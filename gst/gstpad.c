@@ -383,17 +383,20 @@ clear_events (PadEvent events[])
  * copied to the sinkpad (when different) and the inactive flag is set,
  * this will make sure that we send the event to the sinkpad event 
  * function when the next buffer of event arrives. */
-static void
+static gboolean
 replace_events (PadEvent srcev[], PadEvent sinkev[])
 {
   guint i;
+  gboolean inactive = FALSE;
 
   for (i = 0; i < GST_EVENT_MAX_STICKY; i++) {
     if (srcev[i].event != sinkev[i].event) {
       gst_event_replace (&sinkev[i].event, srcev[i].event);
       sinkev[i].active = FALSE;
+      inactive = TRUE;
     }
   }
+  return inactive;
 }
 
 static GstCaps *
@@ -2075,8 +2078,8 @@ gst_pad_link_full (GstPad * srcpad, GstPad * sinkpad, GstPadLinkCheck flags)
 
   /* make sure we push the events from the source to this new peer, for this we
    * copy the events on the sinkpad and mark EVENTS_PENDING */
-  replace_events (srcpad->priv->events, sinkpad->priv->events);
-  GST_OBJECT_FLAG_SET (sinkpad, GST_PAD_NEED_EVENTS);
+  if (replace_events (srcpad->priv->events, sinkpad->priv->events))
+    GST_OBJECT_FLAG_SET (sinkpad, GST_PAD_NEED_EVENTS);
 
   GST_OBJECT_UNLOCK (sinkpad);
   GST_OBJECT_UNLOCK (srcpad);
@@ -4756,39 +4759,40 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
       GST_CAT_DEBUG_OBJECT (GST_CAT_EVENT, pad, "have event type %s",
           GST_EVENT_TYPE_NAME (event));
 
-      /* make this a little faster, no point in grabbing the lock
-       * if the pad is allready flushing. */
-      if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
-        goto flushing;
-
       if (serialized) {
         /* lock order: STREAM_LOCK, LOCK, recheck flushing. */
         GST_OBJECT_UNLOCK (pad);
         GST_PAD_STREAM_LOCK (pad);
         need_unlock = TRUE;
         GST_OBJECT_LOCK (pad);
-        if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
-          goto flushing;
       } else {
         /* don't forward events on non-serialized events */
         needs_events = FALSE;
       }
+
+      /* store the event on the pad, but only on srcpads. We need to store the
+       * event before checking the flushing flag. */
+      if (sticky) {
+        guint idx;
+
+        idx = GST_EVENT_STICKY_IDX (event);
+        GST_LOG_OBJECT (pad, "storing sticky event %s at index %u",
+            GST_EVENT_TYPE_NAME (event), idx);
+
+        if (pad->priv->events[idx].event != event) {
+          gst_event_replace (&pad->priv->events[idx].event, event);
+          pad->priv->events[idx].active = FALSE;
+          /* set the flag so that we update the events next time. We would
+           * usually update below but we might be flushing too. */
+          GST_OBJECT_FLAG_SET (pad, GST_PAD_NEED_EVENTS);
+          needs_events = TRUE;
+        }
+      }
+      /* now check the flushing flag */
+      if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
+        goto flushing;
+
       break;
-  }
-
-  /* store the event on the pad, but only on srcpads */
-  if (sticky) {
-    guint idx;
-
-    idx = GST_EVENT_STICKY_IDX (event);
-    GST_LOG_OBJECT (pad, "storing sticky event %s at index %u",
-        GST_EVENT_TYPE_NAME (event), idx);
-
-    if (pad->priv->events[idx].event != event) {
-      gst_event_replace (&pad->priv->events[idx].event, event);
-      pad->priv->events[idx].active = FALSE;
-      needs_events = TRUE;
-    }
   }
 
   if (G_UNLIKELY (needs_events)) {
