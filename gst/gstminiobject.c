@@ -414,7 +414,7 @@ gst_mini_object_unref (GstMiniObject * mini_object)
 
 /**
  * gst_mini_object_weak_ref: (skip)
- * @mini_object: #GstMiniObject to reference weakly
+ * @object: #GstMiniObject to reference weakly
  * @notify: callback to invoke before the mini object is freed
  * @data: extra data to pass to notify
  *
@@ -475,7 +475,7 @@ found:
 
 /**
  * gst_mini_object_weak_unref: (skip)
- * @mini_object: #GstMiniObject to remove a weak reference from
+ * @object: #GstMiniObject to remove a weak reference from
  * @notify: callback to search for
  * @data: data to search for
  *
