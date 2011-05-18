@@ -621,7 +621,7 @@ long int
 sp_client_recv (ShmPipe * self, char **buf)
 {
   char *area_name = NULL;
-  ShmArea *newarea, *oldarea;
+  ShmArea *newarea;
   ShmArea *area;
   struct CommandBuffer cb;
   int retval;
@@ -648,13 +648,8 @@ sp_client_recv (ShmPipe * self, char **buf)
       if (!newarea)
         return -4;
 
-      oldarea = self->shm_area;
       newarea->next = self->shm_area;
       self->shm_area = newarea;
-      /*
-         if (oldarea)
-         sp_shm_area_dec (self, oldarea);
-       */
       break;
 
     case COMMAND_CLOSE_SHM_AREA:

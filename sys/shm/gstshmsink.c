@@ -118,11 +118,9 @@ static void
 gst_shm_sink_class_init (GstShmSinkClass * klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
   GstBaseSinkClass *gstbasesink_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
   gstbasesink_class = (GstBaseSinkClass *) klass;
 
   gobject_class->finalize = gst_shm_sink_finalize;
