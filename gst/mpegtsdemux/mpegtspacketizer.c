@@ -2268,6 +2268,14 @@ mpegts_packetizer_next_packet (MpegTSPacketizer2 * packetizer,
         gst_buffer_unref (packet->buffer);
         goto done;
       }
+
+      if (packetizer->packet_size == MPEGTS_M2TS_PACKETSIZE) {
+        if (i >= 4)
+          i -= 4;
+        else
+          i += 188;
+      }
+
       /* Pop out the remaining data... */
       GST_BUFFER_DATA (packet->buffer) += i;
       GST_BUFFER_SIZE (packet->buffer) -= i;

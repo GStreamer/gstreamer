@@ -547,6 +547,9 @@ gst_ts_demux_perform_auxiliary_seek (MpegTSBase * base, GstClockTime seektime,
 
   mpegts_packetizer_flush (base->packetizer);
 
+  if (base->packetizer->packet_size == MPEGTS_M2TS_PACKETSIZE)
+    offset -= 4;
+
   while (!done && scan_offset <= length) {
     res =
         gst_pad_pull_range (base->sinkpad, offset + scan_offset,
@@ -1519,6 +1522,8 @@ find_pcr_packet (MpegTSBase * base, guint64 offset, gint64 length,
     return GST_FLOW_ERROR;
 
   mpegts_packetizer_flush (base->packetizer);
+  if (offset >= 4 && base->packetizer->packet_size == MPEGTS_M2TS_PACKETSIZE)
+    offset -= 4;
 
   while (!done && scan_offset < length) {
     ret =
