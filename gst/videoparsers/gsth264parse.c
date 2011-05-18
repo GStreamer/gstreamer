@@ -454,6 +454,10 @@ gst_h264_parse_find_sc (GstBuffer * buffer, guint skip)
   return sc_pos;
 }
 
+/* FIXME move into baseparse, or anything equivalent;
+ * see https://bugzilla.gnome.org/show_bug.cgi?id=650093 */
+#define GST_BASE_PARSE_FRAME_FLAG_PARSING   0x10000
+
 static gboolean
 gst_h264_parse_check_valid_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame, guint * framesize, gint * skipsize)
@@ -472,6 +476,15 @@ gst_h264_parse_check_valid_frame (GstBaseParse * parse,
   /* need to configure aggregation */
   if (G_UNLIKELY (h264parse->format == GST_H264_PARSE_FORMAT_NONE))
     gst_h264_parse_negotiate (h264parse);
+
+  /* avoid stale cached parsing state */
+  if (!(frame->flags & GST_BASE_PARSE_FRAME_FLAG_PARSING)) {
+    GST_LOG_OBJECT (h264parse, "parsing new frame");
+    gst_h264_parse_reset_frame (h264parse);
+    frame->flags |= GST_BASE_PARSE_FRAME_FLAG_PARSING;
+  } else {
+    GST_LOG_OBJECT (h264parse, "resuming frame parsing");
+  }
 
   data = GST_BUFFER_DATA (buffer);
   size = GST_BUFFER_SIZE (buffer);
