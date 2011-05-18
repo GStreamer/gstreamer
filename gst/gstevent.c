@@ -241,7 +241,8 @@ _gst_event_copy (GstEvent * event)
   s = GST_EVENT_STRUCTURE (event);
   if (s) {
     GST_EVENT_STRUCTURE (copy) = gst_structure_copy (s);
-    gst_structure_set_parent_refcount (s, &copy->event.mini_object.refcount);
+    gst_structure_set_parent_refcount (GST_EVENT_STRUCTURE (copy),
+        &copy->event.mini_object.refcount);
   }
   return GST_EVENT_CAST (copy);
 }
