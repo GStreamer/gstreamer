@@ -26,6 +26,42 @@ Different types of events exist to implement various functionalities.
 * not yet implemented, under investigation, might be needed to do still frames
   in DVD.
 
+
+src pads
+--------
+
+A gst_pad_push_event() on a srcpad will first store the event in the sticky
+array before sending the event to the peer pad. If there is no peer pad, the
+gst_pad_push_event() function returns NOT_LINKED.
+
+Note that the behaviour is not influenced by a flushing pad.
+
+sink pads
+---------
+
+A gst_pad_send_event() on a sinkpad will put the event into the pending array of
+sticky tags.
+
+When the pad is flushing, the _send_event() function returns WRONG_STATE.
+
+When the pad is not flushing, the event function is called for all sticky events
+in the pending array. If the event function returns success, the event is moved
+to the sticky array. If the event function returns failure, the event is removed 
+from the pending array.
+
+This ensures that the event function is never called for flushing pads and that
+the sticky array only contains events for which the event function returned
+success.
+
+pad link
+--------
+
+When linking pads, all the sticky events from the srcpad are copied to the
+pending array on the sinkpad. The events will be sent to the event function of
+the sinkpad on the next event or buffer.
+
+
+
 FLUSH_START/STOP
 ~~~~~~~~~~~~~~~~
 

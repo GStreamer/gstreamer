@@ -109,11 +109,17 @@ static GstPadPushCache _pad_cache_invalid = { NULL, };
 #define GST_PAD_GET_PRIVATE(obj)  \
    (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_PAD, GstPadPrivate))
 
+typedef struct
+{
+  GstEvent *event;
+  gboolean active;
+} PadEvent;
+
 struct _GstPadPrivate
 {
   GstPadPushCache *cache_ptr;
 
-  GstEvent *events[GST_EVENT_MAX_STICKY];
+  PadEvent events[GST_EVENT_MAX_STICKY];
 };
 
 static void gst_pad_dispose (GObject * object);
@@ -360,35 +366,33 @@ gst_pad_init (GstPad * pad)
   pad->block_cond = g_cond_new ();
 }
 
+/* called when setting the pad inactive. It removes all sticky events from
+ * the pad */
 static void
-clear_events (GstEvent * events[])
+clear_events (PadEvent events[])
 {
   guint i;
-
-  for (i = 0; i < GST_EVENT_MAX_STICKY; i++)
-    gst_event_replace (&events[i], NULL);
-}
-
-static void
-replace_events (GstEvent * events[], GstEvent * dest[])
-{
-  guint i;
-
-  for (i = 0; i < GST_EVENT_MAX_STICKY; i++)
-    gst_event_replace (&dest[i], events[i]);
-}
-
-static void
-copy_events (GstEvent * events[], GstEvent * dest[])
-{
-  guint i;
-  GstEvent *event;
 
   for (i = 0; i < GST_EVENT_MAX_STICKY; i++) {
-    if ((event = events[i]))
-      dest[i] = gst_event_ref (event);
-    else
-      dest[i] = NULL;
+    gst_event_replace (&events[i].event, NULL);
+    events[i].active = FALSE;
+  }
+}
+
+/* called when elements link. The sticky events from the srcpad are
+ * copied to the sinkpad (when different) and the inactive flag is set,
+ * this will make sure that we send the event to the sinkpad event 
+ * function when the next buffer of event arrives. */
+static void
+replace_events (PadEvent srcev[], PadEvent sinkev[])
+{
+  guint i;
+
+  for (i = 0; i < GST_EVENT_MAX_STICKY; i++) {
+    if (srcev[i].event != sinkev[i].event) {
+      gst_event_replace (&sinkev[i].event, srcev[i].event);
+      sinkev[i].active = FALSE;
+    }
   }
 }
 
@@ -400,8 +404,11 @@ get_pad_caps (GstPad * pad)
   guint idx;
 
   idx = GST_EVENT_STICKY_IDX_TYPE (GST_EVENT_CAPS);
-  if ((event = pad->priv->events[idx]))
-    gst_event_parse_caps (event, &caps);
+  /* we can only use the caps when we have successfully send the caps
+   * event to the event function */
+  if (pad->priv->events[idx].active)
+    if ((event = pad->priv->events[idx].event))
+      gst_event_parse_caps (event, &caps);
 
   return caps;
 }
@@ -2789,8 +2796,12 @@ not_accepted:
   }
 }
 
+/* function to send all inactive events on the sinkpad to the event
+ * function and collect the results. This function should be called with
+ * the object lock. The object lock might be released by this function.
+ */
 static GstFlowReturn
-gst_pad_update_events (GstPad * pad, GstEvent * events[])
+gst_pad_update_events (GstPad * pad)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   guint i;
@@ -2801,11 +2812,31 @@ gst_pad_update_events (GstPad * pad, GstEvent * events[])
     goto no_function;
 
   for (i = 0; i < GST_EVENT_MAX_STICKY; i++) {
-    if ((event = events[i])) {
-      eventfunc (pad, event);
-      events[i] = NULL;
+    /* skip already active events */
+    if (pad->priv->events[i].active)
+      continue;
+
+    if ((event = pad->priv->events[i].event)) {
+      gboolean res;
+
+      gst_event_ref (event);
+      GST_OBJECT_UNLOCK (pad);
+
+      res = eventfunc (pad, event);
+
+      GST_OBJECT_LOCK (pad);
+      /* FIXME, things could have changed here, probably use a cookie
+       * to check for changes. */
+      pad->priv->events[i].active = res;
+      /* remove the event when the event function did not accept it */
+      if (!res) {
+        gst_event_replace (&pad->priv->events[i].event, NULL);
+        ret = GST_FLOW_ERROR;
+      }
     }
   }
+  /* when we get here all events were successfully updated. */
+
   return ret;
 
   /* ERRORS */
@@ -2813,7 +2844,6 @@ no_function:
   {
     g_warning ("pad %s:%s has no event handler, file a bug.",
         GST_DEBUG_PAD_NAME (pad));
-    clear_events (events);
     return GST_FLOW_NOT_SUPPORTED;
   }
 }
@@ -3594,7 +3624,6 @@ gst_pad_chain_data_unchecked (GstPad * pad, gboolean is_buffer, void *data,
   gboolean needs_events;
   GstFlowReturn ret;
   gboolean emit_signal;
-  GstEvent *events[GST_EVENT_MAX_STICKY];
 
   GST_PAD_STREAM_LOCK (pad);
 
@@ -3604,16 +3633,17 @@ gst_pad_chain_data_unchecked (GstPad * pad, gboolean is_buffer, void *data,
 
   needs_events = GST_PAD_NEEDS_EVENTS (pad);
   if (G_UNLIKELY (needs_events)) {
-    /* need to make a copy because when we release the object lock, things
-     * could just change */
-    copy_events (pad->priv->events, events);
     GST_OBJECT_FLAG_UNSET (pad, GST_PAD_NEED_EVENTS);
+
+    GST_DEBUG_OBJECT (pad, "need to update all events");
+    ret = gst_pad_update_events (pad);
+    if (G_UNLIKELY (ret != GST_FLOW_OK))
+      goto events_error;
   }
   emit_signal = GST_PAD_DO_BUFFER_SIGNALS (pad) > 0;
   GST_OBJECT_UNLOCK (pad);
 
-  /* see if the signal should be emited, we emit before caps nego as
-   * we might drop the buffer and do capsnego for nothing. */
+  /* see if the signal should be emited */
   if (G_UNLIKELY (emit_signal)) {
     cache = NULL;
     if (G_LIKELY (is_buffer)) {
@@ -3624,13 +3654,6 @@ gst_pad_chain_data_unchecked (GstPad * pad, gboolean is_buffer, void *data,
        * buffer probes that push buffers or events */
       goto chain_groups;
     }
-  }
-
-  if (G_UNLIKELY (needs_events)) {
-    GST_DEBUG_OBJECT (pad, "need to update all events");
-    ret = gst_pad_update_events (pad, events);
-    if (G_UNLIKELY (ret != GST_FLOW_OK))
-      goto events_error;
   }
 
   /* NOTE: we read the chainfunc unlocked.
@@ -3726,6 +3749,7 @@ events_error:
   {
     gst_pad_data_unref (is_buffer, data);
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "events were not accepted");
+    GST_OBJECT_UNLOCK (pad);
     GST_PAD_STREAM_UNLOCK (pad);
     return ret;
   }
@@ -4393,7 +4417,6 @@ gst_pad_pull_range (GstPad * pad, guint64 offset, guint size,
   GstFlowReturn ret;
   gboolean emit_signal;
   gboolean needs_events;
-  GstEvent *events[GST_EVENT_MAX_STICKY];
 
   g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_PAD_IS_SINK (pad), GST_FLOW_ERROR);
@@ -4431,17 +4454,14 @@ gst_pad_pull_range (GstPad * pad, guint64 offset, guint size,
 
   needs_events = GST_PAD_NEEDS_EVENTS (pad);
   if (G_UNLIKELY (needs_events)) {
-    copy_events (pad->priv->events, events);
     GST_OBJECT_FLAG_UNSET (pad, GST_PAD_NEED_EVENTS);
-  }
-  GST_OBJECT_UNLOCK (pad);
 
-  if (G_UNLIKELY (needs_events)) {
     GST_DEBUG_OBJECT (pad, "we need to update the events");
-    ret = gst_pad_update_events (pad, events);
+    ret = gst_pad_update_events (pad);
     if (G_UNLIKELY (ret != GST_FLOW_OK))
       goto events_error;
   }
+  GST_OBJECT_UNLOCK (pad);
 
   return ret;
 
@@ -4471,6 +4491,7 @@ dropping:
   }
 events_error:
   {
+    GST_OBJECT_UNLOCK (pad);
     gst_buffer_unref (*buffer);
     *buffer = NULL;
     GST_CAT_WARNING_OBJECT (GST_CAT_SCHEDULING, pad,
@@ -4567,7 +4588,9 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
         GST_EVENT_TYPE_NAME (event), idx);
 
     oldcaps = get_pad_caps (pad);
-    gst_event_replace (&pad->priv->events[idx], event);
+    /* srcpad sticky events always become active immediately */
+    gst_event_replace (&pad->priv->events[idx].event, event);
+    pad->priv->events[idx].active = TRUE;
     newcaps = get_pad_caps (pad);
   }
 
@@ -4577,7 +4600,6 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
 
   if (oldcaps != newcaps)
     g_object_notify_by_pspec ((GObject *) pad, pspec_caps);
-
 
   /* backwards compatibility mode for caps */
   if (GST_EVENT_TYPE (event) == GST_EVENT_CAPS) {
@@ -4663,7 +4685,6 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
   gboolean result = FALSE;
   GstPadEventFunction eventfunc;
   gboolean serialized, need_unlock = FALSE, needs_events, sticky;
-  GstEvent *events[GST_EVENT_MAX_STICKY];
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
   g_return_val_if_fail (event != NULL, FALSE);
@@ -4756,30 +4777,30 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
     GST_LOG_OBJECT (pad, "storing sticky event %s at index %u",
         GST_EVENT_TYPE_NAME (event), idx);
 
-    gst_event_replace (&pad->priv->events[idx], event);
+    if (pad->priv->events[idx].event != event) {
+      gst_event_replace (&pad->priv->events[idx].event, event);
+      pad->priv->events[idx].active = FALSE;
+      needs_events = TRUE;
+    }
   }
 
   if (G_UNLIKELY ((eventfunc = GST_PAD_EVENTFUNC (pad)) == NULL))
     goto no_function;
 
   if (G_UNLIKELY (needs_events)) {
-    /* need to make a copy because when we release the object lock, things
-     * could just change */
-    GST_DEBUG_OBJECT (pad, "need to update all events");
-    copy_events (pad->priv->events, events);
     GST_OBJECT_FLAG_UNSET (pad, GST_PAD_NEED_EVENTS);
-  }
-  GST_OBJECT_UNLOCK (pad);
 
-  if (G_UNLIKELY (needs_events)) {
-    GST_DEBUG_OBJECT (pad, "updating all events");
-    if (gst_pad_update_events (pad, events) != GST_FLOW_OK)
+    GST_DEBUG_OBJECT (pad, "need to update all events");
+    if (gst_pad_update_events (pad) != GST_FLOW_OK)
       result = FALSE;
     else
       result = TRUE;
+    GST_OBJECT_UNLOCK (pad);
 
     gst_event_unref (event);
   } else {
+    GST_OBJECT_UNLOCK (pad);
+
     result = eventfunc (pad, event);
   }
 
