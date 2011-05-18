@@ -1580,7 +1580,7 @@ gst_sub_parse_sink_event (GstPad * pad, GstEvent * event)
     }
     case GST_EVENT_SEGMENT:
     {
-      gst_event_parse_segment (event, &self->segment);
+      gst_event_copy_segment (event, &self->segment);
       GST_DEBUG_OBJECT (self, "newsegment (%s)",
           gst_format_get_name (self->segment.format));
 

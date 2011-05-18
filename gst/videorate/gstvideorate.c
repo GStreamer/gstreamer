@@ -616,11 +616,11 @@ gst_video_rate_event (GstPad * pad, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEGMENT:
     {
-      GstSegment segment;
+      const GstSegment *segment;
 
       gst_event_parse_segment (event, &segment);
 
-      if (segment.format != GST_FORMAT_TIME)
+      if (segment->format != GST_FORMAT_TIME)
         goto format_error;
 
       GST_DEBUG_OBJECT (videorate, "handle NEWSEGMENT");
@@ -659,7 +659,7 @@ gst_video_rate_event (GstPad * pad, GstEvent * event)
       }
 
       /* We just want to update the accumulated stream_time  */
-      gst_segment_copy_into (&segment, &videorate->segment);
+      gst_segment_copy_into (segment, &videorate->segment);
 
       GST_DEBUG_OBJECT (videorate, "updated segment: %" GST_SEGMENT_FORMAT,
           &videorate->segment);

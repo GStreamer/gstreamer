@@ -407,7 +407,7 @@ gst_base_rtp_depayload_handle_event (GstBaseRTPDepayload * filter,
       break;
     case GST_EVENT_SEGMENT:
     {
-      gst_event_parse_segment (event, &filter->segment);
+      gst_event_copy_segment (event, &filter->segment);
       /* don't pass the event downstream, we generate our own segment including
        * the NTP time and other things we receive in caps */
       forward = FALSE;

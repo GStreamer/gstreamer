@@ -2131,15 +2131,15 @@ gst_base_text_overlay_text_event (GstPad * pad, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEGMENT:
     {
-      GstSegment segment;
+      const GstSegment *segment;
 
       overlay->text_eos = FALSE;
 
       gst_event_parse_segment (event, &segment);
 
-      if (segment.format == GST_FORMAT_TIME) {
+      if (segment->format == GST_FORMAT_TIME) {
         GST_OBJECT_LOCK (overlay);
-        gst_segment_copy_into (&segment, &overlay->text_segment);
+        gst_segment_copy_into (segment, &overlay->text_segment);
         GST_DEBUG_OBJECT (overlay, "TEXT SEGMENT now: %" GST_SEGMENT_FORMAT,
             &overlay->text_segment);
         GST_OBJECT_UNLOCK (overlay);
@@ -2212,17 +2212,17 @@ gst_base_text_overlay_video_event (GstPad * pad, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEGMENT:
     {
-      GstSegment segment;
+      const GstSegment *segment;
 
       GST_DEBUG_OBJECT (overlay, "received new segment");
 
       gst_event_parse_segment (event, &segment);
 
-      if (segment.format == GST_FORMAT_TIME) {
+      if (segment->format == GST_FORMAT_TIME) {
         GST_DEBUG_OBJECT (overlay, "VIDEO SEGMENT now: %" GST_SEGMENT_FORMAT,
             &overlay->segment);
 
-        gst_segment_copy_into (&segment, &overlay->segment);
+        gst_segment_copy_into (segment, &overlay->segment);
       } else {
         GST_ELEMENT_WARNING (overlay, STREAM, MUX, (NULL),
             ("received non-TIME newsegment event on video input"));

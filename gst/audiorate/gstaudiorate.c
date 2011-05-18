@@ -316,7 +316,7 @@ gst_audio_rate_sink_event (GstPad * pad, GstEvent * event)
       break;
     case GST_EVENT_SEGMENT:
     {
-      gst_event_parse_segment (event, &audiorate->sink_segment);
+      gst_event_copy_segment (event, &audiorate->sink_segment);
 
       GST_DEBUG_OBJECT (audiorate, "handle NEWSEGMENT");
 #if 0

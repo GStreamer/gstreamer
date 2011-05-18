@@ -412,7 +412,7 @@ gst_basertppayload_event (GstPad * pad, GstEvent * event)
       GstSegment *segment;
 
       segment = &basertppayload->segment;
-      gst_event_parse_segment (event, segment);
+      gst_event_copy_segment (event, segment);
 
       GST_DEBUG_OBJECT (basertppayload,
           "configured SEGMENT %" GST_SEGMENT_FORMAT, segment);

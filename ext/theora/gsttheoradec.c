@@ -630,18 +630,18 @@ theora_dec_sink_event (GstPad * pad, GstEvent * event)
       break;
     case GST_EVENT_SEGMENT:
     {
-      GstSegment segment;
+      const GstSegment *segment;
 
       gst_event_parse_segment (event, &segment);
 
       /* we need TIME format */
-      if (segment.format != GST_FORMAT_TIME)
+      if (segment->format != GST_FORMAT_TIME)
         goto newseg_wrong_format;
 
-      GST_DEBUG_OBJECT (dec, "segment: %" GST_SEGMENT_FORMAT, &segment);
+      GST_DEBUG_OBJECT (dec, "segment: %" GST_SEGMENT_FORMAT, segment);
 
       /* now configure the values */
-      gst_segment_copy_into (&segment, &dec->segment);
+      gst_segment_copy_into (segment, &dec->segment);
       dec->seqnum = gst_event_get_seqnum (event);
 
       /* We don't forward this unless/until the decoder is initialised */

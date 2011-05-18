@@ -222,7 +222,7 @@ gst_play_sink_video_convert_sink_event (GstPad * pad, GstEvent * event)
     GST_PLAY_SINK_VIDEO_CONVERT_LOCK (self);
     GST_DEBUG_OBJECT (self, "Segment before %" GST_SEGMENT_FORMAT,
         &self->segment);
-    gst_event_parse_segment (event, &self->segment);
+    gst_event_copy_segment (event, &self->segment);
     GST_DEBUG_OBJECT (self, "Segment after %" GST_SEGMENT_FORMAT,
         &self->segment);
     GST_PLAY_SINK_VIDEO_CONVERT_UNLOCK (self);

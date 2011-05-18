@@ -239,7 +239,7 @@ gst_selector_pad_event (GstPad * pad, GstEvent * event)
       break;
     case GST_EVENT_SEGMENT:
     {
-      gst_event_parse_segment (event, &selpad->segment);
+      gst_event_copy_segment (event, &selpad->segment);
 
       GST_DEBUG_OBJECT (selpad, "configured SEGMENT %" GST_SEGMENT_FORMAT,
           &selpad->segment);

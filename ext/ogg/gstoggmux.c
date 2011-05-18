@@ -283,18 +283,18 @@ gst_ogg_mux_sink_event (GstPad * pad, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEGMENT:
     {
-      GstSegment segment;
+      const GstSegment *segment;
 
       gst_event_parse_segment (event, &segment);
 
       /* We don't support non time NEWSEGMENT events */
-      if (segment.format != GST_FORMAT_TIME) {
+      if (segment->format != GST_FORMAT_TIME) {
         gst_event_unref (event);
         event = NULL;
         break;
       }
 
-      gst_segment_copy_into (&segment, &ogg_pad->segment);
+      gst_segment_copy_into (segment, &ogg_pad->segment);
       break;
     }
     case GST_EVENT_FLUSH_STOP:{

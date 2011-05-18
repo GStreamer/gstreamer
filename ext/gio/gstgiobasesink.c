@@ -210,21 +210,21 @@ gst_gio_base_sink_event (GstBaseSink * base_sink, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEGMENT:
       if (G_IS_OUTPUT_STREAM (sink->stream)) {
-        GstSegment segment;
+        const GstSegment *segment;
 
         gst_event_parse_segment (event, &segment);
 
-        if (segment.format != GST_FORMAT_BYTES) {
+        if (segment->format != GST_FORMAT_BYTES) {
           GST_WARNING_OBJECT (sink, "ignored SEGMENT event in %s format",
-              gst_format_get_name (segment.format));
+              gst_format_get_name (segment->format));
           break;
         }
 
         if (GST_GIO_STREAM_IS_SEEKABLE (sink->stream)) {
-          ret = gst_gio_seek (sink, G_SEEKABLE (sink->stream), segment.start,
+          ret = gst_gio_seek (sink, G_SEEKABLE (sink->stream), segment->start,
               sink->cancel);
           if (ret == GST_FLOW_OK)
-            sink->position = segment.start;
+            sink->position = segment->start;
         } else {
           ret = GST_FLOW_NOT_SUPPORTED;
         }

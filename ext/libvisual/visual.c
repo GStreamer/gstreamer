@@ -513,7 +513,7 @@ gst_visual_sink_event (GstPad * pad, GstEvent * event)
       /* the newsegment values are used to clip the input samples
        * and to convert the incomming timestamps to running time so
        * we can do QoS */
-      gst_event_parse_segment (event, &visual->segment);
+      gst_event_copy_segment (event, &visual->segment);
 
       /* and forward */
       res = gst_pad_push_event (visual->srcpad, event);

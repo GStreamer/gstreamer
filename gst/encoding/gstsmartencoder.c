@@ -352,7 +352,7 @@ smart_encoder_sink_event (GstPad * pad, GstEvent * event)
       break;
     case GST_EVENT_SEGMENT:
     {
-      gst_event_parse_segment (event, smart_encoder->segment);
+      gst_event_copy_segment (event, smart_encoder->segment);
 
       GST_DEBUG_OBJECT (smart_encoder, "segment: %" GST_SEGMENT_FORMAT,
           smart_encoder->segment);

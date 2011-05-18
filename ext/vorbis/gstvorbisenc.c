@@ -968,12 +968,12 @@ gst_vorbis_enc_sink_event (GstPad * pad, GstEvent * event)
       break;
     case GST_EVENT_SEGMENT:
     {
-      GstSegment segment;
+      const GstSegment *segment;
 
       gst_event_parse_segment (event, &segment);
 
-      if (segment.format == GST_FORMAT_TIME) {
-        gst_segment_copy_into (&segment, &vorbisenc->segment);
+      if (segment->format == GST_FORMAT_TIME) {
+        gst_segment_copy_into (segment, &vorbisenc->segment);
       }
     }
       /* fall through */

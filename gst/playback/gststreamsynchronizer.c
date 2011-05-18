@@ -350,7 +350,7 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstEvent * event)
       GstStream *stream;
       GstSegment segment;
 
-      gst_event_parse_segment (event, &segment);
+      gst_event_copy_segment (event, &segment);
 
       GST_STREAM_SYNCHRONIZER_LOCK (self);
       stream = gst_pad_get_element_private (pad);

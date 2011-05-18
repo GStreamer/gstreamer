@@ -738,7 +738,7 @@ gst_tag_demux_sink_event (GstPad * pad, GstEvent * event)
       break;
     case GST_EVENT_SEGMENT:
     {
-      gst_event_parse_segment (event, &demux->priv->segment);
+      gst_event_copy_segment (event, &demux->priv->segment);
 
       demux->priv->need_newseg = TRUE;
       gst_event_unref (event);

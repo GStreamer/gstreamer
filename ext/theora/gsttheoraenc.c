@@ -831,7 +831,7 @@ theora_enc_sink_event (GstPad * pad, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEGMENT:
     {
-      gst_event_parse_segment (event, &enc->segment);
+      gst_event_copy_segment (event, &enc->segment);
 
       res = gst_pad_push_event (enc->srcpad, event);
       break;

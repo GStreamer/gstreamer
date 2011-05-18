@@ -1644,7 +1644,7 @@ gst_subtitle_overlay_video_sink_event (GstPad * pad, GstEvent * event)
   if (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT) {
 
     GST_DEBUG_OBJECT (pad, "segment event: %" GST_PTR_FORMAT, event);
-    gst_event_parse_segment (event, &self->video_segment);
+    gst_event_copy_segment (event, &self->video_segment);
 
     if (self->video_segment.format != GST_FORMAT_TIME) {
       GST_ERROR_OBJECT (pad, "Newsegment event in non-time format: %s",
@@ -1928,7 +1928,7 @@ gst_subtitle_overlay_subtitle_sink_event (GstPad * pad, GstEvent * event)
 
   if (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT) {
     GST_DEBUG_OBJECT (pad, "segment event: %" GST_PTR_FORMAT, event);
-    gst_event_parse_segment (event, &self->subtitle_segment);
+    gst_event_copy_segment (event, &self->subtitle_segment);
     GST_DEBUG_OBJECT (pad, "New subtitle segment: %" GST_SEGMENT_FORMAT,
         &self->subtitle_segment);
   }
