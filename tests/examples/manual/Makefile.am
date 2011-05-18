@@ -74,7 +74,7 @@ fakesrc.c: $(top_srcdir)/docs/manual/advanced-dataaccess.xml
 	$(PERL_PATH) $(srcdir)/extract.pl $@ $<
 
 playbin.c decodebin.c: $(top_srcdir)/docs/manual/highlevel-components.xml
-	$(PERL_PATH) $(srcdir)/extract.pl $@$<
+	$(PERL_PATH) $(srcdir)/extract.pl $@ $<
 
 TESTS = bin \
 	elementcreate elementfactory elementget elementlink elementmake \
