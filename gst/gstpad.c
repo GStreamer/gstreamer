@@ -4899,11 +4899,13 @@ gst_pad_get_sticky_event (GstPad * pad, GstEventType event_type,
 
   idx = GST_EVENT_STICKY_IDX_TYPE (event_type);
 
+  GST_OBJECT_LOCK (pad);
   if (!active || pad->priv->events[idx].active) {
     if ((event = pad->priv->events[idx].event)) {
       gst_event_ref (event);
     }
   }
+  GST_OBJECT_UNLOCK (pad);
 
   return event;
 }
