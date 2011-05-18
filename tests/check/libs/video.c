@@ -748,6 +748,28 @@ GST_START_TEST (test_convert_frame_async)
 
 GST_END_TEST;
 
+GST_START_TEST (test_video_size_from_caps)
+{
+  gint size;
+  guint32 fourcc = GST_MAKE_FOURCC ('Y', 'V', '1', '2');
+  GstCaps *caps = gst_caps_new_simple ("video/x-raw-yuv",
+      "format", GST_TYPE_FOURCC, fourcc,
+      "width", G_TYPE_INT, 640,
+      "height", G_TYPE_INT, 480,
+      "framerate", GST_TYPE_FRACTION, 25, 1,
+      NULL);
+
+  fail_unless (gst_video_get_size_from_caps (caps, &size));
+  fail_unless (size ==
+      gst_video_format_get_size (gst_video_format_from_fourcc (fourcc), 640,
+          480));
+  fail_unless (size == (640 * 480 * 12 / 8));
+
+  gst_caps_unref (caps);
+}
+
+GST_END_TEST;
+
 static Suite *
 video_suite (void)
 {
@@ -763,6 +785,7 @@ video_suite (void)
   tcase_add_test (tc_chain, test_events);
   tcase_add_test (tc_chain, test_convert_frame);
   tcase_add_test (tc_chain, test_convert_frame_async);
+  tcase_add_test (tc_chain, test_video_size_from_caps);
 
   return s;
 }

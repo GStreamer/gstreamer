@@ -325,7 +325,7 @@ gst_video_parse_caps_chroma_site (GstCaps * caps)
  * Returns: TRUE if @caps was parsed correctly.
  */
 gboolean
-gst_video_format_parse_caps (GstCaps * caps, GstVideoFormat * format,
+gst_video_format_parse_caps (const GstCaps * caps, GstVideoFormat * format,
     int *width, int *height)
 {
   GstStructure *structure;
@@ -2064,6 +2064,36 @@ gst_video_format_get_size (GstVideoFormat format, int width, int height)
     default:
       return 0;
   }
+}
+
+/**
+ * gst_video_get_size_from_caps:
+ * @caps: a pointer to #GstCaps
+ * @size: a pointer to a gint that will be assigned the size (in bytes) of a video frame with the given caps
+ *
+ * Calculates the total number of bytes in the raw video format for the given
+ * caps.  This number should be used when allocating a buffer for raw video.
+ *
+ * Since: 0.10.34
+ *
+ * Returns: %TRUE if the size could be calculated from the caps
+ */
+gboolean
+gst_video_get_size_from_caps (const GstCaps * caps, gint * size)
+{
+  GstVideoFormat format = 0;
+  gint width = 0, height = 0;
+
+  g_return_val_if_fail (gst_caps_is_fixed (caps), FALSE);
+  g_return_val_if_fail (size != NULL, FALSE);
+
+  if (gst_video_format_parse_caps (caps, &format, &width, &height) == FALSE) {
+    GST_WARNING ("Could not parse caps: %" GST_PTR_FORMAT, caps);
+    return FALSE;
+  }
+
+  *size = gst_video_format_get_size (format, width, height);
+  return TRUE;
 }
 
 /**
