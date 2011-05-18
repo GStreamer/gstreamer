@@ -686,7 +686,7 @@ static void
 apply_segment (GstQueue2 * queue, GstEvent * event, GstSegment * segment,
     gboolean is_sink)
 {
-  gst_event_parse_segment (event, segment);
+  gst_event_copy_segment (event, segment);
 
   if (segment->format == GST_FORMAT_BYTES) {
     if (QUEUE_IS_USING_TEMP_FILE (queue)) {

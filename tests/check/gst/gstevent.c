@@ -75,7 +75,7 @@ GST_START_TEST (create_events)
     fail_unless (GST_EVENT_IS_DOWNSTREAM (event));
     fail_unless (GST_EVENT_IS_SERIALIZED (event));
 
-    gst_event_parse_segment (event, &parsed);
+    gst_event_copy_segment (event, &parsed);
     fail_unless (parsed.rate == 0.5);
     fail_unless (parsed.applied_rate == 1.0);
     fail_unless (parsed.format == GST_FORMAT_TIME);

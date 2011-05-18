@@ -540,25 +540,25 @@ gst_fd_sink_event (GstBaseSink * sink, GstEvent * event)
   switch (type) {
     case GST_EVENT_SEGMENT:
     {
-      GstSegment segment;
+      const GstSegment *segment;
 
       gst_event_parse_segment (event, &segment);
 
-      if (segment.format == GST_FORMAT_BYTES) {
+      if (segment->format == GST_FORMAT_BYTES) {
         /* only try to seek and fail when we are going to a different
          * position */
-        if (fdsink->current_pos != segment.start) {
+        if (fdsink->current_pos != segment->start) {
           /* FIXME, the seek should be performed on the pos field, start/stop are
            * just boundaries for valid bytes offsets. We should also fill the file
            * with zeroes if the new position extends the current EOF (sparse streams
            * and segment accumulation). */
-          if (!gst_fd_sink_do_seek (fdsink, (guint64) segment.start))
+          if (!gst_fd_sink_do_seek (fdsink, (guint64) segment->start))
             goto seek_failed;
         }
       } else {
         GST_DEBUG_OBJECT (fdsink,
-            "Ignored SEGMENT event of format %u (%s)", (guint) segment.format,
-            gst_format_get_name (segment.format));
+            "Ignored SEGMENT event of format %u (%s)", (guint) segment->format,
+            gst_format_get_name (segment->format));
       }
       break;
     }

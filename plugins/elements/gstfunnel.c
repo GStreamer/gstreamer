@@ -315,7 +315,7 @@ gst_funnel_sink_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_SEGMENT:
     {
       GST_OBJECT_LOCK (funnel);
-      gst_event_parse_segment (event, &fpad->segment);
+      gst_event_copy_segment (event, &fpad->segment);
       GST_OBJECT_UNLOCK (funnel);
 
       forward = FALSE;

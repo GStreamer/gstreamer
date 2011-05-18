@@ -1583,7 +1583,7 @@ gst_base_transform_sink_eventfunc (GstBaseTransform * trans, GstEvent * event)
     }
     case GST_EVENT_SEGMENT:
     {
-      gst_event_parse_segment (event, &trans->segment);
+      gst_event_copy_segment (event, &trans->segment);
       trans->have_segment = TRUE;
 
       GST_DEBUG_OBJECT (trans, "received SEGMENT %" GST_SEGMENT_FORMAT,

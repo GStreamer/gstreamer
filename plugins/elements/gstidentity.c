@@ -353,7 +353,7 @@ gst_identity_event (GstBaseTransform * trans, GstEvent * event)
       GstEvent *news;
       GstSegment segment;
 
-      gst_event_parse_segment (event, &segment);
+      gst_event_copy_segment (event, &segment);
 
       /* This is the first segment, send out a (0, -1) segment */
       gst_segment_init (&segment, segment.format);

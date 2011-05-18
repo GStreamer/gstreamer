@@ -27,6 +27,7 @@ EXPORTS
 	gst_base_parse_set_duration
 	gst_base_parse_set_frame_rate
 	gst_base_parse_set_has_timing_info
+	gst_base_parse_set_latency
 	gst_base_parse_set_min_frame_size
 	gst_base_parse_set_passthrough
 	gst_base_parse_set_syncable

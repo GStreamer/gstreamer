@@ -910,7 +910,7 @@ static void
 apply_segment (GstMultiQueue * mq, GstSingleQueue * sq, GstEvent * event,
     GstSegment * segment)
 {
-  gst_event_parse_segment (event, segment);
+  gst_event_copy_segment (event, segment);
 
   /* now configure the values, we use these to track timestamps on the
    * sinkpad. */
@@ -1011,13 +1011,13 @@ get_running_time (GstSegment * segment, GstMiniObject * object, gboolean end)
 
     /* For newsegment events return the running time of the start position */
     if (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT) {
-      GstSegment new_segment = *segment;
+      const GstSegment *new_segment;
 
       gst_event_parse_segment (event, &new_segment);
-      if (new_segment.format == GST_FORMAT_TIME) {
+      if (new_segment->format == GST_FORMAT_TIME) {
         time =
-            gst_segment_to_running_time (&new_segment, GST_FORMAT_TIME,
-            new_segment.start);
+            gst_segment_to_running_time (new_segment, GST_FORMAT_TIME,
+            new_segment->start);
       }
     }
   }

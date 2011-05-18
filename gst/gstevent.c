@@ -632,49 +632,49 @@ gst_event_new_segment (GstSegment * segment)
 }
 
 /**
- * gst_event_get_segment:
- * @event: The event
+ * gst_event_parse_segment:
+ * @event: The event to parse
+ * @segment: (out) (transfer none): a pointer to a #GstSegment
  *
- * Get the segment from @event. The segment remains valid as long as @event remains
- * valid.
- *
- * Returns: the #GstSegment. The segment stays valid for as long as @event is
- * valid.
+ * Parses a segment @event and stores the result in the given @segment location.
+ * @segment remains valid only until the @event is freed. Don't modify the segment
+ * and make a copy if you want to modify it or store it for later use.
  */
-const GstSegment *
-gst_event_get_segment (GstEvent * event)
+void
+gst_event_parse_segment (GstEvent * event, const GstSegment ** segment)
 {
   GstStructure *structure;
-  GstSegment *segment;
 
-  g_return_val_if_fail (GST_IS_EVENT (event), NULL);
-  g_return_val_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT, NULL);
+  g_return_if_fail (GST_IS_EVENT (event));
+  g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT);
 
-  structure = GST_EVENT_STRUCTURE (event);
-  segment = g_value_get_boxed (gst_structure_id_get_value (structure,
-          GST_QUARK (SEGMENT)));
-
-  return segment;
+  if (segment) {
+    structure = GST_EVENT_STRUCTURE (event);
+    *segment = g_value_get_boxed (gst_structure_id_get_value (structure,
+            GST_QUARK (SEGMENT)));
+  }
 }
 
 /**
- * gst_event_parse_segment:
+ * gst_event_copy_segment:
  * @event: The event to parse
- * @segment: a #GstSegment
+ * @segment: a pointer to a #GstSegment
  *
- * Copy the segment values from @event into @segment.
+ * Parses a segment @event and copies the #GstSegment into the location
+ * given by @segment.
  */
 void
-gst_event_parse_segment (GstEvent * event, GstSegment * segment)
+gst_event_copy_segment (GstEvent * event, GstSegment * segment)
 {
   const GstSegment *src;
 
-  g_return_if_fail (segment != NULL);
+  g_return_if_fail (GST_IS_EVENT (event));
+  g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT);
 
-  src = gst_event_get_segment (event);
-  g_return_if_fail (src != NULL);
-
-  gst_segment_copy_into (src, segment);
+  if (segment) {
+    gst_event_parse_segment (event, &src);
+    gst_segment_copy_into (src, segment);
+  }
 }
 
 /**

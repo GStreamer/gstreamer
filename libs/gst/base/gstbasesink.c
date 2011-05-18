@@ -1454,7 +1454,7 @@ gst_base_sink_configure_segment (GstBaseSink * basesink, GstPad * pad,
   GST_OBJECT_LOCK (basesink);
   /* the newsegment event is needed to bring the buffer timestamps to the
    * stream time and to drop samples outside of the playback segment. */
-  gst_event_parse_segment (event, segment);
+  gst_event_copy_segment (event, segment);
   GST_DEBUG_OBJECT (basesink, "configured SEGMENT %" GST_SEGMENT_FORMAT,
       segment);
   GST_OBJECT_UNLOCK (basesink);

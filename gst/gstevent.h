@@ -410,9 +410,8 @@ void            gst_event_parse_caps            (GstEvent *event, GstCaps **caps
 
 /* segment event */
 GstEvent*       gst_event_new_segment           (GstSegment *segment);
-const GstSegment *
-                gst_event_get_segment           (GstEvent *event);
-void            gst_event_parse_segment         (GstEvent *event, GstSegment *segment);
+void            gst_event_parse_segment         (GstEvent *event, const GstSegment **segment);
+void            gst_event_copy_segment          (GstEvent *event, GstSegment *segment);
 
 /* tag event */
 GstEvent*       gst_event_new_tag               (GstTagList *taglist);

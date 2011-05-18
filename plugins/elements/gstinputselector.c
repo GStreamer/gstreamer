@@ -400,7 +400,7 @@ gst_selector_pad_event (GstPad * pad, GstEvent * event)
     {
       GST_INPUT_SELECTOR_LOCK (sel);
       GST_OBJECT_LOCK (selpad);
-      gst_event_parse_segment (event, &selpad->segment);
+      gst_event_copy_segment (event, &selpad->segment);
       GST_DEBUG_OBJECT (pad, "configured SEGMENT %" GST_SEGMENT_FORMAT,
           &selpad->segment);
       GST_OBJECT_UNLOCK (selpad);

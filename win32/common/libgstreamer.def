@@ -381,7 +381,7 @@ EXPORTS
 	gst_element_unlink_many
 	gst_element_unlink_pads
 	gst_error_get_message
-	gst_event_get_segment
+	gst_event_copy_segment
 	gst_event_get_seqnum
 	gst_event_get_structure
 	gst_event_has_name
@@ -667,6 +667,7 @@ EXPORTS
 	gst_pad_get_query_types
 	gst_pad_get_query_types_default
 	gst_pad_get_range
+	gst_pad_get_sticky_event
 	gst_pad_get_type
 	gst_pad_has_current_caps
 	gst_pad_is_active

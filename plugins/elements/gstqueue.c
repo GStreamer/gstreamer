@@ -570,7 +570,7 @@ static void
 apply_segment (GstQueue * queue, GstEvent * event, GstSegment * segment,
     gboolean sink)
 {
-  gst_event_parse_segment (event, segment);
+  gst_event_copy_segment (event, segment);
 
   /* now configure the values, we use these to track timestamps on the
    * sinkpad. */

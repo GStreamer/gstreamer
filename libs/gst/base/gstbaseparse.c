@@ -926,7 +926,7 @@ gst_base_parse_sink_eventfunc (GstBaseParse * parse, GstEvent * event)
       gboolean update;
 #endif
 
-      in_segment = gst_event_get_segment (event);
+      gst_event_parse_segment (event, &in_segment);
       gst_segment_init (&out_segment, GST_FORMAT_TIME);
 
       GST_DEBUG_OBJECT (parse, "segment %" GST_SEGMENT_FORMAT, in_segment);

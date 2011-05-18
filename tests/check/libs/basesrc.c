@@ -514,7 +514,7 @@ GST_START_TEST (basesrc_seek_events_rate_update)
   GstEvent *seg_event = NULL;
   GstEvent *rate_seek;
   gboolean event_ret;
-  GstSegment segment;
+  const GstSegment *segment;
 
   pipe = gst_pipeline_new ("pipeline");
   sink = gst_element_factory_make ("fakesink", "sink");
@@ -581,7 +581,7 @@ GST_START_TEST (basesrc_seek_events_rate_update)
   fail_unless (seg_event != NULL);
 
   gst_event_parse_segment (seg_event, &segment);
-  fail_unless (segment.rate == 0.5);
+  fail_unless (segment->rate == 0.5);
 
   gst_pad_remove_event_probe (probe_pad, probe);
   gst_object_unref (probe_pad);

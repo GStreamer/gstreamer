@@ -1200,7 +1200,7 @@ gst_collect_pads_event (GstPad * pad, GstEvent * event)
     }
     case GST_EVENT_SEGMENT:
     {
-      gst_event_parse_segment (event, &data->segment);
+      gst_event_copy_segment (event, &data->segment);
 
       GST_DEBUG_OBJECT (data->pad, "got newsegment %" GST_SEGMENT_FORMAT,
           &data->segment);

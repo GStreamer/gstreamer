@@ -546,7 +546,7 @@ gst_output_selector_handle_sink_event (GstPad * pad, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEGMENT:
     {
-      gst_event_parse_segment (event, &sel->segment);
+      gst_event_copy_segment (event, &sel->segment);
 
       GST_DEBUG_OBJECT (sel, "configured SEGMENT update %" GST_SEGMENT_FORMAT,
           &sel->segment);
