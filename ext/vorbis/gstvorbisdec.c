@@ -929,7 +929,8 @@ vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet,
   /* get samples ready for reading now, should be sample_count */
 #ifdef USE_TREMOLO
   pcm = GST_BUFFER_DATA (out);
-  if (G_UNLIKELY ((vorbis_dsp_pcmout (&vd->vd, pcm, sample_count)) != sample_count))
+  if (G_UNLIKELY ((vorbis_dsp_pcmout (&vd->vd, pcm,
+                  sample_count)) != sample_count))
 #else
   if (G_UNLIKELY ((vorbis_synthesis_pcmout (&vd->vd, &pcm)) != sample_count))
 #endif
@@ -960,7 +961,6 @@ done:
     /* no output, still keep track of timestamps */
     vorbis_do_timestamps (vd, NULL, FALSE, timestamp, duration);
   }
-
 #ifdef USE_TREMOLO
   vorbis_dsp_read (&vd->vd, sample_count);
 #else
@@ -994,6 +994,77 @@ wrong_samples:
     GST_ELEMENT_ERROR (GST_ELEMENT (vd), STREAM, DECODE,
         (NULL), ("vorbis decoder reported wrong number of samples"));
     return GST_FLOW_ERROR;
+  }
+}
+
+static GstFlowReturn
+vorbis_dec_handle_header_buffer (GstVorbisDec * vd, GstBuffer * buffer)
+{
+  ogg_packet *packet;
+  ogg_packet_wrapper packet_wrapper;
+
+  gst_ogg_packet_wrapper_from_buffer (&packet_wrapper, buffer);
+  packet = gst_ogg_packet_from_wrapper (&packet_wrapper);
+
+  return vorbis_handle_header_packet (vd, packet);
+}
+
+
+#define MIN_NUM_HEADERS 3
+static GstFlowReturn
+vorbis_dec_handle_header_caps (GstVorbisDec * vd, GstBuffer * buffer)
+{
+  GstFlowReturn result = GST_FLOW_OK;
+  GstCaps *caps = GST_PAD_CAPS (vd->sinkpad);
+  GstStructure *s = gst_caps_get_structure (caps, 0);
+  const GValue *array = gst_structure_get_value (s, "streamheader");
+
+  if (array && (gst_value_array_get_size (array) >= MIN_NUM_HEADERS)) {
+    const GValue *value = NULL;
+    GstBuffer *buf = NULL;
+
+    /* initial header */
+    value = gst_value_array_get_value (array, 0);
+    buf = gst_value_get_buffer (value);
+    if (!buf)
+      goto null_buffer;
+    result = vorbis_dec_handle_header_buffer (vd, buf);
+
+    /* comment header */
+    if (result == GST_FLOW_OK) {
+      value = gst_value_array_get_value (array, 1);
+      buf = gst_value_get_buffer (value);
+      if (!buf)
+        goto null_buffer;
+      result = vorbis_dec_handle_header_buffer (vd, buf);
+    }
+
+    /* bitstream codebook header */
+    if (result == GST_FLOW_OK) {
+      value = gst_value_array_get_value (array, 2);
+      buf = gst_value_get_buffer (value);
+      if (!buf)
+        goto null_buffer;
+      result = vorbis_dec_handle_header_buffer (vd, buf);
+    }
+  } else
+    goto array_error;
+
+done:
+  return (result != GST_FLOW_OK ? GST_FLOW_NOT_NEGOTIATED : GST_FLOW_OK);
+
+array_error:
+  {
+    GST_WARNING_OBJECT (vd, "streamheader array not found");
+    result = GST_FLOW_ERROR;
+    goto done;
+  }
+
+null_buffer:
+  {
+    GST_WARNING_OBJECT (vd, "streamheader with null buffer received");
+    result = GST_FLOW_ERROR;
+    goto done;
   }
 }
 
@@ -1034,6 +1105,13 @@ vorbis_dec_decode_buffer (GstVorbisDec * vd, GstBuffer * buffer)
   } else {
     GstClockTime timestamp, duration;
 
+    /* try to find header in caps so we can initialize the decoder */
+    if (!vd->initialized) {
+      result = vorbis_dec_handle_header_caps (vd, buffer);
+      if (result != GST_FLOW_OK)
+        goto invalid_caps_header;
+    }
+
     timestamp = GST_BUFFER_TIMESTAMP (buffer);
     duration = GST_BUFFER_DURATION (buffer);
 
@@ -1058,6 +1136,13 @@ empty_header:
     GST_ELEMENT_ERROR (vd, STREAM, DECODE, (NULL), ("empty header received"));
     result = GST_FLOW_ERROR;
     vd->discont = TRUE;
+    goto done;
+  }
+
+invalid_caps_header:
+  {
+    GST_ELEMENT_ERROR (vd, STREAM, DECODE, (NULL),
+        ("invalid streamheader in caps"));
     goto done;
   }
 }
