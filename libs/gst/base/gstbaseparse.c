@@ -82,7 +82,11 @@
  *       contain a valid frame, this call must return FALSE and optionally
  *       set the @skipsize value to inform base class that how many bytes
  *       it needs to skip in order to find a valid frame. @framesize can always
- *       indicate a new minimum for current frame parsing.  The passed buffer
+ *       indicate a new minimum for current frame parsing.  Indicating G_MAXUINT
+ *       for requested amount means subclass simply needs best available
+ *       subsequent data.  In push mode this amounts to an additional input buffer
+ *       (thus minimal additional latency), in pull mode this amounts to some
+ *       arbitrary reasonable buffer size increase.  The passed buffer
  *       is read-only.  Note that @check_valid_frame might receive any small
  *       amount of input data when leftover data is being drained (e.g. at EOS).
  *     </para></listitem>
@@ -237,6 +241,7 @@ struct _GstBaseParsePrivate
   guint bitrate;
   guint lead_in, lead_out;
   GstClockTime lead_in_ts, lead_out_ts;
+  GstClockTime min_latency, max_latency;
 
   gboolean discont;
   gboolean flushing;
@@ -306,6 +311,9 @@ struct _GstBaseParsePrivate
 
   /* Segment event that closes the running segment prior to SEEK */
   GstEvent *close_segment;
+
+  /* push mode helper frame */
+  GstBaseParseFrame frame;
 };
 
 typedef struct _GstBaseParseSeek
@@ -566,8 +574,11 @@ gst_base_parse_frame_free (GstBaseParseFrame * frame)
     frame->buffer = NULL;
   }
 
-  if (!(frame->_private_flags & GST_BASE_PARSE_FRAME_PRIVATE_FLAG_NOALLOC))
+  if (!(frame->_private_flags & GST_BASE_PARSE_FRAME_PRIVATE_FLAG_NOALLOC)) {
     g_slice_free (GstBaseParseFrame, frame);
+  } else {
+    memset (frame, 0, sizeof (*frame));
+  }
 }
 
 GType
@@ -720,6 +731,11 @@ gst_base_parse_reset (GstBaseParse * parse)
   g_slist_foreach (parse->priv->pending_seeks, (GFunc) g_free, NULL);
   g_slist_free (parse->priv->pending_seeks);
   parse->priv->pending_seeks = NULL;
+
+  /* we know it is not alloc'ed, but maybe other stuff to free, some day ... */
+  parse->priv->frame._private_flags |=
+      GST_BASE_PARSE_FRAME_PRIVATE_FLAG_NOALLOC;
+  gst_base_parse_frame_free (&parse->priv->frame);
   GST_OBJECT_UNLOCK (parse);
 }
 
@@ -1036,6 +1052,9 @@ gst_base_parse_sink_eventfunc (GstBaseParse * parse, GstEvent * event)
       parse->priv->flushing = FALSE;
       parse->priv->discont = TRUE;
       parse->priv->last_ts = GST_CLOCK_TIME_NONE;
+      parse->priv->frame._private_flags |=
+          GST_BASE_PARSE_FRAME_PRIVATE_FLAG_NOALLOC;
+      gst_base_parse_frame_free (&parse->priv->frame);
       break;
 
     case GST_EVENT_EOS:
@@ -2152,19 +2171,17 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
   const guint8 *data;
   guint old_min_size = 0, min_size, av;
   GstClockTime timestamp;
-  GstBaseParseFrame _frame;
   GstBaseParseFrame *frame;
 
   parse = GST_BASE_PARSE (GST_OBJECT_PARENT (pad));
   bclass = GST_BASE_PARSE_GET_CLASS (parse);
-  frame = &_frame;
-
-  gst_base_parse_frame_init (frame);
+  frame = &parse->priv->frame;
 
   if (G_LIKELY (buffer)) {
     GST_LOG_OBJECT (parse, "buffer size: %d, offset = %" G_GINT64_FORMAT,
         gst_buffer_get_size (buffer), GST_BUFFER_OFFSET (buffer));
     if (G_UNLIKELY (parse->priv->passthrough)) {
+      gst_base_parse_frame_init (frame);
       frame->buffer = gst_buffer_make_writable (buffer);
       return gst_base_parse_push_frame (parse, frame);
     }
@@ -2181,16 +2198,29 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
     gst_adapter_push (parse->priv->adapter, buffer);
   }
 
+  if (G_UNLIKELY (buffer &&
+          GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT))) {
+    frame->_private_flags |= GST_BASE_PARSE_FRAME_PRIVATE_FLAG_NOALLOC;
+    gst_base_parse_frame_free (frame);
+  }
+
   /* Parse and push as many frames as possible */
   /* Stop either when adapter is empty or we are flushing */
   while (!parse->priv->flushing) {
     gboolean res;
+
+    /* maintain frame state for a single frame parsing round across _chain calls,
+     * so only init when needed */
+    if (!frame->_private_flags)
+      gst_base_parse_frame_init (frame);
 
     tmpbuf = gst_buffer_new ();
 
     old_min_size = 0;
     /* Synchronization loop */
     for (;;) {
+      /* note: if subclass indicates MAX fsize,
+       * this will not likely be available anyway ... */
       min_size = MAX (parse->priv->min_frame_size, fsize);
       av = gst_adapter_available (parse->priv->adapter);
 
@@ -2220,7 +2250,7 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
       data = gst_adapter_map (parse->priv->adapter, av);
       gst_buffer_take_memory (tmpbuf,
           gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY,
-              (gpointer) data, NULL, min_size, 0, min_size));
+              (gpointer) data, NULL, av, 0, av));
       GST_BUFFER_OFFSET (tmpbuf) = parse->priv->offset;
 
       if (parse->priv->discont) {
@@ -2496,6 +2526,12 @@ gst_base_parse_scan_frame (GstBaseParse * parse, GstBaseParseClass * klass,
   GST_LOG_OBJECT (parse, "scanning for frame at offset %" G_GUINT64_FORMAT
       " (%#" G_GINT64_MODIFIER "x)", parse->priv->offset, parse->priv->offset);
 
+  /* let's make this efficient for all subclass once and for all;
+   * maybe it does not need this much, but in the latter case, we know we are
+   * in pull mode here and might as well try to read and supply more anyway
+   * (so does the buffer caching mechanism) */
+  fsize = 64 * 1024;
+
   while (TRUE) {
     gboolean res;
 
@@ -2546,7 +2582,9 @@ gst_base_parse_scan_frame (GstBaseParse * parse, GstBaseParseClass * klass,
       if (!parse->priv->discont)
         parse->priv->sync_offset = parse->priv->offset;
       parse->priv->discont = TRUE;
-      /* something changed least; nullify loop check */
+      /* something changed at least; nullify loop check */
+      if (fsize == G_MAXUINT)
+        fsize = old_min_size + 64 * 1024;
       old_min_size = 0;
     }
     /* skip == 0 should imply subclass set min_size to need more data;
@@ -3015,6 +3053,31 @@ gst_base_parse_set_passthrough (GstBaseParse * parse, gboolean passthrough)
   GST_INFO_OBJECT (parse, "passthrough: %s", (passthrough) ? "yes" : "no");
 }
 
+/**
+ * gst_base_parse_set_latency:
+ * @parse: a #GstBaseParse
+ * @min_latency: minimum parse latency
+ * @max_latency: maximum parse latency
+ *
+ * Sets the minimum and maximum (which may likely be equal) latency introduced
+ * by the parsing process.  If there is such a latency, which depends on the
+ * particular parsing of the format, it typically corresponds to 1 frame duration.
+ *
+ * Since: 0.10.34
+ */
+void
+gst_base_parse_set_latency (GstBaseParse * parse, GstClockTime min_latency,
+    GstClockTime max_latency)
+{
+  GST_OBJECT_LOCK (parse);
+  parse->priv->min_latency = min_latency;
+  parse->priv->max_latency = max_latency;
+  GST_OBJECT_UNLOCK (parse);
+  GST_INFO_OBJECT (parse, "min/max latency %" GST_TIME_FORMAT ", %"
+      GST_TIME_FORMAT, GST_TIME_ARGS (min_latency),
+      GST_TIME_ARGS (max_latency));
+}
+
 static gboolean
 gst_base_parse_get_duration (GstBaseParse * parse, GstFormat format,
     GstClockTime * duration)
@@ -3172,6 +3235,29 @@ gst_base_parse_query (GstPad * pad, GstQuery * query)
       if (res) {
         gst_query_set_convert (query, src_format, src_value,
             dest_format, dest_value);
+      }
+      break;
+    }
+    case GST_QUERY_LATENCY:
+    {
+      if ((res = gst_pad_peer_query (parse->sinkpad, query))) {
+        gboolean live;
+        GstClockTime min_latency, max_latency;
+
+        gst_query_parse_latency (query, &live, &min_latency, &max_latency);
+        GST_DEBUG_OBJECT (parse, "Peer latency: live %d, min %"
+            GST_TIME_FORMAT " max %" GST_TIME_FORMAT, live,
+            GST_TIME_ARGS (min_latency), GST_TIME_ARGS (max_latency));
+
+        GST_OBJECT_LOCK (parse);
+        /* add our latency */
+        if (min_latency != -1)
+          min_latency += parse->priv->min_latency;
+        if (max_latency != -1)
+          max_latency += parse->priv->max_latency;
+        GST_OBJECT_UNLOCK (parse);
+
+        gst_query_set_latency (query, live, min_latency, max_latency);
       }
       break;
     }

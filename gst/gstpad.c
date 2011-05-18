@@ -1144,7 +1144,7 @@ had_right_state:
  * take an indeterminate amount of time.
  * You can pass NULL as the callback to make this call block. Be careful with
  * this blocking call as it might not return for reasons stated above.
- * 
+ *
  * <note>
  *  Pad block handlers are only called for source pads in push mode
  *  and sink pads in pull mode.
@@ -1988,7 +1988,7 @@ no_format:
  * @sinkpad: the sink #GstPad.
  *
  * Checks if the source pad and the sink pad are compatible so they can be
- * linked. 
+ * linked.
  *
  * Returns: TRUE if the pads can be linked.
  */

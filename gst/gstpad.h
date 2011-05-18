@@ -157,7 +157,7 @@ GQuark			gst_flow_to_quark	(GstFlowReturn ret);
  * @GST_PAD_LINK_CHECK_NOTHING: Don't check hierarchy or caps compatibility.
  * @GST_PAD_LINK_CHECK_HIERARCHY: Check the pads have same parents/grandparents.
  *   Could be omitted if it is already known that the two elements that own the
- *   pads are in the same bin. 
+ *   pads are in the same bin.
  * @GST_PAD_LINK_CHECK_TEMPLATE_CAPS: Check if the pads are compatible by using
  *   their template caps. This is much faster than @GST_PAD_LINK_CHECK_CAPS, but
  *   would be unsafe e.g. if one pad has %GST_CAPS_ANY.
@@ -188,7 +188,7 @@ typedef enum {
 /**
  * GST_PAD_LINK_CHECK_DEFAULT:
  *
- * The default checks done when linking pads (i.e. the ones used by 
+ * The default checks done when linking pads (i.e. the ones used by
  * gst_pad_link()).
  *
  * Since: 0.10.30

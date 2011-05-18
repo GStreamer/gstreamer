@@ -65,7 +65,6 @@ gst_plugin_feature_finalize (GObject * object)
 
   GST_DEBUG ("finalizing feature %p: '%s'", feature,
       GST_PLUGIN_FEATURE_NAME (feature));
-  g_free (feature->name);
 
   if (feature->plugin != NULL) {
     g_object_remove_weak_pointer ((GObject *) feature->plugin,
@@ -85,7 +84,7 @@ gst_plugin_feature_finalize (GObject * object)
  * Normally this function is used like this:
  * |[
  * GstPluginFeature *loaded_feature;
- * 
+ *
  * loaded_feature = gst_plugin_feature_load (feature);
  * // presumably, we're no longer interested in the potentially-unloaded feature
  * gst_object_unref (feature);
@@ -184,12 +183,12 @@ gst_plugin_feature_set_name (GstPluginFeature * feature, const gchar * name)
   g_return_if_fail (GST_IS_PLUGIN_FEATURE (feature));
   g_return_if_fail (name != NULL);
 
-  if (feature->name) {
+  if (G_UNLIKELY (feature->name)) {
     g_return_if_fail (strcmp (feature->name, name) == 0);
   } else {
-    feature->name = g_strdup (name);
+    gst_object_set_name (GST_OBJECT (feature), name);
+    feature->name = GST_OBJECT_NAME (GST_OBJECT (feature));
   }
-  gst_object_set_name (GST_OBJECT_CAST (feature), feature->name);
 }
 
 /**

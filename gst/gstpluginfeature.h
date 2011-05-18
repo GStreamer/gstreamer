@@ -81,7 +81,7 @@ struct _GstPluginFeature {
 
   /*< private >*/
   gboolean       loaded;
-  gchar         *name;
+  gchar         *name; /* FIXME-0.11: remove variable, we use GstObject:name */
   guint          rank;
 
   const gchar   *plugin_name;
