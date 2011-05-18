@@ -245,20 +245,20 @@ gst_vp8_enc_class_init (GstVP8EncClass * klass)
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_MIN_QUANTIZER,
-      g_param_spec_int ("qp-min", "Minimum quantizer",
+      g_param_spec_int ("min-quantizer", "Minimum quantizer",
           "Minimum (best) quantizer",
           0, 63, DEFAULT_MIN_QUANTIZER,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_MAX_QUANTIZER,
-      g_param_spec_int ("qp-max", "Maximum quantizer",
+      g_param_spec_int ("max-quantizer", "Maximum quantizer",
           "Maximum (worst) quantizer",
           0, 63, DEFAULT_MAX_QUANTIZER,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_QUALITY,
       g_param_spec_double ("quality", "Quality",
-          "Quality. This parameter set constant quantizer.",
+          "Quality. This parameter sets a constant quantizer.",
           0, 10.0, DEFAULT_QUALITY,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
