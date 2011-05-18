@@ -680,7 +680,7 @@ gst_base_transform_getcaps (GstPad * pad, GstCaps * filter)
   if (peerfilter)
     gst_caps_unref (peerfilter);
 
-  if (peercaps && !gst_caps_is_any (peercaps)) {
+  if (peercaps) {
     GstCaps *temp, *templ;
 
     GST_DEBUG_OBJECT (pad, "peer caps  %" GST_PTR_FORMAT, peercaps);
