@@ -1893,14 +1893,16 @@ gst_avi_demux_expose_streams (GstAviDemux * avi, gboolean force)
 static inline void
 gst_avi_demux_roundup_list (GstAviDemux * avi, GstBuffer ** buf)
 {
-  if (G_UNLIKELY (GST_BUFFER_SIZE (*buf) & 1)) {
+  gint size = GST_BUFFER_SIZE (*buf);
+
+  if (G_UNLIKELY (size & 1)) {
     GstBuffer *obuf;
 
-    GST_DEBUG_OBJECT (avi, "rounding up dubious list size %d",
-        GST_BUFFER_SIZE (*buf));
-    obuf = gst_buffer_new_and_alloc (GST_BUFFER_SIZE (*buf) + 1);
-    memcpy (GST_BUFFER_DATA (obuf), GST_BUFFER_DATA (*buf),
-        GST_BUFFER_SIZE (*buf));
+    GST_DEBUG_OBJECT (avi, "rounding up dubious list size %d", size);
+    obuf = gst_buffer_new_and_alloc (size + 1);
+    memcpy (GST_BUFFER_DATA (obuf), GST_BUFFER_DATA (*buf), size);
+    /* assume 0 padding, at least makes outcome deterministic */
+    (GST_BUFFER_DATA (obuf))[size] = 0;
     gst_buffer_replace (buf, obuf);
   }
 }
