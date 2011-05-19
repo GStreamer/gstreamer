@@ -985,7 +985,6 @@ GST_PROXY_PAD
 GST_PROXY_PAD_CLASS
 GST_TYPE_PROXY_PAD
 GstGhostPadPrivate
-GstProxyPad
 GstProxyPadClass
 GstProxyPadPrivate
 gst_proxy_pad_get_type

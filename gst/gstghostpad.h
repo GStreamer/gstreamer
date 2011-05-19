@@ -66,7 +66,7 @@ const GstQueryType* gst_proxy_pad_query_type_default             (GstPad *pad);
 gboolean            gst_proxy_pad_event_default                  (GstPad *pad, GstEvent *event);
 gboolean            gst_proxy_pad_query_default                  (GstPad *pad, GstQuery *query);
 GstIterator*        gst_proxy_pad_iterate_internal_links_default (GstPad *pad);
-GstFlowReturn       gst_proxy_pad_chain_default                  (GstPad *pad, GstBuffer *buf);
+GstFlowReturn       gst_proxy_pad_chain_default                  (GstPad *pad, GstBuffer *buffer);
 GstFlowReturn       gst_proxy_pad_chain_list_default             (GstPad *pad, GstBufferList *list);
 GstFlowReturn       gst_proxy_pad_getrange_default               (GstPad *pad, guint64 offset, guint size, GstBuffer **buffer);
 gboolean            gst_proxy_pad_checkgetrange_default          (GstPad *pad);

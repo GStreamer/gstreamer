@@ -18,8 +18,6 @@ TESTS_ENVIRONMENT = \
         GST_PLUGIN_SYSTEM_PATH=                                 \
         GST_PLUGIN_PATH=$(top_builddir)/plugins
 
-CLEANFILES = core core.* test-registry.* *.gcno *.gcda
-
 EXTRA_DIST = extract.pl
 
 EXAMPLES = \
@@ -41,6 +39,20 @@ EXAMPLES = \
 	playbin \
 	decodebin \
 	$(GST_LOADSAVE_SRC)
+
+BUILT_SOURCES = \
+	elementmake.c elementcreate.c elementget.c elementlink.c elementfactory.c \
+	bin.c \
+	pad.c ghostpad.c \
+	gnome.c \
+	helloworld.c \
+	init.c \
+	query.c \
+	typefind.c dynamic.c \
+	fakesrc.c \
+	playbin.c decodebin.c
+
+CLEANFILES = core core.* test-registry.* *.gcno *.gcda $(BUILT_SOURCES)
 
 AM_CFLAGS = $(GST_OBJ_CFLAGS)
 LDADD = $(top_builddir)/libs/gst/base/libgstbase-@GST_MAJORMINOR@.la \
