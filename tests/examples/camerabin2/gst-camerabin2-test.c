@@ -53,6 +53,7 @@
     --zoom                            Zoom (100 = 1x (default), 200 = 2x etc.)
     --wrapper-source                  Camera source wrapper used for setting the video source
     --video-source                    Video source used in still capture and video recording
+    --audio-source                    Audio source used in video recording
     --image-pp                        List of image post-processing elements separated with comma
     --viewfinder-sink                 Viewfinder sink (default = fakesink)
     --image-width                     Width for capture (only used if the caps
@@ -119,6 +120,7 @@ static GMainLoop *loop = NULL;
 
 /* commandline options */
 static gchar *videosrc_name = NULL;
+static gchar *audiosrc_name = NULL;
 static gchar *wrappersrc_name = NULL;
 static gchar *imagepp_name = NULL;
 static gchar *vfsink_name = NULL;
@@ -538,6 +540,8 @@ setup_pipeline (void)
   }
 
   /* configure used elements */
+  res &= setup_pipeline_element (camerabin, "audio-source", audiosrc_name,
+      NULL);
   res &= setup_pipeline_element (camerabin, "viewfinder-sink", vfsink_name,
       &sink);
   res &= setup_pipeline_element (camerabin, "viewfinder-filter",
@@ -796,6 +800,8 @@ main (int argc, char *argv[])
         NULL},
     {"video-source", '\0', 0, G_OPTION_ARG_STRING, &videosrc_name,
         "Video source used in still capture and video recording", NULL},
+    {"audio-source", '\0', 0, G_OPTION_ARG_STRING, &audiosrc_name,
+        "Audio source used in video recording", NULL},
     {"image-pp", '\0', 0, G_OPTION_ARG_STRING, &imagepp_name,
         "List of image post-processing elements separated with comma", NULL},
     {"viewfinder-sink", '\0', 0, G_OPTION_ARG_STRING, &vfsink_name,
@@ -884,6 +890,7 @@ main (int argc, char *argv[])
   g_free (ev_option);
   g_free (wrappersrc_name);
   g_free (videosrc_name);
+  g_free (audiosrc_name);
   g_free (imagepp_name);
   g_free (vfsink_name);
   g_free (target_times);
