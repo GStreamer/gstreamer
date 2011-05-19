@@ -1,6 +1,6 @@
 GstBin GstChildProxy
-GstPipeline GstChildProxy
-GstFdSrc GstURIHandler
-GstFileSrc GstURIHandler
 GstFdSink GstURIHandler
+GstFdSrc GstURIHandler
 GstFileSink GstURIHandler
+GstFileSrc GstURIHandler
+GstPipeline GstChildProxy
