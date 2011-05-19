@@ -110,7 +110,7 @@
  * Handling mp3!xing!idv3 and theora!ogg tagsetting scenarios:
  *  Once we have chosen a muxer:
  *   When a new stream is requested:
- *    If muxer is 'Formatter' OR doesn't have a TagSetter interface:
+ *    If muxer isn't 'Formatter' OR doesn't have a TagSetter interface:
  *      Find a Formatter for the given stream (preferably with TagSetter)
  *       Insert that before muxer
  **/
@@ -970,7 +970,7 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
 
   /* Output Queue.
    * We only use a 1buffer long queue here, the actual queueing will be done
-   * in the intput queue */
+   * in the input queue */
   last = sgroup->outqueue = gst_element_factory_make ("queue", NULL);
   g_object_set (sgroup->outqueue, "max-size-buffers", (guint32) 1,
       "max-size-bytes", (guint32) 0, "max-size-time", (guint64) 0, NULL);
