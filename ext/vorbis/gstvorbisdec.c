@@ -983,11 +983,16 @@ vorbis_dec_handle_header_buffer (GstVorbisDec * vd, GstBuffer * buffer)
 {
   ogg_packet *packet;
   ogg_packet_wrapper packet_wrapper;
+  GstFlowReturn ret;
 
-  gst_ogg_packet_wrapper_from_buffer (&packet_wrapper, buffer);
+  gst_ogg_packet_wrapper_map (&packet_wrapper, buffer);
   packet = gst_ogg_packet_from_wrapper (&packet_wrapper);
 
-  return vorbis_handle_header_packet (vd, packet);
+  ret = vorbis_handle_header_packet (vd, packet);
+
+  gst_ogg_packet_wrapper_unmap (&packet_wrapper, buffer);
+
+  return ret;
 }
 
 
@@ -996,56 +1001,71 @@ static GstFlowReturn
 vorbis_dec_handle_header_caps (GstVorbisDec * vd, GstBuffer * buffer)
 {
   GstFlowReturn result = GST_FLOW_OK;
-  GstCaps *caps = GST_PAD_CAPS (vd->sinkpad);
-  GstStructure *s = gst_caps_get_structure (caps, 0);
-  const GValue *array = gst_structure_get_value (s, "streamheader");
+  GstCaps *caps;
+  GstStructure *s;
+  const GValue *array;
+  const GValue *value = NULL;
+  GstBuffer *buf = NULL;
 
-  if (array && (gst_value_array_get_size (array) >= MIN_NUM_HEADERS)) {
-    const GValue *value = NULL;
-    GstBuffer *buf = NULL;
+  if ((caps = gst_pad_get_current_caps (vd->sinkpad)) == NULL)
+    goto no_caps;
 
-    /* initial header */
-    value = gst_value_array_get_value (array, 0);
-    buf = gst_value_get_buffer (value);
-    if (!buf)
-      goto null_buffer;
-    result = vorbis_dec_handle_header_buffer (vd, buf);
+  if ((s = gst_caps_get_structure (caps, 0)) == NULL)
+    goto no_caps;
 
-    /* comment header */
-    if (result == GST_FLOW_OK) {
-      value = gst_value_array_get_value (array, 1);
-      buf = gst_value_get_buffer (value);
-      if (!buf)
-        goto null_buffer;
-      result = vorbis_dec_handle_header_buffer (vd, buf);
-    }
+  array = gst_structure_get_value (s, "streamheader");
 
-    /* bitstream codebook header */
-    if (result == GST_FLOW_OK) {
-      value = gst_value_array_get_value (array, 2);
-      buf = gst_value_get_buffer (value);
-      if (!buf)
-        goto null_buffer;
-      result = vorbis_dec_handle_header_buffer (vd, buf);
-    }
-  } else
+  if (array == NULL || (gst_value_array_get_size (array) < MIN_NUM_HEADERS))
     goto array_error;
 
-done:
-  return (result != GST_FLOW_OK ? GST_FLOW_NOT_NEGOTIATED : GST_FLOW_OK);
+  /* initial header */
+  value = gst_value_array_get_value (array, 0);
+  buf = gst_value_get_buffer (value);
+  if (!buf)
+    goto null_buffer;
+  result = vorbis_dec_handle_header_buffer (vd, buf);
+  if (result != GST_FLOW_OK)
+    goto buffer_error;
 
+  /* comment header */
+  value = gst_value_array_get_value (array, 1);
+  buf = gst_value_get_buffer (value);
+  if (!buf)
+    goto null_buffer;
+  result = vorbis_dec_handle_header_buffer (vd, buf);
+  if (result != GST_FLOW_OK)
+    goto buffer_error;
+
+  /* bitstream codebook header */
+  value = gst_value_array_get_value (array, 2);
+  buf = gst_value_get_buffer (value);
+  if (!buf)
+    goto null_buffer;
+  result = vorbis_dec_handle_header_buffer (vd, buf);
+  if (result != GST_FLOW_OK)
+    goto buffer_error;
+
+  return result;
+
+no_caps:
+  {
+    GST_WARNING_OBJECT (vd, "no caps negotiated");
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
 array_error:
   {
     GST_WARNING_OBJECT (vd, "streamheader array not found");
-    result = GST_FLOW_ERROR;
-    goto done;
+    return GST_FLOW_NOT_NEGOTIATED;
   }
-
 null_buffer:
   {
     GST_WARNING_OBJECT (vd, "streamheader with null buffer received");
-    result = GST_FLOW_ERROR;
-    goto done;
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
+buffer_error:
+  {
+    GST_WARNING_OBJECT (vd, "error handling buffer");
+    return GST_FLOW_NOT_NEGOTIATED;
   }
 }
 
