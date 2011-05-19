@@ -379,26 +379,55 @@ clear_events (PadEvent events[])
   }
 }
 
-/* called when elements link. The sticky events from the srcpad are
- * copied to the sinkpad (when different) and the inactive flag is set,
- * this will make sure that we send the event to the sinkpad event 
- * function when the next buffer of event arrives. */
+/* The sticky event with @idx from the srcpad is copied to the
+ * sinkpad (when different) and the inactive flag is set.
+ * This function applies the pad offsets in case of segment events.
+ * This will make sure that we send the event to the sinkpad event
+ * function when the next buffer of event arrives.
+ * Should be called with the OBJECT lock of both pads */
 static gboolean
-replace_events (PadEvent srcev[], PadEvent sinkev[])
+replace_event (GstPad * srcpad, GstPad * sinkpad, guint idx)
 {
-  guint i;
+  PadEvent *srcev, *sinkev;
+  GstEvent *event;
   gboolean inactive = FALSE;
 
-  for (i = 0; i < GST_EVENT_MAX_STICKY; i++) {
-    if (srcev[i].event != sinkev[i].event) {
-      gst_event_replace (&sinkev[i].event, srcev[i].event);
-      sinkev[i].active = FALSE;
+  srcev = &srcpad->priv->events[idx];
+
+  if ((event = srcev->event)) {
+    sinkev = &sinkpad->priv->events[idx];
+
+    switch (GST_EVENT_TYPE (event)) {
+      case GST_EVENT_SEGMENT:
+      {
+        GstSegment segment;
+        gint64 offset;
+
+        offset = srcpad->offset + sinkpad->offset;
+        if (offset != 0) {
+          gst_event_copy_segment (event, &segment);
+          /* adjust the base time. FIXME, check negative times, try to tweak the
+           * start to do clipping on negative times */
+          segment.base += offset;
+          /* make a new event from the updated segment */
+          event = gst_event_new_segment (&segment);
+        }
+        break;
+      }
+      default:
+        break;
+    }
+    if (sinkev->event != event) {
+      /* replace when different */
+      gst_event_replace (&sinkev->event, event);
+      sinkev->active = FALSE;
       inactive = TRUE;
     }
   }
   return inactive;
 }
 
+/* should be called with the OBJECT_LOCK */
 static GstCaps *
 get_pad_caps (GstPad * pad)
 {
@@ -2047,6 +2076,8 @@ gst_pad_link_full (GstPad * srcpad, GstPad * sinkpad, GstPadLinkCheck flags)
 {
   GstPadLinkReturn result;
   GstElement *parent;
+  guint i;
+  gboolean inactive;
 
   g_return_val_if_fail (GST_IS_PAD (srcpad), GST_PAD_LINK_REFUSED);
   g_return_val_if_fail (GST_PAD_IS_SRC (srcpad), GST_PAD_LINK_WRONG_DIRECTION);
@@ -2078,7 +2109,12 @@ gst_pad_link_full (GstPad * srcpad, GstPad * sinkpad, GstPadLinkCheck flags)
 
   /* make sure we push the events from the source to this new peer, for this we
    * copy the events on the sinkpad and mark EVENTS_PENDING */
-  if (replace_events (srcpad->priv->events, sinkpad->priv->events))
+  inactive = FALSE;
+  for (i = 0; i < GST_EVENT_MAX_STICKY; i++)
+    inactive |= replace_event (srcpad, sinkpad, i);
+
+  /* we had some new inactive events, set our flag */
+  if (inactive)
     GST_OBJECT_FLAG_SET (sinkpad, GST_PAD_NEED_EVENTS);
 
   GST_OBJECT_UNLOCK (sinkpad);
@@ -3590,7 +3626,8 @@ flushing:
  * gst_pad_get_offset:
  * @pad: a #GstPad
  *
- * Get the offset applied to the running time of @pad.
+ * Get the offset applied to the running time of @pad. @pad has to be a source
+ * pad.
  *
  * Returns: the offset.
  */
@@ -3618,10 +3655,56 @@ gst_pad_get_offset (GstPad * pad)
 void
 gst_pad_set_offset (GstPad * pad, gint64 offset)
 {
+  guint idx;
+  GstPad *peer;
+  GstPad *tmp = NULL;
+
   g_return_if_fail (GST_IS_PAD (pad));
 
   GST_OBJECT_LOCK (pad);
+  /* if nothing changed, do nothing */
+  if (pad->offset == offset)
+    goto done;
+
   pad->offset = offset;
+
+  /* if no peer, we just updated the offset */
+  if ((peer = GST_PAD_PEER (pad)) == NULL)
+    goto done;
+
+  /* switch pads around when dealing with a sinkpad */
+  if (GST_PAD_IS_SINK (pad)) {
+    /* ref the peer so it doesn't go away when we release the lock */
+    tmp = gst_object_ref (peer);
+    /* make sure we get the peer (the srcpad) */
+    GST_OBJECT_UNLOCK (pad);
+
+    /* swap pads */
+    peer = pad;
+    pad = tmp;
+
+    GST_OBJECT_LOCK (pad);
+    /* check if the pad didn't get relinked */
+    if (GST_PAD_PEER (pad) != peer)
+      goto done;
+
+    /* we can release the ref now */
+    gst_object_unref (peer);
+  }
+
+  /* the index of the segment event in the array */
+  idx = GST_EVENT_STICKY_IDX_TYPE (GST_EVENT_SEGMENT);
+
+  /* lock order is srcpad >> sinkpad */
+  GST_OBJECT_LOCK (peer);
+  /* take the current segment event, adjust it and then place
+   * it on the sinkpad. events on the srcpad are always active. */
+  if (replace_event (pad, peer, idx))
+    GST_OBJECT_FLAG_SET (peer, GST_PAD_NEED_EVENTS);
+
+  GST_OBJECT_UNLOCK (peer);
+
+done:
   GST_OBJECT_UNLOCK (pad);
 }
 
@@ -4580,6 +4663,7 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
 {
   GstPad *peerpad;
   gboolean result;
+  gint64 offset;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
   g_return_val_if_fail (event != NULL, FALSE);
@@ -4652,16 +4736,42 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
 
   if ((peerpad = GST_PAD_PEER (pad)))
     gst_object_ref (peerpad);
+
+  offset = pad->offset;
   GST_OBJECT_UNLOCK (pad);
 
   /* backwards compatibility mode for caps */
-  if (GST_EVENT_TYPE (event) == GST_EVENT_CAPS) {
-    GstCaps *caps;
-    gst_event_parse_caps (event, &caps);
-    /* FIXME, this is awkward because we don't check flushing here which means
-     * that we can call the setcaps functions on flushing pads, this is not
-     * quite what we want */
-    gst_pad_call_setcaps (pad, caps);
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+
+      gst_event_parse_caps (event, &caps);
+      /* FIXME, this is awkward because we don't check flushing here which means
+       * that we can call the setcaps functions on flushing pads, this is not
+       * quite what we want, otoh, this code should just go away and elements
+       * that set caps on their sinkpad should just setup stuff themselves. */
+      gst_pad_call_setcaps (pad, caps);
+      break;
+    }
+    case GST_EVENT_SEGMENT:
+    {
+      /* check if we need to adjust the segment */
+      if (offset != 0 && peerpad != NULL) {
+        GstSegment segment;
+
+        /* copy segment values */
+        gst_event_copy_segment (event, &segment);
+        gst_event_unref (event);
+
+        /* adjust and make a new event with the offset applied */
+        segment.base += offset;
+        event = gst_event_new_segment (&segment);
+      }
+      break;
+    }
+    default:
+      break;
   }
 
   /* now check the peer pad */
