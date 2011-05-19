@@ -540,8 +540,7 @@ setup_pipeline (void)
   }
 
   /* configure used elements */
-  res &= setup_pipeline_element (camerabin, "audio-source", audiosrc_name,
-      NULL);
+  res &= setup_pipeline_element (camerabin, "audio-src", audiosrc_name, NULL);
   res &= setup_pipeline_element (camerabin, "viewfinder-sink", vfsink_name,
       &sink);
   res &= setup_pipeline_element (camerabin, "viewfinder-filter",
