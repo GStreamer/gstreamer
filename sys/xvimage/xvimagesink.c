@@ -1694,6 +1694,7 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
 
   oldpool = xvimagesink->pool;
   xvimagesink->pool = newpool;
+  g_mutex_unlock (xvimagesink->flow_lock);
 
   /* unref the old sink */
   if (oldpool) {
@@ -1701,7 +1702,6 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
     gst_buffer_pool_set_active (oldpool, FALSE);
     gst_object_unref (oldpool);
   }
-  g_mutex_unlock (xvimagesink->flow_lock);
 
   return TRUE;
 
@@ -1973,29 +1973,49 @@ gst_xvimagesink_sink_query (GstPad * sinkpad, GstQuery * query)
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_ALLOCATION:
     {
+      GstBufferPool *pool;
+      GstStructure *config;
       GstCaps *caps;
-      gboolean need_pool;
-      GstBufferPool *pool = NULL;
       guint size;
-      GstVideoFormat format;
-      gint width, height;
+      gboolean need_pool;
 
       gst_query_parse_allocation (query, &caps, &need_pool);
 
       if (caps == NULL)
         goto no_caps;
 
-      if (!gst_video_format_parse_caps (caps, &format, &width, &height))
-        goto invalid_caps;
+      g_mutex_lock (xvimagesink->flow_lock);
+      if ((pool = xvimagesink->pool))
+        gst_object_ref (pool);
+      g_mutex_unlock (xvimagesink->flow_lock);
 
-      /* the normal size of a frame */
-      size = gst_video_format_get_size (format, width, height);
+      if (pool != NULL) {
+        const GstCaps *pcaps;
 
-      if (need_pool) {
-        GstStructure *config;
+        /* we had a pool, check caps */
+        config = gst_buffer_pool_get_config (pool);
+        gst_buffer_pool_config_get (config, &pcaps, &size, NULL, NULL, NULL,
+            NULL, NULL);
 
-        /* create a new pool for the new configuration */
+        if (!gst_caps_is_equal (caps, pcaps)) {
+          GST_DEBUG_OBJECT (xvimagesink, "pool has different caps");
+          /* different caps, we can't use this pool */
+          gst_object_unref (pool);
+          pool = NULL;
+        }
+      }
+      if (pool == NULL && need_pool) {
+        GstVideoFormat format;
+        gint width, height;
+
+        GST_DEBUG_OBJECT (xvimagesink, "create new pool");
         pool = gst_xvimage_buffer_pool_new (xvimagesink);
+
+        if (!gst_video_format_parse_caps (caps, &format, &width, &height))
+          goto invalid_caps;
+
+        /* the normal size of a frame */
+        size = gst_video_format_get_size (format, width, height);
 
         config = gst_buffer_pool_get_config (pool);
         gst_buffer_pool_config_set (config, caps, size, 0, 0, 0, 0, 16);
@@ -2006,6 +2026,8 @@ gst_xvimagesink_sink_query (GstPad * sinkpad, GstQuery * query)
 
       /* we also support various metadata */
       gst_query_add_allocation_meta (query, GST_META_API_VIDEO);
+
+      gst_object_unref (pool);
       break;
     }
     default:
