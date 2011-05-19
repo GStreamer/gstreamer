@@ -446,8 +446,8 @@ gboolean gst_video_calculate_display_ratio (guint *dar_n, guint *dar_d,
             guint video_par_n, guint video_par_d, 
             guint display_par_n, guint display_par_d);
 
-gboolean gst_video_format_parse_caps (GstCaps *caps, GstVideoFormat *format,
-    int *width, int *height);
+gboolean gst_video_format_parse_caps (const GstCaps *caps,
+    GstVideoFormat *format, int *width, int *height);
 gboolean gst_video_format_parse_caps_interlaced (GstCaps *caps, gboolean *interlaced);
 gboolean gst_video_parse_caps_framerate (GstCaps *caps,
     int *fps_n, int *fps_d);
@@ -480,6 +480,7 @@ int gst_video_format_get_component_height (GstVideoFormat format, int component,
 int gst_video_format_get_component_offset (GstVideoFormat format, int component,
     int width, int height);
 int gst_video_format_get_size (GstVideoFormat format, int width, int height);
+gboolean gst_video_get_size_from_caps (const GstCaps * caps, gint * size);
 gboolean gst_video_format_convert (GstVideoFormat format, int width, int height,
     int fps_n, int fps_d,
     GstFormat src_format, gint64 src_value,
