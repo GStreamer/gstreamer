@@ -650,7 +650,7 @@ AG_GST_CHECK_FEATURE(BZ2, [bz2 library], bz2, [
 dnl *** cdaudio ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_CDAUDIO, true)
 AG_GST_CHECK_FEATURE(CDAUDIO, [cdaudio], cdaudio, [
-  PKG_CHECK_MODULES(CDAUDIO, libcdaudio,
+  PKG_CHECK_MODULES(CDAUDIO, libcdaudio, [
           HAVE_CDAUDIO="yes"
   ], [
           HAVE_CDAUDIO="no"
