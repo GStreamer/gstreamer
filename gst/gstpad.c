@@ -3584,6 +3584,48 @@ flushing:
   }
 }
 
+/* pad offsets */
+
+/**
+ * gst_pad_get_offset:
+ * @pad: a #GstPad
+ *
+ * Get the offset applied to the running time of @pad.
+ *
+ * Returns: the offset.
+ */
+gint64
+gst_pad_get_offset (GstPad * pad)
+{
+  gint64 result;
+
+  g_return_val_if_fail (GST_IS_PAD (pad), 0);
+
+  GST_OBJECT_LOCK (pad);
+  result = pad->offset;
+  GST_OBJECT_UNLOCK (pad);
+
+  return result;
+}
+
+/**
+ * gst_pad_set_offset:
+ * @pad: a #GstPad
+ * @offset: the offset
+ *
+ * Set the offset that will be applied to the running time of @pad.
+ */
+void
+gst_pad_set_offset (GstPad * pad, gint64 offset)
+{
+  g_return_if_fail (GST_IS_PAD (pad));
+
+  GST_OBJECT_LOCK (pad);
+  pad->offset = offset;
+  GST_OBJECT_UNLOCK (pad);
+}
+
+
 /**********************************************************************
  * Data passing functions
  */

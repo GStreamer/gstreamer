@@ -630,6 +630,9 @@ struct _GstPad {
   GstPadGetRangeFunction	 getrangefunc;
   GstPadEventFunction		 eventfunc;
 
+  /* pad offset */
+  gint64                         offset;
+
   /* generic query method */
   GstPadQueryTypeFunction	 querytypefunc;
   GstPadQueryFunction		 queryfunc;
@@ -864,6 +867,10 @@ gboolean		gst_pad_peer_accept_caps		(GstPad * pad, GstCaps *caps);
 /* capsnego for linked pads */
 GstCaps *		gst_pad_get_allowed_caps		(GstPad * pad);
 GstCaps *               gst_pad_get_negotiated_caps             (GstPad * pad);
+
+/* pad offsets */
+gint64                  gst_pad_get_offset                      (GstPad *pad);
+void                    gst_pad_set_offset                      (GstPad *pad, gint64 offset);
 
 /* data passing functions to peer */
 GstFlowReturn		gst_pad_push				(GstPad *pad, GstBuffer *buffer);
