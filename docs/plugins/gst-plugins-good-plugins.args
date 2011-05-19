@@ -461,7 +461,7 @@
 <ARG>
 <NAME>GstUDPSrc::sockfd</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Socket Handle</NICK>
 <BLURB>Socket to use for UDP reception. (-1 == allocate).</BLURB>
@@ -511,7 +511,7 @@
 <ARG>
 <NAME>GstUDPSrc::sock</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>r</FLAGS>
 <NICK>Socket Handle</NICK>
 <BLURB>Socket currently in use for UDP reception. (-1 = no socket).</BLURB>
@@ -1651,7 +1651,7 @@
 <ARG>
 <NAME>GstDV1394Src::port</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[G_MAXULONG,16]</RANGE>
+<RANGE>[-1,16]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Port</NICK>
 <BLURB>Port number (-1 automatic).</BLURB>
@@ -1901,7 +1901,7 @@
 <ARG>
 <NAME>GstTest::allowed-timestamp-deviation</NAME>
 <TYPE>gint64</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>allowed timestamp deviation</NICK>
 <BLURB>allowed average difference in usec between timestamp of next buffer and expected timestamp from analyzing last buffer.</BLURB>
@@ -1911,7 +1911,7 @@
 <ARG>
 <NAME>GstTest::buffer-count</NAME>
 <TYPE>gint64</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>r</FLAGS>
 <NICK>buffer count</NICK>
 <BLURB>number of buffers in stream.</BLURB>
@@ -1921,7 +1921,7 @@
 <ARG>
 <NAME>GstTest::expected-buffer-count</NAME>
 <TYPE>gint64</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>expected buffer count</NICK>
 <BLURB>expected number of buffers in stream.</BLURB>
@@ -1931,7 +1931,7 @@
 <ARG>
 <NAME>GstTest::expected-length</NAME>
 <TYPE>gint64</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>expected length</NICK>
 <BLURB>expected length of stream.</BLURB>
@@ -1951,7 +1951,7 @@
 <ARG>
 <NAME>GstTest::length</NAME>
 <TYPE>gint64</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>r</FLAGS>
 <NICK>length</NICK>
 <BLURB>length of stream.</BLURB>
@@ -1971,7 +1971,7 @@
 <ARG>
 <NAME>GstTest::timestamp-deviation</NAME>
 <TYPE>gint64</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>r</FLAGS>
 <NICK>timestamp deviation</NICK>
 <BLURB>average difference in usec between timestamp of next buffer and expected timestamp from analyzing last buffer.</BLURB>
@@ -2051,7 +2051,7 @@
 <ARG>
 <NAME>GstBreakMyData::set-to</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[G_MAXULONG,255]</RANGE>
+<RANGE>[-1,255]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>set-to</NICK>
 <BLURB>set changed bytes to this value (-1 means random value.</BLURB>
@@ -2391,7 +2391,7 @@
 <ARG>
 <NAME>GstDynUDPSink::sockfd</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[G_MAXULONG,32767]</RANGE>
+<RANGE>[-1,32767]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>socket handle</NICK>
 <BLURB>Socket to use for UDP sending. (-1 == allocate).</BLURB>
@@ -2461,7 +2461,7 @@
 <ARG>
 <NAME>GstMultiUDPSink::sock</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>r</FLAGS>
 <NICK>Socket Handle</NICK>
 <BLURB>Socket currently in use for UDP sending. (-1 == no socket).</BLURB>
@@ -2471,7 +2471,7 @@
 <ARG>
 <NAME>GstMultiUDPSink::sockfd</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Socket Handle</NICK>
 <BLURB>Socket to use for UDP sending. (-1 == allocate).</BLURB>
@@ -2501,7 +2501,7 @@
 <ARG>
 <NAME>GstMultiUDPSink::qos-dscp</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[G_MAXULONG,63]</RANGE>
+<RANGE>[-1,63]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>QoS diff srv code point</NICK>
 <BLURB>Quality of Service, differentiated services code point (-1 default).</BLURB>
@@ -2651,7 +2651,7 @@
 <ARG>
 <NAME>GstXImageSrc::screen-num</NAME>
 <TYPE>guint</TYPE>
-<RANGE><= G_MAXINT</RANGE>
+<RANGE><= G_MAXLONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Screen number</NICK>
 <BLURB>X Screen Number.</BLURB>
@@ -2671,7 +2671,7 @@
 <ARG>
 <NAME>GstXImageSrc::endx</NAME>
 <TYPE>guint</TYPE>
-<RANGE><= G_MAXINT</RANGE>
+<RANGE><= G_MAXLONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>End X</NICK>
 <BLURB>X coordinate of bottom right corner of area to be recorded (0 for bottom right of screen).</BLURB>
@@ -2681,7 +2681,7 @@
 <ARG>
 <NAME>GstXImageSrc::endy</NAME>
 <TYPE>guint</TYPE>
-<RANGE><= G_MAXINT</RANGE>
+<RANGE><= G_MAXLONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>End Y</NICK>
 <BLURB>Y coordinate of bottom right corner of area to be recorded (0 for bottom right of screen).</BLURB>
@@ -2691,7 +2691,7 @@
 <ARG>
 <NAME>GstXImageSrc::startx</NAME>
 <TYPE>guint</TYPE>
-<RANGE><= G_MAXINT</RANGE>
+<RANGE><= G_MAXLONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Start X co-ordinate</NICK>
 <BLURB>X coordinate of top left corner of area to be recorded (0 for top left of screen).</BLURB>
@@ -2701,7 +2701,7 @@
 <ARG>
 <NAME>GstXImageSrc::starty</NAME>
 <TYPE>guint</TYPE>
-<RANGE><= G_MAXINT</RANGE>
+<RANGE><= G_MAXLONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Start Y co-ordinate</NICK>
 <BLURB>Y coordinate of top left corner of area to be recorded (0 for top left of screen).</BLURB>
@@ -2811,7 +2811,7 @@
 <ARG>
 <NAME>GstJpegDec::max-errors</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Maximum Consecutive Decoding Errors</NICK>
 <BLURB>Error out after receiving N consecutive decoding errors (-1 = never fail, 0 = automatic, 1 = fail on first error).</BLURB>
@@ -3121,7 +3121,7 @@
 <ARG>
 <NAME>GstV4l2Src::device-fd</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>r</FLAGS>
 <NICK>File descriptor</NICK>
 <BLURB>File descriptor of the device.</BLURB>
@@ -3391,7 +3391,7 @@
 <ARG>
 <NAME>GstRndBufferSize::max</NAME>
 <TYPE>glong</TYPE>
-<RANGE>[1,G_MAXINT]</RANGE>
+<RANGE>>= 1</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>maximum</NICK>
 <BLURB>maximum buffer size.</BLURB>
@@ -3401,7 +3401,7 @@
 <ARG>
 <NAME>GstRndBufferSize::min</NAME>
 <TYPE>glong</TYPE>
-<RANGE>[0,G_MAXINT]</RANGE>
+<RANGE>>= 0</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>mininum</NICK>
 <BLURB>mininum buffer size.</BLURB>
@@ -3411,7 +3411,7 @@
 <ARG>
 <NAME>GstRndBufferSize::seed</NAME>
 <TYPE>gulong</TYPE>
-<RANGE><= G_MAXUINT</RANGE>
+<RANGE></RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>random number seed</NICK>
 <BLURB>seed for randomness (initialized when going from READY to PAUSED).</BLURB>
@@ -20111,7 +20111,7 @@
 <ARG>
 <NAME>GstHDV1394Src::port</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[G_MAXULONG,16]</RANGE>
+<RANGE>[-1,16]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Port</NICK>
 <BLURB>Port number (-1 automatic).</BLURB>
@@ -20399,6 +20399,36 @@
 </ARG>
 
 <ARG>
+<NAME>GstDeinterlace::drop-orphans</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>drop-orphans</NICK>
+<BLURB>Drop orphan fields at the beginning of telecine patterns in active locking mode.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDeinterlace::ignore-obscure</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ignore-obscure</NICK>
+<BLURB>Ignore obscure telecine patterns (only consider P, I and 2:3 variants).</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDeinterlace::locking</NAME>
+<TYPE>GstDeinterlaceLocking</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>locking</NICK>
+<BLURB>Pattern locking mode.</BLURB>
+<DEFAULT>No pattern locking</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstAgingTV::color-aging</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
@@ -20461,7 +20491,7 @@
 <ARG>
 <NAME>GstOpTV::threshold</NAME>
 <TYPE>guint</TYPE>
-<RANGE><= G_MAXINT</RANGE>
+<RANGE><= G_MAXLONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Threshold</NICK>
 <BLURB>Luma threshold.</BLURB>
@@ -20481,7 +20511,7 @@
 <ARG>
 <NAME>GstRadioacTV::interval</NAME>
 <TYPE>guint</TYPE>
-<RANGE><= G_MAXINT</RANGE>
+<RANGE><= G_MAXLONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Interval</NICK>
 <BLURB>Snapshot interval (in strobe mode).</BLURB>
@@ -20751,7 +20781,7 @@
 <ARG>
 <NAME>GstRtpSession::rtcp-rr-bandwidth</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>RTCP RR bandwidth</NICK>
 <BLURB>The RTCP bandwidth used for receivers in bytes per second (-1 = default).</BLURB>
@@ -20761,7 +20791,7 @@
 <ARG>
 <NAME>GstRtpSession::rtcp-rs-bandwidth</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>RTCP RS bandwidth</NICK>
 <BLURB>The RTCP bandwidth used for senders in bytes per second (-1 = default).</BLURB>
@@ -20801,7 +20831,7 @@
 <ARG>
 <NAME>GstV4l2Sink::device-fd</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>r</FLAGS>
 <NICK>File descriptor</NICK>
 <BLURB>File descriptor of the device.</BLURB>
