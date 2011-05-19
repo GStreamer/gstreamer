@@ -53,6 +53,7 @@
     --zoom                            Zoom (100 = 1x (default), 200 = 2x etc.)
     --wrapper-source                  Camera source wrapper used for setting the video source
     --video-source                    Video source used in still capture and video recording
+    --video-device                    Video device to be set on the video source (e.g. /dev/video0)
     --audio-source                    Audio source used in video recording
     --image-pp                        List of image post-processing elements separated with comma
     --viewfinder-sink                 Viewfinder sink (default = fakesink)
@@ -120,6 +121,7 @@ static GMainLoop *loop = NULL;
 
 /* commandline options */
 static gchar *videosrc_name = NULL;
+static gchar *videodevice_name = NULL;
 static gchar *audiosrc_name = NULL;
 static gchar *wrappersrc_name = NULL;
 static gchar *imagepp_name = NULL;
@@ -446,9 +448,6 @@ setup_pipeline_element (GstElement * element, const gchar * property_name,
 
     elem = gst_parse_launch (element_name, &error);
     if (elem) {
-      if (g_object_class_find_property (G_OBJECT_GET_CLASS (elem), "device")) {
-        g_object_set (elem, "device", "/dev/video1", NULL);
-      }
       g_object_set (element, property_name, elem, NULL);
     } else {
       GST_WARNING ("can't create element '%s' for property '%s'", element_name,
@@ -526,6 +525,7 @@ setup_pipeline (void)
 
   if (videosrc_name) {
     GstElement *wrapper;
+    GstElement *videosrc;
 
     if (wrappersrc_name)
       wrapper = gst_element_factory_make (wrappersrc_name, NULL);
@@ -536,6 +536,13 @@ setup_pipeline (void)
       g_object_set (camerabin, "camera-src", wrapper, NULL);
     } else {
       GST_WARNING ("Failed to set videosrc to %s", videosrc_name);
+    }
+
+    g_object_get (wrapper, "video-src", &videosrc, NULL);
+    if (videosrc && videodevice_name &&
+        g_object_class_find_property (G_OBJECT_GET_CLASS (videosrc),
+            "device")) {
+      g_object_set (videosrc, "device", videodevice_name, NULL);
     }
   }
 
@@ -799,6 +806,8 @@ main (int argc, char *argv[])
         NULL},
     {"video-source", '\0', 0, G_OPTION_ARG_STRING, &videosrc_name,
         "Video source used in still capture and video recording", NULL},
+    {"video-device", '\0', 0, G_OPTION_ARG_STRING, &videodevice_name,
+        "Video device to be set on the video source", NULL},
     {"audio-source", '\0', 0, G_OPTION_ARG_STRING, &audiosrc_name,
         "Audio source used in video recording", NULL},
     {"image-pp", '\0', 0, G_OPTION_ARG_STRING, &imagepp_name,
@@ -889,6 +898,7 @@ main (int argc, char *argv[])
   g_free (ev_option);
   g_free (wrappersrc_name);
   g_free (videosrc_name);
+  g_free (videodevice_name);
   g_free (audiosrc_name);
   g_free (imagepp_name);
   g_free (vfsink_name);
