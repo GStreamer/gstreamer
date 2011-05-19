@@ -140,7 +140,6 @@ static gboolean gst_visual_src_event (GstPad * pad, GstEvent * event);
 static gboolean gst_visual_src_query (GstPad * pad, GstQuery * query);
 
 static gboolean gst_visual_sink_setcaps (GstPad * pad, GstCaps * caps);
-static gboolean gst_visual_src_setcaps (GstPad * pad, GstCaps * caps);
 static GstCaps *gst_visual_getcaps (GstPad * pad, GstCaps * filter);
 static void libvisual_log_handler (const char *message, const char *funcname,
     void *priv);
@@ -220,7 +219,6 @@ gst_visual_init (GstVisual * visual)
   gst_element_add_pad (GST_ELEMENT (visual), visual->sinkpad);
 
   visual->srcpad = gst_pad_new_from_static_template (&src_template, "src");
-  gst_pad_set_setcaps_function (visual->srcpad, gst_visual_src_setcaps);
   gst_pad_set_getcaps_function (visual->srcpad, gst_visual_getcaps);
   gst_pad_set_event_function (visual->srcpad, gst_visual_src_event);
   gst_pad_set_query_function (visual->srcpad, gst_visual_src_query);
@@ -327,9 +325,8 @@ beach:
 }
 
 static gboolean
-gst_visual_src_setcaps (GstPad * pad, GstCaps * caps)
+gst_visual_src_setcaps (GstVisual * visual, GstCaps * caps)
 {
-  GstVisual *visual = GST_VISUAL (gst_pad_get_parent (pad));
   GstStructure *structure;
   gint depth, pitch;
 
@@ -361,14 +358,14 @@ gst_visual_src_setcaps (GstPad * pad, GstCaps * caps)
   visual->duration =
       gst_util_uint64_scale_int (GST_SECOND, visual->fps_d, visual->fps_n);
 
-  gst_object_unref (visual);
+  gst_pad_push_event (visual->srcpad, gst_event_new_caps (caps));
+
   return TRUE;
 
   /* ERRORS */
 error:
   {
     GST_DEBUG_OBJECT (visual, "error parsing caps");
-    gst_object_unref (visual);
     return FALSE;
   }
 }
@@ -434,7 +431,7 @@ gst_vis_src_negotiate (GstVisual * visual)
   gst_structure_fixate_field_nearest_fraction (structure, "framerate",
       DEFAULT_FPS_N, DEFAULT_FPS_D);
 
-  gst_pad_set_caps (visual->srcpad, target);
+  gst_visual_src_setcaps (visual, target);
   gst_caps_unref (target);
 
   /* try to get a bufferpool now */
