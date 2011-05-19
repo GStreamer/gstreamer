@@ -44,11 +44,6 @@ DOC_SOURCE_DIR = $(top_srcdir)
 # Extra options to supply to gtkdoc-scan.
 SCAN_OPTIONS=
 
-# FIXME :
-# there's something wrong with gstreamer-sections.txt not being in the dist
-# maybe it doesn't resolve; we're adding it below for now
-#EXTRA_DIST = gstreamer.types.in gstreamer.hierarchy $(DOC_MODULE)-sections.txt gstreamer-sections.txt $(DOC_MAIN_SGML_FILE)
-
 # Extra options to supply to gtkdoc-mkdb.
 MKDB_OPTIONS=--sgml-mode --source-suffixes=c,h,cc,m
 
