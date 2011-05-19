@@ -4755,7 +4755,6 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
       break;
     }
     case GST_EVENT_SEGMENT:
-    {
       /* check if we need to adjust the segment */
       if (offset != 0 && peerpad != NULL) {
         GstSegment segment;
@@ -4769,7 +4768,6 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
         event = gst_event_new_segment (&segment);
       }
       break;
-    }
     default:
       break;
   }
@@ -4926,6 +4924,24 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
        * event before checking the flushing flag. */
       if (sticky) {
         guint idx;
+
+        switch (GST_EVENT_TYPE (event)) {
+          case GST_EVENT_SEGMENT:
+            if (pad->offset != 0) {
+              GstSegment segment;
+
+              /* copy segment values */
+              gst_event_copy_segment (event, &segment);
+              gst_event_unref (event);
+
+              /* adjust and make a new event with the offset applied */
+              segment.base += pad->offset;
+              event = gst_event_new_segment (&segment);
+            }
+            break;
+          default:
+            break;
+        }
 
         idx = GST_EVENT_STICKY_IDX (event);
         GST_LOG_OBJECT (pad, "storing sticky event %s at index %u",
