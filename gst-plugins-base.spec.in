@@ -223,7 +223,7 @@ GStreamer Plugins Base library development and header files.
 %{_includedir}/gstreamer-%{majorminor}/gst/pbutils/gstdiscoverer.h
 %{_includedir}/gstreamer-%{majorminor}/gst/pbutils/gstpluginsbaseversion.h
 %{_includedir}/gstreamer-%{majorminor}/gst/tag/xmpwriter.h
-
+%{_includedir}/gstreamer-%{majorminor}/gst/audio/gstaudioiec61937.h
 
 %{_libdir}/libgstfft-%{majorminor}.so
 %{_libdir}/libgstrtsp-%{majorminor}.so
