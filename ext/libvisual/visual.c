@@ -432,7 +432,6 @@ gst_vis_src_negotiate (GstVisual * visual)
       DEFAULT_FPS_N, DEFAULT_FPS_D);
 
   gst_visual_src_setcaps (visual, target);
-  gst_caps_unref (target);
 
   /* try to get a bufferpool now */
   /* find a pool for the negotiated caps now */
@@ -456,7 +455,7 @@ gst_vis_src_negotiate (GstVisual * visual)
     pool = gst_buffer_pool_new ();
 
     config = gst_buffer_pool_get_config (pool);
-    gst_buffer_pool_config_set (config, caps, size, min, max, prefix, 0,
+    gst_buffer_pool_config_set (config, target, size, min, max, prefix, 0,
         alignment);
     gst_buffer_pool_set_config (pool, config);
   }
@@ -467,6 +466,8 @@ gst_vis_src_negotiate (GstVisual * visual)
 
   /* and activate */
   gst_buffer_pool_set_active (pool, TRUE);
+
+  gst_caps_unref (target);
 
   return TRUE;
 
@@ -557,6 +558,11 @@ gst_visual_src_event (GstPad * pad, GstEvent * event)
       res = gst_pad_push_event (visual->sinkpad, event);
       break;
     }
+    case GST_EVENT_RECONFIGURE:
+      /* dont't forward */
+      gst_event_unref (event);
+      res = TRUE;
+      break;
     default:
       res = gst_pad_event_default (pad, event);
       break;
@@ -627,22 +633,20 @@ gst_visual_src_query (GstPad * pad, GstQuery * query)
  * function will negotiate one. After calling this function, a
  * reverse negotiation could have happened. */
 static GstFlowReturn
-get_buffer (GstVisual * visual, GstBuffer ** outbuf)
+ensure_negotiated (GstVisual * visual)
 {
-  GstFlowReturn ret;
+  gboolean reconfigure;
+
+  GST_OBJECT_LOCK (visual->srcpad);
+  reconfigure = GST_PAD_NEEDS_RECONFIGURE (visual->srcpad);
+  GST_OBJECT_FLAG_UNSET (visual->srcpad, GST_PAD_NEED_RECONFIGURE);
+  GST_OBJECT_UNLOCK (visual->srcpad);
 
   /* we don't know an output format yet, pick one */
-  if (!gst_pad_has_current_caps (visual->srcpad)) {
+  if (reconfigure || !gst_pad_has_current_caps (visual->srcpad)) {
     if (!gst_vis_src_negotiate (visual))
       return GST_FLOW_NOT_NEGOTIATED;
   }
-
-  GST_DEBUG_OBJECT (visual, "allocating output buffer");
-
-  ret = gst_buffer_pool_acquire_buffer (visual->pool, outbuf, NULL);
-  if (ret != GST_FLOW_OK)
-    return ret;
-
   return GST_FLOW_OK;
 }
 
@@ -657,14 +661,11 @@ gst_visual_chain (GstPad * pad, GstBuffer * buffer)
 
   GST_DEBUG_OBJECT (visual, "chain function called");
 
-  /* If we don't have an output format yet, preallocate a buffer to try and
-   * set one */
-  if (!gst_pad_has_current_caps (visual->srcpad)) {
-    ret = get_buffer (visual, &outbuf);
-    if (ret != GST_FLOW_OK) {
-      gst_buffer_unref (buffer);
-      goto beach;
-    }
+  /* Make sure have an output format */
+  ret = ensure_negotiated (visual);
+  if (ret != GST_FLOW_OK) {
+    gst_buffer_unref (buffer);
+    goto beach;
   }
 
   /* resync on DISCONT */
@@ -815,7 +816,8 @@ gst_visual_chain (GstPad * pad, GstBuffer * buffer)
     /* alloc a buffer if we don't have one yet, this happens
      * when we pushed a buffer in this while loop before */
     if (outbuf == NULL) {
-      ret = get_buffer (visual, &outbuf);
+      GST_DEBUG_OBJECT (visual, "allocating output buffer");
+      ret = gst_buffer_pool_acquire_buffer (visual->pool, &outbuf, NULL);
       if (ret != GST_FLOW_OK) {
         gst_adapter_unmap (visual->adapter, 0);
         goto beach;
