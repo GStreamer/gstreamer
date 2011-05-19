@@ -46,6 +46,8 @@ G_BEGIN_DECLS
 #define GST_APEX_SINK_NAME			"apexsink"
 #define GST_APEX_SINK_JACKTYPE_TYPE		(gst_apexsink_jacktype_get_type())
 #define GST_APEX_SINK_JACKSTATUS_TYPE		(gst_apexsink_jackstatus_get_type())
+#define GST_APEX_SINK_GENERATION_TYPE		(gst_apexsink_generation_get_type())
+#define GST_APEX_SINK_TRANSPORT_PROTOCOL_TYPE	(gst_apexsink_transport_protocol_get_type())
 /* ApEx classes declaration */
 typedef struct _GstApExSink GstApExSink;
 typedef struct _GstApExSinkClass GstApExSinkClass;
@@ -59,10 +61,19 @@ struct _GstApExSink
   gchar *host;
   guint port;
   guint volume;
+  GstApExGeneration generation;
+  GstApExTransportProtocol transport_protocol;
 
-  /* private attributes : latency time local copy, tracks list of the mixer interface */
+  /* private attributes : 
+   * latency time local copy 
+   * tracks list of the mixer interface
+   * clock for sleeping
+   * clock ID for sleeping / canceling sleep
+   */
   guint64 latency_time;
   GList *tracks;
+  GstClock *clock;
+  GstClockID clock_id;
 
   /* private apex client */
   GstApExRAOP *gst_apexraop;
@@ -73,9 +84,11 @@ struct _GstApExSinkClass
   GstAudioSinkClass parent_class;
 };
 
-/* genum jack access */
+/* genums */
 GType gst_apexsink_jackstatus_get_type (void);
 GType gst_apexsink_jacktype_get_type (void);
+GType gst_apexsink_generation_get_type (void);
+GType gst_apexsink_transport_protocol_get_type (void);
 
 /* audio sink standard api */
 GType gst_apexsink_get_type (void);
