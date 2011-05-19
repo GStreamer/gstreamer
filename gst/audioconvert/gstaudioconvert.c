@@ -503,15 +503,15 @@ append_with_other_format (GstCaps * caps, GstStructure * s, gboolean isfloat)
   if (isfloat) {
     s2 = gst_structure_copy (s);
     gst_structure_set_name (s2, "audio/x-raw-int");
-    s = make_lossless_changes (s2, FALSE);
+    make_lossless_changes (s2, FALSE);
     /* If 64 bit float was allowed; remove width 64: we don't support it for 
      * integer*/
-    strip_width_64 (s);
+    strip_width_64 (s2);
     gst_caps_append_structure (caps, s2);
   } else {
     s2 = gst_structure_copy (s);
     gst_structure_set_name (s2, "audio/x-raw-float");
-    s = make_lossless_changes (s2, TRUE);
+    make_lossless_changes (s2, TRUE);
     gst_caps_append_structure (caps, s2);
   }
 }
