@@ -9320,6 +9320,7 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
     case GST_MAKE_FOURCC ('V', 'P', '8', '0'):
       _codec ("On2 VP8");
       caps = gst_caps_from_string ("video/x-vp8");
+      break;
     case FOURCC_ovc1:
       _codec ("VC-1");
       caps = gst_caps_new_simple ("video/x-wmv",
