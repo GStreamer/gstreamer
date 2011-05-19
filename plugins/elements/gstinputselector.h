@@ -58,9 +58,6 @@ struct _GstInputSelector {
   guint padcount;
   gboolean sync_streams;
 
-  GstSegment segment;      /* the output segment */
-  gboolean pending_close;  /* if we should push a close first */
-
   GMutex *lock;
   GCond *cond;
   gboolean blocked;
@@ -71,8 +68,6 @@ struct _GstInputSelectorClass {
   GstElementClass parent_class;
 
   gint64 (*block)	(GstInputSelector *self);
-  void (*switch_)	(GstInputSelector *self, GstPad *pad,
-                         gint64 stop_time, gint64 start_time);
 };
 
 GType gst_input_selector_get_type (void);
