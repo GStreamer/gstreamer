@@ -1602,6 +1602,8 @@ gst_h264_parse_push_codec_buffer (GstH264Parse * h264parse, GstBuffer * nal,
 static GstFlowReturn
 gst_h264_parse_push_buffer (GstH264Parse * h264parse, GstBuffer * buf)
 {
+  GstFlowReturn res = GST_FLOW_OK;
+
   /* We can send pending events if this is the first call, since we now have
    * caps for the srcpad */
   if (G_UNLIKELY (h264parse->pending_segment != NULL)) {
@@ -1616,6 +1618,33 @@ gst_h264_parse_push_buffer (GstH264Parse * h264parse, GstBuffer * buf)
 
       g_list_free (h264parse->pending_events);
       h264parse->pending_events = NULL;
+    }
+  }
+
+  if (G_UNLIKELY (h264parse->width == 0 || h264parse->height == 0)) {
+    GST_DEBUG ("Delaying actual push until we are configured");
+    h264parse->gather = g_list_append (h264parse->gather, buf);
+    goto beach;
+  }
+
+  if (G_UNLIKELY (h264parse->gather)) {
+    GList *pendingbuffers = h264parse->gather;
+    GList *tmp;
+
+    GST_DEBUG ("Pushing out pending buffers");
+
+    /* Yes, we're recursively calling in... */
+    h264parse->gather = NULL;
+    for (tmp = pendingbuffers; tmp; tmp = tmp->next) {
+      res = gst_h264_parse_push_buffer (h264parse, (GstBuffer *) tmp->data);
+      if (res != GST_FLOW_OK && res != GST_FLOW_NOT_LINKED)
+        break;
+    }
+    g_list_free (pendingbuffers);
+
+    if (res != GST_FLOW_OK && res != GST_FLOW_NOT_LINKED) {
+      gst_buffer_unref (buf);
+      goto beach;
     }
   }
 
@@ -1740,7 +1769,10 @@ gst_h264_parse_push_buffer (GstH264Parse * h264parse, GstBuffer * buf)
   }
 
   gst_buffer_set_caps (buf, h264parse->src_caps);
-  return gst_pad_push (h264parse->srcpad, buf);
+  res = gst_pad_push (h264parse->srcpad, buf);
+
+beach:
+  return res;
 }
 
 /* takes over ownership of nal and returns fresh buffer */
