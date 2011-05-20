@@ -411,7 +411,7 @@ gst_tag_get_language_code_iso_639_2X (const gchar * lang_code, guint8 flags)
       } else if (i > 0 && (iso_639_codes[i - 1].flags & flags) == flags &&
           iso_639_codes[i].name_offset == iso_639_codes[i - 1].name_offset) {
         return iso_639_codes[i - 1].iso_639_2;
-      } else if (i < G_N_ELEMENTS (iso_639_codes) &&
+      } else if ((i + 1) < G_N_ELEMENTS (iso_639_codes) &&
           (iso_639_codes[i + 1].flags & flags) == flags &&
           iso_639_codes[i].name_offset == iso_639_codes[i + 1].name_offset) {
         return iso_639_codes[i + 1].iso_639_2;
