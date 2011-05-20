@@ -1058,8 +1058,12 @@ static gboolean
 gst_input_selector_event (GstPad * pad, GstEvent * event)
 {
   GstInputSelector *sel;
-  gboolean res = FALSE;
-  GstPad *otherpad;
+  gboolean result = FALSE;
+  GstIterator *iter;
+  gboolean done = FALSE;
+  GValue item = { 0, };
+  GstPad *eventpad;
+  GList *pushed_pads = NULL;
 
   sel = GST_INPUT_SELECTOR (gst_pad_get_parent (pad));
   if (G_UNLIKELY (sel == NULL)) {
@@ -1067,16 +1071,68 @@ gst_input_selector_event (GstPad * pad, GstEvent * event)
     return FALSE;
   }
 
-  otherpad = gst_input_selector_get_linked_pad (sel, pad, TRUE);
-  if (otherpad) {
-    res = gst_pad_push_event (otherpad, event);
+  /* Send upstream events to all sinkpads */
+  iter = gst_element_iterate_sink_pads (GST_ELEMENT_CAST (sel));
 
-    gst_object_unref (otherpad);
-  } else
-    gst_event_unref (event);
+  /* This is now essentially a copy of gst_pad_event_default_dispatch
+   * with a different iterator */
+  while (!done) {
+    switch (gst_iterator_next (iter, &item)) {
+      case GST_ITERATOR_OK:
+        eventpad = g_value_get_object (&item);
 
-  gst_object_unref (sel);
-  return res;
+        /* if already pushed,  skip */
+        if (g_list_find (pushed_pads, eventpad)) {
+          g_value_reset (&item);
+          break;
+        }
+
+        if (GST_PAD_IS_SRC (eventpad)) {
+          /* for each pad we send to, we should ref the event; it's up
+           * to downstream to unref again when handled. */
+          GST_LOG_OBJECT (pad, "Reffing and sending event %p (%s) to %s:%s",
+              event, GST_EVENT_TYPE_NAME (event),
+              GST_DEBUG_PAD_NAME (eventpad));
+          gst_event_ref (event);
+          result |= gst_pad_push_event (eventpad, event);
+        } else {
+          /* we only send the event on one pad, multi-sinkpad elements
+           * should implement a handler */
+          GST_LOG_OBJECT (pad, "sending event %p (%s) to one sink pad %s:%s",
+              event, GST_EVENT_TYPE_NAME (event),
+              GST_DEBUG_PAD_NAME (eventpad));
+          result = gst_pad_push_event (eventpad, event);
+          done = TRUE;
+          event = NULL;
+        }
+
+        pushed_pads = g_list_prepend (pushed_pads, eventpad);
+
+        g_value_reset (&item);
+        break;
+      case GST_ITERATOR_RESYNC:
+        /* We don't reset the result here because we don't push the event
+         * again on pads that got the event already and because we need
+         * to consider the result of the previous pushes */
+        gst_iterator_resync (iter);
+        break;
+      case GST_ITERATOR_ERROR:
+        GST_ERROR_OBJECT (pad, "Could not iterate over internally linked pads");
+        done = TRUE;
+        break;
+      case GST_ITERATOR_DONE:
+        done = TRUE;
+        break;
+    }
+  }
+  g_value_unset (&item);
+  gst_iterator_free (iter);
+
+  g_list_free (pushed_pads);
+
+  gst_event_unref (event);
+
+  return result;
 }
 
 /* query on the srcpad. We override this function because by default it will
