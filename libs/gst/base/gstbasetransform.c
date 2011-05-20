@@ -1202,7 +1202,18 @@ gst_base_transform_query (GstPad * pad, GstQuery * query)
   otherpad = (pad == trans->srcpad) ? trans->sinkpad : trans->srcpad;
 
   switch (GST_QUERY_TYPE (query)) {
-    case GST_QUERY_POSITION:{
+    case GST_QUERY_ALLOCATION:
+    {
+      /* can only be done on the sinkpad */
+      if (!GST_PAD_IS_SINK (pad))
+        goto done;
+
+      /* if we negotiated passthrough */
+      ret = FALSE;
+      break;
+    }
+    case GST_QUERY_POSITION:
+    {
       GstFormat format;
 
       gst_query_parse_position (query, &format, NULL);
@@ -1230,6 +1241,7 @@ gst_base_transform_query (GstPad * pad, GstQuery * query)
       break;
   }
 
+done:
   gst_object_unref (trans);
   return ret;
 }
@@ -1250,7 +1262,7 @@ gst_base_transform_query_type (GstPad * pad)
  * This function can do renegotiation on the source pad
  *
  * The output buffer is always writable. outbuf can be equal to
- * inbuf, the caller should be prepared for this and perform 
+ * inbuf, the caller should be prepared for this and perform
  * appropriate refcounting.
  */
 static GstFlowReturn
@@ -1260,7 +1272,7 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
   GstBaseTransformClass *bclass;
   GstBaseTransformPrivate *priv;
   GstFlowReturn ret = GST_FLOW_OK;
-  gboolean discard, copymeta;
+  gboolean copymeta;
   gsize insize, outsize;
   GstCaps *incaps = NULL, *outcaps = NULL;
 
@@ -1279,8 +1291,6 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
      * in order to get upstream negotiation. The output size is the same as the
      * input size. */
     outsize = insize;
-    /* we always alloc and discard here */
-    discard = TRUE;
   } else {
     gboolean want_in_place = (bclass->transform_ip != NULL)
         && trans->always_in_place;
@@ -1289,10 +1299,6 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
       GST_DEBUG_OBJECT (trans, "doing inplace alloc");
       /* we alloc a buffer of the same size as the input */
       outsize = insize;
-      /* only discard it when the input was not writable, otherwise, we reuse
-       * the input buffer. */
-      discard = gst_buffer_is_writable (in_buf);
-      GST_DEBUG_OBJECT (trans, "discard: %d", discard);
     } else {
       incaps = gst_pad_get_current_caps (trans->sinkpad);
       outcaps = gst_pad_get_current_caps (trans->srcpad);
@@ -1303,8 +1309,6 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
               GST_PAD_SINK, incaps, insize, outcaps, &outsize)) {
         goto unknown_size;
       }
-      /* never discard this buffer, we need it for storing the output */
-      discard = FALSE;
     }
   }
 
@@ -1332,10 +1336,6 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
      * a reffed inbuf, which is exactly what we don't want :), oh well.. */
     if (in_buf == *out_buf)
       gst_buffer_unref (in_buf);
-
-    /* never discard the buffer from the prepare_buffer method */
-    if (*out_buf != NULL)
-      discard = FALSE;
   }
 
   if (ret != GST_FLOW_OK)
@@ -1344,10 +1344,9 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
   if (*out_buf == NULL) {
     if (trans->passthrough) {
       GST_DEBUG_OBJECT (trans, "Avoiding pad alloc");
-      *out_buf = gst_buffer_ref (in_buf);
+      *out_buf = in_buf;
     } else {
       GST_DEBUG_OBJECT (trans, "doing alloc of size %u", outsize);
-
       *out_buf = gst_buffer_new_and_alloc (outsize);
     }
   }
@@ -1356,53 +1355,35 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
   if (*out_buf == NULL)
     goto no_buffer;
 
-  copymeta = FALSE;
-  if (*out_buf == NULL) {
-    if (!discard) {
-      GST_DEBUG_OBJECT (trans, "make default output buffer of size %d",
-          outsize);
-      /* no valid buffer yet, make one, metadata is writable */
-      *out_buf = gst_buffer_new_and_alloc (outsize);
-      gst_buffer_copy_into (*out_buf, in_buf,
-          GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
-    } else {
-      GST_DEBUG_OBJECT (trans, "reuse input buffer");
-      *out_buf = in_buf;
-    }
-  } else {
-    if (trans->passthrough && in_buf != *out_buf) {
-      /* we are asked to perform a passthrough transform but the input and
-       * output buffers are different. We have to discard the output buffer and
-       * reuse the input buffer. */
-      GST_DEBUG_OBJECT (trans, "passthrough but different buffers");
-      discard = TRUE;
-    }
-    if (discard) {
-      GST_DEBUG_OBJECT (trans, "discard buffer, reuse input buffer");
-      gst_buffer_unref (*out_buf);
-      *out_buf = in_buf;
-    } else {
-      GST_DEBUG_OBJECT (trans, "using allocated buffer in %p, out %p", in_buf,
-          *out_buf);
-      /* if we have different buffers, check if the metadata is ok */
-      if (*out_buf != in_buf) {
-        guint mask;
+  if (trans->passthrough && in_buf != *out_buf) {
+    /* we are asked to perform a passthrough transform but the input and
+     * output buffers are different. We have to discard the output buffer and
+     * reuse the input buffer. */
+    GST_DEBUG_OBJECT (trans, "passthrough but different buffers");
+    gst_buffer_unref (*out_buf);
+    *out_buf = in_buf;
+  }
+  GST_DEBUG_OBJECT (trans, "using allocated buffer in %p, out %p", in_buf,
+      *out_buf);
 
-        mask = GST_BUFFER_FLAG_PREROLL | GST_BUFFER_FLAG_IN_CAPS |
-            GST_BUFFER_FLAG_DELTA_UNIT | GST_BUFFER_FLAG_DISCONT |
-            GST_BUFFER_FLAG_GAP | GST_BUFFER_FLAG_MEDIA1 |
-            GST_BUFFER_FLAG_MEDIA2 | GST_BUFFER_FLAG_MEDIA3;
-        /* see if the flags and timestamps match */
-        copymeta =
-            (GST_MINI_OBJECT_FLAGS (*out_buf) & mask) ==
-            (GST_MINI_OBJECT_FLAGS (in_buf) & mask);
-        copymeta |=
-            GST_BUFFER_TIMESTAMP (*out_buf) != GST_BUFFER_TIMESTAMP (in_buf) ||
-            GST_BUFFER_DURATION (*out_buf) != GST_BUFFER_DURATION (in_buf) ||
-            GST_BUFFER_OFFSET (*out_buf) != GST_BUFFER_OFFSET (in_buf) ||
-            GST_BUFFER_OFFSET_END (*out_buf) != GST_BUFFER_OFFSET_END (in_buf);
-      }
-    }
+  /* if we have different buffers, check if the metadata is ok */
+  copymeta = FALSE;
+  if (*out_buf != in_buf) {
+    guint mask;
+
+    mask = GST_BUFFER_FLAG_PREROLL | GST_BUFFER_FLAG_IN_CAPS |
+        GST_BUFFER_FLAG_DELTA_UNIT | GST_BUFFER_FLAG_DISCONT |
+        GST_BUFFER_FLAG_GAP | GST_BUFFER_FLAG_MEDIA1 |
+        GST_BUFFER_FLAG_MEDIA2 | GST_BUFFER_FLAG_MEDIA3;
+    /* see if the flags and timestamps match */
+    copymeta =
+        (GST_MINI_OBJECT_FLAGS (*out_buf) & mask) ==
+        (GST_MINI_OBJECT_FLAGS (in_buf) & mask);
+    copymeta |=
+        GST_BUFFER_TIMESTAMP (*out_buf) != GST_BUFFER_TIMESTAMP (in_buf) ||
+        GST_BUFFER_DURATION (*out_buf) != GST_BUFFER_DURATION (in_buf) ||
+        GST_BUFFER_OFFSET (*out_buf) != GST_BUFFER_OFFSET (in_buf) ||
+        GST_BUFFER_OFFSET_END (*out_buf) != GST_BUFFER_OFFSET_END (in_buf);
   }
 
   /* we need to modify the metadata when the element is not gap aware,
