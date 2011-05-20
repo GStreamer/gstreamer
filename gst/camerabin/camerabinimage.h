@@ -55,7 +55,8 @@ struct _GstCameraBinImage
   GstElement *csp;
   GstElement *enc;
   GstElement *app_enc;
-  GstElement *meta_mux;
+  GstElement *formatter;
+  GstElement *app_formatter;
   GstElement *sink;
 
   GstCameraBinFlags flags;
@@ -77,12 +78,17 @@ gst_camerabin_image_set_postproc (GstCameraBinImage * img,
     GstElement * postproc);
 
 void
+gst_camerabin_image_set_formatter (GstCameraBinImage * img, GstElement * formatter);
+
+void
 gst_camerabin_image_set_flags (GstCameraBinImage * img,
     GstCameraBinFlags flags);
 
 GstElement *gst_camerabin_image_get_encoder (GstCameraBinImage * img);
 
 GstElement *gst_camerabin_image_get_postproc (GstCameraBinImage * img);
+
+GstElement *gst_camerabin_image_get_formatter (GstCameraBinImage * img);
 
 gboolean gst_camerabin_image_prepare_elements (GstCameraBinImage * imagebin);
 

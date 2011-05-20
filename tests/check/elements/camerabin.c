@@ -157,7 +157,7 @@ static void
 setup_camerabin_elements (GstElement * camera)
 {
   GstElement *vfsink, *audiosrc, *videosrc, *audioenc, *videoenc, *imageenc,
-      *videomux, *viewfinder_filter, *imagepp, *videopp;
+      *videomux, *viewfinder_filter, *imagepp, *videopp, *formatter;
   GstCaps *audiocaps, *videocaps;
 
   /* Use fakesink for view finder */
@@ -181,6 +181,7 @@ setup_camerabin_elements (GstElement * camera)
   viewfinder_filter = gst_element_factory_make ("identity", NULL);
   imagepp = gst_element_factory_make ("identity", NULL);
   videopp = gst_element_factory_make ("identity", NULL);
+  formatter = gst_element_factory_make ("jifmux", NULL);
 
   if (set_and_check_camerabin_element (camera, "viewfinder-sink", vfsink)
       && set_and_check_camerabin_element (camera, "audio-source", audiosrc)
@@ -194,7 +195,8 @@ setup_camerabin_elements (GstElement * camera)
       && set_and_check_camerabin_element (camera, "image-post-processing",
           imagepp)
       && set_and_check_camerabin_element (camera, "video-post-processing",
-          videopp)) {
+          videopp)
+      && set_and_check_camerabin_element (camera, "image-formatter", formatter)) {
     GST_INFO ("element properties set and checked");
   } else {
     GST_WARNING ("error setting up test plugins");

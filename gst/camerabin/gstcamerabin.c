@@ -2851,6 +2851,19 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
           GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
+   *  GstCameraBin:image-formatter:
+   *
+   * Set up an image formatter (for example, jifmux) element.
+   * This property can only be set while #GstCameraBin is in NULL state.
+   * The ownership of the element will be taken by #GstCameraBin.
+   */
+
+  g_object_class_install_property (gobject_class, ARG_IMAGE_FORMATTER,
+      g_param_spec_object ("image-formatter", "Image formatter",
+          "Image formatter GStreamer element (default is jifmux)",
+          GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
    *  GstCameraBin:video-post-processing:
    *
    * Set up an element to do video post processing.
@@ -3482,6 +3495,14 @@ gst_camerabin_set_property (GObject * object, guint prop_id,
       gst_camerabin_image_set_encoder (GST_CAMERABIN_IMAGE (camera->imgbin),
           g_value_get_object (value));
       break;
+    case ARG_IMAGE_FORMATTER:
+      if (GST_STATE (camera->imgbin) != GST_STATE_NULL) {
+        GST_WARNING_OBJECT (camera,
+            "can't use set element until next image bin NULL to READY state change");
+      }
+      gst_camerabin_image_set_formatter (GST_CAMERABIN_IMAGE (camera->imgbin),
+          g_value_get_object (value));
+      break;
     case ARG_VF_SINK:
       if (GST_STATE (camera) != GST_STATE_NULL) {
         GST_ELEMENT_ERROR (camera, CORE, FAILED,
@@ -3722,6 +3743,11 @@ gst_camerabin_get_property (GObject * object, guint prop_id,
     case ARG_IMAGE_ENC:
       g_value_set_object (value,
           gst_camerabin_image_get_encoder (GST_CAMERABIN_IMAGE
+              (camera->imgbin)));
+      break;
+    case ARG_IMAGE_FORMATTER:
+      g_value_set_object (value,
+          gst_camerabin_image_get_formatter (GST_CAMERABIN_IMAGE
               (camera->imgbin)));
       break;
     case ARG_VIDEO_POST:
