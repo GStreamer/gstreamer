@@ -1660,7 +1660,7 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
            * bigger than half a frame we then use the incoming timestamp
            * as a reference, otherwise we continue using our accumulated samples
            * counter */
-          if (ABS (mad->total_samples - total) > nsamples / 2) {
+          if (ABS (((gint64) (mad->total_samples)) - total) > nsamples / 2) {
             GST_DEBUG_OBJECT (mad, "difference is bigger than half a frame, "
                 "using calculated samples offset %" G_GUINT64_FORMAT, total);
             /* Override our accumulated samples counter */
