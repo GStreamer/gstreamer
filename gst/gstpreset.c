@@ -86,6 +86,8 @@
 #include "gst_private.h"
 
 #include "gstpreset.h"
+#include "gstinfo.h"
+#include "gstvalue.h"
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
