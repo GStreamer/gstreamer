@@ -110,7 +110,7 @@
  * Handling mp3!xing!idv3 and theora!ogg tagsetting scenarios:
  *  Once we have chosen a muxer:
  *   When a new stream is requested:
- *    If muxer is 'Formatter' OR doesn't have a TagSetter interface:
+ *    If muxer isn't 'Formatter' OR doesn't have a TagSetter interface:
  *      Find a Formatter for the given stream (preferably with TagSetter)
  *       Insert that before muxer
  **/
@@ -162,6 +162,7 @@ struct _GstEncodeBin
 
   /* available muxers, encoders and parsers */
   GList *muxers;
+  GList *formatters;
   GList *encoders;
   GList *parsers;
 
@@ -205,6 +206,7 @@ struct _StreamGroup
   GstElement *parser;
   GstElement *smartencoder;
   GstElement *outfilter;        /* Output capsfilter (streamprofile.format) */
+  GstElement *formatter;
   GstElement *outqueue;         /* Queue just before the muxer */
 };
 
@@ -278,6 +280,9 @@ static StreamGroup *_create_stream_group (GstEncodeBin * ebin,
 static void stream_group_remove (GstEncodeBin * ebin, StreamGroup * sgroup);
 static GstPad *gst_encode_bin_request_pad_signal (GstEncodeBin * encodebin,
     GstCaps * caps);
+
+static inline GstElement *_get_formatter (GstEncodeBin * ebin,
+    GstEncodingProfile * sprof);
 
 static void
 gst_encode_bin_class_init (GstEncodeBinClass * klass)
@@ -388,6 +393,9 @@ gst_encode_bin_dispose (GObject * object)
   if (ebin->muxers)
     gst_plugin_feature_list_free (ebin->muxers);
 
+  if (ebin->formatters)
+    gst_plugin_feature_list_free (ebin->formatters);
+
   if (ebin->encoders)
     gst_plugin_feature_list_free (ebin->encoders);
 
@@ -410,15 +418,14 @@ static void
 gst_encode_bin_init (GstEncodeBin * encode_bin)
 {
   GstPadTemplate *tmpl;
-  GList *formatters;
 
   encode_bin->muxers =
       gst_element_factory_list_get_elements (GST_ELEMENT_FACTORY_TYPE_MUXER,
       GST_RANK_MARGINAL);
-  formatters =
+
+  encode_bin->formatters =
       gst_element_factory_list_get_elements (GST_ELEMENT_FACTORY_TYPE_FORMATTER,
       GST_RANK_SECONDARY);
-  encode_bin->muxers = g_list_concat (encode_bin->muxers, formatters);
 
   encode_bin->encoders =
       gst_element_factory_list_get_elements (GST_ELEMENT_FACTORY_TYPE_ENCODER,
@@ -911,6 +918,16 @@ no_template:
   }
 }
 
+static gboolean
+_has_class (GstElement * element, const gchar * classname)
+{
+  GstElementClass *klass;
+
+  klass = GST_ELEMENT_GET_CLASS (element);
+
+  return strstr (klass->details.klass, classname) != NULL;
+}
+
 /* FIXME : Add handling of streams that don't need encoding  */
 /* FIXME : Add handling of streams that don't require conversion elements */
 /*
@@ -966,11 +983,12 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
     muxerpad = get_compatible_muxer_sink_pad (ebin, NULL, format);
     if (G_UNLIKELY (muxerpad == NULL))
       goto no_muxer_pad;
+
   }
 
   /* Output Queue.
    * We only use a 1buffer long queue here, the actual queueing will be done
-   * in the intput queue */
+   * in the input queue */
   last = sgroup->outqueue = gst_element_factory_make ("queue", NULL);
   g_object_set (sgroup->outqueue, "max-size-buffers", (guint32) 1,
       "max-size-bytes", (guint32) 0, "max-size-time", (guint64) 0, NULL);
@@ -987,6 +1005,26 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
     gst_ghost_pad_set_target (GST_GHOST_PAD (ebin->srcpad), srcpad);
   }
   gst_object_unref (srcpad);
+
+  /* Check if we need a formatter
+   * If we have no muxer or
+   * if the muxer isn't a formatter and doesn't implement the tagsetter interface
+   */
+  if (!ebin->muxer
+      || (!gst_element_implements_interface (ebin->muxer, GST_TYPE_TAG_SETTER)
+          || !_has_class (ebin->muxer, "Formatter"))) {
+    sgroup->formatter = _get_formatter (ebin, sprof);
+    if (sgroup->formatter) {
+      GST_DEBUG ("Adding formatter for %" GST_PTR_FORMAT, format);
+
+      gst_bin_add (GST_BIN (ebin), sgroup->formatter);
+      tosync = g_list_append (tosync, sgroup->formatter);
+      if (G_UNLIKELY (!fast_element_link (sgroup->formatter, last)))
+        goto formatter_link_failure;
+      last = sgroup->formatter;
+    }
+  }
+
 
   /* Output capsfilter
    * This will receive the format caps from the streamprofile */
@@ -1337,8 +1375,13 @@ muxer_link_failure:
   GST_ERROR_OBJECT (ebin, "Couldn't link encoder to muxer");
   goto cleanup;
 
-outfilter_link_failure:
+formatter_link_failure:
   GST_ERROR_OBJECT (ebin, "Couldn't link output filter to output queue");
+  goto cleanup;
+
+outfilter_link_failure:
+  GST_ERROR_OBJECT (ebin,
+      "Couldn't link output filter to output queue/formatter");
   goto cleanup;
 
 passthrough_link_failure:
@@ -1405,9 +1448,48 @@ _factory_can_sink_caps (GstElementFactory * factory, const GstCaps * caps)
 }
 
 static inline GstElement *
+_get_formatter (GstEncodeBin * ebin, GstEncodingProfile * sprof)
+{
+  GList *formatters, *tmpfmtr;
+  GstElement *formatter = NULL;
+  GstElementFactory *formatterfact = NULL;
+  const GstCaps *format;
+  const gchar *preset;
+
+  format = gst_encoding_profile_get_format (sprof);
+  preset = gst_encoding_profile_get_preset (sprof);
+
+  GST_DEBUG ("Getting list of formatters for format %" GST_PTR_FORMAT, format);
+
+  formatters =
+      gst_element_factory_list_filter (ebin->formatters, format, GST_PAD_SRC,
+      FALSE);
+
+  if (formatters == NULL)
+    goto beach;
+
+  /* FIXME : signal the user if he wants this */
+  for (tmpfmtr = formatters; tmpfmtr; tmpfmtr = tmpfmtr->next) {
+    formatterfact = (GstElementFactory *) tmpfmtr->data;
+
+    GST_DEBUG_OBJECT (ebin, "Trying formatter %s",
+        GST_PLUGIN_FEATURE_NAME (formatterfact));
+
+    if ((formatter =
+            _create_element_and_set_preset (formatterfact, preset, NULL)))
+      break;
+  }
+
+  gst_plugin_feature_list_free (formatters);
+
+beach:
+  return formatter;
+}
+
+static inline GstElement *
 _get_muxer (GstEncodeBin * ebin)
 {
-  GList *muxers, *tmpmux;
+  GList *muxers, *formatters, *tmpmux;
   GstElement *muxer = NULL;
   GstElementFactory *muxerfact = NULL;
   const GList *tmp;
@@ -1421,6 +1503,12 @@ _get_muxer (GstEncodeBin * ebin)
 
   muxers =
       gst_element_factory_list_filter (ebin->muxers, format, GST_PAD_SRC, TRUE);
+
+  formatters =
+      gst_element_factory_list_filter (ebin->formatters, format, GST_PAD_SRC,
+      TRUE);
+
+  muxers = g_list_concat (muxers, formatters);
 
   if (muxers == NULL)
     goto beach;
@@ -1604,9 +1692,17 @@ stream_group_free (GstEncodeBin * ebin, StreamGroup * sgroup)
   if (sgroup->outqueue)
     gst_element_set_state (sgroup->outqueue, GST_STATE_NULL);
 
-  /* Capsfilter - outqueue */
-  gst_element_set_state (sgroup->outfilter, GST_STATE_NULL);
-  gst_element_unlink (sgroup->outfilter, sgroup->outqueue);
+  if (sgroup->formatter) {
+    /* capsfilter - formatter - outqueue */
+    gst_element_set_state (sgroup->formatter, GST_STATE_NULL);
+    gst_element_set_state (sgroup->outfilter, GST_STATE_NULL);
+    gst_element_unlink (sgroup->formatter, sgroup->outqueue);
+    gst_element_unlink (sgroup->outfilter, sgroup->formatter);
+  } else {
+    /* Capsfilter - outqueue */
+    gst_element_set_state (sgroup->outfilter, GST_STATE_NULL);
+    gst_element_unlink (sgroup->outfilter, sgroup->outqueue);
+  }
   gst_element_set_state (sgroup->outqueue, GST_STATE_NULL);
   gst_bin_remove (GST_BIN (ebin), sgroup->outqueue);
 

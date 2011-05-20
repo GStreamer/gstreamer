@@ -711,7 +711,7 @@
 <ARG>
 <NAME>GstMultiFdSink::buffers-max</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Buffers max</NICK>
 <BLURB>max number of buffers to queue for a client (-1 = no limit).</BLURB>
@@ -731,7 +731,7 @@
 <ARG>
 <NAME>GstMultiFdSink::buffers-soft-max</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Buffers soft max</NICK>
 <BLURB>Recover client when going over this limit (-1 = no limit).</BLURB>
@@ -821,7 +821,7 @@
 <ARG>
 <NAME>GstMultiFdSink::buffers-min</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Buffers min</NICK>
 <BLURB>min number of buffers to queue (-1 = as few as possible).</BLURB>
@@ -851,7 +851,7 @@
 <ARG>
 <NAME>GstMultiFdSink::bytes-min</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Bytes min</NICK>
 <BLURB>min number of bytes to queue (-1 = as little as possible).</BLURB>
@@ -861,7 +861,7 @@
 <ARG>
 <NAME>GstMultiFdSink::time-min</NAME>
 <TYPE>gint64</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Time min</NICK>
 <BLURB>min number of time to queue (-1 = as little as possible).</BLURB>
@@ -881,7 +881,7 @@
 <ARG>
 <NAME>GstMultiFdSink::units-max</NAME>
 <TYPE>gint64</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Units max</NICK>
 <BLURB>max number of units to queue (-1 = no limit).</BLURB>
@@ -891,7 +891,7 @@
 <ARG>
 <NAME>GstMultiFdSink::units-soft-max</NAME>
 <TYPE>gint64</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Units soft max</NICK>
 <BLURB>Recover client when going over this limit (-1 = no limit).</BLURB>
@@ -901,7 +901,7 @@
 <ARG>
 <NAME>GstMultiFdSink::qos-dscp</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[G_MAXULONG,63]</RANGE>
+<RANGE>[-1,63]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>QoS diff srv code point</NICK>
 <BLURB>Quality of Service, differentiated services code point (-1 default).</BLURB>
@@ -1081,7 +1081,7 @@
 <ARG>
 <NAME>GstVorbisEnc::bitrate</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[G_MAXULONG,250001]</RANGE>
+<RANGE>[-1,250001]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Target Bitrate</NICK>
 <BLURB>Attempt to encode at a bitrate averaging this (in bps). This uses the bitrate management engine, and is not recommended for most users. Quality is a better alternative. (-1 == disabled).</BLURB>
@@ -1111,7 +1111,7 @@
 <ARG>
 <NAME>GstVorbisEnc::max-bitrate</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[G_MAXULONG,250001]</RANGE>
+<RANGE>[-1,250001]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Maximum Bitrate</NICK>
 <BLURB>Specify a maximum bitrate (in bps). Useful for streaming applications. (-1 == disabled).</BLURB>
@@ -1121,7 +1121,7 @@
 <ARG>
 <NAME>GstVorbisEnc::min-bitrate</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[G_MAXULONG,250001]</RANGE>
+<RANGE>[-1,250001]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Minimum Bitrate</NICK>
 <BLURB>Specify a minimum bitrate (in bps). Useful for encoding for a fixed-size channel. (-1 == disabled).</BLURB>
@@ -1679,6 +1679,26 @@
 </ARG>
 
 <ARG>
+<NAME>GstVideoRate::average-period</NAME>
+<TYPE>guint64</TYPE>
+<RANGE><= G_MAXINT64</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Period over which to average</NICK>
+<BLURB>Period over which to average the framerate (in ns) (0 = disabled).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoRate::drop-only</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Only Drop</NICK>
+<BLURB>Only drop frames, no duplicates are produced.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstAudioRate::add</NAME>
 <TYPE>guint64</TYPE>
 <RANGE></RANGE>
@@ -2201,7 +2221,7 @@
 <ARG>
 <NAME>GstCdParanoiaSrc::read-speed</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Read speed</NICK>
 <BLURB>Read from device at specified speed.</BLURB>
@@ -2211,7 +2231,7 @@
 <ARG>
 <NAME>GstCdParanoiaSrc::search-overlap</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[G_MAXULONG,75]</RANGE>
+<RANGE>[-1,75]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Search overlap</NICK>
 <BLURB>Force minimum overlap search during verification to n sectors.</BLURB>
@@ -2221,7 +2241,7 @@
 <ARG>
 <NAME>GstCdParanoiaSrc::cache-size</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Cache size</NICK>
 <BLURB>Set CD cache size to n sectors (-1 = auto).</BLURB>
@@ -2451,7 +2471,7 @@
 <ARG>
 <NAME>GstURIDecodeBin::buffer-duration</NAME>
 <TYPE>gint64</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Buffer duration (ns)</NICK>
 <BLURB>Buffer duration when buffering streams (-1 default value).</BLURB>
@@ -2461,7 +2481,7 @@
 <ARG>
 <NAME>GstURIDecodeBin::buffer-size</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Buffer size (bytes)</NICK>
 <BLURB>Buffer size when buffering streams (-1 default value).</BLURB>
@@ -2501,7 +2521,7 @@
 <ARG>
 <NAME>GstURIDecodeBin::ring-buffer-max-size</NAME>
 <TYPE>guint64</TYPE>
-<RANGE><= G_MAXUINT</RANGE>
+<RANGE><= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Max. ring buffer size (bytes)</NICK>
 <BLURB>Max. amount of data in the ring buffer (bytes, 0 = ring buffer disabled).</BLURB>
@@ -2671,7 +2691,7 @@
 <ARG>
 <NAME>GstPlayBin2::current-audio</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Current audio</NICK>
 <BLURB>Currently playing audio stream (-1 = auto).</BLURB>
@@ -2681,7 +2701,7 @@
 <ARG>
 <NAME>GstPlayBin2::current-text</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Current Text</NICK>
 <BLURB>Currently playing text stream (-1 = auto).</BLURB>
@@ -2691,7 +2711,7 @@
 <ARG>
 <NAME>GstPlayBin2::current-video</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Current Video</NICK>
 <BLURB>Currently playing video stream (-1 = auto).</BLURB>
@@ -2841,7 +2861,7 @@
 <ARG>
 <NAME>GstPlayBin2::buffer-duration</NAME>
 <TYPE>gint64</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Buffer duration (ns)</NICK>
 <BLURB>Buffer duration when buffering network streams.</BLURB>
@@ -2851,7 +2871,7 @@
 <ARG>
 <NAME>GstPlayBin2::buffer-size</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Buffer size (bytes)</NICK>
 <BLURB>Buffer size when buffering network streams.</BLURB>
@@ -2891,7 +2911,7 @@
 <ARG>
 <NAME>GstPlayBin2::ring-buffer-max-size</NAME>
 <TYPE>guint64</TYPE>
-<RANGE><= G_MAXUINT</RANGE>
+<RANGE><= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Max. ring buffer size (bytes)</NICK>
 <BLURB>Max. amount of data in the ring buffer (bytes, 0 = ring buffer disabled).</BLURB>
@@ -3231,7 +3251,7 @@
 <ARG>
 <NAME>GstAppSrc::max-latency</NAME>
 <TYPE>gint64</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Max Latency</NICK>
 <BLURB>The maximum latency (-1 = unlimited).</BLURB>
@@ -3241,7 +3261,7 @@
 <ARG>
 <NAME>GstAppSrc::min-latency</NAME>
 <TYPE>gint64</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Min Latency</NICK>
 <BLURB>The minimum latency (-1 = default).</BLURB>
@@ -3251,7 +3271,7 @@
 <ARG>
 <NAME>GstAppSrc::size</NAME>
 <TYPE>gint64</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Size</NICK>
 <BLURB>The size of the data stream in bytes (-1 if unknown).</BLURB>
