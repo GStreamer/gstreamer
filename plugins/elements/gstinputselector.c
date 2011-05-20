@@ -1087,26 +1087,8 @@ gst_input_selector_event (GstPad * pad, GstEvent * event)
           break;
         }
 
-        if (GST_PAD_IS_SRC (eventpad)) {
-          /* for each pad we send to, we should ref the event; it's up
-           * to downstream to unref again when handled. */
-          GST_LOG_OBJECT (pad, "Reffing and sending event %p (%s) to %s:%s",
-              event, GST_EVENT_TYPE_NAME (event),
-              GST_DEBUG_PAD_NAME (eventpad));
-          gst_event_ref (event);
-          result |= gst_pad_push_event (eventpad, event);
-        } else {
-          /* we only send the event on one pad, multi-sinkpad elements
-           * should implement a handler */
-          GST_LOG_OBJECT (pad, "sending event %p (%s) to one sink pad %s:%s",
-              event, GST_EVENT_TYPE_NAME (event),
-              GST_DEBUG_PAD_NAME (eventpad));
-          result = gst_pad_push_event (eventpad, event);
-          done = TRUE;
-          event = NULL;
-        }
-
-        pushed_pads = g_list_prepend (pushed_pads, eventpad);
+        gst_event_ref (event);
+        result |= gst_pad_push_event (eventpad, event);
 
         g_value_reset (&item);
         break;
@@ -1117,7 +1099,7 @@ gst_input_selector_event (GstPad * pad, GstEvent * event)
         gst_iterator_resync (iter);
         break;
       case GST_ITERATOR_ERROR:
-        GST_ERROR_OBJECT (pad, "Could not iterate over internally linked pads");
+        GST_ERROR_OBJECT (pad, "Could not iterate over sinkpads");
         done = TRUE;
         break;
       case GST_ITERATOR_DONE:
