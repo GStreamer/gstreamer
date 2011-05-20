@@ -699,11 +699,11 @@ gst_selector_pad_chain (GstPad * pad, GstBuffer * buf)
     GST_INPUT_SELECTOR_BROADCAST (sel);
 
   /* if we have a pending segment, push it out now */
-  if (G_UNLIKELY (selpad->segment_pending)) {
+  if (G_UNLIKELY (prev_active_sinkpad != active_sinkpad
+          || selpad->segment_pending)) {
     GST_DEBUG_OBJECT (pad,
         "pushing pending NEWSEGMENT update %d, rate %lf, applied rate %lf, "
-        "format %d, "
-        "%" G_GINT64_FORMAT " -- %" G_GINT64_FORMAT ", time %"
+        "format %d, " "%" G_GINT64_FORMAT " -- %" G_GINT64_FORMAT ", time %"
         G_GINT64_FORMAT, FALSE, seg->rate, seg->applied_rate, seg->format,
         seg->start, seg->stop, seg->time);
 
@@ -962,6 +962,10 @@ gst_input_selector_set_active_pad (GstInputSelector * self, GstPad * pad)
     old->pushed = FALSE;
   if (new)
     new->pushed = FALSE;
+
+  /* Send a new SEGMENT event on the new pad next */
+  if (old != new && new)
+    new->segment_pending = TRUE;
 
   active_pad_p = &self->active_sinkpad;
   gst_object_replace ((GstObject **) active_pad_p, GST_OBJECT_CAST (pad));
