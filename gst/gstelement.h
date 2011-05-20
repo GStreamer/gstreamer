@@ -674,6 +674,8 @@ void                    gst_element_class_set_metadata          (GstElementClass
                                                                  const gchar     *author);
 void                    gst_element_class_add_metadata          (GstElementClass * klass,
                                                                  const gchar * key, const gchar * value);
+G_CONST_RETURN gchar *  gst_element_class_get_metadata          (GstElementClass * klass,
+                                                                 const gchar * key);
 
 
 /* element instance */

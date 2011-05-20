@@ -1350,6 +1350,24 @@ gst_element_class_set_metadata (GstElementClass * klass,
 }
 
 /**
+ * gst_element_class_get_metadata:
+ * @klass: class to get metadata for
+ * @key: the key to get
+ *
+ * Get metadata with @key in @klass.
+ *
+ * Returns: the metadata for @key.
+ */
+G_CONST_RETURN gchar *
+gst_element_class_get_metadata (GstElementClass * klass, const gchar * key)
+{
+  g_return_val_if_fail (GST_IS_ELEMENT_CLASS (klass), NULL);
+  g_return_val_if_fail (key != NULL, NULL);
+
+  return gst_structure_get_string ((GstStructure *) klass->metadata, key);
+}
+
+/**
  * gst_element_class_get_pad_template_list:
  * @element_class: a #GstElementClass to get pad templates of.
  *
