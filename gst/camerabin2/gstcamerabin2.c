@@ -212,6 +212,16 @@ gst_camera_bin_start_capture (GstCameraBin * camerabin)
   const GstTagList *taglist;
 
   GST_DEBUG_OBJECT (camerabin, "Received start-capture");
+
+  /* check that we have a valid location */
+  if ((camerabin->mode == MODE_VIDEO && camerabin->video_location == NULL)
+      || (camerabin->mode == MODE_IMAGE && camerabin->image_location == NULL)) {
+    GST_ELEMENT_ERROR (camerabin, RESOURCE, OPEN_WRITE,
+        (_("File location is set to NULL, please set it to a valid filename")),
+        (NULL));
+    return;
+  }
+
   GST_CAMERA_BIN_PROCESSING_INC (camerabin);
 
   if (camerabin->mode == MODE_VIDEO && camerabin->audio_src) {
