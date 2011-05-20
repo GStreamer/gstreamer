@@ -821,7 +821,7 @@ gpointer		gst_pad_get_element_private		(GstPad *pad);
 
 GstPadTemplate*		gst_pad_get_pad_template		(GstPad *pad);
 
-GstEvent*               gst_pad_get_sticky_event                (GstPad *pad, GstEventType event_type, gboolean active);
+GstEvent*               gst_pad_get_sticky_event                (GstPad *pad, GstEventType event_type);
 
 /* data passing setup functions */
 void			gst_pad_set_activate_function		(GstPad *pad, GstPadActivateFunction activate);

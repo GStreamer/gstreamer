@@ -101,10 +101,10 @@ GST_START_TEST (test_link_unlink_threaded)
   }
   MAIN_STOP_THREADS ();
 
-  ASSERT_CAPS_REFCOUNT (caps, "caps", 2);
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 3);
   gst_caps_unref (caps);
 
-  ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 2);
   gst_object_unref (src);
   gst_object_unref (sink);
 }
@@ -139,11 +139,11 @@ GST_START_TEST (test_refcount)
 
   plr = gst_pad_link (src, sink);
   fail_unless (GST_PAD_LINK_SUCCESSFUL (plr));
-  /* caps replaced by src caps */
-  ASSERT_CAPS_REFCOUNT (caps, "caps", 2);
+  /* src caps added to pending caps on sink */
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 3);
 
   gst_pad_unlink (src, sink);
-  ASSERT_CAPS_REFCOUNT (caps, "caps", 2);
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 3);
 
   /* cleanup */
   gst_object_unref (src);
@@ -201,7 +201,7 @@ GST_START_TEST (test_get_allowed_caps)
   gst_pad_unlink (src, sink);
 
   /* cleanup */
-  ASSERT_CAPS_REFCOUNT (caps, "caps", 2);
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 3);
   ASSERT_OBJECT_REFCOUNT (src, "src", 1);
   ASSERT_OBJECT_REFCOUNT (sink, "sink", 1);
 
@@ -346,7 +346,7 @@ GST_START_TEST (test_push_linked)
 
   plr = gst_pad_link (src, sink);
   fail_unless (GST_PAD_LINK_SUCCESSFUL (plr));
-  ASSERT_CAPS_REFCOUNT (caps, "caps", 2);
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 3);
 
   buffer = gst_buffer_new ();
 #if 0

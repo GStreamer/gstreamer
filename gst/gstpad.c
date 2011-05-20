@@ -109,10 +109,13 @@ static GstPadPushCache _pad_cache_invalid = { NULL, };
 #define GST_PAD_GET_PRIVATE(obj)  \
    (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_PAD, GstPadPrivate))
 
+/* we have a pending and an active event on the pad. On source pads only the
+ * active event is used. On sinkpads, events are copied to the pending entry and
+ * moved to the active event when the eventfunc returned TRUE. */
 typedef struct
 {
+  GstEvent *pending;
   GstEvent *event;
-  gboolean active;
 } PadEvent;
 
 struct _GstPadPrivate
@@ -375,22 +378,24 @@ clear_events (PadEvent events[])
 
   for (i = 0; i < GST_EVENT_MAX_STICKY; i++) {
     gst_event_replace (&events[i].event, NULL);
-    events[i].active = FALSE;
+    gst_event_replace (&events[i].pending, NULL);
   }
 }
 
 /* The sticky event with @idx from the srcpad is copied to the
- * sinkpad (when different) and the inactive flag is set.
+ * pending event on the sinkpad (when different).
  * This function applies the pad offsets in case of segment events.
  * This will make sure that we send the event to the sinkpad event
  * function when the next buffer of event arrives.
- * Should be called with the OBJECT lock of both pads */
+ * Should be called with the OBJECT lock of both pads.
+ * This function returns TRUE when there is a pending event on the
+ * sinkpad */
 static gboolean
 replace_event (GstPad * srcpad, GstPad * sinkpad, guint idx)
 {
   PadEvent *srcev, *sinkev;
   GstEvent *event;
-  gboolean inactive = FALSE;
+  gboolean pending = FALSE;
 
   srcev = &srcpad->priv->events[idx];
 
@@ -418,13 +423,12 @@ replace_event (GstPad * srcpad, GstPad * sinkpad, guint idx)
         break;
     }
     if (sinkev->event != event) {
-      /* replace when different */
-      gst_event_replace (&sinkev->event, event);
-      sinkev->active = FALSE;
-      inactive = TRUE;
+      /* put in the pending entry when different */
+      gst_event_replace (&sinkev->pending, event);
+      pending = TRUE;
     }
   }
-  return inactive;
+  return pending;
 }
 
 /* should be called with the OBJECT_LOCK */
@@ -437,10 +441,9 @@ get_pad_caps (GstPad * pad)
 
   idx = GST_EVENT_STICKY_IDX_TYPE (GST_EVENT_CAPS);
   /* we can only use the caps when we have successfully send the caps
-   * event to the event function */
-  if (pad->priv->events[idx].active)
-    if ((event = pad->priv->events[idx].event))
-      gst_event_parse_caps (event, &caps);
+   * event to the event function and is thus in the active entry */
+  if ((event = pad->priv->events[idx].event))
+    gst_event_parse_caps (event, &caps);
 
   return caps;
 }
@@ -1715,6 +1718,7 @@ gst_pad_unlink (GstPad * srcpad, GstPad * sinkpad)
 {
   gboolean result = FALSE;
   GstElement *parent = NULL;
+  gint i;
 
   g_return_val_if_fail (GST_IS_PAD (srcpad), FALSE);
   g_return_val_if_fail (GST_PAD_IS_SRC (srcpad), FALSE);
@@ -1758,6 +1762,10 @@ gst_pad_unlink (GstPad * srcpad, GstPad * sinkpad)
   /* first clear peers */
   GST_PAD_PEER (srcpad) = NULL;
   GST_PAD_PEER (sinkpad) = NULL;
+
+  /* clear pending caps if any */
+  for (i = 0; i < GST_EVENT_MAX_STICKY; i++)
+    gst_event_replace (&sinkpad->priv->events[i].pending, NULL);
 
   GST_OBJECT_UNLOCK (sinkpad);
   GST_OBJECT_UNLOCK (srcpad);
@@ -2077,7 +2085,7 @@ gst_pad_link_full (GstPad * srcpad, GstPad * sinkpad, GstPadLinkCheck flags)
   GstPadLinkReturn result;
   GstElement *parent;
   guint i;
-  gboolean inactive;
+  gboolean pending;
 
   g_return_val_if_fail (GST_IS_PAD (srcpad), GST_PAD_LINK_REFUSED);
   g_return_val_if_fail (GST_PAD_IS_SRC (srcpad), GST_PAD_LINK_WRONG_DIRECTION);
@@ -2109,12 +2117,12 @@ gst_pad_link_full (GstPad * srcpad, GstPad * sinkpad, GstPadLinkCheck flags)
 
   /* make sure we push the events from the source to this new peer, for this we
    * copy the events on the sinkpad and mark EVENTS_PENDING */
-  inactive = FALSE;
+  pending = FALSE;
   for (i = 0; i < GST_EVENT_MAX_STICKY; i++)
-    inactive |= replace_event (srcpad, sinkpad, i);
+    pending |= replace_event (srcpad, sinkpad, i);
 
-  /* we had some new inactive events, set our flag */
-  if (inactive)
+  /* we had some new pending events, set our flag */
+  if (pending)
     GST_OBJECT_FLAG_SET (sinkpad, GST_PAD_NEED_EVENTS);
 
   GST_OBJECT_UNLOCK (sinkpad);
@@ -2849,7 +2857,7 @@ not_accepted:
   }
 }
 
-/* function to send all inactive events on the sinkpad to the event
+/* function to send all pending events on the sinkpad to the event
  * function and collect the results. This function should be called with
  * the object lock. The object lock might be released by this function.
  */
@@ -2866,33 +2874,40 @@ gst_pad_update_events (GstPad * pad)
 
 restart:
   for (i = 0; i < GST_EVENT_MAX_STICKY; i++) {
-    /* skip already active events */
-    if (pad->priv->events[i].active)
+    gboolean res;
+    PadEvent *ev;
+
+    ev = &pad->priv->events[i];
+
+    /* skip without pending event */
+    if ((event = ev->pending) == NULL)
       continue;
 
-    if ((event = pad->priv->events[i].event)) {
-      gboolean res;
+    gst_event_ref (event);
+    GST_OBJECT_UNLOCK (pad);
 
-      gst_event_ref (event);
-      GST_OBJECT_UNLOCK (pad);
+    res = do_event_function (pad, event, eventfunc);
 
-      res = do_event_function (pad, event, eventfunc);
+    GST_OBJECT_LOCK (pad);
+    /* things could have changed while we release the lock, check if we still
+     * are handling the same event, if we don't something changed and we have
+     * to try again. FIXME. we need a cookie here. */
+    if (event != ev->pending) {
+      GST_DEBUG_OBJECT (pad, "events changed, restarting");
+      goto restart;
+    }
 
-      GST_OBJECT_LOCK (pad);
-      /* things could have changed while we release the lock, check if we still
-       * are handling the same event, if we don't something changed and we have
-       * to try again. FIXME. we need a cookie here. */
-      if (event != pad->priv->events[i].event) {
-        GST_DEBUG_OBJECT (pad, "events changed, restarting");
-        goto restart;
-      }
+    /* remove the event from the pending entry in all cases */
+    ev->pending = NULL;
 
-      pad->priv->events[i].active = res;
-      /* remove the event when the event function did not accept it */
-      if (!res) {
-        gst_event_replace (&pad->priv->events[i].event, NULL);
-        ret = GST_FLOW_ERROR;
-      }
+    if (res) {
+      /* make the event active */
+      if (ev->event)
+        gst_event_unref (ev->event);
+      ev->event = event;
+    } else {
+      gst_event_unref (event);
+      ret = GST_FLOW_ERROR;
     }
   }
   /* when we get here all events were successfully updated. */
@@ -4731,7 +4746,6 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
 
     /* srcpad sticky events always become active immediately */
     gst_event_replace (&pad->priv->events[idx].event, event);
-    pad->priv->events[idx].active = TRUE;
   }
 
   if ((peerpad = GST_PAD_PEER (pad)))
@@ -4924,6 +4938,7 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
        * event before checking the flushing flag. */
       if (sticky) {
         guint idx;
+        PadEvent *ev;
 
         switch (GST_EVENT_TYPE (event)) {
           case GST_EVENT_SEGMENT:
@@ -4944,12 +4959,13 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
         }
 
         idx = GST_EVENT_STICKY_IDX (event);
+        ev = &pad->priv->events[idx];
+
         GST_LOG_OBJECT (pad, "storing sticky event %s at index %u",
             GST_EVENT_TYPE_NAME (event), idx);
 
-        if (pad->priv->events[idx].event != event) {
-          gst_event_replace (&pad->priv->events[idx].event, event);
-          pad->priv->events[idx].active = FALSE;
+        if (ev->event != event) {
+          gst_event_replace (&ev->pending, event);
           /* set the flag so that we update the events next time. We would
            * usually update below but we might be flushing too. */
           GST_OBJECT_FLAG_SET (pad, GST_PAD_NEED_EVENTS);
@@ -5082,17 +5098,14 @@ gst_pad_get_element_private (GstPad * pad)
  * gst_pad_get_sticky_event:
  * @pad: the #GstPad to get the event from.
  * @event_type: the #GstEventType that should be retrieved.
- * @active: If only active events should be retrieved
  *
  * Returns a new reference of the sticky event of type @event_type
- * from the event. If @active is #TRUE only active events that
- * were accepted downstream are returned.
+ * from the event.
  *
  * Returns: (transfer full): a #GstEvent of type @event_type. Unref after usage.
  */
 GstEvent *
-gst_pad_get_sticky_event (GstPad * pad, GstEventType event_type,
-    gboolean active)
+gst_pad_get_sticky_event (GstPad * pad, GstEventType event_type)
 {
   GstEvent *event = NULL;
   guint idx;
@@ -5103,10 +5116,8 @@ gst_pad_get_sticky_event (GstPad * pad, GstEventType event_type,
   idx = GST_EVENT_STICKY_IDX_TYPE (event_type);
 
   GST_OBJECT_LOCK (pad);
-  if (!active || pad->priv->events[idx].active) {
-    if ((event = pad->priv->events[idx].event)) {
-      gst_event_ref (event);
-    }
+  if ((event = pad->priv->events[idx].event)) {
+    gst_event_ref (event);
   }
   GST_OBJECT_UNLOCK (pad);
 
