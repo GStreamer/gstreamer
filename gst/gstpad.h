@@ -712,7 +712,7 @@ struct _GstPad {
 
   /* internal links */
 #ifndef GST_DISABLE_DEPRECATED
-  GstPadIntLinkFunction		 _intlinkfunc;
+  GstPadIntLinkFunction		 intlinkfunc;
 #else
   gpointer intlinkfunc;
 #endif
