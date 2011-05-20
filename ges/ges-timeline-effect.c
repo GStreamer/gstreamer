@@ -28,7 +28,7 @@
  * you use another type of #GESTimelineLayer, you will have to handle it
  * yourself.
  *
- * Since: 0.10.2
+ * @Since: 0.10.2
  */
 
 #include <ges/ges.h>

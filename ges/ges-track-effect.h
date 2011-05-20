@@ -43,7 +43,6 @@ typedef struct _GESTrackEffectPrivate   GESTrackEffectPrivate;
 
 /**
  * GESTrackEffect:
- *
  */
 struct _GESTrackEffect
 {

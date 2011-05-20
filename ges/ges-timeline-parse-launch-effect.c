@@ -31,7 +31,7 @@
  * you use another type of #GESTimelineLayer, you will have to handle it
  * yourself.
  *
- * Since: 0.10.2
+ * @Since: 0.10.2
  */
 
 #include <ges/ges.h>
@@ -205,6 +205,8 @@ ges_tl_parse_launch_effect_create_track_obj (GESTimelineObject * self,
  *
  * Returns: (transfer full): a newly created #GESTimelineParseLaunchEffect, or
  * %NULL if something went wrong.
+ *
+ * Since: 0.10.2
  */
 GESTimelineParseLaunchEffect *
 ges_timeline_parse_launch_effect_new (const gchar * video_bin_description,

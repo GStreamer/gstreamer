@@ -22,7 +22,7 @@
  * @short_description: adds an effect build from a parse-launch style 
  * bin description to a stream in a #GESTimelineSource or a #GESTimelineLayer
  *
- * Since: 0.10.2
+ * @Since: 0.10.2
  */
 
 #include "ges-internal.h"
@@ -188,6 +188,8 @@ ges_track_parse_launch_effect_create_element (GESTrackObject * object)
  *
  * Returns: a newly created #GESTrackParseLaunchEffect, or %NULL if something went
  * wrong.
+ *
+ * Since: 0.10.2
  */
 GESTrackParseLaunchEffect *
 ges_track_parse_launch_effect_new (const gchar * bin_description)

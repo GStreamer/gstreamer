@@ -911,6 +911,8 @@ ges_track_object_is_locked (GESTrackObject * object)
  * Get the position of the object in the container #GESTrack.
  *
  * Returns: the start position (in #GstClockTime)
+ *
+ * Since: 0.10.2
  */
 guint64
 ges_track_object_get_start (GESTrackObject * object)
@@ -928,6 +930,8 @@ ges_track_object_get_start (GESTrackObject * object)
  * Get the offset within the contents of this #GESTrackObject
  *
  * Returns: the in-point (in #GstClockTime)
+ *
+ * Since: 0.10.2
  */
 guint64
 ges_track_object_get_inpoint (GESTrackObject * object)
@@ -946,6 +950,8 @@ ges_track_object_get_inpoint (GESTrackObject * object)
  * starting from the 'in-point'
  *
  * Returns: the duration (in #GstClockTime)
+ *
+ * Since: 0.10.2
  */
 guint64
 ges_track_object_get_duration (GESTrackObject * object)
@@ -963,6 +969,8 @@ ges_track_object_get_duration (GESTrackObject * object)
  * Get the priority of the object withing the containing #GESTrack.
  *
  * Returns: the priority of @object
+ *
+ * Since: 0.10.2
  */
 guint32
 ges_track_object_get_priority (GESTrackObject * object)
@@ -981,6 +989,8 @@ ges_track_object_get_priority (GESTrackObject * object)
  * or not.
  *
  * Returns: %TRUE if @object is active, %FALSE otherwize
+ *
+ * Since: 0.10.2
  */
 gboolean
 ges_track_object_is_active (GESTrackObject * object)
@@ -1011,6 +1021,8 @@ ges_track_object_is_active (GESTrackObject * object)
  * Returns: TRUE if @element and @pspec could be found. FALSE otherwise. In that
  * case the values for @pspec and @element are not modified. Unref @element after
  * usage.
+ *
+ * Since: 0.10.2
  */
 gboolean
 ges_track_object_lookup_child (GESTrackObject * object, const gchar * prop_name,
@@ -1060,6 +1072,8 @@ ges_track_object_lookup_child (GESTrackObject * object, const gchar * prop_name,
  * @value: the value
  *
  * Sets a property of a child of @object.
+ *
+ * Since: 0.10.2
  */
 void
 ges_track_object_set_child_property_by_pspec (GESTrackObject * object,
@@ -1103,6 +1117,8 @@ prop_hash_not_set:
  * that have the same property name, you can distinguish them using the following
  * synthaxe: 'ClasseName::property_name' as property name. If you don't, the
  * corresponding property of the first element found will be set.
+ *
+ * Since: 0.10.2
  */
 void
 ges_track_object_set_child_property_valist (GESTrackObject * object,
@@ -1172,6 +1188,8 @@ cant_copy:
  * that have the same property name, you can distinguish them using the following
  * synthaxe: 'ClasseName::property_name' as property name. If you don't, the
  * corresponding property of the first element found will be set.
+ *
+ * Since: 0.10.2
  */
 void
 ges_track_object_set_child_property (GESTrackObject * object,
@@ -1196,6 +1214,8 @@ ges_track_object_set_child_property (GESTrackObject * object,
  * that have the same property name, you can distinguish them using the following
  * synthaxe: 'ClasseName::property_name' as property name. If you don't, the
  * corresponding property of the first element found will be set.
+ *
+ * Since: 0.10.2
  */
 void
 ges_track_object_get_child_property_valist (GESTrackObject * object,
@@ -1252,6 +1272,8 @@ cant_copy:
  *
  * Returns: (transfer full) (array): an array of #GParamSpec* which should be freed after use or
  * %NULL if something went wrong
+ *
+ * Since: 0.10.2
  */
 GParamSpec **
 ges_track_object_list_children_properties (GESTrackObject * object,
@@ -1274,6 +1296,8 @@ ges_track_object_list_children_properties (GESTrackObject * object,
  * name/return location pairs, followed by NULL
  *
  * Gets properties of a child of @object.
+ *
+ * Since: 0.10.2
  */
 void
 ges_track_object_get_child_property (GESTrackObject * object,
@@ -1294,6 +1318,8 @@ ges_track_object_get_child_property (GESTrackObject * object,
  * @value: return location for the value
  *
  * Gets a property of a child of @object.
+ *
+ * Since: 0.10.2
  */
 void
 ges_track_object_get_child_property_by_pspec (GESTrackObject * object,

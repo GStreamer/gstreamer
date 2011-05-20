@@ -182,9 +182,9 @@ struct _GESTimelineObject {
  * @fill_track_object: method to fill an associated #GESTrackObject.
  * @need_fill_track: Set to TRUE if @fill_track_object needs to be called.
  * @track_object_added: Should be overridden by subclasses if they need to perform an
- * operation when a #GESTrackObject is added.
+ * operation when a #GESTrackObject is added. Since: 0.10.2
  * @track_object_released: Should be overridden by subclassed if they need to perform
- * action when a #GESTrackObject is released.
+ * action when a #GESTrackObject is released. Since: 0.10.2
  *
  * Subclasses can override the @create_track_object and @fill_track_object methods.
  */
