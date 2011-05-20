@@ -114,16 +114,16 @@ typedef gboolean (*GESFormatterLoadMethod) (GESFormatter * formatter,
 struct _GESFormatterClass {
   GObjectClass parent_class;
 
-  /* FIXME : formatter name */
-  /* FIXME : formatter description */
-  /* FIXME : format name/mime-type */
-
   GESFormatterCanLoadURIMethod can_load_uri;
   GESFormatterCanSaveURIMethod can_save_uri;
   GESFormatterLoadFromURIMethod load_from_uri;
   GESFormatterSaveToURIMethod save_to_uri;
 
   /*< private >*/
+  /* FIXME : formatter name */
+  /* FIXME : formatter description */
+  /* FIXME : format name/mime-type */
+
   GESFormatterSaveMethod save;
   GESFormatterLoadMethod load;
 
