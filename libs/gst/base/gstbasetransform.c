@@ -251,6 +251,8 @@ struct _GstBaseTransformPrivate
   guint64 dropped;
 
   GstClockTime position_out;
+
+  GstBufferPool *srcpool;
 };
 
 static GstElementClass *parent_class = NULL;
@@ -742,6 +744,84 @@ done:
   return caps;
 }
 
+static gboolean
+gst_base_transform_do_bufferpool (GstBaseTransform * trans, GstCaps * outcaps)
+{
+  GstQuery *query;
+  GstBufferPool *pool = NULL, *oldpool;
+  guint size, min, max, prefix, alignment;
+
+  /* there are these possibilities:
+   *
+   * 1) we negotiated passthrough, we can proxy the bufferpool directly.
+   * 2) 
+   */
+
+  /* clear old pool */
+  oldpool = trans->priv->srcpool;
+  if (oldpool) {
+    gst_buffer_pool_set_active (oldpool, FALSE);
+    gst_object_unref (oldpool);
+    trans->priv->srcpool = oldpool = NULL;
+  }
+
+  if (trans->passthrough) {
+    /* we are in passthrough, the input buffer is never copied and always passed
+     * along. We never allocate an output buffer on the srcpad. What we do is
+     * let the upstream element decide if it wants to use a bufferpool and
+     * then we will proxy the downstream pool */
+    GST_DEBUG_OBJECT (trans, "we're passthough, delay bufferpool");
+    return TRUE;
+  }
+
+  /* not passthrough, we need to allocate */
+  /* find a pool for the negotiated caps now */
+  query = gst_query_new_allocation (outcaps, TRUE);
+
+  if (gst_pad_peer_query (trans->srcpad, query))
+    goto query_failed;
+
+  /* we got configuration from our peer, parse them */
+  gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
+      &alignment, &pool);
+  gst_query_unref (query);
+
+  if (pool == NULL) {
+    GstStructure *config;
+
+    /* we did not get a pool, make one ourselves then */
+    pool = gst_buffer_pool_new ();
+
+    config = gst_buffer_pool_get_config (pool);
+    gst_buffer_pool_config_set (config, outcaps, size, min, max, prefix, 0,
+        alignment);
+    gst_buffer_pool_set_config (pool, config);
+  }
+
+  /* activate */
+  if (!gst_buffer_pool_set_active (pool, TRUE))
+    goto activate_failed;
+
+  /* and store */
+  trans->priv->srcpool = pool;
+
+  return TRUE;
+
+  /* ERRORS */
+query_failed:
+  {
+    GST_DEBUG_OBJECT (trans, "allocation query failed");
+    gst_query_unref (query);
+    return FALSE;
+  }
+activate_failed:
+  {
+    GST_ERROR_OBJECT (trans, "failed to activate bufferpool.");
+    gst_object_unref (pool);
+    return FALSE;
+  }
+}
+
 /* function triggered when the in and out caps are negotiated and need
  * to be configured in the subclass. */
 static gboolean
@@ -779,6 +859,11 @@ gst_base_transform_configure_caps (GstBaseTransform * trans, GstCaps * in,
   if (klass->set_caps) {
     GST_DEBUG_OBJECT (trans, "Calling set_caps method to setup caps");
     ret = klass->set_caps (trans, in, out);
+  }
+
+  if (ret) {
+    /* try to get a pool when needed */
+    gst_base_transform_do_bufferpool (trans, out);
   }
 
   trans->negotiated = ret;
@@ -1204,12 +1289,20 @@ gst_base_transform_query (GstPad * pad, GstQuery * query)
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_ALLOCATION:
     {
+      gboolean passthrough;
+
       /* can only be done on the sinkpad */
       if (!GST_PAD_IS_SINK (pad))
         goto done;
 
-      /* if we negotiated passthrough */
-      ret = FALSE;
+      GST_BASE_TRANSFORM_LOCK (trans);
+      passthrough = trans->passthrough;
+      GST_BASE_TRANSFORM_UNLOCK (trans);
+
+      if (passthrough)
+        ret = gst_pad_peer_query (otherpad, query);
+      else
+        ret = FALSE;
       break;
     }
     case GST_QUERY_POSITION:
@@ -1287,9 +1380,7 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
   /* figure out how to allocate a buffer based on the current configuration */
   if (trans->passthrough) {
     GST_DEBUG_OBJECT (trans, "doing passthrough alloc");
-    /* passthrough, we don't really need to call pad alloc but we still need to
-     * in order to get upstream negotiation. The output size is the same as the
-     * input size. */
+    /* passthrough, the output size is the same as the input size. */
     outsize = insize;
   } else {
     gboolean want_in_place = (bclass->transform_ip != NULL)
@@ -1345,11 +1436,18 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
     if (trans->passthrough) {
       GST_DEBUG_OBJECT (trans, "Avoiding pad alloc");
       *out_buf = in_buf;
+    } else if (trans->priv->srcpool) {
+      GST_DEBUG_OBJECT (trans, "using pool alloc");
+      ret =
+          gst_buffer_pool_acquire_buffer (trans->priv->srcpool, out_buf, NULL);
     } else {
       GST_DEBUG_OBJECT (trans, "doing alloc of size %u", outsize);
       *out_buf = gst_buffer_new_and_alloc (outsize);
     }
   }
+
+  if (ret != GST_FLOW_OK)
+    goto alloc_failed;
 
   /* must always have a buffer by now */
   if (*out_buf == NULL)
