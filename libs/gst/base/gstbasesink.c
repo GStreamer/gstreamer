@@ -2186,14 +2186,21 @@ gst_base_sink_wait_clock (GstBaseSink * sink, GstClockTime time,
   time += base_time;
 
   /* Re-use existing clockid if available */
-  if (G_LIKELY (sink->priv->cached_clock_id != NULL)) {
+  /* FIXME: Casting to GstClockEntry only works because the types
+   * are the same */
+  if (G_LIKELY (sink->priv->cached_clock_id != NULL
+          && GST_CLOCK_ENTRY_CLOCK ((GstClockEntry *) sink->
+              priv->cached_clock_id) == clock)) {
     if (!gst_clock_single_shot_id_reinit (clock, sink->priv->cached_clock_id,
             time)) {
       gst_clock_id_unref (sink->priv->cached_clock_id);
       sink->priv->cached_clock_id = gst_clock_new_single_shot_id (clock, time);
     }
-  } else
+  } else {
+    if (sink->priv->cached_clock_id != NULL)
+      gst_clock_id_unref (sink->priv->cached_clock_id);
     sink->priv->cached_clock_id = gst_clock_new_single_shot_id (clock, time);
+  }
   GST_OBJECT_UNLOCK (sink);
 
   /* A blocking wait is performed on the clock. We save the ClockID
