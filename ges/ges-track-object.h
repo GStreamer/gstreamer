@@ -97,19 +97,19 @@ struct _GESTrackObject {
  * GESTrackObjectClass:
  * @gnlobject_factorytype: name of the GNonLin GStElementFactory type to use.
  * @create_gnl_object: method to create the GNonLin container object.
- * @get_props_hastable: method to list children properties that user could like
- *                      to configure.
- * @list_children_properties: method to get children properties that user could
- *                            like to configure.
- *                            The default implementation will create an object
- *                            of type @gnlobject_factorytype and call
- *                            @create_element.
  * @create_element: method to return the GstElement to put in the gnlobject.
  * @start_changed: start property of gnlobject has changed
  * @media_start_changed: media-start property of gnlobject has changed
  * @duration_changed: duration property glnobject has changed
  * @gnl_priority_changed: duration property glnobject has changed
  * @active_changed: active property of gnlobject has changed
+ * @get_props_hastable: method to list children properties that user could like
+ *                      to configure. Since: 0.10.2
+ * @list_children_properties: method to get children properties that user could
+ *                            like to configure.
+ *                            The default implementation will create an object
+ *                            of type @gnlobject_factorytype and call
+ *                            @create_element. Since: 0.10.2
  *
  * Subclasses can override the @create_gnl_object method to override what type
  * of GNonLin object will be created.
@@ -123,9 +123,6 @@ struct _GESTrackObjectClass {
   const gchar  *gnlobject_factorytype;
   GstElement*  (*create_gnl_object)        (GESTrackObject * object);
   GstElement*  (*create_element)           (GESTrackObject * object);
-  GHashTable*  (*get_props_hastable)       (GESTrackObject * object);
-  GParamSpec** (*list_children_properties) (GESTrackObject * object,
-					    guint *n_properties);
 
   void (*start_changed)        (GESTrackObject *object, guint64 start);
   void (*media_start_changed)  (GESTrackObject *object, guint64 media_start);
@@ -137,8 +134,14 @@ struct _GESTrackObjectClass {
   /* signals (currently unused) */
   void	(*changed)	(GESTrackObject * object);
 
+  /*< public >*/
+  /* virtual methods for subclasses */
+  GHashTable*  (*get_props_hastable)       (GESTrackObject * object);
+  GParamSpec** (*list_children_properties) (GESTrackObject * object,
+					    guint *n_properties);
+  /*< private >*/
   /* Padding for API extension */
-  gpointer _ges_reserved[GES_PADDING];
+  gpointer _ges_reserved[GES_PADDING - 2];
 };
 
 GType ges_track_object_get_type (void);

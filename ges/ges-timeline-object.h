@@ -196,18 +196,18 @@ struct _GESTimelineObjectClass {
   GESCreateTrackObjectFunc create_track_object;
   GESCreateTrackObjectsFunc create_track_objects;
 
+  /* FIXME : might need a release_track_object */
+  GESFillTrackObjectFunc  fill_track_object;
+  gboolean need_fill_track;
+
   void (*track_object_added)    (GESTimelineObject *object,
                                 GESTrackObject *tck_object);
   void (*track_object_released) (GESTimelineObject *object,
                                 GESTrackObject *tck_object);
 
-  /* FIXME : might need a release_track_object */
-  GESFillTrackObjectFunc  fill_track_object;
-  gboolean need_fill_track;
-
   /*< private >*/
   /* Padding for API extension */
-  gpointer _ges_reserved[GES_PADDING];
+  gpointer _ges_reserved[GES_PADDING - 2];
 };
 
 GType ges_timeline_object_get_type (void);
