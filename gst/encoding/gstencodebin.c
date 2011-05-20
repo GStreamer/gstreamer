@@ -921,11 +921,13 @@ no_template:
 static gboolean
 _has_class (GstElement * element, const gchar * classname)
 {
-  GstElementClass *klass;
+  GstElementFactory *factory;
+  const gchar *klass;
 
-  klass = GST_ELEMENT_GET_CLASS (element);
+  factory = gst_element_get_factory (element);
+  klass = gst_element_factory_get_klass (factory);
 
-  return strstr (klass->details.klass, classname) != NULL;
+  return strstr (klass, classname) != NULL;
 }
 
 /* FIXME : Add handling of streams that don't need encoding  */
