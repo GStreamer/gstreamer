@@ -281,7 +281,6 @@ gst_base_src_get_type (void)
 }
 
 static GstCaps *gst_base_src_getcaps (GstPad * pad, GstCaps * filter);
-static gboolean gst_base_src_setcaps (GstPad * pad, GstCaps * caps);
 static void gst_base_src_fixate (GstPad * pad, GstCaps * caps);
 
 static gboolean gst_base_src_activate_push (GstPad * pad, gboolean active);
@@ -383,7 +382,6 @@ gst_base_src_class_init (GstBaseSrcClass * klass)
   GST_DEBUG_REGISTER_FUNCPTR (gst_base_src_pad_get_range);
   GST_DEBUG_REGISTER_FUNCPTR (gst_base_src_pad_check_get_range);
   GST_DEBUG_REGISTER_FUNCPTR (gst_base_src_getcaps);
-  GST_DEBUG_REGISTER_FUNCPTR (gst_base_src_setcaps);
   GST_DEBUG_REGISTER_FUNCPTR (gst_base_src_fixate);
 }
 
@@ -419,7 +417,6 @@ gst_base_src_init (GstBaseSrc * basesrc, gpointer g_class)
   gst_pad_set_checkgetrange_function (pad, gst_base_src_pad_check_get_range);
   gst_pad_set_getrange_function (pad, gst_base_src_pad_get_range);
   gst_pad_set_getcaps_function (pad, gst_base_src_getcaps);
-  gst_pad_set_setcaps_function (pad, gst_base_src_setcaps);
   gst_pad_set_fixatecaps_function (pad, gst_base_src_fixate);
 
   /* hold pointer to pad */
@@ -769,14 +766,14 @@ gst_base_src_new_seamless_segment (GstBaseSrc * src, gint64 start, gint64 stop,
 }
 
 static gboolean
-gst_base_src_setcaps (GstPad * pad, GstCaps * caps)
+gst_base_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
 {
   GstBaseSrcClass *bclass;
-  GstBaseSrc *bsrc;
   gboolean res = TRUE;
 
-  bsrc = GST_BASE_SRC (GST_PAD_PARENT (pad));
   bclass = GST_BASE_SRC_GET_CLASS (bsrc);
+
+  gst_pad_push_event (bsrc->srcpad, gst_event_new_caps (caps));
 
   if (bclass->set_caps)
     res = bclass->set_caps (bsrc, caps);
@@ -2596,7 +2593,7 @@ gst_base_src_default_negotiate (GstBaseSrc * basesrc)
       if (gst_caps_is_fixed (caps)) {
         /* yay, fixed caps, use those then, it's possible that the subclass does
          * not accept this caps after all and we have to fail. */
-        result = gst_pad_set_caps (GST_BASE_SRC_PAD (basesrc), caps);
+        result = gst_base_src_setcaps (basesrc, caps);
       }
     }
     gst_caps_unref (caps);
@@ -2712,7 +2709,7 @@ gst_base_src_start (GstBaseSrc * basesrc)
     if (!(caps = gst_type_find_helper (basesrc->srcpad, size)))
       goto typefind_failed;
 
-    result = gst_pad_set_caps (basesrc->srcpad, caps);
+    result = gst_base_src_setcaps (basesrc, caps);
     gst_caps_unref (caps);
   } else {
     /* use class or default negotiate function */
