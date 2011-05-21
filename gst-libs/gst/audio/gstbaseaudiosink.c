@@ -1427,7 +1427,8 @@ gst_base_audio_sink_get_alignment (GstBaseAudioSink * sink,
     diff = sink->next_sample - sample_offset;
 
   /* calculate the max allowed drift in units of samples. */
-  maxdrift = (ringbuf->spec.rate * sink->priv->alignment_threshold) / GST_MSECOND;
+  max_sample_diff = gst_util_uint64_scale_int (sink->priv->alignment_threshold,
+      ringbuf->spec.rate, GST_SECOND);
 
   /* calc align with previous sample */
   align = sink->next_sample - sample_offset;
