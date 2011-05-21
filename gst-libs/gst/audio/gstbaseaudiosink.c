@@ -58,7 +58,7 @@ struct _GstBaseAudioSinkPrivate
   GstClockTime eos_time;
 
   gboolean do_time_offset;
-  /* number of microseconds we alow timestamps or clock slaving to drift
+  /* number of microseconds we allow timestamps or clock slaving to drift
    * before resyncing */
   guint64 drift_tolerance;
 };
@@ -216,7 +216,7 @@ gst_base_audio_sink_class_init (GstBaseAudioSinkClass * klass)
   /**
    * GstBaseAudioSink:drift-tolerance
    *
-   * Controls the amount of time in milliseconds that timestamps or clocks are allowed
+   * Controls the amount of time in microseconds that timestamps or clocks are allowed
    * to drift before resynchronisation happens.
    *
    * Since: 0.10.26
@@ -1352,7 +1352,7 @@ gst_base_audio_sink_get_alignment (GstBaseAudioSink * sink,
     diff = sink->next_sample - sample_offset;
 
   /* calculate the max allowed drift in units of samples. By default this is
-   * 20ms and should be anough to compensate for timestamp rounding errors. */
+   * 40ms and should be anough to compensate for timestamp rounding errors. */
   maxdrift = (ringbuf->spec.rate * sink->priv->drift_tolerance) / GST_MSECOND;
 
   /* calc align with previous sample */
