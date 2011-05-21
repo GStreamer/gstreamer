@@ -58,9 +58,13 @@ struct _GstBaseAudioSinkPrivate
   GstClockTime eos_time;
 
   gboolean do_time_offset;
-  /* number of microseconds we allow timestamps or clock slaving to drift
+  /* number of microseconds we allow clock slaving to drift
    * before resyncing */
   guint64 drift_tolerance;
+
+  /* number of nanoseconds we allow timestamps to drift
+   * before resyncing */
+  GstClockTime alignment_threshold;
 };
 
 /* BaseAudioSink signals and args */
@@ -79,9 +83,13 @@ enum
 /* FIXME, enable pull mode when clock slaving and trick modes are figured out */
 #define DEFAULT_CAN_ACTIVATE_PULL FALSE
 
-/* when timestamps or clock slaving drift for more than 40ms we resync. This is
+/* when clock slaving drift for more than 40ms we resync. This is
  * a reasonable default */
 #define DEFAULT_DRIFT_TOLERANCE   ((40 * GST_MSECOND) / GST_USECOND)
+
+/* when timestamps drift for more than 40ms we resync. This should
+ * be anough to compensate for timestamp rounding errors. */
+#define DEFAULT_ALIGNMENT_THRESHOLD   (40 * GST_MSECOND)
 
 enum
 {
@@ -93,6 +101,7 @@ enum
   PROP_SLAVE_METHOD,
   PROP_CAN_ACTIVATE_PULL,
   PROP_DRIFT_TOLERANCE,
+  PROP_ALIGNMENT_THRESHOLD,
 
   PROP_LAST
 };
@@ -216,15 +225,28 @@ gst_base_audio_sink_class_init (GstBaseAudioSinkClass * klass)
   /**
    * GstBaseAudioSink:drift-tolerance
    *
-   * Controls the amount of time in microseconds that timestamps or clocks are allowed
+   * Controls the amount of time in microseconds that clocks are allowed
    * to drift before resynchronisation happens.
    *
    * Since: 0.10.26
    */
   g_object_class_install_property (gobject_class, PROP_DRIFT_TOLERANCE,
       g_param_spec_int64 ("drift-tolerance", "Drift Tolerance",
-          "Tolerance for timestamp and clock drift in microseconds", 1,
+          "Tolerance for clock drift in microseconds", 1,
           G_MAXINT64, DEFAULT_DRIFT_TOLERANCE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstBaseAudioSink:alignment_threshold
+   *
+   * Controls the amount of time in nanoseconds that timestamps are allowed
+   * to drift from their ideal time before choosing not to align them.
+   *
+   * Since: 0.10.26
+   */
+  g_object_class_install_property (gobject_class, PROP_ALIGNMENT_THRESHOLD,
+      g_param_spec_int64 ("alignment-threshold", "Alignment Threshold",
+          "Timestamp alignment threshold in nanoseconds", 1,
+          G_MAXINT64, DEFAULT_ALIGNMENT_THRESHOLD,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state =
@@ -266,6 +288,7 @@ gst_base_audio_sink_init (GstBaseAudioSink * baseaudiosink,
   baseaudiosink->provide_clock = DEFAULT_PROVIDE_CLOCK;
   baseaudiosink->priv->slave_method = DEFAULT_SLAVE_METHOD;
   baseaudiosink->priv->drift_tolerance = DEFAULT_DRIFT_TOLERANCE;
+  baseaudiosink->priv->alignment_threshold = DEFAULT_ALIGNMENT_THRESHOLD;
 
   baseaudiosink->provided_clock = gst_audio_clock_new ("GstAudioSinkClock",
       (GstAudioClockGetTimeFunc) gst_base_audio_sink_get_time, baseaudiosink);
@@ -659,6 +682,50 @@ gst_base_audio_sink_get_drift_tolerance (GstBaseAudioSink * sink)
   return result;
 }
 
+/**
+ * gst_base_audio_sink_set_alignment_threshold:
+ * @sink: a #GstBaseAudioSink
+ * @alignment_threshold: the new alignment threshold in nanoseconds
+ *
+ * Controls the sink's alignment threshold.
+ *
+ * Since: 0.10.31
+ */
+void
+gst_base_audio_sink_set_alignment_threshold (GstBaseAudioSink * sink,
+    GstClockTime alignment_threshold)
+{
+  g_return_if_fail (GST_IS_BASE_AUDIO_SINK (sink));
+
+  GST_OBJECT_LOCK (sink);
+  sink->priv->alignment_threshold = alignment_threshold;
+  GST_OBJECT_UNLOCK (sink);
+}
+
+/**
+ * gst_base_audio_sink_get_alignment_threshold
+ * @sink: a #GstBaseAudioSink
+ *
+ * Get the current alignment threshold, in nanoseconds, used by @sink.
+ *
+ * Returns: The current alignment threshold used by @sink.
+ *
+ * Since: 0.10.31
+ */
+GstClockTime
+gst_base_audio_sink_get_alignment_threshold (GstBaseAudioSink * sink)
+{
+  gint64 result;
+
+  g_return_val_if_fail (GST_IS_BASE_AUDIO_SINK (sink), -1);
+
+  GST_OBJECT_LOCK (sink);
+  result = sink->priv->alignment_threshold;
+  GST_OBJECT_UNLOCK (sink);
+
+  return result;
+}
+
 static void
 gst_base_audio_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
@@ -685,6 +752,10 @@ gst_base_audio_sink_set_property (GObject * object, guint prop_id,
       break;
     case PROP_DRIFT_TOLERANCE:
       gst_base_audio_sink_set_drift_tolerance (sink, g_value_get_int64 (value));
+      break;
+    case PROP_ALIGNMENT_THRESHOLD:
+      gst_base_audio_sink_set_alignment_threshold (sink,
+          g_value_get_uint64 (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -718,6 +789,10 @@ gst_base_audio_sink_get_property (GObject * object, guint prop_id,
       break;
     case PROP_DRIFT_TOLERANCE:
       g_value_set_int64 (value, gst_base_audio_sink_get_drift_tolerance (sink));
+      break;
+    case PROP_ALIGNMENT_THRESHOLD:
+      g_value_set_uint64 (value,
+          gst_base_audio_sink_get_alignment_threshold (sink));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1351,9 +1426,8 @@ gst_base_audio_sink_get_alignment (GstBaseAudioSink * sink,
   else
     diff = sink->next_sample - sample_offset;
 
-  /* calculate the max allowed drift in units of samples. By default this is
-   * 40ms and should be anough to compensate for timestamp rounding errors. */
-  maxdrift = (ringbuf->spec.rate * sink->priv->drift_tolerance) / GST_MSECOND;
+  /* calculate the max allowed drift in units of samples. */
+  maxdrift = (ringbuf->spec.rate * sink->priv->alignment_threshold) / GST_MSECOND;
 
   /* calc align with previous sample */
   align = sink->next_sample - sample_offset;
