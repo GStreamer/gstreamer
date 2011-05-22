@@ -756,17 +756,15 @@ gst_flac_parse_handle_streaminfo (GstFlacParse * flacparse, GstBuffer * buffer)
   if (!gst_bit_reader_get_bits_uint16 (&reader, &flacparse->min_blocksize, 16))
     goto error;
   if (flacparse->min_blocksize < 16) {
-    GST_ERROR_OBJECT (flacparse, "Invalid minimum block size: %u",
+    GST_WARNING_OBJECT (flacparse, "Invalid minimum block size: %u",
         flacparse->min_blocksize);
-    return FALSE;
   }
 
   if (!gst_bit_reader_get_bits_uint16 (&reader, &flacparse->max_blocksize, 16))
     goto error;
   if (flacparse->max_blocksize < 16) {
-    GST_ERROR_OBJECT (flacparse, "Invalid maximum block size: %u",
+    GST_WARNING_OBJECT (flacparse, "Invalid maximum block size: %u",
         flacparse->max_blocksize);
-    return FALSE;
   }
 
   if (!gst_bit_reader_get_bits_uint32 (&reader, &flacparse->min_framesize, 24))
