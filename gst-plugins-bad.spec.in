@@ -272,6 +272,7 @@ aren't tested well enough, or the code is not of good enough quality.
 %{_libdir}/gstreamer-%{majorminor}/libgstvideofiltersbad.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvideoparsersbad.so
 %{_libdir}/gstreamer-%{majorminor}/libgsty4mdec.so
+%{_libdir}/gstreamer-%{majorminor}//libgstopenal.so
 %{_libdir}/libgstbasecamerabinsrc-%{majorminor}.so.0
 %{_libdir}/libgstbasecamerabinsrc-%{majorminor}.so.0.0.0
 
