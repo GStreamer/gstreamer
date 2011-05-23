@@ -3,7 +3,6 @@
 <FILE>gstappsrc</FILE>
 <TITLE>appsrc</TITLE>
 <INCLUDE>gst/app/gstappsrc.h</INCLUDE>
-GstAppSrc
 GstAppStreamType
 gst_app_src_set_caps
 gst_app_src_get_caps
@@ -36,6 +35,7 @@ GST_IS_APP_BUFFER
 GST_IS_APP_BUFFER_CLASS
 GST_TYPE_APP_BUFFER
 <SUBSECTION Private>
+GstAppSrc
 GstAppSrcPrivate
 GstAppBuffer
 GstAppBufferClass
@@ -48,7 +48,6 @@ gst_app_buffer_new
 <FILE>gstappsink</FILE>
 <TITLE>appsink</TITLE>
 <INCLUDE>gst/app/gstappsink.h</INCLUDE>
-GstAppSink
 gst_app_sink_set_caps
 gst_app_sink_get_caps
 gst_app_sink_is_eos
@@ -64,6 +63,7 @@ gst_app_sink_pull_buffer_list
 GstAppSinkCallbacks
 gst_app_sink_set_callbacks
 <SUBSECTION Standard>
+GstAppSink
 GstAppSinkPrivate
 GstAppSinkClass
 GST_APP_SINK
