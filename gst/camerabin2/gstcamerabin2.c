@@ -897,7 +897,6 @@ encodebin_find_pad (GstCameraBin * camera, GstElement * encodebin,
 
     pad = gst_element_request_pad (encodebin, tmpl, NULL, NULL);
     GST_DEBUG_OBJECT (camera, "Got pad: %s", pad ? GST_PAD_NAME (pad) : "null");
-    gst_object_unref (tmpl);
   }
 
   return pad;
