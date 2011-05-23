@@ -25,6 +25,8 @@
 #include <glib.h>
 #include <gst/gst.h>
 
+#include "matroska-ids.h"
+
 G_BEGIN_DECLS
 
 typedef enum {
@@ -60,6 +62,10 @@ typedef struct _GstMatroskaReadCommon {
   guint64                  time_scale;
 } GstMatroskaReadCommon;
 
+GstFlowReturn gst_matroska_decode_content_encodings (GArray * encodings);
+gboolean gst_matroska_decompress_data (GstMatroskaTrackEncoding * enc,
+    guint8 ** data_out, guint * size_out,
+    GstMatroskaTrackCompressionAlgorithm algo);
 GstFlowReturn gst_matroska_read_common_parse_index (GstMatroskaReadCommon *
     common, GstEbmlRead * ebml);
 GstFlowReturn gst_matroska_read_common_parse_skip (GstMatroskaReadCommon *
