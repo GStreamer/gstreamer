@@ -2,6 +2,7 @@
  * (c) 2003 Ronald Bultje <rbultje@ronald.bitfreak.net>
  * (c) 2006 Tim-Philipp Müller <tim centricular net>
  * (c) 2008 Sebastian Dröge <slomo@circular-chaos.org>
+ * (c) 2011 Debarshi Ray <rishi@gnu.org>
  *
  * matroska-parse.c: matroska file/stream parser
  *
@@ -292,7 +293,7 @@ gst_matroska_parse_reset (GstElement * element)
   GST_DEBUG_OBJECT (parse, "Resetting state");
 
   /* reset input */
-  parse->state = GST_MATROSKA_PARSE_STATE_START;
+  parse->common.state = GST_MATROSKA_READ_STATE_START;
 
   /* clean up existing streams */
   if (parse->common.src) {
@@ -2195,7 +2196,7 @@ gst_matroska_parse_handle_seek_push (GstMatroskaParse * parse, GstPad * pad,
 
     GST_OBJECT_LOCK (parse);
     /* handle the seek event in the chain function */
-    parse->state = GST_MATROSKA_PARSE_STATE_SEEK;
+    parse->common.state = GST_MATROSKA_READ_STATE_SEEK;
     /* no more seek can be issued until state reset to _DATA */
 
     /* copy the event */
@@ -2235,7 +2236,7 @@ gst_matroska_parse_handle_src_event (GstPad * pad, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
       /* no seeking until we are (safely) ready */
-      if (parse->state != GST_MATROSKA_PARSE_STATE_DATA) {
+      if (parse->common.state != GST_MATROSKA_READ_STATE_DATA) {
         GST_DEBUG_OBJECT (parse, "not ready for seeking yet");
         return FALSE;
       }
@@ -4097,15 +4098,15 @@ gst_matroska_parse_parse_id (GstMatroskaParse * parse, guint32 id,
   if (G_LIKELY (length != G_MAXUINT64))
     read += needed;
 
-  switch (parse->state) {
-    case GST_MATROSKA_PARSE_STATE_START:
+  switch (parse->common.state) {
+    case GST_MATROSKA_READ_STATE_START:
       switch (id) {
         case GST_EBML_ID_HEADER:
           GST_READ_CHECK (gst_matroska_parse_take (parse, read, &ebml));
           ret = gst_matroska_parse_parse_header (parse, &ebml);
           if (ret != GST_FLOW_OK)
             goto parse_failed;
-          parse->state = GST_MATROSKA_PARSE_STATE_SEGMENT;
+          parse->common.state = GST_MATROSKA_READ_STATE_SEGMENT;
           gst_matroska_parse_check_seekability (parse);
           gst_matroska_parse_accumulate_streamheader (parse, ebml.buf);
           break;
@@ -4114,7 +4115,7 @@ gst_matroska_parse_parse_id (GstMatroskaParse * parse, guint32 id,
           break;
       }
       break;
-    case GST_MATROSKA_PARSE_STATE_SEGMENT:
+    case GST_MATROSKA_READ_STATE_SEGMENT:
       switch (id) {
         case GST_MATROSKA_ID_SEGMENT:
           /* eat segment prefix */
@@ -4125,7 +4126,7 @@ gst_matroska_parse_parse_id (GstMatroskaParse * parse, guint32 id,
           /* seeks are from the beginning of the segment,
            * after the segment ID/length */
           parse->common.ebml_segment_start = parse->offset;
-          parse->state = GST_MATROSKA_PARSE_STATE_HEADER;
+          parse->common.state = GST_MATROSKA_READ_STATE_HEADER;
           gst_matroska_parse_accumulate_streamheader (parse, ebml.buf);
           break;
         default:
@@ -4137,14 +4138,14 @@ gst_matroska_parse_parse_id (GstMatroskaParse * parse, guint32 id,
           break;
       }
       break;
-    case GST_MATROSKA_PARSE_STATE_SCANNING:
+    case GST_MATROSKA_READ_STATE_SCANNING:
       if (id != GST_MATROSKA_ID_CLUSTER &&
           id != GST_MATROSKA_ID_CLUSTERTIMECODE)
         goto skip;
       /* fall-through */
-    case GST_MATROSKA_PARSE_STATE_HEADER:
-    case GST_MATROSKA_PARSE_STATE_DATA:
-    case GST_MATROSKA_PARSE_STATE_SEEK:
+    case GST_MATROSKA_READ_STATE_HEADER:
+    case GST_MATROSKA_READ_STATE_DATA:
+    case GST_MATROSKA_READ_STATE_SEEK:
       switch (id) {
         case GST_MATROSKA_ID_SEGMENTINFO:
           GST_READ_CHECK (gst_matroska_parse_take (parse, read, &ebml));
@@ -4165,8 +4166,9 @@ gst_matroska_parse_parse_id (GstMatroskaParse * parse, guint32 id,
             GST_DEBUG_OBJECT (parse, "Cluster before Track");
             goto not_streamable;
           }
-          if (G_UNLIKELY (parse->state == GST_MATROSKA_PARSE_STATE_HEADER)) {
-            parse->state = GST_MATROSKA_PARSE_STATE_DATA;
+          if (G_UNLIKELY (parse->common.state
+                  == GST_MATROSKA_READ_STATE_HEADER)) {
+            parse->common.state = GST_MATROSKA_READ_STATE_DATA;
             parse->first_cluster_offset = parse->offset;
             GST_DEBUG_OBJECT (parse, "signaling no more pads");
           }
@@ -4263,7 +4265,7 @@ gst_matroska_parse_parse_id (GstMatroskaParse * parse, guint32 id,
             ret = gst_matroska_read_common_parse_index (&parse->common, &ebml);
             /* only push based; delayed index building */
             if (ret == GST_FLOW_OK
-                && parse->state == GST_MATROSKA_PARSE_STATE_SEEK) {
+                && parse->common.state == GST_MATROSKA_READ_STATE_SEEK) {
               GstEvent *event;
 
               GST_OBJECT_LOCK (parse);
@@ -4277,7 +4279,7 @@ gst_matroska_parse_parse_id (GstMatroskaParse * parse, guint32 id,
                 goto seek_failed;
               /* resume data handling, main thread clear to seek again */
               GST_OBJECT_LOCK (parse);
-              parse->state = GST_MATROSKA_PARSE_STATE_DATA;
+              parse->common.state = GST_MATROSKA_READ_STATE_DATA;
               GST_OBJECT_UNLOCK (parse);
             }
           }
@@ -4362,7 +4364,7 @@ gst_matroska_parse_loop (GstPad * pad)
   guint needed;
 
   /* If we have to close a segment, send a new segment to do this now */
-  if (G_LIKELY (parse->state == GST_MATROSKA_PARSE_STATE_DATA)) {
+  if (G_LIKELY (parse->common.state == GST_MATROSKA_READ_STATE_DATA)) {
     if (G_UNLIKELY (parse->close_segment)) {
       gst_matroska_parse_send_event (parse, parse->close_segment);
       parse->close_segment = NULL;
@@ -4600,7 +4602,7 @@ gst_matroska_parse_handle_sink_event (GstPad * pad, GstEvent * event)
           "received format %d newsegment %" GST_SEGMENT_FORMAT, format,
           &segment);
 
-      if (parse->state < GST_MATROSKA_PARSE_STATE_DATA) {
+      if (parse->common.state < GST_MATROSKA_READ_STATE_DATA) {
         GST_DEBUG_OBJECT (parse, "still starting");
         goto exit;
       }
@@ -4634,7 +4636,7 @@ gst_matroska_parse_handle_sink_event (GstPad * pad, GstEvent * event)
     }
     case GST_EVENT_EOS:
     {
-      if (parse->state != GST_MATROSKA_PARSE_STATE_DATA) {
+      if (parse->common.state != GST_MATROSKA_READ_STATE_DATA) {
         gst_event_unref (event);
         GST_ELEMENT_ERROR (parse, STREAM, DEMUX,
             (NULL), ("got eos and didn't receive a complete header object"));

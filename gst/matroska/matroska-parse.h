@@ -1,5 +1,6 @@
 /* GStreamer Matroska muxer/demuxer
  * (c) 2003 Ronald Bultje <rbultje@ronald.bitfreak.net>
+ * (c) 2011 Debarshi Ray <rishi@gnu.org>
  *
  * matroska-parse.h: matroska file/stream parseer definition
  *
@@ -42,15 +43,6 @@ G_BEGIN_DECLS
 #define GST_IS_MATROSKA_PARSE_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_MATROSKA_PARSE))
 
-typedef enum {
-  GST_MATROSKA_PARSE_STATE_START,
-  GST_MATROSKA_PARSE_STATE_SEGMENT,
-  GST_MATROSKA_PARSE_STATE_HEADER,
-  GST_MATROSKA_PARSE_STATE_DATA,
-  GST_MATROSKA_PARSE_STATE_SEEK,
-  GST_MATROSKA_PARSE_STATE_SCANNING
-} GstMatroskaParseState;
-
 typedef struct _GstMatroskaParse {
   GstElement              parent;
 
@@ -77,7 +69,6 @@ typedef struct _GstMatroskaParse {
 
   /* state */
   //gboolean                 streaming;
-  GstMatroskaParseState    state;
   guint                    level_up;
   guint64                  seek_block;
   gboolean                 seek_first;

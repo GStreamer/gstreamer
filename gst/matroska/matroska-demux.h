@@ -1,5 +1,6 @@
 /* GStreamer Matroska muxer/demuxer
  * (c) 2003 Ronald Bultje <rbultje@ronald.bitfreak.net>
+ * (c) 2011 Debarshi Ray <rishi@gnu.org>
  *
  * matroska-demux.h: matroska file/stream demuxer definition
  *
@@ -42,15 +43,6 @@ G_BEGIN_DECLS
 #define GST_IS_MATROSKA_DEMUX_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_MATROSKA_DEMUX))
 
-typedef enum {
-  GST_MATROSKA_DEMUX_STATE_START,
-  GST_MATROSKA_DEMUX_STATE_SEGMENT,
-  GST_MATROSKA_DEMUX_STATE_HEADER,
-  GST_MATROSKA_DEMUX_STATE_DATA,
-  GST_MATROSKA_DEMUX_STATE_SEEK,
-  GST_MATROSKA_DEMUX_STATE_SCANNING
-} GstMatroskaDemuxState;
-
 typedef struct _GstMatroskaDemux {
   GstElement              parent;
 
@@ -72,7 +64,6 @@ typedef struct _GstMatroskaDemux {
 
   /* state */
   gboolean                 streaming;
-  GstMatroskaDemuxState    state;
   guint                    level_up;
   guint64                  seek_block;
   gboolean                 seek_first;

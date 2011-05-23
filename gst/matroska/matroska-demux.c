@@ -2,6 +2,7 @@
  * (c) 2003 Ronald Bultje <rbultje@ronald.bitfreak.net>
  * (c) 2006 Tim-Philipp Müller <tim centricular net>
  * (c) 2008 Sebastian Dröge <slomo@circular-chaos.org>
+ * (c) 2011 Debarshi Ray <rishi@gnu.org>
  *
  * matroska-demux.c: matroska file/stream demuxer
  *
@@ -361,7 +362,7 @@ gst_matroska_demux_reset (GstElement * element)
   GST_DEBUG_OBJECT (demux, "Resetting state");
 
   /* reset input */
-  demux->state = GST_MATROSKA_DEMUX_STATE_START;
+  demux->common.state = GST_MATROSKA_READ_STATE_START;
 
   /* clean up existing streams */
   if (demux->common.src) {
@@ -2444,7 +2445,7 @@ static GstMatroskaIndex *
 gst_matroska_demux_search_pos (GstMatroskaDemux * demux, GstClockTime time)
 {
   GstMatroskaIndex *entry = NULL;
-  GstMatroskaDemuxState current_state;
+  GstMatroskaReadState current_state;
   GstClockTime otime, prev_cluster_time, current_cluster_time, cluster_time;
   gint64 opos, newpos, startpos = 0, current_offset;
   gint64 prev_cluster_offset = -1, current_cluster_offset, cluster_offset;
@@ -2462,14 +2463,14 @@ gst_matroska_demux_search_pos (GstMatroskaDemux * demux, GstClockTime time)
   prev_cluster_time = GST_CLOCK_TIME_NONE;
 
   /* store some current state */
-  current_state = demux->state;
-  g_return_val_if_fail (current_state == GST_MATROSKA_DEMUX_STATE_DATA, NULL);
+  current_state = demux->common.state;
+  g_return_val_if_fail (current_state == GST_MATROSKA_READ_STATE_DATA, NULL);
 
   current_cluster_offset = demux->cluster_offset;
   current_cluster_time = demux->cluster_time;
   current_offset = demux->offset;
 
-  demux->state = GST_MATROSKA_DEMUX_STATE_SCANNING;
+  demux->common.state = GST_MATROSKA_READ_STATE_SCANNING;
 
   /* estimate using start and current position */
   GST_OBJECT_LOCK (demux);
@@ -2607,7 +2608,7 @@ exit:
   demux->cluster_offset = current_cluster_offset;
   demux->cluster_time = current_cluster_time;
   demux->offset = current_offset;
-  demux->state = current_state;
+  demux->common.state = current_state;
 
   return entry;
 }
@@ -2837,7 +2838,7 @@ gst_matroska_demux_handle_seek_push (GstMatroskaDemux * demux, GstPad * pad,
 
     GST_OBJECT_LOCK (demux);
     /* handle the seek event in the chain function */
-    demux->state = GST_MATROSKA_DEMUX_STATE_SEEK;
+    demux->common.state = GST_MATROSKA_READ_STATE_SEEK;
     /* no more seek can be issued until state reset to _DATA */
 
     /* copy the event */
@@ -2877,7 +2878,7 @@ gst_matroska_demux_handle_src_event (GstPad * pad, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
       /* no seeking until we are (safely) ready */
-      if (demux->state != GST_MATROSKA_DEMUX_STATE_DATA) {
+      if (demux->common.state != GST_MATROSKA_READ_STATE_DATA) {
         GST_DEBUG_OBJECT (demux, "not ready for seeking yet");
         return FALSE;
       }
@@ -5414,15 +5415,15 @@ gst_matroska_demux_parse_id (GstMatroskaDemux * demux, guint32 id,
   if (G_LIKELY (length != G_MAXUINT64))
     read += needed;
 
-  switch (demux->state) {
-    case GST_MATROSKA_DEMUX_STATE_START:
+  switch (demux->common.state) {
+    case GST_MATROSKA_READ_STATE_START:
       switch (id) {
         case GST_EBML_ID_HEADER:
           GST_READ_CHECK (gst_matroska_demux_take (demux, read, &ebml));
           ret = gst_matroska_demux_parse_header (demux, &ebml);
           if (ret != GST_FLOW_OK)
             goto parse_failed;
-          demux->state = GST_MATROSKA_DEMUX_STATE_SEGMENT;
+          demux->common.state = GST_MATROSKA_READ_STATE_SEGMENT;
           gst_matroska_demux_check_seekability (demux);
           break;
         default:
@@ -5430,7 +5431,7 @@ gst_matroska_demux_parse_id (GstMatroskaDemux * demux, guint32 id,
           break;
       }
       break;
-    case GST_MATROSKA_DEMUX_STATE_SEGMENT:
+    case GST_MATROSKA_READ_STATE_SEGMENT:
       switch (id) {
         case GST_MATROSKA_ID_SEGMENT:
           /* eat segment prefix */
@@ -5441,7 +5442,7 @@ gst_matroska_demux_parse_id (GstMatroskaDemux * demux, guint32 id,
           /* seeks are from the beginning of the segment,
            * after the segment ID/length */
           demux->common.ebml_segment_start = demux->offset;
-          demux->state = GST_MATROSKA_DEMUX_STATE_HEADER;
+          demux->common.state = GST_MATROSKA_READ_STATE_HEADER;
           break;
         default:
           GST_WARNING_OBJECT (demux,
@@ -5451,14 +5452,14 @@ gst_matroska_demux_parse_id (GstMatroskaDemux * demux, guint32 id,
           break;
       }
       break;
-    case GST_MATROSKA_DEMUX_STATE_SCANNING:
+    case GST_MATROSKA_READ_STATE_SCANNING:
       if (id != GST_MATROSKA_ID_CLUSTER &&
           id != GST_MATROSKA_ID_CLUSTERTIMECODE)
         goto skip;
       /* fall-through */
-    case GST_MATROSKA_DEMUX_STATE_HEADER:
-    case GST_MATROSKA_DEMUX_STATE_DATA:
-    case GST_MATROSKA_DEMUX_STATE_SEEK:
+    case GST_MATROSKA_READ_STATE_HEADER:
+    case GST_MATROSKA_READ_STATE_DATA:
+    case GST_MATROSKA_READ_STATE_SEEK:
       switch (id) {
         case GST_MATROSKA_ID_SEGMENTINFO:
           if (!demux->segmentinfo_parsed) {
@@ -5487,8 +5488,9 @@ gst_matroska_demux_parse_id (GstMatroskaDemux * demux, guint32 id,
                 goto no_tracks;
             }
           }
-          if (G_UNLIKELY (demux->state == GST_MATROSKA_DEMUX_STATE_HEADER)) {
-            demux->state = GST_MATROSKA_DEMUX_STATE_DATA;
+          if (G_UNLIKELY (demux->common.state
+                  == GST_MATROSKA_READ_STATE_HEADER)) {
+            demux->common.state = GST_MATROSKA_READ_STATE_DATA;
             demux->first_cluster_offset = demux->offset;
             GST_DEBUG_OBJECT (demux, "signaling no more pads");
             gst_element_no_more_pads (GST_ELEMENT (demux));
@@ -5588,7 +5590,7 @@ gst_matroska_demux_parse_id (GstMatroskaDemux * demux, guint32 id,
           ret = gst_matroska_read_common_parse_index (&demux->common, &ebml);
           /* only push based; delayed index building */
           if (ret == GST_FLOW_OK
-              && demux->state == GST_MATROSKA_DEMUX_STATE_SEEK) {
+              && demux->common.state == GST_MATROSKA_READ_STATE_SEEK) {
             GstEvent *event;
 
             GST_OBJECT_LOCK (demux);
@@ -5602,7 +5604,7 @@ gst_matroska_demux_parse_id (GstMatroskaDemux * demux, guint32 id,
               goto seek_failed;
             /* resume data handling, main thread clear to seek again */
             GST_OBJECT_LOCK (demux);
-            demux->state = GST_MATROSKA_DEMUX_STATE_DATA;
+            demux->common.state = GST_MATROSKA_READ_STATE_DATA;
             GST_OBJECT_UNLOCK (demux);
           }
           break;
@@ -5681,7 +5683,7 @@ gst_matroska_demux_loop (GstPad * pad)
   guint needed;
 
   /* If we have to close a segment, send a new segment to do this now */
-  if (G_LIKELY (demux->state == GST_MATROSKA_DEMUX_STATE_DATA)) {
+  if (G_LIKELY (demux->common.state == GST_MATROSKA_READ_STATE_DATA)) {
     if (G_UNLIKELY (demux->close_segment)) {
       gst_matroska_demux_send_event (demux, demux->close_segment);
       demux->close_segment = NULL;
@@ -5919,7 +5921,7 @@ gst_matroska_demux_handle_sink_event (GstPad * pad, GstEvent * event)
           "received format %d newsegment %" GST_SEGMENT_FORMAT, format,
           &segment);
 
-      if (demux->state < GST_MATROSKA_DEMUX_STATE_DATA) {
+      if (demux->common.state < GST_MATROSKA_READ_STATE_DATA) {
         GST_DEBUG_OBJECT (demux, "still starting");
         goto exit;
       }
@@ -5955,7 +5957,7 @@ gst_matroska_demux_handle_sink_event (GstPad * pad, GstEvent * event)
     }
     case GST_EVENT_EOS:
     {
-      if (demux->state != GST_MATROSKA_DEMUX_STATE_DATA) {
+      if (demux->common.state != GST_MATROSKA_READ_STATE_DATA) {
         gst_event_unref (event);
         GST_ELEMENT_ERROR (demux, STREAM, DEMUX,
             (NULL), ("got eos and didn't receive a complete header object"));

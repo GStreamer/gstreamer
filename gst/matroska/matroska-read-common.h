@@ -28,13 +28,13 @@
 G_BEGIN_DECLS
 
 typedef enum {
-  GST_MATROSKA_READ_COMMON_STATE_START,
-  GST_MATROSKA_READ_COMMON_STATE_SEGMENT,
-  GST_MATROSKA_READ_COMMON_STATE_HEADER,
-  GST_MATROSKA_READ_COMMON_STATE_DATA,
-  GST_MATROSKA_READ_COMMON_STATE_SEEK,
-  GST_MATROSKA_READ_COMMON_STATE_SCANNING
-} GstMatroskaReadCommonState;
+  GST_MATROSKA_READ_STATE_START,
+  GST_MATROSKA_READ_STATE_SEGMENT,
+  GST_MATROSKA_READ_STATE_HEADER,
+  GST_MATROSKA_READ_STATE_DATA,
+  GST_MATROSKA_READ_STATE_SEEK,
+  GST_MATROSKA_READ_STATE_SCANNING
+} GstMatroskaReadState;
 
 typedef struct _GstMatroskaReadCommon {
   GstIndex                *element_index;
@@ -43,6 +43,9 @@ typedef struct _GstMatroskaReadCommon {
   /* pads */
   GPtrArray               *src;
   guint                    num_streams;
+
+  /* state */
+  GstMatroskaReadState     state;
 
   /* did we parse cues/tracks/segmentinfo already? */
   gboolean                 index_parsed;
