@@ -45,6 +45,25 @@ G_BEGIN_DECLS
 typedef struct _GstTuner GstTuner;
 typedef struct _GstTunerClass GstTunerClass;
 
+/**
+ * GstTunerClass:
+ * @klass: the parent interface
+ * @list_channels: list available channels
+ * @set_channel: set to a channel
+ * @get_channel: return the current channel
+ * @list_norms: list available norms
+ * @set_norm: set a norm
+ * @get_norm: return the current norm
+ * @set_frequency: set the frequency
+ * @get_frequency: return the current frequency
+ * @signal_strength: get the signal strength
+ * @channel_changed: default handler for channel changed notification
+ * @norm_changed: default handler for norm changed notification
+ * @frequency_changed: default handler for frequency changed notification
+ * @signal_changed: default handler for signal-strength changed notification
+ *
+ * Tuner interface.
+ */
 struct _GstTunerClass {
   GTypeInterface klass;
 
@@ -80,6 +99,7 @@ struct _GstTunerClass {
                              GstTunerChannel *channel,
                              gint             signal);
 
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 

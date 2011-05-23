@@ -57,7 +57,13 @@ struct _GstColorBalanceChannel {
   gint    max_value;
 };
 
-
+/**
+ * GstColorBalanceChannelClass:
+ * @parent: the parent interface
+ * @value_changed: default handler for value changed notification
+ *
+ * Color-balance channel class.
+ */
 struct _GstColorBalanceChannelClass {
   GObjectClass parent;
 
@@ -65,6 +71,7 @@ struct _GstColorBalanceChannelClass {
   void (* value_changed) (GstColorBalanceChannel *channel,
                           gint                    value);
 
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 

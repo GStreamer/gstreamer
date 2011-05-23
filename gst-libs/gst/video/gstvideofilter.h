@@ -47,6 +47,12 @@ struct _GstVideoFilter {
   gboolean inited;
 };
 
+/**
+ * GstVideoFilterClass:
+ * @parent_class: the parent class structure
+ *
+ * The video filter class structure.
+ */
 struct _GstVideoFilterClass {
   GstBaseTransformClass parent_class;
 };
