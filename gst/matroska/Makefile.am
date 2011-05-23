@@ -8,6 +8,7 @@ libgstmatroska_la_SOURCES = \
 	matroska-parse.c \
 	matroska-ids.c \
 	matroska-mux.c \
+	matroska-read-common.c \
 	webm-mux.c \
 	lzo.c
 
@@ -19,6 +20,7 @@ noinst_HEADERS = \
 	matroska-parse.h \
 	matroska-ids.h \
 	matroska-mux.h \
+	matroska-read-common.h \
 	webm-mux.h \
 	lzo.h
 

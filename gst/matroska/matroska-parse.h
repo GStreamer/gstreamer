@@ -27,6 +27,7 @@
 
 #include "ebml-read.h"
 #include "matroska-ids.h"
+#include "matroska-read-common.h"
 
 G_BEGIN_DECLS
 
@@ -55,15 +56,12 @@ typedef struct _GstMatroskaParse {
 
   /* < private > */
 
-  GstIndex                *element_index;
-  gint                     element_index_writer_id;
+  GstMatroskaReadCommon    common;
 
   /* pads */
   GstPad                  *sinkpad;
   GstPad                  *srcpad;
-  GPtrArray               *src;
   GstClock                *clock;
-  guint                    num_streams;
   guint                    num_v_streams;
   guint                    num_a_streams;
   guint                    num_t_streams;
@@ -85,21 +83,11 @@ typedef struct _GstMatroskaParse {
   gboolean                 seek_first;
 
   /* did we parse cues/tracks/segmentinfo already? */
-  gboolean                 index_parsed;
   gboolean                 tracks_parsed;
   gboolean                 segmentinfo_parsed;
   gboolean                 attachments_parsed;
   GList                   *tags_parsed;
   GList                   *seek_parsed;
-
-  /* start-of-segment */
-  guint64                  ebml_segment_start;
-
-  /* a cue (index) table */
-  GArray                  *index;
-
-  /* timescale in the file */
-  guint64                  time_scale;
 
   /* keeping track of playback position */
   GstSegment               segment;
