@@ -1372,7 +1372,8 @@ gst_flac_parse_convert (GstBaseParse * parse,
       else
         *dest_value = -1;
       return TRUE;
-    } else if (src_format == GST_FORMAT_TIME && dest_format == GST_FORMAT_TIME) {
+    } else if (src_format == GST_FORMAT_TIME &&
+        dest_format == GST_FORMAT_DEFAULT) {
       if (src_value != -1)
         *dest_value =
             gst_util_uint64_scale (src_value, flacparse->samplerate,
