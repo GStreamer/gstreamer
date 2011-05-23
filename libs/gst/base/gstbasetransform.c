@@ -778,7 +778,7 @@ gst_base_transform_do_bufferpool (GstBaseTransform * trans, GstCaps * outcaps)
   /* find a pool for the negotiated caps now */
   query = gst_query_new_allocation (outcaps, TRUE);
 
-  if (gst_pad_peer_query (trans->srcpad, query))
+  if (!gst_pad_peer_query (trans->srcpad, query))
     goto query_failed;
 
   /* we got configuration from our peer, parse them */
@@ -859,11 +859,6 @@ gst_base_transform_configure_caps (GstBaseTransform * trans, GstCaps * in,
   if (klass->set_caps) {
     GST_DEBUG_OBJECT (trans, "Calling set_caps method to setup caps");
     ret = klass->set_caps (trans, in, out);
-  }
-
-  if (ret) {
-    /* try to get a pool when needed */
-    gst_base_transform_do_bufferpool (trans, out);
   }
 
   trans->negotiated = ret;
@@ -1251,6 +1246,11 @@ gst_base_transform_setcaps (GstBaseTransform * trans, GstPad * pad,
     }
   }
 
+  if (ret) {
+    /* try to get a pool when needed */
+    gst_base_transform_do_bufferpool (trans, othercaps);
+  }
+
 done:
   if (otherpeer)
     gst_object_unref (otherpeer);
@@ -1301,8 +1301,10 @@ gst_base_transform_query (GstPad * pad, GstQuery * query)
         goto done;
 
       GST_BASE_TRANSFORM_LOCK (trans);
-      passthrough = trans->passthrough;
+      passthrough = trans->passthrough || trans->always_in_place;
       GST_BASE_TRANSFORM_UNLOCK (trans);
+
+      GST_DEBUG_OBJECT (trans, "passthrough %d", passthrough);
 
       if (passthrough)
         ret = gst_pad_peer_query (otherpad, query);
@@ -1439,7 +1441,7 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
 
   if (*out_buf == NULL) {
     if (trans->passthrough) {
-      GST_DEBUG_OBJECT (trans, "Avoiding pad alloc");
+      GST_DEBUG_OBJECT (trans, "Reusing input buffer");
       *out_buf = in_buf;
     } else if (trans->priv->srcpool) {
       GST_DEBUG_OBJECT (trans, "using pool alloc");
