@@ -337,8 +337,13 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, guint8 * data,
 {
   guint nal_type;
 
-  g_return_if_fail (nal_size >= 2);
   g_return_if_fail (nal_pos - sc_pos > 0 && nal_pos - sc_pos <= 4);
+
+  /* nothing to do for broken input */
+  if (G_UNLIKELY (nal_size < 2)) {
+    GST_DEBUG_OBJECT (h264parse, "not processing nal size %u", nal_size);
+    return;
+  }
 
   /* lower layer collects params */
   gst_h264_params_parse_nal (h264parse->params, data + nal_pos, nal_size);
@@ -529,6 +534,20 @@ gst_h264_parse_check_valid_frame (GstBaseParse * parse,
       prev_sc_pos--;
 
     /* already consume and gather info from NAL */
+    if (G_UNLIKELY (next_sc_pos - nal_pos < 2)) {
+      GST_WARNING_OBJECT (h264parse, "input stream is corrupt; "
+          "it contains a NAL unit of length %d", next_sc_pos - nal_pos);
+      /* broken nal at start -> arrange to skip it,
+       * otherwise have it terminate current au
+       * (and so it will be skippd on next frame round) */
+      if (prev_sc_pos == sc_pos) {
+        *skipsize = sc_pos + 2;
+        return FALSE;
+      } else {
+        next_sc_pos = prev_sc_pos;
+        break;
+      }
+    }
     gst_h264_parse_process_nal (h264parse, data, prev_sc_pos, nal_pos,
         next_sc_pos - nal_pos);
     if (next_nal_pos >= size - 1 ||
