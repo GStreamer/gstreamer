@@ -34,6 +34,7 @@ GST_DEBUG_CATEGORY_EXTERN (mpeg4v_parse_debug);
 #define GET_BITS(b, num, bits) G_STMT_START {        \
   if (!gst_bit_reader_get_bits_uint32(b, bits, num)) \
     goto failed;                                     \
+  GST_TRACE ("parsed %d bits: %d", num, *(bits));    \
 } G_STMT_END
 
 #define MARKER_BIT(b) G_STMT_START {  \
@@ -130,6 +131,7 @@ gst_mpeg4_params_parse_vo (MPEG4Params * params, GstBitReader * br)
     aspect_ratio_width = aspect_ratio_table[bits][0];
     aspect_ratio_height = aspect_ratio_table[bits][1];
   }
+  GST_DEBUG ("aspect ratio %d/%d", aspect_ratio_width, aspect_ratio_height);
 
   GET_BITS (br, 1, &bits);
   if (bits) {
@@ -180,6 +182,7 @@ gst_mpeg4_params_parse_vo (MPEG4Params * params, GstBitReader * br)
   GET_BITS (br, 13, &bits);
   height = bits;
   MARKER_BIT (br);
+  GST_DEBUG ("width x height: %d x %d", width, height);
 
   /* so we got it all, report back */
   params->width = width;
