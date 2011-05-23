@@ -250,6 +250,12 @@ else
 OFA_DIR=
 endif
 
+if USE_OPENAL
+OPENAL_DIR=openal
+else
+OPENAL_DIR=
+endif
+
 if USE_OPENCV
 OPENCV_DIR=opencv
 else
@@ -405,6 +411,7 @@ SUBDIRS=\
 	$(NAS_DIR) \
 	$(NEON_DIR) \
 	$(OFA_DIR) \
+	$(OPENAL_DIR) \
 	$(OPENCV_DIR) \
 	$(RSVG_DIR) \
 	$(SCHRO_DIR) \
@@ -455,6 +462,7 @@ DIST_SUBDIRS = \
 	nas \
 	neon \
 	ofa \
+	openal \
 	opencv \
 	rsvg \
 	resindvd \

@@ -1299,6 +1299,16 @@ AG_GST_CHECK_FEATURE(OFA, [ofa plugins], ofa, [
   AC_SUBST(OFA_LIBS)
 ])
 
+dnl *** OpenAL ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_OPENAL, true)
+AG_GST_CHECK_FEATURE(OPENAL, [OpenAL plugin], openal, [
+  PKG_CHECK_MODULES(OPENAL, openal, HAVE_OPENAL="yes", [
+    HAVE_OPENAL="no"
+  ])
+  AC_SUBST(OPENAL_CFLAGS)
+  AC_SUBST(OPENAL_LIBS)
+])
+
 dnl *** opencv ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_OPENCV, true)
 AG_GST_CHECK_FEATURE(OPENCV, [opencv plugins], opencv, [
@@ -1688,6 +1698,7 @@ AM_CONDITIONAL(USE_MYTHTV, false)
 AM_CONDITIONAL(USE_NAS, false)
 AM_CONDITIONAL(USE_NEON, false)
 AM_CONDITIONAL(USE_OFA, false)
+AM_CONDITIONAL(USE_OPENAL, false)
 AM_CONDITIONAL(USE_OPENCV, false)
 AM_CONDITIONAL(USE_RSVG, false)
 AM_CONDITIONAL(USE_TIMIDITY, false)
@@ -1927,6 +1938,7 @@ ext/mythtv/Makefile
 ext/nas/Makefile
 ext/neon/Makefile
 ext/ofa/Makefile
+ext/openal/Makefile
 ext/opencv/Makefile
 ext/rsvg/Makefile
 ext/resindvd/Makefile
