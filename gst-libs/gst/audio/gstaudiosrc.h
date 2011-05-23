@@ -40,7 +40,6 @@ typedef struct _GstAudioSrcClass GstAudioSrcClass;
 
 /**
  * GstAudioSrc:
- * @element: parent class
  *
  * Base class for simple audio sources.
  */

@@ -42,6 +42,9 @@ G_BEGIN_DECLS
  * @GST_AUDIO_CHANNEL_POSITION_NONE: used for position-less channels, e.g.
  *     from a sound card that records 1024 channels; mutually exclusive with
  *     any other channel position
+ * @GST_AUDIO_CHANNEL_POSITION_INVALID: invalid position
+ *
+ * Audio channel positions.
  */
 typedef enum {
   GST_AUDIO_CHANNEL_POSITION_INVALID = -1,
@@ -74,6 +77,7 @@ typedef enum {
    * are defined or all positions are undefined, but can't mix'n'match  */
   GST_AUDIO_CHANNEL_POSITION_NONE,
 
+  /*< private >*/
   /* don't use - counter */
   GST_AUDIO_CHANNEL_POSITION_NUM
 } GstAudioChannelPosition;
