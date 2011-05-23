@@ -3406,6 +3406,7 @@ no_iter:
 gboolean
 gst_pad_query (GstPad * pad, GstQuery * query)
 {
+  gboolean res;
   GstPadQueryFunction func;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
@@ -3416,7 +3417,11 @@ gst_pad_query (GstPad * pad, GstQuery * query)
   if ((func = GST_PAD_QUERYFUNC (pad)) == NULL)
     goto no_func;
 
-  return func (pad, query);
+  res = func (pad, query);
+
+  GST_DEBUG_OBJECT (pad, "sent query %p, result %d", query, res);
+
+  return res;
 
 no_func:
   {
