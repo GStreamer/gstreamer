@@ -1,6 +1,6 @@
 /*
  * GStreamer
- * Copyright (C) 2009 Sebastian <sebp@k-d-w.org>
+ * Copyright (C) 2009 Sebastian Pölsterl <sebp@k-d-w.org>
  * Copyright (C) 2010 Andoni Morales Alastruey <ylatuya@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
@@ -215,32 +215,36 @@ gst_teletextdec_class_init (GstTeletextDecClass * klass)
   gobject_class->finalize = gst_teletextdec_finalize;
 
   gstelement_class = GST_ELEMENT_CLASS (klass);
-  gstelement_class->change_state = gst_teletextdec_change_state;
+  gstelement_class->change_state =
+      GST_DEBUG_FUNCPTR (gst_teletextdec_change_state);
 
   g_object_class_install_property (gobject_class, PROP_PAGENO,
       g_param_spec_int ("page", "Page number",
           "Number of page that should displayed",
-          100, 999, 100, G_PARAM_READWRITE));
+          100, 999, 100, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_SUBNO,
       g_param_spec_int ("subpage", "Sub-page number",
           "Number of sub-page that should displayed (-1 for all)",
-          -1, 0x99, -1, G_PARAM_READWRITE));
+          -1, 0x99, -1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_SUBTITLES_MODE,
       g_param_spec_boolean ("subtitles-mode", "Enable subtitles mode",
           "Enables subtitles mode for text output stripping the blank lines and "
-          "the teletext state lines", FALSE, G_PARAM_READWRITE));
+          "the teletext state lines", FALSE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_SUBS_TEMPLATE,
       g_param_spec_string ("subtitles-template", "Subtitles output template",
           "Output template used to print each one of the subtitles lines",
-          g_strescape ("%s\n", NULL), G_PARAM_READWRITE));
+          g_strescape ("%s\n", NULL),
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_FONT_DESCRIPTION,
       g_param_spec_string ("font-description", "Pango font description",
           "Font description used for the pango output.",
-          DEFAULT_FONT_DESCRIPTION, G_PARAM_READWRITE));
+          DEFAULT_FONT_DESCRIPTION,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 /* initialize the new element
@@ -531,6 +535,7 @@ gst_teletextdec_src_set_caps (GstPad * pad, GstCaps * caps)
   GstTeletextDec *teletext;
   GstStructure *structure = NULL;
   const gchar *mimetype;
+  GstPad *peer;
 
   teletext = GST_TELETEXTDEC (gst_pad_get_parent (pad));
   GST_DEBUG_OBJECT (teletext, "Linking teletext source pad");
@@ -542,7 +547,11 @@ gst_teletextdec_src_set_caps (GstPad * pad, GstCaps * caps)
     goto refuse_caps;
   }
 
-  gst_pad_set_caps (gst_pad_get_peer (pad), caps);
+  peer = gst_pad_get_peer (pad);
+  if (peer) {
+    gst_pad_set_caps (peer, caps);
+    gst_object_unref (peer);
+  }
 
   structure = gst_caps_get_structure (caps, 0);
   mimetype = gst_structure_get_name (structure);
@@ -1048,6 +1057,7 @@ gst_teletextdec_push_preroll_buffer (GstTeletextDec * teletext)
     goto beach;
   }
 
+  gst_caps_truncate (out_caps);
   structure = gst_caps_get_structure (out_caps, 0);
   mimetype = gst_structure_get_name (structure);
   if (g_strcmp0 (mimetype, "video/x-raw-rgb") == 0) {
@@ -1077,7 +1087,7 @@ static void
 gst_teletextdec_lofp_to_line (guint * field, guint * field_line,
     guint * frame_line, guint lofp, systems system)
 {
-  uint line_offset;
+  guint line_offset;
 
   /* field_parity */
   *field = !(lofp & (1 << 5));

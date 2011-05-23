@@ -1,6 +1,6 @@
 /*
  * GStreamer
- * Copyright (C) 2009 Sebastian <sebp@k-d-w.org>
+ * Copyright (C) 2009 Sebastian Pölsterl <sebp@k-d-w.org>
  * Copyright (C) 2010 Andoni Morales Alastruey <ylatuya@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
