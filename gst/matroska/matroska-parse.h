@@ -51,7 +51,6 @@ typedef struct _GstMatroskaParse {
   GstMatroskaReadCommon    common;
 
   /* pads */
-  GstPad                  *sinkpad;
   GstPad                  *srcpad;
   GstClock                *clock;
   guint                    num_v_streams;
@@ -89,11 +88,6 @@ typedef struct _GstMatroskaParse {
   GstEvent                *new_segment;
   GstTagList              *global_tags;
 
-  /* pull mode caching */
-  GstBuffer *cached_buffer;
-
-  /* push and pull mode */
-  guint64                  offset;
   /* some state saving */
   GstClockTime             cluster_time;
   guint64                  cluster_offset;

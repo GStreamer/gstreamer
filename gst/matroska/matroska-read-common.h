@@ -44,6 +44,7 @@ typedef struct _GstMatroskaReadCommon {
   gint                     element_index_writer_id;
 
   /* pads */
+  GstPad                  *sinkpad;
   GPtrArray               *src;
   guint                    num_streams;
 
@@ -61,6 +62,12 @@ typedef struct _GstMatroskaReadCommon {
 
   /* timescale in the file */
   guint64                  time_scale;
+
+  /* pull mode caching */
+  GstBuffer *cached_buffer;
+
+  /* push and pull mode */
+  guint64                  offset;
 } GstMatroskaReadCommon;
 
 GstFlowReturn gst_matroska_decode_content_encodings (GArray * encodings);
@@ -71,6 +78,8 @@ GstFlowReturn gst_matroska_read_common_parse_index (GstMatroskaReadCommon *
     common, GstEbmlRead * ebml);
 GstFlowReturn gst_matroska_read_common_parse_skip (GstMatroskaReadCommon *
     common, GstEbmlRead * ebml, const gchar * parent_name, guint id);
+GstFlowReturn gst_matroska_read_common_peek_bytes (GstMatroskaReadCommon *
+    common, guint64 offset, guint size, GstBuffer ** p_buf, guint8 ** bytes);
 gint gst_matroska_read_common_stream_from_num (GstMatroskaReadCommon * common,
     guint track_num);
 GstFlowReturn gst_matroska_read_common_read_track_encoding (

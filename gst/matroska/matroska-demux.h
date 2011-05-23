@@ -51,7 +51,6 @@ typedef struct _GstMatroskaDemux {
   GstMatroskaReadCommon    common;
 
   /* pads */
-  GstPad                  *sinkpad;
   GstClock                *clock;
   guint                    num_v_streams;
   guint                    num_a_streams;
@@ -87,11 +86,6 @@ typedef struct _GstMatroskaDemux {
   GstEvent                *new_segment;
   GstTagList              *global_tags;
 
-  /* pull mode caching */
-  GstBuffer *cached_buffer;
-
-  /* push and pull mode */
-  guint64                  offset;
   /* some state saving */
   GstClockTime             cluster_time;
   guint64                  cluster_offset;
