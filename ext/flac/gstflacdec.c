@@ -1724,8 +1724,9 @@ gst_flac_dec_src_query (GstPad * pad, GstQuery * query)
 
       gst_query_parse_duration (query, &fmt, NULL);
 
-      /* try any demuxers before us first */
-      if (fmt == GST_FORMAT_TIME && peer && gst_pad_query (peer, query)) {
+      /* try any demuxers or parsers before us first */
+      if ((fmt == GST_FORMAT_TIME || fmt == GST_FORMAT_DEFAULT) &&
+          peer != NULL && gst_pad_query (peer, query)) {
         gst_query_parse_duration (query, NULL, &len);
         GST_DEBUG_OBJECT (flacdec, "peer returned duration %" GST_TIME_FORMAT,
             GST_TIME_ARGS (len));
