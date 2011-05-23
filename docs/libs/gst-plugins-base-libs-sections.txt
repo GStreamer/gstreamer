@@ -34,6 +34,7 @@ GST_APP_BUFFER_CLASS
 GST_IS_APP_BUFFER
 GST_IS_APP_BUFFER_CLASS
 GST_TYPE_APP_BUFFER
+GST_TYPE_APP_STREAM_TYPE
 <SUBSECTION Private>
 GstAppSrc
 GstAppSrcPrivate
@@ -859,6 +860,22 @@ gst_netbuffer_get_type
 <SECTION>
 <FILE>gstriff</FILE>
 <INCLUDE>gst/riff/riff-media.h</INCLUDE>
+gst_riff_create_audio_caps
+gst_riff_create_audio_template_caps
+gst_riff_create_iavs_caps
+gst_riff_create_iavs_template_caps
+gst_riff_create_video_caps
+gst_riff_create_video_template_caps
+gst_riff_init
+gst_riff_parse_chunk
+gst_riff_parse_file_header
+gst_riff_parse_info
+gst_riff_parse_strf_auds
+gst_riff_parse_strf_iavs
+gst_riff_parse_strf_vids
+gst_riff_parse_strh
+gst_riff_read_chunk
+<SUBSECTION Standard>
 GST_RIFF_00
 GST_RIFF_0021
 GST_RIFF_0031
@@ -1042,22 +1059,6 @@ GST_RIFF_y41p
 GST_RIFF_yuy2
 GST_RIFF_yv12
 
-gst_riff_create_audio_caps
-gst_riff_create_audio_template_caps
-gst_riff_create_iavs_caps
-gst_riff_create_iavs_template_caps
-gst_riff_create_video_caps
-gst_riff_create_video_template_caps
-gst_riff_init
-gst_riff_parse_chunk
-gst_riff_parse_file_header
-gst_riff_parse_info
-gst_riff_parse_strf_auds
-gst_riff_parse_strf_iavs
-gst_riff_parse_strf_vids
-gst_riff_parse_strh
-gst_riff_read_chunk
-<SUBSECTION Standard>
 gst_riff_acid
 gst_riff_dmlh
 gst_riff_index_entry
@@ -1739,6 +1740,7 @@ GST_TAG_CAPTURING_FLASH_FIRED
 GST_TAG_CAPTURING_FLASH_MODE
 GST_TAG_CAPTURING_METERING_MODE
 GST_TAG_CAPTURING_SOURCE
+GST_TAG_CAPTURING_EXPOSURE_COMPENSATION
 GST_TAG_IMAGE_HORIZONTAL_PPI
 GST_TAG_IMAGE_VERTICAL_PPI
 gst_tag_register_musicbrainz_tags
@@ -1847,6 +1849,7 @@ GST_TAG_XMP_WRITER_INTERFACE
 GST_IS_TAG_XMP_WRITER
 GST_IS_TAG_XMP_WRITER_INTERFACE
 GST_TAG_XMP_WRITER_GET_INTERFACE
+gst_tag_xmp_writer_get_type
 </SECTION>
 
 # base utils
@@ -2079,6 +2082,20 @@ GST_VIDEO_CAPS_BGR_16
 GST_VIDEO_CAPS_RGB8_PALETTED
 GST_VIDEO_CAPS_GRAY8
 GST_VIDEO_CAPS_GRAY16
+GST_VIDEO_CAPS_ARGB_64
+GST_VIDEO_CAPS_r210
+GST_VIDEO_COMP1_MASK_15
+GST_VIDEO_COMP1_MASK_15_INT
+GST_VIDEO_COMP1_MASK_16
+GST_VIDEO_COMP1_MASK_16_INT
+GST_VIDEO_COMP2_MASK_15
+GST_VIDEO_COMP2_MASK_15_INT
+GST_VIDEO_COMP2_MASK_16
+GST_VIDEO_COMP2_MASK_16_INT
+GST_VIDEO_COMP3_MASK_15
+GST_VIDEO_COMP3_MASK_15_INT
+GST_VIDEO_COMP3_MASK_16
+GST_VIDEO_COMP3_MASK_16_INT
 GST_VIDEO_FPS_RANGE
 GST_VIDEO_GREEN_MASK_15
 GST_VIDEO_GREEN_MASK_15_INT
@@ -2096,12 +2113,15 @@ GstVideoFormat
 gst_video_calculate_display_ratio
 gst_video_frame_rate
 gst_video_get_size
+gst_video_get_size_from_caps
 gst_video_format_convert
 gst_video_format_new_caps
 gst_video_format_new_caps_interlaced
+gst_video_format_new_template_caps
 gst_video_format_get_component_height
 gst_video_format_get_component_offset
 gst_video_format_get_component_width
+gst_video_format_get_component_depth
 gst_video_format_get_pixel_stride
 gst_video_format_get_row_stride
 gst_video_format_get_size
