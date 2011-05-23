@@ -658,10 +658,10 @@ gst_video_format_new_caps_raw (GstVideoFormat format)
           blue_mask = GST_VIDEO_COMP1_MASK_15_INT;
           break;
         default:
-          return NULL;
+          g_assert_not_reached ();
       }
     } else if (bpp != 8) {
-      return NULL;
+      g_assert_not_reached ();
     }
 
     caps = gst_caps_new_simple ("video/x-raw-rgb",
