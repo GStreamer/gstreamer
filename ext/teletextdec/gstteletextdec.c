@@ -729,10 +729,11 @@ gst_teletextdec_chain (GstPad * pad, GstBuffer * buf)
 /* ERRORS */
 error:
   {
-    if (GST_FLOW_IS_FATAL (ret)) {
+    if (ret != GST_FLOW_OK && ret != GST_FLOW_NOT_LINKED
+        && ret != GST_FLOW_WRONG_STATE) {
       GST_ELEMENT_ERROR (teletext, STREAM, FAILED,
-          ("Internal data stream error."),
-          ("stream stopped, reason %s", gst_flow_get_name (ret)));
+          ("Internal data stream error."), ("stream stopped, reason %s",
+              gst_flow_get_name (ret)));
       return GST_FLOW_ERROR;
     }
     return ret;
@@ -1054,7 +1055,7 @@ gst_teletextdec_push_preroll_buffer (GstTeletextDec * teletext)
     goto beach;
   }
 
-  buf = gst_buffer_new ();
+  buf = gst_buffer_new_and_alloc (1);
   GST_BUFFER_DATA (buf)[0] = 0;
   gst_buffer_set_caps (buf, out_caps);
   ret = gst_pad_push (teletext->srcpad, buf);
