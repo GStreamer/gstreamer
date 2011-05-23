@@ -1073,7 +1073,7 @@ read_one_tag (GstTagList * list, XmpTag * xmptag,
 
   g_return_if_fail (tag != NULL);
 
-  if (xmptag && xmptag->deserialize) {
+  if (xmptag->deserialize) {
     xmptag->deserialize (xmptag, list, tag, xmptag->tag_name, v, pending_tags);
     return;
   }
