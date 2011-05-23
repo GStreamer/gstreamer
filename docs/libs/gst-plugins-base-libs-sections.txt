@@ -1786,6 +1786,8 @@ gst_tag_list_add_id3_image
 <INCLUDE>gst/tag/tag.h</INCLUDE>
 gst_tag_list_from_xmp_buffer
 gst_tag_list_to_xmp_buffer
+gst_tag_list_to_xmp_buffer_full
+gst_tag_xmp_list_schemas
 <SUBSECTION Standard>
 </SECTION>
 
@@ -1820,13 +1822,31 @@ gst_tag_demux_result_get_type
 <SECTION>
 <FILE>gsttaglanguagecodes</FILE>
 <INCLUDE>gst/tag/tag.h</INCLUDE>
-<SUBSECTION>
 gst_tag_get_language_codes
 gst_tag_get_language_name
 gst_tag_get_language_code
 gst_tag_get_language_code_iso_639_1
 gst_tag_get_language_code_iso_639_2B
 gst_tag_get_language_code_iso_639_2T
+</SECTION>
+
+<SECTION>
+<FILE>gsttagxmpwriter</FILE>
+gst_tag_xmp_writer_add_all_schemas
+gst_tag_xmp_writer_add_schema
+gst_tag_xmp_writer_has_schema
+gst_tag_xmp_writer_remove_schema
+gst_tag_xmp_writer_remove_all_schemas
+gst_tag_xmp_writer_tag_list_to_xmp_buffer
+<SUBSECTION Standard>
+GstTagXmpWriter
+GstTagXmpWriterInterface
+GST_TYPE_TAG_XMP_WRITER
+GST_TAG_XMP_WRITER
+GST_TAG_XMP_WRITER_INTERFACE
+GST_IS_TAG_XMP_WRITER
+GST_IS_TAG_XMP_WRITER_INTERFACE
+GST_TAG_XMP_WRITER_GET_INTERFACE
 </SECTION>
 
 # base utils
