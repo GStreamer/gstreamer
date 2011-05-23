@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) <2005> Philippe Khalaf <burger@speedy.org> 
+ * Copyright (C) <2005> Philippe Khalaf <burger@speedy.org>
  * Copyright (C) <2005> Nokia Corporation <kai.vehmanen@nokia.com>
  *
  * This library is free software; you can redistribute it and/or
@@ -22,11 +22,7 @@
  * SECTION:gstbasertpdepayload
  * @short_description: Base class for RTP depayloader
  *
- * <refsect2>
- * <para>
  * Provides a base class for RTP depayloaders
- * </para>
- * </refsect2>
  */
 
 #include "gstbasertpdepayload.h"

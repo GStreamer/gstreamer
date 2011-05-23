@@ -16,11 +16,7 @@
  * SECTION:gstbasertppayload
  * @short_description: Base class for RTP payloader
  *
- * <refsect2>
- * <para>
  * Provides a base class for RTP payloaders
- * </para>
- * </refsect2>
  */
 
 #ifdef HAVE_CONFIG_H

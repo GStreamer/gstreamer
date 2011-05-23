@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) <2005> Philippe Khalaf <burger@speedy.org> 
+ * Copyright (C) <2005> Philippe Khalaf <burger@speedy.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -92,6 +92,18 @@ struct _GstBaseRTPDepayload
   gpointer _gst_reserved[GST_PADDING-1];
 };
 
+/**
+ * GstBaseRTPDepayloadClass:
+ * @parent_class: the parent class
+ * @set_caps: configure the depayloader
+ * @add_to_queue: (deprecated)
+ * @process: process incoming rtp packets
+ * @set_gst_timestamp: convert from RTP timestamp to GST timestamp
+ * @packet_lost: signal the depayloader about packet loss
+ * @handle_event: custom event handling
+ *
+ * Base class for audio RTP payloader.
+ */
 struct _GstBaseRTPDepayloadClass
 {
   GstElementClass parent_class;
