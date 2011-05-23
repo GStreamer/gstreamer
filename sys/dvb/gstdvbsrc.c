@@ -87,7 +87,8 @@ enum
   ARG_DVBSRC_HIERARCHY_INF,
   ARG_DVBSRC_TUNE,
   ARG_DVBSRC_INVERSION,
-  ARG_DVBSRC_STATS_REPORTING_INTERVAL
+  ARG_DVBSRC_STATS_REPORTING_INTERVAL,
+  ARG_DVBSRC_TIMEOUT,
 };
 
 #define DEFAULT_ADAPTER 0
@@ -106,6 +107,7 @@ enum
 #define DEFAULT_HIERARCHY HIERARCHY_1
 #define DEFAULT_INVERSION INVERSION_ON
 #define DEFAULT_STATS_REPORTING_INTERVAL 100
+#define DEFAULT_TIMEOUT 1000000 /* 1 second */
 
 #define DEFAULT_BUFFER_SIZE 8192        /* not a property */
 
@@ -444,6 +446,11 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
           "stats-reporting-interval",
           "The number of reads before reporting frontend stats",
           0, G_MAXUINT, DEFAULT_STATS_REPORTING_INTERVAL, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, ARG_DVBSRC_TIMEOUT,
+      g_param_spec_uint64 ("timeout", "Timeout",
+          "Post a message after timeout microseconds (0 = disabled)", 0,
+          G_MAXUINT64, DEFAULT_TIMEOUT, G_PARAM_READWRITE));
 }
 
 /* initialize the new element
@@ -488,6 +495,7 @@ gst_dvbsrc_init (GstDvbSrc * object, GstDvbSrcClass * klass)
   object->stats_interval = DEFAULT_STATS_REPORTING_INTERVAL;
 
   object->tune_mutex = g_mutex_new ();
+  object->timeout = DEFAULT_TIMEOUT;
 }
 
 
@@ -625,10 +633,12 @@ gst_dvbsrc_set_property (GObject * _object, guint prop_id,
       object->stats_interval = g_value_get_uint (value);
       object->stats_counter = 0;
       break;
+    case ARG_DVBSRC_TIMEOUT:
+      object->timeout = g_value_get_uint64 (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
   }
-
 }
 
 static void
@@ -688,6 +698,9 @@ gst_dvbsrc_get_property (GObject * _object, guint prop_id,
       break;
     case ARG_DVBSRC_STATS_REPORTING_INTERVAL:
       g_value_set_uint (value, object->stats_interval);
+      break;
+    case ARG_DVBSRC_TIMEOUT:
+      g_value_set_uint64 (value, object->timeout);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -888,80 +901,62 @@ gst_dvbsrc_plugin_init (GstPlugin * plugin)
 }
 
 static GstBuffer *
-read_device (int fd, int adapter_number, int frontend_number, int size,
-    GstDvbSrc * object)
+gst_dvbsrc_read_device (GstDvbSrc * object, int size)
 {
-  int count = 0;
-  struct pollfd pfd[1];
-  int ret_val = 0;
-  guint attempts = 0;
-  const int TIMEOUT = 100;
-
+  gint count = 0;
+  gint ret_val = 0;
   GstBuffer *buf = gst_buffer_new_and_alloc (size);
+  GstClockTime timeout = object->timeout * GST_USECOND;
 
   g_return_val_if_fail (GST_IS_BUFFER (buf), NULL);
 
-  if (fd < 0) {
+  if (object->fd_dvr < 0)
     return NULL;
-  }
 
-  pfd[0].fd = fd;
-  pfd[0].events = POLLIN;
+  while (count < size) {
+    ret_val = gst_poll_wait (object->poll, timeout);
+    GST_LOG_OBJECT (object, "select returned %d", ret_val);
+    if (G_UNLIKELY (ret_val < 0)) {
+      if (errno == EBUSY)
+        goto stopped;
+      else
+        goto select_error;
+    } else if (G_UNLIKELY (ret_val == 0)) {
+      /* timeout, post element message */
+      gst_element_post_message (GST_ELEMENT_CAST (object),
+          gst_message_new_element (GST_OBJECT (object),
+              gst_structure_empty_new ("dvb-read-failure")));
+    } else {
+      int nread =
+          read (object->fd_dvr, GST_BUFFER_DATA (buf) + count, size - count);
 
-  while (count < size && !object->need_unlock) {
-    ret_val = poll (pfd, 1, TIMEOUT);
-    if (ret_val > 0) {
-      if (pfd[0].revents & POLLIN) {
-        int tmp = 0;
-
-        tmp = read (fd, GST_BUFFER_DATA (buf) + count, size - count);
-        if (tmp < 0) {
-          GST_WARNING
-              ("Unable to read from device: /dev/dvb/adapter%d/dvr%d (%d)",
-              adapter_number, frontend_number, errno);
-          attempts += 1;
-          if (attempts % 10 == 0) {
-            GST_WARNING
-                ("Unable to read from device after %u attempts: /dev/dvb/adapter%d/dvr%d",
-                attempts, adapter_number, frontend_number);
-          }
-
-        } else
-          count = count + tmp;
-      } else {
-        GST_LOG ("revents = %d\n", pfd[0].revents);
-      }
-    } else if (ret_val == 0) {  // poll timeout
-      attempts += 1;
-      GST_INFO ("Reading from device /dev/dvb/adapter%d/dvr%d timedout (%d)",
-          adapter_number, frontend_number, attempts);
-
-      if (attempts % 10 == 0) {
-        GST_WARNING
-            ("Unable to read after %u attempts from device: /dev/dvb/adapter%d/dvr%d (%d)",
-            attempts, adapter_number, frontend_number, errno);
+      if (G_UNLIKELY (nread < 0)) {
+        GST_WARNING_OBJECT
+            (object,
+            "Unable to read from device: /dev/dvb/adapter%d/dvr%d (%d)",
+            object->adapter_number, object->frontend_number, errno);
         gst_element_post_message (GST_ELEMENT_CAST (object),
             gst_message_new_element (GST_OBJECT (object),
                 gst_structure_empty_new ("dvb-read-failure")));
-
-      }
-    } else if (errno == -EINTR) {       // poll interrupted
-      if (attempts % 50 == 0) {
-        gst_buffer_unref (buf);
-        return NULL;
-      };
+      } else
+        count = count + nread;
     }
-
-  }
-
-  if (!count) {
-    gst_buffer_unref (buf);
-    return NULL;
   }
 
   GST_BUFFER_SIZE (buf) = count;
   GST_BUFFER_TIMESTAMP (buf) = GST_CLOCK_TIME_NONE;
   return buf;
+
+stopped:
+  GST_DEBUG_OBJECT (object, "stop called");
+  gst_buffer_unref (buf);
+  return NULL;
+
+select_error:
+  GST_ELEMENT_ERROR (object, RESOURCE, READ, (NULL),
+      ("select error %d: %s (%d)", ret_val, g_strerror (errno), errno));
+  gst_buffer_unref (buf);
+  return NULL;
 }
 
 static GstFlowReturn
@@ -984,8 +979,7 @@ gst_dvbsrc_create (GstPushSrc * element, GstBuffer ** buf)
   if (object->fd_dvr > -1) {
     /* --- Read TS from DVR device --- */
     GST_DEBUG_OBJECT (object, "Reading from DVR device");
-    *buf = read_device (object->fd_dvr, object->adapter_number,
-        object->frontend_number, buffer_size, object);
+    *buf = gst_dvbsrc_read_device (object, buffer_size);
     if (*buf != NULL) {
       GstCaps *caps;
 
@@ -994,11 +988,6 @@ gst_dvbsrc_create (GstPushSrc * element, GstBuffer ** buf)
       caps = gst_pad_get_caps (GST_BASE_SRC_PAD (object));
       gst_buffer_set_caps (*buf, caps);
       gst_caps_unref (caps);
-    } else {
-      GST_DEBUG_OBJECT (object, "Failed to read from device");
-      gst_element_post_message (GST_ELEMENT_CAST (object),
-          gst_message_new_element (GST_OBJECT (object),
-              gst_structure_empty_new ("dvb-read-failure")));
     }
 
     if (object->stats_interval != 0 &&
@@ -1062,7 +1051,19 @@ gst_dvbsrc_start (GstBaseSrc * bsrc)
     close (src->fd_frontend);
     return FALSE;
   }
-  src->need_unlock = FALSE;
+  if (!(src->poll = gst_poll_new (TRUE))) {
+    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ_WRITE, (NULL),
+        ("could not create an fdset: %s (%d)", g_strerror (errno), errno));
+    /* unset filters also */
+    gst_dvbsrc_unset_pes_filters (src);
+    close (src->fd_frontend);
+    return FALSE;
+  } else {
+    gst_poll_fd_init (&src->poll_fd_dvr);
+    src->poll_fd_dvr.fd = src->fd_dvr;
+    gst_poll_add_fd (src->poll, &src->poll_fd_dvr);
+    gst_poll_fd_ctl_read (src->poll, &src->poll_fd_dvr, TRUE);
+  }
 
   return TRUE;
 }
@@ -1073,6 +1074,11 @@ gst_dvbsrc_stop (GstBaseSrc * bsrc)
   GstDvbSrc *src = GST_DVBSRC (bsrc);
 
   gst_dvbsrc_close_devices (src);
+  if (src->poll) {
+    gst_poll_free (src->poll);
+    src->poll = NULL;
+  }
+
   return TRUE;
 }
 
@@ -1081,7 +1087,7 @@ gst_dvbsrc_unlock (GstBaseSrc * bsrc)
 {
   GstDvbSrc *src = GST_DVBSRC (bsrc);
 
-  src->need_unlock = TRUE;
+  gst_poll_set_flushing (src->poll, TRUE);
   return TRUE;
 }
 
@@ -1090,7 +1096,7 @@ gst_dvbsrc_unlock_stop (GstBaseSrc * bsrc)
 {
   GstDvbSrc *src = GST_DVBSRC (bsrc);
 
-  src->need_unlock = FALSE;
+  gst_poll_set_flushing (src->poll, FALSE);
   return TRUE;
 }
 
