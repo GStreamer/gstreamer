@@ -22,11 +22,11 @@
 /**
  * SECTION:gstaudioiec61937
  * @short_description: Utility functions for IEC 61937 payloading
+ * @since: 0.10.35
  *
  * This module contains some helper functions for encapsulating various
  * audio formats in IEC 61937 headers and padding.
  *
- * Since: 0.10.35
  */
 
 #ifdef HAVE_CONFIG_H
@@ -60,12 +60,14 @@ caps_get_string_field (const GstCaps * caps, const gchar * field)
 }
 
 /**
- * gst_audio_iec61937_frame_size
- * @type: the type of data to be payloaded as a #GstBufferFormatType
+ * gst_audio_iec61937_frame_size:
+ * @spec: the ringbufer spec
  *
- * Returns 0 if the given @type is not supported or cannot be payloaded, else
- * returns the size of the buffer expected by gst_audio_iec61937_payload() for
- * payloading @type.
+ * Calculated the size of the buffer expected by gst_audio_iec61937_payload() for
+ * payloading type from @spec.
+ *
+ * Returns: the size or 0 if the given @type is not supported or cannot be
+ * payloaded.
  *
  * Since: 0.10.35
  */
@@ -128,19 +130,19 @@ gst_audio_iec61937_frame_size (const GstRingBufferSpec * spec)
 }
 
 /**
- * gst_audio_iec61937_payload
+ * gst_audio_iec61937_payload:
  * @src: a buffer containing the data to payload
  * @src_n: size of @src in bytes
  * @dst: the destination buffer to store the payloaded contents in. Should not
  *       overlap with @src
  * @dst_n: size of @dst in bytes
- * @type: the type of data in @src
+ * @spec: the ringbufer spec for @src
  *
- * Payloads @src in the form specified by IEC 61937 for @type and stores
- * the result in @dst. @src must contain exactly one frame of data and the
- * frame is not checked for errors.
+ * Payloads @src in the form specified by IEC 61937 for the type from @spec and
+ * stores the result in @dst. @src must contain exactly one frame of data and
+ * the frame is not checked for errors.
  *
- * Returns: transfer-full: #TRUE if the payloading was successful, #FALSE
+ * Returns: transfer-full: %TRUE if the payloading was successful, %FALSE
  * otherwise.
  *
  * Since: 0.10.35

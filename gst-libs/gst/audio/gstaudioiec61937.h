@@ -18,13 +18,6 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-/**
- * SECTION:gstaudioiec61937
- * @short_description: Utility functions for IEC 61937 payloading
- *
- * This module contains some helper functions for encapsulating various
- * audio formats in IEC 61937 headers and padding.
- */
 
 #ifndef __GST_AUDIO_IEC61937_H__
 #define __GST_AUDIO_IEC61937_H__
