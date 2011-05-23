@@ -1856,6 +1856,11 @@ GST_TAG_XMP_WRITER_GET_INTERFACE
 <INCLUDE>gst/pbutils/pbutils.h</INCLUDE>
 <SUBSECTION>
 gst_pb_utils_init
+</SECTION>
+
+<SECTION>
+<FILE>gstpluginsbaseversion</FILE>
+<INCLUDE>gst/pbutils/gstpluginsbaseversion.h</INCLUDE>
 <SUBSECTION>
 GST_PLUGINS_BASE_VERSION_MAJOR
 GST_PLUGINS_BASE_VERSION_MINOR
