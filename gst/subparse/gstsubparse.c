@@ -1791,12 +1791,7 @@ gst_subparse_type_find (GstTypeFind * tf, gpointer private)
       }
     }
     converted_str = gst_convert_to_utf8 (str, 128, enc, &tmp, &err);
-    if (converted_str == NULL) {
-      GST_DEBUG ("Charset conversion failed: %s", err->message);
-      g_error_free (err);
-      g_free (str);
-      return;
-    } else {
+    if (converted_str != NULL) {
       g_free (str);
       str = converted_str;
     }
