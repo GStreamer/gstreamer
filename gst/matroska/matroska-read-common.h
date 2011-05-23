@@ -82,12 +82,14 @@ GstFlowReturn gst_matroska_read_common_parse_index (GstMatroskaReadCommon *
     common, GstEbmlRead * ebml);
 GstFlowReturn gst_matroska_read_common_parse_skip (GstMatroskaReadCommon *
     common, GstEbmlRead * ebml, const gchar * parent_name, guint id);
-const guint8 * gst_matroska_read_common_peek_adapter (GstMatroskaReadCommon *
-    common, guint peek);
 GstFlowReturn gst_matroska_read_common_peek_bytes (GstMatroskaReadCommon *
     common, guint64 offset, guint size, GstBuffer ** p_buf, guint8 ** bytes);
-const guint8 * gst_matroska_read_common_peek_pull (GstMatroskaReadCommon *
-    common, guint peek);
+GstFlowReturn gst_matroska_read_common_peek_id_length_pull (GstMatroskaReadCommon *
+    common, GstElement * el, guint32 * _id, guint64 * _length, guint *
+    _needed);
+GstFlowReturn gst_matroska_read_common_peek_id_length_push (GstMatroskaReadCommon *
+    common, GstElement * el, guint32 * _id, guint64 * _length, guint *
+    _needed);
 gint gst_matroska_read_common_stream_from_num (GstMatroskaReadCommon * common,
     guint track_num);
 GstFlowReturn gst_matroska_read_common_read_track_encoding (

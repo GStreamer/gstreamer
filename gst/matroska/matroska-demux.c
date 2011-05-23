@@ -461,16 +461,6 @@ gst_matroska_demux_reset (GstElement * element)
   }
 }
 
-static GstFlowReturn
-gst_matroska_demux_peek_id_length_pull (GstMatroskaDemux * demux, guint32 * _id,
-    guint64 * _length, guint * _needed)
-{
-  return gst_ebml_peek_id_length (_id, _length, _needed,
-      (GstPeekData) gst_matroska_read_common_peek_pull,
-      (gpointer) (&demux->common), GST_ELEMENT_CAST (demux),
-      demux->common.offset);
-}
-
 static gint64
 gst_matroska_demux_get_length (GstMatroskaDemux * demux)
 {
@@ -1865,8 +1855,8 @@ gst_matroska_demux_search_cluster (GstMatroskaDemux * demux, gint64 * pos)
       GST_DEBUG_OBJECT (demux,
           "cluster reported at offset %" G_GINT64_FORMAT, *cpos);
       demux->common.offset = *cpos;
-      ret =
-          gst_matroska_demux_peek_id_length_pull (demux, &id, &length, &needed);
+      ret = gst_matroska_read_common_peek_id_length_pull (&demux->common,
+          GST_ELEMENT_CAST (demux), &id, &length, &needed);
       if (ret == GST_FLOW_OK && id == GST_MATROSKA_ID_CLUSTER) {
         newpos = *cpos;
         goto exit;
@@ -1905,8 +1895,8 @@ gst_matroska_demux_search_cluster (GstMatroskaDemux * demux, gint64 * pos)
         break;
       }
       demux->common.offset = newpos;
-      ret =
-          gst_matroska_demux_peek_id_length_pull (demux, &id, &length, &needed);
+      ret = gst_matroska_read_common_peek_id_length_pull (&demux->common,
+          GST_ELEMENT_CAST (demux), &id, &length, &needed);
       if (ret != GST_FLOW_OK)
         goto resume;
       g_assert (id == GST_MATROSKA_ID_CLUSTER);
@@ -1919,8 +1909,8 @@ gst_matroska_demux_search_cluster (GstMatroskaDemux * demux, gint64 * pos)
       }
       /* skip cluster */
       demux->common.offset += length + needed;
-      ret =
-          gst_matroska_demux_peek_id_length_pull (demux, &id, &length, &needed);
+      ret = gst_matroska_read_common_peek_id_length_pull (&demux->common,
+          GST_ELEMENT_CAST (demux), &id, &length, &needed);
       if (ret != GST_FLOW_OK)
         goto resume;
       GST_DEBUG_OBJECT (demux, "next element is %scluster",
@@ -2035,7 +2025,8 @@ retry:
     guint64 cluster_size = 0;
 
     /* peek and parse some elements */
-    ret = gst_matroska_demux_peek_id_length_pull (demux, &id, &length, &needed);
+    ret = gst_matroska_read_common_peek_id_length_pull (&demux->common,
+        GST_ELEMENT_CAST (demux), &id, &length, &needed);
     if (ret != GST_FLOW_OK)
       goto error;
     GST_LOG_OBJECT (demux, "Offset %" G_GUINT64_FORMAT ", Element id 0x%x, "
@@ -4667,8 +4658,9 @@ gst_matroska_demux_parse_contents_seekentry (GstMatroskaDemux * demux,
       demux->common.offset = seek_pos + demux->common.ebml_segment_start;
 
       /* check ID */
-      if ((ret = gst_matroska_demux_peek_id_length_pull (demux, &id, &length,
-                  &needed)) != GST_FLOW_OK)
+      if ((ret = gst_matroska_read_common_peek_id_length_pull (&demux->common,
+                  GST_ELEMENT_CAST (demux), &id, &length, &needed)) !=
+          GST_FLOW_OK)
         goto finish;
 
       if (id != seek_id) {
@@ -4924,7 +4916,8 @@ gst_matroska_demux_find_tracks (GstMatroskaDemux * demux)
 
   /* Search Tracks element */
   while (TRUE) {
-    ret = gst_matroska_demux_peek_id_length_pull (demux, &id, &length, &needed);
+    ret = gst_matroska_read_common_peek_id_length_pull (&demux->common,
+        GST_ELEMENT_CAST (demux), &id, &length, &needed);
     if (ret != GST_FLOW_OK)
       break;
 
@@ -5259,7 +5252,8 @@ gst_matroska_demux_loop (GstPad * pad)
     }
   }
 
-  ret = gst_matroska_demux_peek_id_length_pull (demux, &id, &length, &needed);
+  ret = gst_matroska_read_common_peek_id_length_pull (&demux->common,
+      GST_ELEMENT_CAST (demux), &id, &length, &needed);
   if (ret == GST_FLOW_UNEXPECTED)
     goto eos;
   if (ret != GST_FLOW_OK) {
@@ -5400,16 +5394,6 @@ perform_seek_to_offset (GstMatroskaDemux * demux, guint64 offset)
 }
 
 static GstFlowReturn
-gst_matroska_demux_peek_id_length_push (GstMatroskaDemux * demux, guint32 * _id,
-    guint64 * _length, guint * _needed)
-{
-  return gst_ebml_peek_id_length (_id, _length, _needed,
-      (GstPeekData) gst_matroska_read_common_peek_adapter,
-      (gpointer) (&demux->common), GST_ELEMENT_CAST (demux),
-      demux->common.offset);
-}
-
-static GstFlowReturn
 gst_matroska_demux_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstMatroskaDemux *demux = GST_MATROSKA_DEMUX (GST_PAD_PARENT (pad));
@@ -5433,7 +5417,8 @@ gst_matroska_demux_chain (GstPad * pad, GstBuffer * buffer)
 next:
   available = gst_adapter_available (demux->common.adapter);
 
-  ret = gst_matroska_demux_peek_id_length_push (demux, &id, &length, &needed);
+  ret = gst_matroska_read_common_peek_id_length_push (&demux->common,
+      GST_ELEMENT_CAST (demux), &id, &length, &needed);
   if (G_UNLIKELY (ret != GST_FLOW_OK && ret != GST_FLOW_UNEXPECTED))
     return ret;
 

@@ -624,7 +624,7 @@ gst_matroska_read_common_parse_index (GstMatroskaReadCommon * common,
   return ret;
 }
 
-const guint8 *
+static const guint8 *
 gst_matroska_read_common_peek_adapter (GstMatroskaReadCommon * common, guint
     peek)
 {
@@ -716,7 +716,7 @@ gst_matroska_read_common_peek_bytes (GstMatroskaReadCommon * common, guint64
   return GST_FLOW_OK;
 }
 
-const guint8 *
+static const guint8 *
 gst_matroska_read_common_peek_pull (GstMatroskaReadCommon * common, guint peek)
 {
   guint8 *data = NULL;
@@ -724,6 +724,24 @@ gst_matroska_read_common_peek_pull (GstMatroskaReadCommon * common, guint peek)
   gst_matroska_read_common_peek_bytes (common, common->offset, peek, NULL,
       &data);
   return data;
+}
+
+GstFlowReturn
+gst_matroska_read_common_peek_id_length_pull (GstMatroskaReadCommon * common,
+    GstElement * el, guint32 * _id, guint64 * _length, guint * _needed)
+{
+  return gst_ebml_peek_id_length (_id, _length, _needed,
+      (GstPeekData) gst_matroska_read_common_peek_pull, (gpointer) common, el,
+      common->offset);
+}
+
+GstFlowReturn
+gst_matroska_read_common_peek_id_length_push (GstMatroskaReadCommon * common,
+    GstElement * el, guint32 * _id, guint64 * _length, guint * _needed)
+{
+  return gst_ebml_peek_id_length (_id, _length, _needed,
+      (GstPeekData) gst_matroska_read_common_peek_adapter, (gpointer) common,
+      el, common->offset);
 }
 
 GstFlowReturn

@@ -384,16 +384,6 @@ gst_matroska_parse_reset (GstElement * element)
   }
 }
 
-static GstFlowReturn
-gst_matroska_parse_peek_id_length_pull (GstMatroskaParse * parse, guint32 * _id,
-    guint64 * _length, guint * _needed)
-{
-  return gst_ebml_peek_id_length (_id, _length, _needed,
-      (GstPeekData) gst_matroska_read_common_peek_pull,
-      (gpointer) (&parse->common), GST_ELEMENT_CAST (parse),
-      parse->common.offset);
-}
-
 static gint64
 gst_matroska_parse_get_length (GstMatroskaParse * parse)
 {
@@ -1549,8 +1539,8 @@ gst_matroska_parse_search_cluster (GstMatroskaParse * parse, gint64 * pos)
         break;
       }
       parse->common.offset = newpos;
-      ret =
-          gst_matroska_parse_peek_id_length_pull (parse, &id, &length, &needed);
+      ret = gst_matroska_read_common_peek_id_length_pull (&parse->common,
+          GST_ELEMENT_CAST (parse), &id, &length, &needed);
       if (ret != GST_FLOW_OK)
         goto resume;
       g_assert (id == GST_MATROSKA_ID_CLUSTER);
@@ -1563,8 +1553,8 @@ gst_matroska_parse_search_cluster (GstMatroskaParse * parse, gint64 * pos)
       }
       /* skip cluster */
       parse->common.offset += length + needed;
-      ret =
-          gst_matroska_parse_peek_id_length_pull (parse, &id, &length, &needed);
+      ret = gst_matroska_read_common_peek_id_length_pull (&parse->common,
+          GST_ELEMENT_CAST (parse), &id, &length, &needed);
       if (ret != GST_FLOW_OK)
         goto resume;
       GST_DEBUG_OBJECT (parse, "next element is %scluster",
@@ -3463,7 +3453,8 @@ gst_matroska_parse_find_tracks (GstMatroskaParse * parse)
 
   /* Search Tracks element */
   while (TRUE) {
-    ret = gst_matroska_parse_peek_id_length_pull (parse, &id, &length, &needed);
+    ret = gst_matroska_read_common_peek_id_length_pull (&parse->common,
+        GST_ELEMENT_CAST (parse), &id, &length, &needed);
     if (ret != GST_FLOW_OK)
       break;
 
@@ -3885,7 +3876,8 @@ gst_matroska_parse_loop (GstPad * pad)
     }
   }
 
-  ret = gst_matroska_parse_peek_id_length_pull (parse, &id, &length, &needed);
+  ret = gst_matroska_read_common_peek_id_length_pull (&parse->common,
+      GST_ELEMENT_CAST (parse), &id, &length, &needed);
   if (ret == GST_FLOW_UNEXPECTED)
     goto eos;
   if (ret != GST_FLOW_OK) {
@@ -4025,16 +4017,6 @@ perform_seek_to_offset (GstMatroskaParse * parse, guint64 offset)
 }
 
 static GstFlowReturn
-gst_matroska_parse_peek_id_length_push (GstMatroskaParse * parse, guint32 * _id,
-    guint64 * _length, guint * _needed)
-{
-  return gst_ebml_peek_id_length (_id, _length, _needed,
-      (GstPeekData) gst_matroska_read_common_peek_adapter,
-      (gpointer) (&parse->common), GST_ELEMENT_CAST (parse),
-      parse->common.offset);
-}
-
-static GstFlowReturn
 gst_matroska_parse_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstMatroskaParse *parse = GST_MATROSKA_PARSE (GST_PAD_PARENT (pad));
@@ -4058,7 +4040,8 @@ gst_matroska_parse_chain (GstPad * pad, GstBuffer * buffer)
 next:
   available = gst_adapter_available (parse->common.adapter);
 
-  ret = gst_matroska_parse_peek_id_length_push (parse, &id, &length, &needed);
+  ret = gst_matroska_read_common_peek_id_length_push (&parse->common,
+      GST_ELEMENT_CAST (parse), &id, &length, &needed);
   if (G_UNLIKELY (ret != GST_FLOW_OK && ret != GST_FLOW_UNEXPECTED))
     return ret;
 
