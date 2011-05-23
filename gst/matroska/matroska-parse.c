@@ -384,23 +384,14 @@ gst_matroska_parse_reset (GstElement * element)
   }
 }
 
-static const guint8 *
-gst_matroska_parse_peek_pull (GstMatroskaParse * parse, guint peek)
-{
-  guint8 *data = NULL;
-
-  gst_matroska_read_common_peek_bytes (&parse->common, parse->common.offset,
-      peek, NULL, &data);
-  return data;
-}
-
 static GstFlowReturn
 gst_matroska_parse_peek_id_length_pull (GstMatroskaParse * parse, guint32 * _id,
     guint64 * _length, guint * _needed)
 {
   return gst_ebml_peek_id_length (_id, _length, _needed,
-      (GstPeekData) gst_matroska_parse_peek_pull, (gpointer) parse,
-      GST_ELEMENT_CAST (parse), parse->common.offset);
+      (GstPeekData) gst_matroska_read_common_peek_pull,
+      (gpointer) (&parse->common), GST_ELEMENT_CAST (parse),
+      parse->common.offset);
 }
 
 static gint64
