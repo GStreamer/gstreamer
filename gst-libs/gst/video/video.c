@@ -1255,9 +1255,10 @@ gst_video_format_has_alpha (GstVideoFormat format)
 /**
  * gst_video_format_get_component_depth:
  * @format: a #GstVideoFormat
+ * @component: the video component (e.g. 0 for 'R' in RGB)
  *
  * Returns the number of bits used to encode an individual pixel of
- * a given component.  Typically this is 8, although higher and lower
+ * a given @component.  Typically this is 8, although higher and lower
  * values are possible for some formats.
  *
  * Since: 0.10.33
