@@ -162,10 +162,10 @@ xmp_tag_get_type_name (XmpTag * xmptag)
   switch (xmptag->type) {
     case GstXmpTagTypeSeq:
       return "rdf:Seq";
-    default:
-      g_assert_not_reached ();
     case GstXmpTagTypeBag:
       return "rdf:Bag";
+    default:
+      g_assert_not_reached ();
   }
 }
 
