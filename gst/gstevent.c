@@ -621,7 +621,7 @@ gst_event_new_segment (GstSegment * segment)
 
   g_return_val_if_fail (segment != NULL, NULL);
 
-  GST_CAT_INFO (GST_CAT_EVENT, "creating segment event %" GST_PTR_FORMAT,
+  GST_CAT_INFO (GST_CAT_EVENT, "creating segment event %" GST_SEGMENT_FORMAT,
       segment);
 
   event = gst_event_new_custom (GST_EVENT_SEGMENT,
