@@ -844,7 +844,7 @@ deserialize_xmp_rating (XmpTag * xmptag, GstTagList * taglist,
     return;
   }
 
-  if (value < 0 || value > 100) {
+  if (value > 100) {
     GST_WARNING ("Unsupported Rating tag %u (should be from 0 to 100), "
         "ignoring", value);
     return;
