@@ -1022,10 +1022,10 @@ gst_mpegvideoparse_change_state (GstElement * element,
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (mpv_parse_debug, "mpegvideoparse", 0,
+  GST_DEBUG_CATEGORY_INIT (mpv_parse_debug, "legacympegvideoparse", 0,
       "MPEG Video Parser");
 
-  return gst_element_register (plugin, "mpegvideoparse",
+  return gst_element_register (plugin, "legacympegvideoparse",
       GST_RANK_PRIMARY, GST_TYPE_MPEGVIDEOPARSE);
 }
 
