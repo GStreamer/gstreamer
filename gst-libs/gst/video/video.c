@@ -31,7 +31,7 @@
  *
  * <refsect2>
  * <para>
- * This library contains some helper functions and includes the 
+ * This library contains some helper functions and includes the
  * videosink and videofilter base classes.
  * </para>
  * </refsect2>
@@ -53,7 +53,7 @@ static GstVideoFormat gst_video_format_from_rgb16_masks (int red_mask,
  *
  * A convenience function to retrieve a GValue holding the framerate
  * from the caps on a pad.
- * 
+ *
  * The pad needs to have negotiated caps containing a framerate property.
  *
  * Returns: NULL if the pad has no configured caps or the configured caps
@@ -106,7 +106,7 @@ gst_video_frame_rate (GstPad * pad)
  *
  * Inspect the caps of the provided pad and retrieve the width and height of
  * the video frames it is configured for.
- * 
+ *
  * The pad needs to have negotiated caps containing width and height properties.
  *
  * Returns: TRUE if the width and height could be retrieved.
@@ -158,13 +158,13 @@ gst_video_get_size (GstPad * pad, gint * width, gint * height)
  * @display_par_n: Numerator of the pixel aspect ratio of the display device
  * @display_par_d: Denominator of the pixel aspect ratio of the display device
  *
- * Given the Pixel Aspect Ratio and size of an input video frame, and the 
- * pixel aspect ratio of the intended display device, calculates the actual 
+ * Given the Pixel Aspect Ratio and size of an input video frame, and the
+ * pixel aspect ratio of the intended display device, calculates the actual
  * display ratio the video will be rendered with.
  *
- * Returns: A boolean indicating success and a calculated Display Ratio in the 
- * dar_n and dar_d parameters. 
- * The return value is FALSE in the case of integer overflow or other error. 
+ * Returns: A boolean indicating success and a calculated Display Ratio in the
+ * dar_n and dar_d parameters.
+ * The return value is FALSE in the case of integer overflow or other error.
  *
  * Since: 0.10.7
  */
@@ -276,7 +276,7 @@ gst_video_parse_caps_color_matrix (GstCaps * caps)
  * halfway-sited vertically), "jpeg" for JPEG and Theora style
  * chroma siting (halfway-sited both horizontally and vertically).
  * Other chroma site values are possible, but uncommon.
- * 
+ *
  * When no chroma site is specified in the caps, it should be assumed
  * to be "mpeg2".
  *
@@ -954,7 +954,7 @@ gst_video_format_to_fourcc (GstVideoFormat format)
  * @blue_mask: blue bit mask
  *
  * Converts red, green, blue bit masks into the corresponding
- * #GstVideoFormat.  
+ * #GstVideoFormat.
  *
  * Since: 0.10.16
  *
@@ -1193,7 +1193,7 @@ gst_video_format_is_gray (GstVideoFormat format)
 /**
  * gst_video_format_has_alpha:
  * @format: a #GstVideoFormat
- * 
+ *
  * Returns TRUE or FALSE depending on if the video format provides an
  * alpha channel.
  *
@@ -1255,7 +1255,7 @@ gst_video_format_has_alpha (GstVideoFormat format)
 /**
  * gst_video_format_get_component_depth:
  * @format: a #GstVideoFormat
- * 
+ *
  * Returns the number of bits used to encode an individual pixel of
  * a given component.  Typically this is 8, although higher and lower
  * values are possible for some formats.
