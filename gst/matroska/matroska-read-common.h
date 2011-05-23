@@ -1,4 +1,5 @@
 /* GStreamer Matroska muxer/demuxer
+ * (c) 2003 Ronald Bultje <rbultje@ronald.bitfreak.net>
  * (c) 2011 Debarshi Ray <rishi@gnu.org>
  *
  * matroska-read-common.h: shared by matroska file/stream demuxer and parser
