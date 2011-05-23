@@ -25,6 +25,7 @@
 
 #include <glib.h>
 #include <gst/gst.h>
+#include <gst/base/gstadapter.h>
 
 #include "matroska-ids.h"
 
@@ -68,6 +69,9 @@ typedef struct _GstMatroskaReadCommon {
 
   /* push and pull mode */
   guint64                  offset;
+
+  /* push based mode usual suspects */
+  GstAdapter              *adapter;
 } GstMatroskaReadCommon;
 
 GstFlowReturn gst_matroska_decode_content_encodings (GArray * encodings);
@@ -78,6 +82,8 @@ GstFlowReturn gst_matroska_read_common_parse_index (GstMatroskaReadCommon *
     common, GstEbmlRead * ebml);
 GstFlowReturn gst_matroska_read_common_parse_skip (GstMatroskaReadCommon *
     common, GstEbmlRead * ebml, const gchar * parent_name, guint id);
+const guint8 * gst_matroska_read_common_peek_adapter (GstMatroskaReadCommon *
+    common, guint peek);
 GstFlowReturn gst_matroska_read_common_peek_bytes (GstMatroskaReadCommon *
     common, guint64 offset, guint size, GstBuffer ** p_buf, guint8 ** bytes);
 const guint8 * gst_matroska_read_common_peek_pull (GstMatroskaReadCommon *

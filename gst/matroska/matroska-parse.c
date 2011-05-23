@@ -171,7 +171,7 @@ gst_matroska_parse_finalize (GObject * object)
     parse->global_tags = NULL;
   }
 
-  g_object_unref (parse->adapter);
+  g_object_unref (parse->common.adapter);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -231,7 +231,7 @@ gst_matroska_parse_init (GstMatroskaParse * parse,
   parse->common.index = NULL;
   parse->global_tags = NULL;
 
-  parse->adapter = gst_adapter_new ();
+  parse->common.adapter = gst_adapter_new ();
 
   /* finish off */
   gst_matroska_parse_reset (GST_ELEMENT (parse));
@@ -3394,8 +3394,8 @@ gst_matroska_parse_take (GstMatroskaParse * parse, guint64 bytes,
     ret = GST_FLOW_ERROR;
     goto exit;
   }
-  if (gst_adapter_available (parse->adapter) >= bytes)
-    buffer = gst_adapter_take_buffer (parse->adapter, bytes);
+  if (gst_adapter_available (parse->common.adapter) >= bytes)
+    buffer = gst_adapter_take_buffer (parse->common.adapter, bytes);
   else
     ret = GST_FLOW_UNEXPECTED;
   if (G_LIKELY (buffer)) {
@@ -4024,19 +4024,14 @@ perform_seek_to_offset (GstMatroskaParse * parse, guint64 offset)
   return res;
 }
 
-static const guint8 *
-gst_matroska_parse_peek_adapter (GstMatroskaParse * parse, guint peek)
-{
-  return gst_adapter_peek (parse->adapter, peek);
-}
-
 static GstFlowReturn
 gst_matroska_parse_peek_id_length_push (GstMatroskaParse * parse, guint32 * _id,
     guint64 * _length, guint * _needed)
 {
   return gst_ebml_peek_id_length (_id, _length, _needed,
-      (GstPeekData) gst_matroska_parse_peek_adapter, (gpointer) parse,
-      GST_ELEMENT_CAST (parse), parse->common.offset);
+      (GstPeekData) gst_matroska_read_common_peek_adapter,
+      (gpointer) (&parse->common), GST_ELEMENT_CAST (parse),
+      parse->common.offset);
 }
 
 static GstFlowReturn
@@ -4051,17 +4046,17 @@ gst_matroska_parse_chain (GstPad * pad, GstBuffer * buffer)
 
   if (G_UNLIKELY (GST_BUFFER_IS_DISCONT (buffer))) {
     GST_DEBUG_OBJECT (parse, "got DISCONT");
-    gst_adapter_clear (parse->adapter);
+    gst_adapter_clear (parse->common.adapter);
     GST_OBJECT_LOCK (parse);
     gst_matroska_parse_reset_streams (parse, GST_CLOCK_TIME_NONE, FALSE);
     GST_OBJECT_UNLOCK (parse);
   }
 
-  gst_adapter_push (parse->adapter, buffer);
+  gst_adapter_push (parse->common.adapter, buffer);
   buffer = NULL;
 
 next:
-  available = gst_adapter_available (parse->adapter);
+  available = gst_adapter_available (parse->common.adapter);
 
   ret = gst_matroska_parse_peek_id_length_push (parse, &id, &length, &needed);
   if (G_UNLIKELY (ret != GST_FLOW_OK && ret != GST_FLOW_UNEXPECTED))
@@ -4125,7 +4120,7 @@ gst_matroska_parse_handle_sink_event (GstPad * pad, GstEvent * event)
 
       GST_DEBUG_OBJECT (parse, "clearing segment state");
       /* clear current segment leftover */
-      gst_adapter_clear (parse->adapter);
+      gst_adapter_clear (parse->common.adapter);
       /* and some streaming setup */
       parse->common.offset = start;
       /* do not know where we are;
@@ -4160,7 +4155,7 @@ gst_matroska_parse_handle_sink_event (GstPad * pad, GstEvent * event)
     }
     case GST_EVENT_FLUSH_STOP:
     {
-      gst_adapter_clear (parse->adapter);
+      gst_adapter_clear (parse->common.adapter);
       GST_OBJECT_LOCK (parse);
       gst_matroska_parse_reset_streams (parse, GST_CLOCK_TIME_NONE, TRUE);
       GST_OBJECT_UNLOCK (parse);

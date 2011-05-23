@@ -624,6 +624,13 @@ gst_matroska_read_common_parse_index (GstMatroskaReadCommon * common,
   return ret;
 }
 
+const guint8 *
+gst_matroska_read_common_peek_adapter (GstMatroskaReadCommon * common, guint
+    peek)
+{
+  return gst_adapter_peek (common->adapter, peek);
+}
+
 /*
  * Calls pull_range for (offset,size) without advancing our offset
  */

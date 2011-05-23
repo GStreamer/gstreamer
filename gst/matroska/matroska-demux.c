@@ -209,7 +209,7 @@ gst_matroska_demux_finalize (GObject * object)
     demux->global_tags = NULL;
   }
 
-  g_object_unref (demux->adapter);
+  g_object_unref (demux->common.adapter);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -262,7 +262,7 @@ gst_matroska_demux_init (GstMatroskaDemux * demux,
   demux->common.index = NULL;
   demux->global_tags = NULL;
 
-  demux->adapter = gst_adapter_new ();
+  demux->common.adapter = gst_adapter_new ();
 
   /* finish off */
   gst_matroska_demux_reset (GST_ELEMENT (demux));
@@ -4820,8 +4820,8 @@ gst_matroska_demux_flush (GstMatroskaDemux * demux, guint flush)
     ret = gst_matroska_demux_check_read_size (demux, flush);
     if (ret != GST_FLOW_OK)
       return ret;
-    if (flush <= gst_adapter_available (demux->adapter))
-      gst_adapter_flush (demux->adapter, flush);
+    if (flush <= gst_adapter_available (demux->common.adapter))
+      gst_adapter_flush (demux->common.adapter, flush);
     else
       return GST_FLOW_UNEXPECTED;
   }
@@ -4853,8 +4853,8 @@ gst_matroska_demux_take (GstMatroskaDemux * demux, guint64 bytes,
     goto exit;
   }
   if (demux->streaming) {
-    if (gst_adapter_available (demux->adapter) >= bytes)
-      buffer = gst_adapter_take_buffer (demux->adapter, bytes);
+    if (gst_adapter_available (demux->common.adapter) >= bytes)
+      buffer = gst_adapter_take_buffer (demux->common.adapter, bytes);
     else
       ret = GST_FLOW_UNEXPECTED;
   } else
@@ -5399,19 +5399,14 @@ perform_seek_to_offset (GstMatroskaDemux * demux, guint64 offset)
   return res;
 }
 
-static const guint8 *
-gst_matroska_demux_peek_adapter (GstMatroskaDemux * demux, guint peek)
-{
-  return gst_adapter_peek (demux->adapter, peek);
-}
-
 static GstFlowReturn
 gst_matroska_demux_peek_id_length_push (GstMatroskaDemux * demux, guint32 * _id,
     guint64 * _length, guint * _needed)
 {
   return gst_ebml_peek_id_length (_id, _length, _needed,
-      (GstPeekData) gst_matroska_demux_peek_adapter, (gpointer) demux,
-      GST_ELEMENT_CAST (demux), demux->common.offset);
+      (GstPeekData) gst_matroska_read_common_peek_adapter,
+      (gpointer) (&demux->common), GST_ELEMENT_CAST (demux),
+      demux->common.offset);
 }
 
 static GstFlowReturn
@@ -5426,17 +5421,17 @@ gst_matroska_demux_chain (GstPad * pad, GstBuffer * buffer)
 
   if (G_UNLIKELY (GST_BUFFER_IS_DISCONT (buffer))) {
     GST_DEBUG_OBJECT (demux, "got DISCONT");
-    gst_adapter_clear (demux->adapter);
+    gst_adapter_clear (demux->common.adapter);
     GST_OBJECT_LOCK (demux);
     gst_matroska_demux_reset_streams (demux, GST_CLOCK_TIME_NONE, FALSE);
     GST_OBJECT_UNLOCK (demux);
   }
 
-  gst_adapter_push (demux->adapter, buffer);
+  gst_adapter_push (demux->common.adapter, buffer);
   buffer = NULL;
 
 next:
-  available = gst_adapter_available (demux->adapter);
+  available = gst_adapter_available (demux->common.adapter);
 
   ret = gst_matroska_demux_peek_id_length_push (demux, &id, &length, &needed);
   if (G_UNLIKELY (ret != GST_FLOW_OK && ret != GST_FLOW_UNEXPECTED))
@@ -5501,7 +5496,7 @@ gst_matroska_demux_handle_sink_event (GstPad * pad, GstEvent * event)
       GST_DEBUG_OBJECT (demux, "clearing segment state");
       GST_OBJECT_LOCK (demux);
       /* clear current segment leftover */
-      gst_adapter_clear (demux->adapter);
+      gst_adapter_clear (demux->common.adapter);
       /* and some streaming setup */
       demux->common.offset = start;
       /* do not know where we are;
@@ -5537,7 +5532,7 @@ gst_matroska_demux_handle_sink_event (GstPad * pad, GstEvent * event)
     }
     case GST_EVENT_FLUSH_STOP:
     {
-      gst_adapter_clear (demux->adapter);
+      gst_adapter_clear (demux->common.adapter);
       GST_OBJECT_LOCK (demux);
       gst_matroska_demux_reset_streams (demux, GST_CLOCK_TIME_NONE, TRUE);
       demux->segment.last_stop = GST_CLOCK_TIME_NONE;

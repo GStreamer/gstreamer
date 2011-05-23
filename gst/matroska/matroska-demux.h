@@ -24,7 +24,6 @@
 #define __GST_MATROSKA_DEMUX_H__
 
 #include <gst/gst.h>
-#include <gst/base/gstadapter.h>
 
 #include "ebml-read.h"
 #include "matroska-ids.h"
@@ -92,8 +91,6 @@ typedef struct _GstMatroskaDemux {
   guint64                  first_cluster_offset;
   guint64                  next_cluster_offset;
 
-  /* push based mode usual suspects */
-  GstAdapter              *adapter;
   /* index stuff */
   gboolean                 seekable;
   gboolean                 building_index;
