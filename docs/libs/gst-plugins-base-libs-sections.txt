@@ -1392,6 +1392,7 @@ gst_rtp_buffer_list_add_extension_twobytes_header
 <FILE>gstrtspdefs</FILE>
 <INCLUDE>gst/rtsp/gstrtspdefs.h</INCLUDE>
 GST_RTSP_CHECK
+GST_RTSP_AUTH_MAX
 GstRTSPEvent
 GstRTSPResult
 GstRTSPFamily
@@ -1399,7 +1400,6 @@ GstRTSPState
 GstRTSPVersion
 GstRTSPMethod
 GstRTSPAuthMethod
-GST_RTSP_AUTH_MAX
 GstRTSPHeaderField
 GstRTSPStatusCode
 gst_rtsp_strresult
