@@ -714,7 +714,9 @@ struct _GstPad {
 #ifndef GST_DISABLE_DEPRECATED
   GstPadIntLinkFunction		 intlinkfunc;
 #else
+#ifndef __GTK_DOC_IGNORE__
   gpointer intlinkfunc;
+#endif
 #endif
 
   GstPadBufferAllocFunction      bufferallocfunc;
