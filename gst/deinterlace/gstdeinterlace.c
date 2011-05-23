@@ -1086,7 +1086,7 @@ gst_deinterlace_push_history (GstDeinterlace * self, GstBuffer * buffer)
   GST_DEBUG_OBJECT (self,
       "Pushing new buffer to the history: ptr %p at %" GST_TIME_FORMAT
       " with duration %" GST_TIME_FORMAT
-      ", size %u, state %u, interlacing method %d", GST_BUFFER_DATA (buffer),
+      ", size %u, state %u, interlacing method %s", GST_BUFFER_DATA (buffer),
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)), GST_BUFFER_SIZE (buffer),
       buf_state,
