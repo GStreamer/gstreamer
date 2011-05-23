@@ -280,6 +280,22 @@ gst_matroska_index_compare (GstMatroskaIndex * i1, GstMatroskaIndex * i2)
     return 0;
 }
 
+static gboolean
+gst_matroska_read_common_encoding_order_unique (GArray * encodings, guint64
+    order)
+{
+  gint i;
+
+  if (encodings == NULL || encodings->len == 0)
+    return TRUE;
+
+  for (i = 0; i < encodings->len; i++)
+    if (g_array_index (encodings, GstMatroskaTrackEncoding, i).order == order)
+      return FALSE;
+
+  return TRUE;
+}
+
 /* skip unknown or alike element */
 GstFlowReturn
 gst_matroska_read_common_parse_skip (GstMatroskaReadCommon * common,
@@ -604,6 +620,169 @@ gst_matroska_read_common_parse_index (GstMatroskaReadCommon * common,
     g_array_free (common->index, TRUE);
     common->index = NULL;
   }
+
+  return ret;
+}
+
+GstFlowReturn
+gst_matroska_read_common_read_track_encoding (GstMatroskaReadCommon * common,
+    GstEbmlRead * ebml, GstMatroskaTrackContext * context)
+{
+  GstMatroskaTrackEncoding enc = { 0, };
+  GstFlowReturn ret;
+  guint32 id;
+
+  DEBUG_ELEMENT_START (common, ebml, "ContentEncoding");
+  /* Set default values */
+  enc.scope = 1;
+  /* All other default values are 0 */
+
+  if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK) {
+    DEBUG_ELEMENT_STOP (common, ebml, "ContentEncoding", ret);
+    return ret;
+  }
+
+  while (ret == GST_FLOW_OK && gst_ebml_read_has_remaining (ebml, 1, TRUE)) {
+    if ((ret = gst_ebml_peek_id (ebml, &id)) != GST_FLOW_OK)
+      break;
+
+    switch (id) {
+      case GST_MATROSKA_ID_CONTENTENCODINGORDER:{
+        guint64 num;
+
+        if ((ret = gst_ebml_read_uint (ebml, &id, &num)) != GST_FLOW_OK)
+          break;
+
+        if (!gst_matroska_read_common_encoding_order_unique (context->encodings,
+                num)) {
+          GST_ERROR_OBJECT (common, "ContentEncodingOrder %" G_GUINT64_FORMAT
+              "is not unique for track %d", num, context->num);
+          ret = GST_FLOW_ERROR;
+          break;
+        }
+
+        GST_DEBUG_OBJECT (common, "ContentEncodingOrder: %" G_GUINT64_FORMAT,
+            num);
+        enc.order = num;
+        break;
+      }
+      case GST_MATROSKA_ID_CONTENTENCODINGSCOPE:{
+        guint64 num;
+
+        if ((ret = gst_ebml_read_uint (ebml, &id, &num)) != GST_FLOW_OK)
+          break;
+
+        if (num > 7 && num == 0) {
+          GST_ERROR_OBJECT (common, "Invalid ContentEncodingScope %"
+              G_GUINT64_FORMAT, num);
+          ret = GST_FLOW_ERROR;
+          break;
+        }
+
+        GST_DEBUG_OBJECT (common, "ContentEncodingScope: %" G_GUINT64_FORMAT,
+            num);
+        enc.scope = num;
+
+        break;
+      }
+      case GST_MATROSKA_ID_CONTENTENCODINGTYPE:{
+        guint64 num;
+
+        if ((ret = gst_ebml_read_uint (ebml, &id, &num)) != GST_FLOW_OK)
+          break;
+
+        if (num > 1) {
+          GST_ERROR_OBJECT (common, "Invalid ContentEncodingType %"
+              G_GUINT64_FORMAT, num);
+          ret = GST_FLOW_ERROR;
+          break;
+        } else if (num != 0) {
+          GST_ERROR_OBJECT (common, "Encrypted tracks are not supported yet");
+          ret = GST_FLOW_ERROR;
+          break;
+        }
+        GST_DEBUG_OBJECT (common, "ContentEncodingType: %" G_GUINT64_FORMAT,
+            num);
+        enc.type = num;
+        break;
+      }
+      case GST_MATROSKA_ID_CONTENTCOMPRESSION:{
+
+        DEBUG_ELEMENT_START (common, ebml, "ContentCompression");
+
+        if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK)
+          break;
+
+        while (ret == GST_FLOW_OK &&
+            gst_ebml_read_has_remaining (ebml, 1, TRUE)) {
+          if ((ret = gst_ebml_peek_id (ebml, &id)) != GST_FLOW_OK)
+            break;
+
+          switch (id) {
+            case GST_MATROSKA_ID_CONTENTCOMPALGO:{
+              guint64 num;
+
+              if ((ret = gst_ebml_read_uint (ebml, &id, &num)) != GST_FLOW_OK) {
+                break;
+              }
+              if (num > 3) {
+                GST_ERROR_OBJECT (common, "Invalid ContentCompAlgo %"
+                    G_GUINT64_FORMAT, num);
+                ret = GST_FLOW_ERROR;
+                break;
+              }
+              GST_DEBUG_OBJECT (common, "ContentCompAlgo: %" G_GUINT64_FORMAT,
+                  num);
+              enc.comp_algo = num;
+
+              break;
+            }
+            case GST_MATROSKA_ID_CONTENTCOMPSETTINGS:{
+              guint8 *data;
+              guint64 size;
+
+              if ((ret =
+                      gst_ebml_read_binary (ebml, &id, &data,
+                          &size)) != GST_FLOW_OK) {
+                break;
+              }
+              enc.comp_settings = data;
+              enc.comp_settings_length = size;
+              GST_DEBUG_OBJECT (common,
+                  "ContentCompSettings of size %" G_GUINT64_FORMAT, size);
+              break;
+            }
+            default:
+              GST_WARNING_OBJECT (common,
+                  "Unknown ContentCompression subelement 0x%x - ignoring", id);
+              ret = gst_ebml_read_skip (ebml);
+              break;
+          }
+        }
+        DEBUG_ELEMENT_STOP (common, ebml, "ContentCompression", ret);
+        break;
+      }
+
+      case GST_MATROSKA_ID_CONTENTENCRYPTION:
+        GST_ERROR_OBJECT (common, "Encrypted tracks not yet supported");
+        gst_ebml_read_skip (ebml);
+        ret = GST_FLOW_ERROR;
+        break;
+      default:
+        GST_WARNING_OBJECT (common,
+            "Unknown ContentEncoding subelement 0x%x - ignoring", id);
+        ret = gst_ebml_read_skip (ebml);
+        break;
+    }
+  }
+
+  DEBUG_ELEMENT_STOP (common, ebml, "ContentEncoding", ret);
+  if (ret != GST_FLOW_OK && ret != GST_FLOW_UNEXPECTED)
+    return ret;
+
+  /* TODO: Check if the combination of values is valid */
+
+  g_array_append_val (context->encodings, enc);
 
   return ret;
 }

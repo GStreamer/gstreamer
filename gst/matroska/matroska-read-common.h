@@ -73,6 +73,9 @@ GstFlowReturn gst_matroska_read_common_parse_skip (GstMatroskaReadCommon *
     common, GstEbmlRead * ebml, const gchar * parent_name, guint id);
 gint gst_matroska_read_common_stream_from_num (GstMatroskaReadCommon * common,
     guint track_num);
+GstFlowReturn gst_matroska_read_common_read_track_encoding (
+    GstMatroskaReadCommon * common, GstEbmlRead * ebml,
+    GstMatroskaTrackContext * context);
 
 G_END_DECLS
 
