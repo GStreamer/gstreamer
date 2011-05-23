@@ -1234,12 +1234,17 @@ gst_base_transform_setcaps (GstBaseTransform * trans, GstPad * pad,
   if (!(ret = gst_base_transform_configure_caps (trans, incaps, outcaps)))
     goto failed_configure;
 
+  GST_OBJECT_LOCK (trans->sinkpad);
+  GST_OBJECT_FLAG_UNSET (trans->srcpad, GST_PAD_NEED_RECONFIGURE);
+  trans->priv->reconfigure = FALSE;
+  GST_OBJECT_UNLOCK (trans->sinkpad);
+
   /* we know this will work, we implement the setcaps */
-  gst_pad_set_caps (otherpad, othercaps);
+  gst_pad_push_event (otherpad, gst_event_new_caps (othercaps));
 
   if (pad == trans->srcpad && trans->priv->pad_mode == GST_ACTIVATE_PULL) {
     /* FIXME hm? */
-    ret &= gst_pad_set_caps (otherpeer, othercaps);
+    ret &= gst_pad_push_event (otherpeer, gst_event_new_caps (othercaps));
     if (!ret) {
       GST_INFO_OBJECT (trans, "otherpeer setcaps(%" GST_PTR_FORMAT ") failed",
           othercaps);
