@@ -148,6 +148,34 @@ G_STMT_START {								\
 #define assert_equals_int(a, b) fail_unless_equals_int(a, b)
 
 /**
+ * fail_unless_equals_int64:
+ * @a: a #gint64 value or expression
+ * @b: a #gint64 value or expression
+ *
+ * This macro checks that @a and @b are equal and aborts if this is not the
+ * case, printing both expressions and the values they evaluated to. This
+ * macro is for use in unit tests.
+ */
+#define fail_unless_equals_int64(a, b)					\
+G_STMT_START {								\
+  gint64 first = a;							\
+  gint64 second = b;							\
+  fail_unless(first == second,						\
+    "'" #a "' (%" G_GINT64_FORMAT") is not equal to '" #b"' (%"		\
+    G_GINT64_FORMAT")", first, second);					\
+} G_STMT_END;
+/**
+ * assert_equals_int64:
+ * @a: a #gint64 value or expression
+ * @b: a #gint64 value or expression
+ *
+ * This macro checks that @a and @b are equal and aborts if this is not the
+ * case, printing both expressions and the values they evaluated to. This
+ * macro is for use in unit tests.
+ */
+#define assert_equals_int64(a, b) fail_unless_equals_int64(a, b)
+
+/**
  * fail_unless_equals_uint64:
  * @a: a #guint64 value or expression
  * @b: a #guint64 value or expression
