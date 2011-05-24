@@ -271,6 +271,16 @@ gst_tee_notify_alloc_pad (GstTee * tee)
 #endif
 }
 
+static GstFlowReturn
+forward_sticky_events (GstPad * pad, GstEvent * event, gpointer user_data)
+{
+  GstPad *srcpad = GST_PAD_CAST (user_data);
+
+  gst_pad_push_event (srcpad, gst_event_ref (event));
+
+  return GST_FLOW_OK;
+}
+
 static GstPad *
 gst_tee_request_new_pad (GstElement * element, GstPadTemplate * templ,
     const gchar * unused, const GstCaps * caps)
@@ -319,8 +329,6 @@ gst_tee_request_new_pad (GstElement * element, GstPadTemplate * templ,
   if (!res)
     goto activate_failed;
 
-  gst_pad_set_setcaps_function (srcpad,
-      GST_DEBUG_FUNCPTR (gst_pad_proxy_setcaps));
   gst_pad_set_getcaps_function (srcpad,
       GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
   gst_pad_set_activatepull_function (srcpad,
@@ -329,6 +337,8 @@ gst_tee_request_new_pad (GstElement * element, GstPadTemplate * templ,
       GST_DEBUG_FUNCPTR (gst_tee_src_check_get_range));
   gst_pad_set_getrange_function (srcpad,
       GST_DEBUG_FUNCPTR (gst_tee_src_get_range));
+  /* Forward sticky events to the new srcpad */
+  gst_pad_sticky_events_foreach (tee->sinkpad, forward_sticky_events, srcpad);
   gst_element_add_pad (GST_ELEMENT_CAST (tee), srcpad);
 
   return srcpad;
