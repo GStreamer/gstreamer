@@ -349,6 +349,16 @@ gst_output_selector_switch_pad_negotiation_mode (GstOutputSelector * sel,
   }
 }
 
+static GstFlowReturn
+forward_sticky_events (GstPad * pad, GstEvent * event, gpointer user_data)
+{
+  GstPad *srcpad = GST_PAD_CAST (user_data);
+
+  gst_pad_push_event (srcpad, gst_event_ref (event));
+
+  return GST_FLOW_OK;
+}
+
 static GstPad *
 gst_output_selector_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * name, const GstCaps * caps)
@@ -367,6 +377,10 @@ gst_output_selector_request_new_pad (GstElement * element,
   GST_OBJECT_UNLOCK (osel);
 
   gst_pad_set_active (srcpad, TRUE);
+
+  /* Forward sticky events to the new srcpad */
+  gst_pad_sticky_events_foreach (osel->sinkpad, forward_sticky_events, srcpad);
+
   gst_element_add_pad (GST_ELEMENT (osel), srcpad);
 
   /* Set the first requested src pad as active by default */
