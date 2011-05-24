@@ -225,7 +225,6 @@ static gboolean gst_app_src_unlock (GstBaseSrc * bsrc);
 static gboolean gst_app_src_unlock_stop (GstBaseSrc * bsrc);
 static gboolean gst_app_src_do_seek (GstBaseSrc * src, GstSegment * segment);
 static gboolean gst_app_src_is_seekable (GstBaseSrc * src);
-static gboolean gst_app_src_check_get_range (GstBaseSrc * src);
 static gboolean gst_app_src_do_get_size (GstBaseSrc * src, guint64 * size);
 static gboolean gst_app_src_query (GstBaseSrc * src, GstQuery * query);
 
@@ -474,7 +473,6 @@ gst_app_src_class_init (GstAppSrcClass * klass)
   basesrc_class->unlock_stop = gst_app_src_unlock_stop;
   basesrc_class->do_seek = gst_app_src_do_seek;
   basesrc_class->is_seekable = gst_app_src_is_seekable;
-  basesrc_class->check_get_range = gst_app_src_check_get_range;
   basesrc_class->get_size = gst_app_src_do_get_size;
   basesrc_class->get_size = gst_app_src_do_get_size;
   basesrc_class->query = gst_app_src_query;
@@ -750,24 +748,6 @@ gst_app_src_is_seekable (GstBaseSrc * src)
 }
 
 static gboolean
-gst_app_src_check_get_range (GstBaseSrc * src)
-{
-  GstAppSrc *appsrc = GST_APP_SRC_CAST (src);
-  GstAppSrcPrivate *priv = appsrc->priv;
-  gboolean res = FALSE;
-
-  switch (priv->stream_type) {
-    case GST_APP_STREAM_TYPE_STREAM:
-    case GST_APP_STREAM_TYPE_SEEKABLE:
-      break;
-    case GST_APP_STREAM_TYPE_RANDOM_ACCESS:
-      res = TRUE;
-      break;
-  }
-  return res;
-}
-
-static gboolean
 gst_app_src_do_get_size (GstBaseSrc * src, guint64 * size)
 {
   GstAppSrc *appsrc = GST_APP_SRC_CAST (src);
@@ -802,6 +782,22 @@ gst_app_src_query (GstBaseSrc * src, GstQuery * query)
       g_mutex_unlock (priv->mutex);
 
       gst_query_set_latency (query, live, min, max);
+      break;
+    }
+    case GST_QUERY_SCHEDULING:
+    {
+      gboolean pull_mode = FALSE;
+
+      switch (priv->stream_type) {
+        case GST_APP_STREAM_TYPE_STREAM:
+        case GST_APP_STREAM_TYPE_SEEKABLE:
+          break;
+        case GST_APP_STREAM_TYPE_RANDOM_ACCESS:
+          pull_mode = TRUE;
+          break;
+      }
+      gst_query_set_scheduling (query, pull_mode, TRUE, FALSE, 1, -1, 1);
+      res = TRUE;
       break;
     }
     default:

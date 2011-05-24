@@ -138,7 +138,6 @@ static GstClockTime gst_base_audio_src_get_time (GstClock * clock,
 
 static GstFlowReturn gst_base_audio_src_create (GstBaseSrc * bsrc,
     guint64 offset, guint length, GstBuffer ** buf);
-static gboolean gst_base_audio_src_check_get_range (GstBaseSrc * bsrc);
 
 static gboolean gst_base_audio_src_event (GstBaseSrc * bsrc, GstEvent * event);
 static void gst_base_audio_src_get_times (GstBaseSrc * bsrc,
@@ -226,8 +225,6 @@ gst_base_audio_src_class_init (GstBaseAudioSrcClass * klass)
   gstbasesrc_class->get_times =
       GST_DEBUG_FUNCPTR (gst_base_audio_src_get_times);
   gstbasesrc_class->create = GST_DEBUG_FUNCPTR (gst_base_audio_src_create);
-  gstbasesrc_class->check_get_range =
-      GST_DEBUG_FUNCPTR (gst_base_audio_src_check_get_range);
   gstbasesrc_class->fixate = GST_DEBUG_FUNCPTR (gst_base_audio_src_fixate);
 
   /* ref class from a thread-safe context to work around missing bit of
@@ -346,16 +343,6 @@ gst_base_audio_src_get_time (GstClock * clock, GstBaseAudioSrc * src)
       GST_TIME_ARGS (result));
 
   return result;
-}
-
-static gboolean
-gst_base_audio_src_check_get_range (GstBaseSrc * bsrc)
-{
-  /* we allow limited pull base operation of which the details
-   * will eventually exposed in an as of yet non-existing query.
-   * Basically pulling can be done on any number of bytes as long
-   * as the offset is -1 or sequentially increasing. */
-  return TRUE;
 }
 
 /**
@@ -654,6 +641,17 @@ gst_base_audio_src_query (GstBaseSrc * bsrc, GstQuery * query)
       /* we are always live, the min latency is 1 segment and the max latency is
        * the complete buffer of segments. */
       gst_query_set_latency (query, TRUE, min_latency, max_latency);
+
+      res = TRUE;
+      break;
+    }
+    case GST_QUERY_SCHEDULING:
+    {
+      /* we allow limited pull base operation of which the details
+       * will eventually exposed in an as of yet non-existing query.
+       * Basically pulling can be done on any number of bytes as long
+       * as the offset is -1 or sequentially increasing. */
+      gst_query_set_scheduling (query, TRUE, FALSE, TRUE, 1, -1, 1);
 
       res = TRUE;
       break;

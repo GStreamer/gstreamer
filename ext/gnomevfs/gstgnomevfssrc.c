@@ -128,7 +128,6 @@ static void gst_gnome_vfs_src_get_property (GObject * object, guint prop_id,
 static gboolean gst_gnome_vfs_src_stop (GstBaseSrc * src);
 static gboolean gst_gnome_vfs_src_start (GstBaseSrc * src);
 static gboolean gst_gnome_vfs_src_is_seekable (GstBaseSrc * src);
-static gboolean gst_gnome_vfs_src_check_get_range (GstBaseSrc * src);
 static gboolean gst_gnome_vfs_src_get_size (GstBaseSrc * src, guint64 * size);
 static GstFlowReturn gst_gnome_vfs_src_create (GstBaseSrc * basesrc,
     guint64 offset, guint size, GstBuffer ** buffer);
@@ -206,8 +205,6 @@ gst_gnome_vfs_src_class_init (GstGnomeVFSSrcClass * klass)
   gstbasesrc_class->get_size = GST_DEBUG_FUNCPTR (gst_gnome_vfs_src_get_size);
   gstbasesrc_class->is_seekable =
       GST_DEBUG_FUNCPTR (gst_gnome_vfs_src_is_seekable);
-  gstbasesrc_class->check_get_range =
-      GST_DEBUG_FUNCPTR (gst_gnome_vfs_src_check_get_range);
   gstbasesrc_class->create = GST_DEBUG_FUNCPTR (gst_gnome_vfs_src_create);
   gstbasesrc_class->query = GST_DEBUG_FUNCPTR (gst_gnome_vfs_src_query);
 }
@@ -657,28 +654,6 @@ eos:
 }
 
 static gboolean
-gst_gnome_vfs_src_query (GstBaseSrc * basesrc, GstQuery * query)
-{
-  gboolean ret = FALSE;
-  GstGnomeVFSSrc *src = GST_GNOME_VFS_SRC (basesrc);
-
-  switch (GST_QUERY_TYPE (query)) {
-    case GST_QUERY_URI:
-      gst_query_set_uri (query, src->uri_name);
-      ret = TRUE;
-      break;
-    default:
-      ret = FALSE;
-      break;
-  }
-
-  if (!ret)
-    ret = GST_BASE_SRC_CLASS (parent_class)->query (basesrc, query);
-
-  return ret;
-}
-
-static gboolean
 gst_gnome_vfs_src_is_seekable (GstBaseSrc * basesrc)
 {
   GstGnomeVFSSrc *src;
@@ -689,48 +664,73 @@ gst_gnome_vfs_src_is_seekable (GstBaseSrc * basesrc)
 }
 
 static gboolean
-gst_gnome_vfs_src_check_get_range (GstBaseSrc * basesrc)
+gst_gnome_vfs_src_scheduling (GstBaseSrc * basesrc, GstQuery * query)
 {
   GstGnomeVFSSrc *src;
   const gchar *protocol;
+  gboolean pull_mode;
 
   src = GST_GNOME_VFS_SRC (basesrc);
 
+  pull_mode = FALSE;
+
   if (src->uri == NULL) {
     GST_WARNING_OBJECT (src, "no URI set yet");
-    return FALSE;
+    goto undecided;
   }
 
   if (gnome_vfs_uri_is_local (src->uri)) {
     GST_LOG_OBJECT (src, "local URI (%s), assuming random access is possible",
         GST_STR_NULL (src->uri_name));
-    return TRUE;
-  }
+    pull_mode = TRUE;
+  } else {
+    /* blacklist certain protocols we know won't work getrange-based */
+    protocol = gnome_vfs_uri_get_scheme (src->uri);
+    if (protocol == NULL)
+      goto undecided;
 
-  /* blacklist certain protocols we know won't work getrange-based */
-  protocol = gnome_vfs_uri_get_scheme (src->uri);
-  if (protocol == NULL)
+    if (strcmp (protocol, "http") == 0 || strcmp (protocol, "https") == 0) {
+      GST_LOG_OBJECT (src,
+          "blacklisted protocol '%s', no random access possible" " (URI=%s)",
+          protocol, GST_STR_NULL (src->uri_name));
+    } else {
+      GST_LOG_OBJECT (src, "undecided about URI '%s', let base class handle it",
+          GST_STR_NULL (src->uri_name));
+    }
     goto undecided;
-
-  if (strcmp (protocol, "http") == 0 || strcmp (protocol, "https") == 0) {
-    GST_LOG_OBJECT (src, "blacklisted protocol '%s', no random access possible"
-        " (URI=%s)", protocol, GST_STR_NULL (src->uri_name));
-    return FALSE;
   }
+  gst_query_set_scheduling (query, pull_mode, pull_mode, FALSE, 1, -1, 1);
+
+  return TRUE;
 
   /* fall through to undecided */
-
 undecided:
   {
     /* don't know what to do, let the basesrc class decide for us */
-    GST_LOG_OBJECT (src, "undecided about URI '%s', let base class handle it",
-        GST_STR_NULL (src->uri_name));
-
-    if (GST_BASE_SRC_CLASS (parent_class)->check_get_range)
-      return GST_BASE_SRC_CLASS (parent_class)->check_get_range (basesrc);
-
-    return FALSE;
+    return GST_BASE_SRC_CLASS (parent_class)->query (basesrc, query);
   }
+}
+
+static gboolean
+gst_gnome_vfs_src_query (GstBaseSrc * basesrc, GstQuery * query)
+{
+  gboolean ret = FALSE;
+  GstGnomeVFSSrc *src = GST_GNOME_VFS_SRC (basesrc);
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_URI:
+      gst_query_set_uri (query, src->uri_name);
+      ret = TRUE;
+      break;
+    case GST_QUERY_SCHEDULING:
+      ret = gst_gnome_vfs_src_scheduling (basesrc, query);
+      break;
+    default:
+      ret = GST_BASE_SRC_CLASS (parent_class)->query (basesrc, query);
+      break;
+  }
+
+  return ret;
 }
 
 static gboolean

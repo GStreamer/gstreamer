@@ -96,7 +96,7 @@ static void gst_gio_src_get_property (GObject * object, guint prop_id,
 
 static GInputStream *gst_gio_src_get_stream (GstGioBaseSrc * bsrc);
 
-static gboolean gst_gio_src_check_get_range (GstBaseSrc * base_src);
+static gboolean gst_gio_src_query (GstBaseSrc * base_src, GstQuery * query);
 
 static void
 gst_gio_src_class_init (GstGioSrcClass * klass)
@@ -133,8 +133,7 @@ gst_gio_src_class_init (GstGioSrcClass * klass)
       "Ren\xc3\xa9 Stadler <mail@renestadler.de>, "
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
 
-  gstbasesrc_class->check_get_range =
-      GST_DEBUG_FUNCPTR (gst_gio_src_check_get_range);
+  gstbasesrc_class->query = GST_DEBUG_FUNCPTR (gst_gio_src_query);
 
   gstgiobasesrc_class->get_stream = GST_DEBUG_FUNCPTR (gst_gio_src_get_stream);
   gstgiobasesrc_class->close_on_stop = TRUE;
@@ -248,39 +247,50 @@ gst_gio_src_get_property (GObject * object, guint prop_id,
 }
 
 static gboolean
-gst_gio_src_check_get_range (GstBaseSrc * base_src)
+gst_gio_src_query (GstBaseSrc * base_src, GstQuery * query)
 {
+  gboolean res;
   GstGioSrc *src = GST_GIO_SRC (base_src);
-  gchar *scheme;
 
-  if (src->file == NULL)
-    goto done;
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_SCHEDULING:
+    {
+      gchar *scheme;
+      gboolean pull_mode;
 
-  scheme = g_file_get_uri_scheme (src->file);
-  if (scheme == NULL)
-    goto done;
+      pull_mode = FALSE;
+      if (src->file == NULL)
+        goto forward_parent;
 
-  if (strcmp (scheme, "file") == 0) {
-    GST_LOG_OBJECT (src, "local URI, assuming random access is possible");
-    g_free (scheme);
-    return TRUE;
-  } else if (strcmp (scheme, "http") == 0 || strcmp (scheme, "https") == 0) {
-    GST_LOG_OBJECT (src, "blacklisted protocol '%s', "
-        "no random access possible", scheme);
-    g_free (scheme);
-    return FALSE;
+      scheme = g_file_get_uri_scheme (src->file);
+      if (scheme == NULL)
+        goto forward_parent;
+
+      if (strcmp (scheme, "file") == 0) {
+        GST_LOG_OBJECT (src, "local URI, assuming random access is possible");
+        pull_mode = TRUE;
+      } else if (strcmp (scheme, "http") == 0 || strcmp (scheme, "https") == 0) {
+        GST_LOG_OBJECT (src, "blacklisted protocol '%s', "
+            "no random access possible", scheme);
+      } else {
+        GST_LOG_OBJECT (src, "unhandled protocol '%s', asking parent", scheme);
+        goto forward_parent;
+      }
+      g_free (scheme);
+
+      gst_query_set_scheduling (query, pull_mode, pull_mode, FALSE, 1, -1, 1);
+      res = TRUE;
+      break;
+    }
+    default:
+    forward_parent:
+      res = GST_CALL_PARENT_WITH_DEFAULT (GST_BASE_SRC_CLASS,
+          query, (base_src, query), FALSE);
+      break;
   }
 
-  g_free (scheme);
-
-done:
-
-  GST_DEBUG_OBJECT (src, "undecided about random access, asking base class");
-
-  return GST_CALL_PARENT_WITH_DEFAULT (GST_BASE_SRC_CLASS,
-      check_get_range, (base_src), FALSE);
+  return res;
 }
-
 
 static GInputStream *
 gst_gio_src_get_stream (GstGioBaseSrc * bsrc)

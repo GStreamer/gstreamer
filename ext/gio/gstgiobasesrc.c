@@ -47,7 +47,6 @@ static gboolean gst_gio_base_src_get_size (GstBaseSrc * base_src,
 static gboolean gst_gio_base_src_is_seekable (GstBaseSrc * base_src);
 static gboolean gst_gio_base_src_unlock (GstBaseSrc * base_src);
 static gboolean gst_gio_base_src_unlock_stop (GstBaseSrc * base_src);
-static gboolean gst_gio_base_src_check_get_range (GstBaseSrc * base_src);
 static GstFlowReturn gst_gio_base_src_create (GstBaseSrc * base_src,
     guint64 offset, guint size, GstBuffer ** buf);
 static gboolean gst_gio_base_src_query (GstBaseSrc * base_src,
@@ -76,8 +75,6 @@ gst_gio_base_src_class_init (GstGioBaseSrcClass * klass)
   gstbasesrc_class->unlock = GST_DEBUG_FUNCPTR (gst_gio_base_src_unlock);
   gstbasesrc_class->unlock_stop =
       GST_DEBUG_FUNCPTR (gst_gio_base_src_unlock_stop);
-  gstbasesrc_class->check_get_range =
-      GST_DEBUG_FUNCPTR (gst_gio_base_src_check_get_range);
   gstbasesrc_class->create = GST_DEBUG_FUNCPTR (gst_gio_base_src_create);
   gstbasesrc_class->query = GST_DEBUG_FUNCPTR (gst_gio_base_src_query);
 }
@@ -292,13 +289,6 @@ gst_gio_base_src_unlock_stop (GstBaseSrc * base_src)
   g_cancellable_reset (src->cancel);
 
   return TRUE;
-}
-
-static gboolean
-gst_gio_base_src_check_get_range (GstBaseSrc * base_src)
-{
-  return GST_CALL_PARENT_WITH_DEFAULT (GST_BASE_SRC_CLASS,
-      check_get_range, (base_src), FALSE);
 }
 
 static GstFlowReturn

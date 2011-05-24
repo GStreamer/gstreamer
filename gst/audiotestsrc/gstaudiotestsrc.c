@@ -151,7 +151,6 @@ static gboolean gst_audio_test_src_setcaps (GstBaseSrc * basesrc,
 static void gst_audio_test_src_src_fixate (GstPad * pad, GstCaps * caps);
 
 static gboolean gst_audio_test_src_is_seekable (GstBaseSrc * basesrc);
-static gboolean gst_audio_test_src_check_get_range (GstBaseSrc * basesrc);
 static gboolean gst_audio_test_src_do_seek (GstBaseSrc * basesrc,
     GstSegment * segment);
 static gboolean gst_audio_test_src_query (GstBaseSrc * basesrc,
@@ -227,8 +226,6 @@ gst_audio_test_src_class_init (GstAudioTestSrcClass * klass)
   gstbasesrc_class->set_caps = GST_DEBUG_FUNCPTR (gst_audio_test_src_setcaps);
   gstbasesrc_class->is_seekable =
       GST_DEBUG_FUNCPTR (gst_audio_test_src_is_seekable);
-  gstbasesrc_class->check_get_range =
-      GST_DEBUG_FUNCPTR (gst_audio_test_src_check_get_range);
   gstbasesrc_class->do_seek = GST_DEBUG_FUNCPTR (gst_audio_test_src_do_seek);
   gstbasesrc_class->query = GST_DEBUG_FUNCPTR (gst_audio_test_src_query);
   gstbasesrc_class->get_times =
@@ -402,6 +399,14 @@ gst_audio_test_src_query (GstBaseSrc * basesrc, GstQuery * query)
       }
     done:
       gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
+      res = TRUE;
+      break;
+    }
+    case GST_QUERY_SCHEDULING:
+    {
+      /* if we can operate in pull mode */
+      gst_query_set_scheduling (query, src->can_activate_pull, TRUE, FALSE, 1,
+          -1, 1);
       res = TRUE;
       break;
     }
@@ -1004,17 +1009,6 @@ gst_audio_test_src_is_seekable (GstBaseSrc * basesrc)
 {
   /* we're seekable... */
   return TRUE;
-}
-
-static gboolean
-gst_audio_test_src_check_get_range (GstBaseSrc * basesrc)
-{
-  GstAudioTestSrc *src;
-
-  src = GST_AUDIO_TEST_SRC (basesrc);
-
-  /* if we can operate in pull mode */
-  return src->can_activate_pull;
 }
 
 static GstFlowReturn
