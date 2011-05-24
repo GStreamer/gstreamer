@@ -216,7 +216,7 @@ gst_auto_video_src_create_element_with_pretty_name (GstAutoVideoSrc * src,
   GstElement *element;
   gchar *name, *marker;
 
-  marker = g_strdup (GST_PLUGIN_FEATURE (factory)->name);
+  marker = g_strdup (GST_OBJECT_NAME (factory));
   if (g_str_has_suffix (marker, "src"))
     marker[strlen (marker) - 4] = '\0';
   if (g_str_has_prefix (marker, "gst"))
@@ -255,7 +255,7 @@ gst_auto_video_src_find_best (GstAutoVideoSrc * src)
     if ((el = gst_auto_video_src_create_element_with_pretty_name (src, f))) {
       GstStateChangeReturn ret;
 
-      GST_DEBUG_OBJECT (src, "Testing %s", GST_PLUGIN_FEATURE (f)->name);
+      GST_DEBUG_OBJECT (src, "Testing %s", GST_OBJECT_NAME (f));
 
       /* If AutoVideoSrc has been provided with filter caps,
        * accept only sources that match with the filter caps */

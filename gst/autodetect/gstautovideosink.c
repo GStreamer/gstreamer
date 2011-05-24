@@ -213,7 +213,7 @@ gst_auto_video_sink_create_element_with_pretty_name (GstAutoVideoSink * sink,
   GstElement *element;
   gchar *name, *marker;
 
-  marker = g_strdup (GST_PLUGIN_FEATURE (factory)->name);
+  marker = g_strdup (GST_OBJECT_NAME (factory));
   if (g_str_has_suffix (marker, "sink"))
     marker[strlen (marker) - 4] = '\0';
   if (g_str_has_prefix (marker, "gst"))
@@ -252,7 +252,7 @@ gst_auto_video_sink_find_best (GstAutoVideoSink * sink)
     if ((el = gst_auto_video_sink_create_element_with_pretty_name (sink, f))) {
       GstStateChangeReturn ret;
 
-      GST_DEBUG_OBJECT (sink, "Testing %s", GST_PLUGIN_FEATURE (f)->name);
+      GST_DEBUG_OBJECT (sink, "Testing %s", GST_OBJECT_NAME (f));
 
       /* If autovideosink has been provided with filter caps,
        * accept only sinks that match with the filter caps */
