@@ -252,7 +252,7 @@ link_failed:
  */
 GstBuffer *
 gst_video_convert_frame (GstBuffer * buf, GstCaps * from_caps,
-    const GstCaps * to_caps, GstClockTime timeout, GError ** err)
+    const GstCaps * to_caps, GstClockTime timeout, GError ** error)
 {
   GstMessage *msg;
   GstBuffer *result = NULL;
