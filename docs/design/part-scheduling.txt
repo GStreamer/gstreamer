@@ -52,6 +52,38 @@ The getrange function
 The getrange function is called when a peer pad performs a _pull_range() on the pad. This
 downstream pad can be a pulling element or another _pull_range() based element.
 
+
+Scheduling Query
+~~~~~~~~~~~~~~~~
+
+A sinkpad can ask the upstream srcpad for its scheduling attributes. It does
+this with the SCHEDULING query.
+
+
+ (out) "pull-mode", G_TYPE_BOOLEAN (default FALSE)
+       - if the pad can operate in pull mode, if this flag is not set the pad
+         will operate in push mode.
+
+ (out) "random-access", G_TYPE_BOOLEAN (default FALSE)
+       - the offset of a pull operation can be specified, if this flag is false,
+         the offset should be -1,
+
+ (out) "sequential", G_TYPE_BOOLEAN (default TRUE)
+       - suggest sequential access to the data. If random-access is specified,
+         seeks are allowed but should be avoided. This is common for network
+         streams. (
+
+ (out) "minsize", G_TYPE_INT (default 1)
+       - the suggested minimum size of pull requests
+
+ (out) "maxsize", G_TYPE_INT (default -1, unlimited)
+       - the suggested maximum size of pull requests
+
+ (out) "align", G_TYPE_INT (default 1)
+       - the suggested alignment for the pull requests.
+
+
+
 Plug-in techniques
 ~~~~~~~~~~~~~~~~~~
 

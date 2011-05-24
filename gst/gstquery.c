@@ -1757,3 +1757,93 @@ gst_query_parse_nth_allocation_meta (GstQuery * query, guint index)
   }
   return ret;
 }
+
+/**
+ * gst_query_new_scheduling
+ *
+ * Constructs a new query object for querying the scheduling properties.
+ *
+ * Free-function: gst_query_unref
+ *
+ * Returns: (transfer full): a new #GstQuery
+ */
+GstQuery *
+gst_query_new_scheduling (void)
+{
+  GstQuery *query;
+  GstStructure *structure;
+
+  structure = gst_structure_id_new (GST_QUARK (QUERY_SCHEDULING),
+      GST_QUARK (PULL_MODE), G_TYPE_BOOLEAN, FALSE,
+      GST_QUARK (RANDOM_ACCESS), G_TYPE_BOOLEAN, FALSE,
+      GST_QUARK (SEQUENTIAL), G_TYPE_BOOLEAN, TRUE,
+      GST_QUARK (MINSIZE), G_TYPE_INT, 1,
+      GST_QUARK (MAXSIZE), G_TYPE_INT, -1,
+      GST_QUARK (ALIGN), G_TYPE_INT, 1, NULL);
+  query = gst_query_new (GST_QUERY_SCHEDULING, structure);
+
+  return query;
+}
+
+/**
+ * gst_query_set_scheduling
+ * @query: A valid #GstQuery of type GST_QUERY_SCHEDULING.
+ * @pull_mode: if pull mode scheduling is supported
+ * @random_access: if random access is possible
+ * @sequential: if sequential access is recommended
+ * @minsize: the suggested minimum size of pull requests
+ * @maxsize the suggested maximum size of pull requests:
+ * @align: the suggested alignment of pull requests
+ *
+ * Set the scheduling properties.
+ */
+void
+gst_query_set_scheduling (GstQuery * query, gboolean pull_mode,
+    gboolean random_access, gboolean sequential,
+    gint minsize, gint maxsize, gint align)
+{
+  GstStructure *structure;
+
+  g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_SCHEDULING);
+  g_return_if_fail (gst_query_is_writable (query));
+
+  structure = GST_QUERY_STRUCTURE (query);
+  gst_structure_id_set (structure,
+      GST_QUARK (PULL_MODE), G_TYPE_BOOLEAN, pull_mode,
+      GST_QUARK (RANDOM_ACCESS), G_TYPE_BOOLEAN, random_access,
+      GST_QUARK (SEQUENTIAL), G_TYPE_BOOLEAN, sequential,
+      GST_QUARK (MINSIZE), G_TYPE_INT, minsize,
+      GST_QUARK (MAXSIZE), G_TYPE_INT, maxsize,
+      GST_QUARK (ALIGN), G_TYPE_INT, align, NULL);
+}
+
+/**
+ * gst_query_parse_scheduling
+ * @query: A valid #GstQuery of type GST_QUERY_SCHEDULING.
+ * @pull_mode: if pull mode scheduling is supported
+ * @random_access: if random access is possible
+ * @sequential: if sequential access is recommended
+ * @minsize: the suggested minimum size of pull requests
+ * @maxsize the suggested maximum size of pull requests:
+ * @align: the suggested alignment of pull requests
+ *
+ * Set the scheduling properties.
+ */
+void
+gst_query_parse_scheduling (GstQuery * query, gboolean * pull_mode,
+    gboolean * random_access, gboolean * sequential,
+    gint * minsize, gint * maxsize, gint * align)
+{
+  GstStructure *structure;
+
+  g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_SCHEDULING);
+
+  structure = GST_QUERY_STRUCTURE (query);
+  gst_structure_id_get (structure,
+      GST_QUARK (PULL_MODE), G_TYPE_BOOLEAN, pull_mode,
+      GST_QUARK (RANDOM_ACCESS), G_TYPE_BOOLEAN, random_access,
+      GST_QUARK (SEQUENTIAL), G_TYPE_BOOLEAN, sequential,
+      GST_QUARK (MINSIZE), G_TYPE_INT, minsize,
+      GST_QUARK (MAXSIZE), G_TYPE_INT, maxsize,
+      GST_QUARK (ALIGN), G_TYPE_INT, align, NULL);
+}

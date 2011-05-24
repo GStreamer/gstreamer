@@ -54,6 +54,7 @@ G_BEGIN_DECLS
  * 0.10.22.
  * @GST_QUERY_URI: query the URI of the source or sink. Since 0.10.22.
  * @GST_QUERY_ALLOCATION: the buffer allocation properties
+ * @GST_QUERY_SCHEDULING: the scheduling properties
  *
  * Standard predefined Query types
  */
@@ -73,7 +74,8 @@ typedef enum {
   GST_QUERY_BUFFERING,
   GST_QUERY_CUSTOM,
   GST_QUERY_URI,
-  GST_QUERY_ALLOCATION
+  GST_QUERY_ALLOCATION,
+  GST_QUERY_SCHEDULING
 } GstQueryType;
 
 /**
@@ -363,6 +365,15 @@ void            gst_query_add_allocation_meta       (GstQuery *query, const gcha
 guint           gst_query_get_n_allocation_metas    (GstQuery *query);
 const gchar *   gst_query_parse_nth_allocation_meta (GstQuery *query, guint index);
 
+/* scheduling query */
+GstQuery *      gst_query_new_scheduling          (void);
+
+void            gst_query_set_scheduling          (GstQuery *query, gboolean pull_mode,
+                                                   gboolean random_access, gboolean sequential,
+                                                   gint minsize, gint maxsize, gint align);
+void            gst_query_parse_scheduling        (GstQuery *query, gboolean *pull_mode,
+                                                   gboolean *random_access, gboolean *sequential,
+                                                   gint *minsize, gint *maxsize, gint *align);
 
 G_END_DECLS
 
