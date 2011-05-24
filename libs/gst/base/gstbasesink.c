@@ -4098,6 +4098,8 @@ gst_base_sink_pad_activate (GstPad * pad)
 {
   gboolean result = FALSE;
   GstBaseSink *basesink;
+  GstQuery *query;
+  gboolean pull_mode;
 
   basesink = GST_BASE_SINK (gst_pad_get_parent (pad));
 
@@ -4112,7 +4114,19 @@ gst_base_sink_pad_activate (GstPad * pad)
   }
 
   /* check if downstreams supports pull mode at all */
-  if (!gst_pad_check_pull_range (pad)) {
+  query = gst_query_new_scheduling ();
+
+  if (!gst_pad_peer_query (pad, query)) {
+    gst_query_unref (query);
+    GST_DEBUG_OBJECT (basesink, "peer query faild, no pull mode");
+    goto fallback;
+  }
+
+  /* parse result of the query */
+  gst_query_parse_scheduling (query, &pull_mode, NULL, NULL, NULL, NULL, NULL);
+  gst_query_unref (query);
+
+  if (!pull_mode) {
     GST_DEBUG_OBJECT (basesink, "pull mode not supported");
     goto fallback;
   }

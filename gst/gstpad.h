@@ -342,20 +342,6 @@ typedef GstFlowReturn		(*GstPadGetRangeFunction)	(GstPad *pad, guint64 offset,
 typedef gboolean		(*GstPadEventFunction)		(GstPad *pad, GstEvent *event);
 
 
-/* FIXME: 0.11: deprecate me, check range should use seeking query */
-/**
- * GstPadCheckGetRangeFunction:
- * @pad: a #GstPad
- *
- * Check if @pad can be activated in pull mode.
- *
- * This function will be deprecated after 0.10; use the seeking query to check
- * if a pad can support random access.
- *
- * Returns: TRUE if the pad can operate in pull mode.
- */
-typedef gboolean		(*GstPadCheckGetRangeFunction)	(GstPad *pad);
-
 /* internal links */
 /**
  * GstPadIterIntLinkFunction:
@@ -638,7 +624,6 @@ struct _GstPad {
   /* data transport functions */
   GstPadChainFunction		 chainfunc;
   GstPadChainListFunction        chainlistfunc;
-  GstPadCheckGetRangeFunction	 checkgetrangefunc;
   GstPadGetRangeFunction	 getrangefunc;
   GstPadEventFunction		 eventfunc;
 
@@ -843,7 +828,6 @@ void			gst_pad_set_activatepush_function	(GstPad *pad, GstPadActivateModeFunctio
 void			gst_pad_set_chain_function		(GstPad *pad, GstPadChainFunction chain);
 void			gst_pad_set_chain_list_function	(GstPad *pad, GstPadChainListFunction chainlist);
 void			gst_pad_set_getrange_function		(GstPad *pad, GstPadGetRangeFunction get);
-void			gst_pad_set_checkgetrange_function	(GstPad *pad, GstPadCheckGetRangeFunction check);
 void			gst_pad_set_event_function		(GstPad *pad, GstPadEventFunction event);
 
 /* pad links */
@@ -888,7 +872,6 @@ void                    gst_pad_set_offset                      (GstPad *pad, gi
 /* data passing functions to peer */
 GstFlowReturn		gst_pad_push				(GstPad *pad, GstBuffer *buffer);
 GstFlowReturn		gst_pad_push_list			(GstPad *pad, GstBufferList *list);
-gboolean		gst_pad_check_pull_range		(GstPad *pad);
 GstFlowReturn		gst_pad_pull_range			(GstPad *pad, guint64 offset, guint size,
 								 GstBuffer **buffer);
 gboolean		gst_pad_push_event			(GstPad *pad, GstEvent *event);

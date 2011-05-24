@@ -139,7 +139,7 @@ static GstFlowReturn gst_tee_chain (GstPad * pad, GstBuffer * buffer);
 static GstFlowReturn gst_tee_chain_list (GstPad * pad, GstBufferList * list);
 static gboolean gst_tee_sink_acceptcaps (GstPad * pad, GstCaps * caps);
 static gboolean gst_tee_sink_activate_push (GstPad * pad, gboolean active);
-static gboolean gst_tee_src_check_get_range (GstPad * pad);
+static gboolean gst_tee_src_query (GstPad * pad, GstQuery * query);
 static gboolean gst_tee_src_activate_pull (GstPad * pad, gboolean active);
 static GstFlowReturn gst_tee_src_get_range (GstPad * pad, guint64 offset,
     guint length, GstBuffer ** buf);
@@ -333,8 +333,7 @@ gst_tee_request_new_pad (GstElement * element, GstPadTemplate * templ,
       GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
   gst_pad_set_activatepull_function (srcpad,
       GST_DEBUG_FUNCPTR (gst_tee_src_activate_pull));
-  gst_pad_set_checkgetrange_function (srcpad,
-      GST_DEBUG_FUNCPTR (gst_tee_src_check_get_range));
+  gst_pad_set_query_function (srcpad, GST_DEBUG_FUNCPTR (gst_tee_src_query));
   gst_pad_set_getrange_function (srcpad,
       GST_DEBUG_FUNCPTR (gst_tee_src_get_range));
   /* Forward sticky events to the new srcpad */
@@ -827,7 +826,7 @@ sink_activate_failed:
 }
 
 static gboolean
-gst_tee_src_check_get_range (GstPad * pad)
+gst_tee_src_query (GstPad * pad, GstQuery * query)
 {
   GstTee *tee;
   gboolean res;
@@ -835,42 +834,43 @@ gst_tee_src_check_get_range (GstPad * pad)
 
   tee = GST_TEE (gst_pad_get_parent (pad));
 
-  GST_OBJECT_LOCK (tee);
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_SCHEDULING:
+    {
+      gboolean pull_mode;
 
-  if (tee->pull_mode == GST_TEE_PULL_MODE_NEVER)
-    goto cannot_pull;
+      GST_OBJECT_LOCK (tee);
+      pull_mode = TRUE;
+      if (tee->pull_mode == GST_TEE_PULL_MODE_NEVER) {
+        GST_INFO_OBJECT (tee, "Cannot activate in pull mode, pull-mode "
+            "set to NEVER");
+        pull_mode = FALSE;
+      } else if (tee->pull_mode == GST_TEE_PULL_MODE_SINGLE && tee->pull_pad) {
+        GST_INFO_OBJECT (tee, "Cannot activate multiple src pads in pull mode, "
+            "pull-mode set to SINGLE");
+        pull_mode = FALSE;
+      }
 
-  if (tee->pull_mode == GST_TEE_PULL_MODE_SINGLE && tee->pull_pad)
-    goto cannot_pull_multiple_srcs;
+      sinkpad = gst_object_ref (tee->sinkpad);
+      GST_OBJECT_UNLOCK (tee);
 
-  sinkpad = gst_object_ref (tee->sinkpad);
-
-  GST_OBJECT_UNLOCK (tee);
-
-  res = gst_pad_check_pull_range (sinkpad);
-  gst_object_unref (sinkpad);
+      if (pull_mode) {
+        /* ask peer if we can operate in pull mode */
+        res = gst_pad_peer_query (sinkpad, query);
+      } else {
+        res = TRUE;
+      }
+      gst_object_unref (sinkpad);
+      break;
+    }
+    default:
+      res = gst_pad_query_default (pad, query);
+      break;
+  }
 
   gst_object_unref (tee);
 
   return res;
-
-  /* ERRORS */
-cannot_pull:
-  {
-    GST_OBJECT_UNLOCK (tee);
-    GST_INFO_OBJECT (tee, "Cannot activate in pull mode, pull-mode "
-        "set to NEVER");
-    gst_object_unref (tee);
-    return FALSE;
-  }
-cannot_pull_multiple_srcs:
-  {
-    GST_OBJECT_UNLOCK (tee);
-    GST_INFO_OBJECT (tee, "Cannot activate multiple src pads in pull mode, "
-        "pull-mode set to SINGLE");
-    gst_object_unref (tee);
-    return FALSE;
-  }
 }
 
 static void

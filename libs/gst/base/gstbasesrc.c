@@ -283,6 +283,7 @@ gst_base_src_get_type (void)
 static GstCaps *gst_base_src_getcaps (GstPad * pad, GstCaps * filter);
 static void gst_base_src_fixate (GstPad * pad, GstCaps * caps);
 
+static gboolean gst_base_src_is_random_access (GstBaseSrc * src);
 static gboolean gst_base_src_activate_push (GstPad * pad, gboolean active);
 static gboolean gst_base_src_activate_pull (GstPad * pad, gboolean active);
 static void gst_base_src_set_property (GObject * object, guint prop_id,
@@ -312,8 +313,6 @@ static GstStateChangeReturn gst_base_src_change_state (GstElement * element,
     GstStateChange transition);
 
 static void gst_base_src_loop (GstPad * pad);
-static gboolean gst_base_src_pad_check_get_range (GstPad * pad);
-static gboolean gst_base_src_default_check_get_range (GstBaseSrc * bsrc);
 static GstFlowReturn gst_base_src_pad_get_range (GstPad * pad, guint64 offset,
     guint length, GstBuffer ** buf);
 static GstFlowReturn gst_base_src_get_range (GstBaseSrc * src, guint64 offset,
@@ -369,8 +368,6 @@ gst_base_src_class_init (GstBaseSrcClass * klass)
   klass->event = GST_DEBUG_FUNCPTR (gst_base_src_default_event);
   klass->do_seek = GST_DEBUG_FUNCPTR (gst_base_src_default_do_seek);
   klass->query = GST_DEBUG_FUNCPTR (gst_base_src_default_query);
-  klass->check_get_range =
-      GST_DEBUG_FUNCPTR (gst_base_src_default_check_get_range);
   klass->prepare_seek_segment =
       GST_DEBUG_FUNCPTR (gst_base_src_default_prepare_seek_segment);
 
@@ -380,7 +377,6 @@ gst_base_src_class_init (GstBaseSrcClass * klass)
   GST_DEBUG_REGISTER_FUNCPTR (gst_base_src_event_handler);
   GST_DEBUG_REGISTER_FUNCPTR (gst_base_src_query);
   GST_DEBUG_REGISTER_FUNCPTR (gst_base_src_pad_get_range);
-  GST_DEBUG_REGISTER_FUNCPTR (gst_base_src_pad_check_get_range);
   GST_DEBUG_REGISTER_FUNCPTR (gst_base_src_getcaps);
   GST_DEBUG_REGISTER_FUNCPTR (gst_base_src_fixate);
 }
@@ -414,7 +410,6 @@ gst_base_src_init (GstBaseSrc * basesrc, gpointer g_class)
   gst_pad_set_activatepull_function (pad, gst_base_src_activate_pull);
   gst_pad_set_event_function (pad, gst_base_src_event_handler);
   gst_pad_set_query_function (pad, gst_base_src_query);
-  gst_pad_set_checkgetrange_function (pad, gst_base_src_pad_check_get_range);
   gst_pad_set_getrange_function (pad, gst_base_src_pad_get_range);
   gst_pad_set_getcaps_function (pad, gst_base_src_getcaps);
   gst_pad_set_fixatecaps_function (pad, gst_base_src_fixate);
@@ -1075,6 +1070,20 @@ gst_base_src_default_query (GstBaseSrc * src, GstQuery * query)
             start, &format, &start);
 
       gst_query_set_buffering_range (query, format, start, stop, estimated);
+      break;
+    }
+    case GST_QUERY_SCHEDULING:
+    {
+      gboolean random_access;
+
+      random_access = gst_base_src_is_random_access (src);
+
+      /* we can operate in getrange mode if the native format is bytes
+       * and we are seekable, this condition is set in the random_access
+       * flag and is set in the _start() method. */
+      gst_query_set_scheduling (query, random_access, TRUE, FALSE, 1, -1, 1);
+
+      res = TRUE;
       break;
     }
     default:
@@ -2240,60 +2249,16 @@ flushing:
 }
 
 static gboolean
-gst_base_src_default_check_get_range (GstBaseSrc * src)
+gst_base_src_is_random_access (GstBaseSrc * src)
 {
-  gboolean res;
-
+  /* we need to start the basesrc to check random access */
   if (!GST_OBJECT_FLAG_IS_SET (src, GST_BASE_SRC_STARTED)) {
     GST_LOG_OBJECT (src, "doing start/stop to check get_range support");
     if (G_LIKELY (gst_base_src_start (src)))
       gst_base_src_stop (src);
   }
 
-  /* we can operate in getrange mode if the native format is bytes
-   * and we are seekable, this condition is set in the random_access
-   * flag and is set in the _start() method. */
-  res = src->random_access;
-
-  return res;
-}
-
-static gboolean
-gst_base_src_check_get_range (GstBaseSrc * src)
-{
-  GstBaseSrcClass *bclass;
-  gboolean res;
-
-  bclass = GST_BASE_SRC_GET_CLASS (src);
-
-  if (bclass->check_get_range == NULL)
-    goto no_function;
-
-  res = bclass->check_get_range (src);
-  GST_LOG_OBJECT (src, "%s() returned %d",
-      GST_DEBUG_FUNCPTR_NAME (bclass->check_get_range), (gint) res);
-
-  return res;
-
-  /* ERRORS */
-no_function:
-  {
-    GST_WARNING_OBJECT (src, "no check_get_range function set");
-    return FALSE;
-  }
-}
-
-static gboolean
-gst_base_src_pad_check_get_range (GstPad * pad)
-{
-  GstBaseSrc *src;
-  gboolean res;
-
-  src = GST_BASE_SRC (GST_OBJECT_PARENT (pad));
-
-  res = gst_base_src_check_get_range (src);
-
-  return res;
+  return src->random_access;
 }
 
 static void
@@ -2316,6 +2281,7 @@ gst_base_src_loop (GstPad * pad)
   reconfigure = GST_PAD_NEEDS_RECONFIGURE (pad);
   GST_OBJECT_FLAG_UNSET (pad, GST_PAD_NEED_RECONFIGURE);
   GST_OBJECT_UNLOCK (pad);
+
   /* check if we need to renegotiate */
   if (reconfigure) {
     if (!gst_base_src_negotiate (src))
@@ -2976,7 +2942,7 @@ gst_base_src_activate_pull (GstPad * pad, gboolean active)
       goto error_start;
 
     /* if not random_access, we cannot operate in pull mode for now */
-    if (G_UNLIKELY (!gst_base_src_check_get_range (basesrc)))
+    if (G_UNLIKELY (!gst_base_src_is_random_access (basesrc)))
       goto no_get_range;
 
     /* stop flushing now but for live sources, still block in the LIVE lock when

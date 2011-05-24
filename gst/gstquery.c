@@ -104,6 +104,7 @@ static GstQueryTypeDefinition standard_definitions[] = {
   {GST_QUERY_CUSTOM, "custom", "Custom query", 0},
   {GST_QUERY_URI, "uri", "URI of the source or sink", 0},
   {GST_QUERY_ALLOCATION, "allocation", "Allocation properties", 0},
+  {GST_QUERY_SCHEDULING, "scheduling", "Scheduling properties", 0},
   {0, NULL, NULL, 0}
 };
 

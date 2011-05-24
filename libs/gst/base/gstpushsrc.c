@@ -69,7 +69,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_push_src_debug);
 #define gst_push_src_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstPushSrc, gst_push_src, GST_TYPE_BASE_SRC, _do_init);
 
-static gboolean gst_push_src_check_get_range (GstBaseSrc * src);
+static gboolean gst_push_src_query (GstBaseSrc * src, GstQuery * query);
 static GstFlowReturn gst_push_src_create (GstBaseSrc * bsrc, guint64 offset,
     guint length, GstBuffer ** ret);
 
@@ -79,8 +79,7 @@ gst_push_src_class_init (GstPushSrcClass * klass)
   GstBaseSrcClass *gstbasesrc_class = (GstBaseSrcClass *) klass;
 
   gstbasesrc_class->create = GST_DEBUG_FUNCPTR (gst_push_src_create);
-  gstbasesrc_class->check_get_range =
-      GST_DEBUG_FUNCPTR (gst_push_src_check_get_range);
+  gstbasesrc_class->query = GST_DEBUG_FUNCPTR (gst_push_src_query);
 }
 
 static void
@@ -90,12 +89,32 @@ gst_push_src_init (GstPushSrc * pushsrc)
 }
 
 static gboolean
-gst_push_src_check_get_range (GstBaseSrc * src)
+gst_push_src_query (GstBaseSrc * src, GstQuery * query)
 {
-  /* a pushsrc can by default never operate in pull mode override
-   * if you want something different. */
-  return FALSE;
+  gboolean ret;
+  GstBaseSrcClass *bclass;
+
+  bclass = GST_BASE_SRC_GET_CLASS (src);
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_SCHEDULING:
+    {
+      /* a pushsrc can by default never operate in pull mode override
+       * if you want something different. */
+      gst_query_set_scheduling (query, FALSE, FALSE, TRUE, 1, -1, 1);
+      ret = TRUE;
+      break;
+    }
+    default:
+      if (bclass->query)
+        ret = bclass->query (src, query);
+      else
+        ret = FALSE;
+      break;
+  }
+  return ret;
 }
+
 
 static GstFlowReturn
 gst_push_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,

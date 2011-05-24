@@ -283,30 +283,6 @@ gst_proxy_pad_getrange_default (GstPad * pad, guint64 offset, guint size,
 }
 
 /**
- * gst_proxy_pad_checkgetrange_default:
- * @pad: a src #GstPad, returns #GST_FLOW_ERROR if not.
- *
- * Invoke the default checkgetrange function of the proxy pad.
- *
- * Returns: a #gboolean from the pad.
- *
- * Since: 0.10.35
- */
-gboolean
-gst_proxy_pad_checkgetrange_default (GstPad * pad)
-{
-  gboolean result;
-  GstPad *internal;
-
-  g_return_val_if_fail (GST_IS_PROXY_PAD (pad), FALSE);
-
-  internal = GST_PROXY_PAD_INTERNAL (pad);
-  result = gst_pad_check_pull_range (internal);
-
-  return result;
-}
-
-/**
  * gst_proxy_pad_getcaps_default:
  * @pad: a #GstPad to get the capabilities of.
  * @filter: a #GstCaps filter.
@@ -615,7 +591,6 @@ gst_proxy_pad_class_init (GstProxyPadClass * klass)
   GST_DEBUG_REGISTER_FUNCPTR (gst_proxy_pad_chain_default);
   GST_DEBUG_REGISTER_FUNCPTR (gst_proxy_pad_chain_list_default);
   GST_DEBUG_REGISTER_FUNCPTR (gst_proxy_pad_getrange_default);
-  GST_DEBUG_REGISTER_FUNCPTR (gst_proxy_pad_checkgetrange_default);
 }
 
 static void
@@ -1045,8 +1020,6 @@ gst_ghost_pad_construct (GstGhostPad * gpad)
     gst_pad_set_chain_list_function (pad, gst_proxy_pad_chain_list_default);
   } else {
     gst_pad_set_getrange_function (pad, gst_proxy_pad_getrange_default);
-    gst_pad_set_checkgetrange_function (pad,
-        gst_proxy_pad_checkgetrange_default);
   }
 
   /* link/unlink functions */
@@ -1075,8 +1048,6 @@ gst_ghost_pad_construct (GstGhostPad * gpad)
         gst_proxy_pad_chain_list_default);
   } else {
     gst_pad_set_getrange_function (internal, gst_proxy_pad_getrange_default);
-    gst_pad_set_checkgetrange_function (internal,
-        gst_proxy_pad_checkgetrange_default);
   }
 
   GST_PROXY_LOCK (pad);

@@ -239,7 +239,6 @@ static gboolean gst_queue2_acceptcaps (GstPad * pad, GstCaps * caps);
 
 static GstFlowReturn gst_queue2_get_range (GstPad * pad, guint64 offset,
     guint length, GstBuffer ** buffer);
-static gboolean gst_queue2_src_checkgetrange_function (GstPad * pad);
 
 static gboolean gst_queue2_src_activate_pull (GstPad * pad, gboolean active);
 static gboolean gst_queue2_src_activate_push (GstPad * pad, gboolean active);
@@ -394,8 +393,6 @@ gst_queue2_init (GstQueue2 * queue)
       GST_DEBUG_FUNCPTR (gst_queue2_src_activate_push));
   gst_pad_set_getrange_function (queue->srcpad,
       GST_DEBUG_FUNCPTR (gst_queue2_get_range));
-  gst_pad_set_checkgetrange_function (queue->srcpad,
-      GST_DEBUG_FUNCPTR (gst_queue2_src_checkgetrange_function));
   gst_pad_set_getcaps_function (queue->srcpad,
       GST_DEBUG_FUNCPTR (gst_queue2_getcaps));
   gst_pad_set_acceptcaps_function (queue->srcpad,
@@ -2598,6 +2595,16 @@ gst_queue2_handle_src_query (GstPad * pad, GstQuery * query)
       }
       break;
     }
+    case GST_QUERY_SCHEDULING:
+    {
+      gboolean pull_mode;
+
+      /* we can operate in pull mode when we are using a tempfile */
+      pull_mode = !QUEUE_IS_USING_QUEUE (queue);
+
+      gst_query_set_scheduling (query, pull_mode, pull_mode, FALSE, 0, -1, 1);
+      break;
+    }
     default:
       /* peer handled other queries */
       if (!gst_queue2_peer_query (queue, queue->sinkpad, query))
@@ -2698,22 +2705,6 @@ out_unexpected:
   }
 }
 
-static gboolean
-gst_queue2_src_checkgetrange_function (GstPad * pad)
-{
-  GstQueue2 *queue;
-  gboolean ret;
-
-  queue = GST_QUEUE2 (gst_pad_get_parent (pad));
-
-  /* we can operate in pull mode when we are using a tempfile */
-  ret = !QUEUE_IS_USING_QUEUE (queue);
-
-  gst_object_unref (GST_OBJECT (queue));
-
-  return ret;
-}
-
 /* sink currently only operates in push mode */
 static gboolean
 gst_queue2_sink_activate_push (GstPad * pad, gboolean active)
@@ -2802,7 +2793,7 @@ gst_queue2_src_activate_pull (GstPad * pad, gboolean active)
         result = gst_queue2_open_temp_location_file (queue);
       } else if (!queue->ring_buffer) {
         queue->ring_buffer = g_malloc (queue->ring_buffer_max_size);
-        result = ! !queue->ring_buffer;
+        result = !!queue->ring_buffer;
       } else {
         result = TRUE;
       }

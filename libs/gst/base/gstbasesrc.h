@@ -191,13 +191,6 @@ struct _GstBaseSrcClass {
 
   /* check if the resource is seekable */
   gboolean      (*is_seekable)  (GstBaseSrc *src);
-  /* check whether the source would support pull-based operation if
-   * it were to be opened now. This vfunc is optional, but should be
-   * implemented if possible to avoid unnecessary start/stop cycles.
-   * The default implementation will open and close the resource to
-   * find out whether get_range is supported and that is usually
-   * undesirable. */
-  gboolean      (*check_get_range) (GstBaseSrc *src);
 
   /* Prepare the segment on which to perform do_seek(), converting to the
    * current basesrc format. */

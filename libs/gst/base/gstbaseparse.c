@@ -2749,12 +2749,24 @@ gst_base_parse_sink_activate (GstPad * sinkpad)
 {
   GstBaseParse *parse;
   gboolean result = TRUE;
+  GstQuery *query;
+  gboolean pull_mode;
 
   parse = GST_BASE_PARSE (gst_pad_get_parent (sinkpad));
 
   GST_DEBUG_OBJECT (parse, "sink activate");
 
-  if (gst_pad_check_pull_range (sinkpad)) {
+  query = gst_query_new_scheduling ();
+  result = gst_pad_peer_query (sinkpad, query);
+  if (result) {
+    gst_query_parse_scheduling (query, &pull_mode, NULL, NULL, NULL, NULL,
+        NULL);
+  } else {
+    pull_mode = FALSE;
+  }
+  gst_query_unref (query);
+
+  if (pull_mode) {
     GST_DEBUG_OBJECT (parse, "trying to activate in pull mode");
     result = gst_pad_activate_pull (sinkpad, TRUE);
   } else {

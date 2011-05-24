@@ -151,7 +151,6 @@ static GstFlowReturn gst_type_find_element_chain (GstPad * sinkpad,
     GstBuffer * buffer);
 static GstFlowReturn gst_type_find_element_getrange (GstPad * srcpad,
     guint64 offset, guint length, GstBuffer ** buffer);
-static gboolean gst_type_find_element_checkgetrange (GstPad * srcpad);
 
 static GstStateChangeReturn
 gst_type_find_element_change_state (GstElement * element,
@@ -273,8 +272,6 @@ gst_type_find_element_init (GstTypeFindElement * typefind)
 
   gst_pad_set_activatepull_function (typefind->src,
       GST_DEBUG_FUNCPTR (gst_type_find_element_activate_src_pull));
-  gst_pad_set_checkgetrange_function (typefind->src,
-      GST_DEBUG_FUNCPTR (gst_type_find_element_checkgetrange));
   gst_pad_set_getrange_function (typefind->src,
       GST_DEBUG_FUNCPTR (gst_type_find_element_getrange));
   gst_pad_set_event_function (typefind->src,
@@ -851,16 +848,6 @@ low_probability:
   }
 }
 
-static gboolean
-gst_type_find_element_checkgetrange (GstPad * srcpad)
-{
-  GstTypeFindElement *typefind;
-
-  typefind = GST_TYPE_FIND_ELEMENT (GST_PAD_PARENT (srcpad));
-
-  return gst_pad_check_pull_range (typefind->sink);
-}
-
 static GstFlowReturn
 gst_type_find_element_getrange (GstPad * srcpad,
     guint64 offset, guint length, GstBuffer ** buffer)
@@ -891,6 +878,8 @@ gst_type_find_element_activate (GstPad * pad)
   GstTypeFindProbability probability = 0;
   GstCaps *found_caps = NULL;
   GstTypeFindElement *typefind;
+  GstQuery *query;
+  gboolean pull_mode;
 
   typefind = GST_TYPE_FIND_ELEMENT (GST_OBJECT_PARENT (pad));
 
@@ -917,14 +906,25 @@ gst_type_find_element_activate (GstPad * pad)
    */
 
   /* 1 */
-  if (!gst_pad_check_pull_range (pad) || !gst_pad_activate_pull (pad, TRUE)) {
-    start_typefinding (typefind);
-    return gst_pad_activate_push (pad, TRUE);
+  query = gst_query_new_scheduling ();
+
+  if (!gst_pad_peer_query (pad, query)) {
+    gst_query_unref (query);
+    goto typefind_push;
   }
 
-  GST_DEBUG_OBJECT (typefind, "find type in pull mode");
+  gst_query_parse_scheduling (query, &pull_mode, NULL, NULL, NULL, NULL, NULL);
+  gst_query_unref (query);
+
+  if (!pull_mode)
+    goto typefind_push;
+
+  if (!gst_pad_activate_pull (pad, TRUE))
+    goto typefind_push;
 
   /* 2 */
+  GST_DEBUG_OBJECT (typefind, "find type in pull mode");
+
   {
     GstPad *peer;
 
@@ -1009,6 +1009,11 @@ really_done:
     ret = gst_pad_activate_push (typefind->src, TRUE);
     ret &= gst_pad_activate_push (pad, TRUE);
     return ret;
+  }
+typefind_push:
+  {
+    start_typefinding (typefind);
+    return gst_pad_activate_push (pad, TRUE);
   }
 }
 

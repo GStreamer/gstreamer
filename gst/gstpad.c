@@ -1402,27 +1402,6 @@ gst_pad_set_getrange_function (GstPad * pad, GstPadGetRangeFunction get)
 }
 
 /**
- * gst_pad_set_checkgetrange_function:
- * @pad: a source #GstPad.
- * @check: the #GstPadCheckGetRangeFunction to set.
- *
- * Sets the given checkgetrange function for the pad. Implement this function
- * on a pad if you dynamically support getrange based scheduling on the pad.
- */
-void
-gst_pad_set_checkgetrange_function (GstPad * pad,
-    GstPadCheckGetRangeFunction check)
-{
-  g_return_if_fail (GST_IS_PAD (pad));
-  g_return_if_fail (GST_PAD_IS_SRC (pad));
-
-  GST_PAD_CHECKGETRANGEFUNC (pad) = check;
-
-  GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "checkgetrangefunc set to %s",
-      GST_DEBUG_FUNCPTR_NAME (check));
-}
-
-/**
  * gst_pad_set_event_function:
  * @pad: a #GstPad of either direction.
  * @event: the #GstPadEventFunction to set.
@@ -3412,14 +3391,16 @@ gst_pad_query (GstPad * pad, GstQuery * query)
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
   g_return_val_if_fail (GST_IS_QUERY (query), FALSE);
 
-  GST_DEBUG_OBJECT (pad, "sending query %p", query);
+  GST_DEBUG_OBJECT (pad, "sending query %p (%s)", query,
+      GST_QUERY_TYPE_NAME (query));
 
   if ((func = GST_PAD_QUERYFUNC (pad)) == NULL)
     goto no_func;
 
   res = func (pad, query);
 
-  GST_DEBUG_OBJECT (pad, "sent query %p, result %d", query, res);
+  GST_DEBUG_OBJECT (pad, "sent query %p (%s), result %d", query,
+      GST_QUERY_TYPE_NAME (query), res);
 
   return res;
 
@@ -3456,7 +3437,8 @@ gst_pad_peer_query (GstPad * pad, GstQuery * query)
 
   GST_OBJECT_LOCK (pad);
 
-  GST_DEBUG_OBJECT (pad, "peer query");
+  GST_DEBUG_OBJECT (pad, "peer query %p (%s)", query,
+      GST_QUERY_TYPE_NAME (query));
 
   peerpad = GST_PAD_PEER (pad);
   if (G_UNLIKELY (peerpad == NULL))
@@ -4360,76 +4342,6 @@ invalid:
     GST_PAD_STREAM_UNLOCK (peer);
     pad_free_cache (cache);
     goto slow_path;
-  }
-}
-
-/**
- * gst_pad_check_pull_range:
- * @pad: a sink #GstPad.
- *
- * Checks if a gst_pad_pull_range() can be performed on the peer
- * source pad. This function is used by plugins that want to check
- * if they can use random access on the peer source pad.
- *
- * The peer sourcepad can implement a custom #GstPadCheckGetRangeFunction
- * if it needs to perform some logic to determine if pull_range is
- * possible.
- *
- * Returns: a gboolean with the result.
- *
- * MT safe.
- */
-gboolean
-gst_pad_check_pull_range (GstPad * pad)
-{
-  GstPad *peer;
-  gboolean ret;
-  GstPadCheckGetRangeFunction checkgetrangefunc;
-
-  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
-
-  GST_OBJECT_LOCK (pad);
-  if (!GST_PAD_IS_SINK (pad))
-    goto wrong_direction;
-
-  if (G_UNLIKELY ((peer = GST_PAD_PEER (pad)) == NULL))
-    goto not_connected;
-
-  gst_object_ref (peer);
-  GST_OBJECT_UNLOCK (pad);
-
-  /* see note in above function */
-  if (G_LIKELY ((checkgetrangefunc = peer->checkgetrangefunc) == NULL)) {
-    /* FIXME, kindoff ghetto */
-    ret = GST_PAD_GETRANGEFUNC (peer) != NULL;
-    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
-        "no checkgetrangefunc, assuming %d", ret);
-  } else {
-    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
-        "calling checkgetrangefunc %s of peer pad %s:%s",
-        GST_DEBUG_FUNCPTR_NAME (checkgetrangefunc), GST_DEBUG_PAD_NAME (peer));
-
-    ret = checkgetrangefunc (peer);
-  }
-
-  gst_object_unref (peer);
-
-  return ret;
-
-  /* ERROR recovery here */
-wrong_direction:
-  {
-    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
-        "checking pull range, but pad must be a sinkpad");
-    GST_OBJECT_UNLOCK (pad);
-    return FALSE;
-  }
-not_connected:
-  {
-    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
-        "checking pull range, but it was not linked");
-    GST_OBJECT_UNLOCK (pad);
-    return FALSE;
   }
 }
 
