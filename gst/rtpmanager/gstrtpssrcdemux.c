@@ -167,11 +167,11 @@ find_or_create_demux_pad_for_ssrc (GstRtpSsrcDemux * demux, guint32 ssrc)
 
   GST_DEBUG_OBJECT (demux, "creating pad for SSRC %08x", ssrc);
 
-  GST_OBJECT_LOCK (demux);
+  GST_PAD_LOCK (demux);
 
   demuxpad = find_demux_pad_for_ssrc (demux, ssrc);
   if (demuxpad != NULL) {
-    GST_OBJECT_UNLOCK (demux);
+    GST_PAD_UNLOCK (demux);
     return demuxpad;
   }
 
@@ -214,7 +214,7 @@ find_or_create_demux_pad_for_ssrc (GstRtpSsrcDemux * demux, guint32 ssrc)
       gst_rtp_ssrc_demux_iterate_internal_links_src);
   gst_pad_set_active (rtcp_pad, TRUE);
 
-  GST_OBJECT_UNLOCK (demux);
+  GST_PAD_UNLOCK (demux);
 
   gst_element_add_pad (GST_ELEMENT_CAST (demux), rtp_pad);
   gst_element_add_pad (GST_ELEMENT_CAST (demux), rtcp_pad);
