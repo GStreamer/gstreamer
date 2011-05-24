@@ -473,8 +473,6 @@ debug_dump_element (GstBin * bin, GstDebugGraphDetails details, FILE * out,
 {
   GstIterator *element_iter, *pad_iter;
   gboolean elements_done, pads_done;
-  GValue item = { 0, };
-  GValue item2 = { 0, };
   GstElement *element;
   GstPad *pad;
   GstPadDirection dir;
@@ -487,9 +485,8 @@ debug_dump_element (GstBin * bin, GstDebugGraphDetails details, FILE * out,
   element_iter = gst_bin_iterate_elements (bin);
   elements_done = FALSE;
   while (!elements_done) {
-    switch (gst_iterator_next (element_iter, &item)) {
+    switch (gst_iterator_next (element_iter, (gpointer) & element)) {
       case GST_ITERATOR_OK:
-        element = g_value_get_object (&item);
         element_name = debug_dump_make_object_name (GST_OBJECT (element));
 
         if (details & GST_DEBUG_GRAPH_SHOW_STATES) {
@@ -522,16 +519,15 @@ debug_dump_element (GstBin * bin, GstDebugGraphDetails details, FILE * out,
         if ((pad_iter = gst_element_iterate_pads (element))) {
           pads_done = FALSE;
           while (!pads_done) {
-            switch (gst_iterator_next (pad_iter, &item2)) {
+            switch (gst_iterator_next (pad_iter, (gpointer) & pad)) {
               case GST_ITERATOR_OK:
-                pad = g_value_get_object (&item2);
                 debug_dump_element_pad (pad, element, details, out, indent);
                 dir = gst_pad_get_direction (pad);
                 if (dir == GST_PAD_SRC)
                   src_pads++;
                 else if (dir == GST_PAD_SINK)
                   sink_pads++;
-                g_value_reset (&item2);
+                gst_object_unref (pad);
                 break;
               case GST_ITERATOR_RESYNC:
                 gst_iterator_resync (pad_iter);
@@ -542,7 +538,6 @@ debug_dump_element (GstBin * bin, GstDebugGraphDetails details, FILE * out,
                 break;
             }
           }
-          g_value_unset (&item2);
           gst_iterator_free (pad_iter);
         }
         if (GST_IS_BIN (element)) {
@@ -563,15 +558,14 @@ debug_dump_element (GstBin * bin, GstDebugGraphDetails details, FILE * out,
         if ((pad_iter = gst_element_iterate_pads (element))) {
           pads_done = FALSE;
           while (!pads_done) {
-            switch (gst_iterator_next (pad_iter, &item2)) {
+            switch (gst_iterator_next (pad_iter, (gpointer) & pad)) {
               case GST_ITERATOR_OK:
-                pad = g_value_get_object (&item2);
                 if (gst_pad_is_linked (pad)
                     && gst_pad_get_direction (pad) == GST_PAD_SRC) {
                   debug_dump_element_pad_link (pad, element, details, out,
                       indent);
                 }
-                g_value_reset (&item2);
+                gst_object_unref (pad);
                 break;
               case GST_ITERATOR_RESYNC:
                 gst_iterator_resync (pad_iter);
@@ -582,10 +576,9 @@ debug_dump_element (GstBin * bin, GstDebugGraphDetails details, FILE * out,
                 break;
             }
           }
-          g_value_unset (&item2);
           gst_iterator_free (pad_iter);
         }
-        g_value_reset (&item);
+        gst_object_unref (element);
         break;
       case GST_ITERATOR_RESYNC:
         gst_iterator_resync (element_iter);
@@ -596,7 +589,6 @@ debug_dump_element (GstBin * bin, GstDebugGraphDetails details, FILE * out,
         break;
     }
   }
-  g_value_unset (&item);
   gst_iterator_free (element_iter);
 }
 
