@@ -2723,6 +2723,7 @@ gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
             ("We got less than expected (received %u, wanted %u, offset %"
                 G_GUINT64_FORMAT ")",
                 GST_BUFFER_SIZE (moov), (guint) length, cur_offset));
+        gst_buffer_unref (moov);
         ret = GST_FLOW_ERROR;
         goto beach;
       }
