@@ -97,14 +97,11 @@ typedef enum {
 
 /**
  * GstPadTemplateFlags:
- * @GST_PAD_TEMPLATE_FIXED: the padtemplate has no variable properties
  * @GST_PAD_TEMPLATE_FLAG_LAST: first flag that can be used by subclasses.
  *
  * Flags for the padtemplate
  */
 typedef enum {
-  /* FIXME0.11: this is not used and the purpose is unclear */
-  GST_PAD_TEMPLATE_FIXED        = (GST_OBJECT_FLAG_LAST << 0),
   /* padding */
   GST_PAD_TEMPLATE_FLAG_LAST    = (GST_OBJECT_FLAG_LAST << 4)
 } GstPadTemplateFlags;
