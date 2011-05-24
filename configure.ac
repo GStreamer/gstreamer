@@ -539,10 +539,6 @@ GLIB_REQ=2.22
 
 AG_GST_GLIB_CHECK([$GLIB_REQ])
 
-dnl FIXME: 0.11: Guess we need to keep this around until 0.11
-GST_HAVE_GLIB_2_8_DEFINE="#define GST_HAVE_GLIB_2_8 1"
-AC_SUBST(GST_HAVE_GLIB_2_8_DEFINE)
-
 dnl Check for glib2 without extra fat, useful for the unversioned tool frontends
 PKG_CHECK_MODULES(GLIB_ONLY, glib-2.0 >= $GLIB_REQ)
 
