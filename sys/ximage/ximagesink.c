@@ -1185,6 +1185,7 @@ activate_failed:
   {
     GST_ERROR_OBJECT (ximagesink, "failed to activate bufferpool.");
     g_mutex_unlock (ximagesink->flow_lock);
+    gst_object_unref (newpool);
     return FALSE;
   }
 }
