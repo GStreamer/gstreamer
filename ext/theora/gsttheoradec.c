@@ -89,8 +89,8 @@ static void theora_dec_get_property (GObject * object, guint prop_id,
 static void theora_dec_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 
+static gboolean theora_dec_setcaps (GstTheoraDec * dec, GstCaps * caps);
 static gboolean theora_dec_sink_event (GstPad * pad, GstEvent * event);
-static gboolean theora_dec_setcaps (GstPad * pad, GstCaps * caps);
 static GstFlowReturn theora_dec_chain (GstPad * pad, GstBuffer * buffer);
 static GstStateChangeReturn theora_dec_change_state (GstElement * element,
     GstStateChange transition);
@@ -193,7 +193,6 @@ gst_theora_dec_init (GstTheoraDec * dec)
   dec->sinkpad =
       gst_pad_new_from_static_template (&theora_dec_sink_factory, "sink");
   gst_pad_set_event_function (dec->sinkpad, theora_dec_sink_event);
-  gst_pad_set_setcaps_function (dec->sinkpad, theora_dec_setcaps);
   gst_pad_set_chain_function (dec->sinkpad, theora_dec_chain);
   gst_element_add_pad (GST_ELEMENT (dec), dec->sinkpad);
 
@@ -653,6 +652,14 @@ theora_dec_sink_event (GstPad * pad, GstEvent * event)
       }
       break;
     }
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+
+      gst_event_parse_caps (event, &caps);
+      ret = theora_dec_setcaps (dec, caps);
+      break;
+    }
     case GST_EVENT_TAG:
     {
       if (dec->have_header)
@@ -684,13 +691,10 @@ newseg_wrong_format:
 }
 
 static gboolean
-theora_dec_setcaps (GstPad * pad, GstCaps * caps)
+theora_dec_setcaps (GstTheoraDec * dec, GstCaps * caps)
 {
-  GstTheoraDec *dec;
   GstStructure *s;
   const GValue *codec_data;
-
-  dec = GST_THEORA_DEC (gst_pad_get_parent (pad));
 
   s = gst_caps_get_structure (caps, 0);
 
@@ -734,7 +738,7 @@ theora_dec_setcaps (GstPad * pad, GstCaps * caps)
           GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
 
         /* now feed it to the decoder we can ignore the error */
-        theora_dec_chain (pad, buf);
+        theora_dec_chain (dec->sinkpad, buf);
 
         /* skip the data */
         left -= psize;
@@ -744,8 +748,6 @@ theora_dec_setcaps (GstPad * pad, GstCaps * caps)
       gst_buffer_unmap (buffer, data, size);
     }
   }
-
-  gst_object_unref (dec);
 
   return TRUE;
 }
@@ -1108,6 +1110,20 @@ theora_handle_image (GstTheoraDec * dec, th_ycbcr_buffer buf, GstBuffer ** out)
   guint8 *dest, *src;
   gsize size;
   guint8 *data;
+  gboolean reconfigure;
+
+  GST_OBJECT_LOCK (dec->srcpad);
+  reconfigure = GST_PAD_NEEDS_RECONFIGURE (dec->srcpad);
+  GST_OBJECT_FLAG_UNSET (dec->srcpad, GST_PAD_NEED_RECONFIGURE);
+  GST_OBJECT_UNLOCK (dec->srcpad);
+
+  if (reconfigure) {
+    GstCaps *caps;
+
+    caps = gst_pad_get_current_caps (dec->srcpad);
+    theora_negotiate_pool (dec, caps);
+    gst_caps_unref (caps);
+  }
 
   result = gst_buffer_pool_acquire_buffer (dec->pool, out, NULL);
   if (G_UNLIKELY (result != GST_FLOW_OK))
