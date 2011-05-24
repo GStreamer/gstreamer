@@ -222,6 +222,8 @@ gst_rtp_g726_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   if (depay->aal2 || depay->force_aal2) {
     /* AAL2, we can just copy the bytes */
     outbuf = gst_rtp_buffer_get_payload_buffer (&rtp);
+    if (!outbuf)
+      goto bad_len;
   } else {
     guint8 *in, *out, tmp, *odata;
     guint len;
@@ -231,6 +233,8 @@ gst_rtp_g726_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     len = gst_rtp_buffer_get_payload_len (&rtp);
 
     outbuf = gst_rtp_buffer_get_payload_buffer (&rtp);
+    if (!outbuf)
+      goto bad_len;
     outbuf = gst_buffer_make_writable (outbuf);
 
     odata = gst_buffer_map (outbuf, &osize, NULL, GST_MAP_WRITE);
@@ -331,6 +335,9 @@ gst_rtp_g726_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   }
 
   return outbuf;
+
+bad_len:
+  return NULL;
 }
 
 static void

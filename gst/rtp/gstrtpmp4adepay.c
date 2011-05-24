@@ -51,7 +51,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
         /* All optional parameters
          *
          * "profile-level-id=[1,MAX]"
-         * "config=" 
+         * "config="
          */
     )
     );
@@ -229,7 +229,7 @@ gst_rtp_mp4a_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
 
       if (!gst_bit_reader_get_bits_uint8 (&br, &sr_idx, 4))
         goto bad_config;
-      if (sr_idx > 12 && sr_idx != 15) {
+      if (sr_idx >= G_N_ELEMENTS (aac_sample_rates) && sr_idx != 15) {
         GST_WARNING_OBJECT (depayload, "invalid sample rate index %d", sr_idx);
         goto bad_config;
       }

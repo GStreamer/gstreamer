@@ -2723,6 +2723,7 @@ gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
             ("We got less than expected (received %u, wanted %u, offset %"
                 G_GUINT64_FORMAT ")",
                 GST_BUFFER_SIZE (moov), (guint) length, cur_offset));
+        gst_buffer_unref (moov);
         ret = GST_FLOW_ERROR;
         goto beach;
       }
@@ -9320,6 +9321,7 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
     case GST_MAKE_FOURCC ('V', 'P', '8', '0'):
       _codec ("On2 VP8");
       caps = gst_caps_from_string ("video/x-vp8");
+      break;
     case FOURCC_ovc1:
       _codec ("VC-1");
       caps = gst_caps_new_simple ("video/x-wmv",

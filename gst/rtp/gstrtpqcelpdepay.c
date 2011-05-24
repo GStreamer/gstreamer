@@ -164,7 +164,7 @@ static const gint frame_size[16] = {
 static gint
 get_frame_len (GstRtpQCELPDepay * depay, guint8 frame_type)
 {
-  if (frame_type > 16)
+  if (frame_type >= G_N_ELEMENTS (frame_size))
     return 0;
 
   return frame_size[frame_type];

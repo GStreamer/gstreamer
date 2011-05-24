@@ -56,7 +56,7 @@ GST_DEBUG_CATEGORY_EXTERN (v4l2_debug);
 #define DEFAULT_PROP_DEVICE_NAME 	NULL
 #define DEFAULT_PROP_DEVICE_FD          -1
 #define DEFAULT_PROP_FLAGS              0
-#define DEFAULT_PROP_NORM               NULL
+#define DEFAULT_PROP_TV_NORM            0
 #define DEFAULT_PROP_CHANNEL            NULL
 #define DEFAULT_PROP_FREQUENCY          0
 
@@ -316,6 +316,58 @@ gst_v4l2_device_get_type (void)
   return v4l2_device_type;
 }
 
+#define GST_TYPE_V4L2_TV_NORM (gst_v4l2_tv_norm_get_type ())
+static GType
+gst_v4l2_tv_norm_get_type (void)
+{
+  static GType v4l2_tv_norm = 0;
+
+  if (!v4l2_tv_norm) {
+    static const GEnumValue tv_norms[] = {
+      {0, "none", "none"},
+
+      {V4L2_STD_NTSC, "NTSC", "NTSC"},
+      {V4L2_STD_NTSC_M, "NTSC-M", "NTSC-M"},
+      {V4L2_STD_NTSC_M_JP, "NTSC-M-JP", "NTSC-M-JP"},
+      {V4L2_STD_NTSC_M_KR, "NTSC-M-KR", "NTSC-M-KR"},
+      {V4L2_STD_NTSC_443, "NTSC-443", "NTSC-443"},
+
+      {V4L2_STD_PAL, "PAL", "PAL"},
+      {V4L2_STD_PAL_BG, "PAL-BG", "PAL-BG"},
+      {V4L2_STD_PAL_B, "PAL-B", "PAL-B"},
+      {V4L2_STD_PAL_B1, "PAL-B1", "PAL-B1"},
+      {V4L2_STD_PAL_G, "PAL-G", "PAL-G"},
+      {V4L2_STD_PAL_H, "PAL-H", "PAL-H"},
+      {V4L2_STD_PAL_I, "PAL-I", "PAL-I"},
+      {V4L2_STD_PAL_DK, "PAL-DK", "PAL-DK"},
+      {V4L2_STD_PAL_D, "PAL-D", "PAL-D"},
+      {V4L2_STD_PAL_D1, "PAL-D1", "PAL-D1"},
+      {V4L2_STD_PAL_K, "PAL-K", "PAL-K"},
+      {V4L2_STD_PAL_M, "PAL-M", "PAL-M"},
+      {V4L2_STD_PAL_N, "PAL-N", "PAL-N"},
+      {V4L2_STD_PAL_Nc, "PAL-Nc", "PAL-Nc"},
+      {V4L2_STD_PAL_60, "PAL-60", "PAL-60"},
+
+      {V4L2_STD_SECAM, "SECAM", "SECAM"},
+      {V4L2_STD_SECAM_B, "SECAM-B", "SECAM-B"},
+      {V4L2_STD_SECAM_G, "SECAM-G", "SECAM-G"},
+      {V4L2_STD_SECAM_H, "SECAM-H", "SECAM-H"},
+      {V4L2_STD_SECAM_DK, "SECAM-DK", "SECAM-DK"},
+      {V4L2_STD_SECAM_D, "SECAM-D", "SECAM-D"},
+      {V4L2_STD_SECAM_K, "SECAM-K", "SECAM-K"},
+      {V4L2_STD_SECAM_K1, "SECAM-K1", "SECAM-K1"},
+      {V4L2_STD_SECAM_L, "SECAM-L", "SECAM-L"},
+      {V4L2_STD_SECAM_LC, "SECAM-Lc", "SECAM-Lc"},
+
+      {0, NULL, NULL}
+    };
+
+    v4l2_tv_norm = g_enum_register_static ("V4L2_TV_norms", tv_norms);
+  }
+
+  return v4l2_tv_norm;
+}
+
 void
 gst_v4l2_object_install_properties_helper (GObjectClass * gobject_class,
     const char *default_device)
@@ -384,6 +436,19 @@ gst_v4l2_object_install_properties_helper (GObjectClass * gobject_class,
           "Hue or color balance", G_MININT,
           G_MAXINT, 0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
+
+  /**
+   * GstV4l2Src:norm
+   *
+   * TV norm
+   *
+   * Since: 0.10.30
+   */
+  g_object_class_install_property (gobject_class, PROP_TV_NORM,
+      g_param_spec_enum ("norm", "TV norm",
+          "video standard",
+          GST_TYPE_V4L2_TV_NORM, DEFAULT_PROP_TV_NORM,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 GstV4l2Object *
@@ -439,9 +504,6 @@ gst_v4l2_object_destroy (GstV4l2Object * v4l2object)
 
   if (v4l2object->channel)
     g_free (v4l2object->channel);
-
-  if (v4l2object->norm)
-    g_free (v4l2object->norm);
 
   if (v4l2object->formats) {
     gst_v4l2_object_clear_format_list (v4l2object);
@@ -510,23 +572,10 @@ gst_v4l2_object_set_property_helper (GstV4l2Object * v4l2object,
       return TRUE;
     }
       break;
-#if 0
-    case PROP_NORM:
-      if (GST_V4L2_IS_OPEN (v4l2object)) {
-        GstTuner *tuner = GST_TUNER (v4l2object->element);
-        GstTunerNorm *norm = gst_tuner_find_norm_by_name (tuner,
-            (gchar *) g_value_get_string (value));
-
-        if (norm) {
-          /* like gst_tuner_set_norm (tuner, norm)
-             without g_object_notify */
-          gst_v4l2_tuner_set_norm (v4l2object, norm);
-        }
-      } else {
-        g_free (v4l2object->norm);
-        v4l2object->norm = g_value_dup_string (value);
-      }
+    case PROP_TV_NORM:
+      v4l2object->tv_norm = g_value_get_enum (value);
       break;
+#if 0
     case PROP_CHANNEL:
       if (GST_V4L2_IS_OPEN (v4l2object)) {
         GstTuner *tuner = GST_TUNER (v4l2object->element);
@@ -631,6 +680,9 @@ gst_v4l2_object_get_property_helper (GstV4l2Object * v4l2object,
       return TRUE;
     }
       break;
+    case PROP_TV_NORM:
+      g_value_set_enum (value, v4l2object->tv_norm);
+      break;
     default:
       return FALSE;
       break;
@@ -650,16 +702,18 @@ gst_v4l2_set_defaults (GstV4l2Object * v4l2object)
 
   tuner = GST_TUNER (v4l2object->element);
 
-  if (v4l2object->norm)
-    norm = gst_tuner_find_norm_by_name (tuner, v4l2object->norm);
+  if (v4l2object->tv_norm)
+    norm = gst_v4l2_tuner_get_norm_by_std_id (v4l2object, v4l2object->tv_norm);
+  GST_DEBUG_OBJECT (v4l2object->element, "tv_norm=%d, norm=%p",
+      v4l2object->tv_norm, norm);
   if (norm) {
     gst_tuner_set_norm (tuner, norm);
   } else {
     norm =
         GST_TUNER_NORM (gst_tuner_get_norm (GST_TUNER (v4l2object->element)));
     if (norm) {
-      g_free (v4l2object->norm);
-      v4l2object->norm = g_strdup (norm->label);
+      v4l2object->tv_norm =
+          gst_v4l2_tuner_get_std_id_by_norm (v4l2object, norm);
       gst_tuner_norm_changed (tuner, norm);
     }
   }
@@ -1887,13 +1941,15 @@ default_frame_sizes:
     }
 
     /* Since we can't get framerate directly, try to use the current norm */
-    if (v4l2object->norm && v4l2object->norms) {
+    if (v4l2object->tv_norm && v4l2object->norms) {
       GList *norms;
       GstTunerNorm *norm = NULL;
+      GstTunerNorm *current =
+          gst_v4l2_tuner_get_norm_by_std_id (v4l2object, v4l2object->tv_norm);
 
       for (norms = v4l2object->norms; norms != NULL; norms = norms->next) {
         norm = (GstTunerNorm *) norms->data;
-        if (!strcmp (norm->label, v4l2object->norm))
+        if (!strcmp (norm->label, current->label))
           break;
       }
       /* If it's possible, set framerate to that (discrete) value */

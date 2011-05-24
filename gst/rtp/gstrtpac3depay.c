@@ -190,8 +190,9 @@ gst_rtp_ac3_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 
   gst_rtp_buffer_unmap (&rtp);
 
-  GST_DEBUG_OBJECT (rtpac3depay, "pushing buffer of size %d",
-      gst_buffer_get_size (outbuf));
+  if (outbuf)
+    GST_DEBUG_OBJECT (rtpac3depay, "pushing buffer of size %d",
+        gst_buffer_get_size (outbuf));
 
   return outbuf;
 

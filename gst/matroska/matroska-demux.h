@@ -1,5 +1,6 @@
 /* GStreamer Matroska muxer/demuxer
  * (c) 2003 Ronald Bultje <rbultje@ronald.bitfreak.net>
+ * (c) 2011 Debarshi Ray <rishi@gnu.org>
  *
  * matroska-demux.h: matroska file/stream demuxer definition
  *
@@ -27,6 +28,7 @@
 
 #include "ebml-read.h"
 #include "matroska-ids.h"
+#include "matroska-read-common.h"
 
 G_BEGIN_DECLS
 
@@ -41,28 +43,16 @@ G_BEGIN_DECLS
 #define GST_IS_MATROSKA_DEMUX_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_MATROSKA_DEMUX))
 
-typedef enum {
-  GST_MATROSKA_DEMUX_STATE_START,
-  GST_MATROSKA_DEMUX_STATE_SEGMENT,
-  GST_MATROSKA_DEMUX_STATE_HEADER,
-  GST_MATROSKA_DEMUX_STATE_DATA,
-  GST_MATROSKA_DEMUX_STATE_SEEK,
-  GST_MATROSKA_DEMUX_STATE_SCANNING
-} GstMatroskaDemuxState;
-
 typedef struct _GstMatroskaDemux {
   GstElement              parent;
 
   /* < private > */
 
-  GstIndex                *element_index;
-  gint                     element_index_writer_id;
+  GstMatroskaReadCommon    common;
 
   /* pads */
   GstPad                  *sinkpad;
-  GPtrArray               *src;
   GstClock                *clock;
-  guint                    num_streams;
   guint                    num_v_streams;
   guint                    num_a_streams;
   guint                    num_t_streams;
@@ -74,29 +64,19 @@ typedef struct _GstMatroskaDemux {
 
   /* state */
   gboolean                 streaming;
-  GstMatroskaDemuxState    state;
   guint                    level_up;
   guint64                  seek_block;
   gboolean                 seek_first;
 
   /* did we parse cues/tracks/segmentinfo already? */
-  gboolean                 index_parsed;
   gboolean                 tracks_parsed;
   gboolean                 segmentinfo_parsed;
   gboolean                 attachments_parsed;
   GList                   *tags_parsed;
   GList                   *seek_parsed;
 
-  /* start-of-segment */
-  guint64                  ebml_segment_start;
-
-  /* a cue (index) table */
-  GArray                  *index;
   /* cluster positions (optional) */
   GArray                  *clusters;
-
-  /* timescale in the file */
-  guint64                  time_scale;
 
   /* keeping track of playback position */
   GstSegment               segment;

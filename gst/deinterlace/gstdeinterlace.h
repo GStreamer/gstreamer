@@ -43,8 +43,6 @@ G_BEGIN_DECLS
 typedef struct _GstDeinterlace GstDeinterlace;
 typedef struct _GstDeinterlaceClass GstDeinterlaceClass;
 
-#define GST_DEINTERLACE_MAX_FIELD_HISTORY 10
-
 typedef enum
 {
   GST_DEINTERLACE_TOMSMOCOMP,
@@ -79,6 +77,39 @@ typedef enum {
   GST_DEINTERLACE_MODE_DISABLED
 } GstDeinterlaceMode;
 
+typedef enum
+{
+  GST_DEINTERLACE_LOCKING_NONE,
+  GST_DEINTERLACE_LOCKING_AUTO,
+  GST_DEINTERLACE_LOCKING_ACTIVE,
+  GST_DEINTERLACE_LOCKING_PASSIVE,
+} GstDeinterlaceLocking;
+
+#define GST_DEINTERLACE_MAX_FIELD_HISTORY 10
+#define GST_DEINTERLACE_MAX_BUFFER_STATE_HISTORY 50
+/* check max field history is large enough */
+#if GST_DEINTERLACE_MAX_FIELD_HISTORY < GST_DEINTERLACE_MAX_BUFFER_STATE_HISTORY * 3
+#undef GST_DEINTERLACE_MAX_FIELD_HISTORY
+#define GST_DEINTERLACE_MAX_FIELD_HISTORY (GST_DEINTERLACE_MAX_BUFFER_STATE_HISTORY * 3)
+#endif
+
+typedef struct _TelecinePattern TelecinePattern;
+struct _TelecinePattern
+{
+  const gchar *nick;
+  guint8 length;
+  guint8 ratio_n, ratio_d;
+  guint8 states[GST_DEINTERLACE_MAX_BUFFER_STATE_HISTORY];
+};
+
+typedef struct _GstDeinterlaceBufferState GstDeinterlaceBufferState;
+struct _GstDeinterlaceBufferState
+{
+  GstClockTime timestamp;
+  GstClockTime duration;
+  guint8 state;
+};
+
 struct _GstDeinterlace
 {
   GstElement parent;
@@ -92,8 +123,10 @@ struct _GstDeinterlace
 
   GstDeinterlaceFields fields;
 
-  GstDeinterlaceMethods method_id; /* current state (differs when flushing) */
-  GstDeinterlaceMethods user_set_method_id; /* property value */
+  /* current state (differs when flushing/inverse telecine using weave) */
+  GstDeinterlaceMethods method_id;
+  /* property value */
+  GstDeinterlaceMethods user_set_method_id;
   GstDeinterlaceMethod *method;
 
   GstVideoFormat format;
@@ -134,6 +167,24 @@ struct _GstDeinterlace
   gboolean reconfigure;
   GstDeinterlaceMode new_mode;
   GstDeinterlaceFields new_fields;
+
+  GstDeinterlaceLocking locking;
+  gint low_latency;
+  gboolean drop_orphans;
+  gboolean ignore_obscure;
+  gboolean pattern_lock;
+  gboolean pattern_refresh;
+  GstDeinterlaceBufferState buf_states[GST_DEINTERLACE_MAX_BUFFER_STATE_HISTORY];
+  gint state_count;
+  gint pattern;
+  guint8 pattern_phase;
+  guint8 pattern_count;
+  guint8 output_count;
+  GstClockTime pattern_base_ts;
+  GstClockTime pattern_buf_dur;
+
+  gboolean need_more;
+  gboolean have_eos;
 };
 
 struct _GstDeinterlaceClass

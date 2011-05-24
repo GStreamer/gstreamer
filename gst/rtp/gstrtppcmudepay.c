@@ -46,18 +46,19 @@ static GstStaticPadTemplate gst_rtp_pcmu_depay_sink_template =
     GST_STATIC_CAPS ("application/x-rtp, "
         "media = (string) \"audio\", "
         "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
-        "clock-rate = (int) 8000, " "encoding-name = (string) \"PCMU\";"
+        "clock-rate = (int) [1, MAX ], " "encoding-name = (string) \"PCMU\";"
         "application/x-rtp, "
         "media = (string) \"audio\", "
         "payload = (int) " GST_RTP_PAYLOAD_PCMU_STRING ", "
-        "clock-rate = (int) 8000")
+        "clock-rate = (int) [1, MAX ]")
     );
 
 static GstStaticPadTemplate gst_rtp_pcmu_depay_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-mulaw, channels = (int) 1, rate = (int) 8000")
+    GST_STATIC_CAPS ("audio/x-mulaw, "
+        "channels = (int) 1, rate = (int) [1, MAX ]")
     );
 
 static GstBuffer *gst_rtp_pcmu_depay_process (GstBaseRTPDepayload * depayload,
@@ -144,12 +145,14 @@ gst_rtp_pcmu_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   outbuf = gst_rtp_buffer_get_payload_buffer (&rtp);
   gst_rtp_buffer_unmap (&rtp);
 
-  GST_BUFFER_DURATION (outbuf) =
-      gst_util_uint64_scale_int (len, GST_SECOND, depayload->clock_rate);
+  if (outbuf) {
+    GST_BUFFER_DURATION (outbuf) =
+        gst_util_uint64_scale_int (len, GST_SECOND, depayload->clock_rate);
 
-  if (marker) {
-    /* mark start of talkspurt with DISCONT */
-    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
+    if (marker) {
+      /* mark start of talkspurt with DISCONT */
+      GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
+    }
   }
 
   return outbuf;

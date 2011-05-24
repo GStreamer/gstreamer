@@ -136,7 +136,7 @@ gst_rtp_gsm_depay_process (GstBaseRTPDepayload * _depayload, GstBuffer * buf)
 
   gst_rtp_buffer_unmap (&rtp);
 
-  if (marker) {
+  if (marker && outbuf) {
     /* mark start of talkspurt with DISCONT */
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
   }

@@ -198,6 +198,9 @@ static GstFlowReturn gst_flac_parse_parse_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame);
 static GstFlowReturn gst_flac_parse_pre_push_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame);
+static gboolean gst_flac_parse_convert (GstBaseParse * parse,
+    GstFormat src_format, gint64 src_value, GstFormat dest_format,
+    gint64 * dest_value);
 
 GST_BOILERPLATE (GstFlacParse, gst_flac_parse, GstBaseParse,
     GST_TYPE_BASE_PARSE);
@@ -244,6 +247,7 @@ gst_flac_parse_class_init (GstFlacParseClass * klass)
   baseparse_class->parse_frame = GST_DEBUG_FUNCPTR (gst_flac_parse_parse_frame);
   baseparse_class->pre_push_frame =
       GST_DEBUG_FUNCPTR (gst_flac_parse_pre_push_frame);
+  baseparse_class->convert = GST_DEBUG_FUNCPTR (gst_flac_parse_convert);
 }
 
 static void
@@ -756,17 +760,15 @@ gst_flac_parse_handle_streaminfo (GstFlacParse * flacparse, GstBuffer * buffer)
   if (!gst_bit_reader_get_bits_uint16 (&reader, &flacparse->min_blocksize, 16))
     goto error;
   if (flacparse->min_blocksize < 16) {
-    GST_ERROR_OBJECT (flacparse, "Invalid minimum block size: %u",
+    GST_WARNING_OBJECT (flacparse, "Invalid minimum block size: %u",
         flacparse->min_blocksize);
-    return FALSE;
   }
 
   if (!gst_bit_reader_get_bits_uint16 (&reader, &flacparse->max_blocksize, 16))
     goto error;
   if (flacparse->max_blocksize < 16) {
-    GST_ERROR_OBJECT (flacparse, "Invalid maximum block size: %u",
+    GST_WARNING_OBJECT (flacparse, "Invalid maximum block size: %u",
         flacparse->max_blocksize);
-    return FALSE;
   }
 
   if (!gst_bit_reader_get_bits_uint32 (&reader, &flacparse->min_framesize, 24))
@@ -796,10 +798,10 @@ gst_flac_parse_handle_streaminfo (GstFlacParse * flacparse, GstBuffer * buffer)
 
   if (!gst_bit_reader_get_bits_uint64 (&reader, &flacparse->total_samples, 36))
     goto error;
-  if (flacparse->total_samples)
-    gst_base_parse_set_duration (GST_BASE_PARSE (flacparse), GST_FORMAT_TIME,
-        GST_FRAMES_TO_CLOCK_TIME (flacparse->total_samples,
-            flacparse->samplerate), 0);
+  if (flacparse->total_samples) {
+    gst_base_parse_set_duration (GST_BASE_PARSE (flacparse),
+        GST_FORMAT_DEFAULT, flacparse->total_samples, 0);
+  }
 
   GST_DEBUG_OBJECT (flacparse, "STREAMINFO:\n"
       "\tmin/max blocksize: %u/%u,\n"
@@ -1352,4 +1354,36 @@ gst_flac_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
   frame->flags |= GST_BASE_PARSE_FRAME_FLAG_CLIP;
 
   return GST_FLOW_OK;
+}
+
+static gboolean
+gst_flac_parse_convert (GstBaseParse * parse,
+    GstFormat src_format, gint64 src_value, GstFormat dest_format,
+    gint64 * dest_value)
+{
+  GstFlacParse *flacparse = GST_FLAC_PARSE (parse);
+
+  if (flacparse->samplerate > 0) {
+    if (src_format == GST_FORMAT_DEFAULT && dest_format == GST_FORMAT_TIME) {
+      if (src_value != -1)
+        *dest_value =
+            gst_util_uint64_scale (src_value, GST_SECOND,
+            flacparse->samplerate);
+      else
+        *dest_value = -1;
+      return TRUE;
+    } else if (src_format == GST_FORMAT_TIME &&
+        dest_format == GST_FORMAT_DEFAULT) {
+      if (src_value != -1)
+        *dest_value =
+            gst_util_uint64_scale (src_value, flacparse->samplerate,
+            GST_SECOND);
+      else
+        *dest_value = -1;
+      return TRUE;
+    }
+  }
+
+  return GST_BASE_PARSE_CLASS (parent_class)->convert (parse, src_format,
+      src_value, dest_format, dest_value);
 }

@@ -716,7 +716,7 @@ gst_rtp_jpeg_pay_handle_buffer (GstBaseRTPPayload * basepayload,
       guint qt;
 
       qt = info[i].qt;
-      if (qt > 15)
+      if (qt >= G_N_ELEMENTS (tables))
         goto invalid_quant;
 
       qsize = tables[qt].size;

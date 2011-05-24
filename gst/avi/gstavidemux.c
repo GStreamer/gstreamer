@@ -1881,6 +1881,8 @@ gst_avi_demux_roundup_list (GstAviDemux * avi, GstBuffer ** buf)
 
     data = gst_buffer_map (obuf, NULL, NULL, GST_MAP_WRITE);
     gst_buffer_extract (*buf, 0, data, size);
+    /* assume 0 padding, at least makes outcome deterministic */
+    data[size] = 0;
     gst_buffer_unmap (obuf, data, size + 1);
     gst_buffer_replace (buf, obuf);
   }
