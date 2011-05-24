@@ -209,6 +209,10 @@ gst_h263_parse_set_src_caps (GstH263Parse * h263parse,
   gst_caps_set_simple (caps, "framerate", GST_TYPE_FRACTION, fr_num, fr_denom,
       NULL);
 
+  if (params->width && params->height)
+    gst_caps_set_simple (caps, "width", G_TYPE_INT, params->width,
+        "height", G_TYPE_INT, params->height, NULL);
+
   if (h263parse->state == GOT_HEADER) {
     gst_caps_set_simple (caps,
         "annex-d", G_TYPE_BOOLEAN, (params->features & H263_OPTION_UMV_MODE),

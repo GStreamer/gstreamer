@@ -142,6 +142,8 @@ gst_h263_parse_get_params (H263Params * params, GstBuffer * buffer,
     /* Fill in width/height based on format */
     params->width = sizetable[params->format][0];
     params->height = sizetable[params->format][1];
+    GST_DEBUG (" Picture width x height: %d x %d",
+        params->width, params->height);
 
     /* Default PAR is 12/11 */
     params->parnum = 12;
