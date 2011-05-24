@@ -255,12 +255,13 @@ wrong_name:
 static guint64
 preset_parse_version (const gchar * str_version)
 {
-  gint major, minor, micro, nano, num;
+  guint major, minor, micro, nano;
+  gint num;
 
   major = minor = micro = nano = 0;
 
   /* parse version (e.g. 0.10.15.1) to guint64 */
-  num = sscanf (str_version, "%d.%d.%d.%d", &major, &minor, &micro, &nano);
+  num = sscanf (str_version, "%u.%u.%u.%u", &major, &minor, &micro, &nano);
   /* make sure we have atleast "major.minor" */
   if (num > 1) {
     guint64 version;
