@@ -1152,42 +1152,6 @@ gst_element_request_pad (GstElement * element,
   return _gst_element_request_pad (element, templ, name, caps);
 }
 
-/**
- * gst_element_get_pad:
- * @element: a #GstElement.
- * @name: the name of the pad to retrieve.
- *
- * Retrieves a pad from @element by name. Tries gst_element_get_static_pad()
- * first, then gst_element_get_request_pad().
- *
- * Deprecated: This function is deprecated as it's unclear if the reference
- * to the result pad should be released with gst_object_unref() in case of a static pad
- * or gst_element_release_request_pad() in case of a request pad.
- * Use gst_element_get_static_pad() or gst_element_get_request_pad() instead.
- *
- * Returns: (transfer full): the #GstPad if found, otherwise %NULL. Unref or Release after usage,
- * depending on the type of the pad.
- */
-#ifndef GST_REMOVE_DEPRECATED
-#ifdef GST_DISABLE_DEPRECATED
-GstPad *gst_element_get_pad (GstElement * element, const gchar * name);
-#endif
-GstPad *
-gst_element_get_pad (GstElement * element, const gchar * name)
-{
-  GstPad *pad;
-
-  g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
-  g_return_val_if_fail (name != NULL, NULL);
-
-  pad = gst_element_get_static_pad (element, name);
-  if (!pad)
-    pad = gst_element_get_request_pad (element, name);
-
-  return pad;
-}
-#endif /* GST_REMOVE_DEPRECATED */
-
 static GstIterator *
 gst_element_iterate_pad_list (GstElement * element, GList ** padlist)
 {

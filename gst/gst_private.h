@@ -242,10 +242,6 @@ extern GstDebugCategory *_priv_GST_CAT_POLL;
 
 #endif
 
-#ifdef GST_DISABLE_DEPRECATED
-typedef GList*			(*GstPadIntLinkFunction)	(GstPad *pad);
-#endif
-
 
 G_END_DECLS
 #endif /* __GST_PRIVATE_H__ */
