@@ -49,22 +49,25 @@ typedef struct _GstMixerOptionsClass GstMixerOptionsClass;
 
 /**
  * GstMixerOptions:
- * @parent: Parent object
  * @values: List of option strings. Do not access this member directly,
  *     always use gst_mixer_options_get_values() instead.
+ *
+ * Mixer control object.
  */
 struct _GstMixerOptions {
   GstMixerTrack parent;
 
+  /*< public >*/
   /* list of strings (do not access directly) (FIXME 0.11: make private) */
   GList        *values;
 
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 
 /**
  * GstMixerOptionsClass:
- * @parent: Parent class
+ * @parent: the parent interface
  * @get_values: Optional implementation of gst_mixer_options_get_values().
  *    (Since: 0.10.18)
  */

@@ -39,12 +39,20 @@ G_BEGIN_DECLS
 typedef struct _GstNavigation GstNavigation;
 typedef struct _GstNavigationInterface GstNavigationInterface;
 
+/**
+ * GstNavigationInterface:
+ * @g_iface: the parent interface
+ * @send_event: sending a navigation event
+ *
+ * Color-balance interface.
+ */
 struct _GstNavigationInterface {
   GTypeInterface g_iface;
 
   /* virtual functions */
   void (*send_event) (GstNavigation *navigation, GstStructure *structure);
-  
+
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 
@@ -109,7 +117,7 @@ typedef enum {
   GST_NAVIGATION_COMMAND_MENU5    = 5,
   GST_NAVIGATION_COMMAND_MENU6    = 6,
   GST_NAVIGATION_COMMAND_MENU7    = 7,
-  
+
   GST_NAVIGATION_COMMAND_LEFT     = 20,
   GST_NAVIGATION_COMMAND_RIGHT    = 21,
   GST_NAVIGATION_COMMAND_UP       = 22,
@@ -130,6 +138,14 @@ typedef enum {
 #define GST_NAVIGATION_COMMAND_DVD_CHAPTER_MENU    GST_NAVIGATION_COMMAND_MENU7
 
 /* Queries */
+/**
+ * GstNavigationQueryType:
+ * @GST_NAVIGATION_QUERY_INVALID: invalid query
+ * @GST_NAVIGATION_QUERY_COMMANDS: command query
+ * @GST_NAVIGATION_QUERY_ANGLES: viewing angle query
+ *
+ * Tyoes of navigation interface queries.
+ */
 typedef enum
 {
   GST_NAVIGATION_QUERY_INVALID     = 0,
@@ -245,9 +261,9 @@ gboolean gst_navigation_event_parse_command (GstEvent *event,
 /* interface virtual function wrappers */
 void gst_navigation_send_event (GstNavigation *navigation,
         GstStructure *structure);
-void gst_navigation_send_key_event (GstNavigation *navigation, 
+void gst_navigation_send_key_event (GstNavigation *navigation,
         const char *event, const char *key);
-void gst_navigation_send_mouse_event (GstNavigation *navigation, 
+void gst_navigation_send_mouse_event (GstNavigation *navigation,
         const char *event, int button, double x, double y);
 void gst_navigation_send_command (GstNavigation *navigation,
         GstNavigationCommand command);

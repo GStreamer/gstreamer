@@ -47,6 +47,13 @@ G_BEGIN_DECLS
 typedef struct _GstMixer GstMixer;
 typedef struct _GstMixerClass GstMixerClass;
 
+/**
+ * GstMixerType:
+ * @GST_MIXER_HARDWARE: mixing is implemented with dedicated hardware.
+ * @GST_MIXER_SOFTWARE: mixing is implemented via software processing.
+ *
+ * Mixer classification.
+ */
 typedef enum
 {
   GST_MIXER_HARDWARE,

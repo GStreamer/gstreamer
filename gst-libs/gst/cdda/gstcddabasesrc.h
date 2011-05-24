@@ -115,6 +115,17 @@ struct _GstCddaBaseSrc {
   gpointer              _gst_reserved2[GST_PADDING/2];
 };
 
+/**
+ * GstCddaBaseSrcClass:
+ * @pushsrc_class: the parent class
+ * @open: opening the device
+ * @close: closing the device
+ * @read_sector: reading a sector
+ * @get_default_device: getting the default device
+ * @probe_devices: probing possible devices
+ *
+ * Cdda source base class.
+ */
 struct _GstCddaBaseSrcClass {
   GstPushSrcClass pushsrc_class;
 

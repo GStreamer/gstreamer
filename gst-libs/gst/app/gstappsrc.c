@@ -17,21 +17,6 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-
-/**
- * SECTION:element-appsrc
- *
- * The appsrc element can be used by applications to insert data into a
- * GStreamer pipeline. Unlike most GStreamer elements, Appsrc provides
- * external API functions.
- *
- * For the documentation of the API, please see the
- * <link linkend="gst-plugins-base-libs-appsrc">libgstapp</link> section in the
- * GStreamer Plugins Base Libraries documentation.
- * 
- * Since: 0.10.22
- */
-
 /**
  * SECTION:gstappsrc
  * @short_description: Easy way for applications to inject buffers into a
@@ -95,7 +80,7 @@
  * For the stream and seekable modes, setting this property is optional but
  * recommended.
  *
- * When the application is finished pushing data into appsrc, it should call 
+ * When the application is finished pushing data into appsrc, it should call
  * gst_app_src_end_of_stream() or emit the end-of-stream action signal. After
  * this call, no more buffers can be pushed into appsrc until a flushing seek
  * happened or the state of the appsrc has gone through READY.
@@ -467,7 +452,7 @@ gst_app_src_class_init (GstAppSrcClass * klass)
     * GstAppSrc::end-of-stream:
     * @appsrc: the appsrc
     *
-    * Notify @appsrc that no more buffer are available. 
+    * Notify @appsrc that no more buffer are available.
     */
   gst_app_src_signals[SIGNAL_END_OF_STREAM] =
       g_signal_new ("end-of-stream", G_TYPE_FROM_CLASS (klass),
@@ -1063,7 +1048,7 @@ seek_error:
  * a copy of the caps structure. After calling this method, the source will
  * only produce caps that match @caps. @caps must be fixed and the caps on the
  * buffers must match the caps or left NULL.
- * 
+ *
  * Since: 0.10.22
  */
 void
@@ -1096,7 +1081,7 @@ gst_app_src_set_caps (GstAppSrc * appsrc, const GstCaps * caps)
  * Get the configured caps on @appsrc.
  *
  * Returns: the #GstCaps produced by the source. gst_caps_unref() after usage.
- * 
+ *
  * Since: 0.10.22
  */
 GstCaps *
@@ -1124,8 +1109,8 @@ gst_app_src_get_caps (GstAppSrc * appsrc)
  * @size: the size to set
  *
  * Set the size of the stream in bytes. A value of -1 means that the size is
- * not known. 
- * 
+ * not known.
+ *
  * Since: 0.10.22
  */
 void
@@ -1148,10 +1133,10 @@ gst_app_src_set_size (GstAppSrc * appsrc, gint64 size)
  * @appsrc: a #GstAppSrc
  *
  * Get the size of the stream in bytes. A value of -1 means that the size is
- * not known. 
+ * not known.
  *
  * Returns: the size of the stream previously set with gst_app_src_set_size();
- * 
+ *
  * Since: 0.10.22
  */
 gint64
@@ -1180,8 +1165,8 @@ gst_app_src_get_size (GstAppSrc * appsrc)
  * Set the stream type on @appsrc. For seekable streams, the "seek" signal must
  * be connected to.
  *
- * A stream_type stream 
- * 
+ * A stream_type stream
+ *
  * Since: 0.10.22
  */
 void
@@ -1207,7 +1192,7 @@ gst_app_src_set_stream_type (GstAppSrc * appsrc, GstAppStreamType type)
  * with gst_app_src_set_stream_type().
  *
  * Returns: the stream type.
- * 
+ *
  * Since: 0.10.22
  */
 GstAppStreamType
@@ -1236,7 +1221,7 @@ gst_app_src_get_stream_type (GstAppSrc * appsrc)
  * Set the maximum amount of bytes that can be queued in @appsrc.
  * After the maximum amount of bytes are queued, @appsrc will emit the
  * "enough-data" signal.
- * 
+ *
  * Since: 0.10.22
  */
 void
@@ -1265,7 +1250,7 @@ gst_app_src_set_max_bytes (GstAppSrc * appsrc, guint64 max)
  * Get the maximum amount of bytes that can be queued in @appsrc.
  *
  * Returns: The maximum amount of bytes that can be queued.
- * 
+ *
  * Since: 0.10.22
  */
 guint64
@@ -1319,7 +1304,7 @@ gst_app_src_set_latencies (GstAppSrc * appsrc, gboolean do_min, guint64 min,
  *
  * Configure the @min and @max latency in @src. If @min is set to -1, the
  * default latency calculations for pseudo-live sources will be used.
- * 
+ *
  * Since: 0.10.22
  */
 void
@@ -1335,7 +1320,7 @@ gst_app_src_set_latency (GstAppSrc * appsrc, guint64 min, guint64 max)
  * @max: the min latency
  *
  * Retrieve the min and max latencies in @min and @max respectively.
- * 
+ *
  * Since: 0.10.22
  */
 void
@@ -1511,7 +1496,7 @@ eos:
  * Returns: #GST_FLOW_OK when the buffer was successfuly queued.
  * #GST_FLOW_WRONG_STATE when @appsrc is not PAUSED or PLAYING.
  * #GST_FLOW_UNEXPECTED when EOS occured.
- * 
+ *
  * Since: 0.10.22
  */
 GstFlowReturn
@@ -1537,7 +1522,7 @@ gst_app_src_push_buffer_action (GstAppSrc * appsrc, GstBuffer * buffer)
  *
  * Returns: #GST_FLOW_OK when the EOS was successfuly queued.
  * #GST_FLOW_WRONG_STATE when @appsrc is not PAUSED or PLAYING.
- * 
+ *
  * Since: 0.10.22
  */
 GstFlowReturn
@@ -1550,7 +1535,7 @@ gst_app_src_end_of_stream (GstAppSrc * appsrc)
   priv = appsrc->priv;
 
   g_mutex_lock (priv->mutex);
-  /* can't accept buffers when we are flushing. We can accept them when we are 
+  /* can't accept buffers when we are flushing. We can accept them when we are
    * EOS although it will not do anything. */
   if (priv->flushing)
     goto flushing;

@@ -61,10 +61,17 @@ struct _GstBaseRTPAudioPayload
   gpointer _gst_reserved[GST_PADDING];
 };
 
+/**
+ * GstBaseRTPAudioPayloadClass:
+ * @parent_class: the parent class
+ *
+ * Base class for audio RTP payloader.
+ */
 struct _GstBaseRTPAudioPayloadClass
 {
   GstBaseRTPPayloadClass parent_class;
 
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 

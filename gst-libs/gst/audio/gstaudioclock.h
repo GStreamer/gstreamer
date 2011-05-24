@@ -60,14 +60,13 @@ typedef GstClockTime (*GstAudioClockGetTimeFunc) (GstClock *clock, gpointer user
 
 /**
  * GstAudioClock:
- * @clock: parent #GstSystemClock
  *
  * Opaque #GstAudioClock.
  */
 struct _GstAudioClock {
   GstSystemClock clock;
 
-  /* --- protected --- */
+  /*< protected >*/
   GstAudioClockGetTimeFunc func;
   gpointer user_data;
 

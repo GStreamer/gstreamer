@@ -47,7 +47,6 @@ typedef struct _GstAudioFilterClass GstAudioFilterClass;
 
 /**
  * GstAudioFilter:
- * @basetransform: Element parent class
  *
  * Base class for audio filters with the same format for input and output.
  *

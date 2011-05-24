@@ -185,7 +185,7 @@ typedef enum {
  * @GST_RTSP_GET: the GET method (HTTP). Since 0.10.25
  * @GST_RTSP_POST: the POST method (HTTP). Since 0.10.25
  *
- * The different supported RTSP methods. 
+ * The different supported RTSP methods.
  */
 typedef enum {
   GST_RTSP_INVALID          = 0,
@@ -221,11 +221,17 @@ typedef enum {
 /**
  * GST_RTSP_AUTH_MAX:
  *
- * Strongest available authentication method 
+ * Strongest available authentication method
  */
 #define GST_RTSP_AUTH_MAX GST_RTSP_AUTH_DIGEST
 
+/**
+ * GstRTSPHeaderField:
+ *
+ * Enumeration of rtsp header fields.
+ */
 typedef enum {
+  /*< protected >*/
   GST_RTSP_HDR_INVALID,
 
   /*
@@ -330,51 +336,57 @@ typedef enum {
   GST_RTSP_HDR_LAST
 } GstRTSPHeaderField;
 
+/**
+ * GstRTSPStatusCode:
+ *
+ * Enumeration of rtsp status codes.
+ */
 typedef enum {
-  GST_RTSP_STS_INVALID                              = 0, 
-  GST_RTSP_STS_CONTINUE                             = 100, 
-  GST_RTSP_STS_OK                                   = 200, 
-  GST_RTSP_STS_CREATED                              = 201, 
-  GST_RTSP_STS_LOW_ON_STORAGE                       = 250, 
-  GST_RTSP_STS_MULTIPLE_CHOICES                     = 300, 
-  GST_RTSP_STS_MOVED_PERMANENTLY                    = 301, 
-  GST_RTSP_STS_MOVE_TEMPORARILY                     = 302, 
-  GST_RTSP_STS_SEE_OTHER                            = 303, 
-  GST_RTSP_STS_NOT_MODIFIED                         = 304, 
-  GST_RTSP_STS_USE_PROXY                            = 305, 
-  GST_RTSP_STS_BAD_REQUEST                          = 400, 
-  GST_RTSP_STS_UNAUTHORIZED                         = 401, 
-  GST_RTSP_STS_PAYMENT_REQUIRED                     = 402, 
-  GST_RTSP_STS_FORBIDDEN                            = 403, 
-  GST_RTSP_STS_NOT_FOUND                            = 404, 
-  GST_RTSP_STS_METHOD_NOT_ALLOWED                   = 405, 
-  GST_RTSP_STS_NOT_ACCEPTABLE                       = 406, 
-  GST_RTSP_STS_PROXY_AUTH_REQUIRED                  = 407, 
-  GST_RTSP_STS_REQUEST_TIMEOUT                      = 408, 
-  GST_RTSP_STS_GONE                                 = 410, 
-  GST_RTSP_STS_LENGTH_REQUIRED                      = 411, 
-  GST_RTSP_STS_PRECONDITION_FAILED                  = 412, 
-  GST_RTSP_STS_REQUEST_ENTITY_TOO_LARGE             = 413, 
-  GST_RTSP_STS_REQUEST_URI_TOO_LARGE                = 414, 
-  GST_RTSP_STS_UNSUPPORTED_MEDIA_TYPE               = 415, 
-  GST_RTSP_STS_PARAMETER_NOT_UNDERSTOOD             = 451, 
-  GST_RTSP_STS_CONFERENCE_NOT_FOUND                 = 452, 
-  GST_RTSP_STS_NOT_ENOUGH_BANDWIDTH                 = 453, 
-  GST_RTSP_STS_SESSION_NOT_FOUND                    = 454, 
-  GST_RTSP_STS_METHOD_NOT_VALID_IN_THIS_STATE       = 455, 
-  GST_RTSP_STS_HEADER_FIELD_NOT_VALID_FOR_RESOURCE  = 456, 
-  GST_RTSP_STS_INVALID_RANGE                        = 457, 
-  GST_RTSP_STS_PARAMETER_IS_READONLY                = 458, 
-  GST_RTSP_STS_AGGREGATE_OPERATION_NOT_ALLOWED      = 459, 
-  GST_RTSP_STS_ONLY_AGGREGATE_OPERATION_ALLOWED     = 460, 
-  GST_RTSP_STS_UNSUPPORTED_TRANSPORT                = 461, 
-  GST_RTSP_STS_DESTINATION_UNREACHABLE              = 462, 
-  GST_RTSP_STS_INTERNAL_SERVER_ERROR                = 500, 
-  GST_RTSP_STS_NOT_IMPLEMENTED                      = 501, 
-  GST_RTSP_STS_BAD_GATEWAY                          = 502, 
-  GST_RTSP_STS_SERVICE_UNAVAILABLE                  = 503, 
-  GST_RTSP_STS_GATEWAY_TIMEOUT                      = 504, 
-  GST_RTSP_STS_RTSP_VERSION_NOT_SUPPORTED           = 505, 
+  /*< protected >*/
+  GST_RTSP_STS_INVALID                              = 0,
+  GST_RTSP_STS_CONTINUE                             = 100,
+  GST_RTSP_STS_OK                                   = 200,
+  GST_RTSP_STS_CREATED                              = 201,
+  GST_RTSP_STS_LOW_ON_STORAGE                       = 250,
+  GST_RTSP_STS_MULTIPLE_CHOICES                     = 300,
+  GST_RTSP_STS_MOVED_PERMANENTLY                    = 301,
+  GST_RTSP_STS_MOVE_TEMPORARILY                     = 302,
+  GST_RTSP_STS_SEE_OTHER                            = 303,
+  GST_RTSP_STS_NOT_MODIFIED                         = 304,
+  GST_RTSP_STS_USE_PROXY                            = 305,
+  GST_RTSP_STS_BAD_REQUEST                          = 400,
+  GST_RTSP_STS_UNAUTHORIZED                         = 401,
+  GST_RTSP_STS_PAYMENT_REQUIRED                     = 402,
+  GST_RTSP_STS_FORBIDDEN                            = 403,
+  GST_RTSP_STS_NOT_FOUND                            = 404,
+  GST_RTSP_STS_METHOD_NOT_ALLOWED                   = 405,
+  GST_RTSP_STS_NOT_ACCEPTABLE                       = 406,
+  GST_RTSP_STS_PROXY_AUTH_REQUIRED                  = 407,
+  GST_RTSP_STS_REQUEST_TIMEOUT                      = 408,
+  GST_RTSP_STS_GONE                                 = 410,
+  GST_RTSP_STS_LENGTH_REQUIRED                      = 411,
+  GST_RTSP_STS_PRECONDITION_FAILED                  = 412,
+  GST_RTSP_STS_REQUEST_ENTITY_TOO_LARGE             = 413,
+  GST_RTSP_STS_REQUEST_URI_TOO_LARGE                = 414,
+  GST_RTSP_STS_UNSUPPORTED_MEDIA_TYPE               = 415,
+  GST_RTSP_STS_PARAMETER_NOT_UNDERSTOOD             = 451,
+  GST_RTSP_STS_CONFERENCE_NOT_FOUND                 = 452,
+  GST_RTSP_STS_NOT_ENOUGH_BANDWIDTH                 = 453,
+  GST_RTSP_STS_SESSION_NOT_FOUND                    = 454,
+  GST_RTSP_STS_METHOD_NOT_VALID_IN_THIS_STATE       = 455,
+  GST_RTSP_STS_HEADER_FIELD_NOT_VALID_FOR_RESOURCE  = 456,
+  GST_RTSP_STS_INVALID_RANGE                        = 457,
+  GST_RTSP_STS_PARAMETER_IS_READONLY                = 458,
+  GST_RTSP_STS_AGGREGATE_OPERATION_NOT_ALLOWED      = 459,
+  GST_RTSP_STS_ONLY_AGGREGATE_OPERATION_ALLOWED     = 460,
+  GST_RTSP_STS_UNSUPPORTED_TRANSPORT                = 461,
+  GST_RTSP_STS_DESTINATION_UNREACHABLE              = 462,
+  GST_RTSP_STS_INTERNAL_SERVER_ERROR                = 500,
+  GST_RTSP_STS_NOT_IMPLEMENTED                      = 501,
+  GST_RTSP_STS_BAD_GATEWAY                          = 502,
+  GST_RTSP_STS_SERVICE_UNAVAILABLE                  = 503,
+  GST_RTSP_STS_GATEWAY_TIMEOUT                      = 504,
+  GST_RTSP_STS_RTSP_VERSION_NOT_SUPPORTED           = 505,
   GST_RTSP_STS_OPTION_NOT_SUPPORTED                 = 551
 } GstRTSPStatusCode;
 

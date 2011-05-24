@@ -162,10 +162,10 @@ xmp_tag_get_type_name (XmpTag * xmptag)
   switch (xmptag->type) {
     case GstXmpTagTypeSeq:
       return "rdf:Seq";
-    default:
-      g_assert_not_reached ();
     case GstXmpTagTypeBag:
       return "rdf:Bag";
+    default:
+      g_assert_not_reached ();
   }
 }
 
@@ -844,7 +844,7 @@ deserialize_xmp_rating (XmpTag * xmptag, GstTagList * taglist,
     return;
   }
 
-  if (value < 0 || value > 100) {
+  if (value > 100) {
     GST_WARNING ("Unsupported Rating tag %u (should be from 0 to 100), "
         "ignoring", value);
     return;
@@ -1073,7 +1073,7 @@ read_one_tag (GstTagList * list, XmpTag * xmptag,
 
   g_return_if_fail (tag != NULL);
 
-  if (xmptag && xmptag->deserialize) {
+  if (xmptag->deserialize) {
     xmptag->deserialize (xmptag, list, tag, xmptag->tag_name, v, pending_tags);
     return;
   }

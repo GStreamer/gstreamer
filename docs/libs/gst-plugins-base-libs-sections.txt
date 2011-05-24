@@ -3,7 +3,6 @@
 <FILE>gstappsrc</FILE>
 <TITLE>appsrc</TITLE>
 <INCLUDE>gst/app/gstappsrc.h</INCLUDE>
-GstAppSrc
 GstAppStreamType
 gst_app_src_set_caps
 gst_app_src_get_caps
@@ -35,7 +34,9 @@ GST_APP_BUFFER_CLASS
 GST_IS_APP_BUFFER
 GST_IS_APP_BUFFER_CLASS
 GST_TYPE_APP_BUFFER
+GST_TYPE_APP_STREAM_TYPE
 <SUBSECTION Private>
+GstAppSrc
 GstAppSrcPrivate
 GstAppBuffer
 GstAppBufferClass
@@ -48,7 +49,6 @@ gst_app_buffer_new
 <FILE>gstappsink</FILE>
 <TITLE>appsink</TITLE>
 <INCLUDE>gst/app/gstappsink.h</INCLUDE>
-GstAppSink
 gst_app_sink_set_caps
 gst_app_sink_get_caps
 gst_app_sink_is_eos
@@ -64,6 +64,7 @@ gst_app_sink_pull_buffer_list
 GstAppSinkCallbacks
 gst_app_sink_set_callbacks
 <SUBSECTION Standard>
+GstAppSink
 GstAppSinkPrivate
 GstAppSinkClass
 GST_APP_SINK
@@ -859,6 +860,22 @@ gst_netbuffer_get_type
 <SECTION>
 <FILE>gstriff</FILE>
 <INCLUDE>gst/riff/riff-media.h</INCLUDE>
+gst_riff_create_audio_caps
+gst_riff_create_audio_template_caps
+gst_riff_create_iavs_caps
+gst_riff_create_iavs_template_caps
+gst_riff_create_video_caps
+gst_riff_create_video_template_caps
+gst_riff_init
+gst_riff_parse_chunk
+gst_riff_parse_file_header
+gst_riff_parse_info
+gst_riff_parse_strf_auds
+gst_riff_parse_strf_iavs
+gst_riff_parse_strf_vids
+gst_riff_parse_strh
+gst_riff_read_chunk
+<SUBSECTION Standard>
 GST_RIFF_00
 GST_RIFF_0021
 GST_RIFF_0031
@@ -1043,28 +1060,12 @@ GST_RIFF_yuy2
 GST_RIFF_yv12
 
 gst_riff_acid
-gst_riff_create_audio_caps
-gst_riff_create_audio_template_caps
-gst_riff_create_iavs_caps
-gst_riff_create_iavs_template_caps
-gst_riff_create_video_caps
-gst_riff_create_video_template_caps
 gst_riff_dmlh
 gst_riff_index_entry
-gst_riff_init
-gst_riff_parse_chunk
-gst_riff_parse_file_header
-gst_riff_parse_info
-gst_riff_parse_strf_auds
-gst_riff_parse_strf_iavs
-gst_riff_parse_strf_vids
-gst_riff_parse_strh
-gst_riff_read_chunk
 gst_riff_strf_auds
 gst_riff_strf_iavs
 gst_riff_strf_vids
 gst_riff_strh
-<SUBSECTION Standard>
 </SECTION>
 
 
@@ -1392,6 +1393,7 @@ gst_rtp_buffer_list_add_extension_twobytes_header
 <FILE>gstrtspdefs</FILE>
 <INCLUDE>gst/rtsp/gstrtspdefs.h</INCLUDE>
 GST_RTSP_CHECK
+GST_RTSP_AUTH_MAX
 GstRTSPEvent
 GstRTSPResult
 GstRTSPFamily
@@ -1399,7 +1401,6 @@ GstRTSPState
 GstRTSPVersion
 GstRTSPMethod
 GstRTSPAuthMethod
-GST_RTSP_AUTH_MAX
 GstRTSPHeaderField
 GstRTSPStatusCode
 gst_rtsp_strresult
@@ -1739,6 +1740,7 @@ GST_TAG_CAPTURING_FLASH_FIRED
 GST_TAG_CAPTURING_FLASH_MODE
 GST_TAG_CAPTURING_METERING_MODE
 GST_TAG_CAPTURING_SOURCE
+GST_TAG_CAPTURING_EXPOSURE_COMPENSATION
 GST_TAG_IMAGE_HORIZONTAL_PPI
 GST_TAG_IMAGE_VERTICAL_PPI
 gst_tag_register_musicbrainz_tags
@@ -1786,6 +1788,8 @@ gst_tag_list_add_id3_image
 <INCLUDE>gst/tag/tag.h</INCLUDE>
 gst_tag_list_from_xmp_buffer
 gst_tag_list_to_xmp_buffer
+gst_tag_list_to_xmp_buffer_full
+gst_tag_xmp_list_schemas
 <SUBSECTION Standard>
 </SECTION>
 
@@ -1820,13 +1824,32 @@ gst_tag_demux_result_get_type
 <SECTION>
 <FILE>gsttaglanguagecodes</FILE>
 <INCLUDE>gst/tag/tag.h</INCLUDE>
-<SUBSECTION>
 gst_tag_get_language_codes
 gst_tag_get_language_name
 gst_tag_get_language_code
 gst_tag_get_language_code_iso_639_1
 gst_tag_get_language_code_iso_639_2B
 gst_tag_get_language_code_iso_639_2T
+</SECTION>
+
+<SECTION>
+<FILE>gsttagxmpwriter</FILE>
+gst_tag_xmp_writer_add_all_schemas
+gst_tag_xmp_writer_add_schema
+gst_tag_xmp_writer_has_schema
+gst_tag_xmp_writer_remove_schema
+gst_tag_xmp_writer_remove_all_schemas
+gst_tag_xmp_writer_tag_list_to_xmp_buffer
+<SUBSECTION Standard>
+GstTagXmpWriter
+GstTagXmpWriterInterface
+GST_TYPE_TAG_XMP_WRITER
+GST_TAG_XMP_WRITER
+GST_TAG_XMP_WRITER_INTERFACE
+GST_IS_TAG_XMP_WRITER
+GST_IS_TAG_XMP_WRITER_INTERFACE
+GST_TAG_XMP_WRITER_GET_INTERFACE
+gst_tag_xmp_writer_get_type
 </SECTION>
 
 # base utils
@@ -1836,6 +1859,11 @@ gst_tag_get_language_code_iso_639_2T
 <INCLUDE>gst/pbutils/pbutils.h</INCLUDE>
 <SUBSECTION>
 gst_pb_utils_init
+</SECTION>
+
+<SECTION>
+<FILE>gstpluginsbaseversion</FILE>
+<INCLUDE>gst/pbutils/gstpluginsbaseversion.h</INCLUDE>
 <SUBSECTION>
 GST_PLUGINS_BASE_VERSION_MAJOR
 GST_PLUGINS_BASE_VERSION_MINOR
@@ -2054,6 +2082,20 @@ GST_VIDEO_CAPS_BGR_16
 GST_VIDEO_CAPS_RGB8_PALETTED
 GST_VIDEO_CAPS_GRAY8
 GST_VIDEO_CAPS_GRAY16
+GST_VIDEO_CAPS_ARGB_64
+GST_VIDEO_CAPS_r210
+GST_VIDEO_COMP1_MASK_15
+GST_VIDEO_COMP1_MASK_15_INT
+GST_VIDEO_COMP1_MASK_16
+GST_VIDEO_COMP1_MASK_16_INT
+GST_VIDEO_COMP2_MASK_15
+GST_VIDEO_COMP2_MASK_15_INT
+GST_VIDEO_COMP2_MASK_16
+GST_VIDEO_COMP2_MASK_16_INT
+GST_VIDEO_COMP3_MASK_15
+GST_VIDEO_COMP3_MASK_15_INT
+GST_VIDEO_COMP3_MASK_16
+GST_VIDEO_COMP3_MASK_16_INT
 GST_VIDEO_FPS_RANGE
 GST_VIDEO_GREEN_MASK_15
 GST_VIDEO_GREEN_MASK_15_INT
@@ -2071,12 +2113,15 @@ GstVideoFormat
 gst_video_calculate_display_ratio
 gst_video_frame_rate
 gst_video_get_size
+gst_video_get_size_from_caps
 gst_video_format_convert
 gst_video_format_new_caps
 gst_video_format_new_caps_interlaced
+gst_video_format_new_template_caps
 gst_video_format_get_component_height
 gst_video_format_get_component_offset
 gst_video_format_get_component_width
+gst_video_format_get_component_depth
 gst_video_format_get_pixel_stride
 gst_video_format_get_row_stride
 gst_video_format_get_size

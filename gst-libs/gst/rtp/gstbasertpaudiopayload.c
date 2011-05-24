@@ -21,12 +21,9 @@
  * SECTION:gstbasertpaudiopayload
  * @short_description: Base class for audio RTP payloader
  *
- * <refsect2>
- * <para>
  * Provides a base class for audio RTP payloaders for frame or sample based
  * audio codecs (constant bitrate)
- * </para>
- * <para>
+ *
  * This class derives from GstBaseRTPPayload. It can be used for payloading
  * audio codecs. It will only work with constant bitrate codecs. It supports
  * both frame based and sample based codecs. It takes care of packing up the
@@ -38,7 +35,8 @@
  * equal to min-ptime (if set). If min-ptime is not set, any residual data is
  * sent in a last RTP packet. In the case of frame based codecs, the resulting
  * RTP packets always contain full frames.
- * </para>
+ *
+ * <refsect2>
  * <title>Usage</title>
  * <para>
  * To use this base class, your child element needs to call either

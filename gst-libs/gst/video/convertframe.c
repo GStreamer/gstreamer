@@ -236,7 +236,7 @@ link_failed:
  * @from_caps: the #GstCaps to convert from
  * @to_caps: the #GstCaps to convert to
  * @timeout: the maximum amount of time allowed for the processing.
- * @err: pointer to a #GError. Can be %NULL.
+ * @error: pointer to a #GError. Can be %NULL.
  *
  * Converts a raw video buffer into the specified output caps.
  *
@@ -256,7 +256,7 @@ gst_video_convert_frame (GstBuffer * buf, GstCaps * from_caps,
 {
   GstMessage *msg;
   GstBuffer *result = NULL;
-  GError *error = NULL;
+  GError *err = NULL;
   GstBus *bus;
   GstCaps *to_caps_copy = NULL;
   GstFlowReturn ret;
@@ -278,8 +278,7 @@ gst_video_convert_frame (GstBuffer * buf, GstCaps * from_caps,
   }
 
   pipeline =
-      build_convert_frame_pipeline (&src, &sink, from_caps, to_caps_copy,
-      &error);
+      build_convert_frame_pipeline (&src, &sink, from_caps, to_caps_copy, &err);
   if (!pipeline)
     goto no_pipeline;
 
@@ -317,14 +316,14 @@ gst_video_convert_frame (GstBuffer * buf, GstCaps * from_caps,
       case GST_MESSAGE_ERROR:{
         gchar *dbg = NULL;
 
-        gst_message_parse_error (msg, &error, &dbg);
-        if (error) {
-          GST_ERROR ("Could not convert video frame: %s", error->message);
-          GST_DEBUG ("%s [debug: %s]", error->message, GST_STR_NULL (dbg));
-          if (err)
-            *err = error;
+        gst_message_parse_error (msg, &err, &dbg);
+        if (err) {
+          GST_ERROR ("Could not convert video frame: %s", err->message);
+          GST_DEBUG ("%s [debug: %s]", err->message, GST_STR_NULL (dbg));
+          if (error)
+            *error = err;
           else
-            g_error_free (error);
+            g_error_free (err);
         }
         g_free (dbg);
         break;
@@ -336,8 +335,8 @@ gst_video_convert_frame (GstBuffer * buf, GstCaps * from_caps,
     gst_message_unref (msg);
   } else {
     GST_ERROR ("Could not convert video frame: timeout during conversion");
-    if (err)
-      *err = g_error_new (GST_CORE_ERROR, GST_CORE_ERROR_FAILED,
+    if (error)
+      *error = g_error_new (GST_CORE_ERROR, GST_CORE_ERROR_FAILED,
           "Could not convert video frame: timeout during conversion");
   }
 
@@ -353,10 +352,10 @@ no_pipeline:
   {
     gst_caps_unref (to_caps_copy);
 
-    if (err)
-      *err = error;
+    if (error)
+      *error = err;
     else
-      g_error_free (error);
+      g_error_free (err);
 
     return NULL;
   }
@@ -576,6 +575,7 @@ done:
  * @to_caps: the #GstCaps to convert to
  * @timeout: the maximum amount of time allowed for the processing.
  * @callback: %GstVideoConvertFrameCallback that will be called after conversion.
+ * @user_data: extra data that will be passed to the @callback
  * @destroy_notify: %GDestroyNotify to be called after @user_data is not needed anymore
  *
  * Converts a raw video buffer into the specified output caps.

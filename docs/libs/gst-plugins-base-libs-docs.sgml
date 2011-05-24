@@ -189,6 +189,7 @@
       <xi:include href="xml/gsttagvorbis.xml" />
       <xi:include href="xml/gsttagid3.xml" />
       <xi:include href="xml/gsttagxmp.xml" />
+      <xi:include href="xml/gsttagxmpwriter.xml" />
       <xi:include href="xml/gsttagdemux.xml" />
       <xi:include href="xml/gsttaglanguagecodes.xml" />
     </chapter>
@@ -202,6 +203,7 @@
         flags.
       </para>
       <xi:include href="xml/gstpbutils.xml" />
+      <xi:include href="xml/gstpluginsbaseversion.xml" />
       <xi:include href="xml/gstpbutilscodecutils.xml" />
       <xi:include href="xml/gstpbutilsdescriptions.xml" />
       <xi:include href="xml/gstpbutilsmissingplugins.xml" />

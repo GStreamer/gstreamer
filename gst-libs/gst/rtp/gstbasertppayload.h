@@ -120,6 +120,16 @@ struct _GstBaseRTPPayload
   } abidata;
 };
 
+/**
+ * GstBaseRTPPayloadClass:
+ * @parent_class: the parent class
+ * @set_caps: configure the payloader
+ * @handle_buffer: process data
+ * @handle_event: custom event handling
+ * @get_caps: get desired caps
+ *
+ * Base class for audio RTP payloader.
+ */
 struct _GstBaseRTPPayloadClass
 {
   GstElementClass parent_class;
