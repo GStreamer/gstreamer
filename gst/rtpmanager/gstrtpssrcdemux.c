@@ -83,8 +83,8 @@ GST_STATIC_PAD_TEMPLATE ("rtcp_src_%d",
     GST_STATIC_CAPS ("application/x-rtcp")
     );
 
-#define GST_PAD_LOCK(obj)   (g_mutex_lock ((obj)->padlock))
-#define GST_PAD_UNLOCK(obj) (g_mutex_unlock ((obj)->padlock))
+#define GST_PAD_LOCK(obj)   (g_static_rec_mutex_lock (&(obj)->padlock))
+#define GST_PAD_UNLOCK(obj) (g_static_rec_mutex_unlock (&(obj)->padlock))
 
 /* signals */
 enum
@@ -214,13 +214,13 @@ find_or_create_demux_pad_for_ssrc (GstRtpSsrcDemux * demux, guint32 ssrc)
       gst_rtp_ssrc_demux_iterate_internal_links_src);
   gst_pad_set_active (rtcp_pad, TRUE);
 
-  GST_PAD_UNLOCK (demux);
-
   gst_element_add_pad (GST_ELEMENT_CAST (demux), rtp_pad);
   gst_element_add_pad (GST_ELEMENT_CAST (demux), rtcp_pad);
 
   g_signal_emit (G_OBJECT (demux),
       gst_rtp_ssrc_demux_signals[SIGNAL_NEW_SSRC_PAD], 0, ssrc, rtp_pad);
+
+  GST_PAD_UNLOCK (demux);
 
   return demuxpad;
 }
@@ -336,7 +336,7 @@ gst_rtp_ssrc_demux_init (GstRtpSsrcDemux * demux,
       gst_rtp_ssrc_demux_iterate_internal_links_sink);
   gst_element_add_pad (GST_ELEMENT_CAST (demux), demux->rtcp_sink);
 
-  demux->padlock = g_mutex_new ();
+  g_static_rec_mutex_init (&demux->padlock);
 
   gst_segment_init (&demux->segment, GST_FORMAT_UNDEFINED);
 }
@@ -378,7 +378,7 @@ gst_rtp_ssrc_demux_finalize (GObject * object)
   GstRtpSsrcDemux *demux;
 
   demux = GST_RTP_SSRC_DEMUX (object);
-  g_mutex_free (demux->padlock);
+  g_static_rec_mutex_free (&demux->padlock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
