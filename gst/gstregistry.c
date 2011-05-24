@@ -484,7 +484,7 @@ gst_registry_remove_features_for_plugin_unlocked (GstRegistry * registry,
           plugin->desc.name);
 
       registry->features = g_list_delete_link (registry->features, f);
-      g_hash_table_remove (registry->feature_hash, feature->name);
+      g_hash_table_remove (registry->feature_hash, GST_OBJECT_NAME (feature));
       gst_object_unparent (GST_OBJECT_CAST (feature));
     }
     f = next;
@@ -538,25 +538,27 @@ gst_registry_add_feature (GstRegistry * registry, GstPluginFeature * feature)
 
   g_return_val_if_fail (GST_IS_REGISTRY (registry), FALSE);
   g_return_val_if_fail (GST_IS_PLUGIN_FEATURE (feature), FALSE);
-  g_return_val_if_fail (feature->name != NULL, FALSE);
+  g_return_val_if_fail (GST_OBJECT_NAME (feature) != NULL, FALSE);
   g_return_val_if_fail (feature->plugin_name != NULL, FALSE);
 
   GST_OBJECT_LOCK (registry);
   existing_feature = gst_registry_lookup_feature_locked (registry,
-      feature->name);
+      GST_OBJECT_NAME (feature));
   if (G_UNLIKELY (existing_feature)) {
     GST_DEBUG_OBJECT (registry, "replacing existing feature %p (%s)",
-        existing_feature, feature->name);
+        existing_feature, GST_OBJECT_NAME (feature));
     /* Remove the existing feature from the list now, before we insert the new
      * one, but don't unref yet because the hash is still storing a reference to
      * it. */
     registry->features = g_list_remove (registry->features, existing_feature);
   }
 
-  GST_DEBUG_OBJECT (registry, "adding feature %p (%s)", feature, feature->name);
+  GST_DEBUG_OBJECT (registry, "adding feature %p (%s)", feature,
+      GST_OBJECT_NAME (feature));
 
   registry->features = g_list_prepend (registry->features, feature);
-  g_hash_table_replace (registry->feature_hash, feature->name, feature);
+  g_hash_table_replace (registry->feature_hash, GST_OBJECT_NAME (feature),
+      feature);
 
   if (G_UNLIKELY (existing_feature)) {
     /* We unref now. No need to remove the feature name from the hash table, it
@@ -569,7 +571,8 @@ gst_registry_add_feature (GstRegistry * registry, GstPluginFeature * feature)
   registry->priv->cookie++;
   GST_OBJECT_UNLOCK (registry);
 
-  GST_LOG_OBJECT (registry, "emitting feature-added for %s", feature->name);
+  GST_LOG_OBJECT (registry, "emitting feature-added for %s",
+      GST_OBJECT_NAME (feature));
   g_signal_emit (registry, gst_registry_signals[FEATURE_ADDED], 0, feature);
 
   return TRUE;
@@ -595,7 +598,7 @@ gst_registry_remove_feature (GstRegistry * registry, GstPluginFeature * feature)
 
   GST_OBJECT_LOCK (registry);
   registry->features = g_list_remove (registry->features, feature);
-  g_hash_table_remove (registry->feature_hash, feature->name);
+  g_hash_table_remove (registry->feature_hash, GST_OBJECT_NAME (feature));
   registry->priv->cookie++;
   GST_OBJECT_UNLOCK (registry);
 
@@ -678,7 +681,7 @@ type_find_factory_rank_cmp (const GstPluginFeature * fac1,
 
   /* to make the order in which things happen more deterministic,
    * sort by name when the ranks are the same. */
-  return strcmp (fac1->name, fac2->name);
+  return strcmp (GST_OBJECT_NAME (fac1), GST_OBJECT_NAME (fac2));
 }
 
 static GList *

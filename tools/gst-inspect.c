@@ -1070,7 +1070,7 @@ print_element_list (gboolean print_all)
           print_element_info (factory, TRUE);
         else
           g_print ("%s:  %s: %s\n", plugin->desc.name,
-              GST_PLUGIN_FEATURE_NAME (factory),
+              GST_OBJECT_NAME (factory),
               gst_element_factory_get_longname (factory));
       } else if (GST_IS_INDEX_FACTORY (feature)) {
         GstIndexFactory *factory;
@@ -1078,7 +1078,7 @@ print_element_list (gboolean print_all)
         factory = GST_INDEX_FACTORY (feature);
         if (!print_all)
           g_print ("%s:  %s: %s\n", plugin->desc.name,
-              GST_PLUGIN_FEATURE_NAME (factory), factory->longdesc);
+              GST_OBJECT_NAME (factory), factory->longdesc);
       } else if (GST_IS_TYPE_FIND_FACTORY (feature)) {
         GstTypeFindFactory *factory;
 
@@ -1103,8 +1103,7 @@ print_element_list (gboolean print_all)
       } else {
         if (!print_all)
           n_print ("%s:  %s (%s)\n", plugin->desc.name,
-              GST_PLUGIN_FEATURE_NAME (feature),
-              g_type_name (G_OBJECT_TYPE (feature)));
+              GST_OBJECT_NAME (feature), g_type_name (G_OBJECT_TYPE (feature)));
       }
 
     next:
@@ -1262,7 +1261,7 @@ print_plugin_features (GstPlugin * plugin)
       GstElementFactory *factory;
 
       factory = GST_ELEMENT_FACTORY (feature);
-      n_print ("  %s: %s\n", GST_PLUGIN_FEATURE_NAME (factory),
+      n_print ("  %s: %s\n", GST_OBJECT_NAME (factory),
           gst_element_factory_get_longname (factory));
       num_elements++;
     } else if (GST_IS_INDEX_FACTORY (feature)) {
@@ -1356,7 +1355,7 @@ print_element_info (GstElementFactory * factory, gboolean print_names)
   }
 
   if (print_names)
-    _name = g_strdup_printf ("%s: ", GST_PLUGIN_FEATURE (factory)->name);
+    _name = g_strdup_printf ("%s: ", GST_OBJECT_NAME (factory));
   else
     _name = NULL;
 
@@ -1434,7 +1433,7 @@ print_plugin_automatic_install_info_codecs (GstElementFactory * factory)
 
   if (caps == NULL) {
     g_printerr ("Couldn't find static pad template for %s '%s'\n",
-        type_name, GST_PLUGIN_FEATURE_NAME (factory));
+        type_name, GST_OBJECT_NAME (factory));
     return;
   }
 

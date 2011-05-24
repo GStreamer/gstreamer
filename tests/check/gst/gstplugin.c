@@ -68,7 +68,7 @@ GST_START_TEST (test_registry)
     fail_if (GST_OBJECT_REFCOUNT_VALUE (feature) != 1,
         "Feature in registry should have refcount of 1");
     GST_DEBUG ("refcount %d %s", GST_OBJECT_REFCOUNT_VALUE (feature),
-        feature->name);
+        GST_OBJECT_NAME (feature));
   }
 }
 

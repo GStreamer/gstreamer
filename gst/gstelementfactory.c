@@ -370,9 +370,9 @@ gst_element_factory_create (GstElementFactory * factory, const gchar * name)
 
   if (name)
     GST_INFO ("creating element \"%s\" named \"%s\"",
-        GST_PLUGIN_FEATURE_NAME (factory), GST_STR_NULL (name));
+        GST_OBJECT_NAME (factory), GST_STR_NULL (name));
   else
-    GST_INFO ("creating element \"%s\"", GST_PLUGIN_FEATURE_NAME (factory));
+    GST_INFO ("creating element \"%s\"", GST_OBJECT_NAME (factory));
 
   if (factory->type == 0)
     goto no_type;
@@ -398,7 +398,7 @@ gst_element_factory_create (GstElementFactory * factory, const gchar * name)
           (gpointer) & oclass->elementfactory, NULL, factory))
     gst_object_unref (factory);
 
-  GST_DEBUG ("created element \"%s\"", GST_PLUGIN_FEATURE_NAME (factory));
+  GST_DEBUG ("created element \"%s\"", GST_OBJECT_NAME (factory));
 
   return element;
 

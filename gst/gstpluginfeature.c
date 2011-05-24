@@ -63,8 +63,7 @@ gst_plugin_feature_finalize (GObject * object)
 {
   GstPluginFeature *feature = GST_PLUGIN_FEATURE_CAST (object);
 
-  GST_DEBUG ("finalizing feature %p: '%s'", feature,
-      GST_PLUGIN_FEATURE_NAME (feature));
+  GST_DEBUG ("finalizing feature %p: '%s'", feature, GST_OBJECT_NAME (feature));
 
   if (feature->plugin != NULL) {
     g_object_remove_weak_pointer ((GObject *) feature->plugin,
@@ -103,7 +102,7 @@ gst_plugin_feature_load (GstPluginFeature * feature)
   g_return_val_if_fail (GST_IS_PLUGIN_FEATURE (feature), FALSE);
 
   GST_DEBUG ("loading plugin for feature %p; '%s'", feature,
-      GST_PLUGIN_FEATURE_NAME (feature));
+      GST_OBJECT_NAME (feature));
   if (feature->loaded)
     return gst_object_ref (feature);
 
@@ -116,7 +115,8 @@ gst_plugin_feature_load (GstPluginFeature * feature)
   gst_object_unref (plugin);
 
   real_feature =
-      gst_registry_lookup_feature (gst_registry_get_default (), feature->name);
+      gst_registry_lookup_feature (gst_registry_get_default (),
+      GST_OBJECT_NAME (feature));
 
   if (real_feature == NULL)
     goto disappeared;
@@ -129,20 +129,20 @@ gst_plugin_feature_load (GstPluginFeature * feature)
 load_failed:
   {
     GST_WARNING ("Failed to load plugin containing feature '%s'.",
-        GST_PLUGIN_FEATURE_NAME (feature));
+        GST_OBJECT_NAME (feature));
     return NULL;
   }
 disappeared:
   {
     GST_INFO
         ("Loaded plugin containing feature '%s', but feature disappeared.",
-        feature->name);
+        GST_OBJECT_NAME (feature));
     return NULL;
   }
 not_found:
   {
     GST_INFO ("Tried to load plugin containing feature '%s', but feature was "
-        "not found.", real_feature->name);
+        "not found.", GST_OBJECT_NAME (real_feature));
     return NULL;
   }
 }
@@ -163,48 +163,7 @@ gst_plugin_feature_type_name_filter (GstPluginFeature * feature,
   g_return_val_if_fail (GST_IS_PLUGIN_FEATURE (feature), FALSE);
 
   return ((data->type == 0 || data->type == G_OBJECT_TYPE (feature)) &&
-      (data->name == NULL
-          || !strcmp (data->name, GST_PLUGIN_FEATURE_NAME (feature))));
-}
-
-/**
- * gst_plugin_feature_set_name:
- * @feature: a feature
- * @name: the name to set
- *
- * Sets the name of a plugin feature. The name uniquely identifies a feature
- * within all features of the same type. Renaming a plugin feature is not
- * allowed. A copy is made of the name so you should free the supplied @name
- * after calling this function.
- */
-void
-gst_plugin_feature_set_name (GstPluginFeature * feature, const gchar * name)
-{
-  g_return_if_fail (GST_IS_PLUGIN_FEATURE (feature));
-  g_return_if_fail (name != NULL);
-
-  if (G_UNLIKELY (feature->name)) {
-    g_return_if_fail (strcmp (feature->name, name) == 0);
-  } else {
-    gst_object_set_name (GST_OBJECT (feature), name);
-    feature->name = GST_OBJECT_NAME (GST_OBJECT (feature));
-  }
-}
-
-/**
- * gst_plugin_feature_get_name:
- * @feature: a feature
- *
- * Gets the name of a plugin feature.
- *
- * Returns: the name
- */
-G_CONST_RETURN gchar *
-gst_plugin_feature_get_name (GstPluginFeature * feature)
-{
-  g_return_val_if_fail (GST_IS_PLUGIN_FEATURE (feature), NULL);
-
-  return feature->name;
+      (data->name == NULL || !strcmp (data->name, GST_OBJECT_NAME (feature))));
 }
 
 /**
@@ -345,7 +304,7 @@ gst_plugin_feature_check_version (GstPluginFeature * feature,
   g_return_val_if_fail (GST_IS_PLUGIN_FEATURE (feature), FALSE);
 
   GST_DEBUG ("Looking up plugin '%s' containing plugin feature '%s'",
-      feature->plugin_name, feature->name);
+      feature->plugin_name, GST_OBJECT_NAME (feature));
 
   registry = gst_registry_get_default ();
   plugin = gst_registry_find_plugin (registry, feature->plugin_name);
@@ -422,7 +381,7 @@ gst_plugin_feature_rank_compare_func (gconstpointer p1, gconstpointer p2)
   if (diff != 0)
     return diff;
 
-  diff = strcmp (f2->name, f1->name);
+  diff = strcmp (GST_OBJECT_NAME (f2), GST_OBJECT_NAME (f1));
 
   return diff;
 }

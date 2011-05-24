@@ -38,14 +38,6 @@ G_BEGIN_DECLS
 #define GST_PLUGIN_FEATURE_GET_CLASS(obj)       (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_PLUGIN_FEATURE, GstPluginFeatureClass))
 #define GST_PLUGIN_FEATURE_CAST(obj)            ((GstPluginFeature*)(obj))
 
-/**
- * GST_PLUGIN_FEATURE_NAME:
- * @feature: The feature to query
- *
- * Get the name of the feature
- */
-#define GST_PLUGIN_FEATURE_NAME(feature)  (GST_PLUGIN_FEATURE (feature)->name)
-
 typedef struct _GstPluginFeature GstPluginFeature;
 typedef struct _GstPluginFeatureClass GstPluginFeatureClass;
 
@@ -72,6 +64,29 @@ typedef enum {
 } GstRank;
 
 /**
+ * gst_plugin_feature_get_name:
+ * @feature: a #GstPluginFeature to get the name of @feature.
+ *
+ * Returns a copy of the name of @feature.
+ * Caller should g_free() the return value after usage.
+ * For a nameless plugin feature, this returns NULL, which you can safely g_free()
+ * as well.
+ *
+ * Returns: (transfer full): the name of @feature. g_free() after usage. MT safe.
+ *
+ */
+#define                 gst_plugin_feature_get_name(feature)      gst_object_get_name(GST_OBJECT_CAST(feature))
+
+/**
+ * gst_plugin_feature_set_name:
+ * @feature: a #GstPluginFeature to set the name of.
+ * @name: the new name
+ *
+ * Sets the name of the plugin feature, getting rid of the old name if there was one.
+ */
+#define                 gst_plugin_feature_set_name(feature,name) gst_object_set_name(GST_OBJECT_CAST(feature),name)
+
+/**
  * GstPluginFeature:
  *
  * Opaque #GstPluginFeature structure.
@@ -81,7 +96,6 @@ struct _GstPluginFeature {
 
   /*< private >*/
   gboolean       loaded;
-  gchar         *name; /* FIXME-0.11: remove variable, we use GstObject:name */
   guint          rank;
 
   const gchar   *plugin_name;
@@ -134,9 +148,7 @@ gboolean        gst_plugin_feature_type_name_filter     (GstPluginFeature *featu
                                                          GstTypeNameData *data);
 
 void            gst_plugin_feature_set_rank             (GstPluginFeature *feature, guint rank);
-void            gst_plugin_feature_set_name             (GstPluginFeature *feature, const gchar *name);
 guint           gst_plugin_feature_get_rank             (GstPluginFeature *feature);
-G_CONST_RETURN gchar *gst_plugin_feature_get_name       (GstPluginFeature *feature);
 
 void            gst_plugin_feature_list_free            (GList *list);
 GList          *gst_plugin_feature_list_copy            (GList *list);

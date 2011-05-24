@@ -462,7 +462,7 @@ print_element_info (GstElementFactory * factory)
     return -1;
   }
   PUT_START_TAG (0, "element");
-  PUT_ESCAPED (1, "name", GST_PLUGIN_FEATURE_NAME (factory));
+  PUT_ESCAPED (1, "name", GST_OBJECT_NAME (factory));
 
   gstobject_class = GST_OBJECT_CLASS (G_OBJECT_GET_CLASS (element));
   gstelement_class = GST_ELEMENT_CLASS (G_OBJECT_GET_CLASS (element));

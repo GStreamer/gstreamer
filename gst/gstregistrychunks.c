@@ -247,7 +247,7 @@ gst_registry_chunks_save_feature (GList ** list, GstPluginFeature * feature)
       gst_registry_chunks_save_const_string (list, (gchar *) walk->data);
     }
     GST_DEBUG ("Feature %s: saved %d interfaces %d pad templates",
-        feature->name, ef->ninterfaces, ef->npadtemplates);
+        GST_OBJECT_NAME (feature), ef->ninterfaces, ef->npadtemplates);
 
     /* save uritypes */
     if (GST_URI_TYPE_IS_VALID (factory->uri_type)) {
@@ -269,7 +269,7 @@ gst_registry_chunks_save_feature (GList ** list, GstPluginFeature * feature)
         GST_DEBUG ("Saved %d UriTypes", ef->nuriprotocols);
       } else {
         g_warning ("GStreamer feature '%s' is URI handler but does not provide"
-            " any protocols it can handle", feature->name);
+            " any protocols it can handle", GST_OBJECT_NAME (feature));
       }
     }
 
@@ -341,7 +341,7 @@ gst_registry_chunks_save_feature (GList ** list, GstPluginFeature * feature)
     *list = g_list_prepend (*list, chk);
 
     /* pack plugin feature strings */
-    gst_registry_chunks_save_const_string (list, feature->name);
+    gst_registry_chunks_save_const_string (list, GST_OBJECT_NAME (feature));
     gst_registry_chunks_save_const_string (list, (gchar *) type_name);
 
     return TRUE;
@@ -674,8 +674,8 @@ gst_registry_chunks_load_feature (GstRegistry * registry, gchar ** in,
       (gpointer *) & feature->plugin);
 
   gst_registry_add_feature (registry, feature);
-  GST_DEBUG ("Added feature %s, plugin %p %s", feature->name, plugin,
-      plugin_name);
+  GST_DEBUG ("Added feature %s, plugin %p %s", GST_OBJECT_NAME (feature),
+      plugin, plugin_name);
 
   return TRUE;
 

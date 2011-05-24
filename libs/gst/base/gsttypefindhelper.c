@@ -86,7 +86,7 @@ helper_find_peek (gpointer data, gint64 offset, guint size)
   helper = (GstTypeFindHelper *) data;
 
   GST_LOG_OBJECT (helper->obj, "'%s' called peek (%" G_GINT64_FORMAT
-      ", %u)", GST_PLUGIN_FEATURE_NAME (helper->factory), offset, size);
+      ", %u)", GST_OBJECT_NAME (helper->factory), offset, size);
 
   if (size == 0)
     return NULL;
@@ -202,7 +202,7 @@ helper_find_suggest (gpointer data, guint probability, const GstCaps * caps)
 
   GST_LOG_OBJECT (helper->obj,
       "'%s' called called suggest (%u, %" GST_PTR_FORMAT ")",
-      GST_PLUGIN_FEATURE_NAME (helper->factory), probability, caps);
+      GST_OBJECT_NAME (helper->factory), probability, caps);
 
   if (probability > helper->best_probability) {
     GstCaps *copy = gst_caps_copy (caps);
@@ -219,8 +219,7 @@ helper_find_get_length (gpointer data)
   GstTypeFindHelper *helper = (GstTypeFindHelper *) data;
 
   GST_LOG_OBJECT (helper->obj, "'%s' called called get_length, returning %"
-      G_GUINT64_FORMAT, GST_PLUGIN_FEATURE_NAME (helper->factory),
-      helper->size);
+      G_GUINT64_FORMAT, GST_OBJECT_NAME (helper->factory), helper->size);
 
   return helper->size;
 }
@@ -313,7 +312,7 @@ gst_type_find_helper_get_range_ext (GstObject * obj,
         continue;
 
       GST_LOG_OBJECT (obj, "testing factory %s for extension %s",
-          GST_PLUGIN_FEATURE_NAME (factory), extension);
+          GST_OBJECT_NAME (factory), extension);
 
       for (i = 0; ext[i]; i++) {
         if (strcmp (ext[i], extension) == 0) {
@@ -443,14 +442,14 @@ buf_helper_find_peek (gpointer data, gint64 off, guint size)
 
   helper = (GstTypeFindBufHelper *) data;
   GST_LOG_OBJECT (helper->obj, "'%s' called peek (%" G_GINT64_FORMAT ", %u)",
-      GST_PLUGIN_FEATURE_NAME (helper->factory), off, size);
+      GST_OBJECT_NAME (helper->factory), off, size);
 
   if (size == 0)
     return NULL;
 
   if (off < 0) {
     GST_LOG_OBJECT (helper->obj, "'%s' wanted to peek at end; not supported",
-        GST_PLUGIN_FEATURE_NAME (helper->factory));
+        GST_OBJECT_NAME (helper->factory));
     return NULL;
   }
 
@@ -475,7 +474,7 @@ buf_helper_find_suggest (gpointer data, guint probability, const GstCaps * caps)
 
   GST_LOG_OBJECT (helper->obj,
       "'%s' called called suggest (%u, %" GST_PTR_FORMAT ")",
-      GST_PLUGIN_FEATURE_NAME (helper->factory), probability, caps);
+      GST_OBJECT_NAME (helper->factory), probability, caps);
 
   /* Note: not >= as we call typefinders in order of rank, highest first */
   if (probability > helper->best_probability) {
