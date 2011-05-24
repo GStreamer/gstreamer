@@ -768,13 +768,12 @@ _create_element_and_set_preset (GstElementFactory * factory,
 {
   GstElement *res = NULL;
 
-  GST_DEBUG ("Creating element from factory %s",
-      GST_PLUGIN_FEATURE_NAME (factory));
+  GST_DEBUG ("Creating element from factory %s", GST_OBJECT_NAME (factory));
   res = gst_element_factory_create (factory, name);
   if (preset && GST_IS_PRESET (res) &&
       !gst_preset_load_preset (GST_PRESET (res), preset)) {
     GST_WARNING ("Couldn't set preset [%s] on element [%s]",
-        preset, GST_PLUGIN_FEATURE_NAME (factory));
+        preset, GST_OBJECT_NAME (factory));
     gst_object_unref (res);
     res = NULL;
   }
@@ -1475,7 +1474,7 @@ _get_formatter (GstEncodeBin * ebin, GstEncodingProfile * sprof)
     formatterfact = (GstElementFactory *) tmpfmtr->data;
 
     GST_DEBUG_OBJECT (ebin, "Trying formatter %s",
-        GST_PLUGIN_FEATURE_NAME (formatterfact));
+        GST_OBJECT_NAME (formatterfact));
 
     if ((formatter =
             _create_element_and_set_preset (formatterfact, preset, NULL)))
@@ -1524,7 +1523,7 @@ _get_muxer (GstEncodeBin * ebin)
 
     muxerfact = (GstElementFactory *) tmpmux->data;
 
-    GST_DEBUG ("Trying muxer %s", GST_PLUGIN_FEATURE_NAME (muxerfact));
+    GST_DEBUG ("Trying muxer %s", GST_OBJECT_NAME (muxerfact));
 
     /* See if the muxer can sink all of our stream profile caps */
     for (tmp = profiles; tmp; tmp = tmp->next) {

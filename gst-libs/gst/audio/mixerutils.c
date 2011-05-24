@@ -178,8 +178,8 @@ element_factory_rank_compare_func (gconstpointer a, gconstpointer b)
 
   /* make order chosen in the end more determinable */
   if (rank_a == rank_b) {
-    const gchar *name_a = GST_PLUGIN_FEATURE_NAME (GST_PLUGIN_FEATURE (a));
-    const gchar *name_b = GST_PLUGIN_FEATURE_NAME (GST_PLUGIN_FEATURE (b));
+    const gchar *name_a = GST_OBJECT_NAME (GST_PLUGIN_FEATURE (a));
+    const gchar *name_b = GST_OBJECT_NAME (GST_PLUGIN_FEATURE (b));
 
     return g_ascii_strcasecmp (name_a, name_b);
   }

@@ -23,7 +23,7 @@
 static gboolean
 filter_func (GstPluginFeature * feature, gpointer user_data)
 {
-  return (g_str_has_prefix (GST_PLUGIN_FEATURE_NAME (feature), "libvisual_"));
+  return (g_str_has_prefix (GST_OBJECT_NAME (feature), "libvisual_"));
 }
 
 static void
@@ -88,7 +88,7 @@ GST_START_TEST (test_shutdown)
       return;
     }
     for (l = list; l != NULL; l = l->next) {
-      test_shutdown_for_factory (GST_PLUGIN_FEATURE_NAME (l->data));
+      test_shutdown_for_factory (GST_OBJECT_NAME (l->data));
     }
     gst_plugin_feature_list_free (list);
   } else {

@@ -3110,8 +3110,7 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
   GST_DEBUG_OBJECT (playbin, "select group %p for %s:%s, %" GST_PTR_FORMAT,
       group, GST_DEBUG_PAD_NAME (pad), caps);
 
-  GST_DEBUG_OBJECT (playbin, "checking factory %s",
-      GST_PLUGIN_FEATURE_NAME (factory));
+  GST_DEBUG_OBJECT (playbin, "checking factory %s", GST_OBJECT_NAME (factory));
 
   /* if it's not a sink, we just make decodebin try it */
   if (!gst_element_factory_list_is_type (factory,
