@@ -496,6 +496,18 @@ typedef gboolean		(*GstPadDispatcherFunction)	(GstPad *pad, gpointer data);
 typedef void			(*GstPadBlockCallback)		(GstPad *pad, gboolean blocked, gpointer user_data);
 
 /**
+ * GstPadStickyEventsForeachFunction:
+ * @pad: the #GstPad.
+ * @event: the sticky #GstEvent.
+ * @user_data: the #gpointer to optional user data.
+ *
+ * Callback used by gst_pad_sticky_events_foreach().
+ *
+ * Returns: GST_FLOW_OK if the iteration should continue
+ */
+typedef GstFlowReturn           (*GstPadStickyEventsForeachFunction) (GstPad *pad, GstEvent *event, gpointer user_data);
+
+/**
  * GstPadDirection:
  * @GST_PAD_UNKNOWN: direction is unknown.
  * @GST_PAD_SRC: the pad is a source pad.
@@ -822,6 +834,7 @@ gpointer		gst_pad_get_element_private		(GstPad *pad);
 GstPadTemplate*		gst_pad_get_pad_template		(GstPad *pad);
 
 GstEvent*               gst_pad_get_sticky_event                (GstPad *pad, GstEventType event_type);
+GstFlowReturn           gst_pad_sticky_events_foreach           (GstPad *pad, GstPadStickyEventsForeachFunction foreach_func, gpointer user_data);
 
 /* data passing setup functions */
 void			gst_pad_set_activate_function		(GstPad *pad, GstPadActivateFunction activate);

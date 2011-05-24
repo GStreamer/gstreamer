@@ -5129,6 +5129,68 @@ gst_pad_get_sticky_event (GstPad * pad, GstEventType event_type)
   return event;
 }
 
+/**
+ * gst_pad_sticky_events_foreach:
+ * @pad: the #GstPad that should be used for iteration.
+ * @foreach_func: (scope call): the #GstPadStickyEventsForeachFunction that should be called for every event.
+ * @user_data: (closure): the optional user data.
+ *
+ * Iterates all active sticky events on @pad and calls @foreach_func for every
+ * event. If @foreach_func returns something else than GST_FLOW_OK the iteration
+ * is immediately stopped.
+ *
+ * Returns: GST_FLOW_OK if iteration was successful
+ */
+GstFlowReturn
+gst_pad_sticky_events_foreach (GstPad * pad,
+    GstPadStickyEventsForeachFunction foreach_func, gpointer user_data)
+{
+  GstFlowReturn ret = GST_FLOW_OK;
+  guint i;
+  GstEvent *event;
+
+  g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
+  g_return_val_if_fail (foreach_func != NULL, GST_FLOW_ERROR);
+
+  GST_OBJECT_LOCK (pad);
+
+restart:
+  for (i = 0; i < GST_EVENT_MAX_STICKY; i++) {
+    gboolean res;
+    PadEvent *ev;
+
+    ev = &pad->priv->events[i];
+
+    /* skip without active event */
+    if ((event = ev->event) == NULL)
+      continue;
+
+    gst_event_ref (event);
+    GST_OBJECT_UNLOCK (pad);
+
+    res = foreach_func (pad, event, user_data);
+
+    GST_OBJECT_LOCK (pad);
+    gst_event_unref (event);
+
+    if (res != GST_FLOW_OK) {
+      ret = res;
+      break;
+    }
+
+    /* things could have changed while we release the lock, check if we still
+     * are handling the same event, if we don't something changed and we have
+     * to try again. FIXME. we need a cookie here. */
+    if (event != ev->event) {
+      GST_DEBUG_OBJECT (pad, "events changed, restarting");
+      goto restart;
+    }
+  }
+  GST_OBJECT_UNLOCK (pad);
+
+  return ret;
+}
+
 static void
 do_stream_status (GstPad * pad, GstStreamStatusType type,
     GThread * thread, GstTask * task)
