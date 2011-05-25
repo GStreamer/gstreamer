@@ -931,11 +931,13 @@ playerbin_set_uri (GstElement * player, const gchar * location)
   gchar *uri;
 
   /* Add "file://" prefix for convenience */
-  if (g_str_has_prefix (location, "/")) {
-    uri = g_strconcat ("file://", location, NULL);
+  if (g_str_has_prefix (location, "/") || !gst_uri_is_valid (location)) {
+    uri = gst_filename_to_uri (location, NULL);
+    g_print ("Setting URI: %s\n", uri);
     g_object_set (G_OBJECT (player), "uri", uri, NULL);
     g_free (uri);
   } else {
+    g_print ("Setting URI: %s\n", location);
     g_object_set (G_OBJECT (player), "uri", location, NULL);
   }
 }
