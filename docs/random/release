@@ -129,7 +129,7 @@ RELEASE PROCEDURE:
     + e.g:
        scp gstreamer-0.10.42.tar.gz master.gnome.org:
        ssh master.gnome.org
-       install-module gstreamer-0.10.42.tar.gz
+       ftpadmin install gstreamer-0.10.42.tar.gz
 
   - Send release announcements to:
     gstreamer-devel@lists.sourceforge.net gstreamer-announce@lists.sourceforge.net kde-multimedia@kde.org gnome-multimedia@gnome.org
