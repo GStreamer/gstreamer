@@ -1078,7 +1078,7 @@ theora_enc_write_multipass_cache (GstTheoraEnc * enc, gboolean begin,
 
   }
 
-  if (stat == G_IO_STATUS_ERROR || bytes_read < 0 || bytes_written < 0) {
+  if (stat == G_IO_STATUS_ERROR || bytes_read < 0) {
     if (begin) {
       if (eos)
         GST_ELEMENT_WARNING (enc, RESOURCE, WRITE, (NULL),
