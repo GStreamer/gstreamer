@@ -707,7 +707,7 @@ gst_codec_utils_mpeg4video_get_level (const guint8 * vis_obj_seq, guint len)
       break;
 
     case 0xf:
-      if (level_id == 7 && level_id > 0xd)
+      if (level_id == 6 || level_id == 7 || level_id > 0xd)
         return NULL;
       break;
   }
