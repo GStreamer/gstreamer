@@ -36,6 +36,9 @@ GstCaps *ctx_output_caps;
 guint ctx_discard = 0;
 datablob ctx_headers[MAX_HEADERS] = { {NULL, 0}, };
 
+VerifyBuffer ctx_verify_buffer = NULL;
+ElementSetup ctx_setup = NULL;
+
 gboolean ctx_no_metadata = FALSE;
 
 /* helper variables */
@@ -43,20 +46,6 @@ GList *current_buf = NULL;
 
 GstPad *srcpad, *sinkpad;
 guint dataoffset = 0;
-GstClockTime ts_counter = 0;
-gint64 offset_counter = 0;
-guint buffer_counter = 0;
-
-typedef struct
-{
-  guint discard;
-  guint buffers_before_offset_skip;
-  guint offset_skip_amount;
-  const guint8 *data_to_verify;
-  guint data_to_verify_size;
-  GstCaps *caps;
-  gboolean no_metadata;
-} buffer_verify_data_s;
 
 /* takes a copy of the passed buffer data */
 static GstBuffer *
@@ -107,28 +96,32 @@ buffer_verify_data (void *buffer, void *user_data)
 
   GST_DEBUG ("discard: %d", vdata->discard);
   if (vdata->discard) {
-    buffer_counter++;
-    if (buffer_counter == vdata->discard) {
-      buffer_counter = 0;
+    if (ctx_verify_buffer)
+      ctx_verify_buffer (vdata, buffer);
+    vdata->buffer_counter++;
+    if (vdata->buffer_counter == vdata->discard) {
+      vdata->buffer_counter = 0;
       vdata->discard = 0;
     }
     return;
   }
 
-  fail_unless (GST_BUFFER_SIZE (buffer) == vdata->data_to_verify_size);
-  fail_unless (memcmp (GST_BUFFER_DATA (buffer), vdata->data_to_verify,
-          vdata->data_to_verify_size) == 0);
+  if (!ctx_verify_buffer || !ctx_verify_buffer (vdata, buffer)) {
+    fail_unless (GST_BUFFER_SIZE (buffer) == vdata->data_to_verify_size);
+    fail_unless (memcmp (GST_BUFFER_DATA (buffer), vdata->data_to_verify,
+            vdata->data_to_verify_size) == 0);
+  }
 
   if (vdata->buffers_before_offset_skip) {
     /* This is for skipping the garbage in some test cases */
-    if (buffer_counter == vdata->buffers_before_offset_skip) {
-      offset_counter += vdata->offset_skip_amount;
+    if (vdata->buffer_counter == vdata->buffers_before_offset_skip) {
+      vdata->offset_counter += vdata->offset_skip_amount;
     }
   }
   if (!vdata->no_metadata) {
-    fail_unless (GST_BUFFER_TIMESTAMP (buffer) == ts_counter);
+    fail_unless (GST_BUFFER_TIMESTAMP (buffer) == vdata->ts_counter);
     fail_unless (GST_BUFFER_DURATION (buffer) != 0);
-    fail_unless (GST_BUFFER_OFFSET (buffer) == offset_counter);
+    fail_unless (GST_BUFFER_OFFSET (buffer) == vdata->offset_counter);
   }
 
   if (vdata->caps) {
@@ -137,20 +130,25 @@ buffer_verify_data (void *buffer, void *user_data)
     fail_unless (gst_caps_is_equal (GST_BUFFER_CAPS (buffer), vdata->caps));
   }
 
-  ts_counter += GST_BUFFER_DURATION (buffer);
-  offset_counter += GST_BUFFER_SIZE (buffer);
-  buffer_counter++;
+  vdata->ts_counter += GST_BUFFER_DURATION (buffer);
+  vdata->offset_counter += GST_BUFFER_SIZE (buffer);
+  vdata->buffer_counter++;
 }
 
 static GstElement *
-setup_element (const gchar * factory, GstStaticPadTemplate * sink_template,
+setup_element (const gchar * factory, ElementSetup setup,
+    GstStaticPadTemplate * sink_template,
     GstCaps * sink_caps, GstStaticPadTemplate * src_template,
     GstCaps * src_caps)
 {
   GstElement *element;
   GstBus *bus;
 
-  element = gst_check_setup_element (factory);
+  if (setup) {
+    element = setup (factory);
+  } else {
+    element = gst_check_setup_element (factory);
+  }
   srcpad = gst_check_setup_src_pad (element, src_template, src_caps);
   sinkpad = gst_check_setup_sink_pad (element, sink_template, sink_caps);
   gst_pad_set_active (srcpad, TRUE);
@@ -163,7 +161,6 @@ setup_element (const gchar * factory, GstStaticPadTemplate * sink_template,
           GST_STATE_PLAYING) != GST_STATE_CHANGE_FAILURE,
       "could not set to playing");
 
-  ts_counter = offset_counter = buffer_counter = 0;
   buffers = NULL;
   return element;
 }
@@ -200,6 +197,7 @@ gst_parser_test_init (GstParserTest * ptest, guint8 * data, guint size,
   /* basics */
   memset (ptest, 0, sizeof (*ptest));
   ptest->factory = ctx_factory;
+  ptest->factory_setup = ctx_setup;
   ptest->sink_template = ctx_sink_template;
   ptest->src_template = ctx_src_template;
   ptest->framed = TRUE;
@@ -224,15 +222,15 @@ gst_parser_test_init (GstParserTest * ptest, guint8 * data, guint size,
 void
 gst_parser_test_run (GstParserTest * test, GstCaps ** out_caps)
 {
-  buffer_verify_data_s vdata = { 0, 0, 0, NULL, 0, NULL, FALSE };
+  buffer_verify_data_s vdata = { 0, 0, 0, NULL, 0, NULL, FALSE, 0, 0, 0 };
   GstElement *element;
   GstBuffer *buffer = NULL;
   GstCaps *src_caps;
   guint i, j, k;
   guint frames = 0, size = 0;
 
-  element = setup_element (test->factory, test->sink_template, NULL,
-      test->src_template, test->src_caps);
+  element = setup_element (test->factory, test->factory_setup,
+      test->sink_template, NULL, test->src_template, test->src_caps);
 
   /* push some setup headers */
   for (j = 0; j < G_N_ELEMENTS (test->headers) && test->headers[j].data; j++) {
