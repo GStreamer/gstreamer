@@ -171,6 +171,7 @@ gst_h264_parse_reset_frame (GstH264Parse * h264parse)
   h264parse->idr_pos = -1;
   h264parse->keyframe = FALSE;
   h264parse->frame_start = FALSE;
+  gst_adapter_clear (h264parse->frame_out);
 }
 
 static void
@@ -1139,13 +1140,14 @@ gst_h264_parse_chain (GstPad * pad, GstBuffer * buffer)
     }
     if (h264parse->split_packetized)
       return ret;
+    else {
+      /* nal processing in pass-through might have collected stuff;
+       * ensure nothing happens with this later on */
+      gst_adapter_clear (h264parse->frame_out);
+    }
   }
 
 exit:
-  /* nal processing in pass-through might have collected stuff;
-   * ensure nothing happens with this later on */
-  gst_adapter_clear (h264parse->frame_out);
-
   return h264parse->parse_chain (pad, buffer);
 
   /* ERRORS */
