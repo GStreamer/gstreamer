@@ -688,6 +688,8 @@ static gboolean
 gst_glimage_sink_interface_supported (GstImplementsInterface * iface,
     GType type)
 {
+  if (type != GST_TYPE_X_OVERLAY)
+    return FALSE;
   return TRUE;
 }
 
