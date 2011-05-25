@@ -191,8 +191,7 @@ enum
   PROP_WINDOW_HEIGHT
 };
 
-static void
-gst_xvimagesink_init_interfaces (GType type);
+static void gst_xvimagesink_init_interfaces (GType type);
 
 GST_BOILERPLATE_FULL (GstXvImageSink, gst_xvimagesink, GstVideoSink,
     GST_TYPE_VIDEO_SINK, gst_xvimagesink_init_interfaces);
@@ -3476,7 +3475,8 @@ gst_xvimagesink_finalize (GObject * object)
 }
 
 static void
-gst_xvimagesink_init (GstXvImageSink * xvimagesink, GstXvImageSinkClass *xvimagesinkclass)
+gst_xvimagesink_init (GstXvImageSink * xvimagesink,
+    GstXvImageSinkClass * xvimagesinkclass)
 {
   xvimagesink->display_name = NULL;
   xvimagesink->adaptor_no = 0;
@@ -3702,47 +3702,45 @@ gst_xvimagesink_class_init (GstXvImageSinkClass * klass)
 static void
 gst_xvimagesink_init_interfaces (GType type)
 {
-   static const GInterfaceInfo iface_info = {
-      (GInterfaceInitFunc) gst_xvimagesink_interface_init,
-      NULL,
-      NULL,
-    };
-    static const GInterfaceInfo navigation_info = {
-      (GInterfaceInitFunc) gst_xvimagesink_navigation_init,
-      NULL,
-      NULL,
-    };
-    static const GInterfaceInfo overlay_info = {
-      (GInterfaceInitFunc) gst_xvimagesink_xoverlay_init,
-      NULL,
-      NULL,
-    };
-    static const GInterfaceInfo colorbalance_info = {
-      (GInterfaceInitFunc) gst_xvimagesink_colorbalance_init,
-      NULL,
-      NULL,
-    };
-    static const GInterfaceInfo propertyprobe_info = {
-      (GInterfaceInitFunc) gst_xvimagesink_property_probe_interface_init,
-      NULL,
-      NULL,
+  static const GInterfaceInfo iface_info = {
+    (GInterfaceInitFunc) gst_xvimagesink_interface_init,
+    NULL,
+    NULL,
+  };
+  static const GInterfaceInfo navigation_info = {
+    (GInterfaceInitFunc) gst_xvimagesink_navigation_init,
+    NULL,
+    NULL,
+  };
+  static const GInterfaceInfo overlay_info = {
+    (GInterfaceInitFunc) gst_xvimagesink_xoverlay_init,
+    NULL,
+    NULL,
+  };
+  static const GInterfaceInfo colorbalance_info = {
+    (GInterfaceInitFunc) gst_xvimagesink_colorbalance_init,
+    NULL,
+    NULL,
+  };
+  static const GInterfaceInfo propertyprobe_info = {
+    (GInterfaceInitFunc) gst_xvimagesink_property_probe_interface_init,
+    NULL,
+    NULL,
   };
 
-   g_type_add_interface_static (type,
-        GST_TYPE_IMPLEMENTS_INTERFACE, &iface_info);
-   g_type_add_interface_static (type, GST_TYPE_NAVIGATION,
-        &navigation_info);
-   g_type_add_interface_static (type, GST_TYPE_X_OVERLAY,
-        &overlay_info);
-   g_type_add_interface_static (type, GST_TYPE_COLOR_BALANCE,
-        &colorbalance_info);
-   g_type_add_interface_static (type, GST_TYPE_PROPERTY_PROBE,
-        &propertyprobe_info);
+  g_type_add_interface_static (type,
+      GST_TYPE_IMPLEMENTS_INTERFACE, &iface_info);
+  g_type_add_interface_static (type, GST_TYPE_NAVIGATION, &navigation_info);
+  g_type_add_interface_static (type, GST_TYPE_X_OVERLAY, &overlay_info);
+  g_type_add_interface_static (type, GST_TYPE_COLOR_BALANCE,
+      &colorbalance_info);
+  g_type_add_interface_static (type, GST_TYPE_PROPERTY_PROBE,
+      &propertyprobe_info);
 
-   /* register type and create class in a more safe place instead of at
-    * runtime since the type registration and class creation is not
-    * threadsafe. */
-   g_type_class_ref (gst_xvimage_buffer_get_type ());
+  /* register type and create class in a more safe place instead of at
+   * runtime since the type registration and class creation is not
+   * threadsafe. */
+  g_type_class_ref (gst_xvimage_buffer_get_type ());
 }
 
 static gboolean
