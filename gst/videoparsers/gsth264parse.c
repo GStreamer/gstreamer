@@ -590,8 +590,8 @@ more:
   /* skip up to initial startcode */
   *skipsize = sc_pos;
   /* resume scanning here next time */
-  h264parse->last_nal_pos = nal_pos;
-  h264parse->next_sc_pos = next_sc_pos;
+  h264parse->last_nal_pos = nal_pos - sc_pos;
+  h264parse->next_sc_pos = next_sc_pos - sc_pos;
 
   return FALSE;
 }
