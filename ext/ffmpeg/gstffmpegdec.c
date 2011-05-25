@@ -827,11 +827,13 @@ gst_ffmpegdec_setcaps (GstPad * pad, GstCaps * caps)
     ffmpegdec->context->flags |= CODEC_FLAG_EMU_EDGE;
   }
 
-  /* for AAC we only use av_parse if not on raw caps */
-  if (oclass->in_plugin->id == CODEC_ID_AAC) {
+  /* for AAC we only use av_parse if not on stream-format==raw or ==loas */
+  if (oclass->in_plugin->id == CODEC_ID_AAC
+      || oclass->in_plugin->id == CODEC_ID_AAC_LATM) {
     const gchar *format = gst_structure_get_string (structure, "stream-format");
 
-    if (format == NULL || strcmp (format, "raw") == 0) {
+    if (format == NULL || strcmp (format, "raw") == 0 ||
+        oclass->in_plugin->id == CODEC_ID_AAC_LATM) {
       ffmpegdec->turnoff_parser = TRUE;
     }
   }
@@ -2134,7 +2136,8 @@ gst_ffmpegdec_audio_frame (GstFFMpegDec * ffmpegdec,
 
   /* If we don't error out after the first failed read with the AAC decoder,
    * we must *not* carry on pushing data, else we'll cause segfaults... */
-  if (len == -1 && in_plugin->id == CODEC_ID_AAC) {
+  if (len == -1 && (in_plugin->id == CODEC_ID_AAC
+          || in_plugin->id == CODEC_ID_AAC_LATM)) {
     GST_ELEMENT_ERROR (ffmpegdec, STREAM, DECODE, (NULL),
         ("Decoding of AAC stream by FFMPEG failed."));
     *ret = GST_FLOW_ERROR;
