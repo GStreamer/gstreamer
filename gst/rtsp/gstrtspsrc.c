@@ -4483,10 +4483,13 @@ next:
       /* ok, a response is good */
       GST_DEBUG_OBJECT (src, "received response message");
       break;
-    default:
     case GST_RTSP_MESSAGE_DATA:
       /* get next response */
       GST_DEBUG_OBJECT (src, "ignoring data response message");
+      goto next;
+    default:
+      GST_WARNING_OBJECT (src, "ignoring unknown message type %d",
+          response->type);
       goto next;
   }
 
