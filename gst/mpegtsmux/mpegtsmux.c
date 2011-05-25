@@ -679,7 +679,8 @@ mpegtsmux_collected (GstCollectPads * pads, MpegTsMux * mux)
     if (prog == NULL) {
       GST_ELEMENT_ERROR (mux, STREAM, MUX,
           ("Stream on pad %" GST_PTR_FORMAT
-              " is not associated with any program", best), (NULL));
+              " is not associated with any program", COLLECT_DATA_PAD (best)),
+          (NULL));
       return GST_FLOW_ERROR;
     }
 
