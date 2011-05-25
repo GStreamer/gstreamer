@@ -1071,21 +1071,25 @@ PKG_CHECK_EXISTS(mjpegtools >= 1.6.1.93 mjpegtools < 1.8.0, [
   PKG_CHECK_EXISTS(mjpegtools >= 1.8.0 mjpegtools < 1.9.0, [
     mjpegtools_api=10800
   ], [
-    PKG_CHECK_MODULES(MJPEG, mjpegtools >= 1.9.0, [
-      dnl logging API changed in release candidates
-      OLD_CFLAGS="$CFLAGS"
-      OLD_LIBS="$LIBS"
-      CFLAGS="$MJPEG_CFLAGS"
-      LIBS="$LIBS $MJPEG_LIBS -lmjpegutils $LIBM -lpthread"
-      AC_CHECK_FUNC(mjpeg_loglev_t, [
-        mjpegtools_api=10903
-        ], [
-        mjpegtools_api=10900
-        ])
-      CFLAGS="$OLD_CFLAGS"
-      LIBS="$OLD_LIBS"
+    PKG_CHECK_EXISTS(mjpegtools >= 2.0.0, [
+      mjpegtools_api=20000
     ], [
-      mjpegtools_api=0
+      PKG_CHECK_MODULES(MJPEG, mjpegtools >= 1.9.0 mjpegtools < 2.0.0, [
+        dnl logging API changed in release candidates
+        OLD_CFLAGS="$CFLAGS"
+        OLD_LIBS="$LIBS"
+        CFLAGS="$MJPEG_CFLAGS"
+        LIBS="$LIBS $MJPEG_LIBS -lmjpegutils $LIBM -lpthread"
+        AC_CHECK_FUNC(mjpeg_loglev_t, [
+          mjpegtools_api=10903
+          ], [
+          mjpegtools_api=10900
+          ])
+        CFLAGS="$OLD_CFLAGS"
+        LIBS="$OLD_LIBS"
+      ], [
+        mjpegtools_api=0
+      ])
     ])
   ])
 ])

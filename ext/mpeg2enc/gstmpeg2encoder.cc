@@ -26,7 +26,7 @@
 
 #include <mpegconsts.h>
 #include <quantize.hh>
-#if GST_MJPEGTOOLS_API >= 10903
+#if GST_MJPEGTOOLS_API >= 20000
 #include <ontheflyratectlpass1.hh>
 #include <ontheflyratectlpass2.hh>
 #elif GST_MJPEGTOOLS_API >= 10900
