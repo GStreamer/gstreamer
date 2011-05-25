@@ -565,12 +565,7 @@ gst_structure_set_valist_internal (GstStructure * structure,
       g_warning ("Don't use G_TYPE_DATE, use GST_TYPE_DATE instead\n");
       type = GST_TYPE_DATE;
     }
-#if GLIB_CHECK_VERSION(2,23,3)
     G_VALUE_COLLECT_INIT (&field.value, type, varargs, 0, &err);
-#else
-    g_value_init (&field.value, type);
-    G_VALUE_COLLECT (&field.value, varargs, 0, &err);
-#endif
     if (G_UNLIKELY (err)) {
       g_critical ("%s", err);
       return;

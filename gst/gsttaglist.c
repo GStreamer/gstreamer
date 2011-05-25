@@ -1011,12 +1011,7 @@ gst_tag_list_add_valist (GstTagList * list, GstTagMergeMode mode,
       g_warning ("unknown tag '%s'", tag);
       return;
     }
-#if GLIB_CHECK_VERSION(2,23,3)
     G_VALUE_COLLECT_INIT (&value, info->type, var_args, 0, &error);
-#else
-    g_value_init (&value, info->type);
-    G_VALUE_COLLECT (&value, var_args, 0, &error);
-#endif
     if (error) {
       g_warning ("%s: %s", G_STRLOC, error);
       g_free (error);
