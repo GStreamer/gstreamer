@@ -1138,9 +1138,10 @@ gst_h264_parse_chain (GstPad * pad, GstBuffer * buffer)
         gst_byte_reader_skip_unchecked (&br, len);
       }
     }
-    if (h264parse->split_packetized)
+    if (h264parse->split_packetized) {
+      gst_buffer_unref (buffer);
       return ret;
-    else {
+    } else {
       /* nal processing in pass-through might have collected stuff;
        * ensure nothing happens with this later on */
       gst_adapter_clear (h264parse->frame_out);
@@ -1154,6 +1155,7 @@ exit:
 not_negotiated:
   {
     GST_DEBUG_OBJECT (h264parse, "insufficient data to split input");
+    gst_buffer_unref (buffer);
     return GST_FLOW_NOT_NEGOTIATED;
   }
 parse_failed:
@@ -1161,6 +1163,7 @@ parse_failed:
     if (h264parse->split_packetized) {
       GST_ELEMENT_ERROR (h264parse, STREAM, FAILED, (NULL),
           ("invalid AVC input data"));
+      gst_buffer_unref (buffer);
       return GST_FLOW_ERROR;
     } else {
       /* do not meddle to much in this case */
