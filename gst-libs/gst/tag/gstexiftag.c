@@ -2608,7 +2608,7 @@ serialize_scene_type (GstExifWriter * writer, const GstTagList * taglist,
   if (gst_tag_list_peek_string_index (taglist, GST_TAG_CAPTURING_SOURCE, 0,
           &str)) {
     if (strcmp (str, "dsc") == 0) {
-      value = 0;
+      value = 1;
     }
   }
 
