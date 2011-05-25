@@ -859,175 +859,175 @@ _wrap_gst_pad_new(PyGObject *self, PyObject *args, PyObject *kwargs)
 }
 %%
 override gst_pad_add_data_probe args
+
+static void
+data_probe_destroy_data (gpointer data)
+{
+    PyGILState_STATE state;
+    PyObject *py_data = (PyObject *) data;
+    
+    state = pyg_gil_state_ensure();
+ 
+    Py_DECREF (py_data);
+
+    pyg_gil_state_release(state);
+}
+
+static gboolean
+data_probe_callback_marshal(GstPad *pad, GstMiniObject *obj, gpointer user_data)
+{
+    PyGILState_STATE state;
+    PyObject *callback, *args;
+    PyObject *pret;
+    PyObject *py_user_data;
+    gboolean ret;
+
+    g_return_val_if_fail(user_data != NULL, TRUE);
+
+    state = pyg_gil_state_ensure();
+
+    py_user_data = (PyObject *) user_data;
+
+    callback = PyTuple_GetItem(py_user_data, 0);
+    args = Py_BuildValue("(NN)",
+             pygobject_new(G_OBJECT(pad)),
+             pygstminiobject_new(GST_MINI_OBJECT(obj)));
+    
+    {
+        PyObject *tmp = args;
+        args = PySequence_Concat(tmp, PyTuple_GetItem(py_user_data, 1));
+        Py_DECREF (tmp);
+    }
+
+    pret = PyObject_CallObject(callback, args);
+    Py_DECREF(args);
+
+    if (!pret) {
+        PyErr_Print();
+        ret = TRUE;
+    } else {
+        ret = PyObject_IsTrue(pret)? TRUE : FALSE;
+        Py_DECREF(pret);
+    }
+    
+    pyg_gil_state_release(state);
+}
+
 static PyObject *
 _wrap_gst_pad_add_data_probe(PyGObject *self, PyObject *args)
 {
-    GstPad *pad = GST_PAD(self->obj);
-    PyObject *method = NULL;
-    PyObject *rv = NULL;
-    PyObject *mylist = PyList_New(1);
-    PyObject *mynewlist = NULL;
-    PyObject *myargs = NULL;
-    PyObject *signalname = NULL;
+    PyObject *callback, *cbargs = NULL, *data;
+    PyObject *pret;
+    gulong ret;
+    gint len;
 
-    signalname = PyString_FromString("have-data");
-
-    if (PyList_SetItem(mylist, 0, signalname)) {
-	Py_DECREF(mylist);
-	return NULL;
-    }
-
-    mynewlist = PySequence_InPlaceConcat(mylist, args);
-
-    Py_DECREF(mylist);
-
-    if (!mynewlist)
-	return NULL;
-
-    myargs = PyList_AsTuple(mynewlist);
-
-    Py_DECREF(mynewlist);
-
-    if (!myargs)
-	return NULL;
-
-    method = PyObject_GetAttrString((PyObject*)self, "connect");
-
-    if (!method) {
-	Py_DECREF(mylist);
+    len = PyTuple_Size(args);
+    if (len < 1) {
+        PyErr_SetString(PyExc_TypeError, "Requires at least 1 arg");
         return NULL;
     }
 
-    GST_OBJECT_LOCK (pad);
-
-    rv = PyObject_CallObject(method, myargs);
-    if (rv) {
-	GST_PAD_DO_BUFFER_SIGNALS (pad)++;
-	GST_PAD_DO_EVENT_SIGNALS (pad)++;
-	GST_DEBUG_OBJECT (pad, "adding data probe, now %d buffer probes "
-	                  "and %d event probes", GST_PAD_DO_BUFFER_SIGNALS (pad),
-	                  GST_PAD_DO_EVENT_SIGNALS (pad));
+    callback = PyTuple_GetItem(args, 0);
+    if (!PyCallable_Check(callback)) {
+        PyErr_SetString(PyExc_TypeError, "callback is not callable");
+        return NULL;
     }
+    cbargs = PySequence_GetSlice(args, 1, len);
+    if (cbargs == NULL)
+        return NULL;
+    data = Py_BuildValue("(ON)", callback, cbargs);
+    if (data == NULL)
+        return NULL;
 
-    GST_OBJECT_UNLOCK (pad);
+    pyg_begin_allow_threads;
+    ret = gst_pad_add_data_probe_full(GST_PAD(self->obj),
+        (GCallback) data_probe_callback_marshal, data,
+	data_probe_destroy_data);
+    pyg_end_allow_threads;
 
-    Py_DECREF(myargs);
-    Py_DECREF(method);
+    pret = PyLong_FromUnsignedLong(ret);
+    Py_INCREF(pret);
 
-    return rv;
+    return pret;
 }
 %%
 override gst_pad_add_event_probe args
 static PyObject *
 _wrap_gst_pad_add_event_probe(PyGObject *self, PyObject *args)
 {
-    GstPad *pad = GST_PAD(self->obj);
-    PyObject *method = NULL;
-    PyObject *rv = NULL;
-    PyObject *mylist = PyList_New(1);
-    PyObject *mynewlist = NULL;
-    PyObject *myargs = NULL;
-    PyObject *signalname = NULL;
+    PyObject *callback, *cbargs = NULL, *data;
+    PyObject *pret;
+    gulong ret;
+    gint len;
 
-    signalname = PyString_FromString("have-data::event");
-
-    if (PyList_SetItem(mylist, 0, signalname)) {
-	Py_DECREF(mylist);
-	return NULL;
-    }
-
-    mynewlist = PySequence_InPlaceConcat(mylist, args);
-
-    Py_DECREF(mylist);
-
-    if (!mynewlist)
-	return NULL;
-
-    myargs = PyList_AsTuple(mynewlist);
-
-    Py_DECREF(mynewlist);
-
-    if (!myargs)
-	return NULL;
-
-    method = PyObject_GetAttrString((PyObject*)self, "connect");
-
-    if (!method) {
-	Py_DECREF(mylist);
+    len = PyTuple_Size(args);
+    if (len < 1) {
+        PyErr_SetString(PyExc_TypeError, "Requires at least 1 arg");
         return NULL;
     }
 
-    GST_OBJECT_LOCK (pad);
+    callback = PyTuple_GetItem(args, 0);
+    if (!PyCallable_Check(callback)) {
+        PyErr_SetString(PyExc_TypeError, "callback is not callable");
+        return NULL;
+    }
+    cbargs = PySequence_GetSlice(args, 1, len);
+    if (cbargs == NULL)
+        return NULL;
+    data = Py_BuildValue("(ON)", callback, cbargs);
+    if (data == NULL)
+        return NULL;
 
-    rv = PyObject_CallObject(method, myargs);
-    if (rv) {
-	GST_PAD_DO_EVENT_SIGNALS (pad)++;
-	GST_DEBUG_OBJECT (pad, "adding event probe, now %d probes",
-	                  GST_PAD_DO_EVENT_SIGNALS (pad));
-   }
-    GST_OBJECT_UNLOCK (pad);
+    pyg_begin_allow_threads;
+    ret = gst_pad_add_event_probe_full(GST_PAD(self->obj),
+        (GCallback) data_probe_callback_marshal, data,
+	data_probe_destroy_data);
+    pyg_end_allow_threads;
 
-    Py_DECREF(myargs);
-    Py_DECREF(method);
+    pret = PyLong_FromUnsignedLong(ret);
+    Py_INCREF(pret);
 
-    return rv;
+    return pret;
 }
 %%
 override gst_pad_add_buffer_probe args
+
 static PyObject *
 _wrap_gst_pad_add_buffer_probe(PyGObject *self, PyObject *args)
 {
-    GstPad *pad = GST_PAD(self->obj);
-    PyObject *method = NULL;
-    PyObject *rv = NULL;
-    PyObject *mylist = PyList_New(1);
-    PyObject *mynewlist = NULL;
-    PyObject *myargs = NULL;
-    PyObject *signalname = NULL;
+    PyObject *callback, *cbargs = NULL, *data;
+    PyObject *pret;
+    gulong ret;
+    gint len;
 
-    signalname = PyString_FromString("have-data::buffer");
-
-    if (PyList_SetItem(mylist, 0, signalname)) {
-	Py_DECREF(mylist);
-	return NULL;
-    }
-
-    mynewlist = PySequence_InPlaceConcat(mylist, args);
-
-    Py_DECREF(mylist);
-
-    if (!mynewlist)
-	return NULL;
-
-    myargs = PyList_AsTuple(mynewlist);
-
-    Py_DECREF(mynewlist);
-
-    if (!myargs)
-	return NULL;
-
-    method = PyObject_GetAttrString((PyObject*)self, "connect");
-
-    if (!method) {
-	Py_DECREF(mylist);
+    len = PyTuple_Size(args);
+    if (len < 1) {
+        PyErr_SetString(PyExc_TypeError, "Requires at least 1 arg");
         return NULL;
     }
 
-    GST_OBJECT_LOCK (pad);
+    callback = PyTuple_GetItem(args, 0);
+    if (!PyCallable_Check(callback)) {
+        PyErr_SetString(PyExc_TypeError, "callback is not callable");
+        return NULL;
+    }
+    cbargs = PySequence_GetSlice(args, 1, len);
+    if (cbargs == NULL)
+        return NULL;
+    data = Py_BuildValue("(ON)", callback, cbargs);
+    if (data == NULL)
+        return NULL;
 
-    rv = PyObject_CallObject(method, myargs);
-    if (rv) {
-	GST_PAD_DO_BUFFER_SIGNALS (pad)++;
-	GST_DEBUG_OBJECT (pad, "adding buffer probe, now %d probes",
-	                  GST_PAD_DO_BUFFER_SIGNALS (pad));
-   }
+    pyg_begin_allow_threads;
+    ret = gst_pad_add_buffer_probe_full(GST_PAD(self->obj),
+        (GCallback) data_probe_callback_marshal, data,
+	data_probe_destroy_data);
+    pyg_end_allow_threads;
 
-    GST_OBJECT_UNLOCK (pad);
+    pret = PyLong_FromUnsignedLong(ret);
+    Py_INCREF(pret);
 
-    Py_DECREF(myargs);
-    Py_DECREF(method);
-
-    return rv;
+    return pret;
 }
 %%
 override-slot GstPadTemplate.tp_getattr
