@@ -32,10 +32,10 @@
 #include <gst/gst.h>
 #include <string.h>
 
-#ifdef HAVE_X
+#include <gdk/gdk.h>
+#if defined (GDK_WINDOWING_X11)
 #include <gdk/gdkx.h>
-#endif
-#ifdef G_OS_WIN32
+#elif defined (GDK_WINDOWING_WIN32)
 #include <gdk/gdkwin32.h>
 #endif
 
@@ -2439,7 +2439,7 @@ msg_clock_lost (GstBus * bus, GstMessage * message, GstPipeline * data)
   }
 }
 
-#if defined (HAVE_X) || defined (G_OS_WIN32)
+#if defined (GDK_WINDOWING_X11) || defined (GDK_WINDOWING_WIN32)
 
 static gulong embed_xid = 0;
 
@@ -2507,11 +2507,11 @@ realize_cb (GtkWidget * widget, gpointer data)
   }
 #endif
 
-#if defined (HAVE_X) || defined (G_OS_WIN32)
+#if defined (GDK_WINDOWING_X11) || defined (GDK_WINDOWING_WIN32)
   {
     GdkWindow *window = gtk_widget_get_window (video_window);
 
-#ifdef G_OS_WIN32
+#if defined (GDK_WINDOWING_WIN32)
     embed_xid = GDK_WINDOW_HWND (window);
 #else
     embed_xid = GDK_WINDOW_XID (window);
@@ -2549,7 +2549,7 @@ connect_bus_signals (GstElement * pipeline)
 {
   GstBus *bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
 
-#ifdef HAVE_X
+#if defined (GDK_WINDOWING_X11) || defined (GDK_WINDOWING_WIN32)
   /* handle prepare-xwindow-id element message synchronously */
   gst_bus_set_sync_handler (bus, (GstBusSyncHandler) bus_sync_handler,
       pipeline);
@@ -2989,7 +2989,7 @@ main (int argc, char **argv)
    * asks for the XID of the window to render onto */
   gtk_widget_realize (window);
 
-#ifdef HAVE_X
+#if defined (GDK_WINDOWING_X11) || defined (GDK_WINDOWING_WIN32)
   /* we should have the XID now */
   g_assert (embed_xid != 0);
 #endif
