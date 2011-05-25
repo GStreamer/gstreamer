@@ -99,6 +99,7 @@ buffer_verify_data (void *buffer, void *user_data)
     if (ctx_verify_buffer)
       ctx_verify_buffer (vdata, buffer);
     vdata->buffer_counter++;
+    vdata->offset_counter += GST_BUFFER_SIZE (buffer);
     if (vdata->buffer_counter == vdata->discard) {
       vdata->buffer_counter = 0;
       vdata->discard = 0;
