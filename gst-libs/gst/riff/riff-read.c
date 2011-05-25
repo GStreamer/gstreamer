@@ -527,7 +527,7 @@ too_small:
  *        codec initialization data).
  *
  * Parses a interleaved (also known as "complex")  stream´s strf
- * structure plus optionally some extradata from input data. This 
+ * structure plus optionally some extradata from input data. This
  * function takes ownership of @buf.
  *
  * Returns: TRUE if parsing succeeded, otherwise FALSE.
@@ -608,7 +608,6 @@ gst_riff_parse_info (GstElement * element,
   GstTagList *taglist;
 
   g_return_if_fail (_taglist != NULL);
-  g_return_if_fail (buf != NULL);
 
   if (!buf) {
     *_taglist = NULL;
