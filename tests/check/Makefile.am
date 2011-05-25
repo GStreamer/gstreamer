@@ -169,6 +169,10 @@ check_PROGRAMS = \
         $(check_jifmux) \
 	elements/jpegparse \
 	$(check_logoinsert) \
+	elements/h263parse \
+	elements/h264parse \
+	elements/mpegvideoparse \
+	elements/mpeg4videoparse \
 	elements/mxfdemux \
 	elements/mxfmux \
 	elements/id3mux \
@@ -189,6 +193,21 @@ AM_CFLAGS = $(GST_CHECK_CFLAGS) $(GST_OPTION_CFLAGS) \
 		-DGST_TEST_FILES_PATH="\"$(TEST_FILES_DIRECTORY)\"" \
 		-UG_DISABLE_ASSERT -UG_DISABLE_CAST_CHECKS
 LDADD = $(GST_CHECK_LIBS)
+
+# parser unit test convenience lib
+noinst_LTLIBRARIES = libparser.la
+libparser_la_SOURCES = elements/parser.c elements/parser.h
+libparser_la_CFLAGS = \
+	-I$(top_srcdir)/tests/check \
+	$(GST_CHECK_CFLAGS) $(GST_OPTION_CFLAGS)
+
+elements_mpegvideoparse_LDADD = libparser.la $(LDADD)
+
+elements_mpeg4videoparse_LDADD = libparser.la $(LDADD)
+
+elements_h263parse_LDADD = libparser.la $(LDADD)
+
+elements_h264parse_LDADD = libparser.la $(LDADD)
 
 elements_voaacenc_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
