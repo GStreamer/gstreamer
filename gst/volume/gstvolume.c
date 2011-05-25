@@ -897,6 +897,7 @@ volume_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
     guint nsamples = size / (width * channels);
     GstClockTime interval = gst_util_uint64_scale_int (1, GST_SECOND, rate);
     GstClockTime ts = GST_BUFFER_TIMESTAMP (outbuf);
+    gboolean use_mutes = FALSE;
 
     ts = gst_segment_to_stream_time (&base->segment, GST_FORMAT_TIME, ts);
 
@@ -918,6 +919,7 @@ volume_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
 
       gst_object_unref (mute_csource);
       mute_csource = NULL;
+      use_mutes = TRUE;
     } else {
       g_free (self->mutes);
       self->mutes = NULL;
@@ -937,7 +939,7 @@ volume_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
       orc_memset_f64 (self->volumes, self->current_volume, nsamples);
     }
 
-    if (mute_csource) {
+    if (use_mutes) {
       orc_prepare_volumes (self->volumes, self->mutes, nsamples);
     }
 
