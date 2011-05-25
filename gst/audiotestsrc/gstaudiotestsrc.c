@@ -131,6 +131,8 @@ gst_audiostestsrc_wave_get_type (void)
     {GST_AUDIO_TEST_SRC_WAVE_GAUSSIAN_WHITE_NOISE, "White Gaussian noise",
         "gaussian-noise"},
     {GST_AUDIO_TEST_SRC_WAVE_RED_NOISE, "Red (brownian) noise", "red-noise"},
+    {GST_AUDIO_TEST_SRC_WAVE_BLUE_NOISE, "Blue noise", "blue-noise"},
+    {GST_AUDIO_TEST_SRC_WAVE_VIOLET_NOISE, "Violet noise", "violet-noise"},
     {0, NULL, NULL},
   };
 
@@ -879,6 +881,66 @@ static const ProcessFunc red_noise_funcs[] = {
   (ProcessFunc) gst_audio_test_src_create_red_noise_double
 };
 
+/* Blue Noise: apply spectral inversion to pink noise */
+
+#define DEFINE_BLUE_NOISE(type) \
+static void \
+gst_audio_test_src_create_blue_noise_##type (GstAudioTestSrc * src, g##type * samples) \
+{ \
+  gint i, c; \
+  static gdouble flip=1.0; \
+  \
+  gst_audio_test_src_create_pink_noise_##type (src, samples); \
+  for (i = 0; i < src->generate_samples_per_buffer * src->channels; ) { \
+    for (c = 0; c < src->channels; ++c) { \
+      samples[i++] *= flip; \
+    } \
+    flip *= -1.0; \
+  } \
+}
+
+DEFINE_BLUE_NOISE (int16);
+DEFINE_BLUE_NOISE (int32);
+DEFINE_BLUE_NOISE (float);
+DEFINE_BLUE_NOISE (double);
+
+static const ProcessFunc blue_noise_funcs[] = {
+  (ProcessFunc) gst_audio_test_src_create_blue_noise_int16,
+  (ProcessFunc) gst_audio_test_src_create_blue_noise_int32,
+  (ProcessFunc) gst_audio_test_src_create_blue_noise_float,
+  (ProcessFunc) gst_audio_test_src_create_blue_noise_double
+};
+
+
+/* Violet Noise: apply spectral inversion to red noise */
+
+#define DEFINE_VIOLET_NOISE(type) \
+static void \
+gst_audio_test_src_create_violet_noise_##type (GstAudioTestSrc * src, g##type * samples) \
+{ \
+  gint i, c; \
+  static gdouble flip=1.0; \
+  \
+  gst_audio_test_src_create_red_noise_##type (src, samples); \
+  for (i = 0; i < src->generate_samples_per_buffer * src->channels; ) { \
+    for (c = 0; c < src->channels; ++c) { \
+      samples[i++] *= flip; \
+    } \
+    flip *= -1.0; \
+  } \
+}
+
+DEFINE_VIOLET_NOISE (int16);
+DEFINE_VIOLET_NOISE (int32);
+DEFINE_VIOLET_NOISE (float);
+DEFINE_VIOLET_NOISE (double);
+
+static const ProcessFunc violet_noise_funcs[] = {
+  (ProcessFunc) gst_audio_test_src_create_violet_noise_int16,
+  (ProcessFunc) gst_audio_test_src_create_violet_noise_int32,
+  (ProcessFunc) gst_audio_test_src_create_violet_noise_float,
+  (ProcessFunc) gst_audio_test_src_create_violet_noise_double
+};
 
 
 /*
@@ -939,6 +1001,17 @@ gst_audio_test_src_change_wave (GstAudioTestSrc * src)
       src->red.state = 0.0;
       src->process = red_noise_funcs[src->format];
       break;
+    case GST_AUDIO_TEST_SRC_WAVE_BLUE_NOISE:
+      if (!(src->gen))
+        src->gen = g_rand_new ();
+      gst_audio_test_src_init_pink_noise (src);
+      src->process = blue_noise_funcs[src->format];
+      break;
+    case GST_AUDIO_TEST_SRC_WAVE_VIOLET_NOISE:
+      if (!(src->gen))
+        src->gen = g_rand_new ();
+      src->red.state = 0.0;
+      src->process = violet_noise_funcs[src->format];
     default:
       GST_ERROR ("invalid wave-form");
       break;
