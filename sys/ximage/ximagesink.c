@@ -1951,8 +1951,10 @@ beach:
 static gboolean
 gst_ximagesink_interface_supported (GstImplementsInterface * iface, GType type)
 {
-  g_assert (type == GST_TYPE_NAVIGATION || type == GST_TYPE_X_OVERLAY);
-  return TRUE;
+  if (type == GST_TYPE_NAVIGATION || type == GST_TYPE_X_OVERLAY)
+    return TRUE;
+  else
+    return FALSE;
 }
 
 static void
