@@ -61,6 +61,7 @@
     --video-enc                       Video encoder used in video recording
     --image-enc                       Image encoder used in still capture
     --image-pp                        Image post-processing element
+    --image-formatter                 Image metadata formatter element
     --video-mux                       Muxer used in video recording
     --viewfinder-sink                 Viewfinder sink (default = fakesink)
     --image-width                     Width for image capture
@@ -126,6 +127,7 @@ static gchar *audioenc_name = NULL;
 static gchar *videoenc_name = NULL;
 static gchar *imageenc_name = NULL;
 static gchar *imagepp_name = NULL;
+static gchar *imageformatter_name = NULL;
 static gchar *videomux_name = NULL;
 static gchar *vfsink_name = NULL;
 static gchar *src_csp = NULL;
@@ -514,6 +516,7 @@ setup_pipeline (void)
 
   res &= setup_pipeline_element ("video-encoder", videoenc_name, NULL);
   res &= setup_pipeline_element ("image-encoder", imageenc_name, &ienc);
+  res &= setup_pipeline_element ("image-formatter", imageformatter_name, NULL);
   res &= setup_pipeline_element ("video-muxer", videomux_name, &vmux);
   if (!res) {
     goto error;
@@ -747,6 +750,8 @@ main (int argc, char *argv[])
         "Image encoder used in still capture", NULL},
     {"image-pp", '\0', 0, G_OPTION_ARG_STRING, &imagepp_name,
         "List of image post-processing elements separated with comma", NULL},
+    {"image-formatter", '\0', 0, G_OPTION_ARG_STRING, &imageformatter_name,
+        "Image metadata formatter used in still image capture", NULL},
     {"video-mux", '\0', 0, G_OPTION_ARG_STRING, &videomux_name,
         "Muxer used in video recording", NULL},
     {"viewfinder-sink", '\0', 0, G_OPTION_ARG_STRING, &vfsink_name,
@@ -829,6 +834,7 @@ main (int argc, char *argv[])
   g_free (audioenc_name);
   g_free (videoenc_name);
   g_free (imageenc_name);
+  g_free (imageformatter_name);
   g_free (imagepp_name);
   g_free (videomux_name);
   g_free (vfsink_name);
