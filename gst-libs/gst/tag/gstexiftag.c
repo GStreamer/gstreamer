@@ -2627,14 +2627,6 @@ deserialize_resolution (GstExifReader * exif_reader,
     unit = GST_READ_UINT16_BE (tagdata->offset_as_data);
   }
 
-  if (unit != 2 && unit != 3) {
-    GST_WARNING ("Invalid resolution unit, ignoring PPI tags");
-    return 0;
-  }
-
-  xres = gst_exif_reader_get_pending_tag (exif_reader, EXIF_TAG_XRESOLUTION);
-  yres = gst_exif_reader_get_pending_tag (exif_reader, EXIF_TAG_YRESOLUTION);
-
   switch (unit) {
     case 2:                    /* inch */
       multiplier = 1;
@@ -2643,15 +2635,16 @@ deserialize_resolution (GstExifReader * exif_reader,
       multiplier = 1 / 2.54;
       break;
     default:
-      multiplier = 1;
-      g_assert_not_reached ();
-      break;
+      GST_WARNING ("Invalid resolution unit, ignoring PPI tags");
+      return 0;
   }
 
+  xres = gst_exif_reader_get_pending_tag (exif_reader, EXIF_TAG_XRESOLUTION);
   if (xres) {
     parse_exif_rational_tag (exif_reader, GST_TAG_IMAGE_HORIZONTAL_PPI,
         xres->count, xres->offset, multiplier, FALSE);
   }
+  yres = gst_exif_reader_get_pending_tag (exif_reader, EXIF_TAG_YRESOLUTION);
   if (yres) {
     parse_exif_rational_tag (exif_reader, GST_TAG_IMAGE_VERTICAL_PPI,
         yres->count, yres->offset, multiplier, FALSE);
@@ -2670,7 +2663,7 @@ serialize_scene_type (GstExifWriter * writer, const GstTagList * taglist,
   if (gst_tag_list_peek_string_index (taglist, GST_TAG_CAPTURING_SOURCE, 0,
           &str)) {
     if (strcmp (str, "dsc") == 0) {
-      value = 0;
+      value = 1;
     }
   }
 

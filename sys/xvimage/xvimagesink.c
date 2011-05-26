@@ -2060,9 +2060,11 @@ config_failed:
 static gboolean
 gst_xvimagesink_interface_supported (GstImplementsInterface * iface, GType type)
 {
-  g_assert (type == GST_TYPE_NAVIGATION || type == GST_TYPE_X_OVERLAY ||
-      type == GST_TYPE_COLOR_BALANCE || type == GST_TYPE_PROPERTY_PROBE);
-  return TRUE;
+  if (type == GST_TYPE_NAVIGATION || type == GST_TYPE_X_OVERLAY ||
+      type == GST_TYPE_COLOR_BALANCE || type == GST_TYPE_PROPERTY_PROBE)
+    return TRUE;
+  else
+    return FALSE;
 }
 
 static void

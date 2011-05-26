@@ -377,8 +377,10 @@ gst_text_render_fixate_caps (GstPad * pad, GstCaps * caps)
   GstStructure *s = gst_caps_get_structure (caps, 0);
 
   GST_DEBUG ("Fixating caps %" GST_PTR_FORMAT, caps);
-  gst_structure_fixate_field_nearest_int (s, "width", render->image_width);
-  gst_structure_fixate_field_nearest_int (s, "height", render->image_height);
+  gst_structure_fixate_field_nearest_int (s, "width", MAX (render->image_width,
+          DEFAULT_RENDER_WIDTH));
+  gst_structure_fixate_field_nearest_int (s, "height",
+      MAX (render->image_height + render->ypad, DEFAULT_RENDER_HEIGHT));
   GST_DEBUG ("Fixated to    %" GST_PTR_FORMAT, caps);
 
   gst_object_unref (render);
@@ -401,12 +403,12 @@ gst_text_renderer_image_to_ayuv (GstTextRender * render, guchar * pixbuf,
 
   width = render->image_width;
   height = render->image_height;
-  bitp = render->text_image;
 
-  for (y = 0; y < height; y++) {
+  for (y = 0; y < height && ypos + y < render->height; y++) {
     int n;
     p = pixbuf + (ypos + y) * stride + xpos * 4;
-    for (n = 0; n < width; n++) {
+    bitp = render->text_image + y * width * 4;
+    for (n = 0; n < width && n < render->width; n++) {
       b = bitp[CAIRO_ARGB_B];
       g = bitp[CAIRO_ARGB_G];
       r = bitp[CAIRO_ARGB_R];
@@ -437,11 +439,11 @@ gst_text_renderer_image_to_argb (GstTextRender * render, guchar * pixbuf,
 
   width = render->image_width;
   height = render->image_height;
-  bitp = render->text_image;
 
-  for (i = 0; i < height; i++) {
+  for (i = 0; i < height && ypos + i < render->height; i++) {
     p = pixbuf + (ypos + i) * stride + xpos * 4;
-    for (j = 0; j < width; j++) {
+    bitp = render->text_image + i * width * 4;
+    for (j = 0; j < width && j < render->width; j++) {
       p[0] = bitp[CAIRO_ARGB_A];
       p[1] = bitp[CAIRO_ARGB_R];
       p[2] = bitp[CAIRO_ARGB_G];
@@ -462,7 +464,7 @@ gst_text_render_chain (GstPad * pad, GstBuffer * inbuf)
   GstTextRender *render;
   GstFlowReturn ret;
   GstBuffer *outbuf;
-  GstCaps *caps = NULL;
+  GstCaps *caps = NULL, *padcaps;
   guint8 *data;
   gsize size;
   gint n;
@@ -487,18 +489,20 @@ gst_text_render_chain (GstPad * pad, GstBuffer * inbuf)
 
   gst_text_render_check_argb (render);
 
-  if (!render->use_ARGB) {
-    caps =
-        gst_video_format_new_caps (GST_VIDEO_FORMAT_AYUV, render->width,
-        render->height, 1, 1, 1, 1);
-  } else {
-    caps =
-        gst_video_format_new_caps (GST_VIDEO_FORMAT_ARGB, render->width,
-        render->height, 1, 1, 1, 1);
+  padcaps = gst_pad_get_caps (render->srcpad, NULL);
+  caps = gst_pad_peer_get_caps (render->srcpad, padcaps);
+  gst_caps_unref (padcaps);
+
+  if (!caps || gst_caps_is_empty (caps)) {
+    GST_ELEMENT_ERROR (render, CORE, NEGOTIATION, (NULL), (NULL));
+    ret = GST_FLOW_ERROR;
+    goto done;
   }
 
+  gst_caps_truncate (caps);
+  gst_pad_fixate_caps (render->srcpad, caps);
+
   if (!gst_pad_set_caps (render->srcpad, caps)) {
-    gst_caps_unref (caps);
     GST_ELEMENT_ERROR (render, CORE, NEGOTIATION, (NULL), (NULL));
     ret = GST_FLOW_ERROR;
     goto done;

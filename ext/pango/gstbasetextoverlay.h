@@ -136,7 +136,7 @@ struct _GstBaseTextOverlay {
     gboolean                 want_shading;
     gboolean                 silent;
     gboolean                 wait_text;
-    guint                    color;
+    guint                    color, outline_color;
 
     PangoLayout             *layout;
     gdouble                  shadow_offset;

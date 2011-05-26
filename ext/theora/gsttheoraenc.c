@@ -989,7 +989,8 @@ theora_enc_read_multipass_cache (GstTheoraEnc * enc)
 {
   GstBuffer *cache_buf;
   const guint8 *cache_data;
-  gsize bytes_read = 0, bytes_consumed = 0;
+  gsize bytes_read = 0;
+  gint bytes_consumed = 0;
   GIOStatus stat = G_IO_STATUS_NORMAL;
   gboolean done = FALSE;
 
@@ -1064,7 +1065,7 @@ theora_enc_write_multipass_cache (GstTheoraEnc * enc, gboolean begin,
 
   }
 
-  if (stat == G_IO_STATUS_ERROR || bytes_read < 0 || bytes_written < 0) {
+  if (stat == G_IO_STATUS_ERROR || bytes_read < 0) {
     if (begin) {
       if (eos)
         GST_ELEMENT_WARNING (enc, RESOURCE, WRITE, (NULL),

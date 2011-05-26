@@ -101,8 +101,26 @@ gst_buffer_add_meta_xvimage (GstBuffer * buffer, GstXvImageSink * xvimagesink,
     meta->xvimage = XvShmCreateImage (xcontext->disp,
         xcontext->xv_port_id,
         meta->im_format, NULL, meta->width, meta->height, &meta->SHMInfo);
-    if (!meta->xvimage || error_caught)
-      goto create_failed;
+    if (!meta->xvimage || error_caught) {
+      g_mutex_unlock (xvimagesink->x_lock);
+
+      /* Reset error flag */
+      error_caught = FALSE;
+
+      /* Push a warning */
+      GST_ELEMENT_WARNING (xvimagesink, RESOURCE, WRITE,
+          ("Failed to create output image buffer of %dx%d pixels",
+              meta->width, meta->height),
+          ("could not XShmCreateImage a %dx%d image",
+              meta->width, meta->height));
+
+      /* Retry without XShm */
+      xvimagesink->xcontext->use_xshm = FALSE;
+
+      /* Hold X mutex again to try without XShm */
+      g_mutex_lock (xvimagesink->x_lock);
+      goto no_xshm;
+    }
 
     /* we have to use the returned data_size for our shm size */
     meta->size = meta->xvimage->data_size;
@@ -189,6 +207,7 @@ gst_buffer_add_meta_xvimage (GstBuffer * buffer, GstXvImageSink * xvimagesink,
     GST_DEBUG_OBJECT (xvimagesink, "XServer ShmAttached to 0x%x, id 0x%lx",
         meta->SHMInfo.shmid, meta->SHMInfo.shmseg);
   } else
+  no_xshm:
 #endif /* HAVE_XSHM */
   {
     meta->xvimage = XvCreateImage (xcontext->disp,

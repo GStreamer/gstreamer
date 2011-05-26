@@ -32,9 +32,13 @@
 #include <gst/gst.h>
 #include <string.h>
 
-#ifdef HAVE_X
+#include <gdk/gdk.h>
+#if defined (GDK_WINDOWING_X11)
 #include <gdk/gdkx.h>
+#elif defined (GDK_WINDOWING_WIN32)
+#include <gdk/gdkwin32.h>
 #endif
+
 #include <gst/interfaces/xoverlay.h>
 
 #if (!GTK_CHECK_VERSION(2, 23, 0) || GTK_CHECK_VERSION(2, 90, 0)) && !GTK_CHECK_VERSION(2, 91, 1)
@@ -57,17 +61,10 @@ gtk_widget_get_allocation (GtkWidget * w, GtkAllocation * a)
 
 /* configuration */
 
-//#define SOURCE "filesrc"
-#define SOURCE "gnomevfssrc"
+#define SOURCE "filesrc"
 
-#define ASINK "alsasink"
-//#define ASINK "osssink"
-
-#define VSINK "xvimagesink"
-//#define VSINK "sdlvideosink"
-//#define VSINK "ximagesink"
-//#define VSINK "aasink"
-//#define VSINK "cacasink"
+static gchar *opt_audiosink_str;        /* NULL */
+static gchar *opt_videosink_str;        /* NULL */
 
 #define FILL_INTERVAL 100
 //#define UPDATE_INTERVAL 500
@@ -219,7 +216,7 @@ make_mod_pipeline (const gchar * location)
 
   src = gst_element_factory_make_or_warn (SOURCE, "src");
   decoder = gst_element_factory_make_or_warn ("modplug", "decoder");
-  audiosink = gst_element_factory_make_or_warn (ASINK, "sink");
+  audiosink = gst_element_factory_make_or_warn (opt_audiosink_str, "sink");
   //g_object_set (G_OBJECT (audiosink), "sync", FALSE, NULL);
 
   g_object_set (G_OBJECT (src), "location", location, NULL);
@@ -254,7 +251,7 @@ make_dv_pipeline (const gchar * location)
   demux = gst_element_factory_make_or_warn ("dvdemux", "demuxer");
   v_queue = gst_element_factory_make_or_warn ("queue", "v_queue");
   decoder = gst_element_factory_make_or_warn ("ffdec_dvvideo", "decoder");
-  videosink = gst_element_factory_make_or_warn (VSINK, "v_sink");
+  videosink = gst_element_factory_make_or_warn (opt_videosink_str, "v_sink");
   a_queue = gst_element_factory_make_or_warn ("queue", "a_queue");
   audiosink = gst_element_factory_make_or_warn ("alsasink", "a_sink");
 
@@ -295,7 +292,7 @@ make_wav_pipeline (const gchar * location)
 
   src = gst_element_factory_make_or_warn (SOURCE, "src");
   decoder = gst_element_factory_make_or_warn ("wavparse", "decoder");
-  audiosink = gst_element_factory_make_or_warn (ASINK, "sink");
+  audiosink = gst_element_factory_make_or_warn (opt_audiosink_str, "sink");
 
   g_object_set (G_OBJECT (src), "location", location, NULL);
 
@@ -327,7 +324,7 @@ make_flac_pipeline (const gchar * location)
 
   src = gst_element_factory_make_or_warn (SOURCE, "src");
   decoder = gst_element_factory_make_or_warn ("flacdec", "decoder");
-  audiosink = gst_element_factory_make_or_warn (ASINK, "sink");
+  audiosink = gst_element_factory_make_or_warn (opt_audiosink_str, "sink");
   g_object_set (G_OBJECT (audiosink), "sync", FALSE, NULL);
 
   g_object_set (G_OBJECT (src), "location", location, NULL);
@@ -359,7 +356,7 @@ make_sid_pipeline (const gchar * location)
 
   src = gst_element_factory_make_or_warn (SOURCE, "src");
   decoder = gst_element_factory_make_or_warn ("siddec", "decoder");
-  audiosink = gst_element_factory_make_or_warn (ASINK, "sink");
+  audiosink = gst_element_factory_make_or_warn (opt_audiosink_str, "sink");
   //g_object_set (G_OBJECT (audiosink), "sync", FALSE, NULL);
 
   g_object_set (G_OBJECT (src), "location", location, NULL);
@@ -426,7 +423,7 @@ make_vorbis_pipeline (const gchar * location)
   demux = gst_element_factory_make_or_warn ("oggdemux", "demux");
   decoder = gst_element_factory_make_or_warn ("vorbisdec", "decoder");
   convert = gst_element_factory_make_or_warn ("audioconvert", "convert");
-  audiosink = gst_element_factory_make_or_warn (ASINK, "sink");
+  audiosink = gst_element_factory_make_or_warn (opt_audiosink_str, "sink");
   g_object_set (G_OBJECT (audiosink), "sync", TRUE, NULL);
 
   g_object_set (G_OBJECT (src), "location", location, NULL);
@@ -473,7 +470,7 @@ make_theora_pipeline (const gchar * location)
   demux = gst_element_factory_make_or_warn ("oggdemux", "demux");
   decoder = gst_element_factory_make_or_warn ("theoradec", "decoder");
   convert = gst_element_factory_make_or_warn ("ffmpegcolorspace", "convert");
-  videosink = gst_element_factory_make_or_warn (VSINK, "sink");
+  videosink = gst_element_factory_make_or_warn (opt_videosink_str, "sink");
 
   g_object_set (G_OBJECT (src), "location", location, NULL);
 
@@ -531,7 +528,7 @@ make_vorbis_theora_pipeline (const gchar * location)
   a_queue = gst_element_factory_make_or_warn ("queue", "a_queue");
   a_decoder = gst_element_factory_make_or_warn ("vorbisdec", "a_dec");
   a_convert = gst_element_factory_make_or_warn ("audioconvert", "a_convert");
-  audiosink = gst_element_factory_make_or_warn (ASINK, "a_sink");
+  audiosink = gst_element_factory_make_or_warn (opt_audiosink_str, "a_sink");
 
   gst_bin_add (GST_BIN (pipeline), audio_bin);
 
@@ -557,7 +554,7 @@ make_vorbis_theora_pipeline (const gchar * location)
   v_convert =
       gst_element_factory_make_or_warn ("ffmpegcolorspace", "v_convert");
   v_scale = gst_element_factory_make_or_warn ("videoscale", "v_scale");
-  videosink = gst_element_factory_make_or_warn (VSINK, "v_sink");
+  videosink = gst_element_factory_make_or_warn (opt_videosink_str, "v_sink");
 
   gst_bin_add (GST_BIN (pipeline), video_bin);
 
@@ -611,7 +608,7 @@ make_avi_msmpeg4v3_mp3_pipeline (const gchar * location)
   a_queue = gst_element_factory_make_or_warn ("queue", "a_queue");
   a_decoder = gst_element_factory_make_or_warn ("mad", "a_dec");
   a_convert = gst_element_factory_make_or_warn ("audioconvert", "a_convert");
-  audiosink = gst_element_factory_make_or_warn (ASINK, "a_sink");
+  audiosink = gst_element_factory_make_or_warn (opt_audiosink_str, "a_sink");
 
   gst_bin_add (GST_BIN (audio_bin), a_queue);
   gst_bin_add (GST_BIN (audio_bin), a_decoder);
@@ -636,7 +633,7 @@ make_avi_msmpeg4v3_mp3_pipeline (const gchar * location)
   v_decoder = gst_element_factory_make_or_warn ("ffdec_msmpeg4", "v_dec");
   v_convert =
       gst_element_factory_make_or_warn ("ffmpegcolorspace", "v_convert");
-  videosink = gst_element_factory_make_or_warn (VSINK, "v_sink");
+  videosink = gst_element_factory_make_or_warn (opt_videosink_str, "v_sink");
 
   gst_bin_add (GST_BIN (video_bin), v_queue);
   gst_bin_add (GST_BIN (video_bin), v_decoder);
@@ -677,7 +674,7 @@ make_mp3_pipeline (const gchar * location)
   parser = gst_element_factory_make_or_warn ("mp3parse", "parse");
   decoder = gst_element_factory_make_or_warn ("mad", "dec");
   queue = gst_element_factory_make_or_warn ("queue", "queue");
-  audiosink = gst_element_factory_make_or_warn (ASINK, "sink");
+  audiosink = gst_element_factory_make_or_warn (opt_audiosink_str, "sink");
 
   seekable_elements = g_list_prepend (seekable_elements, audiosink);
 
@@ -726,7 +723,7 @@ make_avi_pipeline (const gchar * location)
 
   audio_bin = gst_bin_new ("a_decoder_bin");
   a_decoder = gst_element_factory_make_or_warn ("mad", "a_dec");
-  audiosink = gst_element_factory_make_or_warn (ASINK, "a_sink");
+  audiosink = gst_element_factory_make_or_warn (opt_audiosink_str, "a_sink");
   a_queue = gst_element_factory_make_or_warn ("queue", "a_queue");
   gst_element_link (a_decoder, a_queue);
   gst_element_link (a_queue, audiosink);
@@ -747,7 +744,7 @@ make_avi_pipeline (const gchar * location)
 
   video_bin = gst_bin_new ("v_decoder_bin");
   v_decoder = gst_element_factory_make_or_warn ("ffmpegdecall", "v_dec");
-  videosink = gst_element_factory_make_or_warn (VSINK, "v_sink");
+  videosink = gst_element_factory_make_or_warn (opt_videosink_str, "v_sink");
   v_queue = gst_element_factory_make_or_warn ("queue", "v_queue");
   gst_element_link (v_decoder, v_queue);
   gst_element_link (v_queue, videosink);
@@ -795,7 +792,7 @@ make_mpeg_pipeline (const gchar * location)
   audio_bin = gst_bin_new ("a_decoder_bin");
   a_decoder = gst_element_factory_make_or_warn ("mad", "a_dec");
   a_queue = gst_element_factory_make_or_warn ("queue", "a_queue");
-  audiosink = gst_element_factory_make_or_warn (ASINK, "a_sink");
+  audiosink = gst_element_factory_make_or_warn (opt_audiosink_str, "a_sink");
   gst_bin_add (GST_BIN (audio_bin), a_decoder);
   gst_bin_add (GST_BIN (audio_bin), a_queue);
   gst_bin_add (GST_BIN (audio_bin), audiosink);
@@ -816,7 +813,7 @@ make_mpeg_pipeline (const gchar * location)
   v_decoder = gst_element_factory_make_or_warn ("mpeg2dec", "v_dec");
   v_queue = gst_element_factory_make_or_warn ("queue", "v_queue");
   v_filter = gst_element_factory_make_or_warn ("ffmpegcolorspace", "v_filter");
-  videosink = gst_element_factory_make_or_warn (VSINK, "v_sink");
+  videosink = gst_element_factory_make_or_warn (opt_videosink_str, "v_sink");
 
   gst_bin_add (GST_BIN (video_bin), v_decoder);
   gst_bin_add (GST_BIN (video_bin), v_queue);
@@ -872,7 +869,7 @@ make_mpegnt_pipeline (const gchar * location)
   audio_bin = gst_bin_new ("a_decoder_bin");
   a_decoder = gst_element_factory_make_or_warn ("mad", "a_dec");
   a_queue = gst_element_factory_make_or_warn ("queue", "a_queue");
-  audiosink = gst_element_factory_make_or_warn (ASINK, "a_sink");
+  audiosink = gst_element_factory_make_or_warn (opt_audiosink_str, "a_sink");
   //g_object_set (G_OBJECT (audiosink), "fragment", 0x00180008, NULL);
   g_object_set (G_OBJECT (audiosink), "sync", FALSE, NULL);
   gst_element_link (a_decoder, a_queue);
@@ -894,7 +891,7 @@ make_mpegnt_pipeline (const gchar * location)
   video_bin = gst_bin_new ("v_decoder_bin");
   v_decoder = gst_element_factory_make_or_warn ("mpeg2dec", "v_dec");
   v_filter = gst_element_factory_make_or_warn ("ffmpegcolorspace", "v_filter");
-  videosink = gst_element_factory_make_or_warn (VSINK, "v_sink");
+  videosink = gst_element_factory_make_or_warn (opt_videosink_str, "v_sink");
   gst_element_link_many (v_decoder, v_filter, videosink, NULL);
 
   gst_bin_add_many (GST_BIN (video_bin), v_decoder, v_filter, videosink, NULL);
@@ -918,11 +915,13 @@ playerbin_set_uri (GstElement * player, const gchar * location)
   gchar *uri;
 
   /* Add "file://" prefix for convenience */
-  if (g_str_has_prefix (location, "/")) {
-    uri = g_strconcat ("file://", location, NULL);
+  if (g_str_has_prefix (location, "/") || !gst_uri_is_valid (location)) {
+    uri = gst_filename_to_uri (location, NULL);
+    g_print ("Setting URI: %s\n", uri);
     g_object_set (G_OBJECT (player), "uri", uri, NULL);
     g_free (uri);
   } else {
+    g_print ("Setting URI: %s\n", location);
     g_object_set (G_OBJECT (player), "uri", location, NULL);
   }
 }
@@ -931,6 +930,7 @@ static GstElement *
 construct_playerbin (const gchar * name, const gchar * location)
 {
   GstElement *player;
+  GstElement *avsink;
 
   player = gst_element_factory_make (name, "player");
   g_assert (player);
@@ -941,6 +941,14 @@ construct_playerbin (const gchar * name, const gchar * location)
 
   /* force element seeking on this pipeline */
   elem_seek = TRUE;
+
+  avsink = gst_element_factory_make_or_warn (opt_audiosink_str, "a_sink");
+  if (avsink)
+    g_object_set (player, "audio-sink", avsink, NULL);
+
+  avsink = gst_element_factory_make_or_warn (opt_videosink_str, "v_sink");
+  if (avsink)
+    g_object_set (player, "video-sink", avsink, NULL);
 
   return player;
 }
@@ -2432,7 +2440,7 @@ msg_clock_lost (GstBus * bus, GstMessage * message, GstPipeline * data)
   }
 }
 
-#ifdef HAVE_X
+#if defined (GDK_WINDOWING_X11) || defined (GDK_WINDOWING_WIN32)
 
 static gulong embed_xid = 0;
 
@@ -2500,11 +2508,15 @@ realize_cb (GtkWidget * widget, gpointer data)
   }
 #endif
 
-#ifdef HAVE_X
+#if defined (GDK_WINDOWING_X11) || defined (GDK_WINDOWING_WIN32)
   {
     GdkWindow *window = gtk_widget_get_window (video_window);
 
+#if defined (GDK_WINDOWING_WIN32)
+    embed_xid = GDK_WINDOW_HWND (window);
+#else
     embed_xid = GDK_WINDOW_XID (window);
+#endif
     g_print ("Window realize: video window XID = %lu\n", embed_xid);
   }
 #endif
@@ -2538,7 +2550,7 @@ connect_bus_signals (GstElement * pipeline)
 {
   GstBus *bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
 
-#ifdef HAVE_X
+#if defined (GDK_WINDOWING_X11) || defined (GDK_WINDOWING_WIN32)
   /* handle prepare-xwindow-id element message synchronously */
   gst_bus_set_sync_handler (bus, (GstBusSyncHandler) bus_sync_handler,
       pipeline);
@@ -2645,12 +2657,16 @@ main (int argc, char **argv)
   GtkWidget *scrub_checkbox, *play_scrub_checkbox;
   GtkWidget *rate_label, *volume_label;
   GOptionEntry options[] = {
+    {"audiosink", '\0', 0, G_OPTION_ARG_STRING, &opt_audiosink_str,
+        "audio sink to use (default: " DEFAULT_AUDIOSINK ")", NULL},
     {"stats", 's', 0, G_OPTION_ARG_NONE, &stats,
         "Show pad stats", NULL},
     {"elem", 'e', 0, G_OPTION_ARG_NONE, &elem_seek,
         "Seek on elements instead of pads", NULL},
     {"verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose,
         "Verbose properties", NULL},
+    {"videosink", '\0', 0, G_OPTION_ARG_STRING, &opt_videosink_str,
+        "video sink to use (default: " DEFAULT_VIDEOSINK ")", NULL},
     {NULL}
   };
   GOptionContext *ctx;
@@ -2668,6 +2684,12 @@ main (int argc, char **argv)
     g_print ("Error initializing: %s\n", err->message);
     exit (1);
   }
+
+  if (opt_audiosink_str == NULL)
+    opt_audiosink_str = g_strdup (DEFAULT_AUDIOSINK);
+
+  if (opt_videosink_str == NULL)
+    opt_videosink_str = g_strdup (DEFAULT_VIDEOSINK);
 
   GST_DEBUG_CATEGORY_INIT (seek_debug, "seek", 0, "seek example");
 
@@ -2978,7 +3000,7 @@ main (int argc, char **argv)
    * asks for the XID of the window to render onto */
   gtk_widget_realize (window);
 
-#ifdef HAVE_X
+#if defined (GDK_WINDOWING_X11) || defined (GDK_WINDOWING_WIN32)
   /* we should have the XID now */
   g_assert (embed_xid != 0);
 #endif
