@@ -95,17 +95,6 @@ enum
   /* FILL ME */
 };
 
-typedef struct _GstPadPushCache GstPadPushCache;
-
-struct _GstPadPushCache
-{
-  GstPad *peer;                 /* reffed peer pad */
-};
-
-static GstPadPushCache _pad_cache_invalid = { NULL, };
-
-#define PAD_CACHE_INVALID (&_pad_cache_invalid)
-
 #define GST_PAD_GET_PRIVATE(obj)  \
    (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_PAD, GstPadPrivate))
 
@@ -120,8 +109,6 @@ typedef struct
 
 struct _GstPadPrivate
 {
-  GstPadPushCache *cache_ptr;
-
   PadEvent events[GST_EVENT_MAX_STICKY];
 };
 
@@ -671,7 +658,6 @@ pre_activate (GstPad * pad, GstActivateMode new_mode)
     case GST_ACTIVATE_NONE:
       GST_OBJECT_LOCK (pad);
       GST_DEBUG_OBJECT (pad, "setting ACTIVATE_MODE NONE, set flushing");
-      _priv_gst_pad_invalidate_cache (pad);
       GST_PAD_SET_FLUSHING (pad);
       GST_PAD_ACTIVATE_MODE (pad) = new_mode;
       /* unlock blocked pads so element can resume and stop */
@@ -927,7 +913,6 @@ failure:
     GST_OBJECT_LOCK (pad);
     GST_CAT_INFO_OBJECT (GST_CAT_PADS, pad, "failed to %s in pull mode",
         active ? "activate" : "deactivate");
-    _priv_gst_pad_invalidate_cache (pad);
     GST_PAD_SET_FLUSHING (pad);
     GST_PAD_ACTIVATE_MODE (pad) = old;
     GST_OBJECT_UNLOCK (pad);
@@ -1033,7 +1018,6 @@ failure:
     GST_OBJECT_LOCK (pad);
     GST_CAT_INFO_OBJECT (GST_CAT_PADS, pad, "failed to %s in push mode",
         active ? "activate" : "deactivate");
-    _priv_gst_pad_invalidate_cache (pad);
     GST_PAD_SET_FLUSHING (pad);
     GST_PAD_ACTIVATE_MODE (pad) = old;
     GST_OBJECT_UNLOCK (pad);
@@ -1114,7 +1098,6 @@ gst_pad_set_blocked (GstPad * pad, gboolean blocked,
   if (blocked) {
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "blocking pad");
 
-    _priv_gst_pad_invalidate_cache (pad);
     GST_OBJECT_FLAG_SET (pad, GST_PAD_BLOCKED);
 
     if (pad->block_destroy_data && pad->block_data)
@@ -1676,8 +1659,6 @@ gst_pad_unlink (GstPad * srcpad, GstPad * sinkpad)
   if (GST_PAD_UNLINKFUNC (sinkpad)) {
     GST_PAD_UNLINKFUNC (sinkpad) (sinkpad);
   }
-
-  _priv_gst_pad_invalidate_cache (srcpad);
 
   /* first clear peers */
   GST_PAD_PEER (srcpad) = NULL;
@@ -3707,8 +3688,7 @@ gst_pad_data_unref (gboolean is_buffer, void *data)
  * checking for that little extra speed.
  */
 static inline GstFlowReturn
-gst_pad_chain_data_unchecked (GstPad * pad, gboolean is_buffer, void *data,
-    GstPadPushCache * cache)
+gst_pad_chain_data_unchecked (GstPad * pad, gboolean is_buffer, void *data)
 {
   gboolean needs_events;
   GstFlowReturn ret;
@@ -3734,7 +3714,6 @@ gst_pad_chain_data_unchecked (GstPad * pad, gboolean is_buffer, void *data,
 
   /* see if the signal should be emited */
   if (G_UNLIKELY (emit_signal)) {
-    cache = NULL;
     if (!gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT_CAST (data)))
       goto dropping;
   }
@@ -3753,10 +3732,6 @@ gst_pad_chain_data_unchecked (GstPad * pad, gboolean is_buffer, void *data,
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
         "calling chainfunction &%s with buffer %p",
         GST_DEBUG_FUNCPTR_NAME (chainfunc), data);
-
-    if (cache) {
-      cache->peer = gst_object_ref (pad);
-    }
 
     ret = chainfunc (pad, GST_BUFFER_CAST (data));
 
@@ -3856,7 +3831,7 @@ gst_pad_chain (GstPad * pad, GstBuffer * buffer)
   g_return_val_if_fail (GST_PAD_IS_SINK (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_BUFFER (buffer), GST_FLOW_ERROR);
 
-  return gst_pad_chain_data_unchecked (pad, TRUE, buffer, NULL);
+  return gst_pad_chain_data_unchecked (pad, TRUE, buffer);
 }
 
 static GstFlowReturn
@@ -3873,8 +3848,7 @@ gst_pad_chain_list_default (GstPad * pad, GstBufferList * list)
   ret = GST_FLOW_OK;
   for (i = 0; i < len; i++) {
     buffer = gst_buffer_list_get (list, i);
-    ret =
-        gst_pad_chain_data_unchecked (pad, TRUE, gst_buffer_ref (buffer), NULL);
+    ret = gst_pad_chain_data_unchecked (pad, TRUE, gst_buffer_ref (buffer));
     if (ret != GST_FLOW_OK)
       break;
   }
@@ -3919,12 +3893,11 @@ gst_pad_chain_list (GstPad * pad, GstBufferList * list)
   g_return_val_if_fail (GST_PAD_IS_SINK (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_BUFFER_LIST (list), GST_FLOW_ERROR);
 
-  return gst_pad_chain_data_unchecked (pad, FALSE, list, NULL);
+  return gst_pad_chain_data_unchecked (pad, FALSE, list);
 }
 
 static GstFlowReturn
-gst_pad_push_data (GstPad * pad, gboolean is_buffer, void *data,
-    GstPadPushCache * cache)
+gst_pad_push_data (GstPad * pad, gboolean is_buffer, void *data)
 {
   GstPad *peer;
   GstFlowReturn ret;
@@ -3940,7 +3913,6 @@ gst_pad_push_data (GstPad * pad, gboolean is_buffer, void *data,
   /* we emit signals on the pad arg, the peer will have a chance to
    * emit in the _chain() function */
   if (G_UNLIKELY (GST_PAD_DO_BUFFER_SIGNALS (pad) > 0)) {
-    cache = NULL;
     /* unlock before emitting */
     GST_OBJECT_UNLOCK (pad);
 
@@ -3959,7 +3931,7 @@ gst_pad_push_data (GstPad * pad, gboolean is_buffer, void *data,
   gst_object_ref (peer);
   GST_OBJECT_UNLOCK (pad);
 
-  ret = gst_pad_chain_data_unchecked (peer, is_buffer, data, cache);
+  ret = gst_pad_chain_data_unchecked (peer, is_buffer, data);
 
   gst_object_unref (peer);
 
@@ -3987,74 +3959,6 @@ not_linked:
     GST_OBJECT_UNLOCK (pad);
     return GST_FLOW_NOT_LINKED;
   }
-}
-
-static inline GstPadPushCache *
-pad_take_cache (GstPad * pad, gpointer * cache_ptr)
-{
-  GstPadPushCache *cache;
-
-  /* try to get the cached data */
-  do {
-    cache = g_atomic_pointer_get (cache_ptr);
-    /* now try to replace the pointer with NULL to mark that we are busy
-     * with it */
-  } while (!g_atomic_pointer_compare_and_exchange (cache_ptr, cache, NULL));
-
-  /* we could have a leftover invalid entry */
-  if (G_UNLIKELY (cache == PAD_CACHE_INVALID))
-    cache = NULL;
-
-  return cache;
-}
-
-static inline void
-pad_free_cache (GstPadPushCache * cache)
-{
-  gst_object_unref (cache->peer);
-  g_slice_free (GstPadPushCache, cache);
-}
-
-static inline void
-pad_put_cache (GstPad * pad, GstPadPushCache * cache, gpointer * cache_ptr)
-{
-  /* put it back */
-  if (!g_atomic_pointer_compare_and_exchange (cache_ptr, NULL, cache)) {
-    /* something changed, clean up our cache */
-    pad_free_cache (cache);
-  }
-}
-
-/* must be called with the pad lock */
-void
-_priv_gst_pad_invalidate_cache (GstPad * pad)
-{
-  GstPadPushCache *cache;
-  gpointer *cache_ptr;
-
-  GST_LOG_OBJECT (pad, "Invalidating pad cache");
-
-  /* we hold the pad lock here so we can get the peer and it stays
-   * alive during this call */
-  if (GST_PAD_IS_SINK (pad)) {
-    if (!(pad = GST_PAD_PEER (pad)))
-      return;
-  }
-
-  cache_ptr = (gpointer *) & pad->priv->cache_ptr;
-
-  /* try to get the cached data */
-  do {
-    cache = g_atomic_pointer_get (cache_ptr);
-    /* now try to replace the pointer with INVALID. If nothing is busy with this
-     * caps, we get the cache and clean it up. If something is busy, we replace
-     * with INVALID so that when the function finishes and tries to put the
-     * cache back, it'll fail and cleanup */
-  } while (!g_atomic_pointer_compare_and_exchange (cache_ptr, cache,
-          PAD_CACHE_INVALID));
-
-  if (G_LIKELY (cache && cache != PAD_CACHE_INVALID))
-    pad_free_cache (cache);
 }
 
 /**
@@ -4087,73 +3991,11 @@ _priv_gst_pad_invalidate_cache (GstPad * pad)
 GstFlowReturn
 gst_pad_push (GstPad * pad, GstBuffer * buffer)
 {
-  GstPadPushCache *cache;
-  GstFlowReturn ret;
-  gpointer *cache_ptr;
-  GstPad *peer;
-
   g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_PAD_IS_SRC (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_BUFFER (buffer), GST_FLOW_ERROR);
 
-  cache_ptr = (gpointer *) & pad->priv->cache_ptr;
-
-  cache = pad_take_cache (pad, cache_ptr);
-
-  if (G_UNLIKELY (cache == NULL))
-    goto slow_path;
-
-  peer = cache->peer;
-
-  GST_PAD_STREAM_LOCK (peer);
-  if (G_UNLIKELY (g_atomic_pointer_get (cache_ptr) == PAD_CACHE_INVALID))
-    goto invalid;
-
-  GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
-      "calling chainfunction &%s with buffer %p",
-      GST_DEBUG_FUNCPTR_NAME (GST_PAD_CHAINFUNC (peer)), buffer);
-
-  ret = GST_PAD_CHAINFUNC (peer) (peer, buffer);
-
-  GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
-      "called chainfunction &%s with buffer %p, returned %s",
-      GST_DEBUG_FUNCPTR_NAME (GST_PAD_CHAINFUNC (peer)), buffer,
-      gst_flow_get_name (ret));
-
-  GST_PAD_STREAM_UNLOCK (peer);
-
-  pad_put_cache (pad, cache, cache_ptr);
-
-  return ret;
-
-  /* slow path */
-slow_path:
-  {
-    GstPadPushCache scache = { NULL, };
-
-    GST_LOG_OBJECT (pad, "Taking slow path");
-
-    ret = gst_pad_push_data (pad, TRUE, buffer, &scache);
-
-    if (scache.peer) {
-      GstPadPushCache *ncache;
-
-      GST_LOG_OBJECT (pad, "Caching push data");
-
-      /* make cache structure */
-      ncache = g_slice_new (GstPadPushCache);
-      *ncache = scache;
-
-      pad_put_cache (pad, ncache, cache_ptr);
-    }
-    return ret;
-  }
-invalid:
-  {
-    GST_PAD_STREAM_UNLOCK (peer);
-    pad_free_cache (cache);
-    goto slow_path;
-  }
+  return gst_pad_push_data (pad, TRUE, buffer);
 }
 
 /**
@@ -4195,64 +4037,11 @@ invalid:
 GstFlowReturn
 gst_pad_push_list (GstPad * pad, GstBufferList * list)
 {
-  GstPadPushCache *cache;
-  GstFlowReturn ret;
-  gpointer *cache_ptr;
-  GstPad *peer;
-
   g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_PAD_IS_SRC (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_BUFFER_LIST (list), GST_FLOW_ERROR);
 
-  cache_ptr = (gpointer *) & pad->priv->cache_ptr;
-
-  cache = pad_take_cache (pad, cache_ptr);
-
-  if (G_UNLIKELY (cache == NULL))
-    goto slow_path;
-
-  peer = cache->peer;
-
-  GST_PAD_STREAM_LOCK (peer);
-  if (G_UNLIKELY (g_atomic_pointer_get (cache_ptr) == PAD_CACHE_INVALID))
-    goto invalid;
-
-  ret = GST_PAD_CHAINLISTFUNC (peer) (peer, list);
-
-  GST_PAD_STREAM_UNLOCK (peer);
-
-  pad_put_cache (pad, cache, cache_ptr);
-
-  return ret;
-
-  /* slow path */
-slow_path:
-  {
-    GstPadPushCache scache = { NULL, };
-
-    GST_LOG_OBJECT (pad, "Taking slow path");
-
-    ret = gst_pad_push_data (pad, FALSE, list, &scache);
-
-    if (scache.peer) {
-      GstPadPushCache *ncache;
-
-      GST_LOG_OBJECT (pad, "Caching push data");
-
-      /* make cache structure */
-      ncache = g_slice_new (GstPadPushCache);
-      *ncache = scache;
-
-      pad_put_cache (pad, ncache, cache_ptr);
-    }
-    return ret;
-  }
-invalid:
-  {
-    GST_PAD_STREAM_UNLOCK (peer);
-    pad_free_cache (cache);
-    goto slow_path;
-  }
+  return gst_pad_push_data (pad, FALSE, list);
 }
 
 static GstFlowReturn
@@ -4520,7 +4309,6 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
    * . handle pad blocking */
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
-      _priv_gst_pad_invalidate_cache (pad);
       GST_PAD_SET_FLUSHING (pad);
 
       if (G_UNLIKELY (GST_PAD_IS_BLOCKED (pad))) {
@@ -4726,7 +4514,6 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
       if (GST_PAD_IS_FLUSHING (pad))
         goto flushing;
 
-      _priv_gst_pad_invalidate_cache (pad);
       GST_PAD_SET_FLUSHING (pad);
       GST_CAT_DEBUG_OBJECT (GST_CAT_EVENT, pad, "set flush flag");
       needs_events = FALSE;

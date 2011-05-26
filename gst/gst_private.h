@@ -116,8 +116,6 @@ gboolean _priv_gst_registry_remove_cache_plugins (GstRegistry *registry);
 void _priv_gst_registry_cleanup (void);
 gboolean _gst_plugin_loader_client_run (void);
 
-void _priv_gst_pad_invalidate_cache (GstPad *pad);
-
 /* Used in GstBin for manual state handling */
 void _priv_gst_element_state_changed (GstElement *element, GstState oldstate,
     GstState newstate, GstState pending);
