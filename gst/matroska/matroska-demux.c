@@ -474,18 +474,6 @@ gst_matroska_demux_get_length (GstMatroskaDemux * demux)
   return end;
 }
 
-static gint
-gst_matroska_demux_encoding_cmp (GstMatroskaTrackEncoding * a,
-    GstMatroskaTrackEncoding * b)
-{
-  if (b->order > a->order)
-    return 1;
-  else if (b->order < a->order)
-    return -1;
-  else
-    return 0;
-}
-
 static gboolean
 gst_matroska_decode_data (GArray * encodings, guint8 ** data_out,
     guint * size_out, GstMatroskaTrackEncodingScope scope, gboolean free)
@@ -580,51 +568,6 @@ gst_matroska_decode_buffer (GstMatroskaTrackContext * context, GstBuffer * buf)
     gst_buffer_unref (buf);
     return NULL;
   }
-}
-
-static GstFlowReturn
-gst_matroska_demux_read_track_encodings (GstMatroskaDemux * demux,
-    GstEbmlRead * ebml, GstMatroskaTrackContext * context)
-{
-  GstFlowReturn ret;
-  guint32 id;
-
-  DEBUG_ELEMENT_START (demux, ebml, "ContentEncodings");
-
-  if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK) {
-    DEBUG_ELEMENT_STOP (demux, ebml, "ContentEncodings", ret);
-    return ret;
-  }
-
-  context->encodings =
-      g_array_sized_new (FALSE, FALSE, sizeof (GstMatroskaTrackEncoding), 1);
-
-  while (ret == GST_FLOW_OK && gst_ebml_read_has_remaining (ebml, 1, TRUE)) {
-    if ((ret = gst_ebml_peek_id (ebml, &id)) != GST_FLOW_OK)
-      break;
-
-    switch (id) {
-      case GST_MATROSKA_ID_CONTENTENCODING:
-        ret = gst_matroska_read_common_read_track_encoding (&demux->common,
-            ebml, context);
-        break;
-      default:
-        GST_WARNING_OBJECT (demux,
-            "Unknown ContentEncodings subelement 0x%x - ignoring", id);
-        ret = gst_ebml_read_skip (ebml);
-        break;
-    }
-  }
-
-  DEBUG_ELEMENT_STOP (demux, ebml, "ContentEncodings", ret);
-  if (ret != GST_FLOW_OK && ret != GST_FLOW_UNEXPECTED)
-    return ret;
-
-  /* Sort encodings according to their order */
-  g_array_sort (context->encodings,
-      (GCompareFunc) gst_matroska_demux_encoding_cmp);
-
-  return gst_matroska_decode_content_encodings (context->encodings);
 }
 
 static gboolean
@@ -1257,7 +1200,8 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux, GstEbmlRead * ebml)
       }
 
       case GST_MATROSKA_ID_CONTENTENCODINGS:{
-        ret = gst_matroska_demux_read_track_encodings (demux, ebml, context);
+        ret = gst_matroska_read_common_read_track_encodings (&demux->common,
+            ebml, context);
         break;
       }
 

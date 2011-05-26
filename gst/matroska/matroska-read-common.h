@@ -92,7 +92,7 @@ GstFlowReturn gst_matroska_read_common_peek_id_length_push (GstMatroskaReadCommo
     _needed);
 gint gst_matroska_read_common_stream_from_num (GstMatroskaReadCommon * common,
     guint track_num);
-GstFlowReturn gst_matroska_read_common_read_track_encoding (
+GstFlowReturn gst_matroska_read_common_read_track_encodings (
     GstMatroskaReadCommon * common, GstEbmlRead * ebml,
     GstMatroskaTrackContext * context);
 

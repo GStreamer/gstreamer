@@ -397,18 +397,6 @@ gst_matroska_parse_get_length (GstMatroskaParse * parse)
   return end;
 }
 
-static gint
-gst_matroska_parse_encoding_cmp (GstMatroskaTrackEncoding * a,
-    GstMatroskaTrackEncoding * b)
-{
-  if (b->order > a->order)
-    return 1;
-  else if (b->order < a->order)
-    return -1;
-  else
-    return 0;
-}
-
 static gboolean
 gst_matroska_decode_data (GArray * encodings, guint8 ** data_out,
     guint * size_out, GstMatroskaTrackEncodingScope scope, gboolean free)
@@ -469,51 +457,6 @@ gst_matroska_decode_data (GArray * encodings, guint8 ** data_out,
   }
 
   return ret;
-}
-
-static GstFlowReturn
-gst_matroska_parse_read_track_encodings (GstMatroskaParse * parse,
-    GstEbmlRead * ebml, GstMatroskaTrackContext * context)
-{
-  GstFlowReturn ret;
-  guint32 id;
-
-  DEBUG_ELEMENT_START (parse, ebml, "ContentEncodings");
-
-  if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK) {
-    DEBUG_ELEMENT_STOP (parse, ebml, "ContentEncodings", ret);
-    return ret;
-  }
-
-  context->encodings =
-      g_array_sized_new (FALSE, FALSE, sizeof (GstMatroskaTrackEncoding), 1);
-
-  while (ret == GST_FLOW_OK && gst_ebml_read_has_remaining (ebml, 1, TRUE)) {
-    if ((ret = gst_ebml_peek_id (ebml, &id)) != GST_FLOW_OK)
-      break;
-
-    switch (id) {
-      case GST_MATROSKA_ID_CONTENTENCODING:
-        ret = gst_matroska_read_common_read_track_encoding (&parse->common,
-            ebml, context);
-        break;
-      default:
-        GST_WARNING_OBJECT (parse,
-            "Unknown ContentEncodings subelement 0x%x - ignoring", id);
-        ret = gst_ebml_read_skip (ebml);
-        break;
-    }
-  }
-
-  DEBUG_ELEMENT_STOP (parse, ebml, "ContentEncodings", ret);
-  if (ret != GST_FLOW_OK && ret != GST_FLOW_UNEXPECTED)
-    return ret;
-
-  /* Sort encodings according to their order */
-  g_array_sort (context->encodings,
-      (GCompareFunc) gst_matroska_parse_encoding_cmp);
-
-  return gst_matroska_decode_content_encodings (context->encodings);
 }
 
 static gboolean
@@ -1139,7 +1082,8 @@ gst_matroska_parse_add_stream (GstMatroskaParse * parse, GstEbmlRead * ebml)
       }
 
       case GST_MATROSKA_ID_CONTENTENCODINGS:{
-        ret = gst_matroska_parse_read_track_encodings (parse, ebml, context);
+        ret = gst_matroska_read_common_read_track_encodings (&parse->common,
+            ebml, context);
         break;
       }
 

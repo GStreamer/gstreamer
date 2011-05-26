@@ -280,6 +280,18 @@ gst_matroska_index_compare (GstMatroskaIndex * i1, GstMatroskaIndex * i2)
     return 0;
 }
 
+static gint
+gst_matroska_read_common_encoding_cmp (GstMatroskaTrackEncoding * a,
+    GstMatroskaTrackEncoding * b)
+{
+  if (b->order > a->order)
+    return 1;
+  else if (b->order < a->order)
+    return -1;
+  else
+    return 0;
+}
+
 static gboolean
 gst_matroska_read_common_encoding_order_unique (GArray * encodings, guint64
     order)
@@ -744,7 +756,7 @@ gst_matroska_read_common_peek_id_length_push (GstMatroskaReadCommon * common,
       el, common->offset);
 }
 
-GstFlowReturn
+static GstFlowReturn
 gst_matroska_read_common_read_track_encoding (GstMatroskaReadCommon * common,
     GstEbmlRead * ebml, GstMatroskaTrackContext * context)
 {
@@ -905,4 +917,49 @@ gst_matroska_read_common_read_track_encoding (GstMatroskaReadCommon * common,
   g_array_append_val (context->encodings, enc);
 
   return ret;
+}
+
+GstFlowReturn
+gst_matroska_read_common_read_track_encodings (GstMatroskaReadCommon * common,
+    GstEbmlRead * ebml, GstMatroskaTrackContext * context)
+{
+  GstFlowReturn ret;
+  guint32 id;
+
+  DEBUG_ELEMENT_START (common, ebml, "ContentEncodings");
+
+  if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK) {
+    DEBUG_ELEMENT_STOP (common, ebml, "ContentEncodings", ret);
+    return ret;
+  }
+
+  context->encodings =
+      g_array_sized_new (FALSE, FALSE, sizeof (GstMatroskaTrackEncoding), 1);
+
+  while (ret == GST_FLOW_OK && gst_ebml_read_has_remaining (ebml, 1, TRUE)) {
+    if ((ret = gst_ebml_peek_id (ebml, &id)) != GST_FLOW_OK)
+      break;
+
+    switch (id) {
+      case GST_MATROSKA_ID_CONTENTENCODING:
+        ret = gst_matroska_read_common_read_track_encoding (common, ebml,
+            context);
+        break;
+      default:
+        GST_WARNING_OBJECT (common,
+            "Unknown ContentEncodings subelement 0x%x - ignoring", id);
+        ret = gst_ebml_read_skip (ebml);
+        break;
+    }
+  }
+
+  DEBUG_ELEMENT_STOP (common, ebml, "ContentEncodings", ret);
+  if (ret != GST_FLOW_OK && ret != GST_FLOW_UNEXPECTED)
+    return ret;
+
+  /* Sort encodings according to their order */
+  g_array_sort (context->encodings,
+      (GCompareFunc) gst_matroska_read_common_encoding_cmp);
+
+  return gst_matroska_decode_content_encodings (context->encodings);
 }
