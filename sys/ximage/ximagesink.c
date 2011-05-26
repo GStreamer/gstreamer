@@ -434,16 +434,23 @@ gst_ximagesink_ximage_new (GstXImageSink * ximagesink, GstCaps * caps)
         ZPixmap, NULL, &ximage->SHMInfo, ximage->width, ximage->height);
     if (!ximage->ximage || error_caught) {
       g_mutex_unlock (ximagesink->x_lock);
-      /* Reset error handler */
+
+      /* Reset error flag */
       error_caught = FALSE;
-      XSetErrorHandler (handler);
-      /* Push an error */
-      GST_ELEMENT_ERROR (ximagesink, RESOURCE, WRITE,
+
+      /* Push a warning */
+      GST_ELEMENT_WARNING (ximagesink, RESOURCE, WRITE,
           ("Failed to create output image buffer of %dx%d pixels",
               ximage->width, ximage->height),
           ("could not XShmCreateImage a %dx%d image",
               ximage->width, ximage->height));
-      goto beach;
+
+      /* Retry without XShm */
+      ximagesink->xcontext->use_xshm = FALSE;
+
+      /* Hold X mutex again to try without XShm */
+      g_mutex_lock (ximagesink->x_lock);
+      goto no_xshm;
     }
 
     /* we have to use the returned bytes_per_line for our shm size */
@@ -498,6 +505,7 @@ gst_ximagesink_ximage_new (GstXImageSink * ximagesink, GstCaps * caps)
     shmctl (ximage->SHMInfo.shmid, IPC_RMID, NULL);
 
   } else
+  no_xshm:
 #endif /* HAVE_XSHM */
   {
     guint allocsize;
