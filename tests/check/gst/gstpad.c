@@ -704,7 +704,7 @@ block_async_cb (GstPad * pad, gboolean blocked, gpointer user_data)
 
   bool_user_data[0] = blocked;
 
-  gst_pad_set_blocked_async (pad, FALSE, unblock_async_cb, user_data);
+  gst_pad_set_blocked (pad, FALSE, unblock_async_cb, user_data, NULL);
 }
 
 GST_START_TEST (test_block_async)
@@ -718,7 +718,7 @@ GST_START_TEST (test_block_async)
   fail_unless (pad != NULL);
 
   gst_pad_set_active (pad, TRUE);
-  gst_pad_set_blocked_async (pad, TRUE, block_async_cb, &data);
+  gst_pad_set_blocked (pad, TRUE, block_async_cb, &data, NULL);
 
   fail_unless (data[0] == FALSE);
   fail_unless (data[1] == FALSE);
@@ -733,7 +733,7 @@ GST_END_TEST;
 static void
 block_async_second (GstPad * pad, gboolean blocked, gpointer user_data)
 {
-  gst_pad_set_blocked_async (pad, FALSE, unblock_async_cb, NULL);
+  gst_pad_set_blocked (pad, FALSE, unblock_async_cb, NULL, NULL);
 }
 
 static void
@@ -750,7 +750,7 @@ block_async_first (GstPad * pad, gboolean blocked, gpointer user_data)
 
   /* replace block_async_first with block_async_second so next time the pad is
    * blocked the latter should be called */
-  gst_pad_set_blocked_async (pad, TRUE, block_async_second, NULL);
+  gst_pad_set_blocked (pad, TRUE, block_async_second, NULL, NULL);
 
   /* unblock temporarily, in the next push block_async_second should be called
    */
@@ -766,7 +766,7 @@ GST_START_TEST (test_block_async_replace_callback)
   fail_unless (pad != NULL);
   gst_pad_set_active (pad, TRUE);
 
-  gst_pad_set_blocked_async (pad, TRUE, block_async_first, &blocked);
+  gst_pad_set_blocked (pad, TRUE, block_async_first, &blocked, NULL);
   blocked = FALSE;
 
   gst_pad_push (pad, gst_buffer_new ());
@@ -814,7 +814,7 @@ GST_START_TEST (test_block_async_full_destroy)
   fail_unless (pad != NULL);
   gst_pad_set_active (pad, TRUE);
 
-  gst_pad_set_blocked_async_full (pad, TRUE, block_async_full_cb,
+  gst_pad_set_blocked (pad, TRUE, block_async_full_cb,
       &state, block_async_full_destroy);
   fail_unless (state == 0);
 
@@ -825,25 +825,25 @@ GST_START_TEST (test_block_async_full_destroy)
   gst_pad_push_event (pad, gst_event_new_flush_stop ());
 
   /* pad was already blocked so nothing happens */
-  gst_pad_set_blocked_async_full (pad, TRUE, block_async_full_cb,
+  gst_pad_set_blocked (pad, TRUE, block_async_full_cb,
       &state, block_async_full_destroy);
   fail_unless (state == 1);
 
   /* unblock with the same data, callback is called */
-  gst_pad_set_blocked_async_full (pad, FALSE, block_async_full_cb,
+  gst_pad_set_blocked (pad, FALSE, block_async_full_cb,
       &state, block_async_full_destroy);
   fail_unless (state == 2);
 
   /* block with the same data, callback is called */
   state = 1;
-  gst_pad_set_blocked_async_full (pad, TRUE, block_async_full_cb,
+  gst_pad_set_blocked (pad, TRUE, block_async_full_cb,
       &state, block_async_full_destroy);
   fail_unless (state == 2);
 
   /* now change user_data (to NULL in this case) so destroy_notify should be
    * called */
   state = 1;
-  gst_pad_set_blocked_async_full (pad, FALSE, block_async_full_cb,
+  gst_pad_set_blocked (pad, FALSE, block_async_full_cb,
       NULL, block_async_full_destroy);
   fail_unless (state == 2);
 
@@ -862,7 +862,7 @@ GST_START_TEST (test_block_async_full_destroy_dispose)
   fail_unless (pad != NULL);
   gst_pad_set_active (pad, TRUE);
 
-  gst_pad_set_blocked_async_full (pad, TRUE, block_async_full_cb,
+  gst_pad_set_blocked (pad, TRUE, block_async_full_cb,
       &state, block_async_full_destroy);
 
   gst_pad_push (pad, gst_buffer_new ());
@@ -916,8 +916,8 @@ block_async_second_no_flush (GstPad * pad, gboolean blocked, gpointer user_data)
 
   bool_user_data[1] = TRUE;
 
-  fail_unless (gst_pad_set_blocked_async (pad, FALSE, unblock_async_no_flush_cb,
-          user_data));
+  fail_unless (gst_pad_set_blocked (pad, FALSE, unblock_async_no_flush_cb,
+          user_data, NULL));
 }
 
 static void
@@ -938,13 +938,13 @@ block_async_first_no_flush (GstPad * pad, gboolean blocked, gpointer user_data)
   fail_unless (bool_user_data[1] == FALSE);
   fail_unless (bool_user_data[2] == FALSE);
 
-  fail_unless (gst_pad_set_blocked_async (pad, FALSE, unblock_async_not_called,
-          NULL));
+  fail_unless (gst_pad_set_blocked (pad, FALSE, unblock_async_not_called,
+          NULL, NULL));
 
   /* replace block_async_first with block_async_second so next time the pad is
    * blocked the latter should be called */
-  fail_unless (gst_pad_set_blocked_async (pad, TRUE,
-          block_async_second_no_flush, user_data));
+  fail_unless (gst_pad_set_blocked (pad, TRUE,
+          block_async_second_no_flush, user_data, NULL));
 }
 
 GST_START_TEST (test_block_async_replace_callback_no_flush)
@@ -956,8 +956,8 @@ GST_START_TEST (test_block_async_replace_callback_no_flush)
   fail_unless (pad != NULL);
   gst_pad_set_active (pad, TRUE);
 
-  fail_unless (gst_pad_set_blocked_async (pad, TRUE, block_async_first_no_flush,
-          bool_user_data));
+  fail_unless (gst_pad_set_blocked (pad, TRUE, block_async_first_no_flush,
+          bool_user_data, NULL));
 
   gst_pad_push (pad, gst_buffer_new ());
   fail_unless (bool_user_data[0] == TRUE);

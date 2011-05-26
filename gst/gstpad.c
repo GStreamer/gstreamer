@@ -1061,7 +1061,7 @@ gst_pad_is_active (GstPad * pad)
 }
 
 /**
- * gst_pad_set_blocked_async_full:
+ * gst_pad_set_blocked:
  * @pad: the #GstPad to block or unblock
  * @blocked: boolean indicating whether the pad should be blocked or unblocked
  * @callback: #GstPadBlockCallback that will be called when the
@@ -1089,11 +1089,9 @@ gst_pad_is_active (GstPad * pad)
  * wrong parameters were passed or the pad was already in the requested state.
  *
  * MT safe.
- *
- * Since: 0.10.23
  */
 gboolean
-gst_pad_set_blocked_async_full (GstPad * pad, gboolean blocked,
+gst_pad_set_blocked (GstPad * pad, gboolean blocked,
     GstPadBlockCallback callback, gpointer user_data,
     GDestroyNotify destroy_data)
 {
@@ -1159,68 +1157,6 @@ had_right_state:
 
     return FALSE;
   }
-}
-
-/**
- * gst_pad_set_blocked_async:
- * @pad: the #GstPad to block or unblock
- * @blocked: boolean indicating whether the pad should be blocked or unblocked
- * @callback: #GstPadBlockCallback that will be called when the
- *            operation succeeds
- * @user_data: (closure): user data passed to the callback
- *
- * Blocks or unblocks the dataflow on a pad. The provided callback
- * is called when the operation succeeds; this happens right before the next
- * attempt at pushing a buffer on the pad.
- *
- * This can take a while as the pad can only become blocked when real dataflow
- * is happening.
- * When the pipeline is stalled, for example in PAUSED, this can
- * take an indeterminate amount of time.
- * You can pass NULL as the callback to make this call block. Be careful with
- * this blocking call as it might not return for reasons stated above.
- *
- * <note>
- *  Pad block handlers are only called for source pads in push mode
- *  and sink pads in pull mode.
- * </note>
- *
- * Returns: TRUE if the pad could be blocked. This function can fail if the
- * wrong parameters were passed or the pad was already in the requested state.
- *
- * MT safe.
- */
-gboolean
-gst_pad_set_blocked_async (GstPad * pad, gboolean blocked,
-    GstPadBlockCallback callback, gpointer user_data)
-{
-  return gst_pad_set_blocked_async_full (pad, blocked,
-      callback, user_data, NULL);
-}
-
-/**
- * gst_pad_set_blocked:
- * @pad: the #GstPad to block or unblock
- * @blocked: boolean indicating we should block or unblock
- *
- * Blocks or unblocks the dataflow on a pad. This function is
- * a shortcut for gst_pad_set_blocked_async() with a NULL
- * callback.
- *
- * <note>
- *  Pad blocks are only possible for source pads in push mode
- *  and sink pads in pull mode.
- * </note>
- *
- * Returns: TRUE if the pad could be blocked. This function can fail if the
- * wrong parameters were passed or the pad was already in the requested state.
- *
- * MT safe.
- */
-gboolean
-gst_pad_set_blocked (GstPad * pad, gboolean blocked)
-{
-  return gst_pad_set_blocked_async (pad, blocked, NULL, NULL);
 }
 
 /**

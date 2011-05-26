@@ -799,7 +799,7 @@ GST_START_TEST (test_add_live2)
   GST_DEBUG ("blocking srcpad");
   /* block source pad */
   srcpad = gst_element_get_static_pad (src, "src");
-  gst_pad_set_blocked_async (srcpad, TRUE, pad_blocked_cb, NULL);
+  gst_pad_set_blocked (srcpad, TRUE, pad_blocked_cb, NULL, NULL);
 
   /* set source to PAUSED without adding it to the pipeline */
   ret = gst_element_set_state (src, GST_STATE_PAUSED);
@@ -827,7 +827,7 @@ GST_START_TEST (test_add_live2)
   GST_DEBUG ("unblocking srcpad");
 
   /* and unblock */
-  gst_pad_set_blocked_async (srcpad, FALSE, pad_blocked_cb, NULL);
+  gst_pad_set_blocked (srcpad, FALSE, pad_blocked_cb, NULL, NULL);
 
   GST_DEBUG ("getting state");
 
