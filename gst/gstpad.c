@@ -3686,14 +3686,11 @@ gst_pad_data_unref (gboolean is_buffer, void *data)
   }
 }
 
-/* this is the chain function that does not perform the additional argument
- * checking for that little extra speed.
- */
-static inline GstFlowReturn
-gst_pad_chain_data_unchecked (GstPad * pad, gboolean is_buffer, void *data)
+static GstFlowReturn
+pad_pre_chain (GstPad * pad, gpointer data)
 {
-  gboolean needs_events;
   GstFlowReturn ret;
+  gboolean needs_events;
   gboolean emit_signal;
 
   GST_PAD_STREAM_LOCK (pad);
@@ -3719,6 +3716,48 @@ gst_pad_chain_data_unchecked (GstPad * pad, gboolean is_buffer, void *data)
     if (!gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT_CAST (data)))
       goto dropping;
   }
+  return GST_FLOW_OK;
+
+  /* ERRORS */
+flushing:
+  {
+    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
+        "pushing, but pad was flushing");
+    GST_OBJECT_UNLOCK (pad);
+    GST_PAD_STREAM_UNLOCK (pad);
+    return GST_FLOW_WRONG_STATE;
+  }
+events_error:
+  {
+    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "events were not accepted");
+    GST_OBJECT_UNLOCK (pad);
+    GST_PAD_STREAM_UNLOCK (pad);
+    return ret;
+  }
+dropping:
+  {
+    GST_DEBUG_OBJECT (pad, "Dropping buffer due to FALSE probe return");
+    GST_PAD_STREAM_UNLOCK (pad);
+    return GST_FLOW_CUSTOM_SUCCESS;
+  }
+}
+
+static void
+pad_post_chain (GstPad * pad)
+{
+  GST_PAD_STREAM_UNLOCK (pad);
+}
+
+/* this is the chain function that does not perform the additional argument
+ * checking for that little extra speed.
+ */
+static inline GstFlowReturn
+gst_pad_chain_data_unchecked (GstPad * pad, gboolean is_buffer, void *data)
+{
+  GstFlowReturn ret;
+
+  if (G_UNLIKELY ((ret = pad_pre_chain (pad, data)) != GST_FLOW_OK))
+    goto error;
 
   /* NOTE: we read the chainfunc unlocked.
    * we cannot hold the lock for the pad so we might send
@@ -3757,33 +3796,24 @@ gst_pad_chain_data_unchecked (GstPad * pad, gboolean is_buffer, void *data)
         GST_DEBUG_FUNCPTR_NAME (chainlistfunc), gst_flow_get_name (ret));
   }
 
-  GST_PAD_STREAM_UNLOCK (pad);
+  pad_post_chain (pad);
 
   return ret;
 
   /* ERRORS */
-flushing:
+error:
   {
     gst_pad_data_unref (is_buffer, data);
-    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
-        "pushing, but pad was flushing");
-    GST_OBJECT_UNLOCK (pad);
-    GST_PAD_STREAM_UNLOCK (pad);
-    return GST_FLOW_WRONG_STATE;
-  }
-dropping:
-  {
-    gst_pad_data_unref (is_buffer, data);
-    GST_DEBUG_OBJECT (pad, "Dropping buffer due to FALSE probe return");
-    GST_PAD_STREAM_UNLOCK (pad);
-    return GST_FLOW_OK;
-  }
-events_error:
-  {
-    gst_pad_data_unref (is_buffer, data);
-    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "events were not accepted");
-    GST_OBJECT_UNLOCK (pad);
-    GST_PAD_STREAM_UNLOCK (pad);
+
+    switch (ret) {
+      case GST_FLOW_CUSTOM_SUCCESS:
+        GST_DEBUG_OBJECT (pad, "dropped buffer");
+        ret = GST_FLOW_OK;
+        break;
+      default:
+        GST_DEBUG_OBJECT (pad, "en error occured %s", gst_flow_get_name (ret));
+        break;
+    }
     return ret;
   }
 no_function:
@@ -3794,7 +3824,7 @@ no_function:
     GST_ELEMENT_ERROR (GST_PAD_PARENT (pad), CORE, PAD, (NULL),
         ("push on pad %s:%s but it has no chainfunction",
             GST_DEBUG_PAD_NAME (pad)));
-    GST_PAD_STREAM_UNLOCK (pad);
+    pad_post_chain (pad);
     return GST_FLOW_NOT_SUPPORTED;
   }
 }
