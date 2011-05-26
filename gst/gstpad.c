@@ -137,6 +137,8 @@ static GstCaps *gst_pad_get_caps_unlocked (GstPad * pad, GstCaps * filter);
 static void gst_pad_set_pad_template (GstPad * pad, GstPadTemplate * templ);
 static gboolean gst_pad_activate_default (GstPad * pad);
 static gboolean gst_pad_acceptcaps_default (GstPad * pad, GstCaps * caps);
+static GstFlowReturn gst_pad_chain_list_default (GstPad * pad,
+    GstBufferList * list);
 
 static GstObjectClass *parent_class = NULL;
 static guint gst_pad_signals[LAST_SIGNAL] = { 0 };
@@ -145,6 +147,7 @@ static GParamSpec *pspec_caps = NULL;
 
 /* quarks for probe signals */
 static GQuark buffer_quark;
+static GQuark buffer_list_quark;
 static GQuark event_quark;
 
 typedef struct
@@ -217,6 +220,7 @@ gst_flow_to_quark (GstFlowReturn ret)
   gint i; \
   \
   buffer_quark = g_quark_from_static_string ("buffer"); \
+  buffer_list_quark = g_quark_from_static_string ("bufferlist"); \
   event_quark = g_quark_from_static_string ("event"); \
   \
   for (i = 0; i < G_N_ELEMENTS (flow_quarks); i++) {			\
@@ -341,6 +345,7 @@ gst_pad_class_init (GstPadClass * klass)
   GST_DEBUG_REGISTER_FUNCPTR (gst_pad_query_default);
   GST_DEBUG_REGISTER_FUNCPTR (gst_pad_iterate_internal_links_default);
   GST_DEBUG_REGISTER_FUNCPTR (gst_pad_acceptcaps_default);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_pad_chain_list_default);
 
   klass->have_data = default_have_data;
 }
@@ -357,8 +362,8 @@ gst_pad_init (GstPad * pad)
   GST_PAD_QUERYTYPEFUNC (pad) = gst_pad_get_query_types_default;
   GST_PAD_QUERYFUNC (pad) = gst_pad_query_default;
   GST_PAD_ITERINTLINKFUNC (pad) = gst_pad_iterate_internal_links_default;
-
   GST_PAD_ACCEPTCAPSFUNC (pad) = gst_pad_acceptcaps_default;
+  GST_PAD_CHAINLISTFUNC (pad) = gst_pad_chain_list_default;
 
   GST_PAD_SET_FLUSHING (pad);
 
@@ -3669,8 +3674,12 @@ gst_pad_emit_have_data_signal (GstPad * pad, GstMiniObject * obj)
 
   if (GST_IS_EVENT (obj))
     detail = event_quark;
-  else
+  else if (GST_IS_BUFFER (obj))
     detail = buffer_quark;
+  else if (GST_IS_BUFFER_LIST (obj))
+    detail = buffer_list_quark;
+  else
+    detail = 0;
 
   /* actually emit */
   g_signal_emitv (args, gst_pad_signals[PAD_HAVE_DATA], detail, &ret);
@@ -3726,14 +3735,8 @@ gst_pad_chain_data_unchecked (GstPad * pad, gboolean is_buffer, void *data,
   /* see if the signal should be emited */
   if (G_UNLIKELY (emit_signal)) {
     cache = NULL;
-    if (G_LIKELY (is_buffer)) {
-      if (!gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT_CAST (data)))
-        goto dropping;
-    } else {
-      /* chain all groups in the buffer list one by one to avoid problems with
-       * buffer probes that push buffers or events */
-      goto chain_groups;
-    }
+    if (!gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT_CAST (data)))
+      goto dropping;
   }
 
   /* NOTE: we read the chainfunc unlocked.
@@ -3764,7 +3767,7 @@ gst_pad_chain_data_unchecked (GstPad * pad, gboolean is_buffer, void *data,
     GstPadChainListFunction chainlistfunc;
 
     if (G_UNLIKELY ((chainlistfunc = GST_PAD_CHAINLISTFUNC (pad)) == NULL))
-      goto chain_groups;
+      goto no_function;
 
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
         "calling chainlistfunction &%s",
@@ -3780,33 +3783,6 @@ gst_pad_chain_data_unchecked (GstPad * pad, gboolean is_buffer, void *data,
   GST_PAD_STREAM_UNLOCK (pad);
 
   return ret;
-
-chain_groups:
-  {
-    GstBufferList *list;
-    guint i, len;
-    GstBuffer *buffer;
-
-    GST_PAD_STREAM_UNLOCK (pad);
-
-    GST_INFO_OBJECT (pad, "chaining each group in list as a merged buffer");
-
-    list = GST_BUFFER_LIST_CAST (data);
-    len = gst_buffer_list_len (list);
-
-    ret = GST_FLOW_OK;
-    for (i = 0; i < len; i++) {
-      buffer = gst_buffer_list_get (list, i);
-      ret =
-          gst_pad_chain_data_unchecked (pad, TRUE, gst_buffer_ref (buffer),
-          NULL);
-      if (ret != GST_FLOW_OK)
-        break;
-    }
-    gst_buffer_list_unref (list);
-
-    return ret;
-  }
 
   /* ERRORS */
 flushing:
@@ -3883,6 +3859,30 @@ gst_pad_chain (GstPad * pad, GstBuffer * buffer)
   return gst_pad_chain_data_unchecked (pad, TRUE, buffer, NULL);
 }
 
+static GstFlowReturn
+gst_pad_chain_list_default (GstPad * pad, GstBufferList * list)
+{
+  guint i, len;
+  GstBuffer *buffer;
+  GstFlowReturn ret;
+
+  GST_INFO_OBJECT (pad, "chaining each group in list as a merged buffer");
+
+  len = gst_buffer_list_len (list);
+
+  ret = GST_FLOW_OK;
+  for (i = 0; i < len; i++) {
+    buffer = gst_buffer_list_get (list, i);
+    ret =
+        gst_pad_chain_data_unchecked (pad, TRUE, gst_buffer_ref (buffer), NULL);
+    if (ret != GST_FLOW_OK)
+      break;
+  }
+  gst_buffer_list_unref (list);
+
+  return ret;
+}
+
 /**
  * gst_pad_chain_list:
  * @pad: a sink #GstPad, returns GST_FLOW_ERROR if not.
@@ -3944,15 +3944,11 @@ gst_pad_push_data (GstPad * pad, gboolean is_buffer, void *data,
     /* unlock before emitting */
     GST_OBJECT_UNLOCK (pad);
 
-    if (G_LIKELY (is_buffer)) {
-      /* if the signal handler returned FALSE, it means we should just drop the
-       * buffer */
-      if (!gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT_CAST (data)))
-        goto dropped;
-    } else {
-      /* push all buffers in the list */
-      goto push_groups;
-    }
+    /* if the signal handler returned FALSE, it means we should just drop the
+     * buffer */
+    if (!gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT_CAST (data)))
+      goto dropped;
+
     GST_OBJECT_LOCK (pad);
   }
 
@@ -3968,28 +3964,6 @@ gst_pad_push_data (GstPad * pad, gboolean is_buffer, void *data,
   gst_object_unref (peer);
 
   return ret;
-
-push_groups:
-  {
-    GstBufferList *list;
-    guint i, len;
-    GstBuffer *buffer;
-
-    GST_INFO_OBJECT (pad, "pushing each group in list as a merged buffer");
-
-    list = GST_BUFFER_LIST_CAST (data);
-    len = gst_buffer_list_len (list);
-
-    for (i = 0; i < len; i++) {
-      buffer = gst_buffer_list_get (list, i);
-      ret = gst_pad_push_data (pad, TRUE, gst_buffer_ref (buffer), NULL);
-      if (ret != GST_FLOW_OK)
-        break;
-    }
-    gst_buffer_list_unref (list);
-
-    return ret;
-  }
 
   /* ERROR recovery here */
 flushed:
