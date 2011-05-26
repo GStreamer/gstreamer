@@ -532,13 +532,13 @@ setup_pipeline (void)
     else
       wrapper = gst_element_factory_make ("wrappercamerabinsrc", NULL);
 
-    if (setup_pipeline_element (wrapper, "video-src", videosrc_name, NULL)) {
-      g_object_set (camerabin, "camera-src", wrapper, NULL);
+    if (setup_pipeline_element (wrapper, "video-source", videosrc_name, NULL)) {
+      g_object_set (camerabin, "camera-source", wrapper, NULL);
     } else {
       GST_WARNING ("Failed to set videosrc to %s", videosrc_name);
     }
 
-    g_object_get (wrapper, "video-src", &videosrc, NULL);
+    g_object_get (wrapper, "video-source", &videosrc, NULL);
     if (videosrc && videodevice_name &&
         g_object_class_find_property (G_OBJECT_GET_CLASS (videosrc),
             "device")) {
@@ -547,11 +547,13 @@ setup_pipeline (void)
   }
 
   /* configure used elements */
-  res &= setup_pipeline_element (camerabin, "audio-src", audiosrc_name, NULL);
-  res &= setup_pipeline_element (camerabin, "viewfinder-sink", vfsink_name,
-      &sink);
-  res &= setup_pipeline_element (camerabin, "viewfinder-filter",
-      viewfinder_filter, NULL);
+  res &=
+      setup_pipeline_element (camerabin, "audio-source", audiosrc_name, NULL);
+  res &=
+      setup_pipeline_element (camerabin, "viewfinder-sink", vfsink_name, &sink);
+  res &=
+      setup_pipeline_element (camerabin, "viewfinder-filter", viewfinder_filter,
+      NULL);
 
   if (imagepp_name) {
     ipp = create_ipp_bin ();
@@ -719,7 +721,7 @@ run_pipeline (gpointer user_data)
   g_object_set (camerabin, "location", filename_str, NULL);
   g_free (filename_str);
 
-  g_object_get (camerabin, "camera-src", &video_source, NULL);
+  g_object_get (camerabin, "camera-source", &video_source, NULL);
   if (video_source) {
     if (GST_IS_ELEMENT (video_source) &&
         gst_element_implements_interface (video_source, GST_TYPE_PHOTOGRAPHY)) {

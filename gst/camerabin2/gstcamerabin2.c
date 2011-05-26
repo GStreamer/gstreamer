@@ -497,13 +497,13 @@ gst_camera_bin_class_init (GstCameraBinClass * klass)
           DEFAULT_IMG_LOCATION, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (object_class, PROP_CAMERA_SRC,
-      g_param_spec_object ("camera-src", "Camera source",
+      g_param_spec_object ("camera-source", "Camera source",
           "The camera source element to be used. It is only taken into use on"
           " the next null to ready transition",
           GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (object_class, PROP_AUDIO_SRC,
-      g_param_spec_object ("audio-src", "Audio source",
+      g_param_spec_object ("audio-source", "Audio source",
           "The audio source element to be used on video recordings. It is only"
           " taken into use on the next null to ready transition",
           GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));

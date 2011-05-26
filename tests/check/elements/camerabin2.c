@@ -343,8 +343,8 @@ setup_wrappercamerabinsrc_videotestsrc (void)
       320, "height", G_TYPE_INT, 240, NULL);
 
   g_object_set (G_OBJECT (testsrc), "is-live", TRUE, "peer-alloc", FALSE, NULL);
-  g_object_set (G_OBJECT (src), "video-src", testsrc, NULL);
-  g_object_set (G_OBJECT (camera), "camera-src", src, "preview-caps",
+  g_object_set (G_OBJECT (src), "video-source", testsrc, NULL);
+  g_object_set (G_OBJECT (camera), "camera-source", src, "preview-caps",
       preview_caps, NULL);
   gst_object_unref (src);
   gst_object_unref (testsrc);
@@ -1004,7 +1004,7 @@ GST_START_TEST (test_supported_caps)
     return;
 
   src = g_object_new (GST_TYPE_TEST_CAMERA_SRC, NULL);
-  g_object_set (camera, "camera-src", src, NULL);
+  g_object_set (camera, "camera-source", src, NULL);
   gst_object_unref (src);
 
   if (gst_element_set_state (GST_ELEMENT (camera), GST_STATE_PLAYING) ==

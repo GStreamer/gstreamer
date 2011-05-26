@@ -1099,7 +1099,7 @@ gst_wrapper_camera_bin_src_class_init (GstWrapperCameraBinSrcClass * klass)
 
   /* g_object_class_install_property .... */
   g_object_class_install_property (gobject_class, PROP_VIDEO_SRC,
-      g_param_spec_object ("video-src", "Video source",
+      g_param_spec_object ("video-source", "Video source",
           "The video source element to be used",
           GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
