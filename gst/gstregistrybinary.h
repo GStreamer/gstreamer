@@ -55,12 +55,12 @@ G_BEGIN_DECLS
  * This _must_ be updated whenever the registry format changes,
  * we currently use the core version where this change happened.
  */
-#define GST_MAGIC_BINARY_VERSION_STR ("0.10.30.1")
+#define GST_MAGIC_BINARY_VERSION_STR "0.10.30.1"
 
 /*
  * GST_MAGIC_BINARY_VERSION_LEN:
  *
- * length of the version string.
+ * Maximum length of the version string in the header.
  */
 #define GST_MAGIC_BINARY_VERSION_LEN (64)
 

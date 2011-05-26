@@ -535,7 +535,7 @@ LIBS="$save_libs"
 dnl *** checks for dependency libraries ***
 
 dnl GLib
-GLIB_REQ=2.22
+GLIB_REQ=2.24
 
 AG_GST_GLIB_CHECK([$GLIB_REQ])
 
