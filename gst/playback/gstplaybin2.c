@@ -1636,8 +1636,8 @@ gst_play_bin_suburidecodebin_block (GstElement * suburidecodebin,
     switch (gst_iterator_next (it, &item)) {
       case GST_ITERATOR_OK:
         sinkpad = g_value_get_object (&item);
-        gst_pad_set_blocked_async (sinkpad, block, _suburidecodebin_blocked_cb,
-            NULL);
+        gst_pad_set_blocked (sinkpad, block, _suburidecodebin_blocked_cb,
+            NULL, NULL);
         g_value_reset (&item);
         break;
       case GST_ITERATOR_DONE:
@@ -2547,7 +2547,7 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
      * streams and connect the sinks, resulting in not-linked errors. After we
      * configured the sinks we will unblock them all. */
     GST_DEBUG_OBJECT (playbin, "blocking %" GST_PTR_FORMAT, select->srcpad);
-    gst_pad_set_blocked_async (select->srcpad, TRUE, selector_blocked, NULL);
+    gst_pad_set_blocked (select->srcpad, TRUE, selector_blocked, NULL, NULL);
   }
 
   /* get sinkpad for the new stream */
@@ -2861,8 +2861,8 @@ no_more_pads_cb (GstElement * decodebin, GstSourceGroup * group)
       if (select->srcpad) {
         GST_DEBUG_OBJECT (playbin, "unblocking %" GST_PTR_FORMAT,
             select->srcpad);
-        gst_pad_set_blocked_async (select->srcpad, FALSE, selector_blocked,
-            NULL);
+        gst_pad_set_blocked (select->srcpad, FALSE, selector_blocked,
+            NULL, NULL);
       }
     }
     GST_SOURCE_GROUP_UNLOCK (group);
@@ -2894,8 +2894,8 @@ shutdown:
         }
         GST_DEBUG_OBJECT (playbin, "unblocking %" GST_PTR_FORMAT,
             select->srcpad);
-        gst_pad_set_blocked_async (select->srcpad, FALSE, selector_blocked,
-            NULL);
+        gst_pad_set_blocked (select->srcpad, FALSE, selector_blocked,
+            NULL, NULL);
       }
     }
     GST_SOURCE_GROUP_UNLOCK (group);

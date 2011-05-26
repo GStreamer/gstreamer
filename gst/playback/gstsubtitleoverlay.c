@@ -590,12 +590,12 @@ _setup_passthrough (GstSubtitleOverlay * self)
 
 out:
   /* Unblock pads */
-  gst_pad_set_blocked_async_full (self->video_block_pad, FALSE,
+  gst_pad_set_blocked (self->video_block_pad, FALSE,
       _pad_blocked_cb, gst_object_ref (self),
       (GDestroyNotify) gst_object_unref);
 
   if (self->subtitle_sink_blocked)
-    gst_pad_set_blocked_async_full (self->subtitle_block_pad, FALSE,
+    gst_pad_set_blocked (self->subtitle_block_pad, FALSE,
         _pad_blocked_cb, gst_object_ref (self),
         (GDestroyNotify) gst_object_unref);
 
@@ -739,12 +739,12 @@ _pad_blocked_cb (GstPad * pad, gboolean blocked, gpointer user_data)
       gst_object_unref (target);
 
       /* Unblock pads */
-      gst_pad_set_blocked_async_full (self->video_block_pad, FALSE,
+      gst_pad_set_blocked (self->video_block_pad, FALSE,
           _pad_blocked_cb, gst_object_ref (self),
           (GDestroyNotify) gst_object_unref);
 
       if (self->subtitle_sink_blocked)
-        gst_pad_set_blocked_async_full (self->subtitle_block_pad, FALSE,
+        gst_pad_set_blocked (self->subtitle_block_pad, FALSE,
             _pad_blocked_cb, gst_object_ref (self),
             (GDestroyNotify) gst_object_unref);
       goto out;
@@ -755,7 +755,7 @@ _pad_blocked_cb (GstPad * pad, gboolean blocked, gpointer user_data)
 
   if (self->subtitle_sink_blocked && !self->video_sink_blocked) {
     GST_DEBUG_OBJECT (self, "Subtitle sink blocked but video not blocked");
-    gst_pad_set_blocked_async_full (self->video_block_pad, TRUE,
+    gst_pad_set_blocked (self->video_block_pad, TRUE,
         _pad_blocked_cb, gst_object_ref (self),
         (GDestroyNotify) gst_object_unref);
     goto out;
@@ -1204,10 +1204,10 @@ _pad_blocked_cb (GstPad * pad, gboolean blocked, gpointer user_data)
     do_async_done (self);
   } else {
     GST_DEBUG_OBJECT (self, "Everything worked, unblocking pads");
-    gst_pad_set_blocked_async_full (self->video_block_pad, FALSE,
+    gst_pad_set_blocked (self->video_block_pad, FALSE,
         _pad_blocked_cb, gst_object_ref (self),
         (GDestroyNotify) gst_object_unref);
-    gst_pad_set_blocked_async_full (self->subtitle_block_pad, FALSE,
+    gst_pad_set_blocked (self->subtitle_block_pad, FALSE,
         _pad_blocked_cb, gst_object_ref (self),
         (GDestroyNotify) gst_object_unref);
     do_async_done (self);
@@ -1238,10 +1238,10 @@ gst_subtitle_overlay_change_state (GstElement * element,
 
       GST_SUBTITLE_OVERLAY_LOCK (self);
       /* Set the internal pads to blocking */
-      gst_pad_set_blocked_async_full (self->video_block_pad, TRUE,
+      gst_pad_set_blocked (self->video_block_pad, TRUE,
           _pad_blocked_cb, gst_object_ref (self),
           (GDestroyNotify) gst_object_unref);
-      gst_pad_set_blocked_async_full (self->subtitle_block_pad, TRUE,
+      gst_pad_set_blocked (self->subtitle_block_pad, TRUE,
           _pad_blocked_cb, gst_object_ref (self),
           (GDestroyNotify) gst_object_unref);
       GST_SUBTITLE_OVERLAY_UNLOCK (self);
@@ -1309,13 +1309,13 @@ gst_subtitle_overlay_change_state (GstElement * element,
       /* Unblock pads */
       if (self->video_block_pad) {
         pad = self->video_block_pad;
-        gst_pad_set_blocked_async_full (pad, FALSE, _pad_blocked_cb,
+        gst_pad_set_blocked (pad, FALSE, _pad_blocked_cb,
             gst_object_ref (self), (GDestroyNotify) gst_object_unref);
       }
 
       if (self->subtitle_block_pad) {
         pad = self->subtitle_block_pad;
-        gst_pad_set_blocked_async_full (pad, FALSE, _pad_blocked_cb,
+        gst_pad_set_blocked (pad, FALSE, _pad_blocked_cb,
             gst_object_ref (self), (GDestroyNotify) gst_object_unref);
       }
 
@@ -1375,11 +1375,11 @@ gst_subtitle_overlay_handle_message (GstBin * bin, GstMessage * message)
       GST_SUBTITLE_OVERLAY_LOCK (self);
       self->subtitle_error = TRUE;
 
-      gst_pad_set_blocked_async_full (self->subtitle_block_pad, TRUE,
+      gst_pad_set_blocked (self->subtitle_block_pad, TRUE,
           _pad_blocked_cb, gst_object_ref (self),
           (GDestroyNotify) gst_object_unref);
 
-      gst_pad_set_blocked_async_full (self->video_block_pad, TRUE,
+      gst_pad_set_blocked (self->video_block_pad, TRUE,
           _pad_blocked_cb, gst_object_ref (self),
           (GDestroyNotify) gst_object_unref);
       GST_SUBTITLE_OVERLAY_UNLOCK (self);
@@ -1436,11 +1436,11 @@ gst_subtitle_overlay_set_property (GObject * object, guint prop_id,
         else if (self->renderer)
           g_object_set (self->renderer, self->silent_property, silent, NULL);
       } else {
-        gst_pad_set_blocked_async_full (self->subtitle_block_pad, TRUE,
+        gst_pad_set_blocked (self->subtitle_block_pad, TRUE,
             _pad_blocked_cb, gst_object_ref (self),
             (GDestroyNotify) gst_object_unref);
 
-        gst_pad_set_blocked_async_full (self->video_block_pad, TRUE,
+        gst_pad_set_blocked (self->video_block_pad, TRUE,
             _pad_blocked_cb, gst_object_ref (self),
             (GDestroyNotify) gst_object_unref);
       }
@@ -1673,11 +1673,11 @@ gst_subtitle_overlay_video_sink_chain (GstPad * pad, GstBuffer * buffer)
         gst_flow_get_name (ret));
     GST_SUBTITLE_OVERLAY_LOCK (self);
     self->subtitle_error = TRUE;
-    gst_pad_set_blocked_async_full (self->subtitle_block_pad, TRUE,
+    gst_pad_set_blocked (self->subtitle_block_pad, TRUE,
         _pad_blocked_cb, gst_object_ref (self),
         (GDestroyNotify) gst_object_unref);
 
-    gst_pad_set_blocked_async_full (self->video_block_pad, TRUE,
+    gst_pad_set_blocked (self->video_block_pad, TRUE,
         _pad_blocked_cb, gst_object_ref (self),
         (GDestroyNotify) gst_object_unref);
     GST_SUBTITLE_OVERLAY_UNLOCK (self);
@@ -1704,11 +1704,11 @@ gst_subtitle_overlay_subtitle_sink_chain (GstPad * pad, GstBuffer * buffer)
           gst_flow_get_name (ret));
       GST_SUBTITLE_OVERLAY_LOCK (self);
       self->subtitle_error = TRUE;
-      gst_pad_set_blocked_async_full (self->subtitle_block_pad, TRUE,
+      gst_pad_set_blocked (self->subtitle_block_pad, TRUE,
           _pad_blocked_cb, gst_object_ref (self),
           (GDestroyNotify) gst_object_unref);
 
-      gst_pad_set_blocked_async_full (self->video_block_pad, TRUE,
+      gst_pad_set_blocked (self->video_block_pad, TRUE,
           _pad_blocked_cb, gst_object_ref (self),
           (GDestroyNotify) gst_object_unref);
       GST_SUBTITLE_OVERLAY_UNLOCK (self);
@@ -1781,11 +1781,11 @@ gst_subtitle_overlay_subtitle_sink_setcaps (GstPad * pad, GstCaps * caps)
 
   self->subtitle_error = FALSE;
 
-  gst_pad_set_blocked_async_full (self->subtitle_block_pad, TRUE,
+  gst_pad_set_blocked (self->subtitle_block_pad, TRUE,
       _pad_blocked_cb, gst_object_ref (self),
       (GDestroyNotify) gst_object_unref);
 
-  gst_pad_set_blocked_async_full (self->video_block_pad, TRUE,
+  gst_pad_set_blocked (self->video_block_pad, TRUE,
       _pad_blocked_cb, gst_object_ref (self),
       (GDestroyNotify) gst_object_unref);
   GST_SUBTITLE_OVERLAY_UNLOCK (self);
@@ -1822,11 +1822,11 @@ gst_subtitle_overlay_subtitle_sink_link (GstPad * pad, GstPad * peer)
 
     self->subtitle_error = FALSE;
 
-    gst_pad_set_blocked_async_full (self->subtitle_block_pad, TRUE,
+    gst_pad_set_blocked (self->subtitle_block_pad, TRUE,
         _pad_blocked_cb, gst_object_ref (self),
         (GDestroyNotify) gst_object_unref);
 
-    gst_pad_set_blocked_async_full (self->video_block_pad, TRUE,
+    gst_pad_set_blocked (self->video_block_pad, TRUE,
         _pad_blocked_cb, gst_object_ref (self),
         (GDestroyNotify) gst_object_unref);
     GST_SUBTITLE_OVERLAY_UNLOCK (self);
@@ -1858,12 +1858,12 @@ gst_subtitle_overlay_subtitle_sink_unlink (GstPad * pad)
   self->subtitle_error = FALSE;
 
   if (self->subtitle_block_pad)
-    gst_pad_set_blocked_async_full (self->subtitle_block_pad, TRUE,
+    gst_pad_set_blocked (self->subtitle_block_pad, TRUE,
         _pad_blocked_cb, gst_object_ref (self),
         (GDestroyNotify) gst_object_unref);
 
   if (self->video_block_pad)
-    gst_pad_set_blocked_async_full (self->video_block_pad, TRUE,
+    gst_pad_set_blocked (self->video_block_pad, TRUE,
         _pad_blocked_cb, gst_object_ref (self),
         (GDestroyNotify) gst_object_unref);
   GST_SUBTITLE_OVERLAY_UNLOCK (self);
@@ -1884,11 +1884,11 @@ gst_subtitle_overlay_subtitle_sink_event (GstPad * pad, GstEvent * event)
     self->subtitle_flush = TRUE;
     self->subtitle_error = FALSE;
     if (self->subtitle_block_pad)
-      gst_pad_set_blocked_async_full (self->subtitle_block_pad, TRUE,
+      gst_pad_set_blocked (self->subtitle_block_pad, TRUE,
           _pad_blocked_cb, gst_object_ref (self),
           (GDestroyNotify) gst_object_unref);
     if (self->video_block_pad)
-      gst_pad_set_blocked_async_full (self->video_block_pad, TRUE,
+      gst_pad_set_blocked (self->video_block_pad, TRUE,
           _pad_blocked_cb, gst_object_ref (self),
           (GDestroyNotify) gst_object_unref);
     GST_SUBTITLE_OVERLAY_UNLOCK (self);

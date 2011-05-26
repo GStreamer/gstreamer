@@ -187,7 +187,7 @@ pad_blocked_cb (GstPad * pad, gboolean blocked, GstPlaySinkVideoConvert * self)
   }
 
 unblock:
-  gst_pad_set_blocked_async_full (self->sink_proxypad, FALSE,
+  gst_pad_set_blocked (self->sink_proxypad, FALSE,
       (GstPadBlockCallback) pad_blocked_cb, gst_object_ref (self),
       (GDestroyNotify) gst_object_unref);
 
@@ -201,7 +201,7 @@ link_failed:
         (NULL), ("Failed to configure the video converter."));
     gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (self->srcpad),
         self->sink_proxypad);
-    gst_pad_set_blocked_async_full (self->sink_proxypad, FALSE,
+    gst_pad_set_blocked (self->sink_proxypad, FALSE,
         (GstPadBlockCallback) pad_blocked_cb, gst_object_ref (self),
         (GDestroyNotify) gst_object_unref);
     return;
@@ -257,7 +257,7 @@ gst_play_sink_video_convert_sink_setcaps (GstPad * pad, GstCaps * caps)
     if (!self->raw && !gst_pad_is_blocked (self->sink_proxypad)) {
       GST_DEBUG_OBJECT (self, "Changing caps from non-raw to raw");
       reconfigure = TRUE;
-      gst_pad_set_blocked_async_full (self->sink_proxypad, TRUE,
+      gst_pad_set_blocked (self->sink_proxypad, TRUE,
           (GstPadBlockCallback) pad_blocked_cb, gst_object_ref (self),
           (GDestroyNotify) gst_object_unref);
     }
@@ -265,7 +265,7 @@ gst_play_sink_video_convert_sink_setcaps (GstPad * pad, GstCaps * caps)
     if (self->raw && !gst_pad_is_blocked (self->sink_proxypad)) {
       GST_DEBUG_OBJECT (self, "Changing caps from raw to non-raw");
       reconfigure = TRUE;
-      gst_pad_set_blocked_async_full (self->sink_proxypad, TRUE,
+      gst_pad_set_blocked (self->sink_proxypad, TRUE,
           (GstPadBlockCallback) pad_blocked_cb, gst_object_ref (self),
           (GDestroyNotify) gst_object_unref);
     }
@@ -339,7 +339,7 @@ gst_play_sink_video_convert_change_state (GstElement * element,
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       GST_PLAY_SINK_VIDEO_CONVERT_LOCK (self);
       if (gst_pad_is_blocked (self->sink_proxypad))
-        gst_pad_set_blocked_async_full (self->sink_proxypad, FALSE,
+        gst_pad_set_blocked (self->sink_proxypad, FALSE,
             (GstPadBlockCallback) pad_blocked_cb, gst_object_ref (self),
             (GDestroyNotify) gst_object_unref);
       GST_PLAY_SINK_VIDEO_CONVERT_UNLOCK (self);
@@ -374,7 +374,7 @@ gst_play_sink_video_convert_change_state (GstElement * element,
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       GST_PLAY_SINK_VIDEO_CONVERT_LOCK (self);
       if (!gst_pad_is_blocked (self->sink_proxypad))
-        gst_pad_set_blocked_async_full (self->sink_proxypad, TRUE,
+        gst_pad_set_blocked (self->sink_proxypad, TRUE,
             (GstPadBlockCallback) pad_blocked_cb, gst_object_ref (self),
             (GDestroyNotify) gst_object_unref);
       GST_PLAY_SINK_VIDEO_CONVERT_UNLOCK (self);

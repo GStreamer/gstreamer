@@ -3511,7 +3511,7 @@ gst_decode_pad_set_blocked (GstDecodePad * dpad, gboolean blocked)
   /* do not block if shutting down.
    * we do not consider/expect it blocked further below, but use other trick */
   if (!blocked || !dbin->shutdown)
-    gst_pad_set_blocked_async_full (opad, blocked,
+    gst_pad_set_blocked (opad, blocked,
         (GstPadBlockCallback) source_pad_blocked_cb, gst_object_ref (dpad),
         (GDestroyNotify) gst_object_unref);
 
@@ -3671,7 +3671,7 @@ unblock_pads (GstDecodeBin * dbin)
       continue;
 
     GST_DEBUG_OBJECT (dpad, "unblocking");
-    gst_pad_set_blocked_async_full (opad, FALSE,
+    gst_pad_set_blocked (opad, FALSE,
         (GstPadBlockCallback) source_pad_blocked_cb, gst_object_ref (dpad),
         (GDestroyNotify) gst_object_unref);
     /* make flushing, prevent NOT_LINKED */
