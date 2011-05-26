@@ -467,7 +467,7 @@ gst_text_render_chain (GstPad * pad, GstBuffer * inbuf)
   GstTextRender *render;
   GstFlowReturn ret;
   GstBuffer *outbuf;
-  GstCaps *caps = NULL;
+  GstCaps *caps = NULL, *padcaps, *peercaps;
   guint8 *data = GST_BUFFER_DATA (inbuf);
   guint size = GST_BUFFER_SIZE (inbuf);
   gint n;
@@ -489,15 +489,20 @@ gst_text_render_chain (GstPad * pad, GstBuffer * inbuf)
 
   gst_text_render_check_argb (render);
 
-  if (!render->use_ARGB) {
-    caps =
-        gst_video_format_new_caps (GST_VIDEO_FORMAT_AYUV, render->width,
-        render->height, 1, 1, 1, 1);
-  } else {
-    caps =
-        gst_video_format_new_caps (GST_VIDEO_FORMAT_ARGB, render->width,
-        render->height, 1, 1, 1, 1);
+  peercaps = gst_pad_peer_get_caps (render->srcpad);
+  padcaps = gst_pad_get_caps (render->srcpad);
+  caps = gst_caps_intersect (padcaps, peercaps);
+  gst_caps_unref (padcaps);
+  gst_caps_unref (peercaps);
+
+  if (!caps || gst_caps_is_empty (caps)) {
+    GST_ELEMENT_ERROR (render, CORE, NEGOTIATION, (NULL), (NULL));
+    ret = GST_FLOW_ERROR;
+    goto done;
   }
+
+  gst_caps_truncate (caps);
+  gst_pad_fixate_caps (render->srcpad, caps);
 
   if (!gst_pad_set_caps (render->srcpad, caps)) {
     GST_ELEMENT_ERROR (render, CORE, NEGOTIATION, (NULL), (NULL));
