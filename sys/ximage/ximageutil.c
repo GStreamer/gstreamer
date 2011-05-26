@@ -395,7 +395,13 @@ gst_ximageutil_ximage_new (GstXContext * xcontext,
         xcontext->visual, xcontext->depth,
         ZPixmap, NULL, &ximage->SHMInfo, ximage->width, ximage->height);
     if (!ximage->ximage) {
-      goto beach;
+      GST_WARNING_OBJECT (parent,
+          "could not XShmCreateImage a %dx%d image",
+          ximage->width, ximage->height);
+
+      /* Retry without XShm */
+      xcontext->use_xshm = FALSE;
+      goto no_xshm;
     }
 
     /* we have to use the returned bytes_per_line for our shm size */
@@ -421,6 +427,7 @@ gst_ximageutil_ximage_new (GstXContext * xcontext,
 
     XSync (xcontext->disp, FALSE);
   } else
+  no_xshm:
 #endif /* HAVE_XSHM */
   {
     ximage->ximage = XCreateImage (xcontext->disp,
