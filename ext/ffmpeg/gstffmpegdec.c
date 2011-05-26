@@ -832,8 +832,7 @@ gst_ffmpegdec_setcaps (GstPad * pad, GstCaps * caps)
       || oclass->in_plugin->id == CODEC_ID_AAC_LATM) {
     const gchar *format = gst_structure_get_string (structure, "stream-format");
 
-    if (format == NULL || strcmp (format, "raw") == 0 ||
-        oclass->in_plugin->id == CODEC_ID_AAC_LATM) {
+    if (format == NULL || strcmp (format, "raw") == 0) {
       ffmpegdec->turnoff_parser = TRUE;
     }
   }
