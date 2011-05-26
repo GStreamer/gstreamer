@@ -110,6 +110,8 @@ typedef struct
 struct _GstPadPrivate
 {
   PadEvent events[GST_EVENT_MAX_STICKY];
+
+  gint using;
 };
 
 static void gst_pad_dispose (GObject * object);
@@ -3932,6 +3934,7 @@ again:
 
   /* take ref to peer pad before releasing the lock */
   gst_object_ref (*peer);
+  pad->priv->using++;
   GST_OBJECT_UNLOCK (pad);
 
   return GST_FLOW_OK;
@@ -3957,6 +3960,14 @@ not_linked:
   }
 }
 
+static void
+pad_post_push (GstPad * pad)
+{
+  GST_OBJECT_LOCK (pad);
+  pad->priv->using--;
+  GST_OBJECT_UNLOCK (pad);
+}
+
 static GstFlowReturn
 gst_pad_push_data (GstPad * pad, gboolean is_buffer, void *data)
 {
@@ -3969,6 +3980,8 @@ gst_pad_push_data (GstPad * pad, gboolean is_buffer, void *data)
   ret = gst_pad_chain_data_unchecked (peer, is_buffer, data);
 
   gst_object_unref (peer);
+
+  pad_post_push (pad);
 
   return ret;
 
