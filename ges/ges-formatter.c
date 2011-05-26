@@ -312,6 +312,7 @@ ges_formatter_save (GESFormatter * formatter, GESTimeline * timeline)
   GList *layers;
 
   /* Saving an empty timeline is not allowed */
+  /* FIXME : Having a ges_timeline_is_empty() would be more efficient maybe */
   layers = ges_timeline_get_layers (timeline);
 
   g_return_val_if_fail (layers != NULL, FALSE);
@@ -404,18 +405,20 @@ ges_formatter_save_to_uri (GESFormatter * formatter, GESTimeline *
     timeline, const gchar * uri)
 {
   GESFormatterClass *klass = GES_FORMATTER_GET_CLASS (formatter);
-  GList *layers, *tmp;
-
+  GList *layers;
 
   /* Saving an empty timeline is not allowed */
+  /* FIXME : Having a ges_timeline_is_empty() would be more efficient maybe */
   layers = ges_timeline_get_layers (timeline);
+
   g_return_val_if_fail (layers != NULL, FALSE);
-  for (tmp = layers; tmp; tmp = g_list_next (tmp)) {
-    g_object_unref (tmp);
-  }
+  g_list_foreach (layers, (GFunc) g_object_unref, NULL);
+  g_list_free (layers);
 
   if (klass->save_to_uri)
     return klass->save_to_uri (formatter, timeline, uri);
+
+  GST_ERROR ("not implemented!");
 
   return FALSE;
 }
