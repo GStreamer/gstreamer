@@ -498,7 +498,6 @@ gst_text_render_chain (GstPad * pad, GstBuffer * inbuf)
   }
 
   if (!gst_pad_set_caps (render->srcpad, caps)) {
-    gst_caps_unref (caps);
     GST_ELEMENT_ERROR (render, CORE, NEGOTIATION, (NULL), (NULL));
     ret = GST_FLOW_ERROR;
     goto done;
