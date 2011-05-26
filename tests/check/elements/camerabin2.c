@@ -1248,7 +1248,6 @@ static Suite *
 camerabin_suite (void)
 {
   GstElementFactory *jpegenc_factory;
-  GstElementFactory *pngenc_factory;
   Suite *s = suite_create ("camerabin2");
   gint i;
   TCase *tc_generic = tcase_create ("generic");
@@ -1258,7 +1257,6 @@ camerabin_suite (void)
     GST_WARNING ("Skipping camerabin2 tests because jpegenc is missing");
     goto end;
   }
-  pngenc_factory = gst_element_factory_find ("pngenc");
 
   suite_add_tcase (s, tc_generic);
   tcase_add_checked_fixture (tc_generic, setup_wrappercamerabinsrc_videotestsrc,
