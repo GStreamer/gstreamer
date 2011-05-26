@@ -92,9 +92,6 @@ static gboolean
 gst_push_src_query (GstBaseSrc * src, GstQuery * query)
 {
   gboolean ret;
-  GstBaseSrcClass *bclass;
-
-  bclass = GST_BASE_SRC_GET_CLASS (src);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_SCHEDULING:
@@ -106,10 +103,7 @@ gst_push_src_query (GstBaseSrc * src, GstQuery * query)
       break;
     }
     default:
-      if (bclass->query)
-        ret = bclass->query (src, query);
-      else
-        ret = FALSE;
+      ret = GST_BASE_SRC_CLASS (parent_class)->query (src, query);
       break;
   }
   return ret;
