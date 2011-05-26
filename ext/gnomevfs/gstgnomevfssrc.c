@@ -246,7 +246,7 @@ gst_gnome_vfs_src_class_init (GstGnomeVFSSrcClass * klass)
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_gnome_vfs_src_stop);
   gstbasesrc_class->unlock = GST_DEBUG_FUNCPTR (gst_gnome_vfs_src_unlock);
   gstbasesrc_class->unlock_stop =
-      GST_DEBUG_FUNCPTR (gst_gnome_vfs_src_unlock_stop);  
+      GST_DEBUG_FUNCPTR (gst_gnome_vfs_src_unlock_stop);
   gstbasesrc_class->get_size = GST_DEBUG_FUNCPTR (gst_gnome_vfs_src_get_size);
   gstbasesrc_class->is_seekable =
       GST_DEBUG_FUNCPTR (gst_gnome_vfs_src_is_seekable);
@@ -612,6 +612,7 @@ gst_gnome_vfs_src_create (GstBaseSrc * basesrc, guint64 offset, guint size,
   guint8 *data;
   guint todo;
   GstGnomeVFSSrc *src;
+  gboolean interrupted = FALSE;
 
   src = GST_GNOME_VFS_SRC (basesrc);
 
@@ -643,7 +644,9 @@ gst_gnome_vfs_src_create (GstBaseSrc * basesrc, guint64 offset, guint size,
   todo = size;
   while (!src->interrupted && todo > 0) {
     /* this can return less that we ask for */
-    res = gnome_vfs_read_cancellable (src->handle, data, todo, &readbytes, src->context);
+    res =
+        gnome_vfs_read_cancellable (src->handle, data, todo, &readbytes,
+        src->context);
 
     if (G_UNLIKELY (res == GNOME_VFS_ERROR_CANCELLED)) {
       GST_DEBUG_OBJECT (src, "interrupted");
@@ -652,6 +655,7 @@ gst_gnome_vfs_src_create (GstBaseSrc * basesrc, guint64 offset, guint size,
       size = size - todo;
       GST_BUFFER_SIZE (buf) = size;
       todo = 0;
+      interrupted = TRUE;
       break;
     }
 
@@ -671,8 +675,7 @@ gst_gnome_vfs_src_create (GstBaseSrc * basesrc, guint64 offset, guint size,
     GST_LOG ("  got size %" G_GUINT64_FORMAT, readbytes);
   }
 
-  /* Handle interrupts implicitly, since the flag may have been cleared by now */
-  if (size == todo)
+  if (interrupted)
     goto interrupted;
 
   GST_BUFFER_OFFSET (buf) = src->curoffset;
@@ -803,10 +806,9 @@ gst_gnome_vfs_src_unlock (GstBaseSrc * basesrc)
   src = GST_GNOME_VFS_SRC (basesrc);
   GST_DEBUG_OBJECT (src, "unlock()");
   src->interrupted = TRUE;
-  if (src->context)
-  {
+  if (src->context) {
     GnomeVFSCancellation *cancel =
-      gnome_vfs_context_get_cancellation (src->context);
+        gnome_vfs_context_get_cancellation (src->context);
     if (cancel)
       gnome_vfs_cancellation_cancel (cancel);
   }
@@ -879,7 +881,7 @@ gst_gnome_vfs_src_start (GstBaseSrc * basesrc)
 
   gst_gnome_vfs_src_push_callbacks (src);
 
-  src->context = gnome_vfs_context_new();
+  src->context = gnome_vfs_context_new ();
   if (src->uri != NULL) {
     GnomeVFSOpenMode mode = GNOME_VFS_OPEN_READ;
 
@@ -952,7 +954,7 @@ gst_gnome_vfs_src_stop (GstBaseSrc * basesrc)
   }
   src->curoffset = 0;
   src->interrupted = FALSE;
-  gnome_vfs_context_free( src->context );
+  gnome_vfs_context_free (src->context);
   src->context = NULL;
 
   return TRUE;
