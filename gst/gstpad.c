@@ -3897,22 +3897,25 @@ gst_pad_chain_list (GstPad * pad, GstBufferList * list)
 }
 
 static GstFlowReturn
-gst_pad_push_data (GstPad * pad, gboolean is_buffer, void *data)
+pad_pre_push (GstPad * pad, GstPad ** peer, gpointer data)
 {
-  GstPad *peer;
   GstFlowReturn ret;
+  gboolean need_probes, did_probes = FALSE;
 
+again:
   GST_OBJECT_LOCK (pad);
-
   /* FIXME: this check can go away; pad_set_blocked could be implemented with
    * probes completely or probes with an extended pad block. */
   while (G_UNLIKELY (GST_PAD_IS_BLOCKED (pad)))
     if ((ret = handle_pad_block (pad)) != GST_FLOW_OK)
       goto flushed;
 
+  need_probes = GST_PAD_DO_BUFFER_SIGNALS (pad) > 0;
+
   /* we emit signals on the pad arg, the peer will have a chance to
    * emit in the _chain() function */
-  if (G_UNLIKELY (GST_PAD_DO_BUFFER_SIGNALS (pad) > 0)) {
+  if (G_UNLIKELY (need_probes && !did_probes)) {
+    did_probes = TRUE;
     /* unlock before emitting */
     GST_OBJECT_UNLOCK (pad);
 
@@ -3921,15 +3924,47 @@ gst_pad_push_data (GstPad * pad, gboolean is_buffer, void *data)
     if (!gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT_CAST (data)))
       goto dropped;
 
-    GST_OBJECT_LOCK (pad);
+    goto again;
   }
 
-  if (G_UNLIKELY ((peer = GST_PAD_PEER (pad)) == NULL))
+  if (G_UNLIKELY ((*peer = GST_PAD_PEER (pad)) == NULL))
     goto not_linked;
 
   /* take ref to peer pad before releasing the lock */
-  gst_object_ref (peer);
+  gst_object_ref (*peer);
   GST_OBJECT_UNLOCK (pad);
+
+  return GST_FLOW_OK;
+
+  /* ERRORS */
+flushed:
+  {
+    GST_DEBUG_OBJECT (pad, "pad block stopped by flush");
+    GST_OBJECT_UNLOCK (pad);
+    return ret;
+  }
+dropped:
+  {
+    GST_DEBUG_OBJECT (pad, "Dropping buffer due to FALSE probe return");
+    return GST_FLOW_CUSTOM_SUCCESS;
+  }
+not_linked:
+  {
+    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
+        "pushing, but it was not linked");
+    GST_OBJECT_UNLOCK (pad);
+    return GST_FLOW_NOT_LINKED;
+  }
+}
+
+static GstFlowReturn
+gst_pad_push_data (GstPad * pad, gboolean is_buffer, void *data)
+{
+  GstPad *peer;
+  GstFlowReturn ret;
+
+  if ((ret = pad_pre_push (pad, &peer, data)) != GST_FLOW_OK)
+    goto error;
 
   ret = gst_pad_chain_data_unchecked (peer, is_buffer, data);
 
@@ -3938,26 +3973,20 @@ gst_pad_push_data (GstPad * pad, gboolean is_buffer, void *data)
   return ret;
 
   /* ERROR recovery here */
-flushed:
+error:
   {
     gst_pad_data_unref (is_buffer, data);
-    GST_DEBUG_OBJECT (pad, "pad block stopped by flush");
-    GST_OBJECT_UNLOCK (pad);
+
+    switch (ret) {
+      case GST_FLOW_CUSTOM_SUCCESS:
+        GST_DEBUG_OBJECT (pad, "dropped buffer");
+        ret = GST_FLOW_OK;
+        break;
+      default:
+        GST_DEBUG_OBJECT (pad, "en error occured %s", gst_flow_get_name (ret));
+        break;
+    }
     return ret;
-  }
-dropped:
-  {
-    gst_pad_data_unref (is_buffer, data);
-    GST_DEBUG_OBJECT (pad, "Dropping buffer due to FALSE probe return");
-    return GST_FLOW_OK;
-  }
-not_linked:
-  {
-    gst_pad_data_unref (is_buffer, data);
-    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
-        "pushing, but it was not linked");
-    GST_OBJECT_UNLOCK (pad);
-    return GST_FLOW_NOT_LINKED;
   }
 }
 
