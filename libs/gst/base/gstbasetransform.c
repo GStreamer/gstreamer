@@ -461,53 +461,18 @@ gst_base_transform_transform_caps (GstBaseTransform * trans,
 
   /* if there is a custom transform function, use this */
   if (klass->transform_caps) {
-    GstCaps *temp;
-    gint i;
 
-    /* start with empty caps */
-    ret = gst_caps_new_empty ();
     GST_DEBUG_OBJECT (trans, "transform caps (direction = %d)", direction);
 
-    if (gst_caps_is_any (caps)) {
-      /* for any caps we still have to call the transform function */
-      GST_DEBUG_OBJECT (trans, "from: ANY");
-      temp = klass->transform_caps (trans, direction, caps, filter);
-      GST_DEBUG_OBJECT (trans, "  to: %" GST_PTR_FORMAT, temp);
-      temp = gst_caps_make_writable (temp);
-      gst_caps_append (ret, temp);
-    } else {
-      gint n = gst_caps_get_size (caps);
-      /* we send caps with just one structure to the transform
-       * function as this is easier for the element */
-      for (i = 0; i < n; i++) {
-        GstCaps *nth;
-
-        nth = gst_caps_copy_nth (caps, i);
-        GST_LOG_OBJECT (trans, "from[%d]: %" GST_PTR_FORMAT, i, nth);
-        temp = klass->transform_caps (trans, direction, nth, filter);
-        gst_caps_unref (nth);
-
-        GST_LOG_OBJECT (trans, "  to[%d]: %" GST_PTR_FORMAT, i, temp);
-
-        temp = gst_caps_make_writable (temp);
-
-        /* here we need to only append those structures, that are not yet
-         * in there, we use the merge function for this */
-        gst_caps_merge (ret, temp);
-
-        GST_LOG_OBJECT (trans, "  merged[%d]: %" GST_PTR_FORMAT, i, ret);
-      }
-      GST_LOG_OBJECT (trans, "merged: (%d)", gst_caps_get_size (ret));
-      /* FIXME: we can't do much simplification here because we don't really want to
-       * change the caps order
-       gst_caps_do_simplify (ret);
-       GST_DEBUG_OBJECT (trans, "simplified: (%d)", gst_caps_get_size (ret));
-       */
-    }
+    GST_LOG_OBJECT (trans, "from: %" GST_PTR_FORMAT, caps);
+    ret = klass->transform_caps (trans, direction, caps, filter);
+    GST_LOG_OBJECT (trans, "  to: %" GST_PTR_FORMAT, ret);
 
 #ifndef G_DISABLE_ASSERT
     if (filter) {
       if (!gst_caps_is_subset (ret, filter)) {
+        GstCaps *intersection;
+
         GST_ERROR_OBJECT (trans,
             "transform_caps returned caps %" GST_PTR_FORMAT
             " which are not a real subset of the filter caps %"
@@ -515,9 +480,10 @@ gst_base_transform_transform_caps (GstBaseTransform * trans,
         g_warning ("%s: transform_caps returned caps which are not a real "
             "subset of the filter caps", GST_ELEMENT_NAME (trans));
 
-        temp = gst_caps_intersect_full (filter, ret, GST_CAPS_INTERSECT_FIRST);
-        gst_caps_unref (ret);
-        ret = temp;
+        intersection =
+            gst_caps_intersect_full (filter, ret, GST_CAPS_INTERSECT_FIRST);
+        gst_caps_unref (intersection);
+        ret = intersection;
       }
     }
 #endif

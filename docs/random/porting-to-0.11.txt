@@ -248,4 +248,8 @@ The 0.11 porting guide
     GstBaseSink::get_caps() now take a filter GstCaps* parameter to
     filter the caps and allow better negotiation decisions.
  
-  
+* GstBaseTransform
+    GstBaseTransform::transform_caps() now gets the complete caps passed
+    instead of getting it passed structure by structure.
+
+
