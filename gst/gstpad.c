@@ -425,6 +425,24 @@ replace_event (GstPad * srcpad, GstPad * sinkpad, guint idx)
   return pending;
 }
 
+
+static void
+prepare_event_update (GstPad * srcpad, GstPad * sinkpad)
+{
+  gboolean pending;
+  gint i;
+
+  /* make sure we push the events from the source to this new peer, for this we
+   * copy the events on the sinkpad and mark EVENTS_PENDING */
+  pending = FALSE;
+  for (i = 0; i < GST_EVENT_MAX_STICKY; i++)
+    pending |= replace_event (srcpad, sinkpad, i);
+
+  /* we had some new pending events, set our flag */
+  if (pending)
+    GST_OBJECT_FLAG_SET (sinkpad, GST_PAD_NEED_EVENTS);
+}
+
 /* should be called with the OBJECT_LOCK */
 static GstCaps *
 get_pad_caps (GstPad * pad)
@@ -1116,6 +1134,17 @@ gst_pad_set_blocked (GstPad * pad, gboolean blocked,
     }
   } else {
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "unblocking pad");
+
+    if (GST_PAD_IS_SRC (pad)) {
+      GstPad *peer;
+      /* a pad block dropped all events, make sure we copy any new events on the
+       * srcpad to the sinkpad and schedule an update on the sinkpad */
+      if ((peer = GST_PAD_PEER (pad))) {
+        GST_OBJECT_LOCK (peer);
+        prepare_event_update (pad, peer);
+        GST_OBJECT_UNLOCK (peer);
+      }
+    }
 
     GST_OBJECT_FLAG_UNSET (pad, GST_PAD_BLOCKED);
 
@@ -1987,8 +2016,6 @@ gst_pad_link_full (GstPad * srcpad, GstPad * sinkpad, GstPadLinkCheck flags)
 {
   GstPadLinkReturn result;
   GstElement *parent;
-  guint i;
-  gboolean pending;
 
   g_return_val_if_fail (GST_IS_PAD (srcpad), GST_PAD_LINK_REFUSED);
   g_return_val_if_fail (GST_PAD_IS_SRC (srcpad), GST_PAD_LINK_WRONG_DIRECTION);
@@ -2018,15 +2045,8 @@ gst_pad_link_full (GstPad * srcpad, GstPad * sinkpad, GstPadLinkCheck flags)
   GST_PAD_PEER (srcpad) = sinkpad;
   GST_PAD_PEER (sinkpad) = srcpad;
 
-  /* make sure we push the events from the source to this new peer, for this we
-   * copy the events on the sinkpad and mark EVENTS_PENDING */
-  pending = FALSE;
-  for (i = 0; i < GST_EVENT_MAX_STICKY; i++)
-    pending |= replace_event (srcpad, sinkpad, i);
-
-  /* we had some new pending events, set our flag */
-  if (pending)
-    GST_OBJECT_FLAG_SET (sinkpad, GST_PAD_NEED_EVENTS);
+  /* make sure we update events */
+  prepare_event_update (srcpad, sinkpad);
 
   GST_OBJECT_UNLOCK (sinkpad);
   GST_OBJECT_UNLOCK (srcpad);
@@ -4365,7 +4385,7 @@ gboolean
 gst_pad_push_event (GstPad * pad, GstEvent * event)
 {
   GstPad *peerpad;
-  gboolean result;
+  gboolean result, need_probes, did_probes = FALSE, did_event_actions = FALSE;
   gint64 offset;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
@@ -4374,6 +4394,7 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
 
   GST_LOG_OBJECT (pad, "event: %s", GST_EVENT_TYPE_NAME (event));
 
+again:
   GST_OBJECT_LOCK (pad);
 
   /* Two checks to be made:
@@ -4395,32 +4416,9 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
       break;
     case GST_EVENT_FLUSH_STOP:
       GST_PAD_UNSET_FLUSHING (pad);
-
-      /* if we are blocked, flush away the FLUSH_STOP event */
-      if (G_UNLIKELY (GST_PAD_IS_BLOCKED (pad))) {
-        GST_LOG_OBJECT (pad, "Pad is blocked, not forwarding flush-stop");
-        goto flushed;
-      }
       break;
-    case GST_EVENT_RECONFIGURE:
-      if (GST_PAD_IS_SINK (pad))
-        GST_OBJECT_FLAG_SET (pad, GST_PAD_NEED_RECONFIGURE);
     default:
-      while (G_UNLIKELY (GST_PAD_IS_BLOCKED (pad))) {
-        /* block the event as long as the pad is blocked */
-        if (handle_pad_block (pad) != GST_FLOW_OK)
-          goto flushed;
-      }
       break;
-  }
-
-  if (G_UNLIKELY (GST_PAD_DO_EVENT_SIGNALS (pad) > 0)) {
-    GST_OBJECT_UNLOCK (pad);
-
-    if (!gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT_CAST (event)))
-      goto dropping;
-
-    GST_OBJECT_LOCK (pad);
   }
 
   /* store the event on the pad, but only on srcpads */
@@ -4435,47 +4433,80 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
     gst_event_replace (&pad->priv->events[idx].event, event);
   }
 
-  if ((peerpad = GST_PAD_PEER (pad)))
-    gst_object_ref (peerpad);
+  /* drop all events when blocking. Sticky events will stay on the pad and will
+   * be activated on the peer when unblocking. */
+  if (G_UNLIKELY (GST_PAD_IS_BLOCKED (pad))) {
+    GST_LOG_OBJECT (pad, "Pad is blocked, not forwarding event");
+    goto flushed;
+  }
 
   offset = pad->offset;
-  GST_OBJECT_UNLOCK (pad);
+  need_probes = !did_probes && (GST_PAD_DO_EVENT_SIGNALS (pad) > 0);
+  peerpad = GST_PAD_PEER (pad);
 
   /* backwards compatibility mode for caps */
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_CAPS:
-    {
-      GstCaps *caps;
+  if (!did_event_actions) {
+    did_event_actions = TRUE;
 
-      gst_event_parse_caps (event, &caps);
-      /* FIXME, this is awkward because we don't check flushing here which means
-       * that we can call the setcaps functions on flushing pads, this is not
-       * quite what we want, otoh, this code should just go away and elements
-       * that set caps on their sinkpad should just setup stuff themselves. */
-      gst_pad_call_setcaps (pad, caps);
-      break;
-    }
-    case GST_EVENT_SEGMENT:
-      /* check if we need to adjust the segment */
-      if (offset != 0 && peerpad != NULL) {
-        GstSegment segment;
+    switch (GST_EVENT_TYPE (event)) {
+      case GST_EVENT_CAPS:
+      {
+        GstCaps *caps;
 
-        /* copy segment values */
-        gst_event_copy_segment (event, &segment);
-        gst_event_unref (event);
+        GST_OBJECT_UNLOCK (pad);
 
-        /* adjust and make a new event with the offset applied */
-        segment.base += offset;
-        event = gst_event_new_segment (&segment);
+        gst_event_parse_caps (event, &caps);
+        /* FIXME, this is awkward because we don't check flushing here which means
+         * that we can call the setcaps functions on flushing pads, this is not
+         * quite what we want, otoh, this code should just go away and elements
+         * that set caps on their srcpad should just setup stuff themselves. */
+        gst_pad_call_setcaps (pad, caps);
+
+        /* recheck everything, we released the lock */
+        goto again;
       }
-      break;
-    default:
-      break;
+      case GST_EVENT_SEGMENT:
+        /* check if we need to adjust the segment */
+        if (offset != 0 && (need_probes || peerpad != NULL)) {
+          GstSegment segment;
+
+          /* copy segment values */
+          gst_event_copy_segment (event, &segment);
+          gst_event_unref (event);
+
+          /* adjust and make a new event with the offset applied */
+          segment.base += offset;
+          event = gst_event_new_segment (&segment);
+        }
+        break;
+      case GST_EVENT_RECONFIGURE:
+        if (GST_PAD_IS_SINK (pad))
+          GST_OBJECT_FLAG_SET (pad, GST_PAD_NEED_RECONFIGURE);
+        break;
+      default:
+        break;
+    }
+  }
+
+  /* send probes after modifying the events above */
+  if (G_UNLIKELY (need_probes)) {
+    did_probes = TRUE;
+    GST_OBJECT_UNLOCK (pad);
+
+    if (!gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT_CAST (event)))
+      goto dropping;
+
+    /* retry, we released the lock */
+    goto again;
   }
 
   /* now check the peer pad */
   if (peerpad == NULL)
     goto not_linked;
+
+  gst_object_ref (peerpad);
+  pad->priv->using++;
+  GST_OBJECT_UNLOCK (pad);
 
   GST_LOG_OBJECT (pad, "sending event %s to peerpad %" GST_PTR_FORMAT,
       GST_EVENT_TYPE_NAME (event), peerpad);
@@ -4488,9 +4519,21 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
 
   gst_object_unref (peerpad);
 
+  GST_OBJECT_LOCK (pad);
+  pad->priv->using--;
+  GST_OBJECT_UNLOCK (pad);
+
   return result;
 
   /* ERROR handling */
+flushed:
+  {
+    GST_DEBUG_OBJECT (pad,
+        "Not forwarding event since we're flushing and blocking");
+    gst_event_unref (event);
+    GST_OBJECT_UNLOCK (pad);
+    return TRUE;
+  }
 dropping:
   {
     GST_DEBUG_OBJECT (pad, "Dropping event after FALSE probe return");
@@ -4500,16 +4543,9 @@ dropping:
 not_linked:
   {
     GST_DEBUG_OBJECT (pad, "Dropping event because pad is not linked");
+    GST_OBJECT_UNLOCK (pad);
     gst_event_unref (event);
     return FALSE;
-  }
-flushed:
-  {
-    GST_DEBUG_OBJECT (pad,
-        "Not forwarding event since we're flushing and blocking");
-    gst_event_unref (event);
-    GST_OBJECT_UNLOCK (pad);
-    return TRUE;
   }
 }
 
