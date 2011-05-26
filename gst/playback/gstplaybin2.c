@@ -2515,6 +2515,8 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
           (_("Missing element '%s' - check your GStreamer installation."),
               "input-selector"), (NULL));
     } else {
+      g_object_set (select->selector, "sync-streams", TRUE, NULL);
+
       g_signal_connect (select->selector, "notify::active-pad",
           G_CALLBACK (selector_active_pad_changed), playbin);
 
