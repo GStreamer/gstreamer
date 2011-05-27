@@ -308,6 +308,19 @@ gst_matroska_read_common_encoding_order_unique (GArray * encodings, guint64
   return TRUE;
 }
 
+gint64
+gst_matroska_read_common_get_length (GstMatroskaReadCommon * common)
+{
+  GstFormat fmt = GST_FORMAT_BYTES;
+  gint64 end = -1;
+
+  if (!gst_pad_query_peer_duration (common->sinkpad, &fmt, &end) ||
+      fmt != GST_FORMAT_BYTES || end < 0)
+    GST_DEBUG_OBJECT (common, "no upstream length");
+
+  return end;
+}
+
 /* skip unknown or alike element */
 GstFlowReturn
 gst_matroska_read_common_parse_skip (GstMatroskaReadCommon * common,

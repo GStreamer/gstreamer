@@ -384,19 +384,6 @@ gst_matroska_parse_reset (GstElement * element)
   }
 }
 
-static gint64
-gst_matroska_parse_get_length (GstMatroskaParse * parse)
-{
-  GstFormat fmt = GST_FORMAT_BYTES;
-  gint64 end = -1;
-
-  if (!gst_pad_query_peer_duration (parse->common.sinkpad, &fmt, &end) ||
-      fmt != GST_FORMAT_BYTES || end < 0)
-    GST_DEBUG_OBJECT (parse, "no upstream length");
-
-  return end;
-}
-
 static gboolean
 gst_matroska_decode_data (GArray * encodings, guint8 ** data_out,
     guint * size_out, GstMatroskaTrackEncodingScope scope, gboolean free)
@@ -3193,7 +3180,7 @@ gst_matroska_parse_parse_contents_seekentry (GstMatroskaParse * parse,
       guint64 length;
 
       /* remember */
-      length = gst_matroska_parse_get_length (parse);
+      length = gst_matroska_read_common_get_length (&parse->common);
 
       if (length == (guint64) - 1) {
         GST_DEBUG_OBJECT (parse, "no upstream length, skipping SeakHead entry");
@@ -3860,7 +3847,8 @@ gst_matroska_parse_loop (GstPad * pad)
   }
 
 next:
-  if (G_UNLIKELY (parse->offset == gst_matroska_parse_get_length (parse))) {
+  if (G_UNLIKELY (parse->offset ==
+          gst_matroska_read_common_get_length (&parse->common))) {
     GST_LOG_OBJECT (parse, "Reached end of stream");
     ret = GST_FLOW_UNEXPECTED;
     goto eos;

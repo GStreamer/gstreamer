@@ -461,19 +461,6 @@ gst_matroska_demux_reset (GstElement * element)
   }
 }
 
-static gint64
-gst_matroska_demux_get_length (GstMatroskaDemux * demux)
-{
-  GstFormat fmt = GST_FORMAT_BYTES;
-  gint64 end = -1;
-
-  if (!gst_pad_query_peer_duration (demux->common.sinkpad, &fmt, &end) ||
-      fmt != GST_FORMAT_BYTES || end < 0)
-    GST_DEBUG_OBJECT (demux, "no upstream length");
-
-  return end;
-}
-
 static gboolean
 gst_matroska_decode_data (GArray * encodings, guint8 ** data_out,
     guint * size_out, GstMatroskaTrackEncodingScope scope, gboolean free)
@@ -4570,7 +4557,7 @@ gst_matroska_demux_parse_contents_seekentry (GstMatroskaDemux * demux,
       guint needed;
 
       /* remember */
-      length = gst_matroska_demux_get_length (demux);
+      length = gst_matroska_read_common_get_length (&demux->common);
       before_pos = demux->common.offset;
 
       if (length == (guint64) - 1) {
@@ -5238,7 +5225,7 @@ gst_matroska_demux_loop (GstPad * pad)
 
 next:
   if (G_UNLIKELY (demux->common.offset ==
-          gst_matroska_demux_get_length (demux))) {
+          gst_matroska_read_common_get_length (&demux->common))) {
     GST_LOG_OBJECT (demux, "Reached end of stream");
     ret = GST_FLOW_UNEXPECTED;
     goto eos;
