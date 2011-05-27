@@ -22,12 +22,19 @@
 #include "config.h"
 #endif
 #include <gst/gst.h>
+
+#include "gstspectrascope.h"
+#include "gstsynaescope.h"
 #include "gstwavescope.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  return gst_wave_scope_plugin_init (plugin);
+  gboolean res = TRUE;
+
+  res &= gst_spectra_scope_plugin_init (plugin);
+  res &= gst_wave_scope_plugin_init (plugin);
+  return res;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
