@@ -125,8 +125,12 @@ gst_spectra_scope_setup (GstBaseScope * bscope)
     gst_fft_s16_free (scope->fft_ctx);
   if (scope->freq_data)
     g_free (scope->freq_data);
-  scope->fft_ctx = gst_fft_s16_new (bscope->width * 2 - 2, FALSE);
+
+  /* we'd need this amount of samples per render() call */
+  bscope->req_spf = bscope->width * 2 - 2;
+  scope->fft_ctx = gst_fft_s16_new (bscope->req_spf, FALSE);
   scope->freq_data = g_new (GstFFTS16Complex, bscope->width);
+
   return TRUE;
 }
 

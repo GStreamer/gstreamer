@@ -278,13 +278,15 @@ gst_base_scope_src_setcaps (GstPad * pad, GstCaps * caps)
       scope->fps_d, scope->fps_n);
   scope->spf = gst_util_uint64_scale_int (scope->rate,
       scope->fps_d, scope->fps_n);
+  scope->req_spf = scope->spf;
 
   if (klass->setup)
     res = klass->setup (scope);
 
-  GST_DEBUG_OBJECT (scope, "video: dimension %dx%d, framerate %d/%d, spf %d",
-      scope->width, scope->height, scope->fps_n, scope->fps_d, scope->spf);
-
+  GST_DEBUG_OBJECT (scope, "video: dimension %dx%d, framerate %d/%d",
+      scope->width, scope->height, scope->fps_n, scope->fps_d);
+  GST_DEBUG_OBJECT (scope, "blocks: spf %u, req_spf %u",
+      scope->spf, scope->req_spf);
 done:
   gst_object_unref (scope);
   return res;
@@ -306,7 +308,7 @@ gst_base_scope_chain (GstPad * pad, GstBuffer * buffer)
   GstBaseScope *scope;
   GstBaseScopeClass *klass;
   GstBuffer *inbuf;
-  guint32 avail, bytesperread;
+  guint avail, sbpf;
   guint bpp;
   gboolean (*render) (GstBaseScope * scope, GstBuffer * audio,
       GstBuffer * video);
@@ -336,7 +338,7 @@ gst_base_scope_chain (GstPad * pad, GstBuffer * buffer)
   gst_adapter_push (scope->adapter, buffer);
 
   /* this is what we want */
-  bytesperread = scope->spf * scope->channels * sizeof (gint16);
+  sbpf = scope->req_spf * scope->channels * sizeof (gint16);
 
   bpp = gst_video_format_get_pixel_stride (scope->video_format, 0);
 
@@ -346,7 +348,7 @@ gst_base_scope_chain (GstPad * pad, GstBuffer * buffer)
 
   /* this is what we have */
   avail = gst_adapter_available (scope->adapter);
-  while (avail > bytesperread) {
+  while (avail > sbpf) {
     GstBuffer *outbuf;
 
     ret = gst_pad_alloc_buffer_and_set_caps (scope->srcpad,
@@ -363,8 +365,8 @@ gst_base_scope_chain (GstPad * pad, GstBuffer * buffer)
     memset (GST_BUFFER_DATA (outbuf), 0, GST_BUFFER_SIZE (outbuf));
 
     GST_BUFFER_DATA (inbuf) =
-        (guint8 *) gst_adapter_peek (scope->adapter, bytesperread);
-    GST_BUFFER_SIZE (inbuf) = bytesperread;
+        (guint8 *) gst_adapter_peek (scope->adapter, sbpf);
+    GST_BUFFER_SIZE (inbuf) = sbpf;
 
     /* call class->render() vmethod */
     if (render)
@@ -375,10 +377,13 @@ gst_base_scope_chain (GstPad * pad, GstBuffer * buffer)
     ret = gst_pad_push (scope->srcpad, outbuf);
     outbuf = NULL;
 
-    /* FIXME: we want to ev. take less
-     * we need to align the audio-rate, video-rate and blocksize for render
-     */
-    gst_adapter_flush (scope->adapter, bytesperread);
+    GST_LOG_OBJECT (scope, "avail: %u, bpf: %u", avail, sbpf);
+    /* we want to take less or more, depending on spf : req_spf */
+    if (avail - sbpf > sbpf)
+      gst_adapter_flush (scope->adapter, sbpf);
+    else if (avail - sbpf > 0)
+      gst_adapter_flush (scope->adapter, (avail - sbpf));
+    avail = gst_adapter_available (scope->adapter);
 
     if (ret != GST_FLOW_OK)
       break;

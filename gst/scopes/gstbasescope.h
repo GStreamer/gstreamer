@@ -51,6 +51,7 @@ struct _GstBaseScope
   guint64 frame_duration;
   guint bps;                    /* bytes per sample        */
   guint spf;                    /* samples per video frame */
+  guint req_spf;                /* min samples per frame wanted by the subclass */
 
   /* video state */
   GstVideoFormat video_format;
