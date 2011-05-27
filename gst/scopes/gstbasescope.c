@@ -279,9 +279,6 @@ gst_base_scope_src_setcaps (GstPad * pad, GstCaps * caps)
   scope->spf = gst_util_uint64_scale_int (scope->rate,
       scope->fps_d, scope->fps_n);
 
-  /*
-     synaesthesia_resize (scope->si, scope->width, scope->height);
-   */
   if (klass->setup)
     res = klass->setup (scope);
 
@@ -369,11 +366,6 @@ gst_base_scope_chain (GstPad * pad, GstBuffer * buffer)
         (guint8 *) gst_adapter_peek (scope->adapter, bytesperread);
     GST_BUFFER_SIZE (inbuf) = bytesperread;
 
-    /*
-       guchar * out_frame = (guchar *)
-       scope_update (scope->si, scope->datain);
-       memcpy (GST_BUFFER_DATA (outbuf), out_frame, GST_BUFFER_SIZE (outbuf));
-     */
     /* call class->render() vmethod */
     if (render)
       if (!render (scope, inbuf, outbuf)) {
