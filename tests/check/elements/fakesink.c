@@ -425,7 +425,7 @@ GST_START_TEST (test_eos)
     fail_if (eret == TRUE);
   }
 
-  /* send segment, this should fail */
+  /* send segment, this should work */
   {
     GstEvent *event;
     GstSegment segment;
@@ -439,7 +439,7 @@ GST_START_TEST (test_eos)
     event = gst_event_new_segment (&segment);
 
     eret = gst_pad_send_event (sinkpad, event);
-    fail_if (eret == TRUE);
+    fail_if (eret == FALSE);
   }
 
   /* send buffer that should fail after EOS */

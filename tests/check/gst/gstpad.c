@@ -91,7 +91,7 @@ GST_START_TEST (test_link_unlink_threaded)
   gst_pad_set_caps (src, caps);
   gst_pad_set_active (sink, TRUE);
   gst_pad_set_caps (sink, caps);
-  ASSERT_CAPS_REFCOUNT (caps, "caps", 3);
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 2);
 
   MAIN_START_THREADS (5, thread_link_unlink, NULL);
   for (i = 0; i < 1000; ++i) {
@@ -101,10 +101,10 @@ GST_START_TEST (test_link_unlink_threaded)
   }
   MAIN_STOP_THREADS ();
 
-  ASSERT_CAPS_REFCOUNT (caps, "caps", 3);
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 2);
   gst_caps_unref (caps);
 
-  ASSERT_CAPS_REFCOUNT (caps, "caps", 2);
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
   gst_object_unref (src);
   gst_object_unref (sink);
 }
@@ -127,18 +127,27 @@ GST_START_TEST (test_refcount)
   /* one for me */
   ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
 
-  fail_unless (gst_pad_set_caps (src, caps) == TRUE);
-  /* can't set caps on flushing sinkpad */
+  /* can't set caps on flushing pads */
+  fail_if (gst_pad_set_caps (src, caps) == TRUE);
   fail_if (gst_pad_set_caps (sink, caps) == TRUE);
-  /* one for me and one for each set_caps */
-  ASSERT_CAPS_REFCOUNT (caps, "caps", 3);
+
+  /* one for me and one for the pending caps on the sinkpad */
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 2);
 
   gst_pad_set_active (sink, TRUE);
   fail_unless (gst_pad_set_caps (sink, caps) == TRUE);
-  ASSERT_CAPS_REFCOUNT (caps, "caps", 3);
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 2);
+
+  /* can't link with incompatible caps */
+  plr = gst_pad_link (src, sink);
+  fail_if (GST_PAD_LINK_SUCCESSFUL (plr));
+
+  gst_pad_set_active (src, TRUE);
+  fail_unless (gst_pad_set_caps (src, caps) == TRUE);
 
   plr = gst_pad_link (src, sink);
   fail_unless (GST_PAD_LINK_SUCCESSFUL (plr));
+
   /* src caps added to pending caps on sink */
   ASSERT_CAPS_REFCOUNT (caps, "caps", 3);
 
@@ -176,12 +185,16 @@ GST_START_TEST (test_get_allowed_caps)
   caps = gst_caps_from_string ("foo/bar");
 
   sink = gst_pad_new ("sink", GST_PAD_SINK);
-  fail_unless (gst_pad_set_caps (src, caps) == TRUE);
+  fail_if (gst_pad_set_caps (src, caps) == TRUE);
   fail_if (gst_pad_set_caps (sink, caps) == TRUE);
-  ASSERT_CAPS_REFCOUNT (caps, "caps", 3);
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 2);
 
   gst_pad_set_active (sink, TRUE);
   fail_unless (gst_pad_set_caps (sink, caps) == TRUE);
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 2);
+
+  gst_pad_set_active (src, TRUE);
+  fail_unless (gst_pad_set_caps (src, caps) == TRUE);
   ASSERT_CAPS_REFCOUNT (caps, "caps", 3);
 
   plr = gst_pad_link (src, sink);
@@ -189,11 +202,9 @@ GST_START_TEST (test_get_allowed_caps)
 
   gotcaps = gst_pad_get_allowed_caps (src);
   fail_if (gotcaps == NULL);
-#if 0
   /* FIXME, does not work, caps events are different so the sinkpad loses caps
    * when linking */
   fail_unless (gst_caps_is_equal (gotcaps, caps));
-#endif
 
   ASSERT_CAPS_REFCOUNT (gotcaps, "gotcaps", 1);
   gst_caps_unref (gotcaps);
@@ -274,7 +285,16 @@ GST_START_TEST (test_push_unlinked)
   caps = gst_caps_from_string ("foo/bar");
 
   gst_pad_set_caps (src, caps);
-  ASSERT_CAPS_REFCOUNT (caps, "caps", 2);
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
+
+  /* pushing on an inactive pad will drop the buffer */
+  buffer = gst_buffer_new ();
+  gst_buffer_ref (buffer);
+  fail_unless (gst_pad_push (src, buffer) == GST_FLOW_WRONG_STATE);
+  ASSERT_MINI_OBJECT_REFCOUNT (buffer, "buffer", 1);
+  gst_buffer_unref (buffer);
+
+  gst_pad_set_active (src, TRUE);
 
   /* pushing on an unlinked pad will drop the buffer */
   buffer = gst_buffer_new ();
@@ -307,7 +327,7 @@ GST_START_TEST (test_push_unlinked)
 
 
   /* cleanup */
-  ASSERT_CAPS_REFCOUNT (caps, "caps", 2);
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
   ASSERT_OBJECT_REFCOUNT (src, "src", 1);
 
   gst_object_unref (src);
@@ -334,12 +354,31 @@ GST_START_TEST (test_push_linked)
   src = gst_pad_new ("src", GST_PAD_SRC);
   fail_if (src == NULL);
 
+  buffer = gst_buffer_new ();
+  /* new pad should be flushing */
+  gst_buffer_ref (buffer);
+  fail_unless (gst_pad_push (src, buffer) == GST_FLOW_WRONG_STATE);
+  gst_buffer_ref (buffer);
+  fail_unless (gst_pad_chain (sink, buffer) == GST_FLOW_WRONG_STATE);
+
   caps = gst_caps_from_string ("foo/bar");
   /* one for me */
   ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
 
   gst_pad_set_caps (src, caps);
+  gst_pad_set_caps (sink, caps);
+  /* one for me and one for each set_caps */
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 2);
+
+  plr = gst_pad_link (src, sink);
+  fail_if (GST_PAD_LINK_SUCCESSFUL (plr));
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 2);
+
+  /* activate pads */
+  gst_pad_set_active (src, TRUE);
   gst_pad_set_active (sink, TRUE);
+
+  gst_pad_set_caps (src, caps);
   gst_pad_set_caps (sink, caps);
   /* one for me and one for each set_caps */
   ASSERT_CAPS_REFCOUNT (caps, "caps", 3);
@@ -347,19 +386,6 @@ GST_START_TEST (test_push_linked)
   plr = gst_pad_link (src, sink);
   fail_unless (GST_PAD_LINK_SUCCESSFUL (plr));
   ASSERT_CAPS_REFCOUNT (caps, "caps", 3);
-
-  buffer = gst_buffer_new ();
-#if 0
-  /* FIXME, new pad should be flushing */
-  gst_buffer_ref (buffer);
-  fail_unless (gst_pad_push (src, buffer) == GST_FLOW_WRONG_STATE);
-  gst_buffer_ref (buffer);
-  fail_unless (gst_pad_chain (sink, buffer) == GST_FLOW_WRONG_STATE);
-#endif
-
-  /* activate pads */
-  gst_pad_set_active (src, TRUE);
-  gst_pad_set_active (sink, TRUE);
 
   /* test */
   /* pushing on a linked pad will drop the ref to the buffer */
@@ -453,7 +479,6 @@ GST_START_TEST (test_push_buffer_list_compat)
   GstCaps *caps;
   GstBufferList *list;
   GstBuffer *buffer;
-  guint len;
 
   /* setup */
   sink = gst_pad_new ("sink", GST_PAD_SINK);
@@ -466,6 +491,7 @@ GST_START_TEST (test_push_buffer_list_compat)
 
   caps = gst_caps_from_string ("foo/bar");
 
+  gst_pad_set_active (src, TRUE);
   gst_pad_set_caps (src, caps);
   gst_pad_set_active (sink, TRUE);
   gst_pad_set_caps (sink, caps);
@@ -481,8 +507,6 @@ GST_START_TEST (test_push_buffer_list_compat)
 
   /* test */
   /* adding to a buffer list will drop the ref to the buffer */
-  len = gst_buffer_list_len (list);
-
   gst_buffer_list_add (list, buffer_from_string ("ListGroup"));
   gst_buffer_list_add (list, buffer_from_string ("AnotherListGroup"));
 
@@ -626,6 +650,7 @@ GST_START_TEST (test_src_unref_unlink)
 
   caps = gst_caps_from_string ("foo/bar");
 
+  gst_pad_set_active (src, TRUE);
   gst_pad_set_caps (src, caps);
   gst_pad_set_active (sink, TRUE);
   gst_pad_set_caps (sink, caps);
@@ -661,6 +686,7 @@ GST_START_TEST (test_sink_unref_unlink)
 
   caps = gst_caps_from_string ("foo/bar");
 
+  gst_pad_set_active (src, TRUE);
   gst_pad_set_caps (src, caps);
   gst_pad_set_active (sink, TRUE);
   gst_pad_set_caps (sink, caps);
@@ -720,8 +746,8 @@ GST_START_TEST (test_block_async)
   gst_pad_set_active (pad, TRUE);
   gst_pad_set_blocked (pad, TRUE, block_async_cb, &data, NULL);
 
-  fail_unless (data[0] == FALSE);
-  fail_unless (data[1] == FALSE);
+  fail_unless (data[0] == TRUE);
+  fail_unless (data[1] == TRUE);
   gst_pad_push (pad, gst_buffer_new ());
 
   gst_object_unref (pad);
@@ -816,18 +842,19 @@ GST_START_TEST (test_block_async_full_destroy)
 
   gst_pad_set_blocked (pad, TRUE, block_async_full_cb,
       &state, block_async_full_destroy);
-  fail_unless (state == 0);
+  fail_unless (state == 2);
 
   gst_pad_push (pad, gst_buffer_new ());
   /* block_async_full_cb sets state to 1 and then flushes to unblock temporarily
    */
-  fail_unless (state == 1);
+  fail_unless (state == 2);
   gst_pad_push_event (pad, gst_event_new_flush_stop ());
 
   /* pad was already blocked so nothing happens */
+  state = 0;
   gst_pad_set_blocked (pad, TRUE, block_async_full_cb,
       &state, block_async_full_destroy);
-  fail_unless (state == 1);
+  fail_unless (state == 2);
 
   /* unblock with the same data, callback is called */
   gst_pad_set_blocked (pad, FALSE, block_async_full_cb,
@@ -842,10 +869,12 @@ GST_START_TEST (test_block_async_full_destroy)
 
   /* now change user_data (to NULL in this case) so destroy_notify should be
    * called */
+#if 0
   state = 1;
   gst_pad_set_blocked (pad, FALSE, block_async_full_cb,
       NULL, block_async_full_destroy);
   fail_unless (state == 2);
+#endif
 
   gst_object_unref (pad);
 }
@@ -868,7 +897,7 @@ GST_START_TEST (test_block_async_full_destroy_dispose)
   gst_pad_push (pad, gst_buffer_new ());
   /* block_async_full_cb sets state to 1 and then flushes to unblock temporarily
    */
-  fail_unless_equals_int (state, 1);
+  fail_unless_equals_int (state, 2);
   gst_pad_push_event (pad, gst_event_new_flush_stop ());
 
   /* gst_pad_dispose calls the destroy_notify function if necessary */
@@ -896,12 +925,6 @@ unblock_async_no_flush_cb (GstPad * pad, gboolean blocked, gpointer user_data)
   bool_user_data[2] = TRUE;
 }
 
-
-static void
-unblock_async_not_called (GstPad * pad, gboolean blocked, gpointer user_data)
-{
-  g_warn_if_reached ();
-}
 
 static void
 block_async_second_no_flush (GstPad * pad, gboolean blocked, gpointer user_data)
@@ -938,8 +961,7 @@ block_async_first_no_flush (GstPad * pad, gboolean blocked, gpointer user_data)
   fail_unless (bool_user_data[1] == FALSE);
   fail_unless (bool_user_data[2] == FALSE);
 
-  fail_unless (gst_pad_set_blocked (pad, FALSE, unblock_async_not_called,
-          NULL, NULL));
+  fail_unless (gst_pad_set_blocked (pad, FALSE, NULL, NULL, NULL));
 
   /* replace block_async_first with block_async_second so next time the pad is
    * blocked the latter should be called */

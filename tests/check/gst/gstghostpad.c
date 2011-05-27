@@ -476,6 +476,7 @@ typedef struct
 {
   GMutex *mutex;
   GCond *cond;
+  gboolean triggered;
 } BlockData;
 
 static void
@@ -485,6 +486,7 @@ block_callback (GstPad * pad, gboolean blocked, gpointer user_data)
 
   g_mutex_lock (block_data->mutex);
   GST_DEBUG ("blocked\n");
+  block_data->triggered = TRUE;
   g_cond_signal (block_data->cond);
   g_mutex_unlock (block_data->mutex);
 }
@@ -512,12 +514,14 @@ GST_START_TEST (test_ghost_pads_block)
 
   block_data.mutex = g_mutex_new ();
   block_data.cond = g_cond_new ();
+  block_data.triggered = FALSE;
 
-  g_mutex_lock (block_data.mutex);
   gst_pad_set_blocked (srcghost, TRUE, block_callback, &block_data, NULL);
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
   /* and wait now */
-  g_cond_wait (block_data.cond, block_data.mutex);
+  g_mutex_lock (block_data.mutex);
+  while (!block_data.triggered)
+    g_cond_wait (block_data.cond, block_data.mutex);
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
   g_mutex_unlock (block_data.mutex);
 
@@ -553,12 +557,14 @@ GST_START_TEST (test_ghost_pads_probes)
 
   block_data.mutex = g_mutex_new ();
   block_data.cond = g_cond_new ();
+  block_data.triggered = FALSE;
 
-  g_mutex_lock (block_data.mutex);
   gst_pad_set_blocked (srcghost, TRUE, block_callback, &block_data, NULL);
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
   /* and wait now */
-  g_cond_wait (block_data.cond, block_data.mutex);
+  g_mutex_lock (block_data.mutex);
+  while (!block_data.triggered)
+    g_cond_wait (block_data.cond, block_data.mutex);
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
   g_mutex_unlock (block_data.mutex);
 
@@ -701,6 +707,8 @@ GST_START_TEST (test_ghost_pads_forward_setcaps)
   fail_unless (gst_pad_link (ghost, sink) == GST_PAD_LINK_OK);
 
   caps1 = gst_caps_from_string ("meh");
+  gst_pad_set_active (src, TRUE);
+  gst_pad_set_active (ghost, TRUE);
   fail_unless (gst_pad_set_caps (src, caps1));
   caps2 = gst_pad_get_current_caps (ghost);
   fail_unless (gst_caps_is_equal (caps1, caps2));
