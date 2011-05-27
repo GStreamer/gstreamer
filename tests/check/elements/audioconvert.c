@@ -93,14 +93,15 @@ setup_audioconvert (GstCaps * outcaps)
   /* this installs a getcaps func that will always return the caps we set
    * later */
   gst_pad_use_fixed_caps (mysinkpad);
-  gst_pad_set_caps (mysinkpad, outcaps);
-  gst_caps_unref (outcaps);
-  outcaps = gst_pad_get_negotiated_caps (mysinkpad);
-  fail_unless (gst_caps_is_fixed (outcaps));
-  gst_caps_unref (outcaps);
 
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
+
+  gst_pad_set_caps (mysinkpad, outcaps);
+  gst_caps_unref (outcaps);
+  outcaps = gst_pad_get_current_caps (mysinkpad);
+  fail_unless (gst_caps_is_fixed (outcaps));
+  gst_caps_unref (outcaps);
 
   return audioconvert;
 }
@@ -447,11 +448,11 @@ verify_convert (const gchar * which, void *in, int inlength,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
+  gst_pad_push_event (mysrcpad, gst_event_new_caps (incaps));
+
   GST_DEBUG ("Creating buffer of %d bytes", inlength);
   inbuffer = gst_buffer_new_and_alloc (inlength);
   gst_buffer_fill (inbuffer, 0, in, inlength);
-  gst_buffer_set_caps (inbuffer, incaps);
-  ASSERT_CAPS_REFCOUNT (incaps, "incaps", 2);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
   /* pushing gives away my reference ... */
@@ -489,7 +490,7 @@ verify_convert (const gchar * which, void *in, int inlength,
     gint out_chans;
 
     in_s = gst_caps_get_structure (incaps, 0);
-    out_s = gst_caps_get_structure (GST_BUFFER_CAPS (outbuffer), 0);
+    out_s = gst_caps_get_structure (gst_pad_get_current_caps (mysinkpad), 0);
     fail_unless (gst_structure_get_int (out_s, "channels", &out_chans));
 
     /* positions for 1 and 2 channels are implicit if not provided */
@@ -511,7 +512,6 @@ done:
   GST_DEBUG ("cleanup audioconvert");
   cleanup_audioconvert (audioconvert);
   GST_DEBUG ("cleanup, unref incaps");
-  ASSERT_CAPS_REFCOUNT (incaps, "incaps", 1);
   gst_caps_unref (incaps);
 }
 
@@ -1318,7 +1318,7 @@ GST_START_TEST (test_caps_negotiation)
   fail_if (gst_element_get_state (pipeline, NULL, NULL, GST_CLOCK_TIME_NONE) !=
       GST_STATE_CHANGE_SUCCESS, "Failed to set test pipeline to PAUSED");
 
-  caps1 = gst_pad_get_caps (ac3_src);
+  caps1 = gst_pad_get_caps (ac3_src, NULL);
   fail_if (caps1 == NULL, "gst_pad_get_caps returned NULL");
   GST_DEBUG ("Caps size 1 : %d", gst_caps_get_size (caps1));
 
@@ -1337,7 +1337,7 @@ GST_START_TEST (test_caps_negotiation)
   fail_if (gst_element_get_state (pipeline, NULL, NULL, GST_CLOCK_TIME_NONE) !=
       GST_STATE_CHANGE_SUCCESS, "Failed to set test pipeline back to PAUSED");
 
-  caps2 = gst_pad_get_caps (ac3_src);
+  caps2 = gst_pad_get_caps (ac3_src, NULL);
 
   fail_if (caps2 == NULL, "gst_pad_get_caps returned NULL");
   GST_DEBUG ("Caps size 2 : %d", gst_caps_get_size (caps2));
