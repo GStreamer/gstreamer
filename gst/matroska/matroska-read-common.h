@@ -75,9 +75,8 @@ typedef struct _GstMatroskaReadCommon {
 } GstMatroskaReadCommon;
 
 GstFlowReturn gst_matroska_decode_content_encodings (GArray * encodings);
-gboolean gst_matroska_decompress_data (GstMatroskaTrackEncoding * enc,
-    guint8 ** data_out, guint * size_out,
-    GstMatroskaTrackCompressionAlgorithm algo);
+gboolean gst_matroska_decode_data (GArray * encodings, guint8 ** data_out,
+    guint * size_out, GstMatroskaTrackEncodingScope scope, gboolean free);
 gint64 gst_matroska_read_common_get_length (GstMatroskaReadCommon * common);
 GstFlowReturn gst_matroska_read_common_parse_index (GstMatroskaReadCommon *
     common, GstEbmlRead * ebml);

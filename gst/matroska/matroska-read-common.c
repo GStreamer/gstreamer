@@ -52,50 +52,7 @@ GST_DEBUG_CATEGORY_STATIC (matroskareadcommon_debug);
     GST_DEBUG_OBJECT (common, "Parsing " element " element " \
         " finished with '%s'", gst_flow_get_name (ret))
 
-GstFlowReturn
-gst_matroska_decode_content_encodings (GArray * encodings)
-{
-  gint i;
-
-  if (encodings == NULL)
-    return GST_FLOW_OK;
-
-  for (i = 0; i < encodings->len; i++) {
-    GstMatroskaTrackEncoding *enc =
-        &g_array_index (encodings, GstMatroskaTrackEncoding, i);
-    guint8 *data = NULL;
-    guint size;
-
-    if ((enc->scope & GST_MATROSKA_TRACK_ENCODING_SCOPE_NEXT_CONTENT_ENCODING)
-        == 0)
-      continue;
-
-    /* Encryption not supported yet */
-    if (enc->type != 0)
-      return GST_FLOW_ERROR;
-
-    if (i + 1 >= encodings->len)
-      return GST_FLOW_ERROR;
-
-    if (enc->comp_settings_length == 0)
-      continue;
-
-    data = enc->comp_settings;
-    size = enc->comp_settings_length;
-
-    if (!gst_matroska_decompress_data (enc, &data, &size, enc->comp_algo))
-      return GST_FLOW_ERROR;
-
-    g_free (enc->comp_settings);
-
-    enc->comp_settings = data;
-    enc->comp_settings_length = size;
-  }
-
-  return GST_FLOW_OK;
-}
-
-gboolean
+static gboolean
 gst_matroska_decompress_data (GstMatroskaTrackEncoding * enc,
     guint8 ** data_out, guint * size_out,
     GstMatroskaTrackCompressionAlgorithm algo)
@@ -260,6 +217,111 @@ out:
   } else {
     *data_out = new_data;
     *size_out = new_size;
+  }
+
+  return ret;
+}
+
+GstFlowReturn
+gst_matroska_decode_content_encodings (GArray * encodings)
+{
+  gint i;
+
+  if (encodings == NULL)
+    return GST_FLOW_OK;
+
+  for (i = 0; i < encodings->len; i++) {
+    GstMatroskaTrackEncoding *enc =
+        &g_array_index (encodings, GstMatroskaTrackEncoding, i);
+    guint8 *data = NULL;
+    guint size;
+
+    if ((enc->scope & GST_MATROSKA_TRACK_ENCODING_SCOPE_NEXT_CONTENT_ENCODING)
+        == 0)
+      continue;
+
+    /* Encryption not supported yet */
+    if (enc->type != 0)
+      return GST_FLOW_ERROR;
+
+    if (i + 1 >= encodings->len)
+      return GST_FLOW_ERROR;
+
+    if (enc->comp_settings_length == 0)
+      continue;
+
+    data = enc->comp_settings;
+    size = enc->comp_settings_length;
+
+    if (!gst_matroska_decompress_data (enc, &data, &size, enc->comp_algo))
+      return GST_FLOW_ERROR;
+
+    g_free (enc->comp_settings);
+
+    enc->comp_settings = data;
+    enc->comp_settings_length = size;
+  }
+
+  return GST_FLOW_OK;
+}
+
+gboolean
+gst_matroska_decode_data (GArray * encodings, guint8 ** data_out,
+    guint * size_out, GstMatroskaTrackEncodingScope scope, gboolean free)
+{
+  guint8 *data;
+  guint size;
+  gboolean ret = TRUE;
+  gint i;
+
+  g_return_val_if_fail (encodings != NULL, FALSE);
+  g_return_val_if_fail (data_out != NULL && *data_out != NULL, FALSE);
+  g_return_val_if_fail (size_out != NULL, FALSE);
+
+  data = *data_out;
+  size = *size_out;
+
+  for (i = 0; i < encodings->len; i++) {
+    GstMatroskaTrackEncoding *enc =
+        &g_array_index (encodings, GstMatroskaTrackEncoding, i);
+    guint8 *new_data = NULL;
+    guint new_size = 0;
+
+    if ((enc->scope & scope) == 0)
+      continue;
+
+    /* Encryption not supported yet */
+    if (enc->type != 0) {
+      ret = FALSE;
+      break;
+    }
+
+    new_data = data;
+    new_size = size;
+
+    ret =
+        gst_matroska_decompress_data (enc, &new_data, &new_size,
+        enc->comp_algo);
+
+    if (!ret)
+      break;
+
+    if ((data == *data_out && free) || (data != *data_out))
+      g_free (data);
+
+    data = new_data;
+    size = new_size;
+  }
+
+  if (!ret) {
+    if ((data == *data_out && free) || (data != *data_out))
+      g_free (data);
+
+    *data_out = NULL;
+    *size_out = 0;
+  } else {
+    *data_out = data;
+    *size_out = size;
   }
 
   return ret;

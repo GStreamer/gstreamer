@@ -461,68 +461,6 @@ gst_matroska_demux_reset (GstElement * element)
   }
 }
 
-static gboolean
-gst_matroska_decode_data (GArray * encodings, guint8 ** data_out,
-    guint * size_out, GstMatroskaTrackEncodingScope scope, gboolean free)
-{
-  guint8 *data;
-  guint size;
-  gboolean ret = TRUE;
-  gint i;
-
-  g_return_val_if_fail (encodings != NULL, FALSE);
-  g_return_val_if_fail (data_out != NULL && *data_out != NULL, FALSE);
-  g_return_val_if_fail (size_out != NULL, FALSE);
-
-  data = *data_out;
-  size = *size_out;
-
-  for (i = 0; i < encodings->len; i++) {
-    GstMatroskaTrackEncoding *enc =
-        &g_array_index (encodings, GstMatroskaTrackEncoding, i);
-    guint8 *new_data = NULL;
-    guint new_size = 0;
-
-    if ((enc->scope & scope) == 0)
-      continue;
-
-    /* Encryption not supported yet */
-    if (enc->type != 0) {
-      ret = FALSE;
-      break;
-    }
-
-    new_data = data;
-    new_size = size;
-
-    ret =
-        gst_matroska_decompress_data (enc, &new_data, &new_size,
-        enc->comp_algo);
-
-    if (!ret)
-      break;
-
-    if ((data == *data_out && free) || (data != *data_out))
-      g_free (data);
-
-    data = new_data;
-    size = new_size;
-  }
-
-  if (!ret) {
-    if ((data == *data_out && free) || (data != *data_out))
-      g_free (data);
-
-    *data_out = NULL;
-    *size_out = 0;
-  } else {
-    *data_out = data;
-    *size_out = size;
-  }
-
-  return ret;
-}
-
 static GstBuffer *
 gst_matroska_decode_buffer (GstMatroskaTrackContext * context, GstBuffer * buf)
 {
