@@ -495,23 +495,6 @@ gst_matroska_decode_buffer (GstMatroskaTrackContext * context, GstBuffer * buf)
   }
 }
 
-static gboolean
-gst_matroska_demux_tracknumber_unique (GstMatroskaDemux * demux, guint64 num)
-{
-  gint i;
-
-  g_assert (demux->common.src->len == demux->common.num_streams);
-  for (i = 0; i < demux->common.src->len; i++) {
-    GstMatroskaTrackContext *context = g_ptr_array_index (demux->common.src,
-        i);
-
-    if (context->num == num)
-      return FALSE;
-  }
-
-  return TRUE;
-}
-
 static GstFlowReturn
 gst_matroska_demux_add_stream (GstMatroskaDemux * demux, GstEbmlRead * ebml)
 {
@@ -572,7 +555,8 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux, GstEbmlRead * ebml)
           GST_ERROR_OBJECT (demux, "Invalid TrackNumber 0");
           ret = GST_FLOW_ERROR;
           break;
-        } else if (!gst_matroska_demux_tracknumber_unique (demux, num)) {
+        } else if (!gst_matroska_read_common_tracknumber_unique (&demux->common,
+                num)) {
           GST_ERROR_OBJECT (demux, "TrackNumber %" G_GUINT64_FORMAT
               " is not unique", num);
           ret = GST_FLOW_ERROR;

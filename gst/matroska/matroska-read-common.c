@@ -1038,3 +1038,20 @@ gst_matroska_read_common_read_track_encodings (GstMatroskaReadCommon * common,
 
   return gst_matroska_decode_content_encodings (context->encodings);
 }
+
+gboolean
+gst_matroska_read_common_tracknumber_unique (GstMatroskaReadCommon * common,
+    guint64 num)
+{
+  gint i;
+
+  g_assert (common->src->len == common->num_streams);
+  for (i = 0; i < common->src->len; i++) {
+    GstMatroskaTrackContext *context = g_ptr_array_index (common->src, i);
+
+    if (context->num == num)
+      return FALSE;
+  }
+
+  return TRUE;
+}

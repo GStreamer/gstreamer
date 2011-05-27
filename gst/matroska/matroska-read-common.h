@@ -95,6 +95,8 @@ gint gst_matroska_read_common_stream_from_num (GstMatroskaReadCommon * common,
 GstFlowReturn gst_matroska_read_common_read_track_encodings (
     GstMatroskaReadCommon * common, GstEbmlRead * ebml,
     GstMatroskaTrackContext * context);
+gboolean gst_matroska_read_common_tracknumber_unique (GstMatroskaReadCommon *
+    common, guint64 num);
 
 G_END_DECLS
 
