@@ -718,6 +718,9 @@ gst_codec_utils_mpeg4video_get_level (const guint8 * vis_obj_seq, guint len)
   else if (profile_id == 0 && level_id == 9)
     /* Simple Profile / Level 0b */
     return "0b";
+  else if (profile_id == 0xf && level_id > 7)
+    /* Fine Granularity Scalable Profile */
+    return digit_to_string (level_id - 8);
   else if (level_id <= level_max[profile_id])
     /* Levels for all other cases */
     return digit_to_string (level_id);
