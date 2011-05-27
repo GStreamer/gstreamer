@@ -54,6 +54,19 @@ enum
   PROP_BITRATE
 };
 
+#define SAMPLE_RATES " 8000, " \
+                    "11025, " \
+                    "12000, " \
+                    "16000, " \
+                    "22050, " \
+                    "24000, " \
+                    "32000, " \
+                    "44100, " \
+                    "48000, " \
+                    "64000, " \
+                    "88200, " \
+                    "96000"
+
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -62,7 +75,7 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
         "depth = (int) 16, "
         "signed = (boolean) TRUE, "
         "endianness = (int) BYTE_ORDER, "
-        "rate = (int) [8000, 96000], " "channels = (int) [1, 2]")
+        "rate = (int) { " SAMPLE_RATES " }, " "channels = (int) [1, 2]")
     );
 
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
@@ -70,7 +83,7 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/mpeg, "
         "mpegversion = (int) 4, "
-        "rate = (int) [8000, 96000], "
+        "rate = (int) { " SAMPLE_RATES " }, "
         "channels = (int) [1, 2], "
         "stream-format = (string) { adts, raw }, " "base-profile = (string) lc")
     );
