@@ -17,13 +17,6 @@
  * Boston, MA 02111-1307, USA.
  */
 
-/*
- * This file was (probably) generated from
- * gstvideotemplate.c,v 1.12 2004/01/07 21:07:12 ds Exp 
- * and
- * make_filter,v 1.6 2004/01/07 21:33:01 ds Exp 
- */
-
 /**
  * SECTION:element-zbar
  *
