@@ -4423,14 +4423,18 @@ again:
 
   /* store the event on the pad, but only on srcpads */
   if (GST_PAD_IS_SRC (pad) && GST_EVENT_IS_STICKY (event)) {
-    guint idx;
+    if (GST_PAD_IS_FLUSHING (pad)) {
+      goto flushing;
+    } else {
+      guint idx;
 
-    idx = GST_EVENT_STICKY_IDX (event);
-    GST_LOG_OBJECT (pad, "storing sticky event %s at index %u",
-        GST_EVENT_TYPE_NAME (event), idx);
+      idx = GST_EVENT_STICKY_IDX (event);
+      GST_LOG_OBJECT (pad, "storing sticky event %s at index %u",
+          GST_EVENT_TYPE_NAME (event), idx);
 
-    /* srcpad sticky events always become active immediately */
-    gst_event_replace (&pad->priv->events[idx].event, event);
+      /* srcpad sticky events always become active immediately */
+      gst_event_replace (&pad->priv->events[idx].event, event);
+    }
   }
 
   /* drop all events when blocking. Sticky events will stay on the pad and will
@@ -4543,6 +4547,13 @@ dropping:
 not_linked:
   {
     GST_DEBUG_OBJECT (pad, "Dropping event because pad is not linked");
+    GST_OBJECT_UNLOCK (pad);
+    gst_event_unref (event);
+    return FALSE;
+  }
+flushing:
+  {
+    GST_DEBUG_OBJECT (pad, "Dropping event because pad is flushing");
     GST_OBJECT_UNLOCK (pad);
     gst_event_unref (event);
     return FALSE;
