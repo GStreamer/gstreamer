@@ -565,64 +565,6 @@ gst_caps_steal_structure (GstCaps * caps, guint index)
   return gst_caps_remove_and_get_structure (caps, index);
 }
 
-static gboolean
-gst_caps_structure_is_subset_field (GQuark field_id, const GValue * value,
-    gpointer user_data)
-{
-  GstStructure *superset = user_data;
-  GValue subtraction = { 0, };
-  const GValue *other;
-
-  if (!(other = gst_structure_id_get_value (superset, field_id)))
-    /* field is missing in the superset => is subset */
-    return TRUE;
-
-  /* equal values are subset */
-  if (gst_value_compare (other, value) == GST_VALUE_EQUAL)
-    return TRUE;
-
-  /*
-   * 1 - [1,2] = empty
-   * -> !subset
-   *
-   * [1,2] - 1 = 2
-   *  -> 1 - [1,2] = empty
-   *  -> subset
-   *
-   * [1,3] - [1,2] = 3
-   * -> [1,2] - [1,3] = empty
-   * -> subset
-   *
-   * {1,2} - {1,3} = 2
-   * -> {1,3} - {1,2} = 3
-   * -> !subset
-   *
-   *  First caps subtraction needs to return a non-empty set, second
-   *  subtractions needs to give en empty set.
-   */
-  if (gst_value_subtract (&subtraction, other, value)) {
-    g_value_unset (&subtraction);
-    /* !empty result, swapping must be empty */
-    if (!gst_value_subtract (&subtraction, value, other))
-      return TRUE;
-
-    g_value_unset (&subtraction);
-  }
-  return FALSE;
-}
-
-static gboolean
-gst_caps_structure_is_subset (const GstStructure * superset,
-    const GstStructure * subset)
-{
-  if ((superset->name != subset->name) ||
-      (gst_structure_n_fields (superset) > gst_structure_n_fields (subset)))
-    return FALSE;
-
-  return gst_structure_foreach ((GstStructure *) subset,
-      gst_caps_structure_is_subset_field, (gpointer) superset);
-}
-
 /**
  * gst_caps_append:
  * @caps1: the #GstCaps that will be appended to
@@ -792,7 +734,7 @@ gst_caps_merge_structure (GstCaps * caps, GstStructure * structure)
     for (i = caps->structs->len - 1; i >= 0; i--) {
       structure1 = gst_caps_get_structure_unchecked (caps, i);
       /* if structure is a subset of structure1, then skip it */
-      if (gst_caps_structure_is_subset (structure1, structure)) {
+      if (gst_structure_is_subset (structure, structure1)) {
         unique = FALSE;
         break;
       }
@@ -1147,7 +1089,7 @@ gst_caps_is_subset (const GstCaps * subset, const GstCaps * superset)
     for (j = superset->structs->len - 1; j >= 0; j--) {
       s1 = gst_caps_get_structure_unchecked (subset, i);
       s2 = gst_caps_get_structure_unchecked (superset, j);
-      if (gst_caps_structure_is_subset (s2, s1)) {
+      if (gst_structure_is_subset (s1, s2)) {
         /* If we found a superset, continue with the next
          * subset structure */
         break;

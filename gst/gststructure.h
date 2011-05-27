@@ -250,6 +250,8 @@ gboolean                 gst_structure_fixate_field_nearest_fraction (GstStructu
 
 gboolean                 gst_structure_is_equal(const GstStructure *structure1,
 						const GstStructure *structure2);
+gboolean                 gst_structure_is_subset(const GstStructure *subset,
+                                                 const GstStructure *superset);
 gboolean                 gst_structure_can_intersect(const GstStructure *struct1,
 						     const GstStructure *struct2);
 GstStructure*            gst_structure_intersect (const GstStructure *struct1,
