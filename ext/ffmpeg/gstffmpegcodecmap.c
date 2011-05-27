@@ -33,6 +33,8 @@
 #include "gstffmpeg.h"
 #include "gstffmpegcodecmap.h"
 
+#include <gst/pbutils/codec-utils.h>
+
 /*
  * Read a palette from a caps.
  */
@@ -979,7 +981,12 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
         gst_caps_set_value (caps, "stream-format", &arr);
         g_value_unset (&arr);
       } else {
-        gst_caps_set_simple (caps, "stream-format", G_TYPE_STRING, "raw", NULL);
+        gst_caps_set_simple (caps, "stream-format", G_TYPE_STRING, "raw",
+            "base-profile", G_TYPE_STRING, "lc", NULL);
+
+        if (context && context->extradata_size > 0)
+          gst_codec_utils_aac_caps_set_level_and_profile (caps,
+              context->extradata, context->extradata_size);
       }
 
       break;
