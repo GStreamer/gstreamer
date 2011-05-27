@@ -494,45 +494,45 @@ GstCaps *      gst_video_format_new_template_caps (GstVideoFormat format);
 
 /* format properties */
 
-GstVideoFormat gst_video_format_from_fourcc (guint32 fourcc);
+GstVideoFormat gst_video_format_from_fourcc (guint32 fourcc) G_GNUC_CONST;
 
-guint32        gst_video_format_to_fourcc (GstVideoFormat format);
+guint32        gst_video_format_to_fourcc (GstVideoFormat format) G_GNUC_CONST;
 
-gboolean       gst_video_format_is_rgb    (GstVideoFormat format);
+gboolean       gst_video_format_is_rgb    (GstVideoFormat format) G_GNUC_CONST;
 
-gboolean       gst_video_format_is_yuv    (GstVideoFormat format);
+gboolean       gst_video_format_is_yuv    (GstVideoFormat format) G_GNUC_CONST;
 
-gboolean       gst_video_format_is_gray   (GstVideoFormat format);
+gboolean       gst_video_format_is_gray   (GstVideoFormat format) G_GNUC_CONST;
 
-gboolean       gst_video_format_has_alpha (GstVideoFormat format);
+gboolean       gst_video_format_has_alpha (GstVideoFormat format) G_GNUC_CONST;
 
 
 int            gst_video_format_get_component_depth  (GstVideoFormat format,
-                                                      int            component);
+                                                      int            component) G_GNUC_CONST;
 
 int            gst_video_format_get_row_stride       (GstVideoFormat format,
                                                       int            component,
-                                                      int            width);
+                                                      int            width) G_GNUC_CONST;
 
 int            gst_video_format_get_pixel_stride     (GstVideoFormat format,
-                                                      int            component);
+                                                      int            component) G_GNUC_CONST;
 
 int            gst_video_format_get_component_width  (GstVideoFormat format,
                                                       int            component,
-                                                      int            width);
+                                                      int            width) G_GNUC_CONST;
 
 int            gst_video_format_get_component_height (GstVideoFormat format,
                                                       int            component,
-                                                      int            height);
+                                                      int            height) G_GNUC_CONST;
 
 int            gst_video_format_get_component_offset (GstVideoFormat format,
                                                       int            component,
                                                       int            width,
-                                                      int            height);
+                                                      int            height) G_GNUC_CONST;
 
 int            gst_video_format_get_size             (GstVideoFormat format,
                                                       int            width,
-                                                      int            height);
+                                                      int            height) G_GNUC_CONST;
 
 gboolean       gst_video_get_size_from_caps (const GstCaps * caps, gint * size);
 
