@@ -1107,6 +1107,44 @@ gst_caps_is_subset (const GstCaps * subset, const GstCaps * superset)
 }
 
 /**
+ * gst_caps_is_subset_structure:
+ * @caps: a #GstCaps
+ * @structure: a potential #GstStructure subset of @caps
+ *
+ * Checks if @structure is a subset of @caps. See gst_caps_is_subset()
+ * for more information.
+ *
+ * Returns: %TRUE if @structure is a subset of @caps
+ *
+ * Since: 0.10.35
+ */
+gboolean
+gst_caps_is_subset_structure (const GstCaps * caps,
+    const GstStructure * structure)
+{
+  GstStructure *s;
+  gint i;
+
+  g_return_val_if_fail (caps != NULL, FALSE);
+  g_return_val_if_fail (structure != NULL, FALSE);
+
+  if (CAPS_IS_ANY (caps))
+    return TRUE;
+  if (CAPS_IS_EMPTY (caps))
+    return FALSE;
+
+  for (i = caps->structs->len - 1; i >= 0; i--) {
+    s = gst_caps_get_structure_unchecked (caps, i);
+    if (gst_structure_is_subset (structure, s)) {
+      /* If we found a superset return TRUE */
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
+/**
  * gst_caps_is_equal:
  * @caps1: a #GstCaps
  * @caps2: another #GstCaps

@@ -172,6 +172,7 @@ EXPORTS
 	gst_caps_is_equal_fixed
 	gst_caps_is_fixed
 	gst_caps_is_subset
+	gst_caps_is_subset_structure
 	gst_caps_load_thyself
 	gst_caps_make_writable
 	gst_caps_merge
