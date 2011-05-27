@@ -142,9 +142,6 @@ static GstStaticPadTemplate video_sink_factory =
         "video/x-huffyuv, "
         "width = (int) [ 16, 4096 ], "
         "height = (int) [ 16, 4096 ], " "framerate = (fraction) [ 0, MAX ];"
-        "video/x-dirac, "
-        "width = (int) [ 16, 4096 ], "
-        "height = (int) [ 16, 4096 ], " "framerate = (fraction) [ 0, MAX ];"
         "video/x-wmv, "
         "width = (int) [ 16, 4096 ], "
         "height = (int) [ 16, 4096 ], " "framerate = (fraction) [ 0, MAX ], "
@@ -600,8 +597,6 @@ gst_avi_mux_vidsink_set_caps (GstPad * pad, GstCaps * vscaps)
           avipad->vids.compression = GST_MAKE_FOURCC ('M', 'P', 'E', 'G');
           break;
       }
-    } else if (!strcmp (mimetype, "video/x-dirac")) {
-      avipad->vids.compression = GST_MAKE_FOURCC ('d', 'r', 'a', 'c');
     } else if (!strcmp (mimetype, "video/x-wmv")) {
       gint wmvversion;
 
