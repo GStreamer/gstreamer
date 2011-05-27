@@ -43,13 +43,25 @@
 
 #include "gstfaac.h"
 
+#define SAMPLE_RATES " 8000, " \
+                    "11025, " \
+                    "12000, " \
+                    "16000, " \
+                    "22050, " \
+                    "24000, " \
+                    "32000, " \
+                    "44100, " \
+                    "48000, " \
+                    "64000, " \
+                    "88200, " \
+                    "96000"
 #define SINK_CAPS \
     "audio/x-raw-int, "                \
     "endianness = (int) BYTE_ORDER, "  \
     "signed = (boolean) true, "        \
     "width = (int) 16, "               \
     "depth = (int) 16, "               \
-    "rate = (int) [ 8000, 96000 ], "   \
+    "rate = (int) {" SAMPLE_RATES "}, "   \
     "channels = (int) [ 1, 6 ] "
 
 /* these don't seem to work? */
@@ -70,13 +82,13 @@
     "audio/mpeg, "                     \
     "mpegversion = (int) 4, "   \
     "channels = (int) [ 1, 6 ], "      \
-    "rate = (int) [ 8000, 96000 ], "   \
+    "rate = (int) {" SAMPLE_RATES "}, "   \
     "stream-format = (string) { adts, raw }, " \
     "base-profile = (string) { main, lc, ssr, ltp }; " \
     "audio/mpeg, "                     \
     "mpegversion = (int) 2, "   \
     "channels = (int) [ 1, 6 ], "      \
-    "rate = (int) [ 8000, 96000 ], "   \
+    "rate = (int) {" SAMPLE_RATES "}, "   \
     "stream-format = (string) { adts, raw }, " \
     "profile = (string) { main, lc }"
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
@@ -336,12 +348,26 @@ gst_faac_sink_getcaps (GstPad * pad)
     GstCaps *tmp = gst_caps_new_empty ();
     GstStructure *s, *t;
     gint i, c;
+    static const int rates[] = {
+      8000, 11025, 12000, 16000, 22050, 24000,
+      32000, 44100, 48000, 64000, 88200, 96000
+    };
+    GValue rates_arr = { 0, };
+    GValue tmp_v = { 0, };
+
+    g_value_init (&rates_arr, GST_TYPE_LIST);
+    g_value_init (&tmp_v, G_TYPE_INT);
+    for (i = 0; i < G_N_ELEMENTS (rates); i++) {
+      g_value_set_int (&tmp_v, rates[i]);
+      gst_value_list_append_value (&rates_arr, &tmp_v);
+    }
+    g_value_unset (&tmp_v);
 
     s = gst_structure_new ("audio/x-raw-int",
         "endianness", G_TYPE_INT, G_BYTE_ORDER,
         "signed", G_TYPE_BOOLEAN, TRUE,
-        "width", G_TYPE_INT, 16,
-        "depth", G_TYPE_INT, 16, "rate", GST_TYPE_INT_RANGE, 8000, 96000, NULL);
+        "width", G_TYPE_INT, 16, "depth", G_TYPE_INT, 16, NULL);
+    gst_structure_set_value (s, "rate", &rates_arr);
 
     for (i = 1; i <= 6; i++) {
       GValue chanpos = { 0 };
@@ -365,6 +391,7 @@ gst_faac_sink_getcaps (GstPad * pad)
       gst_caps_append_structure (tmp, t);
     }
     gst_structure_free (s);
+    g_value_unset (&rates_arr);
 
     GST_DEBUG_OBJECT (pad, "Generated sinkcaps: %" GST_PTR_FORMAT, tmp);
 
