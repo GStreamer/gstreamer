@@ -327,6 +327,29 @@ GST_START_TEST (test_truncate)
 
 GST_END_TEST;
 
+GST_START_TEST (test_subset)
+{
+  GstCaps *c1, *c2;
+
+  c1 = gst_caps_from_string ("video/x-raw-yuv; video/x-raw-rgb");
+  c2 = gst_caps_from_string ("video/x-raw-yuv, format=(fourcc)YUY2");
+  fail_unless (gst_caps_is_subset (c2, c1));
+  fail_if (gst_caps_is_subset (c1, c2));
+  gst_caps_unref (c1);
+  gst_caps_unref (c2);
+
+  c1 = gst_caps_from_string
+      ("audio/x-raw-int, channels=(int)[ 1, 2 ], rate=(int)44100");
+  c2 = gst_caps_from_string
+      ("audio/x-raw-int, channels=(int)1, rate=(int)44100");
+  fail_unless (gst_caps_is_subset (c2, c1));
+  fail_if (gst_caps_is_subset (c1, c2));
+  gst_caps_unref (c1);
+  gst_caps_unref (c2);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_merge_fundamental)
 {
   GstCaps *c1, *c2;
@@ -552,6 +575,26 @@ GST_START_TEST (test_merge_subset)
   fail_unless (gst_caps_is_subset (test, c2));
   gst_caps_unref (test);
   gst_caps_unref (c2);
+
+  c2 = gst_caps_from_string ("audio/x-raw-int");
+  c1 = gst_caps_from_string ("audio/x-raw-int,channels=1");
+  gst_caps_merge (c2, c1);
+  GST_DEBUG ("merged: (%d) %" GST_PTR_FORMAT, gst_caps_get_size (c2), c2);
+  fail_unless (gst_caps_get_size (c2) == 1, NULL);
+  test = gst_caps_from_string ("audio/x-raw-int");
+  fail_unless (gst_caps_is_equal (c2, test));
+  gst_caps_unref (c2);
+  gst_caps_unref (test);
+
+  c2 = gst_caps_from_string ("audio/x-raw-int,channels=1");
+  c1 = gst_caps_from_string ("audio/x-raw-int");
+  gst_caps_merge (c2, c1);
+  GST_DEBUG ("merged: (%d) %" GST_PTR_FORMAT, gst_caps_get_size (c2), c2);
+  fail_unless (gst_caps_get_size (c2) == 2, NULL);
+  test = gst_caps_from_string ("audio/x-raw-int,channels=1; audio/x-raw-int");
+  fail_unless (gst_caps_is_equal (c2, test));
+  gst_caps_unref (c2);
+  gst_caps_unref (test);
 }
 
 GST_END_TEST;
@@ -909,6 +952,7 @@ gst_caps_suite (void)
   tcase_add_test (tc_chain, test_static_caps);
   tcase_add_test (tc_chain, test_simplify);
   tcase_add_test (tc_chain, test_truncate);
+  tcase_add_test (tc_chain, test_subset);
   tcase_add_test (tc_chain, test_merge_fundamental);
   tcase_add_test (tc_chain, test_merge_same);
   tcase_add_test (tc_chain, test_merge_subset);

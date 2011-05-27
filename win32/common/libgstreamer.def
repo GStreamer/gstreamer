@@ -177,6 +177,7 @@ EXPORTS
 	gst_caps_is_equal_fixed
 	gst_caps_is_fixed
 	gst_caps_is_subset
+	gst_caps_is_subset_structure
 	gst_caps_make_writable
 	gst_caps_merge
 	gst_caps_merge_structure
@@ -1005,6 +1006,7 @@ EXPORTS
 	gst_structure_id_take_value
 	gst_structure_intersect
 	gst_structure_is_equal
+	gst_structure_is_subset
 	gst_structure_map_in_place
 	gst_structure_n_fields
 	gst_structure_new

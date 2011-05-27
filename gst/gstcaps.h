@@ -338,6 +338,8 @@ gboolean          gst_caps_is_always_compatible    (const GstCaps *caps1,
                                                     const GstCaps *caps2);
 gboolean          gst_caps_is_subset		   (const GstCaps *subset,
 						    const GstCaps *superset);
+gboolean          gst_caps_is_subset_structure     (const GstCaps *caps,
+                                                    const GstStructure *structure);
 gboolean          gst_caps_is_equal		   (const GstCaps *caps1,
 						    const GstCaps *caps2);
 gboolean          gst_caps_is_equal_fixed          (const GstCaps *caps1,

@@ -3122,3 +3122,74 @@ gst_structure_can_intersect (const GstStructure * struct1,
 
   return TRUE;
 }
+
+static gboolean
+gst_caps_structure_is_subset_field (GQuark field_id, const GValue * value,
+    gpointer user_data)
+{
+  GstStructure *superset = user_data;
+  GValue subtraction = { 0, };
+  const GValue *other;
+
+  if (!(other = gst_structure_id_get_value (superset, field_id)))
+    /* field is missing in the superset => is subset */
+    return TRUE;
+
+  /* equal values are subset */
+  if (gst_value_compare (other, value) == GST_VALUE_EQUAL)
+    return TRUE;
+
+  /*
+   * 1 - [1,2] = empty
+   * -> !subset
+   *
+   * [1,2] - 1 = 2
+   *  -> 1 - [1,2] = empty
+   *  -> subset
+   *
+   * [1,3] - [1,2] = 3
+   * -> [1,2] - [1,3] = empty
+   * -> subset
+   *
+   * {1,2} - {1,3} = 2
+   * -> {1,3} - {1,2} = 3
+   * -> !subset
+   *
+   *  First caps subtraction needs to return a non-empty set, second
+   *  subtractions needs to give en empty set.
+   */
+  if (gst_value_subtract (&subtraction, other, value)) {
+    g_value_unset (&subtraction);
+    /* !empty result, swapping must be empty */
+    if (!gst_value_subtract (&subtraction, value, other))
+      return TRUE;
+
+    g_value_unset (&subtraction);
+  }
+  return FALSE;
+}
+
+/**
+ * gst_structure_is_subset:
+ * @subset: a #GstStructure
+ * @superset: a potentially greater #GstStructure
+ *
+ * Checks if @subset is a subset of @superset, i.e. has the same
+ * structure name and for all fields that are existing in @superset,
+ * @subset has a value that is a subset of the value in @superset.
+ *
+ * Returns: %TRUE if @subset is a subset of @superset
+ *
+ * Since: 0.10.35
+ */
+gboolean
+gst_structure_is_subset (const GstStructure * subset,
+    const GstStructure * superset)
+{
+  if ((superset->name != subset->name) ||
+      (gst_structure_n_fields (superset) > gst_structure_n_fields (subset)))
+    return FALSE;
+
+  return gst_structure_foreach ((GstStructure *) subset,
+      gst_caps_structure_is_subset_field, (gpointer) superset);
+}
