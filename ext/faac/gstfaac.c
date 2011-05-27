@@ -88,12 +88,12 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
 
 enum
 {
-  ARG_0,
-  ARG_BITRATE,
-  ARG_PROFILE,
-  ARG_TNS,
-  ARG_MIDSIDE,
-  ARG_SHORTCTL
+  PROP_0,
+  PROP_BITRATE,
+  PROP_PROFILE,
+  PROP_TNS,
+  PROP_MIDSIDE,
+  PROP_SHORTCTL
 };
 
 static void gst_faac_base_init (GstFaacClass * klass);
@@ -236,21 +236,21 @@ gst_faac_class_init (GstFaacClass * klass)
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_faac_finalize);
 
   /* properties */
-  g_object_class_install_property (gobject_class, ARG_BITRATE,
+  g_object_class_install_property (gobject_class, PROP_BITRATE,
       g_param_spec_int ("bitrate", "Bitrate (bps)", "Bitrate in bits/sec",
           8 * 1000, 320 * 1000, FAAC_DEFAULT_BITRATE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, ARG_PROFILE,
+  g_object_class_install_property (gobject_class, PROP_PROFILE,
       g_param_spec_enum ("profile", "Profile", "MPEG/AAC encoding profile",
           GST_TYPE_FAAC_PROFILE, FAAC_DEFAULT_PROFILE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, ARG_TNS,
+  g_object_class_install_property (gobject_class, PROP_TNS,
       g_param_spec_boolean ("tns", "TNS", "Use temporal noise shaping",
           FAAC_DEFAULT_TNS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, ARG_MIDSIDE,
+  g_object_class_install_property (gobject_class, PROP_MIDSIDE,
       g_param_spec_boolean ("midside", "Midside", "Allow mid/side encoding",
           FAAC_DEFAULT_MIDSIDE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, ARG_SHORTCTL,
+  g_object_class_install_property (gobject_class, PROP_SHORTCTL,
       g_param_spec_enum ("shortctl", "Block type",
           "Block type encorcing",
           GST_TYPE_FAAC_SHORTCTL, FAAC_DEFAULT_SHORTCTL,
@@ -847,19 +847,19 @@ gst_faac_set_property (GObject * object,
   GST_OBJECT_LOCK (faac);
 
   switch (prop_id) {
-    case ARG_BITRATE:
+    case PROP_BITRATE:
       faac->bitrate = g_value_get_int (value);
       break;
-    case ARG_PROFILE:
+    case PROP_PROFILE:
       faac->profile = g_value_get_enum (value);
       break;
-    case ARG_TNS:
+    case PROP_TNS:
       faac->tns = g_value_get_boolean (value);
       break;
-    case ARG_MIDSIDE:
+    case PROP_MIDSIDE:
       faac->midside = g_value_get_boolean (value);
       break;
-    case ARG_SHORTCTL:
+    case PROP_SHORTCTL:
       faac->shortctl = g_value_get_enum (value);
       break;
     default:
@@ -879,19 +879,19 @@ gst_faac_get_property (GObject * object,
   GST_OBJECT_LOCK (faac);
 
   switch (prop_id) {
-    case ARG_BITRATE:
+    case PROP_BITRATE:
       g_value_set_int (value, faac->bitrate);
       break;
-    case ARG_PROFILE:
+    case PROP_PROFILE:
       g_value_set_enum (value, faac->profile);
       break;
-    case ARG_TNS:
+    case PROP_TNS:
       g_value_set_boolean (value, faac->tns);
       break;
-    case ARG_MIDSIDE:
+    case PROP_MIDSIDE:
       g_value_set_boolean (value, faac->midside);
       break;
-    case ARG_SHORTCTL:
+    case PROP_SHORTCTL:
       g_value_set_enum (value, faac->shortctl);
       break;
     default:
