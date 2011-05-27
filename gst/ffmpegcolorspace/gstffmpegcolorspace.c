@@ -101,13 +101,20 @@ gst_ffmpegcsp_caps_remove_format_info (GstCaps * caps)
 {
   GstStructure *yuvst, *rgbst, *grayst;
   gint i, n;
+  GstCaps *res;
 
-  caps = gst_caps_copy (caps);
+  res = gst_caps_new_empty ();
 
   n = gst_caps_get_size (caps);
   for (i = 0; i < n; i++) {
     yuvst = gst_caps_get_structure (caps, i);
 
+    /* If this is already expressed by the existing caps
+     * skip this structure */
+    if (i > 0 && gst_caps_is_subset_structure (res, yuvst))
+      continue;
+
+    yuvst = gst_structure_copy (yuvst);
     gst_structure_set_name (yuvst, "video/x-raw-yuv");
     gst_structure_remove_fields (yuvst, "format", "endianness", "depth",
         "bpp", "red_mask", "green_mask", "blue_mask", "alpha_mask",
@@ -120,11 +127,12 @@ gst_ffmpegcsp_caps_remove_format_info (GstCaps * caps)
     grayst = gst_structure_copy (rgbst);
     gst_structure_set_name (grayst, "video/x-raw-gray");
 
-    gst_caps_merge_structure (caps, rgbst);
-    gst_caps_merge_structure (caps, grayst);
+    gst_caps_append_structure (res, yuvst);
+    gst_caps_append_structure (res, rgbst);
+    gst_caps_append_structure (res, grayst);
   }
 
-  return caps;
+  return res;
 }
 
 /* The caps can be transformed into any other caps with format info removed.
@@ -134,17 +142,11 @@ static GstCaps *
 gst_ffmpegcsp_transform_caps (GstBaseTransform * btrans,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter)
 {
-  GstCaps *template;
   GstCaps *tmp, *tmp2;
   GstCaps *result;
 
-  template = gst_static_pad_template_get_caps (&gst_ffmpegcsp_src_template);
-
   /* Get all possible caps that we can transform to */
   tmp = gst_ffmpegcsp_caps_remove_format_info (caps);
-  tmp2 = gst_caps_intersect_full (tmp, template, GST_CAPS_INTERSECT_FIRST);
-  gst_caps_unref (tmp);
-  tmp = tmp2;
 
   if (filter) {
     tmp2 = gst_caps_intersect_full (filter, tmp, GST_CAPS_INTERSECT_FIRST);
