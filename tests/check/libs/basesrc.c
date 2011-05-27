@@ -88,12 +88,8 @@ GST_START_TEST (basesrc_eos_events_push_live_op)
   /* wait a second, then do controlled shutdown */
   g_usleep (GST_USECOND * 1);
 
-  /* shut down source only (should send EOS event) ... */
-  gst_element_set_state (src, GST_STATE_NULL);
-  state_ret = gst_element_get_state (src, NULL, NULL, -1);
-  fail_unless (state_ret == GST_STATE_CHANGE_SUCCESS);
-
-  fail_unless (gst_element_set_locked_state (src, TRUE) == TRUE);
+  /* shut down pipeline (should send EOS message) ... */
+  gst_element_send_event (pipe, gst_event_new_eos ());
 
   /* ... and wait for the EOS message from the sink */
   msg = gst_bus_poll (bus, GST_MESSAGE_EOS | GST_MESSAGE_ERROR, -1);
@@ -118,6 +114,8 @@ GST_START_TEST (basesrc_eos_events_push_live_op)
 }
 
 GST_END_TEST;
+
+
 
 /* basesrc_eos_events_push:
  *  - make sure source only sends one EOS when operating in push-mode,
@@ -559,12 +557,8 @@ GST_START_TEST (basesrc_seek_events_rate_update)
   /* wait a second, then do controlled shutdown */
   g_usleep (GST_USECOND * 1);
 
-  /* shut down source only (should send EOS event) ... */
-  gst_element_set_state (src, GST_STATE_NULL);
-  state_ret = gst_element_get_state (src, NULL, NULL, -1);
-  fail_unless (state_ret == GST_STATE_CHANGE_SUCCESS);
-
-  fail_unless (gst_element_set_locked_state (src, TRUE) == TRUE);
+  /* shut down pipeline only (should send EOS message) ... */
+  gst_element_send_event (pipe, gst_event_new_eos ());
 
   /* ... and wait for the EOS message from the sink */
   msg = gst_bus_poll (bus, GST_MESSAGE_EOS | GST_MESSAGE_ERROR, -1);

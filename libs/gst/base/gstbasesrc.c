@@ -150,9 +150,6 @@
  * an EOS message to be posted on the pipeline's bus. Once this EOS message is
  * received, it may safely shut down the entire pipeline.
  *
- * The old behaviour for controlled shutdown introduced since GStreamer 0.10.3
- * is still available but deprecated as it is dangerous and less flexible.
- *
  * Last reviewed on 2007-12-19 (0.10.16)
  * </para>
  * </refsect2>
@@ -212,8 +209,6 @@ enum
 
 struct _GstBaseSrcPrivate
 {
-  gboolean last_sent_eos;       /* last thing we did was send an EOS (we set this
-                                 * to avoid the sending of two EOS in some cases) */
   gboolean discont;
   gboolean flushing;
 
@@ -2302,8 +2297,6 @@ gst_base_src_loop (GstPad * pad)
   if (G_UNLIKELY (src->priv->flushing))
     goto flushing;
 
-  src->priv->last_sent_eos = FALSE;
-
   blocksize = src->blocksize;
 
   /* if we operate in bytes, we can calculate an offset */
@@ -2488,7 +2481,6 @@ pause:
         event = gst_event_new_eos ();
         gst_event_set_seqnum (event, src->priv->seqnum);
         gst_pad_push_event (pad, event);
-        src->priv->last_sent_eos = TRUE;
       }
     } else if (ret == GST_FLOW_NOT_LINKED || ret <= GST_FLOW_UNEXPECTED) {
       event = gst_event_new_eos ();
@@ -2503,7 +2495,6 @@ pause:
           (_("Internal data flow error.")),
           ("streaming task paused, reason %s (%d)", reason, ret));
       gst_pad_push_event (pad, event);
-      src->priv->last_sent_eos = TRUE;
     }
     goto done;
   }
@@ -2876,7 +2867,6 @@ gst_base_src_activate_push (GstPad * pad, gboolean active)
     if (G_UNLIKELY (!gst_base_src_start (basesrc)))
       goto error_start;
 
-    basesrc->priv->last_sent_eos = FALSE;
     basesrc->priv->discont = TRUE;
     gst_base_src_set_flushing (basesrc, FALSE, FALSE, FALSE, NULL);
 
@@ -2962,9 +2952,6 @@ gst_base_src_activate_pull (GstPad * pad, gboolean active)
     /* flush all, there is no task to stop */
     gst_base_src_set_flushing (basesrc, TRUE, FALSE, TRUE, NULL);
 
-    /* don't send EOS when going from PAUSED => READY when in pull mode */
-    basesrc->priv->last_sent_eos = TRUE;
-
     if (G_UNLIKELY (!gst_base_src_stop (basesrc)))
       goto error_stop;
   }
@@ -3031,21 +3018,10 @@ gst_base_src_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
     {
-      GstEvent **event_p, *event;
+      GstEvent **event_p;
 
       /* we don't need to unblock anything here, the pad deactivation code
        * already did this */
-
-      /* FIXME, deprecate this behaviour, it is very dangerous.
-       * the prefered way of sending EOS downstream is by sending
-       * the EOS event to the element */
-      if (!basesrc->priv->last_sent_eos) {
-        GST_DEBUG_OBJECT (basesrc, "Sending EOS event");
-        event = gst_event_new_eos ();
-        gst_event_set_seqnum (event, basesrc->priv->seqnum);
-        gst_pad_push_event (basesrc->srcpad, event);
-        basesrc->priv->last_sent_eos = TRUE;
-      }
       g_atomic_int_set (&basesrc->priv->pending_eos, FALSE);
       event_p = &basesrc->pending_seek;
       gst_event_replace (event_p, NULL);
