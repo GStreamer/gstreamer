@@ -386,10 +386,13 @@ gst_tee_release_pad (GstElement * element, GstPad * pad)
   }
   GST_OBJECT_UNLOCK (tee);
 
-  gst_pad_set_active (pad, FALSE);
-
+  gst_object_ref (pad);
   gst_element_remove_pad (GST_ELEMENT_CAST (tee), pad);
+
+  gst_pad_set_active (pad, FALSE);
   GST_TEE_DYN_UNLOCK (tee);
+
+  gst_object_unref (pad);
 
   if (changed) {
     gst_tee_notify_alloc_pad (tee);
