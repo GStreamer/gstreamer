@@ -155,7 +155,8 @@ aren't tested well enough, or the code is not of good enough quality.
     --with-package-origin="http://gstreamer.freedesktop.org" \
     --enable-debug --disable-static --enable-gtk-doc --enable-experimental
 
-%{__make} %{?_smp_mflags}
+# %{__make} %{?_smp_mflags}
+make ERROR_CFLAGS='' ERROR_CXXFLAGS=''
 
 %install
 %{__rm} -rf %{buildroot}
