@@ -141,8 +141,22 @@ gst_voaacenc_generate_sink_caps (gpointer data)
   };
   GstCaps *caps = gst_caps_new_empty ();
   gint i, c;
+  static const int rates[] = {
+    8000, 11025, 12000, 16000, 22050, 24000,
+    32000, 44100, 48000, 64000, 88200, 96000
+  };
+  GValue rates_arr = { 0, };
+  GValue tmp = { 0, };
 
-  for (i = 0; i < VOAAC_ENC_MAX_CHANNELS; i++) {
+  g_value_init (&rates_arr, GST_TYPE_LIST);
+  g_value_init (&tmp, G_TYPE_INT);
+  for (i = 0; i < G_N_ELEMENTS (rates); i++) {
+    g_value_set_int (&tmp, rates[i]);
+    gst_value_list_append_value (&rates_arr, &tmp);
+  }
+  g_value_unset (&tmp);
+
+  for (i = 0; i < 2 /*VOAAC_ENC_MAX_CHANNELS */ ; i++) {
     GValue chanpos = { 0 };
     GValue pos = { 0 };
     GstStructure *structure;
@@ -162,14 +176,16 @@ gst_voaacenc_generate_sink_caps (gpointer data)
         "depth", G_TYPE_INT, 16,
         "signed", G_TYPE_BOOLEAN, TRUE,
         "endianness", G_TYPE_INT, G_BYTE_ORDER,
-        "rate", GST_TYPE_INT_RANGE, 8000, 96000, "channels", G_TYPE_INT, i + 1,
-        NULL);
+        "channels", G_TYPE_INT, i + 1, NULL);
 
+    gst_structure_set_value (structure, "rate", &rates_arr);
     gst_structure_set_value (structure, "channel-positions", &chanpos);
     g_value_unset (&chanpos);
 
     gst_caps_append_structure (caps, structure);
   }
+
+  g_value_unset (&rates_arr);
 
   GST_DEBUG ("generated sink caps: %" GST_PTR_FORMAT, caps);
   return caps;
