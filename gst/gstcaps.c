@@ -569,13 +569,13 @@ static gboolean
 gst_caps_structure_is_subset_field (GQuark field_id, const GValue * value,
     gpointer user_data)
 {
-  GstStructure *subtract_from = user_data;
+  GstStructure *superset = user_data;
   GValue subtraction = { 0, };
   const GValue *other;
 
-  if (!(other = gst_structure_id_get_value (subtract_from, field_id)))
-    /* field is missing in one set */
-    return FALSE;
+  if (!(other = gst_structure_id_get_value (superset, field_id)))
+    /* field is missing in the superset => is subset */
+    return TRUE;
 
   /* equal values are subset */
   if (gst_value_compare (other, value) == GST_VALUE_EQUAL)
@@ -612,17 +612,15 @@ gst_caps_structure_is_subset_field (GQuark field_id, const GValue * value,
 }
 
 static gboolean
-gst_caps_structure_is_subset (const GstStructure * minuend,
-    const GstStructure * subtrahend)
+gst_caps_structure_is_subset (const GstStructure * superset,
+    const GstStructure * subset)
 {
-  if ((minuend->name != subtrahend->name) ||
-      (gst_structure_n_fields (minuend) !=
-          gst_structure_n_fields (subtrahend))) {
+  if ((superset->name != subset->name) ||
+      (gst_structure_n_fields (superset) > gst_structure_n_fields (subset)))
     return FALSE;
-  }
 
-  return gst_structure_foreach ((GstStructure *) subtrahend,
-      gst_caps_structure_is_subset_field, (gpointer) minuend);
+  return gst_structure_foreach ((GstStructure *) subset,
+      gst_caps_structure_is_subset_field, (gpointer) superset);
 }
 
 /**

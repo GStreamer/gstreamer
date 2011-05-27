@@ -573,6 +573,26 @@ GST_START_TEST (test_merge_subset)
   fail_unless (gst_caps_is_subset (test, c2));
   gst_caps_unref (test);
   gst_caps_unref (c2);
+
+  c2 = gst_caps_from_string ("audio/x-raw-int");
+  c1 = gst_caps_from_string ("audio/x-raw-int,channels=1");
+  gst_caps_merge (c2, c1);
+  GST_DEBUG ("merged: (%d) %" GST_PTR_FORMAT, gst_caps_get_size (c2), c2);
+  fail_unless (gst_caps_get_size (c2) == 1, NULL);
+  test = gst_caps_from_string ("audio/x-raw-int");
+  fail_unless (gst_caps_is_equal (c2, test));
+  gst_caps_unref (c2);
+  gst_caps_unref (test);
+
+  c2 = gst_caps_from_string ("audio/x-raw-int,channels=1");
+  c1 = gst_caps_from_string ("audio/x-raw-int");
+  gst_caps_merge (c2, c1);
+  GST_DEBUG ("merged: (%d) %" GST_PTR_FORMAT, gst_caps_get_size (c2), c2);
+  fail_unless (gst_caps_get_size (c2) == 2, NULL);
+  test = gst_caps_from_string ("audio/x-raw-int,channels=1; audio/x-raw-int");
+  fail_unless (gst_caps_is_equal (c2, test));
+  gst_caps_unref (c2);
+  gst_caps_unref (test);
 }
 
 GST_END_TEST;
