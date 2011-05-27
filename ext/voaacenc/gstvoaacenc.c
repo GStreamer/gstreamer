@@ -62,7 +62,7 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
         "depth = (int) 16, "
         "signed = (boolean) TRUE, "
         "endianness = (int) BYTE_ORDER, "
-        "rate = (int) [8000, 96000], " "channels = (int) [1, 6]")
+        "rate = (int) [8000, 96000], " "channels = (int) [1, 2]")
     );
 
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
@@ -71,7 +71,7 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("audio/mpeg, "
         "mpegversion = (int) 4, "
         "rate = (int) [8000, 96000], "
-        "channels = (int) [1, 6], "
+        "channels = (int) [1, 2], "
         "stream-format = (string) { adts, raw }, " "base-profile = (string) lc")
     );
 
@@ -614,6 +614,8 @@ static gboolean
 voaacenc_core_set_parameter (GstVoAacEnc * voaacenc)
 {
   AACENC_PARAM params = { 0 };
+  guint32 ret;
+
   params.sampleRate = voaacenc->rate;
   params.bitRate = voaacenc->bitrate;
   params.nChannels = voaacenc->channels;
@@ -622,8 +624,12 @@ voaacenc_core_set_parameter (GstVoAacEnc * voaacenc)
   } else {
     params.adtsUsed = 0;
   }
-  if (voaacenc->codec_api.SetParam (voaacenc->handle, VO_PID_AAC_ENCPARAM,
-          &params) != VO_ERR_NONE) {
+
+  ret =
+      voaacenc->codec_api.SetParam (voaacenc->handle, VO_PID_AAC_ENCPARAM,
+      &params);
+  if (ret != VO_ERR_NONE) {
+    GST_ERROR_OBJECT (voaacenc, "Failed to set encoder parameters");
     return FALSE;
   }
   return TRUE;
