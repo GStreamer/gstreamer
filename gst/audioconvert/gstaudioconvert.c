@@ -579,17 +579,12 @@ gst_audio_convert_transform_caps (GstBaseTransform * base,
     structure = gst_caps_get_structure (caps, j);
 
     if (j > 0) {
-      GstCaps *tmp = gst_caps_new_full (gst_structure_copy (structure), NULL);
-
       /* If the new structure is a subset of the already existing transformed
        * caps we can safely skip it because we would transform it to the
        * same caps again.
        */
-      if (gst_caps_is_subset (tmp, ret)) {
-        gst_caps_unref (tmp);
+      if (gst_caps_is_subset_structure (ret, structure))
         continue;
-      }
-      gst_caps_unref (tmp);
     }
 
     structure_name = gst_structure_get_name (structure);
