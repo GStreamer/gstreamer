@@ -490,7 +490,8 @@ strip_width_64 (GstStructure * s)
 
 /* Little utility function to create a related structure for float/int */
 static void
-append_with_other_format (GstCaps * caps, GstStructure * s, gboolean isfloat)
+append_with_other_format (GstCaps * caps, const GstStructure * s,
+    gboolean isfloat)
 {
   GstStructure *s2;
 
@@ -501,12 +502,12 @@ append_with_other_format (GstCaps * caps, GstStructure * s, gboolean isfloat)
     /* If 64 bit float was allowed; remove width 64: we don't support it for 
      * integer*/
     strip_width_64 (s2);
-    gst_caps_append_structure (caps, s2);
+    gst_caps_merge_structure (caps, s2);
   } else {
     s2 = gst_structure_copy (s);
     gst_structure_set_name (s2, "audio/x-raw-float");
     make_lossless_changes (s2, TRUE);
-    gst_caps_append_structure (caps, s2);
+    gst_caps_merge_structure (caps, s2);
   }
 }
 
@@ -567,134 +568,136 @@ gst_audio_convert_transform_caps (GstBaseTransform * base,
     "width", "depth", "rate", "channels", "endianness", "signed"
   };
   const gchar *structure_name;
+  gint n, j;
   int i;
 
-  g_return_val_if_fail (GST_CAPS_IS_SIMPLE (caps), NULL);
-
-  structure = gst_caps_get_structure (caps, 0);
-  structure_name = gst_structure_get_name (structure);
-
-  isfloat = strcmp (structure_name, "audio/x-raw-float") == 0;
-
-  /* We operate on a version of the original structure with any additional
-   * fields absent */
-  s = gst_structure_empty_new (structure_name);
-  for (i = 0; i < sizeof (fields_used) / sizeof (*fields_used); i++) {
-    if (gst_structure_has_field (structure, fields_used[i]))
-      gst_structure_set_value (s, fields_used[i],
-          gst_structure_get_value (structure, fields_used[i]));
-  }
-
-  if (!isfloat) {
-    /* Commonly, depth is left out: set it equal to width if we have a fixed
-     * width, if so */
-    if (!gst_structure_has_field (s, "depth") &&
-        gst_structure_get_int (s, "width", &width))
-      gst_structure_set (s, "depth", G_TYPE_INT, width, NULL);
-  }
+  n = gst_caps_get_size (caps);
 
   ret = gst_caps_new_empty ();
 
-  /* All lossless conversions */
-  s = make_lossless_changes (s, isfloat);
-  gst_caps_append_structure (ret, s);
+  for (j = 0; j < n; j++) {
+    structure = gst_caps_get_structure (caps, j);
+    structure_name = gst_structure_get_name (structure);
 
-  /* Same, plus a float<->int conversion */
-  append_with_other_format (ret, s, isfloat);
-  GST_DEBUG_OBJECT (base, "  step1: (%d) %" GST_PTR_FORMAT,
-      gst_caps_get_size (ret), ret);
+    isfloat = strcmp (structure_name, "audio/x-raw-float") == 0;
 
-  /* We don't mind increasing width/depth/channels, but reducing them is 
-   * Very Bad. Only available if width, depth, channels are already fixed. */
-  s = gst_structure_copy (s);
-  if (!isfloat) {
-    if (gst_structure_get_int (structure, "width", &width))
-      set_structure_widths (s, width, 32);
-    if (gst_structure_get_int (structure, "depth", &depth)) {
-      if (depth == 32)
-        gst_structure_set (s, "depth", G_TYPE_INT, 32, NULL);
-      else
-        gst_structure_set (s, "depth", GST_TYPE_INT_RANGE, depth, 32, NULL);
+    /* We operate on a version of the original structure with any additional
+     * fields absent */
+    s = gst_structure_empty_new (structure_name);
+    for (i = 0; i < sizeof (fields_used) / sizeof (*fields_used); i++) {
+      if (gst_structure_has_field (structure, fields_used[i]))
+        gst_structure_set_value (s, fields_used[i],
+            gst_structure_get_value (structure, fields_used[i]));
     }
-  }
 
-  allow_mixing = TRUE;
-  if (gst_structure_get_int (structure, "channels", &channels)) {
-    gboolean unpositioned;
+    if (!isfloat) {
+      /* Commonly, depth is left out: set it equal to width if we have a fixed
+       * width, if so */
+      if (!gst_structure_has_field (s, "depth") &&
+          gst_structure_get_int (s, "width", &width))
+        gst_structure_set (s, "depth", G_TYPE_INT, width, NULL);
+    }
 
-    /* we don't support mixing for channels without channel positions */
-    if (structure_has_fixed_channel_positions (structure, &unpositioned))
-      allow_mixing = (unpositioned == FALSE);
-  }
+    /* All lossless conversions */
+    s = make_lossless_changes (s, isfloat);
+    gst_caps_merge_structure (ret, gst_structure_copy (s));
 
-  if (!allow_mixing) {
-    gst_structure_set (s, "channels", G_TYPE_INT, channels, NULL);
-    if (gst_structure_has_field (structure, "channel-positions"))
-      gst_structure_set_value (s, "channel-positions",
-          gst_structure_get_value (structure, "channel-positions"));
-  } else {
-    if (channels == 0)
-      gst_structure_set (s, "channels", GST_TYPE_INT_RANGE, 1, 11, NULL);
-    else if (channels == 11)
-      gst_structure_set (s, "channels", G_TYPE_INT, 11, NULL);
-    else
-      gst_structure_set (s, "channels", GST_TYPE_INT_RANGE, channels, 11, NULL);
-    gst_structure_remove_field (s, "channel-positions");
-  }
-  gst_caps_append_structure (ret, s);
+    /* Same, plus a float<->int conversion */
+    append_with_other_format (ret, s, isfloat);
+    GST_DEBUG_OBJECT (base, "  step1: (%d) %" GST_PTR_FORMAT,
+        gst_caps_get_size (ret), ret);
 
-  /* Same, plus a float<->int conversion */
-  append_with_other_format (ret, s, isfloat);
+    /* We don't mind increasing width/depth/channels, but reducing them is 
+     * Very Bad. Only available if width, depth, channels are already fixed. */
+    if (!isfloat) {
+      if (gst_structure_get_int (structure, "width", &width))
+        set_structure_widths (s, width, 32);
+      if (gst_structure_get_int (structure, "depth", &depth)) {
+        if (depth == 32)
+          gst_structure_set (s, "depth", G_TYPE_INT, 32, NULL);
+        else
+          gst_structure_set (s, "depth", GST_TYPE_INT_RANGE, depth, 32, NULL);
+      }
+    }
 
-  /* We'll reduce depth if we must. We reduce as low as 16 bits (for integer); 
-   * reducing to less than this is even worse than dropping channels. We only 
-   * do this if we haven't already done the equivalent above. */
-  if (!gst_structure_get_int (structure, "width", &width) || width > 16) {
-    if (isfloat) {
-      GstStructure *s2 = gst_structure_copy (s);
+    allow_mixing = TRUE;
+    if (gst_structure_get_int (structure, "channels", &channels)) {
+      gboolean unpositioned;
 
-      set_structure_widths_32_and_64 (s2);
-      append_with_other_format (ret, s2, TRUE);
-      gst_structure_free (s2);
+      /* we don't support mixing for channels without channel positions */
+      if (structure_has_fixed_channel_positions (structure, &unpositioned))
+        allow_mixing = (unpositioned == FALSE);
+    }
+
+    if (!allow_mixing) {
+      gst_structure_set (s, "channels", G_TYPE_INT, channels, NULL);
+      if (gst_structure_has_field (structure, "channel-positions"))
+        gst_structure_set_value (s, "channel-positions",
+            gst_structure_get_value (structure, "channel-positions"));
     } else {
-      s = gst_structure_copy (s);
-      set_structure_widths (s, 16, 32);
-      gst_structure_set (s, "depth", GST_TYPE_INT_RANGE, 16, 32, NULL);
-      gst_caps_append_structure (ret, s);
+      if (channels == 0)
+        gst_structure_set (s, "channels", GST_TYPE_INT_RANGE, 1, 11, NULL);
+      else if (channels == 11)
+        gst_structure_set (s, "channels", G_TYPE_INT, 11, NULL);
+      else
+        gst_structure_set (s, "channels", GST_TYPE_INT_RANGE, channels, 11,
+            NULL);
+      gst_structure_remove_field (s, "channel-positions");
     }
+    gst_caps_merge_structure (ret, gst_structure_copy (s));
+
+    /* Same, plus a float<->int conversion */
+    append_with_other_format (ret, s, isfloat);
+
+    /* We'll reduce depth if we must. We reduce as low as 16 bits (for integer); 
+     * reducing to less than this is even worse than dropping channels. We only 
+     * do this if we haven't already done the equivalent above. */
+    if (!gst_structure_get_int (structure, "width", &width) || width > 16) {
+      if (isfloat) {
+        GstStructure *s2 = gst_structure_copy (s);
+
+        set_structure_widths_32_and_64 (s2);
+        append_with_other_format (ret, s2, TRUE);
+        gst_structure_free (s2);
+      } else {
+        GstStructure *s2 = gst_structure_copy (s);
+
+        set_structure_widths (s2, 16, 32);
+        gst_structure_set (s2, "depth", GST_TYPE_INT_RANGE, 16, 32, NULL);
+        gst_caps_merge_structure (ret, s2);
+      }
+    }
+
+    /* Channel conversions to fewer channels is only done if needed - generally
+     * it's very bad to drop channels entirely.
+     */
+    if (allow_mixing) {
+      gst_structure_set (s, "channels", GST_TYPE_INT_RANGE, 1, 11, NULL);
+      gst_structure_remove_field (s, "channel-positions");
+    } else {
+      /* allow_mixing can only be FALSE if we got a fixed number of channels */
+      gst_structure_set (s, "channels", G_TYPE_INT, channels, NULL);
+      if (gst_structure_has_field (structure, "channel-positions"))
+        gst_structure_set_value (s, "channel-positions",
+            gst_structure_get_value (structure, "channel-positions"));
+    }
+    gst_caps_merge_structure (ret, gst_structure_copy (s));
+
+    /* Same, plus a float<->int conversion */
+    append_with_other_format (ret, s, isfloat);
+
+    /* And, finally, for integer only, we allow conversion to any width/depth we
+     * support: this should be equivalent to our (non-float) template caps. (the
+     * floating point case should be being handled just above) */
+    set_structure_widths (s, 8, 32);
+    gst_structure_set (s, "depth", GST_TYPE_INT_RANGE, 1, 32, NULL);
+
+    if (isfloat) {
+      append_with_other_format (ret, s, TRUE);
+      gst_structure_free (s);
+    } else
+      gst_caps_merge_structure (ret, s);
   }
-
-  /* Channel conversions to fewer channels is only done if needed - generally
-   * it's very bad to drop channels entirely.
-   */
-  s = gst_structure_copy (s);
-  if (allow_mixing) {
-    gst_structure_set (s, "channels", GST_TYPE_INT_RANGE, 1, 11, NULL);
-    gst_structure_remove_field (s, "channel-positions");
-  } else {
-    /* allow_mixing can only be FALSE if we got a fixed number of channels */
-    gst_structure_set (s, "channels", G_TYPE_INT, channels, NULL);
-    if (gst_structure_has_field (structure, "channel-positions"))
-      gst_structure_set_value (s, "channel-positions",
-          gst_structure_get_value (structure, "channel-positions"));
-  }
-  gst_caps_append_structure (ret, s);
-
-  /* Same, plus a float<->int conversion */
-  append_with_other_format (ret, s, isfloat);
-
-  /* And, finally, for integer only, we allow conversion to any width/depth we
-   * support: this should be equivalent to our (non-float) template caps. (the
-   * floating point case should be being handled just above) */
-  s = gst_structure_copy (s);
-  set_structure_widths (s, 8, 32);
-  gst_structure_set (s, "depth", GST_TYPE_INT_RANGE, 1, 32, NULL);
-
-  if (isfloat) {
-    append_with_other_format (ret, s, TRUE);
-    gst_structure_free (s);
-  } else
-    gst_caps_append_structure (ret, s);
 
   GST_DEBUG_OBJECT (base, "Caps transformed to %" GST_PTR_FORMAT, ret);
 

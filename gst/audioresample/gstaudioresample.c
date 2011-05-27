@@ -288,30 +288,34 @@ gst_audio_resample_transform_caps (GstBaseTransform * base,
   const GValue *val;
   GstStructure *s;
   GstCaps *res;
+  gint i, n;
 
   /* transform single caps into input_caps + input_caps with the rate
    * field set to our supported range. This ensures that upstream knows
    * about downstream's prefered rate(s) and can negotiate accordingly. */
   res = gst_caps_copy (caps);
 
-  /* first, however, check if the caps contain a range for the rate field, in
-   * which case that side isn't going to care much about the exact sample rate
-   * chosen and we should just assume things will get fixated to something sane
-   * and we may just as well offer our full range instead of the range in the
-   * caps. If the rate is not an int range value, it's likely to express a
-   * real preference or limitation and we should maintain that structure as
-   * preference by putting it first into the transformed caps, and only add
-   * our full rate range as second option  */
-  s = gst_caps_get_structure (res, 0);
-  val = gst_structure_get_value (s, "rate");
-  if (val == NULL || GST_VALUE_HOLDS_INT_RANGE (val)) {
-    /* overwrite existing range, or add field if it doesn't exist yet */
-    gst_structure_set (s, "rate", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
-  } else {
-    /* append caps with full range to existing caps with non-range rate field */
-    s = gst_structure_copy (s);
-    gst_structure_set (s, "rate", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
-    gst_caps_append_structure (res, s);
+  n = gst_caps_get_size (res);
+  for (i = 0; i < n; i++) {
+    /* first, however, check if the caps contain a range for the rate field, in
+     * which case that side isn't going to care much about the exact sample rate
+     * chosen and we should just assume things will get fixated to something sane
+     * and we may just as well offer our full range instead of the range in the
+     * caps. If the rate is not an int range value, it's likely to express a
+     * real preference or limitation and we should maintain that structure as
+     * preference by putting it first into the transformed caps, and only add
+     * our full rate range as second option  */
+    s = gst_caps_get_structure (res, i);
+    val = gst_structure_get_value (s, "rate");
+    if (val == NULL || GST_VALUE_HOLDS_INT_RANGE (val)) {
+      /* overwrite existing range, or add field if it doesn't exist yet */
+      gst_structure_set (s, "rate", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
+    } else {
+      /* append caps with full range to existing caps with non-range rate field */
+      s = gst_structure_copy (s);
+      gst_structure_set (s, "rate", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
+      gst_caps_merge_structure (res, s);
+    }
   }
 
   if (filter) {

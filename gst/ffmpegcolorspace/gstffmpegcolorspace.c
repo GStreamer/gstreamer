@@ -100,26 +100,29 @@ static GstCaps *
 gst_ffmpegcsp_caps_remove_format_info (GstCaps * caps)
 {
   GstStructure *yuvst, *rgbst, *grayst;
+  gint i, n;
 
-  /* We know there's only one structure since we're given simple caps */
   caps = gst_caps_copy (caps);
 
-  yuvst = gst_caps_get_structure (caps, 0);
+  n = gst_caps_get_size (caps);
+  for (i = 0; i < n; i++) {
+    yuvst = gst_caps_get_structure (caps, i);
 
-  gst_structure_set_name (yuvst, "video/x-raw-yuv");
-  gst_structure_remove_fields (yuvst, "format", "endianness", "depth",
-      "bpp", "red_mask", "green_mask", "blue_mask", "alpha_mask",
-      "palette_data", NULL);
+    gst_structure_set_name (yuvst, "video/x-raw-yuv");
+    gst_structure_remove_fields (yuvst, "format", "endianness", "depth",
+        "bpp", "red_mask", "green_mask", "blue_mask", "alpha_mask",
+        "palette_data", NULL);
 
-  rgbst = gst_structure_copy (yuvst);
-  gst_structure_set_name (rgbst, "video/x-raw-rgb");
-  gst_structure_remove_fields (rgbst, "color-matrix", "chroma-site", NULL);
+    rgbst = gst_structure_copy (yuvst);
+    gst_structure_set_name (rgbst, "video/x-raw-rgb");
+    gst_structure_remove_fields (rgbst, "color-matrix", "chroma-site", NULL);
 
-  grayst = gst_structure_copy (rgbst);
-  gst_structure_set_name (grayst, "video/x-raw-gray");
+    grayst = gst_structure_copy (rgbst);
+    gst_structure_set_name (grayst, "video/x-raw-gray");
 
-  gst_caps_append_structure (caps, rgbst);
-  gst_caps_append_structure (caps, grayst);
+    gst_caps_merge_structure (caps, rgbst);
+    gst_caps_merge_structure (caps, grayst);
+  }
 
   return caps;
 }
@@ -136,11 +139,10 @@ gst_ffmpegcsp_transform_caps (GstBaseTransform * btrans,
   GstCaps *result;
 
   template = gst_static_pad_template_get_caps (&gst_ffmpegcsp_src_template);
-  result = gst_caps_copy (caps);
 
   /* Get all possible caps that we can transform to */
   tmp = gst_ffmpegcsp_caps_remove_format_info (caps);
-  tmp2 = gst_caps_intersect (tmp, template);
+  tmp2 = gst_caps_intersect_full (tmp, template, GST_CAPS_INTERSECT_FIRST);
   gst_caps_unref (tmp);
   tmp = tmp2;
 
@@ -149,6 +151,8 @@ gst_ffmpegcsp_transform_caps (GstBaseTransform * btrans,
     gst_caps_unref (tmp);
     tmp = tmp2;
   }
+
+  result = tmp;
 
   GST_DEBUG_OBJECT (btrans, "transformed %" GST_PTR_FORMAT " into %"
       GST_PTR_FORMAT, caps, result);

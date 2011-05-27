@@ -326,6 +326,7 @@ gst_video_scale_transform_caps (GstBaseTransform * trans,
 {
   GstCaps *ret;
   GstStructure *structure;
+  gint i, n;
 
   /* this function is always called with a simple caps */
   g_return_val_if_fail (GST_CAPS_IS_SIMPLE (caps), NULL);
@@ -335,16 +336,19 @@ gst_video_scale_transform_caps (GstBaseTransform * trans,
       (direction == GST_PAD_SINK) ? "sink" : "src");
 
   ret = gst_caps_copy (caps);
-  structure = gst_caps_get_structure (ret, 0);
+  n = gst_caps_get_size (caps);
+  for (i = 0; i < n; i++) {
+    structure = gst_caps_get_structure (ret, i);
 
-  gst_structure_set (structure,
-      "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-      "height", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
+    gst_structure_set (structure,
+        "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+        "height", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
 
-  /* if pixel aspect ratio, make a range of it */
-  if (gst_structure_has_field (structure, "pixel-aspect-ratio")) {
-    gst_structure_set (structure, "pixel-aspect-ratio", GST_TYPE_FRACTION_RANGE,
-        1, G_MAXINT, G_MAXINT, 1, NULL);
+    /* if pixel aspect ratio, make a range of it */
+    if (gst_structure_has_field (structure, "pixel-aspect-ratio")) {
+      gst_structure_set (structure, "pixel-aspect-ratio",
+          GST_TYPE_FRACTION_RANGE, 1, G_MAXINT, G_MAXINT, 1, NULL);
+    }
   }
 
   if (filter) {
