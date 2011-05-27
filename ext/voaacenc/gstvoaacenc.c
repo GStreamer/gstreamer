@@ -38,6 +38,7 @@
 #include <string.h>
 
 #include <gst/audio/multichannel.h>
+#include <gst/pbutils/codec-utils.h>
 
 #include "gstvoaacenc.h"
 
@@ -70,7 +71,8 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("audio/mpeg, "
         "mpegversion = (int) 4, "
         "rate = (int) [8000, 96000], "
-        "channels = (int) [1, 6], " "stream-format = (string) { adts, raw } ")
+        "channels = (int) [1, 6], "
+        "stream-format = (string) { adts, raw }, " "base-profile = (string) lc")
     );
 
 GST_DEBUG_CATEGORY_STATIC (gst_voaacenc_debug);
@@ -517,8 +519,13 @@ gst_voaacenc_create_source_pad_caps (GstVoAacEnc * voaacenc)
   GstCaps *caps = NULL;
   GstBuffer *codec_data;
   gint index;
+  guint8 data[VOAAC_ENC_CODECDATA_LEN];
 
   if ((index = voaacenc_get_rate_index (voaacenc->rate)) >= 0) {
+    /* LC profile only */
+    data[0] = ((0x02 << 3) | (index >> 1));
+    data[1] = ((index & 0x01) << 7) | (voaacenc->channels << 3);
+
     caps = gst_caps_new_simple ("audio/mpeg",
         "mpegversion", G_TYPE_INT, VOAAC_ENC_MPEGVERSION,
         "channels", G_TYPE_INT, voaacenc->channels,
@@ -527,12 +534,12 @@ gst_voaacenc_create_source_pad_caps (GstVoAacEnc * voaacenc)
         (voaacenc->output_format ? "adts" : "raw")
         , NULL);
 
+    gst_codec_utils_aac_caps_set_level_and_profile (caps, data, sizeof (data));
+
     if (!voaacenc->output_format) {
       codec_data = gst_buffer_new_and_alloc (VOAAC_ENC_CODECDATA_LEN);
 
-      GST_BUFFER_DATA (codec_data)[0] = ((0x02 << 3) | (index >> 1));
-      GST_BUFFER_DATA (codec_data)[1] =
-          ((index & 0x01) << 7) | (voaacenc->channels << 3);
+      memcpy (GST_BUFFER_DATA (codec_data), data, sizeof (data));
 
       gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, codec_data,
           NULL);

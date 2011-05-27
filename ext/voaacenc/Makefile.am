@@ -12,6 +12,7 @@ libgstvoaacenc_la_CFLAGS = \
 libgstvoaacenc_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) \
 	-lgstaudio-$(GST_MAJORMINOR) \
+	-lgstpbutils-$(GST_MAJORMINOR) \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS) \
 	$(VOAACENC_LIBS)
