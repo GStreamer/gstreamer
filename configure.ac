@@ -346,6 +346,7 @@ AG_GST_CHECK_PLUGIN(real)
 AG_GST_CHECK_PLUGIN(rtpmux)
 AG_GST_CHECK_PLUGIN(rtpvp8)
 AG_GST_CHECK_PLUGIN(scaletempo)
+AG_GST_CHECK_PLUGIN(scopes)
 AG_GST_CHECK_PLUGIN(sdi)
 AG_GST_CHECK_PLUGIN(sdp)
 AG_GST_CHECK_PLUGIN(segmentclip)
@@ -1897,6 +1898,7 @@ gst/real/Makefile
 gst/rtpmux/Makefile
 gst/rtpvp8/Makefile
 gst/scaletempo/Makefile
+gst/scopes/Makefile
 gst/sdi/Makefile
 gst/sdp/Makefile
 gst/segmentclip/Makefile
