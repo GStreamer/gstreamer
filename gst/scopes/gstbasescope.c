@@ -27,17 +27,30 @@
 #include "config.h"
 #endif
 #include <string.h>
+#include <gst/controller/gstcontroller.h>
 
 #include "gstbasescope.h"
 
 GST_DEBUG_CATEGORY_STATIC (base_scope_debug);
 #define GST_CAT_DEFAULT (base_scope_debug)
 
+enum
+{
+  PROP_0,
+  PROP_SHADER
+};
+
+#define DEFAULT_SHADER GST_BASE_SCOPE_SHADER_FADE
+
 static GstBaseTransformClass *parent_class = NULL;
 
 static void gst_base_scope_class_init (GstBaseScopeClass * klass);
 static void gst_base_scope_init (GstBaseScope * scope,
     GstBaseScopeClass * g_class);
+static void gst_base_scope_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_base_scope_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 static void gst_base_scope_dispose (GObject * object);
 
 static gboolean gst_base_scope_src_negotiate (GstBaseScope * scope);
@@ -47,6 +60,73 @@ static gboolean gst_base_scope_sink_setcaps (GstPad * pad, GstCaps * caps);
 static GstFlowReturn gst_base_scope_chain (GstPad * pad, GstBuffer * buffer);
 static GstStateChangeReturn gst_base_scope_change_state (GstElement * element,
     GstStateChange transition);
+
+/* shading functions */
+
+#define GST_TYPE_BASE_SCOPE_SHADER (gst_base_scope_shader_get_type())
+static GType
+gst_base_scope_shader_get_type (void)
+{
+  static GType shader_type = 0;
+  static const GEnumValue shaders[] = {
+    {GST_BASE_SCOPE_SHADER_NONE, "None", "none"},
+    {GST_BASE_SCOPE_SHADER_FADE, "Fade", "fade"},
+    {GST_BASE_SCOPE_SHADER_FADE_AND_MOVE_UP, "Fade and move up",
+        "fade-and-move-up"},
+    {0, NULL, NULL},
+  };
+
+  if (G_UNLIKELY (shader_type == 0)) {
+    shader_type = g_enum_register_static ("GstBaseScopeShader", shaders);
+  }
+  return shader_type;
+}
+
+static void
+shader_fade (GstBaseScope * scope, const guint8 * s, guint8 * d)
+{
+  guint i, bpf = scope->bpf;
+
+  for (i = 0; i < bpf; i++) {
+    d[i] = (s[i] > 10) ? s[i] - 10 : 0;
+  }
+}
+
+static void
+shader_fade_and_move_up (GstBaseScope * scope, const guint8 * s, guint8 * d)
+{
+  guint i, j, bpf = scope->bpf;
+  guint bpl = 4 * scope->width;
+
+  for (j = 0, i = bpl; i < bpf; i++, j++) {
+    d[j] = (s[i] > 10) ? s[i] - 10 : 0;
+  }
+  for (i = 0; i < bpl; i++, j++) {
+    d[j] = (s[j] > 10) ? s[j] - 10 : 0;
+  }
+}
+
+static void
+gst_base_scope_change_shader (GstBaseScope * scope)
+{
+  switch (scope->shader_type) {
+    case GST_BASE_SCOPE_SHADER_NONE:
+      scope->shader = NULL;
+      break;
+    case GST_BASE_SCOPE_SHADER_FADE:
+      scope->shader = shader_fade;
+      break;
+    case GST_BASE_SCOPE_SHADER_FADE_AND_MOVE_UP:
+      scope->shader = shader_fade_and_move_up;
+      break;
+    default:
+      GST_ERROR ("invalid shader function");
+      scope->shader = NULL;
+      break;
+  }
+}
+
+/* base class */
 
 GType
 gst_base_scope_get_type (void)
@@ -85,8 +165,17 @@ gst_base_scope_class_init (GstBaseScopeClass * klass)
   GST_DEBUG_CATEGORY_INIT (base_scope_debug, "basescope", 0,
       "scope audio visualisation base class");
 
+  gobject_class->set_property = gst_base_scope_set_property;
+  gobject_class->get_property = gst_base_scope_get_property;
   gobject_class->dispose = gst_base_scope_dispose;
+
   element_class->change_state = GST_DEBUG_FUNCPTR (gst_base_scope_change_state);
+
+  g_object_class_install_property (gobject_class, PROP_SHADER,
+      g_param_spec_enum ("shader", "shader type",
+          "Shader function to apply on each frame", GST_TYPE_BASE_SCOPE_SHADER,
+          DEFAULT_SHADER,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -116,6 +205,10 @@ gst_base_scope_init (GstBaseScope * scope, GstBaseScopeClass * g_class)
   scope->adapter = gst_adapter_new ();
   scope->inbuf = gst_buffer_new ();
 
+  /* properties */
+  scope->shader_type = DEFAULT_SHADER;
+  gst_base_scope_change_shader (scope);
+
   /* reset the initial video state */
   scope->width = 320;
   scope->height = 200;
@@ -132,6 +225,39 @@ gst_base_scope_init (GstBaseScope * scope, GstBaseScopeClass * g_class)
 }
 
 static void
+gst_base_scope_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstBaseScope *scope = GST_BASE_SCOPE (object);
+
+  switch (prop_id) {
+    case PROP_SHADER:
+      scope->shader_type = g_value_get_enum (value);
+      gst_base_scope_change_shader (scope);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_base_scope_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstBaseScope *scope = GST_BASE_SCOPE (object);
+
+  switch (prop_id) {
+    case PROP_SHADER:
+      g_value_set_enum (value, scope->shader_type);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
 gst_base_scope_dispose (GObject * object)
 {
   GstBaseScope *scope = GST_BASE_SCOPE (object);
@@ -144,7 +270,10 @@ gst_base_scope_dispose (GObject * object)
     gst_buffer_unref (scope->inbuf);
     scope->inbuf = NULL;
   }
-
+  if (scope->pixelbuf) {
+    g_free (scope->pixelbuf);
+    scope->pixelbuf = NULL;
+  }
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
@@ -280,6 +409,12 @@ gst_base_scope_src_setcaps (GstPad * pad, GstCaps * caps)
       scope->fps_d, scope->fps_n);
   scope->req_spf = scope->spf;
 
+  scope->bpf = w * h * 4;
+
+  if (scope->pixelbuf)
+    g_free (scope->pixelbuf);
+  scope->pixelbuf = g_malloc0 (scope->bpf);
+
   if (klass->setup)
     res = klass->setup (scope);
 
@@ -309,7 +444,6 @@ gst_base_scope_chain (GstPad * pad, GstBuffer * buffer)
   GstBaseScopeClass *klass;
   GstBuffer *inbuf;
   guint avail, sbpf;
-  guint bpp;
   gboolean (*render) (GstBaseScope * scope, GstBuffer * audio,
       GstBuffer * video);
 
@@ -340,8 +474,6 @@ gst_base_scope_chain (GstPad * pad, GstBuffer * buffer)
   /* this is what we want */
   sbpf = scope->req_spf * scope->channels * sizeof (gint16);
 
-  bpp = gst_video_format_get_pixel_stride (scope->video_format, 0);
-
   inbuf = scope->inbuf;
   /* FIXME: the timestamp in the adapter would be different */
   gst_buffer_copy_metadata (inbuf, buffer, GST_BUFFER_COPY_ALL);
@@ -353,26 +485,38 @@ gst_base_scope_chain (GstPad * pad, GstBuffer * buffer)
 
     ret = gst_pad_alloc_buffer_and_set_caps (scope->srcpad,
         GST_BUFFER_OFFSET_NONE,
-        scope->width * scope->height * bpp,
-        GST_PAD_CAPS (scope->srcpad), &outbuf);
+        scope->bpf, GST_PAD_CAPS (scope->srcpad), &outbuf);
 
     /* no buffer allocated, we don't care why. */
     if (ret != GST_FLOW_OK)
       break;
 
+    /* sync controlled properties */
+    gst_object_sync_values (G_OBJECT (scope), scope->next_ts);
+
     GST_BUFFER_TIMESTAMP (outbuf) = scope->next_ts;
     GST_BUFFER_DURATION (outbuf) = scope->frame_duration;
-    memset (GST_BUFFER_DATA (outbuf), 0, GST_BUFFER_SIZE (outbuf));
+    if (scope->shader) {
+      memcpy (GST_BUFFER_DATA (outbuf), scope->pixelbuf, scope->bpf);
+    } else {
+      memset (GST_BUFFER_DATA (outbuf), 0, scope->bpf);
+    }
 
     GST_BUFFER_DATA (inbuf) =
         (guint8 *) gst_adapter_peek (scope->adapter, sbpf);
     GST_BUFFER_SIZE (inbuf) = sbpf;
 
     /* call class->render() vmethod */
-    if (render)
+    if (render) {
       if (!render (scope, inbuf, outbuf)) {
         ret = GST_FLOW_ERROR;
+      } else {
+        /* run various post processing (shading and geometri transformation */
+        if (scope->shader) {
+          scope->shader (scope, GST_BUFFER_DATA (outbuf), scope->pixelbuf);
+        }
       }
+    }
 
     ret = gst_pad_push (scope->srcpad, outbuf);
     outbuf = NULL;

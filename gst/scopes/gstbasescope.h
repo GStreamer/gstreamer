@@ -37,6 +37,22 @@ G_BEGIN_DECLS
 typedef struct _GstBaseScope GstBaseScope;
 typedef struct _GstBaseScopeClass GstBaseScopeClass;
 
+typedef void (*GstBaseScopeShaderFunc)(GstBaseScope *scope, const guint8 *s, guint8 *d);
+
+/**
+ * GstBaseScopeShader:
+ * @GST_BASE_SCOPE_SHADER_NONE: no shading
+ * @GST_BASE_SCOPE_SHADER_FADE: plain fading
+ * @GST_BASE_SCOPE_SHADER_FADE_AND_MOVE_UP: fade and move up
+ *
+ * Different types of supported background shading functions.
+ */
+typedef enum {
+  GST_BASE_SCOPE_SHADER_NONE,
+  GST_BASE_SCOPE_SHADER_FADE,
+  GST_BASE_SCOPE_SHADER_FADE_AND_MOVE_UP
+} GstBaseScopeShader;
+
 struct _GstBaseScope
 {
   GstElement parent;
@@ -46,10 +62,15 @@ struct _GstBaseScope
 
   GstAdapter *adapter;
   GstBuffer *inbuf;
+  guint8 *pixelbuf;
+
+  GstBaseScopeShader shader_type;
+  GstBaseScopeShaderFunc shader;
 
   guint64 next_ts;              /* the timestamp of the next frame */
   guint64 frame_duration;
-  guint bps;                    /* bytes per sample        */
+  guint bpf;                    /* bytes per frame */
+  guint bps;                    /* bytes per sample */
   guint spf;                    /* samples per video frame */
   guint req_spf;                /* min samples per frame wanted by the subclass */
 

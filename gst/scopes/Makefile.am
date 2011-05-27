@@ -5,12 +5,13 @@ libgstscopes_la_SOURCES = \
     gstspectrascope.c gstspectrascope.h \
     gstwavescope.c gstwavescope.h
 
-libgstscopes_la_CFLAGS = $(GST_PLUGINS_BAD_CFLAGS)\
-	$(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS)
+libgstscopes_la_CFLAGS = $(GST_PLUGINS_BAD_CFLAGS) \
+	$(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) \
+	$(GST_CONTROLLER_CFLAGS) $(GST_CFLAGS)
 libgstscopes_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) -lgstaudio-$(GST_MAJORMINOR) \
 	-lgstvideo-$(GST_MAJORMINOR) -lgstfft-$(GST_MAJORMINOR) \
-	$(GST_BASE_LIBS) $(GST_LIBS)
+	$(GST_BASE_LIBS)  $(GST_CONTROLLER_LIBS) $(GST_LIBS) $(LIBM)
 libgstscopes_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstscopes_la_LIBTOOLFLAGS = --tag=disable-static
 
