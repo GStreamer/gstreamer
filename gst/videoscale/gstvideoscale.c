@@ -328,18 +328,21 @@ gst_video_scale_transform_caps (GstBaseTransform * trans,
   GstStructure *structure;
   gint i, n;
 
-  /* this function is always called with a simple caps */
-  g_return_val_if_fail (GST_CAPS_IS_SIMPLE (caps), NULL);
-
   GST_DEBUG_OBJECT (trans,
       "Transforming caps %" GST_PTR_FORMAT " in direction %s", caps,
       (direction == GST_PAD_SINK) ? "sink" : "src");
 
-  ret = gst_caps_copy (caps);
+  ret = gst_caps_new_empty ();
   n = gst_caps_get_size (caps);
   for (i = 0; i < n; i++) {
-    structure = gst_caps_get_structure (ret, i);
+    structure = gst_caps_get_structure (caps, i);
 
+    /* If this is already expressed by the existing caps
+     * skip this structure */
+    if (i > 0 && gst_caps_is_subset_structure (ret, structure))
+      continue;
+
+    structure = gst_structure_copy (structure);
     gst_structure_set (structure,
         "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
         "height", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
@@ -349,6 +352,7 @@ gst_video_scale_transform_caps (GstBaseTransform * trans,
       gst_structure_set (structure, "pixel-aspect-ratio",
           GST_TYPE_FRACTION_RANGE, 1, G_MAXINT, G_MAXINT, 1, NULL);
     }
+    gst_caps_append_structure (ret, structure);
   }
 
   if (filter) {
