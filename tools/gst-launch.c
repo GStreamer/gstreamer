@@ -403,6 +403,24 @@ print_index_stats (GPtrArray * index_stats)
   }
 }
 
+/* Kids, use the functions from libgstpbutils in gst-plugins-base in your
+ * own code (we can't do that here because it would introduce a circular
+ * dependency) */
+static gboolean
+gst_is_missing_plugin_message (GstMessage * msg)
+{
+  if (GST_MESSAGE_TYPE (msg) != GST_MESSAGE_ELEMENT || msg->structure == NULL)
+    return FALSE;
+
+  return gst_structure_has_name (msg->structure, "missing-plugin");
+}
+
+static const gchar *
+gst_missing_plugin_message_get_description (GstMessage * msg)
+{
+  return gst_structure_get_string (msg->structure, "name");
+}
+
 static void
 print_error_message (GstMessage * msg)
 {
@@ -821,6 +839,16 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
           res = ELR_INTERRUPT;
           goto exit;
         }
+        break;
+      }
+      case GST_MESSAGE_ELEMENT:{
+        if (gst_is_missing_plugin_message (message)) {
+          const gchar *desc;
+
+          desc = gst_missing_plugin_message_get_description (message);
+          PRINT (_("Missing element: %s\n"), desc ? desc : "(no description)");
+        }
+        break;
       }
       default:
         /* just be quiet by default */
