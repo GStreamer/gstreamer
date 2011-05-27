@@ -1131,8 +1131,9 @@ gst_caps_is_always_compatible (const GstCaps * caps1, const GstCaps * caps2)
 gboolean
 gst_caps_is_subset (const GstCaps * subset, const GstCaps * superset)
 {
-  GstCaps *caps;
-  gboolean ret;
+  GstStructure *s1, *s2;
+  gboolean ret = TRUE;
+  gint i, j;
 
   g_return_val_if_fail (subset != NULL, FALSE);
   g_return_val_if_fail (superset != NULL, FALSE);
@@ -1142,9 +1143,24 @@ gst_caps_is_subset (const GstCaps * subset, const GstCaps * superset)
   if (CAPS_IS_ANY (subset) || CAPS_IS_EMPTY (superset))
     return FALSE;
 
-  caps = gst_caps_subtract (subset, superset);
-  ret = CAPS_IS_EMPTY_SIMPLE (caps);
-  gst_caps_unref (caps);
+  for (i = subset->structs->len - 1; i >= 0; i--) {
+    for (j = superset->structs->len - 1; j >= 0; j--) {
+      s1 = gst_caps_get_structure_unchecked (subset, i);
+      s2 = gst_caps_get_structure_unchecked (superset, j);
+      if (gst_caps_structure_is_subset (s2, s1)) {
+        /* If we found a superset, continue with the next
+         * subset structure */
+        break;
+      }
+    }
+    /* If we found no superset for this subset structure
+     * we return FALSE immediately */
+    if (j == -1) {
+      ret = FALSE;
+      break;
+    }
+  }
+
   return ret;
 }
 
