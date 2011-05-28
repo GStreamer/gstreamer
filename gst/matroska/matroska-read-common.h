@@ -64,6 +64,8 @@ typedef struct _GstMatroskaReadCommon {
   /* timescale in the file */
   guint64                  time_scale;
 
+  GstTagList              *global_tags;
+
   /* pull mode caching */
   GstBuffer *cached_buffer;
 
@@ -82,6 +84,8 @@ gint gst_matroska_index_seek_find (GstMatroskaIndex * i1, GstClockTime * time,
 GstMatroskaIndex * gst_matroska_read_common_do_index_seek (
     GstMatroskaReadCommon * common, GstMatroskaTrackContext * track, gint64
     seek_pos, GArray ** _index, gint * _entry_index);
+void gst_matroska_read_common_found_global_tag (GstMatroskaReadCommon * common,
+    GstElement * el, GstTagList * taglist);
 gint64 gst_matroska_read_common_get_length (GstMatroskaReadCommon * common);
 GstFlowReturn gst_matroska_read_common_parse_index (GstMatroskaReadCommon *
     common, GstEbmlRead * ebml);

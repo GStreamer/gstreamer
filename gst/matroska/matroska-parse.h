@@ -85,7 +85,6 @@ typedef struct _GstMatroskaParse {
 
   GstEvent                *close_segment;
   GstEvent                *new_segment;
-  GstTagList              *global_tags;
 
   /* some state saving */
   GstClockTime             cluster_time;

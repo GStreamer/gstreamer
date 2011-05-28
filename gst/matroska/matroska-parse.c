@@ -166,9 +166,9 @@ gst_matroska_parse_finalize (GObject * object)
     parse->common.src = NULL;
   }
 
-  if (parse->global_tags) {
-    gst_tag_list_free (parse->global_tags);
-    parse->global_tags = NULL;
+  if (parse->common.global_tags) {
+    gst_tag_list_free (parse->common.global_tags);
+    parse->common.global_tags = NULL;
   }
 
   g_object_unref (parse->common.adapter);
@@ -229,7 +229,7 @@ gst_matroska_parse_init (GstMatroskaParse * parse,
   parse->writing_app = NULL;
   parse->muxing_app = NULL;
   parse->common.index = NULL;
-  parse->global_tags = NULL;
+  parse->common.global_tags = NULL;
 
   parse->common.adapter = gst_adapter_new ();
 
@@ -373,10 +373,10 @@ gst_matroska_parse_reset (GstElement * element)
   }
   parse->common.element_index_writer_id = -1;
 
-  if (parse->global_tags) {
-    gst_tag_list_free (parse->global_tags);
+  if (parse->common.global_tags) {
+    gst_tag_list_free (parse->common.global_tags);
   }
-  parse->global_tags = gst_tag_list_new ();
+  parse->common.global_tags = gst_tag_list_new ();
 
   if (parse->common.cached_buffer) {
     gst_buffer_unref (parse->common.cached_buffer);
@@ -1197,23 +1197,6 @@ gst_matroska_parse_handle_src_query (GstPad * pad, GstQuery * query)
   return ret;
 }
 
-/* takes ownership of taglist */
-static void
-gst_matroska_parse_found_global_tag (GstMatroskaParse * parse,
-    GstTagList * taglist)
-{
-  if (parse->global_tags) {
-    /* nothing sent yet, add to cache */
-    gst_tag_list_insert (parse->global_tags, taglist, GST_TAG_MERGE_APPEND);
-    gst_tag_list_free (taglist);
-  } else {
-    /* hm, already sent, no need to cache and wait anymore */
-    GST_DEBUG_OBJECT (parse, "Sending late global tags %" GST_PTR_FORMAT,
-        taglist);
-    gst_element_found_tags (GST_ELEMENT (parse), taglist);
-  }
-}
-
 /* returns FALSE if there are no pads to deliver event to,
  * otherwise TRUE (whatever the outcome of event sending),
  * takes ownership of the passed event! */
@@ -1870,7 +1853,8 @@ gst_matroska_parse_parse_info (GstMatroskaParse * parse, GstEbmlRead * ebml)
         taglist = gst_tag_list_new ();
         gst_tag_list_add (taglist, GST_TAG_MERGE_APPEND, GST_TAG_TITLE, text,
             NULL);
-        gst_matroska_parse_found_global_tag (parse, taglist);
+        gst_matroska_read_common_found_global_tag (&parse->common,
+            GST_ELEMENT_CAST (parse), taglist);
         g_free (text);
         break;
       }
@@ -2128,7 +2112,8 @@ gst_matroska_parse_parse_metadata (GstMatroskaParse * parse, GstEbmlRead * ebml)
 
   DEBUG_ELEMENT_STOP (parse, ebml, "Tags", ret);
 
-  gst_matroska_parse_found_global_tag (parse, taglist);
+  gst_matroska_read_common_found_global_tag (&parse->common,
+      GST_ELEMENT_CAST (parse), taglist);
 
   return ret;
 }
@@ -2323,7 +2308,8 @@ gst_matroska_parse_parse_attachments (GstMatroskaParse * parse,
 
   if (gst_structure_n_fields (GST_STRUCTURE (taglist)) > 0) {
     GST_DEBUG_OBJECT (parse, "Storing attachment tags");
-    gst_matroska_parse_found_global_tag (parse, taglist);
+    gst_matroska_read_common_found_global_tag (&parse->common,
+        GST_ELEMENT_CAST (parse), taglist);
   } else {
     GST_DEBUG_OBJECT (parse, "No valid attachments found");
     gst_tag_list_free (taglist);

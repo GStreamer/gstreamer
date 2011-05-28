@@ -83,7 +83,6 @@ typedef struct _GstMatroskaDemux {
 
   GstEvent                *close_segment;
   GstEvent                *new_segment;
-  GstTagList              *global_tags;
 
   /* some state saving */
   GstClockTime             cluster_time;

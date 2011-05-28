@@ -204,9 +204,9 @@ gst_matroska_demux_finalize (GObject * object)
     demux->common.src = NULL;
   }
 
-  if (demux->global_tags) {
-    gst_tag_list_free (demux->global_tags);
-    demux->global_tags = NULL;
+  if (demux->common.global_tags) {
+    gst_tag_list_free (demux->common.global_tags);
+    demux->common.global_tags = NULL;
   }
 
   g_object_unref (demux->common.adapter);
@@ -260,7 +260,7 @@ gst_matroska_demux_init (GstMatroskaDemux * demux,
   demux->writing_app = NULL;
   demux->muxing_app = NULL;
   demux->common.index = NULL;
-  demux->global_tags = NULL;
+  demux->common.global_tags = NULL;
 
   demux->common.adapter = gst_adapter_new ();
 
@@ -450,10 +450,10 @@ gst_matroska_demux_reset (GstElement * element)
   }
   demux->common.element_index_writer_id = -1;
 
-  if (demux->global_tags) {
-    gst_tag_list_free (demux->global_tags);
+  if (demux->common.global_tags) {
+    gst_tag_list_free (demux->common.global_tags);
   }
-  demux->global_tags = gst_tag_list_new ();
+  demux->common.global_tags = gst_tag_list_new ();
 
   if (demux->common.cached_buffer) {
     gst_buffer_unref (demux->common.cached_buffer);
@@ -1445,23 +1445,6 @@ gst_matroska_demux_handle_src_query (GstPad * pad, GstQuery * query)
   return ret;
 }
 
-/* takes ownership of taglist */
-static void
-gst_matroska_demux_found_global_tag (GstMatroskaDemux * demux,
-    GstTagList * taglist)
-{
-  if (demux->global_tags) {
-    /* nothing sent yet, add to cache */
-    gst_tag_list_insert (demux->global_tags, taglist, GST_TAG_MERGE_APPEND);
-    gst_tag_list_free (taglist);
-  } else {
-    /* hm, already sent, no need to cache and wait anymore */
-    GST_DEBUG_OBJECT (demux, "Sending late global tags %" GST_PTR_FORMAT,
-        taglist);
-    gst_element_found_tags (GST_ELEMENT (demux), taglist);
-  }
-}
-
 /* returns FALSE if there are no pads to deliver event to,
  * otherwise TRUE (whatever the outcome of event sending),
  * takes ownership of the passed event! */
@@ -1499,13 +1482,13 @@ gst_matroska_demux_send_event (GstMatroskaDemux * demux, GstEvent * event)
     }
   }
 
-  if (G_UNLIKELY (is_newsegment && demux->global_tags != NULL)) {
-    gst_tag_list_add (demux->global_tags, GST_TAG_MERGE_REPLACE,
+  if (G_UNLIKELY (is_newsegment && demux->common.global_tags != NULL)) {
+    gst_tag_list_add (demux->common.global_tags, GST_TAG_MERGE_REPLACE,
         GST_TAG_CONTAINER_FORMAT, "Matroska", NULL);
     GST_DEBUG_OBJECT (demux, "Sending global_tags %p : %" GST_PTR_FORMAT,
-        demux->global_tags, demux->global_tags);
-    gst_element_found_tags (GST_ELEMENT (demux), demux->global_tags);
-    demux->global_tags = NULL;
+        demux->common.global_tags, demux->common.global_tags);
+    gst_element_found_tags (GST_ELEMENT (demux), demux->common.global_tags);
+    demux->common.global_tags = NULL;
   }
 
   gst_event_unref (event);
@@ -2569,7 +2552,8 @@ gst_matroska_demux_parse_info (GstMatroskaDemux * demux, GstEbmlRead * ebml)
         taglist = gst_tag_list_new ();
         gst_tag_list_add (taglist, GST_TAG_MERGE_APPEND, GST_TAG_TITLE, text,
             NULL);
-        gst_matroska_demux_found_global_tag (demux, taglist);
+        gst_matroska_read_common_found_global_tag (&demux->common,
+            GST_ELEMENT_CAST (demux), taglist);
         g_free (text);
         break;
       }
@@ -2828,7 +2812,8 @@ gst_matroska_demux_parse_metadata (GstMatroskaDemux * demux, GstEbmlRead * ebml)
 
   DEBUG_ELEMENT_STOP (demux, ebml, "Tags", ret);
 
-  gst_matroska_demux_found_global_tag (demux, taglist);
+  gst_matroska_read_common_found_global_tag (&demux->common,
+      GST_ELEMENT_CAST (demux), taglist);
 
   return ret;
 }
@@ -3023,7 +3008,8 @@ gst_matroska_demux_parse_attachments (GstMatroskaDemux * demux,
 
   if (gst_structure_n_fields (GST_STRUCTURE (taglist)) > 0) {
     GST_DEBUG_OBJECT (demux, "Storing attachment tags");
-    gst_matroska_demux_found_global_tag (demux, taglist);
+    gst_matroska_read_common_found_global_tag (&demux->common,
+        GST_ELEMENT_CAST (demux), taglist);
   } else {
     GST_DEBUG_OBJECT (demux, "No valid attachments found");
     gst_tag_list_free (taglist);
