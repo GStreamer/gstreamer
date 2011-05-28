@@ -75,6 +75,11 @@ gst_base_scope_shader_get_type (void)
     {GST_BASE_SCOPE_SHADER_FADE, "Fade", "fade"},
     {GST_BASE_SCOPE_SHADER_FADE_AND_MOVE_UP, "Fade and move up",
         "fade-and-move-up"},
+    {GST_BASE_SCOPE_SHADER_FADE_AND_MOVE_DOWN, "Fade and move down",
+        "fade-and-move-down"},
+    {GST_BASE_SCOPE_SHADER_FADE_AND_MOVE_HORIZ_OUT,
+          "Fade and move horizontaly out",
+        "fade-and-move-horiz-out"},
     {0, NULL, NULL},
   };
 
@@ -169,6 +174,154 @@ shader_fade_and_move_up (GstBaseScope * scope, const guint8 * s, guint8 * d)
 }
 
 static void
+shader_fade_and_move_down (GstBaseScope * scope, const guint8 * s, guint8 * d)
+{
+  guint i, j, bpf = scope->bpf;
+  guint bpl = 4 * scope->width;
+  guint r = (scope->shade_amount >> 16) & 0xff;
+  guint g = (scope->shade_amount >> 8) & 0xff;
+  guint b = (scope->shade_amount >> 0) & 0xff;
+
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  for (i = 0; i < bpl;) {
+    d[i] = (s[i] > b) ? s[i] - b : 0;
+    i++;
+    d[i] = (s[i] > g) ? s[i] - g : 0;
+    i++;
+    d[i] = (s[i] > r) ? s[i] - r : 0;
+    i++;
+    d[i++] = 0;
+  }
+  for (j = bpl, i = 0; j < bpf;) {
+    d[j++] = (s[i] > b) ? s[i] - b : 0;
+    i++;
+    d[j++] = (s[i] > g) ? s[i] - g : 0;
+    i++;
+    d[j++] = (s[i] > r) ? s[i] - r : 0;
+    i++;
+    d[j++] = 0;
+    i++;
+  }
+#else
+  for (i = 0; i < bpl;) {
+    d[i++] = 0;
+    d[i] = (s[i] > r) ? s[i] - r : 0;
+    i++;
+    d[i] = (s[i] > g) ? s[i] - g : 0;
+    i++;
+    d[i] = (s[i] > b) ? s[i] - b : 0;
+    i++;
+  }
+  for (j = bpl, i = 0; j < bpf;) {
+    d[j++] = 0;
+    i++;
+    d[j++] = (s[i] > r) ? s[i] - r : 0;
+    i++;
+    d[j++] = (s[i] > g) ? s[i] - g : 0;
+    i++;
+    d[j++] = (s[i] > b) ? s[i] - b : 0;
+    i++;
+  }
+#endif
+}
+
+static void
+shader_fade_and_move_horiz_out (GstBaseScope * scope, const guint8 * s,
+    guint8 * d)
+{
+  guint i, j, bpf = scope->bpf / 2;
+  guint bpl = 4 * scope->width;
+  guint r = (scope->shade_amount >> 16) & 0xff;
+  guint g = (scope->shade_amount >> 8) & 0xff;
+  guint b = (scope->shade_amount >> 0) & 0xff;
+
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  /* middle up */
+  for (j = 0, i = bpl; i < bpf;) {
+    d[j++] = (s[i] > b) ? s[i] - b : 0;
+    i++;
+    d[j++] = (s[i] > g) ? s[i] - g : 0;
+    i++;
+    d[j++] = (s[i] > r) ? s[i] - r : 0;
+    i++;
+    d[j++] = 0;
+    i++;
+  }
+  for (i = 0; i < bpl; i += 4) {
+    d[j] = (s[j] > b) ? s[j] - b : 0;
+    j++;
+    d[j] = (s[j] > g) ? s[j] - g : 0;
+    j++;
+    d[j] = (s[j] > r) ? s[j] - r : 0;
+    j++;
+    d[j++] = 0;
+  }
+  /* middle down */
+  for (i = bpf; i < bpf + bpl;) {
+    d[i] = (s[i] > b) ? s[i] - b : 0;
+    i++;
+    d[i] = (s[i] > g) ? s[i] - g : 0;
+    i++;
+    d[i] = (s[i] > r) ? s[i] - r : 0;
+    i++;
+    d[i++] = 0;
+  }
+  for (j = bpf + bpl, i = bpf; j < bpf + bpf;) {
+    d[j++] = (s[i] > b) ? s[i] - b : 0;
+    i++;
+    d[j++] = (s[i] > g) ? s[i] - g : 0;
+    i++;
+    d[j++] = (s[i] > r) ? s[i] - r : 0;
+    i++;
+    d[j++] = 0;
+    i++;
+  }
+#else
+  /* middle up */
+  for (j = 0, i = bpl; i < bpf;) {
+    d[j++] = 0;
+    i++;
+    d[j++] = (s[i] > r) ? s[i] - r : 0;
+    i++;
+    d[j++] = (s[i] > g) ? s[i] - g : 0;
+    i++;
+    d[j++] = (s[i] > b) ? s[i] - b : 0;
+    i++;
+  }
+  for (i = 0; i < bpl; i += 4) {
+    d[j++] = 0;
+    d[j] = (s[j] > r) ? s[j] - r : 0;
+    j++;
+    d[j] = (s[j] > g) ? s[j] - g : 0;
+    j++;
+    d[j] = (s[j] > b) ? s[j] - b : 0;
+    j++;
+  }
+  /* middle down */
+  for (i = bpf; i < bpf + bpl;) {
+    d[i++] = 0;
+    d[i] = (s[i] > r) ? s[i] - r : 0;
+    i++;
+    d[i] = (s[i] > g) ? s[i] - g : 0;
+    i++;
+    d[i] = (s[i] > b) ? s[i] - b : 0;
+    i++;
+  }
+  for (j = bpf + bpl, i = bpf; j < bpf + bpf;) {
+    d[j++] = 0;
+    i++;
+    d[j++] = (s[i] > r) ? s[i] - r : 0;
+    i++;
+    d[j++] = (s[i] > g) ? s[i] - g : 0;
+    i++;
+    d[j++] = (s[i] > b) ? s[i] - b : 0;
+    i++;
+  }
+#endif
+}
+
+
+static void
 gst_base_scope_change_shader (GstBaseScope * scope)
 {
   switch (scope->shader_type) {
@@ -180,6 +333,12 @@ gst_base_scope_change_shader (GstBaseScope * scope)
       break;
     case GST_BASE_SCOPE_SHADER_FADE_AND_MOVE_UP:
       scope->shader = shader_fade_and_move_up;
+      break;
+    case GST_BASE_SCOPE_SHADER_FADE_AND_MOVE_DOWN:
+      scope->shader = shader_fade_and_move_down;
+      break;
+    case GST_BASE_SCOPE_SHADER_FADE_AND_MOVE_HORIZ_OUT:
+      scope->shader = shader_fade_and_move_horiz_out;
       break;
     default:
       GST_ERROR ("invalid shader function");

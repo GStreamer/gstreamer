@@ -44,13 +44,17 @@ typedef void (*GstBaseScopeShaderFunc)(GstBaseScope *scope, const guint8 *s, gui
  * @GST_BASE_SCOPE_SHADER_NONE: no shading
  * @GST_BASE_SCOPE_SHADER_FADE: plain fading
  * @GST_BASE_SCOPE_SHADER_FADE_AND_MOVE_UP: fade and move up
+ * @GST_BASE_SCOPE_SHADER_FADE_AND_MOVE_DOWN: fade and move down
+ * @GST_BASE_SCOPE_SHADER_FADE_AND_MOVE_HORIZ_OUT: fade and move horizontaly out
  *
  * Different types of supported background shading functions.
  */
 typedef enum {
   GST_BASE_SCOPE_SHADER_NONE,
   GST_BASE_SCOPE_SHADER_FADE,
-  GST_BASE_SCOPE_SHADER_FADE_AND_MOVE_UP
+  GST_BASE_SCOPE_SHADER_FADE_AND_MOVE_UP,
+  GST_BASE_SCOPE_SHADER_FADE_AND_MOVE_DOWN,
+  GST_BASE_SCOPE_SHADER_FADE_AND_MOVE_HORIZ_OUT
 } GstBaseScopeShader;
 
 struct _GstBaseScope
