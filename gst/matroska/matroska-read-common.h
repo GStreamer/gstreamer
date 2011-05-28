@@ -77,6 +77,11 @@ typedef struct _GstMatroskaReadCommon {
 GstFlowReturn gst_matroska_decode_content_encodings (GArray * encodings);
 gboolean gst_matroska_decode_data (GArray * encodings, guint8 ** data_out,
     guint * size_out, GstMatroskaTrackEncodingScope scope, gboolean free);
+gint gst_matroska_index_seek_find (GstMatroskaIndex * i1, GstClockTime * time,
+    gpointer user_data);
+GstMatroskaIndex * gst_matroska_read_common_do_index_seek (
+    GstMatroskaReadCommon * common, GstMatroskaTrackContext * track, gint64
+    seek_pos, GArray ** _index, gint * _entry_index);
 gint64 gst_matroska_read_common_get_length (GstMatroskaReadCommon * common);
 GstFlowReturn gst_matroska_read_common_parse_index (GstMatroskaReadCommon *
     common, GstEbmlRead * ebml);

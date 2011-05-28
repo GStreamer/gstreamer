@@ -1445,52 +1445,6 @@ gst_matroska_demux_handle_src_query (GstPad * pad, GstQuery * query)
   return ret;
 }
 
-static gint
-gst_matroska_index_seek_find (GstMatroskaIndex * i1, GstClockTime * time,
-    gpointer user_data)
-{
-  if (i1->time < *time)
-    return -1;
-  else if (i1->time > *time)
-    return 1;
-  else
-    return 0;
-}
-
-static GstMatroskaIndex *
-gst_matroskademux_do_index_seek (GstMatroskaDemux * demux,
-    GstMatroskaTrackContext * track, gint64 seek_pos, GArray ** _index,
-    gint * _entry_index)
-{
-  GstMatroskaIndex *entry = NULL;
-  GArray *index;
-
-  if (!demux->common.index || !demux->common.index->len)
-    return NULL;
-
-  /* find entry just before or at the requested position */
-  if (track && track->index_table)
-    index = track->index_table;
-  else
-    index = demux->common.index;
-
-  entry =
-      gst_util_array_binary_search (index->data, index->len,
-      sizeof (GstMatroskaIndex),
-      (GCompareDataFunc) gst_matroska_index_seek_find, GST_SEARCH_MODE_BEFORE,
-      &seek_pos, NULL);
-
-  if (entry == NULL)
-    entry = &g_array_index (index, GstMatroskaIndex, 0);
-
-  if (_index)
-    *_index = index;
-  if (_entry_index)
-    *_entry_index = entry - (GstMatroskaIndex *) index->data;
-
-  return entry;
-}
-
 /* takes ownership of taglist */
 static void
 gst_matroska_demux_found_global_tag (GstMatroskaDemux * demux,
@@ -2009,7 +1963,7 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
   /* check sanity before we start flushing and all that */
   GST_OBJECT_LOCK (demux);
   track = gst_matroska_demux_get_seek_track (demux, track);
-  if ((entry = gst_matroskademux_do_index_seek (demux, track,
+  if ((entry = gst_matroska_read_common_do_index_seek (&demux->common, track,
               seeksegment.last_stop, &demux->seek_index, &demux->seek_entry)) ==
       NULL) {
     /* pull mode without index can scan later on */

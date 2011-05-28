@@ -342,6 +342,52 @@ gst_matroska_index_compare (GstMatroskaIndex * i1, GstMatroskaIndex * i2)
     return 0;
 }
 
+gint
+gst_matroska_index_seek_find (GstMatroskaIndex * i1, GstClockTime * time,
+    gpointer user_data)
+{
+  if (i1->time < *time)
+    return -1;
+  else if (i1->time > *time)
+    return 1;
+  else
+    return 0;
+}
+
+GstMatroskaIndex *
+gst_matroska_read_common_do_index_seek (GstMatroskaReadCommon * common,
+    GstMatroskaTrackContext * track, gint64 seek_pos, GArray ** _index,
+    gint * _entry_index)
+{
+  GstMatroskaIndex *entry = NULL;
+  GArray *index;
+
+  if (!common->index || !common->index->len)
+    return NULL;
+
+  /* find entry just before or at the requested position */
+  if (track && track->index_table)
+    index = track->index_table;
+  else
+    index = common->index;
+
+  entry =
+      gst_util_array_binary_search (index->data, index->len,
+      sizeof (GstMatroskaIndex),
+      (GCompareDataFunc) gst_matroska_index_seek_find, GST_SEARCH_MODE_BEFORE,
+      &seek_pos, NULL);
+
+  if (entry == NULL)
+    entry = &g_array_index (index, GstMatroskaIndex, 0);
+
+  if (_index)
+    *_index = index;
+  if (_entry_index)
+    *_entry_index = entry - (GstMatroskaIndex *) index->data;
+
+  return entry;
+}
+
 static gint
 gst_matroska_read_common_encoding_cmp (GstMatroskaTrackEncoding * a,
     GstMatroskaTrackEncoding * b)
