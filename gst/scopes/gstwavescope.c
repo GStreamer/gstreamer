@@ -104,13 +104,12 @@ static gboolean
 gst_wave_scope_render (GstBaseScope * scope, GstBuffer * audio,
     GstBuffer * video)
 {
-  guint8 *vdata = GST_BUFFER_DATA (video);
+  guint32 *vdata = (guint32 *) GST_BUFFER_DATA (video);
   gint16 *adata = (gint16 *) GST_BUFFER_DATA (audio);
   guint i, c, s, x, y, off, oy;
   guint num_samples;
   gfloat dx, dy;
-  guint bpp = gst_video_format_get_pixel_stride (scope->video_format, 0);
-  guint bpl = bpp * scope->width;
+  guint w = scope->width;
 
   /* draw dots */
   num_samples = GST_BUFFER_SIZE (audio) / (scope->channels * sizeof (gint16));
@@ -122,10 +121,8 @@ gst_wave_scope_render (GstBaseScope * scope, GstBuffer * audio,
     x = (guint) ((gfloat) i * dx);
     for (c = 0; c < scope->channels; c++) {
       y = (guint) (oy + (gfloat) adata[s++] * dy);
-      off = (y * bpl) + (x * bpp);
-      vdata[off + 0] = 0xFF;
-      vdata[off + 1] = 0xFF;
-      vdata[off + 2] = 0xFF;
+      off = (y * w) + x;
+      vdata[off] = 0x00FFFFFF;
     }
   }
   return TRUE;
