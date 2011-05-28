@@ -34,13 +34,15 @@
 GST_DEBUG_CATEGORY_STATIC (base_scope_debug);
 #define GST_CAT_DEFAULT (base_scope_debug)
 
+#define DEFAULT_SHADER GST_BASE_SCOPE_SHADER_FADE
+#define DEFAULT_SHADE_AMOUNT   0x000a0a0a
+
 enum
 {
   PROP_0,
-  PROP_SHADER
+  PROP_SHADER,
+  PROP_SHADE_AMOUNT
 };
-
-#define DEFAULT_SHADER GST_BASE_SCOPE_SHADER_FADE
 
 static GstBaseTransformClass *parent_class = NULL;
 
@@ -86,10 +88,32 @@ static void
 shader_fade (GstBaseScope * scope, const guint8 * s, guint8 * d)
 {
   guint i, bpf = scope->bpf;
+  guint r = (scope->shade_amount >> 16) & 0xff;
+  guint g = (scope->shade_amount >> 8) & 0xff;
+  guint b = (scope->shade_amount >> 0) & 0xff;
 
-  for (i = 0; i < bpf; i++) {
-    d[i] = (s[i] > 10) ? s[i] - 10 : 0;
+  /* we're only supporting GST_VIDEO_FORMAT_xRGB right now) */
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  for (i = 0; i < bpf;) {
+    d[i] = (s[i] > b) ? s[i] - b : 0;
+    i++;
+    d[i] = (s[i] > g) ? s[i] - g : 0;
+    i++;
+    d[i] = (s[i] > r) ? s[i] - r : 0;
+    i++;
+    d[i++] = 0;
   }
+#else
+  for (i = 0; i < bpf;) {
+    d[i++] = 0;
+    d[i] = (s[i] > r) ? s[i] - r : 0;
+    i++;
+    d[i] = (s[i] > g) ? s[i] - g : 0;
+    i++;
+    d[i] = (s[i] > b) ? s[i] - b : 0;
+    i++;
+  }
+#endif
 }
 
 static void
@@ -97,13 +121,51 @@ shader_fade_and_move_up (GstBaseScope * scope, const guint8 * s, guint8 * d)
 {
   guint i, j, bpf = scope->bpf;
   guint bpl = 4 * scope->width;
+  guint r = (scope->shade_amount >> 16) & 0xff;
+  guint g = (scope->shade_amount >> 8) & 0xff;
+  guint b = (scope->shade_amount >> 0) & 0xff;
 
-  for (j = 0, i = bpl; i < bpf; i++, j++) {
-    d[j] = (s[i] > 10) ? s[i] - 10 : 0;
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  for (j = 0, i = bpl; i < bpf;) {
+    d[j++] = (s[i] > b) ? s[i] - b : 0;
+    i++;
+    d[j++] = (s[i] > g) ? s[i] - g : 0;
+    i++;
+    d[j++] = (s[i] > r) ? s[i] - r : 0;
+    i++;
+    d[j++] = 0;
+    i++;
   }
-  for (i = 0; i < bpl; i++, j++) {
-    d[j] = (s[j] > 10) ? s[j] - 10 : 0;
+  for (i = 0; i < bpl; i += 4) {
+    d[j] = (s[j] > b) ? s[j] - b : 0;
+    j++;
+    d[j] = (s[j] > g) ? s[j] - g : 0;
+    j++;
+    d[j] = (s[j] > r) ? s[j] - r : 0;
+    j++;
+    d[j++] = 0;
   }
+#else
+  for (j = 0, i = bpl; i < bpf;) {
+    d[j++] = 0;
+    i++;
+    d[j++] = (s[i] > r) ? s[i] - r : 0;
+    i++;
+    d[j++] = (s[i] > g) ? s[i] - g : 0;
+    i++;
+    d[j++] = (s[i] > b) ? s[i] - b : 0;
+    i++;
+  }
+  for (i = 0; i < bpl; i += 4) {
+    d[j++] = 0;
+    d[j] = (s[j] > r) ? s[j] - r : 0;
+    j++;
+    d[j] = (s[j] > g) ? s[j] - g : 0;
+    j++;
+    d[j] = (s[j] > b) ? s[j] - b : 0;
+    j++;
+  }
+#endif
 }
 
 static void
@@ -176,6 +238,11 @@ gst_base_scope_class_init (GstBaseScopeClass * klass)
           "Shader function to apply on each frame", GST_TYPE_BASE_SCOPE_SHADER,
           DEFAULT_SHADER,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_SHADE_AMOUNT,
+      g_param_spec_uint ("shade-amount", "shade amount",
+          "Shading color to use (big-endian ARGB)", 0, G_MAXUINT32,
+          DEFAULT_SHADE_AMOUNT,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -208,6 +275,7 @@ gst_base_scope_init (GstBaseScope * scope, GstBaseScopeClass * g_class)
   /* properties */
   scope->shader_type = DEFAULT_SHADER;
   gst_base_scope_change_shader (scope);
+  scope->shade_amount = DEFAULT_SHADE_AMOUNT;
 
   /* reset the initial video state */
   scope->width = 320;
@@ -235,6 +303,9 @@ gst_base_scope_set_property (GObject * object, guint prop_id,
       scope->shader_type = g_value_get_enum (value);
       gst_base_scope_change_shader (scope);
       break;
+    case PROP_SHADE_AMOUNT:
+      scope->shade_amount = g_value_get_uint (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -250,6 +321,9 @@ gst_base_scope_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_SHADER:
       g_value_set_enum (value, scope->shader_type);
+      break;
+    case PROP_SHADE_AMOUNT:
+      g_value_set_uint (value, scope->shade_amount);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

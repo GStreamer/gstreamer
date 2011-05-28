@@ -66,6 +66,7 @@ struct _GstBaseScope
 
   GstBaseScopeShader shader_type;
   GstBaseScopeShaderFunc shader;
+  guint32 shade_amount;
 
   guint64 next_ts;              /* the timestamp of the next frame */
   guint64 frame_duration;
