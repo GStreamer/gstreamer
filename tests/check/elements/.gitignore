@@ -26,4 +26,5 @@ videoscale
 vorbistag
 playbin
 playbin2
+playbin2-compressed
 subparse
