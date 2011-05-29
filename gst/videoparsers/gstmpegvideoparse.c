@@ -226,11 +226,13 @@ gst_mpegv_parse_process_config (GstMpegvParse * mpvparse, const guint8 * data,
     return TRUE;
 
   if (!gst_mpeg_video_params_parse_config (&mpvparse->params, data, size)) {
-    GST_DEBUG_OBJECT (mpvparse, "failed to parse config data (size %d)", size);
+    GST_DEBUG_OBJECT (mpvparse, "failed to parse config data (size %"
+        G_GSSIZE_FORMAT ")", size);
     return FALSE;
   }
 
-  GST_LOG_OBJECT (mpvparse, "accepting parsed config size %d", size);
+  GST_LOG_OBJECT (mpvparse, "accepting parsed config size %" G_GSSIZE_FORMAT,
+      size);
 
   /* parsing ok, so accept it as new config */
   if (mpvparse->config != NULL)

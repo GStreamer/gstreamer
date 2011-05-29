@@ -231,11 +231,13 @@ gst_mpeg4vparse_process_config (GstMpeg4VParse * mp4vparse, const guint8 * data,
     return TRUE;
 
   if (!gst_mpeg4_params_parse_config (&mp4vparse->params, data, size)) {
-    GST_DEBUG_OBJECT (mp4vparse, "failed to parse config data (size %d)", size);
+    GST_DEBUG_OBJECT (mp4vparse, "failed to parse config data (size %"
+        G_GSSIZE_FORMAT ")", size);
     return FALSE;
   }
 
-  GST_LOG_OBJECT (mp4vparse, "accepting parsed config size %d", size);
+  GST_LOG_OBJECT (mp4vparse, "accepting parsed config size %" G_GSSIZE_FORMAT,
+      size);
 
   /* parsing ok, so accept it as new config */
   if (mp4vparse->config != NULL)
