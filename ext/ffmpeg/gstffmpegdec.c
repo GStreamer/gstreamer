@@ -1791,7 +1791,7 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
 
   /* we assume DTS as input timestamps unless we see reordered input
    * timestamps */
-  if (!ffmpegdec->reordered_in) {
+  if (!ffmpegdec->reordered_in && ffmpegdec->reordered_out) {
     /* PTS and DTS are the same for keyframes */
     if (!iskeyframe && ffmpegdec->next_out != -1) {
       /* interpolate all timestamps except for keyframes, FIXME, this is
