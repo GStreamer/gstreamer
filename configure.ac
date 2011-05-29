@@ -544,7 +544,7 @@ AG_GST_CHECK_FEATURE(AVC, [AVC Video Services], avcsrc, [
   CPPFLAGS="$CPPFLAGS -framework AVCVideoServices -framework CoreFoundation"
   save_LIBS="$LIBS"
   LIBS="$LIBS -framework AVCVideoServices -framework CoreFoundation"
-  AC_TRY_COMPILE([], [], [HAVE_AVC=yes], [HAVE_AVC=no])
+  AC_TRY_LINK([], [], [HAVE_AVC=yes], [HAVE_AVC=no])
   LIBS=$save_LIBS
   CPPFLAGS=$save_CPPFLAGS
   AC_LANG_POP([C++])
