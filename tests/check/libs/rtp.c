@@ -635,12 +635,10 @@ GST_START_TEST (test_rtcp_buffer)
 {
   GstBuffer *buf;
   GstRTCPPacket packet;
-  guint8 *data;
 
   buf = gst_rtcp_buffer_new (1400);
   fail_unless (buf != NULL);
   fail_unless_equals_int (GST_BUFFER_SIZE (buf), 1400);
-  data = GST_BUFFER_DATA (buf);
 
   fail_unless (gst_rtcp_buffer_get_first_packet (buf, &packet) == FALSE);
   fail_unless (gst_rtcp_buffer_get_packet_count (buf) == 0);

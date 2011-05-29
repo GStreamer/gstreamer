@@ -272,7 +272,6 @@ GST_START_TEST (test_continuity)
 
   {
     GstClockTime next_timestamp;
-    gint64 last_granulepos;
 
     /* first buffer should have timestamp of TIMESTAMP_OFFSET, granulepos to
      * match the timestamp of the end of the last sample in the output buffer.
@@ -281,7 +280,6 @@ GST_START_TEST (test_continuity)
      * take care to timestamp correctly based on the offset of the input data
      * however, so it does do sub-granulepos timestamping. */
     buffer = gst_buffer_straw_get_buffer (bin, pad);
-    last_granulepos = GST_BUFFER_OFFSET_END (buffer);
     check_buffer_timestamp (buffer, 0);
     /* plain division because I know the answer is exact */
     check_buffer_duration (buffer, GST_SECOND / 10);
