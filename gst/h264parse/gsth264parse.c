@@ -358,10 +358,7 @@ gst_h264_parse_get_pps (GstH264Parse * h, guint8 pps_id)
 {
   GstH264Pps *pps;
   g_return_val_if_fail (h != NULL, NULL);
-  if (pps_id >= MAX_PPS_COUNT) {
-    GST_DEBUG_OBJECT (h, "requested pps_id=%04x out of range", pps_id);
-    return NULL;
-  }
+
   pps = h->pps_buffers[pps_id];
   if (pps == NULL) {
     GST_DEBUG_OBJECT (h, "Creating pps with pps_id=%04x", pps_id);
@@ -665,10 +662,15 @@ gst_nal_decode_sps (GstH264Parse * h, GstNalBs * bs)
 static gboolean
 gst_nal_decode_pps (GstH264Parse * h, GstNalBs * bs)
 {
-  guint8 pps_id;
+  gint pps_id;
   GstH264Pps *pps = NULL;
 
   pps_id = gst_nal_bs_read_ue (bs);
+  if (pps_id >= MAX_PPS_COUNT) {
+    GST_DEBUG_OBJECT (h, "requested pps_id=%04x out of range", pps_id);
+    return FALSE;
+  }
+
   pps = gst_h264_parse_get_pps (h, pps_id);
   if (pps == NULL) {
     return FALSE;
