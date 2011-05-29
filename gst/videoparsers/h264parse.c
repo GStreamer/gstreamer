@@ -205,12 +205,6 @@ gst_h264_params_get_pps (GstH264Params * params, guint8 pps_id, gboolean set)
 
   g_return_val_if_fail (params != NULL, NULL);
 
-  if (G_UNLIKELY (pps_id >= MAX_PPS_COUNT)) {
-    GST_WARNING_OBJECT (params->el,
-        "requested pps_id=%04x out of range", pps_id);
-    return NULL;
-  }
-
   pps = &params->pps_buffers[pps_id];
   if (set) {
     if (pps->valid) {
@@ -556,10 +550,16 @@ gst_h264_params_decode_sps (GstH264Params * params, GstNalBs * bs)
 static gboolean
 gst_h264_params_decode_pps (GstH264Params * params, GstNalBs * bs)
 {
-  guint8 pps_id;
+  gint pps_id;
   GstH264ParamsPPS *pps = NULL;
 
   pps_id = gst_nal_bs_read_ue (bs);
+  if (G_UNLIKELY (pps_id >= MAX_PPS_COUNT)) {
+    GST_WARNING_OBJECT (params->el,
+        "requested pps_id=%04x out of range", pps_id);
+    return FALSE;
+  }
+
 
   pps = gst_h264_params_get_pps (params, pps_id, FALSE);
   if (G_UNLIKELY (pps == NULL))
