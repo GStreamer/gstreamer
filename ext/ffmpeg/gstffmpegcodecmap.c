@@ -961,12 +961,22 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
 
     case CODEC_ID_AAC:
     {
-      caps = gst_ff_aud_caps_new (context, codec_id, "audio/mpeg",
-          "mpegversion", G_TYPE_INT, 4, NULL);
+      caps = gst_ff_aud_caps_new (context, codec_id, "audio/mpeg", NULL);
 
       if (!encode) {
         GValue arr = { 0, };
         GValue item = { 0, };
+
+        g_value_init (&arr, GST_TYPE_LIST);
+        g_value_init (&item, G_TYPE_INT);
+        g_value_set_int (&item, 2);
+        gst_value_list_append_value (&arr, &item);
+        g_value_set_int (&item, 4);
+        gst_value_list_append_value (&arr, &item);
+        g_value_unset (&item);
+
+        gst_caps_set_value (caps, "mpegversion", &arr);
+        g_value_unset (&arr);
 
         g_value_init (&arr, GST_TYPE_LIST);
         g_value_init (&item, G_TYPE_STRING);
@@ -981,7 +991,8 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
         gst_caps_set_value (caps, "stream-format", &arr);
         g_value_unset (&arr);
       } else {
-        gst_caps_set_simple (caps, "stream-format", G_TYPE_STRING, "raw",
+        gst_caps_set_simple (caps, "mpegversion", G_TYPE_INT, 4,
+            "stream-format", G_TYPE_STRING, "raw",
             "base-profile", G_TYPE_STRING, "lc", NULL);
 
         if (context && context->extradata_size > 0)
