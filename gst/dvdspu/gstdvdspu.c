@@ -55,18 +55,16 @@ static GstStaticPadTemplate video_sink_factory =
 GST_STATIC_PAD_TEMPLATE ("video",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw-yuv, " "format = (fourcc)I420, "
-        "width = (int) [ 16, 4096 ], " "height = (int) [ 16, 4096 ],"
-        "framerate = " GST_VIDEO_FPS_RANGE)
+    GST_STATIC_CAPS ("video/x-raw-yuv, " "format = (fourcc) { I420 }, "
+        "width = (int) [ 16, 4096 ], " "height = (int) [ 16, 4096 ]")
     /* FIXME: Can support YV12 one day too */
     );
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw-yuv, " "format = (fourcc)I420, "
-        "width = (int) [ 16, 4096 ], " "height = (int) [ 16, 4096 ],"
-        "framerate = " GST_VIDEO_FPS_RANGE)
+    GST_STATIC_CAPS ("video/x-raw-yuv, " "format = (fourcc) { I420 }, "
+        "width = (int) [ 16, 4096 ], " "height = (int) [ 16, 4096 ]")
     /* FIXME: Can support YV12 one day too */
     );
 
