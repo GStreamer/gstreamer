@@ -134,6 +134,30 @@ gst_spectra_scope_setup (GstBaseScope * bscope)
   return TRUE;
 }
 
+static inline void
+add_pixel (guint32 * _p, guint32 _c)
+{
+  guint8 *p = (guint8 *) _p;
+  guint8 *c = (guint8 *) & _c;
+
+  if (p[0] < 255 - c[0])
+    p[0] += c[0];
+  else
+    p[0] = 255;
+  if (p[1] < 255 - c[1])
+    p[1] += c[1];
+  else
+    p[1] = 255;
+  if (p[2] < 255 - c[2])
+    p[2] += c[2];
+  else
+    p[2] = 255;
+  if (p[3] < 255 - c[3])
+    p[3] += c[3];
+  else
+    p[3] = 255;
+}
+
 static gboolean
 gst_spectra_scope_render (GstBaseScope * bscope, GstBuffer * audio,
     GstBuffer * video)
@@ -180,7 +204,7 @@ gst_spectra_scope_render (GstBaseScope * bscope, GstBuffer * audio,
     vdata[off] = 0x00FFFFFF;
     for (l = y + 1; l <= h; l++) {
       off += w;
-      vdata[off] = 0x007F7F7F;
+      add_pixel (&vdata[off], 0x007F7F7F);
     }
   }
   return TRUE;
