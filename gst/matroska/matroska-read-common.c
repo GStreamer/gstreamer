@@ -484,6 +484,164 @@ gst_matroska_read_common_parse_skip (GstMatroskaReadCommon * common,
   return gst_ebml_read_skip (ebml);
 }
 
+GstFlowReturn
+gst_matroska_read_common_parse_header (GstMatroskaReadCommon * common,
+    GstEbmlRead * ebml)
+{
+  GstFlowReturn ret;
+  gchar *doctype;
+  guint version;
+  guint32 id;
+
+  /* this function is the first to be called */
+
+  /* default init */
+  doctype = NULL;
+  version = 1;
+
+  ret = gst_ebml_peek_id (ebml, &id);
+  if (ret != GST_FLOW_OK)
+    return ret;
+
+  GST_DEBUG_OBJECT (common, "id: %08x", id);
+
+  if (id != GST_EBML_ID_HEADER) {
+    GST_ERROR_OBJECT (common, "Failed to read header");
+    goto exit;
+  }
+
+  ret = gst_ebml_read_master (ebml, &id);
+  if (ret != GST_FLOW_OK)
+    return ret;
+
+  while (gst_ebml_read_has_remaining (ebml, 1, TRUE)) {
+    ret = gst_ebml_peek_id (ebml, &id);
+    if (ret != GST_FLOW_OK)
+      return ret;
+
+    switch (id) {
+        /* is our read version uptodate? */
+      case GST_EBML_ID_EBMLREADVERSION:{
+        guint64 num;
+
+        ret = gst_ebml_read_uint (ebml, &id, &num);
+        if (ret != GST_FLOW_OK)
+          return ret;
+        if (num != GST_EBML_VERSION) {
+          GST_ERROR_OBJECT (ebml, "Unsupported EBML version %" G_GUINT64_FORMAT,
+              num);
+          return GST_FLOW_ERROR;
+        }
+
+        GST_DEBUG_OBJECT (ebml, "EbmlReadVersion: %" G_GUINT64_FORMAT, num);
+        break;
+      }
+
+        /* we only handle 8 byte lengths at max */
+      case GST_EBML_ID_EBMLMAXSIZELENGTH:{
+        guint64 num;
+
+        ret = gst_ebml_read_uint (ebml, &id, &num);
+        if (ret != GST_FLOW_OK)
+          return ret;
+        if (num > sizeof (guint64)) {
+          GST_ERROR_OBJECT (ebml,
+              "Unsupported EBML maximum size %" G_GUINT64_FORMAT, num);
+          return GST_FLOW_ERROR;
+        }
+        GST_DEBUG_OBJECT (ebml, "EbmlMaxSizeLength: %" G_GUINT64_FORMAT, num);
+        break;
+      }
+
+        /* we handle 4 byte IDs at max */
+      case GST_EBML_ID_EBMLMAXIDLENGTH:{
+        guint64 num;
+
+        ret = gst_ebml_read_uint (ebml, &id, &num);
+        if (ret != GST_FLOW_OK)
+          return ret;
+        if (num > sizeof (guint32)) {
+          GST_ERROR_OBJECT (ebml,
+              "Unsupported EBML maximum ID %" G_GUINT64_FORMAT, num);
+          return GST_FLOW_ERROR;
+        }
+        GST_DEBUG_OBJECT (ebml, "EbmlMaxIdLength: %" G_GUINT64_FORMAT, num);
+        break;
+      }
+
+      case GST_EBML_ID_DOCTYPE:{
+        gchar *text;
+
+        ret = gst_ebml_read_ascii (ebml, &id, &text);
+        if (ret != GST_FLOW_OK)
+          return ret;
+
+        GST_DEBUG_OBJECT (ebml, "EbmlDocType: %s", GST_STR_NULL (text));
+
+        if (doctype)
+          g_free (doctype);
+        doctype = text;
+        break;
+      }
+
+      case GST_EBML_ID_DOCTYPEREADVERSION:{
+        guint64 num;
+
+        ret = gst_ebml_read_uint (ebml, &id, &num);
+        if (ret != GST_FLOW_OK)
+          return ret;
+        version = num;
+        GST_DEBUG_OBJECT (ebml, "EbmlReadVersion: %" G_GUINT64_FORMAT, num);
+        break;
+      }
+
+      default:
+        ret = gst_matroska_read_common_parse_skip (common, ebml,
+            "EBML header", id);
+        if (ret != GST_FLOW_OK)
+          return ret;
+        break;
+
+        /* we ignore these two, as they don't tell us anything we care about */
+      case GST_EBML_ID_EBMLVERSION:
+      case GST_EBML_ID_DOCTYPEVERSION:
+        ret = gst_ebml_read_skip (ebml);
+        if (ret != GST_FLOW_OK)
+          return ret;
+        break;
+    }
+  }
+
+exit:
+
+  if ((doctype != NULL && !strcmp (doctype, GST_MATROSKA_DOCTYPE_MATROSKA)) ||
+      (doctype != NULL && !strcmp (doctype, GST_MATROSKA_DOCTYPE_WEBM)) ||
+      (doctype == NULL)) {
+    if (version <= 2) {
+      if (doctype) {
+        GST_INFO_OBJECT (common, "Input is %s version %d", doctype, version);
+      } else {
+        GST_WARNING_OBJECT (common, "Input is EBML without doctype, assuming "
+            "matroska (version %d)", version);
+      }
+      ret = GST_FLOW_OK;
+    } else {
+      GST_ELEMENT_ERROR (common, STREAM, DEMUX, (NULL),
+          ("Demuxer version (2) is too old to read %s version %d",
+              GST_STR_NULL (doctype), version));
+      ret = GST_FLOW_ERROR;
+    }
+    g_free (doctype);
+  } else {
+    GST_ELEMENT_ERROR (common, STREAM, WRONG_TYPE, (NULL),
+        ("Input is not a matroska stream (doctype=%s)", doctype));
+    ret = GST_FLOW_ERROR;
+    g_free (doctype);
+  }
+
+  return ret;
+}
+
 static GstFlowReturn
 gst_matroska_read_common_parse_index_cuetrack (GstMatroskaReadCommon * common,
     GstEbmlRead * ebml, guint * nentries)
