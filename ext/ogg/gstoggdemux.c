@@ -1186,6 +1186,7 @@ gst_ogg_chain_new_stream (GstOggChain * chain, glong serialno)
       "created new ogg src %p for stream with serial %08lx", ret, serialno);
 
   g_array_append_val (chain->streams, ret);
+  gst_pad_set_active (GST_PAD_CAST (ret), TRUE);
 
   return ret;
 
