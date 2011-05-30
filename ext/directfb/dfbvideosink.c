@@ -998,7 +998,7 @@ beach:
 
 static gboolean
 gst_dfbvideosink_can_blit_from_format (GstDfbVideoSink * dfbvideosink,
-    DFBSurfacePixelFormat format)
+    DFBSurfacePixelFormat format, gboolean accelerated)
 {
   gboolean res = FALSE;
   DFBResult ret;
@@ -1058,14 +1058,14 @@ gst_dfbvideosink_can_blit_from_format (GstDfbVideoSink * dfbvideosink,
   }
 
   /* Blitting from this format to our primary is accelerated */
-  if (mask & DFXL_BLIT) {
+  if ((mask & DFXL_BLIT) && accelerated) {
     GST_DEBUG_OBJECT (dfbvideosink, "blitting from format %s to our primary "
         "is accelerated", gst_dfbvideosink_get_format_name (format));
     res = TRUE;
-  } else {
+  } else if (!accelerated) {
     GST_DEBUG_OBJECT (dfbvideosink, "blitting from format %s to our primary "
         "is not accelerated", gst_dfbvideosink_get_format_name (format));
-    res = FALSE;
+    res = TRUE;
   }
 
   /* Restore original layer configuration */
@@ -1165,41 +1165,52 @@ gst_dfbvideosink_getcaps (GstBaseSink * bsink)
       caps = gst_dfbvideosink_get_caps_from_format (dfbvideosink->pixel_format);
     } else {
       /* Try some formats */
+      gboolean accelerated = TRUE;
       caps = gst_caps_new_empty ();
 
-      if (gst_dfbvideosink_can_blit_from_format (dfbvideosink, DSPF_RGB16)) {
-        gst_caps_append (caps,
-            gst_dfbvideosink_get_caps_from_format (DSPF_RGB16));
-      }
-      if (gst_dfbvideosink_can_blit_from_format (dfbvideosink, DSPF_RGB24)) {
-        gst_caps_append (caps,
-            gst_dfbvideosink_get_caps_from_format (DSPF_RGB24));
-      }
-      /* There's something wrong with RGB32, ffmpegcolorspace ?
-         if (gst_dfbvideosink_can_blit_from_format (dfbvideosink, DSPF_RGB32)) {
-         gst_caps_append (caps,
-         gst_dfbvideosink_get_caps_from_format (DSPF_RGB32));
-         } */
-      if (gst_dfbvideosink_can_blit_from_format (dfbvideosink, DSPF_ARGB)) {
-        gst_caps_append (caps,
-            gst_dfbvideosink_get_caps_from_format (DSPF_ARGB));
-      }
-      if (gst_dfbvideosink_can_blit_from_format (dfbvideosink, DSPF_YUY2)) {
-        gst_caps_append (caps,
-            gst_dfbvideosink_get_caps_from_format (DSPF_YUY2));
-      }
-      if (gst_dfbvideosink_can_blit_from_format (dfbvideosink, DSPF_UYVY)) {
-        gst_caps_append (caps,
-            gst_dfbvideosink_get_caps_from_format (DSPF_UYVY));
-      }
-      if (gst_dfbvideosink_can_blit_from_format (dfbvideosink, DSPF_I420)) {
-        gst_caps_append (caps,
-            gst_dfbvideosink_get_caps_from_format (DSPF_I420));
-      }
-      if (gst_dfbvideosink_can_blit_from_format (dfbvideosink, DSPF_YV12)) {
-        gst_caps_append (caps,
-            gst_dfbvideosink_get_caps_from_format (DSPF_YV12));
-      }
+      do {
+        if (gst_dfbvideosink_can_blit_from_format (dfbvideosink, DSPF_RGB16,
+                accelerated)) {
+          gst_caps_append (caps,
+              gst_dfbvideosink_get_caps_from_format (DSPF_RGB16));
+        }
+        if (gst_dfbvideosink_can_blit_from_format (dfbvideosink, DSPF_RGB24,
+                accelerated)) {
+          gst_caps_append (caps,
+              gst_dfbvideosink_get_caps_from_format (DSPF_RGB24));
+        }
+        if (gst_dfbvideosink_can_blit_from_format (dfbvideosink, DSPF_RGB32,
+                accelerated)) {
+          gst_caps_append (caps,
+              gst_dfbvideosink_get_caps_from_format (DSPF_RGB32));
+        }
+        if (gst_dfbvideosink_can_blit_from_format (dfbvideosink, DSPF_ARGB,
+                accelerated)) {
+          gst_caps_append (caps,
+              gst_dfbvideosink_get_caps_from_format (DSPF_ARGB));
+        }
+        if (gst_dfbvideosink_can_blit_from_format (dfbvideosink, DSPF_YUY2,
+                accelerated)) {
+          gst_caps_append (caps,
+              gst_dfbvideosink_get_caps_from_format (DSPF_YUY2));
+        }
+        if (gst_dfbvideosink_can_blit_from_format (dfbvideosink, DSPF_UYVY,
+                accelerated)) {
+          gst_caps_append (caps,
+              gst_dfbvideosink_get_caps_from_format (DSPF_UYVY));
+        }
+        if (gst_dfbvideosink_can_blit_from_format (dfbvideosink, DSPF_I420,
+                accelerated)) {
+          gst_caps_append (caps,
+              gst_dfbvideosink_get_caps_from_format (DSPF_I420));
+        }
+        if (gst_dfbvideosink_can_blit_from_format (dfbvideosink, DSPF_YV12,
+                accelerated)) {
+          gst_caps_append (caps,
+              gst_dfbvideosink_get_caps_from_format (DSPF_YV12));
+        }
+        accelerated = !accelerated;
+      } while (accelerated == FALSE);
     }
   }
 
