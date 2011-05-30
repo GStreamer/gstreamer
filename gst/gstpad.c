@@ -4452,6 +4452,7 @@ again:
 
     if (GST_PAD_IS_FLUSHING (pad))
       goto flushed;
+
   } while (TRUE);
 
   /* now check the peer pad */
@@ -4480,8 +4481,7 @@ again:
   /* ERROR handling */
 flushed:
   {
-    GST_DEBUG_OBJECT (pad,
-        "Not forwarding event since we're flushing and blocking");
+    GST_DEBUG_OBJECT (pad, "We're flushing");
     GST_OBJECT_UNLOCK (pad);
     gst_event_unref (event);
     return stored;
