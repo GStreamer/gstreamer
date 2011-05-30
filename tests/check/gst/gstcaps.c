@@ -346,6 +346,23 @@ GST_START_TEST (test_subset)
   fail_if (gst_caps_is_subset (c1, c2));
   gst_caps_unref (c1);
   gst_caps_unref (c2);
+
+  c1 = gst_caps_from_string ("audio/x-raw-int, channels=(int) {1}");
+  c2 = gst_caps_from_string ("audio/x-raw-int, channels=(int)1");
+  fail_unless (gst_caps_is_subset (c2, c1));
+  fail_unless (gst_caps_is_subset (c1, c2));
+  fail_unless (gst_caps_is_equal (c1, c2));
+  gst_caps_unref (c1);
+  gst_caps_unref (c2);
+
+  c1 = gst_caps_from_string
+      ("audio/x-raw-int, rate=(int)44100, channels=(int)3, endianness=(int)1234, width=(int)16, depth=(int)16, signed=(boolean)false");
+  c2 = gst_caps_from_string
+      ("audio/x-raw-int, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ], endianness=(int){ 1234, 4321 }, width=(int)16, depth=(int)[ 1, 16 ], signed=(boolean){ true, false }");
+  fail_unless (gst_caps_is_subset (c1, c2));
+  fail_if (gst_caps_is_subset (c2, c1));
+  gst_caps_unref (c1);
+  gst_caps_unref (c2);
 }
 
 GST_END_TEST;

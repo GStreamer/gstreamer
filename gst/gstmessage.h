@@ -73,11 +73,11 @@ typedef struct _GstMessage GstMessage;
  * @GST_MESSAGE_SEGMENT_START posted a GST_MESSAGE_SEGMENT_DONE message.
  * @GST_MESSAGE_DURATION: The duration of a pipeline changed. The application
  * can get the new duration with a duration query.
- * @GST_MESSAGE_ASYNC_START: Posted by elements when they start an ASYNC state
- * change. This message is not forwarded to the application but is used
+ * @GST_MESSAGE_ASYNC_START: Posted by elements when they start an ASYNC
+ * #GstStateChange. This message is not forwarded to the application but is used
  * internally. Since: 0.10.13.
- * @GST_MESSAGE_ASYNC_DONE: Posted by elements when they complete an ASYNC state
- * change. The application will only receive this message from the toplevel
+ * @GST_MESSAGE_ASYNC_DONE: Posted by elements when they complete an ASYNC
+ * #GstStateChange. The application will only receive this message from the toplevel
  * pipeline. Since: 0.10.13
  * @GST_MESSAGE_LATENCY: Posted by elements when their latency changes. The
  * application should recalculate and distribute a new latency. Since: 0.10.12

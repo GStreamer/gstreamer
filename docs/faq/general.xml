@@ -77,7 +77,7 @@ on the GStreamer project website.
 GStreamer aims to support every format imaginable, but that doesn't mean the 
 developers have managed to achieve that aim yet. If a GStreamer enabled 
 application doesn't play back your files, you can help us solve that problem
-by <ulink url="htpp://bugzilla.gnome.org">filing an enhancement request 
+by <ulink url="http://bugzilla.gnome.org">filing an enhancement request
 bug</ulink> for that format. If you have it, please provide: 
 <itemizedlist>
   <listitem><para>links to other players, preferrably Open Source and working 

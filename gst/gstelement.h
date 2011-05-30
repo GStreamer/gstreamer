@@ -85,8 +85,8 @@ G_BEGIN_DECLS
  *                               cannot produce data in %GST_STATE_PAUSED.
  *                               This typically happens with live sources.
  *
- * The possible return values from a state change function. Only
- * @GST_STATE_CHANGE_FAILURE is a real failure.
+ * The possible return values from a state change function such as 
+ * gst_element_set_state(). Only @GST_STATE_CHANGE_FAILURE is a real failure.
  */
 typedef enum {
   GST_STATE_CHANGE_FAILURE             = 0,
@@ -195,17 +195,17 @@ typedef enum {
  *     Streaming threads are started.
  *   </para></listitem>
  *   <listitem><para>
- *     Some elements might need to return ASYNC and complete the state change
- *     when they have enough information. It is a requirement for sinks to
- *     return ASYNC and complete the state change when they receive the first
- *     buffer or EOS event (preroll). Sinks also block the dataflow when in
- *     PAUSED.
+ *     Some elements might need to return %GST_STATE_CHANGE_ASYNC and complete
+ *     the state change when they have enough information. It is a requirement
+ *     for sinks to return %GST_STATE_CHANGE_ASYNC and complete the state change
+ *     when they receive the first buffer or %GST_EVENT_EOS (preroll).
+ *     Sinks also block the dataflow when in PAUSED.
  *   </para></listitem>
  *   <listitem><para>
  *     A pipeline resets the running_time to 0.
  *   </para></listitem>
  *   <listitem><para>
- *     Live sources return NO_PREROLL and don't generate data.
+ *     Live sources return %GST_STATE_CHANGE_NO_PREROLL and don't generate data.
  *   </para></listitem>
  * </itemizedlist>
  * @GST_STATE_CHANGE_PAUSED_TO_PLAYING: state change from PAUSED to PLAYING.
@@ -214,12 +214,12 @@ typedef enum {
  *     Most elements ignore this state change.
  *   </para></listitem>
  *   <listitem><para>
- *     The pipeline selects a clock and distributes this to all the children
+ *     The pipeline selects a #GstClock and distributes this to all the children
  *     before setting them to PLAYING. This means that it is only alowed to
- *     synchronize on the clock in the PLAYING state.
+ *     synchronize on the #GstClock in the PLAYING state.
  *   </para></listitem>
  *   <listitem><para>
- *     The pipeline uses the clock and the running_time to calculate the
+ *     The pipeline uses the #GstClock and the running_time to calculate the
  *     base_time. The base_time is distributed to all children when performing
  *     the state change.
  *   </para></listitem>
@@ -228,15 +228,15 @@ typedef enum {
  *     rendering the data.
  *   </para></listitem>
  *   <listitem><para>
- *     Sinks can post the EOS message in the PLAYING state. It is not allowed to
- *     post EOS when not in the PLAYING state.
+ *     Sinks can post %GST_MESSAGE_EOS in the PLAYING state. It is not allowed
+ *     to post %GST_MESSAGE_EOS when not in the PLAYING state.
  *   </para></listitem>
  *   <listitem><para>
  *     While streaming in PAUSED or PLAYING elements can create and remove
  *     sometimes pads.
  *   </para></listitem>
  *   <listitem><para>
- *     Live sources start generating data and return SUCCESS.
+ *     Live sources start generating data and return %GST_STATE_CHANGE_SUCCESS.
  *   </para></listitem>
  * </itemizedlist>
  * @GST_STATE_CHANGE_PLAYING_TO_PAUSED: state change from PLAYING to PAUSED.
@@ -245,24 +245,25 @@ typedef enum {
  *     Most elements ignore this state change.
  *   </para></listitem>
  *   <listitem><para>
- *     The pipeline calculates the running_time based on the last selected clock
- *     and the base_time. It stores this information to continue playback when
- *     going back to the PLAYING state.
+ *     The pipeline calculates the running_time based on the last selected
+ *     #GstClock and the base_time. It stores this information to continue
+ *     playback when going back to the PLAYING state.
  *   </para></listitem>
  *   <listitem><para>
- *     Sinks unblock any clock wait calls.
+ *     Sinks unblock any #GstClock wait calls.
  *   </para></listitem>
  *   <listitem><para>
- *     When a sink does not have a pending buffer to play, it returns ASYNC from
- *     this state change and completes the state change when it receives a new
- *     buffer or an EOS event.
+ *     When a sink does not have a pending buffer to play, it returns 
+ *     %GST_STATE_CHANGE_ASYNC from this state change and completes the state
+ *     change when it receives a new buffer or an %GST_EVENT_EOS.
  *   </para></listitem>
  *   <listitem><para>
- *     Any queued EOS messages are removed since they will be reposted when going
- *     back to the PLAYING state. The EOS messages are queued in GstBins.
+ *     Any queued %GST_MESSAGE_EOS items are removed since they will be reposted
+ *     when going back to the PLAYING state. The EOS messages are queued in
+ *     #GstBin containers.
  *   </para></listitem>
  *   <listitem><para>
- *     Live sources stop generating data and return NO_PREROLL.
+ *     Live sources stop generating data and return %GST_STATE_CHANGE_NO_PREROLL.
  *   </para></listitem>
  * </itemizedlist>
  * @GST_STATE_CHANGE_PAUSED_TO_READY  : state change from PAUSED to READY.
@@ -274,7 +275,7 @@ typedef enum {
  *     Elements unblock any waits on devices
  *   </para></listitem>
  *   <listitem><para>
- *     Chain or get_range functions return WRONG_STATE.
+ *     Chain or get_range functions return %GST_FLOW_WRONG_STATE.
  *   </para></listitem>
  *   <listitem><para>
  *     The element pads are deactivated so that streaming becomes impossible and
