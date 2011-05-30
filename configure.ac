@@ -310,6 +310,7 @@ AG_GST_CHECK_PLUGIN(debugutils)
 AG_GST_CHECK_PLUGIN(dtmf)
 AG_GST_CHECK_PLUGIN(dvbsuboverlay)
 AG_GST_CHECK_PLUGIN(dvdspu)
+AG_GST_CHECK_PLUGIN(faceoverlay)
 AG_GST_CHECK_PLUGIN(festival)
 AG_GST_CHECK_PLUGIN(fieldanalysis)
 AG_GST_CHECK_PLUGIN(freeze)
@@ -1822,6 +1823,7 @@ gst/debugutils/Makefile
 gst/dtmf/Makefile
 gst/dvbsuboverlay/Makefile
 gst/dvdspu/Makefile
+gst/faceoverlay/Makefile
 gst/festival/Makefile
 gst/fieldanalysis/Makefile
 gst/freeze/Makefile
