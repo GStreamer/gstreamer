@@ -3394,9 +3394,27 @@ gint
 gst_value_compare (const GValue * value1, const GValue * value2)
 {
   GstValueCompareFunc compare;
+  GType ltype;
 
   g_return_val_if_fail (G_IS_VALUE (value1), GST_VALUE_LESS_THAN);
   g_return_val_if_fail (G_IS_VALUE (value2), GST_VALUE_GREATER_THAN);
+
+  /* Special case: lists and scalar values 
+   * "{ 1 }" and "1" are equal */
+  ltype = gst_value_list_get_type ();
+  if (G_VALUE_HOLDS (value1, ltype) && !G_VALUE_HOLDS (value2, ltype)
+      && gst_value_list_get_size (value1) == 1) {
+    const GValue *elt;
+
+    elt = gst_value_list_get_value (value1, 0);
+    return gst_value_compare (elt, value2);
+  } else if (G_VALUE_HOLDS (value2, ltype) && !G_VALUE_HOLDS (value1, ltype)
+      && gst_value_list_get_size (value2) == 1) {
+    const GValue *elt;
+
+    elt = gst_value_list_get_value (value2, 0);
+    return gst_value_compare (elt, value1);
+  }
 
   if (G_VALUE_TYPE (value1) != G_VALUE_TYPE (value2))
     return GST_VALUE_UNORDERED;
