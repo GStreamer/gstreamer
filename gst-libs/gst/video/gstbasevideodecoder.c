@@ -892,11 +892,6 @@ static void
 gst_base_video_decoder_reset (GstBaseVideoDecoder * base_video_decoder,
     gboolean full)
 {
-  GstBaseVideoDecoderClass *base_video_decoder_class;
-
-  base_video_decoder_class =
-      GST_BASE_VIDEO_DECODER_GET_CLASS (base_video_decoder);
-
   GST_DEBUG_OBJECT (base_video_decoder, "reset full %d", full);
 
   if (full) {

@@ -368,11 +368,7 @@ static gboolean
 gst_base_video_encoder_sink_eventfunc (GstBaseVideoEncoder * base_video_encoder,
     GstEvent * event)
 {
-  GstBaseVideoEncoderClass *base_video_encoder_class;
   gboolean ret = FALSE;
-
-  base_video_encoder_class =
-      GST_BASE_VIDEO_ENCODER_GET_CLASS (base_video_encoder);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:

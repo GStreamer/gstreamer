@@ -1811,7 +1811,6 @@ gst_camerabin_have_img_buffer (GstPad * pad, GstMiniObject * obj,
   if (GST_IS_BUFFER (obj)) {
     GstBuffer *buffer = GST_BUFFER_CAST (obj);
     GstStructure *fn_ev_struct = NULL;
-    gboolean ret = TRUE;
     GstPad *os_sink = NULL;
 
     GST_LOG ("got buffer %p with size %d", buffer, GST_BUFFER_SIZE (buffer));
@@ -1823,7 +1822,6 @@ gst_camerabin_have_img_buffer (GstPad * pad, GstMiniObject * obj,
     /* Image filename should be set by now */
     if (g_str_equal (camera->filename->str, "")) {
       GST_DEBUG_OBJECT (camera, "filename not set, dropping buffer");
-      ret = FALSE;
       CAMERABIN_PROCESSING_DEC_UNLOCKED (camera);
       goto done;
     }
