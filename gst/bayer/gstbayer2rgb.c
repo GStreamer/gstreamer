@@ -382,283 +382,281 @@ gst_bayer2rgb_get_unit_size (GstBaseTransform * base, GstCaps * caps,
   return FALSE;
 }
 
-/*
- * We define values for the colors, just to make the code more readable.
- */
-#define	RED	0               /* Pure red element */
-#define	GREENB	1               /* Green element which is on a blue line */
-#define	BLUE	2               /* Pure blue element */
-#define	GREENR	3               /* Green element which is on a red line */
+#define RECONSTRUCT_SQUARE(x) \
+  do { \
+    int _h1 = next[i-1]; \
+    int _h2 = prev[i+1]; \
+    int _v1 = next[i+1]; \
+    int _v2 = prev[i-1]; \
+    (x) = (_h1+_h2+_v1+_v2+2)>>2; \
+  } while (0)
 
-static int
-get_pixel_type (GstBayer2RGB * filter, int x, int y)
+#define RECONSTRUCT_DIAMOND(x) \
+  do { \
+    int _h1 = src[i-1]; \
+    int _h2 = src[i+1]; \
+    int _v1 = next[i]; \
+    int _v2 = prev[i]; \
+    (x) = (_h1+_h2+_v1+_v2+2)>>2; \
+  } while (0)
+
+#define RECONSTRUCT_HORIZ(x) \
+  do { \
+    (x) = (src[i-1] + src[i+1] + 1) >> 1; \
+  } while (0)
+
+#define RECONSTRUCT_VERT(x) \
+  do { \
+    (x) = (next[i] + prev[i] + 1) >> 1; \
+  } while (0)
+
+
+static void
+reconstruct_blue_green (GstBayer2RGB * bayer2rgb, uint8_t * dest,
+    uint8_t * src, int src_stride, int blue_loc)
 {
-  int type;
+  int i;
+  int r, g, b;
+  uint8_t *prev;
+  uint8_t *next;
+  int width = bayer2rgb->width;
 
-  if (((x ^ filter->format) & 1)) {
-    if ((y ^ (filter->format >> 1)) & 1)
-      type = RED;
-    else
-      type = GREENB;
+  prev = src - src_stride;
+  next = src + src_stride;
+
+  i = 0;
+  if ((i & 1) == blue_loc) {
+    b = src[i];
+    r = (next[i + 1] + prev[i + 1] + 1) >> 1;
+    g = (next[i] + prev[i] + 1) >> 1;
   } else {
-    if ((y ^ (filter->format >> 1)) & 1)
-      type = GREENR;
-    else
-      type = BLUE;
+    b = src[i + 1];
+    r = (next[i] + prev[i] + 1) >> 1;
+    g = src[i];
   }
-  return type;
+  dest[i * 4 + bayer2rgb->r_off] = r;
+  dest[i * 4 + bayer2rgb->g_off] = g;
+  dest[i * 4 + bayer2rgb->b_off] = b;
+  for (i = 1; i < width - 1; i++) {
+    if ((i & 1) == blue_loc) {
+      b = src[i];
+      RECONSTRUCT_SQUARE (r);
+      RECONSTRUCT_DIAMOND (g);
+    } else {
+      RECONSTRUCT_HORIZ (b);
+      RECONSTRUCT_VERT (r);
+      g = src[i];
+    }
+    dest[i * 4 + bayer2rgb->r_off] = r;
+    dest[i * 4 + bayer2rgb->g_off] = g;
+    dest[i * 4 + bayer2rgb->b_off] = b;
+  }
+  if ((i & 1) == blue_loc) {
+    b = src[i];
+    r = (next[i - 1] + prev[i - 1] + 1) >> 1;
+    g = (next[i] + prev[i] + 1) >> 1;
+  } else {
+    b = src[i - 1];
+    r = (next[i] + prev[i] + 1) >> 1;
+    g = src[i];
+  }
+  dest[i * 4 + bayer2rgb->r_off] = r;
+  dest[i * 4 + bayer2rgb->g_off] = g;
+  dest[i * 4 + bayer2rgb->b_off] = b;
 }
 
-/* Routine to generate the top and bottom edges (not including corners) */
 static void
-hborder (uint8_t * input, uint8_t * output, int bot_top,
-    int typ, GstBayer2RGB * filter)
+reconstruct_green_red (GstBayer2RGB * bayer2rgb, uint8_t * dest,
+    uint8_t * src, int src_stride, int red_loc)
 {
-  uint8_t *op;                  /* output pointer */
-  uint8_t *ip;                  /* input pointer */
-  uint8_t *nx;                  /* next line pointer */
-  int ix;                       /* loop index */
+  int i;
+  int r, g, b;
+  uint8_t *prev;
+  uint8_t *next;
+  int width = bayer2rgb->width;
 
-  op = output + (bot_top * filter->width * (filter->height - 1) + 1) *
-      filter->pixsize;
-  ip = input + bot_top * filter->stride * (filter->height - 1);
-  /* calculate minus or plus one line, depending upon bot_top flag */
-  nx = ip + (1 - 2 * bot_top) * filter->stride;
-  /* Stepping horizontally */
-  for (ix = 1; ix < filter->width - 1; ix++, op += filter->pixsize) {
-    switch (typ) {
-      case RED:
-        op[filter->r_off] = ip[ix];
-        op[filter->g_off] = (ip[ix + 1] + ip[ix - 1] + nx[ix] + 1) / 3;
-        op[filter->b_off] = (nx[ix + 1] + nx[ix - 1] + 1) / 2;
-        typ = GREENR;
-        break;
-      case GREENR:
-        op[filter->r_off] = (ip[ix + 1] + ip[ix - 1] + 1) / 2;
-        op[filter->g_off] = ip[ix];
-        op[filter->b_off] = nx[ix];
-        typ = RED;
-        break;
-      case GREENB:
-        op[filter->r_off] = nx[ix];
-        op[filter->g_off] = ip[ix];
-        op[filter->b_off] = (ip[ix + 1] + ip[ix - 1] + 1) / 2;
-        typ = BLUE;
-        break;
-      case BLUE:
-        op[filter->r_off] = (nx[ix + 1] + nx[ix - 1] + 1) / 2;
-        op[filter->g_off] = (ip[ix + 1] + ip[ix - 1] + nx[ix] + 1) / 3;
-        op[filter->b_off] = ip[ix];
-        typ = GREENB;
-        break;
+  prev = src - src_stride;
+  next = src + src_stride;
+
+  i = 0;
+  if ((i & 1) == red_loc) {
+    r = src[i];
+    b = (next[i + 1] + prev[i + 1] + 1) >> 1;
+    g = (next[i] + prev[i] + 1) >> 1;
+  } else {
+    r = src[i + 1];
+    b = (next[i] + prev[i] + 1) >> 1;
+    g = src[i];
+  }
+  dest[i * 4 + bayer2rgb->r_off] = r;
+  dest[i * 4 + bayer2rgb->g_off] = g;
+  dest[i * 4 + bayer2rgb->b_off] = b;
+  for (i = 1; i < width - 1; i++) {
+    if ((i & 1) == red_loc) {
+      r = src[i];
+      RECONSTRUCT_SQUARE (b);
+      RECONSTRUCT_DIAMOND (g);
+    } else {
+      RECONSTRUCT_HORIZ (r);
+      RECONSTRUCT_VERT (b);
+      g = src[i];
+    }
+    dest[i * 4 + bayer2rgb->r_off] = r;
+    dest[i * 4 + bayer2rgb->g_off] = g;
+    dest[i * 4 + bayer2rgb->b_off] = b;
+  }
+  if ((i & 1) == red_loc) {
+    r = src[i];
+    b = (next[i - 1] + prev[i - 1] + 1) >> 1;
+    g = (next[i] + prev[i] + 1) >> 1;
+  } else {
+    r = src[i - 1];
+    b = (next[i] + prev[i] + 1) >> 1;
+    g = src[i];
+  }
+  dest[i * 4 + bayer2rgb->r_off] = r;
+  dest[i * 4 + bayer2rgb->g_off] = g;
+  dest[i * 4 + bayer2rgb->b_off] = b;
+}
+
+static void
+reconstruct_blue_green_edge (GstBayer2RGB * bayer2rgb, uint8_t * dest,
+    uint8_t * src, int src_stride, int blue_loc, int offset)
+{
+  int i;
+  int r, g, b;
+  uint8_t *next;
+  int width = bayer2rgb->width;
+
+  next = src + offset * src_stride;
+
+  i = 0;
+  if ((i & 1) == blue_loc) {
+    b = src[i];
+    r = next[i + 1];
+    g = next[i];
+  } else {
+    b = src[i + 1];
+    r = next[i];
+    g = src[i];
+  }
+  dest[i * 4 + bayer2rgb->r_off] = r;
+  dest[i * 4 + bayer2rgb->g_off] = g;
+  dest[i * 4 + bayer2rgb->b_off] = b;
+  for (i = 1; i < width - 1; i++) {
+    if ((i & 1) == blue_loc) {
+      b = src[i];
+      r = (next[i - 1] + next[i + 1] + 1) >> 1;
+      g = (src[i - 1] + src[i + 1] + 1) >> 1;
+    } else {
+      b = (src[i - 1] + src[i + 1] + 1) >> 1;
+      r = next[i];
+      g = src[i];
+    }
+    dest[i * 4 + bayer2rgb->r_off] = r;
+    dest[i * 4 + bayer2rgb->g_off] = g;
+    dest[i * 4 + bayer2rgb->b_off] = b;
+  }
+  if ((i & 1) == blue_loc) {
+    b = src[i];
+    r = next[i - 1];
+    g = next[i];
+  } else {
+    b = src[i - 1];
+    r = next[i];
+    g = src[i];
+  }
+  dest[i * 4 + bayer2rgb->r_off] = r;
+  dest[i * 4 + bayer2rgb->g_off] = g;
+  dest[i * 4 + bayer2rgb->b_off] = b;
+}
+
+static void
+reconstruct_green_red_edge (GstBayer2RGB * bayer2rgb, uint8_t * dest,
+    uint8_t * src, int src_stride, int red_loc, int offset)
+{
+  int i;
+  int r, g, b;
+  uint8_t *next;
+  int width = bayer2rgb->width;
+
+  next = src + offset * src_stride;
+
+  i = 0;
+  if ((i & 1) == red_loc) {
+    r = src[i];
+    b = next[i + 1];
+    g = next[i];
+  } else {
+    r = src[i + 1];
+    b = next[i];
+    g = src[i];
+  }
+  dest[i * 4 + bayer2rgb->r_off] = r;
+  dest[i * 4 + bayer2rgb->g_off] = g;
+  dest[i * 4 + bayer2rgb->b_off] = b;
+  for (i = 1; i < width - 1; i++) {
+    if ((i & 1) == red_loc) {
+      r = src[i];
+      b = (next[i - 1] + next[i + 1] + 1) >> 1;
+      g = (src[i - 1] + src[i + 1] + 1) >> 1;
+    } else {
+      r = (src[i - 1] + src[i + 1] + 1) >> 1;
+      b = next[i];
+      g = src[i];
+    }
+    dest[i * 4 + bayer2rgb->r_off] = r;
+    dest[i * 4 + bayer2rgb->g_off] = g;
+    dest[i * 4 + bayer2rgb->b_off] = b;
+  }
+  if ((i & 1) == red_loc) {
+    r = src[i];
+    b = next[i - 1];
+    g = next[i];
+  } else {
+    r = src[i - 1];
+    b = next[i];
+    g = src[i];
+  }
+  dest[i * 4 + bayer2rgb->r_off] = r;
+  dest[i * 4 + bayer2rgb->g_off] = g;
+  dest[i * 4 + bayer2rgb->b_off] = b;
+}
+
+static void
+gst_bayer2rgb_process_ref (GstBayer2RGB * bayer2rgb, uint8_t * dest,
+    int dest_stride, uint8_t * src, int src_stride)
+{
+  int j;
+  int format = bayer2rgb->format;
+
+  j = 0;
+  if ((j & 1) == (format & 2) >> 1) {
+    reconstruct_blue_green_edge (bayer2rgb, dest + j * dest_stride,
+        src + j * src_stride, src_stride, format & 1, 1);
+  } else {
+    reconstruct_green_red_edge (bayer2rgb, dest + j * dest_stride,
+        src + j * src_stride, src_stride, (format & 1) ^ 1, 1);
+  }
+  for (j = 1; j < bayer2rgb->height - 1; j++) {
+    if ((j & 1) == (format & 2) >> 1) {
+      reconstruct_blue_green (bayer2rgb, dest + j * dest_stride,
+          src + j * src_stride, src_stride, format & 1);
+    } else {
+      reconstruct_green_red (bayer2rgb, dest + j * dest_stride,
+          src + j * src_stride, src_stride, (format & 1) ^ 1);
     }
   }
-}
-
-/* Routine to generate the left and right edges, not including corners */
-static void
-vborder (uint8_t * input, uint8_t * output, int right_left,
-    int typ, GstBayer2RGB * filter)
-{
-  uint8_t *op;                  /* output pointer */
-  uint8_t *ip;                  /* input pointer */
-  uint8_t *la;                  /* line above pointer */
-  uint8_t *lb;                  /* line below pointer */
-  int ix;                       /* loop index */
-  int lr;                       /* 'left-right' flag - +1 is right, -1 is left */
-
-  lr = (1 - 2 * right_left);
-  /* stepping vertically */
-  for (ix = 1; ix < filter->height - 1; ix++) {
-    ip = input + right_left * (filter->width - 1) + ix * filter->stride;
-    op = output + (right_left * (filter->width - 1) + ix * filter->width) *
-        filter->pixsize;
-    la = ip + filter->stride;
-    lb = ip - filter->stride;
-    switch (typ) {
-      case RED:
-        op[filter->r_off] = ip[0];
-        op[filter->g_off] = (la[0] + ip[lr] + lb[0] + 1) / 3;
-        op[filter->b_off] = (la[lr] + lb[lr] + 1) / 2;
-        typ = GREENB;
-        break;
-      case GREENR:
-        op[filter->r_off] = ip[lr];
-        op[filter->g_off] = ip[0];
-        op[filter->b_off] = (la[lr] + lb[lr] + 1) / 2;
-        typ = BLUE;
-        break;
-      case GREENB:
-        op[filter->r_off] = (la[lr] + lb[lr] + 1) / 2;
-        op[filter->g_off] = ip[0];
-        op[filter->b_off] = ip[lr];
-        typ = RED;
-        break;
-      case BLUE:
-        op[filter->r_off] = (la[lr] + lb[lr] + 1) / 2;
-        op[filter->g_off] = (la[0] + ip[lr] + lb[0] + 1) / 3;
-        op[filter->b_off] = ip[0];
-        typ = GREENR;
-        break;
-    }
+  if ((j & 1) == (format & 2) >> 1) {
+    reconstruct_blue_green_edge (bayer2rgb, dest + j * dest_stride,
+        src + j * src_stride, src_stride, format & 1, -1);
+  } else {
+    reconstruct_green_red_edge (bayer2rgb, dest + j * dest_stride,
+        src + j * src_stride, src_stride, (format & 1) ^ 1, -1);
   }
+
 }
 
-/* Produce the four (top, bottom, left, right) edges */
-static void
-do_row0_col0 (uint8_t * input, uint8_t * output, GstBayer2RGB * filter)
-{
-  /* Horizontal edges */
-  hborder (input, output, 0, get_pixel_type (filter, 1, 0), filter);
-  hborder (input, output, 1, get_pixel_type (filter, 1, filter->height - 1),
-      filter);
-
-  /* Vertical edges */
-  vborder (input, output, 0, get_pixel_type (filter, 0, 1), filter);
-  vborder (input, output, 1, get_pixel_type (filter, filter->width - 1, 1),
-      filter);
-}
-
-static void
-corner (uint8_t * input, uint8_t * output, int x, int y,
-    int xd, int yd, int typ, GstBayer2RGB * filter)
-{
-  uint8_t *ip;                  /* input pointer */
-  uint8_t *op;                  /* output pointer */
-  uint8_t *nx;                  /* adjacent line */
-
-  op = output + y * filter->width * filter->pixsize + x * filter->pixsize;
-  ip = input + y * filter->stride + x;
-  nx = ip + yd * filter->stride;
-  switch (typ) {
-    case RED:
-      op[filter->r_off] = ip[0];
-      op[filter->g_off] = (nx[0] + ip[xd] + 1) / 2;
-      op[filter->b_off] = nx[xd];
-      break;
-    case GREENR:
-      op[filter->r_off] = ip[xd];
-      op[filter->g_off] = ip[0];
-      op[filter->b_off] = nx[0];
-      break;
-    case GREENB:
-      op[filter->r_off] = nx[0];
-      op[filter->g_off] = ip[0];
-      op[filter->b_off] = ip[xd];
-      break;
-    case BLUE:
-      op[filter->r_off] = nx[xd];
-      op[filter->g_off] = (nx[0] + ip[xd] + 1) / 2;
-      op[filter->b_off] = ip[0];
-      break;
-  }
-}
-
-static void
-do_corners (uint8_t * input, uint8_t * output, GstBayer2RGB * filter)
-{
-  /* Top left */
-  corner (input, output, 0, 0, 1, 1, get_pixel_type (filter, 0, 0), filter);
-  /* Bottom left */
-  corner (input, output, 0, filter->height - 1, 1, -1,
-      get_pixel_type (filter, 0, filter->height - 1), filter);
-  /* Top right */
-  corner (input, output, filter->width - 1, 0, -1, 0,
-      get_pixel_type (filter, filter->width - 1, 0), filter);
-  /* Bottom right */
-  corner (input, output, filter->width - 1, filter->height - 1, -1, -1,
-      get_pixel_type (filter, filter->width - 1, filter->height - 1), filter);
-}
-
-static void
-do_body (uint8_t * input, uint8_t * output, GstBayer2RGB * filter)
-{
-  int ip, op;                   /* input and output pointers */
-  int w, h;                     /* loop indices */
-  int type;                     /* calculated colour of current element */
-  int a1, a2;
-  int v1, v2, h1, h2;
-
-  /*
-   * We are processing row (line) by row, starting with the second
-   * row and continuing through the next to last.  Each row is processed
-   * column by column, starting with the second and continuing through
-   * to the next to last.
-   */
-  for (h = 1; h < filter->height - 1; h++) {
-    /*
-     * Remember we are processing "row by row". For each row, we need
-     * to set the type of the first element to be processed.  Since we
-     * have already processed the edges, the "first element" will be
-     * the pixel at position (1,1).  Assuming BG format, this should
-     * be RED for odd-numbered rows and GREENB for even rows.
-     */
-    type = get_pixel_type (filter, 1, h);
-    /* Calculate the starting position for the row */
-    op = h * filter->width * filter->pixsize;   /* output (converted) pos */
-    ip = h * filter->stride;    /* input (bayer data) pos */
-    for (w = 1; w < filter->width - 1; w++) {
-      op += filter->pixsize;    /* we are processing "horizontally" */
-      ip++;
-      switch (type) {
-        case RED:
-          output[op + filter->r_off] = input[ip];
-          output[op + filter->b_off] = (input[ip - filter->stride - 1] +
-              input[ip - filter->stride + 1] +
-              input[ip + filter->stride - 1] +
-              input[ip + filter->stride + 1] + 2) / 4;
-          v1 = input[ip + filter->stride];
-          v2 = input[ip - filter->stride];
-          h1 = input[ip + 1];
-          h2 = input[ip - 1];
-          a1 = abs (v1 - v2);
-          a2 = abs (h1 - h2);
-          if (a1 < a2)
-            output[op + filter->g_off] = (v1 + v2 + 1) / 2;
-          else if (a1 > a2)
-            output[op + filter->g_off] = (h1 + h2 + 1) / 2;
-          else
-            output[op + filter->g_off] = (v1 + h1 + v2 + h2 + 2) / 4;
-          type = GREENR;
-          break;
-        case GREENR:
-          output[op + filter->r_off] = (input[ip + 1] + input[ip - 1] + 1) / 2;
-          output[op + filter->g_off] = input[ip];
-          output[op + filter->b_off] = (input[ip - filter->stride] +
-              input[ip + filter->stride] + 1) / 2;
-          type = RED;
-          break;
-        case GREENB:
-          output[op + filter->r_off] = (input[ip - filter->stride] +
-              input[ip + filter->stride] + 1) / 2;
-          output[op + filter->g_off] = input[ip];
-          output[op + filter->b_off] = (input[ip + 1] + input[ip - 1] + 1) / 2;
-          type = BLUE;
-          break;
-        case BLUE:
-          output[op + filter->r_off] = (input[ip - filter->stride - 1] +
-              input[ip - filter->stride + 1] +
-              input[ip + filter->stride - 1] +
-              input[ip + filter->stride + 1] + 2) / 4;
-          output[op + filter->b_off] = input[ip];
-          v1 = input[ip + filter->stride];
-          v2 = input[ip - filter->stride];
-          h1 = input[ip + 1];
-          h2 = input[ip - 1];
-          a1 = abs (v1 - v2);
-          a2 = abs (h1 - h2);
-          if (a1 < a2)
-            output[op + filter->g_off] = (v1 + v2 + 1) / 2;
-          else if (a1 > a2)
-            output[op + filter->g_off] = (h1 + h2 + 1) / 2;
-          else
-            output[op + filter->g_off] = (v1 + h1 + v2 + h2 + 2) / 4;
-          type = GREENB;
-          break;
-      }
-    }
-  }
-}
 
 static GstFlowReturn
 gst_bayer2rgb_transform (GstBaseTransform * base, GstBuffer * inbuf,
@@ -677,9 +675,8 @@ gst_bayer2rgb_transform (GstBaseTransform * base, GstBuffer * inbuf,
   GST_DEBUG ("transforming buffer");
   input = (uint8_t *) GST_BUFFER_DATA (inbuf);
   output = (uint8_t *) GST_BUFFER_DATA (outbuf);
-  do_corners (input, output, filter);
-  do_row0_col0 (input, output, filter);
-  do_body (input, output, filter);
+  gst_bayer2rgb_process_ref (filter, output, filter->width * 4,
+      input, filter->width);
 
   GST_OBJECT_UNLOCK (filter);
   return GST_FLOW_OK;
