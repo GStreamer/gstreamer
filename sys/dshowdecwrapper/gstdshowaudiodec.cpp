@@ -366,11 +366,47 @@ gst_dshowaudiodec_class_init (GstDshowAudioDecClass * klass)
 }
 
 static void
+gst_dshowaudiodec_com_thread (GstDshowAudioDec * adec)
+{
+  HRESULT res;
+
+  g_mutex_lock (adec->com_init_lock);
+
+  /* Initialize COM with a MTA for this process. This thread will
+   * be the first one to enter the apartement and the last one to leave
+   * it, unitializing COM properly */
+
+  res = CoInitializeEx (0, COINIT_MULTITHREADED);
+  if (res == S_FALSE)
+    GST_WARNING_OBJECT (adec, "COM has been already initialized in the same process");
+  else if (res == RPC_E_CHANGED_MODE)
+    GST_WARNING_OBJECT (adec, "The concurrency model of COM has changed.");
+  else
+    GST_INFO_OBJECT (adec, "COM intialized succesfully");
+
+  adec->comInitialized = TRUE;
+
+  /* Signal other threads waiting on this condition that COM was initialized */
+  g_cond_signal (adec->com_initialized);
+
+  g_mutex_unlock (adec->com_init_lock);
+
+  /* Wait until the unitialize condition is met to leave the COM apartement */
+  g_mutex_lock (adec->com_deinit_lock);
+  g_cond_wait (adec->com_uninitialize, adec->com_deinit_lock);
+
+  CoUninitialize ();
+  GST_INFO_OBJECT (adec, "COM unintialized succesfully");
+  adec->comInitialized = FALSE;
+  g_cond_signal (adec->com_uninitialized);
+  g_mutex_unlock (adec->com_deinit_lock);
+}
+
+static void
 gst_dshowaudiodec_init (GstDshowAudioDec * adec,
     GstDshowAudioDecClass * adec_class)
 {
   GstElementClass *element_class = GST_ELEMENT_GET_CLASS (adec);
-  HRESULT hr;
 
   /* setup pads */
   adec->sinkpad =
@@ -407,10 +443,21 @@ gst_dshowaudiodec_init (GstDshowAudioDec * adec,
 
   adec->last_ret = GST_FLOW_OK;
 
-  hr = CoInitialize (0);
-  if (SUCCEEDED(hr)) {
-    adec->comInitialized = TRUE;
-  }
+  adec->com_init_lock = g_mutex_new();
+  adec->com_deinit_lock = g_mutex_new();
+  adec->com_initialized = g_cond_new();
+  adec->com_uninitialize = g_cond_new();
+  adec->com_uninitialized = g_cond_new();
+
+  g_mutex_lock (adec->com_init_lock);
+
+  /* create the COM initialization thread */
+  g_thread_create ((GThreadFunc)gst_dshowaudiodec_com_thread,
+      adec, FALSE, NULL);
+
+  /* wait until the COM thread signals that COM has been initialized */
+  g_cond_wait (adec->com_initialized, adec->com_init_lock);
+  g_mutex_unlock (adec->com_init_lock);
 }
 
 static void
@@ -428,10 +475,19 @@ gst_dshowaudiodec_dispose (GObject * object)
     adec->codec_data = NULL;
   }
 
+  /* signal the COM thread that it sould uninitialize COM */
   if (adec->comInitialized) {
-    CoUninitialize ();
-    adec->comInitialized = FALSE;
+    g_mutex_lock (adec->com_deinit_lock);
+    g_cond_signal (adec->com_uninitialize);
+    g_cond_wait (adec->com_uninitialized, adec->com_deinit_lock);
+    g_mutex_unlock (adec->com_deinit_lock);
   }
+
+  g_mutex_free (adec->com_init_lock);
+  g_mutex_free (adec->com_deinit_lock);
+  g_cond_free (adec->com_initialized);
+  g_cond_free (adec->com_uninitialize);
+  g_cond_free (adec->com_uninitialized);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }

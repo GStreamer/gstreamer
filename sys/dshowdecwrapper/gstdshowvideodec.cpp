@@ -418,11 +418,47 @@ gst_dshowvideodec_class_init (GstDshowVideoDecClass * klass)
 }
 
 static void
+gst_dshowvideodec_com_thread (GstDshowVideoDec * vdec)
+{
+  HRESULT res;
+
+  g_mutex_lock (vdec->com_init_lock);
+
+  /* Initialize COM with a MTA for this process. This thread will
+   * be the first one to enter the apartement and the last one to leave
+   * it, unitializing COM properly */
+
+  res = CoInitializeEx (0, COINIT_MULTITHREADED);
+  if (res == S_FALSE)
+    GST_WARNING_OBJECT (vdec, "COM has been already initialized in the same process");
+  else if (res == RPC_E_CHANGED_MODE)
+    GST_WARNING_OBJECT (vdec, "The concurrency model of COM has changed.");
+  else
+    GST_INFO_OBJECT (vdec, "COM intialized succesfully");
+
+  vdec->comInitialized = TRUE;
+
+  /* Signal other threads waiting on this condition that COM was initialized */
+  g_cond_signal (vdec->com_initialized);
+
+  g_mutex_unlock (vdec->com_init_lock);
+
+  /* Wait until the unitialize condition is met to leave the COM apartement */
+  g_mutex_lock (vdec->com_deinit_lock);
+  g_cond_wait (vdec->com_uninitialize, vdec->com_deinit_lock);
+
+  CoUninitialize ();
+  GST_INFO_OBJECT (vdec, "COM unintialized succesfully");
+  vdec->comInitialized = FALSE;
+  g_cond_signal (vdec->com_uninitialized);
+  g_mutex_unlock (vdec->com_deinit_lock);
+}
+
+static void
 gst_dshowvideodec_init (GstDshowVideoDec * vdec,
     GstDshowVideoDecClass * vdec_class)
 {
   GstElementClass *element_class = GST_ELEMENT_GET_CLASS (vdec);
-  HRESULT hr;
 
   /* setup pads */
   vdec->sinkpad =
@@ -455,10 +491,21 @@ gst_dshowvideodec_init (GstDshowVideoDec * vdec,
 
   vdec->setup = FALSE;
 
-  hr = CoInitialize (0);
-  if (SUCCEEDED(hr)) {
-    vdec->comInitialized = TRUE;
-  }
+  vdec->com_init_lock = g_mutex_new();
+  vdec->com_deinit_lock = g_mutex_new();
+  vdec->com_initialized = g_cond_new();
+  vdec->com_uninitialize = g_cond_new();
+  vdec->com_uninitialized = g_cond_new();
+
+  g_mutex_lock (vdec->com_init_lock);
+
+  /* create the COM initialization thread */
+  g_thread_create ((GThreadFunc)gst_dshowvideodec_com_thread,
+      vdec, FALSE, NULL);
+
+  /* wait until the COM thread signals that COM has been initialized */
+  g_cond_wait (vdec->com_initialized, vdec->com_init_lock);
+  g_mutex_unlock (vdec->com_init_lock);
 }
 
 static void
@@ -471,10 +518,19 @@ gst_dshowvideodec_dispose (GObject * object)
     vdec->segment = NULL;
   }
 
+  /* signal the COM thread that it sould uninitialize COM */
   if (vdec->comInitialized) {
-    CoUninitialize ();
-    vdec->comInitialized = FALSE;
+    g_mutex_lock (vdec->com_deinit_lock);
+    g_cond_signal (vdec->com_uninitialize);
+    g_cond_wait (vdec->com_uninitialized, vdec->com_deinit_lock);
+    g_mutex_unlock (vdec->com_deinit_lock);
   }
+
+  g_mutex_free (vdec->com_init_lock);
+  g_mutex_free (vdec->com_deinit_lock);
+  g_cond_free (vdec->com_initialized);
+  g_cond_free (vdec->com_uninitialize);
+  g_cond_free (vdec->com_uninitialized);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
