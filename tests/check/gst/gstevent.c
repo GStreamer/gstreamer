@@ -465,11 +465,11 @@ GST_START_TEST (send_custom_events)
   /* add pad-probes to faksrc.src and fakesink.sink */
   fail_if ((srcpad = gst_element_get_static_pad (fakesrc, "src")) == NULL);
   gst_pad_add_event_probe (srcpad, (GCallback) event_probe,
-      GINT_TO_POINTER (TRUE));
+      GINT_TO_POINTER (TRUE), NULL);
 
   fail_if ((sinkpad = gst_element_get_static_pad (fakesink, "sink")) == NULL);
   gst_pad_add_event_probe (sinkpad, (GCallback) event_probe,
-      GINT_TO_POINTER (FALSE));
+      GINT_TO_POINTER (FALSE), NULL);
 
   /* Upstream events */
   test_event (pipeline, GST_EVENT_CUSTOM_UPSTREAM, sinkpad, TRUE, srcpad);

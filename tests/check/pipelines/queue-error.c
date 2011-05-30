@@ -69,7 +69,7 @@ GST_START_TEST (test_queue)
   fail_unless (queue != NULL);
   pad = gst_element_get_static_pad (queue, "sink");
   fail_unless (pad != NULL);
-  probe = gst_pad_add_event_probe (pad, G_CALLBACK (modify_caps), filter);
+  probe = gst_pad_add_event_probe (pad, G_CALLBACK (modify_caps), filter, NULL);
 
   bus = gst_element_get_bus (pipeline);
 

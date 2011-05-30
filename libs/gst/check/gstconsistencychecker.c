@@ -118,7 +118,8 @@ gst_consistency_checker_new (GstPad * pad)
   consist = g_new0 (GstStreamConsistency, 1);
   consist->pad = g_object_ref (pad);
   consist->probeid =
-      gst_pad_add_data_probe (pad, (GCallback) source_pad_data_cb, consist);
+      gst_pad_add_data_probe (pad, (GCallback) source_pad_data_cb, consist,
+      NULL);
 
   return consist;
 }

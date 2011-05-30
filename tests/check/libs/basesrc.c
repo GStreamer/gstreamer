@@ -77,7 +77,7 @@ GST_START_TEST (basesrc_eos_events_push_live_op)
   fail_unless (srcpad != NULL);
 
   probe = gst_pad_add_event_probe (srcpad,
-      G_CALLBACK (eos_event_counter), &num_eos);
+      G_CALLBACK (eos_event_counter), &num_eos, NULL);
 
   bus = gst_element_get_bus (pipe);
 
@@ -155,7 +155,7 @@ GST_START_TEST (basesrc_eos_events_push)
   fail_unless (srcpad != NULL);
 
   probe = gst_pad_add_event_probe (srcpad,
-      G_CALLBACK (eos_event_counter), &num_eos);
+      G_CALLBACK (eos_event_counter), &num_eos, NULL);
 
   bus = gst_element_get_bus (pipe);
 
@@ -222,7 +222,7 @@ GST_START_TEST (basesrc_eos_events_pull_live_op)
   fail_unless (srcpad != NULL);
 
   probe = gst_pad_add_event_probe (srcpad,
-      G_CALLBACK (eos_event_counter), &num_eos);
+      G_CALLBACK (eos_event_counter), &num_eos, NULL);
 
   gst_element_set_state (pipe, GST_STATE_PLAYING);
   state_ret = gst_element_get_state (pipe, NULL, NULL, -1);
@@ -294,7 +294,7 @@ GST_START_TEST (basesrc_eos_events_pull)
   fail_unless (srcpad != NULL);
 
   probe = gst_pad_add_event_probe (srcpad,
-      G_CALLBACK (eos_event_counter), &num_eos);
+      G_CALLBACK (eos_event_counter), &num_eos, NULL);
 
   bus = gst_element_get_bus (pipe);
 
@@ -364,7 +364,7 @@ GST_START_TEST (basesrc_eos_events_push_live_eos)
   fail_unless (srcpad != NULL);
 
   probe = gst_pad_add_event_probe (srcpad,
-      G_CALLBACK (eos_event_counter), &num_eos);
+      G_CALLBACK (eos_event_counter), &num_eos, NULL);
 
   bus = gst_element_get_bus (pipe);
 
@@ -441,7 +441,7 @@ GST_START_TEST (basesrc_eos_events_pull_live_eos)
   fail_unless (srcpad != NULL);
 
   probe = gst_pad_add_event_probe (srcpad,
-      G_CALLBACK (eos_event_counter), &num_eos);
+      G_CALLBACK (eos_event_counter), &num_eos, NULL);
 
   bus = gst_element_get_bus (pipe);
 
@@ -534,7 +534,7 @@ GST_START_TEST (basesrc_seek_events_rate_update)
   fail_unless (probe_pad != NULL);
 
   probe = gst_pad_add_event_probe (probe_pad,
-      G_CALLBACK (segment_event_catcher), &seg_event);
+      G_CALLBACK (segment_event_catcher), &seg_event, NULL);
 
   /* prepare the seek */
   rate_seek = gst_event_new_seek (0.5, GST_FORMAT_TIME, GST_SEEK_FLAG_NONE,

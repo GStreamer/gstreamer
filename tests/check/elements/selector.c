@@ -74,7 +74,8 @@ setup_output_pad (GstElement * element, GstStaticPadTemplate * tmpl)
   fail_if (output_pad == NULL, "Could not create a output_pad");
 
   /* add probe */
-  probe_id = gst_pad_add_data_probe (output_pad, G_CALLBACK (probe_cb), NULL);
+  probe_id =
+      gst_pad_add_data_probe (output_pad, G_CALLBACK (probe_cb), NULL, NULL);
   g_object_set_data (G_OBJECT (output_pad), "probe_id",
       GINT_TO_POINTER (probe_id));
 
@@ -313,7 +314,8 @@ run_input_selector_buffer_count (gint num_input_pads,
     input_pads = g_list_append (input_pads, setup_input_pad (sel));
   }
   /* add probe */
-  probe_id = gst_pad_add_data_probe (output_pad, G_CALLBACK (probe_cb), NULL);
+  probe_id =
+      gst_pad_add_data_probe (output_pad, G_CALLBACK (probe_cb), NULL, NULL);
   g_object_set_data (G_OBJECT (output_pad), "probe_id",
       GINT_TO_POINTER (probe_id));
 

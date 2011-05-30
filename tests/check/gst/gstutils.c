@@ -89,18 +89,20 @@ GST_START_TEST (test_buffer_probe_n_times)
   pad = gst_element_get_static_pad (fakesink, "sink");
 
   /* add the probes we need for the test */
-  gst_pad_add_data_probe (pad, G_CALLBACK (data_probe), SPECIAL_POINTER (0));
-  gst_pad_add_buffer_probe (pad, G_CALLBACK (buffer_probe),
-      SPECIAL_POINTER (1));
-  gst_pad_add_event_probe (pad, G_CALLBACK (event_probe), SPECIAL_POINTER (2));
+  gst_pad_add_data_probe (pad, G_CALLBACK (data_probe), SPECIAL_POINTER (0),
+      NULL);
+  gst_pad_add_buffer_probe (pad, G_CALLBACK (buffer_probe), SPECIAL_POINTER (1),
+      NULL);
+  gst_pad_add_event_probe (pad, G_CALLBACK (event_probe), SPECIAL_POINTER (2),
+      NULL);
 
-  /* add some probes just to test that _full works and the data is free'd
+  /* add some string probes just to test that the data is free'd
    * properly as it should be */
-  gst_pad_add_data_probe_full (pad, G_CALLBACK (probe_do_nothing),
+  gst_pad_add_data_probe (pad, G_CALLBACK (probe_do_nothing),
       g_strdup ("data probe string"), (GDestroyNotify) g_free);
-  gst_pad_add_buffer_probe_full (pad, G_CALLBACK (probe_do_nothing),
+  gst_pad_add_buffer_probe (pad, G_CALLBACK (probe_do_nothing),
       g_strdup ("buffer probe string"), (GDestroyNotify) g_free);
-  gst_pad_add_event_probe_full (pad, G_CALLBACK (probe_do_nothing),
+  gst_pad_add_event_probe (pad, G_CALLBACK (probe_do_nothing),
       g_strdup ("event probe string"), (GDestroyNotify) g_free);
 
   gst_object_unref (pad);
@@ -180,9 +182,12 @@ GST_START_TEST (test_buffer_probe_once)
   gst_element_link (fakesrc, fakesink);
 
   pad = gst_element_get_static_pad (fakesink, "sink");
-  id1 = gst_pad_add_data_probe (pad, G_CALLBACK (data_probe_once), &id1);
-  id2 = gst_pad_add_buffer_probe (pad, G_CALLBACK (buffer_probe_once), &id2);
-  id3 = gst_pad_add_event_probe (pad, G_CALLBACK (event_probe_once), &id3);
+  id1 = gst_pad_add_data_probe (pad, G_CALLBACK (data_probe_once), &id1, NULL);
+  id2 =
+      gst_pad_add_buffer_probe (pad, G_CALLBACK (buffer_probe_once), &id2,
+      NULL);
+  id3 =
+      gst_pad_add_event_probe (pad, G_CALLBACK (event_probe_once), &id3, NULL);
   gst_object_unref (pad);
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);

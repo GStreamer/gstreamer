@@ -81,7 +81,7 @@ gst_buffer_straw_start_pipeline (GstElement * bin, GstPad * pad)
 {
   GstStateChangeReturn ret;
 
-  id = gst_pad_add_buffer_probe (pad, G_CALLBACK (buffer_probe), NULL);
+  id = gst_pad_add_buffer_probe (pad, G_CALLBACK (buffer_probe), NULL, NULL);
 
   cond = g_cond_new ();
   lock = g_mutex_new ();

@@ -274,7 +274,7 @@ GST_START_TEST (test_base_time)
   gst_element_link (fakesrc, fakesink);
 
   sink = gst_element_get_static_pad (fakesink, "sink");
-  gst_pad_add_buffer_probe (sink, G_CALLBACK (sink_pad_probe), &observed);
+  gst_pad_add_buffer_probe (sink, G_CALLBACK (sink_pad_probe), &observed, NULL);
 
   fail_unless (gst_element_set_state (pipeline, GST_STATE_PAUSED)
       == GST_STATE_CHANGE_NO_PREROLL, "expected no-preroll from live pipeline");

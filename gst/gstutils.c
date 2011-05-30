@@ -3132,42 +3132,6 @@ gst_pad_query_peer_convert (GstPad * pad, GstFormat src_format, gint64 src_val,
  * @pad: pad to add the data probe handler to
  * @handler: function to call when data is passed over pad
  * @data: (closure): data to pass along with the handler
- *
- * Adds a "data probe" to a pad. This function will be called whenever data
- * passes through a pad. In this case data means both events and buffers. The
- * probe will be called with the data as an argument, meaning @handler should
- * have the same callback signature as the #GstPad::have-data signal.
- * Note that the data will have a reference count greater than 1, so it will
- * be immutable -- you must not change it.
- *
- * For source pads, the probe will be called after the blocking function, if any
- * (see gst_pad_set_blocked_async()), but before looking up the peer to chain
- * to. For sink pads, the probe function will be called before configuring the
- * sink with new caps, if any, and before calling the pad's chain function.
- *
- * Your data probe should return TRUE to let the data continue to flow, or FALSE
- * to drop it. Dropping data is rarely useful, but occasionally comes in handy
- * with events.
- *
- * Although probes are implemented internally by connecting @handler to the
- * have-data signal on the pad, if you want to remove a probe it is insufficient
- * to only call g_signal_handler_disconnect on the returned handler id. To
- * remove a probe, use the appropriate function, such as
- * gst_pad_remove_data_probe().
- *
- * Returns: The handler id.
- */
-gulong
-gst_pad_add_data_probe (GstPad * pad, GCallback handler, gpointer data)
-{
-  return gst_pad_add_data_probe_full (pad, handler, data, NULL);
-}
-
-/**
- * gst_pad_add_data_probe_full:
- * @pad: pad to add the data probe handler to
- * @handler: function to call when data is passed over pad
- * @data: (closure): data to pass along with the handler
  * @notify: (allow-none): function to call when the probe is disconnected,
  *     or NULL
  *
@@ -3201,7 +3165,7 @@ gst_pad_add_data_probe (GstPad * pad, GCallback handler, gpointer data)
  * Since: 0.10.20
  */
 gulong
-gst_pad_add_data_probe_full (GstPad * pad, GCallback handler,
+gst_pad_add_data_probe (GstPad * pad, GCallback handler,
     gpointer data, GDestroyNotify notify)
 {
   gulong sigid;
@@ -3229,23 +3193,6 @@ gst_pad_add_data_probe_full (GstPad * pad, GCallback handler,
  * gst_pad_add_event_probe:
  * @pad: pad to add the event probe handler to
  * @handler: function to call when events are passed over pad
- * @data: (closure): data to pass along with the handler
- *
- * Adds a probe that will be called for all events passing through a pad. See
- * gst_pad_add_data_probe() for more information.
- *
- * Returns: The handler id
- */
-gulong
-gst_pad_add_event_probe (GstPad * pad, GCallback handler, gpointer data)
-{
-  return gst_pad_add_event_probe_full (pad, handler, data, NULL);
-}
-
-/**
- * gst_pad_add_event_probe_full:
- * @pad: pad to add the event probe handler to
- * @handler: function to call when events are passed over pad
  * @data: (closure): data to pass along with the handler, or NULL
  * @notify: (allow-none): function to call when probe is disconnected, or NULL
  *
@@ -3260,7 +3207,7 @@ gst_pad_add_event_probe (GstPad * pad, GCallback handler, gpointer data)
  * Since: 0.10.20
  */
 gulong
-gst_pad_add_event_probe_full (GstPad * pad, GCallback handler,
+gst_pad_add_event_probe (GstPad * pad, GCallback handler,
     gpointer data, GDestroyNotify notify)
 {
   gulong sigid;
@@ -3285,23 +3232,6 @@ gst_pad_add_event_probe_full (GstPad * pad, GCallback handler,
 /**
  * gst_pad_add_buffer_probe:
  * @pad: pad to add the buffer probe handler to
- * @handler: function to call when buffers are passed over pad
- * @data: (closure): data to pass along with the handler
- *
- * Adds a probe that will be called for all buffers passing through a pad. See
- * gst_pad_add_data_probe() for more information.
- *
- * Returns: The handler id
- */
-gulong
-gst_pad_add_buffer_probe (GstPad * pad, GCallback handler, gpointer data)
-{
-  return gst_pad_add_buffer_probe_full (pad, handler, data, NULL);
-}
-
-/**
- * gst_pad_add_buffer_probe_full:
- * @pad: pad to add the buffer probe handler to
  * @handler: function to call when buffer are passed over pad
  * @data: (closure): data to pass along with the handler
  * @notify: (allow-none): function to call when the probe is disconnected,
@@ -3318,7 +3248,7 @@ gst_pad_add_buffer_probe (GstPad * pad, GCallback handler, gpointer data)
  * Since: 0.10.20
  */
 gulong
-gst_pad_add_buffer_probe_full (GstPad * pad, GCallback handler,
+gst_pad_add_buffer_probe (GstPad * pad, GCallback handler,
     gpointer data, GDestroyNotify notify)
 {
   gulong sigid;
