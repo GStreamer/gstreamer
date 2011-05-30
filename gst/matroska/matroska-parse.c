@@ -1234,54 +1234,6 @@ gst_matroska_parse_element_send_event (GstElement * element, GstEvent * event)
   return res;
 }
 
-/* determine track to seek in */
-static GstMatroskaTrackContext *
-gst_matroska_parse_get_seek_track (GstMatroskaParse * parse,
-    GstMatroskaTrackContext * track)
-{
-  gint i;
-
-  if (track && track->type == GST_MATROSKA_TRACK_TYPE_VIDEO)
-    return track;
-
-  for (i = 0; i < parse->common.src->len; i++) {
-    GstMatroskaTrackContext *stream;
-
-    stream = g_ptr_array_index (parse->common.src, i);
-    if (stream->type == GST_MATROSKA_TRACK_TYPE_VIDEO && stream->index_table)
-      track = stream;
-  }
-
-  return track;
-}
-
-static void
-gst_matroska_parse_reset_streams (GstMatroskaParse * parse, GstClockTime time,
-    gboolean full)
-{
-  gint i;
-
-  GST_DEBUG_OBJECT (parse, "resetting stream state");
-
-  g_assert (parse->common.src->len == parse->common.num_streams);
-  for (i = 0; i < parse->common.src->len; i++) {
-    GstMatroskaTrackContext *context = g_ptr_array_index (parse->common.src,
-        i);
-    context->pos = time;
-    context->set_discont = TRUE;
-    context->eos = FALSE;
-    context->from_time = GST_CLOCK_TIME_NONE;
-    if (full)
-      context->last_flow = GST_FLOW_OK;
-    if (context->type == GST_MATROSKA_TRACK_TYPE_VIDEO) {
-      GstMatroskaTrackVideoContext *videocontext =
-          (GstMatroskaTrackVideoContext *) context;
-      /* parse object lock held by caller */
-      videocontext->earliest_time = GST_CLOCK_TIME_NONE;
-    }
-  }
-}
-
 /* searches for a cluster start from @pos,
  * return GST_FLOW_OK and cluster position in @pos if found */
 static GstFlowReturn
@@ -1389,7 +1341,7 @@ gst_matroska_parse_handle_seek_event (GstMatroskaParse * parse,
   if (pad)
     track = gst_pad_get_element_private (pad);
 
-  track = gst_matroska_parse_get_seek_track (parse, track);
+  track = gst_matroska_read_common_get_seek_track (&parse->common, track);
 
   gst_event_parse_seek (event, &rate, &format, &flags, &cur_type, &cur,
       &stop_type, &stop);
@@ -3824,7 +3776,8 @@ gst_matroska_parse_chain (GstPad * pad, GstBuffer * buffer)
     GST_DEBUG_OBJECT (parse, "got DISCONT");
     gst_adapter_clear (parse->common.adapter);
     GST_OBJECT_LOCK (parse);
-    gst_matroska_parse_reset_streams (parse, GST_CLOCK_TIME_NONE, FALSE);
+    gst_matroska_read_common_reset_streams (&parse->common,
+        GST_CLOCK_TIME_NONE, FALSE);
     GST_OBJECT_UNLOCK (parse);
   }
 
@@ -3934,7 +3887,8 @@ gst_matroska_parse_handle_sink_event (GstPad * pad, GstEvent * event)
     {
       gst_adapter_clear (parse->common.adapter);
       GST_OBJECT_LOCK (parse);
-      gst_matroska_parse_reset_streams (parse, GST_CLOCK_TIME_NONE, TRUE);
+      gst_matroska_read_common_reset_streams (&parse->common,
+          GST_CLOCK_TIME_NONE, TRUE);
       GST_OBJECT_UNLOCK (parse);
       parse->segment.last_stop = GST_CLOCK_TIME_NONE;
       parse->cluster_time = GST_CLOCK_TIME_NONE;

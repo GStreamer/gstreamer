@@ -87,6 +87,8 @@ GstMatroskaIndex * gst_matroska_read_common_do_index_seek (
 void gst_matroska_read_common_found_global_tag (GstMatroskaReadCommon * common,
     GstElement * el, GstTagList * taglist);
 gint64 gst_matroska_read_common_get_length (GstMatroskaReadCommon * common);
+GstMatroskaTrackContext * gst_matroska_read_common_get_seek_track (
+    GstMatroskaReadCommon * common, GstMatroskaTrackContext * track);
 GstFlowReturn gst_matroska_read_common_parse_index (GstMatroskaReadCommon *
     common, GstEbmlRead * ebml);
 GstFlowReturn gst_matroska_read_common_parse_skip (GstMatroskaReadCommon *
@@ -104,6 +106,8 @@ gint gst_matroska_read_common_stream_from_num (GstMatroskaReadCommon * common,
 GstFlowReturn gst_matroska_read_common_read_track_encodings (
     GstMatroskaReadCommon * common, GstEbmlRead * ebml,
     GstMatroskaTrackContext * context);
+void gst_matroska_read_common_reset_streams (GstMatroskaReadCommon * common,
+    GstClockTime time, gboolean full);
 gboolean gst_matroska_read_common_tracknumber_unique (GstMatroskaReadCommon *
     common, guint64 num);
 

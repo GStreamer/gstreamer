@@ -1514,55 +1514,6 @@ gst_matroska_demux_element_send_event (GstElement * element, GstEvent * event)
   return res;
 }
 
-/* determine track to seek in */
-static GstMatroskaTrackContext *
-gst_matroska_demux_get_seek_track (GstMatroskaDemux * demux,
-    GstMatroskaTrackContext * track)
-{
-  gint i;
-
-  if (track && track->type == GST_MATROSKA_TRACK_TYPE_VIDEO)
-    return track;
-
-  for (i = 0; i < demux->common.src->len; i++) {
-    GstMatroskaTrackContext *stream;
-
-    stream = g_ptr_array_index (demux->common.src, i);
-    if (stream->type == GST_MATROSKA_TRACK_TYPE_VIDEO && stream->index_table)
-      track = stream;
-  }
-
-  return track;
-}
-
-/* call with object lock held */
-static void
-gst_matroska_demux_reset_streams (GstMatroskaDemux * demux, GstClockTime time,
-    gboolean full)
-{
-  gint i;
-
-  GST_DEBUG_OBJECT (demux, "resetting stream state");
-
-  g_assert (demux->common.src->len == demux->common.num_streams);
-  for (i = 0; i < demux->common.src->len; i++) {
-    GstMatroskaTrackContext *context = g_ptr_array_index (demux->common.src,
-        i);
-    context->pos = time;
-    context->set_discont = TRUE;
-    context->eos = FALSE;
-    context->from_time = GST_CLOCK_TIME_NONE;
-    if (full)
-      context->last_flow = GST_FLOW_OK;
-    if (context->type == GST_MATROSKA_TRACK_TYPE_VIDEO) {
-      GstMatroskaTrackVideoContext *videocontext =
-          (GstMatroskaTrackVideoContext *) context;
-      /* demux object lock held by caller */
-      videocontext->earliest_time = GST_CLOCK_TIME_NONE;
-    }
-  }
-}
-
 static gboolean
 gst_matroska_demux_move_to_entry (GstMatroskaDemux * demux,
     GstMatroskaIndex * entry, gboolean reset)
@@ -1580,7 +1531,7 @@ gst_matroska_demux_move_to_entry (GstMatroskaDemux * demux,
       entry->block, GST_TIME_ARGS (entry->time));
 
   /* update the time */
-  gst_matroska_demux_reset_streams (demux, entry->time, TRUE);
+  gst_matroska_read_common_reset_streams (&demux->common, entry->time, TRUE);
   demux->segment.last_stop = entry->time;
   demux->seek_block = entry->block;
   demux->seek_first = TRUE;
@@ -1945,7 +1896,7 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
 
   /* check sanity before we start flushing and all that */
   GST_OBJECT_LOCK (demux);
-  track = gst_matroska_demux_get_seek_track (demux, track);
+  track = gst_matroska_read_common_get_seek_track (&demux->common, track);
   if ((entry = gst_matroska_read_common_do_index_seek (&demux->common, track,
               seeksegment.last_stop, &demux->seek_index, &demux->seek_entry)) ==
       NULL) {
@@ -5200,7 +5151,8 @@ gst_matroska_demux_chain (GstPad * pad, GstBuffer * buffer)
     GST_DEBUG_OBJECT (demux, "got DISCONT");
     gst_adapter_clear (demux->common.adapter);
     GST_OBJECT_LOCK (demux);
-    gst_matroska_demux_reset_streams (demux, GST_CLOCK_TIME_NONE, FALSE);
+    gst_matroska_read_common_reset_streams (&demux->common,
+        GST_CLOCK_TIME_NONE, FALSE);
     GST_OBJECT_UNLOCK (demux);
   }
 
@@ -5312,7 +5264,8 @@ gst_matroska_demux_handle_sink_event (GstPad * pad, GstEvent * event)
     {
       gst_adapter_clear (demux->common.adapter);
       GST_OBJECT_LOCK (demux);
-      gst_matroska_demux_reset_streams (demux, GST_CLOCK_TIME_NONE, TRUE);
+      gst_matroska_read_common_reset_streams (&demux->common,
+          GST_CLOCK_TIME_NONE, TRUE);
       demux->segment.last_stop = GST_CLOCK_TIME_NONE;
       demux->cluster_time = GST_CLOCK_TIME_NONE;
       demux->cluster_offset = 0;

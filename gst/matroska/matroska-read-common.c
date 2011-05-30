@@ -446,6 +446,27 @@ gst_matroska_read_common_get_length (GstMatroskaReadCommon * common)
   return end;
 }
 
+/* determine track to seek in */
+GstMatroskaTrackContext *
+gst_matroska_read_common_get_seek_track (GstMatroskaReadCommon * common,
+    GstMatroskaTrackContext * track)
+{
+  gint i;
+
+  if (track && track->type == GST_MATROSKA_TRACK_TYPE_VIDEO)
+    return track;
+
+  for (i = 0; i < common->src->len; i++) {
+    GstMatroskaTrackContext *stream;
+
+    stream = g_ptr_array_index (common->src, i);
+    if (stream->type == GST_MATROSKA_TRACK_TYPE_VIDEO && stream->index_table)
+      track = stream;
+  }
+
+  return track;
+}
+
 /* skip unknown or alike element */
 GstFlowReturn
 gst_matroska_read_common_parse_skip (GstMatroskaReadCommon * common,
@@ -1100,6 +1121,33 @@ gst_matroska_read_common_read_track_encodings (GstMatroskaReadCommon * common,
       (GCompareFunc) gst_matroska_read_common_encoding_cmp);
 
   return gst_matroska_decode_content_encodings (context->encodings);
+}
+
+/* call with object lock held */
+void
+gst_matroska_read_common_reset_streams (GstMatroskaReadCommon * common,
+    GstClockTime time, gboolean full)
+{
+  gint i;
+
+  GST_DEBUG_OBJECT (common, "resetting stream state");
+
+  g_assert (common->src->len == common->num_streams);
+  for (i = 0; i < common->src->len; i++) {
+    GstMatroskaTrackContext *context = g_ptr_array_index (common->src, i);
+    context->pos = time;
+    context->set_discont = TRUE;
+    context->eos = FALSE;
+    context->from_time = GST_CLOCK_TIME_NONE;
+    if (full)
+      context->last_flow = GST_FLOW_OK;
+    if (context->type == GST_MATROSKA_TRACK_TYPE_VIDEO) {
+      GstMatroskaTrackVideoContext *videocontext =
+          (GstMatroskaTrackVideoContext *) context;
+      /* demux object lock held by caller */
+      videocontext->earliest_time = GST_CLOCK_TIME_NONE;
+    }
+  }
 }
 
 gboolean
