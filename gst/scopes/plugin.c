@@ -37,6 +37,7 @@ plugin_init (GstPlugin * plugin)
   gst_controller_init (NULL, NULL);
 
   res &= gst_spectra_scope_plugin_init (plugin);
+  res &= gst_synae_scope_plugin_init (plugin);
   res &= gst_wave_scope_plugin_init (plugin);
   return res;
 }
