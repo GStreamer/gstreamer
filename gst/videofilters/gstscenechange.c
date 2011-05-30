@@ -169,10 +169,7 @@ void
 gst_scene_change_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstSceneChange *scenechange;
-
   g_return_if_fail (GST_IS_SCENE_CHANGE (object));
-  scenechange = GST_SCENE_CHANGE (object);
 
   switch (property_id) {
     default:
@@ -185,10 +182,7 @@ void
 gst_scene_change_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstSceneChange *scenechange;
-
   g_return_if_fail (GST_IS_SCENE_CHANGE (object));
-  scenechange = GST_SCENE_CHANGE (object);
 
   switch (property_id) {
     default:
@@ -200,10 +194,7 @@ gst_scene_change_get_property (GObject * object, guint property_id,
 void
 gst_scene_change_dispose (GObject * object)
 {
-  GstSceneChange *scenechange;
-
   g_return_if_fail (GST_IS_SCENE_CHANGE (object));
-  scenechange = GST_SCENE_CHANGE (object);
 
   /* clean up as possible.  may be called multiple times */
 

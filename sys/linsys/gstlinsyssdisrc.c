@@ -212,10 +212,7 @@ gst_linsys_sdi_src_get_property (GObject * object, guint property_id,
 void
 gst_linsys_sdi_src_dispose (GObject * object)
 {
-  GstLinsysSdiSrc *linsyssdisrc;
-
   g_return_if_fail (GST_IS_LINSYS_SDI_SRC (object));
-  linsyssdisrc = GST_LINSYS_SDI_SRC (object);
 
   /* clean up as possible.  may be called multiple times */
 
@@ -225,10 +222,7 @@ gst_linsys_sdi_src_dispose (GObject * object)
 void
 gst_linsys_sdi_src_finalize (GObject * object)
 {
-  GstLinsysSdiSrc *linsyssdisrc;
-
   g_return_if_fail (GST_IS_LINSYS_SDI_SRC (object));
-  linsyssdisrc = GST_LINSYS_SDI_SRC (object);
 
   /* clean up object here */
 

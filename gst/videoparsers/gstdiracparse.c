@@ -144,10 +144,7 @@ void
 gst_dirac_parse_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstDiracParse *diracparse;
-
   g_return_if_fail (GST_IS_DIRAC_PARSE (object));
-  diracparse = GST_DIRAC_PARSE (object);
 
   switch (property_id) {
     default:
@@ -160,10 +157,7 @@ void
 gst_dirac_parse_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstDiracParse *diracparse;
-
   g_return_if_fail (GST_IS_DIRAC_PARSE (object));
-  diracparse = GST_DIRAC_PARSE (object);
 
   switch (property_id) {
     default:
@@ -175,10 +169,7 @@ gst_dirac_parse_get_property (GObject * object, guint property_id,
 void
 gst_dirac_parse_dispose (GObject * object)
 {
-  GstDiracParse *diracparse;
-
   g_return_if_fail (GST_IS_DIRAC_PARSE (object));
-  diracparse = GST_DIRAC_PARSE (object);
 
   /* clean up as possible.  may be called multiple times */
 
@@ -188,10 +179,7 @@ gst_dirac_parse_dispose (GObject * object)
 void
 gst_dirac_parse_finalize (GObject * object)
 {
-  GstDiracParse *diracparse;
-
   g_return_if_fail (GST_IS_DIRAC_PARSE (object));
-  diracparse = GST_DIRAC_PARSE (object);
 
   /* clean up object here */
 

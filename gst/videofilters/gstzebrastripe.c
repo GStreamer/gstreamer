@@ -177,10 +177,7 @@ gst_zebra_stripe_get_property (GObject * object, guint property_id,
 void
 gst_zebra_stripe_finalize (GObject * object)
 {
-  GstZebraStripe *zebrastripe;
-
   g_return_if_fail (GST_IS_ZEBRA_STRIPE (object));
-  zebrastripe = GST_ZEBRA_STRIPE (object);
 
   /* clean up object here */
 

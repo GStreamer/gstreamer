@@ -148,11 +148,9 @@ gst_colorconvert_class_init (gpointer g_class, gpointer class_data)
 {
   GObjectClass *gobject_class;
   GstBaseTransformClass *base_transform_class;
-  GstColorconvertClass *filter_class;
 
   gobject_class = G_OBJECT_CLASS (g_class);
   base_transform_class = GST_BASE_TRANSFORM_CLASS (g_class);
-  filter_class = GST_COLORCONVERT_CLASS (g_class);
 
   gobject_class->set_property = gst_colorconvert_set_property;
   gobject_class->get_property = gst_colorconvert_get_property;
@@ -172,10 +170,7 @@ static void
 gst_colorconvert_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstColorconvert *src;
-
   g_return_if_fail (GST_IS_COLORCONVERT (object));
-  src = GST_COLORCONVERT (object);
 
   GST_DEBUG ("gst_colorconvert_set_property");
   switch (prop_id) {
@@ -188,10 +183,7 @@ static void
 gst_colorconvert_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
-  GstColorconvert *src;
-
   g_return_if_fail (GST_IS_COLORCONVERT (object));
-  src = GST_COLORCONVERT (object);
 
   switch (prop_id) {
     default:

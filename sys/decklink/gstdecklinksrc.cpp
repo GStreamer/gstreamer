@@ -303,10 +303,7 @@ void
 gst_decklink_src_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstDecklinkSrc *decklinksrc;
-
   g_return_if_fail (GST_IS_DECKLINK_SRC (object));
-  decklinksrc = GST_DECKLINK_SRC (object);
 
   switch (property_id) {
     default:
@@ -319,10 +316,7 @@ void
 gst_decklink_src_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstDecklinkSrc *decklinksrc;
-
   g_return_if_fail (GST_IS_DECKLINK_SRC (object));
-  decklinksrc = GST_DECKLINK_SRC (object);
 
   switch (property_id) {
     default:
@@ -334,10 +328,7 @@ gst_decklink_src_get_property (GObject * object, guint property_id,
 void
 gst_decklink_src_dispose (GObject * object)
 {
-  GstDecklinkSrc *decklinksrc;
-
   g_return_if_fail (GST_IS_DECKLINK_SRC (object));
-  decklinksrc = GST_DECKLINK_SRC (object);
 
   /* clean up as possible.  may be called multiple times */
 
@@ -495,13 +486,11 @@ gst_decklink_src_stop (GstElement * element)
 static GstStateChangeReturn
 gst_decklink_src_change_state (GstElement * element, GstStateChange transition)
 {
-  GstDecklinkSrc *decklinksrc;
   GstStateChangeReturn ret;
   gboolean no_preroll = FALSE;
 
   g_return_val_if_fail (GST_IS_DECKLINK_SRC (element),
       GST_STATE_CHANGE_FAILURE);
-  decklinksrc = GST_DECKLINK_SRC (element);
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:

@@ -196,10 +196,7 @@ gst_linsys_sdi_sink_get_property (GObject * object, guint property_id,
 void
 gst_linsys_sdi_sink_dispose (GObject * object)
 {
-  GstLinsysSdiSink *linsyssdisink;
-
   g_return_if_fail (GST_IS_LINSYS_SDI_SINK (object));
-  linsyssdisink = GST_LINSYS_SDI_SINK (object);
 
   /* clean up as possible.  may be called multiple times */
 
@@ -209,10 +206,7 @@ gst_linsys_sdi_sink_dispose (GObject * object)
 void
 gst_linsys_sdi_sink_finalize (GObject * object)
 {
-  GstLinsysSdiSink *linsyssdisink;
-
   g_return_if_fail (GST_IS_LINSYS_SDI_SINK (object));
-  linsyssdisink = GST_LINSYS_SDI_SINK (object);
 
   /* clean up object here */
 
@@ -332,7 +326,7 @@ sdi_mux (guint8 * data, GstBuffer * buffer)
   int j;
   int i;
   guint8 *dest;
-  int f, v, h;
+  int f, v;
   int line;
 
   for (j = 0; j < 525; j++) {
@@ -351,8 +345,6 @@ sdi_mux (guint8 * data, GstBuffer * buffer)
     } else {
       f = 0;
     }
-
-    h = 0;
 
     dest[0] = 0xff;
     dest[1] = 0;

@@ -139,10 +139,7 @@ void
 gst_video_filter2_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstVideoFilter2 *videofilter2;
-
   g_return_if_fail (GST_IS_VIDEO_FILTER2 (object));
-  videofilter2 = GST_VIDEO_FILTER2 (object);
 
   switch (property_id) {
     default:
@@ -155,10 +152,7 @@ void
 gst_video_filter2_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstVideoFilter2 *videofilter2;
-
   g_return_if_fail (GST_IS_VIDEO_FILTER2 (object));
-  videofilter2 = GST_VIDEO_FILTER2 (object);
 
   switch (property_id) {
     default:
@@ -170,10 +164,7 @@ gst_video_filter2_get_property (GObject * object, guint property_id,
 void
 gst_video_filter2_dispose (GObject * object)
 {
-  GstVideoFilter2 *videofilter2;
-
   g_return_if_fail (GST_IS_VIDEO_FILTER2 (object));
-  videofilter2 = GST_VIDEO_FILTER2 (object);
 
   /* clean up as possible.  may be called multiple times */
 
@@ -183,10 +174,7 @@ gst_video_filter2_dispose (GObject * object)
 void
 gst_video_filter2_finalize (GObject * object)
 {
-  GstVideoFilter2 *videofilter2;
-
   g_return_if_fail (GST_IS_VIDEO_FILTER2 (object));
-  videofilter2 = GST_VIDEO_FILTER2 (object);
 
   /* clean up object here */
 

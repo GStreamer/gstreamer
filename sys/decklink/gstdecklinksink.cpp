@@ -314,10 +314,7 @@ void
 gst_decklink_sink_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstDecklinkSink *decklinksink;
-
   g_return_if_fail (GST_IS_DECKLINK_SINK (object));
-  decklinksink = GST_DECKLINK_SINK (object);
 
   switch (property_id) {
     default:
@@ -330,10 +327,7 @@ void
 gst_decklink_sink_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstDecklinkSink *decklinksink;
-
   g_return_if_fail (GST_IS_DECKLINK_SINK (object));
-  decklinksink = GST_DECKLINK_SINK (object);
 
   switch (property_id) {
     default:
@@ -345,10 +339,7 @@ gst_decklink_sink_get_property (GObject * object, guint property_id,
 void
 gst_decklink_sink_dispose (GObject * object)
 {
-  GstDecklinkSink *decklinksink;
-
   g_return_if_fail (GST_IS_DECKLINK_SINK (object));
-  decklinksink = GST_DECKLINK_SINK (object);
 
   /* clean up as possible.  may be called multiple times */
 
