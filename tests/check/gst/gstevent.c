@@ -307,6 +307,55 @@ event_probe (GstPad * pad, GstMiniObject ** data, gpointer user_data)
   return TRUE;
 }
 
+
+typedef struct
+{
+  GMutex *lock;
+  GCond *cond;
+  gboolean signaled;
+} SignalData;
+
+static void
+signal_data_init (SignalData * data)
+{
+  data->lock = g_mutex_new ();
+  data->cond = g_cond_new ();
+  data->signaled = FALSE;
+}
+
+static void
+signal_data_cleanup (SignalData * data)
+{
+  g_mutex_free (data->lock);
+  g_cond_free (data->cond);
+}
+
+static void
+signal_data_signal (SignalData * data)
+{
+  g_mutex_lock (data->lock);
+  data->signaled = TRUE;
+  g_cond_broadcast (data->cond);
+  g_mutex_unlock (data->lock);
+}
+
+static void
+signal_data_wait (SignalData * data)
+{
+  g_mutex_lock (data->lock);
+  while (!data->signaled)
+    g_cond_wait (data->cond, data->lock);
+  g_mutex_unlock (data->lock);
+}
+
+static void
+signal_blocked (GstPad * pad, GstBlockType type, gpointer user_data)
+{
+  SignalData *data = (SignalData *) user_data;
+
+  signal_data_signal (data);
+}
+
 static void test_event
     (GstBin * pipeline, GstEventType type, GstPad * pad,
     gboolean expect_before_q, GstPad * fake_srcpad)
@@ -314,6 +363,7 @@ static void test_event
   GstEvent *event;
   GstPad *peer;
   gint i;
+  SignalData data;
 
   got_event_before_q = got_event_after_q = NULL;
 
@@ -329,17 +379,21 @@ static void test_event
   got_event_time.tv_sec = 0;
   got_event_time.tv_usec = 0;
 
+  signal_data_init (&data);
+
   /* We block the pad so the stream lock is released and we can send the event */
-  fail_unless (gst_pad_set_blocked (fake_srcpad, TRUE, NULL, NULL,
-          NULL) == TRUE);
+  fail_unless (gst_pad_block (fake_srcpad, GST_BLOCK_TYPE_DATA,
+          signal_blocked, &data, NULL) == TRUE);
+
+  signal_data_wait (&data);
 
   /* We send on the peer pad, since the pad is blocked */
   fail_unless ((peer = gst_pad_get_peer (pad)) != NULL);
   gst_pad_send_event (peer, event);
   gst_object_unref (peer);
 
-  fail_unless (gst_pad_set_blocked (fake_srcpad, FALSE, NULL, NULL,
-          NULL) == TRUE);
+  gst_pad_unblock (fake_srcpad);
+  signal_data_cleanup (&data);
 
   if (expect_before_q) {
     /* Wait up to 5 seconds for the event to appear */

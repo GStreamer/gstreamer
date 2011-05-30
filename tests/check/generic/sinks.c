@@ -764,10 +764,10 @@ static GMutex *blocked_lock;
 static GCond *blocked_cond;
 
 static void
-pad_blocked_cb (GstPad * pad, gboolean blocked, gpointer user_data)
+pad_blocked_cb (GstPad * pad, GstBlockType type, gpointer user_data)
 {
   g_mutex_lock (blocked_lock);
-  GST_DEBUG ("srcpad blocked: %d, sending signal", blocked);
+  GST_DEBUG ("srcpad blocked: %d, sending signal", type);
   g_cond_signal (blocked_cond);
   g_mutex_unlock (blocked_lock);
 }
@@ -799,7 +799,7 @@ GST_START_TEST (test_add_live2)
   GST_DEBUG ("blocking srcpad");
   /* block source pad */
   srcpad = gst_element_get_static_pad (src, "src");
-  gst_pad_set_blocked (srcpad, TRUE, pad_blocked_cb, NULL, NULL);
+  gst_pad_block (srcpad, GST_BLOCK_TYPE_DATA, pad_blocked_cb, NULL, NULL);
 
   /* set source to PAUSED without adding it to the pipeline */
   ret = gst_element_set_state (src, GST_STATE_PAUSED);
@@ -827,7 +827,7 @@ GST_START_TEST (test_add_live2)
   GST_DEBUG ("unblocking srcpad");
 
   /* and unblock */
-  gst_pad_set_blocked (srcpad, FALSE, pad_blocked_cb, NULL, NULL);
+  gst_pad_unblock (srcpad);
 
   GST_DEBUG ("getting state");
 

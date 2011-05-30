@@ -471,15 +471,32 @@ typedef void			(*GstPadFixateCapsFunction)	(GstPad *pad, GstCaps *caps);
 typedef gboolean		(*GstPadDispatcherFunction)	(GstPad *pad, gpointer data);
 
 /**
+ * GstBlockType:
+ * @GST_BLOCK_TYPE_IDLE: The pad is idle
+ * @GST_BLOCK_TYPE_DATA: Data is queued on the pad
+ * @GST_BLOCK_TYPE_PUSH: Blocked on a push operation
+ * @GST_BLOCK_TYPE_PULL: Blocked on a pull operation
+ *
+ * The different blocking types that can occur.
+ */
+typedef enum
+{
+  GST_BLOCK_TYPE_IDLE = (1 << 0),
+  GST_BLOCK_TYPE_DATA = (1 << 1),
+  GST_BLOCK_TYPE_PUSH = (1 << 2),
+  GST_BLOCK_TYPE_PULL = (1 << 3),
+} GstBlockType;
+
+/**
  * GstPadBlockCallback:
- * @pad: the #GstPad that is blockend or unblocked.
- * @blocked: blocking state for the pad
+ * @pad: the #GstPad that is blocked
+ * @type: the current blocking type
  * @user_data: the gpointer to optional user data.
  *
- * Callback used by gst_pad_set_blocked_async(). Gets called when the blocking
- * operation succeeds.
+ * Callback used by gst_pad_block(). Gets called to notify about the current
+ * blocking type.
  */
-typedef void			(*GstPadBlockCallback)		(GstPad *pad, gboolean blocked, gpointer user_data);
+typedef void			(*GstPadBlockCallback)		(GstPad *pad, GstBlockType type, gpointer user_data);
 
 /**
  * GstPadStickyEventsForeachFunction:
@@ -600,6 +617,7 @@ struct _GstPad {
   /*< public >*/ /* with LOCK */
   /* block cond, mutex is from the object */
   GCond				*block_cond;
+  GstBlockType                   block_type;
   GstPadBlockCallback		 block_callback;
   gpointer			 block_data;
   GDestroyNotify                 block_destroy_data;
@@ -804,9 +822,13 @@ gboolean		gst_pad_is_active			(GstPad *pad);
 gboolean		gst_pad_activate_pull			(GstPad *pad, gboolean active);
 gboolean		gst_pad_activate_push			(GstPad *pad, gboolean active);
 
-gboolean		gst_pad_set_blocked                     (GstPad *pad, gboolean blocked,
-								 GstPadBlockCallback callback, gpointer user_data,
+gboolean		gst_pad_block                           (GstPad *pad,
+								 GstBlockType type,
+								 GstPadBlockCallback callback,
+                                                                 gpointer user_data,
                                                                  GDestroyNotify destroy_data);
+void                    gst_pad_unblock                         (GstPad *pad);
+
 gboolean		gst_pad_is_blocked			(GstPad *pad);
 gboolean		gst_pad_is_blocking			(GstPad *pad);
 
