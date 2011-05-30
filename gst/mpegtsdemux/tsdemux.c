@@ -763,7 +763,7 @@ gst_ts_demux_program_stopped (MpegTSBase * base, MpegTSBaseProgram * program)
 
   GST_LOG ("program %d stopped", program->program_number);
 
-  if (program != demux->program)
+  if (demux->program == NULL || program != demux->program)
     return;
 
   for (i = 0; i < 0x2000; i++) {
