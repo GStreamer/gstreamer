@@ -1,6 +1,6 @@
 /*
  * GStreamer DirectShow codecs wrapper
- * Copyright <2006, 2007, 2008> Fluendo <gstreamer@fluendo.com>
+ * Copyright <2006, 2007, 2008, 2009, 2010> Fluendo <support@fluendo.com>
  * Copyright <2006, 2007, 2008> Pioneers of the Inevitable <songbird@songbirdnest.com>
  * Copyright <2007,2008> Sebastien Moutte <sebastien@moutte.net>
  *
@@ -57,8 +57,6 @@ GST_DEBUG_CATEGORY_STATIC (dshowaudiodec_debug);
 
 GST_BOILERPLATE (GstDshowAudioDec, gst_dshowaudiodec, GstElement,
     GST_TYPE_ELEMENT);
-
-static const AudioCodecEntry *tmp;
 
 static void gst_dshowaudiodec_dispose (GObject * object);
 static GstStateChangeReturn gst_dshowaudiodec_change_state
@@ -314,15 +312,25 @@ gst_dshowaudiodec_base_init (gpointer klass)
   GstPadTemplate *src, *sink;
   GstCaps *srccaps, *sinkcaps;
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-  char *description;
+  GstElementDetails details;
+  const AudioCodecEntry *tmp;
+  gpointer qdata;
 
-  audiodec_class->entry = tmp;
-  description = g_strdup_printf ("DirectShow %s Decoder Wrapper",
+  qdata = g_type_get_qdata (G_OBJECT_CLASS_TYPE (klass), DSHOW_CODEC_QDATA);
+
+  /* element details */
+  tmp = audiodec_class->entry = (AudioCodecEntry *) qdata;
+
+  details.longname = g_strdup_printf ("DirectShow %s Decoder Wrapper",
       tmp->element_longname);
-  gst_element_class_set_details_simple (element_class, description,
-      "Codec/Decoder/Audio", description,
-      "Sebastien Moutte <sebastien@moutte.net>");
-  g_free (description);
+  details.klass = g_strdup ("Codec/Decoder/Audio");
+  details.description = g_strdup_printf ("DirectShow %s Decoder Wrapper",
+      tmp->element_longname);
+  details.author = "Sebastien Moutte <sebastien@moutte.net>";
+  gst_element_class_set_details (element_class, &details);
+  g_free (details.longname);
+  g_free (details.klass);
+  g_free (details.description);
 
   sinkcaps = gst_caps_from_string (tmp->sinkcaps);
 
@@ -1103,9 +1111,9 @@ dshow_adec_register (GstPlugin * plugin)
     {
       GST_DEBUG ("Registering %s", audio_dec_codecs[i].element_name);
 
-      tmp = &audio_dec_codecs[i];
       type = g_type_register_static (GST_TYPE_ELEMENT,
           audio_dec_codecs[i].element_name, &info, (GTypeFlags)0);
+      g_type_set_qdata (type, DSHOW_CODEC_QDATA, (gpointer) (audio_dec_codecs + i));
       if (!gst_element_register (plugin, audio_dec_codecs[i].element_name,
               GST_RANK_SECONDARY, type)) {
         return FALSE;
