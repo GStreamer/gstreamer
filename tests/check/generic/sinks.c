@@ -762,14 +762,12 @@ GST_END_TEST;
 
 static GMutex *blocked_lock;
 static GCond *blocked_cond;
-gboolean blocked_triggered;
 
 static void
 pad_blocked_cb (GstPad * pad, gboolean blocked, gpointer user_data)
 {
   g_mutex_lock (blocked_lock);
   GST_DEBUG ("srcpad blocked: %d, sending signal", blocked);
-  blocked_triggered = TRUE;
   g_cond_signal (blocked_cond);
   g_mutex_unlock (blocked_lock);
 }
@@ -783,7 +781,6 @@ GST_START_TEST (test_add_live2)
 
   blocked_lock = g_mutex_new ();
   blocked_cond = g_cond_new ();
-  blocked_triggered = FALSE;
 
   pipeline = gst_pipeline_new ("pipeline");
   src = gst_element_factory_make ("fakesrc", "src");
@@ -797,6 +794,7 @@ GST_START_TEST (test_add_live2)
   ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
   fail_unless (ret == GST_STATE_CHANGE_ASYNC, "no ASYNC state return");
 
+  g_mutex_lock (blocked_lock);
 
   GST_DEBUG ("blocking srcpad");
   /* block source pad */
@@ -815,9 +813,7 @@ GST_START_TEST (test_add_live2)
   gst_bin_add (GST_BIN (pipeline), src);
 
   /* wait for pad blocked, this means the source is now PLAYING. */
-  g_mutex_lock (blocked_lock);
-  while (!blocked_triggered)
-    g_cond_wait (blocked_cond, blocked_lock);
+  g_cond_wait (blocked_cond, blocked_lock);
   g_mutex_unlock (blocked_lock);
 
   GST_DEBUG ("linking pads");
