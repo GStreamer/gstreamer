@@ -3455,7 +3455,7 @@ gst_decode_pad_init (GstDecodePad * pad)
 }
 
 static void
-source_pad_blocked_cb (GstPad * pad, gboolean blocked, GstDecodePad * dpad)
+source_pad_blocked_cb (GstPad * pad, GstBlockType type, GstDecodePad * dpad)
 {
   GstDecodeChain *chain;
   GstDecodeBin *dbin;
@@ -3463,18 +3463,16 @@ source_pad_blocked_cb (GstPad * pad, gboolean blocked, GstDecodePad * dpad)
   chain = dpad->chain;
   dbin = chain->dbin;
 
-  GST_LOG_OBJECT (dpad, "blocked:%d, dpad->chain:%p", blocked, chain);
+  GST_LOG_OBJECT (dpad, "blocked: dpad->chain:%p", chain);
 
-  dpad->blocked = blocked;
+  dpad->blocked = TRUE;
 
-  if (dpad->blocked) {
-    EXPOSE_LOCK (dbin);
-    if (gst_decode_chain_is_complete (dbin->decode_chain)) {
-      if (!gst_decode_bin_expose (dbin))
-        GST_WARNING_OBJECT (dbin, "Couldn't expose group");
-    }
-    EXPOSE_UNLOCK (dbin);
+  EXPOSE_LOCK (dbin);
+  if (gst_decode_chain_is_complete (dbin->decode_chain)) {
+    if (!gst_decode_bin_expose (dbin))
+      GST_WARNING_OBJECT (dbin, "Couldn't expose group");
   }
+  EXPOSE_UNLOCK (dbin);
 }
 
 static gboolean
@@ -3510,10 +3508,16 @@ gst_decode_pad_set_blocked (GstDecodePad * dpad, gboolean blocked)
 
   /* do not block if shutting down.
    * we do not consider/expect it blocked further below, but use other trick */
-  if (!blocked || !dbin->shutdown)
-    gst_pad_set_blocked (opad, blocked,
-        (GstPadBlockCallback) source_pad_blocked_cb, gst_object_ref (dpad),
-        (GDestroyNotify) gst_object_unref);
+  if (!blocked || !dbin->shutdown) {
+    if (blocked) {
+      gst_pad_block (opad, GST_BLOCK_TYPE_DATA,
+          (GstPadBlockCallback) source_pad_blocked_cb, gst_object_ref (dpad),
+          (GDestroyNotify) gst_object_unref);
+    } else {
+      gst_pad_unblock (opad);
+      dpad->blocked = FALSE;
+    }
+  }
 
   if (blocked) {
     if (dbin->shutdown) {
@@ -3671,9 +3675,8 @@ unblock_pads (GstDecodeBin * dbin)
       continue;
 
     GST_DEBUG_OBJECT (dpad, "unblocking");
-    gst_pad_set_blocked (opad, FALSE,
-        (GstPadBlockCallback) source_pad_blocked_cb, gst_object_ref (dpad),
-        (GDestroyNotify) gst_object_unref);
+    gst_pad_unblock (opad);
+    dpad->blocked = FALSE;
     /* make flushing, prevent NOT_LINKED */
     GST_PAD_SET_FLUSHING (GST_PAD_CAST (dpad));
     gst_object_unref (dpad);

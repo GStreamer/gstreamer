@@ -1584,12 +1584,6 @@ no_channels:
 }
 
 static void
-_suburidecodebin_blocked_cb (GstPad * pad, gboolean blocked, gpointer user_data)
-{
-  GST_DEBUG_OBJECT (pad, "Pad blocked: %d", blocked);
-}
-
-static void
 gst_play_bin_suburidecodebin_seek_to_start (GstElement * suburidecodebin)
 {
   GstIterator *it = gst_element_iterate_src_pads (suburidecodebin);
@@ -1636,8 +1630,10 @@ gst_play_bin_suburidecodebin_block (GstElement * suburidecodebin,
     switch (gst_iterator_next (it, &item)) {
       case GST_ITERATOR_OK:
         sinkpad = g_value_get_object (&item);
-        gst_pad_set_blocked (sinkpad, block, _suburidecodebin_blocked_cb,
-            NULL, NULL);
+        if (block)
+          gst_pad_block (sinkpad, GST_BLOCK_TYPE_DATA, NULL, NULL, NULL);
+        else
+          gst_pad_unblock (sinkpad);
         g_value_reset (&item);
         break;
       case GST_ITERATOR_DONE:
@@ -2368,13 +2364,6 @@ selector_active_pad_changed (GObject * selector, GParamSpec * pspec,
     g_object_notify (G_OBJECT (playbin), property);
 }
 
-static void
-selector_blocked (GstPad * pad, gboolean blocked, gpointer user_data)
-{
-  /* no nothing */
-  GST_DEBUG_OBJECT (pad, "blocked callback, blocked: %d", blocked);
-}
-
 /* this callback sends a delayed event once the pad becomes unblocked */
 static gboolean
 stream_changed_data_probe (GstPad * pad, GstMiniObject * object, gpointer data)
@@ -2547,7 +2536,7 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
      * streams and connect the sinks, resulting in not-linked errors. After we
      * configured the sinks we will unblock them all. */
     GST_DEBUG_OBJECT (playbin, "blocking %" GST_PTR_FORMAT, select->srcpad);
-    gst_pad_set_blocked (select->srcpad, TRUE, selector_blocked, NULL, NULL);
+    gst_pad_block (select->srcpad, GST_BLOCK_TYPE_DATA, NULL, NULL, NULL);
   }
 
   /* get sinkpad for the new stream */
@@ -2861,8 +2850,7 @@ no_more_pads_cb (GstElement * decodebin, GstSourceGroup * group)
       if (select->srcpad) {
         GST_DEBUG_OBJECT (playbin, "unblocking %" GST_PTR_FORMAT,
             select->srcpad);
-        gst_pad_set_blocked (select->srcpad, FALSE, selector_blocked,
-            NULL, NULL);
+        gst_pad_unblock (select->srcpad);
       }
     }
     GST_SOURCE_GROUP_UNLOCK (group);
@@ -2894,8 +2882,7 @@ shutdown:
         }
         GST_DEBUG_OBJECT (playbin, "unblocking %" GST_PTR_FORMAT,
             select->srcpad);
-        gst_pad_set_blocked (select->srcpad, FALSE, selector_blocked,
-            NULL, NULL);
+        gst_pad_unblock (select->srcpad);
       }
     }
     GST_SOURCE_GROUP_UNLOCK (group);
