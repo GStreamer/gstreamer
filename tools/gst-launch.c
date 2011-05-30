@@ -336,16 +336,18 @@ print_index_stats (GPtrArray * index_stats)
 static gboolean
 gst_is_missing_plugin_message (GstMessage * msg)
 {
-  if (GST_MESSAGE_TYPE (msg) != GST_MESSAGE_ELEMENT || msg->structure == NULL)
+  if (GST_MESSAGE_TYPE (msg) != GST_MESSAGE_ELEMENT
+      || gst_message_get_structure (msg) == NULL)
     return FALSE;
 
-  return gst_structure_has_name (msg->structure, "missing-plugin");
+  return gst_structure_has_name (gst_message_get_structure (msg),
+      "missing-plugin");
 }
 
 static const gchar *
 gst_missing_plugin_message_get_description (GstMessage * msg)
 {
-  return gst_structure_get_string (msg->structure, "name");
+  return gst_structure_get_string (gst_message_get_structure (msg), "name");
 }
 
 static void
