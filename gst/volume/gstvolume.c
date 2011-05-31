@@ -63,12 +63,12 @@
 /* the volume factor is a range from 0.0 to (arbitrary) VOLUME_MAX_DOUBLE = 10.0
  * we map 1.0 to VOLUME_UNITY_INT*
  */
-#define VOLUME_UNITY_INT8            32 /* internal int for unity 2^(8-3) */
-#define VOLUME_UNITY_INT8_BIT_SHIFT  5  /* number of bits to shift for unity */
-#define VOLUME_UNITY_INT16           8192       /* internal int for unity 2^(16-3) */
-#define VOLUME_UNITY_INT16_BIT_SHIFT 13 /* number of bits to shift for unity */
-#define VOLUME_UNITY_INT24           2097152    /* internal int for unity 2^(24-3) */
-#define VOLUME_UNITY_INT24_BIT_SHIFT 21 /* number of bits to shift for unity */
+#define VOLUME_UNITY_INT8            8  /* internal int for unity 2^(8-5) */
+#define VOLUME_UNITY_INT8_BIT_SHIFT  3  /* number of bits to shift for unity */
+#define VOLUME_UNITY_INT16           2048       /* internal int for unity 2^(16-5) */
+#define VOLUME_UNITY_INT16_BIT_SHIFT 11 /* number of bits to shift for unity */
+#define VOLUME_UNITY_INT24           524288     /* internal int for unity 2^(24-5) */
+#define VOLUME_UNITY_INT24_BIT_SHIFT 19 /* number of bits to shift for unity */
 #define VOLUME_UNITY_INT32           134217728  /* internal int for unity 2^(32-5) */
 #define VOLUME_UNITY_INT32_BIT_SHIFT 27
 #define VOLUME_MAX_DOUBLE            10.0
@@ -702,7 +702,7 @@ volume_process_int16 (GstVolume * self, gpointer bytes, guint n_bytes)
   guint num_samples = n_bytes / sizeof (gint16);
 
   /* hard coded in volume.orc */
-  g_assert (VOLUME_UNITY_INT16_BIT_SHIFT == 13);
+  g_assert (VOLUME_UNITY_INT16_BIT_SHIFT == 11);
 
   orc_process_int16 (data, self->current_vol_i16, num_samples);
 }
@@ -714,7 +714,7 @@ volume_process_int16_clamp (GstVolume * self, gpointer bytes, guint n_bytes)
   guint num_samples = n_bytes / sizeof (gint16);
 
   /* hard coded in volume.orc */
-  g_assert (VOLUME_UNITY_INT16_BIT_SHIFT == 13);
+  g_assert (VOLUME_UNITY_INT16_BIT_SHIFT == 11);
 
   orc_process_int16_clamp (data, self->current_vol_i16, num_samples);
 }
@@ -750,7 +750,7 @@ volume_process_int8 (GstVolume * self, gpointer bytes, guint n_bytes)
   guint num_samples = n_bytes / sizeof (gint8);
 
   /* hard coded in volume.orc */
-  g_assert (VOLUME_UNITY_INT8_BIT_SHIFT == 5);
+  g_assert (VOLUME_UNITY_INT8_BIT_SHIFT == 3);
 
   orc_process_int8 (data, self->current_vol_i8, num_samples);
 }
@@ -762,7 +762,7 @@ volume_process_int8_clamp (GstVolume * self, gpointer bytes, guint n_bytes)
   guint num_samples = n_bytes / sizeof (gint8);
 
   /* hard coded in volume.orc */
-  g_assert (VOLUME_UNITY_INT8_BIT_SHIFT == 5);
+  g_assert (VOLUME_UNITY_INT8_BIT_SHIFT == 3);
 
   orc_process_int8_clamp (data, self->current_vol_i8, num_samples);
 }

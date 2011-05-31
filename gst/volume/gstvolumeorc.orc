@@ -37,7 +37,7 @@ convsssql d1, t1
 .temp 4 t1
 
 mulswl t1, d1, p1
-shrsl t1, t1, 13
+shrsl t1, t1, 11
 convlw d1, t1
 
 
@@ -47,7 +47,7 @@ convlw d1, t1
 .temp 4 t1
 
 mulswl t1, d1, p1
-shrsl t1, t1, 13
+shrsl t1, t1, 11
 convssslw d1, t1
 
 .function orc_process_int8
@@ -56,7 +56,7 @@ convssslw d1, t1
 .temp 2 t1
 
 mulsbw t1, d1, p1
-shrsw t1, t1, 5
+shrsw t1, t1, 3
 convwb d1, t1
 
 
@@ -66,7 +66,7 @@ convwb d1, t1
 .temp 2 t1
 
 mulsbw t1, d1, p1
-shrsw t1, t1, 5
+shrsw t1, t1, 3
 convssswb d1, t1
 
 .function orc_memset_f64

@@ -309,6 +309,53 @@ GST_START_TEST (test_double_s8)
 
 GST_END_TEST;
 
+GST_START_TEST (test_ten_s8)
+{
+  GstElement *volume;
+  GstBuffer *inbuffer;
+  GstBuffer *outbuffer;
+  GstCaps *caps;
+  gint8 in[2] = { 64, -10 };
+  gint8 out[2] = { 127, -100 }; /* notice the clamped sample */
+  gint8 *res;
+
+  volume = setup_volume ();
+  g_object_set (G_OBJECT (volume), "volume", 10.0, NULL);
+  fail_unless (gst_element_set_state (volume,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  inbuffer = gst_buffer_new_and_alloc (2);
+  memcpy (GST_BUFFER_DATA (inbuffer), in, 2);
+  fail_unless (memcmp (GST_BUFFER_DATA (inbuffer), in, 2) == 0);
+  caps = gst_caps_from_string (VOLUME_CAPS_STRING_S8);
+  gst_buffer_set_caps (inbuffer, caps);
+  gst_caps_unref (caps);
+  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
+  /* FIXME: reffing the inbuffer should make the transformation not be
+   * inplace
+   gst_buffer_ref (inbuffer);
+   */
+
+  /* pushing gives away my reference ... */
+  fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
+  /* ... but it ends up being modified inplace and
+   * collected on the global buffer list */
+  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
+  fail_unless_equals_int (g_list_length (buffers), 1);
+  fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
+  fail_unless (inbuffer == outbuffer);
+  res = (gint8 *) GST_BUFFER_DATA (outbuffer);
+  GST_INFO ("expected %+5d %+5d  real %+5d %+5d", out[0], out[1], res[0],
+      res[1]);
+  fail_unless (memcmp (GST_BUFFER_DATA (outbuffer), out, 2) == 0);
+
+  /* cleanup */
+  cleanup_volume (volume);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_mute_s8)
 {
   GstElement *volume;
@@ -452,6 +499,53 @@ GST_START_TEST (test_double_s16)
 
   volume = setup_volume ();
   g_object_set (G_OBJECT (volume), "volume", 2.0, NULL);
+  fail_unless (gst_element_set_state (volume,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  inbuffer = gst_buffer_new_and_alloc (4);
+  memcpy (GST_BUFFER_DATA (inbuffer), in, 4);
+  fail_unless (memcmp (GST_BUFFER_DATA (inbuffer), in, 4) == 0);
+  caps = gst_caps_from_string (VOLUME_CAPS_STRING_S16);
+  gst_buffer_set_caps (inbuffer, caps);
+  gst_caps_unref (caps);
+  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
+  /* FIXME: reffing the inbuffer should make the transformation not be
+   * inplace
+   gst_buffer_ref (inbuffer);
+   */
+
+  /* pushing gives away my reference ... */
+  fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
+  /* ... but it ends up being modified inplace and
+   * collected on the global buffer list */
+  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
+  fail_unless_equals_int (g_list_length (buffers), 1);
+  fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
+  fail_unless (inbuffer == outbuffer);
+  res = (gint16 *) GST_BUFFER_DATA (outbuffer);
+  GST_INFO ("expected %+5d %+5d  real %+5d %+5d", out[0], out[1], res[0],
+      res[1]);
+  fail_unless (memcmp (GST_BUFFER_DATA (outbuffer), out, 4) == 0);
+
+  /* cleanup */
+  cleanup_volume (volume);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_ten_s16)
+{
+  GstElement *volume;
+  GstBuffer *inbuffer;
+  GstBuffer *outbuffer;
+  GstCaps *caps;
+  gint16 in[2] = { 16384, -10 };
+  gint16 out[2] = { 32767, -100 };      /* notice the clamped sample */
+  gint16 *res;
+
+  volume = setup_volume ();
+  g_object_set (G_OBJECT (volume), "volume", 10.0, NULL);
   fail_unless (gst_element_set_state (volume,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
@@ -703,6 +797,61 @@ GST_START_TEST (test_double_s24)
 
 GST_END_TEST;
 
+GST_START_TEST (test_ten_s24)
+{
+  GstElement *volume;
+  GstBuffer *inbuffer;
+  GstBuffer *outbuffer;
+  GstCaps *caps;
+  gint32 in_32[2] = { 4194304, -10 };
+  guint8 in[6];
+  guint8 *res;
+  gint32 res_32[2];
+  gint32 out_32[2] = { 8388607, -100 }; /* notice the clamped sample */
+
+  write_unaligned_u24 (in, in_32[0]);
+  write_unaligned_u24 (in + 3, in_32[1]);
+
+  volume = setup_volume ();
+  g_object_set (G_OBJECT (volume), "volume", 10.0, NULL);
+  fail_unless (gst_element_set_state (volume,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  inbuffer = gst_buffer_new_and_alloc (6);
+  memcpy (GST_BUFFER_DATA (inbuffer), in, 6);
+  fail_unless (memcmp (GST_BUFFER_DATA (inbuffer), in, 6) == 0);
+  caps = gst_caps_from_string (VOLUME_CAPS_STRING_S24);
+  gst_buffer_set_caps (inbuffer, caps);
+  gst_caps_unref (caps);
+  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
+  /* FIXME: reffing the inbuffer should make the transformation not be
+   * inplace
+   gst_buffer_ref (inbuffer);
+   */
+
+  /* pushing gives away my reference ... */
+  fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
+  /* ... but it ends up being modified inplace and
+   * collected on the global buffer list */
+  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
+  fail_unless_equals_int (g_list_length (buffers), 1);
+  fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
+  fail_unless (inbuffer == outbuffer);
+  res = GST_BUFFER_DATA (outbuffer);
+
+  res_32[0] = get_unaligned_i24 (res);
+  res_32[1] = get_unaligned_i24 ((res + 3));
+
+  GST_INFO ("expected %+5d %+5d  real %+5d %+5d", out_32[0], out_32[1],
+      res_32[0], res_32[1]);
+  fail_unless (memcmp (res_32, out_32, 8) == 0);
+
+  /* cleanup */
+  cleanup_volume (volume);
+}
+
+GST_END_TEST;
 
 GST_START_TEST (test_mute_s24)
 {
@@ -892,6 +1041,52 @@ GST_START_TEST (test_double_s32)
 
 GST_END_TEST;
 
+GST_START_TEST (test_ten_s32)
+{
+  GstElement *volume;
+  GstBuffer *inbuffer;
+  GstBuffer *outbuffer;
+  GstCaps *caps;
+  gint32 in[2] = { 1073741824, -10 };
+  gint32 out[2] = { 2147483647, -100 }; /* notice the clamped sample */
+  gint32 *res;
+
+  volume = setup_volume ();
+  g_object_set (G_OBJECT (volume), "volume", 10.0, NULL);
+  fail_unless (gst_element_set_state (volume,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  inbuffer = gst_buffer_new_and_alloc (8);
+  memcpy (GST_BUFFER_DATA (inbuffer), in, 8);
+  fail_unless (memcmp (GST_BUFFER_DATA (inbuffer), in, 8) == 0);
+  caps = gst_caps_from_string (VOLUME_CAPS_STRING_S32);
+  gst_buffer_set_caps (inbuffer, caps);
+  gst_caps_unref (caps);
+  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
+  /* FIXME: reffing the inbuffer should make the transformation not be
+   * inplace
+   gst_buffer_ref (inbuffer);
+   */
+
+  /* pushing gives away my reference ... */
+  fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
+  /* ... but it ends up being modified inplace and
+   * collected on the global buffer list */
+  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
+  fail_unless_equals_int (g_list_length (buffers), 1);
+  fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
+  fail_unless (inbuffer == outbuffer);
+  res = (gint32 *) GST_BUFFER_DATA (outbuffer);
+  GST_INFO ("expected %+5d %+5d  real %+5d %+5d", out[0], out[1], res[0],
+      res[1]);
+  fail_unless (memcmp (GST_BUFFER_DATA (outbuffer), out, 8) == 0);
+
+  /* cleanup */
+  cleanup_volume (volume);
+}
+
+GST_END_TEST;
 
 GST_START_TEST (test_mute_s32)
 {
@@ -1039,6 +1234,54 @@ GST_START_TEST (test_double_f32)
 
   volume = setup_volume ();
   g_object_set (G_OBJECT (volume), "volume", 2.0, NULL);
+  fail_unless (gst_element_set_state (volume,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  inbuffer = gst_buffer_new_and_alloc (8);
+  memcpy (GST_BUFFER_DATA (inbuffer), in, 8);
+  fail_unless (memcmp (GST_BUFFER_DATA (inbuffer), in, 8) == 0);
+  caps = gst_caps_from_string (VOLUME_CAPS_STRING_F32);
+  gst_buffer_set_caps (inbuffer, caps);
+  gst_caps_unref (caps);
+  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
+  /* FIXME: reffing the inbuffer should make the transformation not be
+   * inplace
+   gst_buffer_ref (inbuffer);
+   */
+
+  /* pushing gives away my reference ... */
+  fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
+  /* ... but it ends up being modified inplace and
+   * collected on the global buffer list */
+  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
+  fail_unless_equals_int (g_list_length (buffers), 1);
+  fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
+  fail_unless (inbuffer == outbuffer);
+  res = (gfloat *) GST_BUFFER_DATA (outbuffer);
+  GST_INFO ("expected %+1.4f %+1.4f  real %+1.4f %+1.4f", out[0], out[1],
+      res[0], res[1]);
+  fail_unless_equals_float (res[0], out[0]);
+  fail_unless_equals_float (res[1], out[1]);
+
+  /* cleanup */
+  cleanup_volume (volume);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_ten_f32)
+{
+  GstElement *volume;
+  GstBuffer *inbuffer;
+  GstBuffer *outbuffer;
+  GstCaps *caps;
+  gfloat in[2] = { 0.75, -0.25 };
+  gfloat out[2] = { 7.5, -2.5 };        /* nothing is clamped */
+  gfloat *res;
+
+  volume = setup_volume ();
+  g_object_set (G_OBJECT (volume), "volume", 10.0, NULL);
   fail_unless (gst_element_set_state (volume,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
@@ -1223,6 +1466,54 @@ GST_START_TEST (test_double_f64)
 
   volume = setup_volume ();
   g_object_set (G_OBJECT (volume), "volume", 2.0, NULL);
+  fail_unless (gst_element_set_state (volume,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  inbuffer = gst_buffer_new_and_alloc (16);
+  memcpy (GST_BUFFER_DATA (inbuffer), in, 16);
+  fail_unless (memcmp (GST_BUFFER_DATA (inbuffer), in, 16) == 0);
+  caps = gst_caps_from_string (VOLUME_CAPS_STRING_F64);
+  gst_buffer_set_caps (inbuffer, caps);
+  gst_caps_unref (caps);
+  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
+  /* FIXME: reffing the inbuffer should make the transformation not be
+   * inplace
+   gst_buffer_ref (inbuffer);
+   */
+
+  /* pushing gives away my reference ... */
+  fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
+  /* ... but it ends up being modified inplace and
+   * collected on the global buffer list */
+  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
+  fail_unless_equals_int (g_list_length (buffers), 1);
+  fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
+  fail_unless (inbuffer == outbuffer);
+  res = (gdouble *) GST_BUFFER_DATA (outbuffer);
+  GST_INFO ("expected %+1.4f %+1.4f  real %+1.4f %+1.4f", out[0], out[1],
+      res[0], res[1]);
+  fail_unless_equals_float (res[0], out[0]);
+  fail_unless_equals_float (res[1], out[1]);
+
+  /* cleanup */
+  cleanup_volume (volume);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_ten_f64)
+{
+  GstElement *volume;
+  GstBuffer *inbuffer;
+  GstBuffer *outbuffer;
+  GstCaps *caps;
+  gdouble in[2] = { 0.75, -0.25 };
+  gdouble out[2] = { 7.5, -2.5 };       /* nothing is clamped */
+  gdouble *res;
+
+  volume = setup_volume ();
+  g_object_set (G_OBJECT (volume), "volume", 10.0, NULL);
   fail_unless (gst_element_set_state (volume,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
@@ -1493,26 +1784,32 @@ volume_suite (void)
   tcase_add_test (tc_chain, test_unity_s8);
   tcase_add_test (tc_chain, test_half_s8);
   tcase_add_test (tc_chain, test_double_s8);
+  tcase_add_test (tc_chain, test_ten_s8);
   tcase_add_test (tc_chain, test_mute_s8);
   tcase_add_test (tc_chain, test_unity_s16);
   tcase_add_test (tc_chain, test_half_s16);
   tcase_add_test (tc_chain, test_double_s16);
+  tcase_add_test (tc_chain, test_ten_s16);
   tcase_add_test (tc_chain, test_mute_s16);
   tcase_add_test (tc_chain, test_unity_s24);
   tcase_add_test (tc_chain, test_half_s24);
   tcase_add_test (tc_chain, test_double_s24);
+  tcase_add_test (tc_chain, test_ten_s24);
   tcase_add_test (tc_chain, test_mute_s24);
   tcase_add_test (tc_chain, test_unity_s32);
   tcase_add_test (tc_chain, test_half_s32);
   tcase_add_test (tc_chain, test_double_s32);
+  tcase_add_test (tc_chain, test_ten_s32);
   tcase_add_test (tc_chain, test_mute_s32);
   tcase_add_test (tc_chain, test_unity_f32);
   tcase_add_test (tc_chain, test_half_f32);
   tcase_add_test (tc_chain, test_double_f32);
+  tcase_add_test (tc_chain, test_ten_f32);
   tcase_add_test (tc_chain, test_mute_f32);
   tcase_add_test (tc_chain, test_unity_f64);
   tcase_add_test (tc_chain, test_half_f64);
   tcase_add_test (tc_chain, test_double_f64);
+  tcase_add_test (tc_chain, test_ten_f64);
   tcase_add_test (tc_chain, test_mute_f64);
   tcase_add_test (tc_chain, test_wrong_caps);
   tcase_add_test (tc_chain, test_passthrough);
