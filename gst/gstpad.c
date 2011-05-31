@@ -112,7 +112,26 @@ struct _GstPadPrivate
   PadEvent events[GST_EVENT_MAX_STICKY];
 
   gint using;
+  gint probe_cookie;
 };
+
+typedef struct
+{
+  GHook hook;
+  guint cookie;
+} GstProbe;
+
+#define PROBE_COOKIE(h) (((GstProbe *)(h))->cookie)
+
+typedef struct
+{
+  GstPad *pad;
+  GstProbeType mask;
+  gpointer type_data;
+  GstProbeReturn ret;
+  gboolean pass;
+  guint cookie;
+} ProbeMarshall;
 
 static void gst_pad_dispose (GObject * object);
 static void gst_pad_finalize (GObject * object);
@@ -121,7 +140,6 @@ static void gst_pad_set_property (GObject * object, guint prop_id,
 static void gst_pad_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstFlowReturn handle_pad_block (GstPad * pad, GstBlockType type);
 static GstCaps *gst_pad_get_caps_unlocked (GstPad * pad, GstCaps * filter);
 static void gst_pad_set_pad_template (GstPad * pad, GstPadTemplate * templ);
 static gboolean gst_pad_activate_default (GstPad * pad);
@@ -361,6 +379,8 @@ gst_pad_init (GstPad * pad)
   g_static_rec_mutex_init (pad->stream_rec_lock);
 
   pad->block_cond = g_cond_new ();
+
+  g_hook_list_init (&pad->probes, sizeof (GstProbe));
 }
 
 /* called when setting the pad inactive. It removes all sticky events from
@@ -483,12 +503,9 @@ gst_pad_dispose (GObject * object)
 
   gst_pad_set_pad_template (pad, NULL);
 
-  if (pad->block_destroy_data && pad->block_data) {
-    pad->block_destroy_data (pad->block_data);
-    pad->block_data = NULL;
-  }
-
   clear_events (pad->priv->events);
+
+  g_hook_list_clear (&pad->probes);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -1070,53 +1087,68 @@ gst_pad_is_active (GstPad * pad)
 }
 
 /**
- * gst_pad_block:
- * @pad: the #GstPad to block or unblock
- * @type: the different pad block states
- * @callback: #GstPadBlockCallback that will be called with notifications of
- *           the pad block state
+ * gst_pad_add_probe:
+ * @pad: the #GstPad to add the probe to
+ * @mask: the probe mask
+ * @callback: #GstPadProbeCallback that will be called with notifications of
+ *           the pad state
  * @user_data: (closure): user data passed to the callback
  * @destroy_data: #GDestroyNotify for user_data
  *
- * Blocks the dataflow on a pad. The provided callback is called with
- * notifications about the different stages in the pad block.
+ * Be notified of different states of pads. The provided callback is called for
+ * every state that matches @mask.
  *
  * <note>
- *  Pad block handlers are only called for source pads in push mode
+ *  Pad probe handlers are only called for source pads in push mode
  *  and sink pads in pull mode.
  * </note>
  *
- * Returns: TRUE if the pad could be blocked. This function can fail if the
- * wrong parameters were passed or the pad was already blocked.
+ * Returns: an id or 0 on error. The id can be used to remove the probe with
+ * gst_pad_remove_probe().
  *
  * MT safe.
  */
-gboolean
-gst_pad_block (GstPad * pad, GstBlockType type,
-    GstPadBlockCallback callback, gpointer user_data,
+gulong
+gst_pad_add_probe (GstPad * pad, GstProbeType mask,
+    GstPadProbeCallback callback, gpointer user_data,
     GDestroyNotify destroy_data)
 {
-  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
-  g_return_val_if_fail (callback != NULL, FALSE);
+  GHook *hook;
+  gulong res;
+
+  g_return_val_if_fail (GST_IS_PAD (pad), 0);
+  g_return_val_if_fail (mask != 0, 0);
+  g_return_val_if_fail (callback != NULL, 0);
 
   GST_OBJECT_LOCK (pad);
+  /* make a new probe */
+  hook = g_hook_alloc (&pad->probes);
 
-  if (G_UNLIKELY (GST_PAD_IS_BLOCKED (pad)))
-    goto was_blocked;
+  GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "adding probe for mask 0x%08x",
+      mask);
 
-  GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "blocking pad");
+  /* store our flags and other fields */
+  hook->flags |= (mask << G_HOOK_FLAG_USER_SHIFT);
+  hook->func = callback;
+  hook->data = user_data;
+  hook->destroy = destroy_data;
+  PROBE_COOKIE (hook) = 0;
 
-  GST_OBJECT_FLAG_SET (pad, GST_PAD_BLOCKED);
+  /* incremenent cookie so that the new hook get's called */
+  pad->priv->probe_cookie++;
 
-  if (pad->block_destroy_data && pad->block_data)
-    pad->block_destroy_data (pad->block_data);
+  /* add the probe */
+  g_hook_prepend (&pad->probes, hook);
 
-  /* always store the block_cb */
-  pad->block_type = type;
-  pad->block_callback = callback;
-  pad->block_data = user_data;
-  pad->block_destroy_data = destroy_data;
-  pad->block_callback_called = FALSE;
+  res = hook->hook_id;
+
+  GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "got probe id %lu", res);
+
+  if (mask & (GST_PROBE_TYPE_IDLE | GST_PROBE_TYPE_BLOCK)) {
+    /* we have a block probe */
+    pad->num_blocked++;
+    GST_OBJECT_FLAG_SET (pad, GST_PAD_BLOCKED);
+  }
 
   if (pad->priv->using > 0) {
     /* the pad is in use, we can't signal the idle callback yet. Since we set the
@@ -1130,58 +1162,62 @@ gst_pad_block (GstPad * pad, GstBlockType type,
     GST_OBJECT_UNLOCK (pad);
 
     /* call the callback if we need to be called for idle callbacks */
-    if (type & GST_BLOCK_TYPE_IDLE)
-      callback (pad, GST_BLOCK_TYPE_IDLE, user_data);
+    if (mask & GST_PROBE_TYPE_IDLE)
+      callback (pad, GST_PROBE_TYPE_IDLE, NULL, user_data);
   }
   return TRUE;
+}
 
-was_blocked:
-  {
-    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "pad was blocked");
-    GST_OBJECT_UNLOCK (pad);
+static void
+cleanup_hook (GstPad * pad, GHook * hook)
+{
+  GstProbeType type;
 
-    return FALSE;
+  type = (hook->flags) >> G_HOOK_FLAG_USER_SHIFT;
+
+  if (type & (GST_PROBE_TYPE_IDLE | GST_PROBE_TYPE_BLOCK)) {
+    /* unblock when we remove the last blocking probe */
+    pad->num_blocked--;
+    if (pad->num_blocked == 0) {
+      GST_OBJECT_FLAG_UNSET (pad, GST_PAD_BLOCKED);
+      GST_PAD_BLOCK_BROADCAST (pad);
+    }
   }
+  g_hook_destroy_link (&pad->probes, hook);
 }
 
 /**
- * gst_pad_unblock:
- * @pad: the #GstPad to unblock
+ * gst_pad_remove_probe:
+ * @pad: the #GstPad with the probe
+ * @id: the probe id to remove
  *
- * Unblock @pad. All pending and current pad blocks, if any, are canceled. After
- * this method, dataflow will continue on @pad.
+ * Remove the probe with @id from @pad.
  *
  * MT safe.
  */
 void
-gst_pad_unblock (GstPad * pad)
+gst_pad_remove_probe (GstPad * pad, gulong id)
 {
+  GHook *hook;
+
   g_return_if_fail (GST_IS_PAD (pad));
 
   GST_OBJECT_LOCK (pad);
 
-  if (G_UNLIKELY (!GST_PAD_IS_BLOCKED (pad)))
-    goto had_right_state;
+  hook = g_hook_get (&pad->probes, id);
+  if (hook == NULL)
+    goto not_found;
 
-  /* cleanup */
-  if (pad->block_destroy_data && pad->block_data)
-    pad->block_destroy_data (pad->block_data);
-
-  pad->block_type = 0;
-  pad->block_callback = NULL;
-  pad->block_data = NULL;
-  pad->block_destroy_data = NULL;
-
-  GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "unblocking pad");
-  GST_OBJECT_FLAG_UNSET (pad, GST_PAD_BLOCKED);
-  GST_PAD_BLOCK_BROADCAST (pad);
+  GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "removing hook %ld",
+      hook->hook_id);
+  cleanup_hook (pad, hook);
   GST_OBJECT_UNLOCK (pad);
 
   return;
 
-had_right_state:
+not_found:
   {
-    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "pad was unblocked");
+    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "no hook with id %d", id);
     GST_OBJECT_UNLOCK (pad);
     return;
   }
@@ -3445,116 +3481,135 @@ gst_pad_query_default (GstPad * pad, GstQuery * query)
   }
 }
 
-/*
- * should be called with pad OBJECT_LOCK and STREAM_LOCK held.
- * GST_PAD_IS_BLOCKED (pad) == TRUE when this function is
- * called.
- *
- * This function performs the pad blocking when an event, buffer push
- * is performed on a _SRC_ pad. It blocks the streaming thread after
- * informing the pad has been blocked.
- *
- * An application can with this method wait and block any streaming
- * thread and perform operations such as seeking or linking.
- *
- * Two methods are available for notifying the application of the
- * block:
- * - the callback method, which happens in the STREAMING thread with
- *   the STREAM_LOCK held. With this method, the most useful way of
- *   dealing with the callback is to post a message to the main thread
- *   where the pad block can then be handled outside of the streaming
- *   thread. With the last method one can perform all operations such
- *   as doing a state change, linking, unblocking, seeking etc on the
- *   pad.
- * - the GCond signal method, which makes any thread unblock when
- *   the pad block happens.
- *
- * During the actual blocking state, the GST_PAD_BLOCKING flag is set.
- * The GST_PAD_BLOCKING flag is unset when the pad was unblocked.
- *
- * MT safe.
- */
-static GstFlowReturn
-handle_pad_block (GstPad * pad, GstBlockType type)
+static void
+probe_hook_marshal (GHook * hook, ProbeMarshall * data)
 {
-  GstPadBlockCallback callback;
-  gpointer user_data;
-  GstFlowReturn ret = GST_FLOW_OK;
+  GstPad *pad = data->pad;
+  GstProbeType flags;
 
-  GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "signal block taken");
+  /* if we have called this callback, do nothing */
+  if (PROBE_COOKIE (hook) == data->cookie)
+    return;
 
-  /* flushing, don't bother trying to block and return WRONG_STATE
-   * right away */
-  if (GST_PAD_IS_FLUSHING (pad))
-    goto flushingnonref;
+  PROBE_COOKIE (hook) = data->cookie;
 
-  /* we grab an extra ref for the callbacks, this is probably not
-   * needed (callback code does not have a ref and cannot unref). I
-   * think this was done to make it possible to unref the element in
-   * the callback, which is in the end totally impossible as it
-   * requires grabbing the STREAM_LOCK and OBJECT_LOCK which are
-   * all taken when calling this function. */
-  gst_object_ref (pad);
+  flags = hook->flags >> G_HOOK_FLAG_USER_SHIFT;
 
-  while (GST_PAD_IS_BLOCKED (pad)) {
-    do {
-      /* we either have a callback installed to notify the block or
-       * some other thread is doing a GCond wait. */
-      callback = pad->block_callback;
-      pad->block_callback_called = TRUE;
-      if ((pad->block_type & type) == pad->block_type) {
-        user_data = pad->block_data;
-        GST_OBJECT_UNLOCK (pad);
+  GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
+      "have hook %lu with flags 0x%08x", hook->hook_id, flags);
 
-        GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "calling block callback");
-        /* Call the callback. We release the lock so that the callback can
-         * do something usefull with the pad */
-        callback (pad, type, user_data);
+  if ((flags & data->mask) == flags) {
+    GstPadProbeCallback callback;
 
-        GST_OBJECT_LOCK (pad);
-        /* we released the lock, recheck flushing */
-        if (GST_PAD_IS_FLUSHING (pad))
-          goto flushing;
+    callback = (GstPadProbeCallback) hook->func;
+    if (callback) {
+      GstProbeReturn ret;
+
+      GST_OBJECT_UNLOCK (pad);
+
+      ret = callback (pad, data->mask, data->type_data, hook->data);
+
+      GST_OBJECT_LOCK (pad);
+
+      switch (ret) {
+        case GST_PROBE_REMOVE:
+          /* remove the probe */
+          GST_DEBUG_OBJECT (pad, "asked to remove hook");
+          cleanup_hook (pad, hook);
+          break;
+        case GST_PROBE_DROP:
+          /* need to drop the data, make sure other probes don't get called
+           * anymore */
+          GST_DEBUG_OBJECT (pad, "asked to drop item");
+          data->mask = GST_PROBE_TYPE_INVALID;
+          data->ret = GST_PROBE_DROP;
+          break;
+        case GST_PROBE_PASS:
+          /* inform the pad block to let things pass */
+          GST_DEBUG_OBJECT (pad, "asked to pass item");
+          data->pass = TRUE;
+          break;
+        default:
+          GST_DEBUG_OBJECT (pad, "probe returned %d", ret);
+          break;
       }
-    } while (pad->block_callback_called == FALSE && GST_PAD_IS_BLOCKED (pad));
+    }
+  }
+}
 
-    /* OBJECT_LOCK could have been released when we did the callback, which
-     * then could have made the pad unblock so we need to check the blocking
-     * condition again.   */
-    if (!GST_PAD_IS_BLOCKED (pad))
-      break;
+static GstFlowReturn
+do_probe_callbacks (GstPad * pad, GstProbeType mask, gpointer type_data)
+{
+  ProbeMarshall data;
+  guint cookie;
 
-    /* now we block the streaming thread. It can be unlocked when we
-     * deactivate the pad (which will also set the FLUSHING flag) or
-     * when the pad is unblocked. A flushing event will also unblock
-     * the pad after setting the FLUSHING flag. */
-    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
-        "Waiting to be unblocked or set flushing");
-    GST_OBJECT_FLAG_SET (pad, GST_PAD_BLOCKING);
-    GST_PAD_BLOCK_WAIT (pad);
-    GST_OBJECT_FLAG_UNSET (pad, GST_PAD_BLOCKING);
+  if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
+    goto flushing;
 
-    /* see if we got unblocked by a flush or not */
-    if (GST_PAD_IS_FLUSHING (pad))
-      goto flushing;
+  data.pad = pad;
+  data.mask = mask;
+  data.type_data = type_data;
+  data.ret = GST_PROBE_OK;
+  data.pass = FALSE;
+  data.cookie = pad->priv->probe_cookie++;
+
+again:
+  cookie = pad->priv->probe_cookie;
+
+  GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
+      "doing callbacks for probe 0x%08x", data.mask);
+  g_hook_list_marshal (&pad->probes, FALSE,
+      (GHookMarshaller) probe_hook_marshal, &data);
+
+  /* if the list changed, call the new callbacks (they will not have their
+   * cookie set to data.cookie */
+  if (cookie != pad->priv->probe_cookie)
+    goto again;
+
+  /* we might have released the lock */
+  if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
+    goto flushing;
+
+  if (data.ret == GST_PROBE_DROP)
+    goto dropped;
+
+  if (data.pass)
+    goto passed;
+
+  if (mask & (GST_PROBE_TYPE_BLOCK)) {
+    while (GST_PAD_IS_BLOCKING (pad)) {
+      /* now we block the streaming thread. It can be unlocked when we
+       * deactivate the pad (which will also set the FLUSHING flag) or
+       * when the pad is unblocked. A flushing event will also unblock
+       * the pad after setting the FLUSHING flag. */
+      GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
+          "Waiting to be unblocked or set flushing");
+      GST_OBJECT_FLAG_SET (pad, GST_PAD_BLOCKING);
+      GST_PAD_BLOCK_WAIT (pad);
+      GST_OBJECT_FLAG_UNSET (pad, GST_PAD_BLOCKING);
+
+      if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
+        goto flushing;
+    }
   }
 
-  GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "got unblocked");
+  return GST_FLOW_OK;
 
-  gst_object_unref (pad);
-
-  return ret;
-
-flushingnonref:
-  {
-    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "pad was flushing");
-    return GST_FLOW_WRONG_STATE;
-  }
+  /* ERRORS */
 flushing:
   {
-    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "pad became flushing");
-    gst_object_unref (pad);
+    GST_DEBUG_OBJECT (pad, "pad is flushing");
     return GST_FLOW_WRONG_STATE;
+  }
+dropped:
+  {
+    GST_DEBUG_OBJECT (pad, "data is dropped");
+    return GST_FLOW_CUSTOM_SUCCESS;
+  }
+passed:
+  {
+    GST_DEBUG_OBJECT (pad, "data is passed");
+    return GST_FLOW_OK;
   }
 }
 
@@ -3651,6 +3706,7 @@ done:
  * Data passing functions
  */
 
+#if 0
 static gboolean
 gst_pad_emit_have_data_signal (GstPad * pad, GstMiniObject * obj)
 {
@@ -3689,6 +3745,7 @@ gst_pad_emit_have_data_signal (GstPad * pad, GstMiniObject * obj)
 
   return res;
 }
+#endif
 
 static void
 gst_pad_data_unref (gboolean is_buffer, void *data)
@@ -3700,12 +3757,14 @@ gst_pad_data_unref (gboolean is_buffer, void *data)
   }
 }
 
-static GstFlowReturn
-pad_pre_chain (GstPad * pad, gpointer data)
+/* this is the chain function that does not perform the additional argument
+ * checking for that little extra speed.
+ */
+static inline GstFlowReturn
+gst_pad_chain_data_unchecked (GstPad * pad, gboolean is_buffer, void *data)
 {
   GstFlowReturn ret;
   gboolean needs_events;
-  gboolean emit_signal;
 
   GST_PAD_STREAM_LOCK (pad);
 
@@ -3722,56 +3781,14 @@ pad_pre_chain (GstPad * pad, gpointer data)
     if (G_UNLIKELY (ret != GST_FLOW_OK))
       goto events_error;
   }
-  emit_signal = GST_PAD_DO_BUFFER_SIGNALS (pad) > 0;
+
+  ret =
+      do_probe_callbacks (pad, GST_PROBE_TYPE_PUSH | GST_PROBE_TYPE_BUFFER,
+      data);
+  if (ret != GST_FLOW_OK)
+    goto probe_stopped;
+
   GST_OBJECT_UNLOCK (pad);
-
-  /* see if the signal should be emited */
-  if (G_UNLIKELY (emit_signal)) {
-    if (!gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT_CAST (data)))
-      goto dropping;
-  }
-  return GST_FLOW_OK;
-
-  /* ERRORS */
-flushing:
-  {
-    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
-        "pushing, but pad was flushing");
-    GST_OBJECT_UNLOCK (pad);
-    GST_PAD_STREAM_UNLOCK (pad);
-    return GST_FLOW_WRONG_STATE;
-  }
-events_error:
-  {
-    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "events were not accepted");
-    GST_OBJECT_UNLOCK (pad);
-    GST_PAD_STREAM_UNLOCK (pad);
-    return ret;
-  }
-dropping:
-  {
-    GST_DEBUG_OBJECT (pad, "Dropping buffer due to FALSE probe return");
-    GST_PAD_STREAM_UNLOCK (pad);
-    return GST_FLOW_CUSTOM_SUCCESS;
-  }
-}
-
-static void
-pad_post_chain (GstPad * pad)
-{
-  GST_PAD_STREAM_UNLOCK (pad);
-}
-
-/* this is the chain function that does not perform the additional argument
- * checking for that little extra speed.
- */
-static inline GstFlowReturn
-gst_pad_chain_data_unchecked (GstPad * pad, gboolean is_buffer, void *data)
-{
-  GstFlowReturn ret;
-
-  if (G_UNLIKELY ((ret = pad_pre_chain (pad, data)) != GST_FLOW_OK))
-    goto error;
 
   /* NOTE: we read the chainfunc unlocked.
    * we cannot hold the lock for the pad so we might send
@@ -3810,13 +3827,30 @@ gst_pad_chain_data_unchecked (GstPad * pad, gboolean is_buffer, void *data)
         GST_DEBUG_FUNCPTR_NAME (chainlistfunc), gst_flow_get_name (ret));
   }
 
-  pad_post_chain (pad);
+  GST_PAD_STREAM_UNLOCK (pad);
 
   return ret;
 
   /* ERRORS */
-error:
+flushing:
   {
+    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
+        "chaining, but pad was flushing");
+    GST_OBJECT_UNLOCK (pad);
+    GST_PAD_STREAM_UNLOCK (pad);
+    return GST_FLOW_WRONG_STATE;
+  }
+events_error:
+  {
+    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "events were not accepted");
+    GST_OBJECT_UNLOCK (pad);
+    GST_PAD_STREAM_UNLOCK (pad);
+    return ret;
+  }
+probe_stopped:
+  {
+    GST_OBJECT_UNLOCK (pad);
+    GST_PAD_STREAM_UNLOCK (pad);
     gst_pad_data_unref (is_buffer, data);
 
     switch (ret) {
@@ -3838,7 +3872,7 @@ no_function:
     GST_ELEMENT_ERROR (GST_PAD_PARENT (pad), CORE, PAD, (NULL),
         ("push on pad %s:%s but it has no chainfunction",
             GST_DEBUG_PAD_NAME (pad)));
-    pad_post_chain (pad);
+    GST_PAD_STREAM_UNLOCK (pad);
     return GST_FLOW_NOT_SUPPORTED;
   }
 }
@@ -3942,91 +3976,14 @@ gst_pad_chain_list (GstPad * pad, GstBufferList * list)
   return gst_pad_chain_data_unchecked (pad, FALSE, list);
 }
 
-static GstFlowReturn
-pad_pre_push (GstPad * pad, GstPad ** peer, gpointer data)
-{
-  GstFlowReturn ret;
-  gboolean need_probes, do_probes = TRUE;
-
-again:
-  GST_OBJECT_LOCK (pad);
-  /* FIXME: this check can go away; pad_set_blocked could be implemented with
-   * probes completely or probes with an extended pad block. */
-  while (G_UNLIKELY (GST_PAD_IS_BLOCKED (pad)))
-    if ((ret =
-            handle_pad_block (pad,
-                GST_BLOCK_TYPE_PUSH | GST_BLOCK_TYPE_DATA) != GST_FLOW_OK))
-      goto flushed;
-
-  need_probes = GST_PAD_DO_BUFFER_SIGNALS (pad) > 0;
-
-  /* we emit signals on the pad arg, the peer will have a chance to
-   * emit in the _chain() function */
-  if (G_UNLIKELY (need_probes && do_probes)) {
-    do_probes = FALSE;
-    /* unlock before emitting */
-    GST_OBJECT_UNLOCK (pad);
-
-    /* if the signal handler returned FALSE, it means we should just drop the
-     * buffer */
-    if (!gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT_CAST (data)))
-      goto dropped;
-
-    goto again;
-  }
-
-  if (G_UNLIKELY ((*peer = GST_PAD_PEER (pad)) == NULL))
-    goto not_linked;
-
-  /* take ref to peer pad before releasing the lock */
-  gst_object_ref (*peer);
-  pad->priv->using++;
-  GST_OBJECT_UNLOCK (pad);
-
-  return GST_FLOW_OK;
-
-  /* ERRORS */
-flushed:
-  {
-    GST_DEBUG_OBJECT (pad, "pad block stopped by flush");
-    GST_OBJECT_UNLOCK (pad);
-    return ret;
-  }
-dropped:
-  {
-    GST_DEBUG_OBJECT (pad, "Dropping buffer due to FALSE probe return");
-    return GST_FLOW_CUSTOM_SUCCESS;
-  }
-not_linked:
-  {
-    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
-        "pushing, but it was not linked");
-    GST_OBJECT_UNLOCK (pad);
-    return GST_FLOW_NOT_LINKED;
-  }
-}
-
 static void
 pad_post_push (GstPad * pad)
 {
   GST_OBJECT_LOCK (pad);
   pad->priv->using--;
   if (pad->priv->using == 0) {
-    /* pad is not active anymore, check if we need to trigger the block */
-    if (GST_PAD_IS_BLOCKED (pad)) {
-      GstPadBlockCallback callback;
-      gpointer user_data;
-
-      callback = pad->block_callback;
-      user_data = pad->block_data;
-      GST_PAD_BLOCK_BROADCAST (pad);
-      GST_OBJECT_UNLOCK (pad);
-
-      if (callback)
-        callback (pad, GST_BLOCK_TYPE_IDLE, user_data);
-
-      return;
-    }
+    /* pad is not active anymore, trigger idle callbacks */
+    do_probe_callbacks (pad, GST_PROBE_TYPE_IDLE, NULL);
   }
   GST_OBJECT_UNLOCK (pad);
 }
@@ -4036,9 +3993,32 @@ gst_pad_push_data (GstPad * pad, gboolean is_buffer, void *data)
 {
   GstPad *peer;
   GstFlowReturn ret;
+  GstProbeType type;
 
-  if ((ret = pad_pre_push (pad, &peer, data)) != GST_FLOW_OK)
-    goto error;
+  type = is_buffer ? GST_PROBE_TYPE_BUFFER : GST_PROBE_TYPE_BUFFER_LIST;
+  type |= GST_PROBE_TYPE_PUSH;
+
+  GST_OBJECT_LOCK (pad);
+  if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
+    goto flushing;
+
+  /* do block probes */
+  ret = do_probe_callbacks (pad, type | GST_PROBE_TYPE_BLOCK, data);
+  if (ret != GST_FLOW_OK)
+    goto probe_stopped;
+
+  /* do post-blocking probes */
+  ret = do_probe_callbacks (pad, type, data);
+  if (ret != GST_FLOW_OK)
+    goto probe_stopped;
+
+  if (G_UNLIKELY ((peer = GST_PAD_PEER (pad)) == NULL))
+    goto not_linked;
+
+  /* take ref to peer pad before releasing the lock */
+  gst_object_ref (peer);
+  pad->priv->using++;
+  GST_OBJECT_UNLOCK (pad);
 
   ret = gst_pad_chain_data_unchecked (peer, is_buffer, data);
 
@@ -4049,8 +4029,18 @@ gst_pad_push_data (GstPad * pad, gboolean is_buffer, void *data)
   return ret;
 
   /* ERROR recovery here */
-error:
+  /* ERRORS */
+flushing:
   {
+    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
+        "pushing, but pad was flushing");
+    GST_OBJECT_UNLOCK (pad);
+    gst_pad_data_unref (is_buffer, data);
+    return GST_FLOW_WRONG_STATE;
+  }
+probe_stopped:
+  {
+    GST_OBJECT_UNLOCK (pad);
     gst_pad_data_unref (is_buffer, data);
 
     switch (ret) {
@@ -4063,6 +4053,14 @@ error:
         break;
     }
     return ret;
+  }
+not_linked:
+  {
+    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
+        "pushing, but it was not linked");
+    GST_OBJECT_UNLOCK (pad);
+    gst_pad_data_unref (is_buffer, data);
+    return GST_FLOW_NOT_LINKED;
   }
 }
 
@@ -4155,15 +4153,12 @@ gst_pad_get_range_unchecked (GstPad * pad, guint64 offset, guint size,
 {
   GstFlowReturn ret;
   GstPadGetRangeFunction getrangefunc;
-  gboolean emit_signal;
 
   GST_PAD_STREAM_LOCK (pad);
 
   GST_OBJECT_LOCK (pad);
   if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
     goto flushing;
-
-  emit_signal = GST_PAD_DO_BUFFER_SIGNALS (pad) > 0;
   GST_OBJECT_UNLOCK (pad);
 
   if (G_UNLIKELY ((getrangefunc = GST_PAD_GETRANGEFUNC (pad)) == NULL))
@@ -4176,15 +4171,19 @@ gst_pad_get_range_unchecked (GstPad * pad, guint64 offset, guint size,
 
   ret = getrangefunc (pad, offset, size, buffer);
 
-  /* can only fire the signal if we have a valid buffer */
-  if (G_UNLIKELY (emit_signal) && (ret == GST_FLOW_OK)) {
-    if (!gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT_CAST (*buffer)))
-      goto dropping;
-  }
-  GST_PAD_STREAM_UNLOCK (pad);
-
   if (G_UNLIKELY (ret != GST_FLOW_OK))
     goto get_range_failed;
+
+  /* can only fire the signal if we have a valid buffer */
+  GST_OBJECT_LOCK (pad);
+  ret =
+      do_probe_callbacks (pad, GST_PROBE_TYPE_PULL | GST_PROBE_TYPE_BUFFER,
+      *buffer);
+  if (G_UNLIKELY (ret != GST_FLOW_OK))
+    goto probe_stopped;
+  GST_OBJECT_LOCK (pad);
+
+  GST_PAD_STREAM_UNLOCK (pad);
 
   return ret;
 
@@ -4205,17 +4204,19 @@ no_function:
     GST_PAD_STREAM_UNLOCK (pad);
     return GST_FLOW_NOT_SUPPORTED;
   }
-dropping:
+probe_stopped:
   {
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
-        "Dropping data after FALSE probe return");
+        "probe returned %s", gst_flow_get_name (ret));
+    GST_OBJECT_UNLOCK (pad);
     GST_PAD_STREAM_UNLOCK (pad);
     gst_buffer_unref (*buffer);
     *buffer = NULL;
-    return GST_FLOW_UNEXPECTED;
+    return ret;
   }
 get_range_failed:
   {
+    GST_PAD_STREAM_UNLOCK (pad);
     *buffer = NULL;
     GST_CAT_LEVEL_LOG (GST_CAT_SCHEDULING,
         (ret >= GST_FLOW_UNEXPECTED) ? GST_LEVEL_INFO : GST_LEVEL_WARNING,
@@ -4293,7 +4294,6 @@ gst_pad_pull_range (GstPad * pad, guint64 offset, guint size,
 {
   GstPad *peer;
   GstFlowReturn ret;
-  gboolean emit_signal;
   gboolean needs_events;
 
   g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
@@ -4302,16 +4302,14 @@ gst_pad_pull_range (GstPad * pad, guint64 offset, guint size,
 
   GST_OBJECT_LOCK (pad);
 
-  while (G_UNLIKELY (GST_PAD_IS_BLOCKED (pad)))
-    if ((ret = handle_pad_block (pad, GST_BLOCK_TYPE_PULL) != GST_FLOW_OK))
-      goto flushed;
+  ret =
+      do_probe_callbacks (pad, GST_PROBE_TYPE_PULL | GST_PROBE_TYPE_BLOCK,
+      NULL);
+  if (G_UNLIKELY (ret != GST_FLOW_OK))
+    goto pre_probe_stopped;
 
   if (G_UNLIKELY ((peer = GST_PAD_PEER (pad)) == NULL))
-    goto not_connected;
-
-  /* signal emision for the pad, peer has chance to emit when
-   * we call _get_range() */
-  emit_signal = GST_PAD_DO_BUFFER_SIGNALS (pad) > 0;
+    goto not_linked;
 
   gst_object_ref (peer);
   GST_OBJECT_UNLOCK (pad);
@@ -4323,19 +4321,12 @@ gst_pad_pull_range (GstPad * pad, guint64 offset, guint size,
   if (G_UNLIKELY (ret != GST_FLOW_OK))
     goto pull_range_failed;
 
-  while (G_UNLIKELY (GST_PAD_IS_BLOCKED (pad)))
-    if ((ret =
-            handle_pad_block (pad,
-                GST_BLOCK_TYPE_PULL | GST_BLOCK_TYPE_DATA) != GST_FLOW_OK))
-      goto flushed;
-
-  /* can only fire the signal if we have a valid buffer */
-  if (G_UNLIKELY (emit_signal)) {
-    if (!gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT_CAST (*buffer)))
-      goto dropping;
-  }
-
   GST_OBJECT_LOCK (pad);
+  ret =
+      do_probe_callbacks (pad, GST_PROBE_TYPE_PULL | GST_PROBE_TYPE_BUFFER,
+      buffer);
+  if (G_UNLIKELY (ret != GST_FLOW_OK))
+    goto post_probe_stopped;
 
   needs_events = GST_PAD_NEEDS_EVENTS (pad);
   if (G_UNLIKELY (needs_events)) {
@@ -4351,13 +4342,14 @@ gst_pad_pull_range (GstPad * pad, guint64 offset, guint size,
   return ret;
 
   /* ERROR recovery here */
-flushed:
+pre_probe_stopped:
   {
-    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "we are flushing");
+    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "pre probe returned %s",
+        gst_flow_get_name (ret));
     GST_OBJECT_UNLOCK (pad);
-    return GST_FLOW_NOT_LINKED;
+    return ret;
   }
-not_connected:
+not_linked:
   {
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
         "pulling range, but it was not linked");
@@ -4372,13 +4364,14 @@ pull_range_failed:
         pad, "pullrange failed, flow: %s", gst_flow_get_name (ret));
     return ret;
   }
-dropping:
+post_probe_stopped:
   {
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
-        "Dropping data after FALSE probe return");
+        "post probe returned %s", gst_flow_get_name (ret));
+    GST_OBJECT_UNLOCK (pad);
     gst_buffer_unref (*buffer);
     *buffer = NULL;
-    return GST_FLOW_UNEXPECTED;
+    return ret;
   }
 events_error:
   {
@@ -4410,6 +4403,7 @@ events_error:
 gboolean
 gst_pad_push_event (GstPad * pad, GstEvent * event)
 {
+  GstFlowReturn ret;
   GstPad *peerpad;
   gboolean result, need_probes, do_probes = TRUE, do_event_actions = TRUE;
   gboolean stored = FALSE;
@@ -4514,27 +4508,24 @@ again:
             break;
         }
       }
+      if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
+        goto flushed;
 
-      while (G_UNLIKELY (GST_PAD_IS_BLOCKED (pad)))
-        if (handle_pad_block (pad,
-                GST_BLOCK_TYPE_PUSH | GST_BLOCK_TYPE_DATA) != GST_FLOW_OK)
-          goto flushed;
+      ret = do_probe_callbacks (pad, GST_PROBE_TYPE_PUSH | GST_PROBE_TYPE_EVENT
+          | GST_PROBE_TYPE_BLOCK, event);
+      if (ret != GST_FLOW_OK)
+        goto probe_stopped;
 
       break;
     }
   }
 
   /* send probes after modifying the events above */
-  if (G_UNLIKELY (need_probes)) {
-    do_probes = FALSE;
-    GST_OBJECT_UNLOCK (pad);
-
-    if (!gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT_CAST (event)))
-      goto dropped;
-
-    /* retry, we released the lock */
-    goto again;
-  }
+  ret =
+      do_probe_callbacks (pad, GST_PROBE_TYPE_PUSH | GST_PROBE_TYPE_EVENT,
+      event);
+  if (ret != GST_FLOW_OK)
+    goto probe_stopped;
 
   /* now check the peer pad */
   if (peerpad == NULL)
@@ -4567,9 +4558,10 @@ flushed:
     gst_event_unref (event);
     return stored;
   }
-dropped:
+probe_stopped:
   {
-    GST_DEBUG_OBJECT (pad, "Dropping event after FALSE probe return");
+    GST_DEBUG_OBJECT (pad, "Probe returned %s", gst_flow_get_name (ret));
+    GST_OBJECT_UNLOCK (pad);
     gst_event_unref (event);
     return stored;
   }
@@ -4613,6 +4605,7 @@ not_linked:
 gboolean
 gst_pad_send_event (GstPad * pad, GstEvent * event)
 {
+  GstFlowReturn ret;
   gboolean result = FALSE;
   gboolean serialized, need_unlock = FALSE, needs_events, sticky;
 
@@ -4633,15 +4626,6 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
   } else
     goto unknown_direction;
 
-  /* pad signals */
-  if (G_UNLIKELY (GST_PAD_DO_EVENT_SIGNALS (pad) > 0)) {
-    GST_OBJECT_UNLOCK (pad);
-
-    if (!gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT_CAST (event)))
-      goto dropping;
-
-    GST_OBJECT_LOCK (pad);
-  }
   /* get the flag first, we clear it when we have a FLUSH or a non-serialized
    * event. */
   needs_events = GST_PAD_NEEDS_EVENTS (pad);
@@ -4727,9 +4711,13 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
           needs_events = TRUE;
         }
       }
-      /* now check the flushing flag */
+      /* now do the probe */
       if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
         goto flushing;
+
+      ret = do_probe_callbacks (pad, GST_PROBE_TYPE_EVENT, event);
+      if (ret != GST_FLOW_OK)
+        goto probe_stopped;
 
       break;
   }
@@ -4802,9 +4790,12 @@ flushing:
     gst_event_unref (event);
     return FALSE;
   }
-dropping:
+probe_stopped:
   {
-    GST_DEBUG_OBJECT (pad, "Dropping event after FALSE probe return");
+    GST_DEBUG_OBJECT (pad, "probe returned %s", gst_flow_get_name (ret));
+    GST_OBJECT_UNLOCK (pad);
+    if (need_unlock)
+      GST_PAD_STREAM_UNLOCK (pad);
     gst_event_unref (event);
     return FALSE;
   }

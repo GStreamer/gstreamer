@@ -471,32 +471,62 @@ typedef void			(*GstPadFixateCapsFunction)	(GstPad *pad, GstCaps *caps);
 typedef gboolean		(*GstPadDispatcherFunction)	(GstPad *pad, gpointer data);
 
 /**
- * GstBlockType:
- * @GST_BLOCK_TYPE_IDLE: The pad is idle
- * @GST_BLOCK_TYPE_DATA: Data is queued on the pad
- * @GST_BLOCK_TYPE_PUSH: Blocked on a push operation
- * @GST_BLOCK_TYPE_PULL: Blocked on a pull operation
+ * GstProbeType:
+ * @GST_PROBE_TYPE_INVALID: invalid probe type
+ * @GST_PROBE_TYPE_IDLE: probe idle pads and block
+ * @GST_PROBE_TYPE_BLOCK: probe and block pads
+ * @GST_PROBE_TYPE_BUFFER: probe buffers
+ * @GST_PROBE_TYPE_BUFFER_LIST: probe buffer lists
+ * @GST_PROBE_TYPE_EVENT: probe events
+ * @GST_PROBE_TYPE_PUSH: probe push
+ * @GST_PROBE_TYPE_PULL: probe pull
  *
- * The different blocking types that can occur.
+ * The different probing types that can occur.
  */
 typedef enum
 {
-  GST_BLOCK_TYPE_IDLE = (1 << 0),
-  GST_BLOCK_TYPE_DATA = (1 << 1),
-  GST_BLOCK_TYPE_PUSH = (1 << 2),
-  GST_BLOCK_TYPE_PULL = (1 << 3),
-} GstBlockType;
+  GST_PROBE_TYPE_INVALID      = (1 << 0),
+  GST_PROBE_TYPE_IDLE         = (1 << 1),
+  GST_PROBE_TYPE_BLOCK        = (1 << 2),
+  GST_PROBE_TYPE_BUFFER       = (1 << 3),
+  GST_PROBE_TYPE_BUFFER_LIST  = (1 << 4),
+  GST_PROBE_TYPE_EVENT        = (1 << 5),
+  GST_PROBE_TYPE_PUSH         = (1 << 6),
+  GST_PROBE_TYPE_PULL         = (1 << 7),
+} GstProbeType;
+
+#define GST_PROBE_TYPE_DATA (GST_PROBE_TYPE_BUFFER | GST_PROBE_TYPE_EVENT | GST_PROBE_TYPE_BUFFER_LIST)
 
 /**
- * GstPadBlockCallback:
+ * GstProbeResult:
+ * @GST_PROBE_RESULT_OK: normal probe return value
+ * @GST_PROBE_RESULT_DROP: drop data in data probes
+ * @GST_PROBE_RESULT_REMOVE: remove probe
+ * @GST_PROBE_RESULT_PASS: pass the data item in the block probe and block on
+ *                         the next item
+ *
+ * Different return values for the GstPadProbeCallback.
+ */
+typedef enum
+{
+  GST_PROBE_OK,
+  GST_PROBE_DROP,
+  GST_PROBE_REMOVE,
+  GST_PROBE_PASS,
+} GstProbeReturn;
+
+/**
+ * GstPadProbeCallback
  * @pad: the #GstPad that is blocked
- * @type: the current blocking type
+ * @type: the current probe type
+ * @type_data: type specific data
  * @user_data: the gpointer to optional user data.
  *
- * Callback used by gst_pad_block(). Gets called to notify about the current
+ * Callback used by gst_pad_add_probe(). Gets called to notify about the current
  * blocking type.
  */
-typedef void			(*GstPadBlockCallback)		(GstPad *pad, GstBlockType type, gpointer user_data);
+typedef GstProbeReturn      (*GstPadProbeCallback)              (GstPad *pad, GstProbeType type,
+                                                                 gpointer type_data, gpointer user_data);
 
 /**
  * GstPadStickyEventsForeachFunction:
@@ -617,11 +647,7 @@ struct _GstPad {
   /*< public >*/ /* with LOCK */
   /* block cond, mutex is from the object */
   GCond				*block_cond;
-  GstBlockType                   block_type;
-  GstPadBlockCallback		 block_callback;
-  gpointer			 block_data;
-  GDestroyNotify                 block_destroy_data;
-  gboolean                       block_callback_called;
+  GHookList                      probes;
 
   /* the pad capabilities */
   GstPadGetCapsFunction		getcapsfunc;
@@ -659,6 +685,7 @@ struct _GstPad {
    * of handlers attached. */
   gint				 do_buffer_signals;
   gint				 do_event_signals;
+  gint				 num_blocked;
 
   /*< private >*/
   GstPadPrivate                 *priv;
@@ -822,12 +849,12 @@ gboolean		gst_pad_is_active			(GstPad *pad);
 gboolean		gst_pad_activate_pull			(GstPad *pad, gboolean active);
 gboolean		gst_pad_activate_push			(GstPad *pad, gboolean active);
 
-gboolean		gst_pad_block                           (GstPad *pad,
-								 GstBlockType type,
-								 GstPadBlockCallback callback,
+gulong                  gst_pad_add_probe                       (GstPad *pad,
+								 GstProbeType mask,
+								 GstPadProbeCallback callback,
                                                                  gpointer user_data,
                                                                  GDestroyNotify destroy_data);
-void                    gst_pad_unblock                         (GstPad *pad);
+void                    gst_pad_remove_probe                    (GstPad *pad, gulong id);
 
 gboolean		gst_pad_is_blocked			(GstPad *pad);
 gboolean		gst_pad_is_blocking			(GstPad *pad);

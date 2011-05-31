@@ -238,7 +238,7 @@ static GMutex *probe_lock;
 static GCond *probe_cond;
 
 static gboolean
-sink_pad_probe (GstPad * pad, GstBuffer * buffer,
+sink_pad_probe (GstPad * pad, GstProbeType type, GstBuffer * buffer,
     GstClockTime * first_timestamp)
 {
   fail_if (GST_BUFFER_TIMESTAMP (buffer) == GST_CLOCK_TIME_NONE,
@@ -274,7 +274,8 @@ GST_START_TEST (test_base_time)
   gst_element_link (fakesrc, fakesink);
 
   sink = gst_element_get_static_pad (fakesink, "sink");
-  gst_pad_add_buffer_probe (sink, G_CALLBACK (sink_pad_probe), &observed, NULL);
+  gst_pad_add_probe (sink, GST_PROBE_TYPE_BUFFER,
+      (GstPadProbeCallback) sink_pad_probe, &observed, NULL);
 
   fail_unless (gst_element_set_state (pipeline, GST_STATE_PAUSED)
       == GST_STATE_CHANGE_NO_PREROLL, "expected no-preroll from live pipeline");

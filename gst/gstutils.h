@@ -936,28 +936,6 @@ GstPad *                gst_bin_find_unlinked_pad       (GstBin *bin, GstPadDire
 GstBuffer *		gst_buffer_merge		(GstBuffer * buf1, GstBuffer * buf2);
 GstBuffer *		gst_buffer_join			(GstBuffer * buf1, GstBuffer * buf2);
 
-/* probes */
-gulong			gst_pad_add_data_probe          (GstPad       * pad,
-							 GCallback      handler,
-							 gpointer       data,
-							 GDestroyNotify notify);
-
-void			gst_pad_remove_data_probe	(GstPad * pad, guint handler_id);
-
-gulong			gst_pad_add_event_probe         (GstPad       * pad,
-							 GCallback      handler,
-							 gpointer       data,
-							 GDestroyNotify notify);
-
-void			gst_pad_remove_event_probe	(GstPad * pad, guint handler_id);
-
-gulong			gst_pad_add_buffer_probe        (GstPad       * pad,
-							 GCallback      handler,
-							 gpointer       data,
-							 GDestroyNotify notify);
-
-void			gst_pad_remove_buffer_probe	(GstPad * pad, guint handler_id);
-
 /* tag emission utility functions */
 void			gst_element_found_tags_for_pad	(GstElement * element,
 							 GstPad * pad,

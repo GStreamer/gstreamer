@@ -42,7 +42,7 @@ struct _GstStreamConsistency
 };
 
 static gboolean
-source_pad_data_cb (GstPad * pad, GstMiniObject * data,
+source_pad_data_cb (GstPad * pad, GstProbeType type, GstMiniObject * data,
     GstStreamConsistency * consist)
 {
   if (GST_IS_BUFFER (data)) {
@@ -118,8 +118,8 @@ gst_consistency_checker_new (GstPad * pad)
   consist = g_new0 (GstStreamConsistency, 1);
   consist->pad = g_object_ref (pad);
   consist->probeid =
-      gst_pad_add_data_probe (pad, (GCallback) source_pad_data_cb, consist,
-      NULL);
+      gst_pad_add_probe (pad, GST_PROBE_TYPE_DATA,
+      (GstPadProbeCallback) source_pad_data_cb, consist, NULL);
 
   return consist;
 }
@@ -154,7 +154,7 @@ void
 gst_consistency_checker_free (GstStreamConsistency * consist)
 {
   /* Remove the data probe */
-  gst_pad_remove_data_probe (consist->pad, consist->probeid);
+  gst_pad_remove_probe (consist->pad, consist->probeid);
   g_object_unref (consist->pad);
   g_free (consist);
 }

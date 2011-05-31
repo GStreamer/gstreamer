@@ -249,14 +249,16 @@ GST_START_TEST (test_name_is_valid)
 
 GST_END_TEST;
 
-static gboolean
-_probe_handler (GstPad * pad, GstBuffer * buffer, gpointer userdata)
+static GstProbeReturn
+_probe_handler (GstPad * pad, GstProbeType type, GstBuffer * buffer,
+    gpointer userdata)
 {
   gint ret = GPOINTER_TO_INT (userdata);
 
   if (ret == 1)
-    return TRUE;
-  return FALSE;
+    return GST_PROBE_OK;
+
+  return GST_PROBE_DROP;
 }
 
 GST_START_TEST (test_push_unlinked)
@@ -276,6 +278,15 @@ GST_START_TEST (test_push_unlinked)
   gst_pad_set_caps (src, caps);
   ASSERT_CAPS_REFCOUNT (caps, "caps", 2);
 
+  /* pushing on an inactive pad will return wrong state */
+  buffer = gst_buffer_new ();
+  gst_buffer_ref (buffer);
+  fail_unless (gst_pad_push (src, buffer) == GST_FLOW_WRONG_STATE);
+  ASSERT_MINI_OBJECT_REFCOUNT (buffer, "buffer", 1);
+  gst_buffer_unref (buffer);
+
+  gst_pad_set_active (src, TRUE);
+
   /* pushing on an unlinked pad will drop the buffer */
   buffer = gst_buffer_new ();
   gst_buffer_ref (buffer);
@@ -285,25 +296,25 @@ GST_START_TEST (test_push_unlinked)
 
   /* adding a probe that returns FALSE will drop the buffer without trying
    * to chain */
-  id = gst_pad_add_buffer_probe (src, (GCallback) _probe_handler,
-      GINT_TO_POINTER (0), NULL);
+  id = gst_pad_add_probe (src, GST_PROBE_TYPE_BUFFER,
+      (GstPadProbeCallback) _probe_handler, GINT_TO_POINTER (0), NULL);
   buffer = gst_buffer_new ();
   gst_buffer_ref (buffer);
   fail_unless (gst_pad_push (src, buffer) == GST_FLOW_OK);
   ASSERT_MINI_OBJECT_REFCOUNT (buffer, "buffer", 1);
   gst_buffer_unref (buffer);
-  gst_pad_remove_buffer_probe (src, id);
+  gst_pad_remove_probe (src, id);
 
   /* adding a probe that returns TRUE will still chain the buffer,
    * and hence drop because pad is unlinked */
-  id = gst_pad_add_buffer_probe (src, (GCallback) _probe_handler,
-      GINT_TO_POINTER (1), NULL);
+  id = gst_pad_add_probe (src, GST_PROBE_TYPE_BUFFER,
+      (GstPadProbeCallback) _probe_handler, GINT_TO_POINTER (1), NULL);
   buffer = gst_buffer_new ();
   gst_buffer_ref (buffer);
   fail_unless (gst_pad_push (src, buffer) == GST_FLOW_NOT_LINKED);
   ASSERT_MINI_OBJECT_REFCOUNT (buffer, "buffer", 1);
   gst_buffer_unref (buffer);
-  gst_pad_remove_buffer_probe (src, id);
+  gst_pad_remove_probe (src, id);
 
 
   /* cleanup */
@@ -376,23 +387,23 @@ GST_START_TEST (test_push_linked)
 
   /* adding a probe that returns FALSE will drop the buffer without trying
    * to chain */
-  id = gst_pad_add_buffer_probe (src, (GCallback) _probe_handler,
-      GINT_TO_POINTER (0), NULL);
+  id = gst_pad_add_probe (src, GST_PROBE_TYPE_BUFFER,
+      (GstPadProbeCallback) _probe_handler, GINT_TO_POINTER (0), NULL);
   buffer = gst_buffer_new ();
   gst_buffer_ref (buffer);
   fail_unless (gst_pad_push (src, buffer) == GST_FLOW_OK);
   ASSERT_MINI_OBJECT_REFCOUNT (buffer, "buffer", 1);
   gst_buffer_unref (buffer);
-  gst_pad_remove_buffer_probe (src, id);
+  gst_pad_remove_probe (src, id);
   fail_unless_equals_int (g_list_length (buffers), 0);
 
   /* adding a probe that returns TRUE will still chain the buffer */
-  id = gst_pad_add_buffer_probe (src, (GCallback) _probe_handler,
-      GINT_TO_POINTER (1), NULL);
+  id = gst_pad_add_probe (src, GST_PROBE_TYPE_BUFFER,
+      (GstPadProbeCallback) _probe_handler, GINT_TO_POINTER (1), NULL);
   buffer = gst_buffer_new ();
   gst_buffer_ref (buffer);
   fail_unless (gst_pad_push (src, buffer) == GST_FLOW_OK);
-  gst_pad_remove_buffer_probe (src, id);
+  gst_pad_remove_probe (src, id);
 
   ASSERT_MINI_OBJECT_REFCOUNT (buffer, "buffer", 2);
   gst_buffer_unref (buffer);
@@ -681,12 +692,15 @@ GST_START_TEST (test_sink_unref_unlink)
 
 GST_END_TEST;
 
-static void
-block_async_cb (GstPad * pad, GstBlockType type, gpointer user_data)
+static gulong id;
+
+static GstProbeReturn
+block_async_cb (GstPad * pad, GstProbeType type, gpointer type_data,
+    gpointer user_data)
 {
   gboolean *bool_user_data = (gboolean *) user_data;
 
-  fail_unless ((type & GST_BLOCK_TYPE_DATA) != 0);
+  fail_unless ((type & GST_PROBE_TYPE_BLOCK) != 0);
 
   /* here we should have blocked == 0 unblocked == 0 */
   fail_unless (bool_user_data[0] == FALSE);
@@ -694,8 +708,10 @@ block_async_cb (GstPad * pad, GstBlockType type, gpointer user_data)
 
   bool_user_data[0] = TRUE;
 
-  gst_pad_unblock (pad);
+  gst_pad_remove_probe (pad, id);
   bool_user_data[1] = TRUE;
+
+  return GST_PROBE_OK;
 }
 
 GST_START_TEST (test_block_async)
@@ -709,7 +725,8 @@ GST_START_TEST (test_block_async)
   fail_unless (pad != NULL);
 
   gst_pad_set_active (pad, TRUE);
-  gst_pad_block (pad, GST_BLOCK_TYPE_DATA, block_async_cb, &data, NULL);
+  id = gst_pad_add_probe (pad, GST_PROBE_TYPE_BLOCK, block_async_cb, &data,
+      NULL);
 
   fail_unless (data[0] == FALSE);
   fail_unless (data[1] == FALSE);
@@ -786,13 +803,16 @@ block_async_full_destroy (gpointer user_data)
   *state = 2;
 }
 
-static void
-block_async_full_cb (GstPad * pad, GstBlockType type, gpointer user_data)
+static GstProbeReturn
+block_async_full_cb (GstPad * pad, GstProbeType type, gpointer type_data,
+    gpointer user_data)
 {
   *(gint *) user_data = (gint) TRUE;
 
   gst_pad_push_event (pad, gst_event_new_flush_start ());
   GST_DEBUG ("setting state to 1");
+
+  return GST_PROBE_OK;
 }
 
 GST_START_TEST (test_block_async_full_destroy)
@@ -800,12 +820,13 @@ GST_START_TEST (test_block_async_full_destroy)
   GstPad *pad;
   /* 0 = unblocked, 1 = blocked, 2 = destroyed */
   gint state = 0;
+  gulong id;
 
   pad = gst_pad_new ("src", GST_PAD_SRC);
   fail_unless (pad != NULL);
   gst_pad_set_active (pad, TRUE);
 
-  gst_pad_block (pad, GST_BLOCK_TYPE_DATA, block_async_full_cb,
+  id = gst_pad_add_probe (pad, GST_PROBE_TYPE_BLOCK, block_async_full_cb,
       &state, block_async_full_destroy);
   fail_unless (state == 0);
 
@@ -815,25 +836,8 @@ GST_START_TEST (test_block_async_full_destroy)
   fail_unless (state == 1);
   gst_pad_push_event (pad, gst_event_new_flush_stop ());
 
-  /* pad was already blocked so nothing happens */
-  gst_pad_block (pad, GST_BLOCK_TYPE_DATA, block_async_full_cb,
-      &state, block_async_full_destroy);
-  fail_unless (state == 1);
-
   /* unblock callback is called */
-  gst_pad_unblock (pad);
-  fail_unless (state == 2);
-
-  /* block with the same data, nothing is called */
-  state = 1;
-  gst_pad_block (pad, GST_BLOCK_TYPE_DATA, block_async_full_cb,
-      &state, block_async_full_destroy);
-  fail_unless (state == 1);
-
-  /* now change user_data (to NULL in this case) so destroy_notify should be
-   * called */
-  state = 1;
-  gst_pad_unblock (pad);
+  gst_pad_remove_probe (pad, id);
   fail_unless (state == 2);
 
   gst_object_unref (pad);
@@ -846,12 +850,13 @@ GST_START_TEST (test_block_async_full_destroy_dispose)
   GstPad *pad;
   /* 0 = unblocked, 1 = blocked, 2 = destroyed */
   gint state = 0;
+  gulong id;
 
   pad = gst_pad_new ("src", GST_PAD_SRC);
   fail_unless (pad != NULL);
   gst_pad_set_active (pad, TRUE);
 
-  gst_pad_block (pad, GST_BLOCK_TYPE_DATA, block_async_full_cb,
+  id = gst_pad_add_probe (pad, GST_PROBE_TYPE_BLOCK, block_async_full_cb,
       &state, block_async_full_destroy);
 
   gst_pad_push (pad, gst_buffer_new ());
@@ -860,7 +865,7 @@ GST_START_TEST (test_block_async_full_destroy_dispose)
   fail_unless_equals_int (state, 1);
   gst_pad_push_event (pad, gst_event_new_flush_stop ());
 
-  /* gst_pad_dispose calls the destroy_notify function if necessary */
+  /* gst_BLOCK calls the destroy_notify function if necessary */
   gst_object_unref (pad);
 
   fail_unless_equals_int (state, 2);
@@ -896,13 +901,13 @@ unblock_async_not_called (GstPad * pad, gboolean blocked, gpointer user_data)
 }
 #endif
 
-static void
-block_async_second_no_flush (GstPad * pad, GstBlockType type,
-    gpointer user_data)
+static GstProbeReturn
+block_async_second_no_flush (GstPad * pad, GstProbeType type,
+    gpointer type_data, gpointer user_data)
 {
   gboolean *bool_user_data = (gboolean *) user_data;
 
-  fail_unless (type & GST_BLOCK_TYPE_DATA);
+  fail_unless (type & GST_PROBE_TYPE_BLOCK);
 
   fail_unless (bool_user_data[0] == TRUE);
   fail_unless (bool_user_data[1] == FALSE);
@@ -910,16 +915,19 @@ block_async_second_no_flush (GstPad * pad, GstBlockType type,
 
   bool_user_data[1] = TRUE;
 
-  gst_pad_unblock (pad);
+  gst_pad_remove_probe (pad, id);
+
+  return GST_PROBE_OK;
 }
 
-static void
-block_async_first_no_flush (GstPad * pad, GstBlockType type, gpointer user_data)
+static GstProbeReturn
+block_async_first_no_flush (GstPad * pad, GstProbeType type, gpointer type_data,
+    gpointer user_data)
 {
   static int n_calls = 0;
   gboolean *bool_user_data = (gboolean *) user_data;
 
-  fail_unless (type & GST_BLOCK_TYPE_DATA);
+  fail_unless (type & GST_PROBE_TYPE_BLOCK);
 
   if (++n_calls > 1)
     /* we expect this callback to be called only once */
@@ -931,12 +939,14 @@ block_async_first_no_flush (GstPad * pad, GstBlockType type, gpointer user_data)
   fail_unless (bool_user_data[1] == FALSE);
   fail_unless (bool_user_data[2] == FALSE);
 
-  gst_pad_unblock (pad);
+  gst_pad_remove_probe (pad, id);
 
   /* replace block_async_first with block_async_second so next time the pad is
    * blocked the latter should be called */
-  fail_unless (gst_pad_block (pad, GST_BLOCK_TYPE_DATA,
-          block_async_second_no_flush, user_data, NULL));
+  id = gst_pad_add_probe (pad, GST_PROBE_TYPE_BLOCK,
+      block_async_second_no_flush, user_data, NULL);
+
+  return GST_PROBE_OK;
 }
 
 GST_START_TEST (test_block_async_replace_callback_no_flush)
@@ -948,8 +958,9 @@ GST_START_TEST (test_block_async_replace_callback_no_flush)
   fail_unless (pad != NULL);
   gst_pad_set_active (pad, TRUE);
 
-  fail_unless (gst_pad_block (pad, GST_BLOCK_TYPE_DATA,
-          block_async_first_no_flush, bool_user_data, NULL));
+  id = gst_pad_add_probe (pad, GST_PROBE_TYPE_BLOCK,
+      block_async_first_no_flush, bool_user_data, NULL);
+  fail_if (id == 0);
 
   gst_pad_push (pad, gst_buffer_new ());
   fail_unless (bool_user_data[0] == TRUE);

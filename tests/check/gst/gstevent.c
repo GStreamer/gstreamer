@@ -264,14 +264,15 @@ static GTimeVal sent_event_time;
 static GstEvent *got_event_before_q, *got_event_after_q;
 static GTimeVal got_event_time;
 
-static gboolean
-event_probe (GstPad * pad, GstMiniObject ** data, gpointer user_data)
+static GstProbeReturn
+event_probe (GstPad * pad, GstProbeType type, GstMiniObject * data,
+    gpointer user_data)
 {
   gboolean before_q = (gboolean) GPOINTER_TO_INT (user_data);
 
-  fail_unless (GST_IS_EVENT (data));
+  GST_DEBUG ("event probe called %p", data);
 
-  GST_DEBUG ("event probe called");
+  fail_unless (GST_IS_EVENT (data));
 
   if (before_q) {
     switch (GST_EVENT_TYPE (GST_EVENT (data))) {
@@ -304,7 +305,7 @@ event_probe (GstPad * pad, GstMiniObject ** data, gpointer user_data)
     }
   }
 
-  return TRUE;
+  return GST_PROBE_OK;
 }
 
 
@@ -318,6 +319,7 @@ typedef struct
 static void
 signal_data_init (SignalData * data)
 {
+  GST_DEBUG ("init %p", data);
   data->lock = g_mutex_new ();
   data->cond = g_cond_new ();
   data->signaled = FALSE;
@@ -326,6 +328,7 @@ signal_data_init (SignalData * data)
 static void
 signal_data_cleanup (SignalData * data)
 {
+  GST_DEBUG ("free %p", data);
   g_mutex_free (data->lock);
   g_cond_free (data->cond);
 }
@@ -336,6 +339,7 @@ signal_data_signal (SignalData * data)
   g_mutex_lock (data->lock);
   data->signaled = TRUE;
   g_cond_broadcast (data->cond);
+  GST_DEBUG ("signaling %p", data);
   g_mutex_unlock (data->lock);
 }
 
@@ -343,17 +347,24 @@ static void
 signal_data_wait (SignalData * data)
 {
   g_mutex_lock (data->lock);
+  GST_DEBUG ("signal wait %p", data);
   while (!data->signaled)
     g_cond_wait (data->cond, data->lock);
+  GST_DEBUG ("signal wait done %p", data);
   g_mutex_unlock (data->lock);
 }
 
-static void
-signal_blocked (GstPad * pad, GstBlockType type, gpointer user_data)
+static GstProbeReturn
+signal_blocked (GstPad * pad, GstProbeType type, gpointer type_data,
+    gpointer user_data)
 {
   SignalData *data = (SignalData *) user_data;
 
+  GST_DEBUG ("signal called %p", data);
   signal_data_signal (data);
+  GST_DEBUG ("signal done %p", data);
+
+  return GST_PROBE_OK;
 }
 
 static void test_event
@@ -364,6 +375,7 @@ static void test_event
   GstPad *peer;
   gint i;
   SignalData data;
+  gulong id;
 
   got_event_before_q = got_event_after_q = NULL;
 
@@ -382,8 +394,9 @@ static void test_event
   signal_data_init (&data);
 
   /* We block the pad so the stream lock is released and we can send the event */
-  fail_unless (gst_pad_block (fake_srcpad, GST_BLOCK_TYPE_DATA,
-          signal_blocked, &data, NULL) == TRUE);
+  id = gst_pad_add_probe (fake_srcpad, GST_PROBE_TYPE_BLOCK,
+      signal_blocked, &data, NULL);
+  fail_unless (id != 0);
 
   signal_data_wait (&data);
 
@@ -392,8 +405,7 @@ static void test_event
   gst_pad_send_event (peer, event);
   gst_object_unref (peer);
 
-  gst_pad_unblock (fake_srcpad);
-  signal_data_cleanup (&data);
+  gst_pad_remove_probe (fake_srcpad, id);
 
   if (expect_before_q) {
     /* Wait up to 5 seconds for the event to appear */
@@ -428,6 +440,8 @@ static void test_event
     gst_event_unref (got_event_after_q);
 
   got_event_before_q = got_event_after_q = NULL;
+
+  signal_data_cleanup (&data);
 }
 
 static gint64
@@ -464,12 +478,12 @@ GST_START_TEST (send_custom_events)
 
   /* add pad-probes to faksrc.src and fakesink.sink */
   fail_if ((srcpad = gst_element_get_static_pad (fakesrc, "src")) == NULL);
-  gst_pad_add_event_probe (srcpad, (GCallback) event_probe,
-      GINT_TO_POINTER (TRUE), NULL);
+  gst_pad_add_probe (srcpad, GST_PROBE_TYPE_EVENT,
+      (GstPadProbeCallback) event_probe, GINT_TO_POINTER (TRUE), NULL);
 
   fail_if ((sinkpad = gst_element_get_static_pad (fakesink, "sink")) == NULL);
-  gst_pad_add_event_probe (sinkpad, (GCallback) event_probe,
-      GINT_TO_POINTER (FALSE), NULL);
+  gst_pad_add_probe (sinkpad, GST_PROBE_TYPE_EVENT,
+      (GstPadProbeCallback) event_probe, GINT_TO_POINTER (FALSE), NULL);
 
   /* Upstream events */
   test_event (pipeline, GST_EVENT_CUSTOM_UPSTREAM, sinkpad, TRUE, srcpad);
