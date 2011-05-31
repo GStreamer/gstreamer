@@ -1482,10 +1482,6 @@ gst_base_sink_commit_state (GstBaseSink * basesink)
   switch (pending) {
     case GST_STATE_PLAYING:
     {
-      GstBaseSinkClass *bclass;
-
-      bclass = GST_BASE_SINK_GET_CLASS (basesink);
-
       GST_DEBUG_OBJECT (basesink, "commiting state to PLAYING");
 
       basesink->need_preroll = FALSE;

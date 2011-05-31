@@ -368,12 +368,10 @@ static void
 gst_bin_class_init (GstBinClass * klass)
 {
   GObjectClass *gobject_class;
-  GstObjectClass *gstobject_class;
   GstElementClass *gstelement_class;
   GError *err;
 
   gobject_class = (GObjectClass *) klass;
-  gstobject_class = (GstObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
   g_type_class_add_private (klass, sizeof (GstBinPrivate));

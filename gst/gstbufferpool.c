@@ -294,12 +294,9 @@ do_stop (GstBufferPool * pool)
 gboolean
 gst_buffer_pool_set_active (GstBufferPool * pool, gboolean active)
 {
-  GstBufferPoolClass *pclass;
   gboolean res = TRUE;
 
   g_return_val_if_fail (GST_IS_BUFFER_POOL (pool), FALSE);
-
-  pclass = GST_BUFFER_POOL_GET_CLASS (pool);
 
   GST_LOG_OBJECT (pool, "active %d", active);
 
