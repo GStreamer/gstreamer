@@ -244,7 +244,6 @@ gst_segment_do_seek (GstSegment * segment, gdouble rate,
 
   update_start = update_stop = TRUE;
 
-  base = segment->base;
   position = segment->position;
 
   if (flags & GST_SEEK_FLAG_FLUSH) {
