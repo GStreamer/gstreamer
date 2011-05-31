@@ -371,7 +371,6 @@ gst_output_selector_buffer_alloc (GstPad * pad, guint64 offset, guint size,
   sel = GST_OUTPUT_SELECTOR (gst_pad_get_parent (pad));
   if (G_UNLIKELY (sel == NULL))
     return GST_FLOW_WRONG_STATE;
-  res = GST_FLOW_NOT_LINKED;
 
   GST_OBJECT_LOCK (sel);
   allocpad = sel->pending_srcpad ? sel->pending_srcpad : sel->active_srcpad;
