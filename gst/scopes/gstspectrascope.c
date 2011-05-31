@@ -1,7 +1,7 @@
 /* GStreamer
  * Copyright (C) <2011> Stefan Kost <ensonic@users.sf.net>
  *
- * gstspectrascope.c: simple oscilloscope
+ * gstspectrascope.c: frequency spectrum scope
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -71,9 +71,9 @@ gst_spectra_scope_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details_simple (element_class, "Waveform oscilloscope",
-      "Visualization",
-      "Simple waveform oscilloscope", "Stefan Kost <ensonic@users.sf.net>");
+  gst_element_class_set_details_simple (element_class,
+      "Frequency spectrum scope", "Visualization",
+      "Simple frequency spectrum scope", "Stefan Kost <ensonic@users.sf.net>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_spectra_scope_src_template));

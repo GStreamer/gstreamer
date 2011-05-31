@@ -1,7 +1,7 @@
 /* GStreamer
  * Copyright (C) <2011> Stefan Kost <ensonic@users.sf.net>
  *
- * gstsynaescope.c: simple oscilloscope
+ * gstsynaescope.c: frequency spectrum scope
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -70,9 +70,10 @@ gst_synae_scope_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details_simple (element_class, "Waveform oscilloscope",
+  gst_element_class_set_details_simple (element_class, "Synaescope",
       "Visualization",
-      "Simple waveform oscilloscope", "Stefan Kost <ensonic@users.sf.net>");
+      "Creates video visualizations of audio input, using stereo and pitch information",
+      "Stefan Kost <ensonic@users.sf.net>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_synae_scope_src_template));
