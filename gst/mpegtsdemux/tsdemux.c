@@ -877,7 +877,7 @@ find_timestamps (MpegTSBase * base, guint64 initoff, guint64 * offset)
    * for the final PCR */
   mpegts_base_remove_program (base, demux->current_program_number);
 
-  if (ret != GST_FLOW_OK) {
+  if (ret != GST_FLOW_OK && ret != GST_FLOW_UNEXPECTED) {
     GST_WARNING ("Problem getting initial PCRs");
     goto beach;
   }
@@ -892,7 +892,9 @@ find_timestamps (MpegTSBase * base, guint64 initoff, guint64 * offset)
   }
   GST_DEBUG ("Upstream is %" G_GINT64_FORMAT " bytes", total_bytes);
 
-  scan_offset = total_bytes - 4000 * MPEGTS_MAX_PACKETSIZE;
+
+  /* Let's start scanning 4000 packets from the end */
+  scan_offset = MAX (188, total_bytes - 4000 * MPEGTS_MAX_PACKETSIZE);
 
   GST_DEBUG ("Scanning for last sync point between:%" G_GINT64_FORMAT
       " and the end:%" G_GINT64_FORMAT, scan_offset, total_bytes);
@@ -912,7 +914,7 @@ find_timestamps (MpegTSBase * base, guint64 initoff, guint64 * offset)
 
   GST_DEBUG ("Searching PCR");
   ret =
-      process_pcr (base, total_bytes - 4000 * MPEGTS_MAX_PACKETSIZE, &final, 10,
+      process_pcr (base, scan_offset - 50 * MPEGTS_MAX_PACKETSIZE, &final, 10,
       FALSE);
 
   if (ret != GST_FLOW_OK) {
