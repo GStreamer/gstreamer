@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) 2011 FIXME <fixme@example.com>
+ * Copyright (C) 2011 David Schleef <ds@schleef.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -19,15 +19,6 @@
 /**
  * SECTION:element-gstvideofilter2
  *
- * The videofilter2 element does FIXME stuff.
- *
- * <refsect2>
- * <title>Example launch line</title>
- * |[
- * gst-launch -v fakesrc ! videofilter2 ! FIXME ! fakesink
- * ]|
- * FIXME Describe what the pipeline does.
- * </refsect2>
  */
 
 #ifdef HAVE_CONFIG_H
