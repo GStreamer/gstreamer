@@ -80,7 +80,8 @@
 #include <gst/video/video.h>
 #include <string.h>
 #include <stdlib.h>
-#include "_stdint.h"
+#include <_stdint.h>
+#include "gstbayerorc.h"
 
 #define GST_CAT_DEFAULT gst_bayer2rgb_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
@@ -125,7 +126,6 @@ struct _GstBayer2RGBClass
   GstBaseTransformClass parent;
 };
 
-//#define SRC_CAPS GST_VIDEO_CAPS_RGBx
 #define	SRC_CAPS                                 \
   GST_VIDEO_CAPS_RGBx ";"                        \
   GST_VIDEO_CAPS_xRGB ";"                        \
@@ -134,9 +134,7 @@ struct _GstBayer2RGBClass
   GST_VIDEO_CAPS_RGBA ";"                        \
   GST_VIDEO_CAPS_ARGB ";"                        \
   GST_VIDEO_CAPS_BGRA ";"                        \
-  GST_VIDEO_CAPS_ABGR ";"                        \
-  GST_VIDEO_CAPS_RGB ";"                         \
-  GST_VIDEO_CAPS_BGR
+  GST_VIDEO_CAPS_ABGR
 
 #define SINK_CAPS "video/x-raw-bayer,format=(string){bggr,grbg,gbrg,rggb}," \
   "width=(int)[1,MAX],height=(int)[1,MAX],framerate=(fraction)[0/1,MAX]"
@@ -365,7 +363,6 @@ gst_bayer2rgb_get_unit_size (GstBaseTransform * base, GstCaps * caps,
     name = gst_structure_get_name (structure);
     /* Our name must be either video/x-raw-bayer video/x-raw-rgb */
     if (strcmp (name, "video/x-raw-rgb")) {
-      /* For bayer, we handle only BA81 (BGGR), which is BPP=24 */
       *size = GST_ROUND_UP_4 (width) * height;
       return TRUE;
     } else {
@@ -382,280 +379,106 @@ gst_bayer2rgb_get_unit_size (GstBaseTransform * base, GstCaps * caps,
   return FALSE;
 }
 
-#define RECONSTRUCT_SQUARE(x) \
-  do { \
-    int _h1 = next[i-1]; \
-    int _h2 = prev[i+1]; \
-    int _v1 = next[i+1]; \
-    int _v2 = prev[i-1]; \
-    (x) = (_h1+_h2+_v1+_v2+2)>>2; \
-  } while (0)
-
-#define RECONSTRUCT_DIAMOND(x) \
-  do { \
-    int _h1 = src[i-1]; \
-    int _h2 = src[i+1]; \
-    int _v1 = next[i]; \
-    int _v2 = prev[i]; \
-    (x) = (_h1+_h2+_v1+_v2+2)>>2; \
-  } while (0)
-
-#define RECONSTRUCT_HORIZ(x) \
-  do { \
-    (x) = (src[i-1] + src[i+1] + 1) >> 1; \
-  } while (0)
-
-#define RECONSTRUCT_VERT(x) \
-  do { \
-    (x) = (next[i] + prev[i] + 1) >> 1; \
-  } while (0)
-
-
 static void
-reconstruct_blue_green (GstBayer2RGB * bayer2rgb, uint8_t * dest,
-    uint8_t * src, int src_stride, int blue_loc)
+gst_bayer2rgb_split_and_upsample_horiz (guint8 * dest0, guint8 * dest1,
+    const guint8 * src, int n)
 {
   int i;
-  int r, g, b;
-  uint8_t *prev;
-  uint8_t *next;
-  int width = bayer2rgb->width;
 
-  prev = src - src_stride;
-  next = src + src_stride;
+  dest0[0] = src[0];
+  dest1[0] = src[1];
+  dest0[1] = (src[0] + src[2] + 1) >> 1;
+  dest1[1] = src[1];
 
-  i = 0;
-  if ((i & 1) == blue_loc) {
-    b = src[i];
-    r = (next[i + 1] + prev[i + 1] + 1) >> 1;
-    g = (next[i] + prev[i] + 1) >> 1;
-  } else {
-    b = src[i + 1];
-    r = (next[i] + prev[i] + 1) >> 1;
-    g = src[i];
-  }
-  dest[i * 4 + bayer2rgb->r_off] = r;
-  dest[i * 4 + bayer2rgb->g_off] = g;
-  dest[i * 4 + bayer2rgb->b_off] = b;
-  for (i = 1; i < width - 1; i++) {
-    if ((i & 1) == blue_loc) {
-      b = src[i];
-      RECONSTRUCT_SQUARE (r);
-      RECONSTRUCT_DIAMOND (g);
+#if defined(__i386__) || defined(__amd64__)
+  gst_bayer_horiz_upsample_unaligned (dest0 + 2, dest1 + 2, src + 1,
+      (n - 4) >> 1);
+#else
+  gst_bayer_horiz_upsample (dest0 + 2, dest1 + 2, src + 2, (n - 4) >> 1);
+#endif
+
+  for (i = n - 2; i < n; i++) {
+    if ((i & 1) == 0) {
+      dest0[i] = src[i];
+      dest1[i] = src[i - 1];
     } else {
-      RECONSTRUCT_HORIZ (b);
-      RECONSTRUCT_VERT (r);
-      g = src[i];
+      dest0[i] = src[i - 1];
+      dest1[i] = src[i];
     }
-    dest[i * 4 + bayer2rgb->r_off] = r;
-    dest[i * 4 + bayer2rgb->g_off] = g;
-    dest[i * 4 + bayer2rgb->b_off] = b;
   }
-  if ((i & 1) == blue_loc) {
-    b = src[i];
-    r = (next[i - 1] + prev[i - 1] + 1) >> 1;
-    g = (next[i] + prev[i] + 1) >> 1;
-  } else {
-    b = src[i - 1];
-    r = (next[i] + prev[i] + 1) >> 1;
-    g = src[i];
-  }
-  dest[i * 4 + bayer2rgb->r_off] = r;
-  dest[i * 4 + bayer2rgb->g_off] = g;
-  dest[i * 4 + bayer2rgb->b_off] = b;
 }
 
-static void
-reconstruct_green_red (GstBayer2RGB * bayer2rgb, uint8_t * dest,
-    uint8_t * src, int src_stride, int red_loc)
-{
-  int i;
-  int r, g, b;
-  uint8_t *prev;
-  uint8_t *next;
-  int width = bayer2rgb->width;
-
-  prev = src - src_stride;
-  next = src + src_stride;
-
-  i = 0;
-  if ((i & 1) == red_loc) {
-    r = src[i];
-    b = (next[i + 1] + prev[i + 1] + 1) >> 1;
-    g = (next[i] + prev[i] + 1) >> 1;
-  } else {
-    r = src[i + 1];
-    b = (next[i] + prev[i] + 1) >> 1;
-    g = src[i];
-  }
-  dest[i * 4 + bayer2rgb->r_off] = r;
-  dest[i * 4 + bayer2rgb->g_off] = g;
-  dest[i * 4 + bayer2rgb->b_off] = b;
-  for (i = 1; i < width - 1; i++) {
-    if ((i & 1) == red_loc) {
-      r = src[i];
-      RECONSTRUCT_SQUARE (b);
-      RECONSTRUCT_DIAMOND (g);
-    } else {
-      RECONSTRUCT_HORIZ (r);
-      RECONSTRUCT_VERT (b);
-      g = src[i];
-    }
-    dest[i * 4 + bayer2rgb->r_off] = r;
-    dest[i * 4 + bayer2rgb->g_off] = g;
-    dest[i * 4 + bayer2rgb->b_off] = b;
-  }
-  if ((i & 1) == red_loc) {
-    r = src[i];
-    b = (next[i - 1] + prev[i - 1] + 1) >> 1;
-    g = (next[i] + prev[i] + 1) >> 1;
-  } else {
-    r = src[i - 1];
-    b = (next[i] + prev[i] + 1) >> 1;
-    g = src[i];
-  }
-  dest[i * 4 + bayer2rgb->r_off] = r;
-  dest[i * 4 + bayer2rgb->g_off] = g;
-  dest[i * 4 + bayer2rgb->b_off] = b;
-}
+typedef void (*process_func) (guint8 * d0, const guint8 * s0, const guint8 * s1,
+    const guint8 * s2, const guint8 * s3, const guint8 * s4, const guint8 * s5,
+    int n);
 
 static void
-reconstruct_blue_green_edge (GstBayer2RGB * bayer2rgb, uint8_t * dest,
-    uint8_t * src, int src_stride, int blue_loc, int offset)
-{
-  int i;
-  int r, g, b;
-  uint8_t *next;
-  int width = bayer2rgb->width;
-
-  next = src + offset * src_stride;
-
-  i = 0;
-  if ((i & 1) == blue_loc) {
-    b = src[i];
-    r = next[i + 1];
-    g = next[i];
-  } else {
-    b = src[i + 1];
-    r = next[i];
-    g = src[i];
-  }
-  dest[i * 4 + bayer2rgb->r_off] = r;
-  dest[i * 4 + bayer2rgb->g_off] = g;
-  dest[i * 4 + bayer2rgb->b_off] = b;
-  for (i = 1; i < width - 1; i++) {
-    if ((i & 1) == blue_loc) {
-      b = src[i];
-      r = (next[i - 1] + next[i + 1] + 1) >> 1;
-      g = (src[i - 1] + src[i + 1] + 1) >> 1;
-    } else {
-      b = (src[i - 1] + src[i + 1] + 1) >> 1;
-      r = next[i];
-      g = src[i];
-    }
-    dest[i * 4 + bayer2rgb->r_off] = r;
-    dest[i * 4 + bayer2rgb->g_off] = g;
-    dest[i * 4 + bayer2rgb->b_off] = b;
-  }
-  if ((i & 1) == blue_loc) {
-    b = src[i];
-    r = next[i - 1];
-    g = next[i];
-  } else {
-    b = src[i - 1];
-    r = next[i];
-    g = src[i];
-  }
-  dest[i * 4 + bayer2rgb->r_off] = r;
-  dest[i * 4 + bayer2rgb->g_off] = g;
-  dest[i * 4 + bayer2rgb->b_off] = b;
-}
-
-static void
-reconstruct_green_red_edge (GstBayer2RGB * bayer2rgb, uint8_t * dest,
-    uint8_t * src, int src_stride, int red_loc, int offset)
-{
-  int i;
-  int r, g, b;
-  uint8_t *next;
-  int width = bayer2rgb->width;
-
-  next = src + offset * src_stride;
-
-  i = 0;
-  if ((i & 1) == red_loc) {
-    r = src[i];
-    b = next[i + 1];
-    g = next[i];
-  } else {
-    r = src[i + 1];
-    b = next[i];
-    g = src[i];
-  }
-  dest[i * 4 + bayer2rgb->r_off] = r;
-  dest[i * 4 + bayer2rgb->g_off] = g;
-  dest[i * 4 + bayer2rgb->b_off] = b;
-  for (i = 1; i < width - 1; i++) {
-    if ((i & 1) == red_loc) {
-      r = src[i];
-      b = (next[i - 1] + next[i + 1] + 1) >> 1;
-      g = (src[i - 1] + src[i + 1] + 1) >> 1;
-    } else {
-      r = (src[i - 1] + src[i + 1] + 1) >> 1;
-      b = next[i];
-      g = src[i];
-    }
-    dest[i * 4 + bayer2rgb->r_off] = r;
-    dest[i * 4 + bayer2rgb->g_off] = g;
-    dest[i * 4 + bayer2rgb->b_off] = b;
-  }
-  if ((i & 1) == red_loc) {
-    r = src[i];
-    b = next[i - 1];
-    g = next[i];
-  } else {
-    r = src[i - 1];
-    b = next[i];
-    g = src[i];
-  }
-  dest[i * 4 + bayer2rgb->r_off] = r;
-  dest[i * 4 + bayer2rgb->g_off] = g;
-  dest[i * 4 + bayer2rgb->b_off] = b;
-}
-
-static void
-gst_bayer2rgb_process_ref (GstBayer2RGB * bayer2rgb, uint8_t * dest,
+gst_bayer2rgb_process (GstBayer2RGB * bayer2rgb, uint8_t * dest,
     int dest_stride, uint8_t * src, int src_stride)
 {
   int j;
-  int format = bayer2rgb->format;
+  guint8 *tmp;
+  process_func merge[2] = { NULL, NULL };
+  int r_off, g_off, b_off;
 
+  /* We exploit some symmetry in the functions here.  The base functions
+   * are all named for the BGGR arrangement.  For RGGB, we swap the
+   * red offset and blue offset in the output.  For GRBG, we swap the
+   * order of the merge functions.  For GBRG, do both. */
+  r_off = bayer2rgb->r_off;
+  g_off = bayer2rgb->g_off;
+  b_off = bayer2rgb->b_off;
+  if (bayer2rgb->format == GST_BAYER_2_RGB_FORMAT_RGGB ||
+      bayer2rgb->format == GST_BAYER_2_RGB_FORMAT_GBRG) {
+    r_off = bayer2rgb->b_off;
+    b_off = bayer2rgb->r_off;
+  }
+
+  if (r_off == 2 && g_off == 1 && b_off == 0) {
+    merge[0] = gst_bayer_merge_bg_bgra;
+    merge[1] = gst_bayer_merge_gr_bgra;
+  } else if (r_off == 3 && g_off == 2 && b_off == 1) {
+    merge[0] = gst_bayer_merge_bg_abgr;
+    merge[1] = gst_bayer_merge_gr_abgr;
+  } else if (r_off == 1 && g_off == 2 && b_off == 3) {
+    merge[0] = gst_bayer_merge_bg_argb;
+    merge[1] = gst_bayer_merge_gr_argb;
+  } else if (r_off == 0 && g_off == 1 && b_off == 2) {
+    merge[0] = gst_bayer_merge_bg_rgba;
+    merge[1] = gst_bayer_merge_gr_rgba;
+  }
+  if (bayer2rgb->format == GST_BAYER_2_RGB_FORMAT_GRBG ||
+      bayer2rgb->format == GST_BAYER_2_RGB_FORMAT_GBRG) {
+    process_func tmp = merge[0];
+    merge[0] = merge[1];
+    merge[1] = tmp;
+  }
+
+  tmp = g_malloc (2 * 4 * bayer2rgb->width);
+#define LINE(x) (tmp + ((x)&7) * bayer2rgb->width)
+
+  gst_bayer2rgb_split_and_upsample_horiz (LINE (3 * 2 + 0), LINE (3 * 2 + 1),
+      src + 1 * src_stride, bayer2rgb->width);
   j = 0;
-  if ((j & 1) == (format & 2) >> 1) {
-    reconstruct_blue_green_edge (bayer2rgb, dest + j * dest_stride,
-        src + j * src_stride, src_stride, format & 1, 1);
-  } else {
-    reconstruct_green_red_edge (bayer2rgb, dest + j * dest_stride,
-        src + j * src_stride, src_stride, (format & 1) ^ 1, 1);
-  }
-  for (j = 1; j < bayer2rgb->height - 1; j++) {
-    if ((j & 1) == (format & 2) >> 1) {
-      reconstruct_blue_green (bayer2rgb, dest + j * dest_stride,
-          src + j * src_stride, src_stride, format & 1);
-    } else {
-      reconstruct_green_red (bayer2rgb, dest + j * dest_stride,
-          src + j * src_stride, src_stride, (format & 1) ^ 1);
+  gst_bayer2rgb_split_and_upsample_horiz (LINE (j * 2 + 0), LINE (j * 2 + 1),
+      src + j * src_stride, bayer2rgb->width);
+
+  for (j = 0; j < bayer2rgb->height; j++) {
+    if (j < bayer2rgb->height - 1) {
+      gst_bayer2rgb_split_and_upsample_horiz (LINE ((j + 1) * 2 + 0),
+          LINE ((j + 1) * 2 + 1), src + (j + 1) * src_stride, bayer2rgb->width);
     }
-  }
-  if ((j & 1) == (format & 2) >> 1) {
-    reconstruct_blue_green_edge (bayer2rgb, dest + j * dest_stride,
-        src + j * src_stride, src_stride, format & 1, -1);
-  } else {
-    reconstruct_green_red_edge (bayer2rgb, dest + j * dest_stride,
-        src + j * src_stride, src_stride, (format & 1) ^ 1, -1);
+
+    merge[j & 1] (dest + j * dest_stride,
+        LINE (j * 2 - 2), LINE (j * 2 - 1),
+        LINE (j * 2 + 0), LINE (j * 2 + 1),
+        LINE (j * 2 + 2), LINE (j * 2 + 3), bayer2rgb->width >> 1);
   }
 
+  g_free (tmp);
 }
+
+
 
 
 static GstFlowReturn
@@ -675,7 +498,7 @@ gst_bayer2rgb_transform (GstBaseTransform * base, GstBuffer * inbuf,
   GST_DEBUG ("transforming buffer");
   input = (uint8_t *) GST_BUFFER_DATA (inbuf);
   output = (uint8_t *) GST_BUFFER_DATA (outbuf);
-  gst_bayer2rgb_process_ref (filter, output, filter->width * 4,
+  gst_bayer2rgb_process (filter, output, filter->width * 4,
       input, filter->width);
 
   GST_OBJECT_UNLOCK (filter);
