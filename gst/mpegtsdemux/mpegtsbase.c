@@ -447,7 +447,8 @@ mpegts_base_remove_program (MpegTSBase * base, gint program_number)
     program =
         (MpegTSBaseProgram *) g_hash_table_lookup (base->programs,
         GINT_TO_POINTER (program_number));
-    klass->program_stopped (base, program);
+    if (program)
+      klass->program_stopped (base, program);
   }
   g_hash_table_remove (base->programs, GINT_TO_POINTER (program_number));
 
