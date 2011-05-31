@@ -2595,7 +2595,7 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
           ffmpegdec->pctx->pts);
 
       /* store pts for decoding */
-      if (ffmpegdec->pctx->pts != -1)
+      if (ffmpegdec->pctx->pts != AV_NOPTS_VALUE && ffmpegdec->pctx->pts != -1)
         dec_info = gst_ts_info_get (ffmpegdec, ffmpegdec->pctx->pts);
       else {
         /* ffmpeg sometimes loses track after a flush, help it by feeding a
