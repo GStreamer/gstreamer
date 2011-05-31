@@ -41,13 +41,15 @@ static GstPad *mysrcpad, *mysinkpad;
                           "mpegversion = (int) 4, " \
                           "rate = (int) 48000, " \
                           "channels = (int) 2, " \
-													"stream-format = \"raw\""
+                          "stream-format = \"raw\"," \
+                          "base-profile = \"lc\""
 
 #define AAC_ADTS_CAPS_STRING "audio/mpeg, " \
                           "mpegversion = (int) 4, " \
                           "rate = (int) 48000, " \
                           "channels = (int) 2, " \
-													"stream-format = \"adts\""
+                          "stream-format = \"adts\"," \
+                          "base-profile = \"lc\""
 
 static GstStaticPadTemplate sinktemplate_adts = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -72,7 +74,6 @@ setup_faac (gboolean adts)
 
   GST_DEBUG ("setup_faac");
   faac = gst_check_setup_element ("faac");
-  g_object_set (faac, "profile", 2, NULL);
   mysrcpad = gst_check_setup_src_pad (faac, &srctemplate, NULL);
 
   if (adts)
