@@ -1406,10 +1406,9 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
     if (trans->passthrough) {
       GST_DEBUG_OBJECT (trans, "Reusing input buffer");
       *out_buf = in_buf;
-    } else if (trans->priv->srcpool) {
+    } else if (priv->srcpool) {
       GST_DEBUG_OBJECT (trans, "using pool alloc");
-      ret =
-          gst_buffer_pool_acquire_buffer (trans->priv->srcpool, out_buf, NULL);
+      ret = gst_buffer_pool_acquire_buffer (priv->srcpool, out_buf, NULL);
     } else {
       GST_DEBUG_OBJECT (trans, "doing alloc of size %u", outsize);
       *out_buf = gst_buffer_new_and_alloc (outsize);
@@ -1456,7 +1455,7 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
 
   /* we need to modify the metadata when the element is not gap aware,
    * passthrough is not used and the gap flag is set */
-  copymeta |= !trans->priv->gap_aware && !trans->passthrough
+  copymeta |= !priv->gap_aware && !trans->passthrough
       && (GST_MINI_OBJECT_FLAGS (*out_buf) & GST_BUFFER_FLAG_GAP);
 
   if (copymeta) {
@@ -1473,7 +1472,7 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
       gst_buffer_copy_into (*out_buf, in_buf,
           GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
     /* clear the GAP flag when the subclass does not understand it */
-    if (!trans->priv->gap_aware)
+    if (!priv->gap_aware)
       GST_BUFFER_FLAG_UNSET (*out_buf, GST_BUFFER_FLAG_GAP);
   }
 
