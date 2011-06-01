@@ -3130,47 +3130,10 @@ gst_caps_structure_is_subset_field (GQuark field_id, const GValue * value,
   GstStructure *superset = user_data;
   GValue subtraction = { 0, };
   const GValue *other;
-  GType ltype;
 
   if (!(other = gst_structure_id_get_value (superset, field_id)))
     /* field is missing in the superset => is subset */
     return TRUE;
-
-  /* Special case: lists and scalar values 
-   * "{ 1 }" and "1" subsets of each other
-   * but not strictly equal */
-  ltype = gst_value_list_get_type ();
-  if (G_VALUE_HOLDS (other, ltype) && !G_VALUE_HOLDS (value, ltype)) {
-    const GValue *elt;
-    gint i, n;
-    gboolean all_equal = TRUE;
-
-    n = gst_value_list_get_size (other);
-    for (i = 0; i < n; i++) {
-      elt = gst_value_list_get_value (other, 0);
-      if (gst_value_compare (elt, value) != GST_VALUE_EQUAL) {
-        all_equal = FALSE;
-        break;
-      }
-    }
-    if (all_equal)
-      return TRUE;
-  } else if (G_VALUE_HOLDS (value, ltype) && !G_VALUE_HOLDS (other, ltype)) {
-    const GValue *elt;
-    gint i, n;
-    gboolean all_equal = TRUE;
-
-    n = gst_value_list_get_size (value);
-    for (i = 0; i < n; i++) {
-      elt = gst_value_list_get_value (value, 0);
-      if (gst_value_compare (elt, other) != GST_VALUE_EQUAL) {
-        all_equal = FALSE;
-        break;
-      }
-    }
-    if (all_equal)
-      return TRUE;
-  }
 
   /* equal values are subset */
   if (gst_value_compare (other, value) == GST_VALUE_EQUAL)
