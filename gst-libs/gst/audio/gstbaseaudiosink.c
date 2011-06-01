@@ -1614,6 +1614,12 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
       render_stop = 0;
   }
 
+  /* in some clock slaving cases, all late samples end up at 0 first,
+   * and subsequent ones align with that until threshold exceeded,
+   * and then sync back to 0 and so on, so avoid that altogether */
+  if (G_UNLIKELY (render_start == 0 && render_stop == 0))
+    goto too_late;
+
   /* and bring the time to the rate corrected offset in the buffer */
   render_start = gst_util_uint64_scale_int (render_start,
       ringbuf->spec.rate, GST_SECOND);
@@ -1737,6 +1743,11 @@ out_of_segment:
         GST_TIME_ARGS (bsink->segment.start));
     ret = GST_FLOW_OK;
     goto done;
+  }
+too_late:
+  {
+    GST_DEBUG_OBJECT (sink, "dropping late sample");
+    return GST_FLOW_OK;
   }
   /* ERRORS */
 payload_failed:
