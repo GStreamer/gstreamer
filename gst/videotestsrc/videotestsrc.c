@@ -1561,8 +1561,8 @@ gst_video_test_src_ball (GstVideoTestSrc * v, unsigned char *dest, int w, int h)
 
   fourcc->paint_setup (p, dest);
 
-  x = radius + (0.5 + 0.5 * sin (2 * M_PI * t / 200)) * (w - 2 * radius);
-  y = radius + (0.5 + 0.5 * sin (2 * M_PI * sqrt (2) * t / 200)) * (h -
+  x = radius + (0.5 + 0.5 * sin (2 * G_PI * t / 200)) * (w - 2 * radius);
+  y = radius + (0.5 + 0.5 * sin (2 * G_PI * sqrt (2) * t / 200)) * (h -
       2 * radius);
 
   for (i = 0; i < h; i++) {

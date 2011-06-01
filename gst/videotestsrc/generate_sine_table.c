@@ -1,14 +1,14 @@
 
 #include <stdio.h>
 #include <math.h>
-
+#include <glib.h>
 
 static int
 get_value (int i)
 {
   int x;
 
-  x = floor (256 * (0.5 + 0.5 * sin (i * 2 * M_PI / 256)));
+  x = floor (256 * (0.5 + 0.5 * sin (i * 2 * G_PI / 256)));
   if (x > 255)
     x = 255;
   return x;

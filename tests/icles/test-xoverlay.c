@@ -64,8 +64,8 @@ animate_render_rect (gpointer user_data)
     gdouble c = cos (2.0 * anim_state.a);
 
     anim_state.a += anim_state.p;
-    if (anim_state.a > (M_PI + M_PI))
-      anim_state.a -= (M_PI + M_PI);
+    if (anim_state.a > (G_PI + G_PI))
+      anim_state.a -= (G_PI + G_PI);
 
     r->w = anim_state.w / 2;
     r->x = (r->w - (r->w / 2)) + c * (r->w / 2);
@@ -223,7 +223,7 @@ main (gint argc, gchar ** argv)
   anim_state.w = 320;
   anim_state.h = 240;
   anim_state.a = 0.0;
-  anim_state.p = (M_PI + M_PI) / 200.0;
+  anim_state.p = (G_PI + G_PI) / 200.0;
 
   handle_resize_cb (video_window, NULL, sink);
   g_signal_connect (video_window, "configure-event",
