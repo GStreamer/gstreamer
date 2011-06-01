@@ -841,11 +841,6 @@ gst_ogg_mux_queue_pads (GstOggMux * ogg_mux)
           packet.packet = GST_BUFFER_DATA (buf);
           packet.bytes = GST_BUFFER_SIZE (buf);
 
-          if (GST_BUFFER_OFFSET_END_IS_VALID (buf))
-            packet.granulepos = GST_BUFFER_OFFSET_END (buf);
-          else
-            packet.granulepos = 0;
-
           /* if we're not yet in data mode, ensure we're setup on the first packet */
           if (!pad->have_type) {
             /* Use headers in caps, if any; this will allow us to be resilient
