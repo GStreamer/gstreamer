@@ -763,13 +763,16 @@ GST_END_TEST;
 static GMutex *blocked_lock;
 static GCond *blocked_cond;
 
-static void
-pad_blocked_cb (GstPad * pad, GstBlockType type, gpointer user_data)
+static GstProbeReturn
+pad_blocked_cb (GstPad * pad, GstProbeType type, gpointer type_data,
+    gpointer user_data)
 {
   g_mutex_lock (blocked_lock);
   GST_DEBUG ("srcpad blocked: %d, sending signal", type);
   g_cond_signal (blocked_cond);
   g_mutex_unlock (blocked_lock);
+
+  return GST_PROBE_OK;
 }
 
 GST_START_TEST (test_add_live2)
@@ -778,6 +781,7 @@ GST_START_TEST (test_add_live2)
   GstStateChangeReturn ret;
   GstState current, pending;
   GstPad *srcpad, *sinkpad;
+  gulong id;
 
   blocked_lock = g_mutex_new ();
   blocked_cond = g_cond_new ();
@@ -799,7 +803,8 @@ GST_START_TEST (test_add_live2)
   GST_DEBUG ("blocking srcpad");
   /* block source pad */
   srcpad = gst_element_get_static_pad (src, "src");
-  gst_pad_block (srcpad, GST_BLOCK_TYPE_DATA, pad_blocked_cb, NULL, NULL);
+  id = gst_pad_add_probe (srcpad, GST_PROBE_TYPE_BLOCK, pad_blocked_cb, NULL,
+      NULL);
 
   /* set source to PAUSED without adding it to the pipeline */
   ret = gst_element_set_state (src, GST_STATE_PAUSED);
@@ -827,7 +832,7 @@ GST_START_TEST (test_add_live2)
   GST_DEBUG ("unblocking srcpad");
 
   /* and unblock */
-  gst_pad_unblock (srcpad);
+  gst_pad_remove_probe (srcpad, id);
 
   GST_DEBUG ("getting state");
 

@@ -265,9 +265,10 @@ static GstEvent *got_event_before_q, *got_event_after_q;
 static GTimeVal got_event_time;
 
 static GstProbeReturn
-event_probe (GstPad * pad, GstProbeType type, GstMiniObject * data,
+event_probe (GstPad * pad, GstProbeType type, gpointer type_data,
     gpointer user_data)
 {
+  GstMiniObject *data = type_data;
   gboolean before_q = (gboolean) GPOINTER_TO_INT (user_data);
 
   GST_DEBUG ("event probe called %p", data);
@@ -401,6 +402,7 @@ static void test_event
   signal_data_wait (&data);
 
   /* We send on the peer pad, since the pad is blocked */
+  GST_DEBUG ("sending event %p", event);
   fail_unless ((peer = gst_pad_get_peer (pad)) != NULL);
   gst_pad_send_event (peer, event);
   gst_object_unref (peer);
@@ -479,11 +481,11 @@ GST_START_TEST (send_custom_events)
   /* add pad-probes to faksrc.src and fakesink.sink */
   fail_if ((srcpad = gst_element_get_static_pad (fakesrc, "src")) == NULL);
   gst_pad_add_probe (srcpad, GST_PROBE_TYPE_EVENT,
-      (GstPadProbeCallback) event_probe, GINT_TO_POINTER (TRUE), NULL);
+      event_probe, GINT_TO_POINTER (TRUE), NULL);
 
   fail_if ((sinkpad = gst_element_get_static_pad (fakesink, "sink")) == NULL);
   gst_pad_add_probe (sinkpad, GST_PROBE_TYPE_EVENT,
-      (GstPadProbeCallback) event_probe, GINT_TO_POINTER (FALSE), NULL);
+      event_probe, GINT_TO_POINTER (FALSE), NULL);
 
   /* Upstream events */
   test_event (pipeline, GST_EVENT_CUSTOM_UPSTREAM, sinkpad, TRUE, srcpad);

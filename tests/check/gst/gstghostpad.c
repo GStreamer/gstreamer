@@ -517,8 +517,8 @@ GST_START_TEST (test_ghost_pads_block)
   block_data.cond = g_cond_new ();
 
   g_mutex_lock (block_data.mutex);
-  gst_pad_add_probe (srcghost, GST_PROBE_TYPE_DATA, block_callback, &block_data,
-      NULL);
+  gst_pad_add_probe (srcghost, GST_PROBE_TYPE_BLOCK, block_callback,
+      &block_data, NULL);
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
   /* and wait now */
   g_cond_wait (block_data.cond, block_data.mutex);
@@ -559,8 +559,8 @@ GST_START_TEST (test_ghost_pads_probes)
   block_data.cond = g_cond_new ();
 
   g_mutex_lock (block_data.mutex);
-  gst_pad_add_probe (srcghost, GST_PROBE_TYPE_DATA, block_callback, &block_data,
-      NULL);
+  gst_pad_add_probe (srcghost, GST_PROBE_TYPE_BLOCK, block_callback,
+      &block_data, NULL);
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
   /* and wait now */
   g_cond_wait (block_data.cond, block_data.mutex);

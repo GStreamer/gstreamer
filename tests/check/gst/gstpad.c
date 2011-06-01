@@ -907,6 +907,8 @@ block_async_second_no_flush (GstPad * pad, GstProbeType type,
 {
   gboolean *bool_user_data = (gboolean *) user_data;
 
+  GST_DEBUG ("second probe called");
+
   fail_unless (type & GST_PROBE_TYPE_BLOCK);
 
   fail_unless (bool_user_data[0] == TRUE);
@@ -915,6 +917,7 @@ block_async_second_no_flush (GstPad * pad, GstProbeType type,
 
   bool_user_data[1] = TRUE;
 
+  GST_DEBUG ("removing second probe with id %lu", id);
   gst_pad_remove_probe (pad, id);
 
   return GST_PROBE_OK;
@@ -929,6 +932,8 @@ block_async_first_no_flush (GstPad * pad, GstProbeType type, gpointer type_data,
 
   fail_unless (type & GST_PROBE_TYPE_BLOCK);
 
+  GST_DEBUG ("first probe called");
+
   if (++n_calls > 1)
     /* we expect this callback to be called only once */
     g_warn_if_reached ();
@@ -939,12 +944,15 @@ block_async_first_no_flush (GstPad * pad, GstProbeType type, gpointer type_data,
   fail_unless (bool_user_data[1] == FALSE);
   fail_unless (bool_user_data[2] == FALSE);
 
+  GST_DEBUG ("removing first probe with id %lu", id);
   gst_pad_remove_probe (pad, id);
 
+  GST_DEBUG ("adding second probe");
   /* replace block_async_first with block_async_second so next time the pad is
    * blocked the latter should be called */
   id = gst_pad_add_probe (pad, GST_PROBE_TYPE_BLOCK,
       block_async_second_no_flush, user_data, NULL);
+  GST_DEBUG ("added probe with id %lu", id);
 
   return GST_PROBE_OK;
 }
@@ -958,10 +966,13 @@ GST_START_TEST (test_block_async_replace_callback_no_flush)
   fail_unless (pad != NULL);
   gst_pad_set_active (pad, TRUE);
 
+  GST_DEBUG ("adding probe");
   id = gst_pad_add_probe (pad, GST_PROBE_TYPE_BLOCK,
       block_async_first_no_flush, bool_user_data, NULL);
+  GST_DEBUG ("added probe with id %lu", id);
   fail_if (id == 0);
 
+  GST_DEBUG ("pushing buffer");
   gst_pad_push (pad, gst_buffer_new ());
   fail_unless (bool_user_data[0] == TRUE);
   fail_unless (bool_user_data[1] == TRUE);

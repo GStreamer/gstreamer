@@ -32,42 +32,48 @@ static int n_data_probes = 0;
 static int n_buffer_probes = 0;
 static int n_event_probes = 0;
 
-static gboolean
-probe_do_nothing (GstPad * pad, GstMiniObject * obj, gpointer data)
+static GstProbeReturn
+probe_do_nothing (GstPad * pad, GstProbeType type, gpointer type_data,
+    gpointer data)
 {
+  GstMiniObject *obj = type_data;
   GST_DEBUG_OBJECT (pad, "is buffer:%d", GST_IS_BUFFER (obj));
-  return TRUE;
+  return GST_PROBE_OK;
 }
 
-static gboolean
-data_probe (GstPad * pad, GstMiniObject * obj, gpointer data)
+static GstProbeReturn
+data_probe (GstPad * pad, GstProbeType type, gpointer type_data, gpointer data)
 {
+  GstMiniObject *obj = type_data;
   n_data_probes++;
   GST_DEBUG_OBJECT (pad, "data probe %d", n_data_probes);
   g_assert (GST_IS_BUFFER (obj) || GST_IS_EVENT (obj));
   g_assert (data == SPECIAL_POINTER (0));
-  return TRUE;
+  return GST_PROBE_OK;
 }
 
-static gboolean
-buffer_probe (GstPad * pad, GstBuffer * obj, gpointer data)
+static GstProbeReturn
+buffer_probe (GstPad * pad, GstProbeType type, gpointer type_data,
+    gpointer data)
 {
+  GstBuffer *obj = type_data;
   n_buffer_probes++;
   GST_DEBUG_OBJECT (pad, "buffer probe %d", n_buffer_probes);
   g_assert (GST_IS_BUFFER (obj));
   g_assert (data == SPECIAL_POINTER (1));
-  return TRUE;
+  return GST_PROBE_OK;
 }
 
-static gboolean
-event_probe (GstPad * pad, GstEvent * obj, gpointer data)
+static GstProbeReturn
+event_probe (GstPad * pad, GstProbeType type, gpointer type_data, gpointer data)
 {
+  GstEvent *obj = type_data;
   n_event_probes++;
   GST_DEBUG_OBJECT (pad, "event probe %d [%s]",
       n_event_probes, GST_EVENT_TYPE_NAME (obj));
   g_assert (GST_IS_EVENT (obj));
   g_assert (data == SPECIAL_POINTER (2));
-  return TRUE;
+  return GST_PROBE_OK;
 }
 
 GST_START_TEST (test_buffer_probe_n_times)
@@ -89,20 +95,20 @@ GST_START_TEST (test_buffer_probe_n_times)
   pad = gst_element_get_static_pad (fakesink, "sink");
 
   /* add the probes we need for the test */
-  gst_pad_add_data_probe (pad, G_CALLBACK (data_probe), SPECIAL_POINTER (0),
+  gst_pad_add_probe (pad, GST_PROBE_TYPE_DATA, data_probe, SPECIAL_POINTER (0),
       NULL);
-  gst_pad_add_buffer_probe (pad, G_CALLBACK (buffer_probe), SPECIAL_POINTER (1),
-      NULL);
-  gst_pad_add_event_probe (pad, G_CALLBACK (event_probe), SPECIAL_POINTER (2),
-      NULL);
+  gst_pad_add_probe (pad, GST_PROBE_TYPE_BUFFER, buffer_probe,
+      SPECIAL_POINTER (1), NULL);
+  gst_pad_add_probe (pad, GST_PROBE_TYPE_EVENT, event_probe,
+      SPECIAL_POINTER (2), NULL);
 
   /* add some string probes just to test that the data is free'd
    * properly as it should be */
-  gst_pad_add_data_probe (pad, G_CALLBACK (probe_do_nothing),
+  gst_pad_add_probe (pad, GST_PROBE_TYPE_DATA, probe_do_nothing,
       g_strdup ("data probe string"), (GDestroyNotify) g_free);
-  gst_pad_add_buffer_probe (pad, G_CALLBACK (probe_do_nothing),
+  gst_pad_add_probe (pad, GST_PROBE_TYPE_BUFFER, probe_do_nothing,
       g_strdup ("buffer probe string"), (GDestroyNotify) g_free);
-  gst_pad_add_event_probe (pad, G_CALLBACK (probe_do_nothing),
+  gst_pad_add_probe (pad, GST_PROBE_TYPE_EVENT, probe_do_nothing,
       g_strdup ("event probe string"), (GDestroyNotify) g_free);
 
   gst_object_unref (pad);
@@ -131,37 +137,39 @@ static int n_data_probes_once = 0;
 static int n_buffer_probes_once = 0;
 static int n_event_probes_once = 0;
 
-static gboolean
-data_probe_once (GstPad * pad, GstMiniObject * obj, guint * data)
+static GstProbeReturn
+data_probe_once (GstPad * pad, GstProbeType type, GstMiniObject * obj,
+    guint * data)
 {
   n_data_probes_once++;
   g_assert (GST_IS_BUFFER (obj) || GST_IS_EVENT (obj));
 
-  gst_pad_remove_data_probe (pad, *data);
+  gst_pad_remove_probe (pad, *data);
 
-  return TRUE;
+  return GST_PROBE_OK;
 }
 
-static gboolean
-buffer_probe_once (GstPad * pad, GstBuffer * obj, guint * data)
+static GstProbeReturn
+buffer_probe_once (GstPad * pad, GstProbeType type, GstBuffer * obj,
+    guint * data)
 {
   n_buffer_probes_once++;
   g_assert (GST_IS_BUFFER (obj));
 
-  gst_pad_remove_buffer_probe (pad, *data);
+  gst_pad_remove_probe (pad, *data);
 
-  return TRUE;
+  return GST_PROBE_OK;
 }
 
-static gboolean
-event_probe_once (GstPad * pad, GstEvent * obj, guint * data)
+static GstProbeReturn
+event_probe_once (GstPad * pad, GstProbeType type, GstEvent * obj, guint * data)
 {
   n_event_probes_once++;
   g_assert (GST_IS_EVENT (obj));
 
-  gst_pad_remove_event_probe (pad, *data);
+  gst_pad_remove_probe (pad, *data);
 
-  return TRUE;
+  return GST_PROBE_OK;
 }
 
 GST_START_TEST (test_buffer_probe_once)
@@ -182,12 +190,15 @@ GST_START_TEST (test_buffer_probe_once)
   gst_element_link (fakesrc, fakesink);
 
   pad = gst_element_get_static_pad (fakesink, "sink");
-  id1 = gst_pad_add_data_probe (pad, G_CALLBACK (data_probe_once), &id1, NULL);
+  id1 =
+      gst_pad_add_probe (pad, GST_PROBE_TYPE_DATA,
+      (GstPadProbeCallback) data_probe_once, &id1, NULL);
   id2 =
-      gst_pad_add_buffer_probe (pad, G_CALLBACK (buffer_probe_once), &id2,
-      NULL);
+      gst_pad_add_probe (pad, GST_PROBE_TYPE_BUFFER,
+      (GstPadProbeCallback) buffer_probe_once, &id2, NULL);
   id3 =
-      gst_pad_add_event_probe (pad, G_CALLBACK (event_probe_once), &id3, NULL);
+      gst_pad_add_probe (pad, GST_PROBE_TYPE_EVENT,
+      (GstPadProbeCallback) event_probe_once, &id3, NULL);
   gst_object_unref (pad);
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);

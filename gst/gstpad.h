@@ -486,16 +486,22 @@ typedef gboolean		(*GstPadDispatcherFunction)	(GstPad *pad, gpointer data);
 typedef enum
 {
   GST_PROBE_TYPE_INVALID      = (1 << 0),
+
   GST_PROBE_TYPE_IDLE         = (1 << 1),
   GST_PROBE_TYPE_BLOCK        = (1 << 2),
+
   GST_PROBE_TYPE_BUFFER       = (1 << 3),
   GST_PROBE_TYPE_BUFFER_LIST  = (1 << 4),
   GST_PROBE_TYPE_EVENT        = (1 << 5),
+
   GST_PROBE_TYPE_PUSH         = (1 << 6),
   GST_PROBE_TYPE_PULL         = (1 << 7),
 } GstProbeType;
 
-#define GST_PROBE_TYPE_DATA (GST_PROBE_TYPE_BUFFER | GST_PROBE_TYPE_EVENT | GST_PROBE_TYPE_BUFFER_LIST)
+#define GST_PROBE_TYPE_BLOCKING   (GST_PROBE_TYPE_IDLE | GST_PROBE_TYPE_BLOCK)
+#define GST_PROBE_TYPE_DATA       (GST_PROBE_TYPE_BUFFER | GST_PROBE_TYPE_EVENT | \
+                                   GST_PROBE_TYPE_BUFFER_LIST)
+#define GST_PROBE_TYPE_SCHEDULING (GST_PROBE_TYPE_PUSH | GST_PROBE_TYPE_PULL)
 
 /**
  * GstProbeResult:
@@ -509,8 +515,8 @@ typedef enum
  */
 typedef enum
 {
-  GST_PROBE_OK,
   GST_PROBE_DROP,
+  GST_PROBE_OK,
   GST_PROBE_REMOVE,
   GST_PROBE_PASS,
 } GstProbeReturn;
@@ -685,6 +691,7 @@ struct _GstPad {
    * of handlers attached. */
   gint				 do_buffer_signals;
   gint				 do_event_signals;
+  gint				 num_probes;
   gint				 num_blocked;
 
   /*< private >*/
