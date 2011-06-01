@@ -1023,9 +1023,9 @@ handle_current_async (GstDiscoverer * dc)
 {
   GSource *source;
   static GSourceCallbackFuncs cb_funcs = {
-    .ref = _void_g_object_ref,
-    .unref = g_object_unref,
-    .get = get_async_cb,
+    _void_g_object_ref,
+    g_object_unref,
+    get_async_cb,
   };
 
   /* Attach a timeout to the main context */
