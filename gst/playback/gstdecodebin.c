@@ -684,7 +684,7 @@ free_pad_probes (GstDecodeBin * decode_bin)
   for (tmp = decode_bin->probes; tmp; tmp = g_list_next (tmp)) {
     PadProbeData *data = (PadProbeData *) tmp->data;
 
-    gst_pad_remove_data_probe (data->pad, data->sigid);
+    gst_pad_remove_probe (data->pad, data->sigid);
     g_free (data);
   }
   g_list_free (decode_bin->probes);
@@ -702,7 +702,7 @@ free_pad_probe_for_element (GstDecodeBin * decode_bin, GstElement * element)
     PadProbeData *data = (PadProbeData *) l->data;
 
     if (GST_ELEMENT_CAST (GST_PAD_PARENT (data->pad)) == element) {
-      gst_pad_remove_data_probe (data->pad, data->sigid);
+      gst_pad_remove_probe (data->pad, data->sigid);
       decode_bin->probes = g_list_delete_link (decode_bin->probes, l);
       g_free (data);
       return;
@@ -774,9 +774,12 @@ remove_fakesink (GstDecodeBin * decode_bin)
 }
 
 /* this should be implemented with _pad_block() */
-static gboolean
-pad_probe (GstPad * pad, GstMiniObject * data, GstDecodeBin * decode_bin)
+static GstProbeReturn
+pad_probe (GstPad * pad, GstProbeType type, gpointer type_data,
+    gpointer user_data)
 {
+  GstMiniObject *data = type_data;
+  GstDecodeBin *decode_bin = user_data;
   GList *tmp;
   gboolean alldone = TRUE;
 
@@ -931,9 +934,9 @@ close_pad_link (GstElement * element, GstPad * pad, GstCaps * caps,
     data->pad = pad;
     data->done = FALSE;
 
-    /* FIXME, use _pad_block() */
-    data->sigid = gst_pad_add_data_probe (pad, G_CALLBACK (pad_probe),
-        decode_bin);
+    /* FIXME, use pad blocking */
+    data->sigid = gst_pad_add_probe (pad, GST_PROBE_TYPE_DATA, pad_probe,
+        decode_bin, NULL);
     decode_bin->numwaiting++;
 
     decode_bin->probes = g_list_append (decode_bin->probes, data);

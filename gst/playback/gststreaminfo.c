@@ -175,9 +175,11 @@ gst_stream_info_init (GstStreamInfo * stream_info)
   stream_info->caps = NULL;
 }
 
-static gboolean
-cb_probe (GstPad * pad, GstEvent * e, gpointer user_data)
+static GstProbeReturn
+cb_probe (GstPad * pad, GstProbeType type, gpointer type_data,
+    gpointer user_data)
 {
+  GstEvent *e = type_data;
   GstStreamInfo *info = user_data;
 
   if (GST_EVENT_TYPE (e) == GST_EVENT_TAG) {
@@ -225,8 +227,8 @@ gst_stream_info_new (GstObject * object,
 
   gst_object_ref (object);
   if (GST_IS_PAD (object)) {
-    gst_pad_add_event_probe (GST_PAD_CAST (object),
-        G_CALLBACK (cb_probe), info);
+    gst_pad_add_probe (GST_PAD_CAST (object), GST_PROBE_TYPE_EVENT,
+        cb_probe, info, NULL);
   }
   info->object = object;
   info->type = type;

@@ -72,12 +72,14 @@ struct _GstSubtitleOverlay
 
   GstPad *video_sinkpad;
   GstPad *video_block_pad;
+  gulong video_block_id;
   gboolean video_sink_blocked;
   GstSegment video_segment;
   gint fps_n, fps_d;
 
   GstPad *subtitle_sinkpad;
   GstPad *subtitle_block_pad;
+  gulong subtitle_block_id;
   gboolean subtitle_sink_blocked;
   GstSegment subtitle_segment;
   gboolean subtitle_flush;

@@ -64,7 +64,7 @@ struct _GstPlaySinkAudioConvert
   GMutex *lock;
 
   GstPad *sinkpad, *sink_proxypad;
-  gboolean sink_proxypad_blocked;
+  gulong sink_proxypad_block_id;
   GstSegment segment;
 
   GstPad *srcpad;

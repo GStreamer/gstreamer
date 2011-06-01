@@ -287,6 +287,10 @@ struct _GstPlayBin
 
   /* indication if the pipeline is live */
   gboolean is_live;
+
+  /* probes */
+  gulong text_id;
+  gulong sub_id;
 };
 
 struct _GstPlayBinClass
@@ -504,9 +508,9 @@ gst_play_bin_dispose (GObject * object)
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
-static void
-gst_play_bin_vis_blocked (GstPad * tee_pad, GstBlockType type,
-    gpointer user_data)
+static GstProbeReturn
+gst_play_bin_vis_blocked (GstPad * tee_pad, GstProbeType type,
+    gpointer type_data, gpointer user_data)
 {
   GstPlayBin *play_bin = GST_PLAY_BIN (user_data);
   GstBin *vis_bin = NULL;
@@ -607,8 +611,8 @@ beach:
     gst_object_unref (vis_bin);
   }
 
-  /* Unblock the pad */
-  gst_pad_unblock (tee_pad);
+  /* unblock the pad and remove the probe */
+  return GST_PROBE_REMOVE;
 }
 
 static void
@@ -690,7 +694,7 @@ gst_play_bin_set_property (GObject * object, guint prop_id,
 
             play_bin->pending_visualisation = pending_visualisation;
             /* Block with callback */
-            gst_pad_block (tee_pad, GST_BLOCK_TYPE_DATA,
+            gst_pad_add_probe (tee_pad, GST_PROBE_TYPE_BLOCK,
                 gst_play_bin_vis_blocked, play_bin, NULL);
           beach:
             if (vis_sink_pad) {
@@ -1650,7 +1654,9 @@ setup_sinks (GstPlayBaseBin * play_base_bin, GstPlayBaseGroup * group)
             "file, ghosting to a suitable hierarchy");
         /* Block the pad first, because as soon as we add a ghostpad, the queue
          * will try and start pushing */
-        gst_pad_block (textsrcpad, GST_BLOCK_TYPE_DATA, NULL, NULL, NULL);
+        play_bin->text_id =
+            gst_pad_add_probe (textsrcpad, GST_PROBE_TYPE_BLOCK, NULL, NULL,
+            NULL);
         origtextsrcpad = gst_object_ref (textsrcpad);
 
         ghost = gst_ghost_pad_new ("text_src", textsrcpad);
@@ -1694,7 +1700,10 @@ setup_sinks (GstPlayBaseBin * play_base_bin, GstPlayBaseGroup * group)
     if (textsrcpad)
       gst_object_unref (textsrcpad);
     if (origtextsrcpad) {
-      gst_pad_unblock (origtextsrcpad);
+      if (play_bin->text_id) {
+        gst_pad_remove_probe (origtextsrcpad, play_bin->text_id);
+        play_bin->text_id = 0;
+      }
       gst_object_unref (origtextsrcpad);
     }
 
@@ -1709,12 +1718,17 @@ setup_sinks (GstPlayBaseBin * play_base_bin, GstPlayBaseGroup * group)
       spu_sink_pad = gst_element_get_static_pad (sink, "subpicture_sink");
       if (subpic_pad && spu_sink_pad) {
         GST_LOG_OBJECT (play_bin, "Linking DVD subpicture stream onto SPU");
-        gst_pad_block (subpic_pad, GST_BLOCK_TYPE_DATA, NULL, NULL, NULL);
+        play_bin->sub_id =
+            gst_pad_add_probe (subpic_pad, GST_PROBE_TYPE_BLOCK, NULL, NULL,
+            NULL);
         if (gst_pad_link (subpic_pad, spu_sink_pad) != GST_PAD_LINK_OK) {
           GST_WARNING_OBJECT (play_bin,
               "Failed to link DVD subpicture stream onto SPU");
         }
-        gst_pad_unblock (subpic_pad);
+        if (play_bin->sub_id) {
+          gst_pad_remove_probe (subpic_pad, play_bin->sub_id);
+          play_bin->sub_id = 0;
+        }
       }
       if (subpic_pad)
         gst_object_unref (subpic_pad);

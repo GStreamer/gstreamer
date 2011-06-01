@@ -465,6 +465,8 @@ struct _GstDecodePad
   gboolean blocked;             /* the *target* pad is blocked */
   gboolean exposed;             /* the pad is exposed */
   gboolean drained;             /* an EOS has been seen on the pad */
+
+  gulong block_id;
 };
 
 GType gst_decode_pad_get_type (void);
@@ -480,7 +482,8 @@ static void gst_decode_pad_unblock (GstDecodePad * dpad);
 static void gst_decode_pad_set_blocked (GstDecodePad * dpad, gboolean blocked);
 
 static void gst_pending_pad_free (GstPendingPad * ppad);
-static gboolean pad_event_cb (GstPad * pad, GstEvent * event, gpointer data);
+static GstProbeReturn pad_event_cb (GstPad * pad, GstProbeType type,
+    gpointer type_data, gpointer data);
 
 /********************************
  * Standard GObject boilerplate *
@@ -1614,7 +1617,7 @@ setup_caps_delay:
     ppad->pad = gst_object_ref (pad);
     ppad->chain = chain;
     ppad->event_probe_id =
-        gst_pad_add_event_probe (pad, (GCallback) pad_event_cb, ppad);
+        gst_pad_add_probe (pad, GST_PROBE_TYPE_EVENT, pad_event_cb, ppad, NULL);
     chain->pending_pads = g_list_prepend (chain->pending_pads, ppad);
     CHAIN_MUTEX_UNLOCK (chain);
     g_signal_connect (G_OBJECT (pad), "notify::caps",
@@ -1841,7 +1844,7 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
           }
 
           g_signal_handlers_disconnect_by_func (pp->pad, caps_notify_cb, chain);
-          gst_pad_remove_event_probe (pp->pad, pp->event_probe_id);
+          gst_pad_remove_probe (pp->pad, pp->event_probe_id);
           gst_object_unref (pp->pad);
           g_slice_free (GstPendingPad, pp);
 
@@ -2135,9 +2138,11 @@ exit:
   return;
 }
 
-static gboolean
-pad_event_cb (GstPad * pad, GstEvent * event, gpointer data)
+static GstProbeReturn
+pad_event_cb (GstPad * pad, GstProbeType type, gpointer type_data,
+    gpointer data)
 {
+  GstEvent *event = type_data;
   GstPendingPad *ppad = (GstPendingPad *) data;
   GstDecodeChain *chain = ppad->chain;
   GstDecodeBin *dbin = chain->dbin;
@@ -2159,7 +2164,7 @@ pad_event_cb (GstPad * pad, GstEvent * event, gpointer data)
     default:
       break;
   }
-  return TRUE;
+  return GST_PROBE_OK;
 }
 
 static void
@@ -3454,9 +3459,11 @@ gst_decode_pad_init (GstDecodePad * pad)
   gst_object_ref_sink (pad);
 }
 
-static void
-source_pad_blocked_cb (GstPad * pad, GstBlockType type, GstDecodePad * dpad)
+static GstProbeReturn
+source_pad_blocked_cb (GstPad * pad, GstProbeType type, gpointer type_data,
+    gpointer user_data)
 {
+  GstDecodePad *dpad = user_data;
   GstDecodeChain *chain;
   GstDecodeBin *dbin;
 
@@ -3473,11 +3480,17 @@ source_pad_blocked_cb (GstPad * pad, GstBlockType type, GstDecodePad * dpad)
       GST_WARNING_OBJECT (dbin, "Couldn't expose group");
   }
   EXPOSE_UNLOCK (dbin);
+
+  return GST_PROBE_OK;
 }
 
-static gboolean
-source_pad_event_probe (GstPad * pad, GstEvent * event, GstDecodePad * dpad)
+static GstProbeReturn
+source_pad_event_probe (GstPad * pad, GstProbeType type, gpointer type_data,
+    gpointer user_data)
 {
+  GstEvent *event = type_data;
+  GstDecodePad *dpad = user_data;
+
   GST_LOG_OBJECT (pad, "%s dpad:%p", GST_EVENT_TYPE_NAME (event), dpad);
 
   if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
@@ -3489,7 +3502,7 @@ source_pad_event_probe (GstPad * pad, GstEvent * event, GstDecodePad * dpad)
     gst_decode_pad_handle_eos (dpad);
   }
   /* never drop events */
-  return TRUE;
+  return GST_PROBE_OK;
 }
 
 static void
@@ -3510,11 +3523,15 @@ gst_decode_pad_set_blocked (GstDecodePad * dpad, gboolean blocked)
    * we do not consider/expect it blocked further below, but use other trick */
   if (!blocked || !dbin->shutdown) {
     if (blocked) {
-      gst_pad_block (opad, GST_BLOCK_TYPE_DATA,
-          (GstPadBlockCallback) source_pad_blocked_cb, gst_object_ref (dpad),
-          (GDestroyNotify) gst_object_unref);
+      if (dpad->block_id == 0)
+        dpad->block_id = gst_pad_add_probe (opad, GST_PROBE_TYPE_BLOCK,
+            source_pad_blocked_cb, gst_object_ref (dpad),
+            (GDestroyNotify) gst_object_unref);
     } else {
-      gst_pad_unblock (opad);
+      if (dpad->block_id != 0) {
+        gst_pad_remove_probe (opad, dpad->block_id);
+        dpad->block_id = 0;
+      }
       dpad->blocked = FALSE;
     }
   }
@@ -3546,8 +3563,8 @@ out:
 static void
 gst_decode_pad_add_drained_check (GstDecodePad * dpad)
 {
-  gst_pad_add_event_probe (GST_PAD_CAST (dpad),
-      G_CALLBACK (source_pad_event_probe), dpad);
+  gst_pad_add_probe (GST_PAD_CAST (dpad), GST_PROBE_TYPE_EVENT,
+      source_pad_event_probe, dpad, NULL);
 }
 
 static void
@@ -3598,7 +3615,7 @@ gst_pending_pad_free (GstPendingPad * ppad)
   g_assert (ppad->pad);
 
   if (ppad->event_probe_id != 0)
-    gst_pad_remove_event_probe (ppad->pad, ppad->event_probe_id);
+    gst_pad_remove_probe (ppad->pad, ppad->event_probe_id);
   gst_object_unref (ppad->pad);
   g_slice_free (GstPendingPad, ppad);
 }
@@ -3675,7 +3692,10 @@ unblock_pads (GstDecodeBin * dbin)
       continue;
 
     GST_DEBUG_OBJECT (dpad, "unblocking");
-    gst_pad_unblock (opad);
+    if (dpad->block_id != 0) {
+      gst_pad_remove_probe (opad, dpad->block_id);
+      dpad->block_id = 0;
+    }
     dpad->blocked = FALSE;
     /* make flushing, prevent NOT_LINKED */
     GST_PAD_SET_FLUSHING (GST_PAD_CAST (dpad));

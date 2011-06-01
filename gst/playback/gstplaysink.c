@@ -153,6 +153,7 @@ struct _GstPlaySink
   gboolean audio_pad_blocked;
   GstPad *audio_srcpad_stream_synchronizer;
   GstPad *audio_sinkpad_stream_synchronizer;
+  gulong audio_block_id;
   /* audio tee */
   GstElement *audio_tee;
   GstPad *audio_tee_sink;
@@ -164,11 +165,13 @@ struct _GstPlaySink
   gboolean video_pad_blocked;
   GstPad *video_srcpad_stream_synchronizer;
   GstPad *video_sinkpad_stream_synchronizer;
+  gulong video_block_id;
   /* text */
   GstPad *text_pad;
   gboolean text_pad_blocked;
   GstPad *text_srcpad_stream_synchronizer;
   GstPad *text_sinkpad_stream_synchronizer;
+  gulong text_block_id;
 
   /* properties */
   GstElement *audio_sink;
@@ -661,9 +664,9 @@ gst_play_sink_get_sink (GstPlaySink * playsink, GstPlaySinkType type)
   return result;
 }
 
-static void
-gst_play_sink_vis_blocked (GstPad * tee_pad, GstBlockType type,
-    gpointer user_data)
+static GstProbeReturn
+gst_play_sink_vis_blocked (GstPad * tee_pad, GstProbeType type,
+    gpointer type_data, gpointer user_data)
 {
   GstPlaySink *playsink;
   GstPlayVisChain *chain;
@@ -700,9 +703,10 @@ gst_play_sink_vis_blocked (GstPad * tee_pad, GstBlockType type,
       chain->vissrcpad);
 
 done:
-  /* Unblock the pad */
-  gst_pad_unblock (tee_pad);
   GST_PLAY_SINK_UNLOCK (playsink);
+
+  /* remove the probe and unblock the pad */
+  return GST_PROBE_REMOVE;
 }
 
 void
@@ -739,7 +743,7 @@ gst_play_sink_set_vis_plugin (GstPlaySink * playsink, GstElement * vis)
    * function returns FALSE but the previous pad block will do the right thing
    * anyway. */
   GST_DEBUG_OBJECT (playsink, "blocking vis pad");
-  gst_pad_block (chain->blockpad, GST_BLOCK_TYPE_DATA,
+  gst_pad_add_probe (chain->blockpad, GST_PROBE_TYPE_BLOCK,
       gst_play_sink_vis_blocked, playsink, NULL);
 done:
   GST_PLAY_SINK_UNLOCK (playsink);
@@ -2858,8 +2862,9 @@ is_raw_pad (GstPad * pad)
   return raw;
 }
 
-static void
-sinkpad_blocked_cb (GstPad * blockedpad, GstBlockType type, gpointer user_data)
+static GstProbeReturn
+sinkpad_blocked_cb (GstPad * blockedpad, GstProbeType type, gpointer type_data,
+    gpointer user_data)
 {
   GstPlaySink *playsink = (GstPlaySink *) user_data;
   GstPad *pad;
@@ -2901,7 +2906,8 @@ sinkpad_blocked_cb (GstPad * blockedpad, GstBlockType type, gpointer user_data)
       GstPad *opad =
           GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD
               (playsink->video_pad)));
-      gst_pad_unblock (opad);
+      gst_pad_remove_probe (opad, playsink->video_block_id);
+      playsink->video_block_id = 0;
       gst_object_unref (opad);
       playsink->video_pad_blocked = FALSE;
     }
@@ -2910,7 +2916,8 @@ sinkpad_blocked_cb (GstPad * blockedpad, GstBlockType type, gpointer user_data)
       GstPad *opad =
           GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD
               (playsink->audio_pad)));
-      gst_pad_unblock (opad);
+      gst_pad_remove_probe (opad, playsink->audio_block_id);
+      playsink->audio_block_id = 0;
       gst_object_unref (opad);
       playsink->audio_pad_blocked = FALSE;
     }
@@ -2919,7 +2926,8 @@ sinkpad_blocked_cb (GstPad * blockedpad, GstBlockType type, gpointer user_data)
       GstPad *opad =
           GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD
               (playsink->text_pad)));
-      gst_pad_unblock (opad);
+      gst_pad_remove_probe (opad, playsink->text_block_id);
+      playsink->text_block_id = 0;
       gst_object_unref (opad);
       playsink->text_pad_blocked = FALSE;
     }
@@ -2928,6 +2936,8 @@ sinkpad_blocked_cb (GstPad * blockedpad, GstBlockType type, gpointer user_data)
   gst_object_unref (pad);
 
   GST_PLAY_SINK_UNLOCK (playsink);
+
+  return GST_PROBE_OK;
 }
 
 static void
@@ -2965,8 +2975,10 @@ caps_notify_cb (GstPad * pad, GParamSpec * unused, GstPlaySink * playsink)
       GstPad *opad =
           GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD
               (playsink->video_pad)));
-      gst_pad_block (opad, GST_BLOCK_TYPE_DATA, sinkpad_blocked_cb,
-          gst_object_ref (playsink), (GDestroyNotify) gst_object_unref);
+      if (playsink->video_block_id == 0)
+        playsink->video_block_id =
+            gst_pad_add_probe (opad, GST_PROBE_TYPE_BLOCK, sinkpad_blocked_cb,
+            gst_object_ref (playsink), (GDestroyNotify) gst_object_unref);
       gst_object_unref (opad);
     }
 
@@ -2974,8 +2986,10 @@ caps_notify_cb (GstPad * pad, GParamSpec * unused, GstPlaySink * playsink)
       GstPad *opad =
           GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD
               (playsink->audio_pad)));
-      gst_pad_block (opad, GST_BLOCK_TYPE_DATA, sinkpad_blocked_cb,
-          gst_object_ref (playsink), (GDestroyNotify) gst_object_unref);
+      if (playsink->audio_block_id == 0)
+        playsink->audio_block_id =
+            gst_pad_add_probe (opad, GST_PROBE_TYPE_BLOCK, sinkpad_blocked_cb,
+            gst_object_ref (playsink), (GDestroyNotify) gst_object_unref);
       gst_object_unref (opad);
     }
 
@@ -2983,8 +2997,10 @@ caps_notify_cb (GstPad * pad, GParamSpec * unused, GstPlaySink * playsink)
       GstPad *opad =
           GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD
               (playsink->text_pad)));
-      gst_pad_block (opad, GST_BLOCK_TYPE_DATA, sinkpad_blocked_cb,
-          gst_object_ref (playsink), (GDestroyNotify) gst_object_unref);
+      if (playsink->text_block_id == 0)
+        playsink->text_block_id =
+            gst_pad_add_probe (opad, GST_PROBE_TYPE_BLOCK, sinkpad_blocked_cb,
+            gst_object_ref (playsink), (GDestroyNotify) gst_object_unref);
       gst_object_unref (opad);
     }
     GST_PLAY_SINK_UNLOCK (playsink);
@@ -3007,6 +3023,7 @@ gst_play_sink_request_pad (GstPlaySink * playsink, GstPlaySinkType type)
   gboolean created = FALSE;
   gboolean activate = TRUE;
   const gchar *pad_name = NULL;
+  gulong *block_id = NULL;
 
   GST_DEBUG_OBJECT (playsink, "request pad type %d", type);
 
@@ -3046,6 +3063,7 @@ gst_play_sink_request_pad (GstPlaySink * playsink, GstPlaySinkType type)
       }
       playsink->audio_pad_raw = FALSE;
       res = playsink->audio_pad;
+      block_id = &playsink->audio_block_id;
       break;
     case GST_PLAY_SINK_TYPE_VIDEO_RAW:
     case GST_PLAY_SINK_TYPE_VIDEO:
@@ -3060,6 +3078,7 @@ gst_play_sink_request_pad (GstPlaySink * playsink, GstPlaySinkType type)
       }
       playsink->video_pad_raw = FALSE;
       res = playsink->video_pad;
+      block_id = &playsink->video_block_id;
       break;
     case GST_PLAY_SINK_TYPE_TEXT:
       GST_LOG_OBJECT (playsink, "ghosting text");
@@ -3069,6 +3088,7 @@ gst_play_sink_request_pad (GstPlaySink * playsink, GstPlaySinkType type)
         created = TRUE;
       }
       res = playsink->text_pad;
+      block_id = &playsink->text_block_id;
       break;
     case GST_PLAY_SINK_TYPE_FLUSHING:
     {
@@ -3094,11 +3114,12 @@ gst_play_sink_request_pad (GstPlaySink * playsink, GstPlaySinkType type)
      * element is 'running' */
     gst_pad_set_active (res, TRUE);
     gst_element_add_pad (GST_ELEMENT_CAST (playsink), res);
-    if (type != GST_PLAY_SINK_TYPE_FLUSHING) {
+    if (block_id && *block_id == 0) {
       GstPad *blockpad =
           GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD (res)));
 
-      gst_pad_block (blockpad, GST_BLOCK_TYPE_DATA, sinkpad_blocked_cb,
+      *block_id =
+          gst_pad_add_probe (blockpad, GST_PROBE_TYPE_BLOCK, sinkpad_blocked_cb,
           gst_object_ref (playsink), (GDestroyNotify) gst_object_unref);
       gst_object_unref (blockpad);
     }
@@ -3350,7 +3371,8 @@ gst_play_sink_change_state (GstElement * element, GstStateChange transition)
         GstPad *opad =
             GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD
                 (playsink->video_pad)));
-        gst_pad_unblock (opad);
+        gst_pad_remove_probe (opad, playsink->video_block_id);
+        playsink->video_block_id = 0;
         gst_object_unref (opad);
         playsink->video_pad_blocked = FALSE;
       }
@@ -3360,7 +3382,8 @@ gst_play_sink_change_state (GstElement * element, GstStateChange transition)
             GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD
                 (playsink->audio_pad)));
 
-        gst_pad_unblock (opad);
+        gst_pad_remove_probe (opad, playsink->audio_block_id);
+        playsink->audio_block_id = 0;
         gst_object_unref (opad);
         playsink->audio_pad_blocked = FALSE;
       }
@@ -3369,7 +3392,8 @@ gst_play_sink_change_state (GstElement * element, GstStateChange transition)
         GstPad *opad =
             GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD
                 (playsink->text_pad)));
-        gst_pad_unblock (opad);
+        gst_pad_remove_probe (opad, playsink->text_block_id);
+        playsink->text_block_id = 0;
         gst_object_unref (opad);
         playsink->text_pad_blocked = FALSE;
       }

@@ -409,8 +409,9 @@ gst_discoverer_set_timeout (GstDiscoverer * dc, GstClockTime timeout)
   DISCO_UNLOCK (dc);
 }
 
-static gboolean
-_event_probe (GstPad * pad, GstEvent * event, PrivateStream * ps)
+static GstProbeReturn
+_event_probe (GstPad * pad, GstProbeType type, GstEvent * event,
+    PrivateStream * ps)
 {
   if (GST_EVENT_TYPE (event) == GST_EVENT_TAG) {
     GstTagList *tl = NULL, *tmp;
@@ -434,7 +435,7 @@ _event_probe (GstPad * pad, GstEvent * event, PrivateStream * ps)
     DISCO_UNLOCK (ps->dc);
   }
 
-  return TRUE;
+  return GST_PROBE_OK;
 }
 
 static void
@@ -497,7 +498,8 @@ uridecodebin_pad_added_cb (GstElement * uridecodebin, GstPad * pad,
   gst_object_unref (sinkpad);
 
   /* Add an event probe */
-  gst_pad_add_event_probe (pad, G_CALLBACK (_event_probe), ps);
+  gst_pad_add_probe (pad, GST_PROBE_TYPE_EVENT,
+      (GstPadProbeCallback) _event_probe, ps, NULL);
 
   DISCO_LOCK (dc);
   dc->priv->streams = g_list_append (dc->priv->streams, ps);
@@ -989,8 +991,8 @@ discoverer_collect (GstDiscoverer * dc)
           gst_caps_get_structure (dc->priv->current_info->stream_info->caps, 0);
 
       if (g_str_has_prefix (gst_structure_get_name (st), "image/"))
-        ((GstDiscovererVideoInfo *) dc->priv->current_info->
-            stream_info)->is_image = TRUE;
+        ((GstDiscovererVideoInfo *) dc->priv->current_info->stream_info)->
+            is_image = TRUE;
     }
   }
 

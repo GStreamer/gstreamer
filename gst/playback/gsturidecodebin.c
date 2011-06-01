@@ -986,10 +986,13 @@ configure_stream_buffering (GstURIDecodeBin * decoder)
   gst_object_unref (queue);
 }
 
-static gboolean
-decoded_pad_event_probe (GstPad * pad, GstEvent * event,
-    GstURIDecodeBin * decoder)
+static GstProbeReturn
+decoded_pad_event_probe (GstPad * pad, GstProbeType type, gpointer type_data,
+    gpointer user_data)
 {
+  GstEvent *event = type_data;
+  GstURIDecodeBin *decoder = user_data;
+
   GST_LOG_OBJECT (pad, "%s, decoder %p", GST_EVENT_TYPE_NAME (event), decoder);
 
   /* look for a bitrate tag */
@@ -1013,7 +1016,7 @@ decoded_pad_event_probe (GstPad * pad, GstEvent * event,
         if (stream) {
           stream->bitrate = bitrate;
           /* no longer need this probe now */
-          gst_pad_remove_event_probe (pad, stream->probe_id);
+          gst_pad_remove_probe (pad, stream->probe_id);
           /* configure buffer if possible */
           configure_stream_buffering (decoder);
         }
@@ -1025,7 +1028,7 @@ decoded_pad_event_probe (GstPad * pad, GstEvent * event,
   }
 
   /* never drop */
-  return TRUE;
+  return GST_PROBE_OK;
 }
 
 /* Called by the signal handlers when a decodebin has
@@ -1059,8 +1062,8 @@ new_decoded_pad_cb (GstElement * element, GstPad * pad, gboolean last,
   /* add event probe to monitor tags */
   stream = g_slice_alloc0 (sizeof (GstURIDecodeBinStream));
   stream->probe_id =
-      gst_pad_add_event_probe (pad, G_CALLBACK (decoded_pad_event_probe),
-      decoder);
+      gst_pad_add_probe (pad, GST_PROBE_TYPE_EVENT, decoded_pad_event_probe,
+      decoder, NULL);
   GST_URI_DECODE_BIN_LOCK (decoder);
   g_hash_table_insert (decoder->streams, pad, stream);
   GST_URI_DECODE_BIN_UNLOCK (decoder);
@@ -1069,10 +1072,13 @@ new_decoded_pad_cb (GstElement * element, GstPad * pad, gboolean last,
   gst_element_add_pad (GST_ELEMENT_CAST (decoder), newpad);
 }
 
-static gboolean
-source_pad_event_probe (GstPad * pad, GstEvent * event,
-    GstURIDecodeBin * decoder)
+static GstProbeReturn
+source_pad_event_probe (GstPad * pad, GstProbeType type, gpointer type_data,
+    gpointer user_data)
 {
+  GstEvent *event = type_data;
+  GstURIDecodeBin *decoder = user_data;
+
   GST_LOG_OBJECT (pad, "%s, decoder %p", GST_EVENT_TYPE_NAME (event), decoder);
 
   if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
@@ -1082,7 +1088,7 @@ source_pad_event_probe (GstPad * pad, GstEvent * event,
         gst_uri_decode_bin_signals[SIGNAL_DRAINED], 0, NULL);
   }
   /* never drop events */
-  return TRUE;
+  return GST_PROBE_OK;
 }
 
 /* called when we found a raw pad on the source element. We need to set up a
@@ -1091,7 +1097,8 @@ static void
 expose_decoded_pad (GstElement * element, GstPad * pad,
     GstURIDecodeBin * decoder)
 {
-  gst_pad_add_event_probe (pad, G_CALLBACK (source_pad_event_probe), decoder);
+  gst_pad_add_probe (pad, GST_PROBE_TYPE_EVENT, source_pad_event_probe, decoder,
+      NULL);
 
   new_decoded_pad_cb (element, pad, FALSE, decoder);
 }

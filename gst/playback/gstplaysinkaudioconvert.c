@@ -72,15 +72,16 @@ post_missing_element_message (GstPlaySinkAudioConvert * self,
   gst_element_post_message (GST_ELEMENT_CAST (self), msg);
 }
 
-static void
-pad_blocked_cb (GstPad * pad, gboolean blocked, GstPlaySinkAudioConvert * self)
+static GstProbeReturn
+pad_blocked_cb (GstPad * pad, GstProbeType type, gpointer type_data,
+    gpointer user_data)
 {
+  GstPlaySinkAudioConvert *self = user_data;
   GstPad *peer;
   GstCaps *caps;
   gboolean raw;
 
   GST_PLAY_SINK_AUDIO_CONVERT_LOCK (self);
-  self->sink_proxypad_blocked = TRUE;
   GST_DEBUG_OBJECT (self, "Pad blocked");
 
   /* There must be a peer at this point */
@@ -204,11 +205,9 @@ pad_blocked_cb (GstPad * pad, gboolean blocked, GstPlaySinkAudioConvert * self)
   }
 
 unblock:
-  gst_pad_unblock (self->sink_proxypad);
-  self->sink_proxypad_blocked = FALSE;
-
   GST_PLAY_SINK_AUDIO_CONVERT_UNLOCK (self);
-  return;
+
+  return GST_PROBE_REMOVE;
 
 link_failed:
   {
@@ -216,9 +215,29 @@ link_failed:
         (NULL), ("Failed to configure the audio converter."));
     gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (self->srcpad),
         self->sink_proxypad);
-    gst_pad_unblock (self->sink_proxypad);
-    self->sink_proxypad_blocked = FALSE;
-    return;
+    GST_PLAY_SINK_AUDIO_CONVERT_UNLOCK (self);
+
+    return GST_PROBE_REMOVE;
+  }
+}
+
+static void
+block_proxypad (GstPlaySinkAudioConvert * self)
+{
+  if (self->sink_proxypad_block_id == 0) {
+    self->sink_proxypad_block_id =
+        gst_pad_add_probe (self->sink_proxypad, GST_PROBE_TYPE_BLOCK,
+        pad_blocked_cb, gst_object_ref (self),
+        (GDestroyNotify) gst_object_unref);
+  }
+}
+
+static void
+unblock_proxypad (GstPlaySinkAudioConvert * self)
+{
+  if (self->sink_proxypad_block_id != 0) {
+    gst_pad_remove_probe (self->sink_proxypad, self->sink_proxypad_block_id);
+    self->sink_proxypad_block_id = 0;
   }
 }
 
@@ -270,17 +289,13 @@ gst_play_sink_audio_convert_sink_setcaps (GstPad * pad, GstCaps * caps)
     if (!self->raw && !gst_pad_is_blocked (self->sink_proxypad)) {
       GST_DEBUG_OBJECT (self, "Changing caps from non-raw to raw");
       reconfigure = TRUE;
-      gst_pad_block (self->sink_proxypad, GST_BLOCK_TYPE_DATA,
-          (GstPadBlockCallback) pad_blocked_cb, gst_object_ref (self),
-          (GDestroyNotify) gst_object_unref);
+      block_proxypad (self);
     }
   } else {
     if (self->raw && !gst_pad_is_blocked (self->sink_proxypad)) {
       GST_DEBUG_OBJECT (self, "Changing caps from raw to non-raw");
       reconfigure = TRUE;
-      gst_pad_block (self->sink_proxypad, GST_BLOCK_TYPE_DATA,
-          (GstPadBlockCallback) pad_blocked_cb, gst_object_ref (self),
-          (GDestroyNotify) gst_object_unref);
+      block_proxypad (self);
     }
   }
 
@@ -354,8 +369,7 @@ gst_play_sink_audio_convert_change_state (GstElement * element,
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       GST_PLAY_SINK_AUDIO_CONVERT_LOCK (self);
-      gst_pad_unblock (self->sink_proxypad);
-      self->sink_proxypad_blocked = FALSE;
+      unblock_proxypad (self);
       GST_PLAY_SINK_AUDIO_CONVERT_UNLOCK (self);
       break;
     default:
@@ -393,8 +407,7 @@ gst_play_sink_audio_convert_change_state (GstElement * element,
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       GST_PLAY_SINK_AUDIO_CONVERT_LOCK (self);
-      gst_pad_unblock (self->sink_proxypad);
-      self->sink_proxypad_blocked = FALSE;
+      unblock_proxypad (self);
       GST_PLAY_SINK_AUDIO_CONVERT_UNLOCK (self);
     default:
       break;
