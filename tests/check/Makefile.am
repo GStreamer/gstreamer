@@ -172,6 +172,7 @@ VALGRIND_TO_FIX = \
 noinst_PROGRAMS = $(check_libvisual)
 
 noinst_HEADERS = \
+	libs/struct_arm.h     \
 	libs/struct_i386.h     \
 	libs/struct_i386_osx.h \
 	libs/struct_x86_64.h
