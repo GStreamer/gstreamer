@@ -212,16 +212,16 @@ _memory_add (GstBuffer * buffer, GstMemory * mem)
 }
 
 #if 1
-/* buffer alignment in bytes
- * an alignment of 8 would be the same as malloc() guarantees
+/* buffer alignment in bytes - 1
+ * an alignment of 7 would be the same as malloc() guarantees
  */
 #ifdef HAVE_POSIX_MEMALIGN
 #if defined(BUFFER_ALIGNMENT_MALLOC)
-static size_t _gst_buffer_data_alignment = 8;
+static size_t _gst_buffer_data_alignment = 7;
 #elif defined(BUFFER_ALIGNMENT_PAGESIZE)
 static size_t _gst_buffer_data_alignment = 0;
 #elif defined(BUFFER_ALIGNMENT)
-static size_t _gst_buffer_data_alignment = BUFFER_ALIGNMENT;
+static size_t _gst_buffer_data_alignment = BUFFER_ALIGNMENT - 1;
 #else
 #error "No buffer alignment configured"
 #endif
@@ -235,7 +235,7 @@ _gst_buffer_initialize (void)
     _gst_buffer_type = gst_mini_object_register ("GstBuffer");
 #ifdef HAVE_GETPAGESIZE
 #ifdef BUFFER_ALIGNMENT_PAGESIZE
-    _gst_buffer_data_alignment = getpagesize ();
+    _gst_buffer_data_alignment = getpagesize () - 1;
 #endif
 #endif
   }
