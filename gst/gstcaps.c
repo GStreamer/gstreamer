@@ -309,43 +309,6 @@ gst_caps_new_full_valist (GstStructure * structure, va_list var_args)
   return caps;
 }
 
-/**
- * gst_caps_make_writable:
- * @caps: (transfer full): the #GstCaps to make writable
- *
- * Returns a writable copy of @caps.
- *
- * If there is only one reference count on @caps, the caller must be the owner,
- * and so this function will return the caps object unchanged. If on the other
- * hand there is more than one reference on the object, a new caps object will
- * be returned. The caller's reference on @caps will be removed, and instead the
- * caller will own a reference to the returned object.
- *
- * In short, this function unrefs the caps in the argument and refs the caps
- * that it returns. Don't access the argument after calling this function. See
- * also: gst_caps_ref().
- *
- * Returns: (transfer full): the same #GstCaps object.
- */
-GstCaps *
-gst_caps_make_writable (GstCaps * caps)
-{
-  GstCaps *copy;
-
-  g_return_val_if_fail (caps != NULL, NULL);
-
-  /* we are the only instance reffing this caps */
-  if (IS_WRITABLE (caps))
-    return caps;
-
-  /* else copy */
-  GST_CAT_DEBUG (GST_CAT_PERFORMANCE, "copy caps");
-  copy = _gst_caps_copy (caps);
-  gst_caps_unref (caps);
-
-  return copy;
-}
-
 GType
 gst_static_caps_get_type (void)
 {
@@ -1781,40 +1744,6 @@ gst_caps_do_simplify (GstCaps * caps)
 }
 
 /* utility */
-
-/**
- * gst_caps_replace:
- * @caps: (inout) (transfer full): a pointer to #GstCaps
- * @newcaps: a #GstCaps to replace *caps
- *
- * Replaces *caps with @newcaps.  Unrefs the #GstCaps in the location
- * pointed to by @caps, if applicable, then modifies @caps to point to
- * @newcaps. An additional ref on @newcaps is taken.
- *
- * This function does not take any locks so you might want to lock
- * the object owning @caps pointer.
- */
-void
-gst_caps_replace (GstCaps ** caps, GstCaps * newcaps)
-{
-  GstCaps *oldcaps;
-
-  g_return_if_fail (caps != NULL);
-
-  oldcaps = *caps;
-
-  GST_CAT_TRACE (GST_CAT_REFCOUNTING, "%p, %p -> %p", caps, oldcaps, newcaps);
-
-  if (newcaps != oldcaps) {
-    if (newcaps)
-      gst_caps_ref (newcaps);
-
-    *caps = newcaps;
-
-    if (oldcaps)
-      gst_caps_unref (oldcaps);
-  }
-}
 
 /**
  * gst_caps_to_string:

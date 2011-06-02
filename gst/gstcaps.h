@@ -254,6 +254,56 @@ gst_caps_copy (const GstCaps * caps)
   return GST_CAPS (gst_mini_object_copy (GST_MINI_OBJECT_CAST (caps)));
 }
 
+/**
+ * gst_caps_is_writable:
+ * @caps: a #GstCaps
+ *
+ * Tests if you can safely modify @caps. It is only safe to modify caps when
+ * there is only one owner of the caps - ie, the refcount is 1.
+ */
+#define         gst_caps_is_writable(caps)     gst_mini_object_is_writable (GST_MINI_OBJECT_CAST (caps))
+
+/**
+ * gst_caps_make_writable:
+ * @caps: (transfer full): a #GstCaps
+ *
+ * Returns a writable copy of @caps.
+ *
+ * If there is only one reference count on @caps, the caller must be the owner,
+ * and so this function will return the caps object unchanged. If on the other
+ * hand there is more than one reference on the object, a new caps object will
+ * be returned. The caller's reference on @caps will be removed, and instead the
+ * caller will own a reference to the returned object.
+ *
+ * In short, this function unrefs the caps in the argument and refs the caps
+ * that it returns. Don't access the argument after calling this function. See
+ * also: gst_caps_ref().
+ *
+ * Returns: (transfer full): a writable caps which may or may not be the
+ *     same as @caps
+ */
+#define         gst_caps_make_writable(caps)   GST_CAPS_CAST (gst_mini_object_make_writable (GST_MINI_OBJECT_CAST (caps)))
+
+/**
+ * gst_caps_replace:
+ * @ocaps: (inout) (transfer full): pointer to a pointer to a #GstCaps to be
+ *     replaced.
+ * @ncaps: (transfer none) (allow-none): pointer to a #GstCaps that will
+ *     replace the caps pointed to by @ocaps.
+ *
+ * Modifies a pointer to a #GstCaps to point to a different #GstCaps. The
+ * modification is done atomically (so this is useful for ensuring thread safety
+ * in some cases), and the reference counts are updated appropriately (the old
+ * caps is unreffed, the new is reffed).
+ *
+ * Either @ncaps or the #GstCaps pointed to by @ocaps may be NULL.
+ */
+#define         gst_caps_replace(ocaps,ncaps) \
+G_STMT_START {                                                                \
+  GstCaps **___ocapsaddr = (GstCaps **)(ocaps);         \
+  gst_mini_object_replace ((GstMiniObject **)___ocapsaddr, \
+      GST_MINI_OBJECT_CAST (ncaps));                       \
+} G_STMT_END
 
 /**
  * GstCaps:
@@ -297,9 +347,6 @@ GstCaps *         gst_caps_new_simple              (const char    *media_type,
 GstCaps *         gst_caps_new_full                (GstStructure  *struct1, ...);
 GstCaps *         gst_caps_new_full_valist         (GstStructure  *structure,
                                                     va_list        var_args);
-
-/* reference counting */
-GstCaps *         gst_caps_make_writable           (GstCaps       *caps) G_GNUC_WARN_UNUSED_RESULT;
 
 GType             gst_static_caps_get_type         (void);
 GstCaps *         gst_static_caps_get              (GstStaticCaps *static_caps);
@@ -362,8 +409,6 @@ GstCaps *         gst_caps_normalize               (const GstCaps *caps);
 gboolean          gst_caps_do_simplify             (GstCaps       *caps);
 
 /* utility */
-void              gst_caps_replace                 (GstCaps      **caps,
-                                                    GstCaps       *newcaps);
 gchar *           gst_caps_to_string               (const GstCaps *caps);
 GstCaps *         gst_caps_from_string             (const gchar   *string);
 
