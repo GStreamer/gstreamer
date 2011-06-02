@@ -199,7 +199,7 @@ static GstFlowReturn gst_avi_mux_collect_pads (GstCollectPads * pads,
     GstAviMux * avimux);
 static gboolean gst_avi_mux_handle_event (GstPad * pad, GstEvent * event);
 static GstPad *gst_avi_mux_request_new_pad (GstElement * element,
-    GstPadTemplate * templ, const gchar * name);
+    GstPadTemplate * templ, const gchar * name, const GstCaps * caps);
 static void gst_avi_mux_release_pad (GstElement * element, GstPad * pad);
 static void gst_avi_mux_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
@@ -923,7 +923,7 @@ refuse_caps:
 
 static GstPad *
 gst_avi_mux_request_new_pad (GstElement * element,
-    GstPadTemplate * templ, const gchar * req_name)
+    GstPadTemplate * templ, const gchar * req_name, const GstCaps * caps)
 {
   GstAviMux *avimux;
   GstPad *newpad;
@@ -1497,8 +1497,7 @@ gst_avi_mux_write_avix_index (GstAviMux * avimux, GstAviPad * avipad,
   GST_WRITE_UINT32_LE (data + 12, entry_count);
   gst_buffer_unmap (buffer, data, size);
 
-  /* decorate and send */
-  gst_buffer_set_caps (buffer, GST_PAD_CAPS (avimux->srcpad));
+  /* send */
   if ((res = gst_pad_push (avimux->srcpad, buffer)) != GST_FLOW_OK)
     return res;
 
@@ -1573,7 +1572,6 @@ gst_avi_mux_write_index (GstAviMux * avimux)
       avimux->idx_index * sizeof (gst_riff_index_entry));
   gst_buffer_unmap (buffer, buffdata, buffsize);
 
-  gst_buffer_set_caps (buffer, GST_PAD_CAPS (avimux->srcpad));
   res = gst_pad_push (avimux->srcpad, buffer);
   if (res != GST_FLOW_OK)
     return res;
@@ -1589,7 +1587,6 @@ gst_avi_mux_write_index (GstAviMux * avimux)
 
   avimux->total_data += buffsize + 8;
 
-  gst_buffer_set_caps (buffer, GST_PAD_CAPS (avimux->srcpad));
   res = gst_pad_push (avimux->srcpad, buffer);
   if (res != GST_FLOW_OK)
     return res;
@@ -1606,7 +1603,6 @@ gst_avi_mux_bigfile (GstAviMux * avimux, gboolean last)
 {
   GstFlowReturn res = GST_FLOW_OK;
   GstBuffer *header;
-  GstEvent *event;
   GSList *node;
 
   /* first some odml standard index chunks in the movi list */
@@ -1623,21 +1619,23 @@ gst_avi_mux_bigfile (GstAviMux * avimux, gboolean last)
   }
 
   if (avimux->is_bigfile) {
+    GstSegment segment;
+
+    gst_segment_init (&segment, GST_FORMAT_BYTES);
+
     /* search back */
-    event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_BYTES,
-        avimux->avix_start, GST_CLOCK_TIME_NONE, avimux->avix_start);
-    /* if the event succeeds */
-    gst_pad_push_event (avimux->srcpad, event);
+    segment.start = avimux->avix_start;
+    segment.time = avimux->avix_start;
+    gst_pad_push_event (avimux->srcpad, gst_event_new_segment (&segment));
 
     /* rewrite AVIX header */
     header = gst_avi_mux_riff_get_avix_header (avimux->datax_size);
-    gst_buffer_set_caps (header, GST_PAD_CAPS (avimux->srcpad));
     res = gst_pad_push (avimux->srcpad, header);
 
     /* go back to current location, at least try */
-    event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_BYTES,
-        avimux->total_data, GST_CLOCK_TIME_NONE, avimux->total_data);
-    gst_pad_push_event (avimux->srcpad, event);
+    segment.start = avimux->total_data;
+    segment.time = avimux->total_data;
+    gst_pad_push_event (avimux->srcpad, gst_event_new_segment (&segment));
 
     if (res != GST_FLOW_OK)
       return res;
@@ -1672,7 +1670,7 @@ gst_avi_mux_bigfile (GstAviMux * avimux, gboolean last)
   avimux->total_data += gst_buffer_get_size (header);
   /* avix_start is used as base offset for the odml index chunk */
   avimux->idx_offset = avimux->total_data - avimux->avix_start;
-  gst_buffer_set_caps (header, GST_PAD_CAPS (avimux->srcpad));
+
   return gst_pad_push (avimux->srcpad, header);
 }
 
@@ -1685,6 +1683,7 @@ gst_avi_mux_start_file (GstAviMux * avimux)
   GstBuffer *header;
   GSList *node;
   GstCaps *caps;
+  GstSegment segment;
 
   avimux->total_data = 0;
   avimux->total_frames = 0;
@@ -1732,8 +1731,8 @@ gst_avi_mux_start_file (GstAviMux * avimux)
   gst_caps_unref (caps);
 
   /* let downstream know we think in BYTES and expect to do seeking later on */
-  gst_pad_push_event (avimux->srcpad,
-      gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_BYTES, 0, -1, 0));
+  gst_segment_init (&segment, GST_FORMAT_BYTES);
+  gst_pad_push_event (avimux->srcpad, gst_event_new_segment (&segment));
 
   /* header */
   avimux->avi_hdr.streams = g_slist_length (avimux->sinkpads);
@@ -1742,7 +1741,6 @@ gst_avi_mux_start_file (GstAviMux * avimux)
   header = gst_avi_mux_riff_get_avi_header (avimux);
   avimux->total_data += gst_buffer_get_size (header);
 
-  gst_buffer_set_caps (header, GST_PAD_CAPS (avimux->srcpad));
   res = gst_pad_push (avimux->srcpad, header);
 
   avimux->idx_offset = avimux->total_data;
@@ -1754,9 +1752,9 @@ static GstFlowReturn
 gst_avi_mux_stop_file (GstAviMux * avimux)
 {
   GstFlowReturn res = GST_FLOW_OK;
-  GstEvent *event;
   GstBuffer *header;
   GSList *node;
+  GstSegment segment;
 
   /* if bigfile, rewrite header, else write indexes */
   /* don't bail out at once if error, still try to re-write header */
@@ -1816,21 +1814,19 @@ gst_avi_mux_stop_file (GstAviMux * avimux)
   avimux->avi_hdr.tot_frames = avimux->num_frames;
 
   /* seek and rewrite the header */
-  header = gst_avi_mux_riff_get_avi_header (avimux);
-  event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_BYTES,
-      0, GST_CLOCK_TIME_NONE, 0);
-  gst_pad_push_event (avimux->srcpad, event);
+  gst_segment_init (&segment, GST_FORMAT_BYTES);
+  gst_pad_push_event (avimux->srcpad, gst_event_new_segment (&segment));
 
-  gst_buffer_set_caps (header, GST_PAD_CAPS (avimux->srcpad));
   /* the first error survives */
+  header = gst_avi_mux_riff_get_avi_header (avimux);
   if (res == GST_FLOW_OK)
     res = gst_pad_push (avimux->srcpad, header);
   else
     gst_pad_push (avimux->srcpad, header);
 
-  event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_BYTES,
-      avimux->total_data, GST_CLOCK_TIME_NONE, avimux->total_data);
-  gst_pad_push_event (avimux->srcpad, event);
+  segment.start = avimux->total_data;
+  segment.time = avimux->total_data;
+  gst_pad_push_event (avimux->srcpad, gst_event_new_segment (&segment));
 
   avimux->write_header = TRUE;
 
@@ -1894,7 +1890,7 @@ gst_avi_mux_send_pad_data (GstAviMux * avimux, gulong num_bytes)
   bdata = gst_buffer_map (buffer, &bsize, NULL, GST_MAP_WRITE);
   memset (bdata, 0, num_bytes);
   gst_buffer_unmap (buffer, bdata, bsize);
-  gst_buffer_set_caps (buffer, GST_PAD_CAPS (avimux->srcpad));
+
   return gst_pad_push (avimux->srcpad, buffer);
 }
 
@@ -1991,11 +1987,7 @@ gst_avi_mux_do_buffer (GstAviMux * avimux, GstAviPad * avipad)
 
   gst_avi_mux_add_index (avimux, avipad, flags, datasize);
 
-  /* prepare buffers for sending */
-  gst_buffer_set_caps (header, GST_PAD_CAPS (avimux->srcpad));
-  data = gst_buffer_make_writable (data);
-  gst_buffer_set_caps (data, GST_PAD_CAPS (avimux->srcpad));
-
+  /* send buffers */
   GST_LOG_OBJECT (avimux, "pushing buffers: head, data");
 
   if ((res = gst_pad_push (avimux->srcpad, header)) != GST_FLOW_OK)

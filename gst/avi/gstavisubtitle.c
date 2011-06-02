@@ -157,7 +157,6 @@ gst_avi_subtitle_extract_file (GstAviSubtitle * sub, GstBuffer * buffer,
 
     GST_BUFFER_OFFSET (ret) = 0;
   }
-  GST_BUFFER_CAPS (ret) = gst_caps_new_simple ("application/x-subtitle", NULL);
 
 done:
   gst_buffer_unmap (buffer, bdata, bsize);

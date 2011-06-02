@@ -254,10 +254,6 @@ gst_avi_demux_reset (GstAviDemux * avi)
     gst_object_unref (avi->element_index);
   avi->element_index = NULL;
 
-  if (avi->close_seg_event) {
-    gst_event_unref (avi->close_seg_event);
-    avi->close_seg_event = NULL;
-  }
   if (avi->seg_event) {
     gst_event_unref (avi->seg_event);
     avi->seg_event = NULL;
@@ -719,22 +715,14 @@ gst_avi_demux_handle_sink_event (GstPad * pad, GstEvent * event)
       "have event type %s: %p on sink pad", GST_EVENT_TYPE_NAME (event), event);
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_NEWSEGMENT:
+    case GST_EVENT_SEGMENT:
     {
-      GstFormat format;
-      gdouble rate, arate;
-      gint64 start, stop, time, offset = 0;
-      gboolean update;
+      gint64 boffset, offset = 0;
       GstSegment segment;
 
       /* some debug output */
-      gst_segment_init (&segment, GST_FORMAT_UNDEFINED);
-      gst_event_parse_new_segment_full (event, &update, &rate, &arate, &format,
-          &start, &stop, &time);
-      gst_segment_set_newsegment_full (&segment, update, rate, arate, format,
-          start, stop, time);
-      GST_DEBUG_OBJECT (avi,
-          "received format %d newsegment %" GST_SEGMENT_FORMAT, format,
+      gst_event_copy_segment (event, &segment);
+      GST_DEBUG_OBJECT (avi, "received newsegment %" GST_SEGMENT_FORMAT,
           &segment);
 
       /* chain will send initial newsegment after pads have been added */
@@ -744,7 +732,7 @@ gst_avi_demux_handle_sink_event (GstPad * pad, GstEvent * event)
       }
 
       /* we only expect a BYTE segment, e.g. following a seek */
-      if (format != GST_FORMAT_BYTES) {
+      if (segment.format != GST_FORMAT_BYTES) {
         GST_DEBUG_OBJECT (avi, "unsupported segment format, ignoring");
         goto exit;
       }
@@ -755,7 +743,7 @@ gst_avi_demux_handle_sink_event (GstPad * pad, GstEvent * event)
         GstAviStream *stream;
 
         /* compensate chunk header, stored index offset points after header */
-        start += 8;
+        boffset = segment.start + 8;
         /* find which stream we're on */
         do {
           stream = &avi->stream[i];
@@ -764,7 +752,7 @@ gst_avi_demux_handle_sink_event (GstPad * pad, GstEvent * event)
           entry = gst_util_array_binary_search (stream->index,
               stream->idx_n, sizeof (GstAviIndexEntry),
               (GCompareDataFunc) gst_avi_demux_index_entry_offset_search,
-              GST_SEARCH_MODE_AFTER, &start, NULL);
+              GST_SEARCH_MODE_AFTER, &boffset, NULL);
 
           if (entry == NULL)
             continue;
@@ -776,10 +764,10 @@ gst_avi_demux_handle_sink_event (GstPad * pad, GstEvent * event)
             k = i;
           }
           /* exact match needs no further searching */
-          if (stream->index[index].offset == start)
+          if (stream->index[index].offset == segment.start)
             break;
         } while (++i < avi->num_streams);
-        start -= 8;
+        boffset -= 8;
         offset -= 8;
         stream = &avi->stream[k];
 
@@ -791,14 +779,14 @@ gst_avi_demux_handle_sink_event (GstPad * pad, GstEvent * event)
 
         /* get the ts corresponding to start offset bytes for the stream */
         gst_avi_demux_get_buffer_info (avi, stream, index,
-            (GstClockTime *) & time, NULL, NULL, NULL);
+            (GstClockTime *) & segment.time, NULL, NULL, NULL);
       } else if (avi->element_index) {
         GstIndexEntry *entry;
 
         /* Let's check if we have an index entry for this position */
         entry = gst_index_get_assoc_entry (avi->element_index, avi->index_id,
             GST_INDEX_LOOKUP_AFTER, GST_ASSOCIATION_FLAG_NONE,
-            GST_FORMAT_BYTES, start);
+            GST_FORMAT_BYTES, segment.start);
 
         /* we can not go where we have not yet been before ... */
         if (!entry) {
@@ -806,27 +794,26 @@ gst_avi_demux_handle_sink_event (GstPad * pad, GstEvent * event)
           goto eos;
         }
 
-        gst_index_entry_assoc_map (entry, GST_FORMAT_TIME, &time);
+        gst_index_entry_assoc_map (entry, GST_FORMAT_TIME,
+            (gint64 *) & segment.time);
         gst_index_entry_assoc_map (entry, GST_FORMAT_BYTES, &offset);
       } else {
         GST_WARNING_OBJECT (avi, "no index data, forcing EOS");
         goto eos;
       }
 
-      stop = GST_CLOCK_TIME_NONE;
+      segment.format = GST_FORMAT_TIME;
+      segment.start = segment.time;
+      segment.stop = GST_CLOCK_TIME_NONE;
 
       /* set up segment and send downstream */
-      gst_segment_set_newsegment_full (&avi->segment, update, rate, arate,
-          GST_FORMAT_TIME, time, stop, time);
-      GST_DEBUG_OBJECT (avi, "Pushing newseg update %d, rate %g, "
-          "applied rate %g, format %d, start %" G_GINT64_FORMAT ", "
-          "stop %" G_GINT64_FORMAT, update, rate, arate, GST_FORMAT_TIME,
-          time, stop);
-      gst_avi_demux_push_event (avi,
-          gst_event_new_new_segment_full (update, rate, arate, GST_FORMAT_TIME,
-              time, stop, time));
+      gst_segment_copy_into (&segment, &avi->segment);
 
-      GST_DEBUG_OBJECT (avi, "next chunk expected at %" G_GINT64_FORMAT, start);
+      GST_DEBUG_OBJECT (avi, "Pushing newseg %" GST_SEGMENT_FORMAT, &segment);
+      gst_avi_demux_push_event (avi, gst_event_new_segment (&segment));
+
+      GST_DEBUG_OBJECT (avi, "next chunk expected at %" G_GINT64_FORMAT,
+          boffset);
 
       /* adjust state for streaming thread accordingly */
       if (avi->have_index)
@@ -835,9 +822,9 @@ gst_avi_demux_handle_sink_event (GstPad * pad, GstEvent * event)
         gst_avi_demux_seek_streams (avi, offset, FALSE);
 
       /* set up streaming thread */
-      g_assert (offset >= start);
-      avi->offset = start;
-      avi->todrop = offset - start;
+      g_assert (offset >= boffset);
+      avi->offset = boffset;
+      avi->todrop = offset - boffset;
 
     exit:
       gst_event_unref (event);
@@ -1843,8 +1830,8 @@ gst_avi_demux_expose_streams (GstAviDemux * avi, gboolean force)
     GstAviStream *stream = &avi->stream[i];
 
     if (force || stream->idx_n != 0) {
-      GST_LOG_OBJECT (avi, "Added pad %s with caps %" GST_PTR_FORMAT,
-          GST_PAD_NAME (stream->pad), GST_PAD_CAPS (stream->pad));
+      GST_LOG_OBJECT (avi, "Adding pad %s" GST_PTR_FORMAT,
+          GST_PAD_NAME (stream->pad));
       gst_element_add_pad ((GstElement *) avi, stream->pad);
 
       if (avi->element_index)
@@ -2293,8 +2280,8 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
   gst_pad_set_element_private (pad, stream);
   avi->num_streams++;
 
-  gst_pad_set_caps (pad, caps);
   gst_pad_set_active (pad, TRUE);
+  gst_pad_push_event (pad, gst_event_new_caps (caps));
   gst_caps_unref (caps);
 
   /* make tags */
@@ -3070,7 +3057,7 @@ gst_avi_demux_calculate_durations_from_index (GstAviDemux * avi)
   GST_INFO ("Setting total duration to: %" GST_TIME_FORMAT,
       GST_TIME_ARGS (total));
 
-  gst_segment_set_duration (&avi->segment, GST_FORMAT_TIME, total);
+  avi->segment.duration = total;
 }
 
 /* returns FALSE if there are no pads to deliver event to,
@@ -3148,7 +3135,6 @@ gst_avi_demux_stream_header_push (GstAviDemux * avi)
   const guint8 *data;
   GstBuffer *buf = NULL, *sub = NULL;
   guint offset = 4;
-  gint64 stop;
   gint i;
   GstTagList *tags = NULL;
   guint8 fourcc[4];
@@ -3365,16 +3351,9 @@ skipping_done:
     avi->stream[i].current_entry = 0;
 
   /* create initial NEWSEGMENT event */
-  if ((stop = avi->segment.stop) == GST_CLOCK_TIME_NONE)
-    stop = avi->segment.duration;
-
-  GST_DEBUG_OBJECT (avi, "segment stop %" G_GINT64_FORMAT, stop);
-
   if (avi->seg_event)
     gst_event_unref (avi->seg_event);
-  avi->seg_event = gst_event_new_new_segment_full
-      (FALSE, avi->segment.rate, avi->segment.applied_rate, GST_FORMAT_TIME,
-      avi->segment.start, stop, avi->segment.time);
+  avi->seg_event = gst_event_new_segment (&avi->segment);
 
   gst_avi_demux_check_seekability (avi);
 
@@ -3590,7 +3569,6 @@ gst_avi_demux_stream_header_pull (GstAviDemux * avi)
   GstBuffer *buf, *sub = NULL;
   guint32 tag;
   guint offset = 4;
-  gint64 stop;
   GstElement *element = GST_ELEMENT_CAST (avi);
   GstClockTime stamp;
   GstTagList *tags = NULL;
@@ -3862,21 +3840,13 @@ skipping_done:
 
   gst_avi_demux_expose_streams (avi, FALSE);
 
-  /* create initial NEWSEGMENT event */
-  if ((stop = avi->segment.stop) == GST_CLOCK_TIME_NONE)
-    stop = avi->segment.duration;
-
-  GST_DEBUG_OBJECT (avi, "segment stop %" G_GINT64_FORMAT, stop);
-
   /* do initial seek to the default segment values */
   gst_avi_demux_do_seek (avi, &avi->segment);
 
-  /* prepare initial segment */
+  /* create initial NEWSEGMENT event */
   if (avi->seg_event)
     gst_event_unref (avi->seg_event);
-  avi->seg_event = gst_event_new_new_segment_full
-      (FALSE, avi->segment.rate, avi->segment.applied_rate, GST_FORMAT_TIME,
-      avi->segment.start, stop, avi->segment.time);
+  avi->seg_event = gst_event_new_segment (&avi->segment);
 
   stamp = gst_util_get_timestamp () - stamp;
   GST_DEBUG_OBJECT (avi, "pulling header took %" GST_TIME_FORMAT,
@@ -4006,7 +3976,7 @@ gst_avi_demux_do_seek (GstAviDemux * avi, GstSegment * segment)
   guint i, index;
   GstAviStream *stream;
 
-  seek_time = segment->last_stop;
+  seek_time = segment->position;
   keyframe = !!(segment->flags & GST_SEEK_FLAG_KEY_UNIT);
 
   GST_DEBUG_OBJECT (avi, "seek to: %" GST_TIME_FORMAT
@@ -4040,9 +4010,9 @@ gst_avi_demux_do_seek (GstAviDemux * avi, GstSegment * segment)
         GST_TIME_ARGS (seek_time));
   }
 
-  /* the seek time is also the last_stop and stream time when going
+  /* the seek time is also the position and stream time when going
    * forwards */
-  segment->last_stop = seek_time;
+  segment->position = seek_time;
   if (segment->rate > 0.0)
     segment->time = seek_time;
 
@@ -4145,28 +4115,19 @@ gst_avi_demux_handle_seek (GstAviDemux * avi, GstPad * pad, GstEvent * event)
 
   if (event) {
     GST_DEBUG_OBJECT (avi, "configuring seek");
-    gst_segment_set_seek (&seeksegment, rate, format, flags,
+    gst_segment_do_seek (&seeksegment, rate, format, flags,
         cur_type, cur, stop_type, stop, &update);
   }
-  /* do the seek, seeksegment.last_stop contains the new position, this
+  /* do the seek, seeksegment.position contains the new position, this
    * actually never fails. */
   gst_avi_demux_do_seek (avi, &seeksegment);
 
-  gst_event_replace (&avi->close_seg_event, NULL);
   if (flush) {
     GstEvent *fevent = gst_event_new_flush_stop ();
 
     GST_DEBUG_OBJECT (avi, "sending flush stop");
     gst_avi_demux_push_event (avi, gst_event_ref (fevent));
     gst_pad_push_event (avi->sinkpad, fevent);
-  } else if (avi->segment_running) {
-    /* we are running the current segment and doing a non-flushing seek,
-     * close the segment first based on the last_stop. */
-    GST_DEBUG_OBJECT (avi, "closing running segment %" G_GINT64_FORMAT
-        " to %" G_GINT64_FORMAT, avi->segment.start, avi->segment.last_stop);
-    avi->close_seg_event = gst_event_new_new_segment_full (TRUE,
-        avi->segment.rate, avi->segment.applied_rate, avi->segment.format,
-        avi->segment.start, avi->segment.last_stop, avi->segment.time);
   }
 
   /* now update the real segment info */
@@ -4176,30 +4137,15 @@ gst_avi_demux_handle_seek (GstAviDemux * avi, GstPad * pad, GstEvent * event)
   if (avi->segment.flags & GST_SEEK_FLAG_SEGMENT) {
     gst_element_post_message (GST_ELEMENT_CAST (avi),
         gst_message_new_segment_start (GST_OBJECT_CAST (avi),
-            avi->segment.format, avi->segment.last_stop));
+            avi->segment.format, avi->segment.position));
   }
-
-  /* prepare for streaming again */
-  if ((stop = avi->segment.stop) == GST_CLOCK_TIME_NONE)
-    stop = avi->segment.duration;
 
   /* queue the segment event for the streaming thread. */
   if (avi->seg_event)
     gst_event_unref (avi->seg_event);
-  if (avi->segment.rate > 0.0) {
-    /* forwards goes from last_stop to stop */
-    avi->seg_event = gst_event_new_new_segment_full (FALSE,
-        avi->segment.rate, avi->segment.applied_rate, avi->segment.format,
-        avi->segment.last_stop, stop, avi->segment.time);
-  } else {
-    /* reverse goes from start to last_stop */
-    avi->seg_event = gst_event_new_new_segment_full (FALSE,
-        avi->segment.rate, avi->segment.applied_rate, avi->segment.format,
-        avi->segment.start, avi->segment.last_stop, avi->segment.time);
-  }
+  avi->seg_event = gst_event_new_segment (&avi->segment);
 
   if (!avi->streaming) {
-    avi->segment_running = TRUE;
     gst_pad_start_task (avi->sinkpad, (GstTaskFunction) gst_avi_demux_loop,
         avi->sinkpad);
   }
@@ -4270,11 +4216,11 @@ avi_demux_handle_seek_push (GstAviDemux * avi, GstPad * pad, GstEvent * event)
   /* let gst_segment handle any tricky stuff */
   GST_DEBUG_OBJECT (avi, "configuring seek");
   memcpy (&seeksegment, &avi->segment, sizeof (GstSegment));
-  gst_segment_set_seek (&seeksegment, rate, format, flags,
+  gst_segment_do_seek (&seeksegment, rate, format, flags,
       cur_type, cur, stop_type, stop, &update);
 
   keyframe = !!(flags & GST_SEEK_FLAG_KEY_UNIT);
-  cur = seeksegment.last_stop;
+  cur = seeksegment.position;
 
   GST_DEBUG_OBJECT (avi,
       "Seek requested: ts %" GST_TIME_FORMAT " stop %" GST_TIME_FORMAT
@@ -4463,6 +4409,7 @@ gst_avi_demux_invert (GstAviStream * stream, GstBuffer * buf)
   gint bpp, stride;
   guint8 *tmp = NULL, *data;
   gsize size;
+  GstCaps *caps;
 
   if (stream->strh->type != GST_RIFF_FCC_vids)
     return buf;
@@ -4471,7 +4418,10 @@ gst_avi_demux_invert (GstAviStream * stream, GstBuffer * buf)
     return buf;                 /* Ignore non DIB buffers */
   }
 
-  s = gst_caps_get_structure (GST_PAD_CAPS (stream->pad), 0);
+  caps = gst_pad_get_current_caps (stream->pad);
+  s = gst_caps_get_structure (caps, 0);
+  gst_caps_unref (caps);
+
   if (!gst_structure_get_int (s, "bpp", &bpp)) {
     GST_WARNING ("Failed to retrieve depth from caps");
     return buf;
@@ -4784,10 +4734,8 @@ gst_avi_demux_loop_data (GstAviDemux * avi)
 
     gst_avi_demux_add_assoc (avi, stream, timestamp, offset, keyframe);
 
-    gst_buffer_set_caps (buf, GST_PAD_CAPS (stream->pad));
-
     /* update current position in the segment */
-    gst_segment_set_last_stop (&avi->segment, GST_FORMAT_TIME, timestamp);
+    avi->segment.position = timestamp;
 
     GST_DEBUG_OBJECT (avi, "Pushing buffer of size %u, ts %"
         GST_TIME_FORMAT ", dur %" GST_TIME_FORMAT ", off %" G_GUINT64_FORMAT
@@ -5032,7 +4980,7 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
         stream->current_total += size;
 
         /* update current position in the segment */
-        gst_segment_set_last_stop (&avi->segment, GST_FORMAT_TIME, next_ts);
+        avi->segment.position = next_ts;
 
         if (saw_desired_kf && buf) {
           GstClockTime dur_ts = 0;
@@ -5054,7 +5002,6 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
             GST_BUFFER_OFFSET_END (buf) = GST_BUFFER_OFFSET_NONE;
           }
 
-          gst_buffer_set_caps (buf, GST_PAD_CAPS (stream->pad));
           GST_DEBUG_OBJECT (avi,
               "Pushing buffer with time=%" GST_TIME_FORMAT ", duration %"
               GST_TIME_FORMAT ", offset %" G_GUINT64_FORMAT
@@ -5159,10 +5106,6 @@ gst_avi_demux_loop (GstPad * pad)
       avi->state = GST_AVI_DEMUX_MOVI;
       break;
     case GST_AVI_DEMUX_MOVI:
-      if (G_UNLIKELY (avi->close_seg_event)) {
-        gst_avi_demux_push_event (avi, avi->close_seg_event);
-        avi->close_seg_event = NULL;
-      }
       if (G_UNLIKELY (avi->seg_event)) {
         gst_avi_demux_push_event (avi, avi->seg_event);
         avi->seg_event = NULL;
@@ -5192,9 +5135,7 @@ pause:{
 
     gboolean push_eos = FALSE;
     GST_LOG_OBJECT (avi, "pausing task, reason %s", gst_flow_get_name (res));
-    avi->segment_running = FALSE;
     gst_pad_pause_task (avi->sinkpad);
-
 
     if (res == GST_FLOW_UNEXPECTED) {
       /* handle end-of-stream/segment */
@@ -5266,10 +5207,6 @@ gst_avi_demux_chain (GstPad * pad, GstBuffer * buf)
       }
       break;
     case GST_AVI_DEMUX_MOVI:
-      if (G_UNLIKELY (avi->close_seg_event)) {
-        gst_avi_demux_push_event (avi, avi->close_seg_event);
-        avi->close_seg_event = NULL;
-      }
       if (G_UNLIKELY (avi->seg_event)) {
         gst_avi_demux_push_event (avi, avi->seg_event);
         avi->seg_event = NULL;
@@ -5352,11 +5289,27 @@ abort_buffering:
 static gboolean
 gst_avi_demux_sink_activate (GstPad * sinkpad)
 {
-  if (gst_pad_check_pull_range (sinkpad)) {
-    GST_DEBUG ("going to pull mode");
-    return gst_pad_activate_pull (sinkpad, TRUE);
-  } else {
-    GST_DEBUG ("going to push (streaming) mode");
+  GstQuery *query;
+  gboolean pull_mode;
+
+  query = gst_query_new_scheduling ();
+
+  if (!gst_pad_peer_query (sinkpad, query)) {
+    gst_query_unref (query);
+    goto activate_push;
+  }
+
+  gst_query_parse_scheduling (query, &pull_mode, NULL, NULL, NULL, NULL, NULL);
+
+  if (!pull_mode)
+    goto activate_push;
+
+  GST_DEBUG_OBJECT (sinkpad, "activating pull");
+  return gst_pad_activate_pull (sinkpad, TRUE);
+
+activate_push:
+  {
+    GST_DEBUG_OBJECT (sinkpad, "activating push");
     return gst_pad_activate_push (sinkpad, TRUE);
   }
 }
@@ -5367,12 +5320,10 @@ gst_avi_demux_sink_activate_pull (GstPad * sinkpad, gboolean active)
   GstAviDemux *avi = GST_AVI_DEMUX (GST_OBJECT_PARENT (sinkpad));
 
   if (active) {
-    avi->segment_running = TRUE;
     avi->streaming = FALSE;
     return gst_pad_start_task (sinkpad, (GstTaskFunction) gst_avi_demux_loop,
         sinkpad);
   } else {
-    avi->segment_running = FALSE;
     return gst_pad_stop_task (sinkpad);
   }
 }
