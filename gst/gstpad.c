@@ -2041,6 +2041,7 @@ gst_pad_link_full (GstPad * srcpad, GstPad * sinkpad, GstPadLinkCheck flags)
 {
   GstPadLinkReturn result;
   GstElement *parent;
+  GstPadLinkFunction srcfunc, sinkfunc;
 
   g_return_val_if_fail (GST_IS_PAD (srcpad), GST_PAD_LINK_REFUSED);
   g_return_val_if_fail (GST_PAD_IS_SRC (srcpad), GST_PAD_LINK_WRONG_DIRECTION);
@@ -2049,8 +2050,8 @@ gst_pad_link_full (GstPad * srcpad, GstPad * sinkpad, GstPadLinkCheck flags)
       GST_PAD_LINK_WRONG_DIRECTION);
 
   /* Notify the parent early. See gst_pad_unlink for details. */
-  if ((parent = GST_ELEMENT_CAST (gst_pad_get_parent (srcpad)))) {
-    if (GST_IS_ELEMENT (parent)) {
+  if (G_LIKELY ((parent = GST_ELEMENT_CAST (gst_pad_get_parent (srcpad))))) {
+    if (G_LIKELY (GST_IS_ELEMENT (parent))) {
       gst_element_post_message (parent,
           gst_message_new_structure_change (GST_OBJECT_CAST (sinkpad),
               GST_STRUCTURE_CHANGE_TYPE_PAD_LINK, parent, TRUE));
@@ -2063,7 +2064,7 @@ gst_pad_link_full (GstPad * srcpad, GstPad * sinkpad, GstPadLinkCheck flags)
   /* prepare will also lock the two pads */
   result = gst_pad_link_prepare (srcpad, sinkpad, flags);
 
-  if (result != GST_PAD_LINK_OK)
+  if (G_UNLIKELY (result != GST_PAD_LINK_OK))
     goto done;
 
   /* must set peers before calling the link function */
@@ -2073,39 +2074,71 @@ gst_pad_link_full (GstPad * srcpad, GstPad * sinkpad, GstPadLinkCheck flags)
   /* make sure we update events */
   prepare_event_update (srcpad, sinkpad);
 
-  GST_OBJECT_UNLOCK (sinkpad);
-  GST_OBJECT_UNLOCK (srcpad);
+  /* get the link functions */
+  srcfunc = GST_PAD_LINKFUNC (srcpad);
+  sinkfunc = GST_PAD_LINKFUNC (sinkpad);
 
-  /* FIXME released the locks here, concurrent thread might link
-   * something else. */
-  if (GST_PAD_LINKFUNC (srcpad)) {
-    /* this one will call the peer link function */
-    result = GST_PAD_LINKFUNC (srcpad) (srcpad, sinkpad);
-  } else if (GST_PAD_LINKFUNC (sinkpad)) {
-    /* if no source link function, we need to call the sink link
-     * function ourselves. */
-    result = GST_PAD_LINKFUNC (sinkpad) (sinkpad, srcpad);
-  } else {
-    result = GST_PAD_LINK_OK;
-  }
-
-  GST_OBJECT_LOCK (srcpad);
-  GST_OBJECT_LOCK (sinkpad);
-
-  if (result == GST_PAD_LINK_OK) {
+  if (G_UNLIKELY (srcfunc || sinkfunc)) {
+    /* custom link functions, execute them */
     GST_OBJECT_UNLOCK (sinkpad);
     GST_OBJECT_UNLOCK (srcpad);
 
-    /* fire off a signal to each of the pads telling them
-     * that they've been linked */
-    g_signal_emit (srcpad, gst_pad_signals[PAD_LINKED], 0, sinkpad);
-    g_signal_emit (sinkpad, gst_pad_signals[PAD_LINKED], 0, srcpad);
+    if (srcfunc) {
+      /* this one will call the peer link function */
+      result = srcfunc (srcpad, sinkpad);
+    } else if (sinkfunc) {
+      /* if no source link function, we need to call the sink link
+       * function ourselves. */
+      result = sinkfunc (sinkpad, srcpad);
+    }
 
-    GST_CAT_INFO (GST_CAT_PADS, "linked %s:%s and %s:%s, successful",
+    GST_OBJECT_LOCK (srcpad);
+    GST_OBJECT_LOCK (sinkpad);
+
+    /* we released the lock, check if the same pads are linked still */
+    if (GST_PAD_PEER (srcpad) != sinkpad || GST_PAD_PEER (sinkpad) != srcpad)
+      goto concurrent_link;
+
+    if (G_UNLIKELY (result != GST_PAD_LINK_OK))
+      goto link_failed;
+  }
+  GST_OBJECT_UNLOCK (sinkpad);
+  GST_OBJECT_UNLOCK (srcpad);
+
+  /* fire off a signal to each of the pads telling them
+   * that they've been linked */
+  g_signal_emit (srcpad, gst_pad_signals[PAD_LINKED], 0, sinkpad);
+  g_signal_emit (sinkpad, gst_pad_signals[PAD_LINKED], 0, srcpad);
+
+  GST_CAT_INFO (GST_CAT_PADS, "linked %s:%s and %s:%s, successful",
+      GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
+
+  gst_pad_send_event (srcpad, gst_event_new_reconfigure ());
+
+done:
+  if (G_LIKELY (parent)) {
+    gst_element_post_message (parent,
+        gst_message_new_structure_change (GST_OBJECT_CAST (sinkpad),
+            GST_STRUCTURE_CHANGE_TYPE_PAD_LINK, parent, FALSE));
+    gst_object_unref (parent);
+  }
+
+  return result;
+
+  /* ERRORS */
+concurrent_link:
+  {
+    GST_CAT_INFO (GST_CAT_PADS, "concurrent link between %s:%s and %s:%s",
         GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
+    GST_OBJECT_UNLOCK (sinkpad);
+    GST_OBJECT_UNLOCK (srcpad);
 
-    gst_pad_send_event (srcpad, gst_event_new_reconfigure ());
-  } else {
+    /* The other link operation succeeded first */
+    result = GST_PAD_LINK_WAS_LINKED;
+    goto done;
+  }
+link_failed:
+  {
     GST_CAT_INFO (GST_CAT_PADS, "link between %s:%s and %s:%s failed",
         GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
 
@@ -2114,17 +2147,9 @@ gst_pad_link_full (GstPad * srcpad, GstPad * sinkpad, GstPadLinkCheck flags)
 
     GST_OBJECT_UNLOCK (sinkpad);
     GST_OBJECT_UNLOCK (srcpad);
-  }
 
-done:
-  if (parent) {
-    gst_element_post_message (parent,
-        gst_message_new_structure_change (GST_OBJECT_CAST (sinkpad),
-            GST_STRUCTURE_CHANGE_TYPE_PAD_LINK, parent, FALSE));
-    gst_object_unref (parent);
+    goto done;
   }
-
-  return result;
 }
 
 /**
