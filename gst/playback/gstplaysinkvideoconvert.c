@@ -186,6 +186,7 @@ pad_blocked_cb (GstPad * pad, GstProbeType type, gpointer type_data,
   }
 
 unblock:
+  self->sink_proxypad_block_id = 0;
   GST_PLAY_SINK_VIDEO_CONVERT_UNLOCK (self);
 
   return GST_PROBE_REMOVE;
@@ -196,6 +197,7 @@ link_failed:
         (NULL), ("Failed to configure the video converter."));
     gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (self->srcpad),
         self->sink_proxypad);
+    self->sink_proxypad_block_id = 0;
     GST_PLAY_SINK_VIDEO_CONVERT_UNLOCK (self);
 
     return GST_PROBE_REMOVE;
@@ -205,12 +207,12 @@ link_failed:
 static void
 block_proxypad (GstPlaySinkVideoConvert * self)
 {
-  if (self->sink_proxypad_block_id != 0)
-    return;
-
-  self->sink_proxypad_block_id =
-      gst_pad_add_probe (self->sink_proxypad, GST_PROBE_TYPE_BLOCK,
-      pad_blocked_cb, gst_object_ref (self), (GDestroyNotify) gst_object_unref);
+  if (self->sink_proxypad_block_id == 0) {
+    self->sink_proxypad_block_id =
+        gst_pad_add_probe (self->sink_proxypad, GST_PROBE_TYPE_BLOCK,
+        pad_blocked_cb, gst_object_ref (self),
+        (GDestroyNotify) gst_object_unref);
+  }
 }
 
 static void
