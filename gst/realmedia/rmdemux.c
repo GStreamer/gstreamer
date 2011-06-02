@@ -400,9 +400,6 @@ find_seek_offset_bytes (GstRMDemux * rmdemux, guint target)
   GSList *cur;
   gboolean ret = FALSE;
 
-  if (target < 0)
-    return FALSE;
-
   for (cur = rmdemux->streams; cur; cur = cur->next) {
     GstRMDemuxStream *stream = cur->data;
 

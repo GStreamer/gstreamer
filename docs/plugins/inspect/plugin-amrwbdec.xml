@@ -3,10 +3,10 @@
   <description>Adaptive Multi-Rate Wide-Band Decoder</description>
   <filename>../../ext/amrwbdec/.libs/libgstamrwbdec.so</filename>
   <basename>libgstamrwbdec.so</basename>
-  <version>0.10.17.2</version>
+  <version>0.10.18.1</version>
   <license>unknown</license>
   <source>gst-plugins-ugly</source>
-  <package>GStreamer Ugly Plug-ins prerelease</package>
+  <package>GStreamer Ugly Plug-ins git</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>

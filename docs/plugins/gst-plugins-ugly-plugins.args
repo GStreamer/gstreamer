@@ -31,7 +31,7 @@
 <ARG>
 <NAME>GstMPEGParse::max-scr-gap</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Max SCR gap</NICK>
 <BLURB>Maximum allowed gap between expected and actual SCR values. -1 means never adjust.</BLURB>
@@ -81,7 +81,7 @@
 <ARG>
 <NAME>GstCdioCddaSrc::read-speed</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[G_MAXULONG,100]</RANGE>
+<RANGE>[-1,100]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Read speed</NICK>
 <BLURB>Read from device at the specified speed (-1 = default).</BLURB>
@@ -291,7 +291,7 @@
 <ARG>
 <NAME>GstLame::highpass-width</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Highpass width</NICK>
 <BLURB>frequency(kHz) - default 15% of highpass freq.</BLURB>
@@ -311,7 +311,7 @@
 <ARG>
 <NAME>GstLame::lowpass-width</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Lowpass width</NICK>
 <BLURB>frequency(kHz) - default 15% of lowpass freq.</BLURB>
@@ -711,7 +711,7 @@
 <ARG>
 <NAME>GstTwoLame::psymodel</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[G_MAXULONG,4]</RANGE>
+<RANGE>[-1,4]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Psychoacoustic Model</NICK>
 <BLURB>Psychoacoustic model used to encode the audio.</BLURB>
@@ -881,7 +881,7 @@
 <ARG>
 <NAME>GstX264Enc::key-int-max</NAME>
 <TYPE>guint</TYPE>
-<RANGE><= G_MAXINT</RANGE>
+<RANGE><= G_MAXLONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Key-frame maximal interval</NICK>
 <BLURB>Maximal distance between two key-frames (0 for automatic).</BLURB>
@@ -1101,7 +1101,7 @@
 <ARG>
 <NAME>GstX264Enc::sync-lookahead</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[G_MAXULONG,250]</RANGE>
+<RANGE>[-1,250]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Sync Lookahead</NICK>
 <BLURB>Number of buffer frames for threaded lookahead (-1 for automatic).</BLURB>

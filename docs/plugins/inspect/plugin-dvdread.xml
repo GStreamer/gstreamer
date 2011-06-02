@@ -3,10 +3,10 @@
   <description>Access a DVD with dvdread</description>
   <filename>../../ext/dvdread/.libs/libgstdvdread.so</filename>
   <basename>libgstdvdread.so</basename>
-  <version>0.10.17.2</version>
+  <version>0.10.18.1</version>
   <license>GPL</license>
   <source>gst-plugins-ugly</source>
-  <package>GStreamer Ugly Plug-ins prerelease</package>
+  <package>GStreamer Ugly Plug-ins git</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>

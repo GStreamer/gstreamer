@@ -1,15 +1,15 @@
-# translation of gst-plugins-ugly-0.10.11.2.nl.po to Dutch
+# translation of gst-plugins-ugly-0.10.17.2.nl.po to Dutch
 # Copyright (C) 2004, 2007, 2008, 2009 Free Software Foundation, Inc.
 #
 # This file is distributed under the same license as the gst-plugins-ugly package.
-# Freek de Kruijf <f.de.kruijf@hetnet.nl>, 2007, 2008, 2009.
+# Freek de Kruijf <f.de.kruijf@gmail.com>, 2007, 2008, 2009, 2011.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-ugly 0.10.11.2\n"
+"Project-Id-Version: gst-plugins-ugly 0.10.17.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-10-15 15:20+0100\n"
-"PO-Revision-Date: 2009-06-14 23:07+0200\n"
-"Last-Translator: Freek de Kruijf <f.de.kruijf@hetnet.nl>\n"
+"POT-Creation-Date: 2011-04-27 12:41+0100\n"
+"PO-Revision-Date: 2011-04-23 23:55+0200\n"
+"Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
 "Language: nl\n"
 "MIME-Version: 1.0\n"
@@ -50,10 +50,11 @@ msgid ""
 "Could not read DVD. This may be because the DVD is encrypted and a DVD "
 "decryption library is not installed."
 msgstr ""
+"Kon dvd niet lezen. Dit kan veroorzaakt zijn omdat de dvd versleuteld is en "
+"een bibliotheek voor ontcijferen van een dvd niet is geïnstalleerd."
 
-#, fuzzy
 msgid "Could not read DVD."
-msgstr "Kan DVD niet openen"
+msgstr "Kon dvd niet lezen"
 
 msgid "Failed to configure LAME encoder. Check your encoding parameters."
 msgstr ""

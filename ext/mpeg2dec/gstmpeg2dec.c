@@ -299,10 +299,11 @@ gst_mpeg2dec_set_index (GstElement * element, GstIndex * index)
   mpeg2dec->index_id = 0;
   if (index) {
     mpeg2dec->index = gst_object_ref (index);
-    gst_index_get_writer_id (index, GST_OBJECT (element), &mpeg2dec->index_id);
   }
-
   GST_OBJECT_UNLOCK (mpeg2dec);
+  /* object lock might be taken again */
+  if (index)
+    gst_index_get_writer_id (index, GST_OBJECT (element), &mpeg2dec->index_id);
 }
 
 static GstIndex *

@@ -883,6 +883,7 @@ gst_mad_update_info (GstMad * mad)
 {
   struct mad_header *header = &mad->frame.header;
   gboolean changed = FALSE;
+  GstTagList *list = NULL;
 
 #define CHECK_HEADER(h1,str)                                    \
 G_STMT_START{                                                   \
@@ -905,11 +906,9 @@ G_STMT_START{                                                   \
   CHECK_HEADER (layer, "layer");
   CHECK_HEADER (mode, "mode");
   CHECK_HEADER (emphasis, "emphasis");
-  mad->header.bitrate = header->bitrate;
   mad->new_header = FALSE;
 
   if (changed) {
-    GstTagList *list;
     GEnumValue *mode;
     GEnumValue *emphasis;
 
@@ -932,15 +931,29 @@ G_STMT_START{                                                   \
           GST_TAG_AUDIO_CODEC, str, NULL);
       g_free (str);
     }
-    if (!mad->xing_found) {
-      gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
-          GST_TAG_BITRATE, mad->header.bitrate, NULL);
-    }
-    gst_element_post_message (GST_ELEMENT (mad),
-        gst_message_new_tag (GST_OBJECT (mad), list));
   }
+
+  changed = FALSE;
+  CHECK_HEADER (bitrate, "bitrate");
+  if (!mad->xing_found && changed) {
+    if (!list)
+      list = gst_tag_list_new ();
+    gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
+        GST_TAG_BITRATE, mad->header.bitrate, NULL);
+  }
+  mad->header.bitrate = header->bitrate;
 #undef CHECK_HEADER
 
+  if (list) {
+    gst_element_post_message (GST_ELEMENT (mad),
+        gst_message_new_tag (GST_OBJECT (mad), gst_tag_list_copy (list)));
+
+    if (mad->need_newsegment)
+      mad->pending_events =
+          g_list_append (mad->pending_events, gst_event_new_tag (list));
+    else
+      gst_pad_push_event (mad->srcpad, gst_event_new_tag (list));
+  }
 }
 
 static gboolean
@@ -1644,7 +1657,7 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
            * bigger than half a frame we then use the incoming timestamp
            * as a reference, otherwise we continue using our accumulated samples
            * counter */
-          if (ABS (mad->total_samples - total) > nsamples / 2) {
+          if (ABS (((gint64) (mad->total_samples)) - total) > nsamples / 2) {
             GST_DEBUG_OBJECT (mad, "difference is bigger than half a frame, "
                 "using calculated samples offset %" G_GUINT64_FORMAT, total);
             /* Override our accumulated samples counter */
