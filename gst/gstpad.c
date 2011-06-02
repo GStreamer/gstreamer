@@ -1167,11 +1167,13 @@ gst_pad_add_probe (GstPad * pad, GstProbeType mask,
       /* the pad is in use, we can't signal the idle callback yet. Since we set the
        * flag above, the last thread to leave the push will do the callback. New
        * threads going into the push will block. */
-      GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "pad is in use");
+      GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
+          "pad is in use, delay idle callback");
       GST_OBJECT_UNLOCK (pad);
     } else {
       /* the pad is idle now, we can signal the idle callback now */
-      GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "pad is idle");
+      GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
+          "pad is idle, trigger idle callback");
       GST_OBJECT_UNLOCK (pad);
 
       callback (pad, GST_PROBE_TYPE_IDLE, NULL, user_data);
@@ -4318,16 +4320,24 @@ gst_pad_pull_range (GstPad * pad, guint64 offset, guint size,
     goto not_linked;
 
   gst_object_ref (peer);
+  pad->priv->using++;
   GST_OBJECT_UNLOCK (pad);
 
   ret = gst_pad_get_range_unchecked (peer, offset, size, buffer);
 
   gst_object_unref (peer);
 
+  GST_OBJECT_LOCK (pad);
+  pad->priv->using--;
+  if (pad->priv->using == 0) {
+    /* pad is not active anymore, trigger idle callbacks */
+    PROBE (pad, GST_PROBE_TYPE_PULL | GST_PROBE_TYPE_IDLE, NULL,
+        post_probe_stopped);
+  }
+
   if (G_UNLIKELY (ret != GST_FLOW_OK))
     goto pull_range_failed;
 
-  GST_OBJECT_LOCK (pad);
   PROBE (pad, GST_PROBE_TYPE_PULL | GST_PROBE_TYPE_BUFFER, buffer,
       post_probe_stopped);
 
@@ -4362,6 +4372,7 @@ not_linked:
 pull_range_failed:
   {
     *buffer = NULL;
+    GST_OBJECT_UNLOCK (pad);
     GST_CAT_LEVEL_LOG (GST_CAT_SCHEDULING,
         (ret >= GST_FLOW_UNEXPECTED) ? GST_LEVEL_INFO : GST_LEVEL_WARNING,
         pad, "pullrange failed, flow: %s", gst_flow_get_name (ret));
@@ -4372,7 +4383,8 @@ post_probe_stopped:
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
         "post probe returned %s", gst_flow_get_name (ret));
     GST_OBJECT_UNLOCK (pad);
-    gst_buffer_unref (*buffer);
+    if (ret == GST_FLOW_OK)
+      gst_buffer_unref (*buffer);
     *buffer = NULL;
     return ret;
   }
