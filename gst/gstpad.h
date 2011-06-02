@@ -687,10 +687,7 @@ struct _GstPad {
   /* internal links */
   GstPadIterIntLinkFunction      iterintlinkfunc;
 
-  /* whether to emit signals for have-data. counts number
-   * of handlers attached. */
-  gint				 do_buffer_signals;
-  gint				 do_event_signals;
+  /* counts number of probes attached. */
   gint				 num_probes;
   gint				 num_blocked;
 
@@ -707,7 +704,6 @@ struct _GstPadClass {
   void		(*linked)		(GstPad *pad, GstPad *peer);
   void		(*unlinked)		(GstPad *pad, GstPad *peer);
   void		(*request_link)		(GstPad *pad);
-  gboolean	(*have_data)		(GstPad *pad, GstMiniObject *data);
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];

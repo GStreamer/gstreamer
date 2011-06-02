@@ -81,7 +81,6 @@ enum
   PAD_LINKED,
   PAD_UNLINKED,
   PAD_REQUEST_LINK,
-  PAD_HAVE_DATA,
   /* FILL ME */
   LAST_SIGNAL
 };
@@ -240,24 +239,6 @@ gst_flow_to_quark (GstFlowReturn ret)
 
 G_DEFINE_TYPE_WITH_CODE (GstPad, gst_pad, GST_TYPE_OBJECT, _do_init);
 
-static gboolean
-_gst_do_pass_data_accumulator (GSignalInvocationHint * ihint,
-    GValue * return_accu, const GValue * handler_return, gpointer dummy)
-{
-  gboolean ret = g_value_get_boolean (handler_return);
-
-  GST_DEBUG ("accumulated %d", ret);
-  g_value_set_boolean (return_accu, ret);
-
-  return ret;
-}
-
-static gboolean
-default_have_data (GstPad * pad, GstMiniObject * o)
-{
-  return TRUE;
-}
-
 static void
 gst_pad_class_init (GstPadClass * klass)
 {
@@ -310,24 +291,6 @@ gst_pad_class_init (GstPadClass * klass)
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstPadClass, request_link), NULL,
       NULL, gst_marshal_VOID__OBJECT, G_TYPE_NONE, 0);
 
-  /**
-   * GstPad::have-data:
-   * @pad: the pad that emitted the signal
-   * @mini_obj: new data
-   *
-   * Signals that new data is available on the pad. This signal is used
-   * internally for implementing pad probes.
-   * See gst_pad_add_*_probe functions.
-   *
-   * Returns: %TRUE to keep the data, %FALSE to drop it
-   */
-  gst_pad_signals[PAD_HAVE_DATA] =
-      g_signal_new ("have-data", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
-      G_STRUCT_OFFSET (GstPadClass, have_data),
-      _gst_do_pass_data_accumulator,
-      NULL, gst_marshal_BOOLEAN__POINTER, G_TYPE_BOOLEAN, 1, G_TYPE_POINTER);
-
   pspec_caps = g_param_spec_boxed ("caps", "Caps",
       "The capabilities of the pad", GST_TYPE_CAPS,
       G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
@@ -353,8 +316,6 @@ gst_pad_class_init (GstPadClass * klass)
   GST_DEBUG_REGISTER_FUNCPTR (gst_pad_iterate_internal_links_default);
   GST_DEBUG_REGISTER_FUNCPTR (gst_pad_acceptcaps_default);
   GST_DEBUG_REGISTER_FUNCPTR (gst_pad_chain_list_default);
-
-  klass->have_data = default_have_data;
 }
 
 static void
@@ -1743,7 +1704,6 @@ gst_pad_unlink (GstPad * srcpad, GstPad * sinkpad)
   }
 
   GST_OBJECT_LOCK (srcpad);
-
   GST_OBJECT_LOCK (sinkpad);
 
   if (G_UNLIKELY (GST_PAD_PEER (srcpad) != sinkpad))
@@ -3743,47 +3703,6 @@ done:
 /**********************************************************************
  * Data passing functions
  */
-
-#if 0
-static gboolean
-gst_pad_emit_have_data_signal (GstPad * pad, GstMiniObject * obj)
-{
-  GValue ret = { 0 };
-  GValue args[2] = { {0}, {0} };
-  gboolean res;
-  GQuark detail;
-
-  /* init */
-  g_value_init (&ret, G_TYPE_BOOLEAN);
-  g_value_set_boolean (&ret, TRUE);
-  g_value_init (&args[0], GST_TYPE_PAD);
-  g_value_set_object (&args[0], pad);
-  g_value_init (&args[1], GST_MINI_OBJECT_TYPE (obj));
-  g_value_set_boxed (&args[1], obj);
-
-  if (GST_IS_EVENT (obj))
-    detail = event_quark;
-  else if (GST_IS_BUFFER (obj))
-    detail = buffer_quark;
-  else if (GST_IS_BUFFER_LIST (obj))
-    detail = buffer_list_quark;
-  else
-    detail = 0;
-
-  GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "Emiting have-data signal");
-
-  /* actually emit */
-  g_signal_emitv (args, gst_pad_signals[PAD_HAVE_DATA], detail, &ret);
-  res = g_value_get_boolean (&ret);
-
-  /* clean up */
-  g_value_unset (&ret);
-  g_value_unset (&args[0]);
-  g_value_unset (&args[1]);
-
-  return res;
-}
-#endif
 
 /* this is the chain function that does not perform the additional argument
  * checking for that little extra speed.
