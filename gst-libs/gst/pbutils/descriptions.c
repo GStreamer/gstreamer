@@ -231,6 +231,7 @@ static const FormatInfo formats[] = {
   {"image/x-quicktime", "QuickTime Image Format (QTIF)", 0},
   {"image/x-sun-raster", "Sun Raster Format (RAS)", 0},
   {"image/x-tga", "TGA", 0},
+  {"image/vnd.wap.wbmp", "Wireless Bitmap", 0},
 
   /* subtitle formats with static descriptions */
   {"application/x-ass", "ASS", 0},
