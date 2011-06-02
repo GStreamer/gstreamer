@@ -228,6 +228,8 @@ link_failed:
     gst_pad_set_blocked_async_full (self->sink_proxypad, FALSE,
         (GstPadBlockCallback) pad_blocked_cb, gst_object_ref (self),
         (GDestroyNotify) gst_object_unref);
+
+    GST_PLAY_SINK_VIDEO_CONVERT_UNLOCK (self);
     return;
   }
 }
