@@ -377,7 +377,6 @@ static void gst_base_parse_handle_tag (GstBaseParse * parse, GstEvent * event);
 static gboolean gst_base_parse_src_event (GstPad * pad, GstEvent * event);
 static gboolean gst_base_parse_sink_event (GstPad * pad, GstEvent * event);
 static gboolean gst_base_parse_query (GstPad * pad, GstQuery * query);
-static gboolean gst_base_parse_sink_setcaps (GstPad * pad, GstCaps * caps);
 static const GstQueryType *gst_base_parse_get_querytypes (GstPad * pad);
 
 static GstFlowReturn gst_base_parse_chain (GstPad * pad, GstBuffer * buffer);
@@ -509,8 +508,6 @@ gst_base_parse_init (GstBaseParse * parse, GstBaseParseClass * bclass)
   parse->sinkpad = gst_pad_new_from_template (pad_template, "sink");
   gst_pad_set_event_function (parse->sinkpad,
       GST_DEBUG_FUNCPTR (gst_base_parse_sink_event));
-  gst_pad_set_setcaps_function (parse->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_base_parse_sink_setcaps));
   gst_pad_set_chain_function (parse->sinkpad,
       GST_DEBUG_FUNCPTR (gst_base_parse_chain));
   gst_pad_set_activate_function (parse->sinkpad,
@@ -913,6 +910,22 @@ gst_base_parse_sink_eventfunc (GstBaseParse * parse, GstEvent * event)
   GstEvent **eventp;
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+      GstBaseParseClass *klass;
+
+      klass = GST_BASE_PARSE_GET_CLASS (parse);
+
+      gst_event_parse_caps (event, &caps);
+      GST_DEBUG_OBJECT (parse, "caps: %" GST_PTR_FORMAT, caps);
+
+      if (klass->set_sink_caps)
+        klass->set_sink_caps (parse, caps);
+
+      handled = TRUE;
+      break;
+    }
     case GST_EVENT_SEGMENT:
     {
       const GstSegment *in_segment;
@@ -3810,24 +3823,6 @@ gst_base_parse_handle_tag (GstBaseParse * parse, GstEvent * event)
     GST_DEBUG_OBJECT (parse, "upstream max bitrate %d", tmp);
     parse->priv->post_max_bitrate = FALSE;
   }
-}
-
-static gboolean
-gst_base_parse_sink_setcaps (GstPad * pad, GstCaps * caps)
-{
-  GstBaseParse *parse;
-  GstBaseParseClass *klass;
-  gboolean res = TRUE;
-
-  parse = GST_BASE_PARSE (GST_PAD_PARENT (pad));
-  klass = GST_BASE_PARSE_GET_CLASS (parse);
-
-  GST_DEBUG_OBJECT (parse, "caps: %" GST_PTR_FORMAT, caps);
-
-  if (klass->set_sink_caps)
-    res = klass->set_sink_caps (parse, caps);
-
-  return res;
 }
 
 static void
