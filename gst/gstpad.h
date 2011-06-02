@@ -703,7 +703,6 @@ struct _GstPadClass {
   /* signal callbacks */
   void		(*linked)		(GstPad *pad, GstPad *peer);
   void		(*unlinked)		(GstPad *pad, GstPad *peer);
-  void		(*request_link)		(GstPad *pad);
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
@@ -740,9 +739,6 @@ struct _GstPadClass {
 #define GST_PAD_SETCAPSFUNC(pad)	(GST_PAD_CAST(pad)->setcapsfunc)
 #define GST_PAD_ACCEPTCAPSFUNC(pad)	(GST_PAD_CAST(pad)->acceptcapsfunc)
 #define GST_PAD_FIXATECAPSFUNC(pad)	(GST_PAD_CAST(pad)->fixatecapsfunc)
-
-#define GST_PAD_DO_BUFFER_SIGNALS(pad) 	(GST_PAD_CAST(pad)->do_buffer_signals)
-#define GST_PAD_DO_EVENT_SIGNALS(pad) 	(GST_PAD_CAST(pad)->do_event_signals)
 
 #define GST_PAD_IS_SRC(pad)		(GST_PAD_DIRECTION(pad) == GST_PAD_SRC)
 #define GST_PAD_IS_SINK(pad)		(GST_PAD_DIRECTION(pad) == GST_PAD_SINK)

@@ -80,7 +80,6 @@ enum
 {
   PAD_LINKED,
   PAD_UNLINKED,
-  PAD_REQUEST_LINK,
   /* FILL ME */
   LAST_SIGNAL
 };
@@ -279,17 +278,6 @@ gst_pad_class_init (GstPadClass * klass)
       g_signal_new ("unlinked", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstPadClass, unlinked), NULL, NULL,
       gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GST_TYPE_PAD);
-  /**
-   * GstPad::request-link:
-   * @pad: the pad that emitted the signal
-   * @peer: the peer pad for which a connection is requested
-   *
-   * Signals that a pad connection has been requested.
-   */
-  gst_pad_signals[PAD_REQUEST_LINK] =
-      g_signal_new ("request-link", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstPadClass, request_link), NULL,
-      NULL, gst_marshal_VOID__OBJECT, G_TYPE_NONE, 0);
 
   pspec_caps = g_param_spec_boxed ("caps", "Caps",
       "The capabilities of the pad", GST_TYPE_CAPS,
@@ -300,6 +288,7 @@ gst_pad_class_init (GstPadClass * klass)
       g_param_spec_enum ("direction", "Direction", "The direction of the pad",
           GST_TYPE_PAD_DIRECTION, GST_PAD_UNKNOWN,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS));
+
   /* FIXME, Make G_PARAM_CONSTRUCT_ONLY when we fix ghostpads. */
   g_object_class_install_property (gobject_class, PAD_PROP_TEMPLATE,
       g_param_spec_object ("template", "Template",
