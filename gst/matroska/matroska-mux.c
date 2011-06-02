@@ -258,6 +258,9 @@ static gboolean kate_streamheader_to_codecdata (const GValue * streamheader,
     GstMatroskaTrackContext * context);
 static gboolean flac_streamheader_to_codecdata (const GValue * streamheader,
     GstMatroskaTrackContext * context);
+static void
+gst_matroska_mux_write_simple_tag (const GstTagList * list, const gchar * tag,
+    gpointer data);
 
 static void
 gst_matroska_mux_add_interfaces (GType type)
@@ -2115,6 +2118,27 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
       gst_ebml_write_master_finish (ebml, child);
     }
     gst_ebml_write_master_finish (ebml, master);
+  }
+
+  if (mux->streamable) {
+    const GstTagList *tags;
+
+    /* tags */
+    tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (mux));
+
+    if (tags != NULL && !gst_tag_list_is_empty (tags)) {
+      guint64 master_tags, master_tag;
+
+      GST_DEBUG ("Writing tags");
+
+      /* TODO: maybe limit via the TARGETS id by looking at the source pad */
+      mux->tags_pos = ebml->pos;
+      master_tags = gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_TAGS);
+      master_tag = gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_TAG);
+      gst_tag_list_foreach (tags, gst_matroska_mux_write_simple_tag, ebml);
+      gst_ebml_write_master_finish (ebml, master_tag);
+      gst_ebml_write_master_finish (ebml, master_tags);
+    }
   }
 
   /* segment info */
