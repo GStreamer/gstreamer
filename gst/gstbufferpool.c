@@ -372,6 +372,8 @@ default_set_config (GstBufferPool * pool, GstStructure * config)
           &max_buffers, &prefix, &postfix, &align))
     goto wrong_config;
 
+  GST_DEBUG_OBJECT (pool, "config %" GST_PTR_FORMAT, config);
+
   priv->size = size;
   priv->min_buffers = min_buffers;
   priv->max_buffers = max_buffers;
@@ -383,7 +385,7 @@ default_set_config (GstBufferPool * pool, GstStructure * config)
 
 wrong_config:
   {
-    GST_WARNING_OBJECT (pool, "invalid config");
+    GST_WARNING_OBJECT (pool, "invalid config %" GST_PTR_FORMAT, config);
     return FALSE;
   }
 }
