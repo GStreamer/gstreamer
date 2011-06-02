@@ -88,6 +88,6 @@ gint
 av_smp_format_depth(enum SampleFormat smp_fmt);
 
 GstBuffer *
-new_aligned_buffer (gint size, GstCaps * caps);
+new_aligned_buffer (gint size);
 
 #endif /* __GST_FFMPEG_UTILS_H__ */

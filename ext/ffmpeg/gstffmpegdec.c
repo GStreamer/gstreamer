@@ -541,11 +541,12 @@ gst_ffmpegdec_src_event (GstPad * pad, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_QOS:
     {
+      GstQOSType type;
       gdouble proportion;
       GstClockTimeDiff diff;
       GstClockTime timestamp;
 
-      gst_event_parse_qos (event, &proportion, &diff, &timestamp);
+      gst_event_parse_qos (event, &type, &proportion, &diff, &timestamp);
 
       /* update our QoS values */
       gst_ffmpegdec_update_qos (ffmpegdec, proportion, timestamp + diff);
@@ -920,12 +921,9 @@ alloc_output_buffer (GstFFMpegDec * ffmpegdec, GstBuffer ** outbuf,
      * fsize contains the size of the palette, so the overall size
      * is bigger than ffmpegcolorspace's unit size, which will
      * prompt GstBaseTransform to complain endlessly ... */
-    *outbuf = new_aligned_buffer (fsize, GST_PAD_CAPS (ffmpegdec->srcpad));
+    *outbuf = new_aligned_buffer (fsize);
     ret = GST_FLOW_OK;
   }
-  /* set caps, we do this here because the buffer is still writable here and we
-   * are sure to be negotiated */
-  gst_buffer_set_caps (*outbuf, GST_PAD_CAPS (ffmpegdec->srcpad));
 
   return ret;
 
@@ -1488,7 +1486,7 @@ clip_video_buffer (GstFFMpegDec * dec, GstBuffer * buf, GstClockTime in_ts,
     GstClockTime in_dur)
 {
   gboolean res = TRUE;
-  gint64 cstart, cstop;
+  guint64 cstart, cstop;
   GstClockTime stop;
 
   GST_LOG_OBJECT (dec,
@@ -2048,7 +2046,8 @@ clip_audio_buffer (GstFFMpegDec * dec, GstBuffer * buf, GstClockTime in_ts,
     GstClockTime in_dur)
 {
   GstClockTime stop;
-  gint64 diff, ctime, cstop;
+  gint64 diff;
+  guint64 ctime, cstop;
   gboolean res = TRUE;
   gsize size, offset;
 
@@ -2134,9 +2133,7 @@ gst_ffmpegdec_audio_frame (GstFFMpegDec * ffmpegdec,
       dec_info->offset, GST_TIME_ARGS (dec_info->timestamp),
       GST_TIME_ARGS (dec_info->duration), GST_TIME_ARGS (ffmpegdec->next_out));
 
-  *outbuf =
-      new_aligned_buffer (AVCODEC_MAX_AUDIO_FRAME_SIZE,
-      GST_PAD_CAPS (ffmpegdec->srcpad));
+  *outbuf = new_aligned_buffer (AVCODEC_MAX_AUDIO_FRAME_SIZE);
 
   odata = gst_buffer_map (*outbuf, NULL, NULL, GST_MAP_WRITE);
 
@@ -2194,7 +2191,6 @@ gst_ffmpegdec_audio_frame (GstFFMpegDec * ffmpegdec,
     GST_BUFFER_TIMESTAMP (*outbuf) = out_timestamp;
     GST_BUFFER_DURATION (*outbuf) = out_duration;
     GST_BUFFER_OFFSET (*outbuf) = out_offset;
-    gst_buffer_set_caps (*outbuf, GST_PAD_CAPS (ffmpegdec->srcpad));
 
     /* the next timestamp we'll use when interpolating */
     ffmpegdec->next_out = out_timestamp + out_duration;
@@ -2430,17 +2426,13 @@ gst_ffmpegdec_sink_event (GstPad * pad, GstEvent * event)
       clear_queued (ffmpegdec);
       break;
     }
-    case GST_EVENT_NEWSEGMENT:
+    case GST_EVENT_SEGMENT:
     {
-      gboolean update;
-      GstFormat fmt;
-      gint64 start, stop, time;
-      gdouble rate, arate;
+      GstSegment segment;
 
-      gst_event_parse_new_segment_full (event, &update, &rate, &arate, &fmt,
-          &start, &stop, &time);
+      gst_event_copy_segment (event, &segment);
 
-      switch (fmt) {
+      switch (segment.format) {
         case GST_FORMAT_TIME:
           /* fine, our native segment format */
           break;
@@ -2457,23 +2449,25 @@ gst_ffmpegdec_sink_event (GstPad * pad, GstEvent * event)
           GST_DEBUG_OBJECT (ffmpegdec, "bitrate: %d", bit_rate);
 
           /* convert values to TIME */
-          if (start != -1)
-            start = gst_util_uint64_scale_int (start, GST_SECOND, bit_rate);
-          if (stop != -1)
-            stop = gst_util_uint64_scale_int (stop, GST_SECOND, bit_rate);
-          if (time != -1)
-            time = gst_util_uint64_scale_int (time, GST_SECOND, bit_rate);
+          if (segment.start != -1)
+            segment.start =
+                gst_util_uint64_scale_int (segment.start, GST_SECOND, bit_rate);
+          if (segment.stop != -1)
+            segment.stop =
+                gst_util_uint64_scale_int (segment.stop, GST_SECOND, bit_rate);
+          if (segment.time != -1)
+            segment.time =
+                gst_util_uint64_scale_int (segment.time, GST_SECOND, bit_rate);
 
           /* unref old event */
           gst_event_unref (event);
 
           /* create new converted time segment */
-          fmt = GST_FORMAT_TIME;
+          segment.format = GST_FORMAT_TIME;
           /* FIXME, bitrate is not good enough too find a good stop, let's
            * hope start and time were 0... meh. */
-          stop = -1;
-          event = gst_event_new_new_segment (update, rate, fmt,
-              start, stop, time);
+          segment.stop = -1;
+          event = gst_event_new_segment (&segment);
           break;
         }
         default:
@@ -2486,13 +2480,11 @@ gst_ffmpegdec_sink_event (GstPad * pad, GstEvent * event)
       if (ffmpegdec->context->codec)
         gst_ffmpegdec_drain (ffmpegdec);
 
-      GST_DEBUG_OBJECT (ffmpegdec,
-          "NEWSEGMENT in time start %" GST_TIME_FORMAT " -- stop %"
-          GST_TIME_FORMAT, GST_TIME_ARGS (start), GST_TIME_ARGS (stop));
+      GST_DEBUG_OBJECT (ffmpegdec, "SEGMENT in time %" GST_SEGMENT_FORMAT,
+          &segment);
 
       /* and store the values */
-      gst_segment_set_newsegment_full (&ffmpegdec->segment, update,
-          rate, arate, fmt, start, stop, time);
+      gst_segment_copy_into (&segment, &ffmpegdec->segment);
       break;
     }
     default:

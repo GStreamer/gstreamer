@@ -166,7 +166,6 @@ gst_ffmpegdata_write (URLContext * h, const unsigned char *buf, int size)
 
   /* create buffer and push data further */
   outbuf = gst_buffer_new_and_alloc (size);
-  gst_buffer_set_caps (outbuf, GST_PAD_CAPS (info->pad));
 
   gst_buffer_fill (outbuf, 0, buf, size);
 
@@ -181,7 +180,7 @@ static int64_t
 gst_ffmpegdata_seek (URLContext * h, int64_t pos, int whence)
 {
   GstProtocolInfo *info;
-  guint64 newpos = 0;
+  guint64 newpos = 0, oldpos;
 
   GST_DEBUG ("Seeking to %" G_GINT64_FORMAT ", whence=%d",
       (gint64) pos, whence);
@@ -227,26 +226,33 @@ gst_ffmpegdata_seek (URLContext * h, int64_t pos, int whence)
       break;
     case URL_WRONLY:
     {
+      GstSegment segment;
+
+      oldpos = info->offset;
+
       /* srcpad */
       switch (whence) {
         case SEEK_SET:
+        {
           info->offset = (guint64) pos;
-          gst_pad_push_event (info->pad, gst_event_new_new_segment
-              (TRUE, 1.0, GST_FORMAT_BYTES, info->offset,
-                  GST_CLOCK_TIME_NONE, info->offset));
           break;
+        }
         case SEEK_CUR:
           info->offset += pos;
-          gst_pad_push_event (info->pad, gst_event_new_new_segment
-              (TRUE, 1.0, GST_FORMAT_BYTES, info->offset,
-                  GST_CLOCK_TIME_NONE, info->offset));
           break;
         default:
           break;
       }
       newpos = info->offset;
-    }
+
+      if (newpos != oldpos) {
+        gst_segment_init (&segment, GST_FORMAT_BYTES);
+        segment.start = newpos;
+        segment.time = newpos;
+        gst_pad_push_event (info->pad, gst_event_new_segment (&segment));
+      }
       break;
+    }
     default:
       g_assert (0);
       break;

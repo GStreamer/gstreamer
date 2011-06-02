@@ -113,7 +113,7 @@ static void gst_ffmpegmux_finalize (GObject * object);
 
 static gboolean gst_ffmpegmux_setcaps (GstPad * pad, GstCaps * caps);
 static GstPad *gst_ffmpegmux_request_new_pad (GstElement * element,
-    GstPadTemplate * templ, const gchar * name);
+    GstPadTemplate * templ, const gchar * name, const GstCaps * caps);
 static GstFlowReturn gst_ffmpegmux_collected (GstCollectPads * pads,
     gpointer user_data);
 
@@ -404,7 +404,7 @@ gst_ffmpegmux_finalize (GObject * object)
 
 static GstPad *
 gst_ffmpegmux_request_new_pad (GstElement * element,
-    GstPadTemplate * templ, const gchar * name)
+    GstPadTemplate * templ, const gchar * name, const GstCaps * caps)
 {
   GstFFMpegMux *ffmpegmux = (GstFFMpegMux *) element;
   GstElementClass *klass = GST_ELEMENT_GET_CLASS (element);

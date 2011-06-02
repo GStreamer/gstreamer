@@ -170,7 +170,6 @@ gst_ffmpegdeinterlace_chain (GstPad * pad, GstBuffer * inbuf)
   gsize from_size, to_size;
 
   outbuf = gst_buffer_new_and_alloc (deinterlace->to_size);
-  gst_buffer_set_caps (outbuf, GST_PAD_CAPS (deinterlace->srcpad));
 
   from_data = gst_buffer_map (inbuf, &from_size, NULL, GST_MAP_READ);
   gst_ffmpeg_avpicture_fill (&deinterlace->from_frame, from_data,

@@ -172,7 +172,7 @@ static void gst_ffmpegscale_get_property (GObject * object, guint prop_id,
 
 static gboolean gst_ffmpegscale_stop (GstBaseTransform * trans);
 static GstCaps *gst_ffmpegscale_transform_caps (GstBaseTransform * trans,
-    GstPadDirection direction, GstCaps * caps);
+    GstPadDirection direction, GstCaps * caps, GstCaps * filter);
 static void gst_ffmpegscale_fixate_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps, GstCaps * othercaps);
 static gboolean gst_ffmpegscale_get_unit_size (GstBaseTransform * trans,
@@ -307,7 +307,7 @@ gst_ffmpegscale_caps_remove_format_info (GstCaps * caps)
 
 static GstCaps *
 gst_ffmpegscale_transform_caps (GstBaseTransform * trans,
-    GstPadDirection direction, GstCaps * caps)
+    GstPadDirection direction, GstCaps * caps, GstCaps * filter)
 {
   GstCaps *ret;
   GstStructure *structure;

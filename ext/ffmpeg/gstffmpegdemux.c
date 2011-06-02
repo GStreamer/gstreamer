@@ -89,7 +89,6 @@ struct _GstFFMpegDemux
 
   /* segment stuff */
   GstSegment segment;
-  gboolean running;
 
   /* cached seek in READY */
   GstEvent *seek_event;
@@ -451,7 +450,7 @@ gst_ffmpegdemux_do_seek (GstFFMpegDemux * demux, GstSegment * segment)
   /* get the stream for seeking */
   stream = demux->context->streams[index];
   /* initial seek position */
-  target = segment->last_stop;
+  target = segment->position;
   /* convert target to ffmpeg time */
   fftarget = gst_ffmpeg_time_gst_to_ff (target, stream->time_base);
 
@@ -494,7 +493,7 @@ gst_ffmpegdemux_do_seek (GstFFMpegDemux * demux, GstSegment * segment)
 
   GST_DEBUG_OBJECT (demux, "seek success, returned %d", seekret);
 
-  segment->last_stop = target;
+  segment->position = target;
   segment->time = target;
   segment->start = target;
 
@@ -578,13 +577,13 @@ gst_ffmpegdemux_perform_seek (GstFFMpegDemux * demux, GstEvent * event)
 
   /* now configure the seek segment */
   if (event) {
-    gst_segment_set_seek (&seeksegment, rate, format, flags,
+    gst_segment_do_seek (&seeksegment, rate, format, flags,
         cur_type, cur, stop_type, stop, &update);
   }
 
   GST_DEBUG_OBJECT (demux, "segment configured from %" G_GINT64_FORMAT
       " to %" G_GINT64_FORMAT ", position %" G_GINT64_FORMAT,
-      seeksegment.start, seeksegment.stop, seeksegment.last_stop);
+      seeksegment.start, seeksegment.stop, seeksegment.position);
 
   /* make the sinkpad available for data passing since we might need
    * it when doing the seek */
@@ -595,7 +594,7 @@ gst_ffmpegdemux_perform_seek (GstFFMpegDemux * demux, GstEvent * event)
     gst_pad_push_event (demux->sinkpad, gst_event_new_flush_stop ());
   }
 
-  /* do the seek, segment.last_stop contains new position. */
+  /* do the seek, segment.position contains new position. */
   res = gst_ffmpegdemux_do_seek (demux, &seeksegment);
 
   /* and prepare to continue streaming */
@@ -609,18 +608,6 @@ gst_ffmpegdemux_perform_seek (GstFFMpegDemux * demux, GstEvent * event)
       if (demux->streams[n])
         demux->streams[n]->last_flow = GST_FLOW_OK;
     }
-  } else if (res && demux->running) {
-    /* we are running the current segment and doing a non-flushing seek,
-     * close the segment first based on the last_stop. */
-    GST_DEBUG_OBJECT (demux, "closing running segment %" G_GINT64_FORMAT
-        " to %" G_GINT64_FORMAT, demux->segment.start,
-        demux->segment.last_stop);
-
-    gst_ffmpegdemux_push_event (demux,
-        gst_event_new_new_segment (TRUE,
-            demux->segment.rate, demux->segment.format,
-            demux->segment.start, demux->segment.last_stop,
-            demux->segment.time));
   }
   /* if successfull seek, we update our real segment and push
    * out the new segment. */
@@ -630,18 +617,14 @@ gst_ffmpegdemux_perform_seek (GstFFMpegDemux * demux, GstEvent * event)
     if (demux->segment.flags & GST_SEEK_FLAG_SEGMENT) {
       gst_element_post_message (GST_ELEMENT (demux),
           gst_message_new_segment_start (GST_OBJECT (demux),
-              demux->segment.format, demux->segment.last_stop));
+              demux->segment.format, demux->segment.position));
     }
 
-    /* now send the newsegment */
+    /* now send the newsegment, FIXME, do this from the streaming thread */
     GST_DEBUG_OBJECT (demux, "Sending newsegment from %" G_GINT64_FORMAT
-        " to %" G_GINT64_FORMAT, demux->segment.last_stop, demux->segment.stop);
+        " to %" G_GINT64_FORMAT, demux->segment.position, demux->segment.stop);
 
-    gst_ffmpegdemux_push_event (demux,
-        gst_event_new_new_segment (FALSE,
-            demux->segment.rate, demux->segment.format,
-            demux->segment.last_stop, demux->segment.stop,
-            demux->segment.time));
+    gst_ffmpegdemux_push_event (demux, gst_event_new_segment (&demux->segment));
   }
 
   /* Mark discont on all srcpads and remove eos */
@@ -649,7 +632,6 @@ gst_ffmpegdemux_perform_seek (GstFFMpegDemux * demux, GstEvent * event)
 
   /* and restart the task in case it got paused explicitely or by
    * the FLUSH_START event we pushed out. */
-  demux->running = TRUE;
   gst_pad_start_task (demux->sinkpad, (GstTaskFunction) gst_ffmpegdemux_loop,
       demux->sinkpad);
 
@@ -1208,7 +1190,7 @@ gst_ffmpegdemux_open (GstFFMpegDemux * demux)
       GST_TIME_ARGS (demux->duration));
 
   /* store duration in the segment as well */
-  gst_segment_set_duration (&demux->segment, GST_FORMAT_TIME, demux->duration);
+  demux->segment.duration = demux->duration;
 
   GST_OBJECT_LOCK (demux);
   demux->opened = TRUE;
@@ -1222,16 +1204,12 @@ gst_ffmpegdemux_open (GstFFMpegDemux * demux)
     gst_ffmpegdemux_perform_seek (demux, event);
     gst_event_unref (event);
   } else {
-    gst_ffmpegdemux_push_event (demux,
-        gst_event_new_new_segment (FALSE,
-            demux->segment.rate, demux->segment.format,
-            demux->segment.start, demux->segment.stop, demux->segment.time));
+    gst_ffmpegdemux_push_event (demux, gst_event_new_segment (&demux->segment));
   }
 
   while (cached_events) {
     event = cached_events->data;
-    GST_INFO_OBJECT (demux, "pushing cached %s event: %" GST_PTR_FORMAT,
-        GST_EVENT_TYPE_NAME (event), event->structure);
+    GST_INFO_OBJECT (demux, "pushing cached event: %" GST_PTR_FORMAT, event);
     gst_ffmpegdemux_push_event (demux, event);
     cached_events = g_list_delete_link (cached_events, cached_events);
   }
@@ -1416,7 +1394,6 @@ gst_ffmpegdemux_loop (GstFFMpegDemux * demux)
     outsize = pkt.size;
 
   outbuf = gst_buffer_new_and_alloc (outsize);
-  gst_buffer_set_caps (outbuf, GST_PAD_CAPS (srcpad));
 
   if ((ret = gst_ffmpegdemux_aggregated_flow (demux)) != GST_FLOW_OK)
     goto no_buffer;
@@ -1494,7 +1471,6 @@ pause:
   {
     GST_LOG_OBJECT (demux, "pausing task, reason %d (%s)", ret,
         gst_flow_get_name (ret));
-    demux->running = FALSE;
     if (demux->seekable)
       gst_pad_pause_task (demux->sinkpad);
     else {
@@ -1588,8 +1564,7 @@ gst_ffmpegdemux_sink_event (GstPad * sinkpad, GstEvent * event)
   demux = (GstFFMpegDemux *) (GST_PAD_PARENT (sinkpad));
   ffpipe = &(demux->ffpipe);
 
-  GST_LOG_OBJECT (demux, "%s event: %" GST_PTR_FORMAT,
-      GST_EVENT_TYPE_NAME (event), event->structure);
+  GST_LOG_OBJECT (demux, "event: %" GST_PTR_FORMAT, event);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
@@ -1621,7 +1596,6 @@ gst_ffmpegdemux_sink_event (GstPad * sinkpad, GstEvent * event)
       ffpipe->srcresult = GST_FLOW_OK;
       /* loop may have decided to end itself as a result of flush WRONG_STATE */
       gst_task_start (demux->task);
-      demux->running = TRUE;
       demux->flushing = FALSE;
       GST_LOG_OBJECT (demux, "loop started");
       GST_FFMPEG_PIPE_MUTEX_UNLOCK (ffpipe);
@@ -1724,20 +1698,29 @@ ignore:
 static gboolean
 gst_ffmpegdemux_sink_activate (GstPad * sinkpad)
 {
-  GstFFMpegDemux *demux;
-  gboolean res;
+  GstQuery *query;
+  gboolean pull_mode;
 
-  demux = (GstFFMpegDemux *) (gst_pad_get_parent (sinkpad));
+  query = gst_query_new_scheduling ();
 
-  res = FALSE;
-
-  if (gst_pad_check_pull_range (sinkpad))
-    res = gst_pad_activate_pull (sinkpad, TRUE);
-  else {
-    res = gst_pad_activate_push (sinkpad, TRUE);
+  if (!gst_pad_peer_query (sinkpad, query)) {
+    gst_query_unref (query);
+    goto activate_push;
   }
-  gst_object_unref (demux);
-  return res;
+
+  gst_query_parse_scheduling (query, &pull_mode, NULL, NULL, NULL, NULL, NULL);
+
+  if (!pull_mode)
+    goto activate_push;
+
+  GST_DEBUG_OBJECT (sinkpad, "activating pull");
+  return gst_pad_activate_pull (sinkpad, TRUE);
+
+activate_push:
+  {
+    GST_DEBUG_OBJECT (sinkpad, "activating push");
+    return gst_pad_activate_push (sinkpad, TRUE);
+  }
 }
 
 /* push mode:
@@ -1761,7 +1744,6 @@ gst_ffmpegdemux_sink_activate_push (GstPad * sinkpad, gboolean active)
     demux->ffpipe.eos = FALSE;
     demux->ffpipe.srcresult = GST_FLOW_OK;
     demux->ffpipe.needed = 0;
-    demux->running = TRUE;
     demux->seekable = FALSE;
     res = gst_task_start (demux->task);
   } else {
@@ -1780,7 +1762,6 @@ gst_ffmpegdemux_sink_activate_push (GstPad * sinkpad, gboolean active)
     g_static_rec_mutex_lock (demux->task_lock);
     g_static_rec_mutex_unlock (demux->task_lock);
     res = gst_task_join (demux->task);
-    demux->running = FALSE;
     demux->seekable = FALSE;
   }
 
@@ -1804,12 +1785,10 @@ gst_ffmpegdemux_sink_activate_pull (GstPad * sinkpad, gboolean active)
   demux = (GstFFMpegDemux *) (gst_pad_get_parent (sinkpad));
 
   if (active) {
-    demux->running = TRUE;
     demux->seekable = TRUE;
     res = gst_pad_start_task (sinkpad, (GstTaskFunction) gst_ffmpegdemux_loop,
         demux);
   } else {
-    demux->running = FALSE;
     res = gst_pad_stop_task (sinkpad);
     demux->seekable = FALSE;
   }

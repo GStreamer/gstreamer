@@ -97,7 +97,7 @@ static void gst_ffmpegenc_init (GstFFMpegEnc * ffmpegenc);
 static void gst_ffmpegenc_finalize (GObject * object);
 
 static gboolean gst_ffmpegenc_setcaps (GstPad * pad, GstCaps * caps);
-static GstCaps *gst_ffmpegenc_getcaps (GstPad * pad);
+static GstCaps *gst_ffmpegenc_getcaps (GstPad * pad, GstCaps * filter);
 static GstFlowReturn gst_ffmpegenc_chain_video (GstPad * pad,
     GstBuffer * buffer);
 static GstFlowReturn gst_ffmpegenc_chain_audio (GstPad * pad,
@@ -318,7 +318,7 @@ gst_ffmpegenc_get_possible_sizes (GstFFMpegEnc * ffmpegenc, GstPad * pad,
   GstCaps *intersect = NULL;
   guint i;
 
-  othercaps = gst_pad_peer_get_caps (ffmpegenc->srcpad);
+  othercaps = gst_pad_peer_get_caps (ffmpegenc->srcpad, NULL);
 
   if (!othercaps)
     return gst_caps_copy (caps);
@@ -371,7 +371,7 @@ gst_ffmpegenc_get_possible_sizes (GstFFMpegEnc * ffmpegenc, GstPad * pad,
 
 
 static GstCaps *
-gst_ffmpegenc_getcaps (GstPad * pad)
+gst_ffmpegenc_getcaps (GstPad * pad, GstCaps * filter)
 {
   GstFFMpegEnc *ffmpegenc = (GstFFMpegEnc *) GST_PAD_PARENT (pad);
   GstFFMpegEncClass *oclass =
@@ -526,9 +526,6 @@ gst_ffmpegenc_setcaps (GstPad * pad, GstCaps * caps)
   if (ffmpegenc->opened) {
     gst_ffmpeg_avcodec_close (ffmpegenc->context);
     ffmpegenc->opened = FALSE;
-    /* fixed src caps;
-     * so clear src caps for proper (re-)negotiation */
-    gst_pad_set_caps (ffmpegenc->srcpad, NULL);
   }
 
   /* set defaults */
@@ -829,7 +826,6 @@ gst_ffmpegenc_chain_video (GstPad * pad, GstBuffer * inbuf)
       GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
   } else
     GST_WARNING_OBJECT (ffmpegenc, "codec did not provide keyframe info");
-  gst_buffer_set_caps (outbuf, GST_PAD_CAPS (ffmpegenc->srcpad));
 
   gst_buffer_unref (inbuf);
 
@@ -884,7 +880,6 @@ gst_ffmpegenc_encode_audio (GstFFMpegEnc * ffmpegenc, guint8 * audio_in,
   GST_BUFFER_DURATION (outbuf) = duration;
   if (discont)
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
-  gst_buffer_set_caps (outbuf, GST_PAD_CAPS (ffmpegenc->srcpad));
 
   GST_LOG_OBJECT (ffmpegenc, "pushing size %d, timestamp %" GST_TIME_FORMAT,
       res, GST_TIME_ARGS (timestamp));
@@ -1109,7 +1104,6 @@ gst_ffmpegenc_flush_buffers (GstFFMpegEnc * ffmpegenc, gboolean send)
 
     if (!ffmpegenc->context->coded_frame->key_frame)
       GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
-    gst_buffer_set_caps (outbuf, GST_PAD_CAPS (ffmpegenc->srcpad));
 
     gst_buffer_unref (inbuf);
 
