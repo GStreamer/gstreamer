@@ -33,6 +33,8 @@
 #include "gstffmpeg.h"
 #include "gstffmpegcodecmap.h"
 
+#include <gst/pbutils/codec-utils.h>
+
 /*
  * Read a palette from a caps.
  */
@@ -439,6 +441,7 @@ gst_ff_aud_caps_new (AVCodecContext * context, enum CodecID codec_id,
       case CODEC_ID_AC3:
       case CODEC_ID_EAC3:
       case CODEC_ID_AAC:
+      case CODEC_ID_AAC_LATM:
       case CODEC_ID_DTS:
         maxchannels = 6;
         break;
@@ -956,8 +959,52 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       break;
 
     case CODEC_ID_AAC:
+    {
+      caps = gst_ff_aud_caps_new (context, codec_id, "audio/mpeg", NULL);
+
+      if (!encode) {
+        GValue arr = { 0, };
+        GValue item = { 0, };
+
+        g_value_init (&arr, GST_TYPE_LIST);
+        g_value_init (&item, G_TYPE_INT);
+        g_value_set_int (&item, 2);
+        gst_value_list_append_value (&arr, &item);
+        g_value_set_int (&item, 4);
+        gst_value_list_append_value (&arr, &item);
+        g_value_unset (&item);
+
+        gst_caps_set_value (caps, "mpegversion", &arr);
+        g_value_unset (&arr);
+
+        g_value_init (&arr, GST_TYPE_LIST);
+        g_value_init (&item, G_TYPE_STRING);
+        g_value_set_string (&item, "raw");
+        gst_value_list_append_value (&arr, &item);
+        g_value_set_string (&item, "adts");
+        gst_value_list_append_value (&arr, &item);
+        g_value_set_string (&item, "adif");
+        gst_value_list_append_value (&arr, &item);
+        g_value_unset (&item);
+
+        gst_caps_set_value (caps, "stream-format", &arr);
+        g_value_unset (&arr);
+      } else {
+        gst_caps_set_simple (caps, "mpegversion", G_TYPE_INT, 4,
+            "stream-format", G_TYPE_STRING, "raw",
+            "base-profile", G_TYPE_STRING, "lc", NULL);
+
+        if (context && context->extradata_size > 0)
+          gst_codec_utils_aac_caps_set_level_and_profile (caps,
+              context->extradata, context->extradata_size);
+      }
+
+      break;
+    }
+    case CODEC_ID_AAC_LATM:    /* LATM/LOAS AAC syntax */
       caps = gst_ff_aud_caps_new (context, codec_id, "audio/mpeg",
-          "mpegversion", G_TYPE_INT, 4, NULL);
+          "mpegversion", G_TYPE_INT, 4, "stream-format", G_TYPE_STRING, "loas",
+          NULL);
       break;
 
     case CODEC_ID_ASV1:

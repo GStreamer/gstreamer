@@ -822,8 +822,9 @@ gst_ffmpegdec_setcaps (GstPad * pad, GstCaps * caps)
     ffmpegdec->context->flags |= CODEC_FLAG_EMU_EDGE;
   }
 
-  /* for AAC we only use av_parse if not on raw caps */
-  if (oclass->in_plugin->id == CODEC_ID_AAC) {
+  /* for AAC we only use av_parse if not on stream-format==raw or ==loas */
+  if (oclass->in_plugin->id == CODEC_ID_AAC
+      || oclass->in_plugin->id == CODEC_ID_AAC_LATM) {
     const gchar *format = gst_structure_get_string (structure, "stream-format");
 
     if (format == NULL || strcmp (format, "raw") == 0) {
@@ -1423,14 +1424,7 @@ gst_ffmpegdec_do_qos (GstFFMpegDec * ffmpegdec, GstClockTime timestamp,
   if (proportion < 0.4 && diff < 0) {
     goto normal_mode;
   } else {
-    /* if we're more than two seconds late, switch to the next keyframe */
-    /* FIXME, let the demuxer decide what's the best since we might be dropping
-     * a lot of frames when the keyframe is far away or we even might not get a new
-     * keyframe at all.. */
-    if (diff > ((GstClockTimeDiff) GST_SECOND * 2)
-        && !ffmpegdec->waiting_for_key) {
-      goto skip_to_keyframe;
-    } else if (diff >= 0) {
+    if (diff >= 0) {
       /* we're too slow, try to speed up */
       if (ffmpegdec->waiting_for_key) {
         /* we were waiting for a keyframe, that's ok */
@@ -1456,16 +1450,6 @@ normal_mode:
       GST_DEBUG_OBJECT (ffmpegdec, "QOS: normal mode %g < 0.4", proportion);
     }
     return TRUE;
-  }
-skip_to_keyframe:
-  {
-    ffmpegdec->context->skip_frame = AVDISCARD_NONKEY;
-    ffmpegdec->waiting_for_key = TRUE;
-    *mode_switch = TRUE;
-    GST_DEBUG_OBJECT (ffmpegdec,
-        "QOS: keyframe, %" G_GINT64_FORMAT " > GST_SECOND/2", diff);
-    /* we can skip the current frame */
-    return FALSE;
   }
 skip_frame:
   {
@@ -1855,7 +1839,7 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
 
   /* we assume DTS as input timestamps unless we see reordered input
    * timestamps */
-  if (!ffmpegdec->reordered_in) {
+  if (!ffmpegdec->reordered_in && ffmpegdec->reordered_out) {
     /* PTS and DTS are the same for keyframes */
     if (!iskeyframe && ffmpegdec->next_out != -1) {
       /* interpolate all timestamps except for keyframes, FIXME, this is
@@ -2193,7 +2177,8 @@ gst_ffmpegdec_audio_frame (GstFFMpegDec * ffmpegdec,
     GST_BUFFER_OFFSET (*outbuf) = out_offset;
 
     /* the next timestamp we'll use when interpolating */
-    ffmpegdec->next_out = out_timestamp + out_duration;
+    if (GST_CLOCK_TIME_IS_VALID (out_timestamp))
+      ffmpegdec->next_out = out_timestamp + out_duration;
 
     /* now see if we need to clip the buffer against the segment boundaries. */
     if (G_UNLIKELY (!clip_audio_buffer (ffmpegdec, *outbuf, out_timestamp,
@@ -2208,7 +2193,8 @@ gst_ffmpegdec_audio_frame (GstFFMpegDec * ffmpegdec,
 
   /* If we don't error out after the first failed read with the AAC decoder,
    * we must *not* carry on pushing data, else we'll cause segfaults... */
-  if (len == -1 && in_plugin->id == CODEC_ID_AAC) {
+  if (len == -1 && (in_plugin->id == CODEC_ID_AAC
+          || in_plugin->id == CODEC_ID_AAC_LATM)) {
     GST_ELEMENT_ERROR (ffmpegdec, STREAM, DECODE, (NULL),
         ("Decoding of AAC stream by FFMPEG failed."));
     *ret = GST_FLOW_ERROR;
@@ -2666,7 +2652,7 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
           ffmpegdec->pctx->pts);
 
       /* store pts for decoding */
-      if (ffmpegdec->pctx->pts != -1)
+      if (ffmpegdec->pctx->pts != AV_NOPTS_VALUE && ffmpegdec->pctx->pts != -1)
         dec_info = gst_ts_info_get (ffmpegdec, ffmpegdec->pctx->pts);
       else {
         /* ffmpeg sometimes loses track after a flush, help it by feeding a

@@ -22,7 +22,7 @@ libgstffmpeg_la_SOURCES = gstffmpeg.c	\
 # 			  gstffmpegscale.c
 
 libgstffmpeg_la_CFLAGS = $(FFMPEG_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
-libgstffmpeg_la_LIBADD = $(FFMPEG_LIBS) $(GST_BASE_LIBS) $(GST_PLUGINS_BASE_LIBS) -lgstaudio-$(GST_MAJORMINOR) $(LIBM) $(WIN32_LIBS) -lz $(BZ2_LIBS)
+libgstffmpeg_la_LIBADD = $(FFMPEG_LIBS) $(GST_BASE_LIBS) $(GST_PLUGINS_BASE_LIBS) -lgstaudio-$(GST_MAJORMINOR) -lgstpbutils-$(GST_MAJORMINOR) $(LIBM) $(WIN32_LIBS) -lz $(BZ2_LIBS)
 libgstffmpeg_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(DARWIN_LDFLAGS)
 libgstffmpeg_la_LIBTOOLFLAGS = --tag=disable-static
 
