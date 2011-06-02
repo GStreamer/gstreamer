@@ -324,9 +324,7 @@ gst_pad_init (GstPad * pad)
 
   GST_PAD_SET_FLUSHING (pad);
 
-  /* FIXME 0.11: Store this directly in the instance struct */
-  pad->stream_rec_lock = g_slice_new (GStaticRecMutex);
-  g_static_rec_mutex_init (pad->stream_rec_lock);
+  g_static_rec_mutex_init (&pad->stream_rec_lock);
 
   pad->block_cond = g_cond_new ();
 
@@ -473,15 +471,8 @@ gst_pad_finalize (GObject * object)
     gst_object_unref (task);
   }
 
-  if (pad->stream_rec_lock) {
-    g_static_rec_mutex_free (pad->stream_rec_lock);
-    g_slice_free (GStaticRecMutex, pad->stream_rec_lock);
-    pad->stream_rec_lock = NULL;
-  }
-  if (pad->block_cond) {
-    g_cond_free (pad->block_cond);
-    pad->block_cond = NULL;
-  }
+  g_static_rec_mutex_free (&pad->stream_rec_lock);
+  g_cond_free (pad->block_cond);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }

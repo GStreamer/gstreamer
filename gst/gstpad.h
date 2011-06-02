@@ -647,7 +647,7 @@ struct _GstPad {
 
   /*< public >*/ /* with STREAM_LOCK */
   /* streaming rec_lock */
-  GStaticRecMutex		*stream_rec_lock;
+  GStaticRecMutex		 stream_rec_lock;
   GstTask			*task;
 
   /*< public >*/ /* with LOCK */
@@ -764,7 +764,7 @@ struct _GstPadClass {
  * Get the stream lock of @pad. The stream lock is protecting the
  * resources used in the data processing functions of @pad.
  */
-#define GST_PAD_GET_STREAM_LOCK(pad)    (GST_PAD_CAST(pad)->stream_rec_lock)
+#define GST_PAD_GET_STREAM_LOCK(pad)    (&(GST_PAD_CAST(pad)->stream_rec_lock))
 /**
  * GST_PAD_STREAM_LOCK:
  * @pad: a #GstPad
