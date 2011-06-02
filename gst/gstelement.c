@@ -284,7 +284,6 @@ gst_element_init (GstElement * element)
   GST_STATE_PENDING (element) = GST_STATE_VOID_PENDING;
   GST_STATE_RETURN (element) = GST_STATE_CHANGE_SUCCESS;
 
-  /* FIXME 0.11: Store this directly in the instance struct */
   g_static_rec_mutex_init (&element->state_lock);
   element->state_cond = g_cond_new ();
 }
@@ -862,12 +861,15 @@ gst_element_remove_pad (GstElement * element, GstPad * pad)
   /* ERRORS */
 not_our_pad:
   {
-    /* FIXME, locking order? */
+    /* locking order is element > pad */
+    GST_OBJECT_UNLOCK (pad);
+
     GST_OBJECT_LOCK (element);
+    GST_OBJECT_LOCK (pad);
     g_critical ("Padname %s:%s does not belong to element %s when removing",
         GST_DEBUG_PAD_NAME (pad), GST_ELEMENT_NAME (element));
-    GST_OBJECT_UNLOCK (element);
     GST_OBJECT_UNLOCK (pad);
+    GST_OBJECT_UNLOCK (element);
     return FALSE;
   }
 }
