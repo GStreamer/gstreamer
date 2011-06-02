@@ -412,46 +412,6 @@ gst_proxy_pad_fixatecaps_default (GstPad * pad, GstCaps * caps)
   }
 }
 
-/**
- * gst_proxy_pad_setcaps_default:
- * @pad: a  #GstPad to set the capabilities of.
- * @caps: (transfer none): a #GstCaps to set.
- *
- * Invoke the default setcaps function of the proxy pad.
- *
- * Returns: TRUE if the caps could be set. FALSE if the caps were not fixed
- * or bad parameters were provided to this function.
- *
- * Since: 0.10.35
- */
-gboolean
-gst_proxy_pad_setcaps_default (GstPad * pad, GstCaps * caps)
-{
-  GstPad *target;
-  gboolean res;
-
-  g_return_val_if_fail (GST_IS_PROXY_PAD (pad), FALSE);
-  g_return_val_if_fail (caps == NULL || GST_IS_CAPS (caps), FALSE);
-
-  target = gst_proxy_pad_get_target (pad);
-  if (target) {
-#if 0
-    /* FIXME, not needed, the caps event will propagate over the pads
-     * correctly */
-    res = gst_pad_set_caps (target, caps);
-#endif
-    res = TRUE;
-    gst_object_unref (target);
-  } else {
-    /* We don't have any target, but we shouldn't return FALSE since this
-     * would stop the actual push of a buffer (which might trigger a pad block
-     * or probe, or properly return GST_FLOW_NOT_LINKED.
-     */
-    res = TRUE;
-  }
-  return res;
-}
-
 static gboolean
 gst_proxy_pad_set_target_unlocked (GstPad * pad, GstPad * target)
 {
@@ -586,7 +546,6 @@ gst_proxy_pad_class_init (GstProxyPadClass * klass)
   GST_DEBUG_REGISTER_FUNCPTR (gst_proxy_pad_getcaps_default);
   GST_DEBUG_REGISTER_FUNCPTR (gst_proxy_pad_acceptcaps_default);
   GST_DEBUG_REGISTER_FUNCPTR (gst_proxy_pad_fixatecaps_default);
-  GST_DEBUG_REGISTER_FUNCPTR (gst_proxy_pad_setcaps_default);
   GST_DEBUG_REGISTER_FUNCPTR (gst_proxy_pad_unlink_default);
   GST_DEBUG_REGISTER_FUNCPTR (gst_proxy_pad_chain_default);
   GST_DEBUG_REGISTER_FUNCPTR (gst_proxy_pad_chain_list_default);
@@ -640,7 +599,6 @@ gst_proxy_pad_init (GstProxyPad * ppad)
   gst_pad_set_getcaps_function (pad, gst_proxy_pad_getcaps_default);
   gst_pad_set_acceptcaps_function (pad, gst_proxy_pad_acceptcaps_default);
   gst_pad_set_fixatecaps_function (pad, gst_proxy_pad_fixatecaps_default);
-  gst_pad_set_setcaps_function (pad, gst_proxy_pad_setcaps_default);
   gst_pad_set_unlink_function (pad, gst_proxy_pad_unlink_default);
 }
 
@@ -889,29 +847,6 @@ gst_ghost_pad_unlink_default (GstPad * pad)
   gst_proxy_pad_set_target (internal, NULL);
 }
 
-/**
- * gst_ghost_pad_setcaps_default:
- * @pad: the #GstPad to link.
- * @caps: (transfer none): the #GstCaps to set
- *
- * Invoke the default setcaps function of a ghost pad.
- *
- * Returns: %TRUE if the operation was successful
- *
- * Since: 0.10.35
- */
-gboolean
-gst_ghost_pad_setcaps_default (GstPad * pad, GstCaps * caps)
-{
-  g_return_val_if_fail (GST_IS_GHOST_PAD (pad), FALSE);
-  g_return_val_if_fail (caps == NULL || GST_IS_CAPS (caps), FALSE);
-
-  if (GST_PAD_DIRECTION (pad) == GST_PAD_SRC)
-    return TRUE;
-
-  return gst_proxy_pad_setcaps_default (pad, caps);
-}
-
 static void
 gst_ghost_pad_class_init (GstGhostPadClass * klass)
 {
@@ -921,7 +856,6 @@ gst_ghost_pad_class_init (GstGhostPadClass * klass)
 
   gobject_class->dispose = gst_ghost_pad_dispose;
 
-  GST_DEBUG_REGISTER_FUNCPTR (gst_ghost_pad_setcaps_default);
   GST_DEBUG_REGISTER_FUNCPTR (gst_ghost_pad_activate_pull_default);
   GST_DEBUG_REGISTER_FUNCPTR (gst_ghost_pad_activate_push_default);
   GST_DEBUG_REGISTER_FUNCPTR (gst_ghost_pad_link_default);
@@ -933,8 +867,6 @@ gst_ghost_pad_init (GstGhostPad * pad)
   GST_GHOST_PAD_PRIVATE (pad) = G_TYPE_INSTANCE_GET_PRIVATE (pad,
       GST_TYPE_GHOST_PAD, GstGhostPadPrivate);
 
-  gst_pad_set_setcaps_function (GST_PAD_CAST (pad),
-      gst_ghost_pad_setcaps_default);
   gst_pad_set_activatepull_function (GST_PAD_CAST (pad),
       gst_ghost_pad_activate_pull_default);
   gst_pad_set_activatepush_function (GST_PAD_CAST (pad),

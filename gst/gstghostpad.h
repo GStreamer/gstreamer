@@ -72,7 +72,6 @@ GstFlowReturn       gst_proxy_pad_getrange_default               (GstPad *pad, g
 GstCaps*            gst_proxy_pad_getcaps_default                (GstPad *pad, GstCaps * filter);
 gboolean            gst_proxy_pad_acceptcaps_default             (GstPad *pad, GstCaps *caps);
 void                gst_proxy_pad_fixatecaps_default             (GstPad *pad, GstCaps *caps);
-gboolean            gst_proxy_pad_setcaps_default                (GstPad *pad, GstCaps *caps);
 void                gst_proxy_pad_unlink_default                 (GstPad * pad);
 
 #define GST_TYPE_GHOST_PAD		(gst_ghost_pad_get_type ())
@@ -121,7 +120,6 @@ gboolean	 gst_ghost_pad_set_target	(GstGhostPad *gpad, GstPad *newtarget);
 
 gboolean	 gst_ghost_pad_construct	(GstGhostPad *gpad);
 
-gboolean         gst_ghost_pad_setcaps_default        (GstPad * pad, GstCaps * caps);
 void             gst_ghost_pad_unlink_default         (GstPad * pad);
 GstPadLinkReturn gst_ghost_pad_link_default           (GstPad * pad, GstPad * peer);
 gboolean         gst_ghost_pad_activate_pull_default  (GstPad * pad, gboolean active);
