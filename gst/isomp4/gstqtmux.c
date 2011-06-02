@@ -991,6 +991,7 @@ static const GstTagToFourcc tag_matches_mp4[] = {
   {FOURCC_disk, GST_TAG_ALBUM_VOLUME_NUMBER, GST_TAG_ALBUM_VOLUME_COUNT,
       gst_qt_mux_add_mp4_tag},
   {FOURCC_covr, GST_TAG_PREVIEW_IMAGE, NULL, gst_qt_mux_add_mp4_cover},
+  {FOURCC_covr, GST_TAG_IMAGE, NULL, gst_qt_mux_add_mp4_cover},
   {0, NULL,}
 };
 

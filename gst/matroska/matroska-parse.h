@@ -24,7 +24,6 @@
 #define __GST_MATROSKA_PARSE_H__
 
 #include <gst/gst.h>
-#include <gst/base/gstadapter.h>
 
 #include "ebml-read.h"
 #include "matroska-ids.h"
@@ -51,7 +50,6 @@ typedef struct _GstMatroskaParse {
   GstMatroskaReadCommon    common;
 
   /* pads */
-  GstPad                  *sinkpad;
   GstPad                  *srcpad;
   GstClock                *clock;
   guint                    num_v_streams;
@@ -87,21 +85,13 @@ typedef struct _GstMatroskaParse {
 
   GstEvent                *close_segment;
   GstEvent                *new_segment;
-  GstTagList              *global_tags;
 
-  /* pull mode caching */
-  GstBuffer *cached_buffer;
-
-  /* push and pull mode */
-  guint64                  offset;
   /* some state saving */
   GstClockTime             cluster_time;
   guint64                  cluster_offset;
   guint64                  first_cluster_offset;
   guint64                  next_cluster_offset;
 
-  /* push based mode usual suspects */
-  GstAdapter              *adapter;
   /* index stuff */
   gboolean                 seekable;
   gboolean                 building_index;

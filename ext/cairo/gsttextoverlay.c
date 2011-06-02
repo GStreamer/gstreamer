@@ -108,6 +108,8 @@ static GstFlowReturn gst_text_overlay_collected (GstCollectPads * pads,
     gpointer data);
 static void gst_text_overlay_finalize (GObject * object);
 static void gst_text_overlay_font_init (GstCairoTextOverlay * overlay);
+static gboolean gst_text_overlay_src_event (GstPad * pad, GstEvent * event);
+static gboolean gst_text_overlay_video_event (GstPad * pad, GstEvent * event);
 
 /* These macros are adapted from videotestsrc.c */
 #define I420_Y_ROWSTRIDE(width) (GST_ROUND_UP_4(width))
@@ -248,6 +250,8 @@ gst_text_overlay_init (GstCairoTextOverlay * overlay,
       (&cairo_text_overlay_src_template_factory, "src");
   gst_pad_set_getcaps_function (overlay->srcpad,
       GST_DEBUG_FUNCPTR (gst_text_overlay_getcaps));
+  gst_pad_set_event_function (overlay->srcpad,
+      GST_DEBUG_FUNCPTR (gst_text_overlay_src_event));
   gst_element_add_pad (GST_ELEMENT (overlay), overlay->srcpad);
 
   overlay->halign = GST_CAIRO_TEXT_OVERLAY_HALIGN_CENTER;
@@ -273,6 +277,14 @@ gst_text_overlay_init (GstCairoTextOverlay * overlay,
 
   overlay->video_collect_data = gst_collect_pads_add_pad (overlay->collect,
       overlay->video_sinkpad, sizeof (GstCollectData));
+
+  /* FIXME: hacked way to override/extend the event function of
+   * GstCollectPads; because it sets its own event function giving the
+   * element no access to events. Nicked from avimux. */
+  overlay->collect_event =
+      (GstPadEventFunction) GST_PAD_EVENTFUNC (overlay->video_sinkpad);
+  gst_pad_set_event_function (overlay->video_sinkpad,
+      GST_DEBUG_FUNCPTR (gst_text_overlay_video_event));
 
   /* text pad will be added when it is linked */
   overlay->text_collect_data = NULL;
@@ -940,6 +952,45 @@ done:
 
     return ret;
   }
+}
+
+static gboolean
+gst_text_overlay_src_event (GstPad * pad, GstEvent * event)
+{
+  GstCairoTextOverlay *overlay =
+      GST_CAIRO_TEXT_OVERLAY (gst_pad_get_parent (pad));
+  gboolean ret = TRUE;
+
+  /* forward events to the video sink, and, if it is linked, the text sink */
+  if (overlay->text_collect_data) {
+    gst_event_ref (event);
+    ret &= gst_pad_push_event (overlay->text_sinkpad, event);
+  }
+  ret &= gst_pad_push_event (overlay->video_sinkpad, event);
+
+  gst_object_unref (overlay);
+  return ret;
+}
+
+static gboolean
+gst_text_overlay_video_event (GstPad * pad, GstEvent * event)
+{
+  gboolean ret = FALSE;
+  GstCairoTextOverlay *overlay = NULL;
+
+  overlay = GST_CAIRO_TEXT_OVERLAY (gst_pad_get_parent (pad));
+
+  if (GST_EVENT_TYPE (event) == GST_EVENT_NEWSEGMENT) {
+    GST_DEBUG_OBJECT (overlay,
+        "received new segment on video sink pad, forwarding");
+    gst_event_ref (event);
+    gst_pad_push_event (overlay->srcpad, event);
+  }
+
+  /* now GstCollectPads can take care of the rest, e.g. EOS */
+  ret = overlay->collect_event (pad, event);
+  gst_object_unref (overlay);
+  return ret;
 }
 
 static GstStateChangeReturn

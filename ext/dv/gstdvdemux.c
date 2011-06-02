@@ -574,25 +574,22 @@ gst_dvdemux_src_query (GstPad * pad, GstQuery * query)
       GstFormat format;
       GstFormat format2;
       gint64 end;
-      GstPad *peer;
 
-      /* get target format */
-      gst_query_parse_duration (query, &format, NULL);
+      /* First ask the peer in the original format */
+      if (!gst_pad_peer_query (dvdemux->sinkpad, query)) {
+        /* get target format */
+        gst_query_parse_duration (query, &format, NULL);
 
-      /* change query to bytes to perform on peer */
-      gst_query_set_duration (query, GST_FORMAT_BYTES, -1);
+        /* change query to bytes to perform on peer */
+        gst_query_set_duration (query, GST_FORMAT_BYTES, -1);
 
-      if ((peer = gst_pad_get_peer (dvdemux->sinkpad))) {
-        /* ask peer for total length */
-        if (!(res = gst_pad_query (peer, query))) {
-          gst_object_unref (peer);
+        /* Now ask the peer in BYTES format and try to convert */
+        if (!gst_pad_peer_query (dvdemux->sinkpad, query)) {
           goto error;
         }
 
         /* get peer total length */
         gst_query_parse_duration (query, NULL, &end);
-
-        gst_object_unref (peer);
 
         /* convert end to requested format */
         if (end != -1) {
@@ -601,11 +598,9 @@ gst_dvdemux_src_query (GstPad * pad, GstQuery * query)
                       GST_FORMAT_BYTES, end, &format2, &end))) {
             goto error;
           }
+          gst_query_set_duration (query, format, end);
         }
-      } else {
-        end = -1;
       }
-      gst_query_set_duration (query, format, end);
       break;
     }
     case GST_QUERY_CONVERT:

@@ -25,6 +25,7 @@
 
 #include <glib.h>
 #include <gst/gst.h>
+#include <gst/base/gstadapter.h>
 
 #include "matroska-ids.h"
 
@@ -44,6 +45,7 @@ typedef struct _GstMatroskaReadCommon {
   gint                     element_index_writer_id;
 
   /* pads */
+  GstPad                  *sinkpad;
   GPtrArray               *src;
   guint                    num_streams;
 
@@ -61,18 +63,55 @@ typedef struct _GstMatroskaReadCommon {
 
   /* timescale in the file */
   guint64                  time_scale;
+
+  GstTagList              *global_tags;
+
+  /* pull mode caching */
+  GstBuffer *cached_buffer;
+
+  /* push and pull mode */
+  guint64                  offset;
+
+  /* push based mode usual suspects */
+  GstAdapter              *adapter;
 } GstMatroskaReadCommon;
 
 GstFlowReturn gst_matroska_decode_content_encodings (GArray * encodings);
-gboolean gst_matroska_decompress_data (GstMatroskaTrackEncoding * enc,
-    guint8 ** data_out, guint * size_out,
-    GstMatroskaTrackCompressionAlgorithm algo);
+gboolean gst_matroska_decode_data (GArray * encodings, guint8 ** data_out,
+    guint * size_out, GstMatroskaTrackEncodingScope scope, gboolean free);
+gint gst_matroska_index_seek_find (GstMatroskaIndex * i1, GstClockTime * time,
+    gpointer user_data);
+GstMatroskaIndex * gst_matroska_read_common_do_index_seek (
+    GstMatroskaReadCommon * common, GstMatroskaTrackContext * track, gint64
+    seek_pos, GArray ** _index, gint * _entry_index);
+void gst_matroska_read_common_found_global_tag (GstMatroskaReadCommon * common,
+    GstElement * el, GstTagList * taglist);
+gint64 gst_matroska_read_common_get_length (GstMatroskaReadCommon * common);
+GstMatroskaTrackContext * gst_matroska_read_common_get_seek_track (
+    GstMatroskaReadCommon * common, GstMatroskaTrackContext * track);
 GstFlowReturn gst_matroska_read_common_parse_index (GstMatroskaReadCommon *
+    common, GstEbmlRead * ebml);
+GstFlowReturn gst_matroska_read_common_parse_header (GstMatroskaReadCommon *
     common, GstEbmlRead * ebml);
 GstFlowReturn gst_matroska_read_common_parse_skip (GstMatroskaReadCommon *
     common, GstEbmlRead * ebml, const gchar * parent_name, guint id);
+GstFlowReturn gst_matroska_read_common_peek_bytes (GstMatroskaReadCommon *
+    common, guint64 offset, guint size, GstBuffer ** p_buf, guint8 ** bytes);
+GstFlowReturn gst_matroska_read_common_peek_id_length_pull (GstMatroskaReadCommon *
+    common, GstElement * el, guint32 * _id, guint64 * _length, guint *
+    _needed);
+GstFlowReturn gst_matroska_read_common_peek_id_length_push (GstMatroskaReadCommon *
+    common, GstElement * el, guint32 * _id, guint64 * _length, guint *
+    _needed);
 gint gst_matroska_read_common_stream_from_num (GstMatroskaReadCommon * common,
     guint track_num);
+GstFlowReturn gst_matroska_read_common_read_track_encodings (
+    GstMatroskaReadCommon * common, GstEbmlRead * ebml,
+    GstMatroskaTrackContext * context);
+void gst_matroska_read_common_reset_streams (GstMatroskaReadCommon * common,
+    GstClockTime time, gboolean full);
+gboolean gst_matroska_read_common_tracknumber_unique (GstMatroskaReadCommon *
+    common, guint64 num);
 
 G_END_DECLS
 

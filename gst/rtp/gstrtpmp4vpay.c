@@ -112,7 +112,8 @@ gst_rtp_mp4v_pay_class_init (GstRtpMP4VPayClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SEND_CONFIG,
       g_param_spec_boolean ("send-config", "Send Config",
-          "Send the config parameters in RTP packets as well",
+          "Send the config parameters in RTP packets as well(deprecated "
+          "see config-interval)",
           DEFAULT_SEND_CONFIG, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BUFFER_LIST,
@@ -491,7 +492,7 @@ gst_rtp_mp4v_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   flush = gst_rtp_mp4v_pay_depay_data (rtpmp4vpay, data, size, &strip, &vopi);
   if (strip) {
     /* strip off config if requested */
-    if (!rtpmp4vpay->send_config) {
+    if (!(rtpmp4vpay->config_interval > 0)) {
       GstBuffer *subbuf;
 
       GST_LOG_OBJECT (rtpmp4vpay, "stripping config at %d, size %d", strip,
@@ -511,8 +512,7 @@ gst_rtp_mp4v_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   }
 
   /* there is a config request, see if we need to insert it */
-  if (rtpmp4vpay->send_config && vopi && (rtpmp4vpay->config_interval > 0) &&
-      rtpmp4vpay->config) {
+  if (vopi && (rtpmp4vpay->config_interval > 0) && rtpmp4vpay->config) {
     if (rtpmp4vpay->last_config != -1) {
       guint64 diff;
 
@@ -629,6 +629,10 @@ gst_rtp_mp4v_pay_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case ARG_SEND_CONFIG:
       rtpmp4vpay->send_config = g_value_get_boolean (value);
+      /* send the configuration once every minute */
+      if (rtpmp4vpay->send_config && !(rtpmp4vpay->config_interval > 0)) {
+        rtpmp4vpay->config_interval = 60;
+      }
       break;
     case ARG_BUFFER_LIST:
       rtpmp4vpay->buffer_list = g_value_get_boolean (value);

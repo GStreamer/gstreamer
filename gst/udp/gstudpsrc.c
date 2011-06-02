@@ -517,7 +517,7 @@ no_select:
 
   /* patch pktdata and len when stripping off the headers */
   if (G_UNLIKELY (udpsrc->skip_first_bytes != 0)) {
-    if (G_UNLIKELY (readsize <= udpsrc->skip_first_bytes))
+    if (G_UNLIKELY (readsize < udpsrc->skip_first_bytes))
       goto skip_error;
 
     offset += udpsrc->skip_first_bytes;

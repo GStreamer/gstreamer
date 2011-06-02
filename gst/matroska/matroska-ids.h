@@ -567,6 +567,7 @@ typedef struct _GstMatroskaTrackSubtitleContext {
 
   gboolean    check_utf8;     /* buffers should be valid UTF-8 */
   gboolean    invalid_utf8;   /* work around broken files      */
+  gboolean    seen_markup_tag;  /* markup found in text */
 } GstMatroskaTrackSubtitleContext;
 
 typedef struct _GstMatroskaIndex {
