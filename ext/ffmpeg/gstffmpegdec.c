@@ -214,7 +214,6 @@ static void gst_ffmpegdec_finalize (GObject * object);
 static gboolean gst_ffmpegdec_query (GstPad * pad, GstQuery * query);
 static gboolean gst_ffmpegdec_src_event (GstPad * pad, GstEvent * event);
 
-static gboolean gst_ffmpegdec_setcaps (GstPad * pad, GstCaps * caps);
 static gboolean gst_ffmpegdec_sink_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_ffmpegdec_chain (GstPad * pad, GstBuffer * buf);
 
@@ -397,8 +396,6 @@ gst_ffmpegdec_init (GstFFMpegDec * ffmpegdec)
 
   /* setup pads */
   ffmpegdec->sinkpad = gst_pad_new_from_template (oclass->sinktempl, "sink");
-  gst_pad_set_setcaps_function (ffmpegdec->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_ffmpegdec_setcaps));
   gst_pad_set_event_function (ffmpegdec->sinkpad,
       GST_DEBUG_FUNCPTR (gst_ffmpegdec_sink_event));
   gst_pad_set_chain_function (ffmpegdec->sinkpad,
@@ -701,19 +698,17 @@ could_not_open:
 }
 
 static gboolean
-gst_ffmpegdec_setcaps (GstPad * pad, GstCaps * caps)
+gst_ffmpegdec_setcaps (GstFFMpegDec * ffmpegdec, GstCaps * caps)
 {
-  GstFFMpegDec *ffmpegdec;
   GstFFMpegDecClass *oclass;
   GstStructure *structure;
   const GValue *par;
   const GValue *fps;
   gboolean ret = TRUE;
 
-  ffmpegdec = (GstFFMpegDec *) (gst_pad_get_parent (pad));
   oclass = (GstFFMpegDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
 
-  GST_DEBUG_OBJECT (pad, "setcaps called");
+  GST_DEBUG_OBJECT (ffmpegdec, "setcaps called");
 
   GST_OBJECT_LOCK (ffmpegdec);
 
@@ -856,7 +851,7 @@ gst_ffmpegdec_setcaps (GstPad * pad, GstCaps * caps)
   gst_structure_get_int (structure, "height",
       &ffmpegdec->format.video.clip_height);
 
-  GST_DEBUG_OBJECT (pad, "clipping to %dx%d",
+  GST_DEBUG_OBJECT (ffmpegdec, "clipping to %dx%d",
       ffmpegdec->format.video.clip_width, ffmpegdec->format.video.clip_height);
 
   /* take into account the lowres property */
@@ -865,13 +860,11 @@ gst_ffmpegdec_setcaps (GstPad * pad, GstCaps * caps)
   if (ffmpegdec->format.video.clip_height != -1)
     ffmpegdec->format.video.clip_height >>= ffmpegdec->lowres;
 
-  GST_DEBUG_OBJECT (pad, "final clipping to %dx%d",
+  GST_DEBUG_OBJECT (ffmpegdec, "final clipping to %dx%d",
       ffmpegdec->format.video.clip_width, ffmpegdec->format.video.clip_height);
 
 done:
   GST_OBJECT_UNLOCK (ffmpegdec);
-
-  gst_object_unref (ffmpegdec);
 
   return ret;
 
@@ -910,7 +903,7 @@ alloc_output_buffer (GstFFMpegDec * ffmpegdec, GstBuffer ** outbuf,
       width, height);
 
   if (!ffmpegdec->context->palctrl) {
-    GST_LOG_OBJECT (ffmpegdec, "calling pad_alloc");
+    GST_LOG_OBJECT (ffmpegdec, "doing alloc from pool");
     /* no pallete, we can use the buffer size to alloc */
     ret = gst_buffer_pool_acquire_buffer (ffmpegdec->pool, outbuf, NULL);
     if (G_UNLIKELY (ret != GST_FLOW_OK))
@@ -1022,6 +1015,8 @@ gst_ffmpegdec_get_buffer (AVCodecContext * context, AVFrame * picture)
 
       /* FIXME, unmap me later */
       data = gst_buffer_map (buf, &size, NULL, GST_MAP_WRITE);
+      GST_LOG_OBJECT (ffmpegdec, "buffer data %p, size %" G_GSIZE_FORMAT, data,
+          size);
 
       /* copy the right pointers and strides in the picture object */
       gst_ffmpeg_avpicture_fill ((AVPicture *) picture,
@@ -1623,7 +1618,7 @@ get_output_buffer (GstFFMpegDec * ffmpegdec, GstBuffer ** outbuf)
   /* special cases */
 alloc_failed:
   {
-    GST_DEBUG_OBJECT (ffmpegdec, "pad_alloc failed");
+    GST_DEBUG_OBJECT (ffmpegdec, "buffer alloc failed");
     return ret;
   }
 }
@@ -2411,6 +2406,16 @@ gst_ffmpegdec_sink_event (GstPad * pad, GstEvent * event)
       gst_segment_init (&ffmpegdec->segment, GST_FORMAT_TIME);
       clear_queued (ffmpegdec);
       break;
+    }
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+
+      gst_event_parse_caps (event, &caps);
+
+      ret = gst_ffmpegdec_setcaps (ffmpegdec, caps);
+
+      goto done;
     }
     case GST_EVENT_SEGMENT:
     {
