@@ -131,7 +131,7 @@ _default_mem_new_block (gsize maxsize, gsize align, gsize offset, gsize size)
   data = (guint8 *) mem + sizeof (GstMemoryDefault);
 
   if ((aoffset = ((guintptr) data & align)))
-    aoffset = align - aoffset;
+    aoffset = (align + 1) - aoffset;
 
   _default_mem_init (mem, 0, NULL, slice_size, data, NULL, maxsize + align,
       aoffset + offset, size);
@@ -405,8 +405,11 @@ gst_memory_new_wrapped (GstMemoryFlags flags, gpointer data,
  * @maxsize: allocated size of @data
  * @align: alignment for the data
  *
- * Allocate a new memory block with memory that is at least @maxsize big and las
+ * Allocate a new memory block with memory that is at least @maxsize big and has
  * the given alignment.
+ *
+ * @align is given as a bitmask so that @align + 1 equals the amount of bytes to
+ * align to. For example, to align to 8 bytes, use an alignment of 7.
  *
  * Returns: a new #GstMemory.
  */
@@ -414,6 +417,8 @@ GstMemory *
 gst_memory_new_alloc (gsize maxsize, gsize align)
 {
   GstMemoryDefault *mem;
+
+  g_return_val_if_fail (((align + 1) & align) == 0, NULL);
 
   mem = _default_mem_new_block (maxsize, align, 0, maxsize);
 
