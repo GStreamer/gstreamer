@@ -186,11 +186,11 @@ gst_fft_f64_window (GstFFTF64 * self, gdouble * timedata, GstFFTWindow window)
       break;
     case GST_FFT_WINDOW_HAMMING:
       for (i = 0; i < len; i++)
-        timedata[i] *= (0.53836 - 0.46164 * cos (2.0 * M_PI * i / len));
+        timedata[i] *= (0.53836 - 0.46164 * cos (2.0 * G_PI * i / len));
       break;
     case GST_FFT_WINDOW_HANN:
       for (i = 0; i < len; i++)
-        timedata[i] *= (0.5 - 0.5 * cos (2.0 * M_PI * i / len));
+        timedata[i] *= (0.5 - 0.5 * cos (2.0 * G_PI * i / len));
       break;
     case GST_FFT_WINDOW_BARTLETT:
       for (i = 0; i < len; i++)

@@ -174,7 +174,7 @@ check_rgb_buf (const guint8 * pixels, guint32 r_mask, guint32 g_mask,
     guint32 b_mask, guint32 a_mask, guint8 r_expected, guint8 g_expected,
     guint8 b_expected, guint endianness, guint bpp, guint depth)
 {
-  guint32 pixel, red, green, blue, alpha;
+  guint32 pixel, red, green, blue;
 
   switch (bpp) {
     case 32:{
@@ -210,7 +210,7 @@ check_rgb_buf (const guint8 * pixels, guint32 r_mask, guint32 g_mask,
   red = right_shift_colour (r_mask, pixel);
   green = right_shift_colour (g_mask, pixel);
   blue = right_shift_colour (b_mask, pixel);
-  alpha = right_shift_colour (a_mask, pixel);
+  /* alpha = right_shift_colour (a_mask, pixel); */
 
   /* can't enable this by default, valgrind will complain about accessing
    * uninitialised memory for the depth=24,bpp=32 formats ... */

@@ -674,14 +674,11 @@ GST_START_TEST (test_rtcp_buffer)
 {
   GstBuffer *buf;
   GstRTCPPacket packet;
-  guint8 *data;
-  gsize size;
   GstRTCPBuffer rtcp = { NULL, };
 
   buf = gst_rtcp_buffer_new (1400);
   fail_unless (buf != NULL);
-  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
-  fail_unless_equals_int (size, 1400);
+  fail_unless_equals_int (gst_buffer_get_size (buf), 1400);
 
   gst_rtcp_buffer_map (buf, GST_MAP_READWRITE, &rtcp);
 

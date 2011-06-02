@@ -1004,6 +1004,7 @@ tests/Makefile
 tests/check/Makefile
 tests/examples/Makefile
 tests/examples/app/Makefile
+tests/examples/audio/Makefile
 tests/examples/dynamic/Makefile
 tests/examples/encoding/Makefile
 tests/examples/gio/Makefile

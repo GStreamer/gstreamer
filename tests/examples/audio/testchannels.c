@@ -17,8 +17,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include "multichannel.c"
-#include "audio-enumtypes.c"
+#include <gst/audio/multichannel.h>
+#include <gst/audio/audio-enumtypes.h>
 
 gint
 main (gint argc, gchar * argv[])

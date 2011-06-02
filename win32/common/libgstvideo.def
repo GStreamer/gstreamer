@@ -32,6 +32,7 @@ EXPORTS
 	gst_video_format_to_fourcc
 	gst_video_frame_rate
 	gst_video_get_size
+	gst_video_get_size_from_caps
 	gst_video_parse_caps_chroma_site
 	gst_video_parse_caps_color_matrix
 	gst_video_parse_caps_framerate

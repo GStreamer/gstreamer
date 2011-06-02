@@ -436,67 +436,137 @@ typedef enum {
 #define GST_VIDEO_BUFFER_PROGRESSIVE GST_BUFFER_FLAG_MEDIA4
 
 /* functions */
-const GValue *gst_video_frame_rate (GstPad *pad);
-gboolean gst_video_get_size   (GstPad *pad,
-                               gint   *width,
-                               gint   *height);
+const GValue * gst_video_frame_rate (GstPad * pad);
 
-gboolean gst_video_calculate_display_ratio (guint *dar_n, guint *dar_d,
-            guint video_width, guint video_height, 
-            guint video_par_n, guint video_par_d, 
-            guint display_par_n, guint display_par_d);
+gboolean       gst_video_get_size   (GstPad * pad,
+                                     gint   * width,
+                                     gint   * height);
 
-gboolean gst_video_format_parse_caps (const GstCaps *caps,
-    GstVideoFormat *format, int *width, int *height);
-gboolean gst_video_format_parse_caps_interlaced (GstCaps *caps, gboolean *interlaced);
-gboolean gst_video_parse_caps_framerate (GstCaps *caps,
-    int *fps_n, int *fps_d);
-gboolean gst_video_parse_caps_pixel_aspect_ratio (GstCaps *caps,
-    int *par_n, int *par_d);
-const char *gst_video_parse_caps_color_matrix (GstCaps * caps);
-const char *gst_video_parse_caps_chroma_site (GstCaps * caps);
-GstBuffer *gst_video_parse_caps_palette (GstCaps * caps);
-GstCaps * gst_video_format_new_caps (GstVideoFormat format,
-    int width, int height, int framerate_n, int framerate_d,
-    int par_n, int par_d);
-GstCaps * gst_video_format_new_caps_interlaced (GstVideoFormat format,
-    int width, int height, int framerate_n, int framerate_d,
-    int par_n, int par_d, gboolean interlaced);
-GstCaps * gst_video_format_new_template_caps (GstVideoFormat format);
-GstVideoFormat gst_video_format_from_fourcc (guint32 fourcc);
-guint32 gst_video_format_to_fourcc (GstVideoFormat format);
-gboolean gst_video_format_is_rgb (GstVideoFormat format);
-gboolean gst_video_format_is_yuv (GstVideoFormat format);
-gboolean gst_video_format_is_gray (GstVideoFormat format);
-gboolean gst_video_format_has_alpha (GstVideoFormat format);
-int gst_video_format_get_component_depth (GstVideoFormat format, int component);
-int gst_video_format_get_row_stride (GstVideoFormat format, int component,
-    int width);
-int gst_video_format_get_pixel_stride (GstVideoFormat format, int component);
-int gst_video_format_get_component_width (GstVideoFormat format, int component,
-    int width);
-int gst_video_format_get_component_height (GstVideoFormat format, int component,
-    int height);
-int gst_video_format_get_component_offset (GstVideoFormat format, int component,
-    int width, int height);
-int gst_video_format_get_size (GstVideoFormat format, int width, int height);
-gboolean gst_video_get_size_from_caps (const GstCaps * caps, gint * size);
-gboolean gst_video_format_convert (GstVideoFormat format, int width, int height,
-    int fps_n, int fps_d,
-    GstFormat src_format, gint64 src_value,
-    GstFormat dest_format, gint64 * dest_value);
+gboolean       gst_video_calculate_display_ratio (guint * dar_n,
+                                                  guint * dar_d,
+                                                  guint   video_width,
+                                                  guint   video_height,
+                                                  guint   video_par_n,
+                                                  guint   video_par_d,
+                                                  guint   display_par_n,
+                                                  guint   display_par_d);
 
-GstEvent *gst_video_event_new_still_frame (gboolean in_still);
-gboolean gst_video_event_parse_still_frame (GstEvent *event, gboolean *in_still);
+gboolean       gst_video_format_parse_caps (const GstCaps  * caps,
+                                            GstVideoFormat * format,
+                                            int            * width,
+                                            int            * height);
 
-GstBuffer *gst_video_convert_frame(GstBuffer *buf, GstCaps *from_caps, const GstCaps *to_caps,
-				   GstClockTime timeout, GError **error);
+gboolean       gst_video_format_parse_caps_interlaced  (GstCaps  * caps,
+                                                        gboolean * interlaced);
 
-typedef void (*GstVideoConvertFrameCallback) (GstBuffer *buf, GError *error, gpointer user_data);
-void gst_video_convert_frame_async(GstBuffer *buf, GstCaps *from_caps, const GstCaps *to_caps,
-				   GstClockTime timeout, GstVideoConvertFrameCallback callback,
-                                   gpointer user_data, GDestroyNotify destroy_notify);
 
+gboolean       gst_video_parse_caps_pixel_aspect_ratio (GstCaps  * caps,
+                                                        int      * par_n,
+                                                        int      * par_d);
+
+gboolean       gst_video_parse_caps_framerate    (GstCaps * caps,
+                                                  int     * fps_n,
+                                                  int     * fps_d);
+
+const char *   gst_video_parse_caps_color_matrix (GstCaps * caps);
+
+const char *   gst_video_parse_caps_chroma_site  (GstCaps * caps);
+
+GstBuffer *    gst_video_parse_caps_palette      (GstCaps * caps);
+
+/* create caps given format and details */
+
+GstCaps *      gst_video_format_new_caps (GstVideoFormat format,
+                                          int width, int height,
+                                          int framerate_n,
+                                          int framerate_d,
+                                          int par_n, int par_d);
+
+GstCaps *      gst_video_format_new_caps_interlaced (GstVideoFormat format,
+                                                     int width, int height,
+                                                     int framerate_n,
+                                                     int framerate_d,
+                                                     int par_n, int par_d,
+                                                     gboolean interlaced);
+
+GstCaps *      gst_video_format_new_template_caps (GstVideoFormat format);
+
+/* format properties */
+
+GstVideoFormat gst_video_format_from_fourcc (guint32 fourcc) G_GNUC_CONST;
+
+guint32        gst_video_format_to_fourcc (GstVideoFormat format) G_GNUC_CONST;
+
+gboolean       gst_video_format_is_rgb    (GstVideoFormat format) G_GNUC_CONST;
+
+gboolean       gst_video_format_is_yuv    (GstVideoFormat format) G_GNUC_CONST;
+
+gboolean       gst_video_format_is_gray   (GstVideoFormat format) G_GNUC_CONST;
+
+gboolean       gst_video_format_has_alpha (GstVideoFormat format) G_GNUC_CONST;
+
+
+int            gst_video_format_get_component_depth  (GstVideoFormat format,
+                                                      int            component) G_GNUC_CONST;
+
+int            gst_video_format_get_row_stride       (GstVideoFormat format,
+                                                      int            component,
+                                                      int            width) G_GNUC_CONST;
+
+int            gst_video_format_get_pixel_stride     (GstVideoFormat format,
+                                                      int            component) G_GNUC_CONST;
+
+int            gst_video_format_get_component_width  (GstVideoFormat format,
+                                                      int            component,
+                                                      int            width) G_GNUC_CONST;
+
+int            gst_video_format_get_component_height (GstVideoFormat format,
+                                                      int            component,
+                                                      int            height) G_GNUC_CONST;
+
+int            gst_video_format_get_component_offset (GstVideoFormat format,
+                                                      int            component,
+                                                      int            width,
+                                                      int            height) G_GNUC_CONST;
+
+int            gst_video_format_get_size             (GstVideoFormat format,
+                                                      int            width,
+                                                      int            height) G_GNUC_CONST;
+
+gboolean       gst_video_get_size_from_caps (const GstCaps * caps, gint * size);
+
+gboolean       gst_video_format_convert (GstVideoFormat  format,
+                                         int             width,
+                                         int             height,
+                                         int             fps_n,
+                                         int             fps_d,
+                                         GstFormat       src_format,
+                                         gint64          src_value,
+                                         GstFormat       dest_format,
+                                         gint64        * dest_value);
+
+/* video still frame event creation and parsing */
+
+GstEvent *     gst_video_event_new_still_frame   (gboolean in_still);
+
+gboolean       gst_video_event_parse_still_frame (GstEvent * event, gboolean * in_still);
+
+
+/* convert/encode video frame from one format to another */
+
+typedef void (*GstVideoConvertFrameCallback) (GstBuffer * buf, GError *error, gpointer user_data);
+
+void           gst_video_convert_frame_async (GstBuffer                    * buf,
+                                              const GstCaps                * to_caps,
+                                              GstClockTime                   timeout,
+                                              GstVideoConvertFrameCallback   callback,
+                                              gpointer                       user_data,
+                                              GDestroyNotify                 destroy_notify);
+
+GstBuffer *    gst_video_convert_frame       (GstBuffer     * buf,
+                                              const GstCaps * to_caps,
+                                              GstClockTime    timeout,
+                                              GError       ** error);
 G_END_DECLS
 
 #endif /* __GST_VIDEO_H__ */

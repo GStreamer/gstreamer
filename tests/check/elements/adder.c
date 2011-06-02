@@ -573,7 +573,6 @@ GST_START_TEST (test_add_pad)
   GstElement *bin, *src1, *src2, *adder, *sink;
   GstBus *bus;
   GstPad *srcpad;
-  GstStreamConsistency *consist;
   gboolean res;
 
   GST_INFO ("preparing test");
@@ -600,7 +599,6 @@ GST_START_TEST (test_add_pad)
   fail_unless (res == TRUE, NULL);
 
   srcpad = gst_element_get_static_pad (adder, "src");
-  consist = gst_consistency_checker_new (srcpad);
   gst_object_unref (srcpad);
 
   main_loop = g_main_loop_new (NULL, FALSE);
@@ -656,7 +654,6 @@ GST_START_TEST (test_remove_pad)
   GstBus *bus;
   GstPad *pad, *srcpad;
   gboolean res;
-  GstStreamConsistency *consist;
 
   GST_INFO ("preparing test");
 
@@ -682,7 +679,6 @@ GST_START_TEST (test_remove_pad)
   fail_if (pad == NULL, NULL);
 
   srcpad = gst_element_get_static_pad (adder, "src");
-  consist = gst_consistency_checker_new (srcpad);
   gst_object_unref (srcpad);
 
   main_loop = g_main_loop_new (NULL, FALSE);

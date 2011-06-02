@@ -204,7 +204,7 @@ _create_audio_buffer (void)
 {
   GstBuffer *buffer;
   ogg_packet packet;
-  float **vorbis_buffer;
+  float **vorbis_buffer G_GNUC_UNUSED;
 
   vorbis_buffer = vorbis_analysis_buffer (&vd, 0);
   vorbis_analysis_wrote (&vd, 0);
