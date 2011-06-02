@@ -121,8 +121,10 @@ _default_mem_new_block (gsize maxsize, gsize align, gsize offset, gsize size)
   gsize aoffset, slice_size;
   guint8 *data;
 
+  /* allocate more to compensate for alignment */
+  maxsize += align;
   /* alloc header and data in one block */
-  slice_size = sizeof (GstMemoryDefault) + maxsize + align;
+  slice_size = sizeof (GstMemoryDefault) + maxsize;
 
   mem = g_slice_alloc (slice_size);
   if (mem == NULL)
@@ -133,7 +135,7 @@ _default_mem_new_block (gsize maxsize, gsize align, gsize offset, gsize size)
   if ((aoffset = ((guintptr) data & align)))
     aoffset = (align + 1) - aoffset;
 
-  _default_mem_init (mem, 0, NULL, slice_size, data, NULL, maxsize + align,
+  _default_mem_init (mem, 0, NULL, slice_size, data, NULL, maxsize,
       aoffset + offset, size);
 
   return mem;
