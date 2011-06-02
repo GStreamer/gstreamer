@@ -2538,8 +2538,8 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
       }
     }
     ffmpegdec->last_in = in_timestamp;
+    ffmpegdec->last_frames = 0;
   }
-  ffmpegdec->last_frames = 0;
 
   GST_LOG_OBJECT (ffmpegdec,
       "Received new data of size %u, offset:%" G_GUINT64_FORMAT ", ts:%"
