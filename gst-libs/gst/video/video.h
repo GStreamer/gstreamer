@@ -557,6 +557,7 @@ gboolean       gst_video_event_parse_still_frame (GstEvent * event, gboolean * i
 typedef void (*GstVideoConvertFrameCallback) (GstBuffer * buf, GError *error, gpointer user_data);
 
 void           gst_video_convert_frame_async (GstBuffer                    * buf,
+                                              GstCaps                      * from_caps,
                                               const GstCaps                * to_caps,
                                               GstClockTime                   timeout,
                                               GstVideoConvertFrameCallback   callback,
@@ -564,6 +565,7 @@ void           gst_video_convert_frame_async (GstBuffer                    * buf
                                               GDestroyNotify                 destroy_notify);
 
 GstBuffer *    gst_video_convert_frame       (GstBuffer     * buf,
+                                              GstCaps       * from_caps,
                                               const GstCaps * to_caps,
                                               GstClockTime    timeout,
                                               GError       ** error);
