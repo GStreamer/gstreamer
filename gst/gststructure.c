@@ -165,8 +165,7 @@ gst_structure_validate_name (const gchar * name)
 
   g_return_val_if_fail (name != NULL, FALSE);
 
-  /* FIXME 0.11: use g_ascii_isalpha() */
-  if (G_UNLIKELY (!g_ascii_isalnum (*name))) {
+  if (G_UNLIKELY (!g_ascii_isalpha (*name))) {
     GST_WARNING ("Invalid character '%c' at offset 0 in structure name: %s",
         *name, name);
     return FALSE;
