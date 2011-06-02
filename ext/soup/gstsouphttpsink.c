@@ -249,7 +249,7 @@ gst_soup_http_sink_set_property (GObject * object, guint property_id,
       if (souphttpsink->prop_session) {
         g_object_unref (souphttpsink->prop_session);
       }
-      souphttpsink->prop_session = g_value_get_object (value);
+      souphttpsink->prop_session = g_value_dup_object (value);
       break;
     case PROP_LOCATION:
       g_free (souphttpsink->location);
@@ -327,9 +327,12 @@ gst_soup_http_sink_get_property (GObject * object, guint property_id,
 void
 gst_soup_http_sink_dispose (GObject * object)
 {
-  /* GstSoupHttpSink *souphttpsink = GST_SOUP_HTTP_SINK (object); */
+  GstSoupHttpSink *souphttpsink = GST_SOUP_HTTP_SINK (object);
 
   /* clean up as possible.  may be called multiple times */
+  if (souphttpsink->prop_session)
+    g_object_unref (souphttpsink->prop_session);
+  souphttpsink->prop_session = NULL;
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
