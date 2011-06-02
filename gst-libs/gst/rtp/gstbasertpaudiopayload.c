@@ -156,8 +156,8 @@ static GstFlowReturn gst_base_rtp_audio_payload_handle_buffer (GstBaseRTPPayload
 static GstStateChangeReturn gst_base_rtp_payload_audio_change_state (GstElement
     * element, GstStateChange transition);
 
-static gboolean gst_base_rtp_payload_audio_handle_event (GstPad * pad,
-    GstEvent * event);
+static gboolean gst_base_rtp_payload_audio_handle_event (GstBaseRTPPayload
+    * payload, GstEvent * event);
 
 #define gst_base_rtp_audio_payload_parent_class parent_class
 G_DEFINE_TYPE (GstBaseRTPAudioPayload, gst_base_rtp_audio_payload,
@@ -953,12 +953,13 @@ gst_base_rtp_payload_audio_change_state (GstElement * element,
 }
 
 static gboolean
-gst_base_rtp_payload_audio_handle_event (GstPad * pad, GstEvent * event)
+gst_base_rtp_payload_audio_handle_event (GstBaseRTPPayload * basep,
+    GstEvent * event)
 {
   GstBaseRTPAudioPayload *payload;
   gboolean res = FALSE;
 
-  payload = GST_BASE_RTP_AUDIO_PAYLOAD (gst_pad_get_parent (pad));
+  payload = GST_BASE_RTP_AUDIO_PAYLOAD (basep);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
@@ -972,9 +973,9 @@ gst_base_rtp_payload_audio_handle_event (GstPad * pad, GstEvent * event)
       break;
   }
 
-  gst_object_unref (payload);
+  /* let parent handle the remainder of the event */
+  res = GST_BASE_RTP_PAYLOAD_CLASS (parent_class)->handle_event (basep, event);
 
-  /* return FALSE to let parent handle the remainder of the event */
   return res;
 }
 

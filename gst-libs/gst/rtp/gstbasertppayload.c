@@ -94,9 +94,10 @@ static void gst_basertppayload_init (GstBaseRTPPayload * basertppayload,
     gpointer g_class);
 static void gst_basertppayload_finalize (GObject * object);
 
-static gboolean gst_basertppayload_sink_setcaps (GstPad * pad, GstCaps * caps);
 static GstCaps *gst_basertppayload_sink_getcaps (GstPad * pad,
     GstCaps * filter);
+static gboolean gst_basertppayload_event_default (GstBaseRTPPayload *
+    basertppayload, GstEvent * event);
 static gboolean gst_basertppayload_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_basertppayload_chain (GstPad * pad,
     GstBuffer * buffer);
@@ -240,6 +241,8 @@ gst_basertppayload_class_init (GstBaseRTPPayloadClass * klass)
 
   gstelement_class->change_state = gst_basertppayload_change_state;
 
+  klass->handle_event = gst_basertppayload_event_default;
+
   GST_DEBUG_CATEGORY_INIT (basertppayload_debug, "basertppayload", 0,
       "Base class for RTP Payloaders");
 }
@@ -265,8 +268,6 @@ gst_basertppayload_init (GstBaseRTPPayload * basertppayload, gpointer g_class)
   g_return_if_fail (templ != NULL);
 
   basertppayload->sinkpad = gst_pad_new_from_template (templ, "sink");
-  gst_pad_set_setcaps_function (basertppayload->sinkpad,
-      gst_basertppayload_sink_setcaps);
   gst_pad_set_getcaps_function (basertppayload->sinkpad,
       gst_basertppayload_sink_getcaps);
   gst_pad_set_event_function (basertppayload->sinkpad,
@@ -324,25 +325,6 @@ gst_basertppayload_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
-static gboolean
-gst_basertppayload_sink_setcaps (GstPad * pad, GstCaps * caps)
-{
-  GstBaseRTPPayload *basertppayload;
-  GstBaseRTPPayloadClass *basertppayload_class;
-  gboolean ret = TRUE;
-
-  GST_DEBUG_OBJECT (pad, "setting caps %" GST_PTR_FORMAT, caps);
-  basertppayload = GST_BASE_RTP_PAYLOAD (gst_pad_get_parent (pad));
-  basertppayload_class = GST_BASE_RTP_PAYLOAD_GET_CLASS (basertppayload);
-
-  if (basertppayload_class->set_caps)
-    ret = basertppayload_class->set_caps (basertppayload, caps);
-
-  gst_object_unref (basertppayload);
-
-  return ret;
-}
-
 static GstCaps *
 gst_basertppayload_sink_getcaps (GstPad * pad, GstCaps * filter)
 {
@@ -376,33 +358,32 @@ gst_basertppayload_sink_getcaps (GstPad * pad, GstCaps * filter)
 }
 
 static gboolean
-gst_basertppayload_event (GstPad * pad, GstEvent * event)
+gst_basertppayload_event_default (GstBaseRTPPayload * basertppayload,
+    GstEvent * event)
 {
-  GstBaseRTPPayload *basertppayload;
-  GstBaseRTPPayloadClass *basertppayload_class;
-  gboolean res;
-
-  basertppayload = GST_BASE_RTP_PAYLOAD (gst_pad_get_parent (pad));
-  if (G_UNLIKELY (basertppayload == NULL)) {
-    gst_event_unref (event);
-    return FALSE;
-  }
-  basertppayload_class = GST_BASE_RTP_PAYLOAD_GET_CLASS (basertppayload);
-
-  if (basertppayload_class->handle_event) {
-    res = basertppayload_class->handle_event (pad, event);
-    if (res)
-      goto done;
-  }
+  gboolean res = FALSE;
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
-      res = gst_pad_event_default (pad, event);
+      res = gst_pad_event_default (basertppayload->sinkpad, event);
       break;
     case GST_EVENT_FLUSH_STOP:
-      res = gst_pad_event_default (pad, event);
+      res = gst_pad_event_default (basertppayload->sinkpad, event);
       gst_segment_init (&basertppayload->segment, GST_FORMAT_UNDEFINED);
       break;
+    case GST_EVENT_CAPS:
+    {
+      GstBaseRTPPayloadClass *basertppayload_class;
+      GstCaps *caps;
+
+      gst_event_parse_caps (event, &caps);
+      GST_DEBUG_OBJECT (basertppayload, "setting caps %" GST_PTR_FORMAT, caps);
+
+      basertppayload_class = GST_BASE_RTP_PAYLOAD_GET_CLASS (basertppayload);
+      if (basertppayload_class->set_caps)
+        res = basertppayload_class->set_caps (basertppayload, caps);
+      break;
+    }
     case GST_EVENT_SEGMENT:
     {
       GstSegment *segment;
@@ -412,14 +393,36 @@ gst_basertppayload_event (GstPad * pad, GstEvent * event)
 
       GST_DEBUG_OBJECT (basertppayload,
           "configured SEGMENT %" GST_SEGMENT_FORMAT, segment);
-      /* fallthrough */
+      res = gst_pad_event_default (basertppayload->sinkpad, event);
+      break;
     }
     default:
-      res = gst_pad_event_default (pad, event);
+      res = gst_pad_event_default (basertppayload->sinkpad, event);
       break;
   }
+  return res;
+}
 
-done:
+static gboolean
+gst_basertppayload_event (GstPad * pad, GstEvent * event)
+{
+  GstBaseRTPPayload *basertppayload;
+  GstBaseRTPPayloadClass *basertppayload_class;
+  gboolean res = FALSE;
+
+  basertppayload = GST_BASE_RTP_PAYLOAD (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (basertppayload == NULL)) {
+    gst_event_unref (event);
+    return FALSE;
+  }
+
+  basertppayload_class = GST_BASE_RTP_PAYLOAD_GET_CLASS (basertppayload);
+
+  if (basertppayload_class->handle_event)
+    res = basertppayload_class->handle_event (basertppayload, event);
+  else
+    gst_event_unref (event);
+
   gst_object_unref (basertppayload);
 
   return res;
@@ -816,8 +819,8 @@ gst_basertppayload_prepare_push (GstBaseRTPPayload * payload,
       gst_buffer_get_size (GST_BUFFER (obj)), payload->seqnum, data.rtptime,
       GST_TIME_ARGS (data.timestamp));
 
-  if (g_atomic_int_compare_and_exchange (&payload->
-          priv->notified_first_timestamp, 1, 0)) {
+  if (g_atomic_int_compare_and_exchange (&payload->priv->
+          notified_first_timestamp, 1, 0)) {
     g_object_notify (G_OBJECT (payload), "timestamp");
     g_object_notify (G_OBJECT (payload), "seqnum");
   }

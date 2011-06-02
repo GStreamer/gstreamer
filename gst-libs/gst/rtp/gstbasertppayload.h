@@ -140,7 +140,7 @@ struct _GstBaseRTPPayloadClass
    * the RTP buffers. This function takes ownership of the buffer. */
   GstFlowReturn (*handle_buffer)        (GstBaseRTPPayload *payload,
                                          GstBuffer *buffer);
-  gboolean      (*handle_event)         (GstPad * pad, GstEvent * event);
+  gboolean      (*handle_event)         (GstBaseRTPPayload *payload, GstEvent * event);
   GstCaps *     (*get_caps)             (GstBaseRTPPayload *payload, GstPad * pad, GstCaps * filter);
 
   /*< private >*/

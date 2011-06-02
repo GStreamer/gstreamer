@@ -68,7 +68,6 @@ static void gst_base_rtp_depayload_set_property (GObject * object,
 static void gst_base_rtp_depayload_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
-static gboolean gst_base_rtp_depayload_setcaps (GstPad * pad, GstCaps * caps);
 static GstFlowReturn gst_base_rtp_depayload_chain (GstPad * pad,
     GstBuffer * in);
 static gboolean gst_base_rtp_depayload_handle_sink_event (GstPad * pad,
@@ -157,8 +156,6 @@ gst_base_rtp_depayload_init (GstBaseRTPDepayload * filter,
       gst_element_class_get_pad_template (GST_ELEMENT_CLASS (klass), "sink");
   g_return_if_fail (pad_template != NULL);
   filter->sinkpad = gst_pad_new_from_template (pad_template, "sink");
-  gst_pad_set_setcaps_function (filter->sinkpad,
-      gst_base_rtp_depayload_setcaps);
   gst_pad_set_chain_function (filter->sinkpad, gst_base_rtp_depayload_chain);
   gst_pad_set_event_function (filter->sinkpad,
       gst_base_rtp_depayload_handle_sink_event);
@@ -181,16 +178,14 @@ gst_base_rtp_depayload_finalize (GObject * object)
 }
 
 static gboolean
-gst_base_rtp_depayload_setcaps (GstPad * pad, GstCaps * caps)
+gst_base_rtp_depayload_setcaps (GstBaseRTPDepayload * filter, GstCaps * caps)
 {
-  GstBaseRTPDepayload *filter;
   GstBaseRTPDepayloadClass *bclass;
   GstBaseRTPDepayloadPrivate *priv;
   gboolean res;
   GstStructure *caps_struct;
   const GValue *value;
 
-  filter = GST_BASE_RTP_DEPAYLOAD (gst_pad_get_parent (pad));
   priv = filter->priv;
 
   bclass = GST_BASE_RTP_DEPAYLOAD_GET_CLASS (filter);
@@ -238,8 +233,6 @@ gst_base_rtp_depayload_setcaps (GstPad * pad, GstCaps * caps)
   }
 
   priv->negotiated = res;
-
-  gst_object_unref (filter);
 
   return res;
 }
@@ -401,6 +394,16 @@ gst_base_rtp_depayload_handle_event (GstBaseRTPDepayload * filter,
       filter->need_newsegment = TRUE;
       filter->priv->next_seqnum = -1;
       break;
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+
+      gst_event_parse_caps (event, &caps);
+
+      res = gst_base_rtp_depayload_setcaps (filter, caps);
+      forward = FALSE;
+      break;
+    }
     case GST_EVENT_SEGMENT:
     {
       gst_event_copy_segment (event, &filter->segment);
