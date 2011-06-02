@@ -444,6 +444,7 @@ gst_theora_enc_init (GstTheoraEnc * enc, GstTheoraEncClass * g_class)
   enc->srcpad =
       gst_pad_new_from_static_template (&theora_enc_src_factory, "src");
   gst_pad_set_event_function (enc->srcpad, theora_enc_src_event);
+  gst_pad_use_fixed_caps (enc->srcpad);
   gst_element_add_pad (GST_ELEMENT (enc), enc->srcpad);
 
   gst_segment_init (&enc->segment, GST_FORMAT_UNDEFINED);
