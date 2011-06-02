@@ -2864,6 +2864,70 @@ is_raw_pad (GstPad * pad)
 
 static GstProbeReturn
 sinkpad_blocked_cb (GstPad * blockedpad, GstProbeType type, gpointer type_data,
+    gpointer user_data);
+
+static void
+video_set_blocked (GstPlaySink * playsink, gboolean blocked)
+{
+  if (playsink->video_pad) {
+    GstPad *opad =
+        GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD
+            (playsink->video_pad)));
+    if (blocked && playsink->video_block_id == 0) {
+      playsink->video_block_id =
+          gst_pad_add_probe (opad, GST_PROBE_TYPE_BLOCK, sinkpad_blocked_cb,
+          gst_object_ref (playsink), (GDestroyNotify) gst_object_unref);
+    } else if (!blocked && playsink->video_block_id) {
+      gst_pad_remove_probe (opad, playsink->video_block_id);
+      playsink->video_block_id = 0;
+      playsink->video_pad_blocked = FALSE;
+    }
+    gst_object_unref (opad);
+  }
+}
+
+static void
+audio_set_blocked (GstPlaySink * playsink, gboolean blocked)
+{
+  if (playsink->audio_pad) {
+    GstPad *opad =
+        GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD
+            (playsink->audio_pad)));
+    if (blocked && playsink->audio_block_id == 0) {
+      playsink->audio_block_id =
+          gst_pad_add_probe (opad, GST_PROBE_TYPE_BLOCK, sinkpad_blocked_cb,
+          gst_object_ref (playsink), (GDestroyNotify) gst_object_unref);
+    } else if (!blocked && playsink->audio_block_id) {
+      gst_pad_remove_probe (opad, playsink->audio_block_id);
+      playsink->audio_block_id = 0;
+      playsink->audio_pad_blocked = FALSE;
+    }
+    gst_object_unref (opad);
+  }
+}
+
+static void
+text_set_blocked (GstPlaySink * playsink, gboolean blocked)
+{
+  if (playsink->text_pad) {
+    GstPad *opad =
+        GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD
+            (playsink->text_pad)));
+    if (blocked && playsink->text_block_id == 0) {
+      playsink->text_block_id =
+          gst_pad_add_probe (opad, GST_PROBE_TYPE_BLOCK, sinkpad_blocked_cb,
+          gst_object_ref (playsink), (GDestroyNotify) gst_object_unref);
+    } else if (!blocked && playsink->text_block_id) {
+      gst_pad_remove_probe (opad, playsink->text_block_id);
+      playsink->text_block_id = 0;
+      playsink->text_pad_blocked = FALSE;
+    }
+    gst_object_unref (opad);
+  }
+}
+
+static GstProbeReturn
+sinkpad_blocked_cb (GstPad * blockedpad, GstProbeType type, gpointer type_data,
     gpointer user_data)
 {
   GstPlaySink *playsink = (GstPlaySink *) user_data;
@@ -2902,35 +2966,9 @@ sinkpad_blocked_cb (GstPad * blockedpad, GstProbeType type, gpointer type_data,
 
     gst_play_sink_reconfigure (playsink);
 
-    if (playsink->video_pad) {
-      GstPad *opad =
-          GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD
-              (playsink->video_pad)));
-      gst_pad_remove_probe (opad, playsink->video_block_id);
-      playsink->video_block_id = 0;
-      gst_object_unref (opad);
-      playsink->video_pad_blocked = FALSE;
-    }
-
-    if (playsink->audio_pad) {
-      GstPad *opad =
-          GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD
-              (playsink->audio_pad)));
-      gst_pad_remove_probe (opad, playsink->audio_block_id);
-      playsink->audio_block_id = 0;
-      gst_object_unref (opad);
-      playsink->audio_pad_blocked = FALSE;
-    }
-
-    if (playsink->text_pad) {
-      GstPad *opad =
-          GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD
-              (playsink->text_pad)));
-      gst_pad_remove_probe (opad, playsink->text_block_id);
-      playsink->text_block_id = 0;
-      gst_object_unref (opad);
-      playsink->text_pad_blocked = FALSE;
-    }
+    video_set_blocked (playsink, FALSE);
+    audio_set_blocked (playsink, FALSE);
+    text_set_blocked (playsink, FALSE);
   }
 
   gst_object_unref (pad);
@@ -2971,38 +3009,9 @@ caps_notify_cb (GstPad * pad, GParamSpec * unused, GstPlaySink * playsink)
 
   if (reconfigure) {
     GST_PLAY_SINK_LOCK (playsink);
-    if (playsink->video_pad) {
-      GstPad *opad =
-          GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD
-              (playsink->video_pad)));
-      if (playsink->video_block_id == 0)
-        playsink->video_block_id =
-            gst_pad_add_probe (opad, GST_PROBE_TYPE_BLOCK, sinkpad_blocked_cb,
-            gst_object_ref (playsink), (GDestroyNotify) gst_object_unref);
-      gst_object_unref (opad);
-    }
-
-    if (playsink->audio_pad) {
-      GstPad *opad =
-          GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD
-              (playsink->audio_pad)));
-      if (playsink->audio_block_id == 0)
-        playsink->audio_block_id =
-            gst_pad_add_probe (opad, GST_PROBE_TYPE_BLOCK, sinkpad_blocked_cb,
-            gst_object_ref (playsink), (GDestroyNotify) gst_object_unref);
-      gst_object_unref (opad);
-    }
-
-    if (playsink->text_pad) {
-      GstPad *opad =
-          GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD
-              (playsink->text_pad)));
-      if (playsink->text_block_id == 0)
-        playsink->text_block_id =
-            gst_pad_add_probe (opad, GST_PROBE_TYPE_BLOCK, sinkpad_blocked_cb,
-            gst_object_ref (playsink), (GDestroyNotify) gst_object_unref);
-      gst_object_unref (opad);
-    }
+    video_set_blocked (playsink, TRUE);
+    audio_set_blocked (playsink, TRUE);
+    text_set_blocked (playsink, TRUE);
     GST_PLAY_SINK_UNLOCK (playsink);
   }
 }
@@ -3367,36 +3376,9 @@ gst_play_sink_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       /* unblock all pads here */
       GST_PLAY_SINK_LOCK (playsink);
-      if (playsink->video_pad) {
-        GstPad *opad =
-            GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD
-                (playsink->video_pad)));
-        gst_pad_remove_probe (opad, playsink->video_block_id);
-        playsink->video_block_id = 0;
-        gst_object_unref (opad);
-        playsink->video_pad_blocked = FALSE;
-      }
-
-      if (playsink->audio_pad) {
-        GstPad *opad =
-            GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD
-                (playsink->audio_pad)));
-
-        gst_pad_remove_probe (opad, playsink->audio_block_id);
-        playsink->audio_block_id = 0;
-        gst_object_unref (opad);
-        playsink->audio_pad_blocked = FALSE;
-      }
-
-      if (playsink->text_pad) {
-        GstPad *opad =
-            GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD
-                (playsink->text_pad)));
-        gst_pad_remove_probe (opad, playsink->text_block_id);
-        playsink->text_block_id = 0;
-        gst_object_unref (opad);
-        playsink->text_pad_blocked = FALSE;
-      }
+      video_set_blocked (playsink, FALSE);
+      audio_set_blocked (playsink, FALSE);
+      text_set_blocked (playsink, FALSE);
       GST_PLAY_SINK_UNLOCK (playsink);
       /* fall through */
     case GST_STATE_CHANGE_READY_TO_NULL:
