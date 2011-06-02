@@ -4036,6 +4036,73 @@ gst_value_is_fixed (const GValue * value)
   return gst_type_is_fixed (type);
 }
 
+/**
+ * gst_value_fixate:
+ * @dest: the #GValue destination
+ * @src: the #GValue to fixate
+ *
+ * Fixate @src into a new value @dest.
+ * For ranges, the first element is taken. For lists and arrays, the
+ * first item is fixated and returned.
+ * If @src is already fixed, this function returns FALSE.
+ *
+ * Returns: true if @dest contains a fixated version of @src.
+ */
+gboolean
+gst_value_fixate (GValue * dest, const GValue * src)
+{
+  g_return_val_if_fail (G_IS_VALUE (src), FALSE);
+  g_return_val_if_fail (dest != NULL, FALSE);
+
+  if (G_VALUE_TYPE (src) == GST_TYPE_INT_RANGE) {
+    g_value_init (dest, G_TYPE_INT);
+    g_value_set_int (dest, gst_value_get_int_range_min (src));
+  } else if (G_VALUE_TYPE (src) == GST_TYPE_DOUBLE_RANGE) {
+    g_value_init (dest, G_TYPE_DOUBLE);
+    g_value_set_double (dest, gst_value_get_double_range_min (src));
+  } else if (G_VALUE_TYPE (src) == GST_TYPE_FRACTION_RANGE) {
+    gst_value_init_and_copy (dest, gst_value_get_fraction_range_min (src));
+  } else if (G_VALUE_TYPE (src) == GST_TYPE_LIST) {
+    GValue temp = { 0 };
+
+    /* list could be empty */
+    if (gst_value_list_get_size (src) <= 0)
+      return FALSE;
+
+    gst_value_init_and_copy (&temp, gst_value_list_get_value (src, 0));
+
+    if (!gst_value_fixate (dest, &temp))
+      gst_value_init_and_copy (dest, &temp);
+    g_value_unset (&temp);
+  } else if (G_VALUE_TYPE (src) == GST_TYPE_ARRAY) {
+    gboolean res = FALSE;
+    guint n, len;
+
+    len = gst_value_array_get_size (src);
+    g_value_init (dest, GST_TYPE_ARRAY);
+    for (n = 0; n < len; n++) {
+      GValue kid = { 0 };
+      const GValue *orig_kid = gst_value_array_get_value (src, n);
+
+      if (!gst_value_fixate (&kid, orig_kid))
+        gst_value_init_and_copy (&kid, orig_kid);
+      else
+        res = TRUE;
+      gst_value_array_append_value (dest, &kid);
+      g_value_unset (&kid);
+    }
+
+    if (!res)
+      g_value_unset (dest);
+
+    return res;
+  } else {
+    return FALSE;
+  }
+  return TRUE;
+}
+
+
 /************
  * fraction *
  ************/
