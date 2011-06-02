@@ -487,7 +487,7 @@ G_STMT_START {                                                          \
  * This lock is used by the core.  It is taken while getting or setting
  * the state, during state changes, and while finalizing.
  */
-#define GST_STATE_GET_LOCK(elem)               (GST_ELEMENT_CAST(elem)->state_lock)
+#define GST_STATE_GET_LOCK(elem)               (&(GST_ELEMENT_CAST(elem)->state_lock))
 /**
  * GST_STATE_GET_COND:
  * @elem: a #GstElement
@@ -544,7 +544,7 @@ struct _GstElement
   GstObject             object;
 
   /*< public >*/ /* with LOCK */
-  GStaticRecMutex      *state_lock;
+  GStaticRecMutex       state_lock;
 
   /* element state */
   GCond                *state_cond;
