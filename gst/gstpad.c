@@ -3783,21 +3783,11 @@ gst_pad_emit_have_data_signal (GstPad * pad, GstMiniObject * obj)
 }
 #endif
 
-static void
-gst_pad_data_unref (gboolean is_buffer, void *data)
-{
-  if (G_LIKELY (is_buffer)) {
-    gst_buffer_unref (data);
-  } else {
-    gst_buffer_list_unref (data);
-  }
-}
-
 /* this is the chain function that does not perform the additional argument
  * checking for that little extra speed.
  */
 static inline GstFlowReturn
-gst_pad_chain_data_unchecked (GstPad * pad, gboolean is_buffer, void *data)
+gst_pad_chain_data_unchecked (GstPad * pad, GstProbeType type, void *data)
 {
   GstFlowReturn ret;
   gboolean needs_events;
@@ -3818,7 +3808,7 @@ gst_pad_chain_data_unchecked (GstPad * pad, gboolean is_buffer, void *data)
       goto events_error;
   }
 
-  PROBE (pad, GST_PROBE_TYPE_PUSH | GST_PROBE_TYPE_BUFFER, data, probe_stopped);
+  PROBE (pad, GST_PROBE_TYPE_PUSH | type, data, probe_stopped);
 
   GST_OBJECT_UNLOCK (pad);
 
@@ -3827,7 +3817,7 @@ gst_pad_chain_data_unchecked (GstPad * pad, gboolean is_buffer, void *data)
    * the data to the wrong function. This is not really a
    * problem since functions are assigned at creation time
    * and don't change that often... */
-  if (G_LIKELY (is_buffer)) {
+  if (G_LIKELY (type & GST_PROBE_TYPE_BUFFER)) {
     GstPadChainFunction chainfunc;
 
     if (G_UNLIKELY ((chainfunc = GST_PAD_CHAINFUNC (pad)) == NULL))
@@ -3883,7 +3873,7 @@ probe_stopped:
   {
     GST_OBJECT_UNLOCK (pad);
     GST_PAD_STREAM_UNLOCK (pad);
-    gst_pad_data_unref (is_buffer, data);
+    gst_mini_object_unref (GST_MINI_OBJECT_CAST (data));
 
     switch (ret) {
       case GST_FLOW_CUSTOM_SUCCESS:
@@ -3898,7 +3888,7 @@ probe_stopped:
   }
 no_function:
   {
-    gst_pad_data_unref (is_buffer, data);
+    gst_mini_object_unref (GST_MINI_OBJECT_CAST (data));
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
         "pushing, but not chainhandler");
     GST_ELEMENT_ERROR (GST_PAD_PARENT (pad), CORE, PAD, (NULL),
@@ -3943,7 +3933,7 @@ gst_pad_chain (GstPad * pad, GstBuffer * buffer)
   g_return_val_if_fail (GST_PAD_IS_SINK (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_BUFFER (buffer), GST_FLOW_ERROR);
 
-  return gst_pad_chain_data_unchecked (pad, TRUE, buffer);
+  return gst_pad_chain_data_unchecked (pad, GST_PROBE_TYPE_BUFFER, buffer);
 }
 
 static GstFlowReturn
@@ -3960,7 +3950,9 @@ gst_pad_chain_list_default (GstPad * pad, GstBufferList * list)
   ret = GST_FLOW_OK;
   for (i = 0; i < len; i++) {
     buffer = gst_buffer_list_get (list, i);
-    ret = gst_pad_chain_data_unchecked (pad, TRUE, gst_buffer_ref (buffer));
+    ret =
+        gst_pad_chain_data_unchecked (pad, GST_PROBE_TYPE_BUFFER,
+        gst_buffer_ref (buffer));
     if (ret != GST_FLOW_OK)
       break;
   }
@@ -4005,22 +3997,20 @@ gst_pad_chain_list (GstPad * pad, GstBufferList * list)
   g_return_val_if_fail (GST_PAD_IS_SINK (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_BUFFER_LIST (list), GST_FLOW_ERROR);
 
-  return gst_pad_chain_data_unchecked (pad, FALSE, list);
+  return gst_pad_chain_data_unchecked (pad, GST_PROBE_TYPE_BUFFER_LIST, list);
 }
 
 static GstFlowReturn
-gst_pad_push_data (GstPad * pad, gboolean is_buffer, void *data)
+gst_pad_push_data (GstPad * pad, GstProbeType type, void *data)
 {
   GstPad *peer;
   GstFlowReturn ret;
-  GstProbeType type;
-
-  type = is_buffer ? GST_PROBE_TYPE_BUFFER : GST_PROBE_TYPE_BUFFER_LIST;
-  type |= GST_PROBE_TYPE_PUSH;
 
   GST_OBJECT_LOCK (pad);
   if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
     goto flushing;
+
+  type |= GST_PROBE_TYPE_PUSH;
 
   /* do block probes */
   PROBE (pad, type | GST_PROBE_TYPE_BLOCK, data, probe_stopped);
@@ -4036,7 +4026,7 @@ gst_pad_push_data (GstPad * pad, gboolean is_buffer, void *data)
   pad->priv->using++;
   GST_OBJECT_UNLOCK (pad);
 
-  ret = gst_pad_chain_data_unchecked (peer, is_buffer, data);
+  ret = gst_pad_chain_data_unchecked (peer, type, data);
 
   gst_object_unref (peer);
 
@@ -4057,13 +4047,13 @@ flushing:
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
         "pushing, but pad was flushing");
     GST_OBJECT_UNLOCK (pad);
-    gst_pad_data_unref (is_buffer, data);
+    gst_mini_object_unref (GST_MINI_OBJECT_CAST (data));
     return GST_FLOW_WRONG_STATE;
   }
 probe_stopped:
   {
     GST_OBJECT_UNLOCK (pad);
-    gst_pad_data_unref (is_buffer, data);
+    gst_mini_object_unref (GST_MINI_OBJECT_CAST (data));
 
     switch (ret) {
       case GST_FLOW_CUSTOM_SUCCESS:
@@ -4081,7 +4071,7 @@ not_linked:
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
         "pushing, but it was not linked");
     GST_OBJECT_UNLOCK (pad);
-    gst_pad_data_unref (is_buffer, data);
+    gst_mini_object_unref (GST_MINI_OBJECT_CAST (data));
     return GST_FLOW_NOT_LINKED;
   }
 }
@@ -4120,7 +4110,7 @@ gst_pad_push (GstPad * pad, GstBuffer * buffer)
   g_return_val_if_fail (GST_PAD_IS_SRC (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_BUFFER (buffer), GST_FLOW_ERROR);
 
-  return gst_pad_push_data (pad, TRUE, buffer);
+  return gst_pad_push_data (pad, GST_PROBE_TYPE_BUFFER, buffer);
 }
 
 /**
@@ -4166,7 +4156,7 @@ gst_pad_push_list (GstPad * pad, GstBufferList * list)
   g_return_val_if_fail (GST_PAD_IS_SRC (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_BUFFER_LIST (list), GST_FLOW_ERROR);
 
-  return gst_pad_push_data (pad, FALSE, list);
+  return gst_pad_push_data (pad, GST_PROBE_TYPE_BUFFER_LIST, list);
 }
 
 static GstFlowReturn
