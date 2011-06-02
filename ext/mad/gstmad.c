@@ -624,7 +624,7 @@ index_seek (GstMad * mad, GstPad * pad, GstEvent * event)
     return FALSE;
 
   if (format == GST_FORMAT_TIME) {
-    gst_segment_set_seek (&mad->segment, rate, format, flags, cur_type,
+    gst_segment_do_seek (&mad->segment, rate, format, flags, cur_type,
         cur, stop_type, stop, NULL);
   } else {
     gst_segment_init (&mad->segment, GST_FORMAT_UNDEFINED);
@@ -707,7 +707,7 @@ normal_seek (GstMad * mad, GstPad * pad, GstEvent * event)
     time_stop = stop;
   }
 
-  gst_segment_set_seek (&mad->segment, rate, GST_FORMAT_TIME, flags, cur_type,
+  gst_segment_do_seek (&mad->segment, rate, GST_FORMAT_TIME, flags, cur_type,
       time_cur, stop_type, time_stop, NULL);
 
   GST_DEBUG ("seek to time %" GST_TIME_FORMAT "-%" GST_TIME_FORMAT,
@@ -952,27 +952,23 @@ gst_mad_sink_event (GstPad * pad, GstEvent * event)
   GST_DEBUG ("handling %s event", GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_NEWSEGMENT:{
-      GstFormat format;
-      gboolean update;
-      gdouble rate, applied_rate;
-      gint64 start, stop, pos;
+    case GST_EVENT_SEGMENT:
+    {
+      GstSegment segment;
 
-      gst_event_parse_new_segment_full (event, &update, &rate, &applied_rate,
-          &format, &start, &stop, &pos);
+      gst_event_copy_segment (event, &segment);
 
-      if (format == GST_FORMAT_TIME) {
+      if (segment.format == GST_FORMAT_TIME) {
         /* FIXME: is this really correct? */
         mad->tempsize = 0;
         result = gst_pad_push_event (mad->srcpad, event);
         /* we don't need to restart when we get here */
         mad->restart = FALSE;
         mad->framed = TRUE;
-        gst_segment_set_newsegment_full (&mad->segment, update, rate,
-            applied_rate, GST_FORMAT_TIME, start, stop, pos);
+        gst_segment_copy_into (&segment, &mad->segment);
       } else {
-        GST_DEBUG ("dropping newsegment event in format %s",
-            gst_format_get_name (format));
+        GST_DEBUG ("dropping segment event in format %s",
+            gst_format_get_name (segment.format));
         /* on restart the chain function will generate a new
          * newsegment event, so we can just drop this one */
         mad->restart = TRUE;
@@ -999,6 +995,11 @@ gst_mad_sink_event (GstPad * pad, GstEvent * event)
       /* fall-through */
     case GST_EVENT_FLUSH_START:
       result = gst_pad_event_default (pad, event);
+      break;
+    case GST_EVENT_CAPS:
+      GST_DEBUG ("dropping caps event");
+      gst_event_unref (event);
+      result = TRUE;
       break;
     default:
       if (mad->restart) {
@@ -1691,12 +1692,12 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
           GST_DEBUG ("Sending NEWSEGMENT event, start=%" GST_TIME_FORMAT,
               GST_TIME_ARGS (start));
 
-          gst_segment_set_newsegment (&mad->segment, FALSE, 1.0,
-              GST_FORMAT_TIME, start, GST_CLOCK_TIME_NONE, start);
+          mad->segment.start = start;
+          mad->segment.stop = GST_CLOCK_TIME_NONE;
+          mad->segment.time = start;
 
           gst_pad_push_event (mad->srcpad,
-              gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
-                  start, GST_CLOCK_TIME_NONE, start));
+              gst_event_new_segment (&mad->segment));
           mad->need_newsegment = FALSE;
         }
 
@@ -1712,7 +1713,6 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
 
         /* will attach the caps to the buffer */
         outbuffer = gst_buffer_new_and_alloc (nsamples * mad->channels * 4);
-        gst_buffer_set_caps (outbuffer, GST_PAD_CAPS (mad->srcpad));
 
         mad_synth_frame (&mad->synth, &mad->frame);
         left_ch = mad->synth.pcm.samples[0];
@@ -1761,7 +1761,7 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
             mad->discont = FALSE;
           }
 
-          mad->segment.last_stop = GST_BUFFER_TIMESTAMP (outbuffer);
+          mad->segment.position = GST_BUFFER_TIMESTAMP (outbuffer);
           if (mad->segment.rate > 0.0) {
             result = gst_pad_push (mad->srcpad, outbuffer);
           } else {
