@@ -699,12 +699,16 @@ theora_enc_sink_setcaps (GstPad * pad, GstCaps * caps)
   enc->info.fps_denominator = enc->fps_d = fps_d;
   if (par) {
     enc->info.aspect_numerator = gst_value_get_fraction_numerator (par);
+    enc->par_n = gst_value_get_fraction_numerator (par);
     enc->info.aspect_denominator = gst_value_get_fraction_denominator (par);
+    enc->par_d = gst_value_get_fraction_denominator (par);
   } else {
     /* setting them to 0 indicates that the decoder can chose a good aspect
      * ratio, defaulting to 1/1 */
     enc->info.aspect_numerator = 0;
+    enc->par_n = 1;
     enc->info.aspect_denominator = 0;
+    enc->par_d = 1;
   }
 
   enc->info.colorspace = TH_CS_UNSPECIFIED;
@@ -1255,7 +1259,11 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
     buffers = g_slist_reverse (buffers);
 
     /* mark buffers and put on caps */
-    caps = gst_pad_get_caps (enc->srcpad);
+    caps = gst_caps_new_simple ("video/x-theora",
+        "width", G_TYPE_INT, enc->width,
+        "height", G_TYPE_INT, enc->height,
+        "framerate", GST_TYPE_FRACTION, enc->fps_n, enc->fps_d,
+        "pixel-aspect-ratio", GST_TYPE_FRACTION, enc->par_n, enc->par_d, NULL);
     caps = theora_set_header_on_caps (caps, buffers);
     GST_DEBUG ("here are the caps: %" GST_PTR_FORMAT, caps);
     gst_pad_set_caps (enc->srcpad, caps);
