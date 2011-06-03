@@ -247,6 +247,8 @@ GST_STATIC_PAD_TEMPLATE ("src",
 G_DEFINE_TYPE_WITH_CODE (GstTheoraEnc, gst_theora_enc,
     GST_TYPE_ELEMENT, G_IMPLEMENT_INTERFACE (GST_TYPE_PRESET, NULL));
 
+static GstCaps *theora_enc_src_caps;
+
 static gboolean theora_enc_sink_event (GstPad * pad, GstEvent * event);
 static gboolean theora_enc_src_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn theora_enc_chain (GstPad * pad, GstBuffer * buffer);
@@ -263,11 +265,14 @@ static void theora_enc_finalize (GObject * object);
 static gboolean theora_enc_write_multipass_cache (GstTheoraEnc * enc,
     gboolean begin, gboolean eos);
 
+static char *theora_enc_get_supported_formats (void);
+
 static void
 gst_theora_enc_class_init (GstTheoraEncClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
+  char *caps_string;
 
   /* query runtime encoder properties */
   th_enc_ctx *th_ctx;
@@ -396,6 +401,14 @@ gst_theora_enc_class_init (GstTheoraEncClass * klass)
       "encode raw YUV video to a theora stream",
       "Wim Taymans <wim@fluendo.com>");
 
+  caps_string = g_strdup_printf ("video/x-raw-yuv, "
+      "format = (fourcc) { %s }, "
+      "framerate = (fraction) [1/MAX, MAX], "
+      "width = (int) [ 1, MAX ], " "height = (int) [ 1, MAX ]",
+      theora_enc_get_supported_formats ());
+  theora_enc_src_caps = gst_caps_from_string (caps_string);
+  g_free (caps_string);
+
   gstelement_class->change_state = theora_enc_change_state;
 }
 
@@ -413,6 +426,7 @@ gst_theora_enc_init (GstTheoraEnc * enc)
   enc->srcpad =
       gst_pad_new_from_static_template (&theora_enc_src_factory, "src");
   gst_pad_set_event_function (enc->srcpad, theora_enc_src_event);
+  gst_pad_use_fixed_caps (enc->srcpad);
   gst_element_add_pad (GST_ELEMENT (enc), enc->srcpad);
 
   gst_segment_init (&enc->segment, GST_FORMAT_UNDEFINED);
@@ -580,24 +594,49 @@ theora_enc_get_supported_formats (void)
 static GstCaps *
 theora_enc_sink_getcaps (GstPad * pad, GstCaps * filter)
 {
+  GstTheoraEnc *encoder;
+  GstPad *peer;
   GstCaps *caps;
-  char *supported_formats, *caps_string;
 
-  supported_formats = theora_enc_get_supported_formats ();
-  if (!supported_formats) {
-    GST_WARNING ("no supported formats found. Encoder disabled?");
+  /* If we already have caps return them */
+  if (GST_PAD_CAPS (pad))
+    return gst_caps_ref (GST_PAD_CAPS (pad));
+
+  encoder = GST_THEORA_ENC (gst_pad_get_parent (pad));
+  if (!encoder)
     return gst_caps_new_empty ();
+
+  peer = gst_pad_get_peer (encoder->srcpad);
+  if (peer) {
+    const GstCaps *templ_caps;
+    GstCaps *peer_caps;
+    GstStructure *s;
+    guint i, n;
+
+    peer_caps = gst_pad_get_caps (peer);
+
+    /* Translate peercaps to YUV */
+    peer_caps = gst_caps_make_writable (peer_caps);
+    n = gst_caps_get_size (peer_caps);
+    for (i = 0; i < n; i++) {
+      s = gst_caps_get_structure (peer_caps, i);
+
+      gst_structure_set_name (s, "video/x-raw-yuv");
+      gst_structure_remove_field (s, "streamheader");
+    }
+
+    templ_caps = gst_pad_get_pad_template_caps (pad);
+
+    caps = gst_caps_intersect (peer_caps, templ_caps);
+    caps = gst_caps_intersect (caps, theora_enc_src_caps);
+    gst_caps_unref (peer_caps);
+    gst_object_unref (peer);
+    peer = NULL;
+  } else {
+    caps = gst_caps_ref (theora_enc_src_caps);
   }
 
-  caps_string = g_strdup_printf ("video/x-raw-yuv, "
-      "format = (fourcc) { %s }, "
-      "framerate = (fraction) [1/MAX, MAX], "
-      "width = (int) [ 1, MAX ], " "height = (int) [ 1, MAX ]",
-      supported_formats);
-  caps = gst_caps_from_string (caps_string);
-  g_free (caps_string);
-  g_free (supported_formats);
-  GST_DEBUG ("Supported caps: %" GST_PTR_FORMAT, caps);
+  gst_object_unref (encoder);
 
   if (filter) {
     GstCaps *intersection;
@@ -652,12 +691,16 @@ theora_enc_sink_setcaps (GstPad * pad, GstCaps * caps)
   enc->info.fps_denominator = enc->fps_d = fps_d;
   if (par) {
     enc->info.aspect_numerator = gst_value_get_fraction_numerator (par);
+    enc->par_n = gst_value_get_fraction_numerator (par);
     enc->info.aspect_denominator = gst_value_get_fraction_denominator (par);
+    enc->par_d = gst_value_get_fraction_denominator (par);
   } else {
     /* setting them to 0 indicates that the decoder can chose a good aspect
      * ratio, defaulting to 1/1 */
     enc->info.aspect_numerator = 0;
+    enc->par_n = 1;
     enc->info.aspect_denominator = 0;
+    enc->par_d = 1;
   }
 
   enc->info.colorspace = TH_CS_UNSPECIFIED;
@@ -1204,7 +1247,11 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
     buffers = g_slist_reverse (buffers);
 
     /* mark buffers and put on caps */
-    caps = gst_pad_get_caps (enc->srcpad, NULL);
+    caps = gst_caps_new_simple ("video/x-theora",
+        "width", G_TYPE_INT, enc->width,
+        "height", G_TYPE_INT, enc->height,
+        "framerate", GST_TYPE_FRACTION, enc->fps_n, enc->fps_d,
+        "pixel-aspect-ratio", GST_TYPE_FRACTION, enc->par_n, enc->par_d, NULL);
     caps = theora_set_header_on_caps (caps, buffers);
     GST_DEBUG ("here are the caps: %" GST_PTR_FORMAT, caps);
     gst_pad_set_caps (enc->srcpad, caps);

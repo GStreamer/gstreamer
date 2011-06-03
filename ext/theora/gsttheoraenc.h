@@ -102,6 +102,7 @@ struct _GstTheoraEnc
   gint info_width, info_height;
   gint width, height;
   gint fps_n, fps_d;
+  gint par_n, par_d;
   GstClockTime next_ts;
 
   GstClockTime expected_ts;
