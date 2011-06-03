@@ -118,17 +118,19 @@ cleanup_vorbistag (GstElement * vorbistag)
 }
 
 
-static gboolean
-buffer_probe (GstPad * pad, GstBuffer * buffer, gpointer unused)
+static GstProbeReturn
+buffer_probe (GstPad * pad, GstProbeType type, GstBuffer * buffer,
+    gpointer unused)
 {
   g_async_queue_push (pending_buffers, gst_buffer_ref (buffer));
-  return TRUE;
+  return GST_PROBE_OK;
 }
 
 static void
 start_pipeline (GstElement * element)
 {
-  id = gst_pad_add_buffer_probe (mysinkpad, G_CALLBACK (buffer_probe), NULL);
+  id = gst_pad_add_probe (mysinkpad, GST_PROBE_TYPE_BUFFER,
+      (GstPadProbeCallback) buffer_probe, NULL, NULL);
 
   pending_buffers = g_async_queue_new ();
   gst_element_set_state (element, GST_STATE_PLAYING);
@@ -148,7 +150,7 @@ stop_pipeline (GstElement * element)
   while ((buf = g_async_queue_try_pop (pending_buffers)))
     gst_buffer_unref (buf);
 
-  gst_pad_remove_buffer_probe (mysinkpad, (guint) id);
+  gst_pad_remove_probe (mysinkpad, id);
   id = 0;
 
   gst_element_set_state (element, GST_STATE_NULL);
