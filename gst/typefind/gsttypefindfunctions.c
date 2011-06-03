@@ -4011,7 +4011,7 @@ windows_icon_typefind (GstTypeFind * find, gpointer user_data)
 static void
 wbmp_typefind (GstTypeFind * find, gpointer user_data)
 {
-  guint8 *data;
+  const guint8 *data;
   gint64 datalen;
   guint w, h, size;
 
