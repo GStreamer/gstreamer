@@ -799,7 +799,7 @@ gst_ogg_mux_queue_pads (GstOggMux * ogg_mux)
              * to starting streams on the fly, and some streams (like VP8
              * at least) do not send headers packets, as other muxers don't
              * expect/need them. */
-            caps = gst_pad_get_current_caps (GST_PAD_CAST (pad));
+            caps = gst_pad_get_current_caps (GST_PAD_CAST (data->pad));
             pad->have_type =
                 gst_ogg_stream_setup_map_from_caps_headers (&pad->map, caps);
 
