@@ -1600,16 +1600,16 @@ out:
 }
 
 static gboolean
-gst_subtitle_overlay_video_sink_setcaps (GstPad * pad, GstCaps * caps)
+gst_subtitle_overlay_video_sink_setcaps (GstSubtitleOverlay * self,
+    GstCaps * caps)
 {
-  GstSubtitleOverlay *self = GST_SUBTITLE_OVERLAY (gst_pad_get_parent (pad));
   gboolean ret = TRUE;
   gint fps_n, fps_d;
 
-  GST_DEBUG_OBJECT (pad, "Setting caps: %" GST_PTR_FORMAT, caps);
+  GST_DEBUG_OBJECT (self, "Setting caps: %" GST_PTR_FORMAT, caps);
 
   if (!gst_video_parse_caps_framerate (caps, &fps_n, &fps_d)) {
-    GST_ERROR_OBJECT (pad, "Failed to parse framerate from caps");
+    GST_ERROR_OBJECT (self, "Failed to parse framerate from caps");
     ret = FALSE;
     goto out;
   }
@@ -1623,10 +1623,7 @@ gst_subtitle_overlay_video_sink_setcaps (GstPad * pad, GstCaps * caps)
   }
   GST_SUBTITLE_OVERLAY_UNLOCK (self);
 
-  ret = gst_ghost_pad_setcaps_default (pad, caps);
-
 out:
-  gst_object_unref (self);
   return ret;
 }
 
@@ -1636,32 +1633,53 @@ gst_subtitle_overlay_video_sink_event (GstPad * pad, GstEvent * event)
   GstSubtitleOverlay *self = GST_SUBTITLE_OVERLAY (gst_pad_get_parent (pad));
   gboolean ret;
 
-  if (GST_EVENT_TYPE (event) == GST_EVENT_FLUSH_STOP) {
-    GST_DEBUG_OBJECT (pad,
-        "Resetting video segment because of flush-stop event");
-    gst_segment_init (&self->video_segment, GST_FORMAT_UNDEFINED);
-    self->fps_n = self->fps_d = 0;
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH_STOP:
+    {
+      GST_DEBUG_OBJECT (pad,
+          "Resetting video segment because of flush-stop event");
+      gst_segment_init (&self->video_segment, GST_FORMAT_UNDEFINED);
+      self->fps_n = self->fps_d = 0;
+      break;
+    }
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+
+      gst_event_parse_caps (event, &caps);
+      ret = gst_subtitle_overlay_video_sink_setcaps (self, caps);
+      if (!ret)
+        goto done;
+      break;
+    }
+    default:
+      break;
   }
 
   ret = gst_proxy_pad_event_default (pad, gst_event_ref (event));
 
   if (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT) {
-
     GST_DEBUG_OBJECT (pad, "segment event: %" GST_PTR_FORMAT, event);
     gst_event_copy_segment (event, &self->video_segment);
 
-    if (self->video_segment.format != GST_FORMAT_TIME) {
-      GST_ERROR_OBJECT (pad, "Newsegment event in non-time format: %s",
-          gst_format_get_name (self->video_segment.format));
-      gst_object_unref (event);
-      gst_object_unref (self);
-      return FALSE;
-    }
+    if (self->video_segment.format != GST_FORMAT_TIME)
+      goto invalid_format;
   }
 
+done:
   gst_event_unref (event);
   gst_object_unref (self);
+
   return ret;
+
+  /* ERRORS */
+invalid_format:
+  {
+    GST_ERROR_OBJECT (pad, "Newsegment event in non-time format: %s",
+        gst_format_get_name (self->video_segment.format));
+    ret = FALSE;
+    goto done;
+  }
 }
 
 static GstFlowReturn
@@ -1750,13 +1768,13 @@ gst_subtitle_overlay_subtitle_sink_acceptcaps (GstPad * pad, GstCaps * caps)
 }
 
 static gboolean
-gst_subtitle_overlay_subtitle_sink_setcaps (GstPad * pad, GstCaps * caps)
+gst_subtitle_overlay_subtitle_sink_setcaps (GstSubtitleOverlay * self,
+    GstCaps * caps)
 {
-  GstSubtitleOverlay *self = GST_SUBTITLE_OVERLAY (gst_pad_get_parent (pad));
   gboolean ret = TRUE;
   GstPad *target = NULL;;
 
-  GST_DEBUG_OBJECT (pad, "Setting caps: %" GST_PTR_FORMAT, caps);
+  GST_DEBUG_OBJECT (self, "Setting caps: %" GST_PTR_FORMAT, caps);
 
   target =
       gst_ghost_pad_get_target (GST_GHOST_PAD_CAST (self->subtitle_sinkpad));
@@ -1765,13 +1783,12 @@ gst_subtitle_overlay_subtitle_sink_setcaps (GstPad * pad, GstCaps * caps)
   gst_caps_replace (&self->subcaps, caps);
 
   if (target && gst_pad_accept_caps (target, caps)) {
-    GST_DEBUG_OBJECT (pad, "Target accepts caps");
-    ret = gst_ghost_pad_setcaps_default (pad, caps);
+    GST_DEBUG_OBJECT (self, "Target accepts caps");
     GST_SUBTITLE_OVERLAY_UNLOCK (self);
     goto out;
   }
 
-  GST_DEBUG_OBJECT (pad, "Target did not accept caps");
+  GST_DEBUG_OBJECT (self, "Target did not accept caps");
 
   self->subtitle_error = FALSE;
   block_subtitle (self);
@@ -1781,7 +1798,7 @@ gst_subtitle_overlay_subtitle_sink_setcaps (GstPad * pad, GstCaps * caps)
 out:
   if (target)
     gst_object_unref (target);
-  gst_object_unref (self);
+
   return ret;
 }
 
@@ -1870,6 +1887,16 @@ gst_subtitle_overlay_subtitle_sink_event (GstPad * pad, GstEvent * event)
   }
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+
+      gst_event_parse_caps (event, &caps);
+      ret = gst_subtitle_overlay_subtitle_sink_setcaps (self, caps);
+      if (!ret)
+        goto out;
+      break;
+    }
     case GST_EVENT_FLUSH_STOP:
       GST_DEBUG_OBJECT (pad,
           "Resetting subtitle segment because of flush-stop");
@@ -1936,8 +1963,6 @@ gst_subtitle_overlay_init (GstSubtitleOverlay * self)
       gst_ghost_pad_new_no_target_from_template ("video_sink", templ);
   gst_pad_set_event_function (self->video_sinkpad,
       GST_DEBUG_FUNCPTR (gst_subtitle_overlay_video_sink_event));
-  gst_pad_set_setcaps_function (self->video_sinkpad,
-      GST_DEBUG_FUNCPTR (gst_subtitle_overlay_video_sink_setcaps));
   gst_pad_set_chain_function (self->video_sinkpad,
       GST_DEBUG_FUNCPTR (gst_subtitle_overlay_video_sink_chain));
 
@@ -1957,8 +1982,6 @@ gst_subtitle_overlay_init (GstSubtitleOverlay * self)
       GST_DEBUG_FUNCPTR (gst_subtitle_overlay_subtitle_sink_unlink));
   gst_pad_set_event_function (self->subtitle_sinkpad,
       GST_DEBUG_FUNCPTR (gst_subtitle_overlay_subtitle_sink_event));
-  gst_pad_set_setcaps_function (self->subtitle_sinkpad,
-      GST_DEBUG_FUNCPTR (gst_subtitle_overlay_subtitle_sink_setcaps));
   gst_pad_set_chain_function (self->subtitle_sinkpad,
       GST_DEBUG_FUNCPTR (gst_subtitle_overlay_subtitle_sink_chain));
   gst_pad_set_getcaps_function (self->subtitle_sinkpad,

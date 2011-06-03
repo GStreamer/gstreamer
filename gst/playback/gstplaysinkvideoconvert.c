@@ -225,42 +225,9 @@ unblock_proxypad (GstPlaySinkVideoConvert * self)
 }
 
 static gboolean
-gst_play_sink_video_convert_sink_event (GstPad * pad, GstEvent * event)
+gst_play_sink_video_convert_sink_setcaps (GstPlaySinkVideoConvert * self,
+    GstCaps * caps)
 {
-  GstPlaySinkVideoConvert *self =
-      GST_PLAY_SINK_VIDEO_CONVERT (gst_pad_get_parent (pad));
-  gboolean ret;
-
-  ret = gst_proxy_pad_event_default (pad, gst_event_ref (event));
-
-  if (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT) {
-
-    GST_PLAY_SINK_VIDEO_CONVERT_LOCK (self);
-    GST_DEBUG_OBJECT (self, "Segment before %" GST_SEGMENT_FORMAT,
-        &self->segment);
-    gst_event_copy_segment (event, &self->segment);
-    GST_DEBUG_OBJECT (self, "Segment after %" GST_SEGMENT_FORMAT,
-        &self->segment);
-    GST_PLAY_SINK_VIDEO_CONVERT_UNLOCK (self);
-  } else if (GST_EVENT_TYPE (event) == GST_EVENT_FLUSH_STOP) {
-    GST_PLAY_SINK_VIDEO_CONVERT_LOCK (self);
-    GST_DEBUG_OBJECT (self, "Resetting segment");
-    gst_segment_init (&self->segment, GST_FORMAT_UNDEFINED);
-    GST_PLAY_SINK_VIDEO_CONVERT_UNLOCK (self);
-  }
-
-  gst_event_unref (event);
-  gst_object_unref (self);
-
-  return ret;
-}
-
-static gboolean
-gst_play_sink_video_convert_sink_setcaps (GstPad * pad, GstCaps * caps)
-{
-  GstPlaySinkVideoConvert *self =
-      GST_PLAY_SINK_VIDEO_CONVERT (gst_pad_get_parent (pad));
-  gboolean ret;
   GstStructure *s;
   const gchar *name;
   gboolean reconfigure = FALSE;
@@ -290,11 +257,54 @@ gst_play_sink_video_convert_sink_setcaps (GstPad * pad, GstCaps * caps)
   }
   GST_PLAY_SINK_VIDEO_CONVERT_UNLOCK (self);
 
-  ret = gst_ghost_pad_setcaps_default (pad, caps);
+  GST_DEBUG_OBJECT (self, "Setting sink caps %" GST_PTR_FORMAT, caps);
 
-  GST_DEBUG_OBJECT (self, "Setting sink caps %" GST_PTR_FORMAT ": %d", caps,
-      ret);
+  return TRUE;
+}
 
+static gboolean
+gst_play_sink_video_convert_sink_event (GstPad * pad, GstEvent * event)
+{
+  GstPlaySinkVideoConvert *self =
+      GST_PLAY_SINK_VIDEO_CONVERT (gst_pad_get_parent (pad));
+  gboolean ret;
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+
+      gst_event_parse_caps (event, &caps);
+      ret = gst_play_sink_video_convert_sink_setcaps (self, caps);
+      break;
+    }
+    default:
+      break;
+  }
+
+  ret = gst_proxy_pad_event_default (pad, gst_event_ref (event));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_SEGMENT:
+      GST_PLAY_SINK_VIDEO_CONVERT_LOCK (self);
+      GST_DEBUG_OBJECT (self, "Segment before %" GST_SEGMENT_FORMAT,
+          &self->segment);
+      gst_event_copy_segment (event, &self->segment);
+      GST_DEBUG_OBJECT (self, "Segment after %" GST_SEGMENT_FORMAT,
+          &self->segment);
+      GST_PLAY_SINK_VIDEO_CONVERT_UNLOCK (self);
+      break;
+    case GST_EVENT_FLUSH_STOP:
+      GST_PLAY_SINK_VIDEO_CONVERT_LOCK (self);
+      GST_DEBUG_OBJECT (self, "Resetting segment");
+      gst_segment_init (&self->segment, GST_FORMAT_UNDEFINED);
+      GST_PLAY_SINK_VIDEO_CONVERT_UNLOCK (self);
+      break;
+    default:
+      break;
+  }
+
+  gst_event_unref (event);
   gst_object_unref (self);
 
   return ret;
@@ -431,8 +441,6 @@ gst_play_sink_video_convert_init (GstPlaySinkVideoConvert * self)
   self->sinkpad = gst_ghost_pad_new_no_target_from_template ("sink", templ);
   gst_pad_set_event_function (self->sinkpad,
       GST_DEBUG_FUNCPTR (gst_play_sink_video_convert_sink_event));
-  gst_pad_set_setcaps_function (self->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_play_sink_video_convert_sink_setcaps));
   gst_pad_set_getcaps_function (self->sinkpad,
       GST_DEBUG_FUNCPTR (gst_play_sink_video_convert_getcaps));
 
