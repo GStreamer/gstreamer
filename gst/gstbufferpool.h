@@ -54,7 +54,7 @@ typedef struct _GstBufferPoolClass GstBufferPoolClass;
  * GstBufferPoolFlags:
  * @GST_BUFFER_POOL_FLAG_NONE: no flags
  * @GST_BUFFER_POOL_FLAG_KEY_UNIT: buffer is keyframe
- * @GST_BUFFER_POOL_FLAG_WAIT: wait for buffer
+ * @GST_BUFFER_POOL_FLAG_DONTWAIT: don't wait for buffer
  * @GST_BUFFER_POOL_FLAG_DISCONT: buffer is discont
  *
  * Additional flags to control the allocation of a buffer
@@ -62,7 +62,7 @@ typedef struct _GstBufferPoolClass GstBufferPoolClass;
 typedef enum {
   GST_BUFFER_POOL_FLAG_NONE     = 0,
   GST_BUFFER_POOL_FLAG_KEY_UNIT = (1 << 0),
-  GST_BUFFER_POOL_FLAG_WAIT     = (1 << 1),
+  GST_BUFFER_POOL_FLAG_DONTWAIT   = (1 << 1),
   GST_BUFFER_POOL_FLAG_DISCONT  = (1 << 2),
   GST_BUFFER_POOL_FLAG_LAST     = (1 << 16),
 } GstBufferPoolFlags;
