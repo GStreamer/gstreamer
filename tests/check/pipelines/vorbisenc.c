@@ -261,12 +261,15 @@ GST_START_TEST (test_timestamps)
 
 GST_END_TEST;
 
-static gboolean
-drop_second_data_buffer (GstPad * droppad, GstBuffer * buffer, gpointer unused)
+static GstProbeReturn
+drop_second_data_buffer (GstPad * droppad, GstProbeType type,
+    GstBuffer * buffer, gpointer unused)
 {
-  gboolean res;
+  GstProbeReturn res = GST_PROBE_OK;
 
-  res = !(GST_BUFFER_OFFSET (buffer) == 1024);
+  if (GST_BUFFER_OFFSET (buffer) == 1024)
+    res = GST_PROBE_DROP;
+
   GST_DEBUG ("dropping %d", res);
 
   return res;
@@ -312,8 +315,8 @@ GST_START_TEST (test_discontinuity)
     gst_object_unref (sink);
   }
 
-  drop_id = gst_pad_add_buffer_probe (droppad,
-      G_CALLBACK (drop_second_data_buffer), NULL);
+  drop_id = gst_pad_add_probe (droppad, GST_PROBE_TYPE_BUFFER,
+      (GstPadProbeCallback) drop_second_data_buffer, NULL, NULL);
   gst_buffer_straw_start_pipeline (bin, pad);
 
   /* check header packets */
@@ -370,7 +373,7 @@ GST_START_TEST (test_discontinuity)
   }
 
   gst_buffer_straw_stop_pipeline (bin, pad);
-  gst_pad_remove_buffer_probe (droppad, drop_id);
+  gst_pad_remove_probe (droppad, drop_id);
 
   gst_object_unref (droppad);
   gst_object_unref (pad);
