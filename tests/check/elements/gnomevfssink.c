@@ -103,6 +103,7 @@ GST_START_TEST (test_seeking)
 {
   const gchar *tmpdir;
   GstElement *gnomevfssink;
+  GstSegment segment;
   gchar *tmp_fn;
   gint fd;
 
@@ -145,8 +146,8 @@ GST_START_TEST (test_seeking)
   gst_query_unref (seeking_query);
 #endif
 
-  fail_unless (gst_pad_push_event (mysrcpad,
-          gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_BYTES, 0, -1, 0)));
+  gst_segment_init (&segment, GST_FORMAT_BYTES);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
 
   CHECK_QUERY_POSITION (gnomevfssink, GST_FORMAT_BYTES, 0);
 
@@ -163,9 +164,9 @@ GST_START_TEST (test_seeking)
   PUSH_BYTES (8800);
   CHECK_QUERY_POSITION (gnomevfssink, GST_FORMAT_BYTES, 8900);
 
-  if (gst_pad_push_event (mysrcpad,
-          gst_event_new_new_segment (TRUE, 1.0, GST_FORMAT_BYTES, 8800, -1,
-              0))) {
+  gst_segment_init (&segment, GST_FORMAT_BYTES);
+  segment.start = 8800;
+  if (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment))) {
     GST_LOG ("seek ok");
     /* make sure that that new position is reported immediately */
     CHECK_QUERY_POSITION (gnomevfssink, GST_FORMAT_BYTES, 8800);
@@ -174,7 +175,7 @@ GST_START_TEST (test_seeking)
     PUSH_BYTES (9256);
     CHECK_QUERY_POSITION (gnomevfssink, GST_FORMAT_BYTES, 18057);
   } else {
-    GST_INFO ("seeking not supported for tempfile?!");
+    GST_WARNING ("seeking not supported for tempfile?!");
   }
 
   fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
