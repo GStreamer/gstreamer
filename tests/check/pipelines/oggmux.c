@@ -157,8 +157,9 @@ check_chain_final_state (gpointer key, ChainState * state, gpointer data)
   return TRUE;
 }
 
-static gboolean
-eos_buffer_probe (GstPad * pad, GstBuffer * buffer, gpointer unused)
+static GstProbeReturn
+eos_buffer_probe (GstPad * pad, GstProbeType type, GstBuffer * buffer,
+    gpointer unused)
 {
   gint ret;
   gint size;
@@ -195,7 +196,7 @@ eos_buffer_probe (GstPad * pad, GstBuffer * buffer, gpointer unused)
     }
   }
 
-  return TRUE;
+  return GST_PROBE_OK;
 }
 
 static void
@@ -208,7 +209,8 @@ start_pipeline (GstElement * bin, GstPad * pad)
   eos_chain_states =
       g_hash_table_new_full (g_direct_hash, g_direct_equal, NULL, g_free);
   probe_id =
-      gst_pad_add_buffer_probe (pad, G_CALLBACK (eos_buffer_probe), NULL);
+      gst_pad_add_probe (pad, GST_PROBE_TYPE_BUFFER,
+      (GstPadProbeCallback) eos_buffer_probe, NULL, NULL);
 
   ret = gst_element_set_state (bin, GST_STATE_PLAYING);
   fail_if (ret == GST_STATE_CHANGE_FAILURE, "Could not start test pipeline");
@@ -230,7 +232,7 @@ stop_pipeline (GstElement * bin, GstPad * pad)
     fail_if (ret != GST_STATE_CHANGE_SUCCESS, "Could not stop test pipeline");
   }
 
-  gst_pad_remove_buffer_probe (pad, (guint) probe_id);
+  gst_pad_remove_probe (pad, probe_id);
   ogg_sync_clear (&oggsync);
 
   /* check end conditions, such as EOS flags */
