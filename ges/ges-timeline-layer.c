@@ -338,6 +338,8 @@ ges_timeline_layer_resync_priorities (GESTimelineLayer * layer)
   GSList *tmp;
   GESTimelineObject *obj;
 
+  GST_DEBUG ("Resync priorities of %p", layer);
+
   /* TODO : Inhibit composition updates while doing this.
    * Ideally we want to do it from an even higher level, but here will
    * do in the meantime. */

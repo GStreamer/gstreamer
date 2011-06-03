@@ -1150,7 +1150,8 @@ track_object_priority_changed_cb (GESTrackObject * child,
 
   guint tck_priority = ges_track_object_get_priority (child);
 
-  GST_DEBUG ("Priority changed");
+  GST_DEBUG ("TrackObject %p priority changed to %i", child,
+      ges_track_object_get_priority (child));
 
   if (object->priv->ignore_notifies)
     return;
