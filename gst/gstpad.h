@@ -481,21 +481,23 @@ typedef gboolean		(*GstPadDispatcherFunction)	(GstPad *pad, gpointer data);
  * @GST_PROBE_TYPE_PUSH: probe push
  * @GST_PROBE_TYPE_PULL: probe pull
  *
- * The different probing types that can occur.
+ * The different probing types that can occur. When either one of
+ * @GST_PROBE_TYPE_IDLE or @GST_PROBE_TYPE_BLOCK is used, the probe will be a
+ * blocking probe.
  */
 typedef enum
 {
-  GST_PROBE_TYPE_INVALID      = (1 << 0),
-
-  GST_PROBE_TYPE_IDLE         = (1 << 1),
-  GST_PROBE_TYPE_BLOCK        = (1 << 2),
-
-  GST_PROBE_TYPE_BUFFER       = (1 << 3),
-  GST_PROBE_TYPE_BUFFER_LIST  = (1 << 4),
-  GST_PROBE_TYPE_EVENT        = (1 << 5),
-
-  GST_PROBE_TYPE_PUSH         = (1 << 6),
-  GST_PROBE_TYPE_PULL         = (1 << 7),
+  GST_PROBE_TYPE_INVALID      = 0,
+  /* flags to control blocking */
+  GST_PROBE_TYPE_IDLE         = (1 << 0),
+  GST_PROBE_TYPE_BLOCK        = (1 << 1),
+  /* flags to select datatypes */
+  GST_PROBE_TYPE_BUFFER       = (1 << 2),
+  GST_PROBE_TYPE_BUFFER_LIST  = (1 << 3),
+  GST_PROBE_TYPE_EVENT        = (1 << 4),
+  /* flags to select scheduling mode */
+  GST_PROBE_TYPE_PUSH         = (1 << 5),
+  GST_PROBE_TYPE_PULL         = (1 << 6),
 } GstProbeType;
 
 #define GST_PROBE_TYPE_BLOCKING   (GST_PROBE_TYPE_IDLE | GST_PROBE_TYPE_BLOCK)
