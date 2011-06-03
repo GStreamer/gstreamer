@@ -599,8 +599,8 @@ theora_enc_sink_getcaps (GstPad * pad, GstCaps * filter)
   GstCaps *caps;
 
   /* If we already have caps return them */
-  if (GST_PAD_CAPS (pad))
-    return gst_caps_ref (GST_PAD_CAPS (pad));
+  if ((caps = gst_pad_get_current_caps (pad)) != NULL)
+    return caps;
 
   encoder = GST_THEORA_ENC (gst_pad_get_parent (pad));
   if (!encoder)
@@ -613,7 +613,7 @@ theora_enc_sink_getcaps (GstPad * pad, GstCaps * filter)
     GstStructure *s;
     guint i, n;
 
-    peer_caps = gst_pad_get_caps (peer);
+    peer_caps = gst_pad_get_caps (peer, NULL);
 
     /* Translate peercaps to YUV */
     peer_caps = gst_caps_make_writable (peer_caps);
