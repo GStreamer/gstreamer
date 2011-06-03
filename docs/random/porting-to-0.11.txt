@@ -42,6 +42,7 @@ The 0.11 porting guide
     gst_element_class_set_details_simple() -> gst_element_class_set_metadata()
     gst_element_class_set_documentation_uri -> gst_element_class_add_metadata
     gst_element_class_set_icon_name -> gst_element_class_add_metadata
+    also gst_element_class_get_metadata()
 
     gst_element_factory_get_longname -> gst_element_factory_get_metadata
     gst_element_factory_get_klass -> gst_element_factory_get_metadata
@@ -91,6 +92,31 @@ The 0.11 porting guide
     gst_pad_get_pad_template_caps() and gst_pad_get_pad_template()
     return a new reference of the caps or template now and the return
     value needs to be unreffed after usage.
+
+    gst_pad_set_caps() now pushes a CAPS event for backward compatibility.
+    Consider sending the CAPS event yourself. It is not possible anymore to set
+    NULL caps.
+
+    gst_pad_set_checkgetrange_function() and gst_pad_check_pull_range() are
+    gone, use the SCHEDULING query now.
+
+    gst_pad_set_blocked(), gst_pad_set_blocked_async(),
+    gst_pad_set_blocked_async_full() are removed, use the gst_pad_add_probe()
+    method with the GST_PROBE_TYPE_BLOCK to get the same result as the async
+    blocking version. There is no more sync version of blocking, this is in
+    general dangerous and can be implemented using the callbacks if needed.
+
+    gst_pad_add_data_probe(), gst_pad_add_data_probe_full(),
+    gst_pad_remove_data_probe(), gst_pad_add_event_probe(),
+    gst_pad_add_event_probe_full(), gst_pad_remove_event_probe(),
+    gst_pad_add_buffer_probe(), gst_pad_add_buffer_probe_full(),
+    gst_pad_remove_buffer_probe() are removed. Use gst_pad_add_probe() and
+    gst_pad_remove_probe() for equivalent functionality.
+
+    The have-data signal was removed from pads, it was never supposed to be used
+    without calling the _add_.*_probe() methods.
+
+    The request-link signal was removed. It was never used.
 
 * GstPadTemplate
     gst_pad_template_get_caps() returns a new reference of the caps
@@ -189,17 +215,28 @@ The 0.11 porting guide
     For dealing with the groups, it's now needed to add the memory blocks to
     GstBuffer and use the normal buffer API to get and merge the groups.
 
+* GstStructure
+
+    The GArray of the structure fields are moved to private part and are not
+    accessible from the application anymore. Use the methods to retrieve and
+    modify fields from the array.
+
 * GstEvent
     GST_EVENT_SRC is removed. Don't use this anymore.
-
-    gst_event_new_new_segment_full() -> gst_event_new_new_segment()
-    gst_event_parse_new_segment_full() -> gst_event_parse_new_segment()
 
     gst_event_new_qos_full() -> gst_event_new_qos()
     gst_event_parse_qos_full() -> gst_event_parse_qos()
 
     The GstStructure is removed from the public API, use the getters to get
     a handle to a GstStructure.
+
+    GST_EVENT_NEWSEGMENT -> GST_EVENT_SEGMENT
+
+    gst_event_new_new_segment () -> gst_event_new_segment() and it takes a
+    GstSegment structure as an argument.
+    gst_event_parse_new_segment() -> gst_event_parse_segment() to retrieve the
+    GstSegment structure from the event.
+    gst_event_copy_segment() to fill a GstSegment structure.
 
 * GstQuery
     Boxed types derived from GstMiniObject.
@@ -222,6 +259,22 @@ The 0.11 porting guide
 * GstSegment
     abs_rate was removed from the public fields, it can be trivially calculated
     from the rate field.
+
+    accum was renamed to base. last_stop was renamed to position.
+
+    The segment info now contains all the information needed to convert buffer
+    timestamps to running_time and stream_time. There is no more segment
+    accumulation, the GstSegment is completely self contained.
+
+    gst_segment_set_duration() and gst_segment_set_last_stop() are removed,
+    simply modify the structure members duration and position respectively.
+
+    gst_segment_set_newsegment() is removed, it was used to accumulate segments
+    and is not needed anymore, use gst_segment_copy_into() or modify the segment
+    values directly.
+
+    gst_segment_set_seek() -> gst_segment_do_seek(). Updates the segment values
+    with seek parameters.
 
 * GstTypeFind
     gst_type_find_peek() returns a const guin8 * now.
