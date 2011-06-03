@@ -243,8 +243,8 @@ GST_START_TEST (test_missing_urisource_handler)
 
   msg = gst_bus_poll (bus, GST_MESSAGE_ELEMENT | GST_MESSAGE_ERROR, -1);
   fail_unless_equals_int (GST_MESSAGE_TYPE (msg), GST_MESSAGE_ELEMENT);
-  fail_unless (msg->structure != NULL);
-  s = msg->structure;
+  s = (GstStructure *) gst_message_get_structure (msg);
+  fail_unless (s != NULL);
   fail_unless (gst_structure_has_name (s, "missing-plugin"));
   fail_unless (gst_structure_has_field_typed (s, "detail", G_TYPE_STRING));
   fail_unless_equals_string (gst_structure_get_string (s, "detail"),
@@ -296,8 +296,8 @@ GST_START_TEST (test_missing_suburisource_handler)
 
   msg = gst_bus_poll (bus, GST_MESSAGE_ELEMENT | GST_MESSAGE_ERROR, -1);
   fail_unless_equals_int (GST_MESSAGE_TYPE (msg), GST_MESSAGE_ELEMENT);
-  fail_unless (msg->structure != NULL);
-  s = msg->structure;
+  s = (GstStructure *) gst_message_get_structure (msg);
+  fail_unless (s != NULL);
   fail_unless (gst_structure_has_name (s, "missing-plugin"));
   fail_unless (gst_structure_has_field_typed (s, "detail", G_TYPE_STRING));
   fail_unless_equals_string (gst_structure_get_string (s, "detail"), "cookie");
@@ -365,8 +365,8 @@ GST_START_TEST (test_missing_primary_decoder)
 
   msg = gst_bus_poll (bus, GST_MESSAGE_ELEMENT | GST_MESSAGE_ERROR, -1);
   fail_unless_equals_int (GST_MESSAGE_TYPE (msg), GST_MESSAGE_ELEMENT);
-  fail_unless (msg->structure != NULL);
-  s = msg->structure;
+  s = (GstStructure *) gst_message_get_structure (msg);
+  fail_unless (s != NULL);
   fail_unless (gst_structure_has_name (s, "missing-plugin"));
   fail_unless (gst_structure_has_field_typed (s, "type", G_TYPE_STRING));
   fail_unless_equals_string (gst_structure_get_string (s, "type"), "decoder");
@@ -566,7 +566,6 @@ static GstFlowReturn
 gst_red_video_src_create (GstPushSrc * src, GstBuffer ** p_buf)
 {
   GstBuffer *buf;
-  GstCaps *caps;
   guint8 *data;
   guint w = 64, h = 64;
   guint size;
@@ -579,20 +578,24 @@ gst_red_video_src_create (GstPushSrc * src, GstBuffer ** p_buf)
   memset (data + (w * h) + ((w * h) / 4), 255, (w * h) / 4);
   gst_buffer_unmap (buf, data, size);
 
-  caps = gst_caps_new_simple ("video/x-raw-yuv", "format", GST_TYPE_FOURCC,
-      GST_MAKE_FOURCC ('I', '4', '2', '0'), "width", G_TYPE_INT, w, "height",
-      G_TYPE_INT, h, "framerate", GST_TYPE_FRACTION, 1, 1, NULL);
-  gst_buffer_set_caps (buf, caps);
-  gst_caps_unref (caps);
-
   *p_buf = buf;
   return GST_FLOW_OK;
+}
+
+static GstCaps *
+gst_red_video_src_get_caps (GstBaseSrc * src, GstCaps * filter)
+{
+  guint w = 64, h = 64;
+  return gst_caps_new_simple ("video/x-raw-yuv", "format", GST_TYPE_FOURCC,
+      GST_MAKE_FOURCC ('I', '4', '2', '0'), "width", G_TYPE_INT, w, "height",
+      G_TYPE_INT, h, "framerate", GST_TYPE_FRACTION, 1, 1, NULL);
 }
 
 static void
 gst_red_video_src_class_init (GstRedVideoSrcClass * klass)
 {
   GstPushSrcClass *pushsrc_class = GST_PUSH_SRC_CLASS (klass);
+  GstBaseSrcClass *basesrc_class = GST_BASE_SRC_CLASS (klass);
   static GstStaticPadTemplate src_templ = GST_STATIC_PAD_TEMPLATE ("src",
       GST_PAD_SRC, GST_PAD_ALWAYS,
       GST_STATIC_CAPS ("video/x-raw-yuv, format=(fourcc)I420")
@@ -605,6 +608,7 @@ gst_red_video_src_class_init (GstRedVideoSrcClass * klass)
       "Red Video Src", "Source/Video", "yep", "me");
 
   pushsrc_class->create = gst_red_video_src_create;
+  basesrc_class->get_caps = gst_red_video_src_get_caps;
 }
 
 static void
@@ -674,7 +678,6 @@ static GstFlowReturn
 gst_codec_src_create (GstPushSrc * src, GstBuffer ** p_buf)
 {
   GstBuffer *buf;
-  GstCaps *caps;
   guint8 *data;
 
   buf = gst_buffer_new_and_alloc (20);
@@ -682,18 +685,21 @@ gst_codec_src_create (GstPushSrc * src, GstBuffer ** p_buf)
   memset (data, 0, 20);
   gst_buffer_unmap (buf, data, 20);
 
-  caps = gst_caps_new_simple ("application/x-codec", NULL);
-  gst_buffer_set_caps (buf, caps);
-  gst_caps_unref (caps);
-
   *p_buf = buf;
   return GST_FLOW_OK;
+}
+
+static GstCaps *
+gst_codec_src_get_caps (GstBaseSrc * src, GstCaps * filter)
+{
+  return gst_caps_new_simple ("application/x-codec", NULL);
 }
 
 static void
 gst_codec_src_class_init (GstCodecSrcClass * klass)
 {
   GstPushSrcClass *pushsrc_class = GST_PUSH_SRC_CLASS (klass);
+  GstBaseSrcClass *basesrc_class = GST_BASE_SRC_CLASS (klass);
   static GstStaticPadTemplate src_templ = GST_STATIC_PAD_TEMPLATE ("src",
       GST_PAD_SRC, GST_PAD_ALWAYS,
       GST_STATIC_CAPS ("application/x-codec")
@@ -706,6 +712,7 @@ gst_codec_src_class_init (GstCodecSrcClass * klass)
       "Codec Src", "Source/Video", "yep", "me");
 
   pushsrc_class->create = gst_codec_src_create;
+  basesrc_class->get_caps = gst_codec_src_get_caps;
 }
 
 static void
