@@ -33,6 +33,8 @@
 #include "ges-timeline-layer.h"
 #include "ges.h"
 
+#define LAYER_HEIGHT 10
+
 G_DEFINE_TYPE (GESTimelineLayer, ges_timeline_layer, G_TYPE_INITIALLY_UNOWNED);
 
 struct _GESTimelineLayerPrivate
@@ -361,8 +363,8 @@ ges_timeline_layer_set_priority (GESTimelineLayer * layer, guint priority)
 
   if (priority != layer->priv->priority) {
     layer->priv->priority = priority;
-    layer->min_gnl_priority = (priority * 10);
-    layer->max_gnl_priority = ((priority + 1) * 10) - 1;
+    layer->min_gnl_priority = (priority * LAYER_HEIGHT);
+    layer->max_gnl_priority = ((priority + 1) * LAYER_HEIGHT) - 1;
 
     /* FIXME : Update controlled object's gnl priority accordingly */
     ges_timeline_layer_resync_priorities (layer);
