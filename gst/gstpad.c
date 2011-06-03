@@ -3437,14 +3437,15 @@ probe_hook_marshal (GHook * hook, ProbeMarshall * data)
 
   flags = hook->flags >> G_HOOK_FLAG_USER_SHIFT;
 
-  /* check if type matches */
+  /* one of the data types */
   if ((flags & GST_PROBE_TYPE_DATA & data->mask) == 0)
     return;
-
-  if ((flags & 0xc0 & data->mask) == 0)
+  /* one of the scheduling types */
+  if ((flags & GST_PROBE_TYPE_SCHEDULING & data->mask) == 0)
     return;
-
-  if ((flags & 0x6) != (data->mask & 0x6))
+  /* all of the blocking types must match */
+  if ((flags & GST_PROBE_TYPE_BLOCKING) !=
+      (data->mask & GST_PROBE_TYPE_BLOCKING))
     return;
 
   GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
