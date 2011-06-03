@@ -506,14 +506,14 @@ typedef enum
 #define GST_PROBE_TYPE_SCHEDULING (GST_PROBE_TYPE_PUSH | GST_PROBE_TYPE_PULL)
 
 /**
- * GstProbeResult:
- * @GST_PROBE_RESULT_OK: normal probe return value
- * @GST_PROBE_RESULT_DROP: drop data in data probes
- * @GST_PROBE_RESULT_REMOVE: remove probe
- * @GST_PROBE_RESULT_PASS: pass the data item in the block probe and block on
+ * GstProbeReturn:
+ * @GST_PROBE_OK: normal probe return value
+ * @GST_PROBE_DROP: drop data in data probes
+ * @GST_PROBE_REMOVE: remove probe
+ * @GST_PROBE_PASS: pass the data item in the block probe and block on
  *                         the next item
  *
- * Different return values for the GstPadProbeCallback.
+ * Different return values for the #GstPadProbeCallback.
  */
 typedef enum
 {
