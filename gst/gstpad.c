@@ -4082,7 +4082,7 @@ gst_pad_get_range_unchecked (GstPad * pad, guint64 offset, guint size,
 flushing:
   {
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
-        "pulling range, but pad was flushing");
+        "getrange, but pad was flushing");
     GST_OBJECT_UNLOCK (pad);
     GST_PAD_STREAM_UNLOCK (pad);
     return GST_FLOW_WRONG_STATE;
@@ -4090,7 +4090,7 @@ flushing:
 no_function:
   {
     GST_ELEMENT_ERROR (GST_PAD_PARENT (pad), CORE, PAD, (NULL),
-        ("pullrange on pad %s:%s but it has no getrangefunction",
+        ("getrange on pad %s:%s but it has no getrangefunction",
             GST_DEBUG_PAD_NAME (pad)));
     GST_PAD_STREAM_UNLOCK (pad);
     return GST_FLOW_NOT_SUPPORTED;
@@ -4192,6 +4192,8 @@ gst_pad_pull_range (GstPad * pad, guint64 offset, guint size,
   g_return_val_if_fail (buffer != NULL, GST_FLOW_ERROR);
 
   GST_OBJECT_LOCK (pad);
+  if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
+    goto flushing;
 
   PROBE (pad, GST_PROBE_TYPE_PULL | GST_PROBE_TYPE_BLOCK, NULL,
       pre_probe_stopped);
@@ -4235,6 +4237,13 @@ gst_pad_pull_range (GstPad * pad, guint64 offset, guint size,
   return ret;
 
   /* ERROR recovery here */
+flushing:
+  {
+    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
+        "pullrange, but pad was flushing");
+    GST_OBJECT_UNLOCK (pad);
+    return GST_FLOW_WRONG_STATE;
+  }
 pre_probe_stopped:
   {
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "pre probe returned %s",
