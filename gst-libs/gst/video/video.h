@@ -552,6 +552,27 @@ GstEvent *     gst_video_event_new_still_frame   (gboolean in_still);
 
 gboolean       gst_video_event_parse_still_frame (GstEvent * event, gboolean * in_still);
 
+/* video force key unit event creation and parsing */
+
+GstEvent * gst_video_event_new_downstream_force_key_unit (GstClockTime timestamp,
+                                                          GstClockTime streamtime,
+                                                          GstClockTime runningtime,
+                                                          gboolean all_headers,
+                                                          guint count);
+
+gboolean gst_video_event_parse_downstream_force_key_unit (GstEvent * event,
+                                                          GstClockTime * timestamp,
+                                                          GstClockTime * streamtime,
+                                                          GstClockTime * runningtime,
+                                                          gboolean * all_headers,
+                                                          guint * count);
+
+GstEvent * gst_video_event_new_upstream_force_key_unit (gboolean all_headers);
+
+gboolean gst_video_event_parse_upstream_force_key_unit (GstEvent * event,
+                                                        gboolean * all_headers);
+
+gboolean gst_video_event_is_force_key_unit(GstEvent *event);
 
 /* convert/encode video frame from one format to another */
 
