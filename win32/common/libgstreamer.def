@@ -30,7 +30,6 @@ EXPORTS
 	GST_CAT_SIGNAL DATA
 	GST_CAT_STATES DATA
 	GST_CAT_TYPES DATA
-	GST_CAT_XML DATA
 	__gst_debug_enabled DATA
 	__gst_debug_min DATA
 	_gst_alloc_trace_register

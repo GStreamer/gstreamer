@@ -22,9 +22,9 @@ GType gst_buffer_flag_get_type (void);
 GType gst_buffer_copy_flags_get_type (void);
 #define GST_TYPE_BUFFER_COPY_FLAGS (gst_buffer_copy_flags_get_type())
 
-/* enumerations from "gstbufferlist.h" */
-GType gst_buffer_list_item_get_type (void);
-#define GST_TYPE_BUFFER_LIST_ITEM (gst_buffer_list_item_get_type())
+/* enumerations from "gstbufferpool.h" */
+GType gst_buffer_pool_flags_get_type (void);
+#define GST_TYPE_BUFFER_POOL_FLAGS (gst_buffer_pool_flags_get_type())
 
 /* enumerations from "gstbus.h" */
 GType gst_bus_flags_get_type (void);
@@ -75,10 +75,6 @@ GType gst_event_type_flags_get_type (void);
 #define GST_TYPE_EVENT_TYPE_FLAGS (gst_event_type_flags_get_type())
 GType gst_event_type_get_type (void);
 #define GST_TYPE_EVENT_TYPE (gst_event_type_get_type())
-GType gst_seek_type_get_type (void);
-#define GST_TYPE_SEEK_TYPE (gst_seek_type_get_type())
-GType gst_seek_flags_get_type (void);
-#define GST_TYPE_SEEK_FLAGS (gst_seek_flags_get_type())
 GType gst_qos_type_get_type (void);
 #define GST_TYPE_QOS_TYPE (gst_qos_type_get_type())
 
@@ -122,6 +118,12 @@ GType gst_stream_status_type_get_type (void);
 GType gst_progress_type_get_type (void);
 #define GST_TYPE_PROGRESS_TYPE (gst_progress_type_get_type())
 
+/* enumerations from "gstmemory.h" */
+GType gst_memory_flags_get_type (void);
+#define GST_TYPE_MEMORY_FLAGS (gst_memory_flags_get_type())
+GType gst_map_flags_get_type (void);
+#define GST_TYPE_MAP_FLAGS (gst_map_flags_get_type())
+
 /* enumerations from "gstminiobject.h" */
 GType gst_mini_object_flags_get_type (void);
 #define GST_TYPE_MINI_OBJECT_FLAGS (gst_mini_object_flags_get_type())
@@ -135,6 +137,10 @@ GType gst_pad_link_check_get_type (void);
 #define GST_TYPE_PAD_LINK_CHECK (gst_pad_link_check_get_type())
 GType gst_activate_mode_get_type (void);
 #define GST_TYPE_ACTIVATE_MODE (gst_activate_mode_get_type())
+GType gst_probe_type_get_type (void);
+#define GST_TYPE_PROBE_TYPE (gst_probe_type_get_type())
+GType gst_probe_return_get_type (void);
+#define GST_TYPE_PROBE_RETURN (gst_probe_return_get_type())
 GType gst_pad_direction_get_type (void);
 #define GST_TYPE_PAD_DIRECTION (gst_pad_direction_get_type())
 GType gst_pad_flags_get_type (void);
@@ -167,6 +173,12 @@ GType gst_query_type_get_type (void);
 #define GST_TYPE_QUERY_TYPE (gst_query_type_get_type())
 GType gst_buffering_mode_get_type (void);
 #define GST_TYPE_BUFFERING_MODE (gst_buffering_mode_get_type())
+
+/* enumerations from "gstsegment.h" */
+GType gst_seek_type_get_type (void);
+#define GST_TYPE_SEEK_TYPE (gst_seek_type_get_type())
+GType gst_seek_flags_get_type (void);
+#define GST_TYPE_SEEK_FLAGS (gst_seek_flags_get_type())
 
 /* enumerations from "gstsystemclock.h" */
 GType gst_clock_type_get_type (void);

@@ -142,7 +142,15 @@ extern void gst_marshal_BOOLEAN__POINTER (GClosure     *closure,
                                           gpointer      invocation_hint,
                                           gpointer      marshal_data);
 
-/* POINTER:POINTER (./gstmarshal.list:23) */
+/* BOOLEAN:BOXED (./gstmarshal.list:23) */
+extern void gst_marshal_BOOLEAN__BOXED (GClosure     *closure,
+                                        GValue       *return_value,
+                                        guint         n_param_values,
+                                        const GValue *param_values,
+                                        gpointer      invocation_hint,
+                                        gpointer      marshal_data);
+
+/* POINTER:POINTER (./gstmarshal.list:24) */
 extern void gst_marshal_POINTER__POINTER (GClosure     *closure,
                                           GValue       *return_value,
                                           guint         n_param_values,
@@ -150,7 +158,7 @@ extern void gst_marshal_POINTER__POINTER (GClosure     *closure,
                                           gpointer      invocation_hint,
                                           gpointer      marshal_data);
 
-/* BOXED:BOXED (./gstmarshal.list:24) */
+/* BOXED:BOXED (./gstmarshal.list:25) */
 extern void gst_marshal_BOXED__BOXED (GClosure     *closure,
                                       GValue       *return_value,
                                       guint         n_param_values,

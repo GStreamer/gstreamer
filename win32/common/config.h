@@ -26,7 +26,7 @@
 #undef ENABLE_SUBUNIT
 
 /* gettext package name */
-#define GETTEXT_PACKAGE "gstreamer-0.10"
+#define GETTEXT_PACKAGE "gstreamer-0.11"
 
 /* data dir */
 #define GST_DATADIR PREFIX "\\share"
@@ -56,7 +56,7 @@
 #define GST_LICENSE "LGPL"
 
 /* library major.minor version */
-#define GST_MAJORMINOR "0.10"
+#define GST_MAJORMINOR "0.11"
 
 /* package name in plugins */
 #define GST_PACKAGE_NAME "GStreamer git"
@@ -65,7 +65,7 @@
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
 
 /* GStreamer package release date/time for plugins as YYYY-MM-DD */
-#define GST_PACKAGE_RELEASE_DATETIME "2011-05-14T08:26Z"
+#define GST_PACKAGE_RELEASE_DATETIME "2011-06-04T15:03Z"
 
 /* location of the installed gst-plugin-scanner */
 #define GST_PLUGIN_SCANNER_INSTALLED LIBDIR "\\gst-plugin-scanner"
@@ -180,9 +180,6 @@
 
 /* Define to 1 if you have the `socket' library (-lsocket). */
 #undef HAVE_LIBSOCKET
-
-/* Define if libxml2 is available */
-#define HAVE_LIBXML2 1
 
 /* Define to 1 if you have the `localtime_r' function. */
 #undef HAVE_LOCALTIME_R
@@ -340,7 +337,7 @@
 #define PACKAGE_NAME "GStreamer"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer 0.10.34.1"
+#define PACKAGE_STRING "GStreamer 0.11.0.1"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gstreamer"
@@ -349,13 +346,13 @@
 #undef PACKAGE_URL
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.10.34.1"
+#define PACKAGE_VERSION "0.11.0.1"
 
 /* directory where plugins are located */
 #ifdef _DEBUG
-#  define PLUGINDIR PREFIX "\\debug\\lib\\gstreamer-0.10"
+#  define PLUGINDIR PREFIX "\\debug\\lib\\gstreamer-0.11"
 #else
-#  define PLUGINDIR PREFIX "\\lib\\gstreamer-0.10"
+#  define PLUGINDIR PREFIX "\\lib\\gstreamer-0.11"
 #endif
 
 /* The size of `char', as computed by sizeof. */
@@ -380,7 +377,7 @@
 #undef USE_POISONING
 
 /* Version number of package */
-#define VERSION "0.10.34.1"
+#define VERSION "0.11.0.1"
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */
