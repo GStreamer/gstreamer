@@ -158,7 +158,6 @@ GstDebugCategory *GST_CAT_PLUGIN_LOADING = NULL;
 GstDebugCategory *GST_CAT_PLUGIN_INFO = NULL;
 GstDebugCategory *GST_CAT_PROPERTIES = NULL;
 GstDebugCategory *GST_CAT_TYPES = NULL;
-GstDebugCategory *GST_CAT_XML = NULL;
 GstDebugCategory *GST_CAT_NEGOTIATION = NULL;
 GstDebugCategory *GST_CAT_REFCOUNTING = NULL;
 GstDebugCategory *GST_CAT_ERROR_SYSTEM = NULL;
@@ -393,8 +392,6 @@ _gst_debug_init (void)
   GST_CAT_PROPERTIES = _gst_debug_category_new ("GST_PROPERTIES",
       GST_DEBUG_BOLD | GST_DEBUG_FG_WHITE | GST_DEBUG_BG_BLUE, NULL);
   GST_CAT_TYPES = _gst_debug_category_new ("GST_TYPES",
-      GST_DEBUG_BOLD | GST_DEBUG_FG_WHITE | GST_DEBUG_BG_RED, NULL);
-  GST_CAT_XML = _gst_debug_category_new ("GST_XML",
       GST_DEBUG_BOLD | GST_DEBUG_FG_WHITE | GST_DEBUG_BG_RED, NULL);
   GST_CAT_NEGOTIATION = _gst_debug_category_new ("GST_NEGOTIATION",
       GST_DEBUG_BOLD | GST_DEBUG_FG_BLUE, NULL);
