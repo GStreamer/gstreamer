@@ -1808,12 +1808,12 @@ gst_base_video_decoder_set_src_caps (GstBaseVideoDecoder * base_video_decoder)
   g_return_val_if_fail (state->height != 0, FALSE);
 
   /* sanitize */
-  if (state->fps_d == 0) {
+  if (state->fps_n == 0 || state->fps_d == 0) {
     state->fps_n = 0;
     state->fps_d = 1;
   }
-  if (state->par_d == 0) {
-    state->par_n = 0;
+  if (state->par_n == 0 || state->par_d == 0) {
+    state->par_n = 1;
     state->par_d = 1;
   }
 
