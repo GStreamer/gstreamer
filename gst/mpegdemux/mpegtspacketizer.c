@@ -356,7 +356,8 @@ mpegts_packetizer_parse_descriptors (MpegTSPacketizer * packetizer,
     /* include tag and length */
     desc = g_string_new_len ((gchar *) data - 2, length + 2);
     data += length;
-    /* G_TYPE_GSTING is a GBoxed type and is used so properly marshalled from python */
+    /* G_TYPE_GSTRING is a GBoxed type and is used so properly marshalled from
+     * python (FIXME: should either be G_TYPE_STRING or GST_TYPE_BUFFFER) */
     g_value_init (&value, G_TYPE_GSTRING);
     g_value_take_boxed (&value, desc);
     g_value_array_append (descriptors, &value);

@@ -2253,11 +2253,11 @@ gst_mpegts_demux_parse_stream (GstMpegTSDemux * demux, GstMpegTSStream * stream,
     const guint8 * in_data, guint in_size)
 {
   GstFlowReturn ret;
-  gboolean transport_error_indicator;
+  gboolean transport_error_indicator G_GNUC_UNUSED;
+  gboolean transport_priority G_GNUC_UNUSED;
   gboolean payload_unit_start_indicator;
-  gboolean transport_priority;
   guint16 PID;
-  guint8 transport_scrambling_control;
+  guint8 transport_scrambling_control G_GNUC_UNUSED;
   guint8 adaptation_field_control;
   guint8 continuity_counter;
   const guint8 *data = in_data;

@@ -438,8 +438,8 @@ gst_jpeg_parse_sof (GstJpegParse * parse, GstByteReader * reader)
   guint8 numcomps = 0;          /* Number of components in image
                                    (1 for gray, 3 for YUV, etc.) */
   guint8 precision;             /* precision (in bits) for the samples */
-  guint8 compId[3];             /* unique value identifying each component */
-  guint8 qtId[3];               /* quantization table ID to use for this comp */
+  guint8 compId[3] G_GNUC_UNUSED;       /* unique value identifying each component */
+  guint8 qtId[3] G_GNUC_UNUSED; /* quantization table ID to use for this comp */
   guint8 blockWidth[3];         /* Array[numComponents] giving the number of
                                    blocks (horiz) in this component */
   guint8 blockHeight[3];        /* Same for the vertical part of this component */
@@ -464,7 +464,7 @@ gst_jpeg_parse_sof (GstJpegParse * parse, GstByteReader * reader)
   if (!gst_byte_reader_get_uint8 (reader, &numcomps))
     return FALSE;
 
-  if (numcomps > 3)
+  if (numcomps > 3)             /* FIXME */
     return FALSE;
 
   /* Get decimation and quantization table id for each component */

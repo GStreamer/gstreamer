@@ -112,7 +112,7 @@ gst_pes_filter_parse (GstPESFilter * filter)
   GstFlowReturn ret;
   guint32 start_code;
 
-  gboolean STD_buffer_bound_scale;
+  gboolean STD_buffer_bound_scale G_GNUC_UNUSED;
   guint16 STD_buffer_size_bound;
   const guint8 *data;
   gint avail, datalen;

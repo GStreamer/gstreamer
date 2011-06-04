@@ -425,7 +425,7 @@ gst_invtelecine_compare_fields_mse_ave (GstInvtelecine * invtelecine,
   guint8 *data2_1;
   guint8 *data2_2;
   int field_index1;
-  int field_index2;
+  int field_index2 G_GNUC_UNUSED;       /* FIXME: should it be used? */
   double diff;
   double sum;
   double linesum;

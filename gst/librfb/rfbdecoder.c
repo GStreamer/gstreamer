@@ -803,8 +803,8 @@ static void
 rfb_decoder_hextile_encoding (RfbDecoder * decoder, gint start_x, gint start_y,
     gint rect_w, gint rect_h)
 {
-  gint32 x, x_count, x_end, x_max, x_max_16;
-  gint32 y, y_count, y_end, y_max, y_max_16;
+  gint32 x, x_count G_GNUC_UNUSED, x_end, x_max, x_max_16;
+  gint32 y, y_count G_GNUC_UNUSED, y_end, y_max, y_max_16;
   guint8 subencoding, nr_subrect, xy, wh;
   guint32 background, foreground;
 
