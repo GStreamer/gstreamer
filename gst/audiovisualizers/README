@@ -1,0 +1,51 @@
+A basclass for audiovisualizers. Takes care of re-fitting the audio-rate to
+video-rate. It receives audio-data at the sampling-rate. It needs to render
+video-frames at frame-rate. The rendering needs n audio samples (depends on
+subclass). The baseclass takes care of that.
+
+= Feedback =
+* put 'Audio' to klass as well ?
+
+= API =
+
+* should we add some basic drawing helpers to the baseclass
+  draw_point (x,y,color);
+  draw_hline (x1,x2,y,color);
+  draw_vline (x,y1,y2,color);
+  draw_rect (x1,x2,y1,y2,color);
+  draw_box (x1,x2,y1,y2,color); // filled
+  - would be nice if we could use cairo
+* shading effects
+  - would be nice to use a generic 3x3 matrix operation, we don't run inplace
+    anyway
+  - this way we could also blur the background
+
+= Elements to port =
+gst-plugin-ugly/gst/synaestesia -> synaescope
+gst-plugin-good/gst/monoscope -> blend into what we have in wavescope
+
+= Elements to add =
+spectrascope - done
+spacescope - stereo wavescope
+- left->x, right->y - done
+- polar mapping
+
+= TODO =
+- element maker template
+- test for baseclass
+
+= Test it =
+
+GST_DEBUG="*:2,*scope*:4"
+
+GST_PLUGIN_PATH=$GST_PLUGIN_PATH:$PWD gst-inspect scopes
+
+GST_PLUGIN_PATH=$GST_PLUGIN_PATH:$PWD gst-launch audiotestsrc ! audioconvert ! wavescope ! colorspace ! ximagesink
+GST_PLUGIN_PATH=$GST_PLUGIN_PATH:$PWD gst-launch filesrc location=/home/ensonic/Musik/xotox-hypnocat.mp3 ! decodebin2 ! audioconvert ! wavescope ! colorspace ! ximagesink
+GST_PLUGIN_PATH=$GST_PLUGIN_PATH:$PWD gst-launch filesrc location=/home/ensonic/Musik/xotox-hypnocat.mp3 ! decodebin2 ! audioconvert ! spectrascope ! colorspace ! ximagesink
+
+GST_PLUGIN_PATH=$GST_PLUGIN_PATH:$PWD gst-launch filesrc location=/home/ensonic/Musik/Gridlock/Trace/04\ Uh4.17.mp3 ! decodebin2 ! audioconvert ! spectrascope ! colorspace ! ximagesink
+GST_PLUGIN_PATH=$GST_PLUGIN_PATH:$PWD gst-launch filesrc location=/home/ensonic/Musik/Gridlock/Trace/04\ Uh4.17.mp3 ! decodebin2 ! audioconvert ! spectrascope shader=fade-and-move-up shade-amount=0x00040302 ! colorspace ! ximagesink
+
+GST_PLUGIN_PATH=$GST_PLUGIN_PATH:$PWD gst-launch filesrc location=/home/ensonic/Musik/Gridlock/Trace/04\ Uh4.17.mp3 ! decodebin2 ! tee name=t ! queue ! audioconvert ! synaesthesia ! ximagesink t. ! queue ! synaescope shade-amount=0x00040404 ! colorspace ! ximagesink
+
