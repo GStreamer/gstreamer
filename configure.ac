@@ -297,6 +297,7 @@ AG_GST_CHECK_PLUGIN(adpcmdec)
 AG_GST_CHECK_PLUGIN(adpcmenc)
 AG_GST_CHECK_PLUGIN(aiff)
 AG_GST_CHECK_PLUGIN(asfmux)
+AG_GST_CHECK_PLUGIN(audiovisualizers)
 AG_GST_CHECK_PLUGIN(autoconvert)
 AG_GST_CHECK_PLUGIN(bayer)
 AG_GST_CHECK_PLUGIN(camerabin)
@@ -346,7 +347,6 @@ AG_GST_CHECK_PLUGIN(real)
 AG_GST_CHECK_PLUGIN(rtpmux)
 AG_GST_CHECK_PLUGIN(rtpvp8)
 AG_GST_CHECK_PLUGIN(scaletempo)
-AG_GST_CHECK_PLUGIN(scopes)
 AG_GST_CHECK_PLUGIN(sdi)
 AG_GST_CHECK_PLUGIN(sdp)
 AG_GST_CHECK_PLUGIN(segmentclip)
@@ -1036,7 +1036,7 @@ dnl *** ladspa ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LADSPA, true)
 AG_GST_CHECK_FEATURE(LADSPA, [ladspa], ladspa, [
   AC_CHECK_HEADER(ladspa.h, HAVE_LADSPA="yes", HAVE_LADSPA="no")
-  
+
   PKG_CHECK_MODULES(LRDF, lrdf, HAVE_LRDF=yes, HAVE_LRDF=no)
   if test $HAVE_LRDF = "yes"; then
     AC_DEFINE(HAVE_LRDF, 1, [Define if we have liblrdf])
@@ -1481,7 +1481,7 @@ AG_GST_CHECK_FEATURE(SOUNDTOUCH, [soundtouch plug-in], soundtouch, [
       [PKG_CHECK_MODULES(SOUNDTOUCH, soundtouch-1.0,
         [HAVE_SOUNDTOUCH=yes
           HAVE_SOUNDTOUCH_1_4=no
-          SOUNDTOUCH_LIBS="$SOUNDTOUCH_LIBS -lBPM"], 
+          SOUNDTOUCH_LIBS="$SOUNDTOUCH_LIBS -lBPM"],
         [PKG_CHECK_MODULES(SOUNDTOUCH, libSoundTouch >= 1.4,
           [HAVE_SOUNDTOUCH=yes],
           [PKG_CHECK_MODULES(SOUNDTOUCH, libSoundTouch,
@@ -1616,7 +1616,7 @@ AG_GST_CHECK_FEATURE(VDPAU, [VDPAU], vdpau, [
     if test "$HAVE_VDPAU" = "no"; then
       saved_CPPFLAGS="$CPPFLAGS"
       AC_CHECK_HEADER([vdpau/vdpau.h], [HAVE_VDPAU_H=yes])
-      
+
       if test -z "$HAVE_VDPAU_H"; then
         dnl Didn't find VDPAU header straight away.
         dnl Try /usr/include/nvidia. Need to clear caching vars first
@@ -1628,9 +1628,9 @@ AG_GST_CHECK_FEATURE(VDPAU, [VDPAU], vdpau, [
         CPPFLAGS="$VDPAU_CFLAGS $saved_CPPFLAGS"
         AC_CHECK_HEADER([vdpau/vdpau.h], [HAVE_VDPAU_H=yes])
       fi
-      
+
       AC_CHECK_HEADER([vdpau/vdpau_x11.h], [HAVE_VDPAU_X11_H=yes])
-  
+
       if test "x$HAVE_VDPAU_H" = "xyes" -a "x$HAVE_VDPAU_X11_H" = "xyes"; then
         dnl Found the headers - look for the lib
         AC_MSG_NOTICE([VDPAU headers found. Checking libraries])
@@ -1848,6 +1848,7 @@ gst/adpcmdec/Makefile
 gst/adpcmenc/Makefile
 gst/aiff/Makefile
 gst/asfmux/Makefile
+gst/audiovisualizers/Makefile
 gst/autoconvert/Makefile
 gst/bayer/Makefile
 gst/camerabin/Makefile
@@ -1898,7 +1899,6 @@ gst/real/Makefile
 gst/rtpmux/Makefile
 gst/rtpvp8/Makefile
 gst/scaletempo/Makefile
-gst/scopes/Makefile
 gst/sdi/Makefile
 gst/sdp/Makefile
 gst/segmentclip/Makefile
