@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-05-10 08:32+0100\n"
+"POT-Creation-Date: 2011-06-04 15:29+0100\n"
 "PO-Revision-Date: 2010-11-29 11:14+0200\n"
 "Last-Translator: Michael Kotsarinis <mk73628@gmail.com>\n"
 "Language-Team: Greek <team@lists.gnome.gr>\n"
@@ -1045,31 +1045,6 @@ msgstr "Αδυναμία φόρτωσης αρχείου προσθέτου: %s\
 msgid "No such element or plugin '%s'\n"
 msgstr "Δεν υπάρχει τέτοιο στοιχείο ή πρόσθετο '%s'\n"
 
-msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
-msgstr "Χρήση: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
-
-#, c-format
-msgid "ERROR: parse of xml file '%s' failed.\n"
-msgstr "ERROR: αποτυχία ανάλυσης αρχείου xml '%s'.\n"
-
-#, c-format
-msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
-msgstr ""
-"ERROR: δεν υπάρχει στοιχείο διασωλήνωσης στο ανώτερο επίπεδο στο αρχείο "
-"'%s'.\n"
-
-msgid "WARNING: only one toplevel element is supported at this time.\n"
-msgstr ""
-"WARNING: μόνο ένα στοιχείο σε ανώτερο επίπεδο υποστηρίζεται αυτή τη στιγμή.\n"
-
-#, c-format
-msgid "ERROR: could not parse command line argument %d: %s.\n"
-msgstr "ERROR: αδυναμία ανάλυσης ορίσματος γραμμής εντολής %d: %s.\n"
-
-#, c-format
-msgid "WARNING: element named '%s' not found.\n"
-msgstr "WARNING: το στοιχείο με το όνομα '%s' δεν βρέθηκε.\n"
-
 msgid "Index statistics"
 msgstr ""
 
@@ -1142,6 +1117,10 @@ msgstr "Ορισμός κατάστασης σε %s όπως ζητήθηκε α
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Διακοπή: Τερματισμός διασωλήνωσης…\n"
 
+#, fuzzy, c-format
+msgid "Missing element: %s\n"
+msgstr "δεν υπάρχει στοιχείο «%s»"
+
 msgid "Output tags (also known as metadata)"
 msgstr "Ετικέτες εξόδου (επίσης γνωστές ως μεταδεδομένα)"
 
@@ -1160,17 +1139,8 @@ msgstr "Να μην εξάγεται πληροφορία κατάστασης �
 msgid "TYPE1,TYPE2,..."
 msgstr "TYPE1,TYPE2,…"
 
-msgid "Save xml representation of pipeline to FILE and exit"
-msgstr "Αποθήκευση xml αναπαράστασης της διασωλήνωσης στο FILE και έξοδος"
-
-msgid "FILE"
-msgstr "FILE"
-
 msgid "Do not install a fault handler"
 msgstr "Να μην εγκατασταθεί χειριστής σφαλμάτων"
-
-msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
-msgstr "Να μην εγκατασταθούν χειριστές σημάτων για SIGUSR1 και SIGUSR2"
 
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr ""
@@ -1245,3 +1215,34 @@ msgstr "Ορισμός διασωλήνωσης σε NULL …\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Αποδέσμευση της διασωλήνωσης …\n"
+
+#~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
+#~ msgstr "Χρήση: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
+
+#~ msgid "ERROR: parse of xml file '%s' failed.\n"
+#~ msgstr "ERROR: αποτυχία ανάλυσης αρχείου xml '%s'.\n"
+
+#~ msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
+#~ msgstr ""
+#~ "ERROR: δεν υπάρχει στοιχείο διασωλήνωσης στο ανώτερο επίπεδο στο αρχείο "
+#~ "'%s'.\n"
+
+#~ msgid "WARNING: only one toplevel element is supported at this time.\n"
+#~ msgstr ""
+#~ "WARNING: μόνο ένα στοιχείο σε ανώτερο επίπεδο υποστηρίζεται αυτή τη "
+#~ "στιγμή.\n"
+
+#~ msgid "ERROR: could not parse command line argument %d: %s.\n"
+#~ msgstr "ERROR: αδυναμία ανάλυσης ορίσματος γραμμής εντολής %d: %s.\n"
+
+#~ msgid "WARNING: element named '%s' not found.\n"
+#~ msgstr "WARNING: το στοιχείο με το όνομα '%s' δεν βρέθηκε.\n"
+
+#~ msgid "Save xml representation of pipeline to FILE and exit"
+#~ msgstr "Αποθήκευση xml αναπαράστασης της διασωλήνωσης στο FILE και έξοδος"
+
+#~ msgid "FILE"
+#~ msgstr "FILE"
+
+#~ msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
+#~ msgstr "Να μην εγκατασταθούν χειριστές σημάτων για SIGUSR1 και SIGUSR2"

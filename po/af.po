@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.7\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-05-10 08:32+0100\n"
+"POT-Creation-Date: 2011-06-04 15:29+0100\n"
 "PO-Revision-Date: 2005-12-05 11:45+0200\n"
 "Last-Translator: Petri Jooste <rkwjpj@puk.ac.za>\n"
 "Language-Team: Afrikaans <i18n@af.org.za>\n"
@@ -1032,29 +1032,6 @@ msgstr "Kon nie lêer \"%s\" oopmaak om in te skryf nie."
 msgid "No such element or plugin '%s'\n"
 msgstr "geen bronelement vir URI \"%s\""
 
-msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
-msgstr "Gebruik so: gst-xmllaunch <lêer.xml> [ element.eienskap=waarde ... ]\n"
-
-#, c-format
-msgid "ERROR: parse of xml file '%s' failed.\n"
-msgstr "FOUT: ontleding van xml-lêer '%s' het misluk.\n"
-
-#, c-format
-msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
-msgstr "FOUT: geen topvlak pyplynelement in lêer '%s' nie.\n"
-
-#, fuzzy
-msgid "WARNING: only one toplevel element is supported at this time.\n"
-msgstr "WAARSKUWING: slegs een topvlak element word tans ondersteun."
-
-#, c-format
-msgid "ERROR: could not parse command line argument %d: %s.\n"
-msgstr "FOUT: onverstaanbare bevellynparameter %d: %s.\n"
-
-#, c-format
-msgid "WARNING: element named '%s' not found.\n"
-msgstr "WAARSKUWING: element genaamd '%s' nie gevind nie.\n"
-
 msgid "Index statistics"
 msgstr ""
 
@@ -1128,6 +1105,10 @@ msgstr ""
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Pyplyn word gestel na NULL ...\n"
 
+#, fuzzy, c-format
+msgid "Missing element: %s\n"
+msgstr "geen element \"%s\""
+
 msgid "Output tags (also known as metadata)"
 msgstr "Wys etikette (ook bekend as metadata)"
 
@@ -1147,17 +1128,7 @@ msgstr "Moenie statusinligting van TIPE wys nie"
 msgid "TYPE1,TYPE2,..."
 msgstr "TIPE1, TIPE2,..."
 
-msgid "Save xml representation of pipeline to FILE and exit"
-msgstr "Stoor xml-voorstelling van pyplyn na LÊER en stop"
-
-msgid "FILE"
-msgstr "LÊER"
-
 msgid "Do not install a fault handler"
-msgstr "Moenie 'n fouthanteerder installeer nie"
-
-#, fuzzy
-msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
 msgstr "Moenie 'n fouthanteerder installeer nie"
 
 msgid "Print alloc trace (if enabled at compile time)"
@@ -1232,6 +1203,36 @@ msgstr "Pyplyn word gestel na NULL ...\n"
 #, fuzzy
 msgid "Freeing pipeline ...\n"
 msgstr "Pyplyn word gestel na NULL ...\n"
+
+#~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
+#~ msgstr ""
+#~ "Gebruik so: gst-xmllaunch <lêer.xml> [ element.eienskap=waarde ... ]\n"
+
+#~ msgid "ERROR: parse of xml file '%s' failed.\n"
+#~ msgstr "FOUT: ontleding van xml-lêer '%s' het misluk.\n"
+
+#~ msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
+#~ msgstr "FOUT: geen topvlak pyplynelement in lêer '%s' nie.\n"
+
+#, fuzzy
+#~ msgid "WARNING: only one toplevel element is supported at this time.\n"
+#~ msgstr "WAARSKUWING: slegs een topvlak element word tans ondersteun."
+
+#~ msgid "ERROR: could not parse command line argument %d: %s.\n"
+#~ msgstr "FOUT: onverstaanbare bevellynparameter %d: %s.\n"
+
+#~ msgid "WARNING: element named '%s' not found.\n"
+#~ msgstr "WAARSKUWING: element genaamd '%s' nie gevind nie.\n"
+
+#~ msgid "Save xml representation of pipeline to FILE and exit"
+#~ msgstr "Stoor xml-voorstelling van pyplyn na LÊER en stop"
+
+#~ msgid "FILE"
+#~ msgstr "LÊER"
+
+#, fuzzy
+#~ msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
+#~ msgstr "Moenie 'n fouthanteerder installeer nie"
 
 #~ msgid "Internal GStreamer error: state change failed."
 #~ msgstr "Interne GStreamer-fout: state change failed."

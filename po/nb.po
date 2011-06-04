@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-05-10 08:32+0100\n"
+"POT-Creation-Date: 2011-06-04 15:29+0100\n"
 "PO-Revision-Date: 2010-10-24 21:36+0200\n"
 "Last-Translator: Kjartan Maraas <kmaraas@gnome.org>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
@@ -993,28 +993,6 @@ msgstr "Kunne ikke laste tilleggsfil: «%s»\n"
 msgid "No such element or plugin '%s'\n"
 msgstr ""
 
-msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
-msgstr ""
-
-#, c-format
-msgid "ERROR: parse of xml file '%s' failed.\n"
-msgstr ""
-
-#, c-format
-msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
-msgstr ""
-
-msgid "WARNING: only one toplevel element is supported at this time.\n"
-msgstr ""
-
-#, c-format
-msgid "ERROR: could not parse command line argument %d: %s.\n"
-msgstr ""
-
-#, c-format
-msgid "WARNING: element named '%s' not found.\n"
-msgstr ""
-
 msgid "Index statistics"
 msgstr ""
 
@@ -1087,6 +1065,10 @@ msgstr ""
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr ""
 
+#, fuzzy, c-format
+msgid "Missing element: %s\n"
+msgstr "ingen element «%s»"
+
 msgid "Output tags (also known as metadata)"
 msgstr ""
 
@@ -1105,16 +1087,7 @@ msgstr ""
 msgid "TYPE1,TYPE2,..."
 msgstr "TYPE1,TYPE2,..."
 
-msgid "Save xml representation of pipeline to FILE and exit"
-msgstr ""
-
-msgid "FILE"
-msgstr "FIL"
-
 msgid "Do not install a fault handler"
-msgstr ""
-
-msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
 msgstr ""
 
 msgid "Print alloc trace (if enabled at compile time)"
@@ -1187,3 +1160,6 @@ msgstr ""
 
 msgid "Freeing pipeline ...\n"
 msgstr "Frigjør rør ...\n"
+
+#~ msgid "FILE"
+#~ msgstr "FIL"

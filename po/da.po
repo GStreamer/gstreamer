@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-05-10 08:32+0100\n"
+"POT-Creation-Date: 2011-06-04 15:29+0100\n"
 "PO-Revision-Date: 2010-11-06 22:52+0100\n"
 "Last-Translator: Mogens Jaeger <mogensjaeger@gmail.com>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
@@ -1031,29 +1031,6 @@ msgstr "Kunne ikke indlæse pluginfilen: %s\n"
 msgid "No such element or plugin '%s'\n"
 msgstr "Et sådant element eller plugin findes ikke '%s'\n"
 
-msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
-msgstr "Brug: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
-
-#, c-format
-msgid "ERROR: parse of xml file '%s' failed.\n"
-msgstr "FEJL: tolkning af XML fil '%s' mislykkedes.\n"
-
-#, c-format
-msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
-msgstr "FEJL: intet topniveau rørledningselement i fil '%s'.\n"
-
-msgid "WARNING: only one toplevel element is supported at this time.\n"
-msgstr ""
-"ADVARSEL: der understøttes kun ét topniveauelement på nuværende tidspunkt.\n"
-
-#, c-format
-msgid "ERROR: could not parse command line argument %d: %s.\n"
-msgstr "FEJL: kunne ikke tolke kommandolinieargumenetet %d: %s.\n"
-
-#, c-format
-msgid "WARNING: element named '%s' not found.\n"
-msgstr "ADVARSEL: elementet ved navn '%s' blev ikke fundet.\n"
-
 msgid "Index statistics"
 msgstr ""
 
@@ -1127,6 +1104,10 @@ msgstr "Sætter tilstand til %s som krævet af %s...\n"
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Afbrydelse: Stopper rørledning...\n"
 
+#, fuzzy, c-format
+msgid "Missing element: %s\n"
+msgstr "intet element \"%s\""
+
 msgid "Output tags (also known as metadata)"
 msgstr "Uddatamærkater (også kendt som metadata)"
 
@@ -1145,17 +1126,8 @@ msgstr "Send ikke statusinformation af TYPE ud"
 msgid "TYPE1,TYPE2,..."
 msgstr "TYPE1,TYPE2,..."
 
-msgid "Save xml representation of pipeline to FILE and exit"
-msgstr "Gem XML-repræsentation af rørledning til FIL og afslut"
-
-msgid "FILE"
-msgstr "FIL"
-
 msgid "Do not install a fault handler"
 msgstr "Installér ikke en fejlhåndterer"
-
-msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
-msgstr "Undlad installering af signalhåndtering for SIGUSR1 og SIGUSR2"
 
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Udskriv allokeringsspor (hvis tilladt på oversættelsestidspunktet)"
@@ -1228,6 +1200,35 @@ msgstr "Rørledning sættes til NUL ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Rørledning frigøres ...\n"
+
+#~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
+#~ msgstr "Brug: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
+
+#~ msgid "ERROR: parse of xml file '%s' failed.\n"
+#~ msgstr "FEJL: tolkning af XML fil '%s' mislykkedes.\n"
+
+#~ msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
+#~ msgstr "FEJL: intet topniveau rørledningselement i fil '%s'.\n"
+
+#~ msgid "WARNING: only one toplevel element is supported at this time.\n"
+#~ msgstr ""
+#~ "ADVARSEL: der understøttes kun ét topniveauelement på nuværende "
+#~ "tidspunkt.\n"
+
+#~ msgid "ERROR: could not parse command line argument %d: %s.\n"
+#~ msgstr "FEJL: kunne ikke tolke kommandolinieargumenetet %d: %s.\n"
+
+#~ msgid "WARNING: element named '%s' not found.\n"
+#~ msgstr "ADVARSEL: elementet ved navn '%s' blev ikke fundet.\n"
+
+#~ msgid "Save xml representation of pipeline to FILE and exit"
+#~ msgstr "Gem XML-repræsentation af rørledning til FIL og afslut"
+
+#~ msgid "FILE"
+#~ msgstr "FIL"
+
+#~ msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
+#~ msgstr "Undlad installering af signalhåndtering for SIGUSR1 og SIGUSR2"
 
 #~ msgid "Error writing registry cache to %s: %s"
 #~ msgstr "Kunne ikke skrive registraturcache til %s: %s"

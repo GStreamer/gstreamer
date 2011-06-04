@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.8\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-05-10 08:32+0100\n"
+"POT-Creation-Date: 2011-06-04 15:29+0100\n"
 "PO-Revision-Date: 2005-04-27 14:55+0800\n"
 "Last-Translator: Abel Cheung <abelcheung@gmail.com>\n"
 "Language-Team: Chinese (traditional) <zh-l10n@linux.org.tw>\n"
@@ -1023,28 +1023,6 @@ msgstr "無法開啟 “%s” 檔案來寫入內容。"
 msgid "No such element or plugin '%s'\n"
 msgstr "URI “%s” 沒有來源元件"
 
-msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
-msgstr "用法：gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
-
-#, c-format
-msgid "ERROR: parse of xml file '%s' failed.\n"
-msgstr "錯誤：無法解析 XML 檔案 ‘%s’ 的內容。\n"
-
-#, c-format
-msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
-msgstr ""
-
-msgid "WARNING: only one toplevel element is supported at this time.\n"
-msgstr ""
-
-#, c-format
-msgid "ERROR: could not parse command line argument %d: %s.\n"
-msgstr "錯誤：無法解析指令的第 %d 個參數：%s。\n"
-
-#, c-format
-msgid "WARNING: element named '%s' not found.\n"
-msgstr ""
-
 msgid "Index statistics"
 msgstr ""
 
@@ -1115,6 +1093,10 @@ msgstr ""
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr ""
 
+#, fuzzy, c-format
+msgid "Missing element: %s\n"
+msgstr "“%s” 元件不存在"
+
 msgid "Output tags (also known as metadata)"
 msgstr ""
 
@@ -1134,16 +1116,7 @@ msgstr "不顯示和 TYPE 有關的狀態資訊"
 msgid "TYPE1,TYPE2,..."
 msgstr "TYPE1,TYPE2,..."
 
-msgid "Save xml representation of pipeline to FILE and exit"
-msgstr "將代表管線的架構儲存至<檔案>，然後結束"
-
-msgid "FILE"
-msgstr "檔案"
-
 msgid "Do not install a fault handler"
-msgstr ""
-
-msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
 msgstr ""
 
 msgid "Print alloc trace (if enabled at compile time)"
@@ -1219,6 +1192,21 @@ msgstr ""
 #, fuzzy
 msgid "Freeing pipeline ...\n"
 msgstr "執行管線 ...\n"
+
+#~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
+#~ msgstr "用法：gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
+
+#~ msgid "ERROR: parse of xml file '%s' failed.\n"
+#~ msgstr "錯誤：無法解析 XML 檔案 ‘%s’ 的內容。\n"
+
+#~ msgid "ERROR: could not parse command line argument %d: %s.\n"
+#~ msgstr "錯誤：無法解析指令的第 %d 個參數：%s。\n"
+
+#~ msgid "Save xml representation of pipeline to FILE and exit"
+#~ msgstr "將代表管線的架構儲存至<檔案>，然後結束"
+
+#~ msgid "FILE"
+#~ msgstr "檔案"
 
 #~ msgid "Disable accelerated CPU instructions"
 #~ msgstr "關閉 CPU 優化功能"

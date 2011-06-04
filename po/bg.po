@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-05-10 08:32+0100\n"
+"POT-Creation-Date: 2011-06-04 15:29+0100\n"
 "PO-Revision-Date: 2011-04-26 22:40+0300\n"
 "Last-Translator: Alexander Shopov <ash@kambanaria.org>\n"
 "Language-Team: Bulgarian <dict@fsa-bg.org>\n"
@@ -1030,30 +1030,6 @@ msgstr "Файлът на приставката не може да бъде з�
 msgid "No such element or plugin '%s'\n"
 msgstr "Няма такъв елемент или приставка „%s“\n"
 
-msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
-msgstr "Употреба: gst-xmllaunch <файл.xml> [ елемент.свойство=стойност … ]\n"
-
-#, c-format
-msgid "ERROR: parse of xml file '%s' failed.\n"
-msgstr "ГРЕШКА: файлът с xml „%s“ не може да бъде анализиран.\n"
-
-#, c-format
-msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
-msgstr "ГРЕШКА: няма най-горен елемент за конвейер във файла „%s“.\n"
-
-msgid "WARNING: only one toplevel element is supported at this time.\n"
-msgstr "ПРЕДУПРЕЖДЕНИЕ: засега е позволен само един най-горен елемент.\n"
-
-#, c-format
-msgid "ERROR: could not parse command line argument %d: %s.\n"
-msgstr ""
-"ГРЕШКА: аргументът подаден на командния ред не може да бъде анализиран %d: "
-"%s.\n"
-
-#, c-format
-msgid "WARNING: element named '%s' not found.\n"
-msgstr "ПРЕДУПРЕЖДЕНИЕ: елементът на име „%s“ не е открит.\n"
-
 msgid "Index statistics"
 msgstr "Статистика на индекса"
 
@@ -1126,6 +1102,10 @@ msgstr "Задаване на състоянието на %s по заявка �
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Прекъсване: Конвейерът се спира…\n"
 
+#, fuzzy, c-format
+msgid "Missing element: %s\n"
+msgstr "елементът „%s“ липсва"
+
 msgid "Output tags (also known as metadata)"
 msgstr "Изходни съобщения за етикетите (метаданните)"
 
@@ -1144,17 +1124,8 @@ msgstr "Да не се дават изходни съобщения от сле�
 msgid "TYPE1,TYPE2,..."
 msgstr "ВИД1,ВИД2,…"
 
-msgid "Save xml representation of pipeline to FILE and exit"
-msgstr "Запазване на конвейера във вид на XML във ФАЙЛа и изход"
-
-msgid "FILE"
-msgstr "ФАЙЛ"
-
 msgid "Do not install a fault handler"
 msgstr "Да не се инсталира модул за обработка на грешки"
-
-msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
-msgstr "Да не се включват функции за обработка на сигналите SIGUSR1 и SIGUSR2"
 
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr ""
@@ -1229,3 +1200,34 @@ msgstr "Конвейерът се ЗАНУЛЯВА…\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Конвейерът се освобождава…\n"
+
+#~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
+#~ msgstr ""
+#~ "Употреба: gst-xmllaunch <файл.xml> [ елемент.свойство=стойност … ]\n"
+
+#~ msgid "ERROR: parse of xml file '%s' failed.\n"
+#~ msgstr "ГРЕШКА: файлът с xml „%s“ не може да бъде анализиран.\n"
+
+#~ msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
+#~ msgstr "ГРЕШКА: няма най-горен елемент за конвейер във файла „%s“.\n"
+
+#~ msgid "WARNING: only one toplevel element is supported at this time.\n"
+#~ msgstr "ПРЕДУПРЕЖДЕНИЕ: засега е позволен само един най-горен елемент.\n"
+
+#~ msgid "ERROR: could not parse command line argument %d: %s.\n"
+#~ msgstr ""
+#~ "ГРЕШКА: аргументът подаден на командния ред не може да бъде анализиран "
+#~ "%d: %s.\n"
+
+#~ msgid "WARNING: element named '%s' not found.\n"
+#~ msgstr "ПРЕДУПРЕЖДЕНИЕ: елементът на име „%s“ не е открит.\n"
+
+#~ msgid "Save xml representation of pipeline to FILE and exit"
+#~ msgstr "Запазване на конвейера във вид на XML във ФАЙЛа и изход"
+
+#~ msgid "FILE"
+#~ msgstr "ФАЙЛ"
+
+#~ msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
+#~ msgstr ""
+#~ "Да не се включват функции за обработка на сигналите SIGUSR1 и SIGUSR2"

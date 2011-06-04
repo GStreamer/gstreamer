@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.20.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-05-10 08:32+0100\n"
+"POT-Creation-Date: 2011-06-04 15:29+0100\n"
 "PO-Revision-Date: 2008-10-12 12:12+0200\n"
 "Last-Translator: Miloslav Trmac <mitr@volny.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -1040,31 +1040,6 @@ msgstr "Nemohu načíst soubor modulu: %s\n"
 msgid "No such element or plugin '%s'\n"
 msgstr "Element nebo modul '%s' neexistuje\n"
 
-msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
-msgstr ""
-"Použití: gst-xmllaunch <soubor.xml> [ element.vlastnost=hodnota ... ]\n"
-
-#, c-format
-msgid "ERROR: parse of xml file '%s' failed.\n"
-msgstr "CHYBA: zpracovávání xml souboru '%s' selhalo.\n"
-
-#, c-format
-msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
-msgstr "CHYBA: v souboru '%s' není element nejvyšší úrovně pipeline.\n"
-
-#, fuzzy
-msgid "WARNING: only one toplevel element is supported at this time.\n"
-msgstr ""
-"VAROVÁNÍ: v současné době je podporován jen jeden element nejvyšší úrovně."
-
-#, c-format
-msgid "ERROR: could not parse command line argument %d: %s.\n"
-msgstr "CHYBA: nemohu zpracovat argument %d na příkazovém řádku: %s.\n"
-
-#, c-format
-msgid "WARNING: element named '%s' not found.\n"
-msgstr "VAROVÁNÍ: element nazvaný '%s' nenalezen.\n"
-
 msgid "Index statistics"
 msgstr ""
 
@@ -1140,6 +1115,10 @@ msgstr ""
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Přerušení: Zastavuji rouru ...\n"
 
+#, fuzzy, c-format
+msgid "Missing element: %s\n"
+msgstr "element \"%s\" neexistuje"
+
 msgid "Output tags (also known as metadata)"
 msgstr "Vypsat tagy (také známé jako metadata)"
 
@@ -1159,17 +1138,7 @@ msgstr "Nevypisovat informace o stavu s TYPEM"
 msgid "TYPE1,TYPE2,..."
 msgstr "TYP1,TYP2,..."
 
-msgid "Save xml representation of pipeline to FILE and exit"
-msgstr "Uložit reprezentaci roury v xml do SOUBORu a skončit"
-
-msgid "FILE"
-msgstr "SOUBOR"
-
 msgid "Do not install a fault handler"
-msgstr "Neinstalovat obsluhu výjimek"
-
-#, fuzzy
-msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
 msgstr "Neinstalovat obsluhu výjimek"
 
 msgid "Print alloc trace (if enabled at compile time)"
@@ -1247,6 +1216,37 @@ msgstr "Nastavuji rouru na NULL ...\n"
 #, fuzzy
 msgid "Freeing pipeline ...\n"
 msgstr "Nastavuji rouru na NULL ...\n"
+
+#~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
+#~ msgstr ""
+#~ "Použití: gst-xmllaunch <soubor.xml> [ element.vlastnost=hodnota ... ]\n"
+
+#~ msgid "ERROR: parse of xml file '%s' failed.\n"
+#~ msgstr "CHYBA: zpracovávání xml souboru '%s' selhalo.\n"
+
+#~ msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
+#~ msgstr "CHYBA: v souboru '%s' není element nejvyšší úrovně pipeline.\n"
+
+#, fuzzy
+#~ msgid "WARNING: only one toplevel element is supported at this time.\n"
+#~ msgstr ""
+#~ "VAROVÁNÍ: v současné době je podporován jen jeden element nejvyšší úrovně."
+
+#~ msgid "ERROR: could not parse command line argument %d: %s.\n"
+#~ msgstr "CHYBA: nemohu zpracovat argument %d na příkazovém řádku: %s.\n"
+
+#~ msgid "WARNING: element named '%s' not found.\n"
+#~ msgstr "VAROVÁNÍ: element nazvaný '%s' nenalezen.\n"
+
+#~ msgid "Save xml representation of pipeline to FILE and exit"
+#~ msgstr "Uložit reprezentaci roury v xml do SOUBORu a skončit"
+
+#~ msgid "FILE"
+#~ msgstr "SOUBOR"
+
+#, fuzzy
+#~ msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
+#~ msgstr "Neinstalovat obsluhu výjimek"
 
 #~ msgid "Error writing registry cache to %s: %s"
 #~ msgstr "Chyba při zapisování cache registru do %s: %s"

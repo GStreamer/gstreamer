@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.25.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-05-10 08:32+0100\n"
+"POT-Creation-Date: 2011-06-04 15:29+0100\n"
 "PO-Revision-Date: 2010-02-02 18:58+0800\n"
 "Last-Translator: Ji ZhengYu <zhengyuji@gmail.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
@@ -1002,28 +1002,6 @@ msgstr "无法载入插件文件: %s\n"
 msgid "No such element or plugin '%s'\n"
 msgstr "没有那样的组件或插件‘%s’\n"
 
-msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
-msgstr "用法: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
-
-#, c-format
-msgid "ERROR: parse of xml file '%s' failed.\n"
-msgstr "错误: xml 文件‘%s’解析失败。\n"
-
-#, c-format
-msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
-msgstr "错误: 文件‘%s’中没有顶级管道组件。\n"
-
-msgid "WARNING: only one toplevel element is supported at this time.\n"
-msgstr "警告: 此时仅支持一个一级组件。\n"
-
-#, c-format
-msgid "ERROR: could not parse command line argument %d: %s.\n"
-msgstr "错误: 无法解析命令行参数 %d: %s。\n"
-
-#, c-format
-msgid "WARNING: element named '%s' not found.\n"
-msgstr "警告: 组件名‘%s’未找到。\n"
-
 msgid "Index statistics"
 msgstr ""
 
@@ -1096,6 +1074,10 @@ msgstr "%2$s 发起请求时状态设置为 %1$s...\n"
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "中断: 中止管道 ...\n"
 
+#, fuzzy, c-format
+msgid "Missing element: %s\n"
+msgstr "无组件“%s”"
+
 msgid "Output tags (also known as metadata)"
 msgstr "输出标识(也可认为是元数据)"
 
@@ -1114,17 +1096,8 @@ msgstr "不输出类型的状态信息"
 msgid "TYPE1,TYPE2,..."
 msgstr "类型1，类型2，..."
 
-msgid "Save xml representation of pipeline to FILE and exit"
-msgstr "保存管道的 xml 描述符至文件并退出"
-
-msgid "FILE"
-msgstr "文件"
-
 msgid "Do not install a fault handler"
 msgstr "不安装错误的处理程序"
-
-msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
-msgstr ""
 
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "打印分配记录(如果在编译时开启的话)"
@@ -1197,6 +1170,30 @@ msgstr "设置 NULL 管道 ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "释放管道资源 ...\n"
+
+#~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
+#~ msgstr "用法: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
+
+#~ msgid "ERROR: parse of xml file '%s' failed.\n"
+#~ msgstr "错误: xml 文件‘%s’解析失败。\n"
+
+#~ msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
+#~ msgstr "错误: 文件‘%s’中没有顶级管道组件。\n"
+
+#~ msgid "WARNING: only one toplevel element is supported at this time.\n"
+#~ msgstr "警告: 此时仅支持一个一级组件。\n"
+
+#~ msgid "ERROR: could not parse command line argument %d: %s.\n"
+#~ msgstr "错误: 无法解析命令行参数 %d: %s。\n"
+
+#~ msgid "WARNING: element named '%s' not found.\n"
+#~ msgstr "警告: 组件名‘%s’未找到。\n"
+
+#~ msgid "Save xml representation of pipeline to FILE and exit"
+#~ msgstr "保存管道的 xml 描述符至文件并退出"
+
+#~ msgid "FILE"
+#~ msgstr "文件"
 
 #~ msgid "Error writing registry cache to %s: %s"
 #~ msgstr "寄存器缓存写入 %s 时出错: %s"

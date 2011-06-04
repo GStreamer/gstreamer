@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-05-10 08:32+0100\n"
+"POT-Creation-Date: 2011-06-04 15:29+0100\n"
 "PO-Revision-Date: 2010-07-16 00:50+0300\n"
 "Last-Translator: Žygimantas Beručka <uid0@akl.lt>\n"
 "Language-Team: Lithuanian <komp_lt@konferencijos.lt>\n"
@@ -1032,30 +1032,6 @@ msgstr "Nepavyko įkelti įskiepio failo: %s\n"
 msgid "No such element or plugin '%s'\n"
 msgstr "Nėra tokio elemento arba įskiepio „%s“\n"
 
-msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
-msgstr ""
-"Naudojimas: gst-xmllaunch <failas.xml> [ elementas.savybė=reikšmė ... ]\n"
-
-#, c-format
-msgid "ERROR: parse of xml file '%s' failed.\n"
-msgstr "KLAIDA: nepavyko perskaityti xml failo „%s“.\n"
-
-#, c-format
-msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
-msgstr "KLAIDA: nėra aukščiausio lygmens konvejerio elemento faile „%s“.\n"
-
-msgid "WARNING: only one toplevel element is supported at this time.\n"
-msgstr ""
-"ĮSPĖJIMAS: šiuo metu palaikomas tik vienas aukščiausio lygmens elementas.\n"
-
-#, c-format
-msgid "ERROR: could not parse command line argument %d: %s.\n"
-msgstr "KLAIDA: nepavyko apdoroti komandinės eilutės argumento %d: %s.\n"
-
-#, c-format
-msgid "WARNING: element named '%s' not found.\n"
-msgstr "ĮSPĖJIMAS: nerastas elementas „%s“.\n"
-
 msgid "Index statistics"
 msgstr ""
 
@@ -1128,6 +1104,10 @@ msgstr "Nustatoma būsena į %s, kaip prašė %s...\n"
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Pertraukimas: stabdomas konvejeris...\n"
 
+#, fuzzy, c-format
+msgid "Missing element: %s\n"
+msgstr "nėra elemento „%s“"
+
 msgid "Output tags (also known as metadata)"
 msgstr "Išvesti žymas (dar žinomas kaip metaduomenys)"
 
@@ -1146,17 +1126,8 @@ msgstr "Neišvesti šio TIPO būsenos informacijos"
 msgid "TYPE1,TYPE2,..."
 msgstr "TIPAS1,TIPAS2,..."
 
-msgid "Save xml representation of pipeline to FILE and exit"
-msgstr "Įrašyti konvejerio xml atitikmenį į FAILĄ ir išeiti"
-
-msgid "FILE"
-msgstr "FAILAS"
-
 msgid "Do not install a fault handler"
 msgstr "Neįdiegti klaidų apdorojimo posistemės"
-
-msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
-msgstr "Neįdiegti signalų apdorojimo posistemės signalams SIGUSR1 ir SIGUSR2"
 
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Išvesti alloc sekimą (jei įjungta kompiliavimo metu)"
@@ -1228,3 +1199,34 @@ msgstr "Nustatomas konvejeris į NULL...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Atlaisvinamas konvejeris...\n"
+
+#~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
+#~ msgstr ""
+#~ "Naudojimas: gst-xmllaunch <failas.xml> [ elementas.savybė=reikšmė ... ]\n"
+
+#~ msgid "ERROR: parse of xml file '%s' failed.\n"
+#~ msgstr "KLAIDA: nepavyko perskaityti xml failo „%s“.\n"
+
+#~ msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
+#~ msgstr "KLAIDA: nėra aukščiausio lygmens konvejerio elemento faile „%s“.\n"
+
+#~ msgid "WARNING: only one toplevel element is supported at this time.\n"
+#~ msgstr ""
+#~ "ĮSPĖJIMAS: šiuo metu palaikomas tik vienas aukščiausio lygmens "
+#~ "elementas.\n"
+
+#~ msgid "ERROR: could not parse command line argument %d: %s.\n"
+#~ msgstr "KLAIDA: nepavyko apdoroti komandinės eilutės argumento %d: %s.\n"
+
+#~ msgid "WARNING: element named '%s' not found.\n"
+#~ msgstr "ĮSPĖJIMAS: nerastas elementas „%s“.\n"
+
+#~ msgid "Save xml representation of pipeline to FILE and exit"
+#~ msgstr "Įrašyti konvejerio xml atitikmenį į FAILĄ ir išeiti"
+
+#~ msgid "FILE"
+#~ msgstr "FAILAS"
+
+#~ msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
+#~ msgstr ""
+#~ "Neįdiegti signalų apdorojimo posistemės signalams SIGUSR1 ir SIGUSR2"

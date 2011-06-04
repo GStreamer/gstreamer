@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-05-10 08:32+0100\n"
+"POT-Creation-Date: 2011-06-04 15:29+0100\n"
 "PO-Revision-Date: 2011-04-26 23:10+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -1037,31 +1037,6 @@ msgstr "Kan plugin-bestand \"%s\" niet laden\n"
 msgid "No such element or plugin '%s'\n"
 msgstr "Geen element of plugin '%s'\n"
 
-msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
-msgstr ""
-"Gebruik: gst-xmllaunch <bestand.xml> [ element.eigenschap=waarde ... ]\n"
-
-#, c-format
-msgid "ERROR: parse of xml file '%s' failed.\n"
-msgstr "FOUT: verwerken van xml-bestand '%s' mislukt.\n"
-
-#, c-format
-msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
-msgstr "FOUT: geen bovenste pijplijn-element gevonden in file '%s'.\n"
-
-msgid "WARNING: only one toplevel element is supported at this time.\n"
-msgstr ""
-"WAARSCHUWING: slechts één element op het hoogste niveau ondersteund op dit "
-"moment.\n"
-
-#, c-format
-msgid "ERROR: could not parse command line argument %d: %s.\n"
-msgstr "FOUT: kon argument %d op opdrachtregel niet verwerken: %s.\n"
-
-#, c-format
-msgid "WARNING: element named '%s' not found.\n"
-msgstr "WAARSCHUWING: element met naam '%s' niet gevonden.\n"
-
 msgid "Index statistics"
 msgstr "Indexstatistieken"
 
@@ -1134,6 +1109,10 @@ msgstr "Stel de status in op %s zoals verzocht door %s...\n"
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Interrupt: Pijplijn ingesteld op gestopt ...\n"
 
+#, fuzzy, c-format
+msgid "Missing element: %s\n"
+msgstr "geen element \"%s\""
+
 msgid "Output tags (also known as metadata)"
 msgstr "Tags (ook bekend als metadata) weergeven"
 
@@ -1152,17 +1131,8 @@ msgstr "Statusinformatie van soort SOORT niet weergeven"
 msgid "TYPE1,TYPE2,..."
 msgstr "SOORT1,SOORT2,..."
 
-msgid "Save xml representation of pipeline to FILE and exit"
-msgstr "XML-representatie van pijplijn in BESTAND opslaan en afsluiten"
-
-msgid "FILE"
-msgstr "BESTAND"
-
 msgid "Do not install a fault handler"
 msgstr "Geen foutafhandelaar installeren"
-
-msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
-msgstr "Geen signaalafhandelaars installeren voor SIGUSR1 en SIGUSR2"
 
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Toewijzingsspoor weergeven (indien aangezet tijdens compileren)"
@@ -1234,3 +1204,33 @@ msgstr "Pijplijn gezet op NULL ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Pijplijn wordt vrijgemaakt ...\n"
+
+#~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
+#~ msgstr ""
+#~ "Gebruik: gst-xmllaunch <bestand.xml> [ element.eigenschap=waarde ... ]\n"
+
+#~ msgid "ERROR: parse of xml file '%s' failed.\n"
+#~ msgstr "FOUT: verwerken van xml-bestand '%s' mislukt.\n"
+
+#~ msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
+#~ msgstr "FOUT: geen bovenste pijplijn-element gevonden in file '%s'.\n"
+
+#~ msgid "WARNING: only one toplevel element is supported at this time.\n"
+#~ msgstr ""
+#~ "WAARSCHUWING: slechts één element op het hoogste niveau ondersteund op "
+#~ "dit moment.\n"
+
+#~ msgid "ERROR: could not parse command line argument %d: %s.\n"
+#~ msgstr "FOUT: kon argument %d op opdrachtregel niet verwerken: %s.\n"
+
+#~ msgid "WARNING: element named '%s' not found.\n"
+#~ msgstr "WAARSCHUWING: element met naam '%s' niet gevonden.\n"
+
+#~ msgid "Save xml representation of pipeline to FILE and exit"
+#~ msgstr "XML-representatie van pijplijn in BESTAND opslaan en afsluiten"
+
+#~ msgid "FILE"
+#~ msgstr "BESTAND"
+
+#~ msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
+#~ msgstr "Geen signaalafhandelaars installeren voor SIGUSR1 en SIGUSR2"

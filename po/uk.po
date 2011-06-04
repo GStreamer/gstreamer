@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.14\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-05-10 08:32+0100\n"
+"POT-Creation-Date: 2011-06-04 15:29+0100\n"
 "PO-Revision-Date: 2007-09-07 11:16+0300\n"
 "Last-Translator: Maxim V. Dziumanenko <dziumanenko@gmail.com>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
@@ -1033,31 +1033,6 @@ msgstr "Не вдається завантажити файл модулю %s\n"
 msgid "No such element or plugin '%s'\n"
 msgstr "Відсутній елемент або модуль '%s'\n"
 
-msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
-msgstr ""
-"Використання: gst-xmllaunch <file.xml> [ елемент.властивість=значення ... ]\n"
-
-#, c-format
-msgid "ERROR: parse of xml file '%s' failed.\n"
-msgstr "ПОМИЛКА: помилка при аналізі xml файлу \"%s\".\n"
-
-#, c-format
-msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
-msgstr "ПОМИЛКА: немає верхнього елементу каналу у файлі \"%s\".\n"
-
-#, fuzzy
-msgid "WARNING: only one toplevel element is supported at this time.\n"
-msgstr "ПОПЕРЕДЖЕННЯ: наразі підтримується лише один верхній елемент."
-
-#, c-format
-msgid "ERROR: could not parse command line argument %d: %s.\n"
-msgstr ""
-"ПОМИЛКА: не вдається проаналізувати аргумент командного рядка %d: %s.\n"
-
-#, c-format
-msgid "WARNING: element named '%s' not found.\n"
-msgstr "ПОПЕРЕДЖЕННЯ: елемент з назвою \"%s\" не існує.\n"
-
 msgid "Index statistics"
 msgstr ""
 
@@ -1131,6 +1106,10 @@ msgstr ""
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Переривання: Канал переводиться у стан ПРИЗУПИНЕНО ...\n"
 
+#, fuzzy, c-format
+msgid "Missing element: %s\n"
+msgstr "немає елементу \"%s\""
+
 msgid "Output tags (also known as metadata)"
 msgstr "Вивести теги (також відомі як метадані)"
 
@@ -1150,17 +1129,7 @@ msgstr "Не виводити інформацію про статус типу 
 msgid "TYPE1,TYPE2,..."
 msgstr "ТИП1,ТИП2,..."
 
-msgid "Save xml representation of pipeline to FILE and exit"
-msgstr "Зберегти xml представлення каналу у файл ФАЙЛ та завершитись"
-
-msgid "FILE"
-msgstr "ФАЙЛ"
-
 msgid "Do not install a fault handler"
-msgstr "Не встановлювати обробник збоїв"
-
-#, fuzzy
-msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
 msgstr "Не встановлювати обробник збоїв"
 
 msgid "Print alloc trace (if enabled at compile time)"
@@ -1234,6 +1203,38 @@ msgstr "Канал переводиться у стан NULL ...\n"
 #, fuzzy
 msgid "Freeing pipeline ...\n"
 msgstr "Канал переводиться у стан NULL ...\n"
+
+#~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
+#~ msgstr ""
+#~ "Використання: gst-xmllaunch <file.xml> [ елемент."
+#~ "властивість=значення ... ]\n"
+
+#~ msgid "ERROR: parse of xml file '%s' failed.\n"
+#~ msgstr "ПОМИЛКА: помилка при аналізі xml файлу \"%s\".\n"
+
+#~ msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
+#~ msgstr "ПОМИЛКА: немає верхнього елементу каналу у файлі \"%s\".\n"
+
+#, fuzzy
+#~ msgid "WARNING: only one toplevel element is supported at this time.\n"
+#~ msgstr "ПОПЕРЕДЖЕННЯ: наразі підтримується лише один верхній елемент."
+
+#~ msgid "ERROR: could not parse command line argument %d: %s.\n"
+#~ msgstr ""
+#~ "ПОМИЛКА: не вдається проаналізувати аргумент командного рядка %d: %s.\n"
+
+#~ msgid "WARNING: element named '%s' not found.\n"
+#~ msgstr "ПОПЕРЕДЖЕННЯ: елемент з назвою \"%s\" не існує.\n"
+
+#~ msgid "Save xml representation of pipeline to FILE and exit"
+#~ msgstr "Зберегти xml представлення каналу у файл ФАЙЛ та завершитись"
+
+#~ msgid "FILE"
+#~ msgstr "ФАЙЛ"
+
+#, fuzzy
+#~ msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
+#~ msgstr "Не встановлювати обробник збоїв"
 
 #~ msgid "Error writing registry cache to %s: %s"
 #~ msgstr "Помилка при записі кешу реєстру у %s: %s"

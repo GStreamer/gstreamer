@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-05-10 08:32+0100\n"
+"POT-Creation-Date: 2011-06-04 15:29+0100\n"
 "PO-Revision-Date: 2004-04-26 10:36-0400\n"
 "Last-Translator: Gareth Owen <gowen72@yahoo.com>\n"
 "Language-Team: English (British) <en_gb@li.org>\n"
@@ -1039,29 +1039,6 @@ msgstr "Could not open file \"%s\" for writing."
 msgid "No such element or plugin '%s'\n"
 msgstr "no source element for URI \"%s\""
 
-msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
-msgstr "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
-
-#, c-format
-msgid "ERROR: parse of xml file '%s' failed.\n"
-msgstr "ERROR: parsing of xml file '%s' failed.\n"
-
-#, c-format
-msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
-msgstr "ERROR: no toplevel pipeline element in file '%s'.\n"
-
-#, fuzzy
-msgid "WARNING: only one toplevel element is supported at this time.\n"
-msgstr "WARNING: only one toplevel element is supported at this time."
-
-#, c-format
-msgid "ERROR: could not parse command line argument %d: %s.\n"
-msgstr "ERROR: could not parse command line argument %d: %s.\n"
-
-#, c-format
-msgid "WARNING: element named '%s' not found.\n"
-msgstr "WARNING: element named '%s' not found.\n"
-
 msgid "Index statistics"
 msgstr ""
 
@@ -1132,6 +1109,10 @@ msgstr ""
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr ""
 
+#, fuzzy, c-format
+msgid "Missing element: %s\n"
+msgstr "no element \"%s\""
+
 msgid "Output tags (also known as metadata)"
 msgstr "Output tags (also known as metadata)"
 
@@ -1151,17 +1132,7 @@ msgstr "Do not output status information of TYPE"
 msgid "TYPE1,TYPE2,..."
 msgstr "TYPE1,TYPE2,..."
 
-msgid "Save xml representation of pipeline to FILE and exit"
-msgstr "Save xml representation of pipeline to FILE and exit"
-
-msgid "FILE"
-msgstr "FILE"
-
 msgid "Do not install a fault handler"
-msgstr "Do not install a fault handler"
-
-#, fuzzy
-msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
 msgstr "Do not install a fault handler"
 
 msgid "Print alloc trace (if enabled at compile time)"
@@ -1237,6 +1208,35 @@ msgstr ""
 #, fuzzy
 msgid "Freeing pipeline ...\n"
 msgstr "RUNNING pipeline ...\n"
+
+#~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
+#~ msgstr "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
+
+#~ msgid "ERROR: parse of xml file '%s' failed.\n"
+#~ msgstr "ERROR: parsing of xml file '%s' failed.\n"
+
+#~ msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
+#~ msgstr "ERROR: no toplevel pipeline element in file '%s'.\n"
+
+#, fuzzy
+#~ msgid "WARNING: only one toplevel element is supported at this time.\n"
+#~ msgstr "WARNING: only one toplevel element is supported at this time."
+
+#~ msgid "ERROR: could not parse command line argument %d: %s.\n"
+#~ msgstr "ERROR: could not parse command line argument %d: %s.\n"
+
+#~ msgid "WARNING: element named '%s' not found.\n"
+#~ msgstr "WARNING: element named '%s' not found.\n"
+
+#~ msgid "Save xml representation of pipeline to FILE and exit"
+#~ msgstr "Save xml representation of pipeline to FILE and exit"
+
+#~ msgid "FILE"
+#~ msgstr "FILE"
+
+#, fuzzy
+#~ msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
+#~ msgstr "Do not install a fault handler"
 
 #~ msgid "Disable accelerated CPU instructions"
 #~ msgstr "Disable accelerated CPU instructions"

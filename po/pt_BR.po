@@ -17,7 +17,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.31.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-05-10 08:32+0100\n"
+"POT-Creation-Date: 2011-06-04 15:29+0100\n"
 "PO-Revision-Date: 2011-01-08 01:36-0300\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldp-br@bazar.conectiva.com.br>\n"
@@ -1044,31 +1044,6 @@ msgstr "Não foi possível carregar o arquivo do plug-in: %s\n"
 msgid "No such element or plugin '%s'\n"
 msgstr "Nenhum elemento ou plug-in \"%s\"\n"
 
-msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
-msgstr "Uso: gst-xmllaunch <arquivo.xml> [ elemento.propriedade=valor ... ]\n"
-
-#, c-format
-msgid "ERROR: parse of xml file '%s' failed.\n"
-msgstr "ERRO: a validação do arquivo xml \"%s\" falhou.\n"
-
-#, c-format
-msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
-msgstr ""
-"ERRO: nenhum elemento de nível superior na fila de processamento do arquivo "
-"\"%s\".\n"
-
-msgid "WARNING: only one toplevel element is supported at this time.\n"
-msgstr "AVISO: atualmente há suporte apenas a um elemento de nível superior.\n"
-
-#, c-format
-msgid "ERROR: could not parse command line argument %d: %s.\n"
-msgstr ""
-"ERRO: não foi possível validar o argumento %d da linha de comando: %s.\n"
-
-#, c-format
-msgid "WARNING: element named '%s' not found.\n"
-msgstr "AVISO: o elemento com o nome \"%s\" não foi encontrado.\n"
-
 msgid "Index statistics"
 msgstr ""
 
@@ -1144,6 +1119,10 @@ msgstr "Definindo estado de %s como requerido por %s...\n"
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Interrupção: Parando a fila de processamento...\n"
 
+#, fuzzy, c-format
+msgid "Missing element: %s\n"
+msgstr "nenhum elemento \"%s\""
+
 msgid "Output tags (also known as metadata)"
 msgstr "Exibir etiquetas (metadados)"
 
@@ -1162,18 +1141,8 @@ msgstr "Não é possível obter informações do estado de saída do TIPO"
 msgid "TYPE1,TYPE2,..."
 msgstr "TIPO1,TIPO2,..."
 
-msgid "Save xml representation of pipeline to FILE and exit"
-msgstr ""
-"Salvar representação da fila de processamento como xml para o ARQUIVO e sair"
-
-msgid "FILE"
-msgstr "ARQUIVO"
-
 msgid "Do not install a fault handler"
 msgstr "Não instale um manipulador de falhas"
-
-msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
-msgstr "Não fixar manipuladores de sinal para SIGUSR1 e SIGUSR2"
 
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Exibir trilha de alocação (se habilitado na compilação)"
@@ -1250,3 +1219,37 @@ msgstr "Definindo a fila de processamento para NULO...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Liberando a fila de processamento...\n"
+
+#~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
+#~ msgstr ""
+#~ "Uso: gst-xmllaunch <arquivo.xml> [ elemento.propriedade=valor ... ]\n"
+
+#~ msgid "ERROR: parse of xml file '%s' failed.\n"
+#~ msgstr "ERRO: a validação do arquivo xml \"%s\" falhou.\n"
+
+#~ msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
+#~ msgstr ""
+#~ "ERRO: nenhum elemento de nível superior na fila de processamento do "
+#~ "arquivo \"%s\".\n"
+
+#~ msgid "WARNING: only one toplevel element is supported at this time.\n"
+#~ msgstr ""
+#~ "AVISO: atualmente há suporte apenas a um elemento de nível superior.\n"
+
+#~ msgid "ERROR: could not parse command line argument %d: %s.\n"
+#~ msgstr ""
+#~ "ERRO: não foi possível validar o argumento %d da linha de comando: %s.\n"
+
+#~ msgid "WARNING: element named '%s' not found.\n"
+#~ msgstr "AVISO: o elemento com o nome \"%s\" não foi encontrado.\n"
+
+#~ msgid "Save xml representation of pipeline to FILE and exit"
+#~ msgstr ""
+#~ "Salvar representação da fila de processamento como xml para o ARQUIVO e "
+#~ "sair"
+
+#~ msgid "FILE"
+#~ msgstr "ARQUIVO"
+
+#~ msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
+#~ msgstr "Não fixar manipuladores de sinal para SIGUSR1 e SIGUSR2"

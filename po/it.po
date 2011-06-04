@@ -106,7 +106,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-05-10 08:32+0100\n"
+"POT-Creation-Date: 2011-06-04 15:29+0100\n"
 "PO-Revision-Date: 2010-10-25 10:03+0200\n"
 "Last-Translator: Luca Ferretti <elle.uca@infinito.it>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
@@ -1198,29 +1198,6 @@ msgstr "Impossibile caricare il file di plugin: %s\n"
 msgid "No such element or plugin '%s'\n"
 msgstr "Elemento o plugin «%s» inesistente\n"
 
-msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
-msgstr "Uso: gst-xmllaunch <FILE.XML> [ ELEMENTO.PROPRIETA=VALORE ... ]\n"
-
-#, c-format
-msgid "ERROR: parse of xml file '%s' failed.\n"
-msgstr "ERRORE: analisi del file xml «%s» non riuscita.\n"
-
-#, c-format
-msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
-msgstr "ERRORE: nessun elemento pipeline toplevel nel file «%s».\n"
-
-msgid "WARNING: only one toplevel element is supported at this time.\n"
-msgstr "ATTENZIONE: al momento è supportato sono un elemento toplevel.\n"
-
-#, c-format
-msgid "ERROR: could not parse command line argument %d: %s.\n"
-msgstr ""
-"ERRORE: impossibile analizzare l'argomento %d della riga di comando: %s.\n"
-
-#, c-format
-msgid "WARNING: element named '%s' not found.\n"
-msgstr "ATTENZIONE: elemento con nome «%s» non trovato.\n"
-
 msgid "Index statistics"
 msgstr ""
 
@@ -1294,6 +1271,10 @@ msgstr "Impostazione dello stato a %s come richiesto da %s...\n"
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Interrotto: arresto della pipeline ...\n"
 
+#, fuzzy, c-format
+msgid "Missing element: %s\n"
+msgstr "nessun elemento «%s»"
+
 # -t, --tags
 msgid "Output tags (also known as metadata)"
 msgstr "Stampa i tag (anche noti come metadati)"
@@ -1317,19 +1298,9 @@ msgstr "Non stampa le informazioni di stato per TIPO"
 msgid "TYPE1,TYPE2,..."
 msgstr "TIPO1,TIPO2,..."
 
-# -o, --output=FILE
-msgid "Save xml representation of pipeline to FILE and exit"
-msgstr "Salva su FILE una rappresentazione xml della pipeline ed esce"
-
-msgid "FILE"
-msgstr "FILE"
-
 # -f, --no-fault
 msgid "Do not install a fault handler"
 msgstr "Non installa un gestore di fault"
-
-msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
-msgstr "Non installa i gestori di segnale per SIGUSR1 e SIGUSR2"
 
 # -T, --trace
 msgid "Print alloc trace (if enabled at compile time)"
@@ -1409,6 +1380,35 @@ msgstr "Impostazione della pipeline a NULL ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Esecuzione di free sulla pipeline...\n"
+
+#~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
+#~ msgstr "Uso: gst-xmllaunch <FILE.XML> [ ELEMENTO.PROPRIETA=VALORE ... ]\n"
+
+#~ msgid "ERROR: parse of xml file '%s' failed.\n"
+#~ msgstr "ERRORE: analisi del file xml «%s» non riuscita.\n"
+
+#~ msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
+#~ msgstr "ERRORE: nessun elemento pipeline toplevel nel file «%s».\n"
+
+#~ msgid "WARNING: only one toplevel element is supported at this time.\n"
+#~ msgstr "ATTENZIONE: al momento è supportato sono un elemento toplevel.\n"
+
+#~ msgid "ERROR: could not parse command line argument %d: %s.\n"
+#~ msgstr ""
+#~ "ERRORE: impossibile analizzare l'argomento %d della riga di comando: %s.\n"
+
+#~ msgid "WARNING: element named '%s' not found.\n"
+#~ msgstr "ATTENZIONE: elemento con nome «%s» non trovato.\n"
+
+# -o, --output=FILE
+#~ msgid "Save xml representation of pipeline to FILE and exit"
+#~ msgstr "Salva su FILE una rappresentazione xml della pipeline ed esce"
+
+#~ msgid "FILE"
+#~ msgstr "FILE"
+
+#~ msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
+#~ msgstr "Non installa i gestori di segnale per SIGUSR1 e SIGUSR2"
 
 #~ msgid "Error writing registry cache to %s: %s"
 #~ msgstr "Errore nello scrivere la cache di registro su %s: %s"

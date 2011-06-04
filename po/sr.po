@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.8\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-05-10 08:32+0100\n"
+"POT-Creation-Date: 2011-06-04 15:29+0100\n"
 "PO-Revision-Date: 2005-01-27 16:58+0100\n"
 "Last-Translator: Danilo Segan <dsegan@gmx.net>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
@@ -1058,30 +1058,6 @@ msgstr "Не могу да отворим датотеку „%s“ ради у�
 msgid "No such element or plugin '%s'\n"
 msgstr "нема изворног елемента за адресу „%s“"
 
-msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
-msgstr ""
-"Употреба: gst-xmllaunch <датотека.xml> [ елемент.особина=вредност ... ]\n"
-
-#, c-format
-msgid "ERROR: parse of xml file '%s' failed.\n"
-msgstr "ГРЕШКА: неуспешно рашчлањивање xml датотеке „%s“.\n"
-
-#, c-format
-msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
-msgstr "ГРЕШКА: нема врховног елемента цевовода у датотеци „%s“.\n"
-
-#, fuzzy
-msgid "WARNING: only one toplevel element is supported at this time.\n"
-msgstr "УПОЗОРЕЊЕ: тренутно је подржан само један врховни елемент."
-
-#, c-format
-msgid "ERROR: could not parse command line argument %d: %s.\n"
-msgstr "ГРЕШКА: не могу да рашчланим %d. аргумент наредбе: %s.\n"
-
-#, c-format
-msgid "WARNING: element named '%s' not found.\n"
-msgstr "УПОЗОРЕЊЕ: елемент са именом „%s“ није нађен.\n"
-
 msgid "Index statistics"
 msgstr ""
 
@@ -1152,6 +1128,10 @@ msgstr ""
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr ""
 
+#, fuzzy, c-format
+msgid "Missing element: %s\n"
+msgstr "нема елемента „%s“"
+
 msgid "Output tags (also known as metadata)"
 msgstr "Излазне ознаке (такође познато и као метаподаци)"
 
@@ -1171,17 +1151,7 @@ msgstr "Не исписуј податке о стању за ВРСТУ"
 msgid "TYPE1,TYPE2,..."
 msgstr "ВРСТА1,ВРСТА2,..."
 
-msgid "Save xml representation of pipeline to FILE and exit"
-msgstr "Сачувај xml облик цевовода у ДАТОТЕКУ и заврши"
-
-msgid "FILE"
-msgstr "ДАТОТЕКА"
-
 msgid "Do not install a fault handler"
-msgstr "Не постављај руковаоца грешкама"
-
-#, fuzzy
-msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
 msgstr "Не постављај руковаоца грешкама"
 
 msgid "Print alloc trace (if enabled at compile time)"
@@ -1257,6 +1227,36 @@ msgstr ""
 #, fuzzy
 msgid "Freeing pipeline ...\n"
 msgstr "Покрећем цевовод...\n"
+
+#~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
+#~ msgstr ""
+#~ "Употреба: gst-xmllaunch <датотека.xml> [ елемент.особина=вредност ... ]\n"
+
+#~ msgid "ERROR: parse of xml file '%s' failed.\n"
+#~ msgstr "ГРЕШКА: неуспешно рашчлањивање xml датотеке „%s“.\n"
+
+#~ msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
+#~ msgstr "ГРЕШКА: нема врховног елемента цевовода у датотеци „%s“.\n"
+
+#, fuzzy
+#~ msgid "WARNING: only one toplevel element is supported at this time.\n"
+#~ msgstr "УПОЗОРЕЊЕ: тренутно је подржан само један врховни елемент."
+
+#~ msgid "ERROR: could not parse command line argument %d: %s.\n"
+#~ msgstr "ГРЕШКА: не могу да рашчланим %d. аргумент наредбе: %s.\n"
+
+#~ msgid "WARNING: element named '%s' not found.\n"
+#~ msgstr "УПОЗОРЕЊЕ: елемент са именом „%s“ није нађен.\n"
+
+#~ msgid "Save xml representation of pipeline to FILE and exit"
+#~ msgstr "Сачувај xml облик цевовода у ДАТОТЕКУ и заврши"
+
+#~ msgid "FILE"
+#~ msgstr "ДАТОТЕКА"
+
+#, fuzzy
+#~ msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
+#~ msgstr "Не постављај руковаоца грешкама"
 
 #~ msgid "Disable accelerated CPU instructions"
 #~ msgstr "Искључи убрзане инструкције процесора"
