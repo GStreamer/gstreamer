@@ -409,8 +409,11 @@ gst_mxf_mux_request_new_pad (GstElement * element,
     GST_ERROR_OBJECT (mux, "Not our template");
     return NULL;
   }
-
+#if GLIB_CHECK_VERSION(2,29,5)
+  pad_number = g_atomic_int_add ((gint *) & mux->n_pads, 1);
+#else
   pad_number = g_atomic_int_exchange_and_add ((gint *) & mux->n_pads, 1);
+#endif
   name = gst_mxf_mux_create_pad_name (templ, pad_number);
 
   GST_DEBUG_OBJECT (mux, "Creating pad '%s'", name);
