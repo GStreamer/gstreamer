@@ -2,6 +2,7 @@ plugin_LTLIBRARIES = libgstaudiovisualizers.la
 
 libgstaudiovisualizers_la_SOURCES = plugin.c \
     gstbaseaudiovisualizer.c gstbaseaudiovisualizer.h \
+    gstspacescope.c gstspacescope.h \
     gstspectrascope.c gstspectrascope.h \
     gstsynaescope.c gstsynaescope.h \
     gstwavescope.c gstwavescope.h
@@ -17,7 +18,7 @@ libgstaudiovisualizers_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstaudiovisualizers_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = gstbaseaudiovisualizer.h \
-	gstspectrascope.h gstsynaescope.h gstwavescope.h
+	gstspacescope.h gstspectrascope.h gstsynaescope.h gstwavescope.h
 
 Android.mk: Makefile.am $(BUILT_SOURCES)
 	androgenizer \

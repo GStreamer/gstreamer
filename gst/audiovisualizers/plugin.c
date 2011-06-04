@@ -24,6 +24,7 @@
 #include <gst/gst.h>
 #include <gst/controller/gstcontroller.h>
 
+#include "gstspacescope.h"
 #include "gstspectrascope.h"
 #include "gstsynaescope.h"
 #include "gstwavescope.h"
@@ -36,6 +37,7 @@ plugin_init (GstPlugin * plugin)
   /* initialize gst controller library */
   gst_controller_init (NULL, NULL);
 
+  res &= gst_space_scope_plugin_init (plugin);
   res &= gst_spectra_scope_plugin_init (plugin);
   res &= gst_synae_scope_plugin_init (plugin);
   res &= gst_wave_scope_plugin_init (plugin);
