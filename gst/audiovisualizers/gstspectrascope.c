@@ -58,13 +58,13 @@ GST_DEBUG_CATEGORY_STATIC (spectra_scope_debug);
 
 static void gst_spectra_scope_finalize (GObject * object);
 
-static gboolean gst_spectra_scope_setup (GstBaseScope * scope);
-static gboolean gst_spectra_scope_render (GstBaseScope * scope,
+static gboolean gst_spectra_scope_setup (GstBaseAudioVisualizer * scope);
+static gboolean gst_spectra_scope_render (GstBaseAudioVisualizer * scope,
     GstBuffer * audio, GstBuffer * video);
 
 
-GST_BOILERPLATE (GstSpectraScope, gst_spectra_scope, GstBaseScope,
-    GST_TYPE_BASE_SCOPE);
+GST_BOILERPLATE (GstSpectraScope, gst_spectra_scope, GstBaseAudioVisualizer,
+    GST_TYPE_BASE_AUDIO_VISUALIZER);
 
 static void
 gst_spectra_scope_base_init (gpointer g_class)
@@ -85,7 +85,8 @@ static void
 gst_spectra_scope_class_init (GstSpectraScopeClass * g_class)
 {
   GObjectClass *gobject_class = (GObjectClass *) g_class;
-  GstBaseScopeClass *scope_class = (GstBaseScopeClass *) g_class;
+  GstBaseAudioVisualizerClass *scope_class =
+      (GstBaseAudioVisualizerClass *) g_class;
 
   gobject_class->finalize = gst_spectra_scope_finalize;
 
@@ -117,7 +118,7 @@ gst_spectra_scope_finalize (GObject * object)
 }
 
 static gboolean
-gst_spectra_scope_setup (GstBaseScope * bscope)
+gst_spectra_scope_setup (GstBaseAudioVisualizer * bscope)
 {
   GstSpectraScope *scope = GST_SPECTRA_SCOPE (bscope);
   guint num_freq = bscope->width + 1;
@@ -159,7 +160,7 @@ add_pixel (guint32 * _p, guint32 _c)
 }
 
 static gboolean
-gst_spectra_scope_render (GstBaseScope * bscope, GstBuffer * audio,
+gst_spectra_scope_render (GstBaseAudioVisualizer * bscope, GstBuffer * audio,
     GstBuffer * video)
 {
   GstSpectraScope *scope = GST_SPECTRA_SCOPE (bscope);

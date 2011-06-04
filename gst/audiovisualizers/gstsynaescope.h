@@ -22,7 +22,7 @@
 #ifndef __GST_SYNAE_SCOPE_H__
 #define __GST_SYNAE_SCOPE_H__
 
-#include "gstbasescope.h"
+#include "gstbaseaudiovisualizer.h"
 #include <gst/fft/gstffts16.h>
 
 G_BEGIN_DECLS
@@ -36,7 +36,7 @@ typedef struct _GstSynaeScopeClass GstSynaeScopeClass;
 
 struct _GstSynaeScope
 {
-  GstBaseScope parent;
+  GstBaseAudioVisualizer parent;
 
   GstFFTS16 *fft_ctx;
   GstFFTS16Complex *freq_data_l, *freq_data_r;
@@ -48,7 +48,7 @@ struct _GstSynaeScope
 
 struct _GstSynaeScopeClass
 {
-  GstBaseScopeClass parent_class;
+  GstBaseAudioVisualizerClass parent_class;
 };
 
 GType gst_synae_scope_get_type (void);

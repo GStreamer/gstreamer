@@ -22,7 +22,7 @@
 #ifndef __GST_WAVE_SCOPE_H__
 #define __GST_WAVE_SCOPE_H__
 
-#include "gstbasescope.h"
+#include "gstbaseaudiovisualizer.h"
 
 G_BEGIN_DECLS
 #define GST_TYPE_WAVE_SCOPE            (gst_wave_scope_get_type())
@@ -35,12 +35,12 @@ typedef struct _GstWaveScopeClass GstWaveScopeClass;
 
 struct _GstWaveScope
 {
-  GstBaseScope parent;
+  GstBaseAudioVisualizer parent;
 };
 
 struct _GstWaveScopeClass
 {
-  GstBaseScopeClass parent_class;
+  GstBaseAudioVisualizerClass parent_class;
 };
 
 GType gst_wave_scope_get_type (void);

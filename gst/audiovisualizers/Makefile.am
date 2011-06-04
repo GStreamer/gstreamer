@@ -16,7 +16,7 @@ libgstaudiovisualizers_la_LIBADD = \
 libgstaudiovisualizers_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstaudiovisualizers_la_LIBTOOLFLAGS = --tag=disable-static
 
-noinst_HEADERS = gstbasescope.h \
+noinst_HEADERS = gstbaseaudiovisualizer.h \
 	gstspectrascope.h gstsynaescope.h gstwavescope.h
 
 Android.mk: Makefile.am $(BUILT_SOURCES)

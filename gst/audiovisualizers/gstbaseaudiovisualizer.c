@@ -1,7 +1,7 @@
 /* GStreamer
  * Copyright (C) <2011> Stefan Kost <ensonic@users.sf.net>
  *
- * gstbasescope.h: base class for audio visualisation elements
+ * gstbaseaudiovisualizer.h: base class for audio visualisation elements
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 /**
- * SECTION:gstbasescope
+ * SECTION:gstbaseaudiovisualizer
  *
  * A basclass for scopes. Takes care of re-fitting the audio-rate to video-rate.
  */
@@ -29,12 +29,12 @@
 #include <string.h>
 #include <gst/controller/gstcontroller.h>
 
-#include "gstbasescope.h"
+#include "gstbaseaudiovisualizer.h"
 
-GST_DEBUG_CATEGORY_STATIC (base_scope_debug);
-#define GST_CAT_DEFAULT (base_scope_debug)
+GST_DEBUG_CATEGORY_STATIC (base_audio_visualizer_debug);
+#define GST_CAT_DEFAULT (base_audio_visualizer_debug)
 
-#define DEFAULT_SHADER GST_BASE_SCOPE_SHADER_FADE
+#define DEFAULT_SHADER GST_BASE_AUDIO_VISUALIZER_SHADER_FADE
 #define DEFAULT_SHADE_AMOUNT   0x000a0a0a
 
 enum
@@ -46,51 +46,57 @@ enum
 
 static GstBaseTransformClass *parent_class = NULL;
 
-static void gst_base_scope_class_init (GstBaseScopeClass * klass);
-static void gst_base_scope_init (GstBaseScope * scope,
-    GstBaseScopeClass * g_class);
-static void gst_base_scope_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec);
-static void gst_base_scope_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec);
-static void gst_base_scope_dispose (GObject * object);
+static void gst_base_audio_visualizer_class_init (GstBaseAudioVisualizerClass *
+    klass);
+static void gst_base_audio_visualizer_init (GstBaseAudioVisualizer * scope,
+    GstBaseAudioVisualizerClass * g_class);
+static void gst_base_audio_visualizer_set_property (GObject * object,
+    guint prop_id, const GValue * value, GParamSpec * pspec);
+static void gst_base_audio_visualizer_get_property (GObject * object,
+    guint prop_id, GValue * value, GParamSpec * pspec);
+static void gst_base_audio_visualizer_dispose (GObject * object);
 
-static gboolean gst_base_scope_src_negotiate (GstBaseScope * scope);
-static gboolean gst_base_scope_src_setcaps (GstPad * pad, GstCaps * caps);
-static gboolean gst_base_scope_sink_setcaps (GstPad * pad, GstCaps * caps);
+static gboolean gst_base_audio_visualizer_src_negotiate (GstBaseAudioVisualizer
+    * scope);
+static gboolean gst_base_audio_visualizer_src_setcaps (GstPad * pad,
+    GstCaps * caps);
+static gboolean gst_base_audio_visualizer_sink_setcaps (GstPad * pad,
+    GstCaps * caps);
 
-static GstFlowReturn gst_base_scope_chain (GstPad * pad, GstBuffer * buffer);
-static GstStateChangeReturn gst_base_scope_change_state (GstElement * element,
-    GstStateChange transition);
+static GstFlowReturn gst_base_audio_visualizer_chain (GstPad * pad,
+    GstBuffer * buffer);
+static GstStateChangeReturn gst_base_audio_visualizer_change_state (GstElement *
+    element, GstStateChange transition);
 
 /* shading functions */
 
-#define GST_TYPE_BASE_SCOPE_SHADER (gst_base_scope_shader_get_type())
+#define GST_TYPE_BASE_AUDIO_VISUALIZER_SHADER (gst_base_audio_visualizer_shader_get_type())
 static GType
-gst_base_scope_shader_get_type (void)
+gst_base_audio_visualizer_shader_get_type (void)
 {
   static GType shader_type = 0;
   static const GEnumValue shaders[] = {
-    {GST_BASE_SCOPE_SHADER_NONE, "None", "none"},
-    {GST_BASE_SCOPE_SHADER_FADE, "Fade", "fade"},
-    {GST_BASE_SCOPE_SHADER_FADE_AND_MOVE_UP, "Fade and move up",
+    {GST_BASE_AUDIO_VISUALIZER_SHADER_NONE, "None", "none"},
+    {GST_BASE_AUDIO_VISUALIZER_SHADER_FADE, "Fade", "fade"},
+    {GST_BASE_AUDIO_VISUALIZER_SHADER_FADE_AND_MOVE_UP, "Fade and move up",
         "fade-and-move-up"},
-    {GST_BASE_SCOPE_SHADER_FADE_AND_MOVE_DOWN, "Fade and move down",
+    {GST_BASE_AUDIO_VISUALIZER_SHADER_FADE_AND_MOVE_DOWN, "Fade and move down",
         "fade-and-move-down"},
-    {GST_BASE_SCOPE_SHADER_FADE_AND_MOVE_HORIZ_OUT,
+    {GST_BASE_AUDIO_VISUALIZER_SHADER_FADE_AND_MOVE_HORIZ_OUT,
           "Fade and move horizontaly out",
         "fade-and-move-horiz-out"},
     {0, NULL, NULL},
   };
 
   if (G_UNLIKELY (shader_type == 0)) {
-    shader_type = g_enum_register_static ("GstBaseScopeShader", shaders);
+    shader_type =
+        g_enum_register_static ("GstBaseAudioVisualizerShader", shaders);
   }
   return shader_type;
 }
 
 static void
-shader_fade (GstBaseScope * scope, const guint8 * s, guint8 * d)
+shader_fade (GstBaseAudioVisualizer * scope, const guint8 * s, guint8 * d)
 {
   guint i, bpf = scope->bpf;
   guint r = (scope->shade_amount >> 16) & 0xff;
@@ -122,112 +128,114 @@ shader_fade (GstBaseScope * scope, const guint8 * s, guint8 * d)
 }
 
 static void
-shader_fade_and_move_up (GstBaseScope * scope, const guint8 * s, guint8 * d)
-{
-  guint i, j, bpf = scope->bpf;
-  guint bpl = 4 * scope->width;
-  guint r = (scope->shade_amount >> 16) & 0xff;
-  guint g = (scope->shade_amount >> 8) & 0xff;
-  guint b = (scope->shade_amount >> 0) & 0xff;
-
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-  for (j = 0, i = bpl; i < bpf;) {
-    d[j++] = (s[i] > b) ? s[i] - b : 0;
-    i++;
-    d[j++] = (s[i] > g) ? s[i] - g : 0;
-    i++;
-    d[j++] = (s[i] > r) ? s[i] - r : 0;
-    i++;
-    d[j++] = 0;
-    i++;
-  }
-  for (i = 0; i < bpl; i += 4) {
-    d[j] = (s[j] > b) ? s[j] - b : 0;
-    j++;
-    d[j] = (s[j] > g) ? s[j] - g : 0;
-    j++;
-    d[j] = (s[j] > r) ? s[j] - r : 0;
-    j++;
-    d[j++] = 0;
-  }
-#else
-  for (j = 0, i = bpl; i < bpf;) {
-    d[j++] = 0;
-    i++;
-    d[j++] = (s[i] > r) ? s[i] - r : 0;
-    i++;
-    d[j++] = (s[i] > g) ? s[i] - g : 0;
-    i++;
-    d[j++] = (s[i] > b) ? s[i] - b : 0;
-    i++;
-  }
-  for (i = 0; i < bpl; i += 4) {
-    d[j++] = 0;
-    d[j] = (s[j] > r) ? s[j] - r : 0;
-    j++;
-    d[j] = (s[j] > g) ? s[j] - g : 0;
-    j++;
-    d[j] = (s[j] > b) ? s[j] - b : 0;
-    j++;
-  }
-#endif
-}
-
-static void
-shader_fade_and_move_down (GstBaseScope * scope, const guint8 * s, guint8 * d)
-{
-  guint i, j, bpf = scope->bpf;
-  guint bpl = 4 * scope->width;
-  guint r = (scope->shade_amount >> 16) & 0xff;
-  guint g = (scope->shade_amount >> 8) & 0xff;
-  guint b = (scope->shade_amount >> 0) & 0xff;
-
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-  for (i = 0; i < bpl;) {
-    d[i] = (s[i] > b) ? s[i] - b : 0;
-    i++;
-    d[i] = (s[i] > g) ? s[i] - g : 0;
-    i++;
-    d[i] = (s[i] > r) ? s[i] - r : 0;
-    i++;
-    d[i++] = 0;
-  }
-  for (j = bpl, i = 0; j < bpf;) {
-    d[j++] = (s[i] > b) ? s[i] - b : 0;
-    i++;
-    d[j++] = (s[i] > g) ? s[i] - g : 0;
-    i++;
-    d[j++] = (s[i] > r) ? s[i] - r : 0;
-    i++;
-    d[j++] = 0;
-    i++;
-  }
-#else
-  for (i = 0; i < bpl;) {
-    d[i++] = 0;
-    d[i] = (s[i] > r) ? s[i] - r : 0;
-    i++;
-    d[i] = (s[i] > g) ? s[i] - g : 0;
-    i++;
-    d[i] = (s[i] > b) ? s[i] - b : 0;
-    i++;
-  }
-  for (j = bpl, i = 0; j < bpf;) {
-    d[j++] = 0;
-    i++;
-    d[j++] = (s[i] > r) ? s[i] - r : 0;
-    i++;
-    d[j++] = (s[i] > g) ? s[i] - g : 0;
-    i++;
-    d[j++] = (s[i] > b) ? s[i] - b : 0;
-    i++;
-  }
-#endif
-}
-
-static void
-shader_fade_and_move_horiz_out (GstBaseScope * scope, const guint8 * s,
+shader_fade_and_move_up (GstBaseAudioVisualizer * scope, const guint8 * s,
     guint8 * d)
+{
+  guint i, j, bpf = scope->bpf;
+  guint bpl = 4 * scope->width;
+  guint r = (scope->shade_amount >> 16) & 0xff;
+  guint g = (scope->shade_amount >> 8) & 0xff;
+  guint b = (scope->shade_amount >> 0) & 0xff;
+
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  for (j = 0, i = bpl; i < bpf;) {
+    d[j++] = (s[i] > b) ? s[i] - b : 0;
+    i++;
+    d[j++] = (s[i] > g) ? s[i] - g : 0;
+    i++;
+    d[j++] = (s[i] > r) ? s[i] - r : 0;
+    i++;
+    d[j++] = 0;
+    i++;
+  }
+  for (i = 0; i < bpl; i += 4) {
+    d[j] = (s[j] > b) ? s[j] - b : 0;
+    j++;
+    d[j] = (s[j] > g) ? s[j] - g : 0;
+    j++;
+    d[j] = (s[j] > r) ? s[j] - r : 0;
+    j++;
+    d[j++] = 0;
+  }
+#else
+  for (j = 0, i = bpl; i < bpf;) {
+    d[j++] = 0;
+    i++;
+    d[j++] = (s[i] > r) ? s[i] - r : 0;
+    i++;
+    d[j++] = (s[i] > g) ? s[i] - g : 0;
+    i++;
+    d[j++] = (s[i] > b) ? s[i] - b : 0;
+    i++;
+  }
+  for (i = 0; i < bpl; i += 4) {
+    d[j++] = 0;
+    d[j] = (s[j] > r) ? s[j] - r : 0;
+    j++;
+    d[j] = (s[j] > g) ? s[j] - g : 0;
+    j++;
+    d[j] = (s[j] > b) ? s[j] - b : 0;
+    j++;
+  }
+#endif
+}
+
+static void
+shader_fade_and_move_down (GstBaseAudioVisualizer * scope, const guint8 * s,
+    guint8 * d)
+{
+  guint i, j, bpf = scope->bpf;
+  guint bpl = 4 * scope->width;
+  guint r = (scope->shade_amount >> 16) & 0xff;
+  guint g = (scope->shade_amount >> 8) & 0xff;
+  guint b = (scope->shade_amount >> 0) & 0xff;
+
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  for (i = 0; i < bpl;) {
+    d[i] = (s[i] > b) ? s[i] - b : 0;
+    i++;
+    d[i] = (s[i] > g) ? s[i] - g : 0;
+    i++;
+    d[i] = (s[i] > r) ? s[i] - r : 0;
+    i++;
+    d[i++] = 0;
+  }
+  for (j = bpl, i = 0; j < bpf;) {
+    d[j++] = (s[i] > b) ? s[i] - b : 0;
+    i++;
+    d[j++] = (s[i] > g) ? s[i] - g : 0;
+    i++;
+    d[j++] = (s[i] > r) ? s[i] - r : 0;
+    i++;
+    d[j++] = 0;
+    i++;
+  }
+#else
+  for (i = 0; i < bpl;) {
+    d[i++] = 0;
+    d[i] = (s[i] > r) ? s[i] - r : 0;
+    i++;
+    d[i] = (s[i] > g) ? s[i] - g : 0;
+    i++;
+    d[i] = (s[i] > b) ? s[i] - b : 0;
+    i++;
+  }
+  for (j = bpl, i = 0; j < bpf;) {
+    d[j++] = 0;
+    i++;
+    d[j++] = (s[i] > r) ? s[i] - r : 0;
+    i++;
+    d[j++] = (s[i] > g) ? s[i] - g : 0;
+    i++;
+    d[j++] = (s[i] > b) ? s[i] - b : 0;
+    i++;
+  }
+#endif
+}
+
+static void
+shader_fade_and_move_horiz_out (GstBaseAudioVisualizer * scope,
+    const guint8 * s, guint8 * d)
 {
   guint i, j, bpf = scope->bpf / 2;
   guint bpl = 4 * scope->width;
@@ -322,22 +330,22 @@ shader_fade_and_move_horiz_out (GstBaseScope * scope, const guint8 * s,
 
 
 static void
-gst_base_scope_change_shader (GstBaseScope * scope)
+gst_base_audio_visualizer_change_shader (GstBaseAudioVisualizer * scope)
 {
   switch (scope->shader_type) {
-    case GST_BASE_SCOPE_SHADER_NONE:
+    case GST_BASE_AUDIO_VISUALIZER_SHADER_NONE:
       scope->shader = NULL;
       break;
-    case GST_BASE_SCOPE_SHADER_FADE:
+    case GST_BASE_AUDIO_VISUALIZER_SHADER_FADE:
       scope->shader = shader_fade;
       break;
-    case GST_BASE_SCOPE_SHADER_FADE_AND_MOVE_UP:
+    case GST_BASE_AUDIO_VISUALIZER_SHADER_FADE_AND_MOVE_UP:
       scope->shader = shader_fade_and_move_up;
       break;
-    case GST_BASE_SCOPE_SHADER_FADE_AND_MOVE_DOWN:
+    case GST_BASE_AUDIO_VISUALIZER_SHADER_FADE_AND_MOVE_DOWN:
       scope->shader = shader_fade_and_move_down;
       break;
-    case GST_BASE_SCOPE_SHADER_FADE_AND_MOVE_HORIZ_OUT:
+    case GST_BASE_AUDIO_VISUALIZER_SHADER_FADE_AND_MOVE_HORIZ_OUT:
       scope->shader = shader_fade_and_move_horiz_out;
       break;
     default:
@@ -350,52 +358,54 @@ gst_base_scope_change_shader (GstBaseScope * scope)
 /* base class */
 
 GType
-gst_base_scope_get_type (void)
+gst_base_audio_visualizer_get_type (void)
 {
-  static volatile gsize base_scope_type = 0;
+  static volatile gsize base_audio_visualizer_type = 0;
 
-  if (g_once_init_enter (&base_scope_type)) {
-    static const GTypeInfo base_scope_info = {
-      sizeof (GstBaseScopeClass),
+  if (g_once_init_enter (&base_audio_visualizer_type)) {
+    static const GTypeInfo base_audio_visualizer_info = {
+      sizeof (GstBaseAudioVisualizerClass),
       NULL,
       NULL,
-      (GClassInitFunc) gst_base_scope_class_init,
+      (GClassInitFunc) gst_base_audio_visualizer_class_init,
       NULL,
       NULL,
-      sizeof (GstBaseScope),
+      sizeof (GstBaseAudioVisualizer),
       0,
-      (GInstanceInitFunc) gst_base_scope_init,
+      (GInstanceInitFunc) gst_base_audio_visualizer_init,
     };
     GType _type;
 
     _type = g_type_register_static (GST_TYPE_ELEMENT,
-        "GstBaseScope", &base_scope_info, G_TYPE_FLAG_ABSTRACT);
-    g_once_init_leave (&base_scope_type, _type);
+        "GstBaseAudioVisualizer", &base_audio_visualizer_info,
+        G_TYPE_FLAG_ABSTRACT);
+    g_once_init_leave (&base_audio_visualizer_type, _type);
   }
-  return (GType) base_scope_type;
+  return (GType) base_audio_visualizer_type;
 }
 
 static void
-gst_base_scope_class_init (GstBaseScopeClass * klass)
+gst_base_audio_visualizer_class_init (GstBaseAudioVisualizerClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstElementClass *element_class = (GstElementClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
 
-  GST_DEBUG_CATEGORY_INIT (base_scope_debug, "basescope", 0,
-      "scope audio visualisation base class");
+  GST_DEBUG_CATEGORY_INIT (base_audio_visualizer_debug, "baseaudiovisualizer",
+      0, "scope audio visualisation base class");
 
-  gobject_class->set_property = gst_base_scope_set_property;
-  gobject_class->get_property = gst_base_scope_get_property;
-  gobject_class->dispose = gst_base_scope_dispose;
+  gobject_class->set_property = gst_base_audio_visualizer_set_property;
+  gobject_class->get_property = gst_base_audio_visualizer_get_property;
+  gobject_class->dispose = gst_base_audio_visualizer_dispose;
 
-  element_class->change_state = GST_DEBUG_FUNCPTR (gst_base_scope_change_state);
+  element_class->change_state =
+      GST_DEBUG_FUNCPTR (gst_base_audio_visualizer_change_state);
 
   g_object_class_install_property (gobject_class, PROP_SHADER,
       g_param_spec_enum ("shader", "shader type",
-          "Shader function to apply on each frame", GST_TYPE_BASE_SCOPE_SHADER,
-          DEFAULT_SHADER,
+          "Shader function to apply on each frame",
+          GST_TYPE_BASE_AUDIO_VISUALIZER_SHADER, DEFAULT_SHADER,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_SHADE_AMOUNT,
       g_param_spec_uint ("shade-amount", "shade amount",
@@ -405,7 +415,8 @@ gst_base_scope_class_init (GstBaseScopeClass * klass)
 }
 
 static void
-gst_base_scope_init (GstBaseScope * scope, GstBaseScopeClass * g_class)
+gst_base_audio_visualizer_init (GstBaseAudioVisualizer * scope,
+    GstBaseAudioVisualizerClass * g_class)
 {
   GstPadTemplate *pad_template;
 
@@ -415,9 +426,9 @@ gst_base_scope_init (GstBaseScope * scope, GstBaseScopeClass * g_class)
   g_return_if_fail (pad_template != NULL);
   scope->sinkpad = gst_pad_new_from_template (pad_template, "sink");
   gst_pad_set_chain_function (scope->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_base_scope_chain));
+      GST_DEBUG_FUNCPTR (gst_base_audio_visualizer_chain));
   gst_pad_set_setcaps_function (scope->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_base_scope_sink_setcaps));
+      GST_DEBUG_FUNCPTR (gst_base_audio_visualizer_sink_setcaps));
   gst_element_add_pad (GST_ELEMENT (scope), scope->sinkpad);
 
   pad_template =
@@ -425,7 +436,7 @@ gst_base_scope_init (GstBaseScope * scope, GstBaseScopeClass * g_class)
   g_return_if_fail (pad_template != NULL);
   scope->srcpad = gst_pad_new_from_template (pad_template, "src");
   gst_pad_set_setcaps_function (scope->srcpad,
-      GST_DEBUG_FUNCPTR (gst_base_scope_src_setcaps));
+      GST_DEBUG_FUNCPTR (gst_base_audio_visualizer_src_setcaps));
   gst_element_add_pad (GST_ELEMENT (scope), scope->srcpad);
 
   scope->adapter = gst_adapter_new ();
@@ -433,7 +444,7 @@ gst_base_scope_init (GstBaseScope * scope, GstBaseScopeClass * g_class)
 
   /* properties */
   scope->shader_type = DEFAULT_SHADER;
-  gst_base_scope_change_shader (scope);
+  gst_base_audio_visualizer_change_shader (scope);
   scope->shade_amount = DEFAULT_SHADE_AMOUNT;
 
   /* reset the initial video state */
@@ -452,15 +463,15 @@ gst_base_scope_init (GstBaseScope * scope, GstBaseScopeClass * g_class)
 }
 
 static void
-gst_base_scope_set_property (GObject * object, guint prop_id,
+gst_base_audio_visualizer_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstBaseScope *scope = GST_BASE_SCOPE (object);
+  GstBaseAudioVisualizer *scope = GST_BASE_AUDIO_VISUALIZER (object);
 
   switch (prop_id) {
     case PROP_SHADER:
       scope->shader_type = g_value_get_enum (value);
-      gst_base_scope_change_shader (scope);
+      gst_base_audio_visualizer_change_shader (scope);
       break;
     case PROP_SHADE_AMOUNT:
       scope->shade_amount = g_value_get_uint (value);
@@ -472,10 +483,10 @@ gst_base_scope_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_base_scope_get_property (GObject * object, guint prop_id,
+gst_base_audio_visualizer_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstBaseScope *scope = GST_BASE_SCOPE (object);
+  GstBaseAudioVisualizer *scope = GST_BASE_AUDIO_VISUALIZER (object);
 
   switch (prop_id) {
     case PROP_SHADER:
@@ -491,9 +502,9 @@ gst_base_scope_get_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_base_scope_dispose (GObject * object)
+gst_base_audio_visualizer_dispose (GObject * object)
 {
-  GstBaseScope *scope = GST_BASE_SCOPE (object);
+  GstBaseAudioVisualizer *scope = GST_BASE_AUDIO_VISUALIZER (object);
 
   if (scope->adapter) {
     g_object_unref (scope->adapter);
@@ -511,15 +522,15 @@ gst_base_scope_dispose (GObject * object)
 }
 
 static gboolean
-gst_base_scope_sink_setcaps (GstPad * pad, GstCaps * caps)
+gst_base_audio_visualizer_sink_setcaps (GstPad * pad, GstCaps * caps)
 {
-  GstBaseScope *scope;
+  GstBaseAudioVisualizer *scope;
   GstStructure *structure;
   gint channels;
   gint rate;
   gboolean res = TRUE;
 
-  scope = GST_BASE_SCOPE (gst_pad_get_parent (pad));
+  scope = GST_BASE_AUDIO_VISUALIZER (gst_pad_get_parent (pad));
   structure = gst_caps_get_structure (caps, 0);
 
   if (!gst_structure_get_int (structure, "channels", &channels) ||
@@ -565,7 +576,7 @@ wrong_rate:
 }
 
 static gboolean
-gst_base_scope_src_negotiate (GstBaseScope * scope)
+gst_base_audio_visualizer_src_negotiate (GstBaseAudioVisualizer * scope)
 {
   GstCaps *othercaps, *target, *intersect;
   GstStructure *structure;
@@ -611,17 +622,17 @@ no_format:
 }
 
 static gboolean
-gst_base_scope_src_setcaps (GstPad * pad, GstCaps * caps)
+gst_base_audio_visualizer_src_setcaps (GstPad * pad, GstCaps * caps)
 {
-  GstBaseScope *scope;
-  GstBaseScopeClass *klass;
+  GstBaseAudioVisualizer *scope;
+  GstBaseAudioVisualizerClass *klass;
   gint w, h;
   gint num, denom;
   GstVideoFormat format;
   gboolean res = TRUE;
 
-  scope = GST_BASE_SCOPE (gst_pad_get_parent (pad));
-  klass = GST_BASE_SCOPE_CLASS (G_OBJECT_GET_CLASS (scope));
+  scope = GST_BASE_AUDIO_VISUALIZER (gst_pad_get_parent (pad));
+  klass = GST_BASE_AUDIO_VISUALIZER_CLASS (G_OBJECT_GET_CLASS (scope));
 
   if (!gst_video_format_parse_caps (caps, &format, &w, &h)) {
     goto missing_caps_details;
@@ -670,18 +681,18 @@ missing_caps_details:
 }
 
 static GstFlowReturn
-gst_base_scope_chain (GstPad * pad, GstBuffer * buffer)
+gst_base_audio_visualizer_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstFlowReturn ret = GST_FLOW_OK;
-  GstBaseScope *scope;
-  GstBaseScopeClass *klass;
+  GstBaseAudioVisualizer *scope;
+  GstBaseAudioVisualizerClass *klass;
   GstBuffer *inbuf;
   guint avail, sbpf;
-  gboolean (*render) (GstBaseScope * scope, GstBuffer * audio,
+  gboolean (*render) (GstBaseAudioVisualizer * scope, GstBuffer * audio,
       GstBuffer * video);
 
-  scope = GST_BASE_SCOPE (gst_pad_get_parent (pad));
-  klass = GST_BASE_SCOPE_CLASS (G_OBJECT_GET_CLASS (scope));
+  scope = GST_BASE_AUDIO_VISUALIZER (gst_pad_get_parent (pad));
+  klass = GST_BASE_AUDIO_VISUALIZER_CLASS (G_OBJECT_GET_CLASS (scope));
 
   render = klass->render;
 
@@ -694,7 +705,7 @@ gst_base_scope_chain (GstPad * pad, GstBuffer * buffer)
   }
 
   if (GST_PAD_CAPS (scope->srcpad) == NULL) {
-    if (!gst_base_scope_src_negotiate (scope))
+    if (!gst_base_audio_visualizer_src_negotiate (scope))
       return GST_FLOW_NOT_NEGOTIATED;
   }
 
@@ -777,11 +788,12 @@ gst_base_scope_chain (GstPad * pad, GstBuffer * buffer)
 }
 
 static GstStateChangeReturn
-gst_base_scope_change_state (GstElement * element, GstStateChange transition)
+gst_base_audio_visualizer_change_state (GstElement * element,
+    GstStateChange transition)
 {
-  GstBaseScope *scope;
+  GstBaseAudioVisualizer *scope;
 
-  scope = GST_BASE_SCOPE (element);
+  scope = GST_BASE_AUDIO_VISUALIZER (element);
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:

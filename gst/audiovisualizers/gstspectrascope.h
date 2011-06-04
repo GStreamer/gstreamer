@@ -22,7 +22,7 @@
 #ifndef __GST_SPECTRA_SCOPE_H__
 #define __GST_SPECTRA_SCOPE_H__
 
-#include "gstbasescope.h"
+#include "gstbaseaudiovisualizer.h"
 #include <gst/fft/gstffts16.h>
 
 G_BEGIN_DECLS
@@ -36,7 +36,7 @@ typedef struct _GstSpectraScopeClass GstSpectraScopeClass;
 
 struct _GstSpectraScope
 {
-  GstBaseScope parent;
+  GstBaseAudioVisualizer parent;
 
   GstFFTS16 *fft_ctx;
   GstFFTS16Complex *freq_data;
@@ -44,7 +44,7 @@ struct _GstSpectraScope
 
 struct _GstSpectraScopeClass
 {
-  GstBaseScopeClass parent_class;
+  GstBaseAudioVisualizerClass parent_class;
 };
 
 GType gst_spectra_scope_get_type (void);

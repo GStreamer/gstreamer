@@ -57,13 +57,13 @@ GST_DEBUG_CATEGORY_STATIC (synae_scope_debug);
 
 static void gst_synae_scope_finalize (GObject * object);
 
-static gboolean gst_synae_scope_setup (GstBaseScope * scope);
-static gboolean gst_synae_scope_render (GstBaseScope * scope, GstBuffer * audio,
-    GstBuffer * video);
+static gboolean gst_synae_scope_setup (GstBaseAudioVisualizer * scope);
+static gboolean gst_synae_scope_render (GstBaseAudioVisualizer * scope,
+    GstBuffer * audio, GstBuffer * video);
 
 
-GST_BOILERPLATE (GstSynaeScope, gst_synae_scope, GstBaseScope,
-    GST_TYPE_BASE_SCOPE);
+GST_BOILERPLATE (GstSynaeScope, gst_synae_scope, GstBaseAudioVisualizer,
+    GST_TYPE_BASE_AUDIO_VISUALIZER);
 
 static void
 gst_synae_scope_base_init (gpointer g_class)
@@ -85,7 +85,8 @@ static void
 gst_synae_scope_class_init (GstSynaeScopeClass * g_class)
 {
   GObjectClass *gobject_class = (GObjectClass *) g_class;
-  GstBaseScopeClass *scope_class = (GstBaseScopeClass *) g_class;
+  GstBaseAudioVisualizerClass *scope_class =
+      (GstBaseAudioVisualizerClass *) g_class;
 
   gobject_class->finalize = gst_synae_scope_finalize;
 
@@ -147,7 +148,7 @@ gst_synae_scope_finalize (GObject * object)
 }
 
 static gboolean
-gst_synae_scope_setup (GstBaseScope * bscope)
+gst_synae_scope_setup (GstBaseAudioVisualizer * bscope)
 {
   GstSynaeScope *scope = GST_SYNAE_SCOPE (bscope);
   guint num_freq = bscope->height + 1;
@@ -198,7 +199,7 @@ add_pixel (guint32 * _p, guint32 _c)
 }
 
 static gboolean
-gst_synae_scope_render (GstBaseScope * bscope, GstBuffer * audio,
+gst_synae_scope_render (GstBaseAudioVisualizer * bscope, GstBuffer * audio,
     GstBuffer * video)
 {
   GstSynaeScope *scope = GST_SYNAE_SCOPE (bscope);
