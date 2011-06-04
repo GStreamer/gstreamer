@@ -322,6 +322,7 @@ AG_GST_CHECK_PLUGIN(h264parse)
 AG_GST_CHECK_PLUGIN(hdvparse)
 AG_GST_CHECK_PLUGIN(hls)
 AG_GST_CHECK_PLUGIN(id3tag)
+AG_GST_CHECK_PLUGIN(inter)
 AG_GST_CHECK_PLUGIN(interlace)
 AG_GST_CHECK_PLUGIN(ivfparse)
 AG_GST_CHECK_PLUGIN(jp2kdecimator)
@@ -1873,6 +1874,7 @@ gst/h264parse/Makefile
 gst/hdvparse/Makefile
 gst/hls/Makefile
 gst/id3tag/Makefile
+gst/inter/Makefile
 gst/interlace/Makefile
 gst/ivfparse/Makefile
 gst/jp2kdecimator/Makefile
