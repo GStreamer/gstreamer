@@ -54,9 +54,6 @@ Save XML representation of pipeline to FILE and exit (DEPRECATED, DO NOT USE)
 .B  \-f, \-\-no\-fault
 Do not install a fault handler
 .TP 8
-.B  \-\-no\-sigusr-handler
-Do not install signal handlers for SIGUSR1 (play) and SIGUSR2 (stop)
-.TP 8
 .B  \-T, \-\-trace
 Print memory allocation traces. The feature must be enabled at compile time to
 work.
@@ -208,15 +205,6 @@ either be integers or strings. Boolean values are (case insensitive) \fIyes\fR,
 Ranges are in this format:  [ VALUE, VALUE ]
 .br
 Lists use this format:      ( VALUE \fI[, VALUE ...]\fR )
-
-.SH "PIPELINE CONTROL"
-
-A pipeline can be controlled by signals. SIGUSR2 will stop the pipeline
-(GST_STATE_NULL); SIGUSR1 will put it back to play (GST_STATE_PLAYING).
-By default, the pipeline will start in the playing state.
-.br
-There are currently no signals defined to go into the ready or pause
-(GST_STATE_READY and GST_STATE_PAUSED) state explicitely.
 
 .SH "PIPELINE EXAMPLES"
 

@@ -498,33 +498,6 @@ sigint_restore (void)
 
   sigaction (SIGINT, &action, NULL);
 }
-
-/* FIXME 0.11: remove SIGUSR handling (also from man page) */
-static void
-play_handler (int signum)
-{
-  switch (signum) {
-    case SIGUSR1:
-      PRINT ("Caught SIGUSR1 - Play request.\n");
-      gst_element_set_state (pipeline, GST_STATE_PLAYING);
-      break;
-    case SIGUSR2:
-      PRINT ("Caught SIGUSR2 - Stop request.\n");
-      gst_element_set_state (pipeline, GST_STATE_NULL);
-      break;
-  }
-}
-
-static void
-play_signal_setup (void)
-{
-  struct sigaction action;
-
-  memset (&action, 0, sizeof (action));
-  action.sa_handler = play_handler;
-  sigaction (SIGUSR1, &action, NULL);
-  sigaction (SIGUSR2, &action, NULL);
-}
 #endif /* DISABLE_FAULT_HANDLER */
 
 /* returns ELR_ERROR if there was an error
@@ -847,7 +820,6 @@ main (int argc, char *argv[])
   /* options */
   gboolean verbose = FALSE;
   gboolean no_fault = FALSE;
-  gboolean no_sigusr_handler = FALSE;
   gboolean trace = FALSE;
   gboolean eos_on_shutdown = FALSE;
   gboolean check_index = FALSE;
@@ -867,8 +839,6 @@ main (int argc, char *argv[])
         N_("Do not output status information of TYPE"), N_("TYPE1,TYPE2,...")},
     {"no-fault", 'f', 0, G_OPTION_ARG_NONE, &no_fault,
         N_("Do not install a fault handler"), NULL},
-    {"no-sigusr-handler", '\0', 0, G_OPTION_ARG_NONE, &no_sigusr_handler,
-        N_("Do not install signal handlers for SIGUSR1 and SIGUSR2"), NULL},
     {"trace", 'T', 0, G_OPTION_ARG_NONE, &trace,
         N_("Print alloc trace (if enabled at compile time)"), NULL},
     {"eos-on-shutdown", 'e', 0, G_OPTION_ARG_NONE, &eos_on_shutdown,
@@ -922,9 +892,6 @@ main (int argc, char *argv[])
     fault_setup ();
 
   sigint_setup ();
-
-  if (!no_sigusr_handler)
-    play_signal_setup ();
 #endif
 
   if (trace) {
