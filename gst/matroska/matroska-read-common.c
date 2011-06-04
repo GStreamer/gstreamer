@@ -953,6 +953,129 @@ gst_matroska_read_common_parse_index (GstMatroskaReadCommon * common,
   return ret;
 }
 
+GstFlowReturn
+gst_matroska_read_common_parse_metadata_id_simple_tag (GstMatroskaReadCommon *
+    common, GstEbmlRead * ebml, GstTagList ** p_taglist)
+{
+  /* FIXME: check if there are more useful mappings */
+  static const struct
+  {
+    const gchar *matroska_tagname;
+    const gchar *gstreamer_tagname;
+  }
+  tag_conv[] = {
+    {
+    GST_MATROSKA_TAG_ID_TITLE, GST_TAG_TITLE}, {
+    GST_MATROSKA_TAG_ID_ARTIST, GST_TAG_ARTIST}, {
+    GST_MATROSKA_TAG_ID_AUTHOR, GST_TAG_ARTIST}, {
+    GST_MATROSKA_TAG_ID_ALBUM, GST_TAG_ALBUM}, {
+    GST_MATROSKA_TAG_ID_COMMENTS, GST_TAG_COMMENT}, {
+    GST_MATROSKA_TAG_ID_BITSPS, GST_TAG_BITRATE}, {
+    GST_MATROSKA_TAG_ID_BPS, GST_TAG_BITRATE}, {
+    GST_MATROSKA_TAG_ID_ENCODER, GST_TAG_ENCODER}, {
+    GST_MATROSKA_TAG_ID_DATE, GST_TAG_DATE}, {
+    GST_MATROSKA_TAG_ID_ISRC, GST_TAG_ISRC}, {
+    GST_MATROSKA_TAG_ID_COPYRIGHT, GST_TAG_COPYRIGHT}, {
+    GST_MATROSKA_TAG_ID_BPM, GST_TAG_BEATS_PER_MINUTE}, {
+    GST_MATROSKA_TAG_ID_TERMS_OF_USE, GST_TAG_LICENSE}, {
+    GST_MATROSKA_TAG_ID_COMPOSER, GST_TAG_COMPOSER}, {
+    GST_MATROSKA_TAG_ID_LEAD_PERFORMER, GST_TAG_PERFORMER}, {
+    GST_MATROSKA_TAG_ID_GENRE, GST_TAG_GENRE}
+  };
+  GstFlowReturn ret;
+  guint32 id;
+  gchar *value = NULL;
+  gchar *tag = NULL;
+
+  DEBUG_ELEMENT_START (common, ebml, "SimpleTag");
+
+  if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK) {
+    DEBUG_ELEMENT_STOP (common, ebml, "SimpleTag", ret);
+    return ret;
+  }
+
+  while (ret == GST_FLOW_OK && gst_ebml_read_has_remaining (ebml, 1, TRUE)) {
+    /* read all sub-entries */
+
+    if ((ret = gst_ebml_peek_id (ebml, &id)) != GST_FLOW_OK)
+      break;
+
+    switch (id) {
+      case GST_MATROSKA_ID_TAGNAME:
+        g_free (tag);
+        tag = NULL;
+        ret = gst_ebml_read_ascii (ebml, &id, &tag);
+        GST_DEBUG_OBJECT (common, "TagName: %s", GST_STR_NULL (tag));
+        break;
+
+      case GST_MATROSKA_ID_TAGSTRING:
+        g_free (value);
+        value = NULL;
+        ret = gst_ebml_read_utf8 (ebml, &id, &value);
+        GST_DEBUG_OBJECT (common, "TagString: %s", GST_STR_NULL (value));
+        break;
+
+      default:
+        ret = gst_matroska_read_common_parse_skip (common, ebml, "SimpleTag",
+            id);
+        break;
+        /* fall-through */
+
+      case GST_MATROSKA_ID_TAGLANGUAGE:
+      case GST_MATROSKA_ID_TAGDEFAULT:
+      case GST_MATROSKA_ID_TAGBINARY:
+        ret = gst_ebml_read_skip (ebml);
+        break;
+    }
+  }
+
+  DEBUG_ELEMENT_STOP (common, ebml, "SimpleTag", ret);
+
+  if (tag && value) {
+    guint i;
+
+    for (i = 0; i < G_N_ELEMENTS (tag_conv); i++) {
+      const gchar *tagname_gst = tag_conv[i].gstreamer_tagname;
+
+      const gchar *tagname_mkv = tag_conv[i].matroska_tagname;
+
+      if (strcmp (tagname_mkv, tag) == 0) {
+        GValue dest = { 0, };
+        GType dest_type = gst_tag_get_type (tagname_gst);
+
+        /* Ensure that any date string is complete */
+        if (dest_type == GST_TYPE_DATE) {
+          guint year = 1901, month = 1, day = 1;
+
+          /* Dates can be yyyy-MM-dd, yyyy-MM or yyyy, but we need
+           * the first type */
+          if (sscanf (value, "%04u-%02u-%02u", &year, &month, &day) != 0) {
+            g_free (value);
+            value = g_strdup_printf ("%04u-%02u-%02u", year, month, day);
+          }
+        }
+
+        g_value_init (&dest, dest_type);
+        if (gst_value_deserialize (&dest, value)) {
+          gst_tag_list_add_values (*p_taglist, GST_TAG_MERGE_APPEND,
+              tagname_gst, &dest, NULL);
+        } else {
+          GST_WARNING_OBJECT (common, "Can't transform tag '%s' with "
+              "value '%s' to target type '%s'", tag, value,
+              g_type_name (dest_type));
+        }
+        g_value_unset (&dest);
+        break;
+      }
+    }
+  }
+
+  g_free (tag);
+  g_free (value);
+
+  return ret;
+}
+
 static const guint8 *
 gst_matroska_read_common_peek_adapter (GstMatroskaReadCommon * common, guint
     peek)
