@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <gst/gst.h>
+#include <gst/glib-compat-private.h>
 
 #define MAX_THREADS  100
 
@@ -34,7 +35,7 @@ run_test (void *user_data)
 
   while (running) {
     gst_clock_get_time (sysclock);
-    prev = g_atomic_int_exchange_and_add (&count, 1);
+    prev = G_ATOMIC_INT_ADD (&count, 1);
     if (prev == G_MAXINT)
       g_warning ("overflow");
   }

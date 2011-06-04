@@ -44,6 +44,7 @@
 #include "gstenumtypes.h"
 #include "gstpoll.h"
 #include "gstutils.h"
+#include "glib-compat-private.h"
 
 #include <errno.h>
 
@@ -56,8 +57,8 @@
 
 #define GET_ENTRY_STATUS(e)          (g_atomic_int_get(&GST_CLOCK_ENTRY_STATUS(e)))
 #define SET_ENTRY_STATUS(e,val)      (g_atomic_int_set(&GST_CLOCK_ENTRY_STATUS(e),(val)))
-#define CAS_ENTRY_STATUS(e,old,val)  (g_atomic_int_compare_and_exchange(\
-                                       ((volatile gint *)&GST_CLOCK_ENTRY_STATUS(e)), (old), (val)))
+#define CAS_ENTRY_STATUS(e,old,val)  (G_ATOMIC_INT_COMPARE_AND_EXCHANGE(\
+                                       (&GST_CLOCK_ENTRY_STATUS(e)), (old), (val)))
 
 /* Define this to get some extra debug about jitter from each clock_wait */
 #undef WAIT_DEBUGGING
