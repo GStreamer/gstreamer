@@ -1759,6 +1759,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstDvbSrc::timeout</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Timeout</NICK>
+<BLURB>Post a message after timeout microseconds (0 = disabled).</BLURB>
+<DEFAULT>1000000</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstRfbSrc::host</NAME>
 <TYPE>gchar*</TYPE>
 <RANGE></RANGE>
@@ -21094,6 +21104,36 @@
 </ARG>
 
 <ARG>
+<NAME>ladspa-RotarySpeaker::AM-Depth</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>AM-Depth</NICK>
+<BLURB>AM-Depth.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspa-RotarySpeaker::FM-Depth</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>FM-Depth</NICK>
+<BLURB>FM-Depth.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspa-RotarySpeaker::Test</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Test</NICK>
+<BLURB>Test.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>ladspa-Phaser::Amount</NAME>
 <TYPE>gfloat</TYPE>
 <RANGE>[0,4]</RANGE>
@@ -22394,6 +22434,26 @@
 </ARG>
 
 <ARG>
+<NAME>GstApExSink::generation</NAME>
+<TYPE>GstApExGeneration</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Generation</NICK>
+<BLURB>AirPort device generation.</BLURB>
+<DEFAULT>generation-one</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstApExSink::transport-protocol</NAME>
+<TYPE>GstApExTransportProtocol</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Transport Protocol</NICK>
+<BLURB>AirPort transport protocol.</BLURB>
+<DEFAULT>tcp</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstMJ2Mux::faststart</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
@@ -23221,6 +23281,16 @@
 <NICK>Indicates if preparing a new capture is possible</NICK>
 <BLURB>Indicates if preparing a new capture is possible.</BLURB>
 <DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin::image-formatter</NAME>
+<TYPE>GstElement*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Image formatter</NICK>
+<BLURB>Image formatter GStreamer element (default is jifmux).</BLURB>
+<DEFAULT></DEFAULT>
 </ARG>
 
 <ARG>
@@ -47544,6 +47614,26 @@
 </ARG>
 
 <ARG>
+<NAME>GstWrapperCameraBinSrc::video-source</NAME>
+<TYPE>GstElement*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Video source</NICK>
+<BLURB>The video source element to be used.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWrapperCameraBinSrc::video-source-filter</NAME>
+<TYPE>GstElement*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Video source filter</NICK>
+<BLURB>Optional video source filter element.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstViewfinderBin::video-sink</NAME>
 <TYPE>GstElement*</TYPE>
 <RANGE></RANGE>
@@ -47850,6 +47940,26 @@
 <FLAGS>rw</FLAGS>
 <NICK>Image Profile</NICK>
 <BLURB>The GstEncodingProfile to use for image captures.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin2::audio-source</NAME>
+<TYPE>GstElement*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Audio source</NICK>
+<BLURB>The audio source element to be used on video recordings. It is only taken into use on the next null to ready transition.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin2::camera-source</NAME>
+<TYPE>GstElement*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Camera source</NICK>
+<BLURB>The camera source element to be used. It is only taken into use on the next null to ready transition.</BLURB>
 <DEFAULT></DEFAULT>
 </ARG>
 
@@ -49088,9 +49198,9 @@
 <TYPE>gfloat</TYPE>
 <RANGE>[0,1]</RANGE>
 <FLAGS>rwx</FLAGS>
-<NICK>Mod Depth</NICK>
-<BLURB>Mod Depth.</BLURB>
-<DEFAULT>0.1</DEFAULT>
+<NICK>FM Depth</NICK>
+<BLURB>FM Depth.</BLURB>
+<DEFAULT>0.45</DEFAULT>
 </ARG>
 
 <ARG>
@@ -49141,6 +49251,26 @@
 <NICK>Speed Mode</NICK>
 <BLURB>Speed Mode.</BLURB>
 <DEFAULT>5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>calf-sourceforge-net-plugins-RotarySpeaker::am-depth</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>AM Depth</NICK>
+<BLURB>AM Depth.</BLURB>
+<DEFAULT>0.45</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>calf-sourceforge-net-plugins-RotarySpeaker::test</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Test</NICK>
+<BLURB>Test.</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -50060,7 +50190,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Foldover</NICK>
 <BLURB>Foldover.</BLURB>
-<DEFAULT>96</DEFAULT>
+<DEFAULT>108</DEFAULT>
 </ARG>
 
 <ARG>
@@ -50620,7 +50750,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Vib Mod Amt</NICK>
 <BLURB>Vib Mod Amt.</BLURB>
-<DEFAULT>0.5</DEFAULT>
+<DEFAULT>1</DEFAULT>
 </ARG>
 
 <ARG>
@@ -50646,7 +50776,7 @@
 <ARG>
 <NAME>calf-sourceforge-net-plugins-Organ::vib-rate</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0.01,80]</RANGE>
+<RANGE>[0.01,240]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Vib Rate</NICK>
 <BLURB>Vib Rate.</BLURB>
@@ -50751,6 +50881,16 @@
 <NICK>Wave 9</NICK>
 <BLURB>Wave 9.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>calf-sourceforge-net-plugins-Organ::vib-type</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,4]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Vib Type</NICK>
+<BLURB>Vib Type.</BLURB>
+<DEFAULT>3</DEFAULT>
 </ARG>
 
 <ARG>
@@ -57261,5 +57401,95 @@
 <NICK>param-0dB-1</NICK>
 <BLURB>param-0dB-1.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMpegvParse::drop</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>drop</NICK>
+<BLURB>Drop data untill valid configuration data is received either in the stream or through caps.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMpegvParse::gop-split</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>gop-split</NICK>
+<BLURB>Split frame when encountering GOP.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFaceOverlay::h</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>face height percent</NICK>
+<BLURB>Specify image height relative to face height.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFaceOverlay::location</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Location</NICK>
+<BLURB>Location of SVG file to use for face overlay.</BLURB>
+<DEFAULT>""</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFaceOverlay::w</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>face width percent</NICK>
+<BLURB>Specify image width relative to face width.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFaceOverlay::x</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>face x offset</NICK>
+<BLURB>Specify image x relative to detected face x.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFaceOverlay::y</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>face y offset</NICK>
+<BLURB>Specify image y relative to detected face y.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDebugSpy::checksum-type</NAME>
+<TYPE>GChecksumType</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Checksum TYpe</NICK>
+<BLURB>Checksum algorithm to use.</BLURB>
+<DEFAULT>Use the SHA-1 hashing algorithm</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDebugSpy::silent</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Silent</NICK>
+<BLURB>Produce verbose output ?.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 

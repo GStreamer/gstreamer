@@ -1333,6 +1333,34 @@ gst_solarize_plugin_init
 </SECTION>
 
 <SECTION>
+<FILE>element-spacescope</FILE>
+<TITLE>spacescope</TITLE>
+GstSpaceScope
+<SUBSECTION Standard>
+GstSpaceScopeClass
+GST_SPACE_SCOPE
+GST_SPACE_SCOPE_CLASS
+GST_IS_SPACE_SCOPE
+GST_IS_SPACE_SCOPE_CLASS
+GST_TYPE_SPACE_SCOPE
+gst_space_scope_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-spectrascope</FILE>
+<TITLE>spectrascope</TITLE>
+GstSpectraScope
+<SUBSECTION Standard>
+GstSpectraScopeClass
+GST_SPECTRA_SCOPE
+GST_SPECTRA_SCOPE_CLASS
+GST_IS_SPECTRA_SCOPE
+GST_IS_SPECTRA_SCOPE_CLASS
+GST_TYPE_SPECTRA_SCOPE
+gst_spectra_scope_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-speed</FILE>
 <TITLE>speed</TITLE>
 GstSpeed
@@ -1407,6 +1435,20 @@ GST_IS_STRETCH_CLASS
 GST_TYPE_STRETCH
 gst_stretch_get_type
 gst_stretch_plugin_init
+</SECTION>
+
+<SECTION>
+<FILE>element-synaescope</FILE>
+<TITLE>synaescope</TITLE>
+GstSynaeScope
+<SUBSECTION Standard>
+GstSynaeScopeClass
+GST_SYNAE_SCOPE
+GST_SYNAE_SCOPE_CLASS
+GST_IS_SYNAE_SCOPE
+GST_IS_SYNAE_SCOPE_CLASS
+GST_TYPE_SYNAE_SCOPE
+gst_synae_scope_get_type
 </SECTION>
 
 <FILE>element-templatematch</FILE>
@@ -1568,6 +1610,20 @@ GST_IS_WATER_RIPPLE_CLASS
 GST_TYPE_WATER_RIPPLE
 gst_water_ripple_get_type
 gst_water_ripple_plugin_init
+</SECTION>
+
+<SECTION>
+<FILE>element-wavescope</FILE>
+<TITLE>wavescope</TITLE>
+GstWaveScope
+<SUBSECTION Standard>
+GstWaveScopeClass
+GST_WAVE_SCOPE
+GST_WAVE_SCOPE_CLASS
+GST_IS_WAVE_SCOPE
+GST_IS_WAVE_SCOPE_CLASS
+GST_TYPE_WAVE_SCOPE
+gst_wave_scope_get_type
 </SECTION>
 
 <SECTION>

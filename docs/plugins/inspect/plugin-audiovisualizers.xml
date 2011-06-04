@@ -1,0 +1,97 @@
+<plugin>
+  <name>audiovisualizers</name>
+  <description>Creates video visualizations of audio input</description>
+  <filename>../../gst/audiovisualizers/.libs/libgstaudiovisualizers.so</filename>
+  <basename>libgstaudiovisualizers.so</basename>
+  <version>0.10.22.1</version>
+  <license>GPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins git</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>spacescope</name>
+      <longname>Stereo visualizer</longname>
+      <class>Visualization</class>
+      <description>Simple stereo visualizer</description>
+      <author>Stefan Kost &lt;ensonic@users.sf.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-int, rate=(int)[ 1, 2147483647 ], channels=(int)2, endianness=(int)1234, width=(int)16, depth=(int)16, signed=(boolean)true</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw-rgb, bpp=(int)32, depth=(int)24, endianness=(int)4321, red_mask=(int)65280, green_mask=(int)16711680, blue_mask=(int)-16777216, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>spectrascope</name>
+      <longname>Frequency spectrum scope</longname>
+      <class>Visualization</class>
+      <description>Simple frequency spectrum scope</description>
+      <author>Stefan Kost &lt;ensonic@users.sf.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-int, rate=(int)[ 1, 2147483647 ], channels=(int)2, endianness=(int)1234, width=(int)16, depth=(int)16, signed=(boolean)true</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw-rgb, bpp=(int)32, depth=(int)24, endianness=(int)4321, red_mask=(int)65280, green_mask=(int)16711680, blue_mask=(int)-16777216, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>synaescope</name>
+      <longname>Synaescope</longname>
+      <class>Visualization</class>
+      <description>Creates video visualizations of audio input, using stereo and pitch information</description>
+      <author>Stefan Kost &lt;ensonic@users.sf.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-int, rate=(int)[ 1, 2147483647 ], channels=(int)2, endianness=(int)1234, width=(int)16, depth=(int)16, signed=(boolean)true</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw-rgb, bpp=(int)32, depth=(int)24, endianness=(int)4321, red_mask=(int)65280, green_mask=(int)16711680, blue_mask=(int)-16777216, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>wavescope</name>
+      <longname>Waveform oscilloscope</longname>
+      <class>Visualization</class>
+      <description>Simple waveform oscilloscope</description>
+      <author>Stefan Kost &lt;ensonic@users.sf.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-int, rate=(int)[ 1, 2147483647 ], channels=(int)2, endianness=(int)1234, width=(int)16, depth=(int)16, signed=(boolean)true</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw-rgb, bpp=(int)32, depth=(int)24, endianness=(int)4321, red_mask=(int)65280, green_mask=(int)16711680, blue_mask=(int)-16777216, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

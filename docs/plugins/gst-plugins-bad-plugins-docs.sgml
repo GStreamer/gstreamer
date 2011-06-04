@@ -100,6 +100,9 @@
     <xi:include href="xml/element-shmsrc.xml" />
     <xi:include href="xml/element-sdpdemux.xml" />
     <xi:include href="xml/element-solarize.xml" />
+    <xi:include href="xml/element-spacescope.xml" />
+    <xi:include href="xml/element-spectrascope.xml" />
+    <xi:include href="xml/element-synaescope.xml" />
     <xi:include href="xml/element-speed.xml" />
     <xi:include href="xml/element-sphere.xml" />
     <xi:include href="xml/element-square.xml" />
@@ -124,11 +127,13 @@
     <xi:include href="xml/element-voamrwbenc.xml" />
     <xi:include href="xml/element-vp8dec.xml" />
     <xi:include href="xml/element-vp8enc.xml" />
+    <xi:include href="xml/element-wavescope.xml" />
   </chapter>
 
   <chapter>
     <title>gst-plugins-bad Plugins</title>
     <xi:include href="xml/plugin-aiff.xml" />
+    <xi:include href="xml/plugin-audiovisualizers.xml" />
     <xi:include href="xml/plugin-autoconvert.xml" />
     <xi:include href="xml/plugin-legacyresample.xml" />
     <xi:include href="xml/plugin-assrender.xml" />

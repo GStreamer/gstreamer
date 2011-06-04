@@ -13,10 +13,17 @@ GObject
       GstAsfMux
       GstAsfParse
       GstAssRender
+      GstBaseAudioVisualizer
+        GstSpaceScope
+        GstSpectraScope
+        GstSynaeScope
+        GstWaveScope
       GstBaseParse
         GstDiracParse
         GstH263Parse
         GstH264Parse
+        GstMpeg4VParse
+        GstMpegvParse
       GstBaseRTPDepayload
         GstRtpDTMFDepay
         GstRtpVP8Depay
@@ -66,6 +73,7 @@ GObject
         GstCogcolorspace
         GstCogdownsample
         GstColorconvert
+        GstDebugSpy
         GstDtmfDetect
         GstHDVParse
         GstLegacyresample
@@ -137,6 +145,7 @@ GObject
         GstBaseCameraSrc
           GstWrapperCameraBinSrc
         GstFPSDisplaySink
+        GstFaceOverlay
         GstGSettingsSwitchSink
           GstGSettingsAudioSink
           GstGSettingsVideoSink
@@ -188,7 +197,6 @@ GObject
       GstMXFDemux
       GstMXFMux
       GstModPlug
-      GstMpeg4VParse
       GstMpegPSDemux
       GstMpegTSDemux
       GstMplex

@@ -16,6 +16,7 @@ GstDfbVideoSink GstImplementsInterface GstNavigation GstColorBalance
 GstDiracEnc GstPreset
 GstFPSDisplaySink GstChildProxy
 GstFaac GstPreset
+GstFaceOverlay GstChildProxy
 GstGSettingsAudioSink GstChildProxy
 GstGSettingsAudioSrc GstChildProxy
 GstGSettingsSwitchSink GstChildProxy
