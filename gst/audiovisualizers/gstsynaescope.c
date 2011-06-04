@@ -211,7 +211,6 @@ gst_synae_scope_render (GstBaseAudioVisualizer * bscope, GstBuffer * audio,
   GstFFTS16Complex *fdata_r = scope->freq_data_r;
   gint x, y;
   guint off;
-  gfloat frl, fil, frr, fir;
   guint w = bscope->width;
   guint h = bscope->height;
   guint32 *colors = scope->colors, c;
@@ -219,10 +218,11 @@ gst_synae_scope_render (GstBaseAudioVisualizer * bscope, GstBuffer * audio,
   //guint w2 = w /2;
   guint ch = bscope->channels;
   guint num_samples = GST_BUFFER_SIZE (audio) / (ch * sizeof (gint16));
-  gint i, j;
+  gint i, j, b;
   gint br, br1, br2;
   gint clarity;
-  gfloat fc, r, l;
+  gdouble fc, r, l, rr, ll;
+  gdouble frl, fil, frr, fir;
   const guint sl = 30;
 
   /* deinterleave */
@@ -232,39 +232,44 @@ gst_synae_scope_render (GstBaseAudioVisualizer * bscope, GstBuffer * audio,
   }
 
   /* run fft */
-  /* synaesthesia was using a signle fft with left -> real, right -> imag */
-  //gst_fft_s16_window (scope->fft_ctx, adata_l, GST_FFT_WINDOW_HAMMING);
+  /*gst_fft_s16_window (scope->fft_ctx, adata_l, GST_FFT_WINDOW_HAMMING); */
   gst_fft_s16_fft (scope->fft_ctx, adata_l, fdata_l);
-  //gst_fft_s16_window (scope->fft_ctx, adata_r, GST_FFT_WINDOW_HAMMING);
+  /*gst_fft_s16_window (scope->fft_ctx, adata_r, GST_FFT_WINDOW_HAMMING); */
   gst_fft_s16_fft (scope->fft_ctx, adata_r, fdata_r);
 
   /* draw stars */
   for (y = 0; y < h; y++) {
-    frl = (gfloat) fdata_l[h - y].r / 512.0;
-    fil = (gfloat) fdata_l[h - y].i / 512.0;
-    l = sqrt (frl * frl + fil * fil);
-    frr = (gfloat) fdata_r[h - y].r / 512.0;
-    fir = (gfloat) fdata_r[h - y].i / 512.0;
-    r = sqrt (frr * frr + fir * fir);
+    b = h - y;
+    frl = (gdouble) fdata_l[b].r;
+    fil = (gdouble) fdata_l[b].i;
+    frr = (gdouble) fdata_r[b].r;
+    fir = (gdouble) fdata_r[b].i;
+
+    ll = (frl + fil) * (frl + fil) + (frr - fir) * (frr - fir);
+    l = sqrt (ll);
+    rr = (frl - fil) * (frl - fil) + (frr + fir) * (frr + fir);
+    r = sqrt (rr);
+    /* out-of-phase'ness for this frequency component */
+    clarity = (gint) (
+        ((frl + fil) * (frl - fil) + (frr + fir) * (frr - fir)) /
+        (ll + rr) * 256);
     fc = r + l;
 
-    /* out-of-phase'ness for this frequency component */
-    clarity = (gint) (((frl + frr) * (frl - frr) + (fil + fir) * (fil - fir)) /
-        (((frl + frr) * (frl + frr) + (fil - fir) * (fil - fir) + (frl -
-                    frr) * (frl - frr) + (fil + fir) * (fil + fir)) * 256.0));
-
     x = (guint) (r * w / fc);
-    br = y * fc * 100;
-    if (br > 0xFF)
-      br = 0xFF;
+    /* the brighness scaling factor was picked by experimenting */
+    br = b * fc * 0.01;
 
     br1 = br * (clarity + 128) >> 8;
     br2 = br * (128 - clarity) >> 8;
     br1 = CLAMP (br1, 0, 255);
     br2 = CLAMP (br2, 0, 255);
 
+    GST_DEBUG ("y %3d fc %10.6f clarity %d br %d br1 %d br2 %d", y, fc, clarity,
+        br, br1, br2);
+
+    /* draw a star */
     off = (y * w) + x;
-    c = colors[(br1 >> 4) + (br2 & 0xf0)];
+    c = colors[(br1 >> 4) | (br2 & 0xf0)];
     add_pixel (&vdata[off], c);
     if ((x > (sl - 1)) && (x < (w - sl)) && (y > (sl - 1)) && (y < (h - sl))) {
       for (i = 1; br1 || br2; i++, br1 = shade[br1], br2 = shade[br2]) {
@@ -276,7 +281,7 @@ gst_synae_scope_render (GstBaseAudioVisualizer * bscope, GstBuffer * audio,
       }
     } else {
       for (i = 1; br1 || br2; i++, br1 = shade[br1], br2 = shade[br2]) {
-        c = colors[(br1 >> 4) + (br2 & 0xf0)];
+        c = colors[(br1 >> 4) | (br2 & 0xf0)];
         if (x - i > 0)
           add_pixel (&vdata[off - i], c);
         if (x + i < (w - 1))
