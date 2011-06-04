@@ -464,7 +464,6 @@ GST_START_TEST (test_push_buffer_list_compat)
   GstCaps *caps;
   GstBufferList *list;
   GstBuffer *buffer;
-  guint len;
 
   /* setup */
   sink = gst_pad_new ("sink", GST_PAD_SINK);
@@ -492,8 +491,6 @@ GST_START_TEST (test_push_buffer_list_compat)
 
   /* test */
   /* adding to a buffer list will drop the ref to the buffer */
-  len = gst_buffer_list_len (list);
-
   gst_buffer_list_add (list, buffer_from_string ("ListGroup"));
   gst_buffer_list_add (list, buffer_from_string ("AnotherListGroup"));
 
@@ -579,7 +576,6 @@ GST_START_TEST (test_push_negotiation)
   GstPadTemplate *src_template;
   GstPadTemplate *sink_template;
   GstCaps *caps;
-  GstBuffer *buffer;
 
   /* setup */
   src_template = gst_pad_template_new ("src", GST_PAD_SRC,
@@ -598,8 +594,6 @@ GST_START_TEST (test_push_negotiation)
 
   plr = gst_pad_link (src, sink);
   fail_unless (GST_PAD_LINK_SUCCESSFUL (plr));
-
-  buffer = gst_buffer_new ();
 
   /* activate pads */
   gst_pad_set_active (src, TRUE);
@@ -850,13 +844,12 @@ GST_START_TEST (test_block_async_full_destroy_dispose)
   GstPad *pad;
   /* 0 = unblocked, 1 = blocked, 2 = destroyed */
   gint state = 0;
-  gulong id;
 
   pad = gst_pad_new ("src", GST_PAD_SRC);
   fail_unless (pad != NULL);
   gst_pad_set_active (pad, TRUE);
 
-  id = gst_pad_add_probe (pad, GST_PROBE_TYPE_BLOCK, block_async_full_cb,
+  (void) gst_pad_add_probe (pad, GST_PROBE_TYPE_BLOCK, block_async_full_cb,
       &state, block_async_full_destroy);
 
   gst_pad_push (pad, gst_buffer_new ());

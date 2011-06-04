@@ -689,10 +689,8 @@ print_element_flag_info (GstElement * element)
 static void
 print_implementation_info (GstElement * element)
 {
-  GstObjectClass *gstobject_class;
   GstElementClass *gstelement_class;
 
-  gstobject_class = GST_OBJECT_CLASS (G_OBJECT_GET_CLASS (element));
   gstelement_class = GST_ELEMENT_CLASS (G_OBJECT_GET_CLASS (element));
 
   n_print ("\n");
