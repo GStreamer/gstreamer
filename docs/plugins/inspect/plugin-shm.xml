@@ -29,7 +29,7 @@
       <longname>Shared Memory Source</longname>
       <class>Source</class>
       <description>Receive data from the sharem memory sink</description>
-      <author>Olivier Crete &lt;olivier.crete@collabora.co.uk</author>
+      <author>Olivier Crete &lt;olivier.crete@collabora.co.uk&gt;</author>
       <pads>
         <caps>
           <name>src</name>

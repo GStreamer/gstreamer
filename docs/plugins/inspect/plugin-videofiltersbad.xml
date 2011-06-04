@@ -1,0 +1,55 @@
+<plugin>
+  <name>videofiltersbad</name>
+  <description>Video filters in gst-plugins-bad</description>
+  <filename>../../gst/videofilters/.libs/libgstvideofiltersbad.so</filename>
+  <basename>libgstvideofiltersbad.so</basename>
+  <version>0.10.22.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>scenechange</name>
+      <longname>Scene change detector</longname>
+      <class>Video/Filter</class>
+      <description>Detects scene changes in video</description>
+      <author>David Schleef &lt;ds@entropywave.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw-yuv, format=(fourcc)I420, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ], pixel-aspect-ratio=(fraction)[ 0/1, 2147483647/1 ], interlaced=(boolean){ true, false }</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw-yuv, format=(fourcc)I420, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ], pixel-aspect-ratio=(fraction)[ 0/1, 2147483647/1 ], interlaced=(boolean){ true, false }</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>zebrastripe</name>
+      <longname>Zebra stripe overlay</longname>
+      <class>Filter/Analysis</class>
+      <description>Overlays zebra striping on overexposed areas of video</description>
+      <author>David Schleef &lt;ds@entropywave.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw-yuv, format=(fourcc)I420, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ], pixel-aspect-ratio=(fraction)[ 0/1, 2147483647/1 ], interlaced=(boolean){ true, false }</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw-yuv, format=(fourcc)I420, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ], pixel-aspect-ratio=(fraction)[ 0/1, 2147483647/1 ], interlaced=(boolean){ true, false }</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

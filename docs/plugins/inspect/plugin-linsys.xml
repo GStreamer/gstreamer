@@ -1,0 +1,43 @@
+<plugin>
+  <name>linsys</name>
+  <description>FIXME</description>
+  <filename>../../sys/linsys/.libs/libgstlinsys.so</filename>
+  <basename>libgstlinsys.so</basename>
+  <version>0.10.22.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins</package>
+  <origin>http://FIXME.org/</origin>
+  <elements>
+    <element>
+      <name>linsyssdisink</name>
+      <longname>SDI video sink</longname>
+      <class>Sink/Video</class>
+      <description>Writes video from SDI transmit device</description>
+      <author>David Schleef &lt;ds@entropywave.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw-yuv, format=(fourcc)UYVY, width=(int)720, height=(int)480, pixel-aspect-ratio=(fraction)10/11, framerate=(fraction)30000/1001, interlaced=(boolean)true, colorspec=(string)sdtv, chroma-site=(string)mpeg2</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>linsyssdisrc</name>
+      <longname>SDI video source</longname>
+      <class>Source/Video</class>
+      <description>Reads video from SDI capture device</description>
+      <author>David Schleef &lt;ds@entropywave.com&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw-yuv, format=(fourcc)UYVY, width=(int)720, height=(int)480, pixel-aspect-ratio=(fraction)10/11, framerate=(fraction)30000/1001, interlaced=(boolean)true, colorspec=(string)sdtv, chroma-site=(string)mpeg2</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

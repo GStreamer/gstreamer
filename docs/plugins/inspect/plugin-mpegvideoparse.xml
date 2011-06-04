@@ -10,7 +10,7 @@
   <origin>Unknown package origin</origin>
   <elements>
     <element>
-      <name>mpegvideoparse</name>
+      <name>legacympegvideoparse</name>
       <longname>MPEG video elementary stream parser</longname>
       <class>Codec/Parser/Video</class>
       <description>Parses and frames MPEG-1 and MPEG-2 elementary video streams</description>

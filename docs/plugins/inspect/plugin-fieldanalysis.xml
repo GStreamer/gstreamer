@@ -1,0 +1,34 @@
+<plugin>
+  <name>fieldanalysis</name>
+  <description>Video field analysis</description>
+  <filename>../../gst/fieldanalysis/.libs/libgstfieldanalysis.so</filename>
+  <basename>libgstfieldanalysis.so</basename>
+  <version>0.10.22.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer</package>
+  <origin>http://gstreamer.net/</origin>
+  <elements>
+    <element>
+      <name>fieldanalysis</name>
+      <longname>Video field analysis</longname>
+      <class>Filter/Analysis/Video</class>
+      <description>Analyse fields from video frames to identify if they are progressive/telecined/interlaced</description>
+      <author>Robert Swain &lt;robert.swain@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw-yuv, format=(fourcc){ YUY2, UYVY, I420, YV12 }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw-yuv, format=(fourcc){ YUY2, UYVY, I420, YV12 }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

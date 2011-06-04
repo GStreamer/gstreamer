@@ -72,5 +72,26 @@
         </caps>
       </pads>
     </element>
+    <element>
+      <name>mpegvideoparse</name>
+      <longname>MPEG video elementary stream parser</longname>
+      <class>Codec/Parser/Video</class>
+      <description>Parses and frames MPEG-1 and MPEG-2 elementary video streams</description>
+      <author>Wim Taymans &lt;wim.taymans@ccollabora.co.uk&gt;, Jan Schmidt &lt;thaytan@mad.scientist.com&gt;, Mark Nauwelaerts &lt;mark.nauwelaerts@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/mpeg, mpegversion=(int)4, parsed=(boolean)false, systemstream=(boolean)false</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/mpeg, mpegversion=(int)[ 1, 2 ], parsed=(boolean)true, systemstream=(boolean)false</details>
+        </caps>
+      </pads>
+    </element>
   </elements>
 </plugin>

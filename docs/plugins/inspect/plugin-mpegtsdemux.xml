@@ -14,7 +14,8 @@
       <longname>MPEG transport stream demuxer</longname>
       <class>Codec/Demuxer</class>
       <description>Demuxes MPEG2 transport streams</description>
-      <author>Zaheer Abbas Merali &lt;zaheerabbas at merali dot org&gt;; Edward Hervey &lt;edward.hervey@collabora.co.uk&gt;</author>
+      <author>Zaheer Abbas Merali &lt;zaheerabbas at merali dot org&gt;
+Edward Hervey &lt;edward.hervey@collabora.co.uk&gt;</author>
       <pads>
         <caps>
           <name>sink</name>

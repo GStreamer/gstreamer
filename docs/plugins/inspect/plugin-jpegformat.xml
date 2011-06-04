@@ -12,7 +12,7 @@
     <element>
       <name>jifmux</name>
       <longname>JPEG stream muxer</longname>
-      <class>Video/Muxer</class>
+      <class>Video/Formatter</class>
       <description>Remuxes JPEG images with markers and tags</description>
       <author>Arnout Vandecappelle (Essensium/Mind) &lt;arnout@mind.be&gt;</author>
       <pads>

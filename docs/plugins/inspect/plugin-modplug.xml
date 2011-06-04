@@ -1,12 +1,12 @@
 <plugin>
   <name>modplug</name>
   <description>.MOD audio decoding</description>
-  <filename>../../ext/modplug/.libs/libgstmodplug.so</filename>
+  <filename>../../gst/modplug/.libs/libgstmodplug.so</filename>
   <basename>libgstmodplug.so</basename>
-  <version>0.10.22.1</version>
+  <version>0.10.10.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins git</package>
+  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -26,7 +26,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw-int, endianness=(int)1234, signed=(boolean)true, width=(int)32, depth=(int)32, rate=(int){ 8000, 11025, 22050, 44100 }, channels=(int)[ 1, 2 ]; audio/x-raw-int, endianness=(int)1234, signed=(boolean)true, width=(int)16, depth=(int)16, rate=(int){ 8000, 11025, 22050, 44100 }, channels=(int)[ 1, 2 ]; audio/x-raw-int, endianness=(int)1234, signed=(boolean)false, width=(int)8, depth=(int)8, rate=(int){ 8000, 11025, 22050, 44100 }, channels=(int)[ 1, 2 ]</details>
+          <details>audio/x-raw-int, endianness=(int)1234, signed=(boolean)true, width=(int)16, depth=(int)16, rate=(int){ 8000, 11025, 22050, 44100 }, channels=(int)2; audio/x-raw-int, endianness=(int)1234, signed=(boolean)false, width=(int)8, depth=(int)8, rate=(int){ 8000, 11025, 22050, 44100 }, channels=(int)[ 1, 2 ]</details>
         </caps>
       </pads>
     </element>

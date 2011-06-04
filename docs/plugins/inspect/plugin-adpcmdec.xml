@@ -14,7 +14,7 @@
       <longname>ADPCM decoder</longname>
       <class>Codec/Decoder/Audio</class>
       <description>Decode MS and IMA ADPCM audio</description>
-      <author>Pioneers of the Inevitable &lt;songbird@songbirdnest.com</author>
+      <author>Pioneers of the Inevitable &lt;songbird@songbirdnest.com&gt;</author>
       <pads>
         <caps>
           <name>sink</name>

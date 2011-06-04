@@ -14,7 +14,7 @@
       <longname>ADPCM encoder</longname>
       <class>Codec/Encoder/Audio</class>
       <description>Encode ADPCM audio</description>
-      <author>Pioneers of the Inevitable &lt;songbird@songbirdnest.com</author>
+      <author>Pioneers of the Inevitable &lt;songbird@songbirdnest.com&gt;</author>
       <pads>
         <caps>
           <name>sink</name>

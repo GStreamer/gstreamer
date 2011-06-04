@@ -1,0 +1,34 @@
+<plugin>
+  <name>divxenc</name>
+  <description>DivX encoder</description>
+  <filename>../../ext/divx/.libs/libgstdivxenc.so</filename>
+  <basename>libgstdivxenc.so</basename>
+  <version>5.03</version>
+  <license>unknown</license>
+  <source>gst-plugins-bad</source>
+  <package>divx4linux</package>
+  <origin>http://www.divx.com/</origin>
+  <elements>
+    <element>
+      <name>divxenc</name>
+      <longname>Divx4linux video encoder</longname>
+      <class>Codec/Encoder/Video</class>
+      <description>Divx encoder based on divxencore</description>
+      <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw-yuv, format=(fourcc){ I420, YUY2, YV12, YVYU, UYVY }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-divx, divxversion=(int)5, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>
