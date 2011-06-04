@@ -74,6 +74,9 @@ static void authenticate (SoupSession * session, SoupMessage * msg,
     SoupAuth * auth, gboolean retrying, gpointer user_data);
 static void
 callback (SoupSession * session, SoupMessage * msg, gpointer user_data);
+static gboolean
+gst_soup_http_sink_set_proxy (GstSoupHttpSink * souphttpsink,
+    const gchar * uri);
 
 enum
 {
@@ -87,7 +90,7 @@ enum
   PROP_PROXY_ID,
   PROP_PROXY_PW,
   PROP_COOKIES,
-  PROP_SESSION,
+  PROP_SESSION
 };
 
 #define DEFAULT_USER_AGENT           "GStreamer souphttpsink "
@@ -159,13 +162,11 @@ gst_soup_http_sink_class_init (GstSoupHttpSinkClass * klass)
       g_param_spec_boolean ("automatic-redirect", "automatic-redirect",
           "Automatically follow HTTP redirects (HTTP Status Code 3xx)",
           TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-#if 0
   g_object_class_install_property (gobject_class,
       PROP_PROXY,
       g_param_spec_string ("proxy", "Proxy",
           "HTTP proxy server URI", "",
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-#endif
   g_object_class_install_property (gobject_class,
       PROP_USER_ID,
       g_param_spec_string ("user-id", "user-id",
@@ -187,7 +188,9 @@ gst_soup_http_sink_class_init (GstSoupHttpSinkClass * klass)
       g_param_spec_object ("session", "session",
           "SoupSession object to use for communication",
           SOUP_TYPE_SESSION, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
+  g_object_class_install_property (gobject_class, PROP_COOKIES,
+      g_param_spec_boxed ("cookies", "Cookies", "HTTP request cookies",
+          G_TYPE_STRV, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
 }
 
@@ -195,9 +198,7 @@ static void
 gst_soup_http_sink_init (GstSoupHttpSink * souphttpsink,
     GstSoupHttpSinkClass * souphttpsink_class)
 {
-#if 0
   const char *proxy;
-#endif
 
   souphttpsink->sinkpad =
       gst_pad_new_from_static_template (&gst_soup_http_sink_sink_template,
@@ -215,14 +216,12 @@ gst_soup_http_sink_init (GstSoupHttpSink * souphttpsink,
   souphttpsink->proxy_pw = NULL;
   souphttpsink->prop_session = NULL;
   souphttpsink->timeout = 1;
-#if 0
   proxy = g_getenv ("http_proxy");
   if (proxy && !gst_soup_http_sink_set_proxy (souphttpsink, proxy)) {
     GST_WARNING_OBJECT (souphttpsink,
         "The proxy in the http_proxy env var (\"%s\") cannot be parsed.",
         proxy);
   }
-#endif
 
   gst_soup_http_sink_reset (souphttpsink);
 }
@@ -235,6 +234,25 @@ gst_soup_http_sink_reset (GstSoupHttpSink * souphttpsink)
   souphttpsink->status_code = 0;
   souphttpsink->offset = 0;
 
+}
+
+static gboolean
+gst_soup_http_sink_set_proxy (GstSoupHttpSink * souphttpsink, const gchar * uri)
+{
+  if (souphttpsink->proxy) {
+    soup_uri_free (souphttpsink->proxy);
+    souphttpsink->proxy = NULL;
+  }
+  if (g_str_has_prefix (uri, "http://")) {
+    souphttpsink->proxy = soup_uri_new (uri);
+  } else {
+    gchar *new_uri = g_strconcat ("http://", uri, NULL);
+
+    souphttpsink->proxy = soup_uri_new (new_uri);
+    g_free (new_uri);
+  }
+
+  return TRUE;
 }
 
 void
@@ -279,10 +297,31 @@ gst_soup_http_sink_set_property (GObject * object, guint property_id,
       g_free (souphttpsink->proxy_pw);
       souphttpsink->proxy_pw = g_value_dup_string (value);
       break;
+    case PROP_PROXY:
+    {
+      const gchar *proxy;
+
+      proxy = g_value_get_string (value);
+
+      if (proxy == NULL) {
+        GST_WARNING ("proxy property cannot be NULL");
+        goto done;
+      }
+      if (!gst_soup_http_sink_set_proxy (souphttpsink, proxy)) {
+        GST_WARNING ("badly formatted proxy URI");
+        goto done;
+      }
+      break;
+    }
+    case PROP_COOKIES:
+      g_strfreev (souphttpsink->cookies);
+      souphttpsink->cookies = g_strdupv (g_value_get_boxed (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
   }
+done:
   g_mutex_unlock (souphttpsink->mutex);
 }
 
@@ -317,7 +356,19 @@ gst_soup_http_sink_get_property (GObject * object, guint property_id,
     case PROP_PROXY_PW:
       g_value_set_string (value, souphttpsink->proxy_pw);
       break;
+    case PROP_PROXY:
+      if (souphttpsink->proxy == NULL)
+        g_value_set_static_string (value, "");
+      else {
+        char *proxy = soup_uri_to_string (souphttpsink->proxy, FALSE);
 
+        g_value_set_string (value, proxy);
+        g_free (proxy);
+      }
+      break;
+    case PROP_COOKIES:
+      g_value_set_boxed (value, g_strdupv (souphttpsink->cookies));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -349,6 +400,8 @@ gst_soup_http_sink_finalize (GObject * object)
   g_free (souphttpsink->user_pw);
   g_free (souphttpsink->proxy_id);
   g_free (souphttpsink->proxy_pw);
+  if (souphttpsink->proxy)
+    soup_uri_free (souphttpsink->proxy);
   g_free (souphttpsink->location);
 
   g_cond_free (souphttpsink->cond);
@@ -482,17 +535,17 @@ gst_soup_http_sink_event (GstBaseSink * sink, GstEvent * event)
 {
   GstSoupHttpSink *souphttpsink = GST_SOUP_HTTP_SINK (sink);
 
-  GST_DEBUG ("event");
+  GST_DEBUG_OBJECT (souphttpsink, "event");
 
   if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
-    GST_DEBUG ("got eos");
+    GST_DEBUG_OBJECT (souphttpsink, "got eos");
     g_mutex_lock (souphttpsink->mutex);
     while (souphttpsink->message) {
-      GST_DEBUG ("waiting");
+      GST_DEBUG_OBJECT (souphttpsink, "waiting");
       g_cond_wait (souphttpsink->cond, souphttpsink->mutex);
     }
     g_mutex_unlock (souphttpsink->mutex);
-    GST_DEBUG ("finished eos");
+    GST_DEBUG_OBJECT (souphttpsink, "finished eos");
   }
 
   return TRUE;
@@ -536,8 +589,6 @@ send_message_locked (GstSoupHttpSink * souphttpsink)
 
   souphttpsink->message = soup_message_new ("PUT", souphttpsink->location);
 
-  //soup_message_body_set_accumulate (souphttpsink->message->request_body, TRUE);
-
   n = 0;
   if (souphttpsink->offset == 0) {
     for (g = souphttpsink->streamheader_buffers; g; g = g_list_next (g)) {
@@ -579,10 +630,11 @@ send_message_locked (GstSoupHttpSink * souphttpsink)
   souphttpsink->sent_buffers = souphttpsink->queued_buffers;
   souphttpsink->queued_buffers = NULL;
 
-  GST_DEBUG ("queue message %" G_GUINT64_FORMAT " %" G_GUINT64_FORMAT,
+  GST_DEBUG_OBJECT (souphttpsink,
+      "queue message %" G_GUINT64_FORMAT " %" G_GUINT64_FORMAT,
       souphttpsink->offset, n);
-  soup_session_queue_message (souphttpsink->session,
-      souphttpsink->message, callback, souphttpsink);
+  soup_session_queue_message (souphttpsink->session, souphttpsink->message,
+      callback, souphttpsink);
 
   souphttpsink->offset += n;
 }
@@ -631,6 +683,7 @@ gst_soup_http_sink_render (GstBaseSink * sink, GstBuffer * buffer)
   gboolean wake;
 
   if (souphttpsink->status_code != 0) {
+    /* FIXME we should allow a moderate amount of retries. */
     GST_ELEMENT_ERROR (souphttpsink, RESOURCE, WRITE,
         ("Could not write to HTTP URI"),
         ("error: %d %s", souphttpsink->status_code,
@@ -646,7 +699,6 @@ gst_soup_http_sink_render (GstBaseSink * sink, GstBuffer * buffer)
 
     if (wake) {
       source = g_idle_source_new ();
-      //g_source_set_priority (source, G_PRIORITY_DEFAULT);
       g_source_set_callback (source, (GSourceFunc) (send_message),
           souphttpsink, NULL);
       g_source_attach (source, souphttpsink->context);
