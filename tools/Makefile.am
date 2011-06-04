@@ -19,7 +19,6 @@ endif
 
 
 GST_OTHER_SRC = \
-	gst-feedback \
 	gst-inspect \
 	gst-typefind \
 	gst-xmlinspect
@@ -33,7 +32,6 @@ bin_PROGRAMS = \
 	$(GST_LOADSAVE_SRC) $(GST_LOADSAVE_SRC_V) \
 	$(GST_PARSE_SRC) $(GST_PARSE_SRC_V) \
 	$(GST_OTHER_SRC) $(GST_OTHER_SRC_V)
-bin_SCRIPTS = gst-feedback-@GST_MAJORMINOR@
 
 # make sure each versioned tool has the right source file and flags
 if !GST_DISABLE_LOADSAVE
@@ -58,10 +56,6 @@ gst_xmlinspect_@GST_MAJORMINOR@_SOURCES = gst-xmlinspect.c tools.h
 gst_xmlinspect_@GST_MAJORMINOR@_CFLAGS = $(GST_OBJ_CFLAGS)
 gst_xmlinspect_@GST_MAJORMINOR@_LDADD = $(GST_OBJ_LIBS)
 
-gst-feedback-@GST_MAJORMINOR@: gst-feedback-m.m
-	$(AM_V_GEN)cp $(srcdir)/gst-feedback-m.m $@ && \
-	chmod +x $@
-
 # make sure each unversioned tool comes from gst-run.c
 if !GST_DISABLE_LOADSAVE
 gst_xmllaunch_SOURCES = gst-run.c
@@ -71,7 +65,6 @@ if !GST_DISABLE_PARSE
 gst_launch_SOURCES = gst-run.c
 endif
 
-gst_feedback_SOURCES = gst-run.c
 gst_inspect_SOURCES = gst-run.c
 gst_typefind_SOURCES = gst-run.c
 gst_xmlinspect_SOURCES = gst-run.c
@@ -114,14 +107,13 @@ endif
 
 
 GST_OTHER_MAN = \
-	gst-feedback-@GST_MAJORMINOR@.1 \
 	gst-inspect-@GST_MAJORMINOR@.1 \
 	gst-typefind-@GST_MAJORMINOR@.1 \
 	gst-xmlinspect-@GST_MAJORMINOR@.1
 
 manpages = $(GST_LOADSAVE_MAN) $(GST_PARSE_MAN) $(GST_OTHER_MAN)
 
-CLEANFILES = $(manpages) $(bin_SCRIPTS) *.gcno *.gcda
+CLEANFILES = $(manpages) *.gcno *.gcda
 man_MANS = $(manpages)
 
 # developer helper tools, not meant for installation
@@ -131,18 +123,15 @@ noinst_HEADERS = tools.h
 
 EXTRA_DIST = \
 	$(noinst_SCRIPTS) \
-	gst-feedback.1.in \
 	gst-inspect.1.in \
 	gst-launch.1.in \
 	gst-typefind.1.in \
 	gst-xmlinspect.1.in \
 	gst-xmllaunch.1.in \
-	gst-feedback-m.m \
 	gst-plot-timeline.py
 
 %-@GST_MAJORMINOR@.1: %.1.in
 	$(AM_V_GEN)sed \
-		-e s,gst-feedback,gst-feedback-@GST_MAJORMINOR@,g \
 		-e s,gst-inspect,gst-inspect-@GST_MAJORMINOR@,g \
 		-e s,gst-launch,gst-launch-@GST_MAJORMINOR@,g \
 		-e s,gst-typefind,gst-typefind-@GST_MAJORMINOR@,g \

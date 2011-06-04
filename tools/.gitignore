@@ -12,33 +12,18 @@ Makefile.in
 *.da
 *.gcno
 
-gst-complete
-gst-compprep
-gst-feedback
 gst-inspect
 gst-launch
-gst-md5sum
-gst-register
 gst-typefind
 gst-xmlinspect
 gst-xmllaunch
-gst-complete.1
-gst-compprep.1
-gst-feedback.1
 gst-inspect.1
 gst-launch.1
-gst-md5sum.1
-gst-register.1
 gst-typefind.1
 gst-xmllaunch.1
 
-gst-complete-?.?*
-gst-compprep-?.?*
-gst-feedback-?.?*
 gst-inspect-?.?*
 gst-launch-?.?*
-gst-md5sum-?.?*
-gst-register-?.?*
 gst-typefind-?.?*
 gst-xmlinspect-?.?*
 gst-xmllaunch-?.?*

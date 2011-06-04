@@ -154,19 +154,6 @@ how you installed GStreamer (from git, source, packages, which ?)</para></listit
 </itemizedlist>
         </para>
         <para>
-It also is useful for us if you attach output of
-the gst-feedback command to your bug report.
-If you're having problem with a specific application (either one of ours,
-somebody else's, or your own), please also provide a log of gst-mask by
-running
-<programlisting>
-myapp --gst-mask=-1 > mask.log 2>&amp;1
-gzip mask.log
-</programlisting>
-(interrupting the program if it doesn't stop by itself)
-and attach mask.log.gz to your bug report.
-        </para>
-        <para>
 If the application you are having problems with is segfaulting, then
 provide us with the necessary gdb output.  See
 <xref linkend="troubleshooting-segfault" endterm="troubleshooting-segfault"/>

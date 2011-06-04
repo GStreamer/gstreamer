@@ -16,8 +16,6 @@ Source: 	http://gstreamer.freedesktop.org/src/gstreamer/gstreamer-%{version}.tar
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 Requires:	gstreamer-tools >= %{version}
-# gst-feedback uses these
-Requires:	which, pkgconfig
 
 BuildRequires: 	glib2-devel >= %{_glib2}
 BuildRequires: 	libxml2-devel >= %{_libxml2}
@@ -143,14 +141,12 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstcoreelements.so
 %{_libdir}/gstreamer-%{majorminor}/libgstcoreindexers.so
 
-%{_bindir}/gst-feedback-%{majorminor}
 %{_bindir}/gst-inspect-%{majorminor}
 %{_bindir}/gst-launch-%{majorminor}
 %{_bindir}/gst-typefind-%{majorminor}
 %{_bindir}/gst-xmlinspect-%{majorminor}
 %{_bindir}/gst-xmllaunch-%{majorminor}
 %{_libexecdir}/gstreamer-%{majorminor}/gst-plugin-scanner
-%doc %{_mandir}/man1/gst-feedback-%{majorminor}.*
 %doc %{_mandir}/man1/gst-inspect-%{majorminor}.*
 %doc %{_mandir}/man1/gst-launch-%{majorminor}.*
 %doc %{_mandir}/man1/gst-typefind-%{majorminor}.*
@@ -172,7 +168,6 @@ rm -rf $RPM_BUILD_ROOT
 
 %files -n gstreamer-tools
 %defattr(-, root, root, -)
-%{_bindir}/gst-feedback
 %{_bindir}/gst-inspect
 %{_bindir}/gst-launch
 %{_bindir}/gst-typefind
