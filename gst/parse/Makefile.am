@@ -16,7 +16,7 @@ CLEANFILES += grammar.tab.c lex._gst_parse_yy.c
 
 # can't use GST_ALL_CFLAGS here because that'd pull in -Werror
 libgstparse_la_CFLAGS = -I$(top_srcdir) -I$(top_builddir) \
-	$(GLIB_CFLAGS) $(XML_CFLAGS) $(GST_OPTION_CFLAGS)
+	$(GLIB_CFLAGS) $(GST_OPTION_CFLAGS)
 libgstparse_la_LIBADD = $(GST_ALL_LIBS)
 
 noinst_HEADERS = grammar.tab.h types.h

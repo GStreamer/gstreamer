@@ -37,8 +37,7 @@ EXAMPLES = \
 	typefind \
 	fakesrc \
 	playbin \
-	decodebin \
-	$(GST_LOADSAVE_SRC)
+	decodebin
 
 BUILT_SOURCES = \
 	elementmake.c elementcreate.c elementget.c elementlink.c elementfactory.c \

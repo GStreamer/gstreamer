@@ -1,24 +1,12 @@
 plugin_LTLIBRARIES = libgstcoreindexers.la
 
-# file index uses xml
-if HAVE_MMAP
-if GST_DISABLE_LOADSAVE
-GST_LOADSAVE_SRC =
-GST_FILEINDEX_LIBS =
-else
-GST_LOADSAVE_SRC = gstfileindex.c
-GST_FILEINDEX_LIBS = $(XML_LIBS)
-endif
-else
-GST_LOADSAVE_SRC =
-GST_FILEINDEX_LIBS =
-endif
+# FIXME 0.11: gstfileindex.c used libxml and mmap, rewrite using something else or remove
 
 noinst_HEADERS =		\
 	gstindexers.h
 
 libgstcoreindexers_la_DEPENDENCIES = $(top_builddir)/gst/libgstreamer-@GST_MAJORMINOR@.la
-libgstcoreindexers_la_SOURCES = gstindexers.c gstmemindex.c $(GST_LOADSAVE_SRC)
+libgstcoreindexers_la_SOURCES = gstindexers.c gstmemindex.c
 libgstcoreindexers_la_CFLAGS = $(GST_OBJ_CFLAGS)
 libgstcoreindexers_la_LIBADD = $(GST_OBJ_LIBS) $(GST_FILEINDEX_LIBS)
 libgstcoreindexers_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)

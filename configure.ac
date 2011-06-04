@@ -78,16 +78,6 @@ dnl subsystems - can influence other decisions so needs to be high up
 dnl we need to AM_CONDITIONAL them here for automake 1.6.x compatibility
 AG_GST_CHECK_SUBSYSTEM_DISABLE(GST_DEBUG,[debugging subsystem])
 AM_CONDITIONAL(GST_DISABLE_GST_DEBUG, test "x$GST_DISABLE_GST_DEBUG" = "xyes")
-AG_GST_CHECK_SUBSYSTEM_DISABLE(LOADSAVE,[pipeline XML load/save])
-AM_CONDITIONAL(GST_DISABLE_LOADSAVE, test "x$GST_DISABLE_LOADSAVE" = "xyes")
-dnl define a substitution to use in docs/gst/gstreamer.types
-if test "x$GST_DISABLE_LOADSAVE" = "xyes"
-then
-  GST_LOADSAVE_DOC_TYPES="%"
-else
-  GST_LOADSAVE_DOC_TYPES=
-fi
-AC_SUBST(GST_LOADSAVE_DOC_TYPES)
 AG_GST_CHECK_SUBSYSTEM_DISABLE(PARSE,[command-line parser])
 AM_CONDITIONAL(GST_DISABLE_PARSE, test "x$GST_DISABLE_PARSE" = "xyes")
 if test "x$GST_DISABLE_PARSE" = xyes; then
@@ -546,18 +536,6 @@ dnl Check for documentation xrefs
 GLIB_PREFIX="`$PKG_CONFIG --variable=prefix glib-2.0`"
 AC_SUBST(GLIB_PREFIX)
 
-dnl libxml2 is only needed for xml loading/saving of pipelines these days
-if test "x$GST_DISABLE_LOADSAVE" = "xyes"
-then
-  AC_MSG_NOTICE([XML registry and load/save are disabled, not checking for libxml2])
-  GST_DISABLE_XML_DEFINE="#define GST_DISABLE_XML 1"
-else
-  dnl check for libxml2 with minimum req version
-  AG_GST_LIBXML2_CHECK(2.4.9)
-  GST_DISABLE_XML_DEFINE="/* #undef GST_DISABLE_XML */"
-fi
-AC_SUBST(GST_DISABLE_XML_DEFINE)
-
 dnl building of unit test libraries
 AC_ARG_ENABLE(check,
   AC_HELP_STRING([--disable-check], [disable building unit test libraries]),
@@ -629,7 +607,6 @@ AC_DEFINE_UNQUOTED(GST_DATADIR, "$DATADIR", [data dir])
 dnl set location of plugin directory
 AG_GST_SET_PLUGINDIR
 
-dnl FIXME: add LIBXML_PKG here if we use it
 GST_PKG_DEPS="glib-2.0, gobject-2.0, gmodule-no-export-2.0, gthread-2.0"
 AC_SUBST(GST_PKG_DEPS)
 
@@ -677,13 +654,10 @@ AC_SUBST(GST_OPTION_CXXFLAGS)
 dnl GST_ALL_*
 dnl vars common to for all internal objects (core libs, elements, applications)
 dnl CFLAGS:
-dnl - XML needs to be added because xmlPtr is used in core
 dnl - src and build dirs need to be added because every piece that gets built
 dnl   will need the GStreamer source and generated headers
-dnl LIBS: XML doesn't need to be added because we don't explicitly use symbols
-dnl       from LibXML except for in the core library
-GST_ALL_CXXFLAGS="-I\$(top_srcdir)/libs -I\$(top_srcdir) -I\$(top_builddir)/libs -I\$(top_builddir) $GLIB_CFLAGS $GLIB_EXTRA_CFLAGS $XML_CFLAGS \$(GST_OPTION_CXXFLAGS) \$(ERROR_CXXFLAGS)"
-GST_ALL_CFLAGS="-I\$(top_srcdir)/libs -I\$(top_srcdir) -I\$(top_builddir)/libs -I\$(top_builddir) $GLIB_CFLAGS $GLIB_EXTRA_CFLAGS $XML_CFLAGS \$(GST_OPTION_CFLAGS) \$(ERROR_CFLAGS)"
+GST_ALL_CXXFLAGS="-I\$(top_srcdir)/libs -I\$(top_srcdir) -I\$(top_builddir)/libs -I\$(top_builddir) $GLIB_CFLAGS $GLIB_EXTRA_CFLAGS \$(GST_OPTION_CXXFLAGS) \$(ERROR_CXXFLAGS)"
+GST_ALL_CFLAGS="-I\$(top_srcdir)/libs -I\$(top_srcdir) -I\$(top_builddir)/libs -I\$(top_builddir) $GLIB_CFLAGS $GLIB_EXTRA_CFLAGS \$(GST_OPTION_CFLAGS) \$(ERROR_CFLAGS)"
 
 dnl FIXME: check if LTLIBINTL is needed everywhere
 dnl I presume it is given that it contains the symbols that _() stuff maps to
@@ -816,7 +790,6 @@ sed \
     -e 's/.* HAVE_CPU_I386$/#define HAVE_CPU_I386 1/' \
     -e 's/.* HAVE_FGETPOS$/#define HAVE_FGETPOS 1/' \
     -e 's/.* HAVE_FSETPOS$/#define HAVE_FSETPOS 1/' \
-    -e 's/.* HAVE_LIBXML2$/#define HAVE_LIBXML2 1/' \
     -e 's/.* HAVE_PROCESS_H$/#define HAVE_PROCESS_H 1/' \
     -e 's/.* HAVE_STDLIB_H$/#define HAVE_STDLIB_H 1/' \
     -e 's/.* HAVE_STRING_H$/#define HAVE_STRING_H 1/' \
@@ -843,7 +816,6 @@ AC_OUTPUT
 
 dnl negate for output
 if test "x${GST_DISABLE_GST_DEBUG}" = "xno"; then enable_gst_debug="yes"; fi
-if test "x${GST_DISABLE_LOADSAVE}" = "xno"; then enable_loadsave="yes"; fi
 if test "x${GST_DISABLE_PARSE}" = "xno"; then enable_parse="yes"; fi
 if test "x${GST_DISABLE_OPTION_PARSING}" = "xno"; then enable_option_parsing="yes"; fi
 if test "x${GST_DISABLE_TRACE}" = "xno"; then enable_trace="yes"; fi
@@ -866,7 +838,6 @@ Configuration
 	Documentation (API)        : ${enable_gtk_doc}
 
 	Debug Logging              : ${enable_gst_debug}
-	Pipeline XML load/save     : ${enable_loadsave}
 	Command-line parser        : ${enable_parse}
 	Option parsing in gst_init : ${enable_option_parsing}
 	Tracing subsystem          : ${enable_trace}

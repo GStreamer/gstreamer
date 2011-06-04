@@ -130,7 +130,6 @@ libgstreamer_@GST_MAJORMINOR@_la_LIBADD =		\
 	$(GST_PARSE_LA)					\
 	$(GST_ALL_LIBS)					\
 	$(WIN32_LIBS)					\
-	$(XML_LIBS)					\
 	$(LIBM)
 
 libgstreamer_@GST_MAJORMINOR@_la_LDFLAGS =		\

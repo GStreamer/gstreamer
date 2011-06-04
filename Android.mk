@@ -53,7 +53,7 @@ gst-configure-real:
 	PKG_CONFIG_LIBDIR=$(CONFIGURE_PKG_CONFIG_LIBDIR) \
 	PKG_CONFIG_TOP_BUILD_DIR=/ \
 	$(abspath $(gstreamer_TOP))/$(CONFIGURE) --host=arm-linux-androideabi \
-	--prefix=/system --disable-nls --disable-loadsave \
+	--prefix=/system --disable-nls \
 	--disable-valgrind --disable-gtk-doc && \
 	for file in $(GST_BUILT_SOURCES); do \
 		rm -f $$file && \

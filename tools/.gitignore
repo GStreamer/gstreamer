@@ -6,7 +6,6 @@ Makefile.in
 *.la
 .deps
 .libs
-*.xml
 *.bb
 *.bbg
 *.da
@@ -15,13 +14,11 @@ Makefile.in
 gst-inspect
 gst-launch
 gst-typefind
-gst-xmllaunch
 gst-inspect.1
 gst-launch.1
 gst-typefind.1
-gst-xmllaunch.1
 
 gst-inspect-?.?*
 gst-launch-?.?*
 gst-typefind-?.?*
-gst-xmllaunch-?.?*
+

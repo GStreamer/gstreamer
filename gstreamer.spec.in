@@ -2,7 +2,6 @@
 %define		majorminor	@GST_MAJORMINOR@
 
 %define 	_glib2		@GLIB_REQ@
-%define 	_libxml2	@LIBXML2_REQ@
 
 Name: 		%{gstreamer}
 Version: 	@VERSION@
@@ -18,7 +17,6 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Requires:	gstreamer-tools >= %{version}
 
 BuildRequires: 	glib2-devel >= %{_glib2}
-BuildRequires: 	libxml2-devel >= %{_libxml2}
 BuildRequires: 	bison
 BuildRequires: 	flex
 BuildRequires: 	m4
@@ -58,7 +56,6 @@ Group: 		Development/Libraries
 
 Requires: 	%{name} = %{version}-%{release}
 Requires: 	glib2-devel >= %{_glib2}
-Requires: 	libxml2-devel >= %{_libxml2}
 Requires:	check-devel
 
 %description devel
@@ -144,12 +141,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/gst-inspect-%{majorminor}
 %{_bindir}/gst-launch-%{majorminor}
 %{_bindir}/gst-typefind-%{majorminor}
-%{_bindir}/gst-xmllaunch-%{majorminor}
 %{_libexecdir}/gstreamer-%{majorminor}/gst-plugin-scanner
 %doc %{_mandir}/man1/gst-inspect-%{majorminor}.*
 %doc %{_mandir}/man1/gst-launch-%{majorminor}.*
 %doc %{_mandir}/man1/gst-typefind-%{majorminor}.*
-%doc %{_mandir}/man1/gst-xmllaunch-%{majorminor}.*
 %doc %{_datadir}/doc/gstreamer-%{majorminor}/manual
 %doc %{_datadir}/doc/gstreamer-%{majorminor}/pwg
 %doc %{_datadir}/doc/gstreamer-%{majorminor}/faq/
@@ -169,7 +164,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/gst-inspect
 %{_bindir}/gst-launch
 %{_bindir}/gst-typefind
-%{_bindir}/gst-xmllaunch
 
 %files devel
 %defattr(-, root, root, -)

@@ -12,7 +12,7 @@ typelibdir=@abs_top_builddir@/gst
 Name: GStreamer Uninstalled
 Description: Streaming media framework, Not Installed
 Version: @VERSION@
-Requires: @GST_PKG_DEPS@@LIBXML_PKG@
+Requires: @GST_PKG_DEPS@
 Libs: @abs_top_builddir@/gst/libgstreamer-@GST_MAJORMINOR@.la
 # FIXME: the libs dir doesn't really belong here
 Cflags: -I@abs_top_srcdir@ -I@abs_top_srcdir@/libs -I@abs_top_builddir@ -I@abs_top_builddir@/libs

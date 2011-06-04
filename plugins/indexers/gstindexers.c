@@ -29,9 +29,9 @@ plugin_init (GstPlugin * plugin)
   gboolean res = TRUE;
 
   res &= gst_mem_index_plugin_init (plugin);
-#if defined(HAVE_MMAP) && !defined(GST_DISABLE_LOADSAVE)
-  res &= gst_file_index_plugin_init (plugin);
-#endif
+
+  /* FIXME 0.11: fix or remove GstFileIndex, which used mmap and libxml */
+  /* res &= gst_file_index_plugin_init (plugin); */
 
   return res;
 }

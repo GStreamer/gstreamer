@@ -48,9 +48,6 @@ shut down forcefully via Control-C.
 Gather and print index statistics. This is mostly useful for playback or
 recording pipelines.
 .TP 8
-.B  \-o FILE, \-\-output=FILE
-Save XML representation of pipeline to FILE and exit (DEPRECATED, DO NOT USE)
-.TP 8
 .B  \-f, \-\-no\-fault
 Do not install a fault handler
 .TP 8
@@ -414,7 +411,7 @@ When set to a filesystem path, store dot files of pipeline graphs there.
 .TP
 \fBGST_REGISTRY\fR
 Path of the plugin registry file. Default is
-~/.gstreamer-GST_MAJORMINOR/registry-CPU.xml where CPU is the machine/cpu type
+~/.gstreamer-GST_MAJORMINOR/registry-CPU.bin where CPU is the machine/cpu type
 GStreamer was compiled for, e.g. 'i486', 'i686', 'x86-64', 'ppc', etc. (check
 the output of "uname -i" and "uname -m" for details).
 .TP
@@ -451,8 +448,8 @@ a stack trace in the usual way.
 .
 .SH FILES
 .TP 8
-~/.gstreamer-GST_MAJORMINOR/registry-*.xml
-The xml plugin database; can be deleted at any time, will be re-created
+~/.gstreamer-GST_MAJORMINOR/registry-*.bin
+The plugin cache; can be deleted at any time, will be re-created
 automatically when it does not exist yet or plugins change.
 .
 .SH "SEE ALSO"

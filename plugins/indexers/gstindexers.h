@@ -25,9 +25,7 @@ G_BEGIN_DECLS
 
 gboolean gst_mem_index_plugin_init (GstPlugin * plugin);
 
-#ifndef GST_DISABLE_LOADSAVE
-gboolean gst_file_index_plugin_init (GstPlugin * plugin);
-#endif
+/* gboolean gst_file_index_plugin_init (GstPlugin * plugin); */
 
 
 G_END_DECLS

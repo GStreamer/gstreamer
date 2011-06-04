@@ -11,7 +11,7 @@ typelibdir=${libdir}/girepository-1.0
 
 Name: GStreamer
 Description: Streaming media framework
-Requires: @GST_PKG_DEPS@@LIBXML_PKG@
+Requires: @GST_PKG_DEPS@
 Version: @VERSION@
 Libs: -L${libdir} -lgstreamer-@GST_MAJORMINOR@
 Cflags: -I${includedir}

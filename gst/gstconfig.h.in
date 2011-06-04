@@ -54,14 +54,11 @@
 
 #if 0
 #define GST_DISABLE_GST_DEBUG 1
-#define GST_DISABLE_LOADSAVE 1
 #define GST_DISABLE_PARSE 1
 #define GST_DISABLE_TRACE 1
 #define GST_DISABLE_ALLOC_TRACE 1
 #define GST_DISABLE_REGISTRY 1
 #define GST_DISABLE_PLUGIN 1
-#define GST_DISABLE_XML 1
-#define GST_DISABLE_LOADSAVE_REGISTRY 1
 #define GST_HAVE_GLIB_2_8 1
 #endif
 
@@ -80,14 +77,6 @@
  * Configures the inclusion of the debugging subsystem
  */
 @GST_DISABLE_GST_DEBUG_DEFINE@
-
-/**
- * GST_DISABLE_LOADSAVE:
- *
- * Configures the inclusion of the plugin graph xml-serialisation
- * (was used in 0.8 by gst-editor)
- */
-@GST_DISABLE_LOADSAVE_DEFINE@
 
 /**
  * GST_DISABLE_PARSE:
@@ -120,14 +109,6 @@
  * manually
  */
 @GST_DISABLE_REGISTRY_DEFINE@
-
-/**
- * GST_DISABLE_XML:
- *
- * Configures the use libxml2. This setting is derived from the settings of
- * %GST_DISABLE_LOADSAVE and %GST_DISABLE_REGISTRY (in the xml registry case).
- */
-@GST_DISABLE_XML_DEFINE@
 
 /* FIXME: test and document these! */
 /* Configures the use of external plugins */
@@ -186,15 +167,6 @@
 
 /* whether or not the CPU supports unaligned access */
 @GST_HAVE_UNALIGNED_ACCESS_DEFINE@
-
-/***** Deal with XML stuff, we have to handle both loadsave and registry *****/
-/* FIXME: move include to where we need it */
-/*#if (! (defined(GST_DISABLE_LOADSAVE) && defined(GST_DISABLE_REGISTRY)) )*/
-#ifndef GST_DISABLE_XML
-#else
-  /* FIXME: 0.11 (replace by GST_DISABLE_XML) */
-# define GST_DISABLE_LOADSAVE_REGISTRY
-#endif
 
 /**
  * GST_EXPORT:
