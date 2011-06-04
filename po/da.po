@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-05-10 08:32+0100\n"
+"POT-Creation-Date: 2011-06-04 13:33+0100\n"
 "PO-Revision-Date: 2010-11-06 22:52+0100\n"
 "Last-Translator: Mogens Jaeger <mogensjaeger@gmail.com>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
@@ -1126,6 +1126,10 @@ msgstr "Sætter tilstand til %s som krævet af %s...\n"
 
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Afbrydelse: Stopper rørledning...\n"
+
+#, fuzzy, c-format
+msgid "Missing element: %s\n"
+msgstr "intet element \"%s\""
 
 msgid "Output tags (also known as metadata)"
 msgstr "Uddatamærkater (også kendt som metadata)"

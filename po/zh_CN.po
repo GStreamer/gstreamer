@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.25.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-05-10 08:32+0100\n"
+"POT-Creation-Date: 2011-06-04 13:33+0100\n"
 "PO-Revision-Date: 2010-02-02 18:58+0800\n"
 "Last-Translator: Ji ZhengYu <zhengyuji@gmail.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
@@ -1095,6 +1095,10 @@ msgstr "%2$s 发起请求时状态设置为 %1$s...\n"
 
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "中断: 中止管道 ...\n"
+
+#, fuzzy, c-format
+msgid "Missing element: %s\n"
+msgstr "无组件“%s”"
 
 msgid "Output tags (also known as metadata)"
 msgstr "输出标识(也可认为是元数据)"

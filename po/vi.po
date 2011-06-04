@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-05-10 08:32+0100\n"
+"POT-Creation-Date: 2011-06-04 13:33+0100\n"
 "PO-Revision-Date: 2010-10-03 19:09+1030\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
@@ -1124,6 +1124,10 @@ msgstr "Đang đặt tình trạng thành %s như yêu cầu bởi %s....\n"
 
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Ngắt: đang ngừng chạy đường ống ...\n"
+
+#, fuzzy, c-format
+msgid "Missing element: %s\n"
+msgstr "không có yếu tố « %s »"
 
 msgid "Output tags (also known as metadata)"
 msgstr "Thể xuất (cũng được biết là siêu dữ liệu)"

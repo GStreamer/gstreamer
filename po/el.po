@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-05-10 08:32+0100\n"
+"POT-Creation-Date: 2011-06-04 13:33+0100\n"
 "PO-Revision-Date: 2010-11-29 11:14+0200\n"
 "Last-Translator: Michael Kotsarinis <mk73628@gmail.com>\n"
 "Language-Team: Greek <team@lists.gnome.gr>\n"
@@ -1141,6 +1141,10 @@ msgstr "Ορισμός κατάστασης σε %s όπως ζητήθηκε α
 
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Διακοπή: Τερματισμός διασωλήνωσης…\n"
+
+#, fuzzy, c-format
+msgid "Missing element: %s\n"
+msgstr "δεν υπάρχει στοιχείο «%s»"
 
 msgid "Output tags (also known as metadata)"
 msgstr "Ετικέτες εξόδου (επίσης γνωστές ως μεταδεδομένα)"

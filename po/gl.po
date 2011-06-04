@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.31.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-05-10 08:32+0100\n"
+"POT-Creation-Date: 2011-06-04 13:33+0100\n"
 "PO-Revision-Date: 2011-04-13 05:19+0000\n"
 "Last-Translator: Francisco Diéguez <frandieguez@ubuntu.com>\n"
 "Language-Team: Galician <proxecto@trasno.net>\n"
@@ -1125,6 +1125,10 @@ msgstr "Estabelecendo o estado a %s segundo foi solicitado por %s...\n"
 
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Interromper: parando a canalización …\n"
+
+#, fuzzy, c-format
+msgid "Missing element: %s\n"
+msgstr "non hai un elemento «%s»"
 
 msgid "Output tags (also known as metadata)"
 msgstr "Etiquetas de saída (tamén coñecido como metadatos)"

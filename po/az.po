@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.8.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-05-10 08:32+0100\n"
+"POT-Creation-Date: 2011-06-04 13:33+0100\n"
 "PO-Revision-Date: 2004-03-19 18:40+0200\n"
 "Last-Translator: Metin Amiroff <metin@karegen.com>\n"
 "Language-Team: Azerbaijani <translation-team-az@lists.sourceforge.net>\n"
@@ -1073,6 +1073,10 @@ msgid "Setting state to %s as requested by %s...\n"
 msgstr ""
 
 msgid "Interrupt: Stopping pipeline ...\n"
+msgstr ""
+
+#, c-format
+msgid "Missing element: %s\n"
 msgstr ""
 
 msgid "Output tags (also known as metadata)"

@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-05-10 08:32+0100\n"
+"POT-Creation-Date: 2011-06-04 13:33+0100\n"
 "PO-Revision-Date: 2010-08-16 01:10+0300\n"
 "Last-Translator: Lucian Adrian Grijincu <lucian.grijincu@gmail.com>\n"
 "Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
@@ -1149,6 +1149,10 @@ msgstr "Se definește starea la %s după cum a fost cerut de %s...\n"
 
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Întrerupere: Se oprește linia de asamblare ...\n"
+
+#, fuzzy, c-format
+msgid "Missing element: %s\n"
+msgstr "niciun element „%s”"
 
 msgid "Output tags (also known as metadata)"
 msgstr "Marcaje de ieșire (cunoscute și ca „metadata”)"

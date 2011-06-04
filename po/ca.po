@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-05-10 08:32+0100\n"
+"POT-Creation-Date: 2011-06-04 13:33+0100\n"
 "PO-Revision-Date: 2010-11-04 19:41+0100\n"
 "Last-Translator: Jordi Mallach <jordi@sindominio.net>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -1131,6 +1131,10 @@ msgstr "S'està establint l'estat a %s a petició de %s…\n"
 
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Interrupció: S'està aturant el conducte…\n"
+
+#, fuzzy, c-format
+msgid "Missing element: %s\n"
+msgstr "no hi ha cap element «%s»"
 
 msgid "Output tags (also known as metadata)"
 msgstr "Mostra els marcadors (també coneguts com metadades)"

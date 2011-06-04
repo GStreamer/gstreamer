@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-05-10 08:32+0100\n"
+"POT-Creation-Date: 2011-06-04 13:33+0100\n"
 "PO-Revision-Date: 2010-09-18 20:21+0100\n"
 "Last-Translator: Matej Urbančič <matej.urban@gmail.com>\n"
 "Language-Team: Slovenian <translation-team-sl@lists.sourceforge.net>\n"
@@ -1123,6 +1123,10 @@ msgstr "Nastavljanje stanja na %s, kot to zahteva %s ...\n"
 
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Prekinitev: zaustavljanje predvajanja vsebine cevovoda ... \n"
+
+#, fuzzy, c-format
+msgid "Missing element: %s\n"
+msgstr "ni predmeta \"%s\""
 
 msgid "Output tags (also known as metadata)"
 msgstr ""

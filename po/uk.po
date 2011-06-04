@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.14\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-05-10 08:32+0100\n"
+"POT-Creation-Date: 2011-06-04 13:33+0100\n"
 "PO-Revision-Date: 2007-09-07 11:16+0300\n"
 "Last-Translator: Maxim V. Dziumanenko <dziumanenko@gmail.com>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
@@ -1130,6 +1130,10 @@ msgstr ""
 #, fuzzy
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Переривання: Канал переводиться у стан ПРИЗУПИНЕНО ...\n"
+
+#, fuzzy, c-format
+msgid "Missing element: %s\n"
+msgstr "немає елементу \"%s\""
 
 msgid "Output tags (also known as metadata)"
 msgstr "Вивести теги (також відомі як метадані)"

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-05-10 08:32+0100\n"
+"POT-Creation-Date: 2011-06-04 13:33+0100\n"
 "PO-Revision-Date: 2010-07-16 00:50+0300\n"
 "Last-Translator: Žygimantas Beručka <uid0@akl.lt>\n"
 "Language-Team: Lithuanian <komp_lt@konferencijos.lt>\n"
@@ -1127,6 +1127,10 @@ msgstr "Nustatoma būsena į %s, kaip prašė %s...\n"
 
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Pertraukimas: stabdomas konvejeris...\n"
+
+#, fuzzy, c-format
+msgid "Missing element: %s\n"
+msgstr "nėra elemento „%s“"
 
 msgid "Output tags (also known as metadata)"
 msgstr "Išvesti žymas (dar žinomas kaip metaduomenys)"

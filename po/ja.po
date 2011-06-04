@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.20.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-05-10 08:32+0100\n"
+"POT-Creation-Date: 2011-06-04 13:33+0100\n"
 "PO-Revision-Date: 2008-10-16 19:57+0900\n"
 "Last-Translator: Makoto Kato <makoto.kt@gmail.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -1101,6 +1101,10 @@ msgstr ""
 
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "割り込み: パイプラインを停止しています...\n"
+
+#, fuzzy, c-format
+msgid "Missing element: %s\n"
+msgstr "エレメント \"%s\" がありません"
 
 msgid "Output tags (also known as metadata)"
 msgstr "タグ (メタデータ) を出力する"
