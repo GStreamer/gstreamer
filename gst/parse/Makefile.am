@@ -45,6 +45,8 @@ lex._gst_parse_yy.c: parse.l grammar.tab.h
 	echo '#ifdef HAVE_CONFIG_H' > lex._gst_parse_yy_tmp2.c && \
 	echo '#include <config.h>' >> lex._gst_parse_yy_tmp2.c && \
 	echo '#endif' >> lex._gst_parse_yy_tmp2.c && \
+	echo 'static inline int _gst_parse_yyget_column  (void * yyscanner);' >> lex._gst_parse_yy_tmp2.c && \
+	echo 'static inline void _gst_parse_yyset_column (int  column_no , void * yyscanner);' >> lex._gst_parse_yy_tmp2.c && \
 	cat lex._gst_parse_yy_tmp.c >> lex._gst_parse_yy_tmp2.c && \
 	rm lex._gst_parse_yy_tmp.c && \
 	mv lex._gst_parse_yy_tmp2.c lex._gst_parse_yy.c
