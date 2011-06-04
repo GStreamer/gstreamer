@@ -1702,6 +1702,7 @@ gst_matroska_parse_parse_metadata_id_simple_tag (GstMatroskaParse * parse,
   tag_conv[] = {
     {
     GST_MATROSKA_TAG_ID_TITLE, GST_TAG_TITLE}, {
+    GST_MATROSKA_TAG_ID_ARTIST, GST_TAG_ARTIST}, {
     GST_MATROSKA_TAG_ID_AUTHOR, GST_TAG_ARTIST}, {
     GST_MATROSKA_TAG_ID_ALBUM, GST_TAG_ALBUM}, {
     GST_MATROSKA_TAG_ID_COMMENTS, GST_TAG_COMMENT}, {
