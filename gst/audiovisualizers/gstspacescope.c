@@ -55,7 +55,6 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 GST_DEBUG_CATEGORY_STATIC (space_scope_debug);
 #define GST_CAT_DEFAULT space_scope_debug
 
-static gboolean gst_space_scope_setup (GstBaseAudioVisualizer * scope);
 static gboolean gst_space_scope_render (GstBaseAudioVisualizer * scope,
     GstBuffer * audio, GstBuffer * video);
 
@@ -81,7 +80,6 @@ gst_space_scope_base_init (gpointer g_class)
 static void
 gst_space_scope_class_init (GstSpaceScopeClass * g_class)
 {
-  /*GObjectClass *gobject_class = (GObjectClass *) g_class; */
   GstBaseAudioVisualizerClass *scope_class =
       (GstBaseAudioVisualizerClass *) g_class;
 

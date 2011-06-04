@@ -55,7 +55,6 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 GST_DEBUG_CATEGORY_STATIC (wave_scope_debug);
 #define GST_CAT_DEFAULT wave_scope_debug
 
-static gboolean gst_wave_scope_setup (GstBaseAudioVisualizer * scope);
 static gboolean gst_wave_scope_render (GstBaseAudioVisualizer * scope,
     GstBuffer * audio, GstBuffer * video);
 
@@ -81,11 +80,9 @@ gst_wave_scope_base_init (gpointer g_class)
 static void
 gst_wave_scope_class_init (GstWaveScopeClass * g_class)
 {
-  /*GObjectClass *gobject_class = (GObjectClass *) g_class; */
   GstBaseAudioVisualizerClass *scope_class =
       (GstBaseAudioVisualizerClass *) g_class;
 
-  scope_class->setup = GST_DEBUG_FUNCPTR (gst_wave_scope_setup);
   scope_class->render = GST_DEBUG_FUNCPTR (gst_wave_scope_render);
 }
 
@@ -93,12 +90,6 @@ static void
 gst_wave_scope_init (GstWaveScope * scope, GstWaveScopeClass * g_class)
 {
   /* do nothing */
-}
-
-static gboolean
-gst_wave_scope_setup (GstBaseAudioVisualizer * scope)
-{
-  return TRUE;
 }
 
 static gboolean
