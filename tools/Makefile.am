@@ -20,12 +20,10 @@ endif
 
 GST_OTHER_SRC = \
 	gst-inspect \
-	gst-typefind \
-	gst-xmlinspect
+	gst-typefind
 GST_OTHER_SRC_V = \
 	gst-inspect-@GST_MAJORMINOR@ \
-	gst-typefind-@GST_MAJORMINOR@ \
-	gst-xmlinspect-@GST_MAJORMINOR@
+	gst-typefind-@GST_MAJORMINOR@
 
 ### so all of the programs we want to build
 bin_PROGRAMS = \
@@ -52,9 +50,6 @@ gst_inspect_@GST_MAJORMINOR@_LDADD = $(GST_OBJ_LIBS)
 gst_typefind_@GST_MAJORMINOR@_SOURCES = gst-typefind.c tools.h
 gst_typefind_@GST_MAJORMINOR@_CFLAGS = $(GST_OBJ_CFLAGS)
 gst_typefind_@GST_MAJORMINOR@_LDADD = $(GST_OBJ_LIBS)
-gst_xmlinspect_@GST_MAJORMINOR@_SOURCES = gst-xmlinspect.c tools.h
-gst_xmlinspect_@GST_MAJORMINOR@_CFLAGS = $(GST_OBJ_CFLAGS)
-gst_xmlinspect_@GST_MAJORMINOR@_LDADD = $(GST_OBJ_LIBS)
 
 # make sure each unversioned tool comes from gst-run.c
 if !GST_DISABLE_LOADSAVE
@@ -67,7 +62,6 @@ endif
 
 gst_inspect_SOURCES = gst-run.c
 gst_typefind_SOURCES = gst-run.c
-gst_xmlinspect_SOURCES = gst-run.c
 
 # CFLAGS and libs for nonversioned frontend binaries
 AM_CFLAGS = $(GLIB_ONLY_CFLAGS)
@@ -108,8 +102,7 @@ endif
 
 GST_OTHER_MAN = \
 	gst-inspect-@GST_MAJORMINOR@.1 \
-	gst-typefind-@GST_MAJORMINOR@.1 \
-	gst-xmlinspect-@GST_MAJORMINOR@.1
+	gst-typefind-@GST_MAJORMINOR@.1
 
 manpages = $(GST_LOADSAVE_MAN) $(GST_PARSE_MAN) $(GST_OTHER_MAN)
 
@@ -126,7 +119,6 @@ EXTRA_DIST = \
 	gst-inspect.1.in \
 	gst-launch.1.in \
 	gst-typefind.1.in \
-	gst-xmlinspect.1.in \
 	gst-xmllaunch.1.in \
 	gst-plot-timeline.py
 
@@ -135,7 +127,6 @@ EXTRA_DIST = \
 		-e s,gst-inspect,gst-inspect-@GST_MAJORMINOR@,g \
 		-e s,gst-launch,gst-launch-@GST_MAJORMINOR@,g \
 		-e s,gst-typefind,gst-typefind-@GST_MAJORMINOR@,g \
-		-e s,gst-xmlinspect,gst-xmlinspect-@GST_MAJORMINOR@,g \
 		-e s,gst-xmllaunch,gst-xmllaunch-@GST_MAJORMINOR@,g \
 		-e s,GST_MAJORMINOR,@GST_MAJORMINOR@,g \
 		$< >$@

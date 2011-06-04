@@ -144,13 +144,11 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/gst-inspect-%{majorminor}
 %{_bindir}/gst-launch-%{majorminor}
 %{_bindir}/gst-typefind-%{majorminor}
-%{_bindir}/gst-xmlinspect-%{majorminor}
 %{_bindir}/gst-xmllaunch-%{majorminor}
 %{_libexecdir}/gstreamer-%{majorminor}/gst-plugin-scanner
 %doc %{_mandir}/man1/gst-inspect-%{majorminor}.*
 %doc %{_mandir}/man1/gst-launch-%{majorminor}.*
 %doc %{_mandir}/man1/gst-typefind-%{majorminor}.*
-%doc %{_mandir}/man1/gst-xmlinspect-%{majorminor}.*
 %doc %{_mandir}/man1/gst-xmllaunch-%{majorminor}.*
 %doc %{_datadir}/doc/gstreamer-%{majorminor}/manual
 %doc %{_datadir}/doc/gstreamer-%{majorminor}/pwg
@@ -171,7 +169,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/gst-inspect
 %{_bindir}/gst-launch
 %{_bindir}/gst-typefind
-%{_bindir}/gst-xmlinspect
 %{_bindir}/gst-xmllaunch
 
 %files devel
