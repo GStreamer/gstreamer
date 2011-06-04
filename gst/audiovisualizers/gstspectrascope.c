@@ -21,8 +21,8 @@
  * SECTION:element-spectrascope
  * @see_also: goom
  *
- * Wavescope is a simple audio visualisation element. It renders the waveforms
- * like on an oscilloscope.
+ * Spectrascope is a simple spectrum visualisation element. It renders the
+ * frequency spectrum as a series of bars.
  *
  * <refsect2>
  * <title>Example launch line</title>

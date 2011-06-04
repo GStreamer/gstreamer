@@ -21,8 +21,8 @@
  * SECTION:element-synaescope
  * @see_also: goom
  *
- * Wavescope is a simple audio visualisation element. It renders the waveforms
- * like on an oscilloscope.
+ * Synaescope is an audio visualisation element. It analyzes frequencies and
+ * out-of phase properties of audio and draws this as clouds of stars.
  *
  * <refsect2>
  * <title>Example launch line</title>
@@ -248,6 +248,7 @@ gst_synae_scope_render (GstBaseAudioVisualizer * bscope, GstBuffer * audio,
     r = sqrt (frr * frr + fir * fir);
     fc = r + l;
 
+    /* out-of-phase'ness for this frequency component */
     clarity = (gint) (((frl + frr) * (frl - frr) + (fil + fir) * (fil - fir)) /
         (((frl + frr) * (frl + frr) + (fil - fir) * (fil - fir) + (frl -
                     frr) * (frl - frr) + (fil + fir) * (fil + fir)) * 256.0));
