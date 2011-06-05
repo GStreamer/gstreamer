@@ -165,9 +165,9 @@ typedef enum
 #endif
 #endif
 
-#define DIRECTX_DEBUG(...)                                              (directx_log_debug(__FILE__, DIRECTX_FUNCTION, __LINE__, ##__VA_ARGS__))
-#define DIRECTX_WARNING(...)                                            (directx_log_warning(__FILE__, DIRECTX_FUNCTION, __LINE__, ##__VA_ARGS__))
-#define DIRECTX_ERROR(...)                                              (directx_log_error(__FILE__, DIRECTX_FUNCTION, __LINE__, ##__VA_ARGS__))
+#define DIRECTX_DEBUG(...)                                              (directx_log_debug(__FILE__, DIRECTX_FUNCTION, __LINE__, __VA_ARGS__))
+#define DIRECTX_WARNING(...)                                            (directx_log_warning(__FILE__, DIRECTX_FUNCTION, __LINE__, __VA_ARGS__))
+#define DIRECTX_ERROR(...)                                              (directx_log_error(__FILE__, DIRECTX_FUNCTION, __LINE__, __VA_ARGS__))
 
 #define DIRECTX_COMPONENT_API(component)                                (component->api)
 #define DIRECTX_COMPONENT_DATA(component)                               (component->private_data)
