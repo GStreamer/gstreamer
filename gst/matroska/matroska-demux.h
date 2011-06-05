@@ -70,7 +70,6 @@ typedef struct _GstMatroskaDemux {
   gboolean                 tracks_parsed;
   gboolean                 segmentinfo_parsed;
   gboolean                 attachments_parsed;
-  GList                   *tags_parsed;
   GList                   *seek_parsed;
 
   /* cluster positions (optional) */

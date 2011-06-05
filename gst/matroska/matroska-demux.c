@@ -404,10 +404,10 @@ gst_matroska_demux_reset (GstElement * element)
   demux->segmentinfo_parsed = FALSE;
   demux->attachments_parsed = FALSE;
 
-  g_list_foreach (demux->tags_parsed,
+  g_list_foreach (demux->common.tags_parsed,
       (GFunc) gst_matroska_demux_free_parsed_el, NULL);
-  g_list_free (demux->tags_parsed);
-  demux->tags_parsed = NULL;
+  g_list_free (demux->common.tags_parsed);
+  demux->common.tags_parsed = NULL;
 
   g_list_foreach (demux->seek_parsed,
       (GFunc) gst_matroska_demux_free_parsed_el, NULL);
@@ -2383,71 +2383,6 @@ gst_matroska_demux_parse_info (GstMatroskaDemux * demux, GstEbmlRead * ebml)
   DEBUG_ELEMENT_STOP (demux, ebml, "SegmentInfo", ret);
 
   demux->segmentinfo_parsed = TRUE;
-
-  return ret;
-}
-
-static GstFlowReturn
-gst_matroska_demux_parse_metadata (GstMatroskaDemux * demux, GstEbmlRead * ebml)
-{
-  GstTagList *taglist;
-  GstFlowReturn ret = GST_FLOW_OK;
-  guint32 id;
-  GList *l;
-  guint64 curpos;
-
-  curpos = gst_ebml_read_get_pos (ebml);
-
-  /* Make sure we don't parse a tags element twice and
-   * post it's tags twice */
-  curpos = gst_ebml_read_get_pos (ebml);
-  for (l = demux->tags_parsed; l; l = l->next) {
-    guint64 *pos = l->data;
-
-    if (*pos == curpos) {
-      GST_DEBUG_OBJECT (demux, "Skipping already parsed Tags at offset %"
-          G_GUINT64_FORMAT, curpos);
-      return GST_FLOW_OK;
-    }
-  }
-
-  demux->tags_parsed =
-      g_list_prepend (demux->tags_parsed, g_slice_new (guint64));
-  *((guint64 *) demux->tags_parsed->data) = curpos;
-  /* fall-through */
-
-  if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK) {
-    DEBUG_ELEMENT_STOP (demux, ebml, "Tags", ret);
-    return ret;
-  }
-
-  taglist = gst_tag_list_new ();
-
-  while (ret == GST_FLOW_OK && gst_ebml_read_has_remaining (ebml, 1, TRUE)) {
-    if ((ret = gst_ebml_peek_id (ebml, &id)) != GST_FLOW_OK)
-      break;
-
-    switch (id) {
-      case GST_MATROSKA_ID_TAG:
-        ret = gst_matroska_read_common_parse_metadata_id_tag (&demux->common,
-            ebml, &taglist);
-        break;
-
-      default:
-        ret = gst_matroska_read_common_parse_skip (&demux->common, ebml,
-            "Tags", id);
-        break;
-        /* FIXME: Use to limit the tags to specific pads */
-      case GST_MATROSKA_ID_TARGETS:
-        ret = gst_ebml_read_skip (ebml);
-        break;
-    }
-  }
-
-  DEBUG_ELEMENT_STOP (demux, ebml, "Tags", ret);
-
-  gst_matroska_read_common_found_global_tag (&demux->common,
-      GST_ELEMENT_CAST (demux), taglist);
 
   return ret;
 }
@@ -4556,7 +4491,8 @@ gst_matroska_demux_parse_id (GstMatroskaDemux * demux, guint32 id,
           break;
         case GST_MATROSKA_ID_TAGS:
           GST_READ_CHECK (gst_matroska_demux_take (demux, read, &ebml));
-          ret = gst_matroska_demux_parse_metadata (demux, &ebml);
+          ret = gst_matroska_read_common_parse_metadata (&demux->common,
+              GST_ELEMENT_CAST (demux), &ebml);
           break;
         case GST_MATROSKA_ID_CHAPTERS:
           GST_READ_CHECK (gst_matroska_demux_take (demux, read, &ebml));
