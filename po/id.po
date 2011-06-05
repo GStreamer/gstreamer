@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-04-16 15:41+0100\n"
+"POT-Creation-Date: 2011-06-05 23:31+0100\n"
 "PO-Revision-Date: 2010-04-26 22:01+0700\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
@@ -234,14 +234,6 @@ msgstr "Tak ada penanganan URI yang diimplementasikan untuk \"%s\"."
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Galat ketika mengirim data ke \"%s:%d\"."
-
-#, c-format
-msgid "Error while sending gdp header data to \"%s:%d\"."
-msgstr "Galat ketika mengirim data tajuk gdp ke \"%s:%d\"."
-
-#, c-format
-msgid "Error while sending gdp payload data to \"%s:%d\"."
-msgstr "Galat ketika mengirim data pemuat gdp ke \"%s:%d\"."
 
 #, c-format
 msgid "Connection to %s:%d refused."
@@ -599,6 +591,12 @@ msgstr "Divais \"%s\" telah digunakan."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Tak dapat membuka divaus \"%s\" untuk dibaca dan ditulis."
+
+#~ msgid "Error while sending gdp header data to \"%s:%d\"."
+#~ msgstr "Galat ketika mengirim data tajuk gdp ke \"%s:%d\"."
+
+#~ msgid "Error while sending gdp payload data to \"%s:%d\"."
+#~ msgstr "Galat ketika mengirim data pemuat gdp ke \"%s:%d\"."
 
 #~ msgid "Can't display both text subtitles and subpictures."
 #~ msgstr "Tak dapat menampilkan baik teks subjudul dan subgambar."

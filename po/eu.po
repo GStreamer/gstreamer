@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-04-16 15:41+0100\n"
+"POT-Creation-Date: 2011-06-05 23:31+0100\n"
 "PO-Revision-Date: 2010-03-25 12:32+0100\n"
 "Last-Translator: Mikel Olasagasti Uranga <hey_neken@mundurat.net>\n"
 "Language-Team: Basque <translation-team-eu@lists.sourceforge.net>\n"
@@ -243,16 +243,6 @@ msgstr "Ez da URI maneiatzailerik ezarri \"%s\"(r)entzat."
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Errorea gertatu da datuak \"%s:%d\"(e)ra bidaltzean."
-
-#, c-format
-msgid "Error while sending gdp header data to \"%s:%d\"."
-msgstr "Errorea gertatu da gdp goiburuaren datuak \"%s:%d\"(e)ra bidaltzean."
-
-#, c-format
-msgid "Error while sending gdp payload data to \"%s:%d\"."
-msgstr ""
-"Errorea gertatu da gdp karga erabilgarriaren datuak \"%s:%d\"(e)ra "
-"bidaltzean."
 
 #, c-format
 msgid "Connection to %s:%d refused."
@@ -610,3 +600,12 @@ msgstr "\"%s\" gailua erabiltzen ari dira."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Ezin izan da \"%s\" gailua ireki irakurtzeko eta idazteko."
+
+#~ msgid "Error while sending gdp header data to \"%s:%d\"."
+#~ msgstr ""
+#~ "Errorea gertatu da gdp goiburuaren datuak \"%s:%d\"(e)ra bidaltzean."
+
+#~ msgid "Error while sending gdp payload data to \"%s:%d\"."
+#~ msgstr ""
+#~ "Errorea gertatu da gdp karga erabilgarriaren datuak \"%s:%d\"(e)ra "
+#~ "bidaltzean."

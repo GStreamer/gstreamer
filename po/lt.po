@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-0.10.15.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-04-16 15:41+0100\n"
+"POT-Creation-Date: 2011-06-05 23:31+0100\n"
 "PO-Revision-Date: 2008-03-07 23:43+0200\n"
 "Last-Translator: Gintautas Miliauskas <gintas@akl.lt>\n"
 "Language-Team: Lithuanian <komp_lt@konferencijos.lt>\n"
@@ -243,14 +243,6 @@ msgstr "Nėra URI valdyklės „%s“."
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Klaida siunčiant duomenis į „%s:%d“."
-
-#, c-format
-msgid "Error while sending gdp header data to \"%s:%d\"."
-msgstr "Klaida siunčiant gdp antraštės duomenis į \"%s:%d\"."
-
-#, c-format
-msgid "Error while sending gdp payload data to \"%s:%d\"."
-msgstr "Klaida siunčiant gdp duomenis į „%s:%d“."
 
 #, c-format
 msgid "Connection to %s:%d refused."
@@ -609,6 +601,12 @@ msgstr "Įrenginys „%s“ jau naudojamas."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Nepavyko atverti įrenginio „%s“ skaitymui ir rašymui."
+
+#~ msgid "Error while sending gdp header data to \"%s:%d\"."
+#~ msgstr "Klaida siunčiant gdp antraštės duomenis į \"%s:%d\"."
+
+#~ msgid "Error while sending gdp payload data to \"%s:%d\"."
+#~ msgstr "Klaida siunčiant gdp duomenis į „%s:%d“."
 
 #~ msgid "Could not create \"decodebin2\" element."
 #~ msgstr "Nepavyko sukurti „decodebin2“ elemento."

@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-04-27 11:56+0100\n"
+"POT-Creation-Date: 2011-06-05 23:31+0100\n"
 "PO-Revision-Date: 2011-04-26 19:22+0200\n"
 "Last-Translator: Server Acim <serveracim@gmail.com>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
@@ -233,14 +233,6 @@ msgstr "Hiç bir URI bağlantısı sağlanmadı \"%s\"."
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Dosyayı şuraya gönderirken hata \"%s:%d\"."
-
-#, c-format
-msgid "Error while sending gdp header data to \"%s:%d\"."
-msgstr "Bir gdp başlık verisini şuraya gönderirken hata \"%s:%d\"."
-
-#, c-format
-msgid "Error while sending gdp payload data to \"%s:%d\"."
-msgstr "Bir gdp verisini şuraya gönderirken hata \"%s:%d\"."
 
 #, c-format
 msgid "Connection to %s:%d refused."
@@ -598,6 +590,12 @@ msgstr "Aygıt \"%s\" zaten kullanımda."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Şu aygıtı\"%s\" for okuma veya yazma için açamıyor."
+
+#~ msgid "Error while sending gdp header data to \"%s:%d\"."
+#~ msgstr "Bir gdp başlık verisini şuraya gönderirken hata \"%s:%d\"."
+
+#~ msgid "Error while sending gdp payload data to \"%s:%d\"."
+#~ msgstr "Bir gdp verisini şuraya gönderirken hata \"%s:%d\"."
 
 #~ msgid "Can't display both text subtitles and subpictures."
 #~ msgstr "Metin altyazılarını altgörüntülerini oynatamıyor."

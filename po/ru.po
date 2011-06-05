@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-04-27 11:56+0100\n"
+"POT-Creation-Date: 2011-06-05 23:31+0100\n"
 "PO-Revision-Date: 2011-04-26 20:30+0400\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@mx.ru>\n"
@@ -242,14 +242,6 @@ msgstr "Для «%s» не реализован обработчик URI."
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Ошибка отправки данных в «%s:%d»."
-
-#, c-format
-msgid "Error while sending gdp header data to \"%s:%d\"."
-msgstr "Ошибка отправки данных заголовка gdp в «%s:%d»."
-
-#, c-format
-msgid "Error while sending gdp payload data to \"%s:%d\"."
-msgstr "Ошибка отправки данных gdp в «%s:%d»."
 
 #, c-format
 msgid "Connection to %s:%d refused."
@@ -609,6 +601,12 @@ msgstr "Устройство «%s» уже используется."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Не удалось открыть устройство «%s» для чтения и записи."
+
+#~ msgid "Error while sending gdp header data to \"%s:%d\"."
+#~ msgstr "Ошибка отправки данных заголовка gdp в «%s:%d»."
+
+#~ msgid "Error while sending gdp payload data to \"%s:%d\"."
+#~ msgstr "Ошибка отправки данных gdp в «%s:%d»."
 
 #~ msgid "No file name specified."
 #~ msgstr "Не указано имя файла."

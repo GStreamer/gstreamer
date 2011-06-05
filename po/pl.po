@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-04-27 11:56+0100\n"
+"POT-Creation-Date: 2011-06-05 23:31+0100\n"
 "PO-Revision-Date: 2011-04-26 18:01+0200\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
@@ -244,14 +244,6 @@ msgstr "Nie ma zaimplementowanej obsługi URI dla \"%s\"."
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Błąd podczas wysyłania danych do \"%s:%d\"."
-
-#, c-format
-msgid "Error while sending gdp header data to \"%s:%d\"."
-msgstr "Błąd podczas wysyłania danych nagłówka gdp do \"%s:%d\"."
-
-#, c-format
-msgid "Error while sending gdp payload data to \"%s:%d\"."
-msgstr "Błąd podczas wysyłania danych gdp do \"%s:%d\"."
 
 #, c-format
 msgid "Connection to %s:%d refused."
@@ -609,3 +601,9 @@ msgstr "Urządzenie \"%s\" jest już używane."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Nie udało się otworzyć urządzenia \"%s\" do odczytu i zapisu."
+
+#~ msgid "Error while sending gdp header data to \"%s:%d\"."
+#~ msgstr "Błąd podczas wysyłania danych nagłówka gdp do \"%s:%d\"."
+
+#~ msgid "Error while sending gdp payload data to \"%s:%d\"."
+#~ msgstr "Błąd podczas wysyłania danych gdp do \"%s:%d\"."

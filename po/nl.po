@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-04-27 11:56+0100\n"
+"POT-Creation-Date: 2011-06-05 23:31+0100\n"
 "PO-Revision-Date: 2011-04-27 00:12+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -239,14 +239,6 @@ msgstr "Geen URI-handler geïmplementeerd voor \"%s\"."
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Fout bij het zenden van gegevens naar \"%s:%d\"."
-
-#, c-format
-msgid "Error while sending gdp header data to \"%s:%d\"."
-msgstr "Fout tijdens het zenden van gdp-headergegevens naar \"%s:%d\"."
-
-#, c-format
-msgid "Error while sending gdp payload data to \"%s:%d\"."
-msgstr "Fout tijdens het zenden van gdp-gegevens naar \"%s:%d\"."
 
 #, c-format
 msgid "Connection to %s:%d refused."
@@ -613,3 +605,9 @@ msgstr "Apparaat \"%s\" is al in gebruik."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Kan apparaat \"%s\" niet openen voor lezen en schrijven."
+
+#~ msgid "Error while sending gdp header data to \"%s:%d\"."
+#~ msgstr "Fout tijdens het zenden van gdp-headergegevens naar \"%s:%d\"."
+
+#~ msgid "Error while sending gdp payload data to \"%s:%d\"."
+#~ msgstr "Fout tijdens het zenden van gdp-gegevens naar \"%s:%d\"."

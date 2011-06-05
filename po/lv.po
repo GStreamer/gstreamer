@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-04-16 15:41+0100\n"
+"POT-Creation-Date: 2011-06-05 23:31+0100\n"
 "PO-Revision-Date: 2010-07-07 10:52+0100\n"
 "Last-Translator: Rihards Priedītis <rprieditis@gmail.com>\n"
 "Language-Team: Latvian <translation-team-lv@lists.sourceforge.net>\n"
@@ -241,14 +241,6 @@ msgstr "Nav izstrādāts neviens URI apstrādātājs priekš \"%s\"."
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Radās kļūda nosūtot datus uz \"%s:%d\"."
-
-#, c-format
-msgid "Error while sending gdp header data to \"%s:%d\"."
-msgstr "Radās kļūda nosūtot gdb galvenas datus uz \"%s:%d\"."
-
-#, c-format
-msgid "Error while sending gdp payload data to \"%s:%d\"."
-msgstr "Kļūda sūtot gdp iekrāvēja datus uz \"%s:%d\""
 
 #, c-format
 msgid "Connection to %s:%d refused."
@@ -606,6 +598,12 @@ msgstr "Ierīce \"%s\" jau tiek izmantota."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Nevarēja atvērt ierīci \"%s\" lasīšanai vai rakstīšanai."
+
+#~ msgid "Error while sending gdp header data to \"%s:%d\"."
+#~ msgstr "Radās kļūda nosūtot gdb galvenas datus uz \"%s:%d\"."
+
+#~ msgid "Error while sending gdp payload data to \"%s:%d\"."
+#~ msgstr "Kļūda sūtot gdp iekrāvēja datus uz \"%s:%d\""
 
 #~ msgid "Could not create \"decodebin2\" element."
 #~ msgstr "Nav iespējams izveidot \"decodebin2\" elementu."

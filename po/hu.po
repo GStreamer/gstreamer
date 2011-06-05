@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-04-16 15:41+0100\n"
+"POT-Creation-Date: 2011-06-05 23:31+0100\n"
 "PO-Revision-Date: 2010-11-03 02:48+0100\n"
 "Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -241,14 +241,6 @@ msgstr "Nincs URI kezelő megvalósítva a következőhöz: „%s”."
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Hiba adatok küldése során a következőnek: „%s:%d”."
-
-#, c-format
-msgid "Error while sending gdp header data to \"%s:%d\"."
-msgstr "Hiba a gdp fejlécadatok küldésekor a következőnek: „%s:%d”."
-
-#, c-format
-msgid "Error while sending gdp payload data to \"%s:%d\"."
-msgstr "Hiba a gdp küldeményadatok elküldésekor a következőnek: „%s:%d”."
 
 #, c-format
 msgid "Connection to %s:%d refused."
@@ -608,3 +600,9 @@ msgstr "Az eszköz („%s”) már használatban van."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Nem lehet olvasásra és írásra megnyitni az eszközt („%s”)."
+
+#~ msgid "Error while sending gdp header data to \"%s:%d\"."
+#~ msgstr "Hiba a gdp fejlécadatok küldésekor a következőnek: „%s:%d”."
+
+#~ msgid "Error while sending gdp payload data to \"%s:%d\"."
+#~ msgstr "Hiba a gdp küldeményadatok elküldésekor a következőnek: „%s:%d”."

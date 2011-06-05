@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-04-16 15:41+0100\n"
+"POT-Creation-Date: 2011-06-05 23:31+0100\n"
 "PO-Revision-Date: 2010-10-31 10:51+0100\n"
 "Last-Translator: Petr Kovar <pknbe@volny.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -241,14 +241,6 @@ msgstr "U \"%s\" není prováděna obsluha URI."
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Chyba při odesílání dat na \"%s:%d\"."
-
-#, c-format
-msgid "Error while sending gdp header data to \"%s:%d\"."
-msgstr "Chyba při odesílání dat záhlaví gdp na \"%s:%d\"."
-
-#, c-format
-msgid "Error while sending gdp payload data to \"%s:%d\"."
-msgstr "Chyba při odesílání zátěžových dat gdp na \"%s:%d\"."
 
 #, c-format
 msgid "Connection to %s:%d refused."
@@ -611,3 +603,9 @@ msgstr "Zařízení \"%s\" je již používáno."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Zařízení \"%s\" se nezdařilo otevřít ke čtení a k zápisu."
+
+#~ msgid "Error while sending gdp header data to \"%s:%d\"."
+#~ msgstr "Chyba při odesílání dat záhlaví gdp na \"%s:%d\"."
+
+#~ msgid "Error while sending gdp payload data to \"%s:%d\"."
+#~ msgstr "Chyba při odesílání zátěžových dat gdp na \"%s:%d\"."

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-04-16 15:41+0100\n"
+"POT-Creation-Date: 2011-06-05 23:31+0100\n"
 "PO-Revision-Date: 2010-11-04 23:13+0100\n"
 "Last-Translator: Jordi Mallach <jordi@sindominio.net>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -239,15 +239,6 @@ msgstr "No hi ha cap gestor d'URI implementat per a «%s»."
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "S'ha produït un error en enviar dades a «%s:%d»."
-
-#, c-format
-msgid "Error while sending gdp header data to \"%s:%d\"."
-msgstr "S'ha produït un error en enviar dades de la capçalera gdp a «%s:%d»."
-
-# Payload -> càrrega en molts àmbits. jm
-#, c-format
-msgid "Error while sending gdp payload data to \"%s:%d\"."
-msgstr "S'ha produït un error en enviar la càrrega de dades de gdp a «%s:%d»."
 
 #, c-format
 msgid "Connection to %s:%d refused."
@@ -605,6 +596,15 @@ msgstr "El dispositiu «%s» ja és en ús."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "No s'ha pogut obrir el dispositiu «%s» per a llegir i escriure."
+
+#~ msgid "Error while sending gdp header data to \"%s:%d\"."
+#~ msgstr ""
+#~ "S'ha produït un error en enviar dades de la capçalera gdp a «%s:%d»."
+
+# Payload -> càrrega en molts àmbits. jm
+#~ msgid "Error while sending gdp payload data to \"%s:%d\"."
+#~ msgstr ""
+#~ "S'ha produït un error en enviar la càrrega de dades de gdp a «%s:%d»."
 
 #~ msgid "discid"
 #~ msgstr "id del disc"

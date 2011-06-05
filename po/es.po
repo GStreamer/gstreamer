@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-04-16 15:41+0100\n"
+"POT-Creation-Date: 2011-06-05 23:31+0100\n"
 "PO-Revision-Date: 2010-11-02 15:40+0100\n"
 "Last-Translator: Jorge González González <aloriel@gmail.com>\n"
 "Language-Team: Spanish <es@li.org>\n"
@@ -240,14 +240,6 @@ msgstr "No existe un manejador URI implementado para «%s»."
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Error al enviar los datos a «%s:%d»."
-
-#, c-format
-msgid "Error while sending gdp header data to \"%s:%d\"."
-msgstr "Error al enviar los datos de la cabecera gdp a «%s:%d»."
-
-#, c-format
-msgid "Error while sending gdp payload data to \"%s:%d\"."
-msgstr "Error al enviar la carga de datos de gdp a «%s:%d»."
 
 #, c-format
 msgid "Connection to %s:%d refused."
@@ -608,6 +600,12 @@ msgstr "El dispositivo «%s» ya se está usando."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "No se pudo abrir el dispositivo «%s» para su lectura y escritura."
+
+#~ msgid "Error while sending gdp header data to \"%s:%d\"."
+#~ msgstr "Error al enviar los datos de la cabecera gdp a «%s:%d»."
+
+#~ msgid "Error while sending gdp payload data to \"%s:%d\"."
+#~ msgstr "Error al enviar la carga de datos de gdp a «%s:%d»."
 
 #~ msgid "Can't display both text subtitles and subpictures."
 #~ msgstr "No se pueden mostrar a la vez subtítulos de texto y subimágenes."

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-04-16 15:41+0100\n"
+"POT-Creation-Date: 2011-06-05 23:31+0100\n"
 "PO-Revision-Date: 2004-08-07 20:29+0200\n"
 "Last-Translator: Laurent Dhima <laurenti@alblinux.net>\n"
 "Language-Team: Albanian <begraj@hotmail.com>\n"
@@ -238,14 +238,6 @@ msgstr ""
 #, fuzzy, c-format
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Gabim gjatë mbylljes së file \"%s\"."
-
-#, c-format
-msgid "Error while sending gdp header data to \"%s:%d\"."
-msgstr ""
-
-#, c-format
-msgid "Error while sending gdp payload data to \"%s:%d\"."
-msgstr ""
 
 #, c-format
 msgid "Connection to %s:%d refused."

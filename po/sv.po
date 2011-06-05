@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-04-16 15:41+0100\n"
+"POT-Creation-Date: 2011-06-05 23:31+0100\n"
 "PO-Revision-Date: 2010-06-07 18:17+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -239,14 +239,6 @@ msgstr "Ingen URI-hanterare implementerad för \"%s\"."
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Fel vid sändning av data till \"%s:%d\"."
-
-#, c-format
-msgid "Error while sending gdp header data to \"%s:%d\"."
-msgstr "Fel vid sändning av gdp-huvuddata till \"%s:%d\"."
-
-#, c-format
-msgid "Error while sending gdp payload data to \"%s:%d\"."
-msgstr "Fel vid sändning av gdp-paketdata till \"%s:%d\"."
 
 #, c-format
 msgid "Connection to %s:%d refused."
@@ -604,6 +596,12 @@ msgstr "Enheten \"%s\" används redan."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Kunde inte öppna enheten \"%s\" för läsning och skrivning."
+
+#~ msgid "Error while sending gdp header data to \"%s:%d\"."
+#~ msgstr "Fel vid sändning av gdp-huvuddata till \"%s:%d\"."
+
+#~ msgid "Error while sending gdp payload data to \"%s:%d\"."
+#~ msgstr "Fel vid sändning av gdp-paketdata till \"%s:%d\"."
 
 #~ msgid "Can't display both text subtitles and subpictures."
 #~ msgstr "Kan inte visa både undertexter och underbilder."

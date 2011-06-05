@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-04-27 11:56+0100\n"
+"POT-Creation-Date: 2011-06-05 23:31+0100\n"
 "PO-Revision-Date: 2011-04-26 22:31+0300\n"
 "Last-Translator: Alexander Shopov <ash@kambanaria.org>\n"
 "Language-Team: Bulgarian <dict@fsa-bg.org>\n"
@@ -243,14 +243,6 @@ msgstr "Обработката на адреси „%s“ не е реализи
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Грешка при запис във файла „%s:%d“."
-
-#, c-format
-msgid "Error while sending gdp header data to \"%s:%d\"."
-msgstr "Грешка при запис на заглавните данни gdp във файла „%s:%d“."
-
-#, c-format
-msgid "Error while sending gdp payload data to \"%s:%d\"."
-msgstr "Грешка при изпращането на натоварените по gtp данни към „%s:%d“."
 
 #, c-format
 msgid "Connection to %s:%d refused."
@@ -608,3 +600,9 @@ msgstr "Устройството „%s“ вече се използва."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Устройството „%s“ не може да се отвори за четене и запис."
+
+#~ msgid "Error while sending gdp header data to \"%s:%d\"."
+#~ msgstr "Грешка при запис на заглавните данни gdp във файла „%s:%d“."
+
+#~ msgid "Error while sending gdp payload data to \"%s:%d\"."
+#~ msgstr "Грешка при изпращането на натоварените по gtp данни към „%s:%d“."

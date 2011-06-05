@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-04-30 17:11+0100\n"
+"POT-Creation-Date: 2011-06-05 23:31+0100\n"
 "PO-Revision-Date: 2011-04-28 00:04+0200\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@googlemail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
@@ -244,14 +244,6 @@ msgstr "Es ist kein URI-Handler für »%s« implementiert."
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Fehler beim Senden der Daten nach »%s:%d«."
-
-#, c-format
-msgid "Error while sending gdp header data to \"%s:%d\"."
-msgstr "Fehler beim Senden der GDP-Kopfdaten nach »%s:%d«."
-
-#, c-format
-msgid "Error while sending gdp payload data to \"%s:%d\"."
-msgstr "Fehler beim Senden der GDP-Nutzdaten nach »%s:%d«."
 
 #, c-format
 msgid "Connection to %s:%d refused."
@@ -615,6 +607,12 @@ msgstr "Das Gerät »%s« wird bereits verwendet."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Das Gerät »%s« konnte nicht zum Lesen und Schreiben geöffnet werden."
+
+#~ msgid "Error while sending gdp header data to \"%s:%d\"."
+#~ msgstr "Fehler beim Senden der GDP-Kopfdaten nach »%s:%d«."
+
+#~ msgid "Error while sending gdp payload data to \"%s:%d\"."
+#~ msgstr "Fehler beim Senden der GDP-Nutzdaten nach »%s:%d«."
 
 #~ msgid "Can't display both text subtitles and subpictures."
 #~ msgstr ""

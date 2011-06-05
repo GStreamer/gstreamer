@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-04-27 11:56+0100\n"
+"POT-Creation-Date: 2011-06-05 23:31+0100\n"
 "PO-Revision-Date: 2011-04-26 15:56+0100\n"
 "Last-Translator: Klemen Košir <klemen.kosir@gmx.com>\n"
 "Language-Team: Slovenian <translation-team-sl@lists.sourceforge.net>\n"
@@ -241,14 +241,6 @@ msgstr "Ni ročnika naslovov URI za \"%s\"."
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Napaka med pošiljanjem podatkov na \"%s:%d\"."
-
-#, c-format
-msgid "Error while sending gdp header data to \"%s:%d\"."
-msgstr "Napaka med pošiljanjem podatkov glave GDP na \"%s:%d\"."
-
-#, c-format
-msgid "Error while sending gdp payload data to \"%s:%d\"."
-msgstr "Napaka med pošiljanjem podatkov vsebine GDP na \"%s:%d\"."
 
 #, c-format
 msgid "Connection to %s:%d refused."
@@ -607,6 +599,12 @@ msgstr "Naprava \"%s\" je že v uporabi."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Naprave \"%s\" ni mogoče odpreti za branje in pisanje."
+
+#~ msgid "Error while sending gdp header data to \"%s:%d\"."
+#~ msgstr "Napaka med pošiljanjem podatkov glave GDP na \"%s:%d\"."
+
+#~ msgid "Error while sending gdp payload data to \"%s:%d\"."
+#~ msgstr "Napaka med pošiljanjem podatkov vsebine GDP na \"%s:%d\"."
 
 #, fuzzy
 #~ msgid "No Temp directory specified."

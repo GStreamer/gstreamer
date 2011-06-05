@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.31.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-04-16 15:41+0100\n"
+"POT-Creation-Date: 2011-06-05 23:31+0100\n"
 "PO-Revision-Date: 2011-01-09 21:20+0100\n"
 "Last-Translator: Fran Diéguez <frandieguez@ubuntu.com>\n"
 "Language-Team: Galician <proxecto@trasno.net>\n"
@@ -241,14 +241,6 @@ msgstr "Non hai implementado un manexador de URIs para «%s»."
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Produciuse un erro mentres se enviaban datos a \"%s:%d\"."
-
-#, c-format
-msgid "Error while sending gdp header data to \"%s:%d\"."
-msgstr "Produciuse un erro ao enviar os datos da cabeceira gdp a  \"%s:%d\"."
-
-#, c-format
-msgid "Error while sending gdp payload data to \"%s:%d\"."
-msgstr "Produciuse un erro ao enviar a carga de datos de gdp a «%s:%d»."
 
 #, c-format
 msgid "Connection to %s:%d refused."
@@ -610,3 +602,10 @@ msgstr "O dispositivo «%s» xa está en uso."
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr ""
 "Non foi posíbel abrir o dispositivo «%s» para a súa lectura e escritura."
+
+#~ msgid "Error while sending gdp header data to \"%s:%d\"."
+#~ msgstr ""
+#~ "Produciuse un erro ao enviar os datos da cabeceira gdp a  \"%s:%d\"."
+
+#~ msgid "Error while sending gdp payload data to \"%s:%d\"."
+#~ msgstr "Produciuse un erro ao enviar a carga de datos de gdp a «%s:%d»."

@@ -33,7 +33,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-04-30 17:11+0100\n"
+"POT-Creation-Date: 2011-06-05 23:31+0100\n"
 "PO-Revision-Date: 2011-04-28 16:38+0100\n"
 "Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
@@ -264,15 +264,6 @@ msgstr "Ingen URI-håndtering er implementeret for \"%s\"."
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Der opstod en fejl under data-overførsel til \"%s:%d\"."
-
-#, c-format
-msgid "Error while sending gdp header data to \"%s:%d\"."
-msgstr ""
-"Der opstod en fejl under overførsel af gdp-overskriftsdata til \"%s:%d\"."
-
-#, c-format
-msgid "Error while sending gdp payload data to \"%s:%d\"."
-msgstr "Der opstod en fejl under overførsel af gdp-pakkeindhold til \"%s:%d\"."
 
 #, c-format
 msgid "Connection to %s:%d refused."
@@ -647,3 +638,11 @@ msgstr "Enheden \"%s\" er allerede i brug."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Kunne ikke tilgå enheden \"%s\"."
+
+#~ msgid "Error while sending gdp header data to \"%s:%d\"."
+#~ msgstr ""
+#~ "Der opstod en fejl under overførsel af gdp-overskriftsdata til \"%s:%d\"."
+
+#~ msgid "Error while sending gdp payload data to \"%s:%d\"."
+#~ msgstr ""
+#~ "Der opstod en fejl under overførsel af gdp-pakkeindhold til \"%s:%d\"."

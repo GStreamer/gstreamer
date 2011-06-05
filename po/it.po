@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-04-16 15:41+0100\n"
+"POT-Creation-Date: 2011-06-05 23:31+0100\n"
 "PO-Revision-Date: 2010-04-28 14:27+0200\n"
 "Last-Translator: Luca Ferretti <elle.uca@infinito.it>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
@@ -244,14 +244,6 @@ msgstr "Nessun gestore di URI implementato per «%s»."
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Errore durante l'invio dei dati a \"%s:%d\"."
-
-#, c-format
-msgid "Error while sending gdp header data to \"%s:%d\"."
-msgstr "Errore durante l'invio di dati header gdp a \"%s:%d\"."
-
-#, c-format
-msgid "Error while sending gdp payload data to \"%s:%d\"."
-msgstr "Errore durante l'invio di dati payload gdp a \"%s:%d\"."
 
 #, c-format
 msgid "Connection to %s:%d refused."
@@ -627,3 +619,9 @@ msgstr "Il device «%s» è già in uso."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Impossibile aprire il device «%s» in lettura e scrittura."
+
+#~ msgid "Error while sending gdp header data to \"%s:%d\"."
+#~ msgstr "Errore durante l'invio di dati header gdp a \"%s:%d\"."
+
+#~ msgid "Error while sending gdp payload data to \"%s:%d\"."
+#~ msgstr "Errore durante l'invio di dati payload gdp a \"%s:%d\"."

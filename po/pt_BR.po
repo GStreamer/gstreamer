@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-0.10.31.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-04-16 15:41+0100\n"
+"POT-Creation-Date: 2011-06-05 23:31+0100\n"
 "PO-Revision-Date: 2011-01-08 01:02-0300\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldp-br@bazar.conectiva.com.br>\n"
@@ -242,14 +242,6 @@ msgstr "Nenhum manipulador para o URI \"%s\" foi implementado."
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Erro ao enviar dados para \"%s:%d\"."
-
-#, c-format
-msgid "Error while sending gdp header data to \"%s:%d\"."
-msgstr "Erro ao enviar o cabeçalho de dados GDP para \"%s:%d\"."
-
-#, c-format
-msgid "Error while sending gdp payload data to \"%s:%d\"."
-msgstr "Erro ao enviar codificação de dados GDP para \"%s:%d\"."
 
 #, c-format
 msgid "Connection to %s:%d refused."
@@ -616,6 +608,12 @@ msgstr "O dispositivo \"%s\" já está sendo usado."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Não foi possível abrir o dispositivo \"%s\" para leitura e escrita."
+
+#~ msgid "Error while sending gdp header data to \"%s:%d\"."
+#~ msgstr "Erro ao enviar o cabeçalho de dados GDP para \"%s:%d\"."
+
+#~ msgid "Error while sending gdp payload data to \"%s:%d\"."
+#~ msgstr "Erro ao enviar codificação de dados GDP para \"%s:%d\"."
 
 #~ msgid "Could not create \"decodebin2\" element."
 #~ msgstr "Não foi possível criar o elemento \"decodebin2\"."

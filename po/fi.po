@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-04-16 15:41+0100\n"
+"POT-Creation-Date: 2011-06-05 23:31+0100\n"
 "PO-Revision-Date: 2010-12-31 23:21+0200\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
@@ -241,14 +241,6 @@ msgstr "Protokollalle \"%s\" ei ole määritelty URI-käsittelijää."
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Virhe lähetettäessä tietoa kohteeseen \"%s:%d\"."
-
-#, c-format
-msgid "Error while sending gdp header data to \"%s:%d\"."
-msgstr "Virhe lähetettäessä gdp-otsaketietoja kohteeseen \"%s:%d\"."
-
-#, c-format
-msgid "Error while sending gdp payload data to \"%s:%d\"."
-msgstr "Virhe lähetettäessä gdp-sisältöä kohteeseen \"%s:%d\"."
 
 #, c-format
 msgid "Connection to %s:%d refused."
@@ -608,6 +600,12 @@ msgstr "Laite \"%s\" on jo käytössä."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Laitetta \"%s\" ei voi avata luettavaksi ja kirjoitettavaksi."
+
+#~ msgid "Error while sending gdp header data to \"%s:%d\"."
+#~ msgstr "Virhe lähetettäessä gdp-otsaketietoja kohteeseen \"%s:%d\"."
+
+#~ msgid "Error while sending gdp payload data to \"%s:%d\"."
+#~ msgstr "Virhe lähetettäessä gdp-sisältöä kohteeseen \"%s:%d\"."
 
 #~ msgid "Can't display both text subtitles and subpictures."
 #~ msgstr "Ei voida toistaa sekä tekstitystä että alikuvaa."

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-04-16 15:41+0100\n"
+"POT-Creation-Date: 2011-06-05 23:31+0100\n"
 "PO-Revision-Date: 2010-04-27 22:51+0930\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
@@ -235,14 +235,6 @@ msgstr "Không có bộ quản lý địa chỉ URI được thực hiện cho �
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Lỗi khi gởi dữ liệu cho « %s:%d »."
-
-#, c-format
-msgid "Error while sending gdp header data to \"%s:%d\"."
-msgstr "Lỗi khi gởi dữ liệu phần đầu GDP cho « %s:%d »."
-
-#, c-format
-msgid "Error while sending gdp payload data to \"%s:%d\"."
-msgstr "Lỗi khi gởi dữ liệu trọng tải GDP cho « %s:%d »."
 
 #, c-format
 msgid "Connection to %s:%d refused."
@@ -605,3 +597,9 @@ msgstr "Thiết bị « %s » đang được dùng."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Không thể mở thiết bị « %s » để đọc và ghi."
+
+#~ msgid "Error while sending gdp header data to \"%s:%d\"."
+#~ msgstr "Lỗi khi gởi dữ liệu phần đầu GDP cho « %s:%d »."
+
+#~ msgid "Error while sending gdp payload data to \"%s:%d\"."
+#~ msgstr "Lỗi khi gởi dữ liệu trọng tải GDP cho « %s:%d »."
