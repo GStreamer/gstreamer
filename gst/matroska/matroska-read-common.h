@@ -93,7 +93,7 @@ GstFlowReturn gst_matroska_read_common_parse_index (GstMatroskaReadCommon *
     common, GstEbmlRead * ebml);
 GstFlowReturn gst_matroska_read_common_parse_header (GstMatroskaReadCommon *
     common, GstEbmlRead * ebml);
-GstFlowReturn gst_matroska_read_common_parse_metadata_id_simple_tag (
+GstFlowReturn gst_matroska_read_common_parse_metadata_id_tag (
     GstMatroskaReadCommon * common, GstEbmlRead * ebml, GstTagList **
     p_taglist);
 GstFlowReturn gst_matroska_read_common_parse_skip (GstMatroskaReadCommon *

@@ -953,7 +953,7 @@ gst_matroska_read_common_parse_index (GstMatroskaReadCommon * common,
   return ret;
 }
 
-GstFlowReturn
+static GstFlowReturn
 gst_matroska_read_common_parse_metadata_id_simple_tag (GstMatroskaReadCommon *
     common, GstEbmlRead * ebml, GstTagList ** p_taglist)
 {
@@ -1072,6 +1072,43 @@ gst_matroska_read_common_parse_metadata_id_simple_tag (GstMatroskaReadCommon *
 
   g_free (tag);
   g_free (value);
+
+  return ret;
+}
+
+GstFlowReturn
+gst_matroska_read_common_parse_metadata_id_tag (GstMatroskaReadCommon * common,
+    GstEbmlRead * ebml, GstTagList ** p_taglist)
+{
+  guint32 id;
+  GstFlowReturn ret;
+
+  DEBUG_ELEMENT_START (common, ebml, "Tag");
+
+  if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK) {
+    DEBUG_ELEMENT_STOP (common, ebml, "Tag", ret);
+    return ret;
+  }
+
+  while (ret == GST_FLOW_OK && gst_ebml_read_has_remaining (ebml, 1, TRUE)) {
+    /* read all sub-entries */
+
+    if ((ret = gst_ebml_peek_id (ebml, &id)) != GST_FLOW_OK)
+      break;
+
+    switch (id) {
+      case GST_MATROSKA_ID_SIMPLETAG:
+        ret = gst_matroska_read_common_parse_metadata_id_simple_tag (common,
+            ebml, p_taglist);
+        break;
+
+      default:
+        ret = gst_matroska_read_common_parse_skip (common, ebml, "Tag", id);
+        break;
+    }
+  }
+
+  DEBUG_ELEMENT_STOP (common, ebml, "Tag", ret);
 
   return ret;
 }

@@ -1690,45 +1690,6 @@ gst_matroska_parse_parse_info (GstMatroskaParse * parse, GstEbmlRead * ebml)
 }
 
 static GstFlowReturn
-gst_matroska_parse_parse_metadata_id_tag (GstMatroskaParse * parse,
-    GstEbmlRead * ebml, GstTagList ** p_taglist)
-{
-  guint32 id;
-  GstFlowReturn ret;
-
-  DEBUG_ELEMENT_START (parse, ebml, "Tag");
-
-  if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK) {
-    DEBUG_ELEMENT_STOP (parse, ebml, "Tag", ret);
-    return ret;
-  }
-
-  while (ret == GST_FLOW_OK && gst_ebml_read_has_remaining (ebml, 1, TRUE)) {
-    /* read all sub-entries */
-
-    if ((ret = gst_ebml_peek_id (ebml, &id)) != GST_FLOW_OK)
-      break;
-
-    switch (id) {
-      case GST_MATROSKA_ID_SIMPLETAG:
-        ret =
-            gst_matroska_read_common_parse_metadata_id_simple_tag
-            (&parse->common, ebml, p_taglist);
-        break;
-
-      default:
-        ret = gst_matroska_read_common_parse_skip (&parse->common, ebml,
-            "Tag", id);
-        break;
-    }
-  }
-
-  DEBUG_ELEMENT_STOP (parse, ebml, "Tag", ret);
-
-  return ret;
-}
-
-static GstFlowReturn
 gst_matroska_parse_parse_metadata (GstMatroskaParse * parse, GstEbmlRead * ebml)
 {
   GstTagList *taglist;
@@ -1770,7 +1731,8 @@ gst_matroska_parse_parse_metadata (GstMatroskaParse * parse, GstEbmlRead * ebml)
 
     switch (id) {
       case GST_MATROSKA_ID_TAG:
-        ret = gst_matroska_parse_parse_metadata_id_tag (parse, ebml, &taglist);
+        ret = gst_matroska_read_common_parse_metadata_id_tag (&parse->common,
+            ebml, &taglist);
         break;
 
       default:
