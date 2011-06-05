@@ -1385,6 +1385,19 @@ AG_GST_CHECK_FEATURE(OPENCV, [opencv plugins], opencv, [
   AC_SUBST(OPENCV_LIBS)
 ])
 
+dnl *** Opus ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_OPUS, true)
+AG_GST_CHECK_FEATURE(OPUS, [opus], opus, [
+  PKG_CHECK_MODULES(OPUS, opus >= 0.9.4, [
+          AC_DEFINE([HAVE_OPUS], 1, [Define if Opus >= 0.9.4 is installed])
+          HAVE_OPUS="yes"
+  ], [
+          HAVE_OPUS="no"
+  ])
+  AC_SUBST(OPUS_CFLAGS)
+  AC_SUBST(OPUS_LIBS)
+])
+
 dnl *** rsvg ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_RSVG, true)
 AG_GST_CHECK_FEATURE(RSVG, [rsvg decoder], rsvg, [
@@ -1750,6 +1763,7 @@ AM_CONDITIONAL(USE_NEON, false)
 AM_CONDITIONAL(USE_OFA, false)
 AM_CONDITIONAL(USE_OPENAL, false)
 AM_CONDITIONAL(USE_OPENCV, false)
+AM_CONDITIONAL(USE_OPUS, false)
 AM_CONDITIONAL(USE_RSVG, false)
 AM_CONDITIONAL(USE_TIMIDITY, false)
 AM_CONDITIONAL(USE_WILDMIDI, false)
@@ -1994,6 +2008,7 @@ ext/neon/Makefile
 ext/ofa/Makefile
 ext/openal/Makefile
 ext/opencv/Makefile
+ext/opus/Makefile
 ext/rsvg/Makefile
 ext/resindvd/Makefile
 ext/rtmp/Makefile
