@@ -284,3 +284,5 @@ ignore-glob
   *_get_type
   ges_formatter_set_data
   ges_formatter_set_data
+  *_valist
+  *_by_pspec
