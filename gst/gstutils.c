@@ -39,6 +39,7 @@
 #include "gstparse.h"
 #include "gstvalue.h"
 #include "gst-i18n-lib.h"
+#include "glib-compat-private.h"
 #include <math.h>
 
 /**
@@ -704,7 +705,7 @@ guint32
 gst_util_seqnum_next (void)
 {
   static gint counter = 0;
-  return g_atomic_int_exchange_and_add (&counter, 1);
+  return G_ATOMIC_INT_ADD (&counter, 1);
 }
 
 /**

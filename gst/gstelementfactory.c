@@ -394,8 +394,8 @@ gst_element_factory_create (GstElementFactory * factory, const gchar * name)
    * an element at the same moment
    */
   oclass = GST_ELEMENT_GET_CLASS (element);
-  if (!g_atomic_pointer_compare_and_exchange (
-          (gpointer) & oclass->elementfactory, NULL, factory))
+  if (!G_ATOMIC_POINTER_COMPARE_AND_EXCHANGE (&oclass->elementfactory, NULL,
+          factory))
     gst_object_unref (factory);
 
   GST_DEBUG ("created element \"%s\"", GST_OBJECT_NAME (factory));
