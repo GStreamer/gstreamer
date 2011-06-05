@@ -1416,8 +1416,8 @@ feed_textbuf (GstSubParse * self, GstBuffer * buf)
   gst_adapter_push (self->adapter, buf);
 
   avail = gst_adapter_available (self->adapter);
-  data = gst_adapter_map (self->adapter, avail),
-      input = convert_encoding (self, (const gchar *) data, avail, &consumed);
+  data = gst_adapter_map (self->adapter, avail);
+  input = convert_encoding (self, (const gchar *) data, avail, &consumed);
 
   if (input && consumed > 0) {
     self->textbuf = g_string_append (self->textbuf, input);
