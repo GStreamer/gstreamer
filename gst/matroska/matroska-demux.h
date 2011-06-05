@@ -55,11 +55,6 @@ typedef struct _GstMatroskaDemux {
   guint                    num_a_streams;
   guint                    num_t_streams;
 
-  /* metadata */
-  gchar                   *muxing_app;
-  gchar                   *writing_app;
-  gint64                   created;
-
   /* state */
   gboolean                 streaming;
   guint                    level_up;
@@ -68,7 +63,6 @@ typedef struct _GstMatroskaDemux {
 
   /* did we parse cues/tracks/segmentinfo already? */
   gboolean                 tracks_parsed;
-  gboolean                 segmentinfo_parsed;
   gboolean                 attachments_parsed;
   GList                   *seek_parsed;
 
@@ -76,7 +70,6 @@ typedef struct _GstMatroskaDemux {
   GArray                  *clusters;
 
   /* keeping track of playback position */
-  GstSegment               segment;
   gboolean                 segment_running;
   GstClockTime             last_stop_end;
 

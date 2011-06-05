@@ -953,6 +953,136 @@ gst_matroska_read_common_parse_index (GstMatroskaReadCommon * common,
   return ret;
 }
 
+GstFlowReturn
+gst_matroska_read_common_parse_info (GstMatroskaReadCommon * common,
+    GstElement * el, GstEbmlRead * ebml)
+{
+  GstFlowReturn ret = GST_FLOW_OK;
+  gdouble dur_f = -1.0;
+  guint32 id;
+
+  DEBUG_ELEMENT_START (common, ebml, "SegmentInfo");
+
+  if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK) {
+    DEBUG_ELEMENT_STOP (common, ebml, "SegmentInfo", ret);
+    return ret;
+  }
+
+  while (ret == GST_FLOW_OK && gst_ebml_read_has_remaining (ebml, 1, TRUE)) {
+    if ((ret = gst_ebml_peek_id (ebml, &id)) != GST_FLOW_OK)
+      break;
+
+    switch (id) {
+        /* cluster timecode */
+      case GST_MATROSKA_ID_TIMECODESCALE:{
+        guint64 num;
+
+        if ((ret = gst_ebml_read_uint (ebml, &id, &num)) != GST_FLOW_OK)
+          break;
+
+
+        GST_DEBUG_OBJECT (common, "TimeCodeScale: %" G_GUINT64_FORMAT, num);
+        common->time_scale = num;
+        break;
+      }
+
+      case GST_MATROSKA_ID_DURATION:{
+        if ((ret = gst_ebml_read_float (ebml, &id, &dur_f)) != GST_FLOW_OK)
+          break;
+
+        if (dur_f <= 0.0) {
+          GST_WARNING_OBJECT (common, "Invalid duration %lf", dur_f);
+          break;
+        }
+
+        GST_DEBUG_OBJECT (common, "Duration: %lf", dur_f);
+        break;
+      }
+
+      case GST_MATROSKA_ID_WRITINGAPP:{
+        gchar *text;
+
+        if ((ret = gst_ebml_read_utf8 (ebml, &id, &text)) != GST_FLOW_OK)
+          break;
+
+        GST_DEBUG_OBJECT (common, "WritingApp: %s", GST_STR_NULL (text));
+        common->writing_app = text;
+        break;
+      }
+
+      case GST_MATROSKA_ID_MUXINGAPP:{
+        gchar *text;
+
+        if ((ret = gst_ebml_read_utf8 (ebml, &id, &text)) != GST_FLOW_OK)
+          break;
+
+        GST_DEBUG_OBJECT (common, "MuxingApp: %s", GST_STR_NULL (text));
+        common->muxing_app = text;
+        break;
+      }
+
+      case GST_MATROSKA_ID_DATEUTC:{
+        gint64 time;
+
+        if ((ret = gst_ebml_read_date (ebml, &id, &time)) != GST_FLOW_OK)
+          break;
+
+        GST_DEBUG_OBJECT (common, "DateUTC: %" G_GINT64_FORMAT, time);
+        common->created = time;
+        break;
+      }
+
+      case GST_MATROSKA_ID_TITLE:{
+        gchar *text;
+        GstTagList *taglist;
+
+        if ((ret = gst_ebml_read_utf8 (ebml, &id, &text)) != GST_FLOW_OK)
+          break;
+
+        GST_DEBUG_OBJECT (common, "Title: %s", GST_STR_NULL (text));
+        taglist = gst_tag_list_new ();
+        gst_tag_list_add (taglist, GST_TAG_MERGE_APPEND, GST_TAG_TITLE, text,
+            NULL);
+        gst_matroska_read_common_found_global_tag (common, el, taglist);
+        g_free (text);
+        break;
+      }
+
+      default:
+        ret = gst_matroska_read_common_parse_skip (common, ebml,
+            "SegmentInfo", id);
+        break;
+
+        /* fall through */
+      case GST_MATROSKA_ID_SEGMENTUID:
+      case GST_MATROSKA_ID_SEGMENTFILENAME:
+      case GST_MATROSKA_ID_PREVUID:
+      case GST_MATROSKA_ID_PREVFILENAME:
+      case GST_MATROSKA_ID_NEXTUID:
+      case GST_MATROSKA_ID_NEXTFILENAME:
+      case GST_MATROSKA_ID_SEGMENTFAMILY:
+      case GST_MATROSKA_ID_CHAPTERTRANSLATE:
+        ret = gst_ebml_read_skip (ebml);
+        break;
+    }
+  }
+
+  if (dur_f > 0.0) {
+    GstClockTime dur_u;
+
+    dur_u = gst_gdouble_to_guint64 (dur_f *
+        gst_guint64_to_gdouble (common->time_scale));
+    if (GST_CLOCK_TIME_IS_VALID (dur_u) && dur_u <= G_MAXINT64)
+      gst_segment_set_duration (&common->segment, GST_FORMAT_TIME, dur_u);
+  }
+
+  DEBUG_ELEMENT_STOP (common, ebml, "SegmentInfo", ret);
+
+  common->segmentinfo_parsed = TRUE;
+
+  return ret;
+}
+
 static GstFlowReturn
 gst_matroska_read_common_parse_metadata_id_simple_tag (GstMatroskaReadCommon *
     common, GstEbmlRead * ebml, GstTagList ** p_taglist)
