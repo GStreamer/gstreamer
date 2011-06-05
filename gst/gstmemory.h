@@ -39,6 +39,7 @@ typedef struct _GstMemoryImpl GstMemoryImpl;
  * memory with #GST_MAP_WRITE.
  * @GST_MEMORY_FLAG_NO_SHARE: memory must not be shared. Copies will have to be
  * made when this memory needs to be shared between buffers.
+ * @GST_MEMORY_FLAG_LAST: first flag that can be used for custom purposes
  *
  * Flags for wrapped memory.
  */
@@ -201,7 +202,7 @@ typedef GstMemory * (*GstMemoryShareFunction)     (GstMemory *mem, gsize offset,
 /**
  * GstMemoryIsSpanFunction:
  * @mem1: a #GstMemory
- * @mem1: a #GstMemory
+ * @mem2: a #GstMemory
  * @offset: a result offset
  *
  * Check if @mem1 and @mem2 occupy contiguous memory and return the offset of

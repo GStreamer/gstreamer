@@ -597,7 +597,6 @@ struct _GstElement
  * @send_event: send a #GstEvent to the element
  * @get_query_types: get the supported #GstQueryType of this element
  * @query: perform a #GstQuery on the element
- * @request_new_pad_full: called when a new pad is requested. Since: 0.10.32.
  * @state_changed: called immediately after a new state was set. Since: 0.10.35.
  *
  * GStreamer element class. Override the vmethods to implement the element

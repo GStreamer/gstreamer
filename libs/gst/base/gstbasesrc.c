@@ -47,9 +47,6 @@
  *   </listitem>
  * </itemizedlist>
  *
- * Since 0.10.9, any #GstBaseSrc can enable pull based scheduling at any time
- * by overriding #GstBaseSrcClass.check_get_range() so that it returns %TRUE.
- *
  * If all the conditions are met for operating in pull mode, #GstBaseSrc is
  * automatically seekable in push mode as well. The following conditions must
  * be met to make the element seekable in push mode when the format is not

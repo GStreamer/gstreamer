@@ -53,6 +53,8 @@ The 0.11 porting guide
 
     gstelementmetadata.h contains the keys for all standard metadata.
 
+    gst_element_factory_can_{src,sink}_caps() => gst_element_factory_can_{src,sink}_{any,all}_caps()
+
     Element metadata and pad templates are inherited from parent classes and
     should be added in class_init instead of base_init.
 
@@ -156,6 +158,9 @@ The 0.11 porting guide
     gst_value_take_get_object() -> g_value_get_boxed()
     gst_value_take_dup_object() -> g_value_dup_boxed()
 
+    GST_VALUE_HOLDS_MINI_OBJECT() was removed, use G_VALUE_HOLDS_BOXED() or
+    type-specific GST_VALUE_HOLDS_{BUFFER,CAPS,etc.}() instead.
+
     The GST_MINI_OBJECT_READONLY flag was removed as it used to mark the
     memory in buffers as READONLY. Marking memory READONLY can now be done
     with the GstMemory API. Writability of miniobjects is now only done by using
@@ -244,6 +249,11 @@ The 0.11 porting guide
     The GstStructure is removed from the public API, use the getters to get
     a handle to a GstStructure.
 
+    gst_query_new_application() -> gst_query_new_custom()
+
+    gst_query_parse_formats_length() -> gst_query_parse_n_formats()
+    gst_query_parse_formats_nth() -> gst_query_parse_nth_format()
+
 * GstBufferList
     Is now a boxed type derived from GstMiniObject.
 
@@ -276,8 +286,11 @@ The 0.11 porting guide
     gst_segment_set_seek() -> gst_segment_do_seek(). Updates the segment values
     with seek parameters.
 
+* GstPluginFeature
+    GST_PLUGIN_FEATURE_NAME() was removed, use GST_OBJECT_NAME() instead.
+
 * GstTypeFind
-    gst_type_find_peek() returns a const guin8 * now.
+    gst_type_find_peek() returns a const guint8 * now.
 
 * GstAdapter
     gst_adapter_peek() is removed, use gst_adapter_map() and gst_adapter_unmap()

@@ -157,7 +157,6 @@ typedef enum
 
 /**
  * GstMiniObject:
- * @instance: type instance
  * @refcount: atomic refcount
  * @flags: extra flags.
  * @copy: a copy function

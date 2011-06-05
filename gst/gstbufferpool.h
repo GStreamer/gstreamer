@@ -86,7 +86,7 @@ typedef struct _GstBufferPoolParams {
 
 /**
  * GstBufferPool:
- * @mini_object: the parent structure
+ * @object: the parent structure
  *
  * The structure of a #GstBufferPool. Use the associated macros to access the public
  * variables.

@@ -310,7 +310,6 @@ typedef enum {
  * @mini_object: the parent structure
  * @type: the #GstEventType of the event
  * @timestamp: the timestamp of the event
- * @structure: the #GstStructure containing the event info.
  *
  * A #GstEvent.
  */

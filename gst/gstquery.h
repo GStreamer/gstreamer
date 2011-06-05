@@ -143,7 +143,6 @@ struct _GstQueryTypeDefinition
  * GstQuery:
  * @mini_object: The parent #GstMiniObject type
  * @type: the #GstQueryType
- * @structure: the #GstStructure containing the query details.
  *
  * The #GstQuery structure.
  */

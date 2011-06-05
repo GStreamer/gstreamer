@@ -117,7 +117,6 @@ struct _GstBaseSrc {
  * @get_caps: Called to get the caps to report
  * @set_caps: Notify subclass of changed output caps
  * @negotiate: Negotiated the caps with the peer.
- * @newsegment: Generate and send a new_segment event (UNUSED)
  * @start: Start processing. Subclasses should open resources and prepare
  *    to produce data.
  * @stop: Stop processing. Subclasses should use this to close resources.
@@ -148,12 +147,6 @@ struct _GstBaseSrc {
  *   configured native format and prepare a segment in that format.
  *   Since: 0.10.13
  * @query: Handle a requested query.
- * @check_get_range: Check whether the source would support pull-based
- *   operation if it were to be opened now. This vfunc is optional, but
- *   should be implemented if possible to avoid unnecessary start/stop
- *   cycles. The default implementation will open and close the resource
- *   to find out whether get_range is supported, and that is usually
- *   undesirable.
  * @fixate: Called during negotiation if caps need fixating. Implement instead of
  *   setting a fixate function on the source pad.
  *

@@ -694,6 +694,7 @@ find_custom_fold_func (const GValue * item, GValue * ret,
  * gst_iterator_find_custom:
  * @it: The #GstIterator to iterate
  * @func: (scope call): the compare function to use
+ * @elem: (out): pointer to a #GValue where to store the result
  * @user_data: (closure): user data passed to the compare function
  *
  * Find the first element in @it that matches the compare function @func.

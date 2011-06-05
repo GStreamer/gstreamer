@@ -36,8 +36,8 @@
  * in a push based mode. If the peer accepts to operate without
  * offsets and within the limits of the allowed block size, this
  * class can operate in getrange based mode automatically. To make
- * this possible, the subclass should override the ::check_get_range
- * method.
+ * this possible, the subclass should implement and override the
+ * SCHEDULING query.
  *
  * The subclass should extend the methods from the baseclass in
  * addition to the ::create method.

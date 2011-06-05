@@ -131,9 +131,6 @@ struct _GstBaseSink {
  *     correct moment if the #GstBaseSink has been set to sync to the clock.
  * @render_list: Same as @render but used whith buffer lists instead of
  *     buffers. Since: 0.10.24
- * @async_play: Subclasses should override this when they need to perform
- *     special processing when changing to the PLAYING state asynchronously.
- *     Called with the OBJECT_LOCK held.
  * @activate_pull: Subclasses should override this when they can provide an
  *     alternate method of spawning a thread to drive the pipeline in pull mode.
  *     Should start or stop the pulling thread, depending on the value of the

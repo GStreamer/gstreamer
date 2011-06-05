@@ -195,7 +195,6 @@ typedef struct _GstBufferPool GstBufferPool;
 
 /**
  * GstBufferFlag:
- * the buffer should not be modified. The metadata might still be modified.
  * @GST_BUFFER_FLAG_PREROLL: the buffer is part of a preroll and should not be
  * displayed.
  * @GST_BUFFER_FLAG_DISCONT: the buffer marks a discontinuity in the stream.
@@ -231,7 +230,6 @@ typedef enum {
  * GstBuffer:
  * @mini_object: the parent structure
  * @pool: pointer to the pool owner of the buffer
- * @caps: the #GstCaps describing the data format in this buffer
  * @timestamp: timestamp of the buffer, can be #GST_CLOCK_TIME_NONE when the
  *     timestamp is not known or relevant.
  * @duration: duration in time of the buffer data, can be #GST_CLOCK_TIME_NONE
@@ -292,7 +290,7 @@ gsize       gst_buffer_get_size            (GstBuffer *buffer);
 void        gst_buffer_resize              (GstBuffer *buffer, gsize offset, gsize size);
 
 /**
- * gst_buffer_remove_memory:
+ * gst_buffer_set_size:
  * @b: a #GstBuffer.
  * @s: a new size
  *

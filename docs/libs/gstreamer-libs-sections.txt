@@ -188,7 +188,8 @@ GstAdapter
 gst_adapter_new
 gst_adapter_clear
 gst_adapter_push
-gst_adapter_peek
+gst_adapter_map
+gst_adapter_unmap
 gst_adapter_copy
 gst_adapter_flush
 gst_adapter_available
@@ -390,14 +391,11 @@ gst_base_transform_get_type
 GstBitReader
 
 GST_BIT_READER_INIT
-GST_BIT_READER_INIT_FROM_BUFFER
 
 gst_bit_reader_new
-gst_bit_reader_new_from_buffer
 gst_bit_reader_free
 
 gst_bit_reader_init
-gst_bit_reader_init_from_buffer
 
 gst_bit_reader_get_pos
 gst_bit_reader_get_remaining
@@ -440,14 +438,11 @@ GST_BIT_READER
 GstByteReader
 
 GST_BYTE_READER_INIT
-GST_BYTE_READER_INIT_FROM_BUFFER
 
 gst_byte_reader_new
-gst_byte_reader_new_from_buffer
 gst_byte_reader_free
 
 gst_byte_reader_init
-gst_byte_reader_init_from_buffer
 
 gst_byte_reader_get_pos
 gst_byte_reader_get_remaining
@@ -597,12 +592,10 @@ g_memdup
 GstByteWriter
 
 gst_byte_writer_new
-gst_byte_writer_new_with_buffer
 gst_byte_writer_new_with_data
 gst_byte_writer_new_with_size
 
 gst_byte_writer_init
-gst_byte_writer_init_with_buffer
 gst_byte_writer_init_with_data
 gst_byte_writer_init_with_size
 
@@ -708,7 +701,6 @@ gst_collect_pads_set_flushing
 gst_collect_pads_peek
 gst_collect_pads_pop
 gst_collect_pads_available
-gst_collect_pads_read
 gst_collect_pads_read_buffer
 gst_collect_pads_take_buffer
 gst_collect_pads_flush

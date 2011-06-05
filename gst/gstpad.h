@@ -606,12 +606,7 @@ typedef struct _GstPadTemplate GstPadTemplate;
  * @stream_rec_lock: recursive stream lock of the pad, used to protect
  *                   the data used in streaming.
  * @task: task for this pad if the pad is actively driving dataflow.
- * @preroll_lock: lock used when prerolling
- * @preroll_cond: conf to signal preroll
  * @block_cond: conditional to signal pad block
- * @block_callback: callback for the pad block if any
- * @block_data: user data for @block_callback
- * @caps: the current caps of the pad
  * @getcapsfunc: function to get caps of the pad
  * @setcapsfunc: function to set caps on the pad
  * @acceptcapsfunc: function to check if pad can accept caps
@@ -623,17 +618,12 @@ typedef struct _GstPadTemplate GstPadTemplate;
  * @unlinkfunc: function called when pad is unlinked
  * @peer: the pad this pad is linked to
  * @chainfunc: function to chain buffer to pad
- * @checkgetrangefunc: function to check if pad can operate in pull mode
  * @getrangefunc: function to get a range of data from a pad
  * @eventfunc: function to send an event to a pad
  * @mode: current activation mode of the pad
  * @querytypefunc: get list of supported queries
  * @queryfunc: perform a query on the pad
- * @intlinkfunc: get the internal links of this pad
- * @do_buffer_signals: counter counting installed buffer signals
- * @do_event_signals: counter counting installed event signals
  * @iterintlinkfunc: get the internal links iterator of this pad
- * @block_destroy_data: notify function for gst_pad_set_blocked_async_full()
  *
  * The #GstPad structure. Use the functions to update the variables.
  */
@@ -726,7 +716,6 @@ struct _GstPadClass {
 #define GST_PAD_ACTIVATEPULLFUNC(pad)	(GST_PAD_CAST(pad)->activatepullfunc)
 #define GST_PAD_CHAINFUNC(pad)		(GST_PAD_CAST(pad)->chainfunc)
 #define GST_PAD_CHAINLISTFUNC(pad)      (GST_PAD_CAST(pad)->chainlistfunc)
-#define GST_PAD_CHECKGETRANGEFUNC(pad)	(GST_PAD_CAST(pad)->checkgetrangefunc)
 #define GST_PAD_GETRANGEFUNC(pad)	(GST_PAD_CAST(pad)->getrangefunc)
 #define GST_PAD_EVENTFUNC(pad)		(GST_PAD_CAST(pad)->eventfunc)
 #define GST_PAD_QUERYTYPEFUNC(pad)	(GST_PAD_CAST(pad)->querytypefunc)

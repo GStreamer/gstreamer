@@ -108,7 +108,6 @@ Windows.  It is released under the GNU Library General Public License
     <xi:include href="xml/gstutils.xml" />
     <xi:include href="xml/gstvalue.xml" />
     <xi:include href="xml/gstversion.xml" />
-    <xi:include href="xml/gstxml.xml" />
 
   </chapter>
 

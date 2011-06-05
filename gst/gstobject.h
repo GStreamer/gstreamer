@@ -179,7 +179,6 @@ struct _GstObject {
  * GstObjectClass:
  * @parent_class: parent
  * @path_string_separator: separator used by gst_object_get_path_string()
- * @signal_object: is used to signal to the whole class
  * @deep_notify: default signal handler
  *
  * GStreamer base object class.

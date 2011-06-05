@@ -33,11 +33,12 @@
  *
  * The theory of operation is like this: All buffers received are put
  * into the adapter using gst_adapter_push() and the data is then read back
- * in chunks of the desired size using gst_adapter_peek(). After the data is
- * processed, it is freed using gst_adapter_flush().
+ * in chunks of the desired size using gst_adapter_map()/gst_adapter_unmap()
+ * and/or gst_adapter_copy(). After the data has been processed, it is freed
+ * using gst_adapter_unmap().
  *
  * Other methods such as gst_adapter_take() and gst_adapter_take_buffer()
- * combine gst_adapter_peek() and gst_adapter_flush() in one method and are
+ * combine gst_adapter_map() and gst_adapter_unmap() in one method and are
  * potentially more convenient for some use cases.
  *
  * For example, a sink pad's chain function that needs to pass data to a library
@@ -58,9 +59,10 @@
  *   gst_adapter_push (adapter, buffer);
  *   // while we can read out 512 bytes, process them
  *   while (gst_adapter_available (adapter) >= 512 && ret == GST_FLOW_OK) {
+ *     const guint8 *data = gst_adapter_map (adapter, 512);
  *     // use flowreturn as an error value
- *     ret = my_library_foo (gst_adapter_peek (adapter, 512));
- *     gst_adapter_flush (adapter, 512);
+ *     ret = my_library_foo (data);
+ *     gst_adapter_unmap (adapter, 512);
  *   }
  *
  *   gst_object_unref (this);
@@ -371,9 +373,9 @@ gst_adapter_try_to_merge_up (GstAdapter * adapter, gsize size)
 }
 
 /**
- * gst_adapter_peek:
+ * gst_adapter_map:
  * @adapter: a #GstAdapter
- * @size: the number of bytes to peek
+ * @size: the number of bytes to map/peek
  *
  * Gets the first @size bytes stored in the @adapter. The returned pointer is
  * valid until the next function is called on the adapter.
@@ -517,7 +519,7 @@ gst_adapter_copy (GstAdapter * adapter, guint8 * dest, gsize offset, gsize size)
  * Flushes the first @flush bytes in the @adapter. The caller must ensure that
  * at least this many bytes are available.
  *
- * See also: gst_adapter_peek().
+ * See also: gst_adapter_map(), gst_adapter_unmap()
  */
 static void
 gst_adapter_flush_unchecked (GstAdapter * adapter, gsize flush)
@@ -793,7 +795,7 @@ gst_adapter_take_list (GstAdapter * adapter, gsize nbytes)
  * @adapter: a #GstAdapter
  *
  * Gets the maximum amount of bytes available, that is it returns the maximum
- * value that can be supplied to gst_adapter_peek() without that function
+ * value that can be supplied to gst_adapter_map() without that function
  * returning NULL.
  *
  * Returns: number of bytes available in @adapter
