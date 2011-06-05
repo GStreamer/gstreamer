@@ -454,6 +454,44 @@ int main ()
   AC_SUBST(HAVE_DIRECTSOUND)
 ])
 
+dnl Direct3D
+translit(dnm, m, l) AM_CONDITIONAL(USE_DIRECT3D, true)
+AG_GST_CHECK_FEATURE(DIRECT3D, [Direct3D plug-in], direct3dsink, [
+  HAVE_DIRECT3D="no"
+  save_CFLAGS="$CFLAGS"
+  save_LDFLAGS="$LDFLAGS"
+  save_LIBS="$LIBS"
+  CFLAGS="$CFLAGS $DIRECTX_CFLAGS"
+  LDFLAGS="$LDFLAGS $DIRECTX_LDFLAGS"
+  LIBS="$LIBS -ld3d -lgdi32"
+  AC_MSG_CHECKING(for Direct3D LDFLAGS)
+  AC_LINK_IFELSE([
+#include <windows.h>
+#include <d3d.h>
+
+int main ()
+{
+  GetStockObject(0);
+  Direct3DCreate(NULL, NULL, NULL);
+
+  return 0;
+}
+],
+    [HAVE_DIRECT3D="yes"],
+    [HAVE_DIRECT3D="no"])
+  AC_MSG_RESULT($HAVE_DIRECT3D)
+  CFLAGS=$save_CFLAGS
+  LDFLAGS=$save_LDFLAGS
+  LIBS=$save_LIBS
+
+  if test "x$HAVE_DIRECT3D" = "xyes";  then
+    dnl this is much more than we want
+    DIRECT3D_LIBS="-ld3d -ldxguid -lgdi32"
+    AC_SUBST(DIRECT3D_LIBS)
+  fi
+  AC_SUBST(HAVE_DIRECT3D)
+])
+
 dnl DirectDraw
 translit(dnm, m, l) AM_CONDITIONAL(USE_DIRECTDRAW, true)
 AG_GST_CHECK_FEATURE(DIRECTDRAW, [DirectDraw plug-in], directdrawsink, [
@@ -1888,6 +1926,7 @@ sys/acmenc/Makefile
 sys/acmmp3dec/Makefile
 sys/applemedia/Makefile
 sys/avc/Makefile
+sys/d3dvideosink/Makefile
 sys/decklink/Makefile
 sys/directdraw/Makefile
 sys/directsound/Makefile
