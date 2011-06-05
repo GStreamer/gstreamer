@@ -44,6 +44,7 @@
 #endif
 
 #include "gstdirectdrawsink.h"
+#include <gst/video/video.h>
 
 GST_DEBUG_CATEGORY_STATIC (directdrawsink_debug);
 #define GST_CAT_DEFAULT directdrawsink_debug
@@ -539,10 +540,16 @@ gst_directdraw_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   GstStructure *structure = NULL;
   gboolean ret;
   const GValue *fps;
+  gint par_n, par_d;
 
   structure = gst_caps_get_structure (caps, 0);
   if (!structure)
     return FALSE;
+
+  if (!gst_video_parse_caps_pixel_aspect_ratio (caps, &par_n, &par_d)) {
+    par_n = 1;
+    par_d = 1;
+  }
 
   ret = gst_structure_get_int (structure, "width", &ddrawsink->video_width);
   ret &= gst_structure_get_int (structure, "height", &ddrawsink->video_height);
@@ -556,7 +563,7 @@ gst_directdraw_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
         ("Failed to get caps properties from caps"), (NULL));
     return FALSE;
   }
-  GST_VIDEO_SINK_WIDTH (ddrawsink) = ddrawsink->video_width;
+  GST_VIDEO_SINK_WIDTH (ddrawsink) = ddrawsink->video_width * par_n / par_d;
   GST_VIDEO_SINK_HEIGHT (ddrawsink) = ddrawsink->video_height;
 
   ddrawsink->fps_n = gst_value_get_fraction_numerator (fps);
@@ -575,8 +582,10 @@ gst_directdraw_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   /* if we are rendering to our own window, resize it to video size */
   if (ddrawsink->video_window && ddrawsink->our_video_window) {
     SetWindowPos (ddrawsink->video_window, NULL,
-        0, 0, ddrawsink->video_width + (GetSystemMetrics (SM_CXSIZEFRAME) * 2),
-        ddrawsink->video_height + GetSystemMetrics (SM_CYCAPTION) +
+        0, 0,
+        GST_VIDEO_SINK_WIDTH (ddrawsink) +
+        (GetSystemMetrics (SM_CXSIZEFRAME) * 2),
+        GST_VIDEO_SINK_HEIGHT (ddrawsink) + GetSystemMetrics (SM_CYCAPTION) +
         (GetSystemMetrics (SM_CYSIZEFRAME) * 2), SWP_SHOWWINDOW | SWP_NOMOVE);
   }
 
@@ -923,8 +932,8 @@ gst_directdraw_sink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
     /* center image to dest image keeping aspect ratio */
     src_rect.top = 0;
     src_rect.left = 0;
-    src_rect.bottom = ddrawsink->video_height;
-    src_rect.right = ddrawsink->video_width;
+    src_rect.bottom = GST_VIDEO_SINK_HEIGHT (ddrawsink);
+    src_rect.right = GST_VIDEO_SINK_WIDTH (ddrawsink);
     gst_directdraw_sink_center_rect (ddrawsink, src_rect, destsurf_rect,
         &destsurf_rect);
     gst_directdraw_sink_draw_borders (ddrawsink, destsurf_rect);
@@ -1744,9 +1753,9 @@ gst_directdraw_sink_get_depth (LPDDPIXELFORMAT lpddpfPixelFormat)
   gint order = 0, binary;
 
   binary =
-      lpddpfPixelFormat->
-      dwRBitMask | lpddpfPixelFormat->dwGBitMask | lpddpfPixelFormat->
-      dwBBitMask | lpddpfPixelFormat->dwRGBAlphaBitMask;
+      lpddpfPixelFormat->dwRBitMask | lpddpfPixelFormat->
+      dwGBitMask | lpddpfPixelFormat->dwBBitMask | lpddpfPixelFormat->
+      dwRGBAlphaBitMask;
   while (binary != 0) {
     if ((binary % 2) == 1)
       order++;
