@@ -154,6 +154,7 @@ GST_START_TEST (test_layer_priorities)
   GESTimelineObject *object1, *object2, *object3;
   GstElement *gnlobj1, *gnlobj2, *gnlobj3;
   guint prio1, prio2, prio3;
+  GList *objs, *tmp;
 
   ges_init ();
 
@@ -250,6 +251,38 @@ GST_START_TEST (test_layer_priorities)
   assert_equals_int (prio1, 2 * LAYER_HEIGHT);
   assert_equals_int (prio2, 1);
   assert_equals_int (prio3, LAYER_HEIGHT * 2 - 1);
+
+  /* And move objects around */
+  fail_unless (ges_timeline_object_move_to_layer (object2, layer1));
+  fail_unless (ges_timeline_object_move_to_layer (object3, layer1));
+
+  objs = ges_timeline_layer_get_objects (layer1);
+  assert_equals_int (g_list_length (objs), 3);
+  fail_unless (ges_timeline_layer_get_objects (layer2) == NULL);
+  fail_unless (ges_timeline_layer_get_objects (layer3) == NULL);
+
+  for (tmp = objs; tmp; tmp = g_list_next (tmp)) {
+    g_object_unref (tmp->data);
+  }
+  g_list_free (objs);
+
+  /*  Check their priorities (layer1 priority is now 2) */
+  assert_equals_int (GES_TIMELINE_OBJECT_PRIORITY (object1), 0);
+  assert_equals_int (GES_TIMELINE_OBJECT_PRIORITY (object2), 1);
+  assert_equals_int (GES_TIMELINE_OBJECT_PRIORITY (object3), LAYER_HEIGHT - 1);
+  g_object_get (gnlobj1, "priority", &prio1, NULL);
+  g_object_get (gnlobj2, "priority", &prio2, NULL);
+  g_object_get (gnlobj3, "priority", &prio3, NULL);
+  assert_equals_int (prio1, 2 * LAYER_HEIGHT);
+  assert_equals_int (prio2, 2 * LAYER_HEIGHT + 1);
+  assert_equals_int (prio3, LAYER_HEIGHT * 3 - 1);
+
+  /* And change TrackObject-s priorities and check that changes are well
+   * refected on it containing TimelineObject */
+  ges_track_object_set_priority (tckobj3, LAYER_HEIGHT * 2);
+  g_object_get (gnlobj3, "priority", &prio3, NULL);
+  assert_equals_int (prio3, 2 * LAYER_HEIGHT);
+  assert_equals_int (GES_TIMELINE_OBJECT_PRIORITY (object3), 0);
 
   g_object_unref (tckobj1);
   g_object_unref (tckobj2);
