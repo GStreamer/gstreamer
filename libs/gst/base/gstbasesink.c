@@ -3316,22 +3316,20 @@ gst_base_sink_event (GstPad * pad, GstEvent * event)
       if (G_UNLIKELY (basesink->flushing))
         goto flushing;
 
-      if (G_UNLIKELY (basesink->priv->received_eos)) {
-        /* we can't accept anything when we are EOS */
-        result = FALSE;
-        gst_event_unref (event);
-      } else {
-        /* we set the received EOS flag here so that we can use it when testing if
-         * we are prerolled and to refuse more buffers. */
-        basesink->priv->received_eos = TRUE;
+      if (G_UNLIKELY (basesink->priv->received_eos))
+        goto after_eos;
 
-        /* EOS is a prerollable object, we call the unlocked version because it
-         * does not check the received_eos flag. */
-        ret = gst_base_sink_queue_object_unlocked (basesink, pad,
-            _PR_IS_EVENT, GST_MINI_OBJECT_CAST (event), TRUE);
-        if (G_UNLIKELY (ret != GST_FLOW_OK))
-          result = FALSE;
-      }
+      /* we set the received EOS flag here so that we can use it when testing if
+       * we are prerolled and to refuse more buffers. */
+      basesink->priv->received_eos = TRUE;
+
+      /* EOS is a prerollable object, we call the unlocked version because it
+       * does not check the received_eos flag. */
+      ret = gst_base_sink_queue_object_unlocked (basesink, pad,
+          _PR_IS_EVENT, GST_MINI_OBJECT_CAST (event), TRUE);
+      if (G_UNLIKELY (ret != GST_FLOW_OK))
+        result = FALSE;
+
       GST_BASE_SINK_PREROLL_UNLOCK (basesink);
       break;
     }
@@ -3357,6 +3355,9 @@ gst_base_sink_event (GstPad * pad, GstEvent * event)
       GST_BASE_SINK_PREROLL_LOCK (basesink);
       if (G_UNLIKELY (basesink->flushing))
         goto flushing;
+
+      if (G_UNLIKELY (basesink->priv->received_eos))
+        goto after_eos;
 
       /* the new segment is a non prerollable item and does not block anything,
        * we need to configure the current clipping segment and insert the event
@@ -3419,6 +3420,15 @@ done:
 flushing:
   {
     GST_DEBUG_OBJECT (basesink, "we are flushing");
+    GST_BASE_SINK_PREROLL_UNLOCK (basesink);
+    result = FALSE;
+    gst_event_unref (event);
+    goto done;
+  }
+
+after_eos:
+  {
+    GST_DEBUG_OBJECT (basesink, "Event received after EOS, dropping");
     GST_BASE_SINK_PREROLL_UNLOCK (basesink);
     result = FALSE;
     gst_event_unref (event);
