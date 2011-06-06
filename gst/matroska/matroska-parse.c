@@ -323,7 +323,7 @@ gst_matroska_parse_reset (GstElement * element)
   parse->common.index_parsed = FALSE;
   parse->tracks_parsed = FALSE;
   parse->common.segmentinfo_parsed = FALSE;
-  parse->attachments_parsed = FALSE;
+  parse->common.attachments_parsed = FALSE;
 
   g_list_foreach (parse->common.tags_parsed,
       (GFunc) gst_matroska_parse_free_parsed_el, NULL);
@@ -1558,55 +1558,6 @@ gst_matroska_parse_parse_tracks (GstMatroskaParse * parse, GstEbmlRead * ebml)
 }
 
 static GstFlowReturn
-gst_matroska_parse_parse_attachments (GstMatroskaParse * parse,
-    GstEbmlRead * ebml)
-{
-  guint32 id;
-  GstFlowReturn ret = GST_FLOW_OK;
-  GstTagList *taglist;
-
-  DEBUG_ELEMENT_START (parse, ebml, "Attachments");
-
-  if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK) {
-    DEBUG_ELEMENT_STOP (parse, ebml, "Attachments", ret);
-    return ret;
-  }
-
-  taglist = gst_tag_list_new ();
-
-  while (ret == GST_FLOW_OK && gst_ebml_read_has_remaining (ebml, 1, TRUE)) {
-    if ((ret = gst_ebml_peek_id (ebml, &id)) != GST_FLOW_OK)
-      break;
-
-    switch (id) {
-      case GST_MATROSKA_ID_ATTACHEDFILE:
-        ret = gst_matroska_read_common_parse_attached_file (&parse->common,
-            ebml, taglist);
-        break;
-
-      default:
-        ret = gst_matroska_read_common_parse_skip (&parse->common, ebml,
-            "Attachments", id);
-        break;
-    }
-  }
-  DEBUG_ELEMENT_STOP (parse, ebml, "Attachments", ret);
-
-  if (gst_structure_n_fields (GST_STRUCTURE (taglist)) > 0) {
-    GST_DEBUG_OBJECT (parse, "Storing attachment tags");
-    gst_matroska_read_common_found_global_tag (&parse->common,
-        GST_ELEMENT_CAST (parse), taglist);
-  } else {
-    GST_DEBUG_OBJECT (parse, "No valid attachments found");
-    gst_tag_list_free (taglist);
-  }
-
-  parse->attachments_parsed = TRUE;
-
-  return ret;
-}
-
-static GstFlowReturn
 gst_matroska_parse_parse_chapters (GstMatroskaParse * parse, GstEbmlRead * ebml)
 {
   guint32 id;
@@ -2821,8 +2772,9 @@ gst_matroska_parse_parse_id (GstMatroskaParse * parse, guint32 id,
           break;
         case GST_MATROSKA_ID_ATTACHMENTS:
           GST_READ_CHECK (gst_matroska_parse_take (parse, read, &ebml));
-          if (!parse->attachments_parsed) {
-            ret = gst_matroska_parse_parse_attachments (parse, &ebml);
+          if (!parse->common.attachments_parsed) {
+            ret = gst_matroska_read_common_parse_attachments (&parse->common,
+                GST_ELEMENT_CAST (parse), &ebml);
           }
           gst_matroska_parse_output (parse, ebml.buf, FALSE);
           break;

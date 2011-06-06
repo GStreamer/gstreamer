@@ -400,7 +400,7 @@ gst_matroska_demux_reset (GstElement * element)
   demux->common.index_parsed = FALSE;
   demux->tracks_parsed = FALSE;
   demux->common.segmentinfo_parsed = FALSE;
-  demux->attachments_parsed = FALSE;
+  demux->common.attachments_parsed = FALSE;
 
   g_list_foreach (demux->common.tags_parsed,
       (GFunc) gst_matroska_demux_free_parsed_el, NULL);
@@ -2253,55 +2253,6 @@ gst_matroska_demux_parse_tracks (GstMatroskaDemux * demux, GstEbmlRead * ebml)
   DEBUG_ELEMENT_STOP (demux, ebml, "Tracks", ret);
 
   demux->tracks_parsed = TRUE;
-
-  return ret;
-}
-
-static GstFlowReturn
-gst_matroska_demux_parse_attachments (GstMatroskaDemux * demux,
-    GstEbmlRead * ebml)
-{
-  guint32 id;
-  GstFlowReturn ret = GST_FLOW_OK;
-  GstTagList *taglist;
-
-  DEBUG_ELEMENT_START (demux, ebml, "Attachments");
-
-  if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK) {
-    DEBUG_ELEMENT_STOP (demux, ebml, "Attachments", ret);
-    return ret;
-  }
-
-  taglist = gst_tag_list_new ();
-
-  while (ret == GST_FLOW_OK && gst_ebml_read_has_remaining (ebml, 1, TRUE)) {
-    if ((ret = gst_ebml_peek_id (ebml, &id)) != GST_FLOW_OK)
-      break;
-
-    switch (id) {
-      case GST_MATROSKA_ID_ATTACHEDFILE:
-        ret = gst_matroska_read_common_parse_attached_file (&demux->common,
-            ebml, taglist);
-        break;
-
-      default:
-        ret = gst_matroska_read_common_parse_skip (&demux->common, ebml,
-            "Attachments", id);
-        break;
-    }
-  }
-  DEBUG_ELEMENT_STOP (demux, ebml, "Attachments", ret);
-
-  if (gst_structure_n_fields (GST_STRUCTURE (taglist)) > 0) {
-    GST_DEBUG_OBJECT (demux, "Storing attachment tags");
-    gst_matroska_read_common_found_global_tag (&demux->common,
-        GST_ELEMENT_CAST (demux), taglist);
-  } else {
-    GST_DEBUG_OBJECT (demux, "No valid attachments found");
-    gst_tag_list_free (taglist);
-  }
-
-  demux->attachments_parsed = TRUE;
 
   return ret;
 }
@@ -4207,9 +4158,10 @@ gst_matroska_demux_parse_id (GstMatroskaDemux * demux, guint32 id,
           DEBUG_ELEMENT_STOP (demux, &ebml, "SimpleBlock", ret);
           break;
         case GST_MATROSKA_ID_ATTACHMENTS:
-          if (!demux->attachments_parsed) {
+          if (!demux->common.attachments_parsed) {
             GST_READ_CHECK (gst_matroska_demux_take (demux, read, &ebml));
-            ret = gst_matroska_demux_parse_attachments (demux, &ebml);
+            ret = gst_matroska_read_common_parse_attachments (&demux->common,
+                GST_ELEMENT_CAST (demux), &ebml);
           } else {
             GST_READ_CHECK (gst_matroska_demux_flush (demux, read));
           }

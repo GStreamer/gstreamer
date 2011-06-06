@@ -68,7 +68,6 @@ typedef struct _GstMatroskaParse {
 
   /* did we parse cues/tracks/segmentinfo already? */
   gboolean                 tracks_parsed;
-  gboolean                 attachments_parsed;
   GList                   *seek_parsed;
 
   /* keeping track of playback position */

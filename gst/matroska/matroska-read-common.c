@@ -487,7 +487,7 @@ gst_matroska_read_common_parse_skip (GstMatroskaReadCommon * common,
   return gst_ebml_read_skip (ebml);
 }
 
-GstFlowReturn
+static GstFlowReturn
 gst_matroska_read_common_parse_attached_file (GstMatroskaReadCommon * common,
     GstEbmlRead * ebml, GstTagList * taglist)
 {
@@ -638,6 +638,54 @@ gst_matroska_read_common_parse_attached_file (GstMatroskaReadCommon * common,
   g_free (mimetype);
   g_free (data);
   g_free (description);
+
+  return ret;
+}
+
+GstFlowReturn
+gst_matroska_read_common_parse_attachments (GstMatroskaReadCommon * common,
+    GstElement * el, GstEbmlRead * ebml)
+{
+  guint32 id;
+  GstFlowReturn ret = GST_FLOW_OK;
+  GstTagList *taglist;
+
+  DEBUG_ELEMENT_START (common, ebml, "Attachments");
+
+  if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK) {
+    DEBUG_ELEMENT_STOP (common, ebml, "Attachments", ret);
+    return ret;
+  }
+
+  taglist = gst_tag_list_new ();
+
+  while (ret == GST_FLOW_OK && gst_ebml_read_has_remaining (ebml, 1, TRUE)) {
+    if ((ret = gst_ebml_peek_id (ebml, &id)) != GST_FLOW_OK)
+      break;
+
+    switch (id) {
+      case GST_MATROSKA_ID_ATTACHEDFILE:
+        ret = gst_matroska_read_common_parse_attached_file (common, ebml,
+            taglist);
+        break;
+
+      default:
+        ret = gst_matroska_read_common_parse_skip (common, ebml,
+            "Attachments", id);
+        break;
+    }
+  }
+  DEBUG_ELEMENT_STOP (common, ebml, "Attachments", ret);
+
+  if (gst_structure_n_fields (GST_STRUCTURE (taglist)) > 0) {
+    GST_DEBUG_OBJECT (common, "Storing attachment tags");
+    gst_matroska_read_common_found_global_tag (common, el, taglist);
+  } else {
+    GST_DEBUG_OBJECT (common, "No valid attachments found");
+    gst_tag_list_free (taglist);
+  }
+
+  common->attachments_parsed = TRUE;
 
   return ret;
 }

@@ -60,6 +60,7 @@ typedef struct _GstMatroskaReadCommon {
   /* did we parse cues/tracks/segmentinfo already? */
   gboolean                 index_parsed;
   gboolean                 segmentinfo_parsed;
+  gboolean                 attachments_parsed;
   GList                   *tags_parsed;
 
   /* start-of-segment */
@@ -103,8 +104,8 @@ GstFlowReturn gst_matroska_read_common_parse_index (GstMatroskaReadCommon *
     common, GstEbmlRead * ebml);
 GstFlowReturn gst_matroska_read_common_parse_info (GstMatroskaReadCommon *
     common, GstElement * el, GstEbmlRead * ebml);
-GstFlowReturn gst_matroska_read_common_parse_attached_file (
-    GstMatroskaReadCommon * common, GstEbmlRead * ebml, GstTagList * taglist);
+GstFlowReturn gst_matroska_read_common_parse_attachments (
+    GstMatroskaReadCommon * common, GstElement * el, GstEbmlRead * ebml);
 GstFlowReturn gst_matroska_read_common_parse_header (GstMatroskaReadCommon *
     common, GstEbmlRead * ebml);
 GstFlowReturn gst_matroska_read_common_parse_metadata (GstMatroskaReadCommon *
