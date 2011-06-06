@@ -13,7 +13,10 @@ class Timeline(TestCase):
         src = ges.TimelineTestSource()
         pip = ges.TimelinePipeline()
         bus = pip.get_bus()
+        tck_src = ges.TrackAudioTestSource()
         self.mainloop = glib.MainLoop()
+
+        a = tck_src.list_children_properties()
 
         #Let's add the layer to the timeline, and the source to the layer.
         src.set_duration(long(gst.SECOND * 10))

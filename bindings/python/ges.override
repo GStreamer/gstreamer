@@ -30,9 +30,9 @@ import gobject.GObject as PyGInitiallyUnowned_Type
 import gst.Bin as PyGstBin_Type
 import gst.Pipeline as PyGstPipeline_Type
 import gst.Element as PyGstElement_Type
-import gst.Caps as PyGstCaps_Type
 import gst.Buffer as PyGstBuffer_Type
 import gst.Pad as PyGstPad_Type
+import gst.pbutils.EncodingProfile as PyGstEncodingProfile_Type
 
 %%
 override ges_track_get_timeline kwargs
@@ -51,44 +51,88 @@ _wrap_ges_track_get_timeline(PyGObject *self)
 %%
 override ges_track_get_caps noargs
 static PyObject *
-_wrap_ges_track_get_caps(PyGObject *self)
+_wrap_ges_track_get_caps(PyGObject *self, void* closure)
 {
-  const GstCaps *ret;
+    const GstCaps *ret;
 
-    g_return_val_if_fail (GES_IS_TIMELINE (self->obj), PyList_New(0));
+    ret = ges_track_get_caps(GES_TRACK(self->obj));
 
-  pyg_begin_allow_threads;
-  ret = ges_track_get_caps(GES_TRACK(self->obj));
-  pyg_end_allow_threads;
-  /* pygobject_new handles NULL checking */
-  return pygobject_new((GObject *)ret);
+    return pyg_boxed_new (GST_TYPE_CAPS, (GstCaps*) ret, TRUE, TRUE);
 }
 
-
 %%
-override ges_track_set_caps noargs
-static void
-_wrap_ges_track_set_caps(PyGObject *self, const GstCaps *caps)
+override ges_track_set_caps kwargs
+static PyObject *
+_wrap_ges_track_set_caps(PyGObject *self, PyObject *args, PyObject *kwargs)
 {
+  static char *kwlist[] = { "caps", NULL };
+  PyObject *py_caps;
+  GstCaps *caps;
+
+  if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O:GstBuffer.set_caps", kwlist, &py_caps))
+      return NULL;
+
+  caps = pyg_boxed_get (py_caps, GstCaps);
+  if (PyErr_Occurred())
+    return NULL;
+
   pyg_begin_allow_threads;
   ges_track_set_caps (GES_TRACK(self->obj), caps);
   pyg_end_allow_threads;
+  Py_INCREF(Py_None);
+  return Py_None;
 }
 
 %%
-override ges_track_object_lookup_child noargs
-static PyObject *
-_wrap_ges_track_object_lookup_child(PyGObject *self, gchar *name)
+new-constructor GES_TYPE_TRACK
+%%
+override ges_track_new kwargs
+static int
+_wrap_ges_track_new(PyGObject *self, PyObject *args, PyObject *kwargs)
 {
+    static char *kwlist[] = { "type", "caps", NULL };
+    PyObject *py_type = NULL;
+    GESTrackType type;
+    GstCaps *caps;
+    PyObject *py_caps;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,"OO:GES.Track.__init__", kwlist, &py_type, &py_caps))
+        return -1;
+    if (pyg_flags_get_value(GES_TYPE_TRACK_TYPE, py_type, (gpointer)&type))
+        return -1;
+    caps = pyg_boxed_get (py_caps, GstCaps);
+    self->obj = (GObject *)ges_track_new(type, caps);
+
+    if (!self->obj) {
+        PyErr_SetString(PyExc_RuntimeError, "could not create GESTrack object");
+        return -1;
+    }
+    pygobject_register_wrapper((PyObject *)self);
+    return 0;
+}
+
+%%
+override ges_track_object_lookup_child kwargs
+static PyObject *
+_wrap_ges_track_object_lookup_child(PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+  static char *kwlist[] = {"name", NULL};
+  char *name = NULL;
   GParamSpec *pspec;
   GstElement *element;
   gboolean ret;
+
+  if (!PyArg_ParseTupleAndKeywords(args, kwargs,
+      "z:GES.TrackObject.lookup_child", kwlist, &name))
+        return FALSE;
 
   pyg_begin_allow_threads;
   ret = ges_track_object_lookup_child (GES_TRACK_OBJECT (self->obj), name, &element, &pspec);
   pyg_end_allow_threads;
 
-  return PyBool_FromLong(ret);
+  if (!ret)
+    return PyBool_FromLong(ret);
+  return pygobject_new((GObject *)element);
 }
 
 %%
@@ -276,6 +320,73 @@ _wrap_ges_track_object_get_child_property (PyGObject *self, PyObject *args, PyOb
     g_value_unset(&value);
 
     return ret;
+}
+
+%%
+override ges_track_object_set_child_property kwargs
+static PyObject *
+_wrap_ges_track_object_set_child_property (PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+    gchar *property_name;
+    GESTrackObject *obj = GES_TRACK_OBJECT (self->obj);
+
+    GParamSpec *pspec = NULL;
+    PyGObject *pyvalue;
+    GValue value = { 0, } ;
+
+    if (!PyArg_ParseTuple(args, "sO:GESTrackObject.set_child_property",
+                          &property_name, &pyvalue)) {
+        return NULL;
+    }
+
+    ges_track_object_lookup_child(obj, property_name, NULL, &pspec);
+    if (!pspec) {
+        gchar buf[512];
+        g_snprintf(buf, sizeof(buf),
+                   "container does not support property `%s'",
+                   property_name);
+
+        PyErr_SetString(PyExc_TypeError, buf);
+        return NULL;
+    }
+
+    g_value_init(&value, G_PARAM_SPEC_VALUE_TYPE(pspec));
+    pyg_value_from_pyobject(&value, (PyObject*)pyvalue);
+
+    ges_track_object_set_child_property_by_pspec(obj,
+                                     pspec,
+                                     &value);
+
+    g_value_unset(&value);
+
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+%%
+override ges_track_object_list_children_properties noargs
+static PyObject *
+_wrap_ges_track_object_list_children_properties (PyGObject *self)
+{
+    GParamSpec **specs;
+    PyObject *list;
+    guint nprops;
+    guint i;
+
+    specs = ges_track_object_list_children_properties(GES_TRACK_OBJECT (self->obj), &nprops);
+    list = PyTuple_New(nprops);
+    if (list == NULL) {
+      g_free(specs);
+      return NULL;
+    }
+
+    for (i = 0; i < nprops; i++) {
+      PyTuple_SetItem(list, i, pyg_param_spec_new(specs[i]));
+    }
+
+    g_free(specs);
+
+    return list;
 }
 
 %%
