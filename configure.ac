@@ -439,6 +439,7 @@ AG_GST_CHECK_PLUGIN(volume)
 
 dnl FIXME 0.11: check for libxml, split subparse and move libxml parts to ext/
 AM_CONDITIONAL(USE_XML, false)
+AC_DEFINE([GST_DISABLE_XML], [1], [set to disable libxml2-dependent code in subparse])
 
 dnl disable plug-ins that require libxml2's HTML support if it is not available
 if test "x$HAVE_LIBXML_HTML" != "xyes"; then
