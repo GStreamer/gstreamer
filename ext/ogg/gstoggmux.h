@@ -82,6 +82,9 @@ typedef struct
   gboolean prev_delta;          /* was the previous buffer a delta frame */
   gboolean data_pushed;         /* whether we pushed data already */
 
+  gint64  next_granule;         /* expected granule of next buffer ts */
+  gint64  keyframe_granule;     /* granule of last preceding keyframe */
+
   GstPadEventFunction collect_event;
 
   gboolean always_flush_page;
@@ -123,6 +126,7 @@ struct _GstOggMux
 
   guint64 max_delay;
   guint64 max_page_delay;
+  guint64 max_tolerance;
 
   GstOggPadData *delta_pad;     /* when a delta frame is detected on a stream, we mark
                                    pages as delta frames up to the page that has the
