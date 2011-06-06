@@ -469,6 +469,7 @@ gst_aac_parse_detect_stream (GstAacParse * aacparse,
     int skip_size = 0;
     int bitstream_type;
     int sr_idx;
+    GstCaps *sinkcaps;
 
     aacparse->header_type = DSPAAC_HEADER_ADIF;
     aacparse->mpegversion = 4;
@@ -531,8 +532,9 @@ gst_aac_parse_detect_stream (GstAacParse * aacparse,
     gst_base_parse_set_min_frame_size (GST_BASE_PARSE (aacparse), 512);
 
     /* arrange for metadata and get out of the way */
-    gst_aac_parse_set_src_caps (aacparse,
-        GST_PAD_CAPS (GST_BASE_PARSE_SINK_PAD (aacparse)));
+    sinkcaps = gst_pad_get_current_caps (GST_BASE_PARSE_SINK_PAD (aacparse));
+    gst_aac_parse_set_src_caps (aacparse, sinkcaps);
+    gst_caps_unref (sinkcaps);
 
     /* not syncable, not easily seekable (unless we push data from start */
     gst_base_parse_set_syncable (GST_BASE_PARSE_CAST (aacparse), FALSE);
@@ -662,14 +664,18 @@ gst_aac_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 
   if (G_UNLIKELY (rate != aacparse->sample_rate
           || channels != aacparse->channels)) {
+    GstCaps *sinkcaps;
+
     aacparse->sample_rate = rate;
     aacparse->channels = channels;
 
-    if (!gst_aac_parse_set_src_caps (aacparse,
-            GST_PAD_CAPS (GST_BASE_PARSE (aacparse)->sinkpad))) {
+    sinkcaps = gst_pad_get_current_caps (GST_BASE_PARSE (aacparse)->sinkpad);
+    if (!gst_aac_parse_set_src_caps (aacparse, sinkcaps)) {
       /* If linking fails, we need to return appropriate error */
+      gst_caps_unref (sinkcaps);
       ret = GST_FLOW_NOT_LINKED;
     }
+    gst_caps_unref (sinkcaps);
 
     gst_base_parse_set_frame_rate (GST_BASE_PARSE (aacparse),
         aacparse->sample_rate, 1024, 2, 2);

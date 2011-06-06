@@ -240,10 +240,16 @@ static gboolean
 gst_ac3_parse_frame_header_ac3 (GstAc3Parse * ac3parse, GstBuffer * buf,
     guint * frame_size, guint * rate, guint * chans, guint * blks, guint * sid)
 {
-  GstBitReader bits = GST_BIT_READER_INIT_FROM_BUFFER (buf);
+  GstBitReader bits;
+  gpointer data;
+  gsize size;
   guint8 fscod, frmsizcod, bsid, acmod, lfe_on;
+  gboolean ret = FALSE;
 
   GST_LOG_OBJECT (ac3parse, "parsing ac3");
+
+  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+  gst_bit_reader_init (&bits, data, size);
 
   gst_bit_reader_skip_unchecked (&bits, 16 + 16);
   fscod = gst_bit_reader_get_bits_uint8_unchecked (&bits, 2);
@@ -251,7 +257,7 @@ gst_ac3_parse_frame_header_ac3 (GstAc3Parse * ac3parse, GstBuffer * buf,
 
   if (G_UNLIKELY (fscod == 3 || frmsizcod >= G_N_ELEMENTS (frmsizcod_table))) {
     GST_DEBUG_OBJECT (ac3parse, "bad fscod=%d frmsizcod=%d", fscod, frmsizcod);
-    return FALSE;
+    goto cleanup;
   }
 
   bsid = gst_bit_reader_get_bits_uint8_unchecked (&bits, 5);
@@ -262,7 +268,7 @@ gst_ac3_parse_frame_header_ac3 (GstAc3Parse * ac3parse, GstBuffer * buf,
    * but seemingly only defines 6 and 8 cases */
   if (bsid > 8) {
     GST_DEBUG_OBJECT (ac3parse, "unexpected bsid=%d", bsid);
-    return FALSE;
+    goto cleanup;
   } else if (bsid != 8 && bsid != 6) {
     GST_DEBUG_OBJECT (ac3parse, "undefined bsid=%d", bsid);
   }
@@ -287,24 +293,35 @@ gst_ac3_parse_frame_header_ac3 (GstAc3Parse * ac3parse, GstBuffer * buf,
   if (sid)
     *sid = 0;
 
-  return TRUE;
+  ret = TRUE;
+
+cleanup:
+  gst_buffer_unmap (buf, data, size);
+
+  return ret;
 }
 
 static gboolean
 gst_ac3_parse_frame_header_eac3 (GstAc3Parse * ac3parse, GstBuffer * buf,
     guint * frame_size, guint * rate, guint * chans, guint * blks, guint * sid)
 {
-  GstBitReader bits = GST_BIT_READER_INIT_FROM_BUFFER (buf);
+  GstBitReader bits;
+  gpointer data;
+  gsize size;
   guint16 frmsiz, sample_rate, blocks;
   guint8 strmtyp, fscod, fscod2, acmod, lfe_on, strmid, numblkscod;
+  gboolean ret = FALSE;
 
   GST_LOG_OBJECT (ac3parse, "parsing e-ac3");
+
+  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+  gst_bit_reader_init (&bits, data, size);
 
   gst_bit_reader_skip_unchecked (&bits, 16);
   strmtyp = gst_bit_reader_get_bits_uint8_unchecked (&bits, 2); /* strmtyp     */
   if (G_UNLIKELY (strmtyp == 3)) {
     GST_DEBUG_OBJECT (ac3parse, "bad strmtyp %d", strmtyp);
-    return FALSE;
+    goto cleanup;
   }
 
   strmid = gst_bit_reader_get_bits_uint8_unchecked (&bits, 3);  /* substreamid */
@@ -314,7 +331,7 @@ gst_ac3_parse_frame_header_eac3 (GstAc3Parse * ac3parse, GstBuffer * buf,
     fscod2 = gst_bit_reader_get_bits_uint8_unchecked (&bits, 2);        /* fscod2      */
     if (G_UNLIKELY (fscod2 == 3)) {
       GST_DEBUG_OBJECT (ac3parse, "invalid fscod2");
-      return FALSE;
+      goto cleanup;
     }
     sample_rate = fscod_rates[fscod2] / 2;
     blocks = 6;
@@ -340,7 +357,12 @@ gst_ac3_parse_frame_header_eac3 (GstAc3Parse * ac3parse, GstBuffer * buf,
   if (sid)
     *sid = (strmtyp & 0x1) << 3 | strmid;
 
-  return TRUE;
+  ret = TRUE;
+
+cleanup:
+  gst_buffer_unmap (buf, data, size);
+
+  return ret;
 }
 
 static gboolean
@@ -348,35 +370,49 @@ gst_ac3_parse_frame_header (GstAc3Parse * parse, GstBuffer * buf,
     guint * framesize, guint * rate, guint * chans, guint * blocks,
     guint * sid, gboolean * eac)
 {
-  GstBitReader bits = GST_BIT_READER_INIT_FROM_BUFFER (buf);
+  GstBitReader bits;
   guint16 sync;
   guint8 bsid;
+  gpointer data;
+  gsize size;
+  gboolean ret = FALSE;
 
-  GST_MEMDUMP_OBJECT (parse, "AC3 frame sync", GST_BUFFER_DATA (buf), 16);
+  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+  gst_bit_reader_init (&bits, data, size);
+
+  GST_MEMDUMP_OBJECT (parse, "AC3 frame sync", data, MIN (size, 16));
 
   sync = gst_bit_reader_get_bits_uint16_unchecked (&bits, 16);
   gst_bit_reader_skip_unchecked (&bits, 16 + 8);
   bsid = gst_bit_reader_peek_bits_uint8_unchecked (&bits, 5);
 
   if (G_UNLIKELY (sync != 0x0b77))
-    return FALSE;
+    goto cleanup;
 
   GST_LOG_OBJECT (parse, "bsid = %d", bsid);
 
   if (bsid <= 10) {
     if (eac)
       *eac = FALSE;
-    return gst_ac3_parse_frame_header_ac3 (parse, buf, framesize, rate, chans,
+    ret = gst_ac3_parse_frame_header_ac3 (parse, buf, framesize, rate, chans,
         blocks, sid);
-  } else if (bsid <= 16) {
+    goto cleanup;
+  }
+
+  if (bsid <= 16) {
     if (eac)
       *eac = TRUE;
-    return gst_ac3_parse_frame_header_eac3 (parse, buf, framesize, rate, chans,
+    ret = gst_ac3_parse_frame_header_eac3 (parse, buf, framesize, rate, chans,
         blocks, sid);
-  } else {
-    GST_DEBUG_OBJECT (parse, "unexpected bsid %d", bsid);
-    return FALSE;
+    goto cleanup;
   }
+
+  GST_DEBUG_OBJECT (parse, "unexpected bsid %d", bsid);
+
+cleanup:
+  gst_buffer_unmap (buf, data, size);
+
+  return ret;
 }
 
 static gboolean
@@ -385,35 +421,40 @@ gst_ac3_parse_check_valid_frame (GstBaseParse * parse,
 {
   GstAc3Parse *ac3parse = GST_AC3_PARSE (parse);
   GstBuffer *buf = frame->buffer;
-  GstByteReader reader = GST_BYTE_READER_INIT_FROM_BUFFER (buf);
+  GstByteReader reader;
   gint off;
   gboolean lost_sync, draining;
+  gpointer data;
+  gsize size;
+  gboolean ret = FALSE;
 
-  if (G_UNLIKELY (GST_BUFFER_SIZE (buf) < 6))
-    return FALSE;
+  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+
+  if (G_UNLIKELY (size < 6))
+    goto cleanup;
 
   off = gst_byte_reader_masked_scan_uint32 (&reader, 0xffff0000, 0x0b770000,
-      0, GST_BUFFER_SIZE (buf));
+      0, size);
 
   GST_LOG_OBJECT (parse, "possible sync at buffer offset %d", off);
 
   /* didn't find anything that looks like a sync word, skip */
   if (off < 0) {
-    *skipsize = GST_BUFFER_SIZE (buf) - 3;
-    return FALSE;
+    *skipsize = size - 3;
+    goto cleanup;
   }
 
   /* possible frame header, but not at offset 0? skip bytes before sync */
   if (off > 0) {
     *skipsize = off;
-    return FALSE;
+    goto cleanup;
   }
 
   /* make sure the values in the frame header look sane */
   if (!gst_ac3_parse_frame_header (ac3parse, buf, framesize, NULL, NULL,
           NULL, NULL, NULL)) {
     *skipsize = off + 2;
-    return FALSE;
+    goto cleanup;
   }
 
   GST_LOG_OBJECT (parse, "got frame");
@@ -431,12 +472,12 @@ gst_ac3_parse_check_valid_frame (GstBaseParse * parse,
       GST_DEBUG_OBJECT (ac3parse, "... but not sufficient data");
       gst_base_parse_set_min_frame_size (parse, *framesize + 6);
       *skipsize = 0;
-      return FALSE;
+      goto cleanup;
     } else {
       if (word != 0x0b77) {
         GST_DEBUG_OBJECT (ac3parse, "0x%x not OK", word);
         *skipsize = off + 2;
-        return FALSE;
+        goto cleanup;
       } else {
         /* ok, got sync now, let's assume constant frame size */
         gst_base_parse_set_min_frame_size (parse, *framesize);
@@ -444,7 +485,12 @@ gst_ac3_parse_check_valid_frame (GstBaseParse * parse,
     }
   }
 
-  return TRUE;
+  ret = TRUE;
+
+cleanup:
+  gst_buffer_unmap (buf, data, size);
+
+  return ret;
 }
 
 static GstFlowReturn
@@ -480,7 +526,6 @@ gst_ac3_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     GstCaps *caps = gst_caps_new_simple (eac ? "audio/x-eac3" : "audio/x-ac3",
         "framed", G_TYPE_BOOLEAN, TRUE, "rate", G_TYPE_INT, rate,
         "channels", G_TYPE_INT, chans, NULL);
-    gst_buffer_set_caps (buf, caps);
     gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (parse), caps);
     gst_caps_unref (caps);
 

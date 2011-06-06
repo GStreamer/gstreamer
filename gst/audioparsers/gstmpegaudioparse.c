@@ -98,8 +98,8 @@ static gboolean gst_mpeg_audio_parse_convert (GstBaseParse * parse,
     GstFormat src_format, gint64 src_value,
     GstFormat dest_format, gint64 * dest_value);
 
-GST_BOILERPLATE (GstMpegAudioParse, gst_mpeg_audio_parse, GstBaseParse,
-    GST_TYPE_BASE_PARSE);
+#define gst_mpeg_audio_parse_parent_class parent_class
+G_DEFINE_TYPE (GstMpegAudioParse, gst_mpeg_audio_parse, GST_TYPE_BASE_PARSE);
 
 #define GST_TYPE_MPEG_AUDIO_CHANNEL_MODE  \
     (gst_mpeg_audio_channel_mode_get_type())
@@ -138,26 +138,10 @@ gst_mpeg_audio_channel_mode_get_nick (gint mode)
 }
 
 static void
-gst_mpeg_audio_parse_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_template));
-
-  gst_element_class_set_details_simple (element_class, "MPEG1 Audio Parser",
-      "Codec/Parser/Audio",
-      "Parses and frames mpeg1 audio streams (levels 1-3), provides seek",
-      "Jan Schmidt <thaytan@mad.scientist.com>,"
-      "Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>");
-}
-
-static void
 gst_mpeg_audio_parse_class_init (GstMpegAudioParseClass * klass)
 {
   GstBaseParseClass *parse_class = GST_BASE_PARSE_CLASS (klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
   GST_DEBUG_CATEGORY_INIT (mpeg_audio_parse_debug, "mpegaudioparse", 0,
@@ -185,6 +169,17 @@ gst_mpeg_audio_parse_class_init (GstMpegAudioParseClass * klass)
       "channel mode", "MPEG audio channel mode", NULL);
 
   g_type_class_ref (GST_TYPE_MPEG_AUDIO_CHANNEL_MODE);
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&sink_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&src_template));
+
+  gst_element_class_set_details_simple (element_class, "MPEG1 Audio Parser",
+      "Codec/Parser/Audio",
+      "Parses and frames mpeg1 audio streams (levels 1-3), provides seek",
+      "Jan Schmidt <thaytan@mad.scientist.com>,"
+      "Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>");
 }
 
 static void
@@ -220,8 +215,7 @@ gst_mpeg_audio_parse_reset (GstMpegAudioParse * mp3parse)
 }
 
 static void
-gst_mpeg_audio_parse_init (GstMpegAudioParse * mp3parse,
-    GstMpegAudioParseClass * klass)
+gst_mpeg_audio_parse_init (GstMpegAudioParse * mp3parse)
 {
   gst_mpeg_audio_parse_reset (mp3parse);
 }
@@ -374,13 +368,13 @@ gst_mp3parse_validate_extended (GstMpegAudioParse * mp3parse, GstBuffer * buf,
     guint32 header, int bpf, gboolean at_eos, gint * valid)
 {
   guint32 next_header;
-  const guint8 *data;
-  guint available;
+  guint8 *data;
+  gsize available;
+  gboolean res = TRUE;
   int frames_found = 1;
   int offset = bpf;
 
-  available = GST_BUFFER_SIZE (buf);
-  data = GST_BUFFER_DATA (buf);
+  data = gst_buffer_map (buf, &available, NULL, GST_MAP_READ);
 
   while (frames_found < MIN_RESYNC_FRAMES) {
     /* Check if we have enough data for all these frames, plus the next
@@ -389,10 +383,11 @@ gst_mp3parse_validate_extended (GstMpegAudioParse * mp3parse, GstBuffer * buf,
       if (at_eos) {
         /* Running out of data at EOS is fine; just accept it */
         *valid = TRUE;
-        return TRUE;
+        goto cleanup;
       } else {
         *valid = offset + 4;
-        return FALSE;
+        res = FALSE;
+        goto cleanup;
       }
     }
 
@@ -413,14 +408,14 @@ gst_mp3parse_validate_extended (GstMpegAudioParse * mp3parse, GstBuffer * buf,
           (guint) header, (guint) header & HDRMASK, (guint) next_header,
           (guint) next_header & HDRMASK, bpf);
       *valid = FALSE;
-      return TRUE;
+      goto cleanup;
     } else if ((((next_header >> 12) & 0xf) == 0) ||
         (((next_header >> 12) & 0xf) == 0xf)) {
       /* The essential parts were the same, but the bitrate held an
          invalid value - also reject */
       GST_DEBUG_OBJECT (mp3parse, "next header invalid (bitrate)");
       *valid = FALSE;
-      return TRUE;
+      goto cleanup;
     }
 
     bpf = mp3_type_frame_length_from_header (mp3parse, next_header,
@@ -431,7 +426,10 @@ gst_mp3parse_validate_extended (GstMpegAudioParse * mp3parse, GstBuffer * buf,
   }
 
   *valid = TRUE;
-  return TRUE;
+
+cleanup:
+  gst_buffer_unmap (buf, data, available);
+  return res;
 }
 
 static gboolean
@@ -487,37 +485,43 @@ gst_mpeg_audio_parse_check_valid_frame (GstBaseParse * parse,
 {
   GstMpegAudioParse *mp3parse = GST_MPEG_AUDIO_PARSE (parse);
   GstBuffer *buf = frame->buffer;
-  GstByteReader reader = GST_BYTE_READER_INIT_FROM_BUFFER (buf);
+  GstByteReader reader;
   gint off, bpf;
   gboolean lost_sync, draining, valid, caps_change;
   guint32 header;
   guint bitrate, layer, rate, channels, version, mode, crc;
+  guint8 *data;
+  gsize bufsize;
+  gboolean res = FALSE;
 
-  if (G_UNLIKELY (GST_BUFFER_SIZE (buf) < 6))
-    return FALSE;
+  data = gst_buffer_map (buf, &bufsize, NULL, GST_MAP_READ);
+  if (G_UNLIKELY (bufsize < 6))
+    goto cleanup;
+
+  gst_byte_reader_init (&reader, data, bufsize);
 
   off = gst_byte_reader_masked_scan_uint32 (&reader, 0xffe00000, 0xffe00000,
-      0, GST_BUFFER_SIZE (buf));
+      0, bufsize);
 
   GST_LOG_OBJECT (parse, "possible sync at buffer offset %d", off);
 
   /* didn't find anything that looks like a sync word, skip */
   if (off < 0) {
-    *skipsize = GST_BUFFER_SIZE (buf) - 3;
-    return FALSE;
+    *skipsize = bufsize - 3;
+    goto cleanup;
   }
 
   /* possible frame header, but not at offset 0? skip bytes before sync */
   if (off > 0) {
     *skipsize = off;
-    return FALSE;
+    goto cleanup;
   }
 
   /* make sure the values in the frame header look sane */
-  header = GST_READ_UINT32_BE (GST_BUFFER_DATA (buf));
+  header = GST_READ_UINT32_BE (data);
   if (!gst_mpeg_audio_parse_head_check (mp3parse, header)) {
     *skipsize = 1;
-    return FALSE;
+    goto cleanup;
   }
 
   GST_LOG_OBJECT (parse, "got frame");
@@ -541,21 +545,25 @@ gst_mpeg_audio_parse_check_valid_frame (GstBaseParse * parse,
       /* not enough data */
       gst_base_parse_set_min_frame_size (parse, valid);
       *skipsize = 0;
-      return FALSE;
+      goto cleanup;
     } else {
       if (!valid) {
         *skipsize = off + 2;
-        return FALSE;
+        goto cleanup;
       }
     }
   } else if (draining && lost_sync && caps_change && mp3parse->rate > 0) {
     /* avoid caps jitter that we can't be sure of */
     *skipsize = off + 2;
-    return FALSE;
+    goto cleanup;
   }
 
   *framesize = bpf;
-  return TRUE;
+  res = TRUE;
+
+cleanup:
+  gst_buffer_unmap (buf, data, bufsize);
+  return res;
 }
 
 static void
@@ -571,7 +579,8 @@ gst_mpeg_audio_parse_handle_first_frame (GstMpegAudioParse * mp3parse,
   gint64 upstream_total_bytes = 0;
   GstFormat fmt = GST_FORMAT_BYTES;
   guint32 read_id_xing = 0, read_id_vbri = 0;
-  const guint8 *data;
+  guint8 *data, *origdata;
+  gsize bufsize;
   guint bitrate;
 
   if (mp3parse->sent_codec_tag)
@@ -598,8 +607,8 @@ gst_mpeg_audio_parse_handle_first_frame (GstMpegAudioParse * mp3parse,
   offset_vbri += 4;
 
   /* Check if we have enough data to read the Xing header */
-  avail = GST_BUFFER_SIZE (buf);
-  data = GST_BUFFER_DATA (buf);
+  origdata = data = gst_buffer_map (buf, &bufsize, NULL, GST_MAP_READ);
+  avail = bufsize;
 
   if (avail >= offset_xing + 4) {
     read_id_xing = GST_READ_UINT32_BE (data + offset_xing);
@@ -639,7 +648,7 @@ gst_mpeg_audio_parse_handle_first_frame (GstMpegAudioParse * mp3parse,
     if (avail < bytes_needed) {
       GST_DEBUG_OBJECT (mp3parse,
           "Not enough data to read Xing header (need %d)", bytes_needed);
-      return;
+      goto cleanup;
     }
 
     GST_DEBUG_OBJECT (mp3parse, "Reading Xing header");
@@ -795,7 +804,7 @@ gst_mpeg_audio_parse_handle_first_frame (GstMpegAudioParse * mp3parse,
     if (avail < offset_vbri + 26) {
       GST_DEBUG_OBJECT (mp3parse,
           "Not enough data to read VBRI header (need %d)", offset_vbri + 26);
-      return;
+      goto cleanup;
     }
 
     GST_DEBUG_OBJECT (mp3parse, "Reading VBRI header");
@@ -806,7 +815,7 @@ gst_mpeg_audio_parse_handle_first_frame (GstMpegAudioParse * mp3parse,
     if (GST_READ_UINT16_BE (data) != 0x0001) {
       GST_WARNING_OBJECT (mp3parse,
           "Unsupported VBRI version 0x%x", GST_READ_UINT16_BE (data));
-      return;
+      goto cleanup;
     }
     data += 2;
 
@@ -879,10 +888,10 @@ gst_mpeg_audio_parse_handle_first_frame (GstMpegAudioParse * mp3parse,
         GST_DEBUG_OBJECT (mp3parse,
             "Not enough data to read VBRI header (need %d)",
             offset_vbri + 26 + nseek_points * seek_bytes);
-        return;
+        goto cleanup;
       }
 
-      data = GST_BUFFER_DATA (buf);
+      data = origdata;
       data += offset_vbri + 26;
 
       /* VBRI seek table: frame/seek_frames -> byte */
@@ -956,6 +965,9 @@ gst_mpeg_audio_parse_handle_first_frame (GstMpegAudioParse * mp3parse,
     bitrate = 0;
 
   gst_base_parse_set_average_bitrate (GST_BASE_PARSE (mp3parse), bitrate);
+
+cleanup:
+  gst_buffer_unmap (buf, origdata, bufsize);
 }
 
 static GstFlowReturn
@@ -964,12 +976,16 @@ gst_mpeg_audio_parse_parse_frame (GstBaseParse * parse,
 {
   GstMpegAudioParse *mp3parse = GST_MPEG_AUDIO_PARSE (parse);
   GstBuffer *buf = frame->buffer;
+  guint8 *data;
+  gsize bufsize;
   guint bitrate, layer, rate, channels, version, mode, crc;
 
-  g_return_val_if_fail (GST_BUFFER_SIZE (buf) >= 4, GST_FLOW_ERROR);
+  data = gst_buffer_map (buf, &bufsize, NULL, GST_MAP_READ);
+  if (G_UNLIKELY (bufsize < 4))
+    goto short_buffer;
 
   if (!mp3_type_frame_length_from_header (mp3parse,
-          GST_READ_UINT32_BE (GST_BUFFER_DATA (buf)),
+          GST_READ_UINT32_BE (data),
           &version, &layer, &channels, &bitrate, &rate, &mode, &crc))
     goto broken_header;
 
@@ -981,7 +997,6 @@ gst_mpeg_audio_parse_parse_frame (GstBaseParse * parse,
         "layer", G_TYPE_INT, layer,
         "rate", G_TYPE_INT, rate,
         "channels", G_TYPE_INT, channels, "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
-    gst_buffer_set_caps (buf, caps);
     gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (parse), caps);
     gst_caps_unref (caps);
 
@@ -1025,13 +1040,21 @@ gst_mpeg_audio_parse_parse_frame (GstBaseParse * parse,
   mp3parse->last_crc = crc;
   mp3parse->last_mode = mode;
 
+  gst_buffer_unmap (buf, data, bufsize);
   return GST_FLOW_OK;
 
 /* ERRORS */
 broken_header:
   {
     /* this really shouldn't ever happen */
+    gst_buffer_unmap (buf, data, bufsize);
     GST_ELEMENT_ERROR (parse, STREAM, DECODE, (NULL), (NULL));
+    return GST_FLOW_ERROR;
+  }
+
+short_buffer:
+  {
+    gst_buffer_unmap (buf, data, bufsize);
     return GST_FLOW_ERROR;
   }
 }
