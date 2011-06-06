@@ -83,7 +83,7 @@ DeckLinkCaptureDelegate::Release (void)
 }
 
 HRESULT
-DeckLinkCaptureDelegate::VideoInputFrameArrived (IDeckLinkVideoInputFrame *
+    DeckLinkCaptureDelegate::VideoInputFrameArrived (IDeckLinkVideoInputFrame *
     videoFrame, IDeckLinkAudioInputPacket * audioFrame)
 {
   GstDecklinkSrc *decklinksrc = GST_DECKLINK_SRC (priv);
@@ -91,7 +91,7 @@ DeckLinkCaptureDelegate::VideoInputFrameArrived (IDeckLinkVideoInputFrame *
   // Handle Video Frame
   if (videoFrame) {
     if (videoFrame->GetFlags () & bmdFrameHasNoInputSource) {
-      GST_DEBUG("Frame received - No input signal detected");
+      GST_DEBUG ("Frame received - No input signal detected");
     } else {
       const char *timecodeString = NULL;
       if (g_timecodeFormat != 0) {
@@ -101,10 +101,9 @@ DeckLinkCaptureDelegate::VideoInputFrameArrived (IDeckLinkVideoInputFrame *
         }
       }
 
-      GST_DEBUG("Frame received [%s] - %s - Size: %li bytes",
+      GST_DEBUG ("Frame received [%s] - %s - Size: %li bytes",
           timecodeString != NULL ? timecodeString : "No timecode",
-          "Valid Frame",
-          videoFrame->GetRowBytes () * videoFrame->GetHeight ());
+          "Valid Frame", videoFrame->GetRowBytes () * videoFrame->GetHeight ());
 
       if (timecodeString)
         free ((void *) timecodeString);
@@ -113,10 +112,10 @@ DeckLinkCaptureDelegate::VideoInputFrameArrived (IDeckLinkVideoInputFrame *
       if (decklinksrc->video_frame != NULL) {
         decklinksrc->dropped_frames++;
       } else {
-        videoFrame->AddRef();
+        videoFrame->AddRef ();
         decklinksrc->video_frame = videoFrame;
         if (audioFrame) {
-          audioFrame->AddRef();
+          audioFrame->AddRef ();
           decklinksrc->audio_frame = audioFrame;
         }
       }
@@ -128,11 +127,10 @@ DeckLinkCaptureDelegate::VideoInputFrameArrived (IDeckLinkVideoInputFrame *
 }
 
 HRESULT
-DeckLinkCaptureDelegate::
-VideoInputFormatChanged (BMDVideoInputFormatChangedEvents events,
-    IDeckLinkDisplayMode * mode, BMDDetectedVideoInputFormatFlags)
-{
-  GST_ERROR("moo");
+    DeckLinkCaptureDelegate::VideoInputFormatChanged
+    (BMDVideoInputFormatChangedEvents events, IDeckLinkDisplayMode * mode,
+    BMDDetectedVideoInputFormatFlags) {
+  GST_ERROR ("moo");
   return S_OK;
 }
 
@@ -140,19 +138,25 @@ VideoInputFormatChanged (BMDVideoInputFormatChangedEvents events,
 int
 usage (int status)
 {
-  HRESULT result;
-  IDeckLinkDisplayMode *displayMode;
-  int displayModeCount = 0;
+  HRESULT
+      result;
+  IDeckLinkDisplayMode *
+      displayMode;
+  int
+      displayModeCount = 0;
 
   fprintf (stderr,
       "Usage: Capture -m <mode id> [OPTIONS]\n" "\n" "    -m <mode id>:\n");
 
   while (displayModeIterator->Next (&displayMode) == S_OK) {
-    char *displayModeString = NULL;
+    char *
+        displayModeString = NULL;
 
     result = displayMode->GetName ((const char **) &displayModeString);
     if (result == S_OK) {
-      BMDTimeValue frameRateDuration, frameRateScale;
+      BMDTimeValue
+          frameRateDuration,
+          frameRateScale;
       displayMode->GetFrameRate (&frameRateDuration, &frameRateScale);
 
       fprintf (stderr, "        %2d:  %-20s \t %li x %li \t %g FPS\n",
@@ -194,17 +198,28 @@ usage (int status)
 int
 main (int argc, char *argv[])
 {
-  IDeckLinkIterator *deckLinkIterator = CreateDeckLinkIteratorInstance ();
-  DeckLinkCaptureDelegate *delegate;
-  IDeckLinkDisplayMode *displayMode;
-  BMDVideoInputFlags inputFlags = 0;
-  BMDDisplayMode selectedDisplayMode = bmdModeNTSC;
-  BMDPixelFormat pixelFormat = bmdFormat8BitYUV;
-  int displayModeCount = 0;
-  int exitStatus = 1;
-  int ch;
-  bool foundDisplayMode = false;
-  HRESULT result;
+  IDeckLinkIterator *
+      deckLinkIterator = CreateDeckLinkIteratorInstance ();
+  DeckLinkCaptureDelegate *
+      delegate;
+  IDeckLinkDisplayMode *
+      displayMode;
+  BMDVideoInputFlags
+      inputFlags = 0;
+  BMDDisplayMode
+      selectedDisplayMode = bmdModeNTSC;
+  BMDPixelFormat
+      pixelFormat = bmdFormat8BitYUV;
+  int
+      displayModeCount = 0;
+  int
+      exitStatus = 1;
+  int
+      ch;
+  bool
+      foundDisplayMode = false;
+  HRESULT
+      result;
 
   pthread_mutex_init (&sleepMutex, NULL);
   pthread_cond_init (&sleepCond, NULL);
@@ -334,8 +349,10 @@ main (int argc, char *argv[])
 
   while (displayModeIterator->Next (&displayMode) == S_OK) {
     if (g_videoModeIndex == displayModeCount) {
-      BMDDisplayModeSupport result;
-      const char *displayModeName;
+      BMDDisplayModeSupport
+          result;
+      const char *
+          displayModeName;
 
       foundDisplayMode = true;
       displayMode->GetName (&displayModeName);
@@ -427,4 +444,3 @@ bail:
   return exitStatus;
 }
 #endif
-

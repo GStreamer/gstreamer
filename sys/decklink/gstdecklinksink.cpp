@@ -67,7 +67,8 @@ static gboolean gst_decklink_sink_query (GstElement * element,
     GstQuery * query);
 
 static GstCaps *gst_decklink_sink_videosink_getcaps (GstPad * pad);
-static gboolean gst_decklink_sink_videosink_setcaps (GstPad * pad, GstCaps * caps);
+static gboolean gst_decklink_sink_videosink_setcaps (GstPad * pad,
+    GstCaps * caps);
 static gboolean gst_decklink_sink_videosink_acceptcaps (GstPad * pad,
     GstCaps * caps);
 static gboolean gst_decklink_sink_videosink_activate (GstPad * pad);
@@ -81,15 +82,18 @@ static GstFlowReturn gst_decklink_sink_videosink_chain (GstPad * pad,
     GstBuffer * buffer);
 static GstFlowReturn gst_decklink_sink_videosink_chainlist (GstPad * pad,
     GstBufferList * bufferlist);
-static gboolean gst_decklink_sink_videosink_event (GstPad * pad, GstEvent * event);
-static gboolean gst_decklink_sink_videosink_query (GstPad * pad, GstQuery * query);
+static gboolean gst_decklink_sink_videosink_event (GstPad * pad,
+    GstEvent * event);
+static gboolean gst_decklink_sink_videosink_query (GstPad * pad,
+    GstQuery * query);
 static GstFlowReturn gst_decklink_sink_videosink_bufferalloc (GstPad * pad,
     guint64 offset, guint size, GstCaps * caps, GstBuffer ** buf);
 static GstIterator *gst_decklink_sink_videosink_iterintlink (GstPad * pad);
 
 
 static GstCaps *gst_decklink_sink_audiosink_getcaps (GstPad * pad);
-static gboolean gst_decklink_sink_audiosink_setcaps (GstPad * pad, GstCaps * caps);
+static gboolean gst_decklink_sink_audiosink_setcaps (GstPad * pad,
+    GstCaps * caps);
 static gboolean gst_decklink_sink_audiosink_acceptcaps (GstPad * pad,
     GstCaps * caps);
 static gboolean gst_decklink_sink_audiosink_activate (GstPad * pad);
@@ -103,8 +107,10 @@ static GstFlowReturn gst_decklink_sink_audiosink_chain (GstPad * pad,
     GstBuffer * buffer);
 static GstFlowReturn gst_decklink_sink_audiosink_chainlist (GstPad * pad,
     GstBufferList * bufferlist);
-static gboolean gst_decklink_sink_audiosink_event (GstPad * pad, GstEvent * event);
-static gboolean gst_decklink_sink_audiosink_query (GstPad * pad, GstQuery * query);
+static gboolean gst_decklink_sink_audiosink_event (GstPad * pad,
+    GstEvent * event);
+static gboolean gst_decklink_sink_audiosink_query (GstPad * pad,
+    GstQuery * query);
 static GstFlowReturn gst_decklink_sink_audiosink_bufferalloc (GstPad * pad,
     guint64 offset, guint size, GstCaps * caps, GstBuffer ** buf);
 static GstIterator *gst_decklink_sink_audiosink_iterintlink (GstPad * pad);
@@ -125,58 +131,68 @@ static GstStaticPadTemplate gst_decklink_sink_videosink_template =
 GST_STATIC_PAD_TEMPLATE ("videosink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (
-      MODE(720,486,30000,1001,true)
+    GST_STATIC_CAPS (MODE (720, 486, 30000, 1001, true)
     ));
 #if 0
-      MODE(720,486,24000,1001,true) ";"
-      MODE(720,576,25,1,true) ";"
-      MODE(1920,1080,24000,1001,false) ";"
-      MODE(1920,1080,24,1,false) ";"
-      MODE(1920,1080,25,1,false) ";"
-      MODE(1920,1080,30000,1001,false) ";"
-      MODE(1920,1080,30,1,false) ";"
-      MODE(1920,1080,25,1,true) ";"
-      MODE(1920,1080,30000,1001,true) ";"
-      MODE(1920,1080,30,1,true) ";"
-      MODE(1280,720,50,1,true) ";"
-      MODE(1280,720,60000,1001,true) ";"
-      MODE(1280,720,60,1,true)
+MODE (720, 486, 24000, 1001, true) ";"
+MODE (720, 576, 25, 1, true)
+    ";"
+MODE (1920, 1080, 24000, 1001, false)
+    ";"
+MODE (1920, 1080, 24, 1, false)
+    ";"
+MODE (1920, 1080, 25, 1, false)
+    ";"
+MODE (1920, 1080, 30000, 1001, false)
+    ";"
+MODE (1920, 1080, 30, 1, false)
+    ";"
+MODE (1920, 1080, 25, 1, true)
+    ";"
+MODE (1920, 1080, 30000, 1001, true)
+    ";"
+MODE (1920, 1080, 30, 1, true)
+    ";"
+MODE (1280, 720, 50, 1, true)
+    ";"
+MODE (1280, 720, 60000, 1001, true)
+    ";"
+MODE (1280, 720, 60, 1, true)
 #endif
-
-static GstStaticPadTemplate gst_decklink_sink_audiosink_template =
-GST_STATIC_PAD_TEMPLATE ("audiosink",
+     static GstStaticPadTemplate gst_decklink_sink_audiosink_template =
+         GST_STATIC_PAD_TEMPLATE ("audiosink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-int,width=16,depth=16,channels=2,rate=48000")
     );
 
-typedef struct _DecklinkMode DecklinkMode;
-struct _DecklinkMode {
-  BMDDisplayMode mode;
-  int width;
-  int height;
-  int fps_n;
-  int fps_d;
-  gboolean interlaced;
-};
+     typedef struct _DecklinkMode DecklinkMode;
+     struct _DecklinkMode
+     {
+       BMDDisplayMode mode;
+       int width;
+       int height;
+       int fps_n;
+       int fps_d;
+       gboolean interlaced;
+     };
 
-static DecklinkMode modes[] = {
-  { bmdModeNTSC, 720,486,30000,1001,true },
-  { bmdModeNTSC2398, 720,486,24000,1001,true },
-  { bmdModePAL, 720,576,25,1,true },
-  { bmdModeHD1080p2398, 1920,1080,24000,1001,false },
-  { bmdModeHD1080p24, 1920,1080,24,1,false },
-  { bmdModeHD1080p25, 1920,1080,25,1,false },
-  { bmdModeHD1080p2997, 1920,1080,30000,1001,false },
-  { bmdModeHD1080p30, 1920,1080,30,1,false },
-  { bmdModeHD1080i50, 1920,1080,25,1,true },
-  { bmdModeHD1080i5994, 1920,1080,30000,1001,true },
-  { bmdModeHD1080i6000, 1920,1080,30,1,true },
-  { bmdModeHD720p50, 1280,720,50,1,true },
-  { bmdModeHD720p5994, 1280,720,60000,1001,true },
-  { bmdModeHD720p60, 1280,720,60,1,true }
-};
+     static DecklinkMode modes[] = {
+       {bmdModeNTSC, 720, 486, 30000, 1001, true},
+       {bmdModeNTSC2398, 720, 486, 24000, 1001, true},
+       {bmdModePAL, 720, 576, 25, 1, true},
+       {bmdModeHD1080p2398, 1920, 1080, 24000, 1001, false},
+       {bmdModeHD1080p24, 1920, 1080, 24, 1, false},
+       {bmdModeHD1080p25, 1920, 1080, 25, 1, false},
+       {bmdModeHD1080p2997, 1920, 1080, 30000, 1001, false},
+       {bmdModeHD1080p30, 1920, 1080, 30, 1, false},
+       {bmdModeHD1080i50, 1920, 1080, 25, 1, true},
+       {bmdModeHD1080i5994, 1920, 1080, 30000, 1001, true},
+       {bmdModeHD1080i6000, 1920, 1080, 30, 1, true},
+       {bmdModeHD720p50, 1280, 720, 50, 1, true},
+       {bmdModeHD720p5994, 1280, 720, 60000, 1001, true},
+       {bmdModeHD720p60, 1280, 720, 60, 1, true}
+     };
 
 
 /* class initialization */
@@ -294,8 +310,8 @@ gst_decklink_sink_init (GstDecklinkSink * decklinksink,
   gst_element_add_pad (GST_ELEMENT (decklinksink), decklinksink->audiosinkpad);
 
 
-  decklinksink->cond = g_cond_new();
-  decklinksink->mutex = g_mutex_new();
+  decklinksink->cond = g_cond_new ();
+  decklinksink->mutex = g_mutex_new ();
 
   decklinksink->mode = 0;
 
@@ -364,7 +380,7 @@ gst_decklink_sink_finalize (GObject * object)
 }
 
 static gboolean
-gst_decklink_sink_start (GstDecklinkSink *decklinksink)
+gst_decklink_sink_start (GstDecklinkSink * decklinksink)
 {
   IDeckLinkIterator *iterator;
   HRESULT ret;
@@ -375,18 +391,18 @@ gst_decklink_sink_start (GstDecklinkSink *decklinksink)
 
   iterator = CreateDeckLinkIteratorInstance ();
   if (iterator == NULL) {
-    GST_ERROR("no driver");
+    GST_ERROR ("no driver");
     return FALSE;
   }
 
   ret = iterator->Next (&decklinksink->decklink);
   if (ret != S_OK) {
-    GST_ERROR("no card");
+    GST_ERROR ("no card");
     return FALSE;
   }
 
   ret = decklinksink->decklink->QueryInterface (IID_IDeckLinkOutput,
-      (void **)&decklinksink->output);
+      (void **) &decklinksink->output);
   if (ret != S_OK) {
     GST_ERROR ("no output");
     return FALSE;
@@ -424,7 +440,8 @@ gst_decklink_sink_start (GstDecklinkSink *decklinksink)
   }
   //decklinksink->video_enabled = TRUE;
 
-  decklinksink->output->SetScheduledFrameCompletionCallback (decklinksink->callback);
+  decklinksink->output->
+      SetScheduledFrameCompletionCallback (decklinksink->callback);
 
   if (0) {
     ret = decklinksink->output->EnableAudioOutput (bmdAudioSampleRate48kHz,
@@ -441,7 +458,7 @@ gst_decklink_sink_start (GstDecklinkSink *decklinksink)
 }
 
 static gboolean
-gst_decklink_sink_force_stop (GstDecklinkSink *decklinksink)
+gst_decklink_sink_force_stop (GstDecklinkSink * decklinksink)
 {
   g_mutex_lock (decklinksink->mutex);
   decklinksink->stop = TRUE;
@@ -452,7 +469,7 @@ gst_decklink_sink_force_stop (GstDecklinkSink *decklinksink)
 }
 
 static gboolean
-gst_decklink_sink_stop (GstDecklinkSink *decklinksink)
+gst_decklink_sink_stop (GstDecklinkSink * decklinksink)
 {
   decklinksink->output->StopScheduledPlayback (0, NULL, 0);
   decklinksink->output->DisableAudioOutput ();
@@ -773,8 +790,8 @@ gst_decklink_sink_videosink_query (GstPad * pad, GstQuery * query)
 }
 
 static GstFlowReturn
-gst_decklink_sink_videosink_bufferalloc (GstPad * pad, guint64 offset, guint size,
-    GstCaps * caps, GstBuffer ** buf)
+gst_decklink_sink_videosink_bufferalloc (GstPad * pad, guint64 offset,
+    guint size, GstCaps * caps, GstBuffer ** buf)
 {
   GstDecklinkSink *decklinksink;
 
@@ -984,8 +1001,8 @@ gst_decklink_sink_audiosink_query (GstPad * pad, GstQuery * query)
 }
 
 static GstFlowReturn
-gst_decklink_sink_audiosink_bufferalloc (GstPad * pad, guint64 offset, guint size,
-    GstCaps * caps, GstBuffer ** buf)
+gst_decklink_sink_audiosink_bufferalloc (GstPad * pad, guint64 offset,
+    guint size, GstCaps * caps, GstBuffer ** buf)
 {
   GstDecklinkSink *decklinksink;
 
@@ -1020,10 +1037,10 @@ gst_decklink_sink_audiosink_iterintlink (GstPad * pad)
 
 
 HRESULT
-Output::ScheduledFrameCompleted (IDeckLinkVideoFrame * completedFrame,
+    Output::ScheduledFrameCompleted (IDeckLinkVideoFrame * completedFrame,
     BMDOutputFrameCompletionResult result)
-{   
-  GST_DEBUG("ScheduledFrameCompleted");
+{
+  GST_DEBUG ("ScheduledFrameCompleted");
 
   g_mutex_lock (decklinksink->mutex);
   g_cond_signal (decklinksink->cond);
@@ -1036,15 +1053,14 @@ Output::ScheduledFrameCompleted (IDeckLinkVideoFrame * completedFrame,
 HRESULT
 Output::ScheduledPlaybackHasStopped ()
 {
-  GST_ERROR("ScheduledPlaybackHasStopped");
+  GST_ERROR ("ScheduledPlaybackHasStopped");
   return S_OK;
 }
 
 HRESULT
 Output::RenderAudioSamples (bool preroll)
 {
-  GST_ERROR("RenderAudioSamples");
-  
+  GST_ERROR ("RenderAudioSamples");
+
   return S_OK;
 }
-
