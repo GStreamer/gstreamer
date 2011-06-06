@@ -62,11 +62,6 @@ GST_DEBUG_CATEGORY_STATIC (gst_ogg_mux_debug);
     ? GST_BUFFER_TIMESTAMP (buf) + GST_BUFFER_DURATION (buf) \
     : GST_BUFFER_TIMESTAMP (buf))
 
-#define GST_BUFFER_RUNNING_TIME(buf, oggpad) \
-    (GST_BUFFER_DURATION_IS_VALID (buf) \
-    ? gst_segment_to_running_time (&(oggpad)->segment, GST_FORMAT_TIME, \
-    GST_BUFFER_TIMESTAMP (buf)) : 0)
-
 #define GST_GP_FORMAT "[gp %8" G_GINT64_FORMAT "]"
 #define GST_GP_CAST(_gp) ((gint64) _gp)
 
@@ -87,11 +82,13 @@ enum
 /* set to 0.5 seconds by default */
 #define DEFAULT_MAX_DELAY       G_GINT64_CONSTANT(500000000)
 #define DEFAULT_MAX_PAGE_DELAY  G_GINT64_CONSTANT(500000000)
+#define DEFAULT_MAX_TOLERANCE   G_GINT64_CONSTANT(40000000)
 enum
 {
   ARG_0,
   ARG_MAX_DELAY,
   ARG_MAX_PAGE_DELAY,
+  ARG_MAX_TOLERANCE
 };
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
@@ -167,6 +164,11 @@ gst_ogg_mux_class_init (GstOggMuxClass * klass)
           "Maximum delay for sending out a page", 0, G_MAXUINT64,
           DEFAULT_MAX_PAGE_DELAY,
           (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, ARG_MAX_TOLERANCE,
+      g_param_spec_uint64 ("max-tolerance", "Max time tolerance",
+          "Maximum timestamp difference for maintaining perfect granules",
+          0, G_MAXUINT64, DEFAULT_MAX_TOLERANCE,
+          (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state = gst_ogg_mux_change_state;
 
@@ -220,6 +222,7 @@ gst_ogg_mux_init (GstOggMux * ogg_mux)
 
   ogg_mux->max_delay = DEFAULT_MAX_DELAY;
   ogg_mux->max_page_delay = DEFAULT_MAX_PAGE_DELAY;
+  ogg_mux->max_tolerance = DEFAULT_MAX_TOLERANCE;
 
   gst_ogg_mux_clear (ogg_mux);
 }
@@ -403,6 +406,8 @@ gst_ogg_mux_request_new_pad (GstElement * element,
       oggpad->pagebuffers = g_queue_new ();
       oggpad->map.headers = NULL;
       oggpad->map.queued = NULL;
+      oggpad->next_granule = 0;
+      oggpad->keyframe_granule = -1;
 
       gst_segment_init (&oggpad->segment, GST_FORMAT_TIME);
 
@@ -500,7 +505,7 @@ gst_ogg_mux_push_buffer (GstOggMux * mux, GstBuffer * buffer,
 
   /* Ensure we have monotonically increasing timestamps in the output. */
   if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer)) {
-    gint64 run_time = GST_BUFFER_RUNNING_TIME (buffer, oggpad);
+    gint64 run_time = GST_BUFFER_TIMESTAMP (buffer);
     if (mux->last_ts != GST_CLOCK_TIME_NONE && run_time < mux->last_ts)
       GST_BUFFER_TIMESTAMP (buffer) = mux->last_ts;
     else
@@ -699,11 +704,6 @@ gst_ogg_mux_compare_pads (GstOggMux * ogg_mux, GstOggPadData * first,
   if (secondtime == GST_CLOCK_TIME_NONE)
     return 1;
 
-  firsttime = gst_segment_to_running_time (&first->segment, GST_FORMAT_TIME,
-      firsttime);
-  secondtime = gst_segment_to_running_time (&second->segment, GST_FORMAT_TIME,
-      secondtime);
-
   /* first buffer has higher timestamp, second one should go first */
   if (secondtime < firsttime)
     return 1;
@@ -722,6 +722,116 @@ gst_ogg_mux_compare_pads (GstOggMux * ogg_mux, GstOggPadData * first,
   /* same priority if all of the above failed */
   return 0;
 }
+
+static GstBuffer *
+gst_ogg_mux_decorate_buffer (GstOggMux * ogg_mux, GstOggPadData * pad,
+    GstBuffer * buf)
+{
+  GstClockTime time;
+  gint64 duration, granule, limit;
+  GstClockTime next_time;
+  GstClockTimeDiff diff;
+  ogg_packet packet;
+  gsize size;
+
+  /* ensure messing with metadata is ok */
+  buf = gst_buffer_make_writable (buf);
+
+  /* convert time to running time, so we need no longer bother about that */
+  time = GST_BUFFER_TIMESTAMP (buf);
+  if (G_LIKELY (GST_CLOCK_TIME_IS_VALID (time))) {
+    time = gst_segment_to_running_time (&pad->segment, GST_FORMAT_TIME, time);
+    if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (time))) {
+      gst_buffer_unref (buf);
+      return NULL;
+    } else {
+      GST_BUFFER_TIMESTAMP (buf) = time;
+    }
+  }
+
+  /* now come up with granulepos stuff corresponding to time */
+  if (!pad->have_type ||
+      pad->map.granulerate_n <= 0 || pad->map.granulerate_d <= 0)
+    goto no_granule;
+
+  packet.packet = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+  packet.bytes = size;
+  duration = gst_ogg_stream_get_packet_duration (&pad->map, &packet);
+  gst_buffer_unmap (buf, packet.packet, size);
+
+  /* give up if no duration can be determined, relying on upstream */
+  if (G_UNLIKELY (duration < 0)) {
+    /* well, if some day we really could handle sparse input ... */
+    if (pad->map.is_sparse) {
+      limit = 1;
+      diff = 2;
+      goto resync;
+    }
+    GST_WARNING_OBJECT (pad->collect.pad,
+        "failed to determine packet duration");
+    goto no_granule;
+  }
+
+  GST_LOG_OBJECT (pad->collect.pad, "buffer ts %" GST_TIME_FORMAT
+      ", duration %" GST_TIME_FORMAT ", granule duration %" G_GINT64_FORMAT,
+      GST_TIME_ARGS (time), GST_TIME_ARGS (GST_BUFFER_DURATION (buf)),
+      duration);
+
+  /* determine granule corresponding to time,
+   * using the inverse of oggdemux' granule -> time */
+
+  /* see if interpolated granule matches good enough */
+  granule = pad->next_granule;
+  next_time = gst_ogg_stream_granule_to_time (&pad->map, pad->next_granule);
+  diff = GST_CLOCK_DIFF (next_time, time);
+
+  /* we tolerate deviation up to configured or within granule granularity */
+  limit = gst_ogg_stream_granule_to_time (&pad->map, 1) / 2;
+  limit = MAX (limit, ogg_mux->max_tolerance);
+
+  GST_LOG_OBJECT (pad->collect.pad, "expected granule %" G_GINT64_FORMAT " == "
+      "time %" GST_TIME_FORMAT " --> ts diff %" GST_TIME_FORMAT
+      " < tolerance %" GST_TIME_FORMAT " (?)",
+      granule, GST_TIME_ARGS (next_time), GST_TIME_ARGS (ABS (diff)),
+      GST_TIME_ARGS (limit));
+
+resync:
+  /* if not good enough, determine granule based on time */
+  if (diff > limit || diff < -limit) {
+    granule = gst_util_uint64_scale_round (time, pad->map.granulerate_n,
+        GST_SECOND * pad->map.granulerate_d);
+    GST_DEBUG_OBJECT (pad->collect.pad,
+        "resyncing to determined granule %" G_GINT64_FORMAT, granule);
+  }
+
+  if (pad->map.is_ogm || pad->map.is_sparse) {
+    pad->next_granule = granule;
+  } else {
+    granule += duration;
+    pad->next_granule = granule;
+  }
+
+  /* track previous keyframe */
+  if (!GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT))
+    pad->keyframe_granule = granule;
+
+  /* determine corresponding time and granulepos */
+  GST_BUFFER_OFFSET (buf) = gst_ogg_stream_granule_to_time (&pad->map, granule);
+  GST_BUFFER_OFFSET_END (buf) =
+      gst_ogg_stream_granule_to_granulepos (&pad->map, granule,
+      pad->keyframe_granule);
+
+  return buf;
+
+  /* ERRORS */
+no_granule:
+  {
+    GST_DEBUG_OBJECT (pad->collect.pad, "could not determine granulepos, "
+        "falling back to upstream provided metadata");
+    return buf;
+  }
+}
+
 
 /* make sure at least one buffer is queued on all pads, two if possible
  * 
@@ -786,11 +896,6 @@ gst_ogg_mux_queue_pads (GstOggMux * ogg_mux)
           packet.packet = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
           packet.bytes = size;
 
-          if (GST_BUFFER_OFFSET_END_IS_VALID (buf))
-            packet.granulepos = GST_BUFFER_OFFSET_END (buf);
-          else
-            packet.granulepos = 0;
-
           /* if we're not yet in data mode, ensure we're setup on the first packet */
           if (!pad->have_type) {
             GstCaps *caps;
@@ -837,7 +942,24 @@ gst_ogg_mux_queue_pads (GstOggMux * ogg_mux)
                 "got data buffer in control state, switching to data mode");
             /* this is a data buffer so switch to data state */
             pad->state = GST_OGG_PAD_STATE_DATA;
+
+            /* check if this type of stream allows generating granulepos
+             * metadata here, if not, upstream will have to provide */
+            if (gst_ogg_stream_granule_to_granulepos (&pad->map, 1, 1) < 0) {
+              GST_WARNING_OBJECT (data->pad, "can not generate metadata; "
+                  "relying on upstream");
+              /* disable metadata code path, otherwise not used anyway */
+              pad->map.granulerate_n = 0;
+            }
           }
+        }
+
+        /* so now we should have a real data packet;
+         * see that it is properly decorated */
+        if (G_LIKELY (buf)) {
+          buf = gst_ogg_mux_decorate_buffer (ogg_mux, pad, buf);
+          if (G_UNLIKELY (!buf))
+            GST_DEBUG_OBJECT (data->pad, "buffer clipped");
         }
       } else {
         GST_DEBUG_OBJECT (data->pad, "EOS on pad");
@@ -1626,6 +1748,9 @@ gst_ogg_mux_get_property (GObject * object,
     case ARG_MAX_PAGE_DELAY:
       g_value_set_uint64 (value, ogg_mux->max_page_delay);
       break;
+    case ARG_MAX_TOLERANCE:
+      g_value_set_uint64 (value, ogg_mux->max_tolerance);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1646,6 +1771,9 @@ gst_ogg_mux_set_property (GObject * object,
       break;
     case ARG_MAX_PAGE_DELAY:
       ogg_mux->max_page_delay = g_value_get_uint64 (value);
+      break;
+    case ARG_MAX_TOLERANCE:
+      ogg_mux->max_tolerance = g_value_get_uint64 (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

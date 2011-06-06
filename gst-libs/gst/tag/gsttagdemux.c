@@ -1215,7 +1215,9 @@ gst_tag_demux_sink_activate (GstPad * sinkpad)
       demux->priv->strip_start + demux->priv->strip_end) {
     /* There was no data (probably due to a truncated file) */
     GST_DEBUG_OBJECT (demux, "No data in file");
-    return FALSE;
+    /* so we don't know about type either */
+    GST_ELEMENT_ERROR (demux, STREAM, TYPE_NOT_FOUND, (NULL), (NULL));
+    goto done_activate;
   }
 
   /* 3 - Do typefinding on data */

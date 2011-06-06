@@ -1131,6 +1131,89 @@ theora_enc_write_multipass_cache (GstTheoraEnc * enc, gboolean begin,
 }
 
 static GstFlowReturn
+theora_enc_encode_and_push (GstTheoraEnc * enc, ogg_packet op,
+    GstClockTime timestamp, GstClockTime running_time,
+    GstClockTime duration, GstBuffer * buffer)
+{
+  GstFlowReturn ret;
+  th_ycbcr_buffer ycbcr;
+  gint res;
+  guint8 *data;
+  gsize size;
+
+  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+  theora_enc_init_buffer (ycbcr, &enc->info, data);
+
+  if (theora_enc_is_discontinuous (enc, running_time, duration)) {
+    theora_enc_reset (enc);
+    enc->granulepos_offset =
+        gst_util_uint64_scale (running_time, enc->fps_n,
+        GST_SECOND * enc->fps_d);
+    enc->timestamp_offset = running_time;
+    enc->next_ts = 0;
+    enc->next_discont = TRUE;
+  }
+
+  if (enc->multipass_cache_fd
+      && enc->multipass_mode == MULTIPASS_MODE_SECOND_PASS) {
+    if (!theora_enc_read_multipass_cache (enc)) {
+      ret = GST_FLOW_ERROR;
+      goto multipass_read_failed;
+    }
+  }
+
+  res = th_encode_ycbcr_in (enc->encoder, ycbcr);
+  /* none of the failure cases can happen here */
+  g_assert (res == 0);
+
+  if (enc->multipass_cache_fd
+      && enc->multipass_mode == MULTIPASS_MODE_FIRST_PASS) {
+    if (!theora_enc_write_multipass_cache (enc, FALSE, FALSE)) {
+      ret = GST_FLOW_ERROR;
+      goto multipass_write_failed;
+    }
+  }
+
+  ret = GST_FLOW_OK;
+  while (th_encode_packetout (enc->encoder, 0, &op)) {
+    GstClockTime next_time;
+
+    next_time = th_granule_time (enc->encoder, op.granulepos) * GST_SECOND;
+
+    ret =
+        theora_push_packet (enc, &op, timestamp, enc->next_ts,
+        next_time - enc->next_ts);
+
+    enc->next_ts = next_time;
+    if (ret != GST_FLOW_OK)
+      goto data_push;
+  }
+
+done:
+  gst_buffer_unmap (buffer, data, size);
+  gst_buffer_unref (buffer);
+
+  return ret;
+
+  /* ERRORS */
+multipass_read_failed:
+  {
+    GST_DEBUG_OBJECT (enc, "multipass read failed");
+    goto done;
+  }
+multipass_write_failed:
+  {
+    GST_DEBUG_OBJECT (enc, "multipass write failed");
+    goto done;
+  }
+data_push:
+  {
+    GST_DEBUG_OBJECT (enc, "error pushing buffer: %s", gst_flow_get_name (ret));
+    goto done;
+  }
+}
+
+static GstFlowReturn
 theora_enc_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstTheoraEnc *enc;
@@ -1275,91 +1358,18 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
     enc->next_ts = 0;
   }
 
-  {
-    th_ycbcr_buffer ycbcr;
-    gint res;
-    guint8 *data;
-    gsize size;
-
-    data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
-    theora_enc_init_buffer (ycbcr, &enc->info, data);
-
-    if (theora_enc_is_discontinuous (enc, running_time, duration)) {
-      theora_enc_reset (enc);
-      enc->granulepos_offset =
-          gst_util_uint64_scale (running_time, enc->fps_n,
-          GST_SECOND * enc->fps_d);
-      enc->timestamp_offset = running_time;
-      enc->next_ts = 0;
-      enc->next_discont = TRUE;
-    }
-
-    if (enc->multipass_cache_fd
-        && enc->multipass_mode == MULTIPASS_MODE_SECOND_PASS) {
-      if (!theora_enc_read_multipass_cache (enc)) {
-        gst_buffer_unmap (buffer, data, size);
-        ret = GST_FLOW_ERROR;
-        goto multipass_read_failed;
-      }
-    }
-
-    res = th_encode_ycbcr_in (enc->encoder, ycbcr);
-    /* none of the failure cases can happen here */
-    g_assert (res == 0);
-
-    if (enc->multipass_cache_fd
-        && enc->multipass_mode == MULTIPASS_MODE_FIRST_PASS) {
-      if (!theora_enc_write_multipass_cache (enc, FALSE, FALSE)) {
-        gst_buffer_unmap (buffer, data, size);
-        ret = GST_FLOW_ERROR;
-        goto multipass_write_failed;
-      }
-    }
-
-    ret = GST_FLOW_OK;
-    while (th_encode_packetout (enc->encoder, 0, &op)) {
-      GstClockTime next_time;
-
-      next_time = th_granule_time (enc->encoder, op.granulepos) * GST_SECOND;
-
-      ret =
-          theora_push_packet (enc, &op, timestamp, enc->next_ts,
-          next_time - enc->next_ts);
-
-      enc->next_ts = next_time;
-      if (ret != GST_FLOW_OK) {
-        gst_buffer_unmap (buffer, data, size);
-        goto data_push;
-      }
-    }
-    gst_buffer_unmap (buffer, data, size);
-    gst_buffer_unref (buffer);
-  }
+  ret = theora_enc_encode_and_push (enc, op, timestamp, running_time, duration,
+      buffer);
 
   return ret;
 
   /* ERRORS */
-multipass_read_failed:
-  {
-    gst_buffer_unref (buffer);
-    return ret;
-  }
-multipass_write_failed:
-  {
-    gst_buffer_unref (buffer);
-    return ret;
-  }
 header_buffer_alloc:
   {
     gst_buffer_unref (buffer);
     return ret;
   }
 header_push:
-  {
-    gst_buffer_unref (buffer);
-    return ret;
-  }
-data_push:
   {
     gst_buffer_unref (buffer);
     return ret;
