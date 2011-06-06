@@ -195,10 +195,9 @@ includes:
   - offset of the data: a media specific offset, this could be samples for audio or
       frames for video.
   - the duration of the data in time.
-  - the media type of the data described with caps, these are key/value pairs that
-      describe the media type in a unique way.
   - additional flags describing special properties of the data such as 
     discontinuities or delta units.
+  - additional arbitrary metadata
 
 When an element whishes to send a buffer to another element is does this using one
 of the pads that is linked to a pad of the other element. In the push model, a 
@@ -208,13 +207,13 @@ is pulled from the peer with the gst_pad_pull_range() function.
 Before an element pushes out a buffer, it should make sure that the peer element
 can understand the buffer contents.  It does this by querying the peer element
 for the supported formats and by selecting a suitable common format. The selected
-format is then attached to the buffer with gst_buffer_set_caps() before pushing
-out the buffer.
+format is then first sent to the peer element with a CAPS event before pushing
+the buffer.
 
-When an element pad receives a buffer, if has to check if it understands the media
-type of the buffer before starting processing it. The GStreamer core does this
-automatically and will call the gst_pad_set_caps() function of the element before
-sending the buffer to the element.
+
+When an element pad receives a CAPS event, it has to check if it understand the
+media type. The element must refuse following buffers if the media type
+preceeding it was not accepted.
 
 Both gst_pad_push() and gst_pad_pull_range() have a return value indicating whether
 the operation succeeded. An error code means that no more data should be sent
@@ -222,12 +221,11 @@ to that pad. A source element that initiates the data flow in a thread typically
 pauses the producing thread when this happens.
 
 A buffer can be created with gst_buffer_new() or by requesting a usable buffer
-from the peer pad using gst_pad_alloc_buffer(). Using the second method, it is
-possible for the peer element to suggest the element to produce data in another 
-format by attaching another media type caps to the buffer.
+from a buffer pool using gst_buffer_pool_acquire_buffer(). Using the second
+method, it is possible for the peer element to implement a custom buffer
+allocation algorithm.
 
-The process of selecting a media type and attaching it to the buffers is called
-caps negotiation.
+The process of selecting a media type is called caps negotiation.
 
 
 Caps
@@ -349,14 +347,18 @@ it accepts the data from filesrc on the sinkpad and starts decoding the compress
 data to raw audio samples.
 
 The mp3 decoder figures out the samplerate, the number of channels and other audio
-properties of the raw audio samples, puts the decoded samples into a Buffer,  
-attaches the media type caps to the buffer and pushes this buffer to the next
+properties of the raw audio samples and sends out a caps event with the media type.
+
+Alsasink then receives the caps event, inspects the caps and reconfigures
+itself to process the media type.
+
+mp3dec then puts the decoded samples into a Buffer and pushes this buffer to the next
 element.
 
-Alsasink then receives the buffer, inspects the caps and reconfigures itself to process
-the buffer. Since it received the first buffer of samples, it completes the state change
-to the PAUSED state. At this point the pipeline is prerolled and all elements have
-samples. Alsasink is now also capable of providing a clock to the pipeline.
+Alsasink receives the buffer with samples. Since it received the first buffer of
+samples, it completes the state change to the PAUSED state. At this point the
+pipeline is prerolled and all elements have samples. Alsasink is now also
+capable of providing a clock to the pipeline.
 
 Since alsasink is now in the PAUSED state it blocks while receiving the first buffer. This
 effectively blocks both mp3dec and filesrc in their gst_pad_push().
@@ -488,7 +490,7 @@ element performs the following steps.
      always stop because of step 1).
   3) perform the seek operation
   4) send a FLUSH done event to all downstream and upstream peer elements.
-  5) send NEWSEGMENT event to inform all elements of the new position and to complete
+  5) send SEGMENT event to inform all elements of the new position and to complete
      the seek.
 
 In step 1) all downstream elements have to return from any blocking operations
@@ -512,8 +514,8 @@ Since the pipeline is still PAUSED, this will preroll the next media sample in t
 sinks. The application can wait for this preroll to complete by performing a 
 _get_state() on the pipeline.
 
-The last step in the seek operation is then to adjust the stream time of the pipeline
-to 0 and to set the pipeline back to PLAYING.
+The last step in the seek operation is then to adjust the stream running_time of
+the pipeline to 0 and to set the pipeline back to PLAYING.
 
 The sequence of events in our mp3 playback example.
 
@@ -533,8 +535,8 @@ The sequence of events in our mp3 playback example.
 	      | 2) stop streaming
 	      | 3) perform seek
               --------------------------> 4) FLUSH done event
-              --------------------------> 5) NEWSEGMENT event
+              --------------------------> 5) SEGMENT event
   
-                                      | e) update stream time to 0
+                                      | e) update running_time to 0
 				      | f) PLAY pipeline
 

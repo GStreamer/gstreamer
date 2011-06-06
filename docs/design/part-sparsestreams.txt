@@ -8,7 +8,7 @@ In 0.8, there was some support for Sparse Streams through the use of
 FILLER events. These were used to mark gaps between buffers so that downstream
 elements could know not to expect any more data for that gap. 
 
-In 0.10, segment information conveyed through NEWSEGMENT events can be used
+In 0.10, segment information conveyed through SEGMENT events can be used
 for the same purpose.
 
 Use cases
@@ -45,9 +45,9 @@ Details
   The main requirement here is to avoid stalling the pipeline between sub-title
   packets, and is effectively updating the minimum-timestamp for that stream.
   
-  A demuxer can do this by sending an 'update' NEWSEGMENT with a new start time
+  A demuxer can do this by sending an 'update' SEGMENT with a new start time
   to the subtitle pad. For example, every time the SCR in MPEG data 
-  advances more than 0.5 seconds, the MPEG demuxer can issue a NEWSEGMENT with
+  advances more than 0.5 seconds, the MPEG demuxer can issue a SEGMENT with
    (update=TRUE, start=SCR ). Downstream elements can then be aware not to 
    expect any data older than the new start time.
 
@@ -57,7 +57,7 @@ Details
    
   This technique can also be used, for example, to represent a stream of 
   MIDI events spaced to a clock period. When there is no event present for 
-  a clock time, a NEWSEGMENT update can be sent in its place.
+  a clock time, a SEGMENT update can be sent in its place.
   
 2) Still frame/menu support
   Still frames in DVD menus are not the same, in that they do not introduce
@@ -74,7 +74,7 @@ Details
       if necessary due to an intervening activity (such as a user navigation)
     * FLUSH the pipeline using a normal flush sequence (FLUSH_START, 
       chain-lock, FLUSH_STOP)
-    * Send a NEWSEGMENT to restart playback with the next timestamp in the 
+    * Send a SEGMENT to restart playback with the next timestamp in the 
       stream.
   
   The upstream element performing the wait must only do so when in the PLAYING 
@@ -90,7 +90,7 @@ Details
   arriving late at the sink, and they will be discarded instead of played.
 
 3) For audio, 3) is the same case as 1) - there is a 'gap' in the audio data 
-   that needs to be presented, and this can be done by sending a NEWSEGMENT 
+   that needs to be presented, and this can be done by sending a SEGMENT 
    update that moves the start time of the segment to the next timestamp when 
    data will be sent.
    

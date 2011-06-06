@@ -11,7 +11,7 @@ Stream objects
 The following objects are to be expected in the streaming thread:
 
  - events
-    - NEW_SEGMENT	(NS)
+    - SEGMENT           (S)
     - EOS		(EOS)  *
     - TAG               (T)
  - buffers              (B)    *
@@ -23,25 +23,27 @@ and live sources.
 Typical stream
 ~~~~~~~~~~~~~~
 
- A typical stream starts with a newsegment event that marks the
+ A typical stream starts with a segment event that marks the
  buffer timestamp range. After that buffers are sent one after the
  other. After the last buffer an EOS marks the end of the stream. No
  more buffers are to be processed after the EOS event.
 
-  +--+ +-++-+     +-+ +---+
-  |NS| |B||B| ... |B| |EOS|
-  +--+ +-++-+     +-+ +---+
+  +-+ +-++-+     +-+ +---+
+  |S| |B||B| ... |B| |EOS|
+  +-+ +-++-+     +-+ +---+
 
-  1) NEW_SEGMENT, rate, start/stop, time
+  1) SEGMENT, rate, start/stop, time
      - marks valid buffer timestamp range (start, stop)
      - marks stream_time of buffers (time). This is the stream time of buffers
        with a timestamp of NS.start.
      - marks playback rate (rate). This is the required playback rate.
      - marks applied rate (applied_rate). This is the already applied playback
        rate. (See also part-trickmodes.txt)
+     - marks running_time of buffers. This is the time used to synchronize
+       against the clock.
 
   2) N buffers
-     - displayable buffers are between start/stop of the NEW_SEGMENT. Buffers
+     - displayable buffers are between start/stop of the SEGMENT. Buffers
        outside the segment range should be dropped or clipped.
 
      - running_time: 

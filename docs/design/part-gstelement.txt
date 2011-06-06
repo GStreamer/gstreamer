@@ -39,7 +39,7 @@ These pads are stored in a single GList within the Element.  Several counters
 are kept in order to allow quicker determination of the type and properties of
 a given Element.
 
-Pads may be added to an element with _add_pad.  Retrieval is via _get_pad(),
+Pads may be added to an element with _add_pad.  Retrieval is via _get_static_pad(),
 which operates on the name of the Pad (the unique key).  This means that all
 Pads owned by a given Element must have unique names.
 A pointer to the GList of pads may be obtained with _iterate_pads. 

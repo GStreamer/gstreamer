@@ -137,46 +137,53 @@ Push dataflow
 
 All probes have the GST_PROBE_TYPE_PUSH flag set in the callbacks.
 
-In push based scheduling, the blocking probe is called first with the DATA item.
-Then the data probes are called before the peer pad chain function is called.
+In push based scheduling, the blocking probe is called first with the data item.
+Then the data probes are called before the peer pad chain or event function is
+called.
 
 The data probes are called before the peer pad is checked. This allows for
-linking the pad in either the BLOCK or DATA probes on the srcpad.
+linking the pad in either the BLOCK or DATA probes on the pad.
 
-Before the sinkpad chain function is called, the data probes are called.
+Before the peerpad chain or event function is called, the peer pad data probes
+are called.
 
-Finally, the IDLE probe is called on the srcpad after the data was sent to the
+Finally, the IDLE probe is called on the pad after the data was sent to the
 peer pad.
 
+The push dataflow probe behavior is the same for buffers and biderectional events.
 
-              srcpad                          sinkpad
-                |                               |
- gst_pad_push() |                               |
- -------------->O                               |
-                O                               | 
-  flushing?     O                               | 
-  WRONG_STATE   O                               |
-  < - - - - - - O                               | 
-                O-> do BLOCK probes             | 
-                O                               | 
-                O-> do DATA probes              | 
-   no peer?     O                               |
-  NOT_LINKED    O                               | 
-  < - - - - - - O                               |
-                O   gst_pad_chain()             | 
-                O------------------------------>O
-                O                   flushing?   O 
-                O                 WRONG_STATE   O 
-                O< - - - - - - - - - - - - - - -O 
-                O                               O-> do DATA probes
-                O                               O 
-                O                               O---> chainfunc
-                O< - - - - - - - - - - - - - - -O 
-                O                               |
-                O-> do IDLE probes              | 
-                O                               | 
-  < - - - - - - O                               | 
-                |                               | 
+
+                     pad                           peerpad
+                      |                               |
+ gst_pad_push() /     |                               |
+ gst_pad_push_event() |                               |
+ -------------------->O                               |
+                      O                               | 
+        flushing?     O                               | 
+        WRONG_STATE   O                               |
+        < - - - - - - O                               | 
+                      O-> do BLOCK probes             | 
+                      O                               | 
+                      O-> do DATA probes              | 
+         no peer?     O                               |
+        NOT_LINKED    O                               | 
+        < - - - - - - O                               |
+                      O   gst_pad_chain() /           | 
+                      O   gst_pad_send_event()        | 
+                      O------------------------------>O
+                      O                   flushing?   O 
+                      O                 WRONG_STATE   O 
+                      O< - - - - - - - - - - - - - - -O 
+                      O                               O-> do DATA probes
+                      O                               O 
+                      O                               O---> chainfunc /
+                      O                               O     eventfunc
+                      O< - - - - - - - - - - - - - - -O 
+                      O                               |
+                      O-> do IDLE probes              | 
+                      O                               | 
+        < - - - - - - O                               | 
+                      |                               | 
 
 
 Pull dataflow
@@ -190,7 +197,9 @@ item. This allows the pad to be linked before the peer pad is resolved.
 After the getrange function is called on the peer pad and there is a data item,
 the DATA probes are called.
 
-When control returns to the sinkpad, the IDLE callbacks are called.
+When control returns to the sinkpad, the IDLE callbacks are called. The IDLE
+callback is called without a data item so that it will also be called when there
+was an error.
 
 It there is a valid DATA item, the DATA probes are called for the item.
 
@@ -217,7 +226,7 @@ It there is a valid DATA item, the DATA probes are called for the item.
                   O  flow error?                  O
                   O- - - - - - - - - - - - - - - >O
                   O                               O
- dp DATA probes <-O                               O
+ do DATA probes <-O                               O
                   O- - - - - - - - - - - - - - - >O
                   |                               O 
                   |              do IDLE probes <-O               

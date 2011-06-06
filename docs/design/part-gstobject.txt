@@ -89,12 +89,3 @@ Flags
 
 Each object in the GStreamer object hierarchy can have flags associated with it,
 which are used to describe a state or a feature of the object.
-GstObject has flags to mark its lifecycle: FLOATING and DISPOSING.
-
-
-Class signals
-~~~~~~~~~~~~~
-
-It is possible to know when a new object is loaded by connecting to the
-GstObjectClass signal. This feature is not very much used and might be removed
-at some point.

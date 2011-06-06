@@ -147,4 +147,8 @@ A typical udpsink will then use something like sendmsg to send the memory region
 on the network inside one UDP packet. This will further avoid having to memcpy
 data into contiguous memory.
 
+Using bufferlists, the complete array of output buffers can be pushed in one
+operation to the peer element.
+
+
 

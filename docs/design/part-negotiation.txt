@@ -26,32 +26,18 @@ negotiation.
 
 The basics of negotiation are as follows:
 
- - GstCaps (see part-caps.txt) are refcounted before they
-   are attached to a buffer to describe the contents of the buffer.
-   It is possible to add a NULL caps to a buffer, this means that the
-   buffer type did not change relative to the previous buffer. If no
-   previous buffer was received by a downstream element, it is free to
-   discard the buffer.
+ - GstCaps (see part-caps.txt) are refcounted before they are pushed as
+   an event to describe the contents of the following buffer.
 
- - Before receiving a buffer, an element must check if the datatype of
-   the buffer has changed. The element should reconfigure itself to the
-   new format before processing the buffer data. If the data type on
-   the buffer is not acceptable, the element should refuse the buffer by 
+ - An element should reconfigure itself to the new format received as a CAPS
+   event before processing the following buffers. If the data type in the
+   caps event is not acceptable, the element should refuse the buffer by 
    returning an appropriate GST_FLOW_NOT_NEGOTIATED return value from the
    chain function.
-   The core will automatically call the set_caps function for this purpose
-   when it is installed on the sink or source pad.
 
- - When requesting a buffer from a bufferpool, the prefered type should
-   be passed to the buffer allocation function. After receiving a buffer
-   from a bufferpool, the datatype should be checked again.
-
- - A bufferpool allocation function should try to allocate a buffer of the
-   prefered type. If there is a good reason to choose another type, the
-   alloc function should see if that other type is accepted by the other
-   element, then allocate a buffer of that type and attach the type to the
-   buffer before returning it.
-
+ - Upstream elements can request a format change of the stream by sending a
+   RECONFIGURE event upstream. Upstream elements will renegotiate a new format
+   when they receive a RECONFIGURE event.
 
 The general flow for a source pad starting the negotiation.
 
@@ -60,17 +46,14 @@ The general flow for a source pad starting the negotiation.
               |  accepts?       |
   type A      |---------------->|
               |      yes        |
-              |<----------------|
+              |< - - - - - - - -|
               |                 |
- get buffer   |  alloc_buf      |
- from pool    |---------------->| 
- with type A  |                 | Create buffer of type A.
+              |  send_event()   |
+ send CAPS    |---------------->| Receive type A, reconfigure to
+ event A      |                 | process type A.
               |                 |
- check type   |<----------------|
- and use A    |                 |
               |  push           |
- push buffer  |---------------->| Receive type A, reconfigure to
- with new type|                 | process type A.
+ push buffer  |---------------->| Process buffer of type A
               |                 |
 
  One possible implementation in pseudo code:
@@ -93,20 +76,14 @@ The general flow for a source pad starting the negotiation.
      if gst_pad_peer_accept_caps (srcpad, fixedcaps)
        # store the caps as the negotiated caps, this will
        # call the setcaps function on the pad
-       gst_pad_set_caps (srcpad, fixedcaps)
+       gst_pad_push_event (srcpad, gst_event_new_caps (fixedcaps))
        break
      endif
    done
  endif
 
- # if the type is different, the buffer will have different caps from
- # the src pad -- setcaps will get called on the pad_push
- buffer = gst_pad_alloc_buffer (srcpad, 0, size, GST_PAD_CAPS (fixedcaps));
- if buffer
-   [fill buffer and push]
- elseif
-   [no buffer, either no peer or no acceptable format found]
- endif
+ buffer = gst_buffer_new_and_alloc (size);
+ [fill buffer and push]
 
 
 The general flow for a sink pad starting a renegotiation.
@@ -116,21 +93,27 @@ The general flow for a sink pad starting a renegotiation.
               |  accepts?       |
               |<----------------| type B
               |      yes        |
-              |---------------->|
+              |- - - - - - - - >|-.
+              |                 | | suggest B caps next
+              |                 |<'
               |                 |
- get buffer   |  alloc_buf      |
- from pool    |---------------->| 
- with type A  |                 | Create buffer of new type B.
+              |   push_event()  |
+  mark      .-|<----------------| send RECONFIGURE event
+ renegotiate| |                 |
+            '>|                 |
+              |   get_caps()    |
+ renegotiate  |---------------->| 
+              |  suggest B      |
+              |< - - - - - - - -|
               |                 |
- check type   |<----------------|
- and          |                 |
- reconfigure  |                 |
+              |  send_event()   |
+ send CAPS    |---------------->| Receive type B, reconfigure to
+ event B      |                 | process type B.
+              |                 |
               |  push           |
- push buffer  |---------------->| Receive type B, reconfigure to
- with new type|                 | process type B.
+ push buffer  |---------------->| Process buffer of type B
               |                 |
 
-	      
 
 Use case:
 
@@ -146,25 +129,30 @@ videotestsrc ! xvimagesink
 
   2) When does negotiation happen?
    - before srcpad does a push, it figures out a type as stated in 1), then 
-     it calls the pad alloc function with the type. The sinkpad has to 
-     create a buffer of that type, src fills the buffer and sends it to sink.
+     it pushes a caps event with the type. The sink checks the media type and
+     configures itself for this type.
+   - the source then usually does an ALLOCATION query to negotiate a bufferpool
+     with the sink. It then allocates a buffer from the pool and pushes it to
+     the sink. since the sink accepted the caps, it can create a pool for the
+     format.
    - since the sink stated in 1) it could accept the type, it will be able to
-     create a buffer of the type and handle it.
-   - sink checks media type of buffer and configures itself for this type.
+     handle it.
      
   3) How can sink request another format?
    - sink asks if new format is possible for the source.
-   - sink returns buffer with new type in allocfunction.
-   - src receives buffer with new type, reconfigures and pushes.
-   - sink can always select something it can create and handle since it takes
-     the initiative. src should be able to handle the new type since it said
-     it could accept it.
+   - sink pushes RECONFIGURE event upstream
+   - src receives the RECONFIGURE event and marks renegotiation
+   - On the next buffer push, the source renegotiates the caps and the
+     bufferpool. The sink will put the new new prefered format high in the list
+     of caps it returns from its getcaps function.
 
 videotestsrc ! queue ! xvimagesink
 
-  - queue implements an allocfunction, proxying all calls to its srcpad peer.
   - queue proxies all accept and getcaps to the other peer pad.
-  - queue contains buffers with different types.
+  - queue proxies the bufferpool
+  - queue proxies the RECONFIGURE event
+  - queue stores CAPS event in the queue. This means that the queue can contain
+    buffers with different types.
 
    
 Pull-mode negotiation
@@ -232,7 +220,7 @@ deadlines.
 The pull thread is usually started in the PAUSED->PLAYING state change. We must
 be able to complete the negotiation before this state change happens.
 
-The time to do capsnego, then, is after _check_pull_range() has succeeded,
+The time to do capsnego, then, is after the SCHEDULING query has succeeded,
 but before the sink has spawned the pulling thread.
 
 
@@ -240,7 +228,7 @@ Mechanism
 ^^^^^^^^^
 
 The sink determines that the upstream elements support pull based scheduling by
-calling gst_pad_check_pull_range().
+doing a SCHEDULING query.
 
 The sink initiates the negotiation process by intersecting the results
 of gst_pad_get_caps() on its sink pad and its peer src pad. This is the
@@ -250,8 +238,7 @@ intersection of calling get_allowed_caps() on all of its sink pads. In
 this way the sink element knows the capabilities of the entire pipeline.
 
 The sink element then fixates the resulting caps, if necessary,
-resulting in the flow caps. It notifies the pipeline of the caps by
-calling gst_pad_set_caps() on its sink pad. From now on, the getcaps function
+resulting in the flow caps.  From now on, the getcaps function
 of the sinkpad will only return these fixed caps meaning that upstream elements
 will only be able to produce this format.
 
@@ -269,11 +256,3 @@ function. The state will commit to PAUSED when the first buffer is received in
 the sink. This is needed to provide a consistent API to the applications that
 expect ASYNC return values from sinks but it also allows us to perform the
 remainder of the negotiation outside of the context of the pulling thread.
-
-During dataflow, gst_pad_pull_range() checks the caps on the pulled
-buffer. If they are different from the sink pad's caps, it will return
-GST_FLOW_NOT_NEGOTIATED. Because of the low-latency requirements,
-changing caps in an activate pull-mode pipeline is not supported, as it
-might require e.g. the sound card to reconfigure its hardware buffers,
-and start capsnego again.
-

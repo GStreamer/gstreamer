@@ -72,12 +72,12 @@ One element will actually perform the seek, this is usually the demuxer or
 source element. For more information on how to perform the different seek
 types see part-seeking.txt.
 
-For client side trickmode a NEW_SEGMENT event will be sent downstream with
+For client side trickmode a SEGMENT event will be sent downstream with
 the new rate and start/stop positions. All elements prepare themselves to
-handle the rate (see below). The applied rate of the NEW_SEGMENT event will
+handle the rate (see below). The applied rate of the SEGMENT event will
 be set to 1.0 to indicate that no rate adjustment has been done.
 
-for server side trick mode a NEW_SEGMENT event is sent downstream with a
+for server side trick mode a SEGMENT event is sent downstream with a
 rate of 1.0 and the start/stop positions. The elements will configure themselves
 for normal playback speed since the server will perform the rate conversions.
 The applied rate will be set to the rate that will be applied by the server. This
@@ -137,16 +137,16 @@ playback speed or direction.
 client side forward trickmodes 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The seek happens as stated above. a NEW_SEGMENT event is sent downstream with a rate
-different from 1.0. Plugins receiving the NEW_SEGMENT can decide to perform the 
+The seek happens as stated above. a SEGMENT event is sent downstream with a rate
+different from 1.0. Plugins receiving the SEGMENT can decide to perform the 
 rate conversion of the media data (retimestamp video frames, resample audio, ...).
 
-If a plugin decides to resample or retimestamp, it should modify the NEW_SEGMENT with
+If a plugin decides to resample or retimestamp, it should modify the SEGMENT with
 a rate of 1.0 and update the applied rate so that downstream elements don't resample
 again but are aware that the media has been modified.
 
 The GStreamer base audio and video sinks will resample automatically if they receive
-a NEW_SEGMENT event with a rate different from 1.0. The position reporting in the
+a SEGMENT event with a rate different from 1.0. The position reporting in the
 base audio and video sinks will also depend on the applied rate of the segment
 information.
 
@@ -162,10 +162,10 @@ client side backwards trickmode
 
 For backwards playback the following rules apply:
 
- - the rate in the NEW_SEGMENT is less than 0.0.
- - the NEW_SEGMENT start position is less than the stop position, playback will
+ - the rate in the SEGMENT is less than 0.0.
+ - the SEGMENT start position is less than the stop position, playback will
    however happen from stop to start in reverse.
- - the time member in the NEW_SEGMENT is set to the stream time of the start
+ - the time member in the SEGMENT is set to the stream time of the start
    position.
 
 For plugins the following rules apply:
@@ -181,12 +181,12 @@ For plugins the following rules apply:
    forward continuous with the previous buffer.
 
  - A video decoder decodes and accumulates all decoded frames. If a buffer with
-   a DISCONT, accumulate NEWSEGMENT or EOS is received, all accumulated frames
-   are sent downsteam in reverse.
+   a DISCONT, SEGMENT or EOS is received, all accumulated frames are sent
+   downsteam in reverse.
 
  - An audio decoder decodes and accumulates all decoded audio. If a buffer with
-   a DISCONT, accumulate NEWSEGMENT or EOS is received, all accumulated audio
-   is sent downstream in reverse order. Some audio codecs need the previous
+   a DISCONT, SEGMENT or EOS is received, all accumulated audio is sent
+   downstream in reverse order. Some audio codecs need the previous
    data buffer to decode the current one, in that case, the previous DISCONT
    buffer needs to be combined with the last non-DISCONT buffer to generate the
    last bit of output.
@@ -201,7 +201,7 @@ For plugins the following rules apply:
  - for transcoding, audio and video resamplers can be used to reverse, resample
    and retimestamp the buffers. Any rate adjustments performed on the media must
    be added to the applied_rate and subtracted from the rate members in the
-   NEWSEGMENT event.
+   SEGMENT event.
 
  In SKIP mode, the same algorithm as for forward SKIP mode can be used.
 

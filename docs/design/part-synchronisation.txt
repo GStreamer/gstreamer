@@ -8,7 +8,7 @@ Synchronisation in a GstPipeline is achieved using the following 3 components:
 
  - a GstClock, which is global for all elements in a GstPipeline.
  - Timestamps on a GstBuffer.
- - the NEW_SEGMENT event preceding the buffers.
+ - the SEGMENT event preceding the buffers.
 
 
 A GstClock
@@ -68,7 +68,7 @@ This value is monotonically increasing at the rate of the clock.
 Timestamps
 ~~~~~~~~~~
  
-The GstBuffer timestamps and the preceeding NEW_SEGMENT event (See
+The GstBuffer timestamps and the preceeding SEGMENT event (See
 part-streams.txt) define a transformation of the buffer timestamps to
 running_time as follows:
 
@@ -77,13 +77,13 @@ The following notation is used:
  B: GstBuffer 
   - B.timestamp = buffer timestamp (GST_BUFFER_TIMESTAMP)
 
- NS:  NEWSEGMENT event preceeding the buffers.
-  - NS.start: start field in the NEWSEGMENT event
-  - NS.stop: stop field in the NEWSEGMENT event
-  - NS.rate: rate field of NEWSEGMENT event
-  - NS.abs_rate: absolute value of rate field of NEWSEGMENT event
-  - NS.time: time field in the NEWSEGMENT event
-  - NS.accum: total accumulated time of all previous NEWSEGMENT events. This
+ NS:  SEGMENT event preceeding the buffers.
+  - NS.start: start field in the SEGMENT event
+  - NS.stop: stop field in the SEGMENT event
+  - NS.rate: rate field of SEGMENT event
+  - NS.abs_rate: absolute value of rate field of SEGMENT event
+  - NS.time: time field in the SEGMENT event
+  - NS.accum: total accumulated time of all previous SEGMENT events. This
               field is kept in the GstSegment structure.
 
 Valid buffers for synchronisation are those with B.timestamp between NS.start
@@ -97,7 +97,7 @@ The following transformation to running_time exist:
     else
       B.running_time = (NS.stop - B.timestamp) / NS.abs_rate + NS.accum
 
-We write B.running_time as the running_time obtained from the NEWSEGMENT event
+We write B.running_time as the running_time obtained from the SEGMENT event
 and the buffers of that segment.
 
 The first displayable buffer will yield a value of 0 (since B.timestamp ==
@@ -120,7 +120,7 @@ As we have seen, we can get a running_time:
 
     C.running_time = absolute_time - base_time
 
- - using the buffer timestamp and the preceeding NEWSEGMENT event as (assuming
+ - using the buffer timestamp and the preceeding SEGMENT event as (assuming
    positive playback rate):
 
     B.running_time = (B.timestamp - NS.start) / NS.abs_rate + NS.accum
@@ -154,9 +154,9 @@ the sink (See also part-clocks.txt).
 For multiple streams this means that buffers with the same running_time are to
 be displayed at the same time. 
 
-A demuxer must make sure that the NEWSEGMENT it emits on its output pads yield
+A demuxer must make sure that the SEGMENT it emits on its output pads yield
 the same running_time for buffers that should be played synchronized. This
-usually means sending the same NEWSEGMENT on all pads and making sure that the
+usually means sending the same SEGMENT on all pads and making sure that the
 synchronized buffers have the same timestamps.
 
 
@@ -172,7 +172,7 @@ It is the stream time that is used for:
   - the position used in seek events/queries
   - the position used to synchronize controller values
 
-Stream time is calculated using the buffer times and the preceeding NEWSEGMENT
+Stream time is calculated using the buffer times and the preceeding SEGMENT
 event as follows:
 
     stream_time = (B.timestamp - NS.start) * NS.abs_applied_rate + NS.time

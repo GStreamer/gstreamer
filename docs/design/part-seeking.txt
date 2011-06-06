@@ -127,7 +127,7 @@ When a seek to a certain position is requested, the demuxer/parser will
 do two things (ignoring flushing and segment seeks, and simplified for
 illustration purposes):
 
- - send a newsegment event with a new start position
+ - send a segment event with a new start position
 
  - start pushing data/buffers again
 
@@ -136,15 +136,15 @@ can actually be decoded, a demuxer or parser needs to start pushing data
 from a keyframe/keyunit at or before the requested seek position.
 
 Unless requested differently (via the KEY_UNIT flag), the start of the
-newsegment event should be the requested seek position.
+segment event should be the requested seek position.
 
 So by default a demuxer/parser will then start pushing data from
-position DATA and send a newsegment event with start position SEG_START,
+position DATA and send a segment event with start position SEG_START,
 and DATA <= SEG_START.
 
 If DATA < SEG_START, a well-behaved video decoder will start decoding frames
 from DATA, but take into account the segment configured by the demuxer via
-the newsegment event, and only actually output decoded video frames from
+the segment event, and only actually output decoded video frames from
 SEG_START onwards, dropping all decoded frames that are before the
 segment start and adjusting the timestamp/duration of the buffer that
 overlaps the segment start ("clipping"). A not-so-well-behaved video decoder

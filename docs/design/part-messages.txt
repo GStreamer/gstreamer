@@ -134,3 +134,16 @@ GST_MESSAGE_REQUEST_STATE:
   are in. A typical use case would be an audio sink that requests the pipeline
   to pause in order to play a higher priority stream.
 
+GST_MESSAGE_STEP_START:
+
+  A Stepping operation has started.
+
+GST_MESSAGE_QOS:
+
+  A buffer was dropped or an element changed its processing strategy for
+  Quality of Service reasons.
+
+GST_MESSAGE_PROGRESS:
+
+  A progress message was posted. Progress messages inform the application about
+  the state of asynchronous operations.

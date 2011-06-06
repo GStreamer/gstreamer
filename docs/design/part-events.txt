@@ -12,14 +12,18 @@ Different types of events exist to implement various functionalities.
 
   GST_EVENT_FLUSH_START:   data is to be discarded
   GST_EVENT_FLUSH_STOP:    data is allowed again
-  GST_EVENT_EOS: 	   no more data is to be expected on a pad.
-  GST_EVENT_NEWSEGMENT:    A new group of buffers with common start time  
+  GST_EVENT_CAPS:          Format information about the following buffers
+  GST_EVENT_SEGMENT:       Timing information for the following buffers
   GST_EVENT_TAG:           Stream metadata.
   GST_EVENT_BUFFERSIZE:    Buffer size requirements
+  GST_EVENT_SINK_MESSAGE:  An event turned into a message by sinks
+  GST_EVENT_EOS: 	   no more data is to be expected on a pad.
   GST_EVENT_QOS:           A notification of the quality of service of the stream
   GST_EVENT_SEEK:          A seek should be performed to a new position in the stream
   GST_EVENT_NAVIGATION:    A navigation event.
   GST_EVENT_LATENCY:       Configure the latency in a pipeline
+  GST_EVENT_STEP:          Stepping event
+  GST_EVENT_RECONFIGURE:   stream reconfigure event
 
   * GST_EVENT_DRAIN:       Play all data downstream before returning.
 
@@ -36,20 +40,21 @@ gst_pad_push_event() function returns NOT_LINKED.
 
 Note that the behaviour is not influenced by a flushing pad.
 
+FLUSH_START and FLUSH_STOP events are dropped on blocked pads.
+
 sink pads
 ---------
+
+A gst_pad_send_event() on a sinkpad will check the new event against the
+existing event. If they are different, the new event is stored as a pending
+event. If the events are the same, nothing changes.
 
 When the pad is flushing, the _send_event() function returns WRONG_STATE
 immediately.
 
-A gst_pad_send_event() on a sinkpad will check the new event against the
-existing event. If they are different, the old event is replaced with the new
-event and the event is marked as inactive. If the events are the same, nothing
-changes.
-
-The event function is then called for all inactive events. If the function
-returns success, the event is marked active, else the event is removed and set
-to NULL in the array.
+The event function is then called for all pending events. If the function
+returns success, the pending event is copied to the active events, else the
+pending event is removed and the current active event is unchanged.
 
 This ensures that the event function is never called for flushing pads and that
 the sticky array only contains events for which the event function returned
@@ -60,9 +65,8 @@ pad link
 --------
 
 When linking pads, all the sticky events from the srcpad are copied to the
-array on the sinkpad. All the different events are marked inactive.
-The inactive events will be sent to the event function of the sinkpad on the next
-event or buffer.
+pending array on the sinkpad. The pending events will be sent to the event
+function of the sinkpad on the next event or buffer.
 
 
 FLUSH_START/STOP
@@ -96,11 +100,9 @@ For elements that use the pullrange function, they send both flush events to
 the upstream pads in the same way to make sure that the pullrange function
 unlocks and any pending buffers are cleared in the upstream elements.
 
-A FLUSH_STOP event will also clear any configured synchronisation information
-like NEWSEGMENT events. After a FLUSH_STOP, any element that performs
-synchronisation to the clock will therefore need a NEWSEGMENT event (which makes
-the running_time start from 0 again) and will therefore also need a new
-base_time (see part-clocks.txt and part-synchronisation.txt).
+A FLUSH_START may instruct the pipeline to distribute a new base_time to
+elements so that the running_time is reset to 0. 
+(see part-clocks.txt and part-synchronisation.txt).
 
 
 EOS
@@ -145,43 +147,38 @@ goes to PLAYING.
 A FLUSH_STOP event on an element flushes the EOS state and all pending EOS messages.
 
 
-NEWSEGMENT
-~~~~~~~~~~
+SEGMENT
+~~~~~~~
 
-A newsegment event is sent downstream by an element to indicate that the following
+A segment event is sent downstream by an element to indicate that the following
 group of buffers start and end at the specified positions. The newsegment event
 also contains the playback speed and the applied rate of the stream.
 
 Since the stream time is always set to 0 at start and after a seek, a 0
 point for all next buffer's timestamps has to be propagated through the
-pipeline using the NEWSEGMENT event.
+pipeline using the SEGMENT event.
 
-Before sending buffers, an element must send a NEWSEGMENT event. An element is
-free to refuse buffers if they were not preceeded by a NEWSEGMENT event.
+Before sending buffers, an element must send a SEGMENT event. An element is
+free to refuse buffers if they were not preceeded by a SEGMENT event.
 
-Elements that sync to the clock should store the NEWSEGMENT start and end values
+Elements that sync to the clock should store the SEGMENT start and end values
 and substract the start value from the buffer timestamp before comparing
 it against the stream time (see part-clocks.txt).
 
-An element is allowed to send out buffers with the NEWSEGMENT start time already
+An element is allowed to send out buffers with the SEGMENT start time already
 substracted from the timestamp. If it does so, it needs to send a corrected
-NEWSEGMENT downstream, ie, one with start time 0.
+SEGMENT downstream, ie, one with start time 0.
 
-A NEWSEGMENT event should be generated as soon as possible in the pipeline and
+A SEGMENT event should be generated as soon as possible in the pipeline and
 is usually generated by a demuxer or source. The event is generated before 
 pushing the first buffer and after a seek, right before pushing the new buffer.
 
-The NEWSEGMENT event should be sent from the streaming thread and should be
+The SEGMENT event should be sent from the streaming thread and should be
 serialized with the buffers.
 
 Buffers should be clipped within the range indicated by the newsegment event
 start and stop values. Sinks must drop buffers with timestamps out of the
-indicated newsegment range.
-
-If a newsegment arrives at an element not preceeded by a flush event, the 
-streamtime of the pipeline will not be reset to 0 so any element that syncs
-to the clock must use the stop times of the previous newsegment events to
-make the buffer timestamps increasing (part-segments.txt).
+indicated segment range.
 
 
 TAG

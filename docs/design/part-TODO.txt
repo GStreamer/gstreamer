@@ -22,13 +22,14 @@ API/ABI
 
 - rethink how we handle dynamic replugging wrt segments and other events that
   already got pushed and need to be pushed again. Might need GstFlowReturn from
-  gst_pad_push_event().
+  gst_pad_push_event(). FIXED in 0.11 with sticky events.
 
 - Optimize negotiation. We currently do a get_caps() call when we link pads,
   which could potentially generate a huge list of caps and all their
   combinations, we need to avoid generating these huge lists by generating them
   incrementaly when needed. We can do this with a gst_pad_iterate_caps() call.
-  We also need to incrementally return intersections etc, for this.
+  We also need to incrementally return intersections etc, for this. somewhat
+  FIXED in 0.11 with a filter on getcaps functions.
 
 - Elements in a bin have no clue about the final state of the parent element
   since the bin sets the target state on its children in small steps. This
@@ -50,6 +51,7 @@ API/ABI
     and another a push, the push might be busy while the block callback is done.
   * maybe this name is overloaded. We need to look at some more use cases before
     trying to fix this.
+  FIXED in 0.11 with BLOCKING probes. Not everything is implemented yet, though.
 
 - rethink the way we do upstream renegotiation. Currently it's done with
   pad_alloc but this has many issues such as only being able to suggest 1 format
@@ -57,6 +59,7 @@ API/ABI
   as capsfilter only know about the format, not the size). We would ideally like
   to let upstream renegotiate a new format just like it did when it started.
   This could, for example, easily be triggered with a RENEGOTIATE event.
+  FIXED in 0.11 with RECONFIGURE events.
 
 - Remove the result format value in queries.
 
@@ -72,8 +75,6 @@ IMPLEMENTATION
 - implement more QOS, see part-qos.txt.
 
 - implement BUFFERSIZE.
-
-- implement pad_block with probes? see above.
 
 
 DESIGN

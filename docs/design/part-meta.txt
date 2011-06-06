@@ -118,15 +118,13 @@ GstMetaInfo will point to more information about the metadata and looks like thi
 
   struct _GstMetaInfo {
     GQuark                     api;       /* api name */
-    GQuark                     impl;      /* implementation name */
+    GType                      type;      /* implementation type */
     gsize                      size;      /* size of the structure */
 
     GstMetaInitFunction        init_func;
     GstMetaFreeFunction        free_func;
     GstMetaCopyFunction        copy_func;
     GstMetaTransformFunction   transform_func;
-    GstMetaSerializeFunction   serialize_func
-    GstMetaDeserializeFunction deserialize_func
   };
 
 api will contain a GQuark of the metadata api. A repository of registered MetaInfo
@@ -136,16 +134,16 @@ register additional custom metadata.
 
 For each implementation of api, there will thus be a unique GstMetaInfo. In the
 case of metadata with a well defined API, the implementation specific init
-function will setup the methods in the metadata structure.
+function will setup the methods in the metadata structure. A unique GType will
+be made for each implementation and stored in the type field.
 
 Along with the metadata description we will have functions to initialize/free (and/or refcount)
 a specific GstMeta instance. We also have the possibility to add a custom
 transform function that can be used to modify the metadata when a transformation
 happens.
 
-We also add serialize and deserialize function for the metadata in case we need special
-logic for reading and writing the metadata. This is needed for GDP payloading of the
-metadata.
+There are no explicit methods to serialize and deserialize the metadata. Since
+each type has a GType, we can reuse the Gobject transform functions for this.
 
 The purpose of the separate MetaInfo is to not have to carry the free/init functions in
 each buffer instance but to define them globally. We still want quick access to the info
@@ -218,7 +216,7 @@ The following defines can usually be found in the shared .h file.
 
 Adding metadata to a buffer can be done with the gst_buffer_add_meta() call.
 This function will create new metadata based on the implementation specified by
-the GstMetaInfo. It is alos possible to pass a generic pointer to the add_meta()
+the GstMetaInfo. It is also possible to pass a generic pointer to the add_meta()
 function that can contain parameters to initialize the new metadata fields.
 
 Retrieving the metadata on a buffer can be done with the
@@ -305,9 +303,7 @@ Serialization
 When buffer should be sent over the wire or be serialized in GDP, we need a way
 to perform custom serialization and deserialization on the metadata.
 
-For this we add the serialize and deserialize functions to the metadata info.
-Possible use cases are to make sure we write out the fields with a specific size
-and endianness.
+for this we can use the GType transform functions.
 
 
 Transformations

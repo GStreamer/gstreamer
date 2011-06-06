@@ -156,20 +156,3 @@ as well, so that there is a generic method for both PAUSED and PLAYING.
 
 The same flow works as well for any chain of multiple elements and might 
 be implemented with a helper function in the future.
-
-
-Issues
-~~~~~~
-
-When an EOS event has passed a pad and the pad is set to blocked, the block will
-never happen because no data is going to flow anymore. One possibility is to
-keep track of the pad's EOS state and make the block succeed immediatly. This is
-not yet implemenented.
-
-When dynamically reconnecting pads, some events (like NEWSEGMENT, EOS,
-TAGS, ...) are not yet retransmitted to the newly connected element. It's
-unclear if this can be done by core automatically by caching those events and
-resending them on a relink. It might also be possible that this needs a
-GstFlowReturn value from the event function, in which case the implementation
-must be delayed for after 0.11, when we can break API/ABI.
-

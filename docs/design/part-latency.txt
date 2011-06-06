@@ -195,13 +195,11 @@ capture pipelines.
   prerolled.
 
 
-State Changes revised
-~~~~~~~~~~~~~~~~~~~~~
+State Changes
+~~~~~~~~~~~~~
 
-As a first step in a generic solution we propose to modify the state changes so
-that no sink is set to PLAYING before it is prerolled.
-
-In order to do this, the pipeline (at the GstBin level) keeps track of all
+A Sink is never set to PLAYING before it is prerolled. In order to do this, the
+pipeline (at the GstBin level) keeps track of all
 elements that require preroll (the ones that return ASYNC from the state
 change). These elements posted a ASYNC_START message without a matching
 ASYNC_DONE message.
@@ -221,18 +219,12 @@ NO_PREROLL element to PLAYING. This operation has to be performed in the
 separate async state change thread (like the one currently used for going from
 PAUSED->PLAYING in a non-live pipeline).
 
-implications:
-
- - the current async_play vmethod in basesink can be deprecated since we now
-   always call the state change function when going from PAUSED->PLAYING. We
-   keep this method however to remain backward compatible.
-
 
 Latency compensation
 ~~~~~~~~~~~~~~~~~~~~
 
-As an extension to the revised state changes we can perform latency calculation
-and compensation before we proceed to the PLAYING state. 
+Latency calculation and compensation is performed before the pipeline proceeds to
+the PLAYING state. 
 
 When the pipeline collected all ASYNC_DONE messages it can calculate the global
 latency as follows:
@@ -279,8 +271,8 @@ the same for all sinks, all sinks will render data relatively synchronised.
 Flushing a playing pipeline
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Using the new state change mechanism we can implement resynchronisation after an
-uncontrolled FLUSH in (part of) a pipeline. Indeed, when a flush is performed on
+We can implement resynchronisation after an uncontrolled FLUSH in (part of) a
+pipeline in the same way. Indeed, when a flush is performed on
 a PLAYING live element, a new base time must be distributed to this element.
 
 A flush in a pipeline can happen in the following cases:

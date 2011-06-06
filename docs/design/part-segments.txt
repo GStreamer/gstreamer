@@ -22,8 +22,8 @@ on the stream. The seek has a start time, a stop time and a processing rate.
 
 
 The playback of a segment starts with a source or demuxer element pushing a
-newsegment event containing the start time, stop time and rate of the segment.
-The purpose of this newsegment is to inform downstream elements of the 
+segment event containing the start time, stop time and rate of the segment.
+The purpose of this segment is to inform downstream elements of the 
 requested segment positions. Some elements might produce buffers that fall
 outside of the segment and that might therefore be discarded or clipped.
 
@@ -46,8 +46,8 @@ Use case: FLUSHING seek
     upstream and downstream.
 
     When avidemux starts playback of the segment from second 1 to 5, it pushes
-    out a newsegment with 1 and 5 as start and stop times. The stream_time in
-    the newsegment is also 1 as this is the position we seek to.
+    out a segment with 1 and 5 as start and stop times. The stream_time in
+    the segment is also 1 as this is the position we seek to.
 
     The video decoder stores these values internally and forwards them to the
     next downstream element (videosink, which also stores the values)
@@ -64,7 +64,7 @@ Use case: FLUSHING seek
     When it reaches timestamp 5, it does not decode and push frames anymore.
 
     The video sink receives a frame of timestamp 1. It takes the start value of 
-    the previous newsegment and aplies the folowing (simplified) formula:
+    the previous segment and aplies the folowing (simplified) formula:
 
         render_time = BUFFER_TIMESTAMP - segment_start + element->base_time
 

@@ -99,8 +99,7 @@ Negotiation
 Typical (re)negotiation of the transform element in push mode always goes from
 sink to src, this means triggers the following sequence:
  
-  - the sinkpad receives a buffer with new caps, this triggers the setcaps
-    function on the sinkpad before handing the buffer to transform.
+  - the sinkpad receives a new caps event.
   - the transform function figures out what it can convert these caps to.
   - try to see if we can configure the caps unmodified on the peer. We need to
     do this because we prefer to not do anything.
@@ -111,10 +110,10 @@ sink to src, this means triggers the following sequence:
 We call this downstream negotiation (DN) and it goes roughly like this:
 
                sinkpad              transform               srcpad
-     setcaps()    |                    |                      |
+     CAPS event   |                    |                      |
      ------------>|  find_transform()  |                      |
                   |------------------->|                      |
-                  |                    |       setcaps()      |
+                  |                    |       CAPS event     |
                   |                    |--------------------->|
                   | <configure caps> <-|                      |
 
@@ -148,8 +147,7 @@ assume nothing is going to write to the buffer and we don't enforce a writable
 buffer for the transform_ip function, when present.
 
 One common function that we need for the transform element is to find the best
-transform from one format (src) to another (dest). Since the function is
-bidirectional, we will use the src->dest negotiation. Some requirements of this
+transform from one format (src) to another (dest). Some requirements of this
 function are:
 
    - has a fixed src caps
@@ -198,18 +196,14 @@ state. We can identify these steady states:
       - in-place: buffers are modified in-place, this means that the input
 	buffer is modified to produce a new output buffer. This requires the
 	input buffer to be writable. If the input buffer is not writable, a new
-	buffer has to be allocated with pad-alloc. (SCI)
+	buffer has to be allocated from the bufferpool. (SCI)
 
                sinkpad              transform               srcpad
        chain()    |                    |                      |
      ------------>|   handle_buffer()  |                      |
                   |------------------->|                      |
                   |                    |   [!writable]        |
-                  |                    |     pad-alloc()      |
-                  |                    |--------------------->|
-                  |  [caps-changed]  .-|  [caps-changed]      |
-                  |   <reconfigure>  | |     setcaps()        |
-                  |                  '>|--------------------->|
+                  |                    |   alloc buffer       |
                   |                  .-|                      |
                   |  <transform_ip>  | |                      |
                   |                  '>|                      |
@@ -217,18 +211,15 @@ state. We can identify these steady states:
                   |                    |--------------------->|
                   |                    |                      |
 
-      - copy transform: a new output buffer is allocated with pad-alloc and data
-        from the input buffer is transformed into the output buffer. (SCC)
+      - copy transform: a new output buffer is allocate from the bufferpool
+        and data from the input buffer is transformed into the output buffer.
+        (SCC)
 
                sinkpad              transform               srcpad
        chain()    |                    |                      |
      ------------>|   handle_buffer()  |                      |
                   |------------------->|                      |
-                  |                    |     pad_alloc()      |
-                  |                    |--------------------->|
-                  |  [caps-changed]  .-|   [caps-changed]     |
-                  |   <reconfigure>  | |      setcaps()       |
-                  |                  '>|--------------------->|
+                  |                    |     alloc buffer     |
                   |                  .-|                      |
                   |     <transform>  | |                      |
                   |                  '>|                      |
@@ -250,11 +241,7 @@ state. We can identify these steady states:
      ------------>|   handle_buffer()  |                      |
                   |------------------->|                      |
                   |                    | [!writable || !size] |
-                  |                    |     pad-alloc        |
-                  |                    |--------------------->|
-                  |  [caps-changed]  .-|  [caps-changed]      |
-                  |   <reconfigure>  | |     setcaps()        |
-                  |                  '>|--------------------->|
+                  |                    |     alloc buffer     |
                   |                  .-|                      |
                   |  <transform_ip>  | |                      |
                   |                  '>|                      |
@@ -267,146 +254,41 @@ state. We can identify these steady states:
 	the same as the case with the same-caps negotiation. (DCC)
  
 We can immeditatly observe that the copy transform states will need to
-allocate a buffer from a downstream element using pad-alloc. When the transform
-element is receiving a non-writable buffer in the in-place state, it will also
-need to perform a pad-alloc. There is no reason why the passthrough state would
-perform a pad-alloc. This is important because upstream re-negotiation can only
-happen when the transform uses pad-alloc for all outgoing buffers.
+allocate a new buffer from the bufferpool. When the transform element is
+receiving a non-writable buffer in the in-place state, it will also
+need to perform an allocation. There is no reason why the passthrough state would
+perform an allocation.
 
 This steady state changes when one of the following actions occur:
 
   - the sink pad receives new caps, this triggers the above downstream
     renegotation process, see above for the flow.
-  - the src pad is instructed to produce new caps because of new caps from
-    pad-alloc, this only happens when the transform calls pad-alloc on the
-    srcpad in order to produce a new output buffer.
   - the transform element wants to renegotiate (because of changed properties,
     for example). This essentially clears the current steady state and
-    triggers the downstream and upstream renegotiation process.
-
-Parallel to the downstream negotiation process there is an upstream negotiation
-process. The handling and proxy of buffer-alloc is the most comple part of the
-transform element. This upstream negotiation process has 3 cases: (UN)
-
-  - upstream calls the buffer-alloc function of the transform sinkpad and this
-    call is proxied downstream (UNP)
-  - upstream calls the buffer-alloc function of the transform sinkpad, the
-    transform does not proxy the call but returns a buffer itself (UNU)
-  - the transform calls the pad-alloc function downstream to allocate a new
-    output buffer (but not because of a proxied buffer-alloc) (UNA)
-
-The case where the pad-alloc is called because an output buffer must be
-generated in the chain function is handled above in the copy-transform and the
-in-place transform when the input buffer is not writable or the input buffer
-size is smaller than the output size.
-
-We are left with the last case (proxy an incomming pad-alloc or not). We have 2
-possibilities here:
-
-   - pad-alloc is called with the same caps as are currently being handled by
-     the transform on the sinkcaps. Note that this will only be true when the
-     transform element is completely negotiated because of data processing, see
-     above. Then the element is not yet negotiated, we proceed with the case
-     where sinkcaps are different from thos in the buffer-alloc.
-     
-     * If the transform is using copy-transform, we don't need to proxy because
-       we will call pad-alloc when generating an output buffer. 
-
-               sinkpad              transform               srcpad
-   buffer_alloc() |                    |                      |
-  --------------->|                    |                      |
-                  |                    |                      |
-                  |-. [same caps &&    |                      |
-   return default | |  copy-trans]     |                      |
-     <------------|<'                  |                      |
-                  |                    |                      |
-
-     * If the transform is using in-place and insize < outsize, we proxy
-       the pad-alloc with the srccaps. If the caps are unmodified, we proxy
-       the buffer after changing the caps and size. 
-
-               sinkpad              transform               srcpad
-   buffer_alloc() |                    |                      |
-  --------------->|                    |                      |
-                  |   [same caps &&    |                      |
-                  |    in-place]       |                      |
-                  |------------------->|    pad_alloc()       |
-                  |                    |--------------------->|
-                  | [caps unchanged]   |                      |
-      return      |  adjust_buffer     |                      |
-    <----------------------------------|                      |
-                  |                    |                      |
-                  |                    |                      |
-
-     * If the transform is using in-place and insize < outsize, we proxy
-       the pad-alloc with the srccaps. If the caps are modified find the best
-       transform from these new caps and return a buffer of this size/caps
-       instead. 
-
-               sinkpad              transform               srcpad
-   buffer_alloc() |                    |                      |
-  --------------->|                    |                      |
-                  |   [same caps &&    |                      |
-                  |    in-place]       |    pad-alloc()       |
-                  |------------------------------------------>|
-                  | [caps changed]   .-|                      |
-                  | find_transform() | |                      |
-      return      |                  '>|                      |
-    <----------------------------------|                      |
-                  |                    |                      |
-
-     * If the transform is using in-place and insize >= outsize, we cannot proxy
-       the pad-alloc because the resulting buffer would be too small to return
-       anyway. 
-
-     * If the transform is using passthrough, we can proxy the pad-alloc to the
-       source pad. If the caps change, find the best transform and return a
-       buffer of those caps and size instead.
-
-               sinkpad              transform               srcpad
-   buffer_alloc() |                    |                      |
-  --------------->| [same caps &&      |                      |
-                  |  passtrough]       |     pad-alloc()      |
-                  |------------------------------------------>|
-                  | [caps changed]   .-|                      |
-                  | find_transform() | |                      |
-      return      |                  '>|                      |
-    <----------------------------------|                      |
-                  |                    |                      |
-
-   - pad-alloc is called with different caps than are currently being handled by
-     the transform on the sinkcaps we have to try to negotiate a new
-     configuration for the transform element.
-
-      * we perform the standard way to finding a best transform using
-        find_transform() and we call the pad-alloc function with these caps.
-	If we get different caps from pad-alloc, we find the best format to
-	transform these to and return those caps instead.
+    triggers the downstream and upstream renegotiation process. This situation
+    also happens when a RECONFIGURE event was received on the transform srcpad.
 
 
-               sinkpad              transform               srcpad
-   buffer_alloc() |                    |                      |
-  --------------->|                    |                      |
-                  |  find_transform()  |                      |
-                  |------------------->|                      |
-                  |                    |  pad-alloc()         |
-                  |                    |--------------------->|
-      return      | [caps unchanged]   |                      |
-    <----------------------------------|                      |
-                  |                    |                      |
-                  | [caps changed]   .-|                      |
-                  | find_transform() | |                      |
-      return      |                  '>|                      |
-    <----------------------------------|                      |
-                  |                    |                      |
+Allocation
+~~~~~~~~~~
 
-In order to perform passthrough buffer-alloc or pad-alloc, we need to be able
-to get the size of the output buffer after the transform.
+After the transform element is configured with caps, a bufferpool needs to be
+negotiated to perform the allocation of buffers. We habe 2 cases:
 
-For passthrough buffer-alloc, this is trivial: the input size equals the output
-size.
+  - The element is operating in passthrough we don't need to allocate a buffer
+    in the transform element.
+  - The element is not operating in passthrough and needs to allocation an
+    output buffer.
 
-For the copy transform or the in-place transform we need additional function to
+In case 1, we don't query and configure a pool. We let upstream decide if it
+wants to use a bufferpool and then we will proxy the bufferpool from downstream
+to upstream.
+
+In case 2, we query and set a bufferpool on the srcpad that will be used for
+doing the allocations.
+
+In order to perform allocation, we need to be able to get the size of the
+output buffer after the transform.  We need additional function to
 retrieve the size. There are two functions:
 
   - transform_size()
@@ -423,63 +305,4 @@ retrieve the size. There are two functions:
     source and destination buffers.
 
  For performance reasons, the mapping between caps and size is kept in a cache.
-
-
-Issues
-~~~~~~
-
-passthrough and in-place transforms (with writable buffers) never need to
-perform a pad-alloc on the srcpad. This means that if upstream negotiation
-happens, the transform element will never know about it.
-
-The transform element will keep therefore track of the allocation pattern of
-the peer elements. We can see the following cases:
-
-- upstream peer calls buffer-alloc on the sinkpad of the transform. In some
-  cases (see above) this call gets proxied or not.
-
-- upstream peer does never call buffer-alloc.
-
-We will keeps state about this allocation pattern and perform the following in
-each case respectively:
-
-- Upstream calls buffer-alloc: In passthrough and (some) in-place we proxy
-  this call onto the downstream element. If the caps are changed, we mark
-  a flag that we will require a new pad-alloc for the output of the next
-  output buffer.
-
-- upstream peer does not call buffer-alloc: We always perform a pad-alloc
-  when processing buffers. We can further optimize by only looking at the
-  returned caps instead of doing a full, needless buffer copy.
-
-
-Use cases
-~~~~~~~~~
-
- videotestsrc ! ximagesink
-  
-   - resizing happens because videotestsrc performs pad-alloc.
-
- videotestsrc peer-alloc=0 ! ximagesink
-
-   - resizing cannot happen because videotestsrc never performs pad-alloc.
-
- videotestsrc ! videoscale ! ximagesink
-  
-   - videoscale is initially configured in passthrough mode, pad-alloc from
-     videotestsrc is proxied through videoscale.
-   - pad-alloc will renegotiate a new size in videotestsrc.
-
- videotestsrc peer-alloc=0 ! videoscale ! ximagesink
-  
-   - videoscale is initially configured in passthrough mode.
-   - videoscale performs pad-alloc because no buffer-alloc is called on the
-     sinkpad
-   - resizing the videosink makes videoscale perform the scaling.
-   
-Problematic
-~~~~~~~~~~~
-
-    filesrc location=~/media/moveyourfeet.mov ! decodebin !
-    ffmpegcolorspace ! videoscale ! ffmpegcolorspace ! ximagesink -v
 

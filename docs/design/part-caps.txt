@@ -12,9 +12,6 @@ Caps are exposed on the element pads using the _get_caps() pad function.
 This function describes the possible types that the pad can handle or
 produce (see part-pads.txt and part-negotiation.txt).
 
-Caps are also attached to buffers to describe to content of the data
-pointed to be the buffer.
-
 Various methods exist to work with the media types such as substracting
 or intersecting.
 
