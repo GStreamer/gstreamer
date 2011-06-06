@@ -62,11 +62,6 @@ GST_DEBUG_CATEGORY_STATIC (gst_ogg_mux_debug);
     ? GST_BUFFER_TIMESTAMP (buf) + GST_BUFFER_DURATION (buf) \
     : GST_BUFFER_TIMESTAMP (buf))
 
-#define GST_BUFFER_RUNNING_TIME(buf, oggpad) \
-    (GST_BUFFER_DURATION_IS_VALID (buf) \
-    ? gst_segment_to_running_time (&(oggpad)->segment, GST_FORMAT_TIME, \
-    GST_BUFFER_TIMESTAMP (buf)) : 0)
-
 #define GST_GP_FORMAT "[gp %8" G_GINT64_FORMAT "]"
 #define GST_GP_CAST(_gp) ((gint64) _gp)
 
@@ -551,7 +546,7 @@ gst_ogg_mux_push_buffer (GstOggMux * mux, GstBuffer * buffer,
 
   /* Ensure we have monotonically increasing timestamps in the output. */
   if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer)) {
-    gint64 run_time = GST_BUFFER_RUNNING_TIME (buffer, oggpad);
+    gint64 run_time = GST_BUFFER_TIMESTAMP (buffer);
     if (mux->last_ts != GST_CLOCK_TIME_NONE && run_time < mux->last_ts)
       GST_BUFFER_TIMESTAMP (buffer) = mux->last_ts;
     else
@@ -755,11 +750,6 @@ gst_ogg_mux_compare_pads (GstOggMux * ogg_mux, GstOggPadData * first,
   if (secondtime == GST_CLOCK_TIME_NONE)
     return 1;
 
-  firsttime = gst_segment_to_running_time (&first->segment, GST_FORMAT_TIME,
-      firsttime);
-  secondtime = gst_segment_to_running_time (&second->segment, GST_FORMAT_TIME,
-      secondtime);
-
   /* first buffer has higher timestamp, second one should go first */
   if (secondtime < firsttime)
     return 1;
@@ -778,6 +768,29 @@ gst_ogg_mux_compare_pads (GstOggMux * ogg_mux, GstOggPadData * first,
   /* same priority if all of the above failed */
   return 0;
 }
+
+static GstBuffer *
+gst_ogg_mux_decorate_buffer (GstOggMux * ogg_mux, GstOggPadData * pad,
+    GstBuffer * buf)
+{
+  GstClockTime time;
+
+  /* convert time to running time, so we need no longer bother about that */
+  time = GST_BUFFER_TIMESTAMP (buf);
+  if (G_LIKELY (GST_CLOCK_TIME_IS_VALID (time))) {
+    time = gst_segment_to_running_time (&pad->segment, GST_FORMAT_TIME, time);
+    if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (time))) {
+      gst_buffer_unref (buf);
+      return NULL;
+    } else {
+      buf = gst_buffer_make_metadata_writable (buf);
+      GST_BUFFER_TIMESTAMP (buf) = time;
+    }
+  }
+
+  return buf;
+}
+
 
 /* make sure at least one buffer is queued on all pads, two if possible
  * 
@@ -882,6 +895,14 @@ gst_ogg_mux_queue_pads (GstOggMux * ogg_mux)
             /* this is a data buffer so switch to data state */
             pad->state = GST_OGG_PAD_STATE_DATA;
           }
+        }
+
+        /* so now we should have a real data packet;
+         * see that it is properly decorated */
+        if (G_LIKELY (buf)) {
+          buf = gst_ogg_mux_decorate_buffer (ogg_mux, pad, buf);
+          if (G_UNLIKELY (!buf))
+            GST_DEBUG_OBJECT (data->pad, "buffer clipped");
         }
       } else {
         GST_DEBUG_OBJECT (data->pad, "EOS on pad");
