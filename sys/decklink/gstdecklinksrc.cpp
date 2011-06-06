@@ -36,6 +36,7 @@
 #endif
 
 #include <gst/gst.h>
+#include "gstdecklink.h"
 #include "gstdecklinksrc.h"
 #include "capture.h"
 #include <string.h>
@@ -116,7 +117,9 @@ static void gst_decklink_src_task (void *priv);
 
 enum
 {
-  PROP_0
+  PROP_0,
+  PROP_MODE,
+  PROP_OPTICAL
 };
 
 /* pad templates */
@@ -128,57 +131,11 @@ GST_STATIC_PAD_TEMPLATE ("audiosrc",
     GST_STATIC_CAPS ("audio/x-raw-int,width=16,depth=16,channels=2,rate=48000")
     );
 
-#define MODE(w,h,n,d,i) \
-  "video/x-raw-yuv,format=(fourcc)UYVY,width=" #w ",height=" #h \
-  ",framerate=" #n "/" #d ",interlaced=" #i
-
 static GstStaticPadTemplate gst_decklink_src_video_src_template =
-    GST_STATIC_PAD_TEMPLATE ("videosrc",
+GST_STATIC_PAD_TEMPLATE ("videosrc",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (MODE (720, 486, 30000, 1001, true) ";"
-        MODE (720, 486, 24000, 1001, true) ";"
-        MODE (720, 576, 25, 1, true) ";"
-        MODE (1920, 1080, 24000, 1001, false) ";"
-        MODE (1920, 1080, 24, 1, false) ";"
-        MODE (1920, 1080, 25, 1, false) ";"
-        MODE (1920, 1080, 30000, 1001, false) ";"
-        MODE (1920, 1080, 30, 1, false) ";"
-        MODE (1920, 1080, 25, 1, true) ";"
-        MODE (1920, 1080, 30000, 1001, true) ";"
-        MODE (1920, 1080, 30, 1, true) ";"
-        MODE (1280, 720, 50, 1, true) ";"
-        MODE (1280, 720, 60000, 1001, true) ";" MODE (1280, 720, 60, 1, true)
-    ));
-
-typedef struct _DecklinkMode DecklinkMode;
-struct _DecklinkMode
-{
-  BMDDisplayMode mode;
-  int width;
-  int height;
-  int fps_n;
-  int fps_d;
-  gboolean interlaced;
-};
-
-static DecklinkMode modes[] = {
-  {bmdModeNTSC, 720, 486, 30000, 1001, true},
-  {bmdModeNTSC2398, 720, 486, 24000, 1001, true},
-  {bmdModePAL, 720, 576, 25, 1, true},
-  {bmdModeHD1080p2398, 1920, 1080, 24000, 1001, false},
-  {bmdModeHD1080p24, 1920, 1080, 24, 1, false},
-  {bmdModeHD1080p25, 1920, 1080, 25, 1, false},
-  {bmdModeHD1080p2997, 1920, 1080, 30000, 1001, false},
-  {bmdModeHD1080p30, 1920, 1080, 30, 1, false},
-  {bmdModeHD1080i50, 1920, 1080, 25, 1, true},
-  {bmdModeHD1080i5994, 1920, 1080, 30000, 1001, true},
-  {bmdModeHD1080i6000, 1920, 1080, 30, 1, true},
-  {bmdModeHD720p50, 1280, 720, 50, 1, true},
-  {bmdModeHD720p5994, 1280, 720, 60000, 1001, true},
-  {bmdModeHD720p60, 1280, 720, 60, 1, true}
-};
-
+    GST_STATIC_CAPS (GST_DECKLINK_CAPS));
 
 /* class initialization */
 
@@ -226,6 +183,17 @@ gst_decklink_src_class_init (GstDecklinkSrcClass * klass)
   element_class->send_event = GST_DEBUG_FUNCPTR (gst_decklink_src_send_event);
   element_class->query = GST_DEBUG_FUNCPTR (gst_decklink_src_query);
 
+  g_object_class_install_property (gobject_class, PROP_MODE,
+      g_param_spec_enum ("mode", "Mode", "Mode",
+          GST_TYPE_DECKLINK_MODE, GST_DECKLINK_MODE_NTSC,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+              G_PARAM_CONSTRUCT)));
+
+  g_object_class_install_property (gobject_class, PROP_OPTICAL,
+      g_param_spec_boolean ("optical", "Optical", "Optical",
+          TRUE,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+              G_PARAM_CONSTRUCT)));
 }
 
 static void
@@ -301,14 +269,7 @@ gst_decklink_src_init (GstDecklinkSrc * decklinksrc,
   decklinksrc->mutex = g_mutex_new ();
 
   decklinksrc->copy_data = TRUE;
-  decklinksrc->mode = 0;
-
-  decklinksrc->width = modes[decklinksrc->mode].width;
-  decklinksrc->height = modes[decklinksrc->mode].height;
-  decklinksrc->fps_n = modes[decklinksrc->mode].fps_n;
-  decklinksrc->fps_d = modes[decklinksrc->mode].fps_d;
-  decklinksrc->interlaced = modes[decklinksrc->mode].interlaced;
-  decklinksrc->bmd_mode = modes[decklinksrc->mode].mode;
+  decklinksrc->mode = GST_DECKLINK_MODE_NTSC;
 
 }
 
@@ -316,9 +277,18 @@ void
 gst_decklink_src_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
+  GstDecklinkSrc *decklinksrc;
+
   g_return_if_fail (GST_IS_DECKLINK_SRC (object));
+  decklinksrc = GST_DECKLINK_SRC (object);
 
   switch (property_id) {
+    case PROP_MODE:
+      decklinksrc->mode = (GstDecklinkModeEnum) g_value_get_enum (value);
+      break;
+    case PROP_OPTICAL:
+      decklinksrc->optical = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -329,9 +299,18 @@ void
 gst_decklink_src_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
+  GstDecklinkSrc *decklinksrc;
+
   g_return_if_fail (GST_IS_DECKLINK_SRC (object));
+  decklinksrc = GST_DECKLINK_SRC (object);
 
   switch (property_id) {
+    case PROP_MODE:
+      g_value_set_enum (value, decklinksrc->mode);
+      break;
+    case PROP_OPTICAL:
+      g_value_set_boolean (value, decklinksrc->optical);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -394,15 +373,13 @@ gst_decklink_src_start (GstElement * element)
   GstDecklinkSrc *decklinksrc = GST_DECKLINK_SRC (element);
   IDeckLinkIterator *iterator;
   DeckLinkCaptureDelegate *delegate;
-  IDeckLinkDisplayModeIterator *mode_iterator;
-  IDeckLinkDisplayMode *mode;
-  int i;
+  //IDeckLinkDisplayModeIterator *mode_iterator;
+  //IDeckLinkDisplayMode *mode;
   int sample_depth;
   int channels;
-  BMDVideoInputFlags input_flags;
-  BMDDisplayMode selected_mode;
-  BMDPixelFormat pixel_format;
   HRESULT ret;
+  const GstDecklinkMode *mode;
+  IDeckLinkConfiguration *config;
 
   GST_DEBUG_OBJECT (decklinksrc, "start");
 
@@ -429,6 +406,21 @@ gst_decklink_src_start (GstElement * element)
   delegate->priv = decklinksrc;
   decklinksrc->input->SetCallback (delegate);
 
+  ret = decklinksrc->decklink->QueryInterface (IID_IDeckLinkConfiguration,
+      (void **) &config);
+  if (ret != S_OK) {
+    GST_ERROR ("query interface failed");
+    return FALSE;
+  }
+
+  ret = config->SetInt (bmdDeckLinkConfigVideoInputConnection,
+      decklinksrc->optical ? bmdVideoConnectionOpticalSDI :
+      bmdVideoConnectionSDI);
+  if (ret != S_OK) {
+    GST_ERROR ("set configuration (input source)");
+    return FALSE;
+  }
+#if 0
   ret = decklinksrc->input->GetDisplayModeIterator (&mode_iterator);
   if (ret != S_OK) {
     GST_ERROR ("failed to get display mode iterator");
@@ -441,17 +433,16 @@ gst_decklink_src_start (GstElement * element)
 
     mode->GetName (&mode_name);
 
-    GST_ERROR ("%d: mode name: %s", i, mode_name);
+    GST_DEBUG ("%d: mode name: %s", i, mode_name);
 
     mode->Release ();
     i++;
   }
+#endif
 
-  pixel_format = bmdFormat8BitYUV;
-  selected_mode = decklinksrc->bmd_mode;
-  input_flags = 0;
-  ret = decklinksrc->input->EnableVideoInput (selected_mode, pixel_format,
-      input_flags);
+  mode = gst_decklink_get_mode (decklinksrc->mode);
+
+  ret = decklinksrc->input->EnableVideoInput (mode->mode, bmdFormat8BitYUV, 0);
   if (ret != S_OK) {
     GST_ERROR ("enable video input failed");
     return FALSE;
@@ -459,8 +450,7 @@ gst_decklink_src_start (GstElement * element)
 
   sample_depth = 16;
   channels = 2;
-  ret =
-      decklinksrc->input->EnableAudioInput (bmdAudioSampleRate48kHz,
+  ret = decklinksrc->input->EnableAudioInput (bmdAudioSampleRate48kHz,
       sample_depth, channels);
   if (ret != S_OK) {
     GST_ERROR ("enable video input failed");
@@ -493,6 +483,13 @@ gst_decklink_src_stop (GstElement * element)
   g_mutex_unlock (decklinksrc->mutex);
 
   gst_task_join (decklinksrc->task);
+
+  decklinksrc->input->StopStreams ();
+  decklinksrc->input->DisableVideoInput ();
+  decklinksrc->input->DisableAudioInput ();
+
+  decklinksrc->input->Release ();
+  decklinksrc->input = NULL;
 
   return TRUE;
 }
@@ -788,7 +785,7 @@ gst_decklink_src_video_src_getcaps (GstPad * pad)
 
   GST_DEBUG_OBJECT (decklinksrc, "getcaps");
 
-  caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+  caps = gst_decklink_mode_get_caps (decklinksrc->mode);
 
   gst_object_unref (decklinksrc);
   return caps;
@@ -991,6 +988,7 @@ gst_decklink_src_task (void *priv)
   void *data;
   int n_samples;
   GstFlowReturn ret;
+  const GstDecklinkMode *mode;
 
   GST_DEBUG_OBJECT (decklinksrc, "task");
 
@@ -1006,7 +1004,7 @@ gst_decklink_src_task (void *priv)
   g_mutex_unlock (decklinksrc->mutex);
 
   if (decklinksrc->stop) {
-    GST_ERROR ("stopping task");
+    GST_DEBUG ("stopping task");
     return;
   }
 
@@ -1016,18 +1014,18 @@ gst_decklink_src_task (void *priv)
     return;
   }
 
+  mode = gst_decklink_get_mode (decklinksrc->mode);
+
   video_frame->GetBytes (&data);
   if (decklinksrc->copy_data) {
-    buffer =
-        gst_buffer_new_and_alloc (decklinksrc->width * decklinksrc->height * 2);
+    buffer = gst_buffer_new_and_alloc (mode->width * mode->height * 2);
 
-    memcpy (GST_BUFFER_DATA (buffer), data,
-        decklinksrc->width * decklinksrc->height * 2);
+    memcpy (GST_BUFFER_DATA (buffer), data, mode->width * mode->height * 2);
 
     video_frame->Release ();
   } else {
     buffer = gst_buffer_new ();
-    GST_BUFFER_SIZE (buffer) = decklinksrc->width * decklinksrc->height * 2;
+    GST_BUFFER_SIZE (buffer) = mode->width * mode->height * 2;
 
     GST_BUFFER_DATA (buffer) = (guint8 *) data;
 
@@ -1037,10 +1035,10 @@ gst_decklink_src_task (void *priv)
 
   GST_BUFFER_TIMESTAMP (buffer) =
       gst_util_uint64_scale_int (decklinksrc->num_frames * GST_SECOND,
-      decklinksrc->fps_d, decklinksrc->fps_n);
+      mode->fps_d, mode->fps_n);
   GST_BUFFER_DURATION (buffer) =
       gst_util_uint64_scale_int ((decklinksrc->num_frames + 1) * GST_SECOND,
-      decklinksrc->fps_d, decklinksrc->fps_n) - GST_BUFFER_TIMESTAMP (buffer);
+      mode->fps_d, mode->fps_n) - GST_BUFFER_TIMESTAMP (buffer);
   GST_BUFFER_OFFSET (buffer) = decklinksrc->num_frames;
   if (decklinksrc->num_frames == 0) {
     GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
@@ -1048,13 +1046,7 @@ gst_decklink_src_task (void *priv)
   decklinksrc->num_frames++;
 
   if (decklinksrc->video_caps == NULL) {
-    decklinksrc->video_caps = gst_caps_new_simple ("video/x-raw-yuv",
-        "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y'),
-        "width", G_TYPE_INT, decklinksrc->width,
-        "height", G_TYPE_INT, decklinksrc->height,
-        "framerate", GST_TYPE_FRACTION,
-        decklinksrc->fps_n, decklinksrc->fps_d,
-        "interlaced", G_TYPE_BOOLEAN, decklinksrc->interlaced, NULL);
+    decklinksrc->video_caps = gst_decklink_mode_get_caps (decklinksrc->mode);
   }
   gst_buffer_set_caps (buffer, decklinksrc->video_caps);
 
@@ -1063,34 +1055,35 @@ gst_decklink_src_task (void *priv)
     GST_ELEMENT_ERROR (decklinksrc, CORE, NEGOTIATION, (NULL), (NULL));
   }
 
+  if (gst_pad_is_linked (decklinksrc->audiosrcpad)) {
+    n_samples = audio_frame->GetSampleFrameCount ();
+    audio_frame->GetBytes (&data);
+    audio_buffer = gst_buffer_new_and_alloc (n_samples * 2 * 2);
+    memcpy (GST_BUFFER_DATA (audio_buffer), data, n_samples * 2 * 2);
 
-  n_samples = audio_frame->GetSampleFrameCount ();
-  audio_frame->GetBytes (&data);
-  audio_buffer = gst_buffer_new_and_alloc (n_samples * 2 * 2);
-  memcpy (GST_BUFFER_DATA (audio_buffer), data, n_samples * 2 * 2);
+    GST_BUFFER_TIMESTAMP (audio_buffer) =
+        gst_util_uint64_scale_int (decklinksrc->num_audio_samples * GST_SECOND,
+        1, 48000);
+    GST_BUFFER_DURATION (audio_buffer) =
+        gst_util_uint64_scale_int ((decklinksrc->num_audio_samples +
+            n_samples) * GST_SECOND, 1,
+        48000) - GST_BUFFER_TIMESTAMP (audio_buffer);
+    decklinksrc->num_audio_samples += n_samples;
+
+    if (decklinksrc->audio_caps == NULL) {
+      decklinksrc->audio_caps = gst_caps_new_simple ("audio/x-raw-int",
+          "endianness", G_TYPE_INT, LITTLE_ENDIAN,
+          "signed", G_TYPE_BOOLEAN, TRUE,
+          "depth", G_TYPE_INT, 16,
+          "width", G_TYPE_INT, 16,
+          "channels", G_TYPE_INT, 2, "rate", G_TYPE_INT, 48000, NULL);
+    }
+    gst_buffer_set_caps (audio_buffer, decklinksrc->audio_caps);
+
+    ret = gst_pad_push (decklinksrc->audiosrcpad, audio_buffer);
+    if (ret != GST_FLOW_OK) {
+      GST_ELEMENT_ERROR (decklinksrc, CORE, NEGOTIATION, (NULL), (NULL));
+    }
+  }
   audio_frame->Release ();
-
-  GST_BUFFER_TIMESTAMP (audio_buffer) =
-      gst_util_uint64_scale_int (decklinksrc->num_audio_samples * GST_SECOND,
-      1, 48000);
-  GST_BUFFER_DURATION (audio_buffer) =
-      gst_util_uint64_scale_int ((decklinksrc->num_audio_samples +
-          n_samples) * GST_SECOND, 1,
-      48000) - GST_BUFFER_TIMESTAMP (audio_buffer);
-  decklinksrc->num_audio_samples += n_samples;
-
-  if (decklinksrc->audio_caps == NULL) {
-    decklinksrc->audio_caps = gst_caps_new_simple ("audio/x-raw-int",
-        "endianness", G_TYPE_INT, G_LITTLE_ENDIAN,
-        "signed", G_TYPE_BOOLEAN, TRUE,
-        "depth", G_TYPE_INT, 16,
-        "width", G_TYPE_INT, 16,
-        "channels", G_TYPE_INT, 2, "rate", G_TYPE_INT, 48000, NULL);
-  }
-  gst_buffer_set_caps (audio_buffer, decklinksrc->audio_caps);
-
-  ret = gst_pad_push (decklinksrc->audiosrcpad, audio_buffer);
-  if (ret != GST_FLOW_OK) {
-    GST_ELEMENT_ERROR (decklinksrc, CORE, NEGOTIATION, (NULL), (NULL));
-  }
 }

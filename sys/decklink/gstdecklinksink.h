@@ -21,6 +21,7 @@
 #define _GST_DECKLINK_SINK_H_
 
 #include <gst/gst.h>
+#include "gstdecklink.h"
 #include "DeckLinkAPI.h"
 
 G_BEGIN_DECLS
@@ -68,15 +69,9 @@ struct _GstDecklinkSink
   gboolean sched_started;
 
   int num_frames;
-  int fps_n;
-  int fps_d;
-  int width;
-  int height;
-  gboolean interlaced;
-  BMDDisplayMode bmd_mode;
 
   /* properties */
-  int mode;
+  GstDecklinkModeEnum mode;
 
 };
 

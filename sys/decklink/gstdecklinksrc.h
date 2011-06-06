@@ -21,6 +21,7 @@
 #define _GST_DECKLINK_SRC_H_
 
 #include <gst/gst.h>
+#include "gstdecklink.h"
 #include "DeckLinkAPI.h"
 
 G_BEGIN_DECLS
@@ -69,7 +70,8 @@ struct _GstDecklinkSrc
 
   /* properties */
   gboolean copy_data;
-  int mode;
+  GstDecklinkModeEnum mode;
+  gboolean optical;
 };
 
 struct _GstDecklinkSrcClass

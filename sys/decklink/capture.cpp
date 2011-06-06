@@ -57,8 +57,7 @@ DeckLinkCaptureDelegate::~DeckLinkCaptureDelegate ()
   pthread_mutex_destroy (&m_mutex);
 }
 
-ULONG
-DeckLinkCaptureDelegate::AddRef (void)
+ULONG DeckLinkCaptureDelegate::AddRef (void)
 {
   pthread_mutex_lock (&m_mutex);
   m_refCount++;
@@ -67,15 +66,15 @@ DeckLinkCaptureDelegate::AddRef (void)
   return (ULONG) m_refCount;
 }
 
-ULONG
-DeckLinkCaptureDelegate::Release (void)
+ULONG DeckLinkCaptureDelegate::Release (void)
 {
   pthread_mutex_lock (&m_mutex);
   m_refCount--;
   pthread_mutex_unlock (&m_mutex);
 
   if (m_refCount == 0) {
-    delete this;
+    delete
+        this;
     return 0;
   }
 
@@ -86,7 +85,12 @@ HRESULT
     DeckLinkCaptureDelegate::VideoInputFrameArrived (IDeckLinkVideoInputFrame *
     videoFrame, IDeckLinkAudioInputPacket * audioFrame)
 {
-  GstDecklinkSrc *decklinksrc = GST_DECKLINK_SRC (priv);
+  GstDecklinkSrc *decklinksrc;
+
+  g_return_val_if_fail (priv != NULL, S_OK);
+  g_return_val_if_fail (GST_IS_DECKLINK_SRC (priv), S_OK);
+
+  decklinksrc = GST_DECKLINK_SRC (priv);
 
   // Handle Video Frame
   if (videoFrame) {
@@ -133,4 +137,3 @@ HRESULT
   GST_ERROR ("moo");
   return S_OK;
 }
-
