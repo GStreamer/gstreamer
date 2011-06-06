@@ -456,21 +456,19 @@ gst_rtp_asf_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
       return NULL;
 
     /* we need to pad with zeroes to packet_size if it's smaller */
-    g_assert (packet_len == GST_BUFFER_SIZE (outbuf));
-    packet_len = GST_BUFFER_SIZE (outbuf);
-    if (packet_len < depay->packet_size) {
+    if (GST_BUFFER_SIZE (outbuf) < depay->packet_size) {
       GstBuffer *tmp;
+      gint plen = GST_BUFFER_SIZE (outbuf);
 
       GST_LOG_OBJECT (depay, "padding buffer size %d to packet size %d",
-          packet_len, depay->packet_size);
+          plen, depay->packet_size);
       tmp = gst_buffer_new_and_alloc (depay->packet_size);
-      memcpy (GST_BUFFER_DATA (tmp), GST_BUFFER_DATA (outbuf), packet_len);
+      memcpy (GST_BUFFER_DATA (tmp), GST_BUFFER_DATA (outbuf), plen);
+      gst_buffer_copy_metadata (tmp, outbuf, GST_BUFFER_COPY_ALL);
       gst_buffer_unref (outbuf);
       outbuf = tmp;
-      memset (GST_BUFFER_DATA (outbuf) + packet_len, 0,
-          depay->packet_size - packet_len);
-      gst_rtp_asf_depay_set_padding (depay, outbuf,
-          depay->packet_size - packet_len);
+      memset (GST_BUFFER_DATA (outbuf) + plen, 0, depay->packet_size - plen);
+      gst_rtp_asf_depay_set_padding (depay, outbuf, depay->packet_size - plen);
     }
 
     gst_buffer_set_caps (outbuf, GST_PAD_CAPS (depayload->srcpad));
