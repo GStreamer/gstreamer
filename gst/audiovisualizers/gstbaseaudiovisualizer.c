@@ -727,7 +727,8 @@ gst_base_audio_visualizer_chain (GstPad * pad, GstBuffer * buffer)
 
   /* this is what we have */
   avail = gst_adapter_available (scope->adapter);
-  while (avail > sbpf) {
+  GST_LOG_OBJECT (scope, "avail: %u, bpf: %u", avail, sbpf);
+  while (avail >= sbpf) {
     GstBuffer *outbuf;
 
     ret = gst_pad_alloc_buffer_and_set_caps (scope->srcpad,
@@ -770,10 +771,13 @@ gst_base_audio_visualizer_chain (GstPad * pad, GstBuffer * buffer)
 
     GST_LOG_OBJECT (scope, "avail: %u, bpf: %u", avail, sbpf);
     /* we want to take less or more, depending on spf : req_spf */
-    if (avail - sbpf > sbpf)
+    if (avail - sbpf >= sbpf) {
       gst_adapter_flush (scope->adapter, sbpf);
-    else if (avail - sbpf > 0)
+    } else if (avail - sbpf >= 0) {
+      /* just flush a bit and stop */
       gst_adapter_flush (scope->adapter, (avail - sbpf));
+      break;
+    }
     avail = gst_adapter_available (scope->adapter);
 
     if (ret != GST_FLOW_OK)
@@ -781,8 +785,6 @@ gst_base_audio_visualizer_chain (GstPad * pad, GstBuffer * buffer)
 
     if (scope->next_ts != GST_CLOCK_TIME_NONE)
       scope->next_ts += scope->frame_duration;
-
-    avail = gst_adapter_available (scope->adapter);
   }
 
   gst_object_unref (scope);
