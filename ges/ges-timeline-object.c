@@ -119,6 +119,7 @@ struct _GESTimelineObjectPrivate
    * properties so we don't end up in infinite property update loops
    */
   gboolean ignore_notifies;
+  gboolean is_moving;
 
   GList *mappings;
 
@@ -319,6 +320,7 @@ ges_timeline_object_init (GESTimelineObject * self)
   self->priv->trackobjects = NULL;
   self->priv->layer = NULL;
   self->priv->nb_effects = 0;
+  self->priv->is_moving = FALSE;
 }
 
 /**
@@ -820,6 +822,81 @@ ges_timeline_object_set_priority_internal (GESTimelineObject * object,
 
   object->priority = priority;
   return TRUE;
+}
+
+/**
+ * ges_timeline_object_set_moving_from_layer:
+ * @object: a #GESTimelineObject
+ * @is_moving: %TRUE if you want to start moving @object to another layer
+ * %FALSE when you finished moving it.
+ *
+ * Sets the object in a moving to layer state. You might rather use the
+ * ges_timeline_object_move_to_layer function to move #GESTimelineObject-s
+ * from a layer to another.
+ **/
+void
+ges_timeline_object_set_moving_from_layer (GESTimelineObject * object,
+    gboolean is_moving)
+{
+  object->priv->is_moving = is_moving;
+}
+
+/**
+ * ges_timeline_object_is_moving_from_layer:
+ * @object: a #GESTimelineObject
+ *
+ * Tells you if the object is currently moving from a layer to another.
+ * You might rather use the ges_timeline_object_move_to_layer function to
+ * move #GESTimelineObject-s from a layer to another.
+ *
+ *
+ * Returns: %TRUE if @object is currently moving from its current layer
+ * %FALSE otherwize
+ **/
+gboolean
+ges_timeline_object_is_moving_from_layer (GESTimelineObject * object)
+{
+  return object->priv->is_moving;
+}
+
+/**
+ * ges_timeline_object_move_to_layer:
+ * @object: a #GESTimelineObject
+ * @layer: the new #GESTimelineLayer
+ *
+ * Moves @object to @layer. If @object is not in any layer, it adds it to
+ * @layer, else, it removes it from its current layer, and adds it to @layer.
+ *
+ * Returns: %TRUE if @object could be moved %FALSE otherwize
+ */
+gboolean
+ges_timeline_object_move_to_layer (GESTimelineObject * object, GESTimelineLayer
+    * layer)
+{
+  gboolean ret;
+  GESTimelineLayer *current_layer = object->priv->layer;
+
+  if (current_layer == NULL) {
+    GST_DEBUG ("Not moving %p, only adding it to %p", object, layer);
+
+    return ges_timeline_layer_add_object (layer, object);
+  }
+
+  object->priv->is_moving = TRUE;
+  g_object_ref (object);
+  ret = ges_timeline_layer_remove_object (current_layer, object);
+
+  if (!ret) {
+    g_object_unref (object);
+    return FALSE;
+  }
+
+  ret = ges_timeline_layer_add_object (layer, object);
+  object->priv->is_moving = FALSE;
+
+  g_object_unref (object);
+
+  return ret;
 }
 
 /**

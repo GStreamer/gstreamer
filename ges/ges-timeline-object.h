@@ -258,6 +258,17 @@ ges_timeline_object_add_track_object     (GESTimelineObject *object,
 GESTimelineLayer *
 ges_timeline_object_get_layer            (GESTimelineObject *object);
 
+gboolean
+ges_timeline_object_move_to_layer        (GESTimelineObject *object,
+					     GESTimelineLayer *layer);
+
+gboolean
+ges_timeline_object_is_moving_from_layer (GESTimelineObject *object);
+
+void
+ges_timeline_object_set_moving_from_layer (GESTimelineObject * object,
+					     gboolean is_moving);
+
 /* Effects */
 GList *
 ges_timeline_object_get_top_effects      (GESTimelineObject *object);

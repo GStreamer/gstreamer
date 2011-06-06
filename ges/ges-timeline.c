@@ -599,6 +599,12 @@ static void
 layer_object_added_cb (GESTimelineLayer * layer, GESTimelineObject * object,
     GESTimeline * timeline)
 {
+  if (ges_timeline_object_is_moving_from_layer (object)) {
+    GST_DEBUG ("TimelineObject %p is moving from a layer to another, not doing"
+        " anything on it", object);
+    return;
+  }
+
   GST_DEBUG ("New TimelineObject %p added to layer %p", object, layer);
 
   if (GES_IS_TIMELINE_FILE_SOURCE (object)) {
@@ -646,6 +652,12 @@ layer_object_removed_cb (GESTimelineLayer * layer, GESTimelineObject * object,
     GESTimeline * timeline)
 {
   GList *tmp, *trackobjects;
+
+  if (ges_timeline_object_is_moving_from_layer (object)) {
+    GST_DEBUG ("TimelineObject %p is moving from a layer to another, not doing"
+        " anything on it", object);
+    return;
+  }
 
   GST_DEBUG ("TimelineObject %p removed from layer %p", object, layer);
 
