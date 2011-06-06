@@ -52,12 +52,15 @@ public IDeckLinkAudioOutputCallback
 struct _GstDecklinkSink
 {
   GstElement base_decklinksink;
+  GstBuffer *audio_buffer;
 
   GstPad *videosinkpad;
   GstPad *audiosinkpad;
 
   GMutex *mutex;
   GCond *cond;
+  GMutex *audio_mutex;
+//   GCond *audio_cond;
   int queued_frames;
   gboolean stop;
 

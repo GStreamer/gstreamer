@@ -57,7 +57,8 @@ DeckLinkCaptureDelegate::~DeckLinkCaptureDelegate ()
   pthread_mutex_destroy (&m_mutex);
 }
 
-ULONG DeckLinkCaptureDelegate::AddRef (void)
+ULONG
+DeckLinkCaptureDelegate::AddRef (void)
 {
   pthread_mutex_lock (&m_mutex);
   m_refCount++;
@@ -66,15 +67,15 @@ ULONG DeckLinkCaptureDelegate::AddRef (void)
   return (ULONG) m_refCount;
 }
 
-ULONG DeckLinkCaptureDelegate::Release (void)
+ULONG
+DeckLinkCaptureDelegate::Release (void)
 {
   pthread_mutex_lock (&m_mutex);
   m_refCount--;
   pthread_mutex_unlock (&m_mutex);
 
   if (m_refCount == 0) {
-    delete
-        this;
+    delete this;
     return 0;
   }
 
