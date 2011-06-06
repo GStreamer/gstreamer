@@ -705,6 +705,10 @@ GST_START_TEST (test_ghost_pads_forward_setcaps)
       G_CALLBACK (ghost_notify_caps), &notify_counter);
   fail_unless (gst_pad_link (ghost, sink) == GST_PAD_LINK_OK);
 
+  /* Activate pads for caps forwarding/setting to work */
+  gst_pad_set_active (src, TRUE);
+  gst_pad_set_active (ghost, TRUE);
+
   caps1 = gst_caps_from_string ("meh");
   fail_unless (gst_pad_set_caps (src, caps1));
   caps2 = gst_pad_get_current_caps (ghost);
