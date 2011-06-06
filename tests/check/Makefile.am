@@ -168,6 +168,7 @@ check_PROGRAMS = \
 	elements/autoconvert \
 	elements/autovideoconvert \
 	elements/asfmux \
+	elements/baseaudiovisualizer \
 	elements/camerabin \
 	elements/dataurisrc \
 	elements/legacyresample \
@@ -220,6 +221,17 @@ elements_voaacenc_CFLAGS = \
 elements_voaacenc_LDADD = \
 	$(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) $(GST_LIBS) $(LDADD) \
 	-lgstaudio-@GST_MAJORMINOR@
+
+elements_baseaudiovisualizer_SOURCES = elements/baseaudiovisualizer.c \
+	$(top_srcdir)/gst/audiovisualizers/gstbaseaudiovisualizer.c \
+	$(top_srcdir)/gst/audiovisualizers/gstbaseaudiovisualizer.h
+elements_baseaudiovisualizer_CFLAGS = $(GST_PLUGINS_BAD_CFLAGS) \
+	-I$(top_srcdir)/gst/audiovisualizers $(GST_PLUGINS_BASE_CFLAGS) \
+	$(GST_BASE_CFLAGS) $(GST_CONTROLLER_CFLAGS) $(GST_CFLAGS) $(AM_CFLAGS)
+elements_baseaudiovisualizer_LDADD = \
+	$(GST_PLUGINS_BASE_LIBS) -lgstaudio-@GST_MAJORMINOR@  \
+	-lgstvideo-@GST_MAJORMINOR@ 	$(GST_BASE_LIBS) $(GST_CONTROLLER_LIBS) \
+	$(GST_LIBS) $(LDADD)
 
 elements_camerabin_CFLAGS = \
 	$(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
