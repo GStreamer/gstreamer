@@ -106,6 +106,8 @@ GstFlowReturn gst_matroska_read_common_parse_info (GstMatroskaReadCommon *
     common, GstElement * el, GstEbmlRead * ebml);
 GstFlowReturn gst_matroska_read_common_parse_attachments (
     GstMatroskaReadCommon * common, GstElement * el, GstEbmlRead * ebml);
+GstFlowReturn gst_matroska_read_common_parse_chapters (GstMatroskaReadCommon *
+    common, GstEbmlRead * ebml);
 GstFlowReturn gst_matroska_read_common_parse_header (GstMatroskaReadCommon *
     common, GstEbmlRead * ebml);
 GstFlowReturn gst_matroska_read_common_parse_metadata (GstMatroskaReadCommon *

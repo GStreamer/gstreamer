@@ -1557,38 +1557,6 @@ gst_matroska_parse_parse_tracks (GstMatroskaParse * parse, GstEbmlRead * ebml)
   return ret;
 }
 
-static GstFlowReturn
-gst_matroska_parse_parse_chapters (GstMatroskaParse * parse, GstEbmlRead * ebml)
-{
-  guint32 id;
-  GstFlowReturn ret = GST_FLOW_OK;
-
-  GST_WARNING_OBJECT (parse, "Parsing of chapters not implemented yet");
-
-  /* TODO: implement parsing of chapters */
-
-  DEBUG_ELEMENT_START (parse, ebml, "Chapters");
-
-  if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK) {
-    DEBUG_ELEMENT_STOP (parse, ebml, "Chapters", ret);
-    return ret;
-  }
-
-  while (ret == GST_FLOW_OK && gst_ebml_read_has_remaining (ebml, 1, TRUE)) {
-    if ((ret = gst_ebml_peek_id (ebml, &id)) != GST_FLOW_OK)
-      break;
-
-    switch (id) {
-      default:
-        ret = gst_ebml_read_skip (ebml);
-        break;
-    }
-  }
-
-  DEBUG_ELEMENT_STOP (parse, ebml, "Chapters", ret);
-  return ret;
-}
-
 /*
  * Read signed/unsigned "EBML" numbers.
  * Return: number of bytes processed.
@@ -2786,7 +2754,7 @@ gst_matroska_parse_parse_id (GstMatroskaParse * parse, guint32 id,
           break;
         case GST_MATROSKA_ID_CHAPTERS:
           GST_READ_CHECK (gst_matroska_parse_take (parse, read, &ebml));
-          ret = gst_matroska_parse_parse_chapters (parse, &ebml);
+          ret = gst_matroska_read_common_parse_chapters (&parse->common, &ebml);
           gst_matroska_parse_output (parse, ebml.buf, FALSE);
           break;
         case GST_MATROSKA_ID_SEEKHEAD:
