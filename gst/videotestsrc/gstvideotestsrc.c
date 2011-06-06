@@ -49,7 +49,6 @@ GST_DEBUG_CATEGORY_STATIC (video_test_src_debug);
 #define DEFAULT_PATTERN            GST_VIDEO_TEST_SRC_SMPTE
 #define DEFAULT_TIMESTAMP_OFFSET   0
 #define DEFAULT_IS_LIVE            FALSE
-#define DEFAULT_PEER_ALLOC         TRUE
 #define DEFAULT_COLOR_SPEC         GST_VIDEO_TEST_SRC_BT601
 #define DEFAULT_FOREGROUND_COLOR   0xffffffff
 #define DEFAULT_BACKGROUND_COLOR   0xff000000
@@ -61,7 +60,6 @@ enum
   PROP_PATTERN,
   PROP_TIMESTAMP_OFFSET,
   PROP_IS_LIVE,
-  PROP_PEER_ALLOC,
   PROP_COLOR_SPEC,
   PROP_K0,
   PROP_KX,
@@ -193,10 +191,6 @@ gst_video_test_src_class_init (GstVideoTestSrcClass * klass)
   g_object_class_install_property (gobject_class, PROP_IS_LIVE,
       g_param_spec_boolean ("is-live", "Is Live",
           "Whether to act as a live source", DEFAULT_IS_LIVE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_PEER_ALLOC,
-      g_param_spec_boolean ("peer-alloc", "Peer Alloc",
-          "Ask the peer to allocate an output buffer", DEFAULT_PEER_ALLOC,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_COLOR_SPEC,
       g_param_spec_enum ("colorspec", "Color Specification",
@@ -331,7 +325,6 @@ gst_video_test_src_init (GstVideoTestSrc * src)
   /* we operate in time */
   gst_base_src_set_format (GST_BASE_SRC (src), GST_FORMAT_TIME);
   gst_base_src_set_live (GST_BASE_SRC (src), DEFAULT_IS_LIVE);
-  src->peer_alloc = DEFAULT_PEER_ALLOC;
 }
 
 static void
@@ -449,9 +442,6 @@ gst_video_test_src_set_property (GObject * object, guint prop_id,
     case PROP_IS_LIVE:
       gst_base_src_set_live (GST_BASE_SRC (src), g_value_get_boolean (value));
       break;
-    case PROP_PEER_ALLOC:
-      src->peer_alloc = g_value_get_boolean (value);
-      break;
     case PROP_COLOR_SPEC:
       break;
     case PROP_K0:
@@ -518,9 +508,6 @@ gst_video_test_src_get_property (GObject * object, guint prop_id,
       break;
     case PROP_IS_LIVE:
       g_value_set_boolean (value, gst_base_src_is_live (GST_BASE_SRC (src)));
-      break;
-    case PROP_PEER_ALLOC:
-      g_value_set_boolean (value, src->peer_alloc);
       break;
     case PROP_COLOR_SPEC:
       break;

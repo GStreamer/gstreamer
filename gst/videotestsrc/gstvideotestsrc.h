@@ -150,7 +150,6 @@ struct _GstVideoTestSrc {
   gint64 timestamp_offset;              /* base offset */
   GstClockTime running_time;            /* total running time */
   gint64 n_frames;                      /* total frames sent */
-  gboolean peer_alloc;
 
   /* zoneplate */
   gint k0;
