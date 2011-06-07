@@ -463,16 +463,15 @@ AG_GST_CHECK_FEATURE(DIRECT3D, [Direct3D plug-in], direct3dsink, [
   save_LIBS="$LIBS"
   CFLAGS="$CFLAGS $DIRECTX_CFLAGS"
   LDFLAGS="$LDFLAGS $DIRECTX_LDFLAGS"
-  LIBS="$LIBS -ld3d -lgdi32"
+  LIBS="$LIBS -ld3d9 -lgdi32"
   AC_MSG_CHECKING(for Direct3D LDFLAGS)
   AC_LINK_IFELSE([
 #include <windows.h>
-#include <d3d.h>
+#include <d3d9.h>
 
 int main ()
 {
-  GetStockObject(0);
-  Direct3DCreate(NULL, NULL, NULL);
+  Direct3DCreate9(D3D_SDK_VERSION);
 
   return 0;
 }
@@ -485,8 +484,7 @@ int main ()
   LIBS=$save_LIBS
 
   if test "x$HAVE_DIRECT3D" = "xyes";  then
-    dnl this is much more than we want
-    DIRECT3D_LIBS="-ld3d -ldxguid -lgdi32"
+    DIRECT3D_LIBS="-lgdi32"
     AC_SUBST(DIRECT3D_LIBS)
   fi
   AC_SUBST(HAVE_DIRECT3D)
