@@ -78,6 +78,7 @@ CRUFT_DIRS = \
 	$(top_srcdir)/gst/amrparse \
 	$(top_srcdir)/gst/flacparse \
 	$(top_srcdir)/gst/imagefreeze \
+	$(top_srcdir)/gst/invtelecine \
 	$(top_srcdir)/gst/qtmux \
 	$(top_srcdir)/gst/selector \
 	$(top_srcdir)/gst/shapewipe \
