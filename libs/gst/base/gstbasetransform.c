@@ -1159,11 +1159,6 @@ gst_base_transform_setcaps (GstBaseTransform * trans, GstPad * pad,
   otherpad = (pad == trans->srcpad) ? trans->sinkpad : trans->srcpad;
   otherpeer = gst_pad_get_peer (otherpad);
 
-  /* if we get called recursively, we bail out now to avoid an
-   * infinite loop. */
-  if (GST_PAD_IS_IN_SETCAPS (otherpad))
-    goto done;
-
   GST_DEBUG_OBJECT (pad, "have new caps %p %" GST_PTR_FORMAT, caps, caps);
 
   /* find best possible caps for the other pad */

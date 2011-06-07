@@ -207,7 +207,8 @@ gst_check_setup_src_pad (GstElement * element,
 
   srcpad = gst_check_setup_src_pad_by_name (element, tmpl, "sink");
   if (caps)
-    fail_unless (gst_pad_set_caps (srcpad, caps), "could not set caps on pad");
+    fail_unless (gst_pad_push_event (srcpad, gst_event_new_caps (caps)),
+        "could not set caps on pad");
   return srcpad;
 }
 
@@ -286,7 +287,8 @@ gst_check_setup_sink_pad (GstElement * element, GstStaticPadTemplate * tmpl,
 
   sinkpad = gst_check_setup_sink_pad_by_name (element, tmpl, "src");
   if (caps)
-    fail_unless (gst_pad_set_caps (sinkpad, caps), "Could not set pad caps");
+    fail_unless (gst_pad_send_event (sinkpad, gst_event_new_caps (caps)),
+        "Could not set pad caps");
   return sinkpad;
 }
 

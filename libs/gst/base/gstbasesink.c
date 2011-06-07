@@ -4248,7 +4248,8 @@ gst_base_sink_negotiate_pull (GstBaseSink * basesink)
     GST_DEBUG_OBJECT (basesink, "fixated to: %" GST_PTR_FORMAT, caps);
 
     if (gst_caps_is_fixed (caps)) {
-      if (!gst_pad_set_caps (GST_BASE_SINK_PAD (basesink), caps))
+      if (!gst_pad_send_event (GST_BASE_SINK_PAD (basesink),
+              gst_event_new_caps (caps)))
         goto could_not_set_caps;
 
       GST_OBJECT_LOCK (basesink);

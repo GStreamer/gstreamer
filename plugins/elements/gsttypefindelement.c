@@ -144,9 +144,10 @@ static gboolean gst_type_find_element_src_event (GstPad * pad,
     GstEvent * event);
 static gboolean gst_type_find_handle_src_query (GstPad * pad, GstQuery * query);
 
-static gboolean gst_type_find_element_handle_event (GstPad * pad,
+static gboolean gst_type_find_element_sink_event (GstPad * pad,
     GstEvent * event);
-static gboolean gst_type_find_element_setcaps (GstPad * pad, GstCaps * caps);
+static gboolean gst_type_find_element_setcaps (GstTypeFindElement * typefind,
+    GstCaps * caps);
 static GstFlowReturn gst_type_find_element_chain (GstPad * sinkpad,
     GstBuffer * buffer);
 static GstFlowReturn gst_type_find_element_getrange (GstPad * srcpad,
@@ -184,7 +185,7 @@ gst_type_find_element_have_type (GstTypeFindElement * typefind,
   copy = gst_caps_ref (typefind->caps);
   GST_OBJECT_UNLOCK (typefind);
 
-  gst_pad_set_caps (typefind->src, copy);
+  gst_pad_push_event (typefind->src, gst_event_new_caps (copy));
   gst_caps_unref (copy);
 }
 
@@ -258,12 +259,10 @@ gst_type_find_element_init (GstTypeFindElement * typefind)
 
   gst_pad_set_activate_function (typefind->sink,
       GST_DEBUG_FUNCPTR (gst_type_find_element_activate));
-  gst_pad_set_setcaps_function (typefind->sink,
-      GST_DEBUG_FUNCPTR (gst_type_find_element_setcaps));
   gst_pad_set_chain_function (typefind->sink,
       GST_DEBUG_FUNCPTR (gst_type_find_element_chain));
   gst_pad_set_event_function (typefind->sink,
-      GST_DEBUG_FUNCPTR (gst_type_find_element_handle_event));
+      GST_DEBUG_FUNCPTR (gst_type_find_element_sink_event));
   gst_element_add_pad (GST_ELEMENT (typefind), typefind->sink);
 
   /* srcpad */
@@ -519,7 +518,7 @@ no_data:
 }
 
 static gboolean
-gst_type_find_element_handle_event (GstPad * pad, GstEvent * event)
+gst_type_find_element_sink_event (GstPad * pad, GstEvent * event)
 {
   gboolean res = FALSE;
   GstTypeFindElement *typefind = GST_TYPE_FIND_ELEMENT (GST_PAD_PARENT (pad));
@@ -530,6 +529,20 @@ gst_type_find_element_handle_event (GstPad * pad, GstEvent * event)
   switch (typefind->mode) {
     case MODE_TYPEFIND:
       switch (GST_EVENT_TYPE (event)) {
+        case GST_EVENT_CAPS:
+        {
+          GstCaps *caps;
+
+          /* first pass the caps event downstream */
+          res = gst_pad_push_event (typefind->src, gst_event_ref (event));
+
+          /* then parse and push out our data */
+          gst_event_parse_caps (event, &caps);
+          res = gst_type_find_element_setcaps (typefind, caps);
+
+          gst_event_unref (event);
+          break;
+        }
         case GST_EVENT_EOS:
         {
           GST_INFO_OBJECT (typefind, "Got EOS and no type found yet");
@@ -593,12 +606,8 @@ gst_type_find_element_send_cached_events (GstTypeFindElement * typefind)
 }
 
 static gboolean
-gst_type_find_element_setcaps (GstPad * pad, GstCaps * caps)
+gst_type_find_element_setcaps (GstTypeFindElement * typefind, GstCaps * caps)
 {
-  GstTypeFindElement *typefind;
-
-  typefind = GST_TYPE_FIND_ELEMENT (GST_PAD_PARENT (pad));
-
   /* don't operate on ANY caps */
   if (gst_caps_is_any (caps))
     return TRUE;
