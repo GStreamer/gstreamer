@@ -1448,8 +1448,12 @@ no_func:
 static gboolean
 gst_pad_get_query_types_dispatcher (GstPad * pad, const GstQueryType ** data)
 {
-  *data = gst_pad_get_query_types (pad);
+  GstPad *peer;
 
+  if ((peer = gst_pad_get_peer (pad))) {
+    *data = gst_pad_get_query_types (peer);
+    gst_object_unref (peer);
+  }
   return TRUE;
 }
 
@@ -1457,8 +1461,8 @@ gst_pad_get_query_types_dispatcher (GstPad * pad, const GstQueryType ** data)
  * gst_pad_get_query_types_default:
  * @pad: a #GstPad.
  *
- * Invoke the default dispatcher for the query types on
- * the pad.
+ * Invoke the default query types function on the pad. This function will get
+ * the supported query type from the peer of an internally linked pad of @pad.
  *
  * Returns: (transfer none) (array zero-terminated=1): a zero-terminated array
  *     of #GstQueryType, or NULL if none of the internally-linked pads has a
@@ -1471,7 +1475,7 @@ gst_pad_get_query_types_default (GstPad * pad)
 
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
-  gst_pad_dispatcher (pad, (GstPadDispatcherFunction)
+  gst_pad_forward (pad, (GstPadForwardFunction)
       gst_pad_get_query_types_dispatcher, &result);
 
   return result;
@@ -3086,18 +3090,29 @@ gst_pad_iterate_internal_links (GstPad * pad)
   return res;
 }
 
-static gboolean
-gst_pad_event_default_dispatch (GstPad * pad, GstEvent * event)
+/**
+ * gst_pad_forward:
+ * @pad: a #GstPad
+ * @forward: a #GstPadForwardFunction
+ * @user_data: user data passed to @forward
+ *
+ * Calls @forward for all internally linked pads of @pad. This function deals with
+ * dynamically changing internal pads and will make sure that the @forward
+ * function is only called once for each pad.
+ *
+ * When @forward returns TRUE, no further pads will be processed.
+ *
+ * Returns: TRUE if one of the dispatcher functions returned TRUE.
+ */
+gboolean
+gst_pad_forward (GstPad * pad, GstPadForwardFunction forward,
+    gpointer user_data)
 {
   gboolean result = FALSE;
   GstIterator *iter;
   gboolean done = FALSE;
   GValue item = { 0, };
-  GstPad *eventpad;
   GList *pushed_pads = NULL;
-
-  GST_INFO_OBJECT (pad, "Sending event %p (%s) to all internally linked pads",
-      event, GST_EVENT_TYPE_NAME (event));
 
   iter = gst_pad_iterate_internal_links (pad);
 
@@ -3107,37 +3122,26 @@ gst_pad_event_default_dispatch (GstPad * pad, GstEvent * event)
   while (!done) {
     switch (gst_iterator_next (iter, &item)) {
       case GST_ITERATOR_OK:
-        eventpad = g_value_get_object (&item);
+      {
+        GstPad *intpad;
 
-        /* if already pushed,  skip */
-        if (g_list_find (pushed_pads, eventpad)) {
+        intpad = g_value_get_object (&item);
+
+        /* if already pushed, skip. FIXME, find something faster to tag pads */
+        if (g_list_find (pushed_pads, intpad)) {
           g_value_reset (&item);
           break;
         }
 
-        if (GST_PAD_IS_SRC (eventpad)) {
-          /* for each pad we send to, we should ref the event; it's up
-           * to downstream to unref again when handled. */
-          GST_LOG_OBJECT (pad, "Reffing and sending event %p (%s) to %s:%s",
-              event, GST_EVENT_TYPE_NAME (event),
-              GST_DEBUG_PAD_NAME (eventpad));
-          gst_event_ref (event);
-          result |= gst_pad_push_event (eventpad, event);
-        } else {
-          /* we only send the event on one pad, multi-sinkpad elements
-           * should implement a handler */
-          GST_LOG_OBJECT (pad, "sending event %p (%s) to one sink pad %s:%s",
-              event, GST_EVENT_TYPE_NAME (event),
-              GST_DEBUG_PAD_NAME (eventpad));
-          result = gst_pad_push_event (eventpad, event);
-          done = TRUE;
-          event = NULL;
-        }
+        GST_LOG_OBJECT (pad, "calling forward function on pad %s:%s",
+            GST_DEBUG_PAD_NAME (intpad));
+        done = result = forward (intpad, user_data);
 
-        pushed_pads = g_list_prepend (pushed_pads, eventpad);
+        pushed_pads = g_list_prepend (pushed_pads, intpad);
 
         g_value_reset (&item);
         break;
+      }
       case GST_ITERATOR_RESYNC:
         /* We don't reset the result here because we don't push the event
          * again on pads that got the event already and because we need
@@ -3156,23 +3160,55 @@ gst_pad_event_default_dispatch (GstPad * pad, GstEvent * event)
   g_value_unset (&item);
   gst_iterator_free (iter);
 
-no_iter:
-
-  /* If this is a sinkpad and we don't have pads to send the event to, we
-   * return TRUE. This is so that when using the default handler on a sink
-   * element, we don't fail to push it. */
-  if (!pushed_pads)
-    result = GST_PAD_IS_SINK (pad);
-
   g_list_free (pushed_pads);
 
-  /* we handled the incoming event so we unref once */
-  if (event) {
-    GST_LOG_OBJECT (pad, "handled event %p, unreffing", event);
-    gst_event_unref (event);
-  }
-
+no_iter:
   return result;
+}
+
+typedef struct
+{
+  GstEvent *event;
+  gboolean res;
+} EventData;
+
+static gboolean
+event_forward_func (GstPad * pad, EventData * data)
+{
+  /* for each pad we send to, we should ref the event; it's up
+   * to downstream to unref again when handled. */
+  GST_LOG_OBJECT (pad, "Reffing and pushing event %p (%s) to %s:%s",
+      data->event, GST_EVENT_TYPE_NAME (data->event), GST_DEBUG_PAD_NAME (pad));
+
+  data->res |= gst_pad_push_event (pad, gst_event_ref (data->event));
+
+  /* don't stop */
+  return FALSE;
+}
+
+/**
+ * gst_pad_event_forward:
+ * @pad: a #GstPad
+ * @event: (transfer full): the #GstEvent to handle.
+ *
+ * Forward @event to all internally linked pads of @pad.
+ *
+ * Returns: TRUE if the event was sent succesfully.
+ */
+gboolean
+gst_pad_event_forward (GstPad * pad, GstEvent * event)
+{
+  EventData data;
+
+  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
+  g_return_val_if_fail (event != NULL, FALSE);
+
+  data.event = event;
+  data.res = FALSE;
+
+  gst_pad_forward (pad, (GstPadForwardFunction) event_forward_func, &data);
+
+  return data.res;
 }
 
 /**
@@ -3180,11 +3216,14 @@ no_iter:
  * @pad: a #GstPad to call the default event handler on.
  * @event: (transfer full): the #GstEvent to handle.
  *
- * Invokes the default event handler for the given pad. End-of-stream and
- * discontinuity events are handled specially, and then the event is sent to all
- * pads internally linked to @pad. Note that if there are many possible sink
- * pads that are internally linked to @pad, only one will be sent an event.
- * Multi-sinkpad elements should implement custom event handlers.
+ * Invokes the default event handler for the given pad.
+ *
+ * The EOS event will pause the task associated with @pad before it is forwarded
+ * to all internally linked pads,
+ *
+ * The CAPS event will never be forwarded.
+ *
+ * The the event is sent to all pads internally linked to @pad.
  *
  * Returns: TRUE if the event was sent succesfully.
  */
@@ -3216,81 +3255,11 @@ gst_pad_event_default (GstPad * pad, GstEvent * event)
   }
 
   if (forward)
-    result = gst_pad_event_default_dispatch (pad, event);
+    result = gst_pad_event_forward (pad, event);
   else
     gst_event_unref (event);
 
   return result;
-}
-
-/**
- * gst_pad_dispatcher:
- * @pad: a #GstPad to dispatch.
- * @dispatch: the #GstPadDispatcherFunction to call.
- * @data: (closure): gpointer user data passed to the dispatcher function.
- *
- * Invokes the given dispatcher function on each respective peer of
- * all pads that are internally linked to the given pad.
- * The GstPadDispatcherFunction should return TRUE when no further pads
- * need to be processed.
- *
- * Returns: TRUE if one of the dispatcher functions returned TRUE.
- */
-gboolean
-gst_pad_dispatcher (GstPad * pad, GstPadDispatcherFunction dispatch,
-    gpointer data)
-{
-  gboolean res = FALSE;
-  GstIterator *iter = NULL;
-  gboolean done = FALSE;
-  GValue item = { 0, };
-
-  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
-  g_return_val_if_fail (dispatch != NULL, FALSE);
-
-  iter = gst_pad_iterate_internal_links (pad);
-
-  if (!iter)
-    goto no_iter;
-
-  while (!done) {
-    switch (gst_iterator_next (iter, &item)) {
-      case GST_ITERATOR_OK:
-      {
-        GstPad *int_pad = g_value_get_object (&item);
-        GstPad *int_peer = gst_pad_get_peer (int_pad);
-
-        if (int_peer) {
-          GST_DEBUG_OBJECT (int_pad, "dispatching to peer %s:%s",
-              GST_DEBUG_PAD_NAME (int_peer));
-          done = res = dispatch (int_peer, data);
-          gst_object_unref (int_peer);
-        } else {
-          GST_DEBUG_OBJECT (int_pad, "no peer");
-        }
-        g_value_reset (&item);
-      }
-        break;
-      case GST_ITERATOR_RESYNC:
-        gst_iterator_resync (iter);
-        break;
-      case GST_ITERATOR_ERROR:
-        done = TRUE;
-        GST_ERROR_OBJECT (pad, "Could not iterate internally linked pads");
-        break;
-      case GST_ITERATOR_DONE:
-        done = TRUE;
-        break;
-    }
-  }
-  g_value_unset (&item);
-  gst_iterator_free (iter);
-
-  GST_DEBUG_OBJECT (pad, "done, result %d", res);
-
-no_iter:
-
-  return res;
 }
 
 /**
@@ -3416,8 +3385,8 @@ gst_pad_query_default (GstPad * pad, GstQuery * query)
     case GST_QUERY_RATE:
     case GST_QUERY_CONVERT:
     default:
-      return gst_pad_dispatcher
-          (pad, (GstPadDispatcherFunction) gst_pad_query, query);
+      return gst_pad_forward
+          (pad, (GstPadForwardFunction) gst_pad_peer_query, query);
   }
 }
 

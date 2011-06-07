@@ -459,16 +459,16 @@ typedef void			(*GstPadFixateCapsFunction)	(GstPad *pad, GstCaps *caps);
 
 /* misc */
 /**
- * GstPadDispatcherFunction:
- * @pad: the #GstPad that is dispatched.
- * @data: the gpointer to optional user data.
+ * GstPadForwardFunction:
+ * @pad: the #GstPad that is forwarded.
+ * @user_data: the gpointer to optional user data.
  *
- * A dispatcher function is called for all internally linked pads, see
- * gst_pad_dispatcher().
+ * A forward function is called for all internally linked pads, see
+ * gst_pad_forward().
  *
  * Returns: TRUE if the dispatching procedure has to be stopped.
  */
-typedef gboolean		(*GstPadDispatcherFunction)	(GstPad *pad, gpointer data);
+typedef gboolean		(*GstPadForwardFunction)	(GstPad *pad, gpointer user_data);
 
 /**
  * GstProbeType:
@@ -912,6 +912,7 @@ GstFlowReturn		gst_pad_pull_range			(GstPad *pad, guint64 offset, guint size,
 								 GstBuffer **buffer);
 gboolean		gst_pad_push_event			(GstPad *pad, GstEvent *event);
 gboolean		gst_pad_event_default			(GstPad *pad, GstEvent *event);
+gboolean		gst_pad_event_forward			(GstPad *pad, GstEvent *event);
 
 /* data passing functions on pad */
 GstFlowReturn		gst_pad_chain				(GstPad *pad, GstBuffer *buffer);
@@ -946,8 +947,8 @@ void			gst_pad_set_query_function		(GstPad *pad, GstPadQueryFunction query);
 gboolean		gst_pad_query_default			(GstPad *pad, GstQuery *query);
 
 /* misc helper functions */
-gboolean		gst_pad_dispatcher			(GstPad *pad, GstPadDispatcherFunction dispatch,
-								 gpointer data);
+gboolean		gst_pad_forward                         (GstPad *pad, GstPadForwardFunction forward,
+								 gpointer user_data);
 
 G_END_DECLS
 
