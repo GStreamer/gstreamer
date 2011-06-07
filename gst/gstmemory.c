@@ -27,9 +27,10 @@
  * GstMemory is a lightweight refcounted object that wraps a region of memory.
  * They are typically used to manage the data of a #GstBuffer.
  *
+ * Memory is created by allocators.
+ *
  * New memory can be created with gst_memory_new_wrapped() that wraps the memory
- * allocated elsewhere and gst_memory_new_alloc() that creates a new GstMemory
- * and the memory inside it.
+ * allocated elsewhere.
  *
  * Refcounting of the memory block is performed with gst_memory_ref() and
  * gst_memory_unref().
@@ -56,7 +57,7 @@
 #include "gstmemory.h"
 
 
-struct _GstMemoryImpl
+struct _GstMemoryAllocator
 {
   GQuark name;
 
@@ -75,8 +76,12 @@ typedef struct
   gsize size;
 } GstMemoryDefault;
 
-static const GstMemoryImpl *_default_mem_impl;
-static const GstMemoryImpl *_default_share_impl;
+/* the default allocator */
+static const GstMemoryAllocator *_default_allocator;
+
+/* our predefined allocators */
+static const GstMemoryAllocator *_default_mem_impl;
+static const GstMemoryAllocator *_default_share_impl;
 
 /* initialize the fields */
 static void
@@ -84,7 +89,7 @@ _default_mem_init (GstMemoryDefault * mem, GstMemoryFlags flags,
     GstMemory * parent, gsize slice_size, gpointer data,
     GFreeFunc free_func, gsize maxsize, gsize offset, gsize size)
 {
-  mem->mem.impl = data ? _default_mem_impl : _default_share_impl;
+  mem->mem.allocator = data ? _default_mem_impl : _default_share_impl;
   mem->mem.flags = flags;
   mem->mem.refcount = 1;
   mem->mem.parent = parent ? gst_memory_ref (parent) : NULL;
@@ -139,6 +144,13 @@ _default_mem_new_block (gsize maxsize, gsize align, gsize offset, gsize size)
       aoffset + offset, size);
 
   return mem;
+}
+
+static GstMemory *
+_default_mem_alloc (const GstMemoryAllocator * allocator, gsize maxsize,
+    gsize align)
+{
+  return (GstMemory *) _default_mem_new_block (maxsize, align, 0, maxsize);
 }
 
 static gsize
@@ -301,10 +313,14 @@ _fallback_is_span (GstMemory * mem1, GstMemory * mem2, gsize * offset)
   return FALSE;
 }
 
+static GStaticRWLock lock = G_STATIC_RW_LOCK_INIT;
+static GHashTable *memoryimpl;
+
 void
 _gst_memory_init (void)
 {
   static const GstMemoryInfo _mem_info = {
+    (GstMemoryAllocFunction) _default_mem_alloc,
     (GstMemoryGetSizesFunction) _default_mem_get_sizes,
     (GstMemoryResizeFunction) _default_mem_resize,
     (GstMemoryMapFunction) _default_mem_map,
@@ -312,9 +328,11 @@ _gst_memory_init (void)
     (GstMemoryFreeFunction) _default_mem_free,
     (GstMemoryCopyFunction) _default_mem_copy,
     (GstMemoryShareFunction) _default_mem_share,
-    (GstMemoryIsSpanFunction) _default_mem_is_span
+    (GstMemoryIsSpanFunction) _default_mem_is_span,
+    NULL
   };
   static const GstMemoryInfo _share_info = {
+    (GstMemoryAllocFunction) _default_mem_alloc,
     (GstMemoryGetSizesFunction) _default_mem_get_sizes,
     (GstMemoryResizeFunction) _default_mem_resize,
     (GstMemoryMapFunction) _default_share_map,
@@ -322,57 +340,18 @@ _gst_memory_init (void)
     (GstMemoryFreeFunction) _default_mem_free,
     NULL,
     NULL,
+    NULL,
     NULL
   };
 
-  _default_mem_impl = gst_memory_register ("GstMemoryDefault", &_mem_info);
+  memoryimpl = g_hash_table_new (g_str_hash, g_str_equal);
+
+  _default_mem_impl =
+      gst_memory_allocator_register ("GstMemoryDefault", &_mem_info);
   _default_share_impl =
-      gst_memory_register ("GstMemorySharebuffer", &_share_info);
-}
+      gst_memory_allocator_register ("GstMemorySharebuffer", &_share_info);
 
-/**
- * gst_memory_register:
- * @name: the name of the implementation
- * @info: #GstMemoryInfo
- *
- * Registers the memory implementation with @name and implementation functions
- * @info.
- *
- * Returns: a new #GstMemoryImpl.
- */
-const GstMemoryImpl *
-gst_memory_register (const gchar * name, const GstMemoryInfo * info)
-{
-  GstMemoryImpl *impl;
-
-#define INSTALL_FALLBACK(_t) \
-  if (impl->info._t == NULL) impl->info._t = _fallback_ ##_t;
-
-  g_return_val_if_fail (name != NULL, NULL);
-  g_return_val_if_fail (info != NULL, NULL);
-  g_return_val_if_fail (info->get_sizes != NULL, NULL);
-  g_return_val_if_fail (info->resize != NULL, NULL);
-  g_return_val_if_fail (info->map != NULL, NULL);
-  g_return_val_if_fail (info->unmap != NULL, NULL);
-  g_return_val_if_fail (info->free != NULL, NULL);
-
-  impl = g_slice_new (GstMemoryImpl);
-  impl->name = g_quark_from_string (name);
-  impl->info = *info;
-  INSTALL_FALLBACK (copy);
-  INSTALL_FALLBACK (share);
-  INSTALL_FALLBACK (is_span);
-
-  GST_DEBUG ("register \"%s\" of size %" G_GSIZE_FORMAT, name);
-
-#if 0
-  g_static_rw_lock_writer_lock (&lock);
-  g_hash_table_insert (memoryimpl, (gpointer) name, (gpointer) impl);
-  g_static_rw_lock_writer_unlock (&lock);
-#endif
-#undef INSTALL_FALLBACK
-
-  return impl;
+  _default_allocator = _default_mem_impl;
 }
 
 /**
@@ -398,31 +377,6 @@ gst_memory_new_wrapped (GstMemoryFlags flags, gpointer data,
   g_return_val_if_fail (offset + size <= maxsize, NULL);
 
   mem = _default_mem_new (flags, NULL, data, free_func, maxsize, offset, size);
-
-  return (GstMemory *) mem;
-}
-
-/**
- * gst_memory_new_alloc:
- * @maxsize: allocated size of @data
- * @align: alignment for the data
- *
- * Allocate a new memory block with memory that is at least @maxsize big and has
- * the given alignment.
- *
- * @align is given as a bitmask so that @align + 1 equals the amount of bytes to
- * align to. For example, to align to 8 bytes, use an alignment of 7.
- *
- * Returns: a new #GstMemory.
- */
-GstMemory *
-gst_memory_new_alloc (gsize maxsize, gsize align)
-{
-  GstMemoryDefault *mem;
-
-  g_return_val_if_fail (((align + 1) & align) == 0, NULL);
-
-  mem = _default_mem_new_block (maxsize, align, 0, maxsize);
 
   return (GstMemory *) mem;
 }
@@ -456,10 +410,10 @@ void
 gst_memory_unref (GstMemory * mem)
 {
   g_return_if_fail (mem != NULL);
-  g_return_if_fail (mem->impl != NULL);
+  g_return_if_fail (mem->allocator != NULL);
 
   if (g_atomic_int_dec_and_test (&mem->refcount))
-    mem->impl->info.free (mem);
+    mem->allocator->info.free (mem);
 }
 
 /**
@@ -476,7 +430,7 @@ gst_memory_get_sizes (GstMemory * mem, gsize * maxsize)
 {
   g_return_val_if_fail (mem != NULL, 0);
 
-  return mem->impl->info.get_sizes (mem, maxsize);
+  return mem->allocator->info.get_sizes (mem, maxsize);
 }
 
 /**
@@ -494,7 +448,7 @@ gst_memory_resize (GstMemory * mem, gsize offset, gsize size)
   g_return_if_fail (mem != NULL);
   g_return_if_fail (GST_MEMORY_IS_WRITABLE (mem));
 
-  mem->impl->info.resize (mem, offset, size);
+  mem->allocator->info.resize (mem, offset, size);
 }
 
 /**
@@ -519,7 +473,7 @@ gst_memory_map (GstMemory * mem, gsize * size, gsize * maxsize,
   g_return_val_if_fail (!(flags & GST_MAP_WRITE) ||
       GST_MEMORY_IS_WRITABLE (mem), NULL);
 
-  return mem->impl->info.map (mem, size, maxsize, flags);
+  return mem->allocator->info.map (mem, size, maxsize, flags);
 }
 
 /**
@@ -539,7 +493,7 @@ gst_memory_unmap (GstMemory * mem, gpointer data, gsize size)
 {
   g_return_val_if_fail (mem != NULL, FALSE);
 
-  return mem->impl->info.unmap (mem, data, size);
+  return mem->allocator->info.unmap (mem, data, size);
 }
 
 /**
@@ -559,7 +513,7 @@ gst_memory_copy (GstMemory * mem, gsize offset, gsize size)
 {
   g_return_val_if_fail (mem != NULL, NULL);
 
-  return mem->impl->info.copy (mem, offset, size);
+  return mem->allocator->info.copy (mem, offset, size);
 }
 
 /**
@@ -580,7 +534,7 @@ gst_memory_share (GstMemory * mem, gsize offset, gsize size)
 {
   g_return_val_if_fail (mem != NULL, NULL);
 
-  return mem->impl->info.share (mem, offset, size);
+  return mem->allocator->info.share (mem, offset, size);
 }
 
 /**
@@ -604,8 +558,8 @@ gst_memory_is_span (GstMemory * mem1, GstMemory * mem2, gsize * offset)
   g_return_val_if_fail (mem1 != NULL, FALSE);
   g_return_val_if_fail (mem2 != NULL, FALSE);
 
-  /* need to have the same implementation */
-  if (mem1->impl != mem2->impl)
+  /* need to have the same allocators */
+  if (mem1->allocator != mem2->allocator)
     return FALSE;
 
   /* need to have the same parent */
@@ -613,8 +567,129 @@ gst_memory_is_span (GstMemory * mem1, GstMemory * mem2, gsize * offset)
     return FALSE;
 
   /* and memory is contiguous */
-  if (!mem1->impl->info.is_span (mem1, mem2, offset))
+  if (!mem1->allocator->info.is_span (mem1, mem2, offset))
     return FALSE;
 
   return TRUE;
+}
+
+/**
+ * gst_memory_allocator_register:
+ * @name: the name of the allocator
+ * @info: #GstMemoryInfo
+ *
+ * Registers the memory allocator with @name and implementation functions
+ * @info.
+ *
+ * Returns: a new #GstMemoryAllocator.
+ */
+const GstMemoryAllocator *
+gst_memory_allocator_register (const gchar * name, const GstMemoryInfo * info)
+{
+  GstMemoryAllocator *allocator;
+
+#define INSTALL_FALLBACK(_t) \
+  if (allocator->info._t == NULL) allocator->info._t = _fallback_ ##_t;
+
+  g_return_val_if_fail (name != NULL, NULL);
+  g_return_val_if_fail (info != NULL, NULL);
+  g_return_val_if_fail (info->get_sizes != NULL, NULL);
+  g_return_val_if_fail (info->resize != NULL, NULL);
+  g_return_val_if_fail (info->map != NULL, NULL);
+  g_return_val_if_fail (info->unmap != NULL, NULL);
+  g_return_val_if_fail (info->free != NULL, NULL);
+
+  allocator = g_slice_new (GstMemoryAllocator);
+  allocator->name = g_quark_from_string (name);
+  allocator->info = *info;
+  INSTALL_FALLBACK (copy);
+  INSTALL_FALLBACK (share);
+  INSTALL_FALLBACK (is_span);
+#undef INSTALL_FALLBACK
+
+  GST_DEBUG ("register \"%s\" of size %" G_GSIZE_FORMAT, name);
+
+  g_static_rw_lock_writer_lock (&lock);
+  g_hash_table_insert (memoryimpl, (gpointer) name, (gpointer) allocator);
+  g_static_rw_lock_writer_unlock (&lock);
+
+  return allocator;
+}
+
+/**
+ * gst_memory_allocator_find:
+ * @name: the name of the allocator
+ *
+ * Find a previously registered allocator with @name.
+ *
+ * Returns: a #GstMemoryAllocator or NULL when the allocator with @name was not
+ * registered.
+ */
+const GstMemoryAllocator *
+gst_memory_allocator_find (const gchar * name)
+{
+  GstMemoryAllocator *allocator;
+
+  g_return_val_if_fail (name != NULL, NULL);
+
+  g_static_rw_lock_writer_lock (&lock);
+  allocator = g_hash_table_lookup (memoryimpl, (gconstpointer) name);
+  g_static_rw_lock_writer_unlock (&lock);
+
+  return allocator;
+}
+
+/**
+ * gst_memory_allocator_get_default:
+ *
+ * Get the default allocator.
+ *
+ * Returns: the default #GstMemoryAllocator
+ */
+const GstMemoryAllocator *
+gst_memory_allocator_get_default (void)
+{
+  return _default_allocator;
+}
+
+/**
+ * gst_memory_allocator_set_default:
+ * @allocator: a ##GstMemoryAllocator
+ *
+ * Set the default allocator.
+ */
+void
+gst_memory_allocator_set_default (const GstMemoryAllocator * allocator)
+{
+  g_return_if_fail (allocator != NULL);
+
+  _default_allocator = allocator;
+}
+
+/**
+ * gst_memory_allocator_alloc:
+ * @allocator: a #GstMemoryAllocator to use
+ * @maxsize: allocated size of @data
+ * @align: alignment for the data
+ *
+ * Use @allocator to allocate a new memory block with memory that is at least
+ * @maxsize big and has the given alignment.
+ *
+ * @align is given as a bitmask so that @align + 1 equals the amount of bytes to
+ * align to. For example, to align to 8 bytes, use an alignment of 7.
+ *
+ * Returns: a new #GstMemory.
+ */
+GstMemory *
+gst_memory_allocator_alloc (const GstMemoryAllocator * allocator,
+    gsize maxsize, gsize align)
+{
+  g_return_val_if_fail (allocator == NULL
+      || allocator->info.alloc != NULL, NULL);
+  g_return_val_if_fail (((align + 1) & align) == 0, NULL);
+
+  if (allocator == NULL)
+    allocator = _default_allocator;
+
+  return allocator->info.alloc (allocator, maxsize, align);
 }

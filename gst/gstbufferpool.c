@@ -167,7 +167,8 @@ default_alloc_buffer (GstBufferPool * pool, GstBuffer ** buffer,
 
   align = priv->align - 1;
 
-  gst_buffer_take_memory (*buffer, gst_memory_new_alloc (priv->size, align));
+  gst_buffer_take_memory (*buffer, gst_memory_allocator_alloc (NULL, priv->size,
+          align));
 
   return GST_FLOW_OK;
 }

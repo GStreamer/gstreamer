@@ -31,7 +31,7 @@ G_BEGIN_DECLS
 
 typedef struct _GstMemory GstMemory;
 typedef struct _GstMemoryInfo GstMemoryInfo;
-typedef struct _GstMemoryImpl GstMemoryImpl;
+typedef struct _GstMemoryAllocator GstMemoryAllocator;
 
 /**
  * GstMemoryFlags:
@@ -62,7 +62,7 @@ typedef enum {
 
 /**
  * GstMemory:
- * @impl: pointer to the #GstMemoryImpl
+ * @allocator: pointer to the #GstMemoryAllocator
  * @flags: memory flags
  * @refcount: refcount
  * @parent: parent memory block
@@ -71,7 +71,7 @@ typedef enum {
  * as the first member of their structure.
  */
 struct _GstMemory {
-  const GstMemoryImpl *impl;
+  const GstMemoryAllocator *allocator;
 
   GstMemoryFlags  flags;
   gint            refcount;
@@ -103,6 +103,18 @@ typedef enum {
  * The name used for tracing memory allocations.
  */
 #define GST_MEMORY_TRACE_NAME           "GstMemory"
+
+/**
+ * GstMemoryGetSizesFunction:
+ * @maxsize: the maxsize
+ * @align: the alignment
+ *
+ * Allocate a new #GstMemory that hold at least @maxsize bytes and is aligned to
+ * (@align + 1) bytes.
+ *
+ * Returns: a newly allocated #GstMemory. Free with gst_memory_unref()
+ */
+typedef GstMemory *  (*GstMemoryAllocFunction)  (const GstMemoryAllocator *allocator, gsize maxsize, gsize align);
 
 /**
  * GstMemoryGetSizesFunction:
@@ -214,6 +226,7 @@ typedef gboolean    (*GstMemoryIsSpanFunction)    (GstMemory *mem1, GstMemory *m
 
 /**
  * GstMemoryInfo:
+ * @alloc: the implementation of the GstMemoryAllocFunction
  * @get_sizes: the implementation of the GstMemoryGetSizesFunction
  * @resize: the implementation of the GstMemoryResizeFunction
  * @map: the implementation of the GstMemoryMapFunction
@@ -222,11 +235,13 @@ typedef gboolean    (*GstMemoryIsSpanFunction)    (GstMemory *mem1, GstMemory *m
  * @copy: the implementation of the GstMemoryCopyFunction
  * @share: the implementation of the GstMemoryShareFunction
  * @is_span: the implementation of the GstMemoryIsSpanFunction
+ * @user_data: generic user data for the allocator
  *
- * The #GstMemoryInfo is used to register new memory implementations and contain
+ * The #GstMemoryInfo is used to register new memory allocators and contain
  * the implementations for various memory operations.
  */
 struct _GstMemoryInfo {
+  GstMemoryAllocFunction    alloc;
   GstMemoryGetSizesFunction get_sizes;
   GstMemoryResizeFunction   resize;
   GstMemoryMapFunction      map;
@@ -236,14 +251,24 @@ struct _GstMemoryInfo {
   GstMemoryCopyFunction     copy;
   GstMemoryShareFunction    share;
   GstMemoryIsSpanFunction   is_span;
+
+  gpointer user_data;
 };
 
 void _gst_memory_init (void);
 
+/* allocators */
+const GstMemoryAllocator *  gst_memory_allocator_register    (const gchar *name, const GstMemoryInfo *info);
+const GstMemoryAllocator *  gst_memory_allocator_find        (const gchar *name);
+
+const GstMemoryAllocator *  gst_memory_allocator_get_default (void);
+void                        gst_memory_allocator_set_default (const GstMemoryAllocator * allocator);
+
 /* allocating memory blocks */
-GstMemory * gst_memory_new_wrapped (GstMemoryFlags flags, gpointer data, GFreeFunc free_func,
-                                    gsize maxsize, gsize offset, gsize size);
-GstMemory * gst_memory_new_alloc   (gsize maxsize, gsize align);
+GstMemory * gst_memory_allocator_alloc (const GstMemoryAllocator * allocator,
+                                        gsize maxsize, gsize align);
+GstMemory * gst_memory_new_wrapped     (GstMemoryFlags flags, gpointer data, GFreeFunc free_func,
+                                        gsize maxsize, gsize offset, gsize size);
 
 /* refcounting */
 GstMemory * gst_memory_ref        (GstMemory *mem);
@@ -267,13 +292,6 @@ gboolean    gst_memory_is_span    (GstMemory *mem1, GstMemory *mem2, gsize *offs
 
 GstMemory * gst_memory_span       (GstMemory **mem1, gsize len1, gsize offset,
                                    GstMemory **mem2, gsize len2, gsize size);
-
-
-const GstMemoryImpl *  gst_memory_register    (const gchar *name, const GstMemoryInfo *info);
-
-#if 0
-const GstMemoryInfo *  gst_memory_get_info    (const gchar * impl);
-#endif
 
 G_END_DECLS
 
