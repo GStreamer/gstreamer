@@ -1760,6 +1760,108 @@ gst_query_parse_nth_allocation_meta (GstQuery * query, guint index)
 }
 
 /**
+ * gst_query_add_allocation_memory
+ * @query: a GST_QUERY_ALLOCATION type query #GstQuery
+ * @alloc: the memory allocator
+ *
+ * Add @alloc as a supported memory allocator.
+ */
+void
+gst_query_add_allocation_memory (GstQuery * query, const gchar * alloc)
+{
+  GValueArray *array;
+  const GValue *value;
+  GValue alloc_value = { 0 };
+  GstStructure *structure;
+
+  g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_ALLOCATION);
+  g_return_if_fail (gst_query_is_writable (query));
+
+  structure = GST_QUERY_STRUCTURE (query);
+  value = gst_structure_id_get_value (structure, GST_QUARK (ALLOCATOR));
+  if (value) {
+    array = (GValueArray *) g_value_get_boxed (value);
+  } else {
+    GValue new_array_val = { 0, };
+
+    array = g_value_array_new (0);
+
+    g_value_init (&new_array_val, G_TYPE_VALUE_ARRAY);
+    g_value_take_boxed (&new_array_val, array);
+
+    gst_structure_id_take_value (structure, GST_QUARK (ALLOCATOR),
+        &new_array_val);
+  }
+
+  g_value_init (&alloc_value, G_TYPE_STRING);
+  g_value_set_string (&alloc_value, alloc);
+  g_value_array_append (array, &alloc_value);
+  g_value_unset (&alloc_value);
+}
+
+/**
+ * gst_query_get_n_allocation_memories:
+ * @query: a GST_QUERY_ALLOCATION type query #GstQuery
+ *
+ * Retrieve the number of values currently stored in the
+ * allocator array of the query's structure.
+ *
+ * Returns: the allocator array size as a #guint.
+ */
+guint
+gst_query_get_n_allocation_memories (GstQuery * query)
+{
+  GValueArray *array;
+  const GValue *value;
+  guint size = 0;
+  GstStructure *structure;
+
+  g_return_val_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_ALLOCATION, 0);
+
+  structure = GST_QUERY_STRUCTURE (query);
+  value = gst_structure_id_get_value (structure, GST_QUARK (ALLOCATOR));
+  if (value) {
+    array = (GValueArray *) g_value_get_boxed (value);
+    size = array->n_values;
+  }
+  return size;
+}
+
+/**
+ * gst_query_parse_nth_allocation_memory
+ * @query: a GST_QUERY_ALLOCATION type query #GstQuery
+ * @index: position in the allocator array to read
+ *
+ * Parse an available query and get the alloctor
+ * at @index of the allocator array.
+ *
+ * Returns: the name of the allocator at @index.
+ */
+const gchar *
+gst_query_parse_nth_allocation_memory (GstQuery * query, guint index)
+{
+  const GValue *value;
+  const gchar *ret = NULL;
+  GstStructure *structure;
+
+  g_return_val_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_ALLOCATION, NULL);
+
+  structure = GST_QUERY_STRUCTURE (query);
+  value = gst_structure_id_get_value (structure, GST_QUARK (ALLOCATOR));
+  if (value) {
+    GValueArray *memory;
+    GValue *alloc_value;
+
+    memory = (GValueArray *) g_value_get_boxed (value);
+    alloc_value = g_value_array_get_nth (memory, index);
+
+    if (alloc_value)
+      ret = g_value_get_string (alloc_value);
+  }
+  return ret;
+}
+
+/**
  * gst_query_new_scheduling
  *
  * Constructs a new query object for querying the scheduling properties.
