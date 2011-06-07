@@ -143,7 +143,7 @@ transform function that can be used to modify the metadata when a transformation
 happens.
 
 There are no explicit methods to serialize and deserialize the metadata. Since
-each type has a GType, we can reuse the Gobject transform functions for this.
+each type has a GType, we can reuse the GValue transform functions for this.
 
 The purpose of the separate MetaInfo is to not have to carry the free/init functions in
 each buffer instance but to define them globally. We still want quick access to the info
@@ -303,7 +303,7 @@ Serialization
 When buffer should be sent over the wire or be serialized in GDP, we need a way
 to perform custom serialization and deserialization on the metadata.
 
-for this we can use the GType transform functions.
+for this we can use the GValue transform functions.
 
 
 Transformations

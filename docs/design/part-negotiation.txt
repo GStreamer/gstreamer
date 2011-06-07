@@ -35,7 +35,7 @@ The basics of negotiation are as follows:
    returning an appropriate GST_FLOW_NOT_NEGOTIATED return value from the
    chain function.
 
- - Upstream elements can request a format change of the stream by sending a
+ - Downstream elements can request a format change of the stream by sending a
    RECONFIGURE event upstream. Upstream elements will renegotiate a new format
    when they receive a RECONFIGURE event.
 
