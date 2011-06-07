@@ -55,23 +55,14 @@ struct _GstFileSrc {
   GstBaseSrc element;
 
   /*< private >*/
-  guint pagesize;			/* system page size */
-
   gchar *filename;			/* filename */
   gchar *uri;				/* caching the URI */
   gint fd;				/* open file descriptor */
   guint64 read_position;		/* position of fd */
 
-  gboolean touch;			/* whether to touch every page */
-  gboolean using_mmap;                  /* whether we opened it with mmap */
-  gboolean sequential;                  /* Whether to madvise (MADV_SEQUENTIAL) 
-                                           for mmap pages */
   gboolean seekable;                    /* whether the file is seekable */
   gboolean is_regular;                  /* whether it's a (symlink to a)
                                            regular file */
-  GstBuffer *mapbuf;
-  size_t mapsize;
-  gboolean use_mmap;
 };
 
 struct _GstFileSrcClass {
