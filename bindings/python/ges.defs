@@ -519,25 +519,6 @@
   )
 )
 
-(define-method set_data
-  (of-object "GESFormatter")
-  (c-name "ges_formatter_set_data")
-  (return-type "none")
-  (parameters
-    '("void*" "data")
-    '("gsize" "length")
-  )
-)
-
-(define-method get_data
-  (of-object "GESFormatter")
-  (c-name "ges_formatter_get_data")
-  (return-type "void*")
-  (parameters
-    '("gsize*" "length")
-  )
-)
-
 (define-method clear_data
   (of-object "GESFormatter")
   (c-name "ges_formatter_clear_data")

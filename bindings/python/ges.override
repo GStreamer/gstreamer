@@ -168,3 +168,5 @@ _wrap_ges_timeline_object_get_track_objects(PyGObject *self)
 ignore-glob
 
   *_get_type
+  ges_formatter_set_data
+  ges_formatter_set_data
