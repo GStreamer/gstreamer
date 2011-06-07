@@ -25,7 +25,6 @@
  * SECTION:gstutils
  * @short_description: Various utility functions
  *
- * When defining own plugins, use the GST_BOILERPLATE ease gobject creation.
  */
 
 #include "gst_private.h"

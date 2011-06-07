@@ -132,6 +132,7 @@ typedef enum
 #include <gst/gstelement.h>
 #include <gst/gsttaglist.h>
 #include <gst/gststructure.h>
+#include <gst/gstquery.h>
 
 /**
  * GST_MESSAGE_TRACE_NAME:

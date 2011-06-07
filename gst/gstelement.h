@@ -64,6 +64,7 @@ typedef enum {
 #include <gst/gstindexfactory.h>
 #include <gst/gstiterator.h>
 #include <gst/gstmessage.h>
+#include <gst/gstquery.h>
 #include <gst/gsttaglist.h>
 
 G_BEGIN_DECLS

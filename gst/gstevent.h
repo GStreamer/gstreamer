@@ -25,6 +25,8 @@
 #ifndef __GST_EVENT_H__
 #define __GST_EVENT_H__
 
+typedef struct _GstEvent GstEvent;
+
 #include <gst/gstminiobject.h>
 #include <gst/gstformat.h>
 #include <gst/gstobject.h>
@@ -32,12 +34,13 @@
 #include <gst/gststructure.h>
 #include <gst/gsttaglist.h>
 #include <gst/gstsegment.h>
+#include <gst/gstsegment.h>
+#include <gst/gstmessage.h>
 
 G_BEGIN_DECLS
 
 extern GType _gst_event_type;
 
-typedef struct _GstEvent GstEvent;
 
 #define GST_TYPE_EVENT                  (_gst_event_type)
 #define GST_IS_EVENT(obj)               (GST_IS_MINI_OBJECT_TYPE (obj, GST_TYPE_EVENT))
@@ -421,6 +424,10 @@ GstEvent *      gst_event_new_buffer_size       (GstFormat format, gint64 minsiz
                                                  gboolean async);
 void            gst_event_parse_buffer_size     (GstEvent *event, GstFormat *format, gint64 *minsize,
                                                  gint64 *maxsize, gboolean *async);
+
+/* sink message */
+GstEvent*       gst_event_new_sink_message      (GstMessage *msg);
+void            gst_event_parse_sink_message    (GstEvent *event, GstMessage **msg);
 
 /* QOS events */
 GstEvent*       gst_event_new_qos               (GstQOSType type, gdouble proportion,

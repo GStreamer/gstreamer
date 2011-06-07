@@ -32,6 +32,7 @@ typedef struct _GstElementFactoryClass GstElementFactoryClass;
 #include <gst/gstobject.h>
 #include <gst/gstplugin.h>
 #include <gst/gstpluginfeature.h>
+#include <gst/gstpadtemplate.h>
 #include <gst/gstiterator.h>
 
 G_BEGIN_DECLS

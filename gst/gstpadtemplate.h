@@ -26,6 +26,10 @@
 
 #include <gst/gstconfig.h>
 
+typedef struct _GstPadTemplate GstPadTemplate;
+typedef struct _GstPadTemplateClass GstPadTemplateClass;
+typedef struct _GstStaticPadTemplate GstStaticPadTemplate;
+
 #include <gst/gstobject.h>
 #include <gst/gstbuffer.h>
 #include <gst/gstcaps.h>
@@ -34,11 +38,6 @@
 #include <gst/gsttask.h>
 
 G_BEGIN_DECLS
-
-/* FIXME: this awful circular dependency need to be resolved properly (see pad.h) */
-/*typedef struct _GstPadTemplate GstPadTemplate; */
-typedef struct _GstPadTemplateClass GstPadTemplateClass;
-typedef struct _GstStaticPadTemplate GstStaticPadTemplate;
 
 #define GST_TYPE_STATIC_PAD_TEMPLATE	(gst_static_pad_template_get_type ())
 

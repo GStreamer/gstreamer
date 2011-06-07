@@ -26,10 +26,29 @@
 
 #include <gst/gstconfig.h>
 
+typedef struct _GstPad GstPad;
+typedef struct _GstPadPrivate GstPadPrivate;
+typedef struct _GstPadClass GstPadClass;
+
+/**
+ * GstPadDirection:
+ * @GST_PAD_UNKNOWN: direction is unknown.
+ * @GST_PAD_SRC: the pad is a source pad.
+ * @GST_PAD_SINK: the pad is a sink pad.
+ *
+ * The direction of a pad.
+ */
+typedef enum {
+  GST_PAD_UNKNOWN,
+  GST_PAD_SRC,
+  GST_PAD_SINK
+} GstPadDirection;
+
 #include <gst/gstobject.h>
 #include <gst/gstbuffer.h>
 #include <gst/gstbufferlist.h>
 #include <gst/gstcaps.h>
+#include <gst/gstpadtemplate.h>
 #include <gst/gstevent.h>
 #include <gst/gstquery.h>
 #include <gst/gsttask.h>
@@ -47,9 +66,6 @@ G_BEGIN_DECLS
 #define GST_PAD_CAST(obj)		((GstPad*)(obj))
 
 
-typedef struct _GstPad GstPad;
-typedef struct _GstPadPrivate GstPadPrivate;
-typedef struct _GstPadClass GstPadClass;
 
 /**
  * GstPadLinkReturn:
@@ -549,20 +565,6 @@ typedef GstProbeReturn      (*GstPadProbeCallback)              (GstPad *pad, Gs
 typedef GstFlowReturn           (*GstPadStickyEventsForeachFunction) (GstPad *pad, GstEvent *event, gpointer user_data);
 
 /**
- * GstPadDirection:
- * @GST_PAD_UNKNOWN: direction is unknown.
- * @GST_PAD_SRC: the pad is a source pad.
- * @GST_PAD_SINK: the pad is a sink pad.
- *
- * The direction of a pad.
- */
-typedef enum {
-  GST_PAD_UNKNOWN,
-  GST_PAD_SRC,
-  GST_PAD_SINK
-} GstPadDirection;
-
-/**
  * GstPadFlags:
  * @GST_PAD_BLOCKED: is dataflow on a pad blocked
  * @GST_PAD_FLUSHING: is pad refusing buffers
@@ -593,9 +595,6 @@ typedef enum {
   /* padding */
   GST_PAD_FLAG_LAST        = (GST_OBJECT_FLAG_LAST << 16)
 } GstPadFlags;
-
-/* FIXME: this awful circular dependency need to be resolved properly (see padtemplate.h) */
-typedef struct _GstPadTemplate GstPadTemplate;
 
 /**
  * GstPad:
