@@ -568,51 +568,6 @@ AG_GST_CHECK_FEATURE(XSHM, [X Shared Memory extension], , [
   AC_SUBST(XSHM_LIBS) 
 ])
 
-dnl v4l/v4l2 checks have been moved down because they require X
-
-dnl *** Video 4 Linux ***
-dnl for information about the header/define, see sys/v4l/gstv4lelement.h
-dnl renamed to GST_V4L in accordance with V4L2 below
-translit(dnm, m, l) AM_CONDITIONAL(USE_GST_V4L, true)
-AG_GST_CHECK_FEATURE(GST_V4L, [Video 4 Linux], video4linux, [
-  AC_CHECK_DECL(VID_TYPE_MPEG_ENCODER, HAVE_GST_V4L="yes", HAVE_GST_V4L="no", [
-#include <sys/types.h>
-#define _LINUX_TIME_H
-#define __user
-#include <linux/videodev.h>
-  ])
-
-  dnl we can build v4l without Xv, but then we won't have XOverlay support
-  if test "x$HAVE_GST_V4L" = "xyes" -a "x$HAVE_XVIDEO" != "xyes"
-  then
-    AC_MSG_NOTICE([NO XVIDEO FOUND, VIDEO4LINUX WILL BE BUILT])
-    AC_MSG_NOTICE([WITHOUT XOVERLAY SUPPORT])
-  fi
-])
-
-# Optional gudev for device probing
-AC_ARG_WITH([gudev],
-  AC_HELP_STRING([--with-gudev],
-    [device detection with gudev]),
-  [],
-  [with_gudev=check])
-if test x$HAVE_GST_V4L = xyes; then
-  if test x$with_gudev != xno; then
-      PKG_CHECK_MODULES(GUDEV, [ gudev-1.0 >= 143 ],
-          [ have_gudev=yes
-            AC_DEFINE(HAVE_GUDEV, 1,
-               [Whether gudev is available for device detection])
-            AC_DEFINE([G_UDEV_API_IS_SUBJECT_TO_CHANGE], 1, [I know the API is subject to change.])
-          ], [
-          have_gudev=no
-          ])
-  else
-    have_gudev=no
-  fi
-fi
-AC_SUBST(GUDEV_CFLAGS)
-AC_SUBST(GUDEV_LIBS)
-
 dnl *** ext plug-ins ***
 dnl keep this list sorted alphabetically !
 
@@ -938,7 +893,6 @@ gst/volume/Makefile
 sys/Makefile
 sys/ximage/Makefile
 sys/xvimage/Makefile
-sys/v4l/Makefile
 ext/Makefile
 ext/alsa/Makefile
 ext/cdparanoia/Makefile
@@ -1011,7 +965,6 @@ tests/examples/seek/Makefile
 tests/examples/snapshot/Makefile
 tests/examples/playrec/Makefile
 tests/examples/volume/Makefile
-tests/examples/v4l/Makefile
 tests/files/Makefile
 tests/icles/Makefile
 tests/icles/playback/Makefile

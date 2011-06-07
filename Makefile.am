@@ -79,6 +79,9 @@ CRUFT_FILES = \
 	$(top_builddir)/gst-libs/gst/audio/testchannels \
 	$(top_builddir)/tools/gst-discoverer
 
+CRUFT_DIRS = \
+	$(top_srcdir)/sys/v4l \
+	$(top_srcdir)/tests/examples/v4l
 
 include $(top_srcdir)/common/cruft.mak
 

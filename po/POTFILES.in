@@ -20,4 +20,3 @@ gst-libs/gst/tag/tags.c
 gst-libs/gst/cdda/gstcddabasesrc.c
 gst-libs/gst/pbutils/descriptions.c
 gst-libs/gst/pbutils/missing-plugins.c
-sys/v4l/v4l_calls.c

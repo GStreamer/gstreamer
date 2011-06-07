@@ -59,7 +59,7 @@
  * ]| Decode an Ogg/Theora file and adjust the framerate to 15 fps before playing.
  * To create the test Ogg/Theora file refer to the documentation of theoraenc.
  * |[
- * gst-launch -v v4lsrc ! videorate ! video/x-raw-yuv,framerate=25/2 ! theoraenc ! oggmux ! filesink location=v4l.ogg
+ * gst-launch -v v4l2src ! videorate ! video/x-raw-yuv,framerate=25/2 ! theoraenc ! oggmux ! filesink location=recording.ogg
  * ]| Capture video from a V4L device, and adjust the stream to 12.5 fps before
  * encoding to Ogg/Theora.
  * </refsect2>
