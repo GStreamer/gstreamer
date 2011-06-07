@@ -105,12 +105,12 @@ typedef enum {
 #define GST_MEMORY_TRACE_NAME           "GstMemory"
 
 /**
- * GstMemoryGetSizesFunction:
+ * GstMemoryAllocFunction:
  * @maxsize: the maxsize
  * @align: the alignment
  *
- * Allocate a new #GstMemory that hold at least @maxsize bytes and is aligned to
- * (@align + 1) bytes.
+ * Allocate a new #GstMemory that can hold at least @maxsize bytes and is aligned
+ * to (@align + 1) bytes.
  *
  * Returns: a newly allocated #GstMemory. Free with gst_memory_unref()
  */
@@ -278,7 +278,7 @@ void        gst_memory_unref      (GstMemory *mem);
 gsize       gst_memory_get_sizes  (GstMemory *mem, gsize *maxsize);
 void        gst_memory_resize     (GstMemory *mem, gsize offset, gsize size);
 
-/* retriveing data */
+/* retrieving data */
 gpointer    gst_memory_map        (GstMemory *mem, gsize *size, gsize *maxsize,
                                    GstMapFlags flags);
 gboolean    gst_memory_unmap      (GstMemory *mem, gpointer data, gsize size);
