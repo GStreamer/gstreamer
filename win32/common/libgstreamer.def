@@ -641,10 +641,11 @@ EXPORTS
 	gst_pad_chain
 	gst_pad_chain_list
 	gst_pad_direction_get_type
-	gst_pad_dispatcher
 	gst_pad_event_default
+	gst_pad_event_forward
 	gst_pad_fixate_caps
 	gst_pad_flags_get_type
+	gst_pad_forward
 	gst_pad_get_allowed_caps
 	gst_pad_get_caps
 	gst_pad_get_current_caps
@@ -681,7 +682,6 @@ EXPORTS
 	gst_pad_peer_query
 	gst_pad_presence_get_type
 	gst_pad_proxy_getcaps
-	gst_pad_proxy_setcaps
 	gst_pad_pull_range
 	gst_pad_push
 	gst_pad_push_event
