@@ -111,29 +111,14 @@ static void gst_caps_setter_set_property (GObject * object, guint prop_id,
 static void gst_caps_setter_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-GST_BOILERPLATE (GstCapsSetter, gst_caps_setter, GstBaseTransform,
-    GST_TYPE_BASE_TRANSFORM);
-
-static void
-gst_caps_setter_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (element_class, "CapsSetter",
-      "Generic",
-      "Set/merge caps on stream",
-      "Mark Nauwelaerts <mnauw@users.sourceforge.net>");
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_caps_setter_sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_caps_setter_src_template));
-}
+#define gst_caps_setter_parent_class parent_class
+G_DEFINE_TYPE (GstCapsSetter, gst_caps_setter, GST_TYPE_BASE_TRANSFORM);
 
 static void
 gst_caps_setter_class_init (GstCapsSetterClass * g_class)
 {
   GObjectClass *gobject_class = (GObjectClass *) g_class;
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
   GstBaseTransformClass *trans_class = (GstBaseTransformClass *) g_class;
 
   GST_DEBUG_CATEGORY_INIT (caps_setter_debug, "capssetter", 0, "capssetter");
@@ -156,6 +141,16 @@ gst_caps_setter_class_init (GstCapsSetterClass * g_class)
           "Drop fields of incoming caps", DEFAULT_REPLACE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_set_details_simple (element_class, "CapsSetter",
+      "Generic",
+      "Set/merge caps on stream",
+      "Mark Nauwelaerts <mnauw@users.sourceforge.net>");
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_caps_setter_sink_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_caps_setter_src_template));
+
   trans_class->transform_size =
       GST_DEBUG_FUNCPTR (gst_caps_setter_transform_size);
   trans_class->transform_caps =
@@ -165,7 +160,7 @@ gst_caps_setter_class_init (GstCapsSetterClass * g_class)
 }
 
 static void
-gst_caps_setter_init (GstCapsSetter * filter, GstCapsSetterClass * g_class)
+gst_caps_setter_init (GstCapsSetter * filter)
 {
   filter->caps = gst_caps_new_any ();
   filter->join = DEFAULT_JOIN;

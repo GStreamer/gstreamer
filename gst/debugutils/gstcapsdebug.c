@@ -61,26 +61,8 @@ GST_STATIC_PAD_TEMPLATE ("src",
 
 /* class initialization */
 
-#define DEBUG_INIT(bla) \
-  GST_DEBUG_CATEGORY_INIT (gst_caps_debug_debug, "capsdebug", 0, \
-      "debug category for capsdebug element");
-
-GST_BOILERPLATE_FULL (GstCapsDebug, gst_caps_debug, GstElement,
-    GST_TYPE_ELEMENT, DEBUG_INIT);
-
-static void
-gst_caps_debug_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_caps_debug_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_caps_debug_sink_template));
-
-  gst_element_class_set_details_simple (element_class, "Caps debug",
-      "Generic", "Debug caps negotiation", "David Schleef <ds@schleef.org>");
-}
+#define gst_caps_debug_parent_class parent_class
+G_DEFINE_TYPE (GstCapsDebug, gst_caps_debug, GST_TYPE_ELEMENT);
 
 static void
 gst_caps_debug_class_init (GstCapsDebugClass * klass)
@@ -92,11 +74,20 @@ gst_caps_debug_class_init (GstCapsDebugClass * klass)
   gobject_class->finalize = gst_caps_debug_finalize;
   element_class->change_state = GST_DEBUG_FUNCPTR (gst_caps_debug_change_state);
 
+  GST_DEBUG_CATEGORY_INIT (gst_caps_debug_debug, "capsdebug", 0,
+      "debug category for capsdebug element");
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_caps_debug_src_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_caps_debug_sink_template));
+
+  gst_element_class_set_details_simple (element_class, "Caps debug",
+      "Generic", "Debug caps negotiation", "David Schleef <ds@schleef.org>");
 }
 
 static void
-gst_caps_debug_init (GstCapsDebug * capsdebug,
-    GstCapsDebugClass * capsdebug_class)
+gst_caps_debug_init (GstCapsDebug * capsdebug)
 {
 
   capsdebug->srcpad =

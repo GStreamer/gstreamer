@@ -55,38 +55,11 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
 
 static void gst_push_file_src_uri_handler_init (gpointer g_iface,
     gpointer iface_data);
-static void gst_file_push_src_add_uri_handler (GType type);
 
-GST_BOILERPLATE_FULL (GstPushFileSrc, gst_push_file_src, GstBin, GST_TYPE_BIN,
-    gst_file_push_src_add_uri_handler);
-
-static void
-gst_file_push_src_add_uri_handler (GType type)
-{
-  static const GInterfaceInfo info = {
-    gst_push_file_src_uri_handler_init,
-    NULL,
-    NULL
-  };
-
-  g_type_add_interface_static (type, GST_TYPE_URI_HANDLER, &info);
-  GST_DEBUG_CATEGORY_INIT (pushfilesrc_debug, "pushfilesrc", 0,
-      "pushfilesrc element");
-}
-
-static void
-gst_push_file_src_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&srctemplate));
-
-  gst_element_class_set_details_simple (element_class, "Push File Source",
-      "Testing",
-      "Implements pushfile:// URI-handler for push-based file access",
-      "Tim-Philipp Müller <tim centricular net>");
-}
+#define gst_push_file_src_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstPushFileSrc, gst_push_file_src, GST_TYPE_BIN,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER,
+        gst_push_file_src_uri_handler_init));
 
 static void
 gst_push_file_src_dispose (GObject * obj)
@@ -109,10 +82,23 @@ static void
 gst_push_file_src_class_init (GstPushFileSrcClass * g_class)
 {
   GObjectClass *gobject_class;
+  GstElementClass *element_class;
 
   gobject_class = G_OBJECT_CLASS (g_class);
+  element_class = GST_ELEMENT_CLASS (g_class);
+
+  GST_DEBUG_CATEGORY_INIT (pushfilesrc_debug, "pushfilesrc", 0,
+      "pushfilesrc element");
 
   gobject_class->dispose = gst_push_file_src_dispose;
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&srctemplate));
+
+  gst_element_class_set_details_simple (element_class, "Push File Source",
+      "Testing",
+      "Implements pushfile:// URI-handler for push-based file access",
+      "Tim-Philipp Müller <tim centricular net>");
 }
 
 static gboolean
@@ -122,7 +108,7 @@ gst_push_file_src_ghostpad_checkgetrange (GstPad * pad)
 }
 
 static void
-gst_push_file_src_init (GstPushFileSrc * src, GstPushFileSrcClass * g_class)
+gst_push_file_src_init (GstPushFileSrc * src)
 {
   src->filesrc = gst_element_factory_make ("filesrc", "real-filesrc");
   if (src->filesrc) {

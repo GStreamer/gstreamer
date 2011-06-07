@@ -45,6 +45,8 @@ GST_DEBUG_CATEGORY_STATIC (gst_break_my_data_debug);
 #define GST_IS_BREAK_MY_DATA_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_BREAK_MY_DATA))
 
+GType gst_break_my_data_get_type (void);
+
 enum
 {
   ARG_0,
@@ -95,39 +97,23 @@ GstStaticPadTemplate bmd_sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
+#define gst_break_my_data_parent_class parent_class
+G_DEFINE_TYPE (GstBreakMyData, gst_break_my_data, GST_TYPE_BASE_TRANSFORM);
 
-#define DEBUG_INIT(bla) \
-  GST_DEBUG_CATEGORY_INIT (gst_break_my_data_debug, "breakmydata", 0, \
-      "debugging category for breakmydata element");
-
-GType gst_break_my_data_get_type (void);
-GST_BOILERPLATE_FULL (GstBreakMyData, gst_break_my_data, GstBaseTransform,
-    GST_TYPE_BASE_TRANSFORM, DEBUG_INIT);
-
-
-static void
-gst_break_my_data_base_init (gpointer g_class)
-{
-  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&bmd_sink_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&bmd_src_template));
-
-  gst_element_class_set_details_simple (gstelement_class, "Break my data",
-      "Testing",
-      "randomly change data in the stream", "Benjamin Otte <otte@gnome>");
-}
 
 static void
 gst_break_my_data_class_init (GstBreakMyDataClass * klass)
 {
   GstBaseTransformClass *gstbasetrans_class;
+  GstElementClass *gstelement_class;
   GObjectClass *gobject_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
+  gstelement_class = GST_ELEMENT_CLASS (klass);
   gstbasetrans_class = GST_BASE_TRANSFORM_CLASS (klass);
+
+  GST_DEBUG_CATEGORY_INIT (gst_break_my_data_debug, "breakmydata", 0,
+      "debugging category for breakmydata element");
 
   gobject_class->set_property = gst_break_my_data_set_property;
   gobject_class->get_property = gst_break_my_data_get_property;
@@ -152,6 +138,15 @@ gst_break_my_data_class_init (GstBreakMyDataClass * klass)
           "probability for each byte in the buffer to be changed", 0.0, 1.0,
           0.0, G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&bmd_sink_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&bmd_src_template));
+
+  gst_element_class_set_details_simple (gstelement_class, "Break my data",
+      "Testing",
+      "randomly change data in the stream", "Benjamin Otte <otte@gnome>");
+
   gstbasetrans_class->transform_ip =
       GST_DEBUG_FUNCPTR (gst_break_my_data_transform_ip);
   gstbasetrans_class->start = GST_DEBUG_FUNCPTR (gst_break_my_data_start);
@@ -159,7 +154,7 @@ gst_break_my_data_class_init (GstBreakMyDataClass * klass)
 }
 
 static void
-gst_break_my_data_init (GstBreakMyData * bmd, GstBreakMyDataClass * g_class)
+gst_break_my_data_init (GstBreakMyData * bmd)
 {
   gst_base_transform_set_in_place (GST_BASE_TRANSFORM (bmd), TRUE);
   gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (bmd), TRUE);

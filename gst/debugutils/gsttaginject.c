@@ -62,11 +62,8 @@ enum
 };
 
 
-#define DEBUG_INIT(bla) \
-    GST_DEBUG_CATEGORY_INIT (gst_tag_inject_debug, "taginject", 0, "tag inject element");
-
-GST_BOILERPLATE_FULL (GstTagInject, gst_tag_inject, GstBaseTransform,
-    GST_TYPE_BASE_TRANSFORM, DEBUG_INIT);
+#define gst_tag_inject_parent_class parent_class
+G_DEFINE_TYPE (GstTagInject, gst_tag_inject, GST_TYPE_BASE_TRANSFORM);
 
 static void gst_tag_inject_finalize (GObject * object);
 static void gst_tag_inject_set_property (GObject * object, guint prop_id,
@@ -78,20 +75,6 @@ static GstFlowReturn gst_tag_inject_transform_ip (GstBaseTransform * trans,
     GstBuffer * buf);
 static gboolean gst_tag_inject_start (GstBaseTransform * trans);
 
-
-static void
-gst_tag_inject_base_init (gpointer g_class)
-{
-  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (gstelement_class,
-      "TagInject",
-      "Generic", "inject metadata tags", "Stefan Kost <ensonic@users.sf.net>");
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&srctemplate));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sinktemplate));
-}
 
 static void
 gst_tag_inject_finalize (GObject * object)
@@ -110,10 +93,15 @@ static void
 gst_tag_inject_class_init (GstTagInjectClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
   GstBaseTransformClass *gstbasetrans_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
+  gstelement_class = GST_ELEMENT_CLASS (klass);
   gstbasetrans_class = GST_BASE_TRANSFORM_CLASS (klass);
+
+  GST_DEBUG_CATEGORY_INIT (gst_tag_inject_debug, "taginject", 0,
+      "tag inject element");
 
   gobject_class->set_property = gst_tag_inject_set_property;
   gobject_class->get_property = gst_tag_inject_get_property;
@@ -125,6 +113,14 @@ gst_tag_inject_class_init (GstTagInjectClass * klass)
 
   gobject_class->finalize = gst_tag_inject_finalize;
 
+  gst_element_class_set_details_simple (gstelement_class,
+      "TagInject",
+      "Generic", "inject metadata tags", "Stefan Kost <ensonic@users.sf.net>");
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&srctemplate));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sinktemplate));
+
   gstbasetrans_class->transform_ip =
       GST_DEBUG_FUNCPTR (gst_tag_inject_transform_ip);
 
@@ -132,7 +128,7 @@ gst_tag_inject_class_init (GstTagInjectClass * klass)
 }
 
 static void
-gst_tag_inject_init (GstTagInject * self, GstTagInjectClass * g_class)
+gst_tag_inject_init (GstTagInject * self)
 {
   self->tags = NULL;
 }

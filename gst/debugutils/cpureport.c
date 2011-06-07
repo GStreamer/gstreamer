@@ -50,24 +50,8 @@ static GstFlowReturn gst_cpu_report_transform_ip (GstBaseTransform * trans,
 static gboolean gst_cpu_report_start (GstBaseTransform * trans);
 static gboolean gst_cpu_report_stop (GstBaseTransform * trans);
 
-GST_BOILERPLATE (GstCpuReport, gst_cpu_report, GstBaseTransform,
-    GST_TYPE_BASE_TRANSFORM);
-
-static void
-gst_cpu_report_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&cpu_report_sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&cpu_report_src_template));
-
-  gst_element_class_set_details_simple (element_class, "CPU report",
-      "Testing",
-      "Post cpu usage information every buffer",
-      "Zaheer Abbas Merali <zaheerabbas at merali dot org>");
-}
+#define gst_cpu_report_parent_class parent_class
+G_DEFINE_TYPE (GstCpuReport, gst_cpu_report, GST_TYPE_BASE_TRANSFORM);
 
 static void
 gst_cpu_report_finalize (GObject * obj)
@@ -79,12 +63,24 @@ static void
 gst_cpu_report_class_init (GstCpuReportClass * g_class)
 {
   GstBaseTransformClass *gstbasetrans_class;
+  GstElementClass *element_class;
   GObjectClass *gobject_class;
 
   gobject_class = G_OBJECT_CLASS (g_class);
+  element_class = GST_ELEMENT_CLASS (g_class);
   gstbasetrans_class = GST_BASE_TRANSFORM_CLASS (g_class);
 
   gobject_class->finalize = gst_cpu_report_finalize;
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&cpu_report_sink_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&cpu_report_src_template));
+
+  gst_element_class_set_details_simple (element_class, "CPU report",
+      "Testing",
+      "Post cpu usage information every buffer",
+      "Zaheer Abbas Merali <zaheerabbas at merali dot org>");
 
   gstbasetrans_class->transform_ip =
       GST_DEBUG_FUNCPTR (gst_cpu_report_transform_ip);
@@ -93,7 +89,7 @@ gst_cpu_report_class_init (GstCpuReportClass * g_class)
 }
 
 static void
-gst_cpu_report_init (GstCpuReport * report, GstCpuReportClass * g_class)
+gst_cpu_report_init (GstCpuReport * report)
 {
   gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (report), TRUE);
 

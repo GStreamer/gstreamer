@@ -92,19 +92,22 @@ static void gst_rnd_buffer_size_loop (GstRndBufferSize * self);
 static GstStateChangeReturn gst_rnd_buffer_size_change_state (GstElement *
     element, GstStateChange transition);
 
-#define DEBUG_INIT(bla) \
-  GST_DEBUG_CATEGORY_INIT (gst_rnd_buffer_size_debug, "rndbuffersize", 0, \
-      "rndbuffersize element");
-
 GType gst_rnd_buffer_size_get_type (void);
-GST_BOILERPLATE_FULL (GstRndBufferSize, gst_rnd_buffer_size, GstElement,
-    GST_TYPE_ELEMENT, DEBUG_INIT);
-
+#define gst_rnd_buffer_size_parent_class parent_class
+G_DEFINE_TYPE (GstRndBufferSize, gst_rnd_buffer_size, GST_TYPE_ELEMENT);
 
 static void
-gst_rnd_buffer_size_base_init (gpointer g_class)
+gst_rnd_buffer_size_class_init (GstRndBufferSizeClass * klass)
 {
-  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
+
+  GST_DEBUG_CATEGORY_INIT (gst_rnd_buffer_size_debug, "rndbuffersize", 0,
+      "rndbuffersize element");
+
+  gobject_class->set_property = gst_rnd_buffer_size_set_property;
+  gobject_class->get_property = gst_rnd_buffer_size_get_property;
+  gobject_class->finalize = gst_rnd_buffer_size_finalize;
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sink_template));
@@ -114,18 +117,6 @@ gst_rnd_buffer_size_base_init (gpointer g_class)
   gst_element_class_set_details_simple (gstelement_class, "Random buffer size",
       "Testing", "pull random sized buffers",
       "Stefan Kost <stefan.kost@nokia.com>");
-}
-
-
-static void
-gst_rnd_buffer_size_class_init (GstRndBufferSizeClass * klass)
-{
-  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
-  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
-
-  gobject_class->set_property = gst_rnd_buffer_size_set_property;
-  gobject_class->get_property = gst_rnd_buffer_size_get_property;
-  gobject_class->finalize = gst_rnd_buffer_size_finalize;
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_rnd_buffer_size_change_state);
@@ -149,8 +140,7 @@ gst_rnd_buffer_size_class_init (GstRndBufferSizeClass * klass)
 }
 
 static void
-gst_rnd_buffer_size_init (GstRndBufferSize * self,
-    GstRndBufferSizeClass * g_class)
+gst_rnd_buffer_size_init (GstRndBufferSize * self)
 {
   self->sinkpad = gst_pad_new_from_static_template (&sink_template, "sink");
   gst_pad_set_activate_function (self->sinkpad,

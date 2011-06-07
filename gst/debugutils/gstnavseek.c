@@ -60,32 +60,18 @@ static void gst_navseek_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 GType gst_navseek_get_type (void);
-GST_BOILERPLATE (GstNavSeek, gst_navseek, GstBaseTransform,
-    GST_TYPE_BASE_TRANSFORM);
-
-static void
-gst_navseek_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&navseek_sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&navseek_src_template));
-
-  gst_element_class_set_details_simple (element_class,
-      "Seek based on left-right arrows", "Filter/Video",
-      "Seek based on navigation keys left-right",
-      "Jan Schmidt <thaytan@mad.scientist.com>");
-}
+#define gst_navseek_parent_class parent_class
+G_DEFINE_TYPE (GstNavSeek, gst_navseek, GST_TYPE_BASE_TRANSFORM);
 
 static void
 gst_navseek_class_init (GstNavSeekClass * klass)
 {
   GstBaseTransformClass *gstbasetrans_class;
+  GstElementClass *element_class;
   GObjectClass *gobject_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
+  element_class = GST_ELEMENT_CLASS (klass);
   gstbasetrans_class = GST_BASE_TRANSFORM_CLASS (klass);
 
   gobject_class->set_property = gst_navseek_set_property;
@@ -96,6 +82,16 @@ gst_navseek_class_init (GstNavSeekClass * klass)
           "Time in seconds to seek by", 0.0, G_MAXDOUBLE, 5.0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&navseek_sink_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&navseek_src_template));
+
+  gst_element_class_set_details_simple (element_class,
+      "Seek based on left-right arrows", "Filter/Video",
+      "Seek based on navigation keys left-right",
+      "Jan Schmidt <thaytan@mad.scientist.com>");
+
   gstbasetrans_class->event = GST_DEBUG_FUNCPTR (gst_navseek_event);
   gstbasetrans_class->transform_ip =
       GST_DEBUG_FUNCPTR (gst_navseek_transform_ip);
@@ -104,7 +100,7 @@ gst_navseek_class_init (GstNavSeekClass * klass)
 }
 
 static void
-gst_navseek_init (GstNavSeek * navseek, GstNavSeekClass * g_class)
+gst_navseek_init (GstNavSeek * navseek)
 {
   gst_pad_set_event_function (GST_BASE_TRANSFORM (navseek)->srcpad,
       GST_DEBUG_FUNCPTR (gst_navseek_handle_src_event));
