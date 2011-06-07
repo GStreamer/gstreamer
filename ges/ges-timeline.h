@@ -89,6 +89,7 @@ gboolean ges_timeline_load_from_uri (GESTimeline *timeline, const gchar *uri);
 gboolean ges_timeline_save_to_uri (GESTimeline *timeline, const gchar *uri);
 
 gboolean ges_timeline_add_layer (GESTimeline *timeline, GESTimelineLayer *layer);
+gboolean ges_timeline_append_layer (GESTimeline * timeline, GESTimelineLayer * layer);
 gboolean ges_timeline_remove_layer (GESTimeline *timeline, GESTimelineLayer *layer);
 GList* ges_timeline_get_layers (GESTimeline *timeline);
 

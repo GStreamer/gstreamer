@@ -236,6 +236,7 @@ ges_timeline_new
 ges_timeline_new_audio_video
 ges_timeline_new_from_uri
 ges_timeline_add_layer
+ges_timeline_append_layer
 ges_timeline_remove_layer
 ges_timeline_add_track
 ges_timeline_remove_track

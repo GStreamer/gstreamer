@@ -697,6 +697,31 @@ layer_object_removed_cb (GESTimelineLayer * layer, GESTimelineObject * object,
 }
 
 /**
+ * ges_timeline_append_layer:
+ * @timeline: a #GESTimeline
+ * @layer: the #GESTimelineLayer to add
+ *
+ * Convenience method to append @layer to @timeline which means that the
+ * priority of @layer is changed to correspond to the last layer of @timeline.
+ * The reference to the @layer will be stolen by @timeline.
+ *
+ * Returns: TRUE if the layer was properly added, else FALSE.
+ */
+gboolean
+ges_timeline_append_layer (GESTimeline * timeline, GESTimelineLayer * layer)
+{
+  guint32 priority;
+  GESTimelinePrivate *priv = timeline->priv;
+
+  GST_DEBUG ("Appending layer to layer:%p, timeline:%p", timeline, layer);
+  priority = g_list_length (priv->layers);
+
+  ges_timeline_layer_set_priority (layer, priority);
+
+  return ges_timeline_add_layer (timeline, layer);
+}
+
+/**
  * ges_timeline_add_layer:
  * @timeline: a #GESTimeline
  * @layer: the #GESTimelineLayer to add
