@@ -691,5 +691,6 @@ gst_memory_allocator_alloc (const GstMemoryAllocator * allocator,
   if (allocator == NULL)
     allocator = _default_allocator;
 
-  return allocator->info.alloc (allocator, maxsize, align);
+  return allocator->info.alloc (allocator, maxsize, align,
+      allocator->info.user_data);
 }

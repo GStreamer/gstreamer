@@ -106,15 +106,21 @@ typedef enum {
 
 /**
  * GstMemoryAllocFunction:
+ * @allocator: a #GstMemoryAllocator
  * @maxsize: the maxsize
  * @align: the alignment
+ * @user_data: user data
  *
- * Allocate a new #GstMemory that can hold at least @maxsize bytes and is aligned
- * to (@align + 1) bytes.
+ * Allocate a new #GstMemory from @allocator that can hold at least @maxsize bytes
+ * and is aligned to (@align + 1) bytes.
+ *
+ * @user_data is the data that was used when registering @allocator.
  *
  * Returns: a newly allocated #GstMemory. Free with gst_memory_unref()
  */
-typedef GstMemory *  (*GstMemoryAllocFunction)  (const GstMemoryAllocator *allocator, gsize maxsize, gsize align);
+typedef GstMemory *  (*GstMemoryAllocFunction)  (const GstMemoryAllocator *allocator,
+                                                 gsize maxsize, gsize align,
+                                                 gpointer user_data);
 
 /**
  * GstMemoryGetSizesFunction:
