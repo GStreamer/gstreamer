@@ -20,6 +20,9 @@ headers
 #define Py_ssize_t int
 #endif
 
+void pyges_register_classes(PyObject *d);
+void pyges_add_constants(PyObject *module, const gchar *strip_prefix);
+
 %%
 import gobject.GObject as PyGObject_Type
 import gobject.MainContext as PyGMainContext_Type
