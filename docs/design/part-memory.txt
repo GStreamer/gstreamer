@@ -1,0 +1,85 @@
+GstMemory
+---------
+
+This document describes the design of the memory objects.
+
+GstMemory objects are usually added to GstBuffer objects and contain the
+multimedia data passed around in the pipeline.
+
+Requirements
+~~~~~~~~~~~~
+
+ - It must be possible to have different memory allocators
+ - It must be possible to efficiently share memory objects, copy, span
+   and trim.
+
+
+Allocators
+~~~~~~~~~~
+
+ GstMemory objects are created by allocators. Allocators are registered to the
+ memory system with a set of methods contained in a GstMemoryInfo structure.
+
+  struct _GstMemoryInfo {
+    GstMemoryAllocFunction    alloc;
+    GstMemoryGetSizesFunction get_sizes;
+    GstMemoryResizeFunction   resize;
+    GstMemoryMapFunction      map;
+    GstMemoryUnmapFunction    unmap;
+    GstMemoryFreeFunction     free;
+
+    GstMemoryCopyFunction     copy;
+    GstMemoryShareFunction    share;
+    GstMemoryIsSpanFunction   is_span;
+
+    gpointer user_data;
+  };
+
+ After an allocator is registerd, new GstMemory can be created with 
+
+   GstMemory * gst_memory_allocator_alloc (const GstMemoryAllocator * allocator,
+                                           gsize maxsize, gsize align);
+
+ The GstMemory object is a refcounted object that must be freed with
+ gst_memory_unref ().
+
+ It is also possible to create a new GstMemory object that wraps existing
+ memory with:
+  
+   GstMemory * gst_memory_new_wrapped  (GstMemoryFlags flags, gpointer data,
+                                        GFreeFunc free_func, gsize maxsize,
+                                        gsize offset, gsize size);
+
+Memory layout
+~~~~~~~~~~~~~
+
+ GstMemory manages a memory region. The accesible part of the managed region is
+ defined by an offset relative to the start of the region and a size. This
+ means that the managed region can be larger than what is visible to the user of
+ GstMemory API.
+
+ Schematically, GstMemory has a pointer to a memory region of _maxsize_. The area
+ starting from _offset_ and _size_ is accessible.
+
+               memory
+    GstMemory  ->*----------------------------------------------------*
+                 ^----------------------------------------------------^ 
+                                   maxsize
+                      ^--------------------------------------^         
+                     offset            size
+
+ The current properties of the accessible memory can be retrieved with:
+
+   gsize       gst_memory_get_sizes  (GstMemory *mem, gsize *maxsize);
+
+ The offset and size can be changed with:
+
+   void        gst_memory_resize     (GstMemory *mem, gsize offset, gsize size);
+
+
+Data Access
+~~~~~~~~~~~
+
+
+
+
