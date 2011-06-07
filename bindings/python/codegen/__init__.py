@@ -8,6 +8,7 @@ __all__ = [
     'docextract',
     'docgen',
     'h2def',
+    'defsgen'
     'mergedefs',
     'mkskel',
     'override',

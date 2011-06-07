@@ -14,14 +14,13 @@ def make_docstring(lines):
 
 # New Parameter class, wich emulates a tuple for compatibility reasons
 class Parameter(object):
-    def __init__(self, ptype, pname, pdflt, pnull, pdir=None, keeprefcount = False):
+    def __init__(self, ptype, pname, pdflt, pnull, pdir=None):
         self.ptype = ptype
         self.pname = pname
         self.pdflt = pdflt
         self.pnull = pnull
-	self.pdir = pdir
-        self.keeprefcount = keeprefcount
-        
+        self.pdir = pdir
+
     def __len__(self): return 4
     def __getitem__(self, i):
         return (self.ptype, self.pname, self.pdflt, self.pnull)[i]
@@ -32,12 +31,27 @@ class Parameter(object):
         if old.pnull is not None:
             self.pnull = old.pnull
 
+# We currently subclass 'str' to make impact on the rest of codegen as
+# little as possible.  Later we can subclass 'object' instead, but
+# then we must find and adapt all places which expect return types to
+# be strings.
+class ReturnType(str):
+    def __new__(cls, *args, **kwds):
+        return str.__new__(cls, *args[:1])
+    def __init__(self, type_name, optional=False):
+        str.__init__(self)
+        self.optional = optional
+
 # Parameter for property based constructors
 class Property(object):
     def __init__(self, pname, optional, argname):
         self.pname = pname
         self.optional = optional
         self.argname = argname
+
+    def __len__(self): return 4
+    def __getitem__(self, i):
+        return ('', self.pname, self.optional, self.argname)[i]
 
     def merge(self, old):
         if old.optional is not None:
@@ -46,18 +60,26 @@ class Property(object):
             self.argname = old.argname
 
 
-class Definition:
+class Definition(object):
     docstring = "NULL"
+
+    def py_name(self):
+        return '%s.%s' % (self.module, self.name)
+
+    py_name = property(py_name)
+
     def __init__(self, *args):
         """Create a new defs object of this type.  The arguments are the
         components of the definition"""
-        raise RuntimeError, "this is an abstract class"
+        raise RuntimeError("this is an abstract class")
+
     def merge(self, old):
         """Merge in customisations from older version of definition"""
-        raise RuntimeError, "this is an abstract class"
+        raise RuntimeError("this is an abstract class")
+
     def write_defs(self, fp=sys.stdout):
         """write out this definition in defs file format"""
-        raise RuntimeError, "this is an abstract class"
+        raise RuntimeError("this is an abstract class")
 
     def guess_return_value_ownership(self):
         "return 1 if caller owns return value"
@@ -119,58 +141,7 @@ class ObjectDef(Definition):
             for (ftype, fname) in self.fields:
                 fp.write('    \'("' + ftype + '" "' + fname + '")\n')
             fp.write('  )\n')
-	fp.write(')\n\n')
-
-class MiniObjectDef(Definition):
-    def __init__(self, name, *args):
-	self.name = name
-	self.module = None
-	self.parent = None
-	self.c_name = None
-        self.typecode = None
-	self.fields = []
-        self.implements = []
-	for arg in args:
-	    if type(arg) != type(()) or len(arg) < 2:
-		continue
-	    if arg[0] == 'in-module':
-		self.module = arg[1]
-	    elif arg[0] == 'parent':
-                self.parent = arg[1]
-	    elif arg[0] == 'c-name':
-		self.c_name = arg[1]
-	    elif arg[0] == 'gtype-id':
-		self.typecode = arg[1]
-	    elif arg[0] == 'fields':
-                for parg in arg[1:]:
-                    self.fields.append((parg[0], parg[1]))
-            elif arg[0] == 'implements':
-                self.implements.append(arg[1])
-    def merge(self, old):
-	# currently the .h parser doesn't try to work out what fields of
-	# an object structure should be public, so we just copy the list
-	# from the old version ...
-	self.fields = old.fields
-        self.implements = old.implements
-    def write_defs(self, fp=sys.stdout):
-	fp.write('(define-object ' + self.name + '\n')
-	if self.module:
-	    fp.write('  (in-module "' + self.module + '")\n')
-	if self.parent != (None, None):	
-	    fp.write('  (parent "' + self.parent + '")\n')
-        for interface in self.implements:
-            fp.write('  (implements "' + interface + '")\n')
-	if self.c_name:
-	    fp.write('  (c-name "' + self.c_name + '")\n')
-	if self.typecode:
-	    fp.write('  (gtype-id "' + self.typecode + '")\n')
-        if self.fields:
-            fp.write('  (fields\n')
-            for (ftype, fname) in self.fields:
-                fp.write('    \'("' + ftype + '" "' + fname + '")\n')
-            fp.write('  )\n')
-	fp.write(')\n\n')
-
+        fp.write(')\n\n')
 
 class InterfaceDef(Definition):
     def __init__(self, name, *args):
@@ -349,7 +320,12 @@ class MethodDefBase(Definition):
             elif arg[0] == 'gtype-id':
                 self.typecode = arg[1]
             elif arg[0] == 'return-type':
-                self.ret = arg[1]
+                type_name = arg[1]
+                optional = False
+                for prop in arg[2:]:
+                    if prop[0] == 'optional':
+                        optional = True
+                self.ret = ReturnType(type_name, optional)
             elif arg[0] == 'caller-owns-return':
                 self.caller_owns_return = arg[1] in ('t', '#t')
             elif arg[0] == 'unblock-threads':
@@ -360,8 +336,7 @@ class MethodDefBase(Definition):
                     pname = parg[1]
                     pdflt = None
                     pnull = 0
-		    pdir = None
-                    keeprefcount = False
+                    pdir = None
                     for farg in parg[2:]:
                         assert isinstance(farg, tuple)
                         if farg[0] == 'default':
@@ -370,10 +345,7 @@ class MethodDefBase(Definition):
                             pnull = 1
                         elif farg[0] == 'direction':
                             pdir = farg[1]
-                        elif farg[0] == 'keep-refcount':
-                            keeprefcount = True
-                    self.params.append(Parameter(ptype, pname, pdflt, pnull, pdir,
-                                                 keeprefcount=keeprefcount))
+                    self.params.append(Parameter(ptype, pname, pdflt, pnull, pdir))
             elif arg[0] == 'varargs':
                 self.varargs = arg[1] in ('t', '#t')
             elif arg[0] == 'deprecated':
@@ -435,7 +407,7 @@ class MethodDef(MethodDefBase):
         for item in ('c_name', 'of_object'):
             if self.__dict__[item] == None:
                 self.write_defs(sys.stderr)
-                raise RuntimeError, "definition missing required %s" % (item,)
+                raise RuntimeError("definition missing required %s" % (item,))
 
     def write_defs(self, fp=sys.stdout):
         fp.write('(define-method ' + self.name + '\n')
@@ -483,17 +455,13 @@ class FunctionDef(Definition):
                     pname = parg[1]
                     pdflt = None
                     pnull = 0
-                    keeprefcount = False
                     for farg in parg[2:]:
                         if farg[0] == 'default':
                             pdflt = farg[1]
                         elif farg[0] == 'null-ok':
                             pnull = 1
-                        elif farg[0] == 'keep-refcount':
-                            keeprefcount = True
-                    self.params.append(Parameter(ptype, pname, pdflt, pnull,
-                                                 keeprefcount = keeprefcount))
-	    elif arg[0] == 'properties':
+                    self.params.append(Parameter(ptype, pname, pdflt, pnull))
+            elif arg[0] == 'properties':
                 if self.is_constructor_of is None:
                     print >> sys.stderr, "Warning: (properties ...) "\
                           "is only valid for constructors"
@@ -523,7 +491,7 @@ class FunctionDef(Definition):
         for item in ('c_name',):
             if self.__dict__[item] == None:
                 self.write_defs(sys.stderr)
-                raise RuntimeError, "definition missing required %s" % (item,)
+                raise RuntimeError("definition missing required %s" % (item,))
 
     _method_write_defs = MethodDef.__dict__['write_defs']
 
@@ -545,8 +513,8 @@ class FunctionDef(Definition):
                     else:
                         param.merge(old_param)
                         return param
-            raise RuntimeError, "could not find %s in old_parameters %r" % (
-                param.pname, [p.pname for p in old.params])
+            raise RuntimeError("could not find %s in old_parameters %r" % (
+                param.pname, [p.pname for p in old.params]))
         try:
             self.params = map(merge_param, self.params)
         except RuntimeError:

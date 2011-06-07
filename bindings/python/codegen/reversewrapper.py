@@ -88,10 +88,12 @@ class ReverseWrapper(object):
         self.declarations = MemoryCodeSink()
         self.post_return_code = MemoryCodeSink()
         self.body = MemoryCodeSink()
+        self.check_exception_code = MemoryCodeSink()
         self.cleanup_actions = []
         self.pyargv_items = []
         self.pyargv_optional_items = []
         self.pyret_parse_items = [] # list of (format_spec, parameter)
+        self.code_sinks_stack = [self.body]
 
     def set_call_target(self, called_pyobj, method_name=None):
         assert called_pyobj is not None
@@ -121,6 +123,14 @@ class ReverseWrapper(object):
             self.pyret_parse_items.insert(0, (format_specifier, parameter))
         else:
             self.pyret_parse_items.append((format_specifier, parameter))
+
+
+    def push_code_sink(self, code_sink):
+        self.code_sinks_stack.insert(0, code_sink)
+
+    def pop_code_sink(self):
+        return self.code_sinks_stack.pop(0)
+
 
     def write_code(self, code,
                    cleanup=None,
@@ -152,7 +162,7 @@ class ReverseWrapper(object):
                       parses the python method return value.
         '''
         if code_sink is None:
-            code_sink = self.body
+            code_sink = self.code_sinks_stack[0]
         if code is not None:
             code_sink.writeln(code)
         if failure_expression is not None:
@@ -170,7 +180,13 @@ class ReverseWrapper(object):
                 code_sink.writeln(failure_cleanup)
             for cleanup_action in self.cleanup_actions:
                 code_sink.writeln(cleanup_action)
-            self.return_type.write_error_return()
+
+            self.push_code_sink(code_sink)
+            try:
+                self.return_type.write_error_return()
+            finally:
+                self.pop_code_sink()
+
             code_sink.unindent()
             code_sink.writeln("}")
         if cleanup is not None:
@@ -265,8 +281,10 @@ class ReverseWrapper(object):
         if self.method_name is None:
             self.write_code("py_retval = PyObject_Call(%s, %s);"
                             % (self.called_pyobj, py_args),
-                            cleanup="Py_DECREF(py_retval);",
-                            failure_expression="!py_retval")
+                            cleanup="Py_XDECREF(py_retval);")
+            self.check_exception_code.flush_to(self.body)
+            self.write_code(None, failure_expression="!py_retval")
+
         else:
             self.add_declaration("PyObject *py_method;")
             self.write_code("py_method = PyObject_GetAttrString(%s, \"%s\");"
@@ -275,8 +293,9 @@ class ReverseWrapper(object):
                             failure_expression="!py_method")
             self.write_code("py_retval = PyObject_CallObject(py_method, %s);"
                             % (py_args,),
-                            cleanup="Py_DECREF(py_retval);",
-                            failure_expression="!py_retval")
+                            cleanup="Py_XDECREF(py_retval);")
+            self.check_exception_code.flush_to(self.body)
+            self.write_code(None, failure_expression="!py_retval")
 
         ## -- Handle the return value --
 
@@ -291,16 +310,25 @@ class ReverseWrapper(object):
 
         sink.indent()
 
-        if len(self.pyret_parse_items) == 1:
-            ## if retval is one item only, pack it in a tuple so we
-            ## can use PyArg_ParseTuple as usual..
-            self.write_code('py_retval = Py_BuildValue("(N)", py_retval);')
-        if len(self.pyret_parse_items) > 0:
-            ## Parse return values using PyArg_ParseTuple
-            self.write_code(code=None, failure_expression=(
-                '!PyArg_ParseTuple(py_retval, "%s", %s)' % (
-                "".join([format for format, param in self.pyret_parse_items]),
-                ", ".join([param for format, param in self.pyret_parse_items]))))
+        if self.pyret_parse_items == [("", "")]:
+            ## special case when there are no return parameters
+            self.write_code(
+                code=None,
+                failure_expression='py_retval != Py_None',
+                failure_exception=('PyErr_SetString(PyExc_TypeError, '
+                                   '"virtual method should return None");'))
+        else:    
+            if len(self.pyret_parse_items) == 1:
+                ## if retval is one item only, pack it in a tuple so we
+                ## can use PyArg_ParseTuple as usual..
+                self.write_code('py_retval = Py_BuildValue("(N)", py_retval);')
+            if len(self.pyret_parse_items) > 0:
+                ## Parse return values using PyArg_ParseTuple
+                params = ["py_retval",
+                          '"%s"' % "".join([format for format, param in self.pyret_parse_items])]
+                params.extend([param for format, param in self.pyret_parse_items if param])
+                self.write_code(code=None, failure_expression=(
+                    '!PyArg_ParseTuple(%s)' % (', '.join(params),)))
 
         if DEBUG_MODE:
             self.declarations.writeln("/* end declarations */")
@@ -330,6 +358,8 @@ class TypeHandler(object):
         self.props = props
 
 class ReturnType(TypeHandler):
+
+    supports_optional = False
 
     def get_c_type(self):
         raise NotImplementedError
@@ -378,10 +408,22 @@ class StringParam(Parameter):
                                           % (self.name, self.name, self.name)),
                                     cleanup=("Py_XDECREF(py_%s);" % self.name))
             self.wrapper.add_pyargv_item("py_%s" % self.name, optional=True)
-        else:
+        elif self.props.get('nullok', False):
             self.wrapper.add_declaration("PyObject *py_%s;" % self.name)
-            self.wrapper.write_code(code=("py_%s = PyString_FromString(%s);" %
-                                          (self.name, self.name)),
+            self.wrapper.write_code(code=("if (%s)\n"
+                                          "    py_%s = PyString_FromString(%s);\n"
+                                          "else {\n"
+                                          "    Py_INCREF(Py_None);\n"
+                                          "    py_%s = Py_None;\n"
+                                          "}\n"
+                                          % (self.name, self.name, self.name, self.name)),
+                                    cleanup=("Py_DECREF(py_%s);" % self.name))
+            self.wrapper.add_pyargv_item("py_%s" % self.name)
+        else:
+            self.wrapper.add_declaration("PyObject *py_%s = NULL;" % self.name)
+            self.wrapper.write_code(code=("if (%s)\n"
+                                          "    py_%s = PyString_FromString(%s);\n" %
+                                          (self.name, self.name, self.name)),
                                     cleanup=("Py_DECREF(py_%s);" % self.name),
                                     failure_expression=("!py_%s" % self.name))
             self.wrapper.add_pyargv_item("py_%s" % self.name)
@@ -394,10 +436,12 @@ del ctype
 class StringReturn(ReturnType):
 
     def get_c_type(self):
-        return "char *"
+        return self.props.get('c_type', 'char *').replace('const-', 'const ')
+    #return "char *"
 
     def write_decl(self):
-        self.wrapper.add_declaration("char *retval;")
+        self.wrapper.add_declaration("%s retval;" % self.get_c_type())
+        #self.wrapper.add_declaration("char *retval;")
 
     def write_error_return(self):
         self.wrapper.write_code("return NULL;")
@@ -406,7 +450,7 @@ class StringReturn(ReturnType):
         self.wrapper.add_pyret_parse_item("s", "&retval", prepend=True)
         self.wrapper.write_code("retval = g_strdup(retval);", code_sink=self.wrapper.post_return_code)
 
-for ctype in ('char*', 'gchar*'):
+for ctype in ('char*', 'gchar*', 'const-gchar*'):
     argtypes.matcher.register_reverse_ret(ctype, StringReturn)
 del ctype
 
@@ -423,10 +467,7 @@ class VoidReturn(ReturnType):
         self.wrapper.write_code("return;")
 
     def write_conversion(self):
-        self.wrapper.write_code(
-            code=None,
-            failure_expression="py_retval != Py_None",
-            failure_cleanup='PyErr_SetString(PyExc_TypeError, "retval should be None");')
+        self.wrapper.add_pyret_parse_item("", "", prepend=True)
 
 argtypes.matcher.register_reverse_ret('void', VoidReturn)
 argtypes.matcher.register_reverse_ret('none', VoidReturn)
@@ -452,23 +493,39 @@ argtypes.matcher.register_reverse('GObject*', GObjectParam)
 
 class GObjectReturn(ReturnType):
 
+    supports_optional = True
+
     def get_c_type(self):
         return self.props.get('c_type', 'GObject *')
 
     def write_decl(self):
-        self.wrapper.add_declaration("%s retval;" % self.get_c_type())
+        if not self.props.get('optional'):
+            self.wrapper.add_declaration("%s retval;" % self.get_c_type())
+        else:
+            self.wrapper.add_declaration("%s retval = NULL;" % self.get_c_type())
 
     def write_error_return(self):
         self.wrapper.write_code("return NULL;")
 
     def write_conversion(self):
-        self.wrapper.write_code(
-            code=None,
-            failure_expression="!PyObject_TypeCheck(py_retval, &PyGObject_Type)",
-            failure_exception='PyErr_SetString(PyExc_TypeError, "retval should be a GObject");')
-        self.wrapper.write_code("retval = (%s) pygobject_get(py_retval);"
-                                % self.get_c_type())
-        self.wrapper.write_code("g_object_ref((GObject *) retval);")
+        if not self.props.get('optional'):
+            self.wrapper.write_code(
+                code=None,
+                failure_expression="!PyObject_TypeCheck(py_retval, &PyGObject_Type)",
+                failure_exception='PyErr_SetString(PyExc_TypeError, "retval should be a GObject");')
+            self.wrapper.write_code("retval = (%s) pygobject_get(py_retval);"
+                                    % self.get_c_type())
+            self.wrapper.write_code("g_object_ref((GObject *) retval);")
+        else:
+            self.wrapper.write_code(
+                code=None,
+                failure_expression="py_retval != Py_None && !PyObject_TypeCheck(py_retval, &PyGObject_Type)",
+                failure_exception='PyErr_SetString(PyExc_TypeError, "retval should be None or a GObject");')
+            self.wrapper.write_code("if (py_retval != Py_None) {\n"
+                                    "    retval = (%s) pygobject_get(py_retval);\n"
+                                    "    g_object_ref((GObject *) retval);\n"
+                                    "}\n"
+                                    % self.get_c_type())
 
 argtypes.matcher.register_reverse_ret('GObject*', GObjectReturn)
 
@@ -506,9 +563,12 @@ del argtype
 class IntPtrParam(Parameter):
     def __init__(self, wrapper, name, **props):
         if "direction" not in props:
-            raise ValueError("cannot use int* parameter without direction")
+            raise argtypes.ArgTypeConfigurationError(
+                "cannot use int* parameter without direction")
         if props["direction"] not in ("out", "inout"):
-            raise ValueError("cannot use int* parameter with direction '%s'" % (props["direction"],))
+            raise argtypes.ArgTypeConfigurationError(
+                "cannot use int* parameter with direction '%s'"
+                % (props["direction"],))
         Parameter.__init__(self, wrapper, name, **props)
     def get_c_type(self):
         return self.props.get('c_type', 'int*')
@@ -529,8 +589,9 @@ class GEnumReturn(IntReturn):
     def write_conversion(self):
         self.wrapper.write_code(
             code=None,
-            failure_expression=("pyg_enum_get_value(%s, py_retval, (gint *)&retval)" %
-                                self.props['typecode']))
+            failure_expression=(
+            "pyg_enum_get_value(%s, py_retval, (gint *)&retval)"
+            % (self.props['typecode'],)))
 
 argtypes.matcher.register_reverse_ret("GEnum", GEnumReturn)
 
@@ -538,9 +599,9 @@ class GEnumParam(IntParam):
     def convert_c2py(self):
         self.wrapper.add_declaration("PyObject *py_%s;" % self.name)
         self.wrapper.write_code(code=("py_%s = pyg_enum_from_gtype(%s, %s);" %
-                                      (self.name, self.props['typecode'], self.name)),
-                                cleanup=("Py_DECREF(py_%s);" % self.name),
-                                failure_expression=("!py_%s" % self.name))
+                                (self.name, self.props['typecode'], self.name)),
+                        cleanup=("Py_DECREF(py_%s);" % self.name),
+                        failure_expression=("!py_%s" % self.name))
         self.wrapper.add_pyargv_item("py_%s" % self.name)
 
 argtypes.matcher.register_reverse("GEnum", GEnumParam)
@@ -549,16 +610,18 @@ class GFlagsReturn(IntReturn):
     def write_conversion(self):
         self.wrapper.write_code(
             code=None,
-            failure_expression=("pyg_flags_get_value(%s, py_retval, (gint *)&retval)" %
-                                self.props['typecode']))
+            failure_expression=(
+            "pyg_flags_get_value(%s, py_retval, (gint *)&retval)" %
+            self.props['typecode']))
 
 argtypes.matcher.register_reverse_ret("GFlags", GFlagsReturn)
 
 class GFlagsParam(IntParam):
     def convert_c2py(self):
         self.wrapper.add_declaration("PyObject *py_%s;" % self.name)
-        self.wrapper.write_code(code=("py_%s = pyg_flags_from_gtype(%s, %s);" %
-                                      (self.name, self.props['typecode'], self.name)),
+        self.wrapper.write_code(code=(
+            "py_%s = pyg_flags_from_gtype(%s, %s);" %
+            (self.name, self.props['typecode'], self.name)),
                                 cleanup=("Py_DECREF(py_%s);" % self.name),
                                 failure_expression=("!py_%s" % self.name))
         self.wrapper.add_pyargv_item("py_%s" % self.name)
@@ -569,13 +632,31 @@ argtypes.matcher.register_reverse("GFlags", GFlagsParam)
 class GtkTreePathParam(IntParam):
     def convert_c2py(self):
         self.wrapper.add_declaration("PyObject *py_%s;" % self.name)
-        self.wrapper.write_code(code=("py_%s = pygtk_tree_path_to_pyobject(%s);" %
-                                      (self.name, self.name)),
+        self.wrapper.write_code(code=(
+            "py_%s = pygtk_tree_path_to_pyobject(%s);" %
+            (self.name, self.name)),
                                 cleanup=("Py_DECREF(py_%s);" % self.name),
                                 failure_expression=("!py_%s" % self.name))
         self.wrapper.add_pyargv_item("py_%s" % self.name)
 
 argtypes.matcher.register_reverse("GtkTreePath*", GtkTreePathParam)
+
+
+class GtkTreePathReturn(ReturnType):
+    def get_c_type(self):
+        return self.props.get('c_type', 'GtkTreePath *')
+    def write_decl(self):
+        self.wrapper.add_declaration("GtkTreePath * retval;")
+    def write_error_return(self):
+        self.wrapper.write_code("return NULL;")
+    def write_conversion(self):
+        self.wrapper.write_code(
+            "retval = pygtk_tree_path_from_pyobject(py_retval);\n",
+            failure_expression=('!retval'),
+            failure_exception=(
+    'PyErr_SetString(PyExc_TypeError, "retval should be a GtkTreePath");'))
+
+argtypes.matcher.register_reverse_ret("GtkTreePath*", GtkTreePathReturn)
 
 
 class BooleanReturn(ReturnType):
@@ -588,8 +669,9 @@ class BooleanReturn(ReturnType):
         self.wrapper.write_code("return FALSE;")
     def write_conversion(self):
         self.wrapper.add_pyret_parse_item("O", "&py_main_retval", prepend=True)
-        self.wrapper.write_code("retval = PyObject_IsTrue(py_main_retval)? TRUE : FALSE;",
-                                code_sink=self.wrapper.post_return_code)
+        self.wrapper.write_code(
+            "retval = PyObject_IsTrue(py_main_retval)? TRUE : FALSE;",
+            code_sink=self.wrapper.post_return_code)
 argtypes.matcher.register_reverse_ret("gboolean", BooleanReturn)
 
 class BooleanParam(Parameter):
@@ -617,9 +699,12 @@ class DoubleParam(Parameter):
 class DoublePtrParam(Parameter):
     def __init__(self, wrapper, name, **props):
         if "direction" not in props:
-            raise ValueError("cannot use double* parameter without direction")
+            raise argtypes.ArgTypeConfigurationError(
+                "cannot use double* parameter without direction")
         if props["direction"] not in ("out", ): # inout not yet implemented
-            raise ValueError("cannot use double* parameter with direction '%s'" % (props["direction"],))
+            raise argtypes.ArgTypeConfigurationError(
+                "cannot use double* parameter with direction '%s'"
+                % (props["direction"],))
         Parameter.__init__(self, wrapper, name, **props)
     def get_c_type(self):
         return self.props.get('c_type', 'double*')
@@ -637,11 +722,7 @@ class DoubleReturn(ReturnType):
     def write_error_return(self):
         self.wrapper.write_code("return -G_MAXFLOAT;")
     def write_conversion(self):
-        self.wrapper.write_code(
-            code=None,
-            failure_expression="!PyFloat_AsDouble(py_retval)",
-            failure_cleanup='PyErr_SetString(PyExc_TypeError, "retval should be a float");')
-        self.wrapper.write_code("retval = PyFloat_AsDouble(py_retval);")
+        self.wrapper.add_pyret_parse_item("d", "&retval", prepend=True)
 
 for argtype in ('float', 'double', 'gfloat', 'gdouble'):
     argtypes.matcher.register_reverse(argtype, DoubleParam)
@@ -670,6 +751,7 @@ class GBoxedParam(Parameter):
 
 argtypes.matcher.register_reverse("GBoxed", GBoxedParam)
 
+
 class GBoxedReturn(ReturnType):
     def get_c_type(self):
         return self.props.get('c_type')
@@ -678,15 +760,62 @@ class GBoxedReturn(ReturnType):
     def write_error_return(self):
         self.wrapper.write_code("return retval;")
     def write_conversion(self):
-        self.wrapper.write_code(
+        self.wrapper.write_code(code = None,
             failure_expression=("!pyg_boxed_check(py_retval, %s)" %
                                 (self.props['typecode'],)),
-            failure_cleanup=('PyErr_SetString(PyExc_TypeError, "retval should be a %s");'
-                             % (self.props['typename'],)))
+            failure_exception=(
+            'PyErr_SetString(PyExc_TypeError, "retval should be a %s");'
+            % (self.props['typename'],)))
         self.wrapper.write_code('retval = pyg_boxed_get(py_retval, %s);' %
                                 self.props['typename'])
 
 argtypes.matcher.register_reverse_ret("GBoxed", GBoxedReturn)
+
+
+class GdkRegionPtrReturn(GBoxedReturn):
+    def write_error_return(self):
+        self.wrapper.write_code("return gdk_region_new();")
+    def write_conversion(self):
+        self.props['typecode'] = 'PYGDK_TYPE_REGION'
+        self.props['typename'] = 'GdkRegion'
+        super(GdkRegionPtrReturn, self).write_conversion()
+
+argtypes.matcher.register_reverse_ret("GdkRegion*", GdkRegionPtrReturn)
+
+
+class PangoFontDescriptionReturn(GBoxedReturn):
+    def write_error_return(self):
+        self.wrapper.write_code("return pango_font_description_new();")
+    def write_conversion(self):
+        self.props['typecode'] = 'PANGO_TYPE_FONT_DESCRIPTION'
+        self.props['typename'] = 'PangoFontDescription'
+        super(PangoFontDescriptionReturn, self).write_conversion()
+
+argtypes.matcher.register_reverse_ret("PangoFontDescription*",
+                                      PangoFontDescriptionReturn)
+
+
+class PangoFontMetricsReturn(GBoxedReturn):
+    def write_error_return(self):
+        self.wrapper.write_code("return pango_font_metrics_new();")
+    def write_conversion(self):
+        self.props['typecode'] = 'PANGO_TYPE_FONT_METRICS'
+        self.props['typename'] = 'PangoFontMetrics'
+        super(PangoFontMetricsReturn, self).write_conversion()
+
+argtypes.matcher.register_reverse_ret("PangoFontMetrics*",
+                                      PangoFontMetricsReturn)
+
+
+class PangoLanguageReturn(GBoxedReturn):
+    def write_error_return(self):
+        self.wrapper.write_code("return pango_language_from_string(\"\");")
+    def write_conversion(self):
+        self.props['typecode'] = 'PANGO_TYPE_LANGUAGE'
+        self.props['typename'] = 'PangoLanguage'
+        super(PangoLanguageReturn, self).write_conversion()
+
+argtypes.matcher.register_reverse_ret("PangoLanguage*", PangoLanguageReturn)
 
 
 class GdkRectanglePtrParam(Parameter):
@@ -704,6 +833,17 @@ argtypes.matcher.register_reverse("GdkRectangle*", GdkRectanglePtrParam)
 argtypes.matcher.register_reverse('GtkAllocation*', GdkRectanglePtrParam)
 
 
+class GErrorParam(Parameter):
+    def get_c_type(self):
+        return self.props.get('c_type').replace('**', ' **')
+    def convert_c2py(self):
+        self.wrapper.write_code(code=None,
+            failure_expression=("pyg_gerror_exception_check(%s)" % self.name),
+                                code_sink=self.wrapper.check_exception_code)
+
+argtypes.matcher.register_reverse('GError**', GErrorParam)
+
+
 class PyGObjectMethodParam(Parameter):
     def __init__(self, wrapper, name, method_name, **props):
         Parameter.__init__(self, wrapper, name, **props)
@@ -719,6 +859,7 @@ class PyGObjectMethodParam(Parameter):
                                 cleanup=("Py_DECREF(py_%s);" % self.name),
                                 failure_expression=("!py_%s" % self.name))
         self.wrapper.set_call_target("py_%s" % self.name, self.method_name)
+
 
 class CallbackInUserDataParam(Parameter):
     def __init__(self, wrapper, name, free_it, **props):

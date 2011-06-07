@@ -19,10 +19,13 @@ def class2cname(klass, method):
             c_name += c
     return c_name[1:] + '_'  + method
 
-import_pat = re.compile(r'\s*import\s+(\S+)\.([^\s.]+)\s+as\s+(\S+)')
+# import python_type as c_name [for arg_type]
+# Last ('for') clause is optional.  If present, the type will be
+# imported only if given 'arg_type' is registered.
+import_pat = re.compile(r'\s*import\s+(\S+)\.([^\s.]+)\s+as\s+(\S+)(\s+for\s+(\S+))?')
 
 class Overrides:
-    def __init__(self, filename=None, path=[]):
+    def __init__(self, filename=None):
         self.modulename = None
         self.ignores = {}
         self.glob_ignores = []
@@ -43,27 +46,16 @@ class Overrides:
         self.imports = []
         self.defines = {}
         self.functions = {}
-	self.newstyle_constructors = {}
-        self.path = [os.path.abspath(x) for x in path]
-	if filename:
+        self.newstyle_constructors = {}
+        self.dynamicnamespace = False
+        if filename:
             self.handle_file(filename)
 
     def handle_file(self, filename):
         oldpath = os.getcwd()
 
-        fp = None
-        for path in self.path:
-            os.chdir(oldpath)
-            os.chdir(path)
-            try:
-                fp = open(filename, 'r')
-                break
-            except:
-                os.chdir(oldpath)
-        if not fp:
-            raise Exception, "Couldn't find file %s" % filename
-        
-        dirname = path
+        fp = open(filename, 'r')
+        dirname = os.path.dirname(os.path.abspath(filename))
 
         if dirname != oldpath:
             os.chdir(dirname)
@@ -177,7 +169,8 @@ class Overrides:
             for line in string.split(buffer, '\n'):
                 match = import_pat.match(line)
                 if match:
-                    self.imports.append(match.groups())
+                    module, pyname, cname, conditional, importing_for = match.groups()
+                    self.imports.append((module, pyname, cname, importing_for or None))
         elif command == 'define':
             "define funcname [kwargs|noargs|onearg] [classmethod|staticmethod]"
             "define Class.method [kwargs|noargs|onearg] [classmethod|staticmethod]"
@@ -210,6 +203,10 @@ class Overrides:
             "new-constructor GType"
             gtype, = words[1:]
             self.newstyle_constructors[gtype] = True
+        elif command == 'options':
+            for option in words[1:]:
+                if option == 'dynamicnamespace':
+                    self.dynamicnamespace = True
 
     def is_ignored(self, name):
         if self.ignores.has_key(name):

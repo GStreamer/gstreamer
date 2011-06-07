@@ -1,3 +1,5 @@
+#! /usr/bin/env python
+
 import getopt
 import keyword
 import os
@@ -9,6 +11,7 @@ import definitions
 import defsparser
 import override
 import reversewrapper
+import warnings
 
 class Coverage(object):
     def __init__(self, name):
@@ -32,7 +35,7 @@ class Coverage(object):
                       self.wrapped,
                       total))
         else:
-            fd.write("***INFO*** There are no declared %s." % self.name)
+            fd.write("***INFO*** There are no declared %s.\n" % self.name)
 
 functions_coverage = Coverage("global functions")
 methods_coverage = Coverage("methods")
@@ -41,12 +44,13 @@ vaccessors_coverage = Coverage("virtual accessors")
 iproxies_coverage = Coverage("interface proxies")
 
 def exc_info():
+    warnings.warn("deprecated", DeprecationWarning, stacklevel=2)
     #traceback.print_exc()
     etype, value, tb = sys.exc_info()
     ret = ""
     try:
         sval = str(value)
-        if etype == KeyError:
+        if etype == argtypes.ArgTypeError:
             ret = "No ArgType for %s" % (sval,)
         else:
             ret = sval
@@ -91,7 +95,7 @@ class FileOutput:
 
 class Wrapper:
     type_tmpl = (
-        'PyTypeObject Py%(typename)s_Type = {\n'
+        'PyTypeObject G_GNUC_INTERNAL Py%(typename)s_Type = {\n'
         '    PyObject_HEAD_INIT(NULL)\n'
         '    0,                                 /* ob_size */\n'
         '    "%(classname)s",                   /* tp_name */\n'
@@ -211,12 +215,10 @@ class Wrapper:
         '%(parseargs)s'
         '%(codebefore)s'
         '    klass = g_type_class_ref(pyg_type_from_object(cls));\n'
-        '    if (%(class_cast_macro)s(klass)->%(virtual)s) {\n'
-        '        pyg_begin_allow_threads;\n'
+        '    if (%(class_cast_macro)s(klass)->%(virtual)s)\n'
         '        %(setreturn)s%(class_cast_macro)s(klass)->'
         '%(virtual)s(%(arglist)s);\n'
-        '        pyg_end_allow_threads;\n'
-        '    } else {\n'
+        '    else {\n'
         '        PyErr_SetString(PyExc_NotImplementedError, '
         '"virtual method %(name)s not implemented");\n'
         '        g_type_class_unref(klass);\n'
@@ -247,12 +249,17 @@ class Wrapper:
     def get_initial_class_substdict(self): return {}
 
     def get_initial_constructor_substdict(self, constructor):
-        return { 'name': '%s.__init__' % self.objinfo.c_name,
+        return { 'name': '%s.__init__' % self.objinfo.py_name,
                  'errorreturn': '-1' }
+
     def get_initial_method_substdict(self, method):
-        substdict = { 'name': '%s.%s' % (self.objinfo.c_name, method.name) }
-        substdict['begin_allow_threads'] = 'pyg_begin_allow_threads;'
-        substdict['end_allow_threads'] = 'pyg_end_allow_threads;'
+        substdict = { 'name': '%s.%s' % (self.objinfo.py_name, method.name) }
+        if method.unblock_threads:
+            substdict['begin_allow_threads'] = 'pyg_begin_allow_threads;'
+            substdict['end_allow_threads'] = 'pyg_end_allow_threads;'
+        else:
+            substdict['begin_allow_threads'] = ''
+            substdict['end_allow_threads'] = ''
         return substdict
 
     def write_class(self):
@@ -314,14 +321,14 @@ class Wrapper:
             info.arglist.append('')
 
         if function_obj.varargs:
-            raise ValueError, "varargs functions not supported"
+            raise argtypes.ArgTypeNotFoundError("varargs functions not supported")
 
         for param in function_obj.params:
-            if param.pdflt and '|' not in info.parsestr:
+            if param.pdflt != None and '|' not in info.parsestr:
                 info.add_parselist('|', [], [])
             handler = argtypes.matcher.get(param.ptype)
             handler.write_param(param.ptype, param.pname, param.pdflt,
-                                param.pnull, param.keeprefcount, info)
+                                param.pnull, info)
 
         substdict['setreturn'] = ''
         if handle_return:
@@ -341,8 +348,12 @@ class Wrapper:
         # if name isn't set, set it to function_obj.name
         substdict.setdefault('name', function_obj.name)
 
-        substdict['begin_allow_threads'] = 'pyg_begin_allow_threads;'
-        substdict['end_allow_threads'] = 'pyg_end_allow_threads;'
+        if function_obj.unblock_threads:
+            substdict['begin_allow_threads'] = 'pyg_begin_allow_threads;'
+            substdict['end_allow_threads'] = 'pyg_end_allow_threads;'
+        else:
+            substdict['begin_allow_threads'] = ''
+            substdict['end_allow_threads'] = ''
 
         if self.objinfo:
             substdict['typename'] = self.objinfo.c_name
@@ -415,9 +426,9 @@ class Wrapper:
                     constructor))[0]
                 self.fp.write(code)
             initfunc = '_wrap_' + funcname
-        except:
+        except argtypes.ArgTypeError, ex:
             sys.stderr.write('Could not write constructor for %s: %s\n'
-                             % (self.objinfo.c_name, exc_info()))
+                             % (self.objinfo.c_name, str(ex)))
 
             initfunc = self.write_noconstructor()
         return initfunc
@@ -457,7 +468,7 @@ class Wrapper:
 
     def _get_class_virtual_substdict(self, meth, cname, parent):
         substdict = self.get_initial_method_substdict(meth)
-        substdict['virtual'] = substdict['name'].split('.')[1]
+        substdict['virtual'] = meth.name
         substdict['cname'] = cname
         substdict['class_cast_macro'] = parent.typecode.replace(
             '_TYPE_', '_', 1) + "_CLASS"
@@ -492,10 +503,10 @@ class Wrapper:
                                  'flags': methflags,
                                  'docstring': meth.docstring })
                 methods_coverage.declare_wrapped()
-            except:
+            except argtypes.ArgTypeError, ex:
                 methods_coverage.declare_not_wrapped()
                 sys.stderr.write('Could not write method %s.%s: %s\n'
-                                % (klass, meth.name, exc_info()))
+                                % (klass, meth.name, str(ex)))
 
         # Now try to see if there are any defined in the override
         for method_name in self.overrides.get_defines_for(klass):
@@ -512,12 +523,12 @@ class Wrapper:
                                { 'name':  method_name,
                                  'cname': '_wrap_' + c_name,
                                  'flags': methflags,
-                                 'docstring': meth.docstring })
+                                 'docstring': 'NULL' })
                 methods_coverage.declare_wrapped()
-            except:
+            except argtypes.ArgTypeError, ex:
                 methods_coverage.declare_not_wrapped()
                 sys.stderr.write('Could not write method %s.%s: %s\n'
-                                % (klass, meth.name, exc_info()))
+                                % (klass, method_name, str(ex)))
 
         # Add GObject virtual method accessors, for chaining to parent
         # virtuals from subclasses
@@ -568,11 +579,11 @@ class Wrapper:
                                  'flags': methflags + '|METH_CLASS',
                                  'docstring': 'NULL'})
                 vaccessors_coverage.declare_wrapped()
-            except:
+            except argtypes.ArgTypeError, ex:
                 vaccessors_coverage.declare_not_wrapped()
                 sys.stderr.write(
                     'Could not write virtual accessor method %s.%s: %s\n'
-                    % (klass, meth.name, exc_info()))
+                    % (klass, meth.name, str(ex)))
         return methods
 
     def write_virtuals(self):
@@ -604,6 +615,7 @@ class Wrapper:
                         handler, props = argtypes.matcher.get_reverse(
                             param.ptype)
                         props["direction"] = param.pdir
+                        props["nullok"] = param.pnull
                         wrapper.add_parameter(handler(wrapper,
                                                       param.pname, **props))
                     buf = reversewrapper.MemoryCodeSink()
@@ -611,11 +623,11 @@ class Wrapper:
                     self.fp.write(buf.flush())
                 virtuals.append((fixname(meth.name), '_wrap_' + method_name))
                 vproxies_coverage.declare_wrapped()
-            except (KeyError, ValueError):
+            except argtypes.ArgTypeError, ex:
                 vproxies_coverage.declare_not_wrapped()
                 virtuals.append((fixname(meth.name), None))
                 sys.stderr.write('Could not write virtual proxy %s.%s: %s\n'
-                                % (klass, meth.name, exc_info()))
+                                % (klass, meth.name, str(ex)))
         if virtuals:
             # Write a 'pygtk class init' function for this object,
             # except when the object type is explicitly ignored (like
@@ -699,10 +711,10 @@ class Wrapper:
                                     'field': self.get_field_accessor(cfname),
                                     'codeafter': info.get_codeafter() })
                     gettername = funcname
-                except:
+                except argtypes.ArgTypeError, ex:
                     sys.stderr.write(
                         "Could not write getter for %s.%s: %s\n"
-                        % (self.objinfo.c_name, fname, exc_info()))
+                        % (self.objinfo.c_name, fname, str(ex)))
             if gettername != '0' or settername != '0':
                 getsets.append('    { "%s", (getter)%s, (setter)%s },\n' %
                                (fixname(fname), gettername, settername))
@@ -717,10 +729,109 @@ class Wrapper:
 
         return getsets_name
 
-    def write_functions(self, prefix):
-        self.fp.write('\n/* ----------- functions ----------- */\n\n')
-        functions = []
+    def _write_get_symbol_names(self, writer, functions):
+        self.fp.write("""static PyObject *
+_wrap__get_symbol_names(PyObject *self)
+{
+    PyObject *pylist = PyList_New(0);
 
+""")
+        for obj, bases in writer.get_classes():
+            self.fp.write('    PyList_Append(pylist, '
+                          'PyString_FromString("%s"));\n' % (obj.name))
+
+        for name, cname, flags, docstring in functions:
+            self.fp.write('    PyList_Append(pylist, '
+                          'PyString_FromString("%s"));\n' % (name))
+
+        for enum in writer.get_enums():
+            self.fp.write('    PyList_Append(pylist, '
+                          'PyString_FromString("%s"));\n' % (enum.name))
+            for nick, value in enum.values:
+                name = value[len(self.overrides.modulename)+1:]
+                self.fp.write('    PyList_Append(pylist, '
+                              'PyString_FromString("%s"));\n' % (name))
+
+        self.fp.write("    return pylist;\n}\n\n");
+
+    def _write_get_symbol(self, writer, functions):
+        self.fp.write("""static PyObject *
+_wrap__get_symbol(PyObject *self, PyObject *args)
+{
+    PyObject *d;
+    char *name;
+    static PyObject *modulename = NULL;
+    static PyObject *module = NULL;
+    static char *strip_prefix = "%s";
+
+    if (!PyArg_ParseTuple(args, "Os", &d, &name))
+        return NULL;
+
+    if (!modulename)
+       modulename = PyString_FromString("%s");
+
+    if (!module)
+       module = PyDict_GetItemString(d, "__module__");
+
+""" % (self.overrides.modulename.upper() + '_',
+       self.overrides.modulename))
+
+        first = True
+        # Classes / GObjects
+        for obj, bases in writer.get_classes():
+            if first:
+                self.fp.write('    if (!strcmp(name, "%s")) {\n' % obj.name)
+                first = False
+            else:
+                self.fp.write('    } else if (!strcmp(name, "%s")) {\n' % obj.name)
+            self.fp.write(
+                '       return (PyObject*)pygobject_lookup_class(%s);\n' %
+                obj.typecode)
+        self.fp.write('    }\n')
+
+        # Functions
+        for name, cname, flags, docstring in functions:
+            self.fp.write('    else if (!strcmp(name, "%s")) {\n' % name)
+            self.fp.write('        static PyMethodDef ml = { '
+                          '"%s", (PyCFunction)%s, %s, "%s"};\n' % (
+                name, cname, flags, docstring))
+            self.fp.write('        return PyCFunction_NewEx(&ml, NULL, modulename);\n')
+            self.fp.write('    }\n')
+
+        # Enums
+        def write_enum(enum, returnobj=False):
+            if returnobj:
+                ret = 'return '
+            else:
+                ret = ''
+            if enum.deftype == 'enum':
+                self.fp.write(
+                    '        %spyg_enum_add(module, "%s", strip_prefix, %s);\n'
+                    % (ret, enum.name, enum.typecode))
+            else:
+                self.fp.write(
+                    '    %spyg_flags_add(module, "%s", strip_prefix, %s);\n'
+                    % (ret, enum.name, enum.typecode))
+
+        strip_len = len(self.overrides.modulename)+1 # GTK_
+        for enum in writer.get_enums():
+            # XXX: Implement without typecodes
+            self.fp.write('    else if (!strcmp(name, "%s")) {\n' % enum.name)
+            write_enum(enum, returnobj=True)
+            self.fp.write('    }\n')
+
+            for nick, value in enum.values:
+                value = value[strip_len:]
+                self.fp.write('    else if (!strcmp(name, "%s")) {\n' % value)
+                write_enum(enum)
+                self.fp.write('        return PyObject_GetAttrString(module, "%s");\n' %
+                              value)
+                self.fp.write('    }\n')
+
+        self.fp.write('    return Py_None;\n}\n\n');
+
+    def _write_function_bodies(self):
+        functions = []
         # First, get methods from the defs files
         for func in self.parser.find_functions():
             funcname = func.c_name
@@ -737,16 +848,13 @@ class Wrapper:
                     code, methflags = self.write_function_wrapper(func,
                         self.function_tmpl, handle_return=1, is_method=0)
                     self.fp.write(code)
-                functions.append(self.methdef_tmpl %
-                                 { 'name':  func.name,
-                                   'cname': '_wrap_' + funcname,
-                                   'flags': methflags,
-                                   'docstring': func.docstring })
+                functions.append((func.name, '_wrap_' + funcname,
+                                  methflags, func.docstring))
                 functions_coverage.declare_wrapped()
-            except:
+            except argtypes.ArgTypeError, ex:
                 functions_coverage.declare_not_wrapped()
                 sys.stderr.write('Could not write function %s: %s\n'
-                                 % (func.name, exc_info()))
+                                 % (func.name, str(ex)))
 
         # Now try to see if there are any defined in the override
         for funcname in self.overrides.get_functions():
@@ -754,16 +862,49 @@ class Wrapper:
                 data = self.overrides.function(funcname)
                 self.write_function(funcname, data)
                 methflags = self.get_methflags(funcname)
-                functions.append(self.methdef_tmpl %
-                                 { 'name':  funcname,
-                                   'cname': '_wrap_' + funcname,
-                                   'flags': methflags,
-                                   'docstring': 'NULL'})
+                functions.append((funcname, '_wrap_' + funcname,
+                                  methflags, 'NULL'))
                 functions_coverage.declare_wrapped()
-            except:
+            except argtypes.ArgTypeError, ex:
                 functions_coverage.declare_not_wrapped()
                 sys.stderr.write('Could not write function %s: %s\n'
-                                 % (funcname, exc_info()))
+                                 % (funcname, str(ex)))
+        return functions
+
+    def write_functions(self, writer, prefix):
+        self.fp.write('\n/* ----------- functions ----------- */\n\n')
+        functions = []
+        func_infos = self._write_function_bodies()
+
+        # If we have a dynamic namespace, write symbol and attribute getter
+        if self.overrides.dynamicnamespace:
+            self._write_get_symbol_names(writer, func_infos)
+            self._write_get_symbol(writer, func_infos)
+            for obj, bases in writer.get_classes():
+                self.fp.write("""static PyTypeObject *
+%s_register_type(const gchar *name, PyObject *unused)
+{
+    PyObject *m = PyImport_ImportModule("gtk");
+    PyObject *d = PyModule_GetDict(m);
+""" % obj.c_name)
+                writer.write_class(obj, bases, indent=1)
+                self.fp.write(
+                    '    return (%s)PyDict_GetItemString(d, "%s");\n' % (
+                    'PyTypeObject*', obj.name))
+                self.fp.write("}\n")
+
+            functions.append('    { "_get_symbol_names", '
+                             '(PyCFunction)_wrap__get_symbol_names, '
+                             'METH_NOARGS, NULL },\n')
+            functions.append('    { "_get_symbol", '
+                             '(PyCFunction)_wrap__get_symbol, '
+                             'METH_VARARGS, NULL },\n')
+        else:
+            for name, cname, flags, docstring in func_infos:
+                functions.append(self.methdef_tmpl % dict(name=name,
+                                                          cname=cname,
+                                                          flags=flags,
+                                                          docstring=docstring))
 
         # write the PyMethodDef structure
         functions.append('    { NULL, NULL, 0, NULL }\n')
@@ -958,72 +1099,6 @@ class GObjectWrapper(Wrapper):
         return "_wrap_%s" % constructor.c_name
 
 
-## TODO : Add GstMiniObjectWrapper(Wrapper)
-class GstMiniObjectWrapper(Wrapper):
-    constructor_tmpl = (
-        'static int\n'
-        '_wrap_%(cname)s(PyGstMiniObject *self%(extraparams)s)\n'
-        '{\n'
-        '%(varlist)s'
-        '%(parseargs)s'
-        '%(codebefore)s'
-        '    self->obj = (GstMiniObject *)%(cname)s(%(arglist)s);\n'
-        '%(codeafter)s\n'
-        '    if (!self->obj) {\n'
-        '        PyErr_SetString(PyExc_RuntimeError, '
-        '"could not create %(typename)s miniobject");\n'
-        '        return -1;\n'
-        '    }\n'
-        '%(aftercreate)s'
-        '    pygstminiobject_register_wrapper((PyObject *)self);\n'
-        '    return 0;\n'
-        '}\n\n'
-        )
-    method_tmpl = (
-        'static PyObject *\n'
-        '_wrap_%(cname)s(PyGstMiniObject *self%(extraparams)s)\n'
-        '{\n'
-        '%(varlist)s'
-        '%(parseargs)s'
-        '%(codebefore)s'
-        '    %(begin_allow_threads)s\n'
-        '    %(setreturn)s%(cname)s(%(cast)s(self->obj)%(arglist)s);\n'
-        '    %(end_allow_threads)s\n'
-        '%(codeafter)s\n'
-        '}\n\n'
-        )
-    def __init__(self, parser, objinfo, overrides, fp=FileOutput(sys.stdout)):
-        Wrapper.__init__(self, parser, objinfo, overrides, fp)
-        if self.objinfo:
-            self.castmacro = string.replace(self.objinfo.typecode,
-                                            '_TYPE_', '_', 1)
-
-    def get_initial_class_substdict(self):
-        return { 'tp_basicsize'      : 'PyGstMiniObject',
-                 'tp_weaklistoffset' : 'offsetof(PyGstMiniObject, weakreflist)',
-                 'tp_dictoffset'     : 'offsetof(PyGstMiniObject, inst_dict)' }
-    
-    def get_field_accessor(self, fieldname):
-        castmacro = string.replace(self.objinfo.typecode, '_TYPE_', '_', 1)
-        return '%s(pygstminiobject_get(self))->%s' % (castmacro, fieldname)
-
-    def get_initial_constructor_substdict(self, constructor):
-        substdict = Wrapper.get_initial_constructor_substdict(self,
-                                                              constructor)
-        if not constructor.caller_owns_return:
-            substdict['aftercreate'] = "    gst_mini_object_ref(self->obj);\n"
-        else:
-            substdict['aftercreate'] = ''
-        return substdict
-
-    def get_initial_method_substdict(self, method):
-        substdict = Wrapper.get_initial_method_substdict(self, method)
-        substdict['cast'] = string.replace(self.objinfo.typecode,
-                                           '_TYPE_', '_', 1)
-        return substdict
-    
-
-
 class GInterfaceWrapper(GObjectWrapper):
     virtual_accessor_tmpl = (
         'static PyObject *\n'
@@ -1060,7 +1135,7 @@ class GInterfaceWrapper(GObjectWrapper):
 
     def _get_class_virtual_substdict(self, meth, cname, parent):
         substdict = self.get_initial_method_substdict(meth)
-        substdict['virtual'] = substdict['name'].split('.')[1]
+        substdict['virtual'] = meth.name
         substdict['cname'] = cname
         substdict['typecode'] = self.objinfo.typecode
         substdict['vtable'] = self.objinfo.vtable
@@ -1094,6 +1169,7 @@ class GInterfaceWrapper(GObjectWrapper):
                         handler, props = argtypes.matcher.get_reverse(
                             param.ptype)
                         props["direction"] = param.pdir
+                        props["nullok"] = param.pnull
                         wrapper.add_parameter(
                             handler(wrapper, param.pname, **props))
                     buf = reversewrapper.MemoryCodeSink()
@@ -1101,19 +1177,15 @@ class GInterfaceWrapper(GObjectWrapper):
                     self.fp.write(buf.flush())
                 proxies.append((fixname(meth.name), '_wrap_' + method_name))
                 iproxies_coverage.declare_wrapped()
-            except (KeyError, ValueError):
+            except argtypes.ArgTypeError, ex:
                 iproxies_coverage.declare_not_wrapped()
                 proxies.append((fixname(meth.name), None))
                 sys.stderr.write('Could not write interface proxy %s.%s: %s\n'
-                                % (klass, meth.name, exc_info()))
+                                % (klass, meth.name, str(ex)))
 
-        if not proxies:
+        if not proxies or not [cname for name, cname in proxies if cname]:
             return
 
-        # Make sure we have at least one proxy function
-        if not [cname for name,cname in proxies if not cname is None]:
-            return
-        
         ## Write an interface init function for this object
         funcname = "__%s__interface_init" % klass
         vtable = self.objinfo.vtable
@@ -1161,7 +1233,7 @@ class GBoxedWrapper(Wrapper):
     constructor_tmpl = (
         'static int\n'
         '_wrap_%(cname)s(PyGBoxed *self%(extraparams)s)\n'
-        '{\n' \
+        '{\n'
         '%(varlist)s'
         '%(parseargs)s'
         '%(codebefore)s'
@@ -1256,250 +1328,330 @@ class GPointerWrapper(GBoxedWrapper):
         substdict['typecode'] = self.objinfo.typecode
         return substdict
 
-def write_headers(data, fp):
-    fp.write('/* -- THIS FILE IS GENERATED - DO NOT EDIT */')
-    fp.write('/* -*- Mode: C; c-basic-offset: 4 -*- */\n\n')
-    fp.write('#include <Python.h>\n\n\n')
-    fp.write(data)
-    fp.resetline()
-    fp.write('\n\n')
+class SourceWriter:
+    def __init__(self, parser, overrides, prefix, fp=FileOutput(sys.stdout)):
+        self.parser = parser
+        self.overrides = overrides
+        self.prefix = prefix
+        self.fp = fp
 
-def write_body(data, fp):
-    fp.write(data)
-    fp.resetline()
-    fp.write('\n\n')
+    def write(self, py_ssize_t_clean=False):
+        argtypes.py_ssize_t_clean = py_ssize_t_clean
 
-def write_imports(overrides, fp):
-    fp.write('/* ---------- types from other modules ---------- */\n')
-    for module, pyname, cname in overrides.get_imports():
-        fp.write('static PyTypeObject *_%s;\n' % cname)
-        fp.write('#define %s (*_%s)\n' % (cname, cname))
-    fp.write('\n\n')
+        self.write_headers(py_ssize_t_clean)
+        self.write_imports()
+        self.write_type_declarations()
+        self.write_body()
+        self.write_classes()
 
-def write_type_declarations(parser, fp):
-    fp.write('/* ---------- forward type declarations ---------- */\n')
-    for obj in parser.boxes:
-        fp.write('PyTypeObject Py' + obj.c_name + '_Type;\n')
-    for obj in parser.objects:
-        fp.write('PyTypeObject Py' + obj.c_name + '_Type;\n')
-    for obj in parser.miniobjects:
-        fp.write('PyTypeObject Py' + obj.c_name + '_Type;\n')
-    for interface in parser.interfaces:
-        fp.write('PyTypeObject Py' + interface.c_name + '_Type;\n')
-    fp.write('\n')
+        wrapper = Wrapper(self.parser, None, self.overrides, self.fp)
+        wrapper.write_functions(self, self.prefix)
 
+        if not self.overrides.dynamicnamespace:
+            self.write_enums()
+        self.write_extension_init()
+        self.write_registers()
+        
+        argtypes.py_ssize_t_clean = False
 
-def sort_parent_children(objects):
-    objects = list(objects)
-    modified = True
-    while modified:
-        modified = False
-        parent_index = None
-        child_index = None
-        for i, obj in enumerate(objects):
-            if obj.parent == 'GObject':
-                continue
-            if obj.parent not in [info.c_name for info in objects[:i]]:
-                for j, info in enumerate(objects[i+1:]):
-                    if info.c_name == obj.parent:
-                        parent_index = i + 1 + j
-                        child_index = i
-                        break
-                else:
+    def write_headers(self, py_ssize_t_clean):
+        self.fp.write('/* -- THIS FILE IS GENERATED - DO NOT EDIT */')
+        self.fp.write('/* -*- Mode: C; c-basic-offset: 4 -*- */\n\n')
+        if py_ssize_t_clean:
+            self.fp.write('#define PY_SSIZE_T_CLEAN\n')
+        self.fp.write('#include <Python.h>\n\n\n')
+        if py_ssize_t_clean:
+            self.fp.write('''
+
+#if PY_VERSION_HEX < 0x02050000
+typedef int Py_ssize_t;
+#define PY_SSIZE_T_MAX INT_MAX
+#define PY_SSIZE_T_MIN INT_MIN
+typedef inquiry lenfunc;
+typedef intargfunc ssizeargfunc;
+typedef intobjargproc ssizeobjargproc;
+#endif
+
+''')
+        self.fp.write(self.overrides.get_headers())
+        self.fp.resetline()
+        self.fp.write('\n\n')
+
+    def write_imports(self):
+        self.fp.write('/* ---------- types from other modules ---------- */\n')
+        for module, pyname, cname, importing_for in self.overrides.get_imports():
+            if importing_for is None or is_registered_object(importing_for):
+                self.fp.write('static PyTypeObject *_%s;\n' % cname)
+                self.fp.write('#define %s (*_%s)\n' % (cname, cname))
+        self.fp.write('\n\n')
+
+    def write_type_declarations(self):
+        #todo use 'static' if used only in one file
+        self.fp.write('/* ---------- forward type declarations ---------- */\n')
+        for obj in self.parser.boxes:
+            if not self.overrides.is_type_ignored(obj.c_name):
+                self.fp.write('PyTypeObject G_GNUC_INTERNAL Py' + obj.c_name + '_Type;\n')
+        for obj in self.parser.objects:
+            if not self.overrides.is_type_ignored(obj.c_name):
+                self.fp.write('PyTypeObject G_GNUC_INTERNAL Py' + obj.c_name + '_Type;\n')
+        for interface in self.parser.interfaces:
+            if not self.overrides.is_type_ignored(interface.c_name):
+                self.fp.write('PyTypeObject G_GNUC_INTERNAL Py' + interface.c_name + '_Type;\n')
+        self.fp.write('\n')
+
+    def write_body(self):
+        self.fp.write(self.overrides.get_body())
+        self.fp.resetline()
+        self.fp.write('\n\n')
+
+    def _sort_parent_children(self, objects):
+        objects = list(objects)
+        modified = True
+        while modified:
+            modified = False
+            parent_index = None
+            child_index = None
+            for i, obj in enumerate(objects):
+                if obj.parent == 'GObject':
                     continue
-                break
-        if child_index is not None and parent_index is not None:
-            if child_index != parent_index:
-                objects.insert(child_index, objects.pop(parent_index))
-                modified = True
-    return objects
+                if obj.parent not in [info.c_name for info in objects[:i]]:
+                    for j, info in enumerate(objects[i+1:]):
+                        if info.c_name == obj.parent:
+                            parent_index = i + 1 + j
+                            child_index = i
+                            break
+                    else:
+                        continue
+                    break
+            if child_index is not None and parent_index is not None:
+                if child_index != parent_index:
+                    objects.insert(child_index, objects.pop(parent_index))
+                    modified = True
+        return objects
 
-def write_classes(parser, overrides, fp):
-    ## Sort the objects, so that we generate code for the parent types
-    ## before their children.
-    objects = sort_parent_children(parser.objects)
-    for klass, items in ((GBoxedWrapper, parser.boxes),
-                         (GPointerWrapper, parser.pointers),
-                         (GObjectWrapper, objects),
-                         (GstMiniObjectWrapper, parser.miniobjects),
-                         (GInterfaceWrapper, parser.interfaces)):
-        for item in items:
-            instance = klass(parser, item, overrides, fp)
-            instance.write_class()
-            fp.write('\n')
+    def write_classes(self):
+        ## Sort the objects, so that we generate code for the parent types
+        ## before their children.
+        objects = self._sort_parent_children(self.parser.objects)
 
-def write_enums(parser, overrides, prefix, fp=sys.stdout):
-    if not parser.enums:
-        return
-    fp.write('\n/* ----------- enums and flags ----------- */\n\n')
-    fp.write(
-        'void\n' + prefix +
-        '_add_constants(PyObject *module, const gchar *strip_prefix)\n{\n')
+        for klass, items in ((GBoxedWrapper, self.parser.boxes),
+                             (GPointerWrapper, self.parser.pointers),
+                             (GObjectWrapper, objects),
+                             (GInterfaceWrapper, self.parser.interfaces)):
+            for item in items:
+                instance = klass(self.parser, item, self.overrides, self.fp)
+                instance.write_class()
+                self.fp.write('\n')
 
-    for enum in parser.enums:
-        if overrides.is_type_ignored(enum.c_name):
-            continue
-        if enum.typecode is None:
-            for nick, value in enum.values:
-                fp.write(
-                    '    PyModule_AddIntConstant(module, '
-                    '(char *) pyg_constant_strip_prefix("%s", strip_prefix), %s);\n'
-                    % (value, value))
-        else:
-            if enum.deftype == 'enum':
-                fp.write('  pyg_enum_add(module, "%s", strip_prefix, %s);\n'
-                         % (enum.name, enum.typecode))
+    def get_enums(self):
+        enums = []
+        for enum in self.parser.enums:
+            if self.overrides.is_type_ignored(enum.c_name):
+                continue
+            enums.append(enum)
+        return enums
+
+    def write_enums(self):
+        if not self.parser.enums:
+            return
+
+        self.fp.write('\n/* ----------- enums and flags ----------- */\n\n')
+        self.fp.write(
+            'void\n' + self.prefix +
+            '_add_constants(PyObject *module, const gchar *strip_prefix)\n{\n')
+
+        self.fp.write(
+            '#ifdef VERSION\n'
+            '    PyModule_AddStringConstant(module, "__version__", VERSION);\n'
+            '#endif\n')
+
+        for enum in self.get_enums():
+            if enum.typecode is None:
+                for nick, value in enum.values:
+                    self.fp.write(
+                        '    PyModule_AddIntConstant(module, '
+                        '(char *) pyg_constant_strip_prefix("%s", strip_prefix), %s);\n'
+                        % (value, value))
             else:
-                fp.write('  pyg_flags_add(module, "%s", strip_prefix, %s);\n'
-                         % (enum.name, enum.typecode))
+                if enum.deftype == 'enum':
+                    self.fp.write('  pyg_enum_add(module, "%s", strip_prefix, %s);\n'
+                                  % (enum.name, enum.typecode))
+                else:
+                    self.fp.write('  pyg_flags_add(module, "%s", strip_prefix, %s);\n'
+                                  % (enum.name, enum.typecode))
 
-    fp.write('\n')
-    fp.write('  if (PyErr_Occurred())\n')
-    fp.write('    PyErr_Print();\n')
-    fp.write('}\n\n')
+        self.fp.write('\n')
+        self.fp.write('  if (PyErr_Occurred())\n')
+        self.fp.write('    PyErr_Print();\n')
+        self.fp.write('}\n\n')
 
-def write_extension_init(overrides, prefix, fp):
-    fp.write('/* initialise stuff extension classes */\n')
-    fp.write('void\n' + prefix + '_register_classes(PyObject *d)\n{\n')
-    imports = overrides.get_imports()[:]
-    if imports:
+    def write_object_imports(self, retval=''):
+        imports = self.overrides.get_imports()[:]
+        if not imports:
+            return
+
         bymod = {}
-        for module, pyname, cname in imports:
-            bymod.setdefault(module, []).append((pyname, cname))
-        fp.write('    PyObject *module;\n\n')
+        for module, pyname, cname, importing_for in imports:
+            if importing_for is None or is_registered_object(importing_for):
+                bymod.setdefault(module, []).append((pyname, cname))
+        self.fp.write('    PyObject *module;\n\n')
         for module in bymod:
-            fp.write(
+            self.fp.write(
                 '    if ((module = PyImport_ImportModule("%s")) != NULL) {\n'
                 % module)
-            fp.write(
-                '        PyObject *moddict = PyModule_GetDict(module);\n\n')
+            #self.fp.write(
+            #    '        PyObject *moddict = PyModule_GetDict(module);\n\n')
             for pyname, cname in bymod[module]:
-                fp.write(
-                    '        _%s = (PyTypeObject *)PyDict_GetItemString('
-                    'moddict, "%s");\n' % (cname, pyname))
-                fp.write('        if (_%s == NULL) {\n' % cname)
-                fp.write('            PyErr_SetString(PyExc_ImportError,\n')
-                fp.write('                "cannot import name %s from %s");\n'
+                #self.fp.write(
+                #    '        _%s = (PyTypeObject *)PyDict_GetItemString('
+                #    'moddict, "%s");\n' % (cname, pyname))
+                self.fp.write(
+                    '        _%s = (PyTypeObject *)PyObject_GetAttrString('
+                    'module, "%s");\n' % (cname, pyname))
+                self.fp.write('        if (_%s == NULL) {\n' % cname)
+                self.fp.write('            PyErr_SetString(PyExc_ImportError,\n')
+                self.fp.write('                "cannot import name %s from %s");\n'
                          % (pyname, module))
-                fp.write('            return;\n')
-                fp.write('        }\n')
-            fp.write('    } else {\n')
-            fp.write('        PyErr_SetString(PyExc_ImportError,\n')
-            fp.write('            "could not import %s");\n' % module)
-            fp.write('        return;\n')
-            fp.write('    }\n')
-        fp.write('\n')
-    fp.write(overrides.get_init() + '\n')
-    fp.resetline()
+                self.fp.write('            return %s;\n' % retval)
+                self.fp.write('        }\n')
+            self.fp.write('    } else {\n')
+            self.fp.write('        PyErr_SetString(PyExc_ImportError,\n')
+            self.fp.write('            "could not import %s");\n' % module)
+            self.fp.write('        return %s;\n' % retval)
+            self.fp.write('    }\n')
+        self.fp.write('\n')
 
-def write_registers(parser, overrides, fp):
-    for boxed in parser.boxes:
-        if overrides.is_type_ignored(boxed.c_name):
-            continue
-        fp.write('    pyg_register_boxed(d, "' + boxed.name +
-                 '", ' + boxed.typecode +
-                 ', &Py' + boxed.c_name +
-                 '_Type);\n')
-    for pointer in parser.pointers:
-        if overrides.is_type_ignored(pointer.c_name):
-            continue
-        fp.write('    pyg_register_pointer(d, "' + pointer.name +
-                 '", ' + pointer.typecode +
-                 ', &Py' + pointer.c_name + '_Type);\n')
-    for interface in parser.interfaces:
-        if overrides.is_type_ignored(interface.c_name):
-            continue
-        fp.write('    pyg_register_interface(d, "' + interface.name +
-                 '", '+ interface.typecode + ', &Py' + interface.c_name +
-                 '_Type);\n')
-        if interface.interface_info is not None:
-            fp.write('    pyg_register_interface_info(%s, &%s);\n' %
-                     (interface.typecode, interface.interface_info))
+    def write_extension_init(self):
+        self.fp.write('/* initialise stuff extension classes */\n')
+        self.fp.write('void\n' + self.prefix + '_register_classes(PyObject *d)\n{\n')
+        self.write_object_imports()
+        self.fp.write(self.overrides.get_init() + '\n')
+        self.fp.resetline()
 
-    objects = parser.objects[:]
-    pos = 0
-    while pos < len(objects):
-        parent = objects[pos].parent
-        for i in range(pos+1, len(objects)):
-            if objects[i].c_name == parent:
-                objects.insert(i+1, objects[pos])
-                del objects[pos]
-                break
+    def get_classes(self):
+        objects = self.parser.objects[:]
+        pos = 0
+        while pos < len(objects):
+            parent = objects[pos].parent
+            for i in range(pos+1, len(objects)):
+                if objects[i].c_name == parent:
+                    objects.insert(i+1, objects[pos])
+                    del objects[pos]
+                    break
+            else:
+                pos = pos + 1
+
+        retval = []
+        for obj in objects:
+            if self.overrides.is_type_ignored(obj.c_name):
+                continue
+            bases = []
+            if obj.parent != None:
+                bases.append(obj.parent)
+            bases = bases + obj.implements
+            retval.append((obj, bases))
+
+        return retval
+
+    def write_registers(self):
+        for boxed in self.parser.boxes:
+            if not self.overrides.is_type_ignored(boxed.c_name):
+                self.fp.write('    pyg_register_boxed(d, "' + boxed.name +
+                              '", ' + boxed.typecode +
+                              ', &Py' + boxed.c_name +
+                          '_Type);\n')
+        for pointer in self.parser.pointers:
+            if not self.overrides.is_type_ignored(pointer.c_name):
+                self.fp.write('    pyg_register_pointer(d, "' + pointer.name +
+                              '", ' + pointer.typecode +
+                              ', &Py' + pointer.c_name + '_Type);\n')
+        for interface in self.parser.interfaces:
+            if not self.overrides.is_type_ignored(interface.c_name):
+                self.fp.write('    pyg_register_interface(d, "'
+                              + interface.name + '", '+ interface.typecode
+                              + ', &Py' + interface.c_name + '_Type);\n')
+                if interface.interface_info is not None:
+                    self.fp.write('    pyg_register_interface_info(%s, &%s);\n' %
+                                  (interface.typecode, interface.interface_info))
+
+        if not self.overrides.dynamicnamespace:
+            for obj, bases in self.get_classes():
+                self.write_class(obj, bases)
         else:
-            pos = pos + 1
-    for obj in objects:
-        if overrides.is_type_ignored(obj.c_name):
-            continue
-        bases = []
-        if obj.parent != None:
-            bases.append(obj.parent)
-        bases = bases + obj.implements
+            for obj, bases in self.get_classes():
+                self.fp.write(
+                    '    pyg_type_register_custom_callback("%s", '
+                    '(PyGTypeRegistrationFunction)%s_register_type, d);\n' %
+                    (obj.c_name, obj.c_name))
+
+        self.fp.write('}\n')
+
+    def _can_direct_ref(self, base):
+        if not self.overrides.dynamicnamespace:
+            return True
+        if base == 'GObject':
+            return True
+        obj = get_object_by_name(base)
+        if obj.module.lower() != self.overrides.modulename:
+            return True
+        return False
+
+    def write_class(self, obj, bases, indent=1):
+        indent_str = ' ' * (indent * 4)
         if bases:
-            fp.write('    pygobject_register_class(d, "' + obj.c_name +
-                     '", ' + obj.typecode + ', &Py' + obj.c_name +
-                     '_Type, Py_BuildValue("(' + 'O' * len(bases) + ')", ' +
-                     string.join(map(lambda s: '&Py'+s+'_Type', bases), ', ') +
-                     '));\n')
+            bases_str = 'Py_BuildValue("(%s)"' % (len(bases) * 'O')
+
+            for base in bases:
+                if self._can_direct_ref(base):
+                    bases_str += ', &Py%s_Type' % base
+                else:
+                    baseobj = get_object_by_name(base)
+                    bases_str += ', PyObject_GetAttrString(m, "%s")' % baseobj.name
+            bases_str += ')'
         else:
-            fp.write('    pygobject_register_class(d, "' + obj.c_name +
-                     '", ' + obj.typecode + ', &Py' + obj.c_name +
-                     '_Type, NULL);\n')
+            bases_str = 'NULL'
+
+        self.fp.write(
+                '%(indent)spygobject_register_class(d, "%(c_name)s", %(typecode)s, &Py%(c_name)s_Type, %(bases)s);\n'
+                % dict(indent=indent_str, c_name=obj.c_name, typecode=obj.typecode, bases=bases_str))
+
         if obj.has_new_constructor_api:
-            fp.write('    pyg_set_object_has_new_constructor(%s);\n' %
-                     obj.typecode)
+            self.fp.write(
+                indent_str + 'pyg_set_object_has_new_constructor(%s);\n' %
+                obj.typecode)
         else:
             print >> sys.stderr, (
                 "Warning: Constructor for %s needs to be updated to new API\n"
                 "         See http://live.gnome.org/PyGTK_2fWhatsNew28"
                 "#update-constructors") % obj.c_name
+
         if obj.class_init_func is not None:
-            fp.write('    pyg_register_class_init(%s, %s);\n' %
-                     (obj.typecode, obj.class_init_func))
-    #TODO: register mini-objects
-    miniobjects = parser.miniobjects[:]
-    for obj in miniobjects:
-        bases = []
-        if obj.parent != None:
-            bases.append(obj.parent)
-        bases = bases + obj.implements
-        if bases:
-            fp.write('    pygstminiobject_register_class(d, "' + obj.c_name +
-                     '", ' + obj.typecode + ', &Py' + obj.c_name +
-                     '_Type, Py_BuildValue("(' + 'O' * len(bases) + ')", ' +
-                     string.join(map(lambda s: '&Py'+s+'_Type', bases), ', ') +
-                     '));\n')
-        else:
-            fp.write('    pygstminiobject_register_class(d, "' + obj.c_name +
-                     '", ' + obj.typecode + ', &Py' + obj.c_name +
-                     '_Type, NULL);\n')
-       
-    fp.write('}\n')
+            self.fp.write(
+                indent_str + 'pyg_register_class_init(%s, %s);\n' %
+                (obj.typecode, obj.class_init_func))
 
-def write_source(parser, overrides, prefix, fp=FileOutput(sys.stdout)):
-    write_headers(overrides.get_headers(), fp)
-    write_imports(overrides, fp)
-    write_type_declarations(parser, fp)
-    write_body(overrides.get_body(), fp)
-    write_classes(parser, overrides, fp)
+_objects = {}
 
-    wrapper = Wrapper(parser, None, overrides, fp)
-    wrapper.write_functions(prefix)
+def is_registered_object(c_name):
+    return c_name in _objects
 
-    write_enums(parser, overrides, prefix, fp)
-    write_extension_init(overrides, prefix, fp)
-    write_registers(parser, overrides, fp)
+def get_object_by_name(c_name):
+    global _objects
+    return _objects[c_name]
 
 def register_types(parser):
+    global _objects
     for boxed in parser.boxes:
         argtypes.matcher.register_boxed(boxed.c_name, boxed.typecode)
+        _objects[boxed.c_name] = boxed
     for pointer in parser.pointers:
         argtypes.matcher.register_pointer(pointer.c_name, pointer.typecode)
     for obj in parser.objects:
         argtypes.matcher.register_object(obj.c_name, obj.parent, obj.typecode)
-    for obj in parser.miniobjects:
-        argtypes.matcher.register_miniobject(obj.c_name, obj.parent, obj.typecode)
-    for obj in parser.interfaces:
-        argtypes.matcher.register_object(obj.c_name, None, obj.typecode)
+        _objects[obj.c_name] = obj
+    for iface in parser.interfaces:
+        argtypes.matcher.register_object(iface.c_name, None, iface.typecode)
+        _objects[iface.c_name] = iface
     for enum in parser.enums:
         if enum.deftype == 'flags':
             argtypes.matcher.register_flag(enum.c_name, enum.typecode)
@@ -1512,21 +1664,14 @@ def main(argv):
     prefix = 'pygtk'
     outfilename = None
     errorfilename = None
-    extendpath = []
-    opts, args = getopt.getopt(argv[1:], "o:p:r:t:D:x",
+    opts, args = getopt.getopt(argv[1:], "o:p:r:t:D:I:",
                         ["override=", "prefix=", "register=", "outfilename=",
-                         "load-types=", "errorfilename=", "extendpath="])
+                         "load-types=", "errorfilename=", "py_ssize_t-clean"])
     defines = {} # -Dkey[=val] options
-
-    for opt, arg in opts:
-        if opt in ('-x', '--extendpath'):
-            extendpath.append(arg)
-    extendpath.insert(0, os.getcwd())
-    o = override.Overrides(path=extendpath)
-    
+    py_ssize_t_clean = False
     for opt, arg in opts:
         if opt in ('-o', '--override'):
-            o = override.Overrides(arg, path=extendpath)
+            o = override.Overrides(arg)
         elif opt in ('-p', '--prefix'):
             prefix = arg
         elif opt in ('-r', '--register'):
@@ -1548,6 +1693,10 @@ def main(argv):
                 defines[nameval[0]] = nameval[1]
             except IndexError:
                 defines[nameval[0]] = None
+        elif opt == '-I':
+            defsparser.include_path.insert(0, arg)
+        elif opt == '--py_ssize_t-clean':
+            py_ssize_t_clean = True
     if len(args) < 1:
         print >> sys.stderr, usage
         return 1
@@ -1560,7 +1709,8 @@ def main(argv):
     p.startParsing()
 
     register_types(p)
-    write_source(p, o, prefix, FileOutput(sys.stdout, outfilename))
+    sw = SourceWriter(p, o, prefix, FileOutput(sys.stdout, outfilename))
+    sw.write(py_ssize_t_clean)
 
     functions_coverage.printstats()
     methods_coverage.printstats()

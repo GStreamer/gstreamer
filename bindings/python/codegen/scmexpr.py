@@ -3,7 +3,6 @@
 from __future__ import generators
 
 import string
-import types
 from cStringIO import StringIO
 
 class error(Exception):
