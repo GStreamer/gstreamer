@@ -1,0 +1,332 @@
+;; -*- scheme -*-
+; object definitions ...
+
+(define-object Source
+  (in-module "GESTimeline")
+  (parent "GESTimelineObject")
+  (c-name "GESTimelineSource")
+  (gtype-id "GES_TYPE_TIMELINE_SOURCE")
+)
+
+(define-object TimelineSource
+  (in-module "GESCustom")
+  (parent "GESTimelineSource")
+  (c-name "GESCustomTimelineSource")
+  (gtype-id "GES_TYPE_CUSTOM_TIMELINE_SOURCE")
+)
+
+(define-object r
+  (in-module "GESFormatte")
+  (parent "GObject")
+  (c-name "GESFormatter")
+  (gtype-id "GES_TYPE_FORMATTER")
+)
+
+(define-object Formatter
+  (in-module "GESKeyfile")
+  (parent "GESFormatter")
+  (c-name "GESKeyfileFormatter")
+  (gtype-id "GES_TYPE_KEYFILE_FORMATTER")
+)
+
+(define-object e
+  (in-module "GESTimelin")
+  (parent "GstBin")
+  (c-name "GESTimeline")
+  (gtype-id "GES_TYPE_TIMELINE")
+)
+
+(define-object FileSource
+  (in-module "GESTimeline")
+  (parent "GESTimelineSource")
+  (c-name "GESTimelineFileSource")
+  (gtype-id "GES_TYPE_TIMELINE_FILE_SOURCE")
+)
+
+(define-object Layer
+  (in-module "GESTimeline")
+  (parent "GInitiallyUnowned")
+  (c-name "GESTimelineLayer")
+  (gtype-id "GES_TYPE_TIMELINE_LAYER")
+)
+
+(define-object TimelineLayer
+  (in-module "GESSimple")
+  (parent "GESTimelineLayer")
+  (c-name "GESSimpleTimelineLayer")
+  (gtype-id "GES_TYPE_SIMPLE_TIMELINE_LAYER")
+)
+
+(define-object Object
+  (in-module "GESTimeline")
+  (parent "GInitiallyUnowned")
+  (c-name "GESTimelineObject")
+  (gtype-id "GES_TYPE_TIMELINE_OBJECT")
+)
+
+(define-object Operation
+  (in-module "GESTimeline")
+  (parent "GESTimelineObject")
+  (c-name "GESTimelineOperation")
+  (gtype-id "GES_TYPE_TIMELINE_OPERATION")
+)
+
+(define-object Overlay
+  (in-module "GESTimeline")
+  (parent "GESTimelineOperation")
+  (c-name "GESTimelineOverlay")
+  (gtype-id "GES_TYPE_TIMELINE_OVERLAY")
+)
+
+(define-object Pipeline
+  (in-module "GESTimeline")
+  (parent "GstPipeline")
+  (c-name "GESTimelinePipeline")
+  (gtype-id "GES_TYPE_TIMELINE_PIPELINE")
+)
+
+(define-object TestSource
+  (in-module "GESTimeline")
+  (parent "GESTimelineSource")
+  (c-name "GESTimelineTestSource")
+  (gtype-id "GES_TYPE_TIMELINE_TEST_SOURCE")
+)
+
+(define-object TextOverlay
+  (in-module "GESTimeline")
+  (parent "GESTimelineOverlay")
+  (c-name "GESTimelineTextOverlay")
+  (gtype-id "GES_TYPE_TIMELINE_TEXT_OVERLAY")
+)
+
+(define-object TitleSource
+  (in-module "GESTimeline")
+  (parent "GESTimelineSource")
+  (c-name "GESTimelineTitleSource")
+  (gtype-id "GES_TYPE_TIMELINE_TITLE_SOURCE")
+)
+
+(define-object Transition
+  (in-module "GESTimeline")
+  (parent "GESTimelineOperation")
+  (c-name "GESTimelineTransition")
+  (gtype-id "GES_TYPE_TIMELINE_TRANSITION")
+)
+
+(define-object StandardTransition
+  (in-module "GESTimeline")
+  (parent "GESTimelineTransition")
+  (c-name "GESTimelineStandardTransition")
+  (gtype-id "GES_TYPE_TIMELINE_STANDARD_TRANSITION")
+)
+
+(define-object Object
+  (in-module "GESTrack")
+  (parent "GInitiallyUnowned")
+  (c-name "GESTrackObject")
+  (gtype-id "GES_TYPE_TRACK_OBJECT")
+)
+
+(define-object Operation
+  (in-module "GESTrack")
+  (parent "GESTrackObject")
+  (c-name "GESTrackOperation")
+  (gtype-id "GES_TYPE_TRACK_OPERATION")
+)
+
+(define-object Source
+  (in-module "GESTrack")
+  (parent "GESTrackObject")
+  (c-name "GESTrackSource")
+  (gtype-id "GES_TYPE_TRACK_SOURCE")
+)
+
+(define-object ImageSource
+  (in-module "GESTrack")
+  (parent "GESTrackSource")
+  (c-name "GESTrackImageSource")
+  (gtype-id "GES_TYPE_TRACK_IMAGE_SOURCE")
+)
+
+(define-object FileSource
+  (in-module "GESTrack")
+  (parent "GESTrackSource")
+  (c-name "GESTrackFileSource")
+  (gtype-id "GES_TYPE_TRACK_FILESOURCE")
+)
+
+(define-object TextOverlay
+  (in-module "GESTrack")
+  (parent "GESTrackOperation")
+  (c-name "GESTrackTextOverlay")
+  (gtype-id "GES_TYPE_TRACK_TEXT_OVERLAY")
+)
+
+(define-object TitleSource
+  (in-module "GESTrack")
+  (parent "GESTrackSource")
+  (c-name "GESTrackTitleSource")
+  (gtype-id "GES_TYPE_TRACK_TITLE_SOURCE")
+)
+
+(define-object Transition
+  (in-module "GESTrack")
+  (parent "GESTrackOperation")
+  (c-name "GESTrackTransition")
+  (gtype-id "GES_TYPE_TRACK_TRANSITION")
+)
+
+(define-object VideoTestSource
+  (in-module "GESTrack")
+  (parent "GESTrackSource")
+  (c-name "GESTrackVideoTestSource")
+  (gtype-id "GES_TYPE_TRACK_VIDEO_TEST_SOURCE")
+)
+
+(define-object VideoTransition
+  (in-module "GESTrack")
+  (parent "GESTrackTransition")
+  (c-name "GESTrackVideoTransition")
+  (gtype-id "GES_TYPE_TRACK_VIDEO_TRANSITION")
+)
+
+;; Enumerations and flags ...
+
+(define-flags Type
+  (in-module "GESTrack")
+  (c-name "GESTrackType")
+  (gtype-id "GES_TYPE_TRACK_TYPE")
+  (values
+    '("unknown" "GES_TRACK_TYPE_UNKNOWN")
+    '("audio" "GES_TRACK_TYPE_AUDIO")
+    '("video" "GES_TRACK_TYPE_VIDEO")
+    '("text" "GES_TRACK_TYPE_TEXT")
+    '("custom" "GES_TRACK_TYPE_CUSTOM")
+  )
+)
+
+(define-enum StandardTransitionType
+  (in-module "GESVideo")
+  (c-name "GESVideoStandardTransitionType")
+  (gtype-id "GES_VIDEO_STANDARD_TRANSITION_TYPE_TYPE")
+  (values
+    '("none" "GES_VIDEO_STANDARD_TRANSITION_TYPE_NONE")
+    '("bar-wipe-lr" "GES_VIDEO_STANDARD_TRANSITION_TYPE_BAR_WIPE_LR")
+    '("bar-wipe-tb" "GES_VIDEO_STANDARD_TRANSITION_TYPE_BAR_WIPE_TB")
+    '("box-wipe-tl" "GES_VIDEO_STANDARD_TRANSITION_TYPE_BOX_WIPE_TL")
+    '("box-wipe-tr" "GES_VIDEO_STANDARD_TRANSITION_TYPE_BOX_WIPE_TR")
+    '("box-wipe-br" "GES_VIDEO_STANDARD_TRANSITION_TYPE_BOX_WIPE_BR")
+    '("box-wipe-bl" "GES_VIDEO_STANDARD_TRANSITION_TYPE_BOX_WIPE_BL")
+    '("four-box-wipe-ci" "GES_VIDEO_STANDARD_TRANSITION_TYPE_FOUR_BOX_WIPE_CI")
+    '("four-box-wipe-co" "GES_VIDEO_STANDARD_TRANSITION_TYPE_FOUR_BOX_WIPE_CO")
+    '("barndoor-v" "GES_VIDEO_STANDARD_TRANSITION_TYPE_BARNDOOR_V")
+    '("barndoor-h" "GES_VIDEO_STANDARD_TRANSITION_TYPE_BARNDOOR_H")
+    '("box-wipe-tc" "GES_VIDEO_STANDARD_TRANSITION_TYPE_BOX_WIPE_TC")
+    '("box-wipe-rc" "GES_VIDEO_STANDARD_TRANSITION_TYPE_BOX_WIPE_RC")
+    '("box-wipe-bc" "GES_VIDEO_STANDARD_TRANSITION_TYPE_BOX_WIPE_BC")
+    '("box-wipe-lc" "GES_VIDEO_STANDARD_TRANSITION_TYPE_BOX_WIPE_LC")
+    '("diagonal-tl" "GES_VIDEO_STANDARD_TRANSITION_TYPE_DIAGONAL_TL")
+    '("diagonal-tr" "GES_VIDEO_STANDARD_TRANSITION_TYPE_DIAGONAL_TR")
+    '("bowtie-v" "GES_VIDEO_STANDARD_TRANSITION_TYPE_BOWTIE_V")
+    '("bowtie-h" "GES_VIDEO_STANDARD_TRANSITION_TYPE_BOWTIE_H")
+    '("barndoor-dbl" "GES_VIDEO_STANDARD_TRANSITION_TYPE_BARNDOOR_DBL")
+    '("barndoor-dtl" "GES_VIDEO_STANDARD_TRANSITION_TYPE_BARNDOOR_DTL")
+    '("misc-diagonal-dbd" "GES_VIDEO_STANDARD_TRANSITION_TYPE_MISC_DIAGONAL_DBD")
+    '("misc-diagonal-dd" "GES_VIDEO_STANDARD_TRANSITION_TYPE_MISC_DIAGONAL_DD")
+    '("vee-d" "GES_VIDEO_STANDARD_TRANSITION_TYPE_VEE_D")
+    '("vee-l" "GES_VIDEO_STANDARD_TRANSITION_TYPE_VEE_L")
+    '("vee-u" "GES_VIDEO_STANDARD_TRANSITION_TYPE_VEE_U")
+    '("vee-r" "GES_VIDEO_STANDARD_TRANSITION_TYPE_VEE_R")
+    '("barnvee-d" "GES_VIDEO_STANDARD_TRANSITION_TYPE_BARNVEE_D")
+    '("barnvee-l" "GES_VIDEO_STANDARD_TRANSITION_TYPE_BARNVEE_L")
+    '("barnvee-u" "GES_VIDEO_STANDARD_TRANSITION_TYPE_BARNVEE_U")
+    '("barnvee-r" "GES_VIDEO_STANDARD_TRANSITION_TYPE_BARNVEE_R")
+    '("iris-rect" "GES_VIDEO_STANDARD_TRANSITION_TYPE_IRIS_RECT")
+    '("clock-cw12" "GES_VIDEO_STANDARD_TRANSITION_TYPE_CLOCK_CW12")
+    '("clock-cw3" "GES_VIDEO_STANDARD_TRANSITION_TYPE_CLOCK_CW3")
+    '("clock-cw6" "GES_VIDEO_STANDARD_TRANSITION_TYPE_CLOCK_CW6")
+    '("clock-cw9" "GES_VIDEO_STANDARD_TRANSITION_TYPE_CLOCK_CW9")
+    '("pinwheel-tbv" "GES_VIDEO_STANDARD_TRANSITION_TYPE_PINWHEEL_TBV")
+    '("pinwheel-tbh" "GES_VIDEO_STANDARD_TRANSITION_TYPE_PINWHEEL_TBH")
+    '("pinwheel-fb" "GES_VIDEO_STANDARD_TRANSITION_TYPE_PINWHEEL_FB")
+    '("fan-ct" "GES_VIDEO_STANDARD_TRANSITION_TYPE_FAN_CT")
+    '("fan-cr" "GES_VIDEO_STANDARD_TRANSITION_TYPE_FAN_CR")
+    '("doublefan-fov" "GES_VIDEO_STANDARD_TRANSITION_TYPE_DOUBLEFAN_FOV")
+    '("doublefan-foh" "GES_VIDEO_STANDARD_TRANSITION_TYPE_DOUBLEFAN_FOH")
+    '("singlesweep-cwt" "GES_VIDEO_STANDARD_TRANSITION_TYPE_SINGLESWEEP_CWT")
+    '("singlesweep-cwr" "GES_VIDEO_STANDARD_TRANSITION_TYPE_SINGLESWEEP_CWR")
+    '("singlesweep-cwb" "GES_VIDEO_STANDARD_TRANSITION_TYPE_SINGLESWEEP_CWB")
+    '("singlesweep-cwl" "GES_VIDEO_STANDARD_TRANSITION_TYPE_SINGLESWEEP_CWL")
+    '("doublesweep-pv" "GES_VIDEO_STANDARD_TRANSITION_TYPE_DOUBLESWEEP_PV")
+    '("doublesweep-pd" "GES_VIDEO_STANDARD_TRANSITION_TYPE_DOUBLESWEEP_PD")
+    '("doublesweep-ov" "GES_VIDEO_STANDARD_TRANSITION_TYPE_DOUBLESWEEP_OV")
+    '("doublesweep-oh" "GES_VIDEO_STANDARD_TRANSITION_TYPE_DOUBLESWEEP_OH")
+    '("fan-t" "GES_VIDEO_STANDARD_TRANSITION_TYPE_FAN_T")
+    '("fan-r" "GES_VIDEO_STANDARD_TRANSITION_TYPE_FAN_R")
+    '("fan-b" "GES_VIDEO_STANDARD_TRANSITION_TYPE_FAN_B")
+    '("fan-l" "GES_VIDEO_STANDARD_TRANSITION_TYPE_FAN_L")
+    '("doublefan-fiv" "GES_VIDEO_STANDARD_TRANSITION_TYPE_DOUBLEFAN_FIV")
+    '("doublefan-fih" "GES_VIDEO_STANDARD_TRANSITION_TYPE_DOUBLEFAN_FIH")
+    '("singlesweep-cwtl" "GES_VIDEO_STANDARD_TRANSITION_TYPE_SINGLESWEEP_CWTL")
+    '("singlesweep-cwbl" "GES_VIDEO_STANDARD_TRANSITION_TYPE_SINGLESWEEP_CWBL")
+    '("singlesweep-cwbr" "GES_VIDEO_STANDARD_TRANSITION_TYPE_SINGLESWEEP_CWBR")
+    '("singlesweep-cwtr" "GES_VIDEO_STANDARD_TRANSITION_TYPE_SINGLESWEEP_CWTR")
+    '("doublesweep-pdtl" "GES_VIDEO_STANDARD_TRANSITION_TYPE_DOUBLESWEEP_PDTL")
+    '("doublesweep-pdbl" "GES_VIDEO_STANDARD_TRANSITION_TYPE_DOUBLESWEEP_PDBL")
+    '("saloondoor-t" "GES_VIDEO_STANDARD_TRANSITION_TYPE_SALOONDOOR_T")
+    '("saloondoor-l" "GES_VIDEO_STANDARD_TRANSITION_TYPE_SALOONDOOR_L")
+    '("saloondoor-b" "GES_VIDEO_STANDARD_TRANSITION_TYPE_SALOONDOOR_B")
+    '("saloondoor-r" "GES_VIDEO_STANDARD_TRANSITION_TYPE_SALOONDOOR_R")
+    '("windshield-r" "GES_VIDEO_STANDARD_TRANSITION_TYPE_WINDSHIELD_R")
+    '("windshield-u" "GES_VIDEO_STANDARD_TRANSITION_TYPE_WINDSHIELD_U")
+    '("windshield-v" "GES_VIDEO_STANDARD_TRANSITION_TYPE_WINDSHIELD_V")
+    '("windshield-h" "GES_VIDEO_STANDARD_TRANSITION_TYPE_WINDSHIELD_H")
+    '("crossfade" "GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE")
+  )
+)
+
+(define-enum VAlign
+  (in-module "GESText")
+  (c-name "GESTextVAlign")
+  (gtype-id "GES_TEXT_VALIGN_TYPE")
+  (values
+    '("baseline" "GES_TEXT_VALIGN_BASELINE")
+    '("bottom" "GES_TEXT_VALIGN_BOTTOM")
+    '("top" "GES_TEXT_VALIGN_TOP")
+  )
+)
+
+(define-enum HAlign
+  (in-module "GESText")
+  (c-name "GESTextHAlign")
+  (gtype-id "GES_TEXT_HALIGN_TYPE")
+  (values
+    '("left" "GES_TEXT_HALIGN_LEFT")
+    '("center" "GES_TEXT_HALIGN_CENTER")
+    '("right" "GES_TEXT_HALIGN_RIGHT")
+  )
+)
+
+(define-enum TestPattern
+  (in-module "GESVideo")
+  (c-name "GESVideoTestPattern")
+  (gtype-id "GES_VIDEO_TEST_PATTERN_TYPE")
+  (values
+    '("smpte" "GES_VIDEO_TEST_PATTERN_SMPTE")
+    '("snow" "GES_VIDEO_TEST_PATTERN_SNOW")
+    '("black" "GES_VIDEO_TEST_PATTERN_BLACK")
+    '("white" "GES_VIDEO_TEST_PATTERN_WHITE")
+    '("red" "GES_VIDEO_TEST_PATTERN_RED")
+    '("green" "GES_VIDEO_TEST_PATTERN_GREEN")
+    '("blue" "GES_VIDEO_TEST_PATTERN_BLUE")
+    '("checkers1" "GES_VIDEO_TEST_PATTERN_CHECKERS1")
+    '("checkers2" "GES_VIDEO_TEST_PATTERN_CHECKERS2")
+    '("checkers4" "GES_VIDEO_TEST_PATTERN_CHECKERS4")
+    '("checkers8" "GES_VIDEO_TEST_PATTERN_CHECKERS8")
+    '("circular" "GES_VIDEO_TEST_PATTERN_CIRCULAR")
+    '("blink" "GES_VIDEO_TEST_PATTERN_BLINK")
+    '("smpte75" "GES_VIDEO_TEST_PATTERN_SMPTE75")
+  )
+)
+
+

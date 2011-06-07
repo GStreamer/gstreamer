@@ -1,0 +1,1729 @@
+;; -*- scheme -*-
+; object definitions ...
+
+(define-object Source
+  (in-module "GESTimeline")
+  (parent "GESTimelineObject")
+  (c-name "GESTimelineSource")
+  (gtype-id "GES_TYPE_TIMELINE_SOURCE")
+)
+
+(define-object TimelineSource
+  (in-module "GESCustom")
+  (parent "GESTimelineSource")
+  (c-name "GESCustomTimelineSource")
+  (gtype-id "GES_TYPE_CUSTOM_TIMELINE_SOURCE")
+)
+
+(define-object r
+  (in-module "GESFormatte")
+  (parent "GObject")
+  (c-name "GESFormatter")
+  (gtype-id "GES_TYPE_FORMATTER")
+)
+
+(define-object Formatter
+  (in-module "GESKeyfile")
+  (parent "GESFormatter")
+  (c-name "GESKeyfileFormatter")
+  (gtype-id "GES_TYPE_KEYFILE_FORMATTER")
+)
+
+(define-object e
+  (in-module "GESTimelin")
+  (parent "GstBin")
+  (c-name "GESTimeline")
+  (gtype-id "GES_TYPE_TIMELINE")
+)
+
+(define-object FileSource
+  (in-module "GESTimeline")
+  (parent "GESTimelineSource")
+  (c-name "GESTimelineFileSource")
+  (gtype-id "GES_TYPE_TIMELINE_FILE_SOURCE")
+)
+
+(define-object Layer
+  (in-module "GESTimeline")
+  (parent "GInitiallyUnowned")
+  (c-name "GESTimelineLayer")
+  (gtype-id "GES_TYPE_TIMELINE_LAYER")
+)
+
+(define-object TimelineLayer
+  (in-module "GESSimple")
+  (parent "GESTimelineLayer")
+  (c-name "GESSimpleTimelineLayer")
+  (gtype-id "GES_TYPE_SIMPLE_TIMELINE_LAYER")
+)
+
+(define-object Object
+  (in-module "GESTimeline")
+  (parent "GInitiallyUnowned")
+  (c-name "GESTimelineObject")
+  (gtype-id "GES_TYPE_TIMELINE_OBJECT")
+)
+
+(define-object Operation
+  (in-module "GESTimeline")
+  (parent "GESTimelineObject")
+  (c-name "GESTimelineOperation")
+  (gtype-id "GES_TYPE_TIMELINE_OPERATION")
+)
+
+(define-object Overlay
+  (in-module "GESTimeline")
+  (parent "GESTimelineOperation")
+  (c-name "GESTimelineOverlay")
+  (gtype-id "GES_TYPE_TIMELINE_OVERLAY")
+)
+
+(define-object Pipeline
+  (in-module "GESTimeline")
+  (parent "GstPipeline")
+  (c-name "GESTimelinePipeline")
+  (gtype-id "GES_TYPE_TIMELINE_PIPELINE")
+)
+
+(define-object TestSource
+  (in-module "GESTimeline")
+  (parent "GESTimelineSource")
+  (c-name "GESTimelineTestSource")
+  (gtype-id "GES_TYPE_TIMELINE_TEST_SOURCE")
+)
+
+(define-object TextOverlay
+  (in-module "GESTimeline")
+  (parent "GESTimelineOverlay")
+  (c-name "GESTimelineTextOverlay")
+  (gtype-id "GES_TYPE_TIMELINE_TEXT_OVERLAY")
+)
+
+(define-object TitleSource
+  (in-module "GESTimeline")
+  (parent "GESTimelineSource")
+  (c-name "GESTimelineTitleSource")
+  (gtype-id "GES_TYPE_TIMELINE_TITLE_SOURCE")
+)
+
+(define-object Transition
+  (in-module "GESTimeline")
+  (parent "GESTimelineOperation")
+  (c-name "GESTimelineTransition")
+  (gtype-id "GES_TYPE_TIMELINE_TRANSITION")
+)
+
+(define-object StandardTransition
+  (in-module "GESTimeline")
+  (parent "GESTimelineTransition")
+  (c-name "GESTimelineStandardTransition")
+  (gtype-id "GES_TYPE_TIMELINE_STANDARD_TRANSITION")
+)
+
+(define-object Object
+  (in-module "GESTrack")
+  (parent "GInitiallyUnowned")
+  (c-name "GESTrackObject")
+  (gtype-id "GES_TYPE_TRACK_OBJECT")
+)
+
+(define-object Operation
+  (in-module "GESTrack")
+  (parent "GESTrackObject")
+  (c-name "GESTrackOperation")
+  (gtype-id "GES_TYPE_TRACK_OPERATION")
+)
+
+(define-object Source
+  (in-module "GESTrack")
+  (parent "GESTrackObject")
+  (c-name "GESTrackSource")
+  (gtype-id "GES_TYPE_TRACK_SOURCE")
+)
+
+(define-object ImageSource
+  (in-module "GESTrack")
+  (parent "GESTrackSource")
+  (c-name "GESTrackImageSource")
+  (gtype-id "GES_TYPE_TRACK_IMAGE_SOURCE")
+)
+
+(define-object FileSource
+  (in-module "GESTrack")
+  (parent "GESTrackSource")
+  (c-name "GESTrackFileSource")
+  (gtype-id "GES_TYPE_TRACK_FILESOURCE")
+)
+
+(define-object TextOverlay
+  (in-module "GESTrack")
+  (parent "GESTrackOperation")
+  (c-name "GESTrackTextOverlay")
+  (gtype-id "GES_TYPE_TRACK_TEXT_OVERLAY")
+)
+
+(define-object TitleSource
+  (in-module "GESTrack")
+  (parent "GESTrackSource")
+  (c-name "GESTrackTitleSource")
+  (gtype-id "GES_TYPE_TRACK_TITLE_SOURCE")
+)
+
+(define-object Transition
+  (in-module "GESTrack")
+  (parent "GESTrackOperation")
+  (c-name "GESTrackTransition")
+  (gtype-id "GES_TYPE_TRACK_TRANSITION")
+)
+
+(define-object VideoTestSource
+  (in-module "GESTrack")
+  (parent "GESTrackSource")
+  (c-name "GESTrackVideoTestSource")
+  (gtype-id "GES_TYPE_TRACK_VIDEO_TEST_SOURCE")
+)
+
+(define-object VideoTransition
+  (in-module "GESTrack")
+  (parent "GESTrackTransition")
+  (c-name "GESTrackVideoTransition")
+  (gtype-id "GES_TYPE_TRACK_VIDEO_TRANSITION")
+)
+
+;; Enumerations and flags ...
+
+(define-flags Type
+  (in-module "GESTrack")
+  (c-name "GESTrackType")
+  (gtype-id "GES_TYPE_TRACK_TYPE")
+  (values
+    '("unknown" "GES_TRACK_TYPE_UNKNOWN")
+    '("audio" "GES_TRACK_TYPE_AUDIO")
+    '("video" "GES_TRACK_TYPE_VIDEO")
+    '("text" "GES_TRACK_TYPE_TEXT")
+    '("custom" "GES_TRACK_TYPE_CUSTOM")
+  )
+)
+
+(define-enum StandardTransitionType
+  (in-module "GESVideo")
+  (c-name "GESVideoStandardTransitionType")
+  (gtype-id "GES_VIDEO_STANDARD_TRANSITION_TYPE_TYPE")
+  (values
+    '("none" "GES_VIDEO_STANDARD_TRANSITION_TYPE_NONE")
+    '("bar-wipe-lr" "GES_VIDEO_STANDARD_TRANSITION_TYPE_BAR_WIPE_LR")
+    '("bar-wipe-tb" "GES_VIDEO_STANDARD_TRANSITION_TYPE_BAR_WIPE_TB")
+    '("box-wipe-tl" "GES_VIDEO_STANDARD_TRANSITION_TYPE_BOX_WIPE_TL")
+    '("box-wipe-tr" "GES_VIDEO_STANDARD_TRANSITION_TYPE_BOX_WIPE_TR")
+    '("box-wipe-br" "GES_VIDEO_STANDARD_TRANSITION_TYPE_BOX_WIPE_BR")
+    '("box-wipe-bl" "GES_VIDEO_STANDARD_TRANSITION_TYPE_BOX_WIPE_BL")
+    '("four-box-wipe-ci" "GES_VIDEO_STANDARD_TRANSITION_TYPE_FOUR_BOX_WIPE_CI")
+    '("four-box-wipe-co" "GES_VIDEO_STANDARD_TRANSITION_TYPE_FOUR_BOX_WIPE_CO")
+    '("barndoor-v" "GES_VIDEO_STANDARD_TRANSITION_TYPE_BARNDOOR_V")
+    '("barndoor-h" "GES_VIDEO_STANDARD_TRANSITION_TYPE_BARNDOOR_H")
+    '("box-wipe-tc" "GES_VIDEO_STANDARD_TRANSITION_TYPE_BOX_WIPE_TC")
+    '("box-wipe-rc" "GES_VIDEO_STANDARD_TRANSITION_TYPE_BOX_WIPE_RC")
+    '("box-wipe-bc" "GES_VIDEO_STANDARD_TRANSITION_TYPE_BOX_WIPE_BC")
+    '("box-wipe-lc" "GES_VIDEO_STANDARD_TRANSITION_TYPE_BOX_WIPE_LC")
+    '("diagonal-tl" "GES_VIDEO_STANDARD_TRANSITION_TYPE_DIAGONAL_TL")
+    '("diagonal-tr" "GES_VIDEO_STANDARD_TRANSITION_TYPE_DIAGONAL_TR")
+    '("bowtie-v" "GES_VIDEO_STANDARD_TRANSITION_TYPE_BOWTIE_V")
+    '("bowtie-h" "GES_VIDEO_STANDARD_TRANSITION_TYPE_BOWTIE_H")
+    '("barndoor-dbl" "GES_VIDEO_STANDARD_TRANSITION_TYPE_BARNDOOR_DBL")
+    '("barndoor-dtl" "GES_VIDEO_STANDARD_TRANSITION_TYPE_BARNDOOR_DTL")
+    '("misc-diagonal-dbd" "GES_VIDEO_STANDARD_TRANSITION_TYPE_MISC_DIAGONAL_DBD")
+    '("misc-diagonal-dd" "GES_VIDEO_STANDARD_TRANSITION_TYPE_MISC_DIAGONAL_DD")
+    '("vee-d" "GES_VIDEO_STANDARD_TRANSITION_TYPE_VEE_D")
+    '("vee-l" "GES_VIDEO_STANDARD_TRANSITION_TYPE_VEE_L")
+    '("vee-u" "GES_VIDEO_STANDARD_TRANSITION_TYPE_VEE_U")
+    '("vee-r" "GES_VIDEO_STANDARD_TRANSITION_TYPE_VEE_R")
+    '("barnvee-d" "GES_VIDEO_STANDARD_TRANSITION_TYPE_BARNVEE_D")
+    '("barnvee-l" "GES_VIDEO_STANDARD_TRANSITION_TYPE_BARNVEE_L")
+    '("barnvee-u" "GES_VIDEO_STANDARD_TRANSITION_TYPE_BARNVEE_U")
+    '("barnvee-r" "GES_VIDEO_STANDARD_TRANSITION_TYPE_BARNVEE_R")
+    '("iris-rect" "GES_VIDEO_STANDARD_TRANSITION_TYPE_IRIS_RECT")
+    '("clock-cw12" "GES_VIDEO_STANDARD_TRANSITION_TYPE_CLOCK_CW12")
+    '("clock-cw3" "GES_VIDEO_STANDARD_TRANSITION_TYPE_CLOCK_CW3")
+    '("clock-cw6" "GES_VIDEO_STANDARD_TRANSITION_TYPE_CLOCK_CW6")
+    '("clock-cw9" "GES_VIDEO_STANDARD_TRANSITION_TYPE_CLOCK_CW9")
+    '("pinwheel-tbv" "GES_VIDEO_STANDARD_TRANSITION_TYPE_PINWHEEL_TBV")
+    '("pinwheel-tbh" "GES_VIDEO_STANDARD_TRANSITION_TYPE_PINWHEEL_TBH")
+    '("pinwheel-fb" "GES_VIDEO_STANDARD_TRANSITION_TYPE_PINWHEEL_FB")
+    '("fan-ct" "GES_VIDEO_STANDARD_TRANSITION_TYPE_FAN_CT")
+    '("fan-cr" "GES_VIDEO_STANDARD_TRANSITION_TYPE_FAN_CR")
+    '("doublefan-fov" "GES_VIDEO_STANDARD_TRANSITION_TYPE_DOUBLEFAN_FOV")
+    '("doublefan-foh" "GES_VIDEO_STANDARD_TRANSITION_TYPE_DOUBLEFAN_FOH")
+    '("singlesweep-cwt" "GES_VIDEO_STANDARD_TRANSITION_TYPE_SINGLESWEEP_CWT")
+    '("singlesweep-cwr" "GES_VIDEO_STANDARD_TRANSITION_TYPE_SINGLESWEEP_CWR")
+    '("singlesweep-cwb" "GES_VIDEO_STANDARD_TRANSITION_TYPE_SINGLESWEEP_CWB")
+    '("singlesweep-cwl" "GES_VIDEO_STANDARD_TRANSITION_TYPE_SINGLESWEEP_CWL")
+    '("doublesweep-pv" "GES_VIDEO_STANDARD_TRANSITION_TYPE_DOUBLESWEEP_PV")
+    '("doublesweep-pd" "GES_VIDEO_STANDARD_TRANSITION_TYPE_DOUBLESWEEP_PD")
+    '("doublesweep-ov" "GES_VIDEO_STANDARD_TRANSITION_TYPE_DOUBLESWEEP_OV")
+    '("doublesweep-oh" "GES_VIDEO_STANDARD_TRANSITION_TYPE_DOUBLESWEEP_OH")
+    '("fan-t" "GES_VIDEO_STANDARD_TRANSITION_TYPE_FAN_T")
+    '("fan-r" "GES_VIDEO_STANDARD_TRANSITION_TYPE_FAN_R")
+    '("fan-b" "GES_VIDEO_STANDARD_TRANSITION_TYPE_FAN_B")
+    '("fan-l" "GES_VIDEO_STANDARD_TRANSITION_TYPE_FAN_L")
+    '("doublefan-fiv" "GES_VIDEO_STANDARD_TRANSITION_TYPE_DOUBLEFAN_FIV")
+    '("doublefan-fih" "GES_VIDEO_STANDARD_TRANSITION_TYPE_DOUBLEFAN_FIH")
+    '("singlesweep-cwtl" "GES_VIDEO_STANDARD_TRANSITION_TYPE_SINGLESWEEP_CWTL")
+    '("singlesweep-cwbl" "GES_VIDEO_STANDARD_TRANSITION_TYPE_SINGLESWEEP_CWBL")
+    '("singlesweep-cwbr" "GES_VIDEO_STANDARD_TRANSITION_TYPE_SINGLESWEEP_CWBR")
+    '("singlesweep-cwtr" "GES_VIDEO_STANDARD_TRANSITION_TYPE_SINGLESWEEP_CWTR")
+    '("doublesweep-pdtl" "GES_VIDEO_STANDARD_TRANSITION_TYPE_DOUBLESWEEP_PDTL")
+    '("doublesweep-pdbl" "GES_VIDEO_STANDARD_TRANSITION_TYPE_DOUBLESWEEP_PDBL")
+    '("saloondoor-t" "GES_VIDEO_STANDARD_TRANSITION_TYPE_SALOONDOOR_T")
+    '("saloondoor-l" "GES_VIDEO_STANDARD_TRANSITION_TYPE_SALOONDOOR_L")
+    '("saloondoor-b" "GES_VIDEO_STANDARD_TRANSITION_TYPE_SALOONDOOR_B")
+    '("saloondoor-r" "GES_VIDEO_STANDARD_TRANSITION_TYPE_SALOONDOOR_R")
+    '("windshield-r" "GES_VIDEO_STANDARD_TRANSITION_TYPE_WINDSHIELD_R")
+    '("windshield-u" "GES_VIDEO_STANDARD_TRANSITION_TYPE_WINDSHIELD_U")
+    '("windshield-v" "GES_VIDEO_STANDARD_TRANSITION_TYPE_WINDSHIELD_V")
+    '("windshield-h" "GES_VIDEO_STANDARD_TRANSITION_TYPE_WINDSHIELD_H")
+    '("crossfade" "GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE")
+  )
+)
+
+(define-enum VAlign
+  (in-module "GESText")
+  (c-name "GESTextVAlign")
+  (gtype-id "GES_TEXT_VALIGN_TYPE")
+  (values
+    '("baseline" "GES_TEXT_VALIGN_BASELINE")
+    '("bottom" "GES_TEXT_VALIGN_BOTTOM")
+    '("top" "GES_TEXT_VALIGN_TOP")
+  )
+)
+
+(define-enum HAlign
+  (in-module "GESText")
+  (c-name "GESTextHAlign")
+  (gtype-id "GES_TEXT_HALIGN_TYPE")
+  (values
+    '("left" "GES_TEXT_HALIGN_LEFT")
+    '("center" "GES_TEXT_HALIGN_CENTER")
+    '("right" "GES_TEXT_HALIGN_RIGHT")
+  )
+)
+
+(define-enum TestPattern
+  (in-module "GESVideo")
+  (c-name "GESVideoTestPattern")
+  (gtype-id "GES_VIDEO_TEST_PATTERN_TYPE")
+  (values
+    '("smpte" "GES_VIDEO_TEST_PATTERN_SMPTE")
+    '("snow" "GES_VIDEO_TEST_PATTERN_SNOW")
+    '("black" "GES_VIDEO_TEST_PATTERN_BLACK")
+    '("white" "GES_VIDEO_TEST_PATTERN_WHITE")
+    '("red" "GES_VIDEO_TEST_PATTERN_RED")
+    '("green" "GES_VIDEO_TEST_PATTERN_GREEN")
+    '("blue" "GES_VIDEO_TEST_PATTERN_BLUE")
+    '("checkers1" "GES_VIDEO_TEST_PATTERN_CHECKERS1")
+    '("checkers2" "GES_VIDEO_TEST_PATTERN_CHECKERS2")
+    '("checkers4" "GES_VIDEO_TEST_PATTERN_CHECKERS4")
+    '("checkers8" "GES_VIDEO_TEST_PATTERN_CHECKERS8")
+    '("circular" "GES_VIDEO_TEST_PATTERN_CIRCULAR")
+    '("blink" "GES_VIDEO_TEST_PATTERN_BLINK")
+    '("smpte75" "GES_VIDEO_TEST_PATTERN_SMPTE75")
+  )
+)
+
+
+;; From ges.h
+
+(define-function ges_init
+  (c-name "ges_init")
+  (return-type "gboolean")
+)
+
+
+
+;; From ges-custom-timeline-source.h
+
+(define-function ges_custom_timeline_source_get_type
+  (c-name "ges_custom_timeline_source_get_type")
+  (return-type "GType")
+)
+
+(define-function ges_custom_timeline_source_new
+  (c-name "ges_custom_timeline_source_new")
+  (is-constructor-of "GesCustomTimelineSource")
+  (return-type "GESCustomTimelineSource*")
+  (parameters
+    '("GESFillTrackObjectUserFunc" "func")
+    '("gpointer" "user_data")
+  )
+)
+
+
+
+;; From ges-enums.h
+
+(define-function ges_track_type_get_type
+  (c-name "ges_track_type_get_type")
+  (return-type "GType")
+)
+
+(define-function ges_video_standard_transition_type_get_type
+  (c-name "ges_video_standard_transition_type_get_type")
+  (return-type "GType")
+)
+
+(define-function ges_text_valign_get_type
+  (c-name "ges_text_valign_get_type")
+  (return-type "GType")
+)
+
+(define-function ges_text_halign_get_type
+  (c-name "ges_text_halign_get_type")
+  (return-type "GType")
+)
+
+(define-function ges_video_test_pattern_get_type
+  (c-name "ges_video_test_pattern_get_type")
+  (return-type "GType")
+)
+
+
+
+;; From ges-formatter.h
+
+(define-function ges_formatter_get_type
+  (c-name "ges_formatter_get_type")
+  (return-type "GType")
+)
+
+(define-function ges_formatter_new_for_uri
+  (c-name "ges_formatter_new_for_uri")
+  (return-type "GESFormatter*")
+  (parameters
+    '("const-gchar*" "uri")
+  )
+)
+
+(define-function ges_default_formatter_new
+  (c-name "ges_default_formatter_new")
+  (is-constructor-of "GesDefaultFormatter")
+  (return-type "GESFormatter*")
+)
+
+(define-function ges_formatter_can_load_uri
+  (c-name "ges_formatter_can_load_uri")
+  (return-type "gboolean")
+  (parameters
+    '("const-gchar*" "uri")
+  )
+)
+
+(define-function ges_formatter_can_save_uri
+  (c-name "ges_formatter_can_save_uri")
+  (return-type "gboolean")
+  (parameters
+    '("const-gchar*" "uri")
+  )
+)
+
+(define-method load_from_uri
+  (of-object "GESFormatter")
+  (c-name "ges_formatter_load_from_uri")
+  (return-type "gboolean")
+  (parameters
+    '("GESTimeline*" "timeline")
+    '("const-gchar*" "uri")
+  )
+)
+
+(define-method save_to_uri
+  (of-object "GESFormatter")
+  (c-name "ges_formatter_save_to_uri")
+  (return-type "gboolean")
+  (parameters
+    '("GESTimeline*" "timeline")
+    '("const-gchar*" "uri")
+  )
+)
+
+(define-method load
+  (of-object "GESFormatter")
+  (c-name "ges_formatter_load")
+  (return-type "gboolean")
+  (parameters
+    '("GESTimeline*" "timeline")
+  )
+)
+
+(define-method save
+  (of-object "GESFormatter")
+  (c-name "ges_formatter_save")
+  (return-type "gboolean")
+  (parameters
+    '("GESTimeline*" "timeline")
+  )
+)
+
+(define-method set_data
+  (of-object "GESFormatter")
+  (c-name "ges_formatter_set_data")
+  (return-type "none")
+  (parameters
+    '("void*" "data")
+    '("gsize" "length")
+  )
+)
+
+(define-method get_data
+  (of-object "GESFormatter")
+  (c-name "ges_formatter_get_data")
+  (return-type "void*")
+  (parameters
+    '("gsize*" "length")
+  )
+)
+
+(define-method clear_data
+  (of-object "GESFormatter")
+  (c-name "ges_formatter_clear_data")
+  (return-type "none")
+)
+
+
+
+;; From ges-internal.h
+
+
+
+;; From ges-keyfile-formatter.h
+
+(define-function ges_keyfile_formatter_get_type
+  (c-name "ges_keyfile_formatter_get_type")
+  (return-type "GType")
+)
+
+(define-function ges_keyfile_formatter_new
+  (c-name "ges_keyfile_formatter_new")
+  (is-constructor-of "GesKeyfileFormatter")
+  (return-type "GESKeyfileFormatter*")
+)
+
+
+
+;; From gesmarshal.h
+
+
+
+;; From ges-screenshot.h
+
+(define-function ges_play_sink_convert_frame
+  (c-name "ges_play_sink_convert_frame")
+  (return-type "GstBuffer*")
+  (parameters
+    '("GstElement*" "playsink")
+    '("GstCaps*" "caps")
+  )
+)
+
+
+
+;; From ges-simple-timeline-layer.h
+
+(define-function ges_simple_timeline_layer_get_type
+  (c-name "ges_simple_timeline_layer_get_type")
+  (return-type "GType")
+)
+
+(define-function ges_simple_timeline_layer_new
+  (c-name "ges_simple_timeline_layer_new")
+  (is-constructor-of "GesSimpleTimelineLayer")
+  (return-type "GESSimpleTimelineLayer*")
+)
+
+(define-method add_object
+  (of-object "GESSimpleTimelineLayer")
+  (c-name "ges_simple_timeline_layer_add_object")
+  (return-type "gboolean")
+  (parameters
+    '("GESTimelineObject*" "object")
+    '("gint" "position")
+  )
+)
+
+(define-method move_object
+  (of-object "GESSimpleTimelineLayer")
+  (c-name "ges_simple_timeline_layer_move_object")
+  (return-type "gboolean")
+  (parameters
+    '("GESTimelineObject*" "object")
+    '("gint" "newposition")
+  )
+)
+
+(define-method is_valid
+  (of-object "GESSimpleTimelineLayer")
+  (c-name "ges_simple_timeline_layer_is_valid")
+  (return-type "gboolean")
+)
+
+(define-method nth
+  (of-object "GESSimpleTimelineLayer")
+  (c-name "ges_simple_timeline_layer_nth")
+  (return-type "GESTimelineObject*")
+  (parameters
+    '("gint" "position")
+  )
+)
+
+(define-method index
+  (of-object "GESSimpleTimelineLayer")
+  (c-name "ges_simple_timeline_layer_index")
+  (return-type "gint")
+  (parameters
+    '("GESTimelineObject*" "object")
+  )
+)
+
+
+
+;; From ges-timeline.h
+
+(define-function ges_timeline_get_type
+  (c-name "ges_timeline_get_type")
+  (return-type "GType")
+)
+
+(define-function ges_timeline_new
+  (c-name "ges_timeline_new")
+  (is-constructor-of "GesTimeline")
+  (return-type "GESTimeline*")
+)
+
+(define-function ges_timeline_new_from_uri
+  (c-name "ges_timeline_new_from_uri")
+  (return-type "GESTimeline*")
+  (parameters
+    '("const-gchar*" "uri")
+  )
+)
+
+(define-method load_from_uri
+  (of-object "GESTimeline")
+  (c-name "ges_timeline_load_from_uri")
+  (return-type "gboolean")
+  (parameters
+    '("const-gchar*" "uri")
+  )
+)
+
+(define-method save_to_uri
+  (of-object "GESTimeline")
+  (c-name "ges_timeline_save_to_uri")
+  (return-type "gboolean")
+  (parameters
+    '("const-gchar*" "uri")
+  )
+)
+
+(define-method add_layer
+  (of-object "GESTimeline")
+  (c-name "ges_timeline_add_layer")
+  (return-type "gboolean")
+  (parameters
+    '("GESTimelineLayer*" "layer")
+  )
+)
+
+(define-method remove_layer
+  (of-object "GESTimeline")
+  (c-name "ges_timeline_remove_layer")
+  (return-type "gboolean")
+  (parameters
+    '("GESTimelineLayer*" "layer")
+  )
+)
+
+(define-method get_layers
+  (of-object "GESTimeline")
+  (c-name "ges_timeline_get_layers")
+  (return-type "GList*")
+)
+
+(define-method add_track
+  (of-object "GESTimeline")
+  (c-name "ges_timeline_add_track")
+  (return-type "gboolean")
+  (parameters
+    '("GESTrack*" "track")
+  )
+)
+
+(define-method remove_track
+  (of-object "GESTimeline")
+  (c-name "ges_timeline_remove_track")
+  (return-type "gboolean")
+  (parameters
+    '("GESTrack*" "track")
+  )
+)
+
+(define-method get_track_for_pad
+  (of-object "GESTimeline")
+  (c-name "ges_timeline_get_track_for_pad")
+  (return-type "GESTrack*")
+  (parameters
+    '("GstPad*" "pad")
+  )
+)
+
+(define-method get_tracks
+  (of-object "GESTimeline")
+  (c-name "ges_timeline_get_tracks")
+  (return-type "GList*")
+)
+
+
+
+;; From ges-timeline-file-source.h
+
+(define-function ges_timeline_filesource_get_type
+  (c-name "ges_timeline_filesource_get_type")
+  (return-type "GType")
+)
+
+(define-method set_mute
+  (of-object "GESTimelineFileSource")
+  (c-name "ges_timeline_filesource_set_mute")
+  (return-type "none")
+  (parameters
+    '("gboolean" "mute")
+  )
+)
+
+(define-method set_max_duration
+  (of-object "GESTimelineFileSource")
+  (c-name "ges_timeline_filesource_set_max_duration")
+  (return-type "none")
+  (parameters
+    '("guint64" "maxduration")
+  )
+)
+
+(define-method set_supported_formats
+  (of-object "GESTimelineFileSource")
+  (c-name "ges_timeline_filesource_set_supported_formats")
+  (return-type "none")
+  (parameters
+    '("GESTrackType" "supportedformats")
+  )
+)
+
+(define-method set_is_image
+  (of-object "GESTimelineFileSource")
+  (c-name "ges_timeline_filesource_set_is_image")
+  (return-type "none")
+  (parameters
+    '("gboolean" "is_image")
+  )
+)
+
+(define-method is_muted
+  (of-object "GESTimelineFileSource")
+  (c-name "ges_timeline_filesource_is_muted")
+  (return-type "gboolean")
+)
+
+(define-method get_max_duration
+  (of-object "GESTimelineFileSource")
+  (c-name "ges_timeline_filesource_get_max_duration")
+  (return-type "guint64")
+)
+
+(define-method is_image
+  (of-object "GESTimelineFileSource")
+  (c-name "ges_timeline_filesource_is_image")
+  (return-type "gboolean")
+)
+
+(define-method get_uri
+  (of-object "GESTimelineFileSource")
+  (c-name "ges_timeline_filesource_get_uri")
+  (return-type "const-gchar*")
+)
+
+(define-method get_supported_formats
+  (of-object "GESTimelineFileSource")
+  (c-name "ges_timeline_filesource_get_supported_formats")
+  (return-type "GESTrackType")
+)
+
+(define-function ges_timeline_filesource_new
+  (c-name "ges_timeline_filesource_new")
+  (is-constructor-of "GesTimelineFilesource")
+  (return-type "GESTimelineFileSource*")
+  (parameters
+    '("gchar*" "uri")
+  )
+)
+
+
+
+;; From ges-timeline-layer.h
+
+(define-function ges_timeline_layer_get_type
+  (c-name "ges_timeline_layer_get_type")
+  (return-type "GType")
+)
+
+(define-function ges_timeline_layer_new
+  (c-name "ges_timeline_layer_new")
+  (is-constructor-of "GesTimelineLayer")
+  (return-type "GESTimelineLayer*")
+)
+
+(define-method set_timeline
+  (of-object "GESTimelineLayer")
+  (c-name "ges_timeline_layer_set_timeline")
+  (return-type "none")
+  (parameters
+    '("GESTimeline*" "timeline")
+  )
+)
+
+(define-method add_object
+  (of-object "GESTimelineLayer")
+  (c-name "ges_timeline_layer_add_object")
+  (return-type "gboolean")
+  (parameters
+    '("GESTimelineObject*" "object")
+  )
+)
+
+(define-method remove_object
+  (of-object "GESTimelineLayer")
+  (c-name "ges_timeline_layer_remove_object")
+  (return-type "gboolean")
+  (parameters
+    '("GESTimelineObject*" "object")
+  )
+)
+
+(define-method set_priority
+  (of-object "GESTimelineLayer")
+  (c-name "ges_timeline_layer_set_priority")
+  (return-type "none")
+  (parameters
+    '("guint" "priority")
+  )
+)
+
+(define-method get_priority
+  (of-object "GESTimelineLayer")
+  (c-name "ges_timeline_layer_get_priority")
+  (return-type "guint")
+)
+
+(define-method get_objects
+  (of-object "GESTimelineLayer")
+  (c-name "ges_timeline_layer_get_objects")
+  (return-type "GList*")
+)
+
+
+
+;; From ges-timeline-object.h
+
+(define-function ges_timeline_object_get_type
+  (c-name "ges_timeline_object_get_type")
+  (return-type "GType")
+)
+
+(define-method set_start
+  (of-object "GESTimelineObject")
+  (c-name "ges_timeline_object_set_start")
+  (return-type "none")
+  (parameters
+    '("guint64" "start")
+  )
+)
+
+(define-method set_inpoint
+  (of-object "GESTimelineObject")
+  (c-name "ges_timeline_object_set_inpoint")
+  (return-type "none")
+  (parameters
+    '("guint64" "inpoint")
+  )
+)
+
+(define-method set_duration
+  (of-object "GESTimelineObject")
+  (c-name "ges_timeline_object_set_duration")
+  (return-type "none")
+  (parameters
+    '("guint64" "duration")
+  )
+)
+
+(define-method set_priority
+  (of-object "GESTimelineObject")
+  (c-name "ges_timeline_object_set_priority")
+  (return-type "none")
+  (parameters
+    '("guint" "priority")
+  )
+)
+
+(define-method set_layer
+  (of-object "GESTimelineObject")
+  (c-name "ges_timeline_object_set_layer")
+  (return-type "none")
+  (parameters
+    '("GESTimelineLayer*" "layer")
+  )
+)
+
+(define-method create_track_object
+  (of-object "GESTimelineObject")
+  (c-name "ges_timeline_object_create_track_object")
+  (return-type "GESTrackObject*")
+  (parameters
+    '("GESTrack*" "track")
+  )
+)
+
+(define-method create_track_objects
+  (of-object "GESTimelineObject")
+  (c-name "ges_timeline_object_create_track_objects")
+  (return-type "gboolean")
+  (parameters
+    '("GESTrack*" "track")
+  )
+)
+
+(define-method release_track_object
+  (of-object "GESTimelineObject")
+  (c-name "ges_timeline_object_release_track_object")
+  (return-type "gboolean")
+  (parameters
+    '("GESTrackObject*" "trackobject")
+  )
+)
+
+(define-method fill_track_object
+  (of-object "GESTimelineObject")
+  (c-name "ges_timeline_object_fill_track_object")
+  (return-type "gboolean")
+  (parameters
+    '("GESTrackObject*" "trackobj")
+    '("GstElement*" "gnlobj")
+  )
+)
+
+(define-method find_track_object
+  (of-object "GESTimelineObject")
+  (c-name "ges_timeline_object_find_track_object")
+  (return-type "GESTrackObject*")
+  (parameters
+    '("GESTrack*" "track")
+    '("GType" "type")
+  )
+)
+
+(define-method get_track_objects
+  (of-object "GESTimelineObject")
+  (c-name "ges_timeline_object_get_track_objects")
+  (return-type "GList*")
+)
+
+(define-method get_layer
+  (of-object "GESTimelineObject")
+  (c-name "ges_timeline_object_get_layer")
+  (return-type "GESTimelineLayer*")
+)
+
+(define-method add_track_object
+  (of-object "GESTimelineObject")
+  (c-name "ges_timeline_object_add_track_object")
+  (return-type "gboolean")
+  (parameters
+    '("GESTrackObject*" "trobj")
+  )
+)
+
+
+
+;; From ges-timeline-operation.h
+
+(define-function ges_timeline_operation_get_type
+  (c-name "ges_timeline_operation_get_type")
+  (return-type "GType")
+)
+
+
+
+;; From ges-timeline-overlay.h
+
+(define-function ges_timeline_overlay_get_type
+  (c-name "ges_timeline_overlay_get_type")
+  (return-type "GType")
+)
+
+
+
+;; From ges-timeline-pipeline.h
+
+(define-function ges_timeline_pipeline_get_type
+  (c-name "ges_timeline_pipeline_get_type")
+  (return-type "GType")
+)
+
+(define-function ges_timeline_pipeline_new
+  (c-name "ges_timeline_pipeline_new")
+  (is-constructor-of "GesTimelinePipeline")
+  (return-type "GESTimelinePipeline*")
+)
+
+(define-method add_timeline
+  (of-object "GESTimelinePipeline")
+  (c-name "ges_timeline_pipeline_add_timeline")
+  (return-type "gboolean")
+  (parameters
+    '("GESTimeline*" "timeline")
+  )
+)
+
+(define-method set_render_settings
+  (of-object "GESTimelinePipeline")
+  (c-name "ges_timeline_pipeline_set_render_settings")
+  (return-type "gboolean")
+  (parameters
+    '("gchar*" "output_uri")
+    '("GstEncodingProfile*" "profile")
+  )
+)
+
+(define-method set_mode
+  (of-object "GESTimelinePipeline")
+  (c-name "ges_timeline_pipeline_set_mode")
+  (return-type "gboolean")
+  (parameters
+    '("GESPipelineFlags" "mode")
+  )
+)
+
+(define-method get_thumbnail_buffer
+  (of-object "GESTimelinePipeline")
+  (c-name "ges_timeline_pipeline_get_thumbnail_buffer")
+  (return-type "GstBuffer*")
+  (parameters
+    '("GstCaps*" "caps")
+  )
+)
+
+(define-method get_thumbnail_rgb24
+  (of-object "GESTimelinePipeline")
+  (c-name "ges_timeline_pipeline_get_thumbnail_rgb24")
+  (return-type "GstBuffer*")
+  (parameters
+    '("gint" "width")
+    '("gint" "height")
+  )
+)
+
+(define-method save_thumbnail
+  (of-object "GESTimelinePipeline")
+  (c-name "ges_timeline_pipeline_save_thumbnail")
+  (return-type "gboolean")
+  (parameters
+    '("int" "width")
+    '("int" "height")
+    '("const-gchar*" "format")
+    '("const-gchar*" "location")
+  )
+)
+
+
+
+;; From ges-timeline-test-source.h
+
+(define-function ges_timeline_test_source_get_type
+  (c-name "ges_timeline_test_source_get_type")
+  (return-type "GType")
+)
+
+(define-method set_mute
+  (of-object "GESTimelineTestSource")
+  (c-name "ges_timeline_test_source_set_mute")
+  (return-type "none")
+  (parameters
+    '("gboolean" "mute")
+  )
+)
+
+(define-method set_vpattern
+  (of-object "GESTimelineTestSource")
+  (c-name "ges_timeline_test_source_set_vpattern")
+  (return-type "none")
+  (parameters
+    '("GESVideoTestPattern" "vpattern")
+  )
+)
+
+(define-method set_frequency
+  (of-object "GESTimelineTestSource")
+  (c-name "ges_timeline_test_source_set_frequency")
+  (return-type "none")
+  (parameters
+    '("gdouble" "freq")
+  )
+)
+
+(define-method set_volume
+  (of-object "GESTimelineTestSource")
+  (c-name "ges_timeline_test_source_set_volume")
+  (return-type "none")
+  (parameters
+    '("gdouble" "volume")
+  )
+)
+
+(define-method get_vpattern
+  (of-object "GESTimelineTestSource")
+  (c-name "ges_timeline_test_source_get_vpattern")
+  (return-type "GESVideoTestPattern")
+)
+
+(define-method is_muted
+  (of-object "GESTimelineTestSource")
+  (c-name "ges_timeline_test_source_is_muted")
+  (return-type "gboolean")
+)
+
+(define-method get_frequency
+  (of-object "GESTimelineTestSource")
+  (c-name "ges_timeline_test_source_get_frequency")
+  (return-type "gdouble")
+)
+
+(define-method get_volume
+  (of-object "GESTimelineTestSource")
+  (c-name "ges_timeline_test_source_get_volume")
+  (return-type "gdouble")
+)
+
+(define-function ges_timeline_test_source_new
+  (c-name "ges_timeline_test_source_new")
+  (is-constructor-of "GesTimelineTestSource")
+  (return-type "GESTimelineTestSource*")
+)
+
+(define-function ges_timeline_test_source_new_for_nick
+  (c-name "ges_timeline_test_source_new_for_nick")
+  (return-type "GESTimelineTestSource*")
+  (parameters
+    '("gchar*" "nick")
+  )
+)
+
+
+
+;; From ges-timeline-standard-transition.h
+
+(define-function ges_timeline_standard_transition_get_type
+  (c-name "ges_timeline_standard_transition_get_type")
+  (return-type "GType")
+)
+
+(define-function ges_timeline_standard_transition_new
+  (c-name "ges_timeline_standard_transition_new")
+  (is-constructor-of "GesTimelineStandardTransition")
+  (return-type "GESTimelineStandardTransition*")
+  (parameters
+    '("GESVideoStandardTransitionType" "vtype")
+  )
+)
+
+(define-function ges_timeline_standard_transition_new_for_nick
+  (c-name "ges_timeline_standard_transition_new_for_nick")
+  (return-type "GESTimelineStandardTransition*")
+  (parameters
+    '("char*" "nick")
+  )
+)
+
+
+
+;; From ges-timeline-text-overlay.h
+
+(define-function ges_timeline_text_overlay_get_type
+  (c-name "ges_timeline_text_overlay_get_type")
+  (return-type "GType")
+)
+
+(define-method set_text
+  (of-object "GESTimelineTextOverlay")
+  (c-name "ges_timeline_text_overlay_set_text")
+  (return-type "none")
+  (parameters
+    '("const-gchar*" "text")
+  )
+)
+
+(define-method set_font_desc
+  (of-object "GESTimelineTextOverlay")
+  (c-name "ges_timeline_text_overlay_set_font_desc")
+  (return-type "none")
+  (parameters
+    '("const-gchar*" "font_desc")
+  )
+)
+
+(define-method set_valign
+  (of-object "GESTimelineTextOverlay")
+  (c-name "ges_timeline_text_overlay_set_valign")
+  (return-type "none")
+  (parameters
+    '("GESTextVAlign" "valign")
+  )
+)
+
+(define-method set_halign
+  (of-object "GESTimelineTextOverlay")
+  (c-name "ges_timeline_text_overlay_set_halign")
+  (return-type "none")
+  (parameters
+    '("GESTextHAlign" "halign")
+  )
+)
+
+(define-method get_text
+  (of-object "GESTimelineTextOverlay")
+  (c-name "ges_timeline_text_overlay_get_text")
+  (return-type "const-gchar*")
+)
+
+(define-method get_font_desc
+  (of-object "GESTimelineTextOverlay")
+  (c-name "ges_timeline_text_overlay_get_font_desc")
+  (return-type "const-gchar*")
+)
+
+(define-method get_valignment
+  (of-object "GESTimelineTextOverlay")
+  (c-name "ges_timeline_text_overlay_get_valignment")
+  (return-type "GESTextVAlign")
+)
+
+(define-method get_halignment
+  (of-object "GESTimelineTextOverlay")
+  (c-name "ges_timeline_text_overlay_get_halignment")
+  (return-type "GESTextHAlign")
+)
+
+(define-function ges_timeline_text_overlay_new
+  (c-name "ges_timeline_text_overlay_new")
+  (is-constructor-of "GesTimelineTextOverlay")
+  (return-type "GESTimelineTextOverlay*")
+)
+
+
+
+;; From ges-timeline-title-source.h
+
+(define-function ges_timeline_title_source_get_type
+  (c-name "ges_timeline_title_source_get_type")
+  (return-type "GType")
+)
+
+(define-method set_mute
+  (of-object "GESTimelineTitleSource")
+  (c-name "ges_timeline_title_source_set_mute")
+  (return-type "none")
+  (parameters
+    '("gboolean" "mute")
+  )
+)
+
+(define-method set_text
+  (of-object "GESTimelineTitleSource")
+  (c-name "ges_timeline_title_source_set_text")
+  (return-type "none")
+  (parameters
+    '("const-gchar*" "text")
+  )
+)
+
+(define-method set_font_desc
+  (of-object "GESTimelineTitleSource")
+  (c-name "ges_timeline_title_source_set_font_desc")
+  (return-type "none")
+  (parameters
+    '("const-gchar*" "font_desc")
+  )
+)
+
+(define-method set_valignment
+  (of-object "GESTimelineTitleSource")
+  (c-name "ges_timeline_title_source_set_valignment")
+  (return-type "none")
+  (parameters
+    '("GESTextVAlign" "valign")
+  )
+)
+
+(define-method set_halignment
+  (of-object "GESTimelineTitleSource")
+  (c-name "ges_timeline_title_source_set_halignment")
+  (return-type "none")
+  (parameters
+    '("GESTextHAlign" "halign")
+  )
+)
+
+(define-method get_font_desc
+  (of-object "GESTimelineTitleSource")
+  (c-name "ges_timeline_title_source_get_font_desc")
+  (return-type "const-gchar*")
+)
+
+(define-method get_valignment
+  (of-object "GESTimelineTitleSource")
+  (c-name "ges_timeline_title_source_get_valignment")
+  (return-type "GESTextVAlign")
+)
+
+(define-method get_halignment
+  (of-object "GESTimelineTitleSource")
+  (c-name "ges_timeline_title_source_get_halignment")
+  (return-type "GESTextHAlign")
+)
+
+(define-method is_muted
+  (of-object "GESTimelineTitleSource")
+  (c-name "ges_timeline_title_source_is_muted")
+  (return-type "gboolean")
+)
+
+(define-method get_text
+  (of-object "GESTimelineTitleSource")
+  (c-name "ges_timeline_title_source_get_text")
+  (return-type "const-gchar*")
+)
+
+(define-function ges_timeline_title_source_new
+  (c-name "ges_timeline_title_source_new")
+  (is-constructor-of "GesTimelineTitleSource")
+  (return-type "GESTimelineTitleSource*")
+)
+
+
+
+;; From ges-timeline-transition.h
+
+(define-function ges_timeline_transition_get_type
+  (c-name "ges_timeline_transition_get_type")
+  (return-type "GType")
+)
+
+
+
+;; From ges-track-filesource.h
+
+(define-function ges_track_filesource_get_type
+  (c-name "ges_track_filesource_get_type")
+  (return-type "GType")
+)
+
+(define-function ges_track_filesource_new
+  (c-name "ges_track_filesource_new")
+  (is-constructor-of "GesTrackFilesource")
+  (return-type "GESTrackFileSource*")
+  (parameters
+    '("gchar*" "uri")
+  )
+)
+
+
+
+;; From ges-track-image-source.h
+
+(define-function ges_track_image_source_get_type
+  (c-name "ges_track_image_source_get_type")
+  (return-type "GType")
+)
+
+(define-function ges_track_image_source_new
+  (c-name "ges_track_image_source_new")
+  (is-constructor-of "GesTrackImageSource")
+  (return-type "GESTrackImageSource*")
+  (parameters
+    '("gchar*" "uri")
+  )
+)
+
+
+
+;; From ges-track-object.h
+
+(define-function ges_track_object_get_type
+  (c-name "ges_track_object_get_type")
+  (return-type "GType")
+)
+
+(define-method set_track
+  (of-object "GESTrackObject")
+  (c-name "ges_track_object_set_track")
+  (return-type "gboolean")
+  (parameters
+    '("GESTrack*" "track")
+  )
+)
+
+(define-method get_track
+  (of-object "GESTrackObject")
+  (c-name "ges_track_object_get_track")
+  (return-type "GESTrack*")
+)
+
+(define-method set_timeline_object
+  (of-object "GESTrackObject")
+  (c-name "ges_track_object_set_timeline_object")
+  (return-type "none")
+  (parameters
+    '("GESTimelineObject*" "tlobject")
+  )
+)
+
+(define-method get_timeline_object
+  (of-object "GESTrackObject")
+  (c-name "ges_track_object_get_timeline_object")
+  (return-type "GESTimelineObject*")
+)
+
+(define-method get_gnlobject
+  (of-object "GESTrackObject")
+  (c-name "ges_track_object_get_gnlobject")
+  (return-type "GstElement*")
+)
+
+(define-method get_element
+  (of-object "GESTrackObject")
+  (c-name "ges_track_object_get_element")
+  (return-type "GstElement*")
+)
+
+(define-method set_locked
+  (of-object "GESTrackObject")
+  (c-name "ges_track_object_set_locked")
+  (return-type "none")
+  (parameters
+    '("gboolean" "locked")
+  )
+)
+
+(define-method is_locked
+  (of-object "GESTrackObject")
+  (c-name "ges_track_object_is_locked")
+  (return-type "gboolean")
+)
+
+(define-method set_start
+  (of-object "GESTrackObject")
+  (c-name "ges_track_object_set_start")
+  (return-type "none")
+  (parameters
+    '("guint64" "start")
+  )
+)
+
+(define-method set_inpoint
+  (of-object "GESTrackObject")
+  (c-name "ges_track_object_set_inpoint")
+  (return-type "none")
+  (parameters
+    '("guint64" "inpoint")
+  )
+)
+
+(define-method set_duration
+  (of-object "GESTrackObject")
+  (c-name "ges_track_object_set_duration")
+  (return-type "none")
+  (parameters
+    '("guint64" "duration")
+  )
+)
+
+(define-method set_priority
+  (of-object "GESTrackObject")
+  (c-name "ges_track_object_set_priority")
+  (return-type "none")
+  (parameters
+    '("guint32" "priority")
+  )
+)
+
+(define-method set_active
+  (of-object "GESTrackObject")
+  (c-name "ges_track_object_set_active")
+  (return-type "gboolean")
+  (parameters
+    '("gboolean" "active")
+  )
+)
+
+
+
+;; From ges-track-operation.h
+
+(define-function ges_track_operation_get_type
+  (c-name "ges_track_operation_get_type")
+  (return-type "GType")
+)
+
+
+
+;; From ges-track-source.h
+
+(define-function ges_track_source_get_type
+  (c-name "ges_track_source_get_type")
+  (return-type "GType")
+)
+
+
+
+;; From ges-track-text-overlay.h
+
+(define-function ges_track_text_overlay_get_type
+  (c-name "ges_track_text_overlay_get_type")
+  (return-type "GType")
+)
+
+(define-method set_text
+  (of-object "GESTrackTextOverlay")
+  (c-name "ges_track_text_overlay_set_text")
+  (return-type "none")
+  (parameters
+    '("const-gchar*" "text")
+  )
+)
+
+(define-method set_font_desc
+  (of-object "GESTrackTextOverlay")
+  (c-name "ges_track_text_overlay_set_font_desc")
+  (return-type "none")
+  (parameters
+    '("const-gchar*" "font_desc")
+  )
+)
+
+(define-method set_halignment
+  (of-object "GESTrackTextOverlay")
+  (c-name "ges_track_text_overlay_set_halignment")
+  (return-type "none")
+  (parameters
+    '("GESTextHAlign" "halign")
+  )
+)
+
+(define-method set_valignment
+  (of-object "GESTrackTextOverlay")
+  (c-name "ges_track_text_overlay_set_valignment")
+  (return-type "none")
+  (parameters
+    '("GESTextVAlign" "valign")
+  )
+)
+
+(define-method get_text
+  (of-object "GESTrackTextOverlay")
+  (c-name "ges_track_text_overlay_get_text")
+  (return-type "const-gchar*")
+)
+
+(define-method get_font_desc
+  (of-object "GESTrackTextOverlay")
+  (c-name "ges_track_text_overlay_get_font_desc")
+  (return-type "const-char*")
+)
+
+(define-method get_halignment
+  (of-object "GESTrackTextOverlay")
+  (c-name "ges_track_text_overlay_get_halignment")
+  (return-type "GESTextHAlign")
+)
+
+(define-method get_valignment
+  (of-object "GESTrackTextOverlay")
+  (c-name "ges_track_text_overlay_get_valignment")
+  (return-type "GESTextVAlign")
+)
+
+(define-function ges_track_text_overlay_new
+  (c-name "ges_track_text_overlay_new")
+  (is-constructor-of "GesTrackTextOverlay")
+  (return-type "GESTrackTextOverlay*")
+)
+
+
+
+;; From ges-track-title-source.h
+
+(define-function ges_track_title_source_get_type
+  (c-name "ges_track_title_source_get_type")
+  (return-type "GType")
+)
+
+(define-method set_text
+  (of-object "GESTrackTitleSource")
+  (c-name "ges_track_title_source_set_text")
+  (return-type "none")
+  (parameters
+    '("const-gchar*" "text")
+  )
+)
+
+(define-method set_font_desc
+  (of-object "GESTrackTitleSource")
+  (c-name "ges_track_title_source_set_font_desc")
+  (return-type "none")
+  (parameters
+    '("const-gchar*" "font_desc")
+  )
+)
+
+(define-method set_halignment
+  (of-object "GESTrackTitleSource")
+  (c-name "ges_track_title_source_set_halignment")
+  (return-type "none")
+  (parameters
+    '("GESTextHAlign" "halign")
+  )
+)
+
+(define-method set_valignment
+  (of-object "GESTrackTitleSource")
+  (c-name "ges_track_title_source_set_valignment")
+  (return-type "none")
+  (parameters
+    '("GESTextVAlign" "valign")
+  )
+)
+
+(define-method get_text
+  (of-object "GESTrackTitleSource")
+  (c-name "ges_track_title_source_get_text")
+  (return-type "const-gchar*")
+)
+
+(define-method get_font_desc
+  (of-object "GESTrackTitleSource")
+  (c-name "ges_track_title_source_get_font_desc")
+  (return-type "const-gchar*")
+)
+
+(define-method get_halignment
+  (of-object "GESTrackTitleSource")
+  (c-name "ges_track_title_source_get_halignment")
+  (return-type "GESTextHAlign")
+)
+
+(define-method get_valignment
+  (of-object "GESTrackTitleSource")
+  (c-name "ges_track_title_source_get_valignment")
+  (return-type "GESTextVAlign")
+)
+
+(define-function ges_track_title_source_new
+  (c-name "ges_track_title_source_new")
+  (is-constructor-of "GesTrackTitleSource")
+  (return-type "GESTrackTitleSource*")
+)
+
+
+
+;; From ges-track-transition.h
+
+(define-function ges_track_transition_get_type
+  (c-name "ges_track_transition_get_type")
+  (return-type "GType")
+)
+
+
+
+;; From ges-track-video-test-source.h
+
+(define-function ges_track_video_test_source_get_type
+  (c-name "ges_track_video_test_source_get_type")
+  (return-type "GType")
+)
+
+(define-function ges_track_video_test_source_new
+  (c-name "ges_track_video_test_source_new")
+  (is-constructor-of "GesTrackVideoTestSource")
+  (return-type "GESTrackVideoTestSource*")
+)
+
+(define-method set_pattern
+  (of-object "GESTrackVideoTestSource")
+  (c-name "ges_track_video_test_source_set_pattern")
+  (return-type "none")
+  (parameters
+    '("GESVideoTestPattern" "pattern")
+  )
+)
+
+(define-method get_pattern
+  (of-object "GESTrackVideoTestSource")
+  (c-name "ges_track_video_test_source_get_pattern")
+  (return-type "GESVideoTestPattern")
+)
+
+;; From ges-timeline-source.h
+
+(define-function ges_timeline_source_get_type
+  (c-name "ges_timeline_source_get_type")
+  (return-type "GType")
+)
+
+;; From ges-track-video-transition.h
+
+(define-function ges_track_video_transition_get_type
+  (c-name "ges_track_video_transition_get_type")
+  (return-type "GType")
+)
+
+(define-method set_transition_type
+  (of-object "GESTrackVideoTransition")
+  (c-name "ges_track_video_transition_set_transition_type")
+  (return-type "gboolean")
+  (parameters
+    '("GESVideoStandardTransitionType" "type")
+  )
+)
+
+(define-method get_transition_type
+  (of-object "GESTrackVideoTransition")
+  (c-name "ges_track_video_transition_get_transition_type")
+  (return-type "GESVideoStandardTransitionType")
+)
+
+(define-function ges_track_video_transition_new
+  (c-name "ges_track_video_transition_new")
+  (is-constructor-of "GesTrackVideoTransition")
+  (return-type "GESTrackVideoTransition*")
+)
+
+
+
+;; From ges-types.h
+
+
+
+;; From ges-utils.h
+
+(define-function ges_timeline_new_audio_video
+  (c-name "ges_timeline_new_audio_video")
+  (return-type "GESTimeline*")
+)
+
+
