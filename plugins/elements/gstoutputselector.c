@@ -538,9 +538,10 @@ gst_output_selector_handle_sink_event (GstPad * pad, GstEvent * event)
       switch (sel->pad_negotiation_mode) {
         case GST_OUTPUT_SELECTOR_PAD_NEGOTIATION_MODE_ALL:
           /* Send caps to all src pads */
-          gst_pad_event_forward (pad, event);
+          res = gst_pad_event_forward (pad, event);
           break;
         case GST_OUTPUT_SELECTOR_PAD_NEGOTIATION_MODE_NONE:
+          gst_event_unref (event);
           break;
         default:
           GST_OBJECT_LOCK (sel);
@@ -551,12 +552,13 @@ gst_output_selector_handle_sink_event (GstPad * pad, GstEvent * event)
           GST_OBJECT_UNLOCK (sel);
 
           if (active) {
-            res = gst_pad_push_event (active, gst_event_ref (event));
+            res = gst_pad_push_event (active, event);
             gst_object_unref (active);
+          } else {
+            gst_event_unref (event);
           }
           break;
       }
-      gst_event_unref (event);
       break;
     }
     case GST_EVENT_SEGMENT:
@@ -585,10 +587,11 @@ gst_output_selector_handle_sink_event (GstPad * pad, GstEvent * event)
 
       /* Send other events to pending or active src pad */
       if (active) {
-        res = gst_pad_push_event (active, gst_event_ref (event));
+        res = gst_pad_push_event (active, event);
         gst_object_unref (active);
+      } else {
+        gst_event_unref (event);
       }
-      gst_event_unref (event);
       break;
     }
   }
