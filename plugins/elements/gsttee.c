@@ -137,6 +137,7 @@ static void gst_tee_dispose (GObject * object);
 
 static GstFlowReturn gst_tee_chain (GstPad * pad, GstBuffer * buffer);
 static GstFlowReturn gst_tee_chain_list (GstPad * pad, GstBufferList * list);
+static gboolean gst_tee_sink_event (GstPad * pad, GstEvent * event);
 static gboolean gst_tee_sink_acceptcaps (GstPad * pad, GstCaps * caps);
 static gboolean gst_tee_sink_activate_push (GstPad * pad, gboolean active);
 static gboolean gst_tee_src_query (GstPad * pad, GstQuery * query);
@@ -245,8 +246,8 @@ gst_tee_init (GstTee * tee)
   tee->sinkpad = gst_pad_new_from_static_template (&sinktemplate, "sink");
   tee->sink_mode = GST_ACTIVATE_NONE;
 
-  gst_pad_set_setcaps_function (tee->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_pad_proxy_setcaps));
+  gst_pad_set_event_function (tee->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_tee_sink_event));
   gst_pad_set_getcaps_function (tee->sinkpad,
       GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
   gst_pad_set_acceptcaps_function (tee->sinkpad,
@@ -475,6 +476,22 @@ gst_tee_get_property (GObject * object, guint prop_id, GValue * value,
       break;
   }
   GST_OBJECT_UNLOCK (tee);
+}
+
+static gboolean
+gst_tee_sink_event (GstPad * pad, GstEvent * event)
+{
+  gboolean res;
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+      res = gst_pad_event_forward (pad, event);
+      break;
+    default:
+      res = gst_pad_event_default (pad, event);
+      break;
+  }
+  return res;
 }
 
 /* on the sink we accept caps that are acceptable to all srcpads */

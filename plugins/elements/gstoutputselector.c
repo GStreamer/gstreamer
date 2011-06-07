@@ -309,27 +309,6 @@ gst_output_selector_sink_getcaps (GstPad * pad, GstCaps * filter)
   return caps;
 }
 
-static gboolean
-gst_output_selector_sink_setcaps (GstPad * pad, GstCaps * caps)
-{
-  GstOutputSelector *sel = GST_OUTPUT_SELECTOR (GST_PAD_PARENT (pad));
-  GstPad *active = NULL;
-  gboolean ret = TRUE;
-
-  GST_OBJECT_LOCK (sel);
-  if (sel->pending_srcpad)
-    active = gst_object_ref (sel->pending_srcpad);
-  else if (sel->active_srcpad)
-    active = gst_object_ref (sel->active_srcpad);
-  GST_OBJECT_UNLOCK (sel);
-
-  if (active) {
-    ret = gst_pad_set_caps (active, caps);
-    gst_object_unref (active);
-  }
-  return ret;
-}
-
 static void
 gst_output_selector_switch_pad_negotiation_mode (GstOutputSelector * sel,
     gint mode)
@@ -337,15 +316,11 @@ gst_output_selector_switch_pad_negotiation_mode (GstOutputSelector * sel,
   sel->pad_negotiation_mode = mode;
   if (mode == GST_OUTPUT_SELECTOR_PAD_NEGOTIATION_MODE_ALL) {
     gst_pad_set_getcaps_function (sel->sinkpad, gst_pad_proxy_getcaps);
-    gst_pad_set_setcaps_function (sel->sinkpad, gst_pad_proxy_setcaps);
   } else if (mode == GST_OUTPUT_SELECTOR_PAD_NEGOTIATION_MODE_NONE) {
     gst_pad_set_getcaps_function (sel->sinkpad, NULL);
-    gst_pad_set_setcaps_function (sel->sinkpad, NULL);
   } else {                      /* active */
     gst_pad_set_getcaps_function (sel->sinkpad,
         gst_output_selector_sink_getcaps);
-    gst_pad_set_setcaps_function (sel->sinkpad,
-        gst_output_selector_sink_setcaps);
   }
 }
 
@@ -549,7 +524,7 @@ gst_output_selector_handle_sink_event (GstPad * pad, GstEvent * event)
 {
   gboolean res = TRUE;
   GstOutputSelector *sel;
-  GstPad *output_pad = NULL;
+  GstPad *active = NULL;
 
   sel = GST_OUTPUT_SELECTOR (gst_pad_get_parent (pad));
   if (G_UNLIKELY (sel == NULL)) {
@@ -558,28 +533,64 @@ gst_output_selector_handle_sink_event (GstPad * pad, GstEvent * event)
   }
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+    {
+      switch (sel->pad_negotiation_mode) {
+        case GST_OUTPUT_SELECTOR_PAD_NEGOTIATION_MODE_ALL:
+          /* Send caps to all src pads */
+          gst_pad_event_forward (pad, event);
+          break;
+        case GST_OUTPUT_SELECTOR_PAD_NEGOTIATION_MODE_NONE:
+          break;
+        default:
+          GST_OBJECT_LOCK (sel);
+          if (sel->pending_srcpad)
+            active = gst_object_ref (sel->pending_srcpad);
+          else if (sel->active_srcpad)
+            active = gst_object_ref (sel->active_srcpad);
+          GST_OBJECT_UNLOCK (sel);
+
+          if (active) {
+            res = gst_pad_push_event (active, gst_event_ref (event));
+            gst_object_unref (active);
+          }
+          break;
+      }
+      gst_event_unref (event);
+      break;
+    }
     case GST_EVENT_SEGMENT:
     {
       gst_event_copy_segment (event, &sel->segment);
 
-      GST_DEBUG_OBJECT (sel, "configured SEGMENT update %" GST_SEGMENT_FORMAT,
+      GST_DEBUG_OBJECT (sel, "configured SEGMENT %" GST_SEGMENT_FORMAT,
           &sel->segment);
 
       /* Send newsegment to all src pads */
-      gst_pad_event_default (pad, event);
+      res = gst_pad_event_default (pad, event);
       break;
     }
     case GST_EVENT_EOS:
       /* Send eos to all src pads */
-      gst_pad_event_default (pad, event);
+      res = gst_pad_event_default (pad, event);
       break;
     default:
+    {
+      GST_OBJECT_LOCK (sel);
+      if (sel->pending_srcpad)
+        active = gst_object_ref (sel->pending_srcpad);
+      else if (sel->active_srcpad)
+        active = gst_object_ref (sel->active_srcpad);
+      GST_OBJECT_UNLOCK (sel);
+
       /* Send other events to pending or active src pad */
-      output_pad =
-          sel->pending_srcpad ? sel->pending_srcpad : sel->active_srcpad;
-      if (output_pad)
-        res = gst_pad_push_event (output_pad, event);
+      if (active) {
+        res = gst_pad_push_event (active, gst_event_ref (event));
+        gst_object_unref (active);
+      }
+      gst_event_unref (event);
       break;
+    }
   }
 
   gst_object_unref (sel);
