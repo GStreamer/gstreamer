@@ -667,8 +667,6 @@ gst_audio_fx_base_fir_filter_push_residue (GstAudioFXBaseFIRFilter * self)
     }
 
     outbuf = gst_buffer_new_and_alloc (outsize);
-    gst_buffer_set_caps (outbuf,
-        GST_PAD_CAPS (GST_BASE_TRANSFORM_CAST (self)->srcpad));
 
     /* Convolve the residue with zeros to get the actual remaining data */
     in = g_new0 (guint8, outsize);
