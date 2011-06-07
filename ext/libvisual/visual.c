@@ -504,6 +504,7 @@ gst_visual_sink_event (GstPad * pad, GstEvent * event)
 
       gst_event_parse_caps (event, &caps);
       res = gst_visual_sink_setcaps (pad, caps);
+      gst_event_unref (event);
       break;
     }
     case GST_EVENT_SEGMENT:
