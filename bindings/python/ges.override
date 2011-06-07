@@ -1,0 +1,24 @@
+/* -*- Mode: C; c-basic-offset: 4 -*- */
+%%
+headers
+#define NO_IMPORT_PYGOBJECT
+#include <pygobject.h>
+
+#include <gst/gst.h>
+#include <ges/ges.h>
+
+#include <glib.h>
+#include <pyglib.h>
+
+
+#ifdef HAVE_CONFIG_H
+# include <config.h>
+#endif
+
+/* Boonky define that allows for backwards compatibility with Python 2.4 */
+#if PY_VERSION_HEX < 0x02050000
+#define Py_ssize_t int
+#endif
+
+%%
+import gobject.GObject as PyGObject_Type
