@@ -43,3 +43,103 @@ _wrap_ges_track_get_timeline(PyGObject *self)
     /* pygobject_new handles NULL checking */
     return pygobject_new((GObject *)ret);
 }
+
+%%
+override ges_timeline_get_tracks noargs
+static PyObject *
+_wrap_ges_timeline_get_tracks(PyGObject *self)
+{
+    const GList *l, *list;
+    PyObject *py_list;
+
+    g_return_val_if_fail (GES_IS_TIMELINE (self->obj), PyList_New(0));
+
+    pyg_begin_allow_threads;
+    list = ges_timeline_get_tracks(GES_TIMELINE(self->obj));
+    pyg_end_allow_threads;
+
+    py_list = PyList_New(0);
+    for (l = list; l; l = l->next) {
+    GESTrack *track = (GESTrack*)l->data;
+    PyObject *py_track = pygobject_new(G_OBJECT(track));
+    PyList_Append(py_list, py_track);
+    Py_DECREF(py_track);
+    }
+
+    return py_list;
+}
+
+%%
+override ges_timeline_get_layers noargs
+static PyObject *
+_wrap_ges_timeline_get_layers(PyGObject *self)
+{
+    const GList *l, *list;
+    PyObject *py_list;
+
+    g_return_val_if_fail (GES_IS_TIMELINE (self->obj), PyList_New(0));
+
+    pyg_begin_allow_threads;
+    list = ges_timeline_get_layers(GES_TIMELINE(self->obj));
+    pyg_end_allow_threads;
+
+    py_list = PyList_New(0);
+    for (l = list; l; l = l->next) {
+    GESTimelineLayer *layer = (GESTimelineLayer*)l->data;
+    PyObject *py_layer = pygobject_new(G_OBJECT(layer));
+    PyList_Append(py_list, py_layer);
+    Py_DECREF(py_layer);
+    }
+
+    return py_list;
+}
+
+%%
+override ges_timeline_layer_get_objects noargs
+static PyObject *
+_wrap_ges_timeline_layer_get_objects(PyGObject *self)
+{
+    const GList *l, *list;
+    PyObject *py_list;
+
+    g_return_val_if_fail (GES_IS_TIMELINE_LAYER (self->obj), PyList_New(0));
+
+    pyg_begin_allow_threads;
+    list = ges_timeline_layer_get_objects(GES_TIMELINE_LAYER(self->obj));
+    pyg_end_allow_threads;
+
+    py_list = PyList_New(0);
+    for (l = list; l; l = l->next) {
+    GESTimelineObject *object = (GESTimelineObject*)l->data;
+    PyObject *py_object = pygobject_new(G_OBJECT(object));
+    PyList_Append(py_list, py_object);
+    Py_DECREF(py_object);
+    }
+
+    return py_list;
+}
+
+%%
+override ges_timeline_object_get_track_objects noargs
+static PyObject *
+_wrap_ges_timeline_object_get_track_objects(PyGObject *self)
+{
+    const GList *l, *list;
+    PyObject *py_list;
+
+    g_return_val_if_fail (GES_IS_TIMELINE_OBJECT (self->obj), PyList_New(0));
+
+    pyg_begin_allow_threads;
+    list = ges_timeline_object_get_track_objects(GES_TIMELINE_OBJECT(self->obj));
+    pyg_end_allow_threads;
+
+    py_list = PyList_New(0);
+    for (l = list; l; l = l->next) {
+    GESTrackObject *object = (GESTrackObject*)l->data;
+    PyObject *py_object = pygobject_new(G_OBJECT(object));
+    PyList_Append(py_list, py_object);
+    Py_DECREF(py_object);
+    }
+
+    return py_list;
+}
