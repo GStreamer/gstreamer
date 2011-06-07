@@ -65,7 +65,7 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
 G_DEFINE_TYPE (GstAlphaColor, gst_alpha_color, GST_TYPE_VIDEO_FILTER);
 
 static GstCaps *gst_alpha_color_transform_caps (GstBaseTransform * btrans,
-    GstPadDirection direction, GstCaps * caps);
+    GstPadDirection direction, GstCaps * caps, GstCaps * filter);
 static gboolean gst_alpha_color_set_caps (GstBaseTransform * btrans,
     GstCaps * incaps, GstCaps * outcaps);
 static GstFlowReturn gst_alpha_color_transform_ip (GstBaseTransform * btrans,
@@ -110,7 +110,7 @@ gst_alpha_color_init (GstAlphaColor * alpha)
 
 static GstCaps *
 gst_alpha_color_transform_caps (GstBaseTransform * btrans,
-    GstPadDirection direction, GstCaps * caps)
+    GstPadDirection direction, GstCaps * caps, GstCaps * filter)
 {
   const GstCaps *tmpl_caps = NULL;
   GstCaps *result = NULL, *local_caps = NULL;
@@ -155,6 +155,18 @@ gst_alpha_color_transform_caps (GstBaseTransform * btrans,
 
   GST_LOG_OBJECT (btrans, "transformed %" GST_PTR_FORMAT " to %" GST_PTR_FORMAT,
       caps, result);
+
+  if (filter) {
+    GstCaps *intersection;
+
+    GST_DEBUG_OBJECT (btrans, "Using filter caps %" GST_PTR_FORMAT, filter);
+    intersection =
+        gst_caps_intersect_full (filter, result, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (result);
+    result = intersection;
+    GST_DEBUG_OBJECT (btrans, "Intersection %" GST_PTR_FORMAT, result);
+  }
+
 
   return result;
 }

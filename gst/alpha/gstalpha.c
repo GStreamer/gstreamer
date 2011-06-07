@@ -176,7 +176,7 @@ static gboolean gst_alpha_start (GstBaseTransform * trans);
 static gboolean gst_alpha_get_unit_size (GstBaseTransform * btrans,
     GstCaps * caps, gsize * size);
 static GstCaps *gst_alpha_transform_caps (GstBaseTransform * btrans,
-    GstPadDirection direction, GstCaps * caps);
+    GstPadDirection direction, GstCaps * caps, GstCaps * filter);
 static gboolean gst_alpha_set_caps (GstBaseTransform * btrans,
     GstCaps * incaps, GstCaps * outcaps);
 static GstFlowReturn gst_alpha_transform (GstBaseTransform * btrans,
@@ -472,7 +472,7 @@ gst_alpha_get_unit_size (GstBaseTransform * btrans,
 
 static GstCaps *
 gst_alpha_transform_caps (GstBaseTransform * btrans,
-    GstPadDirection direction, GstCaps * caps)
+    GstPadDirection direction, GstCaps * caps, GstCaps * filter)
 {
   GstAlpha *alpha = GST_ALPHA (btrans);
   GstCaps *ret, *tmp, *tmp2;
@@ -526,6 +526,18 @@ gst_alpha_transform_caps (GstBaseTransform * btrans,
 
   GST_DEBUG_OBJECT (alpha,
       "Transformed %" GST_PTR_FORMAT " -> %" GST_PTR_FORMAT, caps, ret);
+
+  if (filter) {
+    GstCaps *intersection;
+
+    GST_DEBUG_OBJECT (alpha, "Using filter caps %" GST_PTR_FORMAT, filter);
+    intersection =
+        gst_caps_intersect_full (filter, ret, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (ret);
+    ret = intersection;
+    GST_DEBUG_OBJECT (alpha, "Intersection %" GST_PTR_FORMAT, ret);
+  }
+
 
   GST_ALPHA_UNLOCK (alpha);
 
