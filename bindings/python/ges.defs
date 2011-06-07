@@ -49,11 +49,25 @@
   (gtype-id "GES_TYPE_TIMELINE_OPERATION")
 )
 
+(define-object TimelineEffect
+  (in-module "GES")
+  (parent "GESTimelineOperation")
+  (c-name "GESTimelineEffect")
+  (gtype-id "GES_TYPE_TIMELINE_EFFECT")
+)
+
 (define-object TimelineOverlay
   (in-module "GES")
   (parent "GESTimelineOperation")
   (c-name "GESTimelineOverlay")
   (gtype-id "GES_TYPE_TIMELINE_OVERLAY")
+)
+
+(define-object TimelineParseLaunchEffect
+  (in-module "GES")
+  (parent "GESTimelineEffect")
+  (c-name "GESTimelineParseLaunchEffect")
+  (gtype-id "GES_TYPE_TIMELINE_PARSE_LAUNCH_EFFECT")
 )
 
 (define-object TimelinePipeline
@@ -138,6 +152,20 @@
   (parent "GESTrackObject")
   (c-name "GESTrackOperation")
   (gtype-id "GES_TYPE_TRACK_OPERATION")
+)
+
+(define-object TrackEffect
+  (in-module "GES")
+  (parent "GESTrackOperation")
+  (c-name "GESTrackEffect")
+  (gtype-id "GES_TYPE_TRACK_EFFECT")
+)
+
+(define-object TrackParseLaunchEffect
+  (in-module "GES")
+  (parent "GESTrackEffect")
+  (c-name "GESTrackParseLaunchEffect")
+  (gtype-id "GES_TYPE_TRACK_PARSE_LAUNCH_EFFECT")
 )
 
 (define-object TrackSource
@@ -621,6 +649,16 @@
 )
 
 
+
+;; From ges-timeline-effect.h
+
+(define-function timeline_effect_get_type
+  (c-name "ges_timeline_effect_get_type")
+  (return-type "GType")
+)
+
+
+
 ;; From ges-timeline-file-source.h
 
 (define-function timeline_filesource_get_type
@@ -986,6 +1024,32 @@
   (return-type "GESTimelineLayer*")
 )
 
+(define-method get_top_effects
+  (of-object "GESTimelineObject")
+  (c-name "ges_timeline_object_get_top_effects")
+  (return-type "GList*")
+)
+
+(define-method get_top_effect_position
+  (of-object "GESTimelineObject")
+  (c-name "ges_timeline_object_get_top_effect_position")
+  (return-type "gint")
+  (parameters
+    '("GESTrackEffect*" "effect")
+  )
+)
+
+(define-method set_top_effect_priority
+  (of-object "GESTimelineObject")
+  (c-name "ges_timeline_object_set_top_effect_priority")
+  (return-type "gboolean")
+  (parameters
+    '("GESTrackEffect*" "effect")
+    '("guint" "newpriority")
+  )
+)
+
+
 
 ;; From ges-timeline-operation.h
 
@@ -1001,6 +1065,25 @@
 (define-function timeline_overlay_get_type
   (c-name "ges_timeline_overlay_get_type")
   (return-type "GType")
+)
+
+
+
+;; From ges-timeline-parse-launch-effect.h
+
+(define-function timeline_parse_launch_effect_get_type
+  (c-name "ges_timeline_parse_launch_effect_get_type")
+  (return-type "GType")
+)
+
+(define-function timeline_parse_launch_effect_new
+  (c-name "ges_timeline_parse_launch_effect_new")
+  (is-constructor-of "GESTimelineParseLaunchEffect")
+  (return-type "GESTimelineParseLaunchEffect*")
+  (parameters
+    '("const-gchar*" "video_bin_description")
+    '("const-gchar*" "audio_bin_description")
+  )
 )
 
 
@@ -1430,6 +1513,16 @@
 )
 
 
+
+;; From ges-track-effect.h
+
+(define-function track_effect_get_type
+  (c-name "ges_track_effect_get_type")
+  (return-type "GType")
+)
+
+
+
 ;; From ges-track-filesource.h
 
 (define-function track_filesource_get_type
@@ -1772,6 +1865,25 @@
   (c-name "ges_track_operation_get_type")
   (return-type "GType")
 )
+
+
+
+;; From ges-track-parse-launch-effect.h
+
+(define-function track_parse_launch_effect_get_type
+  (c-name "ges_track_parse_launch_effect_get_type")
+  (return-type "GType")
+)
+
+(define-function track_parse_launch_effect_new
+  (c-name "ges_track_parse_launch_effect_new")
+  (is-constructor-of "GESTrackParseLaunchEffect")
+  (return-type "GESTrackParseLaunchEffect*")
+  (parameters
+    '("const-gchar*" "bin_description")
+  )
+)
+
 
 
 ;; From ges-track-source.h

@@ -49,11 +49,25 @@
   (gtype-id "GES_TYPE_TIMELINE_OPERATION")
 )
 
+(define-object TimelineEffect
+  (in-module "GES")
+  (parent "GESTimelineOperation")
+  (c-name "GESTimelineEffect")
+  (gtype-id "GES_TYPE_TIMELINE_EFFECT")
+)
+
 (define-object TimelineOverlay
   (in-module "GES")
   (parent "GESTimelineOperation")
   (c-name "GESTimelineOverlay")
   (gtype-id "GES_TYPE_TIMELINE_OVERLAY")
+)
+
+(define-object TimelineParseLaunchEffect
+  (in-module "GES")
+  (parent "GESTimelineEffect")
+  (c-name "GESTimelineParseLaunchEffect")
+  (gtype-id "GES_TYPE_TIMELINE_PARSE_LAUNCH_EFFECT")
 )
 
 (define-object TimelinePipeline
@@ -138,6 +152,20 @@
   (parent "GESTrackObject")
   (c-name "GESTrackOperation")
   (gtype-id "GES_TYPE_TRACK_OPERATION")
+)
+
+(define-object TrackEffect
+  (in-module "GES")
+  (parent "GESTrackOperation")
+  (c-name "GESTrackEffect")
+  (gtype-id "GES_TYPE_TRACK_EFFECT")
+)
+
+(define-object TrackParseLaunchEffect
+  (in-module "GES")
+  (parent "GESTrackEffect")
+  (c-name "GESTrackParseLaunchEffect")
+  (gtype-id "GES_TYPE_TRACK_PARSE_LAUNCH_EFFECT")
 )
 
 (define-object TrackSource
