@@ -206,15 +206,10 @@ gst_audio_rate_reset (GstAudioRate * audiorate)
 }
 
 static gboolean
-gst_audio_rate_setcaps (GstPad * pad, GstCaps * caps)
+gst_audio_rate_setcaps (GstAudioRate * audiorate, GstCaps * caps)
 {
-  GstAudioRate *audiorate;
   GstStructure *structure;
-  GstPad *otherpad;
-  gboolean ret = FALSE;
   gint channels, width, rate;
-
-  audiorate = GST_AUDIO_RATE (gst_pad_get_parent (pad));
 
   structure = gst_caps_get_structure (caps, 0);
 
@@ -231,26 +226,18 @@ gst_audio_rate_setcaps (GstPad * pad, GstCaps * caps)
 
   audiorate->rate = rate;
 
-  /* the format is correct, configure caps on other pad */
-  otherpad = (pad == audiorate->srcpad) ? audiorate->sinkpad :
-      audiorate->srcpad;
-
-  ret = gst_pad_set_caps (otherpad, caps);
-
-done:
-  gst_object_unref (audiorate);
-  return ret;
+  return TRUE;
 
   /* ERRORS */
 wrong_caps:
   {
     GST_DEBUG_OBJECT (audiorate, "could not get channels/width from caps");
-    goto done;
+    return FALSE;
   }
 wrong_format:
   {
     GST_DEBUG_OBJECT (audiorate, "bytes_per_samples gave 0");
-    goto done;
+    return FALSE;
   }
 }
 
@@ -261,14 +248,12 @@ gst_audio_rate_init (GstAudioRate * audiorate)
       gst_pad_new_from_static_template (&gst_audio_rate_sink_template, "sink");
   gst_pad_set_event_function (audiorate->sinkpad, gst_audio_rate_sink_event);
   gst_pad_set_chain_function (audiorate->sinkpad, gst_audio_rate_chain);
-  gst_pad_set_setcaps_function (audiorate->sinkpad, gst_audio_rate_setcaps);
   gst_pad_set_getcaps_function (audiorate->sinkpad, gst_pad_proxy_getcaps);
   gst_element_add_pad (GST_ELEMENT (audiorate), audiorate->sinkpad);
 
   audiorate->srcpad =
       gst_pad_new_from_static_template (&gst_audio_rate_src_template, "src");
   gst_pad_set_event_function (audiorate->srcpad, gst_audio_rate_src_event);
-  gst_pad_set_setcaps_function (audiorate->srcpad, gst_audio_rate_setcaps);
   gst_pad_set_getcaps_function (audiorate->srcpad, gst_pad_proxy_getcaps);
   gst_element_add_pad (GST_ELEMENT (audiorate), audiorate->srcpad);
 
@@ -309,6 +294,18 @@ gst_audio_rate_sink_event (GstPad * pad, GstEvent * event)
   audiorate = GST_AUDIO_RATE (gst_pad_get_parent (pad));
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+
+      gst_event_parse_caps (event, &caps);
+      if ((res = gst_audio_rate_setcaps (audiorate, caps))) {
+        res = gst_pad_push_event (audiorate->srcpad, event);
+      } else {
+        gst_event_unref (event);
+      }
+      break;
+    }
     case GST_EVENT_FLUSH_STOP:
       GST_DEBUG_OBJECT (audiorate, "handling FLUSH_STOP");
       gst_audio_rate_reset (audiorate);

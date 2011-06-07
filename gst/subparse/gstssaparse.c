@@ -69,8 +69,6 @@ static void
 gst_ssa_parse_init (GstSsaParse * parse)
 {
   parse->sinkpad = gst_pad_new_from_static_template (&sink_templ, "sink");
-  gst_pad_set_setcaps_function (parse->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_ssa_parse_setcaps));
   gst_pad_set_chain_function (parse->sinkpad,
       GST_DEBUG_FUNCPTR (gst_ssa_parse_chain));
   gst_pad_set_event_function (parse->sinkpad,
@@ -122,7 +120,23 @@ gst_ssa_parse_src_event (GstPad * pad, GstEvent * event)
 static gboolean
 gst_ssa_parse_sink_event (GstPad * pad, GstEvent * event)
 {
-  return gst_pad_event_default (pad, event);
+  gboolean res;
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+
+      gst_event_parse_caps (event, &caps);
+      res = gst_ssa_parse_setcaps (pad, caps);
+      gst_event_unref (event);
+      break;
+    }
+    default:
+      res = gst_pad_event_default (pad, event);
+      break;
+  }
+  return res;
 }
 
 static gboolean

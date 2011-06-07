@@ -43,6 +43,8 @@ G_DEFINE_TYPE (GstStreamSplitter, gst_stream_splitter, GST_TYPE_ELEMENT);
 
 static void gst_stream_splitter_dispose (GObject * object);
 
+static gboolean gst_stream_splitter_sink_setcaps (GstPad * pad, GstCaps * caps);
+
 static GstPad *gst_stream_splitter_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * name, const GstCaps * caps);
 static void gst_stream_splitter_release_pad (GstElement * element,
@@ -156,6 +158,16 @@ gst_stream_splitter_sink_event (GstPad * pad, GstEvent * event)
       GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+
+      gst_event_parse_caps (event, &caps);
+      res = gst_stream_splitter_sink_setcaps (pad, caps);
+
+      store = TRUE;
+      break;
+    }
     case GST_EVENT_FLUSH_STOP:
       flushpending = TRUE;
       toall = TRUE;
@@ -378,8 +390,6 @@ gst_stream_splitter_init (GstStreamSplitter * stream_splitter)
       gst_stream_splitter_sink_event);
   gst_pad_set_getcaps_function (stream_splitter->sinkpad,
       gst_stream_splitter_sink_getcaps);
-  gst_pad_set_setcaps_function (stream_splitter->sinkpad,
-      gst_stream_splitter_sink_setcaps);
   gst_element_add_pad (GST_ELEMENT (stream_splitter), stream_splitter->sinkpad);
 
   stream_splitter->lock = g_mutex_new ();

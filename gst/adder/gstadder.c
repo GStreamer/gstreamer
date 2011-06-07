@@ -125,7 +125,8 @@ static void gst_adder_set_property (GObject * object, guint prop_id,
 static void gst_adder_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static gboolean gst_adder_setcaps (GstPad * pad, GstCaps * caps);
+static gboolean gst_adder_setcaps (GstAdder * adder, GstPad * pad,
+    GstCaps * caps);
 static gboolean gst_adder_query (GstPad * pad, GstQuery * query);
 static gboolean gst_adder_src_event (GstPad * pad, GstEvent * event);
 static gboolean gst_adder_sink_event (GstPad * pad, GstEvent * event);
@@ -246,9 +247,8 @@ setcapsfunc (const GValue * item, IterData * data)
  * the other sinkpads because we can only mix streams with the same caps.
  */
 static gboolean
-gst_adder_setcaps (GstPad * pad, GstCaps * caps)
+gst_adder_setcaps (GstAdder * adder, GstPad * pad, GstCaps * caps)
 {
-  GstAdder *adder;
   GstStructure *structure;
   const char *media_type;
   GstIterator *it;
@@ -256,9 +256,7 @@ gst_adder_setcaps (GstPad * pad, GstCaps * caps)
   IterData idata;
   gboolean done;
 
-  adder = GST_ADDER (GST_PAD_PARENT (pad));
-
-  GST_LOG_OBJECT (adder, "setting caps on pad %p,%s to %" GST_PTR_FORMAT, pad,
+  GST_LOG_OBJECT (adder, "setting caps pad %p,%s to %" GST_PTR_FORMAT, pad,
       GST_PAD_NAME (pad), caps);
 
   it = gst_element_iterate_pads (GST_ELEMENT_CAST (adder));
@@ -786,6 +784,16 @@ gst_adder_sink_event (GstPad * pad, GstEvent * event)
       GST_DEBUG_PAD_NAME (pad));
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+
+      gst_event_parse_caps (event, &caps);
+      ret = gst_adder_setcaps (adder, pad, caps);
+      gst_event_unref (event);
+
+      goto beach;
+    }
     case GST_EVENT_FLUSH_STOP:
       /* we received a flush-stop. The collect_event function will push the
        * event past our element. We simply forward all flush-stop events, even
@@ -871,8 +879,6 @@ gst_adder_init (GstAdder * adder)
 
   gst_pad_set_getcaps_function (adder->srcpad,
       GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
-  gst_pad_set_setcaps_function (adder->srcpad,
-      GST_DEBUG_FUNCPTR (gst_adder_setcaps));
   gst_pad_set_query_function (adder->srcpad,
       GST_DEBUG_FUNCPTR (gst_adder_query));
   gst_pad_set_event_function (adder->srcpad,
@@ -993,7 +999,6 @@ gst_adder_request_new_pad (GstElement * element, GstPadTemplate * templ,
 
   gst_pad_set_getcaps_function (newpad,
       GST_DEBUG_FUNCPTR (gst_adder_sink_getcaps));
-  gst_pad_set_setcaps_function (newpad, GST_DEBUG_FUNCPTR (gst_adder_setcaps));
   gst_collect_pads_add_pad (adder->collect, newpad, sizeof (GstCollectData));
 
   /* FIXME: hacked way to override/extend the event function of

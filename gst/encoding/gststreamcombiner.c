@@ -122,7 +122,7 @@ gst_stream_combiner_sink_event (GstPad * pad, GstEvent * event)
       break;
   }
 
-  /* NEW_SEGMENT : lock, wait for other stream to EOS, select stream, unlock, push */
+  /* SEGMENT : lock, wait for other stream to EOS, select stream, unlock, push */
   /* EOS : lock, mark pad as unused, unlock , drop event */
   /* CUSTOM_REAL_EOS : push EOS downstream */
   /* FLUSH_START : lock, mark as flushing, unlock. if wasn't flushing forward */
@@ -138,26 +138,6 @@ gst_stream_combiner_sink_getcaps (GstPad * pad, GstCaps * filter)
       (GstStreamCombiner *) GST_PAD_PARENT (pad);
 
   return gst_pad_peer_get_caps (stream_combiner->srcpad, filter);
-}
-
-static gboolean
-gst_stream_combiner_sink_setcaps (GstPad * pad, GstCaps * caps)
-{
-  GstStreamCombiner *stream_combiner =
-      (GstStreamCombiner *) GST_PAD_PARENT (pad);
-  GstPad *peer;
-  gboolean res = FALSE;
-
-  GST_DEBUG_OBJECT (pad, "caps:%" GST_PTR_FORMAT, caps);
-
-  peer = gst_pad_get_peer (stream_combiner->srcpad);
-  if (peer) {
-    GST_DEBUG_OBJECT (peer, "Setting caps");
-    res = gst_pad_set_caps (peer, caps);
-    gst_object_unref (peer);
-  } else
-    GST_WARNING_OBJECT (stream_combiner, "sourcepad has no peer !");
-  return res;
 }
 
 static gboolean
@@ -225,12 +205,9 @@ gst_stream_combiner_request_new_pad (GstElement * element,
   GST_DEBUG_OBJECT (element, "templ:%p, name:%s", templ, name);
 
   sinkpad = gst_pad_new_from_static_template (&sink_template, name);
-  /* FIXME : No buffer alloc for the time being, it will resort to the fallback */
-  /* gst_pad_set_bufferalloc_function (sinkpad, gst_stream_combiner_buffer_alloc); */
   gst_pad_set_chain_function (sinkpad, gst_stream_combiner_chain);
   gst_pad_set_event_function (sinkpad, gst_stream_combiner_sink_event);
   gst_pad_set_getcaps_function (sinkpad, gst_stream_combiner_sink_getcaps);
-  gst_pad_set_setcaps_function (sinkpad, gst_stream_combiner_sink_setcaps);
 
   STREAMS_LOCK (stream_combiner);
   stream_combiner->sinkpads =
