@@ -63,16 +63,16 @@ GstRtspServer-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstrtspserver-@G
 		-I$(top_builddir) \
 		-DIN_GOBJECT_INTROSPECTION=1 \
 		--c-include='gst/gst.h' \
-		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-0.10` \
-		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-rtsp-0.10` \
-		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-sdp-0.10` \
-		--library=libgstrtspserver-0.10.la \
-		--include=Gst-0.10 \
-		--include=GstRtsp-0.10 \
+		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-@GST_MAJORMINOR@` \
+		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-rtsp-@GST_MAJORMINOR@` \
+		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-sdp-@GST_MAJORMINOR@` \
+		--library=libgstrtspserver-@GST_MAJORMINOR@.la \
+		--include=Gst-@GST_MAJORMINOR@ \
+		--include=GstRtsp-@GST_MAJORMINOR@ \
 		--libtool="$(top_builddir)/libtool" \
-		--pkg gstreamer-0.10 \
-		--pkg gstreamer-rtsp-0.10 \
-		--pkg-export gstreamer-rtsp-server-0.10 \
+		--pkg gstreamer-@GST_MAJORMINOR@ \
+		--pkg gstreamer-rtsp-@GST_MAJORMINOR@ \
+		--pkg-export gstreamer-rtsp-server-@GST_MAJORMINOR@ \
 		--output $@ \
 		$(gir_headers) \
 		$(gir_sources)
@@ -91,9 +91,9 @@ typelibs_DATA = $(BUILT_GIRSOURCES:.gir=.typelib)
 	$(INTROSPECTION_COMPILER) \
 	--includedir=$(srcdir) \
 	--includedir=$(builddir) \
-	--includedir=`$(PKG_CONFIG) --variable=girdir gstreamer-0.10` \
-	--includedir=`$(PKG_CONFIG) --variable=girdir gstreamer-rtsp-0.10` \
-	--includedir=`$(PKG_CONFIG) --variable=girdir gstreamer-sdp-0.10` \
+	--includedir=`$(PKG_CONFIG) --variable=girdir gstreamer-@GST_MAJORMINOR@` \
+	--includedir=`$(PKG_CONFIG) --variable=girdir gstreamer-rtsp-@GST_MAJORMINOR@` \
+	--includedir=`$(PKG_CONFIG) --variable=girdir gstreamer-sdp-@GST_MAJORMINOR@` \
 	$(INTROSPECTION_COMPILER_OPTS) $< -o $(@F)
 
 CLEANFILES += $(BUILT_GIRSOURCES) $(typelibs_DATA)
