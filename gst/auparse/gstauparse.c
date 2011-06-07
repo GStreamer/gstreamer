@@ -82,30 +82,16 @@ static gboolean gst_au_parse_src_convert (GstAuParse * auparse,
     GstFormat src_format, gint64 srcval, GstFormat dest_format,
     gint64 * destval);
 
-GST_BOILERPLATE (GstAuParse, gst_au_parse, GstElement, GST_TYPE_ELEMENT);
-
-static void
-gst_au_parse_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_template));
-  gst_element_class_set_details_simple (element_class, "AU audio demuxer",
-      "Codec/Demuxer/Audio",
-      "Parse an .au file into raw audio",
-      "Erik Walthinsen <omega@cse.ogi.edu>");
-
-  GST_DEBUG_CATEGORY_INIT (auparse_debug, "auparse", 0, ".au parser");
-}
+#define gst_au_parse_parent_class parent_class
+G_DEFINE_TYPE (GstAuParse, gst_au_parse, GST_TYPE_ELEMENT);
 
 static void
 gst_au_parse_class_init (GstAuParseClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
+
+  GST_DEBUG_CATEGORY_INIT (auparse_debug, "auparse", 0, ".au parser");
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
@@ -114,10 +100,19 @@ gst_au_parse_class_init (GstAuParseClass * klass)
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_au_parse_change_state);
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sink_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&src_template));
+  gst_element_class_set_details_simple (gstelement_class,
+      "AU audio demuxer",
+      "Codec/Demuxer/Audio",
+      "Parse an .au file into raw audio",
+      "Erik Walthinsen <omega@cse.ogi.edu>");
 }
 
 static void
-gst_au_parse_init (GstAuParse * auparse, GstAuParseClass * klass)
+gst_au_parse_init (GstAuParse * auparse)
 {
   auparse->sinkpad = gst_pad_new_from_static_template (&sink_template, "sink");
   gst_pad_set_chain_function (auparse->sinkpad,
@@ -785,7 +780,7 @@ gst_au_parse_change_state (GstElement * element, GstStateChange transition)
   GstAuParse *auparse = GST_AU_PARSE (element);
   GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
 
-  ret = parent_class->change_state (element, transition);
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
   if (ret == GST_STATE_CHANGE_FAILURE)
     return ret;
 
