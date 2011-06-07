@@ -28,7 +28,7 @@ class Timeline(TestCase):
 
         lyr.add_object(src, -1)
         lyr.add_object(tr, -1)
-        lyr.add_object(src2, -1)
+        assert (lyr.add_object(src2, -1) == True)
 
         pip.add_timeline(tl)
         bus.set_sync_handler(self.bus_handler)
