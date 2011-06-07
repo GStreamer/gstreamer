@@ -135,7 +135,7 @@ G_DEFINE_TYPE (GstVideoFlip, gst_video_flip, GST_TYPE_VIDEO_FILTER);
 
 static GstCaps *
 gst_video_flip_transform_caps (GstBaseTransform * trans,
-    GstPadDirection direction, GstCaps * caps)
+    GstPadDirection direction, GstCaps * caps, GstCaps * filter)
 {
   GstVideoFlip *videoflip = GST_VIDEO_FLIP (trans);
   GstCaps *ret;
@@ -185,6 +185,17 @@ gst_video_flip_transform_caps (GstBaseTransform * trans,
 
   GST_DEBUG_OBJECT (videoflip, "transformed %" GST_PTR_FORMAT " to %"
       GST_PTR_FORMAT, caps, ret);
+
+  if (filter) {
+    GstCaps *intersection;
+
+    GST_DEBUG_OBJECT (videoflip, "Using filter caps %" GST_PTR_FORMAT, filter);
+    intersection =
+        gst_caps_intersect_full (filter, ret, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (ret);
+    ret = intersection;
+    GST_DEBUG_OBJECT (videoflip, "Intersection %" GST_PTR_FORMAT, ret);
+  }
 
   return ret;
 }
