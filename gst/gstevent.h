@@ -27,33 +27,6 @@
 
 typedef struct _GstEvent GstEvent;
 
-#include <gst/gstminiobject.h>
-#include <gst/gstformat.h>
-#include <gst/gstobject.h>
-#include <gst/gstclock.h>
-#include <gst/gststructure.h>
-#include <gst/gsttaglist.h>
-#include <gst/gstsegment.h>
-#include <gst/gstsegment.h>
-#include <gst/gstmessage.h>
-
-G_BEGIN_DECLS
-
-extern GType _gst_event_type;
-
-
-#define GST_TYPE_EVENT                  (_gst_event_type)
-#define GST_IS_EVENT(obj)               (GST_IS_MINI_OBJECT_TYPE (obj, GST_TYPE_EVENT))
-#define GST_EVENT_CAST(obj)             ((GstEvent *)(obj))
-#define GST_EVENT(obj)                  (GST_EVENT_CAST(obj))
-
-/**
- * GST_EVENT_TRACE_NAME:
- *
- * The name used for memory allocation tracing
- */
-#define GST_EVENT_TRACE_NAME    "GstEvent"
-
 /**
  * GstEventTypeFlags:
  * @GST_EVENT_TYPE_UPSTREAM:   Set if the event can travel upstream.
@@ -98,7 +71,6 @@ typedef enum {
     (((num) << GST_EVENT_NUM_SHIFT) | ((idx) << GST_EVENT_STICKY_SHIFT) | (flags))
 
 #define FLAG(name) GST_EVENT_TYPE_##name
-
 
 #define GST_EVENT_STICKY_IDX_TYPE(type)  (((type) >> GST_EVENT_STICKY_SHIFT) & 0xf)
 #define GST_EVENT_STICKY_IDX(ev)         GST_EVENT_STICKY_IDX_TYPE(GST_EVENT_TYPE(ev))
@@ -183,6 +155,32 @@ typedef enum {
   GST_EVENT_CUSTOM_BOTH_OOB       = GST_EVENT_MAKE_TYPE (32, 0, FLAG(BOTH))
 } GstEventType;
 #undef FLAG
+
+#include <gst/gstminiobject.h>
+#include <gst/gstformat.h>
+#include <gst/gstobject.h>
+#include <gst/gstclock.h>
+#include <gst/gststructure.h>
+#include <gst/gsttaglist.h>
+#include <gst/gstsegment.h>
+#include <gst/gstsegment.h>
+#include <gst/gstmessage.h>
+
+G_BEGIN_DECLS
+
+extern GType _gst_event_type;
+
+#define GST_TYPE_EVENT                  (_gst_event_type)
+#define GST_IS_EVENT(obj)               (GST_IS_MINI_OBJECT_TYPE (obj, GST_TYPE_EVENT))
+#define GST_EVENT_CAST(obj)             ((GstEvent *)(obj))
+#define GST_EVENT(obj)                  (GST_EVENT_CAST(obj))
+
+/**
+ * GST_EVENT_TRACE_NAME:
+ *
+ * The name used for memory allocation tracing
+ */
+#define GST_EVENT_TRACE_NAME    "GstEvent"
 
 /**
  * GST_EVENT_TYPE:
