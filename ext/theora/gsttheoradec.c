@@ -658,6 +658,7 @@ theora_dec_sink_event (GstPad * pad, GstEvent * event)
 
       gst_event_parse_caps (event, &caps);
       ret = theora_dec_setcaps (dec, caps);
+      gst_event_unref (event);
       break;
     }
     case GST_EVENT_TAG:

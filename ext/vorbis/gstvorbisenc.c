@@ -284,12 +284,10 @@ gst_vorbis_enc_sink_getcaps (GstPad * pad, GstCaps * filter)
 }
 
 static gboolean
-gst_vorbis_enc_sink_setcaps (GstPad * pad, GstCaps * caps)
+gst_vorbis_enc_sink_setcaps (GstVorbisEnc * vorbisenc, GstCaps * caps)
 {
-  GstVorbisEnc *vorbisenc;
   GstStructure *structure;
 
-  vorbisenc = GST_VORBISENC (GST_PAD_PARENT (pad));
   vorbisenc->setup = FALSE;
 
   structure = gst_caps_get_structure (caps, 0);
@@ -574,8 +572,6 @@ gst_vorbis_enc_init (GstVorbisEnc * vorbisenc)
       GST_DEBUG_FUNCPTR (gst_vorbis_enc_sink_event));
   gst_pad_set_chain_function (vorbisenc->sinkpad,
       GST_DEBUG_FUNCPTR (gst_vorbis_enc_chain));
-  gst_pad_set_setcaps_function (vorbisenc->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_vorbis_enc_sink_setcaps));
   gst_pad_set_getcaps_function (vorbisenc->sinkpad,
       GST_DEBUG_FUNCPTR (gst_vorbis_enc_sink_getcaps));
   gst_pad_set_query_function (vorbisenc->sinkpad,
@@ -946,6 +942,15 @@ gst_vorbis_enc_sink_event (GstPad * pad, GstEvent * event)
   vorbisenc = GST_VORBISENC (GST_PAD_PARENT (pad));
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+
+      gst_event_parse_caps (event, &caps);
+      res = gst_vorbis_enc_sink_setcaps (vorbisenc, caps);
+      gst_event_unref (event);
+      break;
+    }
     case GST_EVENT_EOS:
       /* Tell the library we're at end of stream so that it can handle
        * the last frame and mark end of stream in the output properly */

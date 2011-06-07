@@ -345,28 +345,27 @@ gst_text_render_check_argb (GstTextRender * render)
 }
 
 static gboolean
-gst_text_render_setcaps (GstPad * pad, GstCaps * caps)
+gst_text_render_src_setcaps (GstTextRender * render, GstCaps * caps)
 {
-  GstTextRender *render = GST_TEXT_RENDER (gst_pad_get_parent (pad));
   GstStructure *structure;
-  gboolean ret = FALSE;
+  gboolean ret;
   gint width = 0, height = 0;
 
   structure = gst_caps_get_structure (caps, 0);
   gst_structure_get_int (structure, "width", &width);
   gst_structure_get_int (structure, "height", &height);
 
-  GST_DEBUG ("Got caps %" GST_PTR_FORMAT, caps);
+  GST_DEBUG_OBJECT (render, "Got caps %" GST_PTR_FORMAT, caps);
 
   if (width >= render->image_width && height >= render->image_height) {
     render->width = width;
     render->height = height;
-    ret = TRUE;
   }
 
   gst_text_render_check_argb (render);
 
-  gst_object_unref (render);
+  ret = gst_pad_push_event (render->srcpad, gst_event_new_caps (caps));
+
   return ret;
 }
 
@@ -502,7 +501,7 @@ gst_text_render_chain (GstPad * pad, GstBuffer * inbuf)
   gst_caps_truncate (caps);
   gst_pad_fixate_caps (render->srcpad, caps);
 
-  if (!gst_pad_set_caps (render->srcpad, caps)) {
+  if (!gst_text_render_src_setcaps (render, caps)) {
     GST_ELEMENT_ERROR (render, CORE, NEGOTIATION, (NULL), (NULL));
     ret = GST_FLOW_ERROR;
     goto done;
@@ -605,8 +604,6 @@ gst_text_render_init (GstTextRender * render)
   gst_object_unref (template);
   gst_pad_set_fixatecaps_function (render->srcpad,
       GST_DEBUG_FUNCPTR (gst_text_render_fixate_caps));
-  gst_pad_set_setcaps_function (render->srcpad,
-      GST_DEBUG_FUNCPTR (gst_text_render_setcaps));
 
   gst_element_add_pad (GST_ELEMENT (render), render->srcpad);
 

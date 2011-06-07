@@ -629,8 +629,6 @@ gst_base_text_overlay_init (GstBaseTextOverlay * overlay,
   gst_object_unref (template);
   gst_pad_set_getcaps_function (overlay->video_sinkpad,
       GST_DEBUG_FUNCPTR (gst_base_text_overlay_getcaps));
-  gst_pad_set_setcaps_function (overlay->video_sinkpad,
-      GST_DEBUG_FUNCPTR (gst_base_text_overlay_setcaps));
   gst_pad_set_event_function (overlay->video_sinkpad,
       GST_DEBUG_FUNCPTR (gst_base_text_overlay_video_event));
   gst_pad_set_chain_function (overlay->video_sinkpad,
@@ -645,8 +643,6 @@ gst_base_text_overlay_init (GstBaseTextOverlay * overlay,
     overlay->text_sinkpad = gst_pad_new_from_template (template, "text_sink");
     gst_object_unref (template);
 
-    gst_pad_set_setcaps_function (overlay->text_sinkpad,
-        GST_DEBUG_FUNCPTR (gst_base_text_overlay_setcaps_txt));
     gst_pad_set_event_function (overlay->text_sinkpad,
         GST_DEBUG_FUNCPTR (gst_base_text_overlay_text_event));
     gst_pad_set_chain_function (overlay->text_sinkpad,
@@ -802,7 +798,7 @@ gst_base_text_overlay_setcaps (GstPad * pad, GstCaps * caps)
   if (fps
       && gst_video_format_parse_caps (caps, &overlay->format, &overlay->width,
           &overlay->height)) {
-    ret = gst_pad_set_caps (overlay->srcpad, caps);
+    ret = gst_pad_push_event (overlay->srcpad, gst_event_new_caps (caps));
   }
 
   overlay->fps_n = gst_value_get_fraction_numerator (fps);
@@ -2156,6 +2152,15 @@ gst_base_text_overlay_text_event (GstPad * pad, GstEvent * event)
   GST_LOG_OBJECT (pad, "received event %s", GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+
+      gst_event_parse_caps (event, &caps);
+      ret = gst_base_text_overlay_setcaps_txt (pad, caps);
+      gst_event_unref (event);
+      break;
+    }
     case GST_EVENT_SEGMENT:
     {
       const GstSegment *segment;
@@ -2237,6 +2242,15 @@ gst_base_text_overlay_video_event (GstPad * pad, GstEvent * event)
   GST_DEBUG_OBJECT (pad, "received event %s", GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+
+      gst_event_parse_caps (event, &caps);
+      ret = gst_base_text_overlay_setcaps (pad, caps);
+      gst_event_unref (event);
+      break;
+    }
     case GST_EVENT_SEGMENT:
     {
       const GstSegment *segment;

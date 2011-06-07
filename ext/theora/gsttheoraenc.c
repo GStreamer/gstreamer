@@ -255,7 +255,7 @@ static GstFlowReturn theora_enc_chain (GstPad * pad, GstBuffer * buffer);
 static GstStateChangeReturn theora_enc_change_state (GstElement * element,
     GstStateChange transition);
 static GstCaps *theora_enc_sink_getcaps (GstPad * pad, GstCaps * filter);
-static gboolean theora_enc_sink_setcaps (GstPad * pad, GstCaps * caps);
+static gboolean theora_enc_sink_setcaps (GstTheoraEnc * enc, GstCaps * caps);
 static void theora_enc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void theora_enc_set_property (GObject * object, guint prop_id,
@@ -420,7 +420,6 @@ gst_theora_enc_init (GstTheoraEnc * enc)
   gst_pad_set_chain_function (enc->sinkpad, theora_enc_chain);
   gst_pad_set_event_function (enc->sinkpad, theora_enc_sink_event);
   gst_pad_set_getcaps_function (enc->sinkpad, theora_enc_sink_getcaps);
-  gst_pad_set_setcaps_function (enc->sinkpad, theora_enc_sink_setcaps);
   gst_element_add_pad (GST_ELEMENT (enc), enc->sinkpad);
 
   enc->srcpad =
@@ -651,10 +650,9 @@ theora_enc_sink_getcaps (GstPad * pad, GstCaps * filter)
 }
 
 static gboolean
-theora_enc_sink_setcaps (GstPad * pad, GstCaps * caps)
+theora_enc_sink_setcaps (GstTheoraEnc * enc, GstCaps * caps)
 {
   GstStructure *structure = gst_caps_get_structure (caps, 0);
-  GstTheoraEnc *enc = GST_THEORA_ENC (gst_pad_get_parent (pad));
   guint32 fourcc;
   const GValue *par;
   gint fps_n, fps_d;
@@ -713,8 +711,6 @@ theora_enc_sink_setcaps (GstPad * pad, GstCaps * caps)
 
   theora_enc_reset (enc);
   enc->initialised = TRUE;
-
-  gst_object_unref (enc);
 
   return TRUE;
 }
@@ -872,6 +868,15 @@ theora_enc_sink_event (GstPad * pad, GstEvent * event)
   enc = GST_THEORA_ENC (GST_PAD_PARENT (pad));
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+
+      gst_event_parse_caps (event, &caps);
+      res = theora_enc_sink_setcaps (enc, caps);
+      gst_event_unref (event);
+      break;
+    }
     case GST_EVENT_SEGMENT:
     {
       gst_event_copy_segment (event, &enc->segment);

@@ -164,7 +164,6 @@ gst_ogg_avi_parse_init (GstOggAviParse * ogg)
   ogg->sinkpad =
       gst_pad_new_from_static_template (&ogg_avi_parse_sink_template_factory,
       "sink");
-  gst_pad_set_setcaps_function (ogg->sinkpad, gst_ogg_avi_parse_setcaps);
   gst_pad_set_event_function (ogg->sinkpad, gst_ogg_avi_parse_event);
   gst_pad_set_chain_function (ogg->sinkpad, gst_ogg_avi_parse_chain);
   gst_element_add_pad (GST_ELEMENT (ogg), ogg->sinkpad);
@@ -252,7 +251,8 @@ gst_ogg_avi_parse_setcaps (GstPad * pad, GstCaps * caps)
 
   /* set caps */
   outcaps = gst_caps_new_simple ("audio/x-vorbis", NULL);
-  gst_pad_set_caps (ogg->srcpad, outcaps);
+  gst_pad_push_event (ogg->srcpad, gst_event_new_caps (outcaps));
+  gst_caps_unref (outcaps);
 
   /* copy header data */
   offs = 34;
@@ -266,7 +266,6 @@ gst_ogg_avi_parse_setcaps (GstPad * pad, GstCaps * caps)
     offs += sizes[i];
   }
   gst_buffer_unmap (buffer, data, size);
-  gst_caps_unref (outcaps);
 
   return TRUE;
 
@@ -298,6 +297,15 @@ gst_ogg_avi_parse_event (GstPad * pad, GstEvent * event)
   ogg = GST_OGG_AVI_PARSE (GST_OBJECT_PARENT (pad));
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+
+      gst_event_parse_caps (event, &caps);
+      ret = gst_ogg_avi_parse_setcaps (pad, caps);
+      gst_event_unref (event);
+      break;
+    }
     case GST_EVENT_FLUSH_START:
       ret = gst_pad_push_event (ogg->srcpad, event);
       break;
