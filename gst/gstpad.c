@@ -3170,6 +3170,7 @@ typedef struct
 {
   GstEvent *event;
   gboolean res;
+  gboolean dispatched;
 } EventData;
 
 static gboolean
@@ -3182,6 +3183,8 @@ event_forward_func (GstPad * pad, EventData * data)
 
   data->res |= gst_pad_push_event (pad, gst_event_ref (data->event));
 
+  data->dispatched = TRUE;
+
   /* don't stop */
   return FALSE;
 }
@@ -3191,13 +3194,15 @@ event_forward_func (GstPad * pad, EventData * data)
  * @pad: a #GstPad
  * @event: (transfer full): the #GstEvent to handle.
  *
- * Forward @event to all internally linked pads of @pad.
+ * Forward @event to all internally linked pads of @pad. This function takes
+ * ownership of @event.
  *
  * Returns: TRUE if the event was sent succesfully.
  */
 gboolean
 gst_pad_event_forward (GstPad * pad, GstEvent * event)
 {
+  gboolean res;
   EventData data;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
@@ -3208,7 +3213,16 @@ gst_pad_event_forward (GstPad * pad, GstEvent * event)
 
   gst_pad_forward (pad, (GstPadForwardFunction) event_forward_func, &data);
 
-  return data.res;
+  gst_event_unref (event);
+
+  /* for sinkpads without a parent element or without internal links, nothing
+   * will be dispatched but we still want to return TRUE. */
+  if (data.dispatched)
+    res = data.res;
+  else
+    res = TRUE;
+
+  return res;
 }
 
 /**
@@ -3223,7 +3237,8 @@ gst_pad_event_forward (GstPad * pad, GstEvent * event)
  *
  * The CAPS event will never be forwarded.
  *
- * The the event is sent to all pads internally linked to @pad.
+ * The the event is sent to all pads internally linked to @pad. This function
+ * takes ownership of @event.
  *
  * Returns: TRUE if the event was sent succesfully.
  */
