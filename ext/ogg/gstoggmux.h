@@ -55,10 +55,7 @@ typedef struct
 
   GstSegment segment;
 
-  /* These two buffers make a very simple queue - they enter as 'next_buffer'
-   * and (usually) leave as 'buffer', except at EOS, when buffer will be NULL */
   GstBuffer *buffer;            /* the first waiting buffer for the pad */
-  GstBuffer *next_buffer;       /* the second waiting buffer for the pad */
 
   gint64 packetno;              /* number of next packet */
   gint64 pageno;                /* number of next page */
