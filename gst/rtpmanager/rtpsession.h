@@ -232,6 +232,7 @@ struct _RTPSession {
   gboolean      change_ssrc;
   gboolean      favor_new;
   GstClockTime  rtcp_feedback_retention_window;
+  guint         rtcp_immediate_feedback_threshold;
 
   GArray       *rtcp_pli_requests;
   GstClockTime last_keyframe_request;
