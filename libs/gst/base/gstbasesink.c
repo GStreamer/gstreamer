@@ -651,7 +651,6 @@ gst_base_sink_init (GstBaseSink * basesink, gpointer g_class)
   basesink->preroll_lock = g_mutex_new ();
   basesink->preroll_cond = g_cond_new ();
   basesink->preroll_queue = g_queue_new ();
-  basesink->clip_segment = gst_segment_new ();
   priv->have_latency = FALSE;
 
   basesink->can_activate_push = DEFAULT_CAN_ACTIVATE_PUSH;
@@ -681,7 +680,6 @@ gst_base_sink_finalize (GObject * object)
   g_mutex_free (basesink->preroll_lock);
   g_cond_free (basesink->preroll_cond);
   g_queue_free (basesink->preroll_queue);
-  gst_segment_free (basesink->clip_segment);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -1697,7 +1695,7 @@ stop_stepping (GstBaseSink * sink, GstSegment * segment,
     segment->start = current->start_start;
 
   /* the clip segment is used for position report in paused... */
-  gst_segment_copy_into (segment, sink->clip_segment);
+  gst_segment_copy_into (segment, &sink->clip_segment);
 
   /* post the step done when we know the stepped duration in TIME */
   message =
@@ -3290,7 +3288,7 @@ gst_base_sink_flush_stop (GstBaseSink * basesink, GstPad * pad)
     /* we need new segment info after the flush. */
     basesink->have_newsegment = FALSE;
     gst_segment_init (&basesink->segment, GST_FORMAT_UNDEFINED);
-    gst_segment_init (basesink->clip_segment, GST_FORMAT_UNDEFINED);
+    gst_segment_init (&basesink->clip_segment, GST_FORMAT_UNDEFINED);
   }
   GST_OBJECT_UNLOCK (basesink);
 }
@@ -3369,7 +3367,7 @@ gst_base_sink_event (GstPad * pad, GstEvent * event)
        * we need to configure the current clipping segment and insert the event
        * in the queue to serialize it with the buffers for rendering. */
       gst_base_sink_configure_segment (basesink, pad, event,
-          basesink->clip_segment);
+          &basesink->clip_segment);
 
       ret =
           gst_base_sink_queue_object_unlocked (basesink, pad,
@@ -3514,7 +3512,7 @@ gst_base_sink_chain_unlocked (GstBaseSink * basesink, GstPad * pad,
   }
 
   /* for code clarity */
-  clip_segment = basesink->clip_segment;
+  clip_segment = &basesink->clip_segment;
 
   if (G_UNLIKELY (!basesink->have_newsegment)) {
     gboolean sync;
@@ -4307,7 +4305,7 @@ gst_base_sink_pad_activate_pull (GstPad * pad, gboolean active)
     format = GST_FORMAT_BYTES;
 
     gst_segment_init (&basesink->segment, format);
-    gst_segment_init (basesink->clip_segment, format);
+    gst_segment_init (&basesink->clip_segment, format);
     GST_OBJECT_LOCK (basesink);
     basesink->have_newsegment = TRUE;
     GST_OBJECT_UNLOCK (basesink);
@@ -4317,7 +4315,7 @@ gst_base_sink_pad_activate_pull (GstPad * pad, gboolean active)
     if (result) {
       GST_DEBUG_OBJECT (basesink,
           "setting duration in bytes to %" G_GINT64_FORMAT, duration);
-      basesink->clip_segment->duration = duration;
+      basesink->clip_segment.duration = duration;
       basesink->segment.duration = duration;
     } else {
       GST_DEBUG_OBJECT (basesink, "unknown duration");
@@ -4461,7 +4459,7 @@ gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
    * main segment directly with the new segment values without it having to be
    * activated by the rendering after preroll */
   if (basesink->pad_mode == GST_ACTIVATE_PUSH)
-    segment = basesink->clip_segment;
+    segment = &basesink->clip_segment;
   else
     segment = &basesink->segment;
 
@@ -4856,7 +4854,7 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
       GST_DEBUG_OBJECT (basesink, "READY to PAUSED");
       basesink->have_newsegment = FALSE;
       gst_segment_init (&basesink->segment, GST_FORMAT_UNDEFINED);
-      gst_segment_init (basesink->clip_segment, GST_FORMAT_UNDEFINED);
+      gst_segment_init (&basesink->clip_segment, GST_FORMAT_UNDEFINED);
       basesink->offset = 0;
       basesink->have_preroll = FALSE;
       priv->step_unlock = FALSE;

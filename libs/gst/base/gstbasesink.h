@@ -95,7 +95,7 @@ struct _GstBaseSink {
   /*< protected >*/ /* with STREAM_LOCK */
   gboolean       have_newsegment;
   GstSegment     segment;
-  GstSegment    *clip_segment;
+  GstSegment     clip_segment;
 
   /*< private >*/ /* with LOCK */
   GstClockID     clock_id;
