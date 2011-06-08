@@ -234,6 +234,7 @@ struct _GstBaseSrcPrivate
   GstClockTimeDiff ts_offset;
 
   gboolean do_timestamp;
+  volatile gint dynamic_size;
 
   /* stream sequence number */
   guint32 seqnum;
@@ -323,6 +324,8 @@ static GstFlowReturn gst_base_src_pad_get_range (GstPad * pad, guint64 offset,
 static GstFlowReturn gst_base_src_get_range (GstBaseSrc * src, guint64 offset,
     guint length, GstBuffer ** buf);
 static gboolean gst_base_src_seekable (GstBaseSrc * src);
+static gboolean gst_base_src_update_length (GstBaseSrc * src, guint64 offset,
+    guint * length);
 
 static void
 gst_base_src_base_init (gpointer g_class)
@@ -582,6 +585,23 @@ gst_base_src_set_format (GstBaseSrc * src, GstFormat format)
   GST_OBJECT_LOCK (src);
   gst_segment_init (&src->segment, format);
   GST_OBJECT_UNLOCK (src);
+}
+
+/**
+ * gst_base_src_set_dynamic_size:
+ * @src: base source instance
+ * @dynamic: new dynamic size mode
+ *
+ * If not @dynamic, size is only updated when needed, such as when trying to
+ * read past current tracked size.  Otherwise, size is checked for upon each
+ * read.
+ */
+void
+gst_base_src_set_dynamic_size (GstBaseSrc * src, gboolean dynamic)
+{
+  g_return_if_fail (GST_IS_BASE_SRC (src));
+
+  g_atomic_int_set (&src->priv->dynamic_size, dynamic);
 }
 
 /**
@@ -932,9 +952,14 @@ gst_base_src_default_query (GstBaseSrc * src, GstQuery * query)
         {
           gint64 duration;
           GstFormat seg_format;
+          guint length = 0;
 
-          GST_OBJECT_LOCK (src);
+          /* may have to refresh duration */
+          if (g_atomic_int_get (&src->priv->dynamic_size))
+            gst_base_src_update_length (src, 0, &length);
+
           /* this is the duration as configured by the subclass. */
+          GST_OBJECT_LOCK (src);
           duration = src->segment.duration;
           seg_format = src->segment.format;
           GST_OBJECT_UNLOCK (src);
@@ -2028,6 +2053,7 @@ gst_base_src_update_length (GstBaseSrc * src, guint64 offset, guint * length)
   GstBaseSrcClass *bclass;
   GstFormat format;
   gint64 stop;
+  gboolean dynamic;
 
   bclass = GST_BASE_SRC_GET_CLASS (src);
 
@@ -2052,11 +2078,14 @@ gst_base_src_update_length (GstBaseSrc * src, guint64 offset, guint * length)
       ", segment.stop %" G_GINT64_FORMAT ", maxsize %" G_GINT64_FORMAT, offset,
       *length, size, stop, maxsize);
 
+  dynamic = g_atomic_int_get (&src->priv->dynamic_size);
+  GST_DEBUG_OBJECT (src, "dynamic size: %d", dynamic);
+
   /* check size if we have one */
   if (maxsize != -1) {
     /* if we run past the end, check if the file became bigger and
      * retry. */
-    if (G_UNLIKELY (offset + *length >= maxsize)) {
+    if (G_UNLIKELY (offset + *length >= maxsize || dynamic)) {
       /* see if length of the file changed */
       if (bclass->get_size)
         if (!bclass->get_size (src, &size))
