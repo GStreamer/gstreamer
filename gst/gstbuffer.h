@@ -81,20 +81,6 @@ typedef struct _GstBufferPool GstBufferPool;
 #define GST_BUFFER_FLAG_UNSET(buf,flag)         GST_MINI_OBJECT_FLAG_UNSET (buf, flag)
 
 /**
- * GST_BUFFER_DATA:
- * @buf: a #GstBuffer.
- *
- * A pointer to the data element of this buffer.
- */
-#define GST_BUFFER_DATA(buf)                    (GST_BUFFER_CAST(buf)->data)
-/**
- * GST_BUFFER_SIZE:
- * @buf: a #GstBuffer.
- *
- * The size in bytes of the data in this buffer.
- */
-#define GST_BUFFER_SIZE(buf)                    (GST_BUFFER_CAST(buf)->size)
-/**
  * GST_BUFFER_TIMESTAMP:
  * @buf: a #GstBuffer.:
  *
@@ -125,28 +111,6 @@ typedef struct _GstBufferPool GstBufferPool;
  * The offset in the source file of the end of this buffer.
  */
 #define GST_BUFFER_OFFSET_END(buf)              (GST_BUFFER_CAST(buf)->offset_end)
-/**
- * GST_BUFFER_MALLOCDATA:
- * @buf: a #GstBuffer.
- *
- * A pointer to any data allocated for this buffer using g_malloc(). If this is
- * non-NULL, this memory will be freed at the end of the buffer's lifecycle
- * (i.e. when its refcount becomes zero).
- */
-#define GST_BUFFER_MALLOCDATA(buf)              (GST_BUFFER_CAST(buf)->malloc_data)
-/**
- * GST_BUFFER_FREE_FUNC:
- * @buf: a #GstBuffer.
- *
- * A pointer to a function that will be called on the buffer's malloc_data when
- * this buffer is finalized. Defaults to g_free().
- *
- * Note that the free function only affects the buffer's malloc_data; if the
- * buffer's malloc_data is %NULL, the function will not be called.
- *
- * Since: 0.10.22
- */
-#define GST_BUFFER_FREE_FUNC(buf)               (GST_BUFFER_CAST(buf)->free_func)
 
 /**
  * GST_BUFFER_OFFSET_NONE:
