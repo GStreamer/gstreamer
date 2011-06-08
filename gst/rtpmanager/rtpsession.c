@@ -2444,7 +2444,7 @@ calculate_rtcp_interval (RTPSession * sess, gboolean deterministic,
       g_hash_table_foreach (sess->cnames, (GHFunc) add_bitrates, &bandwidth);
       bandwidth /= 8.0;
     }
-    if (bandwidth == 0)
+    if (bandwidth < 8000)
       bandwidth = RTP_STATS_BANDWIDTH;
 
     rtp_stats_set_bandwidths (&sess->stats, bandwidth,
