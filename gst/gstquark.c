@@ -33,7 +33,7 @@ static const gchar *_quark_strings[] = {
   "gerror", "debug", "buffer-percent", "buffering-mode",
   "avg-in-rate", "avg-out-rate", "buffering-left",
   "estimated-total", "old-state", "new-state", "pending-state",
-  "clock", "ready", "position", "new-base-time", "live", "min-latency",
+  "clock", "ready", "position", "reset-time", "live", "min-latency",
   "max-latency", "busy", "type", "owner", "update", "applied-rate",
   "start", "stop", "minsize", "maxsize", "async", "proportion",
   "diff", "timestamp", "flags", "cur-type", "cur", "stop-type",
