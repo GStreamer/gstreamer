@@ -29,6 +29,10 @@ import gobject.MainContext as PyGMainContext_Type
 import gobject.GObject as PyGInitiallyUnowned_Type
 import gst.Bin as PyGstBin_Type
 import gst.Pipeline as PyGstPipeline_Type
+import gst.Element as PyGstElement_Type
+import gst.Caps as PyGstCaps_Type
+import gst.Buffer as PyGstBuffer_Type
+import gst.Pad as PyGstPad_Type
 
 %%
 override ges_track_get_timeline kwargs
@@ -45,28 +49,46 @@ _wrap_ges_track_get_timeline(PyGObject *self)
 }
 
 %%
-override ges_timeline_get_tracks noargs
+override ges_track_get_caps noargs
 static PyObject *
-_wrap_ges_timeline_get_tracks(PyGObject *self)
+_wrap_ges_track_get_caps(PyGObject *self)
 {
-    const GList *l, *list;
-    PyObject *py_list;
+  const GstCaps *ret;
 
     g_return_val_if_fail (GES_IS_TIMELINE (self->obj), PyList_New(0));
 
-    pyg_begin_allow_threads;
-    list = ges_timeline_get_tracks(GES_TIMELINE(self->obj));
-    pyg_end_allow_threads;
+  pyg_begin_allow_threads;
+  ret = ges_track_get_caps(GES_TRACK(self->obj));
+  pyg_end_allow_threads;
+  /* pygobject_new handles NULL checking */
+  return pygobject_new((GObject *)ret);
+}
 
-    py_list = PyList_New(0);
-    for (l = list; l; l = l->next) {
-    GESTrack *track = (GESTrack*)l->data;
-    PyObject *py_track = pygobject_new(G_OBJECT(track));
-    PyList_Append(py_list, py_track);
-    Py_DECREF(py_track);
-    }
 
-    return py_list;
+%%
+override ges_track_set_caps noargs
+static void
+_wrap_ges_track_set_caps(PyGObject *self, const GstCaps *caps)
+{
+  pyg_begin_allow_threads;
+  ges_track_set_caps (GES_TRACK(self->obj), caps);
+  pyg_end_allow_threads;
+}
+
+%%
+override ges_track_object_lookup_child noargs
+static PyObject *
+_wrap_ges_track_object_lookup_child(PyGObject *self, gchar *name)
+{
+  GParamSpec *pspec;
+  GstElement *element;
+  gboolean ret;
+
+  pyg_begin_allow_threads;
+  ret = ges_track_object_lookup_child (GES_TRACK_OBJECT (self->obj), name, &element, &pspec);
+  pyg_end_allow_threads;
+
+  return PyBool_FromLong(ret);
 }
 
 %%
@@ -87,6 +109,58 @@ _wrap_ges_timeline_parse_launch_effect_new(PyGObject *self, PyObject *args, PyOb
     }
     pygobject_register_wrapper((PyObject *)self);
     return 0;
+}
+
+/* I did not override ges_formatter_get_data and set_data for these functions are deprecated */
+
+%%
+override ges_timeline_object_get_top_effects noargs
+static PyObject *
+_wrap_ges_timeline_object_get_top_effects(PyGObject *self)
+{
+    const GList *l, *list;
+    PyObject *py_list;
+
+    g_return_val_if_fail (GES_IS_TIMELINE_OBJECT (self->obj),PyList_New(0));
+
+    pyg_begin_allow_threads;
+    list = ges_timeline_object_get_top_effects(GES_TIMELINE_OBJECT(self->obj));
+    pyg_end_allow_threads;
+
+    py_list = PyList_New(0);
+    for (l = list; l; l = l->next) {
+    GESTrackEffect *track_effect = (GESTrackEffect*)l->data;
+    PyObject *py_track_effect = pygobject_new(G_OBJECT(track_effect));
+    PyList_Append(py_list, py_track_effect);
+    Py_DECREF(py_track_effect);
+    }
+
+    return py_list;
+}
+
+%%
+override ges_timeline_get_tracks noargs
+static PyObject *
+_wrap_ges_timeline_get_tracks(PyGObject *self)
+{
+    const GList *l, *list;
+    PyObject *py_list;
+
+    g_return_val_if_fail (GES_IS_TIMELINE (self->obj),PyList_New(0));
+
+    pyg_begin_allow_threads;
+    list = ges_timeline_get_tracks(GES_TIMELINE(self->obj));
+    pyg_end_allow_threads;
+
+    py_list = PyList_New(0);
+    for (l = list; l; l = l->next) {
+    GESTrack *track = (GESTrack*)l->data;
+    PyObject *py_track = pygobject_new(G_OBJECT(track));
+    PyList_Append(py_list, py_track);
+    Py_DECREF(py_track);
+    }
+
+    return py_list;
 }
 
 %%
@@ -162,6 +236,46 @@ _wrap_ges_timeline_object_get_track_objects(PyGObject *self)
     }
 
     return py_list;
+}
+
+%%
+override ges_track_object_get_child_property kwargs
+static PyObject *
+_wrap_ges_track_object_get_child_property (PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+    gchar *property_name;
+    GESTrackObject *obj = GES_TRACK_OBJECT (self->obj);
+
+    GParamSpec *pspec = NULL;
+    GValue value = { 0, } ;
+    PyObject *ret;
+
+    if (!PyArg_ParseTuple(args, "s:GESTrackObject.get_child_property",
+                          &property_name)) {
+        return NULL;
+    }
+
+    ges_track_object_lookup_child(obj, property_name, NULL, &pspec);
+    if (!pspec) {
+        gchar buf[512];
+        g_snprintf(buf, sizeof(buf),
+                   "container does not support property `%s'",
+                   property_name);
+
+        PyErr_SetString(PyExc_TypeError, buf);
+        return NULL;
+    }
+
+    g_value_init(&value, G_PARAM_SPEC_VALUE_TYPE(pspec));
+
+    ges_track_object_get_child_property_by_pspec(obj,
+                                     pspec,
+                                     &value);
+
+    ret = pyg_value_as_pyobject(&value, TRUE);
+    g_value_unset(&value);
+
+    return ret;
 }
 
 %%
