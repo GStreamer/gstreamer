@@ -6434,6 +6434,8 @@ gst_rtspsrc_thread (GstRTSPSrc * src)
     else if (src->task)
       gst_task_pause (src->task);
   }
+  /* reset waiting */
+  src->waiting = FALSE;
   GST_OBJECT_UNLOCK (src);
 }
 

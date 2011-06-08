@@ -60,11 +60,6 @@ typedef struct _GstMatroskaParse {
   gboolean pushed_headers;
   GstClockTime last_timestamp;
 
-  /* metadata */
-  gchar                   *muxing_app;
-  gchar                   *writing_app;
-  gint64                   created;
-
   /* state */
   //gboolean                 streaming;
   guint                    level_up;
@@ -73,13 +68,9 @@ typedef struct _GstMatroskaParse {
 
   /* did we parse cues/tracks/segmentinfo already? */
   gboolean                 tracks_parsed;
-  gboolean                 segmentinfo_parsed;
-  gboolean                 attachments_parsed;
-  GList                   *tags_parsed;
   GList                   *seek_parsed;
 
   /* keeping track of playback position */
-  GstSegment               segment;
   gboolean                 segment_running;
   GstClockTime             last_stop_end;
 

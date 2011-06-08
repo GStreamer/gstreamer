@@ -479,8 +479,13 @@ gst_interleave_request_new_pad (GstElement * element, GstPadTemplate * templ,
   if (templ->direction != GST_PAD_SINK)
     goto not_sink_pad;
 
+#if GLIB_CHECK_VERSION(2,29,5)
+  channels = g_atomic_int_add (&self->channels, 1);
+  padnumber = g_atomic_int_add (&self->padcounter, 1);
+#else
   channels = g_atomic_int_exchange_and_add (&self->channels, 1);
   padnumber = g_atomic_int_exchange_and_add (&self->padcounter, 1);
+#endif
 
   pad_name = g_strdup_printf ("sink%d", padnumber);
   new_pad = GST_PAD_CAST (g_object_new (GST_TYPE_INTERLEAVE_PAD,

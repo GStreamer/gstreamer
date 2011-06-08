@@ -62,10 +62,12 @@ struct _GstSoupHttpSink
   char *location;
   char *user_id;
   char *user_pw;
+  SoupURI *proxy;
   char *proxy_id;
   char *proxy_pw;
   char *user_agent;
   gboolean automatic_redirect;
+  gchar **cookies;
 
 };
 

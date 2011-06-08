@@ -61,8 +61,6 @@
 
 #include <gst/tag/tag.h>
 
-#include <gst/base/gsttypefindhelper.h>
-
 #include <gst/pbutils/pbutils.h>
 
 #include "matroska-parse.h"
@@ -226,8 +224,8 @@ gst_matroska_parse_init (GstMatroskaParse * parse,
   /* initial stream no. */
   parse->common.src = NULL;
 
-  parse->writing_app = NULL;
-  parse->muxing_app = NULL;
+  parse->common.writing_app = NULL;
+  parse->common.muxing_app = NULL;
   parse->common.index = NULL;
   parse->common.global_tags = NULL;
 
@@ -306,10 +304,10 @@ gst_matroska_parse_reset (GstElement * element)
   parse->num_v_streams = 0;
 
   /* reset media info */
-  g_free (parse->writing_app);
-  parse->writing_app = NULL;
-  g_free (parse->muxing_app);
-  parse->muxing_app = NULL;
+  g_free (parse->common.writing_app);
+  parse->common.writing_app = NULL;
+  g_free (parse->common.muxing_app);
+  parse->common.muxing_app = NULL;
 
   /* reset indexes */
   if (parse->common.index) {
@@ -320,24 +318,24 @@ gst_matroska_parse_reset (GstElement * element)
   /* reset timers */
   parse->clock = NULL;
   parse->common.time_scale = 1000000;
-  parse->created = G_MININT64;
+  parse->common.created = G_MININT64;
 
   parse->common.index_parsed = FALSE;
   parse->tracks_parsed = FALSE;
-  parse->segmentinfo_parsed = FALSE;
-  parse->attachments_parsed = FALSE;
+  parse->common.segmentinfo_parsed = FALSE;
+  parse->common.attachments_parsed = FALSE;
 
-  g_list_foreach (parse->tags_parsed,
+  g_list_foreach (parse->common.tags_parsed,
       (GFunc) gst_matroska_parse_free_parsed_el, NULL);
-  g_list_free (parse->tags_parsed);
-  parse->tags_parsed = NULL;
+  g_list_free (parse->common.tags_parsed);
+  parse->common.tags_parsed = NULL;
 
   g_list_foreach (parse->seek_parsed,
       (GFunc) gst_matroska_parse_free_parsed_el, NULL);
   g_list_free (parse->seek_parsed);
   parse->seek_parsed = NULL;
 
-  gst_segment_init (&parse->segment, GST_FORMAT_TIME);
+  gst_segment_init (&parse->common.segment, GST_FORMAT_TIME);
   parse->last_stop_end = GST_CLOCK_TIME_NONE;
   parse->seek_block = 0;
 
@@ -1111,7 +1109,7 @@ gst_matroska_parse_query (GstMatroskaParse * parse, GstPad * pad,
           gst_query_set_position (query, GST_FORMAT_TIME, context->pos);
         else
           gst_query_set_position (query, GST_FORMAT_TIME,
-              parse->segment.last_stop);
+              parse->common.segment.last_stop);
         GST_OBJECT_UNLOCK (parse);
       } else if (format == GST_FORMAT_DEFAULT && context
           && context->default_duration) {
@@ -1136,13 +1134,13 @@ gst_matroska_parse_query (GstMatroskaParse * parse, GstPad * pad,
       if (format == GST_FORMAT_TIME) {
         GST_OBJECT_LOCK (parse);
         gst_query_set_duration (query, GST_FORMAT_TIME,
-            parse->segment.duration);
+            parse->common.segment.duration);
         GST_OBJECT_UNLOCK (parse);
       } else if (format == GST_FORMAT_DEFAULT && context
           && context->default_duration) {
         GST_OBJECT_LOCK (parse);
         gst_query_set_duration (query, GST_FORMAT_DEFAULT,
-            parse->segment.duration / context->default_duration);
+            parse->common.segment.duration / context->default_duration);
         GST_OBJECT_UNLOCK (parse);
       } else {
         GST_DEBUG_OBJECT (parse,
@@ -1165,7 +1163,7 @@ gst_matroska_parse_query (GstMatroskaParse * parse, GstPad * pad,
         seekable = parse->seekable;
 
         gst_query_set_seeking (query, GST_FORMAT_TIME, seekable,
-            0, parse->segment.duration);
+            0, parse->common.segment.duration);
         res = TRUE;
       }
       break;
@@ -1354,7 +1352,7 @@ gst_matroska_parse_handle_seek_event (GstMatroskaParse * parse,
 
   /* copy segment, we need this because we still need the old
    * segment when we close the current segment. */
-  memcpy (&seeksegment, &parse->segment, sizeof (GstSegment));
+  memcpy (&seeksegment, &parse->common.segment, sizeof (GstSegment));
 
   if (event) {
     GST_DEBUG_OBJECT (parse, "configuring seek");
@@ -1556,594 +1554,6 @@ gst_matroska_parse_parse_tracks (GstMatroskaParse * parse, GstEbmlRead * ebml)
 
   parse->tracks_parsed = TRUE;
 
-  return ret;
-}
-
-static GstFlowReturn
-gst_matroska_parse_parse_info (GstMatroskaParse * parse, GstEbmlRead * ebml)
-{
-  GstFlowReturn ret = GST_FLOW_OK;
-  gdouble dur_f = -1.0;
-  guint32 id;
-
-  DEBUG_ELEMENT_START (parse, ebml, "SegmentInfo");
-
-  if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK) {
-    DEBUG_ELEMENT_STOP (parse, ebml, "SegmentInfo", ret);
-    return ret;
-  }
-
-  while (ret == GST_FLOW_OK && gst_ebml_read_has_remaining (ebml, 1, TRUE)) {
-    if ((ret = gst_ebml_peek_id (ebml, &id)) != GST_FLOW_OK)
-      break;
-
-    switch (id) {
-        /* cluster timecode */
-      case GST_MATROSKA_ID_TIMECODESCALE:{
-        guint64 num;
-
-        if ((ret = gst_ebml_read_uint (ebml, &id, &num)) != GST_FLOW_OK)
-          break;
-
-
-        GST_DEBUG_OBJECT (parse, "TimeCodeScale: %" G_GUINT64_FORMAT, num);
-        parse->common.time_scale = num;
-        break;
-      }
-
-      case GST_MATROSKA_ID_DURATION:{
-        if ((ret = gst_ebml_read_float (ebml, &id, &dur_f)) != GST_FLOW_OK)
-          break;
-
-        if (dur_f <= 0.0) {
-          GST_WARNING_OBJECT (parse, "Invalid duration %lf", dur_f);
-          break;
-        }
-
-        GST_DEBUG_OBJECT (parse, "Duration: %lf", dur_f);
-        break;
-      }
-
-      case GST_MATROSKA_ID_WRITINGAPP:{
-        gchar *text;
-
-        if ((ret = gst_ebml_read_utf8 (ebml, &id, &text)) != GST_FLOW_OK)
-          break;
-
-        GST_DEBUG_OBJECT (parse, "WritingApp: %s", GST_STR_NULL (text));
-        parse->writing_app = text;
-        break;
-      }
-
-      case GST_MATROSKA_ID_MUXINGAPP:{
-        gchar *text;
-
-        if ((ret = gst_ebml_read_utf8 (ebml, &id, &text)) != GST_FLOW_OK)
-          break;
-
-        GST_DEBUG_OBJECT (parse, "MuxingApp: %s", GST_STR_NULL (text));
-        parse->muxing_app = text;
-        break;
-      }
-
-      case GST_MATROSKA_ID_DATEUTC:{
-        gint64 time;
-
-        if ((ret = gst_ebml_read_date (ebml, &id, &time)) != GST_FLOW_OK)
-          break;
-
-        GST_DEBUG_OBJECT (parse, "DateUTC: %" G_GINT64_FORMAT, time);
-        parse->created = time;
-        break;
-      }
-
-      case GST_MATROSKA_ID_TITLE:{
-        gchar *text;
-        GstTagList *taglist;
-
-        if ((ret = gst_ebml_read_utf8 (ebml, &id, &text)) != GST_FLOW_OK)
-          break;
-
-        GST_DEBUG_OBJECT (parse, "Title: %s", GST_STR_NULL (text));
-        taglist = gst_tag_list_new ();
-        gst_tag_list_add (taglist, GST_TAG_MERGE_APPEND, GST_TAG_TITLE, text,
-            NULL);
-        gst_matroska_read_common_found_global_tag (&parse->common,
-            GST_ELEMENT_CAST (parse), taglist);
-        g_free (text);
-        break;
-      }
-
-      default:
-        ret = gst_matroska_read_common_parse_skip (&parse->common, ebml,
-            "SegmentInfo", id);
-        break;
-
-        /* fall through */
-      case GST_MATROSKA_ID_SEGMENTUID:
-      case GST_MATROSKA_ID_SEGMENTFILENAME:
-      case GST_MATROSKA_ID_PREVUID:
-      case GST_MATROSKA_ID_PREVFILENAME:
-      case GST_MATROSKA_ID_NEXTUID:
-      case GST_MATROSKA_ID_NEXTFILENAME:
-      case GST_MATROSKA_ID_SEGMENTFAMILY:
-      case GST_MATROSKA_ID_CHAPTERTRANSLATE:
-        ret = gst_ebml_read_skip (ebml);
-        break;
-    }
-  }
-
-  if (dur_f > 0.0) {
-    GstClockTime dur_u;
-
-    dur_u = gst_gdouble_to_guint64 (dur_f *
-        gst_guint64_to_gdouble (parse->common.time_scale));
-    if (GST_CLOCK_TIME_IS_VALID (dur_u) && dur_u <= G_MAXINT64)
-      gst_segment_set_duration (&parse->segment, GST_FORMAT_TIME, dur_u);
-  }
-
-  DEBUG_ELEMENT_STOP (parse, ebml, "SegmentInfo", ret);
-
-  parse->segmentinfo_parsed = TRUE;
-
-  return ret;
-}
-
-static GstFlowReturn
-gst_matroska_parse_parse_metadata_id_simple_tag (GstMatroskaParse * parse,
-    GstEbmlRead * ebml, GstTagList ** p_taglist)
-{
-  /* FIXME: check if there are more useful mappings */
-  struct
-  {
-    const gchar *matroska_tagname;
-    const gchar *gstreamer_tagname;
-  }
-  tag_conv[] = {
-    {
-    GST_MATROSKA_TAG_ID_TITLE, GST_TAG_TITLE}, {
-    GST_MATROSKA_TAG_ID_AUTHOR, GST_TAG_ARTIST}, {
-    GST_MATROSKA_TAG_ID_ALBUM, GST_TAG_ALBUM}, {
-    GST_MATROSKA_TAG_ID_COMMENTS, GST_TAG_COMMENT}, {
-    GST_MATROSKA_TAG_ID_BITSPS, GST_TAG_BITRATE}, {
-    GST_MATROSKA_TAG_ID_BPS, GST_TAG_BITRATE}, {
-    GST_MATROSKA_TAG_ID_ENCODER, GST_TAG_ENCODER}, {
-    GST_MATROSKA_TAG_ID_DATE, GST_TAG_DATE}, {
-    GST_MATROSKA_TAG_ID_ISRC, GST_TAG_ISRC}, {
-    GST_MATROSKA_TAG_ID_COPYRIGHT, GST_TAG_COPYRIGHT}, {
-    GST_MATROSKA_TAG_ID_BPM, GST_TAG_BEATS_PER_MINUTE}, {
-    GST_MATROSKA_TAG_ID_TERMS_OF_USE, GST_TAG_LICENSE}, {
-    GST_MATROSKA_TAG_ID_COMPOSER, GST_TAG_COMPOSER}, {
-    GST_MATROSKA_TAG_ID_LEAD_PERFORMER, GST_TAG_PERFORMER}, {
-    GST_MATROSKA_TAG_ID_GENRE, GST_TAG_GENRE}
-  };
-  GstFlowReturn ret;
-  guint32 id;
-  gchar *value = NULL;
-  gchar *tag = NULL;
-
-  DEBUG_ELEMENT_START (parse, ebml, "SimpleTag");
-
-  if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK) {
-    DEBUG_ELEMENT_STOP (parse, ebml, "SimpleTag", ret);
-    return ret;
-  }
-
-  while (ret == GST_FLOW_OK && gst_ebml_read_has_remaining (ebml, 1, TRUE)) {
-    /* read all sub-entries */
-
-    if ((ret = gst_ebml_peek_id (ebml, &id)) != GST_FLOW_OK)
-      break;
-
-    switch (id) {
-      case GST_MATROSKA_ID_TAGNAME:
-        g_free (tag);
-        tag = NULL;
-        ret = gst_ebml_read_ascii (ebml, &id, &tag);
-        GST_DEBUG_OBJECT (parse, "TagName: %s", GST_STR_NULL (tag));
-        break;
-
-      case GST_MATROSKA_ID_TAGSTRING:
-        g_free (value);
-        value = NULL;
-        ret = gst_ebml_read_utf8 (ebml, &id, &value);
-        GST_DEBUG_OBJECT (parse, "TagString: %s", GST_STR_NULL (value));
-        break;
-
-      default:
-        ret = gst_matroska_read_common_parse_skip (&parse->common, ebml,
-            "SimpleTag", id);
-        break;
-        /* fall-through */
-
-      case GST_MATROSKA_ID_TAGLANGUAGE:
-      case GST_MATROSKA_ID_TAGDEFAULT:
-      case GST_MATROSKA_ID_TAGBINARY:
-        ret = gst_ebml_read_skip (ebml);
-        break;
-    }
-  }
-
-  DEBUG_ELEMENT_STOP (parse, ebml, "SimpleTag", ret);
-
-  if (tag && value) {
-    guint i;
-
-    for (i = 0; i < G_N_ELEMENTS (tag_conv); i++) {
-      const gchar *tagname_gst = tag_conv[i].gstreamer_tagname;
-
-      const gchar *tagname_mkv = tag_conv[i].matroska_tagname;
-
-      if (strcmp (tagname_mkv, tag) == 0) {
-        GValue dest = { 0, };
-        GType dest_type = gst_tag_get_type (tagname_gst);
-
-        /* Ensure that any date string is complete */
-        if (dest_type == GST_TYPE_DATE) {
-          guint year = 1901, month = 1, day = 1;
-
-          /* Dates can be yyyy-MM-dd, yyyy-MM or yyyy, but we need
-           * the first type */
-          if (sscanf (value, "%04u-%02u-%02u", &year, &month, &day) != 0) {
-            g_free (value);
-            value = g_strdup_printf ("%04u-%02u-%02u", year, month, day);
-          }
-        }
-
-        g_value_init (&dest, dest_type);
-        if (gst_value_deserialize (&dest, value)) {
-          gst_tag_list_add_values (*p_taglist, GST_TAG_MERGE_APPEND,
-              tagname_gst, &dest, NULL);
-        } else {
-          GST_WARNING_OBJECT (parse, "Can't transform tag '%s' with "
-              "value '%s' to target type '%s'", tag, value,
-              g_type_name (dest_type));
-        }
-        g_value_unset (&dest);
-        break;
-      }
-    }
-  }
-
-  g_free (tag);
-  g_free (value);
-
-  return ret;
-}
-
-static GstFlowReturn
-gst_matroska_parse_parse_metadata_id_tag (GstMatroskaParse * parse,
-    GstEbmlRead * ebml, GstTagList ** p_taglist)
-{
-  guint32 id;
-  GstFlowReturn ret;
-
-  DEBUG_ELEMENT_START (parse, ebml, "Tag");
-
-  if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK) {
-    DEBUG_ELEMENT_STOP (parse, ebml, "Tag", ret);
-    return ret;
-  }
-
-  while (ret == GST_FLOW_OK && gst_ebml_read_has_remaining (ebml, 1, TRUE)) {
-    /* read all sub-entries */
-
-    if ((ret = gst_ebml_peek_id (ebml, &id)) != GST_FLOW_OK)
-      break;
-
-    switch (id) {
-      case GST_MATROSKA_ID_SIMPLETAG:
-        ret = gst_matroska_parse_parse_metadata_id_simple_tag (parse, ebml,
-            p_taglist);
-        break;
-
-      default:
-        ret = gst_matroska_read_common_parse_skip (&parse->common, ebml,
-            "Tag", id);
-        break;
-    }
-  }
-
-  DEBUG_ELEMENT_STOP (parse, ebml, "Tag", ret);
-
-  return ret;
-}
-
-static GstFlowReturn
-gst_matroska_parse_parse_metadata (GstMatroskaParse * parse, GstEbmlRead * ebml)
-{
-  GstTagList *taglist;
-  GstFlowReturn ret = GST_FLOW_OK;
-  guint32 id;
-  GList *l;
-  guint64 curpos;
-
-  curpos = gst_ebml_read_get_pos (ebml);
-
-  /* Make sure we don't parse a tags element twice and
-   * post it's tags twice */
-  curpos = gst_ebml_read_get_pos (ebml);
-  for (l = parse->tags_parsed; l; l = l->next) {
-    guint64 *pos = l->data;
-
-    if (*pos == curpos) {
-      GST_DEBUG_OBJECT (parse, "Skipping already parsed Tags at offset %"
-          G_GUINT64_FORMAT, curpos);
-      return GST_FLOW_OK;
-    }
-  }
-
-  parse->tags_parsed =
-      g_list_prepend (parse->tags_parsed, g_slice_new (guint64));
-  *((guint64 *) parse->tags_parsed->data) = curpos;
-  /* fall-through */
-
-  if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK) {
-    DEBUG_ELEMENT_STOP (parse, ebml, "Tags", ret);
-    return ret;
-  }
-
-  taglist = gst_tag_list_new ();
-
-  while (ret == GST_FLOW_OK && gst_ebml_read_has_remaining (ebml, 1, TRUE)) {
-    if ((ret = gst_ebml_peek_id (ebml, &id)) != GST_FLOW_OK)
-      break;
-
-    switch (id) {
-      case GST_MATROSKA_ID_TAG:
-        ret = gst_matroska_parse_parse_metadata_id_tag (parse, ebml, &taglist);
-        break;
-
-      default:
-        ret = gst_matroska_read_common_parse_skip (&parse->common, ebml,
-            "Tags", id);
-        break;
-        /* FIXME: Use to limit the tags to specific pads */
-      case GST_MATROSKA_ID_TARGETS:
-        ret = gst_ebml_read_skip (ebml);
-        break;
-    }
-  }
-
-  DEBUG_ELEMENT_STOP (parse, ebml, "Tags", ret);
-
-  gst_matroska_read_common_found_global_tag (&parse->common,
-      GST_ELEMENT_CAST (parse), taglist);
-
-  return ret;
-}
-
-static GstFlowReturn
-gst_matroska_parse_parse_attached_file (GstMatroskaParse * parse,
-    GstEbmlRead * ebml, GstTagList * taglist)
-{
-  guint32 id;
-  GstFlowReturn ret;
-  gchar *description = NULL;
-  gchar *filename = NULL;
-  gchar *mimetype = NULL;
-  guint8 *data = NULL;
-  guint64 datalen = 0;
-
-  DEBUG_ELEMENT_START (parse, ebml, "AttachedFile");
-
-  if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK) {
-    DEBUG_ELEMENT_STOP (parse, ebml, "AttachedFile", ret);
-    return ret;
-  }
-
-  while (ret == GST_FLOW_OK && gst_ebml_read_has_remaining (ebml, 1, TRUE)) {
-    /* read all sub-entries */
-
-    if ((ret = gst_ebml_peek_id (ebml, &id)) != GST_FLOW_OK)
-      break;
-
-    switch (id) {
-      case GST_MATROSKA_ID_FILEDESCRIPTION:
-        if (description) {
-          GST_WARNING_OBJECT (parse, "FileDescription can only appear once");
-          break;
-        }
-
-        ret = gst_ebml_read_utf8 (ebml, &id, &description);
-        GST_DEBUG_OBJECT (parse, "FileDescription: %s",
-            GST_STR_NULL (description));
-        break;
-      case GST_MATROSKA_ID_FILENAME:
-        if (filename) {
-          GST_WARNING_OBJECT (parse, "FileName can only appear once");
-          break;
-        }
-
-        ret = gst_ebml_read_utf8 (ebml, &id, &filename);
-
-        GST_DEBUG_OBJECT (parse, "FileName: %s", GST_STR_NULL (filename));
-        break;
-      case GST_MATROSKA_ID_FILEMIMETYPE:
-        if (mimetype) {
-          GST_WARNING_OBJECT (parse, "FileMimeType can only appear once");
-          break;
-        }
-
-        ret = gst_ebml_read_ascii (ebml, &id, &mimetype);
-        GST_DEBUG_OBJECT (parse, "FileMimeType: %s", GST_STR_NULL (mimetype));
-        break;
-      case GST_MATROSKA_ID_FILEDATA:
-        if (data) {
-          GST_WARNING_OBJECT (parse, "FileData can only appear once");
-          break;
-        }
-
-        ret = gst_ebml_read_binary (ebml, &id, &data, &datalen);
-        GST_DEBUG_OBJECT (parse, "FileData of size %" G_GUINT64_FORMAT,
-            datalen);
-        break;
-
-      default:
-        ret = gst_matroska_read_common_parse_skip (&parse->common, ebml,
-            "AttachedFile", id);
-        break;
-      case GST_MATROSKA_ID_FILEUID:
-        ret = gst_ebml_read_skip (ebml);
-        break;
-    }
-  }
-
-  DEBUG_ELEMENT_STOP (parse, ebml, "AttachedFile", ret);
-
-  if (filename && mimetype && data && datalen > 0) {
-    GstTagImageType image_type = GST_TAG_IMAGE_TYPE_NONE;
-    GstBuffer *tagbuffer = NULL;
-    GstCaps *caps;
-    gchar *filename_lc = g_utf8_strdown (filename, -1);
-
-    GST_DEBUG_OBJECT (parse, "Creating tag for attachment with filename '%s', "
-        "mimetype '%s', description '%s', size %" G_GUINT64_FORMAT, filename,
-        mimetype, GST_STR_NULL (description), datalen);
-
-    /* TODO: better heuristics for different image types */
-    if (strstr (filename_lc, "cover")) {
-      if (strstr (filename_lc, "back"))
-        image_type = GST_TAG_IMAGE_TYPE_BACK_COVER;
-      else
-        image_type = GST_TAG_IMAGE_TYPE_FRONT_COVER;
-    } else if (g_str_has_prefix (mimetype, "image/") ||
-        g_str_has_suffix (filename_lc, "png") ||
-        g_str_has_suffix (filename_lc, "jpg") ||
-        g_str_has_suffix (filename_lc, "jpeg") ||
-        g_str_has_suffix (filename_lc, "gif") ||
-        g_str_has_suffix (filename_lc, "bmp")) {
-      image_type = GST_TAG_IMAGE_TYPE_UNDEFINED;
-    }
-    g_free (filename_lc);
-
-    /* First try to create an image tag buffer from this */
-    if (image_type != GST_TAG_IMAGE_TYPE_NONE) {
-      tagbuffer =
-          gst_tag_image_data_to_image_buffer (data, datalen, image_type);
-
-      if (!tagbuffer)
-        image_type = GST_TAG_IMAGE_TYPE_NONE;
-    }
-
-    /* if this failed create an attachment buffer */
-    if (!tagbuffer) {
-      tagbuffer = gst_buffer_new_and_alloc (datalen);
-
-      memcpy (GST_BUFFER_DATA (tagbuffer), data, datalen);
-      GST_BUFFER_SIZE (tagbuffer) = datalen;
-
-      caps = gst_type_find_helper_for_buffer (NULL, tagbuffer, NULL);
-      if (caps == NULL)
-        caps = gst_caps_new_simple (mimetype, NULL);
-      gst_buffer_set_caps (tagbuffer, caps);
-      gst_caps_unref (caps);
-    }
-
-    /* Set filename and description on the caps */
-    caps = GST_BUFFER_CAPS (tagbuffer);
-    gst_caps_set_simple (caps, "filename", G_TYPE_STRING, filename, NULL);
-    if (description)
-      gst_caps_set_simple (caps, "description", G_TYPE_STRING, description,
-          NULL);
-
-    GST_DEBUG_OBJECT (parse,
-        "Created attachment buffer with caps: %" GST_PTR_FORMAT, caps);
-
-    /* and append to the tag list */
-    if (image_type != GST_TAG_IMAGE_TYPE_NONE)
-      gst_tag_list_add (taglist, GST_TAG_MERGE_APPEND, GST_TAG_IMAGE, tagbuffer,
-          NULL);
-    else
-      gst_tag_list_add (taglist, GST_TAG_MERGE_APPEND, GST_TAG_ATTACHMENT,
-          tagbuffer, NULL);
-  }
-
-  g_free (filename);
-  g_free (mimetype);
-  g_free (data);
-  g_free (description);
-
-  return ret;
-}
-
-static GstFlowReturn
-gst_matroska_parse_parse_attachments (GstMatroskaParse * parse,
-    GstEbmlRead * ebml)
-{
-  guint32 id;
-  GstFlowReturn ret = GST_FLOW_OK;
-  GstTagList *taglist;
-
-  DEBUG_ELEMENT_START (parse, ebml, "Attachments");
-
-  if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK) {
-    DEBUG_ELEMENT_STOP (parse, ebml, "Attachments", ret);
-    return ret;
-  }
-
-  taglist = gst_tag_list_new ();
-
-  while (ret == GST_FLOW_OK && gst_ebml_read_has_remaining (ebml, 1, TRUE)) {
-    if ((ret = gst_ebml_peek_id (ebml, &id)) != GST_FLOW_OK)
-      break;
-
-    switch (id) {
-      case GST_MATROSKA_ID_ATTACHEDFILE:
-        ret = gst_matroska_parse_parse_attached_file (parse, ebml, taglist);
-        break;
-
-      default:
-        ret = gst_matroska_read_common_parse_skip (&parse->common, ebml,
-            "Attachments", id);
-        break;
-    }
-  }
-  DEBUG_ELEMENT_STOP (parse, ebml, "Attachments", ret);
-
-  if (gst_structure_n_fields (GST_STRUCTURE (taglist)) > 0) {
-    GST_DEBUG_OBJECT (parse, "Storing attachment tags");
-    gst_matroska_read_common_found_global_tag (&parse->common,
-        GST_ELEMENT_CAST (parse), taglist);
-  } else {
-    GST_DEBUG_OBJECT (parse, "No valid attachments found");
-    gst_tag_list_free (taglist);
-  }
-
-  parse->attachments_parsed = TRUE;
-
-  return ret;
-}
-
-static GstFlowReturn
-gst_matroska_parse_parse_chapters (GstMatroskaParse * parse, GstEbmlRead * ebml)
-{
-  guint32 id;
-  GstFlowReturn ret = GST_FLOW_OK;
-
-  GST_WARNING_OBJECT (parse, "Parsing of chapters not implemented yet");
-
-  /* TODO: implement parsing of chapters */
-
-  DEBUG_ELEMENT_START (parse, ebml, "Chapters");
-
-  if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK) {
-    DEBUG_ELEMENT_STOP (parse, ebml, "Chapters", ret);
-    return ret;
-  }
-
-  while (ret == GST_FLOW_OK && gst_ebml_read_has_remaining (ebml, 1, TRUE)) {
-    if ((ret = gst_ebml_peek_id (ebml, &id)) != GST_FLOW_OK)
-      break;
-
-    switch (id) {
-      default:
-        ret = gst_ebml_read_skip (ebml);
-        break;
-    }
-  }
-
-  DEBUG_ELEMENT_STOP (parse, ebml, "Chapters", ret);
   return ret;
 }
 
@@ -2461,13 +1871,14 @@ gst_matroska_parse_parse_blockgroup_or_simpleblock (GstMatroskaParse * parse,
           "generating segment starting at %" GST_TIME_FORMAT,
           GST_TIME_ARGS (lace_time));
       /* pretend we seeked here */
-      gst_segment_set_seek (&parse->segment, parse->segment.rate,
+      gst_segment_set_seek (&parse->common.segment, parse->common.segment.rate,
           GST_FORMAT_TIME, 0, GST_SEEK_TYPE_SET, lace_time,
           GST_SEEK_TYPE_SET, GST_CLOCK_TIME_NONE, NULL);
       /* now convey our segment notion downstream */
       gst_matroska_parse_send_event (parse, gst_event_new_new_segment (FALSE,
-              parse->segment.rate, parse->segment.format, parse->segment.start,
-              parse->segment.stop, parse->segment.start));
+              parse->common.segment.rate, parse->common.segment.format,
+              parse->common.segment.start, parse->common.segment.stop,
+              parse->common.segment.start));
       parse->need_newsegment = FALSE;
     }
 
@@ -2509,7 +1920,7 @@ gst_matroska_parse_parse_blockgroup_or_simpleblock (GstMatroskaParse * parse,
          will instad skip until the next keyframe. */
       if (GST_CLOCK_TIME_IS_VALID (lace_time) &&
           stream->type == GST_MATROSKA_TRACK_TYPE_VIDEO &&
-          stream->index_table && parse->segment.rate > 0.0) {
+          stream->index_table && parse->common.segment.rate > 0.0) {
         GstMatroskaTrackVideoContext *videocontext =
             (GstMatroskaTrackVideoContext *) stream;
         GstClockTime earliest_time;
@@ -2518,7 +1929,7 @@ gst_matroska_parse_parse_blockgroup_or_simpleblock (GstMatroskaParse * parse,
         GST_OBJECT_LOCK (parse);
         earliest_time = videocontext->earliest_time;
         GST_OBJECT_UNLOCK (parse);
-        earliest_stream_time = gst_segment_to_position (&parse->segment,
+        earliest_stream_time = gst_segment_to_position (&parse->common.segment,
             GST_FORMAT_TIME, earliest_time);
 
         if (GST_CLOCK_TIME_IS_VALID (lace_time) &&
@@ -2566,11 +1977,11 @@ gst_matroska_parse_parse_blockgroup_or_simpleblock (GstMatroskaParse * parse,
         GstClockTime last_stop_end;
 
         /* Check if this stream is after segment stop */
-        if (GST_CLOCK_TIME_IS_VALID (parse->segment.stop) &&
-            lace_time >= parse->segment.stop) {
+        if (GST_CLOCK_TIME_IS_VALID (parse->common.segment.stop) &&
+            lace_time >= parse->common.segment.stop) {
           GST_DEBUG_OBJECT (parse,
               "Stream %d after segment stop %" GST_TIME_FORMAT, stream->index,
-              GST_TIME_ARGS (parse->segment.stop));
+              GST_TIME_ARGS (parse->common.segment.stop));
           gst_buffer_unref (sub);
           goto eos;
         }
@@ -3238,8 +2649,9 @@ gst_matroska_parse_parse_id (GstMatroskaParse * parse, guint32 id,
       switch (id) {
         case GST_MATROSKA_ID_SEGMENTINFO:
           GST_READ_CHECK (gst_matroska_parse_take (parse, read, &ebml));
-          if (!parse->segmentinfo_parsed) {
-            ret = gst_matroska_parse_parse_info (parse, &ebml);
+          if (!parse->common.segmentinfo_parsed) {
+            ret = gst_matroska_read_common_parse_info (&parse->common,
+                GST_ELEMENT_CAST (parse), &ebml);
           }
           gst_matroska_parse_accumulate_streamheader (parse, ebml.buf);
           break;
@@ -3328,19 +2740,21 @@ gst_matroska_parse_parse_id (GstMatroskaParse * parse, guint32 id,
           break;
         case GST_MATROSKA_ID_ATTACHMENTS:
           GST_READ_CHECK (gst_matroska_parse_take (parse, read, &ebml));
-          if (!parse->attachments_parsed) {
-            ret = gst_matroska_parse_parse_attachments (parse, &ebml);
+          if (!parse->common.attachments_parsed) {
+            ret = gst_matroska_read_common_parse_attachments (&parse->common,
+                GST_ELEMENT_CAST (parse), &ebml);
           }
           gst_matroska_parse_output (parse, ebml.buf, FALSE);
           break;
         case GST_MATROSKA_ID_TAGS:
           GST_READ_CHECK (gst_matroska_parse_take (parse, read, &ebml));
-          ret = gst_matroska_parse_parse_metadata (parse, &ebml);
+          ret = gst_matroska_read_common_parse_metadata (&parse->common,
+              GST_ELEMENT_CAST (parse), &ebml);
           gst_matroska_parse_output (parse, ebml.buf, FALSE);
           break;
         case GST_MATROSKA_ID_CHAPTERS:
           GST_READ_CHECK (gst_matroska_parse_take (parse, read, &ebml));
-          ret = gst_matroska_parse_parse_chapters (parse, &ebml);
+          ret = gst_matroska_read_common_parse_chapters (&parse->common, &ebml);
           gst_matroska_parse_output (parse, ebml.buf, FALSE);
           break;
         case GST_MATROSKA_ID_SEEKHEAD:
@@ -3698,12 +3112,12 @@ gst_matroska_parse_handle_sink_event (GstPad * pad, GstEvent * event)
       parse->common.offset = start;
       /* do not know where we are;
        * need to come across a cluster and generate newsegment */
-      parse->segment.last_stop = GST_CLOCK_TIME_NONE;
+      parse->common.segment.last_stop = GST_CLOCK_TIME_NONE;
       parse->cluster_time = GST_CLOCK_TIME_NONE;
       parse->cluster_offset = 0;
       parse->need_newsegment = TRUE;
       /* but keep some of the upstream segment */
-      parse->segment.rate = rate;
+      parse->common.segment.rate = rate;
     exit:
       /* chain will send initial newsegment after pads have been added,
        * or otherwise come up with one */
@@ -3733,7 +3147,7 @@ gst_matroska_parse_handle_sink_event (GstPad * pad, GstEvent * event)
       gst_matroska_read_common_reset_streams (&parse->common,
           GST_CLOCK_TIME_NONE, TRUE);
       GST_OBJECT_UNLOCK (parse);
-      parse->segment.last_stop = GST_CLOCK_TIME_NONE;
+      parse->common.segment.last_stop = GST_CLOCK_TIME_NONE;
       parse->cluster_time = GST_CLOCK_TIME_NONE;
       parse->cluster_offset = 0;
       /* fall-through */
