@@ -2598,8 +2598,8 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
       }
     }
     ffmpegdec->last_in = in_timestamp;
+    ffmpegdec->last_frames = 0;
   }
-  ffmpegdec->last_frames = 0;
 
   /* workarounds, functions write to buffers:
    *  libavcodec/svq1.c:svq1_decode_frame writes to the given buffer.
