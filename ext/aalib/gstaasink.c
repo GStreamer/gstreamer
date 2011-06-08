@@ -54,18 +54,18 @@ enum
 
 enum
 {
-  ARG_0,
-  ARG_WIDTH,
-  ARG_HEIGHT,
-  ARG_DRIVER,
-  ARG_DITHER,
-  ARG_BRIGHTNESS,
-  ARG_CONTRAST,
-  ARG_GAMMA,
-  ARG_INVERSION,
-  ARG_RANDOMVAL,
-  ARG_FRAMES_DISPLAYED,
-  ARG_FRAME_TIME
+  PROP_0,
+  PROP_WIDTH,
+  PROP_HEIGHT,
+  PROP_DRIVER,
+  PROP_DITHER,
+  PROP_BRIGHTNESS,
+  PROP_CONTRAST,
+  PROP_GAMMA,
+  PROP_INVERSION,
+  PROP_RANDOMVAL,
+  PROP_FRAMES_DISPLAYED,
+  PROP_FRAME_TIME
 };
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -73,10 +73,6 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("I420"))
     );
-
-static void gst_aasink_base_init (gpointer g_class);
-static void gst_aasink_class_init (GstAASinkClass * klass);
-static void gst_aasink_init (GstAASink * aasink);
 
 static gboolean gst_aasink_setcaps (GstBaseSink * pad, GstCaps * caps);
 static void gst_aasink_get_times (GstBaseSink * sink, GstBuffer * buffer,
@@ -92,33 +88,10 @@ static void gst_aasink_get_property (GObject * object, guint prop_id,
 static GstStateChangeReturn gst_aasink_change_state (GstElement * element,
     GstStateChange transition);
 
-static GstElementClass *parent_class = NULL;
 static guint gst_aasink_signals[LAST_SIGNAL] = { 0 };
 
-GType
-gst_aasink_get_type (void)
-{
-  static GType aasink_type = 0;
-
-  if (!aasink_type) {
-    static const GTypeInfo aasink_info = {
-      sizeof (GstAASinkClass),
-      gst_aasink_base_init,
-      NULL,
-      (GClassInitFunc) gst_aasink_class_init,
-      NULL,
-      NULL,
-      sizeof (GstAASink),
-      0,
-      (GInstanceInitFunc) gst_aasink_init,
-    };
-
-    aasink_type =
-        g_type_register_static (GST_TYPE_BASE_SINK, "GstAASink", &aasink_info,
-        0);
-  }
-  return aasink_type;
-}
+#define gst_aasink_parent_class parent_class
+G_DEFINE_TYPE (GstAASink, gst_aasink, GST_TYPE_BASE_SINK);
 
 #define GST_TYPE_AADRIVERS (gst_aasink_drivers_get_type())
 static GType
@@ -208,44 +181,42 @@ gst_aasink_class_init (GstAASinkClass * klass)
   gstelement_class = (GstElementClass *) klass;
   gstbasesink_class = (GstBaseSinkClass *) klass;
 
-  parent_class = g_type_class_peek_parent (klass);
-
   gobject_class->set_property = gst_aasink_set_property;
   gobject_class->get_property = gst_aasink_get_property;
 
   /* FIXME: add long property descriptions */
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_WIDTH,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_WIDTH,
       g_param_spec_int ("width", "width", "width", G_MININT, G_MAXINT, 0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_HEIGHT,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_HEIGHT,
       g_param_spec_int ("height", "height", "height", G_MININT, G_MAXINT, 0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DRIVER,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_DRIVER,
       g_param_spec_enum ("driver", "driver", "driver", GST_TYPE_AADRIVERS, 0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DITHER,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_DITHER,
       g_param_spec_enum ("dither", "dither", "dither", GST_TYPE_AADITHER, 0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BRIGHTNESS,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BRIGHTNESS,
       g_param_spec_int ("brightness", "brightness", "brightness", G_MININT,
           G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_CONTRAST,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_CONTRAST,
       g_param_spec_int ("contrast", "contrast", "contrast", G_MININT, G_MAXINT,
           0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_GAMMA,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_GAMMA,
       g_param_spec_float ("gamma", "gamma", "gamma", 0.0, 5.0, 1.0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_INVERSION,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_INVERSION,
       g_param_spec_boolean ("inversion", "inversion", "inversion", TRUE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_RANDOMVAL,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_RANDOMVAL,
       g_param_spec_int ("randomval", "randomval", "randomval", G_MININT,
           G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FRAMES_DISPLAYED,
-      g_param_spec_int ("frames-displayed", "frames displayed",
-          "frames displayed", G_MININT, G_MAXINT, 0,
+  g_object_class_install_property (G_OBJECT_CLASS (klass),
+      PROP_FRAMES_DISPLAYED, g_param_spec_int ("frames-displayed",
+          "frames displayed", "frames displayed", G_MININT, G_MAXINT, 0,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FRAME_TIME,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_FRAME_TIME,
       g_param_spec_int ("frame-time", "frame time", "frame time", G_MININT,
           G_MAXINT, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
@@ -367,19 +338,22 @@ gst_aasink_get_times (GstBaseSink * sink, GstBuffer * buffer,
     GstClockTime * start, GstClockTime * end)
 {
   *start = GST_BUFFER_TIMESTAMP (buffer);
-  *end = *start + GST_BUFFER_DURATION (buffer);
+  if (GST_BUFFER_DURATION_IS_VALID (buffer))
+    *end = *start + GST_BUFFER_DURATION (buffer);
 }
 
 static GstFlowReturn
 gst_aasink_render (GstBaseSink * basesink, GstBuffer * buffer)
 {
   GstAASink *aasink;
+  guint8 *data;
 
   aasink = GST_AASINK (basesink);
 
   GST_DEBUG ("render");
 
-  gst_aasink_scale (aasink, GST_BUFFER_DATA (buffer),   /* src */
+  data = gst_buffer_map (buffer, NULL, NULL, GST_MAP_READ);
+  gst_aasink_scale (aasink, data,       /* src */
       aa_image (aasink->context),       /* dest */
       aasink->width,            /* sw */
       aasink->height,           /* sh */
@@ -390,6 +364,7 @@ gst_aasink_render (GstBaseSink * basesink, GstBuffer * buffer)
       0, 0, aa_imgwidth (aasink->context), aa_imgheight (aasink->context));
   aa_flush (aasink->context);
   aa_getevent (aasink->context, FALSE);
+  gst_buffer_unmap (buffer, data, -1);
 
   return GST_FLOW_OK;
 }
@@ -404,37 +379,37 @@ gst_aasink_set_property (GObject * object, guint prop_id, const GValue * value,
   aasink = GST_AASINK (object);
 
   switch (prop_id) {
-    case ARG_WIDTH:
+    case PROP_WIDTH:
       aasink->ascii_surf.width = g_value_get_int (value);
       break;
-    case ARG_HEIGHT:
+    case PROP_HEIGHT:
       aasink->ascii_surf.height = g_value_get_int (value);
       break;
-    case ARG_DRIVER:{
+    case PROP_DRIVER:{
       aasink->aa_driver = g_value_get_enum (value);
       break;
     }
-    case ARG_DITHER:{
+    case PROP_DITHER:{
       aasink->ascii_parms.dither = g_value_get_enum (value);
       break;
     }
-    case ARG_BRIGHTNESS:{
+    case PROP_BRIGHTNESS:{
       aasink->ascii_parms.bright = g_value_get_int (value);
       break;
     }
-    case ARG_CONTRAST:{
+    case PROP_CONTRAST:{
       aasink->ascii_parms.contrast = g_value_get_int (value);
       break;
     }
-    case ARG_GAMMA:{
+    case PROP_GAMMA:{
       aasink->ascii_parms.gamma = g_value_get_float (value);
       break;
     }
-    case ARG_INVERSION:{
+    case PROP_INVERSION:{
       aasink->ascii_parms.inversion = g_value_get_boolean (value);
       break;
     }
-    case ARG_RANDOMVAL:{
+    case PROP_RANDOMVAL:{
       aasink->ascii_parms.randomval = g_value_get_int (value);
       break;
     }
@@ -452,47 +427,47 @@ gst_aasink_get_property (GObject * object, guint prop_id, GValue * value,
   aasink = GST_AASINK (object);
 
   switch (prop_id) {
-    case ARG_WIDTH:{
+    case PROP_WIDTH:{
       g_value_set_int (value, aasink->ascii_surf.width);
       break;
     }
-    case ARG_HEIGHT:{
+    case PROP_HEIGHT:{
       g_value_set_int (value, aasink->ascii_surf.height);
       break;
     }
-    case ARG_DRIVER:{
+    case PROP_DRIVER:{
       g_value_set_enum (value, aasink->aa_driver);
       break;
     }
-    case ARG_DITHER:{
+    case PROP_DITHER:{
       g_value_set_enum (value, aasink->ascii_parms.dither);
       break;
     }
-    case ARG_BRIGHTNESS:{
+    case PROP_BRIGHTNESS:{
       g_value_set_int (value, aasink->ascii_parms.bright);
       break;
     }
-    case ARG_CONTRAST:{
+    case PROP_CONTRAST:{
       g_value_set_int (value, aasink->ascii_parms.contrast);
       break;
     }
-    case ARG_GAMMA:{
+    case PROP_GAMMA:{
       g_value_set_float (value, aasink->ascii_parms.gamma);
       break;
     }
-    case ARG_INVERSION:{
+    case PROP_INVERSION:{
       g_value_set_boolean (value, aasink->ascii_parms.inversion);
       break;
     }
-    case ARG_RANDOMVAL:{
+    case PROP_RANDOMVAL:{
       g_value_set_int (value, aasink->ascii_parms.randomval);
       break;
     }
-    case ARG_FRAMES_DISPLAYED:{
+    case PROP_FRAMES_DISPLAYED:{
       g_value_set_int (value, aasink->frames_displayed);
       break;
     }
-    case ARG_FRAME_TIME:{
+    case PROP_FRAME_TIME:{
       g_value_set_int (value, aasink->frame_time / 1000000);
       break;
     }
