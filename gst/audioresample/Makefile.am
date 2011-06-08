@@ -20,7 +20,6 @@ libgstaudioresample_la_CFLAGS = \
 	$(ORC_CFLAGS)
 
 libgstaudioresample_la_LIBADD = \
-	$(GST_PLUGINS_BASE_LIBS) \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS) \
 	$(ORC_LIBS) $(ORC_TEST_LIBS) \
