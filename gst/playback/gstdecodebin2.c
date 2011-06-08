@@ -3631,7 +3631,7 @@ do_async_start (GstDecodeBin * dbin)
 
   dbin->async_pending = TRUE;
 
-  message = gst_message_new_async_start (GST_OBJECT_CAST (dbin), FALSE);
+  message = gst_message_new_async_start (GST_OBJECT_CAST (dbin));
   parent_class->handle_message (GST_BIN_CAST (dbin), message);
 }
 
@@ -3641,7 +3641,7 @@ do_async_done (GstDecodeBin * dbin)
   GstMessage *message;
 
   if (dbin->async_pending) {
-    message = gst_message_new_async_done (GST_OBJECT_CAST (dbin));
+    message = gst_message_new_async_done (GST_OBJECT_CAST (dbin), FALSE);
     parent_class->handle_message (GST_BIN_CAST (dbin), message);
 
     dbin->async_pending = FALSE;

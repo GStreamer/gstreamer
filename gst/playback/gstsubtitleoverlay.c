@@ -88,8 +88,7 @@ static void
 do_async_start (GstSubtitleOverlay * self)
 {
   if (!self->do_async) {
-    GstMessage *msg =
-        gst_message_new_async_start (GST_OBJECT_CAST (self), FALSE);
+    GstMessage *msg = gst_message_new_async_start (GST_OBJECT_CAST (self));
 
     GST_DEBUG_OBJECT (self, "Posting async-start");
     GST_BIN_CLASS (parent_class)->handle_message (GST_BIN_CAST (self), msg);
@@ -101,7 +100,8 @@ static void
 do_async_done (GstSubtitleOverlay * self)
 {
   if (self->do_async) {
-    GstMessage *msg = gst_message_new_async_done (GST_OBJECT_CAST (self));
+    GstMessage *msg =
+        gst_message_new_async_done (GST_OBJECT_CAST (self), FALSE);
 
     GST_DEBUG_OBJECT (self, "Posting async-done");
     GST_BIN_CLASS (parent_class)->handle_message (GST_BIN_CAST (self), msg);
