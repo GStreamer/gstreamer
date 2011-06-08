@@ -1624,27 +1624,6 @@ gst_pad_set_fixatecaps_function (GstPad * pad,
 }
 
 /**
- * gst_pad_set_setcaps_function:
- * @pad: a #GstPad.
- * @setcaps: the #GstPadSetCapsFunction to set.
- *
- * Sets the given setcaps function for the pad.  The setcaps function
- * will be called whenever a buffer with a new media type is pushed or
- * pulled from the pad. The pad/element needs to update its internal
- * structures to process the new media type. If this new type is not
- * acceptable, the setcaps function should return FALSE.
- */
-void
-gst_pad_set_setcaps_function (GstPad * pad, GstPadSetCapsFunction setcaps)
-{
-  g_return_if_fail (GST_IS_PAD (pad));
-
-  GST_PAD_SETCAPSFUNC (pad) = setcaps;
-  GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "setcapsfunc set to %s",
-      GST_DEBUG_FUNCPTR_NAME (setcaps));
-}
-
-/**
  * gst_pad_unlink:
  * @srcpad: the source #GstPad to unlink.
  * @sinkpad: the sink #GstPad to unlink.
@@ -2691,41 +2670,6 @@ gst_pad_set_caps (GstPad * pad, GstCaps * caps)
 }
 
 static gboolean
-gst_pad_call_setcaps (GstPad * pad, GstCaps * caps)
-{
-  GstPadSetCapsFunction setcaps;
-
-  GST_OBJECT_LOCK (pad);
-  setcaps = GST_PAD_SETCAPSFUNC (pad);
-
-  /* call setcaps function to configure the pad only if the
-   * caps is not NULL */
-  if (setcaps != NULL) {
-    if (!GST_PAD_IS_IN_SETCAPS (pad)) {
-      GST_OBJECT_FLAG_SET (pad, GST_PAD_IN_SETCAPS);
-      GST_OBJECT_UNLOCK (pad);
-      if (!setcaps (pad, caps))
-        goto setcaps_failed;
-      GST_OBJECT_LOCK (pad);
-      GST_OBJECT_FLAG_UNSET (pad, GST_PAD_IN_SETCAPS);
-    } else {
-      GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad, "pad was dispatching");
-    }
-  }
-  GST_OBJECT_UNLOCK (pad);
-
-  g_object_notify_by_pspec ((GObject *) pad, pspec_caps);
-
-  return TRUE;
-
-  /* ERRORS */
-setcaps_failed:
-  {
-    return FALSE;
-  }
-}
-
-static gboolean
 do_event_function (GstPad * pad, GstEvent * event,
     GstPadEventFunction eventfunc)
 {
@@ -2743,8 +2687,7 @@ do_event_function (GstPad * pad, GstEvent * event,
       if (!gst_caps_can_intersect (caps, templ))
         goto not_accepted;
 
-      if (!gst_pad_call_setcaps (pad, caps))
-        goto not_accepted;
+      g_object_notify_by_pspec ((GObject *) pad, pspec_caps);
 
       gst_caps_unref (templ);
       break;
@@ -3775,10 +3718,9 @@ no_function:
  *
  * The function returns #GST_FLOW_WRONG_STATE if the pad was flushing.
  *
- * If the caps on @buffer are different from the current caps on @pad, this
- * function will call any setcaps function (see gst_pad_set_setcaps_function())
- * installed on @pad. If the new caps are not acceptable for @pad, this
- * function returns #GST_FLOW_NOT_NEGOTIATED.
+ * If the buffer type is not acceptable for @pad (as negotiated with a
+ * preceeding GST_EVENT_CAPS event), this function returns
+ * #GST_FLOW_NOT_NEGOTIATED.
  *
  * The function proceeds calling the chain function installed on @pad (see
  * gst_pad_set_chain_function()) and the return value of that function is
@@ -3837,10 +3779,8 @@ gst_pad_chain_list_default (GstPad * pad, GstBufferList * list)
  *
  * The function returns #GST_FLOW_WRONG_STATE if the pad was flushing.
  *
- * If the caps on the first buffer of @list are different from the current
- * caps on @pad, this function will call any setcaps function
- * (see gst_pad_set_setcaps_function()) installed on @pad. If the new caps
- * are not acceptable for @pad, this function returns #GST_FLOW_NOT_NEGOTIATED.
+ * If @pad was not negotiated properly with a CAPS event, this function
+ * returns #GST_FLOW_NOT_NEGOTIATED.
  *
  * The function proceeds calling the chainlist function installed on @pad (see
  * gst_pad_set_chain_list_function()) and the return value of that function is
@@ -3950,13 +3890,8 @@ not_linked:
  *
  * Pushes a buffer to the peer of @pad.
  *
- * This function will call an installed pad block before triggering any
- * installed pad probes.
- *
- * If the caps on @buffer are different from the currently configured caps on
- * @pad, this function will call any installed setcaps function on @pad (see
- * gst_pad_set_setcaps_function()). In case of failure to renegotiate the new
- * format, this function returns #GST_FLOW_NOT_NEGOTIATED.
+ * This function will call installed block probes before triggering any
+ * installed data probes.
  *
  * The function proceeds calling gst_pad_chain() on the peer pad and returns
  * the value from that function. If @pad has no peer, #GST_FLOW_NOT_LINKED will
@@ -3987,18 +3922,8 @@ gst_pad_push (GstPad * pad, GstBuffer * buffer)
  *
  * Pushes a buffer list to the peer of @pad.
  *
- * This function will call an installed pad block before triggering any
- * installed pad probes.
- *
- * If the caps on the first buffer in the first group of @list are different
- * from the currently configured caps on @pad, this function will call any
- * installed setcaps function on @pad (see gst_pad_set_setcaps_function()). In
- * case of failure to renegotiate the new format, this function returns
- * #GST_FLOW_NOT_NEGOTIATED.
- *
- * If there are any probes installed on @pad every group of the buffer list
- * will be merged into a normal #GstBuffer and pushed via gst_pad_push and the
- * buffer list will be unreffed.
+ * This function will call installed block probes before triggering any
+ * installed data probes.
  *
  * The function proceeds calling the chain function on the peer pad and returns
  * the value from that function. If @pad has no peer, #GST_FLOW_NOT_LINKED will
@@ -4302,7 +4227,6 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
 
   GST_LOG_OBJECT (pad, "event: %s", GST_EVENT_TYPE_NAME (event));
 
-again:
   GST_OBJECT_LOCK (pad);
 
   peerpad = GST_PAD_PEER (pad);
@@ -4354,19 +4278,15 @@ again:
         switch (GST_EVENT_TYPE (event)) {
           case GST_EVENT_CAPS:
           {
-            GstCaps *caps;
-
             GST_OBJECT_UNLOCK (pad);
 
-            gst_event_parse_caps (event, &caps);
-            /* FIXME, this is awkward because we don't check flushing here which means
-             * that we can call the setcaps functions on flushing pads, this is not
-             * quite what we want, otoh, this code should just go away and elements
-             * that set caps on their srcpad should just setup stuff themselves. */
-            gst_pad_call_setcaps (pad, caps);
+            g_object_notify_by_pspec ((GObject *) pad, pspec_caps);
 
-            /* recheck everything, we released the lock */
-            goto again;
+            GST_OBJECT_LOCK (pad);
+            /* the peerpad might have changed. Things we checked above could not
+             * have changed. */
+            peerpad = GST_PAD_PEER (pad);
+            break;
           }
           case GST_EVENT_SEGMENT:
           {

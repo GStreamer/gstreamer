@@ -438,18 +438,6 @@ typedef void			(*GstPadUnlinkFunction)		(GstPad *pad);
 typedef GstCaps*		(*GstPadGetCapsFunction)	(GstPad *pad, GstCaps *filter);
 
 /**
- * GstPadSetCapsFunction:
- * @pad: the #GstPad to set the capabilities of.
- * @caps: the #GstCaps to set
- *
- * Set @caps on @pad. By default this function updates the caps of the
- * pad but the function can be overriden by elements to perform extra
- * actions or verifications.
- *
- * Returns: TRUE if the caps could be set on the pad.
- */
-typedef gboolean		(*GstPadSetCapsFunction)	(GstPad *pad, GstCaps *caps);
-/**
  * GstPadAcceptCapsFunction:
  * @pad: the #GstPad to check
  * @caps: the #GstCaps to check
@@ -569,7 +557,6 @@ typedef GstFlowReturn           (*GstPadStickyEventsForeachFunction) (GstPad *pa
  * @GST_PAD_BLOCKED: is dataflow on a pad blocked
  * @GST_PAD_FLUSHING: is pad refusing buffers
  * @GST_PAD_IN_GETCAPS: GstPadGetCapsFunction() is running now
- * @GST_PAD_IN_SETCAPS: GstPadSetCapsFunction() is running now
  * @GST_PAD_BLOCKING: is pad currently blocking on a buffer or event
  * @GST_PAD_NEED_RECONFIGURE: the pad should be reconfigured/renegotiated.
  *                            The flag has to be unset manually after
@@ -587,7 +574,6 @@ typedef enum {
   GST_PAD_BLOCKED          = (GST_OBJECT_FLAG_LAST << 0),
   GST_PAD_FLUSHING         = (GST_OBJECT_FLAG_LAST << 1),
   GST_PAD_IN_GETCAPS       = (GST_OBJECT_FLAG_LAST << 2),
-  GST_PAD_IN_SETCAPS       = (GST_OBJECT_FLAG_LAST << 3),
   GST_PAD_BLOCKING         = (GST_OBJECT_FLAG_LAST << 4),
   GST_PAD_NEED_RECONFIGURE = (GST_OBJECT_FLAG_LAST << 5),
   GST_PAD_NEED_EVENTS      = (GST_OBJECT_FLAG_LAST << 6),
@@ -607,7 +593,6 @@ typedef enum {
  * @task: task for this pad if the pad is actively driving dataflow.
  * @block_cond: conditional to signal pad block
  * @getcapsfunc: function to get caps of the pad
- * @setcapsfunc: function to set caps on the pad
  * @acceptcapsfunc: function to check if pad can accept caps
  * @fixatecapsfunc: function to fixate caps
  * @activatefunc: pad activation function
@@ -648,7 +633,6 @@ struct _GstPad {
 
   /* the pad capabilities */
   GstPadGetCapsFunction		getcapsfunc;
-  GstPadSetCapsFunction		setcapsfunc;
   GstPadAcceptCapsFunction	 acceptcapsfunc;
   GstPadFixateCapsFunction	 fixatecapsfunc;
 
@@ -726,7 +710,6 @@ struct _GstPadClass {
 #define GST_PAD_UNLINKFUNC(pad)		(GST_PAD_CAST(pad)->unlinkfunc)
 
 #define GST_PAD_GETCAPSFUNC(pad)	(GST_PAD_CAST(pad)->getcapsfunc)
-#define GST_PAD_SETCAPSFUNC(pad)	(GST_PAD_CAST(pad)->setcapsfunc)
 #define GST_PAD_ACCEPTCAPSFUNC(pad)	(GST_PAD_CAST(pad)->acceptcapsfunc)
 #define GST_PAD_FIXATECAPSFUNC(pad)	(GST_PAD_CAST(pad)->fixatecapsfunc)
 
@@ -739,7 +722,6 @@ struct _GstPadClass {
 #define GST_PAD_IS_BLOCKING(pad)	(GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_BLOCKING))
 #define GST_PAD_IS_FLUSHING(pad)	(GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_FLUSHING))
 #define GST_PAD_IS_IN_GETCAPS(pad)	(GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_IN_GETCAPS))
-#define GST_PAD_IS_IN_SETCAPS(pad)	(GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_IN_SETCAPS))
 #define GST_PAD_NEEDS_RECONFIGURE(pad)  (GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_NEED_RECONFIGURE))
 #define GST_PAD_NEEDS_EVENTS(pad)       (GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_NEED_EVENTS))
 #define GST_PAD_IS_FIXED_CAPS(pad)	(GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_FIXED_CAPS))
@@ -881,7 +863,6 @@ GstPad*			gst_pad_get_peer			(GstPad *pad);
 void			gst_pad_set_getcaps_function		(GstPad *pad, GstPadGetCapsFunction getcaps);
 void			gst_pad_set_acceptcaps_function		(GstPad *pad, GstPadAcceptCapsFunction acceptcaps);
 void			gst_pad_set_fixatecaps_function		(GstPad *pad, GstPadFixateCapsFunction fixatecaps);
-void			gst_pad_set_setcaps_function		(GstPad *pad, GstPadSetCapsFunction setcaps);
 
 GstCaps*                gst_pad_get_pad_template_caps		(GstPad *pad);
 
