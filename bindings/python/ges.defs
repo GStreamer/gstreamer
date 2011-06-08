@@ -1589,13 +1589,11 @@
 
 (define-function track_video_raw_new
   (c-name "ges_track_video_raw_new")
-  (is-constructor-of "GESTrackVideoRaw")
   (return-type "GESTrack*")
 )
 
 (define-function track_audio_raw_new
   (c-name "ges_track_audio_raw_new")
-  (is-constructor-of "GESTrackAudioRaw")
   (return-type "GESTrack*")
 )
 
