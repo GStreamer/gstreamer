@@ -101,6 +101,22 @@ typedef enum {
 } GstSeekFlags;
 
 /**
+ * GstSegmentFlags:
+ * @GST_SEGMENT_FLAG_NONE: no flags
+ * @GST_SEGMENT_FLAG_RESET: reset the pipeline running_time to the segment
+ *                          running_time
+ * @GST_SEGMENT_FLAG_SKIP: perform skip playback
+ *
+ * Flags for the GstSegment structure. Currently mapped to the corresponding
+ * values of the seek flags.
+ */
+typedef enum {
+  GST_SEGMENT_FLAG_NONE            = GST_SEEK_FLAG_NONE,
+  GST_SEGMENT_FLAG_RESET           = GST_SEEK_FLAG_FLUSH,
+  GST_SEGMENT_FLAG_SKIP            = GST_SEEK_FLAG_SKIP
+} GstSegmentFlags;
+
+/**
  * GstSegment:
  * @flags: flags for this segment
  * @rate: the rate of the segment
@@ -116,7 +132,7 @@ typedef enum {
  */
 struct _GstSegment {
   /*< public >*/
-  GstSeekFlags    flags;
+  GstSegmentFlags flags;
 
   gdouble         rate;
   gdouble         applied_rate;
