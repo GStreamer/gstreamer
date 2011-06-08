@@ -43,7 +43,7 @@ static const gchar *_quark_strings[] = {
   "GstMessageBuffering", "GstMessageState", "GstMessageClockProvide",
   "GstMessageClockLost", "GstMessageNewClock", "GstMessageStructureChange",
   "GstMessageSegmentStart", "GstMessageSegmentDone", "GstMessageDuration",
-  "GstMessageAsyncStart", "GstMessageRequestState", "GstMessageStreamStatus",
+  "GstMessageAsyncDone", "GstMessageRequestState", "GstMessageStreamStatus",
   "GstQueryPosition", "GstQueryDuration", "GstQueryLatency", "GstQueryConvert",
   "GstQuerySegment", "GstQuerySeeking", "GstQueryFormats", "GstQueryBuffering",
   "GstQueryURI", "GstEventStep", "GstMessageStepDone", "amount", "flush",

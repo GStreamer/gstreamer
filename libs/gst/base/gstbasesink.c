@@ -262,6 +262,8 @@ struct _GstBaseSinkPrivate
   /* for throttling and QoS */
   GstClockTime earliest_in_time;
   GstClockTime throttle_time;
+
+  gboolean reset_time;
 };
 
 #define DO_RUNNING_AVG(avg,val,size) (((val) + ((size)-1) * (avg)) / (size))
@@ -1469,6 +1471,7 @@ gst_base_sink_commit_state (GstBaseSink * basesink)
   gboolean post_paused = FALSE;
   gboolean post_async_done = FALSE;
   gboolean post_playing = FALSE;
+  gboolean reset_time;
 
   /* we are certainly not playing async anymore now */
   basesink->playing_async = FALSE;
@@ -1478,6 +1481,8 @@ gst_base_sink_commit_state (GstBaseSink * basesink)
   next = GST_STATE_NEXT (basesink);
   pending = GST_STATE_PENDING (basesink);
   post_pending = pending;
+  reset_time = basesink->priv->reset_time;
+  basesink->priv->reset_time = FALSE;
 
   switch (pending) {
     case GST_STATE_PLAYING:
@@ -1528,7 +1533,7 @@ gst_base_sink_commit_state (GstBaseSink * basesink)
   if (post_async_done) {
     GST_DEBUG_OBJECT (basesink, "posting async-done message");
     gst_element_post_message (GST_ELEMENT_CAST (basesink),
-        gst_message_new_async_done (GST_OBJECT_CAST (basesink)));
+        gst_message_new_async_done (GST_OBJECT_CAST (basesink), reset_time));
   }
   if (post_playing) {
     GST_DEBUG_OBJECT (basesink, "posting PLAYING state change message");
@@ -3257,7 +3262,8 @@ gst_base_sink_flush_start (GstBaseSink * basesink, GstPad * pad)
    * prerolled buffer */
   basesink->playing_async = TRUE;
   if (basesink->priv->async_enabled) {
-    gst_element_lost_state (GST_ELEMENT_CAST (basesink), TRUE);
+    basesink->priv->reset_time = TRUE;
+    gst_element_lost_state (GST_ELEMENT_CAST (basesink));
   } else {
     basesink->priv->have_latency = TRUE;
   }
@@ -3928,7 +3934,7 @@ gst_base_sink_perform_step (GstBaseSink * sink, GstPad * pad, GstEvent * event)
       sink->playing_async = TRUE;
       priv->pending_step.need_preroll = TRUE;
       sink->need_preroll = FALSE;
-      gst_element_lost_state (GST_ELEMENT_CAST (sink), FALSE);
+      gst_element_lost_state (GST_ELEMENT_CAST (sink));
     } else {
       sink->priv->have_latency = TRUE;
       sink->need_preroll = FALSE;
@@ -4856,6 +4862,7 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
       priv->step_unlock = FALSE;
       basesink->need_preroll = TRUE;
       basesink->playing_async = TRUE;
+      basesink->priv->reset_time = FALSE;
       priv->current_sstart = GST_CLOCK_TIME_NONE;
       priv->current_sstop = GST_CLOCK_TIME_NONE;
       priv->eos_rtime = GST_CLOCK_TIME_NONE;
@@ -4873,7 +4880,7 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
          * the state change function */
         ret = GST_STATE_CHANGE_ASYNC;
         gst_element_post_message (GST_ELEMENT_CAST (basesink),
-            gst_message_new_async_start (GST_OBJECT_CAST (basesink), FALSE));
+            gst_message_new_async_start (GST_OBJECT_CAST (basesink)));
       } else {
         priv->have_latency = TRUE;
       }
@@ -4908,7 +4915,7 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
           GST_DEBUG_OBJECT (basesink, "doing async state change");
           ret = GST_STATE_CHANGE_ASYNC;
           gst_element_post_message (GST_ELEMENT_CAST (basesink),
-              gst_message_new_async_start (GST_OBJECT_CAST (basesink), FALSE));
+              gst_message_new_async_start (GST_OBJECT_CAST (basesink)));
         }
       }
       GST_BASE_SINK_PREROLL_UNLOCK (basesink);
@@ -4970,8 +4977,7 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
             GST_DEBUG_OBJECT (basesink, "doing async state change");
             ret = GST_STATE_CHANGE_ASYNC;
             gst_element_post_message (GST_ELEMENT_CAST (basesink),
-                gst_message_new_async_start (GST_OBJECT_CAST (basesink),
-                    FALSE));
+                gst_message_new_async_start (GST_OBJECT_CAST (basesink)));
           }
         }
       }
@@ -5009,7 +5015,7 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
                   GST_STATE_PLAYING, GST_STATE_PAUSED, GST_STATE_READY));
 
           gst_element_post_message (GST_ELEMENT_CAST (basesink),
-              gst_message_new_async_done (GST_OBJECT_CAST (basesink)));
+              gst_message_new_async_done (GST_OBJECT_CAST (basesink), FALSE));
         }
         priv->commited = TRUE;
       } else {

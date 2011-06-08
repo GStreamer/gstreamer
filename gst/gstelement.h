@@ -802,7 +802,7 @@ GstStateChangeReturn    gst_element_change_state        (GstElement * element,
                                                          GstStateChange transition);
 GstStateChangeReturn    gst_element_continue_state      (GstElement * element,
                                                          GstStateChangeReturn ret);
-void                    gst_element_lost_state          (GstElement * element, gboolean new_base_time);
+void                    gst_element_lost_state          (GstElement * element);
 
 /* factory management */
 GstElementFactory*      gst_element_get_factory         (GstElement *element);

@@ -2335,17 +2335,14 @@ complete:
 /**
  * gst_element_lost_state:
  * @element: a #GstElement the state is lost of
- * @new_base_time: if a new base time should be distributed
  *
  * Brings the element to the lost state. The current state of the
  * element is copied to the pending state so that any call to
  * gst_element_get_state() will return %GST_STATE_CHANGE_ASYNC.
  *
- * An ASYNC_START message is posted with indication to distribute a new
- * base_time to the element when @new_base_time is %TRUE.
- * If the element was PLAYING, it will go to PAUSED. The element
- * will be restored to its PLAYING state by the parent pipeline when it
- * prerolls again.
+ * An ASYNC_START message is posted. If the element was PLAYING, it will
+ * go to PAUSED. The element will be restored to its PLAYING state by
+ * the parent pipeline when it prerolls again.
  *
  * This is mostly used for elements that lost their preroll buffer
  * in the %GST_STATE_PAUSED or %GST_STATE_PLAYING state after a flush,
@@ -2357,7 +2354,7 @@ complete:
  * plugins or applications.
  */
 void
-gst_element_lost_state (GstElement * element, gboolean new_base_time)
+gst_element_lost_state (GstElement * element)
 {
   GstState old_state, new_state;
   GstMessage *message;
@@ -2389,14 +2386,11 @@ gst_element_lost_state (GstElement * element, gboolean new_base_time)
   GST_STATE_NEXT (element) = new_state;
   GST_STATE_PENDING (element) = new_state;
   GST_STATE_RETURN (element) = GST_STATE_CHANGE_ASYNC;
-  if (new_base_time)
-    GST_ELEMENT_START_TIME (element) = 0;
   GST_OBJECT_UNLOCK (element);
 
   _priv_gst_element_state_changed (element, new_state, new_state, new_state);
 
-  message =
-      gst_message_new_async_start (GST_OBJECT_CAST (element), new_base_time);
+  message = gst_message_new_async_start (GST_OBJECT_CAST (element));
   gst_element_post_message (element, message);
 
   return;
@@ -2410,7 +2404,7 @@ only_async_start:
   {
     GST_OBJECT_UNLOCK (element);
 
-    message = gst_message_new_async_start (GST_OBJECT_CAST (element), TRUE);
+    message = gst_message_new_async_start (GST_OBJECT_CAST (element));
     gst_element_post_message (element, message);
     return;
   }

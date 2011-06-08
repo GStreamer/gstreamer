@@ -493,11 +493,11 @@ void            gst_message_parse_duration      (GstMessage *message, GstFormat 
 GstMessage *    gst_message_new_latency         (GstObject * src);
 
 /* ASYNC_START */
-GstMessage *    gst_message_new_async_start     (GstObject * src, gboolean new_base_time);
-void            gst_message_parse_async_start   (GstMessage *message, gboolean *new_base_time);
+GstMessage *    gst_message_new_async_start     (GstObject * src);
 
 /* ASYNC_DONE */
-GstMessage *    gst_message_new_async_done      (GstObject * src);
+GstMessage *    gst_message_new_async_done      (GstObject * src, gboolean new_base_time);
+void            gst_message_parse_async_done    (GstMessage *message, gboolean *new_base_time);
 
 /* STRUCTURE CHANGE */
 GstMessage *    gst_message_new_structure_change   (GstObject * src, GstStructureChangeType type,

@@ -870,27 +870,19 @@ gst_message_new_duration (GstObject * src, GstFormat format, gint64 duration)
 /**
  * gst_message_new_async_start:
  * @src: (transfer none): The object originating the message.
- * @new_base_time: if a new base_time should be set on the element
  *
- * This message is posted by elements when they start an ASYNC state change. 
- * @new_base_time is set to TRUE when the element lost its state when it was
- * PLAYING.
+ * This message is posted by elements when they start an ASYNC state change.
  *
  * Returns: (transfer full): The new async_start message.
  *
  * MT safe.
- *
- * Since: 0.10.13
  */
 GstMessage *
-gst_message_new_async_start (GstObject * src, gboolean new_base_time)
+gst_message_new_async_start (GstObject * src)
 {
   GstMessage *message;
-  GstStructure *structure;
 
-  structure = gst_structure_id_new (GST_QUARK (MESSAGE_ASYNC_START),
-      GST_QUARK (NEW_BASE_TIME), G_TYPE_BOOLEAN, new_base_time, NULL);
-  message = gst_message_new_custom (GST_MESSAGE_ASYNC_START, src, structure);
+  message = gst_message_new_custom (GST_MESSAGE_ASYNC_START, src, NULL);
 
   return message;
 }
@@ -898,21 +890,25 @@ gst_message_new_async_start (GstObject * src, gboolean new_base_time)
 /**
  * gst_message_new_async_done:
  * @src: (transfer none): The object originating the message.
+ * @new_base_time: if a new base_time should be set on the element
  *
  * The message is posted when elements completed an ASYNC state change.
+ * @new_base_time is set to TRUE when the element requests a new base_time
+ * before going to PLAYING.
  *
  * Returns: (transfer full): The new async_done message.
  *
  * MT safe.
- *
- * Since: 0.10.13
  */
 GstMessage *
-gst_message_new_async_done (GstObject * src)
+gst_message_new_async_done (GstObject * src, gboolean new_base_time)
 {
   GstMessage *message;
+  GstStructure *structure;
 
-  message = gst_message_new_custom (GST_MESSAGE_ASYNC_DONE, src, NULL);
+  structure = gst_structure_id_new (GST_QUARK (MESSAGE_ASYNC_DONE),
+      GST_QUARK (NEW_BASE_TIME), G_TYPE_BOOLEAN, new_base_time, NULL);
+  message = gst_message_new_custom (GST_MESSAGE_ASYNC_DONE, src, structure);
 
   return message;
 }
@@ -1607,23 +1603,21 @@ gst_message_parse_duration (GstMessage * message, GstFormat * format,
 }
 
 /**
- * gst_message_parse_async_start:
+ * gst_message_parse_async_done:
  * @message: A valid #GstMessage of type GST_MESSAGE_ASYNC_DONE.
  * @new_base_time: (out): Result location for the new_base_time or NULL
  *
- * Extract the new_base_time from the async_start message. 
+ * Extract the new_base_time from the async_done message.
  *
  * MT safe.
- *
- * Since: 0.10.13
  */
 void
-gst_message_parse_async_start (GstMessage * message, gboolean * new_base_time)
+gst_message_parse_async_done (GstMessage * message, gboolean * new_base_time)
 {
   GstStructure *structure;
 
   g_return_if_fail (GST_IS_MESSAGE (message));
-  g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ASYNC_START);
+  g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ASYNC_DONE);
 
   structure = GST_MESSAGE_STRUCTURE (message);
   if (new_base_time)

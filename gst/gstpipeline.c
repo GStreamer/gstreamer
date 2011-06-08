@@ -548,11 +548,11 @@ gst_pipeline_handle_message (GstBin * bin, GstMessage * message)
   GstPipeline *pipeline = GST_PIPELINE_CAST (bin);
 
   switch (GST_MESSAGE_TYPE (message)) {
-    case GST_MESSAGE_ASYNC_START:
+    case GST_MESSAGE_ASYNC_DONE:
     {
       gboolean new_base_time;
 
-      gst_message_parse_async_start (message, &new_base_time);
+      gst_message_parse_async_done (message, &new_base_time);
 
       /* reset our running time if we need to distribute a new base_time to the
        * children. */
