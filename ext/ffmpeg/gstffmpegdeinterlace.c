@@ -102,42 +102,61 @@ gst_ffmpegdeinterlace_class_init (GstFFMpegDeinterlaceClass * klass)
 }
 
 static gboolean
-gst_ffmpegdeinterlace_sink_setcaps (GstPad * pad, GstCaps * caps)
+gst_ffmpegdeinterlace_sink_event (GstPad * pad, GstEvent * event)
 {
   GstFFMpegDeinterlace *deinterlace =
       GST_FFMPEGDEINTERLACE (gst_pad_get_parent (pad));
-  GstStructure *structure = gst_caps_get_structure (caps, 0);
-  AVCodecContext *ctx;
-  GstCaps *src_caps;
-  gboolean ret;
+  gboolean ret = FALSE;
 
-  if (!gst_structure_get_int (structure, "width", &deinterlace->width))
-    return FALSE;
-  if (!gst_structure_get_int (structure, "height", &deinterlace->height))
-    return FALSE;
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+    {
+      GstStructure *structure;
+      AVCodecContext *ctx;
+      GstCaps *caps, *src_caps;
 
-  ctx = avcodec_alloc_context ();
-  ctx->width = deinterlace->width;
-  ctx->height = deinterlace->height;
-  ctx->pix_fmt = PIX_FMT_NB;
-  gst_ffmpeg_caps_with_codectype (AVMEDIA_TYPE_VIDEO, caps, ctx);
-  if (ctx->pix_fmt == PIX_FMT_NB) {
-    av_free (ctx);
-    return FALSE;
+      gst_event_parse_caps (event, &caps);
+      structure = gst_caps_get_structure (caps, 0);
+
+      if (!gst_structure_get_int (structure, "width", &deinterlace->width) ||
+          !gst_structure_get_int (structure, "height", &deinterlace->height)) {
+        goto done;
+      }
+
+      ctx = avcodec_alloc_context ();
+      ctx->width = deinterlace->width;
+      ctx->height = deinterlace->height;
+      ctx->pix_fmt = PIX_FMT_NB;
+      gst_ffmpeg_caps_with_codectype (AVMEDIA_TYPE_VIDEO, caps, ctx);
+      if (ctx->pix_fmt == PIX_FMT_NB) {
+        av_free (ctx);
+        goto done;
+      }
+
+      deinterlace->pixfmt = ctx->pix_fmt;
+
+      av_free (ctx);
+
+      deinterlace->to_size =
+          avpicture_get_size (deinterlace->pixfmt, deinterlace->width,
+          deinterlace->height);
+
+      src_caps = gst_caps_copy (caps);
+      gst_event_unref (event);
+
+      gst_caps_set_simple (src_caps, "interlaced", G_TYPE_BOOLEAN, FALSE, NULL);
+      event = gst_event_new_caps (src_caps);
+      gst_caps_unref (src_caps);
+    }
+      break;
+    default:
+      break;
   }
 
-  deinterlace->pixfmt = ctx->pix_fmt;
+  ret = gst_pad_push_event (deinterlace->srcpad, event);
 
-  av_free (ctx);
-
-  deinterlace->to_size =
-      avpicture_get_size (deinterlace->pixfmt, deinterlace->width,
-      deinterlace->height);
-
-  src_caps = gst_caps_copy (caps);
-  gst_caps_set_simple (src_caps, "interlaced", G_TYPE_BOOLEAN, FALSE, NULL);
-  ret = gst_pad_set_caps (deinterlace->srcpad, src_caps);
-  gst_caps_unref (src_caps);
+done:
+  gst_object_unref (deinterlace);
 
   return ret;
 }
@@ -147,8 +166,8 @@ gst_ffmpegdeinterlace_init (GstFFMpegDeinterlace * deinterlace)
 {
   deinterlace->sinkpad =
       gst_pad_new_from_static_template (&sink_factory, "sink");
-  gst_pad_set_setcaps_function (deinterlace->sinkpad,
-      gst_ffmpegdeinterlace_sink_setcaps);
+  gst_pad_set_event_function (deinterlace->sinkpad,
+      gst_ffmpegdeinterlace_sink_event);
   gst_pad_set_chain_function (deinterlace->sinkpad,
       gst_ffmpegdeinterlace_chain);
   gst_element_add_pad (GST_ELEMENT (deinterlace), deinterlace->sinkpad);

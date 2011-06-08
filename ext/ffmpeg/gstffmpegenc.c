@@ -96,13 +96,14 @@ static void gst_ffmpegenc_base_init (GstFFMpegEncClass * klass);
 static void gst_ffmpegenc_init (GstFFMpegEnc * ffmpegenc);
 static void gst_ffmpegenc_finalize (GObject * object);
 
-static gboolean gst_ffmpegenc_setcaps (GstPad * pad, GstCaps * caps);
+static gboolean gst_ffmpegenc_setcaps (GstFFMpegEnc * ffmpegenc,
+    GstCaps * caps);
 static GstCaps *gst_ffmpegenc_getcaps (GstPad * pad, GstCaps * filter);
 static GstFlowReturn gst_ffmpegenc_chain_video (GstPad * pad,
     GstBuffer * buffer);
 static GstFlowReturn gst_ffmpegenc_chain_audio (GstPad * pad,
     GstBuffer * buffer);
-static gboolean gst_ffmpegenc_event_video (GstPad * pad, GstEvent * event);
+static gboolean gst_ffmpegenc_event_sink (GstPad * pad, GstEvent * event);
 static gboolean gst_ffmpegenc_event_src (GstPad * pad, GstEvent * event);
 
 static void gst_ffmpegenc_set_property (GObject * object,
@@ -242,7 +243,6 @@ gst_ffmpegenc_init (GstFFMpegEnc * ffmpegenc)
 
   /* setup pads */
   ffmpegenc->sinkpad = gst_pad_new_from_template (oclass->sinktempl, "sink");
-  gst_pad_set_setcaps_function (ffmpegenc->sinkpad, gst_ffmpegenc_setcaps);
   gst_pad_set_getcaps_function (ffmpegenc->sinkpad, gst_ffmpegenc_getcaps);
   ffmpegenc->srcpad = gst_pad_new_from_template (oclass->srctempl, "src");
   gst_pad_use_fixed_caps (ffmpegenc->srcpad);
@@ -255,10 +255,11 @@ gst_ffmpegenc_init (GstFFMpegEnc * ffmpegenc)
   ffmpegenc->file = NULL;
   ffmpegenc->delay = g_queue_new ();
 
+  gst_pad_set_event_function (ffmpegenc->sinkpad, gst_ffmpegenc_event_sink);
+
   if (oclass->in_plugin->type == AVMEDIA_TYPE_VIDEO) {
     gst_pad_set_chain_function (ffmpegenc->sinkpad, gst_ffmpegenc_chain_video);
     /* so we know when to flush the buffers on EOS */
-    gst_pad_set_event_function (ffmpegenc->sinkpad, gst_ffmpegenc_event_video);
     gst_pad_set_event_function (ffmpegenc->srcpad, gst_ffmpegenc_event_src);
 
     ffmpegenc->bitrate = DEFAULT_VIDEO_BITRATE;
@@ -512,13 +513,12 @@ gst_ffmpegenc_getcaps (GstPad * pad, GstCaps * filter)
 }
 
 static gboolean
-gst_ffmpegenc_setcaps (GstPad * pad, GstCaps * caps)
+gst_ffmpegenc_setcaps (GstFFMpegEnc * ffmpegenc, GstCaps * caps)
 {
   GstCaps *other_caps;
   GstCaps *allowed_caps;
   GstCaps *icaps;
   enum PixelFormat pix_fmt;
-  GstFFMpegEnc *ffmpegenc = (GstFFMpegEnc *) GST_PAD_PARENT (pad);
   GstFFMpegEncClass *oclass =
       (GstFFMpegEncClass *) G_OBJECT_GET_CLASS (ffmpegenc);
 
@@ -1122,7 +1122,7 @@ flush:
 }
 
 static gboolean
-gst_ffmpegenc_event_video (GstPad * pad, GstEvent * event)
+gst_ffmpegenc_event_sink (GstPad * pad, GstEvent * event)
 {
   GstFFMpegEnc *ffmpegenc = (GstFFMpegEnc *) (GST_PAD_PARENT (pad));
 
@@ -1138,6 +1138,15 @@ gst_ffmpegenc_event_video (GstPad * pad, GstEvent * event)
       s = gst_event_get_structure (event);
       if (gst_structure_has_name (s, "GstForceKeyUnit")) {
         ffmpegenc->picture->pict_type = FF_I_TYPE;
+      }
+      break;
+    }
+    case GST_EVENT_CAPS:{
+      GstCaps *caps;
+      gst_event_parse_caps (event, &caps);
+      if (!gst_ffmpegenc_setcaps (ffmpegenc, caps)) {
+        gst_event_unref (event);
+        return FALSE;
       }
       break;
     }

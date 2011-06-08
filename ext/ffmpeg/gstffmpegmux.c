@@ -446,7 +446,6 @@ gst_ffmpegmux_request_new_pad (GstElement * element,
   gst_pad_set_event_function (pad,
       GST_DEBUG_FUNCPTR (gst_ffmpegmux_sink_event));
 
-  gst_pad_set_setcaps_function (pad, GST_DEBUG_FUNCPTR (gst_ffmpegmux_setcaps));
   gst_element_add_pad (element, pad);
 
   /* AVStream needs to be created */
@@ -525,6 +524,13 @@ gst_ffmpegmux_sink_event (GstPad * pad, GstEvent * event)
       gst_tag_setter_merge_tags (setter, taglist, mode);
       break;
     }
+    case GST_EVENT_CAPS:{
+      GstCaps *caps;
+      gst_event_parse_caps (event, &caps);
+      if (!(res = gst_ffmpegmux_setcaps (pad, caps)))
+        goto beach;
+      break;
+    }
     default:
       break;
   }
@@ -532,6 +538,7 @@ gst_ffmpegmux_sink_event (GstPad * pad, GstEvent * event)
   /* chaining up to collectpads default event function */
   res = ffmpegmux->event_function (pad, event);
 
+beach:
   gst_object_unref (ffmpegmux);
   return res;
 }
