@@ -831,6 +831,78 @@ class CairoArg(ArgType):
             info.codeafter.append('    cairo_reference(ret);\n'
                                   '    return PycairoContext_FromContext(ret, NULL, NULL);')
 
+class GstElementArg(ArgType):
+    def write_param(self, ptype, pname, pdflt, pnull, info):
+        info.varlist.add('GstElement', '*' + pname)
+        info.add_parselist('O!', ['&PyGstElement_Type', '&' + pname], [pname])
+        info.arglist.append('%s' % pname)
+
+    def write_return(self, ptype, ownsreturn, info):
+        info.varlist.add("GstElement", "*ret")
+        if ownsreturn:
+            info.varlist.add('PyObject', '*py_ret')
+            info.codeafter.append('    py_ret = pygobject_new((GObject *)ret);\n'
+                                  '    if (ret != NULL)\n'
+                                  '        g_object_unref(ret);\n'
+                                  '    return py_ret;')
+        else:
+            info.codeafter.append('    /* pygobject_new handles NULL checking */\n' +
+                                  '    return pygobject_new((GObject *)ret);')
+
+class GstCapsArg(ArgType):
+    def write_param(self, ptype, pname, pdflt, pnull, info):
+        info.varlist.add('GstCaps', '*' + pname)
+        info.add_parselist('O!', ['&PyGstCaps_Type', '&' + pname], [pname])
+        info.arglist.append('%s' % pname)
+
+    def write_return(self, ptype, ownsreturn, info):
+        info.varlist.add("GstCaps", "*ret")
+        if ownsreturn:
+            info.varlist.add('PyObject', '*py_ret')
+            info.codeafter.append('    py_ret = pygobject_new((GObject *)ret);\n'
+                                  '    if (ret != NULL)\n'
+                                  '        g_object_unref(ret);\n'
+                                  '    return py_ret;')
+        else:
+            info.codeafter.append('    /* pygobject_new handles NULL checking */\n' +
+                                  '    return pygobject_new((GObject *)ret);')
+
+class GstBufferArg(ArgType):
+    def write_param(self, ptype, pname, pdflt, pnull, info):
+        info.varlist.add('GstBuffer', '*' + pname)
+        info.add_parselist('O!', ['&PyGstBuffer_Type', '&' + pname], [pname])
+        info.arglist.append('%s' % pname)
+
+    def write_return(self, ptype, ownsreturn, info):
+        info.varlist.add("GstBuffer", "*ret")
+        if ownsreturn:
+            info.varlist.add('PyObject', '*py_ret')
+            info.codeafter.append('    py_ret = pygobject_new((GObject *)ret);\n'
+                                  '    if (ret != NULL)\n'
+                                  '        g_object_unref(ret);\n'
+                                  '    return py_ret;')
+        else:
+            info.codeafter.append('    /* pygobject_new handles NULL checking */\n' +
+                                  '    return pygobject_new((GObject *)ret);')
+
+class GstPadArg(ArgType):
+    def write_param(self, ptype, pname, pdflt, pnull, info):
+        info.varlist.add('GstPad', '*' + pname)
+        info.add_parselist('O!', ['&PyGstPad_Type', '&' + pname], [pname])
+        info.arglist.append('%s' % pname)
+
+    def write_return(self, ptype, ownsreturn, info):
+        info.varlist.add("GstPad", "*ret")
+        if ownsreturn:
+            info.varlist.add('PyObject', '*py_ret')
+            info.codeafter.append('    py_ret = pygobject_new((GObject *)ret);\n'
+                                  '    if (ret != NULL)\n'
+                                  '        g_object_unref(ret);\n'
+                                  '    return py_ret;')
+        else:
+            info.codeafter.append('    /* pygobject_new handles NULL checking */\n' +
+                                  '    return pygobject_new((GObject *)ret);')
+
 
 class ArgMatcher:
     def __init__(self):
@@ -1032,6 +1104,10 @@ matcher.register('GdkRectangle*', GdkRectanglePtrArg())
 matcher.register('GtkAllocation*', GdkRectanglePtrArg())
 matcher.register('GdkRectangle', GdkRectangleArg())
 matcher.register('PyObject*', PyObjectArg())
+matcher.register('GstElement*', GstElementArg())
+matcher.register('GstCaps*', GstCapsArg())
+matcher.register('GstBuffer*', GstBufferArg())
+matcher.register('GstPad*', GstPadArg())
 
 matcher.register('GdkNativeWindow', ULongArg())
 
