@@ -1041,17 +1041,26 @@ struct _GstXmpNamespaceMatch
 {
   const gchar *ns_prefix;
   const gchar *ns_uri;
+
+  /*
+   * Stores extra namespaces for array tags
+   * The namespaces should be writen in the form:
+   *
+   * xmlns:XpTo="http://some.org/your/ns/name/ (next ones)"
+   */
+  const gchar *extra_ns;
 };
 
 static const GstXmpNamespaceMatch ns_match[] = {
-  {"dc", "http://purl.org/dc/elements/1.1/"},
-  {"exif", "http://ns.adobe.com/exif/1.0/"},
-  {"tiff", "http://ns.adobe.com/tiff/1.0/"},
-  {"xap", "http://ns.adobe.com/xap/1.0/"},
-  {"photoshop", "http://ns.adobe.com/photoshop/1.0/"},
-  {"Iptc4xmpCore", "http://iptc.org/std/Iptc4xmpCore/1.0/xmlns/"},
-  {"Iptc4xmpExt", "http://iptc.org/std/Iptc4xmpExt/2008-02-29/"},
-  {NULL, NULL}
+  {"dc", "http://purl.org/dc/elements/1.1/", NULL},
+  {"exif", "http://ns.adobe.com/exif/1.0/", NULL},
+  {"tiff", "http://ns.adobe.com/tiff/1.0/", NULL},
+  {"xap", "http://ns.adobe.com/xap/1.0/", NULL},
+  {"photoshop", "http://ns.adobe.com/photoshop/1.0/", NULL},
+  {"Iptc4xmpCore", "http://iptc.org/std/Iptc4xmpCore/1.0/xmlns/", NULL},
+  {"Iptc4xmpExt", "http://iptc.org/std/Iptc4xmpExt/2008-02-29/",
+      "xmlns:LocationDetails=\"http://iptc.org/std/Iptc4xmpExt/2008-02-29/LocationDetails/\""},
+  {NULL, NULL, NULL}
 };
 
 typedef struct _GstXmpNamespaceMap GstXmpNamespaceMap;
@@ -1762,9 +1771,13 @@ gst_tag_list_to_xmp_buffer_full (const GstTagList * list, gboolean read_only,
   i = 0;
   while (ns_match[i].ns_prefix) {
     if (xmp_serialization_data_use_schema (&serialization_data,
-            ns_match[i].ns_prefix))
+            ns_match[i].ns_prefix)) {
       g_string_append_printf (data, " xmlns:%s=\"%s\"",
           ns_match[i].ns_prefix, ns_match[i].ns_uri);
+      if (ns_match[i].extra_ns) {
+        g_string_append_printf (data, " %s", ns_match[i].extra_ns);
+      }
+    }
     i++;
   }
   g_string_append (data, ">\n");
