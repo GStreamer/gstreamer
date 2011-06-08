@@ -123,9 +123,6 @@ gst_sid_memory_get_type (void)
   return sid_memory_type;
 }
 
-static void gst_siddec_base_init (gpointer g_class);
-static void gst_siddec_class_init (GstSidDec * klass);
-static void gst_siddec_init (GstSidDec * siddec);
 static void gst_siddec_finalize (GObject * object);
 
 static GstFlowReturn gst_siddec_chain (GstPad * pad, GstBuffer * buffer);
@@ -141,58 +138,17 @@ static void gst_siddec_get_property (GObject * object, guint prop_id,
 static void gst_siddec_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 
-static GstElementClass *parent_class = NULL;
-
-GType
-gst_siddec_get_type (void)
-{
-  static GType siddec_type = 0;
-
-  if (G_UNLIKELY (siddec_type == 0)) {
-    static const GTypeInfo siddec_info = {
-      sizeof (GstSidDecClass),
-      gst_siddec_base_init,
-      NULL,
-      (GClassInitFunc) gst_siddec_class_init,
-      NULL,
-      NULL,
-      sizeof (GstSidDec),
-      0,
-      (GInstanceInitFunc) gst_siddec_init,
-      NULL
-    };
-
-    siddec_type =
-        g_type_register_static (GST_TYPE_ELEMENT, "GstSidDec", &siddec_info,
-        (GTypeFlags) 0);
-  }
-
-  return siddec_type;
-}
+#define gst_siddec_parent_class parent_class
+G_DEFINE_TYPE (GstSidDec, gst_siddec, GST_TYPE_ELEMENT);
 
 static void
-gst_siddec_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (element_class, "Sid decoder",
-      "Codec/Decoder/Audio", "Use libsidplay to decode SID audio tunes",
-      "Wim Taymans <wim.taymans@gmail.com>");
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_templ));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_templ));
-}
-
-static void
-gst_siddec_class_init (GstSidDec * klass)
+gst_siddec_class_init (GstSidDecClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
 
   gobject_class = (GObjectClass *) klass;
-
-  parent_class = GST_ELEMENT_CLASS (g_type_class_peek_parent (klass));
+  gstelement_class = (GstElementClass *) klass;
 
   gobject_class->finalize = gst_siddec_finalize;
   gobject_class->set_property = gst_siddec_set_property;
@@ -232,6 +188,15 @@ gst_siddec_class_init (GstSidDec * klass)
   g_object_class_install_property (gobject_class, PROP_METADATA,
       g_param_spec_boxed ("metadata", "Metadata", "Metadata", GST_TYPE_CAPS,
           (GParamFlags)(G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
+
+  gst_element_class_set_details_simple (gstelement_class, "Sid decoder",
+      "Codec/Decoder/Audio", "Use libsidplay to decode SID audio tunes",
+      "Wim Taymans <wim.taymans@gmail.com>");
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&src_templ));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sink_templ));
 }
 
 static void
@@ -383,16 +348,18 @@ play_loop (GstPad * pad)
   GstFlowReturn ret;
   GstSidDec *siddec;
   GstBuffer *out;
+  guint8 *data;
   gint64 value, offset, time;
   GstFormat format;
 
   siddec = GST_SIDDEC (gst_pad_get_parent (pad));
 
   out = gst_buffer_new_and_alloc (siddec->blocksize);
-  gst_buffer_set_caps (out, GST_PAD_CAPS (pad));
 
+  data = (guint8 *) gst_buffer_map (out, NULL, NULL, GST_MAP_WRITE);
   sidEmuFillBuffer (*siddec->engine, *siddec->tune,
-      GST_BUFFER_DATA (out), GST_BUFFER_SIZE (out));
+      data, siddec->blocksize);
+  gst_buffer_unmap (out, data, siddec->blocksize);
 
   /* get offset in samples */
   format = GST_FORMAT_DEFAULT;
@@ -453,6 +420,7 @@ static gboolean
 start_play_tune (GstSidDec * siddec)
 {
   gboolean res;
+  GstSegment segment;
 
   if (!siddec->tune->load (siddec->tune_buffer, siddec->tune_len))
     goto could_not_load;
@@ -466,8 +434,9 @@ start_play_tune (GstSidDec * siddec)
           siddec->tune_number))
     goto could_not_init;
 
+  gst_segment_init (&segment, GST_FORMAT_TIME);
   gst_pad_push_event (siddec->srcpad,
-      gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME, 0, -1, 0));
+      gst_event_new_segment (&segment));
 
   res = gst_pad_start_task (siddec->srcpad,
       (GstTaskFunction) play_loop, siddec->srcpad);
@@ -506,7 +475,7 @@ gst_siddec_sink_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_EOS:
       res = start_play_tune (siddec);
       break;
-    case GST_EVENT_NEWSEGMENT:
+    case GST_EVENT_SEGMENT:
       res = FALSE;
       break;
     default:
@@ -527,12 +496,12 @@ gst_siddec_chain (GstPad * pad, GstBuffer * buffer)
 
   siddec = GST_SIDDEC (gst_pad_get_parent (pad));
 
-  size = GST_BUFFER_SIZE (buffer);
+  size = gst_buffer_get_size (buffer);
   if (siddec->tune_len + size > maxSidtuneFileLen)
     goto overflow;
 
-  memcpy (siddec->tune_buffer + siddec->tune_len, GST_BUFFER_DATA (buffer),
-      size);
+  gst_buffer_extract (buffer, 0, siddec->tune_buffer + siddec->tune_len, size);
+
   siddec->tune_len += size;
 
   gst_buffer_unref (buffer);
