@@ -87,7 +87,6 @@ static const GstMemoryAllocator *_default_allocator;
 
 /* our predefined allocators */
 static const GstMemoryAllocator *_default_mem_impl;
-static const GstMemoryAllocator *_default_share_impl;
 
 /* initialize the fields */
 static void
@@ -95,7 +94,7 @@ _default_mem_init (GstMemoryDefault * mem, GstMemoryFlags flags,
     GstMemory * parent, gsize slice_size, gpointer data,
     GFreeFunc free_func, gsize maxsize, gsize offset, gsize size)
 {
-  mem->mem.allocator = data ? _default_mem_impl : _default_share_impl;
+  mem->mem.allocator = _default_mem_impl;
   mem->mem.flags = flags;
   mem->mem.refcount = 1;
   mem->mem.parent = parent ? gst_memory_ref (parent) : NULL;
@@ -189,45 +188,12 @@ _default_mem_map (GstMemoryDefault * mem, gsize * size, gsize * maxsize,
   return mem->data + mem->offset;
 }
 
-static gpointer
-_default_share_map (GstMemoryDefault * mem, gsize * size, gsize * maxsize,
-    GstMapFlags flags)
-{
-  guint8 *data;
-
-  data = gst_memory_map (mem->mem.parent, size, maxsize, flags);
-
-  if (size)
-    *size = mem->size;
-  if (maxsize)
-    *maxsize -= mem->offset;
-
-  return data + mem->offset;
-}
-
 static gboolean
 _default_mem_unmap (GstMemoryDefault * mem, gpointer data, gsize size)
 {
   if (size != -1)
     mem->size = size;
   return TRUE;
-}
-
-static gboolean
-_default_share_unmap (GstMemoryDefault * mem, gpointer data, gsize size)
-{
-  gboolean res;
-  guint8 *ptr = data;
-
-  if (size != -1)
-    mem->size = size;
-  else
-    size = mem->size - mem->offset;
-
-  res =
-      gst_memory_unmap (mem->mem.parent, ptr - mem->offset, size + mem->offset);
-
-  return res;
 }
 
 static void
@@ -307,16 +273,6 @@ _fallback_copy (GstMemory * mem, gsize offset, gsize size)
   return (GstMemory *) copy;
 }
 
-static GstMemory *
-_fallback_share (GstMemory * mem, gsize offset, gsize size)
-{
-  GstMemoryDefault *sub;
-
-  sub = _default_mem_new (0, mem, NULL, NULL, size, offset, size);
-
-  return (GstMemory *) sub;
-}
-
 static gboolean
 _fallback_is_span (GstMemory * mem1, GstMemory * mem2, gsize * offset)
 {
@@ -324,7 +280,7 @@ _fallback_is_span (GstMemory * mem1, GstMemory * mem2, gsize * offset)
 }
 
 static GStaticRWLock lock = G_STATIC_RW_LOCK_INIT;
-static GHashTable *memoryimpl;
+static GHashTable *allocators;
 
 void
 _gst_memory_init (void)
@@ -341,25 +297,11 @@ _gst_memory_init (void)
     (GstMemoryIsSpanFunction) _default_mem_is_span,
     NULL
   };
-  static const GstMemoryInfo _share_info = {
-    (GstMemoryAllocFunction) _default_mem_alloc,
-    (GstMemoryGetSizesFunction) _default_mem_get_sizes,
-    (GstMemoryResizeFunction) _default_mem_resize,
-    (GstMemoryMapFunction) _default_share_map,
-    (GstMemoryUnmapFunction) _default_share_unmap,
-    (GstMemoryFreeFunction) _default_mem_free,
-    NULL,
-    NULL,
-    NULL,
-    NULL
-  };
 
-  memoryimpl = g_hash_table_new (g_str_hash, g_str_equal);
+  allocators = g_hash_table_new (g_str_hash, g_str_equal);
 
   _default_mem_impl =
       gst_memory_allocator_register ("GstMemoryDefault", &_mem_info);
-  _default_share_impl =
-      gst_memory_allocator_register ("GstMemorySharebuffer", &_share_info);
 
   _default_allocator = _default_mem_impl;
 }
@@ -591,7 +533,7 @@ gst_memory_is_span (GstMemory * mem1, GstMemory * mem2, gsize * offset)
  * Registers the memory allocator with @name and implementation functions
  * @info.
  *
- * All functions in @info are mandatory exept the copy, share and is_span
+ * All functions in @info are mandatory exept the copy and is_span
  * functions, which will have a default implementation when left NULL.
  *
  * The user_data field in @info will be passed to all calls of the alloc
@@ -615,19 +557,19 @@ gst_memory_allocator_register (const gchar * name, const GstMemoryInfo * info)
   g_return_val_if_fail (info->map != NULL, NULL);
   g_return_val_if_fail (info->unmap != NULL, NULL);
   g_return_val_if_fail (info->free != NULL, NULL);
+  g_return_val_if_fail (info->share != NULL, NULL);
 
   allocator = g_slice_new (GstMemoryAllocator);
   allocator->name = g_quark_from_string (name);
   allocator->info = *info;
   INSTALL_FALLBACK (copy);
-  INSTALL_FALLBACK (share);
   INSTALL_FALLBACK (is_span);
 #undef INSTALL_FALLBACK
 
   GST_DEBUG ("register \"%s\" of size %" G_GSIZE_FORMAT, name);
 
   g_static_rw_lock_writer_lock (&lock);
-  g_hash_table_insert (memoryimpl, (gpointer) name, (gpointer) allocator);
+  g_hash_table_insert (allocators, (gpointer) name, (gpointer) allocator);
   g_static_rw_lock_writer_unlock (&lock);
 
   return allocator;
@@ -650,7 +592,7 @@ gst_memory_allocator_find (const gchar * name)
 
   g_static_rw_lock_reader_lock (&lock);
   if (name) {
-    allocator = g_hash_table_lookup (memoryimpl, (gconstpointer) name);
+    allocator = g_hash_table_lookup (allocators, (gconstpointer) name);
   } else {
     allocator = _default_allocator;
   }

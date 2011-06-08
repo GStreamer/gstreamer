@@ -130,8 +130,10 @@ GST_START_TEST (test_meta_test)
   gpointer data;
 
   buffer = gst_buffer_new_and_alloc (4);
+  fail_if (buffer == NULL);
 
   data = gst_buffer_map (buffer, NULL, NULL, GST_MAP_WRITE);
+  fail_if (data == NULL);
   memset (data, 0, 4);
   gst_buffer_unmap (buffer, data, 4);
 

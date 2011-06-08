@@ -50,6 +50,23 @@ Allocators
                                         GFreeFunc free_func, gsize maxsize,
                                         gsize offset, gsize size);
 
+Lifecycle
+~~~~~~~~~
+
+GstMemory objects are refcounted. When the GstMemory object is first created, it
+has a refcount of 1. 
+
+Each variable holding a reference to the GstMemory object is responsible for
+updating the refcount.
+
+The refcount determines the writability of the object. If the refcount > 1, it is
+by definition used by multipled objects and thus cannot be safely written to.
+
+When the refcount reaches 0, and thus no objects hold a reference anymore, we
+can free the memory. The GstMemoryFreeFunction of the allocator will be called
+to cleanup the memory.
+
+
 Memory layout
 ~~~~~~~~~~~~~
 
@@ -76,10 +93,48 @@ Memory layout
 
    void        gst_memory_resize     (GstMemory *mem, gsize offset, gsize size);
 
+ The visible memory region can currently only be made smaller.
+
+ The memory object is always readable. The memory block is writable when:
+
+  - the refcount is exactly 1
+  - the memory object has no parent, or if it has a parent, the parent is
+    writable.
+  - the memory object is not marked as READONLY.
+
 
 Data Access
 ~~~~~~~~~~~
 
+ Access to the memory region is always controlled with a map and unmap method
+ call. This allows the implementation to monitor the access patterns or set up
+ the required memory mappings when needed.
 
+ Mapping a memory region requires the caller to specify the access method: READ
+ and/or WRITE. For write access, the GstMemory object must be writable.
+
+ After the data has been accessed in the object, the unmap call must be
+ performed. The call will update the new memory size with the specified size.
+
+
+Copy
+~~~~
+
+ A GstMemory copy can be made with the gst_memory_copy() call. Normally,
+ allocators will implement a custom version of this function to make a copy of
+ the same kind of memory as the original one.
+
+ This is what the fallback version of the copy function will do, albeit slower
+ than what as custom implementation could do.
+
+ The copy operation is only required to copy the visible range of the memory
+ block.
+
+
+Share
+~~~~~
+
+ A memory region can be shared between GstMemory object with the
+ gst_memory_share() operation. 
 
 
