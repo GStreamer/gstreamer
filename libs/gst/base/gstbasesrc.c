@@ -2028,7 +2028,6 @@ gst_base_src_update_length (GstBaseSrc * src, guint64 offset, guint * length)
   GstBaseSrcClass *bclass;
   GstFormat format;
   gint64 stop;
-  gboolean updated = FALSE;
 
   bclass = GST_BASE_SRC_GET_CLASS (src);
 
@@ -2084,32 +2083,9 @@ gst_base_src_update_length (GstBaseSrc * src, guint64 offset, guint * length)
   /* keep track of current position and update duration.
    * segment is in bytes, we checked that above. */
   GST_OBJECT_LOCK (src);
-  updated = (src->segment.duration != size);
   gst_segment_set_duration (&src->segment, GST_FORMAT_BYTES, size);
   gst_segment_set_last_stop (&src->segment, GST_FORMAT_BYTES, offset);
   GST_OBJECT_UNLOCK (src);
-
-  /* If we updated the duration and doing forward playback, we
-   * have to update the downstream segments to update the stop
-   * position */
-  if (updated && src->segment.rate >= 0.0) {
-    gint64 stop;
-    GstEvent *event;
-
-    /* for deriving a stop position for the playback segment from the seek
-     * segment, we must take the duration when the stop is not set */
-    if ((stop = src->segment.stop) == -1)
-      stop = src->segment.duration;
-
-    GST_DEBUG_OBJECT (src, "Sending update newsegment from %" G_GINT64_FORMAT
-        " to %" G_GINT64_FORMAT, src->segment.start, stop);
-
-    event =
-        gst_event_new_new_segment_full (TRUE,
-        src->segment.rate, src->segment.applied_rate, src->segment.format,
-        src->segment.start, stop, src->segment.time);
-    gst_pad_push_event (src->srcpad, event);
-  }
 
   return TRUE;
 
