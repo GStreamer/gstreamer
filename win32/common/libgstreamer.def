@@ -525,15 +525,17 @@ EXPORTS
 	gst_marshal_VOID__OBJECT_STRING
 	gst_marshal_VOID__POINTER_OBJECT
 	gst_marshal_VOID__UINT_BOXED
+	gst_memory_allocator_alloc
+	gst_memory_allocator_find
+	gst_memory_allocator_register
+	gst_memory_allocator_set_default
 	gst_memory_copy
 	gst_memory_flags_get_type
 	gst_memory_get_sizes
 	gst_memory_is_span
 	gst_memory_map
-	gst_memory_new_alloc
 	gst_memory_new_wrapped
 	gst_memory_ref
-	gst_memory_register
 	gst_memory_resize
 	gst_memory_share
 	gst_memory_unmap
@@ -714,7 +716,6 @@ EXPORTS
 	gst_pad_set_offset
 	gst_pad_set_query_function
 	gst_pad_set_query_type_function
-	gst_pad_set_setcaps_function
 	gst_pad_set_unlink_function
 	gst_pad_start_task
 	gst_pad_sticky_events_foreach
@@ -837,8 +838,10 @@ EXPORTS
 	gst_proxy_pad_query_type_default
 	gst_proxy_pad_unlink_default
 	gst_qos_type_get_type
+	gst_query_add_allocation_memory
 	gst_query_add_allocation_meta
 	gst_query_add_buffering_range
+	gst_query_get_n_allocation_memories
 	gst_query_get_n_allocation_metas
 	gst_query_get_n_buffering_ranges
 	gst_query_get_structure
@@ -864,6 +867,7 @@ EXPORTS
 	gst_query_parse_duration
 	gst_query_parse_latency
 	gst_query_parse_n_formats
+	gst_query_parse_nth_allocation_memory
 	gst_query_parse_nth_allocation_meta
 	gst_query_parse_nth_buffering_range
 	gst_query_parse_nth_format
