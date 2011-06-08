@@ -163,6 +163,8 @@ GST_BUFFER_FLAGS
 GST_BUFFER_FLAG_IS_SET
 GST_BUFFER_FLAG_SET
 GST_BUFFER_FLAG_UNSET
+GST_META_TIMING_INFO
+GstMetaTiming
 
 GST_BUFFER_TIMESTAMP
 GST_BUFFER_DURATION
@@ -192,6 +194,10 @@ gst_buffer_peek_memory
 gst_buffer_remove_memory
 gst_buffer_remove_memory_range
 
+gst_buffer_join
+gst_buffer_memcmp
+gst_buffer_merge
+
 gst_buffer_map
 gst_buffer_unmap
 
@@ -216,6 +222,9 @@ gst_buffer_add_meta
 gst_buffer_remove_meta
 gst_buffer_iterate_meta
 
+gst_buffer_add_meta_timing
+gst_buffer_get_meta_timing
+gst_meta_timing_get_info
 <SUBSECTION Standard>
 GstBufferClass
 GST_BUFFER
@@ -330,6 +339,7 @@ gst_caps_new_any
 gst_caps_new_simple
 gst_caps_new_full
 gst_caps_new_full_valist
+gst_caps_is_writable
 gst_caps_copy
 gst_caps_copy_nth
 gst_static_caps_get
@@ -559,6 +569,13 @@ GST_ELEMENT_WARNING
 GST_ELEMENT_INFO
 GST_ELEMENT_IS_LOCKED_STATE
 
+GST_ELEMENT_METADATA_AUTHOR
+GST_ELEMENT_METADATA_DESCRIPTION
+GST_ELEMENT_METADATA_DOC_URI
+GST_ELEMENT_METADATA_ICON_NAME
+GST_ELEMENT_METADATA_KLASS
+GST_ELEMENT_METADATA_LONGNAME
+
 <SUBSECTION element-construction>
 gst_element_class_add_pad_template
 gst_element_class_get_pad_template
@@ -594,6 +611,7 @@ gst_element_link_pads_filtered
 gst_element_link_filtered
 
 <SUBSECTION element-properties>
+gst_element_class_get_metadata
 gst_element_set_base_time
 gst_element_get_base_time
 gst_element_set_start_time
@@ -814,7 +832,9 @@ gst_event_ref
 gst_event_unref
 gst_event_replace
 gst_event_copy
-
+gst_event_is_writable
+gst_event_make_writable
+gst_event_writable_structure
 
 gst_event_new_custom
 gst_event_get_structure
@@ -830,6 +850,7 @@ gst_event_new_eos
 
 gst_event_new_segment
 gst_event_parse_segment
+gst_event_copy_segment
 
 gst_event_new_tag
 gst_event_parse_tag
@@ -858,6 +879,9 @@ gst_event_new_sink_message
 gst_event_parse_sink_message
 
 gst_event_new_reconfigure
+
+gst_event_new_caps
+gst_event_parse_caps
 <SUBSECTION Standard>
 GstEventClass
 GST_EVENT
@@ -1227,6 +1251,7 @@ gst_iterator_foreach
 gst_iterator_find_custom
 
 <SUBSECTION Standard>
+GST_TYPE_ITERATOR
 GST_TYPE_ITERATOR_ITEM
 GST_TYPE_ITERATOR_RESULT
 <SUBSECTION Private>
@@ -1241,11 +1266,12 @@ gst_iterator_result_get_type
 <TITLE>GstMemory</TITLE>
 GstMemory
 GstMemoryInfo
-GstMemoryImpl
+GstMemoryAllocator
 GST_MEMORY_IS_WRITABLE
 GstMemoryFlags
 GstMapFlags
 GST_MAP_READWRITE
+GstMemoryAllocFunction
 GstMemoryGetSizesFunction
 GstMemoryResizeFunction
 GstMemoryMapFunction
@@ -1254,8 +1280,8 @@ GstMemoryFreeFunction
 GstMemoryCopyFunction
 GstMemoryShareFunction
 GstMemoryIsSpanFunction
+gst_memory_allocator_alloc
 gst_memory_new_wrapped
-gst_memory_new_alloc
 
 gst_memory_ref
 gst_memory_unref
@@ -1270,12 +1296,14 @@ gst_memory_copy
 gst_memory_share
 
 gst_memory_is_span
-gst_memory_span
 
-gst_memory_register
-gst_memory_get_info
+gst_memory_allocator_find
+gst_memory_allocator_register
+gst_memory_allocator_set_default
 <SUBSECTION Standard>
 GST_MEMORY_TRACE_NAME
+GST_TYPE_MAP_FLAGS
+GST_TYPE_MEMORY_FLAGS
 gst_map_flags_get_type
 gst_memory_flags_get_type
 </SECTION>
@@ -1300,6 +1328,9 @@ gst_message_get_structure
 gst_message_make_writable
 gst_message_get_seqnum
 gst_message_set_seqnum
+gst_message_has_name
+gst_message_is_writable
+gst_message_replace
 
 gst_message_new_eos
 gst_message_new_error
@@ -1502,6 +1533,8 @@ GstPadLinkCheck
 GST_PAD_LINK_CHECK_DEFAULT
 GstFlowReturn
 GstActivateMode
+GstProbeReturn
+GstProbeType
 
 <SUBSECTION Application>
 gst_pad_get_name
@@ -1528,15 +1561,23 @@ gst_pad_get_peer
 gst_pad_peer_get_caps
 gst_pad_peer_get_caps_reffed
 gst_pad_use_fixed_caps
+gst_pad_has_current_caps
+
+gst_pad_get_sticky_event
+GstPadStickyEventsForeachFunction
+gst_pad_sticky_events_foreach
 
 gst_pad_is_active
 
 gst_pad_is_blocked
 gst_pad_is_blocking
 
+GstPadProbeCallback
 gst_pad_add_probe
 gst_pad_remove_probe
 
+gst_pad_get_offset
+gst_pad_set_offset
 <SUBSECTION Element>
 gst_pad_new
 gst_pad_new_from_template
@@ -1567,10 +1608,6 @@ GstPadAcceptCapsFunction
 gst_pad_set_getcaps_function
 GstPadGetCapsFunction
 gst_pad_proxy_getcaps
-
-gst_pad_set_setcaps_function
-GstPadSetCapsFunction
-gst_pad_proxy_setcaps
 
 gst_pad_fixate_caps
 gst_pad_set_fixatecaps_function
@@ -1615,12 +1652,12 @@ GstPadIterIntLinkFunction
 gst_pad_iterate_internal_links
 gst_pad_iterate_internal_links_default
 
-gst_pad_dispatcher
-GstPadDispatcherFunction
-
 gst_pad_set_element_private
 gst_pad_get_element_private
 
+GstPadForwardFunction
+gst_pad_event_forward
+gst_pad_forward
 <SUBSECTION Core>
 gst_pad_chain
 gst_pad_chain_list
@@ -1653,6 +1690,8 @@ GST_TYPE_PAD_LINK_CHECK
 GST_TYPE_PAD_PRESENCE
 GST_TYPE_FLOW_RETURN
 GST_TYPE_ACTIVATE_MODE
+GST_TYPE_PROBE_RETURN
+GST_TYPE_PROBE_TYPE
 
 <SUBSECTION Private>
 gst_pad_get_type
@@ -1663,6 +1702,8 @@ gst_pad_link_check_get_type
 gst_pad_presence_get_type
 gst_flow_return_get_type
 gst_activate_mode_get_type
+gst_probe_return_get_type
+gst_probe_type_get_type
 
 GST_PAD_NAME
 GST_PAD_PARENT
@@ -1707,7 +1748,6 @@ GST_PAD_IS_FLUSHING
 GST_PAD_LINKFUNC
 GST_PAD_QUERYFUNC
 GST_PAD_QUERYTYPEFUNC
-GST_PAD_SETCAPSFUNC
 GST_PAD_UNLINKFUNC
 
 GST_PAD_PREROLL_BROADCAST
@@ -2016,6 +2056,9 @@ gst_query_ref
 gst_query_unref
 gst_query_copy
 gst_query_make_writable
+gst_query_is_writable
+gst_query_replace
+gst_query_writable_structure
 
 gst_query_new_custom
 gst_query_get_structure
@@ -2065,6 +2108,21 @@ gst_query_parse_nth_buffering_range
 gst_query_new_uri
 gst_query_parse_uri
 gst_query_set_uri
+
+gst_query_new_allocation
+gst_query_parse_allocation
+gst_query_parse_allocation_params
+gst_query_parse_nth_allocation_memory
+gst_query_parse_nth_allocation_meta
+gst_query_set_allocation_params
+gst_query_add_allocation_memory
+gst_query_add_allocation_meta
+gst_query_get_n_allocation_memories
+gst_query_get_n_allocation_metas
+
+gst_query_new_scheduling
+gst_query_parse_scheduling
+gst_query_set_scheduling
 <SUBSECTION Standard>
 GstQueryClass
 GST_QUERY
@@ -2148,6 +2206,7 @@ gst_segment_to_running_time
 gst_segment_to_stream_time
 gst_segment_to_position
 gst_segment_set_running_time
+gst_segment_copy_into
 <SUBSECTION Standard>
 GST_TYPE_SEGMENT
 gst_segment_get_type
@@ -2849,6 +2908,7 @@ gst_value_array_append_value
 gst_value_array_get_size
 gst_value_array_get_value
 gst_value_array_prepend_value
+gst_value_fixate
 
 
 <SUBSECTION Private>
