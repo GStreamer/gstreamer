@@ -1806,6 +1806,9 @@ gst_query_add_allocation_memory (GstQuery * query, const gchar * alloc)
  * Retrieve the number of values currently stored in the
  * allocator array of the query's structure.
  *
+ * If no memory allocator is specified, the downstream element can handle
+ * the default memory allocator.
+ *
  * Returns: the allocator array size as a #guint.
  */
 guint

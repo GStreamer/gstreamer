@@ -27,7 +27,13 @@
  * GstMemory is a lightweight refcounted object that wraps a region of memory.
  * They are typically used to manage the data of a #GstBuffer.
  *
- * Memory is created by allocators.
+ * Memory is usually created by allocators with a gst_memory_allocator_alloc()
+ * method call. When NULL is used as the allocator, the default allocator will
+ * be used.
+ *
+ * New allocators can be registered with gst_memory_allocator_register().
+ * Allocators are identified by name and can be retrieved with
+ * gst_memory_allocator_find().
  *
  * New memory can be created with gst_memory_new_wrapped() that wraps the memory
  * allocated elsewhere.
@@ -49,7 +55,7 @@
  * Memory can be efficiently merged when gst_memory_is_span() returns TRUE and
  * with the function gst_memory_span().
  *
- * Last reviewed on 2011-03-30 (0.11.0)
+ * Last reviewed on 2011-06-08 (0.11.0)
  */
 
 #include "config.h"
@@ -283,15 +289,19 @@ _default_mem_is_span (GstMemoryDefault * mem1, GstMemoryDefault * mem2,
 static GstMemory *
 _fallback_copy (GstMemory * mem, gsize offset, gsize size)
 {
-  GstMemoryDefault *copy;
-  guint8 *data;
+  GstMemory *copy;
+  guint8 *data, *dest;
   gsize msize;
 
   data = gst_memory_map (mem, &msize, NULL, GST_MAP_READ);
   if (size == -1)
     size = msize > offset ? msize - offset : 0;
-  copy = _default_mem_new_block (size, 0, 0, size);
-  memcpy (copy->data, data + offset, size);
+  /* use the same allocator as the memory we copy, FIXME, alignment?  */
+  copy = gst_memory_allocator_alloc (mem->allocator, size, 1);
+  dest = gst_memory_map (copy, NULL, NULL, GST_MAP_WRITE);
+  memcpy (dest, data + offset, size);
+  gst_memory_unmap (copy, dest, size);
+
   gst_memory_unmap (mem, data, msize);
 
   return (GstMemory *) copy;
@@ -581,6 +591,12 @@ gst_memory_is_span (GstMemory * mem1, GstMemory * mem2, gsize * offset)
  * Registers the memory allocator with @name and implementation functions
  * @info.
  *
+ * All functions in @info are mandatory exept the copy, share and is_span
+ * functions, which will have a default implementation when left NULL.
+ *
+ * The user_data field in @info will be passed to all calls of the alloc
+ * function.
+ *
  * Returns: a new #GstMemoryAllocator.
  */
 const GstMemoryAllocator *
@@ -593,6 +609,7 @@ gst_memory_allocator_register (const gchar * name, const GstMemoryInfo * info)
 
   g_return_val_if_fail (name != NULL, NULL);
   g_return_val_if_fail (info != NULL, NULL);
+  g_return_val_if_fail (info->alloc != NULL, NULL);
   g_return_val_if_fail (info->get_sizes != NULL, NULL);
   g_return_val_if_fail (info->resize != NULL, NULL);
   g_return_val_if_fail (info->map != NULL, NULL);
@@ -620,7 +637,8 @@ gst_memory_allocator_register (const gchar * name, const GstMemoryInfo * info)
  * gst_memory_allocator_find:
  * @name: the name of the allocator
  *
- * Find a previously registered allocator with @name.
+ * Find a previously registered allocator with @name. When @name is NULL, the
+ * default allocator will be returned.
  *
  * Returns: a #GstMemoryAllocator or NULL when the allocator with @name was not
  * registered.
@@ -628,28 +646,17 @@ gst_memory_allocator_register (const gchar * name, const GstMemoryInfo * info)
 const GstMemoryAllocator *
 gst_memory_allocator_find (const gchar * name)
 {
-  GstMemoryAllocator *allocator;
+  const GstMemoryAllocator *allocator;
 
-  g_return_val_if_fail (name != NULL, NULL);
-
-  g_static_rw_lock_writer_lock (&lock);
-  allocator = g_hash_table_lookup (memoryimpl, (gconstpointer) name);
-  g_static_rw_lock_writer_unlock (&lock);
+  g_static_rw_lock_reader_lock (&lock);
+  if (name) {
+    allocator = g_hash_table_lookup (memoryimpl, (gconstpointer) name);
+  } else {
+    allocator = _default_allocator;
+  }
+  g_static_rw_lock_reader_unlock (&lock);
 
   return allocator;
-}
-
-/**
- * gst_memory_allocator_get_default:
- *
- * Get the default allocator.
- *
- * Returns: the default #GstMemoryAllocator
- */
-const GstMemoryAllocator *
-gst_memory_allocator_get_default (void)
-{
-  return _default_allocator;
 }
 
 /**
@@ -663,7 +670,9 @@ gst_memory_allocator_set_default (const GstMemoryAllocator * allocator)
 {
   g_return_if_fail (allocator != NULL);
 
+  g_static_rw_lock_writer_lock (&lock);
   _default_allocator = allocator;
+  g_static_rw_lock_writer_unlock (&lock);
 }
 
 /**
@@ -675,6 +684,8 @@ gst_memory_allocator_set_default (const GstMemoryAllocator * allocator)
  * Use @allocator to allocate a new memory block with memory that is at least
  * @maxsize big and has the given alignment.
  *
+ * When @allocator is NULL, the default allocator will be used.
+ *
  * @align is given as a bitmask so that @align + 1 equals the amount of bytes to
  * align to. For example, to align to 8 bytes, use an alignment of 7.
  *
@@ -684,8 +695,6 @@ GstMemory *
 gst_memory_allocator_alloc (const GstMemoryAllocator * allocator,
     gsize maxsize, gsize align)
 {
-  g_return_val_if_fail (allocator == NULL
-      || allocator->info.alloc != NULL, NULL);
   g_return_val_if_fail (((align + 1) & align) == 0, NULL);
 
   if (allocator == NULL)

@@ -267,7 +267,6 @@ void _gst_memory_init (void);
 const GstMemoryAllocator *  gst_memory_allocator_register    (const gchar *name, const GstMemoryInfo *info);
 const GstMemoryAllocator *  gst_memory_allocator_find        (const gchar *name);
 
-const GstMemoryAllocator *  gst_memory_allocator_get_default (void);
 void                        gst_memory_allocator_set_default (const GstMemoryAllocator * allocator);
 
 /* allocating memory blocks */
@@ -295,9 +294,6 @@ GstMemory * gst_memory_share      (GstMemory *mem, gsize offset, gsize size);
 
 /* span memory */
 gboolean    gst_memory_is_span    (GstMemory *mem1, GstMemory *mem2, gsize *offset);
-
-GstMemory * gst_memory_span       (GstMemory **mem1, gsize len1, gsize offset,
-                                   GstMemory **mem2, gsize len2, gsize size);
 
 G_END_DECLS
 
