@@ -136,7 +136,7 @@ gboolean        gst_plugin_feature_type_name_filter     (GstPluginFeature *featu
 void            gst_plugin_feature_set_rank             (GstPluginFeature *feature, guint rank);
 void            gst_plugin_feature_set_name             (GstPluginFeature *feature, const gchar *name);
 guint           gst_plugin_feature_get_rank             (GstPluginFeature *feature);
-G_CONST_RETURN gchar *gst_plugin_feature_get_name       (GstPluginFeature *feature);
+const gchar    *gst_plugin_feature_get_name             (GstPluginFeature *feature);
 
 void            gst_plugin_feature_list_free            (GList *list);
 GList          *gst_plugin_feature_list_copy            (GList *list);

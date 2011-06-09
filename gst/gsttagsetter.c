@@ -365,7 +365,7 @@ gst_tag_setter_add_tag_value (GstTagSetter * setter,
  * Returns: (transfer none): a current snapshot of the taglist used in the
  *          setter or NULL if none is used.
  */
-G_CONST_RETURN GstTagList *
+const GstTagList *
 gst_tag_setter_get_tag_list (GstTagSetter * setter)
 {
   g_return_val_if_fail (GST_IS_TAG_SETTER (setter), NULL);

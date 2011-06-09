@@ -184,7 +184,7 @@ typedef enum {
 #define GST_FLOW_IS_SUCCESS(ret) ((ret) >= GST_FLOW_OK)
 #endif
 
-G_CONST_RETURN gchar*	gst_flow_get_name	(GstFlowReturn ret);
+const gchar*	        gst_flow_get_name	(GstFlowReturn ret);
 GQuark			gst_flow_to_quark	(GstFlowReturn ret);
 
 /**
@@ -957,7 +957,7 @@ void			gst_pad_set_acceptcaps_function		(GstPad *pad, GstPadAcceptCapsFunction a
 void			gst_pad_set_fixatecaps_function		(GstPad *pad, GstPadFixateCapsFunction fixatecaps);
 void			gst_pad_set_setcaps_function		(GstPad *pad, GstPadSetCapsFunction setcaps);
 
-G_CONST_RETURN GstCaps*	gst_pad_get_pad_template_caps		(GstPad *pad);
+const GstCaps*	        gst_pad_get_pad_template_caps		(GstPad *pad);
 
 /* capsnego function for linked/unlinked pads */
 GstCaps *		gst_pad_get_caps_reffed                 (GstPad * pad);
@@ -1011,10 +1011,8 @@ GstIterator *           gst_pad_iterate_internal_links_default  (GstPad * pad);
 
 /* generic query function */
 void			gst_pad_set_query_type_function		(GstPad *pad, GstPadQueryTypeFunction type_func);
-G_CONST_RETURN GstQueryType*
-			gst_pad_get_query_types			(GstPad *pad);
-G_CONST_RETURN GstQueryType*
-			gst_pad_get_query_types_default		(GstPad *pad);
+const GstQueryType*	gst_pad_get_query_types			(GstPad *pad);
+const GstQueryType*	gst_pad_get_query_types_default		(GstPad *pad);
 
 gboolean		gst_pad_query				(GstPad *pad, GstQuery *query);
 gboolean		gst_pad_peer_query			(GstPad *pad, GstQuery *query);

@@ -1222,7 +1222,7 @@ gst_element_get_compatible_pad (GstElement * element, GstPad * pad,
  *
  * Returns: (transfer none): a string with the name of the state.
  */
-G_CONST_RETURN gchar *
+const gchar *
 gst_element_state_get_name (GstState state)
 {
   switch (state) {
@@ -1253,7 +1253,7 @@ gst_element_state_get_name (GstState state)
  *
  * Since: 0.10.11
  */
-G_CONST_RETURN gchar *
+const gchar *
 gst_element_state_change_return_get_name (GstStateChangeReturn state_ret)
 {
   switch (state_ret) {

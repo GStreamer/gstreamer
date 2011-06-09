@@ -711,7 +711,7 @@ gst_uri_handler_get_protocols (GstURIHandler * handler)
  *   Returns NULL if there are no URI currently handled. The
  *   returned string must not be modified or freed.
  */
-G_CONST_RETURN gchar *
+const gchar *
 gst_uri_handler_get_uri (GstURIHandler * handler)
 {
   GstURIHandlerInterface *iface;

@@ -104,7 +104,7 @@ void			gst_structure_set_parent_refcount  (GstStructure            *structure,
                                                             gint            *refcount);
 void                    gst_structure_free                 (GstStructure            *structure);
 
-G_CONST_RETURN gchar *  gst_structure_get_name             (const GstStructure      *structure);
+const gchar *		gst_structure_get_name             (const GstStructure      *structure);
 GQuark			gst_structure_get_name_id          (const GstStructure      *structure);
 gboolean                gst_structure_has_name             (const GstStructure      *structure,
 							    const gchar             *name);
@@ -155,9 +155,9 @@ gboolean                gst_structure_id_get               (const GstStructure  
                                                             GQuark                   first_field_id,
                                                             ...) G_GNUC_NULL_TERMINATED;
 
-G_CONST_RETURN GValue * gst_structure_id_get_value         (const GstStructure      *structure,
+const GValue *		gst_structure_id_get_value         (const GstStructure      *structure,
 							    GQuark                   field);
-G_CONST_RETURN GValue * gst_structure_get_value            (const GstStructure      *structure,
+const GValue *		gst_structure_get_value            (const GstStructure      *structure,
 							    const gchar             *fieldname);
 void                    gst_structure_remove_field         (GstStructure            *structure,
 							    const gchar             *fieldname);
@@ -215,7 +215,7 @@ gboolean                gst_structure_get_date_time        (const GstStructure  
 gboolean                gst_structure_get_clock_time       (const GstStructure      *structure,
 							    const gchar             *fieldname,
 							    GstClockTime            *value);
-G_CONST_RETURN gchar *  gst_structure_get_string           (const GstStructure      *structure,
+const gchar *		gst_structure_get_string           (const GstStructure      *structure,
 							    const gchar             *fieldname);
 gboolean                gst_structure_get_enum             (const GstStructure      *structure,
 							    const gchar             *fieldname,
