@@ -781,9 +781,6 @@ struct _GstPadClass {
 #define GST_PAD_BLOCK_SIGNAL(pad)       (g_cond_signal(GST_PAD_BLOCK_GET_COND (pad)))
 #define GST_PAD_BLOCK_BROADCAST(pad)    (g_cond_broadcast(GST_PAD_BLOCK_GET_COND (pad)))
 
-/* FIXME: this awful circular dependency need to be resolved properly (see padtemplate.h) */
-#include <gst/gstpadtemplate.h>
-
 GType			gst_pad_get_type			(void);
 
 /* creating pads */
