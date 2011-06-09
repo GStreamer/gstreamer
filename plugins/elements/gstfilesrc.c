@@ -538,6 +538,8 @@ gst_file_src_start (GstBaseSrc * basesrc)
    * don't know their length, so seeking isn't useful/meaningful */
   src->seekable = src->seekable && src->is_regular;
 
+  gst_base_src_set_dynamic_size (basesrc, src->seekable);
+
   return TRUE;
 
   /* ERROR */

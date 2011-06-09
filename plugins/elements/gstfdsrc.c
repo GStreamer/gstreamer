@@ -259,6 +259,8 @@ gst_fd_src_update_fd (GstFdSrc * src, guint64 size)
 
     GST_INFO_OBJECT (src, "marking fd %d as seekable", src->fd);
     src->seekable_fd = TRUE;
+
+    gst_base_src_set_dynamic_size (GST_BASE_SRC (src), TRUE);
   }
   return;
 
@@ -266,6 +268,7 @@ not_seekable:
   {
     GST_INFO_OBJECT (src, "marking fd %d as NOT seekable", src->fd);
     src->seekable_fd = FALSE;
+    gst_base_src_set_dynamic_size (GST_BASE_SRC (src), FALSE);
   }
 }
 
