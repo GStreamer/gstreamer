@@ -922,7 +922,7 @@ gst_buffer_unmap (GstBuffer * buffer, gpointer data, gsize size)
  * @src: the source address
  * @size: the size to fill
  *
- * Copy @size bytes fro @src to @buffer at @offset.
+ * Copy @size bytes from @src to @buffer at @offset.
  */
 void
 gst_buffer_fill (GstBuffer * buffer, gsize offset, gconstpointer src,
