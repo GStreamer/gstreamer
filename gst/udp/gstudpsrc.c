@@ -177,7 +177,7 @@ G_STMT_START {                                                            \
 
 static void gst_udpsrc_uri_handler_init (gpointer g_iface, gpointer iface_data);
 
-static GstCaps *gst_udpsrc_getcaps (GstBaseSrc * src);
+static GstCaps *gst_udpsrc_getcaps (GstBaseSrc * src, GstCaps * filter);
 
 static GstFlowReturn gst_udpsrc_create (GstPushSrc * psrc, GstBuffer ** buf);
 
@@ -347,7 +347,7 @@ gst_udpsrc_finalize (GObject * object)
 }
 
 static GstCaps *
-gst_udpsrc_getcaps (GstBaseSrc * src)
+gst_udpsrc_getcaps (GstBaseSrc * src, GstCaps * filter)
 {
   GstUDPSrc *udpsrc;
 
