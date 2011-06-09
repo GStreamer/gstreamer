@@ -3112,7 +3112,7 @@ no_iter:
 typedef struct
 {
   GstEvent *event;
-  gboolean res;
+  gboolean result;
   gboolean dispatched;
 } EventData;
 
@@ -3124,48 +3124,12 @@ event_forward_func (GstPad * pad, EventData * data)
   GST_LOG_OBJECT (pad, "Reffing and pushing event %p (%s) to %s:%s",
       data->event, GST_EVENT_TYPE_NAME (data->event), GST_DEBUG_PAD_NAME (pad));
 
-  data->res |= gst_pad_push_event (pad, gst_event_ref (data->event));
+  data->result |= gst_pad_push_event (pad, gst_event_ref (data->event));
 
   data->dispatched = TRUE;
 
   /* don't stop */
   return FALSE;
-}
-
-/**
- * gst_pad_event_forward:
- * @pad: a #GstPad
- * @event: (transfer full): the #GstEvent to handle.
- *
- * Forward @event to all internally linked pads of @pad. This function takes
- * ownership of @event.
- *
- * Returns: TRUE if the event was sent succesfully.
- */
-gboolean
-gst_pad_event_forward (GstPad * pad, GstEvent * event)
-{
-  gboolean res;
-  EventData data;
-
-  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
-  g_return_val_if_fail (event != NULL, FALSE);
-
-  data.event = event;
-  data.res = FALSE;
-
-  gst_pad_forward (pad, (GstPadForwardFunction) event_forward_func, &data);
-
-  gst_event_unref (event);
-
-  /* for sinkpads without a parent element or without internal links, nothing
-   * will be dispatched but we still want to return TRUE. */
-  if (data.dispatched)
-    res = data.res;
-  else
-    res = TRUE;
-
-  return res;
 }
 
 /**
@@ -3188,7 +3152,8 @@ gst_pad_event_forward (GstPad * pad, GstEvent * event)
 gboolean
 gst_pad_event_default (GstPad * pad, GstEvent * event)
 {
-  gboolean result = TRUE, forward = TRUE;
+  gboolean result;
+  EventData data;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
   g_return_val_if_fail (event != NULL, FALSE);
@@ -3202,20 +3167,24 @@ gst_pad_event_default (GstPad * pad, GstEvent * event)
       gst_pad_pause_task (pad);
       break;
     }
-    case GST_EVENT_CAPS:
-    {
-      /* don't forward by default */
-      forward = FALSE;
-      break;
-    }
     default:
       break;
   }
 
-  if (forward)
-    result = gst_pad_event_forward (pad, event);
+  data.event = event;
+  data.dispatched = FALSE;
+  data.result = FALSE;
+
+  gst_pad_forward (pad, (GstPadForwardFunction) event_forward_func, &data);
+
+  /* for sinkpads without a parent element or without internal links, nothing
+   * will be dispatched but we still want to return TRUE. */
+  if (data.dispatched)
+    result = data.result;
   else
-    gst_event_unref (event);
+    result = TRUE;
+
+  gst_event_unref (event);
 
   return result;
 }

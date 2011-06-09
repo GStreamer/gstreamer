@@ -484,9 +484,6 @@ gst_tee_sink_event (GstPad * pad, GstEvent * event)
   gboolean res;
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_CAPS:
-      res = gst_pad_event_forward (pad, event);
-      break;
     default:
       res = gst_pad_event_default (pad, event);
       break;

@@ -538,7 +538,7 @@ gst_output_selector_handle_sink_event (GstPad * pad, GstEvent * event)
       switch (sel->pad_negotiation_mode) {
         case GST_OUTPUT_SELECTOR_PAD_NEGOTIATION_MODE_ALL:
           /* Send caps to all src pads */
-          res = gst_pad_event_forward (pad, event);
+          res = gst_pad_event_default (pad, event);
           break;
         case GST_OUTPUT_SELECTOR_PAD_NEGOTIATION_MODE_NONE:
           gst_event_unref (event);
