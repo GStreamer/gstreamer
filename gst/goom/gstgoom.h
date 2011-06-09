@@ -57,6 +57,7 @@ struct _GstGoom
   gint height;
   GstClockTime duration;
   guint outsize;
+  GstBufferPool *pool;
 
   /* samples per frame */
   guint spf;
