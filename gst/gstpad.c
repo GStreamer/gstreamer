@@ -2727,7 +2727,6 @@ gst_pad_update_events (GstPad * pad)
   if (G_UNLIKELY ((eventfunc = GST_PAD_EVENTFUNC (pad)) == NULL))
     goto no_function;
 
-restart:
   for (i = 0; i < GST_EVENT_MAX_STICKY; i++) {
     gboolean res;
     PadEvent *ev;
@@ -2735,7 +2734,7 @@ restart:
     ev = &pad->priv->events[i];
 
     /* skip without pending event */
-    if ((event = ev->pending) == NULL)
+    if ((event = gst_event_steal (&ev->pending)) == NULL)
       continue;
 
     gst_event_ref (event);
@@ -2746,20 +2745,12 @@ restart:
     GST_OBJECT_LOCK (pad);
     /* things could have changed while we release the lock, check if we still
      * are handling the same event, if we don't something changed and we have
-     * to try again. FIXME. we need a cookie here. */
-    if (event != ev->pending) {
-      GST_DEBUG_OBJECT (pad, "events changed, restarting");
-      goto restart;
-    }
-
-    /* remove the event from the pending entry in all cases */
-    ev->pending = NULL;
+     * to try again. FIXME. we need a cookie here. FIXME, we also want to remove
+     * that lock eventually and then do the retry elsewhere. */
 
     if (res) {
       /* make the event active */
-      if (ev->event)
-        gst_event_unref (ev->event);
-      ev->event = event;
+      gst_event_take (&ev->event, event);
     } else {
       gst_event_unref (event);
       ret = GST_FLOW_ERROR;
