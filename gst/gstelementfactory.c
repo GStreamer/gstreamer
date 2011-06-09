@@ -512,7 +512,7 @@ gst_element_factory_get_element_type (GstElementFactory * factory)
  *
  * Returns: the longname
  */
-G_CONST_RETURN gchar *
+const gchar *
 gst_element_factory_get_longname (GstElementFactory * factory)
 {
   g_return_val_if_fail (GST_IS_ELEMENT_FACTORY (factory), NULL);
@@ -528,7 +528,7 @@ gst_element_factory_get_longname (GstElementFactory * factory)
  *
  * Returns: the class
  */
-G_CONST_RETURN gchar *
+const gchar *
 gst_element_factory_get_klass (GstElementFactory * factory)
 {
   g_return_val_if_fail (GST_IS_ELEMENT_FACTORY (factory), NULL);
@@ -544,7 +544,7 @@ gst_element_factory_get_klass (GstElementFactory * factory)
  *
  * Returns: the description
  */
-G_CONST_RETURN gchar *
+const gchar *
 gst_element_factory_get_description (GstElementFactory * factory)
 {
   g_return_val_if_fail (GST_IS_ELEMENT_FACTORY (factory), NULL);
@@ -560,7 +560,7 @@ gst_element_factory_get_description (GstElementFactory * factory)
  *
  * Returns: the author
  */
-G_CONST_RETURN gchar *
+const gchar *
 gst_element_factory_get_author (GstElementFactory * factory)
 {
   g_return_val_if_fail (GST_IS_ELEMENT_FACTORY (factory), NULL);
@@ -568,7 +568,7 @@ gst_element_factory_get_author (GstElementFactory * factory)
   return factory->details.author;
 }
 
-static G_CONST_RETURN gchar *
+static const gchar *
 gst_element_factory_get_meta_data (GstElementFactory * factory,
     const gchar * key)
 {
@@ -589,7 +589,7 @@ gst_element_factory_get_meta_data (GstElementFactory * factory,
  *
  * Returns: the documentation uri
  */
-G_CONST_RETURN gchar *
+const gchar *
 gst_element_factory_get_documentation_uri (GstElementFactory * factory)
 {
   g_return_val_if_fail (GST_IS_ELEMENT_FACTORY (factory), NULL);
@@ -606,7 +606,7 @@ gst_element_factory_get_documentation_uri (GstElementFactory * factory)
  *
  * Returns: the icon name
  */
-G_CONST_RETURN gchar *
+const gchar *
 gst_element_factory_get_icon_name (GstElementFactory * factory)
 {
   g_return_val_if_fail (GST_IS_ELEMENT_FACTORY (factory), NULL);
@@ -659,7 +659,7 @@ __gst_element_factory_add_interface (GstElementFactory * elementfactory,
  * Returns: (transfer none) (element-type Gst.StaticPadTemplate): the
  *     static pad templates
  */
-G_CONST_RETURN GList *
+const GList *
 gst_element_factory_get_static_pad_templates (GstElementFactory * factory)
 {
   g_return_val_if_fail (GST_IS_ELEMENT_FACTORY (factory), NULL);

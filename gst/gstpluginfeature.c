@@ -199,7 +199,7 @@ gst_plugin_feature_set_name (GstPluginFeature * feature, const gchar * name)
  *
  * Returns: the name
  */
-G_CONST_RETURN gchar *
+const gchar *
 gst_plugin_feature_get_name (GstPluginFeature * feature)
 {
   g_return_val_if_fail (GST_IS_PLUGIN_FEATURE (feature), NULL);

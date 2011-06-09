@@ -1152,7 +1152,7 @@ gst_tag_list_foreach (const GstTagList * list, GstTagForeachFunc func,
  * Returns: (transfer none): The GValue for the specified entry or NULL if the
  *          tag wasn't available or the tag doesn't have as many entries
  */
-G_CONST_RETURN GValue *
+const GValue *
 gst_tag_list_get_value_index (const GstTagList * list, const gchar * tag,
     guint index)
 {

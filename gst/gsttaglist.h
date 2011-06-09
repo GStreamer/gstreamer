@@ -205,8 +205,8 @@ void      gst_tag_merge_strings_with_comma (GValue * dest, const GValue * src);
 /* basic tag support */
 gboolean               gst_tag_exists          (const gchar * tag);
 GType                  gst_tag_get_type        (const gchar * tag);
-G_CONST_RETURN gchar * gst_tag_get_nick        (const gchar * tag);
-G_CONST_RETURN gchar * gst_tag_get_description (const gchar * tag);
+const gchar *          gst_tag_get_nick        (const gchar * tag);
+const gchar *          gst_tag_get_description (const gchar * tag);
 GstTagFlag             gst_tag_get_flag        (const gchar * tag);
 gboolean               gst_tag_is_fixed        (const gchar * tag);
 
@@ -253,7 +253,7 @@ void         gst_tag_list_foreach           (const GstTagList * list,
                                              GstTagForeachFunc  func,
                                              gpointer           user_data);
 
-G_CONST_RETURN GValue *
+const GValue *
              gst_tag_list_get_value_index   (const GstTagList * list,
                                              const gchar      * tag,
                                              guint              index);

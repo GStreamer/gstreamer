@@ -915,7 +915,7 @@ gst_plugin_get_name (GstPlugin * plugin)
  *
  * Returns: the long name of the plugin
  */
-G_CONST_RETURN gchar *
+const gchar *
 gst_plugin_get_description (GstPlugin * plugin)
 {
   g_return_val_if_fail (plugin != NULL, NULL);
@@ -931,7 +931,7 @@ gst_plugin_get_description (GstPlugin * plugin)
  *
  * Returns: the filename of the plugin
  */
-G_CONST_RETURN gchar *
+const gchar *
 gst_plugin_get_filename (GstPlugin * plugin)
 {
   g_return_val_if_fail (plugin != NULL, NULL);
@@ -947,7 +947,7 @@ gst_plugin_get_filename (GstPlugin * plugin)
  *
  * Returns: the version of the plugin
  */
-G_CONST_RETURN gchar *
+const gchar *
 gst_plugin_get_version (GstPlugin * plugin)
 {
   g_return_val_if_fail (plugin != NULL, NULL);
@@ -963,7 +963,7 @@ gst_plugin_get_version (GstPlugin * plugin)
  *
  * Returns: the license of the plugin
  */
-G_CONST_RETURN gchar *
+const gchar *
 gst_plugin_get_license (GstPlugin * plugin)
 {
   g_return_val_if_fail (plugin != NULL, NULL);
@@ -979,7 +979,7 @@ gst_plugin_get_license (GstPlugin * plugin)
  *
  * Returns: the source of the plugin
  */
-G_CONST_RETURN gchar *
+const gchar *
 gst_plugin_get_source (GstPlugin * plugin)
 {
   g_return_val_if_fail (plugin != NULL, NULL);
@@ -995,7 +995,7 @@ gst_plugin_get_source (GstPlugin * plugin)
  *
  * Returns: the package of the plugin
  */
-G_CONST_RETURN gchar *
+const gchar *
 gst_plugin_get_package (GstPlugin * plugin)
 {
   g_return_val_if_fail (plugin != NULL, NULL);
@@ -1011,7 +1011,7 @@ gst_plugin_get_package (GstPlugin * plugin)
  *
  * Returns: the origin of the plugin
  */
-G_CONST_RETURN gchar *
+const gchar *
 gst_plugin_get_origin (GstPlugin * plugin)
 {
   g_return_val_if_fail (plugin != NULL, NULL);
@@ -1064,7 +1064,7 @@ gst_plugin_is_loaded (GstPlugin * plugin)
  *
  * Since: 0.10.24
  */
-G_CONST_RETURN GstStructure *
+const GstStructure *
 gst_plugin_get_cache_data (GstPlugin * plugin)
 {
   g_return_val_if_fail (GST_IS_PLUGIN (plugin), NULL);

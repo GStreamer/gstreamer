@@ -371,16 +371,16 @@ gboolean		gst_plugin_register_static_full	(gint major_version,
                                                          const gchar *origin,
                                                          gpointer user_data);
 
-G_CONST_RETURN gchar*	gst_plugin_get_name		(GstPlugin *plugin);
-G_CONST_RETURN gchar*	gst_plugin_get_description	(GstPlugin *plugin);
-G_CONST_RETURN gchar*	gst_plugin_get_filename		(GstPlugin *plugin);
-G_CONST_RETURN gchar*	gst_plugin_get_version		(GstPlugin *plugin);
-G_CONST_RETURN gchar*	gst_plugin_get_license		(GstPlugin *plugin);
-G_CONST_RETURN gchar*	gst_plugin_get_source		(GstPlugin *plugin);
-G_CONST_RETURN gchar*	gst_plugin_get_package		(GstPlugin *plugin);
-G_CONST_RETURN gchar*	gst_plugin_get_origin		(GstPlugin *plugin);
-G_CONST_RETURN GstStructure*	gst_plugin_get_cache_data	(GstPlugin * plugin);
-void		gst_plugin_set_cache_data	(GstPlugin * plugin, GstStructure *cache_data);
+const gchar*		gst_plugin_get_name		(GstPlugin *plugin);
+const gchar*		gst_plugin_get_description	(GstPlugin *plugin);
+const gchar*		gst_plugin_get_filename		(GstPlugin *plugin);
+const gchar*		gst_plugin_get_version		(GstPlugin *plugin);
+const gchar*		gst_plugin_get_license		(GstPlugin *plugin);
+const gchar*		gst_plugin_get_source		(GstPlugin *plugin);
+const gchar*		gst_plugin_get_package		(GstPlugin *plugin);
+const gchar*		gst_plugin_get_origin		(GstPlugin *plugin);
+const GstStructure*	gst_plugin_get_cache_data	(GstPlugin * plugin);
+void			gst_plugin_set_cache_data	(GstPlugin * plugin, GstStructure *cache_data);
 
 GModule *		gst_plugin_get_module		(GstPlugin *plugin);
 gboolean		gst_plugin_is_loaded		(GstPlugin *plugin);

@@ -787,8 +787,7 @@ gboolean                gst_element_seek                (GstElement *element, gd
                                                          GstFormat format, GstSeekFlags flags,
                                                          GstSeekType cur_type, gint64 cur,
                                                          GstSeekType stop_type, gint64 stop);
-G_CONST_RETURN GstQueryType*
-                        gst_element_get_query_types     (GstElement *element);
+const GstQueryType*     gst_element_get_query_types     (GstElement *element);
 gboolean                gst_element_query               (GstElement *element, GstQuery *query);
 
 /* messages */
