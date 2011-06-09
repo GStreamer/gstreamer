@@ -840,7 +840,7 @@ void			gst_pad_set_activate_function		(GstPad *pad, GstPadActivateFunction activ
 void			gst_pad_set_activatepull_function	(GstPad *pad, GstPadActivateModeFunction activatepull);
 void			gst_pad_set_activatepush_function	(GstPad *pad, GstPadActivateModeFunction activatepush);
 void			gst_pad_set_chain_function		(GstPad *pad, GstPadChainFunction chain);
-void			gst_pad_set_chain_list_function	(GstPad *pad, GstPadChainListFunction chainlist);
+void			gst_pad_set_chain_list_function	        (GstPad *pad, GstPadChainListFunction chainlist);
 void			gst_pad_set_getrange_function		(GstPad *pad, GstPadGetRangeFunction get);
 void			gst_pad_set_event_function		(GstPad *pad, GstPadEventFunction event);
 
