@@ -112,6 +112,7 @@ struct _GstRTSPStream {
   /* our udp sources */
   GstElement   *udpsrc[2];
   GstPad       *blockedpad;
+  gulong        blockid;
   gboolean      is_ipv6;
 
   /* our udp sinks back to the server */
@@ -173,7 +174,6 @@ struct _GstRTSPSrc {
   gboolean         need_range;
   gboolean         skip;
   gint             free_channel;
-  GstEvent        *close_segment;
   GstEvent        *start_segment;
   GstClockTime     base_time;
 

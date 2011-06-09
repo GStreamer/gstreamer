@@ -1816,7 +1816,7 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
    * right values in the segment to perform the seek */
   if (event) {
     GST_DEBUG_OBJECT (src, "configuring seek");
-    gst_segment_set_seek (&seeksegment, rate, format, flags,
+    gst_segment_do_seek (&seeksegment, rate, format, flags,
         cur_type, cur, stop_type, stop, &update);
   }
 
@@ -1845,24 +1845,6 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
     /* if we started flush, we stop now */
     GST_DEBUG_OBJECT (src, "stopping flush");
     gst_rtspsrc_flush (src, FALSE);
-  } else if (src->running) {
-    /* re-engage loop */
-    gst_rtspsrc_loop_send_cmd (src, CMD_LOOP, FALSE);
-
-    /* we are running the current segment and doing a non-flushing seek,
-     * close the segment first based on the previous last_stop. */
-    GST_DEBUG_OBJECT (src, "closing running segment %" G_GINT64_FORMAT
-        " to %" G_GINT64_FORMAT, src->segment.accum, src->segment.last_stop);
-
-    /* queue the segment for sending in the stream thread */
-    if (src->close_segment)
-      gst_event_unref (src->close_segment);
-    src->close_segment = gst_event_new_new_segment (TRUE,
-        src->segment.rate, src->segment.format,
-        src->segment.accum, src->segment.last_stop, src->segment.accum);
-
-    /* keep track of our last_stop */
-    seeksegment.accum = src->segment.last_stop;
   }
 
   /* now we did the seek and can activate the new segment values */
@@ -1872,20 +1854,17 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
   if (src->segment.flags & GST_SEEK_FLAG_SEGMENT) {
     gst_element_post_message (GST_ELEMENT_CAST (src),
         gst_message_new_segment_start (GST_OBJECT_CAST (src),
-            src->segment.format, src->segment.last_stop));
+            src->segment.format, src->segment.position));
   }
 
   /* now create the newsegment */
   GST_DEBUG_OBJECT (src, "Creating newsegment from %" G_GINT64_FORMAT
-      " to %" G_GINT64_FORMAT, src->segment.last_stop, stop);
+      " to %" G_GINT64_FORMAT, src->segment.position, stop);
 
   /* store the newsegment event so it can be sent from the streaming thread. */
   if (src->start_segment)
     gst_event_unref (src->start_segment);
-  src->start_segment =
-      gst_event_new_new_segment (FALSE, src->segment.rate,
-      src->segment.format, src->segment.last_stop, stop,
-      src->segment.last_stop);
+  src->start_segment = gst_event_new_segment (&src->segment);
 
   /* mark discont */
   GST_DEBUG_OBJECT (src, "mark DISCONT, we did a seek to another position");
@@ -2140,15 +2119,12 @@ gst_rtspsrc_sink_chain (GstPad * pad, GstBuffer * buffer)
   return res;
 }
 
-static void
-pad_unblocked (GstPad * pad, gboolean blocked, GstRTSPSrc * src)
+static GstProbeReturn
+pad_blocked (GstPad * pad, GstProbeType type, gpointer type_data,
+    gpointer user_data)
 {
-  GST_DEBUG_OBJECT (src, "pad %s:%s unblocked", GST_DEBUG_PAD_NAME (pad));
-}
+  GstRTSPSrc *src = user_data;
 
-static void
-pad_blocked (GstPad * pad, gboolean blocked, GstRTSPSrc * src)
-{
   GST_DEBUG_OBJECT (src, "pad %s:%s blocked, activating streams",
       GST_DEBUG_PAD_NAME (pad));
 
@@ -2162,12 +2138,12 @@ pad_blocked (GstPad * pad, gboolean blocked, GstRTSPSrc * src)
 
   gst_rtspsrc_activate_streams (src);
 
-  return;
+  return GST_PROBE_OK;
 
 was_ok:
   {
     GST_OBJECT_UNLOCK (src);
-    return;
+    return GST_PROBE_OK;
   }
 }
 
@@ -2758,8 +2734,9 @@ gst_rtspsrc_stream_configure_udp (GstRTSPSrc * src, GstRTSPStream * stream,
     /* configure pad block on the pad. As soon as there is dataflow on the
      * UDP source, we know that UDP is not blocked by a firewall and we can
      * configure all the streams to let the application autoplug decoders. */
-    gst_pad_set_blocked_async (stream->blockedpad, TRUE,
-        (GstPadBlockCallback) pad_blocked, src);
+    stream->blockid =
+        gst_pad_add_probe (stream->blockedpad, GST_PROBE_TYPE_BLOCK,
+        pad_blocked, src, NULL);
 
     if (stream->channelpad[0]) {
       GST_DEBUG_OBJECT (src, "connecting UDP source 0 to manager");
@@ -3112,11 +3089,10 @@ gst_rtspsrc_activate_streams (GstRTSPSrc * src)
   for (walk = src->streams; walk; walk = g_list_next (walk)) {
     GstRTSPStream *stream = (GstRTSPStream *) walk->data;
 
-    if (stream->blockedpad) {
+    if (stream->blockid) {
       GST_DEBUG_OBJECT (src, "unblocking stream pad %p", stream);
-      gst_pad_set_blocked_async (stream->blockedpad, FALSE,
-          (GstPadBlockCallback) pad_unblocked, src);
-      stream->blockedpad = NULL;
+      gst_pad_remove_probe (stream->blockedpad, stream->blockid);
+      stream->blockid = 0;
     }
   }
 
@@ -3132,7 +3108,7 @@ gst_rtspsrc_configure_caps (GstRTSPSrc * src, GstSegment * segment)
 
   GST_DEBUG_OBJECT (src, "configuring stream caps");
 
-  start = segment->last_stop;
+  start = segment->position;
   stop = segment->duration;
   play_speed = segment->rate;
   play_scale = segment->applied_rate;
@@ -3627,12 +3603,6 @@ gst_rtspsrc_loop_interleaved (GstRTSPSrc * src)
     src->need_activate = FALSE;
   }
 
-  if (!src->manager) {
-    /* set stream caps on buffer when we don't have a session manager to do it
-     * for us */
-    gst_buffer_set_caps (buf, stream->caps);
-  }
-
   if (src->base_time == -1) {
     /* Take current running_time. This timestamp will be put on
      * the first buffer of each stream because we are a live source and so we
@@ -4115,7 +4085,7 @@ pause:
       if (src->segment.flags & GST_SEEK_FLAG_SEGMENT) {
         gst_element_post_message (GST_ELEMENT_CAST (src),
             gst_message_new_segment_done (GST_OBJECT_CAST (src),
-                src->segment.format, src->segment.last_stop));
+                src->segment.format, src->segment.position));
       } else {
         gst_rtspsrc_push_event (src, gst_event_new_eos (), FALSE);
       }
@@ -5365,7 +5335,7 @@ gst_rtspsrc_parse_range (GstRTSPSrc * src, const gchar * range,
   /* we need to start playback without clipping from the position reported by
    * the server */
   segment->start = seconds;
-  segment->last_stop = seconds;
+  segment->position = seconds;
 
   if (therange->max.type == GST_RTSP_TIME_NOW)
     seconds = -1;
@@ -5391,7 +5361,7 @@ gst_rtspsrc_parse_range (GstRTSPSrc * src, const gchar * range,
   /* don't change duration with unknown value, we might have a valid value
    * there that we want to keep. */
   if (seconds != -1)
-    gst_segment_set_duration (segment, GST_FORMAT_TIME, seconds);
+    segment->duration = seconds;
 
   return TRUE;
 }
@@ -5918,11 +5888,11 @@ gen_range_header (GstRTSPSrc * src, GstSegment * segment)
   if (src->range && src->range->min.type == GST_RTSP_TIME_NOW) {
     g_strlcpy (val_str, "now", sizeof (val_str));
   } else {
-    if (segment->last_stop == 0) {
+    if (segment->position == 0) {
       g_strlcpy (val_str, "0", sizeof (val_str));
     } else {
       g_ascii_dtostr (val_str, sizeof (val_str),
-          ((gdouble) segment->last_stop) / GST_SECOND);
+          ((gdouble) segment->position) / GST_SECOND);
     }
   }
   return g_strdup_printf ("npt=%s-", val_str);
@@ -6070,7 +6040,7 @@ gst_rtspsrc_play (GstRTSPSrc * src, GstSegment * segment, gboolean async)
       /* NOTE the above also disables npt based eos detection */
       /* and below forces position to 0,
        * which is visible feedback we lost the plot */
-      segment->start = segment->last_stop = src->last_pos;
+      segment->start = segment->position = src->last_pos;
     }
 
     gst_rtsp_message_unset (&request);
