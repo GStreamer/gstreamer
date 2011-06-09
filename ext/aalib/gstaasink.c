@@ -159,18 +159,6 @@ gst_aasink_dither_get_type (void)
 }
 
 static void
-gst_aasink_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_template));
-  gst_element_class_set_details_simple (element_class, "ASCII art video sink",
-      "Sink/Video",
-      "An ASCII art videosink", "Wim Taymans <wim.taymans@chello.be>");
-}
-
-static void
 gst_aasink_class_init (GstAASinkClass * klass)
 {
   GObjectClass *gobject_class;
@@ -228,6 +216,13 @@ gst_aasink_class_init (GstAASinkClass * klass)
       g_signal_new ("have-size", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstAASinkClass, have_size), NULL, NULL,
       gst_marshal_VOID__INT_INT, G_TYPE_NONE, 2, G_TYPE_UINT, G_TYPE_UINT);
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sink_template));
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "ASCII art video sink", "Sink/Video", "An ASCII art videosink",
+      "Wim Taymans <wim.taymans@chello.be>");
 
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_aasink_change_state);
 
