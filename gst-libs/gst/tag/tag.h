@@ -444,8 +444,8 @@ GType   gst_tag_image_type_get_type (void);
 
 /* functions for vorbis comment manipulation */
 
-G_CONST_RETURN gchar *  gst_tag_from_vorbis_tag                 (const gchar *          vorbis_tag);
-G_CONST_RETURN gchar *  gst_tag_to_vorbis_tag                   (const gchar *          gst_tag);
+const gchar *           gst_tag_from_vorbis_tag                 (const gchar *          vorbis_tag);
+const gchar *           gst_tag_to_vorbis_tag                   (const gchar *          gst_tag);
 void                    gst_vorbis_tag_add                      (GstTagList *           list, 
                                                                  const gchar *          tag, 
                                                                  const gchar *          value);
@@ -466,13 +466,13 @@ GstBuffer *             gst_tag_list_to_vorbiscomment_buffer    (const GstTagLis
 /* functions for ID3 tag manipulation */
 
 guint                   gst_tag_id3_genre_count                 (void);
-G_CONST_RETURN gchar *  gst_tag_id3_genre_get                   (const guint            id);
+const gchar *           gst_tag_id3_genre_get                   (const guint            id);
 GstTagList *            gst_tag_list_new_from_id3v1             (const guint8 *         data);
 
-G_CONST_RETURN gchar *  gst_tag_from_id3_tag                    (const gchar *          id3_tag);
-G_CONST_RETURN gchar *  gst_tag_from_id3_user_tag               (const gchar *          type,
+const gchar *           gst_tag_from_id3_tag                    (const gchar *          id3_tag);
+const gchar *           gst_tag_from_id3_user_tag               (const gchar *          type,
                                                                  const gchar *          id3_user_tag);
-G_CONST_RETURN gchar *  gst_tag_to_id3_tag                      (const gchar *          gst_tag);
+const gchar *           gst_tag_to_id3_tag                      (const gchar *          gst_tag);
 
 gboolean                gst_tag_list_add_id3_image (GstTagList   * tag_list,
                                                     const guint8 * image_data,
