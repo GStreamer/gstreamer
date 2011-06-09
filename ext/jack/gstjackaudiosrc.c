@@ -683,7 +683,8 @@ static void gst_jack_audio_src_set_property (GObject * object, guint prop_id,
 static void gst_jack_audio_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstCaps *gst_jack_audio_src_getcaps (GstBaseSrc * bsrc);
+static GstCaps *gst_jack_audio_src_getcaps (GstBaseSrc * bsrc,
+    GstCaps * filter);
 static GstRingBuffer *gst_jack_audio_src_create_ringbuffer (GstBaseAudioSrc *
     src);
 
@@ -820,7 +821,7 @@ gst_jack_audio_src_get_property (GObject * object, guint prop_id,
 }
 
 static GstCaps *
-gst_jack_audio_src_getcaps (GstBaseSrc * bsrc)
+gst_jack_audio_src_getcaps (GstBaseSrc * bsrc, GstCaps * filter)
 {
   GstJackAudioSrc *src = GST_JACK_AUDIO_SRC (bsrc);
   const char **ports;

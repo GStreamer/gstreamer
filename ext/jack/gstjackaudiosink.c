@@ -664,7 +664,8 @@ static void gst_jack_audio_sink_set_property (GObject * object, guint prop_id,
 static void gst_jack_audio_sink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstCaps *gst_jack_audio_sink_getcaps (GstBaseSink * bsink);
+static GstCaps *gst_jack_audio_sink_getcaps (GstBaseSink * bsink,
+    GstCaps * filter);
 static GstRingBuffer *gst_jack_audio_sink_create_ringbuffer (GstBaseAudioSink *
     sink);
 
@@ -796,7 +797,7 @@ gst_jack_audio_sink_get_property (GObject * object, guint prop_id,
 }
 
 static GstCaps *
-gst_jack_audio_sink_getcaps (GstBaseSink * bsink)
+gst_jack_audio_sink_getcaps (GstBaseSink * bsink, GstCaps * filter)
 {
   GstJackAudioSink *sink = GST_JACK_AUDIO_SINK (bsink);
   const char **ports;
