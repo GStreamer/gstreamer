@@ -327,6 +327,7 @@ beach:
 static gboolean
 gst_visual_src_setcaps (GstVisual * visual, GstCaps * caps)
 {
+  gboolean res;
   GstStructure *structure;
   gint depth, pitch;
 
@@ -358,9 +359,9 @@ gst_visual_src_setcaps (GstVisual * visual, GstCaps * caps)
   visual->duration =
       gst_util_uint64_scale_int (GST_SECOND, visual->fps_d, visual->fps_n);
 
-  gst_pad_push_event (visual->srcpad, gst_event_new_caps (caps));
+  res = gst_pad_push_event (visual->srcpad, gst_event_new_caps (caps));
 
-  return TRUE;
+  return res;
 
   /* ERRORS */
 error:
@@ -630,9 +631,7 @@ gst_visual_src_query (GstPad * pad, GstQuery * query)
   return res;
 }
 
-/* allocate and output buffer, if no format was negotiated, this
- * function will negotiate one. After calling this function, a
- * reverse negotiation could have happened. */
+/* Make sure we are negotiated */
 static GstFlowReturn
 ensure_negotiated (GstVisual * visual)
 {
