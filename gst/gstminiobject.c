@@ -284,16 +284,20 @@ gst_mini_object_unref (GstMiniObject * mini_object)
  *     be replaced
  * @newdata: pointer to new mini-object
  *
- * Modifies a pointer to point to a new mini-object.  The modification
- * is done atomically, and the reference counts are updated correctly.
+ * Atomically modifies a pointer to point to a new mini-object.
+ * The reference count of @olddata is decreased and the reference count of
+ * @newdata is increased.
+ *
  * Either @newdata and the value pointed to by @olddata may be NULL.
+ *
+ * Returns: TRUE if @newdata was different from @olddata
  */
-void
+gboolean
 gst_mini_object_replace (GstMiniObject ** olddata, GstMiniObject * newdata)
 {
   GstMiniObject *olddata_val;
 
-  g_return_if_fail (olddata != NULL);
+  g_return_val_if_fail (olddata != NULL, FALSE);
 
   GST_CAT_TRACE (GST_CAT_REFCOUNTING, "replace %p (%d) with %p (%d)",
       *olddata, *olddata ? (*olddata)->refcount : 0,
@@ -301,19 +305,91 @@ gst_mini_object_replace (GstMiniObject ** olddata, GstMiniObject * newdata)
 
   olddata_val = g_atomic_pointer_get ((gpointer *) olddata);
 
-  if (olddata_val == newdata)
-    return;
+  if (G_UNLIKELY (olddata_val == newdata))
+    return FALSE;
 
   if (newdata)
     gst_mini_object_ref (newdata);
 
-  while (!g_atomic_pointer_compare_and_exchange ((gpointer *) olddata,
-          olddata_val, newdata)) {
+  while (G_UNLIKELY (!g_atomic_pointer_compare_and_exchange ((gpointer *)
+              olddata, olddata_val, newdata))) {
     olddata_val = g_atomic_pointer_get ((gpointer *) olddata);
+    if (G_UNLIKELY (olddata_val == newdata))
+      break;
   }
 
   if (olddata_val)
     gst_mini_object_unref (olddata_val);
+
+  return olddata_val != newdata;
+}
+
+/**
+ * gst_mini_object_steal:
+ * @olddata: (inout) (transfer full): pointer to a pointer to a mini-object to
+ *     be stolen
+ *
+ * Replace the current #GstMiniObject pointer to by @olddata with NULL and
+ * return the old value.
+ *
+ * Returns: the #GstMiniObject at @oldata
+ */
+GstMiniObject *
+gst_mini_object_steal (GstMiniObject ** olddata)
+{
+  GstMiniObject *olddata_val;
+
+  g_return_val_if_fail (olddata != NULL, NULL);
+
+  GST_CAT_TRACE (GST_CAT_REFCOUNTING, "steal %p (%d)",
+      *olddata, *olddata ? (*olddata)->refcount : 0);
+
+  do {
+    olddata_val = g_atomic_pointer_get ((gpointer *) olddata);
+    if (olddata_val == NULL)
+      break;
+  } while (G_UNLIKELY (!g_atomic_pointer_compare_and_exchange ((gpointer *)
+              olddata, olddata_val, NULL)));
+
+  return olddata_val;
+}
+
+/**
+ * gst_mini_object_take:
+ * @olddata: (inout) (transfer full): pointer to a pointer to a mini-object to
+ *     be replaced
+ *
+ * Modifies a pointer to point to a new mini-object. The modification
+ * is done atomically. This version is similar to gst_mini_object_replace()
+ * except that it does not increase the refcount of @newdata and thus
+ * takes ownership of @newdata.
+ *
+ * Either @newdata and the value pointed to by @olddata may be NULL.
+ *
+ * Returns: TRUE if @newdata was different from @olddata
+ */
+gboolean
+gst_mini_object_take (GstMiniObject ** olddata, GstMiniObject * newdata)
+{
+  GstMiniObject *olddata_val;
+
+  g_return_val_if_fail (olddata != NULL, FALSE);
+
+  GST_CAT_TRACE (GST_CAT_REFCOUNTING, "take %p (%d) with %p (%d)",
+      *olddata, *olddata ? (*olddata)->refcount : 0,
+      newdata, newdata ? newdata->refcount : 0);
+
+  do {
+    olddata_val = g_atomic_pointer_get ((gpointer *) olddata);
+    if (G_UNLIKELY (olddata_val == newdata))
+      break;
+  } while (G_UNLIKELY (!g_atomic_pointer_compare_and_exchange ((gpointer *)
+              olddata, olddata_val, newdata)));
+
+  if (olddata_val)
+    gst_mini_object_unref (olddata_val);
+
+  return olddata_val != newdata;
 }
 
 /**

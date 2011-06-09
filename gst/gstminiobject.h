@@ -211,7 +211,9 @@ void	        gst_mini_object_weak_unref	(GstMiniObject *object,
 					         GstMiniObjectWeakNotify notify,
 					         gpointer data);
 
-void		gst_mini_object_replace         (GstMiniObject **olddata, GstMiniObject *newdata);
+gboolean        gst_mini_object_replace         (GstMiniObject **olddata, GstMiniObject *newdata);
+gboolean        gst_mini_object_take            (GstMiniObject **olddata, GstMiniObject *newdata);
+GstMiniObject * gst_mini_object_steal           (GstMiniObject **olddata);
 
 
 G_END_DECLS
