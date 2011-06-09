@@ -72,6 +72,9 @@ static gboolean ges_timeline_object_set_duration_internal (GESTimelineObject *
 static gboolean ges_timeline_object_set_priority_internal (GESTimelineObject *
     object, guint32 priority);
 
+static GESTimelineObject *ges_timeline_object_copy (GESTimelineObject * object,
+    gboolean * deep);
+
 G_DEFINE_ABSTRACT_TYPE (GESTimelineObject, ges_timeline_object,
     G_TYPE_INITIALLY_UNOWNED);
 
@@ -1189,6 +1192,40 @@ ges_timeline_object_set_top_effect_priority (GESTimelineObject * object,
       (GCompareDataFunc) sort_track_effects, object);
 
   return TRUE;
+}
+
+/* TODO implement the deep parameter, and make it public */
+static GESTimelineObject *
+ges_timeline_object_copy (GESTimelineObject * object, gboolean * deep)
+{
+  GESTimelineObject *ret = NULL;
+  GParameter *params;
+  GParamSpec **specs;
+  guint n, n_specs, n_params;
+
+  g_return_val_if_fail (GES_IS_TIMELINE_OBJECT (object), NULL);
+
+  specs =
+      g_object_class_list_properties (G_OBJECT_GET_CLASS (object), &n_specs);
+  params = g_new0 (GParameter, n_specs);
+  n_params = 0;
+
+  for (n = 0; n < n_specs; ++n) {
+    if (strcmp (specs[n]->name, "parent") &&
+        (specs[n]->flags & G_PARAM_READWRITE) == G_PARAM_READWRITE) {
+      params[n_params].name = g_intern_string (specs[n]->name);
+      g_value_init (&params[n_params].value, specs[n]->value_type);
+      g_object_get_property (G_OBJECT (object), specs[n]->name,
+          &params[n_params].value);
+      ++n_params;
+    }
+  }
+
+  ret = g_object_newv (G_TYPE_FROM_INSTANCE (object), n_params, params);
+  g_free (specs);
+  g_free (params);
+
+  return ret;
 }
 
 static void
