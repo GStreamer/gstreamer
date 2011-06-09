@@ -278,10 +278,39 @@ extern GType _gst_event_type;
  *
  * Either @new_event or the #GstEvent pointed to by @old_event may be NULL.
  *
- * Since: 0.10.3
+ * Returns: TRUE if @new_event was different from @old_event
  */
 #define         gst_event_replace(old_event,new_event) \
     gst_mini_object_replace ((GstMiniObject **)(old_event), GST_MINI_OBJECT_CAST (new_event))
+/**
+ * gst_event_steal:
+ * @old_event: (inout) (transfer full): pointer to a pointer to a #GstEvent
+ *     to be stolen.
+ *
+ * Atomically replace the #GstEvent pointed to by @old_event with NULL and
+ * return the original event.
+ *
+ * Returns: the #GstEvent that was in @old_event
+ */
+#define         gst_event_steal(old_event) \
+    GST_EVENT_CAST (gst_mini_object_steal ((GstMiniObject **)(old_event)))
+/**
+ * gst_event_take:
+ * @old_event: (inout) (transfer full): pointer to a pointer to a #GstEvent
+ *     to be stolen.
+ * @new_event: (allow-none) (transfer full): pointer to a #GstEvent that will
+ *     replace the event pointed to by @old_event.
+ *
+ * Modifies a pointer to a #GstEvent to point to a different #GstEvent. This
+ * function is similar to gst_event_replace() except that it takes ownership of
+ * @new_event.
+ *
+ * Either @new_event or the #GstEvent pointed to by @old_event may be NULL.
+ *
+ * Returns: TRUE if @new_event was different from @old_event
+ */
+#define         gst_event_take(old_event,new_event) \
+    gst_mini_object_take ((GstMiniObject **)(old_event), GST_MINI_OBJECT_CAST (new_event))
 
 /**
  * GstQOSType:
