@@ -2,44 +2,59 @@ import gst
 
 from common import TestCase
 from gst import ges
+from time import sleep
 
-class Timeline(TestCase):
+class TextOverlay(TestCase):
 
-    def testTimeline(self):
+    def testTextOverlay(self):
 
-        tl = ges.timeline_new_audio_video()
-        lyr = ges.SimpleTimelineLayer()
-        src = ges.TimelineTestSource()
-        pip = ges.TimelinePipeline()
         ovrl = ges.TimelineTextOverlay()
-        bus = pip.get_bus()
+        lyr = ges.TimelineLayer()
+        tl = ges.timeline_new_audio_video()
+        tck = tl.get_tracks()[0]
 
-        # Let's add the layer to the timeline, and the sources to the layer.
-
-        tl.add_layer(lyr)
-        src.set_duration(long(gst.SECOND * 10))
-        ovrl.set_duration(long(gst.SECOND * 5))
-        ovrl.set_start(long(gst.SECOND * 5))
         ovrl.set_text("Foo")
+        self.failIf (ovrl.get_text() != "Foo")
+        ovrl.set_font_desc ("Arial")
+        self.failIf (ovrl.get_font_desc() != "Arial")
+        ovrl.set_valign("top")
+        self.failIf (ovrl.get_valignment().value_name != "top")
+        ovrl.set_halign("left")
+        self.failIf (ovrl.get_halignment().value_name != "left")
 
-        lyr.add_object(src, -1)
-        lyr.add_object(ovrl, -1)
+        #We will test Timeline Object class functions here
 
-        pip.add_timeline(tl)
-        bus.set_sync_handler(self.bus_handler)
+        ovrl.set_start(long(100))
+        ovrl.set_inpoint(long(50))
+        ovrl.set_duration(long(500))
+        ovrl.set_priority(2)
+        ovrl.set_layer(lyr)
+        tck_obj = ovrl.create_track_object(tck)
+        self.failIf (ovrl.release_track_object(tck_obj) != True)
+        self.failIf (ovrl.add_track_object(tck_obj) != True)
+        self.failIf (len(ovrl.get_track_objects()) != 1)
+        self.failIf (ovrl.get_layer() != lyr)
+        ovrl.release_track_object(tck_obj)
 
-        self.pipeline = pip
-        self.layer = lyr
+        #We test TrackTextOverlay and TrackObject here
+        tck_obj.set_text("Bar")
+        self.failIf (tck_obj.get_text() != "Bar")
+        tck_obj.set_font_desc ("Arial")
+        self.failIf (tck_obj.get_font_desc() != "Arial")
+        tck_obj.set_valignment("top")
+        self.failIf (tck_obj.get_valignment().value_name != "top")
+        tck_obj.set_halignment("left")
+        self.failIf (tck_obj.get_halignment().value_name != "left")
 
-        #Mainloop is finished, tear down.
-        self.pipeline = None
-
-
-    def bus_handler(self, unused_bus, message):
-        if message.type == gst.MESSAGE_ERROR:
-            print "ERROR"
-            self.mainloop.quit()
-        elif message.type == gst.MESSAGE_EOS:
-            print "Done"
-            self.mainloop.quit()
-        return gst.BUS_PASS
+        tck_obj.set_locked(False)
+        self.failIf (tck_obj.is_locked() != False)
+        tck_obj.set_start(long(100))
+        tck_obj.set_inpoint(long(50))
+        tck_obj.set_duration(long(500))
+        tck_obj.set_priority(2)
+        self.failIf (tck_obj.get_start() != 100)
+        self.failIf (tck_obj.get_inpoint() != 50)
+        self.failIf (tck_obj.get_duration() != 500)
+        self.failIf (tck_obj.get_priority() != 2)
+        tck_obj.set_timeline_object(ovrl)
+        self.failIf(tck_obj.get_timeline_object() != ovrl)

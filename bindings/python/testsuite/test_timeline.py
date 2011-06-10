@@ -10,35 +10,13 @@ class Timeline(TestCase):
 
         tl = ges.timeline_new_audio_video()
         lyr = ges.SimpleTimelineLayer()
-        src = ges.TimelineTestSource()
-        pip = ges.TimelinePipeline()
-        bus = pip.get_bus()
-        tck_src = ges.TrackAudioTestSource()
-        self.mainloop = glib.MainLoop()
+        tck = ges.track_audio_raw_new()
 
-        a = tck_src.list_children_properties()
-
-        #Let's add the layer to the timeline, and the source to the layer.
-        src.set_duration(long(gst.SECOND * 10))
-        src.set_vpattern("Random (television snow)")
+        assert (tl.add_track(tck) == True)
+        #We should have two tracks from the timeline_new_audio_video() function + 1
+        self.failIf(len(tl.get_tracks()) != 3)
+        assert (tl.remove_track(tck) == True)
 
         assert (tl.add_layer(lyr) == True)
-        assert (lyr.add_object(src, -1) == True)
-        self.failIf(len(src.get_track_objects()) != 2)
-        assert (pip.add_timeline(tl) == True)
-
-        bus.set_sync_handler(self.bus_handler)
-
-        self.pipeline = pip
-        self.layer = lyr
-
-        #Mainloop is finished, tear down.
-        self.pipeline = None
-
-
-    def bus_handler(self, unused_bus, message):
-        if message.type == gst.MESSAGE_ERROR:
-            print "ERROR"
-        elif message.type == gst.MESSAGE_EOS:
-            print "Done"
-        return gst.BUS_PASS
+        self.failIf(len(tl.get_layers()) != 1)
+        assert (tl.remove_layer(lyr) == True)
