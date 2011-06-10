@@ -160,15 +160,12 @@ static GstFlowReturn
 default_alloc_buffer (GstBufferPool * pool, GstBuffer ** buffer,
     GstBufferPoolParams * params)
 {
-  guint align;
   GstBufferPoolPrivate *priv = pool->priv;
 
   *buffer = gst_buffer_new ();
 
-  align = priv->align - 1;
-
   gst_buffer_take_memory (*buffer, gst_memory_allocator_alloc (NULL, priv->size,
-          align));
+          priv->align));
 
   return GST_FLOW_OK;
 }
