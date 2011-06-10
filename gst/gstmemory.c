@@ -262,8 +262,14 @@ static gboolean
 _default_mem_is_span (GstMemoryDefault * mem1, GstMemoryDefault * mem2,
     gsize * offset)
 {
-  if (offset)
-    *offset = mem1->offset;
+
+  if (offset) {
+    GstMemoryDefault *parent;
+
+    parent = (GstMemoryDefault *) mem1->mem.parent;
+
+    *offset = mem1->offset - parent->offset;
+  }
 
   /* and memory is contiguous */
   return mem1->data + mem1->offset + mem1->size == mem2->data + mem2->offset;
