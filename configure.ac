@@ -556,22 +556,22 @@ dnl bit of a misnomer, but keep the conditional named like this so we don't
 dnl have to change too much elsewhere
 AM_CONDITIONAL(HAVE_CHECK, test "x$BUILD_CHECK" = "xyes")
 
-dnl configure the desired buffer alignment
-AC_ARG_WITH([buffer-alignment],
-  AS_HELP_STRING([--with-buffer-alignment],[8,N,malloc,pagesize (default is 32)]),
+dnl configure the desired memory alignment
+AC_ARG_WITH([memory-alignment],
+  AS_HELP_STRING([--with-memory-alignment],[8,N,malloc,pagesize (default is 32)]),
   [
     if test "x$withval" = "xyes"
     then
-      AC_DEFINE(BUFFER_ALIGNMENT, 32, [Buffer alignment to use])
+      AC_DEFINE(MEMORY_ALIGNMENT, 32, [Memory alignment to use])
     else
       case "${withval}" in
-        malloc) AC_DEFINE(BUFFER_ALIGNMENT_MALLOC, 1, [Buffer alignment by malloc default]) ;;
-        pagesize)  AC_DEFINE(BUFFER_ALIGNMENT_PAGESIZE, 1, [Buffer alignment by pagesize]) ;;
-        *)   AC_DEFINE_UNQUOTED(BUFFER_ALIGNMENT, ${withval}, [Buffer alignment to use]) ;;
+        malloc) AC_DEFINE(MEMORY_ALIGNMENT_MALLOC, 1, [Memory alignment by malloc default]) ;;
+        pagesize)  AC_DEFINE(MEMORY_ALIGNMENT_PAGESIZE, 1, [Memory alignment by pagesize]) ;;
+        *)   AC_DEFINE_UNQUOTED(MEMORY_ALIGNMENT, ${withval}, [Memory alignment to use]) ;;
       esac
     fi
   ], [
-    AC_DEFINE(BUFFER_ALIGNMENT_MALLOC, 1, [Buffer alignment by malloc default]) 
+    AC_DEFINE(MEMORY_ALIGNMENT_MALLOC, 1, [Memory alignment by malloc default]) 
   ]
 )
 
@@ -798,7 +798,7 @@ sed \
     -e 's/.* HAVE_WIN32$/#define HAVE_WIN32 1/' \
     -e 's/.* HAVE_WINSOCK2_H$/#define HAVE_WINSOCK2_H 1/' \
     -e 's/.* HOST_CPU$/#define HOST_CPU "i686"/' \
-    -e 's/.* BUFFER_ALIGNMENT_MALLOC/#define BUFFER_ALIGNMENT_MALLOC 1/' \
+    -e 's/.* MEMORY_ALIGNMENT_MALLOC/#define MEMORY_ALIGNMENT_MALLOC 1/' \
     -e 's/.* LIBDIR$/#ifdef _DEBUG\n#  define LIBDIR PREFIX "\\\\debug\\\\lib"\n#else\n#  define LIBDIR PREFIX "\\\\lib"\n#endif/' \
     -e 's/.* LOCALEDIR$/#define LOCALEDIR PREFIX "\\\\share\\\\locale"/' \
     -e 's/.* PACKAGE$/#define PACKAGE "gstreamer"/' \

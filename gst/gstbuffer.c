@@ -211,35 +211,11 @@ _memory_add (GstBuffer * buffer, GstMemory * mem)
   GST_BUFFER_MEM_LEN (buffer) = len + 1;
 }
 
-#if 0
-/* buffer alignment in bytes - 1
- * an alignment of 7 would be the same as malloc() guarantees
- */
-#ifdef HAVE_POSIX_MEMALIGN
-#if defined(BUFFER_ALIGNMENT_MALLOC)
-static size_t _gst_buffer_data_alignment = 7;
-#elif defined(BUFFER_ALIGNMENT_PAGESIZE)
-static size_t _gst_buffer_data_alignment = 0;
-#elif defined(BUFFER_ALIGNMENT)
-static size_t _gst_buffer_data_alignment = BUFFER_ALIGNMENT - 1;
-#else
-#error "No buffer alignment configured"
-#endif
-#endif /* HAVE_POSIX_MEMALIGN */
-#endif
-
 void
 _gst_buffer_initialize (void)
 {
   if (G_LIKELY (_gst_buffer_type == 0)) {
     _gst_buffer_type = gst_mini_object_register ("GstBuffer");
-#if 0
-#ifdef HAVE_GETPAGESIZE
-#ifdef BUFFER_ALIGNMENT_PAGESIZE
-    _gst_buffer_data_alignment = getpagesize () - 1;
-#endif
-#endif
-#endif
   }
 }
 

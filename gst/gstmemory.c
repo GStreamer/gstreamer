@@ -63,6 +63,21 @@
 #include "gstmemory.h"
 
 
+/* buffer alignment in bytes - 1
+ * an alignment of 7 would be the same as malloc() guarantees
+ */
+#ifdef HAVE_POSIX_MEMALIGN
+#if defined(MEMORY_ALIGNMENT_MALLOC)
+static size_t _gst_memory_alignment = 7;
+#elif defined(MEMORY_ALIGNMENT_PAGESIZE)
+static size_t _gst_memory_alignment = 0;
+#elif defined(MEMORY_ALIGNMENT)
+static size_t _gst_memory_alignment = MEMORY_ALIGNMENT - 1;
+#else
+#error "No memory alignment configured"
+#endif
+#endif /* HAVE_POSIX_MEMALIGN */
+
 struct _GstMemoryAllocator
 {
   GQuark name;
@@ -131,6 +146,8 @@ _default_mem_new_block (gsize maxsize, gsize align, gsize offset, gsize size)
   gsize aoffset, slice_size;
   guint8 *data;
 
+  /* ensure configured alignment */
+  align |= _gst_memory_alignment;
   /* allocate more to compensate for alignment */
   maxsize += align;
   /* alloc header and data in one block */
@@ -299,6 +316,12 @@ _gst_memory_init (void)
   };
 
   allocators = g_hash_table_new (g_str_hash, g_str_equal);
+
+#ifdef HAVE_GETPAGESIZE
+#ifdef MEMORY_ALIGNMENT_PAGESIZE
+  _gst_memory_alignment = getpagesize () - 1;
+#endif
+#endif
 
   _default_mem_impl =
       gst_memory_allocator_register ("GstMemoryDefault", &_mem_info);
