@@ -49,6 +49,9 @@ G_BEGIN_DECLS
 
 //#define gst_buffer_create_sub(b,o,s)           gst_buffer_copy_region(b,GST_BUFFER_COPY_ALL,o,s)
 
+#define gst_buffer_new_and_alloc(s)            gst_buffer_new_allocate(NULL, s, 0)
+
+
 #ifndef GST_DISABLE_DEPRECATED
 
 #endif /* not GST_DISABLE_DEPRECATED */

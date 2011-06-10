@@ -1259,7 +1259,7 @@ gst_base_src_default_create (GstBaseSrc * src, guint64 offset,
   if (G_UNLIKELY (!bclass->fill))
     goto no_function;
 
-  buf = gst_buffer_new_and_alloc (size);
+  buf = gst_buffer_new_allocate (NULL, size, 0);
   if (G_UNLIKELY (buf == NULL))
     goto alloc_failed;
 

@@ -1789,7 +1789,7 @@ gst_value_deserialize_buffer (GValue * dest, const gchar * s)
   if (len & 1)
     goto wrong_length;
 
-  buffer = gst_buffer_new_and_alloc (len / 2);
+  buffer = gst_buffer_new_allocate (NULL, len / 2, 0);
   data = gst_buffer_map (buffer, &size, NULL, GST_MAP_WRITE);
 
   for (i = 0; i < len / 2; i++) {

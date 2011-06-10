@@ -460,7 +460,7 @@ gst_fake_src_alloc_parent (GstFakeSrc * src)
 {
   GstBuffer *buf;
 
-  buf = gst_buffer_new_and_alloc (src->parentsize);
+  buf = gst_buffer_new_allocate (NULL, src->parentsize, 0);
 
   src->parent = buf;
   src->parentoffset = 0;

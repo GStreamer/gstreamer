@@ -461,7 +461,8 @@ gst_dp_buffer_from_header (guint header_length, const guint8 * header)
       GST_DP_PAYLOAD_BUFFER, NULL);
 
   buffer =
-      gst_buffer_new_and_alloc ((guint) GST_DP_HEADER_PAYLOAD_LENGTH (header));
+      gst_buffer_new_allocate (NULL,
+      (guint) GST_DP_HEADER_PAYLOAD_LENGTH (header), 0);
 
   GST_BUFFER_TIMESTAMP (buffer) = GST_DP_HEADER_TIMESTAMP (header);
   GST_BUFFER_DURATION (buffer) = GST_DP_HEADER_DURATION (header);

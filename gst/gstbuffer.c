@@ -211,7 +211,7 @@ _memory_add (GstBuffer * buffer, GstMemory * mem)
   GST_BUFFER_MEM_LEN (buffer) = len + 1;
 }
 
-#if 1
+#if 0
 /* buffer alignment in bytes - 1
  * an alignment of 7 would be the same as malloc() guarantees
  */
@@ -233,9 +233,11 @@ _gst_buffer_initialize (void)
 {
   if (G_LIKELY (_gst_buffer_type == 0)) {
     _gst_buffer_type = gst_mini_object_register ("GstBuffer");
+#if 0
 #ifdef HAVE_GETPAGESIZE
 #ifdef BUFFER_ALIGNMENT_PAGESIZE
     _gst_buffer_data_alignment = getpagesize () - 1;
+#endif
 #endif
 #endif
   }
@@ -421,6 +423,7 @@ _gst_buffer_free (GstBuffer * buffer)
   for (i = 0; i < len; i++)
     gst_memory_unref (GST_BUFFER_MEM_PTR (buffer, i));
 
+  /* we set msize to 0 when the buffer is part of the memory block */
   if (msize)
     g_slice_free1 (msize, buffer);
 }
@@ -470,12 +473,18 @@ gst_buffer_new (void)
 }
 
 /**
- * gst_buffer_new_and_alloc:
+ * gst_buffer_new_allocate:
+ * @allocator: the #GstMemoryAllocator to use
  * @size: the size in bytes of the new buffer's data.
+ * @align: the alignment of the buffer memory
  *
- * Tries to create a newly allocated buffer with data of the given size. If
- * the requested amount of memory can't be allocated, NULL will be returned.
- * The allocated buffer memory is not cleared.
+ * Tries to create a newly allocated buffer with data of the given size and
+ * alignment from @allocator. If the requested amount of memory can't be
+ * allocated, NULL will be returned. The allocated buffer memory is not cleared.
+ *
+ * When @allocator is NULL, the default memory allocator will be used.
+ *
+ * Allocator buffer memory will be aligned to multiples of (@align + 1) bytes.
  *
  * Note that when @size == 0, the buffer will not have memory associated with it.
  *
@@ -485,7 +494,8 @@ gst_buffer_new (void)
  *     be allocated.
  */
 GstBuffer *
-gst_buffer_new_and_alloc (guint size)
+gst_buffer_new_allocate (GstMemoryAllocator * allocator, gsize size,
+    gsize align)
 {
   GstBuffer *newbuf;
   GstMemory *mem;
@@ -496,7 +506,7 @@ gst_buffer_new_and_alloc (guint size)
 
 #if 1
   if (size > 0) {
-    mem = gst_memory_allocator_alloc (NULL, size, _gst_buffer_data_alignment);
+    mem = gst_memory_allocator_alloc (allocator, size, align);
     if (G_UNLIKELY (mem == NULL))
       goto no_memory;
   } else {

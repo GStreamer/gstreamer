@@ -1406,7 +1406,7 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
       ret = gst_buffer_pool_acquire_buffer (priv->srcpool, out_buf, NULL);
     } else {
       GST_DEBUG_OBJECT (trans, "doing alloc of size %u", outsize);
-      *out_buf = gst_buffer_new_and_alloc (outsize);
+      *out_buf = gst_buffer_new_allocate (NULL, outsize, 0);
     }
   }
 
