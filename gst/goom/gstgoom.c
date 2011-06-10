@@ -285,7 +285,7 @@ gst_goom_src_negotiate (GstGoom * goom)
     size = goom->outsize;
     min = max = 0;
     prefix = 0;
-    alignment = 1;
+    alignment = 0;
   }
 
   if (pool == NULL) {
