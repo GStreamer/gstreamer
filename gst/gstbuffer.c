@@ -144,6 +144,7 @@ struct _GstMetaItem
 #define GST_BUFFER_MEM_LEN(b)      (((GstBufferImpl *)(b))->len)
 #define GST_BUFFER_MEM_ARRAY(b)    (((GstBufferImpl *)(b))->mem)
 #define GST_BUFFER_MEM_PTR(b,i)    (((GstBufferImpl *)(b))->mem[i])
+#define GST_BUFFER_BUFMEM(b)       (((GstBufferImpl *)(b))->bufmem)
 #define GST_BUFFER_META(b)         (((GstBufferImpl *)(b))->item)
 
 typedef struct
@@ -153,6 +154,9 @@ typedef struct
   /* the memory blocks */
   guint len;
   GstMemory *mem[GST_BUFFER_MEM_MAX];
+
+  /* memory of the buffer when allocated from 1 chunk */
+  GstMemory *bufmem;
 
   /* FIXME, make metadata allocation more efficient by using part of the
    * GstBufferImpl */
@@ -402,6 +406,8 @@ _gst_buffer_free (GstBuffer * buffer)
   /* we set msize to 0 when the buffer is part of the memory block */
   if (msize)
     g_slice_free1 (msize, buffer);
+  else
+    gst_memory_unref (GST_BUFFER_BUFMEM (buffer));
 }
 
 static void
@@ -495,8 +501,6 @@ gst_buffer_new_allocate (GstMemoryAllocator * allocator, gsize size,
     _memory_add (newbuf, mem);
 
   GST_CAT_LOG (GST_CAT_BUFFER, "new %p of size %d", newbuf, size);
-
-  return newbuf;
 #endif
 
 #if 0
@@ -513,14 +517,15 @@ gst_buffer_new_allocate (GstMemoryAllocator * allocator, gsize size,
         size, 0, size);
     _memory_add (newbuf, mem);
   }
-
-  return newbuf;
 #endif
 
 #if 0
-  /* allocate memory and buffer */
+  /* allocate memory and buffer, it might be interesting to do this but there
+   * are many complications. We need to keep the memory mapped to access the
+   * buffer fields and the memory for the buffer might be just very slow. We
+   * also need to do some more magic to get the alignment right. */
   asize = sizeof (GstBufferImpl) + size;
-  mem = gst_memory_new_alloc (asize, 0);
+  mem = gst_memory_allocator_alloc (allocator, asize, align);
   if (G_UNLIKELY (mem == NULL))
     goto no_memory;
 
@@ -534,9 +539,10 @@ gst_buffer_new_allocate (GstMemoryAllocator * allocator, gsize size,
   gst_memory_resize (mem, sizeof (GstBufferImpl), size);
 
   newbuf = GST_BUFFER_CAST (data);
+  GST_BUFFER_BUFMEM (newbuf) = mem;
 
   if (size > 0)
-    _memory_add (newbuf, mem);
+    _memory_add (newbuf, gst_memory_ref (mem));
 #endif
 
   return newbuf;
