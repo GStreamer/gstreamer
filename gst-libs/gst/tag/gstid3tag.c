@@ -225,7 +225,7 @@ static const GstTagEntryMatch tag_matches[] = {
  *
  * Returns: The corresponding GStreamer tag or NULL if none exists.
  */
-G_CONST_RETURN gchar *
+const gchar *
 gst_tag_from_id3_tag (const gchar * id3_tag)
 {
   int i = 0;
@@ -285,7 +285,7 @@ static const GstTagEntryMatch user_tag_matches[] = {
  *
  * Returns: The corresponding GStreamer tag or NULL if none exists.
  */
-G_CONST_RETURN gchar *
+const gchar *
 gst_tag_from_id3_user_tag (const gchar * type, const gchar * id3_user_tag)
 {
   int i = 0;
@@ -317,7 +317,7 @@ gst_tag_from_id3_user_tag (const gchar * type, const gchar * id3_user_tag)
  *
  * Returns: The corresponding ID3v2 tag or NULL if none exists.
  */
-G_CONST_RETURN gchar *
+const gchar *
 gst_tag_to_id3_tag (const gchar * gst_tag)
 {
   int i = 0;
@@ -423,7 +423,7 @@ gst_tag_id3_genre_count (void)
  *
  * Returns: the genre or NULL if no genre is associated with that ID.
  */
-G_CONST_RETURN gchar *
+const gchar *
 gst_tag_id3_genre_get (const guint id)
 {
   if (id >= G_N_ELEMENTS (genres))

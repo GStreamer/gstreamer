@@ -115,7 +115,8 @@ xmp_serialization_data_use_schema (XmpSerializationData * serdata,
 
 typedef enum
 {
-  GstXmpTagTypeSimple = 0,
+  GstXmpTagTypeNone = 0,
+  GstXmpTagTypeSimple,
   GstXmpTagTypeBag,
   GstXmpTagTypeSeq,
   GstXmpTagTypeStruct,
@@ -135,6 +136,13 @@ struct _XmpTag
   const gchar *gst_tag;
   const gchar *tag_name;
   GstXmpTagType type;
+
+  /* some tags must be inside a Bag even
+   * if they are a single entry. Set it here so we know */
+  GstXmpTagType supertype;
+
+  /* For tags that need a rdf:parseType attribute */
+  const gchar *parse_type;
 
   /* Used for struct and compound types */
   GSList *children;
@@ -157,9 +165,9 @@ xmp_tag_get_merge_mode (XmpTag * xmptag)
 }
 
 static const gchar *
-xmp_tag_get_type_name (XmpTag * xmptag)
+xmp_tag_type_get_name (GstXmpTagType tagtype)
 {
-  switch (xmptag->type) {
+  switch (tagtype) {
     case GstXmpTagTypeSeq:
       return "rdf:Seq";
     case GstXmpTagTypeBag:
@@ -251,6 +259,8 @@ gst_xmp_tag_create (const gchar * gst_tag, const gchar * xmp_tag,
   xmpinfo->gst_tag = gst_tag;
   xmpinfo->tag_name = xmp_tag;
   xmpinfo->type = xmp_type;
+  xmpinfo->supertype = GstXmpTagTypeNone;
+  xmpinfo->parse_type = NULL;
   xmpinfo->serialize = serialization_func;
   xmpinfo->deserialize = deserialization_func;
   xmpinfo->children = NULL;
@@ -1012,6 +1022,8 @@ _init_xmp_tag_map (gpointer user_data)
   schema = gst_xmp_schema_new ();
   xmpinfo = gst_xmp_tag_create (NULL, "Iptc4xmpExt:LocationShown",
       GstXmpTagTypeStruct, NULL, NULL);
+  xmpinfo->supertype = GstXmpTagTypeBag;
+  xmpinfo->parse_type = "Resource";
   xmpinfo->children = g_slist_prepend (xmpinfo->children,
       gst_xmp_tag_create (GST_TAG_GEO_LOCATION_SUBLOCATION,
           "LocationDetails:Sublocation", GstXmpTagTypeSimple, NULL, NULL));
@@ -1041,17 +1053,26 @@ struct _GstXmpNamespaceMatch
 {
   const gchar *ns_prefix;
   const gchar *ns_uri;
+
+  /*
+   * Stores extra namespaces for array tags
+   * The namespaces should be writen in the form:
+   *
+   * xmlns:XpTo="http://some.org/your/ns/name/ (next ones)"
+   */
+  const gchar *extra_ns;
 };
 
 static const GstXmpNamespaceMatch ns_match[] = {
-  {"dc", "http://purl.org/dc/elements/1.1/"},
-  {"exif", "http://ns.adobe.com/exif/1.0/"},
-  {"tiff", "http://ns.adobe.com/tiff/1.0/"},
-  {"xap", "http://ns.adobe.com/xap/1.0/"},
-  {"photoshop", "http://ns.adobe.com/photoshop/1.0/"},
-  {"Iptc4xmpCore", "http://iptc.org/std/Iptc4xmpCore/1.0/xmlns/"},
-  {"Iptc4xmpExt", "http://iptc.org/std/Iptc4xmpExt/2008-02-29/"},
-  {NULL, NULL}
+  {"dc", "http://purl.org/dc/elements/1.1/", NULL},
+  {"exif", "http://ns.adobe.com/exif/1.0/", NULL},
+  {"tiff", "http://ns.adobe.com/tiff/1.0/", NULL},
+  {"xap", "http://ns.adobe.com/xap/1.0/", NULL},
+  {"photoshop", "http://ns.adobe.com/photoshop/1.0/", NULL},
+  {"Iptc4xmpCore", "http://iptc.org/std/Iptc4xmpCore/1.0/xmlns/", NULL},
+  {"Iptc4xmpExt", "http://iptc.org/std/Iptc4xmpExt/2008-02-29/",
+      "xmlns:LocationDetails=\"http://iptc.org/std/Iptc4xmpExt/2008-02-29/LocationDetails/\""},
+  {NULL, NULL, NULL}
 };
 
 typedef struct _GstXmpNamespaceMap GstXmpNamespaceMap;
@@ -1667,10 +1688,29 @@ write_one_tag (const GstTagList * list, XmpTag * xmp_tag, gpointer user_data)
     if (use_it) {
       if (xmp_tag->tag_name)
         string_open_tag (data, xmp_tag->tag_name);
+
+      if (xmp_tag->supertype) {
+        string_open_tag (data, xmp_tag_type_get_name (xmp_tag->supertype));
+        if (xmp_tag->parse_type) {
+          g_string_append (data, "<rdf:li rdf:parseType=\"");
+          g_string_append (data, xmp_tag->parse_type);
+          g_string_append_c (data, '"');
+          g_string_append_c (data, '>');
+        } else {
+          string_open_tag (data, "rdf:li");
+        }
+      }
+
       /* now write it */
       for (iter = xmp_tag->children; iter; iter = g_slist_next (iter)) {
         write_one_tag (list, iter->data, user_data);
       }
+
+      if (xmp_tag->supertype) {
+        string_close_tag (data, "rdf:li");
+        string_close_tag (data, xmp_tag_type_get_name (xmp_tag->supertype));
+      }
+
       if (xmp_tag->tag_name)
         string_close_tag (data, xmp_tag->tag_name);
     }
@@ -1703,7 +1743,7 @@ write_one_tag (const GstTagList * list, XmpTag * xmp_tag, gpointer user_data)
   } else {
     const gchar *typename;
 
-    typename = xmp_tag_get_type_name (xmp_tag);
+    typename = xmp_tag_type_get_name (xmp_tag->type);
 
     string_open_tag (data, typename);
     for (i = 0; i < ct; i++) {
@@ -1773,9 +1813,13 @@ gst_tag_list_to_xmp_buffer_full (const GstTagList * list, gboolean read_only,
   i = 0;
   while (ns_match[i].ns_prefix) {
     if (xmp_serialization_data_use_schema (&serialization_data,
-            ns_match[i].ns_prefix))
+            ns_match[i].ns_prefix)) {
       g_string_append_printf (data, " xmlns:%s=\"%s\"",
           ns_match[i].ns_prefix, ns_match[i].ns_uri);
+      if (ns_match[i].extra_ns) {
+        g_string_append_printf (data, " %s", ns_match[i].extra_ns);
+      }
+    }
     i++;
   }
   g_string_append (data, ">\n");

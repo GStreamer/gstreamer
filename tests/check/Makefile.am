@@ -409,7 +409,6 @@ elements_textoverlay_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 
 elements_volume_LDADD = \
 	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_MAJORMINOR@.la \
-	$(GST_PLUGINS_BASE_LIBS) \
 	$(GST_CONTROLLER_LIBS) \
 	$(GST_BASE_LIBS) \
 	$(LDADD)

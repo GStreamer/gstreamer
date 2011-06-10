@@ -109,7 +109,7 @@ static const GstTagEntryMatch tag_matches[] = {
  *
  * Returns: The corresponding GStreamer tag or NULL if none exists.
  */
-G_CONST_RETURN gchar *
+const gchar *
 gst_tag_from_vorbis_tag (const gchar * vorbis_tag)
 {
   int i = 0;
@@ -138,7 +138,7 @@ gst_tag_from_vorbis_tag (const gchar * vorbis_tag)
  *
  * Returns: The corresponding vorbiscomment tag or NULL if none exists.
  */
-G_CONST_RETURN gchar *
+const gchar *
 gst_tag_to_vorbis_tag (const gchar * gst_tag)
 {
   int i = 0;
