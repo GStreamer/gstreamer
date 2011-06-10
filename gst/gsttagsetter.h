@@ -88,7 +88,7 @@ void		gst_tag_setter_add_tag_value	    (GstTagSetter *	setter,
 						     const gchar *	tag,
 						     const GValue *     value);
 
-G_CONST_RETURN GstTagList *
+const GstTagList *
 		gst_tag_setter_get_tag_list	     (GstTagSetter *	setter);
 
 void		gst_tag_setter_set_tag_merge_mode    (GstTagSetter *	setter,

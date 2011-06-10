@@ -83,10 +83,10 @@ GstElementFactory *     gst_element_factory_find                (const gchar *na
 
 GType                   gst_element_factory_get_element_type    (GstElementFactory *factory);
 
-G_CONST_RETURN gchar *  gst_element_factory_get_metadata        (GstElementFactory *factory, const gchar *key);
+const gchar *           gst_element_factory_get_metadata        (GstElementFactory *factory, const gchar *key);
 
 guint                   gst_element_factory_get_num_pad_templates (GstElementFactory *factory);
-G_CONST_RETURN GList *  gst_element_factory_get_static_pad_templates (GstElementFactory *factory);
+const GList *           gst_element_factory_get_static_pad_templates (GstElementFactory *factory);
 
 gint                    gst_element_factory_get_uri_type        (GstElementFactory *factory);
 gchar **                gst_element_factory_get_uri_protocols   (GstElementFactory *factory);

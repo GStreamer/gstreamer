@@ -104,7 +104,7 @@ GstFormat	gst_format_get_by_nick		(const gchar *nick);
 gboolean	gst_formats_contains		(const GstFormat *formats, GstFormat format);
 
 /* query for format details */
-G_CONST_RETURN GstFormatDefinition*
+const GstFormatDefinition*
 		gst_format_get_details		(GstFormat format);
 GstIterator* 	gst_format_iterate_definitions 	(void);
 

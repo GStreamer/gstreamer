@@ -165,7 +165,7 @@ typedef enum {
   GST_FLOW_CUSTOM_ERROR_2 = -102
 } GstFlowReturn;
 
-G_CONST_RETURN gchar*	gst_flow_get_name	(GstFlowReturn ret);
+const gchar*	        gst_flow_get_name	(GstFlowReturn ret);
 GQuark			gst_flow_to_quark	(GstFlowReturn ret);
 
 /**
@@ -912,10 +912,8 @@ GstIterator *           gst_pad_iterate_internal_links_default  (GstPad * pad);
 
 /* generic query function */
 void			gst_pad_set_query_type_function		(GstPad *pad, GstPadQueryTypeFunction type_func);
-G_CONST_RETURN GstQueryType*
-			gst_pad_get_query_types			(GstPad *pad);
-G_CONST_RETURN GstQueryType*
-			gst_pad_get_query_types_default		(GstPad *pad);
+const GstQueryType*	gst_pad_get_query_types			(GstPad *pad);
+const GstQueryType*	gst_pad_get_query_types_default		(GstPad *pad);
 
 gboolean		gst_pad_query				(GstPad *pad, GstQuery *query);
 gboolean		gst_pad_peer_query			(GstPad *pad, GstQuery *query);

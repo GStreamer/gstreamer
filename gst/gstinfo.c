@@ -1788,7 +1788,7 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
 {
 }
 
-G_CONST_RETURN gchar *
+const gchar *
 gst_debug_level_get_name (GstDebugLevel level)
 {
   return "NONE";
@@ -1876,7 +1876,7 @@ gst_debug_category_get_threshold (GstDebugCategory * category)
   return GST_LEVEL_NONE;
 }
 
-G_CONST_RETURN gchar *
+const gchar *
 gst_debug_category_get_name (GstDebugCategory * category)
 {
   return "";
@@ -1888,7 +1888,7 @@ gst_debug_category_get_color (GstDebugCategory * category)
   return 0;
 }
 
-G_CONST_RETURN gchar *
+const gchar *
 gst_debug_category_get_description (GstDebugCategory * category)
 {
   return "";

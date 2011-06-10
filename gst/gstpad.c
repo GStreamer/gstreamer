@@ -183,7 +183,7 @@ static GstFlowQuarks flow_quarks[] = {
  *
  * Returns: a static string with the name of the flow return.
  */
-G_CONST_RETURN gchar *
+const gchar *
 gst_flow_get_name (GstFlowReturn ret)
 {
   gint i;

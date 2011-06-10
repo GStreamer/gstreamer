@@ -470,8 +470,7 @@ void		gst_value_list_merge		(GValue		*dest,
 						 const GValue   *value1,
 						 const GValue	*value2);
 guint		gst_value_list_get_size		(const GValue	*value);
-G_CONST_RETURN GValue *
-		gst_value_list_get_value	(const GValue	*value,
+const GValue *	gst_value_list_get_value	(const GValue	*value,
 						 guint		index);
 
 /* array */
@@ -480,8 +479,7 @@ void		gst_value_array_append_value	(GValue		*value,
 void		gst_value_array_prepend_value	(GValue		*value,
 						 const GValue	*prepend_value);
 guint		gst_value_array_get_size	(const GValue	*value);
-G_CONST_RETURN GValue *
-		gst_value_array_get_value	(const GValue	*value,
+const GValue *	gst_value_array_get_value	(const GValue	*value,
 						 guint		index);
 
 /* fourcc */
@@ -511,13 +509,12 @@ gdouble		gst_value_get_double_range_min	(const GValue	*value);
 gdouble		gst_value_get_double_range_max	(const GValue	*value);
 
 /* caps */
-G_CONST_RETURN GstCaps *
-		gst_value_get_caps		(const GValue	*value);
+const GstCaps *	gst_value_get_caps		(const GValue	*value);
 void		gst_value_set_caps		(GValue		*value,
 						 const GstCaps  *caps);
 
 /* structure */
-G_CONST_RETURN GstStructure *
+const GstStructure *
 		gst_value_get_structure		(const GValue	*value);
 void		gst_value_set_structure		(GValue		*value,
 						 const GstStructure  *structure);
@@ -548,8 +545,7 @@ const GValue 	*gst_value_get_fraction_range_min (const GValue	*value);
 const GValue 	*gst_value_get_fraction_range_max (const GValue	*value);
 
 /* date */
-G_CONST_RETURN GDate *
-		gst_value_get_date		(const GValue	*value);
+const GDate *	gst_value_get_date		(const GValue	*value);
 void		gst_value_set_date		(GValue		*value,
 						 const GDate    *date);
 

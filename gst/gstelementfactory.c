@@ -504,7 +504,7 @@ gst_element_factory_get_element_type (GstElementFactory * factory)
   return factory->type;
 }
 
-G_CONST_RETURN gchar *
+const gchar *
 gst_element_factory_get_metadata (GstElementFactory * factory,
     const gchar * key)
 {
@@ -557,7 +557,7 @@ __gst_element_factory_add_interface (GstElementFactory * elementfactory,
  * Returns: (transfer none) (element-type Gst.StaticPadTemplate): the
  *     static pad templates
  */
-G_CONST_RETURN GList *
+const GList *
 gst_element_factory_get_static_pad_templates (GstElementFactory * factory)
 {
   g_return_val_if_fail (GST_IS_ELEMENT_FACTORY (factory), NULL);

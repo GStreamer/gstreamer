@@ -170,7 +170,7 @@ gboolean        gst_query_types_contains       (const GstQueryType *types,
 
 /* query for query details */
 
-G_CONST_RETURN GstQueryTypeDefinition*
+const GstQueryTypeDefinition*
                 gst_query_type_get_details         (GstQueryType type);
 GstIterator*    gst_query_type_iterate_definitions (void);
 
