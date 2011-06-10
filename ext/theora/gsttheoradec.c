@@ -809,7 +809,7 @@ theora_negotiate_pool (GstTheoraDec * dec, GstCaps * caps)
     size = gst_video_format_get_size (dec->format, dec->width, dec->height);
     min = max = 0;
     prefix = 0;
-    alignment = 1;
+    alignment = 0;
   }
 
   if (pool == NULL) {

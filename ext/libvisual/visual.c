@@ -446,7 +446,7 @@ gst_vis_src_negotiate (GstVisual * visual)
     size = visual->outsize;
     min = max = 0;
     prefix = 0;
-    alignment = 1;
+    alignment = 0;
   }
 
   if (pool == NULL) {
