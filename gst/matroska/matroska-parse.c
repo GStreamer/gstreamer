@@ -2527,8 +2527,10 @@ gst_matroska_parse_output (GstMatroskaParse * parse, GstBuffer * buffer,
     s = gst_caps_get_structure (caps, 0);
     g_value_init (&streamheader, GST_TYPE_ARRAY);
     g_value_init (&bufval, GST_TYPE_BUFFER);
-    GST_BUFFER_FLAG_SET (parse->streamheader, GST_BUFFER_FLAG_IN_CAPS);
-    gst_value_set_buffer (&bufval, parse->streamheader);
+    buf = gst_buffer_copy (parse->streamheader);
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_IN_CAPS);
+    gst_value_set_buffer (&bufval, buf);
+    gst_buffer_unref (buf);
     gst_value_array_append_value (&streamheader, &bufval);
     g_value_unset (&bufval);
     gst_structure_set_value (s, "streamheader", &streamheader);
@@ -2536,7 +2538,7 @@ gst_matroska_parse_output (GstMatroskaParse * parse, GstBuffer * buffer,
     //gst_caps_replace (parse->caps, caps);
     gst_pad_set_caps (parse->srcpad, caps);
 
-    buf = gst_buffer_make_metadata_writable (parse->streamheader);
+    buf = gst_buffer_copy (parse->streamheader);
     gst_buffer_set_caps (buf, caps);
     gst_caps_unref (caps);
 
