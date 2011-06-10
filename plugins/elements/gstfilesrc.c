@@ -146,8 +146,8 @@ static gboolean gst_file_src_stop (GstBaseSrc * basesrc);
 
 static gboolean gst_file_src_is_seekable (GstBaseSrc * src);
 static gboolean gst_file_src_get_size (GstBaseSrc * src, guint64 * size);
-static GstFlowReturn gst_file_src_create (GstBaseSrc * src, guint64 offset,
-    guint length, GstBuffer ** buffer);
+static GstFlowReturn gst_file_src_fill (GstBaseSrc * src, guint64 offset,
+    guint length, GstBuffer * buf);
 static gboolean gst_file_src_query (GstBaseSrc * src, GstQuery * query);
 
 static void gst_file_src_uri_handler_init (gpointer g_iface,
@@ -197,7 +197,7 @@ gst_file_src_class_init (GstFileSrcClass * klass)
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_file_src_stop);
   gstbasesrc_class->is_seekable = GST_DEBUG_FUNCPTR (gst_file_src_is_seekable);
   gstbasesrc_class->get_size = GST_DEBUG_FUNCPTR (gst_file_src_get_size);
-  gstbasesrc_class->create = GST_DEBUG_FUNCPTR (gst_file_src_create);
+  gstbasesrc_class->fill = GST_DEBUG_FUNCPTR (gst_file_src_fill);
   gstbasesrc_class->query = GST_DEBUG_FUNCPTR (gst_file_src_query);
 
   if (sizeof (off_t) < 8) {
@@ -325,13 +325,14 @@ gst_file_src_get_property (GObject * object, guint prop_id, GValue * value,
  *
  */
 static GstFlowReturn
-gst_file_src_create_read (GstFileSrc * src, guint64 offset, guint length,
-    GstBuffer ** buffer)
+gst_file_src_fill (GstBaseSrc * basesrc, guint64 offset, guint length,
+    GstBuffer * buf)
 {
+  GstFileSrc *src;
   int ret;
-  GstBuffer *buf;
   guint8 *data;
-  gsize size;
+
+  src = GST_FILE_SRC_CAST (basesrc);
 
   if (G_UNLIKELY (src->read_position != offset)) {
     off_t res;
@@ -343,39 +344,31 @@ gst_file_src_create_read (GstFileSrc * src, guint64 offset, guint length,
     src->read_position = offset;
   }
 
-  buf = gst_buffer_new_and_alloc (length);
-  if (G_UNLIKELY (buf == NULL && length > 0))
-    goto alloc_failed;
+  data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
 
-  /* No need to read anything if length is 0 */
-  if (length > 0) {
-    data = gst_buffer_map (buf, &size, NULL, GST_MAP_WRITE);
+  GST_LOG_OBJECT (src, "Reading %d bytes at offset 0x%" G_GINT64_MODIFIER "x",
+      length, offset);
 
-    GST_LOG_OBJECT (src, "Reading %d bytes at offset 0x%" G_GINT64_MODIFIER "x",
-        length, offset);
-    ret = read (src->fd, data, length);
-    if (G_UNLIKELY (ret < 0))
-      goto could_not_read;
+  ret = read (src->fd, data, length);
+  if (G_UNLIKELY (ret < 0))
+    goto could_not_read;
 
-    /* seekable regular files should have given us what we expected */
-    if (G_UNLIKELY ((guint) ret < length && src->seekable))
-      goto unexpected_eos;
+  /* seekable regular files should have given us what we expected */
+  if (G_UNLIKELY ((guint) ret < length && src->seekable))
+    goto unexpected_eos;
 
-    /* other files should eos if they read 0 and more was requested */
-    if (G_UNLIKELY (ret == 0 && length > 0))
-      goto eos;
+  /* other files should eos if they read 0 and more was requested */
+  if (G_UNLIKELY (ret == 0))
+    goto eos;
 
-    length = ret;
+  length = ret;
 
-    gst_buffer_unmap (buf, data, length);
+  gst_buffer_unmap (buf, data, length);
 
-    GST_BUFFER_OFFSET (buf) = offset;
-    GST_BUFFER_OFFSET_END (buf) = offset + length;
+  GST_BUFFER_OFFSET (buf) = offset;
+  GST_BUFFER_OFFSET_END (buf) = offset + length;
 
-    src->read_position += length;
-  }
-
-  *buffer = buf;
+  src->read_position += length;
 
   return GST_FLOW_OK;
 
@@ -385,16 +378,10 @@ seek_failed:
     GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL), GST_ERROR_SYSTEM);
     return GST_FLOW_ERROR;
   }
-alloc_failed:
-  {
-    GST_ERROR_OBJECT (src, "Failed to allocate %u bytes", length);
-    return GST_FLOW_ERROR;
-  }
 could_not_read:
   {
     GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL), GST_ERROR_SYSTEM);
     gst_buffer_unmap (buf, data, 0);
-    gst_buffer_unref (buf);
     return GST_FLOW_ERROR;
   }
 unexpected_eos:
@@ -402,30 +389,14 @@ unexpected_eos:
     GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
         ("unexpected end of file."));
     gst_buffer_unmap (buf, data, 0);
-    gst_buffer_unref (buf);
     return GST_FLOW_ERROR;
   }
 eos:
   {
     GST_DEBUG ("non-regular file hits EOS");
     gst_buffer_unmap (buf, data, 0);
-    gst_buffer_unref (buf);
     return GST_FLOW_UNEXPECTED;
   }
-}
-
-static GstFlowReturn
-gst_file_src_create (GstBaseSrc * basesrc, guint64 offset, guint length,
-    GstBuffer ** buffer)
-{
-  GstFileSrc *src;
-  GstFlowReturn ret;
-
-  src = GST_FILE_SRC_CAST (basesrc);
-
-  ret = gst_file_src_create_read (src, offset, length, buffer);
-
-  return ret;
 }
 
 static gboolean

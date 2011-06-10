@@ -296,6 +296,8 @@ static gboolean gst_base_src_default_do_seek (GstBaseSrc * src,
 static gboolean gst_base_src_default_query (GstBaseSrc * src, GstQuery * query);
 static gboolean gst_base_src_default_prepare_seek_segment (GstBaseSrc * src,
     GstEvent * event, GstSegment * segment);
+static GstFlowReturn gst_base_src_default_create (GstBaseSrc * basesrc,
+    guint64 offset, guint size, GstBuffer ** buf);
 
 static gboolean gst_base_src_set_flushing (GstBaseSrc * basesrc,
     gboolean flushing, gboolean live_play, gboolean unlock, gboolean * playing);
@@ -334,10 +336,9 @@ gst_base_src_class_init (GstBaseSrcClass * klass)
   gobject_class->set_property = gst_base_src_set_property;
   gobject_class->get_property = gst_base_src_get_property;
 
-/* FIXME 0.11: blocksize property should be int, not ulong (min is >max here) */
   g_object_class_install_property (gobject_class, PROP_BLOCKSIZE,
-      g_param_spec_ulong ("blocksize", "Block size",
-          "Size in bytes to read per buffer (-1 = default)", 0, G_MAXULONG,
+      g_param_spec_uint ("blocksize", "Block size",
+          "Size in bytes to read per buffer (-1 = default)", 0, G_MAXUINT,
           DEFAULT_BLOCKSIZE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_NUM_BUFFERS,
       g_param_spec_int ("num-buffers", "num-buffers",
@@ -365,6 +366,7 @@ gst_base_src_class_init (GstBaseSrcClass * klass)
   klass->query = GST_DEBUG_FUNCPTR (gst_base_src_default_query);
   klass->prepare_seek_segment =
       GST_DEBUG_FUNCPTR (gst_base_src_default_prepare_seek_segment);
+  klass->create = GST_DEBUG_FUNCPTR (gst_base_src_default_create);
 
   /* Registering debug symbols for function pointers */
   GST_DEBUG_REGISTER_FUNCPTR (gst_base_src_activate_push);
@@ -643,9 +645,8 @@ gst_base_src_query_latency (GstBaseSrc * src, gboolean * live,
  *
  * Since: 0.10.22
  */
-/* FIXME 0.11: blocksize property should be int, not ulong */
 void
-gst_base_src_set_blocksize (GstBaseSrc * src, gulong blocksize)
+gst_base_src_set_blocksize (GstBaseSrc * src, guint blocksize)
 {
   g_return_if_fail (GST_IS_BASE_SRC (src));
 
@@ -664,11 +665,10 @@ gst_base_src_set_blocksize (GstBaseSrc * src, gulong blocksize)
  *
  * Since: 0.10.22
  */
-/* FIXME 0.11: blocksize property should be int, not ulong */
-gulong
+guint
 gst_base_src_get_blocksize (GstBaseSrc * src)
 {
-  gulong res;
+  gint res;
 
   g_return_val_if_fail (GST_IS_BASE_SRC (src), 0);
 
@@ -1246,6 +1246,55 @@ gst_base_src_prepare_seek_segment (GstBaseSrc * src, GstEvent * event,
   return result;
 }
 
+static GstFlowReturn
+gst_base_src_default_create (GstBaseSrc * src, guint64 offset,
+    guint size, GstBuffer ** buffer)
+{
+  GstBaseSrcClass *bclass;
+  GstFlowReturn ret;
+  GstBuffer *buf;
+
+  bclass = GST_BASE_SRC_GET_CLASS (src);
+
+  if (G_UNLIKELY (!bclass->fill))
+    goto no_function;
+
+  buf = gst_buffer_new_and_alloc (size);
+  if (G_UNLIKELY (buf == NULL))
+    goto alloc_failed;
+
+  if (G_LIKELY (size > 0)) {
+    /* only call fill when there is a size */
+    ret = bclass->fill (src, offset, size, buf);
+
+    if (G_UNLIKELY (ret != GST_FLOW_OK))
+      goto not_ok;
+  }
+
+  *buffer = buf;
+
+  return GST_FLOW_OK;
+
+  /* ERRORS */
+no_function:
+  {
+    GST_DEBUG_OBJECT (src, "no fill function");
+    return GST_FLOW_NOT_SUPPORTED;
+  }
+alloc_failed:
+  {
+    GST_ERROR_OBJECT (src, "Failed to allocate %u bytes", size);
+    return GST_FLOW_ERROR;
+  }
+not_ok:
+  {
+    GST_DEBUG_OBJECT (src, "fill returned %d (%s)", ret,
+        gst_flow_get_name (ret));
+    gst_buffer_unref (buf);
+    return ret;
+  }
+}
+
 /* this code implements the seeking. It is a good example
  * handling all cases.
  *
@@ -1770,7 +1819,7 @@ gst_base_src_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_BLOCKSIZE:
-      gst_base_src_set_blocksize (src, g_value_get_ulong (value));
+      gst_base_src_set_blocksize (src, g_value_get_uint (value));
       break;
     case PROP_NUM_BUFFERS:
       src->num_buffers = g_value_get_int (value);
@@ -1797,7 +1846,7 @@ gst_base_src_get_property (GObject * object, guint prop_id, GValue * value,
 
   switch (prop_id) {
     case PROP_BLOCKSIZE:
-      g_value_set_ulong (value, gst_base_src_get_blocksize (src));
+      g_value_set_uint (value, gst_base_src_get_blocksize (src));
       break;
     case PROP_NUM_BUFFERS:
       g_value_set_int (value, src->num_buffers);
@@ -2211,7 +2260,7 @@ not_started:
 no_function:
   {
     GST_DEBUG_OBJECT (src, "no create function");
-    return GST_FLOW_ERROR;
+    return GST_FLOW_NOT_SUPPORTED;
   }
 unexpected_length:
   {
@@ -2290,7 +2339,7 @@ gst_base_src_loop (GstPad * pad)
   GstFlowReturn ret;
   gint64 position;
   gboolean eos;
-  gulong blocksize;
+  guint blocksize;
   GList *pending_events = NULL, *tmp;
   gboolean reconfigure;
 
@@ -2333,7 +2382,7 @@ gst_base_src_loop (GstPad * pad)
   } else
     position = -1;
 
-  GST_LOG_OBJECT (src, "next_ts %" GST_TIME_FORMAT " size %lu",
+  GST_LOG_OBJECT (src, "next_ts %" GST_TIME_FORMAT " size %u",
       GST_TIME_ARGS (position), blocksize);
 
   ret = gst_base_src_get_range (src, position, blocksize, &buf);

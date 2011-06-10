@@ -81,7 +81,7 @@ struct _GstBaseSrc {
   gboolean       live_running;
 
   /* MT-protected (with LOCK) */
-  gint           blocksize;     /* size of buffers when operating push based */
+  guint          blocksize;     /* size of buffers when operating push based */
   gboolean       can_activate_push;     /* some scheduling properties */
   GstActivateMode pad_mode;
   gboolean       seekable; /* not used anymore */
@@ -117,6 +117,8 @@ struct _GstBaseSrc {
  * @get_caps: Called to get the caps to report
  * @set_caps: Notify subclass of changed output caps
  * @negotiate: Negotiated the caps with the peer.
+ * @fixate: Called during negotiation if caps need fixating. Implement instead of
+ *   setting a fixate function on the source pad.
  * @start: Start processing. Subclasses should open resources and prepare
  *    to produce data.
  * @stop: Stop processing. Subclasses should use this to close resources.
@@ -125,6 +127,13 @@ struct _GstBaseSrc {
  *    these times.
  * @get_size: Return the total size of the resource, in the configured format.
  * @is_seekable: Check if the source can seek
+ * @prepare_seek_segment: Prepare the GstSegment that will be passed to the
+ *   do_seek vmethod for executing a seek request. Sub-classes should override
+ *   this if they support seeking in formats other than the configured native
+ *   format. By default, it tries to convert the seek arguments to the
+ *   configured native format and prepare a segment in that format.
+ *   Since: 0.10.13
+ * @do_seek: Perform seeking on the resource to the indicated segment.
  * @unlock: Unlock any pending access to the resource. Subclasses should
  *    unblock any blocked function ASAP. In particular, any create() function in
  *    progress should be unblocked and should return GST_FLOW_WRONG_STATE. Any
@@ -132,23 +141,17 @@ struct _GstBaseSrc {
  *    until the @unlock_stop<!-- -->() function has been called.
  * @unlock_stop: Clear the previous unlock request. Subclasses should clear
  *    any state they set during unlock(), such as clearing command queues.
+ * @query: Handle a requested query.
  * @event: Override this to implement custom event handling.
  * @create: Ask the subclass to create a buffer with offset and size.
  *   When the subclass returns GST_FLOW_OK, it MUST return a buffer of the
  *   requested size unless fewer bytes are available because an EOS condition
  *   is near. No buffer should be returned when the return value is different
  *   from GST_FLOW_OK. A return value of GST_FLOW_UNEXPECTED signifies that the
- *   end of stream is reached.
- * @do_seek: Perform seeking on the resource to the indicated segment.
- * @prepare_seek_segment: Prepare the GstSegment that will be passed to the
- *   do_seek vmethod for executing a seek request. Sub-classes should override
- *   this if they support seeking in formats other than the configured native
- *   format. By default, it tries to convert the seek arguments to the
- *   configured native format and prepare a segment in that format.
- *   Since: 0.10.13
- * @query: Handle a requested query.
- * @fixate: Called during negotiation if caps need fixating. Implement instead of
- *   setting a fixate function on the source pad.
+ *   end of stream is reached. The default implementation will create a new
+ *   buffer from the negotiated allocator and will call @fill.
+ * @fill: Ask the subclass to fill the buffer with data for offset and size. The
+ *   passed buffer is guaranteed to hold the requested amount of bytes.
  *
  * Subclasses can override any of the available virtual methods or not, as
  * needed. At the minimum, the @create method should be overridden to produce
@@ -204,9 +207,13 @@ struct _GstBaseSrcClass {
   /* notify subclasses of an event */
   gboolean      (*event)        (GstBaseSrc *src, GstEvent *event);
 
-  /* ask the subclass to create a buffer with offset and size */
+  /* ask the subclass to create a buffer with offset and size, the default
+   * implementation will use the negotiated allocator and call fill. */
   GstFlowReturn (*create)       (GstBaseSrc *src, guint64 offset, guint size,
                                  GstBuffer **buf);
+  /* ask the subclass to fill the buffer with data from offset and size */
+  GstFlowReturn (*fill)         (GstBaseSrc *src, guint64 offset, guint size,
+                                 GstBuffer *buf);
 
   /*< private >*/
   gpointer       _gst_reserved[GST_PADDING_LARGE];
@@ -227,8 +234,8 @@ gboolean        gst_base_src_query_latency    (GstBaseSrc *src, gboolean * live,
                                                GstClockTime * min_latency,
                                                GstClockTime * max_latency);
 
-void            gst_base_src_set_blocksize    (GstBaseSrc *src, gulong blocksize);
-gulong          gst_base_src_get_blocksize    (GstBaseSrc *src);
+void            gst_base_src_set_blocksize    (GstBaseSrc *src, guint blocksize);
+guint           gst_base_src_get_blocksize    (GstBaseSrc *src);
 
 void            gst_base_src_set_do_timestamp (GstBaseSrc *src, gboolean timestamp);
 gboolean        gst_base_src_get_do_timestamp (GstBaseSrc *src);
