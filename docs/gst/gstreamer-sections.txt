@@ -281,6 +281,7 @@ GST_BUFFER_POOL
 GST_IS_BUFFER_POOL
 GST_TYPE_BUFFER_POOL
 gst_buffer_pool_get_type
+GST_TYPE_BUFFER_POOL_FLAGS
 gst_buffer_pool_flags_get_type
 GST_IS_BUFFER_POOL_CLASS
 GST_BUFFER_POOL_GET_CLASS
@@ -333,6 +334,10 @@ GST_STATIC_CAPS_ANY
 GST_STATIC_CAPS_NONE
 GST_CAPS_IS_SIMPLE
 GST_STATIC_CAPS
+GST_CAPS_FLAGS
+GST_CAPS_FLAG_IS_SET
+GST_CAPS_FLAG_SET
+GST_CAPS_FLAG_UNSET
 
 gst_caps_new_empty
 gst_caps_new_any
@@ -823,6 +828,7 @@ GST_EVENT_TIMESTAMP
 GST_EVENT_IS_UPSTREAM
 GST_EVENT_IS_DOWNSTREAM
 GST_EVENT_IS_SERIALIZED
+GST_EVENT_IS_STICKY
 
 gst_event_type_get_flags
 gst_event_type_get_name
@@ -832,6 +838,9 @@ gst_event_ref
 gst_event_unref
 gst_event_replace
 gst_event_copy
+gst_event_steal
+gst_event_take
+
 gst_event_is_writable
 gst_event_make_writable
 gst_event_writable_structure
@@ -845,6 +854,7 @@ gst_event_set_seqnum
 
 gst_event_new_flush_start
 gst_event_new_flush_stop
+gst_event_parse_flush_stop
 
 gst_event_new_eos
 
@@ -1316,6 +1326,7 @@ GstMessageType
 GST_MESSAGE_SRC
 GST_MESSAGE_SRC_NAME
 GST_MESSAGE_TIMESTAMP
+GST_MESSAGE_SEQNUM
 GST_MESSAGE_TYPE
 GST_MESSAGE_TYPE_NAME
 GST_MESSAGE_TRACE_NAME
@@ -1369,8 +1380,8 @@ gst_message_new_duration
 gst_message_parse_duration
 gst_message_new_latency
 gst_message_new_async_start
-gst_message_parse_async_start
 gst_message_new_async_done
+gst_message_parse_async_done
 gst_message_new_step_start
 gst_message_parse_step_start
 gst_message_new_qos
@@ -1457,6 +1468,8 @@ gst_mini_object_weak_ref
 gst_mini_object_weak_unref
 
 gst_mini_object_replace
+gst_mini_object_steal
+gst_mini_object_take
 
 <SUBSECTION Standard>
 GST_MINI_OBJECT
@@ -1535,6 +1548,9 @@ GstFlowReturn
 GstActivateMode
 GstProbeReturn
 GstProbeType
+GST_PROBE_TYPE_BLOCKING
+GST_PROBE_TYPE_DATA
+GST_PROBE_TYPE_SCHEDULING
 
 <SUBSECTION Application>
 gst_pad_get_name
@@ -1656,7 +1672,6 @@ gst_pad_set_element_private
 gst_pad_get_element_private
 
 GstPadForwardFunction
-gst_pad_event_forward
 gst_pad_forward
 <SUBSECTION Core>
 gst_pad_chain
@@ -1714,6 +1729,9 @@ GST_PAD_PEER
 GST_PAD_IS_LINKED
 GST_PAD_IS_SRC
 GST_PAD_IS_SINK
+GST_PAD_IS_FIXED_CAPS
+GST_PAD_NEEDS_EVENTS
+GST_PAD_NEEDS_RECONFIGURE
 
 GST_PAD_IS_IN_GETCAPS
 GST_PAD_MODE_ACTIVATE
@@ -2196,6 +2214,7 @@ GstRegistryPrivate
 <FILE>gstsegment</FILE>
 <TITLE>GstSegment</TITLE>
 GstSegment
+GstSegmentFlags
 gst_segment_clip
 gst_segment_init
 gst_segment_new
@@ -2209,7 +2228,9 @@ gst_segment_set_running_time
 gst_segment_copy_into
 <SUBSECTION Standard>
 GST_TYPE_SEGMENT
+GST_TYPE_SEGMENT_FLAGS
 gst_segment_get_type
+gst_segment_flags_get_type
 <SUBSECTION Private>
 </SECTION>
 
@@ -2283,6 +2304,7 @@ gst_structure_fixate_field_boolean
 gst_structure_fixate_field_string
 <SUBSECTION Standard>
 GST_STRUCTURE
+GST_STRUCTURE_CAST
 GST_IS_STRUCTURE
 GST_TYPE_STRUCTURE
 <SUBSECTION Private>

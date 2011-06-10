@@ -227,6 +227,7 @@ gst_base_parse_set_passthrough
 gst_base_parse_set_syncable
 gst_base_parse_set_has_timing_info
 gst_base_parse_set_frame_rate
+gst_base_parse_set_latency
 gst_base_parse_convert_default
 gst_base_parse_add_index_entry
 
@@ -278,6 +279,7 @@ gst_base_src_set_blocksize
 gst_base_src_get_do_timestamp
 gst_base_src_set_do_timestamp
 gst_base_src_new_seamless_segment
+gst_base_src_set_dynamic_size
 
 GST_BASE_SRC_PAD
 <SUBSECTION Standard>
@@ -327,6 +329,15 @@ gst_base_sink_get_throttle_time
 gst_base_sink_set_throttle_time
 
 GST_BASE_SINK_PAD
+GST_BASE_SINK_GET_PREROLL_COND
+GST_BASE_SINK_GET_PREROLL_LOCK
+GST_BASE_SINK_PREROLL_BROADCAST
+GST_BASE_SINK_PREROLL_LOCK
+GST_BASE_SINK_PREROLL_SIGNAL
+GST_BASE_SINK_PREROLL_TIMED_WAIT
+GST_BASE_SINK_PREROLL_TRYLOCK
+GST_BASE_SINK_PREROLL_UNLOCK
+GST_BASE_SINK_PREROLL_WAIT
 
 <SUBSECTION Standard>
 GST_BASE_SINK
@@ -749,6 +760,7 @@ gst_push_src_get_type
 gst_type_find_helper
 gst_type_find_helper_for_buffer
 gst_type_find_helper_for_extension
+gst_type_find_helper_for_data
 GstTypeFindHelperGetRangeFunction
 gst_type_find_helper_get_range
 gst_type_find_helper_get_range_ext
@@ -862,12 +874,14 @@ fail_unless_equals_int
 fail_unless_equals_float
 fail_unless_equals_string
 fail_unless_equals_uint64
+fail_unless_equals_int64
 fail_unless_message_error
 
 assert_equals_int
 assert_equals_float
 assert_equals_string
 assert_equals_uint64
+assert_equals_int64
 assert_message_error
 
 gst_check_init
@@ -882,6 +896,7 @@ gst_check_teardown_element
 gst_check_teardown_sink_pad
 gst_check_teardown_src_pad
 gst_check_drop_buffers
+gst_check_buffer_data
 gst_check_caps_equal
 gst_check_element_push_buffer_list
 gst_check_element_push_buffer
