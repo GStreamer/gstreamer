@@ -1240,6 +1240,30 @@ gst_pad_is_blocking (GstPad * pad)
 }
 
 /**
+ * gst_pad_check_reconfigure:
+ * @pad: the #GstPad to check
+ *
+ * Check and clear the #GST_PAD_NEED_RECONFIGURE flag on @pad and return %TRUE
+ * if the flag was set.
+ *
+ * Returns: %TRUE is the GST_PAD_NEED_RECONFIGURE flag was set on @pad.
+ */
+gboolean
+gst_pad_check_reconfigure (GstPad * pad)
+{
+  gboolean reconfigure;
+
+  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
+
+  GST_OBJECT_LOCK (pad);
+  reconfigure = GST_PAD_NEEDS_RECONFIGURE (pad);
+  GST_OBJECT_FLAG_UNSET (pad, GST_PAD_NEED_RECONFIGURE);
+  GST_OBJECT_UNLOCK (pad);
+
+  return reconfigure;
+}
+
+/**
  * gst_pad_set_activate_function:
  * @pad: a #GstPad.
  * @activate: the #GstPadActivateFunction to set.
