@@ -2341,19 +2341,13 @@ gst_base_src_loop (GstPad * pad)
   gboolean eos;
   guint blocksize;
   GList *pending_events = NULL, *tmp;
-  gboolean reconfigure;
 
   eos = FALSE;
 
   src = GST_BASE_SRC (GST_OBJECT_PARENT (pad));
 
-  GST_OBJECT_LOCK (pad);
-  reconfigure = GST_PAD_NEEDS_RECONFIGURE (pad);
-  GST_OBJECT_FLAG_UNSET (pad, GST_PAD_NEED_RECONFIGURE);
-  GST_OBJECT_UNLOCK (pad);
-
   /* check if we need to renegotiate */
-  if (reconfigure) {
+  if (gst_pad_check_reconfigure (pad)) {
     if (!gst_base_src_negotiate (src))
       GST_DEBUG_OBJECT (src, "Failed to renegotiate");
   }
