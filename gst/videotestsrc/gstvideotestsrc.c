@@ -694,7 +694,7 @@ gst_video_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
     size = gst_video_test_src_get_size (videotestsrc, width, height);
     min = max = 0;
     prefix = 0;
-    alignment = 1;
+    alignment = 0;
     pool = NULL;
   }
 
