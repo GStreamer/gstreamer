@@ -1400,12 +1400,10 @@ static GstFlowReturn
 gst_ogg_demux_submit_buffer (GstOggDemux * ogg, GstBuffer * buffer)
 {
   gsize size;
-  guint8 *data;
   gchar *oggbuffer;
   GstFlowReturn ret = GST_FLOW_OK;
 
-  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
-
+  size = gst_buffer_get_size (buffer);
   GST_DEBUG_OBJECT (ogg, "submitting %" G_GSIZE_FORMAT " bytes", size);
   if (G_UNLIKELY (size == 0))
     goto done;
@@ -1414,12 +1412,12 @@ gst_ogg_demux_submit_buffer (GstOggDemux * ogg, GstBuffer * buffer)
   if (G_UNLIKELY (oggbuffer == NULL))
     goto no_buffer;
 
-  memcpy (oggbuffer, data, size);
+  gst_buffer_extract (buffer, 0, oggbuffer, size);
+
   if (G_UNLIKELY (ogg_sync_wrote (&ogg->sync, size) < 0))
     goto write_failed;
 
 done:
-  gst_buffer_unmap (buffer, data, size);
   gst_buffer_unref (buffer);
 
   return ret;
