@@ -64,6 +64,7 @@ EXPORTS
 	gst_base_src_query_latency
 	gst_base_src_set_blocksize
 	gst_base_src_set_do_timestamp
+	gst_base_src_set_dynamic_size
 	gst_base_src_set_format
 	gst_base_src_set_live
 	gst_base_src_wait_playing
