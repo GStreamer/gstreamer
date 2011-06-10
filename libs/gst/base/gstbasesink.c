@@ -2066,8 +2066,8 @@ gst_base_sink_wait_clock (GstBaseSink * sink, GstClockTime time,
   /* FIXME: Casting to GstClockEntry only works because the types
    * are the same */
   if (G_LIKELY (sink->priv->cached_clock_id != NULL
-          && GST_CLOCK_ENTRY_CLOCK ((GstClockEntry *) sink->
-              priv->cached_clock_id) == clock)) {
+          && GST_CLOCK_ENTRY_CLOCK ((GstClockEntry *) sink->priv->
+              cached_clock_id) == clock)) {
     if (!gst_clock_single_shot_id_reinit (clock, sink->priv->cached_clock_id,
             time)) {
       gst_clock_id_unref (sink->priv->cached_clock_id);
@@ -3260,7 +3260,6 @@ gst_base_sink_flush_start (GstBaseSink * basesink, GstPad * pad)
    * prerolled buffer */
   basesink->playing_async = TRUE;
   if (basesink->priv->async_enabled) {
-    basesink->priv->reset_time = TRUE;
     gst_element_lost_state (GST_ELEMENT_CAST (basesink));
   } else {
     basesink->priv->have_latency = TRUE;
@@ -3270,7 +3269,8 @@ gst_base_sink_flush_start (GstBaseSink * basesink, GstPad * pad)
 }
 
 static void
-gst_base_sink_flush_stop (GstBaseSink * basesink, GstPad * pad)
+gst_base_sink_flush_stop (GstBaseSink * basesink, GstPad * pad,
+    gboolean reset_time)
 {
   /* unset flushing so we can accept new data, this also flushes out any EOS
    * event. */
@@ -3287,9 +3287,12 @@ gst_base_sink_flush_stop (GstBaseSink * basesink, GstPad * pad)
   if (basesink->pad_mode == GST_ACTIVATE_PUSH) {
     /* we need new segment info after the flush. */
     basesink->have_newsegment = FALSE;
-    gst_segment_init (&basesink->segment, GST_FORMAT_UNDEFINED);
-    gst_segment_init (&basesink->clip_segment, GST_FORMAT_UNDEFINED);
+    if (reset_time) {
+      gst_segment_init (&basesink->segment, GST_FORMAT_UNDEFINED);
+      gst_segment_init (&basesink->clip_segment, GST_FORMAT_UNDEFINED);
+    }
   }
+  basesink->priv->reset_time = reset_time;
   GST_OBJECT_UNLOCK (basesink);
 }
 
@@ -3393,15 +3396,21 @@ gst_base_sink_event (GstPad * pad, GstEvent * event)
       gst_event_unref (event);
       break;
     case GST_EVENT_FLUSH_STOP:
+    {
+      gboolean reset_time;
+
       if (bclass->event)
         bclass->event (basesink, event);
 
-      GST_DEBUG_OBJECT (basesink, "flush-stop %p", event);
+      gst_event_parse_flush_stop (event, &reset_time);
+      GST_DEBUG_OBJECT (basesink, "flush-stop %p, reset_time: %d", event,
+          reset_time);
 
-      gst_base_sink_flush_stop (basesink, pad);
+      gst_base_sink_flush_stop (basesink, pad, reset_time);
 
       gst_event_unref (event);
       break;
+    }
     default:
       /* other events are sent to queue or subclass depending on if they
        * are serialized. */
@@ -3824,8 +3833,8 @@ gst_base_sink_perform_seek (GstBaseSink * sink, GstPad * pad, GstEvent * event)
 
   if (flush) {
     GST_DEBUG_OBJECT (sink, "stop flushing upstream");
-    gst_pad_push_event (pad, gst_event_new_flush_stop ());
-    gst_base_sink_flush_stop (sink, pad);
+    gst_pad_push_event (pad, gst_event_new_flush_stop (TRUE));
+    gst_base_sink_flush_stop (sink, pad, TRUE);
   } else if (res && sink->running) {
     /* we are running the current segment and doing a non-flushing seek,
      * close the segment first based on the position. */

@@ -481,6 +481,7 @@ gst_event_new_flush_start (void)
 
 /**
  * gst_event_new_flush_stop:
+ * @reset_time: if time should be reset
  *
  * Allocate a new flush stop event. The flush stop event can be sent
  * upstream and downstream and travels serialized with the dataflow.
@@ -496,9 +497,39 @@ gst_event_new_flush_start (void)
  * Returns: (transfer full): a new flush stop event.
  */
 GstEvent *
-gst_event_new_flush_stop (void)
+gst_event_new_flush_stop (gboolean reset_time)
 {
-  return gst_event_new (GST_EVENT_FLUSH_STOP);
+  GstEvent *event;
+
+  GST_CAT_INFO (GST_CAT_EVENT, "creating flush stop %d", reset_time);
+
+  event = gst_event_new_custom (GST_EVENT_FLUSH_STOP,
+      gst_structure_id_new (GST_QUARK (EVENT_FLUSH_STOP),
+          GST_QUARK (RESET_TIME), G_TYPE_BOOLEAN, reset_time, NULL));
+
+  return event;
+}
+
+/**
+ * gst_event_parse_flush_stop:
+ * @event: The event to parse
+ * @reset_time: (out): if time should be reset
+ *
+ * Parse the FLUSH_STOP event and retrieve the @reset_time member.
+ */
+void
+gst_event_parse_flush_stop (GstEvent * event, gboolean * reset_time)
+{
+  GstStructure *structure;
+
+  g_return_if_fail (GST_IS_EVENT (event));
+  g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_FLUSH_STOP);
+
+  structure = GST_EVENT_STRUCTURE (event);
+  if (G_LIKELY (reset_time))
+    *reset_time =
+        g_value_get_boolean (gst_structure_id_get_value (structure,
+            GST_QUARK (RESET_TIME)));
 }
 
 /**

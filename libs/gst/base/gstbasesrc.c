@@ -1416,7 +1416,7 @@ gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
 
   /* and prepare to continue streaming */
   if (flush) {
-    tevent = gst_event_new_flush_stop ();
+    tevent = gst_event_new_flush_stop (TRUE);
     gst_event_set_seqnum (tevent, seqnum);
     /* send flush stop, peer will accept data and events again. We
      * are not yet providing data as we still have the STREAM_LOCK. */

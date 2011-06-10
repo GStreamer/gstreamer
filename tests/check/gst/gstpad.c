@@ -828,7 +828,7 @@ GST_START_TEST (test_block_async_full_destroy)
   /* block_async_full_cb sets state to 1 and then flushes to unblock temporarily
    */
   fail_unless (state == 1);
-  gst_pad_push_event (pad, gst_event_new_flush_stop ());
+  gst_pad_push_event (pad, gst_event_new_flush_stop (TRUE));
 
   /* unblock callback is called */
   gst_pad_remove_probe (pad, id);
@@ -856,7 +856,7 @@ GST_START_TEST (test_block_async_full_destroy_dispose)
   /* block_async_full_cb sets state to 1 and then flushes to unblock temporarily
    */
   fail_unless_equals_int (state, 1);
-  gst_pad_push_event (pad, gst_event_new_flush_stop ());
+  gst_pad_push_event (pad, gst_event_new_flush_stop (TRUE));
 
   /* gst_BLOCK calls the destroy_notify function if necessary */
   gst_object_unref (pad);

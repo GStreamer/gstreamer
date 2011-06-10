@@ -3669,8 +3669,8 @@ gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
     /* prepare for streaming again */
     if (flush) {
       GST_DEBUG_OBJECT (parse, "sending flush stop");
-      gst_pad_push_event (parse->srcpad, gst_event_new_flush_stop ());
-      gst_pad_push_event (parse->sinkpad, gst_event_new_flush_stop ());
+      gst_pad_push_event (parse->srcpad, gst_event_new_flush_stop (TRUE));
+      gst_pad_push_event (parse->sinkpad, gst_event_new_flush_stop (TRUE));
       gst_base_parse_clear_queues (parse);
     } else {
       /* keep track of our position */

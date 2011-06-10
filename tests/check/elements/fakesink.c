@@ -469,7 +469,7 @@ GST_START_TEST (test_eos)
     fail_unless (eret == TRUE);
 
     GST_DEBUG ("sending FLUSH_STOP");
-    event = gst_event_new_flush_stop ();
+    event = gst_event_new_flush_stop (TRUE);
     eret = gst_pad_send_event (sinkpad, event);
     fail_unless (eret == TRUE);
   }
@@ -714,7 +714,7 @@ GST_START_TEST (test_position)
   /* stop flushing, timing is affected now */
   {
     GST_DEBUG ("sending flush_stop");
-    event = gst_event_new_flush_stop ();
+    event = gst_event_new_flush_stop (TRUE);
 
     eret = gst_pad_send_event (sinkpad, event);
     fail_if (eret == FALSE);
@@ -802,7 +802,7 @@ GST_START_TEST (test_position)
 
   {
     GST_DEBUG ("sending flush_stop");
-    event = gst_event_new_flush_stop ();
+    event = gst_event_new_flush_stop (TRUE);
 
     eret = gst_pad_send_event (sinkpad, event);
     fail_if (eret == FALSE);

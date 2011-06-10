@@ -39,12 +39,17 @@ GST_START_TEST (create_events)
   }
   /* FLUSH_STOP */
   {
-    event = gst_event_new_flush_stop ();
+    gboolean reset_time;
+
+    event = gst_event_new_flush_stop (TRUE);
     fail_if (event == NULL);
     fail_unless (GST_EVENT_TYPE (event) == GST_EVENT_FLUSH_STOP);
     fail_unless (GST_EVENT_IS_UPSTREAM (event));
     fail_unless (GST_EVENT_IS_DOWNSTREAM (event));
     fail_unless (GST_EVENT_IS_SERIALIZED (event));
+
+    gst_event_parse_flush_stop (event, &reset_time);
+    fail_unless (reset_time == TRUE);
     gst_event_unref (event);
   }
   /* EOS */

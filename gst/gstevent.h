@@ -428,7 +428,9 @@ void            gst_event_set_seqnum            (GstEvent *event, guint32 seqnum
 
 /* flush events */
 GstEvent *      gst_event_new_flush_start       (void);
-GstEvent *      gst_event_new_flush_stop        (void);
+
+GstEvent *      gst_event_new_flush_stop        (gboolean reset_time);
+void            gst_event_parse_flush_stop      (GstEvent *event, gboolean *reset_time);
 
 /* EOS event */
 GstEvent *      gst_event_new_eos               (void);
