@@ -33,6 +33,8 @@ typedef struct _GstMemory GstMemory;
 typedef struct _GstMemoryInfo GstMemoryInfo;
 typedef struct _GstMemoryAllocator GstMemoryAllocator;
 
+extern gsize gst_memory_alignment;
+
 /**
  * GstMemoryFlags:
  * @GST_MEMORY_FLAG_READONLY: memory is readonly. It is not allowed to map the

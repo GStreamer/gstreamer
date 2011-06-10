@@ -68,13 +68,14 @@
  */
 #ifdef HAVE_POSIX_MEMALIGN
 #if defined(MEMORY_ALIGNMENT_MALLOC)
-static size_t _gst_memory_alignment = 7;
+size_t gst_memory_alignment = 7;
 #elif defined(MEMORY_ALIGNMENT_PAGESIZE)
-static size_t _gst_memory_alignment = 0;
+size_t gst_memory_alignment = 0;
 #elif defined(MEMORY_ALIGNMENT)
-static size_t _gst_memory_alignment = MEMORY_ALIGNMENT - 1;
+size_t gst_memory_alignment = MEMORY_ALIGNMENT - 1;
 #else
 #error "No memory alignment configured"
+size_t gst_memory_alignment = 0;
 #endif
 #endif /* HAVE_POSIX_MEMALIGN */
 
@@ -147,7 +148,7 @@ _default_mem_new_block (gsize maxsize, gsize align, gsize offset, gsize size)
   guint8 *data;
 
   /* ensure configured alignment */
-  align |= _gst_memory_alignment;
+  align |= gst_memory_alignment;
   /* allocate more to compensate for alignment */
   maxsize += align;
   /* alloc header and data in one block */
@@ -325,7 +326,7 @@ _gst_memory_init (void)
 
 #ifdef HAVE_GETPAGESIZE
 #ifdef MEMORY_ALIGNMENT_PAGESIZE
-  _gst_memory_alignment = getpagesize () - 1;
+  gst_memory_alignment = getpagesize () - 1;
 #endif
 #endif
 
