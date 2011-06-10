@@ -591,7 +591,7 @@ gst_ffmpegdemux_perform_seek (GstFFMpegDemux * demux, GstEvent * event)
     GST_OBJECT_LOCK (demux);
     demux->flushing = FALSE;
     GST_OBJECT_UNLOCK (demux);
-    gst_pad_push_event (demux->sinkpad, gst_event_new_flush_stop ());
+    gst_pad_push_event (demux->sinkpad, gst_event_new_flush_stop (TRUE));
   }
 
   /* do the seek, segment.position contains new position. */
@@ -603,7 +603,7 @@ gst_ffmpegdemux_perform_seek (GstFFMpegDemux * demux, GstEvent * event)
 
     /* send flush stop, peer will accept data and events again. We
      * are not yet providing data as we still have the STREAM_LOCK. */
-    gst_ffmpegdemux_push_event (demux, gst_event_new_flush_stop ());
+    gst_ffmpegdemux_push_event (demux, gst_event_new_flush_stop (TRUE));
     for (n = 0; n < MAX_STREAMS; ++n) {
       if (demux->streams[n])
         demux->streams[n]->last_flow = GST_FLOW_OK;
