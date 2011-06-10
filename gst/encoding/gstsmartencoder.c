@@ -199,7 +199,7 @@ gst_smart_encoder_reencode_gop (GstSmartEncoder * smart_encoder)
   gst_pad_push_event (smart_encoder->internal_srcpad,
       gst_event_new_flush_start ());
   gst_pad_push_event (smart_encoder->internal_srcpad,
-      gst_event_new_flush_stop ());
+      gst_event_new_flush_stop (TRUE));
 
   /* push newsegment */
   GST_INFO ("Pushing newsegment %" GST_PTR_FORMAT, smart_encoder->newsegment);

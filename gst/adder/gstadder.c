@@ -595,7 +595,7 @@ forward_event_func (const GValue * val, GValue * ret, EventData * data)
     /* quick hack to unflush the pads, ideally we need a way to just unflush
      * this single collect pad */
     if (data->flush)
-      gst_pad_send_event (pad, gst_event_new_flush_stop ());
+      gst_pad_send_event (pad, gst_event_new_flush_stop (TRUE));
   } else {
     g_value_set_boolean (ret, TRUE);
     GST_LOG_OBJECT (pad, "Sent event  %p (%s).",
@@ -746,7 +746,7 @@ gst_adder_src_event (GstPad * pad, GstEvent * event)
       if (g_atomic_int_compare_and_exchange (&adder->flush_stop_pending,
               TRUE, FALSE)) {
         GST_DEBUG_OBJECT (adder, "pending flush stop");
-        gst_pad_push_event (adder->srcpad, gst_event_new_flush_stop ());
+        gst_pad_push_event (adder->srcpad, gst_event_new_flush_stop (TRUE));
       }
       break;
     }
@@ -1090,7 +1090,7 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
   if (g_atomic_int_compare_and_exchange (&adder->flush_stop_pending,
           TRUE, FALSE)) {
     GST_DEBUG_OBJECT (adder, "pending flush stop");
-    gst_pad_push_event (adder->srcpad, gst_event_new_flush_stop ());
+    gst_pad_push_event (adder->srcpad, gst_event_new_flush_stop (TRUE));
   }
 
   /* get available bytes for reading, this can be 0 which could mean empty

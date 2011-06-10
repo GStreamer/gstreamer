@@ -2312,7 +2312,7 @@ gst_ogg_demux_perform_seek_pull (GstOggDemux * ogg, GstEvent * event)
   /* we need to stop flushing on the srcpad as we're going to use it
    * next. We can do this as we have the STREAM lock now. */
   if (flush) {
-    tevent = gst_event_new_flush_stop ();
+    tevent = gst_event_new_flush_stop (TRUE);
     gst_event_set_seqnum (tevent, seqnum);
     gst_pad_push_event (ogg->sinkpad, tevent);
   }
@@ -2353,7 +2353,7 @@ gst_ogg_demux_perform_seek_pull (GstOggDemux * ogg, GstEvent * event)
 
     /* we have to send the flush to the old chain, not the new one */
     if (flush) {
-      tevent = gst_event_new_flush_stop ();
+      tevent = gst_event_new_flush_stop (TRUE);
       gst_event_set_seqnum (tevent, seqnum);
       gst_ogg_demux_send_event (ogg, tevent);
     }
