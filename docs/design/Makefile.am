@@ -6,7 +6,6 @@ EXTRA_DIST = \
 	part-activation.txt \
 	part-block.txt \
 	part-buffering.txt \
-	part-bufferlist.txt \
 	part-caps.txt \
 	part-clocks.txt \
 	part-conventions.txt \
