@@ -400,6 +400,7 @@ EXPORTS
 	gst_event_new_tag
 	gst_event_parse_buffer_size
 	gst_event_parse_caps
+	gst_event_parse_flush_stop
 	gst_event_parse_latency
 	gst_event_parse_qos
 	gst_event_parse_seek
@@ -573,7 +574,7 @@ EXPORTS
 	gst_message_new_tag
 	gst_message_new_tag_full
 	gst_message_new_warning
-	gst_message_parse_async_start
+	gst_message_parse_async_done
 	gst_message_parse_buffering
 	gst_message_parse_buffering_stats
 	gst_message_parse_clock_lost
@@ -616,6 +617,8 @@ EXPORTS
 	gst_mini_object_ref
 	gst_mini_object_register
 	gst_mini_object_replace
+	gst_mini_object_steal
+	gst_mini_object_take
 	gst_mini_object_unref
 	gst_mini_object_weak_ref
 	gst_mini_object_weak_unref
@@ -644,7 +647,6 @@ EXPORTS
 	gst_pad_chain_list
 	gst_pad_direction_get_type
 	gst_pad_event_default
-	gst_pad_event_forward
 	gst_pad_fixate_caps
 	gst_pad_flags_get_type
 	gst_pad_forward
@@ -932,6 +934,7 @@ EXPORTS
 	gst_segment_copy
 	gst_segment_copy_into
 	gst_segment_do_seek
+	gst_segment_flags_get_type
 	gst_segment_free
 	gst_segment_get_type
 	gst_segment_init
