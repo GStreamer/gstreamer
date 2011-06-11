@@ -1194,7 +1194,7 @@ gst_ffmpegdec_bufferpool (GstFFMpegDec * ffmpegdec, GstCaps * caps)
   }
 
   config = gst_buffer_pool_get_config (pool);
-  gst_buffer_pool_config_set (config, caps, size, min, max, prefix, 0,
+  gst_buffer_pool_config_set (config, caps, size, min, max, prefix,
       alignment | 15);
   gst_buffer_pool_set_config (pool, config);
 
