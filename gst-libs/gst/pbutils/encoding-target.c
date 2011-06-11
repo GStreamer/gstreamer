@@ -642,10 +642,14 @@ parse_encoding_profile (GKeyFile * in, gchar * parentprofilename,
             *) sprof, variableframerate);
     gst_encoding_video_profile_set_pass ((GstEncodingVideoProfile *) sprof,
         pass);
+    gst_encoding_profile_set_name (sprof, pname);
+    gst_encoding_profile_set_description (sprof, description);
   } else if (!g_strcmp0 (proftype, "audio")) {
     sprof =
         (GstEncodingProfile *) gst_encoding_audio_profile_new (formatcaps,
         preset, restrictioncaps, presence);
+    gst_encoding_profile_set_name (sprof, pname);
+    gst_encoding_profile_set_description (sprof, description);
   } else
     GST_ERROR ("Unknown profile format '%s'", proftype);
 
