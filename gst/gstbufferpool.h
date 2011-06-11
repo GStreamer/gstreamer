@@ -143,10 +143,10 @@ GstStructure *        gst_buffer_pool_get_config      (GstBufferPool *pool);
 /* helpers for configuring the config structure */
 void                  gst_buffer_pool_config_set      (GstStructure *config, const GstCaps *caps,
                                                        guint size, guint min_buffers, guint max_buffers,
-                                                       guint prefix, guint postfix, guint align);
+                                                       guint prefix, guint align);
 gboolean              gst_buffer_pool_config_get      (GstStructure *config, const GstCaps **caps,
                                                        guint *size, guint *min_buffers, guint *max_buffers,
-                                                       guint *prefix, guint *postfix, guint *align);
+                                                       guint *prefix, guint *align);
 
 /* buffer management */
 GstFlowReturn         gst_buffer_pool_acquire_buffer  (GstBufferPool *pool, GstBuffer **buffer,

@@ -55,7 +55,6 @@ struct _GstBufferPoolPrivate
   guint min_buffers;
   guint max_buffers;
   guint prefix;
-  guint postfix;
   guint align;
 };
 
@@ -115,7 +114,7 @@ gst_buffer_pool_init (GstBufferPool * pool)
   pool->configured = FALSE;
   pool->started = FALSE;
   pool->config = gst_structure_id_empty_new (GST_QUARK (BUFFER_POOL_CONFIG));
-  gst_buffer_pool_config_set (pool->config, NULL, 0, 0, 0, 0, 0, 1);
+  gst_buffer_pool_config_set (pool->config, NULL, 0, 0, 0, 0, 1);
 
   GST_DEBUG_OBJECT (pool, "created");
 }
@@ -161,11 +160,14 @@ default_alloc_buffer (GstBufferPool * pool, GstBuffer ** buffer,
     GstBufferPoolParams * params)
 {
   GstBufferPoolPrivate *priv = pool->priv;
+  GstMemory *mem;
 
   *buffer = gst_buffer_new ();
 
-  gst_buffer_take_memory (*buffer, gst_memory_allocator_alloc (NULL, priv->size,
-          priv->align));
+  mem =
+      gst_memory_allocator_alloc (NULL, priv->size + priv->prefix, priv->align);
+  gst_memory_resize (mem, priv->prefix, priv->size);
+  gst_buffer_take_memory (*buffer, mem);
 
   return GST_FLOW_OK;
 }
@@ -363,11 +365,11 @@ default_set_config (GstBufferPool * pool, GstStructure * config)
   GstBufferPoolPrivate *priv = pool->priv;
   const GstCaps *caps;
   guint size, min_buffers, max_buffers;
-  guint prefix, postfix, align;
+  guint prefix, align;
 
   /* parse the config and keep around */
   if (!gst_buffer_pool_config_get (config, &caps, &size, &min_buffers,
-          &max_buffers, &prefix, &postfix, &align))
+          &max_buffers, &prefix, &align))
     goto wrong_config;
 
   GST_DEBUG_OBJECT (pool, "config %" GST_PTR_FORMAT, config);
@@ -376,7 +378,6 @@ default_set_config (GstBufferPool * pool, GstStructure * config)
   priv->min_buffers = min_buffers;
   priv->max_buffers = max_buffers;
   priv->prefix = prefix;
-  priv->postfix = postfix;
   priv->align = align;
 
   return TRUE;
@@ -485,19 +486,17 @@ gst_buffer_pool_get_config (GstBufferPool * pool)
  * gst_buffer_pool_config_set:
  * @config: a #GstBufferPool
  * @caps: caps for the buffers
- * @size: the size of each buffer, not including pre and post fix
+ * @size: the size of each buffer, not including prefix
  * @min_buffers: the minimum amount of buffers to allocate.
  * @max_buffers: the maximum amount of buffers to allocate or 0 for unlimited.
  * @prefix: prefix each buffer with this many bytes
- * @postfix: postfix each buffer with this many bytes
  * @align: alignment of the buffer data.
  *
  * Configure @config with the given parameters.
  */
 void
 gst_buffer_pool_config_set (GstStructure * config, const GstCaps * caps,
-    guint size, guint min_buffers, guint max_buffers, guint prefix,
-    guint postfix, guint align)
+    guint size, guint min_buffers, guint max_buffers, guint prefix, guint align)
 {
   g_return_if_fail (config != NULL);
 
@@ -507,7 +506,6 @@ gst_buffer_pool_config_set (GstStructure * config, const GstCaps * caps,
       GST_QUARK (MIN_BUFFERS), G_TYPE_UINT, min_buffers,
       GST_QUARK (MAX_BUFFERS), G_TYPE_UINT, max_buffers,
       GST_QUARK (PREFIX), G_TYPE_UINT, prefix,
-      GST_QUARK (POSTFIX), G_TYPE_UINT, postfix,
       GST_QUARK (ALIGN), G_TYPE_UINT, align, NULL);
 }
 
@@ -515,11 +513,10 @@ gst_buffer_pool_config_set (GstStructure * config, const GstCaps * caps,
  * gst_buffer_pool_config_get:
  * @config: a #GstBufferPool
  * @caps: the caps of buffers
- * @size: the size of each buffer, not including pre and post fix
+ * @size: the size of each buffer, not including prefix
  * @min_buffers: the minimum amount of buffers to allocate.
  * @max_buffers: the maximum amount of buffers to allocate or 0 for unlimited.
  * @prefix: prefix each buffer with this many bytes
- * @postfix: postfix each buffer with this many bytes
  * @align: alignment of the buffer data.
  *
  * Get the configuration values from @config.
@@ -527,7 +524,7 @@ gst_buffer_pool_config_set (GstStructure * config, const GstCaps * caps,
 gboolean
 gst_buffer_pool_config_get (GstStructure * config, const GstCaps ** caps,
     guint * size, guint * min_buffers, guint * max_buffers, guint * prefix,
-    guint * postfix, guint * align)
+    guint * align)
 {
   g_return_val_if_fail (config != NULL, FALSE);
 
@@ -537,7 +534,6 @@ gst_buffer_pool_config_get (GstStructure * config, const GstCaps ** caps,
       GST_QUARK (MIN_BUFFERS), G_TYPE_UINT, min_buffers,
       GST_QUARK (MAX_BUFFERS), G_TYPE_UINT, max_buffers,
       GST_QUARK (PREFIX), G_TYPE_UINT, prefix,
-      GST_QUARK (POSTFIX), G_TYPE_UINT, postfix,
       GST_QUARK (ALIGN), G_TYPE_UINT, align, NULL);
 }
 
