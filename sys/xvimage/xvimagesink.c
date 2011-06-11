@@ -1685,7 +1685,7 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   newpool = gst_xvimage_buffer_pool_new (xvimagesink);
 
   structure = gst_buffer_pool_get_config (newpool);
-  gst_buffer_pool_config_set (structure, caps, 0, 0, 0, 0, 0, 16);
+  gst_buffer_pool_config_set (structure, caps, 0, 0, 0, 0, 16);
   if (!gst_buffer_pool_set_config (newpool, structure))
     goto config_failed;
 
@@ -1996,7 +1996,7 @@ gst_xvimagesink_sink_query (GstPad * sinkpad, GstQuery * query)
         /* we had a pool, check caps */
         config = gst_buffer_pool_get_config (pool);
         gst_buffer_pool_config_get (config, &pcaps, &size, NULL, NULL, NULL,
-            NULL, NULL);
+            NULL);
 
         if (!gst_caps_is_equal (caps, pcaps)) {
           GST_DEBUG_OBJECT (xvimagesink, "pool has different caps");
@@ -2019,7 +2019,7 @@ gst_xvimagesink_sink_query (GstPad * sinkpad, GstQuery * query)
         size = gst_video_format_get_size (format, width, height);
 
         config = gst_buffer_pool_get_config (pool);
-        gst_buffer_pool_config_set (config, caps, size, 0, 0, 0, 0, 16);
+        gst_buffer_pool_config_set (config, caps, size, 0, 0, 0, 16);
         if (!gst_buffer_pool_set_config (pool, config))
           goto config_failed;
       }

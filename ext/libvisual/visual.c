@@ -456,7 +456,7 @@ gst_vis_src_negotiate (GstVisual * visual)
     pool = gst_buffer_pool_new ();
 
     config = gst_buffer_pool_get_config (pool);
-    gst_buffer_pool_config_set (config, target, size, min, max, prefix, 0,
+    gst_buffer_pool_config_set (config, target, size, min, max, prefix,
         alignment);
     gst_buffer_pool_set_config (pool, config);
   }

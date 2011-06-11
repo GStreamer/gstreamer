@@ -495,8 +495,7 @@ xvimage_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   gint width, height;
   const GstCaps *caps;
 
-  if (!gst_buffer_pool_config_get (config, &caps, NULL, NULL, NULL, NULL,
-          NULL, NULL))
+  if (!gst_buffer_pool_config_get (config, &caps, NULL, NULL, NULL, NULL, NULL))
     goto wrong_config;
 
   if (caps == NULL)
