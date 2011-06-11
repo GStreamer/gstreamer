@@ -1575,9 +1575,11 @@ gst_query_new_allocation (GstCaps * caps, gboolean need_pool)
   structure = gst_structure_id_new (GST_QUARK (QUERY_ALLOCATION),
       GST_QUARK (CAPS), GST_TYPE_CAPS, caps,
       GST_QUARK (NEED_POOL), G_TYPE_BOOLEAN, need_pool,
-      GST_QUARK (PREFIX), G_TYPE_UINT, 0,
-      GST_QUARK (ALIGN), G_TYPE_UINT, 1,
       GST_QUARK (SIZE), G_TYPE_UINT, 0,
+      GST_QUARK (MIN_BUFFERS), G_TYPE_UINT, 0,
+      GST_QUARK (MAX_BUFFERS), G_TYPE_UINT, 0,
+      GST_QUARK (PREFIX), G_TYPE_UINT, 0,
+      GST_QUARK (ALIGN), G_TYPE_UINT, 0,
       GST_QUARK (POOL), GST_TYPE_BUFFER_POOL, NULL, NULL);
 
   query = gst_query_new (GST_QUERY_ALLOCATION, structure);
