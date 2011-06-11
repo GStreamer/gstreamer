@@ -1604,9 +1604,11 @@ gst_query_parse_allocation (GstQuery * query, GstCaps ** caps,
 /**
  * gst_query_set_allocation_params
  * @query: A valid #GstQuery of type GST_QUERY_ALLOCATION.
- * @alignment: the alignment
- * @prefix: the prefix
  * @size: the size
+ * @min_buffers: the min buffers
+ * @max_buffers: the max buffers
+ * @prefix: the prefix
+ * @alignment: the alignment
  * @pool: the #GstBufferPool
  *
  * Set the allocation parameters in @query.
@@ -1620,6 +1622,8 @@ gst_query_set_allocation_params (GstQuery * query, guint size,
 
   g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_ALLOCATION);
   g_return_if_fail (gst_query_is_writable (query));
+  g_return_if_fail (((alignment + 1) & alignment) == 0);
+  g_return_if_fail (size != 0 || pool == NULL);
 
   structure = GST_QUERY_STRUCTURE (query);
   gst_structure_id_set (structure,
@@ -1634,9 +1638,11 @@ gst_query_set_allocation_params (GstQuery * query, guint size,
 /**
  * gst_query_parse_allocation_params
  * @query: A valid #GstQuery of type GST_QUERY_ALLOCATION.
- * @alignment: the alignment
- * @prefix: the prefix
  * @size: the size
+ * @min_buffers: the min buffers
+ * @max_buffers: the max buffers
+ * @prefix: the prefix
+ * @alignment: the alignment
  * @pool: the #GstBufferPool
  *
  * Get the allocation parameters in @query.
