@@ -1068,6 +1068,7 @@ gst_ximagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   const GValue *par;
   gint new_width, new_height;
   const GValue *fps;
+  gint size;
 
   ximagesink = GST_XIMAGESINK (bsink);
 
@@ -1090,6 +1091,9 @@ gst_ximagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   ret &= (fps != NULL);
 
   if (!ret)
+    return FALSE;
+
+  if (!gst_video_get_size_from_caps (caps, &size))
     return FALSE;
 
   /* if the caps contain pixel-aspect-ratio, they have to match ours,
@@ -1138,7 +1142,7 @@ gst_ximagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   newpool = gst_ximage_buffer_pool_new (ximagesink);
 
   structure = gst_buffer_pool_get_config (newpool);
-  gst_buffer_pool_config_set (structure, caps, 0, 0, 0, 0, 16);
+  gst_buffer_pool_config_set (structure, caps, size, 0, 0, 0, 15);
   if (!gst_buffer_pool_set_config (newpool, structure))
     goto config_failed;
 
@@ -1459,11 +1463,11 @@ gst_ximagesink_sink_query (GstPad * sinkpad, GstQuery * query)
         size = gst_video_format_get_size (format, width, height);
 
         config = gst_buffer_pool_get_config (pool);
-        gst_buffer_pool_config_set (config, caps, size, 0, 0, 0, 16);
+        gst_buffer_pool_config_set (config, caps, size, 0, 0, 0, 15);
         if (!gst_buffer_pool_set_config (pool, config))
           goto config_failed;
       }
-      gst_query_set_allocation_params (query, size, 0, 0, 0, 16, pool);
+      gst_query_set_allocation_params (query, size, 0, 0, 0, 15, pool);
 
       /* we also support various metadata */
       gst_query_add_allocation_meta (query, GST_META_API_VIDEO);

@@ -1553,6 +1553,7 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   const GValue *caps_disp_reg;
   const GValue *fps;
   guint num, den;
+  gint size;
 
   xvimagesink = GST_XVIMAGESINK (bsink);
 
@@ -1580,6 +1581,9 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
 
   im_format = gst_xvimagesink_get_format_from_caps (xvimagesink, caps);
   if (im_format == -1)
+    goto invalid_format;
+
+  if (!gst_video_get_size_from_caps (caps, &size))
     goto invalid_format;
 
   /* get aspect ratio from caps if it's present, and
@@ -1685,7 +1689,7 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   newpool = gst_xvimage_buffer_pool_new (xvimagesink);
 
   structure = gst_buffer_pool_get_config (newpool);
-  gst_buffer_pool_config_set (structure, caps, 0, 0, 0, 0, 16);
+  gst_buffer_pool_config_set (structure, caps, size, 0, 0, 0, 15);
   if (!gst_buffer_pool_set_config (newpool, structure))
     goto config_failed;
 
@@ -1994,6 +1998,7 @@ gst_xvimagesink_sink_query (GstPad * sinkpad, GstQuery * query)
         const GstCaps *pcaps;
 
         /* we had a pool, check caps */
+        GST_DEBUG_OBJECT (xvimagesink, "check existing pool caps");
         config = gst_buffer_pool_get_config (pool);
         gst_buffer_pool_config_get (config, &pcaps, &size, NULL, NULL, NULL,
             NULL);
@@ -2019,11 +2024,11 @@ gst_xvimagesink_sink_query (GstPad * sinkpad, GstQuery * query)
         size = gst_video_format_get_size (format, width, height);
 
         config = gst_buffer_pool_get_config (pool);
-        gst_buffer_pool_config_set (config, caps, size, 0, 0, 0, 16);
+        gst_buffer_pool_config_set (config, caps, size, 0, 0, 0, 15);
         if (!gst_buffer_pool_set_config (pool, config))
           goto config_failed;
       }
-      gst_query_set_allocation_params (query, size, 0, 0, 0, 16, pool);
+      gst_query_set_allocation_params (query, size, 0, 0, 0, 15, pool);
 
       /* we also support various metadata */
       gst_query_add_allocation_meta (query, GST_META_API_VIDEO);
