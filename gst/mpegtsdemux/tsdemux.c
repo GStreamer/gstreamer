@@ -1654,17 +1654,18 @@ find_timestamps (MpegTSBase * base, guint64 initoff, guint64 * offset)
 
   /* Search for the first PCRs */
   ret = process_pcr (base, base->first_pat_offset, &initial, 10, TRUE);
+
+  if (ret != GST_FLOW_OK && ret != GST_FLOW_UNEXPECTED) {
+    GST_WARNING ("Problem getting initial PCRs");
+    goto beach;
+  }
+
   mpegts_packetizer_clear (base->packetizer);
   /* Remove current program so we ensure looking for a PAT when scanning the 
    * for the final PCR */
   gst_structure_free (base->pat);
   base->pat = NULL;
   mpegts_base_remove_program (base, demux->current_program_number);
-
-  if (ret != GST_FLOW_OK && ret != GST_FLOW_UNEXPECTED) {
-    GST_WARNING ("Problem getting initial PCRs");
-    goto beach;
-  }
 
   /* Find end position */
   if (G_UNLIKELY (!gst_pad_query_peer_duration (base->sinkpad, &format,
@@ -1718,8 +1719,10 @@ beach:
 
   mpegts_packetizer_clear (base->packetizer);
   /* Remove current program */
-  gst_structure_free (base->pat);
-  base->pat = NULL;
+  if (base->pat) {
+    gst_structure_free (base->pat);
+    base->pat = NULL;
+  }
   mpegts_base_remove_program (base, demux->current_program_number);
 
   return ret;
