@@ -385,6 +385,53 @@ gst_mpegv_parse_process_sc (GstMpegvParse * mpvparse, GstBuffer * buf, gint off)
   return ret;
 }
 
+static inline guint
+scan_for_start_codes (const GstByteReader * reader, guint offset, guint size)
+{
+  const guint8 *data;
+  guint32 state;
+  guint i;
+
+  g_return_val_if_fail (size > 0, -1);
+  g_return_val_if_fail ((guint64) offset + size <= reader->size - reader->byte,
+      -1);
+
+  /* we can't find the pattern with less than 4 bytes */
+  if (G_UNLIKELY (size < 4))
+    return -1;
+
+  data = reader->data + reader->byte + offset;
+
+  /* set the state to something that does not match */
+  state = 0xffffffff;
+
+  /* now find data */
+  for (i = 0; i < size; i++) {
+    /* throw away one byte and move in the next byte */
+    state = ((state << 8) | data[i]);
+    if (G_UNLIKELY ((state & 0xffffff00) == 0x00000100)) {
+      /* we have a match but we need to have skipped at
+       * least 4 bytes to fill the state. */
+      if (G_LIKELY (i >= 3))
+        return offset + i - 3;
+    }
+
+    /* Accelerate search for start code */
+    if (data[i] > 1) {
+      while (i < (size - 4) && data[i] > 1) {
+        if (data[i + 3] > 1)
+          i += 4;
+        else
+          i += 1;
+      }
+      state = 0x00000100;
+    }
+  }
+
+  /* nothing found */
+  return -1;
+}
+
 /* FIXME move into baseparse, or anything equivalent;
  * see https://bugzilla.gnome.org/show_bug.cgi?id=650093 */
 #define GST_BASE_PARSE_FRAME_FLAG_PARSING   0x10000
@@ -419,8 +466,7 @@ retry:
     goto next;
   }
 
-  off = gst_byte_reader_masked_scan_uint32 (&reader, 0xffffff00, 0x00000100,
-      off, GST_BUFFER_SIZE (buf) - off);
+  off = scan_for_start_codes (&reader, off, GST_BUFFER_SIZE (buf) - off);
 
   GST_LOG_OBJECT (mpvparse, "possible sync at buffer offset %d", off);
 
@@ -453,8 +499,7 @@ next:
   /* position a bit further than last sc */
   off++;
   /* so now we have start code at start of data; locate next start code */
-  off = gst_byte_reader_masked_scan_uint32 (&reader, 0xffffff00, 0x00000100,
-      off, GST_BUFFER_SIZE (buf) - off);
+  off = scan_for_start_codes (&reader, off, GST_BUFFER_SIZE (buf) - off);
 
   GST_LOG_OBJECT (mpvparse, "next start code at %d", off);
   if (off < 0) {
