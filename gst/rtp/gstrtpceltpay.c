@@ -58,7 +58,7 @@ static GstStateChangeReturn gst_rtp_celt_pay_change_state (GstElement *
 static gboolean gst_rtp_celt_pay_setcaps (GstBaseRTPPayload * payload,
     GstCaps * caps);
 static GstCaps *gst_rtp_celt_pay_getcaps (GstBaseRTPPayload * payload,
-    GstPad * pad);
+    GstPad * pad, GstCaps * filter);
 static GstFlowReturn gst_rtp_celt_pay_handle_buffer (GstBaseRTPPayload *
     payload, GstBuffer * buffer);
 
@@ -157,7 +157,8 @@ gst_rtp_celt_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
 
 
 static GstCaps *
-gst_rtp_celt_pay_getcaps (GstBaseRTPPayload * payload, GstPad * pad)
+gst_rtp_celt_pay_getcaps (GstBaseRTPPayload * payload, GstPad * pad,
+    GstCaps * filter)
 {
   GstCaps *otherpadcaps;
   GstCaps *caps;

@@ -54,7 +54,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
 static gboolean gst_rtp_g722_pay_setcaps (GstBaseRTPPayload * basepayload,
     GstCaps * caps);
 static GstCaps *gst_rtp_g722_pay_getcaps (GstBaseRTPPayload * rtppayload,
-    GstPad * pad);
+    GstPad * pad, GstCaps * filter);
 
 #define gst_rtp_g722_pay_parent_class parent_class
 G_DEFINE_TYPE (GstRtpG722Pay, gst_rtp_g722_pay,
@@ -177,7 +177,8 @@ no_channels:
 }
 
 static GstCaps *
-gst_rtp_g722_pay_getcaps (GstBaseRTPPayload * rtppayload, GstPad * pad)
+gst_rtp_g722_pay_getcaps (GstBaseRTPPayload * rtppayload, GstPad * pad,
+    GstCaps * filter)
 {
   GstCaps *otherpadcaps;
   GstCaps *caps;

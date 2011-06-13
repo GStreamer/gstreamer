@@ -55,7 +55,8 @@ static GstStateChangeReturn gst_rtp_ac3_pay_change_state (GstElement * element,
 
 static gboolean gst_rtp_ac3_pay_setcaps (GstBaseRTPPayload * payload,
     GstCaps * caps);
-static gboolean gst_rtp_ac3_pay_handle_event (GstPad * pad, GstEvent * event);
+static gboolean gst_rtp_ac3_pay_handle_event (GstBaseRTPPayload * payload,
+    GstEvent * event);
 static GstFlowReturn gst_rtp_ac3_pay_flush (GstRtpAC3Pay * rtpac3pay);
 static GstFlowReturn gst_rtp_ac3_pay_handle_buffer (GstBaseRTPPayload * payload,
     GstBuffer * buffer);
@@ -142,11 +143,12 @@ gst_rtp_ac3_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
 }
 
 static gboolean
-gst_rtp_ac3_pay_handle_event (GstPad * pad, GstEvent * event)
+gst_rtp_ac3_pay_handle_event (GstBaseRTPPayload * payload, GstEvent * event)
 {
+  gboolean res;
   GstRtpAC3Pay *rtpac3pay;
 
-  rtpac3pay = GST_RTP_AC3_PAY (gst_pad_get_parent (pad));
+  rtpac3pay = GST_RTP_AC3_PAY (payload);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
@@ -160,10 +162,10 @@ gst_rtp_ac3_pay_handle_event (GstPad * pad, GstEvent * event)
       break;
   }
 
-  gst_object_unref (rtpac3pay);
+  res =
+      GST_BASE_RTP_PAYLOAD_CLASS (parent_class)->handle_event (payload, event);
 
-  /* FALSE to let the parent handle the event as well */
-  return FALSE;
+  return res;
 }
 
 struct frmsize_s

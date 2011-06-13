@@ -4,7 +4,6 @@ libgstrtp_la_SOURCES = \
 	fnv1hash.c \
 	gstrtp.c \
 	gstrtpchannels.c \
-	gstrtpdepay.c \
 	gstrtpac3depay.c \
 	gstrtpac3pay.c \
 	gstrtpbvdepay.c \
@@ -148,7 +147,6 @@ noinst_HEADERS =			\
 		 gstrtpmp4gpay.h	\
 		 gstrtpmp4adepay.h      \
 		 gstrtpmp4apay.h        \
-		 gstrtpdepay.h		\
 		 gstasteriskh263.h	\
 		 gstrtpqcelpdepay.h	\
 		 gstrtpqdmdepay.h	\

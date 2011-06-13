@@ -49,7 +49,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
 
 
 static GstCaps *gst_rtp_ilbc_pay_sink_getcaps (GstBaseRTPPayload * payload,
-    GstPad * pad);
+    GstPad * pad, GstCaps * filter);
 static gboolean gst_rtp_ilbc_pay_sink_setcaps (GstBaseRTPPayload * payload,
     GstCaps * caps);
 
@@ -175,7 +175,8 @@ mode_changed:
 /* we return the padtemplate caps with the mode field fixated to a value if we
  * can */
 static GstCaps *
-gst_rtp_ilbc_pay_sink_getcaps (GstBaseRTPPayload * rtppayload, GstPad * pad)
+gst_rtp_ilbc_pay_sink_getcaps (GstBaseRTPPayload * rtppayload, GstPad * pad,
+    GstCaps * filter)
 {
   GstCaps *otherpadcaps;
   GstCaps *caps;

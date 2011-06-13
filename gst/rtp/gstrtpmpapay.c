@@ -58,7 +58,8 @@ static GstStateChangeReturn gst_rtp_mpa_pay_change_state (GstElement * element,
 
 static gboolean gst_rtp_mpa_pay_setcaps (GstBaseRTPPayload * payload,
     GstCaps * caps);
-static gboolean gst_rtp_mpa_pay_handle_event (GstPad * pad, GstEvent * event);
+static gboolean gst_rtp_mpa_pay_handle_event (GstBaseRTPPayload * payload,
+    GstEvent * event);
 static GstFlowReturn gst_rtp_mpa_pay_flush (GstRtpMPAPay * rtpmpapay);
 static GstFlowReturn gst_rtp_mpa_pay_handle_buffer (GstBaseRTPPayload * payload,
     GstBuffer * buffer);
@@ -139,11 +140,12 @@ gst_rtp_mpa_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
 }
 
 static gboolean
-gst_rtp_mpa_pay_handle_event (GstPad * pad, GstEvent * event)
+gst_rtp_mpa_pay_handle_event (GstBaseRTPPayload * payload, GstEvent * event)
 {
+  gboolean ret;
   GstRtpMPAPay *rtpmpapay;
 
-  rtpmpapay = GST_RTP_MPA_PAY (gst_pad_get_parent (pad));
+  rtpmpapay = GST_RTP_MPA_PAY (payload);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
@@ -157,10 +159,10 @@ gst_rtp_mpa_pay_handle_event (GstPad * pad, GstEvent * event)
       break;
   }
 
-  gst_object_unref (rtpmpapay);
+  ret =
+      GST_BASE_RTP_PAYLOAD_CLASS (parent_class)->handle_event (payload, event);
 
-  /* FALSE to let the parent handle the event as well */
-  return FALSE;
+  return ret;
 }
 
 static GstFlowReturn

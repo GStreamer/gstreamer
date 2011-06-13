@@ -175,13 +175,11 @@ gst_rtp_celt_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   res = gst_pad_set_caps (depayload->srcpad, srccaps);
   gst_caps_unref (srccaps);
 
-  gst_buffer_set_caps (buf, GST_PAD_CAPS (depayload->srcpad));
   gst_base_rtp_depayload_push (GST_BASE_RTP_DEPAYLOAD (rtpceltdepay), buf);
 
   buf = gst_buffer_new_and_alloc (sizeof (gst_rtp_celt_comment));
   gst_buffer_fill (buf, 0, gst_rtp_celt_comment, sizeof (gst_rtp_celt_comment));
 
-  gst_buffer_set_caps (buf, GST_PAD_CAPS (depayload->srcpad));
   gst_base_rtp_depayload_push (GST_BASE_RTP_DEPAYLOAD (rtpceltdepay), buf);
 
   return res;
