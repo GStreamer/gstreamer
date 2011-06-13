@@ -395,32 +395,18 @@ static void gst_rtp_h263_pay_context_destroy (GstRtpH263PayContext * context,
     guint ind);
 static void gst_rtp_h263_pay_package_destroy (GstRtpH263PayPackage * pack);
 
-GST_BOILERPLATE (GstRtpH263Pay, gst_rtp_h263_pay, GstBaseRTPPayload,
-    GST_TYPE_BASE_RTP_PAYLOAD)
-
-     static void gst_rtp_h263_pay_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_h263_pay_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_h263_pay_sink_template));
-
-  gst_element_class_set_details_simple (element_class,
-      "RTP H263 packet payloader", "Codec/Payloader/Network/RTP",
-      "Payload-encodes H263 video in RTP packets (RFC 2190)",
-      "Neil Stratford <neils@vipadia.com>"
-      "Dejan Sakelsak <dejan.sakelsak@marand.si>");
-}
+#define gst_rtp_h263_pay_parent_class parent_class
+G_DEFINE_TYPE (GstRtpH263Pay, gst_rtp_h263_pay, GST_TYPE_BASE_RTP_PAYLOAD);
 
 static void
 gst_rtp_h263_pay_class_init (GstRtpH263PayClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
   GstBaseRTPPayloadClass *gstbasertppayload_class;
 
   gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
   gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
 
   gobject_class->finalize = gst_rtp_h263_pay_finalize;
@@ -436,12 +422,23 @@ gst_rtp_h263_pay_class_init (GstRtpH263PayClass * klass)
           "Disable packetization modes B and C", DEFAULT_MODE_A,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_h263_pay_src_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_h263_pay_sink_template));
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "RTP H263 packet payloader", "Codec/Payloader/Network/RTP",
+      "Payload-encodes H263 video in RTP packets (RFC 2190)",
+      "Neil Stratford <neils@vipadia.com>"
+      "Dejan Sakelsak <dejan.sakelsak@marand.si>");
+
   GST_DEBUG_CATEGORY_INIT (rtph263pay_debug, "rtph263pay", 0,
       "H263 RTP Payloader");
 }
 
 static void
-gst_rtp_h263_pay_init (GstRtpH263Pay * rtph263pay, GstRtpH263PayClass * klass)
+gst_rtp_h263_pay_init (GstRtpH263Pay * rtph263pay)
 {
   rtph263pay->adapter = gst_adapter_new ();
 
@@ -1239,8 +1236,11 @@ gst_rtp_h263_pay_push (GstRtpH263Pay * rtph263pay,
   guint8 *header;
   guint8 *payload;
   GstFlowReturn ret;
+  GstRTPBuffer rtp = { NULL };
 
-  header = gst_rtp_buffer_get_payload (package->outbuf);
+  gst_rtp_buffer_map (package->outbuf, GST_MAP_WRITE, &rtp);
+
+  header = gst_rtp_buffer_get_payload (&rtp);
   payload = header + package->mode;
 
   switch (package->mode) {
@@ -1271,9 +1271,11 @@ gst_rtp_h263_pay_push (GstRtpH263Pay * rtph263pay,
    */
   GST_BUFFER_TIMESTAMP (package->outbuf) = rtph263pay->first_ts;
 
-  gst_rtp_buffer_set_marker (package->outbuf, package->marker);
+  gst_rtp_buffer_set_marker (&rtp, package->marker);
   if (package->marker)
     GST_DEBUG ("Marker set!");
+
+  gst_rtp_buffer_unmap (&rtp);
 
   ret =
       gst_basertppayload_push (GST_BASE_RTP_PAYLOAD (rtph263pay),
@@ -1610,7 +1612,7 @@ gst_rtp_h263_pay_flush (GstRtpH263Pay * rtph263pay)
 
   /* Get a pointer to all the data for the frame */
   rtph263pay->data =
-      (guint8 *) gst_adapter_peek (rtph263pay->adapter,
+      (guint8 *) gst_adapter_map (rtph263pay->adapter,
       rtph263pay->available_data);
 
   /* Picture header */
@@ -1766,7 +1768,7 @@ gst_rtp_h263_pay_flush (GstRtpH263Pay * rtph263pay)
 end:
   gst_rtp_h263_pay_context_destroy (context,
       context->piclayer->ptype_srcformat);
-  gst_adapter_flush (rtph263pay->adapter, rtph263pay->available_data);
+  gst_adapter_unmap (rtph263pay->adapter, rtph263pay->available_data);
 
   return ret;
 }

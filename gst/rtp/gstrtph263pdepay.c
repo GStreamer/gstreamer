@@ -230,6 +230,12 @@ gst_rtp_h263p_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 {
   GstRtpH263PDepay *rtph263pdepay;
   GstBuffer *outbuf;
+  gint payload_len;
+  guint8 *payload;
+  gboolean P, V, M;
+  guint header_len;
+  guint8 PLEN, PEBIT;
+  GstRTPBuffer rtp = { NULL };
 
   rtph263pdepay = GST_RTP_H263P_DEPAY (depayload);
 
@@ -240,103 +246,100 @@ gst_rtp_h263p_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     rtph263pdepay->wait_start = TRUE;
   }
 
-  {
-    gint payload_len;
-    guint8 *payload;
-    gboolean P, V, M;
-    guint header_len;
-    guint8 PLEN, PEBIT;
+  gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp);
 
-    payload_len = gst_rtp_buffer_get_payload_len (buf);
-    payload = gst_rtp_buffer_get_payload (buf);
+  payload_len = gst_rtp_buffer_get_payload_len (&rtp);
+  header_len = 2;
 
-    header_len = 2;
+  if (payload_len < header_len)
+    goto too_small;
 
-    if (payload_len < header_len)
-      goto too_small;
+  payload = gst_rtp_buffer_get_payload (&rtp);
 
-    M = gst_rtp_buffer_get_marker (buf);
+  M = gst_rtp_buffer_get_marker (&rtp);
 
-    /*  0                   1
-     *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5
-     * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-     * |   RR    |P|V|   PLEN    |PEBIT|
-     * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-     */
-    P = (payload[0] & 0x04) == 0x04;
-    V = (payload[0] & 0x02) == 0x02;
-    PLEN = ((payload[0] & 0x1) << 5) | (payload[1] >> 3);
-    PEBIT = payload[1] & 0x7;
+  /*  0                   1
+   *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5
+   * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   * |   RR    |P|V|   PLEN    |PEBIT|
+   * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   */
+  P = (payload[0] & 0x04) == 0x04;
+  V = (payload[0] & 0x02) == 0x02;
+  PLEN = ((payload[0] & 0x1) << 5) | (payload[1] >> 3);
+  PEBIT = payload[1] & 0x7;
 
-    GST_LOG_OBJECT (depayload, "P %d, V %d, PLEN %d, PEBIT %d", P, V, PLEN,
-        PEBIT);
+  GST_LOG_OBJECT (depayload, "P %d, V %d, PLEN %d, PEBIT %d", P, V, PLEN,
+      PEBIT);
 
-    if (V) {
-      header_len++;
+  if (V) {
+    header_len++;
+  }
+  if (PLEN) {
+    header_len += PLEN;
+  }
+
+  if ((!P && payload_len < header_len) || (P && payload_len < header_len - 2))
+    goto too_small;
+
+  if (P) {
+    /* FIXME, have to make the packet writable hear. Better to reset these
+     * bytes when we copy the packet below */
+    rtph263pdepay->wait_start = FALSE;
+    header_len -= 2;
+    payload[header_len] = 0;
+    payload[header_len + 1] = 0;
+  }
+
+  if (rtph263pdepay->wait_start)
+    goto waiting_start;
+
+  if (payload_len < header_len)
+    goto too_small;
+
+  /* FIXME do not ignore the VRC header (See RFC 2429 section 4.2) */
+  /* FIXME actually use the RTP picture header when it is lost in the network */
+  /* for now strip off header */
+  payload += header_len;
+  payload_len -= header_len;
+
+  if (M) {
+    /* frame is completed: append to previous, push it out */
+    guint len, padlen;
+    guint avail;
+    guint8 *data;
+
+    GST_LOG_OBJECT (depayload, "Frame complete");
+
+    avail = gst_adapter_available (rtph263pdepay->adapter);
+    len = avail + payload_len;
+    padlen = (len % 4) + 4;
+
+    outbuf = gst_buffer_new_and_alloc (len + padlen);
+
+    data = gst_buffer_map (outbuf, NULL, NULL, GST_MAP_WRITE);
+    memset (data + len, 0, padlen);
+
+    /* prepend previous data */
+    if (avail > 0) {
+      gst_adapter_copy (rtph263pdepay->adapter, data, 0, avail);
+      gst_adapter_flush (rtph263pdepay->adapter, avail);
     }
-    if (PLEN) {
-      header_len += PLEN;
-    }
+    memcpy (data + avail, payload, payload_len);
+    gst_buffer_unmap (outbuf, data, len);
+    gst_rtp_buffer_unmap (&rtp);
 
-    if ((!P && payload_len < header_len) || (P && payload_len < header_len - 2))
-      goto too_small;
+    return outbuf;
 
-    if (P) {
-      /* FIXME, have to make the packet writable hear. Better to reset these
-       * bytes when we copy the packet below */
-      rtph263pdepay->wait_start = FALSE;
-      header_len -= 2;
-      payload[header_len] = 0;
-      payload[header_len + 1] = 0;
-    }
+  } else {
+    /* frame not completed: store in adapter */
+    outbuf = gst_buffer_new_and_alloc (payload_len);
 
-    if (rtph263pdepay->wait_start)
-      goto waiting_start;
+    GST_LOG_OBJECT (depayload, "Frame incomplete, storing %d", payload_len);
+    gst_buffer_fill (outbuf, 0, payload, payload_len);
 
-    if (payload_len < header_len)
-      goto too_small;
-
-    /* FIXME do not ignore the VRC header (See RFC 2429 section 4.2) */
-    /* FIXME actually use the RTP picture header when it is lost in the network */
-    /* for now strip off header */
-    payload += header_len;
-    payload_len -= header_len;
-
-    if (M) {
-      /* frame is completed: append to previous, push it out */
-      guint len, padlen;
-      guint avail;
-
-      GST_LOG_OBJECT (depayload, "Frame complete");
-
-      avail = gst_adapter_available (rtph263pdepay->adapter);
-
-      len = avail + payload_len;
-      padlen = (len % 4) + 4;
-      outbuf = gst_buffer_new_and_alloc (len + padlen);
-      memset (GST_BUFFER_DATA (outbuf) + len, 0, padlen);
-      GST_BUFFER_SIZE (outbuf) = len;
-
-      /* prepend previous data */
-      if (avail > 0) {
-        gst_adapter_copy (rtph263pdepay->adapter, GST_BUFFER_DATA (outbuf), 0,
-            avail);
-        gst_adapter_flush (rtph263pdepay->adapter, avail);
-      }
-      memcpy (GST_BUFFER_DATA (outbuf) + avail, payload, payload_len);
-
-      return outbuf;
-
-    } else {
-      /* frame not completed: store in adapter */
-      outbuf = gst_buffer_new_and_alloc (payload_len);
-
-      GST_LOG_OBJECT (depayload, "Frame incomplete, storing %d", payload_len);
-
-      memcpy (GST_BUFFER_DATA (outbuf), payload, payload_len);
-
-      gst_adapter_push (rtph263pdepay->adapter, outbuf);
-    }
+    gst_adapter_push (rtph263pdepay->adapter, outbuf);
+    gst_rtp_buffer_unmap (&rtp);
   }
   return NULL;
 
@@ -344,11 +347,13 @@ too_small:
   {
     GST_ELEMENT_WARNING (rtph263pdepay, STREAM, DECODE,
         ("Packet payload was too small"), (NULL));
+    gst_rtp_buffer_unmap (&rtp);
     return NULL;
   }
 waiting_start:
   {
     GST_DEBUG_OBJECT (rtph263pdepay, "waiting for picture start");
+    gst_rtp_buffer_unmap (&rtp);
     return NULL;
   }
 }

@@ -90,32 +90,18 @@ static gboolean gst_rtp_h263p_pay_setcaps (GstBaseRTPPayload * payload,
 static GstFlowReturn gst_rtp_h263p_pay_handle_buffer (GstBaseRTPPayload *
     payload, GstBuffer * buffer);
 
-GST_BOILERPLATE (GstRtpH263PPay, gst_rtp_h263p_pay, GstBaseRTPPayload,
-    GST_TYPE_BASE_RTP_PAYLOAD);
-
-static void
-gst_rtp_h263p_pay_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_h263p_pay_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_h263p_pay_sink_template));
-
-  gst_element_class_set_details_simple (element_class, "RTP H263 payloader",
-      "Codec/Payloader/Network/RTP",
-      "Payload-encodes H263/+/++ video in RTP packets (RFC 4629)",
-      "Wim Taymans <wim.taymans@gmail.com>");
-}
+#define gst_rtp_h263p_pay_parent_class parent_class
+G_DEFINE_TYPE (GstRtpH263PPay, gst_rtp_h263p_pay, GST_TYPE_BASE_RTP_PAYLOAD);
 
 static void
 gst_rtp_h263p_pay_class_init (GstRtpH263PPayClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
   GstBaseRTPPayloadClass *gstbasertppayload_class;
 
   gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
   gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
 
   gobject_class->finalize = gst_rtp_h263p_pay_finalize;
@@ -132,13 +118,22 @@ gst_rtp_h263p_pay_class_init (GstRtpH263PPayClass * klass)
           DEFAULT_FRAGMENTATION_MODE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_h263p_pay_src_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_h263p_pay_sink_template));
+
+  gst_element_class_set_details_simple (gstelement_class, "RTP H263 payloader",
+      "Codec/Payloader/Network/RTP",
+      "Payload-encodes H263/+/++ video in RTP packets (RFC 4629)",
+      "Wim Taymans <wim.taymans@gmail.com>");
+
   GST_DEBUG_CATEGORY_INIT (rtph263ppay_debug, "rtph263ppay",
       0, "rtph263ppay (RFC 4629)");
 }
 
 static void
-gst_rtp_h263p_pay_init (GstRtpH263PPay * rtph263ppay,
-    GstRtpH263PPayClass * klass)
+gst_rtp_h263p_pay_init (GstRtpH263PPay * rtph263ppay)
 {
   rtph263ppay->adapter = gst_adapter_new ();
 
@@ -236,13 +231,14 @@ gst_rtp_h263p_pay_flush (GstRtpH263PPay * rtph263ppay)
     gint header_len;
     guint next_gop = 0;
     gboolean found_gob = FALSE;
+    GstRTPBuffer rtp = { NULL };
 
     if (rtph263ppay->fragmentation_mode == GST_FRAGMENTATION_MODE_SYNC) {
       /* start after 1st gop possible */
       guint parsed_len = 3;
       const guint8 *parse_data = NULL;
 
-      parse_data = gst_adapter_peek (rtph263ppay->adapter, avail);
+      parse_data = gst_adapter_map (rtph263ppay->adapter, avail);
 
       /* Check if we have a gob or eos , eossbs */
       /* FIXME EOS and EOSSBS packets should never contain any gobs and vice-versa */
@@ -264,6 +260,7 @@ gst_rtp_h263p_pay_flush (GstRtpH263PPay * rtph263ppay)
         }
         parsed_len++;
       }
+      gst_adapter_unmap (rtph263ppay->adapter, 0);
     }
 
     /* for picture start frames (non-fragmented), we need to remove the first
@@ -279,10 +276,12 @@ gst_rtp_h263p_pay_flush (GstRtpH263PPay * rtph263ppay)
     payload_len = header_len + towrite;
 
     outbuf = gst_rtp_buffer_new_allocate (payload_len, 0, 0);
-    /* last fragment gets the marker bit set */
-    gst_rtp_buffer_set_marker (outbuf, avail > towrite ? 0 : 1);
 
-    payload = gst_rtp_buffer_get_payload (outbuf);
+    gst_rtp_buffer_map (outbuf, GST_MAP_WRITE, &rtp);
+    /* last fragment gets the marker bit set */
+    gst_rtp_buffer_set_marker (&rtp, avail > towrite ? 0 : 1);
+
+    payload = gst_rtp_buffer_get_payload (&rtp);
 
     gst_adapter_copy (rtph263ppay->adapter, &payload[header_len], 0, towrite);
 
@@ -298,6 +297,7 @@ gst_rtp_h263p_pay_flush (GstRtpH263PPay * rtph263ppay)
 
     GST_BUFFER_TIMESTAMP (outbuf) = rtph263ppay->first_timestamp;
     GST_BUFFER_DURATION (outbuf) = rtph263ppay->first_duration;
+    gst_rtp_buffer_unmap (&rtp);
 
     gst_adapter_flush (rtph263ppay->adapter, towrite);
 

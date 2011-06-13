@@ -109,8 +109,7 @@ gst_rtp_h263_depay_class_init (GstRtpH263DepayClass * klass)
 }
 
 static void
-gst_rtp_h263_depay_init (GstRtpH263Depay * rtph263depay,
-    GstRtpH263DepayClass * klass)
+gst_rtp_h263_depay_init (GstRtpH263Depay * rtph263depay)
 {
   rtph263depay->adapter = gst_adapter_new ();
 
@@ -162,6 +161,7 @@ gst_rtp_h263_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   guint SBIT, EBIT;
   gboolean F, P, M;
   gboolean I;
+  GstRTPBuffer rtp = { NULL };
 
   rtph263depay = GST_RTP_H263_DEPAY (depayload);
 
@@ -174,10 +174,12 @@ gst_rtp_h263_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     rtph263depay->start = FALSE;
   }
 
-  payload_len = gst_rtp_buffer_get_payload_len (buf);
-  payload = gst_rtp_buffer_get_payload (buf);
+  gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp);
 
-  M = gst_rtp_buffer_get_marker (buf);
+  payload_len = gst_rtp_buffer_get_payload_len (&rtp);
+  payload = gst_rtp_buffer_get_payload (&rtp);
+
+  M = gst_rtp_buffer_get_marker (&rtp);
 
   /* Let's see what mode we are using */
   F = (payload[0] & 0x80) == 0x80;
@@ -282,13 +284,13 @@ gst_rtp_h263_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     GstBuffer *tmp;
 
     /* Take the entire buffer */
-    tmp = gst_rtp_buffer_get_payload_subbuffer (buf, header_len, payload_len);
+    tmp = gst_rtp_buffer_get_payload_subbuffer (&rtp, header_len, payload_len);
     gst_adapter_push (rtph263depay->adapter, tmp);
   } else {
     GstBuffer *tmp;
 
     /* Take the entire buffer except for the last byte */
-    tmp = gst_rtp_buffer_get_payload_subbuffer (buf, header_len,
+    tmp = gst_rtp_buffer_get_payload_subbuffer (&rtp, header_len,
         payload_len - 1);
     gst_adapter_push (rtph263depay->adapter, tmp);
 
@@ -312,7 +314,7 @@ skip:
         GstBuffer *buf = gst_buffer_new_and_alloc (1);
 
         GST_DEBUG ("Pushing leftover in adapter");
-        GST_BUFFER_DATA (buf)[0] = rtph263depay->leftover;
+        gst_buffer_fill (buf, 0, &rtph263depay->leftover, 1);
         gst_adapter_push (rtph263depay->adapter, buf);
       }
 
@@ -324,7 +326,7 @@ skip:
 
       GST_DEBUG ("Pushing out a buffer of %d bytes", avail);
 
-      timestamp = gst_rtp_buffer_get_timestamp (buf);
+      timestamp = gst_rtp_buffer_get_timestamp (&rtp);
       gst_base_rtp_depayload_push_ts (depayload, timestamp, outbuf);
       rtph263depay->offset = 0;
       rtph263depay->leftover = 0;
@@ -333,6 +335,7 @@ skip:
       rtph263depay->start = TRUE;
     }
   }
+  gst_rtp_buffer_unmap (&rtp);
 
   return NULL;
 }
