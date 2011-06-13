@@ -65,8 +65,8 @@ enum
   PROP_LAST
 };
 
-GST_BOILERPLATE (GstRtpJ2KDepay, gst_rtp_j2k_depay, GstBaseRTPDepayload,
-    GST_TYPE_BASE_RTP_DEPAYLOAD);
+#define gst_rtp_j2k_depay_parent_class parent_class
+G_DEFINE_TYPE (GstRtpJ2KDepay, gst_rtp_j2k_depay, GST_TYPE_BASE_RTP_DEPAYLOAD);
 
 static void gst_rtp_j2k_depay_finalize (GObject * object);
 
@@ -83,22 +83,6 @@ static gboolean gst_rtp_j2k_depay_setcaps (GstBaseRTPDepayload * depayload,
     GstCaps * caps);
 static GstBuffer *gst_rtp_j2k_depay_process (GstBaseRTPDepayload * depayload,
     GstBuffer * buf);
-
-static void
-gst_rtp_j2k_depay_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_j2k_depay_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_j2k_depay_sink_template));
-
-  gst_element_class_set_details_simple (element_class,
-      "RTP JPEG 2000 depayloader", "Codec/Depayloader/Network/RTP",
-      "Extracts JPEG 2000 video from RTP packets (RFC 5371)",
-      "Wim Taymans <wim.taymans@gmail.com>");
-}
 
 static void
 gst_rtp_j2k_depay_class_init (GstRtpJ2KDepayClass * klass)
@@ -121,6 +105,16 @@ gst_rtp_j2k_depay_class_init (GstRtpJ2KDepayClass * klass)
           "Use Buffer Lists",
           DEFAULT_BUFFER_LIST, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_j2k_depay_src_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_j2k_depay_sink_template));
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "RTP JPEG 2000 depayloader", "Codec/Depayloader/Network/RTP",
+      "Extracts JPEG 2000 video from RTP packets (RFC 5371)",
+      "Wim Taymans <wim.taymans@gmail.com>");
+
   gstelement_class->change_state = gst_rtp_j2k_depay_change_state;
 
   gstbasertpdepayload_class->set_caps = gst_rtp_j2k_depay_setcaps;
@@ -131,8 +125,7 @@ gst_rtp_j2k_depay_class_init (GstRtpJ2KDepayClass * klass)
 }
 
 static void
-gst_rtp_j2k_depay_init (GstRtpJ2KDepay * rtpj2kdepay,
-    GstRtpJ2KDepayClass * klass)
+gst_rtp_j2k_depay_init (GstRtpJ2KDepay * rtpj2kdepay)
 {
   rtpj2kdepay->buffer_list = DEFAULT_BUFFER_LIST;
 
@@ -246,7 +239,7 @@ gst_rtp_j2k_depay_flush_pu (GstBaseRTPDepayload * depayload)
     for (walk = packets; walk; walk = g_list_next (walk)) {
       GstBuffer *buf = GST_BUFFER_CAST (walk->data);
       GST_DEBUG_OBJECT (rtpj2kdepay, "append pu packet of size %u",
-          GST_BUFFER_SIZE (buf));
+          gst_buffer_get_size (buf));
       gst_adapter_push (rtpj2kdepay->t_adapter, buf);
     }
     g_list_free (packets);
@@ -274,6 +267,9 @@ gst_rtp_j2k_depay_flush_tile (GstBaseRTPDepayload * depayload)
   GList *packets, *walk;
   guint8 end[2];
   GstFlowReturn ret = GST_FLOW_OK;
+  guint8 *data;
+  gsize size;
+  GstBuffer *buf;
 
   rtpj2kdepay = GST_RTP_J2K_DEPAY (depayload);
 
@@ -307,15 +303,11 @@ gst_rtp_j2k_depay_flush_tile (GstBaseRTPDepayload * depayload)
   /* now append the tile packets to the frame */
   packets = gst_adapter_take_list (rtpj2kdepay->t_adapter, avail);
   for (walk = packets; walk; walk = g_list_next (walk)) {
-    GstBuffer *buf = GST_BUFFER_CAST (walk->data);
+    buf = GST_BUFFER_CAST (walk->data);
 
     if (walk == packets) {
-      guint8 *data;
-      guint size;
-
       /* first buffer should contain the SOT */
-      data = GST_BUFFER_DATA (buf);
-      size = GST_BUFFER_SIZE (buf);
+      data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
 
       if (size < 12)
         goto invalid_tile;
@@ -332,15 +324,19 @@ gst_rtp_j2k_depay_flush_tile (GstBaseRTPDepayload * depayload)
         if (Psot != nPsot && Psot != 0) {
           /* Psot must match the size of the tile */
           GST_DEBUG_OBJECT (rtpj2kdepay, "set Psot from %u to %u", Psot, nPsot);
+          gst_buffer_unmap (buf, data, size);
+
           buf = gst_buffer_make_writable (buf);
-          data = GST_BUFFER_DATA (buf);
+
+          data = gst_buffer_map (buf, &size, NULL, GST_MAP_WRITE);
           GST_WRITE_UINT32_BE (&data[6], nPsot);
         }
       }
+      gst_buffer_unmap (buf, data, size);
     }
 
     GST_DEBUG_OBJECT (rtpj2kdepay, "append pu packet of size %u",
-        GST_BUFFER_SIZE (buf));
+        gst_buffer_get_size (buf));
     gst_adapter_push (rtpj2kdepay->f_adapter, buf);
   }
   g_list_free (packets);
@@ -361,6 +357,7 @@ waiting_header:
 invalid_tile:
   {
     GST_ELEMENT_WARNING (rtpj2kdepay, STREAM, DECODE, ("Invalid tile"), (NULL));
+    gst_buffer_unmap (buf, data, size);
     gst_adapter_clear (rtpj2kdepay->t_adapter);
     rtpj2kdepay->last_tile = -1;
     return ret;
@@ -372,7 +369,6 @@ gst_rtp_j2k_depay_flush_frame (GstBaseRTPDepayload * depayload)
 {
   GstRtpJ2KDepay *rtpj2kdepay;
   guint8 end[2];
-  guint8 *data;
   guint avail;
 
   GstFlowReturn ret = GST_FLOW_OK;
@@ -395,18 +391,19 @@ gst_rtp_j2k_depay_flush_frame (GstBaseRTPDepayload * depayload)
     gst_adapter_copy (rtpj2kdepay->f_adapter, end, avail - 2, 2);
 
     if (end[0] != 0xff && end[1] != 0xd9) {
+      end[0] = 0xff;
+      end[1] = 0xd9;
+
       GST_DEBUG_OBJECT (rtpj2kdepay, "no EOC marker, adding one");
 
       /* no EOI marker, add one */
       outbuf = gst_buffer_new_and_alloc (2);
-      data = GST_BUFFER_DATA (outbuf);
-      data[0] = 0xff;
-      data[1] = 0xd9;
+      gst_buffer_fill (outbuf, 0, end, 2);
 
       gst_adapter_push (rtpj2kdepay->f_adapter, outbuf);
       avail += 2;
     }
-
+#if 0
     if (rtpj2kdepay->buffer_list) {
       GList *list;
       GstBufferList *buflist;
@@ -422,7 +419,9 @@ gst_rtp_j2k_depay_flush_frame (GstBaseRTPDepayload * depayload)
       gst_buffer_list_iterator_free (it);
 
       ret = gst_base_rtp_depayload_push_list (depayload, buflist);
-    } else {
+    } else
+#endif
+    {
       GST_DEBUG_OBJECT (rtpj2kdepay, "pushing buffer of %u bytes", avail);
       outbuf = gst_adapter_take_buffer (rtpj2kdepay->f_adapter, avail);
       ret = gst_base_rtp_depayload_push (depayload, outbuf);
@@ -454,17 +453,20 @@ gst_rtp_j2k_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   guint MHF, mh_id, frag_offset, tile, payload_len, j2klen;
   gint gap;
   guint32 rtptime;
+  GstRTPBuffer rtp = { NULL };
 
   rtpj2kdepay = GST_RTP_J2K_DEPAY (depayload);
 
-  payload = gst_rtp_buffer_get_payload (buf);
-  payload_len = gst_rtp_buffer_get_payload_len (buf);
+  gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp);
+
+  payload = gst_rtp_buffer_get_payload (&rtp);
+  payload_len = gst_rtp_buffer_get_payload_len (&rtp);
 
   /* we need at least a header */
   if (payload_len < 8)
     goto empty_packet;
 
-  rtptime = gst_rtp_buffer_get_timestamp (buf);
+  rtptime = gst_rtp_buffer_get_timestamp (&rtp);
 
   /* new timestamp marks new frame */
   if (rtpj2kdepay->last_rtptime != rtptime) {
@@ -561,7 +563,7 @@ gst_rtp_j2k_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     }
     /* and push in pu adapter */
     GST_DEBUG_OBJECT (rtpj2kdepay, "push pu of size %u in adapter", j2klen);
-    pu_frag = gst_rtp_buffer_get_payload_subbuffer (buf, 8, -1);
+    pu_frag = gst_rtp_buffer_get_payload_subbuffer (&rtp, 8, -1);
     gst_adapter_push (rtpj2kdepay->pu_adapter, pu_frag);
 
     if (MHF & 2) {
@@ -574,11 +576,13 @@ gst_rtp_j2k_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   }
 
   /* marker bit finishes the frame */
-  if (gst_rtp_buffer_get_marker (buf)) {
+  if (gst_rtp_buffer_get_marker (&rtp)) {
     GST_DEBUG_OBJECT (rtpj2kdepay, "marker set, last buffer");
     /* then flush frame */
     gst_rtp_j2k_depay_flush_frame (depayload);
   }
+  gst_rtp_buffer_unmap (&rtp);
+
   return NULL;
 
   /* ERRORS */
@@ -586,6 +590,7 @@ empty_packet:
   {
     GST_ELEMENT_WARNING (rtpj2kdepay, STREAM, DECODE,
         ("Empty Payload."), (NULL));
+    gst_rtp_buffer_unmap (&rtp);
     return NULL;
   }
 wrong_mh_id:
@@ -594,6 +599,7 @@ wrong_mh_id:
         ("Invalid mh_id %u, expected %u", mh_id, rtpj2kdepay->last_mh_id),
         (NULL));
     gst_rtp_j2k_depay_clear_pu (rtpj2kdepay);
+    gst_rtp_buffer_unmap (&rtp);
     return NULL;
   }
 }
