@@ -278,6 +278,7 @@ gst_base_src_get_blocksize
 gst_base_src_set_blocksize
 gst_base_src_get_do_timestamp
 gst_base_src_set_do_timestamp
+gst_base_src_set_dynamic_size
 gst_base_src_new_seamless_segment
 gst_base_src_set_dynamic_size
 
