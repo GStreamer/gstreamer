@@ -500,7 +500,8 @@ gst_buffer_new_allocate (const GstMemoryAllocator * allocator, gsize size,
   if (mem != NULL)
     _memory_add (newbuf, mem);
 
-  GST_CAT_LOG (GST_CAT_BUFFER, "new %p of size %d", newbuf, size);
+  GST_CAT_LOG (GST_CAT_BUFFER, "new %p of size %d from allocator %p", newbuf,
+      size, allocator);
 #endif
 
 #if 0
