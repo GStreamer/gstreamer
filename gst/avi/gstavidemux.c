@@ -4123,7 +4123,7 @@ gst_avi_demux_handle_seek (GstAviDemux * avi, GstPad * pad, GstEvent * event)
   gst_avi_demux_do_seek (avi, &seeksegment);
 
   if (flush) {
-    GstEvent *fevent = gst_event_new_flush_stop ();
+    GstEvent *fevent = gst_event_new_flush_stop (TRUE);
 
     GST_DEBUG_OBJECT (avi, "sending flush stop");
     gst_avi_demux_push_event (avi, gst_event_ref (fevent));
