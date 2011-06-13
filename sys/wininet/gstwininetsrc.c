@@ -408,7 +408,7 @@ gst_win_inet_src_uri_get_protocols (void)
   return (gchar **) protocols;
 }
 
-static G_CONST_RETURN gchar *
+static const gchar *
 gst_win_inet_src_uri_get_uri (GstURIHandler * handler)
 {
   GstWinInetSrc *src = GST_WIN_INET_SRC (handler);
