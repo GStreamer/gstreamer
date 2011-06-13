@@ -238,6 +238,9 @@ struct _GstBaseSrcPrivate
   gboolean qos_enabled;
   gdouble proportion;
   GstClockTime earliest_time;
+
+  GstBufferPool *pool;
+  const GstMemoryAllocator *allocator;
 };
 
 static GstElementClass *parent_class = NULL;
@@ -393,7 +396,6 @@ gst_base_src_init (GstBaseSrc * basesrc, gpointer g_class)
   basesrc->num_buffers_left = -1;
 
   basesrc->can_activate_push = TRUE;
-  basesrc->pad_mode = GST_ACTIVATE_NONE;
 
   pad_template =
       gst_element_class_get_pad_template (GST_ELEMENT_CLASS (g_class), "src");
@@ -2567,6 +2569,67 @@ null_buffer:
   }
 }
 
+static void
+gst_base_src_set_allocation (GstBaseSrc * basesrc, GstBufferPool * pool,
+    const GstMemoryAllocator * allocator)
+{
+  if (basesrc->priv->pool)
+    gst_object_unref (basesrc->priv->pool);
+  basesrc->priv->pool = pool;
+
+  basesrc->priv->allocator = allocator;
+}
+
+static gboolean
+gst_base_src_prepare_allocation (GstBaseSrc * basesrc, GstCaps * caps)
+{
+  GstBaseSrcClass *bclass;
+  gboolean result = TRUE;
+  GstQuery *query;
+  GstBufferPool *pool = NULL;
+  const GstMemoryAllocator *allocator = NULL;
+  guint size, min, max, prefix, alignment;
+
+  bclass = GST_BASE_SRC_GET_CLASS (basesrc);
+
+  /* make query and let peer pad answer, we don't really care if it worked or
+   * not, if it failed, the allocation query would contain defaults and the
+   * subclass would then set better values if needed */
+  query = gst_query_new_allocation (caps, TRUE);
+  gst_pad_peer_query (basesrc->srcpad, query);
+
+  if (G_LIKELY (bclass->setup_allocation))
+    result = bclass->setup_allocation (basesrc, query);
+
+  gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
+      &alignment, &pool);
+
+  if (size == 0) {
+    const gchar *mem = NULL;
+
+    /* no size, we have variable size buffers */
+    if (gst_query_get_n_allocation_memories (query) > 0) {
+      mem = gst_query_parse_nth_allocation_memory (query, 0);
+    }
+    allocator = gst_memory_allocator_find (mem);
+  } else if (pool == NULL) {
+    /* fixed size, we can use a bufferpool */
+    GstStructure *config;
+
+    /* we did not get a pool, make one ourselves then */
+    pool = gst_buffer_pool_new ();
+
+    config = gst_buffer_pool_get_config (pool);
+    gst_buffer_pool_config_set (config, caps, size, min, max, prefix,
+        alignment);
+    gst_buffer_pool_set_config (pool, config);
+  }
+
+  gst_base_src_set_allocation (basesrc, pool, allocator);
+
+  return result;
+}
+
 /* default negotiation code.
  *
  * Take intersection between src and sink pads, take first
@@ -2654,9 +2717,16 @@ gst_base_src_negotiate (GstBaseSrc * basesrc)
 
   bclass = GST_BASE_SRC_GET_CLASS (basesrc);
 
-  if (bclass->negotiate)
+  if (G_LIKELY (bclass->negotiate))
     result = bclass->negotiate (basesrc);
 
+  if (G_LIKELY (result)) {
+    GstCaps *caps;
+
+    caps = gst_pad_get_current_caps (basesrc->srcpad);
+
+    result = gst_base_src_prepare_allocation (basesrc, caps);
+  }
   return result;
 }
 

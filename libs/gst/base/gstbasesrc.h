@@ -83,20 +83,14 @@ struct _GstBaseSrc {
   /* MT-protected (with LOCK) */
   guint          blocksize;     /* size of buffers when operating push based */
   gboolean       can_activate_push;     /* some scheduling properties */
-  GstActivateMode pad_mode;
-  gboolean       seekable; /* not used anymore */
   gboolean       random_access;
 
   GstClockID     clock_id;      /* for syncing */
-  GstClockTime   end_time;
 
   /* MT-protected (with STREAM_LOCK *and* OBJECT_LOCK) */
   GstSegment     segment;
   /* MT-protected (with STREAM_LOCK) */
   gboolean       need_newsegment;
-
-  guint64        offset;        /* current offset in the resource, unused */
-  guint64        size;          /* total size of the resource, unused */
 
   gint           num_buffers;
   gint           num_buffers_left;
@@ -115,10 +109,10 @@ struct _GstBaseSrc {
  * GstBaseSrcClass:
  * @parent_class: Element parent class
  * @get_caps: Called to get the caps to report
- * @set_caps: Notify subclass of changed output caps
  * @negotiate: Negotiated the caps with the peer.
  * @fixate: Called during negotiation if caps need fixating. Implement instead of
  *   setting a fixate function on the source pad.
+ * @set_caps: Notify subclass of changed output caps
  * @start: Start processing. Subclasses should open resources and prepare
  *    to produce data.
  * @stop: Stop processing. Subclasses should use this to close resources.
@@ -165,13 +159,15 @@ struct _GstBaseSrcClass {
 
   /* get caps from subclass */
   GstCaps*      (*get_caps)     (GstBaseSrc *src, GstCaps *filter);
-  /* notify the subclass of new caps */
-  gboolean      (*set_caps)     (GstBaseSrc *src, GstCaps *caps);
-
   /* decide on caps */
   gboolean      (*negotiate)    (GstBaseSrc *src);
   /* called if, in negotiation, caps need fixating */
   void          (*fixate)       (GstBaseSrc *src, GstCaps *caps);
+  /* notify the subclass of new caps */
+  gboolean      (*set_caps)     (GstBaseSrc *src, GstCaps *caps);
+
+  /* setup allocation query */
+  gboolean      (*setup_allocation)   (GstBaseSrc *src, GstQuery *query);
 
   /* start and stop processing, ideal for opening/closing the resource */
   gboolean      (*start)        (GstBaseSrc *src);
