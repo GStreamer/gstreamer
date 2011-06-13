@@ -52,12 +52,12 @@ vs_4tap_func (double x)
 #if 0
   if (x == 0)
     return 1;
-  return sin (M_PI * x) / (M_PI * x) * (1 - 0.25 * x * x);
+  return sin (G_PI * x) / (G_PI * x) * (1 - 0.25 * x * x);
 #endif
 #if 1
   if (x == 0)
     return 1;
-  return sin (M_PI * x) / (M_PI * x);
+  return sin (G_PI * x) / (G_PI * x);
 #endif
 }
 

@@ -48,15 +48,7 @@
 #include "gstaudiotestsrc.h"
 
 
-#ifndef M_PI
-#define M_PI  3.14159265358979323846
-#endif
-
-#ifndef M_PI_2
-#define M_PI_2  1.57079632679489661923
-#endif
-
-#define M_PI_M2 ( M_PI + M_PI )
+#define M_PI_M2 ( G_PI + G_PI )
 
 GST_DEBUG_CATEGORY_STATIC (audio_test_src_debug);
 #define GST_CAT_DEFAULT audio_test_src_debug
@@ -478,7 +470,7 @@ gst_audio_test_src_create_square_##type (GstAudioTestSrc * src, g##type * sample
       src->accumulator -= M_PI_M2; \
     \
     for (c = 0; c < src->channels; ++c) { \
-      samples[i++] = (g##type) ((src->accumulator < M_PI) ? amp : -amp); \
+      samples[i++] = (g##type) ((src->accumulator < G_PI) ? amp : -amp); \
     } \
   } \
 }
@@ -503,7 +495,7 @@ gst_audio_test_src_create_saw_##type (GstAudioTestSrc * src, g##type * samples) 
   gdouble step, amp; \
   \
   step = M_PI_M2 * src->freq / src->samplerate; \
-  amp = (src->volume * scale) / M_PI; \
+  amp = (src->volume * scale) / G_PI; \
   \
   i = 0; \
   while (i < (src->generate_samples_per_buffer * src->channels)) { \
@@ -511,7 +503,7 @@ gst_audio_test_src_create_saw_##type (GstAudioTestSrc * src, g##type * samples) 
     if (src->accumulator >= M_PI_M2) \
       src->accumulator -= M_PI_M2; \
     \
-    if (src->accumulator < M_PI) { \
+    if (src->accumulator < G_PI) { \
       for (c = 0; c < src->channels; ++c) \
         samples[i++] = (g##type) (src->accumulator * amp); \
     } else { \
@@ -541,7 +533,7 @@ gst_audio_test_src_create_triangle_##type (GstAudioTestSrc * src, g##type * samp
   gdouble step, amp; \
   \
   step = M_PI_M2 * src->freq / src->samplerate; \
-  amp = (src->volume * scale) / M_PI_2; \
+  amp = (src->volume * scale) / G_PI_2; \
   \
   i = 0; \
   while (i < (src->generate_samples_per_buffer * src->channels)) { \
@@ -549,12 +541,12 @@ gst_audio_test_src_create_triangle_##type (GstAudioTestSrc * src, g##type * samp
     if (src->accumulator >= M_PI_M2) \
       src->accumulator -= M_PI_M2; \
     \
-    if (src->accumulator < (M_PI * 0.5)) { \
+    if (src->accumulator < (G_PI_2)) { \
       for (c = 0; c < src->channels; ++c) \
         samples[i++] = (g##type) (src->accumulator * amp); \
-    } else if (src->accumulator < (M_PI * 1.5)) { \
+    } else if (src->accumulator < (G_PI * 1.5)) { \
       for (c = 0; c < src->channels; ++c) \
-        samples[i++] = (g##type) ((src->accumulator - M_PI) * -amp); \
+        samples[i++] = (g##type) ((src->accumulator - G_PI) * -amp); \
     } else { \
       for (c = 0; c < src->channels; ++c) \
         samples[i++] = (g##type) ((M_PI_M2 - src->accumulator) * -amp); \
