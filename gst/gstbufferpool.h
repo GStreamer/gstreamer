@@ -62,7 +62,7 @@ typedef struct _GstBufferPoolClass GstBufferPoolClass;
 typedef enum {
   GST_BUFFER_POOL_FLAG_NONE     = 0,
   GST_BUFFER_POOL_FLAG_KEY_UNIT = (1 << 0),
-  GST_BUFFER_POOL_FLAG_DONTWAIT   = (1 << 1),
+  GST_BUFFER_POOL_FLAG_DONTWAIT = (1 << 1),
   GST_BUFFER_POOL_FLAG_DISCONT  = (1 << 2),
   GST_BUFFER_POOL_FLAG_LAST     = (1 << 16),
 } GstBufferPoolFlags;
