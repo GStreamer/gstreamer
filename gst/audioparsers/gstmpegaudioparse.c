@@ -68,6 +68,8 @@ GST_DEBUG_CATEGORY_STATIC (mpeg_audio_parse_debug);
 #define XING_TOC_FLAG        0x0004
 #define XING_VBR_SCALE_FLAG  0x0008
 
+#define MIN_FRAME_SIZE       6
+
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -237,7 +239,7 @@ gst_mpeg_audio_parse_start (GstBaseParse * parse)
 {
   GstMpegAudioParse *mp3parse = GST_MPEG_AUDIO_PARSE (parse);
 
-  gst_base_parse_set_min_frame_size (GST_BASE_PARSE (mp3parse), 1024);
+  gst_base_parse_set_min_frame_size (GST_BASE_PARSE (mp3parse), MIN_FRAME_SIZE);
   GST_DEBUG_OBJECT (parse, "starting");
 
   gst_mpeg_audio_parse_reset (mp3parse);
@@ -553,6 +555,9 @@ gst_mpeg_audio_parse_check_valid_frame (GstBaseParse * parse,
     *skipsize = off + 2;
     return FALSE;
   }
+
+  /* restore default minimum */
+  gst_base_parse_set_min_frame_size (parse, MIN_FRAME_SIZE);
 
   *framesize = bpf;
   return TRUE;

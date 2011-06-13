@@ -210,7 +210,7 @@ gst_ac3_parse_reset (GstAc3Parse * ac3parse)
 static void
 gst_ac3_parse_init (GstAc3Parse * ac3parse, GstAc3ParseClass * klass)
 {
-  gst_base_parse_set_min_frame_size (GST_BASE_PARSE (ac3parse), 64 * 2);
+  gst_base_parse_set_min_frame_size (GST_BASE_PARSE (ac3parse), 6);
   gst_ac3_parse_reset (ac3parse);
 }
 
