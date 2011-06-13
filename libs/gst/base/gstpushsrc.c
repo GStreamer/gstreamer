@@ -72,6 +72,8 @@ G_DEFINE_TYPE_WITH_CODE (GstPushSrc, gst_push_src, GST_TYPE_BASE_SRC, _do_init);
 static gboolean gst_push_src_query (GstBaseSrc * src, GstQuery * query);
 static GstFlowReturn gst_push_src_create (GstBaseSrc * bsrc, guint64 offset,
     guint length, GstBuffer ** ret);
+static GstFlowReturn gst_push_src_fill (GstBaseSrc * bsrc, guint64 offset,
+    guint length, GstBuffer * ret);
 
 static void
 gst_push_src_class_init (GstPushSrcClass * klass)
@@ -79,6 +81,7 @@ gst_push_src_class_init (GstPushSrcClass * klass)
   GstBaseSrcClass *gstbasesrc_class = (GstBaseSrcClass *) klass;
 
   gstbasesrc_class->create = GST_DEBUG_FUNCPTR (gst_push_src_create);
+  gstbasesrc_class->fill = GST_DEBUG_FUNCPTR (gst_push_src_fill);
   gstbasesrc_class->query = GST_DEBUG_FUNCPTR (gst_push_src_query);
 }
 
@@ -123,7 +126,26 @@ gst_push_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
   if (pclass->create)
     fret = pclass->create (src, ret);
   else
-    fret = GST_FLOW_ERROR;
+    fret =
+        GST_BASE_SRC_CLASS (parent_class)->create (bsrc, offset, length, ret);
+
+  return fret;
+}
+
+static GstFlowReturn
+gst_push_src_fill (GstBaseSrc * bsrc, guint64 offset, guint length,
+    GstBuffer * ret)
+{
+  GstFlowReturn fret;
+  GstPushSrc *src;
+  GstPushSrcClass *pclass;
+
+  src = GST_PUSH_SRC (bsrc);
+  pclass = GST_PUSH_SRC_GET_CLASS (src);
+  if (pclass->fill)
+    fret = pclass->fill (src, ret);
+  else
+    fret = GST_BASE_SRC_CLASS (parent_class)->fill (bsrc, offset, length, ret);
 
   return fret;
 }

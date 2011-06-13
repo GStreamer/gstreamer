@@ -57,6 +57,9 @@ struct _GstPushSrcClass {
   /* ask the subclass to create a buffer */
   GstFlowReturn (*create) (GstPushSrc *src, GstBuffer **buf);
 
+  /* ask the subclass to fill a buffer */
+  GstFlowReturn (*fill) (GstPushSrc *src, GstBuffer *buf);
+
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };

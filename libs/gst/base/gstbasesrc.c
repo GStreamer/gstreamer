@@ -241,6 +241,8 @@ struct _GstBaseSrcPrivate
 
   GstBufferPool *pool;
   const GstMemoryAllocator *allocator;
+  guint prefix;
+  guint alignment;
 };
 
 static GstElementClass *parent_class = NULL;
@@ -293,6 +295,8 @@ static const GstQueryType *gst_base_src_get_query_types (GstElement * element);
 
 static gboolean gst_base_src_query (GstPad * pad, GstQuery * query);
 
+static gboolean gst_base_src_activate_pool (GstBaseSrc * basesrc,
+    gboolean active);
 static gboolean gst_base_src_default_negotiate (GstBaseSrc * basesrc);
 static gboolean gst_base_src_default_do_seek (GstBaseSrc * src,
     GstSegment * segment);
@@ -1249,31 +1253,53 @@ gst_base_src_prepare_seek_segment (GstBaseSrc * src, GstEvent * event,
 }
 
 static GstFlowReturn
+gst_base_src_alloc_buffer (GstBaseSrc * src, guint64 offset,
+    guint size, GstBuffer ** buffer)
+{
+  GstFlowReturn ret;
+  GstBaseSrcPrivate *priv = src->priv;
+
+  if (priv->pool) {
+    ret = gst_buffer_pool_acquire_buffer (priv->pool, buffer, NULL);
+  } else {
+    *buffer = gst_buffer_new_allocate (priv->allocator, size, priv->alignment);
+    if (G_UNLIKELY (*buffer == NULL))
+      goto alloc_failed;
+
+    ret = GST_FLOW_OK;
+  }
+  return ret;
+
+  /* ERRORS */
+alloc_failed:
+  {
+    GST_ERROR_OBJECT (src, "Failed to allocate %u bytes", size);
+    return GST_FLOW_ERROR;
+  }
+}
+
+static GstFlowReturn
 gst_base_src_default_create (GstBaseSrc * src, guint64 offset,
     guint size, GstBuffer ** buffer)
 {
   GstBaseSrcClass *bclass;
   GstFlowReturn ret;
-  GstBuffer *buf;
 
   bclass = GST_BASE_SRC_GET_CLASS (src);
 
   if (G_UNLIKELY (!bclass->fill))
     goto no_function;
 
-  buf = gst_buffer_new_allocate (NULL, size, 0);
-  if (G_UNLIKELY (buf == NULL))
+  ret = gst_base_src_alloc_buffer (src, offset, size, buffer);
+  if (G_UNLIKELY (ret != GST_FLOW_OK))
     goto alloc_failed;
 
   if (G_LIKELY (size > 0)) {
     /* only call fill when there is a size */
-    ret = bclass->fill (src, offset, size, buf);
-
+    ret = bclass->fill (src, offset, size, *buffer);
     if (G_UNLIKELY (ret != GST_FLOW_OK))
       goto not_ok;
   }
-
-  *buffer = buf;
 
   return GST_FLOW_OK;
 
@@ -1286,13 +1312,13 @@ no_function:
 alloc_failed:
   {
     GST_ERROR_OBJECT (src, "Failed to allocate %u bytes", size);
-    return GST_FLOW_ERROR;
+    return ret;
   }
 not_ok:
   {
     GST_DEBUG_OBJECT (src, "fill returned %d (%s)", ret,
         gst_flow_get_name (ret));
-    gst_buffer_unref (buf);
+    gst_buffer_unref (*buffer);
     return ret;
   }
 }
@@ -1590,10 +1616,12 @@ gst_base_src_send_event (GstElement * element, GstEvent * event)
       g_atomic_int_set (&src->priv->pending_eos, TRUE);
       GST_DEBUG_OBJECT (src, "EOS marked, calling unlock");
 
+
       /* unlock the _create function so that we can check the pending_eos flag
        * and we can do EOS. This will eventually release the LIVE_LOCK again so
        * that we can grab it and stop the unlock again. We don't take the stream
        * lock so that this operation is guaranteed to never block. */
+      gst_base_src_activate_pool (src, FALSE);
       if (bclass->unlock)
         bclass->unlock (src);
 
@@ -1605,6 +1633,7 @@ gst_base_src_send_event (GstElement * element, GstEvent * event)
        * lock is enough because that protects the create function. */
       if (bclass->unlock_stop)
         bclass->unlock_stop (src);
+      gst_base_src_activate_pool (src, TRUE);
       GST_LIVE_UNLOCK (src);
 
       result = TRUE;
@@ -2571,13 +2600,46 @@ null_buffer:
 
 static void
 gst_base_src_set_allocation (GstBaseSrc * basesrc, GstBufferPool * pool,
-    const GstMemoryAllocator * allocator)
+    const GstMemoryAllocator * allocator, guint prefix, guint alignment)
 {
-  if (basesrc->priv->pool)
-    gst_object_unref (basesrc->priv->pool);
-  basesrc->priv->pool = pool;
+  GstBufferPool *oldpool;
+  GstBaseSrcPrivate *priv = basesrc->priv;
 
-  basesrc->priv->allocator = allocator;
+  GST_OBJECT_LOCK (basesrc);
+  if ((oldpool = priv->pool)) {
+    gst_object_unref (oldpool);
+  }
+  priv->pool = pool;
+
+  priv->allocator = allocator;
+
+  priv->prefix = prefix;
+  priv->alignment = alignment;
+  GST_OBJECT_UNLOCK (basesrc);
+
+  if (oldpool) {
+    gst_buffer_pool_set_active (oldpool, FALSE);
+    gst_object_unref (oldpool);
+  }
+}
+
+static gboolean
+gst_base_src_activate_pool (GstBaseSrc * basesrc, gboolean active)
+{
+  GstBaseSrcPrivate *priv = basesrc->priv;
+  GstBufferPool *pool;
+  gboolean res = TRUE;
+
+  GST_OBJECT_LOCK (basesrc);
+  if ((pool = priv->pool))
+    pool = gst_object_ref (pool);
+  GST_OBJECT_UNLOCK (basesrc);
+
+  if (pool) {
+    res = gst_buffer_pool_set_active (pool, active);
+    gst_object_unref (pool);
+  }
+  return res;
 }
 
 static gboolean
@@ -2623,9 +2685,11 @@ gst_base_src_prepare_allocation (GstBaseSrc * basesrc, GstCaps * caps)
     gst_buffer_pool_config_set (config, caps, size, min, max, prefix,
         alignment);
     gst_buffer_pool_set_config (pool, config);
+
+    gst_buffer_pool_set_active (pool, TRUE);
   }
 
-  gst_base_src_set_allocation (basesrc, pool, allocator);
+  gst_base_src_set_allocation (basesrc, pool, allocator, prefix, alignment);
 
   return result;
 }
@@ -2856,6 +2920,8 @@ gst_base_src_stop (GstBaseSrc * basesrc)
   if (bclass->stop)
     result = bclass->stop (basesrc);
 
+  gst_base_src_set_allocation (basesrc, NULL, NULL, 0, 0);
+
   if (result)
     GST_OBJECT_FLAG_UNSET (basesrc, GST_BASE_SRC_STARTED);
 
@@ -2873,6 +2939,7 @@ gst_base_src_set_flushing (GstBaseSrc * basesrc,
   bclass = GST_BASE_SRC_GET_CLASS (basesrc);
 
   if (flushing && unlock) {
+    gst_base_src_activate_pool (basesrc, FALSE);
     /* unlock any subclasses, we need to do this before grabbing the
      * LIVE_LOCK since we hold this lock before going into ::create. We pass an
      * unlock to the params because of backwards compat (see seek handler)*/
@@ -2903,6 +2970,8 @@ gst_base_src_set_flushing (GstBaseSrc * basesrc,
   } else {
     /* signal the live source that it can start playing */
     basesrc->live_running = live_play;
+
+    gst_base_src_activate_pool (basesrc, TRUE);
 
     /* When unlocking drop all delayed events */
     if (unlock) {
@@ -2935,6 +3004,7 @@ gst_base_src_set_playing (GstBaseSrc * basesrc, gboolean live_play)
   /* unlock subclasses locked in ::create, we only do this when we stop playing. */
   if (!live_play) {
     GST_DEBUG_OBJECT (basesrc, "unlock");
+    gst_base_src_activate_pool (basesrc, FALSE);
     if (bclass->unlock)
       bclass->unlock (basesrc);
   }
@@ -2958,6 +3028,7 @@ gst_base_src_set_playing (GstBaseSrc * basesrc, gboolean live_play)
 
     /* clear our unlock request when going to PLAYING */
     GST_DEBUG_OBJECT (basesrc, "unlock stop");
+    gst_base_src_activate_pool (basesrc, TRUE);
     if (bclass->unlock_stop)
       bclass->unlock_stop (basesrc);
 
