@@ -134,17 +134,19 @@ struct _GstBaseRTPPayloadClass
 {
   GstElementClass parent_class;
 
+  /* query accepted caps */
+  GstCaps *     (*get_caps)             (GstBaseRTPPayload *payload, GstPad * pad, GstCaps * filter);
   /* receive caps on the sink pad, configure the payloader. */
   gboolean      (*set_caps)             (GstBaseRTPPayload *payload, GstCaps *caps);
+
   /* handle a buffer, perform 0 or more gst_basertppayload_push() on
    * the RTP buffers. This function takes ownership of the buffer. */
   GstFlowReturn (*handle_buffer)        (GstBaseRTPPayload *payload,
                                          GstBuffer *buffer);
   gboolean      (*handle_event)         (GstBaseRTPPayload *payload, GstEvent * event);
-  GstCaps *     (*get_caps)             (GstBaseRTPPayload *payload, GstPad * pad, GstCaps * filter);
 
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING-2];
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 GType           gst_basertppayload_get_type             (void);
