@@ -142,9 +142,7 @@ struct _GstVideoTestSrc {
   gint bpp;
   gint rate_numerator;
   gint rate_denominator;
-
-  /* the bufferpool */
-  GstBufferPool *pool;
+  guint size;
 
   /* private */
   gint64 timestamp_offset;              /* base offset */

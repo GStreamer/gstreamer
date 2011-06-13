@@ -102,10 +102,11 @@ static gboolean gst_video_test_src_query (GstBaseSrc * bsrc, GstQuery * query);
 
 static void gst_video_test_src_get_times (GstBaseSrc * basesrc,
     GstBuffer * buffer, GstClockTime * start, GstClockTime * end);
-static GstFlowReturn gst_video_test_src_create (GstPushSrc * psrc,
-    GstBuffer ** buffer);
+static gboolean gst_video_test_src_setup_allocation (GstBaseSrc * bsrc,
+    GstQuery * query);
+static GstFlowReturn gst_video_test_src_fill (GstPushSrc * psrc,
+    GstBuffer * buffer);
 static gboolean gst_video_test_src_start (GstBaseSrc * basesrc);
-static gboolean gst_video_test_src_stop (GstBaseSrc * basesrc);
 
 #define GST_TYPE_VIDEO_TEST_SRC_PATTERN (gst_video_test_src_pattern_get_type ())
 static GType
@@ -303,9 +304,9 @@ gst_video_test_src_class_init (GstVideoTestSrcClass * klass)
   gstbasesrc_class->query = gst_video_test_src_query;
   gstbasesrc_class->get_times = gst_video_test_src_get_times;
   gstbasesrc_class->start = gst_video_test_src_start;
-  gstbasesrc_class->stop = gst_video_test_src_stop;
+  gstbasesrc_class->setup_allocation = gst_video_test_src_setup_allocation;
 
-  gstpushsrc_class->create = gst_video_test_src_create;
+  gstpushsrc_class->fill = gst_video_test_src_fill;
 }
 
 static void
@@ -652,6 +653,27 @@ no_framerate:
 }
 
 static gboolean
+gst_video_test_src_setup_allocation (GstBaseSrc * bsrc, GstQuery * query)
+{
+  GstVideoTestSrc *videotestsrc;
+  GstBufferPool *pool;
+  guint size, min, max, prefix, alignment;
+
+  videotestsrc = GST_VIDEO_TEST_SRC (bsrc);
+
+  gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
+      &alignment, &pool);
+
+  /* adjust size */
+  size = MAX (size, videotestsrc->size);
+
+  gst_query_set_allocation_params (query, size, min, max, prefix,
+      alignment, pool);
+
+  return TRUE;
+}
+
+static gboolean
 gst_video_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
 {
   gboolean res;
@@ -659,9 +681,6 @@ gst_video_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
   struct fourcc_list_struct *fourcc;
   GstVideoTestSrc *videotestsrc;
   GstVideoTestSrcColorSpec color_spec;
-  GstQuery *query;
-  GstBufferPool *pool;
-  guint size, min, max, prefix, alignment;
 
   videotestsrc = GST_VIDEO_TEST_SRC (bsrc);
 
@@ -678,44 +697,12 @@ gst_video_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
   videotestsrc->rate_denominator = rate_denominator;
   videotestsrc->bpp = videotestsrc->fourcc->bitspp;
   videotestsrc->color_spec = color_spec;
+  videotestsrc->size =
+      gst_video_test_src_get_size (videotestsrc, width, height);
 
   GST_DEBUG_OBJECT (videotestsrc, "size %dx%d, %d/%d fps",
       videotestsrc->width, videotestsrc->height,
       videotestsrc->rate_numerator, videotestsrc->rate_denominator);
-
-  /* find a pool for the negotiated caps now */
-  query = gst_query_new_allocation (caps, TRUE);
-
-  if (gst_pad_peer_query (bsrc->srcpad, query)) {
-    /* we got configuration from our peer, parse them */
-    gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
-        &alignment, &pool);
-  } else {
-    size = gst_video_test_src_get_size (videotestsrc, width, height);
-    min = max = 0;
-    prefix = 0;
-    alignment = 0;
-    pool = NULL;
-  }
-
-  if (pool == NULL) {
-    GstStructure *config;
-
-    /* we did not get a pool, make one ourselves then */
-    pool = gst_buffer_pool_new ();
-
-    config = gst_buffer_pool_get_config (pool);
-    gst_buffer_pool_config_set (config, caps, size, min, max, prefix,
-        alignment);
-    gst_buffer_pool_set_config (pool, config);
-  }
-
-  if (videotestsrc->pool)
-    gst_object_unref (videotestsrc->pool);
-  videotestsrc->pool = pool;
-
-  /* and activate */
-  gst_buffer_pool_set_active (pool, TRUE);
 
   return res;
 
@@ -861,18 +848,16 @@ gst_video_test_src_is_seekable (GstBaseSrc * psrc)
 }
 
 static GstFlowReturn
-gst_video_test_src_create (GstPushSrc * psrc, GstBuffer ** buffer)
+gst_video_test_src_fill (GstPushSrc * psrc, GstBuffer * buffer)
 {
   GstVideoTestSrc *src;
   gsize size;
-  GstBuffer *outbuf = NULL;
-  GstFlowReturn res;
   GstClockTime next_time;
   guint8 *data;
 
   src = GST_VIDEO_TEST_SRC (psrc);
 
-  if (G_UNLIKELY (src->pool == NULL))
+  if (G_UNLIKELY (src->fourcc == NULL))
     goto not_negotiated;
 
   /* 0 framerate and we are at the second frame, eos */
@@ -882,40 +867,34 @@ gst_video_test_src_create (GstPushSrc * psrc, GstBuffer ** buffer)
   GST_LOG_OBJECT (src,
       "creating buffer from pool for frame %d", (gint) src->n_frames);
 
-  res = gst_buffer_pool_acquire_buffer (src->pool, &outbuf, NULL);
-  if (res != GST_FLOW_OK)
-    goto no_buffer;
-
-  data = gst_buffer_map (outbuf, &size, NULL, GST_MAP_WRITE);
+  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_WRITE);
   memset (data, 0, size);
   src->tmpline_u8 = g_malloc (src->width + 8);
   src->tmpline = g_malloc ((src->width + 8) * 4);
   src->tmpline2 = g_malloc ((src->width + 8) * 4);
 
   src->make_image (src, (void *) data, src->width, src->height);
-  gst_buffer_unmap (outbuf, data, size);
+  gst_buffer_unmap (buffer, data, size);
 
   g_free (src->tmpline);
   g_free (src->tmpline2);
   g_free (src->tmpline_u8);
 
-  GST_BUFFER_TIMESTAMP (outbuf) = src->timestamp_offset + src->running_time;
-  GST_BUFFER_OFFSET (outbuf) = src->n_frames;
+  GST_BUFFER_TIMESTAMP (buffer) = src->timestamp_offset + src->running_time;
+  GST_BUFFER_OFFSET (buffer) = src->n_frames;
   src->n_frames++;
-  GST_BUFFER_OFFSET_END (outbuf) = src->n_frames;
+  GST_BUFFER_OFFSET_END (buffer) = src->n_frames;
   if (src->rate_numerator) {
     next_time = gst_util_uint64_scale_int (src->n_frames * GST_SECOND,
         src->rate_denominator, src->rate_numerator);
-    GST_BUFFER_DURATION (outbuf) = next_time - src->running_time;
+    GST_BUFFER_DURATION (buffer) = next_time - src->running_time;
   } else {
     next_time = src->timestamp_offset;
     /* NONE means forever */
-    GST_BUFFER_DURATION (outbuf) = GST_CLOCK_TIME_NONE;
+    GST_BUFFER_DURATION (buffer) = GST_CLOCK_TIME_NONE;
   }
 
   src->running_time = next_time;
-
-  *buffer = outbuf;
 
   return GST_FLOW_OK;
 
@@ -930,12 +909,6 @@ eos:
     GST_DEBUG_OBJECT (src, "eos: 0 framerate, frame %d", (gint) src->n_frames);
     return GST_FLOW_UNEXPECTED;
   }
-no_buffer:
-  {
-    GST_DEBUG_OBJECT (src, "could not allocate buffer, reason %s",
-        gst_flow_get_name (res));
-    return res;
-  }
 }
 
 static gboolean
@@ -945,22 +918,6 @@ gst_video_test_src_start (GstBaseSrc * basesrc)
 
   src->running_time = 0;
   src->n_frames = 0;
-
-  return TRUE;
-}
-
-static gboolean
-gst_video_test_src_stop (GstBaseSrc * basesrc)
-{
-  GstVideoTestSrc *src = GST_VIDEO_TEST_SRC (basesrc);
-
-  /* deactivate */
-
-  if (src->pool) {
-    gst_buffer_pool_set_active (src->pool, FALSE);
-    gst_object_unref (src->pool);
-  }
-  src->pool = NULL;
 
   return TRUE;
 }
