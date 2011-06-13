@@ -3318,7 +3318,12 @@ no_peer:
 gboolean
 gst_pad_query_default (GstPad * pad, GstQuery * query)
 {
+  gboolean forward = TRUE, ret = FALSE;
+
   switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_SCHEDULING:
+      forward = FALSE;
+      break;
     case GST_QUERY_POSITION:
     case GST_QUERY_SEEKING:
     case GST_QUERY_FORMATS:
@@ -3327,9 +3332,14 @@ gst_pad_query_default (GstPad * pad, GstQuery * query)
     case GST_QUERY_RATE:
     case GST_QUERY_CONVERT:
     default:
-      return gst_pad_forward
-          (pad, (GstPadForwardFunction) gst_pad_peer_query, query);
+      break;
   }
+
+  if (forward) {
+    ret = gst_pad_forward
+        (pad, (GstPadForwardFunction) gst_pad_peer_query, query);
+  }
+  return ret;
 }
 
 static void
@@ -4209,8 +4219,6 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
   g_return_val_if_fail (event != NULL, FALSE);
   g_return_val_if_fail (GST_IS_EVENT (event), FALSE);
 
-  GST_LOG_OBJECT (pad, "event: %s", GST_EVENT_TYPE_NAME (event));
-
   GST_OBJECT_LOCK (pad);
 
   peerpad = GST_PAD_PEER (pad);
@@ -4320,14 +4328,16 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
   pad->priv->using++;
   GST_OBJECT_UNLOCK (pad);
 
-  GST_LOG_OBJECT (pad, "sending event %s to peerpad %" GST_PTR_FORMAT,
-      GST_EVENT_TYPE_NAME (event), peerpad);
+  GST_LOG_OBJECT (pad, "sending event %p (%s) to peerpad %" GST_PTR_FORMAT,
+      event, GST_EVENT_TYPE_NAME (event), peerpad);
 
   result = gst_pad_send_event (peerpad, event);
 
-  /* Note: we gave away ownership of the event at this point */
-  GST_LOG_OBJECT (pad, "sent event to peerpad %" GST_PTR_FORMAT ", result %d",
-      peerpad, result);
+  /* Note: we gave away ownership of the event at this point but we can still
+   * print the old pointer */
+  GST_LOG_OBJECT (pad,
+      "sent event %p to peerpad %" GST_PTR_FORMAT ", result %d", event, peerpad,
+      result);
 
   gst_object_unref (peerpad);
 
