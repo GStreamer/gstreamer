@@ -3589,7 +3589,7 @@ gst_rtspsrc_loop_interleaved (GstRTSPSrc * src)
   size -= 1;
 
   buf = gst_buffer_new ();
-  gst_buffer_take_memory (buf,
+  gst_buffer_take_memory (buf, -1,
       gst_memory_new_wrapped (0, data, g_free, size, 0, size));
 
   /* don't need message anymore */

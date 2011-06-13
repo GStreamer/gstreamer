@@ -525,7 +525,7 @@ no_select:
   }
 
   outbuf = gst_buffer_new ();
-  gst_buffer_take_memory (outbuf,
+  gst_buffer_take_memory (outbuf, -1,
       gst_memory_new_wrapped (0, pktdata, g_free, pktsize, offset, ret));
 
   /* use buffer metadata so receivers can also track the address */
