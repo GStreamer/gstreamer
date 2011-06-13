@@ -197,9 +197,9 @@ _replace_memory (GstBuffer * buffer, GstMemory * mem)
 }
 
 static inline void
-_memory_add (GstBuffer * buffer, GstMemory * mem)
+_memory_add (GstBuffer * buffer, guint idx, GstMemory * mem)
 {
-  guint len = GST_BUFFER_MEM_LEN (buffer);
+  guint i, len = GST_BUFFER_MEM_LEN (buffer);
 
   if (G_UNLIKELY (len >= GST_BUFFER_MEM_MAX)) {
     /* too many buffer, span them. */
@@ -210,8 +210,16 @@ _memory_add (GstBuffer * buffer, GstMemory * mem)
     /* we now have 1 single spanned buffer */
     len = 1;
   }
-  /* and append the new buffer */
-  GST_BUFFER_MEM_PTR (buffer, len) = mem;
+
+  if (idx == -1)
+    idx = len;
+
+  for (i = len; i > idx; i--) {
+    /* move buffers to insert, FIXME, we need to insert first and then merge */
+    GST_BUFFER_MEM_PTR (buffer, i) = GST_BUFFER_MEM_PTR (buffer, i - 1);
+  }
+  /* and insert the new buffer */
+  GST_BUFFER_MEM_PTR (buffer, idx) = mem;
   GST_BUFFER_MEM_LEN (buffer) = len + 1;
 }
 
@@ -319,7 +327,7 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
         } else {
           mem = gst_memory_ref (mem);
         }
-        _memory_add (dest, mem);
+        _memory_add (dest, -1, mem);
         left -= tocopy;
       }
     }
@@ -498,7 +506,7 @@ gst_buffer_new_allocate (const GstMemoryAllocator * allocator, gsize size,
   newbuf = gst_buffer_new ();
 
   if (mem != NULL)
-    _memory_add (newbuf, mem);
+    _memory_add (newbuf, -1, mem);
 
   GST_CAT_LOG (GST_CAT_BUFFER, "new %p of size %d from allocator %p", newbuf,
       size, allocator);
@@ -516,7 +524,7 @@ gst_buffer_new_allocate (const GstMemoryAllocator * allocator, gsize size,
   if (size > 0) {
     mem = gst_memory_new_wrapped (0, data + sizeof (GstBufferImpl), NULL,
         size, 0, size);
-    _memory_add (newbuf, mem);
+    _memory_add (newbuf, -1, mem);
   }
 #endif
 
@@ -543,7 +551,7 @@ gst_buffer_new_allocate (const GstMemoryAllocator * allocator, gsize size,
   GST_BUFFER_BUFMEM (newbuf) = mem;
 
   if (size > 0)
-    _memory_add (newbuf, gst_memory_ref (mem));
+    _memory_add (newbuf, -1, gst_memory_ref (mem));
 #endif
 
   return newbuf;
@@ -575,19 +583,21 @@ gst_buffer_n_memory (GstBuffer * buffer)
 /**
  * gst_buffer_take_memory:
  * @buffer: a #GstBuffer.
+ * @idx: the index to add the memory
  * @mem: a #GstMemory.
  *
- * Add the memory block @mem to @buffer. This function takes ownership of @mem
+ * Add the memory block @mem to @buffer at @idx. This function takes ownership of @mem
  * and thus doesn't increase its refcount.
  */
 void
-gst_buffer_take_memory (GstBuffer * buffer, GstMemory * mem)
+gst_buffer_take_memory (GstBuffer * buffer, guint idx, GstMemory * mem)
 {
   g_return_if_fail (GST_IS_BUFFER (buffer));
   g_return_if_fail (gst_buffer_is_writable (buffer));
   g_return_if_fail (mem != NULL);
+  g_return_if_fail (idx == -1 || idx < GST_BUFFER_MEM_LEN (buffer));
 
-  _memory_add (buffer, mem);
+  _memory_add (buffer, idx, mem);
 }
 
 static GstMemory *
@@ -1004,6 +1014,8 @@ gst_buffer_extract (GstBuffer * buffer, gsize offset, gpointer dest, gsize size)
  * @size: the size to compare
  *
  * Compare @size bytes starting from @offset in @buffer with the memory in @mem.
+ *
+ * Returns: 0 if the memory is equal.
  */
 gint
 gst_buffer_memcmp (GstBuffer * buffer, gsize offset, gconstpointer mem,
@@ -1255,7 +1267,7 @@ gst_buffer_span (GstBuffer * buf1, gsize offset, GstBuffer * buf2, gsize size)
   span = _gst_buffer_arr_span (mem, len, 2, offset, size, FALSE);
 
   newbuf = gst_buffer_new ();
-  _memory_add (newbuf, span);
+  _memory_add (newbuf, -1, span);
 
 #if 0
   /* if the offset is 0, the new buffer has the same timestamp as buf1 */

@@ -55,7 +55,7 @@ GST_START_TEST (test_buffer_range)
   buf = gst_buffer_new ();
   fail_unless (buf != NULL);
 
-  gst_buffer_take_memory (buf,
+  gst_buffer_take_memory (buf, -1,
       gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY,
           (gpointer) vorbisid, NULL, 30, 0, 30));
 

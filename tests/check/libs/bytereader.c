@@ -49,7 +49,7 @@ GST_START_TEST (test_initialization)
   guint8 *bdata;
   gsize bsize;
 
-  gst_buffer_take_memory (buffer,
+  gst_buffer_take_memory (buffer, -1,
       gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY, data, NULL, 4, 0, 4));
 
   fail_unless (gst_byte_reader_get_uint8 (&reader, &x));

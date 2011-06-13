@@ -2261,7 +2261,7 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
 
       /* always pass all available data */
       data = gst_adapter_map (parse->priv->adapter, av);
-      gst_buffer_take_memory (tmpbuf,
+      gst_buffer_take_memory (tmpbuf, -1,
           gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY,
               (gpointer) data, NULL, av, 0, av));
       GST_BUFFER_OFFSET (tmpbuf) = parse->priv->offset;

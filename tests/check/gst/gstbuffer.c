@@ -246,7 +246,7 @@ create_read_only_buffer (void)
   buf = gst_buffer_new ();
 
   /* assign some read-only data to the new buffer */
-  gst_buffer_take_memory (buf,
+  gst_buffer_take_memory (buf, -1,
       gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY,
           (gpointer) ro_memory, NULL,
           sizeof (ro_memory), 0, sizeof (ro_memory)));
