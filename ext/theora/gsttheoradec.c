@@ -1111,14 +1111,8 @@ theora_handle_image (GstTheoraDec * dec, th_ycbcr_buffer buf, GstBuffer ** out)
   guint8 *dest, *src;
   gsize size;
   guint8 *data;
-  gboolean reconfigure;
 
-  GST_OBJECT_LOCK (dec->srcpad);
-  reconfigure = GST_PAD_NEEDS_RECONFIGURE (dec->srcpad);
-  GST_OBJECT_FLAG_UNSET (dec->srcpad, GST_PAD_NEED_RECONFIGURE);
-  GST_OBJECT_UNLOCK (dec->srcpad);
-
-  if (reconfigure) {
+  if (gst_pad_check_reconfigure (dec->srcpad)) {
     GstCaps *caps;
 
     caps = gst_pad_get_current_caps (dec->srcpad);
