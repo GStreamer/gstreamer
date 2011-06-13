@@ -218,8 +218,8 @@ GST_STATIC_PAD_TEMPLATE ("src",
 
 static guint gst_rtp_jitter_buffer_signals[LAST_SIGNAL] = { 0 };
 
-GST_BOILERPLATE (GstRtpJitterBuffer, gst_rtp_jitter_buffer, GstElement,
-    GST_TYPE_ELEMENT);
+#define gst_rtp_jitter_buffer_parent_class parent_class
+G_DEFINE_TYPE (GstRtpJitterBuffer, gst_rtp_jitter_buffer, GST_TYPE_ELEMENT);
 
 /* object overrides */
 static void gst_rtp_jitter_buffer_set_property (GObject * object,
@@ -232,17 +232,16 @@ static void gst_rtp_jitter_buffer_finalize (GObject * object);
 static GstStateChangeReturn gst_rtp_jitter_buffer_change_state (GstElement
     * element, GstStateChange transition);
 static GstPad *gst_rtp_jitter_buffer_request_new_pad (GstElement * element,
-    GstPadTemplate * templ, const gchar * name);
+    GstPadTemplate * templ, const gchar * name, const GstCaps * filter);
 static void gst_rtp_jitter_buffer_release_pad (GstElement * element,
     GstPad * pad);
 static GstClock *gst_rtp_jitter_buffer_provide_clock (GstElement * element);
 
 /* pad overrides */
-static GstCaps *gst_rtp_jitter_buffer_getcaps (GstPad * pad);
+static GstCaps *gst_rtp_jitter_buffer_getcaps (GstPad * pad, GstCaps * filter);
 static GstIterator *gst_rtp_jitter_buffer_iterate_internal_links (GstPad * pad);
 
 /* sinkpad overrides */
-static gboolean gst_jitter_buffer_sink_setcaps (GstPad * pad, GstCaps * caps);
 static gboolean gst_rtp_jitter_buffer_sink_event (GstPad * pad,
     GstEvent * event);
 static GstFlowReturn gst_rtp_jitter_buffer_chain (GstPad * pad,
@@ -266,25 +265,6 @@ gst_rtp_jitter_buffer_clear_pt_map (GstRtpJitterBuffer * jitterbuffer);
 static GstClockTime
 gst_rtp_jitter_buffer_set_active (GstRtpJitterBuffer * jitterbuffer,
     gboolean active, guint64 base_time);
-
-static void
-gst_rtp_jitter_buffer_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_jitter_buffer_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_jitter_buffer_sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_jitter_buffer_sink_rtcp_template));
-
-  gst_element_class_set_details_simple (element_class,
-      "RTP packet jitter-buffer", "Filter/Network/RTP",
-      "A buffer that deals with network jitter and other transmission faults",
-      "Philippe Kalaf <philippe.kalaf@collabora.co.uk>, "
-      "Wim Taymans <wim.taymans@gmail.com>");
-}
 
 static void
 gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
@@ -443,6 +423,19 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
   gstelement_class->provide_clock =
       GST_DEBUG_FUNCPTR (gst_rtp_jitter_buffer_provide_clock);
 
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_jitter_buffer_src_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_jitter_buffer_sink_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_jitter_buffer_sink_rtcp_template));
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "RTP packet jitter-buffer", "Filter/Network/RTP",
+      "A buffer that deals with network jitter and other transmission faults",
+      "Philippe Kalaf <philippe.kalaf@collabora.co.uk>, "
+      "Wim Taymans <wim.taymans@gmail.com>");
+
   klass->clear_pt_map = GST_DEBUG_FUNCPTR (gst_rtp_jitter_buffer_clear_pt_map);
   klass->set_active = GST_DEBUG_FUNCPTR (gst_rtp_jitter_buffer_set_active);
 
@@ -451,8 +444,7 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
 }
 
 static void
-gst_rtp_jitter_buffer_init (GstRtpJitterBuffer * jitterbuffer,
-    GstRtpJitterBufferClass * klass)
+gst_rtp_jitter_buffer_init (GstRtpJitterBuffer * jitterbuffer)
 {
   GstRtpJitterBufferPrivate *priv;
 
@@ -495,8 +487,6 @@ gst_rtp_jitter_buffer_init (GstRtpJitterBuffer * jitterbuffer,
       GST_DEBUG_FUNCPTR (gst_rtp_jitter_buffer_chain));
   gst_pad_set_event_function (priv->sinkpad,
       GST_DEBUG_FUNCPTR (gst_rtp_jitter_buffer_sink_event));
-  gst_pad_set_setcaps_function (priv->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_jitter_buffer_sink_setcaps));
   gst_pad_set_getcaps_function (priv->sinkpad,
       GST_DEBUG_FUNCPTR (gst_rtp_jitter_buffer_getcaps));
 
@@ -525,6 +515,7 @@ gst_rtp_jitter_buffer_iterate_internal_links (GstPad * pad)
   GstRtpJitterBuffer *jitterbuffer;
   GstPad *otherpad = NULL;
   GstIterator *it;
+  GValue val = { 0, };
 
   jitterbuffer = GST_RTP_JITTER_BUFFER (gst_pad_get_parent (pad));
 
@@ -536,8 +527,10 @@ gst_rtp_jitter_buffer_iterate_internal_links (GstPad * pad)
     otherpad = NULL;
   }
 
-  it = gst_iterator_new_single (GST_TYPE_PAD, otherpad,
-      (GstCopyFunction) gst_object_ref, (GFreeFunc) gst_object_unref);
+  g_value_init (&val, GST_TYPE_PAD);
+  g_value_set_object (&val, otherpad);
+  it = gst_iterator_new_single (GST_TYPE_PAD, &val);
+  g_value_unset (&val);
 
   gst_object_unref (jitterbuffer);
 
@@ -585,7 +578,7 @@ remove_rtcp_sink (GstRtpJitterBuffer * jitterbuffer)
 
 static GstPad *
 gst_rtp_jitter_buffer_request_new_pad (GstElement * element,
-    GstPadTemplate * templ, const gchar * name)
+    GstPadTemplate * templ, const gchar * name, const GstCaps * filter)
 {
   GstRtpJitterBuffer *jitterbuffer;
   GstElementClass *klass;
@@ -714,7 +707,7 @@ gst_rtp_jitter_buffer_set_active (GstRtpJitterBuffer * jbuf, gboolean active,
 }
 
 static GstCaps *
-gst_rtp_jitter_buffer_getcaps (GstPad * pad)
+gst_rtp_jitter_buffer_getcaps (GstPad * pad, GstCaps * filter)
 {
   GstRtpJitterBuffer *jitterbuffer;
   GstRtpJitterBufferPrivate *priv;
@@ -727,7 +720,7 @@ gst_rtp_jitter_buffer_getcaps (GstPad * pad)
 
   other = (pad == priv->srcpad ? priv->sinkpad : priv->srcpad);
 
-  caps = gst_pad_peer_get_caps (other);
+  caps = gst_pad_peer_get_caps (other, filter);
 
   templ = gst_pad_get_pad_template_caps (pad);
   if (caps == NULL) {
@@ -830,29 +823,6 @@ wrong_rate:
     GST_DEBUG_OBJECT (jitterbuffer, "Invalid clock-rate %d", priv->clock_rate);
     return FALSE;
   }
-}
-
-static gboolean
-gst_jitter_buffer_sink_setcaps (GstPad * pad, GstCaps * caps)
-{
-  GstRtpJitterBuffer *jitterbuffer;
-  GstRtpJitterBufferPrivate *priv;
-  gboolean res;
-
-  jitterbuffer = GST_RTP_JITTER_BUFFER (gst_pad_get_parent (pad));
-  priv = jitterbuffer->priv;
-
-  JBUF_LOCK (priv);
-  res = gst_jitter_buffer_sink_parse_caps (jitterbuffer, caps);
-  JBUF_UNLOCK (priv);
-
-  /* set same caps on srcpad on success */
-  if (res)
-    gst_pad_set_caps (priv->srcpad, caps);
-
-  gst_object_unref (jitterbuffer);
-
-  return res;
 }
 
 static void
@@ -1062,30 +1032,33 @@ gst_rtp_jitter_buffer_sink_event (GstPad * pad, GstEvent * event)
   GST_DEBUG_OBJECT (jitterbuffer, "received %s", GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_NEWSEGMENT:
+    case GST_EVENT_CAPS:
     {
-      GstFormat format;
-      gdouble rate, arate;
-      gint64 start, stop, time;
-      gboolean update;
+      GstCaps *caps;
 
-      gst_event_parse_new_segment_full (event, &update, &rate, &arate, &format,
-          &start, &stop, &time);
+      gst_event_parse_caps (event, &caps);
+
+      JBUF_LOCK (priv);
+      ret = gst_jitter_buffer_sink_parse_caps (jitterbuffer, caps);
+      JBUF_UNLOCK (priv);
+
+      /* set same caps on srcpad on success */
+      if (ret)
+        gst_pad_set_caps (priv->srcpad, caps);
+
+      gst_event_unref (event);
+      break;
+    }
+    case GST_EVENT_SEGMENT:
+    {
+      gst_event_copy_segment (event, &priv->segment);
 
       /* we need time for now */
-      if (format != GST_FORMAT_TIME)
+      if (priv->segment.format != GST_FORMAT_TIME)
         goto newseg_wrong_format;
 
       GST_DEBUG_OBJECT (jitterbuffer,
-          "newsegment: update %d, rate %g, arate %g, start %" GST_TIME_FORMAT
-          ", stop %" GST_TIME_FORMAT ", time %" GST_TIME_FORMAT,
-          update, rate, arate, GST_TIME_ARGS (start), GST_TIME_ARGS (stop),
-          GST_TIME_ARGS (time));
-
-      /* now configure the values, we need these to time the release of the
-       * buffers on the srcpad. */
-      gst_segment_set_newsegment_full (&priv->segment, update,
-          rate, arate, format, start, stop, time);
+          "newsegment:  %" GST_SEGMENT_FORMAT, &priv->segment);
 
       /* FIXME, push SEGMENT in the queue. Sorting order might be difficult. */
       ret = gst_pad_push_event (priv->srcpad, event);
@@ -1264,6 +1237,7 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstBuffer * buffer)
   gboolean tail;
   gint percent = -1;
   guint8 pt;
+  GstRTPBuffer rtp = { NULL };
 
   jitterbuffer = GST_RTP_JITTER_BUFFER (gst_pad_get_parent (pad));
 
@@ -1272,7 +1246,10 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstBuffer * buffer)
 
   priv = jitterbuffer->priv;
 
-  pt = gst_rtp_buffer_get_payload_type (buffer);
+  gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp);
+  pt = gst_rtp_buffer_get_payload_type (&rtp);
+  seqnum = gst_rtp_buffer_get_seq (&rtp);
+  gst_rtp_buffer_unmap (&rtp);
 
   /* take the timestamp of the buffer. This is the time when the packet was
    * received and is used to calculate jitter and clock skew. We will adjust
@@ -1283,8 +1260,6 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstBuffer * buffer)
   timestamp = gst_segment_to_running_time (&priv->segment, GST_FORMAT_TIME,
       timestamp);
 
-  seqnum = gst_rtp_buffer_get_seq (buffer);
-
   GST_DEBUG_OBJECT (jitterbuffer,
       "Received packet #%d at time %" GST_TIME_FORMAT, seqnum,
       GST_TIME_ARGS (timestamp));
@@ -1292,19 +1267,20 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstBuffer * buffer)
   JBUF_LOCK_CHECK (priv, out_flushing);
 
   if (G_UNLIKELY (priv->last_pt != pt)) {
-    GstCaps *caps;
-
     GST_DEBUG_OBJECT (jitterbuffer, "pt changed from %u to %u", priv->last_pt,
         pt);
 
     priv->last_pt = pt;
     /* reset clock-rate so that we get a new one */
     priv->clock_rate = -1;
+#if 0
+    GstCaps *caps;
     /* Try to get the clock-rate from the caps first if we can. If there are no
      * caps we must fire the signal to get the clock-rate. */
     if ((caps = GST_BUFFER_CAPS (buffer))) {
       gst_jitter_buffer_sink_parse_caps (jitterbuffer, caps);
     }
+#endif
   }
 
   if (G_UNLIKELY (priv->clock_rate == -1)) {
@@ -1380,8 +1356,8 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstBuffer * buffer)
 
       old_buf = rtp_jitter_buffer_pop (priv->jbuf, &percent);
 
-      GST_DEBUG_OBJECT (jitterbuffer, "Queue full, dropping old packet #%d",
-          gst_rtp_buffer_get_seq (old_buf));
+      GST_DEBUG_OBJECT (jitterbuffer, "Queue full, dropping old packet %p",
+          old_buf);
 
       gst_buffer_unref (old_buf);
     }
@@ -1389,7 +1365,7 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstBuffer * buffer)
 
   /* we need to make the metadata writable before pushing it in the jitterbuffer
    * because the jitterbuffer will update the timestamp */
-  buffer = gst_buffer_make_metadata_writable (buffer);
+  buffer = gst_buffer_make_writable (buffer);
 
   /* now insert the packet into the queue in sorted order. This function returns
    * FALSE if a packet with the same seqnum was already in the queue, meaning we
@@ -1541,9 +1517,12 @@ compute_elapsed (GstRtpJitterBuffer * jitterbuffer, GstBuffer * outbuf)
   guint64 ext_time, elapsed;
   guint32 rtp_time;
   GstRtpJitterBufferPrivate *priv;
+  GstRTPBuffer rtp = { NULL };
 
   priv = jitterbuffer->priv;
-  rtp_time = gst_rtp_buffer_get_timestamp (outbuf);
+  gst_rtp_buffer_map (outbuf, GST_MAP_READ, &rtp);
+  rtp_time = gst_rtp_buffer_get_timestamp (&rtp);
+  gst_rtp_buffer_unmap (&rtp);
 
   GST_LOG_OBJECT (jitterbuffer, "rtp %" G_GUINT32_FORMAT ", ext %"
       G_GUINT64_FORMAT, rtp_time, priv->ext_timestamp);
@@ -1585,6 +1564,7 @@ gst_rtp_jitter_buffer_loop (GstRtpJitterBuffer * jitterbuffer)
   GstClockID id;
   GstClockTime sync_time;
   gint percent = -1;
+  GstRTPBuffer rtp = { NULL };
 
   priv = jitterbuffer->priv;
 
@@ -1679,7 +1659,9 @@ again:
   outbuf = rtp_jitter_buffer_peek (priv->jbuf);
 
   /* get the seqnum and the next expected seqnum */
-  seqnum = gst_rtp_buffer_get_seq (outbuf);
+  gst_rtp_buffer_map (outbuf, GST_MAP_READ, &rtp);
+  seqnum = gst_rtp_buffer_get_seq (&rtp);
+  gst_rtp_buffer_unmap (&rtp);
   next_seqnum = priv->next_seqnum;
 
   /* get the timestamp, this is already corrected for clock skew by the
@@ -1970,6 +1952,7 @@ gst_rtp_jitter_buffer_chain_rtcp (GstPad * pad, GstBuffer * buffer)
   guint64 ext_rtptime, diff;
   guint32 rtptime;
   gboolean drop = FALSE;
+  GstRTCPBuffer rtcp = { NULL };
 
   jitterbuffer = GST_RTP_JITTER_BUFFER (gst_pad_get_parent (pad));
 
@@ -1978,8 +1961,10 @@ gst_rtp_jitter_buffer_chain_rtcp (GstPad * pad, GstBuffer * buffer)
 
   priv = jitterbuffer->priv;
 
-  if (!gst_rtcp_buffer_get_first_packet (buffer, &packet))
-    goto invalid_buffer;
+  gst_rtcp_buffer_map (buffer, GST_MAP_READ, &rtcp);
+
+  if (!gst_rtcp_buffer_get_first_packet (&rtcp, &packet))
+    goto empty_buffer;
 
   /* first packet must be SR or RR or else the validate would have failed */
   switch (gst_rtcp_packet_get_type (&packet)) {
@@ -1990,6 +1975,7 @@ gst_rtp_jitter_buffer_chain_rtcp (GstPad * pad, GstBuffer * buffer)
     default:
       goto ignore_buffer;
   }
+  gst_rtcp_buffer_unmap (&rtcp);
 
   GST_DEBUG_OBJECT (jitterbuffer, "received RTCP of SSRC %08x", ssrc);
 
@@ -2066,9 +2052,19 @@ invalid_buffer:
     ret = GST_FLOW_OK;
     goto done;
   }
+empty_buffer:
+  {
+    /* this is not fatal but should be filtered earlier */
+    GST_ELEMENT_WARNING (jitterbuffer, STREAM, DECODE, (NULL),
+        ("Received empty RTCP payload, dropping"));
+    gst_rtcp_buffer_unmap (&rtcp);
+    ret = GST_FLOW_OK;
+    goto done;
+  }
 ignore_buffer:
   {
     GST_DEBUG_OBJECT (jitterbuffer, "ignoring RTCP packet");
+    gst_rtcp_buffer_unmap (&rtcp);
     ret = GST_FLOW_OK;
     goto done;
   }

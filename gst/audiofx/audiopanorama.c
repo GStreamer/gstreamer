@@ -127,7 +127,7 @@ static void gst_audio_panorama_get_property (GObject * object, guint prop_id,
 static gboolean gst_audio_panorama_get_unit_size (GstBaseTransform * base,
     GstCaps * caps, gsize * size);
 static GstCaps *gst_audio_panorama_transform_caps (GstBaseTransform * base,
-    GstPadDirection direction, GstCaps * caps);
+    GstPadDirection direction, GstCaps * caps, GstCaps * filter);
 static gboolean gst_audio_panorama_set_caps (GstBaseTransform * base,
     GstCaps * incaps, GstCaps * outcaps);
 
@@ -331,7 +331,7 @@ gst_audio_panorama_get_unit_size (GstBaseTransform * base, GstCaps * caps,
 
 static GstCaps *
 gst_audio_panorama_transform_caps (GstBaseTransform * base,
-    GstPadDirection direction, GstCaps * caps)
+    GstPadDirection direction, GstCaps * caps, GstCaps * filter)
 {
   GstCaps *res;
   GstStructure *structure;

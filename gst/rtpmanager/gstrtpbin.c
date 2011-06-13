@@ -1151,6 +1151,7 @@ gst_rtp_bin_handle_sync (GstElement * jitterbuffer, GstStructure * s,
   guint clock_rate;
   guint64 extrtptime;
   GstBuffer *buffer;
+  GstRTCPBuffer rtcp = { NULL };
 
   bin = stream->bin;
 
@@ -1170,7 +1171,10 @@ gst_rtp_bin_handle_sync (GstElement * jitterbuffer, GstStructure * s,
 
   have_sr = FALSE;
   have_sdes = FALSE;
-  GST_RTCP_BUFFER_FOR_PACKETS (more, buffer, &packet) {
+
+  gst_rtcp_buffer_map (buffer, GST_MAP_READ, &rtcp);
+
+  GST_RTCP_BUFFER_FOR_PACKETS (more, &rtcp, &packet) {
     /* first packet must be SR or RR or else the validate would have failed */
     switch (gst_rtcp_packet_get_type (&packet)) {
       case GST_RTCP_TYPE_SR:
@@ -1229,6 +1233,7 @@ gst_rtp_bin_handle_sync (GstElement * jitterbuffer, GstStructure * s,
         break;
     }
   }
+  gst_rtcp_buffer_unmap (&rtcp);
 }
 
 /* create a new stream with @ssrc in @session. Must be called with
@@ -1368,38 +1373,12 @@ static void gst_rtp_bin_get_property (GObject * object, guint prop_id,
 static GstStateChangeReturn gst_rtp_bin_change_state (GstElement * element,
     GstStateChange transition);
 static GstPad *gst_rtp_bin_request_new_pad (GstElement * element,
-    GstPadTemplate * templ, const gchar * name);
+    GstPadTemplate * templ, const gchar * name, const GstCaps * caps);
 static void gst_rtp_bin_release_pad (GstElement * element, GstPad * pad);
 static void gst_rtp_bin_handle_message (GstBin * bin, GstMessage * message);
 
-GST_BOILERPLATE (GstRtpBin, gst_rtp_bin, GstBin, GST_TYPE_BIN);
-
-static void
-gst_rtp_bin_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  /* sink pads */
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&rtpbin_recv_rtp_sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&rtpbin_recv_rtcp_sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&rtpbin_send_rtp_sink_template));
-
-  /* src pads */
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&rtpbin_recv_rtp_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&rtpbin_send_rtcp_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&rtpbin_send_rtp_src_template));
-
-  gst_element_class_set_details_simple (element_class, "RTP Bin",
-      "Filter/Network/RTP",
-      "Real-Time Transport Protocol bin",
-      "Wim Taymans <wim.taymans@gmail.com>");
-}
+#define gst_rtp_bin_parent_class parent_class
+G_DEFINE_TYPE (GstRtpBin, gst_rtp_bin, GST_TYPE_BIN);
 
 static void
 gst_rtp_bin_class_init (GstRtpBinClass * klass)
@@ -1682,6 +1661,27 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
       GST_DEBUG_FUNCPTR (gst_rtp_bin_request_new_pad);
   gstelement_class->release_pad = GST_DEBUG_FUNCPTR (gst_rtp_bin_release_pad);
 
+  /* sink pads */
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&rtpbin_recv_rtp_sink_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&rtpbin_recv_rtcp_sink_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&rtpbin_send_rtp_sink_template));
+
+  /* src pads */
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&rtpbin_recv_rtp_src_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&rtpbin_send_rtcp_src_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&rtpbin_send_rtp_src_template));
+
+  gst_element_class_set_details_simple (gstelement_class, "RTP Bin",
+      "Filter/Network/RTP",
+      "Real-Time Transport Protocol bin",
+      "Wim Taymans <wim.taymans@gmail.com>");
+
   gstbin_class->handle_message = GST_DEBUG_FUNCPTR (gst_rtp_bin_handle_message);
 
   klass->clear_pt_map = GST_DEBUG_FUNCPTR (gst_rtp_bin_clear_pt_map);
@@ -1693,7 +1693,7 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
 }
 
 static void
-gst_rtp_bin_init (GstRtpBin * rtpbin, GstRtpBinClass * klass)
+gst_rtp_bin_init (GstRtpBin * rtpbin)
 {
   gchar *str;
 
@@ -2166,7 +2166,6 @@ new_payload_found (GstElement * element, guint pt, GstPad * pad,
   g_free (padname);
   g_object_set_data (G_OBJECT (pad), "GstRTPBin.ghostpad", gpad);
 
-  gst_pad_set_caps (gpad, GST_PAD_CAPS (pad));
   gst_pad_set_active (gpad, TRUE);
   GST_RTP_BIN_SHUTDOWN_UNLOCK (rtpbin);
 
@@ -2349,7 +2348,6 @@ new_ssrc_pad_found (GstElement * element, guint ssrc, GstPad * pad,
     gpad = gst_ghost_pad_new_from_template (padname, pad, templ);
     g_free (padname);
 
-    gst_pad_set_caps (gpad, GST_PAD_CAPS (pad));
     gst_pad_set_active (gpad, TRUE);
     gst_element_add_pad (GST_ELEMENT_CAST (rtpbin), gpad);
 
@@ -2788,24 +2786,24 @@ gst_rtp_bin_get_free_pad_name (GstElement * element, GstPadTemplate * templ)
   gint session = 0;
   GstIterator *pad_it = NULL;
   gchar *pad_name = NULL;
+  GValue data = { 0, };
 
   GST_DEBUG_OBJECT (element, "find a free pad name for template");
   while (!name_found) {
     gboolean done = FALSE;
+
     g_free (pad_name);
     pad_name = g_strdup_printf (templ->name_template, session++);
     pad_it = gst_element_iterate_pads (GST_ELEMENT (element));
     name_found = TRUE;
     while (!done) {
-      gpointer data;
-
       switch (gst_iterator_next (pad_it, &data)) {
         case GST_ITERATOR_OK:
         {
           GstPad *pad;
           gchar *name;
 
-          pad = GST_PAD_CAST (data);
+          pad = g_value_get_object (&data);
           name = gst_pad_get_name (pad);
 
           if (strcmp (name, pad_name) == 0) {
@@ -2813,7 +2811,7 @@ gst_rtp_bin_get_free_pad_name (GstElement * element, GstPadTemplate * templ)
             name_found = FALSE;
           }
           g_free (name);
-          gst_object_unref (pad);
+          g_value_reset (&data);
           break;
         }
         case GST_ITERATOR_ERROR:
@@ -2828,6 +2826,7 @@ gst_rtp_bin_get_free_pad_name (GstElement * element, GstPadTemplate * templ)
           break;
       }
     }
+    g_value_unset (&data);
     gst_iterator_free (pad_it);
   }
 
@@ -2839,7 +2838,7 @@ gst_rtp_bin_get_free_pad_name (GstElement * element, GstPadTemplate * templ)
  */
 static GstPad *
 gst_rtp_bin_request_new_pad (GstElement * element,
-    GstPadTemplate * templ, const gchar * name)
+    GstPadTemplate * templ, const gchar * name, const GstCaps * caps)
 {
   GstRtpBin *rtpbin;
   GstElementClass *klass;
