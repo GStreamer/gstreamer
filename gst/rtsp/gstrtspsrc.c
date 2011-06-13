@@ -1643,7 +1643,7 @@ gst_rtspsrc_flush (GstRTSPSrc * src, gboolean flush)
     cmd = CMD_WAIT;
     state = GST_STATE_PAUSED;
   } else {
-    event = gst_event_new_flush_stop ();
+    event = gst_event_new_flush_stop (TRUE);
     GST_DEBUG_OBJECT (src, "stop flush");
     cmd = CMD_LOOP;
     state = GST_STATE_PLAYING;
