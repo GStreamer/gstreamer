@@ -926,7 +926,6 @@ gst_avi_mux_request_new_pad (GstElement * element,
   GstElementClass *klass;
   gchar *name = NULL;
   const gchar *pad_name = NULL;
-  GstPadSetCapsFunction setcapsfunc = NULL;
   gint pad_id;
 
   g_return_val_if_fail (templ != NULL, NULL);
@@ -953,7 +952,6 @@ gst_avi_mux_request_new_pad (GstElement * element,
       name = g_strdup_printf ("audio_%02d", avimux->audio_pads++);
       pad_name = name;
     }
-    setcapsfunc = GST_DEBUG_FUNCPTR (gst_avi_mux_audsink_set_caps);
 
     /* init pad specific data */
     avipad = g_malloc0 (sizeof (GstAviAudioPad));
@@ -971,7 +969,6 @@ gst_avi_mux_request_new_pad (GstElement * element,
     /* setup pad */
     pad_name = "video_00";
     avimux->video_pads++;
-    setcapsfunc = GST_DEBUG_FUNCPTR (gst_avi_mux_vidsink_set_caps);
 
     /* init pad specific data */
     avipad = g_malloc0 (sizeof (GstAviVideoPad));
@@ -983,7 +980,6 @@ gst_avi_mux_request_new_pad (GstElement * element,
     goto wrong_template;
 
   newpad = gst_pad_new_from_template (templ, pad_name);
-  gst_pad_set_setcaps_function (newpad, setcapsfunc);
 
   g_free (name);
 
@@ -1846,11 +1842,32 @@ static gboolean
 gst_avi_mux_handle_event (GstPad * pad, GstEvent * event)
 {
   GstAviMux *avimux;
-  gboolean ret;
+  gboolean ret = TRUE;
 
   avimux = GST_AVI_MUX (gst_pad_get_parent (pad));
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+      GstAviCollectData *collect_pad;
+      GstAviVideoPad *avipad;
+
+      gst_event_parse_caps (event, &caps);
+
+      /* find stream data */
+      collect_pad = (GstAviCollectData *) gst_pad_get_element_private (pad);
+      g_assert (collect_pad);
+      avipad = (GstAviVideoPad *) collect_pad->avipad;
+      g_assert (avipad);
+
+      if (avipad->parent.is_video) {
+        ret = gst_avi_mux_vidsink_set_caps (pad, caps);
+      } else {
+        ret = gst_avi_mux_audsink_set_caps (pad, caps);
+      }
+      break;
+    }
     case GST_EVENT_TAG:{
       GstTagList *list;
       GstTagSetter *setter = GST_TAG_SETTER (avimux);
@@ -1865,7 +1882,8 @@ gst_avi_mux_handle_event (GstPad * pad, GstEvent * event)
   }
 
   /* now GstCollectPads can take care of the rest, e.g. EOS */
-  ret = avimux->collect_event (pad, event);
+  if (ret)
+    ret = avimux->collect_event (pad, event);
 
   gst_object_unref (avimux);
 
