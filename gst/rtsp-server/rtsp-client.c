@@ -1428,7 +1428,7 @@ handle_data (GstRTSPClient * client, GstRTSPMessage * message)
   gst_rtsp_message_steal_body (message, &data, &size);
 
   buffer = gst_buffer_new ();
-  gst_buffer_take_memory (buffer,
+  gst_buffer_take_memory (buffer, -1,
       gst_memory_new_wrapped (0, data, g_free, size, 0, size));
 
   handled = FALSE;
