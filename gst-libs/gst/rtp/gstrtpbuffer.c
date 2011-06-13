@@ -126,7 +126,7 @@ gst_rtp_buffer_allocate_data (GstBuffer * buffer, guint payload_len,
   GST_RTP_HEADER_SSRC (data) = 0;
   gst_memory_unmap (mem, data, len);
 
-  gst_buffer_take_memory (buffer, mem);
+  gst_buffer_take_memory (buffer, -1, mem);
 }
 
 /**
@@ -149,7 +149,7 @@ gst_rtp_buffer_new_take_data (gpointer data, gsize len)
   g_return_val_if_fail (len > 0, NULL);
 
   result = gst_buffer_new ();
-  gst_buffer_take_memory (result,
+  gst_buffer_take_memory (result, -1,
       gst_memory_new_wrapped (0, data, g_free, len, 0, len));
 
   return result;

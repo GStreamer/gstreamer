@@ -83,7 +83,7 @@ feed_data (GstElement * appsrc, guint size, App * app)
   if (app->offset + size > app->length)
     size = app->length - app->offset;
 
-  gst_buffer_take_memory (buffer,
+  gst_buffer_take_memory (buffer, -1,
       gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY,
           app->data, NULL, app->length, app->offset, size));
 

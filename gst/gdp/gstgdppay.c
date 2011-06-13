@@ -257,7 +257,7 @@ gst_gdp_pay_buffer_from_buffer (GstGDPPay * this, GstBuffer * buffer)
 
   GST_LOG_OBJECT (this, "creating GDP header and payload buffer from buffer");
   headerbuf = gst_buffer_new ();
-  gst_buffer_take_memory (headerbuf,
+  gst_buffer_take_memory (headerbuf, -1,
       gst_memory_new_wrapped (0, header, g_free, len, 0, len));
 
   /* we do not want to lose the ref on the incoming buffer */
@@ -290,13 +290,13 @@ gst_gdp_buffer_from_event (GstGDPPay * this, GstEvent * event)
 
   GST_LOG_OBJECT (this, "creating GDP header and payload buffer from event");
   headerbuf = gst_buffer_new ();
-  gst_buffer_take_memory (headerbuf,
+  gst_buffer_take_memory (headerbuf, -1,
       gst_memory_new_wrapped (0, header, g_free, len, 0, len));
 
   payloadbuf = gst_buffer_new ();
   plen = gst_dp_header_payload_length (header);
   if (plen && payload != NULL) {
-    gst_buffer_take_memory (payloadbuf,
+    gst_buffer_take_memory (payloadbuf, -1,
         gst_memory_new_wrapped (0, payload, g_free, plen, 0, plen));
   }
 

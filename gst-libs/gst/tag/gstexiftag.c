@@ -1285,7 +1285,7 @@ parse_exif_undefined_tag (GstExifReader * reader, const GstExifTagMatch * tag,
     GstBuffer *buf;
 
     buf = gst_buffer_new ();
-    gst_buffer_take_memory (buf,
+    gst_buffer_take_memory (buf, -1,
         gst_memory_new_wrapped (0, data, g_free, count, 0, count));
     data = NULL;
 
