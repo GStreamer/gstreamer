@@ -72,7 +72,7 @@ guint
 gst_codec_utils_aac_get_sample_rate_from_index (guint sr_idx)
 {
   static const guint aac_sample_rates[] = { 96000, 88200, 64000, 48000, 44100,
-    32000, 24000, 22050, 16000, 12000, 11025, 8000
+    32000, 24000, 22050, 16000, 12000, 11025, 8000, 7350
   };
 
   if (G_LIKELY (sr_idx < G_N_ELEMENTS (aac_sample_rates)))
