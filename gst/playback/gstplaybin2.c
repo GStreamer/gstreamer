@@ -19,15 +19,12 @@
  */
 
 /**
- * SECTION:element-playbin2
+ * SECTION:element-playbin
  *
- * Playbin2 provides a stand-alone everything-in-one abstraction for an
+ * Playbin provides a stand-alone everything-in-one abstraction for an
  * audio and/or video player.
  *
- * playbin2 is considered stable now. It is the prefered playback API now,
- * and replaces the old #playbin element, which is no longer supported.
- *
- * It can handle both audio and video files and features
+ * Playbin can handle both audio and video files and features
  * <itemizedlist>
  * <listitem>
  * automatic file type recognition and based on that automatic
@@ -60,8 +57,8 @@
  * <refsect2>
  * <title>Usage</title>
  * <para>
- * A playbin2 element can be created just like any other element using
- * gst_element_factory_make(). The file/URI to play should be set via the #GstPlayBin2:uri
+ * A playbin element can be created just like any other element using
+ * gst_element_factory_make(). The file/URI to play should be set via the #GstPlayBin:uri
  * property. This must be an absolute URI, relative file paths are not allowed.
  * Example URIs are file:///home/joe/movie.avi or http://www.joedoe.com/foo.ogg
  *
@@ -80,7 +77,7 @@
  * When playback has finished (an EOS message has been received on the bus)
  * or an error has occured (an ERROR message has been received on the bus) or
  * the user wants to play a different track, playbin should be set back to
- * READY or NULL state, then the #GstPlayBin2:uri property should be set to the
+ * READY or NULL state, then the #GstPlayBin:uri property should be set to the
  * new location and then playbin be set to PLAYING state again.
  *
  * Seeking can be done using gst_element_seek_simple() or gst_element_seek()
@@ -101,7 +98,7 @@
  * <title>Advanced Usage: specifying the audio and video sink</title>
  * <para>
  * By default, if no audio sink or video sink has been specified via the
- * #GstPlayBin2:audio-sink or #GstPlayBin2:video-sink property, playbin will use the autoaudiosink
+ * #GstPlayBin:audio-sink or #GstPlayBin:video-sink property, playbin will use the autoaudiosink
  * and autovideosink elements to find the first-best available output method.
  * This should work in most cases, but is not always desirable. Often either
  * the user or application might want to specify more explicitly what to use
@@ -110,7 +107,7 @@
  * If the application wants more control over how audio or video should be
  * output, it may create the audio/video sink elements itself (for example
  * using gst_element_factory_make()) and provide them to playbin using the
- * #GstPlayBin2:audio-sink or #GstPlayBin2:video-sink property.
+ * #GstPlayBin:audio-sink or #GstPlayBin:video-sink property.
  *
  * GNOME-based applications, for example, will usually want to create
  * gconfaudiosink and gconfvideosink elements and make playbin use those,
@@ -359,7 +356,7 @@ G_STMT_START {                                          \
   GST_PLAY_BIN_DYN_UNLOCK (bin);                  \
 
 /**
- * GstPlayBin2:
+ * GstPlayBin:
  *
  * playbin element structure
  */
@@ -598,7 +595,7 @@ gst_play_bin_get_type (void)
     };
 
     gst_play_bin_type = g_type_register_static (GST_TYPE_PIPELINE,
-        "GstPlayBin2", &gst_play_bin_info, 0);
+        "GstPlayBin", &gst_play_bin_info, 0);
 
     g_type_add_interface_static (gst_play_bin_type, GST_TYPE_STREAM_VOLUME,
         &svol_info);
@@ -626,7 +623,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
   gobject_klass->finalize = gst_play_bin_finalize;
 
   /**
-   * GstPlayBin2:uri
+   * GstPlayBin:uri
    *
    * Set the next URI that playbin will play. This property can be set from the
    * about-to-finish signal to queue the next media file.
@@ -636,7 +633,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
           NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstPlayBin2:suburi
+   * GstPlayBin:suburi
    *
    * Set the next subtitle URI that playbin will play. This property can be
    * set from the about-to-finish signal to queue the next subtitle media file.
@@ -650,7 +647,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
           GST_TYPE_ELEMENT, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstPlayBin2:flags
+   * GstPlayBin:flags
    *
    * Control the behaviour of playbin.
    */
@@ -660,7 +657,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstPlayBin2:n-video
+   * GstPlayBin:n-video
    *
    * Get the total number of available video streams.
    */
@@ -669,7 +666,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
           "Total number of video streams", 0, G_MAXINT, 0,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstPlayBin2:current-video
+   * GstPlayBin:current-video
    *
    * Get or set the currently playing video stream. By default the first video
    * stream with data is played.
@@ -679,7 +676,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
           "Currently playing video stream (-1 = auto)",
           -1, G_MAXINT, -1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstPlayBin2:n-audio
+   * GstPlayBin:n-audio
    *
    * Get the total number of available audio streams.
    */
@@ -688,7 +685,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
           "Total number of audio streams", 0, G_MAXINT, 0,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstPlayBin2:current-audio
+   * GstPlayBin:current-audio
    *
    * Get or set the currently playing audio stream. By default the first audio
    * stream with data is played.
@@ -698,7 +695,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
           "Currently playing audio stream (-1 = auto)",
           -1, G_MAXINT, -1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstPlayBin2:n-text
+   * GstPlayBin:n-text
    *
    * Get the total number of available subtitle streams.
    */
@@ -707,7 +704,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
           "Total number of text streams", 0, G_MAXINT, 0,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstPlayBin2:current-text:
+   * GstPlayBin:current-text:
    *
    * Get or set the currently playing subtitle stream. By default the first
    * subtitle stream with data is played.
@@ -743,7 +740,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
           GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstPlayBin2:volume:
+   * GstPlayBin:volume:
    *
    * Get or set the current audio stream volume. 1.0 means 100%,
    * 0.0 means mute. This uses a linear volume scale.
@@ -759,8 +756,8 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstPlayBin2:frame:
-   * @playbin: a #GstPlayBin2
+   * GstPlayBin:frame:
+   * @playbin: a #GstPlayBin
    *
    * Get the currently rendered or prerolled frame in the video sink.
    * The #GstCaps on the buffer will describe the format of the buffer.
@@ -793,7 +790,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
           -1, G_MAXINT64, DEFAULT_BUFFER_DURATION,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstPlayBin2:av-offset:
+   * GstPlayBin:av-offset:
    *
    * Control the synchronisation offset between the audio and video streams.
    * Positive values make the audio ahead of the video and negative values make
@@ -823,8 +820,8 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstPlayBin2::about-to-finish
-   * @playbin: a #GstPlayBin2
+   * GstPlayBin::about-to-finish
+   * @playbin: a #GstPlayBin
    *
    * This signal is emitted when the current uri is about to finish. You can
    * set the uri and suburi to make sure that playback continues.
@@ -836,8 +833,8 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
       gst_marshal_VOID__VOID, G_TYPE_NONE, 0, G_TYPE_NONE);
 
   /**
-   * GstPlayBin2::video-changed
-   * @playbin: a #GstPlayBin2
+   * GstPlayBin::video-changed
+   * @playbin: a #GstPlayBin
    *
    * This signal is emitted whenever the number or order of the video
    * streams has changed. The application will most likely want to select
@@ -849,8 +846,8 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
       G_STRUCT_OFFSET (GstPlayBinClass, video_changed), NULL, NULL,
       gst_marshal_VOID__VOID, G_TYPE_NONE, 0, G_TYPE_NONE);
   /**
-   * GstPlayBin2::audio-changed
-   * @playbin: a #GstPlayBin2
+   * GstPlayBin::audio-changed
+   * @playbin: a #GstPlayBin
    *
    * This signal is emitted whenever the number or order of the audio
    * streams has changed. The application will most likely want to select
@@ -862,8 +859,8 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
       G_STRUCT_OFFSET (GstPlayBinClass, audio_changed), NULL, NULL,
       gst_marshal_VOID__VOID, G_TYPE_NONE, 0, G_TYPE_NONE);
   /**
-   * GstPlayBin2::text-changed
-   * @playbin: a #GstPlayBin2
+   * GstPlayBin::text-changed
+   * @playbin: a #GstPlayBin
    *
    * This signal is emitted whenever the number or order of the text
    * streams has changed. The application will most likely want to select
@@ -876,8 +873,8 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
       gst_marshal_VOID__VOID, G_TYPE_NONE, 0, G_TYPE_NONE);
 
   /**
-   * GstPlayBin2::video-tags-changed
-   * @playbin: a #GstPlayBin2
+   * GstPlayBin::video-tags-changed
+   * @playbin: a #GstPlayBin
    * @stream: stream index with changed tags
    *
    * This signal is emitted whenever the tags of a video stream have changed.
@@ -892,8 +889,8 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
       gst_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
 
   /**
-   * GstPlayBin2::audio-tags-changed
-   * @playbin: a #GstPlayBin2
+   * GstPlayBin::audio-tags-changed
+   * @playbin: a #GstPlayBin
    * @stream: stream index with changed tags
    *
    * This signal is emitted whenever the tags of an audio stream have changed.
@@ -908,8 +905,8 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
       gst_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
 
   /**
-   * GstPlayBin2::text-tags-changed
-   * @playbin: a #GstPlayBin2
+   * GstPlayBin::text-tags-changed
+   * @playbin: a #GstPlayBin
    * @stream: stream index with changed tags
    *
    * This signal is emitted whenever the tags of a text stream have changed.
@@ -924,8 +921,8 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
       gst_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
 
   /**
-   * GstPlayBin2::source-setup:
-   * @playbin: a #GstPlayBin2
+   * GstPlayBin::source-setup:
+   * @playbin: a #GstPlayBin
    * @source: source element
    *
    * This signal is emitted after the source element has been created, so
@@ -942,8 +939,8 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
       gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
 
   /**
-   * GstPlayBin2::get-video-tags
-   * @playbin: a #GstPlayBin2
+   * GstPlayBin::get-video-tags
+   * @playbin: a #GstPlayBin
    * @stream: a video stream number
    *
    * Action signal to retrieve the tags of a specific video stream number.
@@ -958,8 +955,8 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
       G_STRUCT_OFFSET (GstPlayBinClass, get_video_tags), NULL, NULL,
       gst_play_marshal_BOXED__INT, GST_TYPE_TAG_LIST, 1, G_TYPE_INT);
   /**
-   * GstPlayBin2::get-audio-tags
-   * @playbin: a #GstPlayBin2
+   * GstPlayBin::get-audio-tags
+   * @playbin: a #GstPlayBin
    * @stream: an audio stream number
    *
    * Action signal to retrieve the tags of a specific audio stream number.
@@ -974,8 +971,8 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
       G_STRUCT_OFFSET (GstPlayBinClass, get_audio_tags), NULL, NULL,
       gst_play_marshal_BOXED__INT, GST_TYPE_TAG_LIST, 1, G_TYPE_INT);
   /**
-   * GstPlayBin2::get-text-tags
-   * @playbin: a #GstPlayBin2
+   * GstPlayBin::get-text-tags
+   * @playbin: a #GstPlayBin
    * @stream: a text stream number
    *
    * Action signal to retrieve the tags of a specific text stream number.
@@ -990,8 +987,8 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
       G_STRUCT_OFFSET (GstPlayBinClass, get_text_tags), NULL, NULL,
       gst_play_marshal_BOXED__INT, GST_TYPE_TAG_LIST, 1, G_TYPE_INT);
   /**
-   * GstPlayBin2::convert-frame
-   * @playbin: a #GstPlayBin2
+   * GstPlayBin::convert-frame
+   * @playbin: a #GstPlayBin
    * @caps: the target format of the frame
    *
    * Action signal to retrieve the currently playing video frame in the format
@@ -1011,8 +1008,8 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
       gst_play_marshal_BUFFER__BOXED, GST_TYPE_BUFFER, 1, GST_TYPE_CAPS);
 
   /**
-   * GstPlayBin2::get-video-pad
-   * @playbin: a #GstPlayBin2
+   * GstPlayBin::get-video-pad
+   * @playbin: a #GstPlayBin
    * @stream: a video stream number
    *
    * Action signal to retrieve the stream-selector sinkpad for a specific
@@ -1028,8 +1025,8 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
       G_STRUCT_OFFSET (GstPlayBinClass, get_video_pad), NULL, NULL,
       gst_play_marshal_OBJECT__INT, GST_TYPE_PAD, 1, G_TYPE_INT);
   /**
-   * GstPlayBin2::get-audio-pad
-   * @playbin: a #GstPlayBin2
+   * GstPlayBin::get-audio-pad
+   * @playbin: a #GstPlayBin
    * @stream: an audio stream number
    *
    * Action signal to retrieve the stream-selector sinkpad for a specific
@@ -1045,8 +1042,8 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
       G_STRUCT_OFFSET (GstPlayBinClass, get_audio_pad), NULL, NULL,
       gst_play_marshal_OBJECT__INT, GST_TYPE_PAD, 1, G_TYPE_INT);
   /**
-   * GstPlayBin2::get-text-pad
-   * @playbin: a #GstPlayBin2
+   * GstPlayBin::get-text-pad
+   * @playbin: a #GstPlayBin
    * @stream: a text stream number
    *
    * Action signal to retrieve the stream-selector sinkpad for a specific
@@ -2208,7 +2205,7 @@ gst_play_bin_handle_message (GstBin * bin, GstMessage * msg)
     const GstStructure *s = gst_message_get_structure (msg);
 
     /* Drop all stream-changed messages except the last one */
-    if (strcmp ("playbin2-stream-changed", gst_structure_get_name (s)) == 0) {
+    if (strcmp ("playbin-stream-changed", gst_structure_get_name (s)) == 0) {
       guint32 seqnum = gst_message_get_seqnum (msg);
       GList *l, *l_prev;
 
@@ -2561,7 +2558,7 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
           GST_DEBUG_PAD_NAME (sinkpad));
 
       /* store the selector for the pad */
-      g_object_set_data (G_OBJECT (sinkpad), "playbin2.select", select);
+      g_object_set_data (G_OBJECT (sinkpad), "playbin.select", select);
 
       /* connect to the notify::tags signal for our
        * own *-tags-changed signals
@@ -2575,7 +2572,7 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
           g_signal_connect_data (G_OBJECT (sinkpad), "notify::tags",
           G_CALLBACK (notify_tags_cb), ntdata, (GClosureNotify) g_free,
           (GConnectFlags) 0);
-      g_object_set_data (G_OBJECT (sinkpad), "playbin2.notify_tags_handler",
+      g_object_set_data (G_OBJECT (sinkpad), "playbin.notify_tags_handler",
           (gpointer) notify_tags_handler);
 
       /* store the pad in the array */
@@ -2587,7 +2584,7 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
         goto link_failed;
 
       /* store selector pad so we can release it */
-      g_object_set_data (G_OBJECT (pad), "playbin2.sinkpad", sinkpad);
+      g_object_set_data (G_OBJECT (pad), "playbin.sinkpad", sinkpad);
 
       changed = TRUE;
       GST_DEBUG_OBJECT (playbin, "linked pad %s:%s to selector %p",
@@ -2671,18 +2668,18 @@ pad_removed_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
 
   GST_SOURCE_GROUP_LOCK (group);
   /* get the selector sinkpad */
-  if (!(peer = g_object_get_data (G_OBJECT (pad), "playbin2.sinkpad")))
+  if (!(peer = g_object_get_data (G_OBJECT (pad), "playbin.sinkpad")))
     goto not_linked;
 
-  if ((select = g_object_get_data (G_OBJECT (peer), "playbin2.select"))) {
+  if ((select = g_object_get_data (G_OBJECT (peer), "playbin.select"))) {
     gulong notify_tags_handler;
 
     notify_tags_handler =
         (gulong) g_object_get_data (G_OBJECT (peer),
-        "playbin2.notify_tags_handler");
+        "playbin.notify_tags_handler");
     if (notify_tags_handler != 0)
       g_signal_handler_disconnect (G_OBJECT (peer), notify_tags_handler);
-    g_object_set_data (G_OBJECT (peer), "playbin2.notify_tags_handler", NULL);
+    g_object_set_data (G_OBJECT (peer), "playbin.notify_tags_handler", NULL);
 
     /* remove the pad from the array */
     g_ptr_array_remove (select->channels, peer);
@@ -2826,7 +2823,7 @@ no_more_pads_cb (GstElement * decodebin, GstSourceGroup * group)
         GstEvent *event;
         guint32 seqnum;
 
-        s = gst_structure_new ("playbin2-stream-changed", "uri", G_TYPE_STRING,
+        s = gst_structure_new ("playbin-stream-changed", "uri", G_TYPE_STRING,
             group->uri, NULL);
         if (group->suburi)
           gst_structure_set (s, "suburi", G_TYPE_STRING, group->suburi, NULL);
@@ -2846,7 +2843,7 @@ no_more_pads_cb (GstElement * decodebin, GstSourceGroup * group)
           gst_pad_remove_probe (select->sinkpad, select->sinkpad_data_probe);
 
         /* we go to the trouble of setting a probe on the pad to send
-           the playbin2-stream-changed event as sending it here might
+           the playbin-stream-changed event as sending it here might
            find that the pad is blocked, so we'd block here, and the
            pad might not be linked yet. Additionally, sending it here
            apparently would be on the wrong thread */
@@ -3407,7 +3404,7 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group, GstState target)
     goto uridecodebin_failure;
 
   GST_SOURCE_GROUP_LOCK (group);
-  /* alow state changes of the playbin2 affect the group elements now */
+  /* alow state changes of the playbin affect the group elements now */
   group_set_locked_state_unlocked (playbin, group, FALSE);
   group->active = TRUE;
   GST_SOURCE_GROUP_UNLOCK (group);
@@ -3804,8 +3801,8 @@ failure:
 gboolean
 gst_play_bin2_plugin_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (gst_play_bin_debug, "playbin2", 0, "play bin");
+  GST_DEBUG_CATEGORY_INIT (gst_play_bin_debug, "playbin", 0, "play bin");
 
-  return gst_element_register (plugin, "playbin2", GST_RANK_NONE,
+  return gst_element_register (plugin, "playbin", GST_RANK_NONE,
       GST_TYPE_PLAY_BIN);
 }
