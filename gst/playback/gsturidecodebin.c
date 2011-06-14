@@ -37,6 +37,7 @@
 #include "gstplay-marshal.h"
 #include "gstplay-enum.h"
 #include "gstrawcaps.h"
+#include "gstplayback.h"
 
 #define GST_TYPE_URI_DECODE_BIN \
   (gst_uri_decode_bin_get_type())
@@ -2544,38 +2545,12 @@ setup_failed:
   }
 }
 
-gboolean gst_decode_bin_plugin_init (GstPlugin * plugin);
-
-static gboolean
+gboolean
 gst_uri_decode_bin_plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (gst_uri_decode_bin_debug, "uridecodebin", 0,
       "URI decoder element");
 
-#ifdef ENABLE_NLS
-  GST_DEBUG ("binding text domain %s to locale dir %s", GETTEXT_PACKAGE,
-      LOCALEDIR);
-  bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
-  bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
-#endif /* ENABLE_NLS */
-
   return gst_element_register (plugin, "uridecodebin", GST_RANK_NONE,
       GST_TYPE_URI_DECODE_BIN);
 }
-
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  if (!gst_decode_bin_plugin_init (plugin))
-    return FALSE;
-  if (!gst_uri_decode_bin_plugin_init (plugin))
-    return FALSE;
-
-  return TRUE;
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "uridecodebin",
-    "URI Decoder bin", plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME,
-    GST_PACKAGE_ORIGIN)

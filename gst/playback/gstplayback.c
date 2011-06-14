@@ -54,6 +54,9 @@ plugin_init (GstPlugin * plugin)
   res &= gst_play_sink_plugin_init (plugin);
   res &= gst_subtitle_overlay_plugin_init (plugin);
 
+  res &= gst_decode_bin_plugin_init (plugin);
+  res &= gst_uri_decode_bin_plugin_init (plugin);
+
   return res;
 }
 
