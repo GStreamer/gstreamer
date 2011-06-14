@@ -1,0 +1,522 @@
+Media Types
+-----------
+
+ video/x-raw
+
+  width, G_TYPE_INT
+    The width of the image in pixels.
+
+  height, G_TYPE_INT
+    The height of the image in pixels
+
+  framerate, GST_TYPE_FRACTION
+    The framerate of the video 0/1 for variable framerate
+
+  pixel-aspect-ratio, GST_TYPE_FRACTION
+    The pixel aspect ration of the video
+
+  format, G_TYPE_STRING
+    The format of the video
+
+  *  "I420" planar 4:2:0 YUV
+
+        Component 0: Y
+          depth:           8
+          pstride:         1
+          default offset:  0
+          default rstride: RU4 (width)
+          default size:    rstride (component0) * RU2 (height)
+
+        Component 1: U
+          depth:           8
+          pstride:         1
+          default offset:  size (component0)
+          default rstride: RU4 (RU2 (width) / 2)
+          default size:    rstride (component1) * RU2 (height) / 2
+
+        Component 2: V
+          depth            8
+          pstride:         1
+          default offset:  offset (component1) + size (component1)
+          default rstride: RU4 (RU2 (width) / 2)
+          default size:    rstride (component2) * RU2 (height) / 2
+
+        Image
+          default size: size (component0) + 
+                        size (component1) +
+                        size (component2)
+ 
+  *  "YV12" planar 4:2:0 YUV
+
+        Same as I420 but with U and V planes swapped
+
+        Component 0: Y
+          depth:           8
+          pstride:         1
+          default offset:  0
+          default rstride: RU4 (width)
+          default size:    rstride (component0) * RU2 (height)
+
+        Component 1: U
+          depth            8
+          pstride:         1
+          default offset:  offset (component2) + size (component2)
+          default rstride: RU4 (RU2 (width) / 2)
+          default size:    rstride (component1) * RU2 (height) / 2
+
+        Component 2: V
+          depth:           8
+          pstride:         1
+          default offset:  size (component0)
+          default rstride: RU4 (RU2 (width) / 2)
+          default size:    rstride (component2) * RU2 (height) / 2
+
+        Image
+          default size: size (component0) + 
+                        size (component1) +
+                        size (component2)
+
+  *  "YUY2" packed 4:2:2 YUV
+
+       +--+--+--+--+ +--+--+--+--+
+       |Y0|U0|Y1|V0| |Y2|U2|Y3|V2| ...
+       +--+--+--+--+ +--+--+--+--+
+
+        Component 0: Y
+          depth:           8
+          pstride:         2
+          offset:          0
+
+        Component 1: U
+          depth:           8
+          offset:          1
+          pstride:         4
+
+        Component 2: V
+          depth            8
+          offset:          3
+          pstride:         4
+
+        Image
+          default rstride: RU4 (width * 2)
+          default size:    rstride (image) * height
+
+
+  *  "YVYU" packed 4:2:2 YUV
+  
+      Same as "YUY2" but with U and V planes swapped
+
+       +--+--+--+--+ +--+--+--+--+
+       |Y0|V0|Y1|U0| |Y2|V2|Y3|U2| ...
+       +--+--+--+--+ +--+--+--+--+
+
+        Component 0: Y
+          depth:           8
+          pstride:         2
+          offset:          0
+
+        Component 1: U
+          depth:           8
+          pstride:         4
+          offset:          3
+
+        Component 2: V
+          depth            8
+          pstride:         4
+          offset:          1
+
+        Image
+          default rstride: RU4 (width * 2)
+          default size:    rstride (image) * height
+
+
+  *  "UYVY" packed 4:2:2 YUV
+
+       +--+--+--+--+ +--+--+--+--+
+       |U0|Y0|V0|Y1| |U2|Y2|V2|Y3| ...
+       +--+--+--+--+ +--+--+--+--+
+
+        Component 0: Y
+          depth:           8
+          pstride:         2
+          offset:          1
+
+        Component 1: U
+          depth:           8
+          pstride:         4
+          offset:          0
+
+        Component 2: V
+          depth            8
+          pstride:         4
+          offset:          2
+
+        Image
+          default rstride: RU4 (width * 2)
+          default size:    rstride (image) * height
+
+
+  *  "AYUV" packed 4:4:4 YUV with alpha channel
+  
+       +--+--+--+--+ +--+--+--+--+
+       |A0|Y0|U0|V0| |A1|Y1|U1|V1| ...
+       +--+--+--+--+ +--+--+--+--+
+
+        Component 0: Y
+          depth:           8
+          pstride:         4
+          offset:          1
+
+        Component 1: U
+          depth:           8
+          pstride:         4
+          offset:          2
+
+        Component 2: V
+          depth            8
+          pstride:         4
+          offset:          3
+
+        Component 3: A
+          depth            8
+          pstride:         4
+          offset:          0
+
+        Image
+          default rstride: width * 4
+          default size:    rstride (image) * height
+
+
+  *  "RGBx" sparse rgb packed into 32 bit, space last
+
+       +--+--+--+--+ +--+--+--+--+
+       |R0|G0|B0|X | |R1|G1|B1|X | ...
+       +--+--+--+--+ +--+--+--+--+
+
+        Component 0: R
+          depth:           8
+          pstride:         4
+          offset:          0
+
+        Component 1: G
+          depth:           8
+          pstride:         4
+          offset:          1
+
+        Component 2: B
+          depth            8
+          pstride:         4
+          offset:          2
+
+        Image
+          default rstride: width * 4
+          default size:    rstride (image) * height
+
+  *  "BGRx" sparse reverse rgb packed into 32 bit, space last
+
+       +--+--+--+--+ +--+--+--+--+
+       |B0|G0|R0|X | |B1|G1|R1|X | ...
+       +--+--+--+--+ +--+--+--+--+
+
+        Component 0: R
+          depth:           8
+          pstride:         4
+          offset:          2
+
+        Component 1: G
+          depth:           8
+          pstride:         4
+          offset:          1
+
+        Component 2: B
+          depth            8
+          pstride:         4
+          offset:          0
+
+        Image
+          default rstride: width * 4
+          default size:    rstride (image) * height
+
+  *  "xRGB" sparse rgb packed into 32 bit, space first
+
+       +--+--+--+--+ +--+--+--+--+
+       |X |R0|G0|B0| |X |R1|G1|B1| ...
+       +--+--+--+--+ +--+--+--+--+
+
+        Component 0: R
+          depth:           8
+          pstride:         4
+          offset:          1
+
+        Component 1: G
+          depth:           8
+          pstride:         4
+          offset:          2
+
+        Component 2: B
+          depth            8
+          pstride:         4
+          offset:          3
+
+        Image
+          default rstride: width * 4
+          default size:    rstride (image) * height
+
+  *  "xBGR" sparse reverse rgb packed into 32 bit, space first
+
+       +--+--+--+--+ +--+--+--+--+
+       |X |B0|G0|R0| |X |B1|G1|R1| ...
+       +--+--+--+--+ +--+--+--+--+
+
+        Component 0: R
+          depth:           8
+          pstride:         4
+          offset:          3
+
+        Component 1: G
+          depth:           8
+          pstride:         4
+          offset:          2
+
+        Component 2: B
+          depth            8
+          pstride:         4
+          offset:          1
+
+        Image
+          default rstride: width * 4
+          default size:    rstride (image) * height
+
+  *  "RGBA" rgb with alpha channel last
+
+       +--+--+--+--+ +--+--+--+--+
+       |R0|G0|B0|A0| |R1|G1|B1|A1| ...
+       +--+--+--+--+ +--+--+--+--+
+
+        Component 0: R
+          depth:           8
+          pstride:         4
+          offset:          0
+
+        Component 1: G
+          depth:           8
+          pstride:         4
+          offset:          1
+
+        Component 2: B
+          depth            8
+          pstride:         4
+          offset:          2
+
+        Component 3: A
+          depth            8
+          pstride:         4
+          offset:          3
+
+        Image
+          default rstride: width * 4
+          default size:    rstride (image) * height
+
+  *  "BGRA" reverse rgb with alpha channel last
+
+       +--+--+--+--+ +--+--+--+--+
+       |B0|G0|R0|A0| |B1|G1|R1|A1| ...
+       +--+--+--+--+ +--+--+--+--+
+
+        Component 0: R
+          depth:           8
+          pstride:         4
+          offset:          2
+
+        Component 1: G
+          depth:           8
+          pstride:         4
+          offset:          1
+
+        Component 2: B
+          depth            8
+          pstride:         4
+          offset:          0
+
+        Component 3: A
+          depth            8
+          pstride:         4
+          offset:          3
+
+        Image
+          default rstride: width * 4
+          default size:    rstride (image) * height
+
+  *  "ARGB" rgb with alpha channel first
+
+       +--+--+--+--+ +--+--+--+--+
+       |A0|R0|G0|B0| |A1|R1|G1|B1| ...
+       +--+--+--+--+ +--+--+--+--+
+
+        Component 0: R
+          depth:           8
+          pstride:         4
+          offset:          1
+
+        Component 1: G
+          depth:           8
+          pstride:         4
+          offset:          2
+
+        Component 2: B
+          depth            8
+          pstride:         4
+          offset:          3
+
+        Component 3: A
+          depth            8
+          pstride:         4
+          offset:          0
+
+        Image
+          default rstride: width * 4
+          default size:    rstride (image) * height
+
+  *  "ABGR" reverse rgb with alpha channel first
+
+       +--+--+--+--+ +--+--+--+--+
+       |A0|R0|G0|B0| |A1|R1|G1|B1| ...
+       +--+--+--+--+ +--+--+--+--+
+
+        Component 0: R
+          depth:           8
+          pstride:         4
+          offset:          1
+
+        Component 1: G
+          depth:           8
+          pstride:         4
+          offset:          2
+
+        Component 2: B
+          depth            8
+          pstride:         4
+          offset:          3
+
+        Component 3: A
+          depth            8
+          pstride:         4
+          offset:          0
+
+        Image
+          default rstride: width * 4
+          default size:    rstride (image) * height
+
+  *  "RGB" rgb
+
+       +--+--+--+ +--+--+--+
+       |R0|G0|B0| |R1|G1|B1| ...
+       +--+--+--+ +--+--+--+
+
+        Component 0: R
+          depth:           8
+          pstride:         3
+          offset:          0
+
+        Component 1: G
+          depth:           8
+          pstride:         3
+          offset:          1
+
+        Component 2: B
+          depth            8
+          pstride:         3
+          offset:          2
+
+        Image
+          default rstride: RU4 (width * 3)
+          default size:    rstride (image) * height
+
+  *  "BGR" reverse rgb
+
+       +--+--+--+ +--+--+--+
+       |B0|G0|R0| |B1|G1|R1| ...
+       +--+--+--+ +--+--+--+
+
+        Component 0: R
+          depth:           8
+          pstride:         3
+          offset:          2
+
+        Component 1: G
+          depth:           8
+          pstride:         3
+          offset:          1
+
+        Component 2: B
+          depth            8
+          pstride:         3
+          offset:          0
+
+        Image
+          default rstride: RU4 (width * 3)
+          default size:    rstride (image) * height
+
+  *  "Y41B" planar 4:1:1 YUV
+
+        Component 0: Y
+          depth:           8
+          pstride:         1
+          default offset:  0
+          default rstride: RU4 (width)
+          default size:    rstride (component0) * height
+
+        Component 1: U
+          depth            8
+          pstride:         1
+          default offset:  size (component0)
+          default rstride: RU16 (width) / 4
+          default size:    rstride (component1) * height
+
+        Component 2: V
+          depth:           8
+          pstride:         1
+          default offset:  offset (component1) + size (component1)
+          default rstride: RU16 (width) / 4
+          default size:    rstride (component2) * height
+
+        Image
+          default size: size (component0) + 
+                        size (component1) +
+                        size (component2)
+
+  *  "Y42B" planar 4:2:2 YUV
+
+  *  "Y444" planar 4:4:4 YUV
+
+
+
+  *  "v210"
+  *  "v216"
+  *  "NV12"
+  *  "NV21"
+  *  "GRAY8"
+  *  "GRAY16_BE"
+  *  "GRAY16_LE"
+  *  "v308"
+  *  "Y800"
+  *  "Y16"
+  *  "RGB16"
+  *  "BGR16"
+  *  "RGB15"
+  *  "BGR15"
+  *  "UYVP"
+  *  "A420"
+  *  "RGB8_PALETTED"
+  *  "YUV9"
+  *  "YVU9"
+  *  "IYU1"
+  *  "ARGB64"
+  *  "AYUV64"
+  *  "r210"
+
+
+
+    
+
+
