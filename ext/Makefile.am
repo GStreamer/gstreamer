@@ -16,12 +16,6 @@ else
 GIO_DIR=
 endif
 
-if USE_GNOME_VFS
-GNOMEVFS_DIR=gnomevfs
-else
-GNOMEVFS_DIR=
-endif
-
 if USE_LIBVISUAL
 LIBVISUAL_DIR=libvisual
 else
@@ -64,7 +58,6 @@ SUBDIRS = \
   $(ALSA_DIR) \
   $(CDPARANOIA_DIR) \
   $(GIO_DIR) \
-  $(GNOMEVFS_DIR) \
   $(LIBVISUAL_DIR) \
   $(OGG_DIR) \
   $(PANGO_DIR) \
@@ -75,7 +68,6 @@ DIST_SUBDIRS = \
   alsa \
   cdparanoia \
   gio \
-  gnomevfs \
   libvisual \
   ogg \
   pango \

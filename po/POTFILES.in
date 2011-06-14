@@ -2,8 +2,6 @@ ext/alsa/gstalsamixertrack.c
 ext/alsa/gstalsasink.c
 ext/alsa/gstalsasrc.c
 ext/cdparanoia/gstcdparanoiasrc.c
-ext/gnomevfs/gstgnomevfssrc.c
-ext/gnomevfs/gstgnomevfssink.c
 ext/ogg/gstoggdemux.c
 gst/playback/gstdecodebin.c
 gst/playback/gstdecodebin2.c

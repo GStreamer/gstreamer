@@ -39,8 +39,6 @@
     <xi:include href="xml/element-giosrc.xml" />
     <xi:include href="xml/element-giostreamsink.xml" />
     <xi:include href="xml/element-giostreamsrc.xml" />
-    <xi:include href="xml/element-gnomevfssink.xml" />
-    <xi:include href="xml/element-gnomevfssrc.xml" />
     <xi:include href="xml/element-multifdsink.xml" />
     <xi:include href="xml/element-oggdemux.xml" />
     <xi:include href="xml/element-oggmux.xml" />
@@ -85,7 +83,6 @@
     <xi:include href="xml/plugin-ffmpegcolorspace.xml" />
     <xi:include href="xml/plugin-gdp.xml" />
     <xi:include href="xml/plugin-gio.xml" />
-    <xi:include href="xml/plugin-gnomevfs.xml" />
     <xi:include href="xml/plugin-libvisual.xml" />
     <xi:include href="xml/plugin-ogg.xml" />
     <xi:include href="xml/plugin-pango.xml" />

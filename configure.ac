@@ -632,22 +632,6 @@ dnl FIXME : add second check somehow if that is necessary
 dnl AC_CHECK_LIB(cdda_paranoia, paranoia_init, : , HAVE_CDPARANOIA=no, -lcdda_interface )
 dnl AC_CHECK_HEADER(cdda_paranoia.h, :, HAVE_CDPARANOIA=no)
 
-dnl *** GNOME VFS ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_GNOME_VFS, true)
-AG_GST_CHECK_FEATURE(GNOME_VFS, [GNOME VFS], gnomevfs, [
-  PKG_CHECK_MODULES(GNOME_VFS, gnome-vfs-2.0, [
-      HAVE_GNOME_VFS="yes"
-      AC_SUBST(GNOME_VFS_CFLAGS)
-      AC_SUBST(GNOME_VFS_LIBS)
-      GNOME_VFS_MODULES_DIR="`$PKG_CONFIG --variable=modulesdir gnome-vfs-2.0`"
-      AC_DEFINE_UNQUOTED(GNOME_VFS_MODULES_DIR, "$GNOME_VFS_MODULES_DIR",
-             [The GnomeVFS modules directory.])
-    ],[
-      HAVE_GNOME_VFS="no"
-    ]
-    )
-])
-
 dnl *** ivorbis ***
 dnl AM_PATH_IVORBIS only takes two options
 translit(dnm, m, l) AM_CONDITIONAL(USE_IVORBIS, true)
@@ -776,7 +760,6 @@ dnl but we still need to set the conditionals
 AM_CONDITIONAL(USE_ALSA, false)
 AM_CONDITIONAL(USE_CDPARANOIA, false)
 AM_CONDITIONAL(USE_GIO, false)
-AM_CONDITIONAL(USE_GNOME_VFS, false)
 AM_CONDITIONAL(USE_IVORBIS, false)
 AM_CONDITIONAL(USE_LIBVISUAL, false)
 AM_CONDITIONAL(USE_OGG, false)
@@ -896,7 +879,6 @@ sys/xvimage/Makefile
 ext/Makefile
 ext/alsa/Makefile
 ext/cdparanoia/Makefile
-ext/gnomevfs/Makefile
 ext/gio/Makefile
 ext/libvisual/Makefile
 ext/ogg/Makefile

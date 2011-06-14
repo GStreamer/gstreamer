@@ -23,8 +23,6 @@ BuildRequires:  gtk-doc >= 1.3
 BuildRequires:  orc-devel
 Requires:       orc
 
-@USE_GNOME_VFS_TRUE@Requires:      gnome-vfs2 > 1.9.4.00
-@USE_GNOME_VFS_TRUE@BuildRequires: gnome-vfs2-devel > 1.9.4.00
 @USE_VORBIS_TRUE@Requires:      libogg >= 1.0
 @USE_VORBIS_TRUE@Requires:      libvorbis >= 1.0
 @USE_VORBIS_TRUE@BuildRequires: libogg-devel >= 1.0
@@ -128,7 +126,6 @@ rm -rf $RPM_BUILD_ROOT
 # base plugins with dependencies
 @USE_ALSA_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstalsa.so
 @USE_THEORA_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgsttheora.so
-@USE_GNOME_VFS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstgnomevfs.so
 @USE_VORBIS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstvorbis.so
 @USE_VORBIS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstogg.so
 @USE_XVIDEO_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstximage*.so

@@ -34,12 +34,6 @@ else
 check_alsa =
 endif
 
-if USE_GNOME_VFS
-check_gnomevfs = elements/gnomevfssink
-else
-check_gnomevfs =
-endif
-
 if USE_GIO
 check_gio = pipelines/gio
 else
@@ -107,7 +101,6 @@ endif
 
 check_PROGRAMS = \
 	$(check_alsa) \
-	$(check_gnomevfs) \
 	$(check_gio) \
 	$(check_ogg) \
 	$(check_pango) \

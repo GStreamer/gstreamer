@@ -241,9 +241,9 @@ GstDecodeBin
 </SECTION>
 
 <SECTION>
-<FILE>element-decodebin2</FILE>
-<TITLE>decodebin2</TITLE>
-GstDecodeBin2
+<FILE>element-decodebin</FILE>
+<TITLE>decodebin</TITLE>
+GstDecodeBin
 <SUBSECTION Standard>
 </SECTION>
 
@@ -396,34 +396,6 @@ gst_tcp_protocol_get_type
 </SECTION>
 
 <SECTION>
-<FILE>element-gnomevfssink</FILE>
-<TITLE>gnomevfssink</TITLE>
-GstGnomeVFSSink
-<SUBSECTION Standard>
-GstGnomeVFSSinkClass
-GST_GNOME_VFS_SINK_CLASS
-GST_TYPE_GNOME_VFS_SINK
-GST_IS_GNOME_VFS_SINK
-gst_gnome_vfs_sink_get_type
-GST_IS_GNOME_VFS_SINK_CLASS
-GST_GNOME_VFS_SINK
-</SECTION>
-
-<SECTION>
-<FILE>element-gnomevfssrc</FILE>
-<TITLE>gnomevfssrc</TITLE>
-GstGnomeVFSSrc
-<SUBSECTION Standard>
-GST_GNOME_VFS_SRC
-GST_GNOME_VFS_SRC_CLASS
-GST_IS_GNOME_VFS_SRC
-GST_IS_GNOME_VFS_SRC_CLASS
-GST_TYPE_GNOME_VFS_SRC
-GstGnomeVFSSrcClass
-gst_gnome_vfs_src_get_type
-</SECTION>
-
-<SECTION>
 <FILE>element-oggdemux</FILE>
 <TITLE>oggdemux</TITLE>
 GstOggDemux
@@ -461,13 +433,6 @@ GstOggMuxClass
 </SECTION>
 
 <SECTION>
-<FILE>gstplaybasebin</FILE>
-<TITLE>GstPlayBaseBin</TITLE>
-GstPlayBaseBin
-<SUBSECTION Standard>
-</SECTION>
-
-<SECTION>
 <FILE>element-playbin</FILE>
 <TITLE>playbin</TITLE>
 GstPlayBin
@@ -475,9 +440,9 @@ GstPlayBin
 </SECTION>
 
 <SECTION>
-<FILE>element-playbin2</FILE>
-<TITLE>playbin2</TITLE>
-GstPlayBin2
+<FILE>element-playbin</FILE>
+<TITLE>playbin</TITLE>
+GstPlayBin
 GstPlayFlags
 <SUBSECTION Standard>
 gst_play_flags_get_type

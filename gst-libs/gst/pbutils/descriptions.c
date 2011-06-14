@@ -880,7 +880,7 @@ gst_pb_utils_get_encoder_description (const GstCaps * caps)
 
 /**
  * gst_pb_utils_get_element_description:
- * @factory_name: the name of the element, e.g. "gnomevfssrc"
+ * @factory_name: the name of the element, e.g. "giosrc"
  *
  * Returns a localised string describing the given element, for use in
  * error dialogs or other messages to be seen by the user. Should never

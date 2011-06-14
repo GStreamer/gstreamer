@@ -84,8 +84,6 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/gio/gstgiosrc.h \
 	$(top_srcdir)/ext/gio/gstgiostreamsink.h \
 	$(top_srcdir)/ext/gio/gstgiostreamsrc.h \
-	$(top_srcdir)/ext/gnomevfs/gstgnomevfssink.h \
-	$(top_srcdir)/ext/gnomevfs/gstgnomevfssrc.h \
 	$(top_srcdir)/ext/ogg/gstoggdemux.h \
 	$(top_srcdir)/ext/ogg/gstoggmux.h \
 	$(top_srcdir)/ext/pango/gstclockoverlay.h \

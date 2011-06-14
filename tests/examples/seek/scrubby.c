@@ -21,8 +21,7 @@ static guint update_id = 0;
 static guint changed_id = 0;
 static guint schanged_id = 0;
 
-//#define SOURCE "filesrc"
-#define SOURCE "gnomevfssrc"
+#define SOURCE "filesrc"
 #define ASINK "alsasink"
 //#define ASINK "osssink"
 #define VSINK "xvimagesink"

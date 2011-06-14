@@ -129,7 +129,7 @@ main (gint argc, gchar * argv[])
   g_signal_connect (bus, "message::state-changed", G_CALLBACK (state_cb),
       pipeline);
 
-  source = gst_element_factory_make ("gnomevfssrc", "source");
+  source = gst_element_factory_make ("giosrc", "source");
   g_assert (source);
 
   if (argv[1] && strstr (argv[1], "://") != NULL) {

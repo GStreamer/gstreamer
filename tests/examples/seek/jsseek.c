@@ -66,9 +66,7 @@ gtk_widget_get_allocation (GtkWidget * w, GtkAllocation * a)
 #endif
 
 /* configuration */
-
-//#define SOURCE "filesrc"
-#define SOURCE "gnomevfssrc"
+#define SOURCE "filesrc"
 
 #define ASINK "alsasink"
 //#define ASINK "osssink"
