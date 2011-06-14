@@ -29,7 +29,7 @@ non-target caps are left. It is commonly done while pre-rolling, but can also
 happen whenever a new pad appears on any element.
 
   Once a target caps has been found, that pad is ghosted and the
-'new-decoded-pad' signal is emitted.
+'pad-added' signal is emitted.
 
   If no compatible elements can be found for a GstCaps, the pad is ghosted and
 the 'unknown-type' signal is emitted.

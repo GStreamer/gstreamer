@@ -486,8 +486,8 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
    *
    * Returns: #TRUE if you wish uridecodebin to look for elements that can
    * handle the given @caps. If #FALSE, those caps will be considered as
-   * final and the pad will be exposed as such (see 'new-decoded-pad'
-   * signal).
+   * final and the pad will be exposed as such (see 'pad-added' signal of
+   * #GstElement).
    */
   gst_uri_decode_bin_signals[SIGNAL_AUTOPLUG_CONTINUE] =
       g_signal_new ("autoplug-continue", G_TYPE_FROM_CLASS (klass),
@@ -1032,11 +1032,9 @@ decoded_pad_event_probe (GstPad * pad, GstProbeType type, gpointer type_data,
   return GST_PROBE_OK;
 }
 
-/* Called by the signal handlers when a decodebin has
- * found a new raw pad.  
- */
+/* Called by the signal handlers when a decodebin has found a new raw pad */
 static void
-new_decoded_pad_cb (GstElement * element, GstPad * pad, gboolean last,
+new_decoded_pad_added_cb (GstElement * element, GstPad * pad,
     GstURIDecodeBin * decoder)
 {
   GstPad *newpad;
@@ -1044,8 +1042,7 @@ new_decoded_pad_cb (GstElement * element, GstPad * pad, gboolean last,
   gchar *padname;
   GstURIDecodeBinStream *stream;
 
-  GST_DEBUG_OBJECT (element, "new decoded pad, name: <%s>. Last: %d",
-      GST_PAD_NAME (pad), last);
+  GST_DEBUG_OBJECT (element, "new decoded pad, name: <%s>", GST_PAD_NAME (pad));
 
   GST_URI_DECODE_BIN_LOCK (decoder);
   padname = g_strdup_printf ("src%d", decoder->numpads);
@@ -1101,7 +1098,7 @@ expose_decoded_pad (GstElement * element, GstPad * pad,
   gst_pad_add_probe (pad, GST_PROBE_TYPE_EVENT, source_pad_event_probe, decoder,
       NULL);
 
-  new_decoded_pad_cb (element, pad, FALSE, decoder);
+  new_decoded_pad_added_cb (element, pad, decoder);
 }
 
 static void
@@ -1658,7 +1655,7 @@ make_decoder (GstURIDecodeBin * decoder)
     /* set up callbacks to create the links between decoded data
      * and video/audio/subtitle rendering/output. */
     g_signal_connect (decodebin,
-        "new-decoded-pad", G_CALLBACK (new_decoded_pad_cb), decoder);
+        "pad-added", G_CALLBACK (new_decoded_pad_added_cb), decoder);
     g_signal_connect (decodebin,
         "pad-removed", G_CALLBACK (pad_removed_cb), decoder);
     g_signal_connect (decodebin, "no-more-pads",

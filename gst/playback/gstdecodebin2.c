@@ -177,10 +177,6 @@ struct _GstDecodeBinClass
 {
   GstBinClass parent_class;
 
-  /* signal we fire when a new pad has been decoded into raw audio/video */
-  void (*new_decoded_pad) (GstElement * element, GstPad * pad, gboolean last);
-  /* signal we fire when a pad has been removed */
-  void (*removed_decoded_pad) (GstElement * element, GstPad * pad);
   /* signal fired when we found a pad that we cannot decode */
   void (*unknown_type) (GstElement * element, GstPad * pad, GstCaps * caps);
 
@@ -204,8 +200,6 @@ struct _GstDecodeBinClass
 /* signals */
 enum
 {
-  SIGNAL_NEW_DECODED_PAD,
-  SIGNAL_REMOVED_DECODED_PAD,
   SIGNAL_UNKNOWN_TYPE,
   SIGNAL_AUTOPLUG_CONTINUE,
   SIGNAL_AUTOPLUG_FACTORIES,
@@ -594,41 +588,6 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
   gobject_klass->get_property = gst_decode_bin_get_property;
 
   /**
-   * GstDecodeBin::new-decoded-pad:
-   * @bin: The decodebin.
-   * @pad: The newly created pad.
-   * @islast: #TRUE if this is the last pad to be added. Deprecated.
-   *
-   * This signal gets emitted as soon as a new pad of the same type as one of
-   * the valid 'raw' types is added.
-   *
-   * Deprecated: Use GstElement::pad-added instead of this signal.
-   *
-   */
-  gst_decode_bin_signals[SIGNAL_NEW_DECODED_PAD] =
-      g_signal_new ("new-decoded-pad", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST,
-      G_STRUCT_OFFSET (GstDecodeBinClass, new_decoded_pad), NULL, NULL,
-      gst_play_marshal_VOID__OBJECT_BOOLEAN, G_TYPE_NONE, 2, GST_TYPE_PAD,
-      G_TYPE_BOOLEAN);
-
-  /**
-   * GstDecodeBin::removed-decoded-pad:
-   * @bin: The decodebin.
-   * @pad: The pad that was removed.
-   *
-   * This signal is emitted when a 'final' caps pad has been removed.
-   *
-   * Deprecated: Use GstElement::pad-removed instead of this signal.
-   *
-   */
-  gst_decode_bin_signals[SIGNAL_REMOVED_DECODED_PAD] =
-      g_signal_new ("removed-decoded-pad", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST,
-      G_STRUCT_OFFSET (GstDecodeBinClass, removed_decoded_pad), NULL, NULL,
-      gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GST_TYPE_PAD);
-
-  /**
    * GstDecodeBin::unknown-type:
    * @bin: The decodebin.
    * @pad: The new pad containing caps that cannot be resolved to a 'final'
@@ -661,8 +620,8 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
    *
    * Returns: #TRUE if you wish decodebin to look for elements that can
    * handle the given @caps. If #FALSE, those caps will be considered as
-   * final and the pad will be exposed as such (see 'new-decoded-pad'
-   * signal).
+   * final and the pad will be exposed as such (see 'pad-added' signal of
+   * #GstElement).
    */
   gst_decode_bin_signals[SIGNAL_AUTOPLUG_CONTINUE] =
       g_signal_new ("autoplug-continue", G_TYPE_FROM_CLASS (klass),
@@ -2499,8 +2458,6 @@ gst_decode_chain_free_internal (GstDecodeChain * chain, gboolean hide)
     if (chain->endpad->exposed) {
       gst_element_remove_pad (GST_ELEMENT_CAST (chain->dbin),
           GST_PAD_CAST (chain->endpad));
-      g_signal_emit (G_OBJECT (chain->dbin),
-          gst_decode_bin_signals[SIGNAL_REMOVED_DECODED_PAD], 0, chain->endpad);
     }
 
     gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (chain->endpad), NULL);
@@ -3346,11 +3303,7 @@ gst_decode_bin_expose (GstDecodeBin * dbin)
     dpad->exposed = TRUE;
 
     /* 3. emit signal */
-    GST_DEBUG_OBJECT (dbin, "emitting new-decoded-pad");
-    g_signal_emit (G_OBJECT (dbin),
-        gst_decode_bin_signals[SIGNAL_NEW_DECODED_PAD], 0, dpad,
-        (tmp->next == NULL));
-    GST_DEBUG_OBJECT (dbin, "emitted new-decoded-pad");
+    GST_INFO_OBJECT (dpad, "added new decoded pad");
   }
 
   /* 4. Signal no-more-pads. This allows the application to hook stuff to the
