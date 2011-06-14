@@ -10,8 +10,7 @@ API/ABI
   keyframe, after the seek you want to get the new stream time that will
   actually be used to update the slider bar.
 
-- make gst_pad_push_event() return a GstFlowReturn so that we can resend
-  NEWSEGMENT and other events.
+- make gst_pad_push_event() return a GstFlowReturn
 
 - GstEvent, GstMessage register like GstFormat or GstQuery.
 
