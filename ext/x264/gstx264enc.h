@@ -52,6 +52,7 @@ struct _GstX264Enc
 
   x264_t *x264enc;
   x264_param_t x264param;
+  gint current_byte_stream;
 
   /* properties */
   guint threads;

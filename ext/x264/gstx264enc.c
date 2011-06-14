@@ -220,6 +220,13 @@ static GString *x264enc_defaults;
 
 enum
 {
+  GST_X264_ENC_STREAM_FORMAT_FROM_PROPERTY,
+  GST_X264_ENC_STREAM_FORMAT_AVC,
+  GST_X264_ENC_STREAM_FORMAT_BYTE_STREAM
+};
+
+enum
+{
   GST_X264_ENC_PASS_CBR = 0,
   GST_X264_ENC_PASS_QUANT = 0x04,
   GST_X264_ENC_PASS_QUAL,
@@ -940,6 +947,7 @@ gst_x264_enc_reset (GstX264Enc * encoder)
   encoder->x264enc = NULL;
   encoder->width = 0;
   encoder->height = 0;
+  encoder->current_byte_stream = GST_X264_ENC_STREAM_FORMAT_FROM_PROPERTY;
 
   GST_OBJECT_LOCK (encoder);
   encoder->i_type = X264_TYPE_AUTO;
@@ -1445,7 +1453,14 @@ gst_x264_enc_set_src_caps (GstX264Enc * encoder, GstPad * pad, GstCaps * caps)
 
   structure = gst_caps_get_structure (outcaps, 0);
 
-  if (!encoder->byte_stream) {
+  if (encoder->current_byte_stream == GST_X264_ENC_STREAM_FORMAT_FROM_PROPERTY) {
+    if (encoder->byte_stream) {
+      encoder->current_byte_stream = GST_X264_ENC_STREAM_FORMAT_BYTE_STREAM;
+    } else {
+      encoder->current_byte_stream = GST_X264_ENC_STREAM_FORMAT_AVC;
+    }
+  }
+  if (encoder->current_byte_stream == GST_X264_ENC_STREAM_FORMAT_AVC) {
     buf = gst_x264_enc_header_buf (encoder);
     if (buf != NULL) {
       gst_caps_set_simple (outcaps, "codec_data", GST_TYPE_BUFFER, buf, NULL);
@@ -1566,6 +1581,7 @@ gst_x264_enc_sink_set_caps (GstPad * pad, GstCaps * caps)
     GstStructure *s;
     const gchar *profile;
     const gchar *level;
+    const gchar *bytestream;
 
     if (gst_caps_is_empty (allowed_caps)) {
       gst_caps_unref (allowed_caps);
@@ -1628,6 +1644,18 @@ gst_x264_enc_sink_set_caps (GstPad * pad, GstCaps * caps)
             break;
           }
         }
+      }
+    }
+
+    bytestream = gst_structure_get_string (s, "stream-format");
+    encoder->current_byte_stream = GST_X264_ENC_STREAM_FORMAT_FROM_PROPERTY;
+    if (bytestream) {
+      if (!strcmp (bytestream, "avc")) {
+        encoder->current_byte_stream = GST_X264_ENC_STREAM_FORMAT_AVC;
+      } else if (!strcmp (profile, "byte-stream")) {
+        encoder->current_byte_stream = GST_X264_ENC_STREAM_FORMAT_BYTE_STREAM;
+      } else {
+        /* means we have both in caps and _FROM_PROPERTY should be the option */
       }
     }
 
@@ -1904,7 +1932,9 @@ gst_x264_enc_encode_frame (GstX264Enc * encoder, x264_picture_t * pic_in,
 
     nal_size =
         x264_nal_encode (encoder->buffer + i_size + 4, &i_data, 0, &nal[i]);
-    if (encoder->byte_stream)
+    g_assert (encoder->current_byte_stream !=
+        GST_X264_ENC_STREAM_FORMAT_FROM_PROPERTY);
+    if (encoder->current_byte_stream == GST_X264_ENC_STREAM_FORMAT_BYTE_STREAM)
       GST_WRITE_UINT32_BE (encoder->buffer + i_size, 1);
     else
       GST_WRITE_UINT32_BE (encoder->buffer + i_size, nal_size);
