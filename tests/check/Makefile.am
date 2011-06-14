@@ -121,15 +121,13 @@ check_PROGRAMS = \
 	elements/audioresample \
 	elements/audiotestsrc \
 	elements/decodebin \
-	elements/decodebin2 \
 	$(check_encodebin) \
 	elements/ffmpegcolorspace \
 	elements/gdpdepay \
 	elements/gdppay \
 	elements/multifdsink \
 	elements/playbin \
-	elements/playbin2 \
-	elements/playbin2-compressed \
+	elements/playbin-compressed \
 	$(check_subparse) \
 	elements/videorate \
 	elements/videoscale \
@@ -375,20 +373,14 @@ elements_gdppay_LDADD = $(GST_GDP_LIBS) $(LDADD)
 elements_playbin_LDADD = $(GST_BASE_LIBS) $(LDADD)
 elements_playbin_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 
-elements_playbin2_LDADD = $(GST_BASE_LIBS) $(LDADD)
-elements_playbin2_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
-
-elements_playbin2_compressed_LDADD = $(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_MAJORMINOR@.la $(GST_BASE_LIBS) $(LDADD)
-elements_playbin2_compressed_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS)
+elements_playbin_compressed_LDADD = $(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_MAJORMINOR@.la $(GST_BASE_LIBS) $(LDADD)
+elements_playbin_compressed_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 
 elements_decodebin_LDADD = $(GST_BASE_LIBS) $(LDADD)
 elements_decodebin_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 
 elements_encodebin_LDADD = $(top_builddir)/gst-libs/gst/pbutils/libgstpbutils-@GST_MAJORMINOR@.la $(GST_BASE_LIBS) $(LDADD)
 elements_encodebin_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS)
-
-elements_decodebin2_LDADD = $(GST_BASE_LIBS) $(LDADD)
-elements_decodebin2_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 
 elements_subparse_LDADD =  $(LDADD)
 elements_subparse_CFLAGS = $(CFLAGS) $(AM_CFLAGS)

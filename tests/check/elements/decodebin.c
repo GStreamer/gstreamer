@@ -48,7 +48,7 @@ src_need_data_cb (GstElement * src, guint size, gpointer data)
   GstFlowReturn ret;
 
   buf = gst_buffer_new ();
-  gst_buffer_take_memory (buf,
+  gst_buffer_take_memory (buf, 0,
       gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY,
           (gpointer) dummytext, NULL, sizeof (dummytext), 0,
           sizeof (dummytext)));
@@ -61,11 +61,11 @@ src_need_data_cb (GstElement * src, guint size, gpointer data)
 }
 
 static void
-decodebin_new_decoded_pad_cb (GstElement * decodebin, GstPad * pad,
+decodebin_pad_added_cb (GstElement * decodebin, GstPad * pad,
     gboolean last, gboolean * p_flag)
 {
   /* we should not be reached */
-  fail_unless (decodebin == NULL, "new-decoded-pad should not be emitted");
+  fail_unless (decodebin == NULL, "pad-added should not be emitted");
 }
 
 /* make sure that decodebin errors out instead of creating a new decoded pad
@@ -88,8 +88,8 @@ GST_START_TEST (test_text_plain_streams)
   decodebin = gst_element_factory_make ("decodebin", "decodebin");
   fail_unless (decodebin != NULL, "Failed to create decodebin element");
 
-  g_signal_connect (decodebin, "new-decoded-pad",
-      G_CALLBACK (decodebin_new_decoded_pad_cb), NULL);
+  g_signal_connect (decodebin, "pad-added",
+      G_CALLBACK (decodebin_pad_added_cb), NULL);
 
   fail_unless (gst_bin_add (GST_BIN (pipe), src));
   fail_unless (gst_bin_add (GST_BIN (pipe), decodebin));
@@ -114,11 +114,13 @@ GST_START_TEST (test_text_plain_streams)
 GST_END_TEST;
 
 static void
-new_decoded_pad_plug_fakesink_cb (GstElement * decodebin, GstPad * srcpad,
+pad_added_plug_fakesink_cb (GstElement * decodebin, GstPad * srcpad,
     gboolean last, GstElement * pipeline)
 {
   GstElement *sink;
   GstPad *sinkpad;
+
+  GST_LOG ("Linking fakesink");
 
   sink = gst_element_factory_make ("fakesink", "sink");
   fail_unless (sink != NULL, "Failed to create fakesink element");
@@ -145,8 +147,8 @@ GST_START_TEST (test_reuse_without_decoders)
   decodebin = gst_element_factory_make ("decodebin", "decodebin");
   fail_unless (decodebin != NULL, "Failed to create decodebin element");
 
-  g_signal_connect (decodebin, "new-decoded-pad",
-      G_CALLBACK (new_decoded_pad_plug_fakesink_cb), pipe);
+  g_signal_connect (decodebin, "pad-added",
+      G_CALLBACK (pad_added_plug_fakesink_cb), pipe);
 
   fail_unless (gst_bin_add (GST_BIN (pipe), src));
   fail_unless (gst_bin_add (GST_BIN (pipe), decodebin));
@@ -166,10 +168,11 @@ GST_START_TEST (test_reuse_without_decoders)
   fail_if (gst_bus_poll (GST_ELEMENT_BUS (pipe), GST_MESSAGE_ERROR, 0) != NULL);
 
   /* reset */
-  gst_element_set_state (pipe, GST_STATE_NULL);
+  gst_element_set_state (pipe, GST_STATE_READY);
 
   sink = gst_bin_get_by_name (GST_BIN (pipe), "sink");
   gst_bin_remove (GST_BIN (pipe), sink);
+  gst_element_set_state (sink, GST_STATE_NULL);
   gst_object_unref (sink);
 
   GST_LOG ("second try");

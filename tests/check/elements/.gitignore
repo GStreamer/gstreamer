@@ -8,7 +8,6 @@ audiorate
 audioresample
 audiotestsrc
 decodebin
-decodebin2
 encodebin
 gdpdepay
 gdppay
@@ -25,6 +24,5 @@ ffmpegcolorspace
 videoscale
 vorbistag
 playbin
-playbin2
-playbin2-compressed
+playbin-compressed
 subparse

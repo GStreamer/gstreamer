@@ -1,4 +1,4 @@
-/* GStreamer unit tests for playbin2 compressed stream support
+/* GStreamer unit tests for playbin compressed stream support
  *
  * Copyright (C) 2006 Tim-Philipp Müller <tim centricular net>
  * Copyright (C) 2010 Sebastian Dröge <sebastian.droege@collabora.co.uk>
@@ -647,7 +647,7 @@ create_playbin (const gchar * uri, gboolean set_sink)
 {
   GstElement *playbin, *sink;
 
-  playbin = gst_element_factory_make ("playbin2", "playbin2");
+  playbin = gst_element_factory_make ("playbin", "playbin");
   fail_unless (playbin != NULL, "Failed to create playbin element");
 
   if (set_sink) {
@@ -2474,9 +2474,9 @@ GST_END_TEST;
 #endif
 
 static Suite *
-playbin2_compressed_suite (void)
+playbin_compressed_suite (void)
 {
-  Suite *s = suite_create ("playbin2_compressed");
+  Suite *s = suite_create ("playbin_compressed");
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
@@ -2528,4 +2528,4 @@ playbin2_compressed_suite (void)
   return s;
 }
 
-GST_CHECK_MAIN (playbin2_compressed);
+GST_CHECK_MAIN (playbin_compressed);
