@@ -149,10 +149,6 @@ gst_tcp_client_sink_finalize (GObject * gobject)
 static gboolean
 gst_tcp_client_sink_setcaps (GstBaseSink * bsink, GstCaps * caps)
 {
-  GstTCPClientSink *sink;
-
-  sink = GST_TCP_CLIENT_SINK (bsink);
-
   return TRUE;
 }
 

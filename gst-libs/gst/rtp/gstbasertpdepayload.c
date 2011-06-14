@@ -750,10 +750,6 @@ static void
 gst_base_rtp_depayload_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstBaseRTPDepayload *filter;
-
-  filter = GST_BASE_RTP_DEPAYLOAD (object);
-
   switch (prop_id) {
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -765,10 +761,6 @@ static void
 gst_base_rtp_depayload_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstBaseRTPDepayload *filter;
-
-  filter = GST_BASE_RTP_DEPAYLOAD (object);
-
   switch (prop_id) {
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

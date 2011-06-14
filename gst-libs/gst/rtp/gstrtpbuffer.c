@@ -471,10 +471,8 @@ gst_rtp_buffer_unmap (GstRTPBuffer * rtp)
 void
 gst_rtp_buffer_set_packet_len (GstRTPBuffer * rtp, guint len)
 {
-  guint oldlen;
   guint8 *data;
 
-  oldlen = rtp->size;
   data = rtp->data;
 
   if (rtp->maxsize <= len) {
