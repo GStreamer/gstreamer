@@ -3236,7 +3236,7 @@ stopping:
  *
  * Queue an object for rendering.
  * The first prerollable object queued will complete the preroll. If the
- * preroll queue if filled, we render all the objects in the queue.
+ * preroll queue is filled, we render all the objects in the queue.
  *
  * This function takes ownership of the object.
  */
