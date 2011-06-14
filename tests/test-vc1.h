@@ -1,7 +1,7 @@
 /*
  *  test-vc1.h - VC-1 test data
  *
- *  gstreamer-vaapi (C) 2010 Splitted-Desktop Systems
+ *  gstreamer-vaapi (C) 2010-2011 Splitted-Desktop Systems
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by

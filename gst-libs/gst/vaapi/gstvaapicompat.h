@@ -1,7 +1,7 @@
 /*
  *  gstvapicompat.h - VA-API compatibility glue
  *
- *  gstreamer-vaapi (C) 2010 Splitted-Desktop Systems
+ *  gstreamer-vaapi (C) 2010-2011 Splitted-Desktop Systems
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public License
