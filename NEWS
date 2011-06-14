@@ -1,5 +1,8 @@
-gst-vaapi NEWS -- summary of changes.  2010-07-20
+gst-vaapi NEWS -- summary of changes.  2011-06-14
 Copyright (C) 2010 Splitted-Desktop Systems
+
+Version 0.2.6 - 14.Jun.2011
+* Fix licensing terms (LGPL v2.1)
 
 Version 0.2.5 - 20.Jul.2010
 * Fix build with older VA-API 0.29-sds
