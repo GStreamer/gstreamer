@@ -21,7 +21,7 @@
  * SECTION:element-uridecodebin
  *
  * Decodes data from a URI into raw media. It selects a source element that can
- * handle the given #GstURIDecodeBin:uri scheme and connects it to a decodebin2.
+ * handle the given #GstURIDecodeBin:uri scheme and connects it to a decodebin.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -534,7 +534,7 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
    * @caps: The #GstCaps.
    * @factories: A #GValueArray of possible #GstElementFactory to use.
    *
-   * Once decodebin2 has found the possible #GstElementFactory objects to try
+   * Once decodebin has found the possible #GstElementFactory objects to try
    * for @caps on @pad, this signal is emited. The purpose of the signal is for
    * the application to perform additional sorting or filtering on the element
    * factory array.
@@ -573,7 +573,7 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
    * those factories, this signal is emited.
    *
    * The signal handler should return a #GST_TYPE_AUTOPLUG_SELECT_RESULT enum
-   * value indicating what decodebin2 should do next.
+   * value indicating what decodebin should do next.
    *
    * A value of #GST_AUTOPLUG_SELECT_TRY will try to autoplug an element from
    * @factory.
@@ -1484,10 +1484,10 @@ no_queue2:
   }
 }
 
-/* Remove all decodebin2 from ourself 
- * If force is FALSE, then the decodebin2 instances will be stored in
+/* Remove all decodebin from ourself
+ * If force is FALSE, then the decodebin instances will be stored in
  * pending_decodebins for re-use later on.
- * If force is TRUE, then all decodebin2 instances will be unreferenced
+ * If force is TRUE, then all decodebin instances will be unreferenced
  * and cleared, including the pending ones. */
 static void
 remove_decoders (GstURIDecodeBin * bin, gboolean force)
@@ -1620,18 +1620,18 @@ make_decoder (GstURIDecodeBin * decoder)
 {
   GstElement *decodebin;
 
-  /* re-use pending decodebin2 */
+  /* re-use pending decodebin */
   if (decoder->pending_decodebins) {
     GSList *first = decoder->pending_decodebins;
-    GST_LOG_OBJECT (decoder, "re-using pending decodebin2");
+    GST_LOG_OBJECT (decoder, "re-using pending decodebin");
     decodebin = (GstElement *) first->data;
     decoder->pending_decodebins =
         g_slist_delete_link (decoder->pending_decodebins, first);
   } else {
-    GST_LOG_OBJECT (decoder, "making new decodebin2");
+    GST_LOG_OBJECT (decoder, "making new decodebin");
 
     /* now create the decoder element */
-    decodebin = gst_element_factory_make ("decodebin2", NULL);
+    decodebin = gst_element_factory_make ("decodebin", NULL);
 
     if (!decodebin)
       goto no_decodebin;
@@ -1709,16 +1709,16 @@ make_decoder (GstURIDecodeBin * decoder)
   /* ERRORS */
 no_decodebin:
   {
-    post_missing_plugin_error (GST_ELEMENT_CAST (decoder), "decodebin2");
+    post_missing_plugin_error (GST_ELEMENT_CAST (decoder), "decodebin");
     GST_ELEMENT_ERROR (decoder, CORE, MISSING_PLUGIN, (NULL),
-        ("No decodebin2 element, check your installation"));
+        ("No decodebin element, check your installation"));
     return NULL;
   }
 no_typefind:
   {
     gst_object_unref (decodebin);
     GST_ELEMENT_ERROR (decoder, CORE, MISSING_PLUGIN, (NULL),
-        ("No typefind element, decodebin2 is unusable, check your installation"));
+        ("No typefind element, decodebin is unusable, check your installation"));
     return NULL;
   }
 }
@@ -1828,7 +1828,7 @@ no_decodebin:
 could_not_link:
   {
     GST_ELEMENT_ERROR (decoder, CORE, NEGOTIATION,
-        (NULL), ("Can't link typefind to decodebin2 element"));
+        (NULL), ("Can't link typefind to decodebin element"));
     return;
   }
 no_queue2:
@@ -1840,7 +1840,7 @@ no_queue2:
 
 /* setup a streaming source. This will first plug a typefind element to the
  * source. After we find the type, we decide to plug a queue2 and continue to
- * plug a decodebin2 starting from the found caps */
+ * plug a decodebin starting from the found caps */
 static gboolean
 setup_streaming (GstURIDecodeBin * decoder)
 {

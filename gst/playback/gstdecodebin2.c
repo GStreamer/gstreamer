@@ -19,27 +19,27 @@
  */
 
 /**
- * SECTION:element-decodebin2
+ * SECTION:element-decodebin
  *
  * #GstBin that auto-magically constructs a decoding pipeline using available
  * decoders and demuxers via auto-plugging.
  *
- * decodebin2 is considered stable now and replaces the old #decodebin element.
- * #uridecodebin uses decodebin2 internally and is often more convenient to
+ * decodebin is considered stable now and replaces the old #decodebin element.
+ * #uridecodebin uses decodebin internally and is often more convenient to
  * use, as it creates a suitable source element as well.
  */
 
 /* Implementation notes:
  *
- * The following section describes how decodebin2 works internally.
+ * The following section describes how decodebin works internally.
  *
- * The first part of decodebin2 is its typefind element, which tries
+ * The first part of decodebin is its typefind element, which tries
  * to determine the media type of the input stream. If the type is found
  * autoplugging starts.
  *
- * decodebin2 internally organizes the elements it autoplugged into GstDecodeChains
+ * decodebin internally organizes the elements it autoplugged into GstDecodeChains
  * and GstDecodeGroups. A decode chain is a single chain of decoding, this
- * means that if decodebin2 every autoplugs an element with two+ srcpads
+ * means that if decodebin every autoplugs an element with two+ srcpads
  * (e.g. a demuxer) this will end the chain and everything following this
  * demuxer will be put into decode groups below the chain. Otherwise,
  * if an element has a single srcpad that outputs raw data the decode chain
@@ -58,10 +58,10 @@
  * chains are complete.
  *
  * If this happens at some point, all endpads of all active groups are exposed.
- * For this decodebin2 adds the endpads, signals no-more-pads and then unblocks
+ * For this decodebin adds the endpads, signals no-more-pads and then unblocks
  * them. Now playback starts.
  *
- * If one of the chains that end on a endpad receives EOS decodebin2 checks
+ * If one of the chains that end on a endpad receives EOS decodebin checks
  * if all chains and groups are drained. In that case everything goes into EOS.
  * If there is a chain where the active group is drained but there exist next
  * groups, the active group is hidden (endpads are removed) and the next group
@@ -116,7 +116,6 @@ typedef struct _GstDecodeGroup GstDecodeGroup;
 typedef struct _GstDecodePad GstDecodePad;
 typedef GstGhostPadClass GstDecodePadClass;
 typedef struct _GstDecodeBin GstDecodeBin;
-typedef struct _GstDecodeBin GstDecodeBin2;
 typedef struct _GstDecodeBinClass GstDecodeBinClass;
 
 #define GST_TYPE_DECODE_BIN             (gst_decode_bin_get_type())
@@ -127,9 +126,9 @@ typedef struct _GstDecodeBinClass GstDecodeBinClass;
 #define GST_IS_DECODE_BIN_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_DECODE_BIN))
 
 /**
- *  GstDecodeBin2:
+ *  GstDecodeBin:
  *
- *  The opaque #DecodeBin2 data structure
+ *  The opaque #GstDecodeBin data structure
  */
 struct _GstDecodeBin
 {
@@ -514,7 +513,7 @@ gst_decode_bin_get_type (void)
     };
 
     gst_decode_bin_type =
-        g_type_register_static (GST_TYPE_BIN, "GstDecodeBin2",
+        g_type_register_static (GST_TYPE_BIN, "GstDecodeBin",
         &gst_decode_bin_info, 0);
   }
 
@@ -595,7 +594,7 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
   gobject_klass->get_property = gst_decode_bin_get_property;
 
   /**
-   * GstDecodeBin2::new-decoded-pad:
+   * GstDecodeBin::new-decoded-pad:
    * @bin: The decodebin.
    * @pad: The newly created pad.
    * @islast: #TRUE if this is the last pad to be added. Deprecated.
@@ -614,7 +613,7 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
       G_TYPE_BOOLEAN);
 
   /**
-   * GstDecodeBin2::removed-decoded-pad:
+   * GstDecodeBin::removed-decoded-pad:
    * @bin: The decodebin.
    * @pad: The pad that was removed.
    *
@@ -630,7 +629,7 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
       gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GST_TYPE_PAD);
 
   /**
-   * GstDecodeBin2::unknown-type:
+   * GstDecodeBin::unknown-type:
    * @bin: The decodebin.
    * @pad: The new pad containing caps that cannot be resolved to a 'final'
    *       stream type.
@@ -646,12 +645,12 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
       GST_TYPE_PAD, GST_TYPE_CAPS);
 
   /**
-   * GstDecodeBin2::autoplug-continue:
+   * GstDecodeBin::autoplug-continue:
    * @bin: The decodebin.
    * @pad: The #GstPad.
    * @caps: The #GstCaps found.
    *
-   * This signal is emitted whenever decodebin2 finds a new stream. It is
+   * This signal is emitted whenever decodebin finds a new stream. It is
    * emitted before looking for any elements that can handle that stream.
    *
    * <note>
@@ -660,7 +659,7 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
    *   connected in.
    * </note>
    *
-   * Returns: #TRUE if you wish decodebin2 to look for elements that can
+   * Returns: #TRUE if you wish decodebin to look for elements that can
    * handle the given @caps. If #FALSE, those caps will be considered as
    * final and the pad will be exposed as such (see 'new-decoded-pad'
    * signal).
@@ -672,13 +671,13 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
       G_TYPE_BOOLEAN, 2, GST_TYPE_PAD, GST_TYPE_CAPS);
 
   /**
-   * GstDecodeBin2::autoplug-factories:
+   * GstDecodeBin::autoplug-factories:
    * @bin: The decodebin.
    * @pad: The #GstPad.
    * @caps: The #GstCaps found.
    *
    * This function is emited when an array of possible factories for @caps on
-   * @pad is needed. Decodebin2 will by default return an array with all
+   * @pad is needed. Decodebin will by default return an array with all
    * compatible factories, sorted by rank.
    *
    * If this function returns NULL, @pad will be exposed as a final caps.
@@ -704,13 +703,13 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
       GST_TYPE_PAD, GST_TYPE_CAPS);
 
   /**
-   * GstDecodeBin2::autoplug-sort:
+   * GstDecodeBin::autoplug-sort:
    * @bin: The decodebin.
    * @pad: The #GstPad.
    * @caps: The #GstCaps.
    * @factories: A #GValueArray of possible #GstElementFactory to use.
    *
-   * Once decodebin2 has found the possible #GstElementFactory objects to try
+   * Once decodebin has found the possible #GstElementFactory objects to try
    * for @caps on @pad, this signal is emited. The purpose of the signal is for
    * the application to perform additional sorting or filtering on the element
    * factory array.
@@ -736,18 +735,18 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
       GST_TYPE_PAD, GST_TYPE_CAPS, G_TYPE_VALUE_ARRAY);
 
   /**
-   * GstDecodeBin2::autoplug-select:
+   * GstDecodeBin::autoplug-select:
    * @bin: The decodebin.
    * @pad: The #GstPad.
    * @caps: The #GstCaps.
    * @factory: A #GstElementFactory to use.
    *
-   * This signal is emitted once decodebin2 has found all the possible
+   * This signal is emitted once decodebin has found all the possible
    * #GstElementFactory that can be used to handle the given @caps. For each of
    * those factories, this signal is emited.
    *
    * The signal handler should return a #GST_TYPE_AUTOPLUG_SELECT_RESULT enum
-   * value indicating what decodebin2 should do next.
+   * value indicating what decodebin should do next.
    *
    * A value of #GST_AUTOPLUG_SELECT_TRY will try to autoplug an element from
    * @factory.
@@ -777,10 +776,10 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
       GST_TYPE_ELEMENT_FACTORY);
 
   /**
-   * GstDecodeBin2::drained
+   * GstDecodeBin::drained
    * @bin: The decodebin
    *
-   * This signal is emitted once decodebin2 has finished decoding all the data.
+   * This signal is emitted once decodebin has finished decoding all the data.
    *
    * Since: 0.10.16
    */
@@ -807,9 +806,9 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
           GST_TYPE_CAPS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstDecodeBin2::use-buffering
+   * GstDecodeBin::use-buffering
    *
-   * Activate buffering in decodebin2. This will instruct the multiqueues behind
+   * Activate buffering in decodebin. This will instruct the multiqueues behind
    * decoders to emit BUFFERING messages.
 
    * Since: 0.10.26
@@ -820,7 +819,7 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
           DEFAULT_USE_BUFFERING, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstDecodebin2:low-percent
+   * GstDecodeBin:low-percent
    *
    * Low threshold percent for buffering to start.
    *
@@ -831,7 +830,7 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
           "Low threshold for buffering to start", 0, 100,
           DEFAULT_LOW_PERCENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstDecodebin2:high-percent
+   * GstDecodeBin:high-percent
    *
    * High threshold percent for buffering to finish.
    *
@@ -843,7 +842,7 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
           DEFAULT_HIGH_PERCENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstDecodebin2:max-size-bytes
+   * GstDecodeBin:max-size-bytes
    *
    * Max amount amount of bytes in the queue (0=automatic).
    *
@@ -855,7 +854,7 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
           0, G_MAXUINT, DEFAULT_MAX_SIZE_BYTES,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstDecodebin2:max-size-buffers
+   * GstDecodeBin:max-size-buffers
    *
    * Max amount amount of buffers in the queue (0=automatic).
    *
@@ -867,7 +866,7 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
           0, G_MAXUINT, DEFAULT_MAX_SIZE_BUFFERS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstDecodebin2:max-size-time
+   * GstDecodeBin:max-size-time
    *
    * Max amount amount of time in the queue (in ns, 0=automatic).
    *
@@ -880,7 +879,7 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
           DEFAULT_MAX_SIZE_TIME, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstDecodeBin2::post-stream-topology
+   * GstDecodeBin::post-stream-topology
    *
    * Post stream-topology messages on the bus every time the topology changes.
    *
@@ -893,7 +892,7 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstDecodeBin2::expose-all-streams
+   * GstDecodeBin::expose-all-streams
    *
    * Expose streams of unknown type.
    *
@@ -2104,7 +2103,7 @@ type_found (GstElement * typefind, guint probability,
   if (gst_structure_has_name (gst_caps_get_structure (caps, 0), "text/plain")) {
     GST_ELEMENT_ERROR (decode_bin, STREAM, WRONG_TYPE,
         (_("This appears to be a text file")),
-        ("decodebin2 cannot decode plain text files"));
+        ("decodebin cannot decode plain text files"));
     goto exit;
   }
 
@@ -2534,7 +2533,7 @@ gst_decode_chain_free_internal (GstDecodeChain * chain, gboolean hide)
 /* gst_decode_chain_free:
  *
  * Completely frees and removes the chain and all
- * child groups from decodebin2.
+ * child groups from decodebin.
  *
  * MT-safe, don't hold the chain lock or any child chain's lock
  * when calling this!
@@ -2674,7 +2673,7 @@ gst_decode_group_free (GstDecodeGroup * group)
 /* gst_decode_group_hide:
  *
  * Hide the decode group only, this means that
- * all child endpads are removed from decodebin2
+ * all child endpads are removed from decodebin
  * and all signals are unconnected.
  *
  * No element is set to NULL state and completely
@@ -3341,7 +3340,7 @@ gst_decode_bin_expose (GstDecodeBin * dbin)
     if (!dpad->exposed
         && !gst_element_add_pad (GST_ELEMENT (dbin), GST_PAD_CAST (dpad))) {
       /* not really fatal, we can try to add the other pads */
-      g_warning ("error adding pad to decodebin2");
+      g_warning ("error adding pad to decodebin");
       continue;
     }
     dpad->exposed = TRUE;
@@ -3789,8 +3788,7 @@ activate_failed:
 gboolean
 gst_decode_bin_plugin_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (gst_decode_bin_debug, "decodebin2", 0,
-      "decoder bin");
+  GST_DEBUG_CATEGORY_INIT (gst_decode_bin_debug, "decodebin", 0, "decoder bin");
 
 #ifdef ENABLE_NLS
   GST_DEBUG ("binding text domain %s to locale dir %s", GETTEXT_PACKAGE,
@@ -3805,6 +3803,6 @@ gst_decode_bin_plugin_init (GstPlugin * plugin)
   topology_next = g_quark_from_static_string ("next");
   topology_pad = g_quark_from_static_string ("pad");
 
-  return gst_element_register (plugin, "decodebin2", GST_RANK_NONE,
+  return gst_element_register (plugin, "decodebin", GST_RANK_NONE,
       GST_TYPE_DECODE_BIN);
 }

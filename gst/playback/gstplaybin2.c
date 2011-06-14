@@ -2610,7 +2610,7 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
       case GST_PLAY_SINK_TYPE_VIDEO_RAW:
         /* we want to return NOT_LINKED for unselected pads but only for pads
          * from the normal uridecodebin. This makes sure that subtitle streams
-         * are not raced past audio/video from decodebin2's multiqueue.
+         * are not raced past audio/video from decodebin's multiqueue.
          * For pads from suburidecodebin OK should always be returned, otherwise
          * it will most likely stop. */
         g_object_set (sinkpad, "always-ok", always_ok, NULL);
