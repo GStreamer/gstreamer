@@ -2608,9 +2608,7 @@ gst_base_src_set_allocation (GstBaseSrc * basesrc, GstBufferPool * pool,
   GstBaseSrcPrivate *priv = basesrc->priv;
 
   GST_OBJECT_LOCK (basesrc);
-  if ((oldpool = priv->pool)) {
-    gst_object_unref (oldpool);
-  }
+  oldpool = priv->pool;
   priv->pool = pool;
 
   priv->allocator = allocator;
