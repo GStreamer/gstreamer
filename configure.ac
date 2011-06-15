@@ -426,7 +426,7 @@ AG_GST_CHECK_PLUGIN(audiorate)
 AG_GST_CHECK_PLUGIN(audiotestsrc)
 AG_GST_CHECK_PLUGIN(encoding)
 AG_GST_CHECK_PLUGIN(ffmpegcolorspace)
-AG_GST_CHECK_PLUGIN(colorspace)
+AG_GST_CHECK_PLUGIN(videoconvert)
 AG_GST_CHECK_PLUGIN(gdp)
 AG_GST_CHECK_PLUGIN(playback)
 AG_GST_CHECK_PLUGIN(audioresample)
@@ -863,7 +863,7 @@ gst/audioconvert/Makefile
 gst/audiorate/Makefile
 gst/audiotestsrc/Makefile
 gst/encoding/Makefile
-gst/colorspace/Makefile
+gst/videoconvert/Makefile
 gst/ffmpegcolorspace/Makefile
 gst/gdp/Makefile
 gst/playback/Makefile

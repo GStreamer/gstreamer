@@ -19,31 +19,32 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_COLORSPACE_H__
-#define __GST_COLORSPACE_H__
+#ifndef __GST_VIDEOCONVERT_H__
+#define __GST_VIDEOCONVERT_H__
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/video/gstvideofilter.h>
-#include "colorspace.h"
+#include "videoconvert.h"
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_CSP 	      (gst_csp_get_type())
-#define GST_CSP(obj) 	      (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_CSP,GstCsp))
-#define GST_CSP_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_CSP,GstCspClass))
-#define GST_IS_CSP(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_CSP))
-#define GST_IS_CSP_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_CSP))
+#define GST_TYPE_VIDEO_CONVERT	          (gst_video_convert_get_type())
+#define GST_VIDEO_CONVERT(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VIDEO_CONVERT,GstVideoConvert))
+#define GST_VIDEO_CONVERT_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VIDEO_CONVERT,GstVideoConvertClass))
+#define GST_IS_VIDEO_CONVERT(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VIDEO_CONVERT))
+#define GST_IS_VIDEO_CONVERT_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VIDEO_CONVERT))
+#define GST_VIDEO_CONVERT_CAST(obj)       ((GstVideoConvert *)(obj))
 
-typedef struct _GstCsp GstCsp;
-typedef struct _GstCspClass GstCspClass;
+typedef struct _GstVideoConvert GstVideoConvert;
+typedef struct _GstVideoConvertClass GstVideoConvertClass;
 
 /**
- * GstCsp:
+ * GstVideoConvert:
  *
  * Opaque object data structure.
  */
-struct _GstCsp {
+struct _GstVideoConvert {
   GstVideoFilter element;
 
   gint width, height;
@@ -55,15 +56,15 @@ struct _GstCsp {
   GstVideoFormat to_format;
   ColorSpaceColorSpec to_spec;
 
-  ColorspaceConvert *convert;
+  VideoConvert *convert;
   gboolean dither;
 };
 
-struct _GstCspClass
+struct _GstVideoConvertClass
 {
   GstVideoFilterClass parent_class;
 };
 
 G_END_DECLS
 
-#endif /* __GST_COLORSPACE_H__ */
+#endif /* __GST_VIDEOCONVERT_H__ */

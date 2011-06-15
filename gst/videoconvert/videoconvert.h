@@ -1,4 +1,4 @@
-/* Colorspace conversion functions
+/* Video conversion functions
  * Copyright (C) 2010 David Schleef <ds@schleef.org>
  *
  * This library is free software; you can redistribute it and/or
@@ -24,8 +24,8 @@
 
 G_BEGIN_DECLS
 
-typedef struct _ColorspaceConvert ColorspaceConvert;
-typedef struct _ColorspaceFrame ColorspaceComponent;
+typedef struct _VideoConvert VideoConvert;
+typedef struct _VideoFrame VideoComponent;
 
 typedef enum {
   COLOR_SPEC_NONE = 0,
@@ -41,12 +41,12 @@ typedef enum {
   DITHER_HALFTONE
 } ColorSpaceDitherMethod;
 
-struct _ColorspaceComponent {
+struct _VideoComponent {
   int offset;
   int stride;
 };
 
-struct _ColorspaceConvert {
+struct _VideoConvert {
   gint width, height;
   gboolean interlaced;
   gboolean use_16bit;
@@ -67,28 +67,28 @@ struct _ColorspaceConvert {
   int src_offset[4];
   int src_stride[4];
 
-  void (*convert) (ColorspaceConvert *convert, guint8 *dest, const guint8 *src);
-  void (*getline) (ColorspaceConvert *convert, guint8 *dest, const guint8 *src, int j);
-  void (*putline) (ColorspaceConvert *convert, guint8 *dest, const guint8 *src, int j);
-  void (*matrix) (ColorspaceConvert *convert);
+  void (*convert) (VideoConvert *convert, guint8 *dest, const guint8 *src);
+  void (*getline) (VideoConvert *convert, guint8 *dest, const guint8 *src, int j);
+  void (*putline) (VideoConvert *convert, guint8 *dest, const guint8 *src, int j);
+  void (*matrix) (VideoConvert *convert);
 
-  void (*getline16) (ColorspaceConvert *convert, guint16 *dest, const guint8 *src, int j);
-  void (*putline16) (ColorspaceConvert *convert, guint8 *dest, const guint16 *src, int j);
-  void (*matrix16) (ColorspaceConvert *convert);
-  void (*dither16) (ColorspaceConvert *convert, int j);
+  void (*getline16) (VideoConvert *convert, guint16 *dest, const guint8 *src, int j);
+  void (*putline16) (VideoConvert *convert, guint8 *dest, const guint16 *src, int j);
+  void (*matrix16) (VideoConvert *convert);
+  void (*dither16) (VideoConvert *convert, int j);
 };
 
-ColorspaceConvert * colorspace_convert_new (GstVideoFormat to_format,
+VideoConvert * videoconvert_convert_new (GstVideoFormat to_format,
     ColorSpaceColorSpec from_spec, GstVideoFormat from_format,
     ColorSpaceColorSpec to_spec, int width, int height);
-void colorspace_convert_set_dither (ColorspaceConvert * convert, int type);
-void colorspace_convert_set_interlaced (ColorspaceConvert *convert,
+void videoconvert_convert_set_dither (VideoConvert * convert, int type);
+void videoconvert_convert_set_interlaced (VideoConvert *convert,
     gboolean interlaced);
-void colorspace_convert_set_palette (ColorspaceConvert *convert,
+void videoconvert_convert_set_palette (VideoConvert *convert,
     const guint32 *palette);
-const guint32 * colorspace_convert_get_palette (ColorspaceConvert *convert);
-void colorspace_convert_free (ColorspaceConvert * convert);
-void colorspace_convert_convert (ColorspaceConvert * convert,
+const guint32 * videoconvert_convert_get_palette (VideoConvert *convert);
+void videoconvert_convert_free (VideoConvert * convert);
+void videoconvert_convert_convert (VideoConvert * convert,
     guint8 *dest, const guint8 *src);
 
 
