@@ -64,7 +64,7 @@ CFILE_GLOB=$(DOC_SOURCE_DIR)/*/*/*.c
 SCANOBJ_DEPS =
 
 # Header files to ignore when scanning.
-IGNORE_HFILES = avcodec.h gstffmpegcodecmap.h dsputil.h arch.h speex_resampler.h speex_resampler_wrapper.h fixed_arm4.h fixed_arm5e.h fixed_bfin.h fixed_debug.h fixed_generic.h resample_sse.h
+IGNORE_HFILES = avcodec.h dsputil.h arch.h speex_resampler.h speex_resampler_wrapper.h fixed_arm4.h fixed_arm5e.h fixed_bfin.h fixed_debug.h fixed_generic.h resample_sse.h
 IGNORE_CFILES = utils.c mem.c imgconvert.c
 
 # we add all .h files of elements that have signals/args we want
@@ -102,7 +102,6 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/audioconvert/gstaudioconvert.h \
 	$(top_srcdir)/gst/audiotestsrc/gstaudiotestsrc.h \
 	$(top_srcdir)/gst/encoding/gstencodebin.h \
-	$(top_srcdir)/gst/ffmpegcolorspace/gstffmpegcolorspace.h \
 	$(top_srcdir)/gst/gdp/gstgdpdepay.h \
 	$(top_srcdir)/gst/gdp/gstgdppay.h \
 	$(top_srcdir)/gst/playback/gstplay-enum.h \

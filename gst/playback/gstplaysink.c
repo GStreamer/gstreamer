@@ -1116,13 +1116,13 @@ gen_video_deinterlace_chain (GstPlaySink * playsink)
   bin = GST_BIN_CAST (chain->chain.bin);
   gst_object_ref_sink (bin);
 
-  GST_DEBUG_OBJECT (playsink, "creating ffmpegcolorspace");
-  chain->conv = gst_element_factory_make ("ffmpegcolorspace", "vdconv");
+  GST_DEBUG_OBJECT (playsink, "creating videoconvert");
+  chain->conv = gst_element_factory_make ("videoconvert", "vdconv");
   if (chain->conv == NULL) {
-    post_missing_element_message (playsink, "ffmpegcolorspace");
+    post_missing_element_message (playsink, "videoconvert");
     GST_ELEMENT_WARNING (playsink, CORE, MISSING_PLUGIN,
         (_("Missing element '%s' - check your GStreamer installation."),
-            "ffmpegcolorspace"), ("video rendering might fail"));
+            "videoconvert"), ("video rendering might fail"));
   } else {
     gst_bin_add (bin, chain->conv);
     head = chain->conv;

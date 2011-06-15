@@ -171,10 +171,6 @@ dnl *** checks for header files ***
 dnl check if we have ANSI C header files
 AC_HEADER_STDC
 
-dnl used in gst/ffmpegcolorspace/mem.c
-dnl FIXME: could be fixed by redefining av_malloc and av_free to GLib's
-AC_CHECK_HEADERS([malloc.h])
-
 ac_cppflags_save="$CPPFLAGS"
 CPPFLAGS="`$PKG_CONFIG --cflags libxml-2.0`"
 AC_COMPILE_IFELSE(
@@ -213,7 +209,6 @@ LIBS="$save_libs"
 dnl used in gst-libs/gst/pbutils and associated unit test
 AC_CHECK_HEADERS([process.h sys/types.h sys/wait.h sys/stat.h])
 
-dnl ffmpegcolorspace includes _stdint.h
 dnl also, Windows does not have long long
 AX_CREATE_STDINT_H
 
@@ -425,7 +420,6 @@ AG_GST_CHECK_PLUGIN(audioconvert)
 AG_GST_CHECK_PLUGIN(audiorate)
 AG_GST_CHECK_PLUGIN(audiotestsrc)
 AG_GST_CHECK_PLUGIN(encoding)
-AG_GST_CHECK_PLUGIN(ffmpegcolorspace)
 AG_GST_CHECK_PLUGIN(videoconvert)
 AG_GST_CHECK_PLUGIN(gdp)
 AG_GST_CHECK_PLUGIN(playback)
@@ -864,7 +858,6 @@ gst/audiorate/Makefile
 gst/audiotestsrc/Makefile
 gst/encoding/Makefile
 gst/videoconvert/Makefile
-gst/ffmpegcolorspace/Makefile
 gst/gdp/Makefile
 gst/playback/Makefile
 gst/audioresample/Makefile
