@@ -53,7 +53,7 @@ libgstaudio_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) 
 noinst_PROGRAMS = testchannels
 testchannels_SOURCES = testchannels.c
 testchannels_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
-testchannels_LDADD = $(GST_LIBS)
+testchannels_LDADD =  $(builddir)/libgstaudio-$(GST_MAJORMINOR).la $(GST_LIBS)
 
 include $(top_srcdir)/common/gst-glib-gen.mak
 
