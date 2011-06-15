@@ -121,277 +121,22 @@ typedef enum {
   GST_VIDEO_FORMAT_r210
 } GstVideoFormat;
 
-#define GST_VIDEO_BYTE1_MASK_32  "0xFF000000"
-#define GST_VIDEO_BYTE2_MASK_32  "0x00FF0000"
-#define GST_VIDEO_BYTE3_MASK_32  "0x0000FF00"
-#define GST_VIDEO_BYTE4_MASK_32  "0x000000FF"
-
-#define GST_VIDEO_BYTE1_MASK_24  "0x00FF0000"
-#define GST_VIDEO_BYTE2_MASK_24  "0x0000FF00"
-#define GST_VIDEO_BYTE3_MASK_24  "0x000000FF"
-
-#define GST_VIDEO_BYTE1_MASK_32_INT  0xFF000000
-#define GST_VIDEO_BYTE2_MASK_32_INT  0x00FF0000
-#define GST_VIDEO_BYTE3_MASK_32_INT  0x0000FF00
-#define GST_VIDEO_BYTE4_MASK_32_INT  0x000000FF
-
-#define GST_VIDEO_BYTE1_MASK_24_INT  0x00FF0000
-#define GST_VIDEO_BYTE2_MASK_24_INT  0x0000FF00
-#define GST_VIDEO_BYTE3_MASK_24_INT  0x000000FF
-
-#define GST_VIDEO_COMP1_MASK_16 "0xf800"
-#define GST_VIDEO_COMP2_MASK_16 "0x07e0"
-#define GST_VIDEO_COMP3_MASK_16 "0x001f"
-
-#define GST_VIDEO_COMP1_MASK_15 "0x7c00"
-#define GST_VIDEO_COMP2_MASK_15 "0x03e0"
-#define GST_VIDEO_COMP3_MASK_15 "0x001f"
-
-#define GST_VIDEO_COMP1_MASK_16_INT 0xf800
-#define GST_VIDEO_COMP2_MASK_16_INT 0x07e0
-#define GST_VIDEO_COMP3_MASK_16_INT 0x001f
-
-#define GST_VIDEO_COMP1_MASK_15_INT 0x7c00
-#define GST_VIDEO_COMP2_MASK_15_INT 0x03e0
-#define GST_VIDEO_COMP3_MASK_15_INT 0x001f
-
-#ifndef GST_DISABLE_DEPRECATED
-#define GST_VIDEO_RED_MASK_16 GST_VIDEO_COMP1_MASK_16
-#define GST_VIDEO_GREEN_MASK_16 GST_VIDEO_COMP2_MASK_16
-#define GST_VIDEO_BLUE_MASK_16 GST_VIDEO_COMP3_MASK_16
-
-#define GST_VIDEO_RED_MASK_15 GST_VIDEO_COMP1_MASK_15
-#define GST_VIDEO_GREEN_MASK_15 GST_VIDEO_COMP2_MASK_15
-#define GST_VIDEO_BLUE_MASK_15 GST_VIDEO_COMP3_MASK_15
-
-#define GST_VIDEO_RED_MASK_16_INT GST_VIDEO_COMP1_MASK_16_INT
-#define GST_VIDEO_GREEN_MASK_16_INT GST_VIDEO_COMP2_MASK_16_INT
-#define GST_VIDEO_BLUE_MASK_16_INT GST_VIDEO_COMP3_MASK_16_INT
-
-#define GST_VIDEO_RED_MASK_15_INT GST_VIDEO_COMP1_MASK_15_INT
-#define GST_VIDEO_GREEN_MASK_15_INT GST_VIDEO_COMP2_MASK_15_INT
-#define GST_VIDEO_BLUE_MASK_15_INT GST_VIDEO_COMP3_MASK_15_INT
-#endif
-
 #define GST_VIDEO_SIZE_RANGE "(int) [ 1, max ]"
 #define GST_VIDEO_FPS_RANGE "(fraction) [ 0, max ]"
 
-/* consider the next 2 protected */
-#define __GST_VIDEO_CAPS_MAKE_32A(R, G, B, A)                           \
-    "video/x-raw-rgb, "                                                 \
-    "bpp = (int) 32, "                                                  \
-    "depth = (int) 32, "                                                \
-    "endianness = (int) BIG_ENDIAN, "                                   \
-    "red_mask = (int) " GST_VIDEO_BYTE ## R ## _MASK_32 ", "            \
-    "green_mask = (int) " GST_VIDEO_BYTE ## G ## _MASK_32 ", "          \
-    "blue_mask = (int) " GST_VIDEO_BYTE ## B ## _MASK_32 ", "           \
-    "alpha_mask = (int) " GST_VIDEO_BYTE ## A ## _MASK_32 ", "          \
-    "width = " GST_VIDEO_SIZE_RANGE ", "                                \
-    "height = " GST_VIDEO_SIZE_RANGE ", "                               \
-    "framerate = " GST_VIDEO_FPS_RANGE
-
-#define __GST_VIDEO_CAPS_MAKE_32(R, G, B)                               \
-    "video/x-raw-rgb, "                                                 \
-    "bpp = (int) 32, "                                                  \
-    "depth = (int) 24, "                                                \
-    "endianness = (int) BIG_ENDIAN, "                                   \
-    "red_mask = (int) " GST_VIDEO_BYTE ## R ## _MASK_32 ", "            \
-    "green_mask = (int) " GST_VIDEO_BYTE ## G ## _MASK_32 ", "          \
-    "blue_mask = (int) " GST_VIDEO_BYTE ## B ## _MASK_32 ", "           \
-    "width = " GST_VIDEO_SIZE_RANGE ", "                                \
-    "height = " GST_VIDEO_SIZE_RANGE ", "                               \
-    "framerate = " GST_VIDEO_FPS_RANGE
-
-#define __GST_VIDEO_CAPS_MAKE_24(R, G, B)                               \
-    "video/x-raw-rgb, "                                                 \
-    "bpp = (int) 24, "                                                  \
-    "depth = (int) 24, "                                                \
-    "endianness = (int) BIG_ENDIAN, "                                   \
-    "red_mask = (int) " GST_VIDEO_BYTE ## R ## _MASK_24 ", "            \
-    "green_mask = (int) " GST_VIDEO_BYTE ## G ## _MASK_24 ", "          \
-    "blue_mask = (int) " GST_VIDEO_BYTE ## B ## _MASK_24 ", "           \
-    "width = " GST_VIDEO_SIZE_RANGE ", "                                \
-    "height = " GST_VIDEO_SIZE_RANGE ", "                               \
-    "framerate = " GST_VIDEO_FPS_RANGE
-
-#define __GST_VIDEO_CAPS_MAKE_16(R, G, B)                               \
-    "video/x-raw-rgb, "                                                 \
-    "bpp = (int) 16, "                                                  \
-    "depth = (int) 16, "                                                \
-    "endianness = (int) BYTE_ORDER, "                                   \
-    "red_mask = (int) " GST_VIDEO_COMP ## R ## _MASK_16 ", "            \
-    "green_mask = (int) " GST_VIDEO_COMP ## G ## _MASK_16 ", "          \
-    "blue_mask = (int) " GST_VIDEO_COMP ## B ## _MASK_16 ", "           \
-    "width = " GST_VIDEO_SIZE_RANGE ", "                                \
-    "height = " GST_VIDEO_SIZE_RANGE ", "                               \
-    "framerate = " GST_VIDEO_FPS_RANGE
-
-#define __GST_VIDEO_CAPS_MAKE_15(R, G, B)                               \
-    "video/x-raw-rgb, "                                                 \
-    "bpp = (int) 16, "                                                  \
-    "depth = (int) 15, "                                                \
-    "endianness = (int) BYTE_ORDER, "                                   \
-    "red_mask = (int) " GST_VIDEO_COMP ## R ## _MASK_15 ", "            \
-    "green_mask = (int) " GST_VIDEO_COMP ## G ## _MASK_15 ", "          \
-    "blue_mask = (int) " GST_VIDEO_COMP ## B ## _MASK_15 ", "           \
-    "width = " GST_VIDEO_SIZE_RANGE ", "                                \
-    "height = " GST_VIDEO_SIZE_RANGE ", "                               \
-    "framerate = " GST_VIDEO_FPS_RANGE
-
-#define __GST_VIDEO_CAPS_MAKE_64A(R, G, B, A)                           \
-    "video/x-raw-rgb, "                                                 \
-    "bpp = (int) 64, "                                                  \
-    "depth = (int) 64, "                                                \
-    "endianness = (int) BIG_ENDIAN, "                                   \
-    "red_mask = (int) " GST_VIDEO_BYTE ## R ## _MASK_32 ", "            \
-    "green_mask = (int) " GST_VIDEO_BYTE ## G ## _MASK_32 ", "          \
-    "blue_mask = (int) " GST_VIDEO_BYTE ## B ## _MASK_32 ", "           \
-    "alpha_mask = (int) " GST_VIDEO_BYTE ## A ## _MASK_32 ", "          \
-    "width = " GST_VIDEO_SIZE_RANGE ", "                                \
-    "height = " GST_VIDEO_SIZE_RANGE ", "                               \
-    "framerate = " GST_VIDEO_FPS_RANGE
-
-
-/* 24 bit */
-
-#define GST_VIDEO_CAPS_RGB \
-    __GST_VIDEO_CAPS_MAKE_24 (1, 2, 3)
-
-#define GST_VIDEO_CAPS_BGR \
-    __GST_VIDEO_CAPS_MAKE_24 (3, 2, 1)
-
-/* 32 bit */
-
-#define GST_VIDEO_CAPS_RGBx \
-    __GST_VIDEO_CAPS_MAKE_32 (1, 2, 3)
-  
-#define GST_VIDEO_CAPS_xRGB \
-    __GST_VIDEO_CAPS_MAKE_32 (2, 3, 4)
-  
-#define GST_VIDEO_CAPS_BGRx \
-    __GST_VIDEO_CAPS_MAKE_32 (3, 2, 1)
-  
-#define GST_VIDEO_CAPS_xBGR \
-    __GST_VIDEO_CAPS_MAKE_32 (4, 3, 2)
-
-/* 32 bit alpha */
-
-#define GST_VIDEO_CAPS_RGBA \
-    __GST_VIDEO_CAPS_MAKE_32A (1, 2, 3, 4)
-  
-#define GST_VIDEO_CAPS_ARGB \
-    __GST_VIDEO_CAPS_MAKE_32A (2, 3, 4, 1)
-  
-#define GST_VIDEO_CAPS_BGRA \
-    __GST_VIDEO_CAPS_MAKE_32A (3, 2, 1, 4)
-  
-#define GST_VIDEO_CAPS_ABGR \
-    __GST_VIDEO_CAPS_MAKE_32A (4, 3, 2, 1)
-
-/* note: the macro name uses the order on BE systems */
-#if G_BYTE_ORDER == G_BIG_ENDIAN
-  #define GST_VIDEO_CAPS_xRGB_HOST_ENDIAN \
-      GST_VIDEO_CAPS_xRGB
-  #define GST_VIDEO_CAPS_BGRx_HOST_ENDIAN \
-      GST_VIDEO_CAPS_BGRx
-#else
-  #define GST_VIDEO_CAPS_xRGB_HOST_ENDIAN \
-      GST_VIDEO_CAPS_BGRx
-  #define GST_VIDEO_CAPS_BGRx_HOST_ENDIAN \
-      GST_VIDEO_CAPS_xRGB
-#endif
-      
-/* 15/16 bit */
-  
-#define GST_VIDEO_CAPS_RGB_16 \
-    __GST_VIDEO_CAPS_MAKE_16 (1, 2, 3)
-
-#define GST_VIDEO_CAPS_BGR_16 \
-    __GST_VIDEO_CAPS_MAKE_16 (3, 2, 1)
-
-#define GST_VIDEO_CAPS_RGB_15 \
-    __GST_VIDEO_CAPS_MAKE_15 (1, 2, 3)
-
-#define GST_VIDEO_CAPS_BGR_15 \
-    __GST_VIDEO_CAPS_MAKE_15 (3, 2, 1)
-
-/* 30 bit */
-#define GST_VIDEO_CAPS_r210 \
-    "video/x-raw-rgb, "                                                 \
-    "bpp = (int) 32, "                                                  \
-    "depth = (int) 30, "                                                \
-    "endianness = (int) BIG_ENDIAN, "                                   \
-    "red_mask = (int) 0x3ff00000, "                                     \
-    "green_mask = (int) 0x000ffc00, "                                   \
-    "blue_mask = (int) 0x000003ff, "                                    \
-    "width = " GST_VIDEO_SIZE_RANGE ", "                                \
-    "height = " GST_VIDEO_SIZE_RANGE ", "                               \
-    "framerate = " GST_VIDEO_FPS_RANGE
-
-/* 64 bit alpha */
-
-#define GST_VIDEO_CAPS_ARGB_64 \
-    __GST_VIDEO_CAPS_MAKE_64A (2, 3, 4, 1)
-
 /**
- * GST_VIDEO_CAPS_RGB8_PALETTED:
+ * GST_VIDEO_CAPS_MAKE:
+ * @format: string format that describes the pixel layout, as string
+ *     (e.g. "I420", "RGB", "YV12", "YUY2", "AYUV", etc.)
  *
- * Generic caps string for 8-bit paletted RGB video, for use in pad templates.
- *
- * Since: 0.10.32
+ * Generic caps string for video, for use in pad templates.
  */
-#define GST_VIDEO_CAPS_RGB8_PALETTED \
-  "video/x-raw-rgb, bpp = (int)8, depth = (int)8, "                     \
-      "width = "GST_VIDEO_SIZE_RANGE" , "		                \
-      "height = " GST_VIDEO_SIZE_RANGE ", "                             \
-      "framerate = "GST_VIDEO_FPS_RANGE
-
-/**
- * GST_VIDEO_CAPS_YUV:
- * @fourcc: YUV fourcc format that describes the pixel layout, as string
- *     (e.g. "I420", "YV12", "YUY2", "AYUV", etc.)
- *
- * Generic caps string for YUV video, for use in pad templates.
- */
-#define GST_VIDEO_CAPS_YUV(fourcc)                                      \
-        "video/x-raw-yuv, "                                             \
-        "format = (fourcc) " fourcc ", "                                \
-        "width = " GST_VIDEO_SIZE_RANGE ", "                            \
-        "height = " GST_VIDEO_SIZE_RANGE ", "                           \
-        "framerate = " GST_VIDEO_FPS_RANGE
-
-/**
- * GST_VIDEO_CAPS_GRAY8:
- *
- * Generic caps string for 8-bit grayscale video, for use in pad templates.
- *
- * Since: 0.10.29
- */
-#define GST_VIDEO_CAPS_GRAY8                                            \
-        "video/x-raw-gray, "                                            \
-        "bpp = (int) 8, "                                               \
-        "depth = (int) 8, "                                             \
-        "width = " GST_VIDEO_SIZE_RANGE ", "                            \
-        "height = " GST_VIDEO_SIZE_RANGE ", "                           \
-        "framerate = " GST_VIDEO_FPS_RANGE
-
-/**
- * GST_VIDEO_CAPS_GRAY16:
- * @endianness: endianness as string, ie. either "1234", "4321", "BIG_ENDIAN"
- *     or "LITTLE_ENDIAN"
- *
- * Generic caps string for 16-bit grayscale video, for use in pad templates.
- *
- * Since: 0.10.29
- */
-#define GST_VIDEO_CAPS_GRAY16(endianness)                               \
-        "video/x-raw-gray, "                                            \
-        "bpp = (int) 16, "                                              \
-        "depth = (int) 16, "                                            \
-        "endianness = (int) " endianness ", "                           \
-        "width = " GST_VIDEO_SIZE_RANGE ", "                            \
-        "height = " GST_VIDEO_SIZE_RANGE ", "                           \
-        "framerate = " GST_VIDEO_FPS_RANGE
+#define GST_VIDEO_CAPS_MAKE(format)                                     \
+    "video/x-raw, "                                                     \
+    "format = (string) " format ", "                                    \
+    "width = " GST_VIDEO_SIZE_RANGE ", "                                \
+    "height = " GST_VIDEO_SIZE_RANGE ", "                               \
+    "framerate = " GST_VIDEO_FPS_RANGE
 
 /* buffer flags */
 
@@ -494,8 +239,10 @@ GstCaps *      gst_video_format_new_template_caps (GstVideoFormat format);
 /* format properties */
 
 GstVideoFormat gst_video_format_from_fourcc (guint32 fourcc) G_GNUC_CONST;
+GstVideoFormat gst_video_format_from_string (const gchar *format) G_GNUC_CONST;
 
 guint32        gst_video_format_to_fourcc (GstVideoFormat format) G_GNUC_CONST;
+const gchar *  gst_video_format_to_string (GstVideoFormat format) G_GNUC_CONST;
 
 gboolean       gst_video_format_is_rgb    (GstVideoFormat format) G_GNUC_CONST;
 
