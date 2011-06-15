@@ -1830,13 +1830,19 @@ convert_I420_YUY2 (ColorspaceConvert * convert, guint8 * dest,
 {
   int i;
 
-  for (i = 0; i < convert->height; i += 2) {
+  for (i = 0; i < GST_ROUND_DOWN_2 (convert->height); i += 2) {
     cogorc_convert_I420_YUY2 (FRAME_GET_LINE (dest, 0, i),
         FRAME_GET_LINE (dest, 0, i + 1),
         FRAME_GET_LINE (src, 0, i),
         FRAME_GET_LINE (src, 0, i + 1),
         FRAME_GET_LINE (src, 1, i >> 1),
         FRAME_GET_LINE (src, 2, i >> 1), (convert->width + 1) / 2);
+  }
+
+  /* now handle last line */
+  if (convert->height & 1) {
+    getline_I420 (convert, convert->tmpline, src, convert->height - 1);
+    putline_YUY2 (convert, dest, convert->tmpline, convert->height - 1);
   }
 }
 
@@ -1846,13 +1852,19 @@ convert_I420_UYVY (ColorspaceConvert * convert, guint8 * dest,
 {
   int i;
 
-  for (i = 0; i < convert->height; i += 2) {
+  for (i = 0; i < GST_ROUND_DOWN_2 (convert->height); i += 2) {
     cogorc_convert_I420_UYVY (FRAME_GET_LINE (dest, 0, i),
         FRAME_GET_LINE (dest, 0, i + 1),
         FRAME_GET_LINE (src, 0, i),
         FRAME_GET_LINE (src, 0, i + 1),
         FRAME_GET_LINE (src, 1, i >> 1),
         FRAME_GET_LINE (src, 2, i >> 1), (convert->width + 1) / 2);
+  }
+
+  /* now handle last line */
+  if (convert->height & 1) {
+    getline_I420 (convert, convert->tmpline, src, convert->height - 1);
+    putline_UYVY (convert, dest, convert->tmpline, convert->height - 1);
   }
 }
 
@@ -1862,13 +1874,19 @@ convert_I420_AYUV (ColorspaceConvert * convert, guint8 * dest,
 {
   int i;
 
-  for (i = 0; i < convert->height; i += 2) {
+  for (i = 0; i < GST_ROUND_DOWN_2 (convert->height); i += 2) {
     cogorc_convert_I420_AYUV (FRAME_GET_LINE (dest, 0, i),
         FRAME_GET_LINE (dest, 0, i + 1),
         FRAME_GET_LINE (src, 0, i),
         FRAME_GET_LINE (src, 0, i + 1),
         FRAME_GET_LINE (src, 1, i >> 1),
         FRAME_GET_LINE (src, 2, i >> 1), convert->width);
+  }
+
+  /* now handle last line */
+  if (convert->height & 1) {
+    getline_I420 (convert, convert->tmpline, src, convert->height - 1);
+    putline_AYUV (convert, dest, convert->tmpline, convert->height - 1);
   }
 }
 
@@ -1902,29 +1920,43 @@ convert_I420_Y444 (ColorspaceConvert * convert, guint8 * dest,
   cogorc_planar_chroma_420_444 (FRAME_GET_LINE (dest, 1, 0),
       2 * convert->dest_stride[1], FRAME_GET_LINE (dest, 1, 1),
       2 * convert->dest_stride[1], FRAME_GET_LINE (src, 1, 0),
-      convert->src_stride[1], (convert->width + 1) / 2,
-      (convert->height + 1) / 2);
+      convert->src_stride[1], (convert->width + 1) / 2, convert->height / 2);
 
   cogorc_planar_chroma_420_444 (FRAME_GET_LINE (dest, 2, 0),
       2 * convert->dest_stride[2], FRAME_GET_LINE (dest, 2, 1),
       2 * convert->dest_stride[2], FRAME_GET_LINE (src, 2, 0),
-      convert->src_stride[2], (convert->width + 1) / 2,
-      (convert->height + 1) / 2);
+      convert->src_stride[2], (convert->width + 1) / 2, convert->height / 2);
+
+  /* now handle last line */
+  if (convert->height & 1) {
+    getline_I420 (convert, convert->tmpline, src, convert->height - 1);
+    putline_Y444 (convert, dest, convert->tmpline, convert->height - 1);
+  }
 }
 
 static void
 convert_YUY2_I420 (ColorspaceConvert * convert, guint8 * dest,
     const guint8 * src)
 {
-  int i;
+  int i, h;
 
-  for (i = 0; i < convert->height; i += 2) {
+  h = convert->height;
+  if (convert->width & 1)
+    h--;
+
+  for (i = 0; i < h; i += 2) {
     cogorc_convert_YUY2_I420 (FRAME_GET_LINE (dest, 0, i),
         FRAME_GET_LINE (dest, 0, i + 1),
         FRAME_GET_LINE (dest, 1, i >> 1),
         FRAME_GET_LINE (dest, 2, i >> 1),
         FRAME_GET_LINE (src, 0, i),
         FRAME_GET_LINE (src, 0, i + 1), (convert->width + 1) / 2);
+  }
+
+  /* now handle last line */
+  if (convert->width & 1) {
+    getline_YUY2 (convert, convert->tmpline, src, convert->height - 1);
+    putline_I420 (convert, dest, convert->tmpline, convert->height - 1);
   }
 }
 
@@ -1934,7 +1966,14 @@ convert_YUY2_AYUV (ColorspaceConvert * convert, guint8 * dest,
 {
   cogorc_convert_YUY2_AYUV (FRAME_GET_LINE (dest, 0, 0),
       convert->dest_stride[0], FRAME_GET_LINE (src, 0, 0),
-      convert->src_stride[0], (convert->width + 1) / 2, convert->height);
+      convert->src_stride[0], (convert->width + 1) / 2,
+      convert->width & 1 ? convert->height - 1 : convert->height);
+
+  /* now handle last line */
+  if (convert->width & 1) {
+    getline_YUY2 (convert, convert->tmpline, src, convert->height - 1);
+    putline_AYUV (convert, dest, convert->tmpline, convert->height - 1);
+  }
 }
 
 static void
@@ -1966,13 +2005,19 @@ convert_UYVY_I420 (ColorspaceConvert * convert, guint8 * dest,
 {
   int i;
 
-  for (i = 0; i < convert->height; i += 2) {
+  for (i = 0; i < GST_ROUND_DOWN_2 (convert->height); i += 2) {
     cogorc_convert_UYVY_I420 (FRAME_GET_LINE (dest, 0, i),
         FRAME_GET_LINE (dest, 0, i + 1),
         FRAME_GET_LINE (dest, 1, i >> 1),
         FRAME_GET_LINE (dest, 2, i >> 1),
         FRAME_GET_LINE (src, 0, i),
         FRAME_GET_LINE (src, 0, i + 1), (convert->width + 1) / 2);
+  }
+
+  /* now handle last line */
+  if (convert->height & 1) {
+    getline_UYVY (convert, convert->tmpline, src, convert->height - 1);
+    putline_I420 (convert, dest, convert->tmpline, convert->height - 1);
   }
 }
 
@@ -1982,7 +2027,14 @@ convert_UYVY_AYUV (ColorspaceConvert * convert, guint8 * dest,
 {
   cogorc_convert_UYVY_AYUV (FRAME_GET_LINE (dest, 0, 0),
       convert->dest_stride[0], FRAME_GET_LINE (src, 0, 0),
-      convert->src_stride[0], (convert->width + 1) / 2, convert->height);
+      convert->src_stride[0], (convert->width + 1) / 2,
+      convert->width & 1 ? convert->height - 1 : convert->height);
+
+  /* now handle last line */
+  if (convert->width & 1) {
+    getline_UYVY (convert, convert->tmpline, src, convert->height - 1);
+    putline_AYUV (convert, dest, convert->tmpline, convert->height - 1);
+  }
 }
 
 static void
@@ -2055,7 +2107,15 @@ convert_AYUV_Y42B (ColorspaceConvert * convert, guint8 * dest,
       convert->dest_stride[0], FRAME_GET_LINE (dest, 1, 0),
       convert->dest_stride[1], FRAME_GET_LINE (dest, 2, 0),
       convert->dest_stride[2], FRAME_GET_LINE (src, 0, 0),
-      convert->src_stride[0], (convert->width + 1) / 2, convert->height);
+      convert->src_stride[0], (convert->width + 1) / 2,
+      convert->width & 1 ? convert->height - 1 : convert->height);
+
+  /* now handle last line */
+  if (convert->height & 1) {
+    getline_AYUV (convert, convert->tmpline, src, convert->height - 1);
+    putline_Y42B (convert, dest, convert->tmpline, convert->height - 1);
+  }
+
 }
 
 static void
@@ -2081,13 +2141,20 @@ convert_Y42B_I420 (ColorspaceConvert * convert, guint8 * dest,
       convert->dest_stride[1], FRAME_GET_LINE (src, 1, 0),
       2 * convert->src_stride[1], FRAME_GET_LINE (src, 1, 1),
       2 * convert->src_stride[1], (convert->width + 1) / 2,
-      (convert->height + 1) / 2);
+      convert->height / 2);
 
   cogorc_planar_chroma_422_420 (FRAME_GET_LINE (dest, 2, 0),
       convert->dest_stride[2], FRAME_GET_LINE (src, 2, 0),
       2 * convert->src_stride[2], FRAME_GET_LINE (src, 2, 1),
       2 * convert->src_stride[2], (convert->width + 1) / 2,
-      (convert->height + 1) / 2);
+      convert->height / 2);
+
+  /* now handle last line */
+  if (convert->height & 1) {
+    getline_Y42B (convert, convert->tmpline, src, convert->height - 1);
+    putline_I420 (convert, dest, convert->tmpline, convert->height - 1);
+  }
+
 }
 
 static void
@@ -2152,13 +2219,19 @@ convert_Y444_I420 (ColorspaceConvert * convert, guint8 * dest,
       convert->dest_stride[1], FRAME_GET_LINE (src, 1, 0),
       2 * convert->src_stride[1], FRAME_GET_LINE (src, 1, 1),
       2 * convert->src_stride[1], (convert->width + 1) / 2,
-      (convert->height + 1) / 2);
+      convert->height / 2);
 
   cogorc_planar_chroma_444_420 (FRAME_GET_LINE (dest, 2, 0),
       convert->dest_stride[2], FRAME_GET_LINE (src, 2, 0),
       2 * convert->src_stride[2], FRAME_GET_LINE (src, 2, 1),
       2 * convert->src_stride[2], (convert->width + 1) / 2,
-      (convert->height + 1) / 2);
+      convert->height / 2);
+
+  /* now handle last line */
+  if (convert->height & 1) {
+    getline_Y444 (convert, convert->tmpline, src, convert->height - 1);
+    putline_I420 (convert, dest, convert->tmpline, convert->height - 1);
+  }
 }
 
 static void
