@@ -97,12 +97,11 @@ static void gst_csp_set_property (GObject * object,
     guint property_id, const GValue * value, GParamSpec * pspec);
 static void gst_csp_get_property (GObject * object,
     guint property_id, GValue * value, GParamSpec * pspec);
-static void gst_csp_dispose (GObject * object);
 
 static gboolean gst_csp_set_caps (GstBaseTransform * btrans,
     GstCaps * incaps, GstCaps * outcaps);
 static gboolean gst_csp_get_unit_size (GstBaseTransform * btrans,
-    GstCaps * caps, guint * size);
+    GstCaps * caps, gsize * size);
 static GstFlowReturn gst_csp_transform (GstBaseTransform * btrans,
     GstBuffer * inbuf, GstBuffer * outbuf);
 
@@ -185,7 +184,7 @@ gst_csp_structure_is_alpha (GstStructure * s)
  * put it first in the list. */
 static GstCaps *
 gst_csp_transform_caps (GstBaseTransform * btrans,
-    GstPadDirection direction, GstCaps * caps)
+    GstPadDirection direction, GstCaps * caps, GstCaps * filter)
 {
   GstCaps *template;
   GstCaps *tmp, *tmp2;
@@ -348,24 +347,29 @@ gst_csp_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
     goto format_mismatch;
   } else if (space->from_format == GST_VIDEO_FORMAT_RGB8_PALETTED) {
     GstBuffer *palette;
+    guint32 *data;
 
     palette = gst_video_parse_caps_palette (incaps);
 
-    if (!palette || GST_BUFFER_SIZE (palette) < 256 * 4) {
+    if (!palette || gst_buffer_get_size (palette) < 256 * 4) {
       if (palette)
         gst_buffer_unref (palette);
       goto invalid_palette;
     }
-    colorspace_convert_set_palette (space->convert,
-        (const guint32 *) GST_BUFFER_DATA (palette));
+
+    data = gst_buffer_map (palette, NULL, NULL, GST_MAP_READ);
+    colorspace_convert_set_palette (space->convert, data);
+    gst_buffer_unmap (palette, data, -1);
+
     gst_buffer_unref (palette);
   } else if (space->to_format == GST_VIDEO_FORMAT_RGB8_PALETTED) {
     const guint32 *palette;
     GstBuffer *p_buf;
 
     palette = colorspace_convert_get_palette (space->convert);
+
     p_buf = gst_buffer_new_and_alloc (256 * 4);
-    memcpy (GST_BUFFER_DATA (p_buf), palette, 256 * 4);
+    gst_buffer_fill (p_buf, 0, palette, 256 * 4);
     gst_caps_set_simple (outcaps, "palette_data", GST_TYPE_BUFFER, p_buf, NULL);
     gst_buffer_unref (p_buf);
   }
@@ -405,33 +409,8 @@ invalid_palette:
   }
 }
 
-GST_BOILERPLATE (GstCsp, gst_csp, GstVideoFilter, GST_TYPE_VIDEO_FILTER);
-
-static void
-gst_csp_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_csp_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_csp_sink_template));
-
-  gst_element_class_set_details_simple (element_class,
-      " Colorspace converter", "Filter/Converter/Video",
-      "Converts video from one colorspace to another",
-      "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
-
-  _QRAWRGB = g_quark_from_string ("video/x-raw-rgb");
-  _QRAWYUV = g_quark_from_string ("video/x-raw-yuv");
-  _QALPHAMASK = g_quark_from_string ("alpha_mask");
-}
-
-void
-gst_csp_dispose (GObject * object)
-{
-  G_OBJECT_CLASS (parent_class)->dispose (object);
-}
+#define gst_csp_parent_class parent_class
+G_DEFINE_TYPE (GstCsp, gst_csp, GST_TYPE_VIDEO_FILTER);
 
 static void
 gst_csp_finalize (GObject * obj)
@@ -443,20 +422,33 @@ gst_csp_finalize (GObject * obj)
   }
 
   G_OBJECT_CLASS (parent_class)->finalize (obj);
-
 }
 
 static void
 gst_csp_class_init (GstCspClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstElementClass *gstelement_class = (GstElementClass *) klass;
   GstBaseTransformClass *gstbasetransform_class =
       (GstBaseTransformClass *) klass;
 
   gobject_class->set_property = gst_csp_set_property;
   gobject_class->get_property = gst_csp_get_property;
-  gobject_class->dispose = gst_csp_dispose;
   gobject_class->finalize = gst_csp_finalize;
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_csp_src_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_csp_sink_template));
+
+  gst_element_class_set_details_simple (gstelement_class,
+      " Colorspace converter", "Filter/Converter/Video",
+      "Converts video from one colorspace to another",
+      "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
+
+  _QRAWRGB = g_quark_from_string ("video/x-raw-rgb");
+  _QRAWYUV = g_quark_from_string ("video/x-raw-yuv");
+  _QALPHAMASK = g_quark_from_string ("alpha_mask");
 
   gstbasetransform_class->transform_caps =
       GST_DEBUG_FUNCPTR (gst_csp_transform_caps);
@@ -475,7 +467,7 @@ gst_csp_class_init (GstCspClass * klass)
 }
 
 static void
-gst_csp_init (GstCsp * space, GstCspClass * klass)
+gst_csp_init (GstCsp * space)
 {
   space->from_format = GST_VIDEO_FORMAT_UNKNOWN;
   space->to_format = GST_VIDEO_FORMAT_UNKNOWN;
@@ -520,7 +512,7 @@ gst_csp_get_property (GObject * object, guint property_id,
 }
 
 static gboolean
-gst_csp_get_unit_size (GstBaseTransform * btrans, GstCaps * caps, guint * size)
+gst_csp_get_unit_size (GstBaseTransform * btrans, GstCaps * caps, gsize * size)
 {
   gboolean ret = TRUE;
   GstVideoFormat format;
@@ -541,6 +533,8 @@ gst_csp_transform (GstBaseTransform * btrans, GstBuffer * inbuf,
     GstBuffer * outbuf)
 {
   GstCsp *space;
+  guint8 *indata, *outdata;
+  gsize insize, outsize;
 
   space = GST_CSP (btrans);
 
@@ -552,8 +546,13 @@ gst_csp_transform (GstBaseTransform * btrans, GstBuffer * inbuf,
 
   colorspace_convert_set_dither (space->convert, space->dither);
 
-  colorspace_convert_convert (space->convert, GST_BUFFER_DATA (outbuf),
-      GST_BUFFER_DATA (inbuf));
+  indata = gst_buffer_map (inbuf, &insize, NULL, GST_MAP_READ);
+  outdata = gst_buffer_map (outbuf, &outsize, NULL, GST_MAP_WRITE);
+
+  colorspace_convert_convert (space->convert, outdata, indata);
+
+  gst_buffer_unmap (outbuf, outdata, outsize);
+  gst_buffer_unmap (inbuf, indata, insize);
 
   /* baseclass copies timestamps */
   GST_DEBUG ("from %d -> to %d done", space->from_format, space->to_format);
