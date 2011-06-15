@@ -133,50 +133,39 @@ static GstCaps *
 gst_csp_caps_remove_format_info (GstCaps * caps)
 {
   GstStructure *yuvst, *rgbst, *grayst;
+  gint i, n;
+  GstCaps *res;
 
-  /* We know there's only one structure since we're given simple caps */
-  caps = gst_caps_copy (caps);
+  res = gst_caps_new_empty ();
 
-  yuvst = gst_caps_get_structure (caps, 0);
+  n = gst_caps_get_size (caps);
+  for (i = 0; i < n; i++) {
+    yuvst = gst_caps_get_structure (caps, i);
 
-  gst_structure_set_name (yuvst, "video/x-raw-yuv");
-  gst_structure_remove_fields (yuvst, "format", "endianness", "depth",
-      "bpp", "red_mask", "green_mask", "blue_mask", "alpha_mask",
-      "palette_data", "color-matrix", NULL);
+    /* If this is already expressed by the existing caps
+     * skip this structure */
+    if (i > 0 && gst_caps_is_subset_structure (res, yuvst))
+      continue;
 
-  rgbst = gst_structure_copy (yuvst);
-  gst_structure_set_name (rgbst, "video/x-raw-rgb");
-  gst_structure_remove_fields (rgbst, "color-matrix", "chroma-site", NULL);
+    yuvst = gst_structure_copy (yuvst);
+    gst_structure_set_name (yuvst, "video/x-raw-yuv");
+    gst_structure_remove_fields (yuvst, "format", "endianness", "depth",
+        "bpp", "red_mask", "green_mask", "blue_mask", "alpha_mask",
+        "palette_data", NULL);
 
-  grayst = gst_structure_copy (rgbst);
-  gst_structure_set_name (grayst, "video/x-raw-gray");
+    rgbst = gst_structure_copy (yuvst);
+    gst_structure_set_name (rgbst, "video/x-raw-rgb");
+    gst_structure_remove_fields (rgbst, "color-matrix", "chroma-site", NULL);
 
-  gst_caps_append_structure (caps, rgbst);
-  gst_caps_append_structure (caps, grayst);
+    grayst = gst_structure_copy (rgbst);
+    gst_structure_set_name (grayst, "video/x-raw-gray");
 
-  return caps;
-}
-
-
-static gboolean
-gst_csp_structure_is_alpha (GstStructure * s)
-{
-  GQuark name;
-
-  name = gst_structure_get_name_id (s);
-
-  if (name == _QRAWRGB) {
-    return gst_structure_id_has_field (s, _QALPHAMASK);
-  } else if (name == _QRAWYUV) {
-    guint32 fourcc;
-
-    if (!gst_structure_get_fourcc (s, "format", &fourcc))
-      return FALSE;
-
-    return (fourcc == GST_MAKE_FOURCC ('A', 'Y', 'U', 'V'));
+    gst_caps_append_structure (res, yuvst);
+    gst_caps_append_structure (res, rgbst);
+    gst_caps_append_structure (res, grayst);
   }
 
-  return FALSE;
+  return res;
 }
 
 /* The caps can be transformed into any other caps with format info removed.
@@ -189,42 +178,20 @@ gst_csp_transform_caps (GstBaseTransform * btrans,
   GstCaps *template;
   GstCaps *tmp, *tmp2;
   GstCaps *result;
-  GstStructure *s;
-  GstCaps *alpha, *non_alpha;
 
   template = gst_static_pad_template_get_caps (&gst_csp_src_template);
   result = gst_caps_copy (caps);
 
   /* Get all possible caps that we can transform to */
   tmp = gst_csp_caps_remove_format_info (caps);
-  tmp2 = gst_caps_intersect (tmp, template);
-  gst_caps_unref (tmp);
-  tmp = tmp2;
 
-  /* Now move alpha formats to the beginning if caps is an alpha format
-   * or at the end if caps is no alpha format */
-  alpha = gst_caps_new_empty ();
-  non_alpha = gst_caps_new_empty ();
-
-  while ((s = gst_caps_steal_structure (tmp, 0))) {
-    if (gst_csp_structure_is_alpha (s))
-      gst_caps_append_structure (alpha, s);
-    else
-      gst_caps_append_structure (non_alpha, s);
+  if (filter) {
+    tmp2 = gst_caps_intersect_full (filter, tmp, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (tmp);
+    tmp = tmp2;
   }
 
-  s = gst_caps_get_structure (caps, 0);
-  gst_caps_unref (tmp);
-
-  if (gst_csp_structure_is_alpha (s)) {
-    gst_caps_append (alpha, non_alpha);
-    tmp = alpha;
-  } else {
-    gst_caps_append (non_alpha, alpha);
-    tmp = non_alpha;
-  }
-
-  gst_caps_append (result, tmp);
+  result = tmp;
 
   GST_DEBUG_OBJECT (btrans, "transformed %" GST_PTR_FORMAT " into %"
       GST_PTR_FORMAT, caps, result);
@@ -463,7 +430,6 @@ gst_csp_class_init (GstCspClass * klass)
       g_param_spec_enum ("dither", "Dither", "Apply dithering while converting",
           dither_method_get_type (), DITHER_NONE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
 }
 
 static void
