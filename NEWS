@@ -1,4 +1,14 @@
-This is GStreamer Base Plug-ins 0.10.34, "Lemmings"
+This is GStreamer Base Plug-ins 0.10.35, "Short Notice"
+
+Changes since 0.10.34:
+
+      * work around GLib atomic ops API change
+      * don't use G_CONST_RETURN in public headers 
+      * subparse: typefinding fixes for subtitles in non-UTF8 charsets
+
+Bugs fixed since 0.10.34:
+
+      * 600043 : subparse: fails to recognise Cyrillic subtitles in windows-1251 encoding
 
 Changes since 0.10.33:
 

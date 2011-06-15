@@ -36,6 +36,17 @@ A wide range of video and audio decoders, encoders, and filters are included.
 
  <release>
   <Version>
+   <revision>0.10.35</revision>
+   <branch>0.10</branch>
+   <name>Short Notice</name>
+   <created>2011-06-15</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-base/gst-plugins-base-0.10.35.tar.bz2" />
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-base/gst-plugins-base-0.10.35.tar.gz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
    <revision>0.10.34</revision>
    <branch>0.10</branch>
    <name>Lemmings</name>

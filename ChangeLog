@@ -1,9 +1,117 @@
-=== release 0.10.34 ===
+=== release 0.10.35 ===
 
-2011-05-14  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+2011-06-15  Tim-Philipp Müller <tim.muller@collabora.co.uk>
 
 	* configure.ac:
-	  releasing 0.10.34, "Lemmings"
+	  releasing 0.10.35, "Short Notice"
+
+2011-06-15 14:21:30 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst-libs/gst/audio/Makefile.am:
+	  audio: link test program against libgstaudio
+
+2011-06-14 10:31:18 +0530  Debarshi Ray <rishi@gnu.org>
+
+	* gst-libs/gst/pbutils/codec-utils.c:
+	  codec-utils: restore 7350 as a valid sampling frequency for AAC
+	  This was lost during c77f88cac675a1dbb89e40da8e3c28320523bfca.
+
+2011-06-09 18:30:33 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst-libs/gst/tag/gstid3tag.c:
+	* gst-libs/gst/tag/gstvorbistag.c:
+	* gst-libs/gst/tag/tag.h:
+	  libs: replace G_CONST_RETURN with 'const'
+	  G_CONST_RETURN will be deprecated soon.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=652211
+
+2011-05-31 22:14:09 -0700  David Schleef <ds@schleef.org>
+
+	* gst/audioresample/resample.c:
+	* gst/audiotestsrc/gstaudiotestsrc.c:
+	* gst/videoscale/vs_4tap.c:
+	* gst/videotestsrc/generate_sine_table.c:
+	* gst/videotestsrc/videotestsrc.c:
+	* tests/icles/test-xoverlay.c:
+	  convert M_PI to G_PI, for msvc
+
+2011-06-06 14:41:41 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst-libs/gst/tag/gsttagdemux.c:
+	  tagdemux: no input data implies no type can be found
+	  ... and posting a proper error message to this effect is appropriately
+	  informative and prevents auto-plugging otherwise stalling.
+
+2011-06-04 13:36:55 -0700  David Schleef <ds@schleef.org>
+
+	* gst/adder/gstadder.c:
+	  adder: Work around changes in g_atomic API
+	  See #651514 for details.
+
+2011-05-31 20:38:56 -0700  David Schleef <ds@schleef.org>
+
+	* gst-libs/gst/pbutils/gstdiscoverer.c:
+	  discoverer: fix c99-ism
+
+2011-05-23 16:02:34 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/subparse/gstsubparse.c:
+	  subparse: Try to typefind even if conversion to UTF8 failed
+	  Fixes bug #600043.
+
+2011-05-23 15:51:14 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/subparse/gstsubparse.c:
+	  subparse: Interprete typefind strings passed to GRegex as raw bytes instead of valid UTF8
+
+2011-05-20 10:48:39 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* gst-libs/gst/tag/lang.c:
+	  lang: fix possible array overrun
+	  We where checking for i<G_N_ELEMENTS, but where accessing i+1.
+
+=== release 0.10.34 ===
+
+2011-05-14 01:00:38 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-adder.xml:
+	* docs/plugins/inspect/plugin-alsa.xml:
+	* docs/plugins/inspect/plugin-app.xml:
+	* docs/plugins/inspect/plugin-audioconvert.xml:
+	* docs/plugins/inspect/plugin-audiorate.xml:
+	* docs/plugins/inspect/plugin-audioresample.xml:
+	* docs/plugins/inspect/plugin-audiotestsrc.xml:
+	* docs/plugins/inspect/plugin-cdparanoia.xml:
+	* docs/plugins/inspect/plugin-decodebin.xml:
+	* docs/plugins/inspect/plugin-encoding.xml:
+	* docs/plugins/inspect/plugin-ffmpegcolorspace.xml:
+	* docs/plugins/inspect/plugin-gdp.xml:
+	* docs/plugins/inspect/plugin-gio.xml:
+	* docs/plugins/inspect/plugin-gnomevfs.xml:
+	* docs/plugins/inspect/plugin-libvisual.xml:
+	* docs/plugins/inspect/plugin-ogg.xml:
+	* docs/plugins/inspect/plugin-pango.xml:
+	* docs/plugins/inspect/plugin-playback.xml:
+	* docs/plugins/inspect/plugin-subparse.xml:
+	* docs/plugins/inspect/plugin-tcp.xml:
+	* docs/plugins/inspect/plugin-theora.xml:
+	* docs/plugins/inspect/plugin-typefindfunctions.xml:
+	* docs/plugins/inspect/plugin-uridecodebin.xml:
+	* docs/plugins/inspect/plugin-videorate.xml:
+	* docs/plugins/inspect/plugin-videoscale.xml:
+	* docs/plugins/inspect/plugin-videotestsrc.xml:
+	* docs/plugins/inspect/plugin-volume.xml:
+	* docs/plugins/inspect/plugin-vorbis.xml:
+	* docs/plugins/inspect/plugin-ximagesink.xml:
+	* docs/plugins/inspect/plugin-xvimagesink.xml:
+	* gst-plugins-base.doap:
+	* win32/common/_stdint.h:
+	* win32/common/config.h:
+	  Release 0.10.34
 
 === release 0.10.33 ===
 
