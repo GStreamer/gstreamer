@@ -3,7 +3,7 @@
   <description>Wavpack lossless/lossy audio format handling</description>
   <filename>../../ext/wavpack/.libs/libgstwavpack.so</filename>
   <basename>libgstwavpack.so</basename>
-  <version>0.10.29</version>
+  <version>0.10.30</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins source release</package>
