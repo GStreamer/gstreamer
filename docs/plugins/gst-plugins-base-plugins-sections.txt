@@ -264,16 +264,16 @@ gst_encode_bin_get_type
 
 
 <SECTION>
-<FILE>element-ffmpegcolorspace</FILE>
-<TITLE>ffmpegcolorspace</TITLE>
-GstFFMpegCsp
+<FILE>element-videoconvert</FILE>
+<TITLE>videoconvert</TITLE>
+GstVideoConvert
 <SUBSECTION Standard>
-GST_FFMPEGCSP
-GST_FFMPEGCSP_CLASS
-GST_IS_FFMPEGCSP
-GST_IS_FFMPEGCSP_CLASS
-GST_TYPE_FFMPEGCSP
-GstFFMpegCspClass
+GST_VIDEO_CONVERT
+GST_VIDEO_CONVERT_CLASS
+GST_IS_VIDEO_CONVERT_
+GST_IS_VIDEO_CONVERT_CLASS
+GST_TYPE_VIDEO_CONVERT_
+GstVideoConvertClass
 </SECTION>
 
 <SECTION>

@@ -29,7 +29,7 @@
  * <refsect2>
  * <title>Examples</title>
  * |[
- * gst-launch -v filesrc location=test.mkv ! matroskademux name=demux ! "video/x-h264" ! queue2 ! decodebin ! subtitleoverlay name=overlay ! ffmpegcolorspace ! autovideosink  demux. ! "video/x-dvd-subpicture" ! queue2 ! overlay.
+ * gst-launch -v filesrc location=test.mkv ! matroskademux name=demux ! "video/x-h264" ! queue2 ! decodebin ! subtitleoverlay name=overlay ! videoconvert ! autovideosink  demux. ! "video/x-dvd-subpicture" ! queue2 ! overlay.
  * ]| This will play back the given Matroska file with h264 video and subpicture subtitles.
  * </refsect2>
  */
@@ -936,7 +936,7 @@ _pad_blocked_cb (GstPad * pad, GstProbeType type, gpointer type_data,
       gst_object_unref (src);
 
       if (G_UNLIKELY (!_create_element (self, &self->post_colorspace,
-                  "ffmpegcolorspace", NULL, "post-colorspace", FALSE))) {
+                  "videoconvert", NULL, "post-colorspace", FALSE))) {
         continue;
       }
 
@@ -948,13 +948,13 @@ _pad_blocked_cb (GstPad * pad, GstProbeType type, gpointer type_data,
 
       sink = gst_element_get_static_pad (self->post_colorspace, "sink");
       if (G_UNLIKELY (!sink)) {
-        GST_WARNING_OBJECT (self, "Can't get sink pad from ffmpegcolorspace");
+        GST_WARNING_OBJECT (self, "Can't get sink pad from videoconvert");
         gst_object_unref (src);
         continue;
       }
 
       if (G_UNLIKELY (gst_pad_link (src, sink) != GST_PAD_LINK_OK)) {
-        GST_WARNING_OBJECT (self, "Can't link overlay with ffmpegcolorspace");
+        GST_WARNING_OBJECT (self, "Can't link overlay with videoconvert");
         gst_object_unref (src);
         gst_object_unref (sink);
         continue;
@@ -963,7 +963,7 @@ _pad_blocked_cb (GstPad * pad, GstProbeType type, gpointer type_data,
       gst_object_unref (sink);
 
       if (G_UNLIKELY (!_create_element (self, &self->pre_colorspace,
-                  "ffmpegcolorspace", NULL, "pre-colorspace", FALSE))) {
+                  "videoconvert", NULL, "pre-colorspace", FALSE))) {
         continue;
       }
 
@@ -975,13 +975,13 @@ _pad_blocked_cb (GstPad * pad, GstProbeType type, gpointer type_data,
 
       src = gst_element_get_static_pad (self->pre_colorspace, "src");
       if (G_UNLIKELY (!src)) {
-        GST_WARNING_OBJECT (self, "Can't get srcpad from ffmpegcolorspace");
+        GST_WARNING_OBJECT (self, "Can't get srcpad from videoconvert");
         gst_object_unref (sink);
         continue;
       }
 
       if (G_UNLIKELY (gst_pad_link (src, sink) != GST_PAD_LINK_OK)) {
-        GST_WARNING_OBJECT (self, "Can't link ffmpegcolorspace to textoverlay");
+        GST_WARNING_OBJECT (self, "Can't link videoconvert to textoverlay");
         gst_object_unref (src);
         gst_object_unref (sink);
         continue;
@@ -992,7 +992,7 @@ _pad_blocked_cb (GstPad * pad, GstProbeType type, gpointer type_data,
       /* Set src ghostpad target */
       src = gst_element_get_static_pad (self->post_colorspace, "src");
       if (G_UNLIKELY (!src)) {
-        GST_WARNING_OBJECT (self, "Can't get src pad from ffmpegcolorspace");
+        GST_WARNING_OBJECT (self, "Can't get src pad from videoconvert");
         continue;
       }
 
@@ -1011,7 +1011,7 @@ _pad_blocked_cb (GstPad * pad, GstProbeType type, gpointer type_data,
 
         sink = gst_element_get_static_pad (self->pre_colorspace, "sink");
         if (G_UNLIKELY (!sink)) {
-          GST_WARNING_OBJECT (self, "Can't get sink pad from ffmpegcolorspace");
+          GST_WARNING_OBJECT (self, "Can't get sink pad from videoconvert");
           continue;
         }
 
@@ -1043,7 +1043,7 @@ _pad_blocked_cb (GstPad * pad, GstProbeType type, gpointer type_data,
       /* Set the sink ghostpad targets */
       sink = gst_element_get_static_pad (self->pre_colorspace, "sink");
       if (G_UNLIKELY (!sink)) {
-        GST_WARNING_OBJECT (self, "Can't get sink pad from ffmpegcolorspace");
+        GST_WARNING_OBJECT (self, "Can't get sink pad from videoconvert");
         continue;
       }
 
@@ -1093,7 +1093,7 @@ _pad_blocked_cb (GstPad * pad, GstProbeType type, gpointer type_data,
 
       /* First link everything internally */
       if (G_UNLIKELY (!_create_element (self, &self->post_colorspace,
-                  "ffmpegcolorspace", NULL, "post-colorspace", FALSE))) {
+                  "videoconvert", NULL, "post-colorspace", FALSE))) {
         continue;
       }
 
@@ -1105,13 +1105,13 @@ _pad_blocked_cb (GstPad * pad, GstProbeType type, gpointer type_data,
 
       sink = gst_element_get_static_pad (self->post_colorspace, "sink");
       if (G_UNLIKELY (!sink)) {
-        GST_WARNING_OBJECT (self, "Can't get sink pad from ffmpegcolorspace");
+        GST_WARNING_OBJECT (self, "Can't get sink pad from videoconvert");
         gst_object_unref (src);
         continue;
       }
 
       if (G_UNLIKELY (gst_pad_link (src, sink) != GST_PAD_LINK_OK)) {
-        GST_WARNING_OBJECT (self, "Can't link renderer with ffmpegcolorspace");
+        GST_WARNING_OBJECT (self, "Can't link renderer with videoconvert");
         gst_object_unref (src);
         gst_object_unref (sink);
         continue;
@@ -1120,7 +1120,7 @@ _pad_blocked_cb (GstPad * pad, GstProbeType type, gpointer type_data,
       gst_object_unref (sink);
 
       if (G_UNLIKELY (!_create_element (self, &self->pre_colorspace,
-                  "ffmpegcolorspace", NULL, "pre-colorspace", FALSE))) {
+                  "videoconvert", NULL, "pre-colorspace", FALSE))) {
         continue;
       }
 
@@ -1132,13 +1132,13 @@ _pad_blocked_cb (GstPad * pad, GstProbeType type, gpointer type_data,
 
       src = gst_element_get_static_pad (self->pre_colorspace, "src");
       if (G_UNLIKELY (!src)) {
-        GST_WARNING_OBJECT (self, "Can't get srcpad from ffmpegcolorspace");
+        GST_WARNING_OBJECT (self, "Can't get srcpad from videoconvert");
         gst_object_unref (sink);
         continue;
       }
 
       if (G_UNLIKELY (gst_pad_link (src, sink) != GST_PAD_LINK_OK)) {
-        GST_WARNING_OBJECT (self, "Can't link ffmpegcolorspace to renderer");
+        GST_WARNING_OBJECT (self, "Can't link videoconvert to renderer");
         gst_object_unref (src);
         gst_object_unref (sink);
         continue;
@@ -1149,7 +1149,7 @@ _pad_blocked_cb (GstPad * pad, GstProbeType type, gpointer type_data,
       /* Set src ghostpad target */
       src = gst_element_get_static_pad (self->post_colorspace, "src");
       if (G_UNLIKELY (!src)) {
-        GST_WARNING_OBJECT (self, "Can't get src pad from ffmpegcolorspace");
+        GST_WARNING_OBJECT (self, "Can't get src pad from videoconvert");
         continue;
       }
 
@@ -1168,7 +1168,7 @@ _pad_blocked_cb (GstPad * pad, GstProbeType type, gpointer type_data,
 
         sink = gst_element_get_static_pad (self->pre_colorspace, "sink");
         if (G_UNLIKELY (!sink)) {
-          GST_WARNING_OBJECT (self, "Can't get sink pad from ffmpegcolorspace");
+          GST_WARNING_OBJECT (self, "Can't get sink pad from videoconvert");
           continue;
         }
 
@@ -1198,7 +1198,7 @@ _pad_blocked_cb (GstPad * pad, GstProbeType type, gpointer type_data,
       /* Set the sink ghostpad targets */
       sink = gst_element_get_static_pad (self->pre_colorspace, "sink");
       if (G_UNLIKELY (!sink)) {
-        GST_WARNING_OBJECT (self, "Can't get sink pad from ffmpegcolorspace");
+        GST_WARNING_OBJECT (self, "Can't get sink pad from videoconvert");
         continue;
       }
 

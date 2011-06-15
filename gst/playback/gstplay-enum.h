@@ -52,7 +52,7 @@ GType gst_autoplug_select_result_get_type (void);
  * @GST_PLAY_FLAG_NATIVE_AUDIO: only allow native audio formats, this omits
  *   configuration of audioconvert and audioresample.
  * @GST_PLAY_FLAG_NATIVE_VIDEO: only allow native video formats, this omits
- *   configuration of ffmpegcolorspace and videoscale.
+ *   configuration of videoconvert and videoscale.
  * @GST_PLAY_FLAG_DOWNLOAD: enable progressice download buffering for selected
  *   formats.
  * @GST_PLAY_FLAG_BUFFERING: enable buffering of the demuxed or parsed data.

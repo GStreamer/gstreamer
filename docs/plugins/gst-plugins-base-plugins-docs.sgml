@@ -32,7 +32,7 @@
     <xi:include href="xml/element-decodebin.xml" />
     <xi:include href="xml/element-decodebin2.xml" />
     <xi:include href="xml/element-encodebin.xml" />
-    <xi:include href="xml/element-ffmpegcolorspace.xml" />
+    <xi:include href="xml/element-videoconvert.xml" />
     <xi:include href="xml/element-gdpdepay.xml" />
     <xi:include href="xml/element-gdppay.xml" />
     <xi:include href="xml/element-giosink.xml" />
@@ -80,7 +80,7 @@
     <xi:include href="xml/plugin-cdparanoia.xml" />
     <xi:include href="xml/plugin-decodebin.xml" />
     <xi:include href="xml/plugin-encoding.xml" />
-    <xi:include href="xml/plugin-ffmpegcolorspace.xml" />
+    <xi:include href="xml/plugin-videoconvert.xml" />
     <xi:include href="xml/plugin-gdp.xml" />
     <xi:include href="xml/plugin-gio.xml" />
     <xi:include href="xml/plugin-libvisual.xml" />
