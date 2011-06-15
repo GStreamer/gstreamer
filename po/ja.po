@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-05-10 09:38+0100\n"
+"POT-Creation-Date: 2011-06-15 15:02+0100\n"
 "PO-Revision-Date: 2011-04-26 20:15+0900\n"
 "Last-Translator: Makoto Kato <makoto.kt@gmail.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -17,12 +17,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Lokalize 0.3\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-
-msgid "Could not establish connection to sound server"
-msgstr "サウンドサーバーへの接続に失敗しました"
-
-msgid "Failed to query sound server capabilities"
-msgstr "サウンドサーバーのケイパビリティのクエリーに失敗しました"
 
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
@@ -708,6 +702,12 @@ msgstr ""
 
 msgid "Cannot operate without a clock"
 msgstr ""
+
+#~ msgid "Could not establish connection to sound server"
+#~ msgstr "サウンドサーバーへの接続に失敗しました"
+
+#~ msgid "Failed to query sound server capabilities"
+#~ msgstr "サウンドサーバーのケイパビリティのクエリーに失敗しました"
 
 #~ msgid ""
 #~ "Failed trying to get video frames from device '%s'. Not enough memory."

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.23.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-05-10 09:38+0100\n"
+"POT-Creation-Date: 2011-06-15 15:02+0100\n"
 "PO-Revision-Date: 2010-10-03 18:48+1030\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
@@ -17,12 +17,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Generator: LocFactoryEditor 1.8\n"
-
-msgid "Could not establish connection to sound server"
-msgstr "Không thể thiết lập sự kết nối tới máy phục vụ âm thanh"
-
-msgid "Failed to query sound server capabilities"
-msgstr "Lỗi truy vấn khả năng của máy phục vụ âm thanh"
 
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
@@ -673,3 +667,9 @@ msgstr "Chưa hỗ trợ khả năng thay đổi độ phân giải trong khi ch
 
 msgid "Cannot operate without a clock"
 msgstr "Không thể thao tác khi không có đồng hồ."
+
+#~ msgid "Could not establish connection to sound server"
+#~ msgstr "Không thể thiết lập sự kết nối tới máy phục vụ âm thanh"
+
+#~ msgid "Failed to query sound server capabilities"
+#~ msgstr "Lỗi truy vấn khả năng của máy phục vụ âm thanh"

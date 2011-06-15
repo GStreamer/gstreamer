@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-05-10 09:38+0100\n"
+"POT-Creation-Date: 2011-06-15 15:02+0100\n"
 "PO-Revision-Date: 2011-05-01 11:55+0300\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
@@ -18,12 +18,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Lokalize 1.2\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-
-msgid "Could not establish connection to sound server"
-msgstr "Не вдалося встановити з'єднання із звуковим сервером."
-
-msgid "Failed to query sound server capabilities"
-msgstr "Помилка при запиті можливостей звукового сервера"
 
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
@@ -676,6 +670,12 @@ msgstr "Зміна роздільної здатності при відтвор
 
 msgid "Cannot operate without a clock"
 msgstr "Робота без годинника неможлива"
+
+#~ msgid "Could not establish connection to sound server"
+#~ msgstr "Не вдалося встановити з'єднання із звуковим сервером."
+
+#~ msgid "Failed to query sound server capabilities"
+#~ msgstr "Помилка при запиті можливостей звукового сервера"
 
 #~ msgid "Could not read from CD."
 #~ msgstr "Не вдається прочитати з компакт-диску."

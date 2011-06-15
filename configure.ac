@@ -719,17 +719,6 @@ AG_GST_CHECK_FEATURE(CAIRO_GOBJECT,
   AG_GST_PKG_CHECK_MODULES(CAIRO_GOBJECT, cairo-gobject >= 1.10.0)
 ])
 
-dnl **** ESound ****
-translit(dnm, m, l) AM_CONDITIONAL(USE_ESD, true)
-AG_GST_CHECK_FEATURE(ESD, [ESounD sound daemon], esdsink, [
-  AG_GST_PKG_CHECK_MODULES(ESD, esound >= 0.2.12)
-  if test $HAVE_ESD = no
-  then
-    AM_PATH_ESD(0.2.12, HAVE_ESD="yes")
-    AS_SCRUB_INCLUDE(ESD_CFLAGS)
-  fi
-])
-
 dnl *** FLAC ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_FLAC, true)
 AG_GST_CHECK_FEATURE(FLAC, [FLAC lossless audio], flac, [
@@ -1021,7 +1010,6 @@ AM_CONDITIONAL(USE_CAIRO, false)
 AM_CONDITIONAL(USE_CAIRO_GOBJECT, false)
 AM_CONDITIONAL(USE_DIRECTSOUND, false)
 AM_CONDITIONAL(USE_DV1394, false)
-AM_CONDITIONAL(USE_ESD, false)
 AM_CONDITIONAL(USE_FLAC, false)
 AM_CONDITIONAL(USE_GDK_PIXBUF, false)
 AM_CONDITIONAL(USE_GST_V4L2, false)
@@ -1157,7 +1145,6 @@ ext/aalib/Makefile
 ext/annodex/Makefile
 ext/cairo/Makefile
 ext/dv/Makefile
-ext/esd/Makefile
 ext/flac/Makefile
 ext/gdk_pixbuf/Makefile
 ext/hal/Makefile

@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-05-10 09:38+0100\n"
+"POT-Creation-Date: 2011-06-15 15:02+0100\n"
 "PO-Revision-Date: 2011-03-12 18:35+0100\n"
 "Last-Translator: Klemen Košir <klemen.kosir@gmx.com>\n"
 "Language-Team: Slovenian <translation-team-sl@lists.sourceforge.net>\n"
@@ -22,12 +22,6 @@ msgstr ""
 "X-Poedit-Language: Slovenian\n"
 "X-Poedit-Country: SLOVENIA\n"
 "X-Poedit-SourceCharset: utf-8\n"
-
-msgid "Could not establish connection to sound server"
-msgstr "Povezave z zvočnim strežnikom ni mogoče vzpostaviti"
-
-msgid "Failed to query sound server capabilities"
-msgstr "Poizvedba o zmogljivosti zvočnega strežnika je spodletela"
 
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
@@ -679,6 +673,12 @@ msgstr "Spreminjanje ločljivosti med delovanjem še ni podprto."
 
 msgid "Cannot operate without a clock"
 msgstr "Delovanje brez ure ni mogoče"
+
+#~ msgid "Could not establish connection to sound server"
+#~ msgstr "Povezave z zvočnim strežnikom ni mogoče vzpostaviti"
+
+#~ msgid "Failed to query sound server capabilities"
+#~ msgstr "Poizvedba o zmogljivosti zvočnega strežnika je spodletela"
 
 #~ msgid "Describes the selected input element."
 #~ msgstr "Opisuje izbran vnosni predmet."

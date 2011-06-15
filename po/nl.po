@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-05-10 09:38+0100\n"
+"POT-Creation-Date: 2011-06-15 15:02+0100\n"
 "PO-Revision-Date: 2011-04-27 00:05+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -16,12 +16,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Lokalize 1.1\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-
-msgid "Could not establish connection to sound server"
-msgstr "Kan geen verbinding maken met de geluidsserver"
-
-msgid "Failed to query sound server capabilities"
-msgstr "Kan de eigenschappen van de geluidsserver niet opvragen"
 
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
@@ -674,3 +668,9 @@ msgstr "Tijdens het draaien kan de resolutie nog niet gewijzigd worden."
 
 msgid "Cannot operate without a clock"
 msgstr "Kan niet werken zonder een klok."
+
+#~ msgid "Could not establish connection to sound server"
+#~ msgstr "Kan geen verbinding maken met de geluidsserver"
+
+#~ msgid "Failed to query sound server capabilities"
+#~ msgstr "Kan de eigenschappen van de geluidsserver niet opvragen"

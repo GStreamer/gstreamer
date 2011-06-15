@@ -84,7 +84,6 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/cairo/gstcairooverlay.h \
 	$(top_srcdir)/ext/dv/gstdvdec.h \
 	$(top_srcdir)/ext/dv/gstdvdemux.h \
-	$(top_srcdir)/ext/esd/esdsink.h \
 	$(top_srcdir)/ext/flac/gstflacdec.h \
 	$(top_srcdir)/ext/flac/gstflacenc.h \
 	$(top_srcdir)/ext/flac/gstflactag.h \

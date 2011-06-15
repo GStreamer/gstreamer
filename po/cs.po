@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-05-10 09:38+0100\n"
+"POT-Creation-Date: 2011-06-15 15:02+0100\n"
 "PO-Revision-Date: 2011-01-12 23:07+0100\n"
 "Last-Translator: Petr Kovar <pknbe@volny.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -18,12 +18,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
 "X-Generator: Lokalize 1.1\n"
-
-msgid "Could not establish connection to sound server"
-msgstr "Nezdařilo se navázání spojení se zvukovým serverem"
-
-msgid "Failed to query sound server capabilities"
-msgstr "Nezdařil se dotaz na schopnosti zvukového serveru"
 
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
@@ -675,3 +669,9 @@ msgstr "Změna rozlišení za běhu doposud není podporována."
 
 msgid "Cannot operate without a clock"
 msgstr "Není možné fungovat bez hodin"
+
+#~ msgid "Could not establish connection to sound server"
+#~ msgstr "Nezdařilo se navázání spojení se zvukovým serverem"
+
+#~ msgid "Failed to query sound server capabilities"
+#~ msgstr "Nezdařil se dotaz na schopnosti zvukového serveru"

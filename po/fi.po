@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.25.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-05-10 09:38+0100\n"
+"POT-Creation-Date: 2011-06-15 15:02+0100\n"
 "PO-Revision-Date: 2010-11-17 23:03+0200\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
@@ -20,12 +20,6 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-
-msgid "Could not establish connection to sound server"
-msgstr "Yhteyttä äänipalvelimeen ei voitu avata"
-
-msgid "Failed to query sound server capabilities"
-msgstr "Äänipalvelimen ominaisuuksia ei voitu selvittää"
 
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
@@ -674,6 +668,12 @@ msgstr "Resoluution vaihto käytön aikana ei ole vielä mahdollista."
 
 msgid "Cannot operate without a clock"
 msgstr "Ei voitu toimia ilman kelloa"
+
+#~ msgid "Could not establish connection to sound server"
+#~ msgstr "Yhteyttä äänipalvelimeen ei voitu avata"
+
+#~ msgid "Failed to query sound server capabilities"
+#~ msgstr "Äänipalvelimen ominaisuuksia ei voitu selvittää"
 
 #~ msgid ""
 #~ "The buffer type is not supported, or the index is out of bounds, or no "

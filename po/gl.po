@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-05-10 09:38+0100\n"
+"POT-Creation-Date: 2011-06-15 15:02+0100\n"
 "PO-Revision-Date: 2011-01-09 21:20+0100\n"
 "Last-Translator: Fran Diéguez <frandieguez@ubuntu.com>\n"
 "Language-Team: Galician <proxecto@trasno.net>\n"
@@ -16,12 +16,6 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n!=1);\n"
-
-msgid "Could not establish connection to sound server"
-msgstr "Non foi posíbel estabelecer a conexión co servidor de son"
-
-msgid "Failed to query sound server capabilities"
-msgstr "Produciuse un erro ao consultar as capacidades do servidor de son"
 
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
@@ -691,6 +685,12 @@ msgstr "Aínda non se admite o cambio de resolución durante a reprodución."
 
 msgid "Cannot operate without a clock"
 msgstr "Non é posíbel operar sen reloxo"
+
+#~ msgid "Could not establish connection to sound server"
+#~ msgstr "Non foi posíbel estabelecer a conexión co servidor de son"
+
+#~ msgid "Failed to query sound server capabilities"
+#~ msgstr "Produciuse un erro ao consultar as capacidades do servidor de son"
 
 #~ msgid "Describes the selected input element."
 #~ msgstr "Describe o elemento de entrada seleccionado."

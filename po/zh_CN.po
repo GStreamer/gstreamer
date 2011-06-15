@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.16.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-05-10 09:38+0100\n"
+"POT-Creation-Date: 2011-06-15 15:02+0100\n"
 "PO-Revision-Date: 2009-11-13 22:20+0800\n"
 "Last-Translator: Ji ZhengYu <zhengyuji@gmail.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
@@ -15,12 +15,6 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-
-msgid "Could not establish connection to sound server"
-msgstr "无法建立与音频服务器的连接"
-
-msgid "Failed to query sound server capabilities"
-msgstr "查寻音频服务器的服务失败"
 
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
@@ -677,6 +671,12 @@ msgstr "尚不支持在运行时更改分辨率。"
 
 msgid "Cannot operate without a clock"
 msgstr "没有时钟的话无法操作"
+
+#~ msgid "Could not establish connection to sound server"
+#~ msgstr "无法建立与音频服务器的连接"
+
+#~ msgid "Failed to query sound server capabilities"
+#~ msgstr "查寻音频服务器的服务失败"
 
 #~ msgid "Failed to enumerate possible video formats device '%s' can work with"
 #~ msgstr "枚举设备‘%s’可能支持的视频格式时出错"

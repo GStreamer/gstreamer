@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.25.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-05-10 09:38+0100\n"
+"POT-Creation-Date: 2011-06-15 15:02+0100\n"
 "PO-Revision-Date: 2010-10-24 21:53+0200\n"
 "Last-Translator: Kjartan Maraas <kmaraas@gnome.org>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
@@ -14,12 +14,6 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-
-msgid "Could not establish connection to sound server"
-msgstr "Kunne ikke etablere tilkobling til lydtjener"
-
-msgid "Failed to query sound server capabilities"
-msgstr ""
 
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
@@ -646,6 +640,9 @@ msgstr ""
 
 msgid "Cannot operate without a clock"
 msgstr "Kan ikke operere uten en klokke"
+
+#~ msgid "Could not establish connection to sound server"
+#~ msgstr "Kunne ikke etablere tilkobling til lydtjener"
 
 #~ msgid "Describes the selected input element."
 #~ msgstr "Beskriver valgt inndataelement."

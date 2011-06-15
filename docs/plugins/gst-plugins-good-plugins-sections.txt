@@ -798,20 +798,6 @@ ProcessFunc
 </SECTION>
 
 <SECTION>
-<FILE>element-esdsink</FILE>
-<TITLE>esdsink</TITLE>
-GstEsdSink
-<SUBSECTION Standard>
-GstEsdSinkClass
-GST_TYPE_ESDSINK
-GST_ESDSINK
-GST_ESDSINK_CLASS
-GST_IS_ESDSINK
-GST_IS_ESDSINK_CLASS
-gst_esdsink_get_type
-</SECTION>
-
-<SECTION>
 <FILE>element-flacdec</FILE>
 <TITLE>flacdec</TITLE>
 GstFlacDec

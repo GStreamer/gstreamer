@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.25.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-05-10 09:38+0100\n"
+"POT-Creation-Date: 2011-06-15 15:02+0100\n"
 "PO-Revision-Date: 2010-10-27 12:16+0200\n"
 "Last-Translator: Michael Kotsarinis <mk73628@gmail.com>\n"
 "Language-Team: Greek <team@lists.gnome.gr>\n"
@@ -17,12 +17,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Lokalize 0.3\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-
-msgid "Could not establish connection to sound server"
-msgstr "Δεν ήταν δυνατή η σύνδεση με τον διακομιστή ήχου"
-
-msgid "Failed to query sound server capabilities"
-msgstr "Αποτυχία αναζήτησης των δυνατοτήτων του διακομιστή ήχου"
 
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
@@ -678,6 +672,12 @@ msgstr ""
 
 msgid "Cannot operate without a clock"
 msgstr "Δεν είναι δυνατή η λειτουργία χωρίς ρολόι "
+
+#~ msgid "Could not establish connection to sound server"
+#~ msgstr "Δεν ήταν δυνατή η σύνδεση με τον διακομιστή ήχου"
+
+#~ msgid "Failed to query sound server capabilities"
+#~ msgstr "Αποτυχία αναζήτησης των δυνατοτήτων του διακομιστή ήχου"
 
 #~ msgid "Describes the selected input element."
 #~ msgstr "Περιγράφει το επιλεγμένο στοιχείο εισαγωγής."

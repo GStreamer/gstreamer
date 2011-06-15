@@ -72,7 +72,6 @@
     <xi:include href="xml/element-equalizer-10bands.xml" />
     <xi:include href="xml/element-equalizer-3bands.xml" />
     <xi:include href="xml/element-equalizer-nbands.xml" />
-    <xi:include href="xml/element-esdsink.xml" />
     <xi:include href="xml/element-flacdec.xml" />
     <xi:include href="xml/element-flacenc.xml" />
     <xi:include href="xml/element-flacparse.xml" />
@@ -205,7 +204,6 @@
     <xi:include href="xml/plugin-efence.xml" />
     <xi:include href="xml/plugin-equalizer.xml" />
     <xi:include href="xml/plugin-effectv.xml" />
-    <xi:include href="xml/plugin-esdsink.xml" />
     <xi:include href="xml/plugin-flac.xml" />
     <xi:include href="xml/plugin-flv.xml" />
     <xi:include href="xml/plugin-flxdec.xml" />

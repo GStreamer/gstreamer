@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.23.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-05-10 09:38+0100\n"
+"POT-Creation-Date: 2011-06-15 15:02+0100\n"
 "PO-Revision-Date: 2010-07-07 11:53+0100\n"
 "Last-Translator: Rihards Priedītis <rprieditis@gmail.com>\n"
 "Language-Team: Latvian <translation-team-lv@lists.sourceforge.net>\n"
@@ -18,12 +18,6 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n != 0 ? 1 : "
 "2);\n"
 "X-Generator: Lokalize 1.0\n"
-
-msgid "Could not establish connection to sound server"
-msgstr "Nevar izveidot savienojumu ar skaņas serveri"
-
-msgid "Failed to query sound server capabilities"
-msgstr "Neizdevās noskaidrot skaņas servera iespējas"
 
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
@@ -673,3 +667,9 @@ msgstr "Izšķirtspējas mainīšana izpildlaikā pašalik netiek atbalstīta."
 
 msgid "Cannot operate without a clock"
 msgstr "Nevar veikt darbības bez pulksteņa"
+
+#~ msgid "Could not establish connection to sound server"
+#~ msgstr "Nevar izveidot savienojumu ar skaņas serveri"
+
+#~ msgid "Failed to query sound server capabilities"
+#~ msgstr "Neizdevās noskaidrot skaņas servera iespējas"

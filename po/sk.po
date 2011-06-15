@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.25.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-05-10 09:38+0100\n"
+"POT-Creation-Date: 2011-06-15 15:02+0100\n"
 "PO-Revision-Date: 2010-11-08 15:48+0100\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
@@ -17,12 +17,6 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\\n\n"
 "X-Generator: KBabel 1.11.4\n"
 "X-Poedit-Country: SLOVAKIA\n"
-
-msgid "Could not establish connection to sound server"
-msgstr "Nepodarilo sa nadviazať spojenie so zvukovým serverom"
-
-msgid "Failed to query sound server capabilities"
-msgstr "Nepodarilo sa zistiť schopnosti zvukového servera"
 
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
@@ -673,6 +667,12 @@ msgstr "Zmena rozlíšenia za chodu nie je zatiaľ podporovaná."
 
 msgid "Cannot operate without a clock"
 msgstr "Nemôžem fungovať bez hodín"
+
+#~ msgid "Could not establish connection to sound server"
+#~ msgstr "Nepodarilo sa nadviazať spojenie so zvukovým serverom"
+
+#~ msgid "Failed to query sound server capabilities"
+#~ msgstr "Nepodarilo sa zistiť schopnosti zvukového servera"
 
 #~ msgid "Failed getting controls attributes on device '%s.'"
 #~ msgstr "Nepodarilo sa získať atribúty ovládacích prvkov na zariadení '%s.'"

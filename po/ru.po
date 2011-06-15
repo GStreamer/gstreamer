@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-05-10 09:38+0100\n"
+"POT-Creation-Date: 2011-06-15 15:02+0100\n"
 "PO-Revision-Date: 2011-04-26 21:13+0400\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@mx.ru>\n"
@@ -19,12 +19,6 @@ msgstr ""
 "X-Generator: Lokalize 1.0\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
-
-msgid "Could not establish connection to sound server"
-msgstr "Не удалось установить соединение с сервером звука"
-
-msgid "Failed to query sound server capabilities"
-msgstr "Ошибка при запросе возможностей сервера звука"
 
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
@@ -677,6 +671,12 @@ msgstr ""
 
 msgid "Cannot operate without a clock"
 msgstr "Операция невозможна без часов"
+
+#~ msgid "Could not establish connection to sound server"
+#~ msgstr "Не удалось установить соединение с сервером звука"
+
+#~ msgid "Failed to query sound server capabilities"
+#~ msgstr "Ошибка при запросе возможностей сервера звука"
 
 #~ msgid "Failed to enumerate possible video formats device '%s' can work with"
 #~ msgstr ""

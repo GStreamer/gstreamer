@@ -14,7 +14,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-05-10 09:38+0100\n"
+"POT-Creation-Date: 2011-06-15 15:02+0100\n"
 "PO-Revision-Date: 2011-01-21 22:36+0100\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@googlemail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
@@ -25,12 +25,6 @@ msgstr ""
 "X-Poedit-Language: German\n"
 "X-Poedit-Country: GERMANY\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-
-msgid "Could not establish connection to sound server"
-msgstr "Es konnte keine Verbindung zum Audio-Server hergestellt werden"
-
-msgid "Failed to query sound server capabilities"
-msgstr "Abfrage der Fähigkeiten des Audio-Servers ist fehlgeschlagen"
 
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
@@ -695,6 +689,12 @@ msgstr "Ein Wechsel der Auflösung zur Laufzeit wird noch nicht unterstützt."
 # Taktgeber klingt gut.
 msgid "Cannot operate without a clock"
 msgstr "Es kann nicht ohne einen Taktgeber gearbeitet werden."
+
+#~ msgid "Could not establish connection to sound server"
+#~ msgstr "Es konnte keine Verbindung zum Audio-Server hergestellt werden"
+
+#~ msgid "Failed to query sound server capabilities"
+#~ msgstr "Abfrage der Fähigkeiten des Audio-Servers ist fehlgeschlagen"
 
 #~ msgid "Failed to enumerate possible video formats device '%s' can work with"
 #~ msgstr ""

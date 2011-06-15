@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.25.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-05-10 09:38+0100\n"
+"POT-Creation-Date: 2011-06-15 15:02+0100\n"
 "PO-Revision-Date: 2010-10-25 10:11+0200\n"
 "Last-Translator: Luca Ferretti <elle.uca@infinito.it>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
@@ -15,12 +15,6 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-
-msgid "Could not establish connection to sound server"
-msgstr "Impossibile stabilire la connessione al server audio"
-
-msgid "Failed to query sound server capabilities"
-msgstr "Interrogazione delle funzionalità del server audio non riuscita"
 
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
@@ -693,3 +687,9 @@ msgstr ""
 
 msgid "Cannot operate without a clock"
 msgstr "Impossibile operare senza un clock"
+
+#~ msgid "Could not establish connection to sound server"
+#~ msgstr "Impossibile stabilire la connessione al server audio"
+
+#~ msgid "Failed to query sound server capabilities"
+#~ msgstr "Interrogazione delle funzionalità del server audio non riuscita"

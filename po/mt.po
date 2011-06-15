@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-0.10.10.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-05-10 09:38+0100\n"
+"POT-Creation-Date: 2011-06-15 15:02+0100\n"
 "PO-Revision-Date: 2008-10-26 19:09+0100\n"
 "Last-Translator: Michel Bugeja <michelbugeja@rabatmalta.com>\n"
 "Language-Team: Maltese <translation-team-mt@lists.sourceforge.net>\n"
@@ -15,12 +15,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Poedit-Language: Maltese\n"
 "X-Poedit-Country: MALTA\n"
-
-msgid "Could not establish connection to sound server"
-msgstr "Kuntatt mas-sound server ma ġiex stabbilit"
-
-msgid "Failed to query sound server capabilities"
-msgstr "Mhux possibli t-tfittxija għall-kapaċita tas-sound server"
 
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
@@ -706,6 +700,12 @@ msgstr "Ma tistax tibdel ir-resolution waqt runtime."
 
 msgid "Cannot operate without a clock"
 msgstr "Ma nistax nħaddem mingħajr arloġġ"
+
+#~ msgid "Could not establish connection to sound server"
+#~ msgstr "Kuntatt mas-sound server ma ġiex stabbilit"
+
+#~ msgid "Failed to query sound server capabilities"
+#~ msgstr "Mhux possibli t-tfittxija għall-kapaċita tas-sound server"
 
 #~ msgid "Error stopping streaming capture from device '%s'."
 #~ msgstr "Problem biex inwaqqaf streaming capture mill-apparat '%s'."

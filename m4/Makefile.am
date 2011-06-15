@@ -1,13 +1,11 @@
 EXTRA_DIST = \
 	a52.m4 \
 	aalib.m4 \
-	as-arts.m4 \
 	as-ffmpeg.m4 \
 	as-liblame.m4 \
 	as-slurp-ffmpeg.m4 \
 	check-libheader.m4 \
 	codeset.m4 \
-	esd.m4 \
 	freetype2.m4 \
 	gettext.m4 \
 	glibc21.m4 \

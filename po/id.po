@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-05-10 09:38+0100\n"
+"POT-Creation-Date: 2011-06-15 15:02+0100\n"
 "PO-Revision-Date: 2011-02-26 18:09+0700\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
@@ -15,12 +15,6 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-
-msgid "Could not establish connection to sound server"
-msgstr "Tak dapat membangun koneksi ke server suara"
-
-msgid "Failed to query sound server capabilities"
-msgstr "Gagal untuk kueri kemampuan server suara"
 
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
@@ -667,6 +661,12 @@ msgstr "Mengubah resolusi saat waktu berjalan belum didukung."
 
 msgid "Cannot operate without a clock"
 msgstr "Tak dapat beroperasi tanpa jam"
+
+#~ msgid "Could not establish connection to sound server"
+#~ msgstr "Tak dapat membangun koneksi ke server suara"
+
+#~ msgid "Failed to query sound server capabilities"
+#~ msgstr "Gagal untuk kueri kemampuan server suara"
 
 #~ msgid "Failed to enumerate possible video formats device '%s' can work with"
 #~ msgstr ""

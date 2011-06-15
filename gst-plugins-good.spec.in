@@ -20,11 +20,6 @@ BuildRequires: 	  %{gstreamer}-devel >= %{gst_minver}
 
 BuildRequires:  gcc-c++
 
-@USE_ESD_TRUE@BuildRequires: esound-devel >= 0.2.8
-@USE_ESD_TRUE@Obsoletes:     gstreamer-esd
-@USE_ESD_TRUE@
-@USE_ESD_TRUE@Provides:		gstreamer-audiosrc
-@USE_ESD_TRUE@Provides:		gstreamer-audiosink
 @USE_FLAC_TRUE@BuildRequires: flac-devel >= 1.0.3
 @USE_JPEG_TRUE@BuildRequires: libjpeg-devel
 @USE_LIBCACA_TRUE@BuildRequires: libcaca-devel
@@ -141,7 +136,6 @@ rm -rf $RPM_BUILD_ROOT
 
 # gstreamer-plugins with external dependencies but in the main package
 @USE_LIBCACA_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstcacasink.so
-@USE_ESD_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstesd.so
 @USE_FLAC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstflac.so
 @USE_JACK_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstjack.so
 @USE_JPEG_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstjpeg.so

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-05-10 09:38+0100\n"
+"POT-Creation-Date: 2011-06-15 15:02+0100\n"
 "PO-Revision-Date: 2011-02-12 18:30+0100\n"
 "Last-Translator: Jorge González González <aloriel@gmail.com>\n"
 "Language-Team: Spanish <es@li.org>\n"
@@ -17,12 +17,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: KBabel 1.11.4\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-
-msgid "Could not establish connection to sound server"
-msgstr "No se pudo establecer la conexión con el servidor de sonido"
-
-msgid "Failed to query sound server capabilities"
-msgstr "Falló al preguntar al servidor de sonido sus capacidades"
 
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
@@ -686,6 +680,12 @@ msgstr "El cambio de resolución durante la reproducción aún no está soportad
 
 msgid "Cannot operate without a clock"
 msgstr "No se puede operar sin reloj"
+
+#~ msgid "Could not establish connection to sound server"
+#~ msgstr "No se pudo establecer la conexión con el servidor de sonido"
+
+#~ msgid "Failed to query sound server capabilities"
+#~ msgstr "Falló al preguntar al servidor de sonido sus capacidades"
 
 #~ msgid "Failed to enumerate possible video formats device '%s' can work with"
 #~ msgstr ""

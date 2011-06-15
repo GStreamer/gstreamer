@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-0.10.18.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-05-10 09:38+0100\n"
+"POT-Creation-Date: 2011-06-15 15:02+0100\n"
 "PO-Revision-Date: 2010-03-25 12:37+0100\n"
 "Last-Translator: Mikel Olasagasti Uranga <hey_neken@mundurat.net>\n"
 "Language-Team: Basque <translation-team-eu@lists.sourceforge.net>\n"
@@ -18,12 +18,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: KBabel 1.11.4\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-
-msgid "Could not establish connection to sound server"
-msgstr "Ezin izan da konexioa ezarri soinu-zerbitzariarekin"
-
-msgid "Failed to query sound server capabilities"
-msgstr "Huts egin du soinu-zerbitzariaren ahalmena kontsultatzean"
 
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
@@ -683,6 +677,12 @@ msgstr "Oraindik ez dago onartua exekutatu bitartean bereizmena aldatzea."
 
 msgid "Cannot operate without a clock"
 msgstr "Ezin du funtzionatu erlojurik gabe"
+
+#~ msgid "Could not establish connection to sound server"
+#~ msgstr "Ezin izan da konexioa ezarri soinu-zerbitzariarekin"
+
+#~ msgid "Failed to query sound server capabilities"
+#~ msgstr "Huts egin du soinu-zerbitzariaren ahalmena kontsultatzean"
 
 #~ msgid "Describes the selected input element."
 #~ msgstr "Sarrerako elementu hautatua deskribatzen du."

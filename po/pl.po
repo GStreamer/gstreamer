@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-05-10 09:38+0100\n"
+"POT-Creation-Date: 2011-06-15 15:02+0100\n"
 "PO-Revision-Date: 2011-01-07 21:53+0100\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
@@ -14,12 +14,6 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-
-msgid "Could not establish connection to sound server"
-msgstr "Nie udało się nawiązać połączenia z serwerem dźwięku"
-
-msgid "Failed to query sound server capabilities"
-msgstr "Nie udało się odpytać o możliwości serwera dźwięku"
 
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
@@ -670,3 +664,9 @@ msgstr "Zmiana rozdzielczości w czasie działania nie jest jeszcze obsługiwana
 
 msgid "Cannot operate without a clock"
 msgstr "Nie można pracować bez zegara"
+
+#~ msgid "Could not establish connection to sound server"
+#~ msgstr "Nie udało się nawiązać połączenia z serwerem dźwięku"
+
+#~ msgid "Failed to query sound server capabilities"
+#~ msgstr "Nie udało się odpytać o możliwości serwera dźwięku"

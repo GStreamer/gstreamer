@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.23.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-05-10 09:38+0100\n"
+"POT-Creation-Date: 2011-06-15 15:02+0100\n"
 "PO-Revision-Date: 2010-08-16 03:22+0300\n"
 "Last-Translator: Lucian Adrian Grijincu <lucian.grijincu@gmail.com>\n"
 "Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
@@ -17,12 +17,6 @@ msgstr ""
 "20)) ? 1 : 2);;\n"
 "X-Generator: Virtaal 0.6.1\n"
 "X-Launchpad-Export-Date: 2010-08-16 00:08+0000\n"
-
-msgid "Could not establish connection to sound server"
-msgstr "Nu se poate stabili o conexiune la serverul de sunet"
-
-msgid "Failed to query sound server capabilities"
-msgstr "Interogarea capabilităților serverului de sunet a eșuat"
 
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
@@ -682,3 +676,9 @@ msgstr "Schimbarea rezoluției pe durata rulării nu este incă suportată."
 
 msgid "Cannot operate without a clock"
 msgstr "Nu se poate opera fără un ceas"
+
+#~ msgid "Could not establish connection to sound server"
+#~ msgstr "Nu se poate stabili o conexiune la serverul de sunet"
+
+#~ msgid "Failed to query sound server capabilities"
+#~ msgstr "Interogarea capabilităților serverului de sunet a eșuat"

@@ -16,12 +16,6 @@ else
 CAIRO_DIR =
 endif
 
-if USE_ESD
-ESD_DIR = esd
-else
-ESD_DIR =
-endif
-
 if USE_FLAC
 FLAC_DIR = flac
 else
@@ -130,7 +124,6 @@ SUBDIRS = \
 	$(ANNODEX_DIR) \
 	$(CAIRO_DIR) \
 	$(DV1394_DIR) \
-	$(ESD_DIR) \
 	$(FLAC_DIR) \
 	$(GDK_PIXBUF_DIR) \
 	$(HAL_DIR) \
@@ -153,7 +146,6 @@ DIST_SUBDIRS = \
 	annodex \
 	cairo \
 	dv \
-	esd \
 	flac \
 	gdk_pixbuf \
 	hal \

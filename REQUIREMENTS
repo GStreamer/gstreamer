@@ -89,11 +89,6 @@ Version:	>= 0.71
 Plugins:	cdio (cdiocddasrc)
 URL:		http://www.gnu.org/software/libcdio/
 
-Package:	ESound
-Version:	>= 0.2.12
-Plugins:	esdsink
-URL:		http://www.gnome.org/
-
 Package:	FLAC
 Version:	== 1.1.2
 Plugins:	flac (flacenc, flacdec)
