@@ -311,6 +311,7 @@ gst_festival_chain (GstPad * pad, GstBuffer * buf)
   GST_DEBUG_OBJECT (festival, "issued Parameter.set command");
   if (read_response (festival) == FALSE) {
     ret = GST_FLOW_ERROR;
+    fclose (fd);
     goto out;
   }
 

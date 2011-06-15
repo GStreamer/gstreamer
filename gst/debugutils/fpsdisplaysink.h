@@ -51,8 +51,8 @@ struct _GstFPSDisplaySink
   GstPad *ghost_pad;
 
   /* statistics */
-  guint64 frames_rendered, last_frames_rendered;
-  guint64 frames_dropped, last_frames_dropped;
+  gint frames_rendered, frames_dropped;  /* ATOMIC */
+  guint64 last_frames_rendered, last_frames_dropped;
 
   GstClockTime start_ts;
   GstClockTime last_ts;
@@ -66,6 +66,8 @@ struct _GstFPSDisplaySink
   GstClockTime fps_update_interval;
   gdouble max_fps;
   gdouble min_fps;
+  gboolean silent;
+  gchar *last_message;
 };
 
 struct _GstFPSDisplaySinkClass

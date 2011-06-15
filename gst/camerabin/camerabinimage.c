@@ -61,7 +61,7 @@
 
 #define DEFAULT_SINK "filesink"
 #define DEFAULT_ENC "jpegenc"
-#define DEFAULT_META_MUX "jifmux"
+#define DEFAULT_FORMATTER "jifmux"
 #define DEFAULT_FLAGS GST_CAMERABIN_FLAG_IMAGE_COLOR_CONVERSION
 
 enum
@@ -150,7 +150,8 @@ gst_camerabin_image_init (GstCameraBinImage * img,
   img->csp = NULL;
   img->enc = NULL;
   img->app_enc = NULL;
-  img->meta_mux = NULL;
+  img->formatter = NULL;
+  img->app_formatter = NULL;
   img->sink = NULL;
 
   /* Create src and sink ghost pads */
@@ -180,12 +181,21 @@ gst_camerabin_image_dispose (GstCameraBinImage * img)
     img->sink = NULL;
   }
 
-  if (img->meta_mux) {
+  if (img->formatter) {
     GST_LOG_OBJECT (img, "disposing %s with refcount %d",
-        GST_ELEMENT_NAME (img->meta_mux),
-        GST_OBJECT_REFCOUNT_VALUE (img->meta_mux));
-    gst_object_unref (img->meta_mux);
-    img->meta_mux = NULL;
+        GST_ELEMENT_NAME (img->formatter),
+        GST_OBJECT_REFCOUNT_VALUE (img->formatter));
+    gst_object_unref (img->formatter);
+    img->formatter = NULL;
+  }
+
+  if (img->app_formatter) {
+    gst_object_sink (img->app_formatter);
+    GST_LOG_OBJECT (img, "disposing %s with refcount %d",
+        GST_ELEMENT_NAME (img->app_formatter),
+        GST_OBJECT_REFCOUNT_VALUE (img->app_formatter));
+    gst_object_unref (img->app_formatter);
+    img->app_formatter = NULL;
   }
 
   if (img->enc) {
@@ -195,6 +205,12 @@ gst_camerabin_image_dispose (GstCameraBinImage * img)
     img->enc = NULL;
   }
 
+  if (img->csp) {
+    GST_LOG_OBJECT (img, "disposing %s with refcount %d",
+        GST_ELEMENT_NAME (img->csp), GST_OBJECT_REFCOUNT_VALUE (img->csp));
+    gst_object_unref (img->csp);
+    img->csp = NULL;
+  }
 
   /* Note: if imagebin was never set to READY state the
      ownership of elements created by application were never
@@ -394,12 +410,12 @@ gst_camerabin_image_prepare_elements (GstCameraBinImage * imagebin)
   }
 
   /* Create metadata muxer element */
-  if (!prepare_element (&imagebin->elements, DEFAULT_META_MUX, NULL,
-          &imagebin->meta_mux)) {
+  if (!prepare_element (&imagebin->elements, DEFAULT_FORMATTER,
+          imagebin->app_formatter, &imagebin->formatter)) {
     goto done;
   } else if (!imagebin->metadata_probe_id) {
     /* Add probe for default XMP metadata writing */
-    sinkpad = gst_element_get_static_pad (imagebin->meta_mux, "sink");
+    sinkpad = gst_element_get_static_pad (imagebin->formatter, "sink");
     imagebin->metadata_probe_id =
         gst_pad_add_buffer_probe (sinkpad, G_CALLBACK (metadata_write_probe),
         imagebin);
@@ -463,7 +479,9 @@ metadata_write_probe (GstPad * pad, GstBuffer * buffer, gpointer u_data)
 
   g_return_val_if_fail (img != NULL, TRUE);
 
-  setter = GST_TAG_SETTER (img->meta_mux);
+  if (GST_IS_TAG_SETTER (img->formatter)) {
+    setter = GST_TAG_SETTER (img->formatter);
+  }
 
   if (!setter) {
     GST_WARNING_OBJECT (img, "setting tags failed");
@@ -712,6 +730,19 @@ gst_camerabin_image_set_postproc (GstCameraBinImage * img,
 }
 
 void
+gst_camerabin_image_set_formatter (GstCameraBinImage * img,
+    GstElement * formatter)
+{
+  GstElement **app_formatter;
+  GST_DEBUG ("setting image formatter %" GST_PTR_FORMAT, formatter);
+
+  app_formatter = &img->app_formatter;
+  GST_OBJECT_LOCK (img);
+  gst_object_replace ((GstObject **) app_formatter, GST_OBJECT (formatter));
+  GST_OBJECT_UNLOCK (img);
+}
+
+void
 gst_camerabin_image_set_flags (GstCameraBinImage * img, GstCameraBinFlags flags)
 {
   GST_DEBUG_OBJECT (img, "setting image flags: %d", flags);
@@ -730,6 +761,13 @@ gst_camerabin_image_get_encoder (GstCameraBinImage * img)
   }
 
   return enc;
+}
+
+GstElement *
+gst_camerabin_image_get_formatter (GstCameraBinImage * img)
+{
+  /* Prefer formatter that is currently in use */
+  return img->formatter ? img->formatter : img->app_formatter;
 }
 
 GstElement *

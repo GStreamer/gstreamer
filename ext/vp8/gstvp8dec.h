@@ -25,7 +25,6 @@
 
 #include <gst/gst.h>
 #include <gst/video/gstbasevideodecoder.h>
-#include <gst/video/gstbasevideoutils.h>
 
 /* FIXME: Undef HAVE_CONFIG_H because vpx_codec.h uses it,
  * which causes compilation failures */

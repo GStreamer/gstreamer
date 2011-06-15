@@ -44,11 +44,6 @@ DOC_SOURCE_DIR = $(top_srcdir)
 # Extra options to supply to gtkdoc-scan.
 SCAN_OPTIONS=
 
-# FIXME :
-# there's something wrong with gstreamer-sections.txt not being in the dist
-# maybe it doesn't resolve; we're adding it below for now
-#EXTRA_DIST = gstreamer.types.in gstreamer.hierarchy $(DOC_MODULE)-sections.txt gstreamer-sections.txt $(DOC_MAIN_SGML_FILE)
-
 # Extra options to supply to gtkdoc-mkdb.
 MKDB_OPTIONS=--sgml-mode --source-suffixes=c,h,cc,m
 
@@ -91,7 +86,6 @@ EXAMPLE_CFILES = \
 
 EXTRA_HFILES = \
 	$(top_srcdir)/ext/assrender/gstassrender.h \
-	$(top_srcdir)/ext/amrwbenc/gstamrwbenc.h \
 	$(top_srcdir)/ext/celt/gstceltdec.h \
 	$(top_srcdir)/ext/celt/gstceltenc.h \
 	$(top_srcdir)/ext/curl/gstcurlsink.h \
@@ -124,26 +118,26 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/opencv/gstfacedetect.h \
 	$(top_srcdir)/ext/opencv/gstpyramidsegment.h \
 	$(top_srcdir)/ext/opencv/gsttemplatematch.h \
-	$(top_srcdir)/ext/opencv/gsttextwrite.h \
+	$(top_srcdir)/ext/opencv/gsttextoverlay.h \
 	$(top_srcdir)/ext/rsvg/gstrsvgdec.h \
 	$(top_srcdir)/ext/rsvg/gstrsvgoverlay.h \
 	$(top_srcdir)/ext/sdl/sdlaudiosink.h \
 	$(top_srcdir)/ext/sdl/sdlvideosink.h \
-	$(top_srcdir)/ext/theora/theoradec.h \
 	$(top_srcdir)/ext/timidity/gsttimidity.h \
 	$(top_srcdir)/ext/timidity/gstwildmidi.h \
+	$(top_srcdir)/ext/voaacenc/gstvoaacenc.h \
+	$(top_srcdir)/ext/voamrwbenc/gstvoamrwbenc.h \
 	$(top_srcdir)/ext/vp8/gstvp8enc.h \
 	$(top_srcdir)/ext/vp8/gstvp8dec.h \
 	$(top_srcdir)/ext/zbar/gstzbar.h \
 	$(top_srcdir)/gst/aiff/aiffparse.h \
 	$(top_srcdir)/gst/aiff/aiffmux.h \
-	$(top_srcdir)/gst/audioparsers/gstaacparse.h \
-	$(top_srcdir)/gst/audioparsers/gstac3parse.h \
-	$(top_srcdir)/gst/audioparsers/gstamrparse.h \
-	$(top_srcdir)/gst/audioparsers/gstflacparse.h \
-	$(top_srcdir)/gst/audioparsers/gstdcaparse.h \
-	$(top_srcdir)/gst/audioparsers/gstmpegaudioparse.h \
 	$(top_srcdir)/gst/autoconvert/gstautoconvert.h \
+	$(top_srcdir)/gst/audiovisualizers/gstbaseaudiovisualizer.h \
+	$(top_srcdir)/gst/audiovisualizers/gstspacescope.h \
+	$(top_srcdir)/gst/audiovisualizers/gstspectrascope.h \
+	$(top_srcdir)/gst/audiovisualizers/gstsynaescope.h \
+	$(top_srcdir)/gst/audiovisualizers/gstwavescope.h \
 	$(top_srcdir)/gst/camerabin/gstcamerabin.h \
 	$(top_srcdir)/gst/coloreffects/gstcoloreffects.h \
 	$(top_srcdir)/gst/dataurisrc/gstdataurisrc.h \
@@ -189,7 +183,6 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/mxf/mxfmux.h \
 	$(top_srcdir)/gst/nuvdemux/gstnuvdemux.h \
 	$(top_srcdir)/gst/pcapparse/gstpcapparse.h \
-	$(top_srcdir)/gst/qtmux/gstqtmux.h \
 	$(top_srcdir)/gst/rawparse/gstaudioparse.h \
 	$(top_srcdir)/gst/rawparse/gstvideoparse.h \
 	$(top_srcdir)/gst/rtpmux/gstrtpmux.h \

@@ -1,8 +1,9 @@
 GstChildProxy GstObject
-GstImplementsInterface GstElement
-GstXOverlay GstImplementsInterface GstElement
-GstTagSetter GstElement
 GstColorBalance GstImplementsInterface GstElement
+GstImplementsInterface GstElement
 GstMixer GstImplementsInterface GstElement
-MXFDescriptiveMetadataFrameworkInterface MXFDescriptiveMetadata
 GstPhotography GstImplementsInterface GstElement
+GstTagSetter GstElement
+GstTagXmpWriter GstElement
+GstXOverlay GstImplementsInterface GstElement
+MXFDescriptiveMetadataFrameworkInterface MXFDescriptiveMetadata

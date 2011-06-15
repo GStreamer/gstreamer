@@ -1,6 +1,6 @@
 /*
  * GStreamer DirectShow codecs wrapper
- * Copyright <2006, 2007, 2008> Fluendo <gstreamer@fluendo.com>
+ * Copyright <2006, 2007, 2008, 2009, 2010> Fluendo <support@fluendo.com>
  * Copyright <2006, 2007, 2008> Pioneers of the Inevitable <songbird@songbirdnest.com>
  * Copyright <2007,2008> Sebastien Moutte <sebastien@moutte.net>
  *
@@ -58,7 +58,6 @@ GST_DEBUG_CATEGORY_STATIC (dshowvideodec_debug);
 
 GST_BOILERPLATE (GstDshowVideoDec, gst_dshowvideodec, GstElement,
     GST_TYPE_ELEMENT);
-static const VideoCodecEntry *tmp;
 
 static void gst_dshowvideodec_dispose (GObject * object);
 static GstStateChangeReturn gst_dshowvideodec_change_state
@@ -369,16 +368,25 @@ gst_dshowvideodec_base_init (gpointer klass)
   GstPadTemplate *src, *sink;
   GstCaps *srccaps, *sinkcaps;
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-  char *description;
+  GstElementDetails details;
+  const VideoCodecEntry *tmp;
+  gpointer qdata;
 
-  videodec_class->entry = tmp;
+  qdata = g_type_get_qdata (G_OBJECT_CLASS_TYPE (klass), DSHOW_CODEC_QDATA);
 
-  description = g_strdup_printf ("DirectShow %s Decoder Wrapper",
+  /* element details */
+  tmp = videodec_class->entry = (VideoCodecEntry *) qdata;
+
+  details.longname = g_strdup_printf ("DirectShow %s Decoder Wrapper",
       tmp->element_longname);
-  gst_element_class_set_details_simple (element_class, description,
-      "Codec/Decoder/Video", description,
-      "Sebastien Moutte <sebastien@moutte.net>");
-  g_free (description);
+  details.klass = g_strdup ("Codec/Decoder/Video");
+  details.description = g_strdup_printf ("DirectShow %s Decoder Wrapper",
+      tmp->element_longname);
+  details.author = "Sebastien Moutte <sebastien@moutte.net>";
+  gst_element_class_set_details (element_class, &details);
+  g_free (details.longname);
+  g_free (details.klass);
+  g_free (details.description);
 
   sinkcaps = gst_caps_from_string (tmp->sinkcaps);
   gst_caps_set_simple (sinkcaps,
@@ -410,11 +418,47 @@ gst_dshowvideodec_class_init (GstDshowVideoDecClass * klass)
 }
 
 static void
+gst_dshowvideodec_com_thread (GstDshowVideoDec * vdec)
+{
+  HRESULT res;
+
+  g_mutex_lock (vdec->com_init_lock);
+
+  /* Initialize COM with a MTA for this process. This thread will
+   * be the first one to enter the apartement and the last one to leave
+   * it, unitializing COM properly */
+
+  res = CoInitializeEx (0, COINIT_MULTITHREADED);
+  if (res == S_FALSE)
+    GST_WARNING_OBJECT (vdec, "COM has been already initialized in the same process");
+  else if (res == RPC_E_CHANGED_MODE)
+    GST_WARNING_OBJECT (vdec, "The concurrency model of COM has changed.");
+  else
+    GST_INFO_OBJECT (vdec, "COM intialized succesfully");
+
+  vdec->comInitialized = TRUE;
+
+  /* Signal other threads waiting on this condition that COM was initialized */
+  g_cond_signal (vdec->com_initialized);
+
+  g_mutex_unlock (vdec->com_init_lock);
+
+  /* Wait until the unitialize condition is met to leave the COM apartement */
+  g_mutex_lock (vdec->com_deinit_lock);
+  g_cond_wait (vdec->com_uninitialize, vdec->com_deinit_lock);
+
+  CoUninitialize ();
+  GST_INFO_OBJECT (vdec, "COM unintialized succesfully");
+  vdec->comInitialized = FALSE;
+  g_cond_signal (vdec->com_uninitialized);
+  g_mutex_unlock (vdec->com_deinit_lock);
+}
+
+static void
 gst_dshowvideodec_init (GstDshowVideoDec * vdec,
     GstDshowVideoDecClass * vdec_class)
 {
   GstElementClass *element_class = GST_ELEMENT_GET_CLASS (vdec);
-  HRESULT hr;
 
   /* setup pads */
   vdec->sinkpad =
@@ -447,10 +491,21 @@ gst_dshowvideodec_init (GstDshowVideoDec * vdec,
 
   vdec->setup = FALSE;
 
-  hr = CoInitialize (0);
-  if (SUCCEEDED(hr)) {
-    vdec->comInitialized = TRUE;
-  }
+  vdec->com_init_lock = g_mutex_new();
+  vdec->com_deinit_lock = g_mutex_new();
+  vdec->com_initialized = g_cond_new();
+  vdec->com_uninitialize = g_cond_new();
+  vdec->com_uninitialized = g_cond_new();
+
+  g_mutex_lock (vdec->com_init_lock);
+
+  /* create the COM initialization thread */
+  g_thread_create ((GThreadFunc)gst_dshowvideodec_com_thread,
+      vdec, FALSE, NULL);
+
+  /* wait until the COM thread signals that COM has been initialized */
+  g_cond_wait (vdec->com_initialized, vdec->com_init_lock);
+  g_mutex_unlock (vdec->com_init_lock);
 }
 
 static void
@@ -463,10 +518,19 @@ gst_dshowvideodec_dispose (GObject * object)
     vdec->segment = NULL;
   }
 
+  /* signal the COM thread that it sould uninitialize COM */
   if (vdec->comInitialized) {
-    CoUninitialize ();
-    vdec->comInitialized = FALSE;
+    g_mutex_lock (vdec->com_deinit_lock);
+    g_cond_signal (vdec->com_uninitialize);
+    g_cond_wait (vdec->com_uninitialized, vdec->com_deinit_lock);
+    g_mutex_unlock (vdec->com_deinit_lock);
   }
+
+  g_mutex_free (vdec->com_init_lock);
+  g_mutex_free (vdec->com_deinit_lock);
+  g_cond_free (vdec->com_initialized);
+  g_cond_free (vdec->com_uninitialize);
+  g_cond_free (vdec->com_uninitialized);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -1193,10 +1257,9 @@ dshow_vdec_register (GstPlugin * plugin)
 
       GST_DEBUG ("Registering %s", video_dec_codecs[i].element_name);
 
-      tmp = &video_dec_codecs[i];
-      type =
-          g_type_register_static (GST_TYPE_ELEMENT,
+      type = g_type_register_static (GST_TYPE_ELEMENT,
           video_dec_codecs[i].element_name, &info, (GTypeFlags)0);
+      g_type_set_qdata (type, DSHOW_CODEC_QDATA, (gpointer) (video_dec_codecs + i));
       if (!gst_element_register (plugin, video_dec_codecs[i].element_name,
               GST_RANK_PRIMARY, type)) {
         return FALSE;

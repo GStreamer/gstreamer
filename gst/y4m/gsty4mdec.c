@@ -146,10 +146,7 @@ void
 gst_y4m_dec_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstY4mDec *y4mdec;
-
   g_return_if_fail (GST_IS_Y4M_DEC (object));
-  y4mdec = GST_Y4M_DEC (object);
 
   switch (property_id) {
     default:
@@ -162,10 +159,7 @@ void
 gst_y4m_dec_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstY4mDec *y4mdec;
-
   g_return_if_fail (GST_IS_Y4M_DEC (object));
-  y4mdec = GST_Y4M_DEC (object);
 
   switch (property_id) {
     default:
@@ -194,10 +188,7 @@ gst_y4m_dec_dispose (GObject * object)
 void
 gst_y4m_dec_finalize (GObject * object)
 {
-  GstY4mDec *y4mdec;
-
   g_return_if_fail (GST_IS_Y4M_DEC (object));
-  y4mdec = GST_Y4M_DEC (object);
 
   /* clean up object here */
 
@@ -207,11 +198,9 @@ gst_y4m_dec_finalize (GObject * object)
 static GstStateChangeReturn
 gst_y4m_dec_change_state (GstElement * element, GstStateChange transition)
 {
-  GstY4mDec *y4mdec;
   GstStateChangeReturn ret;
 
   g_return_val_if_fail (GST_IS_Y4M_DEC (element), GST_STATE_CHANGE_FAILURE);
-  y4mdec = GST_Y4M_DEC (element);
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
@@ -744,4 +733,5 @@ plugin_init (GstPlugin * plugin)
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "y4mdec",
-    "FIXME", plugin_init, VERSION, "LGPL", PACKAGE_NAME, GST_PACKAGE_ORIGIN)
+    "Demuxes/decodes YUV4MPEG streams",
+    plugin_init, VERSION, "LGPL", PACKAGE_NAME, GST_PACKAGE_ORIGIN)

@@ -406,7 +406,7 @@ gst_gme_play (GstPad * pad)
     }
   }
 
-  if (gme_track_ended (gme->player)) {
+  if (gme_tell (gme->player) * GST_MSECOND > gme->total_duration) {
     gst_pad_pause_task (pad);
     gst_pad_push_event (pad, gst_event_new_eos ());
   }
@@ -423,6 +423,7 @@ gme_setup (GstGmeDec * gme)
   gme_err_t gme_err = NULL;
   GstTagList *taglist;
   guint64 total_duration;
+  guint64 fade_time;
   GstBuffer *buffer;
 
   if (!gst_adapter_available (gme->adapter) || !gme_negotiate (gme)) {
@@ -480,7 +481,9 @@ gme_setup (GstGmeDec * gme)
         info->system, NULL);
 
   gme->total_duration = total_duration =
-      gst_util_uint64_scale_int (info->play_length, GST_MSECOND, 1);
+      gst_util_uint64_scale_int (info->play_length + (info->loop_length >
+          0 ? 8000 : 0), GST_MSECOND, 1);
+  fade_time = info->loop_length > 0 ? info->play_length : 0;
 
   gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE,
       GST_TAG_DURATION, total_duration, NULL);
@@ -494,6 +497,8 @@ gme_setup (GstGmeDec * gme)
   gme_enable_accuracy (gme->player, 1);
 #endif
   gme_start_track (gme->player, 0);
+  if (fade_time)
+    gme_set_fade (gme->player, fade_time);
 
   gst_pad_push_event (gme->srcpad, gst_event_new_new_segment (FALSE, 1.0,
           GST_FORMAT_TIME, 0, -1, 0));

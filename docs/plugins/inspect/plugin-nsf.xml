@@ -3,7 +3,7 @@
   <description>Uses nosefart to decode .nsf files</description>
   <filename>../../gst/nsf/.libs/libgstnsf.so</filename>
   <basename>libgstnsf.so</basename>
-  <version>0.10.21.1</version>
+  <version>0.10.22.1</version>
   <license>GPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins git</package>

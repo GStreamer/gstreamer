@@ -72,6 +72,7 @@ GST_BOILERPLATE (GstCeltDec, gst_celt_dec, GstElement, GST_TYPE_ELEMENT);
 
 static gboolean celt_dec_sink_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn celt_dec_chain (GstPad * pad, GstBuffer * buf);
+static gboolean celt_dec_sink_setcaps (GstPad * pad, GstCaps * caps);
 static GstStateChangeReturn celt_dec_change_state (GstElement * element,
     GstStateChange transition);
 
@@ -86,6 +87,10 @@ static gboolean celt_dec_convert (GstPad * pad,
 
 static GstFlowReturn celt_dec_chain_parse_data (GstCeltDec * dec,
     GstBuffer * buf, GstClockTime timestamp, GstClockTime duration);
+static GstFlowReturn celt_dec_chain_parse_header (GstCeltDec * dec,
+    GstBuffer * buf);
+static GstFlowReturn celt_dec_chain_parse_comments (GstCeltDec * dec,
+    GstBuffer * buf);
 
 static void
 gst_celt_dec_base_init (gpointer g_class)
@@ -133,6 +138,12 @@ gst_celt_dec_reset (GstCeltDec * dec)
     dec->mode = NULL;
   }
 
+  gst_buffer_replace (&dec->streamheader, NULL);
+  gst_buffer_replace (&dec->vorbiscomment, NULL);
+  g_list_foreach (dec->extra_headers, (GFunc) gst_mini_object_unref, NULL);
+  g_list_free (dec->extra_headers);
+  dec->extra_headers = NULL;
+
   memset (&dec->header, 0, sizeof (dec->header));
 }
 
@@ -148,6 +159,8 @@ gst_celt_dec_init (GstCeltDec * dec, GstCeltDecClass * g_class)
       GST_DEBUG_FUNCPTR (celt_get_sink_query_types));
   gst_pad_set_query_function (dec->sinkpad,
       GST_DEBUG_FUNCPTR (celt_dec_sink_query));
+  gst_pad_set_setcaps_function (dec->sinkpad,
+      GST_DEBUG_FUNCPTR (celt_dec_sink_setcaps));
   gst_element_add_pad (GST_ELEMENT (dec), dec->sinkpad);
 
   dec->srcpad = gst_pad_new_from_static_template (&celt_dec_src_factory, "src");
@@ -161,6 +174,62 @@ gst_celt_dec_init (GstCeltDec * dec, GstCeltDecClass * g_class)
   gst_element_add_pad (GST_ELEMENT (dec), dec->srcpad);
 
   gst_celt_dec_reset (dec);
+}
+
+static gboolean
+celt_dec_sink_setcaps (GstPad * pad, GstCaps * caps)
+{
+  GstCeltDec *dec = GST_CELT_DEC (gst_pad_get_parent (pad));
+  gboolean ret = TRUE;
+  GstStructure *s;
+  const GValue *streamheader;
+
+  s = gst_caps_get_structure (caps, 0);
+  if ((streamheader = gst_structure_get_value (s, "streamheader")) &&
+      G_VALUE_HOLDS (streamheader, GST_TYPE_ARRAY) &&
+      gst_value_array_get_size (streamheader) >= 2) {
+    const GValue *header, *vorbiscomment;
+    GstBuffer *buf;
+    GstFlowReturn res = GST_FLOW_OK;
+
+    header = gst_value_array_get_value (streamheader, 0);
+    if (header && G_VALUE_HOLDS (header, GST_TYPE_BUFFER)) {
+      buf = gst_value_get_buffer (header);
+      res = celt_dec_chain_parse_header (dec, buf);
+      if (res != GST_FLOW_OK)
+        goto done;
+      gst_buffer_replace (&dec->streamheader, buf);
+    }
+
+    vorbiscomment = gst_value_array_get_value (streamheader, 1);
+    if (vorbiscomment && G_VALUE_HOLDS (vorbiscomment, GST_TYPE_BUFFER)) {
+      buf = gst_value_get_buffer (vorbiscomment);
+      res = celt_dec_chain_parse_comments (dec, buf);
+      if (res != GST_FLOW_OK)
+        goto done;
+      gst_buffer_replace (&dec->vorbiscomment, buf);
+    }
+
+    g_list_foreach (dec->extra_headers, (GFunc) gst_mini_object_unref, NULL);
+    g_list_free (dec->extra_headers);
+    dec->extra_headers = NULL;
+
+    if (gst_value_array_get_size (streamheader) > 2) {
+      gint i, n;
+
+      n = gst_value_array_get_size (streamheader);
+      for (i = 2; i < n; i++) {
+        header = gst_value_array_get_value (streamheader, i);
+        buf = gst_value_get_buffer (header);
+        dec->extra_headers =
+            g_list_prepend (dec->extra_headers, gst_buffer_ref (buf));
+      }
+    }
+  }
+
+done:
+  gst_object_unref (dec);
+  return ret;
 }
 
 static gboolean
@@ -753,17 +822,48 @@ celt_dec_chain (GstPad * pad, GstBuffer * buf)
     dec->discont = TRUE;
   }
 
-  if (dec->packetno == 0)
-    res = celt_dec_chain_parse_header (dec, buf);
-  else if (dec->packetno == 1)
-    res = celt_dec_chain_parse_comments (dec, buf);
-  else if (dec->packetno <= 1 + dec->header.extra_headers)
-    res = GST_FLOW_OK;
-  else
-    res =
-        celt_dec_chain_parse_data (dec, buf, GST_BUFFER_TIMESTAMP (buf),
-        GST_BUFFER_DURATION (buf));
+  /* If we have the streamheader and vorbiscomment from the caps already
+   * ignore them here */
+  if (dec->streamheader && dec->vorbiscomment) {
+    if (GST_BUFFER_SIZE (dec->streamheader) == GST_BUFFER_SIZE (buf)
+        && memcmp (GST_BUFFER_DATA (dec->streamheader), GST_BUFFER_DATA (buf),
+            GST_BUFFER_SIZE (buf)) == 0) {
+      res = GST_FLOW_OK;
+    } else if (GST_BUFFER_SIZE (dec->vorbiscomment) == GST_BUFFER_SIZE (buf)
+        && memcmp (GST_BUFFER_DATA (dec->vorbiscomment), GST_BUFFER_DATA (buf),
+            GST_BUFFER_SIZE (buf)) == 0) {
+      res = GST_FLOW_OK;
+    } else {
+      GList *l;
 
+      for (l = dec->extra_headers; l; l = l->next) {
+        GstBuffer *header = l->data;
+        if (GST_BUFFER_SIZE (header) == GST_BUFFER_SIZE (buf) &&
+            memcmp (GST_BUFFER_DATA (header), GST_BUFFER_DATA (buf),
+                GST_BUFFER_SIZE (buf)) == 0) {
+          res = GST_FLOW_OK;
+          goto done;
+        }
+      }
+      res =
+          celt_dec_chain_parse_data (dec, buf, GST_BUFFER_TIMESTAMP (buf),
+          GST_BUFFER_DURATION (buf));
+    }
+  } else {
+    /* Otherwise fall back to packet counting and assume that the
+     * first two packets are the headers. */
+    if (dec->packetno == 0)
+      res = celt_dec_chain_parse_header (dec, buf);
+    else if (dec->packetno == 1)
+      res = celt_dec_chain_parse_comments (dec, buf);
+    else if (dec->packetno <= 1 + dec->header.extra_headers)
+      res = GST_FLOW_OK;
+    else
+      res = celt_dec_chain_parse_data (dec, buf, GST_BUFFER_TIMESTAMP (buf),
+          GST_BUFFER_DURATION (buf));
+  }
+
+done:
   dec->packetno++;
 
   gst_buffer_unref (buf);

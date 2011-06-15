@@ -54,11 +54,7 @@ gst_h264_frame_finalize (GstH264Frame * h264_frame)
 {
   g_ptr_array_foreach (h264_frame->slices, (GFunc) gst_buffer_unref, NULL);
 
-#if GLIB_CHECK_VERSION (2,22,0)
   g_ptr_array_unref (h264_frame->slices);
-#else
-  g_ptr_array_free (h264_frame->slices, TRUE);
-#endif
 
   GST_MINI_OBJECT_CLASS (gst_h264_frame_parent_class)->finalize
       (GST_MINI_OBJECT (h264_frame));

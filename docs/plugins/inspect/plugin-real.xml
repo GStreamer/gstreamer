@@ -3,7 +3,7 @@
   <description>Decode REAL streams</description>
   <filename>../../gst/real/.libs/libgstreal.so</filename>
   <basename>libgstreal.so</basename>
-  <version>0.10.21.1</version>
+  <version>0.10.22.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins git</package>

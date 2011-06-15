@@ -74,7 +74,7 @@ typedef struct _GstH264ParamsSPS GstH264ParamsSPS;
 typedef struct _GstH264ParamsPPS GstH264ParamsPPS;
 
 #define MAX_SPS_COUNT   32
-#define MAX_PPS_COUNT   32
+#define MAX_PPS_COUNT   256
 
 /* SPS: sequential parameter sets */
 struct _GstH264ParamsSPS

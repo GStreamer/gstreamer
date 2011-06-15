@@ -1,16 +1,16 @@
-# translation of gst-plugins-bad-0.10.13.2.nl.po to Dutch
+# translation of gst-plugins-bad-0.10.21.2.nl.po to Dutch
 # translation of gst-plugins-bad to Dutch
 # Copyright (C) 2004, 2007, 2008, 2009 Free Software Foundation, Inc.
 #
 # This file is distributed under the same license as the gst-plugins-bad package.
-# Freek de Kruijf <f.de.kruijf@hetnet.nl>, 2007, 2008, 2009.
+# Freek de Kruijf <f.de.kruijf@gmail.com>, 2007, 2008, 2009, 2011.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 0.10.13.2\n"
+"Project-Id-Version: gst-plugins-bad 0.10.21.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-10-19 23:33+0100\n"
-"PO-Revision-Date: 2009-08-13 00:06+0200\n"
-"Last-Translator: Freek de Kruijf <f.de.kruijf@hetnet.nl>\n"
+"POT-Creation-Date: 2011-04-27 12:55+0100\n"
+"PO-Revision-Date: 2011-04-27 00:16+0200\n"
+"Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
 "Language: nl\n"
 "MIME-Version: 1.0\n"
@@ -33,10 +33,11 @@ msgid ""
 "Could not read DVD. This may be because the DVD is encrypted and a DVD "
 "decryption library is not installed."
 msgstr ""
+"Kon de dvd niet lezen. Dit kan zo zijn omdat de dvd versleuteld is en een "
+"bibliotheek voor ontcijferen niet is geïnstalleerd"
 
-#, fuzzy
 msgid "Could not read DVD."
-msgstr "Kan de titelinformatie voor de DVD niet lezen."
+msgstr "Kon de dvd niet lezen."
 
 msgid "No file name specified for writing."
 msgstr "Geen bestandsnaam gespecificeerd voor de uitvoer."
@@ -71,8 +72,354 @@ msgstr "Kan de instellingen van het frontend-apparaat \"%s\" niet verkrijgen."
 msgid "Could not open file \"%s\" for reading."
 msgstr "Kan bestand \"%s\" niet openen om te lezen."
 
+#~ msgid "Internal clock error."
+#~ msgstr "Interne fout met de klok."
+
+#~ msgid "Could not open audio device for mixer control handling."
+#~ msgstr "Kan het audio-apparaat niet openen voor de mixerbesturing."
+
+#~ msgid ""
+#~ "Could not open audio device for mixer control handling. This version of "
+#~ "the Open Sound System is not supported by this element."
+#~ msgstr ""
+#~ "Kan het audio-apparaat niet openen voor de mixerbesturing. Deze versie "
+#~ "van het Open Soundsysteem wordt niet ondersteund door dit element."
+
+#~ msgid "Volume"
+#~ msgstr "Volume"
+
+#~ msgid "Master"
+#~ msgstr "Master"
+
+#~ msgid "Front"
+#~ msgstr "Voorzijde"
+
+#~ msgid "Rear"
+#~ msgstr "Achterzijde"
+
+#~ msgid "Headphones"
+#~ msgstr "Hoofdtelefoon"
+
+#~ msgid "Center"
+#~ msgstr "Midden"
+
+#~ msgid "LFE"
+#~ msgstr "LFE"
+
+#~ msgid "Surround"
+#~ msgstr "Surround"
+
+#~ msgid "Side"
+#~ msgstr "Zijkant"
+
+#~ msgid "Built-in Speaker"
+#~ msgstr "Ingebouwde luidspreker"
+
+#~ msgid "AUX 1 Out"
+#~ msgstr "AUX 1-out"
+
+#~ msgid "AUX 2 Out"
+#~ msgstr "AUX 2-out"
+
+#~ msgid "AUX Out"
+#~ msgstr "AUX-out"
+
+#~ msgid "Bass"
+#~ msgstr "Lage tonen"
+
+#~ msgid "Treble"
+#~ msgstr "Hoge tonen"
+
+#~ msgid "3D Depth"
+#~ msgstr "3D diepte"
+
+#~ msgid "3D Center"
+#~ msgstr "3D midden"
+
+#~ msgid "3D Enhance"
+#~ msgstr "3D verbeteren"
+
+#~ msgid "Telephone"
+#~ msgstr "Telefoon"
+
+#~ msgid "Microphone"
+#~ msgstr "Microfoon"
+
+#~ msgid "Line Out"
+#~ msgstr "Line-out"
+
+#~ msgid "Line In"
+#~ msgstr "Line-in"
+
+#~ msgid "Internal CD"
+#~ msgstr "Interne cd"
+
+#~ msgid "Video In"
+#~ msgstr "Video-in"
+
+#~ msgid "AUX 1 In"
+#~ msgstr "AUX 1-in"
+
+#~ msgid "AUX 2 In"
+#~ msgstr "AUX 2-in"
+
+#~ msgid "AUX In"
+#~ msgstr "AUX-in"
+
+#~ msgid "PCM"
+#~ msgstr "PCM"
+
+#~ msgid "Record Gain"
+#~ msgstr "Opnameversterking"
+
+#~ msgid "Output Gain"
+#~ msgstr "Uitgangversterking"
+
+#~ msgid "Microphone Boost"
+#~ msgstr "Microfoon-boost"
+
+#~ msgid "Loopback"
+#~ msgstr "Terugkoppeling"
+
+#~ msgid "Diagnostic"
+#~ msgstr "Diagnostiek"
+
+#~ msgid "Bass Boost"
+#~ msgstr "Lage tonen-boost"
+
+#~ msgid "Playback Ports"
+#~ msgstr "Afspeelpoorten"
+
+#~ msgid "Input"
+#~ msgstr "Invoer"
+
+#~ msgid "Record Source"
+#~ msgstr "Opnamebron"
+
+#~ msgid "Monitor Source"
+#~ msgstr "Monitorbron"
+
+#~ msgid "Keyboard Beep"
+#~ msgstr "Toetsenbordpiep"
+
+#~ msgid "Monitor"
+#~ msgstr "Monitor"
+
+#~ msgid "Simulate Stereo"
+#~ msgstr "Stereo simuleren"
+
+#~ msgid "Stereo"
+#~ msgstr "Stereo"
+
+#~ msgid "Surround Sound"
+#~ msgstr "Surround geluid"
+
+#~ msgid "Microphone Gain"
+#~ msgstr "Microfoonversterking"
+
+#~ msgid "Speaker Source"
+#~ msgstr "Luidsprekerbron"
+
+#~ msgid "Microphone Source"
+#~ msgstr "Microfoonbron"
+
+#~ msgid "Jack"
+#~ msgstr "Jack"
+
+#~ msgid "Center / LFE"
+#~ msgstr "Midden / LFE"
+
+#~ msgid "Stereo Mix"
+#~ msgstr "Stereo mix"
+
+#~ msgid "Mono Mix"
+#~ msgstr "Mono mix"
+
+#~ msgid "Input Mix"
+#~ msgstr "Invoer mix"
+
+#~ msgid "SPDIF In"
+#~ msgstr "SPDIF-in"
+
+#~ msgid "SPDIF Out"
+#~ msgstr "SPDIF-out"
+
+#~ msgid "Microphone 1"
+#~ msgstr "Microfoon 1"
+
+#~ msgid "Microphone 2"
+#~ msgstr "Microfoon 2"
+
+#~ msgid "Digital Out"
+#~ msgstr "Digitaal-out"
+
+#~ msgid "Digital In"
+#~ msgstr "Digitaal-in"
+
+#~ msgid "HDMI"
+#~ msgstr "HDMI"
+
+#~ msgid "Modem"
+#~ msgstr "Modem"
+
+#~ msgid "Handset"
+#~ msgstr "Mobieltje"
+
+#~ msgid "Other"
+#~ msgstr "Overige"
+
+#~ msgid "None"
+#~ msgstr "Geen"
+
+#~ msgid "On"
+#~ msgstr "Aan"
+
+#~ msgid "Off"
+#~ msgstr "Uit"
+
+#~ msgid "Mute"
+#~ msgstr "Gedempt"
+
+#~ msgid "Fast"
+#~ msgstr "Snel"
+
+#~ msgid "Very Low"
+#~ msgstr "Zeer laag"
+
+#~ msgid "Low"
+#~ msgstr "Laag"
+
+#~ msgid "Medium"
+#~ msgstr "Gemiddeld"
+
+#~ msgid "High"
+#~ msgstr "Hoog"
+
+#~ msgid "Very High"
+#~ msgstr "Zeer hoog"
+
+#~ msgid "Production"
+#~ msgstr "Productie"
+
+#~ msgid "Front Panel Microphone"
+#~ msgstr "Microfoon in frontpaneel"
+
+#~ msgid "Front Panel Line In"
+#~ msgstr "Lijn-in in frontpaneel"
+
+#~ msgid "Front Panel Headphones"
+#~ msgstr "Hoofdtelefoon in frontpaneel"
+
+#~ msgid "Front Panel Line Out"
+#~ msgstr "Lijn-in in frontpaneel"
+
+#~ msgid "Green Connector"
+#~ msgstr "Groene connector"
+
+#~ msgid "Pink Connector"
+#~ msgstr "Roze connector"
+
+#~ msgid "Blue Connector"
+#~ msgstr "Blauwe connector"
+
+#~ msgid "White Connector"
+#~ msgstr "Witte connector"
+
+#~ msgid "Black Connector"
+#~ msgstr "Zwarte connector"
+
+#~ msgid "Gray Connector"
+#~ msgstr "Grijze connector"
+
+#~ msgid "Orange Connector"
+#~ msgstr "Oranje connector"
+
+#~ msgid "Red Connector"
+#~ msgstr "Rode connector"
+
+#~ msgid "Yellow Connector"
+#~ msgstr "Gele connector"
+
+#~ msgid "Green Front Panel Connector"
+#~ msgstr "Groene connector in frontpaneel"
+
+#~ msgid "Pink Front Panel Connector"
+#~ msgstr "Roze connector in frontpaneel"
+
+#~ msgid "Blue Front Panel Connector"
+#~ msgstr "Blauwe connector in frontpaneel"
+
+#~ msgid "White Front Panel Connector"
+#~ msgstr "Witte connector in frontpaneel"
+
+#~ msgid "Black Front Panel Connector"
+#~ msgstr "Zwarte connector in frontpaneel"
+
+#~ msgid "Gray Front Panel Connector"
+#~ msgstr "Grijze connector in frontpaneel"
+
+#~ msgid "Orange Front Panel Connector"
+#~ msgstr "Oranje connector in frontpaneel"
+
+#~ msgid "Red Front Panel Connector"
+#~ msgstr "Rode connector in frontpaneel"
+
+#~ msgid "Yellow Front Panel Connector"
+#~ msgstr "Gele connector in frontpaneel"
+
+#~ msgid "Spread Output"
+#~ msgstr "Spread Output"
+
+#~ msgid "Downmix"
+#~ msgstr "Downmix"
+
+#~ msgid "Virtual Mixer Input"
+#~ msgstr "Virtuele mixer-invoer"
+
+#~ msgid "Virtual Mixer Output"
+#~ msgstr "Virtuele mixer-uitvoer"
+
+#~ msgid "Virtual Mixer Channels"
+#~ msgstr "Virtuele mixer-kanalen"
+
+#~ msgid "%s Function"
+#~ msgstr "%s-functie"
+
 #~ msgid "%s %d"
 #~ msgstr "%s %d"
 
-#~ msgid "Internal clock error."
-#~ msgstr "Interne fout met de klok."
+#~ msgid ""
+#~ "Could not open audio device for playback. Device is being used by another "
+#~ "application."
+#~ msgstr ""
+#~ "Kan het audio-apparaat niet openen voor afspelen. Apparaat is in gebruik "
+#~ "bij een andere applicatie."
+
+#~ msgid ""
+#~ "Could not open audio device for playback. You don't have permission to "
+#~ "open the device."
+#~ msgstr ""
+#~ "Kan het audio-apparaat niet openen voor afspelen. U hebt geen toestemming "
+#~ "om het apparaat te openen."
+
+#~ msgid "Could not open audio device for playback."
+#~ msgstr "Kan het audio-apparaat niet openen voor afspelen."
+
+#~ msgid ""
+#~ "Could not open audio device for playback. This version of the Open Sound "
+#~ "System is not supported by this element."
+#~ msgstr ""
+#~ "Kan het audio-apparaat niet openen voor afspelen. Deze versie van het "
+#~ "Open Soundsysteem wordt niet ondersteund door dit element."
+
+#~ msgid "Playback is not supported by this audio device."
+#~ msgstr "Afspelen wordt door dit audio-apparaat niet ondersteund."
+
+#~ msgid "Audio playback error."
+#~ msgstr "Fout bij audio-afspelen."
+
+#~ msgid "Recording is not supported by this audio device."
+#~ msgstr "Opnemen wordt door dit audio-apparaat niet ondersteund."
+
+#~ msgid "Error recording from audio device."
+#~ msgstr "Fout bij opnemen met dit audio-apparaat."

@@ -3,7 +3,7 @@
   <description>ADPCM decoder</description>
   <filename>../../gst/adpcmdec/.libs/libgstadpcmdec.so</filename>
   <basename>libgstadpcmdec.so</basename>
-  <version>0.10.21.1</version>
+  <version>0.10.22.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins git</package>
@@ -14,7 +14,7 @@
       <longname>ADPCM decoder</longname>
       <class>Codec/Decoder/Audio</class>
       <description>Decode MS and IMA ADPCM audio</description>
-      <author>Pioneers of the Inevitable &lt;songbird@songbirdnest.com</author>
+      <author>Pioneers of the Inevitable &lt;songbird@songbirdnest.com&gt;</author>
       <pads>
         <caps>
           <name>sink</name>

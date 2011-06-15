@@ -21,27 +21,12 @@
 #include "config.h"
 #endif
 
-#include "gstbasevideoutils.h"
+#include "gstbasevideocodec.h"
 
 #include <string.h>
 
 GST_DEBUG_CATEGORY_EXTERN (basevideocodec_debug);
 #define GST_CAT_DEFAULT basevideocodec_debug
-
-
-#if 0
-guint64
-gst_base_video_convert_bytes_to_frames (GstVideoState * state, guint64 bytes)
-{
-  return gst_util_uint64_scale_int (bytes, 1, state->bytes_per_picture);
-}
-
-guint64
-gst_base_video_convert_frames_to_bytes (GstVideoState * state, guint64 frames)
-{
-  return frames * state->bytes_per_picture;
-}
-#endif
 
 
 gboolean
@@ -51,7 +36,10 @@ gst_base_video_rawvideo_convert (GstVideoState * state,
 {
   gboolean res = FALSE;
 
-  if (src_format == *dest_format) {
+  g_return_val_if_fail (dest_format != NULL, FALSE);
+  g_return_val_if_fail (dest_value != NULL, FALSE);
+
+  if (src_format == *dest_format || src_value == 0 || src_value == -1) {
     *dest_value = src_value;
     return TRUE;
   }
@@ -81,43 +69,77 @@ gst_base_video_rawvideo_convert (GstVideoState * state,
     *dest_value = gst_util_uint64_scale (src_value, state->fps_n,
         GST_SECOND * state->fps_d);
     res = TRUE;
+  } else if (src_format == GST_FORMAT_TIME &&
+      *dest_format == GST_FORMAT_BYTES && state->fps_d != 0 &&
+      state->bytes_per_picture != 0) {
+    /* convert time to frames */
+    /* FIXME subtract segment time? */
+    *dest_value = gst_util_uint64_scale (src_value,
+        state->fps_n * state->bytes_per_picture, GST_SECOND * state->fps_d);
+    res = TRUE;
+  } else if (src_format == GST_FORMAT_BYTES &&
+      *dest_format == GST_FORMAT_TIME && state->fps_n != 0 &&
+      state->bytes_per_picture != 0) {
+    /* convert frames to time */
+    /* FIXME add segment time? */
+    *dest_value = gst_util_uint64_scale (src_value,
+        GST_SECOND * state->fps_d, state->fps_n * state->bytes_per_picture);
+    res = TRUE;
   }
-
-  /* FIXME add bytes <--> time */
 
   return res;
 }
 
 gboolean
 gst_base_video_encoded_video_convert (GstVideoState * state,
-    GstFormat src_format, gint64 src_value,
-    GstFormat * dest_format, gint64 * dest_value)
+    gint64 bytes, gint64 time, GstFormat src_format,
+    gint64 src_value, GstFormat * dest_format, gint64 * dest_value)
 {
   gboolean res = FALSE;
 
-  if (src_format == *dest_format) {
-    *dest_value = src_value;
+  g_return_val_if_fail (dest_format != NULL, FALSE);
+  g_return_val_if_fail (dest_value != NULL, FALSE);
+
+  if (G_UNLIKELY (src_format == *dest_format || src_value == 0 ||
+          src_value == -1)) {
+    if (dest_value)
+      *dest_value = src_value;
     return TRUE;
   }
 
-  GST_DEBUG ("src convert");
-
-#if 0
-  if (src_format == GST_FORMAT_DEFAULT && *dest_format == GST_FORMAT_TIME) {
-    if (dec->fps_d != 0) {
-      *dest_value = gst_util_uint64_scale (granulepos_to_frame (src_value),
-          dec->fps_d * GST_SECOND, dec->fps_n);
-      res = TRUE;
-    } else {
-      res = FALSE;
-    }
-  } else {
-    GST_WARNING ("unhandled conversion from %d to %d", src_format,
-        *dest_format);
-    res = FALSE;
+  if (bytes <= 0 || time <= 0) {
+    GST_DEBUG ("not enough metadata yet to convert");
+    goto exit;
   }
-#endif
 
+  switch (src_format) {
+    case GST_FORMAT_BYTES:
+      switch (*dest_format) {
+        case GST_FORMAT_TIME:
+          *dest_value = gst_util_uint64_scale (src_value, time, bytes);
+          res = TRUE;
+          break;
+        default:
+          res = FALSE;
+      }
+      break;
+    case GST_FORMAT_TIME:
+      switch (*dest_format) {
+        case GST_FORMAT_BYTES:
+          *dest_value = gst_util_uint64_scale (src_value, bytes, time);
+          res = TRUE;
+          break;
+        default:
+          res = FALSE;
+      }
+      break;
+    default:
+      GST_DEBUG ("unhandled conversion from %d to %d", src_format,
+          *dest_format);
+      res = FALSE;
+  }
+
+exit:
   return res;
 }
 

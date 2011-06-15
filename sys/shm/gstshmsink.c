@@ -56,7 +56,8 @@ struct GstShmClient
 
 #define DEFAULT_SIZE ( 256 * 1024 )
 #define DEFAULT_WAIT_FOR_CONNECTION (TRUE)
-#define DEFAULT_PERMS (S_IRWXU | S_IRWXG)
+/* Default is user read/write, group read */
+#define DEFAULT_PERMS ( S_IRUSR | S_IWUSR | S_IRGRP )
 
 
 GST_DEBUG_CATEGORY_STATIC (shmsink_debug);
@@ -117,11 +118,9 @@ static void
 gst_shm_sink_class_init (GstShmSinkClass * klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
   GstBaseSinkClass *gstbasesink_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
   gstbasesink_class = (GstBaseSinkClass *) klass;
 
   gobject_class->finalize = gst_shm_sink_finalize;
@@ -298,6 +297,7 @@ gst_shm_sink_start (GstBaseSink * bsink)
     return FALSE;
   }
 
+  sp_set_data (self->pipe, self);
   g_free (self->socket_path);
   self->socket_path = g_strdup (sp_writer_get_path (self->pipe));
 
@@ -411,8 +411,17 @@ gst_shm_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 static void
 gst_shm_sink_free_buffer (gpointer data)
 {
+  ShmPipe *pipe;
   ShmBlock *block = data;
+  GstShmSink *self;
+
+  pipe = sp_writer_block_get_pipe (block);
+  self = sp_get_data (pipe);
+
+  GST_OBJECT_LOCK (self);
   sp_writer_free_block (block);
+  GST_OBJECT_UNLOCK (self);
+  g_object_unref (self);
 }
 
 static GstFlowReturn
@@ -426,8 +435,10 @@ gst_shm_sink_buffer_alloc (GstBaseSink * sink, guint64 offset, guint size,
 
   GST_OBJECT_LOCK (self);
   block = sp_writer_alloc_block (self->pipe, size);
-  if (block)
+  if (block) {
     buf = sp_writer_block_get_buf (block);
+    g_object_ref (self);
+  }
   GST_OBJECT_UNLOCK (self);
 
   if (block) {
@@ -503,6 +514,11 @@ pollthread_func (gpointer data)
       self->clients = g_list_prepend (self->clients, gclient);
       g_signal_emit (self, signals[SIGNAL_CLIENT_CONNECTED], 0,
           gclient->pollfd.fd);
+      /* we need to call gst_poll_wait before calling gst_poll_* status
+         functions on that new descriptor, so restart the loop, so _wait
+         will have been called on all elements of self->poll, whether
+         they have just been added or not. */
+      continue;
     }
 
   again:

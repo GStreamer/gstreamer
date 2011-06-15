@@ -1,20 +1,24 @@
 # Translation for gst-plugins-bad messages to Russian
 # This file is put in the public domain.
+#
 # Артём Попов <artfwo@gmail.com>, 2009.
 # Pavel Maryanov <acid_jack@ukr.net>, 2009.
-#
+# Yuri Kozlov <yuray@komyakino.ru>, 2011.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 0.10.9.3\n"
+"Project-Id-Version: gst-plugins-bad 0.10.21.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-10-19 23:33+0100\n"
-"PO-Revision-Date: 2009-02-12 15:00+0200\n"
-"Last-Translator: Pavel Maryanov <acid_jack@ukr.net>\n"
+"POT-Creation-Date: 2011-04-27 12:55+0100\n"
+"PO-Revision-Date: 2011-04-26 20:31+0400\n"
+"Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@mx.ru>\n"
 "Language: ru\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Lokalize 1.0\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
+"%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
 msgid "Could not read title information for DVD."
 msgstr "Не удалось прочесть информацию о структуре DVD."
@@ -30,10 +34,11 @@ msgid ""
 "Could not read DVD. This may be because the DVD is encrypted and a DVD "
 "decryption library is not installed."
 msgstr ""
+"Не удалось прочесть DVD. Это могло произойти из-за того, что DVD закодирован "
+"и не установлена библиотека декодирования DVD."
 
-#, fuzzy
 msgid "Could not read DVD."
-msgstr "Не удалось прочесть информацию о структуре DVD."
+msgstr "Не удалось прочесть DVD."
 
 msgid "No file name specified for writing."
 msgstr "Не указано имя файла для записи."
@@ -82,6 +87,74 @@ msgstr "Не удалось открыть для чтения файл «%s»."
 #~ "Запрашиваемый битрейт %d кбит/с недопустим для свойства «%s». Битрейт "
 #~ "изменён на %d кбит/с."
 
+#~ msgid "Could not open audio device for mixer control handling."
+#~ msgstr ""
+#~ "Не удалось открыть аудио-устройство для обработки параметров микшера."
+
+#~ msgid ""
+#~ "Could not open audio device for mixer control handling. This version of "
+#~ "the Open Sound System is not supported by this element."
+#~ msgstr ""
+#~ "Не удалось открыть аудио-устройство для обработки параметров микшера. "
+#~ "Данная версия Open Sound System не поддерживается этим элементом."
+
+#~ msgid "Fast"
+#~ msgstr "Скорость"
+
+#~ msgid "Low"
+#~ msgstr "Низкое"
+
+#~ msgid "Medium"
+#~ msgstr "Среднее"
+
+#~ msgid "High"
+#~ msgstr "Высокое"
+
+#~ msgid "Very high"
+#~ msgstr "Очень высокое"
+
+#~ msgid "Production"
+#~ msgstr "Продукция"
+
+#~ msgid "Off"
+#~ msgstr "Выкл"
+
+#~ msgid "On"
+#~ msgstr "Вкл"
+
+#~ msgid "Stereo"
+#~ msgstr "Стерео"
+
+#~ msgid "Surround sound"
+#~ msgstr "Объёмный звук"
+
+#~ msgid "Input mix"
+#~ msgstr "Уровень входа"
+
+#~ msgid "Front"
+#~ msgstr "Фронт"
+
+#~ msgid "Rear"
+#~ msgstr "Тыл"
+
+#~ msgid "Side"
+#~ msgstr "Боковые"
+
+#~ msgid "Center / LFE"
+#~ msgstr "Центр / Сабвуфер"
+
+#~ msgid "Microphone"
+#~ msgstr "Микрофон"
+
+#~ msgid "Front panel microphone"
+#~ msgstr "Фронтальный микрофон"
+
+#~ msgid "Input"
+#~ msgstr "Вход"
+
+#~ msgid "Line-in"
+#~ msgstr "Линейный вход"
+
 #~ msgid "PCM 1"
 #~ msgstr "PCM 1"
 
@@ -93,6 +166,60 @@ msgstr "Не удалось открыть для чтения файл «%s»."
 
 #~ msgid "PCM 4"
 #~ msgstr "PCM 4"
+
+#~ msgid "Green connector"
+#~ msgstr "Зелёный разъём"
+
+#~ msgid "Green front panel connector"
+#~ msgstr "Фронтальный зелёный разъём"
+
+#~ msgid "Pink connector"
+#~ msgstr "Розовый разъём"
+
+#~ msgid "Pink front panel connector"
+#~ msgstr "Фронтальный розовый разъём"
+
+#~ msgid "Blue connector"
+#~ msgstr "Синий разъём"
+
+#~ msgid "Blue front panel connector"
+#~ msgstr "Фронтальный синий разъём"
+
+#~ msgid "Orange connector"
+#~ msgstr "Оранжевый разъём"
+
+#~ msgid "Orange front panel connector"
+#~ msgstr "Фронтальный оранжевый разъём"
+
+#~ msgid "Black connector"
+#~ msgstr "Чёрный разъём"
+
+#~ msgid "Black front panel connector"
+#~ msgstr "Фронтальный чёрный разъём"
+
+#~ msgid "Gray connector"
+#~ msgstr "Серый разъём"
+
+#~ msgid "Gray front panel connector"
+#~ msgstr "Фронтальный серый разъём"
+
+#~ msgid "White connector"
+#~ msgstr "Белый разъём"
+
+#~ msgid "White front panel connector"
+#~ msgstr "Фронтальный белый разъём"
+
+#~ msgid "Red connector"
+#~ msgstr "Красный разъём"
+
+#~ msgid "Red front panel connector"
+#~ msgstr "Фронтальный красный разъём"
+
+#~ msgid "Yellow connector"
+#~ msgstr "Жёлтый разъём"
+
+#~ msgid "Yellow front panel connector"
+#~ msgstr "Фронтальный жёлтый разъём"
 
 #~ msgid "Green connector function"
 #~ msgstr "Функция зелёного разъёма"
@@ -148,5 +275,59 @@ msgstr "Не удалось открыть для чтения файл «%s»."
 #~ msgid "Yellow front panel connector function"
 #~ msgstr "Функция фронтального жёлтого разъёма"
 
+#~ msgid "Front panel line-in"
+#~ msgstr "Фронтальный линейный вход"
+
+#~ msgid "Headphones"
+#~ msgstr "Наушники"
+
+#~ msgid "Front panel headphones"
+#~ msgstr "Фронтальные наушники"
+
+#~ msgid "PCM"
+#~ msgstr "PCM"
+
+#~ msgid "Virtual mixer input"
+#~ msgstr "Виртуальный вход микшера"
+
+#~ msgid "Virtual mixer output"
+#~ msgstr "Виртуальный выход микшера"
+
 #~ msgid "Virtual mixer channel configuration"
 #~ msgstr "Конфигурация виртуальных каналов микшера"
+
+#~ msgid ""
+#~ "Could not open audio device for playback. Device is being used by another "
+#~ "application."
+#~ msgstr ""
+#~ "Не удалось открыть аудио-устройство для воспроизведения. Устройство "
+#~ "используется другим приложением."
+
+#~ msgid ""
+#~ "Could not open audio device for playback. You don't have permission to "
+#~ "open the device."
+#~ msgstr ""
+#~ "Не удалось открыть аудио-устройство для воспроизведения. Отсутствуют "
+#~ "права доступа к устройству."
+
+#~ msgid "Could not open audio device for playback."
+#~ msgstr "Не удалось открыть аудио-устройство для воспроизведения."
+
+#~ msgid ""
+#~ "Could not open audio device for playback. This version of the Open Sound "
+#~ "System is not supported by this element."
+#~ msgstr ""
+#~ "Не удалось открыть аудио-устройство для воспроизведения. Данная версия "
+#~ "Open Sound System не поддерживается этим элементом."
+
+#~ msgid "Playback is not supported by this audio device."
+#~ msgstr "Воспроизведение не поддерживается данным аудио-устройством."
+
+#~ msgid "Audio playback error."
+#~ msgstr "Ошибка воспроизведения аудио."
+
+#~ msgid "Recording is not supported by this audio device."
+#~ msgstr "Запись не поддерживается данным аудио-устройством."
+
+#~ msgid "Error recording from audio device."
+#~ msgstr "Ошибка записи с аудио-устройства."

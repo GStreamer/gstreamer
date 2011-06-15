@@ -18,36 +18,43 @@ static GstBuffer *gst_replace_process (GstBaseRTPDepayload * base,
     GstBuffer * in);
 static void
 gst_replace_set_gst_timestamp (GstBaseRTPDepayload * filter, guint32 timestamp,
-    Gst Buffer * buf);
+    GstBuffer * buf);
 static gboolean
 gst_replace_packet_lost (GstBaseRTPDepayload * filter, GstEvent * event);
 % declare-class
-  GstBaseRTPDepayload *base_rtpdepayload_class = GST_BASE_RTPDEPAYLOAD (klass);
+  GstBaseRTPDepayloadClass *base_rtpdepayload_class = GST_BASE_RTP_DEPAYLOAD_CLASS (klass);
 % set-methods
-  base_rtpdepayload_class-> = GST_DEBUG_FUNCPTR (gst_replace_);
+  base_rtpdepayload_class->set_caps = GST_DEBUG_FUNCPTR (gst_replace_set_caps);
+  base_rtpdepayload_class->add_to_queue = GST_DEBUG_FUNCPTR (gst_replace_add_to_queue);
+  base_rtpdepayload_class->process = GST_DEBUG_FUNCPTR (gst_replace_process);
+  base_rtpdepayload_class->set_gst_timestamp = GST_DEBUG_FUNCPTR (gst_replace_set_gst_timestamp);
+  base_rtpdepayload_class->packet_lost = GST_DEBUG_FUNCPTR (gst_replace_packet_lost);
 % methods
 
 static gboolean
 gst_replace_set_caps (GstBaseRTPDepayload * filter, GstCaps * caps)
 {
 
+  return FALSE;
 }
 
 static GstFlowReturn
 gst_replace_add_to_queue (GstBaseRTPDepayload * filter, GstBuffer * in)
 {
 
+  return GST_FLOW_ERROR;
 }
 
 static GstBuffer *
 gst_replace_process (GstBaseRTPDepayload * base, GstBuffer * in)
 {
 
+  return NULL;
 }
 
 static void
 gst_replace_set_gst_timestamp (GstBaseRTPDepayload * filter, guint32 timestamp,
-    Gst Buffer * buf)
+    GstBuffer * buf)
 {
 
 }
@@ -56,5 +63,6 @@ static gboolean
 gst_replace_packet_lost (GstBaseRTPDepayload * filter, GstEvent * event)
 {
 
+  return FALSE;
 }
 % end

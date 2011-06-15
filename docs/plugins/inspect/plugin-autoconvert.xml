@@ -3,7 +3,7 @@
   <description>Selects convertor element based on caps</description>
   <filename>../../gst/autoconvert/.libs/libgstautoconvert.so</filename>
   <basename>libgstautoconvert.so</basename>
-  <version>0.10.21.1</version>
+  <version>0.10.22.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins git</package>

@@ -58,6 +58,7 @@ gst-launch videotestsrc num-buffers=1 ! jpegenc ! taginject tags="comment=\"test
 #include <gst/base/gstbytereader.h>
 #include <gst/base/gstbytewriter.h>
 #include <gst/tag/tag.h>
+#include <gst/tag/xmpwriter.h>
 
 #include "gstjifmux.h"
 
@@ -118,8 +119,11 @@ static void
 gst_jif_type_init (GType type)
 {
   static const GInterfaceInfo tag_setter_info = { NULL, NULL, NULL };
+  static const GInterfaceInfo tag_xmp_writer_info = { NULL, NULL, NULL };
 
   g_type_add_interface_static (type, GST_TYPE_TAG_SETTER, &tag_setter_info);
+  g_type_add_interface_static (type, GST_TYPE_TAG_XMP_WRITER,
+      &tag_xmp_writer_info);
 
   GST_DEBUG_CATEGORY_INIT (jif_mux_debug, "jifmux", 0,
       "JPEG interchange format muxer");
@@ -139,7 +143,7 @@ gst_jif_mux_base_init (gpointer g_class)
       gst_static_pad_template_get (&gst_jif_mux_sink_pad_template));
   gst_element_class_set_details_simple (element_class,
       "JPEG stream muxer",
-      "Video/Muxer",
+      "Video/Formatter",
       "Remuxes JPEG images with markers and tags",
       "Arnout Vandecappelle (Essensium/Mind) <arnout@mind.be>");
 }
@@ -383,8 +387,8 @@ gst_jif_mux_mangle_markers (GstJifMux * self)
 
   /* update the APP markers
    * - put any JFIF APP0 first
-   * - the Exif APP1 next, 
-   * - the XMP APP1 next, 
+   * - the Exif APP1 next,
+   * - the XMP APP1 next,
    * - the PSIR APP13 next,
    * - followed by all other marker segments
    */
@@ -570,7 +574,9 @@ gst_jif_mux_mangle_markers (GstJifMux * self)
   }
 
   /* add xmp */
-  xmp_data = gst_tag_list_to_xmp_buffer (tags, FALSE);
+  xmp_data =
+      gst_tag_xmp_writer_tag_list_to_xmp_buffer (GST_TAG_XMP_WRITER (self),
+      tags, FALSE);
   if (xmp_data) {
     guint8 *data, *xmp = GST_BUFFER_DATA (xmp_data);
     guint size = GST_BUFFER_SIZE (xmp_data);
@@ -581,7 +587,7 @@ gst_jif_mux_mangle_markers (GstJifMux * self)
     memcpy (&data[29], xmp, size);
     m = gst_jif_mux_new_marker (APP1, size + 29, data, TRUE);
 
-    /* 
+    /*
      * Replace the old xmp marker and not add a new one.
      * There shouldn't be a xmp packet in the input, but it is better
      * to be safe than add another one and end up with 2 packets.
@@ -605,12 +611,13 @@ gst_jif_mux_mangle_markers (GstJifMux * self)
     modified = TRUE;
   }
 
-  /* add jpeg comment */
+  /* add jpeg comment from any of those */
   (void) (gst_tag_list_get_string (tags, GST_TAG_COMMENT, &str) ||
       gst_tag_list_get_string (tags, GST_TAG_DESCRIPTION, &str) ||
       gst_tag_list_get_string (tags, GST_TAG_TITLE, &str));
 
   if (str) {
+    GST_DEBUG_OBJECT (self, "set COM marker to '%s'", str);
     /* insert new marker into self->markers list */
     m = gst_jif_mux_new_marker (COM, strlen (str) + 1, (const guint8 *) str,
         TRUE);

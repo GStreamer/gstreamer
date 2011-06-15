@@ -1811,7 +1811,6 @@ gst_camerabin_have_img_buffer (GstPad * pad, GstMiniObject * obj,
   if (GST_IS_BUFFER (obj)) {
     GstBuffer *buffer = GST_BUFFER_CAST (obj);
     GstStructure *fn_ev_struct = NULL;
-    gboolean ret = TRUE;
     GstPad *os_sink = NULL;
 
     GST_LOG ("got buffer %p with size %d", buffer, GST_BUFFER_SIZE (buffer));
@@ -1823,7 +1822,6 @@ gst_camerabin_have_img_buffer (GstPad * pad, GstMiniObject * obj,
     /* Image filename should be set by now */
     if (g_str_equal (camera->filename->str, "")) {
       GST_DEBUG_OBJECT (camera, "filename not set, dropping buffer");
-      ret = FALSE;
       CAMERABIN_PROCESSING_DEC_UNLOCKED (camera);
       goto done;
     }
@@ -1895,8 +1893,7 @@ gst_camerabin_have_vid_buffer (GstPad * pad, GstBuffer * buffer,
   GST_LOG ("got video buffer %p with size %d",
       buffer, GST_BUFFER_SIZE (buffer));
 
-  if (camera->video_preview_caps &&
-      !camera->video_preview_buffer && !camera->stop_requested) {
+  if (!camera->video_preview_buffer && camera->video_preview_caps) {
     GST_DEBUG ("storing video preview %p", buffer);
     camera->video_preview_buffer = gst_buffer_copy (buffer);
   }
@@ -2075,6 +2072,10 @@ gst_camerabin_reset_to_view_finder (GstCameraBin * camera)
   camera->stop_requested = FALSE;
   camera->paused = FALSE;
   camera->eos_handled = FALSE;
+  if (camera->video_preview_buffer) {
+    gst_buffer_unref (camera->video_preview_buffer);
+    camera->video_preview_buffer = NULL;
+  }
 
   /* Enable view finder mode in v4l2camsrc */
   if (camera->src_vid_src &&
@@ -2097,15 +2098,17 @@ gst_camerabin_reset_to_view_finder (GstCameraBin * camera)
 static void
 gst_camerabin_do_stop (GstCameraBin * camera)
 {
+  gboolean video_preview_sent = FALSE;
   g_mutex_lock (camera->capture_mutex);
   if (camera->capturing) {
     GST_DEBUG_OBJECT (camera, "mark stop");
     camera->stop_requested = TRUE;
 
-    if (camera->video_preview_caps && camera->video_preview_buffer) {
+    /* Post preview image ASAP and don't wait that video recording
+       finishes as it may take time. */
+    if (camera->video_preview_buffer) {
       gst_camerabin_send_preview (camera, camera->video_preview_buffer);
-      gst_buffer_unref (camera->video_preview_buffer);
-      camera->video_preview_buffer = NULL;
+      video_preview_sent = TRUE;
     }
 
     /* Take special care when stopping paused video capture */
@@ -2121,6 +2124,15 @@ gst_camerabin_do_stop (GstCameraBin * camera)
     GST_DEBUG_OBJECT (camera, "waiting for capturing to finish");
     g_cond_wait (camera->cond, camera->capture_mutex);
     GST_DEBUG_OBJECT (camera, "capturing finished");
+
+    if (camera->video_preview_buffer) {
+      /* Double check that preview image has been sent. This is useful
+         in a corner case where capture-stop is issued immediately after
+         start before a single video buffer is actually recorded */
+      if (video_preview_sent == FALSE) {
+        gst_camerabin_send_preview (camera, camera->video_preview_buffer);
+      }
+    }
   }
   g_mutex_unlock (camera->capture_mutex);
 }
@@ -2837,6 +2849,19 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
           GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
+   *  GstCameraBin:image-formatter:
+   *
+   * Set up an image formatter (for example, jifmux) element.
+   * This property can only be set while #GstCameraBin is in NULL state.
+   * The ownership of the element will be taken by #GstCameraBin.
+   */
+
+  g_object_class_install_property (gobject_class, ARG_IMAGE_FORMATTER,
+      g_param_spec_object ("image-formatter", "Image formatter",
+          "Image formatter GStreamer element (default is jifmux)",
+          GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
    *  GstCameraBin:video-post-processing:
    *
    * Set up an element to do video post processing.
@@ -3320,6 +3345,8 @@ gst_camerabin_init (GstCameraBin * camera, GstCameraBinClass * gclass)
   camera->pad_view_vid = NULL;
 
   camera->video_preview_buffer = NULL;
+  camera->preview_caps = NULL;
+  camera->video_preview_caps = NULL;
 
   /* image capture bin */
   camera->imgbin = g_object_new (GST_TYPE_CAMERABIN_IMAGE, NULL);
@@ -3464,6 +3491,14 @@ gst_camerabin_set_property (GObject * object, guint prop_id,
             "can't use set element until next image bin NULL to READY state change");
       }
       gst_camerabin_image_set_encoder (GST_CAMERABIN_IMAGE (camera->imgbin),
+          g_value_get_object (value));
+      break;
+    case ARG_IMAGE_FORMATTER:
+      if (GST_STATE (camera->imgbin) != GST_STATE_NULL) {
+        GST_WARNING_OBJECT (camera,
+            "can't use set element until next image bin NULL to READY state change");
+      }
+      gst_camerabin_image_set_formatter (GST_CAMERABIN_IMAGE (camera->imgbin),
           g_value_get_object (value));
       break;
     case ARG_VF_SINK:
@@ -3708,6 +3743,11 @@ gst_camerabin_get_property (GObject * object, guint prop_id,
           gst_camerabin_image_get_encoder (GST_CAMERABIN_IMAGE
               (camera->imgbin)));
       break;
+    case ARG_IMAGE_FORMATTER:
+      g_value_set_object (value,
+          gst_camerabin_image_get_formatter (GST_CAMERABIN_IMAGE
+              (camera->imgbin)));
+      break;
     case ARG_VIDEO_POST:
       g_value_set_object (value,
           gst_camerabin_video_get_post (GST_CAMERABIN_VIDEO (camera->vidbin)));
@@ -3832,6 +3872,16 @@ gst_camerabin_change_state (GstElement * element, GstStateChange transition)
          now that actual sink has been created. */
       camerabin_setup_view_elements (camera);
       break;
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      /* all processing should stop and those elements could have their state
+       * locked, so set them explicitly here */
+      if (GST_STATE (camera->imgbin) != GST_STATE_NULL) {
+        gst_element_set_state (camera->imgbin, GST_STATE_READY);
+      }
+      if (GST_STATE (camera->vidbin) != GST_STATE_NULL) {
+        gst_element_set_state (camera->vidbin, GST_STATE_READY);
+      }
+      break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       gst_element_set_locked_state (camera->imgbin, FALSE);
       gst_element_set_locked_state (camera->vidbin, FALSE);
@@ -3923,16 +3973,19 @@ gst_camerabin_provide_clock (GstElement * element)
   return clock;
 }
 
-static gboolean
+static gpointer
 gst_camerabin_imgbin_finished (gpointer u_data)
 {
   GstCameraBin *camera = GST_CAMERABIN (u_data);
   gchar *filename = NULL;
 
-  /* Get the filename of the finished image */
-  g_object_get (G_OBJECT (camera->imgbin), "filename", &filename, NULL);
+  /* FIXME: should set a flag (and take a lock) when going to NULL, so we
+   * short-circuit this bit if we got shut down between thread create and now */
 
   GST_DEBUG_OBJECT (camera, "Image encoding finished");
+
+  /* Get the filename of the finished image */
+  g_object_get (G_OBJECT (camera->imgbin), "filename", &filename, NULL);
 
   /* Close the file of saved image */
   gst_element_set_state (camera->imgbin, GST_STATE_READY);
@@ -3943,26 +3996,35 @@ gst_camerabin_imgbin_finished (gpointer u_data)
     CAMERABIN_PROCESSING_DEC_UNLOCKED (camera);
   } else {
     /* Camerabin state change to READY may have reset processing counter to
-     * zero. This is possible as this functions is scheduled from g_idle_add
+     * zero. This is possible as this functions is scheduled from another
+     * thread.
      */
     GST_WARNING_OBJECT (camera, "camerabin has been forced to idle");
   }
   g_mutex_unlock (camera->capture_mutex);
 
-  /* Send image-done signal */
-  gst_camerabin_image_capture_continue (camera, filename);
-  g_free (filename);
-
   /* Set image bin back to PAUSED so that buffer-allocs don't fail */
   gst_element_set_state (camera->imgbin, GST_STATE_PAUSED);
 
   /* Unblock image queue pad to process next buffer */
-  gst_pad_set_blocked_async (camera->pad_src_queue, FALSE,
-      (GstPadBlockCallback) camerabin_pad_blocked, camera);
-  GST_DEBUG_OBJECT (camera, "Queue srcpad unblocked");
+  GST_STATE_LOCK (camera);
+  if (camera->pad_src_queue) {
+    gst_pad_set_blocked_async (camera->pad_src_queue, FALSE,
+        (GstPadBlockCallback) camerabin_pad_blocked, camera);
+    GST_DEBUG_OBJECT (camera, "Queue srcpad unblocked");
+  } else {
+    GST_DEBUG_OBJECT (camera, "Queue srcpad unreffed already, doesn't need "
+        "to unblock");
+  }
+  GST_STATE_UNLOCK (camera);
 
-  /* disconnect automatically */
-  return FALSE;
+  /* Send image-done signal */
+  gst_camerabin_image_capture_continue (camera, filename);
+  g_free (filename);
+
+  GST_INFO_OBJECT (camera, "leaving helper thread");
+  gst_object_unref (camera);
+  return NULL;
 }
 
 /*
@@ -3990,10 +4052,12 @@ gst_camerabin_handle_message_func (GstBin * bin, GstMessage * msg)
       } else if (GST_MESSAGE_SRC (msg) == GST_OBJECT (camera->imgbin)) {
         /* Image eos */
         GST_DEBUG_OBJECT (camera, "got image eos message");
-        /* Calling callback directly will deadlock in
-           imagebin state change functions */
-        g_idle_add_full (G_PRIORITY_HIGH_IDLE, gst_camerabin_imgbin_finished,
-            camera, NULL);
+        /* Can't change state here, since we're in the streaming thread */
+        if (!g_thread_create (gst_camerabin_imgbin_finished,
+                gst_object_ref (camera), FALSE, NULL)) {
+          /* FIXME: what do do if this fails? */
+          gst_object_unref (camera);
+        }
       }
       break;
     case GST_MESSAGE_ERROR:

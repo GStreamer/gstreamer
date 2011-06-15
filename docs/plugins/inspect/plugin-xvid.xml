@@ -3,7 +3,7 @@
   <description>XviD plugin library</description>
   <filename>../../ext/xvid/.libs/libgstxvid.so</filename>
   <basename>libgstxvid.so</basename>
-  <version>0.10.21.1</version>
+  <version>0.10.22.1</version>
   <license>GPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins git</package>
@@ -20,7 +20,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>video/x-xvid, width=(int)[ 0, 2147483647 ], height=(int)[ 0, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+          <details>video/x-xvid, width=(int)[ 0, 2147483647 ], height=(int)[ 0, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/mpeg, mpegversion=(int)4, systemstream=(boolean)false, width=(int)[ 0, 2147483647 ], height=(int)[ 0, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
         <caps>
           <name>src</name>

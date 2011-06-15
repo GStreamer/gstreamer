@@ -31,6 +31,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <glib.h>
+
 #include <gst/gst-i18n-plugin.h>
 #include "mpegtsbase.h"
 #include "gstmpegdesc.h"
@@ -187,6 +189,8 @@ mpegts_base_class_init (MpegTSBaseClass * klass)
 static void
 mpegts_base_reset (MpegTSBase * base)
 {
+  MpegTSBaseClass *klass = GST_MPEGTS_BASE_GET_CLASS (base);
+
   mpegts_packetizer_clear (base->packetizer);
   memset (base->is_pes, 0, 8192);
   memset (base->known_psi, 0, 8192);
@@ -206,6 +210,8 @@ mpegts_base_reset (MpegTSBase * base)
   /* base->pat = NULL; */
   /* pmt pids will be added and removed dynamically */
 
+  if (klass->reset)
+    klass->reset (base);
 }
 
 static void
@@ -307,11 +313,13 @@ mpegts_get_descriptor_from_stream (MpegTSBaseStream * stream, guint8 tag)
   if (descriptors) {
     for (i = 0; i < descriptors->n_values; i++) {
       GValue *value = g_value_array_get_nth (descriptors, i);
-      guint8 *desc = g_value_dup_boxed (value);
-      if (DESC_TAG (desc) == tag) {
-        retval = desc;
+      GString *desc = g_value_dup_boxed (value);
+      if (DESC_TAG (desc->str) == tag) {
+        retval = (guint8 *) desc->str;
+        g_string_free (desc, FALSE);
         break;
-      }
+      } else
+        g_string_free (desc, FALSE);
     }
     g_value_array_free (descriptors);
   }
@@ -427,6 +435,7 @@ mpegts_base_free_program (MpegTSBaseProgram * program)
   for (i = 0; i < 0x2000; i++)
     if (program->streams[i])
       mpegts_base_free_stream (program->streams[i]);
+  g_free (program->streams);
 
   if (program->tags)
     gst_tag_list_free (program->tags);
@@ -444,7 +453,8 @@ mpegts_base_remove_program (MpegTSBase * base, gint program_number)
     program =
         (MpegTSBaseProgram *) g_hash_table_lookup (base->programs,
         GINT_TO_POINTER (program_number));
-    klass->program_stopped (base, program);
+    if (program)
+      klass->program_stopped (base, program);
   }
   g_hash_table_remove (base->programs, GINT_TO_POINTER (program_number));
 
@@ -697,6 +707,8 @@ mpegts_base_apply_pmt (MpegTSBase * base,
 
   if (G_UNLIKELY (base->first_pat_offset == -1)) {
     GST_WARNING ("Got pmt without pat first. Returning");
+    /* remove the stream since we won't get another PMT otherwise */
+    mpegts_packetizer_remove_stream (base->packetizer, pmt_pid);
     return;
   }
 
@@ -731,9 +743,9 @@ mpegts_base_apply_pmt (MpegTSBase * base,
 
     gst_structure_id_get (stream, QUARK_PID, G_TYPE_UINT, &pid,
         QUARK_STREAM_TYPE, G_TYPE_UINT, &stream_type, NULL);
+    base->is_pes[pid] = TRUE;
     mpegts_base_program_add_stream (base, program,
         (guint16) pid, (guint8) stream_type, stream);
-    base->is_pes[pid] = TRUE;
 
   }
 
@@ -1007,8 +1019,8 @@ mpegts_base_sink_event (GstPad * pad, GstEvent * event)
       gst_event_unref (event);
       res = FALSE;
       break;
-    case GST_EVENT_FLUSH_STOP:
-      mpegts_packetizer_clear (base->packetizer);
+    case GST_EVENT_FLUSH_START:
+      mpegts_packetizer_flush (base->packetizer);
       /* Passthrough */
     default:
       res = GST_MPEGTS_BASE_GET_CLASS (base)->push_event (base, event);
@@ -1043,10 +1055,8 @@ mpegts_base_chain (GstPad * pad, GstBuffer * buf)
   MpegTSPacketizerPacketReturn pret;
   MpegTSPacketizer2 *packetizer;
   MpegTSPacketizerPacket packet;
-  MpegTSBaseClass *klass;
 
   base = GST_MPEGTS_BASE (gst_object_get_parent (GST_OBJECT (pad)));
-  klass = GST_MPEGTS_BASE_GET_CLASS (base);
   packetizer = base->packetizer;
 
   mpegts_packetizer_push (base->packetizer, buf);
@@ -1077,10 +1087,11 @@ mpegts_base_chain (GstPad * pad, GstBuffer * buf)
       /* we need to push section packet downstream */
       res = mpegts_base_push (base, &packet, &section);
 
-    } else {
+    } else if (base->is_pes[packet.pid]) {
       /* push the packet downstream */
       res = mpegts_base_push (base, &packet, NULL);
-    }
+    } else
+      gst_buffer_unref (packet.buffer);
 
   next:
     mpegts_packetizer_clear_packet (base->packetizer, &packet);
@@ -1176,6 +1187,9 @@ mpegts_base_loop (MpegTSBase * base)
         goto error;
     }
       break;
+    case BASE_MODE_PUSHING:
+      GST_WARNING ("wrong BASE_MODE_PUSHING mode in pull loop");
+      break;
   }
 
   return;
@@ -1195,6 +1209,104 @@ error:
     gst_pad_pause_task (base->sinkpad);
   }
 }
+
+
+gboolean
+mpegts_base_handle_seek_event (MpegTSBase * base, GstPad * pad,
+    GstEvent * event)
+{
+  MpegTSBaseClass *klass = GST_MPEGTS_BASE_GET_CLASS (base);
+  GstFlowReturn ret = GST_FLOW_ERROR;
+  gdouble rate;
+  gboolean flush;
+  GstFormat format;
+  GstSeekFlags flags;
+  GstSeekType start_type, stop_type;
+  gint64 start, stop;
+  gchar *pad_name;
+  guint16 pid = 0;
+
+  gst_event_parse_seek (event, &rate, &format, &flags, &start_type, &start,
+      &stop_type, &stop);
+
+  if (format != GST_FORMAT_TIME)
+    return FALSE;
+
+  GST_DEBUG ("seek event, rate: %f start: %" GST_TIME_FORMAT
+      " stop: %" GST_TIME_FORMAT, rate, GST_TIME_ARGS (start),
+      GST_TIME_ARGS (stop));
+
+  /* extract the pid from the pad name */
+  pad_name = gst_pad_get_name (pad);
+  if (pad_name) {
+    gchar *pidstr = g_strrstr (pad_name, "_");
+    if (pidstr) {
+      pidstr++;
+      pid = g_ascii_strtoull (pidstr, NULL, 16);
+    }
+    g_free (pad_name);
+  }
+
+  flush = flags & GST_SEEK_FLAG_FLUSH;
+
+  if (base->mode == BASE_MODE_PUSHING) {
+    GST_ERROR ("seeking in push mode not supported");
+    goto done;
+  }
+
+  /* stop streaming, either by flushing or by pausing the task */
+  base->mode = BASE_MODE_SEEKING;
+  if (flush) {
+    GST_DEBUG_OBJECT (base, "sending flush start");
+    gst_pad_push_event (base->sinkpad, gst_event_new_flush_start ());
+    GST_MPEGTS_BASE_GET_CLASS (base)->push_event (base,
+        gst_event_new_flush_start ());
+  } else
+    gst_pad_pause_task (base->sinkpad);
+  /* wait for streaming to finish */
+  GST_PAD_STREAM_LOCK (base->sinkpad);
+
+  if (flush) {
+    /* send a FLUSH_STOP for the sinkpad, since we need data for seeking */
+    GST_DEBUG_OBJECT (base, "sending flush stop");
+    gst_pad_push_event (base->sinkpad, gst_event_new_flush_stop ());
+  }
+
+  if (flags & (GST_SEEK_FLAG_SEGMENT | GST_SEEK_FLAG_SKIP)) {
+    GST_WARNING ("seek flags 0x%x are not supported", (int) flags);
+    goto done;
+  }
+
+
+  if (format == GST_FORMAT_TIME) {
+    /* If the subclass can seek, do that */
+    if (klass->seek) {
+      ret = klass->seek (base, event, pid);
+      if (G_UNLIKELY (ret != GST_FLOW_OK)) {
+        GST_WARNING ("seeking failed %s", gst_flow_get_name (ret));
+        goto done;
+      }
+    } else {
+      GST_WARNING ("subclass has no seek implementation");
+      goto done;
+    }
+  }
+
+  if (flush) {
+    /* if we sent a FLUSH_START, we now send a FLUSH_STOP */
+    GST_DEBUG_OBJECT (base, "sending flush stop");
+    //gst_pad_push_event (base->sinkpad, gst_event_new_flush_stop ());
+    GST_MPEGTS_BASE_GET_CLASS (base)->push_event (base,
+        gst_event_new_flush_stop ());
+  }
+  //else
+done:
+  gst_pad_start_task (base->sinkpad, (GstTaskFunction) mpegts_base_loop, base);
+
+  GST_PAD_STREAM_UNLOCK (base->sinkpad);
+  return ret == GST_FLOW_OK;
+}
+
 
 static gboolean
 mpegts_base_sink_activate (GstPad * pad)
@@ -1222,6 +1334,8 @@ mpegts_base_sink_activate_pull (GstPad * pad, gboolean active)
 static gboolean
 mpegts_base_sink_activate_push (GstPad * pad, gboolean active)
 {
+  MpegTSBase *base = GST_MPEGTS_BASE (GST_OBJECT_PARENT (pad));
+  base->mode = BASE_MODE_PUSHING;
   return TRUE;
 }
 
@@ -1238,6 +1352,8 @@ mpegts_base_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       mpegts_base_reset (base);
+      if (base->mode != BASE_MODE_PUSHING)
+        base->mode = BASE_MODE_SCANNING;
       break;
     default:
       break;

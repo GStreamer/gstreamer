@@ -11,7 +11,6 @@ libgstbasevideo_@GST_MAJORMINOR@_la_SOURCES = \
 
 libgstbasevideo_@GST_MAJORMINOR@includedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/video
 libgstbasevideo_@GST_MAJORMINOR@include_HEADERS = \
-	gstbasevideoutils.h \
 	gstbasevideocodec.h \
 	gstbasevideodecoder.h \
 	gstbasevideoencoder.h

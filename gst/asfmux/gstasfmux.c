@@ -499,7 +499,6 @@ gst_asf_mux_get_content_description_tags (GstAsfMux * asfmux,
     GstAsfTags * asftags)
 {
   const GstTagList *tags;
-  GstTagList *taglist = NULL;
 
   tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (asfmux));
   if (tags && !gst_tag_list_is_empty (tags)) {
@@ -509,7 +508,6 @@ gst_asf_mux_get_content_description_tags (GstAsfMux * asfmux,
     asftags->tags = gst_tag_list_new ();
     asftags->cont_desc_size = 0;
     asftags->ext_cont_desc_size = 0;
-    taglist = asftags->tags;
 
     GST_DEBUG_OBJECT (asfmux, "Processing tags");
     gst_tag_list_foreach (tags, content_description_calc_size_for_tag, asftags);

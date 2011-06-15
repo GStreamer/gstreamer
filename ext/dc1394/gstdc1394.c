@@ -98,6 +98,7 @@ static void gst_dc1394_framerate_const_to_frac (gint framerateconst,
     GValue * framefrac);
 static gboolean
 gst_dc1394_change_camera_transmission (GstDc1394 * src, gboolean on);
+static gboolean gst_dc1394_query (GstBaseSrc * bsrc, GstQuery * query);
 
 static void
 gst_dc1394_base_init (gpointer g_class)
@@ -157,12 +158,12 @@ gst_dc1394_class_init (GstDc1394Class * klass)
 
   gstbasesrc_class->get_caps = gst_dc1394_getcaps;
   gstbasesrc_class->set_caps = gst_dc1394_setcaps;
+  gstbasesrc_class->query = gst_dc1394_query;
 
   gstbasesrc_class->get_times = gst_dc1394_get_times;
   gstpushsrc_class->create = gst_dc1394_create;
 
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_dc1394_change_state);
-
 }
 
 static void
@@ -182,7 +183,6 @@ gst_dc1394_init (GstDc1394 * src, GstDc1394Class * g_class)
       gst_dc1394_src_fixate);
 
   gst_base_src_set_live (GST_BASE_SRC (src), TRUE);
-
 }
 
 static void
@@ -203,6 +203,59 @@ gst_dc1394_src_fixate (GstPad * pad, GstCaps * caps)
     gst_structure_fixate_field_nearest_fraction (structure, "framerate", 30, 1);
   }
   gst_object_unref (GST_OBJECT (src));
+}
+
+static gboolean
+gst_dc1394_query (GstBaseSrc * bsrc, GstQuery * query)
+{
+  gboolean res = TRUE;
+  GstDc1394 *src = GST_DC1394 (bsrc);
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_LATENCY:
+    {
+      GstClockTime min_latency, max_latency;
+
+      if (!src->camera) {
+        GST_WARNING_OBJECT (src,
+            "Can't give latency since device isn't open !");
+        res = FALSE;
+        goto done;
+      }
+
+      if (src->rate_denominator <= 0 || src->rate_numerator <= 0) {
+        GST_WARNING_OBJECT (bsrc,
+            "Can't give latency since framerate isn't fixated !");
+        res = FALSE;
+        goto done;
+      }
+
+      /* min latency is the time to capture one frame */
+      min_latency = gst_util_uint64_scale (GST_SECOND,
+          src->rate_denominator, src->rate_numerator);
+
+      /* max latency is total duration of the frame buffer */
+      max_latency = gst_util_uint64_scale (src->bufsize,
+          GST_SECOND * src->rate_denominator, src->rate_numerator);
+
+      GST_DEBUG_OBJECT (bsrc,
+          "report latency min %" GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (min_latency), GST_TIME_ARGS (max_latency));
+
+      /* we are always live, the min latency is 1 frame and the max latency is
+       * the complete buffer of frames. */
+      gst_query_set_latency (query, TRUE, min_latency, max_latency);
+
+      res = TRUE;
+      break;
+    }
+    default:
+      res = GST_BASE_SRC_CLASS (parent_class)->query (bsrc, query);
+      break;
+  }
+
+done:
+  return res;
 }
 
 static void
@@ -280,11 +333,9 @@ gst_dc1394_getcaps (GstBaseSrc * bsrc)
   return gst_caps_copy (gsrc->caps);
 }
 
-
 static gboolean
 gst_dc1394_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
 {
-
   gboolean res = TRUE;
   GstDc1394 *dc1394;
   gint width, height, rate_denominator, rate_numerator;

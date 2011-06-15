@@ -74,7 +74,8 @@ struct _MpegTSBaseProgram
 typedef enum {
   BASE_MODE_SCANNING,
   BASE_MODE_SEEKING,
-  BASE_MODE_STREAMING
+  BASE_MODE_STREAMING,
+  BASE_MODE_PUSHING
 } MpegTSBaseMode;
 
 struct _MpegTSBase {
@@ -124,6 +125,7 @@ struct _MpegTSBaseClass {
   GstElementClass parent_class;
 
   /* Virtual methods */
+  void (*reset) (MpegTSBase *base);
   GstFlowReturn (*push) (MpegTSBase *base, MpegTSPacketizerPacket *packet, MpegTSPacketizerSection * section);
   gboolean (*push_event) (MpegTSBase *base, GstEvent * event);
   /* program_started gets called when program's pmt arrives for first time */
@@ -138,6 +140,9 @@ struct _MpegTSBaseClass {
 
   /* find_timestamps is called to find PCR */
  GstFlowReturn (*find_timestamps) (MpegTSBase * base, guint64 initoff, guint64 *offset);
+
+  /* seek is called to wait for seeking */
+  GstFlowReturn (*seek) (MpegTSBase * base, GstEvent * event, guint16 pid);
 
   /* signals */
   void (*pat_info) (GstStructure *pat);
@@ -155,6 +160,8 @@ MpegTSBaseProgram *mpegts_base_add_program (MpegTSBase * base, gint program_numb
 guint8 *mpegts_get_descriptor_from_stream (MpegTSBaseStream * stream, guint8 tag);
 guint8 *mpegts_get_descriptor_from_program (MpegTSBaseProgram * program, guint8 tag);
 
+gboolean
+mpegts_base_handle_seek_event(MpegTSBase * base, GstPad * pad, GstEvent * event);
 
 gboolean gst_mpegtsbase_plugin_init (GstPlugin * plugin);
 

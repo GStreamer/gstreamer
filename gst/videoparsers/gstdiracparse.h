@@ -21,7 +21,7 @@
 #define _GST_DIRAC_PARSE_H_
 
 #include <gst/gst.h>
-#include <gst/baseparse/gstbaseparse.h>
+#include <gst/base/gstbaseparse.h>
 
 G_BEGIN_DECLS
 

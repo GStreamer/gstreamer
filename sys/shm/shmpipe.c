@@ -119,6 +119,8 @@ struct _ShmPipe
 {
   int main_socket;
   char *socket_path;
+  int use_count;
+  void *data;
 
   ShmArea *shm_area;
 
@@ -190,12 +192,13 @@ sp_writer_create (const char *path, size_t size, mode_t perms)
 {
   ShmPipe *self = spalloc_new (ShmPipe);
   int flags;
-  struct sockaddr_un sun;
+  struct sockaddr_un sock_un;
   int i = 0;
 
   memset (self, 0, sizeof (ShmPipe));
 
   self->main_socket = socket (PF_UNIX, SOCK_STREAM, 0);
+  self->use_count = 1;
 
   if (self->main_socket < 0)
     RETURN_ERROR ("Could not create socket (%d): %s\n", errno,
@@ -208,10 +211,10 @@ sp_writer_create (const char *path, size_t size, mode_t perms)
   if (fcntl (self->main_socket, F_SETFL, flags | O_NONBLOCK | FD_CLOEXEC) < 0)
     RETURN_ERROR ("fcntl(F_SETFL) failed (%d): %s\n", errno, strerror (errno));
 
-  sun.sun_family = AF_UNIX;
-  strncpy (sun.sun_path, path, sizeof (sun.sun_path) - 1);
+  sock_un.sun_family = AF_UNIX;
+  strncpy (sock_un.sun_path, path, sizeof (sock_un.sun_path) - 1);
 
-  while (bind (self->main_socket, (struct sockaddr *) &sun,
+  while (bind (self->main_socket, (struct sockaddr *) &sock_un,
           sizeof (struct sockaddr_un)) < 0) {
     if (errno != EADDRINUSE)
       RETURN_ERROR ("bind() failed (%d): %s\n", errno, strerror (errno));
@@ -219,11 +222,11 @@ sp_writer_create (const char *path, size_t size, mode_t perms)
     if (i > 256)
       RETURN_ERROR ("Could not find a free socket name for %s", path);
 
-    snprintf (sun.sun_path, sizeof (sun.sun_path), "%s.%d", path, i);
+    snprintf (sock_un.sun_path, sizeof (sock_un.sun_path), "%s.%d", path, i);
     i++;
   }
 
-  self->socket_path = strdup (sun.sun_path);
+  self->socket_path = strdup (sock_un.sun_path);
 
   if (listen (self->main_socket, LISTEN_BACKLOG) < 0)
     RETURN_ERROR ("listen() failed (%d): %s\n", errno, strerror (errno));
@@ -259,7 +262,7 @@ static ShmArea *
 sp_open_shm (char *path, int id, mode_t perms, size_t size)
 {
   ShmArea *area = spalloc_new (ShmArea);
-  char tmppath[PATH_MAX];
+  char tmppath[32];
   int flags;
   int prot;
   int i = 0;
@@ -282,7 +285,7 @@ sp_open_shm (char *path, int id, mode_t perms, size_t size)
     area->shm_fd = shm_open (path, flags, perms);
   } else {
     do {
-      snprintf (tmppath, PATH_MAX, "/shmpipe.5%d.%5d", getpid (), i++);
+      snprintf (tmppath, sizeof (tmppath), "/shmpipe.%5d.%5d", getpid (), i++);
       area->shm_fd = shm_open (tmppath, flags, perms);
     } while (area->shm_fd < 0 && errno == EEXIST);
   }
@@ -372,6 +375,38 @@ sp_shm_area_dec (ShmPipe * self, ShmArea * area)
   }
 }
 
+void *
+sp_get_data (ShmPipe * self)
+{
+  return self->data;
+}
+
+void
+sp_set_data (ShmPipe * self, void *data)
+{
+  self->data = data;
+}
+
+static void
+sp_inc (ShmPipe * self)
+{
+  self->use_count++;
+}
+
+static void
+sp_dec (ShmPipe * self)
+{
+  self->use_count--;
+
+  if (self->use_count > 0)
+    return;
+
+  while (self->shm_area)
+    sp_shm_area_dec (self, self->shm_area);
+
+  spalloc_free (ShmPipe, self);
+}
+
 void
 sp_close (ShmPipe * self)
 {
@@ -386,10 +421,7 @@ sp_close (ShmPipe * self)
   while (self->clients)
     sp_writer_close_client (self, self->clients);
 
-  while (self->shm_area)
-    sp_shm_area_dec (self, self->shm_area);
-
-  spalloc_free (ShmPipe, self);
+  sp_dec (self);
 }
 
 int
@@ -481,6 +513,7 @@ sp_writer_alloc_block (ShmPipe * self, size_t size)
   block->pipe = self;
   block->area = self->shm_area;
   block->ablock = ablock;
+  sp_inc (self);
   return block;
 }
 
@@ -491,11 +524,18 @@ sp_writer_block_get_buf (ShmBlock * block)
       shm_alloc_space_alloc_block_get_offset (block->ablock);
 }
 
+ShmPipe *
+sp_writer_block_get_pipe (ShmBlock * block)
+{
+  return block->pipe;
+}
+
 void
 sp_writer_free_block (ShmBlock * block)
 {
   shm_alloc_space_block_dec (block->ablock);
   sp_shm_area_dec (block->pipe, block->area);
+  sp_dec (block->pipe);
   spalloc_free (ShmBlock, block);
 }
 
@@ -581,7 +621,7 @@ long int
 sp_client_recv (ShmPipe * self, char **buf)
 {
   char *area_name = NULL;
-  ShmArea *newarea, *oldarea;
+  ShmArea *newarea;
   ShmArea *area;
   struct CommandBuffer cb;
   int retval;
@@ -608,13 +648,8 @@ sp_client_recv (ShmPipe * self, char **buf)
       if (!newarea)
         return -4;
 
-      oldarea = self->shm_area;
       newarea->next = self->shm_area;
       self->shm_area = newarea;
-      /*
-         if (oldarea)
-         sp_shm_area_dec (self, oldarea);
-       */
       break;
 
     case COMMAND_CLOSE_SHM_AREA:
@@ -704,18 +739,20 @@ ShmPipe *
 sp_client_open (const char *path)
 {
   ShmPipe *self = spalloc_new (ShmPipe);
-  struct sockaddr_un sun;
+  struct sockaddr_un sock_un;
 
   memset (self, 0, sizeof (ShmPipe));
 
   self->main_socket = socket (PF_UNIX, SOCK_STREAM, 0);
+  self->use_count = 1;
+
   if (self->main_socket < 0)
     goto error;
 
-  sun.sun_family = AF_UNIX;
-  strncpy (sun.sun_path, path, sizeof (sun.sun_path) - 1);
+  sock_un.sun_family = AF_UNIX;
+  strncpy (sock_un.sun_path, path, sizeof (sock_un.sun_path) - 1);
 
-  if (connect (self->main_socket, (struct sockaddr *) &sun,
+  if (connect (self->main_socket, (struct sockaddr *) &sock_un,
           sizeof (struct sockaddr_un)) < 0)
     goto error;
 

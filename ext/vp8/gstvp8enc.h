@@ -24,7 +24,6 @@
 
 #include <gst/gst.h>
 #include <gst/video/gstbasevideoencoder.h>
-#include <gst/video/gstbasevideoutils.h>
 
 /* FIXME: Undef HAVE_CONFIG_H because vpx_codec.h uses it,
  * which causes compilation failures */
@@ -61,6 +60,8 @@ struct _GstVP8Enc
   /* properties */
   int bitrate;
   enum vpx_rc_mode mode;
+  int min_quantizer;
+  int max_quantizer;
   double quality;
   gboolean error_resilient;
   int max_latency;
@@ -74,14 +75,12 @@ struct _GstVP8Enc
   gboolean auto_alt_ref_frames;
 
   /* state */
-  gboolean force_keyframe;
   gboolean inited;
+
+  vpx_image_t image;
 
   int n_frames;
   int keyframe_distance;
-
-  /* FIXME: Get a event vfunc in BaseVideoEncoder */
-  GstPadEventFunction base_sink_event_func;
 };
 
 struct _GstVP8EncClass

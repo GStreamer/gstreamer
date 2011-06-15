@@ -21,6 +21,11 @@
 #ifndef __GST_CAMERABIN_ENUM_H__
 #define __GST_CAMERABIN_ENUM_H__
 
+#ifndef GST_USE_UNSTABLE_API
+#warning "camerabin enums are unstable API and may change in future."
+#warning "You can define GST_USE_UNSTABLE_API to avoid this warning."
+#endif
+
 #include <gst/gst.h>
 
 G_BEGIN_DECLS

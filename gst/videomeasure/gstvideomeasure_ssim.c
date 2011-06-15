@@ -1183,7 +1183,11 @@ gst_ssim_request_new_pad (GstElement * element, GstPadTemplate * templ,
     goto could_not_add_sink;
   else
     /* increment pad counter */
+#if GLIB_CHECK_VERSION(2,29,5)
+    padcount = g_atomic_int_add (&ssim->padcount, 1);
+#else
     padcount = g_atomic_int_exchange_and_add (&ssim->padcount, 1);
+#endif
 
   if (num >= 0) {
     GstSSimOutputContext *c;

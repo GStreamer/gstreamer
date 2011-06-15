@@ -48,7 +48,7 @@ typedef struct _GstH264Sps GstH264Sps;
 typedef struct _GstH264Pps GstH264Pps;
 
 #define MAX_SPS_COUNT	32
-#define MAX_PPS_COUNT   32
+#define MAX_PPS_COUNT   256
 
 #define CLOCK_BASE 9LL
 #define CLOCK_FREQ (CLOCK_BASE * 10000)

@@ -333,7 +333,9 @@ gst_field_analysis_reset (GstFieldAnalysis * filter)
   filter->first_buffer = TRUE;
   filter->width = 0;
   g_free (filter->comb_mask);
+  filter->comb_mask = NULL;
   g_free (filter->block_scores);
+  filter->block_scores = NULL;
 }
 
 static void
@@ -630,7 +632,7 @@ gst_field_analysis_set_caps (GstPad * pad, GstCaps * caps)
  * returns it */
 static GstBuffer *
 gst_field_analysis_decorate (GstFieldAnalysis * filter, gboolean tff,
-    gboolean onefield, FieldAnalysisConclusion conclusion, gboolean gap)
+    gboolean onefield, FieldAnalysisConclusion conclusion, gboolean drop)
 {
   GstBuffer *buf = NULL;
   GstCaps *caps;
@@ -674,10 +676,11 @@ gst_field_analysis_decorate (GstFieldAnalysis * filter, gboolean tff,
     GST_BUFFER_FLAG_UNSET (buf, GST_VIDEO_BUFFER_ONEFIELD);
   }
 
-  GST_BUFFER_FLAG_UNSET (buf, GST_VIDEO_BUFFER_RFF);
-
-  if (gap)
-    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_GAP);
+  if (drop) {
+    GST_BUFFER_FLAG_SET (buf, GST_VIDEO_BUFFER_RFF);
+  } else {
+    GST_BUFFER_FLAG_UNSET (buf, GST_VIDEO_BUFFER_RFF);
+  }
 
   if (conclusion == FIELD_ANALYSIS_TELECINE_PROGRESSIVE || (filter->is_telecine
           && conclusion == FIELD_ANALYSIS_PROGRESSIVE))
@@ -704,12 +707,12 @@ gst_field_analysis_decorate (GstFieldAnalysis * filter, gboolean tff,
   gst_caps_unref (caps);
 
   GST_DEBUG_OBJECT (filter,
-      "Pushing buffer with flags: %p (%p), p %d, tff %d, 1f %d, gap %d; conc %d",
+      "Pushing buffer with flags: %p (%p), p %d, tff %d, 1f %d, drop %d; conc %d",
       GST_BUFFER_DATA (buf), buf,
       GST_BUFFER_FLAG_IS_SET (buf, GST_VIDEO_BUFFER_PROGRESSIVE),
       GST_BUFFER_FLAG_IS_SET (buf, GST_VIDEO_BUFFER_TFF),
       GST_BUFFER_FLAG_IS_SET (buf, GST_VIDEO_BUFFER_ONEFIELD),
-      GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_GAP), conclusion);
+      GST_BUFFER_FLAG_IS_SET (buf, GST_VIDEO_BUFFER_RFF), conclusion);
 
   return buf;
 }
@@ -1397,7 +1400,7 @@ gst_field_analysis_process_buffer (GstFieldAnalysis * filter,
       res0->conclusion = FIELD_ANALYSIS_INTERLACED;
     }
     res0->holding = -1;         /* needed fields unknown */
-    res0->gap = FALSE;
+    res0->drop = FALSE;
   }
 
   if (n_queued >= 2) {
@@ -1452,11 +1455,11 @@ gst_field_analysis_process_buffer (GstFieldAnalysis * filter,
           /* prev P, cur repeated => cur P */
           res0->conclusion = FIELD_ANALYSIS_TELECINE_PROGRESSIVE;
           res0->holding = 1 + BOTH_FIELDS;
-          /* push prev P, GAP */
-          res1->gap = TRUE;
+          /* push prev P, RFF */
+          res1->drop = TRUE;
           outbuf =
               gst_field_analysis_decorate (filter, -1, FALSE, res1->conclusion,
-              res1->gap);
+              res1->drop);
         } else {
           /* prev P, cur t xor b matches => cur TCM */
           res0->conclusion = FIELD_ANALYSIS_TELECINE_MIXED;
@@ -1465,7 +1468,7 @@ gst_field_analysis_process_buffer (GstFieldAnalysis * filter,
           /* push prev P */
           outbuf =
               gst_field_analysis_decorate (filter, -1, FALSE, res1->conclusion,
-              res1->gap);
+              res1->drop);
         }
       } else {
         /* prev !P */
@@ -1506,7 +1509,7 @@ gst_field_analysis_process_buffer (GstFieldAnalysis * filter,
           /* push 1F held field */
           outbuf =
               gst_field_analysis_decorate (filter, !(res1->holding - 1), TRUE,
-              res1->conclusion, res1->gap);
+              res1->conclusion, res1->drop);
         } else if (res0->f > filter->frame_thresh && ((t
                     && telecine_matches & FIELD_ANALYSIS_BOTTOM_TOP) || (b
                     && telecine_matches & FIELD_ANALYSIS_TOP_BOTTOM))) {
@@ -1521,7 +1524,7 @@ gst_field_analysis_process_buffer (GstFieldAnalysis * filter,
           /* push 1F held field */
           outbuf =
               gst_field_analysis_decorate (filter, !(res1->holding - 1), TRUE,
-              res1->conclusion, res1->gap);
+              res1->conclusion, res1->drop);
         } else if (first_buffer && (telecine_matches & FIELD_ANALYSIS_BOTTOM_TOP
                 || telecine_matches & FIELD_ANALYSIS_TOP_BOTTOM)) {
           /* non-matched field is an orphan in the first buffer - push orphan as 1F */
@@ -1531,18 +1534,18 @@ gst_field_analysis_process_buffer (GstFieldAnalysis * filter,
           /* push 1F held field */
           outbuf =
               gst_field_analysis_decorate (filter, !(res1->holding - 1), TRUE,
-              res1->conclusion, res1->gap);
+              res1->conclusion, res1->drop);
         } else if (res1->holding == 1 + BOTH_FIELDS || res1->holding == -1) {
           /* holding both fields, push prev as is */
           outbuf =
               gst_field_analysis_decorate (filter, -1, FALSE, res1->conclusion,
-              res1->gap);
+              res1->drop);
         } else {
-          /* push prev as is with GAP */
-          res1->gap = TRUE;
+          /* push prev as is with RFF */
+          res1->drop = TRUE;
           outbuf =
               gst_field_analysis_decorate (filter, -1, FALSE, res1->conclusion,
-              res1->gap);
+              res1->drop);
         }
       }
     } else if (res0->f <= filter->frame_thresh) {
@@ -1553,19 +1556,19 @@ gst_field_analysis_process_buffer (GstFieldAnalysis * filter,
         /* holding both fields, push prev as is */
         outbuf =
             gst_field_analysis_decorate (filter, -1, FALSE, res1->conclusion,
-            res1->gap);
+            res1->drop);
       } else if (res1->holding > 0) {
         /* holding one field, push prev 1F held */
         outbuf =
             gst_field_analysis_decorate (filter, !(res1->holding - 1), TRUE,
-            res1->conclusion, res1->gap);
+            res1->conclusion, res1->drop);
       } else {
-        /* unknown or no fields held, push prev as is with GAP */
-        /* this will push unknown as gap - should be pushed as not gap? */
-        res1->gap = TRUE;
+        /* unknown or no fields held, push prev as is with RFF */
+        /* this will push unknown as drop - should be pushed as not drop? */
+        res1->drop = TRUE;
         outbuf =
             gst_field_analysis_decorate (filter, -1, FALSE, res1->conclusion,
-            res1->gap);
+            res1->drop);
       }
     } else {
       /* cur !P */
@@ -1588,57 +1591,57 @@ gst_field_analysis_process_buffer (GstFieldAnalysis * filter,
           /* push prev as is */
           outbuf =
               gst_field_analysis_decorate (filter, -1, FALSE, res1->conclusion,
-              res1->gap);
+              res1->drop);
         } else if ((t && telecine_matches & FIELD_ANALYSIS_TOP_BOTTOM) || (b
                 && telecine_matches & FIELD_ANALYSIS_BOTTOM_TOP)) {
           /* held is opposite to matched => need both field from prev */
           /* if t_b, hold bottom from prev and top from current, else vice-versa */
-          res1->holding = 1 + ! !(telecine_matches & FIELD_ANALYSIS_TOP_BOTTOM);
+          res1->holding = 1 + !!(telecine_matches & FIELD_ANALYSIS_TOP_BOTTOM);
           res0->holding = 1 + !(telecine_matches & FIELD_ANALYSIS_TOP_BOTTOM);
           /* push prev TCM */
           outbuf =
               gst_field_analysis_decorate (filter, -1, FALSE, res1->conclusion,
-              res1->gap);
+              res1->drop);
         } else if ((res1->holding > 0 && res1->holding != 1 + BOTH_FIELDS) || (t
                 && telecine_matches & FIELD_ANALYSIS_BOTTOM_TOP) || (b
                 && telecine_matches & FIELD_ANALYSIS_TOP_BOTTOM)) {
           /* held field is needed, push prev 1F held */
           outbuf =
               gst_field_analysis_decorate (filter, !(res1->holding - 1), TRUE,
-              res1->conclusion, res1->gap);
+              res1->conclusion, res1->drop);
         } else {
           /* holding none or unknown */
-          /* push prev as is with GAP */
-          res1->gap = TRUE;
+          /* push prev as is with RFF */
+          res1->drop = TRUE;
           outbuf =
               gst_field_analysis_decorate (filter, -1, FALSE, res1->conclusion,
-              res1->gap);
+              res1->drop);
         }
       } else {
         /* cur I */
         res0->conclusion = FIELD_ANALYSIS_INTERLACED;
         res0->holding = 1 + BOTH_FIELDS;
         /* push prev appropriately */
-        res1->gap = res1->holding <= 0;
+        res1->drop = res1->holding <= 0;
         if (res1->holding != 0) {
-          res1->gap = FALSE;
+          res1->drop = FALSE;
           if (res1->holding == 1 + BOTH_FIELDS || res1->holding == -1) {
             /* push prev as is */
             outbuf =
                 gst_field_analysis_decorate (filter, -1, FALSE,
-                res1->conclusion, res1->gap);
+                res1->conclusion, res1->drop);
           } else {
             /* push prev 1F held */
             outbuf =
                 gst_field_analysis_decorate (filter, !(res1->holding - 1), TRUE,
-                res1->conclusion, res1->gap);
+                res1->conclusion, res1->drop);
           }
         } else {
-          /* push prev as is with GAP */
-          res1->gap = TRUE;
+          /* push prev as is with RFF */
+          res1->drop = TRUE;
           outbuf =
               gst_field_analysis_decorate (filter, -1, FALSE, res1->conclusion,
-              res1->gap);
+              res1->drop);
         }
       }
     }

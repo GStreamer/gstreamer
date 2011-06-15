@@ -3,7 +3,7 @@
   <description>Collection of elements that may or may not be useful for debugging</description>
   <filename>../../gst/debugutils/.libs/libgstdebugutilsbad.so</filename>
   <basename>libgstdebugutilsbad.so</basename>
-  <version>0.10.21.1</version>
+  <version>0.10.22.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins git</package>
@@ -36,6 +36,27 @@
       <class>Generic</class>
       <description>FIXME</description>
       <author>David Schleef &lt;ds@schleef.org&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>debugspy</name>
+      <longname>DebugSpy</longname>
+      <class>Filter/Analyzer/Debug</class>
+      <description>DebugSpy provides information on buffers with bus messages</description>
+      <author>Guillaume Emont &lt;gemont@igalia.com&gt;</author>
       <pads>
         <caps>
           <name>sink</name>

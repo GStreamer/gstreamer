@@ -55,8 +55,6 @@ static void gst_chop_my_data_set_property (GObject * object,
     guint property_id, const GValue * value, GParamSpec * pspec);
 static void gst_chop_my_data_get_property (GObject * object,
     guint property_id, GValue * value, GParamSpec * pspec);
-static void gst_chop_my_data_dispose (GObject * object);
-static void gst_chop_my_data_finalize (GObject * object);
 
 static GstStateChangeReturn
 gst_chop_my_data_change_state (GstElement * element, GstStateChange transition);
@@ -117,8 +115,6 @@ gst_chop_my_data_class_init (GstChopMyDataClass * klass)
 
   gobject_class->set_property = gst_chop_my_data_set_property;
   gobject_class->get_property = gst_chop_my_data_get_property;
-  gobject_class->dispose = gst_chop_my_data_dispose;
-  gobject_class->finalize = gst_chop_my_data_finalize;
   element_class->change_state =
       GST_DEBUG_FUNCPTR (gst_chop_my_data_change_state);
 
@@ -215,32 +211,6 @@ gst_chop_my_data_get_property (GObject * object, guint property_id,
   }
 }
 
-void
-gst_chop_my_data_dispose (GObject * object)
-{
-  GstChopMyData *chopmydata;
-
-  g_return_if_fail (GST_IS_CHOP_MY_DATA (object));
-  chopmydata = GST_CHOP_MY_DATA (object);
-
-  /* clean up as possible.  may be called multiple times */
-
-  G_OBJECT_CLASS (parent_class)->dispose (object);
-}
-
-void
-gst_chop_my_data_finalize (GObject * object)
-{
-  GstChopMyData *chopmydata;
-
-  g_return_if_fail (GST_IS_CHOP_MY_DATA (object));
-  chopmydata = GST_CHOP_MY_DATA (object);
-
-  /* clean up object here */
-
-  G_OBJECT_CLASS (parent_class)->finalize (object);
-}
-
 static GstStateChangeReturn
 gst_chop_my_data_change_state (GstElement * element, GstStateChange transition)
 {
@@ -330,9 +300,15 @@ gst_chop_my_data_process (GstChopMyData * chopmydata, gboolean flush)
   }
 
   if (flush) {
-    buffer = gst_adapter_take_buffer (chopmydata->adapter,
-        gst_adapter_available (chopmydata->adapter));
-    ret = gst_pad_push (chopmydata->srcpad, buffer);
+    guint min_size = chopmydata->min_size;
+
+    while (gst_adapter_available (chopmydata->adapter) >= min_size) {
+      buffer = gst_adapter_take_buffer (chopmydata->adapter, min_size);
+      ret = gst_pad_push (chopmydata->srcpad, buffer);
+      if (ret != GST_FLOW_OK)
+        break;
+    }
+    gst_adapter_clear (chopmydata->adapter);
   }
 
   return ret;
@@ -358,7 +334,6 @@ gst_chop_my_data_chain (GstPad * pad, GstBuffer * buffer)
 static gboolean
 gst_chop_my_data_sink_event (GstPad * pad, GstEvent * event)
 {
-  GstFlowReturn ret = GST_FLOW_OK;
   gboolean res;
   GstChopMyData *chopmydata;
 
@@ -368,17 +343,17 @@ gst_chop_my_data_sink_event (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
-      ret = gst_chop_my_data_process (chopmydata, TRUE);
       res = gst_pad_push_event (chopmydata->srcpad, event);
       break;
     case GST_EVENT_FLUSH_STOP:
+      gst_adapter_clear (chopmydata->adapter);
       res = gst_pad_push_event (chopmydata->srcpad, event);
       break;
     case GST_EVENT_NEWSEGMENT:
       res = gst_pad_push_event (chopmydata->srcpad, event);
       break;
     case GST_EVENT_EOS:
-      ret = gst_chop_my_data_process (chopmydata, TRUE);
+      gst_chop_my_data_process (chopmydata, TRUE);
       res = gst_pad_push_event (chopmydata->srcpad, event);
       break;
     default:
@@ -387,7 +362,7 @@ gst_chop_my_data_sink_event (GstPad * pad, GstEvent * event)
   }
 
   gst_object_unref (chopmydata);
-  return TRUE;
+  return res;
 }
 
 static gboolean
@@ -410,5 +385,5 @@ gst_chop_my_data_src_event (GstPad * pad, GstEvent * event)
   }
 
   gst_object_unref (chopmydata);
-  return TRUE;
+  return res;
 }

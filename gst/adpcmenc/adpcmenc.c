@@ -550,7 +550,7 @@ adpcmenc_base_init (gpointer klass)
   gst_element_class_set_details_simple (element_class, "ADPCM encoder",
       "Codec/Encoder/Audio",
       "Encode ADPCM audio",
-      "Pioneers of the Inevitable <songbird@songbirdnest.com");
+      "Pioneers of the Inevitable <songbird@songbirdnest.com>");
 }
 
 static gboolean

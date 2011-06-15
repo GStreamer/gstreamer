@@ -98,6 +98,8 @@ static void gst_vp8_dec_get_property (GObject * object, guint prop_id,
 
 static gboolean gst_vp8_dec_start (GstBaseVideoDecoder * decoder);
 static gboolean gst_vp8_dec_stop (GstBaseVideoDecoder * decoder);
+static gboolean gst_vp8_dec_set_format (GstBaseVideoDecoder * decoder,
+    GstVideoState * state);
 static gboolean gst_vp8_dec_reset (GstBaseVideoDecoder * decoder);
 static GstFlowReturn gst_vp8_dec_parse_data (GstBaseVideoDecoder * decoder,
     gboolean at_eos);
@@ -172,11 +174,15 @@ gst_vp8_dec_class_init (GstVP8DecClass * klass)
           0, 16, DEFAULT_NOISE_LEVEL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  base_video_decoder_class->start = gst_vp8_dec_start;
-  base_video_decoder_class->stop = gst_vp8_dec_stop;
-  base_video_decoder_class->reset = gst_vp8_dec_reset;
-  base_video_decoder_class->parse_data = gst_vp8_dec_parse_data;
-  base_video_decoder_class->handle_frame = gst_vp8_dec_handle_frame;
+  base_video_decoder_class->start = GST_DEBUG_FUNCPTR (gst_vp8_dec_start);
+  base_video_decoder_class->stop = GST_DEBUG_FUNCPTR (gst_vp8_dec_stop);
+  base_video_decoder_class->reset = GST_DEBUG_FUNCPTR (gst_vp8_dec_reset);
+  base_video_decoder_class->set_format =
+      GST_DEBUG_FUNCPTR (gst_vp8_dec_set_format);
+  base_video_decoder_class->parse_data =
+      GST_DEBUG_FUNCPTR (gst_vp8_dec_parse_data);
+  base_video_decoder_class->handle_frame =
+      GST_DEBUG_FUNCPTR (gst_vp8_dec_handle_frame);
 
   GST_DEBUG_CATEGORY_INIT (gst_vp8dec_debug, "vp8dec", 0, "VP8 Decoder");
 }
@@ -271,6 +277,17 @@ gst_vp8_dec_stop (GstBaseVideoDecoder * base_video_decoder)
   if (gst_vp8_dec->decoder_inited)
     vpx_codec_destroy (&gst_vp8_dec->decoder);
   gst_vp8_dec->decoder_inited = FALSE;
+  return TRUE;
+}
+
+static gboolean
+gst_vp8_dec_set_format (GstBaseVideoDecoder * decoder, GstVideoState * state)
+{
+  GstVP8Dec *gst_vp8_dec = GST_VP8_DEC (decoder);
+
+  GST_DEBUG_OBJECT (gst_vp8_dec, "set_format");
+  gst_vp8_dec->decoder_inited = FALSE;
+
   return TRUE;
 }
 
@@ -381,15 +398,17 @@ gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder, GstVideoFrame * frame)
 
     if (status != VPX_CODEC_OK || !stream_info.is_kf) {
       GST_WARNING_OBJECT (decoder, "No keyframe, skipping");
-      gst_base_video_decoder_skip_frame (decoder, frame);
+      gst_base_video_decoder_finish_frame (decoder, frame);
       return GST_FLOW_OK;
     }
 
-    /* should set size here */
     state->width = stream_info.w;
     state->height = stream_info.h;
     state->format = GST_VIDEO_FORMAT_I420;
+    state->par_n = 1;
+    state->par_d = 1;
     gst_vp8_dec_send_tags (dec);
+    gst_base_video_decoder_set_src_caps (decoder);
 
     caps = vpx_codec_get_caps (&vpx_codec_vp8_dx_algo);
 
@@ -431,21 +450,6 @@ gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder, GstVideoFrame * frame)
   if (!GST_BUFFER_FLAG_IS_SET (frame->sink_buffer, GST_BUFFER_FLAG_DELTA_UNIT))
     gst_base_video_decoder_set_sync_point (decoder);
 
-#if 0
-  if (GST_PAD_CAPS (GST_BASE_VIDEO_CODEC_SRC_PAD (decoder)) == NULL) {
-    GstCaps *caps;
-
-    caps = gst_video_format_new_caps (decoder->state.format,
-        decoder->state.width, decoder->state.height,
-        decoder->state.fps_n, decoder->state.fps_d,
-        decoder->state.par_n, decoder->state.par_d);
-
-    GST_DEBUG ("setting caps %" GST_PTR_FORMAT, caps);
-
-    gst_pad_set_caps (GST_BASE_VIDEO_CODEC_SRC_PAD (decoder), caps);
-  }
-#endif
-
   deadline = gst_base_video_decoder_get_max_decode_time (decoder, frame);
   if (deadline < 0) {
     decoder_deadline = 1;
@@ -469,15 +473,15 @@ gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder, GstVideoFrame * frame)
     if (deadline < 0) {
       GST_LOG_OBJECT (dec, "Skipping late frame (%f s past deadline)",
           (double) -deadline / GST_SECOND);
-      gst_base_video_decoder_skip_frame (decoder, frame);
+      gst_base_video_decoder_finish_frame (decoder, frame);
     } else {
       ret = gst_base_video_decoder_alloc_src_frame (decoder, frame);
 
       if (ret == GST_FLOW_OK) {
         gst_vp8_dec_image_to_buffer (dec, img, frame->src_buffer);
-        gst_base_video_decoder_finish_frame (decoder, frame);
+        ret = gst_base_video_decoder_finish_frame (decoder, frame);
       } else {
-        gst_base_video_decoder_skip_frame (decoder, frame);
+        gst_base_video_decoder_finish_frame (decoder, frame);
       }
     }
 
@@ -489,7 +493,7 @@ gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder, GstVideoFrame * frame)
     }
   } else {
     /* Invisible frame */
-    gst_base_video_decoder_skip_frame (decoder, frame);
+    gst_base_video_decoder_finish_frame (decoder, frame);
   }
 
   return ret;

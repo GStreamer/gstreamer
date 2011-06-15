@@ -36,7 +36,6 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstbytereader.h>
-#include <gst/baseparse/gstbaseparse.h>
 #include "gstdiracparse.h"
 
 /* prototypes */
@@ -77,14 +76,14 @@ static GstStaticPadTemplate gst_dirac_parse_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("application/unknown")
+    GST_STATIC_CAPS ("video/x-dirac, parsed=(boolean)FALSE")
     );
 
 static GstStaticPadTemplate gst_dirac_parse_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("application/unknown")
+    GST_STATIC_CAPS ("video/x-dirac, parsed=(boolean)TRUE")
     );
 
 /* class initialization */
@@ -102,8 +101,9 @@ gst_dirac_parse_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_dirac_parse_sink_template));
 
-  gst_element_class_set_details_simple (element_class, "FIXME",
-      "Generic", "FIXME", "David Schleef <ds@schleef.org>");
+  gst_element_class_set_details_simple (element_class, "Dirac parser",
+      "Codec/Parser/Video", "Parses Dirac streams",
+      "David Schleef <ds@schleef.org>");
 }
 
 static void
@@ -144,10 +144,7 @@ void
 gst_dirac_parse_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstDiracParse *diracparse;
-
   g_return_if_fail (GST_IS_DIRAC_PARSE (object));
-  diracparse = GST_DIRAC_PARSE (object);
 
   switch (property_id) {
     default:
@@ -160,10 +157,7 @@ void
 gst_dirac_parse_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstDiracParse *diracparse;
-
   g_return_if_fail (GST_IS_DIRAC_PARSE (object));
-  diracparse = GST_DIRAC_PARSE (object);
 
   switch (property_id) {
     default:
@@ -175,10 +169,7 @@ gst_dirac_parse_get_property (GObject * object, guint property_id,
 void
 gst_dirac_parse_dispose (GObject * object)
 {
-  GstDiracParse *diracparse;
-
   g_return_if_fail (GST_IS_DIRAC_PARSE (object));
-  diracparse = GST_DIRAC_PARSE (object);
 
   /* clean up as possible.  may be called multiple times */
 
@@ -188,10 +179,7 @@ gst_dirac_parse_dispose (GObject * object)
 void
 gst_dirac_parse_finalize (GObject * object)
 {
-  GstDiracParse *diracparse;
-
   g_return_if_fail (GST_IS_DIRAC_PARSE (object));
-  diracparse = GST_DIRAC_PARSE (object);
 
   /* clean up object here */
 
@@ -238,8 +226,8 @@ gst_dirac_parse_check_valid_frame (GstBaseParse * parse,
   GstDiracParse *diracparse = GST_DIRAC_PARSE (parse);
   int off;
   guint32 next_header;
-  gboolean sync;
-  gboolean drain;
+  gboolean lost_sync;
+  gboolean draining;
 
   if (G_UNLIKELY (GST_BUFFER_SIZE (frame->buffer) < 13))
     return FALSE;
@@ -268,10 +256,10 @@ gst_dirac_parse_check_valid_frame (GstBaseParse * parse,
 
   GST_LOG ("framesize %d", *framesize);
 
-  sync = GST_BASE_PARSE_FRAME_SYNC (frame);
-  drain = GST_BASE_PARSE_FRAME_DRAIN (frame);
+  lost_sync = GST_BASE_PARSE_LOST_SYNC (frame);
+  draining = GST_BASE_PARSE_DRAINING (frame);
 
-  if (!sync && !drain) {
+  if (lost_sync && !draining) {
     guint32 next_sync_word = 0;
 
     next_header = GST_READ_UINT32_BE (GST_BUFFER_DATA (frame->buffer) + 5);

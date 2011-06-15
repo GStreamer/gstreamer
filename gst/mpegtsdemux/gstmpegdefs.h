@@ -141,6 +141,11 @@
 #define ST_DSMCC                        0x08
 #define ST_H222_1                       0x09
 
+#define ST_DSMCC_A                      0x0a
+#define ST_DSMCC_B                      0x0b
+#define ST_DSMCC_C                      0x0c
+#define ST_DSMCC_D                      0x0d
+
 /* later extensions */
 #define ST_AUDIO_AAC                    0x0f
 #define ST_VIDEO_MPEG4                  0x10

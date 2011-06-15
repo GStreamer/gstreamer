@@ -25,6 +25,7 @@
 
 #include <gst/gst.h>
 #include <gst/basecamerabinsrc/gstbasecamerasrc.h>
+#include <gst/basecamerabinsrc/gstcamerabinpreview.h>
 #include "camerabingeneral.h"
 
 G_BEGIN_DECLS
@@ -73,6 +74,7 @@ struct _GstWrapperCameraBinSrc
 
   /* source elements */
   GstElement *src_vid_src;
+  GstElement *video_filter;
   GstElement *src_filter;
   GstElement *src_zoom_crop;
   GstElement *src_zoom_scale;
@@ -93,6 +95,7 @@ struct _GstWrapperCameraBinSrc
 
   /* Application configurable elements */
   GstElement *app_vid_src;
+  GstElement *app_vid_filter;
 
   /* Caps that videosrc supports */
   GstCaps *allowed_caps;
@@ -111,13 +114,6 @@ struct _GstWrapperCameraBinSrc
   GstCaps *image_capture_caps;
   gboolean image_renegotiate;
   gboolean video_renegotiate;
-
-  /* Preview convert pipeline */
-  GstCameraBinPreviewPipelineData *preview_pipeline;
-  gboolean post_previews;
-  GstCaps *preview_caps;
-  GstElement *preview_filter;
-  gboolean preview_filter_changed;
 };
 
 

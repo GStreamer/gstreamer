@@ -35,6 +35,10 @@
 #endif
 
 #include "gstviewfinderbin.h"
+#include "camerabingeneral.h"
+#include <gst/pbutils/pbutils.h>
+
+#include <gst/gst-i18n-plugin.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_viewfinder_bin_debug);
 #define GST_CAT_DEFAULT gst_viewfinder_bin_debug
@@ -144,33 +148,34 @@ gst_viewfinder_bin_create_elements (GstViewfinderBin * vfbin)
   GstElement *csp = NULL;
   GstElement *videoscale = NULL;
   GstPad *pad = NULL;
-  gboolean added = FALSE;
+  const gchar *missing_element_name;
 
   GST_DEBUG_OBJECT (vfbin, "Creating internal elements");
 
   if (!vfbin->elements_created) {
     /* create elements */
-    csp = gst_element_factory_make ("ffmpegcolorspace", "vfbin-csp");
-    if (!csp)
-      goto error;
+    csp =
+        gst_camerabin_create_and_add_element (GST_BIN (vfbin),
+        "ffmpegcolorspace", "vfbin-csp");
+    if (!csp) {
+      missing_element_name = "ffmpegcolorspace";
+      goto missing_element;
+    }
 
-    videoscale = gst_element_factory_make ("videoscale", "vfbin-videoscale");
-    if (!videoscale)
-      goto error;
-
-    GST_DEBUG_OBJECT (vfbin, "Internal elements created, proceding to linking");
-
-    /* add and link */
-    gst_bin_add_many (GST_BIN_CAST (vfbin), csp, videoscale, NULL);
-    added = TRUE;
-    if (!gst_element_link (csp, videoscale))
-      goto error;
+    videoscale =
+        gst_camerabin_create_and_add_element (GST_BIN (vfbin), "videoscale",
+        "vfbin-videoscale");
+    if (!videoscale) {
+      missing_element_name = "videoscale";
+      goto missing_element;
+    }
 
     /* add ghostpad */
     pad = gst_element_get_static_pad (csp, "sink");
     if (!gst_ghost_pad_set_target (GST_GHOST_PAD (vfbin->ghostpad), pad))
       goto error;
     gst_object_unref (pad);
+    pad = NULL;
 
     vfbin->elements_created = TRUE;
     GST_DEBUG_OBJECT (vfbin, "Elements succesfully created and linked");
@@ -188,9 +193,14 @@ gst_viewfinder_bin_create_elements (GstViewfinderBin * vfbin)
   if (!vfbin->video_sink) {
     if (vfbin->user_video_sink)
       vfbin->video_sink = gst_object_ref (vfbin->user_video_sink);
-    else
+    else {
       vfbin->video_sink = gst_element_factory_make ("autovideosink",
           "vfbin-sink");
+      if (!vfbin->video_sink) {
+        missing_element_name = "autovideosink";
+        goto missing_element;
+      }
+    }
 
     gst_bin_add (GST_BIN_CAST (vfbin), gst_object_ref (vfbin->video_sink));
 
@@ -199,24 +209,29 @@ gst_viewfinder_bin_create_elements (GstViewfinderBin * vfbin)
           "vfbin-videoscale");
 
     if (!gst_element_link_pads (videoscale, "src", vfbin->video_sink, "sink")) {
-      GST_WARNING_OBJECT (vfbin, "Failed to link the new sink");
+      GST_ELEMENT_ERROR (vfbin, CORE, NEGOTIATION, (NULL),
+          ("linking videoscale and viewfindersink failed"));
     }
+
+    /* prevent it from being removed from the bin at this point */
+    videoscale = NULL;
   }
 
   return TRUE;
+
+missing_element:
+  gst_element_post_message (GST_ELEMENT_CAST (vfbin),
+      gst_missing_element_message_new (GST_ELEMENT_CAST (vfbin),
+          missing_element_name));
+  GST_ELEMENT_ERROR (vfbin, CORE, MISSING_PLUGIN,
+      (_("Missing element '%s' - check your GStreamer installation."),
+          missing_element_name), (NULL));
+  goto error;
 
 error:
   GST_WARNING_OBJECT (vfbin, "Creating internal elements failed");
   if (pad)
     gst_object_unref (pad);
-  if (!added) {
-    if (csp)
-      gst_object_unref (csp);
-    if (videoscale)
-      gst_object_unref (videoscale);
-  } else {
-    gst_bin_remove_many (GST_BIN_CAST (vfbin), csp, videoscale, NULL);
-  }
   return FALSE;
 }
 

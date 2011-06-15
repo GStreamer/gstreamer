@@ -46,7 +46,7 @@
 /**
  * SECTION:element-edgedetect
  *
- * FIXME:Describe edgedetect here.
+ * Performs canny edge detection on videos and images
  *
  * <refsect2>
  * <title>Example launch line</title>
@@ -151,7 +151,6 @@ gst_edgedetect_class_init (GstedgedetectClass * klass)
   GObjectClass *gobject_class;
 
   gobject_class = (GObjectClass *) klass;
-  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_edgedetect_finalize);
   gobject_class->set_property = gst_edgedetect_set_property;
@@ -324,7 +323,6 @@ gst_edgedetect_plugin_init (GstPlugin * plugin)
 {
   /* debug category for fltering log messages
    *
-   * exchange the string 'Template edgedetect' with your description
    */
   GST_DEBUG_CATEGORY_INIT (gst_edgedetect_debug, "edgedetect",
       0, "Performs canny edge detection on videos and images");

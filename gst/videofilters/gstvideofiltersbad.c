@@ -23,6 +23,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstbasetransform.h>
+#include "gstscenechange.h"
 #include "gstzebrastripe.h"
 
 
@@ -30,6 +31,8 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
 
+  gst_element_register (plugin, "scenechange", GST_RANK_NONE,
+      gst_scene_change_get_type ());
   gst_element_register (plugin, "zebrastripe", GST_RANK_NONE,
       gst_zebra_stripe_get_type ());
 

@@ -54,6 +54,7 @@ struct _GstFaac {
        bps,
        bitrate,
        profile,
+       mpegversion,
        shortctl,
        outputformat;
   gboolean tns,

@@ -1,13 +1,13 @@
 # Polish translation for gst-plugins-bad.
 # This file is distributed under the same license as the gst-plugins-bad package.
-# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2009.
+# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2011.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 0.10.13.2\n"
+"Project-Id-Version: gst-plugins-bad 0.10.21.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-10-19 23:33+0100\n"
-"PO-Revision-Date: 2009-08-26 16:52+0200\n"
+"POT-Creation-Date: 2011-04-27 12:55+0100\n"
+"PO-Revision-Date: 2011-04-26 17:57+0200\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
 "Language: pl\n"
@@ -29,10 +29,11 @@ msgid ""
 "Could not read DVD. This may be because the DVD is encrypted and a DVD "
 "decryption library is not installed."
 msgstr ""
+"Nie udało się odczytać DVD. Powodem może być to, że płyta jest zaszyfrowana, "
+"a biblioteka odszyfrowująca nie została zainstalowana."
 
-#, fuzzy
 msgid "Could not read DVD."
-msgstr "Nie udało się odczytać informacji o tytułach dla DVD."
+msgstr "Nie udało się odczytać DVD."
 
 msgid "No file name specified for writing."
 msgstr "Nie określono nazwy pliku do zapisu."
@@ -66,9 +67,3 @@ msgstr "Nie udało się pobrać ustawień z urządzenia frontendu \"%s\"."
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Nie udało się otworzyć pliku \"%s\" do odczytu."
-
-#~ msgid "%s %d"
-#~ msgstr "%s %d"
-
-#~ msgid "Internal clock error."
-#~ msgstr "Błąd wewnętrzny zegara."

@@ -356,7 +356,8 @@ mpegts_packetizer_parse_descriptors (MpegTSPacketizer * packetizer,
     /* include tag and length */
     desc = g_string_new_len ((gchar *) data - 2, length + 2);
     data += length;
-    /* G_TYPE_GSTING is a GBoxed type and is used so properly marshalled from python */
+    /* G_TYPE_GSTRING is a GBoxed type and is used so properly marshalled from
+     * python (FIXME: should either be G_TYPE_STRING or GST_TYPE_BUFFFER) */
     g_value_init (&value, G_TYPE_GSTRING);
     g_value_take_boxed (&value, desc);
     g_value_array_append (descriptors, &value);
@@ -1646,8 +1647,8 @@ mpegts_packetizer_parse_eit (MpegTSPacketizer * packetizer,
             DESC_LENGTH (event_descriptor)) {
 
           eventname_tmp =
-              get_encoding_and_convert (eventname, eventname_length),
-              eventdescription_tmp =
+              get_encoding_and_convert (eventname, eventname_length);
+          eventdescription_tmp =
               get_encoding_and_convert (eventdescription,
               eventdescription_length);
 
@@ -2360,24 +2361,9 @@ get_encoding (const gchar * text, guint * start_text, gboolean * is_multibyte)
 
   firstbyte = (guint8) text[0];
 
-  if (firstbyte == 0x01) {
-    encoding = g_strdup ("iso8859-5");
-    *start_text = 1;
-    *is_multibyte = FALSE;
-  } else if (firstbyte == 0x02) {
-    encoding = g_strdup ("iso8859-6");
-    *start_text = 1;
-    *is_multibyte = FALSE;
-  } else if (firstbyte == 0x03) {
-    encoding = g_strdup ("iso8859-7");
-    *start_text = 1;
-    *is_multibyte = FALSE;
-  } else if (firstbyte == 0x04) {
-    encoding = g_strdup ("iso8859-8");
-    *start_text = 1;
-    *is_multibyte = FALSE;
-  } else if (firstbyte == 0x05) {
-    encoding = g_strdup ("iso8859-9");
+  /* ETSI EN 300 468, "Selection of character table" */
+  if (firstbyte <= 0x0B) {
+    encoding = g_strdup_printf ("iso8859-%u", firstbyte + 4);
     *start_text = 1;
     *is_multibyte = FALSE;
   } else if (firstbyte >= 0x20) {

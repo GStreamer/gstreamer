@@ -154,6 +154,10 @@ gst_vdp_decoder_init_decoder (GstVdpDecoder * vdp_decoder,
       goto destroy_decoder_error;
   }
 
+  if (!gst_base_video_decoder_set_src_caps (GST_BASE_VIDEO_DECODER
+          (vdp_decoder)))
+    return GST_FLOW_NOT_NEGOTIATED;
+
   state =
       gst_base_video_decoder_get_state (GST_BASE_VIDEO_DECODER (vdp_decoder));
 

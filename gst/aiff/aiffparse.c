@@ -90,10 +90,11 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     );
 
 static GstStaticPadTemplate src_template_factory =
-GST_STATIC_PAD_TEMPLATE ("src",
+    GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_AUDIO_INT_PAD_TEMPLATE_CAPS)
+    GST_STATIC_CAPS (GST_AUDIO_INT_PAD_TEMPLATE_CAPS ";"
+        GST_AUDIO_FLOAT_PAD_TEMPLATE_CAPS)
     );
 
 GST_BOILERPLATE (GstAiffParse, gst_aiff_parse, GstElement, GST_TYPE_ELEMENT);
@@ -203,25 +204,6 @@ gst_aiff_parse_init (GstAiffParse * aiffparse, GstAiffParseClass * g_class)
       GST_DEBUG_FUNCPTR (gst_aiff_parse_srcpad_event));
   gst_element_add_pad (GST_ELEMENT_CAST (aiffparse), aiffparse->srcpad);
 }
-
-/* Compute (value * nom) % denom, avoiding overflow.  This can be used
- * to perform ceiling or rounding division together with
- * gst_util_uint64_scale[_int]. */
-#define uint64_scale_modulo(val, nom, denom) \
-  ((val % denom) * (nom % denom) % denom)
-
-/* Like gst_util_uint64_scale, but performs ceiling division. */
-static guint64
-uint64_ceiling_scale (guint64 val, guint64 num, guint64 denom)
-{
-  guint64 result = gst_util_uint64_scale_int (val, num, denom);
-
-  if (uint64_scale_modulo (val, num, denom) == 0)
-    return result;
-  else
-    return result + 1;
-}
-
 
 static gboolean
 gst_aiff_parse_parse_file_header (GstAiffParse * aiff, GstBuffer * buf)
@@ -387,8 +369,8 @@ gst_aiff_parse_perform_seek (GstAiffParse * aiff, GstEvent * event)
      * bytes. */
     if (aiff->bps > 0)
       aiff->offset =
-          uint64_ceiling_scale (seeksegment.last_stop, (guint64) aiff->bps,
-          GST_SECOND);
+          gst_util_uint64_scale_ceil (seeksegment.last_stop,
+          (guint64) aiff->bps, GST_SECOND);
     else
       aiff->offset = seeksegment.last_stop;
     GST_LOG_OBJECT (aiff, "offset=%" G_GUINT64_FORMAT, aiff->offset);
@@ -404,7 +386,7 @@ gst_aiff_parse_perform_seek (GstAiffParse * aiff, GstEvent * event)
   if (stop_type != GST_SEEK_TYPE_NONE) {
     if (aiff->bps > 0)
       aiff->end_offset =
-          uint64_ceiling_scale (stop, (guint64) aiff->bps, GST_SECOND);
+          gst_util_uint64_scale_ceil (stop, (guint64) aiff->bps, GST_SECOND);
     else
       aiff->end_offset = stop;
     GST_LOG_OBJECT (aiff, "end_offset=%" G_GUINT64_FORMAT, aiff->end_offset);
@@ -594,7 +576,8 @@ gst_aiff_parse_calculate_duration (GstAiffParse * aiff)
 
   if (aiff->datasize > 0 && aiff->bps > 0) {
     aiff->duration =
-        uint64_ceiling_scale (aiff->datasize, GST_SECOND, (guint64) aiff->bps);
+        gst_util_uint64_scale_ceil (aiff->datasize, GST_SECOND,
+        (guint64) aiff->bps);
     GST_INFO_OBJECT (aiff, "Got duration %" GST_TIME_FORMAT,
         GST_TIME_ARGS (aiff->duration));
     return TRUE;
@@ -673,19 +656,37 @@ gst_aiff_parse_parse_comm (GstAiffParse * aiff, GstBuffer * buf)
   aiff->width = GST_ROUND_UP_8 (aiff->depth);
   aiff->rate = (int) gst_aiff_parse_read_IEEE80 (data + 8);
 
+  aiff->floating_point = FALSE;
+
   if (aiff->is_aifc) {
+    guint32 fourcc = GST_READ_UINT32_LE (data + 18);
+
     /* We only support the 'trivial' uncompressed AIFC, but it can be
      * either big or little endian */
-    if (GST_READ_UINT32_LE (data + 18) == GST_MAKE_FOURCC ('N', 'O', 'N', 'E'))
-      aiff->endianness = G_BIG_ENDIAN;
-    else if (GST_READ_UINT32_LE (data + 18) ==
-        GST_MAKE_FOURCC ('s', 'o', 'w', 't'))
-      aiff->endianness = G_LITTLE_ENDIAN;
-    else {
-      GST_WARNING_OBJECT (aiff, "Unsupported compression in AIFC "
-          "file: %" GST_FOURCC_FORMAT,
-          GST_FOURCC_ARGS (GST_READ_UINT32_LE (data + 18)));
-      return FALSE;
+    switch (fourcc) {
+      case GST_MAKE_FOURCC ('N', 'O', 'N', 'E'):
+        aiff->endianness = G_BIG_ENDIAN;
+        break;
+      case GST_MAKE_FOURCC ('s', 'o', 'w', 't'):
+        aiff->endianness = G_LITTLE_ENDIAN;
+        break;
+      case GST_MAKE_FOURCC ('F', 'L', '3', '2'):
+      case GST_MAKE_FOURCC ('f', 'l', '3', '2'):
+        aiff->floating_point = TRUE;
+        aiff->width = aiff->depth = 32;
+        aiff->endianness = G_BIG_ENDIAN;
+        break;
+      case GST_MAKE_FOURCC ('f', 'l', '6', '4'):
+        aiff->floating_point = TRUE;
+        aiff->width = aiff->depth = 64;
+        aiff->endianness = G_BIG_ENDIAN;
+        break;
+      default:
+        GST_WARNING_OBJECT (aiff, "Unsupported compression in AIFC "
+            "file: %" GST_FOURCC_FORMAT,
+            GST_FOURCC_ARGS (GST_READ_UINT32_LE (data + 18)));
+        return FALSE;
+
     }
   } else
     aiff->endianness = G_BIG_ENDIAN;
@@ -737,12 +738,20 @@ gst_aiff_parse_create_caps (GstAiffParse * aiff)
 {
   GstCaps *caps;
 
-  caps = gst_caps_new_simple ("audio/x-raw-int",
-      "width", G_TYPE_INT, aiff->width,
-      "depth", G_TYPE_INT, aiff->depth,
-      "channels", G_TYPE_INT, aiff->channels,
-      "endianness", G_TYPE_INT, aiff->endianness,
-      "rate", G_TYPE_INT, aiff->rate, "signed", G_TYPE_BOOLEAN, TRUE, NULL);
+  if (aiff->floating_point) {
+    caps = gst_caps_new_simple ("audio/x-raw-float",
+        "width", G_TYPE_INT, aiff->width,
+        "channels", G_TYPE_INT, aiff->channels,
+        "endianness", G_TYPE_INT, aiff->endianness,
+        "rate", G_TYPE_INT, aiff->rate, NULL);
+  } else {
+    caps = gst_caps_new_simple ("audio/x-raw-int",
+        "width", G_TYPE_INT, aiff->width,
+        "depth", G_TYPE_INT, aiff->depth,
+        "channels", G_TYPE_INT, aiff->channels,
+        "endianness", G_TYPE_INT, aiff->endianness,
+        "rate", G_TYPE_INT, aiff->rate, "signed", G_TYPE_BOOLEAN, TRUE, NULL);
+  }
 
   GST_DEBUG_OBJECT (aiff, "Created caps: %" GST_PTR_FORMAT, caps);
   return caps;
@@ -831,7 +840,6 @@ gst_aiff_parse_stream_headers (GstAiffParse * aiff)
         break;
       }
       case GST_MAKE_FOURCC ('S', 'S', 'N', 'D'):{
-        GstFormat fmt;
         GstBuffer *ssndbuf = NULL;
         const guint8 *ssnddata = NULL;
         guint32 datasize;
@@ -860,14 +868,13 @@ gst_aiff_parse_stream_headers (GstAiffParse * aiff)
         } else {
           gst_buffer_unref (ssndbuf);
         }
-        /* 8 byte chunk header, 16 byte SSND header */
-        aiff->offset += 24;
+        /* 8 byte chunk header, 8 byte SSND header */
+        aiff->offset += 16;
 
         datasize = size - 16;
 
         aiff->datastart = aiff->offset + aiff->ssnd_offset;
         /* file might be truncated */
-        fmt = GST_FORMAT_BYTES;
         if (upstream_size) {
           size = MIN (datasize, (upstream_size - aiff->datastart));
         }
@@ -1123,9 +1130,10 @@ iterate_adapter:
 
   if (aiff->bps > 0) {
     /* and timestamps if we have a bitrate, be careful for overflows */
-    timestamp = uint64_ceiling_scale (pos, GST_SECOND, (guint64) aiff->bps);
+    timestamp =
+        gst_util_uint64_scale_ceil (pos, GST_SECOND, (guint64) aiff->bps);
     next_timestamp =
-        uint64_ceiling_scale (nextpos, GST_SECOND, (guint64) aiff->bps);
+        gst_util_uint64_scale_ceil (nextpos, GST_SECOND, (guint64) aiff->bps);
     duration = next_timestamp - timestamp;
 
     /* update current running segment position */
@@ -1345,7 +1353,7 @@ gst_aiff_parse_pad_convert (GstPad * pad,
           break;
         case GST_FORMAT_TIME:
           if (aiffparse->bps > 0) {
-            *dest_value = uint64_ceiling_scale (src_value, GST_SECOND,
+            *dest_value = gst_util_uint64_scale_ceil (src_value, GST_SECOND,
                 (guint64) aiffparse->bps);
             break;
           }

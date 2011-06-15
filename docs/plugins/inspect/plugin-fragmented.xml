@@ -1,0 +1,35 @@
+<plugin>
+  <name>fragmented</name>
+  <description>Fragmented streaming plugins</description>
+  <filename>../../gst/hls/.libs/libgstfragmented.so</filename>
+  <basename>libgstfragmented.so</basename>
+  <version>0.10.22.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins</package>
+  <origin>http://www.gstreamer.org/</origin>
+  <elements>
+    <element>
+      <name>hlsdemux</name>
+      <longname>HLS Demuxer</longname>
+      <class>Demuxer/URIList</class>
+      <description>HTTP Live Streaming demuxer</description>
+      <author>Marc-Andre Lureau &lt;marcandre.lureau@gmail.com&gt;
+Andoni Morales Alastruey &lt;ylatuya@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/x-hls</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

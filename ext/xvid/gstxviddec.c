@@ -34,6 +34,11 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-xvid, "
         "width = (int) [ 0, MAX ], "
+        "height = (int) [ 0, MAX ], " "framerate = (fraction) [ 0/1, MAX ]; "
+        "video/mpeg, "
+        "mpegversion = (int) 4, "
+        "systemstream = (boolean) FALSE, "
+        "width = (int) [ 0, MAX ], "
         "height = (int) [ 0, MAX ], " "framerate = (fraction) [ 0/1, MAX ]")
     );
 

@@ -37,6 +37,7 @@ typedef unsigned __int16 orc_uint16;
 typedef unsigned __int32 orc_uint32;
 typedef unsigned __int64 orc_uint64;
 #define ORC_UINT64_C(x) (x##Ui64)
+#define inline __inline
 #else
 #include <limits.h>
 typedef signed char orc_int8;
@@ -59,10 +60,19 @@ typedef union { orc_int16 i; orc_int8 x2[2]; } orc_union16;
 typedef union { orc_int32 i; float f; orc_int16 x2[2]; orc_int8 x4[4]; } orc_union32;
 typedef union { orc_int64 i; double f; orc_int32 x2[2]; float x2f[2]; orc_int16 x4[4]; } orc_union64;
 #endif
-void orc_same_parity_sad_planar_yuv (guint32 * a1, const orc_uint8 * s1, const orc_uint8 * s2, int p2, int n);
-void orc_same_parity_ssd_planar_yuv (guint32 * a1, const orc_uint8 * s1, const orc_uint8 * s2, int p2, int n);
-void orc_same_parity_3_tap_planar_yuv (guint32 * a1, const orc_uint8 * s1, const orc_uint8 * s2, const orc_uint8 * s3, const orc_uint8 * s4, const orc_uint8 * s5, const orc_uint8 * s6, int p2, int n);
-void orc_opposite_parity_5_tap_planar_yuv (guint32 * a1, const orc_uint8 * s1, const orc_uint8 * s2, const orc_uint8 * s3, const orc_uint8 * s4, const orc_uint8 * s5, int p2, int n);
+#ifndef ORC_RESTRICT
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
+#define ORC_RESTRICT restrict
+#elif defined(__GNUC__) && __GNUC__ >= 4
+#define ORC_RESTRICT __restrict__
+#else
+#define ORC_RESTRICT
+#endif
+#endif
+void orc_same_parity_sad_planar_yuv (guint32 * ORC_RESTRICT a1, const orc_uint8 * ORC_RESTRICT s1, const orc_uint8 * ORC_RESTRICT s2, int p2, int n);
+void orc_same_parity_ssd_planar_yuv (guint32 * ORC_RESTRICT a1, const orc_uint8 * ORC_RESTRICT s1, const orc_uint8 * ORC_RESTRICT s2, int p2, int n);
+void orc_same_parity_3_tap_planar_yuv (guint32 * ORC_RESTRICT a1, const orc_uint8 * ORC_RESTRICT s1, const orc_uint8 * ORC_RESTRICT s2, const orc_uint8 * ORC_RESTRICT s3, const orc_uint8 * ORC_RESTRICT s4, const orc_uint8 * ORC_RESTRICT s5, const orc_uint8 * ORC_RESTRICT s6, int p2, int n);
+void orc_opposite_parity_5_tap_planar_yuv (guint32 * ORC_RESTRICT a1, const orc_uint8 * ORC_RESTRICT s1, const orc_uint8 * ORC_RESTRICT s2, const orc_uint8 * ORC_RESTRICT s3, const orc_uint8 * ORC_RESTRICT s4, const orc_uint8 * ORC_RESTRICT s5, int p2, int n);
 
 #ifdef __cplusplus
 }

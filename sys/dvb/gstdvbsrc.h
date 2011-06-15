@@ -52,6 +52,8 @@ G_BEGIN_DECLS
     int fd_frontend;
     int fd_dvr;
     int fd_filters[MAX_FILTERS];
+    GstPoll *poll;
+    GstPollFD poll_fd_dvr;
 
     guint16 pids[MAX_FILTERS];
     unsigned int freq;
@@ -68,11 +70,11 @@ G_BEGIN_DECLS
     int transmission_mode;
     int hierarchy_information;
     int inversion;
+    guint64 timeout;
 
     GstDvbSrcPol pol;
     guint stats_interval;
     guint stats_counter;
-    gboolean need_unlock;
   };
 
   struct _GstDvbSrcClass

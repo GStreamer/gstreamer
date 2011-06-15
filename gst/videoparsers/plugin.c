@@ -25,6 +25,7 @@
 #include "gsth263parse.h"
 #include "gsth264parse.h"
 #include "gstdiracparse.h"
+#include "gstmpegvideoparse.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -37,6 +38,8 @@ plugin_init (GstPlugin * plugin)
       GST_RANK_NONE, GST_TYPE_H264_PARSE);
   ret = gst_element_register (plugin, "diracparse",
       GST_RANK_NONE, GST_TYPE_DIRAC_PARSE);
+  ret = gst_element_register (plugin, "mpegvideoparse",
+      GST_RANK_NONE, GST_TYPE_MPEGVIDEO_PARSE);
 
   return ret;
 }

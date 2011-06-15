@@ -10,20 +10,20 @@ GObject
       ADPCMEnc
       GstAiffMux
       GstAiffParse
-      GstAmrWbEnc
       GstAsfMux
       GstAsfParse
       GstAssRender
-      GstBaseParseBad
-        GstAacParse
-        GstAc3Parse
-        GstAmrParse
-        GstDcaParse
+      GstBaseAudioVisualizer
+        GstSpaceScope
+        GstSpectraScope
+        GstSynaeScope
+        GstWaveScope
+      GstBaseParse
         GstDiracParse
-        GstFlacParse
         GstH263Parse
         GstH264Parse
-        GstMpegAudioParse
+        GstMpeg4VParse
+        GstMpegvParse
       GstBaseRTPDepayload
         GstRtpDTMFDepay
         GstRtpVP8Depay
@@ -34,40 +34,33 @@ GObject
         GstBaseAudioSink
           GstAudioSink
             GstApExSink
-            GstNasSink
             GstSDLAudioSink
         GstChecksumSink
         GstCurlSink
         GstDCCPClientSink
         GstDCCPServerSink
         GstFBDEVSink
+        GstLinsysSdiSink
         GstSFSink
         GstShmSink
         GstVideoSink
-          GstDfbVideoSink
           GstSDLVideoSink
           VdpSink
       GstBaseSrc
         GstDTMFSrc
         GstDataURISrc
+        GstLinsysSdiSrc
         GstPushSrc
           GstDCCPClientSrc
           GstDCCPServerSrc
           GstDc1394
           GstDvbSrc
           GstMMS
-          GstMythtvSrc
           GstNeonhttpSrc
           GstRTMPSrc
           GstRfbSrc
           GstShmSrc
           GstVCDSrc
-          frei0r-src-ising0r
-          frei0r-src-lissajous0r
-          frei0r-src-nois0r
-          frei0r-src-onecol0r
-          frei0r-src-partik0l
-          frei0r-src-plasma
         GstRTPDTMFSrc
         GstSFSrc
       GstBaseTransform
@@ -80,11 +73,13 @@ GObject
         GstCogcolorspace
         GstCogdownsample
         GstColorconvert
+        GstDebugSpy
         GstDtmfDetect
         GstHDVParse
         GstLegacyresample
         GstLogoinsert
         GstMeasureCollector
+        GstPatchdetect
         GstRGB2Bayer
         GstScaletempo
         GstVideoFilter
@@ -125,60 +120,15 @@ GObject
             Gstfacedetect
           GstRsvgOverlay
           GstSolarize
+          GstVideo3DConvert
+          GstVideo3DPresent
           GstVideoAnalyse
           GstVideoDetect
           GstVideoMark
           GstZBar
-          frei0r-filter-3-point-color-balance
-          frei0r-filter-3dflippo
-          frei0r-filter-b
-          frei0r-filter-baltan
-          frei0r-filter-bluescreen0r
-          frei0r-filter-brightness
-          frei0r-filter-bw0r
-          frei0r-filter-cartoon
-          frei0r-filter-color-distance
-          frei0r-filter-contrast0r
-          frei0r-filter-curves
-          frei0r-filter-dealygrab
-          frei0r-filter-delay0r
-          frei0r-filter-distort0r
-          frei0r-filter-edgeglow
-          frei0r-filter-equaliz0r
-          frei0r-filter-flippo
-          frei0r-filter-g
-          frei0r-filter-gamma
-          frei0r-filter-glow
-          frei0r-filter-hueshift0r
-          frei0r-filter-invert0r
-          frei0r-filter-k-means-clustering
-          frei0r-filter-lens-correction
-          frei0r-filter-letterb0xed
-          frei0r-filter-levels
-          frei0r-filter-luminance
-          frei0r-filter-mask0mate
-          frei0r-filter-nervous
-          frei0r-filter-nosync0r
-          frei0r-filter-perspective
-          frei0r-filter-pixeliz0r
-          frei0r-filter-primaries
-          frei0r-filter-r
-          frei0r-filter-rgb-parade
-          frei0r-filter-saturat0r
-          frei0r-filter-scale0tilt
-          frei0r-filter-scanline0r
-          frei0r-filter-sobel
-          frei0r-filter-squareblur
-          frei0r-filter-tehroxx0r
-          frei0r-filter-threelay0r
-          frei0r-filter-threshold0r
-          frei0r-filter-tint0r
-          frei0r-filter-transparency
-          frei0r-filter-twolay0r
-          frei0r-filter-vectorscope
-          frei0r-filter-vertigo
-          frei0r-filter-water
-          frei0r-filter-white-balance
+        GstVideoFilter2
+          GstSceneChange
+          GstZebraStripe
         GstVideoMaxRate
       GstBaseVideoCodec
         GstBaseVideoDecoder
@@ -192,7 +142,10 @@ GObject
         DvbBaseBin
         GstAutoConvert
         GstAutoVideoConvert
+        GstBaseCameraSrc
+          GstWrapperCameraBinSrc
         GstFPSDisplaySink
+        GstFaceOverlay
         GstGSettingsSwitchSink
           GstGSettingsAudioSink
           GstGSettingsVideoSink
@@ -201,8 +154,9 @@ GObject
           GstGSettingsVideoSrc
         GstPipeline
           GstCameraBin
-          GstQTMoovRecover
+          GstCameraBin2
         GstSDPDemux
+        GstViewfinderBin
         RsnDvdBin
       GstBz2dec
       GstBz2enc
@@ -213,15 +167,18 @@ GObject
       GstChopMyData
       GstDVBSubOverlay
       GstDVDSpu
+      GstDecklinkSink
+      GstDecklinkSrc
       GstDtsDec
       GstFaac
       GstFaad
       GstFestival
+      GstFieldAnalysis
       GstFreeze
-      GstGPPMux
       GstGSMDec
       GstGSMEnc
-      GstISMLMux
+      GstGmeDec
+      GstHLSDemux
       GstId3BaseMux
         GstId3Mux
       GstInterlace
@@ -234,19 +191,12 @@ GObject
       GstKateEnc
       GstKateParse
         GstKateTag
-      GstKateTiger
       GstLegacyH264Parse
       GstLiveAdder
-      GstMJ2Mux
-      GstMP4Mux
       GstMSE
       GstMXFDemux
       GstMXFMux
-      GstMimDec
-      GstMimEnc
       GstModPlug
-      GstMpeg2enc
-      GstMpeg4VParse
       GstMpegPSDemux
       GstMpegTSDemux
       GstMplex
@@ -255,11 +205,11 @@ GObject
       GstMveMux
       GstNsfDec
       GstNuvDemux
+      GstOpencvTextOverlay
       GstPcapParse
       GstPitch
       GstPnmdec
       GstPnmenc
-      GstQTMux
       GstRTPMux
         GstRTPDTMFMux
       GstRawParse
@@ -269,117 +219,396 @@ GObject
       GstRealVideoDec
       GstRsvgDec
       GstSSim
+      GstSdiDemux
+      GstSdiMux
       GstSegmentClip
         GstAudioSegmentClip
         GstVideoSegmentClip
       GstSignalProcessor
+        calf-sourceforge-net-plugins-BassEnhancer
+        calf-sourceforge-net-plugins-Compressor
+        calf-sourceforge-net-plugins-Deesser
+        calf-sourceforge-net-plugins-Equalizer12Band
+        calf-sourceforge-net-plugins-Equalizer5Band
+        calf-sourceforge-net-plugins-Equalizer8Band
+        calf-sourceforge-net-plugins-Exciter
+        calf-sourceforge-net-plugins-Filter
+        calf-sourceforge-net-plugins-Filterclavier
+        calf-sourceforge-net-plugins-Flanger
+        calf-sourceforge-net-plugins-Fluidsynth
+        calf-sourceforge-net-plugins-Gate
+        calf-sourceforge-net-plugins-Monosynth
+        calf-sourceforge-net-plugins-MultiChorus
+        calf-sourceforge-net-plugins-Multibandcompressor
+        calf-sourceforge-net-plugins-Organ
+        calf-sourceforge-net-plugins-Phaser
+        calf-sourceforge-net-plugins-Pulsator
+        calf-sourceforge-net-plugins-Reverb
+        calf-sourceforge-net-plugins-RotarySpeaker
+        calf-sourceforge-net-plugins-Saturator
+        calf-sourceforge-net-plugins-Sidechaincompressor
+        calf-sourceforge-net-plugins-Sidechaingate
+        calf-sourceforge-net-plugins-VintageDelay
+        calf-sourceforge-net-plugins-Wavetable
+        invadarecords-com-plugins-lv2-compressor-mono
+        invadarecords-com-plugins-lv2-compressor-stereo
+        invadarecords-com-plugins-lv2-delay-mono
+        invadarecords-com-plugins-lv2-delay-sum
+        invadarecords-com-plugins-lv2-erreverb-mono
+        invadarecords-com-plugins-lv2-erreverb-sum
+        invadarecords-com-plugins-lv2-filter-hpf-mono
+        invadarecords-com-plugins-lv2-filter-hpf-stereo
+        invadarecords-com-plugins-lv2-filter-lpf-mono
+        invadarecords-com-plugins-lv2-filter-lpf-stereo
+        invadarecords-com-plugins-lv2-input
+        invadarecords-com-plugins-lv2-meter
+        invadarecords-com-plugins-lv2-phaser-mono
+        invadarecords-com-plugins-lv2-phaser-stereo
+        invadarecords-com-plugins-lv2-phaser-sum
+        invadarecords-com-plugins-lv2-testtone
+        invadarecords-com-plugins-lv2-tube-mono
+        invadarecords-com-plugins-lv2-tube-stereo
+        ladspa-AWfilt
+        ladspa-Accumulate
+        ladspa-Ambisonics-11-cube-decoder
+        ladspa-Ambisonics-11-hexagon-decoder
+        ladspa-Ambisonics-11-mono-panner
+        ladspa-Ambisonics-11-rotator
+        ladspa-Ambisonics-11-square-decoder
+        ladspa-Ambisonics-11-stereo-panner
+        ladspa-Ambisonics-21-panner
+        ladspa-Ambisonics-21-rotator
+        ladspa-Ambisonics-22-panner
+        ladspa-Ambisonics-22-rotator
+        ladspa-Ambisonics-31-panner
+        ladspa-Ambisonics-31-rotator
+        ladspa-Ambisonics-33-panner
+        ladspa-Ambisonics-33-rotator
+        ladspa-AmpIII
+        ladspa-AmpIV
+        ladspa-AmpV
+        ladspa-AmpVTS
+        ladspa-AutoWah
+        ladspa-BassEnhancer
+        ladspa-BoosterM
+        ladspa-BoosterS
+        ladspa-CEO
+        ladspa-CVFreq
+        ladspa-CabinetI
+        ladspa-CabinetII
         ladspa-Chorus1
+        ladspa-Chorus1-2x2
         ladspa-Chorus2
+        ladspa-ChorusI
+        ladspa-ChorusII
+        ladspa-Click
+        ladspa-Clip
+        ladspa-Compress
+        ladspa-Compressor
+        ladspa-Deesser
+        ladspa-Dirac
+        ladspa-Eq
+        ladspa-Eq2x2
+        ladspa-Equalizer12Band
+        ladspa-Equalizer5Band
+        ladspa-Equalizer8Band
+        ladspa-Exaggerate
+        ladspa-Exciter
+        ladspa-Filter
+        ladspa-Filterclavier
+        ladspa-Flanger
         ladspa-G2reverb
+        ladspa-Gate
+        ladspa-HRTF
+        ladspa-JVRev
+        ladspa-Lorenz
+        ladspa-MUSIC
+        ladspa-MUSICDrum
+        ladspa-MultiChorus
+        ladspa-Multibandcompressor
         ladspa-Mvchpf-1
         ladspa-Mvclpf-1
         ladspa-Mvclpf-2
         ladspa-Mvclpf-3
         ladspa-Mvclpf-4
+        ladspa-NoisifierM
+        ladspa-NoisifierS
+        ladspa-PSG
+        ladspa-Pan
+        ladspa-Parametric1
+        ladspa-Phaser
         ladspa-Phaser1
         ladspa-Phaser1+LFO
+        ladspa-PhaserI
+        ladspa-PhaserII
+        ladspa-Plate
+        ladspa-Plate2x2
+        ladspa-PreampIII
+        ladspa-PreampIV
+        ladspa-Pulsator
+        ladspa-Pulse-VCO
+        ladspa-Rec-VCO
+        ladspa-Reverb
+        ladspa-Roessler
+        ladspa-RotarySpeaker
+        ladspa-SCC
+        ladspa-SID
+        ladspa-Saturator
+        ladspa-Saw-VCO
+        ladspa-Scape
+        ladspa-Sidechaincompressor
+        ladspa-Sidechaingate
+        ladspa-Sin
+        ladspa-SooperLooper
+        ladspa-StereoChorusI
+        ladspa-StereoChorusII
+        ladspa-SweepVFI
+        ladspa-SweepVFII
+        ladspa-Sync-Rect-VCO
+        ladspa-Sync-Saw-VCO
+        ladspa-Sync-Tri-VCO
+        ladspa-ToneStack
+        ladspa-ToneStackLT
+        ladspa-Transpose
+        ladspa-Tricardioid-to-AMB
         ladspa-TripleChorus
+        ladspa-VCOd
+        ladspa-VCOs
+        ladspa-VariNoiseM
+        ladspa-VariNoiseS
+        ladspa-VintageDelay
+        ladspa-Virtualmic
+        ladspa-White
+        ladspa-XShaperM
+        ladspa-XShaperS
+        ladspa-adenv
+        ladspa-adenv-lvl
+        ladspa-adsr
+        ladspa-adsr-g+t
         ladspa-alias
+        ladspa-alienwah-mono
+        ladspa-alienwah-stereo
         ladspa-allpass-c
         ladspa-allpass-l
         ladspa-allpass-n
+        ladspa-am
         ladspa-amPitchshift
         ladspa-amp
+        ladspa-amp-gaia-oa
+        ladspa-amp-gcia-oa
         ladspa-amp-mono
         ladspa-amp-stereo
+        ladspa-analogue
         ladspa-analogueOsc
         ladspa-artificialLatency
         ladspa-autoPhaser
         ladspa-bandpass-a-iir
         ladspa-bandpass-iir
+        ladspa-bf-rotate-z
+        ladspa-bf2cube
+        ladspa-bf2quad
+        ladspa-bf2stereo
         ladspa-bodeShifter
         ladspa-bodeShifterCV
+        ladspa-branch-ia-oaoa
+        ladspa-branch-ic-ococ
         ladspa-butthigh-iir
         ladspa-buttlow-iir
         ladspa-bwxover-iir
+        ladspa-canyon-delay
         ladspa-chebstortion
+        ladspa-clipper
         ladspa-comb
         ladspa-comb-c
         ladspa-comb-l
         ladspa-comb-n
         ladspa-combSplitter
+        ladspa-comp-aa
+        ladspa-comp-ac
+        ladspa-compress-peak
+        ladspa-compress-rms
         ladspa-const
         ladspa-crossoverDist
+        ladspa-dahdsr-cg+t-control
+        ladspa-dahdsr-fexp
+        ladspa-dahdsr-g+t-audio
+        ladspa-dahdsr-g+t-control
+        ladspa-dahdsr-hexp
         ladspa-dcRemove
         ladspa-decay
         ladspa-decimator
         ladspa-declip
+        ladspa-delay-0-01s
+        ladspa-delay-0-1s
+        ladspa-delay-1s
         ladspa-delay-5s
+        ladspa-delay-60s
         ladspa-delay-c
         ladspa-delay-l
         ladspa-delay-n
         ladspa-delayorama
+        ladspa-difference-iama-oa
+        ladspa-difference-iamc-oa
+        ladspa-difference-icma-oa
+        ladspa-difference-icmc-oc
         ladspa-diode
+        ladspa-disintegrator
         ladspa-divider
         ladspa-dj-eq
         ladspa-dj-eq-mono
         ladspa-djFlanger
         ladspa-dysonCompress
+        ladspa-eir
+        ladspa-encode-bformat
+        ladspa-encode-fmh
+        ladspa-expand-peak
+        ladspa-expand-rms
         ladspa-fadDelay
+        ladspa-fast-xfade
         ladspa-fastLookaheadLimiter
+        ladspa-fbdelay-0-01s
+        ladspa-fbdelay-0-1s
+        ladspa-fbdelay-1s
+        ladspa-fbdelay-5s
+        ladspa-fbdelay-60s
         ladspa-flanger
+        ladspa-floatNoise
         ladspa-fmOsc
+        ladspa-fmh-rotate-z
+        ladspa-fmh2bf
+        ladspa-fmh2oct
+        ladspa-fmod-fama-oa
+        ladspa-fmod-famc-oa
+        ladspa-fmod-fcma-oa
+        ladspa-fmod-fcmc-oc
         ladspa-foldover
+        ladspa-foo-chop-liver
+        ladspa-foo-driver
+        ladspa-foo-limiter
+        ladspa-foo-limiter-v2
+        ladspa-foo-saturator
+        ladspa-foo-transients
+        ladspa-foo-transients-mono
+        ladspa-formant-vc
         ladspa-fourByFourPole
         ladspa-foverdrive
+        ladspa-freeverb3
         ladspa-freqTracker
         ladspa-gate
         ladspa-giantFlange
         ladspa-gong
         ladspa-gongBeater
+        ladspa-grain-scatter
         ladspa-gsm
         ladspa-gverb
+        ladspa-hard-gate
         ladspa-hardLimiter
         ladspa-harmonicGen
         ladspa-hermesFilter
         ladspa-highpass-iir
         ladspa-hilbert
         ladspa-hpf
+        ladspa-hz-voct-ar
+        ladspa-hz-voct-cr
+        ladspa-identity-audio
+        ladspa-identity-control
         ladspa-imp
         ladspa-impulse-fc
+        ladspa-intNoise
+        ladspa-interpolator
         ladspa-inv
         ladspa-karaoke
         ladspa-lcrDelay
+        ladspa-leet-equalizer-bw2x2
+        ladspa-leet-equalizer-bw2x2-1
         ladspa-lfoPhaser
+        ladspa-limit-peak
+        ladspa-limit-rms
+        ladspa-lofi
+        ladspa-logistic
         ladspa-lowpass-iir
+        ladspa-lp4pole-faraia-oa
+        ladspa-lp4pole-fcrcia-oa
         ladspa-lpf
         ladspa-lsFilter
+        ladspa-matched
         ladspa-matrixMSSt
         ladspa-matrixSpatialiser
         ladspa-matrixStMS
         ladspa-mbeq
+        ladspa-mixer
         ladspa-modDelay
         ladspa-multivoiceChorus
+        ladspa-mux-ar
+        ladspa-mux-cr
+        ladspa-noise-source-white
         ladspa-noise-white
         ladspa-notch-iir
+        ladspa-null-ai
+        ladspa-null-ao
+        ladspa-null-ci
+        ladspa-null-co
+        ladspa-organ
+        ladspa-peak
+        ladspa-phasemod
+        ladspa-pink-full-frequency
+        ladspa-pink-interpolated-audio
+        ladspa-pink-sh
         ladspa-pitchScale
         ladspa-pitchScaleHQ
         ladspa-plate
         ladspa-pointerCastDistortion
+        ladspa-power
+        ladspa-power-cr
+        ladspa-preamp
+        ladspa-prob-switch-ar
+        ladspa-prob-switch-cr
+        ladspa-product-iaia-oa
+        ladspa-product-iaic-oa
+        ladspa-product-icic-oc
+        ladspa-pulse-fapa-oa
+        ladspa-pulse-fapc-oa
+        ladspa-pulse-fcpa-oa
+        ladspa-pulse-fcpc-oa
+        ladspa-quantiser100
+        ladspa-quantiser20
+        ladspa-quantiser50
+        ladspa-random-fasa-oa
+        ladspa-random-fasc-oa
+        ladspa-random-fcsa-oa
+        ladspa-random-fcsc-oa
+        ladspa-range-trans-ar
+        ladspa-range-trans-cr
         ladspa-rateShifter
+        ladspa-ratio-nada-oa
+        ladspa-ratio-nadc-oa
+        ladspa-ratio-ncda-oa
+        ladspa-ratio-ncdc-oc
         ladspa-retroFlange
         ladspa-revdelay
         ladspa-ringmod-1i1o1l
         ladspa-ringmod-2i1o
+        ladspa-rissetScales
+        ladspa-rubberband-pitchshifter-mono
+        ladspa-rubberband-pitchshifter-stereo
         ladspa-satanMaximiser
+        ladspa-sawtooth-fa-oa
+        ladspa-sawtooth-fc-oa
         ladspa-sc1
         ladspa-sc2
         ladspa-sc3
         ladspa-sc4
         ladspa-sc4m
         ladspa-se4
+        ladspa-sequencer16
+        ladspa-sequencer32
+        ladspa-sequencer64
+        ladspa-sh-ar
+        ladspa-sh-cr
         ladspa-shaper
         ladspa-sifter
+        ladspa-signal-abs-ar
+        ladspa-signal-abs-cr
         ladspa-sinCos
         ladspa-sine-faaa
         ladspa-sine-faac
@@ -387,11 +616,28 @@ GObject
         ladspa-sine-fcac
         ladspa-singlePara
         ladspa-sinusWavewrapper
+        ladspa-sledgehammer
+        ladspa-slew-limiter-ra
+        ladspa-slew-limiter-rc
+        ladspa-slide-ta
+        ladspa-slide-tc
         ladspa-smoothDecimate
         ladspa-split
+        ladspa-square-fa-oa
+        ladspa-square-fc-oa
+        ladspa-ssm-masher
         ladspa-stepMuxer
+        ladspa-sum-iaia-oa
+        ladspa-sum-iaic-oa
+        ladspa-sum-icic-oc
+        ladspa-super-60
         ladspa-surroundEncoder
         ladspa-svf
+        ladspa-syncpulse-fapaga-oa
+        ladspa-syncpulse-fcpcga-oa
+        ladspa-syncsquare-faga-oa
+        ladspa-syncsquare-fcga-oa
+        ladspa-syndrum
         ladspa-tap-autopan
         ladspa-tap-chorusflanger
         ladspa-tap-deesser
@@ -412,12 +658,39 @@ GObject
         ladspa-tap-tubewarmth
         ladspa-tap-vibrato
         ladspa-tapeDelay
+        ladspa-track-max-peak
+        ladspa-track-max-rms
+        ladspa-track-peak
+        ladspa-track-rms
+        ladspa-tracker-gaaadaia-oa
+        ladspa-tracker-gaacdcia-oa
         ladspa-transient
+        ladspa-triangle-fasa-oa
+        ladspa-triangle-fasc-oa
+        ladspa-triangle-fcsa-oa
+        ladspa-triangle-fcsc-oa
+        ladspa-trigger
         ladspa-triplePara
+        ladspa-unmatched
         ladspa-valve
         ladspa-valveRect
+        ladspa-vcf-bp1
+        ladspa-vcf-bp2
+        ladspa-vcf-hp
+        ladspa-vcf-hshelf
+        ladspa-vcf-lp
+        ladspa-vcf-lshelf
+        ladspa-vcf-notch
+        ladspa-vcf-peakeq
+        ladspa-vcf-reslp
+        ladspa-vcf303
+        ladspa-vlevel-mono
+        ladspa-vlevel-stereo
+        ladspa-vocoder
         ladspa-vynil
         ladspa-waveTerrain
+        ladspa-wg-mesh-cr
+        ladspa-wshape-sine
         ladspa-xfade
         ladspa-xfade4
         ladspa-zm1
@@ -427,19 +700,19 @@ GObject
       GstSrtEnc
       GstTRM
       GstTemplateMatch
+      GstTimidity
       GstTtaDec
       GstTtaParse
       GstVMncDec
       GstVcdParse
       GstVdpVideoPostProcess
-      GstWildmidi
+      GstVideo3DMerge
       GstXvidDec
       GstXvidEnc
       GstY4mDec
       Gstedgedetect
       Gstfaceblur
       Gstpyramidsegment
-      Gsttextwrite
       MpegPsMux
       MpegTSBase
         GstTSDemux
@@ -452,36 +725,6 @@ GObject
           GstVdpH264Dec
           GstVdpMpeg4Dec
           GstVdpMpegDec
-      frei0r-mixer-addition
-      frei0r-mixer-alpha-injection
-      frei0r-mixer-alphaatop
-      frei0r-mixer-alphain
-      frei0r-mixer-alphaout
-      frei0r-mixer-alphaover
-      frei0r-mixer-alphaxor
-      frei0r-mixer-blend
-      frei0r-mixer-burn
-      frei0r-mixer-color-only
-      frei0r-mixer-composition
-      frei0r-mixer-darken
-      frei0r-mixer-difference
-      frei0r-mixer-divide
-      frei0r-mixer-dodge
-      frei0r-mixer-grain-extract
-      frei0r-mixer-grain-merge
-      frei0r-mixer-hardlight
-      frei0r-mixer-hue
-      frei0r-mixer-lighten
-      frei0r-mixer-multiply
-      frei0r-mixer-overlay
-      frei0r-mixer-rgb
-      frei0r-mixer-saturation
-      frei0r-mixer-screen
-      frei0r-mixer-softlight
-      frei0r-mixer-subtract
-      frei0r-mixer-uv-map
-      frei0r-mixer-value
-      frei0r-mixer-xfade0r
     GstPad
       GstVdpOutputSrcPad
       GstVdpVideoSrcPad
@@ -511,6 +754,7 @@ GInterface
   GstPhotography
   GstPreset
   GstTagSetter
+  GstTagXmpWriter
   GstURIHandler
   GstXOverlay
   MXFDescriptiveMetadataFrameworkInterface

@@ -2,7 +2,8 @@
 
 
 prefix=gst
-templatedir=element-templates
+basedir=`dirname $0`
+templatedir=$basedir/element-templates
 
 while [ "$1" ] ; do
   case $1 in
@@ -44,7 +45,7 @@ if [ "$name" = "" -o "$class" = "" ] ; then
   exit 1
 fi
 
-if [ ! -f "element-templates/$class" ] ; then
+if [ ! -f "$templatedir/$class" ] ; then
   echo "Template file for $class not found."
   exit 1
 fi
@@ -54,6 +55,7 @@ PREFIX=$(echo $prefix | sed -e 's/\(.*\)/\U\1/')
 NAME=$(echo $name | sed -e 's/\(.*\)/\U\1/')
 Prefix=$(echo $prefix | sed -e 's/_\(.\)/\U\1/g' -e 's/^\(.\)/\U\1/')
 Name=$(echo $name | sed -e 's/_\(.\)/\U\1/g' -e 's/^\(.\)/\U\1/')
+name=$(echo $name | sed -e 's/\(.*\)/\L\1/')
 
 GST_IS_REPLACE=${PREFIX}_IS_${NAME}
 GST_REPLACE=${PREFIX}_${NAME}
@@ -237,10 +239,8 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
 
-  gst_element_register (plugin, "replace", GST_RANK_NONE,
-      gst_replace_get_type ());
-
-  return TRUE;
+  return gst_element_register (plugin, "replace", GST_RANK_NONE,
+      GST_TYPE_REPLACE);
 }
 
 #ifndef VERSION
@@ -377,7 +377,13 @@ gst-indent $gstreplace.c
 
 echo pkg is $pkg
 
-gcc -Wall -fPIC $(pkg-config --cflags gstreamer-0.10 $pkg) -c -o $gstreplace.o $gstreplace.c
-gcc -shared -o $gstreplace.so $gstreplace.o $(pkg-config --libs gstreamer-0.10 $pkg)
+gcc -Wall -fPIC $CPPFLAGS $(pkg-config --cflags gstreamer-0.10 $pkg) -c -o $gstreplace.o $gstreplace.c
+if test $? -ne 0; then
+    exit 1
+fi
 
+gcc -shared -o $gstreplace.so $gstreplace.o $(pkg-config --libs gstreamer-0.10 $pkg)
+if test $? -ne 0; then
+    exit 1
+fi
 

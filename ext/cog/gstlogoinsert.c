@@ -49,7 +49,8 @@ struct _GstLogoinsert
 {
   GstBaseTransform base_transform;
 
-  gchar *location;
+  char *location;
+  GstBuffer *buffer;
 
   GstVideoFormat format;
   int width;
@@ -73,21 +74,24 @@ enum
 {
   ARG_0,
   ARG_LOCATION,
+  ARG_DATA
 };
 
 GType gst_logoinsert_get_type (void);
 
-static void gst_logoinsert_base_init (gpointer g_class);
-static void gst_logoinsert_class_init (gpointer g_class, gpointer class_data);
-static void gst_logoinsert_init (GTypeInstance * instance, gpointer g_class);
+GST_DEBUG_CATEGORY_STATIC (gst_logoinsert_debug_category);
+#define GST_CAT_DEFAULT gst_logoinsert_debug_category
 
 static void gst_logoinsert_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_logoinsert_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
+static void gst_logoinsert_dispose (GObject * object);
+static void gst_logoinsert_finalize (GObject * object);
 
-static void gst_logoinsert_set_location (GstLogoinsert * li,
-    const gchar * location);
+static void
+gst_logoinsert_set_location (GstLogoinsert * li, const char *location);
+static void gst_logoinsert_set_data (GstLogoinsert * li, GstBuffer * buffer);
 
 static gboolean gst_logoinsert_set_caps (GstBaseTransform * base_transform,
     GstCaps * incaps, GstCaps * outcaps);
@@ -111,30 +115,14 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("I420"))
     );
 
-GType
-gst_logoinsert_get_type (void)
-{
-  static GType compress_type = 0;
+/* class initialization */
 
-  if (!compress_type) {
-    static const GTypeInfo compress_info = {
-      sizeof (GstLogoinsertClass),
-      gst_logoinsert_base_init,
-      NULL,
-      gst_logoinsert_class_init,
-      NULL,
-      NULL,
-      sizeof (GstLogoinsert),
-      0,
-      gst_logoinsert_init,
-    };
+#define DEBUG_INIT(bla) \
+  GST_DEBUG_CATEGORY_INIT (gst_logoinsert_debug_category, "logoinsert", 0, \
+      "debug category for logoinsert element");
 
-    compress_type = g_type_register_static (GST_TYPE_BASE_TRANSFORM,
-        "GstLogoinsert", &compress_info, 0);
-  }
-  return compress_type;
-}
-
+GST_BOILERPLATE_FULL (GstLogoinsert, gst_logoinsert, GstBaseTransform,
+    GST_TYPE_BASE_TRANSFORM, DEBUG_INIT);
 
 static void
 gst_logoinsert_base_init (gpointer g_class)
@@ -153,22 +141,26 @@ gst_logoinsert_base_init (gpointer g_class)
 }
 
 static void
-gst_logoinsert_class_init (gpointer g_class, gpointer class_data)
+gst_logoinsert_class_init (GstLogoinsertClass * klass)
 {
   GObjectClass *gobject_class;
   GstBaseTransformClass *base_transform_class;
-  GstLogoinsertClass *filter_class;
 
-  gobject_class = G_OBJECT_CLASS (g_class);
-  base_transform_class = GST_BASE_TRANSFORM_CLASS (g_class);
-  filter_class = GST_LOGOINSERT_CLASS (g_class);
+  gobject_class = G_OBJECT_CLASS (klass);
+  base_transform_class = GST_BASE_TRANSFORM_CLASS (klass);
 
   gobject_class->set_property = gst_logoinsert_set_property;
   gobject_class->get_property = gst_logoinsert_get_property;
+  gobject_class->dispose = gst_logoinsert_dispose;
+  gobject_class->finalize = gst_logoinsert_finalize;
 
   g_object_class_install_property (gobject_class, ARG_LOCATION,
       g_param_spec_string ("location", "location",
           "location of PNG file to overlay", "",
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, ARG_DATA,
+      gst_param_spec_mini_object ("data", "data",
+          "Buffer containing PNG file to overlay", GST_TYPE_BUFFER,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   base_transform_class->set_caps = gst_logoinsert_set_caps;
@@ -176,7 +168,8 @@ gst_logoinsert_class_init (gpointer g_class, gpointer class_data)
 }
 
 static void
-gst_logoinsert_init (GTypeInstance * instance, gpointer g_class)
+gst_logoinsert_init (GstLogoinsert * logoinsert,
+    GstLogoinsertClass * logoinsert_class)
 {
 
   GST_DEBUG ("gst_logoinsert_init");
@@ -196,6 +189,10 @@ gst_logoinsert_set_property (GObject * object, guint prop_id,
     case ARG_LOCATION:
       gst_logoinsert_set_location (src, g_value_get_string (value));
       break;
+    case ARG_DATA:
+      gst_logoinsert_set_data (src,
+          (GstBuffer *) gst_value_get_mini_object (value));
+      break;
     default:
       break;
   }
@@ -214,10 +211,51 @@ gst_logoinsert_get_property (GObject * object, guint prop_id, GValue * value,
     case ARG_LOCATION:
       g_value_set_string (value, src->location);
       break;
+    case ARG_DATA:
+      gst_value_set_mini_object (value, (GstMiniObject *) src->buffer);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+}
+
+void
+gst_logoinsert_dispose (GObject * object)
+{
+  g_return_if_fail (GST_IS_LOGOINSERT (object));
+
+  /* clean up as possible.  may be called multiple times */
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+void
+gst_logoinsert_finalize (GObject * object)
+{
+  GstLogoinsert *logoinsert;
+
+  g_return_if_fail (GST_IS_LOGOINSERT (object));
+  logoinsert = GST_LOGOINSERT (object);
+
+  g_free (logoinsert->location);
+  if (logoinsert->buffer) {
+    gst_buffer_unref (logoinsert->buffer);
+  }
+  if (logoinsert->overlay_frame) {
+    cog_frame_unref (logoinsert->overlay_frame);
+    logoinsert->overlay_frame = NULL;
+  }
+  if (logoinsert->alpha_frame) {
+    cog_frame_unref (logoinsert->alpha_frame);
+    logoinsert->alpha_frame = NULL;
+  }
+  if (logoinsert->argb_frame) {
+    cog_frame_unref (logoinsert->argb_frame);
+    logoinsert->argb_frame = NULL;
+  }
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static gboolean
@@ -243,10 +281,11 @@ gst_logoinsert_transform_ip (GstBaseTransform * base_transform, GstBuffer * buf)
   g_return_val_if_fail (GST_IS_LOGOINSERT (base_transform), GST_FLOW_ERROR);
   li = GST_LOGOINSERT (base_transform);
 
-  frame = gst_cog_buffer_wrap (buf, li->format, li->width, li->height);
-
   if (li->argb_frame == NULL)
     return GST_FLOW_OK;
+
+  frame = gst_cog_buffer_wrap (gst_buffer_ref (buf),
+      li->format, li->width, li->height);
 
   if (li->overlay_frame == NULL) {
     CogFrame *f;
@@ -294,41 +333,65 @@ gst_logoinsert_transform_ip (GstBaseTransform * base_transform, GstBuffer * buf)
     }
   }
 
+  cog_frame_unref (frame);
 
   return GST_FLOW_OK;
 }
 
-static void
-gst_logoinsert_set_location (GstLogoinsert * li, const gchar * location)
+static GstBuffer *
+get_buffer_from_file (const char *filename)
 {
   gboolean ret;
-  GError *error = NULL;
+  GstBuffer *buffer;
+  gsize size;
+  gchar *data;
 
+  ret = g_file_get_contents (filename, &data, &size, NULL);
+  if (!ret)
+    return NULL;
+
+  buffer = gst_buffer_new ();
+  GST_BUFFER_DATA (buffer) = (guchar *) data;
+  GST_BUFFER_MALLOCDATA (buffer) = (guchar *) data;
+  GST_BUFFER_SIZE (buffer) = size;
+
+  return buffer;
+}
+
+static void
+gst_logoinsert_set_location (GstLogoinsert * li, const char *location)
+{
   g_free (li->location);
-  g_free (li->data);
+  li->location = g_strdup (location);
+
+  gst_logoinsert_set_data (li, get_buffer_from_file (li->location));
+}
+
+static void
+gst_logoinsert_set_data (GstLogoinsert * li, GstBuffer * buffer)
+{
+  if (li->buffer)
+    gst_buffer_unref (li->buffer);
+
+  /* steals the reference */
+  li->buffer = buffer;
+
   if (li->overlay_frame) {
     cog_frame_unref (li->overlay_frame);
     li->overlay_frame = NULL;
   }
-
-  li->location = g_strdup (location);
-
-  ret = g_file_get_contents (li->location, &li->data, &li->size, &error);
-  if (!ret) {
-    li->data = NULL;
-    li->size = 0;
-    return;
-  }
-
-  li->argb_frame = cog_frame_new_from_png (li->data, li->size);
-
   if (li->alpha_frame) {
     cog_frame_unref (li->alpha_frame);
     li->alpha_frame = NULL;
   }
-  if (li->overlay_frame) {
-    cog_frame_unref (li->overlay_frame);
-    li->overlay_frame = NULL;
+  if (li->argb_frame) {
+    cog_frame_unref (li->argb_frame);
+    li->argb_frame = NULL;
+  }
+
+  if (li->buffer) {
+    li->argb_frame = cog_frame_new_from_png (GST_BUFFER_DATA (li->buffer),
+        GST_BUFFER_SIZE (li->buffer));
   }
 }
 
@@ -360,7 +423,6 @@ cog_frame_new_from_png (void *data, int size)
   png_bytep *rows;
   CogFrame *frame;
   guchar *frame_data;
-  int rowbytes;
   int j;
   int width, height;
   int color_type;
@@ -390,8 +452,8 @@ cog_frame_new_from_png (void *data, int size)
 
   frame_data = g_malloc (width * height * 4);
   frame = cog_frame_new_from_data_ARGB (frame_data, width, height);
+  frame->regions[0] = frame_data;
 
-  rowbytes = png_get_rowbytes (png_ptr, info_ptr);
   rows = (png_bytep *) g_malloc (sizeof (png_bytep) * height);
 
   for (j = 0; j < height; j++) {

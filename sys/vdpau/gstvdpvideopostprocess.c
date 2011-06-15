@@ -526,11 +526,9 @@ gst_vdp_vpp_sink_setcaps (GstPad * pad, GstCaps * caps)
 
   allowed_caps = gst_pad_get_allowed_caps (vpp->srcpad);
   if (G_UNLIKELY (!allowed_caps))
-    goto allowed_caps_error;
-  if (G_UNLIKELY (gst_caps_is_empty (allowed_caps))) {
-    gst_caps_unref (allowed_caps);
-    goto allowed_caps_error;
-  }
+    goto null_allowed_caps;
+  if (G_UNLIKELY (gst_caps_is_empty (allowed_caps)))
+    goto empty_allowed_caps;
   GST_DEBUG ("allowed_caps: %" GST_PTR_FORMAT, allowed_caps);
 
   output_caps = gst_vdp_video_to_output_caps (video_caps);
@@ -569,8 +567,14 @@ done:
 
   return res;
 
-allowed_caps_error:
-  GST_ERROR_OBJECT (vpp, "Got invalid allowed caps");
+null_allowed_caps:
+  GST_ERROR_OBJECT (vpp, "Got null from gst_pad_get_allowed_caps");
+  goto done;
+
+empty_allowed_caps:
+  GST_ERROR_OBJECT (vpp, "Got EMPTY caps from gst_pad_get_allowed_caps");
+
+  gst_caps_unref (allowed_caps);
   goto done;
 
 not_negotiated:

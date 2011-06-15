@@ -1,0 +1,64 @@
+<plugin>
+  <name>camerabin2</name>
+  <description>camerabin2</description>
+  <filename>../../gst/camerabin2/.libs/libgstcamerabin2.so</filename>
+  <basename>libgstcamerabin2.so</basename>
+  <version>0.10.22.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins git</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>camerabin2</name>
+      <longname>CameraBin2</longname>
+      <class>Generic/Bin/Camera</class>
+      <description>CameraBin2</description>
+      <author>Thiago Santos &lt;thiago.sousa.santos@collabora.co.uk&gt;</author>
+      <pads>
+      </pads>
+    </element>
+    <element>
+      <name>viewfinderbin</name>
+      <longname>Viewfinder Bin</longname>
+      <class>Sink/Video</class>
+      <description>Viewfinder Bin used in camerabin2</description>
+      <author>Thiago Santos &lt;thiago.sousa.santos@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw-yuv; video/x-raw-rgb</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>wrappercamerabinsrc</name>
+      <longname>V4l2 camera src element for camerabin</longname>
+      <class>Source/Video</class>
+      <description>V4l2 camera src element for camerabin</description>
+      <author>Rob Clark &lt;rob@ti.com&gt;</author>
+      <pads>
+        <caps>
+          <name>imgsrc</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>vfsrc</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>vidsrc</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

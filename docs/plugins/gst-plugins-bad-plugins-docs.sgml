@@ -17,12 +17,8 @@
 
   <chapter>
     <title>gst-plugins-bad Elements</title>
-    <xi:include href="xml/element-aacparse.xml" />
-    <xi:include href="xml/element-ac3parse.xml" />
     <xi:include href="xml/element-aiffparse.xml" />
     <xi:include href="xml/element-aiffmux.xml" />
-    <xi:include href="xml/element-amrparse.xml" />
-    <xi:include href="xml/element-amrwbenc.xml" />
     <xi:include href="xml/element-assrender.xml" />
     <xi:include href="xml/element-autoconvert.xml" />
     <xi:include href="xml/element-bulge.xml" />
@@ -42,7 +38,6 @@
     <xi:include href="xml/element-cvsobel.xml" />
     <xi:include href="xml/element-dataurisrc.xml" />
     <!--xi:include href="xml/element-dc1394.xml" /-->
-    <xi:include href="xml/element-dcaparse.xml" />
     <xi:include href="xml/element-dccpclientsink.xml" />
     <xi:include href="xml/element-dccpclientsrc.xml" />
     <xi:include href="xml/element-dccpserversink.xml" />
@@ -65,7 +60,6 @@
     <xi:include href="xml/element-facedetect.xml" />
     <xi:include href="xml/element-festival.xml" />
     <xi:include href="xml/element-fisheye.xml" />
-    <xi:include href="xml/element-flacparse.xml" />
     <xi:include href="xml/element-fpsdisplaysink.xml" />
     <xi:include href="xml/element-freeze.xml" />
     <xi:include href="xml/element-gaussianblur.xml" />
@@ -84,7 +78,6 @@
     <xi:include href="xml/element-mimdec.xml" />
     <xi:include href="xml/element-mirror.xml" />
     <xi:include href="xml/element-modplug.xml" />
-    <xi:include href="xml/element-mpegaudioparse.xml" />
     <xi:include href="xml/element-mpeg2enc.xml" />
     <xi:include href="xml/element-mplex.xml" />
     <xi:include href="xml/element-mythtvsrc.xml" />
@@ -94,7 +87,6 @@
     <xi:include href="xml/element-pcapparse.xml" />
     <xi:include href="xml/element-pinch.xml" />
     <xi:include href="xml/element-pyramidsegment.xml" />
-    <xi:include href="xml/element-qtmux.xml" />
     <xi:include href="xml/element-rsvgdec.xml" />
     <xi:include href="xml/element-rsvgoverlay.xml" />
     <xi:include href="xml/element-rtpdtmfdepay.xml" />
@@ -108,14 +100,16 @@
     <xi:include href="xml/element-shmsrc.xml" />
     <xi:include href="xml/element-sdpdemux.xml" />
     <xi:include href="xml/element-solarize.xml" />
+    <xi:include href="xml/element-spacescope.xml" />
+    <xi:include href="xml/element-spectrascope.xml" />
+    <xi:include href="xml/element-synaescope.xml" />
     <xi:include href="xml/element-speed.xml" />
     <xi:include href="xml/element-sphere.xml" />
     <xi:include href="xml/element-square.xml" />
     <xi:include href="xml/element-stereo.xml" />
     <xi:include href="xml/element-stretch.xml" />
-    <!--xi:include href="xml/element-theoradecexp.xml" /-->
     <xi:include href="xml/element-templatematch.xml" />
-    <xi:include href="xml/element-textwrite.xml" />
+    <xi:include href="xml/element-opencvtextoverlay.xml" />
     <xi:include href="xml/element-tiger.xml" />
     <xi:include href="xml/element-timidity.xml" />
     <xi:include href="xml/element-trm.xml" />
@@ -129,17 +123,19 @@
     <xi:include href="xml/element-waterripple.xml" />
     <xi:include href="xml/element-wildmidi.xml" />
     <xi:include href="xml/element-zbar.xml" />
+    <xi:include href="xml/element-voaacenc.xml" />
+    <xi:include href="xml/element-voamrwbenc.xml" />
     <xi:include href="xml/element-vp8dec.xml" />
     <xi:include href="xml/element-vp8enc.xml" />
+    <xi:include href="xml/element-wavescope.xml" />
   </chapter>
 
   <chapter>
     <title>gst-plugins-bad Plugins</title>
     <xi:include href="xml/plugin-aiff.xml" />
-    <xi:include href="xml/plugin-audioparsersbad.xml" />
+    <xi:include href="xml/plugin-audiovisualizers.xml" />
     <xi:include href="xml/plugin-autoconvert.xml" />
     <xi:include href="xml/plugin-legacyresample.xml" />
-    <xi:include href="xml/plugin-amrwbenc.xml" />
     <xi:include href="xml/plugin-assrender.xml" />
     <xi:include href="xml/plugin-bayer.xml" />
     <xi:include href="xml/plugin-bz2.xml" />
@@ -194,8 +190,8 @@
     <xi:include href="xml/plugin-neon.xml" />
     <xi:include href="xml/plugin-nsf.xml" />
     <xi:include href="xml/plugin-nuvdemux.xml" />
+    <xi:include href="xml/plugin-opencv.xml" />
     <xi:include href="xml/plugin-pcapparse.xml" />
-    <xi:include href="xml/plugin-qtmux.xml" />
     <xi:include href="xml/plugin-rawparse.xml" />
     <xi:include href="xml/plugin-real.xml" />
     <xi:include href="xml/plugin-rfbsrc.xml" />
@@ -219,6 +215,8 @@
     <xi:include href="xml/plugin-vmnc.xml" />
     <xi:include href="xml/plugin-wildmidi.xml" />
     <xi:include href="xml/plugin-xvid.xml" />
+    <xi:include href="xml/plugin-voaacenc.xml" />
+    <xi:include href="xml/plugin-voamrwbenc.xml" />
     <xi:include href="xml/plugin-vp8.xml" />
     <xi:include href="xml/plugin-zbar.xml" />
   </chapter>

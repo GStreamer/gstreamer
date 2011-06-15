@@ -3,7 +3,7 @@
   <description>MPEG demuxers</description>
   <filename>../../gst/mpegdemux/.libs/libgstmpegdemux.so</filename>
   <basename>libgstmpegdemux.so</basename>
-  <version>0.10.21.1</version>
+  <version>0.10.22.1</version>
   <license>unknown</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins git</package>
@@ -83,7 +83,7 @@
           <name>video_%04x</name>
           <direction>source</direction>
           <presence>sometimes</presence>
-          <details>video/mpeg, mpegversion=(int){ 1, 2, 4 }, systemstream=(boolean)false; video/x-h264; video/x-dirac; video/x-wmv, wmvversion=(int)3, format=(fourcc)WVC1</details>
+          <details>video/mpeg, mpegversion=(int){ 1, 2, 4 }, systemstream=(boolean)false; video/x-h264, stream-format=(string)byte-stream, alignment=(string)nal; video/x-dirac; video/x-wmv, wmvversion=(int)3, format=(fourcc)WVC1</details>
         </caps>
       </pads>
     </element>

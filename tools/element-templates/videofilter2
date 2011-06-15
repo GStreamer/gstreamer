@@ -1,0 +1,67 @@
+/* vim: set filetype=c: */
+% ClassName
+GstVideoFilter2
+% TYPE_CLASS_NAME
+GST_TYPE_VIDEO_FILTER2
+% pads
+% pkg-config
+gstreamer-base-0.10
+% pads
+% includes
+#include <gst/base/gstbasetransform.h>
+#include <gst/video/video.h>
+#include "../gst/videofilters/gstvideofilter2.h"
+% prototypes
+static gboolean gst_replace_start (GstBaseTransform * trans);
+static gboolean gst_replace_stop (GstBaseTransform * trans);
+static GstFlowReturn
+gst_replace_prefilter (GstVideoFilter2 *videofilter2, GstBuffer * buf);
+
+static GstVideoFilter2Functions gst_replace_filter_functions[];
+% declare-class
+  GstBaseTransformClass *base_transform_class = GST_BASE_TRANSFORM_CLASS (klass);
+  GstVideoFilter2Class *video_filter2_class = GST_VIDEO_FILTER2_CLASS (klass);
+% set-methods
+  base_transform_class->start = GST_DEBUG_FUNCPTR (gst_replace_start);
+  base_transform_class->stop = GST_DEBUG_FUNCPTR (gst_replace_stop);
+  video_filter2_class->prefilter = GST_DEBUG_FUNCPTR (gst_replace_prefilter);
+
+  gst_video_filter2_class_add_functions (video_filter2_class,
+      gst_replace_filter_functions);
+% methods
+
+static gboolean
+gst_replace_start (GstBaseTransform * trans)
+{
+
+  return TRUE;
+}
+
+static gboolean
+gst_replace_stop (GstBaseTransform * trans)
+{
+
+  return TRUE;
+}
+
+static GstFlowReturn
+gst_replace_prefilter (GstVideoFilter2 *video_filter2, GstBuffer * buf)
+{
+
+  return GST_FLOW_OK;
+}
+
+static GstFlowReturn
+gst_replace_filter_ip_I420 (GstVideoFilter2 * videofilter2,
+		    GstBuffer * buf, int start, int end)
+{
+  return GST_FLOW_OK;
+}
+
+static GstVideoFilter2Functions gst_replace_filter_functions[] = {
+  {GST_VIDEO_FORMAT_I420, NULL, gst_replace_filter_ip_I420},
+  {GST_VIDEO_FORMAT_UNKNOWN}
+};
+
+
+% end

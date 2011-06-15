@@ -67,7 +67,7 @@ gst_fisheye_base_init (gpointer gclass)
       "fisheye",
       "Transform/Effect/Video",
       "Split the image into two halves and reflect one over each other",
-      "Filippo Argiolas <filippo.argiolas@gmail.com");
+      "Filippo Argiolas <filippo.argiolas@gmail.com>");
 }
 
 static gboolean
@@ -123,10 +123,8 @@ fisheye_map (GstGeometricTransform * gt, gint x, gint y, gdouble * in_x,
 static void
 gst_fisheye_class_init (GstFisheyeClass * klass)
 {
-  GObjectClass *gobject_class;
   GstGeometricTransformClass *gstgt_class;
 
-  gobject_class = (GObjectClass *) klass;
   gstgt_class = (GstGeometricTransformClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);

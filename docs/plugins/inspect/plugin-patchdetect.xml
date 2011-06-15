@@ -1,0 +1,34 @@
+<plugin>
+  <name>patchdetect</name>
+  <description>patchdetect element</description>
+  <filename>../../gst/patchdetect/.libs/libgstpatchdetect.so</filename>
+  <basename>libgstpatchdetect.so</basename>
+  <version>0.10.22.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>patchdetect</name>
+      <longname>Color Patch Detector</longname>
+      <class>Video/Analysis</class>
+      <description>Detects color patches from a color calibration chart</description>
+      <author>David Schleef &lt;ds@entropywave.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw-yuv, format=(fourcc)I420, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw-yuv, format=(fourcc)I420, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

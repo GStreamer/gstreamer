@@ -434,6 +434,7 @@ mpegvideoparse_handle_picture (MpegVideoParse * mpegvideoparse, GstBuffer * buf)
           picture_type_name (hdr.pic_type));
       /* FIXME: Can use the picture type and number of fields to track a
        * timestamp */
+      break;
     }
     cur = mpeg_util_find_start_code (&sync_word, cur, end);
   }
@@ -1022,10 +1023,10 @@ gst_mpegvideoparse_change_state (GstElement * element,
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (mpv_parse_debug, "mpegvideoparse", 0,
+  GST_DEBUG_CATEGORY_INIT (mpv_parse_debug, "legacympegvideoparse", 0,
       "MPEG Video Parser");
 
-  return gst_element_register (plugin, "mpegvideoparse",
+  return gst_element_register (plugin, "legacympegvideoparse",
       GST_RANK_PRIMARY, GST_TYPE_MPEGVIDEOPARSE);
 }
 

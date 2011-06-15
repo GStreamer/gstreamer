@@ -48,6 +48,14 @@ G_BEGIN_DECLS
 #define GST_TS_DEMUX_CAST(obj) ((GstTSDemux*) obj)
 typedef struct _GstTSDemux GstTSDemux;
 typedef struct _GstTSDemuxClass GstTSDemuxClass;
+typedef struct _TSPcrOffset TSPcrOffset;
+
+struct _TSPcrOffset
+{
+  guint64 gsttime;
+  guint64 pcr;
+  guint64 offset;
+};
 
 struct _GstTSDemux
 {
@@ -62,7 +70,16 @@ struct _GstTSDemux
   MpegTSBaseProgram *program;	/* Current program */
   guint	current_program_number;
   gboolean need_newsegment;
+  GstSegment segment;
   GstClockTime duration;	/* Total duration */
+
+  /* pcr wrap and seeking */
+  GArray *index;
+  gint index_size;
+  TSPcrOffset first_pcr;
+  TSPcrOffset last_pcr;
+  TSPcrOffset cur_pcr;
+  TSPcrOffset index_pcr;
 };
 
 struct _GstTSDemuxClass

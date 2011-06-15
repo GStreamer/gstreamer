@@ -48,7 +48,8 @@ G_BEGIN_DECLS
 
 /* raop fixed parameters */
 #define GST_APEX_RAOP_BITRATE				44100
-#define GST_APEX_RAOP_SAMPLES_PER_FRAME			4096
+#define GST_APEX_RAOP_V1_SAMPLES_PER_FRAME		4096
+#define GST_APEX_RAOP_V2_SAMPLES_PER_FRAME		352
 #define GST_APEX_RAOP_BYTES_PER_CHANNEL			2
 #define GST_APEX_RAOP_CHANNELS				2
 #define GST_APEX_RAOP_BYTES_PER_SAMPLE			(GST_APEX_RAOP_CHANNELS * GST_APEX_RAOP_BYTES_PER_CHANNEL)
@@ -78,13 +79,30 @@ typedef enum
 }
 GstApExJackStatus;
 
+typedef enum
+{
+  GST_APEX_GENERATION_ONE = 1,
+  GST_APEX_GENERATION_TWO,
+}
+GstApExGeneration;
+
+typedef enum
+{
+  GST_APEX_TCP = 0,
+  GST_APEX_UDP,
+}
+GstApExTransportProtocol;
+
 /* raop context handle */
 typedef struct
 {
 } GstApExRAOP;
 
 /* host might be null and port might be 0 while instanciating */
-GstApExRAOP *gst_apexraop_new (const gchar * host, const guint16 port);
+GstApExRAOP *gst_apexraop_new (const gchar * host,
+                               const guint16 port,
+			       const GstApExGeneration generation,
+			       const GstApExTransportProtocol transport_protocol);
 void gst_apexraop_free (GstApExRAOP * conn);
 
 /* must not be connected yet while setting the host target */
@@ -117,6 +135,12 @@ GstRTSPStatusCode gst_apexraop_flush (GstApExRAOP * conn);
 /* retrieve the connected apex jack type and status */
 GstApExJackType gst_apexraop_get_jacktype (GstApExRAOP * conn);
 GstApExJackStatus gst_apexraop_get_jackstatus (GstApExRAOP * conn);
+
+/* retrieve the generation */
+GstApExGeneration gst_apexraop_get_generation (GstApExRAOP * conn);
+
+/* retrieve the transport protocol */
+GstApExTransportProtocol gst_apexraop_get_transport_protocol (GstApExRAOP * conn);
 
 G_END_DECLS
 

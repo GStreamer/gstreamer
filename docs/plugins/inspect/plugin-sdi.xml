@@ -1,0 +1,55 @@
+<plugin>
+  <name>sdi</name>
+  <description>SDI elements</description>
+  <filename>../../gst/sdi/.libs/libgstsdi.so</filename>
+  <basename>libgstsdi.so</basename>
+  <version>0.10.22.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>sdidemux</name>
+      <longname>SDI Demuxer</longname>
+      <class>Demuxer</class>
+      <description>Demultiplex SDI streams into raw audio and video</description>
+      <author>David Schleef &lt;ds@schleef.org&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/x-raw-sdi</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw-yuv, format=(fourcc)UYVY, width=(int)720, height=(int)480, framerate=(fraction)30000/1001, interlaced=(boolean)true, pixel-aspect-ratio=(fraction)10/11, chroma-site=(string)mpeg2, color-matrix=(string)sdtv; video/x-raw-yuv, format=(fourcc)UYVY, width=(int)720, height=(int)576, framerate=(fraction)25/1, interlaced=(boolean)true, pixel-aspect-ratio=(fraction)12/11, chroma-site=(string)mpeg2, color-matrix=(string)sdtv</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>sdimux</name>
+      <longname>SDI Muxer</longname>
+      <class>Muxer</class>
+      <description>Multiplex raw audio and video into SDI</description>
+      <author>David Schleef &lt;ds@schleef.org&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw-yuv, format=(fourcc){ UYVY, v210 }, width=(int)720, height=(int)480, framerate=(fraction)30000/1001, interlaced=(boolean)true, pixel-aspect-ratio=(fraction)10/11, chroma-site=(string)mpeg2, color-matrix=(string)sdtv; video/x-raw-yuv, format=(fourcc){ UYVY, v210 }, width=(int)720, height=(int)576, framerate=(fraction)25/1, interlaced=(boolean)true, pixel-aspect-ratio=(fraction)12/11, chroma-site=(string)mpeg2, color-matrix=(string)sdtv</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-raw-sdi, rate=(int)270, format=(fourcc){ UYVY, v210 }</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

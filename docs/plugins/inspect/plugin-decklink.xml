@@ -1,0 +1,55 @@
+<plugin>
+  <name>decklink</name>
+  <description>Blackmagic Decklink plugin</description>
+  <filename>../../sys/decklink/.libs/libgstdecklink.so</filename>
+  <basename>libgstdecklink.so</basename>
+  <version>0.10.22.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>decklinksink</name>
+      <longname>Decklink Sink</longname>
+      <class>Video/Sink</class>
+      <description>Decklink Sink</description>
+      <author>David Schleef &lt;ds@entropywave.com&gt;</author>
+      <pads>
+        <caps>
+          <name>audiosink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-int, width=(int)16, depth=(int)16, channels=(int)2, rate=(int)48000</details>
+        </caps>
+        <caps>
+          <name>videosink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw-yuv, format=(fourcc)UYVY, width=(int)720, height=(int)486, framerate=(fraction)30000/1001, interlaced=(boolean)true</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>decklinksrc</name>
+      <longname>Decklink source</longname>
+      <class>Source/Video</class>
+      <description>DeckLink Source</description>
+      <author>David Schleef &lt;ds@entropywave.com&gt;</author>
+      <pads>
+        <caps>
+          <name>audiosrc</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-int, width=(int)16, depth=(int)16, channels=(int)2, rate=(int)48000</details>
+        </caps>
+        <caps>
+          <name>videosrc</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw-yuv, format=(fourcc)UYVY, width=(int)720, height=(int)486, framerate=(fraction)30000/1001, interlaced=(boolean)true; video/x-raw-yuv, format=(fourcc)UYVY, width=(int)720, height=(int)486, framerate=(fraction)24000/1001, interlaced=(boolean)true; video/x-raw-yuv, format=(fourcc)UYVY, width=(int)720, height=(int)576, framerate=(fraction)25/1, interlaced=(boolean)true; video/x-raw-yuv, format=(fourcc)UYVY, width=(int)1920, height=(int)1080, framerate=(fraction)24000/1001, interlaced=(boolean)false; video/x-raw-yuv, format=(fourcc)UYVY, width=(int)1920, height=(int)1080, framerate=(fraction)24/1, interlaced=(boolean)false; video/x-raw-yuv, format=(fourcc)UYVY, width=(int)1920, height=(int)1080, framerate=(fraction)25/1, interlaced=(boolean)false; video/x-raw-yuv, format=(fourcc)UYVY, width=(int)1920, height=(int)1080, framerate=(fraction)30000/1001, interlaced=(boolean)false; video/x-raw-yuv, format=(fourcc)UYVY, width=(int)1920, height=(int)1080, framerate=(fraction)30/1, interlaced=(boolean)false; video/x-raw-yuv, format=(fourcc)UYVY, width=(int)1920, height=(int)1080, framerate=(fraction)25/1, interlaced=(boolean)true; video/x-raw-yuv, format=(fourcc)UYVY, width=(int)1920, height=(int)1080, framerate=(fraction)30000/1001, interlaced=(boolean)true; video/x-raw-yuv, format=(fourcc)UYVY, width=(int)1920, height=(int)1080, framerate=(fraction)30/1, interlaced=(boolean)true; video/x-raw-yuv, format=(fourcc)UYVY, width=(int)1280, height=(int)720, framerate=(fraction)50/1, interlaced=(boolean)true; video/x-raw-yuv, format=(fourcc)UYVY, width=(int)1280, height=(int)720, framerate=(fraction)60000/1001, interlaced=(boolean)true; video/x-raw-yuv, format=(fourcc)UYVY, width=(int)1280, height=(int)720, framerate=(fraction)60/1, interlaced=(boolean)true</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

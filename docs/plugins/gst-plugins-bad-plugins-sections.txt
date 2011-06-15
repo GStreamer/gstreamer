@@ -1,32 +1,4 @@
 <SECTION>
-<FILE>element-aacparse</FILE>
-<TITLE>aacparse</TITLE>
-GstAacParse
-<SUBSECTION Standard>
-GstAacParseClass
-GST_AACPARSE
-GST_AACPARSE_CLASS
-GST_IS_AACPARSE
-GST_IS_AACPARSE_CLASS
-GST_TYPE_AACPARSE
-gst_aacparse_get_type
-</SECTION>
-
-<SECTION>
-<FILE>element-ac3parse</FILE>
-<TITLE>ac3parse</TITLE>
-GstAc3Parse
-<SUBSECTION Standard>
-GstAc3ParseClass
-GST_AC3_PARSE
-GST_AC3_PARSE_CLASS
-GST_IS_AC3_PARSE
-GST_IS_AC3_PARSE_CLASS
-GST_TYPE_AC3_PARSE
-gst_ac3_parse_get_type
-</SECTION>
-
-<SECTION>
 <FILE>element-aiffmux</FILE>
 <TITLE>aiffmux</TITLE>
 GstAiffMux
@@ -56,31 +28,31 @@ gst_aiff_parse_get_type
 </SECTION>
 
 <SECTION>
-<FILE>element-amrparse</FILE>
-<TITLE>amrparse</TITLE>
-GstAmrParse
+<FILE>element-voaacenc</FILE>
+<TITLE>voaacenc</TITLE>
+GstVoAacEnc
 <SUBSECTION Standard>
-GstAmrParseClass
-GST_AMRPARSE
-GST_AMRPARSE_CLASS
-GST_IS_AMRPARSE
-GST_IS_AMRPARSE_CLASS
-GST_TYPE_AMRPARSE
-gst_amrparse_get_type
+GstVoAacEncClass
+GST_VOAACENC
+GST_VOAACENC_CLASS
+GST_IS_VOAACENC
+GST_IS_VOAACENC_CLASS
+GST_TYPE_VOAACENC
+gst_voaacenc_get_type
 </SECTION>
 
 <SECTION>
-<FILE>element-amrwbenc</FILE>
-<TITLE>amrwbenc</TITLE>
-GstAmrwbEnc
+<FILE>element-voamrwbenc</FILE>
+<TITLE>voamrwbenc</TITLE>
+GstVoAmrwbEnc
 <SUBSECTION Standard>
-GstAmrwbEncClass
-GST_AMRWBENC
-GST_AMRWBENC_CLASS
-GST_IS_AMRWBENC
-GST_IS_AMRWBENC_CLASS
-GST_TYPE_AMRWBENC
-gst_amrwbenc_get_type
+GstVoAmrwbEncClass
+GST_VOAMRWBENC
+GST_VOAMRWBENC_CLASS
+GST_IS_VOAMRWBENC
+GST_IS_VOAMRWBENC_CLASS
+GST_TYPE_VOAMRWBENC
+gst_voamrwbenc_get_type
 </SECTION>
 
 <SECTION>
@@ -375,20 +347,6 @@ GST_IS_DC1394
 GST_IS_DC1394_CLASS
 GST_TYPE_DC1394
 gst_dc1394_get_type
-</SECTION>
-
-<SECTION>
-<FILE>element-dcaparse</FILE>
-<TITLE>dcaparse</TITLE>
-GstDCAParse
-<SUBSECTION Standard>
-GstDCAParseClass
-GST_DCA_PARSE
-GST_DCA_PARSE_CLASS
-GST_IS_DCA_PARSE
-GST_IS_DCA_PARSE_CLASS
-GST_TYPE_DCA_PARSE
-gst_dca_parse_get_type
 </SECTION>
 
 <SECTION>
@@ -752,20 +710,6 @@ gst_fisheye_plugin_init
 </SECTION>
 
 <SECTION>
-<FILE>element-flacparse</FILE>
-<TITLE>flacparse</TITLE>
-GstFlacParse
-<SUBSECTION Standard>
-GstFlacParseClass
-GST_FLAC_PARSE
-GST_FLAC_PARSE_CLASS
-GST_IS_FLAC_PARSE
-GST_IS_FLAC_PARSE_CLASS
-GST_TYPE_FLAC_PARSE
-gst_flac_parse_get_type
-</SECTION>
-
-<SECTION>
 <FILE>element-fpsdisplaysink</FILE>
 <TITLE>fpsdisplaysink</TITLE>
 GstFPSDisplaySink
@@ -1035,20 +979,6 @@ gst_modplug_get_type
 </SECTION>
 
 <SECTION>
-<FILE>element-mpegaudioparse</FILE>
-<TITLE>mpegaudioparse</TITLE>
-GstMpegAudioParse
-<SUBSECTION Standard>
-GstMpegAudioParseClass
-GST_MPEG_AUDIO_PARSE
-GST_MPEG_AUDIO_PARSE_CLASS
-GST_IS_MPEG_AUDIO_PARSE
-GST_IS_MPEG_AUDIO_PARSE_CLASS
-GST_TYPE_MPEG_AUDIO_PARSE
-gst_mpeg_audio_parse_get_type
-</SECTION>
-
-<SECTION>
 <FILE>element-mpeg2enc</FILE>
 <TITLE>mpeg2enc</TITLE>
 GstMpeg2enc
@@ -1143,6 +1073,20 @@ GST_TYPE_NUV_DEMUX
 gst_nuv_demux_get_type
 </SECTION>
 
+<FILE>element-opencvtextoverlay</FILE>
+<TITLE>opencvtextoverlay</TITLE>
+GstOpencvTextOverlay
+<SUBSECTION Standard>
+GstOpencvTextOverlayClass
+GST_OPENCV_TEXT_OVERLAY
+GST_OPENCV_TEXT_OVERLAY_CLASS
+GST_TYPE_OPENCV_TEXT_OVERLAY
+GST_IS_OPENCV_TEXT_OVERLAY
+GST_IS_OPENCV_TEXT_OVERLAY_CLASS
+gst_opencv_text_overlay_get_type
+gst_opencv_text_overlay_plugin_init
+</SECTION>
+
 <SECTION>
 <FILE>element-pcapparse</FILE>
 <TITLE>pcapparse</TITLE>
@@ -1186,20 +1130,6 @@ GST_IS_PYRAMIDSEGMENT
 GST_IS_PYRAMIDSEGMENT_CLASS
 gst_pyramidsegment_get_type
 gst_pyramidsegment_plugin_init
-</SECTION>
-
-<SECTION>
-<FILE>element-qtmux</FILE>
-<TITLE>qtmux</TITLE>
-GstQTMux
-<SUBSECTION Standard>
-GstQTMuxClass
-GST_QT_MUX
-GST_QT_MUX_CLASS
-GST_IS_QT_MUX
-GST_IS_QT_MUX_CLASS
-GST_TYPE_QT_MUX
-gst_qt_mux_get_type
 </SECTION>
 
 <SECTION>
@@ -1403,6 +1333,34 @@ gst_solarize_plugin_init
 </SECTION>
 
 <SECTION>
+<FILE>element-spacescope</FILE>
+<TITLE>spacescope</TITLE>
+GstSpaceScope
+<SUBSECTION Standard>
+GstSpaceScopeClass
+GST_SPACE_SCOPE
+GST_SPACE_SCOPE_CLASS
+GST_IS_SPACE_SCOPE
+GST_IS_SPACE_SCOPE_CLASS
+GST_TYPE_SPACE_SCOPE
+gst_space_scope_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-spectrascope</FILE>
+<TITLE>spectrascope</TITLE>
+GstSpectraScope
+<SUBSECTION Standard>
+GstSpectraScopeClass
+GST_SPECTRA_SCOPE
+GST_SPECTRA_SCOPE_CLASS
+GST_IS_SPECTRA_SCOPE
+GST_IS_SPECTRA_SCOPE_CLASS
+GST_TYPE_SPECTRA_SCOPE
+gst_spectra_scope_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-speed</FILE>
 <TITLE>speed</TITLE>
 GstSpeed
@@ -1479,6 +1437,20 @@ gst_stretch_get_type
 gst_stretch_plugin_init
 </SECTION>
 
+<SECTION>
+<FILE>element-synaescope</FILE>
+<TITLE>synaescope</TITLE>
+GstSynaeScope
+<SUBSECTION Standard>
+GstSynaeScopeClass
+GST_SYNAE_SCOPE
+GST_SYNAE_SCOPE_CLASS
+GST_IS_SYNAE_SCOPE
+GST_IS_SYNAE_SCOPE_CLASS
+GST_TYPE_SYNAE_SCOPE
+gst_synae_scope_get_type
+</SECTION>
+
 <FILE>element-templatematch</FILE>
 <TITLE>templatematch</TITLE>
 GstTemplateMatch
@@ -1491,33 +1463,6 @@ GST_IS_TEMPLATEMATCH
 GST_IS_TEMPLATEMATCH_CLASS
 gst_templatematch_get_type
 gst_templatematch_plugin_init
-</SECTION>
-
-<FILE>element-textwrite</FILE>
-<TITLE>textwrite</TITLE>
-Gsttextwrite
-<SUBSECTION Standard>
-GsttextwriteClass
-GST_textwrite
-GST_textwrite_CLASS
-GST_TYPE_textwrite
-GST_IS_textwrite
-GST_IS_textwrite_CLASS
-gst_textwrite_get_type
-gst_textwrite_plugin_init
-</SECTION>
-
-<SECTION>
-<FILE>element-theoradecexp</FILE>
-<TITLE>theoradecexp</TITLE>
-GstTheoraExpDec
-<SUBSECTION Standard>
-GstTheoraExpDecClass
-GST_THEORA_DEC_EXP
-GST_THEORA_DEC_EXP_CLASS
-GST_IS_THEORA_DEC_EXP
-GST_IS_THEORA_DEC_EXP_CLASS
-GST_TYPE_THEORA_DEC_EXP
 </SECTION>
 
 <SECTION>
@@ -1665,6 +1610,20 @@ GST_IS_WATER_RIPPLE_CLASS
 GST_TYPE_WATER_RIPPLE
 gst_water_ripple_get_type
 gst_water_ripple_plugin_init
+</SECTION>
+
+<SECTION>
+<FILE>element-wavescope</FILE>
+<TITLE>wavescope</TITLE>
+GstWaveScope
+<SUBSECTION Standard>
+GstWaveScopeClass
+GST_WAVE_SCOPE
+GST_WAVE_SCOPE_CLASS
+GST_IS_WAVE_SCOPE
+GST_IS_WAVE_SCOPE_CLASS
+GST_TYPE_WAVE_SCOPE
+gst_wave_scope_get_type
 </SECTION>
 
 <SECTION>

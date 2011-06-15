@@ -20,9 +20,11 @@ gst_replace_parse_tag (GstTagDemux * demux,
 static GstTagList *gst_replace_merge_tags (GstTagDemux * demux,
     const GstTagList * start_tags, const GstTagList * end_tags);
 % declare-class
-  GstTagdemux *tagdemux_class = GST_TAGDEMUX (klass);
+  GstTagDemuxClass *tagdemux_class = GST_TAG_DEMUX_CLASS (klass);
 % set-methods
-  tagdemux_class-> = GST_DEBUG_FUNCPTR (gst_replace_);
+  tagdemux_class->identify_tag = GST_DEBUG_FUNCPTR (gst_replace_identify_tag);
+  tagdemux_class->parse_tag = GST_DEBUG_FUNCPTR (gst_replace_parse_tag);
+  tagdemux_class->merge_tags = GST_DEBUG_FUNCPTR (gst_replace_merge_tags);
 % methods
 
 
@@ -31,6 +33,7 @@ gst_replace_identify_tag (GstTagDemux * demux,
     GstBuffer * buffer, gboolean start_tag, guint * tag_size)
 {
 
+  return FALSE;
 }
 
 static GstTagDemuxResult
@@ -39,6 +42,7 @@ gst_replace_parse_tag (GstTagDemux * demux,
     gboolean start_tag, guint * tag_size, GstTagList ** tags)
 {
 
+  return GST_TAG_DEMUX_RESULT_BROKEN_TAG;
 }
 
 static GstTagList *
@@ -46,5 +50,6 @@ gst_replace_merge_tags (GstTagDemux * demux,
     const GstTagList * start_tags, const GstTagList * end_tags)
 {
 
+  return NULL;
 }
 % end

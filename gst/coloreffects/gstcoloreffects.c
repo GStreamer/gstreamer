@@ -25,7 +25,8 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v videotestsrc ! coloreffects preset=heat ! ffmpegcolorspace ! autovideosink
+ * gst-launch -v videotestsrc ! coloreffects preset=heat ! ffmpegcolorspace !
+ *     autovideosink
  * ]| This pipeline shows the effect of coloreffects on a test stream.
  * </refsect2>
  */
@@ -264,7 +265,8 @@ static const gint cog_rgb_to_ycbcr_matrix_8bit_sdtv[] = {
   112, -94, -18, 32768,
 };
 
-#define APPLY_MATRIX(m,o,v1,v2,v3) ((m[o*4] * v1 + m[o*4+1] * v2 + m[o*4+2] * v3 + m[o*4+3]) >> 8)
+#define APPLY_MATRIX(m,o,v1,v2,v3) ((m[o*4] * v1 + m[o*4+1] * v2 + \
+    m[o*4+2] * v3 + m[o*4+3]) >> 8)
 
 static void
 gst_color_effects_transform_rgb (GstColorEffects * filter, guint8 * data)
@@ -306,7 +308,8 @@ gst_color_effects_transform_rgb (GstColorEffects * filter, guint8 * data)
         /* 0.2126 R + 0.7152 G + 0.0722 B */
         luma = ((r << 8) * 54) + ((g << 8) * 183) + ((b << 8) * 19);
         luma >>= 16;            /* get integer part */
-        luma *= 3;              /* times 3 to retrieve the correct pixel from the lut */
+        luma *= 3;              /* times 3 to retrieve the correct pixel from
+                                 * the lut */
         /* map luma to lookup table */
         /* src.luma |-> table[luma].rgb */
         data[offsets[0]] = filter->table[luma];

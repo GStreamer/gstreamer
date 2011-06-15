@@ -33,7 +33,8 @@ plugin_init (GstPlugin * plugin)
   if (!gst_element_register (plugin, "jpegparse", GST_RANK_NONE,
           GST_TYPE_JPEG_PARSE))
     return FALSE;
-  if (!gst_element_register (plugin, "jifmux", GST_RANK_NONE, GST_TYPE_JIF_MUX))
+  if (!gst_element_register (plugin, "jifmux", GST_RANK_SECONDARY,
+          GST_TYPE_JIF_MUX))
     return FALSE;
 
   return TRUE;

@@ -299,8 +299,6 @@ static gboolean
 gst_jasper_enc_sink_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstJasperEnc *enc;
-  GstStructure *s;
-  const gchar *mimetype;
   GstVideoFormat format;
   gint width, height;
   gint fps_num, fps_den;
@@ -308,8 +306,6 @@ gst_jasper_enc_sink_setcaps (GstPad * pad, GstCaps * caps)
   gint i;
 
   enc = GST_JASPER_ENC (GST_PAD_PARENT (pad));
-  s = gst_caps_get_structure (caps, 0);
-  mimetype = gst_structure_get_name (s);
 
   /* get info from caps */
   if (!gst_video_format_parse_caps (caps, &format, &width, &height))

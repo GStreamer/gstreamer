@@ -81,8 +81,9 @@ dump_bytes (guint8 * data, guint16 len)
 static void
 dump_rle_data (GstDVDSpu * dvdspu, guint8 * data, guint32 len)
 {
+  guint16 obj_h G_GNUC_UNUSED;
+  guint16 obj_w;
   guint8 *end = data + len;
-  guint16 obj_w, obj_h;
   guint x = 0;
 
   if (data + 4 > end)
@@ -175,7 +176,8 @@ pgs_composition_object_render (PgsCompositionObject * obj, SpuState * state,
   SpuColour *colour;
   guint8 *planes[3];            /* YUV frame pointers */
   guint8 *data, *end;
-  guint16 obj_w, obj_h;
+  guint16 obj_w;
+  guint16 obj_h G_GNUC_UNUSED;
   guint x, y, i, min_x, max_x;
 
   if (G_UNLIKELY (obj->rle_data == NULL || obj->rle_data_size == 0
@@ -461,8 +463,8 @@ parse_set_palette (GstDVDSpu * dvdspu, guint8 type, guint8 * payload,
 
   const gint PGS_PALETTE_ENTRY_SIZE = 5;
   guint8 *end = payload + len;
-  guint8 palette_id;
-  guint8 palette_version;
+  guint8 palette_id G_GNUC_UNUSED;
+  guint8 palette_version G_GNUC_UNUSED;
   gint n_entries, i;
 
   if (len < 2)                  /* Palette command too short */
@@ -520,7 +522,7 @@ parse_set_window (GstDVDSpu * dvdspu, guint8 type, guint8 * payload,
 {
   SpuState *state = &dvdspu->spu_state;
   guint8 *end = payload + len;
-  guint8 win_count, win_id;
+  guint8 win_count, win_id G_GNUC_UNUSED;
   gint i;
 
   if (payload + 1 > end)

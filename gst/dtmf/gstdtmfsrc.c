@@ -113,7 +113,7 @@
  */
 
 #ifdef HAVE_CONFIG_H
-#  include "config.h"
+#include "config.h"
 #endif
 
 #include <stdlib.h>
@@ -122,10 +122,7 @@
 
 #include <glib.h>
 
-#ifndef M_PI
-# define M_PI           3.14159265358979323846  /* pi */
-#endif
-
+#include "gstdtmfcommon.h"
 
 #include "gstdtmfsrc.h"
 
@@ -136,12 +133,6 @@
 #define DEFAULT_SAMPLE_RATE      8000
 #define SAMPLE_SIZE              16
 #define CHANNELS                 1
-#define MIN_EVENT                0
-#define MAX_EVENT                16
-#define MIN_VOLUME               0
-#define MAX_VOLUME               36
-#define MIN_INTER_DIGIT_INTERVAL 100
-#define MIN_PULSE_DURATION       250
 #define MIN_DUTY_CYCLE           (MIN_INTER_DIGIT_INTERVAL + MIN_PULSE_DURATION)
 
 
@@ -457,17 +448,11 @@ static void
 gst_dtmf_prepare_timestamps (GstDTMFSrc * dtmfsrc)
 {
   GstClock *clock;
-  GstClockTime base_time;
-
-  base_time = gst_element_get_base_time (GST_ELEMENT (dtmfsrc));
 
   clock = gst_element_get_clock (GST_ELEMENT (dtmfsrc));
   if (clock != NULL) {
-#ifdef MAEMO_BROKEN
-    dtmfsrc->timestamp = gst_clock_get_time (clock);
-#else
-    dtmfsrc->timestamp = gst_clock_get_time (clock) - base_time;
-#endif
+    dtmfsrc->timestamp = gst_clock_get_time (clock)
+        - gst_element_get_base_time (GST_ELEMENT (dtmfsrc));
     gst_object_unref (clock);
   } else {
     gchar *dtmf_name = gst_element_get_name (dtmfsrc);
@@ -696,12 +681,8 @@ gst_dtmf_src_create (GstBaseSrc * basesrc, guint64 offset,
 
   clock = gst_element_get_clock (GST_ELEMENT (basesrc));
 
-#ifdef MAEMO_BROKEN
-  clockid = gst_clock_new_single_shot_id (clock, dtmfsrc->timestamp);
-#else
   clockid = gst_clock_new_single_shot_id (clock, dtmfsrc->timestamp +
       gst_element_get_base_time (GST_ELEMENT (dtmfsrc)));
-#endif
   gst_object_unref (clock);
 
   GST_OBJECT_LOCK (dtmfsrc);

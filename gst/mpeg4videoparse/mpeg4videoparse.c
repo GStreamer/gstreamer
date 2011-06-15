@@ -2,6 +2,9 @@
  * Copyright (C) <2008> Mindfruit B.V.
  *   @author Sjoerd Simons <sjoerd@luon.net>
  * Copyright (C) <2007> Julien Moutte <julien@fluendo.com>
+ * Copyright (C) <2011> Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+ * Copyright (C) <2011> Collabora Multimedia
+ * Copyright (C) <2011> Nokia Corporation
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -24,9 +27,10 @@
 #endif
 
 #include <string.h>
+#include <gst/base/gstbytereader.h>
 #include "mpeg4videoparse.h"
 
-GST_DEBUG_CATEGORY_STATIC (mpeg4v_parse_debug);
+GST_DEBUG_CATEGORY (mpeg4v_parse_debug);
 #define GST_CAT_DEFAULT mpeg4v_parse_debug
 
 static GstStaticPadTemplate src_template =
@@ -57,914 +61,23 @@ enum
   PROP_LAST
 };
 
-GST_BOILERPLATE (GstMpeg4VParse, gst_mpeg4vparse, GstElement, GST_TYPE_ELEMENT);
-
-static gboolean
-gst_mpeg4vparse_set_new_caps (GstMpeg4VParse * parse,
-    guint16 time_increment_resolution, guint16 fixed_time_increment,
-    gint aspect_ratio_width, gint aspect_ratio_height, gint width, gint height)
-{
-  gboolean res;
-  GstCaps *out_caps;
-
-  if (parse->sink_caps) {
-    out_caps = gst_caps_copy (parse->sink_caps);
-  } else {
-    out_caps = gst_caps_new_simple ("video/mpeg",
-        "mpegversion", G_TYPE_INT, 4, NULL);
-  }
-  gst_caps_set_simple (out_caps, "systemstream", G_TYPE_BOOLEAN, FALSE,
-      "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
-
-  if (parse->profile != 0) {
-    gchar *profile = NULL;
-
-    /* FIXME does it make sense to expose the profile in the caps ? */
-    profile = g_strdup_printf ("%d", parse->profile);
-    gst_caps_set_simple (out_caps, "profile-level-id",
-        G_TYPE_STRING, profile, NULL);
-    g_free (profile);
-  }
-
-  if (parse->config != NULL) {
-    gst_caps_set_simple (out_caps, "codec_data",
-        GST_TYPE_BUFFER, parse->config, NULL);
-  }
-
-  if (fixed_time_increment != 0) {
-    /* we have  a framerate */
-    gst_caps_set_simple (out_caps, "framerate",
-        GST_TYPE_FRACTION, time_increment_resolution, fixed_time_increment,
-        NULL);
-    parse->frame_duration = gst_util_uint64_scale_int (GST_SECOND,
-        fixed_time_increment, time_increment_resolution);
-  } else {
-    /* unknown duration */
-    parse->frame_duration = 0;
-  }
-
-  if (aspect_ratio_width > 0 && aspect_ratio_height > 0) {
-    gst_caps_set_simple (out_caps, "pixel-aspect-ratio",
-        GST_TYPE_FRACTION, aspect_ratio_width, aspect_ratio_height, NULL);
-  }
-
-  if (width > 0 && height > 0) {
-    gst_caps_set_simple (out_caps,
-        "width", G_TYPE_INT, width, "height", G_TYPE_INT, height, NULL);
-  }
-
-  GST_DEBUG_OBJECT (parse, "setting downstream caps to %" GST_PTR_FORMAT,
-      out_caps);
-  res = gst_pad_set_caps (parse->srcpad, out_caps);
-  gst_caps_unref (out_caps);
-
-  parse->have_src_caps = TRUE;
-  if (parse->pending_segment != NULL) {
-    /* We can send pending events  since we now have caps for the srcpad */
-    gst_pad_push_event (parse->srcpad, parse->pending_segment);
-    parse->pending_segment = NULL;
-
-    if (G_UNLIKELY (parse->pending_events != NULL)) {
-      GList *l;
-
-      for (l = parse->pending_events; l != NULL; l = l->next)
-        gst_pad_push_event (parse->srcpad, GST_EVENT (l->data));
-
-      g_list_free (parse->pending_events);
-      parse->pending_events = NULL;
-    }
-  }
-  return res;
-}
-
-#define VIDEO_OBJECT_STARTCODE_MIN      0x00
-#define VIDEO_OBJECT_STARTCODE_MAX      0x1F
-#define VOS_STARTCODE                   0xB0
-#define VOS_ENDCODE                     0xB1
-#define USER_DATA_STARTCODE             0xB2
-#define GOP_STARTCODE                   0xB3
-#define VISUAL_OBJECT_STARTCODE         0xB5
-#define VOP_STARTCODE                   0xB6
-
-#define START_MARKER                    0x000001
-#define VISUAL_OBJECT_STARTCODE_MARKER  ((START_MARKER << 8) + VISUAL_OBJECT_STARTCODE)
-#define USER_DATA_STARTCODE_MARKER      ((START_MARKER << 8) + USER_DATA_STARTCODE)
-
-typedef struct
-{
-  const guint8 *data;
-  /* byte offset */
-  gsize offset;
-  /* bit offset */
-  gsize b_offset;
-
-  /* size in bytes */
-  gsize size;
-} bitstream_t;
-
-static gboolean
-get_bits (bitstream_t * b, int num, guint32 * bits)
-{
-  *bits = 0;
-
-  if (b->offset + ((b->b_offset + num) / 8) > b->size)
-    return FALSE;
-
-  if (b->b_offset + num <= 8) {
-    *bits = b->data[b->offset];
-    *bits = (*bits >> (8 - num - b->b_offset)) & (((1 << num)) - 1);
-
-    b->offset += (b->b_offset + num) / 8;
-    b->b_offset = (b->b_offset + num) % 8;
-    return TRUE;
-  } else {
-    /* going over the edge.. */
-    int next;
-
-    next = (8 - b->b_offset);
-    do {
-      guint32 t;
-
-      if (!get_bits (b, next, &t))
-        return FALSE;
-      *bits <<= next;
-      *bits |= t;
-      num -= next;
-      next = MIN (8, num);
-    } while (num > 0);
-
-    return TRUE;
-  }
-}
-
-#define GET_BITS(b, num, bits) G_STMT_START { \
-  if (!get_bits(b, num, bits))                \
-    goto failed;                              \
-} G_STMT_END
-
-#define MARKER_BIT(b) G_STMT_START {  \
-  guint32 i;                          \
-  GET_BITS(b, 1, &i);                 \
-  if (i != 0x1)                       \
-    goto failed;                      \
-} G_STMT_END
-
-static inline gboolean
-next_start_code (bitstream_t * b)
-{
-  guint32 bits;
-
-  GET_BITS (b, 1, &bits);
-  if (bits != 0)
-    goto failed;
-
-  while (b->b_offset != 0) {
-    GET_BITS (b, 1, &bits);
-    if (bits != 0x1)
-      goto failed;
-  }
-
-  return TRUE;
-
-failed:
-  return FALSE;
-}
-
-static gint aspect_ratio_table[6][2] = { {-1, -1}, {1, 1}, {12, 11},
-{10, 11}, {16, 11}, {40, 33}
-};
-
-static void
-gst_mpeg4vparse_set_config (GstMpeg4VParse * parse, const guint8 * data,
-    gsize size)
-{
-  /* limit possible caps noise */
-  if (parse->config && size == GST_BUFFER_SIZE (parse->config) &&
-      memcmp (GST_BUFFER_DATA (parse->config), data, size) == 0)
-    return;
-
-  if (parse->config != NULL)
-    gst_buffer_unref (parse->config);
-
-  parse->config = gst_buffer_new_and_alloc (size);
-  memcpy (GST_BUFFER_DATA (parse->config), data, size);
-}
-
-/* Handle parsing a video object */
-static gboolean
-gst_mpeg4vparse_handle_vo (GstMpeg4VParse * parse, const guint8 * data,
-    gsize size, gboolean set_codec_data)
-{
-  guint32 bits;
-  bitstream_t bs = { data, 0, 0, size };
-  guint16 time_increment_resolution = 0;
-  guint16 fixed_time_increment = 0;
-  gint aspect_ratio_width = -1, aspect_ratio_height = -1;
-  gint height = -1, width = -1;
-
-  if (set_codec_data)
-    gst_mpeg4vparse_set_config (parse, data, size);
-
-  /* expecting a video object startcode */
-  GET_BITS (&bs, 32, &bits);
-  if (bits > 0x11F)
-    goto failed;
-
-  /* expecting a video object layer startcode */
-  GET_BITS (&bs, 32, &bits);
-  if (bits < 0x120 || bits > 0x12F)
-    goto failed;
-
-  /* ignore random accessible vol  and video object type indication */
-  GET_BITS (&bs, 9, &bits);
-
-  GET_BITS (&bs, 1, &bits);
-  if (bits) {
-    /* skip video object layer verid and priority */
-    GET_BITS (&bs, 7, &bits);
-  }
-
-  /* aspect ratio info */
-  GET_BITS (&bs, 4, &bits);
-  if (bits == 0)
-    goto failed;
-
-  /* check if aspect ratio info  is extended par */
-  if (bits == 0xf) {
-    GET_BITS (&bs, 8, &bits);
-    aspect_ratio_width = bits;
-    GET_BITS (&bs, 8, &bits);
-    aspect_ratio_height = bits;
-  } else if (bits < 0x6) {
-    aspect_ratio_width = aspect_ratio_table[bits][0];
-    aspect_ratio_height = aspect_ratio_table[bits][1];
-  }
-
-  GET_BITS (&bs, 1, &bits);
-  if (bits) {
-    /* vol control parameters, skip chroma and low delay */
-    GET_BITS (&bs, 3, &bits);
-    GET_BITS (&bs, 1, &bits);
-    if (bits) {
-      /* skip vbv_parameters */
-      GET_BITS (&bs, 79, &bits);
-    }
-  }
-
-  /* layer shape */
-  GET_BITS (&bs, 2, &bits);
-  /* only support rectangular */
-  if (bits != 0)
-    goto failed;
-
-  MARKER_BIT (&bs);
-  GET_BITS (&bs, 16, &bits);
-  time_increment_resolution = bits;
-  MARKER_BIT (&bs);
-
-  GST_DEBUG_OBJECT (parse, "time increment resolution %d",
-      time_increment_resolution);
-
-  GET_BITS (&bs, 1, &bits);
-  if (bits) {
-    /* fixed time increment */
-    int n;
-
-    /* Length of the time increment is the minimal number of bits needed to
-     * represent time_increment_resolution */
-    for (n = 0; (time_increment_resolution >> n) != 0; n++);
-    GET_BITS (&bs, n, &bits);
-
-    fixed_time_increment = bits;
-  } else {
-    /* When fixed_vop_rate is not set we can't guess any framerate */
-    fixed_time_increment = 0;
-  }
-  GST_DEBUG_OBJECT (parse, "fixed time increment %d", fixed_time_increment);
-
-  /* assuming rectangular shape */
-  MARKER_BIT (&bs);
-  GET_BITS (&bs, 13, &bits);
-  width = bits;
-  MARKER_BIT (&bs);
-  GET_BITS (&bs, 13, &bits);
-  height = bits;
-  MARKER_BIT (&bs);
-
-  /* ok we know there is enough data in the stream to decode it and we can start
-   * pushing the data */
-  parse->have_config = TRUE;
-
-out:
-  return gst_mpeg4vparse_set_new_caps (parse, time_increment_resolution,
-      fixed_time_increment, aspect_ratio_width, aspect_ratio_height,
-      width, height);
-
-  /* ERRORS */
-failed:
-  {
-    GST_WARNING_OBJECT (parse, "Failed to parse config data");
-    goto out;
-  }
-}
-
-static inline gboolean
-skip_user_data (bitstream_t * bs, guint32 * bits)
-{
-  while (*bits == USER_DATA_STARTCODE_MARKER) {
-    guint32 b;
-
-    do {
-      GET_BITS (bs, 8, &b);
-      *bits = (*bits << 8) | b;
-    } while ((*bits >> 8) != START_MARKER);
-  }
-
-  return TRUE;
-
-failed:
-  return FALSE;
-}
-
-/* Handle parsing a visual object sequence.
-   Returns whether we successfully set the caps downstream if needed */
-static gboolean
-gst_mpeg4vparse_handle_vos (GstMpeg4VParse * parse, const guint8 * data,
-    gsize size)
-{
-  /* Skip the startcode */
-  guint32 bits;
-
-  guint8 profile;
-  gboolean equal;
-  bitstream_t bs = { data, 0, 0, size };
-
-  if (size < 5)
-    goto failed;
-
-  /* Parse the config from the VOS frame */
-  bs.offset = 5;
-
-  profile = data[4];
-
-  /* invalid profile, yikes */
-  if (profile == 0) {
-    GST_WARNING_OBJECT (parse, "Invalid profile in VOS");
-    return FALSE;
-  }
-
-  equal = FALSE;
-  if (G_LIKELY (parse->config && size == GST_BUFFER_SIZE (parse->config) &&
-          memcmp (GST_BUFFER_DATA (parse->config), data, size) == 0))
-    equal = TRUE;
-
-  if (G_LIKELY (parse->profile == profile && equal)) {
-    /* We know this profile and config data, so we can just keep the same caps
-     */
-    return TRUE;
-  }
-
-  /* Even if we fail to parse, then some other element might succeed, so always
-   * put the VOS in the config */
-  parse->profile = profile;
-  gst_mpeg4vparse_set_config (parse, data, size);
-
-  parse->have_config = TRUE;
-
-  /* Expect Visual Object startcode */
-  GET_BITS (&bs, 32, &bits);
-
-  /* but skip optional user data */
-  if (!skip_user_data (&bs, &bits))
-    goto failed;
-
-  if (bits != VISUAL_OBJECT_STARTCODE_MARKER)
-    goto failed;
-
-  GET_BITS (&bs, 1, &bits);
-  if (bits == 0x1) {
-    /* Skip visual_object_verid and priority */
-    GET_BITS (&bs, 7, &bits);
-  }
-
-  GET_BITS (&bs, 4, &bits);
-  /* Only support video ID */
-  if (bits != 0x1)
-    goto failed;
-
-  /* video signal type */
-  GET_BITS (&bs, 1, &bits);
-
-  if (bits == 0x1) {
-    /* video signal type, ignore format and range */
-    GET_BITS (&bs, 4, &bits);
-
-    GET_BITS (&bs, 1, &bits);
-    if (bits == 0x1) {
-      /* ignore color description */
-      GET_BITS (&bs, 24, &bits);
-    }
-  }
-
-  if (!next_start_code (&bs))
-    goto failed;
-
-  /* skip optional user data */
-  GET_BITS (&bs, 32, &bits);
-  if (!skip_user_data (&bs, &bits))
-    goto failed;
-  /* rewind to start code */
-  bs.offset -= 4;
-
-  data = &bs.data[bs.offset];
-  size -= bs.offset;
-
-  return gst_mpeg4vparse_handle_vo (parse, data, size, FALSE);
-
-out:
-  return gst_mpeg4vparse_set_new_caps (parse, 0, 0, -1, -1, -1, -1);
-
-  /* ERRORS */
-failed:
-  {
-    GST_WARNING_OBJECT (parse, "Failed to parse config data");
-    goto out;
-  }
-}
-
-static void
-gst_mpeg4vparse_push (GstMpeg4VParse * parse, gsize size)
-{
-  if (G_UNLIKELY (!parse->have_config && parse->drop)) {
-    GST_LOG_OBJECT (parse, "Dropping %d bytes", parse->offset);
-    gst_adapter_flush (parse->adapter, size);
-  } else {
-    GstBuffer *out_buf;
-
-    out_buf = gst_adapter_take_buffer (parse->adapter, parse->offset);
-
-    if (G_LIKELY (out_buf)) {
-      out_buf = gst_buffer_make_metadata_writable (out_buf);
-      GST_BUFFER_TIMESTAMP (out_buf) = parse->timestamp;
-
-      /* Set GST_BUFFER_FLAG_DELTA_UNIT if it's not an intra frame */
-      if (!parse->intra_frame) {
-        GST_BUFFER_FLAG_SET (out_buf, GST_BUFFER_FLAG_DELTA_UNIT);
-      } else if (parse->interval > 0 && parse->config) {
-        GstClockTime timestamp = GST_BUFFER_TIMESTAMP (out_buf);
-        guint64 diff;
-
-        /* init */
-        if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (parse->last_report))) {
-          parse->last_report = timestamp;
-        }
-
-        /* insert on intra frames */
-        if (G_LIKELY (timestamp > parse->last_report))
-          diff = timestamp - parse->last_report;
-        else
-          diff = 0;
-
-        GST_LOG_OBJECT (parse,
-            "now %" GST_TIME_FORMAT ", last VOP-I %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (timestamp), GST_TIME_ARGS (parse->last_report));
-
-        GST_DEBUG_OBJECT (parse,
-            "interval since last config %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (diff));
-
-        if (G_UNLIKELY (GST_TIME_AS_SECONDS (diff) >= parse->interval)) {
-          /* we need to send config now first */
-          GstBuffer *superbuf;
-
-          GST_LOG_OBJECT (parse, "inserting config in stream");
-
-          /* insert header */
-          superbuf = gst_buffer_merge (parse->config, out_buf);
-          gst_buffer_unref (out_buf);
-
-          out_buf = gst_buffer_make_metadata_writable (superbuf);
-          GST_BUFFER_TIMESTAMP (out_buf) = timestamp;
-
-          if (G_UNLIKELY (timestamp != -1)) {
-            parse->last_report = timestamp;
-          }
-        }
-      }
-      gst_buffer_set_caps (out_buf, GST_PAD_CAPS (parse->srcpad));
-      gst_pad_push (parse->srcpad, out_buf);
-    }
-  }
-
-  /* Restart now that we flushed data */
-  parse->offset = 0;
-  parse->state = PARSE_NEED_START;
-  parse->intra_frame = FALSE;
-}
-
-static GstFlowReturn
-gst_mpeg4vparse_drain (GstMpeg4VParse * parse, GstBuffer * last_buffer)
-{
-  GstFlowReturn ret = GST_FLOW_OK;
-  const guint8 *data = NULL;
-  guint available = 0;
-
-  available = gst_adapter_available (parse->adapter);
-  /* We do a quick check here to avoid the _peek() below. */
-  if (G_UNLIKELY (available < 5)) {
-    GST_DEBUG_OBJECT (parse, "we need more data, %d < 5", available);
-    goto beach;
-  }
-  data = gst_adapter_peek (parse->adapter, available);
-
-  /* Need at least 5 more bytes, 4 for the startcode, 1 to optionally determine
-   * the VOP frame type */
-  while (available >= 5 && parse->offset < available - 5) {
-    if (data[parse->offset] == 0 && data[parse->offset + 1] == 0 &&
-        data[parse->offset + 2] == 1) {
-
-      switch (parse->state) {
-        case PARSE_NEED_START:
-        {
-          gboolean found = FALSE;
-          guint8 code;
-
-          code = data[parse->offset + 3];
-
-          switch (code) {
-            case VOP_STARTCODE:
-            case VOS_STARTCODE:
-            case GOP_STARTCODE:
-              found = TRUE;
-              break;
-            default:
-              if (code <= 0x1f)
-                found = TRUE;
-              break;
-          }
-          if (found) {
-            /* valid starts of a frame */
-            parse->state = PARSE_START_FOUND;
-            if (parse->offset > 0) {
-              GST_LOG_OBJECT (parse, "Flushing %u bytes", parse->offset);
-              gst_adapter_flush (parse->adapter, parse->offset);
-              parse->offset = 0;
-              available = gst_adapter_available (parse->adapter);
-              data = gst_adapter_peek (parse->adapter, available);
-            }
-          } else
-            parse->offset += 4;
-          break;
-        }
-        case PARSE_START_FOUND:
-        {
-          guint8 code;
-
-          code = data[parse->offset + 3];
-
-          switch (code) {
-            case VOP_STARTCODE:
-              GST_LOG_OBJECT (parse, "found VOP start marker at %u",
-                  parse->offset);
-              parse->intra_frame = ((data[parse->offset + 4] >> 6 & 0x3) == 0);
-              /* Ensure that the timestamp of the outgoing buffer is the same
-               * as the one the VOP header is found in */
-              parse->timestamp = GST_BUFFER_TIMESTAMP (last_buffer);
-              parse->state = PARSE_VOP_FOUND;
-              break;
-            case VOS_STARTCODE:
-              GST_LOG_OBJECT (parse, "found VOS start marker at %u",
-                  parse->offset);
-              parse->vos_offset = parse->offset;
-              parse->state = PARSE_VOS_FOUND;
-              break;
-            default:
-              if (code <= 0x1f) {
-                GST_LOG_OBJECT (parse, "found VO start marker at %u",
-                    parse->offset);
-                parse->vos_offset = parse->offset;
-                parse->state = PARSE_VO_FOUND;
-              }
-              break;
-          }
-          /* Jump over it */
-          parse->offset += 4;
-          break;
-        }
-        case PARSE_VO_FOUND:
-          switch (data[parse->offset + 3]) {
-            case GOP_STARTCODE:
-            case VOP_STARTCODE:
-              /* end of VOS found, interpret the config data and restart the
-               * search for the VOP */
-              gst_mpeg4vparse_handle_vo (parse, data + parse->vos_offset,
-                  parse->offset - parse->vos_offset, TRUE);
-              parse->state = PARSE_START_FOUND;
-              break;
-            default:
-              parse->offset += 4;
-          }
-          break;
-        case PARSE_VOS_FOUND:
-          switch (data[parse->offset + 3]) {
-            case GOP_STARTCODE:
-            case VOP_STARTCODE:
-              /* end of VOS found, interpret the config data and restart the
-               * search for the VOP */
-              gst_mpeg4vparse_handle_vos (parse, data + parse->vos_offset,
-                  parse->offset - parse->vos_offset);
-              parse->state = PARSE_START_FOUND;
-              break;
-            default:
-              parse->offset += 4;
-          }
-          break;
-        case PARSE_VOP_FOUND:
-        {                       /* We were in a VOP already, any start code marks the end of it */
-          GST_LOG_OBJECT (parse, "found VOP end marker at %u", parse->offset);
-
-          gst_mpeg4vparse_push (parse, parse->offset);
-
-          available = gst_adapter_available (parse->adapter);
-          data = gst_adapter_peek (parse->adapter, available);
-          break;
-        }
-        default:
-          GST_WARNING_OBJECT (parse, "unexpected parse state (%d)",
-              parse->state);
-          ret = GST_FLOW_UNEXPECTED;
-          goto beach;
-      }
-    } else {                    /* Continue searching */
-      parse->offset++;
-    }
-  }
-
-beach:
-  return ret;
-}
-
-static GstFlowReturn
-gst_mpeg4vparse_chain (GstPad * pad, GstBuffer * buffer)
-{
-  GstMpeg4VParse *parse = GST_MPEG4VIDEOPARSE (gst_pad_get_parent (pad));
-  GstFlowReturn ret = GST_FLOW_OK;
-
-  GST_DEBUG_OBJECT (parse, "received buffer of %u bytes with ts %"
-      GST_TIME_FORMAT " and offset %" G_GINT64_FORMAT, GST_BUFFER_SIZE (buffer),
-      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
-      GST_BUFFER_OFFSET (buffer));
-
-  gst_adapter_push (parse->adapter, buffer);
-
-  /* Drain the accumulated blocks frame per frame */
-  ret = gst_mpeg4vparse_drain (parse, buffer);
-
-  gst_object_unref (parse);
-
-  return ret;
-}
-
-static gboolean
-gst_mpeg4vparse_sink_setcaps (GstPad * pad, GstCaps * caps)
-{
-  gboolean res = TRUE;
-  GstMpeg4VParse *parse = GST_MPEG4VIDEOPARSE (gst_pad_get_parent (pad));
-  GstStructure *s;
-  const GValue *value;
-
-  GST_DEBUG_OBJECT (parse, "setcaps called with %" GST_PTR_FORMAT, caps);
-  parse->sink_caps = gst_caps_ref (caps);
-
-  s = gst_caps_get_structure (caps, 0);
-
-  if ((value = gst_structure_get_value (s, "codec_data")) != NULL
-      && G_VALUE_HOLDS (value, GST_TYPE_BUFFER)) {
-    GstBuffer *buf = gst_value_get_buffer (value);
-
-    /* Set the config from this codec_data immediately so that in the worst
-       case, we don't just discard it.
-       Note that in most cases, this will be freed and overwritten when we
-       manage to parse the codec_data. */
-    if (!parse->config) {
-      parse->config = gst_buffer_copy (buf);
-    }
-
-    if (GST_BUFFER_SIZE (buf) < 4) {
-      GST_WARNING_OBJECT (parse, "codec_data too short, ignoring");
-      goto failed_parse;
-    } else {
-      const guint8 *data = GST_BUFFER_DATA (buf);
-
-      res = FALSE;
-      if (data[0] == 0 && data[1] == 0 && data[2] == 1) {
-        if (data[3] == VOS_STARTCODE) {
-          /* Usually the codec data will be a visual object sequence, containing
-             a visual object, with a video object/video object layer. */
-          res = gst_mpeg4vparse_handle_vos (parse, data, GST_BUFFER_SIZE (buf));
-        } else if (data[3] <= VIDEO_OBJECT_STARTCODE_MAX) {
-          /* VIDEO_OBJECT_STARTCODE_MIN is zero, and data is unsigned, so we
-             don't need to check min (and in fact that causes a compile err */
-          /* Sometimes, instead, it'll just have the video object/video object
-             layer data. We can parse that too, though it'll give us slightly
-             less information. */
-          res = gst_mpeg4vparse_handle_vo (parse, data, GST_BUFFER_SIZE (buf),
-              FALSE);
-        }
-        if (!res)
-          goto failed_parse;
-      } else {
-        GST_WARNING_OBJECT (parse,
-            "codec_data does not begin with start code, invalid");
-        goto failed_parse;
-      }
-    }
-  } else {
-    /* No codec data; treat the same a failed codec data */
-    goto failed_parse;
-  }
-
-done:
-  gst_object_unref (parse);
-  return res;
-
-failed_parse:
-  /* No codec data, or obviously-invalid, so set minimal new caps.
-     VOS parsing later will (hopefully) fill in the other fields */
-  res = gst_mpeg4vparse_set_new_caps (parse, 0, 0, 0, 0, 0, 0);
-  goto done;
-}
-
-static gboolean
-gst_mpeg4vparse_sink_event (GstPad * pad, GstEvent * event)
-{
-  gboolean res = TRUE;
-  GstMpeg4VParse *parse = GST_MPEG4VIDEOPARSE (gst_pad_get_parent (pad));
-
-  GST_DEBUG_OBJECT (parse, "handling event type %s",
-      GST_EVENT_TYPE_NAME (event));
-
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_FLUSH_STOP:
-      parse->last_report = GST_CLOCK_TIME_NONE;
-      gst_adapter_clear (parse->adapter);
-      parse->state = PARSE_NEED_START;
-      parse->offset = 0;
-      break;
-    case GST_EVENT_EOS:
-      if (parse->pending_segment != NULL) {
-        /* Send pending newsegment before EOS */
-        gst_pad_push_event (parse->srcpad, parse->pending_segment);
-        parse->pending_segment = NULL;
-      }
-      if (parse->state == PARSE_VOP_FOUND) {
-        /* If we've found the start of the VOP assume what's left in the
-         * adapter is the complete VOP. This might cause us to send an
-         * incomplete VOP out, but prevents the last video frame from
-         * potentially being dropped */
-        gst_mpeg4vparse_push (parse, gst_adapter_available (parse->adapter));
-      }
-      /* fallthrough */
-    case GST_EVENT_FLUSH_START:
-      res = gst_pad_event_default (pad, event);
-      break;
-    case GST_EVENT_NEWSEGMENT:
-      gst_event_replace (&parse->pending_segment, event);
-      gst_event_unref (event);
-      res = TRUE;
-      break;
-    default:
-      if (G_UNLIKELY (!parse->have_src_caps || parse->pending_segment)) {
-        /* We don't yet have enough data to set caps on the srcpad, so collect
-         * non-critical events till we do */
-        parse->pending_events = g_list_append (parse->pending_events, event);
-        res = TRUE;
-      } else
-        res = gst_pad_event_default (pad, event);
-      break;
-  }
-
-  gst_object_unref (parse);
-
-  return res;
-}
-
-static gboolean
-gst_mpeg4vparse_src_query (GstPad * pad, GstQuery * query)
-{
-  GstMpeg4VParse *parse = GST_MPEG4VIDEOPARSE (gst_pad_get_parent (pad));
-  gboolean res;
-
-  switch (GST_QUERY_TYPE (query)) {
-    case GST_QUERY_LATENCY:
-    {
-      /* We need to send the query upstream and add the returned latency to our
-       * own */
-      GstClockTime min_latency, max_latency;
-
-      gboolean us_live;
-
-      GstClockTime our_latency;
-
-      if ((res = gst_pad_peer_query (parse->sinkpad, query))) {
-        gst_query_parse_latency (query, &us_live, &min_latency, &max_latency);
-
-        GST_DEBUG_OBJECT (parse, "Peer latency: min %"
-            GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (min_latency), GST_TIME_ARGS (max_latency));
-
-        /* our latency is 1 frame, find the frame duration */
-        our_latency = parse->frame_duration;
-
-        GST_DEBUG_OBJECT (parse, "Our latency: %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (our_latency));
-
-        /* we add some latency */
-        min_latency += our_latency;
-        if (max_latency != -1)
-          max_latency += our_latency;
-
-        GST_DEBUG_OBJECT (parse, "Calculated total latency : min %"
-            GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (min_latency), GST_TIME_ARGS (max_latency));
-
-        gst_query_set_latency (query, us_live, min_latency, max_latency);
-      }
-      break;
-    }
-    default:
-      res = gst_pad_peer_query (parse->sinkpad, query);
-      break;
-  }
-  gst_object_unref (parse);
-
-  return res;
-}
-
-static void
-gst_mpeg4vparse_cleanup (GstMpeg4VParse * parse)
-{
-  if (parse->sink_caps) {
-    gst_caps_unref (parse->sink_caps);
-    parse->sink_caps = NULL;
-  }
-  if (parse->adapter) {
-    gst_adapter_clear (parse->adapter);
-  }
-  if (parse->config != NULL) {
-    gst_buffer_unref (parse->config);
-    parse->config = NULL;
-  }
-
-  if (parse->pending_segment)
-    gst_event_unref (parse->pending_segment);
-  parse->pending_segment = NULL;
-
-  g_list_foreach (parse->pending_events, (GFunc) gst_event_unref, NULL);
-  g_list_free (parse->pending_events);
-  parse->pending_events = NULL;
-
-  parse->have_src_caps = FALSE;
-
-  parse->state = PARSE_NEED_START;
-  parse->have_config = FALSE;
-  parse->offset = 0;
-  parse->last_report = GST_CLOCK_TIME_NONE;
-}
-
-static GstStateChangeReturn
-gst_mpeg4vparse_change_state (GstElement * element, GstStateChange transition)
-{
-  GstMpeg4VParse *parse = GST_MPEG4VIDEOPARSE (element);
-
-  GstStateChangeReturn ret;
-
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-
-  switch (transition) {
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_mpeg4vparse_cleanup (parse);
-      break;
-    default:
-      break;
-  }
-  return ret;
-}
-
-static void
-gst_mpeg4vparse_finalize (GObject * object)
-{
-  GstMpeg4VParse *parse = GST_MPEG4VIDEOPARSE (object);
-
-  gst_mpeg4vparse_cleanup (parse);
-
-  if (parse->adapter) {
-    g_object_unref (parse->adapter);
-    parse->adapter = NULL;
-  }
-
-  GST_CALL_PARENT (G_OBJECT_CLASS, finalize, (object));
-}
+GST_BOILERPLATE (GstMpeg4VParse, gst_mpeg4vparse, GstBaseParse,
+    GST_TYPE_BASE_PARSE);
+
+static gboolean gst_mpeg4vparse_start (GstBaseParse * parse);
+static gboolean gst_mpeg4vparse_stop (GstBaseParse * parse);
+static gboolean gst_mpeg4vparse_check_valid_frame (GstBaseParse * parse,
+    GstBaseParseFrame * frame, guint * framesize, gint * skipsize);
+static GstFlowReturn gst_mpeg4vparse_parse_frame (GstBaseParse * parse,
+    GstBaseParseFrame * frame);
+static GstFlowReturn gst_mpeg4vparse_pre_push_frame (GstBaseParse * parse,
+    GstBaseParseFrame * frame);
+static gboolean gst_mpeg4vparse_set_caps (GstBaseParse * parse, GstCaps * caps);
+
+static void gst_mpeg4vparse_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_mpeg4vparse_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 
 static void
 gst_mpeg4vparse_base_init (gpointer klass)
@@ -1021,14 +134,10 @@ gst_mpeg4vparse_get_property (GObject * object, guint property_id,
 static void
 gst_mpeg4vparse_class_init (GstMpeg4VParseClass * klass)
 {
-  GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
-  gstelement_class = (GstElementClass *) klass;
-  gobject_class = G_OBJECT_CLASS (klass);
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstBaseParseClass *parse_class = GST_BASE_PARSE_CLASS (klass);
 
   parent_class = g_type_class_peek_parent (klass);
-
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_mpeg4vparse_finalize);
 
   gobject_class->set_property = gst_mpeg4vparse_set_property;
   gobject_class->get_property = gst_mpeg4vparse_get_property;
@@ -1047,34 +156,453 @@ gst_mpeg4vparse_class_init (GstMpeg4VParseClass * klass)
           0, 3600, DEFAULT_CONFIG_INTERVAL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gstelement_class->change_state =
-      GST_DEBUG_FUNCPTR (gst_mpeg4vparse_change_state);
+  /* Override BaseParse vfuncs */
+  parse_class->start = GST_DEBUG_FUNCPTR (gst_mpeg4vparse_start);
+  parse_class->stop = GST_DEBUG_FUNCPTR (gst_mpeg4vparse_stop);
+  parse_class->check_valid_frame =
+      GST_DEBUG_FUNCPTR (gst_mpeg4vparse_check_valid_frame);
+  parse_class->parse_frame = GST_DEBUG_FUNCPTR (gst_mpeg4vparse_parse_frame);
+  parse_class->pre_push_frame =
+      GST_DEBUG_FUNCPTR (gst_mpeg4vparse_pre_push_frame);
+  parse_class->set_sink_caps = GST_DEBUG_FUNCPTR (gst_mpeg4vparse_set_caps);
 }
 
 static void
 gst_mpeg4vparse_init (GstMpeg4VParse * parse, GstMpeg4VParseClass * g_class)
 {
-  parse->sinkpad = gst_pad_new_from_static_template (&sink_template, "sink");
-  gst_pad_set_chain_function (parse->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_mpeg4vparse_chain));
-  gst_pad_set_event_function (parse->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_mpeg4vparse_sink_event));
-  gst_pad_set_setcaps_function (parse->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_mpeg4vparse_sink_setcaps));
-  gst_element_add_pad (GST_ELEMENT (parse), parse->sinkpad);
-
-  parse->srcpad = gst_pad_new_from_static_template (&src_template, "src");
-  gst_pad_set_query_function (parse->srcpad,
-      GST_DEBUG_FUNCPTR (gst_mpeg4vparse_src_query));
-  gst_pad_use_fixed_caps (parse->srcpad);
-  gst_element_add_pad (GST_ELEMENT (parse), parse->srcpad);
-
-  parse->adapter = gst_adapter_new ();
-
   parse->interval = DEFAULT_CONFIG_INTERVAL;
   parse->last_report = GST_CLOCK_TIME_NONE;
+}
 
-  gst_mpeg4vparse_cleanup (parse);
+static void
+gst_mpeg4vparse_reset_frame (GstMpeg4VParse * mp4vparse)
+{
+  /* done parsing; reset state */
+  mp4vparse->last_sc = -1;
+  mp4vparse->vop_offset = -1;
+  mp4vparse->vos_offset = -1;
+  mp4vparse->vo_offset = -1;
+}
+
+static void
+gst_mpeg4vparse_reset (GstMpeg4VParse * mp4vparse)
+{
+  gst_mpeg4vparse_reset_frame (mp4vparse);
+  mp4vparse->profile = 0;
+  mp4vparse->update_caps = TRUE;
+
+  gst_buffer_replace (&mp4vparse->config, NULL);
+  memset (&mp4vparse->params, 0, sizeof (mp4vparse->params));
+}
+
+static gboolean
+gst_mpeg4vparse_start (GstBaseParse * parse)
+{
+  GstMpeg4VParse *mp4vparse = GST_MPEG4VIDEOPARSE (parse);
+
+  GST_DEBUG_OBJECT (parse, "start");
+
+  gst_mpeg4vparse_reset (mp4vparse);
+  /* at least this much for a valid frame */
+  gst_base_parse_set_min_frame_size (parse, 6);
+
+  return TRUE;
+}
+
+static gboolean
+gst_mpeg4vparse_stop (GstBaseParse * parse)
+{
+  GstMpeg4VParse *mp4vparse = GST_MPEG4VIDEOPARSE (parse);
+
+  GST_DEBUG_OBJECT (parse, "stop");
+
+  gst_mpeg4vparse_reset (mp4vparse);
+
+  return TRUE;
+}
+
+static gboolean
+gst_mpeg4vparse_process_config (GstMpeg4VParse * mp4vparse, const guint8 * data,
+    gsize size)
+{
+  /* only do stuff if something new */
+  if (mp4vparse->config && size == GST_BUFFER_SIZE (mp4vparse->config) &&
+      memcmp (GST_BUFFER_DATA (mp4vparse->config), data, size) == 0)
+    return TRUE;
+
+  if (!gst_mpeg4_params_parse_config (&mp4vparse->params, data, size)) {
+    GST_DEBUG_OBJECT (mp4vparse, "failed to parse config data (size %"
+        G_GSSIZE_FORMAT ")", size);
+    return FALSE;
+  }
+
+  GST_LOG_OBJECT (mp4vparse, "accepting parsed config size %" G_GSSIZE_FORMAT,
+      size);
+
+  /* parsing ok, so accept it as new config */
+  if (mp4vparse->config != NULL)
+    gst_buffer_unref (mp4vparse->config);
+
+  mp4vparse->config = gst_buffer_new_and_alloc (size);
+  memcpy (GST_BUFFER_DATA (mp4vparse->config), data, size);
+
+  /* trigger src caps update */
+  mp4vparse->update_caps = TRUE;
+
+  return TRUE;
+}
+
+/* caller guarantees at least start code in @buf at @off */
+static gboolean
+gst_mpeg4vparse_process_sc (GstMpeg4VParse * mp4vparse, GstBuffer * buf,
+    gint off)
+{
+  guint8 *data;
+  guint code;
+
+  g_return_val_if_fail (buf && GST_BUFFER_SIZE (buf) >= off + 4, FALSE);
+
+  data = GST_BUFFER_DATA (buf);
+  code = data[off + 3];
+
+  GST_LOG_OBJECT (mp4vparse, "process startcode %x", code);
+
+  /* if we found a VOP, next start code ends it,
+   * except for final VOS end sequence code included in last VOP-frame */
+  if (mp4vparse->vop_offset >= 0 && code != MPEG4_VOS_ENDCODE) {
+    if (G_LIKELY (GST_BUFFER_SIZE (buf) > mp4vparse->vop_offset + 4)) {
+      mp4vparse->intra_frame =
+          ((data[mp4vparse->vop_offset + 4] >> 6 & 0x3) == 0);
+    } else {
+      GST_WARNING_OBJECT (mp4vparse, "no data following VOP startcode");
+      mp4vparse->intra_frame = FALSE;
+    }
+    GST_LOG_OBJECT (mp4vparse, "ending frame of size %d, is intra %d", off,
+        mp4vparse->intra_frame);
+    return TRUE;
+  }
+
+  switch (code) {
+    case MPEG4_VOP_STARTCODE:
+    case MPEG4_GOP_STARTCODE:
+    {
+      gint offset;
+
+      if (code == MPEG4_VOP_STARTCODE) {
+        GST_LOG_OBJECT (mp4vparse, "startcode is VOP");
+        mp4vparse->vop_offset = off;
+      } else {
+        GST_LOG_OBJECT (mp4vparse, "startcode is GOP");
+      }
+      /* parse config data ending here if proper startcodes found earlier;
+       * preferably start at VOS (visual object sequence),
+       * otherwise at VO (video object) */
+      offset = mp4vparse->vos_offset >= 0 ?
+          mp4vparse->vos_offset : mp4vparse->vo_offset;
+      if (offset >= 0) {
+        gst_mpeg4vparse_process_config (mp4vparse, GST_BUFFER_DATA (buf), off);
+        /* avoid accepting again for a VOP sc following a GOP sc */
+        mp4vparse->vos_offset = -1;
+        mp4vparse->vo_offset = -1;
+      }
+      break;
+    }
+    case MPEG4_VOS_STARTCODE:
+      GST_LOG_OBJECT (mp4vparse, "startcode is VOS");
+      mp4vparse->vos_offset = off;
+      break;
+    default:
+      /* VO (video object) cases */
+      if (code <= 0x1f) {
+        GST_LOG_OBJECT (mp4vparse, "startcode is VO");
+        mp4vparse->vo_offset = off;
+      }
+      break;
+  }
+
+  /* at least need to have a VOP in a frame */
+  return FALSE;
+}
+
+/* FIXME move into baseparse, or anything equivalent;
+ * see https://bugzilla.gnome.org/show_bug.cgi?id=650093 */
+#define GST_BASE_PARSE_FRAME_FLAG_PARSING   0x10000
+
+static gboolean
+gst_mpeg4vparse_check_valid_frame (GstBaseParse * parse,
+    GstBaseParseFrame * frame, guint * framesize, gint * skipsize)
+{
+  GstMpeg4VParse *mp4vparse = GST_MPEG4VIDEOPARSE (parse);
+  GstBuffer *buf = frame->buffer;
+  GstByteReader reader = GST_BYTE_READER_INIT_FROM_BUFFER (buf);
+  gint off = 0;
+  gboolean ret;
+  guint code;
+
+retry:
+  /* at least start code and subsequent byte */
+  if (G_UNLIKELY (GST_BUFFER_SIZE (buf) - off < 5))
+    return FALSE;
+
+  /* avoid stale cached parsing state */
+  if (!(frame->flags & GST_BASE_PARSE_FRAME_FLAG_PARSING)) {
+    GST_LOG_OBJECT (mp4vparse, "parsing new frame");
+    gst_mpeg4vparse_reset_frame (mp4vparse);
+    frame->flags |= GST_BASE_PARSE_FRAME_FLAG_PARSING;
+  } else {
+    GST_LOG_OBJECT (mp4vparse, "resuming frame parsing");
+  }
+
+  /* if already found a previous start code, e.g. start of frame, go for next */
+  if (mp4vparse->last_sc >= 0) {
+    off = mp4vparse->last_sc;
+    goto next;
+  }
+
+  off = gst_byte_reader_masked_scan_uint32 (&reader, 0xffffff00, 0x00000100,
+      off, GST_BUFFER_SIZE (buf) - off);
+
+  GST_LOG_OBJECT (mp4vparse, "possible sync at buffer offset %d", off);
+
+  /* didn't find anything that looks like a sync word, skip */
+  if (G_UNLIKELY (off < 0)) {
+    *skipsize = GST_BUFFER_SIZE (buf) - 3;
+    return FALSE;
+  }
+
+  /* possible frame header, but not at offset 0? skip bytes before sync */
+  if (G_UNLIKELY (off > 0)) {
+    *skipsize = off;
+    return FALSE;
+  }
+
+  /* ensure start code looks like a real starting start code */
+  code = GST_BUFFER_DATA (buf)[3];
+  switch (code) {
+    case MPEG4_VOP_STARTCODE:
+    case MPEG4_VOS_STARTCODE:
+    case MPEG4_GOP_STARTCODE:
+      break;
+    default:
+      if (code <= 0x1f)
+        break;
+      /* undesirable sc */
+      GST_LOG_OBJECT (mp4vparse, "start code is no VOS, VO, VOP or GOP");
+      off++;
+      goto retry;
+  }
+
+  /* found sc */
+  mp4vparse->last_sc = 0;
+
+  /* examine start code, which should not end frame at present */
+  gst_mpeg4vparse_process_sc (mp4vparse, buf, 0);
+
+next:
+  /* start is fine as of now */
+  *skipsize = 0;
+  /* position a bit further than last sc */
+  off++;
+  /* so now we have start code at start of data; locate next start code */
+  off = gst_byte_reader_masked_scan_uint32 (&reader, 0xffffff00, 0x00000100,
+      off, GST_BUFFER_SIZE (buf) - off);
+
+  GST_LOG_OBJECT (mp4vparse, "next start code at %d", off);
+  if (off < 0) {
+    /* if draining, take all */
+    if (GST_BASE_PARSE_DRAINING (parse)) {
+      off = GST_BUFFER_SIZE (buf);
+      ret = TRUE;
+    } else {
+      /* resume scan where we left it */
+      mp4vparse->last_sc = GST_BUFFER_SIZE (buf) - 4;
+      /* request best next available */
+      *framesize = G_MAXUINT;
+      return FALSE;
+    }
+  } else {
+    /* decide whether this startcode ends a frame */
+    ret = gst_mpeg4vparse_process_sc (mp4vparse, buf, off);
+  }
+
+  if (ret) {
+    *framesize = off;
+  } else {
+    goto next;
+  }
+
+  return ret;
+}
+
+static void
+gst_mpeg4vparse_update_src_caps (GstMpeg4VParse * mp4vparse)
+{
+  GstCaps *caps = NULL;
+
+  /* only update if no src caps yet or explicitly triggered */
+  if (G_LIKELY (GST_PAD_CAPS (GST_BASE_PARSE_SRC_PAD (mp4vparse)) &&
+          !mp4vparse->update_caps))
+    return;
+
+  /* carry over input caps as much as possible; override with our own stuff */
+  caps = GST_PAD_CAPS (GST_BASE_PARSE_SINK_PAD (mp4vparse));
+  if (caps) {
+    caps = gst_caps_copy (caps);
+  } else {
+    caps = gst_caps_new_simple ("video/mpeg",
+        "mpegversion", G_TYPE_INT, 4, NULL);
+  }
+
+  gst_caps_set_simple (caps, "systemstream", G_TYPE_BOOLEAN, FALSE,
+      "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
+
+  if (mp4vparse->profile != 0) {
+    gchar *profile = NULL;
+
+    /* FIXME does it make sense to expose the profile in the caps ? */
+    profile = g_strdup_printf ("%d", mp4vparse->profile);
+    gst_caps_set_simple (caps, "profile-level-id",
+        G_TYPE_STRING, profile, NULL);
+    g_free (profile);
+  }
+
+  if (mp4vparse->config != NULL) {
+    gst_caps_set_simple (caps, "codec_data",
+        GST_TYPE_BUFFER, mp4vparse->config, NULL);
+  }
+
+  if (mp4vparse->params.width > 0 && mp4vparse->params.height > 0) {
+    gst_caps_set_simple (caps, "width", G_TYPE_INT, mp4vparse->params.width,
+        "height", G_TYPE_INT, mp4vparse->params.height, NULL);
+  }
+
+  /* perhaps we have  a framerate */
+  if (mp4vparse->params.fixed_time_increment != 0) {
+    gint fps_num = mp4vparse->params.time_increment_resolution;
+    gint fps_den = mp4vparse->params.fixed_time_increment;
+    GstClockTime latency = gst_util_uint64_scale (GST_SECOND, fps_den, fps_num);
+
+    gst_caps_set_simple (caps, "framerate",
+        GST_TYPE_FRACTION, fps_num, fps_den, NULL);
+    gst_base_parse_set_frame_rate (GST_BASE_PARSE (mp4vparse),
+        fps_num, fps_den, 0, 0);
+    gst_base_parse_set_latency (GST_BASE_PARSE (mp4vparse), latency, latency);
+  }
+
+  /* or pixel-aspect-ratio */
+  if (mp4vparse->params.aspect_ratio_width > 0 &&
+      mp4vparse->params.aspect_ratio_height > 0) {
+    gst_caps_set_simple (caps, "pixel-aspect-ratio",
+        GST_TYPE_FRACTION, mp4vparse->params.aspect_ratio_width,
+        mp4vparse->params.aspect_ratio_height, NULL);
+  }
+
+  gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (mp4vparse), caps);
+  gst_caps_unref (caps);
+}
+
+static GstFlowReturn
+gst_mpeg4vparse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
+{
+  GstMpeg4VParse *mp4vparse = GST_MPEG4VIDEOPARSE (parse);
+  GstBuffer *buffer = frame->buffer;
+
+  gst_mpeg4vparse_update_src_caps (mp4vparse);
+
+  if (mp4vparse->intra_frame)
+    GST_BUFFER_FLAG_UNSET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
+  else
+    GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
+
+  if (G_UNLIKELY (mp4vparse->drop && !mp4vparse->config)) {
+    GST_DEBUG_OBJECT (mp4vparse, "dropping frame as no config yet");
+    return GST_BASE_PARSE_FLOW_DROPPED;
+  } else
+    return GST_FLOW_OK;
+}
+
+static GstFlowReturn
+gst_mpeg4vparse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
+{
+  GstMpeg4VParse *mp4vparse = GST_MPEG4VIDEOPARSE (parse);
+  GstBuffer *buffer = frame->buffer;
+
+  /* periodic SPS/PPS sending */
+  if (mp4vparse->interval > 0) {
+    GstClockTime timestamp = GST_BUFFER_TIMESTAMP (buffer);
+    guint64 diff;
+
+    /* init */
+    if (!GST_CLOCK_TIME_IS_VALID (mp4vparse->last_report)) {
+      mp4vparse->last_report = timestamp;
+    }
+
+    if (!GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT)) {
+      if (timestamp > mp4vparse->last_report)
+        diff = timestamp - mp4vparse->last_report;
+      else
+        diff = 0;
+
+      GST_LOG_OBJECT (mp4vparse,
+          "now %" GST_TIME_FORMAT ", last config %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (timestamp), GST_TIME_ARGS (mp4vparse->last_report));
+
+      GST_LOG_OBJECT (mp4vparse,
+          "interval since last config %" GST_TIME_FORMAT, GST_TIME_ARGS (diff));
+
+      if (GST_TIME_AS_SECONDS (diff) >= mp4vparse->interval) {
+        /* we need to send config now first */
+        GST_LOG_OBJECT (parse, "inserting config in stream");
+
+        /* avoid inserting duplicate config */
+        if ((GST_BUFFER_SIZE (buffer) < GST_BUFFER_SIZE (mp4vparse->config)) ||
+            memcmp (GST_BUFFER_DATA (buffer),
+                GST_BUFFER_DATA (mp4vparse->config),
+                GST_BUFFER_SIZE (mp4vparse->config))) {
+          GstBuffer *superbuf;
+
+          /* insert header */
+          superbuf = gst_buffer_merge (mp4vparse->config, buffer);
+          gst_buffer_copy_metadata (superbuf, buffer, GST_BUFFER_COPY_ALL);
+          gst_buffer_replace (&frame->buffer, superbuf);
+          gst_buffer_unref (superbuf);
+        } else {
+          GST_LOG_OBJECT (parse, "... but avoiding duplication");
+        }
+
+        if (G_UNLIKELY (timestamp != -1)) {
+          mp4vparse->last_report = timestamp;
+        }
+      }
+    }
+  }
+
+  return GST_FLOW_OK;
+}
+
+static gboolean
+gst_mpeg4vparse_set_caps (GstBaseParse * parse, GstCaps * caps)
+{
+  GstMpeg4VParse *mp4vparse = GST_MPEG4VIDEOPARSE (parse);
+  GstStructure *s;
+  const GValue *value;
+  GstBuffer *buf;
+
+  GST_DEBUG_OBJECT (parse, "setcaps called with %" GST_PTR_FORMAT, caps);
+
+  s = gst_caps_get_structure (caps, 0);
+
+  if ((value = gst_structure_get_value (s, "codec_data")) != NULL
+      && (buf = gst_value_get_buffer (value))) {
+    /* best possible parse attempt,
+     * src caps are based on sink caps so it will end up in there
+     * whether sucessful or not */
+    gst_mpeg4vparse_process_config (mp4vparse, GST_BUFFER_DATA (buf),
+        GST_BUFFER_SIZE (buf));
+  }
+
+  /* let's not interfere and accept regardless of config parsing success */
+  return TRUE;
 }
 
 static gboolean

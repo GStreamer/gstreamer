@@ -77,6 +77,7 @@ struct _GstAiffParse {
   guint16 width;
   guint16 depth;
   guint32 endianness;
+  gboolean floating_point;
 
   /* real bytes per second used or 0 when no bitrate is known */
   guint32 bps;

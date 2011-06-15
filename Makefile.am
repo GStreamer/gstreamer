@@ -49,16 +49,21 @@ CRUFT_FILES = \
 	$(top_builddir)/ext/jack/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/aacparse/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/amrparse/.libs/*.{so,dll,DLL,dylib} \
+	$(top_builddir)/gst/audioparsers/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/flacparse/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/imagefreeze/.libs/*.{so,dll,DLL,dylib} \
+	$(top_builddir)/gst/qtmux/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/selector/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/shapewipe/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/valve/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/videoparsers/.libs/libgsth263parse* \
+	$(top_builddir)/gst-libs/gst/baseparse/.libs/libgstbaseparse* \
 	$(top_builddir)/sys/oss4/.libs/*.{so,dll,DLL,dylib} \
+	$(top_builddir)/tests/check/elements/{aac,ac3,amr,flac,mpegaudio,dca}parse \
 	$(top_builddir)/tests/check/elements/autocolorspace \
 	$(top_builddir)/tests/check/elements/capssetter \
 	$(top_builddir)/tests/check/elements/imagefreeze \
+	$(top_builddir)/tests/check/elements/qtmux \
 	$(top_builddir)/tests/check/elements/selector \
 	$(top_builddir)/tests/check/elements/valve \
 	$(top_builddir)/tests/check/pipelines/metadata \
@@ -73,16 +78,22 @@ CRUFT_DIRS = \
 	$(top_srcdir)/gst/amrparse \
 	$(top_srcdir)/gst/flacparse \
 	$(top_srcdir)/gst/imagefreeze \
+	$(top_srcdir)/gst/invtelecine \
+	$(top_srcdir)/gst/qtmux \
 	$(top_srcdir)/gst/selector \
 	$(top_srcdir)/gst/shapewipe \
 	$(top_srcdir)/gst/valve \
+	$(top_srcdir)/gst-libs/gst/baseparse \
 	$(top_srcdir)/tests/examples/shapewipe \
 	$(top_srcdir)/tests/examples/switch \
 	$(top_srcdir)/tests/examples/jack \
 	$(top_srcdir)/ext/alsaspdif \
+	$(top_srcdir)/ext/amrwbenc \
 	$(top_srcdir)/ext/ivorbis \
 	$(top_srcdir)/ext/jack \
-	$(top_srcdir)/ext/metadata 
+	$(top_srcdir)/ext/metadata \
+	$(top_srcdir)/ext/tarkin \
+	$(top_srcdir)/ext/theora
 
 include $(top_srcdir)/common/cruft.mak
 

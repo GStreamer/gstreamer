@@ -87,7 +87,6 @@
 #include "mpegtsmux_aac.h"
 #include <string.h>
 
-GST_DEBUG_CATEGORY_EXTERN (mpegtsmux_debug);
 #define GST_CAT_DEFAULT mpegtsmux_debug
 
 GstBuffer *

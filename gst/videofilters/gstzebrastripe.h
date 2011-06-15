@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) 2011 FIXME <fixme@example.com>
+ * Copyright (C) 2011 David Schleef <ds@schleef.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -20,7 +20,7 @@
 #ifndef _GST_ZEBRA_STRIPE_H_
 #define _GST_ZEBRA_STRIPE_H_
 
-#include <gst/base/gstbasetransform.h>
+#include "gstvideofilter2.h"
 #include <gst/video/video.h>
 
 G_BEGIN_DECLS
@@ -36,25 +36,20 @@ typedef struct _GstZebraStripeClass GstZebraStripeClass;
 
 struct _GstZebraStripe
 {
-  GstBaseTransform base_zebrastripe;
-
-  GstPad *sinkpad;
-  GstPad *srcpad;
+  GstVideoFilter2 video_filter2;
 
   /* properties */
   int threshold;
 
   /* state */
-  GstVideoFormat format;
-  int width;
-  int height;
   int t;
+  int y_threshold;
 
 };
 
 struct _GstZebraStripeClass
 {
-  GstBaseTransformClass base_zebrastripe_class;
+  GstVideoFilter2Class video_filter2_class;
 };
 
 GType gst_zebra_stripe_get_type (void);

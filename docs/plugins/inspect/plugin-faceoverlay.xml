@@ -1,0 +1,34 @@
+<plugin>
+  <name>faceoverlay</name>
+  <description>SVG Face Overlay</description>
+  <filename>../../gst/faceoverlay/.libs/libgstfaceoverlay.so</filename>
+  <basename>libgstfaceoverlay.so</basename>
+  <version>0.10.22.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer</package>
+  <origin>http://gstreamer.net/</origin>
+  <elements>
+    <element>
+      <name>faceoverlay</name>
+      <longname>faceoverlay</longname>
+      <class>Filter/Editor/Video</class>
+      <description>Overlays SVG graphics over a detected face in a video stream</description>
+      <author>Laura Lucas Alday &lt;lauralucas@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)65280, green_mask=(int)16711680, blue_mask=(int)-16777216, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)65280, green_mask=(int)16711680, blue_mask=(int)-16777216, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

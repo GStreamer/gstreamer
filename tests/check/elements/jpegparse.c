@@ -43,6 +43,113 @@ guint8 test_data_extra_ff[] = { 0xff, 0xd8, 0xff, 0xff, 0xff, 0x12, 0x00, 0x03,
   0x33, 0xff, 0xff, 0xff, 0xd9
 };
 
+guint8 test_data_soi[] = { 0xff, 0xd8 };
+
+guint8 test_data_app1_exif[] = {
+  0xff, 0xe1,
+  0x00, 0xd2,                   /* length = 210 */
+  0x45, 0x78, 0x69, 0x66, 0x00, /* Exif */
+  0x00,
+  0x49, 0x49,
+  0x2a, 0x00,
+  0x08,
+  0x00, 0x00, 0x00,
+  0x09,                         /* number of entries */
+  0x00,
+  0x0e, 0x01,                   /* tag 0x10e */
+  0x02, 0x00,                   /* type 2 */
+  0x0b, 0x00,                   /* count 11 */
+  0x00, 0x00,
+  0x7a,                         /* offset 122 (0x7a) */
+  0x00, 0x00, 0x00,
+  0x0f, 0x01,                   /* tag 0x10f */
+  0x02, 0x00,                   /* type 2 */
+  0x06, 0x00,                   /* count 6 */
+  0x00, 0x00,
+  0x85,                         /* offset 133 (0x85) */
+  0x00, 0x00, 0x00,
+  0x10, 0x01,                   /* tag 0x110 */
+  0x02, 0x00,                   /* type 2 */
+  0x05, 0x00,                   /* count 5 */
+  0x00, 0x00,
+  0x8b,                         /* offset 139 (0x8b) */
+  0x00, 0x00, 0x00,
+  0x12, 0x01,                   /* tag 0x112 */
+  0x03, 0x00,                   /* type 3 */
+  0x01, 0x00,                   /* count 1 */
+  0x00, 0x00,
+  0x01, 0x00, 0x30, 0x2c,       /* offset (0x2c300001) */
+  0x1a, 0x01,                   /* tag 0x11a */
+  0x05, 0x00,                   /* type 5 */
+  0x01, 0x00,                   /* count 1 */
+  0x00, 0x00,
+  0x90,                         /* offset 144 (0x90) */
+  0x00, 0x00, 0x00,
+  0x1b, 0x01,                   /* tag 0x11b */
+  0x05, 0x00,                   /* type 5 */
+  0x01, 0x00,                   /* count 1 */
+  0x00, 0x00,
+  0x98,                         /* offset 152 (0x98) */
+  0x00, 0x00, 0x00,
+  0x28, 0x01,                   /* tag 0x128 */
+  0x03, 0x00,                   /* type 3 */
+  0x01, 0x00,                   /* count 1 */
+  0x00, 0x00,
+  0x02, 0x00, 0x31, 0x2f,       /* offset (0x2f310002) */
+  0x31, 0x01,                   /* tag 0x131 */
+  0x02, 0x00,                   /* type 2 */
+  0x08, 0x00,                   /* count 8 */
+  0x00, 0x00,
+  0xa0,                         /* offset 160 (0xa0) */
+  0x00, 0x00, 0x00,
+  0x32, 0x01,                   /* tag 0x132 */
+  0x02, 0x00,                   /* type 2 */
+  0x14, 0x00,                   /* count 20 */
+  0x00, 0x00,
+  0xa8,                         /* offset 168 (0xa8)  */
+  0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00,
+  0x00,
+  /* string */
+  /* 122: */ 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x00,
+  /* string (NIKON) */
+  /* 133: */ 0x4e, 0x49, 0x4b, 0x4f, 0x4e, 0x00,
+  /* string (E800) */
+  /* 139: */ 0x45, 0x38, 0x30, 0x30, 0x00,
+  /* 144: */ 0x00, 0x00, 0x80, 0x25, /* / */ 0x00, 0x00, 0x20, 0x00,
+  /* 152: */ 0x00, 0x00, 0x80, 0x25, /* / */ 0x00, 0x00, 0x20, 0x00,
+  /* string (v984-75) */
+  /* 160: */ 0x76, 0x39, 0x38, 0x34, 0x2d, 0x37, 0x35, 0x00,
+  /* string (2001:08:18 21:44:21) */
+  /* 168: */ 0x32, 0x30, 0x30, 0x31, 0x3a, 0x30, 0x38, 0x3a,
+  0x31, 0x38, 0x20, 0x32, 0x31, 0x3a, 0x34, 0x34,
+  0x3a, 0x32, 0x31, 0x00,
+
+  0x1e, 0x21, 0x1f, 0x1e, 0x21, 0x1c, 0x20, 0x21, 0x22, 0x24, 0x24, 0x27,
+  0x22, 0x20,
+};
+
+guint8 test_data_comment[] = {
+  0xff, 0xfe,
+  0x00, 0x08,                   /* size */
+  /* xxxxx */
+  0x78, 0x78, 0x78, 0x78, 0x78, 0x00,
+};
+
+guint8 test_data_sof0[] = {
+  0xff, 0xc0,
+  0x00, 0x11,                   /* size */
+  0x08,                         /* precision */
+  0x00, 0x3c,                   /* width */
+  0x00, 0x50,                   /* height */
+  0x03,                         /* number of components */
+  0x01, 0x22, 0x00,             /* component 1 */
+  0x02, 0x11, 0x01,             /* component 2 */
+  0x03, 0x11, 0x01,             /* component 3 */
+};
+
+guint8 test_data_eoi[] = { 0xff, 0xd9 };
+
 static GList *
 _make_buffers_in (GList * buffer_in, guint8 * test_data, gsize test_data_size)
 {
@@ -167,6 +274,86 @@ GST_START_TEST (test_parse_all_in_one_buf)
 
 GST_END_TEST;
 
+static inline GstBuffer *
+make_my_input_buffer (guint8 * test_data_header, gsize test_data_size)
+{
+  GstBuffer *buffer;
+  gsize total_size = 0, offset = 0;
+  GstCaps *caps;
+
+  total_size += sizeof (test_data_soi);
+  total_size += test_data_size;
+  total_size += sizeof (test_data_sof0);
+  total_size += sizeof (test_data_eoi);
+
+  buffer = gst_buffer_new_and_alloc (total_size);
+
+  memcpy (GST_BUFFER_DATA (buffer) + offset, test_data_soi,
+      sizeof (test_data_soi));
+  offset += sizeof (test_data_soi);
+  memcpy (GST_BUFFER_DATA (buffer) + offset, test_data_header, test_data_size);
+  offset += test_data_size;
+  memcpy (GST_BUFFER_DATA (buffer) + offset, test_data_sof0,
+      sizeof (test_data_sof0));
+  offset += sizeof (test_data_sof0);
+  memcpy (GST_BUFFER_DATA (buffer) + offset, test_data_eoi,
+      sizeof (test_data_eoi));
+  offset += sizeof (test_data_eoi);
+
+  caps = gst_caps_new_simple ("image/jpeg", "parsed", G_TYPE_BOOLEAN, FALSE,
+      NULL);
+  gst_buffer_set_caps (buffer, caps);
+  gst_caps_unref (caps);
+
+  return buffer;
+}
+
+static inline GstBuffer *
+make_my_output_buffer (const GstBuffer * buffer_in)
+{
+  GstBuffer *buffer;
+  GstCaps *caps;
+
+  buffer = gst_buffer_new ();
+  caps = gst_caps_new_simple ("image/jpeg", "parsed", G_TYPE_BOOLEAN, TRUE,
+      "framerate", GST_TYPE_FRACTION, 1, 1, "format", GST_TYPE_FOURCC,
+      GST_MAKE_FOURCC ('I', '4', '2', '0'), "interlaced", G_TYPE_BOOLEAN, FALSE,
+      "width", G_TYPE_INT, 80, "height", G_TYPE_INT, 60, NULL);
+  gst_buffer_set_data (buffer, GST_BUFFER_DATA (buffer_in),
+      GST_BUFFER_SIZE (buffer_in));
+  gst_buffer_set_caps (buffer, caps);
+  gst_caps_unref (caps);
+
+  return buffer;
+}
+
+
+GST_START_TEST (test_parse_app1_exif)
+{
+  GstBuffer *buffer_in, *buffer_out;
+
+  buffer_in = make_my_input_buffer (test_data_app1_exif,
+      sizeof (test_data_app1_exif));
+  buffer_out = make_my_output_buffer (buffer_in);
+
+  gst_check_element_push_buffer ("jpegparse", buffer_in, buffer_out);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_parse_comment)
+{
+  GstBuffer *buffer_in, *buffer_out;
+
+  buffer_in = make_my_input_buffer (test_data_comment,
+      sizeof (test_data_comment));
+  buffer_out = make_my_output_buffer (buffer_in);
+
+  gst_check_element_push_buffer ("jpegparse", buffer_in, buffer_out);
+}
+
+GST_END_TEST;
+
 static Suite *
 jpegparse_suite (void)
 {
@@ -176,6 +363,8 @@ jpegparse_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_parse_single_byte);
   tcase_add_test (tc_chain, test_parse_all_in_one_buf);
+  tcase_add_test (tc_chain, test_parse_app1_exif);
+  tcase_add_test (tc_chain, test_parse_comment);
 
   return s;
 }

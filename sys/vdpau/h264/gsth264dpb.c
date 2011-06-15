@@ -81,21 +81,24 @@ gst_h264_dpb_remove (GstH264DPB * dpb, guint idx)
     frames[i] = frames[i + 1];
 }
 
-static void
+static GstFlowReturn
 gst_h264_dpb_output (GstH264DPB * dpb, guint idx)
 {
+  GstFlowReturn ret;
   GstH264Frame *frame = dpb->frames[idx];
 
   gst_video_frame_ref (GST_VIDEO_FRAME_CAST (frame));
-  dpb->output (dpb, frame, dpb->user_data);
+  ret = dpb->output (dpb, frame, dpb->user_data);
   frame->output_needed = FALSE;
 
   if (!frame->is_reference)
     gst_h264_dpb_remove (dpb, idx);
+
+  return ret;
 }
 
 static gboolean
-gst_h264_dpb_bump (GstH264DPB * dpb, guint poc)
+gst_h264_dpb_bump (GstH264DPB * dpb, guint poc, GstFlowReturn * ret)
 {
   GstH264Frame **frames;
   guint i;
@@ -118,7 +121,7 @@ gst_h264_dpb_bump (GstH264DPB * dpb, guint poc)
     }
 
     if (frames[bump_idx]->poc < poc) {
-      gst_h264_dpb_output (dpb, bump_idx);
+      *ret = gst_h264_dpb_output (dpb, bump_idx);
       return TRUE;
     }
   }
@@ -126,10 +129,11 @@ gst_h264_dpb_bump (GstH264DPB * dpb, guint poc)
   return FALSE;
 }
 
-gboolean
+GstFlowReturn
 gst_h264_dpb_add (GstH264DPB * dpb, GstH264Frame * h264_frame)
 {
   GstH264Frame **frames;
+  GstFlowReturn ret;
 
   GST_DEBUG ("add frame with poc: %d", h264_frame->poc);
 
@@ -140,33 +144,40 @@ gst_h264_dpb_add (GstH264DPB * dpb, GstH264Frame * h264_frame)
     h264_frame->is_reference = FALSE;
 
   if (h264_frame->is_reference) {
+
+    ret = GST_FLOW_OK;
     while (dpb->n_frames == dpb->max_frames) {
-      if (!gst_h264_dpb_bump (dpb, G_MAXUINT)) {
+      if (!gst_h264_dpb_bump (dpb, G_MAXUINT, &ret)) {
         GST_ERROR_OBJECT (dpb, "Couldn't make room in DPB");
-        return FALSE;
+        return GST_FLOW_OK;
       }
     }
     dpb->frames[dpb->n_frames++] = h264_frame;
   }
 
   else {
-    while (gst_h264_dpb_bump (dpb, h264_frame->poc));
-    dpb->output (dpb, h264_frame, dpb->user_data);
+    while (gst_h264_dpb_bump (dpb, h264_frame->poc, &ret)) {
+      if (ret != GST_FLOW_OK)
+        return ret;
+    }
+
+    ret = dpb->output (dpb, h264_frame, dpb->user_data);
   }
 
-  return TRUE;
+  return ret;
 }
 
 void
 gst_h264_dpb_flush (GstH264DPB * dpb, gboolean output)
 {
+  GstFlowReturn ret;
   GstVideoFrame **frames;
   guint i;
 
   GST_DEBUG ("flush");
 
   if (output)
-    while (gst_h264_dpb_bump (dpb, G_MAXUINT));
+    while (gst_h264_dpb_bump (dpb, G_MAXUINT, &ret));
 
   frames = (GstVideoFrame **) dpb->frames;
   for (i = 0; i < dpb->n_frames; i++)
@@ -334,11 +345,12 @@ gst_h264_dpb_set_property (GObject * object, guint property_id,
   switch (property_id) {
     case PROP_NUM_REF_FRAMES:
     {
+      GstFlowReturn ret;
       guint i;
 
       dpb->max_frames = g_value_get_uint (value);
       for (i = dpb->n_frames; i > dpb->max_frames; i--)
-        gst_h264_dpb_bump (dpb, G_MAXUINT);
+        gst_h264_dpb_bump (dpb, G_MAXUINT, &ret);
 
       break;
     }

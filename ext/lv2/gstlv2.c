@@ -382,9 +382,38 @@ static gchar *
 gst_lv2_class_get_param_name (GstLV2Class * klass, SLV2Port port)
 {
   SLV2Plugin lv2plugin = klass->plugin;
+  gchar *ret;
 
-  return g_strdup (slv2_value_as_string (slv2_port_get_symbol (lv2plugin,
+  ret = g_strdup (slv2_value_as_string (slv2_port_get_symbol (lv2plugin,
               port)));
+
+  /* this is the same thing that param_spec_* will do */
+  g_strcanon (ret, G_CSET_A_2_Z G_CSET_a_2_z G_CSET_DIGITS "-", '-');
+  /* satisfy glib2 (argname[0] must be [A-Za-z]) */
+  if (!((ret[0] >= 'a' && ret[0] <= 'z') || (ret[0] >= 'A' && ret[0] <= 'Z'))) {
+    gchar *tempstr = ret;
+
+    ret = g_strconcat ("param-", ret, NULL);
+    g_free (tempstr);
+  }
+
+  /* check for duplicate property names */
+  if (g_object_class_find_property (G_OBJECT_CLASS (klass), ret)) {
+    gint n = 1;
+    gchar *nret = g_strdup_printf ("%s-%d", ret, n++);
+
+    while (g_object_class_find_property (G_OBJECT_CLASS (klass), nret)) {
+      g_free (nret);
+      nret = g_strdup_printf ("%s-%d", ret, n++);
+    }
+    g_free (ret);
+    ret = nret;
+  }
+
+  GST_DEBUG ("built property name '%s' from port name '%s'", ret,
+      slv2_value_as_string (slv2_port_get_symbol (lv2plugin, port)));
+
+  return ret;
 }
 
 static gchar *
@@ -408,14 +437,6 @@ gst_lv2_class_get_param_spec (GstLV2Class * klass, gint portnum)
 
   nick = gst_lv2_class_get_param_nick (klass, port);
   name = gst_lv2_class_get_param_name (klass, port);
-  g_strcanon (name, G_CSET_A_2_Z G_CSET_a_2_z G_CSET_DIGITS "-", '-');
-  if (!((name[0] >= 'a' && name[0] <= 'z') || (name[0] >= 'A'
-              && name[0] <= 'Z'))) {
-    gchar *tempstr = name;
-
-    name = g_strconcat ("param-", name, NULL);
-    g_free (tempstr);
-  }
 
   GST_DEBUG ("%s trying port %s : %s",
       slv2_value_as_string (slv2_plugin_get_uri (lv2plugin)), name, nick);

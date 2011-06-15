@@ -87,6 +87,8 @@
 #include "tsmuxstream.h"
 #include "crc.h"
 
+#define GST_CAT_DEFAULT mpegtsmux_debug
+
 /* Maximum total data length for a PAT section is 1024 bytes, minus an 
  * 8 byte header, then the length of each program entry is 32 bits, 
  * then finally a 32 bit CRC. Thus the maximum number of programs in this mux
@@ -723,7 +725,7 @@ tsmux_write_stream_packet (TsMux * mux, TsMuxStream * stream)
     /* Need to decide whether to write a new PCR in this packet */
     if (stream->last_pcr == -1 ||
         (cur_pcr - stream->last_pcr >
-            (TSMUX_CLOCK_FREQ / TSMUX_DEFAULT_PCR_FREQ))) {
+            (TSMUX_SYS_CLOCK_FREQ / TSMUX_DEFAULT_PCR_FREQ))) {
 
       stream->pi.flags |=
           TSMUX_PACKET_FLAG_ADAPTATION | TSMUX_PACKET_FLAG_WRITE_PCR;

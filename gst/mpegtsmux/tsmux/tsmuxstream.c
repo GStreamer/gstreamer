@@ -86,6 +86,8 @@
 #include "tsmuxcommon.h"
 #include "tsmuxstream.h"
 
+#define GST_CAT_DEFAULT mpegtsmux_debug
+
 static guint8 tsmux_stream_pes_header_length (TsMuxStream * stream);
 static void tsmux_stream_write_pes_header (TsMuxStream * stream, guint8 * data);
 static void tsmux_stream_find_pts_dts_within (TsMuxStream * stream, guint bound,

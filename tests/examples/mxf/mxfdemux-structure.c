@@ -151,9 +151,9 @@ on_message (GstBus * bus, GstMessage * message, gpointer data)
 
       gst_tag_list_free (tags);
       break;
+    }
     default:
       break;
-    }
   }
 }
 

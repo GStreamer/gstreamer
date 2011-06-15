@@ -31,7 +31,6 @@
 #include <gst/controller/gstcontroller.h>
 
 G_BEGIN_DECLS
-
 #define GST_TYPE_CHROMA_HOLD \
   (gst_chroma_hold_get_type())
 #define GST_CHROMA_HOLD(obj) \
@@ -42,7 +41,6 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_CHROMA_HOLD))
 #define GST_IS_CHROMA_HOLD_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_CHROMA_HOLD))
-
 typedef struct _GstChromaHold GstChromaHold;
 typedef struct _GstChromaHoldClass GstChromaHoldClass;
 
@@ -64,7 +62,8 @@ struct _GstChromaHold
   guint tolerance;
 
   /* processing function */
-  void (*process) (guint8 *dest, gint width, gint height, GstChromaHold *chroma_hold);
+  void (*process) (guint8 * dest, gint width, gint height,
+      GstChromaHold * chroma_hold);
 
   /* pre-calculated values */
   gint hue;
@@ -78,5 +77,4 @@ struct _GstChromaHoldClass
 GType gst_chroma_hold_get_type (void);
 
 G_END_DECLS
-
 #endif /* __GST_CHROMA_HOLD_H__ */

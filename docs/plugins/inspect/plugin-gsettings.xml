@@ -3,7 +3,7 @@
   <description>GSettings plugin</description>
   <filename>../../ext/gsettings/.libs/libgstgsettingselements.so</filename>
   <basename>libgstgsettingselements.so</basename>
-  <version>0.10.21.1</version>
+  <version>0.10.22.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins git</package>

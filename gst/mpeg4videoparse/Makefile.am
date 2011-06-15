@@ -1,10 +1,24 @@
 
 plugin_LTLIBRARIES = libgstmpeg4videoparse.la
 
-libgstmpeg4videoparse_la_SOURCES = mpeg4videoparse.c 
-libgstmpeg4videoparse_la_CFLAGS = $(GST_CFLAGS)
+libgstmpeg4videoparse_la_SOURCES = mpeg4videoparse.c mpeg4parse.c
+libgstmpeg4videoparse_la_CFLAGS = $(GST_BASE_CFLAGS) $(GST_CFLAGS)
 libgstmpeg4videoparse_la_LIBADD = $(GST_BASE_LIBS) $(GST_LIBS)
 libgstmpeg4videoparse_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstmpeg4videoparse_la_LIBTOOLFLAGS = --tag=disable-static
 
-noinst_HEADERS = mpeg4videoparse.h 
+noinst_HEADERS = mpeg4videoparse.h mpeg4parse.h
+
+Android.mk: Makefile.am $(BUILT_SOURCES)
+	androgenizer \
+	-:PROJECT libgstmpeg4videoparse -:SHARED libgstmpeg4videoparse \
+	 -:TAGS eng debug \
+         -:REL_TOP $(top_srcdir) -:ABS_TOP $(abs_top_srcdir) \
+	 -:SOURCES $(libgstmpeg4videoparse_la_SOURCES) \
+	 -:CFLAGS $(DEFS) $(DEFAULT_INCLUDES) $(libgstmpeg4videoparse_la_CFLAGS) \
+	 -:LDFLAGS $(libgstmpeg4videoparse_la_LDFLAGS) \
+	           $(libgstmpeg4videoparse_la_LIBADD) \
+	           -ldl \
+	 -:PASSTHROUGH LOCAL_ARM_MODE:=arm \
+		       LOCAL_MODULE_PATH:='$$(TARGET_OUT)/lib/gstreamer-0.10' \
+	> $@

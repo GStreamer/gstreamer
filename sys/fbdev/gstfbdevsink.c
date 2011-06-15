@@ -351,11 +351,9 @@ gst_fbdevsink_get_property (GObject * object, guint prop_id, GValue * value,
 static GstStateChangeReturn
 gst_fbdevsink_change_state (GstElement * element, GstStateChange transition)
 {
-  GstFBDEVSink *fbdevsink;
   GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
 
   g_return_val_if_fail (GST_IS_FBDEVSINK (element), GST_STATE_CHANGE_FAILURE);
-  fbdevsink = GST_FBDEVSINK (element);
 
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 

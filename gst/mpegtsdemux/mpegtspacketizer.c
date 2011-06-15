@@ -199,6 +199,21 @@ mpegts_packetizer_finalize (GObject * object)
     G_OBJECT_CLASS (mpegts_packetizer_parent_class)->finalize (object);
 }
 
+guint64
+mpegts_packetizer_compute_pcr (const guint8 * data)
+{
+  guint32 pcr1;
+  guint16 pcr2;
+  guint64 pcr, pcr_ext;
+
+  pcr1 = GST_READ_UINT32_BE (data);
+  pcr2 = GST_READ_UINT16_BE (data + 4);
+  pcr = ((guint64) pcr1) << 1;
+  pcr |= (pcr2 & 0x8000) >> 15;
+  pcr_ext = (pcr2 & 0x01ff);
+  return pcr * 300 + pcr_ext % 300;
+}
+
 static gboolean
 mpegts_packetizer_parse_adaptation_field_control (MpegTSPacketizer2 *
     packetizer, MpegTSPacketizerPacket * packet)
@@ -207,6 +222,13 @@ mpegts_packetizer_parse_adaptation_field_control (MpegTSPacketizer2 *
   guint8 *data;
 
   length = *packet->data++;
+
+  /* an adaptation field with length 0 is valid and
+   * can be used to insert a single stuffing byte */
+  if (!length) {
+    packet->afc_flags = 0;
+    return TRUE;
+  }
 
   if (packet->adaptation_field_control == 0x02) {
     /* no payload, adaptation field of 183 bytes */
@@ -233,31 +255,13 @@ mpegts_packetizer_parse_adaptation_field_control (MpegTSPacketizer2 *
 
   /* PCR */
   if (afcflags & MPEGTS_AFC_PCR_FLAG) {
-    guint32 pcr1;
-    guint16 pcr2;
-    guint64 pcr, pcr_ext;
-
-    pcr1 = GST_READ_UINT32_BE (data);
-    pcr2 = GST_READ_UINT16_BE (data + 4);
-    pcr = ((guint64) pcr1) << 1;
-    pcr |= (pcr2 & 0x8000) >> 15;
-    pcr_ext = (pcr2 & 0x01ff);
-    packet->pcr = pcr * 300 + pcr_ext % 300;;
+    packet->pcr = mpegts_packetizer_compute_pcr (data);
     *data += 6;
   }
 
   /* OPCR */
   if (afcflags & MPEGTS_AFC_OPCR_FLAG) {
-    guint32 pcr1;
-    guint16 pcr2;
-    guint64 pcr, pcr_ext;
-
-    pcr1 = GST_READ_UINT32_BE (data);
-    pcr2 = GST_READ_UINT16_BE (data + 4);
-    pcr = ((guint64) pcr1) << 1;
-    pcr |= (pcr2 & 0x8000) >> 15;
-    pcr_ext = (pcr2 & 0x01ff);
-    packet->opcr = pcr * 300 + pcr_ext % 300;;
+    packet->opcr = mpegts_packetizer_compute_pcr (data);
     *data += 6;
   }
 
@@ -1693,8 +1697,8 @@ mpegts_packetizer_parse_eit (MpegTSPacketizer2 * packetizer,
             DESC_LENGTH (event_descriptor)) {
 
           eventname_tmp =
-              get_encoding_and_convert (eventname, eventname_length),
-              eventdescription_tmp =
+              get_encoding_and_convert (eventname, eventname_length);
+          eventdescription_tmp =
               get_encoding_and_convert (eventdescription,
               eventdescription_length);
 
@@ -2083,6 +2087,24 @@ mpegts_packetizer_clear (MpegTSPacketizer2 * packetizer)
 }
 
 void
+mpegts_packetizer_flush (MpegTSPacketizer2 * packetizer)
+{
+  if (packetizer->streams) {
+    int i;
+    for (i = 0; i < 8192; i++) {
+      if (packetizer->streams[i]) {
+        gst_adapter_flush (packetizer->streams[i]->section_adapter,
+            packetizer->streams[i]->section_adapter->size);
+      }
+    }
+  }
+  gst_adapter_flush (packetizer->adapter, packetizer->adapter->size);
+
+  packetizer->offset = 0;
+  packetizer->empty = TRUE;
+}
+
+void
 mpegts_packetizer_remove_stream (MpegTSPacketizer2 * packetizer, gint16 pid)
 {
   MpegTSPacketizerStream *stream = packetizer->streams[pid];
@@ -2246,6 +2268,14 @@ mpegts_packetizer_next_packet (MpegTSPacketizer2 * packetizer,
         gst_buffer_unref (packet->buffer);
         goto done;
       }
+
+      if (packetizer->packet_size == MPEGTS_M2TS_PACKETSIZE) {
+        if (i >= 4)
+          i -= 4;
+        else
+          i += 188;
+      }
+
       /* Pop out the remaining data... */
       GST_BUFFER_DATA (packet->buffer) += i;
       GST_BUFFER_SIZE (packet->buffer) -= i;
@@ -2466,24 +2496,9 @@ get_encoding (const gchar * text, guint * start_text, gboolean * is_multibyte)
 
   firstbyte = (guint8) text[0];
 
-  if (firstbyte == 0x01) {
-    encoding = g_strdup ("iso8859-5");
-    *start_text = 1;
-    *is_multibyte = FALSE;
-  } else if (firstbyte == 0x02) {
-    encoding = g_strdup ("iso8859-6");
-    *start_text = 1;
-    *is_multibyte = FALSE;
-  } else if (firstbyte == 0x03) {
-    encoding = g_strdup ("iso8859-7");
-    *start_text = 1;
-    *is_multibyte = FALSE;
-  } else if (firstbyte == 0x04) {
-    encoding = g_strdup ("iso8859-8");
-    *start_text = 1;
-    *is_multibyte = FALSE;
-  } else if (firstbyte == 0x05) {
-    encoding = g_strdup ("iso8859-9");
+  /* ETSI EN 300 468, "Selection of character table" */
+  if (firstbyte <= 0x0B) {
+    encoding = g_strdup_printf ("iso8859-%u", firstbyte + 4);
     *start_text = 1;
     *is_multibyte = FALSE;
   } else if (firstbyte >= 0x20) {

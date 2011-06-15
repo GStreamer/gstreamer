@@ -22,11 +22,17 @@
 #ifndef __GST_BASE_CAMERA_SRC_H__
 #define __GST_BASE_CAMERA_SRC_H__
 
+#ifndef GST_USE_UNSTABLE_API
+#warning "GstBaseCameraSrc is unstable API and may change in future."
+#warning "You can define GST_USE_UNSTABLE_API to avoid this warning."
+#endif
+
 #include <gst/gst.h>
 #include <gst/gstbin.h>
 #include <gst/interfaces/photography.h>
 #include <gst/interfaces/colorbalance.h>
 #include "gstcamerabin-enum.h"
+#include "gstcamerabinpreview.h"
 
 G_BEGIN_DECLS
 #define GST_TYPE_BASE_CAMERA_SRC \
@@ -66,12 +72,19 @@ struct _GstBaseCameraSrc
   gboolean capturing;
   GMutex *capturing_mutex;
 
+  /* Preview convert pipeline */
+  GstCaps *preview_caps;
+  gboolean post_preview;
+  GstElement *preview_filter;
+  GstCameraBinPreviewPipelineData *preview_pipeline;
+  gboolean preview_filter_changed;
+
   /* Resolution of the buffers configured to camerabin */
   gint width;
   gint height;
 
-  /* The digital zoom (from 100% to 1000%) */
-  gint zoom;
+  gfloat zoom;
+  gfloat max_zoom;
 
   gpointer _gst_reserved[GST_PADDING_LARGE];
 };
@@ -95,11 +108,15 @@ struct _GstBaseCameraSrcClass
   gboolean    (*setup_pipeline)      (GstBaseCameraSrc *self);
 
   /* set the zoom */
-  void        (*set_zoom)            (GstBaseCameraSrc *self, gint zoom);
+  void        (*set_zoom)            (GstBaseCameraSrc *self, gfloat zoom);
 
   /* set the mode */
   gboolean    (*set_mode)            (GstBaseCameraSrc *self,
                                       GstCameraBinMode mode);
+
+  /* set preview caps */
+  gboolean    (*set_preview)         (GstBaseCameraSrc *self,
+                                      GstCaps *preview_caps);
 
   /* */
   GstCaps *   (*get_allowed_input_caps) (GstBaseCameraSrc * self);
@@ -113,8 +130,8 @@ struct _GstBaseCameraSrcClass
 };
 
 
-#define MIN_ZOOM 100
-#define MAX_ZOOM 1000
+#define MIN_ZOOM 1.0f
+#define MAX_ZOOM 10.0f
 #define ZOOM_1X MIN_ZOOM
 
 GstPhotography * gst_base_camera_src_get_photography (GstBaseCameraSrc *self);
@@ -122,10 +139,12 @@ GstColorBalance * gst_base_camera_src_get_color_balance (GstBaseCameraSrc *self)
 
 gboolean gst_base_camera_src_set_mode (GstBaseCameraSrc *self, GstCameraBinMode mode);
 void gst_base_camera_src_setup_zoom (GstBaseCameraSrc * self);
+void gst_base_camera_src_setup_preview (GstBaseCameraSrc * self, GstCaps * preview_caps);
 GstCaps * gst_base_camera_src_get_allowed_input_caps (GstBaseCameraSrc * self);
 void gst_base_camera_src_finish_capture (GstBaseCameraSrc *self);
 
 
+void gst_base_camera_src_post_preview (GstBaseCameraSrc *self, GstBuffer * buf);
 // XXX add methods to get/set img capture and vid capture caps..
 
 #endif /* __GST_BASE_CAMERA_SRC_H__ */

@@ -1,6 +1,6 @@
 /*
  * GStreamer DirectShow codecs wrapper
- * Copyright <2006, 2007, 2008> Fluendo <gstreamer@fluendo.com>
+ * Copyright <2006, 2007, 2008, 2009, 2010> Fluendo <support@fluendo.com>
  * Copyright <2006, 2007, 2008> Pioneers of the Inevitable <songbird@songbirdnest.com>
  * Copyright <2007,2008> Sebastien Moutte <sebastien@moutte.net>
  *
@@ -57,8 +57,6 @@ GST_DEBUG_CATEGORY_STATIC (dshowaudiodec_debug);
 
 GST_BOILERPLATE (GstDshowAudioDec, gst_dshowaudiodec, GstElement,
     GST_TYPE_ELEMENT);
-
-static const AudioCodecEntry *tmp;
 
 static void gst_dshowaudiodec_dispose (GObject * object);
 static GstStateChangeReturn gst_dshowaudiodec_change_state
@@ -314,15 +312,25 @@ gst_dshowaudiodec_base_init (gpointer klass)
   GstPadTemplate *src, *sink;
   GstCaps *srccaps, *sinkcaps;
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-  char *description;
+  GstElementDetails details;
+  const AudioCodecEntry *tmp;
+  gpointer qdata;
 
-  audiodec_class->entry = tmp;
-  description = g_strdup_printf ("DirectShow %s Decoder Wrapper",
+  qdata = g_type_get_qdata (G_OBJECT_CLASS_TYPE (klass), DSHOW_CODEC_QDATA);
+
+  /* element details */
+  tmp = audiodec_class->entry = (AudioCodecEntry *) qdata;
+
+  details.longname = g_strdup_printf ("DirectShow %s Decoder Wrapper",
       tmp->element_longname);
-  gst_element_class_set_details_simple (element_class, description,
-      "Codec/Decoder/Audio", description,
-      "Sebastien Moutte <sebastien@moutte.net>");
-  g_free (description);
+  details.klass = g_strdup ("Codec/Decoder/Audio");
+  details.description = g_strdup_printf ("DirectShow %s Decoder Wrapper",
+      tmp->element_longname);
+  details.author = "Sebastien Moutte <sebastien@moutte.net>";
+  gst_element_class_set_details (element_class, &details);
+  g_free (details.longname);
+  g_free (details.klass);
+  g_free (details.description);
 
   sinkcaps = gst_caps_from_string (tmp->sinkcaps);
 
@@ -358,11 +366,47 @@ gst_dshowaudiodec_class_init (GstDshowAudioDecClass * klass)
 }
 
 static void
+gst_dshowaudiodec_com_thread (GstDshowAudioDec * adec)
+{
+  HRESULT res;
+
+  g_mutex_lock (adec->com_init_lock);
+
+  /* Initialize COM with a MTA for this process. This thread will
+   * be the first one to enter the apartement and the last one to leave
+   * it, unitializing COM properly */
+
+  res = CoInitializeEx (0, COINIT_MULTITHREADED);
+  if (res == S_FALSE)
+    GST_WARNING_OBJECT (adec, "COM has been already initialized in the same process");
+  else if (res == RPC_E_CHANGED_MODE)
+    GST_WARNING_OBJECT (adec, "The concurrency model of COM has changed.");
+  else
+    GST_INFO_OBJECT (adec, "COM intialized succesfully");
+
+  adec->comInitialized = TRUE;
+
+  /* Signal other threads waiting on this condition that COM was initialized */
+  g_cond_signal (adec->com_initialized);
+
+  g_mutex_unlock (adec->com_init_lock);
+
+  /* Wait until the unitialize condition is met to leave the COM apartement */
+  g_mutex_lock (adec->com_deinit_lock);
+  g_cond_wait (adec->com_uninitialize, adec->com_deinit_lock);
+
+  CoUninitialize ();
+  GST_INFO_OBJECT (adec, "COM unintialized succesfully");
+  adec->comInitialized = FALSE;
+  g_cond_signal (adec->com_uninitialized);
+  g_mutex_unlock (adec->com_deinit_lock);
+}
+
+static void
 gst_dshowaudiodec_init (GstDshowAudioDec * adec,
     GstDshowAudioDecClass * adec_class)
 {
   GstElementClass *element_class = GST_ELEMENT_GET_CLASS (adec);
-  HRESULT hr;
 
   /* setup pads */
   adec->sinkpad =
@@ -399,10 +443,21 @@ gst_dshowaudiodec_init (GstDshowAudioDec * adec,
 
   adec->last_ret = GST_FLOW_OK;
 
-  hr = CoInitialize (0);
-  if (SUCCEEDED(hr)) {
-    adec->comInitialized = TRUE;
-  }
+  adec->com_init_lock = g_mutex_new();
+  adec->com_deinit_lock = g_mutex_new();
+  adec->com_initialized = g_cond_new();
+  adec->com_uninitialize = g_cond_new();
+  adec->com_uninitialized = g_cond_new();
+
+  g_mutex_lock (adec->com_init_lock);
+
+  /* create the COM initialization thread */
+  g_thread_create ((GThreadFunc)gst_dshowaudiodec_com_thread,
+      adec, FALSE, NULL);
+
+  /* wait until the COM thread signals that COM has been initialized */
+  g_cond_wait (adec->com_initialized, adec->com_init_lock);
+  g_mutex_unlock (adec->com_init_lock);
 }
 
 static void
@@ -420,10 +475,19 @@ gst_dshowaudiodec_dispose (GObject * object)
     adec->codec_data = NULL;
   }
 
+  /* signal the COM thread that it sould uninitialize COM */
   if (adec->comInitialized) {
-    CoUninitialize ();
-    adec->comInitialized = FALSE;
+    g_mutex_lock (adec->com_deinit_lock);
+    g_cond_signal (adec->com_uninitialize);
+    g_cond_wait (adec->com_uninitialized, adec->com_deinit_lock);
+    g_mutex_unlock (adec->com_deinit_lock);
   }
+
+  g_mutex_free (adec->com_init_lock);
+  g_mutex_free (adec->com_deinit_lock);
+  g_cond_free (adec->com_initialized);
+  g_cond_free (adec->com_uninitialize);
+  g_cond_free (adec->com_uninitialized);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -1103,9 +1167,9 @@ dshow_adec_register (GstPlugin * plugin)
     {
       GST_DEBUG ("Registering %s", audio_dec_codecs[i].element_name);
 
-      tmp = &audio_dec_codecs[i];
       type = g_type_register_static (GST_TYPE_ELEMENT,
           audio_dec_codecs[i].element_name, &info, (GTypeFlags)0);
+      g_type_set_qdata (type, DSHOW_CODEC_QDATA, (gpointer) (audio_dec_codecs + i));
       if (!gst_element_register (plugin, audio_dec_codecs[i].element_name,
               GST_RANK_SECONDARY, type)) {
         return FALSE;

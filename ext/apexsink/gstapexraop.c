@@ -52,14 +52,15 @@ const static gchar GST_APEX_RAOP_RSA_PUBLIC_EXP[] = "AQAB";
 const static gchar GST_APEX_RAOP_USER_AGENT[] =
     "iTunes/4.6 (Macintosh; U; PPC Mac OS X 10.3)";
 
-const static guchar GST_APEX_RAOP_FRAME_HEADER[] = {
+const static guchar GST_APEX_RAOP_FRAME_HEADER[] = {    // Used by gen. 1
   0x24, 0x00, 0x00, 0x00,
   0xF0, 0xFF, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00
 };
 
-const static int GST_APEX_RAOP_FRAME_HEADER_SIZE = 16;
+const static int GST_APEX_RAOP_FRAME_HEADER_SIZE = 16;  // Used by gen. 1
+const static int GST_APEX_RTP_FRAME_HEADER_SIZE = 12;   // Used by gen. 2
 
 const static int GST_APEX_RAOP_ALAC_HEADER_SIZE = 3;
 
@@ -121,6 +122,9 @@ typedef struct
   GstApExJackType jack_type;    /* APEX connected jack type, once ANNOUNCE performed */
   GstApExJackStatus jack_status;        /* APEX connected jack status, once ANNOUNCE performed */
 
+  GstApExGeneration generation; /* Different devices accept different audio streams */
+  GstApExTransportProtocol transport_protocol;  /* For media stream, not RAOP/RTSP */
+
   gchar *host;                  /* APEX target ip */
   guint ctrl_port;              /* APEX target control port */
   guint data_port;              /* APEX negotiated data port, once SETUP performed */
@@ -130,12 +134,18 @@ typedef struct
 
   int data_sd;                  /* data socket */
   struct sockaddr_in data_sd_in;
+
+  short rtp_seq_num;            /* RTP sequence number, used by gen. 2 */
+  int rtp_timestamp;            /* RTP timestamp,       used by gen. 2 */
 }
 _GstApExRAOP;
 
 /* raop apex struct allocation */
 GstApExRAOP *
-gst_apexraop_new (const gchar * host, const guint16 port)
+gst_apexraop_new (const gchar * host,
+    const guint16 port,
+    const GstApExGeneration generation,
+    const GstApExTransportProtocol transport_protocol)
 {
   _GstApExRAOP *apexraop;
 
@@ -146,6 +156,10 @@ gst_apexraop_new (const gchar * host, const guint16 port)
   apexraop->ua = g_strdup (GST_APEX_RAOP_USER_AGENT);
   apexraop->jack_type = GST_APEX_JACK_TYPE_UNDEFINED;
   apexraop->jack_status = GST_APEX_JACK_STATUS_DISCONNECTED;
+  apexraop->generation = generation;
+  apexraop->transport_protocol = transport_protocol;
+  apexraop->rtp_seq_num = 0;
+  apexraop->rtp_timestamp = 0;
 
   return (GstApExRAOP *) apexraop;
 }
@@ -311,7 +325,9 @@ gst_apexraop_connect (GstApExRAOP * con)
       conn->url_abspath,
       inaddr,
       conn->host,
-      GST_APEX_RAOP_SAMPLES_PER_FRAME,
+      conn->generation == GST_APEX_GENERATION_ONE
+      ? GST_APEX_RAOP_V1_SAMPLES_PER_FRAME
+      : GST_APEX_RAOP_V2_SAMPLES_PER_FRAME,
       GST_APEX_RAOP_BYTES_PER_CHANNEL * 8,
       GST_APEX_RAOP_CHANNELS, GST_APEX_RAOP_BITRATE, ky, iv);
 
@@ -451,8 +467,14 @@ gst_apexraop_connect (GstApExRAOP * con)
   if (res != GST_RTSP_STS_OK)
     return res;
 
-  if ((conn->data_sd = socket (AF_INET, SOCK_STREAM, 0)) < 0)
-    return GST_RTSP_STS_DESTINATION_UNREACHABLE;
+  if (conn->transport_protocol == GST_APEX_TCP) {
+    if ((conn->data_sd = socket (AF_INET, SOCK_STREAM, 0)) < 0)
+      return GST_RTSP_STS_DESTINATION_UNREACHABLE;
+  } else if (conn->transport_protocol == GST_APEX_UDP) {
+    if ((conn->data_sd = socket (AF_INET, SOCK_DGRAM, 0)) < 0)
+      return GST_RTSP_STS_DESTINATION_UNREACHABLE;
+  } else
+    return GST_RTSP_STS_METHOD_NOT_ALLOWED;
 
   conn->data_sd_in.sin_family = AF_INET;
   conn->data_sd_in.sin_port = htons (conn->data_port);
@@ -493,6 +515,34 @@ gst_apexraop_get_jackstatus (GstApExRAOP * con)
     return GST_APEX_JACK_STATUS_UNDEFINED;
 
   return conn->jack_status;
+}
+
+/* raop apex generation access */
+GstApExGeneration
+gst_apexraop_get_generation (GstApExRAOP * con)
+{
+  _GstApExRAOP *conn;
+
+  conn = (_GstApExRAOP *) con;
+
+  if (!conn)
+    return GST_APEX_GENERATION_ONE;
+
+  return conn->generation;
+}
+
+/* raop apex transport protocol access */
+GstApExTransportProtocol
+gst_apexraop_get_transport_protocol (GstApExRAOP * con)
+{
+  _GstApExRAOP *conn;
+
+  conn = (_GstApExRAOP *) con;
+
+  if (!conn)
+    return GST_APEX_TCP;
+
+  return conn->transport_protocol;
 }
 
 /* raop apex sockets close */
@@ -628,25 +678,49 @@ gst_apexraop_write (GstApExRAOP * con, gpointer rawdata, guint length)
   gushort len;
   gint bit_offset, byte_offset, i, out_len, res;
   EVP_CIPHER_CTX aes_ctx;
-  _GstApExRAOP *conn;
-
-  conn = (_GstApExRAOP *) con;
+  _GstApExRAOP *conn = (_GstApExRAOP *) con;
+  const int frame_header_size = conn->generation == GST_APEX_GENERATION_ONE
+      ? GST_APEX_RAOP_FRAME_HEADER_SIZE : GST_APEX_RTP_FRAME_HEADER_SIZE;
 
   buffer =
-      (guchar *) g_malloc0 (GST_APEX_RAOP_FRAME_HEADER_SIZE +
+      (guchar *) g_malloc0 (frame_header_size +
       GST_APEX_RAOP_ALAC_HEADER_SIZE + length);
 
-  memcpy (buffer, GST_APEX_RAOP_FRAME_HEADER, GST_APEX_RAOP_FRAME_HEADER_SIZE);
+  if (conn->generation == GST_APEX_GENERATION_ONE) {
+    g_assert (frame_header_size == GST_APEX_RAOP_FRAME_HEADER_SIZE);
+    memcpy (buffer, GST_APEX_RAOP_FRAME_HEADER, frame_header_size);
 
-  len =
-      length + GST_APEX_RAOP_FRAME_HEADER_SIZE +
-      GST_APEX_RAOP_ALAC_HEADER_SIZE - 4;
-  buffer[2] = len >> 8;
-  buffer[3] = len & 0xff;
+    len = length + frame_header_size + GST_APEX_RAOP_ALAC_HEADER_SIZE - 4;
+
+    buffer[2] = len >> 8;
+    buffer[3] = len & 0xff;
+  } else {
+    /* Gen. 2 uses RTP-like header (RFC 3550). */
+    short network_seq_num;
+    int network_timestamp, unknown_const;
+    static gboolean first = TRUE;
+
+    buffer[0] = 0x80;
+    if (first) {
+      buffer[1] = 0xe0;
+      first = FALSE;
+    } else
+      buffer[1] = 0x60;
+
+    network_seq_num = htons (conn->rtp_seq_num++);
+    memcpy (buffer + 2, &network_seq_num, 2);
+
+    network_timestamp = htons (conn->rtp_timestamp);
+    memcpy (buffer + 4, &network_timestamp, 4);
+    conn->rtp_timestamp += GST_APEX_RAOP_V2_SAMPLES_PER_FRAME;
+
+    unknown_const = 0xdeadbeef;
+    memcpy (buffer + 8, &unknown_const, 4);
+  }
 
   bit_offset = 0;
   byte_offset = 0;
-  frame_data = buffer + GST_APEX_RAOP_FRAME_HEADER_SIZE;
+  frame_data = buffer + frame_header_size;
 
   gst_apexraop_write_bits (frame_data, 1, 3, &bit_offset, &byte_offset);        /* channels, 0 mono, 1 stereo */
   gst_apexraop_write_bits (frame_data, 0, 4, &bit_offset, &byte_offset);        /* unknown */
@@ -673,16 +747,14 @@ gst_apexraop_write (GstApExRAOP * con, gpointer rawdata, guint length)
 
   res =
       gst_apexraop_send (conn->data_sd, buffer,
-      GST_APEX_RAOP_FRAME_HEADER_SIZE + GST_APEX_RAOP_ALAC_HEADER_SIZE +
-      length);
+      frame_header_size + GST_APEX_RAOP_ALAC_HEADER_SIZE + length);
 
   g_free (buffer);
 
   return (guint) ((res >=
-          (GST_APEX_RAOP_FRAME_HEADER_SIZE +
+          (frame_header_size +
               GST_APEX_RAOP_ALAC_HEADER_SIZE)) ? (res -
-          GST_APEX_RAOP_FRAME_HEADER_SIZE -
-          GST_APEX_RAOP_ALAC_HEADER_SIZE) : 0);
+          frame_header_size - GST_APEX_RAOP_ALAC_HEADER_SIZE) : 0);
 }
 
 /* raop apex buffer flush */
@@ -701,10 +773,13 @@ gst_apexraop_flush (GstApExRAOP * con)
       "Client-Instance: %s\r\n"
       "User-Agent: %s\r\n"
       "Session: %s\r\n"
-      "RTP-Info: seq=0;rtptime=0\r\n"
+      "RTP-Info: seq=%d;rtptime=%d\r\n"
       "\r\n",
       conn->host,
-      conn->url_abspath, ++conn->cseq, conn->cid, conn->ua, conn->session);
+      conn->url_abspath,
+      ++conn->cseq,
+      conn->cid,
+      conn->ua, conn->session, conn->rtp_seq_num, conn->rtp_timestamp);
 
   if (gst_apexraop_send (conn->ctrl_sd, hreq, strlen (hreq)) <= 0)
     return GST_RTSP_STS_GONE;

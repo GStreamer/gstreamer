@@ -42,7 +42,7 @@ G_BEGIN_DECLS
 typedef struct _GstH264DPB GstH264DPB;
 typedef struct _GstH264DPBClass GstH264DPBClass;
 
-typedef void (*GstH264DPBOutputFunc) (GstH264DPB *dpb, GstH264Frame *h264_frame, gpointer user_data);
+typedef GstFlowReturn (*GstH264DPBOutputFunc) (GstH264DPB *dpb, GstH264Frame *h264_frame, gpointer user_data);
 
 struct _GstH264DPB
 {

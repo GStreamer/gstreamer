@@ -75,6 +75,8 @@ typedef struct _ShmBlock ShmBlock;
 ShmPipe *sp_writer_create (const char *path, size_t size, mode_t perms);
 const char *sp_writer_get_path (ShmPipe *pipe);
 void sp_close (ShmPipe * self);
+void *sp_get_data (ShmPipe * self);
+void sp_set_data (ShmPipe * self, void *data);
 
 int sp_writer_setperms_shm (ShmPipe * self, mode_t perms);
 int sp_writer_resize (ShmPipe * self, size_t size);
@@ -86,6 +88,7 @@ ShmBlock *sp_writer_alloc_block (ShmPipe * self, size_t size);
 void sp_writer_free_block (ShmBlock *block);
 int sp_writer_send_buf (ShmPipe * self, char *buf, size_t size);
 char *sp_writer_block_get_buf (ShmBlock *block);
+ShmPipe *sp_writer_block_get_pipe (ShmBlock *block);
 
 ShmClient * sp_writer_accept_client (ShmPipe * self);
 void sp_writer_close_client (ShmPipe *self, ShmClient * client);

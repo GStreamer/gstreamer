@@ -5,7 +5,7 @@ GST_TYPE_BASE_PARSE
 % pkg-config
 gstreamer-base-0.10
 % includes
-#include <gst/baseparse/gstbaseparse.h>
+#include <gst/base/gstbaseparse.h>
 % prototypes
 static gboolean gst_replace_start (GstBaseParse *parse);
 static gboolean gst_replace_stop (GstBaseParse *parse);

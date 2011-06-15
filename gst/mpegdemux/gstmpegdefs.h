@@ -159,7 +159,9 @@
 #define ST_H222_1                       0x09
 
 /* later extensions */
-#define ST_AUDIO_AAC                    0x0f
+#define ST_AUDIO_AAC_ADTS               0x0f
+/* LATM/LOAS AAC syntax */
+#define ST_AUDIO_AAC_LOAS               0x11
 #define ST_VIDEO_MPEG4                  0x10
 #define ST_VIDEO_H264                   0x1b
 

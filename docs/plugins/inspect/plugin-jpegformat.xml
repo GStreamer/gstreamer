@@ -3,7 +3,7 @@
   <description>JPEG interchange format plugin</description>
   <filename>../../gst/jpegformat/.libs/libgstjpegformat.so</filename>
   <basename>libgstjpegformat.so</basename>
-  <version>0.10.21.1</version>
+  <version>0.10.22.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins git</package>
@@ -12,7 +12,7 @@
     <element>
       <name>jifmux</name>
       <longname>JPEG stream muxer</longname>
-      <class>Video/Muxer</class>
+      <class>Video/Formatter</class>
       <description>Remuxes JPEG images with markers and tags</description>
       <author>Arnout Vandecappelle (Essensium/Mind) &lt;arnout@mind.be&gt;</author>
       <pads>

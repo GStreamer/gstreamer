@@ -338,6 +338,8 @@ gst_schro_enc_set_format (GstBaseVideoEncoder * base_video_encoder,
       gst_schro_wrap_schro_buffer (schro_encoder_encode_sequence_header
       (schro_enc->encoder));
 
+  schro_enc->granule_offset = ~0;
+
   return TRUE;
 }
 
@@ -413,10 +415,6 @@ gst_schro_enc_get_property (GObject * object, guint prop_id, GValue * value,
 static gboolean
 gst_schro_enc_start (GstBaseVideoEncoder * base_video_encoder)
 {
-  GstSchroEnc *schro_enc = GST_SCHRO_ENC (base_video_encoder);
-
-  schro_enc->granule_offset = ~0;
-
   return TRUE;
 }
 
@@ -648,7 +646,8 @@ gst_schro_enc_shape_output_ogg (GstBaseVideoEncoder * base_video_encoder,
     GST_BUFFER_OFFSET_END (buf) = schro_enc->last_granulepos;
   }
 
-  gst_buffer_set_caps (buf, GST_BASE_VIDEO_CODEC (base_video_encoder)->caps);
+  gst_buffer_set_caps (buf,
+      GST_PAD_CAPS (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder)));
 
   return gst_pad_push (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder), buf);
 }
@@ -680,7 +679,8 @@ gst_schro_enc_shape_output_quicktime (GstBaseVideoEncoder * base_video_encoder,
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
   }
 
-  gst_buffer_set_caps (buf, GST_BASE_VIDEO_CODEC (base_video_encoder)->caps);
+  gst_buffer_set_caps (buf,
+      GST_PAD_CAPS (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder)));
 
   return gst_pad_push (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder), buf);
 }
@@ -716,7 +716,8 @@ gst_schro_enc_shape_output_mp4 (GstBaseVideoEncoder * base_video_encoder,
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
   }
 
-  gst_buffer_set_caps (buf, GST_BASE_VIDEO_CODEC (base_video_encoder)->caps);
+  gst_buffer_set_caps (buf,
+      GST_PAD_CAPS (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder)));
 
   return gst_pad_push (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder), buf);
 }
@@ -782,7 +783,7 @@ gst_schro_enc_process (GstSchroEnc * schro_enc)
           buf = gst_buffer_new_and_alloc (sizeof (double) * 21);
           schro_encoder_get_frame_stats (schro_enc->encoder,
               (double *) GST_BUFFER_DATA (buf), 21);
-          structure = gst_structure_new ("schroenc",
+          structure = gst_structure_new ("GstSchroEnc",
               "frame-stats", GST_TYPE_BUFFER, buf, NULL);
           gst_buffer_unref (buf);
           message = gst_message_new_element (GST_OBJECT (schro_enc), structure);

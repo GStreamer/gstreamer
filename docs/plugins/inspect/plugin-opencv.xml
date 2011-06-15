@@ -3,7 +3,7 @@
   <description>GStreamer OpenCV Plugins</description>
   <filename>../../ext/opencv/.libs/libgstopencv.so</filename>
   <basename>libgstopencv.so</basename>
-  <version>0.10.21.1</version>
+  <version>0.10.22.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins git</package>
@@ -199,6 +199,27 @@
       </pads>
     </element>
     <element>
+      <name>opencvtextoverlay</name>
+      <longname>opencvtextoverlay</longname>
+      <class>Filter/Effect/Video</class>
+      <description>Write text on the top of video</description>
+      <author>sreerenj&lt;bsreerenj@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw-rgb, bpp=(int)24, depth=(int)24, endianness=(int)4321, red_mask=(int)16711680, green_mask=(int)65280, blue_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw-rgb, bpp=(int)24, depth=(int)24, endianness=(int)4321, red_mask=(int)16711680, green_mask=(int)65280, blue_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>pyramidsegment</name>
       <longname>pyramidsegment</longname>
       <class>Filter/Effect/Video</class>
@@ -225,27 +246,6 @@
       <class>Filter/Effect/Video</class>
       <description>Performs template matching on videos and images, providing detected positions via bus messages</description>
       <author>Noam Lewis &lt;jones.noamle@gmail.com&gt;</author>
-      <pads>
-        <caps>
-          <name>sink</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>video/x-raw-rgb, bpp=(int)24, depth=(int)24, endianness=(int)4321, red_mask=(int)16711680, green_mask=(int)65280, blue_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
-        </caps>
-        <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>video/x-raw-rgb, bpp=(int)24, depth=(int)24, endianness=(int)4321, red_mask=(int)16711680, green_mask=(int)65280, blue_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
-        </caps>
-      </pads>
-    </element>
-    <element>
-      <name>textwrite</name>
-      <longname>textwrite</longname>
-      <class>Filter/Effect/Video</class>
-      <description>Performs text writing to the video</description>
-      <author>sreerenj&lt;bsreerenj@gmail.com&gt;</author>
       <pads>
         <caps>
           <name>sink</name>

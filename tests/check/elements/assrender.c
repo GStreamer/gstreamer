@@ -185,6 +185,7 @@ GST_START_TEST (test_assrender_basic_##format) \
   GstBus *bus; \
   GMainLoop *loop; \
   GstPad *pad, *blocked_pad; \
+  guint bus_watch = 0; \
   \
   pipeline = gst_pipeline_new ("pipeline"); \
   fail_unless (pipeline != NULL); \
@@ -243,7 +244,7 @@ GST_START_TEST (test_assrender_basic_##format) \
   \
   bus = gst_element_get_bus (pipeline); \
   fail_unless (bus != NULL); \
-  gst_bus_add_watch (bus, bus_handler, loop); \
+  bus_watch = gst_bus_add_watch (bus, bus_handler, loop); \
   gst_object_unref (bus); \
   \
   fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_PLAYING), \
@@ -266,6 +267,7 @@ GST_START_TEST (test_assrender_basic_##format) \
   \
   g_object_unref (pipeline); \
   g_main_loop_unref (loop); \
+  g_source_remove (bus_watch); \
 } \
 \
 GST_END_TEST;

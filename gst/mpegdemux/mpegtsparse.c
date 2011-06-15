@@ -874,6 +874,8 @@ mpegts_parse_is_psi (MpegTSParse * parse, MpegTSPacketizerPacket * packet)
 {
   gboolean retval = FALSE;
   guint8 table_id;
+  guint8 *data;
+  guint8 pointer;
   int i;
   static const guint8 si_tables[] =
       { 0x00, 0x01, 0x02, 0x03, 0x40, 0x41, 0x42, 0x46, 0x4A, 0x4E, 0x4F, 0x50,
@@ -891,7 +893,10 @@ mpegts_parse_is_psi (MpegTSParse * parse, MpegTSPacketizerPacket * packet)
     return FALSE;
   if (!retval) {
     if (packet->payload_unit_start_indicator) {
-      table_id = *(packet->data);
+      data = packet->data;
+      pointer = *data++;
+      data += pointer;
+      table_id = *data;
       i = 0;
       while (si_tables[i] != TABLE_ID_UNSET) {
         if (G_UNLIKELY (si_tables[i] == table_id)) {

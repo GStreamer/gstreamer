@@ -62,19 +62,15 @@ static void gst_zebra_stripe_set_property (GObject * object,
     guint property_id, const GValue * value, GParamSpec * pspec);
 static void gst_zebra_stripe_get_property (GObject * object,
     guint property_id, GValue * value, GParamSpec * pspec);
-static void gst_zebra_stripe_dispose (GObject * object);
 static void gst_zebra_stripe_finalize (GObject * object);
 
-static gboolean
-gst_zebra_stripe_get_unit_size (GstBaseTransform * trans, GstCaps * caps,
-    guint * size);
-static gboolean
-gst_zebra_stripe_set_caps (GstBaseTransform * trans, GstCaps * incaps,
-    GstCaps * outcaps);
 static gboolean gst_zebra_stripe_start (GstBaseTransform * trans);
 static gboolean gst_zebra_stripe_stop (GstBaseTransform * trans);
-static GstFlowReturn gst_zebra_stripe_transform_ip (GstBaseTransform * trans,
-    GstBuffer * buf);
+
+static GstFlowReturn
+gst_zebra_stripe_prefilter (GstVideoFilter2 * videofilter2, GstBuffer * buf);
+
+static GstVideoFilter2Functions gst_zebra_stripe_filter_functions[];
 
 enum
 {
@@ -84,43 +80,19 @@ enum
 
 #define DEFAULT_THRESHOLD 90
 
-/* pad templates */
-
-static GstStaticPadTemplate gst_zebra_stripe_sink_template =
-GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV
-        ("{I420,YV12,Y41B,Y42B,NV12,NV21,YUV9,YVU9,Y444,UYVY,YVYU,YUY2,AYUV}"))
-    );
-
-static GstStaticPadTemplate gst_zebra_stripe_src_template =
-GST_STATIC_PAD_TEMPLATE ("src",
-    GST_PAD_SRC,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV
-        ("{I420,YV12,Y41B,Y42B,NV12,NV21,YUV9,YVU9,Y444,UYVY,YVYU,YUY2,AYUV}"))
-    );
-
-
 /* class initialization */
 
 #define DEBUG_INIT(bla) \
   GST_DEBUG_CATEGORY_INIT (gst_zebra_stripe_debug_category, "zebrastripe", 0, \
       "debug category for zebrastripe element");
 
-GST_BOILERPLATE_FULL (GstZebraStripe, gst_zebra_stripe, GstBaseTransform,
-    GST_TYPE_BASE_TRANSFORM, DEBUG_INIT);
+GST_BOILERPLATE_FULL (GstZebraStripe, gst_zebra_stripe, GstVideoFilter2,
+    GST_TYPE_VIDEO_FILTER2, DEBUG_INIT);
 
 static void
 gst_zebra_stripe_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_zebra_stripe_sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_zebra_stripe_src_template));
 
   gst_element_class_set_details_simple (element_class, "Zebra stripe overlay",
       "Filter/Analysis",
@@ -132,21 +104,18 @@ static void
 gst_zebra_stripe_class_init (GstZebraStripeClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstVideoFilter2Class *video_filter2_class = GST_VIDEO_FILTER2_CLASS (klass);
   GstBaseTransformClass *base_transform_class =
       GST_BASE_TRANSFORM_CLASS (klass);
 
   gobject_class->set_property = gst_zebra_stripe_set_property;
   gobject_class->get_property = gst_zebra_stripe_get_property;
-  gobject_class->dispose = gst_zebra_stripe_dispose;
   gobject_class->finalize = gst_zebra_stripe_finalize;
-  base_transform_class->get_unit_size =
-      GST_DEBUG_FUNCPTR (gst_zebra_stripe_get_unit_size);
-  base_transform_class->set_caps =
-      GST_DEBUG_FUNCPTR (gst_zebra_stripe_set_caps);
   base_transform_class->start = GST_DEBUG_FUNCPTR (gst_zebra_stripe_start);
   base_transform_class->stop = GST_DEBUG_FUNCPTR (gst_zebra_stripe_stop);
-  base_transform_class->transform_ip =
-      GST_DEBUG_FUNCPTR (gst_zebra_stripe_transform_ip);
+
+  video_filter2_class->prefilter =
+      GST_DEBUG_FUNCPTR (gst_zebra_stripe_prefilter);
 
   g_object_class_install_property (gobject_class, PROP_THRESHOLD,
       g_param_spec_int ("threshold", "Threshold",
@@ -154,6 +123,8 @@ gst_zebra_stripe_class_init (GstZebraStripeClass * klass)
           DEFAULT_THRESHOLD,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
+  gst_video_filter2_class_add_functions (video_filter2_class,
+      gst_zebra_stripe_filter_functions);
 }
 
 static void
@@ -161,12 +132,6 @@ gst_zebra_stripe_init (GstZebraStripe * zebrastripe,
     GstZebraStripeClass * zebrastripe_class)
 {
 
-  zebrastripe->sinkpad =
-      gst_pad_new_from_static_template (&gst_zebra_stripe_sink_template,
-      "sink");
-
-  zebrastripe->srcpad =
-      gst_pad_new_from_static_template (&gst_zebra_stripe_src_template, "src");
 }
 
 void
@@ -181,6 +146,8 @@ gst_zebra_stripe_set_property (GObject * object, guint property_id,
   switch (property_id) {
     case PROP_THRESHOLD:
       zebrastripe->threshold = g_value_get_int (value);
+      zebrastripe->y_threshold =
+          16 + floor (0.5 + 2.19 * zebrastripe->threshold);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -208,64 +175,15 @@ gst_zebra_stripe_get_property (GObject * object, guint property_id,
 }
 
 void
-gst_zebra_stripe_dispose (GObject * object)
-{
-  GstZebraStripe *zebrastripe;
-
-  g_return_if_fail (GST_IS_ZEBRA_STRIPE (object));
-  zebrastripe = GST_ZEBRA_STRIPE (object);
-
-  /* clean up as possible.  may be called multiple times */
-
-  G_OBJECT_CLASS (parent_class)->dispose (object);
-}
-
-void
 gst_zebra_stripe_finalize (GObject * object)
 {
-  GstZebraStripe *zebrastripe;
-
   g_return_if_fail (GST_IS_ZEBRA_STRIPE (object));
-  zebrastripe = GST_ZEBRA_STRIPE (object);
 
   /* clean up object here */
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
-
-static gboolean
-gst_zebra_stripe_get_unit_size (GstBaseTransform * trans, GstCaps * caps,
-    guint * size)
-{
-  int width, height;
-  GstVideoFormat format;
-  gboolean ret;
-
-  ret = gst_video_format_parse_caps (caps, &format, &width, &height);
-  *size = gst_video_format_get_size (format, width, height);
-
-  return ret;
-}
-
-static gboolean
-gst_zebra_stripe_set_caps (GstBaseTransform * trans, GstCaps * incaps,
-    GstCaps * outcaps)
-{
-  GstZebraStripe *zebrastripe = GST_ZEBRA_STRIPE (trans);
-  int width, height;
-  GstVideoFormat format;
-  gboolean ret;
-
-  ret = gst_video_format_parse_caps (incaps, &format, &width, &height);
-  if (ret) {
-    zebrastripe->format = format;
-    zebrastripe->width = width;
-    zebrastripe->height = height;
-  }
-
-  return ret;
-}
 
 static gboolean
 gst_zebra_stripe_start (GstBaseTransform * trans)
@@ -282,72 +200,120 @@ gst_zebra_stripe_stop (GstBaseTransform * trans)
 }
 
 static GstFlowReturn
-gst_zebra_stripe_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
+gst_zebra_stripe_prefilter (GstVideoFilter2 * videofilter2, GstBuffer * buf)
 {
-  GstZebraStripe *zebrastripe = GST_ZEBRA_STRIPE (trans);
-  int i, j;
-  int threshold;
-  int t;
-  guint8 *ydata;
-  int ystride;
-
-  threshold = 16 + floor (0.5 + 2.19 * zebrastripe->threshold);
-  t = zebrastripe->t;
-
-  ydata = GST_BUFFER_DATA (buf);
-  ystride = gst_video_format_get_row_stride (zebrastripe->format,
-      0, zebrastripe->width);
-  switch (zebrastripe->format) {
-    case GST_VIDEO_FORMAT_I420:
-    case GST_VIDEO_FORMAT_YV12:
-    case GST_VIDEO_FORMAT_Y41B:
-    case GST_VIDEO_FORMAT_Y42B:
-    case GST_VIDEO_FORMAT_NV12:
-    case GST_VIDEO_FORMAT_NV21:
-    case GST_VIDEO_FORMAT_YUV9:
-    case GST_VIDEO_FORMAT_YVU9:
-    case GST_VIDEO_FORMAT_Y444:
-      for (j = 0; j < zebrastripe->height; j++) {
-        guint8 *data = ydata + ystride * j;
-        for (i = 0; i < zebrastripe->width; i++) {
-          if (data[i] >= threshold) {
-            if ((i + j + t) & 0x4)
-              data[i] = 16;
-          }
-        }
-      }
-      break;
-    case GST_VIDEO_FORMAT_UYVY:
-      ydata++;
-    case GST_VIDEO_FORMAT_YUY2:
-    case GST_VIDEO_FORMAT_YVYU:
-      for (j = 0; j < zebrastripe->height; j++) {
-        guint8 *data = ydata + ystride * j;
-        for (i = 0; i < zebrastripe->width; i++) {
-          if (data[2 * i] >= threshold) {
-            if ((i + j + t) & 0x4)
-              data[2 * i] = 16;
-          }
-        }
-      }
-      break;
-    case GST_VIDEO_FORMAT_AYUV:
-      ydata++;
-      for (j = 0; j < zebrastripe->height; j++) {
-        guint8 *data = ydata + ystride * j;
-        for (i = 0; i < zebrastripe->width; i++) {
-          if (data[4 * i] >= threshold) {
-            if ((i + j + t) & 0x4)
-              data[4 * i] = 16;
-          }
-        }
-      }
-      break;
-    default:
-      g_assert_not_reached ();
-  }
+  GstZebraStripe *zebrastripe = GST_ZEBRA_STRIPE (videofilter2);
 
   zebrastripe->t++;
 
   return GST_FLOW_OK;
 }
+
+static GstFlowReturn
+gst_zebra_stripe_filter_ip_planarY (GstVideoFilter2 * videofilter2,
+    GstBuffer * buf, int start, int end)
+{
+  GstZebraStripe *zebrastripe = GST_ZEBRA_STRIPE (videofilter2);
+  int width = GST_VIDEO_FILTER2_WIDTH (zebrastripe);
+  int i, j;
+  int threshold = zebrastripe->y_threshold;
+  int t = zebrastripe->t;
+  guint8 *ydata;
+  int ystride;
+
+  ydata = GST_BUFFER_DATA (buf);
+  ystride =
+      gst_video_format_get_row_stride (GST_VIDEO_FILTER2_FORMAT (videofilter2),
+      0, width);
+
+  for (j = start; j < end; j++) {
+    guint8 *data = ydata + ystride * j;
+    for (i = 0; i < width; i++) {
+      if (data[i] >= threshold) {
+        if ((i + j + t) & 0x4)
+          data[i] = 16;
+      }
+    }
+  }
+  return GST_FLOW_OK;
+}
+
+static GstFlowReturn
+gst_zebra_stripe_filter_ip_YxYy (GstVideoFilter2 * videofilter2,
+    GstBuffer * buf, int start, int end)
+{
+  GstZebraStripe *zebrastripe = GST_ZEBRA_STRIPE (videofilter2);
+  GstVideoFormat format = GST_VIDEO_FILTER2_FORMAT (zebrastripe);
+  int width = GST_VIDEO_FILTER2_WIDTH (zebrastripe);
+  int i, j;
+  int threshold = zebrastripe->y_threshold;
+  int t = zebrastripe->t;
+  guint8 *ydata;
+  int ystride;
+
+  ydata = GST_BUFFER_DATA (buf);
+  ystride = gst_video_format_get_row_stride (format, 0, width);
+
+  if (format == GST_VIDEO_FORMAT_UYVY) {
+    ydata++;
+  }
+
+  for (j = start; j < end; j++) {
+    guint8 *data = ydata + ystride * j;
+    for (i = 0; i < width; i++) {
+      if (data[2 * i] >= threshold) {
+        if ((i + j + t) & 0x4)
+          data[2 * i] = 16;
+      }
+    }
+  }
+  return GST_FLOW_OK;
+}
+
+static GstFlowReturn
+gst_zebra_stripe_filter_ip_AYUV (GstVideoFilter2 * videofilter2,
+    GstBuffer * buf, int start, int end)
+{
+  GstZebraStripe *zebrastripe = GST_ZEBRA_STRIPE (videofilter2);
+  int width = GST_VIDEO_FILTER2_WIDTH (zebrastripe);
+  int i, j;
+  int threshold = zebrastripe->y_threshold;
+  int t = zebrastripe->t;
+  guint8 *ydata;
+  int ystride;
+
+  ydata = GST_BUFFER_DATA (buf);
+  ystride =
+      gst_video_format_get_row_stride (GST_VIDEO_FILTER2_FORMAT (videofilter2),
+      0, width);
+
+  ydata++;
+  for (j = start; j < end; j++) {
+    guint8 *data = ydata + ystride * j;
+    for (i = 0; i < width; i++) {
+      if (data[4 * i] >= threshold) {
+        if ((i + j + t) & 0x4)
+          data[4 * i] = 16;
+      }
+    }
+  }
+
+  return GST_FLOW_OK;
+}
+
+static GstVideoFilter2Functions gst_zebra_stripe_filter_functions[] = {
+  {GST_VIDEO_FORMAT_I420, NULL, gst_zebra_stripe_filter_ip_planarY},
+  {GST_VIDEO_FORMAT_YV12, NULL, gst_zebra_stripe_filter_ip_planarY},
+  {GST_VIDEO_FORMAT_Y41B, NULL, gst_zebra_stripe_filter_ip_planarY},
+  {GST_VIDEO_FORMAT_Y42B, NULL, gst_zebra_stripe_filter_ip_planarY},
+  {GST_VIDEO_FORMAT_NV12, NULL, gst_zebra_stripe_filter_ip_planarY},
+  {GST_VIDEO_FORMAT_NV21, NULL, gst_zebra_stripe_filter_ip_planarY},
+  {GST_VIDEO_FORMAT_YUV9, NULL, gst_zebra_stripe_filter_ip_planarY},
+  {GST_VIDEO_FORMAT_YVU9, NULL, gst_zebra_stripe_filter_ip_planarY},
+  {GST_VIDEO_FORMAT_Y444, NULL, gst_zebra_stripe_filter_ip_planarY},
+  {GST_VIDEO_FORMAT_UYVY, NULL, gst_zebra_stripe_filter_ip_YxYy},
+  {GST_VIDEO_FORMAT_YUY2, NULL, gst_zebra_stripe_filter_ip_YxYy},
+  {GST_VIDEO_FORMAT_YVYU, NULL, gst_zebra_stripe_filter_ip_YxYy},
+  {GST_VIDEO_FORMAT_AYUV, NULL, gst_zebra_stripe_filter_ip_AYUV},
+  {GST_VIDEO_FORMAT_UNKNOWN}
+};

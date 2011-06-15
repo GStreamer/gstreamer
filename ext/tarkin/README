@@ -1,8 +1,0 @@
-This is a video codec based on an integer wavelet in 3 dimensions (x,
-y, and time/frame). What documentation exists so far is on the
-vorbis-dev and (now) tarkin-dev mailing lists at xiph.org. Some brief
-documentation can be found in the w3d/docs directory.
-
-For sample / test streams, see http://media.xiph.org/
-(and feel free to submit more streams if you have them).
-

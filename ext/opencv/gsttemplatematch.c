@@ -162,7 +162,7 @@ gst_templatematch_class_init (GstTemplateMatchClass * klass)
 
 /* initialize the new element
  * instantiate pads and add them to element
- * set pad calback functions
+ * set pad callback functions
  * initialize instance structure
  */
 static void
@@ -315,19 +315,32 @@ gst_templatematch_chain (GstPad * pad, GstBuffer * buf)
   if ((!filter) || (!buf) || filter->template == NULL) {
     return GST_FLOW_OK;
   }
+  GST_DEBUG_OBJECT (filter, "Buffer size %u ", GST_BUFFER_SIZE (buf));
+
   filter->cvImage->imageData = (char *) GST_BUFFER_DATA (buf);
 
   if (!filter->cvDistImage) {
-    filter->cvDistImage =
-        cvCreateImage (cvSize (filter->cvImage->width -
-            filter->cvTemplateImage->width + 1,
-            filter->cvImage->height - filter->cvTemplateImage->height + 1),
-        IPL_DEPTH_32F, 1);
-    if (!filter->cvDistImage) {
-      GST_WARNING ("Couldn't create dist image.");
+    if (filter->cvTemplateImage->width > filter->cvImage->width) {
+      GST_WARNING ("Template Image is wider than input image");
+    } else if (filter->cvTemplateImage->height > filter->cvImage->height) {
+      GST_WARNING ("Template Image is taller than input image");
+    } else {
+
+      GST_DEBUG_OBJECT (filter, "cvCreateImage (Size(%d-%d+1,%d) %d, %d)",
+          filter->cvImage->width, filter->cvTemplateImage->width,
+          filter->cvImage->height - filter->cvTemplateImage->height + 1,
+          IPL_DEPTH_32F, 1);
+      filter->cvDistImage =
+          cvCreateImage (cvSize (filter->cvImage->width -
+              filter->cvTemplateImage->width + 1,
+              filter->cvImage->height - filter->cvTemplateImage->height + 1),
+          IPL_DEPTH_32F, 1);
+      if (!filter->cvDistImage) {
+        GST_WARNING ("Couldn't create dist image.");
+      }
     }
   }
-  if (filter->cvTemplateImage) {
+  if (filter->cvTemplateImage && filter->cvImage && filter->cvDistImage) {
     GstStructure *s;
     GstMessage *m;
 
@@ -389,8 +402,10 @@ gst_templatematch_load_template (GstTemplateMatch * filter)
   if (filter->template) {
     filter->cvTemplateImage =
         cvLoadImage (filter->template, CV_LOAD_IMAGE_COLOR);
+
     if (!filter->cvTemplateImage) {
-      GST_WARNING ("Couldn't load template image: %s.", filter->template);
+      GST_WARNING ("Couldn't load template image: %s. error: %s",
+          filter->template, g_strerror (errno));
     }
   }
 }

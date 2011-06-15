@@ -180,7 +180,7 @@ AC_CHECK_FUNC(socket,,[AC_CHECK_LIB(socket,socket)])
 AC_CHECK_FUNC(gethostbyname,,[AC_CHECK_LIB(nsl,gethostbyname)])
 
 dnl GLib is required
-AG_GST_GLIB_CHECK([2.22])
+AG_GST_GLIB_CHECK([2.24])
 
 dnl checks for gstreamer
 dnl uninstalled is selected preferentially -- see pkg-config(1)
@@ -243,8 +243,14 @@ if test "x$HAVE_X11" = "xyes"; then
   AC_DEFINE(HAVE_X11, 1, [Define if you have X11 library])
 fi
 
+dnl exif (used on jifmux tests) ****
+PKG_CHECK_MODULES(EXIF, libexif >= 0.6.16, HAVE_EXIF="yes", HAVE_EXIF="no")
+AC_SUBST(EXIF_LIBS)
+AC_SUBST(EXIF_CFLAGS)
+AM_CONDITIONAL(USE_EXIF, test "x$HAVE_EXIF" = "xyes")
+
 dnl Orc
-ORC_CHECK([0.4.7])
+ORC_CHECK([0.4.11])
 
 dnl set license and copyright notice
 GST_LICENSE="LGPL"
@@ -291,7 +297,7 @@ AG_GST_CHECK_PLUGIN(adpcmdec)
 AG_GST_CHECK_PLUGIN(adpcmenc)
 AG_GST_CHECK_PLUGIN(aiff)
 AG_GST_CHECK_PLUGIN(asfmux)
-AG_GST_CHECK_PLUGIN(audioparsers)
+AG_GST_CHECK_PLUGIN(audiovisualizers)
 AG_GST_CHECK_PLUGIN(autoconvert)
 AG_GST_CHECK_PLUGIN(bayer)
 AG_GST_CHECK_PLUGIN(camerabin)
@@ -305,6 +311,7 @@ AG_GST_CHECK_PLUGIN(debugutils)
 AG_GST_CHECK_PLUGIN(dtmf)
 AG_GST_CHECK_PLUGIN(dvbsuboverlay)
 AG_GST_CHECK_PLUGIN(dvdspu)
+AG_GST_CHECK_PLUGIN(faceoverlay)
 AG_GST_CHECK_PLUGIN(festival)
 AG_GST_CHECK_PLUGIN(fieldanalysis)
 AG_GST_CHECK_PLUGIN(freeze)
@@ -313,9 +320,9 @@ AG_GST_CHECK_PLUGIN(gaudieffects)
 AG_GST_CHECK_PLUGIN(geometrictransform)
 AG_GST_CHECK_PLUGIN(h264parse)
 AG_GST_CHECK_PLUGIN(hdvparse)
+AG_GST_CHECK_PLUGIN(hls)
 AG_GST_CHECK_PLUGIN(id3tag)
 AG_GST_CHECK_PLUGIN(interlace)
-AG_GST_CHECK_PLUGIN(invtelecine)
 AG_GST_CHECK_PLUGIN(ivfparse)
 AG_GST_CHECK_PLUGIN(jp2kdecimator)
 AG_GST_CHECK_PLUGIN(jpegformat)
@@ -332,14 +339,15 @@ AG_GST_CHECK_PLUGIN(mve)
 AG_GST_CHECK_PLUGIN(mxf)
 AG_GST_CHECK_PLUGIN(nsf)
 AG_GST_CHECK_PLUGIN(nuvdemux)
+AG_GST_CHECK_PLUGIN(patchdetect)
 AG_GST_CHECK_PLUGIN(pcapparse)
 AG_GST_CHECK_PLUGIN(pnm)
-AG_GST_CHECK_PLUGIN(qtmux)
 AG_GST_CHECK_PLUGIN(rawparse)
 AG_GST_CHECK_PLUGIN(real)
 AG_GST_CHECK_PLUGIN(rtpmux)
 AG_GST_CHECK_PLUGIN(rtpvp8)
 AG_GST_CHECK_PLUGIN(scaletempo)
+AG_GST_CHECK_PLUGIN(sdi)
 AG_GST_CHECK_PLUGIN(sdp)
 AG_GST_CHECK_PLUGIN(segmentclip)
 AG_GST_CHECK_PLUGIN(siren)
@@ -446,6 +454,44 @@ int main ()
   AC_SUBST(HAVE_DIRECTSOUND)
 ])
 
+dnl Direct3D
+translit(dnm, m, l) AM_CONDITIONAL(USE_DIRECT3D, true)
+AG_GST_CHECK_FEATURE(DIRECT3D, [Direct3D plug-in], direct3dsink, [
+  HAVE_DIRECT3D="no"
+  save_CFLAGS="$CFLAGS"
+  save_LDFLAGS="$LDFLAGS"
+  save_LIBS="$LIBS"
+  CFLAGS="$CFLAGS $DIRECTX_CFLAGS"
+  LDFLAGS="$LDFLAGS $DIRECTX_LDFLAGS"
+  LIBS="$LIBS -ld3d -lgdi32"
+  AC_MSG_CHECKING(for Direct3D LDFLAGS)
+  AC_LINK_IFELSE([
+#include <windows.h>
+#include <d3d.h>
+
+int main ()
+{
+  GetStockObject(0);
+  Direct3DCreate(NULL, NULL, NULL);
+
+  return 0;
+}
+],
+    [HAVE_DIRECT3D="yes"],
+    [HAVE_DIRECT3D="no"])
+  AC_MSG_RESULT($HAVE_DIRECT3D)
+  CFLAGS=$save_CFLAGS
+  LDFLAGS=$save_LDFLAGS
+  LIBS=$save_LIBS
+
+  if test "x$HAVE_DIRECT3D" = "xyes";  then
+    dnl this is much more than we want
+    DIRECT3D_LIBS="-ld3d -ldxguid -lgdi32"
+    AC_SUBST(DIRECT3D_LIBS)
+  fi
+  AC_SUBST(HAVE_DIRECT3D)
+])
+
 dnl DirectDraw
 translit(dnm, m, l) AM_CONDITIONAL(USE_DIRECTDRAW, true)
 AG_GST_CHECK_FEATURE(DIRECTDRAW, [DirectDraw plug-in], directdrawsink, [
@@ -527,6 +573,29 @@ case "$host" in
     ;;
 esac
 
+dnl *** OS/X AVCVideoServices ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_AVC, true)
+HAVE_AVC="no"
+AG_GST_CHECK_FEATURE(AVC, [AVC Video Services], avcsrc, [
+  AC_LANG_PUSH([C++])
+  save_CPPFLAGS="$CPPFLAGS"
+  CPPFLAGS="$CPPFLAGS -framework AVCVideoServices -framework CoreFoundation"
+  save_LIBS="$LIBS"
+  LIBS="$LIBS -framework AVCVideoServices -framework CoreFoundation"
+  AC_TRY_LINK([], [], [HAVE_AVC=yes], [HAVE_AVC=no])
+  LIBS=$save_LIBS
+  CPPFLAGS=$save_CPPFLAGS
+  AC_LANG_POP([C++])
+])
+dnl in case header AVCVideoServices/AVCVideoServices.h is found on other platforms
+case "$host" in
+  *-*darwin*)
+    ;;
+  *)
+    HAVE_AVC="no"
+    ;;
+esac
+
 dnl check for QuickTime
 translit(dnm, m, l) AM_CONDITIONAL(USE_QUICKTIME, true)
 AG_GST_CHECK_FEATURE(QUICKTIME, [QuickTime wrapper], qtwrapper, [
@@ -537,7 +606,15 @@ AG_GST_CHECK_FEATURE(QUICKTIME, [QuickTime wrapper], qtwrapper, [
 dnl check for shm_open (for shm plugin)
 translit(dnm, m, l) AM_CONDITIONAL(USE_SHM, true)
 AG_GST_CHECK_FEATURE(SHM, [POSIX shared memory source and sink], shm, [
-  AC_CHECK_LIB(rt, shm_open, HAVE_SHM=yes, HAVE_SHM=no)
+  if test "x$HAVE_SYS_SOCKET_H" = "xyes"; then
+    AC_CHECK_LIB([rt], [shm_open],
+       AC_CHECK_DECL([MSG_NOSIGNAL], HAVE_SHM=yes, HAVE_SHM=no, [
+#include <sys/socket.h>
+	 ]),
+	 HAVE_SHM=no)
+  else
+    HAVE_SHM=no
+  fi
 ])
 
 dnl check for Video CD
@@ -557,20 +634,21 @@ AG_GST_CHECK_FEATURE(ASSRENDER, [ASS/SSA renderer], assrender, [
   PKG_CHECK_MODULES(ASSRENDER, libass >= 0.9.4, [
     HAVE_ASSRENDER="yes" ], [
     HAVE_ASSRENDER="no"
-    AC_MSG_RESULT(no)
   ])
 ])
 AC_SUBST(ASSRENDER_CFLAGS)
 AC_SUBST(ASSRENDER_LIBS)
 
-dnl *** amrwb ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_AMRWB, true)
-AG_GST_CHECK_FEATURE(AMRWB, [amrwb library], amrwbenc, [
-  AG_GST_CHECK_LIBHEADER(AMRWB, amrwb,
-                        GP3E_IF_encode, ,
-                        amrwb/enc.h,
-                        AMRWB_LIBS="-lamrwb"
-                        AC_SUBST(AMRWB_LIBS))
+dnl *** vo-amrwbenc ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_VOAMRWBENC, true)
+AG_GST_CHECK_FEATURE(VOAMRWBENC, [vo-amrwbenc library], vo-amrwbenc, [
+  AG_GST_PKG_CHECK_MODULES(VOAMRWBENC, vo-amrwbenc >= 0.1.0)
+])
+
+dnl *** vo-aacenc ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_VOAACENC, true)
+AG_GST_CHECK_FEATURE(VOAACENC, [vo-aacenc library], vo-aacenc, [
+  AG_GST_PKG_CHECK_MODULES(VOAACENC, vo-aacenc >= 0.1.0)
 ])
 
 dnl *** apexsink ***
@@ -603,7 +681,6 @@ AG_GST_CHECK_FEATURE(BZ2, [bz2 library], bz2, [
 #AG_GST_CHECK_FEATURE(CAIRO, [cairo plug-in], cairo, [
 #  PKG_CHECK_MODULES(CAIRO, cairo >= 1.0 glitz-glx, HAVE_CAIRO=yes, [
 #    HAVE_CAIRO=no
-#    AC_MSG_RESULT(no)
 #  ])
 #  AC_SUBST(CAIRO_CFLAGS)
 #  AC_SUBST(CAIRO_LIBS)
@@ -612,7 +689,11 @@ AG_GST_CHECK_FEATURE(BZ2, [bz2 library], bz2, [
 dnl *** cdaudio ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_CDAUDIO, true)
 AG_GST_CHECK_FEATURE(CDAUDIO, [cdaudio], cdaudio, [
-  AG_GST_CHECK_CONFIGPROG(CDAUDIO, libcdaudio-config)
+  PKG_CHECK_MODULES(CDAUDIO, libcdaudio, [
+          HAVE_CDAUDIO="yes"
+  ], [
+          HAVE_CDAUDIO="no"
+  ])
   AC_SUBST(CDAUDIO_CFLAGS)
   AC_SUBST(CDAUDIO_LIBS)
 ])
@@ -656,7 +737,6 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_COG, true)
 AG_GST_CHECK_FEATURE(COG, [Cog plugin], cog, [
   PKG_CHECK_MODULES(COG, libpng >= 1.2, HAVE_COG="yes", [
     HAVE_COG="no"
-    AC_MSG_RESULT(no)
   ])
   AC_SUBST(COG_CFLAGS)
   AC_SUBST(COG_LIBS)
@@ -673,7 +753,6 @@ AG_GST_CHECK_FEATURE(CURL, [Curl plugin], curl, [
     AC_MSG_RESULT($HAVE_CURL)
   ], [
     HAVE_CURL="no"
-    AC_MSG_RESULT(no)
   ])
   AC_SUBST(CURL_CFLAGS)
   AC_SUBST(CURL_LIBS)
@@ -687,7 +766,6 @@ AG_GST_CHECK_FEATURE(DC1394, [libdc1394], dc1394, [
 		HAVE_DC1394="yes"
 	else
 		HAVE_DC1394="no"
-		AC_MSG_RESULT(no)
 	fi
    ], [
         HAVE_DC1394="no"
@@ -697,13 +775,35 @@ AG_GST_CHECK_FEATURE(DC1394, [libdc1394], dc1394, [
    AC_SUBST(LIBDC1394_LIBS)
 ])
 
+dnl *** decklink  ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_DECKLINK, true)
+AG_GST_CHECK_FEATURE(DECKLINK, [decklink], decklink, [
+   HAVE_DECKLINK=no
+   case "$host" in
+     *-*linux*)
+       if test "x$HAVE_PTHREAD_H" = "xyes"; then
+         AC_CHECK_LIB(dl, dlopen,
+           [
+            HAVE_DECKLINK=yes
+            DECKLINK_CXXFLAGS=
+            DECKLINK_LIBS="-lpthread -ldl"
+           ])
+       fi
+       ;;
+     *)
+       HAVE_DECKLINK=no
+       ;;
+   esac
+
+   AC_SUBST(DECKLINK_CXXFLAGS)
+   AC_SUBST(DECKLINK_LIBS)
+])
 
 dnl **** DirectFB ****
 translit(dnm, m, l) AM_CONDITIONAL(USE_DIRECTFB, true)
 AG_GST_CHECK_FEATURE(DIRECTFB, [directfb], dfbvideosink , [
   PKG_CHECK_MODULES(DIRECTFB, directfb >= 0.9.24, HAVE_DIRECTFB="yes", [
     HAVE_DIRECTFB="no"
-    AC_MSG_RESULT(no)
   ])
 ])
 
@@ -712,7 +812,6 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_DIRAC, true)
 AG_GST_CHECK_FEATURE(DIRAC, [dirac], dirac, [
   PKG_CHECK_MODULES(DIRAC, dirac >= 0.10, HAVE_DIRAC="yes", [
     HAVE_DIRAC="no"
-    AC_MSG_RESULT(no)
   ])
 ])
 
@@ -750,10 +849,8 @@ AG_GST_CHECK_FEATURE(DIVX, [divx plugins], divx, [
 return 0;
     ], [
       HAVE_DIVX=yes
-      AC_MSG_RESULT(yes)
     ], [
       HAVE_DIVX=no
-      AC_MSG_RESULT(no)
       AC_MSG_WARN([Wrong version of divx4linux installed])
     ])
   fi
@@ -774,10 +871,8 @@ return 0;
 return 0;
     ], [
       HAVE_DIVX=yes
-      AC_MSG_RESULT(yes)
     ], [
       HAVE_DIVX=no
-      AC_MSG_RESULT(no)
       AC_MSG_WARN([Wrong version of divx4linux installed])
     ])
   fi
@@ -807,16 +902,6 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_RESINDVD, true)
 AG_GST_CHECK_FEATURE(RESINDVD, [resindvd plugin], resindvd, [
   PKG_CHECK_MODULES(DVDNAV, dvdnav >= 4.1.2 dvdread >= 4.1.2, HAVE_RESINDVD="yes", [
     HAVE_RESINDVD="no"
-    AC_MSG_RESULT(no)
-  ])
-])
-
-dnl **** exif (used on jifmux tests) ****
-translit(dnm, m, l) AM_CONDITIONAL(USE_EXIF, true)
-AG_GST_CHECK_FEATURE(EXIF, [exif], exif, [
-  PKG_CHECK_MODULES(EXIF, libexif >= 0.6.16, HAVE_EXIF="yes", [
-    HAVE_EXIF="no"
-    AC_MSG_RESULT(no)
   ])
 ])
 
@@ -859,7 +944,6 @@ AG_GST_CHECK_FEATURE(FAAD, [AAC decoder plug-in], faad, [
         #endif
     ], [
       HAVE_FAAD="yes"
-      AC_MSG_RESULT(yes)
 
       AC_MSG_CHECKING([Checking FAAD2 version in $faad_hdr])
       for minor in 10 9 8 7 6 5 0; do
@@ -880,7 +964,6 @@ AG_GST_CHECK_FEATURE(FAAD, [AAC decoder plug-in], faad, [
       fi
     ], [
       HAVE_FAAD="no"
-      AC_MSG_RESULT(no)
     ])
   fi
   AS_SCRUB_INCLUDE(FAAD_CFLAGS)
@@ -932,7 +1015,6 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_KATE, true)
 AG_GST_CHECK_FEATURE(KATE, [Kate], kate, [
   PKG_CHECK_MODULES(KATE, kate >= 0.1.7, HAVE_KATE="yes", [
     HAVE_KATE="no"
-    AC_MSG_RESULT(no)
   ])
   AC_SUBST(KATE_CFLAGS)
   AC_SUBST(KATE_LIBS)
@@ -943,7 +1025,6 @@ AG_GST_CHECK_FEATURE(KATE, [Kate], kate, [
     ],
     [
       HAVE_TIGER="no"
-      AC_MSG_RESULT(no)
     ]
   )
   AM_CONDITIONAL(USE_TIGER, test "x$HAVE_TIGER" = "xyes")
@@ -955,7 +1036,7 @@ dnl *** ladspa ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LADSPA, true)
 AG_GST_CHECK_FEATURE(LADSPA, [ladspa], ladspa, [
   AC_CHECK_HEADER(ladspa.h, HAVE_LADSPA="yes", HAVE_LADSPA="no")
-  
+
   PKG_CHECK_MODULES(LRDF, lrdf, HAVE_LRDF=yes, HAVE_LRDF=no)
   if test $HAVE_LRDF = "yes"; then
     AC_DEFINE(HAVE_LRDF, 1, [Define if we have liblrdf])
@@ -978,10 +1059,22 @@ AG_GST_CHECK_FEATURE(LIBMMS, [mms protocol library], libmms, [
   dnl check with pkg-config first
   PKG_CHECK_MODULES(LIBMMS, libmms >= 0.4, HAVE_LIBMMS="yes", [
     HAVE_LIBMMS="no"
-    AC_MSG_RESULT(no)
   ])
 ])
 AC_SUBST(LIBMMS_LIBS)
+
+dnl *** linsys ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_LINSYS, true)
+AG_GST_CHECK_FEATURE(LINSYS, [Linear Systems SDI plugin], linsys, [
+  case "$host" in
+    *-*linux*)
+      HAVE_LINSYS=yes
+      ;;
+    *)
+      HAVE_LINSYS=no
+      ;;
+  esac
+])
 
 dnl *** modplug ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_MODPLUG, true)
@@ -1017,21 +1110,25 @@ PKG_CHECK_EXISTS(mjpegtools >= 1.6.1.93 mjpegtools < 1.8.0, [
   PKG_CHECK_EXISTS(mjpegtools >= 1.8.0 mjpegtools < 1.9.0, [
     mjpegtools_api=10800
   ], [
-    PKG_CHECK_MODULES(MJPEG, mjpegtools >= 1.9.0, [
-      dnl logging API changed in release candidates
-      OLD_CFLAGS="$CFLAGS"
-      OLD_LIBS="$LIBS"
-      CFLAGS="$MJPEG_CFLAGS"
-      LIBS="$LIBS $MJPEG_LIBS -lmjpegutils $LIBM -lpthread"
-      AC_CHECK_FUNC(mjpeg_loglev_t, [
-        mjpegtools_api=10903
-        ], [
-        mjpegtools_api=10900
-        ])
-      CFLAGS="$OLD_CFLAGS"
-      LIBS="$OLD_LIBS"
+    PKG_CHECK_EXISTS(mjpegtools >= 2.0.0, [
+      mjpegtools_api=20000
     ], [
-      mjpegtools_api=0
+      PKG_CHECK_MODULES(MJPEG, mjpegtools >= 1.9.0 mjpegtools < 2.0.0, [
+        dnl logging API changed in release candidates
+        OLD_CFLAGS="$CFLAGS"
+        OLD_LIBS="$LIBS"
+        CFLAGS="$MJPEG_CFLAGS"
+        LIBS="$LIBS $MJPEG_LIBS -lmjpegutils $LIBM -lpthread"
+        AC_CHECK_FUNC(mjpeg_loglev_t, [
+          mjpegtools_api=10903
+          ], [
+          mjpegtools_api=10900
+          ])
+        CFLAGS="$OLD_CFLAGS"
+        LIBS="$OLD_LIBS"
+      ], [
+        mjpegtools_api=0
+      ])
     ])
   ])
 ])
@@ -1204,7 +1301,6 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_MYTHTV, true)
 AG_GST_CHECK_FEATURE(MYTHTV, [MythTV client plugins], mythtvsrc, [
   PKG_CHECK_MODULES(GMYTH, gmyth >= 0.4 gmyth <= 0.7.99, HAVE_MYTHTV="yes", [
     HAVE_MYTHTV="no"
-    AC_MSG_RESULT(no)
   ])
   AC_SUBST(GMYTH_CFLAGS)
   AC_SUBST(GMYTH_LIBS)
@@ -1231,7 +1327,6 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_NEON, true)
 AG_GST_CHECK_FEATURE(NEON, [neon http client plugins], neonhttpsrc, [
   PKG_CHECK_MODULES(NEON, neon >= 0.27.0  neon <= 0.29.99, HAVE_NEON="yes", [
     HAVE_NEON="no"
-    AC_MSG_RESULT(no)
   ])
   AC_SUBST(NEON_CFLAGS)
   AC_SUBST(NEON_LIBS)
@@ -1242,10 +1337,19 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_OFA, true)
 AG_GST_CHECK_FEATURE(OFA, [ofa plugins], ofa, [
   PKG_CHECK_MODULES(OFA, libofa >= 0.9.3, HAVE_OFA="yes", [
     HAVE_OFA="no"
-    AC_MSG_RESULT(no)
   ])
   AC_SUBST(OFA_CFLAGS)
   AC_SUBST(OFA_LIBS)
+])
+
+dnl *** OpenAL ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_OPENAL, true)
+AG_GST_CHECK_FEATURE(OPENAL, [OpenAL plugin], openal, [
+  PKG_CHECK_MODULES(OPENAL, openal, HAVE_OPENAL="yes", [
+    HAVE_OPENAL="no"
+  ])
+  AC_SUBST(OPENAL_CFLAGS)
+  AC_SUBST(OPENAL_LIBS)
 ])
 
 dnl *** opencv ***
@@ -1257,7 +1361,7 @@ AG_GST_CHECK_FEATURE(OPENCV, [opencv plugins], opencv, [
   dnl a new version and the no-backward-compatibility define. (There doesn't
   dnl seem to be a switch to suppress the warnings the cvcompat.h header
   dnl causes.)
-  PKG_CHECK_MODULES(OPENCV, opencv >= 2.0.0 opencv <= 2.1.0 , [
+  PKG_CHECK_MODULES(OPENCV, opencv >= 2.0.0 opencv <= 2.2.0 , [
     AC_PROG_CXX
     AC_LANG_CPLUSPLUS
     OLD_CPPFLAGS=$CPPFLAGS
@@ -1277,7 +1381,6 @@ AG_GST_CHECK_FEATURE(OPENCV, [opencv plugins], opencv, [
     fi
   ], [
     HAVE_OPENCV="no"
-    AC_MSG_RESULT(no)
   ])
   AC_SUBST(OPENCV_CFLAGS)
   AC_SUBST(OPENCV_LIBS)
@@ -1288,7 +1391,6 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_RSVG, true)
 AG_GST_CHECK_FEATURE(RSVG, [rsvg decoder], rsvg, [
   PKG_CHECK_MODULES(RSVG, librsvg-2.0 >= 2.14 cairo, HAVE_RSVG="yes", [
     HAVE_RSVG="no"
-    AC_MSG_RESULT(no)
   ])
   AC_SUBST(RSVG_CFLAGS)
   AC_SUBST(RSVG_LIBS)
@@ -1318,11 +1420,16 @@ AG_GST_CHECK_FEATURE(TIMIDITY, [timidity midi soft synth plugin], timidity, [
 	fi
   ], [
     HAVE_TIMIDITY="no"
-    AC_MSG_RESULT(no)
   ])
   AC_SUBST(TIMIDITY_CFLAGS)
   AC_SUBST(TIMIDITY_LIBS)
 ])
+
+dnl *** teletextdec ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_TELETEXTDEC, true)
+AG_GST_CHECK_FEATURE(TELETEXTDEC, [Teletext decoder], teletextdec, [
+  AG_GST_PKG_CHECK_MODULES(TELETEXTDEC, zvbi-0.2)
+ ])
 
 dnl *** wildmidi ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_WILDMIDI, true)
@@ -1374,7 +1481,7 @@ AG_GST_CHECK_FEATURE(SOUNDTOUCH, [soundtouch plug-in], soundtouch, [
       [PKG_CHECK_MODULES(SOUNDTOUCH, soundtouch-1.0,
         [HAVE_SOUNDTOUCH=yes
           HAVE_SOUNDTOUCH_1_4=no
-          SOUNDTOUCH_LIBS="$SOUNDTOUCH_LIBS -lBPM"], 
+          SOUNDTOUCH_LIBS="$SOUNDTOUCH_LIBS -lBPM"],
         [PKG_CHECK_MODULES(SOUNDTOUCH, libSoundTouch >= 1.4,
           [HAVE_SOUNDTOUCH=yes],
           [PKG_CHECK_MODULES(SOUNDTOUCH, libSoundTouch,
@@ -1437,21 +1544,9 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_SWFDEC, true)
 AG_GST_CHECK_FEATURE(SWFDEC, [swfdec plug-in], swfdec, [
   PKG_CHECK_MODULES(SWFDEC, swfdec-0.3 >= 0.3.6, HAVE_SWFDEC=yes, [
     HAVE_SWFDEC=no
-    AC_MSG_RESULT(no)
   ])
   AC_SUBST(SWFDEC_CFLAGS)
   AC_SUBST(SWFDEC_LIBS)
-])
-
-dnl *** theora ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_THEORADEC, true)
-AG_GST_CHECK_FEATURE(THEORADEC, [ogg theora codec], theoraexpdec, [
-  PKG_CHECK_MODULES(THEORADEC, theoradec, HAVE_THEORADEC="yes", [
-    HAVE_THEORADEC="no"
-    AC_MSG_RESULT(no)
-  ])
-  AC_SUBST(THEORADEC_LIBS)
-  AC_SUBST(THEORADEC_CFLAGS)
 ])
 
 dnl *** XVID ***
@@ -1521,7 +1616,7 @@ AG_GST_CHECK_FEATURE(VDPAU, [VDPAU], vdpau, [
     if test "$HAVE_VDPAU" = "no"; then
       saved_CPPFLAGS="$CPPFLAGS"
       AC_CHECK_HEADER([vdpau/vdpau.h], [HAVE_VDPAU_H=yes])
-      
+
       if test -z "$HAVE_VDPAU_H"; then
         dnl Didn't find VDPAU header straight away.
         dnl Try /usr/include/nvidia. Need to clear caching vars first
@@ -1533,9 +1628,9 @@ AG_GST_CHECK_FEATURE(VDPAU, [VDPAU], vdpau, [
         CPPFLAGS="$VDPAU_CFLAGS $saved_CPPFLAGS"
         AC_CHECK_HEADER([vdpau/vdpau.h], [HAVE_VDPAU_H=yes])
       fi
-      
+
       AC_CHECK_HEADER([vdpau/vdpau_x11.h], [HAVE_VDPAU_X11_H=yes])
-  
+
       if test "x$HAVE_VDPAU_H" = "xyes" -a "x$HAVE_VDPAU_X11_H" = "xyes"; then
         dnl Found the headers - look for the lib
         AC_MSG_NOTICE([VDPAU headers found. Checking libraries])
@@ -1614,7 +1709,8 @@ dnl not building plugins with external dependencies,
 dnl but we still need to set the conditionals
 
 AM_CONDITIONAL(USE_ASSRENDER, false)
-AM_CONDITIONAL(USE_AMRWB, false)
+AM_CONDITIONAL(USE_VOAMRWBENC, false)
+AM_CONDITIONAL(USE_VOAACENC, false)
 AM_CONDITIONAL(USE_APEXSINK, false)
 AM_CONDITIONAL(USE_BZ2, false)
 AM_CONDITIONAL(USE_CDAUDIO, false)
@@ -1622,6 +1718,7 @@ AM_CONDITIONAL(USE_CELT, false)
 AM_CONDITIONAL(USE_COG, false)
 AM_CONDITIONAL(USE_CURL, false)
 AM_CONDITIONAL(USE_DC1394, false)
+AM_CONDITIONAL(USE_DECKLINK, false)
 AM_CONDITIONAL(USE_DIRECTFB, false)
 AM_CONDITIONAL(USE_DIRAC, false)
 AM_CONDITIONAL(USE_DTS, false)
@@ -1639,6 +1736,7 @@ AM_CONDITIONAL(USE_TIGER, false)
 AM_CONDITIONAL(USE_LADSPA, false)
 AM_CONDITIONAL(USE_LV2, false)
 AM_CONDITIONAL(USE_LIBMMS, false)
+AM_CONDITIONAL(USE_LINSYS, false)
 AM_CONDITIONAL(USE_MODPLUG, false)
 AM_CONDITIONAL(USE_MIMIC, false)
 AM_CONDITIONAL(USE_MPEG2ENC, false)
@@ -1649,6 +1747,7 @@ AM_CONDITIONAL(USE_MYTHTV, false)
 AM_CONDITIONAL(USE_NAS, false)
 AM_CONDITIONAL(USE_NEON, false)
 AM_CONDITIONAL(USE_OFA, false)
+AM_CONDITIONAL(USE_OPENAL, false)
 AM_CONDITIONAL(USE_OPENCV, false)
 AM_CONDITIONAL(USE_RSVG, false)
 AM_CONDITIONAL(USE_TIMIDITY, false)
@@ -1660,7 +1759,6 @@ AM_CONDITIONAL(USE_SPC, false)
 AM_CONDITIONAL(USE_GME, false)
 AM_CONDITIONAL(USE_GSETTINGS, false)
 AM_CONDITIONAL(USE_SWFDEC, false)
-AM_CONDITIONAL(USE_THEORADEC, false)
 AM_CONDITIONAL(USE_XVID, false)
 AM_CONDITIONAL(USE_DVB, false)
 AM_CONDITIONAL(USE_WININET, false)
@@ -1670,6 +1768,7 @@ AM_CONDITIONAL(USE_SCHRO, false)
 AM_CONDITIONAL(USE_ZBAR, false)
 AM_CONDITIONAL(USE_VP8, false)
 AM_CONDITIONAL(USE_RTMP, false)
+AM_CONDITIONAL(USE_TELETEXTDEC, false)
 
 fi dnl of EXT plugins
 
@@ -1749,7 +1848,7 @@ gst/adpcmdec/Makefile
 gst/adpcmenc/Makefile
 gst/aiff/Makefile
 gst/asfmux/Makefile
-gst/audioparsers/Makefile
+gst/audiovisualizers/Makefile
 gst/autoconvert/Makefile
 gst/bayer/Makefile
 gst/camerabin/Makefile
@@ -1763,6 +1862,7 @@ gst/debugutils/Makefile
 gst/dtmf/Makefile
 gst/dvbsuboverlay/Makefile
 gst/dvdspu/Makefile
+gst/faceoverlay/Makefile
 gst/festival/Makefile
 gst/fieldanalysis/Makefile
 gst/freeze/Makefile
@@ -1771,9 +1871,9 @@ gst/gaudieffects/Makefile
 gst/geometrictransform/Makefile
 gst/h264parse/Makefile
 gst/hdvparse/Makefile
+gst/hls/Makefile
 gst/id3tag/Makefile
 gst/interlace/Makefile
-gst/invtelecine/Makefile
 gst/ivfparse/Makefile
 gst/jp2kdecimator/Makefile
 gst/jpegformat/Makefile
@@ -1791,14 +1891,15 @@ gst/mve/Makefile
 gst/mxf/Makefile
 gst/nsf/Makefile
 gst/nuvdemux/Makefile
+gst/patchdetect/Makefile
 gst/pcapparse/Makefile
 gst/pnm/Makefile
-gst/qtmux/Makefile
 gst/rawparse/Makefile
 gst/real/Makefile
 gst/rtpmux/Makefile
 gst/rtpvp8/Makefile
 gst/scaletempo/Makefile
+gst/sdi/Makefile
 gst/sdp/Makefile
 gst/segmentclip/Makefile
 gst/siren/Makefile
@@ -1816,7 +1917,6 @@ gst/y4m/Makefile
 gst-libs/Makefile
 gst-libs/gst/Makefile
 gst-libs/gst/basecamerabinsrc/Makefile
-gst-libs/gst/baseparse/Makefile
 gst-libs/gst/interfaces/Makefile
 gst-libs/gst/signalprocessor/Makefile
 gst-libs/gst/video/Makefile
@@ -1825,12 +1925,16 @@ sys/dshowdecwrapper/Makefile
 sys/acmenc/Makefile
 sys/acmmp3dec/Makefile
 sys/applemedia/Makefile
+sys/avc/Makefile
+sys/d3dvideosink/Makefile
+sys/decklink/Makefile
 sys/directdraw/Makefile
 sys/directsound/Makefile
 sys/dshowsrcwrapper/Makefile
 sys/dshowvideosink/Makefile
 sys/dvb/Makefile
 sys/fbdev/Makefile
+sys/linsys/Makefile
 sys/osxvideo/Makefile
 sys/qtwrapper/Makefile
 sys/shm/Makefile
@@ -1852,7 +1956,8 @@ tests/examples/directfb/Makefile
 tests/examples/mxf/Makefile
 tests/examples/scaletempo/Makefile
 tests/icles/Makefile
-ext/amrwbenc/Makefile
+ext/voamrwbenc/Makefile
+ext/voaacenc/Makefile
 ext/assrender/Makefile
 ext/apexsink/Makefile
 ext/bz2/Makefile
@@ -1885,6 +1990,7 @@ ext/mythtv/Makefile
 ext/nas/Makefile
 ext/neon/Makefile
 ext/ofa/Makefile
+ext/openal/Makefile
 ext/opencv/Makefile
 ext/rsvg/Makefile
 ext/resindvd/Makefile
@@ -1893,12 +1999,12 @@ ext/schroedinger/Makefile
 ext/sdl/Makefile
 ext/sndfile/Makefile
 ext/soundtouch/Makefile
+ext/teletextdec/Makefile
 ext/gme/Makefile
 ext/gsettings/Makefile
 ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml
 ext/spc/Makefile
 ext/swfdec/Makefile
-ext/theora/Makefile
 ext/timidity/Makefile
 ext/vp8/Makefile
 ext/xvid/Makefile

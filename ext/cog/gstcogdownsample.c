@@ -170,10 +170,7 @@ static void
 gst_cogdownsample_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstCogdownsample *src;
-
   g_return_if_fail (GST_IS_COGDOWNSAMPLE (object));
-  src = GST_COGDOWNSAMPLE (object);
 
   GST_DEBUG ("gst_cogdownsample_set_property");
   switch (prop_id) {
@@ -186,10 +183,7 @@ static void
 gst_cogdownsample_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
-  GstCogdownsample *src;
-
   g_return_if_fail (GST_IS_COGDOWNSAMPLE (object));
-  src = GST_COGDOWNSAMPLE (object);
 
   switch (prop_id) {
     default:
@@ -308,14 +302,12 @@ static GstFlowReturn
 gst_cogdownsample_transform (GstBaseTransform * base_transform,
     GstBuffer * inbuf, GstBuffer * outbuf)
 {
-  GstCogdownsample *compress;
   CogFrame *outframe;
   int width, height;
   uint32_t format;
   CogFrame *frame;
 
   g_return_val_if_fail (GST_IS_COGDOWNSAMPLE (base_transform), GST_FLOW_ERROR);
-  compress = GST_COGDOWNSAMPLE (base_transform);
 
   gst_structure_get_fourcc (gst_caps_get_structure (inbuf->caps, 0),
       "format", &format);

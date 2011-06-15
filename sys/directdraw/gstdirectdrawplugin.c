@@ -33,7 +33,7 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "directdrawsink", GST_RANK_PRIMARY,
+  if (!gst_element_register (plugin, "directdrawsink", GST_RANK_SECONDARY,
           GST_TYPE_DIRECTDRAW_SINK))
     return FALSE;
 

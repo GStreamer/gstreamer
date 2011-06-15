@@ -163,18 +163,22 @@ struct MpegTsPadData {
 GType mpegtsmux_get_type (void);
 
 #define CLOCK_BASE 9LL
-#define CLOCK_FREQ (CLOCK_BASE * 10000)
+#define CLOCK_FREQ (CLOCK_BASE * 10000)   /* 90 kHz PTS clock */
+#define CLOCK_FREQ_SCR (CLOCK_FREQ * 300) /* 27 MHz SCR clock */
 
 #define MPEGTIME_TO_GSTTIME(time) (gst_util_uint64_scale ((time), \
                         GST_MSECOND/10, CLOCK_BASE))
 #define GSTTIME_TO_MPEGTIME(time) (gst_util_uint64_scale ((time), \
                         CLOCK_BASE, GST_MSECOND/10))
 
+/* 27 MHz SCR conversions: */
+#define MPEG_SYS_TIME_TO_GSTTIME(time) (gst_util_uint64_scale ((time), \
+                        GST_USECOND, CLOCK_FREQ_SCR / 1000000))
+#define GSTTIME_TO_MPEG_SYS_TIME(time) (gst_util_uint64_scale ((time), \
+                        CLOCK_FREQ_SCR / 1000000, GST_USECOND))
+
 #define NORMAL_TS_PACKET_LENGTH 188
 #define M2TS_PACKET_LENGTH      192
-#define STANDARD_TIME_CLOCK     27000000
-/*33 bits as 1 ie 0x1ffffffff*/
-#define TWO_POW_33_MINUS1     ((0xffffffff * 2) - 1) 
 
 #define MAX_PROG_NUMBER	32
 #define DEFAULT_PROG_ID	0

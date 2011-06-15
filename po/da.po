@@ -1,15 +1,15 @@
 # Danish translation of gst-plugins-bad.
-# Copyright (C) 2009 gst.
+# Copyright (C) 2011 gst.
 # This file is distributed under the same license as the gst-plugins-bad package.
 # Mogens Jaeger <mogens@jaeger.tf>, 2007.
-# Joe Hansen <joedalton2@yahoo.dk>, 2008, 2009.
+# Joe Hansen <joedalton2@yahoo.dk>, 2008, 2009, 2011.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad-0.10.13.2\n"
+"Project-Id-Version: gst-plugins-bad-0.10.21.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-10-19 23:33+0100\n"
-"PO-Revision-Date: 2009-08-12 11:28+0200\n"
+"POT-Creation-Date: 2011-04-30 18:56+0100\n"
+"PO-Revision-Date: 2011-04-28 11:28+0200\n"
 "Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
 "Language: da\n"
@@ -31,10 +31,11 @@ msgid ""
 "Could not read DVD. This may be because the DVD is encrypted and a DVD "
 "decryption library is not installed."
 msgstr ""
+"Kunne ikke læse dvd. Dette kan være fordi dvd'en er krypteret og et dvd-"
+"dekrypteringsbibliotek ikke er installeret."
 
-#, fuzzy
 msgid "Could not read DVD."
-msgstr "Kunne ikke læse titelinformation for dvd."
+msgstr "Kunne ikke læse dvd."
 
 msgid "No file name specified for writing."
 msgstr "Intet filnavn er angivet til skrivning."
@@ -69,11 +70,367 @@ msgstr "Kunne ikke hente indstillinger fra forende-enheden »%s«."
 msgid "Could not open file \"%s\" for reading."
 msgstr "Kunne ikke åbne filen »%s« for læsning."
 
+#~ msgid "Internal clock error."
+#~ msgstr "Intern urfejl."
+
+#~ msgid "Could not open audio device for mixer control handling."
+#~ msgstr "Kunne ikke åbne lydenhed til mikserpulthåndtering."
+
+#~ msgid ""
+#~ "Could not open audio device for mixer control handling. This version of "
+#~ "the Open Sound System is not supported by this element."
+#~ msgstr ""
+#~ "Kunne ikke åbne lydenhed til mikserpulthåndtering. Denne version af Open "
+#~ "Sound System er ikke understøttet af dette element."
+
+#~ msgid "Volume"
+#~ msgstr "Lydstyrke"
+
+#~ msgid "Master"
+#~ msgstr "Master"
+
+#~ msgid "Front"
+#~ msgstr "Front"
+
+# bagende eller eller "Bag" hvis det er den bagerste lydkanal 
+# vi snakker om
+#~ msgid "Rear"
+#~ msgstr "Bag"
+
+#~ msgid "Headphones"
+#~ msgstr "Høretelefoner"
+
+#~ msgid "Center"
+#~ msgstr "Center"
+
+#~ msgid "LFE"
+#~ msgstr "LFE"
+
+#~ msgid "Surround"
+#~ msgstr "Surround"
+
+#~ msgid "Side"
+#~ msgstr "Side"
+
+#~ msgid "Built-in Speaker"
+#~ msgstr "Indbygget højtaler"
+
+#~ msgid "AUX 1 Out"
+#~ msgstr "AUX 1 ud"
+
+#~ msgid "AUX 2 Out"
+#~ msgstr "AUX 2 ud"
+
+#~ msgid "AUX Out"
+#~ msgstr "AUX ud"
+
+#~ msgid "Bass"
+#~ msgstr "Bas"
+
+#~ msgid "Treble"
+#~ msgstr "Diskant"
+
+#~ msgid "3D Depth"
+#~ msgstr "3D-dybde"
+
+#~ msgid "3D Center"
+#~ msgstr "3D-center"
+
+# (ændret fra 3D-forbedring)
+#~ msgid "3D Enhance"
+#~ msgstr "3D-fremhævelse"
+
+#~ msgid "Telephone"
+#~ msgstr "Telefon"
+
+#~ msgid "Microphone"
+#~ msgstr "Mikrofon"
+
+#~ msgid "Line Out"
+#~ msgstr "Linje ud"
+
+#~ msgid "Line In"
+#~ msgstr "Linje ind"
+
+#~ msgid "Internal CD"
+#~ msgstr "Intern cd"
+
+#~ msgid "Video In"
+#~ msgstr "Video ind"
+
+#~ msgid "AUX 1 In"
+#~ msgstr "AUX 1 ind"
+
+#~ msgid "AUX 2 In"
+#~ msgstr "AUX 2 ind"
+
+#~ msgid "AUX In"
+#~ msgstr "AUX ind"
+
+#~ msgid "PCM"
+#~ msgstr "PCM"
+
+#~ msgid "Record Gain"
+#~ msgstr "Optagelsesforøgelse"
+
+#~ msgid "Output Gain"
+#~ msgstr "Uddataforøgelse"
+
+#~ msgid "Microphone Boost"
+#~ msgstr "Mikrofonløft"
+
+#~ msgid "Loopback"
+#~ msgstr "Sløjfe"
+
+#~ msgid "Diagnostic"
+#~ msgstr "Diagnosticering"
+
+#~ msgid "Bass Boost"
+#~ msgstr "Basløft"
+
+#~ msgid "Playback Ports"
+#~ msgstr "Afspilningsporte"
+
+#~ msgid "Input"
+#~ msgstr "Inddata"
+
+#~ msgid "Record Source"
+#~ msgstr "Optagelseskilde"
+
+# overvåg eller skærm ?, mangler lidt info her.
+#~ msgid "Monitor Source"
+#~ msgstr "Overvåg kilde"
+
+#~ msgid "Keyboard Beep"
+#~ msgstr "Tastaturbip"
+
+# overvåg eller skærm?
+#~ msgid "Monitor"
+#~ msgstr "Overvåg"
+
+#~ msgid "Simulate Stereo"
+#~ msgstr "Simuler stereo"
+
+#~ msgid "Stereo"
+#~ msgstr "Stereo"
+
+#~ msgid "Surround Sound"
+#~ msgstr "Surroundlyd"
+
+#~ msgid "Microphone Gain"
+#~ msgstr "Mikrofonforøgelse"
+
+#~ msgid "Speaker Source"
+#~ msgstr "Højtalerkilde"
+
+#~ msgid "Microphone Source"
+#~ msgstr "Mikrofonkilde"
+
+# ikke nem den her
+# Tror det er en fysisk enhed, måske indgang
+#~ msgid "Jack"
+#~ msgstr "Indgang"
+
+#~ msgid "Center / LFE"
+#~ msgstr "Center / LFE"
+
+# rød ordbog 4. (lyd) miksning.
+#~ msgid "Stereo Mix"
+#~ msgstr "Stereomiksning"
+
+#~ msgid "Mono Mix"
+#~ msgstr "Monomiksning"
+
+#~ msgid "Input Mix"
+#~ msgstr "Inddatamiksning"
+
+#~ msgid "SPDIF In"
+#~ msgstr "SPDIF ind"
+
+#~ msgid "SPDIF Out"
+#~ msgstr "SPDIF ud"
+
+#~ msgid "Microphone 1"
+#~ msgstr "Mikrofon 1"
+
+#~ msgid "Microphone 2"
+#~ msgstr "Mikrofon 2"
+
+#~ msgid "Digital Out"
+#~ msgstr "Digitalt ud"
+
+#~ msgid "Digital In"
+#~ msgstr "Digitalt ind"
+
+#~ msgid "HDMI"
+#~ msgstr "HDMI"
+
+#~ msgid "Modem"
+#~ msgstr "Modem"
+
+#~ msgid "Handset"
+#~ msgstr "Håndsæt"
+
+#~ msgid "Other"
+#~ msgstr "Andet"
+
+#~ msgid "None"
+#~ msgstr "Ingen"
+
+#~ msgid "On"
+#~ msgstr "Tændt"
+
+#~ msgid "Off"
+#~ msgstr "Slukket"
+
+# slukket, dæmpet, stum
+#~ msgid "Mute"
+#~ msgstr "Dæmpet"
+
+#~ msgid "Fast"
+#~ msgstr "Hurtig"
+
+#~ msgid "Very Low"
+#~ msgstr "Meget lavt"
+
+#~ msgid "Low"
+#~ msgstr "Lav"
+
+#~ msgid "Medium"
+#~ msgstr "Medium"
+
+#~ msgid "High"
+#~ msgstr "Højt"
+
+#~ msgid "Very High"
+#~ msgstr "Meget højt"
+
+#~ msgid "Production"
+#~ msgstr "Produktion"
+
+#~ msgid "Front Panel Microphone"
+#~ msgstr "Frontpanelmikrofon"
+
+#~ msgid "Front Panel Line In"
+#~ msgstr "Frontpanel linje ind"
+
+#~ msgid "Front Panel Headphones"
+#~ msgstr "Frontpanel høretelefoner"
+
+#~ msgid "Front Panel Line Out"
+#~ msgstr "Frontpanel linje ud"
+
+#~ msgid "Green Connector"
+#~ msgstr "Grøn forbindelse"
+
+#~ msgid "Pink Connector"
+#~ msgstr "Lyserød forbindelse"
+
+#~ msgid "Blue Connector"
+#~ msgstr "Blå forbindelse"
+
+#~ msgid "White Connector"
+#~ msgstr "Hvid forbindelse"
+
+#~ msgid "Black Connector"
+#~ msgstr "Sort forbindelse"
+
+#~ msgid "Gray Connector"
+#~ msgstr "Grå forbindelse"
+
+#~ msgid "Orange Connector"
+#~ msgstr "Orange forbindelse"
+
+#~ msgid "Red Connector"
+#~ msgstr "Rød forbindelse"
+
+#~ msgid "Yellow Connector"
+#~ msgstr "Gul forbindelse"
+
+#~ msgid "Green Front Panel Connector"
+#~ msgstr "Grøn frontpanelforbindelse"
+
+#~ msgid "Pink Front Panel Connector"
+#~ msgstr "Lyserød frontpanelforbindelse"
+
+#~ msgid "Blue Front Panel Connector"
+#~ msgstr "Blå frontpanelforbindelse"
+
+#~ msgid "White Front Panel Connector"
+#~ msgstr "Hvid frontpanelforbindelse"
+
+#~ msgid "Black Front Panel Connector"
+#~ msgstr "Sort frontpanelforbindelse"
+
+#~ msgid "Gray Front Panel Connector"
+#~ msgstr "Grå frontpanelforbindelse"
+
+#~ msgid "Orange Front Panel Connector"
+#~ msgstr "Orange frontpanelforbindelse"
+
+#~ msgid "Red Front Panel Connector"
+#~ msgstr "Rød frontpanelforbindelse"
+
+#~ msgid "Yellow Front Panel Connector"
+#~ msgstr "Gul frontpanelforbindelse"
+
+#~ msgid "Spread Output"
+#~ msgstr "Spred uddata"
+
+# har ingen anelse om hvad det her er?
+#~ msgid "Downmix"
+#~ msgstr "Downmix"
+
+#~ msgid "Virtual Mixer Input"
+#~ msgstr "Virtuelle mikserinddata"
+
+#~ msgid "Virtual Mixer Output"
+#~ msgstr "Virtuelle mikseruddata"
+
+#~ msgid "Virtual Mixer Channels"
+#~ msgstr "Virtuelle mikserkanaler"
+
+#~ msgid "%s Function"
+#~ msgstr "%s funktion"
+
 #~ msgid "%s %d"
 #~ msgstr "%s %d"
 
-#~ msgid "Internal clock error."
-#~ msgstr "Intern urfejl."
+#~ msgid ""
+#~ "Could not open audio device for playback. Device is being used by another "
+#~ "application."
+#~ msgstr ""
+#~ "Kunne ikke åbne lydenhed til afspilning. Enheden bruges af et andet "
+#~ "program."
+
+#~ msgid ""
+#~ "Could not open audio device for playback. You don't have permission to "
+#~ "open the device."
+#~ msgstr ""
+#~ "Kunne ikke åbne lydenhed til afspilning. Du har ikke rettigheder til at "
+#~ "åbne enheden."
+
+#~ msgid "Could not open audio device for playback."
+#~ msgstr "Kunne ikke åbne lydenhed til afspilning."
+
+#~ msgid ""
+#~ "Could not open audio device for playback. This version of the Open Sound "
+#~ "System is not supported by this element."
+#~ msgstr ""
+#~ "Kunne ikke åbne lydenhed for afspilning. Denne version af Open Sound "
+#~ "System er ikke understøttet af dette element."
+
+#~ msgid "Playback is not supported by this audio device."
+#~ msgstr "Afspilning er ikke understøttet af denne lydenhed."
+
+#~ msgid "Audio playback error."
+#~ msgstr "Fejl ved lydafspilning."
+
+#~ msgid "Recording is not supported by this audio device."
+#~ msgstr "Optagelse er ikke understøttet af denne lydenhed."
+
+#~ msgid "Error recording from audio device."
+#~ msgstr "Fejl under optagelse fra lydenhed."
 
 #~ msgid "PCM 1"
 #~ msgstr "PCM 1"

@@ -3,7 +3,7 @@
   <description>Create and parse Audio Interchange File Format (AIFF) files</description>
   <filename>../../gst/aiff/.libs/libgstaiff.so</filename>
   <basename>libgstaiff.so</basename>
-  <version>0.10.21.1</version>
+  <version>0.10.22.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins git</package>
@@ -47,7 +47,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw-int, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ], endianness=(int){ 1234, 4321 }, width=(int){ 8, 16, 24, 32 }, depth=(int)[ 1, 32 ], signed=(boolean){ true, false }</details>
+          <details>audio/x-raw-int, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ], endianness=(int){ 1234, 4321 }, width=(int){ 8, 16, 24, 32 }, depth=(int)[ 1, 32 ], signed=(boolean){ true, false }; audio/x-raw-float, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ], endianness=(int){ 1234, 4321 }, width=(int){ 32, 64 }</details>
         </caps>
       </pads>
     </element>

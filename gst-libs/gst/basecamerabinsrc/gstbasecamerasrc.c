@@ -61,7 +61,11 @@ enum
   PROP_0,
   PROP_MODE,
   PROP_ZOOM,
-  PROP_READY_FOR_CAPTURE
+  PROP_MAX_ZOOM,
+  PROP_READY_FOR_CAPTURE,
+  PROP_POST_PREVIEW,
+  PROP_PREVIEW_CAPS,
+  PROP_PREVIEW_FILTER
 };
 
 enum
@@ -72,6 +76,8 @@ enum
   /* emit signals */
   LAST_SIGNAL
 };
+
+#define DEFAULT_POST_PREVIEW TRUE
 
 static guint basecamerasrc_signals[LAST_SIGNAL];
 
@@ -123,7 +129,7 @@ gst_base_camera_src_get_photography (GstBaseCameraSrc * self)
   }
 
   if (elem) {
-    return GST_PHOTOGRAPHY (self);
+    return GST_PHOTOGRAPHY (elem);
   }
 
   return NULL;
@@ -186,16 +192,35 @@ void
 gst_base_camera_src_setup_zoom (GstBaseCameraSrc * self)
 {
   GstBaseCameraSrcClass *bclass = GST_BASE_CAMERA_SRC_GET_CLASS (self);
-  gint zoom;
 
-  zoom = g_atomic_int_get (&self->zoom);
-
-  g_return_if_fail (zoom);
+  g_return_if_fail (self->zoom);
   g_return_if_fail (bclass->set_zoom);
 
-  bclass->set_zoom (self, zoom);
+  bclass->set_zoom (self, self->zoom);
 }
 
+/**
+ * gst_base_camera_src_setup_preview:
+ * @self: camerasrc bin
+ * @preview_caps: preview caps to set
+ *
+ * Apply preview caps to preview pipeline and to video source.
+ */
+void
+gst_base_camera_src_setup_preview (GstBaseCameraSrc * self,
+    GstCaps * preview_caps)
+{
+  GstBaseCameraSrcClass *bclass = GST_BASE_CAMERA_SRC_GET_CLASS (self);
+
+  if (self->preview_pipeline) {
+    GST_DEBUG_OBJECT (self,
+        "Setting preview pipeline caps %" GST_PTR_FORMAT, self->preview_caps);
+    gst_camerabin_preview_set_caps (self->preview_pipeline, preview_caps);
+  }
+
+  if (bclass->set_preview)
+    bclass->set_preview (self, preview_caps);
+}
 
 /**
  * gst_base_camera_src_get_allowed_input_caps:
@@ -228,6 +253,9 @@ gst_base_camera_src_start_capture (GstBaseCameraSrc * src)
   if (src->capturing) {
     GST_WARNING_OBJECT (src, "Capturing already ongoing");
     g_mutex_unlock (src->capturing_mutex);
+
+    /* post a warning to notify camerabin2 that the capture failed */
+    GST_ELEMENT_WARNING (src, RESOURCE, BUSY, (NULL), (NULL));
     return;
   }
 
@@ -276,6 +304,19 @@ gst_base_camera_src_dispose (GObject * object)
 
   g_mutex_free (src->capturing_mutex);
 
+  if (src->preview_pipeline) {
+    gst_camerabin_destroy_preview_pipeline (src->preview_pipeline);
+    src->preview_pipeline = NULL;
+  }
+
+  if (src->preview_caps)
+    gst_caps_replace (&src->preview_caps, NULL);
+
+  if (src->preview_filter) {
+    gst_object_unref (src->preview_filter);
+    src->preview_filter = NULL;
+  }
+
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
@@ -297,12 +338,38 @@ gst_base_camera_src_set_property (GObject * object,
           g_value_get_enum (value));
       break;
     case PROP_ZOOM:{
-      g_atomic_int_set (&self->zoom, g_value_get_int (value));
+      self->zoom = g_value_get_float (value);
+      /* limit to max-zoom */
+      if (self->zoom > self->max_zoom) {
+        GST_DEBUG_OBJECT (self, "Clipping zoom %f to max-zoom %f", self->zoom,
+            self->max_zoom);
+        self->zoom = self->max_zoom;
+      }
       /* does not set it if in NULL, the src is not created yet */
       if (GST_STATE (self) != GST_STATE_NULL)
         gst_base_camera_src_setup_zoom (self);
       break;
     }
+    case PROP_POST_PREVIEW:
+      self->post_preview = g_value_get_boolean (value);
+      break;
+    case PROP_PREVIEW_CAPS:{
+      GstCaps *new_caps = NULL;
+      new_caps = (GstCaps *) gst_value_get_caps (value);
+      if (!gst_caps_is_equal (self->preview_caps, new_caps)) {
+        gst_caps_replace (&self->preview_caps, new_caps);
+        gst_base_camera_src_setup_preview (self, new_caps);
+      } else {
+        GST_DEBUG_OBJECT (self, "New preview caps equal current preview caps");
+      }
+    }
+      break;
+    case PROP_PREVIEW_FILTER:
+      if (self->preview_filter)
+        gst_object_unref (self->preview_filter);
+      self->preview_filter = g_value_dup_object (value);
+      self->preview_filter_changed = TRUE;
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (self, prop_id, pspec);
       break;
@@ -323,7 +390,21 @@ gst_base_camera_src_get_property (GObject * object,
       g_value_set_boolean (value, !self->capturing);
       break;
     case PROP_ZOOM:
-      g_value_set_int (value, g_atomic_int_get (&self->zoom));
+      g_value_set_float (value, self->zoom);
+      break;
+    case PROP_MAX_ZOOM:
+      g_value_set_float (value, self->max_zoom);
+      break;
+    case PROP_POST_PREVIEW:
+      g_value_set_boolean (value, self->post_preview);
+      break;
+    case PROP_PREVIEW_CAPS:
+      if (self->preview_caps)
+        gst_value_set_caps (value, self->preview_caps);
+      break;
+    case PROP_PREVIEW_FILTER:
+      if (self->preview_filter)
+        g_value_set_object (value, self->preview_filter);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (self, prop_id, pspec);
@@ -370,16 +451,47 @@ gst_base_camera_src_change_state (GstElement * element,
     case GST_STATE_CHANGE_NULL_TO_READY:
       if (!construct_pipeline (self))
         return GST_STATE_CHANGE_FAILURE;
+
+      /* recreate the preview pipeline */
+      if (self->preview_pipeline && self->preview_filter_changed) {
+        gst_camerabin_destroy_preview_pipeline (self->preview_pipeline);
+        self->preview_pipeline = NULL;
+      }
+
+      if (self->preview_pipeline == NULL)
+        self->preview_pipeline =
+            gst_camerabin_create_preview_pipeline (GST_ELEMENT_CAST (self),
+            self->preview_filter);
+
+      g_assert (self->preview_pipeline != NULL);
+      self->preview_filter_changed = FALSE;
+      if (self->preview_caps) {
+        GST_DEBUG_OBJECT (self,
+            "Setting preview pipeline caps %" GST_PTR_FORMAT,
+            self->preview_caps);
+        gst_camerabin_preview_set_caps (self->preview_pipeline,
+            self->preview_caps);
+      }
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       if (!setup_pipeline (self))
         return GST_STATE_CHANGE_FAILURE;
+      gst_element_set_state (self->preview_pipeline->pipeline,
+          GST_STATE_PLAYING);
       break;
     default:
       break;
   }
 
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_NULL:
+      gst_element_set_state (self->preview_pipeline->pipeline, GST_STATE_NULL);
+      break;
+    default:
+      break;
+  }
 
   return ret;
 }
@@ -425,6 +537,38 @@ gst_base_camera_src_class_init (GstBaseCameraSrcClass * klass)
           "The capture mode (still image capture or video recording)",
           GST_TYPE_CAMERABIN_MODE, MODE_IMAGE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_ZOOM,
+      g_param_spec_float ("zoom", "Zoom",
+          "Digital zoom factor (e.g. 1.5 means 1.5x)", MIN_ZOOM, G_MAXFLOAT,
+          DEFAULT_ZOOM, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_MAX_ZOOM,
+      g_param_spec_float ("max-zoom", "Maximum zoom level (note: may change "
+          "depending on resolution/implementation)",
+          "Digital zoom factor (e.g. 1.5 means 1.5x)", MIN_ZOOM, G_MAXFLOAT,
+          MAX_ZOOM, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstBaseCameraSrc:post-previews:
+   *
+   * When %TRUE, preview images should be posted to the bus when
+   * captures are made
+   */
+  g_object_class_install_property (gobject_class, PROP_POST_PREVIEW,
+      g_param_spec_boolean ("post-previews", "Post Previews",
+          "If capture preview images should be posted to the bus",
+          DEFAULT_POST_PREVIEW, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_PREVIEW_CAPS,
+      g_param_spec_boxed ("preview-caps", "Preview caps",
+          "The caps of the preview image to be posted",
+          GST_TYPE_CAPS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_PREVIEW_FILTER,
+      g_param_spec_object ("preview-filter", "Preview filter",
+          "A custom preview filter to process preview image data",
+          GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstBaseCameraSrc:ready-for-capture:
@@ -475,8 +619,21 @@ gst_base_camera_src_init (GstBaseCameraSrc * self,
   self->width = DEFAULT_WIDTH;
   self->height = DEFAULT_HEIGHT;
   self->zoom = DEFAULT_ZOOM;
+  self->max_zoom = MAX_ZOOM;
   self->mode = MODE_IMAGE;
 
   self->capturing = FALSE;
   self->capturing_mutex = g_mutex_new ();
+
+  self->post_preview = DEFAULT_POST_PREVIEW;
+}
+
+void
+gst_base_camera_src_post_preview (GstBaseCameraSrc * self, GstBuffer * buf)
+{
+  if (self->post_preview) {
+    gst_camerabin_preview_pipeline_post (self->preview_pipeline, buf);
+  } else {
+    GST_DEBUG_OBJECT (self, "Previews not enabled, not posting");
+  }
 }

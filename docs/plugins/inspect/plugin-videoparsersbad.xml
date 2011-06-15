@@ -3,7 +3,7 @@
   <description>videoparsers</description>
   <filename>../../gst/videoparsers/.libs/libgstvideoparsersbad.so</filename>
   <basename>libgstvideoparsersbad.so</basename>
-  <version>0.10.21.1</version>
+  <version>0.10.22.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins git</package>
@@ -11,22 +11,22 @@
   <elements>
     <element>
       <name>diracparse</name>
-      <longname>FIXME</longname>
-      <class>Generic</class>
-      <description>FIXME</description>
+      <longname>Dirac parser</longname>
+      <class>Codec/Parser/Video</class>
+      <description>Parses Dirac streams</description>
       <author>David Schleef &lt;ds@schleef.org&gt;</author>
       <pads>
         <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>application/unknown</details>
+          <details>video/x-dirac, parsed=(boolean)false</details>
         </caps>
         <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>application/unknown</details>
+          <details>video/x-dirac, parsed=(boolean)true</details>
         </caps>
       </pads>
     </element>
@@ -69,6 +69,27 @@
           <direction>source</direction>
           <presence>always</presence>
           <details>video/x-h264, parsed=(boolean)true</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>mpegvideoparse</name>
+      <longname>MPEG video elementary stream parser</longname>
+      <class>Codec/Parser/Video</class>
+      <description>Parses and frames MPEG-1 and MPEG-2 elementary video streams</description>
+      <author>Wim Taymans &lt;wim.taymans@ccollabora.co.uk&gt;, Jan Schmidt &lt;thaytan@mad.scientist.com&gt;, Mark Nauwelaerts &lt;mark.nauwelaerts@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/mpeg, mpegversion=(int)4, parsed=(boolean)false, systemstream=(boolean)false</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/mpeg, mpegversion=(int)[ 1, 2 ], parsed=(boolean)true, systemstream=(boolean)false</details>
         </caps>
       </pads>
     </element>

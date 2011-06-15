@@ -27,10 +27,28 @@
 
 #define MAX_HEADERS 10
 
+typedef struct
+{
+  guint discard;
+  guint buffers_before_offset_skip;
+  guint offset_skip_amount;
+  const guint8 *data_to_verify;
+  guint data_to_verify_size;
+  GstCaps *caps;
+  gboolean no_metadata;
+
+  GstClockTime ts_counter;
+  gint64 offset_counter;
+  guint buffer_counter;
+} buffer_verify_data_s;
+
 typedef struct {
     guint8     *data;
     guint       size;
 } datablob;
+
+typedef gboolean (*VerifyBuffer) (buffer_verify_data_s * vdata, GstBuffer * buf);
+typedef GstElement* (*ElementSetup) (const gchar * desc);
 
 /* context state variables; to be set by test using this helper */
 /* mandatory */
@@ -44,10 +62,14 @@ extern guint ctx_discard;
 extern datablob ctx_headers[MAX_HEADERS];
 extern gboolean ctx_no_metadata;
 
+extern VerifyBuffer ctx_verify_buffer;
+extern ElementSetup ctx_setup;
+
 /* no refs taken/kept, all up to caller */
 typedef struct
 {
   const gchar          *factory;
+  ElementSetup         factory_setup;
   GstStaticPadTemplate *sink_template;
   GstStaticPadTemplate *src_template;
   /* caps that go into element */

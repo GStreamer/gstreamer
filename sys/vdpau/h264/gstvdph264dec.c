@@ -151,7 +151,7 @@ gst_vdp_h264_dec_set_sink_caps (GstBaseVideoDecoder * base_video_decoder,
   return TRUE;
 }
 
-static void
+static GstFlowReturn
 gst_vdp_h264_dec_output (GstH264DPB * dpb, GstH264Frame * h264_frame,
     gpointer user_data)
 {
@@ -159,7 +159,7 @@ gst_vdp_h264_dec_output (GstH264DPB * dpb, GstH264Frame * h264_frame,
 
   GST_DEBUG ("poc: %d", h264_frame->poc);
 
-  gst_base_video_decoder_finish_frame (base_video_decoder,
+  return gst_base_video_decoder_finish_frame (base_video_decoder,
       GST_VIDEO_FRAME_CAST (h264_frame));
 }
 
@@ -259,7 +259,7 @@ gst_vdp_h264_dec_calculate_par (GstH264VUIParameters * vui, guint16 * par_n,
   return FALSE;
 }
 
-static gboolean
+static GstFlowReturn
 gst_vdp_h264_dec_idr (GstVdpH264Dec * h264_dec, GstH264Frame * h264_frame)
 {
   GstH264Slice *slice;
@@ -496,7 +496,7 @@ gst_vdp_h264_dec_handle_frame (GstBaseVideoDecoder * base_video_decoder,
       h264_dec->got_idr = TRUE;
     else {
       gst_base_video_decoder_skip_frame (base_video_decoder, frame);
-      return ret;
+      return GST_FLOW_OK;
     }
   }
 
@@ -585,9 +585,7 @@ gst_vdp_h264_dec_handle_frame (GstBaseVideoDecoder * base_video_decoder,
       gst_h264_dpb_mark_sliding (h264_dec->dpb);
   }
 
-  gst_h264_dpb_add (h264_dec->dpb, h264_frame);
-
-  return GST_FLOW_OK;
+  return gst_h264_dpb_add (h264_dec->dpb, h264_frame);
 }
 
 static gint

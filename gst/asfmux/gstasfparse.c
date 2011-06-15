@@ -30,11 +30,6 @@
 GST_DEBUG_CATEGORY_STATIC (asfparse_debug);
 #define GST_CAT_DEFAULT asfparse_debug
 
-enum
-{
-  PROP_0,
-};
-
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -47,10 +42,6 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("video/x-ms-asf, parsed = (boolean) false")
     );
 
-static void gst_asf_parse_set_property (GObject * object,
-    guint prop_id, const GValue * value, GParamSpec * pspec);
-static void gst_asf_parse_get_property (GObject * object,
-    guint prop_id, GValue * value, GParamSpec * pspec);
 static GstStateChangeReturn gst_asf_parse_change_state (GstElement * element,
     GstStateChange transition);
 static void gst_asf_parse_loop (GstPad * pad);
@@ -513,8 +504,6 @@ gst_asf_parse_class_init (GstAsfParseClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
-  gobject_class->get_property = gst_asf_parse_get_property;
-  gobject_class->set_property = gst_asf_parse_set_property;
   gobject_class->finalize = gst_asf_parse_finalize;
 
   gstelement_class->change_state =
@@ -541,34 +530,6 @@ gst_asf_parse_init (GstAsfParse * asfparse, GstAsfParseClass * klass)
   asfparse->asfinfo = gst_asf_file_info_new ();
   asfparse->packetinfo = g_new0 (GstAsfPacketInfo, 1);
   gst_asf_parse_reset (asfparse);
-}
-
-static void
-gst_asf_parse_get_property (GObject * object,
-    guint prop_id, GValue * value, GParamSpec * pspec)
-{
-  GstAsfParse *asfparse;
-
-  asfparse = GST_ASF_PARSE (object);
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-static void
-gst_asf_parse_set_property (GObject * object,
-    guint prop_id, const GValue * value, GParamSpec * pspec)
-{
-  GstAsfParse *asfparse;
-
-  asfparse = GST_ASF_PARSE (object);
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
 }
 
 static GstStateChangeReturn
