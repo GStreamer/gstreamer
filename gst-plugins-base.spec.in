@@ -55,7 +55,7 @@ plug-ins.
 export DOCS_ARE_INCOMPLETE_PLEASE_FIXME=0
 %build
 %configure \
-  --enable-gtk-doc --enable-introspection=no
+  --enable-gtk-doc --enable-introspection=yes
 
 make %{?_smp_mflags}
                                                                                 
@@ -114,7 +114,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstvideorate.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvideoscale.so
 %{_libdir}/gstreamer-%{majorminor}/libgsttcp.so
-%{_libdir}/gstreamer-%{majorminor}/libgstvideo4linux.so
 %{_libdir}/gstreamer-%{majorminor}/libgstaudioresample.so
 %{_libdir}/gstreamer-%{majorminor}/libgstaudiotestsrc.so
 %{_libdir}/gstreamer-%{majorminor}/libgstgdp.so
