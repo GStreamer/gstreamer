@@ -953,7 +953,7 @@ gst_flac_parse_process_seektable (GstFlacParse * flacparse, gint64 boffset)
       "parsing seektable; base offset %" G_GINT64_FORMAT, boffset);
 
   if (boffset <= 0)
-    goto done;
+    goto exit;
 
   data = gst_buffer_map (flacparse->seektable, &bufsize, NULL, GST_MAP_READ);
   gst_byte_reader_init (&br, data, bufsize);
@@ -984,6 +984,7 @@ gst_flac_parse_process_seektable (GstFlacParse * flacparse, gint64 boffset)
 
 done:
   gst_buffer_unmap (flacparse->seektable, data, bufsize);
+exit:
   gst_buffer_unref (flacparse->seektable);
   flacparse->seektable = NULL;
 }
