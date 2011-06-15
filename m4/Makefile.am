@@ -9,7 +9,6 @@ EXTRA_DIST = \
 	codeset.m4 \
 	esd.m4 \
 	freetype2.m4 \
-	gconf-2.m4 \
 	gettext.m4 \
 	glibc21.m4 \
 	glib.m4 \

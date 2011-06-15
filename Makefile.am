@@ -1,11 +1,5 @@
 DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc
 
-if USE_GCONFTOOL
-GCONF_DIR = gconf
-else
-GCONF_DIR =
-endif
-
 ALWAYS_SUBDIRS =		\
 	gst sys ext 		\
 	tests			\
@@ -15,14 +9,9 @@ ALWAYS_SUBDIRS =		\
 	m4			\
 	pkgconfig
 
-SUBDIRS = 			\
-	$(ALWAYS_SUBDIRS)	\
-	$(GCONF_DIR)
+SUBDIRS = $(ALWAYS_SUBDIRS)
 
-DIST_SUBDIRS = 			\
-	$(ALWAYS_SUBDIRS)	\
-	gconf
-
+DIST_SUBDIRS = $(ALWAYS_SUBDIRS)
 
 # include before EXTRA_DIST for win32 assignment
 include $(top_srcdir)/common/win32.mak

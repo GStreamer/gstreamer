@@ -81,10 +81,6 @@
     <xi:include href="xml/element-flvmux.xml" />
     <xi:include href="xml/element-flxdec.xml" />
     <xi:include href="xml/element-gamma.xml" />
-    <xi:include href="xml/element-gconfaudiosrc.xml" />
-    <xi:include href="xml/element-gconfaudiosink.xml" />
-    <xi:include href="xml/element-gconfvideosrc.xml" />
-    <xi:include href="xml/element-gconfvideosink.xml" />
     <xi:include href="xml/element-gdkpixbufsink.xml" />
     <xi:include href="xml/element-goom.xml" />
     <xi:include href="xml/element-goom2k1.xml" />
@@ -213,7 +209,6 @@
     <xi:include href="xml/plugin-flac.xml" />
     <xi:include href="xml/plugin-flv.xml" />
     <xi:include href="xml/plugin-flxdec.xml" />
-    <xi:include href="xml/plugin-gconfelements.xml" />
     <xi:include href="xml/plugin-gdkpixbuf.xml" />
     <xi:include href="xml/plugin-goom.xml" />
     <xi:include href="xml/plugin-goom2k1.xml" />

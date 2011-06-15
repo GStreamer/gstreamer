@@ -26,7 +26,6 @@ BuildRequires:  gcc-c++
 @USE_ESD_TRUE@Provides:		gstreamer-audiosrc
 @USE_ESD_TRUE@Provides:		gstreamer-audiosink
 @USE_FLAC_TRUE@BuildRequires: flac-devel >= 1.0.3
-@USE_GCONF_TRUE@BuildRequires: 	GConf2-devel
 @USE_JPEG_TRUE@BuildRequires: libjpeg-devel
 @USE_LIBCACA_TRUE@BuildRequires: libcaca-devel
 @USE_LIBDV_TRUE@BuildRequires: libdv-devel
@@ -63,9 +62,7 @@ make %{?_smp_mflags}
 %install
 rm -rf $RPM_BUILD_ROOT
 
-export GCONF_DISABLE_MAKEFILE_SCHEMA_INSTALL=1
 %makeinstall
-unset GCONF_DISABLE_MAKEFILE_SCHEMA_INSTALL
                                                                                 
 # Clean out files that should not be part of the rpm.
 rm -f $RPM_BUILD_ROOT%{_libdir}/gstreamer-%{majorminor}/*.la
@@ -79,8 +76,6 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 rm -rf $RPM_BUILD_ROOT
 
 %post
-@USE_GCONF_TRUE@export GCONF_CONFIG_SOURCE=`gconftool-2 --get-default-source`
-@USE_GCONF_TRUE@gconftool-2 --makefile-install-rule %{_sysconfdir}/gconf/schemas/gstreamer-%{majorminor}.schemas > /dev/null
 
 %files -f gst-plugins-good-%{majorminor}.lang
 %defattr(-, root, root)
@@ -153,7 +148,6 @@ rm -rf $RPM_BUILD_ROOT
 @USE_LIBPNG_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstpng.so
 @USE_OSS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstossaudio.so
 @USE_SPEEX_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstspeex.so
-@USE_GCONF_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstgconfelements.so
 @USE_HAL_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgsthalelements.so
 @USE_SHOUT2_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstshout2.so
 @USE_AALIB_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstaasink.so
@@ -162,9 +156,6 @@ rm -rf $RPM_BUILD_ROOT
 @USE_WAVPACK_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstwavpack.so
 @USE_SOUP_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstsouphttpsrc.so
 @USE_PULSE_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstpulse.so
-
-# schema files
-@USE_GCONF_TRUE@%{_sysconfdir}/gconf/schemas/gstreamer-%{majorminor}.schemas
 
 %changelog
 * Tue Jun 12 2007 Jan Schmidt <jan at fluendo dot com>

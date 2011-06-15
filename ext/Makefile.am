@@ -28,12 +28,6 @@ else
 FLAC_DIR =
 endif
 
-if USE_GCONF
-GCONF_DIR = gconf
-else
-GCONF_DIR =
-endif
-
 if USE_GDK_PIXBUF
 GDK_PIXBUF_DIR = gdk_pixbuf
 else
@@ -138,7 +132,6 @@ SUBDIRS = \
 	$(DV1394_DIR) \
 	$(ESD_DIR) \
 	$(FLAC_DIR) \
-	$(GCONF_DIR) \
 	$(GDK_PIXBUF_DIR) \
 	$(HAL_DIR) \
 	$(JACK_DIR) \
@@ -162,7 +155,6 @@ DIST_SUBDIRS = \
 	dv \
 	esd \
 	flac \
-	gconf \
 	gdk_pixbuf \
 	hal \
 	jack \

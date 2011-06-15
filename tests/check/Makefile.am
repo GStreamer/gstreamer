@@ -12,7 +12,7 @@ TESTS_ENVIRONMENT = \
 	GST_PLUGIN_PATH=$(top_builddir)/gst:$(top_builddir)/ext:$(top_builddir)/sys:$(GSTPB_PLUGINS_DIR):$(GST_PLUGINS_DIR)			\
 	GST_PLUGIN_LOADING_WHITELIST="gstreamer@$(GST_PLUGINS_DIR):gst-plugins-base@$(GSTPB_PLUGINS_DIR):gst-plugins-good@$(top_builddir)"	\
 	GST_STATE_IGNORE_ELEMENTS="aasink autoaudiosrc autoaudiosink autovideosrc autovideosink \
-		cacasink cairotextoverlay gconfaudiosrc gconfvideosrc gconfaudiosink gconfvideosink \
+		cacasink cairotextoverlay \
 		halaudiosrc halaudiosink jackaudiosrc jackaudiosink \
 		osssrc osssink osxaudiosink osxaudiosrc osxvideosrc osxvideosink \
 		pulsesink pulsesrc pulsemixer v4l2src"

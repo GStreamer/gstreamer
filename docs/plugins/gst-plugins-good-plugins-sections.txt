@@ -928,62 +928,6 @@ gst_gamma_get_type
 </SECTION>
 
 <SECTION>
-<FILE>element-gconfaudiosrc</FILE>
-<TITLE>gconfaudiosrc</TITLE>
-GstGConfAudioSrc
-<SUBSECTION Standard>
-GstGConfAudioSrcClass
-GST_GCONF_AUDIO_SRC
-GST_IS_GCONF_AUDIO_SRC
-GST_TYPE_GCONF_AUDIO_SRC
-GST_GCONF_AUDIO_SRC_CLASS
-GST_IS_GCONF_AUDIO_SRC_CLASS
-gst_gconf_audio_src_get_type
-</SECTION>
-
-<SECTION>
-<FILE>element-gconfaudiosink</FILE>
-<TITLE>gconfaudiosink</TITLE>
-GstGConfAudioSink
-<SUBSECTION Standard>
-GstGConfAudioSinkClass
-GST_GCONF_AUDIO_SINK
-GST_IS_GCONF_AUDIO_SINK
-GST_TYPE_GCONF_AUDIO_SINK
-GST_GCONF_AUDIO_SINK_CLASS
-GST_IS_GCONF_AUDIO_SINK_CLASS
-gst_gconf_audio_sink_get_type
-</SECTION>
-
-<SECTION>
-<FILE>element-gconfvideosrc</FILE>
-<TITLE>gconfvideosrc</TITLE>
-GstGConfVideoSrc
-<SUBSECTION Standard>
-GstGConfVideoSrcClass
-GST_GCONF_VIDEO_SRC
-GST_IS_GCONF_VIDEO_SRC
-GST_TYPE_GCONF_VIDEO_SRC
-GST_GCONF_VIDEO_SRC_CLASS
-GST_IS_GCONF_VIDEO_SRC_CLASS
-gst_gconf_video_src_get_type
-</SECTION>
-
-<SECTION>
-<FILE>element-gconfvideosink</FILE>
-<TITLE>gconfvideosink</TITLE>
-GstGConfVideoSink
-<SUBSECTION Standard>
-GstGConfVideoSinkClass
-GST_GCONF_VIDEO_SINK
-GST_IS_GCONF_VIDEO_SINK
-GST_TYPE_GCONF_VIDEO_SINK
-GST_GCONF_VIDEO_SINK_CLASS
-GST_IS_GCONF_VIDEO_SINK_CLASS
-gst_gconf_video_sink_get_type
-</SECTION>
-
-<SECTION>
 <FILE>element-gdkpixbufsink</FILE>
 <TITLE>gdkpixbufsink</TITLE>
 GstGdkPixbufSink

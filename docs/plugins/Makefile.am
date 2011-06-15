@@ -88,10 +88,6 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/flac/gstflacdec.h \
 	$(top_srcdir)/ext/flac/gstflacenc.h \
 	$(top_srcdir)/ext/flac/gstflactag.h \
-	$(top_srcdir)/ext/gconf/gstgconfaudiosrc.h \
-	$(top_srcdir)/ext/gconf/gstgconfaudiosink.h \
-	$(top_srcdir)/ext/gconf/gstgconfvideosrc.h \
-	$(top_srcdir)/ext/gconf/gstgconfvideosink.h \
 	$(top_srcdir)/ext/gdk_pixbuf/gstgdkpixbufsink.h \
 	$(top_srcdir)/ext/hal/gsthalaudiosink.h \
 	$(top_srcdir)/ext/hal/gsthalaudiosrc.h \

@@ -130,10 +130,6 @@ AG_GST_CHECK_DOWHILE_MACROS
 AC_PATH_PROG(VALGRIND_PATH, valgrind, no)
 AM_CONDITIONAL(HAVE_VALGRIND, test ! "x$VALGRIND_PATH" = "xno")
 
-dnl check for gconftool-2
-dnl this macro defines an am conditional, so it needs to be run always
-AM_GCONF_SOURCE_2
-
 dnl check for documentation tools
 GTK_DOC_CHECK([1.3])
 AS_PATH_PYTHON([2.1])
@@ -265,19 +261,6 @@ if test "x$BUILD_EXAMPLES" = "xyes"; then
 fi
 AM_CONDITIONAL(HAVE_GTK, test "x$HAVE_GTK" = "xyes")
 AM_CONDITIONAL(HAVE_GTK_X11, test "x$HAVE_GTK_X11" = "xyes")
-
-dnl should we install schemas ?
-translit(dnm, m, l) AM_CONDITIONAL(USE_GCONFTOOL, true)
-AG_GST_CHECK_FEATURE(GCONFTOOL, [GConf schemas], , [
-  AC_PATH_PROG(GCONFTOOL, gconftool-2, no)
-  if test x$GCONFTOOL = xno; then
-    AC_MSG_WARN(Not installing GConf schemas)
-    HAVE_GCONFTOOL="no"
-  else
-    HAVE_GCONFTOOL="yes"
-  fi
-  AC_SUBST(HAVE_GCONFTOOL)
-])
 
 dnl *** set variables based on configure arguments ***
 
@@ -753,12 +736,6 @@ AG_GST_CHECK_FEATURE(FLAC, [FLAC lossless audio], flac, [
   AG_GST_PKG_CHECK_MODULES(FLAC, flac >= 1.1.4)
 ])
 
-dnl *** GConf ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_GCONF, true)
-AG_GST_CHECK_FEATURE(GCONF, [GConf libraries], gconfelements, [
-  AG_GST_PKG_CHECK_MODULES(GCONF, gconf-2.0)
-])
-
 dnl *** GDK pixbuf ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_GDK_PIXBUF, true)
 AG_GST_CHECK_FEATURE(GDK_PIXBUF, [GDK pixbuf], gdkpixbuf, [
@@ -1046,8 +1023,6 @@ AM_CONDITIONAL(USE_DIRECTSOUND, false)
 AM_CONDITIONAL(USE_DV1394, false)
 AM_CONDITIONAL(USE_ESD, false)
 AM_CONDITIONAL(USE_FLAC, false)
-AM_CONDITIONAL(USE_GCONF, false)
-AM_CONDITIONAL(USE_GCONFTOOL, false)
 AM_CONDITIONAL(USE_GDK_PIXBUF, false)
 AM_CONDITIONAL(USE_GST_V4L2, false)
 AM_CONDITIONAL(USE_HAL, false)
@@ -1184,7 +1159,6 @@ ext/cairo/Makefile
 ext/dv/Makefile
 ext/esd/Makefile
 ext/flac/Makefile
-ext/gconf/Makefile
 ext/gdk_pixbuf/Makefile
 ext/hal/Makefile
 ext/jack/Makefile
@@ -1224,8 +1198,6 @@ tests/examples/spectrum/Makefile
 tests/examples/v4l2/Makefile
 tests/files/Makefile
 tests/icles/Makefile
-gconf/Makefile
-gconf/gstreamer.schemas
 common/Makefile
 common/m4/Makefile
 m4/Makefile
