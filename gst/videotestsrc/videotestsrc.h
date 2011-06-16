@@ -75,10 +75,10 @@ struct paintinfo_struct
   struct vts_color_struct background_color;
 };
 
-struct fourcc_list_struct
+struct format_list_struct
 {
   int type;
-  const char *fourcc;
+  const char *format;
   const char *name;
   int bitspp;
   void (*paint_setup) (paintinfo * p, unsigned char *dest);
@@ -90,14 +90,14 @@ struct fourcc_list_struct
   unsigned int alpha_mask;
 };
 
-struct fourcc_list_struct *
-        paintrect_find_fourcc           (int find_fourcc);
-struct fourcc_list_struct *
+struct format_list_struct *
+        paintrect_find_format           (const gchar *find_format);
+struct format_list_struct *
         paintrect_find_name             (const char *name);
-struct fourcc_list_struct *
+struct format_list_struct *
         paintinfo_find_by_structure     (const GstStructure *structure);
 GstStructure *
-        paint_get_structure             (struct fourcc_list_struct *format);
+        paint_get_structure             (struct format_list_struct *format);
 int     gst_video_test_src_get_size     (GstVideoTestSrc * v, int w, int h);
 void    gst_video_test_src_smpte        (GstVideoTestSrc * v,
                                          unsigned char *dest, int w, int h);
@@ -142,7 +142,7 @@ void    gst_video_test_src_smpte100     (GstVideoTestSrc * v,
 void    gst_video_test_src_bar          (GstVideoTestSrc * v,
                                          unsigned char *dest, int w, int h);
 
-extern struct fourcc_list_struct fourcc_list[];
-extern int n_fourccs;
+extern struct format_list_struct format_list[];
+extern int n_formats;
 
 #endif

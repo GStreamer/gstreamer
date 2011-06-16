@@ -23,12 +23,12 @@
 /**
  * SECTION:element-videoconvert
  *
- * Convert video frames between a great variety of videoconvert formats.
+ * Convert video frames between a great variety of video formats.
  *
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v videotestsrc ! video/x-raw-yuv,format=\(fourcc\)YUY2 ! videoconvert ! ximagesink
+ * gst-launch -v videotestsrc ! video/x-raw,format=\(fourcc\)YUY2 ! videoconvert ! ximagesink
  * ]|
  * </refsect2>
  */
@@ -52,30 +52,7 @@ enum
   PROP_DITHER
 };
 
-#define CSP_VIDEO_CAPS						\
-  "video/x-raw-yuv, width = "GST_VIDEO_SIZE_RANGE" , "			\
-  "height="GST_VIDEO_SIZE_RANGE",framerate="GST_VIDEO_FPS_RANGE","	\
-  "format= (fourcc) { I420 , NV12 , NV21 , YV12 , YUY2 , Y42B , Y444 , YUV9 , YVU9 , Y41B , Y800 , Y8 , GREY , Y16 , UYVY , YVYU , IYU1 , v308 , AYUV, v210, v216, A420, AY64 } ;" \
-  GST_VIDEO_CAPS_RGB";"							\
-  GST_VIDEO_CAPS_BGR";"							\
-  GST_VIDEO_CAPS_RGBx";"						\
-  GST_VIDEO_CAPS_xRGB";"						\
-  GST_VIDEO_CAPS_BGRx";"						\
-  GST_VIDEO_CAPS_xBGR";"						\
-  GST_VIDEO_CAPS_RGBA";"						\
-  GST_VIDEO_CAPS_ARGB";"						\
-  GST_VIDEO_CAPS_BGRA";"						\
-  GST_VIDEO_CAPS_ABGR";"						\
-  GST_VIDEO_CAPS_RGB_16";"						\
-  GST_VIDEO_CAPS_BGR_16";"						\
-  GST_VIDEO_CAPS_RGB_15";"						\
-  GST_VIDEO_CAPS_BGR_15";"						\
-  GST_VIDEO_CAPS_RGB8_PALETTED "; "                                     \
-  GST_VIDEO_CAPS_GRAY8";"						\
-  GST_VIDEO_CAPS_GRAY16("BIG_ENDIAN")";"				\
-  GST_VIDEO_CAPS_GRAY16("LITTLE_ENDIAN")";"                             \
-  GST_VIDEO_CAPS_r210";"                                                \
-  GST_VIDEO_CAPS_ARGB_64
+#define CSP_VIDEO_CAPS GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL)
 
 static GstStaticPadTemplate gst_video_convert_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
@@ -105,11 +82,6 @@ static gboolean gst_video_convert_get_unit_size (GstBaseTransform * btrans,
 static GstFlowReturn gst_video_convert_transform (GstBaseTransform * btrans,
     GstBuffer * inbuf, GstBuffer * outbuf);
 
-static GQuark _QRAWRGB;         /* "video/x-raw-rgb" */
-static GQuark _QRAWYUV;         /* "video/x-raw-yuv" */
-static GQuark _QALPHAMASK;      /* "alpha_mask" */
-
-
 static GType
 dither_method_get_type (void)
 {
@@ -132,7 +104,7 @@ dither_method_get_type (void)
 static GstCaps *
 gst_video_convert_caps_remove_format_info (GstCaps * caps)
 {
-  GstStructure *yuvst, *rgbst, *grayst;
+  GstStructure *st;
   gint i, n;
   GstCaps *res;
 
@@ -140,29 +112,18 @@ gst_video_convert_caps_remove_format_info (GstCaps * caps)
 
   n = gst_caps_get_size (caps);
   for (i = 0; i < n; i++) {
-    yuvst = gst_caps_get_structure (caps, i);
+    st = gst_caps_get_structure (caps, i);
 
     /* If this is already expressed by the existing caps
      * skip this structure */
-    if (i > 0 && gst_caps_is_subset_structure (res, yuvst))
+    if (i > 0 && gst_caps_is_subset_structure (res, st))
       continue;
 
-    yuvst = gst_structure_copy (yuvst);
-    gst_structure_set_name (yuvst, "video/x-raw-yuv");
-    gst_structure_remove_fields (yuvst, "format", "endianness", "depth",
-        "bpp", "red_mask", "green_mask", "blue_mask", "alpha_mask",
-        "palette_data", NULL);
+    st = gst_structure_copy (st);
+    gst_structure_remove_fields (st, "format", "palette_data",
+        "color-matrix", "chroma-site", NULL);
 
-    rgbst = gst_structure_copy (yuvst);
-    gst_structure_set_name (rgbst, "video/x-raw-rgb");
-    gst_structure_remove_fields (rgbst, "color-matrix", "chroma-site", NULL);
-
-    grayst = gst_structure_copy (rgbst);
-    gst_structure_set_name (grayst, "video/x-raw-gray");
-
-    gst_caps_append_structure (res, yuvst);
-    gst_caps_append_structure (res, rgbst);
-    gst_caps_append_structure (res, grayst);
+    gst_caps_append_structure (res, st);
   }
 
   return res;
@@ -412,10 +373,6 @@ gst_video_convert_class_init (GstVideoConvertClass * klass)
       " Colorspace converter", "Filter/Converter/Video",
       "Converts video from one colorspace to another",
       "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
-
-  _QRAWRGB = g_quark_from_string ("video/x-raw-rgb");
-  _QRAWYUV = g_quark_from_string ("video/x-raw-yuv");
-  _QALPHAMASK = g_quark_from_string ("alpha_mask");
 
   gstbasetransform_class->transform_caps =
       GST_DEBUG_FUNCPTR (gst_video_convert_transform_caps);

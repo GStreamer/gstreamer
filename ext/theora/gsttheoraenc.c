@@ -230,8 +230,8 @@ static GstStaticPadTemplate theora_enc_sink_factory =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw-yuv, "
-        "format = (fourcc) { I420, Y42B, Y444 }, "
+    GST_STATIC_CAPS ("video/x-raw, "
+        "format = (string) { I420, Y42B, Y444 }, "
         "framerate = (fraction) [1/MAX, MAX], "
         "width = (int) [ 1, MAX ], " "height = (int) [ 1, MAX ]")
     );
@@ -401,8 +401,8 @@ gst_theora_enc_class_init (GstTheoraEncClass * klass)
       "encode raw YUV video to a theora stream",
       "Wim Taymans <wim@fluendo.com>");
 
-  caps_string = g_strdup_printf ("video/x-raw-yuv, "
-      "format = (fourcc) { %s }, "
+  caps_string = g_strdup_printf ("video/x-raw, "
+      "format = (string) { %s }, "
       "framerate = (fraction) [1/MAX, MAX], "
       "width = (int) [ 1, MAX ], " "height = (int) [ 1, MAX ]",
       theora_enc_get_supported_formats ());
@@ -620,7 +620,7 @@ theora_enc_sink_getcaps (GstPad * pad, GstCaps * filter)
     for (i = 0; i < n; i++) {
       s = gst_caps_get_structure (peer_caps, i);
 
-      gst_structure_set_name (s, "video/x-raw-yuv");
+      gst_structure_set_name (s, "video/x-raw");
       gst_structure_remove_field (s, "streamheader");
     }
 

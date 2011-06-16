@@ -20,7 +20,7 @@
 
 /**
  * SECTION:element-videoscale
- * @see_also: videorate, ffmpegcolorspace
+ * @see_also: videorate, videoconvert
  *
  * This element resizes video frames. By default the element will try to
  * negotiate to the same size on the source and sinkpad so that no scaling
@@ -34,13 +34,13 @@
  * <refsect2>
  * <title>Example pipelines</title>
  * |[
- * gst-launch -v filesrc location=videotestsrc.ogg ! oggdemux ! theoradec ! ffmpegcolorspace ! videoscale ! ximagesink
+ * gst-launch -v filesrc location=videotestsrc.ogg ! oggdemux ! theoradec ! videoconvert ! videoscale ! ximagesink
  * ]| Decode an Ogg/Theora and display the video using ximagesink. Since
  * ximagesink cannot perform scaling, the video scaling will be performed by
  * videoscale when you resize the video window.
  * To create the test Ogg/Theora file refer to the documentation of theoraenc.
  * |[
- * gst-launch -v filesrc location=videotestsrc.ogg ! oggdemux ! theoradec ! videoscale ! video/x-raw-yuv, width=50 ! xvimagesink
+ * gst-launch -v filesrc location=videotestsrc.ogg ! oggdemux ! theoradec ! videoscale ! video/x-raw, width=50 ! xvimagesink
  * ]| Decode an Ogg/Theora and display the video using xvimagesink with a width
  * of 50.
  * </refsect2>
@@ -101,37 +101,14 @@ enum
 #undef GST_VIDEO_SIZE_RANGE
 #define GST_VIDEO_SIZE_RANGE "(int) [ 1, 32767]"
 
+#define GST_VIDEO_FORMATS "{ \"I420\", \"YV12\", \"YUY2\", \"UYVY\", \"AYUV\", \"RGBx\", " \
+    "\"BGRx\", \"xRGB\", \"xBGR\", \"RGBA\", \"BGRA\", \"ARGB\", \"ABGR\", \"RGB\", " \
+    "\"BGR\", \"Y41B\", \"Y42B\", \"YVYU\", \"Y444\", \"GRAY8\", \"GRAY16_BE\", \"GRAY16_LE\", " \
+    "\"v308\", \"Y800\", \"Y16\", \"RGB16\", \"RGB15\", \"ARGB64\", \"AYUV64\" } "
+
+
 static GstStaticCaps gst_video_scale_format_caps[] = {
-  GST_STATIC_CAPS (GST_VIDEO_CAPS_RGBA),
-  GST_STATIC_CAPS (GST_VIDEO_CAPS_ARGB),
-  GST_STATIC_CAPS (GST_VIDEO_CAPS_BGRA),
-  GST_STATIC_CAPS (GST_VIDEO_CAPS_ABGR),
-  GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("AYUV")),
-  GST_STATIC_CAPS (GST_VIDEO_CAPS_RGBx),
-  GST_STATIC_CAPS (GST_VIDEO_CAPS_xRGB),
-  GST_STATIC_CAPS (GST_VIDEO_CAPS_BGRx),
-  GST_STATIC_CAPS (GST_VIDEO_CAPS_xBGR),
-  GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("Y444")),
-  GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("v308")),
-  GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB),
-  GST_STATIC_CAPS (GST_VIDEO_CAPS_BGR),
-  GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("Y42B")),
-  GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("YUY2")),
-  GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("YVYU")),
-  GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("UYVY")),
-  GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("I420")),
-  GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("YV12")),
-  GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("Y41B")),
-  GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB_16),
-  GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB_15),
-  GST_STATIC_CAPS (GST_VIDEO_CAPS_GRAY16 ("BYTE_ORDER")),
-  GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("Y16 ")),
-  GST_STATIC_CAPS (GST_VIDEO_CAPS_GRAY8),
-  GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("Y800")),
-  GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("Y8  ")),
-  GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("GREY")),
-  GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("AY64")),
-  GST_STATIC_CAPS (GST_VIDEO_CAPS_ARGB_64)
+  GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS))
 };
 
 #define GST_TYPE_VIDEO_SCALE_METHOD (gst_video_scale_method_get_type())

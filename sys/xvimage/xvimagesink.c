@@ -94,7 +94,7 @@
  * position. This also handles borders correctly, limiting coordinates to the
  * image area
  * |[
- * gst-launch -v videotestsrc ! video/x-raw-yuv, pixel-aspect-ratio=(fraction)4/3 ! xvimagesink
+ * gst-launch -v videotestsrc ! video/x-raw, pixel-aspect-ratio=(fraction)4/3 ! xvimagesink
  * ]| This is faking a 4/3 pixel aspect ratio caps on video frames produced by
  * videotestsrc, in most cases the pixel aspect ratio of the display will be
  * 1/1. This means that XvImageSink will have to do the scaling to convert
@@ -152,14 +152,10 @@ static void gst_xvimagesink_expose (GstXOverlay * overlay);
 /* Default template - initiated with class struct to allow gst-register to work
    without X running */
 static GstStaticPadTemplate gst_xvimagesink_sink_template_factory =
-    GST_STATIC_PAD_TEMPLATE ("sink",
+GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw-rgb, "
-        "framerate = (fraction) [ 0, MAX ], "
-        "width = (int) [ 1, MAX ], "
-        "height = (int) [ 1, MAX ]; "
-        "video/x-raw-yuv, "
+    GST_STATIC_CAPS ("video/x-raw, "
         "framerate = (fraction) [ 0, MAX ], "
         "width = (int) [ 1, MAX ], " "height = (int) [ 1, MAX ]")
     );
@@ -1053,31 +1049,17 @@ gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
       case XvRGB:
       {
         XvImageFormatValues *fmt = &(formats[i]);
-        gint endianness = G_BIG_ENDIAN;
+        gint endianness;
+        GstVideoFormat vformat;
 
-        if (fmt->byte_order == LSBFirst) {
-          /* our caps system handles 24/32bpp RGB as big-endian. */
-          if (fmt->bits_per_pixel == 24 || fmt->bits_per_pixel == 32) {
-            fmt->red_mask = GUINT32_TO_BE (fmt->red_mask);
-            fmt->green_mask = GUINT32_TO_BE (fmt->green_mask);
-            fmt->blue_mask = GUINT32_TO_BE (fmt->blue_mask);
+        endianness =
+            (fmt->byte_order == LSBFirst ? G_LITTLE_ENDIAN : G_BIG_ENDIAN);
 
-            if (fmt->bits_per_pixel == 24) {
-              fmt->red_mask >>= 8;
-              fmt->green_mask >>= 8;
-              fmt->blue_mask >>= 8;
-            }
-          } else
-            endianness = G_LITTLE_ENDIAN;
-        }
+        vformat = gst_video_format_from_masks (fmt->depth, fmt->bits_per_pixel,
+            endianness, fmt->red_mask, fmt->green_mask, fmt->blue_mask, 0);
 
-        format_caps = gst_caps_new_simple ("video/x-raw-rgb",
-            "endianness", G_TYPE_INT, endianness,
-            "depth", G_TYPE_INT, fmt->depth,
-            "bpp", G_TYPE_INT, fmt->bits_per_pixel,
-            "red_mask", G_TYPE_INT, fmt->red_mask,
-            "green_mask", G_TYPE_INT, fmt->green_mask,
-            "blue_mask", G_TYPE_INT, fmt->blue_mask,
+        format_caps = gst_caps_new_simple ("video/x-raw",
+            "format", G_TYPE_STRING, gst_video_format_to_string (vformat),
             "width", GST_TYPE_INT_RANGE, 1, max_w,
             "height", GST_TYPE_INT_RANGE, 1, max_h,
             "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
@@ -1086,12 +1068,18 @@ gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
         break;
       }
       case XvYUV:
-        format_caps = gst_caps_new_simple ("video/x-raw-yuv",
-            "format", GST_TYPE_FOURCC, formats[i].id,
+      {
+        GstVideoFormat vformat;
+
+        vformat = gst_video_format_from_fourcc (formats[i].id);
+
+        format_caps = gst_caps_new_simple ("video/x-raw",
+            "format", G_TYPE_STRING, gst_video_format_to_string (vformat),
             "width", GST_TYPE_INT_RANGE, 1, max_w,
             "height", GST_TYPE_INT_RANGE, 1, max_h,
             "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
         break;
+      }
       default:
         g_assert_not_reached ();
         break;

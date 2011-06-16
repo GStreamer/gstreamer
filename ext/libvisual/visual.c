@@ -101,13 +101,13 @@ GType gst_visual_get_type (void);
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_xRGB_HOST_ENDIAN "; "
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (" { "
 #if G_BYTE_ORDER == G_BIG_ENDIAN
-        GST_VIDEO_CAPS_RGB "; "
+            "\"xRGB\", " "\"RGB\", "
 #else
-        GST_VIDEO_CAPS_BGR "; "
+            "\"BGRx\", " "\"BGR\", "
 #endif
-        GST_VIDEO_CAPS_RGB_16)
+            "\"RGB16\" } "))
     );
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -295,17 +295,21 @@ gst_visual_getcaps (GstPad * pad, GstCaps * filter)
   GST_DEBUG_OBJECT (visual, "libvisual plugin supports depths %u (0x%04x)",
       depths, depths);
   /* if (depths & VISUAL_VIDEO_DEPTH_32BIT) Always supports 32bit output */
-  gst_caps_append (ret, gst_caps_from_string (GST_VIDEO_CAPS_xRGB_HOST_ENDIAN));
+#if G_BYTE_ORDER == G_BIG_ENDIAN
+  gst_caps_append (ret, gst_caps_from_string (GST_VIDEO_CAPS_MAKE ("xRGB")));
+#else
+  gst_caps_append (ret, gst_caps_from_string (GST_VIDEO_CAPS_MAKE ("BGRx")));
+#endif
 
   if (depths & VISUAL_VIDEO_DEPTH_24BIT) {
 #if G_BYTE_ORDER == G_BIG_ENDIAN
-    gst_caps_append (ret, gst_caps_from_string (GST_VIDEO_CAPS_RGB));
+    gst_caps_append (ret, gst_caps_from_string (GST_VIDEO_CAPS_MAKE ("RGB")));
 #else
-    gst_caps_append (ret, gst_caps_from_string (GST_VIDEO_CAPS_BGR));
+    gst_caps_append (ret, gst_caps_from_string (GST_VIDEO_CAPS_MAKE ("BGR")));
 #endif
   }
   if (depths & VISUAL_VIDEO_DEPTH_16BIT) {
-    gst_caps_append (ret, gst_caps_from_string (GST_VIDEO_CAPS_RGB_16));
+    gst_caps_append (ret, gst_caps_from_string (GST_VIDEO_CAPS_MAKE ("RGB16")));
   }
 
 beach:
@@ -330,6 +334,7 @@ gst_visual_src_setcaps (GstVisual * visual, GstCaps * caps)
   gboolean res;
   GstStructure *structure;
   gint depth, pitch;
+  const gchar *fmt;
 
   structure = gst_caps_get_structure (caps, 0);
 
@@ -339,11 +344,18 @@ gst_visual_src_setcaps (GstVisual * visual, GstCaps * caps)
     goto error;
   if (!gst_structure_get_int (structure, "height", &visual->height))
     goto error;
-  if (!gst_structure_get_int (structure, "bpp", &depth))
+  if (!(fmt = gst_structure_get_string (structure, "format")))
     goto error;
   if (!gst_structure_get_fraction (structure, "framerate", &visual->fps_n,
           &visual->fps_d))
     goto error;
+
+  if (!strcmp (fmt, "BGR") || !strcmp (fmt, "RGB"))
+    depth = 24;
+  else if (!strcmp (fmt, "BGRx") || !strcmp (fmt, "xRGB"))
+    depth = 32;
+  else
+    depth = 16;
 
   visual_video_set_depth (visual->video,
       visual_video_depth_enum_from_value (depth));
@@ -422,15 +434,21 @@ gst_vis_src_negotiate (GstVisual * visual)
     target = gst_caps_copy (caps);
     gst_caps_unref (caps);
   }
+  GST_DEBUG_OBJECT (visual, "before fixate caps %" GST_PTR_FORMAT, target);
 
   /* fixate in case something is not fixed. This does nothing if the value is
    * already fixed. For video we always try to fixate to something like
    * 320x240x25 by convention. */
   structure = gst_caps_get_structure (target, 0);
   gst_structure_fixate_field_nearest_int (structure, "width", DEFAULT_WIDTH);
+  gst_structure_fixate_field_nearest_int (structure, "width", DEFAULT_WIDTH);
   gst_structure_fixate_field_nearest_int (structure, "height", DEFAULT_HEIGHT);
   gst_structure_fixate_field_nearest_fraction (structure, "framerate",
       DEFAULT_FPS_N, DEFAULT_FPS_D);
+
+  gst_pad_fixate_caps (visual->srcpad, target);
+
+  GST_DEBUG_OBJECT (visual, "after fixate caps %" GST_PTR_FORMAT, target);
 
   gst_visual_src_setcaps (visual, target);
 
@@ -870,8 +888,8 @@ gst_visual_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
       visual->actor =
-          visual_actor_new (GST_VISUAL_GET_CLASS (visual)->plugin->info->
-          plugname);
+          visual_actor_new (GST_VISUAL_GET_CLASS (visual)->plugin->
+          info->plugname);
       visual->video = visual_video_new ();
       visual->audio = visual_audio_new ();
       /* can't have a play without actors */

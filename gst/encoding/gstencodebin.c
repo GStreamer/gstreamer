@@ -218,9 +218,7 @@ struct _StreamGroup
 #define DEFAULT_AVOID_REENCODING   FALSE
 
 #define DEFAULT_RAW_CAPS			\
-  "video/x-raw-yuv; "				\
-  "video/x-raw-rgb; "				\
-  "video/x-raw-gray; "				\
+  "video/x-raw; "				\
   "audio/x-raw-int; "				\
   "audio/x-raw-float; "				\
   "text/plain; "				\
@@ -435,8 +433,7 @@ gst_encode_bin_init (GstEncodeBin * encode_bin)
       gst_element_factory_list_get_elements (GST_ELEMENT_FACTORY_TYPE_PARSER,
       GST_RANK_MARGINAL);
 
-  encode_bin->raw_video_caps =
-      gst_caps_from_string ("video/x-raw-yuv;video/x-raw-rgb;video/x-raw-gray");
+  encode_bin->raw_video_caps = gst_caps_from_string ("video/x-raw");
   encode_bin->raw_audio_caps =
       gst_caps_from_string ("audio/x-raw-int;audio/x-raw-float");
   /* encode_bin->raw_text_caps = */

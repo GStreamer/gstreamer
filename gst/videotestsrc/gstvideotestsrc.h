@@ -138,7 +138,7 @@ struct _GstVideoTestSrc {
   char *format_name;
   gint width;
   gint height;
-  struct fourcc_list_struct *fourcc;
+  struct format_list_struct *format;
   gint bpp;
   gint rate_numerator;
   gint rate_denominator;

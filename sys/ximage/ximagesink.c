@@ -89,7 +89,7 @@
  * the button and a red one where you released it. (The navigationtest element
  * is part of gst-plugins-good.)
  * |[
- * gst-launch -v videotestsrc ! video/x-raw-rgb, pixel-aspect-ratio=(fraction)4/3 ! videoscale ! ximagesink
+ * gst-launch -v videotestsrc ! video/x-raw, pixel-aspect-ratio=(fraction)4/3 ! videoscale ! ximagesink
  * ]| This is faking a 4/3 pixel aspect ratio caps on video frames produced by
  * videotestsrc, in most cases the pixel aspect ratio of the display will be
  * 1/1. This means that videoscale will have to do the scaling to convert 
@@ -138,7 +138,7 @@ static GstStaticPadTemplate gst_ximagesink_sink_template_factory =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw-rgb, "
+    GST_STATIC_CAPS ("video/x-raw, "
         "framerate = (fraction) [ 0, MAX ], "
         "width = (int) [ 1, MAX ], " "height = (int) [ 1, MAX ]")
     );
@@ -816,6 +816,8 @@ gst_ximagesink_xcontext_get (GstXImageSink * ximagesink)
   GstXContext *xcontext = NULL;
   XPixmapFormatValues *px_formats = NULL;
   gint nb_formats = 0, i;
+  gint endianness;
+  GstVideoFormat vformat;
 
   g_return_val_if_fail (GST_IS_XIMAGESINK (ximagesink), NULL);
 
@@ -872,8 +874,7 @@ gst_ximagesink_xcontext_get (GstXImageSink * ximagesink)
 
   XFree (px_formats);
 
-  xcontext->endianness =
-      (ImageByteOrder (xcontext->disp) ==
+  endianness = (ImageByteOrder (xcontext->disp) ==
       LSBFirst) ? G_LITTLE_ENDIAN : G_BIG_ENDIAN;
 
   /* Search for XShm extension support */
@@ -889,19 +890,12 @@ gst_ximagesink_xcontext_get (GstXImageSink * ximagesink)
     GST_DEBUG ("ximagesink is not using XShm extension");
   }
 
-  /* our caps system handles 24/32bpp RGB as big-endian. */
-  if ((xcontext->bpp == 24 || xcontext->bpp == 32) &&
-      xcontext->endianness == G_LITTLE_ENDIAN) {
-    xcontext->endianness = G_BIG_ENDIAN;
-    xcontext->visual->red_mask = GUINT32_TO_BE (xcontext->visual->red_mask);
-    xcontext->visual->green_mask = GUINT32_TO_BE (xcontext->visual->green_mask);
-    xcontext->visual->blue_mask = GUINT32_TO_BE (xcontext->visual->blue_mask);
-    if (xcontext->bpp == 24) {
-      xcontext->visual->red_mask >>= 8;
-      xcontext->visual->green_mask >>= 8;
-      xcontext->visual->blue_mask >>= 8;
-    }
-  }
+  vformat = gst_video_format_from_masks (xcontext->depth, xcontext->bpp,
+      endianness, xcontext->visual->red_mask, xcontext->visual->green_mask,
+      xcontext->visual->blue_mask, 0);
+
+  if (vformat == GST_VIDEO_FORMAT_UNKNOWN)
+    goto unknown_format;
 
   /* update object's par with calculated one if not set yet */
   if (!ximagesink->par) {
@@ -909,13 +903,8 @@ gst_ximagesink_xcontext_get (GstXImageSink * ximagesink)
     gst_value_init_and_copy (ximagesink->par, xcontext->par);
     GST_DEBUG_OBJECT (ximagesink, "set calculated PAR on object's PAR");
   }
-  xcontext->caps = gst_caps_new_simple ("video/x-raw-rgb",
-      "bpp", G_TYPE_INT, xcontext->bpp,
-      "depth", G_TYPE_INT, xcontext->depth,
-      "endianness", G_TYPE_INT, xcontext->endianness,
-      "red_mask", G_TYPE_INT, xcontext->visual->red_mask,
-      "green_mask", G_TYPE_INT, xcontext->visual->green_mask,
-      "blue_mask", G_TYPE_INT, xcontext->visual->blue_mask,
+  xcontext->caps = gst_caps_new_simple ("video/x-raw",
+      "format", G_TYPE_STRING, gst_video_format_to_string (vformat),
       "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
       "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
       "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
@@ -931,6 +920,13 @@ gst_ximagesink_xcontext_get (GstXImageSink * ximagesink)
   g_mutex_unlock (ximagesink->x_lock);
 
   return xcontext;
+
+  /* ERRORS */
+unknown_format:
+  {
+    GST_ERROR_OBJECT (ximagesink, "unknown format");
+    return NULL;
+  }
 }
 
 /* This function cleans the X context. Closing the Display and unrefing the

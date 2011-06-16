@@ -98,7 +98,6 @@ struct _GstXContext
 
   gint depth;
   gint bpp;
-  gint endianness;
 
   gint width, height;
   gint widthmm, heightmm;

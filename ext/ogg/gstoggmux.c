@@ -27,7 +27,7 @@
  * <refsect2>
  * <title>Example pipelines</title>
  * |[
- * gst-launch v4l2src num-buffers=500 ! video/x-raw-yuv,width=320,height=240 ! ffmpegcolorspace ! theoraenc ! oggmux ! filesink location=video.ogg
+ * gst-launch v4l2src num-buffers=500 ! video/x-raw,width=320,height=240 ! ffmpegcolorspace ! theoraenc ! oggmux ! filesink location=video.ogg
  * ]| Encodes a video stream captured from a v4l2-compatible camera to Ogg/Theora
  * (the encoding will stop automatically after 500 frames)
  * </refsect2>

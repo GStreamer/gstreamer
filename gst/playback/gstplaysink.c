@@ -2818,8 +2818,8 @@ is_raw_structure (GstStructure * s)
 
   name = gst_structure_get_name (s);
 
-  if (g_str_has_prefix (name, "video/x-raw-") ||
-      g_str_has_prefix (name, "audio/x-raw-"))
+  if (g_str_has_prefix (name, "video/x-raw") ||
+      g_str_has_prefix (name, "audio/x-raw"))
     return TRUE;
   return FALSE;
 }

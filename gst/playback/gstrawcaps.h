@@ -26,9 +26,7 @@
 G_BEGIN_DECLS
 
 #define DEFAULT_RAW_CAPS \
-    "video/x-raw-yuv; " \
-    "video/x-raw-rgb; " \
-    "video/x-raw-gray; " \
+    "video/x-raw; " \
     "audio/x-raw-int; " \
     "audio/x-raw-float; " \
     "text/plain; " \

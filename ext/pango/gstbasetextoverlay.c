@@ -192,34 +192,20 @@ enum
   PROP_LAST
 };
 
+#define VIDEO_FORMATS "{ BGRx, RGBx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, AYUV, I420, UYVY, NV12, NV21 } "
+
 static GstStaticPadTemplate src_template_factory =
-    GST_STATIC_PAD_TEMPLATE ("src",
+GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_BGRx ";"
-        GST_VIDEO_CAPS_RGBx ";"
-        GST_VIDEO_CAPS_xRGB ";"
-        GST_VIDEO_CAPS_xBGR ";"
-        GST_VIDEO_CAPS_RGBA ";"
-        GST_VIDEO_CAPS_BGRA ";"
-        GST_VIDEO_CAPS_ARGB ";"
-        GST_VIDEO_CAPS_ABGR ";"
-        GST_VIDEO_CAPS_YUV ("{AYUV, I420, UYVY, NV12, NV21}"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (VIDEO_FORMATS))
     );
 
 static GstStaticPadTemplate video_sink_template_factory =
-    GST_STATIC_PAD_TEMPLATE ("video_sink",
+GST_STATIC_PAD_TEMPLATE ("video_sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_BGRx ";"
-        GST_VIDEO_CAPS_RGBx ";"
-        GST_VIDEO_CAPS_xRGB ";"
-        GST_VIDEO_CAPS_xBGR ";"
-        GST_VIDEO_CAPS_RGBA ";"
-        GST_VIDEO_CAPS_BGRA ";"
-        GST_VIDEO_CAPS_ARGB ";"
-        GST_VIDEO_CAPS_ABGR ";"
-        GST_VIDEO_CAPS_YUV ("{AYUV, I420, UYVY, NV12, NV21}"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (VIDEO_FORMATS))
     );
 
 #define GST_TYPE_BASE_TEXT_OVERLAY_VALIGN (gst_base_text_overlay_valign_get_type())

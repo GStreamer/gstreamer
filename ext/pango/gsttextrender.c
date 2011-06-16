@@ -86,12 +86,13 @@ enum
   PROP_FONT_DESC
 };
 
+#define VIDEO_FORMATS "{ AYUV, ARGB } "
 
 static GstStaticPadTemplate src_template_factory =
-    GST_STATIC_PAD_TEMPLATE ("src",
+GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("AYUV") ";" GST_VIDEO_CAPS_ARGB)
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (VIDEO_FORMATS))
     );
 
 static GstStaticPadTemplate sink_template_factory =
@@ -326,19 +327,20 @@ gst_text_render_check_argb (GstTextRender * render)
 
     /* Check if AYUV or ARGB is first */
     for (i = 0; i < n; i++) {
-      GstStructure *s = gst_caps_get_structure (peer_caps, i);
-      if (gst_structure_has_name (s, "video/x-raw-rgb") &&
-          gst_structure_has_field (s, "alpha_mask")) {
-        render->use_ARGB = TRUE;
-        break;
-      } else if (gst_structure_has_name (s, "video/x-raw-yuv")) {
-        guint fourcc;
-        if (gst_structure_get_fourcc (s, "format", &fourcc) &&
-            fourcc == GST_MAKE_FOURCC ('A', 'Y', 'U', 'V')) {
-          render->use_ARGB = FALSE;
-          break;
-        }
-      }
+      GstStructure *s;
+      GstVideoFormat vformat;
+      const gchar *fmt;
+
+      s = gst_caps_get_structure (peer_caps, i);
+      if (!gst_structure_has_name (s, "video/x-raw"))
+        continue;
+
+      fmt = gst_structure_get_string (s, "format");
+      if (fmt == NULL)
+        continue;
+
+      vformat = gst_video_format_from_string (fmt);
+      render->use_ARGB = gst_video_format_has_alpha (vformat);
     }
     gst_caps_unref (peer_caps);
   }

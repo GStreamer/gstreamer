@@ -236,7 +236,7 @@ gst_play_sink_video_convert_sink_setcaps (GstPlaySinkVideoConvert * self,
   s = gst_caps_get_structure (caps, 0);
   name = gst_structure_get_name (s);
 
-  if (g_str_has_prefix (name, "video/x-raw-")) {
+  if (g_str_has_prefix (name, "video/x-raw")) {
     if (!self->raw && !gst_pad_is_blocked (self->sink_proxypad)) {
       GST_DEBUG_OBJECT (self, "Changing caps from non-raw to raw");
       reconfigure = TRUE;

@@ -68,8 +68,8 @@ static GstStaticPadTemplate theora_dec_src_factory =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw-yuv, "
-        "format = (fourcc) { I420, Y42B, Y444 }, "
+    GST_STATIC_CAPS ("video/x-raw, "
+        "format = (string) { I420, Y42B, Y444 }, "
         "framerate = (fraction) [0/1, MAX], "
         "width = (int) [ 1, MAX ], " "height = (int) [ 1, MAX ]")
     );
@@ -844,7 +844,6 @@ theora_handle_type_packet (GstTheoraDec * dec, ogg_packet * packet)
   gint par_num, par_den;
   GstFlowReturn ret = GST_FLOW_OK;
   GList *walk;
-  guint32 fourcc;
 
   GST_DEBUG_OBJECT (dec, "fps %d/%d, PAR %d/%d",
       dec->info.fps_numerator, dec->info.fps_denominator,
@@ -883,17 +882,14 @@ theora_handle_type_packet (GstTheoraDec * dec, ogg_packet * packet)
     case TH_PF_444:
       dec->output_bpp = 24;
       dec->format = GST_VIDEO_FORMAT_Y444;
-      fourcc = GST_MAKE_FOURCC ('Y', '4', '4', '4');
       break;
     case TH_PF_420:
       dec->output_bpp = 12;     /* Average bits per pixel. */
       dec->format = GST_VIDEO_FORMAT_I420;
-      fourcc = GST_MAKE_FOURCC ('I', '4', '2', '0');
       break;
     case TH_PF_422:
       dec->output_bpp = 16;
       dec->format = GST_VIDEO_FORMAT_Y42B;
-      fourcc = GST_MAKE_FOURCC ('Y', '4', '2', 'B');
       break;
     default:
       goto invalid_format;
@@ -946,8 +942,8 @@ theora_handle_type_packet (GstTheoraDec * dec, ogg_packet * packet)
     GST_WARNING_OBJECT (dec, "Could not enable BITS mode visualisation");
   }
 
-  caps = gst_caps_new_simple ("video/x-raw-yuv",
-      "format", GST_TYPE_FOURCC, fourcc,
+  caps = gst_caps_new_simple ("video/x-raw",
+      "format", G_TYPE_STRING, gst_video_format_to_string (dec->format),
       "framerate", GST_TYPE_FRACTION,
       dec->info.fps_numerator, dec->info.fps_denominator,
       "pixel-aspect-ratio", GST_TYPE_FRACTION, par_num, par_den,

@@ -255,7 +255,7 @@ gst_play_sink_audio_convert_sink_setcaps (GstPlaySinkAudioConvert * self,
   s = gst_caps_get_structure (caps, 0);
   name = gst_structure_get_name (s);
 
-  if (g_str_has_prefix (name, "audio/x-raw-")) {
+  if (g_str_has_prefix (name, "audio/x-raw")) {
     if (!self->raw && !gst_pad_is_blocked (self->sink_proxypad)) {
       GST_DEBUG_OBJECT (self, "Changing caps from non-raw to raw");
       reconfigure = TRUE;

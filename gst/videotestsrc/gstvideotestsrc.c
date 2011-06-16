@@ -575,8 +575,8 @@ gst_video_test_src_getcaps (GstBaseSrc * bsrc, GstCaps * filter)
     int i;
 
     caps = gst_caps_new_empty ();
-    for (i = 0; i < n_fourccs; i++) {
-      structure = paint_get_structure (fourcc_list + i);
+    for (i = 0; i < n_formats; i++) {
+      structure = paint_get_structure (format_list + i);
       gst_structure_set (structure,
           "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
           "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
@@ -596,7 +596,7 @@ gst_video_test_src_getcaps (GstBaseSrc * bsrc, GstCaps * filter)
 static gboolean
 gst_video_test_src_parse_caps (const GstCaps * caps,
     gint * width, gint * height, gint * rate_numerator, gint * rate_denominator,
-    struct fourcc_list_struct **fourcc, GstVideoTestSrcColorSpec * color_spec)
+    struct format_list_struct **format, GstVideoTestSrcColorSpec * color_spec)
 {
   const GstStructure *structure;
   GstPadLinkReturn ret;
@@ -610,7 +610,7 @@ gst_video_test_src_parse_caps (const GstCaps * caps,
 
   structure = gst_caps_get_structure (caps, 0);
 
-  if (!(*fourcc = paintinfo_find_by_structure (structure)))
+  if (!(*format = paintinfo_find_by_structure (structure)))
     goto unknown_format;
 
   ret = gst_structure_get_int (structure, "width", width);
@@ -678,24 +678,24 @@ gst_video_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
 {
   gboolean res;
   gint width, height, rate_denominator, rate_numerator;
-  struct fourcc_list_struct *fourcc;
+  struct format_list_struct *format;
   GstVideoTestSrc *videotestsrc;
   GstVideoTestSrcColorSpec color_spec;
 
   videotestsrc = GST_VIDEO_TEST_SRC (bsrc);
 
   res = gst_video_test_src_parse_caps (caps, &width, &height,
-      &rate_numerator, &rate_denominator, &fourcc, &color_spec);
+      &rate_numerator, &rate_denominator, &format, &color_spec);
   if (!res)
     goto parse_failed;
 
   /* looks ok here */
-  videotestsrc->fourcc = fourcc;
+  videotestsrc->format = format;
   videotestsrc->width = width;
   videotestsrc->height = height;
   videotestsrc->rate_numerator = rate_numerator;
   videotestsrc->rate_denominator = rate_denominator;
-  videotestsrc->bpp = videotestsrc->fourcc->bitspp;
+  videotestsrc->bpp = videotestsrc->format->bitspp;
   videotestsrc->color_spec = color_spec;
   videotestsrc->size =
       gst_video_test_src_get_size (videotestsrc, width, height);
@@ -857,7 +857,7 @@ gst_video_test_src_fill (GstPushSrc * psrc, GstBuffer * buffer)
 
   src = GST_VIDEO_TEST_SRC (psrc);
 
-  if (G_UNLIKELY (src->fourcc == NULL))
+  if (G_UNLIKELY (src->format == NULL))
     goto not_negotiated;
 
   /* 0 framerate and we are at the second frame, eos */

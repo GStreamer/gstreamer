@@ -3038,7 +3038,7 @@ sort_end_pads (GstDecodePad * da, GstDecodePad * db)
   namea = gst_structure_get_name (sa);
   nameb = gst_structure_get_name (sb);
 
-  if (g_strrstr (namea, "video/x-raw-"))
+  if (g_strrstr (namea, "video/x-raw"))
     va = 0;
   else if (g_strrstr (namea, "video/"))
     va = 1;
@@ -3049,7 +3049,7 @@ sort_end_pads (GstDecodePad * da, GstDecodePad * db)
   else
     va = 4;
 
-  if (g_strrstr (nameb, "video/x-raw-"))
+  if (g_strrstr (nameb, "video/x-raw"))
     vb = 0;
   else if (g_strrstr (nameb, "video/"))
     vb = 1;

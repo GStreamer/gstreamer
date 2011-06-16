@@ -55,11 +55,11 @@
  * <refsect2>
  * <title>Example pipelines</title>
  * |[
- * gst-launch -v filesrc location=videotestsrc.ogg ! oggdemux ! theoradec ! videorate ! video/x-raw-yuv,framerate=15/1 ! xvimagesink
+ * gst-launch -v filesrc location=videotestsrc.ogg ! oggdemux ! theoradec ! videorate ! video/x-raw,framerate=15/1 ! xvimagesink
  * ]| Decode an Ogg/Theora file and adjust the framerate to 15 fps before playing.
  * To create the test Ogg/Theora file refer to the documentation of theoraenc.
  * |[
- * gst-launch -v v4l2src ! videorate ! video/x-raw-yuv,framerate=25/2 ! theoraenc ! oggmux ! filesink location=recording.ogg
+ * gst-launch -v v4l2src ! videorate ! video/x-raw,framerate=25/2 ! theoraenc ! oggmux ! filesink location=recording.ogg
  * ]| Capture video from a V4L device, and adjust the stream to 12.5 fps before
  * encoding to Ogg/Theora.
  * </refsect2>
@@ -108,16 +108,14 @@ static GstStaticPadTemplate gst_video_rate_src_template =
     GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw-yuv;"
-        "video/x-raw-rgb;" "video/x-raw-gray;" "image/jpeg;" "image/png")
+    GST_STATIC_CAPS ("video/x-raw;" "image/jpeg;" "image/png")
     );
 
 static GstStaticPadTemplate gst_video_rate_sink_template =
     GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw-yuv;"
-        "video/x-raw-rgb;" "video/x-raw-gray;" "image/jpeg;" "image/png")
+    GST_STATIC_CAPS ("video/x-raw;" "image/jpeg;" "image/png")
     );
 
 static void gst_video_rate_swap_prev (GstVideoRate * videorate,

@@ -206,7 +206,7 @@ static void paint_setup_GRAY16 (paintinfo * p, unsigned char *dest);
 static void convert_hline_GRAY8 (paintinfo * p, int y);
 static void convert_hline_GRAY16 (paintinfo * p, int y);
 
-struct fourcc_list_struct fourcc_list[] = {
+struct format_list_struct format_list[] = {
 /* packed */
   {VTS_YUV, "YUY2", "YUY2", 16, paint_setup_YUY2, convert_hline_YUY2},
   {VTS_YUV, "UYVY", "UYVY", 16, paint_setup_UYVY, convert_hline_YUY2},
@@ -255,43 +255,49 @@ struct fourcc_list_struct fourcc_list[] = {
 
   /* Not exactly YUV but it's the same as above */
   {VTS_GRAY, "GRAY8", "GRAY8", 8, paint_setup_GRAY8, convert_hline_GRAY8},
-  {VTS_GRAY, "GRAY16", "GRAY16", 16, paint_setup_GRAY16, convert_hline_GRAY16},
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  {VTS_GRAY, "GRAY16_LE", "GRAY16", 16, paint_setup_GRAY16,
+      convert_hline_GRAY16},
+#else
+  {VTS_GRAY, "GRAY16_BE", "GRAY16", 16, paint_setup_GRAY16,
+      convert_hline_GRAY16},
+#endif
 
-  {VTS_RGB, "RGB ", "xRGB8888", 32, paint_setup_xRGB8888, convert_hline_str4,
+  {VTS_RGB, "xRGB", "xRGB8888", 32, paint_setup_xRGB8888, convert_hline_str4,
         24,
       0x00ff0000, 0x0000ff00, 0x000000ff},
-  {VTS_RGB, "RGB ", "xBGR8888", 32, paint_setup_xBGR8888, convert_hline_str4,
+  {VTS_RGB, "xBGR", "xBGR8888", 32, paint_setup_xBGR8888, convert_hline_str4,
         24,
       0x000000ff, 0x0000ff00, 0x00ff0000},
-  {VTS_RGB, "RGB ", "RGBx8888", 32, paint_setup_RGBx8888, convert_hline_str4,
+  {VTS_RGB, "RGBx", "RGBx8888", 32, paint_setup_RGBx8888, convert_hline_str4,
         24,
       0xff000000, 0x00ff0000, 0x0000ff00},
-  {VTS_RGB, "RGB ", "BGRx8888", 32, paint_setup_BGRx8888, convert_hline_str4,
+  {VTS_RGB, "BGRx", "BGRx8888", 32, paint_setup_BGRx8888, convert_hline_str4,
         24,
       0x0000ff00, 0x00ff0000, 0xff000000},
-  {VTS_RGB, "RGB ", "ARGB8888", 32, paint_setup_ARGB8888, convert_hline_astr4,
+  {VTS_RGB, "ARGB", "ARGB8888", 32, paint_setup_ARGB8888, convert_hline_astr4,
         32,
       0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000},
-  {VTS_RGB, "RGB ", "ABGR8888", 32, paint_setup_ABGR8888, convert_hline_astr4,
+  {VTS_RGB, "ABGR", "ABGR8888", 32, paint_setup_ABGR8888, convert_hline_astr4,
         32,
       0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000},
-  {VTS_RGB, "RGB ", "RGBA8888", 32, paint_setup_RGBA8888, convert_hline_astr4,
+  {VTS_RGB, "RGBA", "RGBA8888", 32, paint_setup_RGBA8888, convert_hline_astr4,
         32,
       0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff},
-  {VTS_RGB, "RGB ", "BGRA8888", 32, paint_setup_BGRA8888, convert_hline_astr4,
+  {VTS_RGB, "BGRA", "BGRA8888", 32, paint_setup_BGRA8888, convert_hline_astr4,
         32,
       0x0000ff00, 0x00ff0000, 0xff000000, 0x000000ff},
-  {VTS_RGB, "RGB ", "RGB888", 24, paint_setup_RGB888, convert_hline_str3, 24,
+  {VTS_RGB, "RGB", "RGB888", 24, paint_setup_RGB888, convert_hline_str3, 24,
       0x00ff0000, 0x0000ff00, 0x000000ff},
-  {VTS_RGB, "RGB ", "BGR888", 24, paint_setup_BGR888, convert_hline_str3, 24,
+  {VTS_RGB, "BGR", "BGR888", 24, paint_setup_BGR888, convert_hline_str3, 24,
       0x000000ff, 0x0000ff00, 0x00ff0000},
-  {VTS_RGB, "RGB ", "RGB565", 16, paint_setup_RGB565, convert_hline_RGB565, 16,
+  {VTS_RGB, "RGB16", "RGB565", 16, paint_setup_RGB565, convert_hline_RGB565, 16,
       0x0000f800, 0x000007e0, 0x0000001f},
-  {VTS_RGB, "RGB ", "xRGB1555", 16, paint_setup_xRGB1555,
+  {VTS_RGB, "RGB15", "xRGB1555", 16, paint_setup_xRGB1555,
         convert_hline_xRGB1555,
         15,
       0x00007c00, 0x000003e0, 0x0000001f},
-  {VTS_RGB, "RGB ", "ARGB8888", 64, paint_setup_ARGB64, convert_hline_astr8,
+  {VTS_RGB, "ARGB64", "ARGB8888", 64, paint_setup_ARGB64, convert_hline_astr8,
         64,
       0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000},
 
@@ -301,84 +307,28 @@ struct fourcc_list_struct fourcc_list[] = {
   {VTS_BAYER, "gbrg", "Bayer", 8, paint_setup_bayer_gbrg, convert_hline_bayer}
 };
 
-int n_fourccs = G_N_ELEMENTS (fourcc_list);
+int n_formats = G_N_ELEMENTS (format_list);
 
-struct fourcc_list_struct *
+struct format_list_struct *
 paintinfo_find_by_structure (const GstStructure * structure)
 {
   int i;
   const char *media_type = gst_structure_get_name (structure);
-  int ret;
 
   g_return_val_if_fail (structure, NULL);
 
-  if (strcmp (media_type, "video/x-raw-gray") == 0) {
-    gint bpp, depth, endianness = 0;
+  if (strcmp (media_type, "video/x-raw") == 0) {
+    const gchar *format;
 
-    ret = gst_structure_get_int (structure, "bpp", &bpp) &&
-        gst_structure_get_int (structure, "depth", &depth);
-    if (!ret || bpp != depth || (depth != 8 && depth != 16))
-      return NULL;
-
-    ret = gst_structure_get_int (structure, "endianness", &endianness);
-    if ((!ret || endianness != G_BYTE_ORDER) && bpp == 16)
-      return NULL;
-
-    for (i = 0; i < n_fourccs; i++) {
-      if (fourcc_list[i].type == VTS_GRAY && fourcc_list[i].bitspp == bpp) {
-        return fourcc_list + i;
-      }
-    }
-  } else if (strcmp (media_type, "video/x-raw-yuv") == 0) {
-    const char *s;
-    int fourcc;
-    guint32 format;
-
-    ret = gst_structure_get_fourcc (structure, "format", &format);
-    if (!ret)
-      return NULL;
-    for (i = 0; i < n_fourccs; i++) {
-      s = fourcc_list[i].fourcc;
-      /* g_print("testing %" GST_FOURCC_FORMAT " and %s\n", GST_FOURCC_ARGS(format), s); */
-      fourcc = GST_MAKE_FOURCC (s[0], s[1], s[2], s[3]);
-      if (fourcc_list[i].type == VTS_YUV && fourcc == format) {
-        return fourcc_list + i;
-      }
-    }
-  } else if (strcmp (media_type, "video/x-raw-rgb") == 0) {
-    int red_mask;
-    int green_mask;
-    int blue_mask;
-    int alpha_mask;
-    int depth;
-    int bpp;
-
-    ret = gst_structure_get_int (structure, "red_mask", &red_mask);
-    ret &= gst_structure_get_int (structure, "green_mask", &green_mask);
-    ret &= gst_structure_get_int (structure, "blue_mask", &blue_mask);
-    ret &= gst_structure_get_int (structure, "depth", &depth);
-    ret &= gst_structure_get_int (structure, "bpp", &bpp);
-
-    if (depth == 32) {
-      ret &= gst_structure_get_int (structure, "alpha_mask", &alpha_mask);
-      ret &= (alpha_mask != 0);
-    } else {
-      alpha_mask = 0;
-    }
-
-    if (!ret) {
+    format = gst_structure_get_string (structure, "format");
+    if (!format) {
       GST_WARNING ("incomplete caps structure: %" GST_PTR_FORMAT, structure);
       return NULL;
     }
 
-    for (i = 0; i < n_fourccs; i++) {
-      if (fourcc_list[i].type == VTS_RGB &&
-          fourcc_list[i].red_mask == red_mask &&
-          fourcc_list[i].green_mask == green_mask &&
-          fourcc_list[i].blue_mask == blue_mask &&
-          (alpha_mask == 0 || fourcc_list[i].alpha_mask == alpha_mask) &&
-          fourcc_list[i].depth == depth && fourcc_list[i].bitspp == bpp) {
-        return fourcc_list + i;
+    for (i = 0; i < n_formats; i++) {
+      if (g_str_equal (format, format_list[i].format)) {
+        return format_list + i;
       }
     }
     return NULL;
@@ -391,10 +341,10 @@ paintinfo_find_by_structure (const GstStructure * structure)
       return NULL;
     }
 
-    for (i = 0; i < n_fourccs; i++) {
-      if (fourcc_list[i].type == VTS_BAYER &&
-          g_str_equal (format, fourcc_list[i].fourcc)) {
-        return fourcc_list + i;
+    for (i = 0; i < n_formats; i++) {
+      if (format_list[i].type == VTS_BAYER &&
+          g_str_equal (format, format_list[i].format)) {
+        return format_list + i;
       }
     }
     return NULL;
@@ -405,37 +355,27 @@ paintinfo_find_by_structure (const GstStructure * structure)
   return NULL;
 }
 
-struct fourcc_list_struct *
-paintrect_find_fourcc (int find_fourcc)
+struct format_list_struct *
+paintrect_find_format (const gchar * find_format)
 {
   int i;
 
-  for (i = 0; i < n_fourccs; i++) {
-    const char *s;
-    int fourcc;
-
-    s = fourcc_list[i].fourcc;
-    fourcc = GST_MAKE_FOURCC (s[0], s[1], s[2], s[3]);
-    if (find_fourcc == fourcc) {
-      /* If YUV format, it's good */
-      if (!fourcc_list[i].type == VTS_YUV) {
-        return fourcc_list + i;
-      }
-
-      return fourcc_list + i;
+  for (i = 0; i < n_formats; i++) {
+    if (strcmp (find_format, format_list[i].format) == 0) {
+      return format_list + i;
     }
   }
   return NULL;
 }
 
-struct fourcc_list_struct *
+struct format_list_struct *
 paintrect_find_name (const char *name)
 {
   int i;
 
-  for (i = 0; i < n_fourccs; i++) {
-    if (strcmp (name, fourcc_list[i].name) == 0) {
-      return fourcc_list + i;
+  for (i = 0; i < n_formats; i++) {
+    if (strcmp (name, format_list[i].name) == 0) {
+      return format_list + i;
     }
   }
   return NULL;
@@ -443,54 +383,27 @@ paintrect_find_name (const char *name)
 
 
 GstStructure *
-paint_get_structure (struct fourcc_list_struct * format)
+paint_get_structure (struct format_list_struct * format)
 {
   GstStructure *structure = NULL;
-  unsigned int fourcc;
-  int endianness;
 
   g_return_val_if_fail (format, NULL);
 
-  fourcc =
-      GST_MAKE_FOURCC (format->fourcc[0], format->fourcc[1], format->fourcc[2],
-      format->fourcc[3]);
-
   switch (format->type) {
     case VTS_RGB:
-      if (format->bitspp == 16) {
-        endianness = G_BYTE_ORDER;
-      } else {
-        endianness = G_BIG_ENDIAN;
-      }
-      structure = gst_structure_new ("video/x-raw-rgb",
-          "bpp", G_TYPE_INT, format->bitspp,
-          "endianness", G_TYPE_INT, endianness,
-          "depth", G_TYPE_INT, format->depth,
-          "red_mask", G_TYPE_INT, format->red_mask,
-          "green_mask", G_TYPE_INT, format->green_mask,
-          "blue_mask", G_TYPE_INT, format->blue_mask, NULL);
-      if (format->depth == 32 && format->alpha_mask > 0) {
-        gst_structure_set (structure, "alpha_mask", G_TYPE_INT,
-            format->alpha_mask, NULL);
-      }
-      break;
     case VTS_GRAY:
-      structure = gst_structure_new ("video/x-raw-gray",
-          "bpp", G_TYPE_INT, format->bitspp, "depth", G_TYPE_INT,
-          format->bitspp, NULL);
-      if (format->bitspp == 16)
-        gst_structure_set (structure, "endianness", G_TYPE_INT, G_BYTE_ORDER,
-            NULL);
+      structure = gst_structure_new ("video/x-raw",
+          "format", G_TYPE_STRING, format->format, NULL);
       break;
     case VTS_YUV:
     {
       GValue value_list = { 0 };
       GValue value = { 0 };
 
-      structure = gst_structure_new ("video/x-raw-yuv",
-          "format", GST_TYPE_FOURCC, fourcc, NULL);
+      structure = gst_structure_new ("video/x-raw",
+          "format", G_TYPE_STRING, format->format, NULL);
 
-      if (fourcc != GST_STR_FOURCC ("Y800")) {
+      if (strcmp (format->format, "Y800") != 0) {
         g_value_init (&value_list, GST_TYPE_LIST);
 
         g_value_init (&value, G_TYPE_STRING);
@@ -503,10 +416,10 @@ paint_get_structure (struct fourcc_list_struct * format)
         gst_structure_set_value (structure, "color-matrix", &value_list);
         g_value_reset (&value_list);
 
-        if (fourcc != GST_STR_FOURCC ("AYUV") &&
-            fourcc != GST_STR_FOURCC ("v308") &&
-            fourcc != GST_STR_FOURCC ("v410") &&
-            fourcc != GST_STR_FOURCC ("Y444")) {
+        if (strcmp (format->format, "AYUV") &&
+            strcmp (format->format, "v308") &&
+            strcmp (format->format, "v410") &&
+            strcmp (format->format, "Y444")) {
           g_value_set_static_string (&value, "mpeg2");
           gst_value_list_append_value (&value_list, &value);
 
@@ -521,7 +434,7 @@ paint_get_structure (struct fourcc_list_struct * format)
       break;
     case VTS_BAYER:
       structure = gst_structure_new ("video/x-raw-bayer",
-          "format", G_TYPE_STRING, format->fourcc, NULL);
+          "format", G_TYPE_STRING, format->format, NULL);
       break;
     default:
       g_assert_not_reached ();
@@ -531,21 +444,21 @@ paint_get_structure (struct fourcc_list_struct * format)
 }
 
 /* returns the size in bytes for one video frame of the given dimensions
- * given the fourcc in GstVideoTestSrc */
+ * given the format in GstVideoTestSrc */
 int
 gst_video_test_src_get_size (GstVideoTestSrc * v, int w, int h)
 {
   paintinfo pi = { NULL, };
   paintinfo *p = &pi;
-  struct fourcc_list_struct *fourcc;
+  struct format_list_struct *format;
 
   p->width = w;
   p->height = h;
-  fourcc = v->fourcc;
-  if (fourcc == NULL)
+  format = v->format;
+  if (format == NULL)
     return 0;
 
-  fourcc->paint_setup (p, NULL);
+  format->paint_setup (p, NULL);
 
   return (unsigned long) p->endptr;
 }
@@ -603,8 +516,8 @@ videotestsrc_setup_paintinfo (GstVideoTestSrc * v, paintinfo * p, int w, int h)
   p->width = w;
   p->height = h;
 
-  p->convert_tmpline = v->fourcc->convert_hline;
-  if (v->fourcc->type == VTS_RGB || v->fourcc->type == VTS_BAYER) {
+  p->convert_tmpline = v->format->convert_hline;
+  if (v->format->type == VTS_RGB || v->format->type == VTS_BAYER) {
     p->paint_tmpline = paint_tmpline_ARGB;
   } else {
     p->paint_tmpline = paint_tmpline_AYUV;
@@ -703,7 +616,7 @@ videotestsrc_blend_line (GstVideoTestSrc * v, guint8 * dest, guint8 * src,
     struct vts_color_struct *a, struct vts_color_struct *b, int n)
 {
   int i;
-  if (v->fourcc->type == VTS_RGB || v->fourcc->type == VTS_BAYER) {
+  if (v->format->type == VTS_RGB || v->format->type == VTS_BAYER) {
     for (i = 0; i < n; i++) {
       dest[i * 4 + 0] = BLEND (a->A, b->A, src[i]);
       dest[i * 4 + 1] = BLEND (a->R, b->R, src[i]);
@@ -730,14 +643,14 @@ gst_video_test_src_smpte (GstVideoTestSrc * v, unsigned char *dest, int w,
   int j;
   paintinfo pi = { NULL, };
   paintinfo *p = &pi;
-  struct fourcc_list_struct *fourcc;
+  struct format_list_struct *format;
 
   videotestsrc_setup_paintinfo (v, p, w, h);
-  fourcc = v->fourcc;
-  if (fourcc == NULL)
+  format = v->format;
+  if (format == NULL)
     return;
 
-  fourcc->paint_setup (p, dest);
+  format->paint_setup (p, dest);
 
   y1 = 2 * h / 3;
   y2 = h * 0.75;
@@ -835,7 +748,7 @@ gst_video_test_src_smpte75 (GstVideoTestSrc * v, unsigned char *dest, int w,
   int j;
   paintinfo pi = { NULL, };
   paintinfo *p = &pi;
-  struct fourcc_list_struct *fourcc;
+  struct format_list_struct *format;
 
   videotestsrc_setup_paintinfo (v, p, w, h);
   if (v->color_spec == GST_VIDEO_TEST_SRC_BT601) {
@@ -843,11 +756,11 @@ gst_video_test_src_smpte75 (GstVideoTestSrc * v, unsigned char *dest, int w,
   } else {
     p->colors = vts_colors_bt709_ycbcr_75;
   }
-  fourcc = v->fourcc;
-  if (fourcc == NULL)
+  format = v->format;
+  if (format == NULL)
     return;
 
-  fourcc->paint_setup (p, dest);
+  format->paint_setup (p, dest);
 
   /* color bars */
   for (j = 0; j < h; j++) {
@@ -870,14 +783,14 @@ gst_video_test_src_smpte100 (GstVideoTestSrc * v, unsigned char *dest, int w,
   int j;
   paintinfo pi = { NULL, };
   paintinfo *p = &pi;
-  struct fourcc_list_struct *fourcc;
+  struct format_list_struct *format;
 
   videotestsrc_setup_paintinfo (v, p, w, h);
-  fourcc = v->fourcc;
-  if (fourcc == NULL)
+  format = v->format;
+  if (format == NULL)
     return;
 
-  fourcc->paint_setup (p, dest);
+  format->paint_setup (p, dest);
 
   /* color bars */
   for (j = 0; j < h; j++) {
@@ -898,14 +811,14 @@ gst_video_test_src_bar (GstVideoTestSrc * v, unsigned char *dest, int w, int h)
   int j;
   paintinfo pi = { NULL, };
   paintinfo *p = &pi;
-  struct fourcc_list_struct *fourcc;
+  struct format_list_struct *format;
 
   videotestsrc_setup_paintinfo (v, p, w, h);
-  fourcc = v->fourcc;
-  if (fourcc == NULL)
+  format = v->format;
+  if (format == NULL)
     return;
 
-  fourcc->paint_setup (p, dest);
+  format->paint_setup (p, dest);
 
   for (j = 0; j < h; j++) {
     /* use fixed size for now */
@@ -926,15 +839,15 @@ gst_video_test_src_snow (GstVideoTestSrc * v, unsigned char *dest, int w, int h)
   int j;
   paintinfo pi = { NULL, };
   paintinfo *p = &pi;
-  struct fourcc_list_struct *fourcc;
+  struct format_list_struct *format;
   struct vts_color_struct color;
 
   videotestsrc_setup_paintinfo (v, p, w, h);
-  fourcc = v->fourcc;
-  if (fourcc == NULL)
+  format = v->format;
+  if (format == NULL)
     return;
 
-  fourcc->paint_setup (p, dest);
+  format->paint_setup (p, dest);
 
   color = p->colors[COLOR_BLACK];
   p->color = &color;
@@ -957,14 +870,14 @@ gst_video_test_src_unicolor (GstVideoTestSrc * v, unsigned char *dest, int w,
   int i;
   paintinfo pi = { NULL, };
   paintinfo *p = &pi;
-  struct fourcc_list_struct *fourcc;
+  struct format_list_struct *format;
 
   videotestsrc_setup_paintinfo (v, p, w, h);
-  fourcc = v->fourcc;
-  if (fourcc == NULL)
+  format = v->format;
+  if (format == NULL)
     return;
 
-  fourcc->paint_setup (p, dest);
+  format->paint_setup (p, dest);
 
   p->color = p->colors + color_index;
   if (color_index == COLOR_BLACK) {
@@ -1017,15 +930,15 @@ gst_video_test_src_blink (GstVideoTestSrc * v, unsigned char *dest, int w,
   int i;
   paintinfo pi = { NULL, };
   paintinfo *p = &pi;
-  struct fourcc_list_struct *fourcc;
+  struct format_list_struct *format;
 
   videotestsrc_setup_paintinfo (v, p, w, h);
 
-  fourcc = v->fourcc;
-  if (fourcc == NULL)
+  format = v->format;
+  if (format == NULL)
     return;
 
-  fourcc->paint_setup (p, dest);
+  format->paint_setup (p, dest);
 
   if (v->n_frames & 1) {
     p->color = &p->foreground_color;
@@ -1046,15 +959,15 @@ gst_video_test_src_solid (GstVideoTestSrc * v, unsigned char *dest, int w,
   int i;
   paintinfo pi = { NULL, };
   paintinfo *p = &pi;
-  struct fourcc_list_struct *fourcc;
+  struct format_list_struct *format;
 
   videotestsrc_setup_paintinfo (v, p, w, h);
 
-  fourcc = v->fourcc;
-  if (fourcc == NULL)
+  format = v->format;
+  if (format == NULL)
     return;
 
-  fourcc->paint_setup (p, dest);
+  format->paint_setup (p, dest);
 
   p->color = &p->foreground_color;
 
@@ -1070,15 +983,15 @@ gst_video_test_src_checkers1 (GstVideoTestSrc * v, guchar * dest, int w, int h)
   int x, y;
   paintinfo pi = { NULL, };
   paintinfo *p = &pi;
-  struct fourcc_list_struct *fourcc;
+  struct format_list_struct *format;
 
   videotestsrc_setup_paintinfo (v, p, w, h);
 
-  fourcc = v->fourcc;
-  if (fourcc == NULL)
+  format = v->format;
+  if (format == NULL)
     return;
 
-  fourcc->paint_setup (p, dest);
+  format->paint_setup (p, dest);
 
   for (y = 0; y < h; y++) {
     for (x = 0; x < w; x++) {
@@ -1099,14 +1012,14 @@ gst_video_test_src_checkers2 (GstVideoTestSrc * v, guchar * dest, int w, int h)
   int x, y;
   paintinfo pi = { NULL, };
   paintinfo *p = &pi;
-  struct fourcc_list_struct *fourcc;
+  struct format_list_struct *format;
 
   videotestsrc_setup_paintinfo (v, p, w, h);
-  fourcc = v->fourcc;
-  if (fourcc == NULL)
+  format = v->format;
+  if (format == NULL)
     return;
 
-  fourcc->paint_setup (p, dest);
+  format->paint_setup (p, dest);
 
   for (y = 0; y < h; y++) {
     for (x = 0; x < w; x += 2) {
@@ -1129,14 +1042,14 @@ gst_video_test_src_checkers4 (GstVideoTestSrc * v, guchar * dest, int w, int h)
   int x, y;
   paintinfo pi = { NULL, };
   paintinfo *p = &pi;
-  struct fourcc_list_struct *fourcc;
+  struct format_list_struct *format;
 
   videotestsrc_setup_paintinfo (v, p, w, h);
-  fourcc = v->fourcc;
-  if (fourcc == NULL)
+  format = v->format;
+  if (format == NULL)
     return;
 
-  fourcc->paint_setup (p, dest);
+  format->paint_setup (p, dest);
 
   for (y = 0; y < h; y++) {
     for (x = 0; x < w; x += 4) {
@@ -1159,14 +1072,14 @@ gst_video_test_src_checkers8 (GstVideoTestSrc * v, guchar * dest, int w, int h)
   int x, y;
   paintinfo pi = { NULL, };
   paintinfo *p = &pi;
-  struct fourcc_list_struct *fourcc;
+  struct format_list_struct *format;
 
   videotestsrc_setup_paintinfo (v, p, w, h);
-  fourcc = v->fourcc;
-  if (fourcc == NULL)
+  format = v->format;
+  if (format == NULL)
     return;
 
-  fourcc->paint_setup (p, dest);
+  format->paint_setup (p, dest);
 
   for (y = 0; y < h; y++) {
     for (x = 0; x < w; x += 8) {
@@ -1227,7 +1140,7 @@ gst_video_test_src_zoneplate (GstVideoTestSrc * v, unsigned char *dest,
   int j;
   paintinfo pi = { NULL, };
   paintinfo *p = &pi;
-  struct fourcc_list_struct *fourcc;
+  struct format_list_struct *format;
   struct vts_color_struct color;
   int t = v->n_frames;
   int xreset = -(w / 2) - v->xoffset;   /* starting values for x^2 and y^2, centering the ellipse */
@@ -1248,11 +1161,11 @@ gst_video_test_src_zoneplate (GstVideoTestSrc * v, unsigned char *dest,
   int scale_kx2 = 0xffff / w;
 
   videotestsrc_setup_paintinfo (v, p, w, h);
-  fourcc = v->fourcc;
-  if (fourcc == NULL)
+  format = v->format;
+  if (format == NULL)
     return;
 
-  fourcc->paint_setup (p, dest);
+  format->paint_setup (p, dest);
 
   color = p->colors[COLOR_BLACK];
   p->color = &color;
@@ -1348,7 +1261,7 @@ gst_video_test_src_chromazoneplate (GstVideoTestSrc * v, unsigned char *dest,
   int j;
   paintinfo pi = { NULL, };
   paintinfo *p = &pi;
-  struct fourcc_list_struct *fourcc;
+  struct format_list_struct *format;
   struct vts_color_struct color;
   int t = v->n_frames;
 
@@ -1370,11 +1283,11 @@ gst_video_test_src_chromazoneplate (GstVideoTestSrc * v, unsigned char *dest,
   int scale_kx2 = 0xffff / w;
 
   videotestsrc_setup_paintinfo (v, p, w, h);
-  fourcc = v->fourcc;
-  if (fourcc == NULL)
+  format = v->format;
+  if (format == NULL)
     return;
 
-  fourcc->paint_setup (p, dest);
+  format->paint_setup (p, dest);
 
   color = p->colors[COLOR_BLACK];
   p->color = &color;
@@ -1448,17 +1361,17 @@ gst_video_test_src_circular (GstVideoTestSrc * v, unsigned char *dest,
   int j;
   paintinfo pi = { NULL, };
   paintinfo *p = &pi;
-  struct fourcc_list_struct *fourcc;
+  struct format_list_struct *format;
   double freq[8];
 
   int d;
 
   videotestsrc_setup_paintinfo (v, p, w, h);
-  fourcc = v->fourcc;
-  if (fourcc == NULL)
+  format = v->format;
+  if (format == NULL)
     return;
 
-  fourcc->paint_setup (p, dest);
+  format->paint_setup (p, dest);
 
   for (i = 1; i < 8; i++) {
     freq[i] = 200 * pow (2.0, -(i - 1) / 4.0);
@@ -1492,16 +1405,16 @@ gst_video_test_src_gamut (GstVideoTestSrc * v, guchar * dest, int w, int h)
   int x, y;
   paintinfo pi = { NULL, };
   paintinfo *p = &pi;
-  struct fourcc_list_struct *fourcc;
+  struct format_list_struct *format;
   struct vts_color_struct yuv_primary;
   struct vts_color_struct yuv_secondary;
 
   videotestsrc_setup_paintinfo (v, p, w, h);
-  fourcc = v->fourcc;
-  if (fourcc == NULL)
+  format = v->format;
+  if (format == NULL)
     return;
 
-  fourcc->paint_setup (p, dest);
+  format->paint_setup (p, dest);
 
   for (y = 0; y < h; y++) {
     int region = (y * 4) / h;
@@ -1549,17 +1462,17 @@ gst_video_test_src_ball (GstVideoTestSrc * v, unsigned char *dest, int w, int h)
   int i;
   paintinfo pi = { NULL, };
   paintinfo *p = &pi;
-  struct fourcc_list_struct *fourcc;
+  struct format_list_struct *format;
   int t = v->n_frames;
   double x, y;
   int radius = 20;
 
   videotestsrc_setup_paintinfo (v, p, w, h);
-  fourcc = v->fourcc;
-  if (fourcc == NULL)
+  format = v->format;
+  if (format == NULL)
     return;
 
-  fourcc->paint_setup (p, dest);
+  format->paint_setup (p, dest);
 
   x = radius + (0.5 + 0.5 * sin (2 * G_PI * t / 200)) * (w - 2 * radius);
   y = radius + (0.5 + 0.5 * sin (2 * G_PI * sqrt (2) * t / 200)) * (h -
