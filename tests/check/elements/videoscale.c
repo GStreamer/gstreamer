@@ -498,44 +498,42 @@ _test_negotiation (const gchar * src_templ, const gchar * sink_templ,
 GST_START_TEST (test_negotiation)
 {
   _test_negotiation
-      ("video/x-raw-yuv,format=(fourcc)AYUV,width=720,height=576,pixel-aspect-ratio=16/15",
-      "video/x-raw-yuv,format=(fourcc)AYUV,width=768,height=576",
-      768, 576, 1, 1);
+      ("video/x-raw,format=(string)AYUV,width=720,height=576,pixel-aspect-ratio=16/15",
+      "video/x-raw,format=(string)AYUV,width=768,height=576", 768, 576, 1, 1);
 
   _test_negotiation
-      ("video/x-raw-yuv,format=(fourcc)AYUV,width=320,height=240",
-      "video/x-raw-yuv,format=(fourcc)AYUV,width=640,height=320",
+      ("video/x-raw,format=(string)AYUV,width=320,height=240",
+      "video/x-raw,format=(string)AYUV,width=640,height=320", 640, 320, 2, 3);
+
+  _test_negotiation
+      ("video/x-raw,format=(string)AYUV,width=320,height=240",
+      "video/x-raw,format=(string)AYUV,width=640,height=320,pixel-aspect-ratio=[0/1, 1/1]",
       640, 320, 2, 3);
 
   _test_negotiation
-      ("video/x-raw-yuv,format=(fourcc)AYUV,width=320,height=240",
-      "video/x-raw-yuv,format=(fourcc)AYUV,width=640,height=320,pixel-aspect-ratio=[0/1, 1/1]",
-      640, 320, 2, 3);
-
-  _test_negotiation
-      ("video/x-raw-yuv,format=(fourcc)AYUV,width=1920,height=2560,pixel-aspect-ratio=1/1",
-      "video/x-raw-yuv,format=(fourcc)AYUV,width=[1, 2048],height=[1, 2048],pixel-aspect-ratio=1/1",
+      ("video/x-raw,format=(string)AYUV,width=1920,height=2560,pixel-aspect-ratio=1/1",
+      "video/x-raw,format=(string)AYUV,width=[1, 2048],height=[1, 2048],pixel-aspect-ratio=1/1",
       1536, 2048, 1, 1);
 
   _test_negotiation
-      ("video/x-raw-yuv,format=(fourcc)AYUV,width=1920,height=2560,pixel-aspect-ratio=1/1",
-      "video/x-raw-yuv,format=(fourcc)AYUV,width=[1, 2048],height=[1, 2048]",
+      ("video/x-raw,format=(string)AYUV,width=1920,height=2560,pixel-aspect-ratio=1/1",
+      "video/x-raw,format=(string)AYUV,width=[1, 2048],height=[1, 2048]",
       1920, 2048, 4, 5);
 
   _test_negotiation
-      ("video/x-raw-yuv,format=(fourcc)AYUV,width=1920,height=2560",
-      "video/x-raw-yuv,format=(fourcc)AYUV,width=[1, 2048],height=[1, 2048]",
+      ("video/x-raw,format=(string)AYUV,width=1920,height=2560",
+      "video/x-raw,format=(string)AYUV,width=[1, 2048],height=[1, 2048]",
       1920, 2048, 4, 5);
 
   _test_negotiation
-      ("video/x-raw-yuv,format=(fourcc)AYUV,width=1920,height=2560",
-      "video/x-raw-yuv,format=(fourcc)AYUV,width=1200,height=[1, 2048],pixel-aspect-ratio=1/1",
+      ("video/x-raw,format=(string)AYUV,width=1920,height=2560",
+      "video/x-raw,format=(string)AYUV,width=1200,height=[1, 2048],pixel-aspect-ratio=1/1",
       1200, 1600, 1, 1);
 
   /* Doesn't keep DAR but must be possible! */
   _test_negotiation
-      ("video/x-raw-yuv,format=(fourcc)AYUV,width=320,height=240,pixel-aspect-ratio=1/1",
-      "video/x-raw-yuv,format=(fourcc)AYUV,width=200,height=200,pixel-aspect-ratio=1/2",
+      ("video/x-raw,format=(string)AYUV,width=320,height=240,pixel-aspect-ratio=1/1",
+      "video/x-raw,format=(string)AYUV,width=200,height=200,pixel-aspect-ratio=1/2",
       200, 200, 1, 2);
 }
 
@@ -782,7 +780,7 @@ GST_START_TEST (test_basetransform_negotiation)
 
   g_object_set (src, "num-buffers", 3, NULL);
 
-  caps = gst_caps_new_simple ("video/x-raw-yuv", "format", GST_TYPE_FOURCC,
+  caps = gst_caps_new_simple ("video/x-raw", "format", GST_TYPE_FOURCC,
       GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y'), "width", G_TYPE_INT, 352,
       "height", G_TYPE_INT, 288, "framerate", GST_TYPE_FRACTION, 30, 1,
       "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1, NULL);
@@ -790,7 +788,7 @@ GST_START_TEST (test_basetransform_negotiation)
   gst_caps_unref (caps);
 
   /* same caps, just different pixel-aspect-ratio */
-  caps = gst_caps_new_simple ("video/x-raw-yuv", "format", GST_TYPE_FOURCC,
+  caps = gst_caps_new_simple ("video/x-raw", "format", GST_TYPE_FOURCC,
       GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y'), "width", G_TYPE_INT, 352,
       "height", G_TYPE_INT, 288, "framerate", GST_TYPE_FRACTION, 30, 1,
       "pixel-aspect-ratio", GST_TYPE_FRACTION, 12, 11, NULL);

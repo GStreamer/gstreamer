@@ -23,12 +23,12 @@
 
 #include <gst/check/gstcheck.h>
 
-#define FIRST_CAPS  "video/x-raw-yuv,width=(int)480,height=(int)320"
-#define SECOND_CAPS "video/x-raw-yuv,width=(int)120,height=(int)100"
-#define THIRD_CAPS  "video/x-raw-yuv,width=(int)[10,50],height=(int)[100,200]"
-#define FOURTH_CAPS "video/x-raw-rgb,width=(int)300,height=(int)[25,75];" \
-                    "video/x-raw-yuv,width=(int)[30,40]," \
-                    "height=(int)[100,200],format=(fourcc)YUY2"
+#define FIRST_CAPS  "video/x-raw,width=(int)480,height=(int)320"
+#define SECOND_CAPS "video/x-raw,width=(int)120,height=(int)100"
+#define THIRD_CAPS  "video/x-raw,width=(int)[10,50],height=(int)[100,200]"
+#define FOURTH_CAPS "video/x-raw,width=(int)300,height=(int)[25,75];" \
+                    "video/x-raw,width=(int)[30,40]," \
+                    "height=(int)[100,200],format=(string)YUY2"
 
 int buffer_count = 0;
 GstCaps *current_caps = NULL;
@@ -147,8 +147,8 @@ GST_START_TEST (test_capsfilter_renegotiation)
   run_capsfilter_renegotiation ("videotestsrc num-buffers=200 peer-alloc=false"
       " ! capsfilter caps=\"" FIRST_CAPS "\" name=cf ! fakesink name=sink");
   run_capsfilter_renegotiation ("videotestsrc num-buffers=200 peer-alloc=false"
-      " ! capsfilter caps=\"video/x-raw-yuv, format=(fourcc)I420, width=(int)100, height=(int)100\" "
-      " ! ffmpegcolorspace ! videoscale ! capsfilter caps=\"" FIRST_CAPS
+      " ! capsfilter caps=\"video/x-raw, format=(string)I420, width=(int)100, height=(int)100\" "
+      " ! videoconvert ! videoscale ! capsfilter caps=\"" FIRST_CAPS
       "\" name=cf " " ! fakesink name=sink");
 }
 

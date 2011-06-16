@@ -271,7 +271,7 @@ static const gchar *caps_strings[] = {
   "video/x-h261", "video/x-huffyuv", "video/x-intel-h263", "video/x-jpeg",
   "video/x-mjpeg", "video/x-mjpeg-b", "video/mpegts", "video/x-mng",
   "video/x-mszh", "video/x-msvideocodec", "video/x-mve", "video/x-nut",
-  "video/x-nuv", "video/x-qdrw", "video/x-raw-gray", "video/x-smc",
+  "video/x-nuv", "video/x-qdrw", "video/x-raw", "video/x-smc",
   "video/x-smoke", "video/x-tarkin", "video/x-theora", "video/x-rle",
   "video/x-ultimotion", "video/x-vcd", "video/x-vmnc", "video/x-vp3",
   "video/x-vp5", "video/x-vp6", "video/x-vp6-flash", "video/x-vp7",
@@ -383,8 +383,8 @@ static const gchar *caps_strings[] = {
   "audio/x-raw-int, endianness=(int)1234, signed=(boolean)true, width=(int)16, depth=(int)16, rate=(int)44100, channels=(int)2",
   "audio/x-raw-float, rate=(int)22050, channels=(int)2, endianness=(int)1234, width=(int)32",
   /* raw video */
-  "video/x-raw-rgb, bpp=(int)16, endianness=(int)1234, depth=(int)16, red_mask=(int)63488, green_mask=(int)2016, blue_mask=(int)31, width=(int)320, height=(int)240, framerate=(fraction)30/1, pixel-aspect-ratio=(fraction)1/1",
-  "video/x-raw-yuv, format=(fourcc)YUY2, width=(int)320, height=(int)240, framerate=(fraction)30/1",
+  "video/x-raw, format=(string)RGB16, width=(int)320, height=(int)240, framerate=(fraction)30/1, pixel-aspect-ratio=(fraction)1/1",
+  "video/x-raw, format=(string)YUY2, width=(int)320, height=(int)240, framerate=(fraction)30/1",
   /* and a made-up format */
   "video/x-tpm"
 };

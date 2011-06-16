@@ -239,8 +239,7 @@ create_saveload_target (const gchar * targetname)
 
   caps = gst_caps_from_string ("video/x-glitter,sparkling=True");
   caps2 =
-      gst_caps_from_string
-      ("video/x-raw-yuv,width=640,height=480,framerate=15/1");
+      gst_caps_from_string ("video/x-raw,width=640,height=480,framerate=15/1");
   sprof = (GstEncodingProfile *)
       gst_encoding_video_profile_new (caps, "seriously glittery", caps2, 0);
   gst_encoding_video_profile_set_variableframerate ((GstEncodingVideoProfile *)
@@ -376,8 +375,7 @@ test_individual_target (GstEncodingTarget * target)
   GST_DEBUG ("Checking the container profile has the video//x-glitter stream");
   tmpcaps = gst_caps_from_string ("video/x-glitter,sparkling=True");
   tmpcaps2 =
-      gst_caps_from_string
-      ("video/x-raw-yuv,width=640,height=480,framerate=15/1");
+      gst_caps_from_string ("video/x-raw,width=640,height=480,framerate=15/1");
   sprof2 = (GstEncodingProfile *)
       gst_encoding_video_profile_new (tmpcaps, "seriously glittery", tmpcaps2,
       0);
@@ -536,7 +534,7 @@ parent=pony\n\
 type=video\n\
 preset=seriously glittery\n\
 format=video/x-glitter,sparkling=True\n\
-restriction=video/x-raw-yuv,width=640,height=480,framerate=15/1\n\
+restriction=video/x-raw,width=640,height=480,framerate=15/1\n\
 presence=0\n\
 variableframerate=true\n\
 ";

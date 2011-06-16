@@ -586,7 +586,7 @@ static GstCaps *
 gst_red_video_src_get_caps (GstBaseSrc * src, GstCaps * filter)
 {
   guint w = 64, h = 64;
-  return gst_caps_new_simple ("video/x-raw-yuv", "format", GST_TYPE_FOURCC,
+  return gst_caps_new_simple ("video/x-raw", "format", GST_TYPE_FOURCC,
       GST_MAKE_FOURCC ('I', '4', '2', '0'), "width", G_TYPE_INT, w, "height",
       G_TYPE_INT, h, "framerate", GST_TYPE_FRACTION, 1, 1, NULL);
 }
@@ -598,7 +598,7 @@ gst_red_video_src_class_init (GstRedVideoSrcClass * klass)
   GstBaseSrcClass *basesrc_class = GST_BASE_SRC_CLASS (klass);
   static GstStaticPadTemplate src_templ = GST_STATIC_PAD_TEMPLATE ("src",
       GST_PAD_SRC, GST_PAD_ALWAYS,
-      GST_STATIC_CAPS ("video/x-raw-yuv, format=(fourcc)I420")
+      GST_STATIC_CAPS ("video/x-raw, format=(string)I420")
       );
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 

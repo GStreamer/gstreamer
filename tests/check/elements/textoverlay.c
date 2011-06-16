@@ -41,15 +41,15 @@
 static GstPad *myvideosrcpad, *mytextsrcpad, *mysinkpad;
 
 #define VIDEO_CAPS_STRING               \
-    "video/x-raw-yuv, "                 \
-    "format = (fourcc) I420, "          \
+    "video/x-raw, "                 \
+    "format = (string) I420, "          \
     "framerate = (fraction) 1/1, "      \
     "width = (int) 240, "               \
     "height = (int) 120"
 
 #define VIDEO_CAPS_TEMPLATE_STRING      \
-    "video/x-raw-yuv, "                 \
-    "format = (fourcc) I420"
+    "video/x-raw, "                 \
+    "format = (string) I420"
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,

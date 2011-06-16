@@ -43,7 +43,7 @@ test_shutdown_for_factory (const gchar * factory_name)
   vis = gst_check_setup_element (factory_name);
 
   cf = gst_check_setup_element ("capsfilter");
-  caps = gst_caps_new_simple ("video/x-raw-rgb", "width", G_TYPE_INT, 320,
+  caps = gst_caps_new_simple ("video/x-raw", "width", G_TYPE_INT, 320,
       "height", G_TYPE_INT, 240, "framerate", GST_TYPE_FRACTION, 15, 1, NULL);
   g_object_set (cf, "caps", caps, NULL);
   gst_caps_unref (caps);

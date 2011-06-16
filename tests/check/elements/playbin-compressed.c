@@ -380,7 +380,7 @@ gst_video_codec_sink_base_init (gpointer klass)
 {
   static GstStaticPadTemplate sink_templ = GST_STATIC_PAD_TEMPLATE ("sink",
       GST_PAD_SINK, GST_PAD_ALWAYS,
-      GST_STATIC_CAPS ("video/x-raw-yuv; video/x-compressed")
+      GST_STATIC_CAPS ("video/x-raw; video/x-compressed")
       );
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
@@ -398,12 +398,12 @@ gst_video_codec_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
 
   s = gst_caps_get_structure (caps, 0);
 
-  if (gst_structure_has_name (s, "video/x-raw-yuv")) {
+  if (gst_structure_has_name (s, "video/x-raw")) {
     sink->raw = TRUE;
   } else if (gst_structure_has_name (s, "video/x-compressed")) {
     sink->raw = FALSE;
   } else {
-    fail_unless (gst_structure_has_name (s, "video/x-raw-yuv")
+    fail_unless (gst_structure_has_name (s, "video/x-raw")
         || gst_structure_has_name (s, "video/x-compressed"));
     return FALSE;
   }
@@ -464,7 +464,7 @@ gst_codec_demuxer_base_init (gpointer klass)
   static GstStaticPadTemplate src_templ = GST_STATIC_PAD_TEMPLATE ("src_%d",
       GST_PAD_SRC, GST_PAD_SOMETIMES,
       GST_STATIC_CAPS ("audio/x-raw-int; audio/x-compressed; "
-          "video/x-raw-yuv; video/x-compressed")
+          "video/x-raw; video/x-compressed")
       );
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
@@ -577,7 +577,7 @@ gst_codec_demuxer_setup_pad (GstCodecDemuxer * demux, GstPad ** pad,
     }
 
     if (g_str_equal (streaminfo, "raw-video")) {
-      caps = gst_caps_new_simple ("video/x-raw-yuv",
+      caps = gst_caps_new_simple ("video/x-raw",
           "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('I', '4', '2', '0'),
           "width", G_TYPE_INT, 320,
           "height", G_TYPE_INT, 240,
@@ -692,8 +692,8 @@ GST_START_TEST (test_raw_single_video_stream_manual_sink)
 
   playbin =
       create_playbin
-      ("caps:video/x-raw-yuv, "
-      "format=(fourcc)I420, "
+      ("caps:video/x-raw, "
+      "format=(string)I420, "
       "width=(int)320, "
       "height=(int)240, "
       "framerate=(fraction)0/1, " "pixel-aspect-ratio=(fraction)1/1", TRUE);

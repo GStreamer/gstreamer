@@ -755,9 +755,9 @@ GST_END_TEST;
 GST_START_TEST (test_video_size_from_caps)
 {
   gint size;
-  guint32 fourcc = GST_MAKE_FOURCC ('Y', 'V', '1', '2');
-  GstCaps *caps = gst_caps_new_simple ("video/x-raw-yuv",
-      "format", GST_TYPE_FOURCC, fourcc,
+
+  GstCaps *caps = gst_caps_new_simple ("video/x-raw",
+      "format", G_TYPE_STRING, "YV12",
       "width", G_TYPE_INT, 640,
       "height", G_TYPE_INT, 480,
       "framerate", GST_TYPE_FRACTION, 25, 1,

@@ -31,34 +31,34 @@ static GstPad *mysrcpad, *mysinkpad;
 
 
 #define VIDEO_CAPS_TEMPLATE_STRING     \
-    "video/x-raw-yuv"
+    "video/x-raw"
 
 #define VIDEO_CAPS_STRING               \
-    "video/x-raw-yuv, "                 \
+    "video/x-raw, "                 \
     "width = (int) 320, "               \
     "height = (int) 240, "              \
     "framerate = (fraction) 25/1 , "    \
-    "format = (fourcc) I420"
+    "format = (string) I420"
 
 #define VIDEO_CAPS_NO_FRAMERATE_STRING  \
-    "video/x-raw-yuv, "                 \
+    "video/x-raw, "                 \
     "width = (int) 320, "               \
     "height = (int) 240, "              \
-    "format = (fourcc) I420"
+    "format = (string) I420"
 
 #define VIDEO_CAPS_NEWSIZE_STRING       \
-    "video/x-raw-yuv, "                 \
+    "video/x-raw, "                 \
     "width = (int) 240, "               \
     "height = (int) 120, "              \
     "framerate = (fraction) 25/1 , "	\
-    "format = (fourcc) I420"
+    "format = (string) I420"
 
 #define VIDEO_CAPS_UNUSUAL_FRAMERATE    \
-    "video/x-raw-yuv, "                 \
+    "video/x-raw, "                 \
     "width = (int) 240, "               \
     "height = (int) 120, "              \
     "framerate = (fraction) 999/7 , "	\
-    "format = (fourcc) I420, "          \
+    "format = (string) I420, "          \
     "color-matrix=(string)sdtv"
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
