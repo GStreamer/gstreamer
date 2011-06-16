@@ -33,7 +33,7 @@ G_BEGIN_DECLS
  * @GST_VIDEO_FORMAT_I420: planar 4:2:0 YUV
  * @GST_VIDEO_FORMAT_YV12: planar 4:2:0 YVU (like I420 but UV planes swapped)
  * @GST_VIDEO_FORMAT_YUY2: packed 4:2:2 YUV (Y0-U0-Y1-V0 Y2-U2-Y3-V2 Y4 ...)
- * @GST_VIDEO_FORMAT_UYVY: packed 4:2:2 YUV (U0-Y0-V0-Y1 U2-Y2-V2-Y3 U4 ...) 
+ * @GST_VIDEO_FORMAT_UYVY: packed 4:2:2 YUV (U0-Y0-V0-Y1 U2-Y2-V2-Y3 U4 ...)
  * @GST_VIDEO_FORMAT_AYUV: packed 4:4:4 YUV with alpha channel (A0-Y0-U0-V0 ...)
  * @GST_VIDEO_FORMAT_RGBx: sparse rgb packed into 32 bit, space last
  * @GST_VIDEO_FORMAT_BGRx: sparse reverse rgb packed into 32 bit, space last
@@ -123,6 +123,13 @@ typedef enum {
 
 #define GST_VIDEO_SIZE_RANGE "(int) [ 1, max ]"
 #define GST_VIDEO_FPS_RANGE "(fraction) [ 0, max ]"
+
+#define GST_VIDEO_FORMATS_ALL "{ \"I420\"," "\"YV12\"," "\"YUY2\"," "\"UYVY\"," "\"AYUV\"," "\"RGBx\"," \
+    "\"BGRx\"," "\"xRGB\"," "\"xBGR\"," "\"RGBA\"," "\"BGRA\"," "\"ARGB\"," "\"ABGR\"," "\"RGB\"," \
+    "\"BGR\"," "\"Y41B\"," "\"Y42B\"," "\"YVYU\"," "\"Y444\"," "\"v210\"," "\"v216\"," "\"NV12\"," \
+    "\"NV21\"," "\"GRAY8\"," "\"GRAY16_BE\"," "\"GRAY16_LE\"," "\"v308\"," "\"Y800\"," "\"Y16\"," \
+    "\"RGB16\"," "\"BGR16\"," "\"RGB15\"," "\"BGR15\"," "\"UYVP\"," "\"A420\"," "\"RGB8_PALETTED\"," \
+    "\"YUV9\"," "\"YVU9\"," "\"IYU1\"," "\"ARGB64\"," "\"AYUV64\"," "\"r210\" } "
 
 /**
  * GST_VIDEO_CAPS_MAKE:
@@ -237,6 +244,10 @@ GstCaps *      gst_video_format_new_caps_interlaced (GstVideoFormat format,
 GstCaps *      gst_video_format_new_template_caps (GstVideoFormat format);
 
 /* format properties */
+
+GstVideoFormat gst_video_format_from_masks (gint depth, gint bpp, gint endianness,
+                                            gint red_mask, gint green_mask,
+                                            gint blue_mask, gint alpha_mask) G_GNUC_CONST;
 
 GstVideoFormat gst_video_format_from_fourcc (guint32 fourcc) G_GNUC_CONST;
 GstVideoFormat gst_video_format_from_string (const gchar *format) G_GNUC_CONST;

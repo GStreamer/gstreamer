@@ -630,6 +630,149 @@ gst_video_format_new_caps (GstVideoFormat format, int width,
 }
 
 
+static GstVideoFormat
+gst_video_format_from_rgb32_masks (int red_mask, int green_mask, int blue_mask)
+{
+  if (red_mask == 0xff000000 && green_mask == 0x00ff0000 &&
+      blue_mask == 0x0000ff00) {
+    return GST_VIDEO_FORMAT_RGBx;
+  }
+  if (red_mask == 0x0000ff00 && green_mask == 0x00ff0000 &&
+      blue_mask == 0xff000000) {
+    return GST_VIDEO_FORMAT_BGRx;
+  }
+  if (red_mask == 0x00ff0000 && green_mask == 0x0000ff00 &&
+      blue_mask == 0x000000ff) {
+    return GST_VIDEO_FORMAT_xRGB;
+  }
+  if (red_mask == 0x000000ff && green_mask == 0x0000ff00 &&
+      blue_mask == 0x00ff0000) {
+    return GST_VIDEO_FORMAT_xBGR;
+  }
+
+  return GST_VIDEO_FORMAT_UNKNOWN;
+}
+
+static GstVideoFormat
+gst_video_format_from_rgba32_masks (int red_mask, int green_mask,
+    int blue_mask, int alpha_mask)
+{
+  if (red_mask == 0xff000000 && green_mask == 0x00ff0000 &&
+      blue_mask == 0x0000ff00 && alpha_mask == 0x000000ff) {
+    return GST_VIDEO_FORMAT_RGBA;
+  }
+  if (red_mask == 0x0000ff00 && green_mask == 0x00ff0000 &&
+      blue_mask == 0xff000000 && alpha_mask == 0x000000ff) {
+    return GST_VIDEO_FORMAT_BGRA;
+  }
+  if (red_mask == 0x00ff0000 && green_mask == 0x0000ff00 &&
+      blue_mask == 0x000000ff && alpha_mask == 0xff000000) {
+    return GST_VIDEO_FORMAT_ARGB;
+  }
+  if (red_mask == 0x000000ff && green_mask == 0x0000ff00 &&
+      blue_mask == 0x00ff0000 && alpha_mask == 0xff000000) {
+    return GST_VIDEO_FORMAT_ABGR;
+  }
+  return GST_VIDEO_FORMAT_UNKNOWN;
+}
+
+static GstVideoFormat
+gst_video_format_from_rgb24_masks (int red_mask, int green_mask, int blue_mask)
+{
+  if (red_mask == 0xff0000 && green_mask == 0x00ff00 && blue_mask == 0x0000ff) {
+    return GST_VIDEO_FORMAT_RGB;
+  }
+  if (red_mask == 0x0000ff && green_mask == 0x00ff00 && blue_mask == 0xff0000) {
+    return GST_VIDEO_FORMAT_BGR;
+  }
+
+  return GST_VIDEO_FORMAT_UNKNOWN;
+}
+
+#define GST_VIDEO_COMP1_MASK_16_INT 0xf800
+#define GST_VIDEO_COMP2_MASK_16_INT 0x07e0
+#define GST_VIDEO_COMP3_MASK_16_INT 0x001f
+
+#define GST_VIDEO_COMP1_MASK_15_INT 0x7c00
+#define GST_VIDEO_COMP2_MASK_15_INT 0x03e0
+#define GST_VIDEO_COMP3_MASK_15_INT 0x001f
+
+static GstVideoFormat
+gst_video_format_from_rgb16_masks (int red_mask, int green_mask, int blue_mask)
+{
+  if (red_mask == GST_VIDEO_COMP1_MASK_16_INT
+      && green_mask == GST_VIDEO_COMP2_MASK_16_INT
+      && blue_mask == GST_VIDEO_COMP3_MASK_16_INT) {
+    return GST_VIDEO_FORMAT_RGB16;
+  }
+  if (red_mask == GST_VIDEO_COMP3_MASK_16_INT
+      && green_mask == GST_VIDEO_COMP2_MASK_16_INT
+      && blue_mask == GST_VIDEO_COMP1_MASK_16_INT) {
+    return GST_VIDEO_FORMAT_BGR16;
+  }
+  if (red_mask == GST_VIDEO_COMP1_MASK_15_INT
+      && green_mask == GST_VIDEO_COMP2_MASK_15_INT
+      && blue_mask == GST_VIDEO_COMP3_MASK_15_INT) {
+    return GST_VIDEO_FORMAT_RGB15;
+  }
+  if (red_mask == GST_VIDEO_COMP3_MASK_15_INT
+      && green_mask == GST_VIDEO_COMP2_MASK_15_INT
+      && blue_mask == GST_VIDEO_COMP1_MASK_15_INT) {
+    return GST_VIDEO_FORMAT_BGR15;
+  }
+  return GST_VIDEO_FORMAT_UNKNOWN;
+}
+
+GstVideoFormat
+gst_video_format_from_masks (gint depth, gint bpp, gint endianness,
+    gint red_mask, gint green_mask, gint blue_mask, gint alpha_mask)
+{
+  GstVideoFormat format;
+
+  /* our caps system handles 24/32bpp RGB as big-endian. */
+  if ((bpp == 24 || bpp == 32) && endianness == G_LITTLE_ENDIAN) {
+    red_mask = GUINT32_TO_BE (red_mask);
+    green_mask = GUINT32_TO_BE (green_mask);
+    blue_mask = GUINT32_TO_BE (blue_mask);
+    endianness = G_BIG_ENDIAN;
+    if (bpp == 24) {
+      red_mask >>= 8;
+      green_mask >>= 8;
+      blue_mask >>= 8;
+    }
+  }
+
+  if (depth == 30 && bpp == 32) {
+    format = GST_VIDEO_FORMAT_r210;
+  } else if (depth == 24 && bpp == 32) {
+    format = gst_video_format_from_rgb32_masks (red_mask, green_mask,
+        blue_mask);
+  } else if (depth == 32 && bpp == 32 && alpha_mask) {
+    format = gst_video_format_from_rgba32_masks (red_mask, green_mask,
+        blue_mask, alpha_mask);
+  } else if (depth == 24 && bpp == 24) {
+    format = gst_video_format_from_rgb24_masks (red_mask, green_mask,
+        blue_mask);
+  } else if ((depth == 15 || depth == 16) && bpp == 16 &&
+      endianness == G_BYTE_ORDER) {
+    format = gst_video_format_from_rgb16_masks (red_mask, green_mask,
+        blue_mask);
+  } else if (depth == 8 && bpp == 8) {
+    format = GST_VIDEO_FORMAT_RGB8_PALETTED;
+  } else if (depth == 64 && bpp == 64) {
+    format = gst_video_format_from_rgba32_masks (red_mask, green_mask,
+        blue_mask, alpha_mask);
+    if (format == GST_VIDEO_FORMAT_ARGB) {
+      format = GST_VIDEO_FORMAT_ARGB64;
+    } else {
+      format = GST_VIDEO_FORMAT_UNKNOWN;
+    }
+  } else {
+    format = GST_VIDEO_FORMAT_UNKNOWN;
+  }
+  return format;
+}
+
 /**
  * gst_video_format_from_fourcc:
  * @fourcc: a FOURCC value representing raw YUV video
