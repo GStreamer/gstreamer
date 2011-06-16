@@ -29,8 +29,6 @@ G_BEGIN_DECLS
 #define GST_META_API_VIDEO   "GstMetaVideo"
 #define GST_META_INFO_VIDEO  (gst_meta_video_get_info())
 
-#define GST_VIDEO_MAX_PLANES 4
-
 typedef struct _GstMetaVideo GstMetaVideo;
 typedef struct _GstMetaVideoPlane GstMetaVideoPlane;
 

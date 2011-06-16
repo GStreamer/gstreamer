@@ -27,57 +27,97 @@
 
 #include "video.h"
 
+typedef enum
+{
+  VIDEO_FLAG_YUV = (1 << 0),
+  VIDEO_FLAG_RGB = (1 << 1),
+  VIDEO_FLAG_GRAY = (1 << 2),
+  VIDEO_FLAG_ALPHA = (1 << 3)
+} VideoFlags;
+
 typedef struct
 {
   const gchar *fmt;
   GstVideoFormat format;
   guint32 fourcc;
+  VideoFlags flags;
+  guint depth[GST_VIDEO_MAX_PLANES];
 } VideoFormat;
 
+#define COMP0            { 0, 0, 0, 0 }
+#define COMP8            { 8, 0, 0, 0 }
+#define COMP888          { 8, 8, 8, 0 }
+#define COMP8888         { 8, 8, 8, 8 }
+#define COMP10_10_10     { 10, 10, 10, 0 }
+#define COMP16           { 16, 0, 0, 0 }
+#define COMP16_16_16     { 16, 0, 0, 0 }
+#define COMP16_16_16_16  { 16, 0, 0, 0 }
+#define COMP555          { 5, 5, 5, 0 }
+#define COMP565          { 5, 6, 5, 0 }
+
+#define MAKE_YUV_FORMAT(name, fourcc, comp) \
+ { G_STRINGIFY(name), GST_VIDEO_FORMAT_ ##name, fourcc, VIDEO_FLAG_YUV, comp }
+#define MAKE_YUVA_FORMAT(name, fourcc, comp) \
+ { G_STRINGIFY(name), GST_VIDEO_FORMAT_ ##name, fourcc, VIDEO_FLAG_YUV | VIDEO_FLAG_ALPHA, comp }
+
+#define MAKE_RGB_FORMAT(name, comp) \
+ { G_STRINGIFY(name), GST_VIDEO_FORMAT_ ##name, 0x00000000, VIDEO_FLAG_RGB, comp }
+#define MAKE_RGBA_FORMAT(name, comp) \
+ { G_STRINGIFY(name), GST_VIDEO_FORMAT_ ##name, 0x00000000, VIDEO_FLAG_RGB | VIDEO_FLAG_ALPHA, comp }
+
+#define MAKE_GRAY_FORMAT(name, comp) \
+ { G_STRINGIFY(name), GST_VIDEO_FORMAT_ ##name, 0x00000000, VIDEO_FLAG_GRAY, comp }
+
 static VideoFormat formats[] = {
-  {"UNKNOWN", GST_VIDEO_FORMAT_UNKNOWN, 0x00000000},
-  {"I420", GST_VIDEO_FORMAT_I420, GST_MAKE_FOURCC ('I', '4', '2', '0')},
-  {"YV12", GST_VIDEO_FORMAT_YV12, GST_MAKE_FOURCC ('Y', 'V', '1', '2')},
-  {"YUY2", GST_VIDEO_FORMAT_YUY2, GST_MAKE_FOURCC ('Y', 'U', 'Y', '2')},
-  {"UYVY", GST_VIDEO_FORMAT_UYVY, GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y')},
-  {"AYUV", GST_VIDEO_FORMAT_AYUV, GST_MAKE_FOURCC ('A', 'Y', 'U', 'V')},
-  {"RGBx", GST_VIDEO_FORMAT_RGBx, 0x00000000},
-  {"BGRx", GST_VIDEO_FORMAT_BGRx, 0x00000000},
-  {"xRGB", GST_VIDEO_FORMAT_xRGB, 0x00000000},
-  {"xBGR", GST_VIDEO_FORMAT_xBGR, 0x00000000},
-  {"RGBA", GST_VIDEO_FORMAT_RGBA, 0x00000000},
-  {"BGRA", GST_VIDEO_FORMAT_BGRA, 0x00000000},
-  {"ARGB", GST_VIDEO_FORMAT_ARGB, 0x00000000},
-  {"ABGR", GST_VIDEO_FORMAT_ABGR, 0x00000000},
-  {"RGB", GST_VIDEO_FORMAT_RGB, 0x00000000},
-  {"BGR", GST_VIDEO_FORMAT_BGR, 0x00000000},
-  {"Y41B", GST_VIDEO_FORMAT_Y41B, GST_MAKE_FOURCC ('Y', '4', '1', 'B')},
-  {"Y42B", GST_VIDEO_FORMAT_Y42B, GST_MAKE_FOURCC ('Y', '4', '2', 'B')},
-  {"YVYU", GST_VIDEO_FORMAT_YVYU, GST_MAKE_FOURCC ('Y', 'V', 'Y', 'U')},
-  {"Y444", GST_VIDEO_FORMAT_Y444, GST_MAKE_FOURCC ('Y', '4', '4', '4')},
-  {"v210", GST_VIDEO_FORMAT_v210, GST_MAKE_FOURCC ('v', '2', '1', '0')},
-  {"v216", GST_VIDEO_FORMAT_v216, GST_MAKE_FOURCC ('v', '2', '1', '6')},
-  {"NV12", GST_VIDEO_FORMAT_NV12, GST_MAKE_FOURCC ('N', 'V', '1', '2')},
-  {"NV21", GST_VIDEO_FORMAT_NV21, GST_MAKE_FOURCC ('N', 'V', '2', '1')},
-  {"GRAY8", GST_VIDEO_FORMAT_GRAY8, 0x00000000},
-  {"GRAY16_BE", GST_VIDEO_FORMAT_GRAY16_BE, 0x00000000},
-  {"GRAY16_LE", GST_VIDEO_FORMAT_GRAY16_LE, 0x00000000},
-  {"v308", GST_VIDEO_FORMAT_v308, GST_MAKE_FOURCC ('v', '3', '0', '8')},
-  {"Y800", GST_VIDEO_FORMAT_Y800, GST_MAKE_FOURCC ('Y', '8', '0', '0')},
-  {"Y16", GST_VIDEO_FORMAT_Y16, GST_MAKE_FOURCC ('Y', '1', '6', ' ')},
-  {"RGB16", GST_VIDEO_FORMAT_RGB16, 0x00000000},
-  {"BGR16", GST_VIDEO_FORMAT_BGR16, 0x00000000},
-  {"RGB15", GST_VIDEO_FORMAT_RGB15, 0x00000000},
-  {"BGR15", GST_VIDEO_FORMAT_BGR15, 0x00000000},
-  {"UYVP", GST_VIDEO_FORMAT_UYVP, GST_MAKE_FOURCC ('U', 'Y', 'V', 'P')},
-  {"A420", GST_VIDEO_FORMAT_A420, GST_MAKE_FOURCC ('A', '4', '2', '0')},
-  {"RGB8_PALLETTED", GST_VIDEO_FORMAT_RGB8_PALETTED, 0x00000000},
-  {"YUV9", GST_VIDEO_FORMAT_YUV9, GST_MAKE_FOURCC ('Y', 'U', 'V', '9')},
-  {"YVU9", GST_VIDEO_FORMAT_YVU9, GST_MAKE_FOURCC ('Y', 'V', 'U', '9')},
-  {"IYU1", GST_VIDEO_FORMAT_IYU1, GST_MAKE_FOURCC ('I', 'Y', 'U', '1')},
-  {"ARGB64", GST_VIDEO_FORMAT_ARGB64, 0x00000000},
-  {"AYUV64", GST_VIDEO_FORMAT_AYUV64, GST_MAKE_FOURCC ('A', 'Y', '6', '4')},
-  {"r210", GST_VIDEO_FORMAT_r210, 0x00000000}
+  {"UNKNOWN", GST_VIDEO_FORMAT_UNKNOWN, 0x00000000, 0, COMP0},
+
+  MAKE_YUV_FORMAT (I420, GST_MAKE_FOURCC ('I', '4', '2', '0'), COMP888),
+  MAKE_YUV_FORMAT (YV12, GST_MAKE_FOURCC ('Y', 'V', '1', '2'), COMP888),
+  MAKE_YUV_FORMAT (YUY2, GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'), COMP888),
+  MAKE_YUV_FORMAT (UYVY, GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y'), COMP888),
+  MAKE_YUVA_FORMAT (AYUV, GST_MAKE_FOURCC ('A', 'Y', 'U', 'V'), COMP8888),
+  MAKE_RGB_FORMAT (RGBx, COMP888),
+  MAKE_RGB_FORMAT (BGRx, COMP888),
+  MAKE_RGB_FORMAT (xRGB, COMP888),
+  MAKE_RGB_FORMAT (xBGR, COMP888),
+  MAKE_RGBA_FORMAT (RGBA, COMP8888),
+  MAKE_RGBA_FORMAT (BGRA, COMP8888),
+  MAKE_RGBA_FORMAT (ARGB, COMP8888),
+  MAKE_RGBA_FORMAT (ABGR, COMP8888),
+  MAKE_RGB_FORMAT (RGB, COMP888),
+  MAKE_RGB_FORMAT (BGR, COMP888),
+
+  MAKE_YUV_FORMAT (Y41B, GST_MAKE_FOURCC ('Y', '4', '1', 'B'), COMP888),
+  MAKE_YUV_FORMAT (Y42B, GST_MAKE_FOURCC ('Y', '4', '2', 'B'), COMP888),
+  MAKE_YUV_FORMAT (YVYU, GST_MAKE_FOURCC ('Y', 'V', 'Y', 'U'), COMP888),
+  MAKE_YUV_FORMAT (Y444, GST_MAKE_FOURCC ('Y', '4', '4', '4'), COMP888),
+  MAKE_YUV_FORMAT (v210, GST_MAKE_FOURCC ('v', '2', '1', '0'), COMP10_10_10),
+  MAKE_YUV_FORMAT (v216, GST_MAKE_FOURCC ('v', '2', '1', '6'), COMP16_16_16),
+  MAKE_YUV_FORMAT (NV12, GST_MAKE_FOURCC ('N', 'V', '1', '2'), COMP888),
+  MAKE_YUV_FORMAT (NV21, GST_MAKE_FOURCC ('N', 'V', '2', '1'), COMP888),
+
+  MAKE_GRAY_FORMAT (GRAY8, COMP8),
+  MAKE_GRAY_FORMAT (GRAY16_BE, COMP16),
+  MAKE_GRAY_FORMAT (GRAY16_LE, COMP16),
+
+  MAKE_YUV_FORMAT (v308, GST_MAKE_FOURCC ('v', '3', '0', '8'), COMP888),
+  MAKE_YUV_FORMAT (Y800, GST_MAKE_FOURCC ('Y', '8', '0', '0'), COMP8),
+  MAKE_YUV_FORMAT (Y16, GST_MAKE_FOURCC ('Y', '1', '6', ' '), COMP16),
+
+  MAKE_RGB_FORMAT (RGB16, COMP565),
+  MAKE_RGB_FORMAT (BGR16, COMP565),
+  MAKE_RGB_FORMAT (RGB15, COMP555),
+  MAKE_RGB_FORMAT (BGR15, COMP555),
+
+  MAKE_YUV_FORMAT (UYVP, GST_MAKE_FOURCC ('U', 'Y', 'V', 'P'), COMP10_10_10),
+  MAKE_YUVA_FORMAT (A420, GST_MAKE_FOURCC ('A', '4', '2', '0'), COMP888),
+  MAKE_RGBA_FORMAT (RGB8_PALETTED, COMP8888),
+  MAKE_YUV_FORMAT (YUV9, GST_MAKE_FOURCC ('Y', 'U', 'V', '9'), COMP888),
+  MAKE_YUV_FORMAT (YVU9, GST_MAKE_FOURCC ('Y', 'V', 'U', '9'), COMP888),
+  MAKE_YUV_FORMAT (IYU1, GST_MAKE_FOURCC ('I', 'Y', 'U', '1'), COMP888),
+  MAKE_RGBA_FORMAT (ARGB64, COMP16_16_16_16),
+  MAKE_YUVA_FORMAT (AYUV64, 0x00000000, COMP16_16_16_16),
+  MAKE_YUV_FORMAT (r210, GST_MAKE_FOURCC ('r', '2', '1', '0'), COMP10_10_10),
 };
 
 /**
@@ -159,63 +199,6 @@ no_fraction:
 }
 
 /**
- * gst_video_get_size:
- * @pad: pointer to a #GstPad
- * @width: pointer to integer to hold pixel width of the video frames (output)
- * @height: pointer to integer to hold pixel height of the video frames (output)
- *
- * Inspect the caps of the provided pad and retrieve the width and height of
- * the video frames it is configured for.
- *
- * The pad needs to have negotiated caps containing width and height properties.
- *
- * Returns: TRUE if the width and height could be retrieved.
- *
- */
-gboolean
-gst_video_get_size (GstPad * pad, gint * width, gint * height)
-{
-  GstCaps *caps = NULL;
-  GstStructure *structure;
-  gboolean ret;
-
-  g_return_val_if_fail (pad != NULL, FALSE);
-  g_return_val_if_fail (width != NULL, FALSE);
-  g_return_val_if_fail (height != NULL, FALSE);
-
-  caps = gst_pad_get_current_caps (pad);
-  if (caps == NULL)
-    goto no_caps;
-
-  structure = gst_caps_get_structure (caps, 0);
-  ret = gst_structure_get_int (structure, "width", width);
-  ret &= gst_structure_get_int (structure, "height", height);
-  gst_caps_unref (caps);
-
-  if (!ret)
-    goto no_size;
-
-  GST_DEBUG ("size request on pad %s:%s: %dx%d",
-      GST_DEBUG_PAD_NAME (pad), width ? *width : -1, height ? *height : -1);
-
-  return TRUE;
-
-  /* ERROR */
-no_caps:
-  {
-    g_warning ("gstvideo: failed to get caps of pad %s:%s",
-        GST_DEBUG_PAD_NAME (pad));
-    return FALSE;
-  }
-no_size:
-  {
-    g_warning ("gstvideo: failed to get size properties on pad %s:%s",
-        GST_DEBUG_PAD_NAME (pad));
-    return FALSE;
-  }
-}
-
-/**
  * gst_video_calculate_display_ratio:
  * @dar_n: Numerator of the calculated display_ratio
  * @dar_d: Denominator of the calculated display_ratio
@@ -265,8 +248,13 @@ gst_video_calculate_display_ratio (guint * dar_n, guint * dar_d,
   *dar_d = den;
 
   return TRUE;
+
+  /* ERRORS */
 error_overflow:
-  return FALSE;
+  {
+    GST_WARNING ("overflow in multiply");
+    return FALSE;
+  }
 }
 
 /**
@@ -374,64 +362,6 @@ gst_video_parse_caps_chroma_site (GstCaps * caps)
 
   return NULL;
 }
-
-/**
- * gst_video_format_parse_caps:
- * @caps: the #GstCaps to parse
- * @format: the #GstVideoFormat of the video represented by @caps (output)
- * @width: the width of the video represented by @caps, may be NULL (output)
- * @height: the height of the video represented by @caps, may be NULL (output)
- *
- * Determines the #GstVideoFormat of @caps and places it in the location
- * pointed to by @format.  Extracts the size of the video and places it
- * in the location pointed to by @width and @height.  If @caps does not
- * represent one of the raw video formats listed in #GstVideoFormat, the
- * function will fail and return FALSE.
- *
- * Since: 0.10.16
- *
- * Returns: TRUE if @caps was parsed correctly.
- */
-gboolean
-gst_video_format_parse_caps (const GstCaps * caps, GstVideoFormat * format,
-    int *width, int *height)
-{
-  GstStructure *structure;
-  gboolean ok = TRUE;
-
-  if (!gst_caps_is_fixed (caps))
-    return FALSE;
-
-  structure = gst_caps_get_structure (caps, 0);
-
-  if (format) {
-    if (gst_structure_has_name (structure, "video/x-raw")) {
-      const gchar *fmt;
-
-      fmt = gst_structure_get_string (structure, "format");
-      if (fmt == NULL)
-        ok = FALSE;
-
-      *format = gst_video_format_from_string (fmt);
-      if (*format == GST_VIDEO_FORMAT_UNKNOWN) {
-        ok = FALSE;
-      }
-    } else {
-      ok = FALSE;
-    }
-  }
-
-  if (width) {
-    ok &= gst_structure_get_int (structure, "width", width);
-  }
-
-  if (height) {
-    ok &= gst_structure_get_int (structure, "height", height);
-  }
-
-  return ok;
-}
-
 
 /**
  * gst_video_parse_caps_framerate:
@@ -879,10 +809,10 @@ gst_video_format_to_fourcc (GstVideoFormat format)
 const gchar *
 gst_video_format_to_string (GstVideoFormat format)
 {
-  g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN, 0);
+  g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN, NULL);
 
   if (format >= G_N_ELEMENTS (formats))
-    return GST_VIDEO_FORMAT_UNKNOWN;
+    return NULL;
 
   return formats[format].fmt;
 }
@@ -900,49 +830,12 @@ gst_video_format_to_string (GstVideoFormat format)
 gboolean
 gst_video_format_is_rgb (GstVideoFormat format)
 {
-  switch (format) {
-    case GST_VIDEO_FORMAT_I420:
-    case GST_VIDEO_FORMAT_YV12:
-    case GST_VIDEO_FORMAT_YUY2:
-    case GST_VIDEO_FORMAT_YVYU:
-    case GST_VIDEO_FORMAT_UYVY:
-    case GST_VIDEO_FORMAT_AYUV:
-    case GST_VIDEO_FORMAT_Y41B:
-    case GST_VIDEO_FORMAT_Y42B:
-    case GST_VIDEO_FORMAT_Y444:
-    case GST_VIDEO_FORMAT_v210:
-    case GST_VIDEO_FORMAT_v216:
-    case GST_VIDEO_FORMAT_NV12:
-    case GST_VIDEO_FORMAT_NV21:
-    case GST_VIDEO_FORMAT_v308:
-    case GST_VIDEO_FORMAT_UYVP:
-    case GST_VIDEO_FORMAT_A420:
-    case GST_VIDEO_FORMAT_YUV9:
-    case GST_VIDEO_FORMAT_YVU9:
-    case GST_VIDEO_FORMAT_IYU1:
-    case GST_VIDEO_FORMAT_AYUV64:
-      return FALSE;
-    case GST_VIDEO_FORMAT_RGBx:
-    case GST_VIDEO_FORMAT_BGRx:
-    case GST_VIDEO_FORMAT_xRGB:
-    case GST_VIDEO_FORMAT_xBGR:
-    case GST_VIDEO_FORMAT_RGBA:
-    case GST_VIDEO_FORMAT_BGRA:
-    case GST_VIDEO_FORMAT_ARGB:
-    case GST_VIDEO_FORMAT_ABGR:
-    case GST_VIDEO_FORMAT_RGB:
-    case GST_VIDEO_FORMAT_BGR:
-    case GST_VIDEO_FORMAT_RGB16:
-    case GST_VIDEO_FORMAT_BGR16:
-    case GST_VIDEO_FORMAT_RGB15:
-    case GST_VIDEO_FORMAT_BGR15:
-    case GST_VIDEO_FORMAT_RGB8_PALETTED:
-    case GST_VIDEO_FORMAT_ARGB64:
-    case GST_VIDEO_FORMAT_r210:
-      return TRUE;
-    default:
-      return FALSE;
-  }
+  g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN, FALSE);
+
+  if (format >= G_N_ELEMENTS (formats))
+    return FALSE;
+
+  return (formats[format].flags & VIDEO_FLAG_RGB) != 0;
 }
 
 /**
@@ -958,51 +851,12 @@ gst_video_format_is_rgb (GstVideoFormat format)
 gboolean
 gst_video_format_is_yuv (GstVideoFormat format)
 {
-  switch (format) {
-    case GST_VIDEO_FORMAT_I420:
-    case GST_VIDEO_FORMAT_YV12:
-    case GST_VIDEO_FORMAT_YUY2:
-    case GST_VIDEO_FORMAT_YVYU:
-    case GST_VIDEO_FORMAT_UYVY:
-    case GST_VIDEO_FORMAT_AYUV:
-    case GST_VIDEO_FORMAT_Y41B:
-    case GST_VIDEO_FORMAT_Y42B:
-    case GST_VIDEO_FORMAT_Y444:
-    case GST_VIDEO_FORMAT_v210:
-    case GST_VIDEO_FORMAT_v216:
-    case GST_VIDEO_FORMAT_NV12:
-    case GST_VIDEO_FORMAT_NV21:
-    case GST_VIDEO_FORMAT_v308:
-    case GST_VIDEO_FORMAT_Y800:
-    case GST_VIDEO_FORMAT_Y16:
-    case GST_VIDEO_FORMAT_UYVP:
-    case GST_VIDEO_FORMAT_A420:
-    case GST_VIDEO_FORMAT_YUV9:
-    case GST_VIDEO_FORMAT_YVU9:
-    case GST_VIDEO_FORMAT_IYU1:
-    case GST_VIDEO_FORMAT_AYUV64:
-      return TRUE;
-    case GST_VIDEO_FORMAT_RGBx:
-    case GST_VIDEO_FORMAT_BGRx:
-    case GST_VIDEO_FORMAT_xRGB:
-    case GST_VIDEO_FORMAT_xBGR:
-    case GST_VIDEO_FORMAT_RGBA:
-    case GST_VIDEO_FORMAT_BGRA:
-    case GST_VIDEO_FORMAT_ARGB:
-    case GST_VIDEO_FORMAT_ABGR:
-    case GST_VIDEO_FORMAT_RGB:
-    case GST_VIDEO_FORMAT_BGR:
-    case GST_VIDEO_FORMAT_RGB16:
-    case GST_VIDEO_FORMAT_BGR16:
-    case GST_VIDEO_FORMAT_RGB15:
-    case GST_VIDEO_FORMAT_BGR15:
-    case GST_VIDEO_FORMAT_RGB8_PALETTED:
-    case GST_VIDEO_FORMAT_ARGB64:
-    case GST_VIDEO_FORMAT_r210:
-      return FALSE;
-    default:
-      return FALSE;
-  }
+  g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN, FALSE);
+
+  if (format >= G_N_ELEMENTS (formats))
+    return FALSE;
+
+  return (formats[format].flags & VIDEO_FLAG_YUV) != 0;
 }
 
 /**
@@ -1018,16 +872,12 @@ gst_video_format_is_yuv (GstVideoFormat format)
 gboolean
 gst_video_format_is_gray (GstVideoFormat format)
 {
-  switch (format) {
-    case GST_VIDEO_FORMAT_GRAY8:
-    case GST_VIDEO_FORMAT_GRAY16_BE:
-    case GST_VIDEO_FORMAT_GRAY16_LE:
-    case GST_VIDEO_FORMAT_Y800:
-    case GST_VIDEO_FORMAT_Y16:
-      return TRUE;
-    default:
-      return FALSE;
-  }
+  g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN, FALSE);
+
+  if (format >= G_N_ELEMENTS (formats))
+    return FALSE;
+
+  return (formats[format].flags & VIDEO_FLAG_GRAY) != 0;
 }
 
 /**
@@ -1044,52 +894,12 @@ gst_video_format_is_gray (GstVideoFormat format)
 gboolean
 gst_video_format_has_alpha (GstVideoFormat format)
 {
-  switch (format) {
-    case GST_VIDEO_FORMAT_I420:
-    case GST_VIDEO_FORMAT_YV12:
-    case GST_VIDEO_FORMAT_YUY2:
-    case GST_VIDEO_FORMAT_YVYU:
-    case GST_VIDEO_FORMAT_UYVY:
-    case GST_VIDEO_FORMAT_Y41B:
-    case GST_VIDEO_FORMAT_Y42B:
-    case GST_VIDEO_FORMAT_Y444:
-    case GST_VIDEO_FORMAT_v210:
-    case GST_VIDEO_FORMAT_v216:
-    case GST_VIDEO_FORMAT_NV12:
-    case GST_VIDEO_FORMAT_NV21:
-    case GST_VIDEO_FORMAT_v308:
-    case GST_VIDEO_FORMAT_Y800:
-    case GST_VIDEO_FORMAT_Y16:
-    case GST_VIDEO_FORMAT_UYVP:
-    case GST_VIDEO_FORMAT_YUV9:
-    case GST_VIDEO_FORMAT_YVU9:
-    case GST_VIDEO_FORMAT_IYU1:
-      return FALSE;
-    case GST_VIDEO_FORMAT_AYUV:
-    case GST_VIDEO_FORMAT_RGBA:
-    case GST_VIDEO_FORMAT_BGRA:
-    case GST_VIDEO_FORMAT_ARGB:
-    case GST_VIDEO_FORMAT_ABGR:
-    case GST_VIDEO_FORMAT_A420:
-    case GST_VIDEO_FORMAT_RGB8_PALETTED:
-    case GST_VIDEO_FORMAT_ARGB64:
-    case GST_VIDEO_FORMAT_AYUV64:
-      return TRUE;
-    case GST_VIDEO_FORMAT_RGBx:
-    case GST_VIDEO_FORMAT_BGRx:
-    case GST_VIDEO_FORMAT_xRGB:
-    case GST_VIDEO_FORMAT_xBGR:
-    case GST_VIDEO_FORMAT_RGB:
-    case GST_VIDEO_FORMAT_BGR:
-    case GST_VIDEO_FORMAT_RGB16:
-    case GST_VIDEO_FORMAT_BGR16:
-    case GST_VIDEO_FORMAT_RGB15:
-    case GST_VIDEO_FORMAT_BGR15:
-    case GST_VIDEO_FORMAT_r210:
-      return FALSE;
-    default:
-      return FALSE;
-  }
+  g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN, FALSE);
+
+  if (format >= G_N_ELEMENTS (formats))
+    return FALSE;
+
+  return (formats[format].flags & VIDEO_FLAG_ALPHA) != 0;
 }
 
 /**
@@ -1108,59 +918,218 @@ gst_video_format_has_alpha (GstVideoFormat format)
 int
 gst_video_format_get_component_depth (GstVideoFormat format, int component)
 {
-  if (component == 3 && !gst_video_format_has_alpha (format))
-    return 0;
+  g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN, 0);
+  g_return_val_if_fail (component < GST_VIDEO_MAX_PLANES, 0);
+
+  if (format >= G_N_ELEMENTS (formats))
+    return FALSE;
+
+  return formats[format].depth[component];
+}
+
+/**
+ * gst_video_format_get_pixel_stride:
+ * @format: a #GstVideoFormat
+ * @component: the component index
+ *
+ * Calculates the pixel stride (number of bytes from one pixel to the
+ * pixel to its immediate left) for the video component with an index
+ * of @component.  See @gst_video_format_get_row_stride for a description
+ * of the component index.
+ *
+ * Since: 0.10.16
+ *
+ * Returns: pixel stride of component @component
+ */
+int
+gst_video_format_get_pixel_stride (GstVideoFormat format, int component)
+{
+  g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN, 0);
+  g_return_val_if_fail (component >= 0 && component <= 3, 0);
 
   switch (format) {
-    case GST_VIDEO_FORMAT_RGB16:
-    case GST_VIDEO_FORMAT_BGR16:
-      if (component == 1)
-        return 6;
-      return 5;
-    case GST_VIDEO_FORMAT_RGB15:
-    case GST_VIDEO_FORMAT_BGR15:
-      return 5;
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
-    case GST_VIDEO_FORMAT_YUY2:
-    case GST_VIDEO_FORMAT_YVYU:
-    case GST_VIDEO_FORMAT_UYVY:
     case GST_VIDEO_FORMAT_Y41B:
     case GST_VIDEO_FORMAT_Y42B:
     case GST_VIDEO_FORMAT_Y444:
-    case GST_VIDEO_FORMAT_NV12:
-    case GST_VIDEO_FORMAT_NV21:
-    case GST_VIDEO_FORMAT_v308:
-    case GST_VIDEO_FORMAT_Y800:
+    case GST_VIDEO_FORMAT_A420:
     case GST_VIDEO_FORMAT_YUV9:
     case GST_VIDEO_FORMAT_YVU9:
+      return 1;
+    case GST_VIDEO_FORMAT_YUY2:
+    case GST_VIDEO_FORMAT_YVYU:
+    case GST_VIDEO_FORMAT_UYVY:
+      if (component == 0) {
+        return 2;
+      } else {
+        return 4;
+      }
     case GST_VIDEO_FORMAT_IYU1:
+      /* doesn't make much sense for IYU1 because it's 1 or 3
+       * for luma depending on position */
+      return 0;
     case GST_VIDEO_FORMAT_AYUV:
-    case GST_VIDEO_FORMAT_RGBA:
-    case GST_VIDEO_FORMAT_BGRA:
-    case GST_VIDEO_FORMAT_ARGB:
-    case GST_VIDEO_FORMAT_ABGR:
-    case GST_VIDEO_FORMAT_A420:
-    case GST_VIDEO_FORMAT_RGB8_PALETTED:
     case GST_VIDEO_FORMAT_RGBx:
     case GST_VIDEO_FORMAT_BGRx:
     case GST_VIDEO_FORMAT_xRGB:
     case GST_VIDEO_FORMAT_xBGR:
+    case GST_VIDEO_FORMAT_RGBA:
+    case GST_VIDEO_FORMAT_BGRA:
+    case GST_VIDEO_FORMAT_ARGB:
+    case GST_VIDEO_FORMAT_ABGR:
+    case GST_VIDEO_FORMAT_r210:
+      return 4;
+    case GST_VIDEO_FORMAT_RGB16:
+    case GST_VIDEO_FORMAT_BGR16:
+    case GST_VIDEO_FORMAT_RGB15:
+    case GST_VIDEO_FORMAT_BGR15:
+      return 2;
     case GST_VIDEO_FORMAT_RGB:
     case GST_VIDEO_FORMAT_BGR:
-    default:
-      return 8;
+    case GST_VIDEO_FORMAT_v308:
+      return 3;
     case GST_VIDEO_FORMAT_v210:
-    case GST_VIDEO_FORMAT_UYVP:
-    case GST_VIDEO_FORMAT_r210:
-      return 10;
-    case GST_VIDEO_FORMAT_Y16:
+      /* v210 is packed at the bit level, so pixel stride doesn't make sense */
+      return 0;
     case GST_VIDEO_FORMAT_v216:
+      if (component == 0) {
+        return 4;
+      } else {
+        return 8;
+      }
+    case GST_VIDEO_FORMAT_NV12:
+    case GST_VIDEO_FORMAT_NV21:
+      if (component == 0) {
+        return 1;
+      } else {
+        return 2;
+      }
+    case GST_VIDEO_FORMAT_GRAY8:
+    case GST_VIDEO_FORMAT_Y800:
+      return 1;
+    case GST_VIDEO_FORMAT_GRAY16_BE:
+    case GST_VIDEO_FORMAT_GRAY16_LE:
+    case GST_VIDEO_FORMAT_Y16:
+      return 2;
+    case GST_VIDEO_FORMAT_UYVP:
+      /* UYVP is packed at the bit level, so pixel stride doesn't make sense */
+      return 0;
+    case GST_VIDEO_FORMAT_RGB8_PALETTED:
+      return 1;
     case GST_VIDEO_FORMAT_ARGB64:
     case GST_VIDEO_FORMAT_AYUV64:
-      return 16;
+      return 8;
+    default:
+      return 0;
   }
+}
 
+/**
+ * gst_video_info_init:
+ * @info: a #GstVideoInfo
+ *
+ * Initialize @info with default values.
+ */
+void
+gst_video_info_init (GstVideoInfo * info)
+{
+  g_return_if_fail (info != NULL);
+
+  memset (info, 0, sizeof (GstVideoInfo));
+}
+
+/**
+ * gst_video_info_set_format:
+ * @info: a #GstVideoInfo
+ * @format: the format
+ * @width: a width
+ * @height: a height
+ *
+ * Set the default info for a video frame of @format and @width and @height.
+ */
+void
+gst_video_info_set_format (GstVideoInfo * info, GstVideoFormat format,
+    guint width, guint height)
+{
+  g_return_if_fail (info != NULL);
+  g_return_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN);
+
+  info->format = format;
+  info->width = width;
+  info->heigth = height;
+}
+
+/**
+ * gst_video_info_from_caps:
+ * @info: a #GstVideoInfo
+ * @caps: a #GstCaps
+ *
+ * Parse @caps and update @info.
+ *
+ * Returns: TRUE if @caps could be parsed
+ */
+gboolean
+gst_video_info_from_caps (GstVideoInfo * info, const GstCaps * caps)
+{
+  GstStructure *structure;
+  const gchar *fmt;
+  gboolean ok = TRUE;
+  GstVideoFormat format;
+  gint width, height g_return_val_if_fail (info != NULL, FALSE);
+  g_return_val_if_fail (caps != NULL, FALSE);
+
+  if (!gst_caps_is_fixed (caps))
+    return FALSE;
+
+  structure = gst_caps_get_structure (caps, 0);
+
+  if (!gst_structure_has_name (structure, "video/x-raw"))
+    goto wrong_name;
+
+  if (!(fmt = gst_structure_get_string (structure, "format")))
+    goto no_format;
+
+  format = gst_video_format_from_string (fmt);
+  if (format == GST_VIDEO_FORMAT_UNKNOWN)
+    goto unknown_format;
+
+  info->format = format;
+
+  if (gst_structure_get_int (structure, "width", &width))
+    info->width = width;
+  if (gst_structure_get_int (structure, "height", &height))
+    info->height = height;
+
+  return TRUE;
+
+  /* ERROR */
+wrong_name:
+  {
+    return FALSE;
+  }
+no_format:
+  {
+    return FALSE;
+  }
+unknown_format:
+  {
+    return FALSE;
+  }
+}
+
+GstCaps *
+gst_video_info_to_caps (GstVideoInfo * info)
+{
+  return NULL;
+}
+
+gboolean
+gst_video_info_convert (GstVideoInfo * info,
+    GstFormat src_format, gint64 src_value, GstFormat dest_format,
+    gint64 * dest_value)
+{
+  return TRUE;
 }
 
 /**
@@ -1272,104 +1241,6 @@ gst_video_format_get_row_stride (GstVideoFormat format, int component,
     case GST_VIDEO_FORMAT_ARGB64:
     case GST_VIDEO_FORMAT_AYUV64:
       return width * 8;
-    default:
-      return 0;
-  }
-}
-
-/**
- * gst_video_format_get_pixel_stride:
- * @format: a #GstVideoFormat
- * @component: the component index
- *
- * Calculates the pixel stride (number of bytes from one pixel to the
- * pixel to its immediate left) for the video component with an index
- * of @component.  See @gst_video_format_get_row_stride for a description
- * of the component index.
- *
- * Since: 0.10.16
- *
- * Returns: pixel stride of component @component
- */
-int
-gst_video_format_get_pixel_stride (GstVideoFormat format, int component)
-{
-  g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN, 0);
-  g_return_val_if_fail (component >= 0 && component <= 3, 0);
-
-  switch (format) {
-    case GST_VIDEO_FORMAT_I420:
-    case GST_VIDEO_FORMAT_YV12:
-    case GST_VIDEO_FORMAT_Y41B:
-    case GST_VIDEO_FORMAT_Y42B:
-    case GST_VIDEO_FORMAT_Y444:
-    case GST_VIDEO_FORMAT_A420:
-    case GST_VIDEO_FORMAT_YUV9:
-    case GST_VIDEO_FORMAT_YVU9:
-      return 1;
-    case GST_VIDEO_FORMAT_YUY2:
-    case GST_VIDEO_FORMAT_YVYU:
-    case GST_VIDEO_FORMAT_UYVY:
-      if (component == 0) {
-        return 2;
-      } else {
-        return 4;
-      }
-    case GST_VIDEO_FORMAT_IYU1:
-      /* doesn't make much sense for IYU1 because it's 1 or 3
-       * for luma depending on position */
-      return 0;
-    case GST_VIDEO_FORMAT_AYUV:
-    case GST_VIDEO_FORMAT_RGBx:
-    case GST_VIDEO_FORMAT_BGRx:
-    case GST_VIDEO_FORMAT_xRGB:
-    case GST_VIDEO_FORMAT_xBGR:
-    case GST_VIDEO_FORMAT_RGBA:
-    case GST_VIDEO_FORMAT_BGRA:
-    case GST_VIDEO_FORMAT_ARGB:
-    case GST_VIDEO_FORMAT_ABGR:
-    case GST_VIDEO_FORMAT_r210:
-      return 4;
-    case GST_VIDEO_FORMAT_RGB16:
-    case GST_VIDEO_FORMAT_BGR16:
-    case GST_VIDEO_FORMAT_RGB15:
-    case GST_VIDEO_FORMAT_BGR15:
-      return 2;
-    case GST_VIDEO_FORMAT_RGB:
-    case GST_VIDEO_FORMAT_BGR:
-    case GST_VIDEO_FORMAT_v308:
-      return 3;
-    case GST_VIDEO_FORMAT_v210:
-      /* v210 is packed at the bit level, so pixel stride doesn't make sense */
-      return 0;
-    case GST_VIDEO_FORMAT_v216:
-      if (component == 0) {
-        return 4;
-      } else {
-        return 8;
-      }
-    case GST_VIDEO_FORMAT_NV12:
-    case GST_VIDEO_FORMAT_NV21:
-      if (component == 0) {
-        return 1;
-      } else {
-        return 2;
-      }
-    case GST_VIDEO_FORMAT_GRAY8:
-    case GST_VIDEO_FORMAT_Y800:
-      return 1;
-    case GST_VIDEO_FORMAT_GRAY16_BE:
-    case GST_VIDEO_FORMAT_GRAY16_LE:
-    case GST_VIDEO_FORMAT_Y16:
-      return 2;
-    case GST_VIDEO_FORMAT_UYVP:
-      /* UYVP is packed at the bit level, so pixel stride doesn't make sense */
-      return 0;
-    case GST_VIDEO_FORMAT_RGB8_PALETTED:
-      return 1;
-    case GST_VIDEO_FORMAT_ARGB64:
-    case GST_VIDEO_FORMAT_AYUV64:
-      return 8;
     default:
       return 0;
   }

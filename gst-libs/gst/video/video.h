@@ -121,6 +121,118 @@ typedef enum {
   GST_VIDEO_FORMAT_r210
 } GstVideoFormat;
 
+/* format properties */
+GstVideoFormat gst_video_format_from_masks           (gint depth, gint bpp, gint endianness,
+                                                      gint red_mask, gint green_mask,
+                                                      gint blue_mask, gint alpha_mask) G_GNUC_CONST;
+
+GstVideoFormat gst_video_format_from_fourcc          (guint32 fourcc) G_GNUC_CONST;
+GstVideoFormat gst_video_format_from_string          (const gchar *format) G_GNUC_CONST;
+
+guint32        gst_video_format_to_fourcc            (GstVideoFormat format) G_GNUC_CONST;
+const gchar *  gst_video_format_to_string            (GstVideoFormat format) G_GNUC_CONST;
+
+gboolean       gst_video_format_is_rgb               (GstVideoFormat format) G_GNUC_CONST;
+gboolean       gst_video_format_is_yuv               (GstVideoFormat format) G_GNUC_CONST;
+gboolean       gst_video_format_is_gray              (GstVideoFormat format) G_GNUC_CONST;
+gboolean       gst_video_format_has_alpha            (GstVideoFormat format) G_GNUC_CONST;
+
+int            gst_video_format_get_component_depth  (GstVideoFormat format,
+                                                      int            component) G_GNUC_CONST;
+int            gst_video_format_get_pixel_stride     (GstVideoFormat format,
+                                                      int            component) G_GNUC_CONST;
+
+
+typedef struct _GstVideoPlane GstVideoPlane;
+typedef struct _GstVideoInfo GstVideoInfo;
+
+/**
+ * GstVideoFlags:
+ * @GST_META_VIDEO_FLAG_NONE: no flags
+ * @GST_META_VIDEO_FLAG_INTERLACED:
+ * @GST_META_VIDEO_FLAG_TTF:
+ * @GST_META_VIDEO_FLAG_RFF:
+ * @GST_META_VIDEO_FLAG_ONEFIELD:
+ * @GST_META_VIDEO_FLAG_TELECINE:
+ * @GST_META_VIDEO_FLAG_PROGRESSIVE:
+ *
+ * Extra video flags
+ */
+typedef enum {
+  GST_VIDEO_FLAG_NONE        = 0,
+  GST_VIDEO_FLAG_INTERLACED  = (1 << 0),
+  GST_VIDEO_FLAG_TTF         = (1 << 1),
+  GST_VIDEO_FLAG_RFF         = (1 << 2),
+  GST_VIDEO_FLAG_ONEFIELD    = (1 << 3),
+  GST_VIDEO_FLAG_TELECINE    = (1 << 4),
+  GST_VIDEO_FLAG_PROGRESSIVE = (1 << 5)
+} GstVideoFlags;
+
+#define GST_VIDEO_MAX_PLANES 4
+
+/**
+ * GstVideoPlane:
+ * @offset: offset of the first pixel in the buffer memory region
+ * @stride: stride of the image lines. Can be negative when the image is
+ *    upside-down
+ *
+ * Information for one video plane.
+ */
+struct _GstVideoPlane {
+  gsize           offset;
+  gint            stride;
+};
+
+/**
+ * GstVideoInfo:
+ * @flags: additional video flags
+ * @format: the format of the video
+ * @width: the width of the video
+ * @height: the height of the video
+ * @par_n: the pixel-aspect-ratio numerator
+ * @par_d: the pixel-aspect-ratio demnominator
+ * @fps_n: the framerate numerator
+ * @fps_d: the framerate demnominator
+ * @n_planes: the number of planes in the image
+ * @plane: array of #GstMetaVideoPlane
+ *
+ * Extra buffer metadata describing image properties
+ */
+struct _GstVideoInfo {
+  GstVideoFormat format;
+  GstVideoFlags  flags;
+  guint          width;
+  guint          height;
+  guint          size;
+
+  const gchar   *color_matrix;
+  const gchar   *chroma_site;
+
+  guint          par_n;
+  guint          par_d;
+  guint          fps_n;
+  guint          fps_d;
+
+  guint          n_planes;
+  GstVideoPlane  plane[GST_VIDEO_MAX_PLANES];
+};
+
+
+void         gst_video_info_init        (GstVideoInfo *info);
+
+void         gst_video_info_set_format  (GstVideoInfo *info, GstVideoFormat format,
+                                         guint width, guint height);
+
+gboolean     gst_video_info_from_caps   (GstVideoInfo *info, const GstCaps  * caps);
+
+GstCaps *    gst_video_info_to_caps     (GstVideoInfo *info);
+
+gboolean     gst_video_info_convert     (GstVideoInfo *info,
+                                         GstFormat     src_format,
+                                         gint64        src_value,
+                                         GstFormat     dest_format,
+                                         gint64       *dest_value);
+
 #define GST_VIDEO_SIZE_RANGE "(int) [ 1, max ]"
 #define GST_VIDEO_FPS_RANGE "(fraction) [ 0, max ]"
 
@@ -190,10 +302,6 @@ typedef enum {
 /* functions */
 const GValue * gst_video_frame_rate (GstPad * pad);
 
-gboolean       gst_video_get_size   (GstPad * pad,
-                                     gint   * width,
-                                     gint   * height);
-
 gboolean       gst_video_calculate_display_ratio (guint * dar_n,
                                                   guint * dar_d,
                                                   guint   video_width,
@@ -203,77 +311,7 @@ gboolean       gst_video_calculate_display_ratio (guint * dar_n,
                                                   guint   display_par_n,
                                                   guint   display_par_d);
 
-gboolean       gst_video_format_parse_caps (const GstCaps  * caps,
-                                            GstVideoFormat * format,
-                                            int            * width,
-                                            int            * height);
-
-gboolean       gst_video_format_parse_caps_interlaced  (GstCaps  * caps,
-                                                        gboolean * interlaced);
-
-
-gboolean       gst_video_parse_caps_pixel_aspect_ratio (GstCaps  * caps,
-                                                        int      * par_n,
-                                                        int      * par_d);
-
-gboolean       gst_video_parse_caps_framerate    (GstCaps * caps,
-                                                  int     * fps_n,
-                                                  int     * fps_d);
-
-const char *   gst_video_parse_caps_color_matrix (GstCaps * caps);
-
-const char *   gst_video_parse_caps_chroma_site  (GstCaps * caps);
-
-GstBuffer *    gst_video_parse_caps_palette      (GstCaps * caps);
-
-/* create caps given format and details */
-
-GstCaps *      gst_video_format_new_caps (GstVideoFormat format,
-                                          int width, int height,
-                                          int framerate_n,
-                                          int framerate_d,
-                                          int par_n, int par_d);
-
-GstCaps *      gst_video_format_new_caps_interlaced (GstVideoFormat format,
-                                                     int width, int height,
-                                                     int framerate_n,
-                                                     int framerate_d,
-                                                     int par_n, int par_d,
-                                                     gboolean interlaced);
-
-GstCaps *      gst_video_format_new_template_caps (GstVideoFormat format);
-
-/* format properties */
-
-GstVideoFormat gst_video_format_from_masks (gint depth, gint bpp, gint endianness,
-                                            gint red_mask, gint green_mask,
-                                            gint blue_mask, gint alpha_mask) G_GNUC_CONST;
-
-GstVideoFormat gst_video_format_from_fourcc (guint32 fourcc) G_GNUC_CONST;
-GstVideoFormat gst_video_format_from_string (const gchar *format) G_GNUC_CONST;
-
-guint32        gst_video_format_to_fourcc (GstVideoFormat format) G_GNUC_CONST;
-const gchar *  gst_video_format_to_string (GstVideoFormat format) G_GNUC_CONST;
-
-gboolean       gst_video_format_is_rgb    (GstVideoFormat format) G_GNUC_CONST;
-
-gboolean       gst_video_format_is_yuv    (GstVideoFormat format) G_GNUC_CONST;
-
-gboolean       gst_video_format_is_gray   (GstVideoFormat format) G_GNUC_CONST;
-
-gboolean       gst_video_format_has_alpha (GstVideoFormat format) G_GNUC_CONST;
-
-
-int            gst_video_format_get_component_depth  (GstVideoFormat format,
-                                                      int            component) G_GNUC_CONST;
-
-int            gst_video_format_get_row_stride       (GstVideoFormat format,
-                                                      int            component,
-                                                      int            width) G_GNUC_CONST;
-
-int            gst_video_format_get_pixel_stride     (GstVideoFormat format,
-                                                      int            component) G_GNUC_CONST;
-
+#if 0
 int            gst_video_format_get_component_width  (GstVideoFormat format,
                                                       int            component,
                                                       int            width) G_GNUC_CONST;
@@ -292,16 +330,8 @@ int            gst_video_format_get_size             (GstVideoFormat format,
                                                       int            height) G_GNUC_CONST;
 
 gboolean       gst_video_get_size_from_caps (const GstCaps * caps, gint * size);
+#endif
 
-gboolean       gst_video_format_convert (GstVideoFormat  format,
-                                         int             width,
-                                         int             height,
-                                         int             fps_n,
-                                         int             fps_d,
-                                         GstFormat       src_format,
-                                         gint64          src_value,
-                                         GstFormat       dest_format,
-                                         gint64        * dest_value);
 
 /* video still frame event creation and parsing */
 
