@@ -117,7 +117,7 @@ typedef enum {
   GST_ASF_DEMUX_STATE_HEADER,
   GST_ASF_DEMUX_STATE_DATA,
   GST_ASF_DEMUX_STATE_INDEX
-} GstAsfDemuxState;
+} GstASFDemuxState;
 
 #define GST_ASF_DEMUX_NUM_VIDEO_PADS   16
 #define GST_ASF_DEMUX_NUM_AUDIO_PADS   32
@@ -131,7 +131,7 @@ struct _GstASFDemux {
 
   GstAdapter        *adapter;
   GstTagList        *taglist;
-  GstAsfDemuxState   state;
+  GstASFDemuxState   state;
 
   /* byte offset where the asf starts, which might not be zero on chained
    * asfs, index_offset and data_offset already are 'offseted' by base_offset */

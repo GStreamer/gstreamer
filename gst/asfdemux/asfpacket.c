@@ -77,13 +77,13 @@ asf_packet_create_payload_buffer (AsfPacket * packet, const guint8 ** p_data,
 
   g_assert (payload_len <= *p_size);
 
-  off = (guint) (*p_data - GST_BUFFER_DATA (packet->buf));
-  g_assert (off < GST_BUFFER_SIZE (packet->buf));
+  off = (guint) (gst_buffer_get_size (packet->buf) - *p_size);
 
   *p_data += payload_len;
   *p_size -= payload_len;
 
-  return gst_buffer_create_sub (packet->buf, off, payload_len);
+  return gst_buffer_copy_region (packet->buf, GST_BUFFER_COPY_ALL, off,
+      payload_len);
 }
 
 static AsfPayload *
@@ -199,7 +199,7 @@ gst_asf_payload_queue_for_stream (GstASFDemux * demux, AsfPayload * payload,
     demux->segment_ts = payload->ts;
     /* always note, but only determines segment when streaming */
     if (demux->streaming)
-      gst_segment_set_seek (&demux->segment, demux->in_segment.rate,
+      gst_segment_do_seek (&demux->segment, demux->in_segment.rate,
           GST_FORMAT_TIME, demux->segment.flags, GST_SEEK_TYPE_SET,
           demux->segment_ts, GST_SEEK_TYPE_NONE, 0, NULL);
   }
@@ -390,13 +390,13 @@ gst_asf_demux_parse_payload (GstASFDemux * demux, AsfPacket * packet,
         AsfPayload *prev;
 
         if ((prev = asf_payload_find_previous_fragment (&payload, stream))) {
-          if (payload.mo_offset != GST_BUFFER_SIZE (prev->buf)) {
+          if (payload.mo_offset != gst_buffer_get_size (prev->buf)) {
             GST_WARNING_OBJECT (demux, "Offset doesn't match previous data?!");
           }
           /* note: buffer join/merge might not preserve buffer flags */
           prev->buf = gst_buffer_join (prev->buf, payload.buf);
           GST_LOG_OBJECT (demux, "Merged fragments, merged size: %u",
-              GST_BUFFER_SIZE (prev->buf));
+              gst_buffer_get_size (prev->buf));
         } else {
           gst_buffer_unref (payload.buf);
         }
@@ -464,14 +464,17 @@ gboolean
 gst_asf_demux_parse_packet (GstASFDemux * demux, GstBuffer * buf)
 {
   AsfPacket packet = { 0, };
+  gpointer bufdata;
   const guint8 *data;
   gboolean has_multiple_payloads;
   gboolean ret = TRUE;
   guint8 ec_flags, flags1;
+  gsize bufsize;
   guint size;
 
-  data = GST_BUFFER_DATA (buf);
-  size = GST_BUFFER_SIZE (buf);
+  bufdata = gst_buffer_map (buf, &bufsize, NULL, GST_MAP_READ);
+  data = bufdata;
+  size = bufsize;
   GST_LOG_OBJECT (demux, "Buffer size: %u", size);
 
   /* need at least two payload flag bytes, send time, and duration */
@@ -588,11 +591,13 @@ gst_asf_demux_parse_packet (GstASFDemux * demux, GstBuffer * buf)
     ret = gst_asf_demux_parse_payload (demux, &packet, -1, &data, &size);
   }
 
+  gst_buffer_unmap (buf, bufdata, bufsize);
   return ret;
 
 /* ERRORS */
 short_packet:
   {
+    gst_buffer_unmap (buf, bufdata, bufsize);
     GST_WARNING_OBJECT (demux, "Short packet!");
     return FALSE;
   }

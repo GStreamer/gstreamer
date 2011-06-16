@@ -57,8 +57,9 @@ typedef struct {
 
 gboolean   gst_asf_demux_parse_packet (GstASFDemux * demux, GstBuffer * buf);
 
+/* FIXME - gst_buffer_get_size is slow */
 #define gst_asf_payload_is_complete(payload) \
-    (GST_BUFFER_SIZE ((payload)->buf) >= (payload)->mo_size)
+    (gst_buffer_get_size ((payload)->buf) >= (payload)->mo_size)
 
 G_END_DECLS
 

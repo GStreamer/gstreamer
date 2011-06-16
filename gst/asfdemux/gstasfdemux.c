@@ -109,24 +109,8 @@ static GstStructure *gst_asf_demux_get_metadata_for_stream (GstASFDemux * d,
 static GstFlowReturn gst_asf_demux_push_complete_payloads (GstASFDemux * demux,
     gboolean force);
 
-GST_BOILERPLATE (GstASFDemux, gst_asf_demux, GstElement, GST_TYPE_ELEMENT);
-
-static void
-gst_asf_demux_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&audio_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&video_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_asf_demux_sink_template));
-
-  gst_element_class_set_details_simple (element_class, "ASF Demuxer",
-      "Codec/Demuxer",
-      "Demultiplexes ASF Streams", "Owen Fraser-Green <owen@discobabe.net>");
-}
+#define gst_asf_demux_parent_class parent_class
+G_DEFINE_TYPE (GstASFDemux, gst_asf_demux, GST_TYPE_ELEMENT);
 
 static void
 gst_asf_demux_class_init (GstASFDemuxClass * klass)
@@ -134,6 +118,17 @@ gst_asf_demux_class_init (GstASFDemuxClass * klass)
   GstElementClass *gstelement_class;
 
   gstelement_class = (GstElementClass *) klass;
+
+  gst_element_class_set_details_simple (gstelement_class, "ASF Demuxer",
+      "Codec/Demuxer",
+      "Demultiplexes ASF Streams", "Owen Fraser-Green <owen@discobabe.net>");
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&audio_src_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&video_src_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_asf_demux_sink_template));
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_asf_demux_change_state);
@@ -262,7 +257,7 @@ gst_asf_demux_reset (GstASFDemux * demux, gboolean chain_reset)
 }
 
 static void
-gst_asf_demux_init (GstASFDemux * demux, GstASFDemuxClass * klass)
+gst_asf_demux_init (GstASFDemux * demux)
 {
   demux->sinkpad =
       gst_pad_new_from_static_template (&gst_asf_demux_sink_template, "sink");
@@ -285,9 +280,27 @@ gst_asf_demux_init (GstASFDemux * demux, GstASFDemuxClass * klass)
 static gboolean
 gst_asf_demux_activate (GstPad * sinkpad)
 {
-  if (gst_pad_check_pull_range (sinkpad)) {
-    return gst_pad_activate_pull (sinkpad, TRUE);
-  } else {
+  GstQuery *query;
+  gboolean pull_mode;
+
+  query = gst_query_new_scheduling ();
+
+  if (!gst_pad_peer_query (sinkpad, query)) {
+    gst_query_unref (query);
+    goto activate_push;
+  }
+
+  gst_query_parse_scheduling (query, &pull_mode, NULL, NULL, NULL, NULL, NULL);
+
+  if (!pull_mode)
+    goto activate_push;
+
+  GST_DEBUG_OBJECT (sinkpad, "activating pull");
+  return gst_pad_activate_pull (sinkpad, TRUE);
+
+activate_push:
+  {
+    GST_DEBUG_OBJECT (sinkpad, "activating push");
     return gst_pad_activate_push (sinkpad, TRUE);
   }
 }
@@ -334,22 +347,18 @@ gst_asf_demux_sink_event (GstPad * pad, GstEvent * event)
 
   GST_LOG_OBJECT (demux, "handling %s event", GST_EVENT_TYPE_NAME (event));
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_NEWSEGMENT:{
-      GstFormat newsegment_format;
-      gint64 newsegment_start, stop, time;
-      gdouble rate, arate;
-      gboolean update;
+    case GST_EVENT_SEGMENT:{
+      const GstSegment *segment;
 
-      gst_event_parse_new_segment_full (event, &update, &rate, &arate,
-          &newsegment_format, &newsegment_start, &stop, &time);
+      gst_event_parse_segment (event, &segment);
 
-      if (newsegment_format == GST_FORMAT_BYTES) {
-        if (demux->packet_size && newsegment_start > demux->data_offset)
-          demux->packet = (newsegment_start - demux->data_offset) /
+      if (segment->format == GST_FORMAT_BYTES) {
+        if (demux->packet_size && segment->start > demux->data_offset)
+          demux->packet = (segment->start - demux->data_offset) /
               demux->packet_size;
         else
           demux->packet = 0;
-      } else if (newsegment_format == GST_FORMAT_TIME) {
+      } else if (segment->format == GST_FORMAT_TIME) {
         /* do not know packet position, not really a problem */
         demux->packet = -1;
       } else {
@@ -359,10 +368,9 @@ gst_asf_demux_sink_event (GstPad * pad, GstEvent * event)
       }
 
       /* record upstream segment for interpolation */
-      if (newsegment_format != demux->in_segment.format)
+      if (segment->format != demux->in_segment.format)
         gst_segment_init (&demux->in_segment, GST_FORMAT_UNDEFINED);
-      gst_segment_set_newsegment_full (&demux->in_segment, update, rate, arate,
-          newsegment_format, newsegment_start, stop, time);
+      gst_segment_copy_into (segment, &demux->in_segment);
 
       /* in either case, clear some state and generate newsegment later on */
       GST_OBJECT_LOCK (demux);
@@ -623,25 +631,26 @@ gst_asf_demux_handle_seek_event (GstASFDemux * demux, GstEvent * event)
   GST_PAD_STREAM_LOCK (demux->sinkpad);
 
   /* we now can stop flushing, since we have the stream lock now */
-  gst_pad_push_event (demux->sinkpad, gst_event_new_flush_stop ());
+  gst_pad_push_event (demux->sinkpad, gst_event_new_flush_stop (TRUE));
 
   if (G_LIKELY (flush))
-    gst_asf_demux_send_event_unlocked (demux, gst_event_new_flush_stop ());
+    gst_asf_demux_send_event_unlocked (demux, gst_event_new_flush_stop (TRUE));
 
   /* operating on copy of segment until we know the seek worked */
   segment = demux->segment;
 
   if (G_UNLIKELY (demux->segment_running && !flush)) {
+    GstSegment newsegment;
     GstEvent *newseg;
 
     /* create the segment event to close the current segment */
-    newseg = gst_event_new_new_segment (TRUE, segment.rate,
-        GST_FORMAT_TIME, segment.start, segment.last_stop, segment.time);
+    gst_segment_copy_into (&segment, &newsegment);
+    newseg = gst_event_new_segment (&newsegment);
 
     gst_asf_demux_send_event_unlocked (demux, newseg);
   }
 
-  gst_segment_set_seek (&segment, rate, format, flags, cur_type,
+  gst_segment_do_seek (&segment, rate, format, flags, cur_type,
       cur, stop_type, stop, &only_need_update);
 
   GST_DEBUG_OBJECT (demux, "seeking to time %" GST_TIME_FORMAT ", segment: "
@@ -649,7 +658,7 @@ gst_asf_demux_handle_seek_event (GstASFDemux * demux, GstEvent * event)
 
   seek_time = segment.start;
 
-  /* FIXME: should check the KEY_UNIT flag; need to adjust last_stop to
+  /* FIXME: should check the KEY_UNIT flag; need to adjust position to
    * real start of data and segment_start to indexed time for key unit seek*/
   if (G_UNLIKELY (!gst_asf_demux_seek_index_lookup (demux, &packet, seek_time,
               &idx_time, &speed_count))) {
@@ -692,7 +701,7 @@ gst_asf_demux_handle_seek_event (GstASFDemux * demux, GstEvent * event)
           GST_TIME_FORMAT " to index_time = %" GST_TIME_FORMAT,
           GST_TIME_ARGS (seek_time), GST_TIME_ARGS (idx_time));
       segment.start = idx_time;
-      segment.last_stop = idx_time;
+      segment.position = idx_time;
       segment.time = idx_time;
     }
   }
@@ -823,7 +832,7 @@ gst_asf_demux_chain_headers (GstASFDemux * demux)
   const guint8 *cdata = NULL;
   guint64 header_size;
 
-  cdata = (guint8 *) gst_adapter_peek (demux->adapter, ASF_OBJECT_HEADER_SIZE);
+  cdata = (guint8 *) gst_adapter_map (demux->adapter, ASF_OBJECT_HEADER_SIZE);
   if (cdata == NULL)
     goto need_more_data;
 
@@ -918,6 +927,7 @@ static gboolean
 gst_asf_demux_pull_data (GstASFDemux * demux, guint64 offset, guint size,
     GstBuffer ** p_buf, GstFlowReturn * p_flow)
 {
+  gsize buffer_size;
   GstFlowReturn flow;
 
   GST_LOG_OBJECT (demux, "pulling buffer at %" G_GUINT64_FORMAT "+%u",
@@ -937,9 +947,10 @@ gst_asf_demux_pull_data (GstASFDemux * demux, guint64 offset, guint size,
 
   g_assert (*p_buf != NULL);
 
-  if (G_UNLIKELY (GST_BUFFER_SIZE (*p_buf) < size)) {
+  buffer_size = gst_buffer_get_size (*p_buf);
+  if (G_UNLIKELY (buffer_size < size)) {
     GST_DEBUG_OBJECT (demux, "short read pulling buffer at %" G_GUINT64_FORMAT
-        "+%u (got only %u bytes)", offset, size, GST_BUFFER_SIZE (*p_buf));
+        "+%u (got only %u bytes)", offset, size, buffer_size);
     gst_buffer_unref (*p_buf);
     if (G_LIKELY (p_flow))
       *p_flow = GST_FLOW_UNEXPECTED;
@@ -967,8 +978,14 @@ gst_asf_demux_pull_indices (GstASFDemux * demux)
   while (gst_asf_demux_pull_data (demux, offset, 16 + 8, &buf, NULL)) {
     GstFlowReturn flow;
     AsfObject obj;
+    gpointer data;
+    gsize size;
+    guint8 *bufdata;
 
-    asf_demux_peek_object (demux, GST_BUFFER_DATA (buf), 16 + 8, &obj, TRUE);
+    data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+    g_assert (size >= 16 + 8);
+    asf_demux_peek_object (demux, data, 16 + 8, &obj, TRUE);
+    gst_buffer_unmap (buf, data, size);
     gst_buffer_replace (&buf, NULL);
 
     /* check for sanity */
@@ -986,7 +1003,11 @@ gst_asf_demux_pull_indices (GstASFDemux * demux)
 
     offset += obj.size;         /* increase before _process_object changes it */
 
-    flow = gst_asf_demux_process_object (demux, &buf->data, &obj.size);
+    data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+    g_assert (size >= obj.size);
+    bufdata = (guint8 *) data;
+    flow = gst_asf_demux_process_object (demux, &bufdata, &obj.size);
+    gst_buffer_unmap (buf, data, size);
     gst_buffer_replace (&buf, NULL);
 
     if (G_UNLIKELY (flow != GST_FLOW_OK))
@@ -1055,6 +1076,9 @@ gst_asf_demux_pull_headers (GstASFDemux * demux)
   AsfObject obj;
   GstBuffer *buf = NULL;
   guint64 size;
+  guint8 *bufdata;
+  gpointer data = NULL;
+  gsize data_size;
 
   GST_LOG_OBJECT (demux, "reading headers");
 
@@ -1062,8 +1086,12 @@ gst_asf_demux_pull_headers (GstASFDemux * demux)
   if (!gst_asf_demux_pull_data (demux, demux->base_offset, 16 + 8, &buf, NULL))
     goto read_failed;
 
-  asf_demux_peek_object (demux, GST_BUFFER_DATA (buf), 16 + 8, &obj, TRUE);
+  data = gst_buffer_map (buf, &data_size, NULL, GST_MAP_READ);
+  g_assert (data_size >= 16 + 8);
+  asf_demux_peek_object (demux, data, 16 + 8, &obj, TRUE);
+  gst_buffer_unmap (buf, data, data_size);
   gst_buffer_replace (&buf, NULL);
+  data = NULL;
 
   if (obj.id != ASF_OBJ_HEADER)
     goto wrong_type;
@@ -1076,8 +1104,13 @@ gst_asf_demux_pull_headers (GstASFDemux * demux)
     goto read_failed;
 
   size = obj.size;              /* don't want obj.size changed */
-  flow = gst_asf_demux_process_object (demux, &buf->data, &size);
+  data = gst_buffer_map (buf, &data_size, NULL, GST_MAP_READ);
+  g_assert (data_size >= size);
+  bufdata = (guint8 *) data;
+  flow = gst_asf_demux_process_object (demux, &bufdata, &size);
+  gst_buffer_unmap (buf, data, data_size);
   gst_buffer_replace (&buf, NULL);
+  data = NULL;
 
   if (flow != GST_FLOW_OK) {
     GST_WARNING_OBJECT (demux, "process_object: %s", gst_flow_get_name (flow));
@@ -1092,19 +1125,27 @@ gst_asf_demux_pull_headers (GstASFDemux * demux)
           NULL))
     goto read_failed;
 
-  if (!gst_asf_demux_parse_data_object_start (demux, GST_BUFFER_DATA (buf)))
+
+  data = gst_buffer_map (buf, &data_size, NULL, GST_MAP_READ);
+  g_assert (data_size >= size);
+  bufdata = (guint8 *) data;
+  if (!gst_asf_demux_parse_data_object_start (demux, bufdata))
     goto wrong_type;
 
   if (demux->num_streams == 0)
     goto no_streams;
 
+  gst_buffer_unmap (buf, data, data_size);
   gst_buffer_replace (&buf, NULL);
   return TRUE;
 
 /* ERRORS */
 wrong_type:
   {
-    gst_buffer_replace (&buf, NULL);
+    if (data != NULL) {
+      gst_buffer_unmap (buf, data, data_size);
+      gst_buffer_replace (&buf, NULL);
+    }
     GST_ELEMENT_ERROR (demux, STREAM, WRONG_TYPE, (NULL),
         ("This doesn't seem to be an ASF file"));
     return FALSE;
@@ -1113,6 +1154,8 @@ no_streams:
 read_failed:
 parse_failed:
   {
+    gst_buffer_unmap (buf, data, data_size);
+    gst_buffer_replace (&buf, NULL);
     GST_ELEMENT_ERROR (demux, STREAM, DEMUX, (NULL), (NULL));
     return FALSE;
   }
@@ -1342,9 +1385,7 @@ gst_asf_demux_push_complete_payloads (GstASFDemux * demux, gboolean force)
 
       /* note: we fix up all timestamps to start from 0, so this should be ok */
       gst_asf_demux_send_event_unlocked (demux,
-          gst_event_new_new_segment (FALSE, demux->segment.rate,
-              GST_FORMAT_TIME, demux->segment.start, demux->segment.stop,
-              demux->segment.start));
+          gst_event_new_segment (&demux->segment));
 
       /* now post any global tags we may have found */
       if (demux->taglist == NULL)
@@ -1376,7 +1417,7 @@ gst_asf_demux_push_complete_payloads (GstASFDemux * demux, gboolean force)
       gst_asf_demux_descramble_buffer (demux, stream, &payload->buf);
     }
 
-    payload->buf = gst_buffer_make_metadata_writable (payload->buf);
+    payload->buf = gst_buffer_make_writable (payload->buf);
 
     if (G_LIKELY (!payload->keyframe)) {
       GST_BUFFER_FLAG_SET (payload->buf, GST_BUFFER_FLAG_DELTA_UNIT);
@@ -1408,8 +1449,6 @@ gst_asf_demux_push_complete_payloads (GstASFDemux * demux, gboolean force)
           stream->interlaced, NULL);
     }
 
-    gst_buffer_set_caps (payload->buf, stream->caps);
-
     /* (sort of) interpolate timestamps using upstream "frame of reference",
      * typically useful for live src, but might (unavoidably) mess with
      * position reporting if a live src is playing not so live content
@@ -1428,7 +1467,7 @@ gst_asf_demux_push_complete_payloads (GstASFDemux * demux, gboolean force)
         ", dur=%" GST_TIME_FORMAT " size=%u",
         GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (payload->buf)),
         GST_TIME_ARGS (GST_BUFFER_DURATION (payload->buf)),
-        GST_BUFFER_SIZE (payload->buf));
+        gst_buffer_get_size (payload->buf));
 
     ret = gst_pad_push (stream->pad, payload->buf);
     ret = gst_asf_demux_aggregate_flow_return (demux, stream, ret);
@@ -1447,17 +1486,23 @@ static gboolean
 gst_asf_demux_check_buffer_is_header (GstASFDemux * demux, GstBuffer * buf)
 {
   AsfObject obj;
+  gpointer data;
+  gsize size;
   g_assert (buf != NULL);
 
   GST_LOG_OBJECT (demux, "Checking if buffer is a header");
 
+  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+
   /* we return false on buffer too small */
-  if (GST_BUFFER_SIZE (buf) < ASF_OBJECT_HEADER_SIZE)
+  if (size < ASF_OBJECT_HEADER_SIZE) {
+    gst_buffer_unmap (buf, data, size);
     return FALSE;
+  }
 
   /* check if it is a header */
-  asf_demux_peek_object (demux, GST_BUFFER_DATA (buf),
-      ASF_OBJECT_HEADER_SIZE, &obj, TRUE);
+  asf_demux_peek_object (demux, data, ASF_OBJECT_HEADER_SIZE, &obj, TRUE);
+  gst_buffer_unmap (buf, data, size);
   if (obj.id == ASF_OBJ_HEADER) {
     return TRUE;
   }
@@ -1557,8 +1602,8 @@ gst_asf_demux_loop (GstASFDemux * demux)
       GstBuffer *sub;
 
       sub =
-          gst_buffer_create_sub (buf, n * demux->packet_size,
-          demux->packet_size);
+          gst_buffer_copy_region (buf, GST_BUFFER_COPY_NONE,
+          n * demux->packet_size, demux->packet_size);
       /* FIXME: maybe we should just skip broken packets and error out only
        * after a few broken packets in a row? */
       if (G_UNLIKELY (!gst_asf_demux_parse_packet (demux, sub))) {
@@ -1690,7 +1735,7 @@ static gint
 gst_asf_demux_check_header (GstASFDemux * demux)
 {
   AsfObject obj;
-  guint8 *cdata = (guint8 *) gst_adapter_peek (demux->adapter,
+  guint8 *cdata = (guint8 *) gst_adapter_map (demux->adapter,
       ASF_OBJECT_HEADER_SIZE);
   if (cdata == NULL)            /* need more data */
     return GST_ASF_DEMUX_CHECK_HEADER_NEED_DATA;
@@ -1712,7 +1757,7 @@ gst_asf_demux_chain (GstPad * pad, GstBuffer * buf)
   demux = GST_ASF_DEMUX (GST_PAD_PARENT (pad));
 
   GST_LOG_OBJECT (demux, "buffer: size=%u, offset=%" G_GINT64_FORMAT ", time=%"
-      GST_TIME_FORMAT, GST_BUFFER_SIZE (buf), GST_BUFFER_OFFSET (buf),
+      GST_TIME_FORMAT, gst_buffer_get_size (buf), GST_BUFFER_OFFSET (buf),
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
 
   if (G_UNLIKELY (GST_BUFFER_IS_DISCONT (buf))) {
@@ -1909,15 +1954,21 @@ static gboolean
 gst_asf_demux_get_buffer (GstBuffer ** p_buf, guint num_bytes_to_read,
     guint8 ** p_data, guint64 * p_size)
 {
+  gpointer data;
+  gsize size;
+
   *p_buf = NULL;
 
   if (*p_size < num_bytes_to_read)
     return FALSE;
 
+
   *p_buf = gst_buffer_new_and_alloc (num_bytes_to_read);
-  memcpy (GST_BUFFER_DATA (*p_buf), *p_data, num_bytes_to_read);
+  data = gst_buffer_map (*p_buf, &size, NULL, GST_MAP_WRITE);
+  memcpy (data, *p_data, num_bytes_to_read);
   *p_data += num_bytes_to_read;
   *p_size -= num_bytes_to_read;
+  gst_buffer_unmap (*p_buf, data, size);
   return TRUE;
 }
 
@@ -2253,6 +2304,7 @@ gst_asf_demux_activate_stream (GstASFDemux * demux, AsfStream * stream)
         GST_PTR_FORMAT, stream->id, GST_PAD_NAME (stream->pad), stream->caps);
     gst_pad_set_active (stream->pad, TRUE);
     gst_element_add_pad (GST_ELEMENT_CAST (demux), stream->pad);
+    gst_pad_set_caps (stream->pad, stream->caps);
     stream->active = TRUE;
   }
 }
@@ -2289,7 +2341,7 @@ gst_asf_demux_parse_stream_object (GstASFDemux * demux, guint8 * data,
 
   flags = gst_asf_demux_get_uint16 (&data, &size);
   stream_id = flags & 0x7f;
-  is_encrypted = !!((flags & 0x8000) << 15);
+  is_encrypted = ! !((flags & 0x8000) << 15);
   unknown = gst_asf_demux_get_uint32 (&data, &size);
 
   GST_DEBUG_OBJECT (demux, "Found stream %u, time_offset=%" GST_TIME_FORMAT,
@@ -2897,8 +2949,8 @@ gst_asf_demux_process_file (GstASFDemux * demux, guint8 * data, guint64 size)
   max_pktsize = gst_asf_demux_get_uint32 (&data, &size);
   min_bitrate = gst_asf_demux_get_uint32 (&data, &size);
 
-  demux->broadcast = !!(flags & 0x01);
-  demux->seekable = !!(flags & 0x02);
+  demux->broadcast = ! !(flags & 0x01);
+  demux->seekable = ! !(flags & 0x02);
 
   GST_DEBUG_OBJECT (demux, "min_pktsize = %u", min_pktsize);
   GST_DEBUG_OBJECT (demux, "flags::broadcast = %d", demux->broadcast);
@@ -2935,8 +2987,7 @@ gst_asf_demux_process_file (GstASFDemux * demux, guint8 * data, guint64 size)
       GST_TIME_ARGS (demux->preroll));
 
   if (demux->play_time > 0) {
-    gst_segment_set_duration (&demux->segment, GST_FORMAT_TIME,
-        demux->play_time);
+    demux->segment.duration = demux->play_time;
   }
 
   GST_INFO ("object is a file with %" G_GUINT64_FORMAT " data packets",
@@ -3504,10 +3555,14 @@ gst_asf_demux_process_queued_extended_stream_objects (GstASFDemux * demux)
 
   for (l = demux->ext_stream_props, i = 0; l != NULL; l = l->next, ++i) {
     GstBuffer *buf = GST_BUFFER (l->data);
+    gpointer data;
+    gsize size;
+
+    data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
 
     GST_LOG_OBJECT (demux, "parsing ext. stream properties object #%u", i);
-    gst_asf_demux_process_ext_stream_props (demux, GST_BUFFER_DATA (buf),
-        GST_BUFFER_SIZE (buf));
+    gst_asf_demux_process_ext_stream_props (demux, data, size);
+    gst_buffer_unmap (buf, data, size);
     gst_buffer_unref (buf);
   }
   g_slist_free (demux->ext_stream_props);
@@ -3627,12 +3682,16 @@ gst_asf_demux_process_object (GstASFDemux * demux, guint8 ** p_data,
       break;
     case ASF_OBJ_EXTENDED_STREAM_PROPS:{
       GstBuffer *buf;
+      gpointer data;
+      gsize size;
 
       /* process these later, we might not have parsed the corresponding
        * stream object yet */
       GST_LOG ("%s: queued for later parsing", demux->objpath);
       buf = gst_buffer_new_and_alloc (obj_data_size);
-      memcpy (GST_BUFFER_DATA (buf), *p_data, obj_data_size);
+      data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+      memcpy (data, *p_data, obj_data_size);
+      gst_buffer_unmap (buf, data, size);
       demux->ext_stream_props = g_slist_append (demux->ext_stream_props, buf);
       ret = GST_FLOW_OK;
       break;
@@ -3705,10 +3764,11 @@ gst_asf_demux_descramble_buffer (GstASFDemux * demux, AsfStream * stream,
   descrambled_buffer = NULL;
   scrambled_buffer = *p_buffer;
 
-  if (GST_BUFFER_SIZE (scrambled_buffer) < demux->ds_packet_size * demux->span)
+  if (gst_buffer_get_size (scrambled_buffer) <
+      demux->ds_packet_size * demux->span)
     return;
 
-  for (offset = 0; offset < GST_BUFFER_SIZE (scrambled_buffer);
+  for (offset = 0; offset < gst_buffer_get_size (scrambled_buffer);
       offset += demux->ds_chunk_size) {
     off = offset / demux->ds_chunk_size;
     row = off / demux->span;
@@ -3717,12 +3777,13 @@ gst_asf_demux_descramble_buffer (GstASFDemux * demux, AsfStream * stream,
     GST_DEBUG ("idx=%u, row=%u, col=%u, off=%u, ds_chunk_size=%u", idx, row,
         col, off, demux->ds_chunk_size);
     GST_DEBUG ("scrambled buffer size=%u, span=%u, packet_size=%u",
-        GST_BUFFER_SIZE (scrambled_buffer), demux->span, demux->ds_packet_size);
-    GST_DEBUG ("GST_BUFFER_SIZE (scrambled_buffer) = %u",
-        GST_BUFFER_SIZE (scrambled_buffer));
+        gst_buffer_get_size (scrambled_buffer), demux->span,
+        demux->ds_packet_size);
+    GST_DEBUG ("gst_buffer_get_size (scrambled_buffer) = %u",
+        gst_buffer_get_size (scrambled_buffer));
     sub_buffer =
-        gst_buffer_create_sub (scrambled_buffer, idx * demux->ds_chunk_size,
-        demux->ds_chunk_size);
+        gst_buffer_copy_region (scrambled_buffer, GST_BUFFER_COPY_NONE,
+        idx * demux->ds_chunk_size, demux->ds_chunk_size);
     if (!offset) {
       descrambled_buffer = sub_buffer;
     } else {
@@ -3730,8 +3791,13 @@ gst_asf_demux_descramble_buffer (GstASFDemux * demux, AsfStream * stream,
     }
   }
 
-  gst_buffer_copy_metadata (descrambled_buffer, scrambled_buffer,
-      GST_BUFFER_COPY_TIMESTAMPS);
+  GST_BUFFER_TIMESTAMP (descrambled_buffer) =
+      GST_BUFFER_TIMESTAMP (scrambled_buffer);
+  GST_BUFFER_DURATION (descrambled_buffer) =
+      GST_BUFFER_DURATION (scrambled_buffer);
+  GST_BUFFER_OFFSET (descrambled_buffer) = GST_BUFFER_OFFSET (scrambled_buffer);
+  GST_BUFFER_OFFSET_END (descrambled_buffer) =
+      GST_BUFFER_OFFSET_END (scrambled_buffer);
 
   /* FIXME/CHECK: do we need to transfer buffer flags here too? */
 
@@ -3843,12 +3909,12 @@ gst_asf_demux_handle_src_query (GstPad * pad, GstQuery * query)
 
       GST_OBJECT_LOCK (demux);
 
-      if (demux->segment.last_stop != GST_CLOCK_TIME_NONE) {
+      if (demux->segment.position != GST_CLOCK_TIME_NONE) {
         GST_LOG ("returning position: %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (demux->segment.last_stop));
+            GST_TIME_ARGS (demux->segment.position));
 
         gst_query_set_position (query, GST_FORMAT_TIME,
-            demux->segment.last_stop);
+            demux->segment.position);
 
         res = TRUE;
       } else {
