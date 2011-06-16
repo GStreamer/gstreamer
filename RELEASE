@@ -1,5 +1,5 @@
 
-Release notes for GStreamer 0.10.34 "Misfits"
+Release notes for GStreamer 0.10.35 "Nuclear Fission"
         
 
 
@@ -37,14 +37,13 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * Fix multiqueue thread-safety regression
-      * Don't set artificial 0-timestamp on first packet for TIME-based live sources
-      * Otherwise identical to the previous release (0.10.33)
+      * work around GLib atomic ops API change
+      * some minor win32/mingw fixes
+      * don't use G_CONST_RETURN in public headers
 
 Bugs fixed in this release
      
-      * 649369 : basesrc: do not set first buffer timestamp to 0 for live sources
-      * 649878 : [multiqueue] regression: gst_single_queue_new not MT-safe
+      * 652211 : Use const instead G_CONST_RETURN
 
 Download
 
@@ -78,6 +77,7 @@ Let us know if you want to be added to this list.
   
 Contributors to this release
     
-      * Mark Nauwelaerts
-      * Vincent Penquerc'h
+      * David Schleef
+      * Javier Jardón
+      * Руслан Ижбулатов
  
