@@ -359,6 +359,173 @@ GType gst_type_register_static_full (GType parent_type,
 					  _GST_PUT (data, 0,  8,  0, num); \
 					} while (0)
 
+/* Float endianess conversion macros */
+
+/* FIXME: Remove this once we depend on a GLib version with this */
+#ifndef GFLOAT_FROM_LE
+/**
+ * GFLOAT_SWAP_LE_BE:
+ * @in: input value
+ *
+ * Swap byte order of a 32-bit floating point value (float).
+ *
+ * Returns: @in byte-swapped.
+ *
+ * Since: 0.10.22
+ *
+ */
+#ifdef _FOOL_GTK_DOC_
+G_INLINE_FUNC gfloat GFLOAT_SWAP_LE_BE (gfloat in);
+#endif
+
+inline static gfloat
+GFLOAT_SWAP_LE_BE(gfloat in)
+{
+  union
+  {
+    guint32 i;
+    gfloat f;
+  } u;
+
+  u.f = in;
+  u.i = GUINT32_SWAP_LE_BE (u.i);
+  return u.f;
+}
+
+/**
+ * GDOUBLE_SWAP_LE_BE:
+ * @in: input value
+ *
+ * Swap byte order of a 64-bit floating point value (double).
+ *
+ * Returns: @in byte-swapped.
+ *
+ * Since: 0.10.22
+ *
+ */
+#ifdef _FOOL_GTK_DOC_
+G_INLINE_FUNC gdouble GDOUBLE_SWAP_LE_BE (gdouble in);
+#endif
+
+inline static gdouble
+GDOUBLE_SWAP_LE_BE(gdouble in)
+{
+  union
+  {
+    guint64 i;
+    gdouble d;
+  } u;
+
+  u.d = in;
+  u.i = GUINT64_SWAP_LE_BE (u.i);
+  return u.d;
+}
+
+/**
+ * GDOUBLE_TO_LE:
+ * @val: value
+ *
+ * Convert 64-bit floating point value (double) from native byte order into
+ * little endian byte order.
+ *
+ * Since: 0.10.22
+ *
+ */
+/**
+ * GDOUBLE_TO_BE:
+ * @val: value
+ *
+ * Convert 64-bit floating point value (double) from native byte order into
+ * big endian byte order.
+ *
+ * Since: 0.10.22
+ *
+ */
+/**
+ * GDOUBLE_FROM_LE:
+ * @val: value
+ *
+ * Convert 64-bit floating point value (double) from little endian byte order
+ * into native byte order.
+ *
+ * Since: 0.10.22
+ *
+ */
+/**
+ * GDOUBLE_FROM_BE:
+ * @val: value
+ *
+ * Convert 64-bit floating point value (double) from big endian byte order
+ * into native byte order.
+ *
+ * Since: 0.10.22
+ *
+ */
+
+/**
+ * GFLOAT_TO_LE:
+ * @val: value
+ *
+ * Convert 32-bit floating point value (float) from native byte order into
+ * little endian byte order.
+ *
+ * Since: 0.10.22
+ *
+ */
+/**
+ * GFLOAT_TO_BE:
+ * @val: value
+ *
+ * Convert 32-bit floating point value (float) from native byte order into
+ * big endian byte order.
+ *
+ * Since: 0.10.22
+ *
+ */
+/**
+ * GFLOAT_FROM_LE:
+ * @val: value
+ *
+ * Convert 32-bit floating point value (float) from little endian byte order
+ * into native byte order.
+ *
+ * Since: 0.10.22
+ *
+ */
+/**
+ * GFLOAT_FROM_BE:
+ * @val: value
+ *
+ * Convert 32-bit floating point value (float) from big endian byte order
+ * into native byte order.
+ *
+ * Since: 0.10.22
+ *
+ */
+
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+#define GFLOAT_TO_LE(val)    ((gfloat) (val))
+#define GFLOAT_TO_BE(val)    (GFLOAT_SWAP_LE_BE (val))
+#define GDOUBLE_TO_LE(val)   ((gdouble) (val))
+#define GDOUBLE_TO_BE(val)   (GDOUBLE_SWAP_LE_BE (val))
+
+#elif G_BYTE_ORDER == G_BIG_ENDIAN
+#define GFLOAT_TO_LE(val)    (GFLOAT_SWAP_LE_BE (val))
+#define GFLOAT_TO_BE(val)    ((gfloat) (val))
+#define GDOUBLE_TO_LE(val)   (GDOUBLE_SWAP_LE_BE (val))
+#define GDOUBLE_TO_BE(val)   ((gdouble) (val))
+
+#else /* !G_LITTLE_ENDIAN && !G_BIG_ENDIAN */
+#error unknown ENDIAN type
+#endif /* !G_LITTLE_ENDIAN && !G_BIG_ENDIAN */
+
+#define GFLOAT_FROM_LE(val)  (GFLOAT_TO_LE (val))
+#define GFLOAT_FROM_BE(val)  (GFLOAT_TO_BE (val))
+#define GDOUBLE_FROM_LE(val) (GDOUBLE_TO_LE (val))
+#define GDOUBLE_FROM_BE(val) (GDOUBLE_TO_BE (val))
+
+#endif /* !defined(GFLOAT_FROM_LE) */
+
 /**
  * GST_READ_FLOAT_LE:
  * @data: memory location
