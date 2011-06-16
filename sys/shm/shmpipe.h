@@ -23,35 +23,39 @@
  */
 
 /*
- * None of this code is thread safe, if you want to use it in a multi-threaded
- * context, please protect it with a mutex.
+ * None of this code is thread safe, if you want to use it in a
+ * multi-threaded context, please protect it with a mutex.
  *
- * First, create a writer with sp_writer_create()
- * And selectes() on the socket from sp_get_fd()
- * If the socket is closed or there are errors from any function, the app
- * should call sp_close() and assume the writer is dead
- * The server calls sp_writer_accept_client() when there is something to read
- * from the server fd
- * It then needs to select() on the socket from sp_writer_get_client_fd()
- * If it gets an error on that socket, it call sp_writer_close_client().
- * If there is something to read, it calls sp_writer_recv().
+ * First, create a writer with sp_writer_create(), then select() on
+ * the socket returned by sp_get_fd(). If the socket is closed or any
+ * function returns an error, the app should call sp_close() and
+ * assume the other side is dead. The writer calls
+ * sp_writer_accept_client() when there is something to read from the
+ * main server fd. This returns a new ShmClient (representing a client
+ * connection), the writer needs to do a select() on the socket
+ * returned by sp_writer_get_client_fd(). If it gets an error on that
+ * socket, it calls sp_writer_close_client(). If there is something to
+ * read, it calls sp_writer_recv().
  *
- * The writer allocates buffers with sp_writer_alloc_block(),
- * writes something in the buffer (retrieved with sp_writer_block_get_buf(),
- * then calls  sp_writer_send_buf() to send the buffer or a subsection to
- * the other side. When it is done with the block, it calls
- * sp_writer_free_block().
- * If alloc fails, then the server must wait for events from the clients before
- * trying again.
+ * The writer allocates a block containing a free buffer with
+ * sp_writer_alloc_block(), then writes something in the buffer
+ * (retrieved with sp_writer_block_get_buf(), then calls
+ * sp_writer_send_buf() to send the buffer or a subsection to the
+ * other side. When it is done with the block, it calls
+ * sp_writer_free_block().  If alloc fails, then the server must wait
+ * for events on the client fd (the ones where sp_writer_recv() is
+ * called), and then try to re-alloc.
  *
- *
- * The clients connect with sp_client_open()
- * And select() on the fd from sp_get_fd() until there is something to read.
- * Then they must read using sp_client_recv() which will return > 0 if there
- * is a valid buffer (which is read only). It will return 0 if it is an internal
- * message and <0 if there was an error. If there was an error, one must close
- * it with sp_close(). If was valid buffer was received, the client must release
- * it with sp_client_recv_finish() when it is done reading from it.
+ * The reader (client) connect to the writer with sp_client_open() And
+ * select()s on the fd from sp_get_fd() until there is something to
+ * read.  Then they must read using sp_client_recv() which will return
+ * the size of the buffer (positive) if there is a valid buffer (which
+ * is read only).  It will return 0 if it is an internal message and a
+ * negative number if there was an error.  If there was an error, the
+ * application must close the pipe with sp_close() and assume that all
+ * buffers are no longer valid. If was valid buffer was received, the
+ * client must release it with sp_client_recv_finish() when it is done
+ * reading from it.
  */
 
 
