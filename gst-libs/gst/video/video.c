@@ -27,6 +27,10 @@
 
 #include "video.h"
 
+static int get_size (GstVideoFormat format, int width, int height);
+static int get_stride (GstVideoFormat format, int plane, int width);
+static int fill_planes (GstVideoInfo * info);
+
 typedef enum
 {
   VIDEO_FLAG_YUV = (1 << 0),
@@ -41,19 +45,21 @@ typedef struct
   GstVideoFormat format;
   guint32 fourcc;
   VideoFlags flags;
+  guint n_comp;
   guint depth[GST_VIDEO_MAX_PLANES];
+  guint n_planes;
 } VideoFormat;
 
-#define COMP0            { 0, 0, 0, 0 }
-#define COMP8            { 8, 0, 0, 0 }
-#define COMP888          { 8, 8, 8, 0 }
-#define COMP8888         { 8, 8, 8, 8 }
-#define COMP10_10_10     { 10, 10, 10, 0 }
-#define COMP16           { 16, 0, 0, 0 }
-#define COMP16_16_16     { 16, 0, 0, 0 }
-#define COMP16_16_16_16  { 16, 0, 0, 0 }
-#define COMP555          { 5, 5, 5, 0 }
-#define COMP565          { 5, 6, 5, 0 }
+#define COMP0            0, { 0, 0, 0, 0 }
+#define COMP8            1, { 8, 0, 0, 0 }
+#define COMP888          3, { 8, 8, 8, 0 }
+#define COMP8888         4, { 8, 8, 8, 8 }
+#define COMP10_10_10     3, { 10, 10, 10, 0 }
+#define COMP16           1, { 16, 0, 0, 0 }
+#define COMP16_16_16     3, { 16, 16, 16, 0 }
+#define COMP16_16_16_16  4, { 16, 16, 16, 16 }
+#define COMP555          3, { 5, 5, 5, 0 }
+#define COMP565          3, { 5, 6, 5, 0 }
 
 #define MAKE_YUV_FORMAT(name, fourcc, comp) \
  { G_STRINGIFY(name), GST_VIDEO_FORMAT_ ##name, fourcc, VIDEO_FLAG_YUV, comp }
@@ -133,72 +139,6 @@ static VideoFormat formats[] = {
  */
 
 /**
- * gst_video_frame_rate:
- * @pad: pointer to a #GstPad
- *
- * A convenience function to retrieve a GValue holding the framerate
- * from the caps on a pad.
- *
- * The pad needs to have negotiated caps containing a framerate property.
- *
- * Returns: NULL if the pad has no configured caps or the configured caps
- * do not contain a framerate.
- *
- */
-const GValue *
-gst_video_frame_rate (GstPad * pad)
-{
-  const GValue *fps;
-  gchar *fps_string;
-  GstCaps *caps = NULL;
-  GstStructure *structure;
-
-  /* get pad caps */
-  caps = gst_pad_get_current_caps (pad);
-  if (caps == NULL)
-    goto no_caps;
-
-  structure = gst_caps_get_structure (caps, 0);
-  if ((fps = gst_structure_get_value (structure, "framerate")) == NULL)
-    goto no_framerate;
-
-  if (!GST_VALUE_HOLDS_FRACTION (fps))
-    goto no_fraction;
-
-  fps_string = gst_value_serialize (fps);
-  GST_DEBUG ("Framerate request on pad %s:%s: %s",
-      GST_DEBUG_PAD_NAME (pad), fps_string);
-  g_free (fps_string);
-
-  gst_caps_unref (caps);
-
-  return fps;
-
-  /* ERRORS */
-no_caps:
-  {
-    g_warning ("gstvideo: failed to get caps of pad %s:%s",
-        GST_DEBUG_PAD_NAME (pad));
-    return NULL;
-  }
-no_framerate:
-  {
-    g_warning ("gstvideo: failed to get framerate property of pad %s:%s",
-        GST_DEBUG_PAD_NAME (pad));
-    gst_caps_unref (caps);
-    return NULL;
-  }
-no_fraction:
-  {
-    g_warning
-        ("gstvideo: framerate property of pad %s:%s is not of type Fraction",
-        GST_DEBUG_PAD_NAME (pad));
-    gst_caps_unref (caps);
-    return NULL;
-  }
-}
-
-/**
  * gst_video_calculate_display_ratio:
  * @dar_n: Numerator of the calculated display_ratio
  * @dar_d: Denominator of the calculated display_ratio
@@ -256,309 +196,6 @@ error_overflow:
     return FALSE;
   }
 }
-
-/**
- * gst_video_format_parse_caps_interlaced:
- * @caps: the fixed #GstCaps to parse
- * @interlaced: whether @caps represents interlaced video or not, may be NULL (output)
- *
- * Extracts whether the caps represents interlaced content or not and places it
- * in @interlaced.
- *
- * Since: 0.10.23
- *
- * Returns: TRUE if @caps was parsed correctly.
- */
-gboolean
-gst_video_format_parse_caps_interlaced (GstCaps * caps, gboolean * interlaced)
-{
-  GstStructure *structure;
-
-  if (!gst_caps_is_fixed (caps))
-    return FALSE;
-
-  structure = gst_caps_get_structure (caps, 0);
-
-  if (interlaced) {
-    if (!gst_structure_get_boolean (structure, "interlaced", interlaced))
-      *interlaced = FALSE;
-  }
-
-  return TRUE;
-}
-
-/**
- * gst_video_parse_caps_color_matrix:
- * @caps: the fixed #GstCaps to parse
- *
- * Extracts the color matrix used by the caps.  Possible values are
- * "sdtv" for the standard definition color matrix (as specified in
- * Rec. ITU-R BT.470-6) or "hdtv" for the high definition color
- * matrix (as specified in Rec. ITU-R BT.709)
- *
- * Since: 0.10.29
- *
- * Returns: a color matrix string, or NULL if no color matrix could be
- *     determined.
- */
-const char *
-gst_video_parse_caps_color_matrix (GstCaps * caps)
-{
-  GstStructure *structure;
-  const char *s;
-
-  if (!gst_caps_is_fixed (caps))
-    return NULL;
-
-  structure = gst_caps_get_structure (caps, 0);
-
-  s = gst_structure_get_string (structure, "color-matrix");
-  if (s)
-    return s;
-
-  if (gst_structure_has_name (structure, "video/x-raw-yuv")) {
-    return "sdtv";
-  }
-
-  return NULL;
-}
-
-/**
- * gst_video_parse_caps_chroma_site:
- * @caps: the fixed #GstCaps to parse
- *
- * Extracts the chroma site used by the caps.  Possible values are
- * "mpeg2" for MPEG-2 style chroma siting (co-sited horizontally,
- * halfway-sited vertically), "jpeg" for JPEG and Theora style
- * chroma siting (halfway-sited both horizontally and vertically).
- * Other chroma site values are possible, but uncommon.
- *
- * When no chroma site is specified in the caps, it should be assumed
- * to be "mpeg2".
- *
- * Since: 0.10.29
- *
- * Returns: a chroma site string, or NULL if no chroma site could be
- *     determined.
- */
-const char *
-gst_video_parse_caps_chroma_site (GstCaps * caps)
-{
-  GstStructure *structure;
-  const char *s;
-
-  if (!gst_caps_is_fixed (caps))
-    return NULL;
-
-  structure = gst_caps_get_structure (caps, 0);
-
-  s = gst_structure_get_string (structure, "chroma-site");
-  if (s)
-    return s;
-
-  if (gst_structure_has_name (structure, "video/x-raw-yuv")) {
-    return "mpeg2";
-  }
-
-  return NULL;
-}
-
-/**
- * gst_video_parse_caps_framerate:
- * @caps: pointer to a #GstCaps instance
- * @fps_n: pointer to integer to hold numerator of frame rate (output)
- * @fps_d: pointer to integer to hold denominator of frame rate (output)
- *
- * Extracts the frame rate from @caps and places the values in the locations
- * pointed to by @fps_n and @fps_d.  Returns TRUE if the values could be
- * parsed correctly, FALSE if not.
- *
- * This function can be used with #GstCaps that have any media type; it
- * is not limited to formats handled by #GstVideoFormat.
- *
- * Since: 0.10.16
- *
- * Returns: TRUE if @caps was parsed correctly.
- */
-gboolean
-gst_video_parse_caps_framerate (GstCaps * caps, int *fps_n, int *fps_d)
-{
-  GstStructure *structure;
-
-  if (!gst_caps_is_fixed (caps))
-    return FALSE;
-
-  structure = gst_caps_get_structure (caps, 0);
-
-  return gst_structure_get_fraction (structure, "framerate", fps_n, fps_d);
-}
-
-/**
- * gst_video_parse_caps_pixel_aspect_ratio:
- * @caps: pointer to a #GstCaps instance
- * @par_n: pointer to numerator of pixel aspect ratio (output)
- * @par_d: pointer to denominator of pixel aspect ratio (output)
- *
- * Extracts the pixel aspect ratio from @caps and places the values in
- * the locations pointed to by @par_n and @par_d.  Returns TRUE if the
- * values could be parsed correctly, FALSE if not.
- *
- * This function can be used with #GstCaps that have any media type; it
- * is not limited to formats handled by #GstVideoFormat.
- *
- * Since: 0.10.16
- *
- * Returns: TRUE if @caps was parsed correctly.
- */
-gboolean
-gst_video_parse_caps_pixel_aspect_ratio (GstCaps * caps, int *par_n, int *par_d)
-{
-  GstStructure *structure;
-
-  if (!gst_caps_is_fixed (caps))
-    return FALSE;
-
-  structure = gst_caps_get_structure (caps, 0);
-
-  if (!gst_structure_get_fraction (structure, "pixel-aspect-ratio",
-          par_n, par_d)) {
-    *par_n = 1;
-    *par_d = 1;
-  }
-  return TRUE;
-}
-
-/**
- * gst_video_format_new_caps_interlaced:
- * @format: the #GstVideoFormat describing the raw video format
- * @width: width of video
- * @height: height of video
- * @framerate_n: numerator of frame rate
- * @framerate_d: denominator of frame rate
- * @par_n: numerator of pixel aspect ratio
- * @par_d: denominator of pixel aspect ratio
- * @interlaced: #TRUE if the format is interlaced
- *
- * Creates a new #GstCaps object based on the parameters provided.
- *
- * Since: 0.10.23
- *
- * Returns: a new #GstCaps object, or NULL if there was an error
- */
-GstCaps *
-gst_video_format_new_caps_interlaced (GstVideoFormat format,
-    int width, int height, int framerate_n, int framerate_d, int par_n,
-    int par_d, gboolean interlaced)
-{
-  GstCaps *res;
-
-  res =
-      gst_video_format_new_caps (format, width, height, framerate_n,
-      framerate_d, par_n, par_d);
-  if (interlaced && (res != NULL))
-    gst_caps_set_simple (res, "interlaced", G_TYPE_BOOLEAN, TRUE, NULL);
-
-  return res;
-}
-
-static GstCaps *
-gst_video_format_new_caps_raw (GstVideoFormat format)
-{
-  g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN, NULL);
-
-  return gst_caps_new_simple ("video/x-raw",
-      "format", G_TYPE_STRING, gst_video_format_to_string (format), NULL);
-}
-
-/**
- * gst_video_format_new_template_caps:
- * @format: the #GstVideoFormat describing the raw video format
- *
- * Creates a new #GstCaps object based on the parameters provided.
- * Size, frame rate, and pixel aspect ratio are set to the full
- * range.
- *
- * Since: 0.10.33
- *
- * Returns: a new #GstCaps object, or NULL if there was an error
- */
-GstCaps *
-gst_video_format_new_template_caps (GstVideoFormat format)
-{
-  GstCaps *caps;
-  GstStructure *structure;
-
-  g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN, NULL);
-
-  caps = gst_video_format_new_caps_raw (format);
-  if (caps) {
-    GValue value = { 0 };
-    GValue v = { 0 };
-
-    structure = gst_caps_get_structure (caps, 0);
-
-    gst_structure_set (structure,
-        "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-        "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-        "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1,
-        "pixel-aspect-ratio", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
-
-    g_value_init (&value, GST_TYPE_LIST);
-    g_value_init (&v, G_TYPE_BOOLEAN);
-    g_value_set_boolean (&v, TRUE);
-    gst_value_list_append_value (&value, &v);
-    g_value_set_boolean (&v, FALSE);
-    gst_value_list_append_value (&value, &v);
-
-    gst_structure_set_value (structure, "interlaced", &value);
-
-    g_value_reset (&value);
-    g_value_reset (&v);
-  }
-
-  return caps;
-}
-
-/**
- * gst_video_format_new_caps:
- * @format: the #GstVideoFormat describing the raw video format
- * @width: width of video
- * @height: height of video
- * @framerate_n: numerator of frame rate
- * @framerate_d: denominator of frame rate
- * @par_n: numerator of pixel aspect ratio
- * @par_d: denominator of pixel aspect ratio
- *
- * Creates a new #GstCaps object based on the parameters provided.
- *
- * Since: 0.10.16
- *
- * Returns: a new #GstCaps object, or NULL if there was an error
- */
-GstCaps *
-gst_video_format_new_caps (GstVideoFormat format, int width,
-    int height, int framerate_n, int framerate_d, int par_n, int par_d)
-{
-  GstCaps *caps;
-  GstStructure *structure;
-
-  g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN, NULL);
-  g_return_val_if_fail (width > 0 && height > 0, NULL);
-
-  caps = gst_video_format_new_caps_raw (format);
-  if (caps) {
-    structure = gst_caps_get_structure (caps, 0);
-
-    gst_structure_set (structure,
-        "width", G_TYPE_INT, width,
-        "height", G_TYPE_INT, height,
-        "framerate", GST_TYPE_FRACTION, framerate_n, framerate_d,
-        "pixel-aspect-ratio", GST_TYPE_FRACTION, par_n, par_d, NULL);
-  }
-
-  return caps;
-}
-
 
 static GstVideoFormat
 gst_video_format_from_rgb32_masks (int red_mask, int green_mask, int blue_mask)
@@ -903,6 +540,25 @@ gst_video_format_has_alpha (GstVideoFormat format)
 }
 
 /**
+ * gst_video_format_get_n_components:
+ * @format: a #GstVideoFormat
+ *
+ * Get the number of components for @format.
+ *
+ * Returns: the number of components for @format.
+ */
+int
+gst_video_format_get_n_components (GstVideoFormat format)
+{
+  g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN, 0);
+
+  if (format >= G_N_ELEMENTS (formats))
+    return 0;
+
+  return formats[format].n_comp;
+}
+
+/**
  * gst_video_format_get_component_depth:
  * @format: a #GstVideoFormat
  * @component: the video component (e.g. 0 for 'R' in RGB)
@@ -1052,12 +708,22 @@ void
 gst_video_info_set_format (GstVideoInfo * info, GstVideoFormat format,
     guint width, guint height)
 {
+  gint i;
+
   g_return_if_fail (info != NULL);
   g_return_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN);
 
   info->format = format;
   info->width = width;
-  info->heigth = height;
+  info->height = height;
+
+  info->n_planes = formats[format].n_planes;
+  info->size = get_size (format, info->width, info->height);
+  fill_planes (info);
+
+  for (i = 0; i < info->n_planes; i++) {
+    info->plane[i].stride = get_stride (format, i, info->width);
+  }
 }
 
 /**
@@ -1073,34 +739,71 @@ gboolean
 gst_video_info_from_caps (GstVideoInfo * info, const GstCaps * caps)
 {
   GstStructure *structure;
-  const gchar *fmt;
-  gboolean ok = TRUE;
+  const gchar *s;
   GstVideoFormat format;
-  gint width, height g_return_val_if_fail (info != NULL, FALSE);
-  g_return_val_if_fail (caps != NULL, FALSE);
+  gint width, height;
+  gint fps_n, fps_d;
+  gboolean interlaced;
+  gint par_n, par_d;
 
-  if (!gst_caps_is_fixed (caps))
-    return FALSE;
+  g_return_val_if_fail (info != NULL, FALSE);
+  g_return_val_if_fail (caps != NULL, FALSE);
+  g_return_val_if_fail (gst_caps_is_fixed (caps), FALSE);
 
   structure = gst_caps_get_structure (caps, 0);
 
   if (!gst_structure_has_name (structure, "video/x-raw"))
     goto wrong_name;
 
-  if (!(fmt = gst_structure_get_string (structure, "format")))
+  if (!(s = gst_structure_get_string (structure, "format")))
     goto no_format;
 
-  format = gst_video_format_from_string (fmt);
+  format = gst_video_format_from_string (s);
   if (format == GST_VIDEO_FORMAT_UNKNOWN)
     goto unknown_format;
 
-  info->format = format;
+  if (!gst_structure_get_int (structure, "width", &width))
+    goto no_width;
+  if (!gst_structure_get_int (structure, "height", &height))
+    goto no_height;
 
-  if (gst_structure_get_int (structure, "width", &width))
-    info->width = width;
-  if (gst_structure_get_int (structure, "height", &height))
-    info->height = height;
+  gst_video_info_set_format (info, format, width, height);
 
+  if (gst_structure_get_fraction (structure, "framerate", &fps_n, &fps_d)) {
+    info->fps_n = fps_n;
+    info->fps_d = fps_d;
+  } else {
+    info->fps_n = 0;
+    info->fps_d = 1;
+  }
+
+  if (!gst_structure_get_boolean (structure, "interlaced", &interlaced))
+    interlaced = FALSE;
+  if (interlaced)
+    info->flags |= GST_VIDEO_FLAG_INTERLACED;
+  else
+    info->flags &= ~GST_VIDEO_FLAG_INTERLACED;
+
+  s = gst_structure_get_string (structure, "color-matrix");
+  if (s)
+    info->color_matrix = s;
+  else
+    info->color_matrix = "sdtv";
+
+  s = gst_structure_get_string (structure, "chroma-site");
+  if (s)
+    info->chroma_site = s;
+  else
+    info->chroma_site = "mpeg2";
+
+  if (gst_structure_get_fraction (structure, "pixel-aspect-ratio",
+          &par_n, &par_d)) {
+    info->par_n = par_n;
+    info->par_d = par_d;
+  } else {
+    info->par_n = 1;
+    info->par_d = 1;
+  }
   return TRUE;
 
   /* ERROR */
@@ -1116,24 +819,56 @@ unknown_format:
   {
     return FALSE;
   }
-}
-
-GstCaps *
-gst_video_info_to_caps (GstVideoInfo * info)
-{
-  return NULL;
-}
-
-gboolean
-gst_video_info_convert (GstVideoInfo * info,
-    GstFormat src_format, gint64 src_value, GstFormat dest_format,
-    gint64 * dest_value)
-{
-  return TRUE;
+no_width:
+  {
+    return FALSE;
+  }
+no_height:
+  {
+    return FALSE;
+  }
 }
 
 /**
- * gst_video_format_get_row_stride:
+ * gst_video_info_to_caps:
+ * @info: a #GstVideoInfo
+ *
+ * Convert the values of @info into a #GstCaps.
+ *
+ * Returns: a new #GstCaps containing the info of @info.
+ */
+GstCaps *
+gst_video_info_to_caps (GstVideoInfo * info)
+{
+  GstCaps *caps;
+  const gchar *format;
+
+  g_return_val_if_fail (info != NULL, NULL);
+  g_return_val_if_fail (info->format != GST_VIDEO_FORMAT_UNKNOWN, NULL);
+
+  format = gst_video_format_to_string (info->format);
+  g_return_val_if_fail (format != NULL, NULL);
+
+  caps = gst_caps_new_simple ("video/x-raw",
+      "format", G_TYPE_STRING, format,
+      "width", G_TYPE_INT, info->width,
+      "height", G_TYPE_INT, info->height,
+      "framerate", GST_TYPE_FRACTION, info->fps_n, info->fps_d,
+      "pixel-aspect-ratio", GST_TYPE_FRACTION, info->par_n, info->par_d, NULL);
+  if (info->flags & GST_VIDEO_FLAG_INTERLACED)
+    gst_caps_set_simple (caps, "interlaced", G_TYPE_BOOLEAN, TRUE, NULL);
+  if (info->color_matrix)
+    gst_caps_set_simple (caps, "color-matrix", G_TYPE_STRING,
+        info->color_matrix, NULL);
+  if (info->chroma_site)
+    gst_caps_set_simple (caps, "chromar-site", G_TYPE_STRING, info->chroma_site,
+        NULL);
+
+  return caps;
+}
+
+/**
+ * get_stride:
  * @format: a #GstVideoFormat
  * @component: the component index
  * @width: the width of video
@@ -1150,18 +885,13 @@ gst_video_info_convert (GstVideoInfo * info,
  *
  * Returns: row stride of component @component
  */
-int
-gst_video_format_get_row_stride (GstVideoFormat format, int component,
-    int width)
+static int
+get_stride (GstVideoFormat format, int plane, int width)
 {
-  g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN, 0);
-  g_return_val_if_fail (component >= 0 && component <= 3, 0);
-  g_return_val_if_fail (width > 0, 0);
-
   switch (format) {
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
-      if (component == 0) {
+      if (plane == 0) {
         return GST_ROUND_UP_4 (width);
       } else {
         return GST_ROUND_UP_4 (GST_ROUND_UP_2 (width) / 2);
@@ -1191,13 +921,13 @@ gst_video_format_get_row_stride (GstVideoFormat format, int component,
     case GST_VIDEO_FORMAT_v308:
       return GST_ROUND_UP_4 (width * 3);
     case GST_VIDEO_FORMAT_Y41B:
-      if (component == 0) {
+      if (plane == 0) {
         return GST_ROUND_UP_4 (width);
       } else {
         return GST_ROUND_UP_16 (width) / 4;
       }
     case GST_VIDEO_FORMAT_Y42B:
-      if (component == 0) {
+      if (plane == 0) {
         return GST_ROUND_UP_4 (width);
       } else {
         return GST_ROUND_UP_8 (width) / 2;
@@ -1221,7 +951,7 @@ gst_video_format_get_row_stride (GstVideoFormat format, int component,
     case GST_VIDEO_FORMAT_UYVP:
       return GST_ROUND_UP_4 ((width * 2 * 5 + 3) / 4);
     case GST_VIDEO_FORMAT_A420:
-      if (component == 0 || component == 3) {
+      if (plane == 0 || plane == 3) {
         return GST_ROUND_UP_4 (width);
       } else {
         return GST_ROUND_UP_4 (GST_ROUND_UP_2 (width) / 2);
@@ -1230,7 +960,7 @@ gst_video_format_get_row_stride (GstVideoFormat format, int component,
       return GST_ROUND_UP_4 (width);
     case GST_VIDEO_FORMAT_YUV9:
     case GST_VIDEO_FORMAT_YVU9:
-      if (component == 0) {
+      if (plane == 0) {
         return GST_ROUND_UP_4 (width);
       } else {
         return GST_ROUND_UP_4 (GST_ROUND_UP_4 (width) / 4);
@@ -1246,6 +976,7 @@ gst_video_format_get_row_stride (GstVideoFormat format, int component,
   }
 }
 
+#if 0
 /**
  * gst_video_format_get_component_width:
  * @format: a #GstVideoFormat
@@ -1260,7 +991,7 @@ gst_video_format_get_row_stride (GstVideoFormat format, int component,
  *
  * Returns: width of component @component
  */
-int
+static int
 gst_video_format_get_component_width (GstVideoFormat format,
     int component, int width)
 {
@@ -1331,7 +1062,9 @@ gst_video_format_get_component_width (GstVideoFormat format,
       return 0;
   }
 }
+#endif
 
+#if 0
 /**
  * gst_video_format_get_component_height:
  * @format: a #GstVideoFormat
@@ -1417,9 +1150,11 @@ gst_video_format_get_component_height (GstVideoFormat format,
       return 0;
   }
 }
+#endif
 
+#if 0
 /**
- * gst_video_format_get_component_offset:
+ * get_component_offset:
  * @format: a #GstVideoFormat
  * @component: the component index
  * @width: the width of video
@@ -1436,8 +1171,8 @@ gst_video_format_get_component_height (GstVideoFormat format,
  *
  * Returns: offset of component @component
  */
-int
-gst_video_format_get_component_offset (GstVideoFormat format,
+static int
+get_component_offset (GstVideoFormat format,
     int component, int width, int height)
 {
   g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN, 0);
@@ -1684,9 +1419,145 @@ gst_video_format_get_component_offset (GstVideoFormat format,
   GST_WARNING ("unhandled format %d or component %d", format, component);
   return 0;
 }
+#endif
 
 /**
- * gst_video_format_get_size:
+ * get_plane_offset:
+ * @format: a #GstVideoFormat
+ * @plane: the plane index
+ * @width: the width of video
+ * @height: the height of video
+ *
+ * Calculates the offset (in bytes) of the first pixel of the plane
+ * with index @plane.  For packed formats, this will typically be 0.
+ * For planar formats, this will be a (relatively) large offset to the
+ * beginning of the second or third plane planes.
+ * See @gst_video_format_get_row_stride for a description
+ * of the plane index.
+ *
+ * Since: 0.10.16
+ *
+ * Returns: offset of plane @plane
+ */
+static int
+fill_planes (GstVideoInfo * info)
+{
+  int width;
+  int height;
+
+  width = info->width;
+  height = info->height;
+
+  switch (info->format) {
+    case GST_VIDEO_FORMAT_YUY2:
+    case GST_VIDEO_FORMAT_YVYU:
+    case GST_VIDEO_FORMAT_UYVY:
+    case GST_VIDEO_FORMAT_AYUV:
+    case GST_VIDEO_FORMAT_RGBx:
+    case GST_VIDEO_FORMAT_RGBA:
+    case GST_VIDEO_FORMAT_BGRx:
+    case GST_VIDEO_FORMAT_BGRA:
+    case GST_VIDEO_FORMAT_xRGB:
+    case GST_VIDEO_FORMAT_ARGB:
+    case GST_VIDEO_FORMAT_xBGR:
+    case GST_VIDEO_FORMAT_ABGR:
+    case GST_VIDEO_FORMAT_RGB:
+    case GST_VIDEO_FORMAT_v308:
+    case GST_VIDEO_FORMAT_BGR:
+    case GST_VIDEO_FORMAT_v210:
+    case GST_VIDEO_FORMAT_r210:
+    case GST_VIDEO_FORMAT_v216:
+    case GST_VIDEO_FORMAT_GRAY8:
+    case GST_VIDEO_FORMAT_GRAY16_BE:
+    case GST_VIDEO_FORMAT_GRAY16_LE:
+    case GST_VIDEO_FORMAT_Y800:
+    case GST_VIDEO_FORMAT_Y16:
+    case GST_VIDEO_FORMAT_UYVP:
+    case GST_VIDEO_FORMAT_RGB8_PALETTED:
+    case GST_VIDEO_FORMAT_IYU1:
+    case GST_VIDEO_FORMAT_ARGB64:
+    case GST_VIDEO_FORMAT_AYUV64:
+      info->n_planes = 1;
+      info->plane[0].offset = 0;
+      break;
+    case GST_VIDEO_FORMAT_I420:
+      info->n_planes = 3;
+      info->plane[0].offset = 0;
+      info->plane[1].offset = GST_ROUND_UP_4 (width) * GST_ROUND_UP_2 (height);
+      info->plane[2].offset = info->plane[1].offset +
+          GST_ROUND_UP_4 (GST_ROUND_UP_2 (width) / 2) *
+          (GST_ROUND_UP_2 (height) / 2);
+      break;
+    case GST_VIDEO_FORMAT_YV12:        /* same as I420, but plane 1+2 swapped */
+      info->n_planes = 3;
+      info->plane[0].offset = 0;
+      info->plane[2].offset = GST_ROUND_UP_4 (width) * GST_ROUND_UP_2 (height);
+      info->plane[1].offset = info->plane[2].offset +
+          GST_ROUND_UP_4 (GST_ROUND_UP_2 (width) / 2) *
+          (GST_ROUND_UP_2 (height) / 2);
+      break;
+    case GST_VIDEO_FORMAT_Y41B:
+      info->n_planes = 3;
+      info->plane[0].offset = 0;
+      info->plane[1].offset = GST_ROUND_UP_4 (width) * height;
+      info->plane[2].offset = (GST_ROUND_UP_4 (width) +
+          (GST_ROUND_UP_16 (width) / 4)) * height;
+      break;
+    case GST_VIDEO_FORMAT_Y42B:
+      info->n_planes = 3;
+      info->plane[0].offset = 0;
+      info->plane[1].offset = GST_ROUND_UP_4 (width) * height;
+      info->plane[2].offset =
+          (GST_ROUND_UP_4 (width) + (GST_ROUND_UP_8 (width) / 2)) * height;
+      break;
+    case GST_VIDEO_FORMAT_Y444:
+      info->n_planes = 3;
+      info->plane[0].offset = 0;
+      info->plane[1].offset = GST_ROUND_UP_4 (width) * height;
+      info->plane[2].offset = GST_ROUND_UP_4 (width) * height * 2;
+      break;
+    case GST_VIDEO_FORMAT_NV12:
+    case GST_VIDEO_FORMAT_NV21:
+      info->n_planes = 2;
+      info->plane[0].offset = 0;
+      info->plane[1].offset = GST_ROUND_UP_4 (width) * GST_ROUND_UP_2 (height);
+      break;
+    case GST_VIDEO_FORMAT_A420:
+      info->n_planes = 4;
+      info->plane[0].offset = 0;
+      info->plane[1].offset = GST_ROUND_UP_4 (width) * GST_ROUND_UP_2 (height);
+      info->plane[2].offset = info->plane[1].offset +
+          GST_ROUND_UP_4 (GST_ROUND_UP_2 (width) / 2) *
+          (GST_ROUND_UP_2 (height) / 2);
+      info->plane[3].offset = info->plane[2].offset +
+          GST_ROUND_UP_4 (GST_ROUND_UP_2 (width) / 2) *
+          (GST_ROUND_UP_2 (height) / 2);
+      break;
+    case GST_VIDEO_FORMAT_YUV9:
+      info->n_planes = 3;
+      info->plane[0].offset = 0;
+      info->plane[1].offset = GST_ROUND_UP_4 (width) * height;
+      info->plane[2].offset = info->plane[1].offset +
+          GST_ROUND_UP_4 (GST_ROUND_UP_4 (width) / 4) *
+          (GST_ROUND_UP_4 (height) / 4);
+      break;
+    case GST_VIDEO_FORMAT_YVU9:
+      info->n_planes = 3;
+      info->plane[0].offset = 0;
+      info->plane[2].offset = GST_ROUND_UP_4 (width) * height;
+      info->plane[1].offset = info->plane[2].offset +
+          GST_ROUND_UP_4 (GST_ROUND_UP_4 (width) / 4) *
+          (GST_ROUND_UP_4 (height) / 4);
+      break;
+    default:
+      break;
+  }
+  GST_WARNING ("unhandled format %d", info->format);
+  return 0;
+}
+
+/**
+ * get_size:
  * @format: a #GstVideoFormat
  * @width: the width of video
  * @height: the height of video
@@ -1694,12 +1565,10 @@ gst_video_format_get_component_offset (GstVideoFormat format,
  * Calculates the total number of bytes in the raw video format.  This
  * number should be used when allocating a buffer for raw video.
  *
- * Since: 0.10.16
- *
  * Returns: size (in bytes) of raw video format
  */
-int
-gst_video_format_get_size (GstVideoFormat format, int width, int height)
+static int
+get_size (GstVideoFormat format, int width, int height)
 {
   int size;
 
@@ -1785,42 +1654,8 @@ gst_video_format_get_size (GstVideoFormat format, int width, int height)
 }
 
 /**
- * gst_video_get_size_from_caps:
- * @caps: a pointer to #GstCaps
- * @size: a pointer to a gint that will be assigned the size (in bytes) of a video frame with the given caps
- *
- * Calculates the total number of bytes in the raw video format for the given
- * caps.  This number should be used when allocating a buffer for raw video.
- *
- * Since: 0.10.34
- *
- * Returns: %TRUE if the size could be calculated from the caps
- */
-gboolean
-gst_video_get_size_from_caps (const GstCaps * caps, gint * size)
-{
-  GstVideoFormat format = 0;
-  gint width = 0, height = 0;
-
-  g_return_val_if_fail (gst_caps_is_fixed (caps), FALSE);
-  g_return_val_if_fail (size != NULL, FALSE);
-
-  if (gst_video_format_parse_caps (caps, &format, &width, &height) == FALSE) {
-    GST_WARNING ("Could not parse caps: %" GST_PTR_FORMAT, caps);
-    return FALSE;
-  }
-
-  *size = gst_video_format_get_size (format, width, height);
-  return TRUE;
-}
-
-/**
  * gst_video_format_convert:
- * @format: a #GstVideoFormat
- * @width: the width of video
- * @height: the height of video
- * @fps_n: frame rate numerator
- * @fps_d: frame rate denominator
+ * @info: a #GstVideoInfo
  * @src_format: #GstFormat of the @src_value
  * @src_value: value to convert
  * @dest_format: #GstFormat of the @dest_value
@@ -1829,25 +1664,27 @@ gst_video_get_size_from_caps (const GstCaps * caps, gint * size)
  * Converts among various #GstFormat types.  This function handles
  * GST_FORMAT_BYTES, GST_FORMAT_TIME, and GST_FORMAT_DEFAULT.  For
  * raw video, GST_FORMAT_DEFAULT corresponds to video frames.  This
- * function can be to handle pad queries of the type GST_QUERY_CONVERT.
+ * function can be used to handle pad queries of the type GST_QUERY_CONVERT.
  *
  * Since: 0.10.16
  *
  * Returns: TRUE if the conversion was successful.
  */
 gboolean
-gst_video_format_convert (GstVideoFormat format, int width, int height,
-    int fps_n, int fps_d,
+gst_video_info_convert (GstVideoInfo * info,
     GstFormat src_format, gint64 src_value,
     GstFormat dest_format, gint64 * dest_value)
 {
   gboolean ret = FALSE;
-  int size;
+  int size, fps_n, fps_d;
 
-  g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN, 0);
-  g_return_val_if_fail (width > 0 && height > 0, 0);
+  g_return_val_if_fail (info != NULL, 0);
+  g_return_val_if_fail (info->format != GST_VIDEO_FORMAT_UNKNOWN, 0);
+  g_return_val_if_fail (info->size > 0, 0);
 
-  size = gst_video_format_get_size (format, width, height);
+  size = info->size;
+  fps_n = info->fps_n;
+  fps_d = info->fps_d;
 
   GST_DEBUG ("converting value %" G_GINT64_FORMAT " from %s to %s",
       src_value, gst_format_get_name (src_format),
@@ -2010,6 +1847,7 @@ gst_video_event_parse_still_frame (GstEvent * event, gboolean * in_still)
   return TRUE;
 }
 
+#if 0
 /**
  * gst_video_parse_caps_palette:
  * @caps: #GstCaps to parse
@@ -2041,3 +1879,4 @@ gst_video_parse_caps_palette (GstCaps * caps)
 
   return p;
 }
+#endif

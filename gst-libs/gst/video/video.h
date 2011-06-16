@@ -137,11 +137,11 @@ gboolean       gst_video_format_is_yuv               (GstVideoFormat format) G_G
 gboolean       gst_video_format_is_gray              (GstVideoFormat format) G_GNUC_CONST;
 gboolean       gst_video_format_has_alpha            (GstVideoFormat format) G_GNUC_CONST;
 
+int            gst_video_format_get_n_components     (GstVideoFormat format) G_GNUC_CONST;
 int            gst_video_format_get_component_depth  (GstVideoFormat format,
                                                       int            component) G_GNUC_CONST;
 int            gst_video_format_get_pixel_stride     (GstVideoFormat format,
                                                       int            component) G_GNUC_CONST;
-
 
 typedef struct _GstVideoPlane GstVideoPlane;
 typedef struct _GstVideoInfo GstVideoInfo;
@@ -189,6 +189,16 @@ struct _GstVideoPlane {
  * @format: the format of the video
  * @width: the width of the video
  * @height: the height of the video
+ * @size: the size of one frame
+ * @color_matrix: the color matrix.  Possible values are
+ *   "sdtv" for the standard definition color matrix (as specified in
+ *   Rec. ITU-R BT.470-6) or "hdtv" for the high definition color
+ *   matrix (as specified in Rec. ITU-R BT.709)
+ * @chroma_site: the chroma siting. Possible values are
+ *   "mpeg2" for MPEG-2 style chroma siting (co-sited horizontally,
+ *   halfway-sited vertically), "jpeg" for JPEG and Theora style
+ *   chroma siting (halfway-sited both horizontally and vertically).
+ *   Other chroma site values are possible, but uncommon.
  * @par_n: the pixel-aspect-ratio numerator
  * @par_d: the pixel-aspect-ratio demnominator
  * @fps_n: the framerate numerator
@@ -300,8 +310,6 @@ gboolean     gst_video_info_convert     (GstVideoInfo *info,
 #define GST_VIDEO_BUFFER_PROGRESSIVE GST_BUFFER_FLAG_MEDIA4
 
 /* functions */
-const GValue * gst_video_frame_rate (GstPad * pad);
-
 gboolean       gst_video_calculate_display_ratio (guint * dar_n,
                                                   guint * dar_d,
                                                   guint   video_width,
