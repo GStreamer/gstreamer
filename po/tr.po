@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-06-05 23:31+0100\n"
+"POT-Creation-Date: 2011-06-16 01:38+1000\n"
 "PO-Revision-Date: 2011-04-26 19:22+0200\n"
 "Last-Translator: Server Acim <serveracim@gmail.com>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
@@ -96,21 +96,6 @@ msgstr "CD bulunamıyor."
 msgid "Could not read CD."
 msgstr "CD okunamıyor."
 
-#, c-format
-msgid "Could not open vfs file \"%s\" for writing: %s."
-msgstr "Vfs dosyası \"%s\" yazmak için açılamıyor: %s."
-
-msgid "No filename given"
-msgstr "Dosya adı verilmedi"
-
-#, c-format
-msgid "Could not close vfs file \"%s\"."
-msgstr "Vfs dosyası kapatılamıyor \"%s\"."
-
-#, c-format
-msgid "Error while writing to file \"%s\"."
-msgstr "Dosyaya yazmada hata \"%s\"."
-
 msgid "Internal data stream error."
 msgstr "İç veri akışı hatası."
 
@@ -118,61 +103,15 @@ msgstr "İç veri akışı hatası."
 msgid "A %s plugin is required to play this stream, but not installed."
 msgstr "Bir %s eklenti bu akışı çalmak için gerekli, fakat kurulu değil."
 
-msgid "This appears to be a text file"
-msgstr "Bu bir metin dosyasına benziyor"
-
 msgid "Could not determine type of stream"
 msgstr "Akışın türü belirlenemiyor"
 
-#, c-format
-msgid "Invalid subtitle URI \"%s\", subtitles disabled."
-msgstr "Geçersiz altyazı adresi \"%s\", altyazılar kaldırıldı."
-
-msgid "No URI specified to play from."
-msgstr "Çalmak için bir ağ adresi belirtilmedi."
-
-#, c-format
-msgid "Invalid URI \"%s\"."
-msgstr "Geçersiz URI \"%s\"."
-
-msgid "RTSP streams cannot be played yet."
-msgstr "RTSP akışları henüz çalınamıyor."
-
-msgid "Could not create \"decodebin\" element."
-msgstr "\"decodebin\" öğesi oluşturulamıyor."
-
-msgid "Source element is invalid."
-msgstr "Kaynak öğesi geçersiz."
-
-msgid ""
-"Only a subtitle stream was detected. Either you are loading a subtitle file "
-"or some other type of text file, or the media file was not recognized."
-msgstr ""
-"Bir altyazı dosyası algılandı. Siz ya bir altyazı veya başka bir metin "
-"dosyası yüklemek üzeresiniz, veya çokluortam dosyası tanınamadı."
-
-msgid ""
-"You do not have a decoder installed to handle this file. You might need to "
-"install the necessary plugins."
-msgstr ""
-"Bu yüklü dosyası çözümleyecek bir kod çözücüye sahip değilsiniz. Gerekli "
-"eklentileri kurmak zorundasınız."
-
-msgid "This is not a media file"
-msgstr "Bu bir çokluortam dosyası değil."
-
-msgid "A subtitle stream was detected, but no video stream."
-msgstr "Bir altyazı akışı algılanda, ancak vidyo akışı bulunamadı."
-
-msgid "Both autovideosink and xvimagesink elements are missing."
-msgstr "Autovideosink ve xvimagesink öğelerininin ikisi de kayıp."
+msgid "This appears to be a text file"
+msgstr "Bu bir metin dosyasına benziyor"
 
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Kayıp öğe '%s' - GStreamer kurulumunu denetleyin."
-
-msgid "Both autoaudiosink and alsasink elements are missing."
-msgstr "Autoaudiosink ve alsasink öğelerinin ikisi de kayıp."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -223,12 +162,22 @@ msgstr "Vidyo veya görsellik olmadan metin dosyasını oynatamaz."
 msgid "No decoder available for type '%s'."
 msgstr "Şu tür '%s' için kod çözücü bulunamadı."
 
+msgid "No URI specified to play from."
+msgstr "Çalmak için bir ağ adresi belirtilmedi."
+
+#, c-format
+msgid "Invalid URI \"%s\"."
+msgstr "Geçersiz URI \"%s\"."
+
 msgid "This stream type cannot be played yet."
 msgstr "Bu akış türü henüz çalınamıyor."
 
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Hiç bir URI bağlantısı sağlanmadı \"%s\"."
+
+msgid "Source element is invalid."
+msgstr "Kaynak öğesi geçersiz."
 
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
@@ -576,20 +525,65 @@ msgstr "Bilinmeyen kodlama öğesi"
 msgid "Plugin or element of unknown type"
 msgstr "Bilinmeyen türde eklenti veya öğe"
 
-msgid "No device specified."
-msgstr "Aygıt belirtilmedi."
+#~ msgid "Could not open vfs file \"%s\" for writing: %s."
+#~ msgstr "Vfs dosyası \"%s\" yazmak için açılamıyor: %s."
 
-#, c-format
-msgid "Device \"%s\" does not exist."
-msgstr "Aygıt \"%s\" bulunamadı."
+#~ msgid "No filename given"
+#~ msgstr "Dosya adı verilmedi"
 
-#, c-format
-msgid "Device \"%s\" is already being used."
-msgstr "Aygıt \"%s\" zaten kullanımda."
+#~ msgid "Could not close vfs file \"%s\"."
+#~ msgstr "Vfs dosyası kapatılamıyor \"%s\"."
 
-#, c-format
-msgid "Could not open device \"%s\" for reading and writing."
-msgstr "Şu aygıtı\"%s\" for okuma veya yazma için açamıyor."
+#~ msgid "Error while writing to file \"%s\"."
+#~ msgstr "Dosyaya yazmada hata \"%s\"."
+
+#~ msgid "Invalid subtitle URI \"%s\", subtitles disabled."
+#~ msgstr "Geçersiz altyazı adresi \"%s\", altyazılar kaldırıldı."
+
+#~ msgid "RTSP streams cannot be played yet."
+#~ msgstr "RTSP akışları henüz çalınamıyor."
+
+#~ msgid "Could not create \"decodebin\" element."
+#~ msgstr "\"decodebin\" öğesi oluşturulamıyor."
+
+#~ msgid ""
+#~ "Only a subtitle stream was detected. Either you are loading a subtitle "
+#~ "file or some other type of text file, or the media file was not "
+#~ "recognized."
+#~ msgstr ""
+#~ "Bir altyazı dosyası algılandı. Siz ya bir altyazı veya başka bir metin "
+#~ "dosyası yüklemek üzeresiniz, veya çokluortam dosyası tanınamadı."
+
+#~ msgid ""
+#~ "You do not have a decoder installed to handle this file. You might need "
+#~ "to install the necessary plugins."
+#~ msgstr ""
+#~ "Bu yüklü dosyası çözümleyecek bir kod çözücüye sahip değilsiniz. Gerekli "
+#~ "eklentileri kurmak zorundasınız."
+
+#~ msgid "This is not a media file"
+#~ msgstr "Bu bir çokluortam dosyası değil."
+
+#~ msgid "A subtitle stream was detected, but no video stream."
+#~ msgstr "Bir altyazı akışı algılanda, ancak vidyo akışı bulunamadı."
+
+#~ msgid "Both autovideosink and xvimagesink elements are missing."
+#~ msgstr "Autovideosink ve xvimagesink öğelerininin ikisi de kayıp."
+
+#~ msgid "Both autoaudiosink and alsasink elements are missing."
+#~ msgstr "Autoaudiosink ve alsasink öğelerinin ikisi de kayıp."
+
+#~ msgid "No device specified."
+#~ msgstr "Aygıt belirtilmedi."
+
+#~ msgid "Device \"%s\" does not exist."
+#~ msgstr "Aygıt \"%s\" bulunamadı."
+
+#~ msgid "Device \"%s\" is already being used."
+#~ msgstr "Aygıt \"%s\" zaten kullanımda."
+
+#~ msgid "Could not open device \"%s\" for reading and writing."
+#~ msgstr "Şu aygıtı\"%s\" for okuma veya yazma için açamıyor."
 
 #~ msgid "Error while sending gdp header data to \"%s:%d\"."
 #~ msgstr "Bir gdp başlık verisini şuraya gönderirken hata \"%s:%d\"."

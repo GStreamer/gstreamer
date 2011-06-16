@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-06-05 23:31+0100\n"
+"POT-Creation-Date: 2011-06-16 01:38+1000\n"
 "PO-Revision-Date: 2010-03-25 12:32+0100\n"
 "Last-Translator: Mikel Olasagasti Uranga <hey_neken@mundurat.net>\n"
 "Language-Team: Basque <translation-team-eu@lists.sourceforge.net>\n"
@@ -101,21 +101,6 @@ msgstr "Ezin izan da CDan bilatu."
 msgid "Could not read CD."
 msgstr "Ezin izan da CDa irakurri."
 
-#, c-format
-msgid "Could not open vfs file \"%s\" for writing: %s."
-msgstr "Ezin izan da \"%s\" vfs fitxategia ireki idazteko: %s."
-
-msgid "No filename given"
-msgstr "Ez da fitxategi-izenik eman"
-
-#, c-format
-msgid "Could not close vfs file \"%s\"."
-msgstr "Ezin izan da itxi \"%s\" vfs fitxategia."
-
-#, c-format
-msgid "Error while writing to file \"%s\"."
-msgstr "Errorea gertatu da \"%s\" fitxategian idaztean."
-
 msgid "Internal data stream error."
 msgstr "Datu-korrontearen barne-errorea."
 
@@ -124,63 +109,15 @@ msgid "A %s plugin is required to play this stream, but not installed."
 msgstr ""
 "%s plugina behar da korronte hori erreproduzitzeko, baina ez dago instalatua."
 
-msgid "This appears to be a text file"
-msgstr "Testu-fitxategia dela dirudi"
-
 msgid "Could not determine type of stream"
 msgstr "Ezin izan da korronte mota zehaztu"
 
-#, c-format
-msgid "Invalid subtitle URI \"%s\", subtitles disabled."
-msgstr ""
-"Azpitituluen \"%s\" URIa ez da baliozkoa. Azpitituluak desgaitu egin dira."
-
-msgid "No URI specified to play from."
-msgstr "Ez da URIrik zehaztu irakurtzeko."
-
-#, c-format
-msgid "Invalid URI \"%s\"."
-msgstr "\"%s\" URI baliogabea."
-
-msgid "RTSP streams cannot be played yet."
-msgstr "Oraindik ezin dira erreproduzitu RTSP korronteak."
-
-msgid "Could not create \"decodebin\" element."
-msgstr "Ezin izan da sortu \"decodebin\" elementua."
-
-msgid "Source element is invalid."
-msgstr "Iturburuko elementua baliogabea da."
-
-msgid ""
-"Only a subtitle stream was detected. Either you are loading a subtitle file "
-"or some other type of text file, or the media file was not recognized."
-msgstr ""
-"Azpitituluen korrontea soilik detektatu da. Azpitituluen fitxategi bat edo "
-"beste testu-fitxategi bat ari zara kargatzen, edo multimedia-fitxategi hori "
-"ez da onartzen."
-
-msgid ""
-"You do not have a decoder installed to handle this file. You might need to "
-"install the necessary plugins."
-msgstr ""
-"Ez da instalatu fitxategi hori maneiatzeko deskodetzailerik  Litekeena da "
-"beharrezko pluginak instalatu behar izatea."
-
-msgid "This is not a media file"
-msgstr "Hori ez da multimedia-fitxategi bat"
-
-msgid "A subtitle stream was detected, but no video stream."
-msgstr "Azpitituluen korrontea detektatu da, baina ez bideoarena."
-
-msgid "Both autovideosink and xvimagesink elements are missing."
-msgstr "Autovideosink eta xvimagesink elementuak, biak, falta dira."
+msgid "This appears to be a text file"
+msgstr "Testu-fitxategia dela dirudi"
 
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "'%s' elementua falta da. Begiratu GStreamer ondo instalatua dagoen."
-
-msgid "Both autoaudiosink and alsasink elements are missing."
-msgstr "Autoaudiosink eta alsasink elementuak, biak, falta dira."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -233,12 +170,22 @@ msgstr ""
 msgid "No decoder available for type '%s'."
 msgstr "Ez dago deskodetzaile erabilgarririk '%s' motarentzat."
 
+msgid "No URI specified to play from."
+msgstr "Ez da URIrik zehaztu irakurtzeko."
+
+#, c-format
+msgid "Invalid URI \"%s\"."
+msgstr "\"%s\" URI baliogabea."
+
 msgid "This stream type cannot be played yet."
 msgstr "Oraindik ezin da erreproduzitu korronte mota hori."
 
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Ez da URI maneiatzailerik ezarri \"%s\"(r)entzat."
+
+msgid "Source element is invalid."
+msgstr "Iturburuko elementua baliogabea da."
 
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
@@ -586,20 +533,67 @@ msgstr "Kodetzailearen elementu ezezaguna"
 msgid "Plugin or element of unknown type"
 msgstr "Mota ezezaguneko plugina edo elementua"
 
-msgid "No device specified."
-msgstr "Ez da gailurik zehaztu."
+#~ msgid "Could not open vfs file \"%s\" for writing: %s."
+#~ msgstr "Ezin izan da \"%s\" vfs fitxategia ireki idazteko: %s."
 
-#, c-format
-msgid "Device \"%s\" does not exist."
-msgstr "\"%s\" gailua ez dago."
+#~ msgid "No filename given"
+#~ msgstr "Ez da fitxategi-izenik eman"
 
-#, c-format
-msgid "Device \"%s\" is already being used."
-msgstr "\"%s\" gailua erabiltzen ari dira."
+#~ msgid "Could not close vfs file \"%s\"."
+#~ msgstr "Ezin izan da itxi \"%s\" vfs fitxategia."
 
-#, c-format
-msgid "Could not open device \"%s\" for reading and writing."
-msgstr "Ezin izan da \"%s\" gailua ireki irakurtzeko eta idazteko."
+#~ msgid "Error while writing to file \"%s\"."
+#~ msgstr "Errorea gertatu da \"%s\" fitxategian idaztean."
+
+#~ msgid "Invalid subtitle URI \"%s\", subtitles disabled."
+#~ msgstr ""
+#~ "Azpitituluen \"%s\" URIa ez da baliozkoa. Azpitituluak desgaitu egin dira."
+
+#~ msgid "RTSP streams cannot be played yet."
+#~ msgstr "Oraindik ezin dira erreproduzitu RTSP korronteak."
+
+#~ msgid "Could not create \"decodebin\" element."
+#~ msgstr "Ezin izan da sortu \"decodebin\" elementua."
+
+#~ msgid ""
+#~ "Only a subtitle stream was detected. Either you are loading a subtitle "
+#~ "file or some other type of text file, or the media file was not "
+#~ "recognized."
+#~ msgstr ""
+#~ "Azpitituluen korrontea soilik detektatu da. Azpitituluen fitxategi bat "
+#~ "edo beste testu-fitxategi bat ari zara kargatzen, edo multimedia-"
+#~ "fitxategi hori ez da onartzen."
+
+#~ msgid ""
+#~ "You do not have a decoder installed to handle this file. You might need "
+#~ "to install the necessary plugins."
+#~ msgstr ""
+#~ "Ez da instalatu fitxategi hori maneiatzeko deskodetzailerik  Litekeena da "
+#~ "beharrezko pluginak instalatu behar izatea."
+
+#~ msgid "This is not a media file"
+#~ msgstr "Hori ez da multimedia-fitxategi bat"
+
+#~ msgid "A subtitle stream was detected, but no video stream."
+#~ msgstr "Azpitituluen korrontea detektatu da, baina ez bideoarena."
+
+#~ msgid "Both autovideosink and xvimagesink elements are missing."
+#~ msgstr "Autovideosink eta xvimagesink elementuak, biak, falta dira."
+
+#~ msgid "Both autoaudiosink and alsasink elements are missing."
+#~ msgstr "Autoaudiosink eta alsasink elementuak, biak, falta dira."
+
+#~ msgid "No device specified."
+#~ msgstr "Ez da gailurik zehaztu."
+
+#~ msgid "Device \"%s\" does not exist."
+#~ msgstr "\"%s\" gailua ez dago."
+
+#~ msgid "Device \"%s\" is already being used."
+#~ msgstr "\"%s\" gailua erabiltzen ari dira."
+
+#~ msgid "Could not open device \"%s\" for reading and writing."
+#~ msgstr "Ezin izan da \"%s\" gailua ireki irakurtzeko eta idazteko."
 
 #~ msgid "Error while sending gdp header data to \"%s:%d\"."
 #~ msgstr ""

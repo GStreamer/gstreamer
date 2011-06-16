@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-06-05 23:31+0100\n"
+"POT-Creation-Date: 2011-06-16 01:38+1000\n"
 "PO-Revision-Date: 2004-08-07 20:29+0200\n"
 "Last-Translator: Laurent Dhima <laurenti@alblinux.net>\n"
 "Language-Team: Albanian <begraj@hotmail.com>\n"
@@ -103,21 +103,6 @@ msgstr "E pamundur mbyllja e file vfs \"%s\"."
 msgid "Could not read CD."
 msgstr "I pamundur shkrimi në dispozitivin \"%s\"."
 
-#, c-format
-msgid "Could not open vfs file \"%s\" for writing: %s."
-msgstr "E pamundur hapja e file vfs \"%s\" për shkrim: %s."
-
-msgid "No filename given"
-msgstr "Nuk është dhënë asnjë emër file"
-
-#, c-format
-msgid "Could not close vfs file \"%s\"."
-msgstr "E pamundur mbyllja e file vfs \"%s\"."
-
-#, fuzzy, c-format
-msgid "Error while writing to file \"%s\"."
-msgstr "Gabim gjatë mbylljes së file \"%s\"."
-
 msgid "Internal data stream error."
 msgstr ""
 
@@ -125,58 +110,15 @@ msgstr ""
 msgid "A %s plugin is required to play this stream, but not installed."
 msgstr ""
 
-msgid "This appears to be a text file"
-msgstr ""
-
 #, fuzzy
 msgid "Could not determine type of stream"
 msgstr "I pamundur shkrimi tek file \"%s\"."
 
-#, c-format
-msgid "Invalid subtitle URI \"%s\", subtitles disabled."
-msgstr ""
-
-msgid "No URI specified to play from."
-msgstr ""
-
-#, c-format
-msgid "Invalid URI \"%s\"."
-msgstr ""
-
-msgid "RTSP streams cannot be played yet."
-msgstr ""
-
-msgid "Could not create \"decodebin\" element."
-msgstr ""
-
-msgid "Source element is invalid."
-msgstr ""
-
-msgid ""
-"Only a subtitle stream was detected. Either you are loading a subtitle file "
-"or some other type of text file, or the media file was not recognized."
-msgstr ""
-
-msgid ""
-"You do not have a decoder installed to handle this file. You might need to "
-"install the necessary plugins."
-msgstr ""
-
-#, fuzzy
-msgid "This is not a media file"
-msgstr "Dispozitivi \"%s\" nuk është një dispozitiv marrje."
-
-msgid "A subtitle stream was detected, but no video stream."
-msgstr ""
-
-msgid "Both autovideosink and xvimagesink elements are missing."
+msgid "This appears to be a text file"
 msgstr ""
 
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
-msgstr ""
-
-msgid "Both autoaudiosink and alsasink elements are missing."
 msgstr ""
 
 #, c-format
@@ -228,11 +170,21 @@ msgstr ""
 msgid "No decoder available for type '%s'."
 msgstr ""
 
+msgid "No URI specified to play from."
+msgstr ""
+
+#, c-format
+msgid "Invalid URI \"%s\"."
+msgstr ""
+
 msgid "This stream type cannot be played yet."
 msgstr ""
 
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
+msgstr ""
+
+msgid "Source element is invalid."
 msgstr ""
 
 #, fuzzy, c-format
@@ -581,20 +533,36 @@ msgstr ""
 msgid "Plugin or element of unknown type"
 msgstr ""
 
-msgid "No device specified."
-msgstr "Nuk është përcaktuar asnjë dispozitiv."
+#~ msgid "Could not open vfs file \"%s\" for writing: %s."
+#~ msgstr "E pamundur hapja e file vfs \"%s\" për shkrim: %s."
 
-#, c-format
-msgid "Device \"%s\" does not exist."
-msgstr "Dispozitivi \"%s\" nuk ekziston."
+#~ msgid "No filename given"
+#~ msgstr "Nuk është dhënë asnjë emër file"
 
-#, fuzzy, c-format
-msgid "Device \"%s\" is already being used."
-msgstr "Dispozitivi OSS \"%s\" është duke u përdorur nga një tjetër program."
+#~ msgid "Could not close vfs file \"%s\"."
+#~ msgstr "E pamundur mbyllja e file vfs \"%s\"."
 
-#, c-format
-msgid "Could not open device \"%s\" for reading and writing."
-msgstr "E pamundur hapja e dispozitivit \"%s\" për lexim dhe shkrim."
+#, fuzzy
+#~ msgid "Error while writing to file \"%s\"."
+#~ msgstr "Gabim gjatë mbylljes së file \"%s\"."
+
+#, fuzzy
+#~ msgid "This is not a media file"
+#~ msgstr "Dispozitivi \"%s\" nuk është një dispozitiv marrje."
+
+#~ msgid "No device specified."
+#~ msgstr "Nuk është përcaktuar asnjë dispozitiv."
+
+#~ msgid "Device \"%s\" does not exist."
+#~ msgstr "Dispozitivi \"%s\" nuk ekziston."
+
+#, fuzzy
+#~ msgid "Device \"%s\" is already being used."
+#~ msgstr ""
+#~ "Dispozitivi OSS \"%s\" është duke u përdorur nga një tjetër program."
+
+#~ msgid "Could not open device \"%s\" for reading and writing."
+#~ msgstr "E pamundur hapja e dispozitivit \"%s\" për lexim dhe shkrim."
 
 #, fuzzy
 #~ msgid "Could not create \"typefind\" element."

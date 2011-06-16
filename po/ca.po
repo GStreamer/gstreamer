@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-06-05 23:31+0100\n"
+"POT-Creation-Date: 2011-06-16 01:38+1000\n"
 "PO-Revision-Date: 2010-11-04 23:13+0100\n"
 "Last-Translator: Jordi Mallach <jordi@sindominio.net>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -99,21 +99,6 @@ msgstr "No s'ha pogut cercar el CD."
 msgid "Could not read CD."
 msgstr "No s'ha pogut llegir el CD."
 
-#, c-format
-msgid "Could not open vfs file \"%s\" for writing: %s."
-msgstr "No s'ha pogut obrir el fitxer vfs «%s» per a l'escriptura: %s."
-
-msgid "No filename given"
-msgstr "No s'ha donat cap nom de fitxer"
-
-#, c-format
-msgid "Could not close vfs file \"%s\"."
-msgstr "No s'ha pogut tancar el fitxer vfs «%s»."
-
-#, c-format
-msgid "Error while writing to file \"%s\"."
-msgstr "S'ha produït un error en escriure al fitxer «%s»."
-
 msgid "Internal data stream error."
 msgstr "S'ha produït un error intern de flux de dades."
 
@@ -123,62 +108,15 @@ msgstr ""
 "Es requereix un connector %s per a reproduir aquest flux, però no és "
 "instaŀlat."
 
-msgid "This appears to be a text file"
-msgstr "Açò sembla ser un fitxer de text"
-
 msgid "Could not determine type of stream"
 msgstr "No s'ha pogut determinar el tipus de flux"
 
-#, c-format
-msgid "Invalid subtitle URI \"%s\", subtitles disabled."
-msgstr "L'URI de subtítols «%s» és invàlida, s'inhabiliten els subtítols."
-
-msgid "No URI specified to play from."
-msgstr "No s'ha especificat cap URL des d'on reproduir."
-
-#, c-format
-msgid "Invalid URI \"%s\"."
-msgstr "L'URI «%s» és invàlid."
-
-msgid "RTSP streams cannot be played yet."
-msgstr "Encara no es poden reproduir els fluxes RTSP."
-
-msgid "Could not create \"decodebin\" element."
-msgstr "No s'ha pogut crear l'element «decodebin»."
-
-msgid "Source element is invalid."
-msgstr "L'element font és invàlid."
-
-msgid ""
-"Only a subtitle stream was detected. Either you are loading a subtitle file "
-"or some other type of text file, or the media file was not recognized."
-msgstr ""
-"Només s'ha detectat un flux de subtítols. O bé esteu carregant un fitxer de "
-"subtítols o qualsevol altre tipus de fitxer de text, o no s'ha reconegut el "
-"fitxer de medi."
-
-msgid ""
-"You do not have a decoder installed to handle this file. You might need to "
-"install the necessary plugins."
-msgstr ""
-"No teniu un decodificador instaŀlat per a gestionar aquest fitxer. És "
-"possible que necessiteu instaŀlar els connectors necessaris."
-
-msgid "This is not a media file"
-msgstr "Aquest no és un fitxer de medi"
-
-msgid "A subtitle stream was detected, but no video stream."
-msgstr "S'ha detectat un flux de subtítols, però no un flux de vídeo."
-
-msgid "Both autovideosink and xvimagesink elements are missing."
-msgstr "Manquen l'element autovideosink i el xvimagesink."
+msgid "This appears to be a text file"
+msgstr "Açò sembla ser un fitxer de text"
 
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Manca l'element «%s» - comproveu la vostra instaŀlació del GStreamer."
-
-msgid "Both autoaudiosink and alsasink elements are missing."
-msgstr "Manquen l'element autoaudiosink i l'alsasink."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -229,12 +167,22 @@ msgstr "No es pot reproduir un fitxer de text sense vídeo o visualitzacions."
 msgid "No decoder available for type '%s'."
 msgstr "No hi ha un decodificador disponible per al tipus «%s»."
 
+msgid "No URI specified to play from."
+msgstr "No s'ha especificat cap URL des d'on reproduir."
+
+#, c-format
+msgid "Invalid URI \"%s\"."
+msgstr "L'URI «%s» és invàlid."
+
 msgid "This stream type cannot be played yet."
 msgstr "Encara no es pot reproduir aquest tipus de flux."
 
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "No hi ha cap gestor d'URI implementat per a «%s»."
+
+msgid "Source element is invalid."
+msgstr "L'element font és invàlid."
 
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
@@ -582,20 +530,66 @@ msgstr "L'element codificador és desconegut"
 msgid "Plugin or element of unknown type"
 msgstr "El connector o element és de tipus desconegut"
 
-msgid "No device specified."
-msgstr "No s'ha especificat un dispositiu."
+#~ msgid "Could not open vfs file \"%s\" for writing: %s."
+#~ msgstr "No s'ha pogut obrir el fitxer vfs «%s» per a l'escriptura: %s."
 
-#, c-format
-msgid "Device \"%s\" does not exist."
-msgstr "El dispositiu «%s» no existeix."
+#~ msgid "No filename given"
+#~ msgstr "No s'ha donat cap nom de fitxer"
 
-#, c-format
-msgid "Device \"%s\" is already being used."
-msgstr "El dispositiu «%s» ja és en ús."
+#~ msgid "Could not close vfs file \"%s\"."
+#~ msgstr "No s'ha pogut tancar el fitxer vfs «%s»."
 
-#, c-format
-msgid "Could not open device \"%s\" for reading and writing."
-msgstr "No s'ha pogut obrir el dispositiu «%s» per a llegir i escriure."
+#~ msgid "Error while writing to file \"%s\"."
+#~ msgstr "S'ha produït un error en escriure al fitxer «%s»."
+
+#~ msgid "Invalid subtitle URI \"%s\", subtitles disabled."
+#~ msgstr "L'URI de subtítols «%s» és invàlida, s'inhabiliten els subtítols."
+
+#~ msgid "RTSP streams cannot be played yet."
+#~ msgstr "Encara no es poden reproduir els fluxes RTSP."
+
+#~ msgid "Could not create \"decodebin\" element."
+#~ msgstr "No s'ha pogut crear l'element «decodebin»."
+
+#~ msgid ""
+#~ "Only a subtitle stream was detected. Either you are loading a subtitle "
+#~ "file or some other type of text file, or the media file was not "
+#~ "recognized."
+#~ msgstr ""
+#~ "Només s'ha detectat un flux de subtítols. O bé esteu carregant un fitxer "
+#~ "de subtítols o qualsevol altre tipus de fitxer de text, o no s'ha "
+#~ "reconegut el fitxer de medi."
+
+#~ msgid ""
+#~ "You do not have a decoder installed to handle this file. You might need "
+#~ "to install the necessary plugins."
+#~ msgstr ""
+#~ "No teniu un decodificador instaŀlat per a gestionar aquest fitxer. És "
+#~ "possible que necessiteu instaŀlar els connectors necessaris."
+
+#~ msgid "This is not a media file"
+#~ msgstr "Aquest no és un fitxer de medi"
+
+#~ msgid "A subtitle stream was detected, but no video stream."
+#~ msgstr "S'ha detectat un flux de subtítols, però no un flux de vídeo."
+
+#~ msgid "Both autovideosink and xvimagesink elements are missing."
+#~ msgstr "Manquen l'element autovideosink i el xvimagesink."
+
+#~ msgid "Both autoaudiosink and alsasink elements are missing."
+#~ msgstr "Manquen l'element autoaudiosink i l'alsasink."
+
+#~ msgid "No device specified."
+#~ msgstr "No s'ha especificat un dispositiu."
+
+#~ msgid "Device \"%s\" does not exist."
+#~ msgstr "El dispositiu «%s» no existeix."
+
+#~ msgid "Device \"%s\" is already being used."
+#~ msgstr "El dispositiu «%s» ja és en ús."
+
+#~ msgid "Could not open device \"%s\" for reading and writing."
+#~ msgstr "No s'ha pogut obrir el dispositiu «%s» per a llegir i escriure."
 
 #~ msgid "Error while sending gdp header data to \"%s:%d\"."
 #~ msgstr ""

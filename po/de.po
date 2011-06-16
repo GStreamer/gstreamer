@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-06-05 23:31+0100\n"
+"POT-Creation-Date: 2011-06-16 01:38+1000\n"
 "PO-Revision-Date: 2011-04-28 00:04+0200\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@googlemail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
@@ -101,21 +101,6 @@ msgstr "Suchvorgang auf der CD ist fehlgeschlagen."
 msgid "Could not read CD."
 msgstr "CD konnte nicht gelesen werden."
 
-#, c-format
-msgid "Could not open vfs file \"%s\" for writing: %s."
-msgstr "VFS-Datei »%s« konnte nicht zum Schreiben geöffnet werden: %s."
-
-msgid "No filename given"
-msgstr "Kein Dateiname angegeben"
-
-#, c-format
-msgid "Could not close vfs file \"%s\"."
-msgstr "VFS-Datei »%s« konnte nicht geschlossen werden."
-
-#, c-format
-msgid "Error while writing to file \"%s\"."
-msgstr "Fehler beim Schreiben in die Datei »%s«."
-
 msgid "Internal data stream error."
 msgstr "Interner Fehler im Datenstrom."
 
@@ -125,63 +110,16 @@ msgstr ""
 "Ein Plugin »%s« wird zum Abspielen dieses Datenstroms benötigt, ist aber "
 "nicht installiert."
 
-msgid "This appears to be a text file"
-msgstr "Dies scheint eine Textdatei zu sein"
-
 msgid "Could not determine type of stream"
 msgstr "Der Typ des Datenstroms konnte nicht bestimmt werden"
 
-#, c-format
-msgid "Invalid subtitle URI \"%s\", subtitles disabled."
-msgstr "Ungültige Untertitel-URI »%s«, Untertitel werden deaktiviert."
-
-msgid "No URI specified to play from."
-msgstr "Keine Adresse (URI) zum Abspielen angegeben."
-
-#, c-format
-msgid "Invalid URI \"%s\"."
-msgstr "Ungültige Adresse (URI) »%s«."
-
-msgid "RTSP streams cannot be played yet."
-msgstr "RTSP-Datenströme können noch nicht abgespielt werden."
-
-msgid "Could not create \"decodebin\" element."
-msgstr "Das Element »decodebin« konnte nicht erstellt werden."
-
-msgid "Source element is invalid."
-msgstr "Das Quellelement ist ungültig."
-
-msgid ""
-"Only a subtitle stream was detected. Either you are loading a subtitle file "
-"or some other type of text file, or the media file was not recognized."
-msgstr ""
-"Es wurde nur ein Datenstrom mit Untertiteln erkannt. Entweder laden Sie eine "
-"Datei mit Untertiteln oder eine andere Art Textdatei oder die Mediendatei "
-"wurde nicht erkannt."
-
-msgid ""
-"You do not have a decoder installed to handle this file. You might need to "
-"install the necessary plugins."
-msgstr ""
-"Sie haben keinen Decoder für den Umgang mit dieser Datei installiert. Sie "
-"sollten die erforderlichen Plugins installieren."
-
-msgid "This is not a media file"
-msgstr "Dies ist keine Mediendatei"
-
-msgid "A subtitle stream was detected, but no video stream."
-msgstr "Ein Datenstrom mit Untertiteln wurde erkannt, aber kein Videostrom."
-
-msgid "Both autovideosink and xvimagesink elements are missing."
-msgstr "Beide Elemente »autovideosink« und »xvimagesink« fehlen."
+msgid "This appears to be a text file"
+msgstr "Dies scheint eine Textdatei zu sein"
 
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr ""
 "Das Element »%s« fehlt - überprüfen Sie Ihre Installation von GStreamer."
-
-msgid "Both autoaudiosink and alsasink elements are missing."
-msgstr "Beide Elemente »autoaudiosink« und »alsasink« fehlen."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -234,12 +172,22 @@ msgstr ""
 msgid "No decoder available for type '%s'."
 msgstr "Für den Typ »%s« ist kein Decoder vorhanden."
 
+msgid "No URI specified to play from."
+msgstr "Keine Adresse (URI) zum Abspielen angegeben."
+
+#, c-format
+msgid "Invalid URI \"%s\"."
+msgstr "Ungültige Adresse (URI) »%s«."
+
 msgid "This stream type cannot be played yet."
 msgstr "Dieser Datenstrom kann noch nicht abgespielt werden."
 
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Es ist kein URI-Handler für »%s« implementiert."
+
+msgid "Source element is invalid."
+msgstr "Das Quellelement ist ungültig."
 
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
@@ -593,20 +541,67 @@ msgstr "Unbekanntes Encoder-Element"
 msgid "Plugin or element of unknown type"
 msgstr "Plugin oder Element unbekannten Typs"
 
-msgid "No device specified."
-msgstr "Kein Gerät angegeben."
+#~ msgid "Could not open vfs file \"%s\" for writing: %s."
+#~ msgstr "VFS-Datei »%s« konnte nicht zum Schreiben geöffnet werden: %s."
 
-#, c-format
-msgid "Device \"%s\" does not exist."
-msgstr "Das Gerät »%s« existiert nicht."
+#~ msgid "No filename given"
+#~ msgstr "Kein Dateiname angegeben"
 
-#, c-format
-msgid "Device \"%s\" is already being used."
-msgstr "Das Gerät »%s« wird bereits verwendet."
+#~ msgid "Could not close vfs file \"%s\"."
+#~ msgstr "VFS-Datei »%s« konnte nicht geschlossen werden."
 
-#, c-format
-msgid "Could not open device \"%s\" for reading and writing."
-msgstr "Das Gerät »%s« konnte nicht zum Lesen und Schreiben geöffnet werden."
+#~ msgid "Error while writing to file \"%s\"."
+#~ msgstr "Fehler beim Schreiben in die Datei »%s«."
+
+#~ msgid "Invalid subtitle URI \"%s\", subtitles disabled."
+#~ msgstr "Ungültige Untertitel-URI »%s«, Untertitel werden deaktiviert."
+
+#~ msgid "RTSP streams cannot be played yet."
+#~ msgstr "RTSP-Datenströme können noch nicht abgespielt werden."
+
+#~ msgid "Could not create \"decodebin\" element."
+#~ msgstr "Das Element »decodebin« konnte nicht erstellt werden."
+
+#~ msgid ""
+#~ "Only a subtitle stream was detected. Either you are loading a subtitle "
+#~ "file or some other type of text file, or the media file was not "
+#~ "recognized."
+#~ msgstr ""
+#~ "Es wurde nur ein Datenstrom mit Untertiteln erkannt. Entweder laden Sie "
+#~ "eine Datei mit Untertiteln oder eine andere Art Textdatei oder die "
+#~ "Mediendatei wurde nicht erkannt."
+
+#~ msgid ""
+#~ "You do not have a decoder installed to handle this file. You might need "
+#~ "to install the necessary plugins."
+#~ msgstr ""
+#~ "Sie haben keinen Decoder für den Umgang mit dieser Datei installiert. Sie "
+#~ "sollten die erforderlichen Plugins installieren."
+
+#~ msgid "This is not a media file"
+#~ msgstr "Dies ist keine Mediendatei"
+
+#~ msgid "A subtitle stream was detected, but no video stream."
+#~ msgstr "Ein Datenstrom mit Untertiteln wurde erkannt, aber kein Videostrom."
+
+#~ msgid "Both autovideosink and xvimagesink elements are missing."
+#~ msgstr "Beide Elemente »autovideosink« und »xvimagesink« fehlen."
+
+#~ msgid "Both autoaudiosink and alsasink elements are missing."
+#~ msgstr "Beide Elemente »autoaudiosink« und »alsasink« fehlen."
+
+#~ msgid "No device specified."
+#~ msgstr "Kein Gerät angegeben."
+
+#~ msgid "Device \"%s\" does not exist."
+#~ msgstr "Das Gerät »%s« existiert nicht."
+
+#~ msgid "Device \"%s\" is already being used."
+#~ msgstr "Das Gerät »%s« wird bereits verwendet."
+
+#~ msgid "Could not open device \"%s\" for reading and writing."
+#~ msgstr ""
+#~ "Das Gerät »%s« konnte nicht zum Lesen und Schreiben geöffnet werden."
 
 #~ msgid "Error while sending gdp header data to \"%s:%d\"."
 #~ msgstr "Fehler beim Senden der GDP-Kopfdaten nach »%s:%d«."

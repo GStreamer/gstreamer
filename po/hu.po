@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-06-05 23:31+0100\n"
+"POT-Creation-Date: 2011-06-16 01:38+1000\n"
 "PO-Revision-Date: 2010-11-03 02:48+0100\n"
 "Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -102,21 +102,6 @@ msgstr "Nem kereshető a CD."
 msgid "Could not read CD."
 msgstr "Nem olvasható a CD."
 
-#, c-format
-msgid "Could not open vfs file \"%s\" for writing: %s."
-msgstr "Nem lehet írásra megnyitni a(z) „%s” vfs-fájlt: %s."
-
-msgid "No filename given"
-msgstr "Nincs fájlnév megadva"
-
-#, c-format
-msgid "Could not close vfs file \"%s\"."
-msgstr "Nem lehet bezárni a(z) „%s” vfs-fájlt."
-
-#, c-format
-msgid "Error while writing to file \"%s\"."
-msgstr "Hiba a(z) „%s” fájl írása közben."
-
 msgid "Internal data stream error."
 msgstr "Belső adatfolyam-hiba."
 
@@ -126,61 +111,15 @@ msgstr ""
 "Az adatfolyam lejátszásához egy %s bővítmény szükséges, de az nincs "
 "telepítve."
 
-msgid "This appears to be a text file"
-msgstr "Ez egy szövegfájlnak tűnik"
-
 msgid "Could not determine type of stream"
 msgstr "Nem határozható meg az adatfolyam típusa"
 
-#, c-format
-msgid "Invalid subtitle URI \"%s\", subtitles disabled."
-msgstr "Érvénytelen felirat URI: „%s”, a feliratok letiltva."
-
-msgid "No URI specified to play from."
-msgstr "Nincs megadva URI a lejátszáshoz."
-
-#, c-format
-msgid "Invalid URI \"%s\"."
-msgstr "Érvénytelen URI: „%s”."
-
-msgid "RTSP streams cannot be played yet."
-msgstr "Az RTSP adatfolyamok még nem játszhatók le."
-
-msgid "Could not create \"decodebin\" element."
-msgstr "Nem hozható létre „decodebin” elem"
-
-msgid "Source element is invalid."
-msgstr "A forráselem érvénytelen."
-
-msgid ""
-"Only a subtitle stream was detected. Either you are loading a subtitle file "
-"or some other type of text file, or the media file was not recognized."
-msgstr ""
-"Csak egy feliratfolyam észlelhető. Vagy egy feliratfájlt vagy más "
-"szövegfájlt tölt be, vagy a médiafájl nem ismerhető fel."
-
-msgid ""
-"You do not have a decoder installed to handle this file. You might need to "
-"install the necessary plugins."
-msgstr ""
-"Nincs telepítve a fájl kezeléséhez szükséges dekódoló. Lehetséges, hogy "
-"telepítenie kell a szükséges bővítményeket."
-
-msgid "This is not a media file"
-msgstr "Ez nem egy médiafájl"
-
-msgid "A subtitle stream was detected, but no video stream."
-msgstr "Egy feliratfolyam felismerve, de nincs videofolyam."
-
-msgid "Both autovideosink and xvimagesink elements are missing."
-msgstr "Mind az autovideosink, mind az xvimagesink elemek hiányoznak."
+msgid "This appears to be a text file"
+msgstr "Ez egy szövegfájlnak tűnik"
 
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "A(z) „%s” elem hiányzik - ellenőrizze a Gstreamer telepítését."
-
-msgid "Both autoaudiosink and alsasink elements are missing."
-msgstr "Az autoaudiosink és az alsasink elem is hiányzik."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -231,12 +170,22 @@ msgstr "A szövegfájl nem játszható le videó vagy vizualizációk nélkül."
 msgid "No decoder available for type '%s'."
 msgstr "Nem érhető el dekódoló a(z) „%s” típushoz."
 
+msgid "No URI specified to play from."
+msgstr "Nincs megadva URI a lejátszáshoz."
+
+#, c-format
+msgid "Invalid URI \"%s\"."
+msgstr "Érvénytelen URI: „%s”."
+
 msgid "This stream type cannot be played yet."
 msgstr "Ez az adatfolyamtípus még nem játszható le."
 
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Nincs URI kezelő megvalósítva a következőhöz: „%s”."
+
+msgid "Source element is invalid."
+msgstr "A forráselem érvénytelen."
 
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
@@ -586,20 +535,65 @@ msgstr "Ismeretlen kódolóelem"
 msgid "Plugin or element of unknown type"
 msgstr "Ismeretlen típusú bővítmény vagy elem"
 
-msgid "No device specified."
-msgstr "Nincs megadva eszköz."
+#~ msgid "Could not open vfs file \"%s\" for writing: %s."
+#~ msgstr "Nem lehet írásra megnyitni a(z) „%s” vfs-fájlt: %s."
 
-#, c-format
-msgid "Device \"%s\" does not exist."
-msgstr "Az eszköz („%s”) nem létezik."
+#~ msgid "No filename given"
+#~ msgstr "Nincs fájlnév megadva"
 
-#, c-format
-msgid "Device \"%s\" is already being used."
-msgstr "Az eszköz („%s”) már használatban van."
+#~ msgid "Could not close vfs file \"%s\"."
+#~ msgstr "Nem lehet bezárni a(z) „%s” vfs-fájlt."
 
-#, c-format
-msgid "Could not open device \"%s\" for reading and writing."
-msgstr "Nem lehet olvasásra és írásra megnyitni az eszközt („%s”)."
+#~ msgid "Error while writing to file \"%s\"."
+#~ msgstr "Hiba a(z) „%s” fájl írása közben."
+
+#~ msgid "Invalid subtitle URI \"%s\", subtitles disabled."
+#~ msgstr "Érvénytelen felirat URI: „%s”, a feliratok letiltva."
+
+#~ msgid "RTSP streams cannot be played yet."
+#~ msgstr "Az RTSP adatfolyamok még nem játszhatók le."
+
+#~ msgid "Could not create \"decodebin\" element."
+#~ msgstr "Nem hozható létre „decodebin” elem"
+
+#~ msgid ""
+#~ "Only a subtitle stream was detected. Either you are loading a subtitle "
+#~ "file or some other type of text file, or the media file was not "
+#~ "recognized."
+#~ msgstr ""
+#~ "Csak egy feliratfolyam észlelhető. Vagy egy feliratfájlt vagy más "
+#~ "szövegfájlt tölt be, vagy a médiafájl nem ismerhető fel."
+
+#~ msgid ""
+#~ "You do not have a decoder installed to handle this file. You might need "
+#~ "to install the necessary plugins."
+#~ msgstr ""
+#~ "Nincs telepítve a fájl kezeléséhez szükséges dekódoló. Lehetséges, hogy "
+#~ "telepítenie kell a szükséges bővítményeket."
+
+#~ msgid "This is not a media file"
+#~ msgstr "Ez nem egy médiafájl"
+
+#~ msgid "A subtitle stream was detected, but no video stream."
+#~ msgstr "Egy feliratfolyam felismerve, de nincs videofolyam."
+
+#~ msgid "Both autovideosink and xvimagesink elements are missing."
+#~ msgstr "Mind az autovideosink, mind az xvimagesink elemek hiányoznak."
+
+#~ msgid "Both autoaudiosink and alsasink elements are missing."
+#~ msgstr "Az autoaudiosink és az alsasink elem is hiányzik."
+
+#~ msgid "No device specified."
+#~ msgstr "Nincs megadva eszköz."
+
+#~ msgid "Device \"%s\" does not exist."
+#~ msgstr "Az eszköz („%s”) nem létezik."
+
+#~ msgid "Device \"%s\" is already being used."
+#~ msgstr "Az eszköz („%s”) már használatban van."
+
+#~ msgid "Could not open device \"%s\" for reading and writing."
+#~ msgstr "Nem lehet olvasásra és írásra megnyitni az eszközt („%s”)."
 
 #~ msgid "Error while sending gdp header data to \"%s:%d\"."
 #~ msgstr "Hiba a gdp fejlécadatok küldésekor a következőnek: „%s:%d”."

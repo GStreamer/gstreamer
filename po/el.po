@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-06-05 23:31+0100\n"
+"POT-Creation-Date: 2011-06-16 01:38+1000\n"
 "PO-Revision-Date: 2010-10-27 12:05+0200\n"
 "Last-Translator: Michael Kotsarinis <mk73628@gmail.com>\n"
 "Language-Team: Greek <team@lists.gnome.gr>\n"
@@ -102,21 +102,6 @@ msgstr "Αδυναμία αναζήτησης CD."
 msgid "Could not read CD."
 msgstr "Αδυναμία ανάγνωσης CD."
 
-#, c-format
-msgid "Could not open vfs file \"%s\" for writing: %s."
-msgstr "Αδυναμία ανοίγματος αρχείου vfs «%s» για εγγραφή: %s."
-
-msgid "No filename given"
-msgstr "Δεν δόθηκε όνομα αρχείου"
-
-#, c-format
-msgid "Could not close vfs file \"%s\"."
-msgstr "Αδυναμία κλεισίματος αρχείου vfs «%s»."
-
-#, c-format
-msgid "Error while writing to file \"%s\"."
-msgstr "Σφάλμα κατά την εγγραφή στο αρχείο «%s»."
-
 msgid "Internal data stream error."
 msgstr "Σφάλμα εσωτερικής ροής δεδομένων."
 
@@ -126,61 +111,15 @@ msgstr ""
 "Απαιτείται μια πρόσθετη λειτουργία %s για την αναπαραγωγή αυτής της ροής, "
 "αλλά δεν έχει εγκατασταθεί."
 
-msgid "This appears to be a text file"
-msgstr "Αυτό φαίνεται να είναι αρχείο κειμένου"
-
 msgid "Could not determine type of stream"
 msgstr "Αδυναμία προσδιορισμού τύπου ροής"
 
-#, c-format
-msgid "Invalid subtitle URI \"%s\", subtitles disabled."
-msgstr "Μη έγκυρο URI υποτίτλων «%s», υπότιτλοι απενεργοποιήθηκαν."
-
-msgid "No URI specified to play from."
-msgstr "Δεν ορίσθηκε URI από το οποίο θα γίνει αναπαραγωγή."
-
-#, c-format
-msgid "Invalid URI \"%s\"."
-msgstr "Μη έγκυρο URI «%s»."
-
-msgid "RTSP streams cannot be played yet."
-msgstr "Ροές RTSP δεν μπορούν να αναπαραχθούν ακόμα."
-
-msgid "Could not create \"decodebin\" element."
-msgstr "Αδυναμία δημιουργία στοιχείου «decodebin»."
-
-msgid "Source element is invalid."
-msgstr "Το στοιχείο προέλευσης δεν είναι έγκυρο."
-
-msgid ""
-"Only a subtitle stream was detected. Either you are loading a subtitle file "
-"or some other type of text file, or the media file was not recognized."
-msgstr ""
-"Ανιχνεύθηκε μόνο μια ροή υποτίτλων. Είτε φορτώνετε ένα αρχείο υποτίτλων ή "
-"κάποιο άλλο τύπο αρχείου κειμένου, ή το αρχείο πολυμέσων δεν αναγνωρίσθηκε."
-
-msgid ""
-"You do not have a decoder installed to handle this file. You might need to "
-"install the necessary plugins."
-msgstr ""
-"Δεν έχετε εγκατεστημένο αποκωδικοποιητή για να χειριστεί αυτό το αρχείο. "
-"Μπορεί να χρειάζεται να εγκαταστήσετε τις απαραίτητες πρόσθετες λειτουργίες."
-
-msgid "This is not a media file"
-msgstr "Αυτό δεν είναι αρχείο πολυμέσων"
-
-msgid "A subtitle stream was detected, but no video stream."
-msgstr "Ανιχνεύθηκε ροή υποτίτλων αλλά όχι ροή βίντεο."
-
-msgid "Both autovideosink and xvimagesink elements are missing."
-msgstr "Λείπουν και τα δύο στοιχεία autovideosink και xvimagesink."
+msgid "This appears to be a text file"
+msgstr "Αυτό φαίνεται να είναι αρχείο κειμένου"
 
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Λείπει το στοιχείο '%s' - ελέγξτε την εγκατάσταση του GStreamer."
-
-msgid "Both autoaudiosink and alsasink elements are missing."
-msgstr "Λείπουν και τα δύο στοιχεία autoaudiosink και alsasink."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -231,12 +170,22 @@ msgstr "Αδυναμία αναπαραγωγής αρχείου κειμένο�
 msgid "No decoder available for type '%s'."
 msgstr "Δεν υπάρχει διαθέσιμος αποκωδικοποιητής για τον τύπο '%s'."
 
+msgid "No URI specified to play from."
+msgstr "Δεν ορίσθηκε URI από το οποίο θα γίνει αναπαραγωγή."
+
+#, c-format
+msgid "Invalid URI \"%s\"."
+msgstr "Μη έγκυρο URI «%s»."
+
 msgid "This stream type cannot be played yet."
 msgstr "Αυτός ο τύπος ροής δεν μπορεί να αναπαραχθεί ακόμη."
 
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Δεν έχει υλοποιηθεί χειριστής URI για «%s»."
+
+msgid "Source element is invalid."
+msgstr "Το στοιχείο προέλευσης δεν είναι έγκυρο."
 
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
@@ -601,20 +550,67 @@ msgstr "Άγνωστο στοιχείο κωδικοποιητή"
 msgid "Plugin or element of unknown type"
 msgstr "Πρόσθετη λειτουργία ή στοιχείο άγνωστου τύπου"
 
-msgid "No device specified."
-msgstr "Δεν ορίσθηκε συσκευή."
+#~ msgid "Could not open vfs file \"%s\" for writing: %s."
+#~ msgstr "Αδυναμία ανοίγματος αρχείου vfs «%s» για εγγραφή: %s."
 
-#, c-format
-msgid "Device \"%s\" does not exist."
-msgstr "Η συσκευή «%s» δεν υπάρχει."
+#~ msgid "No filename given"
+#~ msgstr "Δεν δόθηκε όνομα αρχείου"
 
-#, c-format
-msgid "Device \"%s\" is already being used."
-msgstr "Η συσκευή «%s» χρησιμοποιείται ήδη."
+#~ msgid "Could not close vfs file \"%s\"."
+#~ msgstr "Αδυναμία κλεισίματος αρχείου vfs «%s»."
 
-#, c-format
-msgid "Could not open device \"%s\" for reading and writing."
-msgstr "Αδυναμία ανοίγματος συσκευής «%s» για ανάγνωση και εγγραφή."
+#~ msgid "Error while writing to file \"%s\"."
+#~ msgstr "Σφάλμα κατά την εγγραφή στο αρχείο «%s»."
+
+#~ msgid "Invalid subtitle URI \"%s\", subtitles disabled."
+#~ msgstr "Μη έγκυρο URI υποτίτλων «%s», υπότιτλοι απενεργοποιήθηκαν."
+
+#~ msgid "RTSP streams cannot be played yet."
+#~ msgstr "Ροές RTSP δεν μπορούν να αναπαραχθούν ακόμα."
+
+#~ msgid "Could not create \"decodebin\" element."
+#~ msgstr "Αδυναμία δημιουργία στοιχείου «decodebin»."
+
+#~ msgid ""
+#~ "Only a subtitle stream was detected. Either you are loading a subtitle "
+#~ "file or some other type of text file, or the media file was not "
+#~ "recognized."
+#~ msgstr ""
+#~ "Ανιχνεύθηκε μόνο μια ροή υποτίτλων. Είτε φορτώνετε ένα αρχείο υποτίτλων ή "
+#~ "κάποιο άλλο τύπο αρχείου κειμένου, ή το αρχείο πολυμέσων δεν "
+#~ "αναγνωρίσθηκε."
+
+#~ msgid ""
+#~ "You do not have a decoder installed to handle this file. You might need "
+#~ "to install the necessary plugins."
+#~ msgstr ""
+#~ "Δεν έχετε εγκατεστημένο αποκωδικοποιητή για να χειριστεί αυτό το αρχείο. "
+#~ "Μπορεί να χρειάζεται να εγκαταστήσετε τις απαραίτητες πρόσθετες "
+#~ "λειτουργίες."
+
+#~ msgid "This is not a media file"
+#~ msgstr "Αυτό δεν είναι αρχείο πολυμέσων"
+
+#~ msgid "A subtitle stream was detected, but no video stream."
+#~ msgstr "Ανιχνεύθηκε ροή υποτίτλων αλλά όχι ροή βίντεο."
+
+#~ msgid "Both autovideosink and xvimagesink elements are missing."
+#~ msgstr "Λείπουν και τα δύο στοιχεία autovideosink και xvimagesink."
+
+#~ msgid "Both autoaudiosink and alsasink elements are missing."
+#~ msgstr "Λείπουν και τα δύο στοιχεία autoaudiosink και alsasink."
+
+#~ msgid "No device specified."
+#~ msgstr "Δεν ορίσθηκε συσκευή."
+
+#~ msgid "Device \"%s\" does not exist."
+#~ msgstr "Η συσκευή «%s» δεν υπάρχει."
+
+#~ msgid "Device \"%s\" is already being used."
+#~ msgstr "Η συσκευή «%s» χρησιμοποιείται ήδη."
+
+#~ msgid "Could not open device \"%s\" for reading and writing."
+#~ msgstr "Αδυναμία ανοίγματος συσκευής «%s» για ανάγνωση και εγγραφή."
 
 #~ msgid "Error while sending gdp header data to \"%s:%d\"."
 #~ msgstr "Σφάλμα κατά την αποστολή δεδομένων κεφαλίδας gdp σε «%s:%d»."

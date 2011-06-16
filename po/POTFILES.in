@@ -3,11 +3,9 @@ ext/alsa/gstalsasink.c
 ext/alsa/gstalsasrc.c
 ext/cdparanoia/gstcdparanoiasrc.c
 ext/ogg/gstoggdemux.c
-gst/playback/gstdecodebin.c
 gst/playback/gstdecodebin2.c
-gst/playback/gstplaybasebin.c
-gst/playback/gstplaybin.c
 gst/playback/gstplaysink.c
+gst/playback/gstsubtitleoverlay.c
 gst/playback/gsturidecodebin.c
 gst/tcp/gsttcp.c
 gst/tcp/gsttcpclientsink.c

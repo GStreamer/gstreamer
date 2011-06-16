@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-06-05 23:31+0100\n"
+"POT-Creation-Date: 2011-06-16 01:38+1000\n"
 "PO-Revision-Date: 2011-04-26 22:31+0300\n"
 "Last-Translator: Alexander Shopov <ash@kambanaria.org>\n"
 "Language-Team: Bulgarian <dict@fsa-bg.org>\n"
@@ -100,22 +100,6 @@ msgstr "По CD-то не може да се търси."
 msgid "Could not read CD."
 msgstr "CD-то не може да бъде прочетено."
 
-#, c-format
-msgid "Could not open vfs file \"%s\" for writing: %s."
-msgstr ""
-"Файлът „%s“ от виртуалната файлова система не може да се отвори за запис: %s."
-
-msgid "No filename given"
-msgstr "Не е дадено име на файл"
-
-#, c-format
-msgid "Could not close vfs file \"%s\"."
-msgstr "Файлът „%s“ от виртуалната файлова система не може да се затвори."
-
-#, c-format
-msgid "Error while writing to file \"%s\"."
-msgstr "Грешка при запис във файла „%s“."
-
 msgid "Internal data stream error."
 msgstr "Вътрешна грешка на потока от данни."
 
@@ -125,64 +109,15 @@ msgstr ""
 "За да пуснете този поток, се нуждаете от приставка за %s. Такава не е "
 "инсталирана."
 
-msgid "This appears to be a text file"
-msgstr "Това изглежда е текстов файл"
-
 msgid "Could not determine type of stream"
 msgstr "Видът на потока не може да бъде определен"
 
-#, c-format
-msgid "Invalid subtitle URI \"%s\", subtitles disabled."
-msgstr "Грешен адрес за субтитри „%s“, субтитрите са изключени."
-
-msgid "No URI specified to play from."
-msgstr "Не е указан адрес за пускане."
-
-#, c-format
-msgid "Invalid URI \"%s\"."
-msgstr "Грешен адрес „%s“."
-
-msgid "RTSP streams cannot be played yet."
-msgstr "Потоци с RTSP все още не се поддържат."
-
-msgid "Could not create \"decodebin\" element."
-msgstr "Не може да се създаде елемент „decodebin“."
-
-msgid "Source element is invalid."
-msgstr "Елементът-източник е грешен."
-
-msgid ""
-"Only a subtitle stream was detected. Either you are loading a subtitle file "
-"or some other type of text file, or the media file was not recognized."
-msgstr ""
-"Бе засечен единствено поток със субтитри. Или сте заредили файл със "
-"субтитри, или някакъв друг вид текстов файл, или просто видът на "
-"мултимедийния файл не е разпознат."
-
-msgid ""
-"You do not have a decoder installed to handle this file. You might need to "
-"install the necessary plugins."
-msgstr ""
-"Липсва декодер за обработката на този файл. Ще трябва да инсталирате "
-"необходимите приставки."
-
-msgid "This is not a media file"
-msgstr "Това не е медиен файл"
-
-msgid "A subtitle stream was detected, but no video stream."
-msgstr "Открит е поток със субтитри, липсва видео поток."
-
-msgid "Both autovideosink and xvimagesink elements are missing."
-msgstr ""
-"Едновременно липсват елементите-приемници „autovideosink“ и „xvimagesink“."
+msgid "This appears to be a text file"
+msgstr "Това изглежда е текстов файл"
 
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Елементът „%s“ липсва — проверете инсталацията на GStreamer."
-
-msgid "Both autoaudiosink and alsasink elements are missing."
-msgstr ""
-"Едновременно липсват елементите-приемници „autoaudiosink“ и „alsasink“."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -233,12 +168,22 @@ msgstr "Текстов файл не може да се изпълни без в
 msgid "No decoder available for type '%s'."
 msgstr "Липсва декодер за вида „%s“."
 
+msgid "No URI specified to play from."
+msgstr "Не е указан адрес за пускане."
+
+#, c-format
+msgid "Invalid URI \"%s\"."
+msgstr "Грешен адрес „%s“."
+
 msgid "This stream type cannot be played yet."
 msgstr "Потоци от този тип все още не могат да бъдат изпълнявани."
 
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Обработката на адреси „%s“ не е реализирана."
+
+msgid "Source element is invalid."
+msgstr "Елементът-източник е грешен."
 
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
@@ -586,20 +531,70 @@ msgstr "Непознат елемент-кодер"
 msgid "Plugin or element of unknown type"
 msgstr "Приставка или елемент от непознат вид"
 
-msgid "No device specified."
-msgstr "Не е указано устройство."
+#~ msgid "Could not open vfs file \"%s\" for writing: %s."
+#~ msgstr ""
+#~ "Файлът „%s“ от виртуалната файлова система не може да се отвори за запис: "
+#~ "%s."
 
-#, c-format
-msgid "Device \"%s\" does not exist."
-msgstr "Устройството „%s“ не съществува."
+#~ msgid "No filename given"
+#~ msgstr "Не е дадено име на файл"
 
-#, c-format
-msgid "Device \"%s\" is already being used."
-msgstr "Устройството „%s“ вече се използва."
+#~ msgid "Could not close vfs file \"%s\"."
+#~ msgstr "Файлът „%s“ от виртуалната файлова система не може да се затвори."
 
-#, c-format
-msgid "Could not open device \"%s\" for reading and writing."
-msgstr "Устройството „%s“ не може да се отвори за четене и запис."
+#~ msgid "Error while writing to file \"%s\"."
+#~ msgstr "Грешка при запис във файла „%s“."
+
+#~ msgid "Invalid subtitle URI \"%s\", subtitles disabled."
+#~ msgstr "Грешен адрес за субтитри „%s“, субтитрите са изключени."
+
+#~ msgid "RTSP streams cannot be played yet."
+#~ msgstr "Потоци с RTSP все още не се поддържат."
+
+#~ msgid "Could not create \"decodebin\" element."
+#~ msgstr "Не може да се създаде елемент „decodebin“."
+
+#~ msgid ""
+#~ "Only a subtitle stream was detected. Either you are loading a subtitle "
+#~ "file or some other type of text file, or the media file was not "
+#~ "recognized."
+#~ msgstr ""
+#~ "Бе засечен единствено поток със субтитри. Или сте заредили файл със "
+#~ "субтитри, или някакъв друг вид текстов файл, или просто видът на "
+#~ "мултимедийния файл не е разпознат."
+
+#~ msgid ""
+#~ "You do not have a decoder installed to handle this file. You might need "
+#~ "to install the necessary plugins."
+#~ msgstr ""
+#~ "Липсва декодер за обработката на този файл. Ще трябва да инсталирате "
+#~ "необходимите приставки."
+
+#~ msgid "This is not a media file"
+#~ msgstr "Това не е медиен файл"
+
+#~ msgid "A subtitle stream was detected, but no video stream."
+#~ msgstr "Открит е поток със субтитри, липсва видео поток."
+
+#~ msgid "Both autovideosink and xvimagesink elements are missing."
+#~ msgstr ""
+#~ "Едновременно липсват елементите-приемници „autovideosink“ и „xvimagesink“."
+
+#~ msgid "Both autoaudiosink and alsasink elements are missing."
+#~ msgstr ""
+#~ "Едновременно липсват елементите-приемници „autoaudiosink“ и „alsasink“."
+
+#~ msgid "No device specified."
+#~ msgstr "Не е указано устройство."
+
+#~ msgid "Device \"%s\" does not exist."
+#~ msgstr "Устройството „%s“ не съществува."
+
+#~ msgid "Device \"%s\" is already being used."
+#~ msgstr "Устройството „%s“ вече се използва."
+
+#~ msgid "Could not open device \"%s\" for reading and writing."
+#~ msgstr "Устройството „%s“ не може да се отвори за четене и запис."
 
 #~ msgid "Error while sending gdp header data to \"%s:%d\"."
 #~ msgstr "Грешка при запис на заглавните данни gdp във файла „%s:%d“."

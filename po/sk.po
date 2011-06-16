@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-06-05 23:31+0100\n"
+"POT-Creation-Date: 2011-06-16 01:38+1000\n"
 "PO-Revision-Date: 2010-11-08 15:34+0100\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
@@ -102,21 +102,6 @@ msgstr "Nepodarilo sa nastaviť pozíciu na CD."
 msgid "Could not read CD."
 msgstr "Nepodarilo sa čítať CD."
 
-#, c-format
-msgid "Could not open vfs file \"%s\" for writing: %s."
-msgstr "Nepodarilo sa otvoriť vfs súbor \"%s\" pre zápis: %s."
-
-msgid "No filename given"
-msgstr "Nebol zadaný názov súboru"
-
-#, c-format
-msgid "Could not close vfs file \"%s\"."
-msgstr "Nepodarilo sa zatvoriť súbor \"%s\"."
-
-#, c-format
-msgid "Error while writing to file \"%s\"."
-msgstr "Chyba pri zápise do súboru \"%s\"."
-
 msgid "Internal data stream error."
 msgstr "Vnútorná chyba prúdu údajov."
 
@@ -126,61 +111,15 @@ msgstr ""
 "Na prehratie tohto prúdu údajov je vyžadovaný zásuvný modul %s, ktorý nie je "
 "nainštalovaný."
 
-msgid "This appears to be a text file"
-msgstr "Tento súbor je asi textový"
-
 msgid "Could not determine type of stream"
 msgstr "Nepodarilo sa zistiť typ prádu údajov"
 
-#, c-format
-msgid "Invalid subtitle URI \"%s\", subtitles disabled."
-msgstr "Chybné URI titulkov \"%s\", titulky zakázané."
-
-msgid "No URI specified to play from."
-msgstr "Nebolo špecifikované žiadne URI, z ktorého by sa dalo prehrávať."
-
-#, c-format
-msgid "Invalid URI \"%s\"."
-msgstr "Chybné URI \"%s\"."
-
-msgid "RTSP streams cannot be played yet."
-msgstr "RTSP prúdy sa teraz nedajú prehrávať."
-
-msgid "Could not create \"decodebin\" element."
-msgstr "Nepodarilo sa vytvoriť prvok \"decodebin\""
-
-msgid "Source element is invalid."
-msgstr "Zdrojový prvok je chybný."
-
-msgid ""
-"Only a subtitle stream was detected. Either you are loading a subtitle file "
-"or some other type of text file, or the media file was not recognized."
-msgstr ""
-"Bol zistený iba prúd titulkov. Buď načítavate titulkový súbor alebo nejaký "
-"iný typ textového súboru, alebo ide o neznámy typ mediálneho súboru."
-
-msgid ""
-"You do not have a decoder installed to handle this file. You might need to "
-"install the necessary plugins."
-msgstr ""
-"Nemáte nainštalovaný dekodér pre tento typ súboru. Zrejme bude potrebné "
-"nainštalovať príslušné zásuvné moduly."
-
-msgid "This is not a media file"
-msgstr "Toto nie je mediálny súbor"
-
-msgid "A subtitle stream was detected, but no video stream."
-msgstr "Bol zistený prúd titulkov, ale bez video prúdu údajov."
-
-msgid "Both autovideosink and xvimagesink elements are missing."
-msgstr "Chýbajú prvky autovideosink aj xvimagesink."
+msgid "This appears to be a text file"
+msgstr "Tento súbor je asi textový"
 
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Chýa prvok '%s' - skontrolujte svoju inštaláciu GStreamer."
-
-msgid "Both autoaudiosink and alsasink elements are missing."
-msgstr "Chýbajú prvky autoaudiosink aj alsasink."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -231,12 +170,22 @@ msgstr "Nemôžem prehrať textový súbor bez videa alebo vizualizácií."
 msgid "No decoder available for type '%s'."
 msgstr "Pre typ '%s' nie je k dispozícii dekodér."
 
+msgid "No URI specified to play from."
+msgstr "Nebolo špecifikované žiadne URI, z ktorého by sa dalo prehrávať."
+
+#, c-format
+msgid "Invalid URI \"%s\"."
+msgstr "Chybné URI \"%s\"."
+
 msgid "This stream type cannot be played yet."
 msgstr "Tento typ prúdu údajov sa teraz nedá prehrávať."
 
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Pre \"%s\" nie je implementovaná obsluha."
+
+msgid "Source element is invalid."
+msgstr "Zdrojový prvok je chybný."
 
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
@@ -586,20 +535,66 @@ msgstr "Neznámy prvok enkodéra"
 msgid "Plugin or element of unknown type"
 msgstr "Neznámy typ zásuvného modulu alebo prvku"
 
-msgid "No device specified."
-msgstr "Nebolo zadané zariadenie."
+#~ msgid "Could not open vfs file \"%s\" for writing: %s."
+#~ msgstr "Nepodarilo sa otvoriť vfs súbor \"%s\" pre zápis: %s."
 
-#, c-format
-msgid "Device \"%s\" does not exist."
-msgstr "Zariadenie \"%s\" neexistuje."
+#~ msgid "No filename given"
+#~ msgstr "Nebol zadaný názov súboru"
 
-#, c-format
-msgid "Device \"%s\" is already being used."
-msgstr "Zariadenie \"%s\" sa už používa."
+#~ msgid "Could not close vfs file \"%s\"."
+#~ msgstr "Nepodarilo sa zatvoriť súbor \"%s\"."
 
-#, c-format
-msgid "Could not open device \"%s\" for reading and writing."
-msgstr "Nepodarilo sa otvoriť zariadenie  \"%s\" pre čítanie a zápis."
+#~ msgid "Error while writing to file \"%s\"."
+#~ msgstr "Chyba pri zápise do súboru \"%s\"."
+
+#~ msgid "Invalid subtitle URI \"%s\", subtitles disabled."
+#~ msgstr "Chybné URI titulkov \"%s\", titulky zakázané."
+
+#~ msgid "RTSP streams cannot be played yet."
+#~ msgstr "RTSP prúdy sa teraz nedajú prehrávať."
+
+#~ msgid "Could not create \"decodebin\" element."
+#~ msgstr "Nepodarilo sa vytvoriť prvok \"decodebin\""
+
+#~ msgid ""
+#~ "Only a subtitle stream was detected. Either you are loading a subtitle "
+#~ "file or some other type of text file, or the media file was not "
+#~ "recognized."
+#~ msgstr ""
+#~ "Bol zistený iba prúd titulkov. Buď načítavate titulkový súbor alebo "
+#~ "nejaký iný typ textového súboru, alebo ide o neznámy typ mediálneho "
+#~ "súboru."
+
+#~ msgid ""
+#~ "You do not have a decoder installed to handle this file. You might need "
+#~ "to install the necessary plugins."
+#~ msgstr ""
+#~ "Nemáte nainštalovaný dekodér pre tento typ súboru. Zrejme bude potrebné "
+#~ "nainštalovať príslušné zásuvné moduly."
+
+#~ msgid "This is not a media file"
+#~ msgstr "Toto nie je mediálny súbor"
+
+#~ msgid "A subtitle stream was detected, but no video stream."
+#~ msgstr "Bol zistený prúd titulkov, ale bez video prúdu údajov."
+
+#~ msgid "Both autovideosink and xvimagesink elements are missing."
+#~ msgstr "Chýbajú prvky autovideosink aj xvimagesink."
+
+#~ msgid "Both autoaudiosink and alsasink elements are missing."
+#~ msgstr "Chýbajú prvky autoaudiosink aj alsasink."
+
+#~ msgid "No device specified."
+#~ msgstr "Nebolo zadané zariadenie."
+
+#~ msgid "Device \"%s\" does not exist."
+#~ msgstr "Zariadenie \"%s\" neexistuje."
+
+#~ msgid "Device \"%s\" is already being used."
+#~ msgstr "Zariadenie \"%s\" sa už používa."
+
+#~ msgid "Could not open device \"%s\" for reading and writing."
+#~ msgstr "Nepodarilo sa otvoriť zariadenie  \"%s\" pre čítanie a zápis."
 
 #~ msgid "Error while sending gdp header data to \"%s:%d\"."
 #~ msgstr "Chyba pri posielaní hlavičky gdp údajov do \"%s:%d\"."

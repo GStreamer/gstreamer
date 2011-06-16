@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.31.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-06-05 23:31+0100\n"
+"POT-Creation-Date: 2011-06-16 01:38+1000\n"
 "PO-Revision-Date: 2011-01-09 21:20+0100\n"
 "Last-Translator: Fran Diéguez <frandieguez@ubuntu.com>\n"
 "Language-Team: Galician <proxecto@trasno.net>\n"
@@ -101,21 +101,6 @@ msgstr "Non foi posíbel buscar no CD."
 msgid "Could not read CD."
 msgstr "Non foi posíbel ler o CD."
 
-#, c-format
-msgid "Could not open vfs file \"%s\" for writing: %s."
-msgstr "Non foi posíbel abrir o ficheiro vfs «%s» para escribir: %s."
-
-msgid "No filename given"
-msgstr "Non se forneceu un nome de ficheiro"
-
-#, c-format
-msgid "Could not close vfs file \"%s\"."
-msgstr "Non foi posíbel pechar o ficheiro vfs «%s»."
-
-#, c-format
-msgid "Error while writing to file \"%s\"."
-msgstr "Produciuse un erro ao escribir no ficheiro «%s»."
-
 msgid "Internal data stream error."
 msgstr "Produciuse un erro no fluxo de datos internos."
 
@@ -124,62 +109,15 @@ msgid "A %s plugin is required to play this stream, but not installed."
 msgstr ""
 "Precísase un engadido %s que non está instalado para reproducir este fluxo."
 
-msgid "This appears to be a text file"
-msgstr "Isto parece ser un ficheiro de texto"
-
 msgid "Could not determine type of stream"
 msgstr "Non foi posíbel determinar o tipo de fluxo."
 
-#, c-format
-msgid "Invalid subtitle URI \"%s\", subtitles disabled."
-msgstr "O URI dos subtítulos «%s» é incorrecto, desactiváronse os subtítulos."
-
-msgid "No URI specified to play from."
-msgstr "Non se especificou un URI para reproducir."
-
-#, c-format
-msgid "Invalid URI \"%s\"."
-msgstr "O URI «%s» é incorrecto."
-
-msgid "RTSP streams cannot be played yet."
-msgstr "Aínda non é posíbel reproducir os fluxos RTSP."
-
-msgid "Could not create \"decodebin\" element."
-msgstr "Non foi posíbel crear o elemento \"decodebin\" ."
-
-msgid "Source element is invalid."
-msgstr "O elemento fonte é incorrecto."
-
-msgid ""
-"Only a subtitle stream was detected. Either you are loading a subtitle file "
-"or some other type of text file, or the media file was not recognized."
-msgstr ""
-"Só se detectou un fluxo de subtítulos. Ou ben está cargando un ficheiro de "
-"subtítulos ou calquera outro ficheiro de texto ou quizais o ficheiro "
-"multimedia non foi recoñecido."
-
-msgid ""
-"You do not have a decoder installed to handle this file. You might need to "
-"install the necessary plugins."
-msgstr ""
-"Non ten instalado un decodificador para manexar este ficheiro. É posíbel que "
-"precise instalar os engadidos necesarios. "
-
-msgid "This is not a media file"
-msgstr "Este non é un ficheiro multimedia"
-
-msgid "A subtitle stream was detected, but no video stream."
-msgstr "Detectouse un fluxo de subtítulos pero non de vídeo."
-
-msgid "Both autovideosink and xvimagesink elements are missing."
-msgstr "Faltan os elementos autovideosink e xvimagesink."
+msgid "This appears to be a text file"
+msgstr "Isto parece ser un ficheiro de texto"
 
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Falta o elemento «%s» - comprobe a instalación do GStreamer."
-
-msgid "Both autoaudiosink and alsasink elements are missing."
-msgstr "Faltan os elementos autoaudiosink e alsasink."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -231,12 +169,22 @@ msgstr ""
 msgid "No decoder available for type '%s'."
 msgstr "Non hai dispoñíbel ningún decodificador para o tipo «%s»."
 
+msgid "No URI specified to play from."
+msgstr "Non se especificou un URI para reproducir."
+
+#, c-format
+msgid "Invalid URI \"%s\"."
+msgstr "O URI «%s» é incorrecto."
+
 msgid "This stream type cannot be played yet."
 msgstr "Aínda non é posíbel reproducir este tipo de fluxo."
 
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Non hai implementado un manexador de URIs para «%s»."
+
+msgid "Source element is invalid."
+msgstr "O elemento fonte é incorrecto."
 
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
@@ -587,21 +535,68 @@ msgstr "O elemento codificador é descoñecido"
 msgid "Plugin or element of unknown type"
 msgstr "Engadido ou elemento de tipo descoñecido"
 
-msgid "No device specified."
-msgstr "Non se especificou un dispositivo."
+#~ msgid "Could not open vfs file \"%s\" for writing: %s."
+#~ msgstr "Non foi posíbel abrir o ficheiro vfs «%s» para escribir: %s."
 
-#, c-format
-msgid "Device \"%s\" does not exist."
-msgstr "O dispositivo «%s» non existe."
+#~ msgid "No filename given"
+#~ msgstr "Non se forneceu un nome de ficheiro"
 
-#, c-format
-msgid "Device \"%s\" is already being used."
-msgstr "O dispositivo «%s» xa está en uso."
+#~ msgid "Could not close vfs file \"%s\"."
+#~ msgstr "Non foi posíbel pechar o ficheiro vfs «%s»."
 
-#, c-format
-msgid "Could not open device \"%s\" for reading and writing."
-msgstr ""
-"Non foi posíbel abrir o dispositivo «%s» para a súa lectura e escritura."
+#~ msgid "Error while writing to file \"%s\"."
+#~ msgstr "Produciuse un erro ao escribir no ficheiro «%s»."
+
+#~ msgid "Invalid subtitle URI \"%s\", subtitles disabled."
+#~ msgstr ""
+#~ "O URI dos subtítulos «%s» é incorrecto, desactiváronse os subtítulos."
+
+#~ msgid "RTSP streams cannot be played yet."
+#~ msgstr "Aínda non é posíbel reproducir os fluxos RTSP."
+
+#~ msgid "Could not create \"decodebin\" element."
+#~ msgstr "Non foi posíbel crear o elemento \"decodebin\" ."
+
+#~ msgid ""
+#~ "Only a subtitle stream was detected. Either you are loading a subtitle "
+#~ "file or some other type of text file, or the media file was not "
+#~ "recognized."
+#~ msgstr ""
+#~ "Só se detectou un fluxo de subtítulos. Ou ben está cargando un ficheiro "
+#~ "de subtítulos ou calquera outro ficheiro de texto ou quizais o ficheiro "
+#~ "multimedia non foi recoñecido."
+
+#~ msgid ""
+#~ "You do not have a decoder installed to handle this file. You might need "
+#~ "to install the necessary plugins."
+#~ msgstr ""
+#~ "Non ten instalado un decodificador para manexar este ficheiro. É posíbel "
+#~ "que precise instalar os engadidos necesarios. "
+
+#~ msgid "This is not a media file"
+#~ msgstr "Este non é un ficheiro multimedia"
+
+#~ msgid "A subtitle stream was detected, but no video stream."
+#~ msgstr "Detectouse un fluxo de subtítulos pero non de vídeo."
+
+#~ msgid "Both autovideosink and xvimagesink elements are missing."
+#~ msgstr "Faltan os elementos autovideosink e xvimagesink."
+
+#~ msgid "Both autoaudiosink and alsasink elements are missing."
+#~ msgstr "Faltan os elementos autoaudiosink e alsasink."
+
+#~ msgid "No device specified."
+#~ msgstr "Non se especificou un dispositivo."
+
+#~ msgid "Device \"%s\" does not exist."
+#~ msgstr "O dispositivo «%s» non existe."
+
+#~ msgid "Device \"%s\" is already being used."
+#~ msgstr "O dispositivo «%s» xa está en uso."
+
+#~ msgid "Could not open device \"%s\" for reading and writing."
+#~ msgstr ""
+#~ "Non foi posíbel abrir o dispositivo «%s» para a súa lectura e escritura."
 
 #~ msgid "Error while sending gdp header data to \"%s:%d\"."
 #~ msgstr ""

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-06-05 23:31+0100\n"
+"POT-Creation-Date: 2011-06-16 01:38+1000\n"
 "PO-Revision-Date: 2004-09-27 13:32+0530\n"
 "Last-Translator: Gora Mohanty <gora_mohanty@yahoo.co.in>\n"
 "Language-Team: Oriya <gora_mohanty@yahoo.co.in>\n"
@@ -105,21 +105,6 @@ msgstr "ଭି.ଏଫ.ଏସ. ଫାଇଲ \"%s\" ବନ୍ଦ କରିହେ�
 msgid "Could not read CD."
 msgstr "\"%s\" ଯନ୍ତ୍ରରେ ଲେଖିହେଲା ନାହିଁ."
 
-#, c-format
-msgid "Could not open vfs file \"%s\" for writing: %s."
-msgstr "ଭି.ଏଫ.ଏସ. ଫାଇଲ \"%s\" ଲେଖିବା ପାଇଁ ଖୋଲିହେଲା ନାହିଁ: %s."
-
-msgid "No filename given"
-msgstr "କୌଣସି ଫାଇଲନାମ ଦିଆଯାଇ ନାହିଁ"
-
-#, c-format
-msgid "Could not close vfs file \"%s\"."
-msgstr "ଭି.ଏଫ.ଏସ. ଫାଇଲ \"%s\" ବନ୍ଦ କରିହେଲା ନାହିଁ."
-
-#, fuzzy, c-format
-msgid "Error while writing to file \"%s\"."
-msgstr "\"%s\" ଫାଇଲ ବନ୍ଦ କରିବାରେ ତ୍ରୁଟି."
-
 msgid "Internal data stream error."
 msgstr ""
 
@@ -127,58 +112,15 @@ msgstr ""
 msgid "A %s plugin is required to play this stream, but not installed."
 msgstr ""
 
-msgid "This appears to be a text file"
-msgstr ""
-
 #, fuzzy
 msgid "Could not determine type of stream"
 msgstr "\"%s\" ଫାଇଲ ଲେଖିହେଲା ନାହିଁ."
 
-#, c-format
-msgid "Invalid subtitle URI \"%s\", subtitles disabled."
-msgstr ""
-
-msgid "No URI specified to play from."
-msgstr ""
-
-#, c-format
-msgid "Invalid URI \"%s\"."
-msgstr ""
-
-msgid "RTSP streams cannot be played yet."
-msgstr ""
-
-msgid "Could not create \"decodebin\" element."
-msgstr ""
-
-msgid "Source element is invalid."
-msgstr ""
-
-msgid ""
-"Only a subtitle stream was detected. Either you are loading a subtitle file "
-"or some other type of text file, or the media file was not recognized."
-msgstr ""
-
-msgid ""
-"You do not have a decoder installed to handle this file. You might need to "
-"install the necessary plugins."
-msgstr ""
-
-#, fuzzy
-msgid "This is not a media file"
-msgstr "\"%s\" ଯନ୍ତ୍ର ଗୋଟିଏ ଅନୁଲିପିକାର ନୁହେଁ."
-
-msgid "A subtitle stream was detected, but no video stream."
-msgstr ""
-
-msgid "Both autovideosink and xvimagesink elements are missing."
+msgid "This appears to be a text file"
 msgstr ""
 
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
-msgstr ""
-
-msgid "Both autoaudiosink and alsasink elements are missing."
 msgstr ""
 
 #, c-format
@@ -230,11 +172,21 @@ msgstr ""
 msgid "No decoder available for type '%s'."
 msgstr ""
 
+msgid "No URI specified to play from."
+msgstr ""
+
+#, c-format
+msgid "Invalid URI \"%s\"."
+msgstr ""
+
 msgid "This stream type cannot be played yet."
 msgstr ""
 
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
+msgstr ""
+
+msgid "Source element is invalid."
 msgstr ""
 
 #, fuzzy, c-format
@@ -583,20 +535,35 @@ msgstr ""
 msgid "Plugin or element of unknown type"
 msgstr ""
 
-msgid "No device specified."
-msgstr "କୌଣସି ଯନ୍ତ୍ର ଉଲ୍ଲେଖିତ କରାଯାଇ ନାହିଁ."
+#~ msgid "Could not open vfs file \"%s\" for writing: %s."
+#~ msgstr "ଭି.ଏଫ.ଏସ. ଫାଇଲ \"%s\" ଲେଖିବା ପାଇଁ ଖୋଲିହେଲା ନାହିଁ: %s."
 
-#, c-format
-msgid "Device \"%s\" does not exist."
-msgstr "\"%s\" ଯନ୍ତ୍ର ଅବସ୍ଥିତ ନାହିଁ."
+#~ msgid "No filename given"
+#~ msgstr "କୌଣସି ଫାଇଲନାମ ଦିଆଯାଇ ନାହିଁ"
 
-#, fuzzy, c-format
-msgid "Device \"%s\" is already being used."
-msgstr "\"%s\" ଓ.ଏସ.ଏସ. ଯନ୍ତ୍ର ପୂର୍ବରୁ ଅନ୍ଯ କାରିକା ଦ୍ବାରା ବ୍ଯବହାର କରାଯାଉଛି."
+#~ msgid "Could not close vfs file \"%s\"."
+#~ msgstr "ଭି.ଏଫ.ଏସ. ଫାଇଲ \"%s\" ବନ୍ଦ କରିହେଲା ନାହିଁ."
 
-#, c-format
-msgid "Could not open device \"%s\" for reading and writing."
-msgstr "\"%s\" ଯନ୍ତ୍ର ପଢ଼ିବା ଓ ଲେଖିବା ପାଇଁ ଖୋଲିହେଲା ନାହିଁ."
+#, fuzzy
+#~ msgid "Error while writing to file \"%s\"."
+#~ msgstr "\"%s\" ଫାଇଲ ବନ୍ଦ କରିବାରେ ତ୍ରୁଟି."
+
+#, fuzzy
+#~ msgid "This is not a media file"
+#~ msgstr "\"%s\" ଯନ୍ତ୍ର ଗୋଟିଏ ଅନୁଲିପିକାର ନୁହେଁ."
+
+#~ msgid "No device specified."
+#~ msgstr "କୌଣସି ଯନ୍ତ୍ର ଉଲ୍ଲେଖିତ କରାଯାଇ ନାହିଁ."
+
+#~ msgid "Device \"%s\" does not exist."
+#~ msgstr "\"%s\" ଯନ୍ତ୍ର ଅବସ୍ଥିତ ନାହିଁ."
+
+#, fuzzy
+#~ msgid "Device \"%s\" is already being used."
+#~ msgstr "\"%s\" ଓ.ଏସ.ଏସ. ଯନ୍ତ୍ର ପୂର୍ବରୁ ଅନ୍ଯ କାରିକା ଦ୍ବାରା ବ୍ଯବହାର କରାଯାଉଛି."
+
+#~ msgid "Could not open device \"%s\" for reading and writing."
+#~ msgstr "\"%s\" ଯନ୍ତ୍ର ପଢ଼ିବା ଓ ଲେଖିବା ପାଇଁ ଖୋଲିହେଲା ନାହିଁ."
 
 #, fuzzy
 #~ msgid "Could not create \"typefind\" element."

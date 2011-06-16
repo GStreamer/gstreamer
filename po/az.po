@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-06-05 23:31+0100\n"
+"POT-Creation-Date: 2011-06-16 01:38+1000\n"
 "PO-Revision-Date: 2004-03-19 18:29+0200\n"
 "Last-Translator: Metin Amiroff <metin@karegen.com>\n"
 "Language-Team: Azerbaijani <translation-team-az@lists.sourceforge.net>\n"
@@ -105,22 +105,6 @@ msgstr "\"%s\" vfs faylı bağlana bilmədi."
 msgid "Could not read CD."
 msgstr "\"%s\" avadanlığına yazıla bilmədi."
 
-#, fuzzy, c-format
-msgid "Could not open vfs file \"%s\" for writing: %s."
-msgstr "\"%s\" vfs faylı yazma üçün açıla bilmədi."
-
-#, fuzzy
-msgid "No filename given"
-msgstr "Fayl adı verilməyib."
-
-#, c-format
-msgid "Could not close vfs file \"%s\"."
-msgstr "\"%s\" vfs faylı bağlana bilmədi."
-
-#, fuzzy, c-format
-msgid "Error while writing to file \"%s\"."
-msgstr "\"%s\" faylı bağlana bilmədi."
-
 msgid "Internal data stream error."
 msgstr ""
 
@@ -128,58 +112,15 @@ msgstr ""
 msgid "A %s plugin is required to play this stream, but not installed."
 msgstr ""
 
-msgid "This appears to be a text file"
-msgstr ""
-
 #, fuzzy
 msgid "Could not determine type of stream"
 msgstr "\"%s\" faylına yazıla bilmədi."
 
-#, c-format
-msgid "Invalid subtitle URI \"%s\", subtitles disabled."
-msgstr ""
-
-msgid "No URI specified to play from."
-msgstr ""
-
-#, c-format
-msgid "Invalid URI \"%s\"."
-msgstr ""
-
-msgid "RTSP streams cannot be played yet."
-msgstr ""
-
-msgid "Could not create \"decodebin\" element."
-msgstr ""
-
-msgid "Source element is invalid."
-msgstr ""
-
-msgid ""
-"Only a subtitle stream was detected. Either you are loading a subtitle file "
-"or some other type of text file, or the media file was not recognized."
-msgstr ""
-
-msgid ""
-"You do not have a decoder installed to handle this file. You might need to "
-"install the necessary plugins."
-msgstr ""
-
-#, fuzzy
-msgid "This is not a media file"
-msgstr "\"%s\" avadanlığı capture avadanlığı deyil."
-
-msgid "A subtitle stream was detected, but no video stream."
-msgstr ""
-
-msgid "Both autovideosink and xvimagesink elements are missing."
+msgid "This appears to be a text file"
 msgstr ""
 
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
-msgstr ""
-
-msgid "Both autoaudiosink and alsasink elements are missing."
 msgstr ""
 
 #, c-format
@@ -231,11 +172,21 @@ msgstr ""
 msgid "No decoder available for type '%s'."
 msgstr ""
 
+msgid "No URI specified to play from."
+msgstr ""
+
+#, c-format
+msgid "Invalid URI \"%s\"."
+msgstr ""
+
 msgid "This stream type cannot be played yet."
 msgstr ""
 
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
+msgstr ""
+
+msgid "Source element is invalid."
 msgstr ""
 
 #, fuzzy, c-format
@@ -584,20 +535,37 @@ msgstr ""
 msgid "Plugin or element of unknown type"
 msgstr ""
 
-msgid "No device specified."
-msgstr "Avadanlıq bildirilməyib."
+#, fuzzy
+#~ msgid "Could not open vfs file \"%s\" for writing: %s."
+#~ msgstr "\"%s\" vfs faylı yazma üçün açıla bilmədi."
 
-#, c-format
-msgid "Device \"%s\" does not exist."
-msgstr "\"%s\" avadanlığı mövcud deyil."
+#, fuzzy
+#~ msgid "No filename given"
+#~ msgstr "Fayl adı verilməyib."
 
-#, fuzzy, c-format
-msgid "Device \"%s\" is already being used."
-msgstr "\"%s\" OSS avadanlığı başqa bir proqram tərəfindən istifadədədir."
+#~ msgid "Could not close vfs file \"%s\"."
+#~ msgstr "\"%s\" vfs faylı bağlana bilmədi."
 
-#, c-format
-msgid "Could not open device \"%s\" for reading and writing."
-msgstr "\"%s\" avadanlığı oxuma və yazma üçün açıla bilmədi."
+#, fuzzy
+#~ msgid "Error while writing to file \"%s\"."
+#~ msgstr "\"%s\" faylı bağlana bilmədi."
+
+#, fuzzy
+#~ msgid "This is not a media file"
+#~ msgstr "\"%s\" avadanlığı capture avadanlığı deyil."
+
+#~ msgid "No device specified."
+#~ msgstr "Avadanlıq bildirilməyib."
+
+#~ msgid "Device \"%s\" does not exist."
+#~ msgstr "\"%s\" avadanlığı mövcud deyil."
+
+#, fuzzy
+#~ msgid "Device \"%s\" is already being used."
+#~ msgstr "\"%s\" OSS avadanlığı başqa bir proqram tərəfindən istifadədədir."
+
+#~ msgid "Could not open device \"%s\" for reading and writing."
+#~ msgstr "\"%s\" avadanlığı oxuma və yazma üçün açıla bilmədi."
 
 #, fuzzy
 #~ msgid "Could not create \"typefind\" element."

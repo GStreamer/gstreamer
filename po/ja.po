@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-06-05 23:31+0100\n"
+"POT-Creation-Date: 2011-06-16 01:38+1000\n"
 "PO-Revision-Date: 2010-10-25 10:27+0900\n"
 "Last-Translator: Makoto Kato <makoto.kt@gmail.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -99,21 +99,6 @@ msgstr "CDをシークすることができませんでした"
 msgid "Could not read CD."
 msgstr "CD を読むことができませんでした"
 
-#, c-format
-msgid "Could not open vfs file \"%s\" for writing: %s."
-msgstr "書き込み用に vfs ファイル \"%s\" を開くことができませんでした: %s"
-
-msgid "No filename given"
-msgstr "ファイル名が与えられていません"
-
-#, c-format
-msgid "Could not close vfs file \"%s\"."
-msgstr "vfs ファイル \"%s\" をクローズできませんでした"
-
-#, c-format
-msgid "Error while writing to file \"%s\"."
-msgstr "ファイル \"%s\" の書き込み中にエラーが発生しました"
-
 msgid "Internal data stream error."
 msgstr "内部データストリームエラー"
 
@@ -123,63 +108,17 @@ msgstr ""
 "%s プラグインはこのストリームを再生するのに必要ですが、インストールされていま"
 "せん"
 
-msgid "This appears to be a text file"
-msgstr "これはテキストファイルのようです"
-
 msgid "Could not determine type of stream"
 msgstr "ストリームの種類を判別できませんでした"
 
-#, c-format
-msgid "Invalid subtitle URI \"%s\", subtitles disabled."
-msgstr "不正な字幕 URI \"%s\"。字幕を無効にします。"
-
-msgid "No URI specified to play from."
-msgstr "再生するURIが指定されていません"
-
-#, c-format
-msgid "Invalid URI \"%s\"."
-msgstr "不正な URI \"%s\""
-
-msgid "RTSP streams cannot be played yet."
-msgstr "RTSP ストリームをまだ再生できません"
-
-msgid "Could not create \"decodebin\" element."
-msgstr "\"decodebin\" エレメントを作成できません。"
-
-msgid "Source element is invalid."
-msgstr "ソースエレメントが不正です。"
-
-msgid ""
-"Only a subtitle stream was detected. Either you are loading a subtitle file "
-"or some other type of text file, or the media file was not recognized."
-msgstr ""
-"字幕ストリームのみを認識しました。字幕ファイルかテキストファイルをロード中"
-"か、メディアファイルが認識されないのかどちらかです。"
-
-msgid ""
-"You do not have a decoder installed to handle this file. You might need to "
-"install the necessary plugins."
-msgstr ""
-"このファイルを扱うことができるデコーダがインストールされていません。必要なプ"
-"ラグインをインストールする必要があるかもしれません"
-
-msgid "This is not a media file"
-msgstr "これはメディアファイルではありません"
-
-msgid "A subtitle stream was detected, but no video stream."
-msgstr "字幕のストリームを認識しましたが、動画ストリームがありません"
-
-msgid "Both autovideosink and xvimagesink elements are missing."
-msgstr "autovideosinkとxvimagesinkエレメントの両方が見つかりません。"
+msgid "This appears to be a text file"
+msgstr "これはテキストファイルのようです"
 
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr ""
 "エレメント '%s' が見つかりません - GStreamer のインストールが失敗している可能"
 "性があります"
-
-msgid "Both autoaudiosink and alsasink elements are missing."
-msgstr "autovideosinkとalsasinkエレメントの両方が見つかりません。"
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -230,12 +169,22 @@ msgstr "ビデオまたは視覚化なしでテキストファイルを再生で
 msgid "No decoder available for type '%s'."
 msgstr "タイプ '%s' 用のデコーダーが利用可能ではありません。"
 
+msgid "No URI specified to play from."
+msgstr "再生するURIが指定されていません"
+
+#, c-format
+msgid "Invalid URI \"%s\"."
+msgstr "不正な URI \"%s\""
+
 msgid "This stream type cannot be played yet."
 msgstr "このストリームタイプをまだ再生することはできません"
 
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "\"%s\" 用の URI ハンドラの実装はありません"
+
+msgid "Source element is invalid."
+msgstr "ソースエレメントが不正です。"
 
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
@@ -585,20 +534,66 @@ msgstr "不明なエンコーダーエレメント"
 msgid "Plugin or element of unknown type"
 msgstr "不明な種類のプラグインまたはエレメント"
 
-msgid "No device specified."
-msgstr "デバイスが指定されていません。"
+#~ msgid "Could not open vfs file \"%s\" for writing: %s."
+#~ msgstr "書き込み用に vfs ファイル \"%s\" を開くことができませんでした: %s"
 
-#, c-format
-msgid "Device \"%s\" does not exist."
-msgstr "デバイス \"%s\" は存在しません。"
+#~ msgid "No filename given"
+#~ msgstr "ファイル名が与えられていません"
 
-#, c-format
-msgid "Device \"%s\" is already being used."
-msgstr "デバイス \"%s\" は既に使われています。"
+#~ msgid "Could not close vfs file \"%s\"."
+#~ msgstr "vfs ファイル \"%s\" をクローズできませんでした"
 
-#, c-format
-msgid "Could not open device \"%s\" for reading and writing."
-msgstr "読み込み用と書き込み用にデバイス \"%s\" を開くことができませんでした。"
+#~ msgid "Error while writing to file \"%s\"."
+#~ msgstr "ファイル \"%s\" の書き込み中にエラーが発生しました"
+
+#~ msgid "Invalid subtitle URI \"%s\", subtitles disabled."
+#~ msgstr "不正な字幕 URI \"%s\"。字幕を無効にします。"
+
+#~ msgid "RTSP streams cannot be played yet."
+#~ msgstr "RTSP ストリームをまだ再生できません"
+
+#~ msgid "Could not create \"decodebin\" element."
+#~ msgstr "\"decodebin\" エレメントを作成できません。"
+
+#~ msgid ""
+#~ "Only a subtitle stream was detected. Either you are loading a subtitle "
+#~ "file or some other type of text file, or the media file was not "
+#~ "recognized."
+#~ msgstr ""
+#~ "字幕ストリームのみを認識しました。字幕ファイルかテキストファイルをロード中"
+#~ "か、メディアファイルが認識されないのかどちらかです。"
+
+#~ msgid ""
+#~ "You do not have a decoder installed to handle this file. You might need "
+#~ "to install the necessary plugins."
+#~ msgstr ""
+#~ "このファイルを扱うことができるデコーダがインストールされていません。必要な"
+#~ "プラグインをインストールする必要があるかもしれません"
+
+#~ msgid "This is not a media file"
+#~ msgstr "これはメディアファイルではありません"
+
+#~ msgid "A subtitle stream was detected, but no video stream."
+#~ msgstr "字幕のストリームを認識しましたが、動画ストリームがありません"
+
+#~ msgid "Both autovideosink and xvimagesink elements are missing."
+#~ msgstr "autovideosinkとxvimagesinkエレメントの両方が見つかりません。"
+
+#~ msgid "Both autoaudiosink and alsasink elements are missing."
+#~ msgstr "autovideosinkとalsasinkエレメントの両方が見つかりません。"
+
+#~ msgid "No device specified."
+#~ msgstr "デバイスが指定されていません。"
+
+#~ msgid "Device \"%s\" does not exist."
+#~ msgstr "デバイス \"%s\" は存在しません。"
+
+#~ msgid "Device \"%s\" is already being used."
+#~ msgstr "デバイス \"%s\" は既に使われています。"
+
+#~ msgid "Could not open device \"%s\" for reading and writing."
+#~ msgstr ""
+#~ "読み込み用と書き込み用にデバイス \"%s\" を開くことができませんでした。"
 
 #~ msgid "Error while sending gdp header data to \"%s:%d\"."
 #~ msgstr "gdp ヘッダデータを \"%s:%d\" へ送信中にエラーが発生しました"

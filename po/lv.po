@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-06-05 23:31+0100\n"
+"POT-Creation-Date: 2011-06-16 01:38+1000\n"
 "PO-Revision-Date: 2010-07-07 10:52+0100\n"
 "Last-Translator: Rihards Priedītis <rprieditis@gmail.com>\n"
 "Language-Team: Latvian <translation-team-lv@lists.sourceforge.net>\n"
@@ -103,21 +103,6 @@ msgstr "Nevarēja meklēt pa CD."
 msgid "Could not read CD."
 msgstr "Nevarēja nolasīt CD."
 
-#, c-format
-msgid "Could not open vfs file \"%s\" for writing: %s."
-msgstr "Nevarēja atvērt vfs failu \"%s\" rakstīšanai: %s."
-
-msgid "No filename given"
-msgstr "Nav norādīts faila nosaukums"
-
-#, c-format
-msgid "Could not close vfs file \"%s\"."
-msgstr "Nevarēja aizvērt vfs failu \"%s\"."
-
-#, c-format
-msgid "Error while writing to file \"%s\"."
-msgstr "Kļūda rakstot failā \"%s\"."
-
 msgid "Internal data stream error."
 msgstr "Iekšējās datu plūsmas kļūda."
 
@@ -126,61 +111,15 @@ msgid "A %s plugin is required to play this stream, but not installed."
 msgstr ""
 "Nepieciešamas %s spraudnis, lai atskaņotu šo plūsmu, bet tas nav instalēts."
 
-msgid "This appears to be a text file"
-msgstr "Tiek atpazīts kā teksta fails"
-
 msgid "Could not determine type of stream"
 msgstr "Nevarēja noteikts straumes tipu"
 
-#, c-format
-msgid "Invalid subtitle URI \"%s\", subtitles disabled."
-msgstr "Nederīgs subtitru URI \"%s\", subtitri izslēgti."
-
-msgid "No URI specified to play from."
-msgstr "Nav norādīts neviens URI, no kā varētu spēlēt. "
-
-#, c-format
-msgid "Invalid URI \"%s\"."
-msgstr "Nederīgs URI \"%s\"."
-
-msgid "RTSP streams cannot be played yet."
-msgstr "RTSP plūsmas pagaidām nevar tikt atskaņotas."
-
-msgid "Could not create \"decodebin\" element."
-msgstr "Nevarēja izveidot \"decodebin\" elementu."
-
-msgid "Source element is invalid."
-msgstr "Avota elements ir nederīgs."
-
-msgid ""
-"Only a subtitle stream was detected. Either you are loading a subtitle file "
-"or some other type of text file, or the media file was not recognized."
-msgstr ""
-"Tika pamanīta tikai subtitru plūsma. Vai nu jūs ielādējat subtitru failu vai "
-"cita veida teksta failu, vai arī mediju fails netika atpazīts."
-
-msgid ""
-"You do not have a decoder installed to handle this file. You might need to "
-"install the necessary plugins."
-msgstr ""
-"Jums nav instalēta atkodētāja, lai apietos ar šo failu. Jums iespējams "
-"vajadzētu instalēt nepieciešamos spraudņus."
-
-msgid "This is not a media file"
-msgstr "Šis nav mediju fails"
-
-msgid "A subtitle stream was detected, but no video stream."
-msgstr "Tika pamanīta subtitru plūsma, bet ne video plūsma."
-
-msgid "Both autovideosink and xvimagesink elements are missing."
-msgstr "Trūkst gan autovideosink, gan xvimagesink elementi."
+msgid "This appears to be a text file"
+msgstr "Tiek atpazīts kā teksta fails"
 
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Trūkst elements \"%s\" - pārbaudiet savu GStreamer instalāciju."
-
-msgid "Both autoaudiosink and alsasink elements are missing."
-msgstr "Trūkst gan autoaudiosink, gan alsasink elementi."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -231,12 +170,22 @@ msgstr "Nevar atskaņot teksta failu bez video vai vizualizācijas."
 msgid "No decoder available for type '%s'."
 msgstr "Nav pieejams neviens atkodētājs failu veidam \"%s\"."
 
+msgid "No URI specified to play from."
+msgstr "Nav norādīts neviens URI, no kā varētu spēlēt. "
+
+#, c-format
+msgid "Invalid URI \"%s\"."
+msgstr "Nederīgs URI \"%s\"."
+
 msgid "This stream type cannot be played yet."
 msgstr "Šī plūsma pagaidām nevar tikt atskaņota."
 
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Nav izstrādāts neviens URI apstrādātājs priekš \"%s\"."
+
+msgid "Source element is invalid."
+msgstr "Avota elements ir nederīgs."
 
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
@@ -584,20 +533,65 @@ msgstr "Nezināms kodētāja elements"
 msgid "Plugin or element of unknown type"
 msgstr "Nezināma veida spraudnis vai elements"
 
-msgid "No device specified."
-msgstr "Nav norādīta ierīce."
+#~ msgid "Could not open vfs file \"%s\" for writing: %s."
+#~ msgstr "Nevarēja atvērt vfs failu \"%s\" rakstīšanai: %s."
 
-#, c-format
-msgid "Device \"%s\" does not exist."
-msgstr "Ierīce \"%s\" neeksistē."
+#~ msgid "No filename given"
+#~ msgstr "Nav norādīts faila nosaukums"
 
-#, c-format
-msgid "Device \"%s\" is already being used."
-msgstr "Ierīce \"%s\" jau tiek izmantota."
+#~ msgid "Could not close vfs file \"%s\"."
+#~ msgstr "Nevarēja aizvērt vfs failu \"%s\"."
 
-#, c-format
-msgid "Could not open device \"%s\" for reading and writing."
-msgstr "Nevarēja atvērt ierīci \"%s\" lasīšanai vai rakstīšanai."
+#~ msgid "Error while writing to file \"%s\"."
+#~ msgstr "Kļūda rakstot failā \"%s\"."
+
+#~ msgid "Invalid subtitle URI \"%s\", subtitles disabled."
+#~ msgstr "Nederīgs subtitru URI \"%s\", subtitri izslēgti."
+
+#~ msgid "RTSP streams cannot be played yet."
+#~ msgstr "RTSP plūsmas pagaidām nevar tikt atskaņotas."
+
+#~ msgid "Could not create \"decodebin\" element."
+#~ msgstr "Nevarēja izveidot \"decodebin\" elementu."
+
+#~ msgid ""
+#~ "Only a subtitle stream was detected. Either you are loading a subtitle "
+#~ "file or some other type of text file, or the media file was not "
+#~ "recognized."
+#~ msgstr ""
+#~ "Tika pamanīta tikai subtitru plūsma. Vai nu jūs ielādējat subtitru failu "
+#~ "vai cita veida teksta failu, vai arī mediju fails netika atpazīts."
+
+#~ msgid ""
+#~ "You do not have a decoder installed to handle this file. You might need "
+#~ "to install the necessary plugins."
+#~ msgstr ""
+#~ "Jums nav instalēta atkodētāja, lai apietos ar šo failu. Jums iespējams "
+#~ "vajadzētu instalēt nepieciešamos spraudņus."
+
+#~ msgid "This is not a media file"
+#~ msgstr "Šis nav mediju fails"
+
+#~ msgid "A subtitle stream was detected, but no video stream."
+#~ msgstr "Tika pamanīta subtitru plūsma, bet ne video plūsma."
+
+#~ msgid "Both autovideosink and xvimagesink elements are missing."
+#~ msgstr "Trūkst gan autovideosink, gan xvimagesink elementi."
+
+#~ msgid "Both autoaudiosink and alsasink elements are missing."
+#~ msgstr "Trūkst gan autoaudiosink, gan alsasink elementi."
+
+#~ msgid "No device specified."
+#~ msgstr "Nav norādīta ierīce."
+
+#~ msgid "Device \"%s\" does not exist."
+#~ msgstr "Ierīce \"%s\" neeksistē."
+
+#~ msgid "Device \"%s\" is already being used."
+#~ msgstr "Ierīce \"%s\" jau tiek izmantota."
+
+#~ msgid "Could not open device \"%s\" for reading and writing."
+#~ msgstr "Nevarēja atvērt ierīci \"%s\" lasīšanai vai rakstīšanai."
 
 #~ msgid "Error while sending gdp header data to \"%s:%d\"."
 #~ msgstr "Radās kļūda nosūtot gdb galvenas datus uz \"%s:%d\"."

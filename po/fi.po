@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-06-05 23:31+0100\n"
+"POT-Creation-Date: 2011-06-16 01:38+1000\n"
 "PO-Revision-Date: 2010-12-31 23:21+0200\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
@@ -103,21 +103,6 @@ msgstr "CD-levyllä ei voitu siirtyä."
 msgid "Could not read CD."
 msgstr "CD-levyä ei voitu lukea."
 
-#, c-format
-msgid "Could not open vfs file \"%s\" for writing: %s."
-msgstr "VFS-tiedostoa \"%s\" ei voi avata kirjoitettavaksi: %s."
-
-msgid "No filename given"
-msgstr "Tiedostonimeä ei annettu"
-
-#, c-format
-msgid "Could not close vfs file \"%s\"."
-msgstr "VFS-tiedostoa \"%s\" ei voitu sulkea."
-
-#, c-format
-msgid "Error while writing to file \"%s\"."
-msgstr "Virhe kirjoitettaessa tiedostoon \"%s\"."
-
 msgid "Internal data stream error."
 msgstr "Sisäisen tietovirran virhe."
 
@@ -126,61 +111,15 @@ msgid "A %s plugin is required to play this stream, but not installed."
 msgstr ""
 "Virran toistamiseen tarvitaan %s-liitännäinen, mutta se ei ole asennettu."
 
-msgid "This appears to be a text file"
-msgstr "Tämä näyttää olevan tekstitiedosto"
-
 msgid "Could not determine type of stream"
 msgstr "Virran tyyppiä ei voitu määrittää"
 
-#, c-format
-msgid "Invalid subtitle URI \"%s\", subtitles disabled."
-msgstr "Virheellinen tekstitysten URI \"%s\", tekstitys ei ole käytössä."
-
-msgid "No URI specified to play from."
-msgstr "URIa, josta soitetaan, ei annettu."
-
-#, c-format
-msgid "Invalid URI \"%s\"."
-msgstr "Virheellinen URI \"%s\"."
-
-msgid "RTSP streams cannot be played yet."
-msgstr "RTSP-virtoja ei voi vielä soittaa."
-
-msgid "Could not create \"decodebin\" element."
-msgstr "Elementtiä \"decodebin\" ei voitu luoda."
-
-msgid "Source element is invalid."
-msgstr "Lähde-elementti on virheellinen."
-
-msgid ""
-"Only a subtitle stream was detected. Either you are loading a subtitle file "
-"or some other type of text file, or the media file was not recognized."
-msgstr ""
-"Havaittiin vain tekstitysvirta. Joko yrität ladata tekstitystiedostoa tai "
-"muuta tekstitiedostoa, tai mediatiedostoa ei voitu tunnistaa."
-
-msgid ""
-"You do not have a decoder installed to handle this file. You might need to "
-"install the necessary plugins."
-msgstr ""
-"Tämän tiedoston käsittelyyn ei ole asennettu purkajaa. Voi olla, että sinun "
-"täytyy asentaa tarvittavia liitännäisiä."
-
-msgid "This is not a media file"
-msgstr "Tämä ei ole mediatiedosto"
-
-msgid "A subtitle stream was detected, but no video stream."
-msgstr "Havaittiin tekstitysvirta, mutta ei videovirtaa."
-
-msgid "Both autovideosink and xvimagesink elements are missing."
-msgstr "Sekä autovideosink- ja xvimagesink-elementit puuttuvat."
+msgid "This appears to be a text file"
+msgstr "Tämä näyttää olevan tekstitiedosto"
 
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Puuttuva elementti \"%s\" - tarkista GStreamer-asennuksesi."
-
-msgid "Both autoaudiosink and alsasink elements are missing."
-msgstr "Sekä autoaudiosink- että alsasink-elementit puuttuvat."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -231,12 +170,22 @@ msgstr "Ei voida toistaa tekstitiedosta ilman videota tai visualisointia."
 msgid "No decoder available for type '%s'."
 msgstr "Purkajaa tyypille \"%s\" ei ole saatavilla."
 
+msgid "No URI specified to play from."
+msgstr "URIa, josta soitetaan, ei annettu."
+
+#, c-format
+msgid "Invalid URI \"%s\"."
+msgstr "Virheellinen URI \"%s\"."
+
 msgid "This stream type cannot be played yet."
 msgstr "Tätä virtatyyppiä ei voi vielä soittaa."
 
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Protokollalle \"%s\" ei ole määritelty URI-käsittelijää."
+
+msgid "Source element is invalid."
+msgstr "Lähde-elementti on virheellinen."
 
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
@@ -586,20 +535,65 @@ msgstr "Tuntematon kodekkielementti"
 msgid "Plugin or element of unknown type"
 msgstr "Liitännäisen tai elementin tyyppi on tuntematon"
 
-msgid "No device specified."
-msgstr "Laitetta ei ole määritelty."
+#~ msgid "Could not open vfs file \"%s\" for writing: %s."
+#~ msgstr "VFS-tiedostoa \"%s\" ei voi avata kirjoitettavaksi: %s."
 
-#, c-format
-msgid "Device \"%s\" does not exist."
-msgstr "Laitetta \"%s\" ei ole olemassa."
+#~ msgid "No filename given"
+#~ msgstr "Tiedostonimeä ei annettu"
 
-#, c-format
-msgid "Device \"%s\" is already being used."
-msgstr "Laite \"%s\" on jo käytössä."
+#~ msgid "Could not close vfs file \"%s\"."
+#~ msgstr "VFS-tiedostoa \"%s\" ei voitu sulkea."
 
-#, c-format
-msgid "Could not open device \"%s\" for reading and writing."
-msgstr "Laitetta \"%s\" ei voi avata luettavaksi ja kirjoitettavaksi."
+#~ msgid "Error while writing to file \"%s\"."
+#~ msgstr "Virhe kirjoitettaessa tiedostoon \"%s\"."
+
+#~ msgid "Invalid subtitle URI \"%s\", subtitles disabled."
+#~ msgstr "Virheellinen tekstitysten URI \"%s\", tekstitys ei ole käytössä."
+
+#~ msgid "RTSP streams cannot be played yet."
+#~ msgstr "RTSP-virtoja ei voi vielä soittaa."
+
+#~ msgid "Could not create \"decodebin\" element."
+#~ msgstr "Elementtiä \"decodebin\" ei voitu luoda."
+
+#~ msgid ""
+#~ "Only a subtitle stream was detected. Either you are loading a subtitle "
+#~ "file or some other type of text file, or the media file was not "
+#~ "recognized."
+#~ msgstr ""
+#~ "Havaittiin vain tekstitysvirta. Joko yrität ladata tekstitystiedostoa tai "
+#~ "muuta tekstitiedostoa, tai mediatiedostoa ei voitu tunnistaa."
+
+#~ msgid ""
+#~ "You do not have a decoder installed to handle this file. You might need "
+#~ "to install the necessary plugins."
+#~ msgstr ""
+#~ "Tämän tiedoston käsittelyyn ei ole asennettu purkajaa. Voi olla, että "
+#~ "sinun täytyy asentaa tarvittavia liitännäisiä."
+
+#~ msgid "This is not a media file"
+#~ msgstr "Tämä ei ole mediatiedosto"
+
+#~ msgid "A subtitle stream was detected, but no video stream."
+#~ msgstr "Havaittiin tekstitysvirta, mutta ei videovirtaa."
+
+#~ msgid "Both autovideosink and xvimagesink elements are missing."
+#~ msgstr "Sekä autovideosink- ja xvimagesink-elementit puuttuvat."
+
+#~ msgid "Both autoaudiosink and alsasink elements are missing."
+#~ msgstr "Sekä autoaudiosink- että alsasink-elementit puuttuvat."
+
+#~ msgid "No device specified."
+#~ msgstr "Laitetta ei ole määritelty."
+
+#~ msgid "Device \"%s\" does not exist."
+#~ msgstr "Laitetta \"%s\" ei ole olemassa."
+
+#~ msgid "Device \"%s\" is already being used."
+#~ msgstr "Laite \"%s\" on jo käytössä."
+
+#~ msgid "Could not open device \"%s\" for reading and writing."
+#~ msgstr "Laitetta \"%s\" ei voi avata luettavaksi ja kirjoitettavaksi."
 
 #~ msgid "Error while sending gdp header data to \"%s:%d\"."
 #~ msgstr "Virhe lähetettäessä gdp-otsaketietoja kohteeseen \"%s:%d\"."
