@@ -186,12 +186,11 @@ static gboolean
 gst_goom_sink_setcaps (GstGoom * goom, GstCaps * caps)
 {
   GstStructure *structure;
-  gboolean res;
 
   structure = gst_caps_get_structure (caps, 0);
 
-  res = gst_structure_get_int (structure, "channels", &goom->channels);
-  res &= gst_structure_get_int (structure, "rate", &goom->rate);
+  gst_structure_get_int (structure, "channels", &goom->channels);
+  gst_structure_get_int (structure, "rate", &goom->rate);
 
   goom->bps = goom->channels * sizeof (gint16);
 
@@ -238,7 +237,6 @@ error:
 static gboolean
 gst_goom_src_negotiate (GstGoom * goom)
 {
-  gboolean res;
   GstCaps *othercaps, *target;
   GstStructure *structure;
   GstCaps *templ;
@@ -271,7 +269,7 @@ gst_goom_src_negotiate (GstGoom * goom)
   gst_structure_fixate_field_nearest_fraction (structure, "framerate",
       DEFAULT_FPS_N, DEFAULT_FPS_D);
 
-  res = gst_goom_src_setcaps (goom, target);
+  gst_goom_src_setcaps (goom, target);
 
   /* try to get a bufferpool now */
   /* find a pool for the negotiated caps now */
