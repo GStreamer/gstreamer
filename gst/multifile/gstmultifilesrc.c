@@ -74,7 +74,8 @@ enum
   ARG_0,
   ARG_LOCATION,
   ARG_INDEX,
-  ARG_CAPS
+  ARG_CAPS,
+  ARG_LOOP
 };
 
 #define DEFAULT_LOCATION "%05d"
@@ -126,6 +127,10 @@ gst_multi_file_src_class_init (GstMultiFileSrcClass * klass)
       g_param_spec_boxed ("caps", "Caps",
           "Caps describing the format of the data.",
           GST_TYPE_CAPS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, ARG_LOOP,
+      g_param_spec_boolean ("loop", "Loop",
+          "Whether to repeat from the beginning when all files have been read.",
+          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gobject_class->dispose = gst_multi_file_src_dispose;
 
@@ -144,7 +149,8 @@ static void
 gst_multi_file_src_init (GstMultiFileSrc * multifilesrc,
     GstMultiFileSrcClass * g_class)
 {
-  multifilesrc->index = DEFAULT_INDEX;
+  multifilesrc->original_index = DEFAULT_INDEX;
+  multifilesrc->index = multifilesrc->original_index;
   multifilesrc->filename = g_strdup (DEFAULT_LOCATION);
   multifilesrc->successful_read = FALSE;
 }
@@ -233,7 +239,8 @@ gst_multi_file_src_set_property (GObject * object, guint prop_id,
       gst_multi_file_src_set_location (src, g_value_get_string (value));
       break;
     case ARG_INDEX:
-      src->index = g_value_get_int (value);
+      src->original_index = g_value_get_int (value);
+      src->index = src->original_index;
       break;
     case ARG_CAPS:
     {
@@ -248,6 +255,9 @@ gst_multi_file_src_set_property (GObject * object, guint prop_id,
       gst_caps_replace (&src->caps, new_caps);
       gst_pad_set_caps (GST_BASE_SRC_PAD (src), new_caps);
     }
+      break;
+    case ARG_LOOP:
+      src->loop = g_value_get_boolean (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -270,6 +280,9 @@ gst_multi_file_src_get_property (GObject * object, guint prop_id,
       break;
     case ARG_CAPS:
       gst_value_set_caps (value, src->caps);
+      break;
+    case ARG_LOOP:
+      g_value_set_boolean (value, src->loop);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -312,7 +325,17 @@ gst_multi_file_src_create (GstPushSrc * src, GstBuffer ** buffer)
       g_free (filename);
       if (error != NULL)
         g_error_free (error);
-      return GST_FLOW_UNEXPECTED;
+
+      if (multifilesrc->loop
+          && multifilesrc->index != multifilesrc->original_index) {
+        /* But we might be expected to loop, so let's go again. Make
+         * sure the original index and index aren't the same otherwise
+         * we'll just recurse to death in some error case. */
+        multifilesrc->index = multifilesrc->original_index;
+        return gst_multi_file_src_create (src, buffer);
+      } else {
+        return GST_FLOW_UNEXPECTED;
+      }
     } else {
       goto handle_error;
     }
