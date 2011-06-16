@@ -131,7 +131,6 @@ gst_ebml_peek_id_length (guint32 * _id, guint64 * _length, guint * _needed,
     *_length = G_MAXUINT64;
   else
     *_length = total;
-  *_length = total;
 
   *_needed = needed;
 
