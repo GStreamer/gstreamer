@@ -27,6 +27,10 @@
 /* Debugging category */
 #include <gst/gstinfo.h>
 
+/* Helper functions */
+#include <gst/video/video.h>
+#include <gst/video/gstmetavideo.h>
+
 GST_DEBUG_CATEGORY_EXTERN (gst_debug_xvimagepool);
 #define GST_CAT_DEFAULT gst_debug_xvimagepool
 
@@ -461,8 +465,9 @@ static void gst_xvimage_buffer_pool_finalize (GObject * object);
 struct _GstXvImageBufferPoolPrivate
 {
   GstCaps *caps;
-  gint width, height;
   gint im_format;
+  GstVideoInfo info;
+  gboolean add_metavideo;
 };
 
 G_DEFINE_TYPE (GstXvImageBufferPool, gst_xvimage_buffer_pool,
@@ -473,8 +478,7 @@ xvimage_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
 {
   GstXvImageBufferPool *xvpool = GST_XVIMAGE_BUFFER_POOL_CAST (pool);
   GstXvImageBufferPoolPrivate *priv = xvpool->priv;
-  GstStructure *structure;
-  gint width, height;
+  GstVideoInfo info;
   const GstCaps *caps;
 
   if (!gst_buffer_pool_config_get (config, &caps, NULL, NULL, NULL, NULL, NULL))
@@ -484,31 +488,24 @@ xvimage_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
     goto no_caps;
 
   /* now parse the caps from the config */
-  structure = gst_caps_get_structure (caps, 0);
-
-  if (!gst_structure_get_int (structure, "width", &width) ||
-      !gst_structure_get_int (structure, "height", &height))
+  if (!gst_video_info_from_caps (&info, caps))
     goto wrong_caps;
 
-  GST_LOG_OBJECT (pool, "%dx%d, caps %" GST_PTR_FORMAT, width, height, caps);
+  priv->info = info;
+
+  GST_LOG_OBJECT (pool, "%dx%d, caps %" GST_PTR_FORMAT, info.width, info.height,
+      caps);
 
   /* keep track of the width and height and caps */
   if (priv->caps)
     gst_caps_unref (priv->caps);
   priv->caps = gst_caps_copy (caps);
-  priv->width = width;
-  priv->height = height;
   priv->im_format =
       gst_xvimagesink_get_format_from_caps (xvpool->sink, (GstCaps *) caps);
-
-  if (priv->im_format == -1) {
-    GST_WARNING_OBJECT (xvpool->sink, "failed to get format from caps %"
-        GST_PTR_FORMAT, caps);
-    GST_ELEMENT_ERROR (xvpool->sink, RESOURCE, WRITE,
-        ("Failed to create output image buffer of %dx%d pixels",
-            priv->width, priv->height), ("Invalid input caps"));
-    goto wrong_config;
-  }
+  /* FIXME, enable metadata based on config of the pool */
+  priv->add_metavideo = FALSE;
+  if (priv->im_format == -1)
+    goto unknown_format;
 
   return TRUE;
 
@@ -529,6 +526,15 @@ wrong_caps:
         "failed getting geometry from caps %" GST_PTR_FORMAT, caps);
     return FALSE;
   }
+unknown_format:
+  {
+    GST_WARNING_OBJECT (xvpool->sink, "failed to get format from caps %"
+        GST_PTR_FORMAT, caps);
+    GST_ELEMENT_ERROR (xvpool->sink, RESOURCE, WRITE,
+        ("Failed to create output image buffer of %dx%d pixels",
+            priv->info.width, priv->info.height), ("Invalid input caps"));
+    return FALSE;;
+  }
 }
 
 /* This function handles GstXImageBuffer creation depending on XShm availability */
@@ -543,12 +549,19 @@ xvimage_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
 
   xvimage = gst_buffer_new ();
   meta =
-      gst_buffer_add_meta_xvimage (xvimage, xvpool->sink, priv->width,
-      priv->height, priv->im_format);
+      gst_buffer_add_meta_xvimage (xvimage, xvpool->sink, priv->info.width,
+      priv->info.height, priv->im_format);
   if (meta == NULL) {
     gst_buffer_unref (xvimage);
     goto no_buffer;
   }
+
+  if (priv->add_metavideo) {
+    /* these are just the defaults for now */
+    gst_buffer_add_meta_video (xvimage, 0, priv->info.format, priv->info.width,
+        priv->info.height);
+  }
+
   *buffer = xvimage;
 
   return GST_FLOW_OK;

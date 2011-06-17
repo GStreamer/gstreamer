@@ -27,6 +27,10 @@
 /* Debugging category */
 #include <gst/gstinfo.h>
 
+/* Helper functions */
+#include <gst/video/video.h>
+#include <gst/video/gstmetavideo.h>
+
 GST_DEBUG_CATEGORY_EXTERN (gst_debug_ximagepool);
 #define GST_CAT_DEFAULT gst_debug_ximagepool
 
@@ -429,7 +433,8 @@ static void gst_ximage_buffer_pool_finalize (GObject * object);
 struct _GstXImageBufferPoolPrivate
 {
   GstCaps *caps;
-  gint width, height;
+  GstVideoInfo info;
+  gboolean add_metavideo;
 };
 
 G_DEFINE_TYPE (GstXImageBufferPool, gst_ximage_buffer_pool,
@@ -440,8 +445,7 @@ ximage_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
 {
   GstXImageBufferPool *xpool = GST_XIMAGE_BUFFER_POOL_CAST (pool);
   GstXImageBufferPoolPrivate *priv = xpool->priv;
-  GstStructure *structure;
-  gint width, height;
+  GstVideoInfo info;
   const GstCaps *caps;
 
   if (!gst_buffer_pool_config_get (config, &caps, NULL, NULL, NULL, NULL, NULL))
@@ -451,20 +455,20 @@ ximage_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
     goto no_caps;
 
   /* now parse the caps from the config */
-  structure = gst_caps_get_structure (caps, 0);
-
-  if (!gst_structure_get_int (structure, "width", &width) ||
-      !gst_structure_get_int (structure, "height", &height))
+  if (!gst_video_info_from_caps (&info, caps))
     goto wrong_caps;
 
-  GST_LOG_OBJECT (pool, "%dx%d, caps %" GST_PTR_FORMAT, width, height, caps);
+  priv->info = info;
+
+  GST_LOG_OBJECT (pool, "%dx%d, caps %" GST_PTR_FORMAT, info.width, info.height,
+      caps);
 
   /* keep track of the width and height and caps */
   if (priv->caps)
     gst_caps_unref (priv->caps);
   priv->caps = gst_caps_copy (caps);
-  priv->width = width;
-  priv->height = height;
+  /* FIXME, configure based on config of the bufferpool */
+  priv->add_metavideo = FALSE;
 
   return TRUE;
 
@@ -499,11 +503,16 @@ ximage_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
 
   ximage = gst_buffer_new ();
   meta =
-      gst_buffer_add_meta_ximage (ximage, xpool->sink, priv->width,
-      priv->height);
+      gst_buffer_add_meta_ximage (ximage, xpool->sink, priv->info.width,
+      priv->info.height);
   if (meta == NULL) {
     gst_buffer_unref (ximage);
     goto no_buffer;
+  }
+  if (priv->add_metavideo) {
+    /* these are just the defaults for now */
+    gst_buffer_add_meta_video (ximage, 0, priv->info.format, priv->info.width,
+        priv->info.height);
   }
   *buffer = ximage;
 
