@@ -20,7 +20,7 @@
 #include <ges/ges.h>
 #include <gst/check/gstcheck.h>
 
-#define LAYER_HEIGHT 10
+#define LAYER_HEIGHT 1000
 
 static gboolean
 my_fill_track_func (GESTimelineObject * object,
@@ -120,14 +120,14 @@ GST_START_TEST (test_layer_properties)
   assert_equals_int (ges_timeline_layer_get_priority (layer), 1);
   assert_equals_uint64 (GES_TIMELINE_OBJECT_PRIORITY (object), 0);
   gnl_object_check (ges_track_object_get_gnlobject (trackobject), 42, 51, 12,
-      51, 10, TRUE);
+      51, LAYER_HEIGHT, TRUE);
 
   /* Change it to an insanely high value */
-  g_object_set (layer, "priority", 1000000, NULL);
-  assert_equals_int (ges_timeline_layer_get_priority (layer), 1000000);
+  g_object_set (layer, "priority", 31, NULL);
+  assert_equals_int (ges_timeline_layer_get_priority (layer), 31);
   assert_equals_uint64 (GES_TIMELINE_OBJECT_PRIORITY (object), 0);
   gnl_object_check (ges_track_object_get_gnlobject (trackobject), 42, 51, 12,
-      51, 10000000, TRUE);
+      51, LAYER_HEIGHT * 31, TRUE);
 
   /* and back to 0 */
   g_object_set (layer, "priority", 0, NULL);

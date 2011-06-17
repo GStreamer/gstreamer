@@ -34,7 +34,7 @@
 #include "ges.h"
 #include "ges-timeline-source.h"
 
-#define LAYER_HEIGHT 10
+#define LAYER_HEIGHT 1000
 
 static void
 track_object_removed_cb (GESTimelineObject * object,
