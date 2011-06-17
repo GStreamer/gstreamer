@@ -60,7 +60,7 @@ struct _GstSunAudioSink {
   gint samples_written;
   guint bytes_per_sample;
 
-  /* mutex and gconf used to control the write method */
+  /* mutex and gcond used to control the write method */
   GMutex *write_mutex;
   GCond *sleep_cond;
   gboolean flushing;
