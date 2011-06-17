@@ -887,9 +887,9 @@ gst_video_frame_map (GstVideoFrame * frame, GstVideoInfo * info,
     GstBuffer * buffer, GstMapFlags flags)
 {
   GstMetaVideo *meta;
-  gint i;
   guint8 *data;
   gsize size;
+  gint i;
 
   g_return_val_if_fail (frame != NULL, FALSE);
   g_return_val_if_fail (info != NULL, FALSE);
@@ -900,7 +900,16 @@ gst_video_frame_map (GstVideoFrame * frame, GstVideoInfo * info,
   frame->meta = meta;
 
   if (meta) {
-    /* FIXME use metadata */
+    frame->info.flags = meta->flags;
+    frame->info.format = meta->format;
+    frame->info.width = meta->width;
+    frame->info.height = meta->height;
+    frame->info.n_planes = meta->n_planes;
+
+    for (i = 0; i < info->n_planes; i++) {
+      frame->data[i] =
+          gst_meta_video_map (meta, i, &frame->info.plane[i].stride, flags);
+    }
   } else {
     /* copy the info */
     frame->info = *info;
@@ -937,7 +946,7 @@ gst_video_frame_unmap (GstVideoFrame * frame)
 {
   GstBuffer *buffer;
   GstMetaVideo *meta;
-  guint8 *data;
+  gint i;
 
   g_return_if_fail (frame != NULL);
 
@@ -945,8 +954,12 @@ gst_video_frame_unmap (GstVideoFrame * frame)
   meta = frame->meta;
 
   if (meta) {
-    /* FIXME use metadata */
+    for (i = 0; i < frame->info.n_planes; i++) {
+      gst_meta_video_unmap (meta, i, frame->data[i]);
+    }
   } else {
+    guint8 *data;
+
     data = frame->data[0];
     data -= frame->info.plane[0].offset;
     gst_buffer_unmap (buffer, data, -1);
