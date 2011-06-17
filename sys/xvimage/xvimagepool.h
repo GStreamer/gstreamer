@@ -82,9 +82,6 @@ struct _GstMetaXvImage
   size_t size;
 };
 
-GstBuffer *gst_xvimage_buffer_new (GstXvImageSink *xvimagesink, gint width, gint height,
-    gint in_format);
-
 /* buffer pool functions */
 #define GST_TYPE_XVIMAGE_BUFFER_POOL      (gst_xvimage_buffer_pool_get_type())
 #define GST_IS_XVIMAGE_BUFFER_POOL(obj)   (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_XVIMAGE_BUFFER_POOL))

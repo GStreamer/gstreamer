@@ -81,8 +81,6 @@ struct _GstMetaXImage
   size_t size;
 };
 
-GstBuffer *   gst_ximage_buffer_new    (GstXImageSink *ximagesink, gint width, gint height);
-
 /* buffer pool functions */
 #define GST_TYPE_XIMAGE_BUFFER_POOL      (gst_ximage_buffer_pool_get_type())
 #define GST_IS_XIMAGE_BUFFER_POOL(obj)   (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_XIMAGE_BUFFER_POOL))

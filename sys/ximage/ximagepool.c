@@ -313,21 +313,6 @@ beach:
   gst_object_unref (meta->sink);
 }
 
-GstBuffer *
-gst_ximage_buffer_new (GstXImageSink * ximagesink, gint width, gint height)
-{
-  GstBuffer *buffer;
-  GstMetaXImage *meta;
-
-  buffer = gst_buffer_new ();
-  meta = gst_buffer_add_meta_ximage (buffer, ximagesink, width, height);
-  if (meta == NULL) {
-    gst_buffer_unref (buffer);
-    buffer = NULL;
-  }
-  return buffer;
-}
-
 #ifdef HAVE_XSHM
 /* This function checks that it is actually really possible to create an image
    using XShm */
@@ -510,11 +495,16 @@ ximage_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
   GstXImageBufferPool *xpool = GST_XIMAGE_BUFFER_POOL_CAST (pool);
   GstXImageBufferPoolPrivate *priv = xpool->priv;
   GstBuffer *ximage;
+  GstMetaXImage *meta;
 
-  ximage = gst_ximage_buffer_new (xpool->sink, priv->width, priv->height);
-  if (ximage == NULL)
+  ximage = gst_buffer_new ();
+  meta =
+      gst_buffer_add_meta_ximage (ximage, xpool->sink, priv->width,
+      priv->height);
+  if (meta == NULL) {
+    gst_buffer_unref (ximage);
     goto no_buffer;
-
+  }
   *buffer = ximage;
 
   return GST_FLOW_OK;
