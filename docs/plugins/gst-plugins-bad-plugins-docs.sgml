@@ -89,7 +89,9 @@
     <xi:include href="xml/element-pyramidsegment.xml" />
     <xi:include href="xml/element-rsvgdec.xml" />
     <xi:include href="xml/element-rsvgoverlay.xml" />
-    <xi:include href="xml/element-rtpdtmfdepay.xml" />
+    <xi:include href="xml/element-rtmpsink.xml" />
+    <xi:include href="xml/element-rtmpsrc.xml" />
+    <xi:include href="xml/element-rtpmux.xml" />
     <xi:include href="xml/element-rtpdtmfsrc.xml" />
     <xi:include href="xml/element-rtpdtmfmux.xml" />
     <xi:include href="xml/element-rtpmux.xml" />
@@ -196,6 +198,7 @@
     <xi:include href="xml/plugin-real.xml" />
     <xi:include href="xml/plugin-rfbsrc.xml" />
     <xi:include href="xml/plugin-rsvg.xml" />
+    <xi:include href="xml/plugin-rtmp.xml" />
     <xi:include href="xml/plugin-rtpmux.xml" />
     <xi:include href="xml/plugin-scaletempo.xml" />
     <xi:include href="xml/plugin-sdl.xml" />

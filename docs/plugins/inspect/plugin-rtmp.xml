@@ -1,6 +1,6 @@
 <plugin>
-  <name>rtmpsrc</name>
-  <description>RTMP source</description>
+  <name>rtmp</name>
+  <description>RTMP source and sink</description>
   <filename>../../ext/rtmp/.libs/libgstrtmp.so</filename>
   <basename>libgstrtmp.so</basename>
   <version>0.10.22.1</version>
@@ -9,6 +9,21 @@
   <package>GStreamer Bad Plug-ins git</package>
   <origin>Unknown package origin</origin>
   <elements>
+    <element>
+      <name>rtmpsink</name>
+      <longname>RTMP output sink</longname>
+      <class>Sink/Network</class>
+      <description>Sends FLV content to a server via RTMP</description>
+      <author>Jan Schmidt &lt;thaytan@noraisin.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-flv</details>
+        </caps>
+      </pads>
+    </element>
     <element>
       <name>rtmpsrc</name>
       <longname>RTMP Source</longname>

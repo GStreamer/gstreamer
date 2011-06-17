@@ -1161,6 +1161,34 @@ gst_rsvg_dec_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-rtmpsink</FILE>
+<TITLE>rtmpsink</TITLE>
+GstRTMPSink
+<SUBSECTION Standard>
+GstRTMPSinkClass
+GST_RTMP_SINK
+GST_IS_RTMP_SINK
+GST_TYPE_RTMP_SINK
+gst_rtmp_sink_get_type
+GST_RTMP_SINK_CLASS
+GST_IS_RTMP_SINK_CLASS
+</SECTION>
+
+<SECTION>
+<FILE>element-rtmpsrc</FILE>
+<TITLE>rtmpsrc</TITLE>
+GstRTMPSrc
+<SUBSECTION Standard>
+GstRTMPSrcClass
+GST_RTMP_SRC
+GST_IS_RTMP_SRC
+GST_TYPE_RTMP_SRC
+gst_rtmp_src_get_type
+GST_RTMP_SRC_CLASS
+GST_IS_RTMP_SRC_CLASS
+</SECTION>
+
+<SECTION>
 <FILE>element-rtpdtmfdepay</FILE>
 <TITLE>rtpdtmfdepay</TITLE>
 GstRtpDTMFDepay
