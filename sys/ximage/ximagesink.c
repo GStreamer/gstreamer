@@ -1059,11 +1059,9 @@ gst_ximagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
 {
   GstXImageSink *ximagesink;
   GstStructure *structure;
+  GstVideoInfo info;
   GstBufferPool *newpool, *oldpool;
-  gboolean ret = TRUE;
   const GValue *par;
-  gint new_width, new_height;
-  const GValue *fps;
   gint size;
 
   ximagesink = GST_XIMAGESINK (bsink);
@@ -1079,19 +1077,12 @@ gst_ximagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   if (!gst_caps_can_intersect (ximagesink->xcontext->caps, caps))
     goto incompatible_caps;
 
+  if (!gst_video_info_from_caps (&info, caps))
+    goto invalid_format;
+
+  size = info.size;
+
   structure = gst_caps_get_structure (caps, 0);
-
-  ret &= gst_structure_get_int (structure, "width", &new_width);
-  ret &= gst_structure_get_int (structure, "height", &new_height);
-  fps = gst_structure_get_value (structure, "framerate");
-  ret &= (fps != NULL);
-
-  if (!ret)
-    return FALSE;
-
-  if (!gst_video_get_size_from_caps (caps, &size))
-    return FALSE;
-
   /* if the caps contain pixel-aspect-ratio, they have to match ours,
    * otherwise linking should fail */
   par = gst_structure_get_value (structure, "pixel-aspect-ratio");
@@ -1107,10 +1098,10 @@ gst_ximagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
     }
   }
 
-  GST_VIDEO_SINK_WIDTH (ximagesink) = new_width;
-  GST_VIDEO_SINK_HEIGHT (ximagesink) = new_height;
-  ximagesink->fps_n = gst_value_get_fraction_numerator (fps);
-  ximagesink->fps_d = gst_value_get_fraction_denominator (fps);
+  GST_VIDEO_SINK_WIDTH (ximagesink) = info.width;
+  GST_VIDEO_SINK_HEIGHT (ximagesink) = info.height;
+  ximagesink->fps_n = info.fps_n;
+  ximagesink->fps_d = info.fps_d;
 
   /* Notify application to set xwindow id now */
   g_mutex_lock (ximagesink->flow_lock);
@@ -1162,6 +1153,11 @@ gst_ximagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
 incompatible_caps:
   {
     GST_ERROR_OBJECT (ximagesink, "caps incompatible");
+    return FALSE;
+  }
+invalid_format:
+  {
+    GST_ERROR_OBJECT (ximagesink, "caps invalid");
     return FALSE;
   }
 wrong_aspect:
@@ -1446,17 +1442,16 @@ gst_ximagesink_sink_query (GstPad * sinkpad, GstQuery * query)
         }
       }
       if (pool == NULL && need_pool) {
-        GstVideoFormat format;
-        gint width, height;
+        GstVideoInfo info;
 
         GST_DEBUG_OBJECT (ximagesink, "create new pool");
         pool = gst_ximage_buffer_pool_new (ximagesink);
 
-        if (!gst_video_format_parse_caps (caps, &format, &width, &height))
+        if (!gst_video_info_from_caps (&info, caps))
           goto invalid_caps;
 
         /* the normal size of a frame */
-        size = gst_video_format_get_size (format, width, height);
+        size = info.size;
 
         config = gst_buffer_pool_get_config (pool);
         gst_buffer_pool_config_set (config, caps, size, 0, 0, 0, 15);

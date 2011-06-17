@@ -61,7 +61,6 @@
 #include <stdlib.h>             /* free */
 
 #include <gst/tag/tag.h>
-#include <gst/video/video.h>
 
 #define GST_CAT_DEFAULT theoraenc_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
@@ -652,54 +651,50 @@ theora_enc_sink_getcaps (GstPad * pad, GstCaps * filter)
 static gboolean
 theora_enc_sink_setcaps (GstTheoraEnc * enc, GstCaps * caps)
 {
-  GstStructure *structure = gst_caps_get_structure (caps, 0);
-  guint32 fourcc;
-  const GValue *par;
-  gint fps_n, fps_d;
-
-  gst_structure_get_fourcc (structure, "format", &fourcc);
-  gst_structure_get_int (structure, "width", &enc->width);
-  gst_structure_get_int (structure, "height", &enc->height);
-  gst_structure_get_fraction (structure, "framerate", &fps_n, &fps_d);
-  par = gst_structure_get_value (structure, "pixel-aspect-ratio");
+  GstVideoInfo info;
 
   th_info_clear (&enc->info);
   th_info_init (&enc->info);
+
+  if (!gst_video_info_from_caps (&info, caps))
+    goto invalid_caps;
+
+  enc->vinfo = info;
+
   /* Theora has a divisible-by-sixteen restriction for the encoded video size but
    * we can define a picture area using pic_width/pic_height */
-  enc->info.frame_width = GST_ROUND_UP_16 (enc->width);
-  enc->info.frame_height = GST_ROUND_UP_16 (enc->height);
-  enc->info.pic_width = enc->width;
-  enc->info.pic_height = enc->height;
-  switch (fourcc) {
-    case GST_MAKE_FOURCC ('I', '4', '2', '0'):
+  enc->info.frame_width = GST_ROUND_UP_16 (info.width);
+  enc->info.frame_height = GST_ROUND_UP_16 (info.height);
+  enc->info.pic_width = info.width;
+  enc->info.pic_height = info.height;
+
+  switch (info.format) {
+    case GST_VIDEO_FORMAT_I420:
       enc->info.pixel_fmt = TH_PF_420;
       break;
-    case GST_MAKE_FOURCC ('Y', '4', '2', 'B'):
+    case GST_VIDEO_FORMAT_Y42B:
       enc->info.pixel_fmt = TH_PF_422;
       break;
-    case GST_MAKE_FOURCC ('Y', '4', '4', '4'):
+    case GST_VIDEO_FORMAT_Y444:
       enc->info.pixel_fmt = TH_PF_444;
       break;
     default:
       g_assert_not_reached ();
   }
 
-  enc->info.fps_numerator = enc->fps_n = fps_n;
-  enc->info.fps_denominator = enc->fps_d = fps_d;
-  if (par) {
-    enc->info.aspect_numerator = gst_value_get_fraction_numerator (par);
-    enc->par_n = gst_value_get_fraction_numerator (par);
-    enc->info.aspect_denominator = gst_value_get_fraction_denominator (par);
-    enc->par_d = gst_value_get_fraction_denominator (par);
-  } else {
-    /* setting them to 0 indicates that the decoder can chose a good aspect
-     * ratio, defaulting to 1/1 */
-    enc->info.aspect_numerator = 0;
-    enc->par_n = 1;
-    enc->info.aspect_denominator = 0;
-    enc->par_d = 1;
-  }
+  enc->info.fps_numerator = info.fps_n;
+  enc->info.fps_denominator = info.fps_d;
+
+  enc->info.aspect_numerator = info.par_n;
+  enc->info.aspect_denominator = info.par_d;
+#if 0
+  /* setting them to 0 indicates that the decoder can chose a good aspect
+   * ratio, defaulting to 1/1 */
+  enc->info.aspect_numerator = 0;
+  enc->par_n = 1;
+  enc->info.aspect_denominator = 0;
+  enc->par_d = 1;
+#endif
 
   enc->info.colorspace = TH_CS_UNSPECIFIED;
 
@@ -713,6 +708,13 @@ theora_enc_sink_setcaps (GstTheoraEnc * enc, GstCaps * caps)
   enc->initialised = TRUE;
 
   return TRUE;
+
+  /* ERRORS */
+invalid_caps:
+  {
+    GST_DEBUG_OBJECT (enc, "could not parse caps");
+    return FALSE;
+  }
 }
 
 static guint64
@@ -853,7 +855,8 @@ theora_enc_force_keyframe (GstTheoraEnc * enc)
 
   theora_enc_reset (enc);
   enc->granulepos_offset =
-      gst_util_uint64_scale (next_ts, enc->fps_n, GST_SECOND * enc->fps_d);
+      gst_util_uint64_scale (next_ts, enc->vinfo.fps_n,
+      GST_SECOND * enc->vinfo.fps_d);
   enc->timestamp_offset = next_ts;
   enc->next_ts = 0;
 }
@@ -992,7 +995,8 @@ theora_enc_is_discontinuous (GstTheoraEnc * enc, GstClockTime timestamp,
 }
 
 static void
-theora_enc_init_buffer (th_ycbcr_buffer buf, th_info * info, guint8 * data)
+theora_enc_init_buffer (th_ycbcr_buffer buf, th_info * info,
+    GstVideoFrame * frame)
 {
   GstVideoFormat format;
   guint i;
@@ -1024,11 +1028,8 @@ theora_enc_init_buffer (th_ycbcr_buffer buf, th_info * info, guint8 * data)
     buf[i].height =
         gst_video_format_get_component_height (format, i, info->frame_height);
 
-    buf[i].data =
-        data + gst_video_format_get_component_offset (format, i,
-        info->pic_width, info->pic_height);
-    buf[i].stride =
-        gst_video_format_get_row_stride (format, i, info->pic_width);
+    buf[i].data = frame->data[i];
+    buf[i].stride = frame->info.plane[i].stride;
   }
 }
 
@@ -1143,17 +1144,16 @@ theora_enc_encode_and_push (GstTheoraEnc * enc, ogg_packet op,
   GstFlowReturn ret;
   th_ycbcr_buffer ycbcr;
   gint res;
-  guint8 *data;
-  gsize size;
+  GstVideoFrame frame;
 
-  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
-  theora_enc_init_buffer (ycbcr, &enc->info, data);
+  gst_video_frame_map (&frame, &enc->vinfo, buffer, GST_MAP_READ);
+  theora_enc_init_buffer (ycbcr, &enc->info, &frame);
 
   if (theora_enc_is_discontinuous (enc, running_time, duration)) {
     theora_enc_reset (enc);
     enc->granulepos_offset =
-        gst_util_uint64_scale (running_time, enc->fps_n,
-        GST_SECOND * enc->fps_d);
+        gst_util_uint64_scale (running_time, enc->vinfo.fps_n,
+        GST_SECOND * enc->vinfo.fps_d);
     enc->timestamp_offset = running_time;
     enc->next_ts = 0;
     enc->next_discont = TRUE;
@@ -1195,7 +1195,7 @@ theora_enc_encode_and_push (GstTheoraEnc * enc, ogg_packet op,
   }
 
 done:
-  gst_buffer_unmap (buffer, data, size);
+  gst_video_frame_unmap (&frame);
   gst_buffer_unref (buffer);
 
   return ret;
@@ -1336,10 +1336,11 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
 
     /* mark buffers and put on caps */
     caps = gst_caps_new_simple ("video/x-theora",
-        "width", G_TYPE_INT, enc->width,
-        "height", G_TYPE_INT, enc->height,
-        "framerate", GST_TYPE_FRACTION, enc->fps_n, enc->fps_d,
-        "pixel-aspect-ratio", GST_TYPE_FRACTION, enc->par_n, enc->par_d, NULL);
+        "width", G_TYPE_INT, enc->vinfo.width,
+        "height", G_TYPE_INT, enc->vinfo.height,
+        "framerate", GST_TYPE_FRACTION, enc->vinfo.fps_n, enc->vinfo.fps_d,
+        "pixel-aspect-ratio", GST_TYPE_FRACTION, enc->vinfo.par_n,
+        enc->vinfo.par_d, NULL);
     caps = theora_set_header_on_caps (caps, buffers);
     GST_DEBUG ("here are the caps: %" GST_PTR_FORMAT, caps);
     gst_pad_set_caps (enc->srcpad, caps);
@@ -1357,8 +1358,8 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
     }
 
     enc->granulepos_offset =
-        gst_util_uint64_scale (running_time, enc->fps_n,
-        GST_SECOND * enc->fps_d);
+        gst_util_uint64_scale (running_time, enc->vinfo.fps_n,
+        GST_SECOND * enc->vinfo.fps_d);
     enc->timestamp_offset = running_time;
     enc->next_ts = 0;
   }

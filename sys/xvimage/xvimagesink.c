@@ -1530,16 +1530,13 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   GstXvImageSink *xvimagesink;
   GstStructure *structure;
   GstBufferPool *newpool, *oldpool;
-  gboolean ret;
+  GstVideoInfo info;
   guint32 im_format = 0;
-  gint video_width, video_height;
   gint disp_x, disp_y;
   gint disp_width, disp_height;
   gint video_par_n, video_par_d;        /* video's PAR */
   gint display_par_n, display_par_d;    /* display's PAR */
-  const GValue *caps_par;
   const GValue *caps_disp_reg;
-  const GValue *fps;
   guint num, den;
   gint size;
 
@@ -1552,41 +1549,31 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   if (!gst_caps_can_intersect (xvimagesink->xcontext->caps, caps))
     goto incompatible_caps;
 
+  if (!gst_video_info_from_caps (&info, caps))
+    goto invalid_format;
+
   structure = gst_caps_get_structure (caps, 0);
-  ret = gst_structure_get_int (structure, "width", &video_width);
-  ret &= gst_structure_get_int (structure, "height", &video_height);
-  fps = gst_structure_get_value (structure, "framerate");
-  ret &= (fps != NULL);
 
-  if (!ret)
-    goto incomplete_caps;
+  xvimagesink->fps_n = info.fps_n;
+  xvimagesink->fps_d = info.fps_d;
 
-  xvimagesink->fps_n = gst_value_get_fraction_numerator (fps);
-  xvimagesink->fps_d = gst_value_get_fraction_denominator (fps);
-
-  xvimagesink->video_width = video_width;
-  xvimagesink->video_height = video_height;
+  xvimagesink->video_width = info.width;
+  xvimagesink->video_height = info.height;
 
   im_format = gst_xvimagesink_get_format_from_caps (xvimagesink, caps);
   if (im_format == -1)
     goto invalid_format;
 
-  if (!gst_video_get_size_from_caps (caps, &size))
-    goto invalid_format;
+  size = info.size;
 
   /* get aspect ratio from caps if it's present, and
    * convert video width and height to a display width and height
    * using wd / hd = wv / hv * PARv / PARd */
 
   /* get video's PAR */
-  caps_par = gst_structure_get_value (structure, "pixel-aspect-ratio");
-  if (caps_par) {
-    video_par_n = gst_value_get_fraction_numerator (caps_par);
-    video_par_d = gst_value_get_fraction_denominator (caps_par);
-  } else {
-    video_par_n = 1;
-    video_par_d = 1;
-  }
+  video_par_n = info.par_n;
+  video_par_d = info.par_d;
+
   /* get display's PAR */
   if (xvimagesink->par) {
     display_par_n = gst_value_get_fraction_numerator (xvimagesink->par);
@@ -1606,12 +1593,12 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
         g_value_get_int (gst_value_array_get_value (caps_disp_reg, 3));
   } else {
     disp_x = disp_y = 0;
-    disp_width = video_width;
-    disp_height = video_height;
+    disp_width = info.width;
+    disp_height = info.height;
   }
 
-  if (!gst_video_calculate_display_ratio (&num, &den, video_width,
-          video_height, video_par_n, video_par_d, display_par_n, display_par_d))
+  if (!gst_video_calculate_display_ratio (&num, &den, info.width,
+          info.height, video_par_n, video_par_d, display_par_n, display_par_d))
     goto no_disp_ratio;
 
   xvimagesink->disp_x = disp_x;
@@ -1621,7 +1608,7 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
 
   GST_DEBUG_OBJECT (xvimagesink,
       "video width/height: %dx%d, calculated display ratio: %d/%d",
-      video_width, video_height, num, den);
+      info.width, info.height, num, den);
 
   /* now find a width x height that respects this display ratio.
    * prefer those that have one of w/h the same as the incoming video
@@ -1629,21 +1616,21 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
 
   /* start with same height, because of interlaced video */
   /* check hd / den is an integer scale factor, and scale wd with the PAR */
-  if (video_height % den == 0) {
+  if (info.height % den == 0) {
     GST_DEBUG_OBJECT (xvimagesink, "keeping video height");
     GST_VIDEO_SINK_WIDTH (xvimagesink) = (guint)
-        gst_util_uint64_scale_int (video_height, num, den);
-    GST_VIDEO_SINK_HEIGHT (xvimagesink) = video_height;
-  } else if (video_width % num == 0) {
+        gst_util_uint64_scale_int (info.height, num, den);
+    GST_VIDEO_SINK_HEIGHT (xvimagesink) = info.height;
+  } else if (info.width % num == 0) {
     GST_DEBUG_OBJECT (xvimagesink, "keeping video width");
-    GST_VIDEO_SINK_WIDTH (xvimagesink) = video_width;
+    GST_VIDEO_SINK_WIDTH (xvimagesink) = info.width;
     GST_VIDEO_SINK_HEIGHT (xvimagesink) = (guint)
-        gst_util_uint64_scale_int (video_width, den, num);
+        gst_util_uint64_scale_int (info.width, den, num);
   } else {
     GST_DEBUG_OBJECT (xvimagesink, "approximating while keeping video height");
     GST_VIDEO_SINK_WIDTH (xvimagesink) = (guint)
-        gst_util_uint64_scale_int (video_height, num, den);
-    GST_VIDEO_SINK_HEIGHT (xvimagesink) = video_height;
+        gst_util_uint64_scale_int (info.height, num, den);
+    GST_VIDEO_SINK_HEIGHT (xvimagesink) = info.height;
   }
   GST_DEBUG_OBJECT (xvimagesink, "scaling to %dx%d",
       GST_VIDEO_SINK_WIDTH (xvimagesink), GST_VIDEO_SINK_HEIGHT (xvimagesink));
@@ -1701,12 +1688,6 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
 incompatible_caps:
   {
     GST_ERROR_OBJECT (xvimagesink, "caps incompatible");
-    return FALSE;
-  }
-incomplete_caps:
-  {
-    GST_DEBUG_OBJECT (xvimagesink, "Failed to retrieve either width, "
-        "height or framerate from intersected caps");
     return FALSE;
   }
 invalid_format:
@@ -1999,17 +1980,16 @@ gst_xvimagesink_sink_query (GstPad * sinkpad, GstQuery * query)
         }
       }
       if (pool == NULL && need_pool) {
-        GstVideoFormat format;
-        gint width, height;
+        GstVideoInfo info;
 
         GST_DEBUG_OBJECT (xvimagesink, "create new pool");
         pool = gst_xvimage_buffer_pool_new (xvimagesink);
 
-        if (!gst_video_format_parse_caps (caps, &format, &width, &height))
+        if (!gst_video_info_from_caps (&info, caps))
           goto invalid_caps;
 
         /* the normal size of a frame */
-        size = gst_video_format_get_size (format, width, height);
+        size = info.size;
 
         config = gst_buffer_pool_get_config (pool);
         gst_buffer_pool_config_set (config, caps, size, 0, 0, 0, 15);

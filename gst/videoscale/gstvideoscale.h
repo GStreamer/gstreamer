@@ -71,13 +71,8 @@ struct _GstVideoScale {
   gboolean add_borders;
 
   /* negotiated stuff */
-  GstVideoFormat format;
-  gint to_width;
-  gint to_height;
-  gint from_width;
-  gint from_height;
-  guint src_size;
-  guint dest_size;
+  GstVideoInfo from_info;
+  GstVideoInfo to_info;
 
   gint borders_h;
   gint borders_w;

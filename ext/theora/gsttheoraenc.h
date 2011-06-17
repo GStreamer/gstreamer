@@ -24,6 +24,8 @@
 #include <gst/base/gstadapter.h>
 #include <theora/theoraenc.h>
 
+#include <gst/video/video.h>
+
 G_BEGIN_DECLS
 
 #define GST_TYPE_THEORA_ENC \
@@ -99,10 +101,8 @@ struct _GstTheoraEnc
   gint keyframe_freq;
   gint keyframe_force;
 
+  GstVideoInfo vinfo;
   gint info_width, info_height;
-  gint width, height;
-  gint fps_n, fps_d;
-  gint par_n, par_d;
   GstClockTime next_ts;
 
   GstClockTime expected_ts;

@@ -69,8 +69,8 @@ struct _GstTheoraDec
   GstClockTime last_timestamp;
   guint64 frame_nr;
   gboolean need_keyframe;
-  GstVideoFormat format;
-  gint width, height;
+  GstVideoInfo vinfo;
+
   gint offset_x, offset_y;
   gint output_bpp;
   GstBufferPool *pool;

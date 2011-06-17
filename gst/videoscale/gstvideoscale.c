@@ -351,36 +351,23 @@ gst_video_scale_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
 {
   GstVideoScale *videoscale = GST_VIDEO_SCALE (trans);
   gboolean ret;
+  GstVideoInfo in_info, out_info;
   gint from_dar_n, from_dar_d, to_dar_n, to_dar_d;
-  gint from_par_n, from_par_d, to_par_n, to_par_d;
 
-  ret =
-      gst_video_format_parse_caps (in, &videoscale->format,
-      &videoscale->from_width, &videoscale->from_height);
-  ret &=
-      gst_video_format_parse_caps (out, NULL, &videoscale->to_width,
-      &videoscale->to_height);
+  ret = gst_video_info_from_caps (&in_info, in);
+  ret &= gst_video_info_from_caps (&out_info, out);
   if (!ret)
-    goto done;
+    goto invalid_formats;
 
-  videoscale->src_size = gst_video_format_get_size (videoscale->format,
-      videoscale->from_width, videoscale->from_height);
-  videoscale->dest_size = gst_video_format_get_size (videoscale->format,
-      videoscale->to_width, videoscale->to_height);
-
-  if (!gst_video_parse_caps_pixel_aspect_ratio (in, &from_par_n, &from_par_d))
-    from_par_n = from_par_d = 1;
-  if (!gst_video_parse_caps_pixel_aspect_ratio (out, &to_par_n, &to_par_d))
-    to_par_n = to_par_d = 1;
-
-  if (!gst_util_fraction_multiply (videoscale->from_width,
-          videoscale->from_height, from_par_n, from_par_d, &from_dar_n,
+  if (!gst_util_fraction_multiply (in_info.width,
+          in_info.height, out_info.par_n, out_info.par_d, &from_dar_n,
           &from_dar_d)) {
     from_dar_n = from_dar_d = -1;
   }
 
-  if (!gst_util_fraction_multiply (videoscale->to_width,
-          videoscale->to_height, to_par_n, to_par_d, &to_dar_n, &to_dar_d)) {
+  if (!gst_util_fraction_multiply (out_info.width,
+          out_info.height, out_info.par_n, out_info.par_d, &to_dar_n,
+          &to_dar_d)) {
     to_dar_n = to_dar_d = -1;
   }
 
@@ -390,17 +377,17 @@ gst_video_scale_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
       gint n, d, to_h, to_w;
 
       if (from_dar_n != -1 && from_dar_d != -1
-          && gst_util_fraction_multiply (from_dar_n, from_dar_d, to_par_n,
-              to_par_d, &n, &d)) {
-        to_h = gst_util_uint64_scale_int (videoscale->to_width, d, n);
-        if (to_h <= videoscale->to_height) {
-          videoscale->borders_h = videoscale->to_height - to_h;
+          && gst_util_fraction_multiply (from_dar_n, from_dar_d, out_info.par_n,
+              out_info.par_d, &n, &d)) {
+        to_h = gst_util_uint64_scale_int (out_info.width, d, n);
+        if (to_h <= out_info.height) {
+          videoscale->borders_h = out_info.height - to_h;
           videoscale->borders_w = 0;
         } else {
-          to_w = gst_util_uint64_scale_int (videoscale->to_height, n, d);
-          g_assert (to_w <= videoscale->to_width);
+          to_w = gst_util_uint64_scale_int (out_info.height, n, d);
+          g_assert (to_w <= out_info.width);
           videoscale->borders_h = 0;
-          videoscale->borders_w = videoscale->to_width - to_w;
+          videoscale->borders_w = out_info.width - to_w;
         }
       } else {
         GST_WARNING_OBJECT (videoscale, "Can't calculate borders");
@@ -412,34 +399,41 @@ gst_video_scale_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
 
   if (videoscale->tmp_buf)
     g_free (videoscale->tmp_buf);
-  videoscale->tmp_buf = g_malloc (videoscale->to_width * 8 * 4);
+  videoscale->tmp_buf = g_malloc (out_info.width * 8 * 4);
 
   gst_base_transform_set_passthrough (trans,
-      (videoscale->from_width == videoscale->to_width
-          && videoscale->from_height == videoscale->to_height));
+      (in_info.width == out_info.width && in_info.height == out_info.height));
 
   GST_DEBUG_OBJECT (videoscale, "from=%dx%d (par=%d/%d dar=%d/%d), size %d "
       "-> to=%dx%d (par=%d/%d dar=%d/%d borders=%d:%d), size %d",
-      videoscale->from_width, videoscale->from_height, from_par_n, from_par_d,
-      from_dar_n, from_dar_d, videoscale->src_size, videoscale->to_width,
-      videoscale->to_height, to_par_n, to_par_d, to_dar_n, to_dar_d,
-      videoscale->borders_w, videoscale->borders_h, videoscale->dest_size);
+      in_info.width, in_info.height, out_info.par_n, out_info.par_d,
+      from_dar_n, from_dar_d, in_info.size, out_info.width,
+      out_info.height, out_info.par_n, out_info.par_d, to_dar_n, to_dar_d,
+      videoscale->borders_w, videoscale->borders_h, out_info.size);
 
-done:
-  return ret;
+  videoscale->from_info = in_info;
+  videoscale->to_info = out_info;
+
+  return TRUE;
+
+  /* ERRORS */
+invalid_formats:
+  {
+    GST_DEBUG_OBJECT (videoscale, "could not parse formats");
+    return FALSE;
+  }
 }
 
 static gboolean
 gst_video_scale_get_unit_size (GstBaseTransform * trans, GstCaps * caps,
     gsize * size)
 {
-  GstVideoFormat format;
-  gint width, height;
+  GstVideoInfo info;
 
-  if (!gst_video_format_parse_caps (caps, &format, &width, &height))
+  if (!gst_video_info_from_caps (&info, caps))
     return FALSE;
 
-  *size = gst_video_format_get_size (format, width, height);
+  *size = info.size;
 
   return TRUE;
 }
@@ -879,9 +873,16 @@ done:
 }
 
 static void
-gst_video_scale_setup_vs_image (VSImage * image, GstVideoFormat format,
-    gint component, gint width, gint height, gint b_w, gint b_h, uint8_t * data)
+gst_video_scale_setup_vs_image (VSImage * image, GstVideoFrame * frame,
+    gint component, gint b_w, gint b_h)
 {
+  GstVideoFormat format;
+  gint width, height;
+
+  format = frame->info.format;
+  width = frame->info.width;
+  height = frame->info.height;
+
   image->real_width =
       gst_video_format_get_component_width (format, component, width);
   image->real_height =
@@ -892,7 +893,6 @@ gst_video_scale_setup_vs_image (VSImage * image, GstVideoFormat format,
   image->height =
       gst_video_format_get_component_height (format, component, MAX (1,
           height - b_h));
-  image->stride = gst_video_format_get_row_stride (format, component, width);
 
   image->border_top = (image->real_height - image->height) / 2;
   image->border_bottom = image->real_height - image->height - image->border_top;
@@ -911,16 +911,8 @@ gst_video_scale_setup_vs_image (VSImage * image, GstVideoFormat format,
     image->border_right = image->real_width - image->width - image->border_left;
   }
 
-  if (format == GST_VIDEO_FORMAT_I420
-      || format == GST_VIDEO_FORMAT_YV12
-      || format == GST_VIDEO_FORMAT_Y444
-      || format == GST_VIDEO_FORMAT_Y42B || format == GST_VIDEO_FORMAT_Y41B) {
-    image->real_pixels = data + gst_video_format_get_component_offset (format,
-        component, width, height);
-  } else {
-    g_assert (component == 0);
-    image->real_pixels = data;
-  }
+  image->real_pixels = frame->data[component];
+  image->stride = frame->info.plane[component].stride;
 
   image->pixels =
       image->real_pixels + image->border_top * image->stride +
@@ -995,58 +987,41 @@ gst_video_scale_transform (GstBaseTransform * trans, GstBuffer * in,
 {
   GstVideoScale *videoscale = GST_VIDEO_SCALE (trans);
   GstFlowReturn ret = GST_FLOW_OK;
-  VSImage dest = { NULL, };
-  VSImage src = { NULL, };
-  VSImage dest_u = { NULL, };
-  VSImage dest_v = { NULL, };
-  VSImage src_u = { NULL, };
-  VSImage src_v = { NULL, };
+  GstVideoFrame in_frame, out_frame;
+  VSImage dest[4] = { {NULL,}, };
+  VSImage src[4] = { {NULL,}, };
   gint method;
-  const guint8 *black = _get_black_for_format (videoscale->format);
+  const guint8 *black;
   gboolean add_borders;
-  guint8 *in_data, *out_data;
-  gsize in_size, out_size;
+  GstVideoFormat format;
+  gint i;
 
   GST_OBJECT_LOCK (videoscale);
   method = videoscale->method;
   add_borders = videoscale->add_borders;
   GST_OBJECT_UNLOCK (videoscale);
 
-  if (videoscale->from_width == 1) {
+  format = videoscale->from_info.format;
+  black = _get_black_for_format (format);
+
+  if (videoscale->from_info.width == 1) {
     method = GST_VIDEO_SCALE_NEAREST;
   }
   if (method == GST_VIDEO_SCALE_4TAP &&
-      (videoscale->from_width < 4 || videoscale->from_height < 4)) {
+      (videoscale->from_info.width < 4 || videoscale->from_info.height < 4)) {
     method = GST_VIDEO_SCALE_BILINEAR;
   }
 
-  in_data = gst_buffer_map (in, &in_size, NULL, GST_MAP_READ);
-  out_data = gst_buffer_map (out, &out_size, NULL, GST_MAP_WRITE);
+  gst_video_frame_map (&in_frame, &videoscale->from_info, in, GST_MAP_READ);
+  gst_video_frame_map (&out_frame, &videoscale->to_info, out, GST_MAP_WRITE);
 
-  gst_video_scale_setup_vs_image (&src, videoscale->format, 0,
-      videoscale->from_width, videoscale->from_height, 0, 0, in_data);
-  gst_video_scale_setup_vs_image (&dest, videoscale->format, 0,
-      videoscale->to_width, videoscale->to_height, videoscale->borders_w,
-      videoscale->borders_h, out_data);
-
-  if (videoscale->format == GST_VIDEO_FORMAT_I420
-      || videoscale->format == GST_VIDEO_FORMAT_YV12
-      || videoscale->format == GST_VIDEO_FORMAT_Y444
-      || videoscale->format == GST_VIDEO_FORMAT_Y42B
-      || videoscale->format == GST_VIDEO_FORMAT_Y41B) {
-    gst_video_scale_setup_vs_image (&src_u, videoscale->format, 1,
-        videoscale->from_width, videoscale->from_height, 0, 0, in_data);
-    gst_video_scale_setup_vs_image (&src_v, videoscale->format, 2,
-        videoscale->from_width, videoscale->from_height, 0, 0, in_data);
-    gst_video_scale_setup_vs_image (&dest_u, videoscale->format, 1,
-        videoscale->to_width, videoscale->to_height, videoscale->borders_w,
-        videoscale->borders_h, out_data);
-    gst_video_scale_setup_vs_image (&dest_v, videoscale->format, 2,
-        videoscale->to_width, videoscale->to_height, videoscale->borders_w,
-        videoscale->borders_h, out_data);
+  for (i = 0; i < in_frame.info.n_planes; i++) {
+    gst_video_scale_setup_vs_image (&src[i], &in_frame, i, 0, 0);
+    gst_video_scale_setup_vs_image (&dest[i], &out_frame, i,
+        videoscale->borders_w, videoscale->borders_h);
   }
 
-  switch (videoscale->format) {
+  switch (format) {
     case GST_VIDEO_FORMAT_RGBx:
     case GST_VIDEO_FORMAT_xRGB:
     case GST_VIDEO_FORMAT_BGRx:
@@ -1057,16 +1032,16 @@ gst_video_scale_transform (GstBaseTransform * trans, GstBuffer * in,
     case GST_VIDEO_FORMAT_ABGR:
     case GST_VIDEO_FORMAT_AYUV:
       if (add_borders)
-        vs_fill_borders_RGBA (&dest, black);
+        vs_fill_borders_RGBA (&dest[0], black);
       switch (method) {
         case GST_VIDEO_SCALE_NEAREST:
-          vs_image_scale_nearest_RGBA (&dest, &src, videoscale->tmp_buf);
+          vs_image_scale_nearest_RGBA (&dest[0], &src[0], videoscale->tmp_buf);
           break;
         case GST_VIDEO_SCALE_BILINEAR:
-          vs_image_scale_linear_RGBA (&dest, &src, videoscale->tmp_buf);
+          vs_image_scale_linear_RGBA (&dest[0], &src[0], videoscale->tmp_buf);
           break;
         case GST_VIDEO_SCALE_4TAP:
-          vs_image_scale_4tap_RGBA (&dest, &src, videoscale->tmp_buf);
+          vs_image_scale_4tap_RGBA (&dest[0], &src[0], videoscale->tmp_buf);
           break;
         default:
           goto unknown_mode;
@@ -1075,16 +1050,17 @@ gst_video_scale_transform (GstBaseTransform * trans, GstBuffer * in,
     case GST_VIDEO_FORMAT_ARGB64:
     case GST_VIDEO_FORMAT_AYUV64:
       if (add_borders)
-        vs_fill_borders_AYUV64 (&dest, black);
+        vs_fill_borders_AYUV64 (&dest[0], black);
       switch (method) {
         case GST_VIDEO_SCALE_NEAREST:
-          vs_image_scale_nearest_AYUV64 (&dest, &src, videoscale->tmp_buf);
+          vs_image_scale_nearest_AYUV64 (&dest[0], &src[0],
+              videoscale->tmp_buf);
           break;
         case GST_VIDEO_SCALE_BILINEAR:
-          vs_image_scale_linear_AYUV64 (&dest, &src, videoscale->tmp_buf);
+          vs_image_scale_linear_AYUV64 (&dest[0], &src[0], videoscale->tmp_buf);
           break;
         case GST_VIDEO_SCALE_4TAP:
-          vs_image_scale_4tap_AYUV64 (&dest, &src, videoscale->tmp_buf);
+          vs_image_scale_4tap_AYUV64 (&dest[0], &src[0], videoscale->tmp_buf);
           break;
         default:
           goto unknown_mode;
@@ -1094,16 +1070,16 @@ gst_video_scale_transform (GstBaseTransform * trans, GstBuffer * in,
     case GST_VIDEO_FORMAT_BGR:
     case GST_VIDEO_FORMAT_v308:
       if (add_borders)
-        vs_fill_borders_RGB (&dest, black);
+        vs_fill_borders_RGB (&dest[0], black);
       switch (method) {
         case GST_VIDEO_SCALE_NEAREST:
-          vs_image_scale_nearest_RGB (&dest, &src, videoscale->tmp_buf);
+          vs_image_scale_nearest_RGB (&dest[0], &src[0], videoscale->tmp_buf);
           break;
         case GST_VIDEO_SCALE_BILINEAR:
-          vs_image_scale_linear_RGB (&dest, &src, videoscale->tmp_buf);
+          vs_image_scale_linear_RGB (&dest[0], &src[0], videoscale->tmp_buf);
           break;
         case GST_VIDEO_SCALE_4TAP:
-          vs_image_scale_4tap_RGB (&dest, &src, videoscale->tmp_buf);
+          vs_image_scale_4tap_RGB (&dest[0], &src[0], videoscale->tmp_buf);
           break;
         default:
           goto unknown_mode;
@@ -1112,16 +1088,16 @@ gst_video_scale_transform (GstBaseTransform * trans, GstBuffer * in,
     case GST_VIDEO_FORMAT_YUY2:
     case GST_VIDEO_FORMAT_YVYU:
       if (add_borders)
-        vs_fill_borders_YUYV (&dest, black);
+        vs_fill_borders_YUYV (&dest[0], black);
       switch (method) {
         case GST_VIDEO_SCALE_NEAREST:
-          vs_image_scale_nearest_YUYV (&dest, &src, videoscale->tmp_buf);
+          vs_image_scale_nearest_YUYV (&dest[0], &src[0], videoscale->tmp_buf);
           break;
         case GST_VIDEO_SCALE_BILINEAR:
-          vs_image_scale_linear_YUYV (&dest, &src, videoscale->tmp_buf);
+          vs_image_scale_linear_YUYV (&dest[0], &src[0], videoscale->tmp_buf);
           break;
         case GST_VIDEO_SCALE_4TAP:
-          vs_image_scale_4tap_YUYV (&dest, &src, videoscale->tmp_buf);
+          vs_image_scale_4tap_YUYV (&dest[0], &src[0], videoscale->tmp_buf);
           break;
         default:
           goto unknown_mode;
@@ -1129,16 +1105,16 @@ gst_video_scale_transform (GstBaseTransform * trans, GstBuffer * in,
       break;
     case GST_VIDEO_FORMAT_UYVY:
       if (add_borders)
-        vs_fill_borders_UYVY (&dest, black);
+        vs_fill_borders_UYVY (&dest[0], black);
       switch (method) {
         case GST_VIDEO_SCALE_NEAREST:
-          vs_image_scale_nearest_UYVY (&dest, &src, videoscale->tmp_buf);
+          vs_image_scale_nearest_UYVY (&dest[0], &src[0], videoscale->tmp_buf);
           break;
         case GST_VIDEO_SCALE_BILINEAR:
-          vs_image_scale_linear_UYVY (&dest, &src, videoscale->tmp_buf);
+          vs_image_scale_linear_UYVY (&dest[0], &src[0], videoscale->tmp_buf);
           break;
         case GST_VIDEO_SCALE_4TAP:
-          vs_image_scale_4tap_UYVY (&dest, &src, videoscale->tmp_buf);
+          vs_image_scale_4tap_UYVY (&dest[0], &src[0], videoscale->tmp_buf);
           break;
         default:
           goto unknown_mode;
@@ -1147,16 +1123,16 @@ gst_video_scale_transform (GstBaseTransform * trans, GstBuffer * in,
     case GST_VIDEO_FORMAT_Y800:
     case GST_VIDEO_FORMAT_GRAY8:
       if (add_borders)
-        vs_fill_borders_Y (&dest, black);
+        vs_fill_borders_Y (&dest[0], black);
       switch (method) {
         case GST_VIDEO_SCALE_NEAREST:
-          vs_image_scale_nearest_Y (&dest, &src, videoscale->tmp_buf);
+          vs_image_scale_nearest_Y (&dest[0], &src[0], videoscale->tmp_buf);
           break;
         case GST_VIDEO_SCALE_BILINEAR:
-          vs_image_scale_linear_Y (&dest, &src, videoscale->tmp_buf);
+          vs_image_scale_linear_Y (&dest[0], &src[0], videoscale->tmp_buf);
           break;
         case GST_VIDEO_SCALE_4TAP:
-          vs_image_scale_4tap_Y (&dest, &src, videoscale->tmp_buf);
+          vs_image_scale_4tap_Y (&dest[0], &src[0], videoscale->tmp_buf);
           break;
         default:
           goto unknown_mode;
@@ -1166,16 +1142,16 @@ gst_video_scale_transform (GstBaseTransform * trans, GstBuffer * in,
     case GST_VIDEO_FORMAT_GRAY16_BE:
     case GST_VIDEO_FORMAT_Y16:
       if (add_borders)
-        vs_fill_borders_Y16 (&dest, 0);
+        vs_fill_borders_Y16 (&dest[0], 0);
       switch (method) {
         case GST_VIDEO_SCALE_NEAREST:
-          vs_image_scale_nearest_Y16 (&dest, &src, videoscale->tmp_buf);
+          vs_image_scale_nearest_Y16 (&dest[0], &src[0], videoscale->tmp_buf);
           break;
         case GST_VIDEO_SCALE_BILINEAR:
-          vs_image_scale_linear_Y16 (&dest, &src, videoscale->tmp_buf);
+          vs_image_scale_linear_Y16 (&dest[0], &src[0], videoscale->tmp_buf);
           break;
         case GST_VIDEO_SCALE_4TAP:
-          vs_image_scale_4tap_Y16 (&dest, &src, videoscale->tmp_buf);
+          vs_image_scale_4tap_Y16 (&dest[0], &src[0], videoscale->tmp_buf);
           break;
         default:
           goto unknown_mode;
@@ -1187,25 +1163,25 @@ gst_video_scale_transform (GstBaseTransform * trans, GstBuffer * in,
     case GST_VIDEO_FORMAT_Y42B:
     case GST_VIDEO_FORMAT_Y41B:
       if (add_borders) {
-        vs_fill_borders_Y (&dest, black);
-        vs_fill_borders_Y (&dest_u, black + 1);
-        vs_fill_borders_Y (&dest_v, black + 2);
+        vs_fill_borders_Y (&dest[0], black);
+        vs_fill_borders_Y (&dest[1], black + 1);
+        vs_fill_borders_Y (&dest[2], black + 2);
       }
       switch (method) {
         case GST_VIDEO_SCALE_NEAREST:
-          vs_image_scale_nearest_Y (&dest, &src, videoscale->tmp_buf);
-          vs_image_scale_nearest_Y (&dest_u, &src_u, videoscale->tmp_buf);
-          vs_image_scale_nearest_Y (&dest_v, &src_v, videoscale->tmp_buf);
+          vs_image_scale_nearest_Y (&dest[0], &src[0], videoscale->tmp_buf);
+          vs_image_scale_nearest_Y (&dest[1], &src[1], videoscale->tmp_buf);
+          vs_image_scale_nearest_Y (&dest[2], &src[2], videoscale->tmp_buf);
           break;
         case GST_VIDEO_SCALE_BILINEAR:
-          vs_image_scale_linear_Y (&dest, &src, videoscale->tmp_buf);
-          vs_image_scale_linear_Y (&dest_u, &src_u, videoscale->tmp_buf);
-          vs_image_scale_linear_Y (&dest_v, &src_v, videoscale->tmp_buf);
+          vs_image_scale_linear_Y (&dest[0], &src[0], videoscale->tmp_buf);
+          vs_image_scale_linear_Y (&dest[1], &src[1], videoscale->tmp_buf);
+          vs_image_scale_linear_Y (&dest[2], &src[2], videoscale->tmp_buf);
           break;
         case GST_VIDEO_SCALE_4TAP:
-          vs_image_scale_4tap_Y (&dest, &src, videoscale->tmp_buf);
-          vs_image_scale_4tap_Y (&dest_u, &src_u, videoscale->tmp_buf);
-          vs_image_scale_4tap_Y (&dest_v, &src_v, videoscale->tmp_buf);
+          vs_image_scale_4tap_Y (&dest[0], &src[0], videoscale->tmp_buf);
+          vs_image_scale_4tap_Y (&dest[1], &src[1], videoscale->tmp_buf);
+          vs_image_scale_4tap_Y (&dest[2], &src[2], videoscale->tmp_buf);
           break;
         default:
           goto unknown_mode;
@@ -1213,16 +1189,17 @@ gst_video_scale_transform (GstBaseTransform * trans, GstBuffer * in,
       break;
     case GST_VIDEO_FORMAT_RGB16:
       if (add_borders)
-        vs_fill_borders_RGB565 (&dest, black);
+        vs_fill_borders_RGB565 (&dest[0], black);
       switch (method) {
         case GST_VIDEO_SCALE_NEAREST:
-          vs_image_scale_nearest_RGB565 (&dest, &src, videoscale->tmp_buf);
+          vs_image_scale_nearest_RGB565 (&dest[0], &src[0],
+              videoscale->tmp_buf);
           break;
         case GST_VIDEO_SCALE_BILINEAR:
-          vs_image_scale_linear_RGB565 (&dest, &src, videoscale->tmp_buf);
+          vs_image_scale_linear_RGB565 (&dest[0], &src[0], videoscale->tmp_buf);
           break;
         case GST_VIDEO_SCALE_4TAP:
-          vs_image_scale_4tap_RGB565 (&dest, &src, videoscale->tmp_buf);
+          vs_image_scale_4tap_RGB565 (&dest[0], &src[0], videoscale->tmp_buf);
           break;
         default:
           goto unknown_mode;
@@ -1230,16 +1207,17 @@ gst_video_scale_transform (GstBaseTransform * trans, GstBuffer * in,
       break;
     case GST_VIDEO_FORMAT_RGB15:
       if (add_borders)
-        vs_fill_borders_RGB555 (&dest, black);
+        vs_fill_borders_RGB555 (&dest[0], black);
       switch (method) {
         case GST_VIDEO_SCALE_NEAREST:
-          vs_image_scale_nearest_RGB555 (&dest, &src, videoscale->tmp_buf);
+          vs_image_scale_nearest_RGB555 (&dest[0], &src[0],
+              videoscale->tmp_buf);
           break;
         case GST_VIDEO_SCALE_BILINEAR:
-          vs_image_scale_linear_RGB555 (&dest, &src, videoscale->tmp_buf);
+          vs_image_scale_linear_RGB555 (&dest[0], &src[0], videoscale->tmp_buf);
           break;
         case GST_VIDEO_SCALE_4TAP:
-          vs_image_scale_4tap_RGB555 (&dest, &src, videoscale->tmp_buf);
+          vs_image_scale_4tap_RGB555 (&dest[0], &src[0], videoscale->tmp_buf);
           break;
         default:
           goto unknown_mode;
@@ -1253,8 +1231,8 @@ gst_video_scale_transform (GstBaseTransform * trans, GstBuffer * in,
       gst_buffer_get_size (out));
 
 done:
-  gst_buffer_unmap (in, in_data, in_size);
-  gst_buffer_unmap (out, out_data, out_size);
+  gst_video_frame_unmap (&out_frame);
+  gst_video_frame_unmap (&in_frame);
 
   return ret;
 
@@ -1262,8 +1240,7 @@ done:
 unsupported:
   {
     GST_ELEMENT_ERROR (videoscale, STREAM, NOT_IMPLEMENTED, (NULL),
-        ("Unsupported format %d for scaling method %d",
-            videoscale->format, method));
+        ("Unsupported format %d for scaling method %d", format, method));
     ret = GST_FLOW_ERROR;
     goto done;
   }
@@ -1295,11 +1272,12 @@ gst_video_scale_src_event (GstBaseTransform * trans, GstEvent * event)
       structure = (GstStructure *) gst_event_get_structure (event);
       if (gst_structure_get_double (structure, "pointer_x", &a)) {
         gst_structure_set (structure, "pointer_x", G_TYPE_DOUBLE,
-            a * videoscale->from_width / videoscale->to_width, NULL);
+            a * videoscale->from_info.width / videoscale->to_info.width, NULL);
       }
       if (gst_structure_get_double (structure, "pointer_y", &a)) {
         gst_structure_set (structure, "pointer_y", G_TYPE_DOUBLE,
-            a * videoscale->from_height / videoscale->to_height, NULL);
+            a * videoscale->from_info.height / videoscale->to_info.height,
+            NULL);
       }
       break;
     default:

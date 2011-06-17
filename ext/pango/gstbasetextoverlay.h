@@ -115,11 +115,10 @@ struct _GstBaseTextOverlay {
                                      * a text segment update, or a change
                                      * in status (e.g. shutdown, flushing) */
 
+    GstVideoInfo             info;
+    GstVideoFormat           format;
     gint                     width;
     gint                     height;
-    gint                     fps_n;
-    gint                     fps_d;
-    GstVideoFormat           format;
 
     GstBaseTextOverlayVAlign     valign;
     GstBaseTextOverlayHAlign     halign;

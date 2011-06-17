@@ -169,6 +169,7 @@ gst_video_convert_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
   GstVideoInfo out_info;
   gboolean ret;
   ColorSpaceColorSpec in_spec, out_spec;
+  gboolean interlaced;
 
   space = GST_VIDEO_CONVERT_CAST (btrans);
 
@@ -228,16 +229,17 @@ gst_video_convert_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
   space->from_spec = in_spec;
   space->to_info = out_info;
   space->to_spec = out_spec;
-  space->width = in_info.width;
-  space->height = in_info.height;
-  space->interlaced = (in_info.flags & GST_VIDEO_FLAG_INTERLACED) != 0;
+
+  interlaced = (in_info.flags & GST_VIDEO_FLAG_INTERLACED) != 0;
 
   space->convert =
       videoconvert_convert_new (out_info.format, out_spec, in_info.format,
       in_spec, in_info.width, in_info.height);
-  if (space->convert) {
-    videoconvert_convert_set_interlaced (space->convert, space->interlaced);
-  }
+  if (space->convert == NULL)
+    goto no_convert;
+
+  videoconvert_convert_set_interlaced (space->convert, interlaced);
+
   /* palette, only for from data */
   if (space->from_info.format == GST_VIDEO_FORMAT_RGB8_PALETTED &&
       space->to_info.format == GST_VIDEO_FORMAT_RGB8_PALETTED) {
@@ -287,6 +289,13 @@ invalid_caps:
 format_mismatch:
   {
     GST_ERROR_OBJECT (space, "input and output formats do not match");
+    space->from_info.format = GST_VIDEO_FORMAT_UNKNOWN;
+    space->to_info.format = GST_VIDEO_FORMAT_UNKNOWN;
+    return FALSE;
+  }
+no_convert:
+  {
+    GST_ERROR_OBJECT (space, "could not create converter");
     space->from_info.format = GST_VIDEO_FORMAT_UNKNOWN;
     space->to_info.format = GST_VIDEO_FORMAT_UNKNOWN;
     return FALSE;
@@ -419,9 +428,7 @@ gst_video_convert_transform (GstBaseTransform * btrans, GstBuffer * inbuf,
     GstBuffer * outbuf)
 {
   GstVideoConvert *space;
-  guint8 *indata, *outdata;
-  gsize insize, outsize;
-  gint i;
+  GstVideoFrame in_frame, out_frame;
 
   space = GST_VIDEO_CONVERT_CAST (btrans);
 
@@ -434,21 +441,16 @@ gst_video_convert_transform (GstBaseTransform * btrans, GstBuffer * inbuf,
 
   videoconvert_convert_set_dither (space->convert, space->dither);
 
-  indata = gst_buffer_map (inbuf, &insize, NULL, GST_MAP_READ);
-  outdata = gst_buffer_map (outbuf, &outsize, NULL, GST_MAP_WRITE);
+  if (!gst_video_frame_map (&in_frame, &space->from_info, inbuf, GST_MAP_READ))
+    goto invalid_buffer;
 
-  for (i = 0; i < space->to_info.n_planes; i++) {
-    space->convert->dest_stride[i] = space->to_info.plane[i].stride;
-    space->convert->dest_offset[i] = space->to_info.plane[i].offset;
+  if (!gst_video_frame_map (&out_frame, &space->to_info, outbuf, GST_MAP_WRITE))
+    goto invalid_buffer;
 
-    space->convert->src_stride[i] = space->from_info.plane[i].stride;
-    space->convert->src_offset[i] = space->from_info.plane[i].offset;
-  }
+  videoconvert_convert_convert (space->convert, &out_frame, &in_frame);
 
-  videoconvert_convert_convert (space->convert, outdata, indata);
-
-  gst_buffer_unmap (outbuf, outdata, outsize);
-  gst_buffer_unmap (inbuf, indata, insize);
+  gst_video_frame_unmap (&out_frame);
+  gst_video_frame_unmap (&in_frame);
 
   /* baseclass copies timestamps */
   GST_DEBUG ("from %d -> to %d done", space->from_info.format,
@@ -462,6 +464,12 @@ unknown_format:
     GST_ELEMENT_ERROR (space, CORE, NOT_IMPLEMENTED, (NULL),
         ("attempting to convert colorspaces between unknown formats"));
     return GST_FLOW_NOT_NEGOTIATED;
+  }
+invalid_buffer:
+  {
+    GST_ELEMENT_WARNING (space, CORE, NOT_IMPLEMENTED, (NULL),
+        ("invalid video buffer received"));
+    return GST_FLOW_OK;
   }
 #if 0
 not_supported:

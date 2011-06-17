@@ -47,9 +47,6 @@ typedef struct _GstVideoConvertClass GstVideoConvertClass;
 struct _GstVideoConvert {
   GstVideoFilter element;
 
-  gint width, height;
-  gboolean interlaced;
-
   GstVideoInfo from_info;
   GstVideoInfo to_info;
 
