@@ -37,35 +37,24 @@ gst_meta_video_get_info (void)
 
 
 GstMetaVideo *
-gst_buffer_add_meta_video (GstBuffer * buffer, GstMetaVideoFlags flags,
+gst_buffer_add_meta_video (GstBuffer * buffer, GstVideoFlags flags,
     GstVideoFormat format, guint width, guint height)
 {
   GstMetaVideo *meta;
-  guint i;
-  GstMetaVideoPlane plane[GST_VIDEO_MAX_PLANES];
+  GstVideoInfo info;
 
-  for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
-    gint offset;
-
-    offset = gst_video_format_get_component_offset (format, i, width, height);
-    /* end when the offset is 0 for something else that the first component */
-    if (i > 0 && offset == 0)
-      break;
-
-    plane[i].offset = offset;
-    plane[i].stride = gst_video_format_get_row_stride (format, i, width);
-  }
+  gst_video_info_set_format (&info, format, width, height);
 
   meta = gst_buffer_add_meta_video_full (buffer, flags, format, width, height,
-      i, plane);
+      info.n_planes, info.plane);
 
   return meta;
 }
 
 GstMetaVideo *
-gst_buffer_add_meta_video_full (GstBuffer * buffer, GstMetaVideoFlags flags,
+gst_buffer_add_meta_video_full (GstBuffer * buffer, GstVideoFlags flags,
     GstVideoFormat format, guint width, guint height,
-    guint n_planes, GstMetaVideoPlane plane[GST_VIDEO_MAX_PLANES])
+    guint n_planes, GstVideoPlane plane[GST_VIDEO_MAX_PLANES])
 {
   GstMetaVideo *meta;
   guint i;

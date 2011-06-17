@@ -49,11 +49,11 @@ struct _GstVideoConvert {
 
   gint width, height;
   gboolean interlaced;
-  gfloat fps;
 
-  GstVideoFormat from_format;
+  GstVideoInfo from_info;
+  GstVideoInfo to_info;
+
   ColorSpaceColorSpec from_spec;
-  GstVideoFormat to_format;
   ColorSpaceColorSpec to_spec;
 
   VideoConvert *convert;

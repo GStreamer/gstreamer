@@ -165,15 +165,8 @@ gst_video_convert_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
     GstCaps * outcaps)
 {
   GstVideoConvert *space;
-  GstVideoFormat in_format;
-  GstVideoFormat out_format;
-  gint in_height, in_width;
-  gint out_height, out_width;
-  gint in_fps_n, in_fps_d, in_par_n, in_par_d;
-  gint out_fps_n, out_fps_d, out_par_n, out_par_d;
-  gboolean have_in_par, have_out_par;
-  gboolean have_in_interlaced, have_out_interlaced;
-  gboolean in_interlaced, out_interlaced;
+  GstVideoInfo in_info;
+  GstVideoInfo out_info;
   gboolean ret;
   ColorSpaceColorSpec in_spec, out_spec;
 
@@ -185,25 +178,14 @@ gst_video_convert_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
 
   /* input caps */
 
-  ret = gst_video_format_parse_caps (incaps, &in_format, &in_width, &in_height);
+  ret = gst_video_info_from_caps (&in_info, incaps);
   if (!ret)
-    goto no_width_height;
+    goto invalid_caps;
 
-  ret = gst_video_parse_caps_framerate (incaps, &in_fps_n, &in_fps_d);
-  if (!ret)
-    goto no_framerate;
-
-  have_in_par = gst_video_parse_caps_pixel_aspect_ratio (incaps,
-      &in_par_n, &in_par_d);
-  have_in_interlaced = gst_video_format_parse_caps_interlaced (incaps,
-      &in_interlaced);
-
-  if (gst_video_format_is_rgb (in_format)) {
+  if (gst_video_format_is_rgb (in_info.format)) {
     in_spec = COLOR_SPEC_RGB;
-  } else if (gst_video_format_is_yuv (in_format)) {
-    const gchar *matrix = gst_video_parse_caps_color_matrix (incaps);
-
-    if (matrix && g_str_equal (matrix, "hdtv"))
+  } else if (gst_video_format_is_yuv (in_info.format)) {
+    if (in_info.color_matrix && g_str_equal (in_info.color_matrix, "hdtv"))
       in_spec = COLOR_SPEC_YUV_BT709;
     else
       in_spec = COLOR_SPEC_YUV_BT470_6;
@@ -213,27 +195,14 @@ gst_video_convert_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
 
   /* output caps */
 
-  ret =
-      gst_video_format_parse_caps (outcaps, &out_format, &out_width,
-      &out_height);
+  ret = gst_video_info_from_caps (&out_info, outcaps);
   if (!ret)
-    goto no_width_height;
+    goto invalid_caps;
 
-  ret = gst_video_parse_caps_framerate (outcaps, &out_fps_n, &out_fps_d);
-  if (!ret)
-    goto no_framerate;
-
-  have_out_par = gst_video_parse_caps_pixel_aspect_ratio (outcaps,
-      &out_par_n, &out_par_d);
-  have_out_interlaced = gst_video_format_parse_caps_interlaced (incaps,
-      &out_interlaced);
-
-  if (gst_video_format_is_rgb (out_format)) {
+  if (gst_video_format_is_rgb (out_info.format)) {
     out_spec = COLOR_SPEC_RGB;
-  } else if (gst_video_format_is_yuv (out_format)) {
-    const gchar *matrix = gst_video_parse_caps_color_matrix (outcaps);
-
-    if (matrix && g_str_equal (matrix, "hdtv"))
+  } else if (gst_video_format_is_yuv (out_info.format)) {
+    if (out_info.color_matrix && g_str_equal (out_info.color_matrix, "hdtv"))
       out_spec = COLOR_SPEC_YUV_BT709;
     else
       out_spec = COLOR_SPEC_YUV_BT470_6;
@@ -242,38 +211,38 @@ gst_video_convert_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
   }
 
   /* these must match */
-  if (in_width != out_width || in_height != out_height ||
-      in_fps_n != out_fps_n || in_fps_d != out_fps_d)
+  if (in_info.width != out_info.width || in_info.height != out_info.height ||
+      in_info.fps_n != out_info.fps_n || in_info.fps_d != out_info.fps_d)
     goto format_mismatch;
 
   /* if present, these must match too */
-  if (have_in_par && have_out_par &&
-      (in_par_n != out_par_n || in_par_d != out_par_d))
+  if (in_info.par_n != out_info.par_n || in_info.par_d != out_info.par_d)
     goto format_mismatch;
 
   /* if present, these must match too */
-  if (have_in_interlaced && have_out_interlaced &&
-      in_interlaced != out_interlaced)
+  if ((in_info.flags & GST_VIDEO_FLAG_INTERLACED) !=
+      (out_info.flags & GST_VIDEO_FLAG_INTERLACED))
     goto format_mismatch;
 
-  space->from_format = in_format;
+  space->from_info = in_info;
   space->from_spec = in_spec;
-  space->to_format = out_format;
+  space->to_info = out_info;
   space->to_spec = out_spec;
-  space->width = in_width;
-  space->height = in_height;
-  space->interlaced = in_interlaced;
+  space->width = in_info.width;
+  space->height = in_info.height;
+  space->interlaced = (in_info.flags & GST_VIDEO_FLAG_INTERLACED) != 0;
 
-  space->convert = videoconvert_convert_new (out_format, out_spec, in_format,
-      in_spec, in_width, in_height);
+  space->convert =
+      videoconvert_convert_new (out_info.format, out_spec, in_info.format,
+      in_spec, in_info.width, in_info.height);
   if (space->convert) {
-    videoconvert_convert_set_interlaced (space->convert, in_interlaced);
+    videoconvert_convert_set_interlaced (space->convert, space->interlaced);
   }
   /* palette, only for from data */
-  if (space->from_format == GST_VIDEO_FORMAT_RGB8_PALETTED &&
-      space->to_format == GST_VIDEO_FORMAT_RGB8_PALETTED) {
+  if (space->from_info.format == GST_VIDEO_FORMAT_RGB8_PALETTED &&
+      space->to_info.format == GST_VIDEO_FORMAT_RGB8_PALETTED) {
     goto format_mismatch;
-  } else if (space->from_format == GST_VIDEO_FORMAT_RGB8_PALETTED) {
+  } else if (space->from_info.format == GST_VIDEO_FORMAT_RGB8_PALETTED) {
     GstBuffer *palette;
     guint32 *data;
 
@@ -290,7 +259,7 @@ gst_video_convert_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
     gst_buffer_unmap (palette, data, -1);
 
     gst_buffer_unref (palette);
-  } else if (space->to_format == GST_VIDEO_FORMAT_RGB8_PALETTED) {
+  } else if (space->to_info.format == GST_VIDEO_FORMAT_RGB8_PALETTED) {
     const guint32 *palette;
     GstBuffer *p_buf;
 
@@ -302,37 +271,31 @@ gst_video_convert_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
     gst_buffer_unref (p_buf);
   }
 
-  GST_DEBUG ("reconfigured %d %d", space->from_format, space->to_format);
+  GST_DEBUG ("reconfigured %d %d", space->from_info.format,
+      space->to_info.format);
 
   return TRUE;
 
   /* ERRORS */
-no_width_height:
+invalid_caps:
   {
-    GST_ERROR_OBJECT (space, "did not specify width or height");
-    space->from_format = GST_VIDEO_FORMAT_UNKNOWN;
-    space->to_format = GST_VIDEO_FORMAT_UNKNOWN;
-    return FALSE;
-  }
-no_framerate:
-  {
-    GST_ERROR_OBJECT (space, "did not specify framerate");
-    space->from_format = GST_VIDEO_FORMAT_UNKNOWN;
-    space->to_format = GST_VIDEO_FORMAT_UNKNOWN;
+    GST_ERROR_OBJECT (space, "invalid caps");
+    space->from_info.format = GST_VIDEO_FORMAT_UNKNOWN;
+    space->to_info.format = GST_VIDEO_FORMAT_UNKNOWN;
     return FALSE;
   }
 format_mismatch:
   {
     GST_ERROR_OBJECT (space, "input and output formats do not match");
-    space->from_format = GST_VIDEO_FORMAT_UNKNOWN;
-    space->to_format = GST_VIDEO_FORMAT_UNKNOWN;
+    space->from_info.format = GST_VIDEO_FORMAT_UNKNOWN;
+    space->to_info.format = GST_VIDEO_FORMAT_UNKNOWN;
     return FALSE;
   }
 invalid_palette:
   {
     GST_ERROR_OBJECT (space, "invalid palette");
-    space->from_format = GST_VIDEO_FORMAT_UNKNOWN;
-    space->to_format = GST_VIDEO_FORMAT_UNKNOWN;
+    space->from_info.format = GST_VIDEO_FORMAT_UNKNOWN;
+    space->to_info.format = GST_VIDEO_FORMAT_UNKNOWN;
     return FALSE;
   }
 }
@@ -394,8 +357,8 @@ gst_video_convert_class_init (GstVideoConvertClass * klass)
 static void
 gst_video_convert_init (GstVideoConvert * space)
 {
-  space->from_format = GST_VIDEO_FORMAT_UNKNOWN;
-  space->to_format = GST_VIDEO_FORMAT_UNKNOWN;
+  space->from_info.format = GST_VIDEO_FORMAT_UNKNOWN;
+  space->to_info.format = GST_VIDEO_FORMAT_UNKNOWN;
 }
 
 void
@@ -439,14 +402,13 @@ gst_video_convert_get_unit_size (GstBaseTransform * btrans, GstCaps * caps,
     gsize * size)
 {
   gboolean ret = TRUE;
-  GstVideoFormat format;
-  gint width, height;
+  GstVideoInfo info;
 
   g_assert (size);
 
-  ret = gst_video_format_parse_caps (caps, &format, &width, &height);
+  ret = gst_video_info_from_caps (&info, caps);
   if (ret) {
-    *size = gst_video_format_get_size (format, width, height);
+    *size = info.size;
   }
 
   return ret;
@@ -459,13 +421,15 @@ gst_video_convert_transform (GstBaseTransform * btrans, GstBuffer * inbuf,
   GstVideoConvert *space;
   guint8 *indata, *outdata;
   gsize insize, outsize;
+  gint i;
 
   space = GST_VIDEO_CONVERT_CAST (btrans);
 
-  GST_DEBUG ("from %d -> to %d", space->from_format, space->to_format);
+  GST_DEBUG ("from %d -> to %d", space->from_info.format,
+      space->to_info.format);
 
-  if (G_UNLIKELY (space->from_format == GST_VIDEO_FORMAT_UNKNOWN ||
-          space->to_format == GST_VIDEO_FORMAT_UNKNOWN))
+  if (G_UNLIKELY (space->from_info.format == GST_VIDEO_FORMAT_UNKNOWN ||
+          space->to_info.format == GST_VIDEO_FORMAT_UNKNOWN))
     goto unknown_format;
 
   videoconvert_convert_set_dither (space->convert, space->dither);
@@ -473,13 +437,22 @@ gst_video_convert_transform (GstBaseTransform * btrans, GstBuffer * inbuf,
   indata = gst_buffer_map (inbuf, &insize, NULL, GST_MAP_READ);
   outdata = gst_buffer_map (outbuf, &outsize, NULL, GST_MAP_WRITE);
 
+  for (i = 0; i < space->to_info.n_planes; i++) {
+    space->convert->dest_stride[i] = space->to_info.plane[i].stride;
+    space->convert->dest_offset[i] = space->to_info.plane[i].offset;
+
+    space->convert->src_stride[i] = space->from_info.plane[i].stride;
+    space->convert->src_offset[i] = space->from_info.plane[i].offset;
+  }
+
   videoconvert_convert_convert (space->convert, outdata, indata);
 
   gst_buffer_unmap (outbuf, outdata, outsize);
   gst_buffer_unmap (inbuf, indata, insize);
 
   /* baseclass copies timestamps */
-  GST_DEBUG ("from %d -> to %d done", space->from_format, space->to_format);
+  GST_DEBUG ("from %d -> to %d done", space->from_info.format,
+      space->to_info.format);
 
   return GST_FLOW_OK;
 

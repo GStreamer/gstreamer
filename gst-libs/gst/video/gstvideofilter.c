@@ -77,15 +77,14 @@ static gboolean
 gst_video_filter_get_unit_size (GstBaseTransform * btrans, GstCaps * caps,
     gsize * size)
 {
-  GstVideoFormat fmt;
-  gint width, height;
+  GstVideoInfo info;
 
-  if (!gst_video_format_parse_caps (caps, &fmt, &width, &height)) {
+  if (!gst_video_info_from_caps (&info, caps)) {
     GST_WARNING_OBJECT (btrans, "Failed to parse caps %" GST_PTR_FORMAT, caps);
     return FALSE;
   }
 
-  *size = gst_video_format_get_size (fmt, width, height);
+  *size = info.size;
 
   GST_DEBUG_OBJECT (btrans, "Returning size %u bytes for caps %"
       GST_PTR_FORMAT, *size, caps);

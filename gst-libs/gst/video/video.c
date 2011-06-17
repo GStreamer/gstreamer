@@ -713,6 +713,7 @@ gst_video_info_set_format (GstVideoInfo * info, GstVideoFormat format,
   g_return_if_fail (info != NULL);
   g_return_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN);
 
+  info->flags = 0;
   info->format = format;
   info->width = width;
   info->height = height;
@@ -1847,7 +1848,36 @@ gst_video_event_parse_still_frame (GstEvent * event, gboolean * in_still)
   return TRUE;
 }
 
-#if 0
+/**
+ * gst_video_parse_caps_framerate:
+ * @caps: pointer to a #GstCaps instance
+ * @fps_n: pointer to integer to hold numerator of frame rate (output)
+ * @fps_d: pointer to integer to hold denominator of frame rate (output)
+ *
+ * Extracts the frame rate from @caps and places the values in the locations
+ * pointed to by @fps_n and @fps_d.  Returns TRUE if the values could be
+ * parsed correctly, FALSE if not.
+ *
+ * This function can be used with #GstCaps that have any media type; it
+ * is not limited to formats handled by #GstVideoFormat.
+ *
+ * Since: 0.10.16
+ *
+ * Returns: TRUE if @caps was parsed correctly.
+ */
+gboolean
+gst_video_parse_caps_framerate (GstCaps * caps, int *fps_n, int *fps_d)
+{
+  GstStructure *structure;
+
+  if (!gst_caps_is_fixed (caps))
+    return FALSE;
+
+  structure = gst_caps_get_structure (caps, 0);
+
+  return gst_structure_get_fraction (structure, "framerate", fps_n, fps_d);
+}
+
 /**
  * gst_video_parse_caps_palette:
  * @caps: #GstCaps to parse
@@ -1879,4 +1909,3 @@ gst_video_parse_caps_palette (GstCaps * caps)
 
   return p;
 }
-#endif

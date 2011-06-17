@@ -217,6 +217,7 @@ struct _GstVideoInfo {
 
   const gchar   *color_matrix;
   const gchar   *chroma_site;
+  GstBuffer     *palette;
 
   guint          par_n;
   guint          par_d;
@@ -318,6 +319,9 @@ gboolean       gst_video_calculate_display_ratio (guint * dar_n,
                                                   guint   video_par_d,
                                                   guint   display_par_n,
                                                   guint   display_par_d);
+
+gboolean       gst_video_parse_caps_framerate    (GstCaps * caps, int *fps_n, int *fps_d);
+GstBuffer *    gst_video_parse_caps_palette      (GstCaps * caps);
 
 #if 0
 int            gst_video_format_get_component_width  (GstVideoFormat format,

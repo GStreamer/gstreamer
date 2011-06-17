@@ -608,9 +608,8 @@ collect_information (GstDiscoverer * dc, const GstStructure * st,
   GstCaps *caps;
   GstStructure *caps_st, *tags_st;
   const gchar *name;
-  int tmp, tmp2;
+  int tmp;
   guint utmp;
-  gboolean btmp;
 
   if (!st || !gst_structure_id_has_field (st, _CAPS_QUARK)) {
     GST_WARNING ("Couldn't find caps !");
@@ -667,7 +666,7 @@ collect_information (GstDiscoverer * dc, const GstStructure * st,
   } else if (g_str_has_prefix (name, "video/") ||
       g_str_has_prefix (name, "image/")) {
     GstDiscovererVideoInfo *info;
-    GstVideoFormat format;
+    GstVideoInfo vinfo;
 
     if (parent)
       info = (GstDiscovererVideoInfo *) parent;
@@ -677,26 +676,20 @@ collect_information (GstDiscoverer * dc, const GstStructure * st,
       info->parent.caps = caps;
     }
 
-    if (gst_video_format_parse_caps (caps, &format, &tmp, &tmp2)) {
-      info->width = (guint) tmp;
-      info->height = (guint) tmp2;
+    if (gst_video_info_from_caps (&vinfo, caps)) {
+      info->width = (guint) vinfo.width;
+      info->height = (guint) vinfo.height;
+
+      info->depth = (guint) 0;
+
+      info->par_num = vinfo.par_n;
+      info->par_denom = vinfo.par_d;
+
+      info->framerate_num = vinfo.fps_n;
+      info->framerate_denom = vinfo.fps_d;
+
+      info->interlaced = (vinfo.flags & GST_VIDEO_FLAG_INTERLACED) != 0;
     }
-
-    if (gst_structure_get_int (caps_st, "depth", &tmp))
-      info->depth = (guint) tmp;
-
-    if (gst_video_parse_caps_pixel_aspect_ratio (caps, &tmp, &tmp2)) {
-      info->par_num = tmp;
-      info->par_denom = tmp2;
-    }
-
-    if (gst_video_parse_caps_framerate (caps, &tmp, &tmp2)) {
-      info->framerate_num = tmp;
-      info->framerate_denom = tmp2;
-    }
-
-    if (gst_video_format_parse_caps_interlaced (caps, &btmp))
-      info->interlaced = btmp;
 
     if (gst_structure_id_has_field (st, _TAGS_QUARK)) {
       gst_structure_id_get (st, _TAGS_QUARK,

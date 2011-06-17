@@ -84,26 +84,6 @@ videoconvert_convert_new (GstVideoFormat to_format, ColorSpaceColorSpec to_spec,
     convert->use_16bit = FALSE;
   }
 
-  for (i = 0; i < 4; i++) {
-    convert->dest_stride[i] = gst_video_format_get_row_stride (to_format, i,
-        width);
-    convert->dest_offset[i] = gst_video_format_get_component_offset (to_format,
-        i, width, height);
-    if (i == 0)
-      convert->dest_offset[i] = 0;
-
-    convert->src_stride[i] = gst_video_format_get_row_stride (from_format, i,
-        width);
-    convert->src_offset[i] = gst_video_format_get_component_offset (from_format,
-        i, width, height);
-    if (i == 0)
-      convert->src_offset[i] = 0;
-
-    GST_DEBUG ("%d: dest %d %d src %d %d", i,
-        convert->dest_stride[i], convert->dest_offset[i],
-        convert->src_stride[i], convert->src_offset[i]);
-  }
-
   videoconvert_convert_lookup_fastpath (convert);
   videoconvert_convert_lookup_getput (convert);
 

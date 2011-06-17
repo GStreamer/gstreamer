@@ -33,41 +33,6 @@ typedef struct _GstMetaVideo GstMetaVideo;
 typedef struct _GstMetaVideoPlane GstMetaVideoPlane;
 
 /**
- * GstMetaVideoFlags:
- * @GST_META_VIDEO_FLAG_NONE: no flags
- * @GST_META_VIDEO_FLAG_INTERLACED:
- * @GST_META_VIDEO_FLAG_TTF:
- * @GST_META_VIDEO_FLAG_RFF:
- * @GST_META_VIDEO_FLAG_ONEFIELD:
- * @GST_META_VIDEO_FLAG_TELECINE:
- * @GST_META_VIDEO_FLAG_PROGRESSIVE:
- *
- * Extra video flags
- */
-typedef enum {
-  GST_META_VIDEO_FLAG_NONE        = 0,
-  GST_META_VIDEO_FLAG_INTERLACED  = (1 << 0),
-  GST_META_VIDEO_FLAG_TTF         = (1 << 1),
-  GST_META_VIDEO_FLAG_RFF         = (1 << 2),
-  GST_META_VIDEO_FLAG_ONEFIELD    = (1 << 3),
-  GST_META_VIDEO_FLAG_TELECINE    = (1 << 4),
-  GST_META_VIDEO_FLAG_PROGRESSIVE = (1 << 5)
-} GstMetaVideoFlags;
-
-/**
- * GstMetaVideoPlane:
- * @offset: offset of the first pixel in the buffer memory region
- * @stride: stride of the image lines. Can be negative when the image is
- *    upside-down
- *
- * Information for one video plane.
- */
-struct _GstMetaVideoPlane {
-  gsize           offset;
-  gint            stride;
-};
-
-/**
  * GstMetaVideo:
  * @meta: parent #GstMeta
  * @flags: additional video flags
@@ -81,16 +46,15 @@ struct _GstMetaVideoPlane {
 struct _GstMetaVideo {
   GstMeta       meta;
 
-  GstMetaVideoFlags  flags;
-
   GstBuffer         *buffer;
 
+  GstVideoFlags      flags;
   GstVideoFormat     format;
   guint              width;
   guint              height;
 
   guint              n_planes;
-  GstMetaVideoPlane  plane[GST_VIDEO_MAX_PLANES];
+  GstVideoPlane      plane[GST_VIDEO_MAX_PLANES];
 
   gpointer (*map)    (GstMetaVideo *meta, guint plane, gint *stride,
                       GstMapFlags flags);
@@ -100,11 +64,11 @@ struct _GstMetaVideo {
 const GstMetaInfo * gst_meta_video_get_info (void);
 
 #define gst_buffer_get_meta_video(b) ((GstMetaVideo*)gst_buffer_get_meta((b),GST_META_INFO_VIDEO))
-GstMetaVideo * gst_buffer_add_meta_video       (GstBuffer *buffer, GstMetaVideoFlags flags,
+GstMetaVideo * gst_buffer_add_meta_video       (GstBuffer *buffer, GstVideoFlags flags,
                                                 GstVideoFormat format, guint width, guint height);
-GstMetaVideo * gst_buffer_add_meta_video_full  (GstBuffer *buffer, GstMetaVideoFlags flags,
+GstMetaVideo * gst_buffer_add_meta_video_full  (GstBuffer *buffer, GstVideoFlags flags,
                                                 GstVideoFormat format, guint width, guint height,
-                                                guint n_planes, GstMetaVideoPlane plane[GST_VIDEO_MAX_PLANES]);
+                                                guint n_planes, GstVideoPlane plane[GST_VIDEO_MAX_PLANES]);
 
 gpointer       gst_meta_video_map        (GstMetaVideo *meta, guint plane, gint *stride,
                                           GstMapFlags flags);
