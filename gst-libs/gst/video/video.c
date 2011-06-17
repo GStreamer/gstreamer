@@ -26,6 +26,7 @@
 #include <string.h>
 
 #include "video.h"
+#include "gstmetavideo.h"
 
 static int get_size (GstVideoFormat format, int width, int height);
 static int get_stride (GstVideoFormat format, int plane, int width);
@@ -862,10 +863,94 @@ gst_video_info_to_caps (GstVideoInfo * info)
     gst_caps_set_simple (caps, "color-matrix", G_TYPE_STRING,
         info->color_matrix, NULL);
   if (info->chroma_site)
-    gst_caps_set_simple (caps, "chromar-site", G_TYPE_STRING, info->chroma_site,
+    gst_caps_set_simple (caps, "chroma-site", G_TYPE_STRING, info->chroma_site,
         NULL);
 
   return caps;
+}
+
+/**
+ * gst_video_frame_map:
+ * @frame: pointer to #GstVideoFrame
+ * @info: a #GstVideoInfo
+ * @buffer: the buffer to map
+ *
+ * Use @info and @buffer to fill in the values of @frame.
+ *
+ * All video planes of @buffer will be mapped and the pointers will be set in
+ * @frame->data.
+ *
+ * Returns: %TRUE on success.
+ */
+gboolean
+gst_video_frame_map (GstVideoFrame * frame, GstVideoInfo * info,
+    GstBuffer * buffer, GstMapFlags flags)
+{
+  GstMetaVideo *meta;
+  gint i;
+  guint8 *data;
+  gsize size;
+
+  g_return_val_if_fail (frame != NULL, FALSE);
+  g_return_val_if_fail (info != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
+
+  frame->buffer = buffer;
+  meta = gst_buffer_get_meta_video (buffer);
+  frame->meta = meta;
+
+  if (meta) {
+    /* FIXME use metadata */
+  } else {
+    /* copy the info */
+    frame->info = *info;
+
+    data = gst_buffer_map (buffer, &size, NULL, flags);
+
+    /* do some sanity checks */
+    if (size < info->size)
+      goto invalid_size;
+
+    /* set up pointers */
+    for (i = 0; i < info->n_planes; i++) {
+      frame->data[i] = data + info->plane[i].offset;
+    }
+  }
+  return TRUE;
+
+  /* ERRORS */
+invalid_size:
+  {
+    gst_buffer_unmap (buffer, data, size);
+    return FALSE;
+  }
+}
+
+/**
+ * gst_video_frame_unmap:
+ * @frame: a #GstVideoFrame
+ *
+ * Unmap the memory previously mapped with gst_video_frame_map.
+ */
+void
+gst_video_frame_unmap (GstVideoFrame * frame)
+{
+  GstBuffer *buffer;
+  GstMetaVideo *meta;
+  guint8 *data;
+
+  g_return_if_fail (frame != NULL);
+
+  buffer = frame->buffer;
+  meta = frame->meta;
+
+  if (meta) {
+    /* FIXME use metadata */
+  } else {
+    data = frame->data[0];
+    data -= frame->info.plane[0].offset;
+    gst_buffer_unmap (buffer, data, -1);
+  }
 }
 
 /**
@@ -977,7 +1062,6 @@ get_stride (GstVideoFormat format, int plane, int width)
   }
 }
 
-#if 0
 /**
  * gst_video_format_get_component_width:
  * @format: a #GstVideoFormat
@@ -992,7 +1076,7 @@ get_stride (GstVideoFormat format, int plane, int width)
  *
  * Returns: width of component @component
  */
-static int
+int
 gst_video_format_get_component_width (GstVideoFormat format,
     int component, int width)
 {
@@ -1063,9 +1147,7 @@ gst_video_format_get_component_width (GstVideoFormat format,
       return 0;
   }
 }
-#endif
 
-#if 0
 /**
  * gst_video_format_get_component_height:
  * @format: a #GstVideoFormat
@@ -1151,11 +1233,9 @@ gst_video_format_get_component_height (GstVideoFormat format,
       return 0;
   }
 }
-#endif
 
-#if 0
 /**
- * get_component_offset:
+ * gst_video_format_get_component_offset:
  * @format: a #GstVideoFormat
  * @component: the component index
  * @width: the width of video
@@ -1172,8 +1252,8 @@ gst_video_format_get_component_height (GstVideoFormat format,
  *
  * Returns: offset of component @component
  */
-static int
-get_component_offset (GstVideoFormat format,
+int
+gst_video_format_get_component_offset (GstVideoFormat format,
     int component, int width, int height)
 {
   g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN, 0);
@@ -1420,7 +1500,6 @@ get_component_offset (GstVideoFormat format,
   GST_WARNING ("unhandled format %d or component %d", format, component);
   return 0;
 }
-#endif
 
 /**
  * get_plane_offset:
@@ -1551,9 +1630,9 @@ fill_planes (GstVideoInfo * info)
           (GST_ROUND_UP_4 (height) / 4);
       break;
     default:
+      GST_WARNING ("unhandled format %d", info->format);
       break;
   }
-  GST_WARNING ("unhandled format %d", info->format);
   return 0;
 }
 

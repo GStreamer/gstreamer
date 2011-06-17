@@ -145,6 +145,7 @@ int            gst_video_format_get_pixel_stride     (GstVideoFormat format,
 
 typedef struct _GstVideoPlane GstVideoPlane;
 typedef struct _GstVideoInfo GstVideoInfo;
+typedef struct _GstVideoFrame GstVideoFrame;
 
 /**
  * GstVideoFlags:
@@ -228,6 +229,22 @@ struct _GstVideoInfo {
   GstVideoPlane  plane[GST_VIDEO_MAX_PLANES];
 };
 
+/**
+ * GstVideoFrame:
+ * @info: the #GstVideoInfo
+ * @buffer: the mapped buffer
+ * @data: pointers to the plane data
+ *
+ * A video frame obtained from gst_video_frame_map()
+ */
+struct _GstVideoFrame {
+  GstVideoInfo info;
+
+  GstBuffer *buffer;
+  gpointer   meta;
+
+  guint8    *data[GST_VIDEO_MAX_PLANES];
+};
 
 void         gst_video_info_init        (GstVideoInfo *info);
 
@@ -243,6 +260,10 @@ gboolean     gst_video_info_convert     (GstVideoInfo *info,
                                          gint64        src_value,
                                          GstFormat     dest_format,
                                          gint64       *dest_value);
+
+gboolean    gst_video_frame_map         (GstVideoFrame *frame, GstVideoInfo *info,
+                                         GstBuffer *buffer, GstMapFlags flags);
+void        gst_video_frame_unmap       (GstVideoFrame *frame);
 
 #define GST_VIDEO_SIZE_RANGE "(int) [ 1, max ]"
 #define GST_VIDEO_FPS_RANGE "(fraction) [ 0, max ]"
@@ -323,7 +344,6 @@ gboolean       gst_video_calculate_display_ratio (guint * dar_n,
 gboolean       gst_video_parse_caps_framerate    (GstCaps * caps, int *fps_n, int *fps_d);
 GstBuffer *    gst_video_parse_caps_palette      (GstCaps * caps);
 
-#if 0
 int            gst_video_format_get_component_width  (GstVideoFormat format,
                                                       int            component,
                                                       int            width) G_GNUC_CONST;
@@ -331,19 +351,10 @@ int            gst_video_format_get_component_width  (GstVideoFormat format,
 int            gst_video_format_get_component_height (GstVideoFormat format,
                                                       int            component,
                                                       int            height) G_GNUC_CONST;
-
 int            gst_video_format_get_component_offset (GstVideoFormat format,
                                                       int            component,
                                                       int            width,
-                                                      int            height) G_GNUC_CONST;
-
-int            gst_video_format_get_size             (GstVideoFormat format,
-                                                      int            width,
-                                                      int            height) G_GNUC_CONST;
-
-gboolean       gst_video_get_size_from_caps (const GstCaps * caps, gint * size);
-#endif
-
+                                                      int            height);
 
 /* video still frame event creation and parsing */
 
