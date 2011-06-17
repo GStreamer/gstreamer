@@ -45,7 +45,6 @@ struct _GstCameraBin
   GstElement *video_encodebin;
   gulong video_encodebin_signal_id;
   GstElement *videosink;
-  gulong videosink_probe;
   GstElement *videobin_queue;
   GstElement *videobin_capsfilter;
 

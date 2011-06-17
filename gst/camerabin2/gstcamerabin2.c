@@ -382,12 +382,6 @@ gst_camera_bin_dispose (GObject * object)
     g_signal_handler_disconnect (camerabin->video_encodebin,
         camerabin->video_encodebin_signal_id);
 
-  if (camerabin->videosink_probe) {
-    GstPad *pad = gst_element_get_static_pad (camerabin->videosink, "sink");
-    gst_pad_remove_data_probe (pad, camerabin->videosink_probe);
-    gst_object_unref (pad);
-  }
-
   if (camerabin->videosink)
     gst_object_unref (camerabin->videosink);
   if (camerabin->video_encodebin)
