@@ -137,7 +137,8 @@ gst_audio_echo_class_init (GstAudioEchoClass * klass)
           "Maximum delay of the echo in nanoseconds"
           " (can't be changed in PLAYING or PAUSED state)",
           1, G_MAXUINT64, 1,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_READY));
 
   g_object_class_install_property (gobject_class, PROP_INTENSITY,
       g_param_spec_float ("intensity", "Intensity",
