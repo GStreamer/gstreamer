@@ -156,8 +156,7 @@ gst_auto_video_src_reset (GstAutoVideoSrc * src)
   gst_object_unref (targetpad);
 }
 
-static GstStaticCaps raw_caps =
-    GST_STATIC_CAPS ("video/x-raw-yuv; video/x-raw-rgb");
+static GstStaticCaps raw_caps = GST_STATIC_CAPS ("video/x-raw");
 
 static void
 gst_auto_video_src_init (GstAutoVideoSrc * src)
