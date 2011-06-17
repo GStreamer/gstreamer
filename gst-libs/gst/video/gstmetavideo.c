@@ -66,6 +66,7 @@ gst_buffer_add_meta_video_full (GstBuffer * buffer, GstVideoFlags flags,
   meta->format = format;
   meta->width = width;
   meta->height = height;
+  meta->buffer = buffer;
 
   meta->n_planes = n_planes;
   for (i = 0; i < n_planes; i++)
@@ -115,7 +116,7 @@ gst_meta_video_map (GstMetaVideo * meta, guint plane, gint * stride,
   g_return_val_if_fail (buffer != NULL, NULL);
 
   write = (flags & GST_MAP_WRITE) != 0;
-  g_return_val_if_fail (write && !gst_buffer_is_writable (buffer), NULL);
+  g_return_val_if_fail (!write || gst_buffer_is_writable (buffer), NULL);
 
   offset = meta->plane[plane].offset;
   *stride = meta->plane[plane].stride;
