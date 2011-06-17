@@ -305,8 +305,10 @@ static void
 gst_ts_demux_reset (MpegTSBase * base)
 {
   GstTSDemux *demux = (GstTSDemux *) base;
-  g_array_free (demux->index, TRUE);
-  demux->index = NULL;
+  if (demux->index) {
+    g_array_free (demux->index, TRUE);
+    demux->index = NULL;
+  }
   demux->index_size = 0;
   demux->need_newsegment = TRUE;
   demux->program_number = -1;
@@ -581,7 +583,7 @@ gst_ts_demux_perform_auxiliary_seek (MpegTSBase * base, GstClockTime seektime,
             GstClockTime time = calculate_gsttime (pcroffset, pts * 300);
 
             GST_DEBUG ("packet has PTS: %" GST_TIME_FORMAT,
-              GST_TIME_ARGS (time));
+                GST_TIME_ARGS (time));
 
             if (time <= seektime) {
               pcroffset->gsttime = time;
