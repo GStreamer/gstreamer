@@ -53,7 +53,7 @@ plug-ins.
 export DOCS_ARE_INCOMPLETE_PLEASE_FIXME=0
 %build
 %configure \
-  --enable-gtk-doc --enable-introspection=no
+  --enable-gtk-doc --enable-introspection=yes
 
 make %{?_smp_mflags}
                                                                                 
@@ -251,6 +251,31 @@ GStreamer Plugins Base library development and header files.
 %{_libdir}/pkgconfig/gstreamer-tag-%{majorminor}.pc
 %{_libdir}/pkgconfig/gstreamer-video-%{majorminor}.pc
 %{_libdir}/pkgconfig/gstreamer-app-%{majorminor}.pc
+
+%{_libdir}/girepository-1.0/GstApp-0.10.typelib
+%{_libdir}/girepository-1.0/GstAudio-0.10.typelib
+%{_libdir}/girepository-1.0/GstFft-0.10.typelib
+%{_libdir}/girepository-1.0/GstInterfaces-0.10.typelib
+%{_libdir}/girepository-1.0/GstNetbuffer-0.10.typelib
+%{_libdir}/girepository-1.0/GstPbutils-0.10.typelib
+%{_libdir}/girepository-1.0/GstRiff-0.10.typelib
+%{_libdir}/girepository-1.0/GstRtp-0.10.typelib
+%{_libdir}/girepository-1.0/GstRtsp-0.10.typelib
+%{_libdir}/girepository-1.0/GstSdp-0.10.typelib
+%{_libdir}/girepository-1.0/GstTag-0.10.typelib
+%{_libdir}/girepository-1.0/GstVideo-0.10.typelib
+%{_datadir}/gir-1.0/GstApp-0.10.gir
+%{_datadir}/gir-1.0/GstAudio-0.10.gir
+%{_datadir}/gir-1.0/GstFft-0.10.gir
+%{_datadir}/gir-1.0/GstInterfaces-0.10.gir
+%{_datadir}/gir-1.0/GstNetbuffer-0.10.gir
+%{_datadir}/gir-1.0/GstPbutils-0.10.gir
+%{_datadir}/gir-1.0/GstRiff-0.10.gir
+%{_datadir}/gir-1.0/GstRtp-0.10.gir
+%{_datadir}/gir-1.0/GstRtsp-0.10.gir
+%{_datadir}/gir-1.0/GstSdp-0.10.gir
+%{_datadir}/gir-1.0/GstTag-0.10.gir
+%{_datadir}/gir-1.0/GstVideo-0.10.gir
 
 # gtk-doc documentation
 %doc %{_datadir}/gtk-doc/html/gst-plugins-base-libs-%{majorminor}
