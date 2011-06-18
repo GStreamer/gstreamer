@@ -283,7 +283,7 @@ gst_vp8_enc_class_init (GstVP8EncClass * klass)
   g_object_class_install_property (gobject_class, PROP_SPEED,
       g_param_spec_int ("speed", "Speed",
           "Speed",
-          0, 2, DEFAULT_SPEED,
+          0, 7, DEFAULT_SPEED,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_THREADS,
@@ -586,7 +586,9 @@ gst_vp8_enc_set_format (GstBaseVideoEncoder * base_video_encoder,
     return FALSE;
   }
 
-  status = vpx_codec_control (&encoder->encoder, VP8E_SET_CPUUSED, 0);
+  /* FIXME move this to a set_speed() function */
+  status = vpx_codec_control (&encoder->encoder, VP8E_SET_CPUUSED,
+      (encoder->speed == 0) ? 0 : (encoder->speed - 1));
   if (status != VPX_CODEC_OK) {
     GST_WARNING_OBJECT (encoder, "Failed to set VP8E_SET_CPUUSED to 0: %s",
         gst_vpx_error_name (status));
@@ -837,12 +839,6 @@ gst_vp8_enc_buffer_to_image (GstVP8Enc * enc, GstBuffer * buffer)
   return image;
 }
 
-static const int speed_table[] = {
-  VPX_DL_BEST_QUALITY,
-  VPX_DL_GOOD_QUALITY,
-  VPX_DL_REALTIME,
-};
-
 static GstFlowReturn
 gst_vp8_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
     GstVideoFrame * frame)
@@ -853,6 +849,7 @@ gst_vp8_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
   int flags = 0;
   vpx_image_t *image;
   GstVP8EncCoderHook *hook;
+  int quality;
 
   GST_DEBUG_OBJECT (base_video_encoder, "handle_frame");
 
@@ -874,8 +871,10 @@ gst_vp8_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
     flags |= VPX_EFLAG_FORCE_KF;
   }
 
+  quality = (encoder->speed == 0) ? VPX_DL_BEST_QUALITY : VPX_DL_GOOD_QUALITY;
+
   status = vpx_codec_encode (&encoder->encoder, image,
-      encoder->n_frames, 1, flags, speed_table[encoder->speed]);
+      encoder->n_frames, 1, flags, quality);
   if (status != 0) {
     GST_ELEMENT_ERROR (encoder, LIBRARY, ENCODE,
         ("Failed to encode frame"), ("%s", gst_vpx_error_name (status)));
