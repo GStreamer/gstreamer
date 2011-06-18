@@ -4212,7 +4212,7 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
 {
   GstFlowReturn ret;
   GstPad *peerpad;
-  gboolean result, do_event_actions = TRUE;
+  gboolean result;
   gboolean stored = FALSE;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
@@ -4264,49 +4264,46 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
       }
 
       /* backwards compatibility mode for caps */
-      if (do_event_actions) {
-        do_event_actions = FALSE;
+      switch (GST_EVENT_TYPE (event)) {
+        case GST_EVENT_CAPS:
+        {
+          GST_OBJECT_UNLOCK (pad);
 
-        switch (GST_EVENT_TYPE (event)) {
-          case GST_EVENT_CAPS:
-          {
-            GST_OBJECT_UNLOCK (pad);
+          g_object_notify_by_pspec ((GObject *) pad, pspec_caps);
 
-            g_object_notify_by_pspec ((GObject *) pad, pspec_caps);
-
-            GST_OBJECT_LOCK (pad);
-            /* the peerpad might have changed. Things we checked above could not
-             * have changed. */
-            peerpad = GST_PAD_PEER (pad);
-            break;
-          }
-          case GST_EVENT_SEGMENT:
-          {
-            gint64 offset;
-
-            offset = pad->offset;
-            /* check if we need to adjust the segment */
-            if (offset != 0 && (peerpad != NULL)) {
-              GstSegment segment;
-
-              /* copy segment values */
-              gst_event_copy_segment (event, &segment);
-              gst_event_unref (event);
-
-              /* adjust and make a new event with the offset applied */
-              segment.base += offset;
-              event = gst_event_new_segment (&segment);
-            }
-            break;
-          }
-          case GST_EVENT_RECONFIGURE:
-            if (GST_PAD_IS_SINK (pad))
-              GST_OBJECT_FLAG_SET (pad, GST_PAD_NEED_RECONFIGURE);
-            break;
-          default:
-            break;
+          GST_OBJECT_LOCK (pad);
+          /* the peerpad might have changed. Things we checked above could not
+           * have changed. */
+          peerpad = GST_PAD_PEER (pad);
+          break;
         }
+        case GST_EVENT_SEGMENT:
+        {
+          gint64 offset;
+
+          offset = pad->offset;
+          /* check if we need to adjust the segment */
+          if (offset != 0 && (peerpad != NULL)) {
+            GstSegment segment;
+
+            /* copy segment values */
+            gst_event_copy_segment (event, &segment);
+            gst_event_unref (event);
+
+            /* adjust and make a new event with the offset applied */
+            segment.base += offset;
+            event = gst_event_new_segment (&segment);
+          }
+          break;
+        }
+        case GST_EVENT_RECONFIGURE:
+          if (GST_PAD_IS_SINK (pad))
+            GST_OBJECT_FLAG_SET (pad, GST_PAD_NEED_RECONFIGURE);
+          break;
+        default:
+          break;
       }
+
       if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
         goto flushed;
 
