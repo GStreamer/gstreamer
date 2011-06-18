@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Base Plug-ins 0.10.34 "Lemmings"
+Release notes for GStreamer Base Plug-ins 0.10.35 "Short Notice"
         
 
 
@@ -55,9 +55,13 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * This release is identical to 0.10.33 (to keep core/base versions in sync)
-There were no bugs fixed in this release
-    
+      * work around GLib atomic ops API change
+      * don't use G_CONST_RETURN in public headers
+      * subparse: typefinding fixes for subtitles in non-UTF8 charsets
+
+Bugs fixed in this release
+     
+      * 600043 : subparse: fails to recognise Cyrillic subtitles in windows-1251 encoding
 
 Download
 
@@ -86,5 +90,10 @@ Applications
   
 Contributors to this release
     
+      * David Schleef
+      * Debarshi Ray
+      * Mark Nauwelaerts
+      * Sebastian Dröge
+      * Stefan Kost
       * Tim-Philipp Müller
  
