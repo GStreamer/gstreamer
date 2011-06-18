@@ -1,4 +1,15 @@
-This is GStreamer Good Plug-ins 0.10.29, "Soft Cheese Enthusiast"
+This is GStreamer Good Plug-ins 0.10.30, "Adagio"
+
+Changes since 0.10.29:
+
+      * work around GLib atomic ops API change
+      * better handling of malformed buffers in RTP depayloders
+      * some minor compilation fixes
+
+Bugs fixed since 0.10.29:
+
+      * 650470 : rtp: some depayloaders break with malformed rtp packets
+      * 652144 : udp: fix compiler warning on mingw-w64
 
 Changes since 0.10.28:
 

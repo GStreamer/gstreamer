@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Good Plug-ins 0.10.29 "Soft Cheese Enthusiast"
+Release notes for GStreamer Good Plug-ins 0.10.30 "Adagio"
         
 
 
@@ -52,163 +52,14 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * audioparser: new amrparse, aacparse, ac3parse, flacparse, mpegaudioparse, dcaparse elements
-      * audiowsincband: Add new windowing functions: gaussian, cos and hann
-      * audiowsincband: Fix range of kernel elements (lim -> lim-1)
-      * audiowsinclimimt: Add new windows to high/low-pass filters: gaussian, cosine, hann
-      * audiowsinclimit: Fix range of kernel elements (lim -> lim-1) in high/low-pass filters
-      * avidemux: also add the frame-type for the stream index.
-      * avidemux, flvdemux: mark delta-units in the index
-      * avidemux: stream->current_total is accumulated byte size and not time
-      * avimux: add stream-format field to h264 pad template caps
-      * avimux: rework _request_new_pad to handle explict req-pad-names
-      * avimux: use running time for synchronization
-      * cairooverlay: Add generic Cairo overlay video element.
-      * debugutils: remove bitrotten negotiation element
-      * deinterlace: add support for NV12 and NV21 formats; fix greedyl method
-      * dvdemux: first try if upstream handles TIME seeks before handling them here and other event handling fixes
-      * flacdec: fix issues with large metadata blocks when streaming unframed flac
-      * flacenc: Add support for writing METADATA_BLOCK_PICTURE blocks for GST_TAG_IMAGE and GST_TAG_PREVIEW_IMAGE
-      * flacenc: Don't store image tags inside the vorbiscomments and the flac metadata
-      * flvdemux: add width, height and framerate to caps when present on onMetaData
-      * flvdemux: Do not build an index if upstream is not seekable
-      * flvdemux: fix deadlock on setting index on flvdemux
-      * flvmux: don't overwrite metadata tag with duration in streaming mode
-      * flvmux: don't set duration for live stream
-      * flvmux: use running time for synchronization
-      * flv: specify stream-format for h264 in the pad template caps
-      * icydemux: fix tag list handling issues that might have caused crashes
-      * j2kpay: skip EPH packets
-      * jitterbuffer: also estimate eos if very near eos
-      * jitterbuffer: avoid trying to buffer more than is available
-      * jitterbuffer: handle position query
-      * matroskademux: better calculation of output framerate
-      * matroskademux: properly resume cluster scanning
-      * matroskademux: pull mode should always report seekable
-      * matroskademux: set stream-format=byte-stream on h264 caps if there's no codec data
-      * matroskademux: store cluster positions provided by SeekHead
-      * matroskamux: add support for A-Law and µ-Law
-      * matroskamux: avoid building index when streamable
-      * matroskamux: use running time for stream synchronization
-      * matroskamux: add stream-format field to h264 pad template caps
-      * matroska: Use ARTIST Matroska tag instead of AUTHOR for GST_TAG_ARTIST
-      * matroskaparse: new element
-      * monoscope: stability (off-by-one) and memory leak fixes
-      * pngdec: handle 16-bit-per-channel images
-      * pulsesink: also uncork during EOS waiting (and after EOS is rendered)
-      * pulsesink: fix deadlock if connecting to PA fails
-      * pulsesink: release pa_shared_resource_mutex before pa_threaded_mainloop_wait
-      * qtdemux: Adds more h264 fields to its caps
-      * qtdemux: Add support for 2Vuy and r210
-      * qtdemux: don't error out when there's a problem parsing non-vital headers
-      * qtdemux: avoid skipping exposing a stream following a removed stream
-      * qtdemux: Check for invalid (empty) classification info entity strings
-      * qtdemux: extract MusicBrainz tags
-      * qtdemux: mind rounding issues when converting from global time to mov time
-      * qtdemux: propagate error during expose_streams
-      * qtdemux: support some more mpeg-4 fourcc variants
-      * qtdemux: take configured start time into account
-      * isomp4: move mp4mux/3gppmux/qtmux from -bad to -good, rename qtdemux plugin to isomp4
-      * rtpbin: Don't try to request the same request pad twice
-      * rtpbin: fix setting the SDES property
-      * rtpbin: Get and use the NTP time when receiving RTCP
-      * rtpmanager: ignore a BYE if it is sent with our internal SSRC
-      * rtpptdemux: Tag upstream custom events with payload type
-      * rtpsession: add action signal to request early RTCP
-      * rtpsession: add "rtcp-min-interval" property for minimum interval between Regular RTCP messages
-      * rtpsession: Don't relay more than one PLI request per RTT
-      * rtpsession: Emit "on-ssrc-validated" when validating by RTCP
-      * rtpsession: Emit signal on incoming RTCP feedback packet
-      * rtpsession: Emit signal when sending a compound RTCP packet
-      * rtpsession: Implement sending PLI packets in response to GstForceKeyUnit
-      * rtpsession: Number of active sources should be updated whenever the status of the source changes to active
-      * rtpsession: Send GstForceKeyUnit event in response to received RTCP PLI
-      * rtpsource: Retain RTCP Feedback packets for a specified amount of time
-      * rtpssrcdemux: Tag upstream custom events with SSRC
-      * rtpssrcdemux: Unknown SSRC is not fatal
-      * rtpspeexpay: Do not transmit samples with GAP flag
-      * rtptheoradepay: Request new keyframe on lost packets
-      * rtpvrawpay: add support for interlaced video
-      * rtspsrc: distribute new base_time to manager children following flush seek
-      * rtspsrc: handle * control correctly
-      * rtspsrc: improve recovery from failed seek
-      * spectrum: miscellaneous optimisations, add multi-channel support
-      * speexdec: Always process the number of frames per packet as specified in the header
-      * speexdec: get and use streamheader from the caps if possible
-      * speexenc: Use speex intern silence detection
-      * theorapay: handle 0-sized packets (which are repeat frames)
-      * udpsink: warn when packet is too large
-      * v4l2: Add PJPG mapping
-      * v4l2: fix interlaced set_format configuration
-      * v4l2: new v4l2radio element to control analog radio devices
-      * videobalance: fix handling of YUV images with 'odd' widths
-      * videoflip: add support for YUY2, UVYV and YVYU
-      * videoflip: fix invalid memory access for odd resolutions and Y422
-      * videomixer2: Add transparent background option for alpha channel formats
-      * videomixer: Add transparent background option for alpha channel formats
-      * videomixer: Fix argb/rgba overlay orc code
-      * wavparse: tune output max buffer size to material
+      * work around GLib atomic ops API change
+      * better handling of malformed buffers in RTP depayloders
+      * some minor compilation fixes
 
 Bugs fixed in this release
      
-      * 564122 : Crash in monoscope_update
-      * 432612 : [matroskamux] doesn't handle segments correctly
-      * 593482 : Spectrum: Multi-Channel support and Stereo to Mono compat report(cross-correlation)
-      * 595520 : Implement a generic cairo overlay
-      * 622553 : rtpmanager: Implement RFC 4585 (AVPF / early feedback)
-      * 636699 : [PLUGIN-MOVE] qtmux: move to -good
-      * 639994 : videomixer2: added 'transparent' background option
-      * 640118 : v4l2: add element to control radio devices
-      * 640163 : rtspsrc: minor leak
-      * 640249 : [taginject] Taginject does not allow to change tags after init
-      * 640483 : flvdemux: Video's width, height and/or framerate src caps added when present on onMetaData
-      * 640542 : matroskamux leaks memory after reset
-      * 641330 : icydemux: crash while playing MP3 stream in amarok
-      * 641332 : can't connect vorbisenc ! queue ! matroskamux
-      * 641400 : [deinterlace] Handle image caps without asserting
-      * 641827 : rtptheorapay: doesn't handle 0-size packets
-      * 642205 : qtdemux: extract MusicBrainz tags
-      * 642337 : [souphttpsrc] Add support for URI queries
-      * 642412 : gstrtpbin with ignore-pt tries to use NULL stream- > demux during uninitialization
-      * 642691 : deinterlace: Miscellaneous cleanup
-      * 642879 : qtmux: add a 'variant' with the bare video/quicktime media type
-      * 642961 : NV12 colorspace support for deinterlace plugin
-      * 642963 : [dvdemux] time based upstream seek
-      * 643087 : pulsesink: deadlock in gst_pulseringbuffer_open_device
-      * 643981 : [cairooverlay] example uses gtk/gtk-x11 unnecessarily
-      * 644288 : generic/states check fails
-      * 644477 : [jack] doesn't build with jack > = 0.120.2
-      * 644510 : pulsesink: deadlock when create/connect fails
-      * 644669 : gstspeexdec causes 'Conditional jump depends on uninitialised value'
-      * 644773 : Add support for Y422 colorspaces in videoflip element
-      * 644849 : [speexdec] Remove warning message when it is inappropriate
-      * 644875 : [matroskademux] can't read the ARTIST tag in a Matroska file
-      * 645858 : [flvdemux] memory leak when demuxing infinite FLV files
-      * 645961 : [pulsesink] hangs when going from paused to playing near EOS
-      * 646397 : rtpjitterbuffer base_time broken by commit f84b8a69
-      * 646474 : rtpspeexpay should drop empty samples
-      * 646567 : [matroska] Add alaw/mulaw audio support
-      * 646800 : rtspsrc: control attribute on the session and not on the media
-      * 646954 : rtpgstpay: declare frag_offset to hold 32 bits
-      * 646964 : rtpmanager: ignore a BYE if it is sent with our internal SSRC
-      * 646965 : rtpmanager: Number of active sources should be updated whenever the status of the source changes to active
-      * 646966 : rtpssrcdemux: Unknown SSRC is not fatal
-      * 646967 : rtpsession: make iterate_internal_links MT-safe
-      * 646999 : [regression] pulsesink: underruns while playing WMA
-      * 647263 : REGRESSION: rtpsession: fix wrongly applied patch
-      * 647510 : audiowsinclimit uses the wrong limits for the range of the kernel elements
-      * 647511 : add other common windows to low/high-pass filters in audiowsinclimit.c
-      * 647659 : mp3parse / mpegaudioparse fails to detect VBRI header in mpeg1 mono and mpeg2 files
-      * 647833 : matroskademux: bad at guessing the framerate
-      * 647848 : Failure to compile with GCC 4.6.x due to variable unused but set warnings being treated as errors
-      * 647919 : qtmux: silently corrupts h264 streams with legacy caps
-      * 648004 : [quicktime] Rename plugin library to quicktime too
-      * 648160 : Remove half-complete bits of RTCP FIR support
-      * 648589 : jpegdec: documentation typo " jpegddec " 
-      * 649060 : flvmux: overwrites metadata tags with duration in streamable=false mode
-      * 649449 : [gppmux] Failure to write location
-      * 566769 : [flacdec] crash in push mode with large header packet (image)
-      * 644730 : [matroskamux] Should return TRUE in the event function when the event is handled
+      * 650470 : RTP: Some depayloaders break with malformed rtp packets
+      * 652144 : [udp] Fix compiler warning on mingw-w64
 
 Download
 
@@ -237,55 +88,9 @@ Applications
   
 Contributors to this release
     
-      * "Carsten Kroll
-      * Alejandro Gonzalez
-      * Alessandro Decina
-      * Alexey Chernov
-      * Alexey Fisher
-      * Andoni Morales Alastruey
-      * Arun Raghavan
-      * Benjamin Otte
-      * Christian Fredrik Kalager Schaller
-      * Christian Schaller
-      * David Hoyt
       * David Schleef
-      * Edward Hervey
-      * Felipe Contreras
-      * Haakon Sporsheim
-      * Havard Graff
-      * Jan Schmidt
-      * Jan Urbanski
-      * Jan Urbański
-      * Jon Nordby
-      * Jordi Burguet-Castell
-      * Josep Torra
-      * Joshua M. Doe
-      * Julien Moutte
-      * LRN
-      * Lane Brooks
-      * Lasse Laukkanen
-      * Leonardo Sandoval
-      * Luis de Bethencourt
-      * Marc-André Lureau
-      * Mark Nauwelaerts
-      * Michael Smith
-      * Ole André Vadla Ravnås
-      * Olivier Crête
-      * Pascal Buhler
-      * Philip Jägenstedt
-      * Philippe Normand
-      * René Stadler
-      * Rob Clark
-      * Robert Swain
+      * Jose Antonio Santos Cadenas
+      * Pino Toscano
+      * Raimo Järvi
       * Sebastian Dröge
-      * Stefan Kost
-      * Thiago Santos
-      * Thiago Sousa Santos
-      * Thibault Saunier
-      * Tim-Philipp Müller
-      * Tom Janiszewski
-      * Vincent Penquerc'h
-      * Wim Taymans
-      * Youness Alaoui
-      * Zaheer Abbas Merali
  

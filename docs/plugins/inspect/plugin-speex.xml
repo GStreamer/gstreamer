@@ -3,7 +3,7 @@
   <description>Speex plugin library</description>
   <filename>../../ext/speex/.libs/libgstspeex.so</filename>
   <basename>libgstspeex.so</basename>
-  <version>0.10.29.1</version>
+  <version>0.10.30.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins git</package>

@@ -3,7 +3,7 @@
   <description>Run an FFT on the audio signal, output spectrum data</description>
   <filename>../../gst/spectrum/.libs/libgstspectrum.so</filename>
   <basename>libgstspectrum.so</basename>
-  <version>0.10.29.1</version>
+  <version>0.10.30.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins git</package>
