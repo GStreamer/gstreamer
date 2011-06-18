@@ -49,7 +49,8 @@ colorspace_convert_new (GstVideoFormat to_format, ColorSpaceColorSpec to_spec,
       || to_spec == COLOR_SPEC_RGB, NULL);
   g_return_val_if_fail (!gst_video_format_is_yuv (to_format)
       || to_spec == COLOR_SPEC_YUV_BT709
-      || to_spec == COLOR_SPEC_YUV_BT470_6, NULL);
+      || to_spec == COLOR_SPEC_YUV_BT470_6
+      || to_spec == COLOR_SPEC_YUV_JPEG, NULL);
   g_return_val_if_fail (gst_video_format_is_rgb (to_format)
       || gst_video_format_is_yuv (to_format)
       || (gst_video_format_is_gray (to_format) &&
@@ -59,7 +60,8 @@ colorspace_convert_new (GstVideoFormat to_format, ColorSpaceColorSpec to_spec,
       || from_spec == COLOR_SPEC_RGB, NULL);
   g_return_val_if_fail (!gst_video_format_is_yuv (from_format)
       || from_spec == COLOR_SPEC_YUV_BT709
-      || from_spec == COLOR_SPEC_YUV_BT470_6, NULL);
+      || from_spec == COLOR_SPEC_YUV_BT470_6
+      || from_spec == COLOR_SPEC_YUV_JPEG, NULL);
   g_return_val_if_fail (gst_video_format_is_rgb (from_format)
       || gst_video_format_is_yuv (from_format)
       || (gst_video_format_is_gray (from_format) &&

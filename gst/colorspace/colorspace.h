@@ -32,7 +32,8 @@ typedef enum {
   COLOR_SPEC_RGB,
   COLOR_SPEC_GRAY,
   COLOR_SPEC_YUV_BT470_6,
-  COLOR_SPEC_YUV_BT709
+  COLOR_SPEC_YUV_BT709,
+  COLOR_SPEC_YUV_JPEG
 } ColorSpaceColorSpec;
 
 typedef enum {

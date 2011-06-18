@@ -278,6 +278,8 @@ gst_csp_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
 
     if (matrix && g_str_equal (matrix, "hdtv"))
       in_spec = COLOR_SPEC_YUV_BT709;
+    else if (matrix && g_str_equal (matrix, "jpeg"))
+      in_spec = COLOR_SPEC_YUV_JPEG;
     else
       in_spec = COLOR_SPEC_YUV_BT470_6;
   } else {
@@ -308,6 +310,8 @@ gst_csp_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
 
     if (matrix && g_str_equal (matrix, "hdtv"))
       out_spec = COLOR_SPEC_YUV_BT709;
+    else if (matrix && g_str_equal (matrix, "jpeg"))
+      out_spec = COLOR_SPEC_YUV_JPEG;
     else
       out_spec = COLOR_SPEC_YUV_BT470_6;
   } else {
