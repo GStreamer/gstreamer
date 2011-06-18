@@ -405,8 +405,10 @@ gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder, GstVideoFrame * frame)
     state->width = stream_info.w;
     state->height = stream_info.h;
     state->format = GST_VIDEO_FORMAT_I420;
-    state->par_n = 1;
-    state->par_d = 1;
+    if (state->par_n == 0 || state->par_d == 0) {
+      state->par_n = 1;
+      state->par_d = 1;
+    }
     gst_vp8_dec_send_tags (dec);
     gst_base_video_decoder_set_src_caps (decoder);
 
