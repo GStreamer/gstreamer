@@ -60,6 +60,8 @@ struct _GstVP8Enc
   /* properties */
   int bitrate;
   enum vpx_rc_mode mode;
+  unsigned int minsection_pct;
+  unsigned int maxsection_pct;
   int min_quantizer;
   int max_quantizer;
   double quality;

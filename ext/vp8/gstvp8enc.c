@@ -85,6 +85,8 @@ gst_vp8_enc_coder_hook_free (GstVP8EncCoderHook * hook)
 
 #define DEFAULT_BITRATE 0
 #define DEFAULT_MODE VPX_VBR
+#define DEFAULT_MINSECTION_PCT 5
+#define DEFAULT_MAXSECTION_PCT 800
 #define DEFAULT_MIN_QUANTIZER 0
 #define DEFAULT_MAX_QUANTIZER 63
 #define DEFAULT_QUALITY 5
@@ -103,6 +105,8 @@ enum
   PROP_0,
   PROP_BITRATE,
   PROP_MODE,
+  PROP_MINSECTION_PCT,
+  PROP_MAXSECTION_PCT,
   PROP_MIN_QUANTIZER,
   PROP_MAX_QUANTIZER,
   PROP_QUALITY,
@@ -264,6 +268,20 @@ gst_vp8_enc_class_init (GstVP8EncClass * klass)
           GST_VP8_ENC_MODE_TYPE, DEFAULT_MODE,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+  g_object_class_install_property (gobject_class, PROP_MINSECTION_PCT,
+      g_param_spec_uint ("minsection-pct",
+          "minimum percentage allocation per section",
+          "The numbers represent a percentage of the average allocation per section (frame)",
+          0, 20, DEFAULT_MINSECTION_PCT,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  g_object_class_install_property (gobject_class, PROP_MAXSECTION_PCT,
+      g_param_spec_uint ("maxsection-pct",
+          "maximum percentage allocation per section",
+          "The numbers represent a percentage of the average allocation per section (frame)",
+          200, 800, DEFAULT_MAXSECTION_PCT,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
   g_object_class_install_property (gobject_class, PROP_MIN_QUANTIZER,
       g_param_spec_int ("min-quantizer", "Minimum quantizer",
           "Minimum (best) quantizer",
@@ -347,6 +365,8 @@ gst_vp8_enc_init (GstVP8Enc * gst_vp8_enc, GstVP8EncClass * klass)
   GST_DEBUG_OBJECT (gst_vp8_enc, "init");
 
   gst_vp8_enc->bitrate = DEFAULT_BITRATE;
+  gst_vp8_enc->minsection_pct = DEFAULT_MINSECTION_PCT;
+  gst_vp8_enc->maxsection_pct = DEFAULT_MAXSECTION_PCT;
   gst_vp8_enc->min_quantizer = DEFAULT_MIN_QUANTIZER;
   gst_vp8_enc->max_quantizer = DEFAULT_MAX_QUANTIZER;
   gst_vp8_enc->mode = DEFAULT_MODE;
@@ -393,6 +413,12 @@ gst_vp8_enc_set_property (GObject * object, guint prop_id,
       break;
     case PROP_MODE:
       gst_vp8_enc->mode = g_value_get_enum (value);
+      break;
+    case PROP_MINSECTION_PCT:
+      gst_vp8_enc->minsection_pct = g_value_get_uint (value);
+      break;
+    case PROP_MAXSECTION_PCT:
+      gst_vp8_enc->maxsection_pct = g_value_get_uint (value);
       break;
     case PROP_MIN_QUANTIZER:
       gst_vp8_enc->min_quantizer = g_value_get_int (value);
@@ -452,6 +478,12 @@ gst_vp8_enc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_MODE:
       g_value_set_enum (value, gst_vp8_enc->mode);
+      break;
+    case PROP_MINSECTION_PCT:
+      g_value_set_uint (value, gst_vp8_enc->minsection_pct);
+      break;
+    case PROP_MAXSECTION_PCT:
+      g_value_set_uint (value, gst_vp8_enc->maxsection_pct);
       break;
     case PROP_MIN_QUANTIZER:
       g_value_set_int (value, gst_vp8_enc->min_quantizer);
@@ -568,6 +600,8 @@ gst_vp8_enc_set_format (GstBaseVideoEncoder * base_video_encoder,
   cfg.g_lag_in_frames = encoder->max_latency;
   cfg.g_threads = encoder->threads;
   cfg.rc_end_usage = encoder->mode;
+  cfg.rc_2pass_vbr_minsection_pct = encoder->minsection_pct;
+  cfg.rc_2pass_vbr_maxsection_pct = encoder->maxsection_pct;
   /* Standalone qp-min do not make any sence, with bitrate=0 and qp-min=1
    * encoder will use only default qp-max=63. Also this will make
    * worst possbile quality.
