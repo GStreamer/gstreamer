@@ -1057,6 +1057,7 @@ gst_buffer_memcmp (GstBuffer * buffer, gsize offset, gconstpointer mem,
 /**
  * gst_buffer_copy_region:
  * @parent: a #GstBuffer.
+ * @flags: the #GstBufferCopyFlags
  * @offset: the offset into parent #GstBuffer at which the new sub-buffer 
  *          begins.
  * @size: the size of the new #GstBuffer sub-buffer, in bytes.
