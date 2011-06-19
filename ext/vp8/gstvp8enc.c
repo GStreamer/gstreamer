@@ -94,7 +94,7 @@ gst_vp8_enc_coder_hook_free (GstVP8EncCoderHook * hook)
 #define DEFAULT_SPEED 0
 #define DEFAULT_THREADS 1
 #define DEFAULT_MULTIPASS_MODE VPX_RC_ONE_PASS
-#define DEFAULT_MULTIPASS_CACHE_FILE NULL
+#define DEFAULT_MULTIPASS_CACHE_FILE "multipass.cache"
 #define DEFAULT_AUTO_ALT_REF_FRAMES FALSE
 
 enum
@@ -347,7 +347,7 @@ gst_vp8_enc_init (GstVP8Enc * gst_vp8_enc, GstVP8EncClass * klass)
   gst_vp8_enc->max_latency = DEFAULT_MAX_LATENCY;
   gst_vp8_enc->max_keyframe_distance = DEFAULT_MAX_KEYFRAME_DISTANCE;
   gst_vp8_enc->multipass_mode = DEFAULT_MULTIPASS_MODE;
-  gst_vp8_enc->multipass_cache_file = DEFAULT_MULTIPASS_CACHE_FILE;
+  gst_vp8_enc->multipass_cache_file = g_strdup (DEFAULT_MULTIPASS_CACHE_FILE);
   gst_vp8_enc->auto_alt_ref_frames = DEFAULT_AUTO_ALT_REF_FRAMES;
 }
 
