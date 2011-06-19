@@ -96,6 +96,7 @@ gst_vp8_enc_coder_hook_free (GstVP8EncCoderHook * hook)
 #define DEFAULT_MULTIPASS_MODE VPX_RC_ONE_PASS
 #define DEFAULT_MULTIPASS_CACHE_FILE "multipass.cache"
 #define DEFAULT_AUTO_ALT_REF_FRAMES FALSE
+#define DEFAULT_LAG_IN_FRAMES 0
 
 enum
 {
@@ -112,7 +113,8 @@ enum
   PROP_THREADS,
   PROP_MULTIPASS_MODE,
   PROP_MULTIPASS_CACHE_FILE,
-  PROP_AUTO_ALT_REF_FRAMES
+  PROP_AUTO_ALT_REF_FRAMES,
+  PROP_LAG_IN_FRAMES
 };
 
 #define GST_VP8_ENC_MODE_TYPE (gst_vp8_enc_mode_get_type())
@@ -328,6 +330,12 @@ gst_vp8_enc_class_init (GstVP8EncClass * klass)
           DEFAULT_AUTO_ALT_REF_FRAMES,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+  g_object_class_install_property (gobject_class, PROP_LAG_IN_FRAMES,
+      g_param_spec_uint ("lag-in-frames", "Max number of frames to lag",
+          "If set, this value allows the encoder to consume a number of input "
+          "frames before producing output frames.",
+          0, 64, DEFAULT_LAG_IN_FRAMES,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   GST_DEBUG_CATEGORY_INIT (gst_vp8enc_debug, "vp8enc", 0, "VP8 Encoder");
 }
@@ -349,6 +357,7 @@ gst_vp8_enc_init (GstVP8Enc * gst_vp8_enc, GstVP8EncClass * klass)
   gst_vp8_enc->multipass_mode = DEFAULT_MULTIPASS_MODE;
   gst_vp8_enc->multipass_cache_file = g_strdup (DEFAULT_MULTIPASS_CACHE_FILE);
   gst_vp8_enc->auto_alt_ref_frames = DEFAULT_AUTO_ALT_REF_FRAMES;
+  gst_vp8_enc->lag_in_frames = DEFAULT_LAG_IN_FRAMES;
 }
 
 static void
@@ -420,6 +429,9 @@ gst_vp8_enc_set_property (GObject * object, guint prop_id,
     case PROP_AUTO_ALT_REF_FRAMES:
       gst_vp8_enc->auto_alt_ref_frames = g_value_get_boolean (value);
       break;
+    case PROP_LAG_IN_FRAMES:
+      gst_vp8_enc->lag_in_frames = g_value_get_uint (value);
+      break;
     default:
       break;
   }
@@ -473,6 +485,9 @@ gst_vp8_enc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_AUTO_ALT_REF_FRAMES:
       g_value_set_boolean (value, gst_vp8_enc->auto_alt_ref_frames);
+      break;
+    case PROP_LAG_IN_FRAMES:
+      g_value_set_uint (value, gst_vp8_enc->lag_in_frames);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -620,6 +635,8 @@ gst_vp8_enc_set_format (GstBaseVideoEncoder * base_video_encoder,
         "Failed to set VP8E_ENABLEAUTOALTREF to %d: %s",
         (encoder->auto_alt_ref_frames ? 1 : 0), gst_vpx_error_name (status));
   }
+
+  cfg.g_lag_in_frames = encoder->lag_in_frames;
 
   gst_base_video_encoder_set_latency (base_video_encoder, 0,
       gst_util_uint64_scale (encoder->max_latency,
