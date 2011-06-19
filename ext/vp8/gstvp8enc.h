@@ -73,6 +73,7 @@ struct _GstVP8Enc
   GByteArray *first_pass_cache_content;
   vpx_fixed_buf_t last_pass_cache_content;
   gboolean auto_alt_ref_frames;
+  unsigned int lag_in_frames;
 
   /* state */
   gboolean inited;
