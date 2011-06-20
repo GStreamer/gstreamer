@@ -114,6 +114,7 @@ struct _GstBufferPoolClass {
   GstObjectClass    object_class;
 
   /* vmethods */
+  const gchar ** (*get_metas)      (GstBufferPool *pool);
   gboolean       (*set_config)     (GstBufferPool *pool, GstStructure *config);
 
   gboolean       (*start)          (GstBufferPool *pool);
@@ -132,26 +133,33 @@ struct _GstBufferPoolClass {
 GType       gst_buffer_pool_get_type (void);
 
 /* allocation */
-GstBufferPool *       gst_buffer_pool_new  (void);
+GstBufferPool *  gst_buffer_pool_new  (void);
 
 /* state management */
-gboolean              gst_buffer_pool_set_active      (GstBufferPool *pool, gboolean active);
+gboolean         gst_buffer_pool_set_active      (GstBufferPool *pool, gboolean active);
 
-gboolean              gst_buffer_pool_set_config      (GstBufferPool *pool, GstStructure *config);
-GstStructure *        gst_buffer_pool_get_config      (GstBufferPool *pool);
+gboolean         gst_buffer_pool_set_config      (GstBufferPool *pool, GstStructure *config);
+GstStructure *   gst_buffer_pool_get_config      (GstBufferPool *pool);
+
+const gchar **   gst_buffer_pool_get_metas       (GstBufferPool *pool);
 
 /* helpers for configuring the config structure */
-void                  gst_buffer_pool_config_set      (GstStructure *config, const GstCaps *caps,
-                                                       guint size, guint min_buffers, guint max_buffers,
-                                                       guint prefix, guint align);
-gboolean              gst_buffer_pool_config_get      (GstStructure *config, const GstCaps **caps,
-                                                       guint *size, guint *min_buffers, guint *max_buffers,
-                                                       guint *prefix, guint *align);
+void             gst_buffer_pool_config_set      (GstStructure *config, const GstCaps *caps,
+                                                  guint size, guint min_buffers, guint max_buffers,
+                                                  guint prefix, guint align);
+gboolean         gst_buffer_pool_config_get      (GstStructure *config, const GstCaps **caps,
+                                                  guint *size, guint *min_buffers, guint *max_buffers,
+                                                  guint *prefix, guint *align);
+
+guint            gst_buffer_pool_config_n_metas  (GstStructure *config);
+void             gst_buffer_pool_config_add_meta (GstStructure *config, const gchar *api);
+const gchar *    gst_buffer_pool_config_get_meta (GstStructure *config, guint index);
+gboolean         gst_buffer_pool_config_has_meta (GstStructure *config, const gchar *api);
 
 /* buffer management */
-GstFlowReturn         gst_buffer_pool_acquire_buffer  (GstBufferPool *pool, GstBuffer **buffer,
-                                                       GstBufferPoolParams *params);
-void                  gst_buffer_pool_release_buffer  (GstBufferPool *pool, GstBuffer *buffer);
+GstFlowReturn    gst_buffer_pool_acquire_buffer  (GstBufferPool *pool, GstBuffer **buffer,
+                                                  GstBufferPoolParams *params);
+void             gst_buffer_pool_release_buffer  (GstBufferPool *pool, GstBuffer *buffer);
 
 G_END_DECLS
 

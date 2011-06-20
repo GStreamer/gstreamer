@@ -483,8 +483,36 @@ gst_buffer_pool_get_config (GstBufferPool * pool)
 }
 
 /**
+ * gst_buffer_pool_get_metas:
+ * @pool: a #GstBufferPool
+ *
+ * Get a NULL terminated array of string with supported #GstMeta apis for
+ * @pool. The requested api would typically be added to the config with
+ * gst_buffer_pool_config_add_meta().
+ *
+ * Returns: a NULL terminated array of strings.
+ */
+const gchar **
+gst_buffer_pool_get_metas (GstBufferPool * pool)
+{
+  GstBufferPoolClass *pclass;
+  const gchar **result;
+
+  g_return_val_if_fail (GST_IS_BUFFER_POOL (pool), NULL);
+
+  pclass = GST_BUFFER_POOL_GET_CLASS (pool);
+
+  if (G_LIKELY (pclass->get_metas))
+    result = pclass->get_metas (pool);
+  else
+    result = NULL;
+
+  return result;
+}
+
+/**
  * gst_buffer_pool_config_set:
- * @config: a #GstBufferPool
+ * @config: a #GstBufferPool configuration
  * @caps: caps for the buffers
  * @size: the size of each buffer, not including prefix
  * @min_buffers: the minimum amount of buffers to allocate.
@@ -510,8 +538,137 @@ gst_buffer_pool_config_set (GstStructure * config, const GstCaps * caps,
 }
 
 /**
+ * gst_buffer_pool_config_add_meta:
+ * @config: a #GstBufferPool configuration
+ * @api: an API to add
+ *
+ * Adds the metadata api to @config. This will instruct the @bufferpool to use
+ * the specified metadata api on the buffers that it allocates.
+ *
+ * The supported API by @pool can be retrieved with gst_buffer_pool_get_metas().
+ */
+void
+gst_buffer_pool_config_add_meta (GstStructure * config, const gchar * api)
+{
+  GValueArray *array;
+  const GValue *value;
+  GValue api_value = { 0 };
+
+  g_return_if_fail (config != NULL);
+
+  value = gst_structure_id_get_value (config, GST_QUARK (META));
+  if (value) {
+    array = (GValueArray *) g_value_get_boxed (value);
+  } else {
+    GValue new_array_val = { 0, };
+
+    array = g_value_array_new (0);
+
+    g_value_init (&new_array_val, G_TYPE_VALUE_ARRAY);
+    g_value_take_boxed (&new_array_val, array);
+
+    gst_structure_id_take_value (config, GST_QUARK (META), &new_array_val);
+  }
+
+  g_value_init (&api_value, G_TYPE_STRING);
+  g_value_set_string (&api_value, api);
+  g_value_array_append (array, &api_value);
+  g_value_unset (&api_value);
+}
+
+/**
+ * gst_buffer_pool_config_n_metas:
+ * @config: a #GstBufferPool configuration
+ *
+ * Retrieve the number of values currently stored in the
+ * meta API array of the @config structure.
+ *
+ * Returns: the metadata API array size as a #guint.
+ */
+guint
+gst_buffer_pool_config_n_metas (GstStructure * config)
+{
+  GValueArray *array;
+  const GValue *value;
+  guint size = 0;
+
+  g_return_val_if_fail (config != NULL, 0);
+
+  value = gst_structure_id_get_value (config, GST_QUARK (META));
+  if (value) {
+    array = (GValueArray *) g_value_get_boxed (value);
+    size = array->n_values;
+  }
+  return size;
+}
+
+/**
+ * gst_buffer_pool_config_get_meta:
+ * @config: a #GstBufferPool configuration
+ * @index: position in the metadata API array to read
+ *
+ * Parse an available @config and get the metadata API
+ * at @index of the metadata API array.
+ *
+ * Returns: a #gchar of the metadata API at @index.
+ */
+const gchar *
+gst_buffer_pool_config_get_meta (GstStructure * config, guint index)
+{
+  const GValue *value;
+  const gchar *ret = NULL;
+
+  g_return_val_if_fail (config != NULL, 0);
+
+  value = gst_structure_id_get_value (config, GST_QUARK (META));
+  if (value) {
+    GValueArray *meta;
+    GValue *api_value;
+
+    meta = (GValueArray *) g_value_get_boxed (value);
+    api_value = g_value_array_get_nth (meta, index);
+
+    if (api_value)
+      ret = g_value_get_string (api_value);
+  }
+  return ret;
+}
+
+/**
+ * gst_buffer_pool_config_has_meta:
+ * @config: a #GstBufferPool configuration
+ * @api: a metadata api
+ *
+ * Check if @config contains @api metadata.
+ *
+ * Returns: TRUE if the metadata array contain @api.
+ */
+gboolean
+gst_buffer_pool_config_has_meta (GstStructure * config, const gchar * api)
+{
+  const GValue *value;
+
+  g_return_val_if_fail (config != NULL, 0);
+
+  value = gst_structure_id_get_value (config, GST_QUARK (META));
+  if (value) {
+    GValueArray *array;
+    GValue *api_value;
+    gint i;
+
+    array = (GValueArray *) g_value_get_boxed (value);
+    for (i = 0; i < array->n_values; i++) {
+      api_value = g_value_array_get_nth (array, i);
+      if (!strcmp (api, g_value_get_string (api_value)))
+        return TRUE;
+    }
+  }
+  return FALSE;
+}
+
+/**
  * gst_buffer_pool_config_get:
- * @config: a #GstBufferPool
+ * @config: a #GstBufferPool configuration
  * @caps: the caps of buffers
  * @size: the size of each buffer, not including prefix
  * @min_buffers: the minimum amount of buffers to allocate.
