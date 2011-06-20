@@ -710,13 +710,19 @@ done:
   return caps;
 }
 
-static void
+static gboolean
 gst_base_transform_set_allocation (GstBaseTransform * trans,
     GstBufferPool * pool, const GstMemoryAllocator * allocator, guint prefix,
     guint alignment)
 {
   GstBufferPool *oldpool;
   GstBaseTransformPrivate *priv = trans->priv;
+
+  /* activate */
+  if (pool) {
+    if (!gst_buffer_pool_set_active (pool, TRUE))
+      goto activate_failed;
+  }
 
   GST_OBJECT_LOCK (trans);
   oldpool = priv->pool;
@@ -729,6 +735,14 @@ gst_base_transform_set_allocation (GstBaseTransform * trans,
   if (oldpool) {
     gst_buffer_pool_set_active (oldpool, FALSE);
     gst_object_unref (oldpool);
+  }
+  return FALSE;
+
+  /* ERRORS */
+activate_failed:
+  {
+    GST_ERROR_OBJECT (trans, "failed to activate bufferpool.");
+    return FALSE;
   }
 }
 
@@ -801,24 +815,14 @@ gst_base_transform_do_bufferpool (GstBaseTransform * trans, GstCaps * outcaps)
     gst_buffer_pool_config_set (config, outcaps, size, min, max, prefix,
         alignment);
     gst_buffer_pool_set_config (pool, config);
-
-    /* activate */
-    if (!gst_buffer_pool_set_active (pool, TRUE))
-      goto activate_failed;
   }
 
   /* and store */
-  gst_base_transform_set_allocation (trans, pool, allocator, prefix, alignment);
+  result =
+      gst_base_transform_set_allocation (trans, pool, allocator, prefix,
+      alignment);
 
   return result;
-
-  /* ERRORS */
-activate_failed:
-  {
-    GST_ERROR_OBJECT (trans, "failed to activate bufferpool.");
-    gst_object_unref (pool);
-    return FALSE;
-  }
 }
 
 /* function triggered when the in and out caps are negotiated and need
