@@ -76,7 +76,7 @@
 
 #include <math.h>
 
-#include <gst/video/video.h>
+#include <gst/video/gstmetavideo.h>
 
 #include "gstvideoscale.h"
 #include "gstvideoscaleorc.h"
@@ -179,6 +179,8 @@ static gboolean gst_video_scale_set_caps (GstBaseTransform * trans,
     GstCaps * in, GstCaps * out);
 static gboolean gst_video_scale_get_unit_size (GstBaseTransform * trans,
     GstCaps * caps, gsize * size);
+static gboolean gst_video_scale_setup_allocation (GstBaseTransform * trans,
+    GstQuery * query);
 static GstFlowReturn gst_video_scale_transform (GstBaseTransform * trans,
     GstBuffer * in, GstBuffer * out);
 static void gst_video_scale_fixate_caps (GstBaseTransform * base,
@@ -228,6 +230,8 @@ gst_video_scale_class_init (GstVideoScaleClass * klass)
   trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_video_scale_set_caps);
   trans_class->get_unit_size =
       GST_DEBUG_FUNCPTR (gst_video_scale_get_unit_size);
+  trans_class->setup_allocation =
+      GST_DEBUG_FUNCPTR (gst_video_scale_setup_allocation);
   trans_class->transform = GST_DEBUG_FUNCPTR (gst_video_scale_transform);
   trans_class->fixate_caps = GST_DEBUG_FUNCPTR (gst_video_scale_fixate_caps);
   trans_class->src_event = GST_DEBUG_FUNCPTR (gst_video_scale_src_event);
@@ -344,6 +348,26 @@ gst_video_scale_transform_caps (GstBaseTransform * trans,
   GST_DEBUG_OBJECT (trans, "returning caps: %" GST_PTR_FORMAT, ret);
 
   return ret;
+}
+
+
+static gboolean
+gst_video_scale_setup_allocation (GstBaseTransform * trans, GstQuery * query)
+{
+  GstBufferPool *pool = NULL;
+  guint size, min, max, prefix, alignment;
+
+  gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
+      &alignment, &pool);
+
+  if (pool) {
+    GstStructure *config;
+
+    config = gst_buffer_pool_get_config (pool);
+    gst_buffer_pool_config_add_meta (config, GST_META_API_VIDEO);
+    gst_buffer_pool_set_config (pool, config);
+  }
+  return TRUE;
 }
 
 static gboolean
