@@ -2658,13 +2658,17 @@ gst_base_src_prepare_allocation (GstBaseSrc * basesrc, GstCaps * caps)
    * not, if it failed, the allocation query would contain defaults and the
    * subclass would then set better values if needed */
   query = gst_query_new_allocation (caps, TRUE);
-  gst_pad_peer_query (basesrc->srcpad, query);
+  if (!gst_pad_peer_query (basesrc->srcpad, query)) {
+    /* not a problem, just debug a little */
+    GST_DEBUG_OBJECT (basesrc, "peer ALLOCATION query failed");
+  }
 
   if (G_LIKELY (bclass->setup_allocation))
     result = bclass->setup_allocation (basesrc, query);
 
   gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
       &alignment, &pool);
+  gst_query_unref (query);
 
   if (size == 0) {
     const gchar *mem = NULL;
@@ -2686,12 +2690,21 @@ gst_base_src_prepare_allocation (GstBaseSrc * basesrc, GstCaps * caps)
         alignment);
     gst_buffer_pool_set_config (pool, config);
 
-    gst_buffer_pool_set_active (pool, TRUE);
+    if (!gst_buffer_pool_set_active (pool, TRUE))
+      goto activate_failed;
   }
 
   gst_base_src_set_allocation (basesrc, pool, allocator, prefix, alignment);
 
   return result;
+
+  /* ERRORS */
+activate_failed:
+  {
+    GST_ERROR_OBJECT (basesrc, "failed to activate bufferpool.");
+    gst_object_unref (pool);
+    return FALSE;
+  }
 }
 
 /* default negotiation code.
