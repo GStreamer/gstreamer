@@ -473,6 +473,14 @@ struct _GstXvImageBufferPoolPrivate
 G_DEFINE_TYPE (GstXvImageBufferPool, gst_xvimage_buffer_pool,
     GST_TYPE_BUFFER_POOL);
 
+static const gchar **
+xvimage_buffer_pool_get_metas (GstBufferPool * pool)
+{
+  static const gchar *metas[] = { "GstMetaVideo", NULL };
+
+  return metas;
+}
+
 static gboolean
 xvimage_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
 {
@@ -502,8 +510,11 @@ xvimage_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   priv->caps = gst_caps_copy (caps);
   priv->im_format =
       gst_xvimagesink_get_format_from_caps (xvpool->sink, (GstCaps *) caps);
-  /* FIXME, enable metadata based on config of the pool */
-  priv->add_metavideo = FALSE;
+
+  /* enable metadata based on config of the pool */
+  priv->add_metavideo =
+      gst_buffer_pool_config_has_meta (config, GST_META_API_VIDEO);
+
   if (priv->im_format == -1)
     goto unknown_format;
 
@@ -605,6 +616,7 @@ gst_xvimage_buffer_pool_class_init (GstXvImageBufferPoolClass * klass)
 
   gobject_class->finalize = gst_xvimage_buffer_pool_finalize;
 
+  gstbufferpool_class->get_metas = xvimage_buffer_pool_get_metas;
   gstbufferpool_class->set_config = xvimage_buffer_pool_set_config;
   gstbufferpool_class->alloc_buffer = xvimage_buffer_pool_alloc;
   gstbufferpool_class->free_buffer = xvimage_buffer_pool_free;

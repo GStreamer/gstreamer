@@ -440,6 +440,14 @@ struct _GstXImageBufferPoolPrivate
 G_DEFINE_TYPE (GstXImageBufferPool, gst_ximage_buffer_pool,
     GST_TYPE_BUFFER_POOL);
 
+static const gchar **
+ximage_buffer_pool_get_metas (GstBufferPool * pool)
+{
+  static const gchar *metas[] = { "GstMetaVideo", NULL };
+
+  return metas;
+}
+
 static gboolean
 ximage_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
 {
@@ -467,8 +475,10 @@ ximage_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   if (priv->caps)
     gst_caps_unref (priv->caps);
   priv->caps = gst_caps_copy (caps);
-  /* FIXME, configure based on config of the bufferpool */
-  priv->add_metavideo = FALSE;
+
+  /* check for the configured metadata */
+  priv->add_metavideo =
+      gst_buffer_pool_config_has_meta (config, GST_META_API_VIDEO);
 
   return TRUE;
 
@@ -557,6 +567,7 @@ gst_ximage_buffer_pool_class_init (GstXImageBufferPoolClass * klass)
 
   gobject_class->finalize = gst_ximage_buffer_pool_finalize;
 
+  gstbufferpool_class->get_metas = ximage_buffer_pool_get_metas;
   gstbufferpool_class->set_config = ximage_buffer_pool_set_config;
   gstbufferpool_class->alloc_buffer = ximage_buffer_pool_alloc;
   gstbufferpool_class->free_buffer = ximage_buffer_pool_free;
