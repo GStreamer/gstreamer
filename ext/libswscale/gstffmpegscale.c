@@ -85,16 +85,10 @@ GST_DEBUG_CATEGORY (ffmpegscale_debug);
 /* libswscale supported formats depend on endianness */
 #if G_BYTE_ORDER == G_BIG_ENDIAN
 #define VIDEO_CAPS \
-        GST_VIDEO_CAPS_RGB "; " GST_VIDEO_CAPS_BGR "; " \
-        GST_VIDEO_CAPS_xRGB "; " GST_VIDEO_CAPS_xBGR "; " \
-        GST_VIDEO_CAPS_ARGB "; " GST_VIDEO_CAPS_ABGR "; " \
-        GST_VIDEO_CAPS_YUV ("{ I420, YUY2, UYVY, Y41B, Y42B }")
+        GST_VIDEO_CAPS_MAKE ("{ RGB, BGR, xRGB, xBGR, ARGB, ABGR, I420, YUY2, UYVY, Y41B, Y42B }")
 #else
 #define VIDEO_CAPS \
-        GST_VIDEO_CAPS_RGB "; " GST_VIDEO_CAPS_BGR "; " \
-        GST_VIDEO_CAPS_RGBx "; " GST_VIDEO_CAPS_BGRx "; " \
-        GST_VIDEO_CAPS_RGBA "; " GST_VIDEO_CAPS_BGRA "; " \
-        GST_VIDEO_CAPS_YUV ("{ I420, YUY2, UYVY, Y41B, Y42B }")
+        GST_VIDEO_CAPS_MAKE ("{ RGB, BGR, RGBx, BGRx, RGBA, BGRA, I420, YUY2, UYVY, Y41B, Y42B }")
 #endif
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",

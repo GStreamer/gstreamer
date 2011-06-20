@@ -178,14 +178,14 @@ static GstStaticPadTemplate gst_post_proc_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("{ IYUV, I420, YV12, Y42B, Y41B }"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ IYUV, I420, YV12, Y42B, Y41B }"))
     );
 
 static GstStaticPadTemplate gst_post_proc_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("{ IYUV, I420, YV12, Y42B, Y41B }"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ IYUV, I420, YV12, Y42B, Y41B }"))
     );
 
 GST_DEBUG_CATEGORY (postproc_debug);
