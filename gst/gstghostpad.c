@@ -96,12 +96,20 @@ gst_proxy_pad_query_type_default (GstPad * pad)
 
   g_return_val_if_fail (GST_IS_PROXY_PAD (pad), NULL);
 
-  target = gst_proxy_pad_get_target (pad);
-  if (target) {
-    res = gst_pad_get_query_types (target);
-    gst_object_unref (target);
-  }
+  if (!(target = gst_proxy_pad_get_target (pad)))
+    goto no_target;
+
+  res = gst_pad_get_query_types (target);
+  gst_object_unref (target);
+
   return res;
+
+  /* ERRORS */
+no_target:
+  {
+    GST_DEBUG_OBJECT (pad, "no target pad");
+    return FALSE;
+  }
 }
 
 /**
@@ -118,18 +126,14 @@ gst_proxy_pad_query_type_default (GstPad * pad)
 gboolean
 gst_proxy_pad_event_default (GstPad * pad, GstEvent * event)
 {
-  gboolean res = FALSE;
+  gboolean res;
   GstPad *internal;
 
   g_return_val_if_fail (GST_IS_PROXY_PAD (pad), FALSE);
   g_return_val_if_fail (GST_IS_EVENT (event), FALSE);
 
-  internal =
-      GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD_CAST (pad)));
-  if (internal) {
-    res = gst_pad_push_event (internal, event);
-    gst_object_unref (internal);
-  }
+  internal = GST_PROXY_PAD_INTERNAL (pad);
+  res = gst_pad_push_event (internal, event);
 
   return res;
 }
@@ -148,19 +152,26 @@ gst_proxy_pad_event_default (GstPad * pad, GstEvent * event)
 gboolean
 gst_proxy_pad_query_default (GstPad * pad, GstQuery * query)
 {
-  gboolean res = FALSE;
+  gboolean res;
   GstPad *target;
 
   g_return_val_if_fail (GST_IS_PROXY_PAD (pad), FALSE);
   g_return_val_if_fail (GST_IS_QUERY (query), FALSE);
 
-  target = gst_proxy_pad_get_target (pad);
-  if (target) {
-    res = gst_pad_query (target, query);
-    gst_object_unref (target);
-  }
+  if (!(target = gst_proxy_pad_get_target (pad)))
+    goto no_target;
+
+  res = gst_pad_query (target, query);
+  gst_object_unref (target);
 
   return res;
+
+  /* ERRORS */
+no_target:
+  {
+    GST_DEBUG_OBJECT (pad, "no target pad");
+    return FALSE;
+  }
 }
 
 /**
@@ -179,21 +190,16 @@ gst_proxy_pad_iterate_internal_links_default (GstPad * pad)
 {
   GstIterator *res = NULL;
   GstPad *internal;
+  GValue v = { 0, };
 
   g_return_val_if_fail (GST_IS_PROXY_PAD (pad), NULL);
 
-  internal =
-      GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD_CAST (pad)));
-
-  if (internal) {
-    GValue v = { 0, };
-
-    g_value_init (&v, GST_TYPE_PAD);
-    g_value_set_object (&v, internal);
-    res = gst_iterator_new_single (GST_TYPE_PAD, &v);
-    g_value_unset (&v);
-    gst_object_unref (internal);
-  }
+  internal = GST_PROXY_PAD_INTERNAL (pad);
+  g_value_init (&v, GST_TYPE_PAD);
+  g_value_set_object (&v, internal);
+  res = gst_iterator_new_single (GST_TYPE_PAD, &v);
+  g_value_unset (&v);
+  gst_object_unref (internal);
 
   return res;
 }
@@ -380,6 +386,7 @@ gst_proxy_pad_acceptcaps_default (GstPad * pad, GstCaps * caps)
     res = gst_pad_accept_caps (target, caps);
     gst_object_unref (target);
   } else {
+    GST_DEBUG_OBJECT (pad, "no target");
     /* We don't have a target, we return TRUE and we assume that any future
      * target will be able to deal with any configured caps. */
     res = TRUE;
@@ -405,10 +412,19 @@ gst_proxy_pad_fixatecaps_default (GstPad * pad, GstCaps * caps)
   g_return_if_fail (GST_IS_PROXY_PAD (pad));
   g_return_if_fail (GST_IS_CAPS (caps));
 
-  target = gst_proxy_pad_get_target (pad);
-  if (target) {
-    gst_pad_fixate_caps (target, caps);
-    gst_object_unref (target);
+  if (!(target = gst_proxy_pad_get_target (pad)))
+    goto no_target;
+
+  gst_pad_fixate_caps (target, caps);
+  gst_object_unref (target);
+
+  return;
+
+  /* ERRORS */
+no_target:
+  {
+    GST_DEBUG_OBJECT (pad, "no target");
+    return;
   }
 }
 
