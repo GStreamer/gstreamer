@@ -39,6 +39,7 @@
 
 #include "gstvideoconvert.h"
 #include <gst/video/video.h>
+#include <gst/video/gstmetavideo.h>
 
 #include <string.h>
 
@@ -161,13 +162,31 @@ gst_video_convert_transform_caps (GstBaseTransform * btrans,
 }
 
 static gboolean
+gst_video_convert_setup_allocation (GstBaseTransform * trans, GstQuery * query)
+{
+  GstBufferPool *pool = NULL;
+  guint size, min, max, prefix, alignment;
+
+  gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
+      &alignment, &pool);
+
+  if (pool) {
+    GstStructure *config;
+
+    config = gst_buffer_pool_get_config (pool);
+    gst_buffer_pool_config_add_meta (config, GST_META_API_VIDEO);
+    gst_buffer_pool_set_config (pool, config);
+  }
+  return TRUE;
+}
+
+static gboolean
 gst_video_convert_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
     GstCaps * outcaps)
 {
   GstVideoConvert *space;
   GstVideoInfo in_info;
   GstVideoInfo out_info;
-  gboolean ret;
   ColorSpaceColorSpec in_spec, out_spec;
   gboolean interlaced;
 
@@ -178,9 +197,7 @@ gst_video_convert_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
   }
 
   /* input caps */
-
-  ret = gst_video_info_from_caps (&in_info, incaps);
-  if (!ret)
+  if (!gst_video_info_from_caps (&in_info, incaps))
     goto invalid_caps;
 
   if (gst_video_format_is_rgb (in_info.format)) {
@@ -195,9 +212,7 @@ gst_video_convert_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
   }
 
   /* output caps */
-
-  ret = gst_video_info_from_caps (&out_info, outcaps);
-  if (!ret)
+  if (!gst_video_info_from_caps (&out_info, outcaps))
     goto invalid_caps;
 
   if (gst_video_format_is_rgb (out_info.format)) {
@@ -352,6 +367,8 @@ gst_video_convert_class_init (GstVideoConvertClass * klass)
       GST_DEBUG_FUNCPTR (gst_video_convert_set_caps);
   gstbasetransform_class->get_unit_size =
       GST_DEBUG_FUNCPTR (gst_video_convert_get_unit_size);
+  gstbasetransform_class->setup_allocation =
+      GST_DEBUG_FUNCPTR (gst_video_convert_setup_allocation);
   gstbasetransform_class->transform =
       GST_DEBUG_FUNCPTR (gst_video_convert_transform);
 
