@@ -2600,12 +2600,17 @@ null_buffer:
   }
 }
 
-static void
+static gboolean
 gst_base_src_set_allocation (GstBaseSrc * basesrc, GstBufferPool * pool,
     const GstMemoryAllocator * allocator, guint prefix, guint alignment)
 {
   GstBufferPool *oldpool;
   GstBaseSrcPrivate *priv = basesrc->priv;
+
+  if (pool) {
+    if (!gst_buffer_pool_set_active (pool, TRUE))
+      goto activate_failed;
+  }
 
   GST_OBJECT_LOCK (basesrc);
   oldpool = priv->pool;
@@ -2620,6 +2625,14 @@ gst_base_src_set_allocation (GstBaseSrc * basesrc, GstBufferPool * pool,
   if (oldpool) {
     gst_buffer_pool_set_active (oldpool, FALSE);
     gst_object_unref (oldpool);
+  }
+  return TRUE;
+
+  /* ERRORS */
+activate_failed:
+  {
+    GST_ERROR_OBJECT (basesrc, "failed to activate bufferpool.");
+    return FALSE;
   }
 }
 
@@ -2689,22 +2702,13 @@ gst_base_src_prepare_allocation (GstBaseSrc * basesrc, GstCaps * caps)
     gst_buffer_pool_config_set (config, caps, size, min, max, prefix,
         alignment);
     gst_buffer_pool_set_config (pool, config);
-
-    if (!gst_buffer_pool_set_active (pool, TRUE))
-      goto activate_failed;
   }
 
-  gst_base_src_set_allocation (basesrc, pool, allocator, prefix, alignment);
+  result =
+      gst_base_src_set_allocation (basesrc, pool, allocator, prefix, alignment);
 
   return result;
 
-  /* ERRORS */
-activate_failed:
-  {
-    GST_ERROR_OBJECT (basesrc, "failed to activate bufferpool.");
-    gst_object_unref (pool);
-    return FALSE;
-  }
 }
 
 /* default negotiation code.
