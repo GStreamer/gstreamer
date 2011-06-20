@@ -47,15 +47,10 @@ typedef struct _GstFFMpegScale
   GstPad *sinkpad, *srcpad;
 
   /* state */
-  gint in_width, in_height;
-  gint out_width, out_height;
+  GstVideoInfo in_info, out_info;
 
   enum PixelFormat in_pixfmt, out_pixfmt;
   struct SwsContext *ctx;
-
-  /* cached auxiliary data */
-  gint in_stride[3], in_offset[3];
-  gint out_stride[3], out_offset[3];
 
   /* property */
   gint method;
@@ -464,16 +459,15 @@ static gboolean
 gst_ffmpegscale_get_unit_size (GstBaseTransform * trans, GstCaps * caps,
     gsize * size)
 {
-  gint width, height;
-  GstVideoFormat format;
+  GstVideoInfo info;
 
-  if (!gst_video_format_parse_caps (caps, &format, &width, &height))
+  if (!gst_video_info_from_caps (&info, caps))
     return FALSE;
 
-  *size = gst_video_format_get_size (format, width, height);
+  *size = info.size;
 
   GST_DEBUG_OBJECT (trans, "unit size = %d for format %d w %d height %d",
-      *size, format, width, height);
+      *size, info.format, info.width, info.height);
 
   return TRUE;
 }
@@ -563,24 +557,6 @@ gst_ffmpeg_caps_to_pixfmt (const GstCaps * caps)
   return pix_fmt;
 }
 
-static void
-gst_ffmpegscale_fill_info (GstFFMpegScale * scale, GstVideoFormat format,
-    guint width, guint height, gint stride[], gint offset[])
-{
-  gint i;
-
-  for (i = 0; i < 3; i++) {
-    stride[i] = gst_video_format_get_row_stride (format, i, width);
-    offset[i] = gst_video_format_get_component_offset (format, i, width,
-        height);
-    /* stay close to the ffmpeg offset way */
-    if (offset[i] < 3)
-      offset[i] = 0;
-    GST_DEBUG_OBJECT (scale, "format %d, component %d; stride %d, offset %d",
-        format, i, stride[i], offset[i]);
-  }
-}
-
 static gboolean
 gst_ffmpegscale_set_caps (GstBaseTransform * trans, GstCaps * incaps,
     GstCaps * outcaps)
@@ -588,7 +564,6 @@ gst_ffmpegscale_set_caps (GstBaseTransform * trans, GstCaps * incaps,
   GstFFMpegScale *scale = GST_FFMPEGSCALE (trans);
   guint mmx_flags, altivec_flags;
   gint swsflags;
-  GstVideoFormat in_format, out_format;
   gboolean ok;
 
   g_return_val_if_fail (scale->method <
@@ -599,27 +574,21 @@ gst_ffmpegscale_set_caps (GstBaseTransform * trans, GstCaps * incaps,
     scale->ctx = NULL;
   }
 
-  ok = gst_video_format_parse_caps (incaps, &in_format, &scale->in_width,
-      &scale->in_height);
-  ok &= gst_video_format_parse_caps (outcaps, &out_format, &scale->out_width,
-      &scale->out_height);
+  ok = gst_video_info_from_caps (&scale->in_info, incaps);
+  ok &= gst_video_info_from_caps (&scale->out_info, outcaps);
+
   scale->in_pixfmt = gst_ffmpeg_caps_to_pixfmt (incaps);
   scale->out_pixfmt = gst_ffmpeg_caps_to_pixfmt (outcaps);
 
   if (!ok || scale->in_pixfmt == PIX_FMT_NONE ||
       scale->out_pixfmt == PIX_FMT_NONE ||
-      in_format == GST_VIDEO_FORMAT_UNKNOWN ||
-      out_format == GST_VIDEO_FORMAT_UNKNOWN)
+      scale->in_info.format == GST_VIDEO_FORMAT_UNKNOWN ||
+      scale->out_info.format == GST_VIDEO_FORMAT_UNKNOWN)
     goto refuse_caps;
 
-  GST_DEBUG_OBJECT (scale, "format %d => %d, from=%dx%d -> to=%dx%d", in_format,
-      out_format, scale->in_width, scale->in_height, scale->out_width,
-      scale->out_height);
-
-  gst_ffmpegscale_fill_info (scale, in_format, scale->in_width,
-      scale->in_height, scale->in_stride, scale->in_offset);
-  gst_ffmpegscale_fill_info (scale, out_format, scale->out_width,
-      scale->out_height, scale->out_stride, scale->out_offset);
+  GST_DEBUG_OBJECT (scale, "format %d => %d, from=%dx%d -> to=%dx%d",
+      scale->in_info.format, scale->out_info.format, scale->in_info.width,
+      scale->in_info.height, scale->out_info.width, scale->out_info.height);
 
 #ifdef HAVE_ORC
   mmx_flags = orc_target_get_default_flags (orc_target_get_by_name ("mmx"));
@@ -635,10 +604,10 @@ gst_ffmpegscale_set_caps (GstBaseTransform * trans, GstCaps * incaps,
   swsflags = 0;
 #endif
 
-
-  scale->ctx = sws_getContext (scale->in_width, scale->in_height,
-      scale->in_pixfmt, scale->out_width, scale->out_height, scale->out_pixfmt,
-      swsflags | gst_ffmpegscale_method_flags[scale->method], NULL, NULL, NULL);
+  scale->ctx = sws_getContext (scale->in_info.width, scale->in_info.height,
+      scale->in_pixfmt, scale->out_info.width, scale->out_info.height,
+      scale->out_pixfmt, swsflags | gst_ffmpegscale_method_flags[scale->method],
+      NULL, NULL, NULL);
   if (!scale->ctx)
     goto setup_failed;
 
@@ -662,30 +631,28 @@ gst_ffmpegscale_transform (GstBaseTransform * trans, GstBuffer * inbuf,
     GstBuffer * outbuf)
 {
   GstFFMpegScale *scale = GST_FFMPEGSCALE (trans);
-  guint8 *in_data[3] = { NULL, NULL, NULL };
-  guint8 *out_data[3] = { NULL, NULL, NULL };
-  gint i;
-  guint8 *indata, *outdata;
-  gsize insize, outsize;
+  GstVideoFrame in_frame, out_frame;
 
-  indata = gst_buffer_map (inbuf, &insize, NULL, GST_MAP_READ);
-  outdata = gst_buffer_map (outbuf, &outsize, NULL, GST_MAP_WRITE);
+  if (!gst_video_frame_map (&in_frame, &scale->in_info, inbuf, GST_MAP_READ))
+    goto invalid_buffer;
 
-  for (i = 0; i < 3; i++) {
-    /* again; stay close to the ffmpeg offset way */
-    if (!i || scale->in_offset[i])
-      in_data[i] = indata + scale->in_offset[i];
-    if (!i || scale->out_offset[i])
-      out_data[i] = outdata + scale->out_offset[i];
-  }
+  if (!gst_video_frame_map (&out_frame, &scale->out_info, outbuf,
+          GST_MAP_WRITE))
+    goto invalid_buffer;
 
-  sws_scale (scale->ctx, (const guint8 **) in_data, scale->in_stride, 0,
-      scale->in_height, out_data, scale->out_stride);
+  sws_scale (scale->ctx, (const guint8 **) in_frame.data, in_frame.info.stride,
+      0, scale->in_info.height, out_frame.data, out_frame.info.stride);
 
-  gst_buffer_unmap (inbuf, indata, insize);
-  gst_buffer_unmap (outbuf, outdata, outsize);
+  gst_video_frame_unmap (&in_frame);
+  gst_video_frame_unmap (&out_frame);
 
   return GST_FLOW_OK;
+
+  /* ERRORS */
+invalid_buffer:
+  {
+    return GST_FLOW_OK;
+  }
 }
 
 static gboolean
@@ -707,12 +674,12 @@ gst_ffmpegscale_handle_src_event (GstPad * pad, GstEvent * event)
       if (gst_structure_get_double (structure, "pointer_x", &pointer)) {
         gst_structure_set (structure,
             "pointer_x", G_TYPE_DOUBLE,
-            pointer * scale->in_width / scale->out_width, NULL);
+            pointer * scale->in_info.width / scale->out_info.width, NULL);
       }
       if (gst_structure_get_double (structure, "pointer_y", &pointer)) {
         gst_structure_set (structure,
             "pointer_y", G_TYPE_DOUBLE,
-            pointer * scale->in_height / scale->out_height, NULL);
+            pointer * scale->in_info.height / scale->out_info.height, NULL);
       }
       break;
     default:
