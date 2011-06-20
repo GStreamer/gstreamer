@@ -67,7 +67,6 @@ REGISTRY_CHECKS =				\
 	gst/gstevent				\
 	gst/gstghostpad				\
 	gst/gstindex				\
-	gst/gstinterface				\
 	gst/gstplugin				\
 	gst/gstpreset				\
 	gst/gstquery				\

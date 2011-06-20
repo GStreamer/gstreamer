@@ -68,7 +68,6 @@ libgstreamer_@GST_MAJORMINOR@_la_SOURCES = \
 	gstindex.c 		\
 	gstindexfactory.c 	\
 	gstinfo.c		\
-	gstinterface.c		\
 	gstiterator.c		\
 	gstatomicqueue.c	\
 	gstmessage.c		\
@@ -163,7 +162,6 @@ gst_headers =			\
 	gstindex.h		\
 	gstindexfactory.h	\
 	gstinfo.h		\
-	gstinterface.h		\
 	gstiterator.h		\
 	gstatomicqueue.h	\
 	gstmacros.h		\

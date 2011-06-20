@@ -17,7 +17,6 @@ gstevent
 gstghostpad
 gstiterator
 gstindex
-gstinterface
 gstmessage
 gstmeta
 gstminiobject

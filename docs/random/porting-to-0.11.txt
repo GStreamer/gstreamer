@@ -318,4 +318,9 @@ The 0.11 porting guide
     GstBaseTransform::transform_caps() now gets the complete caps passed
     instead of getting it passed structure by structure.
 
+* GstImplementsInterface
+    has been removed. Interfaces need to be updated to either have
+    is_ready/usable/available() methods, or have GError arguments
+    to their methods so we can return an appropriate error if a
+    particular interface isn't supported for a particular device.
 

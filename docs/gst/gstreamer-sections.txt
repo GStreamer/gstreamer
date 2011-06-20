@@ -1203,27 +1203,6 @@ gst_debug_graph_details_get_type
 GST_CAT_LEVEL_LOG_valist
 </SECTION>
 
-
-<SECTION>
-<FILE>gstimplementsinterface</FILE>
-<TITLE>GstImplementsInterface</TITLE>
-GstImplementsInterface
-gst_element_implements_interface
-gst_implements_interface_cast
-gst_implements_interface_check
-<SUBSECTION Standard>
-GstImplementsInterfaceClass
-GST_IMPLEMENTS_INTERFACE
-GST_IS_IMPLEMENTS_INTERFACE
-GST_IMPLEMENTS_INTERFACE_GET_CLASS
-GST_TYPE_IMPLEMENTS_INTERFACE
-GST_IMPLEMENTS_INTERFACE_CHECK_INSTANCE_CAST
-GST_IMPLEMENTS_INTERFACE_CHECK_INSTANCE_TYPE
-<SUBSECTION Private>
-gst_implements_interface_get_type
-</SECTION>
-
-
 <SECTION>
 <FILE>gstiterator</FILE>
 <TITLE>GstIterator</TITLE>

@@ -27,7 +27,6 @@ GstCheckABIStruct list[] = {
   {"GstIndexFactory", sizeof (GstIndexFactory), 96},
   {"GstIndexFactoryClass", sizeof (GstIndexFactoryClass), 152},
   {"GstDebugCategory", sizeof (GstDebugCategory), 16},
-  {"GstImplementsInterfaceClass", sizeof (GstImplementsInterfaceClass), 28},
   {"GstIterator", sizeof (GstIterator), 52},
   {"GstMessage", sizeof (GstMessage), 64},
   {"GstMessageClass", sizeof (GstMessageClass), 32},

@@ -75,7 +75,6 @@ Windows.  It is released under the GNU Library General Public License
     <xi:include href="xml/gstfilter.xml" />
     <xi:include href="xml/gstformat.xml" />
     <xi:include href="xml/gstghostpad.xml" />
-    <xi:include href="xml/gstimplementsinterface.xml" />
     <xi:include href="xml/gstindex.xml" />
     <xi:include href="xml/gstindexfactory.xml" />
     <xi:include href="xml/gstiterator.xml" />
