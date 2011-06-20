@@ -177,7 +177,7 @@ videoconvert_convert_convert (VideoConvert * convert,
 /* Line conversion to AYUV */
 
 #define FRAME_GET_STRIDE(dir, comp) \
-  ((dir)->info.plane[comp].stride)
+  ((dir)->info.stride[comp])
 #define FRAME_GET_LINE(dir, comp, line) \
   ((dir)->data[comp] + FRAME_GET_STRIDE (dir, comp) * (line))
 

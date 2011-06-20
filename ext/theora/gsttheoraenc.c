@@ -1028,8 +1028,8 @@ theora_enc_init_buffer (th_ycbcr_buffer buf, th_info * info,
     buf[i].height =
         gst_video_format_get_component_height (format, i, info->frame_height);
 
-    buf[i].data = frame->data[i];
-    buf[i].stride = frame->info.plane[i].stride;
+    buf[i].data = GST_VIDEO_FRAME_DATA (frame, i);
+    buf[i].stride = GST_VIDEO_FRAME_STRIDE (frame, i);
   }
 }
 

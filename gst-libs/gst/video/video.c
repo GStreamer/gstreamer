@@ -724,7 +724,7 @@ gst_video_info_set_format (GstVideoInfo * info, GstVideoFormat format,
   fill_planes (info);
 
   for (i = 0; i < info->n_planes; i++) {
-    info->plane[i].stride = get_stride (format, i, info->width);
+    info->stride[i] = get_stride (format, i, info->width);
   }
 }
 
@@ -908,7 +908,7 @@ gst_video_frame_map (GstVideoFrame * frame, GstVideoInfo * info,
 
     for (i = 0; i < info->n_planes; i++) {
       frame->data[i] =
-          gst_meta_video_map (meta, i, &frame->info.plane[i].stride, flags);
+          gst_meta_video_map (meta, i, &frame->info.stride[i], flags);
     }
   } else {
     /* copy the info */
@@ -922,7 +922,7 @@ gst_video_frame_map (GstVideoFrame * frame, GstVideoInfo * info,
 
     /* set up pointers */
     for (i = 0; i < info->n_planes; i++) {
-      frame->data[i] = data + info->plane[i].offset;
+      frame->data[i] = data + info->offset[i];
     }
   }
   return TRUE;
@@ -961,7 +961,7 @@ gst_video_frame_unmap (GstVideoFrame * frame)
     guint8 *data;
 
     data = frame->data[0];
-    data -= frame->info.plane[0].offset;
+    data -= frame->info.offset[0];
     gst_buffer_unmap (buffer, data, -1);
   }
 }
@@ -1571,74 +1571,74 @@ fill_planes (GstVideoInfo * info)
     case GST_VIDEO_FORMAT_ARGB64:
     case GST_VIDEO_FORMAT_AYUV64:
       info->n_planes = 1;
-      info->plane[0].offset = 0;
+      info->offset[0] = 0;
       break;
     case GST_VIDEO_FORMAT_I420:
       info->n_planes = 3;
-      info->plane[0].offset = 0;
-      info->plane[1].offset = GST_ROUND_UP_4 (width) * GST_ROUND_UP_2 (height);
-      info->plane[2].offset = info->plane[1].offset +
+      info->offset[0] = 0;
+      info->offset[1] = GST_ROUND_UP_4 (width) * GST_ROUND_UP_2 (height);
+      info->offset[2] = info->offset[1] +
           GST_ROUND_UP_4 (GST_ROUND_UP_2 (width) / 2) *
           (GST_ROUND_UP_2 (height) / 2);
       break;
     case GST_VIDEO_FORMAT_YV12:        /* same as I420, but plane 1+2 swapped */
       info->n_planes = 3;
-      info->plane[0].offset = 0;
-      info->plane[2].offset = GST_ROUND_UP_4 (width) * GST_ROUND_UP_2 (height);
-      info->plane[1].offset = info->plane[2].offset +
+      info->offset[0] = 0;
+      info->offset[2] = GST_ROUND_UP_4 (width) * GST_ROUND_UP_2 (height);
+      info->offset[1] = info->offset[2] +
           GST_ROUND_UP_4 (GST_ROUND_UP_2 (width) / 2) *
           (GST_ROUND_UP_2 (height) / 2);
       break;
     case GST_VIDEO_FORMAT_Y41B:
       info->n_planes = 3;
-      info->plane[0].offset = 0;
-      info->plane[1].offset = GST_ROUND_UP_4 (width) * height;
-      info->plane[2].offset = (GST_ROUND_UP_4 (width) +
+      info->offset[0] = 0;
+      info->offset[1] = GST_ROUND_UP_4 (width) * height;
+      info->offset[2] = (GST_ROUND_UP_4 (width) +
           (GST_ROUND_UP_16 (width) / 4)) * height;
       break;
     case GST_VIDEO_FORMAT_Y42B:
       info->n_planes = 3;
-      info->plane[0].offset = 0;
-      info->plane[1].offset = GST_ROUND_UP_4 (width) * height;
-      info->plane[2].offset =
+      info->offset[0] = 0;
+      info->offset[1] = GST_ROUND_UP_4 (width) * height;
+      info->offset[2] =
           (GST_ROUND_UP_4 (width) + (GST_ROUND_UP_8 (width) / 2)) * height;
       break;
     case GST_VIDEO_FORMAT_Y444:
       info->n_planes = 3;
-      info->plane[0].offset = 0;
-      info->plane[1].offset = GST_ROUND_UP_4 (width) * height;
-      info->plane[2].offset = GST_ROUND_UP_4 (width) * height * 2;
+      info->offset[0] = 0;
+      info->offset[1] = GST_ROUND_UP_4 (width) * height;
+      info->offset[2] = GST_ROUND_UP_4 (width) * height * 2;
       break;
     case GST_VIDEO_FORMAT_NV12:
     case GST_VIDEO_FORMAT_NV21:
       info->n_planes = 2;
-      info->plane[0].offset = 0;
-      info->plane[1].offset = GST_ROUND_UP_4 (width) * GST_ROUND_UP_2 (height);
+      info->offset[0] = 0;
+      info->offset[1] = GST_ROUND_UP_4 (width) * GST_ROUND_UP_2 (height);
       break;
     case GST_VIDEO_FORMAT_A420:
       info->n_planes = 4;
-      info->plane[0].offset = 0;
-      info->plane[1].offset = GST_ROUND_UP_4 (width) * GST_ROUND_UP_2 (height);
-      info->plane[2].offset = info->plane[1].offset +
+      info->offset[0] = 0;
+      info->offset[1] = GST_ROUND_UP_4 (width) * GST_ROUND_UP_2 (height);
+      info->offset[2] = info->offset[1] +
           GST_ROUND_UP_4 (GST_ROUND_UP_2 (width) / 2) *
           (GST_ROUND_UP_2 (height) / 2);
-      info->plane[3].offset = info->plane[2].offset +
+      info->offset[3] = info->offset[2] +
           GST_ROUND_UP_4 (GST_ROUND_UP_2 (width) / 2) *
           (GST_ROUND_UP_2 (height) / 2);
       break;
     case GST_VIDEO_FORMAT_YUV9:
       info->n_planes = 3;
-      info->plane[0].offset = 0;
-      info->plane[1].offset = GST_ROUND_UP_4 (width) * height;
-      info->plane[2].offset = info->plane[1].offset +
+      info->offset[0] = 0;
+      info->offset[1] = GST_ROUND_UP_4 (width) * height;
+      info->offset[2] = info->offset[1] +
           GST_ROUND_UP_4 (GST_ROUND_UP_4 (width) / 4) *
           (GST_ROUND_UP_4 (height) / 4);
       break;
     case GST_VIDEO_FORMAT_YVU9:
       info->n_planes = 3;
-      info->plane[0].offset = 0;
-      info->plane[2].offset = GST_ROUND_UP_4 (width) * height;
-      info->plane[1].offset = info->plane[2].offset +
+      info->offset[0] = 0;
+      info->offset[2] = GST_ROUND_UP_4 (width) * height;
+      info->offset[1] = info->offset[2] +
           GST_ROUND_UP_4 (GST_ROUND_UP_4 (width) / 4) *
           (GST_ROUND_UP_4 (height) / 4);
       break;

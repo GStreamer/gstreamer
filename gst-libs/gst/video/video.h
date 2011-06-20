@@ -143,7 +143,6 @@ int            gst_video_format_get_component_depth  (GstVideoFormat format,
 int            gst_video_format_get_pixel_stride     (GstVideoFormat format,
                                                       int            component) G_GNUC_CONST;
 
-typedef struct _GstVideoPlane GstVideoPlane;
 typedef struct _GstVideoInfo GstVideoInfo;
 typedef struct _GstVideoFrame GstVideoFrame;
 
@@ -172,19 +171,6 @@ typedef enum {
 #define GST_VIDEO_MAX_PLANES 4
 
 /**
- * GstVideoPlane:
- * @offset: offset of the first pixel in the buffer memory region
- * @stride: stride of the image lines. Can be negative when the image is
- *    upside-down
- *
- * Information for one video plane.
- */
-struct _GstVideoPlane {
-  gsize           offset;
-  gint            stride;
-};
-
-/**
  * GstVideoInfo:
  * @flags: additional video flags
  * @format: the format of the video
@@ -205,7 +191,8 @@ struct _GstVideoPlane {
  * @fps_n: the framerate numerator
  * @fps_d: the framerate demnominator
  * @n_planes: the number of planes in the image
- * @plane: array of #GstMetaVideoPlane
+ * @offset: offsets of the planes
+ * @stride: strides of the planes
  *
  * Extra buffer metadata describing image properties
  */
@@ -226,8 +213,24 @@ struct _GstVideoInfo {
   guint          fps_d;
 
   guint          n_planes;
-  GstVideoPlane  plane[GST_VIDEO_MAX_PLANES];
+  gsize          offset[GST_VIDEO_MAX_PLANES];
+  gint           stride[GST_VIDEO_MAX_PLANES];
 };
+
+void         gst_video_info_init        (GstVideoInfo *info);
+
+void         gst_video_info_set_format  (GstVideoInfo *info, GstVideoFormat format,
+                                         guint width, guint height);
+
+gboolean     gst_video_info_from_caps   (GstVideoInfo *info, const GstCaps  * caps);
+
+GstCaps *    gst_video_info_to_caps     (GstVideoInfo *info);
+
+gboolean     gst_video_info_convert     (GstVideoInfo *info,
+                                         GstFormat     src_format,
+                                         gint64        src_value,
+                                         GstFormat     dest_format,
+                                         gint64       *dest_value);
 
 /**
  * GstVideoFrame:
@@ -246,20 +249,8 @@ struct _GstVideoFrame {
   guint8    *data[GST_VIDEO_MAX_PLANES];
 };
 
-void         gst_video_info_init        (GstVideoInfo *info);
-
-void         gst_video_info_set_format  (GstVideoInfo *info, GstVideoFormat format,
-                                         guint width, guint height);
-
-gboolean     gst_video_info_from_caps   (GstVideoInfo *info, const GstCaps  * caps);
-
-GstCaps *    gst_video_info_to_caps     (GstVideoInfo *info);
-
-gboolean     gst_video_info_convert     (GstVideoInfo *info,
-                                         GstFormat     src_format,
-                                         gint64        src_value,
-                                         GstFormat     dest_format,
-                                         gint64       *dest_value);
+#define GST_VIDEO_FRAME_DATA(f,c)    ((f)->data[c])
+#define GST_VIDEO_FRAME_STRIDE(f,c)  ((f)->info.stride[c])
 
 gboolean    gst_video_frame_map         (GstVideoFrame *frame, GstVideoInfo *info,
                                          GstBuffer *buffer, GstMapFlags flags);

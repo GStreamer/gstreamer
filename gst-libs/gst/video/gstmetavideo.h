@@ -30,14 +30,14 @@ G_BEGIN_DECLS
 #define GST_META_INFO_VIDEO  (gst_meta_video_get_info())
 
 typedef struct _GstMetaVideo GstMetaVideo;
-typedef struct _GstMetaVideoPlane GstMetaVideoPlane;
 
 /**
  * GstMetaVideo:
  * @meta: parent #GstMeta
  * @flags: additional video flags
  * @n_planes: the number of planes in the image
- * @plane: array of #GstMetaVideoPlane
+ * @offset: array of offsets for the planes
+ * @stride: array of strides for the planes
  * @map: map the memory of a plane
  * @unmap: unmap the memory of a plane
  *
@@ -54,7 +54,8 @@ struct _GstMetaVideo {
   guint              height;
 
   guint              n_planes;
-  GstVideoPlane      plane[GST_VIDEO_MAX_PLANES];
+  gsize              offset[GST_VIDEO_MAX_PLANES];
+  gint               stride[GST_VIDEO_MAX_PLANES];
 
   gpointer (*map)    (GstMetaVideo *meta, guint plane, gint *stride,
                       GstMapFlags flags);
@@ -68,7 +69,8 @@ GstMetaVideo * gst_buffer_add_meta_video       (GstBuffer *buffer, GstVideoFlags
                                                 GstVideoFormat format, guint width, guint height);
 GstMetaVideo * gst_buffer_add_meta_video_full  (GstBuffer *buffer, GstVideoFlags flags,
                                                 GstVideoFormat format, guint width, guint height,
-                                                guint n_planes, GstVideoPlane plane[GST_VIDEO_MAX_PLANES]);
+                                                guint n_planes, gsize offset[GST_VIDEO_MAX_PLANES],
+                                                gint stride[GST_VIDEO_MAX_PLANES]);
 
 gpointer       gst_meta_video_map        (GstMetaVideo *meta, guint plane, gint *stride,
                                           GstMapFlags flags);

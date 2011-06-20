@@ -1135,9 +1135,9 @@ theora_handle_image (GstTheoraDec * dec, th_ycbcr_buffer buf, GstBuffer ** out)
     height =
         gst_video_format_get_component_height (frame.info.format, plane,
         dec->vinfo.height);
-    stride = frame.info.plane[plane].stride;
 
-    dest = frame.data[plane];
+    stride = GST_VIDEO_FRAME_STRIDE (&frame, plane);
+    dest = GST_VIDEO_FRAME_DATA (&frame, plane);
 
     src = buf[plane].data;
     src += ((height == dec->vinfo.height) ? dec->offset_y : dec->offset_y / 2)

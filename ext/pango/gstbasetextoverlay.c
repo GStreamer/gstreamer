@@ -1442,7 +1442,7 @@ gst_base_text_overlay_shade_planar_Y (GstBaseTextOverlay * overlay,
   gint i, j, dest_stride;
   guint8 *dest_ptr;
 
-  dest_stride = dest->info.plane[0].stride;
+  dest_stride = dest->info.stride[0];
   dest_ptr = dest->data[0];
 
   x0 = CLAMP (x0 - BOX_XPAD, 0, overlay->width);
@@ -1468,7 +1468,7 @@ gst_base_text_overlay_shade_packed_Y (GstBaseTextOverlay * overlay,
   guint dest_stride, pixel_stride, component_offset;
   guint8 *dest_ptr;
 
-  dest_stride = dest->info.plane[0].stride;
+  dest_stride = dest->info.stride[0];
   dest_ptr = dest->data[0];
 
   pixel_stride = gst_video_format_get_pixel_stride (dest->info.format, 0);
@@ -1591,9 +1591,9 @@ gst_base_text_overlay_blit_NV12_NV21 (GstBaseTextOverlay * overlay,
   y_pixels = dest->data[0];
   u_pixels = dest->data[1];
   v_pixels = dest->data[2];
-  y_stride = dest->info.plane[0].stride;
-  u_stride = dest->info.plane[1].stride;
-  v_stride = dest->info.plane[2].stride;
+  y_stride = dest->info.stride[0];
+  u_stride = dest->info.stride[1];
+  v_stride = dest->info.stride[2];
 
   gst_base_text_overlay_blit_1 (overlay, y_pixels, xpos, ypos,
       overlay->text_image, y_stride);
@@ -1617,9 +1617,9 @@ gst_base_text_overlay_blit_I420 (GstBaseTextOverlay * overlay,
   y_pixels = dest->data[0];
   u_pixels = dest->data[1];
   v_pixels = dest->data[2];
-  y_stride = dest->info.plane[0].stride;
-  u_stride = dest->info.plane[1].stride;
-  v_stride = dest->info.plane[2].stride;
+  y_stride = dest->info.stride[0];
+  u_stride = dest->info.stride[1];
+  v_stride = dest->info.stride[2];
 
   gst_base_text_overlay_blit_1 (overlay, y_pixels, xpos, ypos,
       overlay->text_image, y_stride);

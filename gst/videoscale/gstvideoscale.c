@@ -912,7 +912,7 @@ gst_video_scale_setup_vs_image (VSImage * image, GstVideoFrame * frame,
   }
 
   image->real_pixels = frame->data[component];
-  image->stride = frame->info.plane[component].stride;
+  image->stride = frame->info.stride[component];
 
   image->pixels =
       image->real_pixels + image->border_top * image->stride +

@@ -46,7 +46,7 @@ gst_buffer_add_meta_video (GstBuffer * buffer, GstVideoFlags flags,
   gst_video_info_set_format (&info, format, width, height);
 
   meta = gst_buffer_add_meta_video_full (buffer, flags, format, width, height,
-      info.n_planes, info.plane);
+      info.n_planes, info.offset, info.stride);
 
   return meta;
 }
@@ -54,7 +54,8 @@ gst_buffer_add_meta_video (GstBuffer * buffer, GstVideoFlags flags,
 GstMetaVideo *
 gst_buffer_add_meta_video_full (GstBuffer * buffer, GstVideoFlags flags,
     GstVideoFormat format, guint width, guint height,
-    guint n_planes, GstVideoPlane plane[GST_VIDEO_MAX_PLANES])
+    guint n_planes, gsize offset[GST_VIDEO_MAX_PLANES],
+    gint stride[GST_VIDEO_MAX_PLANES])
 {
   GstMetaVideo *meta;
   guint i;
@@ -69,8 +70,10 @@ gst_buffer_add_meta_video_full (GstBuffer * buffer, GstVideoFlags flags,
   meta->buffer = buffer;
 
   meta->n_planes = n_planes;
-  for (i = 0; i < n_planes; i++)
-    meta->plane[i] = plane[i];
+  for (i = 0; i < n_planes; i++) {
+    meta->offset[i] = offset[i];
+    meta->stride[i] = stride[i];
+  }
 
   return meta;
 }
@@ -118,8 +121,8 @@ gst_meta_video_map (GstMetaVideo * meta, guint plane, gint * stride,
   write = (flags & GST_MAP_WRITE) != 0;
   g_return_val_if_fail (!write || gst_buffer_is_writable (buffer), NULL);
 
-  offset = meta->plane[plane].offset;
-  *stride = meta->plane[plane].stride;
+  offset = meta->offset[plane];
+  *stride = meta->stride[plane];
   /* find the memory block for this plane, this is the memory block containing
    * the plane offset */
   mem = find_mem_for_offset (buffer, &offset, flags);
@@ -144,7 +147,7 @@ gst_meta_video_unmap (GstMetaVideo * meta, guint plane, gpointer data)
   buffer = meta->buffer;
   g_return_val_if_fail (buffer != NULL, FALSE);
 
-  offset = meta->plane[plane].offset;
+  offset = meta->offset[plane];
   mem = find_mem_for_offset (buffer, &offset, GST_MAP_READ);
   base = data;
 
