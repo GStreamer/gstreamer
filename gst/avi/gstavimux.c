@@ -35,7 +35,7 @@
  * <para>(write everything in one line, without the backslash characters)</para>
  * |[
  * gst-launch videotestsrc num-buffers=250 \
- * ! 'video/x-raw-yuv,format=(fourcc)I420,width=320,height=240,framerate=(fraction)25/1' \
+ * ! 'video/x-raw,format=(string)I420,width=320,height=240,framerate=(fraction)25/1' \
  * ! queue ! mux. \
  * audiotestsrc num-buffers=440 ! audioconvert \
  * ! 'audio/x-raw-int,rate=44100,channels=2' ! queue ! mux. \
@@ -45,7 +45,7 @@
  * test sound.
  * |[
  * gst-launch videotestsrc num-buffers=250 \
- * ! 'video/x-raw-yuv,format=(fourcc)I420,width=320,height=240,framerate=(fraction)25/1' \
+ * ! 'video/x-raw,format=(string)I420,width=320,height=240,framerate=(fraction)25/1' \
  * ! xvidenc ! queue ! mux. \
  * audiotestsrc num-buffers=440 ! audioconvert ! 'audio/x-raw-int,rate=44100,channels=2' \
  * ! lame ! queue ! mux. \
@@ -91,7 +91,7 @@ static GstStaticPadTemplate video_sink_factory =
     GST_STATIC_PAD_TEMPLATE ("video_%d",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
-    GST_STATIC_CAPS ("video/x-raw-yuv, "
+    GST_STATIC_CAPS ("video/x-raw, "
         "format = (fourcc) { YUY2, I420 }, "
         "width = (int) [ 16, 4096 ], "
         "height = (int) [ 16, 4096 ], "
@@ -466,17 +466,23 @@ gst_avi_mux_vidsink_set_caps (GstPad * pad, GstCaps * vscaps)
     avipad->vprp.field_info[0].valid_bm_width = width;
   }
 
-  if (!strcmp (mimetype, "video/x-raw-yuv")) {
-    guint32 format;
+  if (!strcmp (mimetype, "video/x-raw")) {
+    const gchar *format;
+    GstVideoFormat fmt;
 
-    gst_structure_get_fourcc (structure, "format", &format);
-    avipad->vids.compression = format;
-    switch (format) {
-      case GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'):
+    format = gst_structure_get_string (structure, "format");
+    fmt = gst_video_format_from_string (format);
+
+    switch (fmt) {
+      case GST_VIDEO_FORMAT_YUY2:
+        avipad->vids.compression = GST_MAKE_FOURCC ('Y', 'U', 'Y', '2');
         avipad->vids.bit_cnt = 16;
         break;
-      case GST_MAKE_FOURCC ('I', '4', '2', '0'):
+      case GST_VIDEO_FORMAT_I420:
+        avipad->vids.compression = GST_MAKE_FOURCC ('I', '4', '2', '0');
         avipad->vids.bit_cnt = 12;
+        break;
+      default:
         break;
     }
   } else {
