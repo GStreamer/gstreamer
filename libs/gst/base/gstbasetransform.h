@@ -206,17 +206,18 @@ struct _GstBaseTransformClass {
   GstCaps*	(*transform_caps) (GstBaseTransform *trans,
                                    GstPadDirection direction,
                                    GstCaps *caps, GstCaps *filter);
-
   void		(*fixate_caps)	  (GstBaseTransform *trans,
                                    GstPadDirection direction, GstCaps *caps,
                                    GstCaps *othercaps);
   gboolean      (*accept_caps)    (GstBaseTransform *trans, GstPadDirection direction,
                                    GstCaps *caps);
-
   gboolean      (*set_caps)       (GstBaseTransform *trans, GstCaps *incaps,
                                    GstCaps *outcaps);
 
+  /* setup allocation query */
+  gboolean      (*setup_allocation) (GstBaseTransform *trans, GstQuery *query);
 
+  /* transform size */
   gboolean      (*transform_size) (GstBaseTransform *trans,
                                    GstPadDirection direction,
                                    GstCaps *caps, gsize size,
@@ -225,6 +226,7 @@ struct _GstBaseTransformClass {
   gboolean      (*get_unit_size)  (GstBaseTransform *trans, GstCaps *caps,
                                    gsize *size);
 
+  /* states */
   gboolean      (*start)        (GstBaseTransform *trans);
   gboolean      (*stop)         (GstBaseTransform *trans);
 
@@ -237,6 +239,7 @@ struct _GstBaseTransformClass {
 
   void          (*before_transform)  (GstBaseTransform *trans, GstBuffer *buffer);
 
+  /* transform */
   GstFlowReturn (*transform)    (GstBaseTransform *trans, GstBuffer *inbuf,
                                  GstBuffer *outbuf);
   GstFlowReturn (*transform_ip) (GstBaseTransform *trans, GstBuffer *buf);

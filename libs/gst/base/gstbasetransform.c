@@ -252,7 +252,10 @@ struct _GstBaseTransformPrivate
 
   GstClockTime position_out;
 
-  GstBufferPool *srcpool;
+  GstBufferPool *pool;
+  const GstMemoryAllocator *allocator;
+  guint prefix;
+  guint alignment;
 };
 
 static GstElementClass *parent_class = NULL;
@@ -707,12 +710,37 @@ done:
   return caps;
 }
 
+static void
+gst_base_transform_set_allocation (GstBaseTransform * trans,
+    GstBufferPool * pool, const GstMemoryAllocator * allocator, guint prefix,
+    guint alignment)
+{
+  GstBufferPool *oldpool;
+  GstBaseTransformPrivate *priv = trans->priv;
+
+  GST_OBJECT_LOCK (trans);
+  oldpool = priv->pool;
+  priv->pool = pool;
+  priv->allocator = allocator;
+  priv->prefix = prefix;
+  priv->alignment = alignment;
+  GST_OBJECT_UNLOCK (trans);
+
+  if (oldpool) {
+    gst_buffer_pool_set_active (oldpool, FALSE);
+    gst_object_unref (oldpool);
+  }
+}
+
 static gboolean
 gst_base_transform_do_bufferpool (GstBaseTransform * trans, GstCaps * outcaps)
 {
   GstQuery *query;
+  gboolean result = TRUE;
   GstBufferPool *pool = NULL, *oldpool;
   guint size, min, max, prefix, alignment;
+  GstBaseTransformClass *klass;
+  const GstMemoryAllocator *allocator = NULL;
 
   /* there are these possibilities:
    *
@@ -721,11 +749,11 @@ gst_base_transform_do_bufferpool (GstBaseTransform * trans, GstCaps * outcaps)
    */
 
   /* clear old pool */
-  oldpool = trans->priv->srcpool;
+  oldpool = trans->priv->pool;
   if (oldpool) {
     gst_buffer_pool_set_active (oldpool, FALSE);
     gst_object_unref (oldpool);
-    trans->priv->srcpool = oldpool = NULL;
+    trans->priv->pool = oldpool = NULL;
   }
 
   if (trans->passthrough) {
@@ -740,16 +768,30 @@ gst_base_transform_do_bufferpool (GstBaseTransform * trans, GstCaps * outcaps)
   /* not passthrough, we need to allocate */
   /* find a pool for the negotiated caps now */
   query = gst_query_new_allocation (outcaps, TRUE);
+  if (!gst_pad_peer_query (trans->srcpad, query)) {
+    /* not a problem, just debug a little */
+    GST_DEBUG_OBJECT (trans, "peer ALLOCATION query failed");
+  }
 
-  if (!gst_pad_peer_query (trans->srcpad, query))
-    goto query_failed;
+  klass = GST_BASE_TRANSFORM_GET_CLASS (trans);
+
+  if (G_LIKELY (klass->setup_allocation))
+    result = klass->setup_allocation (trans, query);
 
   /* we got configuration from our peer, parse them */
   gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
       &alignment, &pool);
   gst_query_unref (query);
 
-  if (pool == NULL) {
+  if (size == 0) {
+    const gchar *mem = NULL;
+
+    /* no size, we have variable size buffers */
+    if (gst_query_get_n_allocation_memories (query) > 0) {
+      mem = gst_query_parse_nth_allocation_memory (query, 0);
+    }
+    allocator = gst_memory_allocator_find (mem);
+  } else if (pool == NULL) {
     GstStructure *config;
 
     /* we did not get a pool, make one ourselves then */
@@ -759,24 +801,18 @@ gst_base_transform_do_bufferpool (GstBaseTransform * trans, GstCaps * outcaps)
     gst_buffer_pool_config_set (config, outcaps, size, min, max, prefix,
         alignment);
     gst_buffer_pool_set_config (pool, config);
-  }
 
-  /* activate */
-  if (!gst_buffer_pool_set_active (pool, TRUE))
-    goto activate_failed;
+    /* activate */
+    if (!gst_buffer_pool_set_active (pool, TRUE))
+      goto activate_failed;
+  }
 
   /* and store */
-  trans->priv->srcpool = pool;
+  gst_base_transform_set_allocation (trans, pool, allocator, prefix, alignment);
 
-  return TRUE;
+  return result;
 
   /* ERRORS */
-query_failed:
-  {
-    GST_DEBUG_OBJECT (trans, "allocation query failed");
-    gst_query_unref (query);
-    return FALSE;
-  }
 activate_failed:
   {
     GST_ERROR_OBJECT (trans, "failed to activate bufferpool.");
@@ -1401,12 +1437,13 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
     if (trans->passthrough) {
       GST_DEBUG_OBJECT (trans, "Reusing input buffer");
       *out_buf = in_buf;
-    } else if (priv->srcpool) {
+    } else if (priv->pool) {
       GST_DEBUG_OBJECT (trans, "using pool alloc");
-      ret = gst_buffer_pool_acquire_buffer (priv->srcpool, out_buf, NULL);
+      ret = gst_buffer_pool_acquire_buffer (priv->pool, out_buf, NULL);
     } else {
       GST_DEBUG_OBJECT (trans, "doing alloc of size %u", outsize);
-      *out_buf = gst_buffer_new_allocate (NULL, outsize, 0);
+      *out_buf =
+          gst_buffer_new_allocate (priv->allocator, outsize, priv->alignment);
     }
   }
 
@@ -2113,6 +2150,8 @@ gst_base_transform_activate (GstBaseTransform * trans, gboolean active)
 
     if (trans->priv->pad_mode != GST_ACTIVATE_NONE && bclass->stop)
       result &= bclass->stop (trans);
+
+    gst_base_transform_set_allocation (trans, NULL, NULL, 0, 0);
   }
 
   return result;
