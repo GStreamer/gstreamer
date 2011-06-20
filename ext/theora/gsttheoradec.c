@@ -44,6 +44,7 @@
 #include "gsttheoradec.h"
 #include <gst/tag/tag.h>
 #include <gst/video/video.h>
+#include <gst/video/gstmetavideo.h>
 
 #define GST_CAT_DEFAULT theoradec_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
@@ -795,6 +796,7 @@ theora_negotiate_pool (GstTheoraDec * dec, GstCaps * caps, GstVideoInfo * info)
   GstQuery *query;
   GstBufferPool *pool = NULL;
   guint size, min, max, prefix, alignment;
+  GstStructure *config;
 
   /* find a pool for the negotiated caps now */
   query = gst_query_new_allocation (caps, TRUE);
@@ -813,23 +815,23 @@ theora_negotiate_pool (GstTheoraDec * dec, GstCaps * caps, GstVideoInfo * info)
   }
 
   if (pool == NULL) {
-    GstStructure *config;
-
     /* we did not get a pool, make one ourselves then */
     pool = gst_buffer_pool_new ();
-
-    config = gst_buffer_pool_get_config (pool);
-    gst_buffer_pool_config_set (config, caps, size, min, max, prefix,
-        alignment);
-    gst_buffer_pool_set_config (pool, config);
   }
 
   if (dec->pool)
     gst_object_unref (dec->pool);
   dec->pool = pool;
 
-  /* FIXME, we can check if downstream supports clipping and/or video
-   * metadata. */
+  config = gst_buffer_pool_get_config (pool);
+  gst_buffer_pool_config_set (config, caps, size, min, max, prefix, alignment);
+  /* just set the metadata, if the pool can support it we will transparently use
+   * it through the video info API. We could also see if the pool support this
+   * metadata and only activate it then. */
+  gst_buffer_pool_config_add_meta (config, GST_META_API_VIDEO);
+  /* FIXME, we can check if downstream supports clipping metadata */
+
+  gst_buffer_pool_set_config (pool, config);
 
   /* and activate */
   gst_buffer_pool_set_active (pool, TRUE);
