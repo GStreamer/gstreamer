@@ -113,6 +113,7 @@ gst_1394_clock_get_internal_time (GstClock * clock)
   _1394clock = GST_1394_CLOCK_CAST (clock);
 
   if (_1394clock->handle != NULL) {
+    GST_OBJECT_LOCK (clock);
     raw1394_read_cycle_timer (_1394clock->handle, &cycle_timer, &local_time);
 
     if (cycle_timer < _1394clock->cycle_timer_lo) {
@@ -130,6 +131,7 @@ gst_1394_clock_get_internal_time (GstClock * clock)
     result += (((cycle_timer >> 12) & 0x1fff) * 125) * GST_USECOND;
 
     GST_LOG_OBJECT (clock, "result %" GST_TIME_FORMAT, GST_TIME_ARGS (result));
+    GST_OBJECT_UNLOCK (clock);
   } else {
     result = GST_CLOCK_TIME_NONE;
   }
