@@ -19,7 +19,8 @@ libgstavi_la_LIBADD = \
 	$(GST_LIBS) \
 	-lgstriff-@GST_MAJORMINOR@ \
 	-lgstaudio-@GST_MAJORMINOR@ \
-	-lgsttag-@GST_MAJORMINOR@
+	-lgsttag-@GST_MAJORMINOR@ \
+	-lgstvideo-@GST_MAJORMINOR@
 
 libgstavi_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstavi_la_LIBTOOLFLAGS = --tag=disable-static
