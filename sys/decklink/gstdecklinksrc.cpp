@@ -119,7 +119,7 @@ enum
 {
   PROP_0,
   PROP_MODE,
-  PROP_OPTICAL
+  PROP_CONNECTION
 };
 
 /* pad templates */
@@ -189,9 +189,9 @@ gst_decklink_src_class_init (GstDecklinkSrcClass * klass)
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
               G_PARAM_CONSTRUCT)));
 
-  g_object_class_install_property (gobject_class, PROP_OPTICAL,
-      g_param_spec_boolean ("optical", "Optical", "Optical",
-          TRUE,
+  g_object_class_install_property (gobject_class, PROP_CONNECTION,
+      g_param_spec_enum ("connection", "Connection", "Connection",
+          GST_TYPE_DECKLINK_CONNECTION, GST_DECKLINK_CONNECTION_SDI,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
               G_PARAM_CONSTRUCT)));
 }
@@ -286,8 +286,9 @@ gst_decklink_src_set_property (GObject * object, guint property_id,
     case PROP_MODE:
       decklinksrc->mode = (GstDecklinkModeEnum) g_value_get_enum (value);
       break;
-    case PROP_OPTICAL:
-      decklinksrc->optical = g_value_get_boolean (value);
+    case PROP_CONNECTION:
+      decklinksrc->connection =
+          (GstDecklinkConnectionEnum) g_value_get_enum (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -308,8 +309,8 @@ gst_decklink_src_get_property (GObject * object, guint property_id,
     case PROP_MODE:
       g_value_set_enum (value, decklinksrc->mode);
       break;
-    case PROP_OPTICAL:
-      g_value_set_boolean (value, decklinksrc->optical);
+    case PROP_CONNECTION:
+      g_value_set_enum (value, decklinksrc->connection);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -380,6 +381,7 @@ gst_decklink_src_start (GstElement * element)
   HRESULT ret;
   const GstDecklinkMode *mode;
   IDeckLinkConfiguration *config;
+  BMDVideoConnection conn;
 
   GST_DEBUG_OBJECT (decklinksrc, "start");
 
@@ -413,9 +415,29 @@ gst_decklink_src_start (GstElement * element)
     return FALSE;
   }
 
-  ret = config->SetInt (bmdDeckLinkConfigVideoInputConnection,
-      decklinksrc->optical ? bmdVideoConnectionOpticalSDI :
-      bmdVideoConnectionSDI);
+  switch (decklinksrc->connection) {
+    default:
+    case GST_DECKLINK_CONNECTION_SDI:
+      conn = bmdVideoConnectionSDI;
+      break;
+    case GST_DECKLINK_CONNECTION_HDMI:
+      conn = bmdVideoConnectionHDMI;
+      break;
+    case GST_DECKLINK_CONNECTION_OPTICAL_SDI:
+      conn = bmdVideoConnectionOpticalSDI;
+      break;
+    case GST_DECKLINK_CONNECTION_COMPONENT:
+      conn = bmdVideoConnectionComponent;
+      break;
+    case GST_DECKLINK_CONNECTION_COMPOSITE:
+      conn = bmdVideoConnectionComposite;
+      break;
+    case GST_DECKLINK_CONNECTION_SVIDEO:
+      conn = bmdVideoConnectionSVideo;
+      break;
+  }
+
+  ret = config->SetInt (bmdDeckLinkConfigVideoInputConnection, conn);
   if (ret != S_OK) {
     GST_ERROR ("set configuration (input source)");
     return FALSE;

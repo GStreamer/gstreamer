@@ -47,6 +47,27 @@ gst_decklink_mode_get_type (void)
   return type;
 }
 
+GType
+gst_decklink_connection_get_type (void)
+{
+  static GType type;
+
+  if (!type) {
+    static const GEnumValue connections[] = {
+      {GST_DECKLINK_CONNECTION_SDI, "sdi", "SDI"},
+      {GST_DECKLINK_CONNECTION_HDMI, "hdmi", "HDMI"},
+      {GST_DECKLINK_CONNECTION_OPTICAL_SDI, "optical-sdi", "Optical SDI"},
+      {GST_DECKLINK_CONNECTION_COMPONENT, "component", "Component"},
+      {GST_DECKLINK_CONNECTION_COMPOSITE, "composite", "Composite"},
+      {GST_DECKLINK_CONNECTION_SVIDEO, "svideo", "S-Video"},
+      {0, NULL, NULL}
+    };
+
+    type = g_enum_register_static ("GstDecklinkConnection", connections);
+  }
+  return type;
+}
+
 static const GstDecklinkMode modes[] = {
   {bmdModeNTSC, 720, 486, 30000, 1001, true},
   {bmdModePAL, 720, 576, 25, 1, true},

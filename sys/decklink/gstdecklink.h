@@ -35,6 +35,16 @@ typedef enum {
 #define GST_TYPE_DECKLINK_MODE (gst_decklink_mode_get_type ())
 GType gst_decklink_mode_get_type (void);
 
+typedef enum {
+  GST_DECKLINK_CONNECTION_SDI,
+  GST_DECKLINK_CONNECTION_HDMI,
+  GST_DECKLINK_CONNECTION_OPTICAL_SDI,
+  GST_DECKLINK_CONNECTION_COMPONENT,
+  GST_DECKLINK_CONNECTION_COMPOSITE,
+  GST_DECKLINK_CONNECTION_SVIDEO
+} GstDecklinkConnectionEnum;
+#define GST_TYPE_DECKLINK_CONNECTION (gst_decklink_connection_get_type ())
+GType gst_decklink_connection_get_type (void);
 
 typedef struct _GstDecklinkMode GstDecklinkMode;
 struct _GstDecklinkMode {

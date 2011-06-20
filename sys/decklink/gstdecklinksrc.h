@@ -71,7 +71,7 @@ struct _GstDecklinkSrc
   /* properties */
   gboolean copy_data;
   GstDecklinkModeEnum mode;
-  gboolean optical;
+  GstDecklinkConnectionEnum connection;
 };
 
 struct _GstDecklinkSrcClass
