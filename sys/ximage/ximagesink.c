@@ -1133,9 +1133,6 @@ gst_ximagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   if (!gst_buffer_pool_set_config (newpool, structure))
     goto config_failed;
 
-  if (!gst_buffer_pool_set_active (newpool, TRUE))
-    goto activate_failed;
-
   oldpool = ximagesink->pool;
   ximagesink->pool = newpool;
 
@@ -1175,13 +1172,6 @@ config_failed:
   {
     GST_ERROR_OBJECT (ximagesink, "failed to set config.");
     g_mutex_unlock (ximagesink->flow_lock);
-    return FALSE;
-  }
-activate_failed:
-  {
-    GST_ERROR_OBJECT (ximagesink, "failed to activate bufferpool.");
-    g_mutex_unlock (ximagesink->flow_lock);
-    gst_object_unref (newpool);
     return FALSE;
   }
 }
@@ -1284,8 +1274,7 @@ gst_ximagesink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
   GstFlowReturn res;
   GstXImageSink *ximagesink;
   GstMetaXImage *meta;
-  GstBuffer *temp;
-  gboolean unref;
+  GstBuffer *to_put = NULL;
 
   ximagesink = GST_XIMAGESINK (vsink);
 
@@ -1295,8 +1284,8 @@ gst_ximagesink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
     /* If this buffer has been allocated using our buffer management we simply
        put the ximage which is in the PRIVATE pointer */
     GST_LOG_OBJECT (ximagesink, "buffer from our pool, writing directly");
+    to_put = buf;
     res = GST_FLOW_OK;
-    unref = FALSE;
   } else {
     guint8 *data;
     gsize size;
@@ -1309,29 +1298,28 @@ gst_ximagesink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
     if (ximagesink->pool == NULL)
       goto no_pool;
 
+    if (!gst_buffer_pool_set_active (ximagesink->pool, TRUE))
+      goto activate_failed;
+
     /* take a buffer form our pool */
-    res = gst_buffer_pool_acquire_buffer (ximagesink->pool, &temp, NULL);
+    res = gst_buffer_pool_acquire_buffer (ximagesink->pool, &to_put, NULL);
     if (res != GST_FLOW_OK)
       goto no_buffer;
 
-    unref = TRUE;
-
-    if (gst_buffer_get_size (temp) < gst_buffer_get_size (buf))
+    if (gst_buffer_get_size (to_put) < gst_buffer_get_size (buf))
       goto wrong_size;
 
-    data = gst_buffer_map (temp, &size, NULL, GST_MAP_WRITE);
+    data = gst_buffer_map (to_put, &size, NULL, GST_MAP_WRITE);
     gst_buffer_extract (buf, 0, data, size);
-    gst_buffer_unmap (temp, data, size);
-
-    buf = temp;
+    gst_buffer_unmap (to_put, data, size);
   }
 
-  if (!gst_ximagesink_ximage_put (ximagesink, buf))
+  if (!gst_ximagesink_ximage_put (ximagesink, to_put))
     goto no_window;
 
 done:
-  if (unref)
-    gst_buffer_unref (buf);
+  if (to_put != buf)
+    gst_buffer_unref (to_put);
 
   return res;
 
@@ -1354,7 +1342,7 @@ wrong_size:
     GST_ELEMENT_ERROR (ximagesink, RESOURCE, WRITE,
         ("Failed to create output image buffer"),
         ("XServer allocated buffer size did not match input buffer %"
-            G_GSIZE_FORMAT " - %" G_GSIZE_FORMAT, gst_buffer_get_size (temp),
+            G_GSIZE_FORMAT " - %" G_GSIZE_FORMAT, gst_buffer_get_size (to_put),
             gst_buffer_get_size (buf)));
     res = GST_FLOW_ERROR;
     goto done;
@@ -1363,6 +1351,12 @@ no_window:
   {
     /* No Window available to put our image into */
     GST_WARNING_OBJECT (ximagesink, "could not output image - no window");
+    res = GST_FLOW_ERROR;
+    goto done;
+  }
+activate_failed:
+  {
+    GST_ERROR_OBJECT (ximagesink, "failed to activate bufferpool.");
     res = GST_FLOW_ERROR;
     goto done;
   }

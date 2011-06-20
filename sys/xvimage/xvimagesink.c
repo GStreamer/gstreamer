@@ -1668,9 +1668,6 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   if (!gst_buffer_pool_set_config (newpool, structure))
     goto config_failed;
 
-  if (!gst_buffer_pool_set_active (newpool, TRUE))
-    goto activate_failed;
-
   oldpool = xvimagesink->pool;
   xvimagesink->pool = newpool;
   g_mutex_unlock (xvimagesink->flow_lock);
@@ -1712,13 +1709,6 @@ config_failed:
   {
     GST_ERROR_OBJECT (xvimagesink, "failed to set config.");
     g_mutex_unlock (xvimagesink->flow_lock);
-    return FALSE;
-  }
-activate_failed:
-  {
-    GST_ERROR_OBJECT (xvimagesink, "failed to activate bufferpool.");
-    g_mutex_unlock (xvimagesink->flow_lock);
-    gst_object_unref (newpool);
     return FALSE;
   }
 }
@@ -1835,8 +1825,8 @@ gst_xvimagesink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
        put the ximage which is in the PRIVATE pointer */
     GST_LOG_OBJECT (xvimagesink, "buffer %p from our pool, writing directly",
         buf);
-    res = GST_FLOW_OK;
     to_put = buf;
+    res = GST_FLOW_OK;
   } else {
     guint8 *data;
     gsize size;
@@ -1848,6 +1838,9 @@ gst_xvimagesink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
     /* we should have a pool, configured in setcaps */
     if (xvimagesink->pool == NULL)
       goto no_pool;
+
+    if (!gst_buffer_pool_set_active (xvimagesink->pool, TRUE))
+      goto activate_failed;
 
     /* take a buffer form our pool */
     res = gst_buffer_pool_acquire_buffer (xvimagesink->pool, &to_put, NULL);
@@ -1902,6 +1895,12 @@ no_window:
   {
     /* No Window available to put our image into */
     GST_WARNING_OBJECT (xvimagesink, "could not output image - no window");
+    res = GST_FLOW_ERROR;
+    goto done;
+  }
+activate_failed:
+  {
+    GST_ERROR_OBJECT (xvimagesink, "failed to activate bufferpool.");
     res = GST_FLOW_ERROR;
     goto done;
   }
