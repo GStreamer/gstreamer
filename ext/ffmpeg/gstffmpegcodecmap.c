@@ -33,6 +33,7 @@
 #include "gstffmpeg.h"
 #include "gstffmpegcodecmap.h"
 
+#include <gst/video/video.h>
 #include <gst/pbutils/codec-utils.h>
 
 /*
@@ -1704,89 +1705,57 @@ gst_ffmpeg_pixfmt_to_caps (enum PixelFormat pix_fmt, AVCodecContext * context,
     enum CodecID codec_id)
 {
   GstCaps *caps = NULL;
-
-  int bpp = 0, depth = 0, endianness = 0;
-  gulong g_mask = 0, r_mask = 0, b_mask = 0, a_mask = 0;
-  guint32 fmt = 0;
+  const gchar *fmt = NULL;
 
   switch (pix_fmt) {
     case PIX_FMT_YUVJ420P:
     case PIX_FMT_YUV420P:
-      fmt = GST_MAKE_FOURCC ('I', '4', '2', '0');
+      fmt = "I420";
       break;
     case PIX_FMT_YUVA420P:
-      fmt = GST_MAKE_FOURCC ('A', '4', '2', '0');
+      fmt = "A420";
       break;
     case PIX_FMT_YUYV422:
-      fmt = GST_MAKE_FOURCC ('Y', 'U', 'Y', '2');
+      fmt = "YUY2";
       break;
     case PIX_FMT_RGB24:
-      bpp = depth = 24;
-      endianness = G_BIG_ENDIAN;
-      r_mask = 0xff0000;
-      g_mask = 0x00ff00;
-      b_mask = 0x0000ff;
+      fmt = "RGB";
       break;
     case PIX_FMT_BGR24:
-      bpp = depth = 24;
-      endianness = G_BIG_ENDIAN;
-      r_mask = 0x0000ff;
-      g_mask = 0x00ff00;
-      b_mask = 0xff0000;
+      fmt = "BGR";
       break;
     case PIX_FMT_YUVJ422P:
     case PIX_FMT_YUV422P:
-      fmt = GST_MAKE_FOURCC ('Y', '4', '2', 'B');
+      fmt = "YV2B";
       break;
     case PIX_FMT_YUVJ444P:
     case PIX_FMT_YUV444P:
-      fmt = GST_MAKE_FOURCC ('Y', '4', '4', '4');
+      fmt = "Y444";
       break;
     case PIX_FMT_RGB32:
-      bpp = 32;
-      depth = 32;
-      endianness = G_BIG_ENDIAN;
 #if (G_BYTE_ORDER == G_BIG_ENDIAN)
-      r_mask = 0x00ff0000;
-      g_mask = 0x0000ff00;
-      b_mask = 0x000000ff;
-      a_mask = 0xff000000;
+      fmt = "xRGB";
 #else
-      r_mask = 0x0000ff00;
-      g_mask = 0x00ff0000;
-      b_mask = 0xff000000;
-      a_mask = 0x000000ff;
+      fmt = "BGRx";
 #endif
       break;
     case PIX_FMT_YUV410P:
-      fmt = GST_MAKE_FOURCC ('Y', 'U', 'V', '9');
+      fmt = "YUV9";
       break;
     case PIX_FMT_YUV411P:
-      fmt = GST_MAKE_FOURCC ('Y', '4', '1', 'B');
+      fmt = "Y41B";
       break;
     case PIX_FMT_RGB565:
-      bpp = depth = 16;
-      endianness = G_BYTE_ORDER;
-      r_mask = 0xf800;
-      g_mask = 0x07e0;
-      b_mask = 0x001f;
+      fmt = "RGB16";
       break;
     case PIX_FMT_RGB555:
-      bpp = 16;
-      depth = 15;
-      endianness = G_BYTE_ORDER;
-      r_mask = 0x7c00;
-      g_mask = 0x03e0;
-      b_mask = 0x001f;
+      fmt = "RGB15";
       break;
     case PIX_FMT_PAL8:
-      bpp = depth = 8;
-      endianness = G_BYTE_ORDER;
+      fmt = "RGB8_PALETTED";
       break;
     case PIX_FMT_GRAY8:
-      bpp = depth = 8;
-      caps = gst_ff_vid_caps_new (context, codec_id, "video/x-raw-gray",
-          "bpp", G_TYPE_INT, bpp, "depth", G_TYPE_INT, depth, NULL);
+      fmt = "GRAY8";
       break;
     default:
       /* give up ... */
@@ -1794,38 +1763,9 @@ gst_ffmpeg_pixfmt_to_caps (enum PixelFormat pix_fmt, AVCodecContext * context,
   }
 
   if (caps == NULL) {
-    if (bpp != 0) {
-      if (r_mask != 0) {
-        if (a_mask) {
-          caps = gst_ff_vid_caps_new (context, codec_id, "video/x-raw-rgb",
-              "bpp", G_TYPE_INT, bpp,
-              "depth", G_TYPE_INT, depth,
-              "red_mask", G_TYPE_INT, r_mask,
-              "green_mask", G_TYPE_INT, g_mask,
-              "blue_mask", G_TYPE_INT, b_mask,
-              "alpha_mask", G_TYPE_INT, a_mask,
-              "endianness", G_TYPE_INT, endianness, NULL);
-        } else {
-          caps = gst_ff_vid_caps_new (context, codec_id, "video/x-raw-rgb",
-              "bpp", G_TYPE_INT, bpp,
-              "depth", G_TYPE_INT, depth,
-              "red_mask", G_TYPE_INT, r_mask,
-              "green_mask", G_TYPE_INT, g_mask,
-              "blue_mask", G_TYPE_INT, b_mask,
-              "endianness", G_TYPE_INT, endianness, NULL);
-        }
-      } else {
-        caps = gst_ff_vid_caps_new (context, codec_id, "video/x-raw-rgb",
-            "bpp", G_TYPE_INT, bpp,
-            "depth", G_TYPE_INT, depth,
-            "endianness", G_TYPE_INT, endianness, NULL);
-        if (caps && context) {
-          gst_ffmpeg_set_palette (caps, context);
-        }
-      }
-    } else if (fmt) {
-      caps = gst_ff_vid_caps_new (context, codec_id, "video/x-raw-yuv",
-          "format", GST_TYPE_FOURCC, fmt, NULL);
+    if (fmt) {
+      caps = gst_ff_vid_caps_new (context, codec_id, "video/x-raw",
+          "format", G_TYPE_STRING, fmt, NULL);
     }
   }
 
@@ -2073,6 +2013,8 @@ gst_ffmpeg_caps_to_pixfmt (const GstCaps * caps,
   GstStructure *structure;
   const GValue *fps;
   const GValue *par = NULL;
+  const gchar *fmt;
+  GstVideoFormat format = GST_VIDEO_FORMAT_UNKNOWN;
 
   GST_DEBUG ("converting caps %" GST_PTR_FORMAT, caps);
   g_return_if_fail (gst_caps_get_size (caps) == 1);
@@ -2112,88 +2054,65 @@ gst_ffmpeg_caps_to_pixfmt (const GstCaps * caps,
 
   g_return_if_fail (fps != NULL && GST_VALUE_HOLDS_FRACTION (fps));
 
-  if (strcmp (gst_structure_get_name (structure), "video/x-raw-yuv") == 0) {
-    guint32 fourcc;
-
-    if (gst_structure_get_fourcc (structure, "format", &fourcc)) {
-      switch (fourcc) {
-        case GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'):
-          context->pix_fmt = PIX_FMT_YUYV422;
-          break;
-        case GST_MAKE_FOURCC ('I', '4', '2', '0'):
-          context->pix_fmt = PIX_FMT_YUV420P;
-          break;
-        case GST_MAKE_FOURCC ('A', '4', '2', '0'):
-          context->pix_fmt = PIX_FMT_YUVA420P;
-          break;
-        case GST_MAKE_FOURCC ('Y', '4', '1', 'B'):
-          context->pix_fmt = PIX_FMT_YUV411P;
-          break;
-        case GST_MAKE_FOURCC ('Y', '4', '2', 'B'):
-          context->pix_fmt = PIX_FMT_YUV422P;
-          break;
-        case GST_MAKE_FOURCC ('Y', 'U', 'V', '9'):
-          context->pix_fmt = PIX_FMT_YUV410P;
-          break;
-#if 0
-        case FIXME:
-          context->pix_fmt = PIX_FMT_YUV444P;
-          break;
-#endif
-      }
+  if (gst_structure_has_name (structure, "video/x-raw")) {
+    if ((fmt = gst_structure_get_string (structure, "format"))) {
+      format = gst_video_format_from_string (fmt);
     }
-  } else if (strcmp (gst_structure_get_name (structure),
-          "video/x-raw-rgb") == 0) {
-    gint bpp = 0, rmask = 0, endianness = 0;
+  }
 
-    if (gst_structure_get_int (structure, "bpp", &bpp) &&
-        gst_structure_get_int (structure, "endianness", &endianness)) {
-      if (gst_structure_get_int (structure, "red_mask", &rmask)) {
-        switch (bpp) {
-          case 32:
+  switch (format) {
+    case GST_VIDEO_FORMAT_YUY2:
+      context->pix_fmt = PIX_FMT_YUYV422;
+      break;
+    case GST_VIDEO_FORMAT_I420:
+      context->pix_fmt = PIX_FMT_YUV420P;
+      break;
+    case GST_VIDEO_FORMAT_A420:
+      context->pix_fmt = PIX_FMT_YUVA420P;
+      break;
+    case GST_VIDEO_FORMAT_Y41B:
+      context->pix_fmt = PIX_FMT_YUV411P;
+      break;
+    case GST_VIDEO_FORMAT_Y42B:
+      context->pix_fmt = PIX_FMT_YUV422P;
+      break;
+    case GST_VIDEO_FORMAT_YUV9:
+      context->pix_fmt = PIX_FMT_YUV410P;
+      break;
+    case GST_VIDEO_FORMAT_Y444:
+      context->pix_fmt = PIX_FMT_YUV444P;
+      break;
+    case GST_VIDEO_FORMAT_GRAY8:
+      context->pix_fmt = PIX_FMT_GRAY8;
+      break;
+    case GST_VIDEO_FORMAT_xRGB:
 #if (G_BYTE_ORDER == G_BIG_ENDIAN)
-            if (rmask == 0x00ff0000)
-#else
-            if (rmask == 0x0000ff00)
+      context->pix_fmt = PIX_FMT_RGB32;
 #endif
-              context->pix_fmt = PIX_FMT_RGB32;
-            break;
-          case 24:
-            if (rmask == 0x0000FF)
-              context->pix_fmt = PIX_FMT_BGR24;
-            else
-              context->pix_fmt = PIX_FMT_RGB24;
-            break;
-          case 16:
-            if (endianness == G_BYTE_ORDER)
-              context->pix_fmt = PIX_FMT_RGB565;
-            break;
-          case 15:
-            if (endianness == G_BYTE_ORDER)
-              context->pix_fmt = PIX_FMT_RGB555;
-            break;
-          default:
-            /* nothing */
-            break;
-        }
-      } else {
-        if (bpp == 8) {
-          context->pix_fmt = PIX_FMT_PAL8;
-          gst_ffmpeg_get_palette (caps, context);
-        }
-      }
-    }
-  } else if (strcmp (gst_structure_get_name (structure),
-          "video/x-raw-gray") == 0) {
-    gint bpp = 0;
-
-    if (gst_structure_get_int (structure, "bpp", &bpp)) {
-      switch (bpp) {
-        case 8:
-          context->pix_fmt = PIX_FMT_GRAY8;
-          break;
-      }
-    }
+      break;
+    case GST_VIDEO_FORMAT_BGRx:
+#if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
+      context->pix_fmt = PIX_FMT_RGB32;
+#endif
+      break;
+    case GST_VIDEO_FORMAT_RGB:
+      context->pix_fmt = PIX_FMT_RGB24;
+      break;
+    case GST_VIDEO_FORMAT_BGR:
+      context->pix_fmt = PIX_FMT_BGR24;
+      break;
+    case GST_VIDEO_FORMAT_RGB16:
+      context->pix_fmt = PIX_FMT_RGB565;
+      break;
+    case GST_VIDEO_FORMAT_RGB15:
+      context->pix_fmt = PIX_FMT_RGB555;
+      break;
+    case GST_VIDEO_FORMAT_RGB8_PALETTED:
+      context->pix_fmt = PIX_FMT_PAL8;
+      gst_ffmpeg_get_palette (caps, context);
+      break;
+    default:
+      break;
   }
 }
 
@@ -2877,8 +2796,7 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
 
   mimetype = gst_structure_get_name (structure);
 
-  if (!strcmp (mimetype, "video/x-raw-rgb") ||
-      !strcmp (mimetype, "video/x-raw-yuv")) {
+  if (!strcmp (mimetype, "video/x-raw")) {
     id = CODEC_ID_RAWVIDEO;
     video = TRUE;
   } else if (!strcmp (mimetype, "audio/x-raw-int")) {

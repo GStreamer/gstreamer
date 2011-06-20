@@ -153,8 +153,7 @@ gst_ffmpegenc_base_init (GstFFMpegEncClass * klass)
   }
 
   if (in_plugin->type == AVMEDIA_TYPE_VIDEO) {
-    sinkcaps = gst_caps_from_string
-        ("video/x-raw-rgb; video/x-raw-yuv; video/x-raw-gray");
+    sinkcaps = gst_caps_from_string ("video/x-raw");
   } else {
     sinkcaps = gst_ffmpeg_codectype_to_audio_caps (NULL,
         in_plugin->id, TRUE, in_plugin);
@@ -347,19 +346,13 @@ gst_ffmpegenc_get_possible_sizes (GstFFMpegEnc * ffmpegenc, GstPad * pad,
     width = gst_structure_get_value (s, "width");
     framerate = gst_structure_get_value (s, "framerate");
 
-    tmps = gst_structure_new ("video/x-raw-rgb", NULL);
+    tmps = gst_structure_new ("video/x-raw", NULL);
     if (width)
       gst_structure_set_value (tmps, "width", width);
     if (height)
       gst_structure_set_value (tmps, "height", height);
     if (framerate)
       gst_structure_set_value (tmps, "framerate", framerate);
-    gst_caps_merge_structure (tmpcaps, gst_structure_copy (tmps));
-
-    gst_structure_set_name (tmps, "video/x-raw-yuv");
-    gst_caps_merge_structure (tmpcaps, gst_structure_copy (tmps));
-
-    gst_structure_set_name (tmps, "video/x-raw-gray");
     gst_caps_merge_structure (tmpcaps, tmps);
   }
   gst_caps_unref (intersect);

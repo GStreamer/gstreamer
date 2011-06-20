@@ -318,7 +318,7 @@ gst_ffmpegdec_base_init (GstFFMpegDecClass * klass)
     sinkcaps = gst_caps_from_string ("unknown/unknown");
   }
   if (in_plugin->type == AVMEDIA_TYPE_VIDEO) {
-    srccaps = gst_caps_from_string ("video/x-raw-rgb; video/x-raw-yuv");
+    srccaps = gst_caps_from_string ("video/x-raw");
   } else {
     srccaps = gst_ffmpeg_codectype_to_audio_caps (NULL,
         in_plugin->id, FALSE, in_plugin);
