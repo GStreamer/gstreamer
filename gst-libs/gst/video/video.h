@@ -199,18 +199,18 @@ typedef enum {
 struct _GstVideoInfo {
   GstVideoFormat format;
   GstVideoFlags  flags;
-  guint          width;
-  guint          height;
+  gint           width;
+  gint           height;
   guint          size;
 
   const gchar   *color_matrix;
   const gchar   *chroma_site;
   GstBuffer     *palette;
 
-  guint          par_n;
-  guint          par_d;
-  guint          fps_n;
-  guint          fps_d;
+  gint           par_n;
+  gint           par_d;
+  gint           fps_n;
+  gint           fps_d;
 
   guint          n_planes;
   gsize          offset[GST_VIDEO_MAX_PLANES];
