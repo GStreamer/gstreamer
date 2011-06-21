@@ -315,7 +315,6 @@ gst_rtp_mp4a_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     guint8 *data;
     guint pos;
     GstClockTime timestamp;
-    guint offset;
 
     avail = gst_adapter_available (rtpmp4adepay->adapter);
     timestamp = gst_adapter_prev_timestamp (rtpmp4adepay->adapter, NULL);
@@ -326,8 +325,6 @@ gst_rtp_mp4a_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     data = GST_BUFFER_DATA (outbuf);
     /* position in data we are at */
     pos = 0;
-    /* timestamp offset */
-    offset = 0;
 
     /* looping through the number of sub-frames in the audio payload */
     for (i = 0; i <= rtpmp4adepay->numSubFrames; i++) {
@@ -366,18 +363,15 @@ gst_rtp_mp4a_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
       data += skip;
       avail -= skip;
 
-      if (offset > 0 && timestamp != -1 && depayload->clock_rate != 0) {
-        timestamp +=
-            gst_util_uint64_scale_int (offset, GST_SECOND,
-            depayload->clock_rate);
-      }
-
       GST_BUFFER_TIMESTAMP (tmp) = timestamp;
       gst_base_rtp_depayload_push (depayload, tmp);
 
-      /* calculate offsets for next buffers */
-      if (rtpmp4adepay->frame_len) {
-        offset += rtpmp4adepay->frame_len;
+      /* shift ts for next buffers */
+      if (rtpmp4adepay->frame_len && timestamp != -1
+          && depayload->clock_rate != 0) {
+        timestamp +=
+            gst_util_uint64_scale_int (rtpmp4adepay->frame_len, GST_SECOND,
+            depayload->clock_rate);
       }
     }
 
