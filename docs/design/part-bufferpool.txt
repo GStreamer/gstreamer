@@ -73,6 +73,9 @@ Negotiation
  Buffers are then allocated by the srcpad from the negotiated pool and pushed to
  the peer pad as usual.
 
+ The allocation query can also return an allocator name when the buffers are of
+ different sizes and can't be allocated from a pool.
+
 
 Allocation query
 ----------------
@@ -85,21 +88,33 @@ Allocation query
   (in) "need-pool", G_TYPE_BOOLEAN
         - if a GstBufferPool is requested
 
+  (out) "size", G_TYPE_UINT
+        - the total size of the buffer memory. This size is set to 0 when the 
+          buffers are of variable size.
+
+  (out) "min-buffers", G_TYPE_UINT
+        - the minimum amount of buffers to allocate
+
+  (out) "max-buffers", G_TYPE_UINT
+        - the maximum amount of buffers to allocate
+
   (out) "prefix", G_TYPE_UINT
         - the prefix of the buffer memory
 
   (out) "align", G_TYPE_UINT
         - the aligment of the memory in the buffers, the alignment will be applied
-          to the prefix.
-
-  (out) "size", G_TYPE_UINT
-        - the total size of the buffer memory
+          to the prefix. The aligment is expressed as a value ((1 << N) - 1).
+          Alignment will be done on multiples of (1 << N).
 
   (out) "pool", GST_TYPE_BUFFER_POOL
-        - a buffer pool when need-pool was TRUE and the peer can provide a pool
+        - a buffer pool when need-pool was TRUE and the peer can provide a pool.
+          This pool is inactive and can be configured when needed.
 
   (out) "metadata", G_TYPE_VALUE_ARRAY of G_TYPE_STRING
         - an array of metadata API strings that can be accepted.
+
+  (out) "allocator", G_TYPE_VALUE_ARRAY of G_TYPE_STRING
+        - an array of allocators that can be used.
 
 
 Allocating from pool
