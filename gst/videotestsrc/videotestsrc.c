@@ -125,50 +125,50 @@ static const struct vts_color_struct vts_colors_bt601_ycbcr_75[] = {
 };
 
 
-static void paint_setup_I420 (paintinfo * p, unsigned char *dest);
-static void paint_setup_YV12 (paintinfo * p, unsigned char *dest);
-static void paint_setup_YUY2 (paintinfo * p, unsigned char *dest);
-static void paint_setup_UYVY (paintinfo * p, unsigned char *dest);
-static void paint_setup_YVYU (paintinfo * p, unsigned char *dest);
+static void paint_setup_I420 (paintinfo * p, GstVideoFrame * frame);
+static void paint_setup_YV12 (paintinfo * p, GstVideoFrame * frame);
+static void paint_setup_YUY2 (paintinfo * p, GstVideoFrame * frame);
+static void paint_setup_UYVY (paintinfo * p, GstVideoFrame * frame);
+static void paint_setup_YVYU (paintinfo * p, GstVideoFrame * frame);
 #ifdef disabled
-static void paint_setup_IYU2 (paintinfo * p, unsigned char *dest);
+static void paint_setup_IYU2 (paintinfo * p, GstVideoFrame * frame);
 #endif
-static void paint_setup_Y41B (paintinfo * p, unsigned char *dest);
-static void paint_setup_Y42B (paintinfo * p, unsigned char *dest);
-static void paint_setup_Y444 (paintinfo * p, unsigned char *dest);
-static void paint_setup_Y800 (paintinfo * p, unsigned char *dest);
-static void paint_setup_AYUV (paintinfo * p, unsigned char *dest);
-static void paint_setup_v308 (paintinfo * p, unsigned char *dest);
-static void paint_setup_NV12 (paintinfo * p, unsigned char *dest);
-static void paint_setup_NV21 (paintinfo * p, unsigned char *dest);
+static void paint_setup_Y41B (paintinfo * p, GstVideoFrame * frame);
+static void paint_setup_Y42B (paintinfo * p, GstVideoFrame * frame);
+static void paint_setup_Y444 (paintinfo * p, GstVideoFrame * frame);
+static void paint_setup_Y800 (paintinfo * p, GstVideoFrame * frame);
+static void paint_setup_AYUV (paintinfo * p, GstVideoFrame * frame);
+static void paint_setup_v308 (paintinfo * p, GstVideoFrame * frame);
+static void paint_setup_NV12 (paintinfo * p, GstVideoFrame * frame);
+static void paint_setup_NV21 (paintinfo * p, GstVideoFrame * frame);
 #ifdef disabled
-static void paint_setup_v410 (paintinfo * p, unsigned char *dest);
+static void paint_setup_v410 (paintinfo * p, GstVideoFrame * frame);
 #endif
-static void paint_setup_v216 (paintinfo * p, unsigned char *dest);
-static void paint_setup_v210 (paintinfo * p, unsigned char *dest);
-static void paint_setup_UYVP (paintinfo * p, unsigned char *dest);
-static void paint_setup_AY64 (paintinfo * p, unsigned char *dest);
+static void paint_setup_v216 (paintinfo * p, GstVideoFrame * frame);
+static void paint_setup_v210 (paintinfo * p, GstVideoFrame * frame);
+static void paint_setup_UYVP (paintinfo * p, GstVideoFrame * frame);
+static void paint_setup_AY64 (paintinfo * p, GstVideoFrame * frame);
 
-static void paint_setup_YUV9 (paintinfo * p, unsigned char *dest);
-static void paint_setup_YVU9 (paintinfo * p, unsigned char *dest);
-static void paint_setup_ARGB8888 (paintinfo * p, unsigned char *dest);
-static void paint_setup_ABGR8888 (paintinfo * p, unsigned char *dest);
-static void paint_setup_RGBA8888 (paintinfo * p, unsigned char *dest);
-static void paint_setup_BGRA8888 (paintinfo * p, unsigned char *dest);
-static void paint_setup_xRGB8888 (paintinfo * p, unsigned char *dest);
-static void paint_setup_xBGR8888 (paintinfo * p, unsigned char *dest);
-static void paint_setup_RGBx8888 (paintinfo * p, unsigned char *dest);
-static void paint_setup_BGRx8888 (paintinfo * p, unsigned char *dest);
-static void paint_setup_RGB888 (paintinfo * p, unsigned char *dest);
-static void paint_setup_BGR888 (paintinfo * p, unsigned char *dest);
-static void paint_setup_RGB565 (paintinfo * p, unsigned char *dest);
-static void paint_setup_xRGB1555 (paintinfo * p, unsigned char *dest);
-static void paint_setup_ARGB64 (paintinfo * p, unsigned char *dest);
+static void paint_setup_YUV9 (paintinfo * p, GstVideoFrame * frame);
+static void paint_setup_YVU9 (paintinfo * p, GstVideoFrame * frame);
+static void paint_setup_ARGB8888 (paintinfo * p, GstVideoFrame * frame);
+static void paint_setup_ABGR8888 (paintinfo * p, GstVideoFrame * frame);
+static void paint_setup_RGBA8888 (paintinfo * p, GstVideoFrame * frame);
+static void paint_setup_BGRA8888 (paintinfo * p, GstVideoFrame * frame);
+static void paint_setup_xRGB8888 (paintinfo * p, GstVideoFrame * frame);
+static void paint_setup_xBGR8888 (paintinfo * p, GstVideoFrame * frame);
+static void paint_setup_RGBx8888 (paintinfo * p, GstVideoFrame * frame);
+static void paint_setup_BGRx8888 (paintinfo * p, GstVideoFrame * frame);
+static void paint_setup_RGB888 (paintinfo * p, GstVideoFrame * frame);
+static void paint_setup_BGR888 (paintinfo * p, GstVideoFrame * frame);
+static void paint_setup_RGB565 (paintinfo * p, GstVideoFrame * frame);
+static void paint_setup_xRGB1555 (paintinfo * p, GstVideoFrame * frame);
+static void paint_setup_ARGB64 (paintinfo * p, GstVideoFrame * frame);
 
-static void paint_setup_bayer_bggr (paintinfo * p, unsigned char *dest);
-static void paint_setup_bayer_rggb (paintinfo * p, unsigned char *dest);
-static void paint_setup_bayer_gbrg (paintinfo * p, unsigned char *dest);
-static void paint_setup_bayer_grbg (paintinfo * p, unsigned char *dest);
+static void paint_setup_bayer_bggr (paintinfo * p, GstVideoFrame * frame);
+static void paint_setup_bayer_rggb (paintinfo * p, GstVideoFrame * frame);
+static void paint_setup_bayer_gbrg (paintinfo * p, GstVideoFrame * frame);
+static void paint_setup_bayer_grbg (paintinfo * p, GstVideoFrame * frame);
 
 static void convert_hline_I420 (paintinfo * p, int y);
 static void convert_hline_NV12 (paintinfo * p, int y);
@@ -201,8 +201,8 @@ static void convert_hline_xRGB1555 (paintinfo * p, int y);
 
 static void convert_hline_bayer (paintinfo * p, int y);
 
-static void paint_setup_GRAY8 (paintinfo * p, unsigned char *dest);
-static void paint_setup_GRAY16 (paintinfo * p, unsigned char *dest);
+static void paint_setup_GRAY8 (paintinfo * p, GstVideoFrame * frame);
+static void paint_setup_GRAY16 (paintinfo * p, GstVideoFrame * frame);
 static void convert_hline_GRAY8 (paintinfo * p, int y);
 static void convert_hline_GRAY16 (paintinfo * p, int y);
 
@@ -460,7 +460,7 @@ gst_video_test_src_get_size (GstVideoTestSrc * v, int w, int h)
 
   format->paint_setup (p, NULL);
 
-  return (unsigned long) p->endptr;
+  return p->size;
 }
 
 #define SCALEBITS 10
@@ -635,8 +635,7 @@ videotestsrc_blend_line (GstVideoTestSrc * v, guint8 * dest, guint8 * src,
 }
 
 void
-gst_video_test_src_smpte (GstVideoTestSrc * v, unsigned char *dest, int w,
-    int h)
+gst_video_test_src_smpte (GstVideoTestSrc * v, GstVideoFrame * frame)
 {
   int i;
   int y1, y2;
@@ -644,13 +643,14 @@ gst_video_test_src_smpte (GstVideoTestSrc * v, unsigned char *dest, int w,
   paintinfo pi = { NULL, };
   paintinfo *p = &pi;
   struct format_list_struct *format;
+  int w = frame->info.width, h = frame->info.height;
 
-  videotestsrc_setup_paintinfo (v, p, w, h);
+  videotestsrc_setup_paintinfo (v, p, frame->info.width, frame->info.height);
   format = v->format;
   if (format == NULL)
     return;
 
-  format->paint_setup (p, dest);
+  format->paint_setup (p, frame);
 
   y1 = 2 * h / 3;
   y2 = h * 0.75;
@@ -741,14 +741,14 @@ gst_video_test_src_smpte (GstVideoTestSrc * v, unsigned char *dest, int w,
 }
 
 void
-gst_video_test_src_smpte75 (GstVideoTestSrc * v, unsigned char *dest, int w,
-    int h)
+gst_video_test_src_smpte75 (GstVideoTestSrc * v, GstVideoFrame * frame)
 {
   int i;
   int j;
   paintinfo pi = { NULL, };
   paintinfo *p = &pi;
   struct format_list_struct *format;
+  int w = frame->info.width, h = frame->info.height;
 
   videotestsrc_setup_paintinfo (v, p, w, h);
   if (v->color_spec == GST_VIDEO_TEST_SRC_BT601) {
@@ -760,7 +760,7 @@ gst_video_test_src_smpte75 (GstVideoTestSrc * v, unsigned char *dest, int w,
   if (format == NULL)
     return;
 
-  format->paint_setup (p, dest);
+  format->paint_setup (p, frame);
 
   /* color bars */
   for (j = 0; j < h; j++) {
@@ -776,21 +776,21 @@ gst_video_test_src_smpte75 (GstVideoTestSrc * v, unsigned char *dest, int w,
 }
 
 void
-gst_video_test_src_smpte100 (GstVideoTestSrc * v, unsigned char *dest, int w,
-    int h)
+gst_video_test_src_smpte100 (GstVideoTestSrc * v, GstVideoFrame * frame)
 {
   int i;
   int j;
   paintinfo pi = { NULL, };
   paintinfo *p = &pi;
   struct format_list_struct *format;
+  int w = frame->info.width, h = frame->info.height;
 
   videotestsrc_setup_paintinfo (v, p, w, h);
   format = v->format;
   if (format == NULL)
     return;
 
-  format->paint_setup (p, dest);
+  format->paint_setup (p, frame);
 
   /* color bars */
   for (j = 0; j < h; j++) {
@@ -806,19 +806,20 @@ gst_video_test_src_smpte100 (GstVideoTestSrc * v, unsigned char *dest, int w,
 }
 
 void
-gst_video_test_src_bar (GstVideoTestSrc * v, unsigned char *dest, int w, int h)
+gst_video_test_src_bar (GstVideoTestSrc * v, GstVideoFrame * frame)
 {
   int j;
   paintinfo pi = { NULL, };
   paintinfo *p = &pi;
   struct format_list_struct *format;
+  int w = frame->info.width, h = frame->info.height;
 
   videotestsrc_setup_paintinfo (v, p, w, h);
   format = v->format;
   if (format == NULL)
     return;
 
-  format->paint_setup (p, dest);
+  format->paint_setup (p, frame);
 
   for (j = 0; j < h; j++) {
     /* use fixed size for now */
@@ -833,7 +834,7 @@ gst_video_test_src_bar (GstVideoTestSrc * v, unsigned char *dest, int w, int h)
 }
 
 void
-gst_video_test_src_snow (GstVideoTestSrc * v, unsigned char *dest, int w, int h)
+gst_video_test_src_snow (GstVideoTestSrc * v, GstVideoFrame * frame)
 {
   int i;
   int j;
@@ -841,13 +842,14 @@ gst_video_test_src_snow (GstVideoTestSrc * v, unsigned char *dest, int w, int h)
   paintinfo *p = &pi;
   struct format_list_struct *format;
   struct vts_color_struct color;
+  int w = frame->info.width, h = frame->info.height;
 
   videotestsrc_setup_paintinfo (v, p, w, h);
   format = v->format;
   if (format == NULL)
     return;
 
-  format->paint_setup (p, dest);
+  format->paint_setup (p, frame);
 
   color = p->colors[COLOR_BLACK];
   p->color = &color;
@@ -864,20 +866,21 @@ gst_video_test_src_snow (GstVideoTestSrc * v, unsigned char *dest, int w, int h)
 }
 
 static void
-gst_video_test_src_unicolor (GstVideoTestSrc * v, unsigned char *dest, int w,
-    int h, int color_index)
+gst_video_test_src_unicolor (GstVideoTestSrc * v, GstVideoFrame * frame,
+    int color_index)
 {
   int i;
   paintinfo pi = { NULL, };
   paintinfo *p = &pi;
   struct format_list_struct *format;
+  int w = frame->info.width, h = frame->info.height;
 
   videotestsrc_setup_paintinfo (v, p, w, h);
   format = v->format;
   if (format == NULL)
     return;
 
-  format->paint_setup (p, dest);
+  format->paint_setup (p, frame);
 
   p->color = p->colors + color_index;
   if (color_index == COLOR_BLACK) {
@@ -894,43 +897,43 @@ gst_video_test_src_unicolor (GstVideoTestSrc * v, unsigned char *dest, int w,
 }
 
 void
-gst_video_test_src_black (GstVideoTestSrc * v, guchar * dest, int w, int h)
+gst_video_test_src_black (GstVideoTestSrc * v, GstVideoFrame * frame)
 {
-  gst_video_test_src_unicolor (v, dest, w, h, COLOR_BLACK);
+  gst_video_test_src_unicolor (v, frame, COLOR_BLACK);
 }
 
 void
-gst_video_test_src_white (GstVideoTestSrc * v, guchar * dest, int w, int h)
+gst_video_test_src_white (GstVideoTestSrc * v, GstVideoFrame * frame)
 {
-  gst_video_test_src_unicolor (v, dest, w, h, COLOR_WHITE);
+  gst_video_test_src_unicolor (v, frame, COLOR_WHITE);
 }
 
 void
-gst_video_test_src_red (GstVideoTestSrc * v, guchar * dest, int w, int h)
+gst_video_test_src_red (GstVideoTestSrc * v, GstVideoFrame * frame)
 {
-  gst_video_test_src_unicolor (v, dest, w, h, COLOR_RED);
+  gst_video_test_src_unicolor (v, frame, COLOR_RED);
 }
 
 void
-gst_video_test_src_green (GstVideoTestSrc * v, guchar * dest, int w, int h)
+gst_video_test_src_green (GstVideoTestSrc * v, GstVideoFrame * frame)
 {
-  gst_video_test_src_unicolor (v, dest, w, h, COLOR_GREEN);
+  gst_video_test_src_unicolor (v, frame, COLOR_GREEN);
 }
 
 void
-gst_video_test_src_blue (GstVideoTestSrc * v, guchar * dest, int w, int h)
+gst_video_test_src_blue (GstVideoTestSrc * v, GstVideoFrame * frame)
 {
-  gst_video_test_src_unicolor (v, dest, w, h, COLOR_BLUE);
+  gst_video_test_src_unicolor (v, frame, COLOR_BLUE);
 }
 
 void
-gst_video_test_src_blink (GstVideoTestSrc * v, unsigned char *dest, int w,
-    int h)
+gst_video_test_src_blink (GstVideoTestSrc * v, GstVideoFrame * frame)
 {
   int i;
   paintinfo pi = { NULL, };
   paintinfo *p = &pi;
   struct format_list_struct *format;
+  int w = frame->info.width, h = frame->info.height;
 
   videotestsrc_setup_paintinfo (v, p, w, h);
 
@@ -938,7 +941,7 @@ gst_video_test_src_blink (GstVideoTestSrc * v, unsigned char *dest, int w,
   if (format == NULL)
     return;
 
-  format->paint_setup (p, dest);
+  format->paint_setup (p, frame);
 
   if (v->n_frames & 1) {
     p->color = &p->foreground_color;
@@ -953,13 +956,13 @@ gst_video_test_src_blink (GstVideoTestSrc * v, unsigned char *dest, int w,
 }
 
 void
-gst_video_test_src_solid (GstVideoTestSrc * v, unsigned char *dest, int w,
-    int h)
+gst_video_test_src_solid (GstVideoTestSrc * v, GstVideoFrame * frame)
 {
   int i;
   paintinfo pi = { NULL, };
   paintinfo *p = &pi;
   struct format_list_struct *format;
+  int w = frame->info.width, h = frame->info.height;
 
   videotestsrc_setup_paintinfo (v, p, w, h);
 
@@ -967,7 +970,7 @@ gst_video_test_src_solid (GstVideoTestSrc * v, unsigned char *dest, int w,
   if (format == NULL)
     return;
 
-  format->paint_setup (p, dest);
+  format->paint_setup (p, frame);
 
   p->color = &p->foreground_color;
 
@@ -978,12 +981,13 @@ gst_video_test_src_solid (GstVideoTestSrc * v, unsigned char *dest, int w,
 }
 
 void
-gst_video_test_src_checkers1 (GstVideoTestSrc * v, guchar * dest, int w, int h)
+gst_video_test_src_checkers1 (GstVideoTestSrc * v, GstVideoFrame * frame)
 {
   int x, y;
   paintinfo pi = { NULL, };
   paintinfo *p = &pi;
   struct format_list_struct *format;
+  int w = frame->info.width, h = frame->info.height;
 
   videotestsrc_setup_paintinfo (v, p, w, h);
 
@@ -991,7 +995,7 @@ gst_video_test_src_checkers1 (GstVideoTestSrc * v, guchar * dest, int w, int h)
   if (format == NULL)
     return;
 
-  format->paint_setup (p, dest);
+  format->paint_setup (p, frame);
 
   for (y = 0; y < h; y++) {
     for (x = 0; x < w; x++) {
@@ -1007,19 +1011,20 @@ gst_video_test_src_checkers1 (GstVideoTestSrc * v, guchar * dest, int w, int h)
 }
 
 void
-gst_video_test_src_checkers2 (GstVideoTestSrc * v, guchar * dest, int w, int h)
+gst_video_test_src_checkers2 (GstVideoTestSrc * v, GstVideoFrame * frame)
 {
   int x, y;
   paintinfo pi = { NULL, };
   paintinfo *p = &pi;
   struct format_list_struct *format;
+  int w = frame->info.width, h = frame->info.height;
 
   videotestsrc_setup_paintinfo (v, p, w, h);
   format = v->format;
   if (format == NULL)
     return;
 
-  format->paint_setup (p, dest);
+  format->paint_setup (p, frame);
 
   for (y = 0; y < h; y++) {
     for (x = 0; x < w; x += 2) {
@@ -1037,19 +1042,20 @@ gst_video_test_src_checkers2 (GstVideoTestSrc * v, guchar * dest, int w, int h)
 }
 
 void
-gst_video_test_src_checkers4 (GstVideoTestSrc * v, guchar * dest, int w, int h)
+gst_video_test_src_checkers4 (GstVideoTestSrc * v, GstVideoFrame * frame)
 {
   int x, y;
   paintinfo pi = { NULL, };
   paintinfo *p = &pi;
   struct format_list_struct *format;
+  int w = frame->info.width, h = frame->info.height;
 
   videotestsrc_setup_paintinfo (v, p, w, h);
   format = v->format;
   if (format == NULL)
     return;
 
-  format->paint_setup (p, dest);
+  format->paint_setup (p, frame);
 
   for (y = 0; y < h; y++) {
     for (x = 0; x < w; x += 4) {
@@ -1067,19 +1073,20 @@ gst_video_test_src_checkers4 (GstVideoTestSrc * v, guchar * dest, int w, int h)
 }
 
 void
-gst_video_test_src_checkers8 (GstVideoTestSrc * v, guchar * dest, int w, int h)
+gst_video_test_src_checkers8 (GstVideoTestSrc * v, GstVideoFrame * frame)
 {
   int x, y;
   paintinfo pi = { NULL, };
   paintinfo *p = &pi;
   struct format_list_struct *format;
+  int w = frame->info.width, h = frame->info.height;
 
   videotestsrc_setup_paintinfo (v, p, w, h);
   format = v->format;
   if (format == NULL)
     return;
 
-  format->paint_setup (p, dest);
+  format->paint_setup (p, frame);
 
   for (y = 0; y < h; y++) {
     for (x = 0; x < w; x += 8) {
@@ -1133,8 +1140,7 @@ static const guint8 sine_table[256] = {
 
 
 void
-gst_video_test_src_zoneplate (GstVideoTestSrc * v, unsigned char *dest,
-    int w, int h)
+gst_video_test_src_zoneplate (GstVideoTestSrc * v, GstVideoFrame * frame)
 {
   int i;
   int j;
@@ -1143,6 +1149,7 @@ gst_video_test_src_zoneplate (GstVideoTestSrc * v, unsigned char *dest,
   struct format_list_struct *format;
   struct vts_color_struct color;
   int t = v->n_frames;
+  int w = frame->info.width, h = frame->info.height;
   int xreset = -(w / 2) - v->xoffset;   /* starting values for x^2 and y^2, centering the ellipse */
   int yreset = -(h / 2) - v->yoffset;
 
@@ -1165,7 +1172,7 @@ gst_video_test_src_zoneplate (GstVideoTestSrc * v, unsigned char *dest,
   if (format == NULL)
     return;
 
-  format->paint_setup (p, dest);
+  format->paint_setup (p, frame);
 
   color = p->colors[COLOR_BLACK];
   p->color = &color;
@@ -1254,8 +1261,7 @@ gst_video_test_src_zoneplate (GstVideoTestSrc * v, unsigned char *dest,
 }
 
 void
-gst_video_test_src_chromazoneplate (GstVideoTestSrc * v, unsigned char *dest,
-    int w, int h)
+gst_video_test_src_chromazoneplate (GstVideoTestSrc * v, GstVideoFrame * frame)
 {
   int i;
   int j;
@@ -1264,6 +1270,7 @@ gst_video_test_src_chromazoneplate (GstVideoTestSrc * v, unsigned char *dest,
   struct format_list_struct *format;
   struct vts_color_struct color;
   int t = v->n_frames;
+  int w = frame->info.width, h = frame->info.height;
 
   int xreset = -(w / 2) - v->xoffset;   /* starting values for x^2 and y^2, centering the ellipse */
   int yreset = -(h / 2) - v->yoffset;
@@ -1287,7 +1294,7 @@ gst_video_test_src_chromazoneplate (GstVideoTestSrc * v, unsigned char *dest,
   if (format == NULL)
     return;
 
-  format->paint_setup (p, dest);
+  format->paint_setup (p, frame);
 
   color = p->colors[COLOR_BLACK];
   p->color = &color;
@@ -1354,8 +1361,7 @@ gst_video_test_src_chromazoneplate (GstVideoTestSrc * v, unsigned char *dest,
 
 #undef SCALE_AMPLITUDE
 void
-gst_video_test_src_circular (GstVideoTestSrc * v, unsigned char *dest,
-    int w, int h)
+gst_video_test_src_circular (GstVideoTestSrc * v, GstVideoFrame * frame)
 {
   int i;
   int j;
@@ -1363,6 +1369,7 @@ gst_video_test_src_circular (GstVideoTestSrc * v, unsigned char *dest,
   paintinfo *p = &pi;
   struct format_list_struct *format;
   double freq[8];
+  int w = frame->info.width, h = frame->info.height;
 
   int d;
 
@@ -1371,7 +1378,7 @@ gst_video_test_src_circular (GstVideoTestSrc * v, unsigned char *dest,
   if (format == NULL)
     return;
 
-  format->paint_setup (p, dest);
+  format->paint_setup (p, frame);
 
   for (i = 1; i < 8; i++) {
     freq[i] = 200 * pow (2.0, -(i - 1) / 4.0);
@@ -1400,7 +1407,7 @@ gst_video_test_src_circular (GstVideoTestSrc * v, unsigned char *dest,
 }
 
 void
-gst_video_test_src_gamut (GstVideoTestSrc * v, guchar * dest, int w, int h)
+gst_video_test_src_gamut (GstVideoTestSrc * v, GstVideoFrame * frame)
 {
   int x, y;
   paintinfo pi = { NULL, };
@@ -1408,13 +1415,14 @@ gst_video_test_src_gamut (GstVideoTestSrc * v, guchar * dest, int w, int h)
   struct format_list_struct *format;
   struct vts_color_struct yuv_primary;
   struct vts_color_struct yuv_secondary;
+  int w = frame->info.width, h = frame->info.height;
 
   videotestsrc_setup_paintinfo (v, p, w, h);
   format = v->format;
   if (format == NULL)
     return;
 
-  format->paint_setup (p, dest);
+  format->paint_setup (p, frame);
 
   for (y = 0; y < h; y++) {
     int region = (y * 4) / h;
@@ -1457,7 +1465,7 @@ gst_video_test_src_gamut (GstVideoTestSrc * v, guchar * dest, int w, int h)
 }
 
 void
-gst_video_test_src_ball (GstVideoTestSrc * v, unsigned char *dest, int w, int h)
+gst_video_test_src_ball (GstVideoTestSrc * v, GstVideoFrame * frame)
 {
   int i;
   paintinfo pi = { NULL, };
@@ -1466,13 +1474,14 @@ gst_video_test_src_ball (GstVideoTestSrc * v, unsigned char *dest, int w, int h)
   int t = v->n_frames;
   double x, y;
   int radius = 20;
+  int w = frame->info.width, h = frame->info.height;
 
   videotestsrc_setup_paintinfo (v, p, w, h);
   format = v->format;
   if (format == NULL)
     return;
 
-  format->paint_setup (p, dest);
+  format->paint_setup (p, frame);
 
   x = radius + (0.5 + 0.5 * sin (2 * G_PI * t / 200)) * (w - 2 * radius);
   y = radius + (0.5 + 0.5 * sin (2 * G_PI * sqrt (2) * t / 200)) * (h -
@@ -1551,39 +1560,39 @@ paint_tmpline_AYUV (paintinfo * p, int x, int w)
 
 
 static void
-paint_setup_I420 (paintinfo * p, unsigned char *dest)
+paint_setup_I420 (paintinfo * p, GstVideoFrame * frame)
 {
-  p->yp = dest;
-  p->ystride = GST_ROUND_UP_4 (p->width);
-  p->up = p->yp + p->ystride * GST_ROUND_UP_2 (p->height);
-  p->ustride = GST_ROUND_UP_8 (p->width) / 2;
-  p->vp = p->up + p->ustride * GST_ROUND_UP_2 (p->height) / 2;
-  p->vstride = GST_ROUND_UP_8 (p->ystride) / 2;
-  p->endptr = p->vp + p->vstride * GST_ROUND_UP_2 (p->height) / 2;
+  p->yp = GST_VIDEO_FRAME_DATA (frame, 0);
+  p->ystride = GST_VIDEO_FRAME_STRIDE (frame, 0);
+  p->up = GST_VIDEO_FRAME_DATA (frame, 1);
+  p->ustride = GST_VIDEO_FRAME_STRIDE (frame, 1);
+  p->vp = GST_VIDEO_FRAME_DATA (frame, 2);
+  p->vstride = GST_VIDEO_FRAME_STRIDE (frame, 2);
+  p->size = frame->info.size;
 }
 
 static void
-paint_setup_NV12 (paintinfo * p, unsigned char *dest)
+paint_setup_NV12 (paintinfo * p, GstVideoFrame * frame)
 {
-  p->yp = dest;
-  p->ystride = GST_ROUND_UP_4 (p->width);
-  p->up = p->yp + p->ystride * GST_ROUND_UP_2 (p->height);
+  p->yp = GST_VIDEO_FRAME_DATA (frame, 0);
+  p->ystride = GST_VIDEO_FRAME_STRIDE (frame, 0);
+  p->up = GST_VIDEO_FRAME_DATA (frame, 1);
+  p->ustride = GST_VIDEO_FRAME_STRIDE (frame, 1);
   p->vp = p->up + 1;
-  p->ustride = p->ystride;
-  p->vstride = p->ystride;
-  p->endptr = p->up + (p->ystride * GST_ROUND_UP_2 (p->height)) / 2;
+  p->vstride = p->ustride;
+  p->size = frame->info.size;
 }
 
 static void
-paint_setup_NV21 (paintinfo * p, unsigned char *dest)
+paint_setup_NV21 (paintinfo * p, GstVideoFrame * frame)
 {
-  p->yp = dest;
-  p->ystride = GST_ROUND_UP_4 (p->width);
-  p->vp = p->yp + p->ystride * GST_ROUND_UP_2 (p->height);
+  p->yp = GST_VIDEO_FRAME_DATA (frame, 0);
+  p->ystride = GST_VIDEO_FRAME_STRIDE (frame, 0);
+  p->vp = GST_VIDEO_FRAME_DATA (frame, 1);
+  p->vstride = GST_VIDEO_FRAME_STRIDE (frame, 1);
   p->up = p->vp + 1;
-  p->ustride = p->ystride;
-  p->vstride = p->ystride;
-  p->endptr = p->vp + (p->ystride * GST_ROUND_UP_2 (p->height)) / 2;
+  p->ustride = p->vstride;
+  p->size = frame->info.size;
 }
 
 static void
@@ -1642,137 +1651,146 @@ convert_hline_NV21 (paintinfo * p, int y)
 
 
 static void
-paint_setup_YV12 (paintinfo * p, unsigned char *dest)
+paint_setup_YV12 (paintinfo * p, GstVideoFrame * frame)
 {
-  p->yp = dest;
-  p->ystride = GST_ROUND_UP_4 (p->width);
-  p->vp = p->yp + p->ystride * GST_ROUND_UP_2 (p->height);
-  p->vstride = GST_ROUND_UP_8 (p->ystride) / 2;
-  p->up = p->vp + p->vstride * GST_ROUND_UP_2 (p->height) / 2;
-  p->ustride = GST_ROUND_UP_8 (p->ystride) / 2;
-  p->endptr = p->up + p->ustride * GST_ROUND_UP_2 (p->height) / 2;
+  p->yp = GST_VIDEO_FRAME_DATA (frame, 0);
+  p->ystride = GST_VIDEO_FRAME_STRIDE (frame, 0);
+  p->up = GST_VIDEO_FRAME_DATA (frame, 1);
+  p->ustride = GST_VIDEO_FRAME_STRIDE (frame, 1);
+  p->vp = GST_VIDEO_FRAME_DATA (frame, 2);
+  p->vstride = GST_VIDEO_FRAME_STRIDE (frame, 2);
+  p->size = frame->info.size;
 }
 
 static void
-paint_setup_v308 (paintinfo * p, unsigned char *dest)
+paint_setup_v308 (paintinfo * p, GstVideoFrame * frame)
 {
-  p->yp = dest;
-  p->up = dest + 1;
-  p->vp = dest + 2;
-  p->ystride = GST_ROUND_UP_4 (p->width * 3);
-  p->ustride = GST_ROUND_UP_4 (p->width * 3);
-  p->vstride = GST_ROUND_UP_4 (p->width * 3);
-  p->endptr = dest + p->ystride * p->height;
+  p->yp = GST_VIDEO_FRAME_DATA (frame, 0);
+  p->up = p->yp + 1;
+  p->vp = p->yp + 2;
+  p->ystride = GST_VIDEO_FRAME_STRIDE (frame, 0);
+  p->ustride = p->ystride;
+  p->vstride = p->ystride;
+  p->size = frame->info.size;
 }
 
 static void
-paint_setup_AYUV (paintinfo * p, unsigned char *dest)
+paint_setup_AYUV (paintinfo * p, GstVideoFrame * frame)
 {
-  p->ap = dest;
-  p->yp = dest + 1;
-  p->up = dest + 2;
-  p->vp = dest + 3;
-  p->ystride = p->width * 4;
-  p->ustride = p->width * 4;
-  p->vstride = p->width * 4;
-  p->endptr = dest + p->ystride * p->height;
+  p->ap = GST_VIDEO_FRAME_DATA (frame, 0);
+  p->yp = p->ap + 1;
+  p->up = p->ap + 2;
+  p->vp = p->ap + 3;
+  p->astride = GST_VIDEO_FRAME_STRIDE (frame, 0);
+  p->ystride = p->astride;;
+  p->ustride = p->astride;
+  p->vstride = p->astride;
+  p->size = frame->info.size;
 }
 
 #ifdef disabled
 static void
-paint_setup_v410 (paintinfo * p, unsigned char *dest)
+paint_setup_v410 (paintinfo * p, GstVideoFrame * frame)
 {
   p->yp = dest + 0;
   p->up = dest + 0;
   p->vp = dest + 0;
   p->ystride = p->width * 4;
   p->endptr = dest + p->ystride * p->height;
+  p->size = frame->info.size;
 }
 #endif
 
 static void
-paint_setup_v216 (paintinfo * p, unsigned char *dest)
+paint_setup_v216 (paintinfo * p, GstVideoFrame * frame)
 {
-  p->ap = dest;
-  p->yp = dest + 2;
-  p->up = dest + 0;
-  p->vp = dest + 4;
-  p->ystride = p->width * 4;
-  p->ustride = p->width * 4;
-  p->vstride = p->width * 4;
-  p->endptr = dest + p->ystride * p->height;
+  p->ap = GST_VIDEO_FRAME_DATA (frame, 0);
+  p->yp = p->ap + 2;
+  p->up = p->ap + 0;
+  p->vp = p->ap + 4;
+  p->astride = GST_VIDEO_FRAME_STRIDE (frame, 0);
+  p->ystride = p->astride;;
+  p->ustride = p->astride;
+  p->vstride = p->astride;
+  p->size = frame->info.size;
 }
 
 static void
-paint_setup_v210 (paintinfo * p, unsigned char *dest)
+paint_setup_v210 (paintinfo * p, GstVideoFrame * frame)
 {
-  p->ap = dest;
-  p->yp = dest + 0;
-  p->up = dest + 0;
-  p->vp = dest + 0;
-  p->ystride = ((p->width + 47) / 48) * 128;    /* no, really. */
-  p->endptr = dest + p->ystride * p->height;
+  p->ap = GST_VIDEO_FRAME_DATA (frame, 0);
+  p->yp = p->ap;
+  p->up = p->ap;
+  p->vp = p->ap;
+  p->astride = GST_VIDEO_FRAME_STRIDE (frame, 0);
+  p->ystride = p->astride;;
+  p->ustride = p->astride;
+  p->vstride = p->astride;
+  p->size = frame->info.size;
 }
 
 static void
-paint_setup_UYVP (paintinfo * p, unsigned char *dest)
+paint_setup_UYVP (paintinfo * p, GstVideoFrame * frame)
 {
-  p->ap = dest;
-  p->yp = dest + 0;
-  p->up = dest + 0;
-  p->vp = dest + 0;
-  p->ystride = GST_ROUND_UP_4 ((p->width * 2 * 5 + 3) / 4);
-  GST_ERROR ("stride %d", p->ystride);
-  p->endptr = dest + p->ystride * p->height;
+  p->ap = GST_VIDEO_FRAME_DATA (frame, 0);
+  p->yp = p->ap;
+  p->up = p->ap;
+  p->vp = p->ap;
+  p->astride = GST_VIDEO_FRAME_STRIDE (frame, 0);
+  p->ystride = p->astride;;
+  p->ustride = p->astride;
+  p->vstride = p->astride;
+  p->size = frame->info.size;
 }
 
 static void
-paint_setup_YUY2 (paintinfo * p, unsigned char *dest)
+paint_setup_YUY2 (paintinfo * p, GstVideoFrame * frame)
 {
-  p->yp = dest;
-  p->up = dest + 1;
-  p->vp = dest + 3;
-  p->ystride = GST_ROUND_UP_2 (p->width) * 2;
-  p->ustride = GST_ROUND_UP_2 (p->width) * 2;
-  p->vstride = GST_ROUND_UP_2 (p->width) * 2;
-  p->endptr = dest + p->ystride * p->height;
+  p->yp = GST_VIDEO_FRAME_DATA (frame, 0);
+  p->up = p->yp + 1;
+  p->vp = p->yp + 3;
+  p->ystride = GST_VIDEO_FRAME_STRIDE (frame, 0);
+  p->ustride = p->ystride;
+  p->vstride = p->ystride;
+  p->size = frame->info.size;
 }
 
 static void
-paint_setup_UYVY (paintinfo * p, unsigned char *dest)
+paint_setup_UYVY (paintinfo * p, GstVideoFrame * frame)
 {
-  p->yp = dest + 1;
-  p->up = dest;
-  p->vp = dest + 2;
-  p->ystride = GST_ROUND_UP_2 (p->width) * 2;
-  p->ustride = GST_ROUND_UP_2 (p->width) * 2;
-  p->vstride = GST_ROUND_UP_2 (p->width) * 2;
-  p->endptr = dest + p->ystride * p->height;
+  p->up = GST_VIDEO_FRAME_DATA (frame, 0);
+  p->yp = p->up + 1;
+  p->vp = p->up + 2;
+  p->ystride = GST_VIDEO_FRAME_STRIDE (frame, 0);
+  p->ustride = p->ystride;
+  p->vstride = p->ystride;
+  p->size = frame->info.size;
 }
 
 static void
-paint_setup_YVYU (paintinfo * p, unsigned char *dest)
+paint_setup_YVYU (paintinfo * p, GstVideoFrame * frame)
 {
-  p->yp = dest;
-  p->up = dest + 3;
-  p->vp = dest + 1;
-  p->ystride = GST_ROUND_UP_2 (p->width) * 2;
-  p->ustride = GST_ROUND_UP_2 (p->width) * 2;
-  p->vstride = GST_ROUND_UP_2 (p->width) * 2;
-  p->endptr = dest + p->ystride * p->height;
+  p->yp = GST_VIDEO_FRAME_DATA (frame, 0);
+  p->up = p->yp + 3;
+  p->vp = p->yp + 1;
+  p->ystride = GST_VIDEO_FRAME_STRIDE (frame, 0);
+  p->ustride = p->ystride;
+  p->vstride = p->ystride;
+  p->size = frame->info.size;
 }
 
 static void
-paint_setup_AY64 (paintinfo * p, unsigned char *dest)
+paint_setup_AY64 (paintinfo * p, GstVideoFrame * frame)
 {
-  p->ap = dest;
-  p->yp = dest + 2;
-  p->up = dest + 4;
-  p->vp = dest + 6;
-  p->ystride = p->width * 8;
-  p->ustride = p->width * 8;
-  p->vstride = p->width * 8;
-  p->endptr = dest + p->ystride * p->height;
+  p->ap = GST_VIDEO_FRAME_DATA (frame, 0);
+  p->yp = p->ap + 2;
+  p->up = p->ap + 4;
+  p->vp = p->ap + 6;
+  p->astride = GST_VIDEO_FRAME_STRIDE (frame, 0);
+  p->ystride = p->astride;
+  p->ustride = p->astride;
+  p->vstride = p->astride;
+  p->size = frame->info.size;
 }
 
 static void
@@ -1956,14 +1974,16 @@ convert_hline_AY64 (paintinfo * p, int y)
 
 #ifdef disabled
 static void
-paint_setup_IYU2 (paintinfo * p, unsigned char *dest)
+paint_setup_IYU2 (paintinfo * p, GstVideoFrame * frame)
 {
   /* untested */
-  p->yp = dest + 1;
-  p->up = dest + 0;
-  p->vp = dest + 2;
-  p->ystride = GST_ROUND_UP_4 (p->width * 3);
-  p->endptr = dest + p->ystride * p->height;
+  p->up = GST_VIDEO_FRAME_DATA (frame, 0);
+  p->yp = p->up + 1;
+  p->vp = p->up + 2;
+  p->ystride = GST_VIDEO_FRAME_STRIDE (frame, 0);
+  p->ustride = p->ystride;
+  p->vstride = p->ystride;
+  p->size = frame->info.size;
 }
 
 static void
@@ -1984,15 +2004,15 @@ convert_hline_IYU2 (paintinfo * p, int y)
 #endif
 
 static void
-paint_setup_Y41B (paintinfo * p, unsigned char *dest)
+paint_setup_Y41B (paintinfo * p, GstVideoFrame * frame)
 {
-  p->yp = dest;
-  p->ystride = GST_ROUND_UP_4 (p->width);
-  p->up = p->yp + p->ystride * p->height;
-  p->ustride = GST_ROUND_UP_16 (p->width) / 4;
-  p->vp = p->up + p->ustride * p->height;
-  p->vstride = GST_ROUND_UP_16 (p->width) / 4;
-  p->endptr = p->vp + p->vstride * p->height;
+  p->yp = GST_VIDEO_FRAME_DATA (frame, 0);
+  p->up = GST_VIDEO_FRAME_DATA (frame, 1);
+  p->vp = GST_VIDEO_FRAME_DATA (frame, 2);
+  p->ystride = GST_VIDEO_FRAME_STRIDE (frame, 0);
+  p->ustride = GST_VIDEO_FRAME_STRIDE (frame, 1);
+  p->vstride = GST_VIDEO_FRAME_STRIDE (frame, 2);
+  p->size = frame->info.size;
 }
 
 static void
@@ -2016,15 +2036,15 @@ convert_hline_Y41B (paintinfo * p, int y)
 }
 
 static void
-paint_setup_Y42B (paintinfo * p, unsigned char *dest)
+paint_setup_Y42B (paintinfo * p, GstVideoFrame * frame)
 {
-  p->yp = dest;
-  p->ystride = GST_ROUND_UP_4 (p->width);
-  p->up = p->yp + p->ystride * p->height;
-  p->ustride = GST_ROUND_UP_8 (p->width) / 2;
-  p->vp = p->up + p->ustride * p->height;
-  p->vstride = GST_ROUND_UP_8 (p->width) / 2;
-  p->endptr = p->vp + p->vstride * p->height;
+  p->yp = GST_VIDEO_FRAME_DATA (frame, 0);
+  p->up = GST_VIDEO_FRAME_DATA (frame, 1);
+  p->vp = GST_VIDEO_FRAME_DATA (frame, 2);
+  p->ystride = GST_VIDEO_FRAME_STRIDE (frame, 0);
+  p->ustride = GST_VIDEO_FRAME_STRIDE (frame, 1);
+  p->vstride = GST_VIDEO_FRAME_STRIDE (frame, 2);
+  p->size = frame->info.size;
 }
 
 static void
@@ -2046,15 +2066,15 @@ convert_hline_Y42B (paintinfo * p, int y)
 }
 
 static void
-paint_setup_Y444 (paintinfo * p, unsigned char *dest)
+paint_setup_Y444 (paintinfo * p, GstVideoFrame * frame)
 {
-  p->yp = dest;
-  p->ystride = GST_ROUND_UP_4 (p->width);
-  p->ustride = GST_ROUND_UP_4 (p->width);
-  p->vstride = GST_ROUND_UP_4 (p->width);
-  p->up = p->yp + p->ystride * p->height;
-  p->vp = p->up + p->ystride * p->height;
-  p->endptr = p->vp + p->ystride * p->height;
+  p->yp = GST_VIDEO_FRAME_DATA (frame, 0);
+  p->up = GST_VIDEO_FRAME_DATA (frame, 1);
+  p->vp = GST_VIDEO_FRAME_DATA (frame, 2);
+  p->ystride = GST_VIDEO_FRAME_STRIDE (frame, 0);
+  p->ustride = GST_VIDEO_FRAME_STRIDE (frame, 1);
+  p->vstride = GST_VIDEO_FRAME_STRIDE (frame, 2);
+  p->size = frame->info.size;
 }
 
 static void
@@ -2074,12 +2094,12 @@ convert_hline_Y444 (paintinfo * p, int y)
 }
 
 static void
-paint_setup_Y800 (paintinfo * p, unsigned char *dest)
+paint_setup_Y800 (paintinfo * p, GstVideoFrame * frame)
 {
   /* untested */
-  p->yp = dest;
-  p->ystride = GST_ROUND_UP_4 (p->width);
-  p->endptr = dest + p->ystride * p->height;
+  p->yp = GST_VIDEO_FRAME_DATA (frame, 0);
+  p->ystride = GST_VIDEO_FRAME_STRIDE (frame, 0);
+  p->size = frame->info.size;
 }
 
 static void
@@ -2095,32 +2115,27 @@ convert_hline_Y800 (paintinfo * p, int y)
 }
 
 static void
-paint_setup_YVU9 (paintinfo * p, unsigned char *dest)
+paint_setup_YVU9 (paintinfo * p, GstVideoFrame * frame)
 {
-  int h = GST_ROUND_UP_4 (p->height);
-
-  p->yp = dest;
-  p->ystride = GST_ROUND_UP_4 (p->width);
-  p->vp = p->yp + p->ystride * h;
-  p->vstride = GST_ROUND_UP_4 (p->ystride / 4);
-  p->up = p->vp + p->vstride * h / 4;
-  p->ustride = GST_ROUND_UP_4 (p->ystride / 4);
-  p->endptr = p->up + p->ustride * h / 4;
+  p->yp = GST_VIDEO_FRAME_DATA (frame, 0);
+  p->up = GST_VIDEO_FRAME_DATA (frame, 1);
+  p->vp = GST_VIDEO_FRAME_DATA (frame, 2);
+  p->ystride = GST_VIDEO_FRAME_STRIDE (frame, 0);
+  p->ustride = GST_VIDEO_FRAME_STRIDE (frame, 1);
+  p->vstride = GST_VIDEO_FRAME_STRIDE (frame, 2);
+  p->size = frame->info.size;
 }
 
 static void
-paint_setup_YUV9 (paintinfo * p, unsigned char *dest)
+paint_setup_YUV9 (paintinfo * p, GstVideoFrame * frame)
 {
-  /* untested */
-  int h = GST_ROUND_UP_4 (p->height);
-
-  p->yp = dest;
-  p->ystride = GST_ROUND_UP_4 (p->width);
-  p->up = p->yp + p->ystride * h;
-  p->ustride = GST_ROUND_UP_4 (p->ystride / 4);
-  p->vp = p->up + p->ustride * h / 4;
-  p->vstride = GST_ROUND_UP_4 (p->ystride / 4);
-  p->endptr = p->vp + p->vstride * h / 4;
+  p->yp = GST_VIDEO_FRAME_DATA (frame, 0);
+  p->up = GST_VIDEO_FRAME_DATA (frame, 1);
+  p->vp = GST_VIDEO_FRAME_DATA (frame, 2);
+  p->ystride = GST_VIDEO_FRAME_STRIDE (frame, 0);
+  p->ustride = GST_VIDEO_FRAME_STRIDE (frame, 1);
+  p->vstride = GST_VIDEO_FRAME_STRIDE (frame, 2);
+  p->size = frame->info.size;
 }
 
 static void
@@ -2144,116 +2159,121 @@ convert_hline_YUV9 (paintinfo * p, int y)
 }
 
 static void
-paint_setup_ARGB8888 (paintinfo * p, unsigned char *dest)
+paint_setup_ARGB8888 (paintinfo * p, GstVideoFrame * frame)
 {
-  paint_setup_xRGB8888 (p, dest);
+  paint_setup_xRGB8888 (p, frame);
 }
 
 static void
-paint_setup_ABGR8888 (paintinfo * p, unsigned char *dest)
+paint_setup_ABGR8888 (paintinfo * p, GstVideoFrame * frame)
 {
-  paint_setup_xBGR8888 (p, dest);
+  paint_setup_xBGR8888 (p, frame);
 }
 
 static void
-paint_setup_RGBA8888 (paintinfo * p, unsigned char *dest)
+paint_setup_RGBA8888 (paintinfo * p, GstVideoFrame * frame)
 {
-  paint_setup_RGBx8888 (p, dest);
+  paint_setup_RGBx8888 (p, frame);
 }
 
 static void
-paint_setup_BGRA8888 (paintinfo * p, unsigned char *dest)
+paint_setup_BGRA8888 (paintinfo * p, GstVideoFrame * frame)
 {
-  paint_setup_BGRx8888 (p, dest);
+  paint_setup_BGRx8888 (p, frame);
 }
 
 static void
-paint_setup_xRGB8888 (paintinfo * p, unsigned char *dest)
+paint_setup_xRGB8888 (paintinfo * p, GstVideoFrame * frame)
 {
-  p->yp = dest + 1;
-  p->up = dest + 2;
-  p->vp = dest + 3;
-  p->ap = dest;
-  p->ystride = p->width * 4;
-  p->ustride = p->width * 4;
-  p->vstride = p->width * 4;
-  p->endptr = p->dest + p->ystride * p->height;
+  p->ap = GST_VIDEO_FRAME_DATA (frame, 0);
+  p->yp = p->ap + 1;
+  p->up = p->ap + 2;
+  p->vp = p->ap + 3;
+  p->astride = GST_VIDEO_FRAME_STRIDE (frame, 0);
+  p->ystride = p->astride;
+  p->ustride = p->astride;
+  p->vstride = p->astride;
+  p->size = frame->info.size;
 }
 
 static void
-paint_setup_xBGR8888 (paintinfo * p, unsigned char *dest)
+paint_setup_xBGR8888 (paintinfo * p, GstVideoFrame * frame)
 {
-  p->yp = dest + 3;
-  p->up = dest + 2;
-  p->vp = dest + 1;
-  p->ap = dest;
-  p->ystride = p->width * 4;
-  p->ustride = p->width * 4;
-  p->vstride = p->width * 4;
-  p->endptr = p->dest + p->ystride * p->height;
+  p->ap = GST_VIDEO_FRAME_DATA (frame, 0);
+  p->yp = p->ap + 3;
+  p->up = p->ap + 2;
+  p->vp = p->ap + 1;
+  p->astride = GST_VIDEO_FRAME_STRIDE (frame, 0);
+  p->ystride = p->astride;
+  p->ustride = p->astride;
+  p->vstride = p->astride;
+  p->size = frame->info.size;
 }
 
 static void
-paint_setup_RGBx8888 (paintinfo * p, unsigned char *dest)
+paint_setup_RGBx8888 (paintinfo * p, GstVideoFrame * frame)
 {
-  p->yp = dest + 0;
-  p->up = dest + 1;
-  p->vp = dest + 2;
-  p->ap = dest + 3;
-  p->ystride = p->width * 4;
-  p->ustride = p->width * 4;
-  p->vstride = p->width * 4;
-  p->endptr = p->dest + p->ystride * p->height;
+  p->yp = GST_VIDEO_FRAME_DATA (frame, 0);
+  p->up = p->yp + 1;
+  p->vp = p->yp + 2;
+  p->ap = p->yp + 3;
+  p->astride = GST_VIDEO_FRAME_STRIDE (frame, 0);
+  p->ystride = p->astride;
+  p->ustride = p->astride;
+  p->vstride = p->astride;
+  p->size = frame->info.size;
 }
 
 static void
-paint_setup_BGRx8888 (paintinfo * p, unsigned char *dest)
+paint_setup_BGRx8888 (paintinfo * p, GstVideoFrame * frame)
 {
-  p->yp = dest + 2;
-  p->up = dest + 1;
-  p->vp = dest + 0;
-  p->ap = dest + 3;
-  p->ystride = p->width * 4;
-  p->ustride = p->width * 4;
-  p->vstride = p->width * 4;
-  p->endptr = p->dest + p->ystride * p->height;
+  p->vp = GST_VIDEO_FRAME_DATA (frame, 0);
+  p->up = p->vp + 1;
+  p->yp = p->vp + 2;
+  p->ap = p->vp + 3;
+  p->astride = GST_VIDEO_FRAME_STRIDE (frame, 0);
+  p->ystride = p->astride;
+  p->ustride = p->astride;
+  p->vstride = p->astride;
+  p->size = frame->info.size;
 }
 
 static void
-paint_setup_RGB888 (paintinfo * p, unsigned char *dest)
+paint_setup_RGB888 (paintinfo * p, GstVideoFrame * frame)
 {
-  p->yp = dest + 0;
-  p->up = dest + 1;
-  p->vp = dest + 2;
-  p->ystride = GST_ROUND_UP_4 (p->width * 3);
-  p->ustride = GST_ROUND_UP_4 (p->width * 3);
-  p->vstride = GST_ROUND_UP_4 (p->width * 3);
-  p->endptr = p->dest + p->ystride * p->height;
+  p->yp = GST_VIDEO_FRAME_DATA (frame, 0);
+  p->up = p->yp + 1;
+  p->vp = p->yp + 2;
+  p->ystride = GST_VIDEO_FRAME_STRIDE (frame, 0);
+  p->ustride = p->ystride;
+  p->vstride = p->ystride;
+  p->size = frame->info.size;
 }
 
 static void
-paint_setup_BGR888 (paintinfo * p, unsigned char *dest)
+paint_setup_BGR888 (paintinfo * p, GstVideoFrame * frame)
 {
-  p->yp = dest + 2;
-  p->up = dest + 1;
-  p->vp = dest + 0;
-  p->ystride = GST_ROUND_UP_4 (p->width * 3);
-  p->ustride = GST_ROUND_UP_4 (p->width * 3);
-  p->vstride = GST_ROUND_UP_4 (p->width * 3);
-  p->endptr = p->dest + p->ystride * p->height;
+  p->vp = GST_VIDEO_FRAME_DATA (frame, 0);
+  p->up = p->vp + 1;
+  p->yp = p->vp + 2;
+  p->ystride = GST_VIDEO_FRAME_STRIDE (frame, 0);
+  p->ustride = p->ystride;
+  p->vstride = p->ystride;
+  p->size = frame->info.size;
 }
 
 static void
-paint_setup_ARGB64 (paintinfo * p, unsigned char *dest)
+paint_setup_ARGB64 (paintinfo * p, GstVideoFrame * frame)
 {
-  p->yp = dest + 2;
-  p->up = dest + 4;
-  p->vp = dest + 6;
-  p->ap = dest;
-  p->ystride = p->width * 8;
-  p->ustride = p->width * 8;
-  p->vstride = p->width * 8;
-  p->endptr = p->dest + p->ystride * p->height;
+  p->ap = GST_VIDEO_FRAME_DATA (frame, 0);
+  p->yp = p->ap + 2;
+  p->up = p->ap + 4;
+  p->yp = p->ap + 6;
+  p->astride = GST_VIDEO_FRAME_STRIDE (frame, 0);
+  p->ystride = p->astride;
+  p->ustride = p->astride;
+  p->vstride = p->astride;
+  p->size = frame->info.size;
 }
 
 static void
@@ -2327,13 +2347,13 @@ convert_hline_str3 (paintinfo * p, int y)
 }
 
 static void
-paint_setup_RGB565 (paintinfo * p, unsigned char *dest)
+paint_setup_RGB565 (paintinfo * p, GstVideoFrame * frame)
 {
-  p->yp = dest;
-  p->ystride = GST_ROUND_UP_4 (p->width * 2);
-  p->ustride = GST_ROUND_UP_4 (p->width * 2);
-  p->vstride = GST_ROUND_UP_4 (p->width * 2);
-  p->endptr = p->dest + p->ystride * p->height;
+  p->yp = GST_VIDEO_FRAME_DATA (frame, 0);
+  p->ystride = GST_VIDEO_FRAME_STRIDE (frame, 0);
+  p->ustride = p->ystride;
+  p->vstride = p->ystride;
+  p->size = frame->info.size;
 }
 
 static void
@@ -2373,60 +2393,60 @@ convert_hline_xRGB1555 (paintinfo * p, int y)
 }
 
 static void
-paint_setup_xRGB1555 (paintinfo * p, unsigned char *dest)
+paint_setup_xRGB1555 (paintinfo * p, GstVideoFrame * frame)
 {
-  p->yp = dest;
-  p->ystride = GST_ROUND_UP_4 (p->width * 2);
-  p->ustride = GST_ROUND_UP_4 (p->width * 2);
-  p->vstride = GST_ROUND_UP_4 (p->width * 2);
-  p->endptr = p->dest + p->ystride * p->height;
+  p->yp = GST_VIDEO_FRAME_DATA (frame, 0);
+  p->ystride = GST_VIDEO_FRAME_STRIDE (frame, 0);
+  p->ustride = p->ystride;
+  p->vstride = p->ystride;
+  p->size = frame->info.size;
 }
 
 
 static void
-paint_setup_bayer_bggr (paintinfo * p, unsigned char *dest)
+paint_setup_bayer_bggr (paintinfo * p, GstVideoFrame * frame)
 {
-  p->yp = dest;
+  p->yp = GST_VIDEO_FRAME_DATA (frame, 0);
   p->ystride = GST_ROUND_UP_4 (p->width);
   p->ustride = GST_ROUND_UP_4 (p->width);
   p->vstride = GST_ROUND_UP_4 (p->width);
-  p->endptr = p->dest + p->ystride * p->height;
+  p->size = p->ystride * p->height;
   p->bayer_x_invert = 0;
   p->bayer_y_invert = 0;
 }
 
 static void
-paint_setup_bayer_rggb (paintinfo * p, unsigned char *dest)
+paint_setup_bayer_rggb (paintinfo * p, GstVideoFrame * frame)
 {
-  p->yp = dest;
+  p->yp = GST_VIDEO_FRAME_DATA (frame, 0);
   p->ystride = GST_ROUND_UP_4 (p->width);
   p->ustride = GST_ROUND_UP_4 (p->width);
   p->vstride = GST_ROUND_UP_4 (p->width);
-  p->endptr = p->dest + p->ystride * p->height;
+  p->size = p->ystride * p->height;
   p->bayer_x_invert = 1;
   p->bayer_y_invert = 1;
 }
 
 static void
-paint_setup_bayer_grbg (paintinfo * p, unsigned char *dest)
+paint_setup_bayer_grbg (paintinfo * p, GstVideoFrame * frame)
 {
-  p->yp = dest;
+  p->yp = GST_VIDEO_FRAME_DATA (frame, 0);
   p->ystride = GST_ROUND_UP_4 (p->width);
   p->ustride = GST_ROUND_UP_4 (p->width);
   p->vstride = GST_ROUND_UP_4 (p->width);
-  p->endptr = p->dest + p->ystride * p->height;
+  p->size = p->ystride * p->height;
   p->bayer_x_invert = 0;
   p->bayer_y_invert = 1;
 }
 
 static void
-paint_setup_bayer_gbrg (paintinfo * p, unsigned char *dest)
+paint_setup_bayer_gbrg (paintinfo * p, GstVideoFrame * frame)
 {
-  p->yp = dest;
+  p->yp = GST_VIDEO_FRAME_DATA (frame, 0);
   p->ystride = GST_ROUND_UP_4 (p->width);
   p->ustride = GST_ROUND_UP_4 (p->width);
   p->vstride = GST_ROUND_UP_4 (p->width);
-  p->endptr = p->dest + p->ystride * p->height;
+  p->size = p->ystride * p->height;
   p->bayer_x_invert = 1;
   p->bayer_y_invert = 0;
 }
@@ -2460,11 +2480,11 @@ convert_hline_bayer (paintinfo * p, int y)
 }
 
 static void
-paint_setup_GRAY8 (paintinfo * p, unsigned char *dest)
+paint_setup_GRAY8 (paintinfo * p, GstVideoFrame * frame)
 {
-  p->yp = dest;
-  p->ystride = GST_ROUND_UP_4 (p->width);
-  p->endptr = dest + p->ystride * p->height;
+  p->yp = GST_VIDEO_FRAME_DATA (frame, 0);
+  p->ystride = GST_VIDEO_FRAME_STRIDE (frame, 0);
+  p->size = frame->info.size;
 }
 
 static void
@@ -2481,11 +2501,11 @@ convert_hline_GRAY8 (paintinfo * p, int y)
 }
 
 static void
-paint_setup_GRAY16 (paintinfo * p, unsigned char *dest)
+paint_setup_GRAY16 (paintinfo * p, GstVideoFrame * frame)
 {
-  p->yp = dest;
-  p->ystride = GST_ROUND_UP_4 (p->width * 2);
-  p->endptr = dest + p->ystride * p->height;
+  p->yp = GST_VIDEO_FRAME_DATA (frame, 0);
+  p->ystride = GST_VIDEO_FRAME_STRIDE (frame, 0);
+  p->size = frame->info.size;
 }
 
 static void

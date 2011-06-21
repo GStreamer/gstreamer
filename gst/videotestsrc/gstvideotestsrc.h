@@ -24,6 +24,8 @@
 #include <gst/gst.h>
 #include <gst/base/gstpushsrc.h>
 
+#include <gst/video/gstmetavideo.h>
+
 G_BEGIN_DECLS
 
 #define GST_TYPE_VIDEO_TEST_SRC \
@@ -111,6 +113,7 @@ typedef enum {
  * The color specification to use.
  */
 typedef enum {
+  GST_VIDEO_TEST_SRC_UNKNOWN,
   GST_VIDEO_TEST_SRC_BT601,
   GST_VIDEO_TEST_SRC_BT709
 } GstVideoTestSrcColorSpec;
@@ -135,14 +138,10 @@ struct _GstVideoTestSrc {
   GstVideoTestSrcColorSpec color_spec;
 
   /* video state */
+  GstVideoInfo info;
+
   char *format_name;
-  gint width;
-  gint height;
   struct format_list_struct *format;
-  gint bpp;
-  gint rate_numerator;
-  gint rate_denominator;
-  guint size;
 
   /* private */
   gint64 timestamp_offset;              /* base offset */
@@ -171,7 +170,7 @@ struct _GstVideoTestSrc {
   gint horizontal_offset;
   gint horizontal_speed;
 
-  void (*make_image) (GstVideoTestSrc *v, unsigned char *dest, int w, int h);
+  void (*make_image) (GstVideoTestSrc *v, GstVideoFrame *frame);
 
   /* temporary AYUV/ARGB scanline */
   guint8 *tmpline_u8;

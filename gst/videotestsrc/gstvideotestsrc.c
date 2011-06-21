@@ -107,6 +107,7 @@ static gboolean gst_video_test_src_setup_allocation (GstBaseSrc * bsrc,
 static GstFlowReturn gst_video_test_src_fill (GstPushSrc * psrc,
     GstBuffer * buffer);
 static gboolean gst_video_test_src_start (GstBaseSrc * basesrc);
+static gboolean gst_video_test_src_stop (GstBaseSrc * basesrc);
 
 #define GST_TYPE_VIDEO_TEST_SRC_PATTERN (gst_video_test_src_pattern_get_type ())
 static GType
@@ -304,6 +305,7 @@ gst_video_test_src_class_init (GstVideoTestSrcClass * klass)
   gstbasesrc_class->query = gst_video_test_src_query;
   gstbasesrc_class->get_times = gst_video_test_src_get_times;
   gstbasesrc_class->start = gst_video_test_src_start;
+  gstbasesrc_class->stop = gst_video_test_src_stop;
   gstbasesrc_class->setup_allocation = gst_video_test_src_setup_allocation;
 
   gstpushsrc_class->fill = gst_video_test_src_fill;
@@ -563,6 +565,23 @@ gst_video_test_src_get_property (GObject * object, guint prop_id,
   }
 }
 
+static GstVideoTestSrcColorSpec
+to_color_spec (const gchar * csp)
+{
+  if (csp) {
+    if (strcmp (csp, "sdtv") == 0) {
+      return GST_VIDEO_TEST_SRC_BT601;
+    } else if (strcmp (csp, "hdtv") == 0) {
+      return GST_VIDEO_TEST_SRC_BT709;
+    } else {
+      GST_DEBUG ("unknown color-matrix");
+      return GST_VIDEO_TEST_SRC_UNKNOWN;
+    }
+  } else {
+    return GST_VIDEO_TEST_SRC_BT601;
+  }
+}
+
 /* threadsafe because this gets called as the plugin is loaded */
 static GstCaps *
 gst_video_test_src_getcaps (GstBaseSrc * bsrc, GstCaps * filter)
@@ -595,56 +614,32 @@ gst_video_test_src_getcaps (GstBaseSrc * bsrc, GstCaps * filter)
 
 static gboolean
 gst_video_test_src_parse_caps (const GstCaps * caps,
-    gint * width, gint * height, gint * rate_numerator, gint * rate_denominator,
-    struct format_list_struct **format, GstVideoTestSrcColorSpec * color_spec)
+    gint * width, gint * height, gint * fps_n, gint * fps_d,
+    const gchar ** color_matrix)
 {
   const GstStructure *structure;
   GstPadLinkReturn ret;
   const GValue *framerate;
-  const char *csp;
 
   GST_DEBUG ("parsing caps");
 
-  if (gst_caps_get_size (caps) < 1)
-    return FALSE;
-
   structure = gst_caps_get_structure (caps, 0);
-
-  if (!(*format = paintinfo_find_by_structure (structure)))
-    goto unknown_format;
 
   ret = gst_structure_get_int (structure, "width", width);
   ret &= gst_structure_get_int (structure, "height", height);
   framerate = gst_structure_get_value (structure, "framerate");
 
   if (framerate) {
-    *rate_numerator = gst_value_get_fraction_numerator (framerate);
-    *rate_denominator = gst_value_get_fraction_denominator (framerate);
+    *fps_n = gst_value_get_fraction_numerator (framerate);
+    *fps_d = gst_value_get_fraction_denominator (framerate);
   } else
     goto no_framerate;
 
-  csp = gst_structure_get_string (structure, "color-matrix");
-  if (csp) {
-    if (strcmp (csp, "sdtv") == 0) {
-      *color_spec = GST_VIDEO_TEST_SRC_BT601;
-    } else if (strcmp (csp, "hdtv") == 0) {
-      *color_spec = GST_VIDEO_TEST_SRC_BT709;
-    } else {
-      GST_DEBUG ("unknown color-matrix");
-      return FALSE;
-    }
-  } else {
-    *color_spec = GST_VIDEO_TEST_SRC_BT601;
-  }
+  *color_matrix = gst_structure_get_string (structure, "color-matrix");
 
   return ret;
 
   /* ERRORS */
-unknown_format:
-  {
-    GST_DEBUG ("videotestsrc format not found");
-    return FALSE;
-  }
 no_framerate:
   {
     GST_DEBUG ("videotestsrc no framerate given");
@@ -663,10 +658,16 @@ gst_video_test_src_setup_allocation (GstBaseSrc * bsrc, GstQuery * query)
 
   gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
       &alignment, &pool);
-
   /* adjust size */
-  size = MAX (size, videotestsrc->size);
+  size = MAX (size, videotestsrc->info.size);
 
+  if (pool) {
+    GstStructure *config;
+
+    config = gst_buffer_pool_get_config (pool);
+    gst_buffer_pool_config_add_meta (config, GST_META_API_VIDEO);
+    gst_buffer_pool_set_config (pool, config);
+  }
   gst_query_set_allocation_params (query, size, min, max, prefix,
       alignment, pool);
 
@@ -676,40 +677,58 @@ gst_video_test_src_setup_allocation (GstBaseSrc * bsrc, GstQuery * query)
 static gboolean
 gst_video_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
 {
-  gboolean res;
-  gint width, height, rate_denominator, rate_numerator;
   struct format_list_struct *format;
+  const GstStructure *structure;
   GstVideoTestSrc *videotestsrc;
-  GstVideoTestSrcColorSpec color_spec;
+  GstVideoInfo info;
 
   videotestsrc = GST_VIDEO_TEST_SRC (bsrc);
 
-  res = gst_video_test_src_parse_caps (caps, &width, &height,
-      &rate_numerator, &rate_denominator, &format, &color_spec);
-  if (!res)
-    goto parse_failed;
+  structure = gst_caps_get_structure (caps, 0);
+
+  if (gst_structure_has_name (structure, "video/x-raw")) {
+    /* we can use the parsing code */
+    if (!gst_video_info_from_caps (&info, caps))
+      goto parse_failed;
+
+  } else if (gst_structure_has_name (structure, "video/x-raw-bayer")) {
+    if (!gst_video_test_src_parse_caps (caps, &info.width, &info.height,
+            &info.fps_n, &info.fps_d, &info.color_matrix))
+      goto parse_failed;
+
+    info.size =
+        gst_video_test_src_get_size (videotestsrc, info.width, info.height);
+  }
+
+  if (!(format = paintinfo_find_by_structure (structure)))
+    goto unknown_format;
 
   /* looks ok here */
+  videotestsrc->color_spec = to_color_spec (info.color_matrix);
   videotestsrc->format = format;
-  videotestsrc->width = width;
-  videotestsrc->height = height;
-  videotestsrc->rate_numerator = rate_numerator;
-  videotestsrc->rate_denominator = rate_denominator;
-  videotestsrc->bpp = videotestsrc->format->bitspp;
-  videotestsrc->color_spec = color_spec;
-  videotestsrc->size =
-      gst_video_test_src_get_size (videotestsrc, width, height);
+  videotestsrc->info = info;
 
   GST_DEBUG_OBJECT (videotestsrc, "size %dx%d, %d/%d fps",
-      videotestsrc->width, videotestsrc->height,
-      videotestsrc->rate_numerator, videotestsrc->rate_denominator);
+      info.width, info.height, info.fps_n, info.fps_d);
 
-  return res;
+  g_free (videotestsrc->tmpline);
+  g_free (videotestsrc->tmpline2);
+  g_free (videotestsrc->tmpline_u8);
+  videotestsrc->tmpline_u8 = g_malloc (info.width + 8);
+  videotestsrc->tmpline = g_malloc ((info.width + 8) * 4);
+  videotestsrc->tmpline2 = g_malloc ((info.width + 8) * 4);
+
+  return TRUE;
 
   /* ERRORS */
 parse_failed:
   {
     GST_DEBUG_OBJECT (bsrc, "failed to parse caps");
+    return FALSE;
+  }
+unknown_format:
+  {
+    GST_DEBUG ("videotestsrc format not found");
     return FALSE;
   }
 }
@@ -729,61 +748,17 @@ gst_video_test_src_query (GstBaseSrc * bsrc, GstQuery * query)
       gint64 src_val, dest_val;
 
       gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
-      if (src_fmt == dest_fmt) {
-        dest_val = src_val;
-        goto done;
-      }
-
-      switch (src_fmt) {
-        case GST_FORMAT_DEFAULT:
-          switch (dest_fmt) {
-            case GST_FORMAT_TIME:
-              /* frames to time */
-              if (src->rate_numerator) {
-                dest_val = gst_util_uint64_scale (src_val,
-                    src->rate_denominator * GST_SECOND, src->rate_numerator);
-              } else {
-                dest_val = 0;
-              }
-              break;
-            default:
-              goto error;
-          }
-          break;
-        case GST_FORMAT_TIME:
-          switch (dest_fmt) {
-            case GST_FORMAT_DEFAULT:
-              /* time to frames */
-              if (src->rate_numerator) {
-                dest_val = gst_util_uint64_scale (src_val,
-                    src->rate_numerator, src->rate_denominator * GST_SECOND);
-              } else {
-                dest_val = 0;
-              }
-              break;
-            default:
-              goto error;
-          }
-          break;
-        default:
-          goto error;
-      }
-    done:
+      res =
+          gst_video_info_convert (&src->info, src_fmt, src_val, dest_fmt,
+          &dest_val);
       gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
-      res = TRUE;
       break;
     }
     default:
       res = GST_BASE_SRC_CLASS (parent_class)->query (bsrc, query);
+      break;
   }
   return res;
-
-  /* ERROR */
-error:
-  {
-    GST_DEBUG_OBJECT (src, "query failed");
-    return FALSE;
-  }
 }
 
 static void
@@ -821,15 +796,15 @@ gst_video_test_src_do_seek (GstBaseSrc * bsrc, GstSegment * segment)
   position = segment->position;
 
   /* now move to the position indicated */
-  if (src->rate_numerator) {
+  if (src->info.fps_n) {
     src->n_frames = gst_util_uint64_scale (position,
-        src->rate_numerator, src->rate_denominator * GST_SECOND);
+        src->info.fps_n, src->info.fps_d * GST_SECOND);
   } else {
     src->n_frames = 0;
   }
-  if (src->rate_numerator) {
+  if (src->info.fps_n) {
     src->running_time = gst_util_uint64_scale (src->n_frames,
-        src->rate_denominator * GST_SECOND, src->rate_numerator);
+        src->info.fps_d * GST_SECOND, src->info.fps_n);
   } else {
     /* FIXME : Not sure what to set here */
     src->running_time = 0;
@@ -851,9 +826,8 @@ static GstFlowReturn
 gst_video_test_src_fill (GstPushSrc * psrc, GstBuffer * buffer)
 {
   GstVideoTestSrc *src;
-  gsize size;
   GstClockTime next_time;
-  guint8 *data;
+  GstVideoFrame frame;
 
   src = GST_VIDEO_TEST_SRC (psrc);
 
@@ -861,32 +835,26 @@ gst_video_test_src_fill (GstPushSrc * psrc, GstBuffer * buffer)
     goto not_negotiated;
 
   /* 0 framerate and we are at the second frame, eos */
-  if (G_UNLIKELY (src->rate_numerator == 0 && src->n_frames == 1))
+  if (G_UNLIKELY (src->info.fps_n == 0 && src->n_frames == 1))
     goto eos;
 
   GST_LOG_OBJECT (src,
       "creating buffer from pool for frame %d", (gint) src->n_frames);
 
-  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_WRITE);
-  memset (data, 0, size);
-  src->tmpline_u8 = g_malloc (src->width + 8);
-  src->tmpline = g_malloc ((src->width + 8) * 4);
-  src->tmpline2 = g_malloc ((src->width + 8) * 4);
+  if (!gst_video_frame_map (&frame, &src->info, buffer, GST_MAP_WRITE))
+    goto invalid_frame;
 
-  src->make_image (src, (void *) data, src->width, src->height);
-  gst_buffer_unmap (buffer, data, size);
+  src->make_image (src, &frame);
 
-  g_free (src->tmpline);
-  g_free (src->tmpline2);
-  g_free (src->tmpline_u8);
+  gst_video_frame_unmap (&frame);
 
   GST_BUFFER_TIMESTAMP (buffer) = src->timestamp_offset + src->running_time;
   GST_BUFFER_OFFSET (buffer) = src->n_frames;
   src->n_frames++;
   GST_BUFFER_OFFSET_END (buffer) = src->n_frames;
-  if (src->rate_numerator) {
+  if (src->info.fps_n) {
     next_time = gst_util_uint64_scale_int (src->n_frames * GST_SECOND,
-        src->rate_denominator, src->rate_numerator);
+        src->info.fps_d, src->info.fps_n);
     GST_BUFFER_DURATION (buffer) = next_time - src->running_time;
   } else {
     next_time = src->timestamp_offset;
@@ -909,6 +877,11 @@ eos:
     GST_DEBUG_OBJECT (src, "eos: 0 framerate, frame %d", (gint) src->n_frames);
     return GST_FLOW_UNEXPECTED;
   }
+invalid_frame:
+  {
+    GST_DEBUG_OBJECT (src, "invalid frame");
+    return GST_FLOW_OK;
+  }
 }
 
 static gboolean
@@ -918,6 +891,21 @@ gst_video_test_src_start (GstBaseSrc * basesrc)
 
   src->running_time = 0;
   src->n_frames = 0;
+
+  return TRUE;
+}
+
+static gboolean
+gst_video_test_src_stop (GstBaseSrc * basesrc)
+{
+  GstVideoTestSrc *src = GST_VIDEO_TEST_SRC (basesrc);
+
+  g_free (src->tmpline);
+  src->tmpline = NULL;
+  g_free (src->tmpline2);
+  src->tmpline2 = NULL;
+  g_free (src->tmpline_u8);
+  src->tmpline_u8 = NULL;
 
   return TRUE;
 }

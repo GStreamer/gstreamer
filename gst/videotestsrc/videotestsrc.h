@@ -46,14 +46,11 @@ struct vts_color_struct {
 typedef struct paintinfo_struct paintinfo;
 struct paintinfo_struct
 {
-  unsigned char *dest;          /* pointer to first byte of video data */
-  unsigned char *yp, *up, *vp;  /* pointers to first byte of each component
-                                 * for both packed/planar YUV and RGB */
-  unsigned char *ap;            /* pointer to first byte of alpha component */
-  unsigned char *endptr;        /* pointer to byte beyond last video data */
-  int ystride;
-  int ustride;
-  int vstride;
+  unsigned char *ap, *yp, *up, *vp; /* pointers to first byte of each component
+                                     * for both packed/planar YUV and RGB */
+  int astride, ystride, ustride, vstride;
+
+  int size;                     /* size of a frame */
   int width;
   int height;
   const struct vts_color_struct *colors;
@@ -81,7 +78,7 @@ struct format_list_struct
   const char *format;
   const char *name;
   int bitspp;
-  void (*paint_setup) (paintinfo * p, unsigned char *dest);
+  void (*paint_setup) (paintinfo * p, GstVideoFrame *frame);
   void (*convert_hline) (paintinfo * p, int y);
   int depth;
   unsigned int red_mask;
@@ -98,49 +95,29 @@ struct format_list_struct *
         paintinfo_find_by_structure     (const GstStructure *structure);
 GstStructure *
         paint_get_structure             (struct format_list_struct *format);
+
 int     gst_video_test_src_get_size     (GstVideoTestSrc * v, int w, int h);
-void    gst_video_test_src_smpte        (GstVideoTestSrc * v,
-                                         unsigned char *dest, int w, int h);
-void    gst_video_test_src_smpte75      (GstVideoTestSrc * v,
-                                         unsigned char *dest, int w, int h);
-void    gst_video_test_src_snow         (GstVideoTestSrc * v,
-                                         unsigned char *dest, int w, int h);
-void    gst_video_test_src_black        (GstVideoTestSrc * v,
-                                         unsigned char *dest, int w, int h);
-void    gst_video_test_src_white        (GstVideoTestSrc * v,
-                                         unsigned char *dest, int w, int h);
-void    gst_video_test_src_red          (GstVideoTestSrc * v,
-                                         unsigned char *dest, int w, int h);
-void    gst_video_test_src_green        (GstVideoTestSrc * v,
-                                         unsigned char *dest, int w, int h);
-void    gst_video_test_src_blue         (GstVideoTestSrc * v,
-                                         unsigned char *dest, int w, int h);
-void    gst_video_test_src_solid        (GstVideoTestSrc * v,
-                                         unsigned char *dest, int w, int h);
-void    gst_video_test_src_blink        (GstVideoTestSrc * v,
-                                         unsigned char *dest, int w, int h);
-void    gst_video_test_src_checkers1    (GstVideoTestSrc * v,
-                                         unsigned char *dest, int w, int h);
-void    gst_video_test_src_checkers2    (GstVideoTestSrc * v,
-                                         unsigned char *dest, int w, int h);
-void    gst_video_test_src_checkers4    (GstVideoTestSrc * v,
-                                         unsigned char *dest, int w, int h);
-void    gst_video_test_src_checkers8    (GstVideoTestSrc * v,
-                                         unsigned char *dest, int w, int h);
-void    gst_video_test_src_circular     (GstVideoTestSrc * v,
-                                         unsigned char *dest, int w, int h);
-void    gst_video_test_src_zoneplate    (GstVideoTestSrc * v,
-                                         unsigned char *dest, int w, int h);
-void    gst_video_test_src_gamut        (GstVideoTestSrc * v,
-                                         unsigned char *dest, int w, int h);
-void    gst_video_test_src_chromazoneplate (GstVideoTestSrc * v,
-                                            unsigned char *dest, int w, int h);
-void    gst_video_test_src_ball         (GstVideoTestSrc * v,
-                                         unsigned char *dest, int w, int h);
-void    gst_video_test_src_smpte100     (GstVideoTestSrc * v,
-                                         unsigned char *dest, int w, int h);
-void    gst_video_test_src_bar          (GstVideoTestSrc * v,
-                                         unsigned char *dest, int w, int h);
+void    gst_video_test_src_smpte        (GstVideoTestSrc * v, GstVideoFrame *frame);
+void    gst_video_test_src_smpte75      (GstVideoTestSrc * v, GstVideoFrame *frame);
+void    gst_video_test_src_snow         (GstVideoTestSrc * v, GstVideoFrame *frame);
+void    gst_video_test_src_black        (GstVideoTestSrc * v, GstVideoFrame *frame);
+void    gst_video_test_src_white        (GstVideoTestSrc * v, GstVideoFrame *frame);
+void    gst_video_test_src_red          (GstVideoTestSrc * v, GstVideoFrame *frame);
+void    gst_video_test_src_green        (GstVideoTestSrc * v, GstVideoFrame *frame);
+void    gst_video_test_src_blue         (GstVideoTestSrc * v, GstVideoFrame *frame);
+void    gst_video_test_src_solid        (GstVideoTestSrc * v, GstVideoFrame *frame);
+void    gst_video_test_src_blink        (GstVideoTestSrc * v, GstVideoFrame *frame);
+void    gst_video_test_src_checkers1    (GstVideoTestSrc * v, GstVideoFrame *frame);
+void    gst_video_test_src_checkers2    (GstVideoTestSrc * v, GstVideoFrame *frame);
+void    gst_video_test_src_checkers4    (GstVideoTestSrc * v, GstVideoFrame *frame);
+void    gst_video_test_src_checkers8    (GstVideoTestSrc * v, GstVideoFrame *frame);
+void    gst_video_test_src_circular     (GstVideoTestSrc * v, GstVideoFrame *frame);
+void    gst_video_test_src_zoneplate    (GstVideoTestSrc * v, GstVideoFrame *frame);
+void    gst_video_test_src_gamut        (GstVideoTestSrc * v, GstVideoFrame *frame);
+void    gst_video_test_src_chromazoneplate (GstVideoTestSrc * v, GstVideoFrame *frame);
+void    gst_video_test_src_ball         (GstVideoTestSrc * v, GstVideoFrame *frame);
+void    gst_video_test_src_smpte100     (GstVideoTestSrc * v, GstVideoFrame *frame);
+void    gst_video_test_src_bar          (GstVideoTestSrc * v, GstVideoFrame *frame);
 
 extern struct format_list_struct format_list[];
 extern int n_formats;
