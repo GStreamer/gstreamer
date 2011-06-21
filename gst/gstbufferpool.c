@@ -482,6 +482,8 @@ gst_buffer_pool_get_config (GstBufferPool * pool)
   return result;
 }
 
+static const gchar *empty_meta[] = { NULL };
+
 /**
  * gst_buffer_pool_get_metas:
  * @pool: a #GstBufferPool
@@ -505,7 +507,7 @@ gst_buffer_pool_get_metas (GstBufferPool * pool)
   if (G_LIKELY (pclass->get_metas))
     result = pclass->get_metas (pool);
   else
-    result = NULL;
+    result = empty_meta;
 
   return result;
 }
