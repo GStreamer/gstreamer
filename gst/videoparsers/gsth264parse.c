@@ -1042,12 +1042,13 @@ gst_h264_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
 
     /* we did parse codec-data and might supplement src caps */
     gst_h264_parse_update_src_caps (h264parse, caps);
-  } else if (format == GST_H264_PARSE_FORMAT_AVC &&
-      h264parse->format == GST_H264_PARSE_FORMAT_BYTE) {
+  } else if (format == GST_H264_PARSE_FORMAT_AVC) {
+    /* if input != output, and input is avc, must split before anything else */
     /* arrange to insert codec-data in-stream if needed.
      * src caps are only arranged for later on */
     h264parse->push_codec = TRUE;
     h264parse->split_packetized = TRUE;
+    h264parse->packetized = TRUE;
   }
 
   return TRUE;
