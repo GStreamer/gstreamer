@@ -1440,7 +1440,7 @@ gst_discoverer_discover_uri_async (GstDiscoverer * discoverer,
  * gst_discoverer_discover_uri:
  * @discoverer: A #GstDiscoverer
  * @uri: The URI to run on.
- * @err: If an error occurred, this field will be filled in.
+ * @err: (out) (allow-none): If an error occurred, this field will be filled in.
  *
  * Synchronously discovers the given @uri.
  *
@@ -1476,10 +1476,12 @@ gst_discoverer_discover_uri (GstDiscoverer * discoverer, const gchar * uri,
   discoverer_collect (discoverer);
 
   /* Get results */
-  if (discoverer->priv->current_error)
-    *err = g_error_copy (discoverer->priv->current_error);
-  else
-    *err = NULL;
+  if (err) {
+    if (discoverer->priv->current_error)
+      *err = g_error_copy (discoverer->priv->current_error);
+    else
+      *err = NULL;
+  }
   if (res != GST_DISCOVERER_OK) {
     GST_DEBUG ("Setting result to %d (was %d)", res,
         discoverer->priv->current_info->result);

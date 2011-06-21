@@ -3,7 +3,7 @@
   <description>default typefind functions</description>
   <filename>../../gst/typefind/.libs/libgsttypefindfunctions.so</filename>
   <basename>libgsttypefindfunctions.so</basename>
-  <version>0.10.34.1</version>
+  <version>0.10.35.1</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
   <package>GStreamer Base Plug-ins git</package>
