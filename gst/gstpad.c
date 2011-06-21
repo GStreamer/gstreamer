@@ -4547,7 +4547,7 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
 
     GST_OBJECT_UNLOCK (pad);
 
-    result = do_event_function (pad, event, eventfunc);
+    result = eventfunc (pad, event);
   }
 
   if (need_unlock)
