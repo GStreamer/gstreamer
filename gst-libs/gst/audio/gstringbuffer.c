@@ -85,7 +85,7 @@ gst_ring_buffer_init (GstRingBuffer * ringbuffer)
   ringbuffer->cond = g_cond_new ();
   ringbuffer->waiting = 0;
   ringbuffer->empty_seg = NULL;
-  ringbuffer->abidata.ABI.flushing = TRUE;
+  ringbuffer->flushing = TRUE;
 }
 
 static void
@@ -996,7 +996,7 @@ gst_ring_buffer_activate (GstRingBuffer * buf, gboolean active)
   if (G_UNLIKELY (active && !buf->acquired))
     goto not_acquired;
 
-  if (G_UNLIKELY (buf->abidata.ABI.active == active))
+  if (G_UNLIKELY (buf->active == active))
     goto was_active;
 
   rclass = GST_RING_BUFFER_GET_CLASS (buf);
@@ -1010,7 +1010,7 @@ gst_ring_buffer_activate (GstRingBuffer * buf, gboolean active)
   if (G_UNLIKELY (!res))
     goto activate_failed;
 
-  buf->abidata.ABI.active = active;
+  buf->active = active;
 
 done:
   GST_OBJECT_UNLOCK (buf);
@@ -1058,7 +1058,7 @@ gst_ring_buffer_is_active (GstRingBuffer * buf)
   g_return_val_if_fail (GST_IS_RING_BUFFER (buf), FALSE);
 
   GST_OBJECT_LOCK (buf);
-  res = buf->abidata.ABI.active;
+  res = buf->active;
   GST_OBJECT_UNLOCK (buf);
 
   return res;
@@ -1080,7 +1080,7 @@ gst_ring_buffer_set_flushing (GstRingBuffer * buf, gboolean flushing)
   g_return_if_fail (GST_IS_RING_BUFFER (buf));
 
   GST_OBJECT_LOCK (buf);
-  buf->abidata.ABI.flushing = flushing;
+  buf->flushing = flushing;
 
   if (flushing) {
     gst_ring_buffer_pause_unlocked (buf);
@@ -1112,13 +1112,13 @@ gst_ring_buffer_start (GstRingBuffer * buf)
   GST_DEBUG_OBJECT (buf, "starting ringbuffer");
 
   GST_OBJECT_LOCK (buf);
-  if (G_UNLIKELY (buf->abidata.ABI.flushing))
+  if (G_UNLIKELY (buf->flushing))
     goto flushing;
 
   if (G_UNLIKELY (!buf->acquired))
     goto not_acquired;
 
-  if (G_UNLIKELY (g_atomic_int_get (&buf->abidata.ABI.may_start) == FALSE))
+  if (G_UNLIKELY (g_atomic_int_get (&buf->may_start) == FALSE))
     goto may_not_start;
 
   /* if stopped, set to started */
@@ -1239,7 +1239,7 @@ gst_ring_buffer_pause (GstRingBuffer * buf)
   g_return_val_if_fail (GST_IS_RING_BUFFER (buf), FALSE);
 
   GST_OBJECT_LOCK (buf);
-  if (G_UNLIKELY (buf->abidata.ABI.flushing))
+  if (G_UNLIKELY (buf->flushing))
     goto flushing;
 
   if (G_UNLIKELY (!buf->acquired))
@@ -1483,7 +1483,7 @@ wait_segment (GstRingBuffer * buf)
   if (G_UNLIKELY (g_atomic_int_get (&buf->state) !=
           GST_RING_BUFFER_STATE_STARTED)) {
     /* see if we are allowed to start it */
-    if (G_UNLIKELY (g_atomic_int_get (&buf->abidata.ABI.may_start) == FALSE))
+    if (G_UNLIKELY (g_atomic_int_get (&buf->may_start) == FALSE))
       goto no_start;
 
     GST_DEBUG_OBJECT (buf, "start!");
@@ -1498,7 +1498,7 @@ wait_segment (GstRingBuffer * buf)
 
   /* take lock first, then update our waiting flag */
   GST_OBJECT_LOCK (buf);
-  if (G_UNLIKELY (buf->abidata.ABI.flushing))
+  if (G_UNLIKELY (buf->flushing))
     goto flushing;
 
   if (G_UNLIKELY (g_atomic_int_get (&buf->state) !=
@@ -1510,7 +1510,7 @@ wait_segment (GstRingBuffer * buf)
       GST_DEBUG_OBJECT (buf, "waiting..");
       GST_RING_BUFFER_WAIT (buf);
 
-      if (G_UNLIKELY (buf->abidata.ABI.flushing))
+      if (G_UNLIKELY (buf->flushing))
         goto flushing;
 
       if (G_UNLIKELY (g_atomic_int_get (&buf->state) !=
@@ -2089,5 +2089,5 @@ gst_ring_buffer_may_start (GstRingBuffer * buf, gboolean allowed)
   g_return_if_fail (GST_IS_RING_BUFFER (buf));
 
   GST_LOG_OBJECT (buf, "may start: %d", allowed);
-  g_atomic_int_set (&buf->abidata.ABI.may_start, allowed);
+  g_atomic_int_set (&buf->may_start, allowed);
 }

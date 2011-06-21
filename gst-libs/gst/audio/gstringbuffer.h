@@ -277,8 +277,7 @@ struct _GstRingBufferSpec
 				 * level device, defaults to segtotal. */
 
   /*< private >*/
-  /* gpointer _gst_reserved[GST_PADDING]; */
-  guint8 _gst_reserved[(sizeof (gpointer) * GST_PADDING) - sizeof (gint)];
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 #define GST_RING_BUFFER_GET_COND(buf) (((GstRingBuffer *)buf)->cond)
@@ -327,17 +326,13 @@ struct _GstRingBuffer {
   GstRingBufferCallback  callback;
   gpointer               cb_data;
 
+  gboolean               flushing;
+  /* ATOMIC */
+  gint                   may_start;
+  gboolean               active;
+
   /*< private >*/
-  union {
-    struct {
-      gboolean           flushing;
-      /* ATOMIC */
-      gint               may_start;
-      gboolean           active;
-    } ABI;
-    /* adding + 0 to mark ABI change to be undone later */
-    gpointer _gst_reserved[GST_PADDING + 0];
-  } abidata;
+  gpointer _gst_reserved[GST_PADDING + 0];
 };
 
 /**
