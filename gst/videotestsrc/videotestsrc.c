@@ -361,7 +361,7 @@ paintrect_find_format (const gchar * find_format)
   int i;
 
   for (i = 0; i < n_formats; i++) {
-    if (strcmp (find_format, format_list[i].format) == 0) {
+    if (g_str_equal (find_format, format_list[i].format)) {
       return format_list + i;
     }
   }
@@ -374,7 +374,7 @@ paintrect_find_name (const char *name)
   int i;
 
   for (i = 0; i < n_formats; i++) {
-    if (strcmp (name, format_list[i].name) == 0) {
+    if (g_str_equal (name, format_list[i].name)) {
       return format_list + i;
     }
   }
