@@ -2695,7 +2695,7 @@ gst_pad_set_caps (GstPad * pad, GstCaps * caps)
 
 static gboolean
 do_event_function (GstPad * pad, GstEvent * event,
-    GstPadEventFunction eventfunc)
+    GstPadEventFunction eventfunc, gboolean * caps_notify)
 {
   gboolean result = TRUE;
   GstCaps *caps, *templ;
@@ -2711,7 +2711,7 @@ do_event_function (GstPad * pad, GstEvent * event,
       if (!gst_caps_can_intersect (caps, templ))
         goto not_accepted;
 
-      g_object_notify_by_pspec ((GObject *) pad, pspec_caps);
+      *caps_notify = TRUE;
 
       gst_caps_unref (templ);
       break;
@@ -2747,6 +2747,7 @@ gst_pad_update_events (GstPad * pad)
   guint i;
   GstPadEventFunction eventfunc;
   GstEvent *event;
+  gboolean caps_notify = FALSE;
 
   if (G_UNLIKELY ((eventfunc = GST_PAD_EVENTFUNC (pad)) == NULL))
     goto no_function;
@@ -2764,9 +2765,8 @@ gst_pad_update_events (GstPad * pad)
     gst_event_ref (event);
     GST_OBJECT_UNLOCK (pad);
 
-    res = do_event_function (pad, event, eventfunc);
+    res = do_event_function (pad, event, eventfunc, &caps_notify);
 
-    GST_OBJECT_LOCK (pad);
     /* things could have changed while we release the lock, check if we still
      * are handling the same event, if we don't something changed and we have
      * to try again. FIXME. we need a cookie here. FIXME, we also want to remove
@@ -2775,13 +2775,19 @@ gst_pad_update_events (GstPad * pad)
     if (res) {
       /* make the event active */
       gst_event_take (&ev->event, event);
+
+      /* notify caps change when needed */
+      if (caps_notify) {
+        g_object_notify_by_pspec ((GObject *) pad, pspec_caps);
+        caps_notify = FALSE;
+      }
     } else {
       gst_event_unref (event);
       ret = GST_FLOW_ERROR;
     }
+    GST_OBJECT_LOCK (pad);
   }
   /* when we get here all events were successfully updated. */
-
   return ret;
 
   /* ERRORS */
