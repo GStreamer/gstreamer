@@ -1,0 +1,49 @@
+<Project
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+  xmlns="http://usefulinc.com/ns/doap#"
+  xmlns:foaf="http://xmlns.com/foaf/0.1/"
+  xmlns:admin="http://webns.net/mvcb/">
+
+ <name>GStreamer OpenMAX Plug-ins</name>
+ <shortname>gst-plugins-base</shortname>
+ <homepage rdf:resource="http://gstreamer.freedesktop.org/modules/gst-omx.html" />
+ <created>2011-06-21</created>
+ <shortdesc xml:lang="en">
+OpenMAX GStreamer Plug-ins
+ </shortdesc>
+ <description xml:lang="en">
+</description>
+ <category></category>
+ <bug-database rdf:resource="http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer&amp;component=gst-omx" />
+ <screenshots></screenshots>
+ <mailing-list rdf:resource="http://lists.freedesktop.org/mailman/listinfo/gstreamer-devel" />
+ <programming-language>C</programming-language>
+ <license rdf:resource="http://usefulinc.com/doap/licenses/lgpl"/>
+ <download-page rdf:resource="http://gstreamer.freedesktop.org/download/" />
+
+ <repository>
+   <GitRepository>
+     <location rdf:resource="git://anongit.freedesktop.org/gstreamer/gst-omx"/>
+     <browse rdf:resource="http://cgit.freedesktop.org/gstreamer/gst-omx"/>
+   </GitRepository>
+ </repository> 
+
+ <release>
+  <Version>
+   <revision>0.10.0</revision>
+   <branch>0.10</branch>
+   <name>TODO</name>
+   <created>2011-XX-XX</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-omx/gst-omx-0.10.0.tar.bz2" />
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-omx/gst-omx-0.10.0.tar.gz" />
+  </Version>
+ </release>
+
+ <maintainer>
+  <foaf:Person>
+     <foaf:name>Sebastian Dr&ouml;ge</foaf:name>
+  </foaf:Person>
+ </maintainer>
+
+</Project>
