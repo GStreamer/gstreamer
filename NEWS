@@ -1,4 +1,14 @@
-This is GStreamer 0.10.34 "Misfits"
+This is GStreamer 0.10.35 "Nuclear Fission"
+
+Changes since 0.10.34:
+
+      * work around GLib atomic ops API change
+      * some minor win32/mingw fixes
+      * don't use G_CONST_RETURN in public headers
+
+Bugs fixed since 0.10.34:
+
+      * 652211 : Use const instead G_CONST_RETURN
 
 Changes since 0.10.33:
 

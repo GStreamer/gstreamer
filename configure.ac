@@ -244,7 +244,7 @@ AC_PATH_PROG(VALGRIND_PATH, valgrind, no)
 AM_CONDITIONAL(HAVE_VALGRIND, test ! "x$VALGRIND_PATH" = "xno")
 
 dnl check for gobject-introspection
-GOBJECT_INTROSPECTION_CHECK([0.6.3])
+GOBJECT_INTROSPECTION_CHECK([0.6.8])
 
 dnl check for documentation tools
 AG_GST_DOCBOOK_CHECK

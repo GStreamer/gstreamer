@@ -1,9 +1,79 @@
-=== release 0.10.34 ===
+=== release 0.10.35 ===
 
-2011-05-14  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+2011-06-15  Tim-Philipp Müller <tim.muller@collabora.co.uk>
 
 	* configure.ac:
-	  releasing 0.10.34, "Misfits"
+	  releasing 0.10.35, "Nuclear Fission"
+
+2011-06-09 17:13:35 +0100  Javier Jardón <jjardon@gnome.org>
+
+	* gst/gstelement.h:
+	* gst/gstelementfactory.c:
+	* gst/gstelementfactory.h:
+	* gst/gstformat.h:
+	* gst/gstinfo.c:
+	* gst/gstinfo.h:
+	* gst/gstpad.c:
+	* gst/gstpad.h:
+	* gst/gstplugin.c:
+	* gst/gstplugin.h:
+	* gst/gstpluginfeature.c:
+	* gst/gstpluginfeature.h:
+	* gst/gstquery.h:
+	* gst/gststructure.h:
+	* gst/gsttaglist.c:
+	* gst/gsttaglist.h:
+	* gst/gsttagsetter.c:
+	* gst/gsttagsetter.h:
+	* gst/gsttrace.h:
+	* gst/gsturi.c:
+	* gst/gsturi.h:
+	* gst/gstutils.c:
+	* gst/gstutils.h:
+	* gst/gstvalue.h:
+	  Use "const" instead G_CONST_RETURN
+	  G_CONST_RETURN will be deprecated soon.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=652211
+
+2011-06-04 00:30:15 -0700  David Schleef <ds@schleef.org>
+
+	* gst/glib-compat-private.h:
+	* gst/gstatomicqueue.c:
+	* gst/gstelementfactory.c:
+	* gst/gstpoll.c:
+	* gst/gstsystemclock.c:
+	* gst/gstutils.c:
+	* plugins/elements/gstmultiqueue.c:
+	* tests/benchmarks/gstclockstress.c:
+	  Work around changes in g_atomic API
+	  See #651514 for details.  It's apparently impossible to write code
+	  that avoids both type punning warnings with old g_atomic headers and
+	  assertions in the new.  Thus, macros and a version check.
+
+2011-05-25 13:40:30 +0400  Руслан Ижбулатов <lrn1986@gmail.com>
+
+	* gst/gstsystemclock.c:
+	  systemclock: Placate gcc by defining EWOULDBLOCK to something
+
+2011-05-25 12:47:51 +0400  Руслан Ижбулатов <lrn1986@gmail.com>
+
+	* gst/gstpoll.c:
+	  poll: Fix WAKE_EVENT() to behave posixly on Windows
+
+=== release 0.10.34 ===
+
+2011-05-14 01:00:23 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-coreelements.xml:
+	* docs/plugins/inspect/plugin-coreindexers.xml:
+	* gstreamer.doap:
+	* win32/common/config.h:
+	* win32/common/gstversion.h:
+	  Release 0.10.34
 
 2011-05-04 15:31:56 +0300  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
 
