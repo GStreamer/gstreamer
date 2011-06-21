@@ -191,7 +191,7 @@ gst_audioringbuffer_class_init (GstAudioRingBufferClass * klass)
       GST_DEBUG_FUNCPTR (gst_audioringbuffer_activate);
 }
 
-typedef guint (*WriteFunc) (GstAudioSink * sink, gpointer data, guint length);
+typedef gint (*WriteFunc) (GstAudioSink * sink, gpointer data, guint length);
 
 /* this internal thread does nothing else but write samples to the audio device.
  * It will write each segment in the ringbuffer and will update the play

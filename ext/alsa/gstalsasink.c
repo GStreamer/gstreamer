@@ -86,7 +86,7 @@ static gboolean gst_alsasink_prepare (GstAudioSink * asink,
     GstRingBufferSpec * spec);
 static gboolean gst_alsasink_unprepare (GstAudioSink * asink);
 static gboolean gst_alsasink_close (GstAudioSink * asink);
-static guint gst_alsasink_write (GstAudioSink * asink, gpointer data,
+static gint gst_alsasink_write (GstAudioSink * asink, gpointer data,
     guint length);
 static guint gst_alsasink_delay (GstAudioSink * asink);
 static void gst_alsasink_reset (GstAudioSink * asink);
@@ -846,7 +846,7 @@ xrun_recovery (GstAlsaSink * alsa, snd_pcm_t * handle, gint err)
   return err;
 }
 
-static guint
+static gint
 gst_alsasink_write (GstAudioSink * asink, gpointer data, guint length)
 {
   GstAlsaSink *alsa;
