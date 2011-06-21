@@ -53,7 +53,13 @@ static void
 ges_track_parse_launch_effect_get_property (GObject * object,
     guint property_id, GValue * value, GParamSpec * pspec)
 {
+  GESTrackParseLaunchEffectPrivate *priv =
+      GES_TRACK_PARSE_LAUNCH_EFFECT (object)->priv;
+
   switch (property_id) {
+    case PROP_BIN_DESCRIPTION:
+      g_value_set_string (value, priv->bin_description);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
   }
