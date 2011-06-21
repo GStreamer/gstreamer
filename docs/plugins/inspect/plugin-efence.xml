@@ -3,7 +3,7 @@
   <description>This element converts a stream of normal GStreamer buffers into a stream of buffers that are allocated in such a way that out-of-bounds access to data in the buffer is more likely to cause segmentation faults.  This allocation method is very similar to the debugging tool &quot;Electric Fence&quot;.</description>
   <filename>../../gst/debugutils/.libs/libgstefence.so</filename>
   <basename>libgstefence.so</basename>
-  <version>0.10.29.1</version>
+  <version>0.10.30.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins git</package>

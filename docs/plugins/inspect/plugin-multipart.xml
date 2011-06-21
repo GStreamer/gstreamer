@@ -3,7 +3,7 @@
   <description>multipart stream manipulation</description>
   <filename>../../gst/multipart/.libs/libgstmultipart.so</filename>
   <basename>libgstmultipart.so</basename>
-  <version>0.10.29.1</version>
+  <version>0.10.30.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins git</package>

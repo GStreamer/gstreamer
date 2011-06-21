@@ -208,7 +208,7 @@ gst_sunaudiosink_init (GstSunAudioSink * sunaudiosink)
     audiodev = DEFAULT_DEVICE;
   sunaudiosink->device = g_strdup (audiodev);
 
-  /* mutex and gconf used to control the write method */
+  /* mutex and gcond used to control the write method */
   sunaudiosink->write_mutex = g_mutex_new ();
   sunaudiosink->sleep_cond = g_cond_new ();
 }

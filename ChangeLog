@@ -1,9 +1,189 @@
-=== release 0.10.29 ===
+=== release 0.10.30 ===
 
-2011-05-10  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+2011-06-15  Tim-Philipp Müller <tim.muller@collabora.co.uk>
 
 	* configure.ac:
-	  releasing 0.10.29, "Soft Cheese Enthusiast"
+	  releasing 0.10.30, "Adagio"
+
+2011-06-08 18:33:10 +0300  Raimo Järvi <raimo.jarvi@gmail.com>
+
+	* gst/udp/gstudpnetutils.h:
+	  udp: Fix compiler warning on mingw-w64
+	  Fixes: #652144.
+	  gstudpnetutils.h:32:0: error: "WINVER" redefined
+	  /usr/i686-w64-mingw32/sys-root/mingw/include/_mingw.h:231:0: note: this is the
+	  location of the previous definition
+
+2011-06-04 13:49:52 -0700  David Schleef <ds@schleef.org>
+
+	* gst/interleave/interleave.c:
+	  interleave: Work around changes in g_atomic API
+	  See #651514 for details.
+
+2011-05-18 12:36:40 +0200  Jose Antonio Santos Cadenas <santoscadenas@gmail.com>
+
+	* gst/rtp/gstrtpac3depay.c:
+	* gst/rtp/gstrtpbvdepay.c:
+	* gst/rtp/gstrtpg722depay.c:
+	* gst/rtp/gstrtpg726depay.c:
+	* gst/rtp/gstrtpgsmdepay.c:
+	* gst/rtp/gstrtpilbcdepay.c:
+	* gst/rtp/gstrtpmp1sdepay.c:
+	* gst/rtp/gstrtpmp2tdepay.c:
+	* gst/rtp/gstrtpmpvdepay.c:
+	* gst/rtp/gstrtppcmadepay.c:
+	* gst/rtp/gstrtppcmudepay.c:
+	* gst/rtp/gstrtpspeexdepay.c:
+	  rtp: Fix segmentation fault processing payload buffers
+	  This commit checks if the value returned by
+	  gst_rtp_buffer_get_payload_buffer and
+	  gst_rtp_buffer_get_payload_subbuffer is NULL before using it.
+
+2011-05-16 09:04:31 +0200  Pino Toscano <toscano.pino@tiscali.it>
+
+	* ext/pulse/pulseutil.c:
+	  pulse: Define PATH_MAX if it isn't defined
+	  GNU Hurd for example doesn't define it.
+
+2011-04-29 08:55:19 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/wavenc/gstwavenc.c:
+	  wavenc: Allow setcaps to be called after a format was negotiated if it's compatible
+	  Otherwise wavenc will fail if upstream decides to set equivalent caps or caps
+	  with additional information later.
+	  Thanks to Alexander Schremmer for finding this bug.
+
+=== release 0.10.29 ===
+
+2011-05-10 10:04:28 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gst-plugins-good-plugins.hierarchy:
+	* docs/plugins/gst-plugins-good-plugins.interfaces:
+	* docs/plugins/gst-plugins-good-plugins.prerequisites:
+	* docs/plugins/inspect/plugin-1394.xml:
+	* docs/plugins/inspect/plugin-aasink.xml:
+	* docs/plugins/inspect/plugin-alaw.xml:
+	* docs/plugins/inspect/plugin-alpha.xml:
+	* docs/plugins/inspect/plugin-alphacolor.xml:
+	* docs/plugins/inspect/plugin-annodex.xml:
+	* docs/plugins/inspect/plugin-apetag.xml:
+	* docs/plugins/inspect/plugin-audiofx.xml:
+	* docs/plugins/inspect/plugin-audioparsers.xml:
+	* docs/plugins/inspect/plugin-auparse.xml:
+	* docs/plugins/inspect/plugin-autodetect.xml:
+	* docs/plugins/inspect/plugin-avi.xml:
+	* docs/plugins/inspect/plugin-cacasink.xml:
+	* docs/plugins/inspect/plugin-cairo.xml:
+	* docs/plugins/inspect/plugin-cutter.xml:
+	* docs/plugins/inspect/plugin-debug.xml:
+	* docs/plugins/inspect/plugin-deinterlace.xml:
+	* docs/plugins/inspect/plugin-dv.xml:
+	* docs/plugins/inspect/plugin-efence.xml:
+	* docs/plugins/inspect/plugin-effectv.xml:
+	* docs/plugins/inspect/plugin-equalizer.xml:
+	* docs/plugins/inspect/plugin-esdsink.xml:
+	* docs/plugins/inspect/plugin-flac.xml:
+	* docs/plugins/inspect/plugin-flv.xml:
+	* docs/plugins/inspect/plugin-flxdec.xml:
+	* docs/plugins/inspect/plugin-gconfelements.xml:
+	* docs/plugins/inspect/plugin-gdkpixbuf.xml:
+	* docs/plugins/inspect/plugin-goom.xml:
+	* docs/plugins/inspect/plugin-goom2k1.xml:
+	* docs/plugins/inspect/plugin-gstrtpmanager.xml:
+	* docs/plugins/inspect/plugin-halelements.xml:
+	* docs/plugins/inspect/plugin-icydemux.xml:
+	* docs/plugins/inspect/plugin-id3demux.xml:
+	* docs/plugins/inspect/plugin-imagefreeze.xml:
+	* docs/plugins/inspect/plugin-interleave.xml:
+	* docs/plugins/inspect/plugin-isomp4.xml:
+	* docs/plugins/inspect/plugin-jack.xml:
+	* docs/plugins/inspect/plugin-jpeg.xml:
+	* docs/plugins/inspect/plugin-level.xml:
+	* docs/plugins/inspect/plugin-matroska.xml:
+	* docs/plugins/inspect/plugin-mulaw.xml:
+	* docs/plugins/inspect/plugin-multifile.xml:
+	* docs/plugins/inspect/plugin-multipart.xml:
+	* docs/plugins/inspect/plugin-navigationtest.xml:
+	* docs/plugins/inspect/plugin-oss4.xml:
+	* docs/plugins/inspect/plugin-ossaudio.xml:
+	* docs/plugins/inspect/plugin-png.xml:
+	* docs/plugins/inspect/plugin-pulseaudio.xml:
+	* docs/plugins/inspect/plugin-replaygain.xml:
+	* docs/plugins/inspect/plugin-rtp.xml:
+	* docs/plugins/inspect/plugin-rtsp.xml:
+	* docs/plugins/inspect/plugin-shapewipe.xml:
+	* docs/plugins/inspect/plugin-shout2send.xml:
+	* docs/plugins/inspect/plugin-smpte.xml:
+	* docs/plugins/inspect/plugin-soup.xml:
+	* docs/plugins/inspect/plugin-spectrum.xml:
+	* docs/plugins/inspect/plugin-speex.xml:
+	* docs/plugins/inspect/plugin-taglib.xml:
+	* docs/plugins/inspect/plugin-udp.xml:
+	* docs/plugins/inspect/plugin-video4linux2.xml:
+	* docs/plugins/inspect/plugin-videobox.xml:
+	* docs/plugins/inspect/plugin-videocrop.xml:
+	* docs/plugins/inspect/plugin-videofilter.xml:
+	* docs/plugins/inspect/plugin-videomixer.xml:
+	* docs/plugins/inspect/plugin-wavenc.xml:
+	* docs/plugins/inspect/plugin-wavpack.xml:
+	* docs/plugins/inspect/plugin-wavparse.xml:
+	* docs/plugins/inspect/plugin-ximagesrc.xml:
+	* docs/plugins/inspect/plugin-y4menc.xml:
+	* gst-plugins-good.doap:
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_HK.po:
+	* po/zh_TW.po:
+	* win32/common/config.h:
+	  Release 0.10.29
+	  Highlights:
+	  - amrparse, aacparse, ac3parse, flacparse, mpegaudioparse, dcaparse audio parsers (moved from -bad)
+	  - muxers now mux based on running time
+	  - ISO MP4 muxers: mp4mux/3gppmux/qtmux/mj2mux (moved from -bad)
+	  - new matroskaparse element
+	  - new v4l2radio element
+	  - rtpsession: support RTCP Early Feedback (the AVPF profile)
+	  - orc 0.4.14 or newer recommended
+	  - many other fixes and improvements
 
 2011-05-05 13:24:23 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
 

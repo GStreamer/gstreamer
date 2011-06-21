@@ -3,7 +3,7 @@
   <description>ASCII Art video sink</description>
   <filename>../../ext/aalib/.libs/libgstaasink.so</filename>
   <basename>libgstaasink.so</basename>
-  <version>0.10.29.1</version>
+  <version>0.10.30.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins git</package>

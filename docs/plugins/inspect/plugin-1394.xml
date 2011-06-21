@@ -3,7 +3,7 @@
   <description>Source for video data via IEEE1394 interface</description>
   <filename>../../ext/raw1394/.libs/libgst1394.so</filename>
   <basename>libgst1394.so</basename>
-  <version>0.10.29.1</version>
+  <version>0.10.30.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins git</package>

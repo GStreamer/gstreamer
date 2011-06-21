@@ -34,6 +34,17 @@ the plug-in code, LGPL or LGPL-compatible for the supporting library).
 
  <release>
   <Version>
+   <revision>0.10.30</revision>
+   <branch>0.10</branch>
+   <name>Adagio</name>
+   <created>2011-06-15</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-good/gst-plugins-good-0.10.30.tar.bz2" />
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-good/gst-plugins-good-0.10.30.tar.gz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
    <revision>0.10.29</revision>
    <branch>0.10</branch>
    <name>Soft Cheese Enthusiast</name>
