@@ -68,19 +68,14 @@ struct _GstAudioClock {
 
   /*< protected >*/
   GstAudioClockGetTimeFunc func;
-  gpointer user_data;
-
-  GstClockTime last_time;
+  gpointer                 user_data;
+  GDestroyNotify           destroy_notify;
 
   /*< private >*/
-  union {
-    struct {
-      GstClockTimeDiff   time_offset;
-      GDestroyNotify     destroy_notify;
-    } ABI;
-    /* adding + 0 to mark ABI change to be undone later */
-    gpointer _gst_reserved[GST_PADDING + 0];
-  } abidata;
+  GstClockTime             last_time;
+  GstClockTimeDiff         time_offset;
+
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstAudioClockClass {

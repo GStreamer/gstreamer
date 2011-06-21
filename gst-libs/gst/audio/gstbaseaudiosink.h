@@ -124,17 +124,13 @@ struct _GstBaseAudioSink {
   gboolean       provide_clock;
   GstClock      *provided_clock;
 
+  /* with g_atomic_; currently rendering eos */
+  gboolean       eos_rendering;
+
   /*< private >*/
   GstBaseAudioSinkPrivate *priv;
 
-  union {
-    struct {
-      /*< protected >*/
-      /* with g_atomic_; currently rendering eos */
-      gboolean   eos_rendering;
-    } ABI;
-    gpointer _gst_reserved[GST_PADDING - 1];
-  } abidata;
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 /**
@@ -158,9 +154,8 @@ struct _GstBaseAudioSinkClass {
   /* subclass payloader */
   GstBuffer*     (*payload)            (GstBaseAudioSink *sink,
                                         GstBuffer        *buffer);
-
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING - 1];
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 GType gst_base_audio_sink_get_type(void);
