@@ -2679,8 +2679,10 @@ gst_base_src_prepare_allocation (GstBaseSrc * basesrc, GstCaps * caps)
   if (G_LIKELY (bclass->setup_allocation))
     result = bclass->setup_allocation (basesrc, query);
 
+  GST_DEBUG_OBJECT (basesrc, "ALLOCATION params: %" GST_PTR_FORMAT, query);
   gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
       &alignment, &pool);
+
   gst_query_unref (query);
 
   if (size == 0) {
