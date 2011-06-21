@@ -507,6 +507,8 @@ gst_h264_parse_check_valid_frame (GstBaseParse * parse,
     if (sc_pos == -1) {
       /* SC not found, need more data */
       sc_pos = GST_BUFFER_SIZE (buffer) - 3;
+      /* avoid going < 0 later on */
+      nal_pos = next_sc_pos = sc_pos;
       goto more;
     }
 
