@@ -26,8 +26,10 @@ AC_SUBST(MI_PACKAGES)
 GETTEXT_PACKAGE=gst-mi
 AC_DEFINE_UNQUOTED([GETTEXT_PACKAGE], ["$GETTEXT_PACKAGE"], [Gettext Package])
 AC_SUBST(GETTEXT_PACKAGE)
-AM_GNU_GETTEXT_VERSION([0.18.1])
-AM_GNU_GETTEXT([external])
+# AC_PROG_INTLTOOL is enough, the lines below caused:
+#   required file `./config.rpath' not found
+#AM_GNU_GETTEXT_VERSION([0.18.1])
+#AM_GNU_GETTEXT([external])
 
 dnl check for desktop utilities
 AC_PATH_PROG(UPDATE_DESKTOP_DATABASE, update-desktop-database)

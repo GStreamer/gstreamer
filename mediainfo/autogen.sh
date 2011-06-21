@@ -6,11 +6,13 @@ echo "#!/bin/sh" > autoregen.sh
 echo "./autogen.sh $@ \$@" >> autoregen.sh
 chmod +x autoregen.sh
 
+mkdir -p m4
+
 test -n "$srcdir" || srcdir=$(dirname "$0")
 test -n "$srcdir" || srcdir=.
 (
   cd "$srcdir" &&
-  AUTOPOINT='intltoolize --automake --copy' autoreconf -fiv
+  AUTOPOINT='intltoolize --automake -c -f' autoreconf -fivm
 ) || exit
 test -n "$NOCONFIGURE" || "$srcdir/configure" "$@"
 
