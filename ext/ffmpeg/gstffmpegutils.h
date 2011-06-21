@@ -80,6 +80,8 @@ gst_ffmpeg_time_gst_to_ff (guint64 time, AVRational base)
 void 
 gst_ffmpeg_init_pix_fmt_info(void);
 
+int
+gst_ffmpeg_auto_max_threads(void);
 
 G_CONST_RETURN gchar *
 gst_ffmpeg_get_codecid_longname (enum CodecID codec_id);

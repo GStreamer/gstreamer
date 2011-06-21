@@ -121,6 +121,7 @@ struct _GstFFMpegDec
   gboolean do_padding;
   gboolean debug_mv;
   gboolean crop;
+  int max_threads;
 
   /* QoS stuff *//* with LOCK */
   gdouble proportion;
@@ -194,6 +195,7 @@ gst_ts_info_get (GstFFMpegDec * dec, gint idx)
 #define DEFAULT_DO_PADDING		TRUE
 #define DEFAULT_DEBUG_MV		FALSE
 #define DEFAULT_CROP			TRUE
+#define DEFAULT_MAX_THREADS		0
 
 enum
 {
@@ -204,6 +206,7 @@ enum
   PROP_DO_PADDING,
   PROP_DEBUG_MV,
   PROP_CROP,
+  PROP_MAX_THREADS,
   PROP_LAST
 };
 
@@ -358,6 +361,8 @@ gst_ffmpegdec_class_init (GstFFMpegDecClass * klass)
   gobject_class->get_property = gst_ffmpegdec_get_property;
 
   if (klass->in_plugin->type == AVMEDIA_TYPE_VIDEO) {
+    int caps;
+
     g_object_class_install_property (gobject_class, PROP_SKIPFRAME,
         g_param_spec_enum ("skip-frame", "Skip frames",
             "Which types of frames to skip during decoding",
@@ -385,6 +390,15 @@ gst_ffmpegdec_class_init (GstFFMpegDecClass * klass)
             "Crop images to the display region",
             DEFAULT_CROP, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 #endif
+
+    caps = klass->in_plugin->capabilities;
+    if (caps & (CODEC_CAP_FRAME_THREADS | CODEC_CAP_SLICE_THREADS)) {
+      g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_MAX_THREADS,
+          g_param_spec_int ("max-threads", "Maximum decode threads",
+              "Maximum number of worker threads to spawn. (0 = auto)",
+              0, G_MAXINT, DEFAULT_MAX_THREADS,
+              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+    }
   }
 
   gstelement_class->change_state = gst_ffmpegdec_change_state;
@@ -428,6 +442,7 @@ gst_ffmpegdec_init (GstFFMpegDec * ffmpegdec)
   ffmpegdec->do_padding = DEFAULT_DO_PADDING;
   ffmpegdec->debug_mv = DEFAULT_DEBUG_MV;
   ffmpegdec->crop = DEFAULT_CROP;
+  ffmpegdec->max_threads = DEFAULT_MAX_THREADS;
 
   ffmpegdec->format.video.par_n = -1;
   ffmpegdec->format.video.fps_n = -1;
@@ -848,6 +863,11 @@ gst_ffmpegdec_setcaps (GstPad * pad, GstCaps * caps)
   /* ffmpeg can draw motion vectors on top of the image (not every decoder
    * supports it) */
   ffmpegdec->context->debug_mv = ffmpegdec->debug_mv;
+
+  if (ffmpegdec->max_threads == 0)
+    ffmpegdec->context->thread_count = gst_ffmpeg_auto_max_threads ();
+  else
+    ffmpegdec->context->thread_count = ffmpegdec->max_threads;
 
   /* open codec - we don't select an output pix_fmt yet,
    * simply because we don't know! We only get it
@@ -2794,6 +2814,9 @@ gst_ffmpegdec_set_property (GObject * object,
     case PROP_CROP:
       ffmpegdec->crop = g_value_get_boolean (value);
       break;
+    case PROP_MAX_THREADS:
+      ffmpegdec->max_threads = g_value_get_int (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -2824,6 +2847,9 @@ gst_ffmpegdec_get_property (GObject * object,
       break;
     case PROP_CROP:
       g_value_set_boolean (value, ffmpegdec->crop);
+      break;
+    case PROP_MAX_THREADS:
+      g_value_set_int (value, ffmpegdec->max_threads);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
