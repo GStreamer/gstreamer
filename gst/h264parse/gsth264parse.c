@@ -1313,16 +1313,18 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
     alignment = "au";
   } else {
     if (h264parse->packetized) {
-      /* if packetized input, take upstream alignment if validly provided,
-       * otherwise assume au aligned ... */
-      alignment = gst_structure_get_string (structure, "alignment");
-      if (!alignment || (alignment &&
-              strcmp (alignment, "au") != 0 &&
-              strcmp (alignment, "nal") != 0)) {
-        if (h264parse->split_packetized)
-          alignment = "nal";
-        else
+      if (h264parse->split_packetized)
+        alignment = "nal";
+      else {
+        /* if packetized input is not split,
+         * take upstream alignment if validly provided,
+         * otherwise assume au aligned ... */
+        alignment = gst_structure_get_string (structure, "alignment");
+        if (!alignment || (alignment &&
+                strcmp (alignment, "au") != 0 &&
+                strcmp (alignment, "nal") != 0)) {
           alignment = "au";
+        }
       }
     } else {
       alignment = "nal";
