@@ -482,39 +482,6 @@ gst_message_new_tag (GstObject * src, GstTagList * tag_list)
 }
 
 /**
- * gst_message_new_tag_full:
- * @src: (transfer none): the object originating the message.
- * @pad: (transfer none): the originating pad for the tag.
- * @tag_list: (transfer full): the tag list for the message.
- *
- * Create a new tag message. The message will take ownership of the tag list.
- * The message is posted by elements that discovered a new taglist.
- *
- * MT safe.
- *
- * Returns: (transfer full): the new tag message.
- *
- * Since: 0.10.24
- */
-GstMessage *
-gst_message_new_tag_full (GstObject * src, GstPad * pad, GstTagList * tag_list)
-{
-  GstMessage *message;
-  GstStructure *s;
-
-  g_return_val_if_fail (GST_IS_STRUCTURE (tag_list), NULL);
-  g_return_val_if_fail (pad == NULL || GST_IS_PAD (pad), NULL);
-
-  s = (GstStructure *) tag_list;
-  if (pad)
-    gst_structure_set (s, "source-pad", GST_TYPE_PAD, pad, NULL);
-
-  message = gst_message_new_custom (GST_MESSAGE_TAG, src, s);
-
-  return message;
-}
-
-/**
  * gst_message_new_buffering:
  * @src: (transfer none): The object originating the message.
  * @percent: The buffering percent
@@ -1048,48 +1015,6 @@ gst_message_parse_tag (GstMessage * message, GstTagList ** tag_list)
   g_return_if_fail (tag_list != NULL);
 
   ret = gst_structure_copy (GST_MESSAGE_STRUCTURE (message));
-  gst_structure_remove_field (ret, "source-pad");
-
-  *tag_list = (GstTagList *) ret;
-}
-
-/**
- * gst_message_parse_tag_full:
- * @message: A valid #GstMessage of type GST_MESSAGE_TAG.
- * @pad: (out callee-allocates): location where the originating pad is stored,
- *     unref after usage
- * @tag_list: (out callee-allocates): return location for the tag-list.
- *
- * Extracts the tag list from the GstMessage. The tag list returned in the
- * output argument is a copy; the caller must free it when done.
- *
- * MT safe.
- *
- * Since: 0.10.24
- */
-void
-gst_message_parse_tag_full (GstMessage * message, GstPad ** pad,
-    GstTagList ** tag_list)
-{
-  GstStructure *ret;
-
-  g_return_if_fail (GST_IS_MESSAGE (message));
-  g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_TAG);
-  g_return_if_fail (tag_list != NULL);
-
-  ret = gst_structure_copy (GST_MESSAGE_STRUCTURE (message));
-
-  if (gst_structure_has_field (ret, "source-pad") && pad) {
-    const GValue *v;
-
-    v = gst_structure_get_value (ret, "source-pad");
-    if (v && G_VALUE_HOLDS (v, GST_TYPE_PAD))
-      *pad = g_value_dup_object (v);
-    else
-      *pad = NULL;
-  } else if (pad) {
-    *pad = NULL;
-  }
   gst_structure_remove_field (ret, "source-pad");
 
   *tag_list = (GstTagList *) ret;

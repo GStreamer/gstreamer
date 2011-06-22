@@ -3049,9 +3049,6 @@ gst_element_found_tags_for_pad (GstElement * element,
   g_return_if_fail (list != NULL);
 
   gst_pad_push_event (pad, gst_event_new_tag (gst_tag_list_copy (list)));
-  /* FIXME 0.11: Set the pad as source. */
-  gst_element_post_message (element,
-      gst_message_new_tag_full (GST_OBJECT (element), pad, list));
 }
 
 static void
@@ -3087,9 +3084,6 @@ gst_element_found_tags (GstElement * element, GstTagList * list)
   gst_iterator_foreach (iter, (GstIteratorForeachFunction) push_and_ref, event);
   gst_iterator_free (iter);
   gst_event_unref (event);
-
-  gst_element_post_message (element,
-      gst_message_new_tag (GST_OBJECT (element), list));
 }
 
 static GstPad *

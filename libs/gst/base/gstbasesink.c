@@ -2066,8 +2066,8 @@ gst_base_sink_wait_clock (GstBaseSink * sink, GstClockTime time,
   /* FIXME: Casting to GstClockEntry only works because the types
    * are the same */
   if (G_LIKELY (sink->priv->cached_clock_id != NULL
-          && GST_CLOCK_ENTRY_CLOCK ((GstClockEntry *) sink->priv->
-              cached_clock_id) == clock)) {
+          && GST_CLOCK_ENTRY_CLOCK ((GstClockEntry *) sink->
+              priv->cached_clock_id) == clock)) {
     if (!gst_clock_single_shot_id_reinit (clock, sink->priv->cached_clock_id,
             time)) {
       gst_clock_id_unref (sink->priv->cached_clock_id);
@@ -2958,7 +2958,19 @@ again:
           gst_base_sink_configure_segment (basesink, pad, event,
               &basesink->segment);
           break;
-        case GST_EVENT_SINK_MESSAGE:{
+        case GST_EVENT_TAG:
+        {
+          GstTagList *taglist;
+
+          gst_event_parse_tag (event, &taglist);
+
+          gst_element_post_message (GST_ELEMENT_CAST (basesink),
+              gst_message_new_tag (GST_OBJECT_CAST (basesink),
+                  gst_tag_list_copy (taglist)));
+          break;
+        }
+        case GST_EVENT_SINK_MESSAGE:
+        {
           GstMessage *msg = NULL;
 
           gst_event_parse_sink_message (event, &msg);
