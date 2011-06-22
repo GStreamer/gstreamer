@@ -6558,13 +6558,13 @@ gst_rtspsrc_send_event (GstElement * element, GstEvent * event)
 /*** GSTURIHANDLER INTERFACE *************************************************/
 
 static GstURIType
-gst_rtspsrc_uri_get_type (void)
+gst_rtspsrc_uri_get_type (GType type)
 {
   return GST_URI_SRC;
 }
 
 static gchar **
-gst_rtspsrc_uri_get_protocols (void)
+gst_rtspsrc_uri_get_protocols (GType type)
 {
   static const gchar *protocols[] =
       { "rtsp", "rtspu", "rtspt", "rtsph", "rtsp-sdp", NULL };
