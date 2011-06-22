@@ -967,6 +967,56 @@ gst_video_frame_unmap (GstVideoFrame * frame)
 }
 
 /**
+ * gst_video_frame_copy:
+ * @dest: a #GstVideoFrame
+ * @src: a #GstVideoFrame
+ *
+ * Copy the contents from @src to @dest.
+ *
+ * Returns: TRUE if the contents could be copied.
+ */
+gboolean
+gst_video_frame_copy (GstVideoFrame * dest, const GstVideoFrame * src)
+{
+  guint i, n_planes;
+  const GstVideoInfo *sinfo;
+  GstVideoInfo *dinfo;
+
+  sinfo = &src->info;
+  dinfo = &dest->info;
+
+  g_return_val_if_fail (dinfo->format == sinfo->format, FALSE);
+  g_return_val_if_fail (dinfo->width == sinfo->width
+      && dinfo->height == sinfo->height, FALSE);
+
+  n_planes = dinfo->n_planes;
+
+  for (i = 0; i < n_planes; i++) {
+    guint w, h, j;
+    guint8 *sp, *dp;
+    gint ss, ds;
+
+    sp = src->data[i];
+    dp = dest->data[i];
+
+    ss = sinfo->stride[i];
+    ds = dinfo->stride[i];
+
+    w = MIN (ABS (ss), ABS (ds));
+    h = gst_video_format_get_component_height (dinfo->format, i, dinfo->height);
+
+    GST_DEBUG ("w %d h %d", w, h);
+
+    for (j = 0; j < h; j++) {
+      memcpy (dp, sp, w);
+      dp += ds;
+      sp += ss;
+    }
+  }
+  return TRUE;
+}
+
+/**
  * get_stride:
  * @format: a #GstVideoFormat
  * @component: the component index

@@ -256,6 +256,9 @@ gboolean    gst_video_frame_map         (GstVideoFrame *frame, GstVideoInfo *inf
                                          GstBuffer *buffer, GstMapFlags flags);
 void        gst_video_frame_unmap       (GstVideoFrame *frame);
 
+gboolean    gst_video_frame_copy        (GstVideoFrame *dest, const GstVideoFrame *src);
+
+
 #define GST_VIDEO_SIZE_RANGE "(int) [ 1, max ]"
 #define GST_VIDEO_FPS_RANGE "(fraction) [ 0, max ]"
 
