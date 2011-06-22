@@ -981,7 +981,8 @@ gst_camera_bin_create_elements (GstCameraBin * camera)
   if (!camera->elements_created) {
     /* TODO check that elements created in _init were really created */
 
-    camera->video_encodebin = gst_element_factory_make ("encodebin", NULL);
+    camera->video_encodebin =
+        gst_element_factory_make ("encodebin", "video-encodebin");
     if (!camera->video_encodebin) {
       missing_element_name = "encodebin";
       goto missing_element;
@@ -1036,7 +1037,8 @@ gst_camera_bin_create_elements (GstCameraBin * camera)
       camera->video_profile_switch = TRUE;
     }
 
-    camera->image_encodebin = gst_element_factory_make ("encodebin", NULL);
+    camera->image_encodebin =
+        gst_element_factory_make ("encodebin", "image-encodebin");
     if (!camera->image_encodebin) {
       missing_element_name = "encodebin";
       goto missing_element;
