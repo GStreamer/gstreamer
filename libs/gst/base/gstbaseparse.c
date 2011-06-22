@@ -3742,7 +3742,7 @@ gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
        seek event (in bytes) to upstream. Segment / flush handling happens
        in corresponding src event handlers */
     GST_DEBUG_OBJECT (parse, "seek in PUSH mode");
-    if (seekstop >= 0 && seekpos <= seekpos)
+    if (seekstop >= 0 && seekstop <= seekpos)
       seekstop = seekpos;
     new_event = gst_event_new_seek (rate, GST_FORMAT_BYTES, flush,
         GST_SEEK_TYPE_SET, seekpos, stop_type, seekstop);
