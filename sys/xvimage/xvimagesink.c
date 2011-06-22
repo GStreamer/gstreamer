@@ -1056,6 +1056,8 @@ gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
 
         vformat = gst_video_format_from_masks (fmt->depth, fmt->bits_per_pixel,
             endianness, fmt->red_mask, fmt->green_mask, fmt->blue_mask, 0);
+        if (vformat == GST_VIDEO_FORMAT_UNKNOWN)
+          break;
 
         format_caps = gst_caps_new_simple ("video/x-raw",
             "format", G_TYPE_STRING, gst_video_format_to_string (vformat),
@@ -1071,6 +1073,8 @@ gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
         GstVideoFormat vformat;
 
         vformat = gst_video_format_from_fourcc (formats[i].id);
+        if (vformat == GST_VIDEO_FORMAT_UNKNOWN)
+          break;
 
         format_caps = gst_caps_new_simple ("video/x-raw",
             "format", G_TYPE_STRING, gst_video_format_to_string (vformat),
