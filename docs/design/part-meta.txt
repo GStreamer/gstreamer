@@ -83,24 +83,25 @@ methods.
 
  #define GST_VIDEO_MAX_PLANES 4
 
- struct GstMetaVideoPlane {
-   gsize           offset;   /* offset in the buffer memory region of the
-                              * first pixel. */
-   gint            stride;   /* stride of the image lines. Can be negative when
-                              * the image is upside-down */
- };
-
  struct GstMetaVideo {
-   GstMeta       meta
+   GstMeta       meta;
 
-   GstMetaVideoFlags flags
+   GstBuffer         *buffer;
 
-   guint               n_planes;
-   GstVideoPlane       plane[GST_VIDEO_MAX_PLANES];
+   GstVideoFlags      flags;
+   GstVideoFormat     format;
+   guint              width;
+   guint              height;
 
-   gpointer (*map)     (GstMetaVideo *meta, guint plane, gint *stride,
-                        GstMapflags flags);
-   gboolean (*unmap)   (GstMetaVideo *meta, guint plane, gpointer data);
+   guint              n_planes;
+   gsize              offset[GST_VIDEO_MAX_PLANES];   /* offset in the buffer memory region of the
+                                                       * first pixel. */
+   gint               stride[GST_VIDEO_MAX_PLANES];   /* stride of the image lines. Can be negative when
+                                                       * the image is upside-down */
+
+   gpointer (*map)    (GstMetaVideo *meta, guint plane, gint *stride,
+                       GstMapFlags flags);
+   gboolean (*unmap)  (GstMetaVideo *meta, guint plane, gpointer data);
  };
 
  gpointer gst_meta_video_map   (GstMetaVideo *meta, guint plane, gint *stride,
