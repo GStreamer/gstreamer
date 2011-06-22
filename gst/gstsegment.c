@@ -340,7 +340,7 @@ gst_segment_do_seek (GstSegment * segment, gdouble rate,
   segment->rate = rate;
   segment->applied_rate = 1.0;
   segment->base = base;
-  segment->flags = flags;
+  segment->flags = (GstSegmentFlags) flags;
   segment->start = start;
   segment->stop = stop;
   segment->time = start;
