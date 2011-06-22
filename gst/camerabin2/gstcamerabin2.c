@@ -127,8 +127,7 @@ enum
 static guint camerabin_signals[LAST_SIGNAL];
 
 #define DEFAULT_MODE MODE_IMAGE
-#define DEFAULT_VID_LOCATION "vid_%d"
-#define DEFAULT_IMG_LOCATION "img_%d"
+#define DEFAULT_LOCATION "cap_%d"
 #define DEFAULT_POST_PREVIEWS TRUE
 #define DEFAULT_MUTE_AUDIO FALSE
 #define DEFAULT_IDLE TRUE
@@ -222,8 +221,7 @@ gst_camera_bin_start_capture (GstCameraBin * camerabin)
   GST_DEBUG_OBJECT (camerabin, "Received start-capture");
 
   /* check that we have a valid location */
-  if ((camerabin->mode == MODE_VIDEO && camerabin->video_location == NULL)
-      || (camerabin->mode == MODE_IMAGE && camerabin->image_location == NULL)) {
+  if (camerabin->location == NULL) {
     GST_ELEMENT_ERROR (camerabin, RESOURCE, OPEN_WRITE,
         (_("File location is set to NULL, please set it to a valid filename")),
         (NULL));
@@ -251,7 +249,7 @@ gst_camera_bin_start_capture (GstCameraBin * camerabin)
 
     /* store the next capture buffer filename */
     location =
-        g_strdup_printf (camerabin->image_location, camerabin->image_index++);
+        g_strdup_printf (camerabin->location, camerabin->capture_index++);
     camerabin->image_location_list =
         g_slist_append (camerabin->image_location_list, location);
   }
@@ -332,8 +330,7 @@ gst_camera_bin_src_notify_readyforcapture (GObject * obj, GParamSpec * pspec,
       gst_element_set_state (camera->video_encodebin, GST_STATE_NULL);
       gst_element_set_state (camera->videobin_capsfilter, GST_STATE_NULL);
       gst_element_set_state (camera->videobin_queue, GST_STATE_NULL);
-      location =
-          g_strdup_printf (camera->video_location, camera->video_index++);
+      location = g_strdup_printf (camera->location, camera->capture_index++);
       GST_DEBUG_OBJECT (camera, "Switching videobin location to %s", location);
       g_object_set (camera->videosink, "location", location, NULL);
       g_free (location);
@@ -351,8 +348,7 @@ gst_camera_bin_dispose (GObject * object)
 {
   GstCameraBin *camerabin = GST_CAMERA_BIN_CAST (object);
 
-  g_free (camerabin->image_location);
-  g_free (camerabin->video_location);
+  g_free (camerabin->location);
 
   if (camerabin->src_capture_notify_id)
     g_signal_handler_disconnect (camerabin->src,
@@ -493,8 +489,8 @@ gst_camera_bin_class_init (GstCameraBinClass * klass)
       g_param_spec_string ("location", "Location",
           "Location to save the captured files. A %d might be used on the"
           "filename as a placeholder for a numeric index of the capture."
-          "Default for images is img_%d and vid_%d for videos",
-          DEFAULT_IMG_LOCATION, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          "Default is cap_%d",
+          DEFAULT_LOCATION, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (object_class, PROP_CAMERA_SRC,
       g_param_spec_object ("camera-source", "Camera source",
@@ -691,8 +687,7 @@ gst_camera_bin_init (GstCameraBin * camera)
 {
   camera->post_previews = DEFAULT_POST_PREVIEWS;
   camera->mode = DEFAULT_MODE;
-  camera->video_location = g_strdup (DEFAULT_VID_LOCATION);
-  camera->image_location = g_strdup (DEFAULT_IMG_LOCATION);
+  camera->location = g_strdup (DEFAULT_LOCATION);
   camera->viewfinderbin = gst_element_factory_make ("viewfinderbin", "vf-bin");
   camera->zoom = DEFAULT_ZOOM;
   camera->max_zoom = MAX_ZOOM;
@@ -1196,8 +1191,8 @@ gst_camera_bin_create_elements (GstCameraBin * camera)
     gst_element_set_locked_state (camera->videosink, TRUE);
     gst_element_set_locked_state (camera->imagesink, TRUE);
 
-    g_object_set (camera->videosink, "location", camera->video_location, NULL);
-    g_object_set (camera->imagesink, "location", camera->image_location, NULL);
+    g_object_set (camera->videosink, "location", camera->location, NULL);
+    g_object_set (camera->imagesink, "location", camera->location, NULL);
   }
 
   if (camera->video_profile_switch) {
@@ -1463,13 +1458,8 @@ gst_camera_bin_set_location (GstCameraBin * camera, const gchar * location)
 {
   GST_DEBUG_OBJECT (camera, "Setting mode %d location to %s", camera->mode,
       location);
-  if (camera->mode == MODE_IMAGE) {
-    g_free (camera->image_location);
-    camera->image_location = g_strdup (location);
-  } else {
-    g_free (camera->video_location);
-    camera->video_location = g_strdup (location);
-  }
+  g_free (camera->location);
+  camera->location = g_strdup (location);
 }
 
 static void
@@ -1692,11 +1682,7 @@ gst_camera_bin_get_property (GObject * object, guint prop_id,
       g_value_set_enum (value, camera->mode);
       break;
     case PROP_LOCATION:
-      if (camera->mode == MODE_VIDEO) {
-        g_value_set_string (value, camera->video_location);
-      } else {
-        g_value_set_string (value, camera->image_location);
-      }
+      g_value_set_string (value, camera->location);
       break;
     case PROP_CAMERA_SRC:
       g_value_set_object (value, camera->user_src);

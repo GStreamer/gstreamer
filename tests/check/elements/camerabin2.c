@@ -746,14 +746,6 @@ GST_START_TEST (test_image_video_cycle)
   if (!camera)
     return;
 
-  /* set filepaths for image and videos */
-  g_object_set (camera, "mode", 1, NULL);
-  g_object_set (camera, "location", make_test_file_name (IMAGE_FILENAME, -1),
-      NULL);
-  g_object_set (camera, "mode", 2, NULL);
-  g_object_set (camera, "location", make_test_file_name (VIDEO_FILENAME, -1),
-      NULL);
-
   if (gst_element_set_state (GST_ELEMENT (camera), GST_STATE_PLAYING) ==
       GST_STATE_CHANGE_FAILURE) {
     GST_WARNING ("setting camerabin to PLAYING failed");
@@ -769,6 +761,8 @@ GST_START_TEST (test_image_video_cycle)
 
     /* take a picture */
     g_object_set (camera, "mode", 1, NULL);
+    g_object_set (camera, "location", make_test_file_name (IMAGE_FILENAME, i),
+        NULL);
     g_signal_emit_by_name (camera, "start-capture", NULL);
     g_timeout_add_seconds (3, (GSourceFunc) g_main_loop_quit, main_loop);
     g_main_loop_run (main_loop);
@@ -777,6 +771,8 @@ GST_START_TEST (test_image_video_cycle)
 
     /* now go to video */
     g_object_set (camera, "mode", 2, NULL);
+    g_object_set (camera, "location", make_test_file_name (VIDEO_FILENAME, i),
+        NULL);
     g_signal_emit_by_name (camera, "start-capture", NULL);
     g_timeout_add_seconds (VIDEO_DURATION, (GSourceFunc) g_main_loop_quit,
         main_loop);
