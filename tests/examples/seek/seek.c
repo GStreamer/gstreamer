@@ -1135,6 +1135,9 @@ volume_notify_cb (GstElement * pipeline, GParamSpec * arg, gpointer user_dat)
 {
   gdouble cur_volume, new_volume;
 
+  if (volume_spinbutton == NULL)
+    return;
+
   g_object_get (pipeline, "volume", &new_volume, NULL);
   cur_volume = gtk_spin_button_get_value (GTK_SPIN_BUTTON (volume_spinbutton));
   if (fabs (cur_volume - new_volume) > 0.001) {
