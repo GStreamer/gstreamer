@@ -809,7 +809,7 @@ gst_tee_src_activate_pull (GstPad * pad, gboolean active)
     if (pad == tee->pull_pad)
       tee->pull_pad = NULL;
   }
-  tee->sink_mode = active && GST_ACTIVATE_PULL;
+  tee->sink_mode = active & GST_ACTIVATE_PULL;
   GST_OBJECT_UNLOCK (tee);
 
   gst_object_unref (tee);
