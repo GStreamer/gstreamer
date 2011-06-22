@@ -31,7 +31,7 @@ G_BEGIN_DECLS
 
 typedef struct _GstMemory GstMemory;
 typedef struct _GstMemoryInfo GstMemoryInfo;
-typedef struct _GstMemoryAllocator GstMemoryAllocator;
+typedef struct _GstAllocator GstAllocator;
 
 extern gsize gst_memory_alignment;
 
@@ -64,7 +64,7 @@ typedef enum {
 
 /**
  * GstMemory:
- * @allocator: pointer to the #GstMemoryAllocator
+ * @allocator: pointer to the #GstAllocator
  * @flags: memory flags
  * @refcount: refcount
  * @parent: parent memory block
@@ -73,7 +73,7 @@ typedef enum {
  * as the first member of their structure.
  */
 struct _GstMemory {
-  const GstMemoryAllocator *allocator;
+  const GstAllocator *allocator;
 
   GstMemoryFlags  flags;
   gint            refcount;
@@ -100,15 +100,15 @@ typedef enum {
 #define GST_MAP_READWRITE      (GST_MAP_READ | GST_MAP_WRITE)
 
 /**
- * GST_MEMORY_TRACE_NAME:
+ * GST_ALLOCATOR_SYSMEM:
  *
- * The name used for tracing memory allocations.
+ * The allocator name for the default system memory allocator
  */
-#define GST_MEMORY_TRACE_NAME           "GstMemory"
+#define GST_ALLOCATOR_SYSMEM   "SystemMemory"
 
 /**
  * GstMemoryAllocFunction:
- * @allocator: a #GstMemoryAllocator
+ * @allocator: a #GstAllocator
  * @maxsize: the maxsize
  * @align: the alignment
  * @user_data: user data
@@ -120,7 +120,7 @@ typedef enum {
  *
  * Returns: a newly allocated #GstMemory. Free with gst_memory_unref()
  */
-typedef GstMemory *  (*GstMemoryAllocFunction)  (const GstMemoryAllocator *allocator,
+typedef GstMemory *  (*GstMemoryAllocFunction)  (const GstAllocator *allocator,
                                                  gsize maxsize, gsize align,
                                                  gpointer user_data);
 
@@ -266,14 +266,15 @@ struct _GstMemoryInfo {
 void _gst_memory_init (void);
 
 /* allocators */
-const GstMemoryAllocator *  gst_memory_allocator_register    (const gchar *name, const GstMemoryInfo *info);
-const GstMemoryAllocator *  gst_memory_allocator_find        (const gchar *name);
+const GstAllocator *  gst_allocator_register    (const gchar *name, const GstMemoryInfo *info);
+const GstAllocator *  gst_allocator_find        (const gchar *name);
 
-void                        gst_memory_allocator_set_default (const GstMemoryAllocator * allocator);
+void                  gst_allocator_set_default (const GstAllocator * allocator);
 
 /* allocating memory blocks */
-GstMemory * gst_memory_allocator_alloc (const GstMemoryAllocator * allocator,
+GstMemory * gst_allocator_alloc        (const GstAllocator * allocator,
                                         gsize maxsize, gsize align);
+
 GstMemory * gst_memory_new_wrapped     (GstMemoryFlags flags, gpointer data, GFreeFunc free_func,
                                         gsize maxsize, gsize offset, gsize size);
 

@@ -240,7 +240,7 @@ struct _GstBaseSrcPrivate
   GstClockTime earliest_time;
 
   GstBufferPool *pool;
-  const GstMemoryAllocator *allocator;
+  const GstAllocator *allocator;
   guint prefix;
   guint alignment;
 };
@@ -2602,7 +2602,7 @@ null_buffer:
 
 static gboolean
 gst_base_src_set_allocation (GstBaseSrc * basesrc, GstBufferPool * pool,
-    const GstMemoryAllocator * allocator, guint prefix, guint alignment)
+    const GstAllocator * allocator, guint prefix, guint alignment)
 {
   GstBufferPool *oldpool;
   GstBaseSrcPrivate *priv = basesrc->priv;
@@ -2662,7 +2662,7 @@ gst_base_src_prepare_allocation (GstBaseSrc * basesrc, GstCaps * caps)
   gboolean result = TRUE;
   GstQuery *query;
   GstBufferPool *pool = NULL;
-  const GstMemoryAllocator *allocator = NULL;
+  const GstAllocator *allocator = NULL;
   guint size, min, max, prefix, alignment;
 
   bclass = GST_BASE_SRC_GET_CLASS (basesrc);
@@ -2692,7 +2692,7 @@ gst_base_src_prepare_allocation (GstBaseSrc * basesrc, GstCaps * caps)
     if (gst_query_get_n_allocation_memories (query) > 0) {
       mem = gst_query_parse_nth_allocation_memory (query, 0);
     }
-    allocator = gst_memory_allocator_find (mem);
+    allocator = gst_allocator_find (mem);
   } else if (pool == NULL) {
     /* fixed size, we can use a bufferpool */
     GstStructure *config;

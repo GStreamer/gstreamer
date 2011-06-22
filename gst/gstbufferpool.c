@@ -164,8 +164,7 @@ default_alloc_buffer (GstBufferPool * pool, GstBuffer ** buffer,
 
   *buffer = gst_buffer_new ();
 
-  mem =
-      gst_memory_allocator_alloc (NULL, priv->size + priv->prefix, priv->align);
+  mem = gst_allocator_alloc (NULL, priv->size + priv->prefix, priv->align);
   gst_memory_resize (mem, priv->prefix, priv->size);
   gst_buffer_take_memory (*buffer, -1, mem);
 

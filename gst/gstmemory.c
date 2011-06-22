@@ -27,13 +27,13 @@
  * GstMemory is a lightweight refcounted object that wraps a region of memory.
  * They are typically used to manage the data of a #GstBuffer.
  *
- * Memory is usually created by allocators with a gst_memory_allocator_alloc()
+ * Memory is usually created by allocators with a gst_allocator_alloc()
  * method call. When NULL is used as the allocator, the default allocator will
  * be used.
  *
- * New allocators can be registered with gst_memory_allocator_register().
+ * New allocators can be registered with gst_allocator_register().
  * Allocators are identified by name and can be retrieved with
- * gst_memory_allocator_find().
+ * gst_allocator_find().
  *
  * New memory can be created with gst_memory_new_wrapped() that wraps the memory
  * allocated elsewhere.
@@ -79,7 +79,7 @@ size_t gst_memory_alignment = 0;
 #endif
 #endif /* HAVE_POSIX_MEMALIGN */
 
-struct _GstMemoryAllocator
+struct _GstAllocator
 {
   GQuark name;
 
@@ -99,10 +99,10 @@ typedef struct
 } GstMemoryDefault;
 
 /* the default allocator */
-static const GstMemoryAllocator *_default_allocator;
+static const GstAllocator *_default_allocator;
 
 /* our predefined allocators */
-static const GstMemoryAllocator *_default_mem_impl;
+static const GstAllocator *_default_mem_impl;
 
 /* initialize the fields */
 static void
@@ -170,8 +170,7 @@ _default_mem_new_block (gsize maxsize, gsize align, gsize offset, gsize size)
 }
 
 static GstMemory *
-_default_mem_alloc (const GstMemoryAllocator * allocator, gsize maxsize,
-    gsize align)
+_default_mem_alloc (const GstAllocator * allocator, gsize maxsize, gsize align)
 {
   return (GstMemory *) _default_mem_new_block (maxsize, align, 0, maxsize);
 }
@@ -287,7 +286,7 @@ _fallback_copy (GstMemory * mem, gsize offset, gsize size)
   if (size == -1)
     size = msize > offset ? msize - offset : 0;
   /* use the same allocator as the memory we copy, FIXME, alignment?  */
-  copy = gst_memory_allocator_alloc (mem->allocator, size, 1);
+  copy = gst_allocator_alloc (mem->allocator, size, 1);
   dest = gst_memory_map (copy, NULL, NULL, GST_MAP_WRITE);
   memcpy (dest, data + offset, size);
   gst_memory_unmap (copy, dest, size);
@@ -330,8 +329,7 @@ _gst_memory_init (void)
 #endif
 #endif
 
-  _default_mem_impl =
-      gst_memory_allocator_register ("GstMemoryDefault", &_mem_info);
+  _default_mem_impl = gst_allocator_register (GST_ALLOCATOR_SYSMEM, &_mem_info);
 
   _default_allocator = _default_mem_impl;
 }
@@ -556,7 +554,7 @@ gst_memory_is_span (GstMemory * mem1, GstMemory * mem2, gsize * offset)
 }
 
 /**
- * gst_memory_allocator_register:
+ * gst_allocator_register:
  * @name: the name of the allocator
  * @info: #GstMemoryInfo
  *
@@ -569,12 +567,12 @@ gst_memory_is_span (GstMemory * mem1, GstMemory * mem2, gsize * offset)
  * The user_data field in @info will be passed to all calls of the alloc
  * function.
  *
- * Returns: a new #GstMemoryAllocator.
+ * Returns: a new #GstAllocator.
  */
-const GstMemoryAllocator *
-gst_memory_allocator_register (const gchar * name, const GstMemoryInfo * info)
+const GstAllocator *
+gst_allocator_register (const gchar * name, const GstMemoryInfo * info)
 {
-  GstMemoryAllocator *allocator;
+  GstAllocator *allocator;
 
 #define INSTALL_FALLBACK(_t) \
   if (allocator->info._t == NULL) allocator->info._t = _fallback_ ##_t;
@@ -589,7 +587,7 @@ gst_memory_allocator_register (const gchar * name, const GstMemoryInfo * info)
   g_return_val_if_fail (info->free != NULL, NULL);
   g_return_val_if_fail (info->share != NULL, NULL);
 
-  allocator = g_slice_new (GstMemoryAllocator);
+  allocator = g_slice_new (GstAllocator);
   allocator->name = g_quark_from_string (name);
   allocator->info = *info;
   INSTALL_FALLBACK (copy);
@@ -606,19 +604,19 @@ gst_memory_allocator_register (const gchar * name, const GstMemoryInfo * info)
 }
 
 /**
- * gst_memory_allocator_find:
+ * gst_allocator_find:
  * @name: the name of the allocator
  *
  * Find a previously registered allocator with @name. When @name is NULL, the
  * default allocator will be returned.
  *
- * Returns: a #GstMemoryAllocator or NULL when the allocator with @name was not
+ * Returns: a #GstAllocator or NULL when the allocator with @name was not
  * registered.
  */
-const GstMemoryAllocator *
-gst_memory_allocator_find (const gchar * name)
+const GstAllocator *
+gst_allocator_find (const gchar * name)
 {
-  const GstMemoryAllocator *allocator;
+  const GstAllocator *allocator;
 
   g_static_rw_lock_reader_lock (&lock);
   if (name) {
@@ -632,13 +630,13 @@ gst_memory_allocator_find (const gchar * name)
 }
 
 /**
- * gst_memory_allocator_set_default:
- * @allocator: a ##GstMemoryAllocator
+ * gst_allocator_set_default:
+ * @allocator: a #GstAllocator
  *
  * Set the default allocator.
  */
 void
-gst_memory_allocator_set_default (const GstMemoryAllocator * allocator)
+gst_allocator_set_default (const GstAllocator * allocator)
 {
   g_return_if_fail (allocator != NULL);
 
@@ -648,8 +646,8 @@ gst_memory_allocator_set_default (const GstMemoryAllocator * allocator)
 }
 
 /**
- * gst_memory_allocator_alloc:
- * @allocator: a #GstMemoryAllocator to use
+ * gst_allocator_alloc:
+ * @allocator: a #GstAllocator to use
  * @maxsize: allocated size of @data
  * @align: alignment for the data
  *
@@ -664,8 +662,7 @@ gst_memory_allocator_set_default (const GstMemoryAllocator * allocator)
  * Returns: a new #GstMemory.
  */
 GstMemory *
-gst_memory_allocator_alloc (const GstMemoryAllocator * allocator,
-    gsize maxsize, gsize align)
+gst_allocator_alloc (const GstAllocator * allocator, gsize maxsize, gsize align)
 {
   g_return_val_if_fail (((align + 1) & align) == 0, NULL);
 

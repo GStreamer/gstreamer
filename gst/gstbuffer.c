@@ -464,7 +464,7 @@ gst_buffer_new (void)
 
 /**
  * gst_buffer_new_allocate:
- * @allocator: the #GstMemoryAllocator to use
+ * @allocator: the #GstAllocator to use
  * @size: the size in bytes of the new buffer's data.
  * @align: the alignment of the buffer memory
  *
@@ -484,7 +484,7 @@ gst_buffer_new (void)
  *     be allocated.
  */
 GstBuffer *
-gst_buffer_new_allocate (const GstMemoryAllocator * allocator, gsize size,
+gst_buffer_new_allocate (const GstAllocator * allocator, gsize size,
     gsize align)
 {
   GstBuffer *newbuf;
@@ -496,7 +496,7 @@ gst_buffer_new_allocate (const GstMemoryAllocator * allocator, gsize size,
 
 #if 1
   if (size > 0) {
-    mem = gst_memory_allocator_alloc (allocator, size, align);
+    mem = gst_allocator_alloc (allocator, size, align);
     if (G_UNLIKELY (mem == NULL))
       goto no_memory;
   } else {
@@ -534,7 +534,7 @@ gst_buffer_new_allocate (const GstMemoryAllocator * allocator, gsize size,
    * buffer fields and the memory for the buffer might be just very slow. We
    * also need to do some more magic to get the alignment right. */
   asize = sizeof (GstBufferImpl) + size;
-  mem = gst_memory_allocator_alloc (allocator, asize, align);
+  mem = gst_allocator_alloc (allocator, asize, align);
   if (G_UNLIKELY (mem == NULL))
     goto no_memory;
 
@@ -1152,7 +1152,7 @@ _gst_buffer_arr_span (GstMemory ** mem[], gsize len[], guint n, gsize offset,
     gsize count, left;
     guint8 *dest, *ptr;
 
-    span = gst_memory_allocator_alloc (NULL, size, 0);
+    span = gst_allocator_alloc (NULL, size, 0);
     dest = gst_memory_map (span, NULL, NULL, GST_MAP_WRITE);
 
     ptr = dest;
