@@ -109,7 +109,7 @@ gst_rtp_buffer_allocate_data (GstBuffer * buffer, guint payload_len,
   len = GST_RTP_HEADER_LEN + csrc_count * sizeof (guint32)
       + payload_len + pad_len;
 
-  mem = gst_memory_allocator_alloc (NULL, len, 0);
+  mem = gst_allocator_alloc (NULL, len, 0);
 
   data = gst_memory_map (mem, NULL, NULL, GST_MAP_WRITE);
   /* fill in defaults */
