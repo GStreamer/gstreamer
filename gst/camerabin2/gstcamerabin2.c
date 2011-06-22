@@ -325,17 +325,11 @@ gst_camera_bin_src_notify_readyforcapture (GObject * obj, GParamSpec * pspec,
       gst_element_set_state (camera->videobin_queue, GST_STATE_PLAYING);
     } else if (camera->mode == MODE_IMAGE) {
       gst_element_set_state (camera->imagesink, GST_STATE_NULL);
-      gst_element_set_state (camera->image_encodebin, GST_STATE_NULL);
-      gst_element_set_state (camera->imagebin_queue, GST_STATE_NULL);
-      gst_element_set_state (camera->imagebin_capsfilter, GST_STATE_NULL);
       GST_DEBUG_OBJECT (camera, "Switching imagebin location to %s",
           camera->image_location);
       g_object_set (camera->imagesink, "location", camera->image_location,
           NULL);
       gst_element_set_state (camera->imagesink, GST_STATE_PLAYING);
-      gst_element_set_state (camera->image_encodebin, GST_STATE_PLAYING);
-      gst_element_set_state (camera->imagebin_capsfilter, GST_STATE_PLAYING);
-      gst_element_set_state (camera->imagebin_queue, GST_STATE_PLAYING);
     }
 
   }
