@@ -102,22 +102,19 @@ struct _GstURIHandlerInterface {
 
   /*< public >*/
   /* querying capabilities */
-  GstURIType		(* get_type)		(void);
-  gchar **		(* get_protocols)	(void);
+  GstURIType		(* get_type)		(GType type);
+  gchar **		(* get_protocols)	(GType type);
 
   /* using the interface */
   const gchar *		(* get_uri)		(GstURIHandler * handler);
   gboolean		(* set_uri)		(GstURIHandler * handler,
 						 const gchar *	 uri);
 
-  GstURIType		(* get_type_full)	(GType type);
-  gchar **		(* get_protocols_full)	(GType type);
-
   /*< private >*/
   /* we might want to add functions here to query features,
    * someone with gnome-vfs knowledge go ahead */
 
-  gpointer _gst_reserved[GST_PADDING - 2];
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 /* general URI functions */

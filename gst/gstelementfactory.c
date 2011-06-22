@@ -267,19 +267,14 @@ gst_element_register (GstPlugin * plugin, const gchar * name, guint rank,
     GstURIHandlerInterface *iface = (GstURIHandlerInterface *)
         g_type_interface_peek (klass, GST_TYPE_URI_HANDLER);
 
-    if (!iface || (!iface->get_type && !iface->get_type_full) ||
-        (!iface->get_protocols && !iface->get_protocols_full))
+    if (!iface || !iface->get_type || !iface->get_protocols)
       goto urierror;
     if (iface->get_type)
-      factory->uri_type = iface->get_type ();
-    else if (iface->get_type_full)
-      factory->uri_type = iface->get_type_full (factory->type);
+      factory->uri_type = iface->get_type (factory->type);
     if (!GST_URI_TYPE_IS_VALID (factory->uri_type))
       goto urierror;
     if (iface->get_protocols)
-      factory->uri_protocols = g_strdupv (iface->get_protocols ());
-    else if (iface->get_protocols_full)
-      factory->uri_protocols = iface->get_protocols_full (factory->type);
+      factory->uri_protocols = iface->get_protocols (factory->type);
     if (!factory->uri_protocols)
       goto urierror;
   }

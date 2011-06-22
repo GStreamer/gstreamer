@@ -581,13 +581,13 @@ seek_failed:
 /*** GSTURIHANDLER INTERFACE *************************************************/
 
 static GstURIType
-gst_fd_sink_uri_get_type (void)
+gst_fd_sink_uri_get_type (GType type)
 {
   return GST_URI_SINK;
 }
 
 static gchar **
-gst_fd_sink_uri_get_protocols (void)
+gst_fd_sink_uri_get_protocols (GType type)
 {
   static gchar *protocols[] = { (char *) "fd", NULL };
 

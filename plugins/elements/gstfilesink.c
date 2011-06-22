@@ -675,13 +675,13 @@ gst_file_sink_stop (GstBaseSink * basesink)
 /*** GSTURIHANDLER INTERFACE *************************************************/
 
 static GstURIType
-gst_file_sink_uri_get_type (void)
+gst_file_sink_uri_get_type (GType type)
 {
   return GST_URI_SINK;
 }
 
 static gchar **
-gst_file_sink_uri_get_protocols (void)
+gst_file_sink_uri_get_protocols (GType type)
 {
   static gchar *protocols[] = { (char *) "file", NULL };
 
