@@ -119,7 +119,6 @@
 #include <gst/interfaces/colorbalance.h>
 #include <gst/interfaces/propertyprobe.h>
 /* Helper functions */
-#include <gst/video/video.h>
 #include <gst/video/gstmetavideo.h>
 
 /* Object header */
@@ -1656,6 +1655,8 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
         GST_VIDEO_SINK_HEIGHT (xvimagesink));
   }
 
+  xvimagesink->info = info;
+
   /* After a resize, we want to redraw the borders in case the new frame size
    * doesn't cover the same area */
   xvimagesink->redraw_border = TRUE;
@@ -1828,8 +1829,7 @@ gst_xvimagesink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
     to_put = buf;
     res = GST_FLOW_OK;
   } else {
-    guint8 *data;
-    gsize size;
+    GstVideoFrame src, dest;
 
     /* Else we have to copy the data into our private image, */
     /* if we have one... */
@@ -1853,9 +1853,18 @@ gst_xvimagesink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
     GST_CAT_LOG_OBJECT (GST_CAT_PERFORMANCE, xvimagesink,
         "slow copy into bufferpool buffer %p", to_put);
 
-    data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
-    gst_buffer_fill (to_put, 0, data, size);
-    gst_buffer_unmap (buf, data, size);
+    if (!gst_video_frame_map (&src, &xvimagesink->info, buf, GST_MAP_READ))
+      goto invalid_buffer;
+
+    if (!gst_video_frame_map (&dest, &xvimagesink->info, to_put, GST_MAP_WRITE)) {
+      gst_video_frame_unmap (&src);
+      goto invalid_buffer;
+    }
+
+    gst_video_frame_copy (&dest, &src);
+
+    gst_video_frame_unmap (&dest);
+    gst_video_frame_unmap (&src);
   }
 
   if (!gst_xvimagesink_xvimage_put (xvimagesink, to_put))
@@ -1889,6 +1898,13 @@ wrong_size:
             G_GSIZE_FORMAT " - %" G_GSIZE_FORMAT, gst_buffer_get_size (to_put),
             gst_buffer_get_size (buf)));
     res = GST_FLOW_ERROR;
+    goto done;
+  }
+invalid_buffer:
+  {
+    /* No Window available to put our image into */
+    GST_WARNING_OBJECT (xvimagesink, "could map image");
+    res = GST_FLOW_OK;
     goto done;
   }
 no_window:

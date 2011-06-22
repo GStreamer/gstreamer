@@ -42,6 +42,9 @@
 #include <math.h>
 #include <stdlib.h>
 
+/* Helper functions */
+#include <gst/video/video.h>
+
 G_BEGIN_DECLS
 #define GST_TYPE_XVIMAGESINK \
   (gst_xvimagesink_get_type())
@@ -212,6 +215,8 @@ struct _GstXvImageSink
 
   GThread *event_thread;
   gboolean running;
+
+  GstVideoInfo info;
 
   /* Framerate numerator and denominator */
   gint fps_n;

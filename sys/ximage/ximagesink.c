@@ -116,6 +116,7 @@
 #include <gst/gstinfo.h>
 
 GST_DEBUG_CATEGORY_EXTERN (gst_debug_ximagesink);
+GST_DEBUG_CATEGORY_EXTERN (GST_CAT_PERFORMANCE);
 #define GST_CAT_DEFAULT gst_debug_ximagesink
 
 typedef struct
@@ -1122,6 +1123,9 @@ gst_ximagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
     ximagesink->xwindow = gst_ximagesink_xwindow_new (ximagesink,
         GST_VIDEO_SINK_WIDTH (ximagesink), GST_VIDEO_SINK_HEIGHT (ximagesink));
   }
+
+  ximagesink->info = info;
+
   /* Remember to draw borders for next frame */
   ximagesink->draw_border = TRUE;
 
@@ -1287,8 +1291,7 @@ gst_ximagesink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
     to_put = buf;
     res = GST_FLOW_OK;
   } else {
-    guint8 *data;
-    gsize size;
+    GstVideoFrame src, dest;
 
     /* Else we have to copy the data into our private image, */
     /* if we have one... */
@@ -1309,9 +1312,21 @@ gst_ximagesink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
     if (gst_buffer_get_size (to_put) < gst_buffer_get_size (buf))
       goto wrong_size;
 
-    data = gst_buffer_map (to_put, &size, NULL, GST_MAP_WRITE);
-    gst_buffer_extract (buf, 0, data, size);
-    gst_buffer_unmap (to_put, data, size);
+    GST_CAT_LOG_OBJECT (GST_CAT_PERFORMANCE, ximagesink,
+        "slow copy into bufferpool buffer %p", to_put);
+
+    if (!gst_video_frame_map (&src, &ximagesink->info, buf, GST_MAP_READ))
+      goto invalid_buffer;
+
+    if (!gst_video_frame_map (&dest, &ximagesink->info, to_put, GST_MAP_WRITE)) {
+      gst_video_frame_unmap (&src);
+      goto invalid_buffer;
+    }
+
+    gst_video_frame_copy (&dest, &src);
+
+    gst_video_frame_unmap (&dest);
+    gst_video_frame_unmap (&src);
   }
 
   if (!gst_ximagesink_ximage_put (ximagesink, to_put))
@@ -1345,6 +1360,13 @@ wrong_size:
             G_GSIZE_FORMAT " - %" G_GSIZE_FORMAT, gst_buffer_get_size (to_put),
             gst_buffer_get_size (buf)));
     res = GST_FLOW_ERROR;
+    goto done;
+  }
+invalid_buffer:
+  {
+    /* No Window available to put our image into */
+    GST_WARNING_OBJECT (ximagesink, "could map image");
+    res = GST_FLOW_OK;
     goto done;
   }
 no_window:

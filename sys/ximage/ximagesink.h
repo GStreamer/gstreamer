@@ -38,6 +38,9 @@
 #include <string.h>
 #include <math.h>
 
+/* Helper functions */
+#include <gst/video/video.h>
+
 G_BEGIN_DECLS
 #define GST_TYPE_XIMAGESINK \
   (gst_ximagesink_get_type())
@@ -170,6 +173,8 @@ struct _GstXImageSink
 
   GThread *event_thread;
   gboolean running;
+
+  GstVideoInfo info;
 
   /* Framerate numerator and denominator */
   gint fps_n;
