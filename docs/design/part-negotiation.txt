@@ -60,13 +60,10 @@ The general flow for a source pad starting the negotiation.
 
  [element wants to create a buffer]
  if not format
-   # see what the peer can do
-   peercaps = gst_pad_peer_get_caps (srcpad)
    # see what we can do
    ourcaps = gst_pad_get_caps (srcpad)
-
-   # get common formats
-   candidates = gst_caps_intersect (peercaps, ourcaps)
+   # see what the peer can do filtered against our caps
+   candidates = gst_pad_peer_get_caps (srcpad, ourcaps)
 
    foreach candidate in candidates
      # make sure the caps is fixed
@@ -82,8 +79,10 @@ The general flow for a source pad starting the negotiation.
    done
  endif
 
- buffer = gst_buffer_new_and_alloc (size);
- [fill buffer and push]
+ #negotiate allocator/bufferpool with the ALLOCATION query
+
+ buffer = gst_buffer_new_allocate (NULL, size, 0);
+ # fill buffer and push
 
 
 The general flow for a sink pad starting a renegotiation.
