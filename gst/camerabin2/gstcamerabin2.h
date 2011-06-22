@@ -74,8 +74,14 @@ struct _GstCameraBin
 
   gint processing_counter; /* atomic int */
 
-  /* Index of the auto incrementing file index for video recordings */
+  /* Index of the auto incrementing file index for captures */
   gint video_index;
+  gint image_index;
+
+  /* stores list of image locations to be pushed to the image sink
+   * as file location change notifications, they are pushed before
+   * each buffer capture */
+  GSList *image_location_list;
 
   gboolean video_profile_switch;
   gboolean image_profile_switch;
