@@ -1606,13 +1606,13 @@ gst_app_src_set_callbacks (GstAppSrc * appsrc,
 /*** GSTURIHANDLER INTERFACE *************************************************/
 
 static GstURIType
-gst_app_src_uri_get_type (void)
+gst_app_src_uri_get_type (GType type)
 {
   return GST_URI_SRC;
 }
 
 static gchar **
-gst_app_src_uri_get_protocols (void)
+gst_app_src_uri_get_protocols (GType type)
 {
   static gchar *protocols[] = { (char *) "appsrc", NULL };
 

@@ -1359,13 +1359,13 @@ gst_app_sink_set_callbacks (GstAppSink * appsink,
 /*** GSTURIHANDLER INTERFACE *************************************************/
 
 static GstURIType
-gst_app_sink_uri_get_type (void)
+gst_app_sink_uri_get_type (GType type)
 {
   return GST_URI_SINK;
 }
 
 static gchar **
-gst_app_sink_uri_get_protocols (void)
+gst_app_sink_uri_get_protocols (GType type)
 {
   static gchar *protocols[] = { (char *) "appsink", NULL };
 

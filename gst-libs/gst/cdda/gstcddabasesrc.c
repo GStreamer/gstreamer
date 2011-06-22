@@ -911,13 +911,13 @@ gst_cdda_base_src_handle_event (GstBaseSrc * basesrc, GstEvent * event)
 }
 
 static GstURIType
-gst_cdda_base_src_uri_get_type (void)
+gst_cdda_base_src_uri_get_type (GType type)
 {
   return GST_URI_SRC;
 }
 
 static gchar **
-gst_cdda_base_src_uri_get_protocols (void)
+gst_cdda_base_src_uri_get_protocols (GType type)
 {
   static gchar *protocols[] = { (char *) "cdda", NULL };
 

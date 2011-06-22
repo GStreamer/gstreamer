@@ -139,19 +139,19 @@ gst_gio_get_supported_protocols (void)
 }
 
 static GstURIType
-gst_gio_uri_handler_get_type_sink (void)
+gst_gio_uri_handler_get_type_sink (GType type)
 {
   return GST_URI_SINK;
 }
 
 static GstURIType
-gst_gio_uri_handler_get_type_src (void)
+gst_gio_uri_handler_get_type_src (GType type)
 {
   return GST_URI_SRC;
 }
 
 static gchar **
-gst_gio_uri_handler_get_protocols (void)
+gst_gio_uri_handler_get_protocols (GType type)
 {
   static gchar **protocols = NULL;
 
