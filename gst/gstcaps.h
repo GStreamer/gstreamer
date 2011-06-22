@@ -128,7 +128,7 @@ typedef enum {
 #define GST_STATIC_CAPS(string) \
 { \
   /* miniobject */ { { 0, 0, 0, 0, NULL, NULL, NULL }, \
-  /* caps */ NULL,  GST_PADDING_INIT }, \
+  /* caps */ NULL }, \
   /* string */ string, \
   GST_PADDING_INIT \
 }
@@ -315,10 +315,7 @@ struct _GstCaps {
   GstMiniObject mini_object;
 
   /*< private >*/
-  GPtrArray *structs;
-
-  /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
+  gpointer     priv;
 };
 
 /**
@@ -350,6 +347,7 @@ GstCaps *         gst_caps_new_full_valist         (GstStructure  *structure,
 
 GType             gst_static_caps_get_type         (void);
 GstCaps *         gst_static_caps_get              (GstStaticCaps *static_caps);
+void              gst_static_caps_cleanup          (GstStaticCaps *static_caps);
 
 /* manipulation */
 void              gst_caps_append                  (GstCaps       *caps1,
