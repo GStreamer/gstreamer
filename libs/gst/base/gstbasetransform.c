@@ -2018,7 +2018,7 @@ gst_base_transform_chain (GstPad * pad, GstBuffer * buffer)
   /* outbuf can be NULL, this means a dropped buffer, if we have a buffer but
    * GST_BASE_TRANSFORM_FLOW_DROPPED we will not push either. */
   if (outbuf != NULL) {
-    if ((ret == GST_FLOW_OK)) {
+    if (ret == GST_FLOW_OK) {
       GstClockTime position_out = GST_CLOCK_TIME_NONE;
 
       /* Remember last stop position */
