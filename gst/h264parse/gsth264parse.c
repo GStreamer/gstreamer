@@ -1134,11 +1134,11 @@ gst_h264_parse_make_codec_data (GstH264Parse * h264parse)
       num_sps++;
       /* size bytes also count */
       sps_size += GST_BUFFER_SIZE (nal) - 4 + 2;
-      if (GST_BUFFER_SIZE (nal) >= 7) {
+      if (GST_BUFFER_SIZE (nal) >= 8) {
         found = TRUE;
-        profile_idc = (GST_BUFFER_DATA (nal))[4];
-        profile_comp = (GST_BUFFER_DATA (nal))[5];
-        level_idc = (GST_BUFFER_DATA (nal))[6];
+        profile_idc = (GST_BUFFER_DATA (nal))[5];
+        profile_comp = (GST_BUFFER_DATA (nal))[6];
+        level_idc = (GST_BUFFER_DATA (nal))[7];
       }
     }
   }
