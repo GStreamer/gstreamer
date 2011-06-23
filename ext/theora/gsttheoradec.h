@@ -74,6 +74,7 @@ struct _GstTheoraDec
   gint offset_x, offset_y;
   gint output_bpp;
   GstBufferPool *pool;
+  gboolean use_cropping;
 
   /* telemetry debuging options */
   gint telemetry_mv;

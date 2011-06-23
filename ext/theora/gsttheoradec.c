@@ -829,12 +829,16 @@ theora_negotiate_pool (GstTheoraDec * dec, GstCaps * caps, GstVideoInfo * info)
    * it through the video info API. We could also see if the pool support this
    * metadata and only activate it then. */
   gst_buffer_pool_config_add_meta (config, GST_META_API_VIDEO);
-  /* FIXME, we can check if downstream supports clipping metadata */
+
+  /* check if downstream supports cropping */
+  dec->use_cropping =
+      gst_query_has_allocation_meta (query, GST_META_API_VIDEO_CROP);
 
   gst_buffer_pool_set_config (pool, config);
-
   /* and activate */
   gst_buffer_pool_set_active (pool, TRUE);
+
+  gst_query_unref (query);
 
   return GST_FLOW_OK;
 }
@@ -909,11 +913,9 @@ theora_handle_type_packet (GstTheoraDec * dec, ogg_packet * packet)
      * so no need to handle them ourselves. */
     if (dec->offset_x & 1 && dec->info.pixel_fmt != TH_PF_444) {
       dec->offset_x--;
-      width++;
     }
     if (dec->offset_y & 1 && dec->info.pixel_fmt == TH_PF_420) {
       dec->offset_y--;
-      height++;
     }
   } else {
     /* no cropping, use the encoded dimensions */
@@ -1107,10 +1109,13 @@ static GstFlowReturn
 theora_handle_image (GstTheoraDec * dec, th_ycbcr_buffer buf, GstBuffer ** out)
 {
   gint width, height, stride;
+  gint pic_width, pic_height;
   GstFlowReturn result;
   int i, plane;
   guint8 *dest, *src;
   GstVideoFrame frame;
+  GstMetaVideoCrop *crop;
+  gint offset_x, offset_y;
 
   if (gst_pad_check_reconfigure (dec->srcpad)) {
     GstCaps *caps;
@@ -1127,24 +1132,52 @@ theora_handle_image (GstTheoraDec * dec, th_ycbcr_buffer buf, GstBuffer ** out)
   if (!gst_video_frame_map (&frame, &dec->vinfo, *out, GST_MAP_WRITE))
     goto invalid_frame;
 
-  /* FIXME, we can do things slightly more efficient when we know that
-   * downstream understands clipping and video metadata */
+  if (dec->crop && !dec->use_cropping) {
+    /* we need to crop the hard way */
+    offset_x = dec->info.pic_x;
+    offset_y = dec->info.pic_y;
+    pic_width = dec->info.pic_width;
+    pic_height = dec->info.pic_height;
+    /* Ensure correct offsets in chroma for formats that need it
+     * by rounding the offset. libtheora will add proper pixels,
+     * so no need to handle them ourselves. */
+    if (offset_x & 1 && dec->info.pixel_fmt != TH_PF_444)
+      offset_x--;
+    if (offset_y & 1 && dec->info.pixel_fmt == TH_PF_420)
+      offset_y--;
+  } else {
+    /* copy the whole frame */
+    offset_x = 0;
+    offset_y = 0;
+    pic_width = dec->info.frame_width;
+    pic_height = dec->info.frame_height;
+
+    if (dec->use_cropping) {
+      crop = gst_buffer_add_meta_video_crop (*out);
+      /* we can do things slightly more efficient when we know that
+       * downstream understands clipping */
+      crop->x = dec->info.pic_x;
+      crop->y = dec->info.pic_y;
+      crop->width = dec->info.pic_width;
+      crop->height = dec->info.pic_height;
+    }
+  }
 
   for (plane = 0; plane < 3; plane++) {
     width =
         gst_video_format_get_component_width (frame.info.format, plane,
-        dec->vinfo.width);
+        pic_width);
     height =
         gst_video_format_get_component_height (frame.info.format, plane,
-        dec->vinfo.height);
+        pic_height);
 
     stride = GST_VIDEO_FRAME_STRIDE (&frame, plane);
     dest = GST_VIDEO_FRAME_DATA (&frame, plane);
 
     src = buf[plane].data;
-    src += ((height == dec->vinfo.height) ? dec->offset_y : dec->offset_y / 2)
+    src += ((height == pic_height) ? offset_y : offset_y / 2)
         * buf[plane].stride;
-    src += (width == dec->vinfo.width) ? dec->offset_x : dec->offset_x / 2;
+    src += (width == pic_width) ? offset_x : offset_x / 2;
 
     for (i = 0; i < height; i++) {
       memcpy (dest, src, width);
