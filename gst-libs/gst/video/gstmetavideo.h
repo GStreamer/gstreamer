@@ -28,8 +28,11 @@ G_BEGIN_DECLS
 
 #define GST_META_API_VIDEO   "GstMetaVideo"
 #define GST_META_INFO_VIDEO  (gst_meta_video_get_info())
-
 typedef struct _GstMetaVideo GstMetaVideo;
+
+#define GST_META_API_VIDEO_CROP   "GstMetaVideoCrop"
+#define GST_META_INFO_VIDEO_CROP  (gst_meta_video_crop_get_info())
+typedef struct _GstMetaVideoCrop GstMetaVideoCrop;
 
 /**
  * GstMetaVideo:
@@ -76,6 +79,29 @@ gpointer       gst_meta_video_map        (GstMetaVideo *meta, guint plane, gint 
                                           GstMapFlags flags);
 gboolean       gst_meta_video_unmap      (GstMetaVideo *meta, guint plane, gpointer data);
 
+/**
+ * GstMetaVideoCrop:
+ * @meta: parent #GstMeta
+ * @x: the horizontal offset
+ * @y: the vertical offset
+ * @width: the cropped width
+ * @height: the cropped height
+ *
+ * Extra buffer metadata describing image cropping.
+ */
+struct _GstMetaVideoCrop {
+  GstMeta       meta;
+
+  guint         x;
+  guint         y;
+  guint         width;
+  guint         height;
+};
+
+const GstMetaInfo * gst_meta_video_crop_get_info (void);
+
+#define gst_buffer_get_meta_video_crop(b) ((GstMetaVideoCrop*)gst_buffer_get_meta((b),GST_META_INFO_VIDEO_CROP))
+GstMetaVideoCrop * gst_buffer_add_meta_video_crop (GstBuffer *buffer);
 
 G_END_DECLS
 

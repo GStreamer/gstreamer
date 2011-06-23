@@ -155,3 +155,30 @@ gst_meta_video_unmap (GstMetaVideo * meta, guint plane, gpointer data)
 
   return TRUE;
 }
+
+const GstMetaInfo *
+gst_meta_video_crop_get_info (void)
+{
+  static const GstMetaInfo *meta_video_crop_info = NULL;
+
+  if (meta_video_crop_info == NULL) {
+    meta_video_crop_info =
+        gst_meta_register (GST_META_API_VIDEO_CROP, "GstMetaVideoCrop",
+        sizeof (GstMetaVideoCrop), (GstMetaInitFunction) NULL,
+        (GstMetaFreeFunction) NULL, (GstMetaCopyFunction) NULL,
+        (GstMetaTransformFunction) NULL);
+  }
+  return meta_video_crop_info;
+}
+
+GstMetaVideoCrop *
+gst_buffer_add_meta_video_crop (GstBuffer * buffer)
+{
+  GstMetaVideoCrop *meta;
+
+  meta =
+      (GstMetaVideoCrop *) gst_buffer_add_meta (buffer,
+      GST_META_INFO_VIDEO_CROP, NULL);
+
+  return meta;
+}
