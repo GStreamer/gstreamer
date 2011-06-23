@@ -271,8 +271,10 @@ static gboolean
 gst_xvimagesink_xvimage_put (GstXvImageSink * xvimagesink, GstBuffer * xvimage)
 {
   GstMetaXvImage *meta;
+  GstMetaVideoCrop *crop;
   GstVideoRectangle result;
   gboolean draw_border = FALSE;
+  GstVideoRectangle src, dst;
 
   /* We take the flow_lock. If expose is in there we don't want to run
      concurrently from the data flow thread */
@@ -312,13 +314,21 @@ gst_xvimagesink_xvimage_put (GstXvImageSink * xvimagesink, GstBuffer * xvimage)
 
   meta = gst_buffer_get_meta_xvimage (xvimage);
 
-  if (xvimagesink->keep_aspect) {
-    GstVideoRectangle src, dst;
+  crop = gst_buffer_get_meta_video_crop (xvimage);
 
-    /* We use the calculated geometry from _setcaps as a source to respect
-       source and screen pixel aspect ratios. */
-    src.w = GST_VIDEO_SINK_WIDTH (xvimagesink);
-    src.h = GST_VIDEO_SINK_HEIGHT (xvimagesink);
+  if (crop) {
+    src.x = crop->x;
+    src.y = crop->y;
+    src.w = crop->width;
+    src.h = crop->height;
+  } else {
+    src.x = 0;
+    src.y = 0;
+    src.w = meta->width;
+    src.h = meta->height;
+  }
+
+  if (xvimagesink->keep_aspect) {
     dst.w = xvimagesink->render_rect.w;
     dst.h = xvimagesink->render_rect.h;
 
@@ -347,8 +357,7 @@ gst_xvimagesink_xvimage_put (GstXvImageSink * xvimagesink, GstBuffer * xvimage)
         xvimagesink->xcontext->xv_port_id,
         xvimagesink->xwindow->win,
         xvimagesink->xwindow->gc, meta->xvimage,
-        xvimagesink->disp_x, xvimagesink->disp_y,
-        xvimagesink->disp_width, xvimagesink->disp_height,
+        src.x, src.y, src.w, src.h,
         result.x, result.y, result.w, result.h, FALSE);
   } else
 #endif /* HAVE_XSHM */
@@ -357,9 +366,7 @@ gst_xvimagesink_xvimage_put (GstXvImageSink * xvimagesink, GstBuffer * xvimage)
         xvimagesink->xcontext->xv_port_id,
         xvimagesink->xwindow->win,
         xvimagesink->xwindow->gc, meta->xvimage,
-        xvimagesink->disp_x, xvimagesink->disp_y,
-        xvimagesink->disp_width, xvimagesink->disp_height,
-        result.x, result.y, result.w, result.h);
+        src.x, src.y, src.w, src.h, result.x, result.y, result.w, result.h);
   }
 
   XSync (xvimagesink->xcontext->disp, FALSE);
@@ -1535,11 +1542,8 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   GstBufferPool *newpool, *oldpool;
   GstVideoInfo info;
   guint32 im_format = 0;
-  gint disp_x, disp_y;
-  gint disp_width, disp_height;
   gint video_par_n, video_par_d;        /* video's PAR */
   gint display_par_n, display_par_d;    /* display's PAR */
-  const GValue *caps_disp_reg;
   guint num, den;
   gint size;
 
@@ -1586,28 +1590,9 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
     display_par_d = 1;
   }
 
-  /* get the display region */
-  caps_disp_reg = gst_structure_get_value (structure, "display-region");
-  if (caps_disp_reg) {
-    disp_x = g_value_get_int (gst_value_array_get_value (caps_disp_reg, 0));
-    disp_y = g_value_get_int (gst_value_array_get_value (caps_disp_reg, 1));
-    disp_width = g_value_get_int (gst_value_array_get_value (caps_disp_reg, 2));
-    disp_height =
-        g_value_get_int (gst_value_array_get_value (caps_disp_reg, 3));
-  } else {
-    disp_x = disp_y = 0;
-    disp_width = info.width;
-    disp_height = info.height;
-  }
-
   if (!gst_video_calculate_display_ratio (&num, &den, info.width,
           info.height, video_par_n, video_par_d, display_par_n, display_par_d))
     goto no_disp_ratio;
-
-  xvimagesink->disp_x = disp_x;
-  xvimagesink->disp_y = disp_y;
-  xvimagesink->disp_width = disp_width;
-  xvimagesink->disp_height = disp_height;
 
   GST_DEBUG_OBJECT (xvimagesink,
       "video width/height: %dx%d, calculated display ratio: %d/%d",

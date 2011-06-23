@@ -227,6 +227,7 @@ static gboolean
 gst_ximagesink_ximage_put (GstXImageSink * ximagesink, GstBuffer * ximage)
 {
   GstMetaXImage *meta;
+  GstMetaVideoCrop *crop;
   GstVideoRectangle src, dst, result;
   gboolean draw_border = FALSE;
 
@@ -267,9 +268,19 @@ gst_ximagesink_ximage_put (GstXImageSink * ximagesink, GstBuffer * ximage)
   }
 
   meta = gst_buffer_get_meta_ximage (ximage);
+  crop = gst_buffer_get_meta_video_crop (ximage);
 
-  src.w = meta->width;
-  src.h = meta->height;
+  if (crop) {
+    src.x = crop->x;
+    src.y = crop->y;
+    src.w = crop->width;
+    src.h = crop->height;
+  } else {
+    src.x = 0;
+    src.y = 0;
+    src.w = meta->width;
+    src.h = meta->height;
+  }
   dst.w = ximagesink->xwindow->width;
   dst.h = ximagesink->xwindow->height;
 
@@ -289,7 +300,7 @@ gst_ximagesink_ximage_put (GstXImageSink * ximagesink, GstBuffer * ximage)
         ximage, 0, 0, result.x, result.y, result.w, result.h,
         ximagesink->xwindow->width, ximagesink->xwindow->height);
     XShmPutImage (ximagesink->xcontext->disp, ximagesink->xwindow->win,
-        ximagesink->xwindow->gc, meta->ximage, 0, 0, result.x, result.y,
+        ximagesink->xwindow->gc, meta->ximage, src.x, src.y, result.x, result.y,
         result.w, result.h, FALSE);
   } else
 #endif /* HAVE_XSHM */
@@ -299,7 +310,7 @@ gst_ximagesink_ximage_put (GstXImageSink * ximagesink, GstBuffer * ximage)
         ximage, 0, 0, result.x, result.y, result.w, result.h,
         ximagesink->xwindow->width, ximagesink->xwindow->height);
     XPutImage (ximagesink->xcontext->disp, ximagesink->xwindow->win,
-        ximagesink->xwindow->gc, meta->ximage, 0, 0, result.x, result.y,
+        ximagesink->xwindow->gc, meta->ximage, src.x, src.y, result.x, result.y,
         result.w, result.h);
   }
 

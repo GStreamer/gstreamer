@@ -247,10 +247,6 @@ struct _GstXvImageSink
   /* size of incoming video, used as the size for XvImage */
   guint video_width, video_height;
 
-  /* display sizes, used for clipping the image */
-  gint disp_x, disp_y;
-  gint disp_width, disp_height;
-
   /* port attributes */
   gboolean autopaint_colorkey;
   gint colorkey;
