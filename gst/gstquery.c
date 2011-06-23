@@ -1682,6 +1682,7 @@ gst_query_add_allocation_meta (GstQuery * query, const gchar * api)
   GstStructure *structure;
 
   g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_ALLOCATION);
+  g_return_if_fail (api != NULL);
   g_return_if_fail (gst_query_is_writable (query));
 
   structure = GST_QUERY_STRUCTURE (query);
@@ -1765,6 +1766,41 @@ gst_query_parse_nth_allocation_meta (GstQuery * query, guint index)
       ret = g_value_get_string (api_value);
   }
   return ret;
+}
+
+/**
+ * gst_query_has_allocation_meta
+ * @query: a GST_QUERY_ALLOCATION type query #GstQuery
+ * @api: the metadata API
+ *
+ * Check if @query has metadata @api set.
+ *
+ * Returns: TRUE when @api is in the list of metadata.
+ */
+gboolean
+gst_query_has_allocation_meta (GstQuery * query, const gchar * api)
+{
+  const GValue *value;
+  GstStructure *structure;
+
+  g_return_val_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_ALLOCATION, FALSE);
+  g_return_val_if_fail (api != NULL, FALSE);
+
+  structure = GST_QUERY_STRUCTURE (query);
+  value = gst_structure_id_get_value (structure, GST_QUARK (META));
+  if (value) {
+    GValueArray *array;
+    GValue *api_value;
+    guint i;
+
+    array = (GValueArray *) g_value_get_boxed (value);
+    for (i = 0; i < array->n_values; i++) {
+      api_value = g_value_array_get_nth (array, i);
+      if (!strcmp (api, g_value_get_string (api_value)))
+        return TRUE;
+    }
+  }
+  return FALSE;
 }
 
 /**
