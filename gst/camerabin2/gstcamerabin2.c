@@ -1398,7 +1398,8 @@ gst_camera_bin_change_state (GstElement * element, GstStateChange trans)
       gst_tag_setter_reset_tags (GST_TAG_SETTER (camera));
       GST_CAMERA_BIN_RESET_PROCESSING_COUNTER (camera);
 
-      g_slist_free_full (camera->image_location_list, g_free);
+      g_slist_foreach (camera->image_location_list, (GFunc) g_free, NULL);
+      g_slist_free (camera->image_location_list);
       camera->image_location_list = NULL;
 
       /* explicitly set to READY as they might be outside of the bin */
