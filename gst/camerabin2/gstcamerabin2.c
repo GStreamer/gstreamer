@@ -828,6 +828,12 @@ encodebin_element_added (GstElement * encodebin, GstElement * new_element,
       g_object_set (new_element, "skip-to-first", TRUE, NULL);
     }
   }
+
+  if (gst_element_implements_interface (new_element, GST_TYPE_TAG_SETTER)) {
+    GstTagSetter *tagsetter = GST_TAG_SETTER (new_element);
+
+    gst_tag_setter_set_tag_merge_mode (tagsetter, GST_TAG_MERGE_REPLACE);
+  }
 }
 
 #define VIDEO_PAD 1
