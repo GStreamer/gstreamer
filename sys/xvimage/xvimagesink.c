@@ -2004,6 +2004,7 @@ gst_xvimagesink_sink_query (GstPad * sinkpad, GstQuery * query)
 
       /* we also support various metadata */
       gst_query_add_allocation_meta (query, GST_META_API_VIDEO);
+      gst_query_add_allocation_meta (query, GST_META_API_VIDEO_CROP);
 
       gst_object_unref (pool);
       break;
