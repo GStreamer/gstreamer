@@ -1,8 +1,10 @@
 /* GStreamer
  * Copyright (C) <2007> Jan Schmidt <thaytan@mad.scientist.com>
  * Copyright (C) <2011> Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
- * Copyright (C) <2011> Collabora Multimedia
+ * Copyright (C) <2011> Thibault Saunier <thibault.saunier@collabora.com>
+ * Copyright (C) <2011> Collabora ltd
  * Copyright (C) <2011> Nokia Corporation
+ * Copyright (C) <2011> Intel Corporation
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -168,6 +170,7 @@ gst_mpegv_parse_class_init (GstMpegvParseClass * klass)
 static void
 gst_mpegv_parse_init (GstMpegvParse * parse, GstMpegvParseClass * g_class)
 {
+  parse->mpeg_version = 0;
 }
 
 static void
@@ -175,7 +178,7 @@ gst_mpegv_parse_reset_frame (GstMpegvParse * mpvparse)
 {
   /* done parsing; reset state */
   mpvparse->last_sc = -1;
-  mpvparse->seq_offset = -1;
+  mpvparse->seq_offset = G_MAXUINT;
   mpvparse->pic_offset = -1;
 }
 
@@ -187,7 +190,9 @@ gst_mpegv_parse_reset (GstMpegvParse * mpvparse)
   mpvparse->update_caps = TRUE;
 
   gst_buffer_replace (&mpvparse->config, NULL);
-  memset (&mpvparse->params, 0, sizeof (mpvparse->params));
+  memset (&mpvparse->sequencehdr, 0, sizeof (mpvparse->sequencehdr));
+  memset (&mpvparse->sequenceext, 0, sizeof (mpvparse->sequenceext));
+  memset (&mpvparse->pichdr, 0, sizeof (mpvparse->pichdr));
 }
 
 static gboolean
@@ -217,22 +222,44 @@ gst_mpegv_parse_stop (GstBaseParse * parse)
 }
 
 static gboolean
-gst_mpegv_parse_process_config (GstMpegvParse * mpvparse, const guint8 * data,
-    gsize size)
+gst_mpegv_parse_process_config (GstMpegvParse * mpvparse, GstBuffer * buf,
+    guint size)
 {
+  GList *tmp;
+  guint8 *data = GST_BUFFER_DATA (buf);
+  data = data + mpvparse->seq_offset;
+
   /* only do stuff if something new */
   if (mpvparse->config && size == GST_BUFFER_SIZE (mpvparse->config) &&
       memcmp (GST_BUFFER_DATA (mpvparse->config), data, size) == 0)
     return TRUE;
 
-  if (!gst_mpeg_video_params_parse_config (&mpvparse->params, data, size)) {
-    GST_DEBUG_OBJECT (mpvparse, "failed to parse config data (size %"
-        G_GSSIZE_FORMAT ")", size);
+  if (!gst_mpeg_video_parse_sequence_header (&mpvparse->sequencehdr, data,
+          GST_BUFFER_SIZE (buf) - mpvparse->seq_offset, 0)) {
+    GST_DEBUG_OBJECT (mpvparse,
+        "failed to parse config data (size %" G_GSSIZE_FORMAT ") at offset %d",
+        size, mpvparse->seq_offset);
     return FALSE;
   }
 
   GST_LOG_OBJECT (mpvparse, "accepting parsed config size %" G_GSSIZE_FORMAT,
       size);
+
+  /* Set mpeg version, and parse sequence extension */
+  if (mpvparse->mpeg_version <= 0) {
+    GstMpegVideoTypeOffsetSize *tpoffsz;
+
+    mpvparse->mpeg_version = 1;
+    for (tmp = mpvparse->typeoffsize; tmp; tmp = tmp->next) {
+      tpoffsz = tmp->data;
+
+      if (tpoffsz->type == GST_MPEG_VIDEO_PACKET_EXTENSION) {
+        mpvparse->mpeg_version = 2;
+        gst_mpeg_video_parse_sequence_extension (&mpvparse->sequenceext,
+            GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf), tpoffsz->offset);
+      }
+    }
+  }
 
   /* parsing ok, so accept it as new config */
   if (mpvparse->config != NULL)
@@ -309,22 +336,18 @@ picture_type_name (guint8 pct)
 /* for off == 0 initial code; returns TRUE if code starts a frame,
  * otherwise returns TRUE if code terminates preceding frame */
 static gboolean
-gst_mpegv_parse_process_sc (GstMpegvParse * mpvparse, GstBuffer * buf, gint off)
+gst_mpegv_parse_process_sc (GstMpegvParse * mpvparse,
+    GstBuffer * buf, guint off, guint8 code)
 {
-  gboolean ret = FALSE, do_seq = TRUE;
-  guint8 *data;
-  guint code;
+  gboolean ret = FALSE, packet = TRUE;
 
   g_return_val_if_fail (buf && GST_BUFFER_SIZE (buf) >= 4, FALSE);
-
-  data = GST_BUFFER_DATA (buf);
-  code = data[off + 3];
 
   GST_LOG_OBJECT (mpvparse, "process startcode %x (%s)", code,
       picture_start_code_name (code));
 
   switch (code) {
-    case MPEG_PACKET_PICTURE:
+    case GST_MPEG_VIDEO_PACKET_PICTURE:
       GST_LOG_OBJECT (mpvparse, "startcode is PICTURE");
       /* picture is aggregated with preceding sequence/gop, if any.
        * so, picture start code only ends if already a previous one */
@@ -332,103 +355,64 @@ gst_mpegv_parse_process_sc (GstMpegvParse * mpvparse, GstBuffer * buf, gint off)
         mpvparse->pic_offset = off;
       else
         ret = TRUE;
-      if (!off)
+      if (off == 4)
         ret = TRUE;
       break;
-    case MPEG_PACKET_SEQUENCE:
+    case GST_MPEG_VIDEO_PACKET_SEQUENCE:
       GST_LOG_OBJECT (mpvparse, "startcode is SEQUENCE");
-      if (off == 0)
+      if (off < mpvparse->seq_offset)
         mpvparse->seq_offset = off;
       ret = TRUE;
       break;
-    case MPEG_PACKET_GOP:
+    case GST_MPEG_VIDEO_PACKET_GOP:
       GST_LOG_OBJECT (mpvparse, "startcode is GOP");
-      if (mpvparse->seq_offset >= 0)
+      if (mpvparse->seq_offset < G_MAXUINT)
         ret = mpvparse->gop_split;
       else
         ret = TRUE;
       break;
     default:
-      do_seq = FALSE;
+      packet = FALSE;
       break;
   }
 
-  /* process config data */
-  if (G_UNLIKELY (mpvparse->seq_offset >= 0 && off && do_seq)) {
-    g_assert (mpvparse->seq_offset == 0);
-    gst_mpegv_parse_process_config (mpvparse, GST_BUFFER_DATA (buf), off);
-    /* avoid accepting again for a PICTURE sc following a GOP sc */
-    mpvparse->seq_offset = -1;
+  if (mpvparse->seq_offset != G_MAXUINT && off != mpvparse->seq_offset &&
+      packet) {
+    gst_mpegv_parse_process_config (mpvparse, buf, off - mpvparse->seq_offset);
+    mpvparse->seq_offset = G_MAXUINT;
   }
 
   /* extract some picture info if there is any in the frame being terminated */
-  if (G_UNLIKELY (ret && off)) {
-    if (G_LIKELY (mpvparse->pic_offset >= 0 && mpvparse->pic_offset < off)) {
-      if (G_LIKELY (GST_BUFFER_SIZE (buf) >= mpvparse->pic_offset + 6)) {
-        gint pct = (data[mpvparse->pic_offset + 5] >> 3) & 0x7;
-
-        GST_LOG_OBJECT (mpvparse, "picture_coding_type %d (%s)", pct,
-            picture_type_name (pct));
-        mpvparse->intra_frame = (pct == MPEG_PICTURE_TYPE_I);
-      } else {
-        GST_WARNING_OBJECT (mpvparse, "no data following PICTURE startcode");
-        mpvparse->intra_frame = FALSE;
-      }
-    } else {
-      /* frame without picture must be some config, consider as keyframe */
-      mpvparse->intra_frame = TRUE;
-    }
-    GST_LOG_OBJECT (mpvparse, "ending frame of size %d, is intra %d", off,
-        mpvparse->intra_frame);
+  if (ret && mpvparse->pic_offset >= 0 && mpvparse->pic_offset < off) {
+    if (gst_mpeg_video_parse_picture_header (&mpvparse->pichdr,
+            GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf), mpvparse->pic_offset))
+      GST_LOG_OBJECT (mpvparse, "picture_coding_type %d (%s), ending"
+          "frame of size %d", mpvparse->pichdr.pic_type,
+          picture_type_name (mpvparse->pichdr.pic_type), off - 4);
+    else
+      GST_LOG_OBJECT (mpvparse, "Couldn't parse picture at offset %d",
+          mpvparse->pic_offset);
   }
 
   return ret;
 }
 
-static inline guint
-scan_for_start_codes (const GstByteReader * reader, guint offset, guint size)
+static inline gint
+get_frame_size (GstMpegvParse * mpvparse, GstBuffer * buf, GList * l_codoffsz)
 {
-  const guint8 *data;
-  guint32 state;
-  guint i;
+  GList *tmp;
+  GstMpegVideoTypeOffsetSize *codoffsz;
 
-  g_return_val_if_fail (size > 0, -1);
-  g_return_val_if_fail ((guint64) offset + size <= reader->size - reader->byte,
-      -1);
+  for (tmp = l_codoffsz; tmp; tmp = tmp->next) {
+    codoffsz = tmp->data;
 
-  /* we can't find the pattern with less than 4 bytes */
-  if (G_UNLIKELY (size < 4))
-    return -1;
+    GST_LOG_OBJECT (mpvparse, "next start code at %d", codoffsz->offset);
 
-  data = reader->data + reader->byte + offset;
-
-  /* set the state to something that does not match */
-  state = 0xffffffff;
-
-  /* now find data */
-  for (i = 0; i < size; i++) {
-    /* throw away one byte and move in the next byte */
-    state = ((state << 8) | data[i]);
-    if (G_UNLIKELY ((state & 0xffffff00) == 0x00000100)) {
-      /* we have a match but we need to have skipped at
-       * least 4 bytes to fill the state. */
-      if (G_LIKELY (i >= 3))
-        return offset + i - 3;
-    }
-
-    /* Accelerate search for start code */
-    if (data[i] > 1) {
-      while (i < (size - 4) && data[i] > 1) {
-        if (data[i + 3] > 1)
-          i += 4;
-        else
-          i += 1;
-      }
-      state = 0x00000100;
-    }
+    if (gst_mpegv_parse_process_sc (mpvparse, buf, codoffsz->offset,
+            codoffsz->type))
+      return codoffsz->offset - 4;
   }
 
-  /* nothing found */
   return -1;
 }
 
@@ -436,21 +420,10 @@ scan_for_start_codes (const GstByteReader * reader, guint offset, guint size)
  * see https://bugzilla.gnome.org/show_bug.cgi?id=650093 */
 #define GST_BASE_PARSE_FRAME_FLAG_PARSING   0x10000
 
-static gboolean
-gst_mpegv_parse_check_valid_frame (GstBaseParse * parse,
-    GstBaseParseFrame * frame, guint * framesize, gint * skipsize)
+static inline void
+update_frame_parsing_status (GstMpegvParse * mpvparse,
+    GstBaseParseFrame * frame)
 {
-  GstMpegvParse *mpvparse = GST_MPEGVIDEO_PARSE (parse);
-  GstBuffer *buf = frame->buffer;
-  GstByteReader reader = GST_BYTE_READER_INIT_FROM_BUFFER (buf);
-  gint off = 0;
-  gboolean ret;
-
-retry:
-  /* at least start code and subsequent byte */
-  if (G_UNLIKELY (GST_BUFFER_SIZE (buf) - off < 5))
-    return FALSE;
-
   /* avoid stale cached parsing state */
   if (!(frame->flags & GST_BASE_PARSE_FRAME_FLAG_PARSING)) {
     GST_LOG_OBJECT (mpvparse, "parsing new frame");
@@ -459,71 +432,74 @@ retry:
   } else {
     GST_LOG_OBJECT (mpvparse, "resuming frame parsing");
   }
+}
 
-  /* if already found a previous start code, e.g. start of frame, go for next */
-  if (mpvparse->last_sc >= 0) {
+
+static gboolean
+gst_mpegv_parse_check_valid_frame (GstBaseParse * parse,
+    GstBaseParseFrame * frame, guint * framesize, gint * skipsize)
+{
+  GstMpegvParse *mpvparse = GST_MPEGVIDEO_PARSE (parse);
+  GstBuffer *buf = frame->buffer;
+  gboolean ret = FALSE;
+  GList *tmp;
+  gint off = 0, fsize = -1;
+
+  update_frame_parsing_status (mpvparse, frame);
+
+  if (mpvparse->last_sc >= 0)
     off = mpvparse->last_sc;
-    goto next;
+
+  mpvparse->typeoffsize =
+      gst_mpeg_video_parse (GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf), off);
+
+  /* No sc found */
+  if (mpvparse->typeoffsize == NULL)
+    goto end;
+
+  /* Already found the start code looking for the end */
+  if (mpvparse->last_sc >= 0) {
+    *skipsize = 0;
+    fsize = get_frame_size (mpvparse, buf, mpvparse->typeoffsize);
+
+    goto end;
   }
 
-  off = scan_for_start_codes (&reader, off, GST_BUFFER_SIZE (buf) - off);
+  for (tmp = mpvparse->typeoffsize; tmp; tmp = g_list_next (tmp)) {
+    GstMpegVideoTypeOffsetSize *codoffsz = tmp->data;
 
-  GST_LOG_OBJECT (mpvparse, "possible sync at buffer offset %d", off);
+    GST_LOG_OBJECT (mpvparse, "next start code at %d", codoffsz->offset);
 
-  /* didn't find anything that looks like a sync word, skip */
-  if (G_UNLIKELY (off < 0)) {
-    *skipsize = GST_BUFFER_SIZE (buf) - 3;
-    return FALSE;
-  }
+    if (codoffsz->size < 0)
+      break;
 
-  /* possible frame header, but not at offset 0? skip bytes before sync */
-  if (G_UNLIKELY (off > 0)) {
-    *skipsize = off;
-    return FALSE;
-  }
+    ret = gst_mpegv_parse_process_sc (mpvparse, buf, codoffsz->offset,
+        codoffsz->type);
 
-  /* note: initial start code is assumed at offset 0 by subsequent code */
-
-  /* examine start code, see if it looks like an initial start code */
-  if (gst_mpegv_parse_process_sc (mpvparse, buf, 0)) {
-    /* found sc */
-    mpvparse->last_sc = 0;
-  } else {
-    off++;
-    goto retry;
-  }
-
-next:
-  /* start is fine as of now */
-  *skipsize = 0;
-  /* position a bit further than last sc */
-  off++;
-  /* so now we have start code at start of data; locate next start code */
-  off = scan_for_start_codes (&reader, off, GST_BUFFER_SIZE (buf) - off);
-
-  GST_LOG_OBJECT (mpvparse, "next start code at %d", off);
-  if (off < 0) {
-    /* if draining, take all */
-    if (GST_BASE_PARSE_DRAINING (parse)) {
-      off = GST_BUFFER_SIZE (buf);
-      ret = TRUE;
-    } else {
-      /* resume scan where we left it */
-      mpvparse->last_sc = GST_BUFFER_SIZE (buf) - 4;
-      /* request best next available */
-      *framesize = G_MAXUINT;
-      return FALSE;
+    if (ret) {
+      *skipsize = 0;
+      fsize = get_frame_size (mpvparse, buf, tmp->next);
+      break;
     }
-  } else {
-    /* decide whether this startcode ends a frame */
-    ret = gst_mpegv_parse_process_sc (mpvparse, buf, off);
   }
 
-  if (ret) {
-    *framesize = off;
+end:
+  if (fsize > 0) {
+    *framesize = fsize;
+    ret = TRUE;
+  } else if (GST_BASE_PARSE_DRAINING (parse)) {
+    *framesize = GST_BUFFER_SIZE (buf);
+    ret = TRUE;
   } else {
-    goto next;
+    /* resume scan where we left it */
+    mpvparse->last_sc = GST_BUFFER_SIZE (buf);
+    /* request best next available */
+    *framesize = G_MAXUINT;
+    ret = FALSE;
   }
+
+  g_list_free_full (mpvparse->typeoffsize, (GDestroyNotify) g_free);
+  mpvparse->typeoffsize = NULL;
 
   return ret;
 }
@@ -550,22 +526,23 @@ gst_mpegv_parse_update_src_caps (GstMpegvParse * mpvparse)
    * config data, so we should at least know about version.
    * If not, it means it has been requested not to drop data, and
    * upstream and/or app must know what they are doing ... */
-  if (G_LIKELY (mpvparse->params.mpeg_version))
+
+  if (G_LIKELY (mpvparse->mpeg_version))
     gst_caps_set_simple (caps,
-        "mpegversion", G_TYPE_INT, mpvparse->params.mpeg_version, NULL);
+        "mpegversion", G_TYPE_INT, mpvparse->mpeg_version, NULL);
 
   gst_caps_set_simple (caps, "systemstream", G_TYPE_BOOLEAN, FALSE,
       "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
 
-  if (mpvparse->params.width > 0 && mpvparse->params.height > 0) {
-    gst_caps_set_simple (caps, "width", G_TYPE_INT, mpvparse->params.width,
-        "height", G_TYPE_INT, mpvparse->params.height, NULL);
+  if (mpvparse->sequencehdr.width > 0 && mpvparse->sequencehdr.height > 0) {
+    gst_caps_set_simple (caps, "width", G_TYPE_INT, mpvparse->sequencehdr.width,
+        "height", G_TYPE_INT, mpvparse->sequencehdr.height, NULL);
   }
 
   /* perhaps we have  a framerate */
-  if (mpvparse->params.fps_n > 0 && mpvparse->params.fps_d > 0) {
-    gint fps_num = mpvparse->params.fps_n;
-    gint fps_den = mpvparse->params.fps_d;
+  if (mpvparse->sequencehdr.fps_n > 0 && mpvparse->sequencehdr.fps_d > 0) {
+    gint fps_num = mpvparse->sequencehdr.fps_n;
+    gint fps_den = mpvparse->sequencehdr.fps_d;
     GstClockTime latency = gst_util_uint64_scale (GST_SECOND, fps_den, fps_num);
 
     gst_caps_set_simple (caps, "framerate",
@@ -576,9 +553,9 @@ gst_mpegv_parse_update_src_caps (GstMpegvParse * mpvparse)
   }
 
   /* or pixel-aspect-ratio */
-  if (mpvparse->params.par_w && mpvparse->params.par_h > 0) {
+  if (mpvparse->sequencehdr.par_w && mpvparse->sequencehdr.par_h > 0) {
     gst_caps_set_simple (caps, "pixel-aspect-ratio", GST_TYPE_FRACTION,
-        mpvparse->params.par_w, mpvparse->params.par_h, NULL);
+        mpvparse->sequencehdr.par_w, mpvparse->sequencehdr.par_h, NULL);
   }
 
   if (mpvparse->config != NULL) {
@@ -586,9 +563,9 @@ gst_mpegv_parse_update_src_caps (GstMpegvParse * mpvparse)
         GST_TYPE_BUFFER, mpvparse->config, NULL);
   }
 
-  if (mpvparse->params.mpeg_version == 2) {
-    const guint profile_c = mpvparse->params.profile;
-    const guint level_c = mpvparse->params.level;
+  if (mpvparse->mpeg_version == 2) {
+    const guint profile_c = mpvparse->sequenceext.profile;
+    const guint level_c = mpvparse->sequenceext.level;
     const gchar *profile = NULL, *level = NULL;
     /*
      * Profile indication - 1 => High, 2 => Spatially Scalable,
@@ -657,7 +634,7 @@ gst_mpegv_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 
   gst_mpegv_parse_update_src_caps (mpvparse);
 
-  if (G_UNLIKELY (mpvparse->intra_frame))
+  if (G_UNLIKELY (mpvparse->pichdr.pic_type == GST_MPEG_VIDEO_PICTURE_TYPE_I))
     GST_BUFFER_FLAG_UNSET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
   else
     GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
@@ -694,8 +671,7 @@ gst_mpegv_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
     /* best possible parse attempt,
      * src caps are based on sink caps so it will end up in there
      * whether sucessful or not */
-    gst_mpegv_parse_process_config (mpvparse, GST_BUFFER_DATA (buf),
-        GST_BUFFER_SIZE (buf));
+    gst_mpegv_parse_process_config (mpvparse, buf, GST_BUFFER_SIZE (buf));
   }
 
   /* let's not interfere and accept regardless of config parsing success */

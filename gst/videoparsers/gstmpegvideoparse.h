@@ -1,8 +1,10 @@
 /* GStreamer
  * Copyright (C) <2007> Jan Schmidt <thaytan@mad.scientist.com>
  * Copyright (C) <2011> Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
- * Copyright (C) <2011> Collabora Multimedia
+ * Copyright (C) <2011> Thibault Saunier <thibault.saunier@collabora.com>
+ * Copyright (C) <2011> Collabora ltd
  * Copyright (C) <2011> Nokia Corporation
+ * Copyright (C) <2011> Intel Corporation
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -26,7 +28,7 @@
 #include <gst/gst.h>
 #include <gst/base/gstbaseparse.h>
 
-#include "mpegvideoparse.h"
+#include <gst/codecparsers/gstmpegvideoparser.h>
 
 G_BEGIN_DECLS
 
@@ -49,15 +51,18 @@ struct _GstMpegvParse {
   GstBaseParse element;
 
   /* parse state */
+  GList *typeoffsize;
   gint last_sc;
   gint seq_offset;
   gint pic_offset;
-  gboolean intra_frame;
   gboolean update_caps;
 
   GstBuffer *config;
   guint8 profile;
-  MPEGVParams params;
+  guint mpeg_version;
+  GstMpegVideoSequenceHdr sequencehdr;
+  GstMpegVideoSequenceExt sequenceext;
+  GstMpegVideoPictureHdr pichdr;
 
   /* properties */
   gboolean drop;
