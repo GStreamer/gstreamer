@@ -101,7 +101,7 @@ struct _GstMetaVideoCrop {
 const GstMetaInfo * gst_meta_video_crop_get_info (void);
 
 #define gst_buffer_get_meta_video_crop(b) ((GstMetaVideoCrop*)gst_buffer_get_meta((b),GST_META_INFO_VIDEO_CROP))
-GstMetaVideoCrop * gst_buffer_add_meta_video_crop (GstBuffer *buffer);
+#define gst_buffer_add_meta_video_crop(b) ((GstMetaVideoCrop*)gst_buffer_add_meta((b),GST_META_INFO_VIDEO_CROP, NULL))
 
 G_END_DECLS
 

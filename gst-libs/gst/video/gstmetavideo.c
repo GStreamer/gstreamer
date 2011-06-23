@@ -35,7 +35,22 @@ gst_meta_video_get_info (void)
   return meta_video_info;
 }
 
-
+/**
+ * gst_buffer_add_meta_video:
+ * @buffer: a #GstBuffer
+ * @flags: #GstVideoFlags
+ * @format: a #GstVideoFormat
+ * @width: the width
+ * @height: the height
+ *
+ * Attaches GstVideoMeta metadata to @buffer with the given parameters and the
+ * default offsets and strides for @format and @width x @height.
+ *
+ * This function calculates the default offsets and strides and then calls
+ * gst_buffer_add_meta_video_full() with them.
+ *
+ * Returns: the #GstMetaVideo on @buffer.
+ */
 GstMetaVideo *
 gst_buffer_add_meta_video (GstBuffer * buffer, GstVideoFlags flags,
     GstVideoFormat format, guint width, guint height)
@@ -51,6 +66,21 @@ gst_buffer_add_meta_video (GstBuffer * buffer, GstVideoFlags flags,
   return meta;
 }
 
+/**
+ * gst_buffer_add_meta_video_full:
+ * @buffer: a #GstBuffer
+ * @flags: #GstVideoFlags
+ * @format: a #GstVideoFormat
+ * @width: the width
+ * @height: the height
+ * @n_planes: number of planes
+ * @offset: offset of each plane
+ * @stride: stride of each plane
+ *
+ * Attaches GstVideoMeta metadata to @buffer with the given parameters.
+ *
+ * Returns: the #GstMetaVideo on @buffer.
+ */
 GstMetaVideo *
 gst_buffer_add_meta_video_full (GstBuffer * buffer, GstVideoFlags flags,
     GstVideoFormat format, guint width, guint height,
@@ -74,7 +104,6 @@ gst_buffer_add_meta_video_full (GstBuffer * buffer, GstVideoFlags flags,
     meta->offset[i] = offset[i];
     meta->stride[i] = stride[i];
   }
-
   return meta;
 }
 
@@ -101,6 +130,18 @@ find_mem_for_offset (GstBuffer * buffer, guint * offset, GstMapFlags flags)
   return res;
 }
 
+/**
+ * gst_meta_video_map:
+ * @meta: a #GstVideoMeta
+ * @plane: a plane
+ * @stride: result stride
+ * @flags: @GstMapFlags
+ *
+ * Map the video plane with index @plane in @meta and return a pointer to the
+ * first byte of the plane and the stride of the plane.
+ *
+ * Returns: a pointer to the first byte of the plane data
+ */
 gpointer
 gst_meta_video_map (GstMetaVideo * meta, guint plane, gint * stride,
     GstMapFlags flags)
@@ -127,12 +168,22 @@ gst_meta_video_map (GstMetaVideo * meta, guint plane, gint * stride,
    * the plane offset */
   mem = find_mem_for_offset (buffer, &offset, flags);
 
-  /* move to the right offset inside the block */
   base = gst_memory_map (mem, NULL, NULL, flags);
 
+  /* move to the right offset inside the block */
   return base + offset;
 }
 
+/**
+ * gst_meta_video_unmap:
+ * @meta: a #GstVideoMeta
+ * @plane: a plane
+ * @data: the data to unmap
+ *
+ * Unmap previously mapped data with gst_video_meta_map().
+ *
+ * Returns: TRUE if the memory was successfully unmapped.
+ */
 gboolean
 gst_meta_video_unmap (GstMetaVideo * meta, guint plane, gpointer data)
 {
@@ -169,16 +220,4 @@ gst_meta_video_crop_get_info (void)
         (GstMetaTransformFunction) NULL);
   }
   return meta_video_crop_info;
-}
-
-GstMetaVideoCrop *
-gst_buffer_add_meta_video_crop (GstBuffer * buffer)
-{
-  GstMetaVideoCrop *meta;
-
-  meta =
-      (GstMetaVideoCrop *) gst_buffer_add_meta (buffer,
-      GST_META_INFO_VIDEO_CROP, NULL);
-
-  return meta;
 }
