@@ -699,7 +699,7 @@ rtp_jitter_buffer_pop (RTPJitterBuffer * jbuf, gint * percent)
 {
   GstBuffer *buf;
 
-  g_return_val_if_fail (jbuf != NULL, FALSE);
+  g_return_val_if_fail (jbuf != NULL, NULL);
 
   buf = g_queue_pop_tail (jbuf->packets);
 
@@ -727,7 +727,7 @@ rtp_jitter_buffer_peek (RTPJitterBuffer * jbuf)
 {
   GstBuffer *buf;
 
-  g_return_val_if_fail (jbuf != NULL, FALSE);
+  g_return_val_if_fail (jbuf != NULL, NULL);
 
   buf = g_queue_peek_tail (jbuf->packets);
 
