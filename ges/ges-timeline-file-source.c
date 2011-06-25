@@ -22,7 +22,7 @@
  * SECTION:ges-timeline-filesource
  * @short_description: An object for manipulating media files in a GESTimeline
  * 
- * Represents all the output treams from a particular uri. It is assumed that
+ * Represents all the output streams from a particular uri. It is assumed that
  * the URI points to a file of some type.
  */
 
@@ -178,7 +178,7 @@ ges_timeline_filesource_class_init (GESTimelineFileSourceClass * klass)
   /**
    * GESTimelineFileSource:supported-formats:
    *
-   * Whether the sound will be played or not.
+   * The formats supported by the filesource.
    */
   g_object_class_install_property (object_class, PROP_SUPPORTED_FORMATS,
       g_param_spec_flags ("supported-formats", "Supported formats",
@@ -282,7 +282,7 @@ ges_timeline_filesource_set_supported_formats (GESTimelineFileSource * self,
 /**
  * ges_timeline_filesource_set_is_image:
  * @self: the #GESTimelineFileSource 
- * @is_image: %TRUE if @self is a still image, %FALSE otherwize
+ * @is_image: %TRUE if @self is a still image, %FALSE otherwise
  *
  * Sets whether the timeline object is a still image or not.
  */
@@ -299,7 +299,7 @@ ges_timeline_filesource_set_is_image (GESTimelineFileSource * self,
  *
  * Lets you know if the audio track of @self is muted or not.
  *
- * Returns: %TRUE if the audio track of @self is muted, %FALSE otherwize.
+ * Returns: %TRUE if the audio track of @self is muted, %FALSE otherwise.
  */
 gboolean
 ges_timeline_filesource_is_muted (GESTimelineFileSource * self)
@@ -327,7 +327,7 @@ ges_timeline_filesource_get_max_duration (GESTimelineFileSource * self)
  *
  * Lets you know if @self is an image or not.
  *
- * Returns: %TRUE if @self is a still image %FALSE otherwize.
+ * Returns: %TRUE if @self is a still image %FALSE otherwise.
  */
 gboolean
 ges_timeline_filesource_is_image (GESTimelineFileSource * self)
@@ -339,9 +339,9 @@ ges_timeline_filesource_is_image (GESTimelineFileSource * self)
  * ges_timeline_filesource_get_uri:
  * @self: the #GESTimelineFileSource 
  *
- * Get the location of the ressource.
+ * Get the location of the resource.
  *
- * Returns: The location of the ressource.
+ * Returns: The location of the resource.
  */
 const gchar *
 ges_timeline_filesource_get_uri (GESTimelineFileSource * self)
