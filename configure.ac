@@ -1586,7 +1586,9 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_WININET, true)
 AG_GST_CHECK_FEATURE(WININET, [Windows internet library], wininet, [
   AC_MSG_CHECKING([Checking for windows internet support])
   AC_CHECK_HEADERS([windows.h wininet.h],
-      [HAVE_WININET="yes"], [HAVE_WININET="no"])
+      [HAVE_WININET="yes"], [HAVE_WININET="no"],
+      [AC_INCLUDES_DEFAULT
+#include <windows.h>])
 ])
 
 dnl *** acm ***
