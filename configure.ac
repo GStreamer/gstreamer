@@ -896,12 +896,6 @@ dnl *** shout2 ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SHOUT2, true)
 AG_GST_CHECK_FEATURE(SHOUT2, [Shoutcast/Icecast client library], shout2, [
   AG_GST_PKG_CHECK_MODULES(SHOUT2, shout >= 2.0)
-  if test $HAVE_SHOUT2 = no
-  then
-    AM_PATH_SHOUT2(HAVE_SHOUT2="yes")
-    AC_SUBST(SHOUT2_CFLAGS)
-    AC_SUBST(SHOUT2_LIBS)
-  fi
 ])
 
 dnl *** soup ***
