@@ -673,8 +673,9 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
       x264_motion_est_names[ARG_ME_DEFAULT]);
   g_object_class_install_property (gobject_class, ARG_SUBME,
       g_param_spec_uint ("subme", "Subpixel Motion Estimation",
-          "Subpixel motion estimation and partition decision quality: 1=fast, 6=best",
-          1, 6, ARG_SUBME_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          "Subpixel motion estimation and partition decision quality: 1=fast, 10=best",
+          1, 10, ARG_SUBME_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_string_append_printf (x264enc_defaults, ":subme=%d", ARG_SUBME_DEFAULT);
   g_object_class_install_property (gobject_class, ARG_ANALYSE,
       g_param_spec_flags ("analyse", "Analyse", "Partitions to consider",
