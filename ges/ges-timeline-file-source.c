@@ -411,6 +411,10 @@ ges_timeline_filesource_create_track_object (GESTimelineObject * obj,
 GESTimelineFileSource *
 ges_timeline_filesource_new (gchar * uri)
 {
-  /* FIXME : Check for validity/existence of URI */
-  return g_object_new (GES_TYPE_TIMELINE_FILE_SOURCE, "uri", uri, NULL);
+  GESTimelineFileSource *res = NULL;
+
+  if (gst_uri_is_valid (uri))
+    res = g_object_new (GES_TYPE_TIMELINE_FILE_SOURCE, "uri", uri, NULL);
+
+  return res;
 }
