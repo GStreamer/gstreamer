@@ -495,7 +495,7 @@ gboolean
 gst_tta_parse_plugin_init (GstPlugin * plugin)
 {
   if (!gst_element_register (plugin, "ttaparse",
-          GST_RANK_PRIMARY, GST_TYPE_TTA_PARSE)) {
+          GST_RANK_NONE, GST_TYPE_TTA_PARSE)) {
     return FALSE;
   }
 

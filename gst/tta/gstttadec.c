@@ -89,7 +89,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
         "depth = (int) { 8, 16, 24 }, "
         "channels = (int) { 1, 2 }, "
         "rate = (int) [ 8000, 96000 ], "
-        "endianness = (int) LITTLE_ENDIAN, " "signed = (boolean) true")
+        "endianness = (int) BYTE_ORDER, " "signed = (boolean) true")
     );
 
 static void gst_tta_dec_class_init (GstTtaDecClass * klass);
@@ -125,7 +125,7 @@ gst_tta_dec_setcaps (GstPad * pad, GstCaps * caps)
       "channels", G_TYPE_INT, ttadec->channels,
       "depth", G_TYPE_INT, bits,
       "width", G_TYPE_INT, bits,
-      "endianness", G_TYPE_INT, G_LITTLE_ENDIAN,
+      "endianness", G_TYPE_INT, G_BYTE_ORDER,
       "signed", G_TYPE_BOOLEAN, TRUE, NULL);
 
   if (!gst_pad_set_caps (ttadec->srcpad, srccaps))
@@ -445,5 +445,5 @@ gboolean
 gst_tta_dec_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "ttadec",
-      GST_RANK_PRIMARY, GST_TYPE_TTA_DEC);
+      GST_RANK_NONE, GST_TYPE_TTA_DEC);
 }
