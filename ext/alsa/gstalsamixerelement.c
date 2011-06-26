@@ -53,39 +53,15 @@ static void gst_alsa_mixer_element_finalize (GObject * object);
 static GstStateChangeReturn gst_alsa_mixer_element_change_state (GstElement
     * element, GstStateChange transition);
 
-static gboolean
-gst_alsa_mixer_element_interface_supported (GstAlsaMixerElement * this,
-    GType interface_type)
-{
-  if (interface_type == GST_TYPE_MIXER) {
-    return gst_alsa_mixer_element_supported (this, interface_type);
-  }
-
-  g_return_val_if_reached (FALSE);
-}
-
-static void
-gst_implements_interface_init (GstImplementsInterfaceClass * klass)
-{
-  klass->supported = (gpointer) gst_alsa_mixer_element_interface_supported;
-}
-
 static void
 gst_alsa_mixer_element_init_interfaces (GType type)
 {
-  static const GInterfaceInfo implements_iface_info = {
-    (GInterfaceInitFunc) gst_implements_interface_init,
-    NULL,
-    NULL,
-  };
   static const GInterfaceInfo mixer_iface_info = {
     (GInterfaceInitFunc) gst_alsa_mixer_element_interface_init,
     NULL,
     NULL,
   };
 
-  g_type_add_interface_static (type, GST_TYPE_IMPLEMENTS_INTERFACE,
-      &implements_iface_info);
   g_type_add_interface_static (type, GST_TYPE_MIXER, &mixer_iface_info);
 
   gst_alsa_type_add_device_property_probe_interface (type);

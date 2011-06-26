@@ -152,37 +152,15 @@ gst_alsasrc_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
-static gboolean
-gst_alsasrc_interface_supported (GstAlsaSrc * this, GType interface_type)
-{
-  /* only support this one interface (wrapped by GstImplementsInterface) */
-  g_assert (interface_type == GST_TYPE_MIXER);
-
-  return gst_alsasrc_mixer_supported (this, interface_type);
-}
-
-static void
-gst_implements_interface_init (GstImplementsInterfaceClass * klass)
-{
-  klass->supported = (gpointer) gst_alsasrc_interface_supported;
-}
-
 static void
 gst_alsasrc_init_interfaces (GType type)
 {
-  static const GInterfaceInfo implements_iface_info = {
-    (GInterfaceInitFunc) gst_implements_interface_init,
-    NULL,
-    NULL,
-  };
   static const GInterfaceInfo mixer_iface_info = {
     (GInterfaceInitFunc) gst_alsasrc_mixer_interface_init,
     NULL,
     NULL,
   };
 
-  g_type_add_interface_static (type, GST_TYPE_IMPLEMENTS_INTERFACE,
-      &implements_iface_info);
   g_type_add_interface_static (type, GST_TYPE_MIXER, &mixer_iface_info);
 
   gst_alsa_type_add_device_property_probe_interface (type);

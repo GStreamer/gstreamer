@@ -93,14 +93,6 @@ void		_gst_alsa_mixer_set_interface   (GstAlsaMixer * mixer,
 GstMixerFlags   gst_alsa_mixer_get_mixer_flags  (GstAlsaMixer *mixer);
 
 #define GST_IMPLEMENT_ALSA_MIXER_METHODS(Type, interface_as_function)           \
-static gboolean                                                                 \
-interface_as_function ## _supported (Type *this, GType iface_type)              \
-{                                                                               \
-  g_assert (iface_type == GST_TYPE_MIXER);                                      \
-                                                                                \
-  return (this->mixer != NULL);                                                 \
-}                                                                               \
-                                                                                \
 static const GList*                                                             \
 interface_as_function ## _list_tracks (GstMixer * mixer)                        \
 {                                                                               \
