@@ -54,7 +54,6 @@ struct TestElementClass
 GType test_element_get_type (void);
 
 static void init_interface (GType type);
-static void gst_implements_interface_init (GstImplementsInterfaceClass * klass);
 static void nav_send_event (GstNavigation * navigation,
     GstStructure * structure);
 
@@ -75,14 +74,7 @@ init_interface (GType type)
     NULL,
     NULL,
   };
-  static const GInterfaceInfo implements_iface_info = {
-    (GInterfaceInitFunc) gst_implements_interface_init,
-    NULL,
-    NULL,
-  };
 
-  g_type_add_interface_static (type, GST_TYPE_IMPLEMENTS_INTERFACE,
-      &implements_iface_info);
   g_type_add_interface_static (type, GST_TYPE_NAVIGATION,
       &navigation_iface_info);
 }
@@ -90,22 +82,6 @@ init_interface (GType type)
 static void
 test_element_class_init (TestElementClass * klass)
 {
-}
-
-static gboolean
-test_element_interface_supported (GstImplementsInterface * ifacE,
-    GType interface_type)
-{
-  if (interface_type == GST_TYPE_NAVIGATION)
-    return TRUE;
-
-  return FALSE;
-}
-
-static void
-gst_implements_interface_init (GstImplementsInterfaceClass * klass)
-{
-  klass->supported = test_element_interface_supported;
 }
 
 static void
