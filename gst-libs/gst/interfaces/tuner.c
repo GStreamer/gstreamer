@@ -69,6 +69,11 @@
  * </refsect2>
  */
 
+/* FIXME 0.11: check if we need to add API for sometimes-supportedness
+ * (aka making up for GstImplementsInterface removal) */
+
+/* FIXME 0.11: replace signals with messages (+ make API thread-safe) */
+
 enum
 {
   NORM_CHANGED,
@@ -102,8 +107,6 @@ gst_tuner_get_type (void)
 
     gst_tuner_type = g_type_register_static (G_TYPE_INTERFACE,
         "GstTuner", &gst_tuner_info, 0);
-    g_type_interface_add_prerequisite (gst_tuner_type,
-        GST_TYPE_IMPLEMENTS_INTERFACE);
   }
 
   return gst_tuner_type;

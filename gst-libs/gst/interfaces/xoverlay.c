@@ -318,8 +318,6 @@ gst_x_overlay_get_type (void)
 
     gst_x_overlay_type = g_type_register_static (G_TYPE_INTERFACE,
         "GstXOverlay", &gst_x_overlay_info, 0);
-    g_type_interface_add_prerequisite (gst_x_overlay_type,
-        GST_TYPE_IMPLEMENTS_INTERFACE);
   }
 
   return gst_x_overlay_type;

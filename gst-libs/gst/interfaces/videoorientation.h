@@ -30,9 +30,9 @@ G_BEGIN_DECLS
 #define GST_TYPE_VIDEO_ORIENTATION \
   (gst_video_orientation_get_type ())
 #define GST_VIDEO_ORIENTATION(obj) \
-  (GST_IMPLEMENTS_INTERFACE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_VIDEO_ORIENTATION, GstVideoOrientation))
+  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_VIDEO_ORIENTATION, GstVideoOrientation))
 #define GST_IS_VIDEO_ORIENTATION(obj) \
-  (GST_IMPLEMENTS_INTERFACE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VIDEO_ORIENTATION))
+  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VIDEO_ORIENTATION))
 #define GST_VIDEO_ORIENTATION_GET_IFACE(inst) \
   (G_TYPE_INSTANCE_GET_INTERFACE ((inst), GST_TYPE_VIDEO_ORIENTATION, GstVideoOrientationInterface))
 
@@ -60,6 +60,10 @@ typedef struct _GstVideoOrientationInterface GstVideoOrientationInterface;
  */
 struct _GstVideoOrientationInterface {
   GTypeInterface parent;
+
+  /* FIXME 0.11: fix awkward API? add some kind of get_supported flags thing
+   * and then just return booleans/int from all vfuncs requiring the caller
+   * to check the flags first */
 
   /* virtual functions */
   gboolean (* get_hflip)   (GstVideoOrientation *video_orientation, gboolean *flip);

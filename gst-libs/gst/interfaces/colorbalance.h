@@ -28,16 +28,16 @@
 
 G_BEGIN_DECLS
 
+/* FIXME 0.11: remove all CLASS bits, this is an interface */
 #define GST_TYPE_COLOR_BALANCE \
   (gst_color_balance_get_type ())
 #define GST_COLOR_BALANCE(obj) \
-  (GST_IMPLEMENTS_INTERFACE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_COLOR_BALANCE, \
-                                                 GstColorBalance))
+  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_COLOR_BALANCE, GstColorBalance))
 #define GST_COLOR_BALANCE_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_COLOR_BALANCE, \
                             GstColorBalanceClass))
 #define GST_IS_COLOR_BALANCE(obj) \
-  (GST_IMPLEMENTS_INTERFACE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_COLOR_BALANCE))
+  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_COLOR_BALANCE))
 #define GST_IS_COLOR_BALANCE_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_COLOR_BALANCE))
 #define GST_COLOR_BALANCE_GET_CLASS(inst) \

@@ -29,14 +29,16 @@
 
 G_BEGIN_DECLS
 
+/* FIXME 0.11: remove all CLASS bits, this is an interface */
+
 #define GST_TYPE_MIXER \
   (gst_mixer_get_type ())
 #define GST_MIXER(obj) \
-  (GST_IMPLEMENTS_INTERFACE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_MIXER, GstMixer))
+  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_MIXER, GstMixer))
 #define GST_MIXER_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_MIXER, GstMixerClass))
 #define GST_IS_MIXER(obj) \
-  (GST_IMPLEMENTS_INTERFACE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_MIXER))
+  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_MIXER))
 #define GST_IS_MIXER_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_MIXER))
 #define GST_MIXER_GET_CLASS(inst) \

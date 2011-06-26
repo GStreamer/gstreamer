@@ -29,14 +29,16 @@
 
 G_BEGIN_DECLS
 
+/* FIXME 0.11: remove all CLASS bits, this is an interface */
+
 #define GST_TYPE_TUNER \
   (gst_tuner_get_type ())
 #define GST_TUNER(obj) \
-  (GST_IMPLEMENTS_INTERFACE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_TUNER, GstTuner))
+  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_TUNER, GstTuner))
 #define GST_TUNER_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_TUNER, GstTunerClass))
 #define GST_IS_TUNER(obj) \
-  (GST_IMPLEMENTS_INTERFACE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_TUNER))
+  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_TUNER))
 #define GST_IS_TUNER_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_TUNER))
 #define GST_TUNER_GET_CLASS(inst) \

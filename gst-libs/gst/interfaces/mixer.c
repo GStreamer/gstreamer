@@ -50,6 +50,9 @@
  * macro (in C) and the mixer API can be used.
  */
 
+/* FIXME 0.11: check if we need to add API for sometimes-supportedness
+ * (aka making up for GstImplementsInterface removal) */
+
 #ifndef GST_DISABLE_DEPRECATED
 enum
 {
@@ -86,8 +89,6 @@ gst_mixer_get_type (void)
 
     gst_mixer_type = g_type_register_static (G_TYPE_INTERFACE,
         "GstMixer", &gst_mixer_info, 0);
-    g_type_interface_add_prerequisite (gst_mixer_type,
-        GST_TYPE_IMPLEMENTS_INTERFACE);
   }
 
   return gst_mixer_type;

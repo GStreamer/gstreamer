@@ -39,6 +39,9 @@
  * Since: 0.10.11
  */
 
+/* FIXME 0.11: check if we need to add API for sometimes-supportedness
+ * (aka making up for GstImplementsInterface removal) (probably yes) */
+
 static void gst_video_orientation_iface_init (GstVideoOrientationInterface *
     iface);
 
@@ -62,8 +65,6 @@ gst_video_orientation_get_type (void)
 
     gst_video_orientation_type = g_type_register_static (G_TYPE_INTERFACE,
         "GstVideoOrientation", &gst_video_orientation_info, 0);
-    g_type_interface_add_prerequisite (gst_video_orientation_type,
-        GST_TYPE_IMPLEMENTS_INTERFACE);
   }
 
   return gst_video_orientation_type;
