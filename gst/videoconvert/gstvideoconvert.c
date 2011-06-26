@@ -137,11 +137,9 @@ static GstCaps *
 gst_video_convert_transform_caps (GstBaseTransform * btrans,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter)
 {
-  GstCaps *template;
   GstCaps *tmp, *tmp2;
   GstCaps *result;
 
-  template = gst_static_pad_template_get_caps (&gst_video_convert_src_template);
   result = gst_caps_copy (caps);
 
   /* Get all possible caps that we can transform to */
