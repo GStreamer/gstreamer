@@ -193,8 +193,6 @@ enum
 /*          Object typing & Creation           */
 /*                                             */
 /* =========================================== */
-static void gst_xvimagesink_interface_init (GstImplementsInterfaceClass *
-    klass);
 static void gst_xvimagesink_navigation_init (GstNavigationInterface * iface);
 static void gst_xvimagesink_xoverlay_init (GstXOverlayClass * iface);
 static void gst_xvimagesink_colorbalance_init (GstColorBalanceClass * iface);
@@ -203,8 +201,6 @@ gst_xvimagesink_property_probe_interface_init (GstPropertyProbeInterface *
     iface);
 #define gst_xvimagesink_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstXvImageSink, gst_xvimagesink, GST_TYPE_VIDEO_SINK,
-    G_IMPLEMENT_INTERFACE (GST_TYPE_IMPLEMENTS_INTERFACE,
-        gst_xvimagesink_interface_init);
     G_IMPLEMENT_INTERFACE (GST_TYPE_NAVIGATION,
         gst_xvimagesink_navigation_init);
     G_IMPLEMENT_INTERFACE (GST_TYPE_X_OVERLAY, gst_xvimagesink_xoverlay_init);
@@ -2034,23 +2030,6 @@ config_failed:
 }
 
 /* Interfaces stuff */
-
-static gboolean
-gst_xvimagesink_interface_supported (GstImplementsInterface * iface, GType type)
-{
-  if (type == GST_TYPE_NAVIGATION || type == GST_TYPE_X_OVERLAY ||
-      type == GST_TYPE_COLOR_BALANCE || type == GST_TYPE_PROPERTY_PROBE)
-    return TRUE;
-  else
-    return FALSE;
-}
-
-static void
-gst_xvimagesink_interface_init (GstImplementsInterfaceClass * klass)
-{
-  klass->supported = gst_xvimagesink_interface_supported;
-}
-
 static void
 gst_xvimagesink_navigation_send_event (GstNavigation * navigation,
     GstStructure * structure)

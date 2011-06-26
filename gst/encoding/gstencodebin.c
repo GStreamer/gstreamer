@@ -1008,8 +1008,7 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
    * If we have no muxer or
    * if the muxer isn't a formatter and doesn't implement the tagsetter interface
    */
-  if (!ebin->muxer
-      || (!gst_element_implements_interface (ebin->muxer, GST_TYPE_TAG_SETTER)
+  if (!ebin->muxer || (!GST_IS_TAG_SETTER (ebin->muxer)
           || !_has_class (ebin->muxer, "Formatter"))) {
     sgroup->formatter = _get_formatter (ebin, sprof);
     if (sgroup->formatter) {

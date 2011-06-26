@@ -139,13 +139,11 @@ enum
 	"depth = (int) 32, " \
 	"signed = (bool) TRUE"
 
-static void gst_volume_interface_init (GstImplementsInterfaceClass * klass);
 static void gst_volume_mixer_init (GstMixerClass * iface);
 
 #define gst_volume_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstVolume, gst_volume,
-    GST_TYPE_AUDIO_FILTER, G_IMPLEMENT_INTERFACE (GST_TYPE_IMPLEMENTS_INTERFACE,
-        gst_volume_interface_init);
+    GST_TYPE_AUDIO_FILTER,
     G_IMPLEMENT_INTERFACE (GST_TYPE_MIXER, gst_volume_mixer_init);
     G_IMPLEMENT_INTERFACE (GST_TYPE_STREAM_VOLUME, NULL));
 
@@ -319,18 +317,6 @@ volume_update_volume (GstVolume * self, gfloat volume, gboolean mute)
 }
 
 /* Mixer interface */
-
-static gboolean
-gst_volume_interface_supported (GstImplementsInterface * iface, GType type)
-{
-  return (type == GST_TYPE_MIXER || type == GST_TYPE_STREAM_VOLUME);
-}
-
-static void
-gst_volume_interface_init (GstImplementsInterfaceClass * klass)
-{
-  klass->supported = gst_volume_interface_supported;
-}
 
 static const GList *
 gst_volume_list_tracks (GstMixer * mixer)

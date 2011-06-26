@@ -168,13 +168,10 @@ enum
 /*          Object typing & Creation           */
 /*                                             */
 /* =========================================== */
-static void gst_ximagesink_interface_init (GstImplementsInterfaceClass * klass);
 static void gst_ximagesink_navigation_init (GstNavigationInterface * klass);
 static void gst_ximagesink_xoverlay_init (GstXOverlayClass * klass);
 #define gst_ximagesink_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstXImageSink, gst_ximagesink, GST_TYPE_VIDEO_SINK,
-    G_IMPLEMENT_INTERFACE (GST_TYPE_IMPLEMENTS_INTERFACE,
-        gst_ximagesink_interface_init);
     G_IMPLEMENT_INTERFACE (GST_TYPE_NAVIGATION, gst_ximagesink_navigation_init);
     G_IMPLEMENT_INTERFACE (GST_TYPE_X_OVERLAY, gst_ximagesink_xoverlay_init));
 
@@ -1519,22 +1516,6 @@ config_failed:
 }
 
 /* Interfaces stuff */
-
-static gboolean
-gst_ximagesink_interface_supported (GstImplementsInterface * iface, GType type)
-{
-  if (type == GST_TYPE_NAVIGATION || type == GST_TYPE_X_OVERLAY)
-    return TRUE;
-  else
-    return FALSE;
-}
-
-static void
-gst_ximagesink_interface_init (GstImplementsInterfaceClass * klass)
-{
-  klass->supported = gst_ximagesink_interface_supported;
-}
-
 static void
 gst_ximagesink_navigation_send_event (GstNavigation * navigation,
     GstStructure * structure)
