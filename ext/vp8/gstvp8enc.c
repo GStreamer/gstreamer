@@ -939,6 +939,8 @@ gst_vp8_enc_shape_output (GstBaseVideoEncoder * base_video_encoder,
       encoder->keyframe_distance++;
     }
 
+    GST_BUFFER_TIMESTAMP (buf) = GST_BUFFER_TIMESTAMP (frame->src_buffer);
+    GST_BUFFER_DURATION (buf) = 0;
     GST_BUFFER_OFFSET_END (buf) =
         _to_granulepos (frame->presentation_frame_number + 1,
         inv_count, encoder->keyframe_distance);
