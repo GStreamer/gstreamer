@@ -33,12 +33,17 @@ GstEncodingProfile *
 make_ogg_vorbis_profile (void)
 {
   GstEncodingContainerProfile *profile;
+  GstCaps *caps;
 
-  profile = gst_encoding_container_profile_new ((gchar *) "ges-test4", NULL,
-      gst_caps_new_simple ("application/ogg", NULL), NULL);
+  caps = gst_caps_from_string ("application/ogg");
+  profile = gst_encoding_container_profile_new ("Ogg audio", NULL, caps, NULL);
+  gst_caps_unref (caps);
+
+  caps = gst_caps_from_string ("audio/x-vorbis");
   gst_encoding_container_profile_add_profile (profile, (GstEncodingProfile *)
-      gst_encoding_audio_profile_new (gst_caps_new_simple ("audio/x-vorbis",
-              NULL), NULL, NULL, 1));
+      gst_encoding_audio_profile_new (caps, NULL, NULL, 1));
+  gst_caps_unref (caps);
+
   return (GstEncodingProfile *) profile;
 }
 
@@ -49,7 +54,6 @@ main (int argc, gchar ** argv)
   GESTimeline *timeline;
   GESTrack *tracka;
   GESTimelineLayer *layer;
-  GList *sources = NULL;
   GMainLoop *mainloop;
   GstEncodingProfile *profile;
   gchar *output_uri;
@@ -84,7 +88,7 @@ main (int argc, gchar ** argv)
     return -1;
 
   /* Here we've finished initializing our timeline, we're 
-   * ready to start using it... by solely working with the layer !*/
+   * ready to start using it... by solely working with the layer ! */
 
   for (i = 2; i < argc; i++) {
     gchar *uri = g_strdup_printf ("file://%s", argv[i]);
@@ -97,8 +101,6 @@ main (int argc, gchar ** argv)
     /* Since we're using a GESSimpleTimelineLayer, objects will be automatically
      * appended to the end of the layer */
     ges_timeline_layer_add_object (layer, (GESTimelineObject *) src);
-
-    sources = g_list_append (sources, src);
   }
 
   /* In order to view our timeline, let's grab a convenience pipeline to put
@@ -112,14 +114,18 @@ main (int argc, gchar ** argv)
 
   /* RENDER SETTINGS ! */
   /* We set our output URI and rendering setting on the pipeline */
-  output_uri = argv[1];
+  if (gst_uri_is_valid (argv[1])) {
+    output_uri = g_strdup (argv[1]);
+  } else {
+    output_uri = g_strdup_printf ("file://%s", argv[1]);
+  }
   profile = make_ogg_vorbis_profile ();
   if (!ges_timeline_pipeline_set_render_settings (pipeline, output_uri,
           profile))
     return -1;
 
   /* We want the pipeline to render (without any preview) */
-  if (!ges_timeline_pipeline_set_mode (pipeline, TIMELINE_MODE_RENDER))
+  if (!ges_timeline_pipeline_set_mode (pipeline, TIMELINE_MODE_SMART_RENDER))
     return -1;
 
 
@@ -129,13 +135,13 @@ main (int argc, gchar ** argv)
    * We set the pipeline to playing ... */
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
 
-  /* .. and we start a GMainLoop. GES **REQUIRES** a GMainLoop to be running in
+  /* ... and we start a GMainLoop. GES **REQUIRES** a GMainLoop to be running in
    * order to function properly ! */
   mainloop = g_main_loop_new (NULL, FALSE);
 
   /* Simple code to have the mainloop shutdown after 4s */
   /* FIXME : We should wait for EOS ! */
-  g_timeout_add_seconds (argc, (GSourceFunc) g_main_loop_quit, mainloop);
+  g_timeout_add_seconds (argc - 1, (GSourceFunc) g_main_loop_quit, mainloop);
   g_main_loop_run (mainloop);
 
   return 0;
