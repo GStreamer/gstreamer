@@ -114,6 +114,9 @@ gst_base_video_codec_reset (GstBaseVideoCodec * base_video_codec)
 
   base_video_codec->bytes = 0;
   base_video_codec->time = 0;
+
+  gst_buffer_replace (&base_video_codec->state.codec_data, NULL);
+  gst_caps_replace (&base_video_codec->state.caps, NULL);
 }
 
 static void

@@ -86,6 +86,7 @@ typedef struct _GstBaseVideoCodecClass GstBaseVideoCodecClass;
 
 struct _GstVideoState
 {
+  GstCaps *caps;
   GstVideoFormat format;
   int width, height;
   int fps_n, fps_d;
