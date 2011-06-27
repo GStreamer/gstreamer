@@ -26,7 +26,6 @@ main (int argc, gchar ** argv)
   GESTimeline *timeline;
   GESTrack *tracka;
   GESTimelineLayer *layer;
-  GList *sources = NULL;
   GMainLoop *mainloop;
   GstClockTime offset = 0;
   guint i;
@@ -60,7 +59,7 @@ main (int argc, gchar ** argv)
     return -1;
 
   /* Here we've finished initializing our timeline, we're 
-   * ready to start using it... by solely working with the layer !*/
+   * ready to start using it... by solely working with the layer ! */
 
   for (i = 1; i < argc; i++, offset += GST_SECOND) {
     gchar *uri = g_strdup_printf ("file://%s", argv[i]);
@@ -72,11 +71,9 @@ main (int argc, gchar ** argv)
     g_object_set (src, "start", offset, "duration", GST_SECOND, NULL);
 
     ges_timeline_layer_add_object (layer, (GESTimelineObject *) src);
-
-    sources = g_list_append (sources, src);
   }
 
-  /* In order to view our timeline, let's grab a convenience pipeline to put
+  /* In order to listen our timeline, let's grab a convenience pipeline to put
    * our timeline in. */
   pipeline = ges_timeline_pipeline_new ();
 
@@ -84,18 +81,18 @@ main (int argc, gchar ** argv)
   if (!ges_timeline_pipeline_add_timeline (pipeline, timeline))
     return -1;
 
-  /* The following is standard usage of a GStreamer pipeline (note how you haven't
-   * had to care about GStreamer so far ?).
+  /* The following is standard usage of a GStreamer pipeline (note how you
+   * haven't had to care about GStreamer so far ?).
    *
    * We set the pipeline to playing ... */
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
 
-  /* .. and we start a GMainLoop. GES **REQUIRES** a GMainLoop to be running in
+  /* ... and we start a GMainLoop. GES **REQUIRES** a GMainLoop to be running in
    * order to function properly ! */
   mainloop = g_main_loop_new (NULL, FALSE);
 
   /* Simple code to have the mainloop shutdown after 4s */
-  g_timeout_add_seconds (argc, (GSourceFunc) g_main_loop_quit, mainloop);
+  g_timeout_add_seconds (argc - 1, (GSourceFunc) g_main_loop_quit, mainloop);
   g_main_loop_run (mainloop);
 
   return 0;
