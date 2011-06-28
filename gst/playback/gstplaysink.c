@@ -991,10 +991,11 @@ gst_play_sink_find_property_sinks (GstPlaySink * playsink, GstElement * obj,
     found = gst_iterator_find_custom (it,
         (GCompareFunc) find_property, &item, &helper);
     gst_iterator_free (it);
-    if (found)
+    if (found) {
       result = g_value_get_object (&item);
-    /* we don't need the extra ref */
-    g_value_unset (&item);
+      /* we don't need the extra ref */
+      g_value_unset (&item);
+    }
   }
   return result;
 }
