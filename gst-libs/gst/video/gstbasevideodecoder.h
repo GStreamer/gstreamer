@@ -65,6 +65,13 @@ G_BEGIN_DECLS
  **/
 #define GST_BASE_VIDEO_DECODER_FLOW_NEED_DATA GST_FLOW_CUSTOM_SUCCESS
 
+/**
+ * GST_BASE_VIDEO_DECODER_FLOW_DROPPED:
+ *
+ * Returned when the event/buffer should be dropped.
+ */
+#define GST_BASE_VIDEO_DECODER_FLOW_DROPPED GST_FLOW_CUSTOM_SUCCESS_1
+
 typedef struct _GstBaseVideoDecoder GstBaseVideoDecoder;
 typedef struct _GstBaseVideoDecoderClass GstBaseVideoDecoderClass;
 
@@ -136,6 +143,8 @@ struct _GstBaseVideoDecoder
    * only available during parsing */
   /* FIXME remove and add parameter to method */
   GstVideoFrame    *current_frame;
+  /* events that should apply to the current frame */
+  GList            *current_frame_events;
   /* relative offset of input data */
   guint64           input_offset;
   /* relative offset of frame */
