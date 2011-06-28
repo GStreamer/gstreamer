@@ -805,6 +805,10 @@ gst_avi_demux_handle_sink_event (GstPad * pad, GstEvent * event)
       segment.format = GST_FORMAT_TIME;
       segment.start = segment.time;
       segment.stop = GST_CLOCK_TIME_NONE;
+      segment.position = segment.start;
+
+      /* rescue duration */
+      segment.duration = avi->segment.duration;
 
       /* set up segment and send downstream */
       gst_segment_copy_into (&segment, &avi->segment);
@@ -5139,6 +5143,13 @@ pause:{
 
     if (res == GST_FLOW_UNEXPECTED) {
       /* handle end-of-stream/segment */
+      /* so align our position with the end of it, if there is one
+       * this ensures a subsequent will arrive at correct base/acc time */
+      if (avi->segment.rate > 0.0 &&
+          GST_CLOCK_TIME_IS_VALID (avi->segment.stop))
+        avi->segment.position = avi->segment.stop;
+      else if (avi->segment.rate < 0.0)
+        avi->segment.position = avi->segment.start;
       if (avi->segment.flags & GST_SEEK_FLAG_SEGMENT) {
         gint64 stop;
 
