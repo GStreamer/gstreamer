@@ -56,10 +56,7 @@ struct _GstGamma
   /* < private > */
 
   /* format */
-  GstVideoFormat format;
-  gint width;
-  gint height;
-  gint size;
+  GstVideoInfo info;
 
   /* properties */
   gdouble gamma;
@@ -67,7 +64,7 @@ struct _GstGamma
   /* tables */
   guint8 gamma_table[256];
 
-  void (*process) (GstGamma *gamma, guint8 *data);
+  void (*process) (GstGamma *gamma, GstVideoFrame *frame);
 };
 
 struct _GstGammaClass

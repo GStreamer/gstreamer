@@ -73,12 +73,11 @@ struct _GstVideoFlip {
   GstVideoFilter videofilter;
   
   /* < private > */
-  GstVideoFormat format;
-  gint from_width, from_height;
-  gint to_width, to_height;
+  GstVideoInfo in_info;
+  GstVideoInfo out_info;
   
   GstVideoFlipMethod method;
-  void (*process) (GstVideoFlip *videoflip, guint8 *dest, const guint8 *src);
+  void (*process) (GstVideoFlip *videoflip, GstVideoFrame *dest, const GstVideoFrame *src);
 };
 
 struct _GstVideoFlipClass {

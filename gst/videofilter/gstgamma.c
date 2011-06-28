@@ -71,49 +71,23 @@ enum
 #define DEFAULT_PROP_GAMMA  1
 
 static GstStaticPadTemplate gst_gamma_src_template =
-    GST_STATIC_PAD_TEMPLATE ("src",
+GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("AYUV") ";"
-        GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_BGRA ";"
-        GST_VIDEO_CAPS_ABGR ";" GST_VIDEO_CAPS_RGBA ";"
-        GST_VIDEO_CAPS_YUV ("Y444") ";"
-        GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_RGBx ";"
-        GST_VIDEO_CAPS_xBGR ";" GST_VIDEO_CAPS_BGRx ";"
-        GST_VIDEO_CAPS_RGB ";" GST_VIDEO_CAPS_BGR ";"
-        GST_VIDEO_CAPS_YUV ("Y42B") ";"
-        GST_VIDEO_CAPS_YUV ("NV12") ";"
-        GST_VIDEO_CAPS_YUV ("NV21") ";"
-        GST_VIDEO_CAPS_YUV ("YUY2") ";"
-        GST_VIDEO_CAPS_YUV ("UYVY") ";"
-        GST_VIDEO_CAPS_YUV ("YVYU") ";"
-        GST_VIDEO_CAPS_YUV ("I420") ";"
-        GST_VIDEO_CAPS_YUV ("YV12") ";"
-        GST_VIDEO_CAPS_YUV ("IYUV") ";" GST_VIDEO_CAPS_YUV ("Y41B")
-    )
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ AYUV, "
+            "ARGB, BGRA, ABGR, RGBA, ABGR, RGBA, Y444, "
+            "xRGB, RGBx, xBGR, BGRx, RGB, BGR, Y42B, NV12, "
+            "NV21, YUY2, UYVY, YVYU, I420, YV12, IYUV, Y41B }"))
     );
 
 static GstStaticPadTemplate gst_gamma_sink_template =
-    GST_STATIC_PAD_TEMPLATE ("sink",
+GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("AYUV") ";"
-        GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_BGRA ";"
-        GST_VIDEO_CAPS_ABGR ";" GST_VIDEO_CAPS_RGBA ";"
-        GST_VIDEO_CAPS_YUV ("Y444") ";"
-        GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_RGBx ";"
-        GST_VIDEO_CAPS_xBGR ";" GST_VIDEO_CAPS_BGRx ";"
-        GST_VIDEO_CAPS_RGB ";" GST_VIDEO_CAPS_BGR ";"
-        GST_VIDEO_CAPS_YUV ("Y42B") ";"
-        GST_VIDEO_CAPS_YUV ("NV12") ";"
-        GST_VIDEO_CAPS_YUV ("NV21") ";"
-        GST_VIDEO_CAPS_YUV ("YUY2") ";"
-        GST_VIDEO_CAPS_YUV ("UYVY") ";"
-        GST_VIDEO_CAPS_YUV ("YVYU") ";"
-        GST_VIDEO_CAPS_YUV ("I420") ";"
-        GST_VIDEO_CAPS_YUV ("YV12") ";"
-        GST_VIDEO_CAPS_YUV ("IYUV") ";" GST_VIDEO_CAPS_YUV ("Y41B")
-    )
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ AYUV, "
+            "ARGB, BGRA, ABGR, RGBA, ABGR, RGBA, Y444, "
+            "xRGB, RGBx, xBGR, BGRx, RGB, BGR, Y42B, NV12, "
+            "NV21, YUY2, UYVY, YVYU, I420, YV12, IYUV, Y41B }"))
     );
 
 static void gst_gamma_set_property (GObject * object, guint prop_id,
@@ -235,21 +209,18 @@ gst_gamma_calculate_tables (GstGamma * gamma)
 }
 
 static void
-gst_gamma_planar_yuv_ip (GstGamma * gamma, guint8 * data)
+gst_gamma_planar_yuv_ip (GstGamma * gamma, GstVideoFrame * frame)
 {
   gint i, j, height;
-  gint width, row_stride, row_wrap;
+  gint width, stride, row_wrap;
   const guint8 *table = gamma->gamma_table;
+  guint8 *data;
 
-  data =
-      data + gst_video_format_get_component_offset (gamma->format, 0,
-      gamma->width, gamma->height);
-
-  width = gst_video_format_get_component_width (gamma->format, 0, gamma->width);
-  height = gst_video_format_get_component_height (gamma->format, 0,
-      gamma->height);
-  row_stride = gst_video_format_get_row_stride (gamma->format, 0, gamma->width);
-  row_wrap = row_stride - width;
+  data = GST_VIDEO_FRAME_COMP_DATA (frame, 0);
+  stride = GST_VIDEO_FRAME_COMP_STRIDE (frame, 0);
+  width = GST_VIDEO_FRAME_COMP_WIDTH (frame, 0);
+  height = GST_VIDEO_FRAME_COMP_HEIGHT (frame, 0);
+  row_wrap = stride - width;
 
   for (i = 0; i < height; i++) {
     for (j = 0; j < width; j++) {
@@ -261,22 +232,20 @@ gst_gamma_planar_yuv_ip (GstGamma * gamma, guint8 * data)
 }
 
 static void
-gst_gamma_packed_yuv_ip (GstGamma * gamma, guint8 * data)
+gst_gamma_packed_yuv_ip (GstGamma * gamma, GstVideoFrame * frame)
 {
   gint i, j, height;
-  gint width, row_stride, row_wrap;
+  gint width, stride, row_wrap;
   gint pixel_stride;
   const guint8 *table = gamma->gamma_table;
+  guint8 *data;
 
-  data = data + gst_video_format_get_component_offset (gamma->format, 0,
-      gamma->width, gamma->height);
-
-  width = gst_video_format_get_component_width (gamma->format, 0, gamma->width);
-  height = gst_video_format_get_component_height (gamma->format, 0,
-      gamma->height);
-  row_stride = gst_video_format_get_row_stride (gamma->format, 0, gamma->width);
-  pixel_stride = gst_video_format_get_pixel_stride (gamma->format, 0);
-  row_wrap = row_stride - pixel_stride * width;
+  data = GST_VIDEO_FRAME_COMP_DATA (frame, 0);
+  stride = GST_VIDEO_FRAME_COMP_STRIDE (frame, 0);
+  width = GST_VIDEO_FRAME_COMP_WIDTH (frame, 0);
+  height = GST_VIDEO_FRAME_COMP_HEIGHT (frame, 0);
+  pixel_stride = GST_VIDEO_FRAME_COMP_PSTRIDE (frame, 0);
+  row_wrap = stride - pixel_stride * width;
 
   for (i = 0; i < height; i++) {
     for (j = 0; j < width; j++) {
@@ -302,29 +271,28 @@ static const gint cog_rgb_to_ycbcr_matrix_8bit_sdtv[] = {
 #define APPLY_MATRIX(m,o,v1,v2,v3) ((m[o*4] * v1 + m[o*4+1] * v2 + m[o*4+2] * v3 + m[o*4+3]) >> 8)
 
 static void
-gst_gamma_packed_rgb_ip (GstGamma * gamma, guint8 * data)
+gst_gamma_packed_rgb_ip (GstGamma * gamma, GstVideoFrame * frame)
 {
   gint i, j, height;
-  gint width, row_stride, row_wrap;
+  gint width, stride, row_wrap;
   gint pixel_stride;
   const guint8 *table = gamma->gamma_table;
   gint offsets[3];
   gint r, g, b;
   gint y, u, v;
+  guint8 *data;
 
-  offsets[0] = gst_video_format_get_component_offset (gamma->format, 0,
-      gamma->width, gamma->height);
-  offsets[1] = gst_video_format_get_component_offset (gamma->format, 1,
-      gamma->width, gamma->height);
-  offsets[2] = gst_video_format_get_component_offset (gamma->format, 2,
-      gamma->width, gamma->height);
+  data = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  stride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
+  width = GST_VIDEO_FRAME_COMP_WIDTH (frame, 0);
+  height = GST_VIDEO_FRAME_COMP_HEIGHT (frame, 0);
 
-  width = gst_video_format_get_component_width (gamma->format, 0, gamma->width);
-  height = gst_video_format_get_component_height (gamma->format, 0,
-      gamma->height);
-  row_stride = gst_video_format_get_row_stride (gamma->format, 0, gamma->width);
-  pixel_stride = gst_video_format_get_pixel_stride (gamma->format, 0);
-  row_wrap = row_stride - pixel_stride * width;
+  offsets[0] = GST_VIDEO_FRAME_COMP_OFFSET (frame, 0);
+  offsets[1] = GST_VIDEO_FRAME_COMP_OFFSET (frame, 1);
+  offsets[2] = GST_VIDEO_FRAME_COMP_OFFSET (frame, 2);
+
+  pixel_stride = GST_VIDEO_FRAME_COMP_PSTRIDE (frame, 0);
+  row_wrap = stride - pixel_stride * width;
 
   for (i = 0; i < height; i++) {
     for (j = 0; j < width; j++) {
@@ -355,19 +323,18 @@ gst_gamma_set_caps (GstBaseTransform * base, GstCaps * incaps,
     GstCaps * outcaps)
 {
   GstGamma *gamma = GST_GAMMA (base);
+  GstVideoInfo info;
 
   GST_DEBUG_OBJECT (gamma,
       "setting caps: in %" GST_PTR_FORMAT " out %" GST_PTR_FORMAT, incaps,
       outcaps);
 
-  if (!gst_video_format_parse_caps (incaps, &gamma->format, &gamma->width,
-          &gamma->height))
+  if (!gst_video_info_from_caps (&info, incaps))
     goto invalid_caps;
 
-  gamma->size =
-      gst_video_format_get_size (gamma->format, gamma->width, gamma->height);
+  gamma->info = info;
 
-  switch (gamma->format) {
+  switch (GST_VIDEO_INFO_FORMAT (&info)) {
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
     case GST_VIDEO_FORMAT_Y41B:
@@ -403,8 +370,10 @@ gst_gamma_set_caps (GstBaseTransform * base, GstCaps * incaps,
   return TRUE;
 
 invalid_caps:
-  GST_ERROR_OBJECT (gamma, "Invalid caps: %" GST_PTR_FORMAT, incaps);
-  return FALSE;
+  {
+    GST_ERROR_OBJECT (gamma, "Invalid caps: %" GST_PTR_FORMAT, incaps);
+    return FALSE;
+  }
 }
 
 static void
@@ -428,8 +397,7 @@ static GstFlowReturn
 gst_gamma_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
 {
   GstGamma *gamma = GST_GAMMA (base);
-  guint8 *data;
-  gsize size;
+  GstVideoFrame frame;
 
   if (!gamma->process)
     goto not_negotiated;
@@ -437,26 +405,23 @@ gst_gamma_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
   if (base->passthrough)
     goto done;
 
-  data = gst_buffer_map (outbuf, &size, NULL, GST_MAP_READWRITE);
-
-  if (size != gamma->size)
-    goto wrong_size;
+  if (!gst_video_frame_map (&frame, &gamma->info, outbuf, GST_MAP_READWRITE))
+    goto wrong_buffer;
 
   GST_OBJECT_LOCK (gamma);
-  gamma->process (gamma, data);
+  gamma->process (gamma, &frame);
   GST_OBJECT_UNLOCK (gamma);
 
-  gst_buffer_unmap (outbuf, data, size);
+  gst_video_frame_unmap (&frame);
 
 done:
   return GST_FLOW_OK;
 
   /* ERRORS */
-wrong_size:
+wrong_buffer:
   {
     GST_ELEMENT_ERROR (gamma, STREAM, FORMAT,
-        (NULL), ("Invalid buffer size %d, expected %d", size, gamma->size));
-    gst_buffer_unmap (outbuf, data, size);
+        (NULL), ("Invalid buffer received"));
     return GST_FLOW_ERROR;
   }
 not_negotiated:
