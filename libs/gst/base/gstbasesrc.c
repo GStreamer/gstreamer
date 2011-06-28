@@ -2683,8 +2683,6 @@ gst_base_src_prepare_allocation (GstBaseSrc * basesrc, GstCaps * caps)
   gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
       &alignment, &pool);
 
-  gst_query_unref (query);
-
   if (size == 0) {
     const gchar *mem = NULL;
 
@@ -2705,6 +2703,8 @@ gst_base_src_prepare_allocation (GstBaseSrc * basesrc, GstCaps * caps)
         alignment);
     gst_buffer_pool_set_config (pool, config);
   }
+
+  gst_query_unref (query);
 
   result =
       gst_base_src_set_allocation (basesrc, pool, allocator, prefix, alignment);
