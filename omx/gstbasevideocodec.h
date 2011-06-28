@@ -129,6 +129,10 @@ struct _GstVideoFrame
   GstClockTime deadline;
 
   gboolean force_keyframe;
+
+  /* Events that should be pushed downstream *before*
+   * the next src_buffer */
+  GList *events;
 };
 
 struct _GstBaseVideoCodec
