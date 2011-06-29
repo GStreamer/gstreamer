@@ -108,10 +108,15 @@ atoms_recov_write_ftyp_info (FILE * f, AtomFTYP * ftyp, GstBuffer * prefix)
   guint64 size = 0;
 
   if (prefix) {
-    if (fwrite (GST_BUFFER_DATA (prefix), 1, GST_BUFFER_SIZE (prefix), f) !=
-        GST_BUFFER_SIZE (prefix)) {
+    guint8 *bdata;
+    gsize bsize;
+
+    bdata = gst_buffer_map (prefix, &bsize, NULL, GST_MAP_READ);
+    if (fwrite (bdata, 1, bsize, f) != bsize) {
+      gst_buffer_unmap (prefix, bdata, bsize);
       return FALSE;
     }
+    gst_buffer_unmap (prefix, bdata, bsize);
   }
   if (!atom_ftyp_copy_data (ftyp, &data, &size, &offset)) {
     return FALSE;

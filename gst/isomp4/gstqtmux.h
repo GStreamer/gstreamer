@@ -125,6 +125,7 @@ struct _GstQTPad
 
   /* if nothing is set, it won't be called */
   GstQTPadPrepareBufferFunc prepare_buf_func;
+  gboolean (*set_caps) (GstPad * pad, GstCaps * caps);
 };
 
 typedef enum _GstQTMuxState

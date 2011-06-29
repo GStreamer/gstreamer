@@ -6,6 +6,7 @@ libgstisomp4_la_LIBADD = \
     $(GST_PLUGINS_BASE_LIBS) \
     -lgstriff-@GST_MAJORMINOR@ \
     -lgstaudio-@GST_MAJORMINOR@ \
+    -lgstvideo-@GST_MAJORMINOR@ \
     -lgstrtp-@GST_MAJORMINOR@ \
     -lgsttag-@GST_MAJORMINOR@ \
     -lgstpbutils-@GST_MAJORMINOR@ \

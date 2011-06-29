@@ -153,10 +153,8 @@ GstQTMuxFormatProp gst_qt_mux_format_list[] = {
         "GstQTMux",
         GST_STATIC_CAPS ("video/quicktime, variant = (string) apple; "
             "video/quicktime"),
-        GST_STATIC_CAPS ("video/x-raw-rgb, "
-            COMMON_VIDEO_CAPS "; "
-            "video/x-raw-yuv, "
-            "format = (fourcc) UYVY, "
+        GST_STATIC_CAPS ("video/x-raw, "
+            "format = (string) { RGB, UYVY }, "
             COMMON_VIDEO_CAPS "; "
             MPEG4V_CAPS "; "
             H263_CAPS "; "
@@ -361,12 +359,18 @@ gst_qt_mux_map_format_to_header (GstQTMuxFormat format, GstBuffer ** _prefix,
       break;
     }
     case GST_QT_MUX_FORMAT_MJ2:
+    {
+      guint8 *bdata;
+
       major = FOURCC_mjp2;
       comp = mjp2_brands;
       version = 0;
       prefix = gst_buffer_new_and_alloc (sizeof (mjp2_prefix));
-      memcpy (GST_BUFFER_DATA (prefix), mjp2_prefix, GST_BUFFER_SIZE (prefix));
+      bdata = gst_buffer_map (prefix, NULL, NULL, GST_MAP_WRITE);
+      memcpy (bdata, mjp2_prefix, sizeof (mjp2_prefix));
+      gst_buffer_unmap (prefix, bdata, -1);
       break;
+    }
     default:
       g_assert_not_reached ();
       break;

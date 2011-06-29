@@ -89,8 +89,8 @@ enum
   PROP_FAST_START_MODE
 };
 
-GST_BOILERPLATE (GstQTMoovRecover, gst_qt_moov_recover, GstPipeline,
-    GST_TYPE_PIPELINE);
+#define gst_qt_moov_recover_parent_class parent_class
+G_DEFINE_TYPE (GstQTMoovRecover, gst_qt_moov_recover, GST_TYPE_PIPELINE);
 
 /* property functions */
 static void gst_qt_moov_recover_set_property (GObject * object,
@@ -102,18 +102,6 @@ static GstStateChangeReturn gst_qt_moov_recover_change_state (GstElement *
     element, GstStateChange transition);
 
 static void gst_qt_moov_recover_finalize (GObject * object);
-
-static void
-gst_qt_moov_recover_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-#if 0
-  GstQTMoovRecoverClass *klass = (GstQTMoovRecoverClass *) g_class;
-#endif
-  gst_element_class_set_details_simple (element_class, "QT Moov Recover",
-      "Util", "Recovers unfinished qtmux files",
-      "Thiago Santos <thiago.sousa.santos@collabora.co.uk>");
-}
 
 static void
 gst_qt_moov_recover_class_init (GstQTMoovRecoverClass * klass)
@@ -156,11 +144,14 @@ gst_qt_moov_recover_class_init (GstQTMoovRecoverClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (gst_qt_moov_recover_debug, "qtmoovrecover", 0,
       "QT Moovie Recover");
+
+  gst_element_class_set_details_simple (gstelement_class, "QT Moov Recover",
+      "Util", "Recovers unfinished qtmux files",
+      "Thiago Santos <thiago.sousa.santos@collabora.co.uk>");
 }
 
 static void
-gst_qt_moov_recover_init (GstQTMoovRecover * qtmr,
-    GstQTMoovRecoverClass * qtmr_klass)
+gst_qt_moov_recover_init (GstQTMoovRecover * qtmr)
 {
 }
 
