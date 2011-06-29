@@ -613,6 +613,8 @@ gst_qt_mux_add_mp4_date (GstQTMux * qtmux, const GstTagList * list,
   month = g_date_get_month (date);
   day = g_date_get_day (date);
 
+  g_date_free (date);
+
   if (year == G_DATE_BAD_YEAR && month == G_DATE_BAD_MONTH &&
       day == G_DATE_BAD_DAY) {
     GST_WARNING_OBJECT (qtmux, "invalid date in tag");
