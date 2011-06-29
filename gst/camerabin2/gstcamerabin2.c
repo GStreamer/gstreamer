@@ -245,13 +245,9 @@ gst_camera_bin_start_capture (GstCameraBin2 * camerabin)
     if (camerabin->audio_src) {
       gst_element_set_state (camerabin->audio_src, GST_STATE_READY);
       /* need to reset eos status (pads could be flushing) */
-      gst_element_set_state (camerabin->audio_queue, GST_STATE_READY);
-      gst_element_set_state (camerabin->audio_convert, GST_STATE_READY);
       gst_element_set_state (camerabin->audio_capsfilter, GST_STATE_READY);
       gst_element_set_state (camerabin->audio_volume, GST_STATE_READY);
 
-      gst_element_sync_state_with_parent (camerabin->audio_queue);
-      gst_element_sync_state_with_parent (camerabin->audio_convert);
       gst_element_sync_state_with_parent (camerabin->audio_capsfilter);
       gst_element_sync_state_with_parent (camerabin->audio_volume);
     }
@@ -341,7 +337,6 @@ gst_camera_bin_src_notify_readyforcapture (GObject * obj, GParamSpec * pspec,
       gst_element_set_state (camera->videosink, GST_STATE_NULL);
       gst_element_set_state (camera->video_encodebin, GST_STATE_NULL);
       gst_element_set_state (camera->videobin_capsfilter, GST_STATE_NULL);
-      gst_element_set_state (camera->videobin_queue, GST_STATE_NULL);
       location = g_strdup_printf (camera->location, camera->capture_index++);
       GST_DEBUG_OBJECT (camera, "Switching videobin location to %s", location);
       g_object_set (camera->videosink, "location", location, NULL);
@@ -349,7 +344,6 @@ gst_camera_bin_src_notify_readyforcapture (GObject * obj, GParamSpec * pspec,
       gst_element_set_state (camera->videosink, GST_STATE_PLAYING);
       gst_element_set_state (camera->video_encodebin, GST_STATE_PLAYING);
       gst_element_set_state (camera->videobin_capsfilter, GST_STATE_PLAYING);
-      gst_element_set_state (camera->videobin_queue, GST_STATE_PLAYING);
     }
 
   }
@@ -377,10 +371,6 @@ gst_camera_bin_dispose (GObject * object)
 
   if (camerabin->audio_capsfilter)
     gst_object_unref (camerabin->audio_capsfilter);
-  if (camerabin->audio_queue)
-    gst_object_unref (camerabin->audio_queue);
-  if (camerabin->audio_convert)
-    gst_object_unref (camerabin->audio_convert);
   if (camerabin->audio_volume)
     gst_object_unref (camerabin->audio_volume);
 
@@ -399,8 +389,6 @@ gst_camera_bin_dispose (GObject * object)
     gst_object_unref (camerabin->videosink);
   if (camerabin->video_encodebin)
     gst_object_unref (camerabin->video_encodebin);
-  if (camerabin->videobin_queue)
-    gst_object_unref (camerabin->videobin_queue);
   if (camerabin->videobin_capsfilter)
     gst_object_unref (camerabin->videobin_capsfilter);
 
@@ -798,7 +786,8 @@ gst_camera_bin_handle_message (GstBin * bin, GstMessage * message)
 static void
 gst_camera_bin_check_and_replace_filter (GstCameraBin2 * camera,
     GstElement ** current_filter, GstElement * new_filter,
-    GstElement * previous_element, GstElement * next_element)
+    GstElement * previous_element, GstElement * next_element,
+    const gchar * prev_elem_pad)
 {
   if (*current_filter == new_filter) {
     GST_DEBUG_OBJECT (camera, "Current filter is the same as the previous, "
@@ -822,9 +811,21 @@ gst_camera_bin_check_and_replace_filter (GstCameraBin2 * camera,
   if (new_filter) {
     *current_filter = gst_object_ref (new_filter);
     gst_bin_add (GST_BIN_CAST (camera), gst_object_ref (new_filter));
-    gst_element_link_many (previous_element, new_filter, next_element, NULL);
+  }
+
+  if (prev_elem_pad) {
+    if (new_filter) {
+      gst_element_link_pads (previous_element, prev_elem_pad, new_filter, NULL);
+      gst_element_link (new_filter, next_element);
+    } else {
+      gst_element_link_pads (previous_element, prev_elem_pad, next_element,
+          NULL);
+    }
   } else {
-    gst_element_link (previous_element, next_element);
+    if (new_filter)
+      gst_element_link_many (previous_element, new_filter, next_element, NULL);
+    else
+      gst_element_link (previous_element, next_element);
   }
 }
 
@@ -1081,13 +1082,6 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
     g_object_set (camera->videosink, "async", FALSE, NULL);
 
     /* audio elements */
-    camera->audio_queue = gst_element_factory_make ("queue", "audio-queue");
-    camera->audio_convert = gst_element_factory_make ("audioconvert",
-        "audio-convert");
-    if (!camera->audio_convert) {
-      missing_element_name = "audioconvert";
-      goto missing_element;
-    }
     if (!camera->audio_volume) {
       missing_element_name = "volume";
       goto missing_element;
@@ -1160,8 +1154,6 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
       camera->image_profile_switch = TRUE;
     }
 
-    camera->videobin_queue =
-        gst_element_factory_make ("queue", "videobin-queue");
     camera->imagebin_queue =
         gst_element_factory_make ("queue", "imagebin-queue");
     camera->viewfinderbin_queue =
@@ -1171,20 +1163,16 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
         NULL);
     g_object_set (camera->imagebin_queue, "max-size-time", (guint64) 0,
         "silent", TRUE, NULL);
-    g_object_set (camera->videobin_queue, "silent", TRUE, NULL);
 
     gst_bin_add_many (GST_BIN_CAST (camera),
         gst_object_ref (camera->video_encodebin),
         gst_object_ref (camera->videosink),
         gst_object_ref (camera->image_encodebin),
         gst_object_ref (camera->imagesink),
-        gst_object_ref (camera->videobin_queue),
         gst_object_ref (camera->imagebin_queue),
         gst_object_ref (camera->viewfinderbin_queue), NULL);
 
     /* Linking can be optimized TODO */
-    gst_element_link_many (camera->videobin_queue, camera->videobin_capsfilter,
-        NULL);
     gst_element_link (camera->video_encodebin, camera->videosink);
 
     gst_element_link_many (camera->imagebin_queue, camera->imagebin_capsfilter,
@@ -1297,8 +1285,12 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
         "sink");
     gst_element_link_pads (camera->src, "imgsrc", camera->imagebin_queue,
         "sink");
-    gst_element_link_pads (camera->src, "vidsrc", camera->videobin_queue,
-        "sink");
+    if (!gst_element_link_pads (camera->src, "vidsrc",
+            camera->videobin_capsfilter, "sink")) {
+      GST_ERROR_OBJECT (camera,
+          "Failed to link camera source's vidsrc pad to video bin capsfilter");
+      goto fail;
+    }
 
     gst_pad_add_buffer_probe (imgsrc,
         (GCallback) gst_camera_bin_image_src_buffer_probe, camera);
@@ -1307,13 +1299,13 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
 
   gst_camera_bin_check_and_replace_filter (camera, &camera->image_filter,
       camera->user_image_filter, camera->imagebin_queue,
-      camera->imagebin_capsfilter);
+      camera->imagebin_capsfilter, NULL);
   gst_camera_bin_check_and_replace_filter (camera, &camera->video_filter,
-      camera->user_video_filter, camera->videobin_queue,
-      camera->videobin_capsfilter);
+      camera->user_video_filter, camera->src, camera->videobin_capsfilter,
+      "vidsrc");
   gst_camera_bin_check_and_replace_filter (camera, &camera->viewfinder_filter,
       camera->user_viewfinder_filter, camera->viewfinderbin_queue,
-      camera->viewfinderbin_capsfilter);
+      camera->viewfinderbin_capsfilter, NULL);
 
   /* check if we need to replace the camera audio src */
   has_audio = gst_camera_bin_video_profile_has_audio (camera);
@@ -1321,10 +1313,8 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
     if ((camera->user_audio_src && camera->user_audio_src != camera->audio_src)
         || !has_audio) {
       gst_bin_remove (GST_BIN_CAST (camera), camera->audio_src);
-      gst_bin_remove (GST_BIN_CAST (camera), camera->audio_queue);
       gst_bin_remove (GST_BIN_CAST (camera), camera->audio_volume);
       gst_bin_remove (GST_BIN_CAST (camera), camera->audio_capsfilter);
-      gst_bin_remove (GST_BIN_CAST (camera), camera->audio_convert);
       gst_object_unref (camera->audio_src);
       camera->audio_src = NULL;
     }
@@ -1344,20 +1334,18 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
 
   if (new_audio_src) {
     gst_bin_add (GST_BIN_CAST (camera), gst_object_ref (camera->audio_src));
-    gst_bin_add (GST_BIN_CAST (camera), gst_object_ref (camera->audio_queue));
     gst_bin_add (GST_BIN_CAST (camera), gst_object_ref (camera->audio_volume));
     gst_bin_add (GST_BIN_CAST (camera),
         gst_object_ref (camera->audio_capsfilter));
-    gst_bin_add (GST_BIN_CAST (camera), gst_object_ref (camera->audio_convert));
 
-    gst_element_link_many (camera->audio_src, camera->audio_queue,
-        camera->audio_volume,
-        camera->audio_capsfilter, camera->audio_convert, NULL);
+    gst_element_link_many (camera->audio_src, camera->audio_volume,
+        camera->audio_capsfilter, NULL);
   }
 
   if ((profile_switched && has_audio) || new_audio_src) {
     if (GST_PAD_LINK_FAILED (gst_camera_bin_link_encodebin (camera,
-                camera->video_encodebin, camera->audio_convert, AUDIO_PAD))) {
+                camera->video_encodebin, camera->audio_capsfilter,
+                AUDIO_PAD))) {
       goto fail;
     }
   }
@@ -1423,20 +1411,16 @@ gst_camera_bin_change_state (GstElement * element, GstStateChange trans)
       camera->image_location_list = NULL;
 
       /* explicitly set to READY as they might be outside of the bin */
-      gst_element_set_state (camera->audio_queue, GST_STATE_READY);
       gst_element_set_state (camera->audio_volume, GST_STATE_READY);
       gst_element_set_state (camera->audio_capsfilter, GST_STATE_READY);
-      gst_element_set_state (camera->audio_convert, GST_STATE_READY);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       if (camera->audio_src)
         gst_element_set_state (camera->audio_src, GST_STATE_NULL);
 
       /* explicitly set to NULL as they might be outside of the bin */
-      gst_element_set_state (camera->audio_queue, GST_STATE_NULL);
       gst_element_set_state (camera->audio_volume, GST_STATE_NULL);
       gst_element_set_state (camera->audio_capsfilter, GST_STATE_NULL);
-      gst_element_set_state (camera->audio_convert, GST_STATE_NULL);
 
       break;
     default:

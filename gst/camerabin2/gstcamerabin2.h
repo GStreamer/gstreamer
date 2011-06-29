@@ -45,7 +45,6 @@ struct _GstCameraBin2
   GstElement *video_encodebin;
   gulong video_encodebin_signal_id;
   GstElement *videosink;
-  GstElement *videobin_queue;
   GstElement *videobin_capsfilter;
 
   GstElement *viewfinderbin;
@@ -67,10 +66,8 @@ struct _GstCameraBin2
 
   GstElement *audio_src;
   GstElement *user_audio_src;
-  GstElement *audio_queue;
   GstElement *audio_volume;
   GstElement *audio_capsfilter;
-  GstElement *audio_convert;
 
   gint processing_counter; /* atomic int */
 
