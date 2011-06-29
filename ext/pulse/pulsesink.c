@@ -1006,7 +1006,6 @@ mainloop_enter_defer_cb (pa_mainloop_api * api, void *userdata)
   gst_element_post_message (GST_ELEMENT (pulsesink), message);
 
   /* signal the waiter */
-  pulsesink->pa_defer_ran = TRUE;
   pa_threaded_mainloop_signal (mainloop, 0);
 }
 
@@ -1023,7 +1022,6 @@ gst_pulseringbuffer_start (GstRingBuffer * buf)
   pa_threaded_mainloop_lock (mainloop);
 
   GST_DEBUG_OBJECT (psink, "scheduling stream status");
-  psink->pa_defer_ran = FALSE;
   pa_mainloop_api_once (pa_threaded_mainloop_get_api (mainloop),
       mainloop_enter_defer_cb, psink);
 
@@ -1083,7 +1081,6 @@ mainloop_leave_defer_cb (pa_mainloop_api * api, void *userdata)
   gst_message_set_stream_status_object (message, &val);
   gst_element_post_message (GST_ELEMENT (pulsesink), message);
 
-  pulsesink->pa_defer_ran = TRUE;
   pa_threaded_mainloop_signal (mainloop, 0);
   gst_object_unref (pulsesink);
 }
@@ -1129,12 +1126,10 @@ cleanup:
   }
 
   GST_DEBUG_OBJECT (psink, "scheduling stream status");
-  psink->pa_defer_ran = FALSE;
   gst_object_ref (psink);
   pa_mainloop_api_once (pa_threaded_mainloop_get_api (mainloop),
       mainloop_leave_defer_cb, psink);
 
-  GST_DEBUG_OBJECT (psink, "waiting for stream status");
   pa_threaded_mainloop_unlock (mainloop);
 
   return res;
