@@ -1632,16 +1632,12 @@ flush_queued (GstFFMpegDec * ffmpegdec)
   return res;
 }
 
-static AVPacket *
-gst_avpacket_new (guint8 * data, guint size)
+static void
+gst_avpacket_init (AVPacket * packet, guint8 * data, guint size)
 {
-  AVPacket *res;
-
-  res = g_malloc0 (sizeof (AVPacket));
-  res->data = data;
-  res->size = size;
-
-  return res;
+  memset (packet, 0, sizeof (AVPacket));
+  packet->data = data;
+  packet->size = size;
 }
 
 /* gst_ffmpegdec_[video|audio]_frame:
@@ -1671,7 +1667,7 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
   GstClockTime out_timestamp, out_duration, out_pts;
   gint64 out_offset;
   const GstTSInfo *out_info;
-  AVPacket *packet;
+  AVPacket packet;
 
   *ret = GST_FLOW_OK;
   *outbuf = NULL;
@@ -1717,9 +1713,9 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
   GST_DEBUG_OBJECT (ffmpegdec, "stored opaque values idx %d", dec_info->idx);
 
   /* now decode the frame */
-  packet = gst_avpacket_new (data, size);
+  gst_avpacket_init (&packet, data, size);
   len = avcodec_decode_video2 (ffmpegdec->context,
-      ffmpegdec->picture, &have_data, packet);
+      ffmpegdec->picture, &have_data, &packet);
 
   /* restore previous state */
   if (!decode)
@@ -2071,7 +2067,7 @@ gst_ffmpegdec_audio_frame (GstFFMpegDec * ffmpegdec,
   gint have_data = AVCODEC_MAX_AUDIO_FRAME_SIZE;
   GstClockTime out_timestamp, out_duration;
   gint64 out_offset;
-  AVPacket *packet;
+  AVPacket packet;
 
   GST_DEBUG_OBJECT (ffmpegdec,
       "size:%d, offset:%" G_GINT64_FORMAT ", ts:%" GST_TIME_FORMAT ", dur:%"
@@ -2083,9 +2079,9 @@ gst_ffmpegdec_audio_frame (GstFFMpegDec * ffmpegdec,
       new_aligned_buffer (AVCODEC_MAX_AUDIO_FRAME_SIZE,
       GST_PAD_CAPS (ffmpegdec->srcpad));
 
-  packet = gst_avpacket_new (data, size);
+  gst_avpacket_init (&packet, data, size);
   len = avcodec_decode_audio3 (ffmpegdec->context,
-      (int16_t *) GST_BUFFER_DATA (*outbuf), &have_data, packet);
+      (int16_t *) GST_BUFFER_DATA (*outbuf), &have_data, &packet);
   GST_DEBUG_OBJECT (ffmpegdec,
       "Decode audio: len=%d, have_data=%d", len, have_data);
 
