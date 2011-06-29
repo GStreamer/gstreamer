@@ -26,10 +26,27 @@
 
 typedef enum {
   GST_DECKLINK_MODE_NTSC,
+  GST_DECKLINK_MODE_NTSC2398,
   GST_DECKLINK_MODE_PAL,
+  GST_DECKLINK_MODE_NTSC_P,
+  GST_DECKLINK_MODE_PAL_P,
+
+  GST_DECKLINK_MODE_1080p2398,
+  GST_DECKLINK_MODE_1080p24,
+  GST_DECKLINK_MODE_1080p25,
+  GST_DECKLINK_MODE_1080p2997,
+  GST_DECKLINK_MODE_1080p30,
+
   GST_DECKLINK_MODE_1080i50,
+  GST_DECKLINK_MODE_1080i5994,
   GST_DECKLINK_MODE_1080i60,
+
+  GST_DECKLINK_MODE_1080p50,
+  GST_DECKLINK_MODE_1080p5994,
+  GST_DECKLINK_MODE_1080p60,
+
   GST_DECKLINK_MODE_720p50,
+  GST_DECKLINK_MODE_720p5994,
   GST_DECKLINK_MODE_720p60
 } GstDecklinkModeEnum;
 #define GST_TYPE_DECKLINK_MODE (gst_decklink_mode_get_type ())
@@ -54,10 +71,15 @@ struct _GstDecklinkMode {
   int fps_n;
   int fps_d;
   gboolean interlaced;
+  int par_n;
+  int par_d;
+  gboolean tff;
+  gboolean is_hdtv;
 };
 
 const GstDecklinkMode * gst_decklink_get_mode (GstDecklinkModeEnum e);
 GstCaps * gst_decklink_mode_get_caps (GstDecklinkModeEnum e);
+GstCaps * gst_decklink_mode_get_template_caps (void);
 
 #define GST_DECKLINK_MODE_CAPS(w,h,n,d,i) \
   "video/x-raw-yuv,format=(fourcc)UYVY,width=" #w ",height=" #h \
@@ -65,22 +87,28 @@ GstCaps * gst_decklink_mode_get_caps (GstDecklinkModeEnum e);
 
 #define GST_DECKLINK_CAPS \
   GST_DECKLINK_MODE_CAPS(720,486,30000,1001,true) ";" \
+  GST_DECKLINK_MODE_CAPS(720,486,24000,1001,true) ";" \
   GST_DECKLINK_MODE_CAPS(720,576,25,1,true) ";" \
+  GST_DECKLINK_MODE_CAPS(720,486,30000,1001,false) ";" \
+  GST_DECKLINK_MODE_CAPS(720,576,25,1,false) ";" \
+  \
+  GST_DECKLINK_MODE_CAPS(1920,1080,24000,1001,false) ";" \
+  GST_DECKLINK_MODE_CAPS(1920,1080,24,1,false) ";" \
+  GST_DECKLINK_MODE_CAPS(1920,1080,25,1,false) ";" \
+  GST_DECKLINK_MODE_CAPS(1920,1080,30000,1001,false) ";" \
+  GST_DECKLINK_MODE_CAPS(1920,1080,30,1,false) ";" \
+  \
   GST_DECKLINK_MODE_CAPS(1920,1080,25,1,true) ";" \
   GST_DECKLINK_MODE_CAPS(1920,1080,30000,1001,true) ";" \
-  GST_DECKLINK_MODE_CAPS(1280,720,50,1,true) ";" \
-  GST_DECKLINK_MODE_CAPS(1280,720,60000,1001,true)
-
-#if 0
-  MODE(720,486,24000,1001,true) ";" \
-  MODE(1920,1080,24000,1001,false) ";" \
-  MODE(1920,1080,24,1,false) ";" \
-  MODE(1920,1080,25,1,false) ";" \
-  MODE(1920,1080,30000,1001,false) ";" \
-  MODE(1920,1080,30,1,false) ";" \
-  MODE(1920,1080,30,1,true) ";" \
-  MODE(1280,720,60,1,true)
-#endif
+  GST_DECKLINK_MODE_CAPS(1920,1080,30,1,true) ";" \
+  \
+  GST_DECKLINK_MODE_CAPS(1920,1080,50,1,false) ";" \
+  GST_DECKLINK_MODE_CAPS(1920,1080,60000,1001,false) ";" \
+  GST_DECKLINK_MODE_CAPS(1920,1080,60,1,false) ";" \
+  \
+  GST_DECKLINK_MODE_CAPS(1280,720,50,1,false) ";" \
+  GST_DECKLINK_MODE_CAPS(1280,720,60000,1001,false) ";" \
+  GST_DECKLINK_MODE_CAPS(1280,720,60,1,false)
 
 
 #endif

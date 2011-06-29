@@ -131,11 +131,7 @@ GST_STATIC_PAD_TEMPLATE ("audiosrc",
     GST_STATIC_CAPS ("audio/x-raw-int,width=16,depth=16,channels=2,rate=48000")
     );
 
-static GstStaticPadTemplate gst_decklink_src_video_src_template =
-GST_STATIC_PAD_TEMPLATE ("videosrc",
-    GST_PAD_SRC,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_DECKLINK_CAPS));
+/* the video source pad template is created on the fly */
 
 /* class initialization */
 
@@ -154,7 +150,8 @@ gst_decklink_src_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_decklink_src_audio_src_template));
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_decklink_src_video_src_template));
+      gst_pad_template_new ("videosrc", GST_PAD_SRC, GST_PAD_ALWAYS,
+        gst_decklink_mode_get_template_caps ()));
 
   gst_element_class_set_details_simple (element_class, "Decklink source",
       "Source/Video", "DeckLink Source", "David Schleef <ds@entropywave.com>");
@@ -235,9 +232,9 @@ gst_decklink_src_init (GstDecklinkSrc * decklinksrc,
 
 
 
-  decklinksrc->videosrcpad =
-      gst_pad_new_from_static_template (&gst_decklink_src_video_src_template,
-      "videosrc");
+  decklinksrc->videosrcpad = gst_pad_new_from_template (
+      gst_element_class_get_pad_template(GST_ELEMENT_CLASS(decklinksrc_class),
+        "videosrc"), "videosrc");
   gst_pad_set_getcaps_function (decklinksrc->videosrcpad,
       GST_DEBUG_FUNCPTR (gst_decklink_src_video_src_getcaps));
   gst_pad_set_setcaps_function (decklinksrc->videosrcpad,
