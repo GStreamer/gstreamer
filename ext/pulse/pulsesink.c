@@ -988,6 +988,7 @@ gst_pulseringbuffer_clear (GstRingBuffer * buf)
   pa_threaded_mainloop_unlock (mainloop);
 }
 
+/* called from pulse with the mainloop lock */
 static void
 mainloop_enter_defer_cb (pa_mainloop_api * api, void *userdata)
 {
@@ -1005,7 +1006,8 @@ mainloop_enter_defer_cb (pa_mainloop_api * api, void *userdata)
 
   gst_element_post_message (GST_ELEMENT (pulsesink), message);
 
-  /* signal the waiter */
+  g_return_if_fail (pulsesink->defer_pending);
+  pulsesink->defer_pending--;
   pa_threaded_mainloop_signal (mainloop, 0);
 }
 
@@ -1022,6 +1024,7 @@ gst_pulseringbuffer_start (GstRingBuffer * buf)
   pa_threaded_mainloop_lock (mainloop);
 
   GST_DEBUG_OBJECT (psink, "scheduling stream status");
+  psink->defer_pending++;
   pa_mainloop_api_once (pa_threaded_mainloop_get_api (mainloop),
       mainloop_enter_defer_cb, psink);
 
@@ -1065,6 +1068,7 @@ gst_pulseringbuffer_pause (GstRingBuffer * buf)
   return res;
 }
 
+/* called from pulse with the mainloop lock */
 static void
 mainloop_leave_defer_cb (pa_mainloop_api * api, void *userdata)
 {
@@ -1081,8 +1085,9 @@ mainloop_leave_defer_cb (pa_mainloop_api * api, void *userdata)
   gst_message_set_stream_status_object (message, &val);
   gst_element_post_message (GST_ELEMENT (pulsesink), message);
 
+  g_return_if_fail (pulsesink->defer_pending);
+  pulsesink->defer_pending--;
   pa_threaded_mainloop_signal (mainloop, 0);
-  gst_object_unref (pulsesink);
 }
 
 /* stop playback, we flush everything. */
@@ -1126,7 +1131,7 @@ cleanup:
   }
 
   GST_DEBUG_OBJECT (psink, "scheduling stream status");
-  gst_object_ref (psink);
+  psink->defer_pending++;
   pa_mainloop_api_once (pa_threaded_mainloop_get_api (mainloop),
       mainloop_leave_defer_cb, psink);
 
@@ -2565,6 +2570,13 @@ gst_pulsesink_release_mainloop (GstPulseSink * psink)
 {
   if (!mainloop)
     return;
+
+  pa_threaded_mainloop_lock (mainloop);
+  while (psink->defer_pending) {
+    GST_DEBUG_OBJECT (psink, "waiting for stream status message emission");
+    pa_threaded_mainloop_wait (mainloop);
+  }
+  pa_threaded_mainloop_unlock (mainloop);
 
   g_mutex_lock (pa_shared_resource_mutex);
   mainloop_ref_ct--;
