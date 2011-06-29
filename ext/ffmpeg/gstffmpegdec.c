@@ -1188,6 +1188,8 @@ gst_ffmpegdec_bufferpool (GstFFMpegDec * ffmpegdec, GstCaps * caps)
     alignment = 15;
   }
 
+  gst_query_unref (query);
+
   if (pool == NULL) {
     /* we did not get a pool, make one ourselves then */
     pool = gst_buffer_pool_new ();
