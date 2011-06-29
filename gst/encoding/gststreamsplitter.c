@@ -268,10 +268,13 @@ resync:
     GstPad *srcpad = (GstPad *) tmp->data;
 
     STREAMS_UNLOCK (stream_splitter);
-    if (res)
-      gst_caps_merge (res, gst_pad_peer_get_caps_reffed (srcpad));
-    else
+    if (res) {
+      GstCaps *peercaps = gst_pad_peer_get_caps_reffed (srcpad);
+      if (peercaps)
+        gst_caps_merge (res, gst_caps_make_writable (peercaps));
+    } else {
       res = gst_pad_peer_get_caps (srcpad);
+    }
     STREAMS_LOCK (stream_splitter);
 
     if (G_UNLIKELY (cookie != stream_splitter->cookie)) {
