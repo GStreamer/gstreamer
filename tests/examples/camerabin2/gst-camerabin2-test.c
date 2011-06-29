@@ -215,6 +215,7 @@ static gchar *gep_filename = NULL;
 static gchar *image_capture_caps_str = NULL;
 static gchar *viewfinder_caps_str = NULL;
 static gchar *video_capture_caps_str = NULL;
+static gchar *audio_capture_caps_str = NULL;
 static gboolean performance_measure = FALSE;
 static gchar *performance_targets_str = NULL;
 static gchar *camerabin2_flags = NULL;
@@ -648,6 +649,13 @@ set_camerabin2_caps_from_string (void)
     caps = gst_caps_from_string (video_capture_caps_str);
     GST_DEBUG ("setting video-capture-caps: %" GST_PTR_FORMAT, caps);
     g_object_set (camerabin, "video-capture-caps", caps, NULL);
+    gst_caps_unref (caps);
+  }
+
+  if (audio_capture_caps_str != NULL) {
+    caps = gst_caps_from_string (audio_capture_caps_str);
+    GST_DEBUG ("setting audio-capture-caps: %" GST_PTR_FORMAT, caps);
+    g_object_set (camerabin, "audio-capture-caps", caps, NULL);
     gst_caps_unref (caps);
   }
 }
@@ -1226,6 +1234,10 @@ main (int argc, char *argv[])
     {"video-capture-caps", '\0', 0,
           G_OPTION_ARG_STRING, &video_capture_caps_str,
         "Video capture caps (e.g. video/x-raw-rgb,width=640,height=480)", NULL},
+    {"audio-capture-caps", '\0', 0,
+          G_OPTION_ARG_STRING, &audio_capture_caps_str,
+          "Audio capture caps (e.g. audio/x-raw-int,width=16,depth=16,rate=44100,channels=2)",
+        NULL},
     {"performance-measure", '\0', 0,
           G_OPTION_ARG_NONE, &performance_measure,
           "If performance information should be printed at the end of execution",
