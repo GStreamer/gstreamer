@@ -2417,6 +2417,7 @@ gst_ffmpegdec_sink_event (GstPad * pad, GstEvent * event)
 
       ret = gst_ffmpegdec_setcaps (ffmpegdec, caps);
 
+      gst_event_unref (event);
       goto done;
     }
     case GST_EVENT_SEGMENT:
