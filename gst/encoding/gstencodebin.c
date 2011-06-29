@@ -118,6 +118,15 @@
 #define fast_pad_link(a,b) gst_pad_link_full((a),(b),GST_PAD_LINK_CHECK_NOTHING)
 #define fast_element_link(a,b) gst_element_link_pads_full((a),"src",(b),"sink",GST_PAD_LINK_CHECK_NOTHING)
 
+typedef enum
+{
+  GST_ENC_FLAG_NATIVE_AUDIO = (1 << 0),
+  GST_ENC_FLAG_NATIVE_VIDEO = (1 << 1)
+} GstEncFlags;
+
+#define GST_TYPE_ENC_FLAGS (gst_enc_flags_get_type())
+GType gst_enc_flags_get_type (void);
+
 /* generic templates */
 static GstStaticPadTemplate muxer_src_template =
 GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
@@ -180,6 +189,8 @@ struct _GstEncodeBin
 
   guint64 tolerance;
   gboolean avoid_reencoding;
+
+  GstEncFlags flags;
 };
 
 struct _GstEncodeBinClass
@@ -216,6 +227,7 @@ struct _StreamGroup
 #define DEFAULT_QUEUE_TIME_MAX     GST_SECOND
 #define DEFAULT_AUDIO_JITTER_TOLERANCE 20 * GST_MSECOND
 #define DEFAULT_AVOID_REENCODING   FALSE
+#define DEFAULT_FLAGS              0
 
 #define DEFAULT_RAW_CAPS			\
   "video/x-raw-yuv; "				\
@@ -238,6 +250,7 @@ enum
   PROP_QUEUE_TIME_MAX,
   PROP_AUDIO_JITTER_TOLERANCE,
   PROP_AVOID_REENCODING,
+  PROP_FLAGS,
   PROP_LAST
 };
 
@@ -247,6 +260,31 @@ enum
   SIGNAL_REQUEST_PAD,
   LAST_SIGNAL
 };
+
+#define C_FLAGS(v) ((guint) v)
+
+GType
+gst_enc_flags_get_type (void)
+{
+  static const GFlagsValue values[] = {
+    {C_FLAGS (GST_ENC_FLAG_NATIVE_AUDIO), "Only use native audio formats",
+        "native-audio"},
+    {C_FLAGS (GST_ENC_FLAG_NATIVE_VIDEO), "Only use native video formats",
+        "native-video"},
+    {0, NULL, NULL}
+  };
+  static volatile GType id = 0;
+
+  if (g_once_init_enter ((gsize *) & id)) {
+    GType _id;
+
+    _id = g_flags_register_static ("GstEncFlags", values);
+
+    g_once_init_leave ((gsize *) & id, _id);
+  }
+
+  return id;
+}
 
 static guint gst_encode_bin_signals[LAST_SIGNAL] = { 0 };
 
@@ -337,6 +375,16 @@ gst_encode_bin_class_init (GstEncodeBinClass * klass)
       g_param_spec_boolean ("avoid-reencoding", "Avoid re-encoding",
           "Whether to re-encode portions of compatible video streams that lay on segment boundaries",
           DEFAULT_AVOID_REENCODING,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstEncodeBin:flags
+   *
+   * Control the behaviour of encodebin.
+   */
+  g_object_class_install_property (gobject_klass, PROP_FLAGS,
+      g_param_spec_flags ("flags", "Flags", "Flags to control behaviour",
+          GST_TYPE_ENC_FLAGS, DEFAULT_FLAGS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /* Signals */
@@ -447,6 +495,7 @@ gst_encode_bin_init (GstEncodeBin * encode_bin)
   encode_bin->queue_time_max = DEFAULT_QUEUE_TIME_MAX;
   encode_bin->tolerance = DEFAULT_AUDIO_JITTER_TOLERANCE;
   encode_bin->avoid_reencoding = DEFAULT_AVOID_REENCODING;
+  encode_bin->flags = DEFAULT_FLAGS;
 
   tmpl = gst_static_pad_template_get (&muxer_src_template);
   encode_bin->srcpad = gst_ghost_pad_new_no_target_from_template ("src", tmpl);
@@ -480,6 +529,9 @@ gst_encode_bin_set_property (GObject * object, guint prop_id,
     case PROP_AVOID_REENCODING:
       ebin->avoid_reencoding = g_value_get_boolean (value);
       break;
+    case PROP_FLAGS:
+      ebin->flags = g_value_get_flags (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -510,6 +562,9 @@ gst_encode_bin_get_property (GObject * object, guint prop_id,
       break;
     case PROP_AVOID_REENCODING:
       g_value_set_boolean (value, ebin->avoid_reencoding);
+      break;
+    case PROP_FLAGS:
+      g_value_set_flags (value, ebin->flags);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1206,37 +1261,40 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
   /* 3.2. restriction elements */
   /* FIXME : Once we have properties for specific converters, use those */
   if (GST_IS_ENCODING_VIDEO_PROFILE (sprof)) {
+    const gboolean native_video = ! !(ebin->flags & GST_ENC_FLAG_NATIVE_VIDEO);
     GstElement *cspace, *scale, *vrate, *cspace2;
 
     GST_LOG ("Adding conversion elements for video stream");
 
-    cspace = gst_element_factory_make ("ffmpegcolorspace", NULL);
-    scale = gst_element_factory_make ("videoscale", NULL);
-    if (!scale) {
-      missing_element_name = "videoscale";
-      goto missing_element;
+    if (!native_video) {
+      cspace = gst_element_factory_make ("ffmpegcolorspace", NULL);
+      scale = gst_element_factory_make ("videoscale", NULL);
+      if (!scale) {
+        missing_element_name = "videoscale";
+        goto missing_element;
+      }
+      /* 4-tap scaling and black borders */
+      g_object_set (scale, "method", 2, "add-borders", TRUE, NULL);
+      cspace2 = gst_element_factory_make ("ffmpegcolorspace", NULL);
+
+      if (!cspace || !cspace2) {
+        missing_element_name = "ffmpegcolorspace";
+        goto missing_element;
+      }
+
+      gst_bin_add_many ((GstBin *) ebin, cspace, scale, cspace2, NULL);
+      tosync = g_list_append (tosync, cspace);
+      tosync = g_list_append (tosync, scale);
+      tosync = g_list_append (tosync, cspace2);
+
+      sgroup->converters = g_list_prepend (sgroup->converters, cspace);
+      sgroup->converters = g_list_prepend (sgroup->converters, scale);
+      sgroup->converters = g_list_prepend (sgroup->converters, cspace2);
+
+      if (!fast_element_link (cspace, scale) ||
+          !fast_element_link (scale, cspace2))
+        goto converter_link_failure;
     }
-    /* 4-tap scaling and black borders */
-    g_object_set (scale, "method", 2, "add-borders", TRUE, NULL);
-    cspace2 = gst_element_factory_make ("ffmpegcolorspace", NULL);
-
-    if (!cspace || !cspace2) {
-      missing_element_name = "ffmpegcolorspace";
-      goto missing_element;
-    }
-
-    gst_bin_add_many ((GstBin *) ebin, cspace, scale, cspace2, NULL);
-    tosync = g_list_append (tosync, cspace);
-    tosync = g_list_append (tosync, scale);
-    tosync = g_list_append (tosync, cspace2);
-
-    sgroup->converters = g_list_prepend (sgroup->converters, cspace);
-    sgroup->converters = g_list_prepend (sgroup->converters, scale);
-    sgroup->converters = g_list_prepend (sgroup->converters, cspace2);
-
-    if (!fast_element_link (cspace, scale) ||
-        !fast_element_link (scale, cspace2))
-      goto converter_link_failure;
 
     if (!gst_encoding_video_profile_get_variableframerate
         (GST_ENCODING_VIDEO_PROFILE (sprof))) {
@@ -1249,15 +1307,23 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
       gst_bin_add ((GstBin *) ebin, vrate);
       tosync = g_list_prepend (tosync, vrate);
       sgroup->converters = g_list_prepend (sgroup->converters, vrate);
-      if (!fast_element_link (cspace2, vrate) ||
-          !fast_element_link (vrate, last))
+
+      if ((!native_video && !fast_element_link (cspace2, vrate))
+          || !fast_element_link (vrate, last))
         goto converter_link_failure;
-    } else if (!fast_element_link (cspace2, last))
-      goto converter_link_failure;
 
-    last = cspace;
+      if (!native_video)
+        last = cspace;
+      else
+        last = vrate;
+    } else if (!native_video) {
+      if (!fast_element_link (cspace2, last))
+        goto converter_link_failure;
+      last = cspace;
+    }
 
-  } else if (GST_IS_ENCODING_AUDIO_PROFILE (sprof)) {
+  } else if (GST_IS_ENCODING_AUDIO_PROFILE (sprof)
+      && !(ebin->flags & GST_ENC_FLAG_NATIVE_AUDIO)) {
     GstElement *aconv, *ares, *arate, *aconv2;
 
     GST_LOG ("Adding conversion elements for audio stream");
