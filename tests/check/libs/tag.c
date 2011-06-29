@@ -793,8 +793,7 @@ GST_START_TEST (test_xmp_parsing)
       "<?xpacket begin=\"\xEF\xBB\xBF\" id=\"W5M0MpCehiHzreSzNTczkc9d\"?>"
       "<x:xmpmeta xmlns:x=\"adobe:ns:meta/\" x:xmptk=\"GStreamer\">"
       "<rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\">";
-  const gchar *xmp_footer =
-      "</rdf:RDF>" "</x:xmpmeta>" "<?xpacket end=\"r\"?>\n";
+  const gchar *xmp_footer = "</rdf:RDF>" "</x:xmpmeta>" "<?xpacket end=\"r\"?>";
   struct
   {
     const gchar *xmp_data;

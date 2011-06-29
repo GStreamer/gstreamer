@@ -1317,7 +1317,7 @@ gst_tag_list_from_xmp_buffer (const GstBuffer * buffer)
   if (*xp1 != '>')
     goto missing_header;
 
-  max_ft_len = 1 + strlen ("<?xpacket end=\".\"?>\n");
+  max_ft_len = 1 + strlen ("<?xpacket end=\".\"?>");
   if (len < max_ft_len)
     goto missing_footer;
 
@@ -1848,11 +1848,11 @@ gst_tag_list_to_xmp_buffer_full (const GstTagList * list, gboolean read_only,
           "                " "                " "\n");
     }
   }
-  g_string_append_printf (data, "<?xpacket end=\"%c\"?>\n",
+  g_string_append_printf (data, "<?xpacket end=\"%c\"?>",
       (read_only ? 'r' : 'w'));
 
   buffer = gst_buffer_new ();
-  GST_BUFFER_SIZE (buffer) = data->len + 1;
+  GST_BUFFER_SIZE (buffer) = data->len;
   GST_BUFFER_DATA (buffer) = (guint8 *) g_string_free (data, FALSE);
   GST_BUFFER_MALLOCDATA (buffer) = GST_BUFFER_DATA (buffer);
 
