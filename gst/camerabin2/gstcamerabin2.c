@@ -250,6 +250,7 @@ gst_camera_bin_start_capture (GstCameraBin2 * camerabin)
 
       gst_element_sync_state_with_parent (camerabin->audio_capsfilter);
       gst_element_sync_state_with_parent (camerabin->audio_volume);
+      gst_element_set_state (camerabin->audio_src, GST_STATE_PAUSED);
     }
   } else {
     gchar *location = NULL;
