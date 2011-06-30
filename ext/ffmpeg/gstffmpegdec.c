@@ -2984,6 +2984,14 @@ gst_ffmpegdec_register (GstPlugin * plugin)
       case CODEC_ID_MP3:
         rank = GST_RANK_NONE;
         break;
+        /* TEMPORARILY DISABLING AC3/EAC3/DTS for 0.10.12 release
+         * due to downmixing failure.
+         * See Bug #608892 for more details */
+      case CODEC_ID_EAC3:
+      case CODEC_ID_AC3:
+      case CODEC_ID_DTS:
+        rank = GST_RANK_NONE;
+        break;
       default:
         rank = GST_RANK_MARGINAL;
         break;
