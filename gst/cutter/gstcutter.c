@@ -98,7 +98,8 @@ enum
   PROP_LEAKY
 };
 
-GST_BOILERPLATE (GstCutter, gst_cutter, GstElement, GST_TYPE_ELEMENT);
+#define gst_cutter_parent_class parent_class
+G_DEFINE_TYPE (GstCutter, gst_cutter, GST_TYPE_ELEMENT);
 
 static void gst_cutter_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -110,26 +111,13 @@ static GstFlowReturn gst_cutter_chain (GstPad * pad, GstBuffer * buffer);
 static gboolean gst_cutter_get_caps (GstPad * pad, GstCutter * filter);
 
 static void
-gst_cutter_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&cutter_src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&cutter_sink_factory));
-  gst_element_class_set_details_simple (element_class, "Audio cutter",
-      "Filter/Editor/Audio",
-      "Audio Cutter to split audio into non-silent bits",
-      "Thomas Vander Stichele <thomas at apestaart dot org>");
-}
-
-static void
 gst_cutter_class_init (GstCutterClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *element_class;
 
   gobject_class = (GObjectClass *) klass;
+  element_class = (GstElementClass *) klass;
 
   gobject_class->set_property = gst_cutter_set_property;
   gobject_class->get_property = gst_cutter_get_property;
@@ -158,10 +146,19 @@ gst_cutter_class_init (GstCutterClass * klass)
           FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   GST_DEBUG_CATEGORY_INIT (cutter_debug, "cutter", 0, "Audio cutting");
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&cutter_src_factory));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&cutter_sink_factory));
+  gst_element_class_set_details_simple (element_class, "Audio cutter",
+      "Filter/Editor/Audio",
+      "Audio Cutter to split audio into non-silent bits",
+      "Thomas Vander Stichele <thomas at apestaart dot org>");
 }
 
 static void
-gst_cutter_init (GstCutter * filter, GstCutterClass * g_class)
+gst_cutter_init (GstCutter * filter)
 {
   filter->sinkpad =
       gst_pad_new_from_static_template (&cutter_sink_factory, "sink");
@@ -238,6 +235,7 @@ gst_cutter_chain (GstPad * pad, GstBuffer * buf)
 {
   GstCutter *filter;
   gint16 *in_data;
+  gsize in_size;
   guint num_samples;
   gdouble NCS = 0.0;            /* Normalized Cumulative Square of buffer */
   gdouble RMS = 0.0;            /* RMS of signal in buffer */
@@ -257,19 +255,19 @@ gst_cutter_chain (GstPad * pad, GstBuffer * buf)
       return GST_FLOW_NOT_NEGOTIATED;
   }
 
-  in_data = (gint16 *) GST_BUFFER_DATA (buf);
+  in_data = (gint16 *) gst_buffer_map (buf, &in_size, NULL, GST_MAP_READ);
   GST_LOG_OBJECT (filter, "length of prerec buffer: %" GST_TIME_FORMAT,
       GST_TIME_ARGS (filter->pre_run_length));
 
   /* calculate mean square value on buffer */
   switch (filter->width) {
     case 16:
-      num_samples = GST_BUFFER_SIZE (buf) / 2;
+      num_samples = in_size / 2;
       gst_cutter_calculate_gint16 (in_data, num_samples, &NCS);
       NMS = NCS / num_samples;
       break;
     case 8:
-      num_samples = GST_BUFFER_SIZE (buf);
+      num_samples = in_size;
       gst_cutter_calculate_gint8 ((gint8 *) in_data, num_samples, &NCS);
       NMS = NCS / num_samples;
       break;
@@ -278,6 +276,8 @@ gst_cutter_chain (GstPad * pad, GstBuffer * buf)
       g_warning ("no mean square function for width %d\n", filter->width);
       break;
   }
+
+  gst_buffer_unmap (buf, in_data, in_size);
 
   filter->silent_prev = filter->silent;
 
@@ -364,7 +364,7 @@ gst_cutter_get_caps (GstPad * pad, GstCutter * filter)
   GstCaps *caps;
   GstStructure *structure;
 
-  caps = gst_pad_get_caps (pad);
+  caps = gst_pad_get_current_caps (pad);
   if (!caps) {
     GST_INFO ("no caps on pad %s:%s", GST_DEBUG_PAD_NAME (pad));
     return FALSE;
