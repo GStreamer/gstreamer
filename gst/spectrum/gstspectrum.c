@@ -162,8 +162,8 @@ enum
   PROP_MULTI_CHANNEL
 };
 
-GST_BOILERPLATE (GstSpectrum, gst_spectrum, GstAudioFilter,
-    GST_TYPE_AUDIO_FILTER);
+#define gst_spectrum_parent_class parent_class
+G_DEFINE_TYPE (GstSpectrum, gst_spectrum, GST_TYPE_AUDIO_FILTER);
 
 static void gst_spectrum_finalize (GObject * object);
 static void gst_spectrum_set_property (GObject * object, guint prop_id,
@@ -178,30 +178,13 @@ static gboolean gst_spectrum_setup (GstAudioFilter * base,
     GstRingBufferSpec * format);
 
 static void
-gst_spectrum_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-  GstCaps *caps;
-
-  gst_element_class_set_details_simple (element_class, "Spectrum analyzer",
-      "Filter/Analyzer/Audio",
-      "Run an FFT on the audio signal, output spectrum data",
-      "Erik Walthinsen <omega@cse.ogi.edu>, "
-      "Stefan Kost <ensonic@users.sf.net>, "
-      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
-
-  caps = gst_caps_from_string (ALLOWED_CAPS);
-  gst_audio_filter_class_add_pad_templates (GST_AUDIO_FILTER_CLASS (g_class),
-      caps);
-  gst_caps_unref (caps);
-}
-
-static void
 gst_spectrum_class_init (GstSpectrumClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstBaseTransformClass *trans_class = GST_BASE_TRANSFORM_CLASS (klass);
   GstAudioFilterClass *filter_class = GST_AUDIO_FILTER_CLASS (klass);
+  GstCaps *caps;
 
   gobject_class->set_property = gst_spectrum_set_property;
   gobject_class->get_property = gst_spectrum_get_property;
@@ -277,10 +260,21 @@ gst_spectrum_class_init (GstSpectrumClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (gst_spectrum_debug, "spectrum", 0,
       "audio spectrum analyser element");
+
+  gst_element_class_set_details_simple (element_class, "Spectrum analyzer",
+      "Filter/Analyzer/Audio",
+      "Run an FFT on the audio signal, output spectrum data",
+      "Erik Walthinsen <omega@cse.ogi.edu>, "
+      "Stefan Kost <ensonic@users.sf.net>, "
+      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
+
+  caps = gst_caps_from_string (ALLOWED_CAPS);
+  gst_audio_filter_class_add_pad_templates (filter_class, caps);
+  gst_caps_unref (caps);
 }
 
 static void
-gst_spectrum_init (GstSpectrum * spectrum, GstSpectrumClass * g_class)
+gst_spectrum_init (GstSpectrum * spectrum)
 {
   spectrum->post_messages = DEFAULT_POST_MESSAGES;
   spectrum->message_magnitude = DEFAULT_MESSAGE_MAGNITUDE;
@@ -1011,15 +1005,17 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
   guint nfft = 2 * bands - 2;
   guint input_pos;
   gfloat *input;
-  const guint8 *data = GST_BUFFER_DATA (buffer);
-  guint size = GST_BUFFER_SIZE (buffer);
+  const guint8 *data, *mdata;
+  gsize size;
   guint frame_size = width * channels;
   guint fft_todo, msg_todo, block_size;
   gboolean have_full_interval;
   GstSpectrumChannel *cd;
   GstSpectrumInputData input_data;
 
-  GST_LOG_OBJECT (spectrum, "input size: %d bytes", GST_BUFFER_SIZE (buffer));
+  data = mdata = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+
+  GST_LOG_OBJECT (spectrum, "input size: %" G_GSIZE_FORMAT " bytes", size);
 
   if (GST_BUFFER_IS_DISCONT (buffer)) {
     GST_DEBUG_OBJECT (spectrum, "Discontinuity detected -- flushing");
@@ -1144,6 +1140,8 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
   }
 
   spectrum->input_pos = input_pos;
+
+  gst_buffer_unmap (buffer, (guint8 *) mdata, -1);
 
   g_assert (size == 0);
 
