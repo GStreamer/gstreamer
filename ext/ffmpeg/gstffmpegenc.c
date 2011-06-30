@@ -1158,11 +1158,12 @@ gst_ffmpegenc_event_sink (GstPad * pad, GstEvent * event)
     }
     case GST_EVENT_CAPS:{
       GstCaps *caps;
+      gboolean ret;
+
       gst_event_parse_caps (event, &caps);
-      if (!gst_ffmpegenc_setcaps (ffmpegenc, caps)) {
-        gst_event_unref (event);
-        return FALSE;
-      }
+      ret = gst_ffmpegenc_setcaps (ffmpegenc, caps);
+      gst_event_unref (event);
+      return ret;
       break;
     }
     default:
