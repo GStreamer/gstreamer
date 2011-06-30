@@ -1262,7 +1262,7 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
   /* FIXME : Once we have properties for specific converters, use those */
   if (GST_IS_ENCODING_VIDEO_PROFILE (sprof)) {
     const gboolean native_video = ! !(ebin->flags & GST_ENC_FLAG_NATIVE_VIDEO);
-    GstElement *cspace, *scale, *vrate, *cspace2;
+    GstElement *cspace = NULL, *scale, *vrate, *cspace2 = NULL;
 
     GST_LOG ("Adding conversion elements for video stream");
 
