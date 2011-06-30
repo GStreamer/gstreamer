@@ -376,14 +376,18 @@ gst_ffmpegenc_getcaps (GstPad * pad, GstCaps * filter)
   GstCaps *finalcaps = NULL;
   gint i;
 
-  GST_DEBUG_OBJECT (ffmpegenc, "getting caps");
+  GST_DEBUG_OBJECT (ffmpegenc, "getting caps, filter %" GST_PTR_FORMAT, filter);
 
   /* audio needs no special care */
   if (oclass->in_plugin->type == AVMEDIA_TYPE_AUDIO) {
-    caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+    caps = gst_pad_get_pad_template_caps (pad);
+    if (filter)
+      caps = gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
+    else
+      caps = gst_caps_copy (caps);
 
-    GST_DEBUG_OBJECT (ffmpegenc, "audio caps, return template %" GST_PTR_FORMAT,
-        caps);
+    GST_DEBUG_OBJECT (ffmpegenc, "audio caps, return intersected template %"
+        GST_PTR_FORMAT, caps);
 
     return caps;
   }
@@ -391,8 +395,16 @@ gst_ffmpegenc_getcaps (GstPad * pad, GstCaps * filter)
   /* cached */
   if (oclass->sinkcaps) {
     caps = gst_ffmpegenc_get_possible_sizes (ffmpegenc, pad, oclass->sinkcaps);
-    GST_DEBUG_OBJECT (ffmpegenc, "return cached caps %" GST_PTR_FORMAT, caps);
-    return caps;
+    if (filter) {
+      finalcaps =
+          gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
+      gst_caps_unref (caps);
+    } else {
+      finalcaps = caps;
+    }
+    GST_DEBUG_OBJECT (ffmpegenc,
+        "return intersected cached caps %" GST_PTR_FORMAT, finalcaps);
+    return finalcaps;
   }
 
   /* create cache etc. */
@@ -491,9 +503,16 @@ gst_ffmpegenc_getcaps (GstPad * pad, GstCaps * filter)
   if (!caps) {
     caps = gst_ffmpegenc_get_possible_sizes (ffmpegenc, pad,
         gst_pad_get_pad_template_caps (pad));
+    if (filter) {
+      finalcaps =
+          gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
+      gst_caps_unref (caps);
+    } else {
+      finalcaps = caps;
+    }
     GST_DEBUG_OBJECT (ffmpegenc, "probing gave nothing, "
-        "return template %" GST_PTR_FORMAT, caps);
-    return caps;
+        "return intersected template %" GST_PTR_FORMAT, finalcaps);
+    return finalcaps;
   }
 
   GST_DEBUG_OBJECT (ffmpegenc, "probed caps gave %" GST_PTR_FORMAT, caps);
@@ -501,6 +520,13 @@ gst_ffmpegenc_getcaps (GstPad * pad, GstCaps * filter)
 
   finalcaps = gst_ffmpegenc_get_possible_sizes (ffmpegenc, pad, caps);
   gst_caps_unref (caps);
+
+  if (filter) {
+    caps = finalcaps;
+    finalcaps =
+        gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (caps);
+  }
 
   return finalcaps;
 }
