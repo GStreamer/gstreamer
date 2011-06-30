@@ -140,7 +140,6 @@ GST_DEBUG_CATEGORY_STATIC (gst_spectrum_debug);
     " channels = (int) [ 1, MAX ]"
 
 /* Spectrum properties */
-#define DEFAULT_MESSAGE			TRUE
 #define DEFAULT_POST_MESSAGES			TRUE
 #define DEFAULT_MESSAGE_MAGNITUDE	TRUE
 #define DEFAULT_MESSAGE_PHASE		FALSE
@@ -152,7 +151,6 @@ GST_DEBUG_CATEGORY_STATIC (gst_spectrum_debug);
 enum
 {
   PROP_0,
-  PROP_MESSAGE,
   PROP_POST_MESSAGES,
   PROP_MESSAGE_MAGNITUDE,
   PROP_MESSAGE_PHASE,
@@ -197,12 +195,6 @@ gst_spectrum_class_init (GstSpectrumClass * klass)
 
   filter_class->setup = GST_DEBUG_FUNCPTR (gst_spectrum_setup);
 
-  /* FIXME 0.11, remove in favour of post-messages */
-  g_object_class_install_property (gobject_class, PROP_MESSAGE,
-      g_param_spec_boolean ("message", "Message",
-          "Whether to post a 'spectrum' element message on the bus for each "
-          "passed interval (deprecated, use post-messages)", DEFAULT_MESSAGE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
    * GstSpectrum:post-messages
    *
@@ -372,7 +364,6 @@ gst_spectrum_set_property (GObject * object, guint prop_id,
   GstSpectrum *filter = GST_SPECTRUM (object);
 
   switch (prop_id) {
-    case PROP_MESSAGE:
     case PROP_POST_MESSAGES:
       filter->post_messages = g_value_get_boolean (value);
       break;
@@ -428,7 +419,6 @@ gst_spectrum_get_property (GObject * object, guint prop_id,
   GstSpectrum *filter = GST_SPECTRUM (object);
 
   switch (prop_id) {
-    case PROP_MESSAGE:
     case PROP_POST_MESSAGES:
       g_value_set_boolean (value, filter->post_messages);
       break;
