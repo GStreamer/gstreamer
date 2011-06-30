@@ -120,7 +120,8 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
         "endianness = (int) BYTE_ORDER, "
         "width = (int) 16, " "depth = (int) 16, " "signed = (bool) TRUE"));
 
-GST_BOILERPLATE (GstRgVolume, gst_rg_volume, GstBin, GST_TYPE_BIN);
+#define gst_rg_volume_parent_class parent_class
+G_DEFINE_TYPE (GstRgVolume, gst_rg_volume, GST_TYPE_BIN);
 
 static void gst_rg_volume_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -137,24 +138,6 @@ static void gst_rg_volume_reset (GstRgVolume * self);
 static void gst_rg_volume_update_gain (GstRgVolume * self);
 static inline void gst_rg_volume_determine_gain (GstRgVolume * self,
     gdouble * target_gain, gdouble * result_gain);
-
-static void
-gst_rg_volume_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = g_class;
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_template));
-  gst_element_class_set_details_simple (element_class, "ReplayGain volume",
-      "Filter/Effect/Audio",
-      "Apply ReplayGain volume adjustment",
-      "Ren\xc3\xa9 Stadler <mail@renestadler.de>");
-
-  GST_DEBUG_CATEGORY_INIT (gst_rg_volume_debug, "rgvolume", 0,
-      "ReplayGain volume element");
-}
 
 static void
 gst_rg_volume_class_init (GstRgVolumeClass * klass)
@@ -298,10 +281,22 @@ gst_rg_volume_class_init (GstRgVolumeClass * klass)
    * mess with our internals. */
   bin_class->add_element = NULL;
   bin_class->remove_element = NULL;
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&src_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&sink_template));
+  gst_element_class_set_details_simple (element_class, "ReplayGain volume",
+      "Filter/Effect/Audio",
+      "Apply ReplayGain volume adjustment",
+      "Ren\xc3\xa9 Stadler <mail@renestadler.de>");
+
+  GST_DEBUG_CATEGORY_INIT (gst_rg_volume_debug, "rgvolume", 0,
+      "ReplayGain volume element");
 }
 
 static void
-gst_rg_volume_init (GstRgVolume * self, GstRgVolumeClass * gclass)
+gst_rg_volume_init (GstRgVolume * self)
 {
   GObjectClass *volume_class;
   GstPad *volume_pad, *ghost_pad;

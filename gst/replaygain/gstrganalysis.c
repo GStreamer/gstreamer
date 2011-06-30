@@ -125,8 +125,8 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
         "signed = (boolean) true, " "endianness = (int) BYTE_ORDER, "
         REPLAY_GAIN_CAPS));
 
-GST_BOILERPLATE (GstRgAnalysis, gst_rg_analysis, GstBaseTransform,
-    GST_TYPE_BASE_TRANSFORM);
+#define gst_rg_analysis_parent_class parent_class
+G_DEFINE_TYPE (GstRgAnalysis, gst_rg_analysis, GST_TYPE_BASE_TRANSFORM);
 
 static void gst_rg_analysis_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -151,30 +151,15 @@ static gboolean gst_rg_analysis_album_result (GstRgAnalysis * filter,
     GstTagList ** tag_list);
 
 static void
-gst_rg_analysis_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_factory));
-  gst_element_class_set_details_simple (element_class, "ReplayGain analysis",
-      "Filter/Analyzer/Audio",
-      "Perform the ReplayGain analysis",
-      "Ren\xc3\xa9 Stadler <mail@renestadler.de>");
-
-  GST_DEBUG_CATEGORY_INIT (gst_rg_analysis_debug, "rganalysis", 0,
-      "ReplayGain analysis element");
-}
-
-static void
 gst_rg_analysis_class_init (GstRgAnalysisClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *element_class;
   GstBaseTransformClass *trans_class;
 
   gobject_class = (GObjectClass *) klass;
+  element_class = (GstElementClass *) klass;
+
   gobject_class->set_property = gst_rg_analysis_set_property;
   gobject_class->get_property = gst_rg_analysis_get_property;
 
@@ -279,10 +264,22 @@ gst_rg_analysis_class_init (GstRgAnalysisClass * klass)
   trans_class->event = GST_DEBUG_FUNCPTR (gst_rg_analysis_event);
   trans_class->stop = GST_DEBUG_FUNCPTR (gst_rg_analysis_stop);
   trans_class->passthrough_on_same_caps = TRUE;
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&src_factory));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&sink_factory));
+  gst_element_class_set_details_simple (element_class, "ReplayGain analysis",
+      "Filter/Analyzer/Audio",
+      "Perform the ReplayGain analysis",
+      "Ren\xc3\xa9 Stadler <mail@renestadler.de>");
+
+  GST_DEBUG_CATEGORY_INIT (gst_rg_analysis_debug, "rganalysis", 0,
+      "ReplayGain analysis element");
 }
 
 static void
-gst_rg_analysis_init (GstRgAnalysis * filter, GstRgAnalysisClass * gclass)
+gst_rg_analysis_init (GstRgAnalysis * filter)
 {
   GstBaseTransform *base = GST_BASE_TRANSFORM (filter);
 
@@ -479,6 +476,8 @@ static GstFlowReturn
 gst_rg_analysis_transform_ip (GstBaseTransform * base, GstBuffer * buf)
 {
   GstRgAnalysis *filter = GST_RG_ANALYSIS (base);
+  guint8 *data;
+  gsize size;
 
   g_return_val_if_fail (filter->ctx != NULL, GST_FLOW_WRONG_STATE);
   g_return_val_if_fail (filter->analyze != NULL, GST_FLOW_NOT_NEGOTIATED);
@@ -486,12 +485,13 @@ gst_rg_analysis_transform_ip (GstBaseTransform * base, GstBuffer * buf)
   if (filter->skip)
     return GST_FLOW_OK;
 
-  GST_LOG_OBJECT (filter, "processing buffer of size %u",
-      GST_BUFFER_SIZE (buf));
+  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+  GST_LOG_OBJECT (filter, "processing buffer of size %" G_GSIZE_FORMAT, size);
 
   rg_analysis_start_buffer (filter->ctx, GST_BUFFER_TIMESTAMP (buf));
-  filter->analyze (filter->ctx, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf),
-      filter->depth);
+  filter->analyze (filter->ctx, data, size, filter->depth);
+
+  gst_buffer_unmap (buf, data, size);
 
   return GST_FLOW_OK;
 }

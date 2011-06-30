@@ -67,8 +67,8 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
         "width = (int) 32, channels = (int) [1, MAX], "
         "rate = (int) [1, MAX], endianness = (int) BYTE_ORDER"));
 
-GST_BOILERPLATE (GstRgLimiter, gst_rg_limiter, GstBaseTransform,
-    GST_TYPE_BASE_TRANSFORM);
+#define gst_rg_limiter_parent_class parent_class
+G_DEFINE_TYPE (GstRgLimiter, gst_rg_limiter, GST_TYPE_BASE_TRANSFORM);
 
 static void gst_rg_limiter_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -79,9 +79,25 @@ static GstFlowReturn gst_rg_limiter_transform_ip (GstBaseTransform * base,
     GstBuffer * buf);
 
 static void
-gst_rg_limiter_base_init (gpointer g_class)
+gst_rg_limiter_class_init (GstRgLimiterClass * klass)
 {
-  GstElementClass *element_class = g_class;
+  GObjectClass *gobject_class;
+  GstElementClass *element_class;
+  GstBaseTransformClass *trans_class;
+
+  gobject_class = (GObjectClass *) klass;
+  element_class = (GstElementClass *) klass;
+
+  gobject_class->set_property = gst_rg_limiter_set_property;
+  gobject_class->get_property = gst_rg_limiter_get_property;
+
+  g_object_class_install_property (gobject_class, PROP_ENABLED,
+      g_param_spec_boolean ("enabled", "Enabled", "Enable processing", TRUE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  trans_class = GST_BASE_TRANSFORM_CLASS (klass);
+  trans_class->transform_ip = GST_DEBUG_FUNCPTR (gst_rg_limiter_transform_ip);
+  trans_class->passthrough_on_same_caps = FALSE;
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_factory));
@@ -97,27 +113,7 @@ gst_rg_limiter_base_init (gpointer g_class)
 }
 
 static void
-gst_rg_limiter_class_init (GstRgLimiterClass * klass)
-{
-  GObjectClass *gobject_class;
-  GstBaseTransformClass *trans_class;
-
-  gobject_class = (GObjectClass *) klass;
-
-  gobject_class->set_property = gst_rg_limiter_set_property;
-  gobject_class->get_property = gst_rg_limiter_get_property;
-
-  g_object_class_install_property (gobject_class, PROP_ENABLED,
-      g_param_spec_boolean ("enabled", "Enabled", "Enable processing", TRUE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-  trans_class = GST_BASE_TRANSFORM_CLASS (klass);
-  trans_class->transform_ip = GST_DEBUG_FUNCPTR (gst_rg_limiter_transform_ip);
-  trans_class->passthrough_on_same_caps = FALSE;
-}
-
-static void
-gst_rg_limiter_init (GstRgLimiter * filter, GstRgLimiterClass * gclass)
+gst_rg_limiter_init (GstRgLimiter * filter)
 {
   GstBaseTransform *base = GST_BASE_TRANSFORM (filter);
 
@@ -170,6 +166,7 @@ gst_rg_limiter_transform_ip (GstBaseTransform * base, GstBuffer * buf)
 {
   GstRgLimiter *filter = GST_RG_LIMITER (base);
   gfloat *input;
+  guint8 *data;
   guint count;
   guint i;
 
@@ -179,8 +176,9 @@ gst_rg_limiter_transform_ip (GstBaseTransform * base, GstBuffer * buf)
   if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_GAP))
     return GST_FLOW_OK;
 
-  input = (gfloat *) GST_BUFFER_DATA (buf);
-  count = GST_BUFFER_SIZE (buf) / sizeof (gfloat);
+  data = gst_buffer_map (buf, NULL, NULL, GST_MAP_READ);
+  input = (gfloat *) data;
+  count = gst_buffer_get_size (buf) / sizeof (gfloat);
 
   for (i = count; i--;) {
     if (*input > THRES)
@@ -189,6 +187,8 @@ gst_rg_limiter_transform_ip (GstBaseTransform * base, GstBuffer * buf)
       *input = tanhf ((*input + THRES) / COMPL) * COMPL - THRES;
     input++;
   }
+
+  gst_buffer_unmap (buf, data, -1);
 
   return GST_FLOW_OK;
 }
