@@ -21,7 +21,7 @@
 #include <gst/check/gstcheck.h>
 
 /* This test uri will eventually have to be fixed */
-#define TEST_URI "blahblahblah"
+#define TEST_URI "http://nowhere/blahblahblah"
 
 GST_START_TEST (test_filesource_basic)
 {
