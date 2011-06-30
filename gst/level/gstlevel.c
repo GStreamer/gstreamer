@@ -159,8 +159,8 @@ enum
   PROP_PEAK_FALLOFF
 };
 
-GST_BOILERPLATE (GstLevel, gst_level, GstBaseTransform,
-    GST_TYPE_BASE_TRANSFORM);
+#define gst_level_parent_class parent_class
+G_DEFINE_TYPE (GstLevel, gst_level, GST_TYPE_BASE_TRANSFORM);
 
 static void gst_level_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -176,24 +176,10 @@ static GstFlowReturn gst_level_transform_ip (GstBaseTransform * trans,
 
 
 static void
-gst_level_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = g_class;
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_template_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_template_factory));
-  gst_element_class_set_details_simple (element_class, "Level",
-      "Filter/Analyzer/Audio",
-      "RMS/Peak/Decaying Peak Level messager for audio/raw",
-      "Thomas Vander Stichele <thomas at apestaart dot org>");
-}
-
-static void
 gst_level_class_init (GstLevelClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstBaseTransformClass *trans_class = GST_BASE_TRANSFORM_CLASS (klass);
 
   gobject_class->set_property = gst_level_set_property;
@@ -221,6 +207,15 @@ gst_level_class_init (GstLevelClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (level_debug, "level", 0, "Level calculation");
 
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&sink_template_factory));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&src_template_factory));
+  gst_element_class_set_details_simple (element_class, "Level",
+      "Filter/Analyzer/Audio",
+      "RMS/Peak/Decaying Peak Level messager for audio/raw",
+      "Thomas Vander Stichele <thomas at apestaart dot org>");
+
   trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_level_set_caps);
   trans_class->start = GST_DEBUG_FUNCPTR (gst_level_start);
   trans_class->transform_ip = GST_DEBUG_FUNCPTR (gst_level_transform_ip);
@@ -228,7 +223,7 @@ gst_level_class_init (GstLevelClass * klass)
 }
 
 static void
-gst_level_init (GstLevel * filter, GstLevelClass * g_class)
+gst_level_init (GstLevel * filter)
 {
   filter->CS = NULL;
   filter->peak = NULL;
@@ -569,7 +564,8 @@ static GstFlowReturn
 gst_level_transform_ip (GstBaseTransform * trans, GstBuffer * in)
 {
   GstLevel *filter;
-  guint8 *in_data;
+  guint8 *in_data, *data;
+  gsize in_size;
   gdouble CS;
   guint i;
   guint num_frames = 0;
@@ -579,8 +575,8 @@ gst_level_transform_ip (GstBaseTransform * trans, GstBuffer * in)
 
   filter = GST_LEVEL (trans);
 
-  in_data = GST_BUFFER_DATA (in);
-  num_int_samples = GST_BUFFER_SIZE (in) / (filter->width / 8);
+  in_data = data = gst_buffer_map (in, &in_size, NULL, GST_MAP_READ);
+  num_int_samples = in_size / (filter->width / 8);
 
   GST_LOG_OBJECT (filter, "analyzing %u sample frames at ts %" GST_TIME_FORMAT,
       num_int_samples, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (in)));
@@ -708,6 +704,8 @@ gst_level_transform_ip (GstBaseTransform * trans, GstBuffer * in)
     }
     filter->num_frames = 0;
   }
+
+  gst_buffer_unmap (in, data, in_size);
 
   return GST_FLOW_OK;
 }
