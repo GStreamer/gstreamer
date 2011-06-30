@@ -2115,7 +2115,6 @@ gst_base_src_update_length (GstBaseSrc * src, guint64 offset, guint * length)
    * segment is in bytes, we checked that above. */
   GST_OBJECT_LOCK (src);
   gst_segment_set_duration (&src->segment, GST_FORMAT_BYTES, size);
-  gst_segment_set_last_stop (&src->segment, GST_FORMAT_BYTES, offset);
   GST_OBJECT_UNLOCK (src);
 
   return TRUE;
@@ -2155,6 +2154,12 @@ again:
 
   if (G_UNLIKELY (!gst_base_src_update_length (src, offset, &length)))
     goto unexpected_length;
+
+  /* track position */
+  GST_OBJECT_LOCK (src);
+  if (src->segment.format == GST_FORMAT_BYTES)
+    gst_segment_set_last_stop (&src->segment, GST_FORMAT_BYTES, offset);
+  GST_OBJECT_UNLOCK (src);
 
   /* normally we don't count buffers */
   if (G_UNLIKELY (src->num_buffers_left >= 0)) {
