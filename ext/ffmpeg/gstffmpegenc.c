@@ -752,6 +752,9 @@ gst_ffmpegenc_chain_video (GstPad * pad, GstBuffer * inbuf)
   gint ret_size = 0, frame_size;
   gboolean force_keyframe;
 
+  if (G_UNLIKELY (!ffmpegenc->opened))
+    goto not_negotiated;
+
   GST_DEBUG_OBJECT (ffmpegenc,
       "Received buffer of time %" GST_TIME_FORMAT,
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (inbuf)));
@@ -835,6 +838,15 @@ gst_ffmpegenc_chain_video (GstPad * pad, GstBuffer * inbuf)
   }
 
   return gst_pad_push (ffmpegenc->srcpad, outbuf);
+
+  /* ERRORS */
+not_negotiated:
+  {
+    GST_ELEMENT_ERROR (ffmpegenc, CORE, NEGOTIATION, (NULL),
+        ("not configured to input format before data start"));
+    gst_buffer_unref (inbuf);
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
 }
 
 static GstFlowReturn
@@ -898,6 +910,9 @@ gst_ffmpegenc_chain_audio (GstPad * pad, GstBuffer * inbuf)
 
   ffmpegenc = (GstFFMpegEnc *) (GST_OBJECT_PARENT (pad));
   oclass = (GstFFMpegEncClass *) G_OBJECT_GET_CLASS (ffmpegenc);
+
+  if (G_UNLIKELY (!ffmpegenc->opened))
+    goto not_negotiated;
 
   ctx = ffmpegenc->context;
 
@@ -1043,6 +1058,13 @@ gst_ffmpegenc_chain_audio (GstPad * pad, GstBuffer * inbuf)
   return GST_FLOW_OK;
 
   /* ERRORS */
+not_negotiated:
+  {
+    GST_ELEMENT_ERROR (ffmpegenc, CORE, NEGOTIATION, (NULL),
+        ("not configured to input format before data start"));
+    gst_buffer_unref (inbuf);
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
 push_failed:
   {
     GST_DEBUG_OBJECT (ffmpegenc, "Failed to push buffer %d (%s)", ret,
