@@ -61,21 +61,12 @@ static GstFlowReturn gst_iir_equalizer_transform_ip (GstBaseTransform * btrans,
     " rate=(int)[1000,MAX],"                                          \
     " channels=(int)[1,MAX]"
 
-static void
-_do_init (GType object_type)
-{
-  const GInterfaceInfo child_proxy_interface_info = {
-    (GInterfaceInitFunc) gst_iir_equalizer_child_proxy_interface_init,
-    NULL,                       /* interface_finalize */
-    NULL                        /* interface_data */
-  };
+#define gst_iir_equalizer_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstIirEqualizer, gst_iir_equalizer,
+    GST_TYPE_AUDIO_FILTER,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_CHILD_PROXY,
+        gst_iir_equalizer_child_proxy_interface_init));
 
-  g_type_add_interface_static (object_type, GST_TYPE_CHILD_PROXY,
-      &child_proxy_interface_info);
-}
-
-GST_BOILERPLATE_FULL (GstIirEqualizer, gst_iir_equalizer,
-    GstAudioFilter, GST_TYPE_AUDIO_FILTER, _do_init);
 
 /* child object */
 
@@ -364,30 +355,24 @@ gst_iir_equalizer_child_proxy_interface_init (gpointer g_iface,
 /* equalizer implementation */
 
 static void
-gst_iir_equalizer_base_init (gpointer g_class)
-{
-  GstAudioFilterClass *audiofilter_class = GST_AUDIO_FILTER_CLASS (g_class);
-  GstCaps *caps;
-
-  caps = gst_caps_from_string (ALLOWED_CAPS);
-  gst_audio_filter_class_add_pad_templates (audiofilter_class, caps);
-  gst_caps_unref (caps);
-}
-
-static void
 gst_iir_equalizer_class_init (GstIirEqualizerClass * klass)
 {
   GstAudioFilterClass *audio_filter_class = (GstAudioFilterClass *) klass;
   GstBaseTransformClass *btrans_class = (GstBaseTransformClass *) klass;
   GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstCaps *caps;
 
   gobject_class->finalize = gst_iir_equalizer_finalize;
   audio_filter_class->setup = gst_iir_equalizer_setup;
   btrans_class->transform_ip = gst_iir_equalizer_transform_ip;
+
+  caps = gst_caps_from_string (ALLOWED_CAPS);
+  gst_audio_filter_class_add_pad_templates (audio_filter_class, caps);
+  gst_caps_unref (caps);
 }
 
 static void
-gst_iir_equalizer_init (GstIirEqualizer * eq, GstIirEqualizerClass * g_class)
+gst_iir_equalizer_init (GstIirEqualizer * eq)
 {
   eq->bands_lock = g_mutex_new ();
   eq->need_new_coefficients = TRUE;
@@ -832,6 +817,8 @@ gst_iir_equalizer_transform_ip (GstBaseTransform * btrans, GstBuffer * buf)
   GstAudioFilter *filter = GST_AUDIO_FILTER (btrans);
   GstIirEqualizer *equ = GST_IIR_EQUALIZER (btrans);
   GstClockTime timestamp;
+  guint8 *data;
+  gsize size;
 
   if (G_UNLIKELY (filter->format.channels < 1 || equ->process == NULL))
     return GST_FLOW_NOT_NEGOTIATED;
@@ -853,8 +840,9 @@ gst_iir_equalizer_transform_ip (GstBaseTransform * btrans, GstBuffer * buf)
   if (GST_CLOCK_TIME_IS_VALID (timestamp))
     gst_object_sync_values (G_OBJECT (equ), timestamp);
 
-  equ->process (equ, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf),
-      filter->format.channels);
+  data = gst_buffer_map (buf, &size, NULL, GST_MAP_WRITE);
+  equ->process (equ, data, size, filter->format.channels);
+  gst_buffer_unmap (buf, data, size);
 
   return GST_FLOW_OK;
 }

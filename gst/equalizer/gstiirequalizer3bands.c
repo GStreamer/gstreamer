@@ -53,39 +53,17 @@ static void gst_iir_equalizer_3bands_get_property (GObject * object,
 GST_DEBUG_CATEGORY_EXTERN (equalizer_debug);
 #define GST_CAT_DEFAULT equalizer_debug
 
-
-static void
-_do_init (GType object_type)
-{
-  const GInterfaceInfo preset_interface_info = {
-    NULL,                       /* interface_init */
-    NULL,                       /* interface_finalize */
-    NULL                        /* interface_data */
-  };
-
-  g_type_add_interface_static (object_type, GST_TYPE_PRESET,
-      &preset_interface_info);
-}
-
-GST_BOILERPLATE_FULL (GstIirEqualizer3Bands, gst_iir_equalizer_3bands,
-    GstIirEqualizer, GST_TYPE_IIR_EQUALIZER, _do_init);
+#define gst_iir_equalizer_3bands_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstIirEqualizer3Bands, gst_iir_equalizer_3bands,
+    GST_TYPE_IIR_EQUALIZER, G_IMPLEMENT_INTERFACE (GST_TYPE_PRESET, NULL));
 
 /* equalizer implementation */
-
-static void
-gst_iir_equalizer_3bands_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (element_class, "3 Band Equalizer",
-      "Filter/Effect/Audio",
-      "Direct Form 3 band IIR equalizer", "Stefan Kost <ensonic@users.sf.net>");
-}
 
 static void
 gst_iir_equalizer_3bands_class_init (GstIirEqualizer3BandsClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstElementClass *gstelement_class = (GstElementClass *) klass;
 
   gobject_class->set_property = gst_iir_equalizer_3bands_set_property;
   gobject_class->get_property = gst_iir_equalizer_3bands_get_property;
@@ -105,11 +83,14 @@ gst_iir_equalizer_3bands_class_init (GstIirEqualizer3BandsClass * klass)
           "gain for the frequency band 11 kHz, ranging from -24.0 to +12.0",
           -24.0, 12.0, 0.0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
+
+  gst_element_class_set_details_simple (gstelement_class, "3 Band Equalizer",
+      "Filter/Effect/Audio",
+      "Direct Form 3 band IIR equalizer", "Stefan Kost <ensonic@users.sf.net>");
 }
 
 static void
-gst_iir_equalizer_3bands_init (GstIirEqualizer3Bands * equ_n,
-    GstIirEqualizer3BandsClass * g_class)
+gst_iir_equalizer_3bands_init (GstIirEqualizer3Bands * equ_n)
 {
   GstIirEqualizer *equ = GST_IIR_EQUALIZER (equ_n);
 
