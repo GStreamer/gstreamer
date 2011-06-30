@@ -31,6 +31,15 @@ G_BEGIN_DECLS
 #define GST_IS_CAMERA_BIN2(obj)   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_CAMERA_BIN2))
 #define GST_IS_CAMERA_BIN2_CLASS(obj)   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_CAMERA_BIN2))
 
+typedef enum
+{
+  /* matches GstEncFlags GST_ENC_FLAG_NO_AUDIO_CONVERSION in encodebin */
+  GST_CAM_FLAG_NO_AUDIO_CONVERSION = (1 << 0),
+  /* matches GstEncFlags GST_ENC_FLAG_NO_VIDEO_CONVERSION in encodebin */
+  GST_CAM_FLAG_NO_VIDEO_CONVERSION = (1 << 1)
+} GstCamFlags;
+
+
 typedef struct _GstCameraBin2 GstCameraBin2;
 typedef struct _GstCameraBin2Class GstCameraBin2Class;
 
@@ -92,6 +101,7 @@ struct _GstCameraBin2
   GstEncodingProfile *image_profile;
   gfloat zoom;
   gfloat max_zoom;
+  GstCamFlags flags;
 
   gboolean elements_created;
 };

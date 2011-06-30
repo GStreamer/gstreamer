@@ -217,6 +217,7 @@ static gchar *viewfinder_caps_str = NULL;
 static gchar *video_capture_caps_str = NULL;
 static gboolean performance_measure = FALSE;
 static gchar *performance_targets_str = NULL;
+static gchar *camerabin2_flags = NULL;
 
 
 #define MODE_VIDEO 2
@@ -675,6 +676,8 @@ setup_pipeline (void)
   gst_object_unref (bus);
 
   GST_INFO_OBJECT (camerabin, "camerabin2 created");
+
+  gst_util_set_object_arg (camerabin, "flags", camerabin2_flags);
 
   if (videosrc_name) {
     GstElement *wrapper;
@@ -1234,6 +1237,8 @@ main (int argc, char *argv[])
           ", shot to snapshot, shot to shot, preview to shot, shot to buffer. "
           "e.g. 3.5,1.0,5.0,2.5,5.0,1.5,1.0",
         NULL},
+    {"flags", '\0', 0, G_OPTION_ARG_STRING, &camerabin2_flags,
+        "camerabin2 element flags (default = 0)", NULL},
     {NULL}
   };
 

@@ -124,7 +124,8 @@ enum
   PROP_ZOOM,
   PROP_MAX_ZOOM,
   PROP_IMAGE_ENCODING_PROFILE,
-  PROP_IDLE
+  PROP_IDLE,
+  PROP_FLAGS
 };
 
 enum
@@ -142,6 +143,7 @@ static guint camerabin_signals[LAST_SIGNAL];
 #define DEFAULT_POST_PREVIEWS TRUE
 #define DEFAULT_MUTE_AUDIO FALSE
 #define DEFAULT_IDLE TRUE
+#define DEFAULT_FLAGS 0
 
 #define DEFAULT_AUDIO_SRC "autoaudiosrc"
 
@@ -160,6 +162,31 @@ static void gst_camera_bin_finalize (GObject * object);
 static void gst_camera_bin_handle_message (GstBin * bin, GstMessage * message);
 static gboolean gst_camera_bin_send_event (GstElement * element,
     GstEvent * event);
+
+#define C_FLAGS(v) ((guint) v)
+#define GST_TYPE_CAM_FLAGS (gst_cam_flags_get_type())
+static GType
+gst_cam_flags_get_type (void)
+{
+  static const GFlagsValue values[] = {
+    {C_FLAGS (GST_CAM_FLAG_NO_AUDIO_CONVERSION), "Do not use audio conversion "
+        "elements", "no-audio-conversion"},
+    {C_FLAGS (GST_CAM_FLAG_NO_VIDEO_CONVERSION), "Do not use video conversion "
+        "elements", "no-video-conversion"},
+    {0, NULL, NULL}
+  };
+  static volatile GType id = 0;
+
+  if (g_once_init_enter ((gsize *) & id)) {
+    GType _id;
+
+    _id = g_flags_register_static ("GstCamFlags", values);
+
+    g_once_init_leave ((gsize *) & id, _id);
+  }
+
+  return id;
+}
 
 GType
 gst_camera_bin2_get_type (void)
@@ -658,6 +685,16 @@ gst_camera_bin_class_init (GstCameraBin2Class * klass)
           "The caps that the camera source can produce on the viewfinder pad",
           GST_TYPE_CAPS, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
+   /**
+    * GstCameraBin:flags
+    *
+    * Control the behaviour of encodebin.
+    */
+  g_object_class_install_property (object_class, PROP_FLAGS,
+      g_param_spec_flags ("flags", "Flags", "Flags to control behaviour",
+          GST_TYPE_CAM_FLAGS, DEFAULT_FLAGS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   /**
    * GstCameraBin2::capture-start:
    * @camera: the camera bin element
@@ -692,6 +729,7 @@ gst_camera_bin_init (GstCameraBin2 * camera)
   camera->viewfinderbin = gst_element_factory_make ("viewfinderbin", "vf-bin");
   camera->zoom = DEFAULT_ZOOM;
   camera->max_zoom = MAX_ZOOM;
+  camera->flags = DEFAULT_FLAGS;
 
   /* capsfilters are created here as we proxy their caps properties and
    * this way we avoid having to store the caps while on NULL state to 
@@ -1064,6 +1102,7 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
   gboolean has_audio;
   gboolean profile_switched = FALSE;
   const gchar *missing_element_name;
+  gint encbin_flags = 0;
 
   if (!camera->elements_created) {
     /* TODO check that elements created in _init were really created */
@@ -1077,6 +1116,14 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
     camera->video_encodebin_signal_id =
         g_signal_connect (camera->video_encodebin, "element-added",
         (GCallback) encodebin_element_added, camera);
+
+    /* propagate the flags property by translating appropriate values
+     * to GstEncFlags values */
+    if (camera->flags & GST_CAM_FLAG_NO_AUDIO_CONVERSION)
+      encbin_flags |= (1 << 0);
+    if (camera->flags & GST_CAM_FLAG_NO_VIDEO_CONVERSION)
+      encbin_flags |= (1 << 1);
+    g_object_set (camera->video_encodebin, "flags", encbin_flags, NULL);
 
     camera->videosink =
         gst_element_factory_make ("filesink", "videobin-filesink");
@@ -1677,6 +1724,9 @@ gst_camera_bin_set_property (GObject * object, guint prop_id,
           (GstEncodingProfile *) gst_value_dup_mini_object (value);
       camera->image_profile_switch = TRUE;
       break;
+    case PROP_FLAGS:
+      camera->flags = g_value_get_flags (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1834,6 +1884,9 @@ gst_camera_bin_get_property (GObject * object, guint prop_id,
     case PROP_IDLE:
       g_value_set_boolean (value,
           g_atomic_int_get (&camera->processing_counter) == 0);
+      break;
+    case PROP_FLAGS:
+      g_value_set_flags (value, camera->flags);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
