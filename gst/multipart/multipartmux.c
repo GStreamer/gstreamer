@@ -427,6 +427,7 @@ gst_multipart_mux_collected (GstCollectPads * pads, GstMultipartMux * mux)
   gchar *header = NULL;
   size_t headerlen;
   GstBuffer *headerbuf = NULL;
+  GstBuffer *footerbuf = NULL;
   GstBuffer *databuf = NULL;
   GstStructure *structure = NULL;
   const gchar *mime;
@@ -484,7 +485,7 @@ gst_multipart_mux_collected (GstCollectPads * pads, GstMultipartMux * mux)
   /* get the mime type for the structure */
   mime = gst_multipart_mux_get_mime (mux, structure);
 
-  header = g_strdup_printf ("\r\n--%s\r\nContent-Type: %s\r\n"
+  header = g_strdup_printf ("--%s\r\nContent-Type: %s\r\n"
       "Content-Length: %u\r\n\r\n",
       mux->boundary, mime, GST_BUFFER_SIZE (best->buffer));
   headerlen = strlen (header);
@@ -529,6 +530,29 @@ gst_multipart_mux_collected (GstCollectPads * pads, GstMultipartMux * mux)
   GST_DEBUG_OBJECT (mux, "pushing %u bytes data buffer",
       GST_BUFFER_SIZE (databuf));
   ret = gst_pad_push (mux->srcpad, databuf);
+  if (ret != GST_FLOW_OK)
+    /* push always takes ownership of the buffer, even after an error, so we
+     * don't need to unref headerbuf here. */
+    goto beach;
+
+  ret = gst_pad_alloc_buffer_and_set_caps (mux->srcpad, GST_BUFFER_OFFSET_NONE,
+      2, GST_PAD_CAPS (mux->srcpad), &footerbuf);
+  if (ret != GST_FLOW_OK)
+    goto alloc_failed;
+
+  memcpy (GST_BUFFER_DATA (footerbuf), "\r\n", 2);
+
+  /* the footer has the same timestamp as the data buffer and has a
+   * duration of 0 */
+  GST_BUFFER_TIMESTAMP (footerbuf) = best->timestamp;
+  GST_BUFFER_DURATION (footerbuf) = 0;
+  GST_BUFFER_OFFSET (footerbuf) = mux->offset;
+  mux->offset += 2;
+  GST_BUFFER_OFFSET_END (footerbuf) = mux->offset;
+  GST_BUFFER_FLAG_SET (footerbuf, GST_BUFFER_FLAG_DELTA_UNIT);
+
+  GST_DEBUG_OBJECT (mux, "pushing %" G_GSIZE_FORMAT " bytes footer buffer", 2);
+  ret = gst_pad_push (mux->srcpad, footerbuf);
 
 beach:
   if (best && best->buffer) {
