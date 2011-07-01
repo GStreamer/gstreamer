@@ -20,28 +20,32 @@
 #include <ges/ges.h>
 #include <gst/pbutils/encoding-profile.h>
 
-GstEncodingProfile *make_ogg_vorbis_profile (void);
+GstEncodingProfile *make_encoding_profile (gchar * audio, gchar * container);
 
 /* This example will take a series of files and create a audio-only timeline
  * containing the first second of each file and render it to the output uri 
  * using ogg/vorbis */
 
-/* make_ogg_vorbis_profile:
- * simple method creating a ogg/vorbis encoding profile. This is here in
+/* make_encoding_profile
+ * simple method creating an encoding profile. This is here in
  * order not to clutter the main function. */
 GstEncodingProfile *
-make_ogg_vorbis_profile (void)
+make_encoding_profile (gchar * audio, gchar * container)
 {
   GstEncodingContainerProfile *profile;
+  GstEncodingProfile *stream;
   GstCaps *caps;
 
-  caps = gst_caps_from_string ("application/ogg");
-  profile = gst_encoding_container_profile_new ("Ogg audio", NULL, caps, NULL);
+  caps = gst_caps_from_string (container);
+  profile =
+      gst_encoding_container_profile_new ((gchar *) "ges-test4", NULL, caps,
+      NULL);
   gst_caps_unref (caps);
 
-  caps = gst_caps_from_string ("audio/x-vorbis");
-  gst_encoding_container_profile_add_profile (profile, (GstEncodingProfile *)
-      gst_encoding_audio_profile_new (caps, NULL, NULL, 1));
+  caps = gst_caps_from_string (audio);
+  stream = (GstEncodingProfile *)
+      gst_encoding_audio_profile_new (caps, NULL, NULL, 0);
+  gst_encoding_container_profile_add_profile (profile, stream);
   gst_caps_unref (caps);
 
   return (GstEncodingProfile *) profile;
@@ -56,8 +60,29 @@ main (int argc, gchar ** argv)
   GESTimelineLayer *layer;
   GMainLoop *mainloop;
   GstEncodingProfile *profile;
+  gchar *container = (gchar *) "application/ogg";
+  gchar *audio = (gchar *) "audio/x-vorbis";
   gchar *output_uri;
   guint i;
+  GError *err = NULL;
+  GOptionEntry options[] = {
+    {"format", 'f', 0, G_OPTION_ARG_STRING, &container,
+        "Container format", "<GstCaps>"},
+    {"aformat", 'a', 0, G_OPTION_ARG_STRING, &audio,
+        "Audio format", "<GstCaps>"},
+    {NULL}
+  };
+  GOptionContext *ctx;
+
+  ctx = g_option_context_new ("- renders a sequence of audio files.");
+  g_option_context_add_main_entries (ctx, options, NULL);
+  g_option_context_add_group (ctx, gst_init_get_option_group ());
+
+  if (!g_option_context_parse (ctx, &argc, &argv, &err)) {
+    g_printerr ("Error initializing: %s\n", err->message);
+    g_option_context_free (ctx);
+    return -1;
+  }
 
   if (argc < 3) {
     g_print ("Usage: %s <output uri> <list of audio files>\n", argv[0]);
@@ -119,7 +144,7 @@ main (int argc, gchar ** argv)
   } else {
     output_uri = g_strdup_printf ("file://%s", argv[1]);
   }
-  profile = make_ogg_vorbis_profile ();
+  profile = make_encoding_profile (audio, container);
   if (!ges_timeline_pipeline_set_render_settings (pipeline, output_uri,
           profile))
     return -1;
