@@ -1012,13 +1012,13 @@ gst_udpsrc_stop (GstBaseSrc * bsrc)
 /*** GSTURIHANDLER INTERFACE *************************************************/
 
 static GstURIType
-gst_udpsrc_uri_get_type (void)
+gst_udpsrc_uri_get_type (GType type)
 {
   return GST_URI_SRC;
 }
 
 static gchar **
-gst_udpsrc_uri_get_protocols (void)
+gst_udpsrc_uri_get_protocols (GType type)
 {
   static gchar *protocols[] = { (char *) "udp", NULL };
 

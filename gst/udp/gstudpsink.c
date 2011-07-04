@@ -207,13 +207,13 @@ gst_udpsink_get_property (GObject * object, guint prop_id, GValue * value,
 /*** GSTURIHANDLER INTERFACE *************************************************/
 
 static GstURIType
-gst_udpsink_uri_get_type (void)
+gst_udpsink_uri_get_type (GType type)
 {
   return GST_URI_SINK;
 }
 
 static gchar **
-gst_udpsink_uri_get_protocols (void)
+gst_udpsink_uri_get_protocols (GType type)
 {
   static gchar *protocols[] = { (char *) "udp", NULL };
 
