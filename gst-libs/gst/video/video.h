@@ -293,6 +293,8 @@ struct _GstVideoInfo {
 #define GST_VIDEO_INFO_COMP_STRIDE(i,c)  GST_VIDEO_FORMAT_INFO_STRIDE((i)->finfo,(i)->stride,c)
 #define GST_VIDEO_INFO_COMP_WIDTH(i,c)   GST_VIDEO_FORMAT_INFO_SCALE_WIDTH((i)->finfo,c,(i)->width)
 #define GST_VIDEO_INFO_COMP_HEIGHT(i,c)  GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT((i)->finfo,c,(i)->height)
+#define GST_VIDEO_INFO_COMP_PLANE(i,c)   GST_VIDEO_FORMAT_INFO_PLANE((i)->finfo,c)
+#define GST_VIDEO_INFO_COMP_OFFSET(i,c)  GST_VIDEO_FORMAT_INFO_OFFSET((i)->finfo,c)
 #define GST_VIDEO_INFO_COMP_PSTRIDE(i,c) GST_VIDEO_FORMAT_INFO_PSTRIDE((i)->finfo,c)
 
 void         gst_video_info_init        (GstVideoInfo *info);
@@ -351,6 +353,8 @@ gboolean    gst_video_frame_copy          (GstVideoFrame *dest, const GstVideoFr
 #define GST_VIDEO_FRAME_COMP_STRIDE(f,c)  GST_VIDEO_INFO_COMP_STRIDE(&(f)->info,c)
 #define GST_VIDEO_FRAME_COMP_WIDTH(f,c)   GST_VIDEO_INFO_COMP_WIDTH(&(f)->info,c)
 #define GST_VIDEO_FRAME_COMP_HEIGHT(f,c)  GST_VIDEO_INFO_COMP_HEIGHT(&(f)->info,c)
+#define GST_VIDEO_FRAME_COMP_PLANE(f,c)   GST_VIDEO_INFO_COMP_PLANE(&(f)->info,c)
+#define GST_VIDEO_FRAME_COMP_OFFSET(f,c)  GST_VIDEO_INFO_COMP_OFFSET(&(f)->info,c)
 #define GST_VIDEO_FRAME_COMP_PSTRIDE(f,c) GST_VIDEO_INFO_COMP_PSTRIDE(&(f)->info,c)
 
 #define GST_VIDEO_SIZE_RANGE "(int) [ 1, max ]"
