@@ -47,6 +47,7 @@ GstDataprotocol-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstdataprotoco
 		$(INTROSPECTION_SCANNER) -v --namespace GstDataprotocol \
 		--strip-prefix=Gst \
 		--nsversion=@GST_MAJORMINOR@ \
+		-DGST_USE_UNSTABLE_API \
 		-I$(top_srcdir) \
 		-I$(top_builddir) \
 		$(gir_cincludes) \

@@ -57,6 +57,7 @@ GstController-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstcontroller-@G
 		$(INTROSPECTION_SCANNER) -v --namespace GstController \
 		--nsversion=@GST_MAJORMINOR@ \
 		--strip-prefix=Gst \
+		-DGST_USE_UNSTABLE_API \
 		-I$(top_srcdir) \
 		-I$(top_srcdir)/libs \
 		-I$(top_builddir) \

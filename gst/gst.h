@@ -24,6 +24,11 @@
 #ifndef __GST_H__
 #define __GST_H__
 
+#ifndef GST_USE_UNSTABLE_API
+#warning "The GStreamer 0.11 API is still unstable and will change in future."
+#warning "Define GST_USE_UNSTABLE_API to avoid this warning."
+#endif
+
 #include <glib.h>
 
 #include <gst/glib-compat.h>
