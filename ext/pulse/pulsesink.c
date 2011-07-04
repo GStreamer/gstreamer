@@ -2560,6 +2560,23 @@ gst_pulsesink_event (GstBaseSink * sink, GstEvent * event)
   return GST_BASE_SINK_CLASS (parent_class)->event (sink, event);
 }
 
+static void
+gst_pulsesink_release_mainloop (GstPulseSink * psink)
+{
+  if (!mainloop)
+    return;
+
+  g_mutex_lock (pa_shared_resource_mutex);
+  mainloop_ref_ct--;
+  if (!mainloop_ref_ct) {
+    GST_INFO_OBJECT (psink, "terminating pa main loop thread");
+    pa_threaded_mainloop_stop (mainloop);
+    pa_threaded_mainloop_free (mainloop);
+    mainloop = NULL;
+  }
+  g_mutex_unlock (pa_shared_resource_mutex);
+}
+
 static GstStateChangeReturn
 gst_pulsesink_change_state (GstElement * element, GstStateChange transition)
 {
@@ -2602,17 +2619,7 @@ gst_pulsesink_change_state (GstElement * element, GstStateChange transition)
               GST_BASE_AUDIO_SINK (pulsesink)->provided_clock));
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
-      if (mainloop) {
-        g_mutex_lock (pa_shared_resource_mutex);
-        mainloop_ref_ct--;
-        if (!mainloop_ref_ct) {
-          GST_INFO_OBJECT (element, "terminating pa main loop thread");
-          pa_threaded_mainloop_stop (mainloop);
-          pa_threaded_mainloop_free (mainloop);
-          mainloop = NULL;
-        }
-        g_mutex_unlock (pa_shared_resource_mutex);
-      }
+      gst_pulsesink_release_mainloop (pulsesink);
       break;
     default:
       break;
@@ -2633,15 +2640,7 @@ state_failure:
     if (transition == GST_STATE_CHANGE_NULL_TO_READY) {
       /* Clear the PA mainloop if baseaudiosink failed to open the ring_buffer */
       g_assert (mainloop);
-      g_mutex_lock (pa_shared_resource_mutex);
-      mainloop_ref_ct--;
-      if (!mainloop_ref_ct) {
-        GST_INFO_OBJECT (element, "terminating pa main loop thread");
-        pa_threaded_mainloop_stop (mainloop);
-        pa_threaded_mainloop_free (mainloop);
-        mainloop = NULL;
-      }
-      g_mutex_unlock (pa_shared_resource_mutex);
+      gst_pulsesink_release_mainloop (pulsesink);
     }
     return ret;
   }
