@@ -439,6 +439,27 @@ gst_decklink_src_start (GstElement * element)
     GST_ERROR ("set configuration (input source)");
     return FALSE;
   }
+
+  if (decklinksrc->connection == GST_DECKLINK_CONNECTION_COMPOSITE) {
+    ret = config->SetInt (bmdDeckLinkConfigAnalogVideoInputFlags,
+        bmdAnalogVideoFlagCompositeSetup75);
+    if (ret != S_OK) {
+      GST_ERROR ("set configuration (composite setup)");
+      return FALSE;
+    }
+  }
+
+  if (decklinksrc->connection == GST_DECKLINK_CONNECTION_COMPOSITE ||
+      decklinksrc->connection == GST_DECKLINK_CONNECTION_COMPONENT ||
+      decklinksrc->connection == GST_DECKLINK_CONNECTION_SVIDEO) {
+    ret = config->SetInt (bmdDeckLinkConfigAudioInputConnection,
+        bmdAudioConnectionAnalog);
+    if (ret != S_OK) {
+      GST_ERROR ("set configuration (audio input connection)");
+      return FALSE;
+    }
+  }
+
 #if 0
   ret = decklinksrc->input->GetDisplayModeIterator (&mode_iterator);
   if (ret != S_OK) {
