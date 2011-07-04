@@ -3292,6 +3292,7 @@ gst_qt_mux_request_new_pad (GstElement * element,
   GstPad *newpad;
   gboolean audio;
   gchar *name;
+  gint pad_id;
 
   if (templ->direction != GST_PAD_SINK)
     goto wrong_direction;
@@ -3301,10 +3302,18 @@ gst_qt_mux_request_new_pad (GstElement * element,
 
   if (templ == gst_element_class_get_pad_template (klass, "audio_%d")) {
     audio = TRUE;
-    name = g_strdup_printf ("audio_%02d", qtmux->audio_pads++);
+    if (req_name != NULL && sscanf (req_name, "audio_%02d", &pad_id) == 1) {
+      name = g_strdup (req_name);
+    } else {
+      name = g_strdup_printf ("audio_%02d", qtmux->audio_pads++);
+    }
   } else if (templ == gst_element_class_get_pad_template (klass, "video_%d")) {
     audio = FALSE;
-    name = g_strdup_printf ("video_%02d", qtmux->video_pads++);
+    if (req_name != NULL && sscanf (req_name, "video_%02d", &pad_id) == 1) {
+      name = g_strdup (req_name);
+    } else {
+      name = g_strdup_printf ("video_%02d", qtmux->video_pads++);
+    }
   } else
     goto wrong_template;
 
