@@ -26,8 +26,8 @@
  *
  * Sample pipeline:
  * |[
- * gst-launch videotestsrc ! "video/x-raw-yuv,format=(fourcc)AYUV" ! \
- *   alphacolor ! "video/x-raw-rgb" ! ffmpegcolorspace ! autovideosink
+ * gst-launch videotestsrc ! "video/x-raw,format=(fourcc)AYUV" ! \
+ *   alphacolor ! videoconvert ! autovideosink
  * ]|
  */
 
@@ -49,17 +49,13 @@ GST_DEBUG_CATEGORY_STATIC (alpha_color_debug);
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGBA ";" GST_VIDEO_CAPS_BGRA ";"
-        GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_ABGR ";"
-        GST_VIDEO_CAPS_YUV ("AYUV"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ RGBA, BGRA, ARGB, ABGR, AYUV }"))
     );
 
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGBA ";" GST_VIDEO_CAPS_BGRA ";"
-        GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_ABGR ";"
-        GST_VIDEO_CAPS_YUV ("AYUV"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ RGBA, BGRA, ARGB, ABGR, AYUV }"))
     );
 
 G_DEFINE_TYPE (GstAlphaColor, gst_alpha_color, GST_TYPE_VIDEO_FILTER);
@@ -84,7 +80,7 @@ gst_alpha_color_class_init (GstAlphaColorClass * klass)
   gst_element_class_set_details_simple (gstelement_class, "Alpha color filter",
       "Filter/Converter/Video",
       "ARGB from/to AYUV colorspace conversion preserving the alpha channel",
-      "Wim Taymans <wim@fluendo.com>");
+      "Wim Taymans <wim.taymans@gmail.com>");
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sink_template));
@@ -97,7 +93,6 @@ gst_alpha_color_class_init (GstAlphaColorClass * klass)
       GST_DEBUG_FUNCPTR (gst_alpha_color_set_caps);
   gstbasetransform_class->transform_ip =
       GST_DEBUG_FUNCPTR (gst_alpha_color_transform_ip);
-
 }
 
 static void
@@ -210,12 +205,17 @@ static const gint cog_ycbcr_hdtv_to_ycbcr_sdtv_matrix_8bit[] = {
 
 #define DEFINE_ARGB_AYUV_FUNCTIONS(name, A, R, G, B) \
 static void \
-transform_##name##_ayuv (guint8 * data, gint size, const gint *matrix) \
+transform_##name##_ayuv (GstVideoFrame * frame, const gint *matrix) \
 { \
+  guint8 *data; \
+  gsize size; \
   gint y, u, v; \
   gint yc[4]; \
   gint uc[4]; \
   gint vc[4]; \
+  \
+  data = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);\
+  size = GST_VIDEO_FRAME_SIZE (frame);\
   \
   memcpy (yc, matrix, 4 * sizeof (gint)); \
   memcpy (uc, matrix + 4, 4 * sizeof (gint)); \
@@ -237,12 +237,17 @@ transform_##name##_ayuv (guint8 * data, gint size, const gint *matrix) \
 } \
 \
 static void \
-transform_ayuv_##name (guint8 * data, gint size, const gint *matrix) \
+transform_ayuv_##name (GstVideoFrame * frame, const gint *matrix) \
 { \
+  guint8 *data; \
+  gsize size; \
   gint r, g, b; \
   gint rc[4]; \
   gint gc[4]; \
   gint bc[4]; \
+  \
+  data = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);\
+  size = GST_VIDEO_FRAME_SIZE (frame);\
   \
   memcpy (rc, matrix, 4 * sizeof (gint)); \
   memcpy (gc, matrix + 4, 4 * sizeof (gint)); \
@@ -269,8 +274,10 @@ DEFINE_ARGB_AYUV_FUNCTIONS (argb, 0, 1, 2, 3);
 DEFINE_ARGB_AYUV_FUNCTIONS (abgr, 0, 3, 2, 1);
 
 static void
-transform_ayuv_ayuv (guint8 * data, gint size, const gint * matrix)
+transform_ayuv_ayuv (GstVideoFrame * frame, const gint * matrix)
 {
+  guint8 *data;
+  gsize size;
   gint y, u, v;
   gint yc[4];
   gint uc[4];
@@ -278,6 +285,9 @@ transform_ayuv_ayuv (guint8 * data, gint size, const gint * matrix)
 
   if (matrix == NULL)
     return;
+
+  data = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  size = GST_VIDEO_FRAME_SIZE (frame);
 
   memcpy (yc, matrix, 4 * sizeof (gint));
   memcpy (uc, matrix + 4, 4 * sizeof (gint));
@@ -299,9 +309,14 @@ transform_ayuv_ayuv (guint8 * data, gint size, const gint * matrix)
 }
 
 static void
-transform_argb_bgra (guint8 * data, gint size, const gint * matrix)
+transform_argb_bgra (GstVideoFrame * frame, const gint * matrix)
 {
+  guint8 *data;
+  gsize size;
   gint r, g, b;
+
+  data = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  size = GST_VIDEO_FRAME_SIZE (frame);
 
   while (size > 0) {
     r = data[1];
@@ -321,9 +336,14 @@ transform_argb_bgra (guint8 * data, gint size, const gint * matrix)
 #define transform_abgr_rgba transform_argb_bgra
 
 static void
-transform_argb_abgr (guint8 * data, gint size, const gint * matrix)
+transform_argb_abgr (GstVideoFrame * frame, const gint * matrix)
 {
+  guint8 *data;
+  gsize size;
   gint r, g, b;
+
+  data = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  size = GST_VIDEO_FRAME_SIZE (frame);
 
   while (size > 0) {
     r = data[1];
@@ -343,9 +363,14 @@ transform_argb_abgr (guint8 * data, gint size, const gint * matrix)
 #define transform_abgr_argb transform_argb_abgr
 
 static void
-transform_rgba_bgra (guint8 * data, gint size, const gint * matrix)
+transform_rgba_bgra (GstVideoFrame * frame, const gint * matrix)
 {
+  guint8 *data;
+  gsize size;
   gint r, g, b;
+
+  data = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  size = GST_VIDEO_FRAME_SIZE (frame);
 
   while (size > 0) {
     r = data[0];
@@ -365,9 +390,14 @@ transform_rgba_bgra (guint8 * data, gint size, const gint * matrix)
 #define transform_bgra_rgba transform_rgba_bgra
 
 static void
-transform_argb_rgba (guint8 * data, gint size, const gint * matrix)
+transform_argb_rgba (GstVideoFrame * frame, const gint * matrix)
 {
+  guint8 *data;
+  gsize size;
   gint r, g, b;
+
+  data = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  size = GST_VIDEO_FRAME_SIZE (frame);
 
   while (size > 0) {
     r = data[1];
@@ -387,9 +417,14 @@ transform_argb_rgba (guint8 * data, gint size, const gint * matrix)
 #define transform_abgr_bgra transform_argb_rgba
 
 static void
-transform_bgra_argb (guint8 * data, gint size, const gint * matrix)
+transform_bgra_argb (GstVideoFrame * frame, const gint * matrix)
 {
+  guint8 *data;
+  gsize size;
   gint r, g, b;
+
+  data = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  size = GST_VIDEO_FRAME_SIZE (frame);
 
   while (size > 0) {
     r = data[2];
@@ -409,9 +444,14 @@ transform_bgra_argb (guint8 * data, gint size, const gint * matrix)
 #define transform_rgba_abgr transform_bgra_argb
 
 static void
-transform_rgba_argb (guint8 * data, gint size, const gint * matrix)
+transform_rgba_argb (GstVideoFrame * frame, const gint * matrix)
 {
+  guint8 *data;
+  gsize size;
   gint r, g, b;
+
+  data = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  size = GST_VIDEO_FRAME_SIZE (frame);
 
   while (size > 0) {
     r = data[0];
@@ -436,36 +476,30 @@ gst_alpha_color_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
 {
   GstAlphaColor *alpha = GST_ALPHA_COLOR (btrans);
   gboolean ret;
-  gint w, h;
-  gint w2, h2;
-  GstVideoFormat in_format, out_format;
-  const gchar *matrix;
+  GstVideoInfo in_info, out_info;
   gboolean in_sdtv, out_sdtv;
 
   alpha->process = NULL;
   alpha->matrix = NULL;
 
-  ret = gst_video_format_parse_caps (incaps, &in_format, &w, &h);
-  ret &= gst_video_format_parse_caps (outcaps, &out_format, &w2, &h2);
+  ret = gst_video_info_from_caps (&in_info, incaps);
+  ret &= gst_video_info_from_caps (&out_info, outcaps);
+  if (!ret)
+    goto invalid_caps;
 
-  if (!ret || w != w2 || h != h2) {
-    GST_DEBUG_OBJECT (alpha, "incomplete or invalid caps!");
-    return FALSE;
-  }
+  if (GST_VIDEO_INFO_WIDTH (&in_info) != GST_VIDEO_INFO_WIDTH (&out_info) ||
+      GST_VIDEO_INFO_HEIGHT (&in_info) != GST_VIDEO_INFO_HEIGHT (&out_info))
+    goto invalid_caps;
 
-  matrix = gst_video_parse_caps_color_matrix (incaps);
-  in_sdtv = matrix ? g_str_equal (matrix, "sdtv") : TRUE;
-  matrix = gst_video_parse_caps_color_matrix (outcaps);
-  out_sdtv = matrix ? g_str_equal (matrix, "sdtv") : TRUE;
+  in_sdtv =
+      in_info.color_matrix ? g_str_equal (in_info.color_matrix, "sdtv") : TRUE;
+  out_sdtv =
+      out_info.color_matrix ? g_str_equal (out_info.color_matrix,
+      "sdtv") : TRUE;
 
-  alpha->in_format = in_format;
-  alpha->out_format = out_format;
-  alpha->width = w;
-  alpha->height = h;
-
-  switch (alpha->in_format) {
+  switch (GST_VIDEO_INFO_FORMAT (&in_info)) {
     case GST_VIDEO_FORMAT_ARGB:
-      switch (alpha->out_format) {
+      switch (GST_VIDEO_INFO_FORMAT (&out_info)) {
         case GST_VIDEO_FORMAT_ARGB:
           alpha->process = NULL;
           alpha->matrix = NULL;
@@ -495,7 +529,7 @@ gst_alpha_color_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
       }
       break;
     case GST_VIDEO_FORMAT_BGRA:
-      switch (alpha->out_format) {
+      switch (GST_VIDEO_INFO_FORMAT (&out_info)) {
         case GST_VIDEO_FORMAT_BGRA:
           alpha->process = NULL;
           alpha->matrix = NULL;
@@ -525,7 +559,7 @@ gst_alpha_color_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
       }
       break;
     case GST_VIDEO_FORMAT_ABGR:
-      switch (alpha->out_format) {
+      switch (GST_VIDEO_INFO_FORMAT (&out_info)) {
         case GST_VIDEO_FORMAT_ABGR:
           alpha->process = NULL;
           alpha->matrix = NULL;
@@ -555,7 +589,7 @@ gst_alpha_color_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
       }
       break;
     case GST_VIDEO_FORMAT_RGBA:
-      switch (alpha->out_format) {
+      switch (GST_VIDEO_INFO_FORMAT (&out_info)) {
         case GST_VIDEO_FORMAT_RGBA:
           alpha->process = NULL;
           alpha->matrix = NULL;
@@ -585,7 +619,7 @@ gst_alpha_color_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
       }
       break;
     case GST_VIDEO_FORMAT_AYUV:
-      switch (alpha->out_format) {
+      switch (GST_VIDEO_INFO_FORMAT (&out_info)) {
         case GST_VIDEO_FORMAT_AYUV:
           if (in_sdtv == out_sdtv) {
             alpha->process = transform_ayuv_ayuv;
@@ -633,44 +667,60 @@ gst_alpha_color_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
       break;
   }
 
-  if (in_format == out_format && in_sdtv == out_sdtv)
+  if (GST_VIDEO_INFO_FORMAT (&in_info) == GST_VIDEO_INFO_FORMAT (&out_info)
+      && in_sdtv == out_sdtv)
     gst_base_transform_set_passthrough (btrans, TRUE);
   else if (!alpha->process)
-    return FALSE;
+    goto no_process;
 
   return TRUE;
+
+  /* ERRORS */
+invalid_caps:
+  {
+    GST_DEBUG_OBJECT (alpha, "incomplete or invalid caps");
+    return FALSE;
+  }
+no_process:
+  {
+    GST_DEBUG_OBJECT (alpha, "could not find process function");
+    return FALSE;
+  }
 }
 
 static GstFlowReturn
 gst_alpha_color_transform_ip (GstBaseTransform * btrans, GstBuffer * inbuf)
 {
   GstAlphaColor *alpha = GST_ALPHA_COLOR (btrans);
-  guint8 *data;
-  gsize size;
+  GstVideoFrame frame;
 
   if (gst_base_transform_is_passthrough (btrans))
     return GST_FLOW_OK;
 
-  if (G_UNLIKELY (!alpha->process)) {
+  if (G_UNLIKELY (!alpha->process))
+    goto not_negotiated;
+
+  if (!gst_video_frame_map (&frame, &alpha->in_info, inbuf, GST_MAP_READWRITE))
+    goto invalid_buffer;
+
+  /* Transform in place */
+  alpha->process (&frame, alpha->matrix);
+
+  gst_video_frame_unmap (&frame);
+
+  return GST_FLOW_OK;
+
+  /* ERRORS */
+not_negotiated:
+  {
     GST_ERROR_OBJECT (alpha, "Not negotiated yet");
     return GST_FLOW_NOT_NEGOTIATED;
   }
-
-  data = gst_buffer_map (inbuf, &size, NULL, GST_MAP_READWRITE);
-
-  if (G_UNLIKELY (size != 4 * alpha->width * alpha->height)) {
-    GST_ERROR_OBJECT (alpha, "Invalid buffer size (was %u, expected %u)",
-        size, alpha->width * alpha->height);
-    gst_buffer_unmap (inbuf, data, size);
+invalid_buffer:
+  {
+    GST_ERROR_OBJECT (alpha, "Invalid buffer received");
     return GST_FLOW_ERROR;
   }
-
-  /* Transform in place */
-  alpha->process (data, size, alpha->matrix);
-
-  gst_buffer_unmap (inbuf, data, size);
-
-  return GST_FLOW_OK;
 }
 
 static gboolean

@@ -43,10 +43,9 @@ struct _GstAlphaColor
 
   /*< private >*/
   /* caps */
-  GstVideoFormat in_format, out_format;
-  gint width, height;
+  GstVideoInfo in_info, out_info;
 
-  void (*process) (guint8 * data, gint size, const gint * matrix);
+  void (*process) (GstVideoFrame * frame, const gint * matrix);
   const gint *matrix;
 };
 
