@@ -668,7 +668,7 @@ theora_enc_sink_setcaps (GstTheoraEnc * enc, GstCaps * caps)
   enc->info.pic_width = info.width;
   enc->info.pic_height = info.height;
 
-  switch (info.format) {
+  switch (GST_VIDEO_INFO_FORMAT (&info)) {
     case GST_VIDEO_FORMAT_I420:
       enc->info.pixel_fmt = TH_PF_420;
       break;
@@ -1023,13 +1023,10 @@ theora_enc_init_buffer (th_ycbcr_buffer buf, th_info * info,
    * is perfectly ok, even though it does not strictly look ok.
    */
   for (i = 0; i < 3; i++) {
-    buf[i].width =
-        gst_video_format_get_component_width (format, i, info->frame_width);
-    buf[i].height =
-        gst_video_format_get_component_height (format, i, info->frame_height);
-
-    buf[i].data = GST_VIDEO_FRAME_DATA (frame, i);
-    buf[i].stride = GST_VIDEO_FRAME_STRIDE (frame, i);
+    buf[i].width = GST_VIDEO_FRAME_COMP_WIDTH (frame, i);
+    buf[i].height = GST_VIDEO_FRAME_COMP_HEIGHT (frame, i);
+    buf[i].data = GST_VIDEO_FRAME_COMP_DATA (frame, i);
+    buf[i].stride = GST_VIDEO_FRAME_COMP_STRIDE (frame, i);
   }
 }
 

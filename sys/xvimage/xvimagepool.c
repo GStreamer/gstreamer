@@ -555,22 +555,27 @@ xvimage_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
 {
   GstXvImageBufferPool *xvpool = GST_XVIMAGE_BUFFER_POOL_CAST (pool);
   GstXvImageBufferPoolPrivate *priv = xvpool->priv;
+  GstVideoInfo *info;
   GstBuffer *xvimage;
   GstMetaXvImage *meta;
 
+  info = &priv->info;
+
   xvimage = gst_buffer_new ();
   meta =
-      gst_buffer_add_meta_xvimage (xvimage, xvpool->sink, priv->info.width,
-      priv->info.height, priv->im_format);
+      gst_buffer_add_meta_xvimage (xvimage, xvpool->sink,
+      GST_VIDEO_INFO_WIDTH (info), GST_VIDEO_INFO_HEIGHT (info),
+      priv->im_format);
   if (meta == NULL) {
     gst_buffer_unref (xvimage);
     goto no_buffer;
   }
 
   if (priv->add_metavideo) {
+    GST_DEBUG_OBJECT (pool, "adding GstMetaVideo");
     /* these are just the defaults for now */
-    gst_buffer_add_meta_video (xvimage, 0, priv->info.format, priv->info.width,
-        priv->info.height);
+    gst_buffer_add_meta_video (xvimage, 0, GST_VIDEO_INFO_FORMAT (info),
+        GST_VIDEO_INFO_WIDTH (info), GST_VIDEO_INFO_HEIGHT (info));
   }
 
   *buffer = xvimage;

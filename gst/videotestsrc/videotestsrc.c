@@ -1562,22 +1562,22 @@ paint_tmpline_AYUV (paintinfo * p, int x, int w)
 static void
 paint_setup_I420 (paintinfo * p, GstVideoFrame * frame)
 {
-  p->yp = GST_VIDEO_FRAME_DATA (frame, 0);
-  p->ystride = GST_VIDEO_FRAME_STRIDE (frame, 0);
-  p->up = GST_VIDEO_FRAME_DATA (frame, 1);
-  p->ustride = GST_VIDEO_FRAME_STRIDE (frame, 1);
-  p->vp = GST_VIDEO_FRAME_DATA (frame, 2);
-  p->vstride = GST_VIDEO_FRAME_STRIDE (frame, 2);
+  p->yp = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  p->ystride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
+  p->up = GST_VIDEO_FRAME_PLANE_DATA (frame, 1);
+  p->ustride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 1);
+  p->vp = GST_VIDEO_FRAME_PLANE_DATA (frame, 2);
+  p->vstride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 2);
   p->size = frame->info.size;
 }
 
 static void
 paint_setup_NV12 (paintinfo * p, GstVideoFrame * frame)
 {
-  p->yp = GST_VIDEO_FRAME_DATA (frame, 0);
-  p->ystride = GST_VIDEO_FRAME_STRIDE (frame, 0);
-  p->up = GST_VIDEO_FRAME_DATA (frame, 1);
-  p->ustride = GST_VIDEO_FRAME_STRIDE (frame, 1);
+  p->yp = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  p->ystride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
+  p->up = GST_VIDEO_FRAME_PLANE_DATA (frame, 1);
+  p->ustride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 1);
   p->vp = p->up + 1;
   p->vstride = p->ustride;
   p->size = frame->info.size;
@@ -1586,10 +1586,10 @@ paint_setup_NV12 (paintinfo * p, GstVideoFrame * frame)
 static void
 paint_setup_NV21 (paintinfo * p, GstVideoFrame * frame)
 {
-  p->yp = GST_VIDEO_FRAME_DATA (frame, 0);
-  p->ystride = GST_VIDEO_FRAME_STRIDE (frame, 0);
-  p->vp = GST_VIDEO_FRAME_DATA (frame, 1);
-  p->vstride = GST_VIDEO_FRAME_STRIDE (frame, 1);
+  p->yp = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  p->ystride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
+  p->vp = GST_VIDEO_FRAME_PLANE_DATA (frame, 1);
+  p->vstride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 1);
   p->up = p->vp + 1;
   p->ustride = p->vstride;
   p->size = frame->info.size;
@@ -1653,22 +1653,22 @@ convert_hline_NV21 (paintinfo * p, int y)
 static void
 paint_setup_YV12 (paintinfo * p, GstVideoFrame * frame)
 {
-  p->yp = GST_VIDEO_FRAME_DATA (frame, 0);
-  p->ystride = GST_VIDEO_FRAME_STRIDE (frame, 0);
-  p->up = GST_VIDEO_FRAME_DATA (frame, 1);
-  p->ustride = GST_VIDEO_FRAME_STRIDE (frame, 1);
-  p->vp = GST_VIDEO_FRAME_DATA (frame, 2);
-  p->vstride = GST_VIDEO_FRAME_STRIDE (frame, 2);
+  p->yp = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  p->ystride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
+  p->up = GST_VIDEO_FRAME_PLANE_DATA (frame, 1);
+  p->ustride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 1);
+  p->vp = GST_VIDEO_FRAME_PLANE_DATA (frame, 2);
+  p->vstride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 2);
   p->size = frame->info.size;
 }
 
 static void
 paint_setup_v308 (paintinfo * p, GstVideoFrame * frame)
 {
-  p->yp = GST_VIDEO_FRAME_DATA (frame, 0);
+  p->yp = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
   p->up = p->yp + 1;
   p->vp = p->yp + 2;
-  p->ystride = GST_VIDEO_FRAME_STRIDE (frame, 0);
+  p->ystride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
   p->ustride = p->ystride;
   p->vstride = p->ystride;
   p->size = frame->info.size;
@@ -1677,11 +1677,11 @@ paint_setup_v308 (paintinfo * p, GstVideoFrame * frame)
 static void
 paint_setup_AYUV (paintinfo * p, GstVideoFrame * frame)
 {
-  p->ap = GST_VIDEO_FRAME_DATA (frame, 0);
+  p->ap = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
   p->yp = p->ap + 1;
   p->up = p->ap + 2;
   p->vp = p->ap + 3;
-  p->astride = GST_VIDEO_FRAME_STRIDE (frame, 0);
+  p->astride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
   p->ystride = p->astride;;
   p->ustride = p->astride;
   p->vstride = p->astride;
@@ -1704,11 +1704,11 @@ paint_setup_v410 (paintinfo * p, GstVideoFrame * frame)
 static void
 paint_setup_v216 (paintinfo * p, GstVideoFrame * frame)
 {
-  p->ap = GST_VIDEO_FRAME_DATA (frame, 0);
+  p->ap = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
   p->yp = p->ap + 2;
   p->up = p->ap + 0;
   p->vp = p->ap + 4;
-  p->astride = GST_VIDEO_FRAME_STRIDE (frame, 0);
+  p->astride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
   p->ystride = p->astride;;
   p->ustride = p->astride;
   p->vstride = p->astride;
@@ -1718,11 +1718,11 @@ paint_setup_v216 (paintinfo * p, GstVideoFrame * frame)
 static void
 paint_setup_v210 (paintinfo * p, GstVideoFrame * frame)
 {
-  p->ap = GST_VIDEO_FRAME_DATA (frame, 0);
+  p->ap = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
   p->yp = p->ap;
   p->up = p->ap;
   p->vp = p->ap;
-  p->astride = GST_VIDEO_FRAME_STRIDE (frame, 0);
+  p->astride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
   p->ystride = p->astride;;
   p->ustride = p->astride;
   p->vstride = p->astride;
@@ -1732,11 +1732,11 @@ paint_setup_v210 (paintinfo * p, GstVideoFrame * frame)
 static void
 paint_setup_UYVP (paintinfo * p, GstVideoFrame * frame)
 {
-  p->ap = GST_VIDEO_FRAME_DATA (frame, 0);
+  p->ap = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
   p->yp = p->ap;
   p->up = p->ap;
   p->vp = p->ap;
-  p->astride = GST_VIDEO_FRAME_STRIDE (frame, 0);
+  p->astride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
   p->ystride = p->astride;;
   p->ustride = p->astride;
   p->vstride = p->astride;
@@ -1746,10 +1746,10 @@ paint_setup_UYVP (paintinfo * p, GstVideoFrame * frame)
 static void
 paint_setup_YUY2 (paintinfo * p, GstVideoFrame * frame)
 {
-  p->yp = GST_VIDEO_FRAME_DATA (frame, 0);
+  p->yp = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
   p->up = p->yp + 1;
   p->vp = p->yp + 3;
-  p->ystride = GST_VIDEO_FRAME_STRIDE (frame, 0);
+  p->ystride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
   p->ustride = p->ystride;
   p->vstride = p->ystride;
   p->size = frame->info.size;
@@ -1758,10 +1758,10 @@ paint_setup_YUY2 (paintinfo * p, GstVideoFrame * frame)
 static void
 paint_setup_UYVY (paintinfo * p, GstVideoFrame * frame)
 {
-  p->up = GST_VIDEO_FRAME_DATA (frame, 0);
+  p->up = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
   p->yp = p->up + 1;
   p->vp = p->up + 2;
-  p->ystride = GST_VIDEO_FRAME_STRIDE (frame, 0);
+  p->ystride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
   p->ustride = p->ystride;
   p->vstride = p->ystride;
   p->size = frame->info.size;
@@ -1770,10 +1770,10 @@ paint_setup_UYVY (paintinfo * p, GstVideoFrame * frame)
 static void
 paint_setup_YVYU (paintinfo * p, GstVideoFrame * frame)
 {
-  p->yp = GST_VIDEO_FRAME_DATA (frame, 0);
+  p->yp = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
   p->up = p->yp + 3;
   p->vp = p->yp + 1;
-  p->ystride = GST_VIDEO_FRAME_STRIDE (frame, 0);
+  p->ystride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
   p->ustride = p->ystride;
   p->vstride = p->ystride;
   p->size = frame->info.size;
@@ -1782,11 +1782,11 @@ paint_setup_YVYU (paintinfo * p, GstVideoFrame * frame)
 static void
 paint_setup_AY64 (paintinfo * p, GstVideoFrame * frame)
 {
-  p->ap = GST_VIDEO_FRAME_DATA (frame, 0);
+  p->ap = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
   p->yp = p->ap + 2;
   p->up = p->ap + 4;
   p->vp = p->ap + 6;
-  p->astride = GST_VIDEO_FRAME_STRIDE (frame, 0);
+  p->astride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
   p->ystride = p->astride;
   p->ustride = p->astride;
   p->vstride = p->astride;
@@ -1977,10 +1977,10 @@ static void
 paint_setup_IYU2 (paintinfo * p, GstVideoFrame * frame)
 {
   /* untested */
-  p->up = GST_VIDEO_FRAME_DATA (frame, 0);
+  p->up = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
   p->yp = p->up + 1;
   p->vp = p->up + 2;
-  p->ystride = GST_VIDEO_FRAME_STRIDE (frame, 0);
+  p->ystride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
   p->ustride = p->ystride;
   p->vstride = p->ystride;
   p->size = frame->info.size;
@@ -2006,12 +2006,12 @@ convert_hline_IYU2 (paintinfo * p, int y)
 static void
 paint_setup_Y41B (paintinfo * p, GstVideoFrame * frame)
 {
-  p->yp = GST_VIDEO_FRAME_DATA (frame, 0);
-  p->up = GST_VIDEO_FRAME_DATA (frame, 1);
-  p->vp = GST_VIDEO_FRAME_DATA (frame, 2);
-  p->ystride = GST_VIDEO_FRAME_STRIDE (frame, 0);
-  p->ustride = GST_VIDEO_FRAME_STRIDE (frame, 1);
-  p->vstride = GST_VIDEO_FRAME_STRIDE (frame, 2);
+  p->yp = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  p->up = GST_VIDEO_FRAME_PLANE_DATA (frame, 1);
+  p->vp = GST_VIDEO_FRAME_PLANE_DATA (frame, 2);
+  p->ystride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
+  p->ustride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 1);
+  p->vstride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 2);
   p->size = frame->info.size;
 }
 
@@ -2038,12 +2038,12 @@ convert_hline_Y41B (paintinfo * p, int y)
 static void
 paint_setup_Y42B (paintinfo * p, GstVideoFrame * frame)
 {
-  p->yp = GST_VIDEO_FRAME_DATA (frame, 0);
-  p->up = GST_VIDEO_FRAME_DATA (frame, 1);
-  p->vp = GST_VIDEO_FRAME_DATA (frame, 2);
-  p->ystride = GST_VIDEO_FRAME_STRIDE (frame, 0);
-  p->ustride = GST_VIDEO_FRAME_STRIDE (frame, 1);
-  p->vstride = GST_VIDEO_FRAME_STRIDE (frame, 2);
+  p->yp = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  p->up = GST_VIDEO_FRAME_PLANE_DATA (frame, 1);
+  p->vp = GST_VIDEO_FRAME_PLANE_DATA (frame, 2);
+  p->ystride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
+  p->ustride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 1);
+  p->vstride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 2);
   p->size = frame->info.size;
 }
 
@@ -2068,12 +2068,12 @@ convert_hline_Y42B (paintinfo * p, int y)
 static void
 paint_setup_Y444 (paintinfo * p, GstVideoFrame * frame)
 {
-  p->yp = GST_VIDEO_FRAME_DATA (frame, 0);
-  p->up = GST_VIDEO_FRAME_DATA (frame, 1);
-  p->vp = GST_VIDEO_FRAME_DATA (frame, 2);
-  p->ystride = GST_VIDEO_FRAME_STRIDE (frame, 0);
-  p->ustride = GST_VIDEO_FRAME_STRIDE (frame, 1);
-  p->vstride = GST_VIDEO_FRAME_STRIDE (frame, 2);
+  p->yp = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  p->up = GST_VIDEO_FRAME_PLANE_DATA (frame, 1);
+  p->vp = GST_VIDEO_FRAME_PLANE_DATA (frame, 2);
+  p->ystride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
+  p->ustride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 1);
+  p->vstride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 2);
   p->size = frame->info.size;
 }
 
@@ -2097,8 +2097,8 @@ static void
 paint_setup_Y800 (paintinfo * p, GstVideoFrame * frame)
 {
   /* untested */
-  p->yp = GST_VIDEO_FRAME_DATA (frame, 0);
-  p->ystride = GST_VIDEO_FRAME_STRIDE (frame, 0);
+  p->yp = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  p->ystride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
   p->size = frame->info.size;
 }
 
@@ -2117,24 +2117,24 @@ convert_hline_Y800 (paintinfo * p, int y)
 static void
 paint_setup_YVU9 (paintinfo * p, GstVideoFrame * frame)
 {
-  p->yp = GST_VIDEO_FRAME_DATA (frame, 0);
-  p->up = GST_VIDEO_FRAME_DATA (frame, 1);
-  p->vp = GST_VIDEO_FRAME_DATA (frame, 2);
-  p->ystride = GST_VIDEO_FRAME_STRIDE (frame, 0);
-  p->ustride = GST_VIDEO_FRAME_STRIDE (frame, 1);
-  p->vstride = GST_VIDEO_FRAME_STRIDE (frame, 2);
+  p->yp = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  p->up = GST_VIDEO_FRAME_PLANE_DATA (frame, 1);
+  p->vp = GST_VIDEO_FRAME_PLANE_DATA (frame, 2);
+  p->ystride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
+  p->ustride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 1);
+  p->vstride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 2);
   p->size = frame->info.size;
 }
 
 static void
 paint_setup_YUV9 (paintinfo * p, GstVideoFrame * frame)
 {
-  p->yp = GST_VIDEO_FRAME_DATA (frame, 0);
-  p->up = GST_VIDEO_FRAME_DATA (frame, 1);
-  p->vp = GST_VIDEO_FRAME_DATA (frame, 2);
-  p->ystride = GST_VIDEO_FRAME_STRIDE (frame, 0);
-  p->ustride = GST_VIDEO_FRAME_STRIDE (frame, 1);
-  p->vstride = GST_VIDEO_FRAME_STRIDE (frame, 2);
+  p->yp = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  p->up = GST_VIDEO_FRAME_PLANE_DATA (frame, 1);
+  p->vp = GST_VIDEO_FRAME_PLANE_DATA (frame, 2);
+  p->ystride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
+  p->ustride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 1);
+  p->vstride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 2);
   p->size = frame->info.size;
 }
 
@@ -2185,11 +2185,11 @@ paint_setup_BGRA8888 (paintinfo * p, GstVideoFrame * frame)
 static void
 paint_setup_xRGB8888 (paintinfo * p, GstVideoFrame * frame)
 {
-  p->ap = GST_VIDEO_FRAME_DATA (frame, 0);
+  p->ap = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
   p->yp = p->ap + 1;
   p->up = p->ap + 2;
   p->vp = p->ap + 3;
-  p->astride = GST_VIDEO_FRAME_STRIDE (frame, 0);
+  p->astride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
   p->ystride = p->astride;
   p->ustride = p->astride;
   p->vstride = p->astride;
@@ -2199,11 +2199,11 @@ paint_setup_xRGB8888 (paintinfo * p, GstVideoFrame * frame)
 static void
 paint_setup_xBGR8888 (paintinfo * p, GstVideoFrame * frame)
 {
-  p->ap = GST_VIDEO_FRAME_DATA (frame, 0);
+  p->ap = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
   p->yp = p->ap + 3;
   p->up = p->ap + 2;
   p->vp = p->ap + 1;
-  p->astride = GST_VIDEO_FRAME_STRIDE (frame, 0);
+  p->astride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
   p->ystride = p->astride;
   p->ustride = p->astride;
   p->vstride = p->astride;
@@ -2213,11 +2213,11 @@ paint_setup_xBGR8888 (paintinfo * p, GstVideoFrame * frame)
 static void
 paint_setup_RGBx8888 (paintinfo * p, GstVideoFrame * frame)
 {
-  p->yp = GST_VIDEO_FRAME_DATA (frame, 0);
+  p->yp = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
   p->up = p->yp + 1;
   p->vp = p->yp + 2;
   p->ap = p->yp + 3;
-  p->astride = GST_VIDEO_FRAME_STRIDE (frame, 0);
+  p->astride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
   p->ystride = p->astride;
   p->ustride = p->astride;
   p->vstride = p->astride;
@@ -2227,11 +2227,11 @@ paint_setup_RGBx8888 (paintinfo * p, GstVideoFrame * frame)
 static void
 paint_setup_BGRx8888 (paintinfo * p, GstVideoFrame * frame)
 {
-  p->vp = GST_VIDEO_FRAME_DATA (frame, 0);
+  p->vp = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
   p->up = p->vp + 1;
   p->yp = p->vp + 2;
   p->ap = p->vp + 3;
-  p->astride = GST_VIDEO_FRAME_STRIDE (frame, 0);
+  p->astride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
   p->ystride = p->astride;
   p->ustride = p->astride;
   p->vstride = p->astride;
@@ -2241,10 +2241,10 @@ paint_setup_BGRx8888 (paintinfo * p, GstVideoFrame * frame)
 static void
 paint_setup_RGB888 (paintinfo * p, GstVideoFrame * frame)
 {
-  p->yp = GST_VIDEO_FRAME_DATA (frame, 0);
+  p->yp = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
   p->up = p->yp + 1;
   p->vp = p->yp + 2;
-  p->ystride = GST_VIDEO_FRAME_STRIDE (frame, 0);
+  p->ystride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
   p->ustride = p->ystride;
   p->vstride = p->ystride;
   p->size = frame->info.size;
@@ -2253,10 +2253,10 @@ paint_setup_RGB888 (paintinfo * p, GstVideoFrame * frame)
 static void
 paint_setup_BGR888 (paintinfo * p, GstVideoFrame * frame)
 {
-  p->vp = GST_VIDEO_FRAME_DATA (frame, 0);
+  p->vp = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
   p->up = p->vp + 1;
   p->yp = p->vp + 2;
-  p->ystride = GST_VIDEO_FRAME_STRIDE (frame, 0);
+  p->ystride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
   p->ustride = p->ystride;
   p->vstride = p->ystride;
   p->size = frame->info.size;
@@ -2265,11 +2265,11 @@ paint_setup_BGR888 (paintinfo * p, GstVideoFrame * frame)
 static void
 paint_setup_ARGB64 (paintinfo * p, GstVideoFrame * frame)
 {
-  p->ap = GST_VIDEO_FRAME_DATA (frame, 0);
+  p->ap = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
   p->yp = p->ap + 2;
   p->up = p->ap + 4;
   p->yp = p->ap + 6;
-  p->astride = GST_VIDEO_FRAME_STRIDE (frame, 0);
+  p->astride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
   p->ystride = p->astride;
   p->ustride = p->astride;
   p->vstride = p->astride;
@@ -2349,8 +2349,8 @@ convert_hline_str3 (paintinfo * p, int y)
 static void
 paint_setup_RGB565 (paintinfo * p, GstVideoFrame * frame)
 {
-  p->yp = GST_VIDEO_FRAME_DATA (frame, 0);
-  p->ystride = GST_VIDEO_FRAME_STRIDE (frame, 0);
+  p->yp = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  p->ystride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
   p->ustride = p->ystride;
   p->vstride = p->ystride;
   p->size = frame->info.size;
@@ -2395,8 +2395,8 @@ convert_hline_xRGB1555 (paintinfo * p, int y)
 static void
 paint_setup_xRGB1555 (paintinfo * p, GstVideoFrame * frame)
 {
-  p->yp = GST_VIDEO_FRAME_DATA (frame, 0);
-  p->ystride = GST_VIDEO_FRAME_STRIDE (frame, 0);
+  p->yp = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  p->ystride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
   p->ustride = p->ystride;
   p->vstride = p->ystride;
   p->size = frame->info.size;
@@ -2406,7 +2406,7 @@ paint_setup_xRGB1555 (paintinfo * p, GstVideoFrame * frame)
 static void
 paint_setup_bayer_bggr (paintinfo * p, GstVideoFrame * frame)
 {
-  p->yp = GST_VIDEO_FRAME_DATA (frame, 0);
+  p->yp = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
   p->ystride = GST_ROUND_UP_4 (p->width);
   p->ustride = GST_ROUND_UP_4 (p->width);
   p->vstride = GST_ROUND_UP_4 (p->width);
@@ -2418,7 +2418,7 @@ paint_setup_bayer_bggr (paintinfo * p, GstVideoFrame * frame)
 static void
 paint_setup_bayer_rggb (paintinfo * p, GstVideoFrame * frame)
 {
-  p->yp = GST_VIDEO_FRAME_DATA (frame, 0);
+  p->yp = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
   p->ystride = GST_ROUND_UP_4 (p->width);
   p->ustride = GST_ROUND_UP_4 (p->width);
   p->vstride = GST_ROUND_UP_4 (p->width);
@@ -2430,7 +2430,7 @@ paint_setup_bayer_rggb (paintinfo * p, GstVideoFrame * frame)
 static void
 paint_setup_bayer_grbg (paintinfo * p, GstVideoFrame * frame)
 {
-  p->yp = GST_VIDEO_FRAME_DATA (frame, 0);
+  p->yp = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
   p->ystride = GST_ROUND_UP_4 (p->width);
   p->ustride = GST_ROUND_UP_4 (p->width);
   p->vstride = GST_ROUND_UP_4 (p->width);
@@ -2442,7 +2442,7 @@ paint_setup_bayer_grbg (paintinfo * p, GstVideoFrame * frame)
 static void
 paint_setup_bayer_gbrg (paintinfo * p, GstVideoFrame * frame)
 {
-  p->yp = GST_VIDEO_FRAME_DATA (frame, 0);
+  p->yp = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
   p->ystride = GST_ROUND_UP_4 (p->width);
   p->ustride = GST_ROUND_UP_4 (p->width);
   p->vstride = GST_ROUND_UP_4 (p->width);
@@ -2482,8 +2482,8 @@ convert_hline_bayer (paintinfo * p, int y)
 static void
 paint_setup_GRAY8 (paintinfo * p, GstVideoFrame * frame)
 {
-  p->yp = GST_VIDEO_FRAME_DATA (frame, 0);
-  p->ystride = GST_VIDEO_FRAME_STRIDE (frame, 0);
+  p->yp = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  p->ystride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
   p->size = frame->info.size;
 }
 
@@ -2503,8 +2503,8 @@ convert_hline_GRAY8 (paintinfo * p, int y)
 static void
 paint_setup_GRAY16 (paintinfo * p, GstVideoFrame * frame)
 {
-  p->yp = GST_VIDEO_FRAME_DATA (frame, 0);
-  p->ystride = GST_VIDEO_FRAME_STRIDE (frame, 0);
+  p->yp = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  p->ystride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
   p->size = frame->info.size;
 }
 

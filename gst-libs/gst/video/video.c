@@ -28,103 +28,166 @@
 #include "video.h"
 #include "gstmetavideo.h"
 
-static int get_size (GstVideoFormat format, int width, int height);
-static int get_stride (GstVideoFormat format, int plane, int width);
 static int fill_planes (GstVideoInfo * info);
-
-typedef enum
-{
-  VIDEO_FLAG_YUV = (1 << 0),
-  VIDEO_FLAG_RGB = (1 << 1),
-  VIDEO_FLAG_GRAY = (1 << 2),
-  VIDEO_FLAG_ALPHA = (1 << 3)
-} VideoFlags;
 
 typedef struct
 {
-  const gchar *fmt;
-  GstVideoFormat format;
   guint32 fourcc;
-  VideoFlags flags;
-  guint n_comp;
-  guint depth[GST_VIDEO_MAX_PLANES];
-  guint n_planes;
+  GstVideoFormatInfo info;
 } VideoFormat;
 
-#define COMP0            0, { 0, 0, 0, 0 }
-#define COMP8            1, { 8, 0, 0, 0 }
-#define COMP888          3, { 8, 8, 8, 0 }
-#define COMP8888         4, { 8, 8, 8, 8 }
-#define COMP10_10_10     3, { 10, 10, 10, 0 }
-#define COMP16           1, { 16, 0, 0, 0 }
-#define COMP16_16_16     3, { 16, 16, 16, 0 }
-#define COMP16_16_16_16  4, { 16, 16, 16, 16 }
-#define COMP555          3, { 5, 5, 5, 0 }
-#define COMP565          3, { 5, 6, 5, 0 }
+/* depths */
+#define DPTH0            0, { 0, 0, 0, 0 }
+#define DPTH8            1, { 8, 0, 0, 0 }
+#define DPTH888          3, { 8, 8, 8, 0 }
+#define DPTH8888         4, { 8, 8, 8, 8 }
+#define DPTH10_10_10     3, { 10, 10, 10, 0 }
+#define DPTH16           1, { 16, 0, 0, 0 }
+#define DPTH16_16_16     3, { 16, 16, 16, 0 }
+#define DPTH16_16_16_16  4, { 16, 16, 16, 16 }
+#define DPTH555          3, { 5, 5, 5, 0 }
+#define DPTH565          3, { 5, 6, 5, 0 }
 
-#define MAKE_YUV_FORMAT(name, fourcc, comp) \
- { G_STRINGIFY(name), GST_VIDEO_FORMAT_ ##name, fourcc, VIDEO_FLAG_YUV, comp }
-#define MAKE_YUVA_FORMAT(name, fourcc, comp) \
- { G_STRINGIFY(name), GST_VIDEO_FORMAT_ ##name, fourcc, VIDEO_FLAG_YUV | VIDEO_FLAG_ALPHA, comp }
+/* pixel strides */
+#define PSTR0             { 0, 0, 0, 0 }
+#define PSTR1             { 1, 0, 0, 0 }
+#define PSTR111           { 1, 1, 1, 0 }
+#define PSTR1111          { 1, 1, 1, 1 }
+#define PSTR122           { 1, 2, 2, 0 }
+#define PSTR2             { 2, 0, 0, 0 }
+#define PSTR222           { 2, 2, 2, 0 }
+#define PSTR244           { 2, 4, 4, 0 }
+#define PSTR444           { 4, 4, 4, 0 }
+#define PSTR4444          { 4, 4, 4, 4 }
+#define PSTR333           { 3, 3, 3, 0 }
+#define PSTR488           { 4, 8, 8, 0 }
+#define PSTR8888          { 8, 8, 8, 8 }
 
-#define MAKE_RGB_FORMAT(name, comp) \
- { G_STRINGIFY(name), GST_VIDEO_FORMAT_ ##name, 0x00000000, VIDEO_FLAG_RGB, comp }
-#define MAKE_RGBA_FORMAT(name, comp) \
- { G_STRINGIFY(name), GST_VIDEO_FORMAT_ ##name, 0x00000000, VIDEO_FLAG_RGB | VIDEO_FLAG_ALPHA, comp }
+/* planes */
+#define PLANE_NA          0, { 0, 0, 0, 0 }
+#define PLANE0            1, { 0, 0, 0, 0 }
+#define PLANE011          2, { 0, 1, 1, 0 }
+#define PLANE012          3, { 0, 1, 2, 0 }
+#define PLANE0123         4, { 0, 1, 2, 3 }
+#define PLANE021          3, { 0, 2, 1, 0 }
 
-#define MAKE_GRAY_FORMAT(name, comp) \
- { G_STRINGIFY(name), GST_VIDEO_FORMAT_ ##name, 0x00000000, VIDEO_FLAG_GRAY, comp }
+/* offsets */
+#define OFFS0             { 0, 0, 0, 0 }
+#define OFFS013           { 0, 1, 3, 0 }
+#define OFFS102           { 1, 0, 2, 0 }
+#define OFFS1230          { 1, 2, 3, 0 }
+#define OFFS012           { 0, 1, 2, 0 }
+#define OFFS210           { 2, 1, 0, 0 }
+#define OFFS123           { 1, 2, 3, 0 }
+#define OFFS321           { 3, 2, 1, 0 }
+#define OFFS0123          { 0, 1, 2, 3 }
+#define OFFS2103          { 2, 1, 0, 3 }
+#define OFFS3210          { 3, 2, 1, 0 }
+#define OFFS031           { 0, 3, 1, 0 }
+#define OFFS026           { 0, 2, 6, 0 }
+#define OFFS001           { 0, 0, 1, 0 }
+#define OFFS010           { 0, 1, 0, 0 }
+#define OFFS104           { 1, 0, 4, 0 }
+#define OFFS2460          { 2, 4, 6, 0 }
+
+/* subsampling */
+#define SUB410            { 0, 2, 2, 0 }, { 0, 2, 2, 0 }
+#define SUB411            { 0, 2, 2, 0 }, { 0, 0, 0, 0 }
+#define SUB420            { 0, 1, 1, 0 }, { 0, 1, 1, 0 }
+#define SUB422            { 0, 1, 1, 0 }, { 0, 0, 0, 0 }
+#define SUB4              { 0, 0, 0, 0 }, { 0, 0, 0, 0 }
+#define SUB444            { 0, 0, 0, 0 }, { 0, 0, 0, 0 }
+#define SUB4444           { 0, 0, 0, 0 }, { 0, 0, 0, 0 }
+#define SUB4204           { 0, 1, 1, 0 }, { 0, 1, 1, 0 }
+
+#define MAKE_YUV_FORMAT(name, fourcc, depth, pstride, plane, offs, sub ) \
+ { fourcc, {GST_VIDEO_FORMAT_ ##name, G_STRINGIFY(name), GST_VIDEO_FORMAT_FLAG_YUV, depth, pstride, plane, offs, sub } }
+#define MAKE_YUVA_FORMAT(name, fourcc, depth, pstride, plane, offs, sub) \
+ { fourcc, {GST_VIDEO_FORMAT_ ##name, G_STRINGIFY(name), GST_VIDEO_FORMAT_FLAG_YUV | GST_VIDEO_FORMAT_FLAG_ALPHA, depth, pstride, plane, offs, sub } }
+
+#define MAKE_RGB_FORMAT(name, depth, pstride, plane, offs, sub) \
+ { 0x00000000, {GST_VIDEO_FORMAT_ ##name, G_STRINGIFY(name), GST_VIDEO_FORMAT_FLAG_RGB, depth, pstride, plane, offs, sub } }
+#define MAKE_RGBA_FORMAT(name, depth, pstride, plane, offs, sub) \
+ { 0x00000000, {GST_VIDEO_FORMAT_ ##name, G_STRINGIFY(name), GST_VIDEO_FORMAT_FLAG_RGB | GST_VIDEO_FORMAT_FLAG_ALPHA, depth, pstride, plane, offs, sub } }
+
+#define MAKE_GRAY_FORMAT(name, depth, pstride, plane, offs, sub) \
+ { 0x00000000, {GST_VIDEO_FORMAT_ ##name, G_STRINGIFY(name), GST_VIDEO_FORMAT_FLAG_GRAY, depth, pstride, plane, offs, sub } }
 
 static VideoFormat formats[] = {
-  {"UNKNOWN", GST_VIDEO_FORMAT_UNKNOWN, 0x00000000, 0, COMP0},
+  {0x00000000, {GST_VIDEO_FORMAT_UNKNOWN, "UNKNOWN", 0, DPTH0, PSTR0, PLANE_NA,
+          OFFS0}},
 
-  MAKE_YUV_FORMAT (I420, GST_MAKE_FOURCC ('I', '4', '2', '0'), COMP888),
-  MAKE_YUV_FORMAT (YV12, GST_MAKE_FOURCC ('Y', 'V', '1', '2'), COMP888),
-  MAKE_YUV_FORMAT (YUY2, GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'), COMP888),
-  MAKE_YUV_FORMAT (UYVY, GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y'), COMP888),
-  MAKE_YUVA_FORMAT (AYUV, GST_MAKE_FOURCC ('A', 'Y', 'U', 'V'), COMP8888),
-  MAKE_RGB_FORMAT (RGBx, COMP888),
-  MAKE_RGB_FORMAT (BGRx, COMP888),
-  MAKE_RGB_FORMAT (xRGB, COMP888),
-  MAKE_RGB_FORMAT (xBGR, COMP888),
-  MAKE_RGBA_FORMAT (RGBA, COMP8888),
-  MAKE_RGBA_FORMAT (BGRA, COMP8888),
-  MAKE_RGBA_FORMAT (ARGB, COMP8888),
-  MAKE_RGBA_FORMAT (ABGR, COMP8888),
-  MAKE_RGB_FORMAT (RGB, COMP888),
-  MAKE_RGB_FORMAT (BGR, COMP888),
+  MAKE_YUV_FORMAT (I420, GST_MAKE_FOURCC ('I', '4', '2', '0'), DPTH888, PSTR111,
+      PLANE012, OFFS0, SUB420),
+  MAKE_YUV_FORMAT (YV12, GST_MAKE_FOURCC ('Y', 'V', '1', '2'), DPTH888, PSTR111,
+      PLANE021, OFFS0, SUB420),
+  MAKE_YUV_FORMAT (YUY2, GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'), DPTH888, PSTR244,
+      PLANE0, OFFS013, SUB422),
+  MAKE_YUV_FORMAT (UYVY, GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y'), DPTH888, PSTR244,
+      PLANE0, OFFS102, SUB422),
+  MAKE_YUVA_FORMAT (AYUV, GST_MAKE_FOURCC ('A', 'Y', 'U', 'V'), DPTH8888,
+      PSTR4444, PLANE0, OFFS1230, SUB4444),
+  MAKE_RGB_FORMAT (RGBx, DPTH888, PSTR444, PLANE0, OFFS012, SUB444),
+  MAKE_RGB_FORMAT (BGRx, DPTH888, PSTR444, PLANE0, OFFS210, SUB444),
+  MAKE_RGB_FORMAT (xRGB, DPTH888, PSTR444, PLANE0, OFFS123, SUB444),
+  MAKE_RGB_FORMAT (xBGR, DPTH888, PSTR444, PLANE0, OFFS321, SUB444),
+  MAKE_RGBA_FORMAT (RGBA, DPTH8888, PSTR4444, PLANE0, OFFS0123, SUB4444),
+  MAKE_RGBA_FORMAT (BGRA, DPTH8888, PSTR4444, PLANE0, OFFS2103, SUB4444),
+  MAKE_RGBA_FORMAT (ARGB, DPTH8888, PSTR4444, PLANE0, OFFS1230, SUB4444),
+  MAKE_RGBA_FORMAT (ABGR, DPTH8888, PSTR4444, PLANE0, OFFS3210, SUB4444),
+  MAKE_RGB_FORMAT (RGB, DPTH888, PSTR333, PLANE0, OFFS012, SUB444),
+  MAKE_RGB_FORMAT (BGR, DPTH888, PSTR333, PLANE0, OFFS210, SUB444),
 
-  MAKE_YUV_FORMAT (Y41B, GST_MAKE_FOURCC ('Y', '4', '1', 'B'), COMP888),
-  MAKE_YUV_FORMAT (Y42B, GST_MAKE_FOURCC ('Y', '4', '2', 'B'), COMP888),
-  MAKE_YUV_FORMAT (YVYU, GST_MAKE_FOURCC ('Y', 'V', 'Y', 'U'), COMP888),
-  MAKE_YUV_FORMAT (Y444, GST_MAKE_FOURCC ('Y', '4', '4', '4'), COMP888),
-  MAKE_YUV_FORMAT (v210, GST_MAKE_FOURCC ('v', '2', '1', '0'), COMP10_10_10),
-  MAKE_YUV_FORMAT (v216, GST_MAKE_FOURCC ('v', '2', '1', '6'), COMP16_16_16),
-  MAKE_YUV_FORMAT (NV12, GST_MAKE_FOURCC ('N', 'V', '1', '2'), COMP888),
-  MAKE_YUV_FORMAT (NV21, GST_MAKE_FOURCC ('N', 'V', '2', '1'), COMP888),
+  MAKE_YUV_FORMAT (Y41B, GST_MAKE_FOURCC ('Y', '4', '1', 'B'), DPTH888, PSTR111,
+      PLANE012, OFFS0, SUB411),
+  MAKE_YUV_FORMAT (Y42B, GST_MAKE_FOURCC ('Y', '4', '2', 'B'), DPTH888, PSTR111,
+      PLANE012, OFFS0, SUB422),
+  MAKE_YUV_FORMAT (YVYU, GST_MAKE_FOURCC ('Y', 'V', 'Y', 'U'), DPTH888, PSTR244,
+      PLANE0, OFFS031, SUB422),
+  MAKE_YUV_FORMAT (Y444, GST_MAKE_FOURCC ('Y', '4', '4', '4'), DPTH888, PSTR111,
+      PLANE012, OFFS0, SUB444),
+  MAKE_YUV_FORMAT (v210, GST_MAKE_FOURCC ('v', '2', '1', '0'), DPTH10_10_10,
+      PSTR0, PLANE0, OFFS0, SUB422),
+  MAKE_YUV_FORMAT (v216, GST_MAKE_FOURCC ('v', '2', '1', '6'), DPTH16_16_16,
+      PSTR488, PLANE0, OFFS026, SUB422),
+  MAKE_YUV_FORMAT (NV12, GST_MAKE_FOURCC ('N', 'V', '1', '2'), DPTH888, PSTR122,
+      PLANE011, OFFS001, SUB420),
+  MAKE_YUV_FORMAT (NV21, GST_MAKE_FOURCC ('N', 'V', '2', '1'), DPTH888, PSTR122,
+      PLANE011, OFFS010, SUB420),
 
-  MAKE_GRAY_FORMAT (GRAY8, COMP8),
-  MAKE_GRAY_FORMAT (GRAY16_BE, COMP16),
-  MAKE_GRAY_FORMAT (GRAY16_LE, COMP16),
+  MAKE_GRAY_FORMAT (GRAY8, DPTH8, PSTR1, PLANE0, OFFS0, SUB4),
+  MAKE_GRAY_FORMAT (GRAY16_BE, DPTH16, PSTR2, PLANE0, OFFS0, SUB4),
+  MAKE_GRAY_FORMAT (GRAY16_LE, DPTH16, PSTR2, PLANE0, OFFS0, SUB4),
 
-  MAKE_YUV_FORMAT (v308, GST_MAKE_FOURCC ('v', '3', '0', '8'), COMP888),
-  MAKE_YUV_FORMAT (Y800, GST_MAKE_FOURCC ('Y', '8', '0', '0'), COMP8),
-  MAKE_YUV_FORMAT (Y16, GST_MAKE_FOURCC ('Y', '1', '6', ' '), COMP16),
+  MAKE_YUV_FORMAT (v308, GST_MAKE_FOURCC ('v', '3', '0', '8'), DPTH888, PSTR333,
+      PLANE0, OFFS012, SUB444),
+  MAKE_YUV_FORMAT (Y800, GST_MAKE_FOURCC ('Y', '8', '0', '0'), DPTH8, PSTR1,
+      PLANE0, OFFS0, SUB4),
+  MAKE_YUV_FORMAT (Y16, GST_MAKE_FOURCC ('Y', '1', '6', ' '), DPTH16, PSTR2,
+      PLANE0, OFFS0, SUB4),
 
-  MAKE_RGB_FORMAT (RGB16, COMP565),
-  MAKE_RGB_FORMAT (BGR16, COMP565),
-  MAKE_RGB_FORMAT (RGB15, COMP555),
-  MAKE_RGB_FORMAT (BGR15, COMP555),
+  MAKE_RGB_FORMAT (RGB16, DPTH565, PSTR222, PLANE0, OFFS0, SUB444),
+  MAKE_RGB_FORMAT (BGR16, DPTH565, PSTR222, PLANE0, OFFS0, SUB444),
+  MAKE_RGB_FORMAT (RGB15, DPTH555, PSTR222, PLANE0, OFFS0, SUB444),
+  MAKE_RGB_FORMAT (BGR15, DPTH555, PSTR222, PLANE0, OFFS0, SUB444),
 
-  MAKE_YUV_FORMAT (UYVP, GST_MAKE_FOURCC ('U', 'Y', 'V', 'P'), COMP10_10_10),
-  MAKE_YUVA_FORMAT (A420, GST_MAKE_FOURCC ('A', '4', '2', '0'), COMP888),
-  MAKE_RGBA_FORMAT (RGB8_PALETTED, COMP8888),
-  MAKE_YUV_FORMAT (YUV9, GST_MAKE_FOURCC ('Y', 'U', 'V', '9'), COMP888),
-  MAKE_YUV_FORMAT (YVU9, GST_MAKE_FOURCC ('Y', 'V', 'U', '9'), COMP888),
-  MAKE_YUV_FORMAT (IYU1, GST_MAKE_FOURCC ('I', 'Y', 'U', '1'), COMP888),
-  MAKE_RGBA_FORMAT (ARGB64, COMP16_16_16_16),
-  MAKE_YUVA_FORMAT (AYUV64, 0x00000000, COMP16_16_16_16),
-  MAKE_YUV_FORMAT (r210, GST_MAKE_FOURCC ('r', '2', '1', '0'), COMP10_10_10),
+  MAKE_YUV_FORMAT (UYVP, GST_MAKE_FOURCC ('U', 'Y', 'V', 'P'), DPTH10_10_10,
+      PSTR0, PLANE0, OFFS0, SUB422),
+  MAKE_YUVA_FORMAT (A420, GST_MAKE_FOURCC ('A', '4', '2', '0'), DPTH8888,
+      PSTR1111, PLANE0123, OFFS0, SUB4204),
+  MAKE_RGBA_FORMAT (RGB8_PALETTED, DPTH8888, PSTR1111, PLANE0, OFFS0, SUB4444),
+  MAKE_YUV_FORMAT (YUV9, GST_MAKE_FOURCC ('Y', 'U', 'V', '9'), DPTH888, PSTR111,
+      PLANE012, OFFS0, SUB410),
+  MAKE_YUV_FORMAT (YVU9, GST_MAKE_FOURCC ('Y', 'V', 'U', '9'), DPTH888, PSTR111,
+      PLANE021, OFFS0, SUB410),
+  MAKE_YUV_FORMAT (IYU1, GST_MAKE_FOURCC ('I', 'Y', 'U', '1'), DPTH888, PSTR0,
+      PLANE0, OFFS104, SUB411),
+  MAKE_RGBA_FORMAT (ARGB64, DPTH16_16_16_16, PSTR8888, PLANE0, OFFS2460,
+      SUB444),
+  MAKE_YUVA_FORMAT (AYUV64, 0x00000000, DPTH16_16_16_16, PSTR8888, PLANE0,
+      OFFS2460, SUB444),
+  MAKE_YUV_FORMAT (r210, GST_MAKE_FOURCC ('r', '2', '1', '0'), DPTH10_10_10,
+      PSTR444, PLANE0, OFFS0, SUB444),
 };
 
 /**
@@ -291,6 +354,22 @@ gst_video_format_from_rgb16_masks (int red_mask, int green_mask, int blue_mask)
   return GST_VIDEO_FORMAT_UNKNOWN;
 }
 
+/**
+ * gst_video_format_from_masks:
+ * @depth: the amount of bits used for a pixel
+ * @bpp: the amount of bits used to store a pixel. This value is bigger than
+ *   @depth
+ * @endianness: the endianness of the masks
+ * @red_mask: the red mask
+ * @green_mask: the green mask
+ * @blue_mask: the blue mask
+ * @alpha_mask: the optional alpha mask
+ *
+ * Find the #GstVideoFormat for the given parameters.
+ *
+ * Returns: a #GstVideoFormat or GST_VIDEO_FORMAT_UNKNOWN when the parameters to
+ * not specify a known format.
+ */
 GstVideoFormat
 gst_video_format_from_masks (gint depth, gint bpp, gint endianness,
     gint red_mask, gint green_mask, gint blue_mask, gint alpha_mask)
@@ -408,14 +487,23 @@ gst_video_format_from_fourcc (guint32 fourcc)
   }
 }
 
+/**
+ * gst_video_format_from_string:
+ * @format: a format string
+ *
+ * Convert the @format string to its #GstVideoFormat.
+ *
+ * Returns: the #GstVideoFormat for @format or GST_VIDEO_FORMAT_UNKNOWN when the
+ * string is not a known format.
+ */
 GstVideoFormat
 gst_video_format_from_string (const gchar * format)
 {
   guint i;
 
   for (i = 0; i < G_N_ELEMENTS (formats); i++) {
-    if (strcmp (formats[i].fmt, format) == 0)
-      return formats[i].format;
+    if (strcmp (GST_VIDEO_FORMAT_INFO_NAME (&formats[i].info), format) == 0)
+      return GST_VIDEO_FORMAT_INFO_FORMAT (&formats[i].info);
   }
   return GST_VIDEO_FORMAT_UNKNOWN;
 }
@@ -452,234 +540,24 @@ gst_video_format_to_string (GstVideoFormat format)
   if (format >= G_N_ELEMENTS (formats))
     return NULL;
 
-  return formats[format].fmt;
+  return GST_VIDEO_FORMAT_INFO_NAME (&formats[format].info);
 }
 
 /**
- * gst_video_format_is_rgb:
+ * gst_video_format_get_info:
  * @format: a #GstVideoFormat
  *
- * Determine whether the video format is an RGB format.
+ * Get the #GstVideoFormatInfo for @format
  *
- * Since: 0.10.16
- *
- * Returns: TRUE if @format represents RGB video
+ * Returns: The #GstVideoFormatInfo for @format.
  */
-gboolean
-gst_video_format_is_rgb (GstVideoFormat format)
+const GstVideoFormatInfo *
+gst_video_format_get_info (GstVideoFormat format)
 {
-  g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN, FALSE);
+  g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN, NULL);
+  g_return_val_if_fail (format < G_N_ELEMENTS (formats), NULL);
 
-  if (format >= G_N_ELEMENTS (formats))
-    return FALSE;
-
-  return (formats[format].flags & VIDEO_FLAG_RGB) != 0;
-}
-
-/**
- * gst_video_format_is_yuv:
- * @format: a #GstVideoFormat
- *
- * Determine whether the video format is a YUV format.
- *
- * Since: 0.10.16
- *
- * Returns: TRUE if @format represents YUV video
- */
-gboolean
-gst_video_format_is_yuv (GstVideoFormat format)
-{
-  g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN, FALSE);
-
-  if (format >= G_N_ELEMENTS (formats))
-    return FALSE;
-
-  return (formats[format].flags & VIDEO_FLAG_YUV) != 0;
-}
-
-/**
- * gst_video_format_is_gray:
- * @format: a #GstVideoFormat
- *
- * Determine whether the video format is a grayscale format.
- *
- * Since: 0.10.29
- *
- * Returns: TRUE if @format represents grayscale video
- */
-gboolean
-gst_video_format_is_gray (GstVideoFormat format)
-{
-  g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN, FALSE);
-
-  if (format >= G_N_ELEMENTS (formats))
-    return FALSE;
-
-  return (formats[format].flags & VIDEO_FLAG_GRAY) != 0;
-}
-
-/**
- * gst_video_format_has_alpha:
- * @format: a #GstVideoFormat
- *
- * Returns TRUE or FALSE depending on if the video format provides an
- * alpha channel.
- *
- * Since: 0.10.16
- *
- * Returns: TRUE if @format has an alpha channel
- */
-gboolean
-gst_video_format_has_alpha (GstVideoFormat format)
-{
-  g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN, FALSE);
-
-  if (format >= G_N_ELEMENTS (formats))
-    return FALSE;
-
-  return (formats[format].flags & VIDEO_FLAG_ALPHA) != 0;
-}
-
-/**
- * gst_video_format_get_n_components:
- * @format: a #GstVideoFormat
- *
- * Get the number of components for @format.
- *
- * Returns: the number of components for @format.
- */
-int
-gst_video_format_get_n_components (GstVideoFormat format)
-{
-  g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN, 0);
-
-  if (format >= G_N_ELEMENTS (formats))
-    return 0;
-
-  return formats[format].n_comp;
-}
-
-/**
- * gst_video_format_get_component_depth:
- * @format: a #GstVideoFormat
- * @component: the video component (e.g. 0 for 'R' in RGB)
- *
- * Returns the number of bits used to encode an individual pixel of
- * a given @component.  Typically this is 8, although higher and lower
- * values are possible for some formats.
- *
- * Since: 0.10.33
- *
- * Returns: depth of component
- */
-int
-gst_video_format_get_component_depth (GstVideoFormat format, int component)
-{
-  g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN, 0);
-  g_return_val_if_fail (component < GST_VIDEO_MAX_PLANES, 0);
-
-  if (format >= G_N_ELEMENTS (formats))
-    return FALSE;
-
-  return formats[format].depth[component];
-}
-
-/**
- * gst_video_format_get_pixel_stride:
- * @format: a #GstVideoFormat
- * @component: the component index
- *
- * Calculates the pixel stride (number of bytes from one pixel to the
- * pixel to its immediate left) for the video component with an index
- * of @component.  See @gst_video_format_get_row_stride for a description
- * of the component index.
- *
- * Since: 0.10.16
- *
- * Returns: pixel stride of component @component
- */
-int
-gst_video_format_get_pixel_stride (GstVideoFormat format, int component)
-{
-  g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN, 0);
-  g_return_val_if_fail (component >= 0 && component <= 3, 0);
-
-  switch (format) {
-    case GST_VIDEO_FORMAT_I420:
-    case GST_VIDEO_FORMAT_YV12:
-    case GST_VIDEO_FORMAT_Y41B:
-    case GST_VIDEO_FORMAT_Y42B:
-    case GST_VIDEO_FORMAT_Y444:
-    case GST_VIDEO_FORMAT_A420:
-    case GST_VIDEO_FORMAT_YUV9:
-    case GST_VIDEO_FORMAT_YVU9:
-      return 1;
-    case GST_VIDEO_FORMAT_YUY2:
-    case GST_VIDEO_FORMAT_YVYU:
-    case GST_VIDEO_FORMAT_UYVY:
-      if (component == 0) {
-        return 2;
-      } else {
-        return 4;
-      }
-    case GST_VIDEO_FORMAT_IYU1:
-      /* doesn't make much sense for IYU1 because it's 1 or 3
-       * for luma depending on position */
-      return 0;
-    case GST_VIDEO_FORMAT_AYUV:
-    case GST_VIDEO_FORMAT_RGBx:
-    case GST_VIDEO_FORMAT_BGRx:
-    case GST_VIDEO_FORMAT_xRGB:
-    case GST_VIDEO_FORMAT_xBGR:
-    case GST_VIDEO_FORMAT_RGBA:
-    case GST_VIDEO_FORMAT_BGRA:
-    case GST_VIDEO_FORMAT_ARGB:
-    case GST_VIDEO_FORMAT_ABGR:
-    case GST_VIDEO_FORMAT_r210:
-      return 4;
-    case GST_VIDEO_FORMAT_RGB16:
-    case GST_VIDEO_FORMAT_BGR16:
-    case GST_VIDEO_FORMAT_RGB15:
-    case GST_VIDEO_FORMAT_BGR15:
-      return 2;
-    case GST_VIDEO_FORMAT_RGB:
-    case GST_VIDEO_FORMAT_BGR:
-    case GST_VIDEO_FORMAT_v308:
-      return 3;
-    case GST_VIDEO_FORMAT_v210:
-      /* v210 is packed at the bit level, so pixel stride doesn't make sense */
-      return 0;
-    case GST_VIDEO_FORMAT_v216:
-      if (component == 0) {
-        return 4;
-      } else {
-        return 8;
-      }
-    case GST_VIDEO_FORMAT_NV12:
-    case GST_VIDEO_FORMAT_NV21:
-      if (component == 0) {
-        return 1;
-      } else {
-        return 2;
-      }
-    case GST_VIDEO_FORMAT_GRAY8:
-    case GST_VIDEO_FORMAT_Y800:
-      return 1;
-    case GST_VIDEO_FORMAT_GRAY16_BE:
-    case GST_VIDEO_FORMAT_GRAY16_LE:
-    case GST_VIDEO_FORMAT_Y16:
-      return 2;
-    case GST_VIDEO_FORMAT_UYVP:
-      /* UYVP is packed at the bit level, so pixel stride doesn't make sense */
-      return 0;
-    case GST_VIDEO_FORMAT_RGB8_PALETTED:
-      return 1;
-    case GST_VIDEO_FORMAT_ARGB64:
-    case GST_VIDEO_FORMAT_AYUV64:
-      return 8;
-    default:
-      return 0;
-  }
+  return &formats[format].info;
 }
 
 /**
@@ -709,23 +587,19 @@ void
 gst_video_info_set_format (GstVideoInfo * info, GstVideoFormat format,
     guint width, guint height)
 {
-  gint i;
+  const GstVideoFormatInfo *finfo;
 
   g_return_if_fail (info != NULL);
   g_return_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN);
 
+  finfo = &formats[format].info;
+
   info->flags = 0;
-  info->format = format;
+  info->finfo = finfo;
   info->width = width;
   info->height = height;
 
-  info->n_planes = formats[format].n_planes;
-  info->size = get_size (format, info->width, info->height);
   fill_planes (info);
-
-  for (i = 0; i < info->n_planes; i++) {
-    info->stride[i] = get_stride (format, i, info->width);
-  }
 }
 
 /**
@@ -751,6 +625,8 @@ gst_video_info_from_caps (GstVideoInfo * info, const GstCaps * caps)
   g_return_val_if_fail (info != NULL, FALSE);
   g_return_val_if_fail (caps != NULL, FALSE);
   g_return_val_if_fail (gst_caps_is_fixed (caps), FALSE);
+
+  GST_DEBUG ("parsing caps %" GST_PTR_FORMAT, caps);
 
   structure = gst_caps_get_structure (caps, 0);
 
@@ -811,22 +687,27 @@ gst_video_info_from_caps (GstVideoInfo * info, const GstCaps * caps)
   /* ERROR */
 wrong_name:
   {
+    GST_ERROR ("wrong name, expected video/x-raw");
     return FALSE;
   }
 no_format:
   {
+    GST_ERROR ("no format given");
     return FALSE;
   }
 unknown_format:
   {
+    GST_ERROR ("unknown format given");
     return FALSE;
   }
 no_width:
   {
+    GST_ERROR ("no width property given");
     return FALSE;
   }
 no_height:
   {
+    GST_ERROR ("no height property given");
     return FALSE;
   }
 }
@@ -846,9 +727,10 @@ gst_video_info_to_caps (GstVideoInfo * info)
   const gchar *format;
 
   g_return_val_if_fail (info != NULL, NULL);
-  g_return_val_if_fail (info->format != GST_VIDEO_FORMAT_UNKNOWN, NULL);
+  g_return_val_if_fail (info->finfo != NULL, NULL);
+  g_return_val_if_fail (info->finfo->format != GST_VIDEO_FORMAT_UNKNOWN, NULL);
 
-  format = gst_video_format_to_string (info->format);
+  format = gst_video_format_to_string (info->finfo->format);
   g_return_val_if_fail (format != NULL, NULL);
 
   caps = gst_caps_new_simple ("video/x-raw",
@@ -901,12 +783,11 @@ gst_video_frame_map (GstVideoFrame * frame, GstVideoInfo * info,
 
   if (meta) {
     frame->info.flags = meta->flags;
-    frame->info.format = meta->format;
+    frame->info.finfo = &formats[meta->format].info;
     frame->info.width = meta->width;
     frame->info.height = meta->height;
-    frame->info.n_planes = meta->n_planes;
 
-    for (i = 0; i < info->n_planes; i++) {
+    for (i = 0; i < info->finfo->n_planes; i++) {
       frame->data[i] =
           gst_meta_video_map (meta, i, &frame->info.stride[i], flags);
     }
@@ -921,7 +802,7 @@ gst_video_frame_map (GstVideoFrame * frame, GstVideoInfo * info,
       goto invalid_size;
 
     /* set up pointers */
-    for (i = 0; i < info->n_planes; i++) {
+    for (i = 0; i < info->finfo->n_planes; i++) {
       frame->data[i] = data + info->offset[i];
     }
   }
@@ -930,6 +811,7 @@ gst_video_frame_map (GstVideoFrame * frame, GstVideoInfo * info,
   /* ERRORS */
 invalid_size:
   {
+    GST_ERROR ("invalid buffer size");
     gst_buffer_unmap (buffer, data, size);
     return FALSE;
   }
@@ -954,7 +836,7 @@ gst_video_frame_unmap (GstVideoFrame * frame)
   meta = frame->meta;
 
   if (meta) {
-    for (i = 0; i < frame->info.n_planes; i++) {
+    for (i = 0; i < frame->info.finfo->n_planes; i++) {
       gst_meta_video_unmap (meta, i, frame->data[i]);
     }
   } else {
@@ -985,11 +867,11 @@ gst_video_frame_copy (GstVideoFrame * dest, const GstVideoFrame * src)
   sinfo = &src->info;
   dinfo = &dest->info;
 
-  g_return_val_if_fail (dinfo->format == sinfo->format, FALSE);
+  g_return_val_if_fail (dinfo->finfo->format == sinfo->finfo->format, FALSE);
   g_return_val_if_fail (dinfo->width == sinfo->width
       && dinfo->height == sinfo->height, FALSE);
 
-  n_planes = dinfo->n_planes;
+  n_planes = dinfo->finfo->n_planes;
 
   for (i = 0; i < n_planes; i++) {
     guint w, h, j;
@@ -1003,7 +885,7 @@ gst_video_frame_copy (GstVideoFrame * dest, const GstVideoFrame * src)
     ds = dinfo->stride[i];
 
     w = MIN (ABS (ss), ABS (ds));
-    h = gst_video_format_get_component_height (dinfo->format, i, dinfo->height);
+    h = GST_VIDEO_FRAME_COMP_HEIGHT (dest, i);
 
     GST_DEBUG ("w %d h %d", w, h);
 
@@ -1016,585 +898,22 @@ gst_video_frame_copy (GstVideoFrame * dest, const GstVideoFrame * src)
   return TRUE;
 }
 
-/**
- * get_stride:
- * @format: a #GstVideoFormat
- * @component: the component index
- * @width: the width of video
- *
- * Calculates the row stride (number of bytes from one row of pixels to
- * the next) for the video component with an index of @component.  For
- * YUV video, Y, U, and V have component indices of 0, 1, and 2,
- * respectively.  For RGB video, R, G, and B have component indicies of
- * 0, 1, and 2, respectively.  Alpha channels, if present, have a component
- * index of 3.  The @width parameter always represents the width of the
- * video, not the component.
- *
- * Since: 0.10.16
- *
- * Returns: row stride of component @component
- */
-static int
-get_stride (GstVideoFormat format, int plane, int width)
-{
-  switch (format) {
-    case GST_VIDEO_FORMAT_I420:
-    case GST_VIDEO_FORMAT_YV12:
-      if (plane == 0) {
-        return GST_ROUND_UP_4 (width);
-      } else {
-        return GST_ROUND_UP_4 (GST_ROUND_UP_2 (width) / 2);
-      }
-    case GST_VIDEO_FORMAT_YUY2:
-    case GST_VIDEO_FORMAT_YVYU:
-    case GST_VIDEO_FORMAT_UYVY:
-      return GST_ROUND_UP_4 (width * 2);
-    case GST_VIDEO_FORMAT_AYUV:
-    case GST_VIDEO_FORMAT_RGBx:
-    case GST_VIDEO_FORMAT_BGRx:
-    case GST_VIDEO_FORMAT_xRGB:
-    case GST_VIDEO_FORMAT_xBGR:
-    case GST_VIDEO_FORMAT_RGBA:
-    case GST_VIDEO_FORMAT_BGRA:
-    case GST_VIDEO_FORMAT_ARGB:
-    case GST_VIDEO_FORMAT_ABGR:
-    case GST_VIDEO_FORMAT_r210:
-      return width * 4;
-    case GST_VIDEO_FORMAT_RGB16:
-    case GST_VIDEO_FORMAT_BGR16:
-    case GST_VIDEO_FORMAT_RGB15:
-    case GST_VIDEO_FORMAT_BGR15:
-      return GST_ROUND_UP_4 (width * 2);
-    case GST_VIDEO_FORMAT_RGB:
-    case GST_VIDEO_FORMAT_BGR:
-    case GST_VIDEO_FORMAT_v308:
-      return GST_ROUND_UP_4 (width * 3);
-    case GST_VIDEO_FORMAT_Y41B:
-      if (plane == 0) {
-        return GST_ROUND_UP_4 (width);
-      } else {
-        return GST_ROUND_UP_16 (width) / 4;
-      }
-    case GST_VIDEO_FORMAT_Y42B:
-      if (plane == 0) {
-        return GST_ROUND_UP_4 (width);
-      } else {
-        return GST_ROUND_UP_8 (width) / 2;
-      }
-    case GST_VIDEO_FORMAT_Y444:
-      return GST_ROUND_UP_4 (width);
-    case GST_VIDEO_FORMAT_v210:
-      return ((width + 47) / 48) * 128;
-    case GST_VIDEO_FORMAT_v216:
-      return GST_ROUND_UP_8 (width * 4);
-    case GST_VIDEO_FORMAT_NV12:
-    case GST_VIDEO_FORMAT_NV21:
-      return GST_ROUND_UP_4 (width);
-    case GST_VIDEO_FORMAT_GRAY8:
-    case GST_VIDEO_FORMAT_Y800:
-      return GST_ROUND_UP_4 (width);
-    case GST_VIDEO_FORMAT_GRAY16_BE:
-    case GST_VIDEO_FORMAT_GRAY16_LE:
-    case GST_VIDEO_FORMAT_Y16:
-      return GST_ROUND_UP_4 (width * 2);
-    case GST_VIDEO_FORMAT_UYVP:
-      return GST_ROUND_UP_4 ((width * 2 * 5 + 3) / 4);
-    case GST_VIDEO_FORMAT_A420:
-      if (plane == 0 || plane == 3) {
-        return GST_ROUND_UP_4 (width);
-      } else {
-        return GST_ROUND_UP_4 (GST_ROUND_UP_2 (width) / 2);
-      }
-    case GST_VIDEO_FORMAT_RGB8_PALETTED:
-      return GST_ROUND_UP_4 (width);
-    case GST_VIDEO_FORMAT_YUV9:
-    case GST_VIDEO_FORMAT_YVU9:
-      if (plane == 0) {
-        return GST_ROUND_UP_4 (width);
-      } else {
-        return GST_ROUND_UP_4 (GST_ROUND_UP_4 (width) / 4);
-      }
-    case GST_VIDEO_FORMAT_IYU1:
-      return GST_ROUND_UP_4 (GST_ROUND_UP_4 (width) +
-          GST_ROUND_UP_4 (width) / 2);
-    case GST_VIDEO_FORMAT_ARGB64:
-    case GST_VIDEO_FORMAT_AYUV64:
-      return width * 8;
-    default:
-      return 0;
-  }
-}
-
-/**
- * gst_video_format_get_component_width:
- * @format: a #GstVideoFormat
- * @component: the component index
- * @width: the width of video
- *
- * Calculates the width of the component.  See
- * @gst_video_format_get_row_stride for a description
- * of the component index.
- *
- * Since: 0.10.16
- *
- * Returns: width of component @component
- */
-int
-gst_video_format_get_component_width (GstVideoFormat format,
-    int component, int width)
-{
-  g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN, 0);
-  g_return_val_if_fail (component >= 0 && component <= 3, 0);
-  g_return_val_if_fail (width > 0, 0);
-
-  switch (format) {
-    case GST_VIDEO_FORMAT_I420:
-    case GST_VIDEO_FORMAT_YV12:
-    case GST_VIDEO_FORMAT_YUY2:
-    case GST_VIDEO_FORMAT_YVYU:
-    case GST_VIDEO_FORMAT_UYVY:
-    case GST_VIDEO_FORMAT_Y42B:
-    case GST_VIDEO_FORMAT_v210:
-    case GST_VIDEO_FORMAT_v216:
-    case GST_VIDEO_FORMAT_NV12:
-    case GST_VIDEO_FORMAT_NV21:
-    case GST_VIDEO_FORMAT_UYVP:
-      if (component == 0) {
-        return width;
-      } else {
-        return GST_ROUND_UP_2 (width) / 2;
-      }
-    case GST_VIDEO_FORMAT_Y41B:
-    case GST_VIDEO_FORMAT_YUV9:
-    case GST_VIDEO_FORMAT_YVU9:
-    case GST_VIDEO_FORMAT_IYU1:
-      if (component == 0) {
-        return width;
-      } else {
-        return GST_ROUND_UP_4 (width) / 4;
-      }
-    case GST_VIDEO_FORMAT_AYUV:
-    case GST_VIDEO_FORMAT_RGBx:
-    case GST_VIDEO_FORMAT_BGRx:
-    case GST_VIDEO_FORMAT_xRGB:
-    case GST_VIDEO_FORMAT_xBGR:
-    case GST_VIDEO_FORMAT_RGBA:
-    case GST_VIDEO_FORMAT_BGRA:
-    case GST_VIDEO_FORMAT_ARGB:
-    case GST_VIDEO_FORMAT_ABGR:
-    case GST_VIDEO_FORMAT_RGB:
-    case GST_VIDEO_FORMAT_BGR:
-    case GST_VIDEO_FORMAT_RGB16:
-    case GST_VIDEO_FORMAT_BGR16:
-    case GST_VIDEO_FORMAT_RGB15:
-    case GST_VIDEO_FORMAT_BGR15:
-    case GST_VIDEO_FORMAT_Y444:
-    case GST_VIDEO_FORMAT_v308:
-    case GST_VIDEO_FORMAT_GRAY8:
-    case GST_VIDEO_FORMAT_GRAY16_BE:
-    case GST_VIDEO_FORMAT_GRAY16_LE:
-    case GST_VIDEO_FORMAT_Y800:
-    case GST_VIDEO_FORMAT_Y16:
-    case GST_VIDEO_FORMAT_RGB8_PALETTED:
-    case GST_VIDEO_FORMAT_ARGB64:
-    case GST_VIDEO_FORMAT_AYUV64:
-    case GST_VIDEO_FORMAT_r210:
-      return width;
-    case GST_VIDEO_FORMAT_A420:
-      if (component == 0 || component == 3) {
-        return width;
-      } else {
-        return GST_ROUND_UP_2 (width) / 2;
-      }
-    default:
-      return 0;
-  }
-}
-
-/**
- * gst_video_format_get_component_height:
- * @format: a #GstVideoFormat
- * @component: the component index
- * @height: the height of video
- *
- * Calculates the height of the component.  See
- * @gst_video_format_get_row_stride for a description
- * of the component index.
- *
- * Since: 0.10.16
- *
- * Returns: height of component @component
- */
-int
-gst_video_format_get_component_height (GstVideoFormat format,
-    int component, int height)
-{
-  g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN, 0);
-  g_return_val_if_fail (component >= 0 && component <= 3, 0);
-  g_return_val_if_fail (height > 0, 0);
-
-  switch (format) {
-    case GST_VIDEO_FORMAT_I420:
-    case GST_VIDEO_FORMAT_YV12:
-    case GST_VIDEO_FORMAT_NV12:
-    case GST_VIDEO_FORMAT_NV21:
-      if (component == 0) {
-        return height;
-      } else {
-        return GST_ROUND_UP_2 (height) / 2;
-      }
-    case GST_VIDEO_FORMAT_Y41B:
-    case GST_VIDEO_FORMAT_Y42B:
-    case GST_VIDEO_FORMAT_YUY2:
-    case GST_VIDEO_FORMAT_YVYU:
-    case GST_VIDEO_FORMAT_UYVY:
-    case GST_VIDEO_FORMAT_AYUV:
-    case GST_VIDEO_FORMAT_RGBx:
-    case GST_VIDEO_FORMAT_BGRx:
-    case GST_VIDEO_FORMAT_xRGB:
-    case GST_VIDEO_FORMAT_xBGR:
-    case GST_VIDEO_FORMAT_RGBA:
-    case GST_VIDEO_FORMAT_BGRA:
-    case GST_VIDEO_FORMAT_ARGB:
-    case GST_VIDEO_FORMAT_ABGR:
-    case GST_VIDEO_FORMAT_RGB:
-    case GST_VIDEO_FORMAT_BGR:
-    case GST_VIDEO_FORMAT_RGB16:
-    case GST_VIDEO_FORMAT_BGR16:
-    case GST_VIDEO_FORMAT_RGB15:
-    case GST_VIDEO_FORMAT_BGR15:
-    case GST_VIDEO_FORMAT_Y444:
-    case GST_VIDEO_FORMAT_v210:
-    case GST_VIDEO_FORMAT_v216:
-    case GST_VIDEO_FORMAT_v308:
-    case GST_VIDEO_FORMAT_GRAY8:
-    case GST_VIDEO_FORMAT_GRAY16_BE:
-    case GST_VIDEO_FORMAT_GRAY16_LE:
-    case GST_VIDEO_FORMAT_Y800:
-    case GST_VIDEO_FORMAT_Y16:
-    case GST_VIDEO_FORMAT_UYVP:
-    case GST_VIDEO_FORMAT_RGB8_PALETTED:
-    case GST_VIDEO_FORMAT_IYU1:
-    case GST_VIDEO_FORMAT_ARGB64:
-    case GST_VIDEO_FORMAT_AYUV64:
-    case GST_VIDEO_FORMAT_r210:
-      return height;
-    case GST_VIDEO_FORMAT_A420:
-      if (component == 0 || component == 3) {
-        return height;
-      } else {
-        return GST_ROUND_UP_2 (height) / 2;
-      }
-    case GST_VIDEO_FORMAT_YUV9:
-    case GST_VIDEO_FORMAT_YVU9:
-      if (component == 0) {
-        return height;
-      } else {
-        return GST_ROUND_UP_4 (height) / 4;
-      }
-    default:
-      return 0;
-  }
-}
-
-/**
- * gst_video_format_get_component_offset:
- * @format: a #GstVideoFormat
- * @component: the component index
- * @width: the width of video
- * @height: the height of video
- *
- * Calculates the offset (in bytes) of the first pixel of the component
- * with index @component.  For packed formats, this will typically be a
- * small integer (0, 1, 2, 3).  For planar formats, this will be a
- * (relatively) large offset to the beginning of the second or third
- * component planes.  See @gst_video_format_get_row_stride for a description
- * of the component index.
- *
- * Since: 0.10.16
- *
- * Returns: offset of component @component
- */
-int
-gst_video_format_get_component_offset (GstVideoFormat format,
-    int component, int width, int height)
-{
-  g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN, 0);
-  g_return_val_if_fail (component >= 0 && component <= 3, 0);
-  g_return_val_if_fail ((!gst_video_format_is_yuv (format)) || (width > 0
-          && height > 0), 0);
-
-  switch (format) {
-    case GST_VIDEO_FORMAT_I420:
-      if (component == 0)
-        return 0;
-      if (component == 1)
-        return GST_ROUND_UP_4 (width) * GST_ROUND_UP_2 (height);
-      if (component == 2) {
-        return GST_ROUND_UP_4 (width) * GST_ROUND_UP_2 (height) +
-            GST_ROUND_UP_4 (GST_ROUND_UP_2 (width) / 2) *
-            (GST_ROUND_UP_2 (height) / 2);
-      }
-      break;
-    case GST_VIDEO_FORMAT_YV12:        /* same as I420, but components 1+2 swapped */
-      if (component == 0)
-        return 0;
-      if (component == 2)
-        return GST_ROUND_UP_4 (width) * GST_ROUND_UP_2 (height);
-      if (component == 1) {
-        return GST_ROUND_UP_4 (width) * GST_ROUND_UP_2 (height) +
-            GST_ROUND_UP_4 (GST_ROUND_UP_2 (width) / 2) *
-            (GST_ROUND_UP_2 (height) / 2);
-      }
-      break;
-    case GST_VIDEO_FORMAT_YUY2:
-      if (component == 0)
-        return 0;
-      if (component == 1)
-        return 1;
-      if (component == 2)
-        return 3;
-      break;
-    case GST_VIDEO_FORMAT_YVYU:
-      if (component == 0)
-        return 0;
-      if (component == 1)
-        return 3;
-      if (component == 2)
-        return 1;
-      break;
-    case GST_VIDEO_FORMAT_UYVY:
-      if (component == 0)
-        return 1;
-      if (component == 1)
-        return 0;
-      if (component == 2)
-        return 2;
-      break;
-    case GST_VIDEO_FORMAT_AYUV:
-      if (component == 0)
-        return 1;
-      if (component == 1)
-        return 2;
-      if (component == 2)
-        return 3;
-      if (component == 3)
-        return 0;
-      break;
-    case GST_VIDEO_FORMAT_RGBx:
-    case GST_VIDEO_FORMAT_RGBA:
-      if (component == 0)
-        return 0;
-      if (component == 1)
-        return 1;
-      if (component == 2)
-        return 2;
-      if (component == 3)
-        return 3;
-      break;
-    case GST_VIDEO_FORMAT_BGRx:
-    case GST_VIDEO_FORMAT_BGRA:
-      if (component == 0)
-        return 2;
-      if (component == 1)
-        return 1;
-      if (component == 2)
-        return 0;
-      if (component == 3)
-        return 3;
-      break;
-    case GST_VIDEO_FORMAT_xRGB:
-    case GST_VIDEO_FORMAT_ARGB:
-      if (component == 0)
-        return 1;
-      if (component == 1)
-        return 2;
-      if (component == 2)
-        return 3;
-      if (component == 3)
-        return 0;
-      break;
-    case GST_VIDEO_FORMAT_xBGR:
-    case GST_VIDEO_FORMAT_ABGR:
-      if (component == 0)
-        return 3;
-      if (component == 1)
-        return 2;
-      if (component == 2)
-        return 1;
-      if (component == 3)
-        return 0;
-      break;
-    case GST_VIDEO_FORMAT_RGB:
-    case GST_VIDEO_FORMAT_v308:
-      if (component == 0)
-        return 0;
-      if (component == 1)
-        return 1;
-      if (component == 2)
-        return 2;
-      break;
-    case GST_VIDEO_FORMAT_BGR:
-      if (component == 0)
-        return 2;
-      if (component == 1)
-        return 1;
-      if (component == 2)
-        return 0;
-      break;
-    case GST_VIDEO_FORMAT_Y41B:
-      if (component == 0)
-        return 0;
-      if (component == 1)
-        return GST_ROUND_UP_4 (width) * height;
-      if (component == 2)
-        return (GST_ROUND_UP_4 (width) +
-            (GST_ROUND_UP_16 (width) / 4)) * height;
-      break;
-    case GST_VIDEO_FORMAT_Y42B:
-      if (component == 0)
-        return 0;
-      if (component == 1)
-        return GST_ROUND_UP_4 (width) * height;
-      if (component == 2)
-        return (GST_ROUND_UP_4 (width) + (GST_ROUND_UP_8 (width) / 2)) * height;
-      break;
-    case GST_VIDEO_FORMAT_Y444:
-      return GST_ROUND_UP_4 (width) * height * component;
-    case GST_VIDEO_FORMAT_v210:
-    case GST_VIDEO_FORMAT_r210:
-      /* v210 is bit-packed, so this doesn't make sense */
-      return 0;
-    case GST_VIDEO_FORMAT_v216:
-      if (component == 0)
-        return 0;
-      if (component == 1)
-        return 2;
-      if (component == 2)
-        return 6;
-      break;
-    case GST_VIDEO_FORMAT_NV12:
-      if (component == 0)
-        return 0;
-      if (component == 1)
-        return GST_ROUND_UP_4 (width) * GST_ROUND_UP_2 (height);
-      if (component == 2)
-        return GST_ROUND_UP_4 (width) * GST_ROUND_UP_2 (height) + 1;
-      break;
-    case GST_VIDEO_FORMAT_NV21:
-      if (component == 0)
-        return 0;
-      if (component == 1)
-        return GST_ROUND_UP_4 (width) * GST_ROUND_UP_2 (height) + 1;
-      if (component == 2)
-        return GST_ROUND_UP_4 (width) * GST_ROUND_UP_2 (height);
-      break;
-    case GST_VIDEO_FORMAT_GRAY8:
-    case GST_VIDEO_FORMAT_GRAY16_BE:
-    case GST_VIDEO_FORMAT_GRAY16_LE:
-    case GST_VIDEO_FORMAT_Y800:
-    case GST_VIDEO_FORMAT_Y16:
-      return 0;
-    case GST_VIDEO_FORMAT_UYVP:
-      /* UYVP is bit-packed, so this doesn't make sense */
-      return 0;
-    case GST_VIDEO_FORMAT_A420:
-      if (component == 0)
-        return 0;
-      if (component == 1)
-        return GST_ROUND_UP_4 (width) * GST_ROUND_UP_2 (height);
-      if (component == 2) {
-        return GST_ROUND_UP_4 (width) * GST_ROUND_UP_2 (height) +
-            GST_ROUND_UP_4 (GST_ROUND_UP_2 (width) / 2) *
-            (GST_ROUND_UP_2 (height) / 2);
-      }
-      if (component == 3) {
-        return GST_ROUND_UP_4 (width) * GST_ROUND_UP_2 (height) +
-            2 * GST_ROUND_UP_4 (GST_ROUND_UP_2 (width) / 2) *
-            (GST_ROUND_UP_2 (height) / 2);
-      }
-      break;
-    case GST_VIDEO_FORMAT_RGB8_PALETTED:
-      return 0;
-    case GST_VIDEO_FORMAT_YUV9:
-      if (component == 0)
-        return 0;
-      if (component == 1)
-        return GST_ROUND_UP_4 (width) * height;
-      if (component == 2) {
-        return GST_ROUND_UP_4 (width) * height +
-            GST_ROUND_UP_4 (GST_ROUND_UP_4 (width) / 4) *
-            (GST_ROUND_UP_4 (height) / 4);
-      }
-      break;
-    case GST_VIDEO_FORMAT_YVU9:
-      if (component == 0)
-        return 0;
-      if (component == 1) {
-        return GST_ROUND_UP_4 (width) * height +
-            GST_ROUND_UP_4 (GST_ROUND_UP_4 (width) / 4) *
-            (GST_ROUND_UP_4 (height) / 4);
-      }
-      if (component == 2)
-        return GST_ROUND_UP_4 (width) * height;
-      break;
-    case GST_VIDEO_FORMAT_IYU1:
-      if (component == 0)
-        return 1;
-      if (component == 1)
-        return 0;
-      if (component == 2)
-        return 4;
-      break;
-    case GST_VIDEO_FORMAT_ARGB64:
-    case GST_VIDEO_FORMAT_AYUV64:
-      if (component == 0)
-        return 2;
-      if (component == 1)
-        return 4;
-      if (component == 2)
-        return 6;
-      if (component == 3)
-        return 0;
-      break;
-    default:
-      break;
-  }
-  GST_WARNING ("unhandled format %d or component %d", format, component);
-  return 0;
-}
-
-/**
- * get_plane_offset:
- * @format: a #GstVideoFormat
- * @plane: the plane index
- * @width: the width of video
- * @height: the height of video
- *
- * Calculates the offset (in bytes) of the first pixel of the plane
- * with index @plane.  For packed formats, this will typically be 0.
- * For planar formats, this will be a (relatively) large offset to the
- * beginning of the second or third plane planes.
- * See @gst_video_format_get_row_stride for a description
- * of the plane index.
- *
- * Since: 0.10.16
- *
- * Returns: offset of plane @plane
- */
 static int
 fill_planes (GstVideoInfo * info)
 {
-  int width;
-  int height;
+  gint width, height;
 
   width = info->width;
   height = info->height;
 
-  switch (info->format) {
+  switch (info->finfo->format) {
     case GST_VIDEO_FORMAT_YUY2:
     case GST_VIDEO_FORMAT_YVYU:
     case GST_VIDEO_FORMAT_UYVY:
+      info->stride[0] = GST_ROUND_UP_4 (width * 2);
+      info->offset[0] = 0;
+      info->size = info->stride[0] * height;
+      break;
     case GST_VIDEO_FORMAT_AYUV:
     case GST_VIDEO_FORMAT_RGBx:
     case GST_VIDEO_FORMAT_RGBA:
@@ -1604,196 +923,171 @@ fill_planes (GstVideoInfo * info)
     case GST_VIDEO_FORMAT_ARGB:
     case GST_VIDEO_FORMAT_xBGR:
     case GST_VIDEO_FORMAT_ABGR:
-    case GST_VIDEO_FORMAT_RGB:
-    case GST_VIDEO_FORMAT_v308:
-    case GST_VIDEO_FORMAT_BGR:
-    case GST_VIDEO_FORMAT_v210:
     case GST_VIDEO_FORMAT_r210:
-    case GST_VIDEO_FORMAT_v216:
-    case GST_VIDEO_FORMAT_GRAY8:
-    case GST_VIDEO_FORMAT_GRAY16_BE:
-    case GST_VIDEO_FORMAT_GRAY16_LE:
-    case GST_VIDEO_FORMAT_Y800:
-    case GST_VIDEO_FORMAT_Y16:
-    case GST_VIDEO_FORMAT_UYVP:
-    case GST_VIDEO_FORMAT_RGB8_PALETTED:
-    case GST_VIDEO_FORMAT_IYU1:
-    case GST_VIDEO_FORMAT_ARGB64:
-    case GST_VIDEO_FORMAT_AYUV64:
-      info->n_planes = 1;
+      info->stride[0] = width * 4;
       info->offset[0] = 0;
+      info->size = info->stride[0] * height;
       break;
-    case GST_VIDEO_FORMAT_I420:
-      info->n_planes = 3;
-      info->offset[0] = 0;
-      info->offset[1] = GST_ROUND_UP_4 (width) * GST_ROUND_UP_2 (height);
-      info->offset[2] = info->offset[1] +
-          GST_ROUND_UP_4 (GST_ROUND_UP_2 (width) / 2) *
-          (GST_ROUND_UP_2 (height) / 2);
-      break;
-    case GST_VIDEO_FORMAT_YV12:        /* same as I420, but plane 1+2 swapped */
-      info->n_planes = 3;
-      info->offset[0] = 0;
-      info->offset[2] = GST_ROUND_UP_4 (width) * GST_ROUND_UP_2 (height);
-      info->offset[1] = info->offset[2] +
-          GST_ROUND_UP_4 (GST_ROUND_UP_2 (width) / 2) *
-          (GST_ROUND_UP_2 (height) / 2);
-      break;
-    case GST_VIDEO_FORMAT_Y41B:
-      info->n_planes = 3;
-      info->offset[0] = 0;
-      info->offset[1] = GST_ROUND_UP_4 (width) * height;
-      info->offset[2] = (GST_ROUND_UP_4 (width) +
-          (GST_ROUND_UP_16 (width) / 4)) * height;
-      break;
-    case GST_VIDEO_FORMAT_Y42B:
-      info->n_planes = 3;
-      info->offset[0] = 0;
-      info->offset[1] = GST_ROUND_UP_4 (width) * height;
-      info->offset[2] =
-          (GST_ROUND_UP_4 (width) + (GST_ROUND_UP_8 (width) / 2)) * height;
-      break;
-    case GST_VIDEO_FORMAT_Y444:
-      info->n_planes = 3;
-      info->offset[0] = 0;
-      info->offset[1] = GST_ROUND_UP_4 (width) * height;
-      info->offset[2] = GST_ROUND_UP_4 (width) * height * 2;
-      break;
-    case GST_VIDEO_FORMAT_NV12:
-    case GST_VIDEO_FORMAT_NV21:
-      info->n_planes = 2;
-      info->offset[0] = 0;
-      info->offset[1] = GST_ROUND_UP_4 (width) * GST_ROUND_UP_2 (height);
-      break;
-    case GST_VIDEO_FORMAT_A420:
-      info->n_planes = 4;
-      info->offset[0] = 0;
-      info->offset[1] = GST_ROUND_UP_4 (width) * GST_ROUND_UP_2 (height);
-      info->offset[2] = info->offset[1] +
-          GST_ROUND_UP_4 (GST_ROUND_UP_2 (width) / 2) *
-          (GST_ROUND_UP_2 (height) / 2);
-      info->offset[3] = info->offset[2] +
-          GST_ROUND_UP_4 (GST_ROUND_UP_2 (width) / 2) *
-          (GST_ROUND_UP_2 (height) / 2);
-      break;
-    case GST_VIDEO_FORMAT_YUV9:
-      info->n_planes = 3;
-      info->offset[0] = 0;
-      info->offset[1] = GST_ROUND_UP_4 (width) * height;
-      info->offset[2] = info->offset[1] +
-          GST_ROUND_UP_4 (GST_ROUND_UP_4 (width) / 4) *
-          (GST_ROUND_UP_4 (height) / 4);
-      break;
-    case GST_VIDEO_FORMAT_YVU9:
-      info->n_planes = 3;
-      info->offset[0] = 0;
-      info->offset[2] = GST_ROUND_UP_4 (width) * height;
-      info->offset[1] = info->offset[2] +
-          GST_ROUND_UP_4 (GST_ROUND_UP_4 (width) / 4) *
-          (GST_ROUND_UP_4 (height) / 4);
-      break;
-    default:
-      GST_WARNING ("unhandled format %d", info->format);
-      break;
-  }
-  return 0;
-}
-
-/**
- * get_size:
- * @format: a #GstVideoFormat
- * @width: the width of video
- * @height: the height of video
- *
- * Calculates the total number of bytes in the raw video format.  This
- * number should be used when allocating a buffer for raw video.
- *
- * Returns: size (in bytes) of raw video format
- */
-static int
-get_size (GstVideoFormat format, int width, int height)
-{
-  int size;
-
-  g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN, 0);
-  g_return_val_if_fail (width > 0 && height > 0, 0);
-
-  switch (format) {
-    case GST_VIDEO_FORMAT_I420:
-    case GST_VIDEO_FORMAT_YV12:
-      size = GST_ROUND_UP_4 (width) * GST_ROUND_UP_2 (height);
-      size += GST_ROUND_UP_4 (GST_ROUND_UP_2 (width) / 2) *
-          (GST_ROUND_UP_2 (height) / 2) * 2;
-      return size;
-    case GST_VIDEO_FORMAT_IYU1:
-      return GST_ROUND_UP_4 (GST_ROUND_UP_4 (width) +
-          GST_ROUND_UP_4 (width) / 2) * height;
-    case GST_VIDEO_FORMAT_YUY2:
-    case GST_VIDEO_FORMAT_YVYU:
-    case GST_VIDEO_FORMAT_UYVY:
-      return GST_ROUND_UP_4 (width * 2) * height;
-    case GST_VIDEO_FORMAT_AYUV:
-    case GST_VIDEO_FORMAT_RGBx:
-    case GST_VIDEO_FORMAT_BGRx:
-    case GST_VIDEO_FORMAT_xRGB:
-    case GST_VIDEO_FORMAT_xBGR:
-    case GST_VIDEO_FORMAT_RGBA:
-    case GST_VIDEO_FORMAT_BGRA:
-    case GST_VIDEO_FORMAT_ARGB:
-    case GST_VIDEO_FORMAT_ABGR:
-    case GST_VIDEO_FORMAT_r210:
-      return width * 4 * height;
     case GST_VIDEO_FORMAT_RGB16:
     case GST_VIDEO_FORMAT_BGR16:
     case GST_VIDEO_FORMAT_RGB15:
     case GST_VIDEO_FORMAT_BGR15:
-      return GST_ROUND_UP_4 (width * 2) * height;
+      info->stride[0] = GST_ROUND_UP_4 (width * 2);
+      info->offset[0] = 0;
+      info->size = info->stride[0] * height;
+      break;
     case GST_VIDEO_FORMAT_RGB:
     case GST_VIDEO_FORMAT_BGR:
     case GST_VIDEO_FORMAT_v308:
-      return GST_ROUND_UP_4 (width * 3) * height;
-    case GST_VIDEO_FORMAT_Y41B:
-      /* simplification of ROUNDUP4(w)*h + 2*((ROUNDUP16(w)/4)*h */
-      return (GST_ROUND_UP_4 (width) + (GST_ROUND_UP_16 (width) / 2)) * height;
-    case GST_VIDEO_FORMAT_Y42B:
-      /* simplification of ROUNDUP4(w)*h + 2*(ROUNDUP8(w)/2)*h */
-      return (GST_ROUND_UP_4 (width) + GST_ROUND_UP_8 (width)) * height;
-    case GST_VIDEO_FORMAT_Y444:
-      return GST_ROUND_UP_4 (width) * height * 3;
+      info->stride[0] = GST_ROUND_UP_4 (width * 3);
+      info->offset[0] = 0;
+      info->size = info->stride[0] * height;
+      break;
     case GST_VIDEO_FORMAT_v210:
-      return ((width + 47) / 48) * 128 * height;
+      info->stride[0] = ((width + 47) / 48) * 128;
+      info->offset[0] = 0;
+      info->size = info->stride[0] * height;
+      break;
     case GST_VIDEO_FORMAT_v216:
-      return GST_ROUND_UP_8 (width * 4) * height;
-    case GST_VIDEO_FORMAT_NV12:
-    case GST_VIDEO_FORMAT_NV21:
-      return GST_ROUND_UP_4 (width) * GST_ROUND_UP_2 (height) * 3 / 2;
+      info->stride[0] = GST_ROUND_UP_8 (width * 4);
+      info->offset[0] = 0;
+      info->size = info->stride[0] * height;
+      break;
     case GST_VIDEO_FORMAT_GRAY8:
     case GST_VIDEO_FORMAT_Y800:
-    case GST_VIDEO_FORMAT_RGB8_PALETTED:
-      return GST_ROUND_UP_4 (width) * height;
+      info->stride[0] = GST_ROUND_UP_4 (width);
+      info->offset[0] = 0;
+      info->size = info->stride[0] * height;
+      break;
     case GST_VIDEO_FORMAT_GRAY16_BE:
     case GST_VIDEO_FORMAT_GRAY16_LE:
     case GST_VIDEO_FORMAT_Y16:
-      return GST_ROUND_UP_4 (width * 2) * height;
+      info->stride[0] = GST_ROUND_UP_4 (width * 2);
+      info->offset[0] = 0;
+      info->size = info->stride[0] * height;
+      break;
     case GST_VIDEO_FORMAT_UYVP:
-      return GST_ROUND_UP_4 ((width * 2 * 5 + 3) / 4) * height;
-    case GST_VIDEO_FORMAT_A420:
-      size = 2 * GST_ROUND_UP_4 (width) * GST_ROUND_UP_2 (height);
-      size += GST_ROUND_UP_4 (GST_ROUND_UP_2 (width) / 2) *
-          (GST_ROUND_UP_2 (height) / 2) * 2;
-      return size;
-    case GST_VIDEO_FORMAT_YUV9:
-    case GST_VIDEO_FORMAT_YVU9:
-      size = GST_ROUND_UP_4 (width) * height;
-      size += GST_ROUND_UP_4 (GST_ROUND_UP_4 (width) / 4) *
-          (GST_ROUND_UP_4 (height) / 4) * 2;
-      return size;
+      info->stride[0] = GST_ROUND_UP_4 ((width * 2 * 5 + 3) / 4);
+      info->offset[0] = 0;
+      info->size = info->stride[0] * height;
+      break;
+    case GST_VIDEO_FORMAT_RGB8_PALETTED:
+      info->stride[0] = GST_ROUND_UP_4 (width);
+      info->offset[0] = 0;
+      info->size = info->stride[0] * height;
+      break;
+    case GST_VIDEO_FORMAT_IYU1:
+      info->stride[0] = GST_ROUND_UP_4 (GST_ROUND_UP_4 (width) +
+          GST_ROUND_UP_4 (width) / 2);
+      info->offset[0] = 0;
+      info->size = info->stride[0] * height;
+      break;
     case GST_VIDEO_FORMAT_ARGB64:
     case GST_VIDEO_FORMAT_AYUV64:
-      return width * 8 * height;
-    default:
-      return 0;
+      info->stride[0] = width * 8;
+      info->offset[0] = 0;
+      info->size = info->stride[0] * height;
+      break;
+    case GST_VIDEO_FORMAT_I420:
+      info->stride[0] = GST_ROUND_UP_4 (width);
+      info->stride[1] = GST_ROUND_UP_4 (GST_ROUND_UP_2 (width) / 2);
+      info->stride[2] = info->stride[1];
+      info->offset[0] = 0;
+      info->offset[1] = info->stride[0] * GST_ROUND_UP_2 (height);
+      info->offset[2] = info->offset[1] +
+          info->stride[1] * (GST_ROUND_UP_2 (height) / 2);
+      info->size = info->offset[2] +
+          info->stride[2] * (GST_ROUND_UP_2 (height) / 2);
+      break;
+    case GST_VIDEO_FORMAT_YV12:        /* same as I420, but plane 1+2 swapped */
+      info->stride[0] = GST_ROUND_UP_4 (width);
+      info->stride[1] = GST_ROUND_UP_4 (GST_ROUND_UP_2 (width) / 2);
+      info->stride[2] = info->stride[1];
+      info->offset[0] = 0;
+      info->offset[2] = info->stride[0] * GST_ROUND_UP_2 (height);
+      info->offset[1] = info->offset[2] +
+          info->stride[1] * (GST_ROUND_UP_2 (height) / 2);
+      info->size = info->offset[1] +
+          info->stride[2] * (GST_ROUND_UP_2 (height) / 2);
+      break;
+    case GST_VIDEO_FORMAT_Y41B:
+      info->stride[0] = GST_ROUND_UP_4 (width);
+      info->stride[1] = GST_ROUND_UP_16 (width) / 4;
+      info->stride[2] = info->stride[1];
+      info->offset[0] = 0;
+      info->offset[1] = info->stride[0] * height;
+      info->offset[2] = info->offset[1] + info->stride[1] * height;
+      /* simplification of ROUNDUP4(w)*h + 2*((ROUNDUP16(w)/4)*h */
+      info->size = (info->stride[0] + (GST_ROUND_UP_16 (width) / 2)) * height;
+      break;
+    case GST_VIDEO_FORMAT_Y42B:
+      info->stride[0] = GST_ROUND_UP_4 (width);
+      info->stride[1] = GST_ROUND_UP_8 (width) / 2;
+      info->stride[2] = info->stride[1];
+      info->offset[0] = 0;
+      info->offset[1] = info->stride[0] * height;
+      info->offset[2] = info->offset[1] + info->stride[1] * height;
+      /* simplification of ROUNDUP4(w)*h + 2*(ROUNDUP8(w)/2)*h */
+      info->size = (info->stride[0] + GST_ROUND_UP_8 (width)) * height;
+      break;
+    case GST_VIDEO_FORMAT_Y444:
+      info->stride[0] = GST_ROUND_UP_4 (width);
+      info->stride[1] = info->stride[0];
+      info->stride[2] = info->stride[0];
+      info->offset[0] = 0;
+      info->offset[1] = info->stride[0] * height;
+      info->offset[2] = info->offset[1] * 2;
+      info->size = info->stride[0] * height * 3;
+      break;
+    case GST_VIDEO_FORMAT_NV12:
+    case GST_VIDEO_FORMAT_NV21:
+      info->stride[0] = GST_ROUND_UP_4 (width);
+      info->stride[1] = info->stride[0];
+      info->offset[0] = 0;
+      info->offset[1] = info->stride[0] * GST_ROUND_UP_2 (height);
+      info->size = info->stride[0] * GST_ROUND_UP_2 (height) * 3 / 2;
+      break;
+    case GST_VIDEO_FORMAT_A420:
+      info->stride[0] = GST_ROUND_UP_4 (width);
+      info->stride[1] = GST_ROUND_UP_4 (GST_ROUND_UP_2 (width) / 2);
+      info->stride[2] = info->stride[1];
+      info->stride[3] = info->stride[0];
+      info->offset[0] = 0;
+      info->offset[1] = info->stride[0] * GST_ROUND_UP_2 (height);
+      info->offset[2] = info->offset[1] +
+          info->stride[1] * (GST_ROUND_UP_2 (height) / 2);
+      info->offset[3] = info->offset[2] +
+          info->stride[2] * (GST_ROUND_UP_2 (height) / 2);
+      info->size = info->offset[3] + info->stride[0];
+      break;
+    case GST_VIDEO_FORMAT_YUV9:
+      info->stride[0] = GST_ROUND_UP_4 (width);
+      info->stride[1] = GST_ROUND_UP_4 (GST_ROUND_UP_4 (width) / 4);
+      info->stride[2] = info->stride[1];
+      info->offset[0] = 0;
+      info->offset[1] = info->stride[0] * height;
+      info->offset[2] = info->offset[1] +
+          info->stride[1] * (GST_ROUND_UP_4 (height) / 4);
+      info->size = info->offset[2] +
+          info->stride[2] * (GST_ROUND_UP_4 (height) / 4);
+      break;
+    case GST_VIDEO_FORMAT_YVU9:
+      info->stride[0] = GST_ROUND_UP_4 (width);
+      info->stride[1] = GST_ROUND_UP_4 (GST_ROUND_UP_4 (width) / 4);
+      info->stride[2] = info->stride[1];
+      info->offset[0] = 0;
+      info->offset[2] = info->stride[0] * height;
+      info->offset[1] = info->offset[2] +
+          info->stride[1] * (GST_ROUND_UP_4 (height) / 4);
+      info->size = info->offset[2] +
+          info->stride[2] * (GST_ROUND_UP_4 (height) / 4);
+      break;
+    case GST_VIDEO_FORMAT_UNKNOWN:
+      GST_ERROR ("invalid format");
+      g_warning ("invalid format");
+      break;
   }
+  return 0;
 }
 
 /**
@@ -1822,7 +1116,8 @@ gst_video_info_convert (GstVideoInfo * info,
   int size, fps_n, fps_d;
 
   g_return_val_if_fail (info != NULL, 0);
-  g_return_val_if_fail (info->format != GST_VIDEO_FORMAT_UNKNOWN, 0);
+  g_return_val_if_fail (info->finfo != NULL, 0);
+  g_return_val_if_fail (info->finfo->format != GST_VIDEO_FORMAT_UNKNOWN, 0);
   g_return_val_if_fail (info->size > 0, 0);
 
   size = info->size;

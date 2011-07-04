@@ -47,7 +47,7 @@ typedef struct _GstMetaVideoCrop GstMetaVideoCrop;
  * Extra buffer metadata describing image properties
  */
 struct _GstMetaVideo {
-  GstMeta       meta;
+  GstMeta            meta;
 
   GstBuffer         *buffer;
 

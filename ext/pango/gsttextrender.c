@@ -329,6 +329,7 @@ gst_text_render_check_argb (GstTextRender * render)
     for (i = 0; i < n; i++) {
       GstStructure *s;
       GstVideoFormat vformat;
+      const GstVideoFormatInfo *info;
       const gchar *fmt;
 
       s = gst_caps_get_structure (peer_caps, i);
@@ -340,7 +341,11 @@ gst_text_render_check_argb (GstTextRender * render)
         continue;
 
       vformat = gst_video_format_from_string (fmt);
-      render->use_ARGB = gst_video_format_has_alpha (vformat);
+      info = gst_video_format_get_info (vformat);
+      if (info == NULL)
+        continue;
+
+      render->use_ARGB = GST_VIDEO_FORMAT_INFO_HAS_ALPHA (info);
     }
     gst_caps_unref (peer_caps);
   }

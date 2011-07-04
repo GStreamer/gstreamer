@@ -508,21 +508,25 @@ ximage_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
 {
   GstXImageBufferPool *xpool = GST_XIMAGE_BUFFER_POOL_CAST (pool);
   GstXImageBufferPoolPrivate *priv = xpool->priv;
+  GstVideoInfo *info;
   GstBuffer *ximage;
   GstMetaXImage *meta;
 
+  info = &priv->info;
+
   ximage = gst_buffer_new ();
   meta =
-      gst_buffer_add_meta_ximage (ximage, xpool->sink, priv->info.width,
-      priv->info.height);
+      gst_buffer_add_meta_ximage (ximage, xpool->sink,
+      GST_VIDEO_INFO_WIDTH (info), GST_VIDEO_INFO_HEIGHT (info));
   if (meta == NULL) {
     gst_buffer_unref (ximage);
     goto no_buffer;
   }
   if (priv->add_metavideo) {
+    GST_DEBUG_OBJECT (pool, "adding GstMetaVideo");
     /* these are just the defaults for now */
-    gst_buffer_add_meta_video (ximage, 0, priv->info.format, priv->info.width,
-        priv->info.height);
+    gst_buffer_add_meta_video (ximage, 0, GST_VIDEO_INFO_FORMAT (info),
+        GST_VIDEO_INFO_WIDTH (info), GST_VIDEO_INFO_HEIGHT (info));
   }
   *buffer = ximage;
 

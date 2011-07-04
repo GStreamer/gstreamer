@@ -121,6 +121,76 @@ typedef enum {
   GST_VIDEO_FORMAT_r210
 } GstVideoFormat;
 
+#define GST_VIDEO_MAX_PLANES 4
+#define GST_VIDEO_MAX_COMPONENTS 4
+
+typedef struct _GstVideoFormatInfo GstVideoFormatInfo;
+
+typedef enum
+{
+  GST_VIDEO_FORMAT_FLAG_YUV   = (1 << 0),
+  GST_VIDEO_FORMAT_FLAG_RGB   = (1 << 1),
+  GST_VIDEO_FORMAT_FLAG_GRAY  = (1 << 2),
+  GST_VIDEO_FORMAT_FLAG_ALPHA = (1 << 3)
+} GstVideoFormatFlags;
+
+#define GST_VIDEO_SUB_SCALE(scale,val)   (-((-(val))>>(scale)))
+
+/**
+ * GstVideoFormatInfo:
+ * @format: #GstVideoFormat
+ * @name: string representation of the format
+ * @flags: #GstVideoFormatFlags
+ * @n_components: the number of components in the video format
+ * @depth: the depth for each component
+ * @pixel_stride: the pixel stride of each component. This is the amount of
+ *    bytes to the pixel immediately to the right.
+ * @n_planes: the number of planes for this format
+ * @plane: the plane number where this component can be found
+ * @offset: the offset in the plane where the first pixel can be
+ *    found.
+ * @w_sub: subsampling factor of the width
+ * @h_sub: subsampling factor of the height
+ */
+struct _GstVideoFormatInfo {
+  GstVideoFormat format;
+  const gchar *name;
+  GstVideoFormatFlags flags;
+  guint n_components;
+  guint depth[GST_VIDEO_MAX_COMPONENTS];
+  gint  pixel_stride[GST_VIDEO_MAX_COMPONENTS];
+  guint n_planes;
+  guint plane[GST_VIDEO_MAX_COMPONENTS];
+  guint offset[GST_VIDEO_MAX_COMPONENTS];
+  guint w_sub[GST_VIDEO_MAX_COMPONENTS];
+  guint h_sub[GST_VIDEO_MAX_COMPONENTS];
+};
+
+#define GST_VIDEO_FORMAT_INFO_FORMAT(info)       ((info)->format)
+#define GST_VIDEO_FORMAT_INFO_NAME(info)         ((info)->name)
+#define GST_VIDEO_FORMAT_INFO_FLAGS(info)        ((info)->flags)
+
+#define GST_VIDEO_FORMAT_INFO_IS_YUV(info)       ((info)->flags & GST_VIDEO_FORMAT_FLAG_YUV)
+#define GST_VIDEO_FORMAT_INFO_IS_RGB(info)       ((info)->flags & GST_VIDEO_FORMAT_FLAG_RGB)
+#define GST_VIDEO_FORMAT_INFO_IS_GRAY(info)      ((info)->flags & GST_VIDEO_FORMAT_FLAG_GRAY)
+#define GST_VIDEO_FORMAT_INFO_HAS_ALPHA(info)    ((info)->flags & GST_VIDEO_FORMAT_FLAG_ALPHA)
+
+#define GST_VIDEO_FORMAT_INFO_N_COMPONENTS(info) ((info)->n_components)
+#define GST_VIDEO_FORMAT_INFO_DEPTH(info,c)      ((info)->depth[c])
+#define GST_VIDEO_FORMAT_INFO_PSTRIDE(info,c)    ((info)->pixel_stride[c])
+#define GST_VIDEO_FORMAT_INFO_N_PLANES(info)     ((info)->n_planes)
+#define GST_VIDEO_FORMAT_INFO_PLANE(info,c)      ((info)->plane[c])
+#define GST_VIDEO_FORMAT_INFO_OFFSET(info,c)     ((info)->offset[c])
+#define GST_VIDEO_FORMAT_INFO_W_SUB(info,c)      ((info)->w_sub[c])
+#define GST_VIDEO_FORMAT_INFO_H_SUB(info,c)      ((info)->h_sub[c])
+
+#define GST_VIDEO_FORMAT_INFO_SCALE_WIDTH(info,c,w)  GST_VIDEO_SUB_SCALE ((info)->w_sub[(c)],(w))
+#define GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT(info,c,h) GST_VIDEO_SUB_SCALE ((info)->h_sub[(c)],(h))
+
+#define GST_VIDEO_FORMAT_INFO_DATA(info,planes,comp) \
+  (((guint8*)(planes)[info->plane[comp]]) + info->offset[comp])
+#define GST_VIDEO_FORMAT_INFO_STRIDE(info,strides,comp) ((strides)[info->plane[comp]])
+
 /* format properties */
 GstVideoFormat gst_video_format_from_masks           (gint depth, gint bpp, gint endianness,
                                                       gint red_mask, gint green_mask,
@@ -132,16 +202,8 @@ GstVideoFormat gst_video_format_from_string          (const gchar *format) G_GNU
 guint32        gst_video_format_to_fourcc            (GstVideoFormat format) G_GNUC_CONST;
 const gchar *  gst_video_format_to_string            (GstVideoFormat format) G_GNUC_CONST;
 
-gboolean       gst_video_format_is_rgb               (GstVideoFormat format) G_GNUC_CONST;
-gboolean       gst_video_format_is_yuv               (GstVideoFormat format) G_GNUC_CONST;
-gboolean       gst_video_format_is_gray              (GstVideoFormat format) G_GNUC_CONST;
-gboolean       gst_video_format_has_alpha            (GstVideoFormat format) G_GNUC_CONST;
-
-int            gst_video_format_get_n_components     (GstVideoFormat format) G_GNUC_CONST;
-int            gst_video_format_get_component_depth  (GstVideoFormat format,
-                                                      int            component) G_GNUC_CONST;
-int            gst_video_format_get_pixel_stride     (GstVideoFormat format,
-                                                      int            component) G_GNUC_CONST;
+const GstVideoFormatInfo *
+               gst_video_format_get_info             (GstVideoFormat format) G_GNUC_CONST;
 
 typedef struct _GstVideoInfo GstVideoInfo;
 typedef struct _GstVideoFrame GstVideoFrame;
@@ -168,8 +230,6 @@ typedef enum {
   GST_VIDEO_FLAG_PROGRESSIVE = (1 << 5)
 } GstVideoFlags;
 
-#define GST_VIDEO_MAX_PLANES 4
-
 /**
  * GstVideoInfo:
  * @flags: additional video flags
@@ -190,32 +250,50 @@ typedef enum {
  * @par_d: the pixel-aspect-ratio demnominator
  * @fps_n: the framerate numerator
  * @fps_d: the framerate demnominator
- * @n_planes: the number of planes in the image
  * @offset: offsets of the planes
  * @stride: strides of the planes
  *
  * Extra buffer metadata describing image properties
  */
 struct _GstVideoInfo {
-  GstVideoFormat format;
-  GstVideoFlags  flags;
-  gint           width;
-  gint           height;
-  guint          size;
+  const GstVideoFormatInfo *finfo;
+  GstVideoFlags             flags;
+  gint                      width;
+  gint                      height;
+  guint                     size;
 
-  const gchar   *color_matrix;
-  const gchar   *chroma_site;
-  GstBuffer     *palette;
+  const gchar              *color_matrix;
+  const gchar              *chroma_site;
+  GstBuffer                *palette;
 
-  gint           par_n;
-  gint           par_d;
-  gint           fps_n;
-  gint           fps_d;
+  gint                      par_n;
+  gint                      par_d;
+  gint                      fps_n;
+  gint                      fps_d;
 
-  guint          n_planes;
-  gsize          offset[GST_VIDEO_MAX_PLANES];
-  gint           stride[GST_VIDEO_MAX_PLANES];
+  gsize                     offset[GST_VIDEO_MAX_PLANES];
+  gint                      stride[GST_VIDEO_MAX_PLANES];
 };
+
+/* general info */
+#define GST_VIDEO_INFO_FORMAT(i)         (GST_VIDEO_FORMAT_INFO_FORMAT((i)->finfo))
+#define GST_VIDEO_INFO_NAME(i)           (GST_VIDEO_FORMAT_INFO_NAME((i)->finfo))
+#define GST_VIDEO_INFO_WIDTH(i)          ((i)->width)
+#define GST_VIDEO_INFO_HEIGHT(i)         ((i)->height)
+#define GST_VIDEO_INFO_SIZE(i)           ((i)->size)
+
+/* dealing with planes */
+#define GST_VIDEO_INFO_N_PLANES(i)       (GST_VIDEO_FORMAT_INFO_N_PLANES((i)->finfo))
+#define GST_VIDEO_INFO_PLANE_OFFSET(i,p) ((i)->offset[p])
+#define GST_VIDEO_INFO_PLANE_STRIDE(i,p) ((i)->stride[p])
+
+/* dealing with components */
+#define GST_VIDEO_INFO_N_COMPONENTS(i)   GST_VIDEO_FORMAT_INFO_N_COMPONENTS((i)->finfo)
+#define GST_VIDEO_INFO_COMP_DATA(i,d,c)  GST_VIDEO_FORMAT_INFO_DATA((i)->finfo,d,c)
+#define GST_VIDEO_INFO_COMP_STRIDE(i,c)  GST_VIDEO_FORMAT_INFO_STRIDE((i)->finfo,(i)->stride,c)
+#define GST_VIDEO_INFO_COMP_WIDTH(i,c)   GST_VIDEO_FORMAT_INFO_SCALE_WIDTH((i)->finfo,c,(i)->width)
+#define GST_VIDEO_INFO_COMP_HEIGHT(i,c)  GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT((i)->finfo,c,(i)->height)
+#define GST_VIDEO_INFO_COMP_PSTRIDE(i,c) GST_VIDEO_FORMAT_INFO_PSTRIDE((i)->finfo,c)
 
 void         gst_video_info_init        (GstVideoInfo *info);
 
@@ -236,6 +314,7 @@ gboolean     gst_video_info_convert     (GstVideoInfo *info,
  * GstVideoFrame:
  * @info: the #GstVideoInfo
  * @buffer: the mapped buffer
+ * @meta: pointer to metadata if any
  * @data: pointers to the plane data
  *
  * A video frame obtained from gst_video_frame_map()
@@ -246,18 +325,33 @@ struct _GstVideoFrame {
   GstBuffer *buffer;
   gpointer   meta;
 
-  guint8    *data[GST_VIDEO_MAX_PLANES];
+  gpointer   data[GST_VIDEO_MAX_PLANES];
 };
 
-#define GST_VIDEO_FRAME_DATA(f,c)    ((f)->data[c])
-#define GST_VIDEO_FRAME_STRIDE(f,c)  ((f)->info.stride[c])
+gboolean    gst_video_frame_map           (GstVideoFrame *frame, GstVideoInfo *info,
+                                           GstBuffer *buffer, GstMapFlags flags);
+void        gst_video_frame_unmap         (GstVideoFrame *frame);
 
-gboolean    gst_video_frame_map         (GstVideoFrame *frame, GstVideoInfo *info,
-                                         GstBuffer *buffer, GstMapFlags flags);
-void        gst_video_frame_unmap       (GstVideoFrame *frame);
+gboolean    gst_video_frame_copy          (GstVideoFrame *dest, const GstVideoFrame *src);
 
-gboolean    gst_video_frame_copy        (GstVideoFrame *dest, const GstVideoFrame *src);
+/* general info */
+#define GST_VIDEO_FRAME_FORMAT(f)         (GST_VIDEO_INFO_FORMAT(&(f)->info))
+#define GST_VIDEO_FRAME_WIDTH(f)          (GST_VIDEO_INFO_WIDTH(&(f)->info))
+#define GST_VIDEO_FRAME_HEIGHT(f)         (GST_VIDEO_INFO_HEIGHT(&(f)->info))
 
+/* dealing with planes */
+#define GST_VIDEO_FRAME_N_PLANES(f)       (GST_VIDEO_INFO_N_PLANES(&(f)->info))
+#define GST_VIDEO_FRAME_PLANE_DATA(f,p)   ((f)->data[p])
+#define GST_VIDEO_FRAME_PLANE_OFFSET(f,p) (GST_VIDEO_INFO_PLANE_OFFSET(&(f)->info,p))
+#define GST_VIDEO_FRAME_PLANE_STRIDE(f,p) (GST_VIDEO_INFO_PLANE_STRIDE(&(f)->info,p))
+
+/* dealing with components */
+#define GST_VIDEO_FRAME_N_COMPONENTS(f)   GST_VIDEO_INFO_N_COMPONENTS(&(f)->info)
+#define GST_VIDEO_FRAME_COMP_DATA(f,c)    GST_VIDEO_INFO_COMP_DATA(&(f)->info,(f)->data,c)
+#define GST_VIDEO_FRAME_COMP_STRIDE(f,c)  GST_VIDEO_INFO_COMP_STRIDE(&(f)->info,c)
+#define GST_VIDEO_FRAME_COMP_WIDTH(f,c)   GST_VIDEO_INFO_COMP_WIDTH(&(f)->info,c)
+#define GST_VIDEO_FRAME_COMP_HEIGHT(f,c)  GST_VIDEO_INFO_COMP_HEIGHT(&(f)->info,c)
+#define GST_VIDEO_FRAME_COMP_PSTRIDE(f,c) GST_VIDEO_INFO_COMP_PSTRIDE(&(f)->info,c)
 
 #define GST_VIDEO_SIZE_RANGE "(int) [ 1, max ]"
 #define GST_VIDEO_FPS_RANGE "(fraction) [ 0, max ]"
@@ -337,18 +431,6 @@ gboolean       gst_video_calculate_display_ratio (guint * dar_n,
 
 gboolean       gst_video_parse_caps_framerate    (GstCaps * caps, int *fps_n, int *fps_d);
 GstBuffer *    gst_video_parse_caps_palette      (GstCaps * caps);
-
-int            gst_video_format_get_component_width  (GstVideoFormat format,
-                                                      int            component,
-                                                      int            width) G_GNUC_CONST;
-
-int            gst_video_format_get_component_height (GstVideoFormat format,
-                                                      int            component,
-                                                      int            height) G_GNUC_CONST;
-int            gst_video_format_get_component_offset (GstVideoFormat format,
-                                                      int            component,
-                                                      int            width,
-                                                      int            height);
 
 /* video still frame event creation and parsing */
 

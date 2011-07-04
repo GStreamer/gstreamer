@@ -1111,7 +1111,7 @@ theora_handle_image (GstTheoraDec * dec, th_ycbcr_buffer buf, GstBuffer ** out)
   gint width, height, stride;
   gint pic_width, pic_height;
   GstFlowReturn result;
-  int i, plane;
+  int i, comp;
   guint8 *dest, *src;
   GstVideoFrame frame;
   GstMetaVideoCrop *crop;
@@ -1163,27 +1163,24 @@ theora_handle_image (GstTheoraDec * dec, th_ycbcr_buffer buf, GstBuffer ** out)
     }
   }
 
-  for (plane = 0; plane < 3; plane++) {
+  for (comp = 0; comp < 3; comp++) {
     width =
-        gst_video_format_get_component_width (frame.info.format, plane,
-        pic_width);
+        GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (frame.info.finfo, comp, pic_width);
     height =
-        gst_video_format_get_component_height (frame.info.format, plane,
-        pic_height);
+        GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (frame.info.finfo, comp, pic_height);
+    stride = GST_VIDEO_FRAME_COMP_STRIDE (&frame, comp);
+    dest = GST_VIDEO_FRAME_COMP_DATA (&frame, comp);
 
-    stride = GST_VIDEO_FRAME_STRIDE (&frame, plane);
-    dest = GST_VIDEO_FRAME_DATA (&frame, plane);
-
-    src = buf[plane].data;
+    src = buf[comp].data;
     src += ((height == pic_height) ? offset_y : offset_y / 2)
-        * buf[plane].stride;
+        * buf[comp].stride;
     src += (width == pic_width) ? offset_x : offset_x / 2;
 
     for (i = 0; i < height; i++) {
       memcpy (dest, src, width);
 
       dest += stride;
-      src += buf[plane].stride;
+      src += buf[comp].stride;
     }
   }
   gst_video_frame_unmap (&frame);

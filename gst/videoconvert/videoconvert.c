@@ -42,27 +42,31 @@ videoconvert_convert_new (GstVideoFormat to_format, ColorSpaceColorSpec to_spec,
     GstVideoFormat from_format, ColorSpaceColorSpec from_spec,
     int width, int height)
 {
+  const GstVideoFormatInfo *to_info, *from_info;
   VideoConvert *convert;
   int i;
 
-  g_return_val_if_fail (!gst_video_format_is_rgb (to_format)
+  from_info = gst_video_format_get_info (from_format);
+  to_info = gst_video_format_get_info (to_format);
+
+  g_return_val_if_fail (!GST_VIDEO_FORMAT_INFO_IS_RGB (to_info)
       || to_spec == COLOR_SPEC_RGB, NULL);
-  g_return_val_if_fail (!gst_video_format_is_yuv (to_format)
+  g_return_val_if_fail (!GST_VIDEO_FORMAT_INFO_IS_YUV (to_info)
       || to_spec == COLOR_SPEC_YUV_BT709
       || to_spec == COLOR_SPEC_YUV_BT470_6, NULL);
-  g_return_val_if_fail (gst_video_format_is_rgb (to_format)
-      || gst_video_format_is_yuv (to_format)
-      || (gst_video_format_is_gray (to_format) &&
+  g_return_val_if_fail (GST_VIDEO_FORMAT_INFO_IS_RGB (to_info)
+      || GST_VIDEO_FORMAT_INFO_IS_YUV (to_info)
+      || (GST_VIDEO_FORMAT_INFO_IS_GRAY (to_info) &&
           to_spec == COLOR_SPEC_GRAY), NULL);
 
-  g_return_val_if_fail (!gst_video_format_is_rgb (from_format)
+  g_return_val_if_fail (!GST_VIDEO_FORMAT_INFO_IS_RGB (from_info)
       || from_spec == COLOR_SPEC_RGB, NULL);
-  g_return_val_if_fail (!gst_video_format_is_yuv (from_format)
+  g_return_val_if_fail (!GST_VIDEO_FORMAT_INFO_IS_YUV (from_info)
       || from_spec == COLOR_SPEC_YUV_BT709
       || from_spec == COLOR_SPEC_YUV_BT470_6, NULL);
-  g_return_val_if_fail (gst_video_format_is_rgb (from_format)
-      || gst_video_format_is_yuv (from_format)
-      || (gst_video_format_is_gray (from_format) &&
+  g_return_val_if_fail (GST_VIDEO_FORMAT_INFO_IS_RGB (from_info)
+      || GST_VIDEO_FORMAT_INFO_IS_YUV (from_info)
+      || (GST_VIDEO_FORMAT_INFO_IS_GRAY (from_info) &&
           from_spec == COLOR_SPEC_GRAY), NULL);
 
   convert = g_malloc (sizeof (VideoConvert));
@@ -77,8 +81,7 @@ videoconvert_convert_new (GstVideoFormat to_format, ColorSpaceColorSpec to_spec,
   convert->convert = videoconvert_convert_generic;
   convert->dither16 = videoconvert_dither_none;
 
-  if (gst_video_format_get_component_depth (to_format, 0) > 8 ||
-      gst_video_format_get_component_depth (from_format, 0) > 8) {
+  if (to_info->depth[0] > 8 || from_info->depth[0] > 8) {
     convert->use_16bit = TRUE;
   } else {
     convert->use_16bit = FALSE;
@@ -179,7 +182,7 @@ videoconvert_convert_convert (VideoConvert * convert,
 #define FRAME_GET_STRIDE(dir, comp) \
   ((dir)->info.stride[comp])
 #define FRAME_GET_LINE(dir, comp, line) \
-  ((dir)->data[comp] + FRAME_GET_STRIDE (dir, comp) * (line))
+  (((guint8*)(dir)->data[comp]) + FRAME_GET_STRIDE (dir, comp) * (line))
 
 static void
 getline_I420 (VideoConvert * convert, guint8 * dest, const GstVideoFrame * src,

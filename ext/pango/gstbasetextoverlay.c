@@ -764,9 +764,9 @@ gst_base_text_overlay_setcaps (GstBaseTextOverlay * overlay, GstCaps * caps)
     goto invalid_caps;
 
   overlay->info = info;
-  overlay->format = info.format;
-  overlay->width = info.width;
-  overlay->height = info.height;
+  overlay->format = GST_VIDEO_INFO_FORMAT (&info);
+  overlay->width = GST_VIDEO_INFO_WIDTH (&info);
+  overlay->height = GST_VIDEO_INFO_HEIGHT (&info);
 
   ret = gst_pad_push_event (overlay->srcpad, gst_event_new_caps (caps));
 
@@ -1465,16 +1465,12 @@ gst_base_text_overlay_shade_packed_Y (GstBaseTextOverlay * overlay,
     GstVideoFrame * dest, gint x0, gint x1, gint y0, gint y1)
 {
   gint i, j;
-  guint dest_stride, pixel_stride, component_offset;
+  guint dest_stride, pixel_stride;
   guint8 *dest_ptr;
 
-  dest_stride = dest->info.stride[0];
-  dest_ptr = dest->data[0];
-
-  pixel_stride = gst_video_format_get_pixel_stride (dest->info.format, 0);
-  component_offset =
-      gst_video_format_get_component_offset (dest->info.format, 0,
-      overlay->width, overlay->height);
+  dest_stride = GST_VIDEO_FRAME_COMP_STRIDE (dest, 0);
+  dest_ptr = GST_VIDEO_FRAME_COMP_DATA (dest, 0);
+  pixel_stride = GST_VIDEO_FRAME_COMP_PSTRIDE (dest, 0);
 
   x0 = CLAMP (x0 - BOX_XPAD, 0, overlay->width);
   x1 = CLAMP (x1 + BOX_XPAD, 0, overlay->width);
@@ -1483,21 +1479,21 @@ gst_base_text_overlay_shade_packed_Y (GstBaseTextOverlay * overlay,
   y1 = CLAMP (y1 + BOX_YPAD, 0, overlay->height);
 
   if (x0 != 0)
-    x0 = gst_video_format_get_component_width (overlay->format, 0, x0);
+    x0 = GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (dest->info.finfo, 0, x0);
   if (x1 != 0)
-    x1 = gst_video_format_get_component_width (overlay->format, 0, x1);
+    x1 = GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (dest->info.finfo, 0, x1);
 
   if (y0 != 0)
-    y0 = gst_video_format_get_component_height (overlay->format, 0, y0);
+    y0 = GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (dest->info.finfo, 0, y0);
   if (y1 != 0)
-    y1 = gst_video_format_get_component_height (overlay->format, 0, y1);
+    y1 = GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (dest->info.finfo, 0, y1);
 
   for (i = y0; i < y1; i++) {
     for (j = x0; j < x1; j++) {
       gint y;
       gint y_pos;
 
-      y_pos = (i * dest_stride) + j * pixel_stride + component_offset;
+      y_pos = (i * dest_stride) + j * pixel_stride;
       y = dest_ptr[y_pos] + overlay->shading_value;
 
       dest_ptr[y_pos] = CLAMP (y, 0, 255);

@@ -903,20 +903,16 @@ gst_video_scale_setup_vs_image (VSImage * image, GstVideoFrame * frame,
   GstVideoFormat format;
   gint width, height;
 
-  format = frame->info.format;
-  width = frame->info.width;
-  height = frame->info.height;
+  format = GST_VIDEO_FRAME_FORMAT (frame);
+  width = GST_VIDEO_FRAME_WIDTH (frame);
+  height = GST_VIDEO_FRAME_HEIGHT (frame);
 
-  image->real_width =
-      gst_video_format_get_component_width (format, component, width);
-  image->real_height =
-      gst_video_format_get_component_height (format, component, height);
-  image->width =
-      gst_video_format_get_component_width (format, component, MAX (1,
-          width - b_w));
-  image->height =
-      gst_video_format_get_component_height (format, component, MAX (1,
-          height - b_h));
+  image->real_width = GST_VIDEO_FRAME_COMP_WIDTH (frame, component);
+  image->real_height = GST_VIDEO_FRAME_COMP_HEIGHT (frame, component);
+  image->width = GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (frame->info.finfo,
+      component, MAX (1, width - b_w));
+  image->height = GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (frame->info.finfo,
+      component, MAX (1, height - b_h));
 
   image->border_top = (image->real_height - image->height) / 2;
   image->border_bottom = image->real_height - image->height - image->border_top;
@@ -940,8 +936,7 @@ gst_video_scale_setup_vs_image (VSImage * image, GstVideoFrame * frame,
 
   image->pixels =
       image->real_pixels + image->border_top * image->stride +
-      image->border_left * gst_video_format_get_pixel_stride (format,
-      component);
+      image->border_left * GST_VIDEO_FRAME_COMP_PSTRIDE (frame, component);
 }
 
 static const guint8 *
@@ -1025,7 +1020,7 @@ gst_video_scale_transform (GstBaseTransform * trans, GstBuffer * in,
   add_borders = videoscale->add_borders;
   GST_OBJECT_UNLOCK (videoscale);
 
-  format = videoscale->from_info.format;
+  format = GST_VIDEO_INFO_FORMAT (&videoscale->from_info);
   black = _get_black_for_format (format);
 
   if (videoscale->from_info.width == 1) {
@@ -1039,7 +1034,7 @@ gst_video_scale_transform (GstBaseTransform * trans, GstBuffer * in,
   gst_video_frame_map (&in_frame, &videoscale->from_info, in, GST_MAP_READ);
   gst_video_frame_map (&out_frame, &videoscale->to_info, out, GST_MAP_WRITE);
 
-  for (i = 0; i < in_frame.info.n_planes; i++) {
+  for (i = 0; i < GST_VIDEO_FRAME_N_PLANES (&in_frame); i++) {
     gst_video_scale_setup_vs_image (&src[i], &in_frame, i, 0, 0);
     gst_video_scale_setup_vs_image (&dest[i], &out_frame, i,
         videoscale->borders_w, videoscale->borders_h);

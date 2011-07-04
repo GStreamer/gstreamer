@@ -61,7 +61,7 @@ gst_buffer_add_meta_video (GstBuffer * buffer, GstVideoFlags flags,
   gst_video_info_set_format (&info, format, width, height);
 
   meta = gst_buffer_add_meta_video_full (buffer, flags, format, width, height,
-      info.n_planes, info.offset, info.stride);
+      info.finfo->n_planes, info.offset, info.stride);
 
   return meta;
 }
