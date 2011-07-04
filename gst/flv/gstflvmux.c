@@ -274,11 +274,6 @@ gst_flv_mux_handle_sink_event (GstPad * pad, GstEvent * event)
       mux->new_tags = TRUE;
       break;
     }
-    case GST_EVENT_NEWSEGMENT:
-      /* We don't support NEWSEGMENT events */
-      ret = FALSE;
-      gst_event_unref (event);
-      break;
     default:
       break;
   }

@@ -605,7 +605,8 @@ gst_aac_parse_check_valid_frame (GstBaseParse * parse,
 
   } else {
     GST_DEBUG ("buffer didn't contain valid frame");
-    gst_base_parse_set_min_frame_size (GST_BASE_PARSE (aacparse), 1024);
+    gst_base_parse_set_min_frame_size (GST_BASE_PARSE (aacparse),
+        ADTS_MAX_SIZE);
   }
   gst_buffer_unmap (buffer, data, size);
 
@@ -700,7 +701,7 @@ gst_aac_parse_start (GstBaseParse * parse)
 
   aacparse = GST_AAC_PARSE (parse);
   GST_DEBUG ("start");
-  gst_base_parse_set_min_frame_size (GST_BASE_PARSE (aacparse), 1024);
+  gst_base_parse_set_min_frame_size (GST_BASE_PARSE (aacparse), ADTS_MAX_SIZE);
   return TRUE;
 }
 

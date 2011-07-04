@@ -1608,6 +1608,10 @@ gst_matroska_demux_search_cluster (GstMatroskaDemux * demux, gint64 * pos)
     GstByteReader reader;
     gint cluster_pos;
 
+    if (buf != NULL) {
+      gst_buffer_unref (buf);
+      buf = NULL;
+    }
     ret = gst_pad_pull_range (demux->common.sinkpad, newpos, chunk, &buf);
     if (ret != GST_FLOW_OK)
       break;
@@ -1636,13 +1640,15 @@ gst_matroska_demux_search_cluster (GstMatroskaDemux * demux, gint64 * pos)
       demux->common.offset = newpos;
       ret = gst_matroska_read_common_peek_id_length_pull (&demux->common,
           GST_ELEMENT_CAST (demux), &id, &length, &needed);
-      if (ret != GST_FLOW_OK)
-        goto resume;
+      if (ret != GST_FLOW_OK) {
+        GST_DEBUG_OBJECT (demux, "need more data -> continue");
+        continue;
+      }
       g_assert (id == GST_MATROSKA_ID_CLUSTER);
       GST_DEBUG_OBJECT (demux, "cluster size %" G_GUINT64_FORMAT ", prefix %d",
           length, needed);
       /* ok if undefined length or first cluster */
-      if (length == G_MAXUINT64) {
+      if (length == GST_EBML_SIZE_UNKNOWN || length == G_MAXUINT64) {
         GST_DEBUG_OBJECT (demux, "cluster has undefined length -> OK");
         break;
       }
@@ -1661,8 +1667,6 @@ gst_matroska_demux_search_cluster (GstMatroskaDemux * demux, gint64 * pos)
     } else {
       /* partial cluster id may have been in tail of buffer */
       newpos += MAX (gst_byte_reader_get_remaining (&reader), 4) - 3;
-      gst_buffer_unref (buf);
-      buf = NULL;
     }
   }
 
@@ -1715,6 +1719,10 @@ gst_matroska_demux_search_pos (GstMatroskaDemux * demux, GstClockTime time)
   opos = demux->common.offset - demux->common.ebml_segment_start;
   otime = demux->common.segment.last_stop;
   GST_OBJECT_UNLOCK (demux);
+
+  /* avoid division by zero in first estimation below */
+  if (otime == 0)
+    otime = time;
 
 retry:
   GST_LOG_OBJECT (demux,

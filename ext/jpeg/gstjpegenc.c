@@ -246,8 +246,7 @@ gst_jpegenc_term_destination (j_compress_ptr cinfo)
 
   /* Trim the buffer size and push it. */
   GST_BUFFER_SIZE (jpegenc->output_buffer) =
-      GST_ROUND_UP_4 (GST_BUFFER_SIZE (jpegenc->output_buffer) -
-      jpegenc->jdest.free_in_buffer);
+      GST_BUFFER_SIZE (jpegenc->output_buffer) - jpegenc->jdest.free_in_buffer;
 
   g_signal_emit (G_OBJECT (jpegenc), gst_jpegenc_signals[FRAME_ENCODED], 0);
 

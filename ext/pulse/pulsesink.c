@@ -63,11 +63,6 @@
 GST_DEBUG_CATEGORY_EXTERN (pulse_debug);
 #define GST_CAT_DEFAULT pulse_debug
 
-/* according to
- * http://www.pulseaudio.org/ticket/314
- * we need pulse-0.9.12 to use sink volume properties
- */
-
 #define DEFAULT_SERVER          NULL
 #define DEFAULT_DEVICE          NULL
 #define DEFAULT_DEVICE_NAME     NULL
@@ -145,13 +140,11 @@ struct _GstPulseRingBuffer
 
   pa_sample_spec sample_spec;
 
-#ifdef HAVE_PULSE_0_9_16
   void *m_data;
   size_t m_towrite;
   size_t m_writable;
   gint64 m_offset;
   gint64 m_lastoffset;
-#endif
 
   gboolean corked:1;
   gboolean in_commit:1;
@@ -229,21 +222,13 @@ gst_pulseringbuffer_init (GstPulseRingBuffer * pbuf)
   pbuf->context = NULL;
   pbuf->stream = NULL;
 
-#ifdef HAVE_PULSE_0_9_13
   pa_sample_spec_init (&pbuf->sample_spec);
-#else
-  pbuf->sample_spec.format = PA_SAMPLE_INVALID;
-  pbuf->sample_spec.rate = 0;
-  pbuf->sample_spec.channels = 0;
-#endif
 
-#ifdef HAVE_PULSE_0_9_16
   pbuf->m_data = NULL;
   pbuf->m_towrite = 0;
   pbuf->m_writable = 0;
   pbuf->m_offset = 0;
   pbuf->m_lastoffset = 0;
-#endif
 
   pbuf->corked = TRUE;
   pbuf->in_commit = FALSE;
@@ -255,7 +240,6 @@ gst_pulsering_destroy_stream (GstPulseRingBuffer * pbuf)
 {
   if (pbuf->stream) {
 
-#ifdef HAVE_PULSE_0_9_16
     if (pbuf->m_data) {
       /* drop shm memory buffer */
       pa_stream_cancel_write (pbuf->stream);
@@ -267,7 +251,6 @@ gst_pulsering_destroy_stream (GstPulseRingBuffer * pbuf)
       pbuf->m_offset = 0;
       pbuf->m_lastoffset = 0;
     }
-#endif
 
     pa_stream_disconnect (pbuf->stream);
 
@@ -318,9 +301,7 @@ gst_pulsering_destroy_context (GstPulseRingBuffer * pbuf)
 
         /* Make sure we don't get any further callbacks */
         pa_context_set_state_callback (pctx->context, NULL, NULL);
-#ifdef HAVE_PULSE_0_9_12
         pa_context_set_subscribe_callback (pctx->context, NULL, NULL);
-#endif
 
         g_hash_table_remove (gst_pulse_shared_contexts, pbuf->context_name);
 
@@ -397,7 +378,6 @@ gst_pulsering_context_state_cb (pa_context * c, void *userdata)
   }
 }
 
-#ifdef HAVE_PULSE_0_9_12
 static void
 gst_pulsering_context_subscribe_cb (pa_context * c,
     pa_subscription_event_type_t t, uint32_t idx, void *userdata)
@@ -431,7 +411,6 @@ gst_pulsering_context_subscribe_cb (pa_context * c,
     g_atomic_int_compare_and_exchange (&psink->notify, 0, 1);
   }
 }
-#endif
 
 /* will be called when the device should be opened. In this case we will connect
  * to the server. We should not try to open any streams in this state. */
@@ -478,10 +457,8 @@ gst_pulseringbuffer_open_device (GstRingBuffer * buf)
     /* register some essential callbacks */
     pa_context_set_state_callback (pctx->context,
         gst_pulsering_context_state_cb, mainloop);
-#ifdef HAVE_PULSE_0_9_12
     pa_context_set_subscribe_callback (pctx->context,
         gst_pulsering_context_subscribe_cb, pctx);
-#endif
 
     /* try to connect to the server and wait for completion, we don't want to
      * autospawn a deamon */
@@ -659,11 +636,7 @@ gst_pulsering_stream_latency_cb (pa_stream * s, void *userdata)
     GST_LOG_OBJECT (psink, "latency update (information unknown)");
     return;
   }
-#ifdef HAVE_PULSE_0_9_11
   sink_usec = info->configured_sink_usec;
-#else
-  sink_usec = 0;
-#endif
 
   GST_LOG_OBJECT (psink,
       "latency_update, %" G_GUINT64_FORMAT ", %d:%" G_GINT64_FORMAT ", %d:%"
@@ -688,7 +661,6 @@ gst_pulsering_stream_suspended_cb (pa_stream * p, void *userdata)
     GST_DEBUG_OBJECT (psink, "stream resumed");
 }
 
-#ifdef HAVE_PULSE_0_9_11
 static void
 gst_pulsering_stream_started_cb (pa_stream * p, void *userdata)
 {
@@ -700,9 +672,7 @@ gst_pulsering_stream_started_cb (pa_stream * p, void *userdata)
 
   GST_DEBUG_OBJECT (psink, "stream started");
 }
-#endif
 
-#ifdef HAVE_PULSE_0_9_15
 static void
 gst_pulsering_stream_event_cb (pa_stream * p, const char *name,
     pa_proplist * pl, void *userdata)
@@ -729,7 +699,6 @@ gst_pulsering_stream_event_cb (pa_stream * p, const char *name,
     GST_DEBUG_OBJECT (psink, "got unknown event %s", name);
   }
 }
-#endif
 
 /* This method should create a new stream of the given @spec. No playback should
  * start yet so we start in the corked state. */
@@ -800,14 +769,10 @@ gst_pulseringbuffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
       gst_pulsering_stream_latency_cb, pbuf);
   pa_stream_set_suspended_callback (pbuf->stream,
       gst_pulsering_stream_suspended_cb, pbuf);
-#ifdef HAVE_PULSE_0_9_11
   pa_stream_set_started_callback (pbuf->stream,
       gst_pulsering_stream_started_cb, pbuf);
-#endif
-#ifdef HAVE_PULSE_0_9_15
   pa_stream_set_event_callback (pbuf->stream,
       gst_pulsering_stream_event_cb, pbuf);
-#endif
 
   /* buffering requirements. When setting prebuf to 0, the stream will not pause
    * when we cause an underrun, which causes time to continue. */
@@ -836,15 +801,10 @@ gst_pulseringbuffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
 
   /* construct the flags */
   flags = PA_STREAM_INTERPOLATE_TIMING | PA_STREAM_AUTO_TIMING_UPDATE |
-#ifdef HAVE_PULSE_0_9_11
-      PA_STREAM_ADJUST_LATENCY |
-#endif
-      PA_STREAM_START_CORKED;
+      PA_STREAM_ADJUST_LATENCY | PA_STREAM_START_CORKED;
 
-#ifdef HAVE_PULSE_0_9_12
   if (psink->mute_set && psink->mute)
     flags |= PA_STREAM_START_MUTED;
-#endif
 
   /* we always start corked (see flags above) */
   pbuf->corked = TRUE;
@@ -1148,18 +1108,16 @@ gst_pulseringbuffer_stop (GstRingBuffer * buf)
     pa_threaded_mainloop_signal (mainloop, 0);
   }
 
-  if (strcmp (psink->pa_version, "0.9.12")) {
-    /* then try to flush, it's not fatal when this fails */
-    GST_DEBUG_OBJECT (psink, "flushing");
-    if ((o = pa_stream_flush (pbuf->stream, gst_pulsering_success_cb, pbuf))) {
-      while (pa_operation_get_state (o) == PA_OPERATION_RUNNING) {
-        GST_DEBUG_OBJECT (psink, "wait for completion");
-        pa_threaded_mainloop_wait (mainloop);
-        if (gst_pulsering_is_dead (psink, pbuf, TRUE))
-          goto server_dead;
-      }
-      GST_DEBUG_OBJECT (psink, "flush completed");
+  /* then try to flush, it's not fatal when this fails */
+  GST_DEBUG_OBJECT (psink, "flushing");
+  if ((o = pa_stream_flush (pbuf->stream, gst_pulsering_success_cb, pbuf))) {
+    while (pa_operation_get_state (o) == PA_OPERATION_RUNNING) {
+      GST_DEBUG_OBJECT (psink, "wait for completion");
+      pa_threaded_mainloop_wait (mainloop);
+      if (gst_pulsering_is_dead (psink, pbuf, TRUE))
+        goto server_dead;
     }
+    GST_DEBUG_OBJECT (psink, "flush completed");
   }
   res = TRUE;
 
@@ -1335,7 +1293,6 @@ gst_pulseringbuffer_commit (GstRingBuffer * buf, guint64 * sample,
         "need to write %d samples at offset %" G_GINT64_FORMAT, *toprocess,
         offset);
 
-#ifdef HAVE_PULSE_0_9_16
     if (offset != pbuf->m_lastoffset)
       GST_LOG_OBJECT (psink, "discontinuity, offset is %" G_GINT64_FORMAT ", "
           "last offset was %" G_GINT64_FORMAT, offset, pbuf->m_lastoffset);
@@ -1483,94 +1440,10 @@ gst_pulseringbuffer_commit (GstRingBuffer * buf, guint64 * sample,
       pbuf->m_towrite = 0;
       pbuf->m_offset = offset + towrite;        /* keep track of current offset */
     }
-#else
-
-    for (;;) {
-      /* FIXME, this is not quite right */
-      if ((avail = pa_stream_writable_size (pbuf->stream)) == (size_t) - 1)
-        goto writable_size_failed;
-
-      /* We always try to satisfy a request for data */
-      GST_LOG_OBJECT (psink, "writable bytes %" G_GSIZE_FORMAT, avail);
-
-      /* convert to samples, we can only deal with multiples of the
-       * sample size */
-      avail /= bps;
-
-      if (avail > 0)
-        break;
-
-      /* see if we need to uncork because we have no free space */
-      if (pbuf->corked) {
-        if (!gst_pulsering_set_corked (pbuf, FALSE, FALSE))
-          goto uncork_failed;
-      }
-
-      /* we can't write a single byte, wait a bit */
-      GST_LOG_OBJECT (psink, "waiting for free space");
-      pa_threaded_mainloop_wait (mainloop);
-
-      if (pbuf->paused)
-        goto was_paused;
-    }
-
-    if (avail > out_samples)
-      avail = out_samples;
-
-    towrite = avail * bps;
-
-    GST_LOG_OBJECT (psink, "writing %u samples at offset %" G_GUINT64_FORMAT,
-        (guint) avail, offset);
-
-    if (G_LIKELY (inr == outr && !reverse)) {
-      /* no rate conversion, simply write out the samples */
-      if (pa_stream_write (pbuf->stream, data, towrite, NULL, offset,
-              PA_SEEK_ABSOLUTE) < 0)
-        goto write_failed;
-
-      data += towrite;
-      in_samples -= avail;
-      out_samples -= avail;
-    } else {
-      guint8 *dest, *d, *d_end;
-
-      /* we need to allocate a temporary buffer to resample the data into,
-       * FIXME, we should have a pulseaudio API to allocate this buffer for us
-       * from the shared memory. */
-      dest = d = g_malloc (towrite);
-      d_end = d + towrite;
-
-      if (!reverse) {
-        if (inr >= outr)
-          /* forward speed up */
-          FWD_UP_SAMPLES (data, data_end, d, d_end);
-        else
-          /* forward slow down */
-          FWD_DOWN_SAMPLES (data, data_end, d, d_end);
-      } else {
-        if (inr >= outr)
-          /* reverse speed up */
-          REV_UP_SAMPLES (data, data_end, d, d_end);
-        else
-          /* reverse slow down */
-          REV_DOWN_SAMPLES (data, data_end, d, d_end);
-      }
-      /* see what we have left to write */
-      towrite = (d - dest);
-      if (pa_stream_write (pbuf->stream, dest, towrite,
-              g_free, offset, PA_SEEK_ABSOLUTE) < 0)
-        goto write_failed;
-
-      avail = towrite / bps;
-    }
-#endif /* HAVE_PULSE_0_9_16 */
 
     *sample += avail;
     offset += avail * bps;
-
-#ifdef HAVE_PULSE_0_9_16
     pbuf->m_lastoffset = offset;
-#endif
 
     /* check if we need to uncork after writing the samples */
     if (pbuf->corked) {
@@ -1656,7 +1529,6 @@ write_failed:
 static void
 gst_pulsering_flush (GstPulseRingBuffer * pbuf)
 {
-#ifdef HAVE_PULSE_0_9_16
   GstPulseSink *psink;
 
   psink = GST_PULSESINK_CAST (GST_OBJECT_PARENT (pbuf));
@@ -1693,7 +1565,6 @@ write_failed:
             pa_strerror (pa_context_errno (pbuf->context))), (NULL));
     goto done;
   }
-#endif
 }
 
 static void gst_pulsesink_set_property (GObject * object, guint prop_id,
@@ -1795,9 +1666,7 @@ G_DEFINE_TYPE_WITH_CODE (GstPulseSink, gst_pulsesink, GST_TYPE_BASE_AUDIO_SINK,
         gst_pulsesink_implements_interface_init);
     G_IMPLEMENT_INTERFACE (GST_TYPE_PROPERTY_PROBE,
         gst_pulsesink_property_probe_interface_init);
-#ifdef HAVE_PULSE_0_9_12
     G_IMPLEMENT_INTERFACE (GST_TYPE_STREAM_VOLUME, NULL)
-#endif
     );
 
 static GstRingBuffer *
@@ -1855,7 +1724,6 @@ gst_pulsesink_class_init (GstPulseSinkClass * klass)
           "Human-readable name of the sound device", DEFAULT_DEVICE_NAME,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
-#ifdef HAVE_PULSE_0_9_12
   g_object_class_install_property (gobject_class,
       PROP_VOLUME,
       g_param_spec_double ("volume", "Volume",
@@ -1866,7 +1734,6 @@ gst_pulsesink_class_init (GstPulseSinkClass * klass)
       g_param_spec_boolean ("mute", "Mute",
           "Mute state of this stream", DEFAULT_MUTE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-#endif
 
   /**
    * GstPulseSink:client
@@ -1970,14 +1837,8 @@ gst_pulsesink_init (GstPulseSink * pulsesink)
 
   pulsesink->notify = 0;
 
-  /* needed for conditional execution */
-  pulsesink->pa_version = pa_get_library_version ();
-
   pulsesink->properties = NULL;
   pulsesink->proplist = NULL;
-
-  GST_DEBUG_OBJECT (pulsesink, "using pulseaudio version %s",
-      pulsesink->pa_version);
 
   /* override with a custom clock */
   if (GST_BASE_AUDIO_SINK (pulsesink)->provided_clock)
@@ -2016,7 +1877,6 @@ gst_pulsesink_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
-#ifdef HAVE_PULSE_0_9_12
 static void
 gst_pulsesink_set_volume (GstPulseSink * psink, gdouble volume)
 {
@@ -2315,7 +2175,6 @@ info_failed:
     goto unlock;
   }
 }
-#endif
 
 static void
 gst_pulsesink_sink_info_cb (pa_context * c, const pa_sink_info * i, int eol,
@@ -2408,14 +2267,12 @@ gst_pulsesink_set_property (GObject * object,
       g_free (pulsesink->device);
       pulsesink->device = g_value_dup_string (value);
       break;
-#ifdef HAVE_PULSE_0_9_12
     case PROP_VOLUME:
       gst_pulsesink_set_volume (pulsesink, g_value_get_double (value));
       break;
     case PROP_MUTE:
       gst_pulsesink_set_mute (pulsesink, g_value_get_boolean (value));
       break;
-#endif
     case PROP_CLIENT:
       g_free (pulsesink->client_name);
       if (!g_value_get_string (value)) {
@@ -2457,14 +2314,12 @@ gst_pulsesink_get_property (GObject * object,
     case PROP_DEVICE_NAME:
       g_value_take_string (value, gst_pulsesink_device_description (pulsesink));
       break;
-#ifdef HAVE_PULSE_0_9_12
     case PROP_VOLUME:
       g_value_set_double (value, gst_pulsesink_get_volume (pulsesink));
       break;
     case PROP_MUTE:
       g_value_set_boolean (value, gst_pulsesink_get_mute (pulsesink));
       break;
-#endif
     case PROP_CLIENT:
       g_value_set_string (value, pulsesink->client_name);
       break;
@@ -2520,7 +2375,6 @@ name_failed:
   }
 }
 
-#ifdef HAVE_PULSE_0_9_11
 static void
 gst_pulsesink_change_props (GstPulseSink * psink, GstTagList * l)
 {
@@ -2598,7 +2452,6 @@ update_failed:
     goto unlock;
   }
 }
-#endif
 
 static void
 gst_pulsesink_flush_ringbuffer (GstPulseSink * psink)
@@ -2674,9 +2527,7 @@ gst_pulsesink_event (GstBaseSink * sink, GstEvent * event)
       g_free (description);
       g_free (buf);
 
-#ifdef HAVE_PULSE_0_9_11
       gst_pulsesink_change_props (pulsesink, l);
-#endif
 
       break;
     }

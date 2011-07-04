@@ -271,13 +271,7 @@ gst_pulsesrc_init (GstPulseSrc * pulsesrc)
   pulsesrc->read_buffer = NULL;
   pulsesrc->read_buffer_length = 0;
 
-#ifdef HAVE_PULSE_0_9_13
   pa_sample_spec_init (&pulsesrc->sample_spec);
-#else
-  pulsesrc->sample_spec.format = PA_SAMPLE_INVALID;
-  pulsesrc->sample_spec.rate = 0;
-  pulsesrc->sample_spec.channels = 0;
-#endif
 
   pulsesrc->operation_success = FALSE;
   pulsesrc->paused = FALSE;
@@ -570,11 +564,7 @@ gst_pulsesrc_stream_latency_update_cb (pa_stream * s, void *userdata)
         "latency update (information unknown)");
     return;
   }
-#ifdef HAVE_PULSE_0_9_11
   source_usec = info->configured_source_usec;
-#else
-  source_usec = 0;
-#endif
 
   GST_LOG_OBJECT (GST_PULSESRC_CAST (userdata),
       "latency_update, %" G_GUINT64_FORMAT ", %d:%" G_GINT64_FORMAT ", %d:%"
@@ -1014,11 +1004,8 @@ gst_pulsesrc_prepare (GstAudioSrc * asrc, GstRingBufferSpec * spec)
   GST_INFO_OBJECT (pulsesrc, "fragsize:  %d", wanted.fragsize);
 
   if (pa_stream_connect_record (pulsesrc->stream, pulsesrc->device, &wanted,
-          PA_STREAM_INTERPOLATE_TIMING |
-          PA_STREAM_AUTO_TIMING_UPDATE | PA_STREAM_NOT_MONOTONOUS |
-#ifdef HAVE_PULSE_0_9_11
-          PA_STREAM_ADJUST_LATENCY |
-#endif
+          PA_STREAM_INTERPOLATE_TIMING | PA_STREAM_AUTO_TIMING_UPDATE |
+          PA_STREAM_NOT_MONOTONIC | PA_STREAM_ADJUST_LATENCY |
           PA_STREAM_START_CORKED) < 0) {
     GST_ELEMENT_ERROR (pulsesrc, RESOURCE, FAILED,
         ("Failed to connect stream: %s",

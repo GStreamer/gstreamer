@@ -41,11 +41,11 @@ plugin_init (GstPlugin * plugin)
   bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 #endif
 
-  if (!gst_element_register (plugin, "pulsesink", GST_RANK_PRIMARY,
+  if (!gst_element_register (plugin, "pulsesink", GST_RANK_PRIMARY + 10,
           GST_TYPE_PULSESINK))
     return FALSE;
 
-  if (!gst_element_register (plugin, "pulsesrc", GST_RANK_PRIMARY,
+  if (!gst_element_register (plugin, "pulsesrc", GST_RANK_PRIMARY + 10,
           GST_TYPE_PULSESRC))
     return FALSE;
 
