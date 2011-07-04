@@ -64,6 +64,10 @@ EXPORTS
 	gst_alloc_trace_print_live
 	gst_alloc_trace_set_flags
 	gst_alloc_trace_set_flags_all
+	gst_allocator_alloc
+	gst_allocator_find
+	gst_allocator_register
+	gst_allocator_set_default
 	gst_assoc_flags_get_type
 	gst_atomic_queue_length
 	gst_atomic_queue_new
@@ -114,13 +118,18 @@ EXPORTS
 	gst_buffer_merge
 	gst_buffer_n_memory
 	gst_buffer_new
-	gst_buffer_new_and_alloc
+	gst_buffer_new_allocate
 	gst_buffer_peek_memory
 	gst_buffer_pool_acquire_buffer
+	gst_buffer_pool_config_add_meta
 	gst_buffer_pool_config_get
+	gst_buffer_pool_config_get_meta
+	gst_buffer_pool_config_has_meta
+	gst_buffer_pool_config_n_metas
 	gst_buffer_pool_config_set
 	gst_buffer_pool_flags_get_type
 	gst_buffer_pool_get_config
+	gst_buffer_pool_get_metas
 	gst_buffer_pool_get_type
 	gst_buffer_pool_new
 	gst_buffer_pool_release_buffer
@@ -334,7 +343,6 @@ EXPORTS
 	gst_element_get_state
 	gst_element_get_static_pad
 	gst_element_get_type
-	gst_element_implements_interface
 	gst_element_is_indexable
 	gst_element_is_locked_state
 	gst_element_iterate_pads
@@ -446,9 +454,6 @@ EXPORTS
 	gst_ghost_pad_new_no_target_from_template
 	gst_ghost_pad_set_target
 	gst_ghost_pad_unlink_default
-	gst_implements_interface_cast
-	gst_implements_interface_check
-	gst_implements_interface_get_type
 	gst_index_add_association
 	gst_index_add_associationv
 	gst_index_add_format
@@ -526,10 +531,7 @@ EXPORTS
 	gst_marshal_VOID__OBJECT_STRING
 	gst_marshal_VOID__POINTER_OBJECT
 	gst_marshal_VOID__UINT_BOXED
-	gst_memory_allocator_alloc
-	gst_memory_allocator_find
-	gst_memory_allocator_register
-	gst_memory_allocator_set_default
+	gst_memory_alignment DATA
 	gst_memory_copy
 	gst_memory_flags_get_type
 	gst_memory_get_sizes
@@ -572,7 +574,6 @@ EXPORTS
 	gst_message_new_stream_status
 	gst_message_new_structure_change
 	gst_message_new_tag
-	gst_message_new_tag_full
 	gst_message_new_warning
 	gst_message_parse_async_done
 	gst_message_parse_buffering
@@ -596,7 +597,6 @@ EXPORTS
 	gst_message_parse_stream_status
 	gst_message_parse_structure_change
 	gst_message_parse_tag
-	gst_message_parse_tag_full
 	gst_message_parse_warning
 	gst_message_set_buffering_stats
 	gst_message_set_qos_stats
@@ -645,6 +645,7 @@ EXPORTS
 	gst_pad_can_link
 	gst_pad_chain
 	gst_pad_chain_list
+	gst_pad_check_reconfigure
 	gst_pad_direction_get_type
 	gst_pad_event_default
 	gst_pad_fixate_caps
@@ -848,6 +849,7 @@ EXPORTS
 	gst_query_get_n_buffering_ranges
 	gst_query_get_structure
 	gst_query_get_type
+	gst_query_has_allocation_meta
 	gst_query_new_allocation
 	gst_query_new_buffering
 	gst_query_new_convert
@@ -948,6 +950,7 @@ EXPORTS
 	gst_state_change_get_type
 	gst_state_change_return_get_type
 	gst_state_get_type
+	gst_static_caps_cleanup
 	gst_static_caps_get
 	gst_static_caps_get_type
 	gst_static_pad_template_get
