@@ -72,8 +72,7 @@ struct _GstAlpha
   /* caps */
   GStaticMutex lock;
 
-  GstVideoFormat in_format, out_format;
-  gint width, height;
+  GstVideoInfo in_info, out_info;
   gboolean in_sdtv, out_sdtv;
 
   /* properties */
@@ -93,7 +92,7 @@ struct _GstAlpha
   gboolean prefer_passthrough;
 
   /* processing function */
-  void (*process) (const guint8 *src, guint8 *dest, gint width, gint height, GstAlpha *alpha);
+  void (*process) (const GstVideoFrame *in_frame, GstVideoFrame *out_frame, GstAlpha *alpha);
 
   /* precalculated values for chroma keying */
   gint8 cb, cr;
