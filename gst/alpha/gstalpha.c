@@ -447,8 +447,9 @@ gst_alpha_get_unit_size (GstBaseTransform * btrans,
 
   *size = info.size;
 
-  GST_DEBUG_OBJECT (btrans, "unit size = %d for format %d w %d height %d",
-      *size, info.format, info.width, info.height);
+  GST_DEBUG_OBJECT (btrans, "unit size = %d for format %s w %d height %d",
+      *size, GST_VIDEO_INFO_NAME (&info), GST_VIDEO_INFO_WIDTH (&info),
+      GST_VIDEO_INFO_HEIGHT (&info));
 
   return TRUE;
 }
@@ -538,8 +539,9 @@ gst_alpha_set_caps (GstBaseTransform * btrans,
       "sdtv") : TRUE;
 
   passthrough = alpha->prefer_passthrough &&
-      in_info.format == out_info.format && alpha->in_sdtv == alpha->out_sdtv
-      && alpha->method == ALPHA_METHOD_SET && alpha->alpha == 1.0;
+      GST_VIDEO_INFO_FORMAT (&in_info) == GST_VIDEO_INFO_FORMAT (&out_info)
+      && alpha->in_sdtv == alpha->out_sdtv && alpha->method == ALPHA_METHOD_SET
+      && alpha->alpha == 1.0;
 
   GST_DEBUG_OBJECT (alpha,
       "Setting caps %" GST_PTR_FORMAT " -> %" GST_PTR_FORMAT
@@ -659,7 +661,6 @@ gst_alpha_set_argb_ayuv (const GstVideoFrame * in_frame,
     GstVideoFrame * out_frame, GstAlpha * alpha)
 {
   gint s_alpha = CLAMP ((gint) (alpha->alpha * 256), 0, 256);
-  GstVideoFormat in_format = in_frame->info.format;
   const guint8 *src;
   guint8 *dest;
   gint width, height;
@@ -668,8 +669,8 @@ gst_alpha_set_argb_ayuv (const GstVideoFrame * in_frame,
   gint y, u, v;
   gint o[4];
 
-  src = GST_VIDEO_FRAME_DATA (in_frame, 0);
-  dest = GST_VIDEO_FRAME_DATA (out_frame, 0);
+  src = GST_VIDEO_FRAME_PLANE_DATA (in_frame, 0);
+  dest = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 0);
 
   width = in_frame->info.width;
   height = in_frame->info.height;
@@ -705,7 +706,6 @@ static void
 gst_alpha_chroma_key_argb_ayuv (const GstVideoFrame * in_frame,
     GstVideoFrame * out_frame, GstAlpha * alpha)
 {
-  GstVideoFormat in_format;
   const guint8 *src;
   guint8 *dest;
   gint width, height;
@@ -724,13 +724,11 @@ gst_alpha_chroma_key_argb_ayuv (const GstVideoFrame * in_frame,
   gint matrix[12];
   gint o[4];
 
-  src = GST_VIDEO_FRAME_DATA (in_frame, 0);
-  dest = GST_VIDEO_FRAME_DATA (out_frame, 0);
+  src = GST_VIDEO_FRAME_PLANE_DATA (in_frame, 0);
+  dest = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 0);
 
   width = in_frame->info.width;
   height = in_frame->info.height;
-
-  in_format = in_frame->info.format;
 
   o[0] = gst_video_format_get_component_offset (in_format, 3, width, height);
   o[1] = gst_video_format_get_component_offset (in_format, 0, width, height);
@@ -777,7 +775,6 @@ static void
 gst_alpha_set_argb_argb (const GstVideoFrame * in_frame,
     GstVideoFrame * out_frame, GstAlpha * alpha)
 {
-  GstVideoFormat in_format, out_format;
   const guint8 *src;
   guint8 *dest;
   gint width, height;
@@ -785,14 +782,11 @@ gst_alpha_set_argb_argb (const GstVideoFrame * in_frame,
   gint i, j;
   gint p[4], o[4];
 
-  src = GST_VIDEO_FRAME_DATA (in_frame, 0);
-  dest = GST_VIDEO_FRAME_DATA (out_frame, 0);
+  src = GST_VIDEO_FRAME_PLANE_DATA (in_frame, 0);
+  dest = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 0);
 
   width = in_frame->info.width;
   height = in_frame->info.height;
-
-  in_format = in_frame->info.format;
-  out_format = out_frame->info.format;
 
   p[0] = gst_video_format_get_component_offset (out_format, 3, width, height);
   p[1] = gst_video_format_get_component_offset (out_format, 0, width, height);
@@ -822,7 +816,6 @@ static void
 gst_alpha_chroma_key_argb_argb (const GstVideoFrame * in_frame,
     GstVideoFrame * out_frame, GstAlpha * alpha)
 {
-  GstVideoFormat in_format, out_format;
   const guint8 *src;
   guint8 *dest;
   gint width, height;
@@ -841,14 +834,11 @@ gst_alpha_chroma_key_argb_argb (const GstVideoFrame * in_frame,
   gint matrix[12], matrix2[12];
   gint p[4], o[4];
 
-  src = GST_VIDEO_FRAME_DATA (in_frame, 0);
-  dest = GST_VIDEO_FRAME_DATA (out_frame, 0);
+  src = GST_VIDEO_FRAME_PLANE_DATA (in_frame, 0);
+  dest = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 0);
 
   width = in_frame->info.width;
   height = in_frame->info.height;
-
-  in_format = in_frame->info.format;
-  out_format = out_frame->info.format;
 
   p[0] = gst_video_format_get_component_offset (out_format, 3, width, height);
   p[1] = gst_video_format_get_component_offset (out_format, 0, width, height);
@@ -903,7 +893,6 @@ static void
 gst_alpha_set_ayuv_argb (const GstVideoFrame * in_frame,
     GstVideoFrame * out_frame, GstAlpha * alpha)
 {
-  GstVideoFormat in_format, out_format;
   const guint8 *src;
   guint8 *dest;
   gint width, height;
@@ -913,14 +902,11 @@ gst_alpha_set_ayuv_argb (const GstVideoFrame * in_frame,
   gint r, g, b;
   gint p[4];
 
-  src = GST_VIDEO_FRAME_DATA (in_frame, 0);
-  dest = GST_VIDEO_FRAME_DATA (out_frame, 0);
+  src = GST_VIDEO_FRAME_PLANE_DATA (in_frame, 0);
+  dest = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 0);
 
   width = in_frame->info.width;
   height = in_frame->info.height;
-
-  in_format = in_frame->info.format;
-  out_format = out_frame->info.format;
 
   p[0] = gst_video_format_get_component_offset (out_format, 3, width, height);
   p[1] = gst_video_format_get_component_offset (out_format, 0, width, height);
@@ -953,7 +939,6 @@ static void
 gst_alpha_chroma_key_ayuv_argb (const GstVideoFrame * in_frame,
     GstVideoFrame * out_frame, GstAlpha * alpha)
 {
-  GstVideoFormat in_format, out_format;
   const guint8 *src;
   guint8 *dest;
   gint width, height;
@@ -972,14 +957,11 @@ gst_alpha_chroma_key_ayuv_argb (const GstVideoFrame * in_frame,
   gint matrix[12];
   gint p[4];
 
-  src = GST_VIDEO_FRAME_DATA (in_frame, 0);
-  dest = GST_VIDEO_FRAME_DATA (out_frame, 0);
+  src = GST_VIDEO_FRAME_PLANE_DATA (in_frame, 0);
+  dest = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 0);
 
   width = in_frame->info.width;
   height = in_frame->info.height;
-
-  in_format = in_frame->info.format;
-  out_format = out_frame->info.format;
 
   p[0] = gst_video_format_get_component_offset (out_format, 3, width, height);
   p[1] = gst_video_format_get_component_offset (out_format, 0, width, height);
@@ -1032,8 +1014,8 @@ gst_alpha_set_ayuv_ayuv (const GstVideoFrame * in_frame,
   gint s_alpha = CLAMP ((gint) (alpha->alpha * 256), 0, 256);
   gint y, x;
 
-  src = GST_VIDEO_FRAME_DATA (in_frame, 0);
-  dest = GST_VIDEO_FRAME_DATA (out_frame, 0);
+  src = GST_VIDEO_FRAME_PLANE_DATA (in_frame, 0);
+  dest = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 0);
 
   width = in_frame->info.width;
   height = in_frame->info.height;
@@ -1090,8 +1072,8 @@ gst_alpha_chroma_key_ayuv_ayuv (const GstVideoFrame * in_frame,
   guint8 kfgy_scale = alpha->kfgy_scale;
   guint noise_level2 = alpha->noise_level2;
 
-  src = GST_VIDEO_FRAME_DATA (in_frame, 0);
-  dest = GST_VIDEO_FRAME_DATA (out_frame, 0);
+  src = GST_VIDEO_FRAME_PLANE_DATA (in_frame, 0);
+  dest = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 0);
 
   width = in_frame->info.width;
   height = in_frame->info.height;
@@ -1160,7 +1142,6 @@ static void
 gst_alpha_set_rgb_ayuv (const GstVideoFrame * in_frame,
     GstVideoFrame * out_frame, GstAlpha * alpha)
 {
-  GstVideoFormat in_format, out_format;
   const guint8 *src;
   guint8 *dest;
   gint width, height;
@@ -1171,14 +1152,11 @@ gst_alpha_set_rgb_ayuv (const GstVideoFrame * in_frame,
   gint o[3];
   gint bpp;
 
-  src = GST_VIDEO_FRAME_DATA (in_frame, 0);
-  dest = GST_VIDEO_FRAME_DATA (out_frame, 0);
+  src = GST_VIDEO_FRAME_PLANE_DATA (in_frame, 0);
+  dest = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 0);
 
   width = in_frame->info.width;
   height = in_frame->info.height;
-
-  in_format = in_frame->info.format;
-  out_format = out_frame->info.format;
 
   bpp = gst_video_format_get_pixel_stride (in_format, 0);
 
@@ -1212,7 +1190,6 @@ static void
 gst_alpha_chroma_key_rgb_ayuv (const GstVideoFrame * in_frame,
     GstVideoFrame * out_frame, GstAlpha * alpha)
 {
-  GstVideoFormat in_format, out_format;
   const guint8 *src;
   guint8 *dest;
   gint width, height;
@@ -1232,14 +1209,11 @@ gst_alpha_chroma_key_rgb_ayuv (const GstVideoFrame * in_frame,
   gint o[3];
   gint bpp;
 
-  src = GST_VIDEO_FRAME_DATA (in_frame, 0);
-  dest = GST_VIDEO_FRAME_DATA (out_frame, 0);
+  src = GST_VIDEO_FRAME_PLANE_DATA (in_frame, 0);
+  dest = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 0);
 
   width = in_frame->info.width;
   height = in_frame->info.height;
-
-  in_format = in_frame->info.format;
-  out_format = out_frame->info.format;
 
   bpp = gst_video_format_get_pixel_stride (in_format, 0);
 
@@ -1296,14 +1270,11 @@ gst_alpha_set_rgb_argb (const GstVideoFrame * in_frame,
   gint p[4], o[3];
   gint bpp;
 
-  src = GST_VIDEO_FRAME_DATA (in_frame, 0);
-  dest = GST_VIDEO_FRAME_DATA (out_frame, 0);
+  src = GST_VIDEO_FRAME_PLANE_DATA (in_frame, 0);
+  dest = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 0);
 
   width = in_frame->info.width;
   height = in_frame->info.height;
-
-  in_format = in_frame->info.format;
-  out_format = out_frame->info.format;
 
   bpp = gst_video_format_get_pixel_stride (in_format, 0);
 
@@ -1334,7 +1305,6 @@ static void
 gst_alpha_chroma_key_rgb_argb (const GstVideoFrame * in_frame,
     GstVideoFrame * out_frame, GstAlpha * alpha)
 {
-  GstVideoFormat in_format, out_format;
   const guint8 *src;
   guint8 *dest;
   gint width, height;
@@ -1354,14 +1324,11 @@ gst_alpha_chroma_key_rgb_argb (const GstVideoFrame * in_frame,
   gint p[4], o[3];
   gint bpp;
 
-  src = GST_VIDEO_FRAME_DATA (in_frame, 0);
-  dest = GST_VIDEO_FRAME_DATA (out_frame, 0);
+  src = GST_VIDEO_FRAME_PLANE_DATA (in_frame, 0);
+  dest = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 0);
 
   width = in_frame->info.width;
   height = in_frame->info.height;
-
-  in_format = in_frame->info.format;
-  out_format = out_frame->info.format;
 
   bpp = gst_video_format_get_pixel_stride (in_format, 0);
 
@@ -1417,7 +1384,6 @@ static void
 gst_alpha_set_planar_yuv_ayuv (const GstVideoFrame * in_frame,
     GstVideoFrame * out_frame, GstAlpha * alpha)
 {
-  GstVideoFormat in_format, out_format;
   const guint8 *src;
   guint8 *dest;
   gint width, height;
@@ -1429,14 +1395,11 @@ gst_alpha_set_planar_yuv_ayuv (const GstVideoFrame * in_frame,
   gint y_stride, uv_stride;
   gint v_subs, h_subs;
 
-  src = GST_VIDEO_FRAME_DATA (in_frame, 0);
-  dest = GST_VIDEO_FRAME_DATA (out_frame, 0);
+  src = GST_VIDEO_FRAME_PLANE_DATA (in_frame, 0);
+  dest = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 0);
 
   width = in_frame->info.width;
   height = in_frame->info.height;
-
-  in_format = in_frame->info.format;
-  out_format = out_frame->info.format;
 
   y_stride = gst_video_format_get_row_stride (in_format, 0, width);
   uv_stride = gst_video_format_get_row_stride (in_format, 1, width);
@@ -1537,7 +1500,6 @@ static void
 gst_alpha_chroma_key_planar_yuv_ayuv (const GstVideoFrame * in_frame,
     GstVideoFrame * out_frame, gint width, gint height, GstAlpha * alpha)
 {
-  GstVideoFormat in_format, out_format;
   const guint8 *src;
   guint8 *dest;
   gint width, height;
@@ -1559,14 +1521,11 @@ gst_alpha_chroma_key_planar_yuv_ayuv (const GstVideoFrame * in_frame,
   guint8 kfgy_scale = alpha->kfgy_scale;
   guint noise_level2 = alpha->noise_level2;
 
-  src = GST_VIDEO_FRAME_DATA (in_frame, 0);
-  dest = GST_VIDEO_FRAME_DATA (out_frame, 0);
+  src = GST_VIDEO_FRAME_PLANE_DATA (in_frame, 0);
+  dest = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 0);
 
   width = in_frame->info.width;
   height = in_frame->info.height;
-
-  in_format = in_frame->info.format;
-  out_format = out_frame->info.format;
 
   y_stride = gst_video_format_get_row_stride (in_format, 0, width);
   uv_stride = gst_video_format_get_row_stride (in_format, 1, width);
@@ -1682,7 +1641,6 @@ static void
 gst_alpha_set_planar_yuv_argb (const GstVideoFrame * in_frame,
     GstVideoFrame * out_frame, gint width, gint height, GstAlpha * alpha)
 {
-  GstVideoFormat in_format, out_format;
   const guint8 *src;
   guint8 *dest;
   gint width, height;
@@ -1698,14 +1656,11 @@ gst_alpha_set_planar_yuv_argb (const GstVideoFrame * in_frame,
   gint r, g, b;
   gint p[4];
 
-  src = GST_VIDEO_FRAME_DATA (in_frame, 0);
-  dest = GST_VIDEO_FRAME_DATA (out_frame, 0);
+  src = GST_VIDEO_FRAME_PLANE_DATA (in_frame, 0);
+  dest = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 0);
 
   width = in_frame->info.width;
   height = in_frame->info.height;
-
-  in_format = in_frame->info.format;
-  out_format = out_frame->info.format;
 
   p[0] = gst_video_format_get_component_offset (out_format, 3, width, height);
   p[1] = gst_video_format_get_component_offset (out_format, 0, width, height);
@@ -1784,7 +1739,6 @@ static void
 gst_alpha_chroma_key_planar_yuv_argb (const GstVideoFrame * in_frame,
     GstVideoFrame * out_frame, gint width, gint height, GstAlpha * alpha)
 {
-  GstVideoFormat in_format, out_format;
   const guint8 *src;
   guint8 *dest;
   gint width, height;
@@ -1809,14 +1763,11 @@ gst_alpha_chroma_key_planar_yuv_argb (const GstVideoFrame * in_frame,
   gint matrix[12];
   gint p[4];
 
-  src = GST_VIDEO_FRAME_DATA (in_frame, 0);
-  dest = GST_VIDEO_FRAME_DATA (out_frame, 0);
+  src = GST_VIDEO_FRAME_PLANE_DATA (in_frame, 0);
+  dest = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 0);
 
   width = in_frame->info.width;
   height = in_frame->info.height;
-
-  in_format = in_frame->info.format;
-  out_format = out_frame->info.format;
 
   p[0] =
       gst_video_format_get_component_offset (alpha->out_format, 3, width,
@@ -1912,7 +1863,6 @@ static void
 gst_alpha_set_packed_422_ayuv (const GstVideoFrame * in_frame,
     GstVideoFrame * out_frame, gint width, gint height, GstAlpha * alpha)
 {
-  GstVideoFormat in_format, out_format;
   const guint8 *src;
   guint8 *dest;
   gint width, height;
@@ -1923,14 +1873,11 @@ gst_alpha_set_packed_422_ayuv (const GstVideoFrame * in_frame,
   gint src_stride;
   const guint8 *src_tmp;
 
-  src = GST_VIDEO_FRAME_DATA (in_frame, 0);
-  dest = GST_VIDEO_FRAME_DATA (out_frame, 0);
+  src = GST_VIDEO_FRAME_PLANE_DATA (in_frame, 0);
+  dest = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 0);
 
   width = in_frame->info.width;
   height = in_frame->info.height;
-
-  in_format = in_frame->info.format;
-  out_format = out_frame->info.format;
 
   src_stride = gst_video_format_get_row_stride (alpha->in_format, 0, width);
 
@@ -2044,7 +1991,6 @@ static void
 gst_alpha_chroma_key_packed_422_ayuv (const GstVideoFrame * in_frame,
     GstVideoFrame * out_frame, gint width, gint height, GstAlpha * alpha)
 {
-  GstVideoFormat in_format, out_format;
   const guint8 *src;
   guint8 *dest;
   gint width, height;
@@ -2063,14 +2009,11 @@ gst_alpha_chroma_key_packed_422_ayuv (const GstVideoFrame * in_frame,
   gint src_stride;
   const guint8 *src_tmp;
 
-  src = GST_VIDEO_FRAME_DATA (in_frame, 0);
-  dest = GST_VIDEO_FRAME_DATA (out_frame, 0);
+  src = GST_VIDEO_FRAME_PLANE_DATA (in_frame, 0);
+  dest = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 0);
 
   width = in_frame->info.width;
   height = in_frame->info.height;
-
-  in_format = in_frame->info.format;
-  out_format = out_frame->info.format;
 
   src_stride = gst_video_format_get_row_stride (alpha->in_format, 0, width);
 
@@ -2209,7 +2152,6 @@ static void
 gst_alpha_set_packed_422_argb (const GstVideoFrame * in_frame,
     GstVideoFrame * out_frame, GstAlpha * alpha)
 {
-  GstVideoFormat in_format, out_format;
   const guint8 *src;
   guint8 *dest;
   gint width, height;
@@ -2221,14 +2163,11 @@ gst_alpha_set_packed_422_argb (const GstVideoFrame * in_frame,
   gint matrix[12];
   gint r, g, b;
 
-  src = GST_VIDEO_FRAME_DATA (in_frame, 0);
-  dest = GST_VIDEO_FRAME_DATA (out_frame, 0);
+  src = GST_VIDEO_FRAME_PLANE_DATA (in_frame, 0);
+  dest = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 0);
 
   width = in_frame->info.width;
   height = in_frame->info.height;
-
-  in_format = in_frame->info.format;
-  out_format = out_frame->info.format;
 
   src_stride = gst_video_format_get_row_stride (alpha->in_format, 0, width);
 
@@ -2307,7 +2246,6 @@ static void
 gst_alpha_chroma_key_packed_422_argb (const GstVideoFrame * in_frame,
     GstVideoFrame * out_frame, gint width, gint height, GstAlpha * alpha)
 {
-  GstVideoFormat in_format, out_format;
   const guint8 *src;
   guint8 *dest;
   gint width, height;
@@ -2328,14 +2266,11 @@ gst_alpha_chroma_key_packed_422_argb (const GstVideoFrame * in_frame,
   const guint8 *src_tmp;
   gint matrix[12];
 
-  src = GST_VIDEO_FRAME_DATA (in_frame, 0);
-  dest = GST_VIDEO_FRAME_DATA (out_frame, 0);
+  src = GST_VIDEO_FRAME_PLANE_DATA (in_frame, 0);
+  dest = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 0);
 
   width = in_frame->info.width;
   height = in_frame->info.height;
-
-  in_format = in_frame->info.format;
-  out_format = out_frame->info.format;
 
   src_stride = gst_video_format_get_row_stride (alpha->in_format, 0, width);
 
