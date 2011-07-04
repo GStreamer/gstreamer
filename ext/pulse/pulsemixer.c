@@ -67,31 +67,9 @@ static GstStateChangeReturn gst_pulsemixer_change_state (GstElement * element,
 GST_IMPLEMENT_PULSEMIXER_CTRL_METHODS (GstPulseMixer, gst_pulsemixer);
 GST_IMPLEMENT_PULSEPROBE_METHODS (GstPulseMixer, gst_pulsemixer);
 
-static gboolean
-gst_pulsemixer_interface_supported (GstImplementsInterface
-    * iface, GType interface_type)
-{
-  GstPulseMixer *this = GST_PULSEMIXER (iface);
-
-  if (interface_type == GST_TYPE_MIXER && this->mixer)
-    return TRUE;
-
-  if (interface_type == GST_TYPE_PROPERTY_PROBE && this->probe)
-    return TRUE;
-
-  return FALSE;
-}
-
-static void
-gst_pulsemixer_implements_interface_init (GstImplementsInterfaceClass * klass)
-{
-  klass->supported = gst_pulsemixer_interface_supported;
-}
 
 #define gst_pulsemixer_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstPulseMixer, gst_pulsemixer, GST_TYPE_ELEMENT,
-    G_IMPLEMENT_INTERFACE (GST_TYPE_IMPLEMENTS_INTERFACE,
-        gst_pulsemixer_implements_interface_init);
     G_IMPLEMENT_INTERFACE (GST_TYPE_MIXER, gst_pulsemixer_mixer_interface_init);
     G_IMPLEMENT_INTERFACE (GST_TYPE_PROPERTY_PROBE,
         gst_pulsemixer_property_probe_interface_init));

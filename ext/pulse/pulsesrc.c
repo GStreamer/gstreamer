@@ -140,31 +140,8 @@ static GstStaticPadTemplate pad_template = GST_STATIC_PAD_TEMPLATE ("src",
 GST_IMPLEMENT_PULSEMIXER_CTRL_METHODS (GstPulseSrc, gst_pulsesrc);
 GST_IMPLEMENT_PULSEPROBE_METHODS (GstPulseSrc, gst_pulsesrc);
 
-static gboolean
-gst_pulsesrc_interface_supported (GstImplementsInterface *
-    iface, GType interface_type)
-{
-  GstPulseSrc *this = GST_PULSESRC_CAST (iface);
-
-  if (interface_type == GST_TYPE_MIXER && this->mixer)
-    return TRUE;
-
-  if (interface_type == GST_TYPE_PROPERTY_PROBE && this->probe)
-    return TRUE;
-
-  return FALSE;
-}
-
-static void
-gst_pulsesrc_implements_interface_init (GstImplementsInterfaceClass * klass)
-{
-  klass->supported = gst_pulsesrc_interface_supported;
-}
-
 #define gst_pulsesrc_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstPulseSrc, gst_pulsesrc, GST_TYPE_AUDIO_SRC,
-    G_IMPLEMENT_INTERFACE (GST_TYPE_IMPLEMENTS_INTERFACE,
-        gst_pulsesrc_implements_interface_init);
     G_IMPLEMENT_INTERFACE (GST_TYPE_MIXER, gst_pulsesrc_mixer_interface_init);
     G_IMPLEMENT_INTERFACE (GST_TYPE_PROPERTY_PROBE,
         gst_pulsesrc_property_probe_interface_init));

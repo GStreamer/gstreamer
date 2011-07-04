@@ -1639,31 +1639,9 @@ GST_IMPLEMENT_PULSEPROBE_METHODS (GstPulseSink, gst_pulsesink);
   gst_pulsesink_init_contexts (); \
   gst_pulsesink_init_interfaces (type);
 
-static gboolean
-gst_pulsesink_interface_supported (GstImplementsInterface *
-    iface, GType interface_type)
-{
-  GstPulseSink *this = GST_PULSESINK_CAST (iface);
-
-  if (interface_type == GST_TYPE_PROPERTY_PROBE && this->probe)
-    return TRUE;
-  if (interface_type == GST_TYPE_STREAM_VOLUME)
-    return TRUE;
-
-  return FALSE;
-}
-
-static void
-gst_pulsesink_implements_interface_init (GstImplementsInterfaceClass * klass)
-{
-  klass->supported = gst_pulsesink_interface_supported;
-}
-
 #define gst_pulsesink_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstPulseSink, gst_pulsesink, GST_TYPE_BASE_AUDIO_SINK,
     gst_pulsesink_init_contexts ();
-    G_IMPLEMENT_INTERFACE (GST_TYPE_IMPLEMENTS_INTERFACE,
-        gst_pulsesink_implements_interface_init);
     G_IMPLEMENT_INTERFACE (GST_TYPE_PROPERTY_PROBE,
         gst_pulsesink_property_probe_interface_init);
     G_IMPLEMENT_INTERFACE (GST_TYPE_STREAM_VOLUME, NULL)
