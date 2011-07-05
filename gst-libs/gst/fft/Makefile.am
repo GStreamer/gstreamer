@@ -58,6 +58,7 @@ GstFft-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstfft-@GST_MAJORMINOR@
 		--nsversion=@GST_MAJORMINOR@ \
 		--strip-prefix=Gst \
 		$(gir_cincludes) \
+		-DGST_USE_UNSTABLE_API \
 		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-@GST_MAJORMINOR@` \
 		--library=libgstfft-@GST_MAJORMINOR@.la \
 		--include=Gst-@GST_MAJORMINOR@ \

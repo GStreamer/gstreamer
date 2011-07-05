@@ -29,6 +29,7 @@ GstCdda-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstcdda-@GST_MAJORMINO
 		--nsversion=@GST_MAJORMINOR@ \
 		--strip-prefix=Gst \
 		$(gir_cincludes) \
+		-DGST_USE_UNSTABLE_API \
 		--add-include-path=$(builddir)/../tag \
 		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-@GST_MAJORMINOR@` \
 		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-base-@GST_MAJORMINOR@` \

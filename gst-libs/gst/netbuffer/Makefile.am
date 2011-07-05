@@ -23,6 +23,7 @@ GstNetbuffer-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstnetbuffer-@GST
 		--nsversion=@GST_MAJORMINOR@ \
 		--strip-prefix=Gst \
 		$(gir_cincludes) \
+		-DGST_USE_UNSTABLE_API \
 		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-@GST_MAJORMINOR@` \
 		--library=libgstnetbuffer-@GST_MAJORMINOR@.la \
 		--include=Gst-@GST_MAJORMINOR@ \

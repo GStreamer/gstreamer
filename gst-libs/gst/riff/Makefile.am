@@ -33,6 +33,7 @@ GstRiff-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstriff-@GST_MAJORMINO
 		--nsversion=@GST_MAJORMINOR@ \
 		--strip-prefix=Gst \
 		$(gir_cincludes) \
+		-DGST_USE_UNSTABLE_API \
 		--add-include-path=$(builddir)/../tag \
 		--add-include-path=$(builddir)/../audio \
 		--add-include-path=$(builddir)/../interfaces \
