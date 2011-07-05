@@ -126,6 +126,19 @@ typedef enum {
 
 typedef struct _GstVideoFormatInfo GstVideoFormatInfo;
 
+/**
+ * GstVideoFormatFlags:
+ * @GST_VIDEO_FORMAT_FLAG_YUV: The video format is YUV, components are numbered
+ *   0=Y, 1=U, 2=V.
+ * @GST_VIDEO_FORMAT_FLAG_RGB: The video format is RGB, components are numbered
+ *   0=R, 1=G, 2=B.
+ * @GST_VIDEO_FORMAT_FLAG_GRAY: The video is gray, there is one gray component
+ *   with index 0.
+ * @GST_VIDEO_FORMAT_FLAG_ALPHA: The video format has an alpha components with
+ *   the number 3.
+ *
+ * The different video flags that a format info can have.
+ */
 typedef enum
 {
   GST_VIDEO_FORMAT_FLAG_YUV   = (1 << 0),
@@ -134,23 +147,37 @@ typedef enum
   GST_VIDEO_FORMAT_FLAG_ALPHA = (1 << 3)
 } GstVideoFormatFlags;
 
-#define GST_VIDEO_SUB_SCALE(scale,val)   (-((-(val))>>(scale)))
+#define GST_VIDEO_COMP_Y  0
+#define GST_VIDEO_COMP_U  1
+#define GST_VIDEO_COMP_V  2
+
+#define GST_VIDEO_COMP_R  0
+#define GST_VIDEO_COMP_G  1
+#define GST_VIDEO_COMP_B  2
+
+#define GST_VIDEO_COMP_A  3
 
 /**
  * GstVideoFormatInfo:
  * @format: #GstVideoFormat
  * @name: string representation of the format
  * @flags: #GstVideoFormatFlags
- * @n_components: the number of components in the video format
+ * @n_components: the number of components in the video format.
  * @depth: the depth for each component
  * @pixel_stride: the pixel stride of each component. This is the amount of
  *    bytes to the pixel immediately to the right.
- * @n_planes: the number of planes for this format
- * @plane: the plane number where this component can be found
- * @offset: the offset in the plane where the first pixel can be
- *    found.
- * @w_sub: subsampling factor of the width
- * @h_sub: subsampling factor of the height
+ * @n_planes: the number of planes for this format. The number of planes can be
+ *    less than the amount of components when multiple componets are packed into
+ *    one plane.
+ * @plane: the plane number where a component can be found
+ * @offset: the offset in the plane where the first pixel of the components
+ *    can be found.
+ * @w_sub: subsampling factor of the width for the component. Use
+ *     GST_VIDEO_SUB_SCALE to scale a width.
+ * @h_sub: subsampling factor of the height for the component. Use
+ *     GST_VIDEO_SUB_SCALE to scale a height.
+ *
+ * Information for a video format.
  */
 struct _GstVideoFormatInfo {
   GstVideoFormat format;
@@ -183,6 +210,8 @@ struct _GstVideoFormatInfo {
 #define GST_VIDEO_FORMAT_INFO_OFFSET(info,c)     ((info)->offset[c])
 #define GST_VIDEO_FORMAT_INFO_W_SUB(info,c)      ((info)->w_sub[c])
 #define GST_VIDEO_FORMAT_INFO_H_SUB(info,c)      ((info)->h_sub[c])
+
+#define GST_VIDEO_SUB_SCALE(scale,val)   (-((-(val))>>(scale)))
 
 #define GST_VIDEO_FORMAT_INFO_SCALE_WIDTH(info,c,w)  GST_VIDEO_SUB_SCALE ((info)->w_sub[(c)],(w))
 #define GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT(info,c,h) GST_VIDEO_SUB_SCALE ((info)->h_sub[(c)],(h))
@@ -232,11 +261,11 @@ typedef enum {
 
 /**
  * GstVideoInfo:
+ * @finfo: the format info of the video
  * @flags: additional video flags
- * @format: the format of the video
  * @width: the width of the video
  * @height: the height of the video
- * @size: the size of one frame
+ * @size: the default size of one frame
  * @color_matrix: the color matrix.  Possible values are
  *   "sdtv" for the standard definition color matrix (as specified in
  *   Rec. ITU-R BT.470-6) or "hdtv" for the high definition color
@@ -246,6 +275,7 @@ typedef enum {
  *   halfway-sited vertically), "jpeg" for JPEG and Theora style
  *   chroma siting (halfway-sited both horizontally and vertically).
  *   Other chroma site values are possible, but uncommon.
+ * @palette: a buffer with palette data
  * @par_n: the pixel-aspect-ratio numerator
  * @par_d: the pixel-aspect-ratio demnominator
  * @fps_n: the framerate numerator
@@ -253,7 +283,12 @@ typedef enum {
  * @offset: offsets of the planes
  * @stride: strides of the planes
  *
- * Extra buffer metadata describing image properties
+ * Information describing image properties. This information can be filled
+ * in from GstCaps with gst_video_info_from_caps(). The information is also used
+ * to store the specific video info when mapping a video frame with
+ * gst_video_frame_map().
+ *
+ * Use the provided macros to access the info in this structure.
  */
 struct _GstVideoInfo {
   const GstVideoFormatInfo *finfo;
