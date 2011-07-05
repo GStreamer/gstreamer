@@ -995,25 +995,9 @@ theora_enc_is_discontinuous (GstTheoraEnc * enc, GstClockTime timestamp,
 }
 
 static void
-theora_enc_init_buffer (th_ycbcr_buffer buf, th_info * info,
-    GstVideoFrame * frame)
+theora_enc_init_buffer (th_ycbcr_buffer buf, GstVideoFrame * frame)
 {
-  GstVideoFormat format;
   guint i;
-
-  switch (info->pixel_fmt) {
-    case TH_PF_444:
-      format = GST_VIDEO_FORMAT_Y444;
-      break;
-    case TH_PF_420:
-      format = GST_VIDEO_FORMAT_I420;
-      break;
-    case TH_PF_422:
-      format = GST_VIDEO_FORMAT_Y42B;
-      break;
-    default:
-      g_assert_not_reached ();
-  }
 
   /* According to Theora developer Timothy Terriberry, the Theora 
    * encoder will not use memory outside of pic_width/height, even when
@@ -1144,7 +1128,7 @@ theora_enc_encode_and_push (GstTheoraEnc * enc, ogg_packet op,
   GstVideoFrame frame;
 
   gst_video_frame_map (&frame, &enc->vinfo, buffer, GST_MAP_READ);
-  theora_enc_init_buffer (ycbcr, &enc->info, &frame);
+  theora_enc_init_buffer (ycbcr, &frame);
 
   if (theora_enc_is_discontinuous (enc, running_time, duration)) {
     theora_enc_reset (enc);
