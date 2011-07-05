@@ -46,14 +46,13 @@
 
 #include "gstedge.h"
 
-#include <gst/video/video.h>
-
-GST_BOILERPLATE (GstEdgeTV, gst_edgetv, GstVideoFilter, GST_TYPE_VIDEO_FILTER);
+#define gst_edgetv_parent_class parent_class
+G_DEFINE_TYPE (GstEdgeTV, gst_edgetv, GST_TYPE_VIDEO_FILTER);
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-#define CAPS_STR GST_VIDEO_CAPS_BGRx ";" GST_VIDEO_CAPS_RGBx
+#define CAPS_STR GST_VIDEO_CAPS_MAKE ("{  BGRx, RGBx }")
 #else
-#define CAPS_STR GST_VIDEO_CAPS_xBGR ";" GST_VIDEO_CAPS_xRGB
+#define CAPS_STR GST_VIDEO_CAPS_MAKE ("{  xBGR, xRGB }")
 #endif
 
 static GstStaticPadTemplate gst_edgetv_src_template =
@@ -75,29 +74,35 @@ gst_edgetv_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
     GstCaps * outcaps)
 {
   GstEdgeTV *edgetv = GST_EDGETV (btrans);
-  GstStructure *structure;
-  gboolean ret = FALSE;
+  GstVideoInfo info;
+  guint map_size;
+  gint width, height;
 
-  structure = gst_caps_get_structure (incaps, 0);
+  if (!gst_video_info_from_caps (&info, incaps))
+    goto invalid_caps;
 
-  GST_OBJECT_LOCK (edgetv);
-  if (gst_structure_get_int (structure, "width", &edgetv->width) &&
-      gst_structure_get_int (structure, "height", &edgetv->height)) {
-    guint map_size;
+  edgetv->info = info;
 
-    edgetv->map_width = edgetv->width / 4;
-    edgetv->map_height = edgetv->height / 4;
-    edgetv->video_width_margin = edgetv->width % 4;
+  width = GST_VIDEO_INFO_WIDTH (&info);
+  height = GST_VIDEO_INFO_HEIGHT (&info);
 
-    map_size = edgetv->map_width * edgetv->map_height * sizeof (guint32) * 2;
+  edgetv->map_width = width / 4;
+  edgetv->map_height = height / 4;
+  edgetv->video_width_margin = width % 4;
 
-    g_free (edgetv->map);
-    edgetv->map = (guint32 *) g_malloc0 (map_size);
-    ret = TRUE;
+  map_size = edgetv->map_width * edgetv->map_height * sizeof (guint32) * 2;
+
+  g_free (edgetv->map);
+  edgetv->map = (guint32 *) g_malloc0 (map_size);
+
+  return TRUE;
+
+  /* ERRORS */
+invalid_caps:
+  {
+    GST_DEBUG_OBJECT (btrans, "could not parse caps");
+    return FALSE;
   }
-  GST_OBJECT_UNLOCK (edgetv);
-
-  return ret;
 }
 
 static GstFlowReturn
@@ -112,16 +117,21 @@ gst_edgetv_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
   gint video_width_margin;
   guint32 *map;
   GstFlowReturn ret = GST_FLOW_OK;
+  GstVideoFrame in_frame, out_frame;
 
-  src = (guint32 *) GST_BUFFER_DATA (in);
-  dest = (guint32 *) GST_BUFFER_DATA (out);
-
-  GST_OBJECT_LOCK (filter);
   map = filter->map;
-  width = filter->width;
   map_height = filter->map_height;
   map_width = filter->map_width;
   video_width_margin = filter->video_width_margin;
+
+  gst_video_frame_map (&in_frame, &filter->info, in, GST_MAP_READ);
+  gst_video_frame_map (&out_frame, &filter->info, out, GST_MAP_WRITE);
+
+  src = GST_VIDEO_FRAME_PLANE_DATA (&in_frame, 0);
+  dest = GST_VIDEO_FRAME_PLANE_DATA (&out_frame, 0);
+
+  width = GST_VIDEO_FRAME_WIDTH (&in_frame);
+
   src += width * 4 + 4;
   dest += width * 4 + 4;
 
@@ -198,7 +208,6 @@ gst_edgetv_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
     src += width * 3 + 8 + video_width_margin;
     dest += width * 3 + 8 + video_width_margin;
   }
-  GST_OBJECT_UNLOCK (filter);
 
   return ret;
 }
@@ -226,27 +235,22 @@ gst_edgetv_finalize (GObject * object)
 }
 
 static void
-gst_edgetv_base_init (gpointer g_class)
+gst_edgetv_class_init (GstEdgeTVClass * klass)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstElementClass *gstelement_class = (GstElementClass *) klass;
+  GstBaseTransformClass *trans_class = (GstBaseTransformClass *) klass;
 
-  gst_element_class_set_details_simple (element_class, "EdgeTV effect",
+  gobject_class->finalize = gst_edgetv_finalize;
+
+  gst_element_class_set_details_simple (gstelement_class, "EdgeTV effect",
       "Filter/Effect/Video",
       "Apply edge detect on video", "Wim Taymans <wim.taymans@chello.be>");
 
-  gst_element_class_add_pad_template (element_class,
+  gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_edgetv_sink_template));
-  gst_element_class_add_pad_template (element_class,
+  gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_edgetv_src_template));
-}
-
-static void
-gst_edgetv_class_init (GstEdgeTVClass * klass)
-{
-  GstBaseTransformClass *trans_class = (GstBaseTransformClass *) klass;
-  GObjectClass *gobject_class = (GObjectClass *) klass;
-
-  gobject_class->finalize = gst_edgetv_finalize;
 
   trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_edgetv_set_caps);
   trans_class->transform = GST_DEBUG_FUNCPTR (gst_edgetv_transform);
@@ -254,6 +258,6 @@ gst_edgetv_class_init (GstEdgeTVClass * klass)
 }
 
 static void
-gst_edgetv_init (GstEdgeTV * edgetv, GstEdgeTVClass * klass)
+gst_edgetv_init (GstEdgeTV * edgetv)
 {
 }

@@ -29,6 +29,7 @@
 
 #include <gst/gst.h>
 
+#include <gst/video/video.h>
 #include <gst/video/gstvideofilter.h>
 
 G_BEGIN_DECLS
@@ -52,8 +53,7 @@ struct _GstEdgeTV
   GstVideoFilter videofilter;
 
   /* < private > */
-
-  gint width, height;
+  GstVideoInfo info;
   gint map_width, map_height;
   guint32 *map;
   gint video_width_margin;
