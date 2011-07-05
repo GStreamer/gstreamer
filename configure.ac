@@ -204,6 +204,13 @@ if test "x$have_bz2" = "xno"; then
   AC_WARN([libbz2 not found, matroska demuxer will not be able to read bz2 tracks])
 fi
 
+AC_ARG_ENABLE(lgpl,
+              [AC_HELP_STRING([--enable-lgpl], [build a LGPL licensed gst-ffmpeg])])
+AM_CONDITIONAL(GST_FFMPEG_ENABLE_LGPL, test "x$enable_lgpl" = "xyes")
+if test "x$enable_lgpl" = "xyes"; then
+  AC_DEFINE([GST_FFMPEG_ENABLE_LGPL], [], [Defined if building a LGPL-only version of gst-ffmpeg])
+fi
+
 dnl *** configure external libs ***
 
 HAVE_FFMPEG_UNINSTALLED=1
@@ -213,7 +220,9 @@ AC_ARG_WITH(system-ffmpeg,
 
 if test "x$with_system_ffmpeg" = "xyes"; then
   PKG_CHECK_MODULES(FFMPEG, libavformat libavcodec libavutil) 
-  PKG_CHECK_MODULES(POSTPROC, libpostproc libavcodec libavutil)
+  if test "x$enable_lgpl" != "xyes"; then
+    PKG_CHECK_MODULES(POSTPROC, libpostproc libavcodec libavutil)
+  fi
   PKG_CHECK_MODULES(SWSCALE, libswscale libavutil)
   saved_CPPFLAGS="$CPPFLAGS"
   CPPFLAGS="$CPPFLAGS $FFMPEG_CFLAGS"
@@ -306,10 +315,15 @@ else
 
   # Enable pic and static so that we get .a files, but with PIC code.
   embffmpeg_configure_args="$embffmpeg_configure_args --disable-avserver --disable-avplay\
-        --disable-ffmpeg --disable-avprobe --enable-postproc --enable-gpl --enable-static --enable-pic \
+        --disable-ffmpeg --disable-avprobe --enable-postproc --enable-static --enable-pic \
 	--disable-encoder=flac --disable-decoder=cavs --disable-protocols --disable-devices\
 	--disable-network --disable-hwaccels --disable-filters --disable-doc\
 	--enable-optimizations"
+
+  if test "x$enable_lgpl" != "xyes"; then
+    embffmpeg_configure_args="$embffmpeg_configure_args --enable-postproc \
+        --enable-gpl"
+  fi
 
   # if we are cross-compiling, tell ffmpeg so
   target_os=`echo $host_os | sed 's/-gnu//'`

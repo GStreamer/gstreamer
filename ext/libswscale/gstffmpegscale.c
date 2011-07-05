@@ -821,4 +821,10 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     "ffvideoscale",
     "videoscaling element (" FFMPEG_SOURCE ")",
     plugin_init,
-    PACKAGE_VERSION, "GPL", "FFMpeg", "http://ffmpeg.sourceforge.net/")
+    PACKAGE_VERSION,
+#ifdef GST_FFMPEG_ENABLE_LGPL
+    "LGPL",
+#else
+    "GPL",
+#endif
+    "FFMpeg", "http://ffmpeg.sourceforge.net/")
