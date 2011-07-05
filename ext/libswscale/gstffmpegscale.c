@@ -467,7 +467,8 @@ gst_ffmpegscale_get_unit_size (GstBaseTransform * trans, GstCaps * caps,
   *size = info.size;
 
   GST_DEBUG_OBJECT (trans, "unit size = %d for format %d w %d height %d",
-      *size, info.format, info.width, info.height);
+      *size, GST_VIDEO_INFO_FORMAT (&info), GST_VIDEO_INFO_WIDTH (&info),
+      GST_VIDEO_INFO_HEIGHT (&info));
 
   return TRUE;
 }
@@ -582,13 +583,17 @@ gst_ffmpegscale_set_caps (GstBaseTransform * trans, GstCaps * incaps,
 
   if (!ok || scale->in_pixfmt == PIX_FMT_NONE ||
       scale->out_pixfmt == PIX_FMT_NONE ||
-      scale->in_info.format == GST_VIDEO_FORMAT_UNKNOWN ||
-      scale->out_info.format == GST_VIDEO_FORMAT_UNKNOWN)
+      GST_VIDEO_INFO_FORMAT (&scale->in_info) == GST_VIDEO_FORMAT_UNKNOWN ||
+      GST_VIDEO_INFO_FORMAT (&scale->out_info) == GST_VIDEO_FORMAT_UNKNOWN)
     goto refuse_caps;
 
   GST_DEBUG_OBJECT (scale, "format %d => %d, from=%dx%d -> to=%dx%d",
-      scale->in_info.format, scale->out_info.format, scale->in_info.width,
-      scale->in_info.height, scale->out_info.width, scale->out_info.height);
+      GST_VIDEO_INFO_FORMAT (&scale->in_info),
+      GST_VIDEO_INFO_FORMAT (&scale->out_info),
+      GST_VIDEO_INFO_WIDTH (&scale->in_info),
+      GST_VIDEO_INFO_HEIGHT (&scale->in_info),
+      GST_VIDEO_INFO_WIDTH (&scale->out_info),
+      GST_VIDEO_INFO_HEIGHT (&scale->out_info));
 
 #ifdef HAVE_ORC
   mmx_flags = orc_target_get_default_flags (orc_target_get_by_name ("mmx"));
