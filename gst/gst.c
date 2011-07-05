@@ -757,6 +757,7 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
   g_type_class_ref (gst_caps_intersect_mode_get_type ());
   g_type_class_ref (gst_probe_type_get_type ());
   g_type_class_ref (gst_probe_return_get_type ());
+  g_type_class_ref (gst_segment_flags_get_type ());
 
   _gst_event_initialize ();
   _gst_buffer_initialize ();
@@ -1126,6 +1127,7 @@ gst_deinit (void)
   g_type_class_unref (g_type_class_peek (gst_caps_intersect_mode_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_probe_type_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_probe_return_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_segment_flags_get_type ()));
 
   gst_deinitialized = TRUE;
   GST_INFO ("deinitialized GStreamer");
