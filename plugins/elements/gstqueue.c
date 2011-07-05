@@ -540,6 +540,7 @@ update_time_level (GstQueue * queue)
   gint64 sink_time, src_time;
 
   if (queue->sink_tainted) {
+    GST_LOG_OBJECT (queue, "update sink time");
     queue->sinktime =
         gst_segment_to_running_time (&queue->sink_segment, GST_FORMAT_TIME,
         queue->sink_segment.position);
@@ -548,6 +549,7 @@ update_time_level (GstQueue * queue)
   sink_time = queue->sinktime;
 
   if (queue->src_tainted) {
+    GST_LOG_OBJECT (queue, "update src time");
     queue->srctime =
         gst_segment_to_running_time (&queue->src_segment, GST_FORMAT_TIME,
         queue->src_segment.position);

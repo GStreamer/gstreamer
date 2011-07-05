@@ -553,6 +553,7 @@ GST_START_TEST (test_time_level_task_not_started)
   segment.start = 1 * GST_SECOND;
   segment.stop = 5 * GST_SECOND;
   segment.time = 0;
+  segment.position = 1 * GST_SECOND;
 
   event = gst_event_new_segment (&segment);
   gst_pad_push_event (mysrcpad, event);
@@ -565,6 +566,7 @@ GST_START_TEST (test_time_level_task_not_started)
   gst_pad_push_event (mysrcpad, event);
 
   g_object_get (G_OBJECT (queue), "current-level-time", &time, NULL);
+  GST_DEBUG ("time now %" GST_TIME_FORMAT, GST_TIME_ARGS (time));
   fail_if (time != 4 * GST_SECOND);
 
   GST_DEBUG ("stopping");
