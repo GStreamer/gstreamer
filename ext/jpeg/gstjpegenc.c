@@ -68,9 +68,6 @@ enum
 };
 
 static void gst_jpegenc_reset (GstJpegEnc * enc);
-static void gst_jpegenc_base_init (gpointer g_class);
-static void gst_jpegenc_class_init (GstJpegEnc * klass);
-static void gst_jpegenc_init (GstJpegEnc * jpegenc);
 static void gst_jpegenc_finalize (GObject * object);
 
 static GstFlowReturn gst_jpegenc_chain (GstPad * pad, GstBuffer * buf);
@@ -85,46 +82,19 @@ static void gst_jpegenc_get_property (GObject * object, guint prop_id,
 static GstStateChangeReturn gst_jpegenc_change_state (GstElement * element,
     GstStateChange transition);
 
-
-static GstElementClass *parent_class = NULL;
 static guint gst_jpegenc_signals[LAST_SIGNAL] = { 0 };
 
-GType
-gst_jpegenc_get_type (void)
-{
-  static GType jpegenc_type = 0;
-
-  if (!jpegenc_type) {
-    static const GTypeInfo jpegenc_info = {
-      sizeof (GstJpegEnc),
-      (GBaseInitFunc) gst_jpegenc_base_init,
-      NULL,
-      (GClassInitFunc) gst_jpegenc_class_init,
-      NULL,
-      NULL,
-      sizeof (GstJpegEnc),
-      0,
-      (GInstanceInitFunc) gst_jpegenc_init,
-    };
-
-    jpegenc_type =
-        g_type_register_static (GST_TYPE_ELEMENT, "GstJpegEnc", &jpegenc_info,
-        0);
-  }
-  return jpegenc_type;
-}
+#define gst_jpegenc_parent_class parent_class
+G_DEFINE_TYPE (GstJpegEnc, gst_jpegenc, GST_TYPE_ELEMENT);
 
 /* *INDENT-OFF* */
 static GstStaticPadTemplate gst_jpegenc_sink_pad_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV
-        ("{ I420, YV12, YUY2, UYVY, Y41B, Y42B, YVYU, Y444 }") "; "
-        GST_VIDEO_CAPS_RGB "; " GST_VIDEO_CAPS_BGR "; "
-        GST_VIDEO_CAPS_RGBx "; " GST_VIDEO_CAPS_xRGB "; "
-        GST_VIDEO_CAPS_BGRx "; " GST_VIDEO_CAPS_xBGR "; "
-        GST_VIDEO_CAPS_GRAY8)
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE
+        ("{ I420, YV12, YUY2, UYVY, Y41B, Y42B, YVYU, Y444, "
+         "RGB, BGR, RGBx, xRGB, BGRx, xBGR, GRAY8 }"))
     );
 /* *INDENT-ON* */
 
@@ -137,22 +107,9 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "height = (int) [ 16, 65535 ], " "framerate = (fraction) [ 0/1, MAX ]")
     );
 
-static void
-gst_jpegenc_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_jpegenc_sink_pad_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_jpegenc_src_pad_template));
-  gst_element_class_set_details_simple (element_class, "JPEG image encoder",
-      "Codec/Encoder/Image",
-      "Encode images in JPEG format", "Wim Taymans <wim.taymans@tvd.be>");
-}
 
 static void
-gst_jpegenc_class_init (GstJpegEnc * klass)
+gst_jpegenc_class_init (GstJpegEncClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -160,16 +117,14 @@ gst_jpegenc_class_init (GstJpegEnc * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  parent_class = g_type_class_peek_parent (klass);
+  gobject_class->finalize = gst_jpegenc_finalize;
+  gobject_class->set_property = gst_jpegenc_set_property;
+  gobject_class->get_property = gst_jpegenc_get_property;
 
   gst_jpegenc_signals[FRAME_ENCODED] =
       g_signal_new ("frame-encoded", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstJpegEncClass, frame_encoded), NULL,
       NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
-
-  gobject_class->set_property = gst_jpegenc_set_property;
-  gobject_class->get_property = gst_jpegenc_get_property;
-
 
   g_object_class_install_property (gobject_class, PROP_QUALITY,
       g_param_spec_int ("quality", "Quality", "Quality of encoding",
@@ -192,7 +147,13 @@ gst_jpegenc_class_init (GstJpegEnc * klass)
 
   gstelement_class->change_state = gst_jpegenc_change_state;
 
-  gobject_class->finalize = gst_jpegenc_finalize;
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_jpegenc_sink_pad_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_jpegenc_src_pad_template));
+  gst_element_class_set_details_simple (gstelement_class, "JPEG image encoder",
+      "Codec/Encoder/Image",
+      "Encode images in JPEG format", "Wim Taymans <wim.taymans@tvd.be>");
 
   GST_DEBUG_CATEGORY_INIT (jpegenc_debug, "jpegenc", 0,
       "JPEG encoding element");
@@ -216,6 +177,7 @@ gst_jpegenc_flush_destination (j_compress_ptr cinfo)
   /* Our output buffer wasn't big enough.
    * Make a new buffer that's twice the size, */
   old_buffer_size = GST_BUFFER_SIZE (jpegenc->output_buffer);
+
   gst_pad_alloc_buffer_and_set_caps (jpegenc->srcpad,
       GST_BUFFER_OFFSET_NONE, old_buffer_size * 2,
       GST_PAD_CAPS (jpegenc->srcpad), &overflow_buffer);
