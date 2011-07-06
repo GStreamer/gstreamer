@@ -88,7 +88,7 @@ gst_decklink_connection_get_type (void)
 
 #define NTSC 10, 11, false, false
 #define PAL 12, 11, true, false
-#define HD 12, 11, false, true
+#define HD 1, 1, false, true
 
 static const GstDecklinkMode modes[] = {
   {bmdModeNTSC, 720, 486, 30000, 1001, true, NTSC },
