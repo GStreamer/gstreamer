@@ -1346,12 +1346,16 @@ again:
     GST_WARNING_OBJECT (dec, "reading the header failed, %d", hdr_ok);
   }
 
+  GST_LOG_OBJECT (dec, "num_components=%d", dec->cinfo.num_components);
+  GST_LOG_OBJECT (dec, "jpeg_color_space=%d", dec->cinfo.jpeg_color_space);
+
+  if (!dec->cinfo.num_components || !dec->cinfo.comp_info)
+    goto components_not_supported;
+
   r_h = dec->cinfo.comp_info[0].h_samp_factor;
   r_v = dec->cinfo.comp_info[0].v_samp_factor;
 
   GST_LOG_OBJECT (dec, "r_h = %d, r_v = %d", r_h, r_v);
-  GST_LOG_OBJECT (dec, "num_components=%d", dec->cinfo.num_components);
-  GST_LOG_OBJECT (dec, "jpeg_color_space=%d", dec->cinfo.jpeg_color_space);
 
   if (dec->cinfo.num_components > 3)
     goto components_not_supported;
@@ -1624,7 +1628,8 @@ drop_buffer:
 components_not_supported:
   {
     gst_jpeg_dec_set_error (dec, GST_FUNCTION, __LINE__,
-        "more components than supported: %d > 3", dec->cinfo.num_components);
+        "number of components not supported: %d (max 3)",
+        dec->cinfo.num_components);
     ret = GST_FLOW_ERROR;
     goto done;
   }

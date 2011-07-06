@@ -64,7 +64,7 @@ struct _GstPulseSink
   gboolean mute:1;
   gboolean mute_set:1;
 
-  gboolean pa_defer_ran:1;
+  guint defer_pending;
 
   gint notify; /* atomic */
 

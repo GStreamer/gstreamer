@@ -988,6 +988,7 @@ gst_pulseringbuffer_clear (GstRingBuffer * buf)
   pa_threaded_mainloop_unlock (mainloop);
 }
 
+/* called from pulse with the mainloop lock */
 static void
 mainloop_enter_defer_cb (pa_mainloop_api * api, void *userdata)
 {
@@ -1005,8 +1006,8 @@ mainloop_enter_defer_cb (pa_mainloop_api * api, void *userdata)
 
   gst_element_post_message (GST_ELEMENT (pulsesink), message);
 
-  /* signal the waiter */
-  pulsesink->pa_defer_ran = TRUE;
+  g_return_if_fail (pulsesink->defer_pending);
+  pulsesink->defer_pending--;
   pa_threaded_mainloop_signal (mainloop, 0);
 }
 
@@ -1023,7 +1024,7 @@ gst_pulseringbuffer_start (GstRingBuffer * buf)
   pa_threaded_mainloop_lock (mainloop);
 
   GST_DEBUG_OBJECT (psink, "scheduling stream status");
-  psink->pa_defer_ran = FALSE;
+  psink->defer_pending++;
   pa_mainloop_api_once (pa_threaded_mainloop_get_api (mainloop),
       mainloop_enter_defer_cb, psink);
 
@@ -1066,6 +1067,7 @@ gst_pulseringbuffer_pause (GstRingBuffer * buf)
   return res;
 }
 
+/* called from pulse with the mainloop lock */
 static void
 mainloop_leave_defer_cb (pa_mainloop_api * api, void *userdata)
 {
@@ -1082,9 +1084,9 @@ mainloop_leave_defer_cb (pa_mainloop_api * api, void *userdata)
   gst_message_set_stream_status_object (message, &val);
   gst_element_post_message (GST_ELEMENT (pulsesink), message);
 
-  pulsesink->pa_defer_ran = TRUE;
+  g_return_if_fail (pulsesink->defer_pending);
+  pulsesink->defer_pending--;
   pa_threaded_mainloop_signal (mainloop, 0);
-  gst_object_unref (pulsesink);
 }
 
 /* stop playback, we flush everything. */
@@ -1128,12 +1130,10 @@ cleanup:
   }
 
   GST_DEBUG_OBJECT (psink, "scheduling stream status");
-  psink->pa_defer_ran = FALSE;
-  gst_object_ref (psink);
+  psink->defer_pending++;
   pa_mainloop_api_once (pa_threaded_mainloop_get_api (mainloop),
       mainloop_leave_defer_cb, psink);
 
-  GST_DEBUG_OBJECT (psink, "waiting for stream status");
   pa_threaded_mainloop_unlock (mainloop);
 
   return res;
@@ -2519,6 +2519,30 @@ gst_pulsesink_event (GstBaseSink * sink, GstEvent * event)
   return GST_BASE_SINK_CLASS (parent_class)->event (sink, event);
 }
 
+static void
+gst_pulsesink_release_mainloop (GstPulseSink * psink)
+{
+  if (!mainloop)
+    return;
+
+  pa_threaded_mainloop_lock (mainloop);
+  while (psink->defer_pending) {
+    GST_DEBUG_OBJECT (psink, "waiting for stream status message emission");
+    pa_threaded_mainloop_wait (mainloop);
+  }
+  pa_threaded_mainloop_unlock (mainloop);
+
+  g_mutex_lock (pa_shared_resource_mutex);
+  mainloop_ref_ct--;
+  if (!mainloop_ref_ct) {
+    GST_INFO_OBJECT (psink, "terminating pa main loop thread");
+    pa_threaded_mainloop_stop (mainloop);
+    pa_threaded_mainloop_free (mainloop);
+    mainloop = NULL;
+  }
+  g_mutex_unlock (pa_shared_resource_mutex);
+}
+
 static GstStateChangeReturn
 gst_pulsesink_change_state (GstElement * element, GstStateChange transition)
 {
@@ -2561,17 +2585,7 @@ gst_pulsesink_change_state (GstElement * element, GstStateChange transition)
               GST_BASE_AUDIO_SINK (pulsesink)->provided_clock));
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
-      if (mainloop) {
-        g_mutex_lock (pa_shared_resource_mutex);
-        mainloop_ref_ct--;
-        if (!mainloop_ref_ct) {
-          GST_INFO_OBJECT (element, "terminating pa main loop thread");
-          pa_threaded_mainloop_stop (mainloop);
-          pa_threaded_mainloop_free (mainloop);
-          mainloop = NULL;
-        }
-        g_mutex_unlock (pa_shared_resource_mutex);
-      }
+      gst_pulsesink_release_mainloop (pulsesink);
       break;
     default:
       break;
@@ -2592,15 +2606,7 @@ state_failure:
     if (transition == GST_STATE_CHANGE_NULL_TO_READY) {
       /* Clear the PA mainloop if baseaudiosink failed to open the ring_buffer */
       g_assert (mainloop);
-      g_mutex_lock (pa_shared_resource_mutex);
-      mainloop_ref_ct--;
-      if (!mainloop_ref_ct) {
-        GST_INFO_OBJECT (element, "terminating pa main loop thread");
-        pa_threaded_mainloop_stop (mainloop);
-        pa_threaded_mainloop_free (mainloop);
-        mainloop = NULL;
-      }
-      g_mutex_unlock (pa_shared_resource_mutex);
+      gst_pulsesink_release_mainloop (pulsesink);
     }
     return ret;
   }
