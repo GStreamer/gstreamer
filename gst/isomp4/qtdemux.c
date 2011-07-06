@@ -1644,7 +1644,8 @@ gst_qtdemux_handle_sink_event (GstPad * sinkpad, GstEvent * event)
           } else {
             gst_qtdemux_find_sample (demux, segment.start, TRUE, FALSE, NULL,
                 NULL, (gint64 *) & segment.start);
-            segment.start = MAX (segment.start, 0);
+            if ((gint64) segment.start < 0)
+              segment.start = 0;
           }
         }
         if (GST_CLOCK_TIME_IS_VALID (segment.stop)) {
