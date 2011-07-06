@@ -23,6 +23,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstbasesink.h>
+#include <gst/video/video.h>
 
 #include <aalib.h>
 
@@ -48,8 +49,7 @@ typedef struct _GstAASinkClass GstAASinkClass;
 struct _GstAASink {
   GstBaseSink parent;
 
-  gulong format;
-  gint width, height;
+  GstVideoInfo info;
 
   gint frames_displayed;
   guint64 frame_time;
@@ -63,10 +63,6 @@ struct _GstAASink {
 
 struct _GstAASinkClass {
   GstBaseSinkClass parent_class;
-
-  /* signals */
-  void (*frame_displayed) (GstElement *element);
-  void (*have_size)       (GstElement *element, guint width, guint height);
 };
 
 GType gst_aasink_get_type(void);

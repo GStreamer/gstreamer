@@ -41,13 +41,10 @@
 #include <sys/time.h>
 
 #include "gstaasink.h"
-#include <gst/video/video.h>
 
 /* aasink signals and args */
 enum
 {
-  SIGNAL_FRAME_DISPLAYED,
-  SIGNAL_HAVE_SIZE,
   LAST_SIGNAL
 };
 
@@ -71,7 +68,7 @@ enum
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("I420"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("I420"))
     );
 
 static gboolean gst_aasink_setcaps (GstBaseSink * pad, GstCaps * caps);
@@ -87,8 +84,6 @@ static void gst_aasink_get_property (GObject * object, guint prop_id,
 
 static GstStateChangeReturn gst_aasink_change_state (GstElement * element,
     GstStateChange transition);
-
-static guint gst_aasink_signals[LAST_SIGNAL] = { 0 };
 
 #define gst_aasink_parent_class parent_class
 G_DEFINE_TYPE (GstAASink, gst_aasink, GST_TYPE_BASE_SINK);
@@ -208,15 +203,6 @@ gst_aasink_class_init (GstAASinkClass * klass)
       g_param_spec_int ("frame-time", "frame time", "frame time", G_MININT,
           G_MAXINT, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
-  gst_aasink_signals[SIGNAL_FRAME_DISPLAYED] =
-      g_signal_new ("frame-displayed", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstAASinkClass, frame_displayed),
-      NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
-  gst_aasink_signals[SIGNAL_HAVE_SIZE] =
-      g_signal_new ("have-size", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
-      G_STRUCT_OFFSET (GstAASinkClass, have_size), NULL, NULL,
-      gst_marshal_VOID__INT_INT, G_TYPE_NONE, 2, G_TYPE_UINT, G_TYPE_UINT);
-
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sink_template));
 
@@ -249,23 +235,23 @@ gst_aasink_setcaps (GstBaseSink * basesink, GstCaps * caps)
 {
   GstAASink *aasink;
   GstStructure *structure;
+  GstVideoInfo info;
 
   aasink = GST_AASINK (basesink);
 
-  structure = gst_caps_get_structure (caps, 0);
-  gst_structure_get_int (structure, "width", &aasink->width);
-  gst_structure_get_int (structure, "height", &aasink->height);
+  if (!gst_video_info_from_caps (&info, caps))
+    goto invalid_caps;
 
-  /* FIXME aasink->format is never set */
-  g_print ("%d %d\n", aasink->width, aasink->height);
-
-  GST_DEBUG ("aasink: setting %08lx (%" GST_FOURCC_FORMAT ")",
-      aasink->format, GST_FOURCC_ARGS (aasink->format));
-
-  g_signal_emit (G_OBJECT (aasink), gst_aasink_signals[SIGNAL_HAVE_SIZE], 0,
-      aasink->width, aasink->height);
+  aasink->info = info;
 
   return TRUE;
+
+  /* ERRORS */
+invalid_caps:
+  {
+    GST_DEBUG_OBJECT (aasink, "invalid caps");
+    return FALSE;
+  }
 }
 
 static void
@@ -285,10 +271,6 @@ gst_aasink_init (GstAASink * aasink)
   aasink->ascii_parms.inversion = 0;
   aasink->ascii_parms.randomval = 0;
   aasink->aa_driver = 0;
-
-  aasink->width = -1;
-  aasink->height = -1;
-
 }
 
 static void
@@ -342,16 +324,19 @@ gst_aasink_render (GstBaseSink * basesink, GstBuffer * buffer)
 {
   GstAASink *aasink;
   guint8 *data;
+  GstVideoFrame frame;
 
   aasink = GST_AASINK (basesink);
 
   GST_DEBUG ("render");
 
-  data = gst_buffer_map (buffer, NULL, NULL, GST_MAP_READ);
-  gst_aasink_scale (aasink, data,       /* src */
+  if (!gst_video_frame_map (&frame, &aasink->info, buffer, GST_MAP_READ))
+    goto invalid_frame;
+
+  gst_aasink_scale (aasink, GST_VIDEO_FRAME_PLANE_DATA (&frame, 0),     /* src */
       aa_image (aasink->context),       /* dest */
-      aasink->width,            /* sw */
-      aasink->height,           /* sh */
+      GST_VIDEO_INFO_WIDTH (&aasink->info),     /* sw */
+      GST_VIDEO_INFO_HEIGHT (&aasink->info),    /* sh */
       aa_imgwidth (aasink->context),    /* dw */
       aa_imgheight (aasink->context));  /* dh */
 
@@ -359,9 +344,16 @@ gst_aasink_render (GstBaseSink * basesink, GstBuffer * buffer)
       0, 0, aa_imgwidth (aasink->context), aa_imgheight (aasink->context));
   aa_flush (aasink->context);
   aa_getevent (aasink->context, FALSE);
-  gst_buffer_unmap (buffer, data, -1);
+  gst_video_frame_unmap (&frame);
 
   return GST_FLOW_OK;
+
+  /* ERRORS */
+invalid_frame:
+  {
+    GST_DEBUG_OBJECT (aasink, "invalid frame");
+    return GST_FLOW_ERROR;
+  }
 }
 
 
