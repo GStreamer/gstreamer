@@ -354,9 +354,23 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
   } else if (buf->omx_buf->nFilledLen > 0) {
     if (gst_base_video_decoder_alloc_src_frame (GST_BASE_VIDEO_DECODER (self),
             frame) == GST_FLOW_OK) {
-      memcpy (GST_BUFFER_DATA (frame->src_buffer),
-          buf->omx_buf->pBuffer + buf->omx_buf->nOffset,
-          buf->omx_buf->nFilledLen);
+      /* FIXME: This currently happens because of a race condition too.
+       * We first need to reconfigure the output port and then the input
+       * port if both need reconfiguration.
+       */
+      if (GST_BUFFER_SIZE (frame->src_buffer) >= buf->omx_buf->nFilledLen) {
+        memcpy (GST_BUFFER_DATA (frame->src_buffer),
+            buf->omx_buf->pBuffer + buf->omx_buf->nOffset,
+            buf->omx_buf->nFilledLen);
+      } else {
+        GST_ERROR_OBJECT (self, "Invalid frame size (%u < %u)",
+            GST_BUFFER_SIZE (frame->src_buffer), buf->omx_buf->nFilledLen);
+        gst_buffer_replace (&frame->src_buffer, NULL);
+        g_slice_free (BufferIdentification, frame->coder_hook);
+        gst_base_video_decoder_finish_frame (GST_BASE_VIDEO_DECODER (self),
+            frame);
+        goto invalid_frame_size;
+      }
     }
     g_slice_free (BufferIdentification, frame->coder_hook);
     flow_ret =
@@ -418,6 +432,14 @@ reconfigure_error:
   {
     GST_ELEMENT_ERROR (self, LIBRARY, SETTINGS, (NULL),
         ("Unable to reconfigure output port"));
+    gst_pad_push_event (GST_BASE_VIDEO_CODEC_SRC_PAD (self),
+        gst_event_new_eos ());
+    gst_pad_pause_task (GST_BASE_VIDEO_CODEC_SRC_PAD (self));
+    return;
+  }
+invalid_frame_size:
+  {
+    GST_ELEMENT_ERROR (self, LIBRARY, SETTINGS, (NULL), ("Invalid frame size"));
     gst_pad_push_event (GST_BASE_VIDEO_CODEC_SRC_PAD (self),
         gst_event_new_eos ());
     gst_pad_pause_task (GST_BASE_VIDEO_CODEC_SRC_PAD (self));
