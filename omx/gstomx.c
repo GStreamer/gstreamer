@@ -1186,13 +1186,14 @@ gst_omx_port_set_enabled_unlocked (GstOMXPort * port, gboolean enabled)
 
   if (!signalled) {
     GST_ERROR_OBJECT (comp->parent,
-        "Timeout waiting for port %u to be enabled/disabled", port->index);
+        "Timeout waiting for port %u to be %s", port->index,
+        (enabled ? "enabled" : "disabled"));
     err = OMX_ErrorTimeout;
     gst_omx_component_set_last_error (comp, err);
   } else if (last_error != OMX_ErrorNone) {
     GST_ERROR_OBJECT (comp->parent,
-        "Got error while waiting for port %u to be enabled/disabled: %d",
-        port->index, err);
+        "Got error while waiting for port %u to be %s: %d",
+        port->index, (enabled ? "enabled" : "disabled"), err);
     err = last_error;
   }
 
