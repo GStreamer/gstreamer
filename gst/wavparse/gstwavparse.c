@@ -83,7 +83,7 @@ static void gst_wavparse_loop (GstPad * pad);
 static gboolean gst_wavparse_srcpad_event (GstPad * pad, GstEvent * event);
 
 static GstStaticPadTemplate sink_template_factory =
-GST_STATIC_PAD_TEMPLATE ("wavparse_sink",
+GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-wav")
@@ -117,8 +117,8 @@ gst_wavparse_class_init (GstWavParseClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sink_template_factory));
 
-  src_template = gst_pad_template_new ("wavparse_src", GST_PAD_SRC,
-      GST_PAD_SOMETIMES, gst_riff_create_audio_template_caps ());
+  src_template = gst_pad_template_new ("src", GST_PAD_SRC,
+      GST_PAD_ALWAYS, gst_riff_create_audio_template_caps ());
   gst_element_class_add_pad_template (gstelement_class, src_template);
 
   gst_element_class_set_details_simple (gstelement_class, "WAV audio demuxer",
@@ -197,8 +197,18 @@ gst_wavparse_init (GstWavParse * wavparse)
       GST_DEBUG_FUNCPTR (gst_wavparse_sink_event));
   gst_element_add_pad (GST_ELEMENT_CAST (wavparse), wavparse->sinkpad);
 
-  /* src, will be created later */
-  wavparse->srcpad = NULL;
+  /* src */
+  wavparse->srcpad =
+      gst_pad_new_from_template (gst_element_class_get_pad_template
+      (GST_ELEMENT_GET_CLASS (wavparse), "src"), "src");
+  gst_pad_use_fixed_caps (wavparse->srcpad);
+  gst_pad_set_query_type_function (wavparse->srcpad,
+      GST_DEBUG_FUNCPTR (gst_wavparse_get_query_types));
+  gst_pad_set_query_function (wavparse->srcpad,
+      GST_DEBUG_FUNCPTR (gst_wavparse_pad_query));
+  gst_pad_set_event_function (wavparse->srcpad,
+      GST_DEBUG_FUNCPTR (gst_wavparse_srcpad_event));
+  gst_element_add_pad (GST_ELEMENT_CAST (wavparse), wavparse->srcpad);
 }
 
 static void
@@ -208,29 +218,6 @@ gst_wavparse_destroy_sourcepad (GstWavParse * wavparse)
     gst_element_remove_pad (GST_ELEMENT_CAST (wavparse), wavparse->srcpad);
     wavparse->srcpad = NULL;
   }
-}
-
-static void
-gst_wavparse_create_sourcepad (GstWavParse * wavparse)
-{
-  GstElementClass *klass = GST_ELEMENT_GET_CLASS (wavparse);
-  GstPadTemplate *src_template;
-
-  /* destroy previous one */
-  gst_wavparse_destroy_sourcepad (wavparse);
-
-  /* source */
-  src_template = gst_element_class_get_pad_template (klass, "wavparse_src");
-  wavparse->srcpad = gst_pad_new_from_template (src_template, "src");
-  gst_pad_use_fixed_caps (wavparse->srcpad);
-  gst_pad_set_query_type_function (wavparse->srcpad,
-      GST_DEBUG_FUNCPTR (gst_wavparse_get_query_types));
-  gst_pad_set_query_function (wavparse->srcpad,
-      GST_DEBUG_FUNCPTR (gst_wavparse_pad_query));
-  gst_pad_set_event_function (wavparse->srcpad,
-      GST_DEBUG_FUNCPTR (gst_wavparse_srcpad_event));
-
-  GST_DEBUG_OBJECT (wavparse, "srcpad created");
 }
 
 /* Compute (value * nom) % denom, avoiding overflow.  This can be used
@@ -1781,13 +1768,8 @@ gst_wavparse_add_src_pad (GstWavParse * wav, GstBuffer * buf)
     }
   }
 
-  gst_wavparse_create_sourcepad (wav);
-  gst_pad_set_active (wav->srcpad, TRUE);
   gst_pad_set_caps (wav->srcpad, wav->caps);
   gst_caps_replace (&wav->caps, NULL);
-
-  gst_element_add_pad (GST_ELEMENT_CAST (wav), wav->srcpad);
-  gst_element_no_more_pads (GST_ELEMENT_CAST (wav));
 
   if (wav->start_segment) {
     GST_DEBUG_OBJECT (wav, "Send start segment event on newpad");
@@ -2174,6 +2156,12 @@ gst_wavparse_sink_event (GstPad * pad, GstEvent * event)
   GST_LOG_OBJECT (wav, "handling %s event", GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+    {
+      /* discard, we'll come up with proper src caps */
+      gst_event_unref (event);
+      break;
+    }
     case GST_EVENT_SEGMENT:
     {
       gint64 start, stop, offset = 0, end_offset = -1;
