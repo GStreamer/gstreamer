@@ -54,7 +54,7 @@ struct _GstOMXCore {
 
 struct _GstOMXPort {
   GstOMXComponent *comp;
-  OMX_U32 index;
+  guint32 index;
 
   /* Protects port_def, buffers, pending_buffers,
    * settings_changed, flushing and flushed.
@@ -121,6 +121,7 @@ void              gst_omx_component_free (GstOMXComponent * comp);
 OMX_ERRORTYPE     gst_omx_component_set_state (GstOMXComponent * comp, OMX_STATETYPE state);
 OMX_STATETYPE     gst_omx_component_get_state (GstOMXComponent * comp, GstClockTime timeout);
 
+void              gst_omx_component_set_last_error (GstOMXComponent * comp, OMX_ERRORTYPE err);
 OMX_ERRORTYPE     gst_omx_component_get_last_error (GstOMXComponent * comp);
 
 GstOMXPort *      gst_omx_component_add_port (GstOMXComponent * comp, guint32 index);
@@ -131,7 +132,7 @@ void              gst_omx_port_get_port_definition (GstOMXPort * port, OMX_PARAM
 gboolean          gst_omx_port_update_port_definition (GstOMXPort *port, OMX_PARAM_PORTDEFINITIONTYPE *port_definition);
 
 GstOMXBuffer *    gst_omx_port_acquire_buffer (GstOMXPort *port);
-OMX_ERRORTYPE     gst_omx_port_release_buffer (GstOMXPort *port, GstOMXBuffer *buffer);
+OMX_ERRORTYPE     gst_omx_port_release_buffer (GstOMXPort *port, GstOMXBuffer *buf);
 
 OMX_ERRORTYPE     gst_omx_port_set_flushing (GstOMXPort *port, gboolean flush);
 gboolean          gst_omx_port_is_flushing (GstOMXPort *port);
