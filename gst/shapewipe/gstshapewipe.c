@@ -96,11 +96,10 @@ enum
 #define DEFAULT_BORDER 0.0
 
 static GstStaticPadTemplate video_sink_pad_template =
-    GST_STATIC_PAD_TEMPLATE ("video_sink",
+GST_STATIC_PAD_TEMPLATE ("video_sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("AYUV") " ; " GST_VIDEO_CAPS_ARGB " ; "
-        GST_VIDEO_CAPS_BGRA ";" GST_VIDEO_CAPS_ABGR ";" GST_VIDEO_CAPS_RGBA));
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ AYUV, ARGB, BGRA, ABGR, RGBA }")));
 
 static GstStaticPadTemplate mask_sink_pad_template =
     GST_STATIC_PAD_TEMPLATE ("mask_sink",
@@ -116,33 +115,14 @@ static GstStaticPadTemplate mask_sink_pad_template =
         "height = " GST_VIDEO_SIZE_RANGE ", " "framerate = 0/1"));
 
 static GstStaticPadTemplate src_pad_template =
-    GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("AYUV") " ; " GST_VIDEO_CAPS_ARGB " ; "
-        GST_VIDEO_CAPS_BGRA ";" GST_VIDEO_CAPS_ABGR ";" GST_VIDEO_CAPS_RGBA));
+GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ AYUV, ARGB, BGRA, ABGR, RGBA }")));
 
 GST_DEBUG_CATEGORY_STATIC (gst_shape_wipe_debug);
 #define GST_CAT_DEFAULT gst_shape_wipe_debug
 
-GST_BOILERPLATE (GstShapeWipe, gst_shape_wipe, GstElement, GST_TYPE_ELEMENT);
-
-static void
-gst_shape_wipe_base_init (gpointer g_class)
-{
-  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (gstelement_class,
-      "Shape Wipe transition filter",
-      "Filter/Editor/Video",
-      "Adds a shape wipe transition to a video stream",
-      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
-
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&video_sink_pad_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&mask_sink_pad_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&src_pad_template));
-}
+#define gst_shape_wipe_parent_class parent_class
+G_DEFINE_TYPE (GstShapeWipe, gst_shape_wipe, GST_TYPE_ELEMENT);
 
 static void
 gst_shape_wipe_class_init (GstShapeWipeClass * klass)
@@ -165,10 +145,23 @@ gst_shape_wipe_class_init (GstShapeWipeClass * klass)
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_shape_wipe_change_state);
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "Shape Wipe transition filter",
+      "Filter/Editor/Video",
+      "Adds a shape wipe transition to a video stream",
+      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&video_sink_pad_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&mask_sink_pad_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&src_pad_template));
 }
 
 static void
-gst_shape_wipe_init (GstShapeWipe * self, GstShapeWipeClass * g_class)
+gst_shape_wipe_init (GstShapeWipe * self)
 {
   self->video_sinkpad =
       gst_pad_new_from_static_template (&video_sink_pad_template, "video_sink");
