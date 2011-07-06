@@ -108,6 +108,8 @@ gst_dicetv_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
       GST_VIDEO_INFO_WIDTH (&info));
   gst_dicetv_create_map (filter);
 
+  filter->info = info;
+
   return TRUE;
 
   /* ERRORS */
