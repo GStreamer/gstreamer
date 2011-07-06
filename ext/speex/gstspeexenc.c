@@ -135,7 +135,7 @@ gst_speex_enc_get_formats (GstPad * pad)
 
 static void gst_speex_enc_finalize (GObject * object);
 
-static gboolean gst_speex_enc_sinkevent (GstPad * pad, GstEvent * event);
+static gboolean gst_speex_enc_sink_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_speex_enc_chain (GstPad * pad, GstBuffer * buf);
 static gboolean gst_speex_enc_setup (GstSpeexEnc * enc);
 
@@ -148,40 +148,10 @@ static GstStateChangeReturn gst_speex_enc_change_state (GstElement * element,
 
 static GstFlowReturn gst_speex_enc_encode (GstSpeexEnc * enc, gboolean flush);
 
-static void
-gst_speex_enc_setup_interfaces (GType speexenc_type)
-{
-  static const GInterfaceInfo tag_setter_info = { NULL, NULL, NULL };
-  const GInterfaceInfo preset_interface_info = {
-    NULL,                       /* interface_init */
-    NULL,                       /* interface_finalize */
-    NULL                        /* interface_data */
-  };
-
-  g_type_add_interface_static (speexenc_type, GST_TYPE_TAG_SETTER,
-      &tag_setter_info);
-  g_type_add_interface_static (speexenc_type, GST_TYPE_PRESET,
-      &preset_interface_info);
-
-  GST_DEBUG_CATEGORY_INIT (speexenc_debug, "speexenc", 0, "Speex encoder");
-}
-
-GST_BOILERPLATE_FULL (GstSpeexEnc, gst_speex_enc, GstElement, GST_TYPE_ELEMENT,
-    gst_speex_enc_setup_interfaces);
-
-static void
-gst_speex_enc_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_factory));
-  gst_element_class_set_details_simple (element_class, "Speex audio encoder",
-      "Codec/Encoder/Audio",
-      "Encodes audio in Speex format", "Wim Taymans <wim@fluendo.com>");
-}
+#define gst_speex_enc_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstSpeexEnc, gst_speex_enc, GST_TYPE_ELEMENT,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_TAG_SETTER, NULL);
+    G_IMPLEMENT_INTERFACE (GST_TYPE_PRESET, NULL));
 
 static void
 gst_speex_enc_class_init (GstSpeexEncClass * klass)
@@ -192,6 +162,7 @@ gst_speex_enc_class_init (GstSpeexEncClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
+  gobject_class->finalize = gst_speex_enc_finalize;
   gobject_class->set_property = gst_speex_enc_set_property;
   gobject_class->get_property = gst_speex_enc_get_property;
 
@@ -240,10 +211,18 @@ gst_speex_enc_class_init (GstSpeexEncClass * klass)
           "The last status message", NULL,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
-  gobject_class->finalize = gst_speex_enc_finalize;
-
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_speex_enc_change_state);
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&src_factory));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sink_factory));
+  gst_element_class_set_details_simple (gstelement_class, "Speex audio encoder",
+      "Codec/Encoder/Audio",
+      "Encodes audio in Speex format", "Wim Taymans <wim@fluendo.com>");
+
+  GST_DEBUG_CATEGORY_INIT (speexenc_debug, "speexenc", 0, "Speex encoder");
 }
 
 static void
@@ -279,13 +258,13 @@ gst_speex_enc_sink_setcaps (GstPad * pad, GstCaps * caps)
 
 
 static GstCaps *
-gst_speex_enc_sink_getcaps (GstPad * pad)
+gst_speex_enc_sink_getcaps (GstPad * pad, GstCaps * filter)
 {
   GstCaps *caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
   GstCaps *peercaps = NULL;
   GstSpeexEnc *enc = GST_SPEEX_ENC (gst_pad_get_parent_element (pad));
 
-  peercaps = gst_pad_peer_get_caps (enc->srcpad);
+  peercaps = gst_pad_peer_get_caps (enc->srcpad, filter);
 
   if (peercaps) {
     if (!gst_caps_is_empty (peercaps) && !gst_caps_is_any (peercaps)) {
@@ -568,16 +547,14 @@ error:
 }
 
 static void
-gst_speex_enc_init (GstSpeexEnc * enc, GstSpeexEncClass * klass)
+gst_speex_enc_init (GstSpeexEnc * enc)
 {
   enc->sinkpad = gst_pad_new_from_static_template (&sink_factory, "sink");
   gst_element_add_pad (GST_ELEMENT (enc), enc->sinkpad);
   gst_pad_set_event_function (enc->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_speex_enc_sinkevent));
+      GST_DEBUG_FUNCPTR (gst_speex_enc_sink_event));
   gst_pad_set_chain_function (enc->sinkpad,
       GST_DEBUG_FUNCPTR (gst_speex_enc_chain));
-  gst_pad_set_setcaps_function (enc->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_speex_enc_sink_setcaps));
   gst_pad_set_getcaps_function (enc->sinkpad,
       GST_DEBUG_FUNCPTR (gst_speex_enc_sink_getcaps));
   gst_pad_set_query_function (enc->sinkpad,
@@ -782,11 +759,11 @@ gst_speex_enc_buffer_from_data (GstSpeexEnc * enc, guchar * data,
   GstBuffer *outbuf;
 
   outbuf = gst_buffer_new_and_alloc (data_len);
-  memcpy (GST_BUFFER_DATA (outbuf), data, data_len);
+  gst_buffer_fill (outbuf, 0, data, data_len);
   GST_BUFFER_OFFSET (outbuf) = enc->bytes_out;
   GST_BUFFER_OFFSET_END (outbuf) = granulepos;
 
-  GST_LOG_OBJECT (enc, "encoded buffer of %d bytes", GST_BUFFER_SIZE (outbuf));
+  GST_LOG_OBJECT (enc, "encoded buffer of %d bytes", data_len);
   return outbuf;
 }
 
@@ -797,8 +774,7 @@ gst_speex_enc_push_buffer (GstSpeexEnc * enc, GstBuffer * buffer)
 {
   guint size;
 
-  size = GST_BUFFER_SIZE (buffer);
-
+  size = gst_buffer_get_size (buffer);
   enc->bytes_out += size;
 
   GST_DEBUG_OBJECT (enc, "pushing output buffer of size %u", size);
@@ -818,8 +794,8 @@ gst_speex_enc_set_header_on_caps (GstCaps * caps, GstBuffer * buf1,
   caps = gst_caps_make_writable (caps);
   structure = gst_caps_get_structure (caps, 0);
 
-  g_assert (gst_buffer_is_metadata_writable (buf1));
-  g_assert (gst_buffer_is_metadata_writable (buf2));
+  g_assert (gst_buffer_is_writable (buf1));
+  g_assert (gst_buffer_is_writable (buf2));
 
   /* mark buffers */
   GST_BUFFER_FLAG_SET (buf1, GST_BUFFER_FLAG_IN_CAPS);
@@ -847,7 +823,7 @@ gst_speex_enc_set_header_on_caps (GstCaps * caps, GstBuffer * buf1,
 
 
 static gboolean
-gst_speex_enc_sinkevent (GstPad * pad, GstEvent * event)
+gst_speex_enc_sink_event (GstPad * pad, GstEvent * event)
 {
   gboolean res = TRUE;
   GstSpeexEnc *enc;
@@ -855,6 +831,15 @@ gst_speex_enc_sinkevent (GstPad * pad, GstEvent * event)
   enc = GST_SPEEX_ENC (gst_pad_get_parent (pad));
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+
+      gst_event_parse_caps (event, &caps);
+      res = gst_speex_enc_sink_setcaps (pad, caps);
+      gst_event_unref (event);
+      break;
+    }
     case GST_EVENT_EOS:
       if (enc->setup)
         gst_speex_enc_encode (enc, TRUE);
@@ -894,8 +879,7 @@ gst_speex_enc_encode (GstSpeexEnc * enc, gboolean flush)
   if (flush && gst_adapter_available (enc->adapter) % bytes != 0) {
     guint diff = gst_adapter_available (enc->adapter) % bytes;
     GstBuffer *buf = gst_buffer_new_and_alloc (diff);
-
-    memset (GST_BUFFER_DATA (buf), 0, diff);
+    gst_buffer_memset (buf, 0, 0, diff);
     gst_adapter_push (enc->adapter, buf);
   }
 
@@ -903,6 +887,7 @@ gst_speex_enc_encode (GstSpeexEnc * enc, gboolean flush)
     gint16 *data;
     gint outsize, written, dtx_ret;
     GstBuffer *outbuf;
+    gchar *outdata;
 
     data = (gint16 *) gst_adapter_take (enc->adapter, bytes);
 
@@ -926,19 +911,21 @@ gst_speex_enc_encode (GstSpeexEnc * enc, gboolean flush)
     speex_bits_insert_terminator (&enc->bits);
     outsize = speex_bits_nbytes (&enc->bits);
 
+#if 0
     ret = gst_pad_alloc_buffer_and_set_caps (enc->srcpad,
         GST_BUFFER_OFFSET_NONE, outsize, GST_PAD_CAPS (enc->srcpad), &outbuf);
-
     if ((GST_FLOW_OK != ret))
       goto done;
+#endif
+    outbuf = gst_buffer_new_allocate (NULL, outsize, 0);
 
-    written = speex_bits_write (&enc->bits,
-        (gchar *) GST_BUFFER_DATA (outbuf), outsize);
+    outdata = gst_buffer_map (outbuf, NULL, NULL, GST_MAP_WRITE);
+    written = speex_bits_write (&enc->bits, outdata, outsize);
 
     if (G_UNLIKELY (written != outsize)) {
       GST_ERROR_OBJECT (enc, "short write: %d < %d bytes", written, outsize);
-      GST_BUFFER_SIZE (outbuf) = written;
     }
+    gst_buffer_unmap (outbuf, outdata, written);
 
     speex_bits_reset (&enc->bits);
 
@@ -1001,7 +988,7 @@ gst_speex_enc_chain (GstPad * pad, GstBuffer * buf)
     buf2 = gst_speex_enc_create_metadata_buffer (enc);
 
     /* mark and put on caps */
-    caps = gst_pad_get_caps (enc->srcpad);
+    caps = gst_pad_get_caps (enc->srcpad, NULL);
     caps = gst_speex_enc_set_header_on_caps (caps, buf1, buf2);
 
     gst_caps_set_simple (caps,
@@ -1011,9 +998,6 @@ gst_speex_enc_chain (GstPad * pad, GstBuffer * buf)
     /* negotiate with these caps */
     GST_DEBUG_OBJECT (enc, "here are the caps: %" GST_PTR_FORMAT, caps);
     gst_pad_set_caps (enc->srcpad, caps);
-
-    gst_buffer_set_caps (buf1, caps);
-    gst_buffer_set_caps (buf2, caps);
     gst_caps_unref (caps);
 
     /* push out buffers */
@@ -1061,13 +1045,12 @@ gst_speex_enc_chain (GstPad * pad, GstBuffer * buf)
         GST_TIME_ARGS (enc->next_ts));
 
     diff_bytes = GST_CLOCK_TIME_TO_FRAMES (diff, enc->rate) * enc->channels * 2;
-    if (diff_bytes >= GST_BUFFER_SIZE (buf)) {
+    if (diff_bytes >= gst_buffer_get_size (buf)) {
       gst_buffer_unref (buf);
       return GST_FLOW_OK;
     }
-    buf = gst_buffer_make_metadata_writable (buf);
-    GST_BUFFER_DATA (buf) += diff_bytes;
-    GST_BUFFER_SIZE (buf) -= diff_bytes;
+    buf = gst_buffer_make_writable (buf);
+    gst_buffer_resize (buf, diff_bytes, -1);
 
     GST_BUFFER_TIMESTAMP (buf) += diff;
     if (GST_BUFFER_DURATION_IS_VALID (buf))
@@ -1100,7 +1083,8 @@ gst_speex_enc_chain (GstPad * pad, GstBuffer * buf)
   else
     enc->next_ts = GST_CLOCK_TIME_NONE;
 
-  GST_DEBUG_OBJECT (enc, "received buffer of %u bytes", GST_BUFFER_SIZE (buf));
+  GST_DEBUG_OBJECT (enc, "received buffer of %u bytes",
+      gst_buffer_get_size (buf));
 
   /* push buffer to adapter */
   gst_adapter_push (enc->adapter, buf);

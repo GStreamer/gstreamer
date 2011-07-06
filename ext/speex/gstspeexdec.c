@@ -76,7 +76,8 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("audio/x-speex")
     );
 
-GST_BOILERPLATE (GstSpeexDec, gst_speex_dec, GstElement, GST_TYPE_ELEMENT);
+#define gst_speex_dec_parent_class parent_class
+G_DEFINE_TYPE (GstSpeexDec, gst_speex_dec, GST_TYPE_ELEMENT);
 
 static gboolean speex_dec_sink_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn speex_dec_chain (GstPad * pad, GstBuffer * buf);
@@ -86,7 +87,6 @@ static GstStateChangeReturn speex_dec_change_state (GstElement * element,
 static gboolean speex_dec_src_event (GstPad * pad, GstEvent * event);
 static gboolean speex_dec_src_query (GstPad * pad, GstQuery * query);
 static gboolean speex_dec_sink_query (GstPad * pad, GstQuery * query);
-static gboolean speex_dec_sink_setcaps (GstPad * pad, GstCaps * caps);
 static const GstQueryType *speex_get_src_query_types (GstPad * pad);
 static const GstQueryType *speex_get_sink_query_types (GstPad * pad);
 static gboolean speex_dec_convert (GstPad * pad,
@@ -107,20 +107,6 @@ static GstFlowReturn speex_dec_chain_parse_comments (GstSpeexDec * dec,
     GstBuffer * buf);
 
 static void
-gst_speex_dec_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&speex_dec_src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&speex_dec_sink_factory));
-  gst_element_class_set_details_simple (element_class, "Speex audio decoder",
-      "Codec/Decoder/Audio",
-      "decode speex streams to audio", "Wim Taymans <wim@fluendo.com>");
-}
-
-static void
 gst_speex_dec_class_init (GstSpeexDecClass * klass)
 {
   GObjectClass *gobject_class;
@@ -137,6 +123,14 @@ gst_speex_dec_class_init (GstSpeexDecClass * klass)
           DEFAULT_ENH, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (speex_dec_change_state);
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&speex_dec_src_factory));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&speex_dec_sink_factory));
+  gst_element_class_set_details_simple (gstelement_class, "Speex audio decoder",
+      "Codec/Decoder/Audio",
+      "decode speex streams to audio", "Wim Taymans <wim@fluendo.com>");
 
   GST_DEBUG_CATEGORY_INIT (speexdec_debug, "speexdec", 0,
       "speex decoding element");
@@ -169,7 +163,7 @@ gst_speex_dec_reset (GstSpeexDec * dec)
 }
 
 static void
-gst_speex_dec_init (GstSpeexDec * dec, GstSpeexDecClass * g_class)
+gst_speex_dec_init (GstSpeexDec * dec)
 {
   dec->sinkpad =
       gst_pad_new_from_static_template (&speex_dec_sink_factory, "sink");
@@ -181,8 +175,6 @@ gst_speex_dec_init (GstSpeexDec * dec, GstSpeexDecClass * g_class)
       GST_DEBUG_FUNCPTR (speex_get_sink_query_types));
   gst_pad_set_query_function (dec->sinkpad,
       GST_DEBUG_FUNCPTR (speex_dec_sink_query));
-  gst_pad_set_setcaps_function (dec->sinkpad,
-      GST_DEBUG_FUNCPTR (speex_dec_sink_setcaps));
   gst_element_add_pad (GST_ELEMENT (dec), dec->sinkpad);
 
   dec->srcpad =
@@ -402,7 +394,7 @@ speex_dec_src_query (GstPad * pad, GstQuery * query)
       }
 
       if ((res = speex_dec_convert (dec->srcpad, GST_FORMAT_TIME,
-                  segment.last_stop, &format, &cur))) {
+                  segment.position, &format, &cur))) {
         gst_query_set_position (query, format, cur);
       }
       break;
@@ -496,43 +488,44 @@ speex_dec_sink_event (GstPad * pad, GstEvent * event)
   GST_LOG_OBJECT (dec, "handling %s event", GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_NEWSEGMENT:{
-      GstFormat format;
-      gdouble rate, arate;
-      gint64 start, stop, time;
-      gboolean update;
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
 
-      gst_event_parse_new_segment_full (event, &update, &rate, &arate, &format,
-          &start, &stop, &time);
+      gst_event_parse_caps (event, &caps);
+      ret = speex_dec_sink_setcaps (pad, caps);
+      gst_event_unref (event);
+      break;
+    }
+    case GST_EVENT_SEGMENT:{
+      GstSegment segment;
 
-      if (format != GST_FORMAT_TIME)
+      gst_event_copy_segment (event, &segment);
+
+      if (segment.format != GST_FORMAT_TIME)
         goto newseg_wrong_format;
 
-      if (rate <= 0.0)
+      if (segment.rate <= 0.0)
         goto newseg_wrong_rate;
 
+#if 0
       if (update) {
         /* time progressed without data, see if we can fill the gap with
          * some concealment data */
-        if (dec->segment.last_stop < start) {
+        if (dec->segment.position < start) {
           GstClockTime duration;
 
-          duration = start - dec->segment.last_stop;
-          speex_dec_chain_parse_data (dec, NULL, dec->segment.last_stop,
+          duration = start - dec->segment.position;
+          speex_dec_chain_parse_data (dec, NULL, dec->segment.position,
               duration);
         }
       }
+#endif
 
       /* now configure the values */
-      gst_segment_set_newsegment_full (&dec->segment, update,
-          rate, arate, GST_FORMAT_TIME, start, stop, time);
+      dec->segment = segment;
 
-      GST_DEBUG_OBJECT (dec, "segment now: cur = %" GST_TIME_FORMAT " [%"
-          GST_TIME_FORMAT " - %" GST_TIME_FORMAT "]",
-          GST_TIME_ARGS (dec->segment.last_stop),
-          GST_TIME_ARGS (dec->segment.start),
-          GST_TIME_ARGS (dec->segment.stop));
-
+      GST_DEBUG_OBJECT (dec, "segment now: %" GST_SEGMENT_FORMAT, &segment);
       ret = gst_pad_push_event (dec->srcpad, event);
       break;
     }
@@ -563,10 +556,13 @@ static GstFlowReturn
 speex_dec_chain_parse_header (GstSpeexDec * dec, GstBuffer * buf)
 {
   GstCaps *caps;
+  char *data;
+  gsize size;
 
   /* get the header */
-  dec->header = speex_packet_to_header ((char *) GST_BUFFER_DATA (buf),
-      GST_BUFFER_SIZE (buf));
+  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+  dec->header = speex_packet_to_header (data, size);
+  gst_buffer_unmap (buf, data, size);
 
   if (!dec->header)
     goto no_header;
@@ -693,25 +689,24 @@ speex_dec_chain_parse_data (GstSpeexDec * dec, GstBuffer * buf,
 {
   GstFlowReturn res = GST_FLOW_OK;
   gint i, fpp;
-  guint size;
-  guint8 *data;
   SpeexBits *bits;
+  gsize size;
+  char *data;
 
   if (!dec->frame_duration)
     goto not_negotiated;
 
   if (timestamp != -1) {
-    dec->segment.last_stop = timestamp;
+    dec->segment.position = timestamp;
   } else {
-    timestamp = dec->segment.last_stop;
+    timestamp = dec->segment.position;
   }
 
   if (buf) {
-    data = GST_BUFFER_DATA (buf);
-    size = GST_BUFFER_SIZE (buf);
-
     /* send data to the bitstream */
-    speex_bits_read_from (&dec->bits, (char *) data, size);
+    data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+    speex_bits_read_from (&dec->bits, data, size);
+    gst_buffer_unmap (buf, data, size);
 
     fpp = dec->header->frames_per_packet;
     bits = &dec->bits;
@@ -734,7 +729,7 @@ speex_dec_chain_parse_data (GstSpeexDec * dec, GstBuffer * buf,
 
     GST_LOG_OBJECT (dec, "decoding frame %d/%d, %d bits remaining", i, fpp,
         bits ? speex_bits_remaining (bits) : -1);
-
+#if 0
     res = gst_pad_alloc_buffer_and_set_caps (dec->srcpad,
         GST_BUFFER_OFFSET_NONE, dec->frame_size * dec->header->nb_channels * 2,
         GST_PAD_CAPS (dec->srcpad), &outbuf);
@@ -743,10 +738,17 @@ speex_dec_chain_parse_data (GstSpeexDec * dec, GstBuffer * buf,
       GST_DEBUG_OBJECT (dec, "buf alloc flow: %s", gst_flow_get_name (res));
       return res;
     }
+#endif
+    /* FIXME, we can use a bufferpool because we have fixed size buffers. We
+     * could also use an allocator */
+    outbuf =
+        gst_buffer_new_allocate (NULL,
+        dec->frame_size * dec->header->nb_channels * 2, 0);
 
-    out_data = (gint16 *) GST_BUFFER_DATA (outbuf);
-
+    out_data = gst_buffer_map (outbuf, &size, NULL, GST_MAP_WRITE);
     ret = speex_decode_int (dec->state, bits, out_data);
+    gst_buffer_unmap (outbuf, out_data, size);
+
     if (ret == -1) {
       /* uh? end of stream */
       if (fpp == 0 && speex_bits_remaining (bits) < 8) {
@@ -777,8 +779,8 @@ speex_dec_chain_parse_data (GstSpeexDec * dec, GstBuffer * buf,
     GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
     GST_BUFFER_DURATION (outbuf) = dec->frame_duration;
 
-    dec->segment.last_stop += dec->frame_duration;
-    timestamp = dec->segment.last_stop;
+    dec->segment.position += dec->frame_duration;
+    timestamp = dec->segment.position;
 
     GST_LOG_OBJECT (dec, "pushing buffer with ts=%" GST_TIME_FORMAT ", dur=%"
         GST_TIME_FORMAT, GST_TIME_ARGS (timestamp),
@@ -803,6 +805,26 @@ not_negotiated:
   }
 }
 
+static gboolean
+memcmp_buffers (GstBuffer * buf1, GstBuffer * buf2)
+{
+  gsize size1, size2;
+  gpointer data1;
+  gboolean res;
+
+  size1 = gst_buffer_get_size (buf1);
+  size2 = gst_buffer_get_size (buf2);
+
+  if (size1 != size2)
+    return FALSE;
+
+  data1 = gst_buffer_map (buf1, NULL, NULL, GST_MAP_READ);
+  res = gst_buffer_memcmp (buf2, 0, data1, size1) == 0;
+  gst_buffer_unmap (buf1, data1, size1);
+
+  return res;
+}
+
 static GstFlowReturn
 speex_dec_chain (GstPad * pad, GstBuffer * buf)
 {
@@ -814,13 +836,9 @@ speex_dec_chain (GstPad * pad, GstBuffer * buf)
   /* If we have the streamheader and vorbiscomment from the caps already
    * ignore them here */
   if (dec->streamheader && dec->vorbiscomment) {
-    if (GST_BUFFER_SIZE (dec->streamheader) == GST_BUFFER_SIZE (buf)
-        && memcmp (GST_BUFFER_DATA (dec->streamheader), GST_BUFFER_DATA (buf),
-            GST_BUFFER_SIZE (buf)) == 0) {
+    if (memcmp_buffers (dec->streamheader, buf)) {
       res = GST_FLOW_OK;
-    } else if (GST_BUFFER_SIZE (dec->vorbiscomment) == GST_BUFFER_SIZE (buf)
-        && memcmp (GST_BUFFER_DATA (dec->vorbiscomment), GST_BUFFER_DATA (buf),
-            GST_BUFFER_SIZE (buf)) == 0) {
+    } else if (memcmp_buffers (dec->vorbiscomment, buf)) {
       res = GST_FLOW_OK;
     } else {
       res =
@@ -904,7 +922,7 @@ speex_dec_change_state (GstElement * element, GstStateChange transition)
       break;
   }
 
-  ret = parent_class->change_state (element, transition);
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
   if (ret != GST_STATE_CHANGE_SUCCESS)
     return ret;
 
