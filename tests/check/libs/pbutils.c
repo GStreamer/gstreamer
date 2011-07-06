@@ -60,8 +60,8 @@ missing_msg_check_getters (GstMessage * msg)
 
 GST_START_TEST (test_pb_utils_post_missing_messages)
 {
+  const GstStructure *s;
   GstElement *pipeline;
-  GstStructure *s;
   GstMessage *msg;
   GstCaps *caps;
   GstBus *bus;
@@ -95,8 +95,8 @@ GST_START_TEST (test_pb_utils_post_missing_messages)
   msg = gst_missing_uri_source_message_new (pipeline, "http");
   fail_unless (msg != NULL);
   fail_unless_equals_int (GST_MESSAGE_TYPE (msg), GST_MESSAGE_ELEMENT);
-  fail_unless (msg->structure != NULL);
-  s = msg->structure;
+  fail_unless (gst_message_get_structure (msg) != NULL);
+  s = gst_message_get_structure (msg);
   fail_unless (gst_structure_has_name (s, "missing-plugin"));
   fail_unless (gst_structure_has_field_typed (s, "type", G_TYPE_STRING));
   fail_unless_equals_string (gst_structure_get_string (s, "type"), "urisource");
@@ -109,8 +109,8 @@ GST_START_TEST (test_pb_utils_post_missing_messages)
   msg = gst_missing_uri_sink_message_new (pipeline, "smb");
   fail_unless (msg != NULL);
   fail_unless_equals_int (GST_MESSAGE_TYPE (msg), GST_MESSAGE_ELEMENT);
-  fail_unless (msg->structure != NULL);
-  s = msg->structure;
+  fail_unless (gst_message_get_structure (msg) != NULL);
+  s = gst_message_get_structure (msg);
   fail_unless (gst_structure_has_name (s, "missing-plugin"));
   fail_unless (gst_structure_has_field_typed (s, "type", G_TYPE_STRING));
   fail_unless_equals_string (gst_structure_get_string (s, "type"), "urisink");
@@ -123,8 +123,8 @@ GST_START_TEST (test_pb_utils_post_missing_messages)
   msg = gst_missing_uri_source_message_new (pipeline, "chchck");
   fail_unless (msg != NULL);
   fail_unless_equals_int (GST_MESSAGE_TYPE (msg), GST_MESSAGE_ELEMENT);
-  fail_unless (msg->structure != NULL);
-  s = msg->structure;
+  fail_unless (gst_message_get_structure (msg) != NULL);
+  s = gst_message_get_structure (msg);
   fail_unless (gst_structure_has_name (s, "missing-plugin"));
   fail_unless (gst_structure_has_field_typed (s, "type", G_TYPE_STRING));
   fail_unless_equals_string (gst_structure_get_string (s, "type"), "urisource");
@@ -137,8 +137,8 @@ GST_START_TEST (test_pb_utils_post_missing_messages)
   msg = gst_missing_uri_sink_message_new (pipeline, "chchck");
   fail_unless (msg != NULL);
   fail_unless_equals_int (GST_MESSAGE_TYPE (msg), GST_MESSAGE_ELEMENT);
-  fail_unless (msg->structure != NULL);
-  s = msg->structure;
+  fail_unless (gst_message_get_structure (msg) != NULL);
+  s = gst_message_get_structure (msg);
   fail_unless (gst_structure_has_name (s, "missing-plugin"));
   fail_unless (gst_structure_has_field_typed (s, "type", G_TYPE_STRING));
   fail_unless_equals_string (gst_structure_get_string (s, "type"), "urisink");
@@ -151,8 +151,8 @@ GST_START_TEST (test_pb_utils_post_missing_messages)
   msg = gst_missing_element_message_new (pipeline, "foobar");
   fail_unless (msg != NULL);
   fail_unless_equals_int (GST_MESSAGE_TYPE (msg), GST_MESSAGE_ELEMENT);
-  fail_unless (msg->structure != NULL);
-  s = msg->structure;
+  fail_unless (gst_message_get_structure (msg) != NULL);
+  s = gst_message_get_structure (msg);
   fail_unless (gst_structure_has_name (s, "missing-plugin"));
   fail_unless (gst_structure_has_field_typed (s, "type", G_TYPE_STRING));
   fail_unless_equals_string (gst_structure_get_string (s, "type"), "element");
@@ -168,8 +168,8 @@ GST_START_TEST (test_pb_utils_post_missing_messages)
   msg = gst_missing_decoder_message_new (pipeline, caps);
   fail_unless (msg != NULL);
   fail_unless_equals_int (GST_MESSAGE_TYPE (msg), GST_MESSAGE_ELEMENT);
-  fail_unless (msg->structure != NULL);
-  s = msg->structure;
+  fail_unless (gst_message_get_structure (msg) != NULL);
+  s = gst_message_get_structure (msg);
   fail_unless (gst_structure_has_name (s, "missing-plugin"));
   fail_unless (gst_structure_has_field_typed (s, "type", G_TYPE_STRING));
   fail_unless_equals_string (gst_structure_get_string (s, "type"), "decoder");
@@ -181,8 +181,8 @@ GST_START_TEST (test_pb_utils_post_missing_messages)
   msg = gst_missing_encoder_message_new (pipeline, caps);
   fail_unless (msg != NULL);
   fail_unless_equals_int (GST_MESSAGE_TYPE (msg), GST_MESSAGE_ELEMENT);
-  fail_unless (msg->structure != NULL);
-  s = msg->structure;
+  fail_unless (gst_message_get_structure (msg) != NULL);
+  s = gst_message_get_structure (msg);
   fail_unless (gst_structure_has_name (s, "missing-plugin"));
   fail_unless (gst_structure_has_field_typed (s, "type", G_TYPE_STRING));
   fail_unless_equals_string (gst_structure_get_string (s, "type"), "encoder");
@@ -198,8 +198,8 @@ GST_START_TEST (test_pb_utils_post_missing_messages)
   msg = gst_missing_decoder_message_new (pipeline, caps);
   fail_unless (msg != NULL);
   fail_unless_equals_int (GST_MESSAGE_TYPE (msg), GST_MESSAGE_ELEMENT);
-  fail_unless (msg->structure != NULL);
-  s = msg->structure;
+  fail_unless (gst_message_get_structure (msg) != NULL);
+  s = gst_message_get_structure (msg);
   fail_unless (gst_structure_has_name (s, "missing-plugin"));
   fail_unless (gst_structure_has_field_typed (s, "type", G_TYPE_STRING));
   fail_unless_equals_string (gst_structure_get_string (s, "type"), "decoder");
@@ -213,8 +213,8 @@ GST_START_TEST (test_pb_utils_post_missing_messages)
   msg = gst_missing_encoder_message_new (pipeline, caps);
   fail_unless (msg != NULL);
   fail_unless_equals_int (GST_MESSAGE_TYPE (msg), GST_MESSAGE_ELEMENT);
-  fail_unless (msg->structure != NULL);
-  s = msg->structure;
+  fail_unless (gst_message_get_structure (msg) != NULL);
+  s = gst_message_get_structure (msg);
   fail_unless (gst_structure_has_name (s, "missing-plugin"));
   fail_unless (gst_structure_has_field_typed (s, "type", G_TYPE_STRING));
   fail_unless_equals_string (gst_structure_get_string (s, "type"), "encoder");
