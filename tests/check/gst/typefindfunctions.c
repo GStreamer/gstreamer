@@ -62,7 +62,7 @@ GST_START_TEST (test_quicktime_mpeg4video)
   GstCaps *caps = NULL;
 
   buf = gst_buffer_new ();
-  gst_buffer_take_memory (buf,
+  gst_buffer_take_memory (buf, -1,
       gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY,
           (gpointer) qt_redirect_396042, NULL,
           sizeof (qt_redirect_396042), 0, sizeof (qt_redirect_396042)));
@@ -92,7 +92,7 @@ GST_START_TEST (test_broken_flac_in_ogg)
   GstCaps *caps = NULL;
 
   buf = gst_buffer_new ();
-  gst_buffer_take_memory (buf,
+  gst_buffer_take_memory (buf, -1,
       gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY,
           (gpointer) flac_id_packet, NULL,
           sizeof (flac_id_packet), 0, sizeof (flac_id_packet)));
@@ -129,7 +129,7 @@ typefind_test_file (const gchar * filename)
   }
 
   buf = gst_buffer_new ();
-  gst_buffer_take_memory (buf,
+  gst_buffer_take_memory (buf, -1,
       gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY,
           (gpointer) data, NULL, data_len, 0, data_len));
 
@@ -349,7 +349,7 @@ GST_START_TEST (test_random_data)
     data[i] = g_random_int () & 0xff;
 
   buf = gst_buffer_new ();
-  gst_buffer_take_memory (buf,
+  gst_buffer_take_memory (buf, -1,
       gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY,
           data, NULL, TEST_RANDOM_DATA_SIZE, 0, TEST_RANDOM_DATA_SIZE));
 
