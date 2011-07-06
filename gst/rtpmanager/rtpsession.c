@@ -158,7 +158,7 @@ gst_rtp_bin_marshal_BOOLEAN__MINIOBJECT_BOOLEAN (GClosure * closure,
       cc->callback);
 
   v_return = callback (data1,
-      gst_value_get_mini_object (param_values + 1),
+      g_value_get_boxed (param_values + 1),
       g_value_get_boolean (param_values + 2), data2);
 
   g_value_set_boolean (return_value, v_return);
@@ -195,7 +195,7 @@ gst_rtp_bin_marshal_VOID__UINT_UINT_UINT_UINT_MINIOBJECT (GClosure * closure,
       g_value_get_uint (param_values + 2),
       g_value_get_uint (param_values + 3),
       g_value_get_uint (param_values + 4),
-      gst_value_get_mini_object (param_values + 5), data2);
+      g_value_get_boxed (param_values + 5), data2);
 }
 
 
@@ -1670,6 +1670,7 @@ update_arrival_stats (RTPSession * sess, RTPArrivalStats * arrival,
     GstClockTime running_time, guint64 ntpnstime)
 {
   GstMetaNetAddress *meta;
+  GstRTPBuffer rtpb;
 
   /* get time of arrival */
   arrival->current_time = current_time;
@@ -1677,10 +1678,12 @@ update_arrival_stats (RTPSession * sess, RTPArrivalStats * arrival,
   arrival->ntpnstime = ntpnstime;
 
   /* get packet size including header overhead */
-  arrival->bytes = GST_BUFFER_SIZE (buffer) + sess->header_len;
+  arrival->bytes = gst_buffer_get_size (buffer) + sess->header_len;
 
   if (rtp) {
-    arrival->payload_len = gst_rtp_buffer_get_payload_len (buffer);
+    gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtpb);
+    arrival->payload_len = gst_rtp_buffer_get_payload_len (&rtpb);
+    gst_rtp_buffer_unmap (&rtpb);
   } else {
     arrival->payload_len = 0;
   }
@@ -1720,6 +1723,7 @@ rtp_session_process_rtp (RTPSession * sess, GstBuffer * buffer,
   guint32 csrcs[16];
   guint8 i, count;
   guint64 oldrate;
+  GstRTPBuffer rtp;
 
   g_return_val_if_fail (RTP_IS_SESSION (sess), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_BUFFER (buffer), GST_FLOW_ERROR);
@@ -1737,23 +1741,28 @@ rtp_session_process_rtp (RTPSession * sess, GstBuffer * buffer,
     goto ignore;
 
   /* get SSRC and look up in session database */
-  ssrc = gst_rtp_buffer_get_ssrc (buffer);
+  gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp);
+  ssrc = gst_rtp_buffer_get_ssrc (&rtp);
   source = obtain_source (sess, ssrc, &created, &arrival, TRUE);
-  if (!source)
+  if (!source) {
+    gst_rtp_buffer_unmap (&rtp);
     goto collision;
-
-  prevsender = RTP_SOURCE_IS_SENDER (source);
-  prevactive = RTP_SOURCE_IS_ACTIVE (source);
-  oldrate = source->bitrate;
+  }
 
   /* copy available csrc for later */
-  count = gst_rtp_buffer_get_csrc_count (buffer);
+  count = gst_rtp_buffer_get_csrc_count (&rtp);
   /* make sure to not overflow our array. An RTP buffer can maximally contain
    * 16 CSRCs */
   count = MIN (count, 16);
 
   for (i = 0; i < count; i++)
-    csrcs[i] = gst_rtp_buffer_get_csrc (buffer, i);
+    csrcs[i] = gst_rtp_buffer_get_csrc (&rtp, i);
+
+  gst_rtp_buffer_unmap (&rtp);
+
+  prevsender = RTP_SOURCE_IS_SENDER (source);
+  prevactive = RTP_SOURCE_IS_ACTIVE (source);
+  oldrate = source->bitrate;
 
   /* let source process the packet */
   result = rtp_source_process_rtp (source, buffer, &arrival);
@@ -2191,8 +2200,8 @@ rtp_session_process_feedback (RTPSession * sess, GstRTCPPacket * packet,
     GstBuffer *fci_buffer = NULL;
 
     if (fci_length > 0) {
-      fci_buffer = gst_buffer_create_sub (packet->buffer,
-          fci_data - GST_BUFFER_DATA (packet->buffer), fci_length);
+      fci_buffer = gst_buffer_copy_region (packet->rtcp->buffer,
+          GST_BUFFER_COPY_MEMORY, fci_data - packet->rtcp->data, fci_length);
       GST_BUFFER_TIMESTAMP (fci_buffer) = arrival->running_time;
     }
 
@@ -2252,6 +2261,7 @@ rtp_session_process_rtcp (RTPSession * sess, GstBuffer * buffer,
   gboolean more, is_bye = FALSE, do_sync = FALSE;
   RTPArrivalStats arrival;
   GstFlowReturn result = GST_FLOW_OK;
+  GstRTCPBuffer rtcp;
 
   g_return_val_if_fail (RTP_IS_SESSION (sess), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_BUFFER (buffer), GST_FLOW_ERROR);
@@ -2270,7 +2280,8 @@ rtp_session_process_rtcp (RTPSession * sess, GstBuffer * buffer,
     goto ignore;
 
   /* start processing the compound packet */
-  more = gst_rtcp_buffer_get_first_packet (buffer, &packet);
+  gst_rtcp_buffer_map (buffer, GST_MAP_READ, &rtcp);
+  more = gst_rtcp_buffer_get_first_packet (&rtcp, &packet);
   while (more) {
     GstRTCPType type;
 
@@ -2313,6 +2324,8 @@ rtp_session_process_rtcp (RTPSession * sess, GstBuffer * buffer,
     more = gst_rtcp_packet_move_to_next (&packet);
   }
 
+  gst_rtcp_buffer_unmap (&rtcp);
+
   /* if we are scheduling a BYE, we only want to count bye packets, else we
    * count everything */
   if (sess->source->received_bye) {
@@ -2331,7 +2344,7 @@ rtp_session_process_rtcp (RTPSession * sess, GstBuffer * buffer,
   /* notify caller of sr packets in the callback */
   if (do_sync && sess->callbacks.sync_rtcp) {
     /* make writable, we might want to change the buffer */
-    buffer = gst_buffer_make_metadata_writable (buffer);
+    buffer = gst_buffer_make_writable (buffer);
 
     result = sess->callbacks.sync_rtcp (sess, sess->source, buffer,
         sess->sync_rtcp_user_data);
@@ -2383,7 +2396,12 @@ rtp_session_send_rtp (RTPSession * sess, gpointer data, gboolean is_list,
   g_return_val_if_fail (is_list || GST_IS_BUFFER (data), GST_FLOW_ERROR);
 
   if (is_list) {
-    valid_packet = gst_rtp_buffer_list_validate (GST_BUFFER_LIST_CAST (data));
+    GstBufferList *blist = GST_BUFFER_LIST_CAST (data);
+    gint i, len = gst_buffer_list_len (blist);
+
+    valid_packet = TRUE;
+    for (i = 0; i < len; i++)
+      valid_packet &= gst_rtp_buffer_validate (gst_buffer_list_get (blist, i));
   } else {
     valid_packet = gst_rtp_buffer_validate (GST_BUFFER_CAST (data));
   }
@@ -2641,8 +2659,11 @@ session_start_rtcp (RTPSession * sess, ReportData * data)
 {
   GstRTCPPacket *packet = &data->packet;
   RTPSource *own = sess->source;
+  GstRTCPBuffer rtcp;
 
   data->rtcp = gst_rtcp_buffer_new (sess->mtu);
+
+  gst_rtcp_buffer_map (data->rtcp, GST_MAP_WRITE, &rtcp);
 
   if (RTP_SOURCE_IS_SENDER (own)) {
     guint64 ntptime;
@@ -2651,7 +2672,7 @@ session_start_rtcp (RTPSession * sess, ReportData * data)
 
     /* we are a sender, create SR */
     GST_DEBUG ("create SR for SSRC %08x", own->ssrc);
-    gst_rtcp_buffer_add_packet (data->rtcp, GST_RTCP_TYPE_SR, packet);
+    gst_rtcp_buffer_add_packet (&rtcp, GST_RTCP_TYPE_SR, packet);
 
     /* get latest stats */
     rtp_source_get_new_sr (own, data->ntpnstime, data->running_time,
@@ -2666,9 +2687,11 @@ session_start_rtcp (RTPSession * sess, ReportData * data)
   } else {
     /* we are only receiver, create RR */
     GST_DEBUG ("create RR for SSRC %08x", own->ssrc);
-    gst_rtcp_buffer_add_packet (data->rtcp, GST_RTCP_TYPE_RR, packet);
+    gst_rtcp_buffer_add_packet (&rtcp, GST_RTCP_TYPE_RR, packet);
     gst_rtcp_packet_rr_set_ssrc (packet, own->ssrc);
   }
+
+  gst_rtcp_buffer_unmap (&rtcp);
 }
 
 /* construct a Sender or Receiver Report */
@@ -2792,9 +2815,12 @@ session_sdes (RTPSession * sess, ReportData * data)
   GstRTCPPacket *packet = &data->packet;
   const GstStructure *sdes;
   gint i, n_fields;
+  GstRTCPBuffer rtcp;
+
+  gst_rtcp_buffer_map (data->rtcp, GST_MAP_WRITE, &rtcp);
 
   /* add SDES packet */
-  gst_rtcp_buffer_add_packet (data->rtcp, GST_RTCP_TYPE_SDES, packet);
+  gst_rtcp_buffer_add_packet (&rtcp, GST_RTCP_TYPE_SDES, packet);
 
   gst_rtcp_packet_sdes_add_item (packet, sess->source->ssrc);
 
@@ -2848,6 +2874,8 @@ session_sdes (RTPSession * sess, ReportData * data)
   }
 
   data->has_sdes = TRUE;
+
+  gst_rtcp_buffer_unmap (&rtcp);
 }
 
 /* schedule a BYE packet */
@@ -2855,6 +2883,7 @@ static void
 session_bye (RTPSession * sess, ReportData * data)
 {
   GstRTCPPacket *packet = &data->packet;
+  GstRTCPBuffer rtcp;
 
   /* open packet */
   session_start_rtcp (sess, data);
@@ -2862,14 +2891,18 @@ session_bye (RTPSession * sess, ReportData * data)
   /* add SDES */
   session_sdes (sess, data);
 
+  gst_rtcp_buffer_map (data->rtcp, GST_MAP_WRITE, &rtcp);
+
   /* add a BYE packet */
-  gst_rtcp_buffer_add_packet (data->rtcp, GST_RTCP_TYPE_BYE, packet);
+  gst_rtcp_buffer_add_packet (&rtcp, GST_RTCP_TYPE_BYE, packet);
   gst_rtcp_packet_bye_add_ssrc (packet, sess->source->ssrc);
   if (sess->bye_reason)
     gst_rtcp_packet_bye_set_reason (packet, sess->bye_reason);
 
   /* we have a BYE packet now */
   data->is_bye = TRUE;
+
+  gst_rtcp_buffer_unmap (&rtcp);
 }
 
 static gboolean
@@ -3090,10 +3123,7 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
     if (sess->callbacks.send_rtcp && (do_not_suppress || !data.may_suppress)) {
       guint packet_size;
 
-      /* close the RTCP packet */
-      gst_rtcp_buffer_end (data.rtcp);
-
-      packet_size = GST_BUFFER_SIZE (data.rtcp) + sess->header_len;
+      packet_size = gst_buffer_get_size (data.rtcp) + sess->header_len;
 
       UPDATE_AVG (sess->stats.avg_rtcp_packet_size, packet_size);
       GST_DEBUG ("%p, sending RTCP packet, avg size %u, %u", &sess->stats,
@@ -3189,15 +3219,20 @@ static gboolean
 has_pli_compare_func (gconstpointer a, gconstpointer ignored)
 {
   GstRTCPPacket packet;
+  GstRTCPBuffer rtcp;
+  gboolean ret = FALSE;
 
-  packet.buffer = (GstBuffer *) a;
-  packet.offset = 0;
+  gst_rtcp_buffer_map ((GstBuffer *) a, GST_MAP_READ, &rtcp);
 
-  if (gst_rtcp_packet_get_type (&packet) == GST_RTCP_TYPE_PSFB &&
-      gst_rtcp_packet_fb_get_type (&packet) == GST_RTCP_PSFB_TYPE_PLI)
-    return TRUE;
-  else
-    return FALSE;
+  if (gst_rtcp_buffer_get_first_packet (&rtcp, &packet)) {
+    if (gst_rtcp_packet_get_type (&packet) == GST_RTCP_TYPE_PSFB &&
+        gst_rtcp_packet_fb_get_type (&packet) == GST_RTCP_PSFB_TYPE_PLI)
+      ret = TRUE;
+  }
+
+  gst_rtcp_buffer_unmap (&rtcp);
+
+  return ret;
 }
 
 static gboolean
@@ -3216,16 +3251,21 @@ rtp_session_on_sending_rtcp (RTPSession * sess, GstBuffer * buffer,
 
     if (media_src && !rtp_source_has_retained (media_src,
             has_pli_compare_func, NULL)) {
-      if (gst_rtcp_buffer_add_packet (buffer, GST_RTCP_TYPE_PSFB, &rtcppacket)) {
+      GstRTCPBuffer rtcp;
+
+      gst_rtcp_buffer_map (buffer, GST_MAP_WRITE, &rtcp);
+      if (gst_rtcp_buffer_add_packet (&rtcp, GST_RTCP_TYPE_PSFB, &rtcppacket)) {
         gst_rtcp_packet_fb_set_type (&rtcppacket, GST_RTCP_PSFB_TYPE_PLI);
         gst_rtcp_packet_fb_set_sender_ssrc (&rtcppacket,
             rtp_source_get_ssrc (sess->source));
         gst_rtcp_packet_fb_set_media_ssrc (&rtcppacket, media_ssrc);
         ret = TRUE;
+        gst_rtcp_buffer_unmap (&rtcp);
       } else {
         /* Break because the packet is full, will put next request in a
          * further packet
          */
+        gst_rtcp_buffer_unmap (&rtcp);
         break;
       }
     }

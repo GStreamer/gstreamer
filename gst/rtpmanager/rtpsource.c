@@ -897,20 +897,24 @@ calculate_jitter (RTPSource * src, GstBuffer * buffer,
   gint32 diff;
   gint clock_rate;
   guint8 pt;
+  GstRTPBuffer rtp;
 
   /* get arrival time */
   if ((running_time = arrival->running_time) == GST_CLOCK_TIME_NONE)
     goto no_time;
 
-  pt = gst_rtp_buffer_get_payload_type (buffer);
+  gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp);
+  pt = gst_rtp_buffer_get_payload_type (&rtp);
 
   GST_LOG ("SSRC %08x got payload %d", src->ssrc, pt);
 
   /* get clockrate */
-  if ((clock_rate = get_clock_rate (src, pt)) == -1)
+  if ((clock_rate = get_clock_rate (src, pt)) == -1) {
+    gst_rtp_buffer_unmap (&rtp);
     goto no_clock_rate;
+  }
 
-  rtptime = gst_rtp_buffer_get_timestamp (buffer);
+  rtptime = gst_rtp_buffer_get_timestamp (&rtp);
 
   /* convert arrival time to RTP timestamp units, truncate to 32 bits, we don't
    * care about the absolute value, just the difference. */
@@ -939,6 +943,7 @@ calculate_jitter (RTPSource * src, GstBuffer * buffer,
   GST_LOG ("rtparrival %u, rtptime %u, clock-rate %d, diff %d, jitter: %f",
       rtparrival, rtptime, clock_rate, diff, (src->stats.jitter) / 16.0);
 
+  gst_rtp_buffer_unmap (&rtp);
   return;
 
   /* ERRORS */
@@ -1021,15 +1026,21 @@ rtp_source_process_rtp (RTPSource * src, GstBuffer * buffer,
   guint16 seqnr, udelta;
   RTPSourceStats *stats;
   guint16 expected;
+  GstRTPBuffer rtp;
 
   g_return_val_if_fail (RTP_IS_SOURCE (src), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_BUFFER (buffer), GST_FLOW_ERROR);
 
   stats = &src->stats;
 
-  seqnr = gst_rtp_buffer_get_seq (buffer);
+  gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp);
+  seqnr = gst_rtp_buffer_get_seq (&rtp);
+  gst_rtp_buffer_unmap (&rtp);
 
-  rtp_source_update_caps (src, GST_BUFFER_CAPS (buffer));
+  /* FIXME-0.11
+   * would be nice to be able to pass along with buffer */
+  g_assert_not_reached ();
+  /* rtp_source_update_caps (src, GST_BUFFER_CAPS (buffer)); */
 
   if (stats->cycles == -1) {
     GST_DEBUG ("received first buffer");
@@ -1157,12 +1168,16 @@ rtp_source_process_bye (RTPSource * src, const gchar * reason)
   src->received_bye = TRUE;
 }
 
-static GstBufferListItem
-set_ssrc (GstBuffer ** buffer, guint group, guint idx, RTPSource * src)
+static gboolean
+set_ssrc (GstBuffer ** buffer, guint idx, RTPSource * src)
 {
+  GstRTPBuffer rtp;
+
   *buffer = gst_buffer_make_writable (*buffer);
-  gst_rtp_buffer_set_ssrc (*buffer, src->ssrc);
-  return GST_BUFFER_LIST_SKIP_GROUP;
+  gst_rtp_buffer_map (*buffer, GST_MAP_WRITE, &rtp);
+  gst_rtp_buffer_set_ssrc (&rtp, src->ssrc);
+  gst_rtp_buffer_unmap (&rtp);
+  return TRUE;
 }
 
 /**
@@ -1191,6 +1206,7 @@ rtp_source_send_rtp (RTPSource * src, gpointer data, gboolean is_list,
   GstBuffer *buffer = NULL;
   guint packets;
   guint32 ssrc;
+  GstRTPBuffer rtp;
 
   g_return_val_if_fail (RTP_IS_SOURCE (src), GST_FLOW_ERROR);
   g_return_val_if_fail (is_list || GST_IS_BUFFER (data), GST_FLOW_ERROR);
@@ -1200,24 +1216,36 @@ rtp_source_send_rtp (RTPSource * src, gpointer data, gboolean is_list,
 
     /* We can grab the caps from the first group, since all
      * groups of a buffer list have same caps. */
-    buffer = gst_buffer_list_get (list, 0, 0);
+    buffer = gst_buffer_list_get (list, 0);
     if (!buffer)
       goto no_buffer;
   } else {
     buffer = GST_BUFFER_CAST (data);
   }
-  rtp_source_update_caps (src, GST_BUFFER_CAPS (buffer));
+
+  /* FIXME-0.11 */
+  g_assert_not_reached ();
+  /* rtp_source_update_caps (src, GST_BUFFER_CAPS (buffer)); */
 
   /* we are a sender now */
   src->is_sender = TRUE;
 
   if (is_list) {
+    gint i;
+
     /* Each group makes up a network packet. */
-    packets = gst_buffer_list_n_groups (list);
-    len = gst_rtp_buffer_list_get_payload_len (list);
+    packets = gst_buffer_list_len (list);
+    for (i = 0, len = 0; i < packets; i++) {
+      gst_rtp_buffer_map (gst_buffer_list_get (list, i), GST_MAP_READ, &rtp);
+      len += gst_rtp_buffer_get_payload_len (&rtp);
+      gst_rtp_buffer_unmap (&rtp);
+    }
+    /* subsequent info taken from first list member */
+    gst_rtp_buffer_map (gst_buffer_list_get (list, 0), GST_MAP_READ, &rtp);
   } else {
     packets = 1;
-    len = gst_rtp_buffer_get_payload_len (buffer);
+    gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp);
+    len = gst_rtp_buffer_get_payload_len (&rtp);
   }
 
   /* update stats for the SR */
@@ -1227,11 +1255,7 @@ rtp_source_send_rtp (RTPSource * src, gpointer data, gboolean is_list,
 
   do_bitrate_estimation (src, running_time, &src->bytes_sent);
 
-  if (is_list) {
-    rtptime = gst_rtp_buffer_list_get_timestamp (list);
-  } else {
-    rtptime = gst_rtp_buffer_get_timestamp (buffer);
-  }
+  rtptime = gst_rtp_buffer_get_timestamp (&rtp);
   ext_rtptime = src->last_rtptime;
   ext_rtptime = gst_rtp_buffer_ext_timestamp (&ext_rtptime, rtptime);
 
@@ -1255,14 +1279,13 @@ rtp_source_send_rtp (RTPSource * src, gpointer data, gboolean is_list,
   src->last_rtptime = ext_rtptime;
 
   /* push packet */
-  if (!src->callbacks.push_rtp)
+  if (!src->callbacks.push_rtp) {
+    gst_rtp_buffer_unmap (&rtp);
     goto no_callback;
-
-  if (is_list) {
-    ssrc = gst_rtp_buffer_list_get_ssrc (list);
-  } else {
-    ssrc = gst_rtp_buffer_get_ssrc (buffer);
   }
+
+  ssrc = gst_rtp_buffer_get_ssrc (&rtp);
+  gst_rtp_buffer_unmap (&rtp);
 
   if (ssrc != src->ssrc) {
     /* the SSRC of the packet is not correct, make a writable buffer and
@@ -1279,7 +1302,7 @@ rtp_source_send_rtp (RTPSource * src, gpointer data, gboolean is_list,
       list = gst_buffer_list_make_writable (list);
       gst_buffer_list_foreach (list, (GstBufferListFunc) set_ssrc, src);
     } else {
-      set_ssrc (&buffer, 0, 0, src);
+      set_ssrc (&buffer, 0, src);
     }
   }
   GST_LOG ("pushing RTP %s %" G_GUINT64_FORMAT, is_list ? "list" : "packet",
@@ -1780,8 +1803,8 @@ rtp_source_retain_rtcp_packet (RTPSource * src, GstRTCPPacket * packet,
 {
   GstBuffer *buffer;
 
-  buffer = gst_buffer_create_sub (packet->buffer, packet->offset,
-      (gst_rtcp_packet_get_length (packet) + 1) * 4);
+  buffer = gst_buffer_copy_region (packet->rtcp->buffer, GST_BUFFER_COPY_MEMORY,
+      packet->offset, (gst_rtcp_packet_get_length (packet) + 1) * 4);
 
   GST_BUFFER_TIMESTAMP (buffer) = running_time;
 

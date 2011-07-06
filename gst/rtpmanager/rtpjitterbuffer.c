@@ -608,18 +608,24 @@ rtp_jitter_buffer_insert (RTPJitterBuffer * jbuf, GstBuffer * buf,
   GList *list;
   guint32 rtptime;
   guint16 seqnum;
+  GstRTPBuffer rtp;
 
   g_return_val_if_fail (jbuf != NULL, FALSE);
   g_return_val_if_fail (buf != NULL, FALSE);
 
-  seqnum = gst_rtp_buffer_get_seq (buf);
+  gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp);
+
+  seqnum = gst_rtp_buffer_get_seq (&rtp);
 
   /* loop the list to skip strictly smaller seqnum buffers */
   for (list = jbuf->packets->head; list; list = g_list_next (list)) {
     guint16 qseq;
     gint gap;
+    GstRTPBuffer rtpb;
 
-    qseq = gst_rtp_buffer_get_seq (GST_BUFFER_CAST (list->data));
+    gst_rtp_buffer_map (GST_BUFFER_CAST (list->data), GST_MAP_READ, &rtpb);
+    qseq = gst_rtp_buffer_get_seq (&rtpb);
+    gst_rtp_buffer_unmap (&rtpb);
 
     /* compare the new seqnum to the one in the buffer */
     gap = gst_rtp_buffer_compare_seqnum (seqnum, qseq);
@@ -633,7 +639,7 @@ rtp_jitter_buffer_insert (RTPJitterBuffer * jbuf, GstBuffer * buf,
       break;
   }
 
-  rtptime = gst_rtp_buffer_get_timestamp (buf);
+  rtptime = gst_rtp_buffer_get_timestamp (&rtp);
   switch (jbuf->mode) {
     case RTP_JITTER_BUFFER_MODE_NONE:
     case RTP_JITTER_BUFFER_MODE_BUFFER:
@@ -673,11 +679,14 @@ rtp_jitter_buffer_insert (RTPJitterBuffer * jbuf, GstBuffer * buf,
   if (G_LIKELY (tail))
     *tail = (list == NULL);
 
+  gst_rtp_buffer_unmap (&rtp);
+
   return TRUE;
 
   /* ERRORS */
 duplicate:
   {
+    gst_rtp_buffer_unmap (&rtp);
     GST_WARNING ("duplicate packet %d found", (gint) seqnum);
     return FALSE;
   }
@@ -834,6 +843,7 @@ rtp_jitter_buffer_get_ts_diff (RTPJitterBuffer * jbuf)
   guint64 high_ts, low_ts;
   GstBuffer *high_buf, *low_buf;
   guint32 result;
+  GstRTPBuffer rtp;
 
   g_return_val_if_fail (jbuf != NULL, 0);
 
@@ -843,8 +853,12 @@ rtp_jitter_buffer_get_ts_diff (RTPJitterBuffer * jbuf)
   if (!high_buf || !low_buf || high_buf == low_buf)
     return 0;
 
-  high_ts = gst_rtp_buffer_get_timestamp (high_buf);
-  low_ts = gst_rtp_buffer_get_timestamp (low_buf);
+  gst_rtp_buffer_map (high_buf, GST_MAP_READ, &rtp);
+  high_ts = gst_rtp_buffer_get_timestamp (&rtp);
+  gst_rtp_buffer_unmap (&rtp);
+  gst_rtp_buffer_map (low_buf, GST_MAP_READ, &rtp);
+  low_ts = gst_rtp_buffer_get_timestamp (&rtp);
+  gst_rtp_buffer_unmap (&rtp);
 
   /* it needs to work if ts wraps */
   if (high_ts >= low_ts) {
