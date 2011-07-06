@@ -57,7 +57,7 @@ struct _GstOMXPort {
   guint32 index;
 
   /* Protects port_def, buffers, pending_buffers,
-   * settings_changed, flushing and flushed.
+   * settings_changed, flushing, flushed, enabled_changed.
    *
    * Signalled if pending_buffers gets a
    * new buffer or flushing/flushed is set
@@ -80,6 +80,7 @@ struct _GstOMXPort {
   gboolean settings_changed;
   gboolean flushing;
   gboolean flushed; /* TRUE after OMX_CommandFlush was done */
+  gboolean enabled_changed; /* TRUE after OMX_Command{En,Dis}able was done */
 };
 
 struct _GstOMXComponent {

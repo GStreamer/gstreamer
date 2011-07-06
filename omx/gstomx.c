@@ -206,6 +206,7 @@ EventHandler (OMX_HANDLETYPE hComponent, OMX_PTR pAppData, OMX_EVENTTYPE eEvent,
               (cmd == OMX_CommandPortEnable ? "enabled" : "disabled"));
 
           g_mutex_lock (port->port_lock);
+          port->enabled_changed = TRUE;
           g_cond_broadcast (port->port_cond);
           g_mutex_unlock (port->port_lock);
 
@@ -1103,6 +1104,8 @@ gst_omx_port_set_enabled_unlocked (GstOMXPort * port, gboolean enabled)
   if (! !port->port_def.bEnabled == ! !enabled)
     goto done;
 
+  port->enabled_changed = FALSE;
+
   if (enabled)
     err =
         OMX_SendCommand (comp->handle, OMX_CommandPortEnable, port->index,
@@ -1125,10 +1128,6 @@ gst_omx_port_set_enabled_unlocked (GstOMXPort * port, gboolean enabled)
   timeval = &abstimeout;
   GST_DEBUG_OBJECT (comp->parent, "Waiting for 5s");
 
-  /* FIXME XXX: The spec says that bEnabled should be set *immediately*
-   * but bellagio sets bEnabled after all buffers are allocated/deallocated
-   */
-
   /* First wait until all buffers are released by the port */
   signalled = TRUE;
   last_error = OMX_ErrorNone;
@@ -1144,11 +1143,13 @@ gst_omx_port_set_enabled_unlocked (GstOMXPort * port, gboolean enabled)
     GST_ERROR_OBJECT (comp->parent,
         "Got error while waiting for port %u to release all buffers: %d",
         port->index, err);
+    goto done;
   } else if (!signalled) {
     GST_ERROR_OBJECT (comp->parent,
         "Timeout waiting for port %u to release all buffers", port->index);
     err = OMX_ErrorTimeout;
     gst_omx_component_set_last_error (comp, err);
+    goto done;
   }
 
   /* Allocate/deallocate all buffers for the port to finish
@@ -1174,12 +1175,14 @@ gst_omx_port_set_enabled_unlocked (GstOMXPort * port, gboolean enabled)
   OMX_GetParameter (comp->handle, OMX_IndexParamPortDefinition,
       &port->port_def);
   while (signalled && last_error == OMX_ErrorNone
-      && (! !port->port_def.bEnabled != ! !enabled)) {
+      && (! !port->port_def.bEnabled != ! !enabled || !port->enabled_changed)) {
     signalled = g_cond_timed_wait (port->port_cond, port->port_lock, timeval);
     last_error = gst_omx_component_get_last_error (comp);
     OMX_GetParameter (comp->handle, OMX_IndexParamPortDefinition,
         &port->port_def);
   }
+
+  port->enabled_changed = FALSE;
 
   if (!signalled) {
     GST_ERROR_OBJECT (comp->parent,
