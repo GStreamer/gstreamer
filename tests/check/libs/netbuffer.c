@@ -50,7 +50,7 @@ GST_START_TEST (test_netbuffer_copy)
   gst_netaddress_set_ip4_address (&meta->naddr, ipv4_addr, ipv4_port);
 
   len = strlen (DATA_STRING);
-  gst_buffer_take_memory (netbuf,
+  gst_buffer_take_memory (netbuf, -1,
       gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY,
           (gpointer) DATA_STRING, NULL, len, 0, len));
 
@@ -88,7 +88,7 @@ GST_START_TEST (test_netbuffer_copy)
   gst_netaddress_set_ip6_address (&meta->naddr, ipv6_addr, ipv6_port);
 
   len = strlen (DATA_STRING);
-  gst_buffer_take_memory (netbuf,
+  gst_buffer_take_memory (netbuf, -1,
       gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY,
           (gpointer) DATA_STRING, NULL, len, 0, len));
 
