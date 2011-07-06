@@ -1,6 +1,7 @@
 EXPORTS
 	gst_buffer_add_meta_video
 	gst_buffer_add_meta_video_full
+	gst_meta_video_crop_get_info
 	gst_meta_video_get_info
 	gst_meta_video_map
 	gst_meta_video_unmap
@@ -10,33 +11,24 @@ EXPORTS
 	gst_video_event_new_still_frame
 	gst_video_event_parse_still_frame
 	gst_video_filter_get_type
-	gst_video_format_convert
+	gst_video_flags_get_type
+	gst_video_format_flags_get_type
 	gst_video_format_from_fourcc
-	gst_video_format_get_component_depth
-	gst_video_format_get_component_height
-	gst_video_format_get_component_offset
-	gst_video_format_get_component_width
-	gst_video_format_get_pixel_stride
-	gst_video_format_get_row_stride
-	gst_video_format_get_size
+	gst_video_format_from_masks
+	gst_video_format_from_string
+	gst_video_format_get_info
 	gst_video_format_get_type
-	gst_video_format_has_alpha
-	gst_video_format_is_gray
-	gst_video_format_is_rgb
-	gst_video_format_is_yuv
-	gst_video_format_new_caps
-	gst_video_format_new_caps_interlaced
-	gst_video_format_new_template_caps
-	gst_video_format_parse_caps
-	gst_video_format_parse_caps_interlaced
 	gst_video_format_to_fourcc
-	gst_video_frame_rate
-	gst_video_get_size
-	gst_video_get_size_from_caps
-	gst_video_parse_caps_chroma_site
-	gst_video_parse_caps_color_matrix
+	gst_video_format_to_string
+	gst_video_frame_copy
+	gst_video_frame_map
+	gst_video_frame_unmap
+	gst_video_info_convert
+	gst_video_info_from_caps
+	gst_video_info_init
+	gst_video_info_set_format
+	gst_video_info_to_caps
 	gst_video_parse_caps_framerate
 	gst_video_parse_caps_palette
-	gst_video_parse_caps_pixel_aspect_ratio
 	gst_video_sink_center_rect
 	gst_video_sink_get_type
