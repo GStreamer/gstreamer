@@ -952,8 +952,12 @@ gst_h264_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
   gst_structure_get_fraction (str, "framerate", &h264parse->fps_num,
       &h264parse->fps_den);
 
+  /* get upstream format and align from caps */
+  gst_h264_parse_format_from_caps (caps, &format, &align);
+
   /* packetized video has a codec_data */
-  if ((value = gst_structure_get_value (str, "codec_data"))) {
+  if (format != GST_H264_PARSE_FORMAT_BYTE &&
+      (value = gst_structure_get_value (str, "codec_data"))) {
     guint8 *data;
     guint num_sps, num_pps, profile, len;
     gint i;
@@ -1023,9 +1027,6 @@ gst_h264_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
 
   /* negotiate with downstream, sets ->format and ->align */
   gst_h264_parse_negotiate (h264parse);
-
-  /* get upstream format and align from caps */
-  gst_h264_parse_format_from_caps (caps, &format, &align);
 
   /* if upstream sets codec_data without setting stream-format and alignment, we
    * assume stream-format=avc,alignment=au */
