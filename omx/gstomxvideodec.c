@@ -478,10 +478,6 @@ gst_omx_video_dec_set_format (GstBaseVideoDecoder * decoder,
   self = GST_OMX_VIDEO_DEC (decoder);
   klass = GST_OMX_VIDEO_DEC_GET_CLASS (decoder);
 
-  /* FIXME: If called again later, properly set states and reinitialize
-   *        only possible in Loaded state or if port is disabled =>
-   *        delay if state>loaded into the port-disabled callback */
-
   gst_omx_port_get_port_definition (self->in_port, &port_def);
 
   /* Check if the caps change is a real format change or if only irrelevant
