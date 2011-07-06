@@ -92,7 +92,7 @@ extra_files =
 
 # CFLAGS and LDFLAGS for compiling scan program. Only needed if your app/lib
 # contains GtkObjects/GObjects and you want to document signals and properties.
-GTKDOC_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS)
+GTKDOC_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) -DGST_USE_UNSTABLE_API
 GTKDOC_LIBS = $(SCANOBJ_DEPS) $(GST_BASE_LIBS)
 
 GTKDOC_CC=$(LIBTOOL) --tag=CC --mode=compile $(CC)
