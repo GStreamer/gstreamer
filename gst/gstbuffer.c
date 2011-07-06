@@ -595,7 +595,7 @@ gst_buffer_take_memory (GstBuffer * buffer, guint idx, GstMemory * mem)
   g_return_if_fail (GST_IS_BUFFER (buffer));
   g_return_if_fail (gst_buffer_is_writable (buffer));
   g_return_if_fail (mem != NULL);
-  g_return_if_fail (idx == -1 || idx < GST_BUFFER_MEM_LEN (buffer));
+  g_return_if_fail (idx == -1 || idx <= GST_BUFFER_MEM_LEN (buffer));
 
   _memory_add (buffer, idx, mem);
 }
