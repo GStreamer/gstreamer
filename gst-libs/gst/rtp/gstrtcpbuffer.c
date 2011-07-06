@@ -260,6 +260,13 @@ gst_rtcp_buffer_map (GstBuffer * buffer, GstMapFlags flags,
   rtcp->flags = flags;
   rtcp->data = gst_buffer_map (buffer, &rtcp->size, &rtcp->maxsize, flags);
 
+  /* allow for expansion, e.g. adding packets, if needed */
+  if ((flags & GST_MAP_WRITE) != 0) {
+    /* unmap and adjust to max available, and remap */
+    gst_buffer_unmap (buffer, rtcp->data, rtcp->maxsize);
+    rtcp->data = gst_buffer_map (buffer, &rtcp->size, &rtcp->maxsize, flags);
+  }
+
   return TRUE;
 }
 
