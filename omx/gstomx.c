@@ -470,7 +470,7 @@ gst_omx_component_get_state (GstOMXComponent * comp, GstClockTime timeout)
   }
 
   if (timeout != GST_CLOCK_TIME_NONE) {
-    glong add = timeout / 1000;
+    glong add = timeout / (GST_SECOND / G_USEC_PER_SEC);
 
     if (add == 0)
       goto done;
@@ -831,7 +831,7 @@ gst_omx_port_set_flushing (GstOMXPort * port, gboolean flush)
     }
 
     g_get_current_time (&abstimeout);
-    g_time_val_add (&abstimeout, 5 * 10000000);
+    g_time_val_add (&abstimeout, 5 * G_USEC_PER_SEC);
     timeval = &abstimeout;
     GST_DEBUG_OBJECT (comp->parent, "Waiting for 5s");
 
@@ -1124,7 +1124,7 @@ gst_omx_port_set_enabled_unlocked (GstOMXPort * port, gboolean enabled)
   }
 
   g_get_current_time (&abstimeout);
-  g_time_val_add (&abstimeout, 5 * 10000000);
+  g_time_val_add (&abstimeout, 5 * G_USEC_PER_SEC);
   timeval = &abstimeout;
   GST_DEBUG_OBJECT (comp->parent, "Waiting for 5s");
 
