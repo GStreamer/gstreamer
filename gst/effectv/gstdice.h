@@ -31,6 +31,7 @@
 
 #include <gst/gst.h>
 
+#include <gst/video/video.h>
 #include <gst/video/gstvideofilter.h>
 
 G_BEGIN_DECLS
@@ -54,8 +55,7 @@ struct _GstDiceTV
   GstVideoFilter videofilter;
 
   /* < private > */
-
-  gint width, height;
+  GstVideoInfo info;
   guint8 *dicemap;
 
   gint g_cube_bits;
