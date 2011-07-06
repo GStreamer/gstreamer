@@ -134,7 +134,8 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("audio/x-wav")
     );
 
-GST_BOILERPLATE (GstWavEnc, gst_wavenc, GstElement, GST_TYPE_ELEMENT);
+#define gst_wavenc_parent_class parent_class
+G_DEFINE_TYPE (GstWavEnc, gst_wavenc, GST_TYPE_ELEMENT);
 
 static GstFlowReturn gst_wavenc_chain (GstPad * pad, GstBuffer * buf);
 static gboolean gst_wavenc_event (GstPad * pad, GstEvent * event);
@@ -143,9 +144,13 @@ static GstStateChangeReturn gst_wavenc_change_state (GstElement * element,
 static gboolean gst_wavenc_sink_setcaps (GstPad * pad, GstCaps * caps);
 
 static void
-gst_wavenc_base_init (gpointer g_class)
+gst_wavenc_class_init (GstWavEncClass * klass)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GstElementClass *element_class;
+
+  element_class = (GstElementClass *) klass;
+
+  element_class->change_state = GST_DEBUG_FUNCPTR (gst_wavenc_change_state);
 
   gst_element_class_set_details_simple (element_class, "WAV audio muxer",
       "Codec/Muxer/Audio",
@@ -160,25 +165,13 @@ gst_wavenc_base_init (gpointer g_class)
 }
 
 static void
-gst_wavenc_class_init (GstWavEncClass * klass)
-{
-  GstElementClass *element_class;
-
-  element_class = (GstElementClass *) klass;
-
-  element_class->change_state = GST_DEBUG_FUNCPTR (gst_wavenc_change_state);
-}
-
-static void
-gst_wavenc_init (GstWavEnc * wavenc, GstWavEncClass * klass)
+gst_wavenc_init (GstWavEnc * wavenc)
 {
   wavenc->sinkpad = gst_pad_new_from_static_template (&sink_factory, "sink");
   gst_pad_set_chain_function (wavenc->sinkpad,
       GST_DEBUG_FUNCPTR (gst_wavenc_chain));
   gst_pad_set_event_function (wavenc->sinkpad,
       GST_DEBUG_FUNCPTR (gst_wavenc_event));
-  gst_pad_set_setcaps_function (wavenc->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_wavenc_sink_setcaps));
   gst_pad_use_fixed_caps (wavenc->sinkpad);
   gst_element_add_pad (GST_ELEMENT (wavenc), wavenc->sinkpad);
 
@@ -199,7 +192,7 @@ gst_wavenc_create_header_buf (GstWavEnc * wavenc, guint audio_data_size)
   guint8 *header;
 
   buf = gst_buffer_new_and_alloc (WAV_HEADER_LEN);
-  header = GST_BUFFER_DATA (buf);
+  header = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
   memset (header, 0, WAV_HEADER_LEN);
 
   wave.common.wChannels = wavenc->channels;
@@ -236,7 +229,7 @@ gst_wavenc_create_header_buf (GstWavEnc * wavenc, guint audio_data_size)
   memcpy (header + 36, (char *) wave.data.id, 4);
   GST_WRITE_UINT32_LE (header + 40, wave.data.len);
 
-  gst_buffer_set_caps (buf, GST_PAD_CAPS (wavenc->srcpad));
+  gst_buffer_unmap (buf, header, -1);
 
   return buf;
 }
@@ -246,10 +239,11 @@ gst_wavenc_push_header (GstWavEnc * wavenc, guint audio_data_size)
 {
   GstFlowReturn ret;
   GstBuffer *outbuf;
+  GstSegment segment;
 
   /* seek to beginning of file */
-  gst_pad_push_event (wavenc->srcpad,
-      gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_BYTES, 0, -1, 0));
+  gst_segment_init (&segment, GST_FORMAT_BYTES);
+  gst_pad_push_event (wavenc->srcpad, gst_event_new_segment (&segment));
 
   GST_DEBUG_OBJECT (wavenc, "writing header with datasize=%u", audio_data_size);
 
@@ -273,13 +267,18 @@ gst_wavenc_sink_setcaps (GstPad * pad, GstCaps * caps)
   GstStructure *structure;
   const gchar *name;
   gint chans, rate, width;
+  GstCaps *ccaps;
 
   wavenc = GST_WAVENC (gst_pad_get_parent (pad));
 
-  if (wavenc->sent_header && !gst_caps_can_intersect (caps, GST_PAD_CAPS (pad))) {
+  ccaps = gst_pad_get_current_caps (pad);
+  if (wavenc->sent_header && ccaps && !gst_caps_can_intersect (caps, ccaps)) {
+    gst_caps_unref (ccaps);
     GST_WARNING_OBJECT (wavenc, "cannot change format in middle of stream");
     goto fail;
   }
+  if (ccaps)
+    gst_caps_unref (ccaps);
 
   GST_DEBUG_OBJECT (wavenc, "got caps: %" GST_PTR_FORMAT, caps);
 
@@ -621,6 +620,17 @@ gst_wavenc_event (GstPad * pad, GstEvent * event)
   wavenc = GST_WAVENC (gst_pad_get_parent (pad));
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+
+      gst_event_parse_caps (event, &caps);
+      gst_wavenc_sink_setcaps (pad, caps);
+
+      /* have our own src caps */
+      gst_event_unref (event);
+      break;
+    }
     case GST_EVENT_EOS:{
       GST_DEBUG_OBJECT (wavenc, "got EOS");
 #if 0
@@ -641,7 +651,7 @@ gst_wavenc_event (GstPad * pad, GstEvent * event)
       res = gst_pad_event_default (pad, event);
       break;
     }
-    case GST_EVENT_NEWSEGMENT:
+    case GST_EVENT_SEGMENT:
       /* Just drop it, it's probably in TIME format
        * anyway. We'll send our own newsegment event */
       gst_event_unref (event);
@@ -679,15 +689,14 @@ gst_wavenc_chain (GstPad * pad, GstBuffer * buf)
   }
 
   GST_LOG_OBJECT (wavenc, "pushing %u bytes raw audio, ts=%" GST_TIME_FORMAT,
-      GST_BUFFER_SIZE (buf), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
+      gst_buffer_get_size (buf), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
 
-  buf = gst_buffer_make_metadata_writable (buf);
+  buf = gst_buffer_make_writable (buf);
 
-  gst_buffer_set_caps (buf, GST_PAD_CAPS (wavenc->srcpad));
   GST_BUFFER_OFFSET (buf) = WAV_HEADER_LEN + wavenc->length;
   GST_BUFFER_OFFSET_END (buf) = GST_BUFFER_OFFSET_NONE;
 
-  wavenc->length += GST_BUFFER_SIZE (buf);
+  wavenc->length += gst_buffer_get_size (buf);
 
   flow = gst_pad_push (wavenc->srcpad, buf);
 
@@ -715,7 +724,7 @@ gst_wavenc_change_state (GstElement * element, GstStateChange transition)
       break;
   }
 
-  ret = parent_class->change_state (element, transition);
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
   if (ret != GST_STATE_CHANGE_SUCCESS)
     return ret;
 
