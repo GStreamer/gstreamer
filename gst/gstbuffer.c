@@ -1055,6 +1055,47 @@ gst_buffer_memcmp (GstBuffer * buffer, gsize offset, gconstpointer mem,
 }
 
 /**
+ * gst_buffer_memset:
+ * @buffer: a #GstBuffer.
+ * @offset: the offset in @buffer
+ * @val: the value to set
+ * @size: the size to set
+ *
+ * Fill @buf with @size bytes with @val starting from @offset.
+ */
+void
+gst_buffer_memset (GstBuffer * buffer, gsize offset, guint8 val, gsize size)
+{
+  gsize i, len;
+
+  g_return_if_fail (GST_IS_BUFFER (buffer));
+  g_return_if_fail (gst_buffer_is_writable (buffer));
+
+  len = GST_BUFFER_MEM_LEN (buffer);
+
+  for (i = 0; i < len && size > 0; i++) {
+    guint8 *data;
+    gsize ssize, toset;
+    GstMemory *mem;
+
+    mem = GST_BUFFER_MEM_PTR (buffer, i);
+
+    data = gst_memory_map (mem, &ssize, NULL, GST_MAP_WRITE);
+    if (ssize > offset) {
+      /* we have enough */
+      toset = MIN (ssize - offset, size);
+      memset (data + offset, val, toset);
+      size -= toset;
+      offset = 0;
+    } else {
+      /* offset past buffer, skip */
+      offset -= ssize;
+    }
+    gst_memory_unmap (mem, data, ssize);
+  }
+}
+
+/**
  * gst_buffer_copy_region:
  * @parent: a #GstBuffer.
  * @flags: the #GstBufferCopyFlags
