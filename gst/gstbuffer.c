@@ -583,19 +583,20 @@ gst_buffer_n_memory (GstBuffer * buffer)
 /**
  * gst_buffer_take_memory:
  * @buffer: a #GstBuffer.
- * @idx: the index to add the memory
- * @mem: a #GstMemory.
+ * @idx: the index to add the memory at, or -1 to append it to the end
+ * @mem: (transfer: full): a #GstMemory.
  *
- * Add the memory block @mem to @buffer at @idx. This function takes ownership of @mem
- * and thus doesn't increase its refcount.
+ * Add the memory block @mem to @buffer at @idx. This function takes ownership
+ * of @mem and thus doesn't increase its refcount.
  */
 void
-gst_buffer_take_memory (GstBuffer * buffer, guint idx, GstMemory * mem)
+gst_buffer_take_memory (GstBuffer * buffer, gint idx, GstMemory * mem)
 {
   g_return_if_fail (GST_IS_BUFFER (buffer));
   g_return_if_fail (gst_buffer_is_writable (buffer));
   g_return_if_fail (mem != NULL);
-  g_return_if_fail (idx == -1 || idx <= GST_BUFFER_MEM_LEN (buffer));
+  g_return_if_fail (idx == -1 ||
+      (idx >= 0 && idx <= GST_BUFFER_MEM_LEN (buffer)));
 
   _memory_add (buffer, idx, mem);
 }
