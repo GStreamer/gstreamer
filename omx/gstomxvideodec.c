@@ -97,6 +97,9 @@ gst_omx_video_dec_class_init (GstOMXVideoDecClass * klass)
       GST_DEBUG_FUNCPTR (gst_omx_video_dec_handle_frame);
   base_video_decoder_class->finish =
       GST_DEBUG_FUNCPTR (gst_omx_video_dec_finish);
+
+  klass->in_port_index = 0;
+  klass->out_port_index = 1;
 }
 
 static void
@@ -122,8 +125,10 @@ gst_omx_video_dec_open (GstOMXVideoDec * self)
     return FALSE;
 
   /* FIXME: Always 0 == input, 1 == output? Make configurable? Let subclass decide? */
-  self->in_port = gst_omx_component_add_port (self->component, 0);
-  self->out_port = gst_omx_component_add_port (self->component, 1);
+  self->in_port =
+      gst_omx_component_add_port (self->component, klass->in_port_index);
+  self->out_port =
+      gst_omx_component_add_port (self->component, klass->out_port_index);
 
   if (!self->in_port || !self->out_port)
     return FALSE;
