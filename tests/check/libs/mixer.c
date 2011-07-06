@@ -32,6 +32,8 @@
 
 #define TEST_ELEMENT_TYPE (test_element_get_type())
 
+/* FIXME 0.11: possibly remove mixer interface entirely, or simplify, or
+ * radically change */
 typedef struct TestElement TestElement;
 typedef struct TestElementClass TestElementClass;
 
@@ -48,7 +50,6 @@ struct TestElementClass
 GType test_element_get_type (void);
 
 static void init_interface (GType type);
-static void gst_implements_interface_init (GstImplementsInterfaceClass * klass);
 
 G_DEFINE_TYPE_WITH_CODE (TestElement, test_element, GST_TYPE_ELEMENT,
     init_interface (g_define_type_id));
@@ -67,36 +68,13 @@ init_interface (GType type)
     NULL,
     NULL,
   };
-  static const GInterfaceInfo implements_iface_info = {
-    (GInterfaceInitFunc) gst_implements_interface_init,
-    NULL,
-    NULL,
-  };
 
-  g_type_add_interface_static (type, GST_TYPE_IMPLEMENTS_INTERFACE,
-      &implements_iface_info);
   g_type_add_interface_static (type, GST_TYPE_MIXER, &mixer_iface_info);
 }
 
 static void
 test_element_class_init (TestElementClass * klass)
 {
-}
-
-static gboolean
-test_element_interface_supported (GstImplementsInterface * ifacE,
-    GType interface_type)
-{
-  if (interface_type == GST_TYPE_MIXER)
-    return TRUE;
-
-  return FALSE;
-}
-
-static void
-gst_implements_interface_init (GstImplementsInterfaceClass * klass)
-{
-  klass->supported = test_element_interface_supported;
 }
 
 static void
