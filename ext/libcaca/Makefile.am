@@ -7,6 +7,7 @@ libgstcacasink_la_CFLAGS = \
 	$(GST_CFLAGS) \
 	$(LIBCACA_CFLAGS)
 libgstcacasink_la_LIBADD = \
+	-lgstvideo-$(GST_MAJORMINOR) \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS) \
 	$(LIBCACA_LIBS)

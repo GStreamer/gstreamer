@@ -43,12 +43,6 @@
 
 #include "gstcacasink.h"
 
-#define GST_CACA_DEFAULT_SCREEN_WIDTH 80
-#define GST_CACA_DEFAULT_SCREEN_HEIGHT 25
-#define GST_CACA_DEFAULT_BPP 24
-#define GST_CACA_DEFAULT_RED_MASK GST_VIDEO_BYTE1_MASK_32_INT
-#define GST_CACA_DEFAULT_GREEN_MASK GST_VIDEO_BYTE2_MASK_32_INT
-#define GST_CACA_DEFAULT_BLUE_MASK GST_VIDEO_BYTE3_MASK_32_INT
 
 //#define GST_CACA_DEFAULT_RED_MASK R_MASK_32_REVERSE_INT
 //#define GST_CACA_DEFAULT_GREEN_MASK G_MASK_32_REVERSE_INT
@@ -60,26 +54,25 @@ enum
   LAST_SIGNAL
 };
 
+#define GST_CACA_DEFAULT_SCREEN_WIDTH 80
+#define GST_CACA_DEFAULT_SCREEN_HEIGHT 25
+#define GST_CACA_DEFAULT_DITHER CACA_DITHERING_NONE
+#define GST_CACA_DEFAULT_ANTIALIASING TRUE
 
 enum
 {
-  ARG_0,
-  ARG_SCREEN_WIDTH,
-  ARG_SCREEN_HEIGHT,
-  ARG_DITHER,
-  ARG_ANTIALIASING
+  PROP_0,
+  PROP_SCREEN_WIDTH,
+  PROP_SCREEN_HEIGHT,
+  PROP_DITHER,
+  PROP_ANTIALIASING
 };
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB ";" GST_VIDEO_CAPS_RGBx ";"
-        GST_VIDEO_CAPS_RGB_16 ";" GST_VIDEO_CAPS_RGB_15)
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ RGB, RGBx, RGB16, RGB15 }"))
     );
-
-static void gst_cacasink_base_init (gpointer g_class);
-static void gst_cacasink_class_init (GstCACASinkClass * klass);
-static void gst_cacasink_init (GstCACASink * cacasink);
 
 static gboolean gst_cacasink_setcaps (GstBaseSink * pad, GstCaps * caps);
 static void gst_cacasink_get_times (GstBaseSink * sink, GstBuffer * buffer,
@@ -95,32 +88,8 @@ static void gst_cacasink_get_property (GObject * object, guint prop_id,
 static GstStateChangeReturn gst_cacasink_change_state (GstElement * element,
     GstStateChange transition);
 
-static GstElementClass *parent_class = NULL;
-
-GType
-gst_cacasink_get_type (void)
-{
-  static GType cacasink_type = 0;
-
-  if (!cacasink_type) {
-    static const GTypeInfo cacasink_info = {
-      sizeof (GstCACASinkClass),
-      gst_cacasink_base_init,
-      NULL,
-      (GClassInitFunc) gst_cacasink_class_init,
-      NULL,
-      NULL,
-      sizeof (GstCACASink),
-      0,
-      (GInstanceInitFunc) gst_cacasink_init,
-    };
-
-    cacasink_type =
-        g_type_register_static (GST_TYPE_BASE_SINK, "GstCACASink",
-        &cacasink_info, 0);
-  }
-  return cacasink_type;
-}
+#define gst_cacasink_parent_class parent_class
+G_DEFINE_TYPE (GstCACASink, gst_cacasink, GST_TYPE_BASE_SINK);
 
 #define GST_TYPE_CACADITHER (gst_cacasink_dither_get_type())
 static GType
@@ -144,18 +113,6 @@ gst_cacasink_dither_get_type (void)
 }
 
 static void
-gst_cacasink_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (element_class,
-      "A colored ASCII art video sink", "Sink/Video",
-      "A colored ASCII art videosink", "Zeeshan Ali <zak147@yahoo.com>");
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_template));
-}
-
-static void
 gst_cacasink_class_init (GstCACASinkClass * klass)
 {
   GObjectClass *gobject_class;
@@ -170,25 +127,32 @@ gst_cacasink_class_init (GstCACASinkClass * klass)
 
   gobject_class->set_property = gst_cacasink_set_property;
   gobject_class->get_property = gst_cacasink_get_property;
-  gstelement_class->change_state = gst_cacasink_change_state;
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SCREEN_WIDTH,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SCREEN_WIDTH,
       g_param_spec_int ("screen-width", "Screen Width",
           "The width of the screen", 0, G_MAXINT, GST_CACA_DEFAULT_SCREEN_WIDTH,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SCREEN_HEIGHT,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SCREEN_HEIGHT,
       g_param_spec_int ("screen-height", "Screen Height",
           "The height of the screen", 0, G_MAXINT,
           GST_CACA_DEFAULT_SCREEN_HEIGHT,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DITHER,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_DITHER,
       g_param_spec_enum ("dither", "Dither Type", "Set type of Dither",
-          GST_TYPE_CACADITHER, CACA_DITHERING_NONE,
+          GST_TYPE_CACADITHER, GST_CACA_DEFAULT_DITHER,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ANTIALIASING,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_ANTIALIASING,
       g_param_spec_boolean ("anti-aliasing", "Anti Aliasing",
-          "Enables Anti-Aliasing", TRUE,
+          "Enables Anti-Aliasing", GST_CACA_DEFAULT_ANTIALIASING,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gstelement_class->change_state = gst_cacasink_change_state;
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "A colored ASCII art video sink", "Sink/Video",
+      "A colored ASCII art videosink", "Zeeshan Ali <zak147@yahoo.com>");
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sink_template));
 
   gstbasesink_class->set_caps = GST_DEBUG_FUNCPTR (gst_cacasink_setcaps);
   gstbasesink_class->get_times = GST_DEBUG_FUNCPTR (gst_cacasink_get_times);
@@ -208,60 +172,75 @@ static gboolean
 gst_cacasink_setcaps (GstBaseSink * basesink, GstCaps * caps)
 {
   GstCACASink *cacasink;
-  GstStructure *structure;
-  gint endianness;
+  GstVideoInfo info;
+  guint bpp, red_mask, green_mask, blue_mask;
 
   cacasink = GST_CACASINK (basesink);
 
-  structure = gst_caps_get_structure (caps, 0);
-  gst_structure_get_int (structure, "width", &(cacasink->width));
-  gst_structure_get_int (structure, "height", &(cacasink->height));
-  gst_structure_get_int (structure, "endianness", &endianness);
-  gst_structure_get_int (structure, "bpp", (int *) &cacasink->bpp);
-  gst_structure_get_int (structure, "red_mask", (int *) &cacasink->red_mask);
-  gst_structure_get_int (structure, "green_mask",
-      (int *) &cacasink->green_mask);
-  gst_structure_get_int (structure, "blue_mask", (int *) &cacasink->blue_mask);
+  if (!gst_video_info_from_caps (&info, caps))
+    goto caps_error;
 
-  if (cacasink->bpp == 24) {
-    cacasink->red_mask = GUINT32_FROM_BE (cacasink->red_mask) >> 8;
-    cacasink->green_mask = GUINT32_FROM_BE (cacasink->green_mask) >> 8;
-    cacasink->blue_mask = GUINT32_FROM_BE (cacasink->blue_mask) >> 8;
-  }
 
-  else if (cacasink->bpp == 32) {
-    cacasink->red_mask = GUINT32_FROM_BE (cacasink->red_mask);
-    cacasink->green_mask = GUINT32_FROM_BE (cacasink->green_mask);
-    cacasink->blue_mask = GUINT32_FROM_BE (cacasink->blue_mask);
-  }
-
-  else if (cacasink->bpp == 16) {
-    if (endianness == G_BIG_ENDIAN) {
-      cacasink->red_mask = GUINT16_FROM_BE (cacasink->red_mask);
-      cacasink->green_mask = GUINT16_FROM_BE (cacasink->green_mask);
-      cacasink->blue_mask = GUINT16_FROM_BE (cacasink->blue_mask);
-    } else {
-      cacasink->red_mask = GUINT16_FROM_LE (cacasink->red_mask);
-      cacasink->green_mask = GUINT16_FROM_LE (cacasink->green_mask);
-      cacasink->blue_mask = GUINT16_FROM_LE (cacasink->blue_mask);
-    }
+  switch (GST_VIDEO_INFO_FORMAT (&info)) {
+    case GST_VIDEO_FORMAT_RGB:
+      bpp = 24;
+      red_mask = 0xff0000;
+      green_mask = 0x00ff00;
+      blue_mask = 0x0000ff;
+      break;
+    case GST_VIDEO_FORMAT_RGBx:
+      bpp = 32;
+      red_mask = 0xff000000;
+      green_mask = 0x00ff0000;
+      blue_mask = 0x0000ff00;
+      break;
+    case GST_VIDEO_FORMAT_RGB16:
+      bpp = 16;
+      red_mask = 0xf800;
+      green_mask = 0x07e0;
+      blue_mask = 0x001f;
+      break;
+    case GST_VIDEO_FORMAT_RGB15:
+      bpp = 16;
+      red_mask = 0x7c00;
+      green_mask = 0x03e0;
+      blue_mask = 0x001f;
+      break;
+    default:
+      goto invalid_format;
   }
 
   if (cacasink->bitmap) {
     caca_free_bitmap (cacasink->bitmap);
   }
+  cacasink->bitmap = caca_create_bitmap (bpp,
+      GST_VIDEO_INFO_WIDTH (&info),
+      GST_VIDEO_INFO_HEIGHT (&info),
+      GST_ROUND_UP_4 (GST_VIDEO_INFO_WIDTH (&info) * bpp / 8),
+      red_mask, green_mask, blue_mask, 0);
+  if (!cacasink->bitmap)
+    goto no_bitmap;
 
-  cacasink->bitmap = caca_create_bitmap (cacasink->bpp,
-      cacasink->width,
-      cacasink->height,
-      GST_ROUND_UP_4 (cacasink->width * cacasink->bpp / 8),
-      cacasink->red_mask, cacasink->green_mask, cacasink->blue_mask, 0);
-
-  if (!cacasink->bitmap) {
-    return FALSE;
-  }
+  cacasink->info = info;
 
   return TRUE;
+
+  /* ERROS */
+caps_error:
+  {
+    GST_ERROR_OBJECT (cacasink, "error parsing caps");
+    return FALSE;
+  }
+invalid_format:
+  {
+    GST_ERROR_OBJECT (cacasink, "invalid format");
+    return FALSE;
+  }
+no_bitmap:
+  {
+    GST_ERROR_OBJECT (cacasink, "could not create bitmap");
+    return FALSE;
+  }
 }
 
 static void
@@ -269,25 +248,38 @@ gst_cacasink_init (GstCACASink * cacasink)
 {
   cacasink->screen_width = GST_CACA_DEFAULT_SCREEN_WIDTH;
   cacasink->screen_height = GST_CACA_DEFAULT_SCREEN_HEIGHT;
-  cacasink->bpp = GST_CACA_DEFAULT_BPP;
-  cacasink->red_mask = GST_CACA_DEFAULT_RED_MASK;
-  cacasink->green_mask = GST_CACA_DEFAULT_GREEN_MASK;
-  cacasink->blue_mask = GST_CACA_DEFAULT_BLUE_MASK;
+
+  cacasink->dither = GST_CACA_DEFAULT_DITHER;
+  cacasink->antialiasing = GST_CACA_DEFAULT_ANTIALIASING;
 }
 
 static GstFlowReturn
 gst_cacasink_render (GstBaseSink * basesink, GstBuffer * buffer)
 {
   GstCACASink *cacasink = GST_CACASINK (basesink);
+  GstVideoFrame frame;
 
   GST_DEBUG ("render");
 
+  if (!gst_video_frame_map (&frame, &cacasink->info, buffer, GST_MAP_READ))
+    goto invalid_frame;
+
   caca_clear ();
   caca_draw_bitmap (0, 0, cacasink->screen_width - 1,
-      cacasink->screen_height - 1, cacasink->bitmap, GST_BUFFER_DATA (buffer));
+      cacasink->screen_height - 1, cacasink->bitmap,
+      GST_VIDEO_FRAME_PLANE_DATA (&frame, 0));
   caca_refresh ();
 
+  gst_video_frame_unmap (&frame);
+
   return GST_FLOW_OK;
+
+  /* ERRORS */
+invalid_frame:
+  {
+    GST_ERROR_OBJECT (cacasink, "invalid frame received");
+    return GST_FLOW_ERROR;
+  }
 }
 
 static void
@@ -301,12 +293,12 @@ gst_cacasink_set_property (GObject * object, guint prop_id,
   cacasink = GST_CACASINK (object);
 
   switch (prop_id) {
-    case ARG_DITHER:{
+    case PROP_DITHER:{
       cacasink->dither = g_value_get_enum (value);
       caca_set_dithering (cacasink->dither + CACA_DITHERING_NONE);
       break;
     }
-    case ARG_ANTIALIASING:{
+    case PROP_ANTIALIASING:{
       cacasink->antialiasing = g_value_get_boolean (value);
       if (cacasink->antialiasing) {
         caca_set_feature (CACA_ANTIALIASING_MAX);
@@ -329,19 +321,19 @@ gst_cacasink_get_property (GObject * object, guint prop_id, GValue * value,
   cacasink = GST_CACASINK (object);
 
   switch (prop_id) {
-    case ARG_SCREEN_WIDTH:{
+    case PROP_SCREEN_WIDTH:{
       g_value_set_int (value, cacasink->screen_width);
       break;
     }
-    case ARG_SCREEN_HEIGHT:{
+    case PROP_SCREEN_HEIGHT:{
       g_value_set_int (value, cacasink->screen_height);
       break;
     }
-    case ARG_DITHER:{
+    case PROP_DITHER:{
       g_value_set_enum (value, cacasink->dither);
       break;
     }
-    case ARG_ANTIALIASING:{
+    case PROP_ANTIALIASING:{
       g_value_set_boolean (value, cacasink->antialiasing);
       break;
     }
@@ -357,11 +349,8 @@ gst_cacasink_open (GstCACASink * cacasink)
 {
   cacasink->bitmap = NULL;
 
-  if (caca_init () < 0) {
-    GST_ELEMENT_ERROR (cacasink, RESOURCE, OPEN_WRITE, (NULL),
-        ("caca_init() failed"));
-    return FALSE;
-  }
+  if (caca_init () < 0)
+    goto init_failed;
 
   cacasink->screen_width = caca_get_width ();
   cacasink->screen_height = caca_get_height ();
@@ -371,6 +360,14 @@ gst_cacasink_open (GstCACASink * cacasink)
   caca_set_dithering (CACA_DITHERING_NONE);
 
   return TRUE;
+
+  /* ERRORS */
+init_failed:
+  {
+    GST_ELEMENT_ERROR (cacasink, RESOURCE, OPEN_WRITE, (NULL),
+        ("caca_init() failed"));
+    return FALSE;
+  }
 }
 
 static void
