@@ -135,12 +135,13 @@ GST_START_TEST (test_buffer_clipping_time)
   /* Clip start and end */
   buf = gst_buffer_new ();
   data = (guint8 *) g_malloc (1000);
-  gst_buffer_take_memory (buf,
+  gst_buffer_take_memory (buf, -1,
       gst_memory_new_wrapped (0, data, g_free, 1000, 0, 1000));
 
   gst_segment_init (&s, GST_FORMAT_TIME);
-  gst_segment_set_newsegment (&s, FALSE, 1.0, GST_FORMAT_TIME, 4 * GST_SECOND,
-      8 * GST_SECOND, 4 * GST_SECOND);
+  s.start = 4 * GST_SECOND;
+  s.stop = 8 * GST_SECOND;
+  s.time = 4 * GST_SECOND;
 
   GST_BUFFER_TIMESTAMP (buf) = 2 * GST_SECOND;
   GST_BUFFER_DURATION (buf) = 10 * GST_SECOND;
@@ -164,12 +165,13 @@ GST_START_TEST (test_buffer_clipping_time)
   /* Clip only start */
   buf = gst_buffer_new ();
   data = (guint8 *) g_malloc (1000);
-  gst_buffer_take_memory (buf,
+  gst_buffer_take_memory (buf, -1,
       gst_memory_new_wrapped (0, data, g_free, 1000, 0, 1000));
 
   gst_segment_init (&s, GST_FORMAT_TIME);
-  gst_segment_set_newsegment (&s, FALSE, 1.0, GST_FORMAT_TIME, 4 * GST_SECOND,
-      12 * GST_SECOND, 4 * GST_SECOND);
+  s.start = 4 * GST_SECOND;
+  s.stop = 12 * GST_SECOND;
+  s.time = 4 * GST_SECOND;
 
   GST_BUFFER_TIMESTAMP (buf) = 2 * GST_SECOND;
   GST_BUFFER_DURATION (buf) = 10 * GST_SECOND;
@@ -193,12 +195,13 @@ GST_START_TEST (test_buffer_clipping_time)
   /* Clip only stop */
   buf = gst_buffer_new ();
   data = (guint8 *) g_malloc (1000);
-  gst_buffer_take_memory (buf,
+  gst_buffer_take_memory (buf, -1,
       gst_memory_new_wrapped (0, data, g_free, 1000, 0, 1000));
 
   gst_segment_init (&s, GST_FORMAT_TIME);
-  gst_segment_set_newsegment (&s, FALSE, 1.0, GST_FORMAT_TIME, 2 * GST_SECOND,
-      10 * GST_SECOND, 2 * GST_SECOND);
+  s.start = 2 * GST_SECOND;
+  s.stop = 10 * GST_SECOND;
+  s.time = 2 * GST_SECOND;
 
   GST_BUFFER_TIMESTAMP (buf) = 2 * GST_SECOND;
   GST_BUFFER_DURATION (buf) = 10 * GST_SECOND;
@@ -222,12 +225,13 @@ GST_START_TEST (test_buffer_clipping_time)
   /* Buffer outside segment */
   buf = gst_buffer_new ();
   data = (guint8 *) g_malloc (1000);
-  gst_buffer_take_memory (buf,
+  gst_buffer_take_memory (buf, -1,
       gst_memory_new_wrapped (0, data, g_free, 1000, 0, 1000));
 
   gst_segment_init (&s, GST_FORMAT_TIME);
-  gst_segment_set_newsegment (&s, FALSE, 1.0, GST_FORMAT_TIME, 12 * GST_SECOND,
-      20 * GST_SECOND, 12 * GST_SECOND);
+  s.start = 12 * GST_SECOND;
+  s.stop = 20 * GST_SECOND;
+  s.time = 12 * GST_SECOND;
 
   GST_BUFFER_TIMESTAMP (buf) = 2 * GST_SECOND;
   GST_BUFFER_DURATION (buf) = 10 * GST_SECOND;
@@ -240,12 +244,13 @@ GST_START_TEST (test_buffer_clipping_time)
   /* Clip start and end but don't touch duration and offset_end */
   buf = gst_buffer_new ();
   data = (guint8 *) g_malloc (1000);
-  gst_buffer_take_memory (buf,
+  gst_buffer_take_memory (buf, -1,
       gst_memory_new_wrapped (0, data, g_free, 1000, 0, 1000));
 
   gst_segment_init (&s, GST_FORMAT_TIME);
-  gst_segment_set_newsegment (&s, FALSE, 1.0, GST_FORMAT_TIME, 4 * GST_SECOND,
-      8 * GST_SECOND, 4 * GST_SECOND);
+  s.start = 4 * GST_SECOND;
+  s.stop = 8 * GST_SECOND;
+  s.time = 4 * GST_SECOND;
 
   GST_BUFFER_TIMESTAMP (buf) = 2 * GST_SECOND;
   GST_BUFFER_DURATION (buf) = GST_CLOCK_TIME_NONE;
@@ -272,12 +277,13 @@ GST_START_TEST (test_buffer_clipping_time)
    */
   buf = gst_buffer_new ();
   data = (guint8 *) g_malloc (1000);
-  gst_buffer_take_memory (buf,
+  gst_buffer_take_memory (buf, -1,
       gst_memory_new_wrapped (0, data, g_free, 1000, 0, 1000));
 
   gst_segment_init (&s, GST_FORMAT_TIME);
-  gst_segment_set_newsegment (&s, FALSE, 1.0, GST_FORMAT_TIME, 0 * GST_SECOND,
-      10 * GST_SECOND, 0 * GST_SECOND);
+  s.start = 0 * GST_SECOND;
+  s.stop = 10 * GST_SECOND;
+  s.time = 0 * GST_SECOND;
 
   GST_BUFFER_TIMESTAMP (buf) = GST_CLOCK_TIME_NONE;
   GST_BUFFER_DURATION (buf) = GST_CLOCK_TIME_NONE;
@@ -295,11 +301,13 @@ GST_START_TEST (test_buffer_clipping_time)
    */
   buf = gst_buffer_new ();
   data = (guint8 *) g_malloc (1000);
-  gst_buffer_take_memory (buf,
+  gst_buffer_take_memory (buf, -1,
       gst_memory_new_wrapped (0, data, g_free, 1000, 0, 1000));
 
   gst_segment_init (&s, GST_FORMAT_PERCENT);
-  gst_segment_set_newsegment (&s, FALSE, 1.0, GST_FORMAT_PERCENT, 0, 10, 0);
+  s.start = 0;
+  s.stop = 10;
+  s.time = 0;
 
   GST_BUFFER_TIMESTAMP (buf) = 0 * GST_SECOND;
   GST_BUFFER_DURATION (buf) = 0;
@@ -325,12 +333,13 @@ GST_START_TEST (test_buffer_clipping_samples)
   /* Clip start and end */
   buf = gst_buffer_new ();
   data = (guint8 *) g_malloc (1000);
-  gst_buffer_take_memory (buf,
+  gst_buffer_take_memory (buf, -1,
       gst_memory_new_wrapped (0, data, g_free, 1000, 0, 1000));
 
   gst_segment_init (&s, GST_FORMAT_DEFAULT);
-  gst_segment_set_newsegment (&s, FALSE, 1.0, GST_FORMAT_DEFAULT, 400,
-      800, 400);
+  s.start = 400;
+  s.stop = 800;
+  s.time = 400;
 
   GST_BUFFER_TIMESTAMP (buf) = 2 * GST_SECOND;
   GST_BUFFER_DURATION (buf) = 10 * GST_SECOND;
@@ -354,12 +363,13 @@ GST_START_TEST (test_buffer_clipping_samples)
   /* Clip only start */
   buf = gst_buffer_new ();
   data = (guint8 *) g_malloc (1000);
-  gst_buffer_take_memory (buf,
+  gst_buffer_take_memory (buf, -1,
       gst_memory_new_wrapped (0, data, g_free, 1000, 0, 1000));
 
   gst_segment_init (&s, GST_FORMAT_DEFAULT);
-  gst_segment_set_newsegment (&s, FALSE, 1.0, GST_FORMAT_DEFAULT, 400,
-      1200, 400);
+  s.start = 400;
+  s.stop = 1200;
+  s.time = 400;
 
   GST_BUFFER_TIMESTAMP (buf) = 2 * GST_SECOND;
   GST_BUFFER_DURATION (buf) = 10 * GST_SECOND;
@@ -383,12 +393,13 @@ GST_START_TEST (test_buffer_clipping_samples)
   /* Clip only stop */
   buf = gst_buffer_new ();
   data = (guint8 *) g_malloc (1000);
-  gst_buffer_take_memory (buf,
+  gst_buffer_take_memory (buf, -1,
       gst_memory_new_wrapped (0, data, g_free, 1000, 0, 1000));
 
   gst_segment_init (&s, GST_FORMAT_DEFAULT);
-  gst_segment_set_newsegment (&s, FALSE, 1.0, GST_FORMAT_DEFAULT, 200,
-      1000, 200);
+  s.start = 200;
+  s.stop = 1000;
+  s.time = 200;
 
   GST_BUFFER_TIMESTAMP (buf) = 2 * GST_SECOND;
   GST_BUFFER_DURATION (buf) = 10 * GST_SECOND;
@@ -412,12 +423,13 @@ GST_START_TEST (test_buffer_clipping_samples)
   /* Buffer outside segment */
   buf = gst_buffer_new ();
   data = (guint8 *) g_malloc (1000);
-  gst_buffer_take_memory (buf,
+  gst_buffer_take_memory (buf, -1,
       gst_memory_new_wrapped (0, data, g_free, 1000, 0, 1000));
 
   gst_segment_init (&s, GST_FORMAT_DEFAULT);
-  gst_segment_set_newsegment (&s, FALSE, 1.0, GST_FORMAT_DEFAULT, 1200,
-      2000, 1200);
+  s.start = 1200;
+  s.stop = 2000;
+  s.time = 1200;
 
   GST_BUFFER_TIMESTAMP (buf) = 2 * GST_SECOND;
   GST_BUFFER_DURATION (buf) = 10 * GST_SECOND;
@@ -430,12 +442,13 @@ GST_START_TEST (test_buffer_clipping_samples)
   /* Clip start and end but don't touch duration and offset_end */
   buf = gst_buffer_new ();
   data = (guint8 *) g_malloc (1000);
-  gst_buffer_take_memory (buf,
+  gst_buffer_take_memory (buf, -1,
       gst_memory_new_wrapped (0, data, g_free, 1000, 0, 1000));
 
   gst_segment_init (&s, GST_FORMAT_DEFAULT);
-  gst_segment_set_newsegment (&s, FALSE, 1.0, GST_FORMAT_DEFAULT, 400,
-      800, 400);
+  s.start = 400;
+  s.stop = 800;
+  s.time = 400;
 
   GST_BUFFER_TIMESTAMP (buf) = 2 * GST_SECOND;
   GST_BUFFER_DURATION (buf) = GST_CLOCK_TIME_NONE;
@@ -462,11 +475,13 @@ GST_START_TEST (test_buffer_clipping_samples)
    */
   buf = gst_buffer_new ();
   data = (guint8 *) g_malloc (1000);
-  gst_buffer_take_memory (buf,
+  gst_buffer_take_memory (buf, -1,
       gst_memory_new_wrapped (0, data, g_free, 1000, 0, 1000));
 
   gst_segment_init (&s, GST_FORMAT_DEFAULT);
-  gst_segment_set_newsegment (&s, FALSE, 1.0, GST_FORMAT_DEFAULT, 0, 10, 0);
+  s.start = 0;
+  s.stop = 10;
+  s.time = 0;
 
   GST_BUFFER_TIMESTAMP (buf) = 0 * GST_SECOND;
   GST_BUFFER_DURATION (buf) = GST_CLOCK_TIME_NONE;
