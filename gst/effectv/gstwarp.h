@@ -26,6 +26,7 @@
 
 #include <gst/gst.h>
 
+#include <gst/video/video.h>
 #include <gst/video/gstvideofilter.h>
 
 G_BEGIN_DECLS
@@ -49,8 +50,8 @@ struct _GstWarpTV
   GstVideoFilter videofilter;
 
   /* < private > */
+  GstVideoInfo info;
 
-  gint width, height;
   gint *offstable;
   gint32 *disttable;
   gint32 ctable[1024];

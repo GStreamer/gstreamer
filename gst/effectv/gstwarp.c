@@ -55,32 +55,29 @@
 
 #include "gstwarp.h"
 
-#include <gst/video/video.h>
-
 #ifndef M_PI
 #define M_PI    3.14159265358979323846
 #endif
 
-GST_BOILERPLATE (GstWarpTV, gst_warptv, GstVideoFilter, GST_TYPE_VIDEO_FILTER);
+#define gst_warptv_parent_class parent_class
+G_DEFINE_TYPE (GstWarpTV, gst_warptv, GST_TYPE_VIDEO_FILTER);
 
 static void initSinTable ();
-static void initOffsTable (GstWarpTV * filter);
-static void initDistTable (GstWarpTV * filter);
+static void initOffsTable (GstWarpTV * filter, gint width, gint height);
+static void initDistTable (GstWarpTV * filter, gint width, gint height);
 
 static GstStaticPadTemplate gst_warptv_src_template =
-    GST_STATIC_PAD_TEMPLATE ("src",
+GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGBx ";" GST_VIDEO_CAPS_xRGB ";"
-        GST_VIDEO_CAPS_BGRx ";" GST_VIDEO_CAPS_xBGR)
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ RGBx, xRGB, BGRx, xBGR }"))
     );
 
 static GstStaticPadTemplate gst_warptv_sink_template =
-    GST_STATIC_PAD_TEMPLATE ("sink",
+GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGBx ";" GST_VIDEO_CAPS_xRGB ";"
-        GST_VIDEO_CAPS_BGRx ";" GST_VIDEO_CAPS_xBGR)
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ RGBx, xRGB, BGRx, xBGR }"))
     );
 
 static gboolean
@@ -88,28 +85,32 @@ gst_warptv_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
     GstCaps * outcaps)
 {
   GstWarpTV *filter = GST_WARPTV (btrans);
-  GstStructure *structure;
-  gboolean ret = FALSE;
+  GstVideoInfo info;
+  gint width, height;
 
-  structure = gst_caps_get_structure (incaps, 0);
+  if (!gst_video_info_from_caps (&info, incaps))
+    goto invalid_caps;
 
-  GST_OBJECT_LOCK (filter);
-  if (gst_structure_get_int (structure, "width", &filter->width) &&
-      gst_structure_get_int (structure, "height", &filter->height)) {
-    g_free (filter->disttable);
-    g_free (filter->offstable);
+  filter->info = info;
 
-    filter->offstable = g_malloc (filter->height * sizeof (guint32));
-    filter->disttable =
-        g_malloc (filter->width * filter->height * sizeof (guint32));
+  width = GST_VIDEO_INFO_WIDTH (&info);
+  height = GST_VIDEO_INFO_HEIGHT (&info);
 
-    initOffsTable (filter);
-    initDistTable (filter);
-    ret = TRUE;
+  g_free (filter->disttable);
+  g_free (filter->offstable);
+  filter->offstable = g_malloc (height * sizeof (guint32));
+  filter->disttable = g_malloc (width * height * sizeof (guint32));
+  initOffsTable (filter, width, height);
+  initDistTable (filter, width, height);
+
+  return TRUE;
+
+  /* ERRORS */
+invalid_caps:
+  {
+    GST_DEBUG_OBJECT (filter, "invalid caps received");
+    return FALSE;
   }
-  GST_OBJECT_UNLOCK (filter);
-
-  return ret;
 }
 
 static gint32 sintable[1024 + 256];
@@ -130,17 +131,17 @@ initSinTable (void)
 }
 
 static void
-initOffsTable (GstWarpTV * filter)
+initOffsTable (GstWarpTV * filter, gint width, gint height)
 {
   gint y;
 
-  for (y = 0; y < filter->height; y++) {
-    filter->offstable[y] = y * filter->width;
+  for (y = 0; y < height; y++) {
+    filter->offstable[y] = y * width;
   }
 }
 
 static void
-initDistTable (GstWarpTV * filter)
+initDistTable (GstWarpTV * filter, gint width, gint height)
 {
   gint32 halfw, halfh, *distptr;
   gint x, y;
@@ -150,8 +151,8 @@ initDistTable (GstWarpTV * filter)
   float m;
 #endif
 
-  halfw = filter->width >> 1;
-  halfh = filter->height >> 1;
+  halfw = width >> 1;
+  halfh = height >> 1;
 
   distptr = filter->disttable;
 
@@ -171,18 +172,23 @@ gst_warptv_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
 {
   GstWarpTV *warptv = GST_WARPTV (trans);
   gint width, height;
-  guint32 *src = (guint32 *) GST_BUFFER_DATA (in);
-  guint32 *dest = (guint32 *) GST_BUFFER_DATA (out);
   gint xw, yw, cw;
   gint32 c, i, x, y, dx, dy, maxx, maxy;
   gint32 skip, *ctptr, *distptr;
   gint32 *ctable;
-  GstFlowReturn ret = GST_FLOW_OK;
+  guint32 *src, *dest;
+  GstVideoFrame in_frame, out_frame;
+
+  gst_video_frame_map (&in_frame, &warptv->info, in, GST_MAP_READ);
+  gst_video_frame_map (&out_frame, &warptv->info, out, GST_MAP_WRITE);
+
+  src = GST_VIDEO_FRAME_PLANE_DATA (&in_frame, 0);
+  dest = GST_VIDEO_FRAME_PLANE_DATA (&out_frame, 0);
+
+  width = GST_VIDEO_FRAME_WIDTH (&in_frame);
+  height = GST_VIDEO_FRAME_HEIGHT (&in_frame);
 
   GST_OBJECT_LOCK (warptv);
-  width = warptv->width;
-  height = warptv->height;
-
   xw = (gint) (sin ((warptv->tval + 100) * M_PI / 128) * 30);
   yw = (gint) (sin ((warptv->tval) * M_PI / 256) * -35);
   cw = (gint) (sin ((warptv->tval - 70) * M_PI / 64) * 50);
@@ -228,7 +234,10 @@ gst_warptv_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
   warptv->tval = (warptv->tval + 1) & 511;
   GST_OBJECT_UNLOCK (warptv);
 
-  return ret;
+  gst_video_frame_unmap (&in_frame);
+  gst_video_frame_unmap (&out_frame);
+
+  return GST_FLOW_OK;
 }
 
 static gboolean
@@ -255,28 +264,23 @@ gst_warptv_finalize (GObject * object)
 }
 
 static void
-gst_warptv_base_init (gpointer g_class)
+gst_warptv_class_init (GstWarpTVClass * klass)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstElementClass *gstelement_class = (GstElementClass *) klass;
+  GstBaseTransformClass *trans_class = (GstBaseTransformClass *) klass;
 
-  gst_element_class_set_details_simple (element_class, "WarpTV effect",
+  gobject_class->finalize = gst_warptv_finalize;
+
+  gst_element_class_set_details_simple (gstelement_class, "WarpTV effect",
       "Filter/Effect/Video",
       "WarpTV does realtime goo'ing of the video input",
       "Sam Lantinga <slouken@devolution.com>");
 
-  gst_element_class_add_pad_template (element_class,
+  gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_warptv_sink_template));
-  gst_element_class_add_pad_template (element_class,
+  gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_warptv_src_template));
-}
-
-static void
-gst_warptv_class_init (GstWarpTVClass * klass)
-{
-  GObjectClass *gobject_class = (GObjectClass *) klass;
-  GstBaseTransformClass *trans_class = (GstBaseTransformClass *) klass;
-
-  gobject_class->finalize = gst_warptv_finalize;
 
   trans_class->start = GST_DEBUG_FUNCPTR (gst_warptv_start);
   trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_warptv_set_caps);
@@ -286,7 +290,7 @@ gst_warptv_class_init (GstWarpTVClass * klass)
 }
 
 static void
-gst_warptv_init (GstWarpTV * warptv, GstWarpTVClass * klass)
+gst_warptv_init (GstWarpTV * warptv)
 {
   gst_pad_use_fixed_caps (GST_BASE_TRANSFORM_SRC_PAD (warptv));
   gst_pad_use_fixed_caps (GST_BASE_TRANSFORM_SINK_PAD (warptv));
