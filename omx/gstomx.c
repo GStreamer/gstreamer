@@ -1023,21 +1023,21 @@ gst_omx_port_deallocate_buffers_unlocked (GstOMXPort * port)
 
   if ((err = gst_omx_component_get_last_error (comp)) != OMX_ErrorNone) {
     GST_ERROR_OBJECT (comp->parent, "Component in error state: %d", err);
-    goto done;
+    /* We still try to deallocate all buffers */
   }
 
   /* We only allow deallocation of buffers after they
    * were all released from the port, either by flushing
    * the port or by disabling it.
    */
-  g_assert (g_queue_get_length (port->pending_buffers) == port->buffers->len);
-
   n = port->buffers->len;
   for (i = 0; i < n; i++) {
     GstOMXBuffer *buf = g_ptr_array_index (port->buffers, i);
     OMX_ERRORTYPE tmp = OMX_ErrorNone;
 
-    g_assert (!buf->used);
+    if (buf->used)
+      GST_ERROR_OBJECT (comp->parent,
+          "Trying to free used buffer %p of port %u", buf, port->index);
 
     /* omx_buf can be NULL if allocation failed earlier
      * and we're just shutting down
