@@ -740,6 +740,7 @@ handoff_buffer_cb (GstElement * fakesink, GstBuffer * buffer, GstPad * pad,
 /* check if clipping works as expected */
 GST_START_TEST (test_clip)
 {
+  GstSegment segment;
   GstElement *bin, *adder, *sink;
   GstBus *bus;
   GstPad *sinkpad;
@@ -747,7 +748,7 @@ GST_START_TEST (test_clip)
   GstFlowReturn ret;
   GstEvent *event;
   GstBuffer *buffer;
-  GstCaps *caps;
+//FIXME:  GstCaps *caps;
 
   GST_INFO ("preparing test");
 
@@ -780,22 +781,26 @@ GST_START_TEST (test_clip)
   fail_if (sinkpad == NULL, NULL);
 
   /* send segment to adder */
-  event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
-      GST_SECOND, 2 * GST_SECOND, 0);
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  segment.start = GST_SECOND;
+  segment.stop = 2 * GST_SECOND;
+  segment.time = 0;
+  event = gst_event_new_segment (&segment);
   gst_pad_send_event (sinkpad, event);
 
-  caps = gst_caps_new_simple ("audio/x-raw-int",
+/*FIXME:  caps = gst_caps_new_simple ("audio/x-raw-int",
       "rate", G_TYPE_INT, 44100,
       "channels", G_TYPE_INT, 2,
       "endianness", G_TYPE_INT, G_BYTE_ORDER,
       "width", G_TYPE_INT, 16,
       "depth", G_TYPE_INT, 16, "signed", G_TYPE_BOOLEAN, TRUE, NULL);
+*/
 
   /* should be clipped and ok */
   buffer = gst_buffer_new_and_alloc (44100);
   GST_BUFFER_TIMESTAMP (buffer) = 0;
   GST_BUFFER_DURATION (buffer) = 250 * GST_MSECOND;
-  gst_buffer_set_caps (buffer, caps);
+//FIXME:  gst_buffer_set_caps (buffer, caps);
   GST_DEBUG ("pushing buffer %p", buffer);
   ret = gst_pad_chain (sinkpad, buffer);
   fail_unless (ret == GST_FLOW_OK);
@@ -805,7 +810,7 @@ GST_START_TEST (test_clip)
   buffer = gst_buffer_new_and_alloc (44100);
   GST_BUFFER_TIMESTAMP (buffer) = 900 * GST_MSECOND;
   GST_BUFFER_DURATION (buffer) = 250 * GST_MSECOND;
-  gst_buffer_set_caps (buffer, caps);
+//FIXME:  gst_buffer_set_caps (buffer, caps);
   GST_DEBUG ("pushing buffer %p", buffer);
   ret = gst_pad_chain (sinkpad, buffer);
   fail_unless (ret == GST_FLOW_OK);
@@ -816,7 +821,7 @@ GST_START_TEST (test_clip)
   buffer = gst_buffer_new_and_alloc (44100);
   GST_BUFFER_TIMESTAMP (buffer) = 1 * GST_SECOND;
   GST_BUFFER_DURATION (buffer) = 250 * GST_MSECOND;
-  gst_buffer_set_caps (buffer, caps);
+//FIXME:  gst_buffer_set_caps (buffer, caps);
   GST_DEBUG ("pushing buffer %p", buffer);
   ret = gst_pad_chain (sinkpad, buffer);
   fail_unless (ret == GST_FLOW_OK);
@@ -827,7 +832,7 @@ GST_START_TEST (test_clip)
   buffer = gst_buffer_new_and_alloc (44100);
   GST_BUFFER_TIMESTAMP (buffer) = 2 * GST_SECOND;
   GST_BUFFER_DURATION (buffer) = 250 * GST_MSECOND;
-  gst_buffer_set_caps (buffer, caps);
+//FIXME:  gst_buffer_set_caps (buffer, caps);
   GST_DEBUG ("pushing buffer %p", buffer);
   ret = gst_pad_chain (sinkpad, buffer);
   fail_unless (ret == GST_FLOW_OK);
