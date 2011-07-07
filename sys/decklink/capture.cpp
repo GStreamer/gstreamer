@@ -28,7 +28,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <pthread.h>
 #include <unistd.h>
 #include <fcntl.h>
 
@@ -49,20 +48,20 @@ static BMDTimecodeFormat g_timecodeFormat = 0;
 
 DeckLinkCaptureDelegate::DeckLinkCaptureDelegate ():m_refCount (0)
 {
-  pthread_mutex_init (&m_mutex, NULL);
+  m_mutex = g_mutex_new();
 }
 
 DeckLinkCaptureDelegate::~DeckLinkCaptureDelegate ()
 {
-  pthread_mutex_destroy (&m_mutex);
+  g_mutex_free (m_mutex);
 }
 
 ULONG
 DeckLinkCaptureDelegate::AddRef (void)
 {
-  pthread_mutex_lock (&m_mutex);
+  g_mutex_lock (m_mutex);
   m_refCount++;
-  pthread_mutex_unlock (&m_mutex);
+  g_mutex_unlock (m_mutex);
 
   return (ULONG) m_refCount;
 }
@@ -70,9 +69,9 @@ DeckLinkCaptureDelegate::AddRef (void)
 ULONG
 DeckLinkCaptureDelegate::Release (void)
 {
-  pthread_mutex_lock (&m_mutex);
+  g_mutex_lock (m_mutex);
   m_refCount--;
-  pthread_mutex_unlock (&m_mutex);
+  g_mutex_unlock (m_mutex);
 
   if (m_refCount == 0) {
     delete this;
