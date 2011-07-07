@@ -183,6 +183,9 @@ gst_revtv_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
   }
   GST_OBJECT_UNLOCK (filter);
 
+  gst_video_frame_unmap (&in_frame);
+  gst_video_frame_unmap (&out_frame);
+
   return GST_FLOW_OK;
 
   /* ERRORS */

@@ -29,6 +29,7 @@
 
 #include <gst/gst.h>
 
+#include <gst/video/video.h>
 #include <gst/video/gstvideofilter.h>
 
 G_BEGIN_DECLS
@@ -52,8 +53,8 @@ struct _GstQuarkTV
   GstVideoFilter element;
 
   /* < private > */
+  GstVideoInfo info;
 
-  gint width, height;
   gint area;
   gint planes;
   gint current_plane;
