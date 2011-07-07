@@ -984,7 +984,6 @@ gst_omx_port_allocate_buffers_unlocked (GstOMXPort * port)
     /* In the beginning all buffers are not owned by the component */
     g_queue_push_tail (port->pending_buffers, buf);
   }
-  g_cond_broadcast (port->port_cond);
 
 done:
   GST_DEBUG_OBJECT (comp->parent, "Allocated buffers for port %u: %d",
