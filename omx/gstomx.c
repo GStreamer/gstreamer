@@ -1112,6 +1112,11 @@ gst_omx_port_set_enabled_unlocked (GstOMXPort * port, gboolean enabled)
 
   comp = port->comp;
 
+  if ((err = gst_omx_component_get_last_error (comp)) != OMX_ErrorNone) {
+    GST_ERROR_OBJECT (comp->parent, "Component in error state: %d", err);
+    goto done;
+  }
+
   GST_DEBUG_OBJECT (comp->parent, "Setting port %u to %s", port->index,
       (enabled ? "enabled" : "disabled"));
 
