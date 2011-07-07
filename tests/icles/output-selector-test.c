@@ -86,11 +86,11 @@ main (gint argc, gchar * argv[])
   /* create elements */
   pipeline = gst_element_factory_make ("pipeline", "pipeline");
   src = gst_element_factory_make ("videotestsrc", "src");
-  c0 = gst_element_factory_make ("ffmpegcolorspace", NULL);
+  c0 = gst_element_factory_make ("videoconvert", NULL);
   toverlay = gst_element_factory_make ("timeoverlay", "timeoverlay");
   osel = gst_element_factory_make ("output-selector", "osel");
-  c1 = gst_element_factory_make ("ffmpegcolorspace", NULL);
-  c2 = gst_element_factory_make ("ffmpegcolorspace", NULL);
+  c1 = gst_element_factory_make ("videoconvert", NULL);
+  c2 = gst_element_factory_make ("videoconvert", NULL);
   sink1 = gst_element_factory_make ("autovideosink", "sink1");
   sink2 = gst_element_factory_make ("autovideosink", "sink2");
 

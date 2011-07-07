@@ -28,10 +28,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libgstaudiotestsrc", "libgs
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libgstffmpegcolorspace", "libgstffmpegcolorspace.vcproj", "{BE2600A9-5BEB-42D9-8F13-FD38FCF5B801}"
-	ProjectSection(ProjectDependencies) = postProject
-	EndProjectSection
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libgstplaybin", "libgstplaybin.vcproj", "{7B296C12-D728-4CD8-8CF7-B8D7A433F85C}"
 	ProjectSection(ProjectDependencies) = postProject
 		{F7558C2A-C1BC-453C-8FDE-84F33DB73915} = {F7558C2A-C1BC-453C-8FDE-84F33DB73915}

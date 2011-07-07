@@ -52,7 +52,7 @@ sub visualise(@)
     my $pipe;
     $pipe = $vis unless $pipe = $pipes{$vis};
 
-    $command = "gst-launch-@GST_MAJORMINOR@ $cfg{AUDIOSRC} ! $pipe ! { queue ! ffmpegcolorspace ! $cfg{VIDEOSINK} }";
+    $command = "gst-launch-@GST_MAJORMINOR@ $cfg{AUDIOSRC} ! $pipe ! { queue ! videoconvert ! $cfg{VIDEOSINK} }";
     print "Running $command\n";
     system ("PATH=\$PATH:".$cfg{CVS_PATH}."/gstreamer/tools $command");
 }

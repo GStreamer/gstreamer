@@ -56,7 +56,7 @@ GST_PLUGINS_BASE_BUILT_SOURCES := 						\
 	gst/audiotestsrc/Android.mk				\
 	gst/videotestsrc/Android.mk				\
 	gst/videoscale/Android.mk				\
-	gst/ffmpegcolorspace/Android.mk				\
+	gst/videoconvert/Android.mk				\
 	gst/videorate/Android.mk				\
 	gst/encoding/Android.mk					\
 	gst/adder/Android.mk					\
@@ -114,7 +114,7 @@ CONFIGURE_TARGETS += gst-plugins-base-configure
 -include $(GST_PLUGINS_BASE_TOP)/gst/audiotestsrc/Android.mk
 -include $(GST_PLUGINS_BASE_TOP)/gst/videotestsrc/Android.mk
 -include $(GST_PLUGINS_BASE_TOP)/gst/videoscale/Android.mk
--include $(GST_PLUGINS_BASE_TOP)/gst/ffmpegcolorspace/Android.mk
+-include $(GST_PLUGINS_BASE_TOP)/gst/videoconvert/Android.mk
 -include $(GST_PLUGINS_BASE_TOP)/gst/videorate/Android.mk
 -include $(GST_PLUGINS_BASE_TOP)/gst/encoding/Android.mk
 -include $(GST_PLUGINS_BASE_TOP)/gst/adder/Android.mk

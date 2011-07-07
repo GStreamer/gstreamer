@@ -1268,7 +1268,7 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
     GST_LOG ("Adding conversion elements for video stream");
 
     if (!native_video) {
-      cspace = gst_element_factory_make ("ffmpegcolorspace", NULL);
+      cspace = gst_element_factory_make ("videoconvert", NULL);
       scale = gst_element_factory_make ("videoscale", NULL);
       if (!scale) {
         missing_element_name = "videoscale";
@@ -1276,10 +1276,10 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
       }
       /* 4-tap scaling and black borders */
       g_object_set (scale, "method", 2, "add-borders", TRUE, NULL);
-      cspace2 = gst_element_factory_make ("ffmpegcolorspace", NULL);
+      cspace2 = gst_element_factory_make ("videoconvert", NULL);
 
       if (!cspace || !cspace2) {
-        missing_element_name = "ffmpegcolorspace";
+        missing_element_name = "videoconvert";
         goto missing_element;
       }
 

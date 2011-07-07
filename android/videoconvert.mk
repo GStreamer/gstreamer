@@ -4,15 +4,12 @@ include $(CLEAR_VARS)
 
 LOCAL_ARM_MODE := arm
 
-ffmpegcolorspace_LOCAL_SRC_FILES:= \
-	gst/ffmpegcolorspace/gstffmpegcolorspace.c \
-	gst/ffmpegcolorspace/gstffmpegcodecmap.c \
-	gst/ffmpegcolorspace/dsputil.c \
-	gst/ffmpegcolorspace/imgconvert.c \
-	gst/ffmpegcolorspace/mem.c \
-	gst/ffmpegcolorspace/utils.c
+videoconvert_LOCAL_SRC_FILES:= \
+	gst/videoconvert/gstvideoconvert.c \
+	gst/videoconvert/gstvideoconvertorc-dist.c \
+	gst/videoconvert/videoconvert.c
 
-LOCAL_SRC_FILES:= $(addprefix ../,$(ffmpegcolorspace_LOCAL_SRC_FILES))
+LOCAL_SRC_FILES:= $(addprefix ../,$(videoconvert_LOCAL_SRC_FILES))
 
 LOCAL_SHARED_LIBRARIES := \
     libgstvideo-0.10        \
@@ -24,7 +21,7 @@ LOCAL_SHARED_LIBRARIES := \
     libgobject-2.0 			\
     libgstpbutils-0.10
 
-LOCAL_MODULE:= libgstffmpegcolorspace
+LOCAL_MODULE:= libgstvideoconvert
 
 LOCAL_CFLAGS := -DHAVE_CONFIG_H -DGSTREAMER_BUILT_FOR_ANDROID \
 	$(GST_PLUGINS_BASE_CFLAGS)

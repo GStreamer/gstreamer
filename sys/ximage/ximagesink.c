@@ -81,7 +81,7 @@
  * size are allocated along the way. If you take away the queue, scaling will
  * happen almost immediately.
  * |[
- * gst-launch -v videotestsrc ! navigationtest ! ffmpegcolorspace ! ximagesink
+ * gst-launch -v videotestsrc ! navigationtest ! videoconvert ! ximagesink
  * ]| A pipeline to test navigation events.
  * While moving the mouse pointer over the test signal you will see a black box
  * following the mouse pointer. If you press the mouse button somewhere on the 

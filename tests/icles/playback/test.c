@@ -35,7 +35,7 @@ gen_video_element (void)
   GstPad *pad;
 
   element = gst_bin_new ("vbin");
-  conv = gst_element_factory_make ("ffmpegcolorspace", "conv");
+  conv = gst_element_factory_make ("videoconvert", "conv");
   sink = gst_element_factory_make (DEFAULT_VIDEOSINK, "sink");
 
   gst_bin_add (GST_BIN (element), conv);

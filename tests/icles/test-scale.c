@@ -63,7 +63,7 @@ make_pipeline (gint type)
           "capsfilter name=filter ! " "ximagesink");
       break;
     case 7:
-      pstr = g_strdup_printf ("v4l2src ! ffmpegcolorspace ! videoscale ! "
+      pstr = g_strdup_printf ("v4l2src ! videoconvert ! videoscale ! "
           "capsfilter name=filter ! " "ximagesink");
       break;
     default:

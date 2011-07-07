@@ -120,7 +120,7 @@ build_convert_frame_pipeline (GstElement ** src_element,
   /* videoscale is here to correct for the pixel-aspect-ratio for us */
   GST_DEBUG ("creating elements");
   if (!create_element ("appsrc", &src, &error) ||
-      !create_element ("ffmpegcolorspace", &csp, &error) ||
+      !create_element ("videoconvert", &csp, &error) ||
       !create_element ("videoscale", &vscale, &error) ||
       !create_element ("appsink", &sink, &error))
     goto no_elements;

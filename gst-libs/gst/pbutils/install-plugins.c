@@ -216,7 +216,7 @@
  *       urisource-$(PROTOCOL_REQUIRED), e.g. urisource-http or urisource-mms
  *     </para></listitem>
  *     <listitem><para>
- *       element-$(ELEMENT_REQUIRED), e.g. element-ffmpegcolorspace
+ *       element-$(ELEMENT_REQUIRED), e.g. element-videoconvert
  *     </para></listitem>
  *     <listitem><para>
  *       decoder-$(CAPS_REQUIRED), e.g. (do read below for more details!):

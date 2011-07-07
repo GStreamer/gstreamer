@@ -99,6 +99,8 @@ else
 cxx_checks =
 endif
 
+# FIXME 0.11: convert elements/ffmpegcolorspace to videoconvert or remove
+
 check_PROGRAMS = \
 	$(check_alsa) \
 	$(check_gio) \
@@ -115,7 +117,6 @@ check_PROGRAMS = \
 	elements/audiotestsrc \
 	elements/decodebin \
 	$(check_encodebin) \
-	elements/ffmpegcolorspace \
 	elements/gdpdepay \
 	elements/gdppay \
 	elements/multifdsink \
@@ -154,9 +155,9 @@ check_PROGRAMS = \
 # TORTURE_TO_FIX = \
 #       elements/adder
 
-# ffmpegcolorspace takes too long, so disabled for now
+# videoconvert takes too long, so disabled for now
 VALGRIND_TO_FIX = \
-	elements/ffmpegcolorspace \
+	elements/videoconvert \
 	libs/video
 
 # these tests don't even pass

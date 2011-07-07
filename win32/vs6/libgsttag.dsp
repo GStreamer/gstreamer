@@ -131,9 +131,5 @@ SOURCE="..\..\gst-libs\gst\tag\tags.c"
 
 # PROP Default_Filter "ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
 # End Group
-# Begin Source File
-
-SOURCE=..\..\gst\ffmpegcolorspace\avcodec.h
-# End Source File
 # End Target
 # End Project

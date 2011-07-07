@@ -27,7 +27,7 @@ Here is an example .gst file that implements the same defaults as hard-coded
 in the script :
 
 AUDIOSINK = osssink
-VIDEOSINK = ffmpegcolorspace ! xvimagesink
+VIDEOSINK = videoconvert ! xvimagesink
 
 You can change osssink to esdsink or alsasink (if you have
 the plug-in), and you can change xvimagesink to ximagesink, aasink

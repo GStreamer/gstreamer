@@ -38,7 +38,7 @@ make_pipeline (gint type)
       pstr =
           g_strdup_printf ("videotestsrc ! " CAPS
           " ! videobox name=box ! videoscale ! " CAPS
-          " ! ffmpegcolorspace ! ximagesink");
+          " ! videoconvert ! ximagesink");
       break;
     default:
       return NULL;

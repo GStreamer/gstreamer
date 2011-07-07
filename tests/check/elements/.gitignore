@@ -19,7 +19,7 @@ volume
 vorbisdec
 typefindfunctions
 textoverlay
-ffmpegcolorspace
+videoconvert
 videoscale
 vorbistag
 playbin

@@ -34,7 +34,7 @@
  * gst-launch -v videotestsrc ! clockoverlay ! xvimagesink
  * ]| Display the current time in the top left corner of the video picture
  * |[
- * gst-launch -v videotestsrc ! clockoverlay halign=right valign=bottom text="Edge City" shaded-background=true ! ffmpegcolorspace ! ximagesink
+ * gst-launch -v videotestsrc ! clockoverlay halign=right valign=bottom text="Edge City" shaded-background=true ! videoconvert ! ximagesink
  * ]| Another pipeline that displays the current time with some leading
  * text in the bottom right corner of the video picture, with the background
  * of the text being shaded in order to make it more legible on top of a

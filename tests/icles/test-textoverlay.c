@@ -82,7 +82,7 @@ test_textoverlay (int width, int height)
   pstr = g_strdup_printf ("videotestsrc pattern=blue ! "
       "video/x-raw-yuv,width=%d,height=%d ! t.video_sink "
       "textoverlay name=t font-desc=\"Sans Serif, 20\" ! "
-      " ffmpegcolorspace ! videoscale ! autovideosink", width, height);
+      " videoconvert ! videoscale ! autovideosink", width, height);
 
   pipe = gst_parse_launch_full (pstr, NULL, GST_PARSE_FLAG_NONE, NULL);
   g_assert (pipe);

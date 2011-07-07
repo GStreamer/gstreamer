@@ -94,14 +94,14 @@ run_test (const GstCaps * caps, gint src_width, gint src_height,
     GCallback sink_handoff, gpointer sink_handoff_user_data)
 {
   GstElement *pipeline;
-  GstElement *src, *ffmpegcolorspace, *capsfilter1, *identity, *scale,
+  GstElement *src, *videoconvert, *capsfilter1, *identity, *scale,
       *capsfilter2, *sink;
   GstMessage *msg;
   GstBus *bus;
   GstCaps *copy;
   guint n_buffers = 0;
 
-  /* skip formats that ffmpegcolorspace can't handle */
+  /* skip formats that videoconvert can't handle */
   if (caps_are_64bpp (caps))
     return;
 
@@ -112,8 +112,8 @@ run_test (const GstCaps * caps, gint src_width, gint src_height,
   fail_unless (src != NULL);
   g_object_set (G_OBJECT (src), "num-buffers", 1, NULL);
 
-  ffmpegcolorspace = gst_element_factory_make ("ffmpegcolorspace", "csp");
-  fail_unless (ffmpegcolorspace != NULL);
+  videoconvert = gst_element_factory_make ("videoconvert", "csp");
+  fail_unless (videoconvert != NULL);
 
   capsfilter1 = gst_element_factory_make ("capsfilter", "filter1");
   fail_unless (capsfilter1 != NULL);
@@ -152,12 +152,12 @@ run_test (const GstCaps * caps, gint src_width, gint src_height,
         sink_handoff_user_data);
   }
 
-  gst_bin_add_many (GST_BIN (pipeline), src, ffmpegcolorspace, capsfilter1,
+  gst_bin_add_many (GST_BIN (pipeline), src, videoconvert, capsfilter1,
       identity, scale, capsfilter2, sink, NULL);
 
-  fail_unless (gst_element_link_pads_full (src, "src", ffmpegcolorspace, "sink",
+  fail_unless (gst_element_link_pads_full (src, "src", videoconvert, "sink",
           LINK_CHECK_FLAGS));
-  fail_unless (gst_element_link_pads_full (ffmpegcolorspace, "src", capsfilter1,
+  fail_unless (gst_element_link_pads_full (videoconvert, "src", capsfilter1,
           "sink", LINK_CHECK_FLAGS));
   fail_unless (gst_element_link_pads_full (capsfilter1, "src", identity, "sink",
           LINK_CHECK_FLAGS));
@@ -221,7 +221,7 @@ GST_START_TEST (test_passthrough)
     GstCaps *caps = *p;
 
     for (method = 0; method < 3; method++) {
-      /* skip formats that ffmpegcolorspace can't handle */
+      /* skip formats that videoconvert can't handle */
       if (caps_are_64bpp (caps))
         continue;
 
@@ -627,7 +627,7 @@ gst_test_reverse_negotiation_sink_render (GstBaseSink * bsink,
   sink->nbuffers++;
 
   /* The third buffer is still in the old size
-   * because the ffmpegcolorspaces can't convert
+   * because the videoconverts can't convert
    * the frame sizes
    */
   if (sink->nbuffers > 3) {
@@ -715,13 +715,13 @@ GST_START_TEST (test_reverse_negotiation)
   fail_unless (src != NULL);
   g_object_set (G_OBJECT (src), "num-buffers", 8, NULL);
 
-  csp1 = gst_element_factory_make ("ffmpegcolorspace", "csp1");
+  csp1 = gst_element_factory_make ("videoconvert", "csp1");
   fail_unless (csp1 != NULL);
 
   scale = gst_element_factory_make ("videoscale", "scale");
   fail_unless (scale != NULL);
 
-  csp2 = gst_element_factory_make ("ffmpegcolorspace", "csp2");
+  csp2 = gst_element_factory_make ("videoconvert", "csp2");
   fail_unless (csp2 != NULL);
 
   sink = g_object_new (GST_TYPE_TEST_REVERSE_NEGOTIATION_SINK, NULL);

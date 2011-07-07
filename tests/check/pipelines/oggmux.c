@@ -350,7 +350,7 @@ GST_END_TEST;
 GST_START_TEST (test_theora)
 {
   test_pipeline
-      ("videotestsrc num-buffers=5 ! ffmpegcolorspace ! theoraenc ! oggmux");
+      ("videotestsrc num-buffers=5 ! videoconvert ! theoraenc ! oggmux");
 }
 
 GST_END_TEST;
@@ -360,7 +360,7 @@ GST_END_TEST;
 GST_START_TEST (test_theora_vorbis)
 {
   test_pipeline
-      ("videotestsrc num-buffers=10 ! ffmpegcolorspace ! theoraenc ! queue ! oggmux name=mux "
+      ("videotestsrc num-buffers=10 ! videoconvert ! theoraenc ! queue ! oggmux name=mux "
       "audiotestsrc num-buffers=2 ! audioconvert ! vorbisenc ! queue ! mux.");
 }
 
@@ -369,7 +369,7 @@ GST_END_TEST;
 GST_START_TEST (test_vorbis_theora)
 {
   test_pipeline
-      ("videotestsrc num-buffers=2 ! ffmpegcolorspace ! theoraenc ! queue ! oggmux name=mux "
+      ("videotestsrc num-buffers=2 ! videoconvert ! theoraenc ! queue ! oggmux name=mux "
       "audiotestsrc num-buffers=10 ! audioconvert ! vorbisenc ! queue ! mux.");
 }
 

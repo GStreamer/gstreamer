@@ -149,7 +149,7 @@ perform_step (gpointer pstep)
       g_print ("creating bin1\n");
       bin1 =
           create_stream
-          ("( v4l2src ! ffmpegcolorspace ! timeoverlay ! queue ! xvimagesink name=v4llive )");
+          ("( v4l2src ! videoconvert ! timeoverlay ! queue ! xvimagesink name=v4llive )");
       pause_play_stream (bin1, 0);
       g_timeout_add (1000, (GSourceFunc) perform_step, GINT_TO_POINTER (1));
       break;
@@ -172,7 +172,7 @@ perform_step (gpointer pstep)
       g_print ("creating bin4\n");
       bin4 =
           create_stream
-          ("( videotestsrc ! timeoverlay ! ffmpegcolorspace ! ximagesink name=vtnonlive )");
+          ("( videotestsrc ! timeoverlay ! videoconvert ! ximagesink name=vtnonlive )");
       pause_play_stream (bin4, 0);
       g_timeout_add (1000, (GSourceFunc) perform_step, GINT_TO_POINTER (4));
       break;
@@ -181,7 +181,7 @@ perform_step (gpointer pstep)
       g_print ("creating bin5\n");
       bin5 =
           create_stream
-          ("( videotestsrc is-live=1 ! timeoverlay ! ffmpegcolorspace ! ximagesink name=vtlive )");
+          ("( videotestsrc is-live=1 ! timeoverlay ! videoconvert ! ximagesink name=vtlive )");
       pause_play_stream (bin5, 0);
       g_timeout_add (1000, (GSourceFunc) perform_step, GINT_TO_POINTER (5));
       break;

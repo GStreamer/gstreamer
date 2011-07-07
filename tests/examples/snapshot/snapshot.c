@@ -50,7 +50,7 @@ main (int argc, char *argv[])
 
   /* create a new pipeline */
   descr =
-      g_strdup_printf ("uridecodebin uri=%s ! ffmpegcolorspace ! videoscale ! "
+      g_strdup_printf ("uridecodebin uri=%s ! videoconvert ! videoscale ! "
       " appsink name=sink caps=\"" CAPS "\"", argv[1]);
   pipeline = gst_parse_launch (descr, &error);
 

@@ -100,7 +100,6 @@ rm -rf $RPM_BUILD_ROOT
 # base plugins without external dependencies
 %{_libdir}/gstreamer-%{majorminor}/libgstadder.so
 %{_libdir}/gstreamer-%{majorminor}/libgstaudioconvert.so
-%{_libdir}/gstreamer-%{majorminor}/libgstffmpegcolorspace.so
 %{_libdir}/gstreamer-%{majorminor}/libgstdecodebin.so
 %{_libdir}/gstreamer-%{majorminor}/libgstdecodebin2.so
 %{_libdir}/gstreamer-%{majorminor}/libgstplaybin.so
@@ -109,6 +108,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstaudiorate.so
 %{_libdir}/gstreamer-%{majorminor}/libgstsubparse.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvolume.so
+%{_libdir}/gstreamer-%{majorminor}/libgstvideoconvert.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvideorate.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvideoscale.so
 %{_libdir}/gstreamer-%{majorminor}/libgsttcp.so
