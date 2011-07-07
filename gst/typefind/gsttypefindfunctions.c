@@ -4077,6 +4077,8 @@ degas_type_find (GstTypeFind * tf, gpointer private)
   if (len < 34)                 /* smallest header of the lot */
     return;
   data = gst_type_find_peek (tf, 0, 4);
+  if (G_UNLIKELY (data == NULL))
+    return;
   resolution = GST_READ_UINT16_BE (data);
   if (len == 32034) {
     /* could be DEGAS */
@@ -4087,6 +4089,8 @@ degas_type_find (GstTypeFind * tf, gpointer private)
     /* could be DEGAS Elite */
     if (resolution <= 2) {
       data = gst_type_find_peek (tf, len - 16, 8);
+      if (G_UNLIKELY (data == NULL))
+        return;
       for (n = 0; n < 4; n++) {
         if (GST_READ_UINT16_BE (data + n * 2) > 2)
           return;
@@ -4099,6 +4103,8 @@ degas_type_find (GstTypeFind * tf, gpointer private)
        it does have 4 16 bytes values near the end that are 0-2 though. */
     if ((resolution & 0x8000) && (resolution & 0x7fff) <= 2) {
       data = gst_type_find_peek (tf, len - 16, 8);
+      if (G_UNLIKELY (data == NULL))
+        return;
       for (n = 0; n < 4; n++) {
         if (GST_READ_UINT16_BE (data + n * 2) > 2)
           return;
