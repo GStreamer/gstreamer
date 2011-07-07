@@ -1,0 +1,28 @@
+<plugin>
+  <name>flite</name>
+  <description>Flite speech synthesizer plugin</description>
+  <filename>../../ext/flite/.libs/libgstflite.so</filename>
+  <basename>libgstflite.so</basename>
+  <version>0.10.22.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins git</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>flitetestsrc</name>
+      <longname>Flite speech test source</longname>
+      <class>Source/Audio</class>
+      <description>Creates audio test signals identifying channels</description>
+      <author>David Schleef &lt;ds@schleef.org&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-int, endianness=(int)1234, signed=(boolean)true, width=(int)16, depth=(int)16, rate=(int)48000, channels=(int)[ 1, 8 ]</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

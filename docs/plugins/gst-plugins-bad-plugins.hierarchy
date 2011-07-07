@@ -1,7 +1,6 @@
 GObject
+  GstAdapter
   GstColorBalanceChannel
-  GstMixerTrack
-    GstMixerOptions
   GstObject
     GstBus
     GstClock
@@ -37,37 +36,32 @@ GObject
           GstAudioSink
             GstApExSink
             GstNasSink
-            GstOpenALSink
             GstSDLAudioSink
         GstChecksumSink
-        GstCurlSink
         GstDCCPClientSink
         GstDCCPServerSink
         GstFBDEVSink
+        GstInterAudioSink
+        GstInterVideoSink
         GstLinsysSdiSink
-        GstRTMPSink
         GstSFSink
         GstShmSink
         GstVideoSink
           GstDfbVideoSink
           GstSDLVideoSink
-          VdpSink
       GstBaseSrc
         GstDTMFSrc
         GstDataURISrc
         GstFliteTestSrc
+        GstInterAudioSrc
+        GstInterVideoSrc
         GstLinsysSdiSrc
         GstPushSrc
-          GstBaseAudioSrc
-            GstAudioSrc
-              GstOpenalSrc
           GstDCCPClientSrc
           GstDCCPServerSrc
           GstDc1394
           GstDvbSrc
           GstMMS
-          GstNeonhttpSrc
-          GstRTMPSrc
           GstRfbSrc
           GstShmSrc
           GstVCDSrc
@@ -124,7 +118,6 @@ GObject
           GstVideoAnalyse
           GstVideoDetect
           GstVideoMark
-          GstZBar
         GstVideoFilter2
           GstSceneChange
           GstZebraStripe
@@ -132,26 +125,22 @@ GObject
       GstBaseVideoCodec
         GstBaseVideoDecoder
           GstSchroDec
-          GstVP8Dec
         GstBaseVideoEncoder
           GstDiracEnc
           GstSchroEnc
-          GstVP8Enc
       GstBin
         DvbBaseBin
         GstAutoConvert
         GstAutoVideoConvert
+        GstBaseCameraSrc
+          GstWrapperCameraBinSrc
         GstFPSDisplaySink
         GstFaceOverlay
-        GstGSettingsSwitchSink
-          GstGSettingsAudioSink
-          GstGSettingsVideoSink
-        GstGSettingsSwitchSrc
-          GstGSettingsAudioSrc
-          GstGSettingsVideoSrc
         GstPipeline
           GstCameraBin
+          GstCameraBin2
         GstSDPDemux
+        GstViewfinderBin
         RsnDvdBin
       GstBz2dec
       GstBz2enc
@@ -177,7 +166,6 @@ GObject
       GstId3BaseMux
         GstId3Mux
       GstInterlace
-      GstInvtelecine
       GstIvfParse
       GstJP2kDecimator
       GstJifMux
@@ -239,7 +227,6 @@ GObject
       GstTtaParse
       GstVMncDec
       GstVcdParse
-      GstVdpVideoPostProcess
       GstWildmidi
       GstY4mDec
       MpegPsMux
@@ -249,14 +236,7 @@ GObject
       MpegTSParse
       MpegTsMux
       MpegVideoParse
-      SatBaseVideoDecoder
-        GstVdpDecoder
-          GstVdpH264Dec
-          GstVdpMpeg4Dec
-          GstVdpMpegDec
     GstPad
-      GstVdpOutputSrcPad
-      GstVdpVideoSrcPad
     GstPadTemplate
       GstSignalProcessorPadTemplate
     GstPlugin
@@ -267,11 +247,9 @@ GObject
     GstRegistry
     GstRingBuffer
       GstAudioSinkRingBuffer
-      GstAudioSrcRingBuffer
     GstTask
     GstTaskPool
   GstSignalObject
-  GstVdpDevice
   MpegTsPatInfo
   MpegTsPmtInfo
 GInterface

@@ -1,0 +1,73 @@
+<plugin>
+  <name>inter</name>
+  <description>plugin for inter-pipeline communication</description>
+  <filename>../../gst/inter/.libs/libgstinter.so</filename>
+  <basename>libgstinter.so</basename>
+  <version>0.10.22.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>interaudiosink</name>
+      <longname>FIXME Long name</longname>
+      <class>Generic</class>
+      <description>FIXME Description</description>
+      <author>FIXME &lt;fixme@example.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-int, endianness=(int)1234, signed=(boolean)true, width=(int)16, depth=(int)16, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2 ]</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>interaudiosrc</name>
+      <longname>FIXME Long name</longname>
+      <class>Generic</class>
+      <description>FIXME Description</description>
+      <author>FIXME &lt;fixme@example.com&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-int, endianness=(int)1234, signed=(boolean)true, width=(int)16, depth=(int)16, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2 ]</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>intervideosink</name>
+      <longname>FIXME Long name</longname>
+      <class>Generic</class>
+      <description>FIXME Description</description>
+      <author>FIXME &lt;fixme@example.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw-yuv, format=(fourcc)I420, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>intervideosrc</name>
+      <longname>FIXME Long name</longname>
+      <class>Generic</class>
+      <description>FIXME Description</description>
+      <author>FIXME &lt;fixme@example.com&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw-yuv, format=(fourcc)I420, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

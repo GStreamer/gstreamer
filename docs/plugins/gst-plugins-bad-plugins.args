@@ -27930,7 +27930,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
 <BLURB>bitrate.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>13824000</DEFAULT>
 </ARG>
 
 <ARG>
@@ -28030,7 +28030,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>enable_multiquant</NICK>
 <BLURB>enable_multiquant.</BLURB>
-<DEFAULT>FALSE</DEFAULT>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -28116,11 +28116,11 @@
 <ARG>
 <NAME>GstSchroEnc::horiz-slices</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= 0</RANGE>
+<RANGE>>= 1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>horiz_slices</NICK>
 <BLURB>horiz_slices.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>8</DEFAULT>
 </ARG>
 
 <ARG>
@@ -28130,7 +28130,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>inter_wavelet</NICK>
 <BLURB>inter_wavelet.</BLURB>
-<DEFAULT>desl_dubuc_9_7</DEFAULT>
+<DEFAULT>le_gall_5_3</DEFAULT>
 </ARG>
 
 <ARG>
@@ -28220,7 +28220,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>magic_chroma_lambda_scale</NICK>
 <BLURB>magic_chroma_lambda_scale.</BLURB>
-<DEFAULT>0.1</DEFAULT>
+<DEFAULT>0.01</DEFAULT>
 </ARG>
 
 <ARG>
@@ -28320,7 +28320,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>magic_scene_change_threshold</NICK>
 <BLURB>magic_scene_change_threshold.</BLURB>
-<DEFAULT>3</DEFAULT>
+<DEFAULT>0.2</DEFAULT>
 </ARG>
 
 <ARG>
@@ -28490,17 +28490,17 @@
 <FLAGS>rw</FLAGS>
 <NICK>transform_depth</NICK>
 <BLURB>transform_depth.</BLURB>
-<DEFAULT>3</DEFAULT>
+<DEFAULT>4</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>GstSchroEnc::vert-slices</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= 0</RANGE>
+<RANGE>>= 1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>vert_slices</NICK>
 <BLURB>vert_slices.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>6</DEFAULT>
 </ARG>
 
 <ARG>
@@ -47779,8 +47779,8 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Location</NICK>
-<BLURB>Location to save the captured files. A %d might be used on thefilename as a placeholder for a numeric index of the capture.Default for images is img_%d and vid_%d for videos.</BLURB>
-<DEFAULT>"img_%d"</DEFAULT>
+<BLURB>Location to save the captured files. A %d might be used on thefilename as a placeholder for a numeric index of the capture.Default is cap_%d.</BLURB>
+<DEFAULT>"cap_%d"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -57621,5 +57621,35 @@
 <NICK>File Location</NICK>
 <BLURB>Location of the file to read.</BLURB>
 <DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDecklinkSrc::connection</NAME>
+<TYPE>GstDecklinkConnection</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Connection</NICK>
+<BLURB>Connection.</BLURB>
+<DEFAULT>sdi</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDecklinkSrc::mode</NAME>
+<TYPE>GstDecklinkModes</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Mode</NICK>
+<BLURB>Mode.</BLURB>
+<DEFAULT>ntsc</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDecklinkSink::mode</NAME>
+<TYPE>GstDecklinkModes</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Mode</NICK>
+<BLURB>Mode.</BLURB>
+<DEFAULT>ntsc</DEFAULT>
 </ARG>
 

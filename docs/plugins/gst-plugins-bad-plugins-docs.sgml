@@ -24,6 +24,7 @@
     <xi:include href="xml/element-bulge.xml" />
     <xi:include href="xml/element-burn.xml" />
     <xi:include href="xml/element-camerabin.xml" />
+    <xi:include href="xml/element-camerabin2.xml" />
     <xi:include href="xml/element-celtdec.xml" />
     <xi:include href="xml/element-celtenc.xml" />
     <xi:include href="xml/element-chromium.xml" />
@@ -142,6 +143,7 @@
     <xi:include href="xml/plugin-bayer.xml" />
     <xi:include href="xml/plugin-bz2.xml" />
     <xi:include href="xml/plugin-camerabin.xml" />
+    <xi:include href="xml/plugin-camerabin2.xml" />
     <xi:include href="xml/plugin-cdaudio.xml" />
     <xi:include href="xml/plugin-cdxaparse.xml" />
     <xi:include href="xml/plugin-celt.xml" />

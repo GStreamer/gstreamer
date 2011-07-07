@@ -116,6 +116,20 @@ gst_camerabin_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-camerabin2</FILE>
+<TITLE>camerabin2</TITLE>
+GstCameraBin2
+<SUBSECTION Standard>
+GstCameraBin2Class
+GST_CAMERABIN2
+GST_IS_CAMERABIN2
+GST_TYPE_CAMERABIN2
+GST_CAMERABIN2_CLASS
+GST_IS_CAMERABIN2_CLASS
+gst_camerabin2_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-celtdec</FILE>
 <TITLE>celtdec</TITLE>
 GstCeltDec

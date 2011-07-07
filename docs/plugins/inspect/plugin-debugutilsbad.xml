@@ -52,6 +52,33 @@
       </pads>
     </element>
     <element>
+      <name>compare</name>
+      <longname>Compare buffers</longname>
+      <class>Filter/Debug</class>
+      <description>Compares incoming buffers</description>
+      <author>Mark Nauwelaerts &lt;mark.nauwelaerts@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>check</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>debugspy</name>
       <longname>DebugSpy</longname>
       <class>Filter/Analyzer/Debug</class>
