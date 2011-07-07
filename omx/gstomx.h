@@ -80,8 +80,8 @@ struct _GstOMXPort {
   GMutex *port_lock;
   GCond *port_cond;
   OMX_PARAM_PORTDEFINITIONTYPE port_def;
-  GPtrArray *buffers;
-  GQueue *pending_buffers;
+  GPtrArray *buffers; /* Contains GstOMXBuffer* */
+  GQueue *pending_buffers; /* Contains GstOMXBuffer* */
   /* If TRUE we need to get the new caps
    * of this port */
   gboolean settings_changed;
@@ -95,7 +95,7 @@ struct _GstOMXComponent {
   OMX_HANDLETYPE handle;
   GstOMXCore *core;
 
-  GPtrArray *ports;
+  GPtrArray *ports; /* Contains GstOMXPort* */
 
   /* Protecting state, pending_state and last_error
    * Signalled if one of them changes
