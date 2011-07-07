@@ -27,6 +27,7 @@
 
 #include <gst/gst.h>
 
+#include <gst/video/video.h>
 #include <gst/video/gstvideofilter.h>
 
 G_BEGIN_DECLS
@@ -50,9 +51,8 @@ struct _GstShagadelicTV
   GstVideoFilter videofilter;
 
   /* < private > */
+  GstVideoInfo info;
 
-  gint width, height;
-  gint stat;
   guint8 *ripple;
   guint8 *spiral;
   guint8 phase;

@@ -329,7 +329,6 @@ gst_agingtv_transform (GstBaseTransform * trans, GstBuffer * in,
   GstAgingTV *agingtv = GST_AGINGTV (trans);
   GstVideoFrame in_frame, out_frame;
   gint area_scale;
-  GstFlowReturn ret = GST_FLOW_OK;
   GstClockTime timestamp, stream_time;
   gint width, height, stride, video_size;
   guint32 *src, *dest;
@@ -377,7 +376,7 @@ gst_agingtv_transform (GstBaseTransform * trans, GstBuffer * in,
   gst_video_frame_unmap (&in_frame);
   gst_video_frame_unmap (&out_frame);
 
-  return ret;
+  return GST_FLOW_OK;
 
   /* ERRORS */
 invalid_in:
