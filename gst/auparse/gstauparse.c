@@ -225,7 +225,7 @@ gst_au_parse_parse_header (GstAuParse * auparse)
   gchar layout[7] = { 0, };
   gint law = 0, depth = 0, ieee = 0;
 
-  head = (guint8 *) gst_adapter_peek (auparse->adapter, 24);
+  head = (guint8 *) gst_adapter_map (auparse->adapter, 24);
   g_assert (head != NULL);
 
   GST_DEBUG_OBJECT (auparse, "[%c%c%c%c]", head[0], head[1], head[2], head[3]);
@@ -379,7 +379,7 @@ gst_au_parse_parse_header (GstAuParse * auparse)
     goto add_pad_failed;
 
   GST_DEBUG_OBJECT (auparse, "offset=%" G_GINT64_FORMAT, auparse->offset);
-  gst_adapter_flush (auparse->adapter, auparse->offset);
+  gst_adapter_unmap (auparse->adapter, auparse->offset);
 
   gst_caps_unref (tempcaps);
   return GST_FLOW_OK;
@@ -387,29 +387,34 @@ gst_au_parse_parse_header (GstAuParse * auparse)
   /* ERRORS */
 unknown_header:
   {
+    gst_adapter_unmap (auparse->adapter, 0);
     GST_ELEMENT_ERROR (auparse, STREAM, WRONG_TYPE, (NULL), (NULL));
     return GST_FLOW_ERROR;
   }
 unsupported_sample_rate:
   {
+    gst_adapter_unmap (auparse->adapter, 0);
     GST_ELEMENT_ERROR (auparse, STREAM, FORMAT, (NULL),
         ("Unsupported samplerate: %u", auparse->samplerate));
     return GST_FLOW_ERROR;
   }
 unsupported_number_of_channels:
   {
+    gst_adapter_unmap (auparse->adapter, 0);
     GST_ELEMENT_ERROR (auparse, STREAM, FORMAT, (NULL),
         ("Unsupported number of channels: %u", auparse->channels));
     return GST_FLOW_ERROR;
   }
 unknown_format:
   {
+    gst_adapter_unmap (auparse->adapter, 0);
     GST_ELEMENT_ERROR (auparse, STREAM, FORMAT, (NULL),
         ("Unsupported encoding: %u", auparse->encoding));
     return GST_FLOW_ERROR;
   }
 add_pad_failed:
   {
+    gst_adapter_unmap (auparse->adapter, 0);
     GST_ELEMENT_ERROR (auparse, STREAM, FAILED, (NULL),
         ("Failed to add srcpad"));
     gst_caps_unref (tempcaps);
@@ -428,10 +433,11 @@ gst_au_parse_chain (GstPad * pad, GstBuffer * buf)
   gint64 timestamp;
   gint64 duration;
   gint64 offset;
+  GstSegment segment;
 
   auparse = GST_AU_PARSE (gst_pad_get_parent (pad));
 
-  GST_LOG_OBJECT (auparse, "got buffer of size %u", GST_BUFFER_SIZE (buf));
+  GST_LOG_OBJECT (auparse, "got buffer of size %u", gst_buffer_get_size (buf));
 
   gst_adapter_push (auparse->adapter, buf);
   buf = NULL;
@@ -448,9 +454,8 @@ gst_au_parse_chain (GstPad * pad, GstBuffer * buf)
     if (ret != GST_FLOW_OK)
       goto out;
 
-    gst_pad_push_event (auparse->srcpad,
-        gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
-            0, GST_CLOCK_TIME_NONE, 0));
+    gst_segment_init (&segment, GST_FORMAT_TIME);
+    gst_pad_push_event (auparse->srcpad, gst_event_new_segment (&segment));
   }
 
   avail = gst_adapter_available (auparse->adapter);
@@ -466,21 +471,10 @@ gst_au_parse_chain (GstPad * pad, GstBuffer * buf)
 
   if (sendnow > 0) {
     GstBuffer *outbuf;
-    const guint8 *data;
     gint64 pos;
 
-    ret = gst_pad_alloc_buffer_and_set_caps (auparse->srcpad,
-        auparse->buffer_offset, sendnow, GST_PAD_CAPS (auparse->srcpad),
-        &outbuf);
-
-    if (ret != GST_FLOW_OK) {
-      GST_DEBUG_OBJECT (auparse, "pad alloc flow: %s", gst_flow_get_name (ret));
-      goto out;
-    }
-
-    data = gst_adapter_peek (auparse->adapter, sendnow);
-    memcpy (GST_BUFFER_DATA (outbuf), data, sendnow);
-    gst_adapter_flush (auparse->adapter, sendnow);
+    outbuf = gst_adapter_take_buffer (auparse->adapter, sendnow);
+    outbuf = gst_buffer_make_writable (outbuf);
 
     pos = auparse->buffer_offset - auparse->offset;
     pos = MAX (pos, 0);
@@ -697,21 +691,19 @@ gst_au_parse_sink_event (GstPad * pad, GstEvent * event)
   auparse = GST_AU_PARSE (gst_pad_get_parent (pad));
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_NEWSEGMENT:
+    case GST_EVENT_SEGMENT:
     {
-      GstFormat format;
-      gdouble rate, arate;
-      gint64 start, stop, time, offset = 0;
-      gboolean update;
+      gint64 start, stop, offset = 0;
       GstSegment segment;
       GstEvent *new_event = NULL;
 
-      gst_segment_init (&segment, GST_FORMAT_UNDEFINED);
-      gst_event_parse_new_segment_full (event, &update, &rate, &arate, &format,
-          &start, &stop, &time);
-      gst_segment_set_newsegment_full (&segment, update, rate, arate, format,
-          start, stop, time);
+      /* some debug output */
+      gst_event_copy_segment (event, &segment);
+      GST_DEBUG_OBJECT (auparse, "received newsegment %" GST_SEGMENT_FORMAT,
+          &segment);
 
+      start = segment.start;
+      stop = segment.stop;
       if (auparse->sample_size > 0) {
         if (start > 0) {
           offset = start;
@@ -733,8 +725,10 @@ gst_au_parse_sink_event (GstPad * pad, GstEvent * event)
             "new segment: %" GST_TIME_FORMAT " ... %" GST_TIME_FORMAT,
             GST_TIME_ARGS (start), GST_TIME_ARGS (stop));
 
-        new_event = gst_event_new_new_segment_full (update, rate, arate,
-            GST_FORMAT_TIME, start, stop, start);
+        gst_segment_init (&segment, GST_FORMAT_TIME);
+        segment.start = segment.time = start;
+        segment.stop = stop;
+        new_event = gst_event_new_segment (&segment);
 
         ret = gst_pad_push_event (auparse->srcpad, new_event);
       }
