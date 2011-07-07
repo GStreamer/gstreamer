@@ -180,11 +180,13 @@ gst_omx_video_dec_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       gst_omx_port_set_flushing (self->out_port, FALSE);
+      gst_omx_port_set_flushing (self->in_port, FALSE);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_omx_port_set_flushing (self->out_port, TRUE);
+      gst_omx_port_set_flushing (self->in_port, TRUE);
       break;
     default:
       break;
