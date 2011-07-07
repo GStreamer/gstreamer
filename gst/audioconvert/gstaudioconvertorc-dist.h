@@ -10,8 +10,6 @@
 extern "C" {
 #endif
 
-void gst_audio_convert_orc_init (void);
-
 
 
 #ifndef _ORC_INTEGER_TYPEDEFS_
