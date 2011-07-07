@@ -679,7 +679,7 @@ gst_omx_video_dec_handle_frame (GstBaseVideoDecoder * decoder,
         GST_BUFFER_DATA (codec_data), GST_BUFFER_SIZE (codec_data));
 
     gst_omx_port_release_buffer (self->in_port, buf);
-    self->codec_data = NULL;
+    gst_buffer_replace (&self->codec_data, NULL);
   }
 
   {
