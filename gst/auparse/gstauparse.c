@@ -60,7 +60,7 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
 
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
-    GST_PAD_SOMETIMES,
+    GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_AUDIO_INT_PAD_TEMPLATE_CAPS "; "
         GST_AUDIO_FLOAT_PAD_TEMPLATE_CAPS ";"
         GST_AU_PARSE_ALAW_PAD_TEMPLATE_CAPS ";"
@@ -73,8 +73,6 @@ static GstFlowReturn gst_au_parse_chain (GstPad * pad, GstBuffer * buf);
 static GstStateChangeReturn gst_au_parse_change_state (GstElement * element,
     GstStateChange transition);
 static void gst_au_parse_reset (GstAuParse * auparse);
-static gboolean gst_au_parse_remove_srcpad (GstAuParse * auparse);
-static gboolean gst_au_parse_add_srcpad (GstAuParse * auparse, GstCaps * caps);
 static gboolean gst_au_parse_src_query (GstPad * pad, GstQuery * query);
 static gboolean gst_au_parse_src_event (GstPad * pad, GstEvent * event);
 static gboolean gst_au_parse_sink_event (GstPad * pad, GstEvent * event);
@@ -121,7 +119,14 @@ gst_au_parse_init (GstAuParse * auparse)
       GST_DEBUG_FUNCPTR (gst_au_parse_sink_event));
   gst_element_add_pad (GST_ELEMENT (auparse), auparse->sinkpad);
 
-  auparse->srcpad = NULL;
+  auparse->srcpad = gst_pad_new_from_static_template (&src_template, "src");
+  gst_pad_set_query_function (auparse->srcpad,
+      GST_DEBUG_FUNCPTR (gst_au_parse_src_query));
+  gst_pad_set_event_function (auparse->srcpad,
+      GST_DEBUG_FUNCPTR (gst_au_parse_src_event));
+  gst_pad_use_fixed_caps (auparse->srcpad);
+  gst_element_add_pad (GST_ELEMENT (auparse), auparse->srcpad);
+
   auparse->adapter = gst_adapter_new ();
   gst_au_parse_reset (auparse);
 }
@@ -141,8 +146,6 @@ gst_au_parse_dispose (GObject * object)
 static void
 gst_au_parse_reset (GstAuParse * auparse)
 {
-  gst_au_parse_remove_srcpad (auparse);
-
   auparse->offset = 0;
   auparse->buffer_offset = 0;
   auparse->encoding = 0;
@@ -154,66 +157,20 @@ gst_au_parse_reset (GstAuParse * auparse)
   /* gst_segment_init (&auparse->segment, GST_FORMAT_TIME); */
 }
 
-static gboolean
-gst_au_parse_add_srcpad (GstAuParse * auparse, GstCaps * new_caps)
+static void
+gst_au_parse_negotiate_srcpad (GstAuParse * auparse, GstCaps * new_caps)
 {
   if (auparse->src_caps && gst_caps_is_equal (new_caps, auparse->src_caps)) {
     GST_LOG_OBJECT (auparse, "same caps, nothing to do");
-    return TRUE;
+    return;
   }
 
   gst_caps_replace (&auparse->src_caps, new_caps);
-  if (auparse->srcpad != NULL) {
-    GST_DEBUG_OBJECT (auparse, "Changing src pad caps to %" GST_PTR_FORMAT,
-        auparse->src_caps);
-    gst_pad_set_caps (auparse->srcpad, auparse->src_caps);
-  }
+  GST_DEBUG_OBJECT (auparse, "Changing src pad caps to %" GST_PTR_FORMAT,
+      auparse->src_caps);
+  gst_pad_set_caps (auparse->srcpad, auparse->src_caps);
 
-  if (auparse->srcpad == NULL) {
-    auparse->srcpad = gst_pad_new_from_static_template (&src_template, "src");
-    g_return_val_if_fail (auparse->srcpad != NULL, FALSE);
-
-#if 0
-    gst_pad_set_query_type_function (auparse->srcpad,
-        GST_DEBUG_FUNCPTR (gst_au_parse_src_get_query_types));
-#endif
-    gst_pad_set_query_function (auparse->srcpad,
-        GST_DEBUG_FUNCPTR (gst_au_parse_src_query));
-    gst_pad_set_event_function (auparse->srcpad,
-        GST_DEBUG_FUNCPTR (gst_au_parse_src_event));
-
-    gst_pad_use_fixed_caps (auparse->srcpad);
-    gst_pad_set_active (auparse->srcpad, TRUE);
-
-    if (auparse->src_caps)
-      gst_pad_set_caps (auparse->srcpad, auparse->src_caps);
-
-    GST_DEBUG_OBJECT (auparse, "Adding src pad with caps %" GST_PTR_FORMAT,
-        auparse->src_caps);
-
-    gst_object_ref (auparse->srcpad);
-    if (!gst_element_add_pad (GST_ELEMENT (auparse), auparse->srcpad))
-      return FALSE;
-    gst_element_no_more_pads (GST_ELEMENT (auparse));
-  }
-
-  return TRUE;
-}
-
-static gboolean
-gst_au_parse_remove_srcpad (GstAuParse * auparse)
-{
-  gboolean res = TRUE;
-
-  if (auparse->srcpad != NULL) {
-    GST_DEBUG_OBJECT (auparse, "Removing src pad");
-    res = gst_element_remove_pad (GST_ELEMENT (auparse), auparse->srcpad);
-    g_return_val_if_fail (res != FALSE, FALSE);
-    gst_object_unref (auparse->srcpad);
-    auparse->srcpad = NULL;
-  }
-
-  return res;
+  return;
 }
 
 static GstFlowReturn
@@ -375,8 +332,7 @@ gst_au_parse_parse_header (GstAuParse * auparse)
 
   GST_DEBUG_OBJECT (auparse, "sample_size=%d", auparse->sample_size);
 
-  if (!gst_au_parse_add_srcpad (auparse, tempcaps))
-    goto add_pad_failed;
+  gst_au_parse_negotiate_srcpad (auparse, tempcaps);
 
   GST_DEBUG_OBJECT (auparse, "offset=%" G_GINT64_FORMAT, auparse->offset);
   gst_adapter_unmap (auparse->adapter, auparse->offset);
@@ -412,14 +368,6 @@ unknown_format:
         ("Unsupported encoding: %u", auparse->encoding));
     return GST_FLOW_ERROR;
   }
-add_pad_failed:
-  {
-    gst_adapter_unmap (auparse->adapter, 0);
-    GST_ELEMENT_ERROR (auparse, STREAM, FAILED, (NULL),
-        ("Failed to add srcpad"));
-    gst_caps_unref (tempcaps);
-    return GST_FLOW_ERROR;
-  }
 }
 
 #define AU_HEADER_SIZE 24
@@ -443,7 +391,7 @@ gst_au_parse_chain (GstPad * pad, GstBuffer * buf)
   buf = NULL;
 
   /* if we haven't seen any data yet... */
-  if (auparse->srcpad == NULL) {
+  if (!gst_pad_has_current_caps (auparse->srcpad)) {
     if (gst_adapter_available (auparse->adapter) < AU_HEADER_SIZE) {
       GST_DEBUG_OBJECT (auparse, "need more data to parse header");
       ret = GST_FLOW_OK;
@@ -691,6 +639,12 @@ gst_au_parse_sink_event (GstPad * pad, GstEvent * event)
   auparse = GST_AU_PARSE (gst_pad_get_parent (pad));
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+    {
+      /* discard, we'll come up with proper src caps */
+      gst_event_unref (event);
+      break;
+    }
     case GST_EVENT_SEGMENT:
     {
       gint64 start, stop, offset = 0;
@@ -720,18 +674,16 @@ gst_au_parse_sink_event (GstPad * pad, GstEvent * event)
             GST_FORMAT_TIME, &stop);
       }
 
-      if (auparse->srcpad) {
-        GST_INFO_OBJECT (auparse,
-            "new segment: %" GST_TIME_FORMAT " ... %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (start), GST_TIME_ARGS (stop));
+      GST_INFO_OBJECT (auparse,
+          "new segment: %" GST_TIME_FORMAT " ... %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (start), GST_TIME_ARGS (stop));
 
-        gst_segment_init (&segment, GST_FORMAT_TIME);
-        segment.start = segment.time = start;
-        segment.stop = stop;
-        new_event = gst_event_new_segment (&segment);
+      gst_segment_init (&segment, GST_FORMAT_TIME);
+      segment.start = segment.time = start;
+      segment.stop = stop;
+      new_event = gst_event_new_segment (&segment);
 
-        ret = gst_pad_push_event (auparse->srcpad, new_event);
-      }
+      ret = gst_pad_push_event (auparse->srcpad, new_event);
 
       auparse->buffer_offset = offset;
 
