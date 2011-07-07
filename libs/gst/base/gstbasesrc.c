@@ -2186,7 +2186,7 @@ again:
   /* track position */
   GST_OBJECT_LOCK (src);
   if (src->segment.format == GST_FORMAT_BYTES)
-    gst_segment_set_last_stop (&src->segment, GST_FORMAT_BYTES, offset);
+    src->segment.position = offset;
   GST_OBJECT_UNLOCK (src);
 
   /* normally we don't count buffers */
