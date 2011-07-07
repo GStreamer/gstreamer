@@ -38,9 +38,6 @@
 
 #define GST_CAT_DEFAULT gst_decklink_src_debug_category
 
-int videoOutputFile = -1;
-int audioOutputFile = -1;
-
 IDeckLink *deckLink;
 IDeckLinkInput *deckLinkInput;
 IDeckLinkDisplayModeIterator *displayModeIterator;
@@ -102,7 +99,8 @@ HRESULT
       if (g_timecodeFormat != 0) {
         IDeckLinkTimecode *timecode;
         if (videoFrame->GetTimecode (g_timecodeFormat, &timecode) == S_OK) {
-          timecode->GetString (&timecodeString);
+          timecode->GetString ((COMSTR_T)&timecodeString);
+          CONVERT_COM_STRING (timecodeString);
         }
       }
 
@@ -111,7 +109,7 @@ HRESULT
           "Valid Frame", videoFrame->GetRowBytes () * videoFrame->GetHeight ());
 
       if (timecodeString)
-        free ((void *) timecodeString);
+        FREE_COM_STRING (timecodeString);
 
       g_mutex_lock (decklinksrc->mutex);
       if (decklinksrc->video_frame != NULL) {

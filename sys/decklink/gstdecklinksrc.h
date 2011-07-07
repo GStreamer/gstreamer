@@ -74,6 +74,15 @@ struct _GstDecklinkSrc
   GstDecklinkModeEnum mode;
   GstDecklinkConnectionEnum connection;
   GstDecklinkAudioConnectionEnum audio_connection;
+
+#ifdef _MSC_VER
+  gboolean comInitialized;
+  GMutex   *com_init_lock;
+  GMutex   *com_deinit_lock;
+  GCond    *com_initialized;
+  GCond    *com_uninitialize;
+  GCond    *com_uninitialized;
+#endif /* _MSC_VER */
 };
 
 struct _GstDecklinkSrcClass

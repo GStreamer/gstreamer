@@ -40,6 +40,10 @@
 #include "gstdecklinksink.h"
 #include <string.h>
 
+extern "C" {
+  IDeckLinkIterator* CreateDeckLinkIteratorInstance (void);
+};
+
 GST_DEBUG_CATEGORY_STATIC (gst_decklink_sink_debug_category);
 #define GST_CAT_DEFAULT gst_decklink_sink_debug_category
 
@@ -116,6 +120,10 @@ static GstFlowReturn gst_decklink_sink_audiosink_bufferalloc (GstPad * pad,
     guint64 offset, guint size, GstCaps * caps, GstBuffer ** buf);
 static GstIterator *gst_decklink_sink_audiosink_iterintlink (GstPad * pad);
 
+#ifdef _MSC_VER
+/* COM initialization/uninitialization thread */
+static void gst_decklink_sink_com_thread (GstDecklinkSink * src);
+#endif /* _MSC_VER */
 
 enum
 {
@@ -268,6 +276,24 @@ gst_decklink_sink_init (GstDecklinkSink * decklinksink,
 
   decklinksink->callback = new Output;
   decklinksink->callback->decklinksink = decklinksink;
+
+#ifdef _MSC_VER
+  decklinksink->com_init_lock = g_mutex_new();
+  decklinksink->com_deinit_lock = g_mutex_new();
+  decklinksink->com_initialized = g_cond_new();
+  decklinksink->com_uninitialize = g_cond_new();
+  decklinksink->com_uninitialized = g_cond_new();
+
+  g_mutex_lock (decklinksink->com_init_lock);
+
+  /* create the COM initialization thread */
+  g_thread_create ((GThreadFunc)gst_decklink_sink_com_thread,
+    decklinksink, FALSE, NULL);
+
+  /* wait until the COM thread signals that COM has been initialized */
+  g_cond_wait (decklinksink->com_initialized, decklinksink->com_init_lock);
+  g_mutex_unlock (decklinksink->com_init_lock);
+#endif /* _MSC_VER */
 }
 
 void
@@ -308,6 +334,45 @@ gst_decklink_sink_get_property (GObject * object, guint property_id,
   }
 }
 
+#ifdef _MSC_VER
+static void
+gst_decklink_sink_com_thread (GstDecklinkSink * src)
+{
+  HRESULT res;
+
+  g_mutex_lock (src->com_init_lock);
+
+  /* Initialize COM with a MTA for this process. This thread will
+   * be the first one to enter the apartement and the last one to leave
+   * it, unitializing COM properly */
+
+  res = CoInitializeEx (0, COINIT_MULTITHREADED);
+  if (res == S_FALSE)
+    GST_WARNING_OBJECT (src, "COM has been already initialized in the same process");
+  else if (res == RPC_E_CHANGED_MODE)
+    GST_WARNING_OBJECT (src, "The concurrency model of COM has changed.");
+  else
+    GST_INFO_OBJECT (src, "COM intialized succesfully");
+
+  src->comInitialized = TRUE;
+
+  /* Signal other threads waiting on this condition that COM was initialized */
+  g_cond_signal (src->com_initialized);
+
+  g_mutex_unlock (src->com_init_lock);
+
+  /* Wait until the unitialize condition is met to leave the COM apartement */
+  g_mutex_lock (src->com_deinit_lock);
+  g_cond_wait (src->com_uninitialize, src->com_deinit_lock);
+
+  CoUninitialize ();
+  GST_INFO_OBJECT (src, "COM unintialized succesfully");
+  src->comInitialized = FALSE;
+  g_cond_signal (src->com_uninitialized);
+  g_mutex_unlock (src->com_deinit_lock);
+}
+#endif /* _MSC_VER */
+
 void
 gst_decklink_sink_dispose (GObject * object)
 {
@@ -333,6 +398,22 @@ gst_decklink_sink_finalize (GObject * object)
 
   delete decklinksink->callback;
 
+#ifdef _MSC_VER
+  /* signal the COM thread that it should uninitialize COM */
+  if (decklinksink->comInitialized) {
+    g_mutex_lock (decklinksink->com_deinit_lock);
+    g_cond_signal (decklinksink->com_uninitialize);
+    g_cond_wait (decklinksink->com_uninitialized, decklinksink->com_deinit_lock);
+    g_mutex_unlock (decklinksink->com_deinit_lock);
+  }
+
+  g_mutex_free (decklinksink->com_init_lock);
+  g_mutex_free (decklinksink->com_deinit_lock);
+  g_cond_free (decklinksink->com_initialized);
+  g_cond_free (decklinksink->com_uninitialize);
+  g_cond_free (decklinksink->com_uninitialized);
+#endif /* _MSC_VER */
+
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -342,6 +423,7 @@ gst_decklink_sink_start (GstDecklinkSink * decklinksink)
   IDeckLinkIterator *iterator;
   HRESULT ret;
   const GstDecklinkMode *mode;
+  BMDAudioSampleType sample_depth;
 
   iterator = CreateDeckLinkIteratorInstance ();
   if (iterator == NULL) {
@@ -377,8 +459,9 @@ gst_decklink_sink_start (GstDecklinkSink * decklinksink)
   decklinksink->output->
       SetScheduledFrameCompletionCallback (decklinksink->callback);
 
+  sample_depth = bmdAudioSampleType16bitInteger;
   ret = decklinksink->output->EnableAudioOutput (bmdAudioSampleRate48kHz,
-      16, 2, bmdAudioOutputStreamContinuous);
+      sample_depth, 2, bmdAudioOutputStreamContinuous);
   if (ret != S_OK) {
     GST_ERROR ("failed to enable audio output");
     return FALSE;
@@ -1003,7 +1086,7 @@ HRESULT Output::ScheduledPlaybackHasStopped ()
 
 HRESULT Output::RenderAudioSamples (bool preroll)
 {
-  guint
+  unsigned long
       samplesWritten;
   GstBuffer *
       buffer;

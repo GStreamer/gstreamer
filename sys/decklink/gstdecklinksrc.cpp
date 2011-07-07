@@ -115,6 +115,11 @@ static GstIterator *gst_decklink_src_video_src_iterintlink (GstPad * pad);
 
 static void gst_decklink_src_task (void *priv);
 
+#ifdef _MSC_VER
+/* COM initialization/uninitialization thread */
+static void gst_decklink_src_com_thread (GstDecklinkSrc * src);
+#endif /* _MSC_VER */
+
 enum
 {
   PROP_0,
@@ -281,6 +286,24 @@ gst_decklink_src_init (GstDecklinkSrc * decklinksrc,
   decklinksrc->dropped_frames = 0;
   decklinksrc->dropped_frames_old = 0;
   decklinksrc->frame_num = -1; /* -1 so will be 0 after incrementing */
+
+#ifdef _MSC_VER
+  decklinksrc->com_init_lock = g_mutex_new();
+  decklinksrc->com_deinit_lock = g_mutex_new();
+  decklinksrc->com_initialized = g_cond_new();
+  decklinksrc->com_uninitialize = g_cond_new();
+  decklinksrc->com_uninitialized = g_cond_new();
+
+  g_mutex_lock (decklinksrc->com_init_lock);
+
+  /* create the COM initialization thread */
+  g_thread_create ((GThreadFunc)gst_decklink_src_com_thread,
+    decklinksrc, FALSE, NULL);
+
+  /* wait until the COM thread signals that COM has been initialized */
+  g_cond_wait (decklinksrc->com_initialized, decklinksrc->com_init_lock);
+  g_mutex_unlock (decklinksrc->com_init_lock);
+#endif /* _MSC_VER */
 }
 
 void
@@ -335,6 +358,45 @@ gst_decklink_src_get_property (GObject * object, guint property_id,
   }
 }
 
+#ifdef _MSC_VER
+static void
+gst_decklink_src_com_thread (GstDecklinkSrc * src)
+{
+  HRESULT res;
+
+  g_mutex_lock (src->com_init_lock);
+
+  /* Initialize COM with a MTA for this process. This thread will
+   * be the first one to enter the apartement and the last one to leave
+   * it, unitializing COM properly */
+
+  res = CoInitializeEx (0, COINIT_MULTITHREADED);
+  if (res == S_FALSE)
+    GST_WARNING_OBJECT (src, "COM has been already initialized in the same process");
+  else if (res == RPC_E_CHANGED_MODE)
+    GST_WARNING_OBJECT (src, "The concurrency model of COM has changed.");
+  else
+    GST_INFO_OBJECT (src, "COM intialized succesfully");
+
+  src->comInitialized = TRUE;
+
+  /* Signal other threads waiting on this condition that COM was initialized */
+  g_cond_signal (src->com_initialized);
+
+  g_mutex_unlock (src->com_init_lock);
+
+  /* Wait until the unitialize condition is met to leave the COM apartement */
+  g_mutex_lock (src->com_deinit_lock);
+  g_cond_wait (src->com_uninitialize, src->com_deinit_lock);
+
+  CoUninitialize ();
+  GST_INFO_OBJECT (src, "COM unintialized succesfully");
+  src->comInitialized = FALSE;
+  g_cond_signal (src->com_uninitialized);
+  g_mutex_unlock (src->com_deinit_lock);
+}
+#endif /* _MSC_VER */
+
 void
 gst_decklink_src_dispose (GObject * object)
 {
@@ -365,6 +427,22 @@ gst_decklink_src_finalize (GObject * object)
   if (decklinksrc->video_caps) {
     gst_caps_unref (decklinksrc->video_caps);
   }
+
+#ifdef _MSC_VER
+  /* signal the COM thread that it should uninitialize COM */
+  if (decklinksrc->comInitialized) {
+    g_mutex_lock (decklinksrc->com_deinit_lock);
+    g_cond_signal (decklinksrc->com_uninitialize);
+    g_cond_wait (decklinksrc->com_uninitialized, decklinksrc->com_deinit_lock);
+    g_mutex_unlock (decklinksrc->com_deinit_lock);
+  }
+
+  g_mutex_free (decklinksrc->com_init_lock);
+  g_mutex_free (decklinksrc->com_deinit_lock);
+  g_cond_free (decklinksrc->com_initialized);
+  g_cond_free (decklinksrc->com_uninitialize);
+  g_cond_free (decklinksrc->com_uninitialized);
+#endif /* _MSC_VER */
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }

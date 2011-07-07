@@ -3,6 +3,10 @@
 
 #include "DeckLinkAPI.h"
 
+extern "C" {
+  IDeckLinkIterator* CreateDeckLinkIteratorInstance (void);
+};
+
 class DeckLinkCaptureDelegate : public IDeckLinkInputCallback
 {
   public:
