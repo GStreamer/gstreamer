@@ -2961,7 +2961,7 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
   GstFlowReturn ret = GST_FLOW_OK;
   gboolean readblock = FALSE;
   guint32 id;
-  guint64 block_duration = 0;
+  guint64 block_duration = -1;
   GstBuffer *buf = NULL;
   gint stream_num = -1, n, laces = 0;
   guint size = 0;
@@ -3249,7 +3249,7 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
       demux->need_newsegment = FALSE;
     }
 
-    if (block_duration) {
+    if (block_duration != -1) {
       if (stream->timecodescale == 1.0)
         duration = gst_util_uint64_scale (block_duration,
             demux->common.time_scale, 1);
