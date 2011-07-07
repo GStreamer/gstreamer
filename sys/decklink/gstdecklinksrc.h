@@ -50,6 +50,7 @@ struct _GstDecklinkSrc
   GMutex *mutex;
   GCond *cond;
   int dropped_frames;
+  int dropped_frames_old;
   gboolean stop;
   IDeckLinkVideoInputFrame *video_frame;
   IDeckLinkAudioInputPacket * audio_frame;
@@ -60,7 +61,7 @@ struct _GstDecklinkSrc
   guint64 num_audio_samples;
 
   GstCaps *video_caps;
-  guint64 num_frames;
+  guint64 frame_num;
   int fps_n;
   int fps_d;
   int width;

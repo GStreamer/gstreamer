@@ -45,7 +45,7 @@ IDeckLink *deckLink;
 IDeckLinkInput *deckLinkInput;
 IDeckLinkDisplayModeIterator *displayModeIterator;
 
-static BMDTimecodeFormat g_timecodeFormat = 0;
+static BMDTimecodeFormat g_timecodeFormat = (BMDTimecodeFormat)0;
 
 DeckLinkCaptureDelegate::DeckLinkCaptureDelegate ():m_refCount (0)
 {
@@ -124,6 +124,10 @@ HRESULT
           decklinksrc->audio_frame = audioFrame;
         }
       }
+
+      /* increment regardless whether frame was dropped or not */
+      decklinksrc->frame_num++;
+
       g_cond_signal (decklinksrc->cond);
       g_mutex_unlock (decklinksrc->mutex);
     }
