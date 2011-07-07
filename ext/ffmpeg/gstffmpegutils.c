@@ -21,6 +21,10 @@
 #include "config.h"
 #endif
 #include "gstffmpegutils.h"
+#include <unistd.h>
+#ifdef __APPLE__
+#include <sys/sysctl.h>
+#endif
 
 G_CONST_RETURN gchar *
 gst_ffmpeg_get_codecid_longname (enum CodecID codec_id)
@@ -439,4 +443,38 @@ new_aligned_buffer (gint size)
       gst_memory_new_wrapped (0, av_malloc (size), av_free, size, 0, size));
 
   return buf;
+}
+
+int
+gst_ffmpeg_auto_max_threads (void)
+{
+  static gsize n_threads = 0;
+  if (g_once_init_enter (&n_threads)) {
+    int n = 1;
+#if defined(_WIN32)
+    {
+      const char *s = getenv ("NUMBER_OF_PROCESSORS");
+      if (s) {
+        n = atoi (s);
+      }
+    }
+#elif defined(__APPLE__)
+    {
+      int mib[] = { CTL_HW, HW_NCPU };
+      size_t dataSize = sizeof (int);
+
+      if (sysctl (mib, 2, &n_threads, &dataSize, NULL, 0)) {
+        n = 1;
+      }
+    }
+#else
+    n = sysconf (_SC_NPROCESSORS_CONF);
+#endif
+    if (n < 1)
+      n = 1;
+
+    g_once_init_leave (&n_threads, n);
+  }
+
+  return (int) (n_threads);
 }

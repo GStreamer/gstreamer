@@ -1864,7 +1864,7 @@ gst_ffmpeg_codectype_to_audio_caps (AVCodecContext * context,
     caps = gst_caps_new_empty ();
     for (i = 0; codec->sample_fmts[i] != -1; i++) {
       temp =
-          gst_ffmpeg_smpfmt_to_caps (codec->sample_fmts[0], context, codec_id);
+          gst_ffmpeg_smpfmt_to_caps (codec->sample_fmts[i], context, codec_id);
       if (temp != NULL)
         gst_caps_append (caps, temp);
     }
