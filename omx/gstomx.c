@@ -587,6 +587,7 @@ gst_omx_component_get_port (GstOMXComponent * comp, guint32 index)
   return NULL;
 }
 
+/* NOTE: This takes comp->state_lock *and* *all* port->port_lock! */
 void
 gst_omx_component_set_last_error (GstOMXComponent * comp, OMX_ERRORTYPE err)
 {
@@ -616,13 +617,9 @@ gst_omx_component_set_last_error (GstOMXComponent * comp, OMX_ERRORTYPE err)
   for (i = 0; i < n; i++) {
     GstOMXPort *tmp = g_ptr_array_index (comp->ports, i);
 
-    /* NOTE: We're not holding port->port_lock here
-     * to simplify the code of callers, which often
-     * already hold one of the port mutexes.
-     * Holding the mutex related to the condition
-     * variable is not necessary for signalling
-     */
+    g_mutex_lock (tmp->port_lock);
     g_cond_broadcast (tmp->port_cond);
+    g_mutex_unlock (tmp->port_lock);
   }
 }
 
@@ -870,8 +867,7 @@ gst_omx_port_set_flushing (GstOMXPort * port, gboolean flush)
         if (err != OMX_ErrorNone) {
           GST_ERROR_OBJECT (comp->parent,
               "Failed to pass buffer %p to port %u: %d", buf, port->index, err);
-          gst_omx_component_set_last_error (comp, err);
-          goto done;
+          goto error;
         }
       }
     }
@@ -882,8 +878,19 @@ done:
       port->index, (flush ? "" : "not "), err);
   g_mutex_unlock (port->port_lock);
 
-
   return err;
+
+error:
+  {
+    /* Need to unlock the port lock here because
+     * set_last_error() needs all port locks.
+     * This is safe here because we're just going
+     * to error out anyway */
+    g_mutex_unlock (port->port_lock);
+    gst_omx_component_set_last_error (comp, err);
+    g_mutex_lock (port->port_lock);
+    goto done;
+  }
 }
 
 gboolean
@@ -946,8 +953,7 @@ gst_omx_port_allocate_buffers_unlocked (GstOMXPort * port)
     GST_ERROR_OBJECT (comp->parent,
         "Failed to configure number of buffers of port %u: %d", port->index,
         err);
-    gst_omx_component_set_last_error (comp, err);
-    goto done;
+    goto error;
   }
 
   n = port->port_def.nBufferCountActual;
@@ -972,8 +978,7 @@ gst_omx_port_allocate_buffers_unlocked (GstOMXPort * port)
     if (err != OMX_ErrorNone) {
       GST_ERROR_OBJECT (comp->parent,
           "Failed to allocate buffer for port %u: %d", port->index, err);
-      gst_omx_component_set_last_error (comp, err);
-      break;
+      goto error;
     }
 
     /* In the beginning all buffers are not owned by the component */
@@ -986,6 +991,18 @@ done:
       port->index, err);
 
   return err;
+
+error:
+  {
+    /* Need to unlock the port lock here because
+     * set_last_error() needs all port locks.
+     * This is safe here because we're just going
+     * to error out anyway */
+    g_mutex_unlock (port->port_lock);
+    gst_omx_component_set_last_error (comp, err);
+    g_mutex_lock (port->port_lock);
+    goto done;
+  }
 }
 
 OMX_ERRORTYPE
@@ -1119,8 +1136,7 @@ gst_omx_port_set_enabled_unlocked (GstOMXPort * port, gboolean enabled)
     GST_ERROR_OBJECT (comp->parent,
         "Failed to send enable/disable command to port %u: %d", port->index,
         err);
-    gst_omx_component_set_last_error (comp, err);
-    goto done;
+    goto error;
   }
 
   g_get_current_time (&abstimeout);
@@ -1148,8 +1164,7 @@ gst_omx_port_set_enabled_unlocked (GstOMXPort * port, gboolean enabled)
     GST_ERROR_OBJECT (comp->parent,
         "Timeout waiting for port %u to release all buffers", port->index);
     err = OMX_ErrorTimeout;
-    gst_omx_component_set_last_error (comp, err);
-    goto done;
+    goto error;
   }
 
   /* Allocate/deallocate all buffers for the port to finish
@@ -1157,15 +1172,13 @@ gst_omx_port_set_enabled_unlocked (GstOMXPort * port, gboolean enabled)
   if (enabled) {
     /* If allocation fails this component can't really be used anymore */
     if ((err = gst_omx_port_allocate_buffers_unlocked (port)) != OMX_ErrorNone) {
-      gst_omx_component_set_last_error (comp, err);
-      goto done;
+      goto error;
     }
   } else {
     /* If deallocation fails this component can't really be used anymore */
     if ((err =
             gst_omx_port_deallocate_buffers_unlocked (port)) != OMX_ErrorNone) {
-      gst_omx_component_set_last_error (comp, err);
-      goto done;
+      goto error;
     }
   }
 
@@ -1189,7 +1202,7 @@ gst_omx_port_set_enabled_unlocked (GstOMXPort * port, gboolean enabled)
         "Timeout waiting for port %u to be %s", port->index,
         (enabled ? "enabled" : "disabled"));
     err = OMX_ErrorTimeout;
-    gst_omx_component_set_last_error (comp, err);
+    goto error;
   } else if (last_error != OMX_ErrorNone) {
     GST_ERROR_OBJECT (comp->parent,
         "Got error while waiting for port %u to be %s: %d",
@@ -1203,6 +1216,18 @@ done:
       (enabled ? "enabled" : "disabled"), err);
 
   return err;
+
+error:
+  {
+    /* Need to unlock the port lock here because
+     * set_last_error() needs all port locks.
+     * This is safe here because we're just going
+     * to error out anyway */
+    g_mutex_unlock (port->port_lock);
+    gst_omx_component_set_last_error (comp, err);
+    g_mutex_lock (port->port_lock);
+    goto done;
+  }
 }
 
 OMX_ERRORTYPE
