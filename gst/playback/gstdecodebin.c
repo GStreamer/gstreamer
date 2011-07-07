@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) <2004> Wim Taymans <wim.taymans@gmail.com>
+ * Copyright (C) 2011 Hewlett-Packard Development Company, L.P.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -1115,12 +1116,26 @@ try_to_link_1 (GstDecodeBin * decode_bin, GstElement * srcelement, GstPad * pad,
   /* loop over the factories */
   for (walk = factories; walk; walk = g_list_next (walk)) {
     GstElementFactory *factory = GST_ELEMENT_FACTORY (walk->data);
+    GstElementFactory *src_factory;
     GstElement *element;
     GstPadLinkReturn ret;
     GstPad *sinkpad;
 
-    GST_DEBUG_OBJECT (decode_bin, "trying to link %s",
-        gst_plugin_feature_get_name (GST_PLUGIN_FEATURE (factory)));
+    GST_DEBUG_OBJECT (decode_bin, "trying to link %s to %s",
+        gst_plugin_feature_get_name (GST_PLUGIN_FEATURE (factory)),
+        GST_OBJECT_NAME (srcelement));
+
+    /* don't plug the same parser twice, but allow multiple
+     * instances of other elements (e.g. id3demux) in a row */
+    src_factory = gst_element_get_factory (srcelement);
+    if (src_factory == factory
+        && gst_element_factory_list_is_type (factory,
+            GST_ELEMENT_FACTORY_TYPE_PARSER)) {
+      GST_DEBUG_OBJECT (decode_bin,
+          "not inserting parser element %s twice in a row, skipping",
+          GST_PLUGIN_FEATURE_NAME (factory));
+      continue;
+    }
 
     /* make an element from the factory first */
     if ((element = gst_element_factory_create (factory, NULL)) == NULL) {
