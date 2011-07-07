@@ -31,8 +31,6 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  gst_audio_convert_orc_init ();
-
   /* ensure GstAudioChannelPosition type is registered */
   if (!gst_audio_channel_position_get_type ())
     return FALSE;
