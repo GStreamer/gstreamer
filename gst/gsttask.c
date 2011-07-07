@@ -225,7 +225,7 @@ gst_task_finalize (GObject * object)
 static void
 gst_task_configure_name (GstTask * task)
 {
-#ifdef HAVE_SYS_PRCTL_H
+#if defined(HAVE_SYS_PRCTL_H) && defined(PR_SET_NAME)
   const gchar *name;
   gchar thread_name[17] = { 0, };
 
