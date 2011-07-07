@@ -16,25 +16,25 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-#ifndef _GST_CAMERA_BIN_H_
-#define _GST_CAMERA_BIN_H_
+#ifndef _GST_CAMERA_BIN2_H_
+#define _GST_CAMERA_BIN2_H_
 
 #include <gst/gst.h>
 #include <gst/pbutils/encoding-profile.h>
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_CAMERA_BIN   (gst_camera_bin_get_type())
-#define GST_CAMERA_BIN(obj)   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_CAMERA_BIN,GstCameraBin))
-#define GST_CAMERA_BIN_CAST(obj)   ((GstCameraBin *) obj)
-#define GST_CAMERA_BIN_CLASS(klass)   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_CAMERA_BIN,GstCameraBinClass))
-#define GST_IS_CAMERA_BIN(obj)   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_CAMERA_BIN))
-#define GST_IS_CAMERA_BIN_CLASS(obj)   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_CAMERA_BIN))
+#define GST_TYPE_CAMERA_BIN2   (gst_camera_bin2_get_type())
+#define GST_CAMERA_BIN2(obj)   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_CAMERA_BIN2,GstCameraBin2))
+#define GST_CAMERA_BIN2_CAST(obj)   ((GstCameraBin2 *) obj)
+#define GST_CAMERA_BIN2_CLASS(klass)   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_CAMERA_BIN2,GstCameraBin2Class))
+#define GST_IS_CAMERA_BIN2(obj)   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_CAMERA_BIN2))
+#define GST_IS_CAMERA_BIN2_CLASS(obj)   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_CAMERA_BIN2))
 
-typedef struct _GstCameraBin GstCameraBin;
-typedef struct _GstCameraBinClass GstCameraBinClass;
+typedef struct _GstCameraBin2 GstCameraBin2;
+typedef struct _GstCameraBin2Class GstCameraBin2Class;
 
-struct _GstCameraBin
+struct _GstCameraBin2
 {
   GstPipeline pipeline;
 
@@ -99,17 +99,17 @@ struct _GstCameraBin
   gboolean elements_created;
 };
 
-struct _GstCameraBinClass
+struct _GstCameraBin2Class
 {
   GstPipelineClass pipeline_class;
 
   /* Action signals */
-  void (*start_capture) (GstCameraBin * camera);
-  void (*stop_capture) (GstCameraBin * camera);
+  void (*start_capture) (GstCameraBin2 * camera);
+  void (*stop_capture) (GstCameraBin2 * camera);
 };
 
-GType gst_camera_bin_get_type (void);
-gboolean gst_camera_bin_plugin_init (GstPlugin * plugin);
+GType gst_camera_bin2_get_type (void);
+gboolean gst_camera_bin2_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS
 

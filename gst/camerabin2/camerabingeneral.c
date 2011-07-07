@@ -20,10 +20,10 @@
 
 /**
  * SECTION:camerabingeneral
- * @short_description: helper functions for #GstCameraBin and it's modules
+ * @short_description: helper functions for #GstCameraBin2 and it's modules
  *
- * Common helper functions for #GstCameraBin, #GstCameraBinImage and
- * #GstCameraBinVideo.
+ * Common helper functions for #GstCameraBin2, #GstCameraBin2Image and
+ * #GstCameraBin2Video.
  *
  */
 #ifdef HAVE_CONFIG_H
