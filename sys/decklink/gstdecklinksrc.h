@@ -72,6 +72,7 @@ struct _GstDecklinkSrc
   gboolean copy_data;
   GstDecklinkModeEnum mode;
   GstDecklinkConnectionEnum connection;
+  GstDecklinkAudioConnectionEnum audio_connection;
 };
 
 struct _GstDecklinkSrcClass

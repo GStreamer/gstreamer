@@ -119,7 +119,8 @@ enum
 {
   PROP_0,
   PROP_MODE,
-  PROP_CONNECTION
+  PROP_CONNECTION,
+  PROP_AUDIO_INPUT
 };
 
 /* pad templates */
@@ -189,6 +190,12 @@ gst_decklink_src_class_init (GstDecklinkSrcClass * klass)
   g_object_class_install_property (gobject_class, PROP_CONNECTION,
       g_param_spec_enum ("connection", "Connection", "Connection",
           GST_TYPE_DECKLINK_CONNECTION, GST_DECKLINK_CONNECTION_SDI,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+              G_PARAM_CONSTRUCT)));
+
+  g_object_class_install_property (gobject_class, PROP_AUDIO_INPUT,
+      g_param_spec_enum ("audio-input", "Audio Input", "Audio Input Connection",
+          GST_TYPE_DECKLINK_AUDIO_CONNECTION, GST_DECKLINK_AUDIO_CONNECTION_AUTO,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
               G_PARAM_CONSTRUCT)));
 }
@@ -267,6 +274,8 @@ gst_decklink_src_init (GstDecklinkSrc * decklinksrc,
 
   decklinksrc->copy_data = TRUE;
   decklinksrc->mode = GST_DECKLINK_MODE_NTSC;
+  decklinksrc->connection = GST_DECKLINK_CONNECTION_SDI;
+  decklinksrc->audio_connection = GST_DECKLINK_AUDIO_CONNECTION_AUTO;
 
 }
 
@@ -286,6 +295,10 @@ gst_decklink_src_set_property (GObject * object, guint property_id,
     case PROP_CONNECTION:
       decklinksrc->connection =
           (GstDecklinkConnectionEnum) g_value_get_enum (value);
+      break;
+    case PROP_AUDIO_INPUT:
+      decklinksrc->audio_connection =
+          (GstDecklinkAudioConnectionEnum) g_value_get_enum (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -308,6 +321,9 @@ gst_decklink_src_get_property (GObject * object, guint property_id,
       break;
     case PROP_CONNECTION:
       g_value_set_enum (value, decklinksrc->connection);
+      break;
+    case PROP_AUDIO_INPUT:
+      g_value_set_enum (value, decklinksrc->audio_connection);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -379,6 +395,7 @@ gst_decklink_src_start (GstElement * element)
   const GstDecklinkMode *mode;
   IDeckLinkConfiguration *config;
   BMDVideoConnection conn;
+  BMDAudioConnection aconn;
 
   GST_DEBUG_OBJECT (decklinksrc, "start");
 
@@ -416,21 +433,27 @@ gst_decklink_src_start (GstElement * element)
     default:
     case GST_DECKLINK_CONNECTION_SDI:
       conn = bmdVideoConnectionSDI;
+      aconn = bmdAudioConnectionEmbedded;
       break;
     case GST_DECKLINK_CONNECTION_HDMI:
       conn = bmdVideoConnectionHDMI;
+      aconn = bmdAudioConnectionEmbedded;
       break;
     case GST_DECKLINK_CONNECTION_OPTICAL_SDI:
       conn = bmdVideoConnectionOpticalSDI;
+      aconn = bmdAudioConnectionEmbedded;
       break;
     case GST_DECKLINK_CONNECTION_COMPONENT:
       conn = bmdVideoConnectionComponent;
+      aconn = bmdAudioConnectionAnalog;
       break;
     case GST_DECKLINK_CONNECTION_COMPOSITE:
       conn = bmdVideoConnectionComposite;
+      aconn = bmdAudioConnectionAnalog;
       break;
     case GST_DECKLINK_CONNECTION_SVIDEO:
       conn = bmdVideoConnectionSVideo;
+      aconn = bmdAudioConnectionAnalog;
       break;
   }
 
@@ -449,15 +472,24 @@ gst_decklink_src_start (GstElement * element)
     }
   }
 
-  if (decklinksrc->connection == GST_DECKLINK_CONNECTION_COMPOSITE ||
-      decklinksrc->connection == GST_DECKLINK_CONNECTION_COMPONENT ||
-      decklinksrc->connection == GST_DECKLINK_CONNECTION_SVIDEO) {
-    ret = config->SetInt (bmdDeckLinkConfigAudioInputConnection,
-        bmdAudioConnectionAnalog);
-    if (ret != S_OK) {
-      GST_ERROR ("set configuration (audio input connection)");
-      return FALSE;
-    }
+  switch (decklinksrc->audio_connection) {
+    default:
+    case GST_DECKLINK_AUDIO_CONNECTION_AUTO:
+      break;
+    case GST_DECKLINK_AUDIO_CONNECTION_EMBEDDED:
+      aconn = bmdAudioConnectionEmbedded;
+      break;
+    case GST_DECKLINK_AUDIO_CONNECTION_AES_EBU:
+      aconn = bmdAudioConnectionAESEBU;
+      break;
+    case GST_DECKLINK_AUDIO_CONNECTION_ANALOG:
+      aconn = bmdAudioConnectionAnalog;
+      break;
+  }
+  ret = config->SetInt (bmdDeckLinkConfigAudioInputConnection, aconn);
+  if (ret != S_OK) {
+    GST_ERROR ("set configuration (audio input connection)");
+    return FALSE;
   }
 
 #if 0
