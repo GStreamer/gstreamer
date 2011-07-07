@@ -532,7 +532,7 @@ gst_omx_video_dec_set_format (GstBaseVideoDecoder * decoder,
       return FALSE;
   }
 
-  port_def.format.video.nFrameWidth = state->width - 100;
+  port_def.format.video.nFrameWidth = state->width;
   port_def.format.video.nFrameHeight = state->height;
   if (state->fps_n == 0)
     port_def.format.video.xFramerate = 0;
