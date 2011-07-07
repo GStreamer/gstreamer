@@ -25,7 +25,7 @@
 #include "DeckLinkAPI.h"
 
 G_BEGIN_DECLS
-
+GST_DEBUG_CATEGORY_EXTERN (gst_decklink_src_debug_category);
 #define GST_TYPE_DECKLINK_SRC   (gst_decklink_src_get_type())
 #define GST_DECKLINK_SRC(obj)   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_DECKLINK_SRC,GstDecklinkSrc))
 #define GST_DECKLINK_SRC_CLASS(klass)   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_DECKLINK_SRC,GstDecklinkSrcClass))

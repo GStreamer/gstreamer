@@ -36,6 +36,7 @@
 #include "DeckLinkAPI.h"
 #include "capture.h"
 
+#define GST_CAT_DEFAULT gst_decklink_src_debug_category
 
 int videoOutputFile = -1;
 int audioOutputFile = -1;

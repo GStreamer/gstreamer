@@ -41,7 +41,7 @@
 #include "capture.h"
 #include <string.h>
 
-GST_DEBUG_CATEGORY_STATIC (gst_decklink_src_debug_category);
+GST_DEBUG_CATEGORY (gst_decklink_src_debug_category);
 #define GST_CAT_DEFAULT gst_decklink_src_debug_category
 
 /* prototypes */
