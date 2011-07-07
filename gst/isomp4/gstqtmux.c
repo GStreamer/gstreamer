@@ -3120,6 +3120,9 @@ gst_qt_mux_video_sink_set_caps (GstPad * pad, GstCaps * caps)
   } else if (strcmp (mimetype, "video/x-vp8") == 0) {
     entry.fourcc = FOURCC_VP80;
     sync = FALSE;
+  } else if (strcmp (mimetype, "video/x-dirac") == 0) {
+    entry.fourcc = FOURCC_drac;
+    qtpad->have_dts = TRUE;
   } else if (strcmp (mimetype, "video/x-qt-part") == 0) {
     guint32 fourcc;
 
