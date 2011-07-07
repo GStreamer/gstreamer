@@ -45,6 +45,7 @@
 
 #include <gst/gst.h>
 
+#include <gst/video/video.h>
 #include <gst/video/gstvideofilter.h>
 
 G_BEGIN_DECLS
@@ -68,8 +69,8 @@ struct _GstRevTV
   GstVideoFilter videofilter;
 
   /* < private > */
+  GstVideoInfo info;
 
-  gint width, height;
   gint vgrabtime;
   gint vgrab;
   gint linespace;

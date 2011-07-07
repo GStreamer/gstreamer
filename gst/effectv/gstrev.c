@@ -64,7 +64,6 @@
 
 #include "gstrev.h"
 
-#include <gst/video/video.h>
 #include <gst/controller/gstcontroller.h>
 
 #define THE_COLOR 0xffffffff
@@ -77,12 +76,13 @@ enum
   PROP_GAIN
 };
 
-GST_BOILERPLATE (GstRevTV, gst_revtv, GstVideoFilter, GST_TYPE_VIDEO_FILTER);
+#define gst_revtv_parent_class parent_class
+G_DEFINE_TYPE (GstRevTV, gst_revtv, GST_TYPE_VIDEO_FILTER);
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-#define CAPS_STR GST_VIDEO_CAPS_BGRx ";" GST_VIDEO_CAPS_RGBx
+#define CAPS_STR GST_VIDEO_CAPS_MAKE ("{ BGRx, RGBx }")
 #else
-#define CAPS_STR GST_VIDEO_CAPS_xBGR ";" GST_VIDEO_CAPS_xRGB
+#define CAPS_STR GST_VIDEO_CAPS_MAKE ("{ xBGR, xRGB }")
 #endif
 
 static GstStaticPadTemplate gst_revtv_src_template =
@@ -104,19 +104,21 @@ gst_revtv_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
     GstCaps * outcaps)
 {
   GstRevTV *filter = GST_REVTV (btrans);
-  GstStructure *structure;
-  gboolean ret = FALSE;
+  GstVideoInfo info;
 
-  structure = gst_caps_get_structure (incaps, 0);
+  if (!gst_video_info_from_caps (&info, incaps))
+    goto invalid_caps;
 
-  GST_OBJECT_LOCK (filter);
-  if (gst_structure_get_int (structure, "width", &filter->width) &&
-      gst_structure_get_int (structure, "height", &filter->height)) {
-    ret = TRUE;
+  filter->info = info;
+
+  return TRUE;
+
+  /* ERRORS */
+invalid_caps:
+  {
+    GST_DEBUG_OBJECT (filter, "invalid caps received");
+    return FALSE;
   }
-  GST_OBJECT_UNLOCK (filter);
-
-  return ret;
 }
 
 static GstFlowReturn
@@ -124,12 +126,12 @@ gst_revtv_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
 {
   GstRevTV *filter = GST_REVTV (trans);
   guint32 *src, *dest;
-  gint width, height;
+  gint width, height, sstride, dstride;
   guint32 *nsrc;
   gint y, x, R, G, B, yval;
-  GstFlowReturn ret = GST_FLOW_OK;
   gint linespace, vscale;
   GstClockTime timestamp, stream_time;
+  GstVideoFrame in_frame, out_frame;
 
   timestamp = GST_BUFFER_TIMESTAMP (in);
   stream_time =
@@ -141,23 +143,31 @@ gst_revtv_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
   if (GST_CLOCK_TIME_IS_VALID (stream_time))
     gst_object_sync_values (G_OBJECT (filter), stream_time);
 
-  src = (guint32 *) GST_BUFFER_DATA (in);
-  dest = (guint32 *) GST_BUFFER_DATA (out);
+  if (!gst_video_frame_map (&in_frame, &filter->info, in, GST_MAP_READ))
+    goto invalid_in;
 
-  GST_OBJECT_LOCK (filter);
-  width = filter->width;
-  height = filter->height;
+  if (!gst_video_frame_map (&out_frame, &filter->info, out, GST_MAP_WRITE))
+    goto invalid_out;
+
+  src = GST_VIDEO_FRAME_PLANE_DATA (&in_frame, 0);
+  sstride = GST_VIDEO_FRAME_PLANE_STRIDE (&in_frame, 0);
+  dest = GST_VIDEO_FRAME_PLANE_DATA (&out_frame, 0);
+  dstride = GST_VIDEO_FRAME_PLANE_STRIDE (&out_frame, 0);
+
+  width = GST_VIDEO_FRAME_WIDTH (&in_frame);
+  height = GST_VIDEO_FRAME_HEIGHT (&in_frame);
 
   /* Clear everything to black */
-  memset (dest, 0, width * height * sizeof (guint32));
+  memset (dest, 0, dstride * height * sizeof (guint32));
 
+  GST_OBJECT_LOCK (filter);
   linespace = filter->linespace;
   vscale = filter->vscale;
 
   /* draw the offset lines */
   for (y = 0; y < height; y += linespace) {
     for (x = 0; x <= width; x++) {
-      nsrc = src + (y * width) + x;
+      nsrc = src + (y * sstride) + x;
 
       /* Calc Y Value for curpix */
       R = ((*nsrc) & 0xff0000) >> (16 - 1);
@@ -167,13 +177,26 @@ gst_revtv_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
       yval = y - ((short) (R + G + B) / vscale);
 
       if (yval > 0) {
-        dest[x + (yval * width)] = THE_COLOR;
+        dest[x + (yval * dstride)] = THE_COLOR;
       }
     }
   }
   GST_OBJECT_UNLOCK (filter);
 
-  return ret;
+  return GST_FLOW_OK;
+
+  /* ERRORS */
+invalid_in:
+  {
+    GST_DEBUG_OBJECT (filter, "invalid input frame");
+    return GST_FLOW_ERROR;
+  }
+invalid_out:
+  {
+    GST_DEBUG_OBJECT (filter, "invalid output frame");
+    gst_video_frame_unmap (&in_frame);
+    return GST_FLOW_ERROR;
+  }
 }
 
 static void
@@ -223,25 +246,10 @@ gst_revtv_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static void
-gst_revtv_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (element_class, "RevTV effect",
-      "Filter/Effect/Video",
-      "A video waveform monitor for each line of video processed",
-      "Wim Taymans <wim.taymans@chello.be>");
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_revtv_sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_revtv_src_template));
-}
-
-static void
 gst_revtv_class_init (GstRevTVClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstElementClass *gstelement_class = (GstElementClass *) klass;
   GstBaseTransformClass *trans_class = (GstBaseTransformClass *) klass;
 
   gobject_class->set_property = gst_revtv_set_property;
@@ -259,12 +267,22 @@ gst_revtv_class_init (GstRevTVClass * klass)
       g_param_spec_int ("gain", "Gain", "Control gain", 1, 200, 50,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
 
+  gst_element_class_set_details_simple (gstelement_class, "RevTV effect",
+      "Filter/Effect/Video",
+      "A video waveform monitor for each line of video processed",
+      "Wim Taymans <wim.taymans@gmail.be>");
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_revtv_sink_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_revtv_src_template));
+
   trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_revtv_set_caps);
   trans_class->transform = GST_DEBUG_FUNCPTR (gst_revtv_transform);
 }
 
 static void
-gst_revtv_init (GstRevTV * restv, GstRevTVClass * klass)
+gst_revtv_init (GstRevTV * restv)
 {
   restv->vgrabtime = 1;
   restv->vgrab = 0;
