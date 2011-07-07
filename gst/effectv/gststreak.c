@@ -51,8 +51,6 @@
 #include "gststreak.h"
 #include "gsteffectv.h"
 
-#include <gst/video/video.h>
-
 #define DEFAULT_FEEDBACK FALSE
 
 enum
@@ -61,25 +59,22 @@ enum
   PROP_FEEDBACK
 };
 
-GST_BOILERPLATE (GstStreakTV, gst_streaktv, GstVideoFilter,
-    GST_TYPE_VIDEO_FILTER);
+#define gst_streaktv_parent_class parent_class
+G_DEFINE_TYPE (GstStreakTV, gst_streaktv, GST_TYPE_VIDEO_FILTER);
 
 static GstStaticPadTemplate gst_streaktv_src_template =
-    GST_STATIC_PAD_TEMPLATE ("src",
+GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_BGRx "; " GST_VIDEO_CAPS_RGBx ";"
-        GST_VIDEO_CAPS_xBGR "; " GST_VIDEO_CAPS_xRGB)
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ BGRx, RGBx, xBGR, xRGB }"))
     );
 
 static GstStaticPadTemplate gst_streaktv_sink_template =
-    GST_STATIC_PAD_TEMPLATE ("sink",
+GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_BGRx "; " GST_VIDEO_CAPS_RGBx ";"
-        GST_VIDEO_CAPS_xBGR "; " GST_VIDEO_CAPS_xRGB)
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ BGRx, RGBx, xBGR, xRGB }"))
     );
-
 
 
 static GstFlowReturn
@@ -88,12 +83,26 @@ gst_streaktv_transform (GstBaseTransform * trans, GstBuffer * in,
 {
   GstStreakTV *filter = GST_STREAKTV (trans);
   guint32 *src, *dest;
-  GstFlowReturn ret = GST_FLOW_OK;
+  GstVideoFrame in_frame, out_frame;
   gint i, cf;
-  gint video_area = filter->width * filter->height;
+  gint video_area, width, height;
   guint32 **planetable = filter->planetable;
   gint plane = filter->plane;
   guint stride_mask, stride_shift, stride;
+
+  if (!gst_video_frame_map (&in_frame, &filter->info, in, GST_MAP_READ))
+    goto invalid_in;
+
+  if (!gst_video_frame_map (&out_frame, &filter->info, out, GST_MAP_WRITE))
+    goto invalid_out;
+
+  src = GST_VIDEO_FRAME_PLANE_DATA (&in_frame, 0);
+  dest = GST_VIDEO_FRAME_PLANE_DATA (&out_frame, 0);
+
+  width = GST_VIDEO_FRAME_WIDTH (&in_frame);
+  height = GST_VIDEO_FRAME_HEIGHT (&in_frame);
+
+  video_area = width * height;
 
   GST_OBJECT_LOCK (filter);
   if (filter->feedback) {
@@ -105,9 +114,6 @@ gst_streaktv_transform (GstBaseTransform * trans, GstBuffer * in,
     stride = 4;
     stride_shift = 3;
   }
-
-  src = (guint32 *) GST_BUFFER_DATA (in);
-  dest = (guint32 *) GST_BUFFER_DATA (out);
 
   for (i = 0; i < video_area; i++) {
     planetable[plane][i] = (src[i] & stride_mask) >> stride_shift;
@@ -139,7 +145,23 @@ gst_streaktv_transform (GstBaseTransform * trans, GstBuffer * in,
   filter->plane = plane & (PLANES - 1);
   GST_OBJECT_UNLOCK (filter);
 
-  return ret;
+  gst_video_frame_unmap (&in_frame);
+  gst_video_frame_unmap (&out_frame);
+
+  return GST_FLOW_OK;
+
+  /* ERRORS */
+invalid_in:
+  {
+    GST_DEBUG_OBJECT (filter, "invalid input frame");
+    return GST_FLOW_ERROR;
+  }
+invalid_out:
+  {
+    GST_DEBUG_OBJECT (filter, "invalid output frame");
+    gst_video_frame_unmap (&in_frame);
+    return GST_FLOW_ERROR;
+  }
 }
 
 static gboolean
@@ -147,30 +169,33 @@ gst_streaktv_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
     GstCaps * outcaps)
 {
   GstStreakTV *filter = GST_STREAKTV (btrans);
-  GstStructure *structure;
-  gboolean ret = FALSE;
+  GstVideoInfo info;
+  gint i, width, height;
 
-  structure = gst_caps_get_structure (incaps, 0);
+  if (!gst_video_info_from_caps (&info, incaps))
+    goto invalid_caps;
 
-  GST_OBJECT_LOCK (filter);
-  if (gst_structure_get_int (structure, "width", &filter->width) &&
-      gst_structure_get_int (structure, "height", &filter->height)) {
-    gint i;
+  filter->info = info;
 
-    if (filter->planebuffer)
-      g_free (filter->planebuffer);
+  width = GST_VIDEO_INFO_WIDTH (&info);
+  height = GST_VIDEO_INFO_HEIGHT (&info);
 
-    filter->planebuffer =
-        g_new0 (guint32, filter->width * filter->height * 4 * PLANES);
-    for (i = 0; i < PLANES; i++)
-      filter->planetable[i] =
-          &filter->planebuffer[filter->width * filter->height * i];
+  if (filter->planebuffer)
+    g_free (filter->planebuffer);
 
-    ret = TRUE;
+  filter->planebuffer = g_new0 (guint32, width * height * 4 * PLANES);
+
+  for (i = 0; i < PLANES; i++)
+    filter->planetable[i] = &filter->planebuffer[width * height * i];
+
+  return TRUE;
+
+  /* ERRORS */
+invalid_caps:
+  {
+    GST_DEBUG_OBJECT (filter, "invalid caps received");
+    return FALSE;
   }
-  GST_OBJECT_UNLOCK (filter);
-
-  return ret;
 }
 
 static gboolean
@@ -235,26 +260,10 @@ gst_streaktv_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static void
-gst_streaktv_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (element_class, "StreakTV effect",
-      "Filter/Effect/Video",
-      "StreakTV makes after images of moving objects",
-      "FUKUCHI, Kentarou <fukuchi@users.sourceforge.net>, "
-      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_streaktv_sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_streaktv_src_template));
-}
-
-static void
 gst_streaktv_class_init (GstStreakTVClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstElementClass *gstelement_class = (GstElementClass *) klass;
   GstBaseTransformClass *trans_class = (GstBaseTransformClass *) klass;
 
   gobject_class->set_property = gst_streaktv_set_property;
@@ -267,13 +276,24 @@ gst_streaktv_class_init (GstStreakTVClass * klass)
           "Feedback", DEFAULT_FEEDBACK,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_set_details_simple (gstelement_class, "StreakTV effect",
+      "Filter/Effect/Video",
+      "StreakTV makes after images of moving objects",
+      "FUKUCHI, Kentarou <fukuchi@users.sourceforge.net>, "
+      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_streaktv_sink_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_streaktv_src_template));
+
   trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_streaktv_set_caps);
   trans_class->transform = GST_DEBUG_FUNCPTR (gst_streaktv_transform);
   trans_class->start = GST_DEBUG_FUNCPTR (gst_streaktv_start);
 }
 
 static void
-gst_streaktv_init (GstStreakTV * filter, GstStreakTVClass * klass)
+gst_streaktv_init (GstStreakTV * filter)
 {
   filter->feedback = DEFAULT_FEEDBACK;
 
