@@ -28,34 +28,6 @@ gst_aiff_parse_get_type
 </SECTION>
 
 <SECTION>
-<FILE>element-voaacenc</FILE>
-<TITLE>voaacenc</TITLE>
-GstVoAacEnc
-<SUBSECTION Standard>
-GstVoAacEncClass
-GST_VOAACENC
-GST_VOAACENC_CLASS
-GST_IS_VOAACENC
-GST_IS_VOAACENC_CLASS
-GST_TYPE_VOAACENC
-gst_voaacenc_get_type
-</SECTION>
-
-<SECTION>
-<FILE>element-voamrwbenc</FILE>
-<TITLE>voamrwbenc</TITLE>
-GstVoAmrwbEnc
-<SUBSECTION Standard>
-GstVoAmrwbEncClass
-GST_VOAMRWBENC
-GST_VOAMRWBENC_CLASS
-GST_IS_VOAMRWBENC
-GST_IS_VOAMRWBENC_CLASS
-GST_TYPE_VOAMRWBENC
-gst_voamrwbenc_get_type
-</SECTION>
-
-<SECTION>
 <FILE>element-assrender</FILE>
 <TITLE>assrender</TITLE>
 GstAssRender
@@ -1665,6 +1637,34 @@ GST_WILDMIDI_CLASS
 GST_IS_WILDMIDI
 GST_IS_WILDMIDI_CLASS
 GST_TYPE_WILDMIDI
+</SECTION>
+
+<SECTION>
+<FILE>element-voaacenc</FILE>
+<TITLE>voaacenc</TITLE>
+GstVoAacEnc
+<SUBSECTION Standard>
+GstVoAacEncClass
+GST_VOAACENC
+GST_VOAACENC_CLASS
+GST_IS_VOAACENC
+GST_IS_VOAACENC_CLASS
+GST_TYPE_VOAACENC
+gst_voaacenc_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-voamrwbenc</FILE>
+<TITLE>voamrwbenc</TITLE>
+GstVoAmrwbEnc
+<SUBSECTION Standard>
+GstVoAmrwbEncClass
+GST_VOAMRWBENC
+GST_VOAMRWBENC_CLASS
+GST_IS_VOAMRWBENC
+GST_IS_VOAMRWBENC_CLASS
+GST_TYPE_VOAMRWBENC
+gst_voamrwbenc_get_type
 </SECTION>
 
 <SECTION>
