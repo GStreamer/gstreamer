@@ -33,6 +33,13 @@ typedef enum _GstOMXPortDirection GstOMXPortDirection;
 typedef struct _GstOMXComponent GstOMXComponent;
 typedef struct _GstOMXBuffer GstOMXBuffer;
 
+typedef enum {
+  GST_OMX_ACQUIRE_BUFFER_OK = 0,
+  GST_OMX_ACQUIRE_BUFFER_FLUSHING,
+  GST_OMX_ACQUIRE_BUFFER_RECONFIGURE,
+  GST_OMX_ACQUIRE_BUFFER_ERROR
+} GstOMXAcquireBufferReturn;
+
 struct _GstOMXCore {
   /* Handle to the OpenMAX IL core shared library */
   GModule *module;
@@ -132,7 +139,7 @@ GstOMXPort *      gst_omx_component_get_port (GstOMXComponent * comp, guint32 in
 void              gst_omx_port_get_port_definition (GstOMXPort * port, OMX_PARAM_PORTDEFINITIONTYPE * port_def);
 gboolean          gst_omx_port_update_port_definition (GstOMXPort *port, OMX_PARAM_PORTDEFINITIONTYPE *port_definition);
 
-GstOMXBuffer *    gst_omx_port_acquire_buffer (GstOMXPort *port);
+GstOMXAcquireBufferReturn gst_omx_port_acquire_buffer (GstOMXPort *port, GstOMXBuffer **buf);
 OMX_ERRORTYPE     gst_omx_port_release_buffer (GstOMXPort *port, GstOMXBuffer *buf);
 
 OMX_ERRORTYPE     gst_omx_port_set_flushing (GstOMXPort *port, gboolean flush);

@@ -684,26 +684,43 @@ gst_omx_port_update_port_definition (GstOMXPort * port,
   return (err == OMX_ErrorNone);
 }
 
-GstOMXBuffer *
-gst_omx_port_acquire_buffer (GstOMXPort * port)
+GstOMXAcquireBufferReturn
+gst_omx_port_acquire_buffer (GstOMXPort * port, GstOMXBuffer ** buf)
 {
+  GstOMXAcquireBufferReturn ret = GST_OMX_ACQUIRE_BUFFER_ERROR;
   GstOMXComponent *comp;
   OMX_ERRORTYPE err;
-  GstOMXBuffer *buf = NULL;
+  GstOMXBuffer *_buf = NULL;
 
-  g_return_val_if_fail (port != NULL, NULL);
+  g_return_val_if_fail (port != NULL, GST_OMX_ACQUIRE_BUFFER_ERROR);
+  g_return_val_if_fail (buf != NULL, GST_OMX_ACQUIRE_BUFFER_ERROR);
+
+  *buf = NULL;
 
   comp = port->comp;
 
   GST_DEBUG_OBJECT (comp->parent, "Acquiring buffer from port %u", port->index);
 
   g_mutex_lock (port->port_lock);
-  if (port->flushing)
-    goto done;
 
   /* Check if the component is in an error state */
   if ((err = gst_omx_component_get_last_error (comp)) != OMX_ErrorNone) {
     GST_ERROR_OBJECT (comp->parent, "Component is in error state: %d", err);
+    ret = GST_OMX_ACQUIRE_BUFFER_ERROR;
+    goto done;
+  }
+
+  /* Check if the port is flushing */
+  if (port->flushing) {
+    ret = GST_OMX_ACQUIRE_BUFFER_FLUSHING;
+    goto done;
+  }
+
+  /* Check if the port needs to be reconfigured */
+  if (port->settings_changed) {
+    GST_DEBUG_OBJECT (comp->parent, "Settings changed for port %u",
+        port->index);
+    ret = GST_OMX_ACQUIRE_BUFFER_RECONFIGURE;
     goto done;
   }
 
@@ -717,18 +734,43 @@ gst_omx_port_acquire_buffer (GstOMXPort * port)
   /* Check if the component is in an error state */
   if ((err = gst_omx_component_get_last_error (comp)) != OMX_ErrorNone) {
     GST_ERROR_OBJECT (comp->parent, "Component is in error state: %d", err);
+    ret = GST_OMX_ACQUIRE_BUFFER_ERROR;
     goto done;
   }
 
-  buf = g_queue_pop_head (port->pending_buffers);
+  /* Check if the port is flushing */
+  if (port->flushing) {
+    ret = GST_OMX_ACQUIRE_BUFFER_FLUSHING;
+    goto done;
+  }
+
+  /* Check if the port needs to be reconfigured */
+  /* FIXME: There might still be pending buffers for the
+   * previous configuration */
+  if (port->settings_changed) {
+    GST_DEBUG_OBJECT (comp->parent, "Settings changed for port %u",
+        port->index);
+    ret = GST_OMX_ACQUIRE_BUFFER_RECONFIGURE;
+    goto done;
+  }
+
+  _buf = g_queue_pop_head (port->pending_buffers);
+
+  if (_buf) {
+    ret = GST_OMX_ACQUIRE_BUFFER_OK;
+    *buf = _buf;
+  } else {
+    GST_ERROR_OBJECT (comp->parent, "Unexpectactly got no buffer");
+    ret = GST_OMX_ACQUIRE_BUFFER_ERROR;
+  }
 
 done:
   g_mutex_unlock (port->port_lock);
 
-  GST_DEBUG_OBJECT (comp->parent, "Acquired buffer %p from port %u", buf,
-      port->index);
+  GST_DEBUG_OBJECT (comp->parent, "Acquired buffer %p from port %u: %d", buf,
+      port->index, ret);
 
-  return buf;
+  return ret;
 }
 
 OMX_ERRORTYPE

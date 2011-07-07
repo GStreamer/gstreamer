@@ -303,18 +303,17 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
   GstOMXBuffer *buf = NULL;
   GstVideoFrame *frame;
   GstFlowReturn flow_ret = GST_FLOW_OK;
+  GstOMXAcquireBufferReturn acq_return;
 
-  buf = gst_omx_port_acquire_buffer (port);
-  if (!buf) {
-    if (gst_omx_component_get_last_error (self->component) != OMX_ErrorNone) {
-      goto component_error;
-    } else if (!gst_omx_port_is_settings_changed (self->out_port)) {
-      goto flushing;
-    }
+  acq_return = gst_omx_port_acquire_buffer (port, &buf);
+  if (acq_return == GST_OMX_ACQUIRE_BUFFER_ERROR) {
+    goto component_error;
+  } else if (acq_return == GST_OMX_ACQUIRE_BUFFER_FLUSHING) {
+    goto flushing;
   }
 
   if (!GST_PAD_CAPS (GST_BASE_VIDEO_CODEC_SRC_PAD (self))
-      || gst_omx_port_is_settings_changed (self->out_port)) {
+      || acq_return == GST_OMX_ACQUIRE_BUFFER_RECONFIGURE) {
     GstVideoState *state = &GST_BASE_VIDEO_CODEC (self)->state;
     OMX_PARAM_PORTDEFINITIONTYPE port_def;
 
@@ -337,15 +336,14 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
     /* gst_util_double_to_fraction (port_def.format.video.xFramerate / ((gdouble) 0xffff), &state->fps_n, &state->fps_d); */
     gst_base_video_decoder_set_src_caps (GST_BASE_VIDEO_DECODER (self));
 
-    if (gst_omx_port_is_settings_changed (self->out_port)) {
+    if (acq_return == GST_OMX_ACQUIRE_BUFFER_RECONFIGURE) {
       if (gst_omx_port_reconfigure (self->out_port) != OMX_ErrorNone)
         goto reconfigure_error;
-    }
-
-    /* Get a new buffer */
-    if (!buf)
       return;
+    }
   }
+
+  g_assert (acq_return == GST_OMX_ACQUIRE_BUFFER_OK && buf != NULL);
 
   GST_DEBUG_OBJECT (self, "Handling buffer: 0x%08x %lu", buf->omx_buf->nFlags,
       buf->omx_buf->nTimeStamp);
@@ -635,126 +633,105 @@ static GstFlowReturn
 gst_omx_video_dec_handle_frame (GstBaseVideoDecoder * decoder,
     GstVideoFrame * frame)
 {
+  GstOMXAcquireBufferReturn acq_ret = GST_OMX_ACQUIRE_BUFFER_ERROR;
   GstOMXVideoDec *self;
   GstOMXBuffer *buf;
   GstBuffer *codec_data = NULL;
+  guint offset = 0;
+  GstClockTime timestamp, duration, timestamp_offset = 0;
 
   self = GST_OMX_VIDEO_DEC (decoder);
 
   GST_DEBUG_OBJECT (self, "Handling frame");
 
-  if (gst_omx_port_is_flushing (self->in_port))
-    goto flushing;
-  if (gst_omx_component_get_last_error (self->component) != OMX_ErrorNone)
-    goto component_error;
+  GST_OBJECT_LOCK (self);
+  self->pending_frames = g_list_append (self->pending_frames, frame);
+  GST_OBJECT_UNLOCK (self);
 
-  if (gst_omx_port_is_settings_changed (self->in_port)) {
-    if (gst_omx_port_reconfigure (self->in_port) != OMX_ErrorNone)
-      goto reconfigure_error;
-  }
+  timestamp = frame->presentation_timestamp;
+  duration = frame->presentation_duration;
 
-  if (self->codec_data) {
-    codec_data = self->codec_data;
+  while (offset < GST_BUFFER_SIZE (frame->sink_buffer)) {
+    acq_ret = gst_omx_port_acquire_buffer (self->in_port, &buf);
 
-  retry_codec_data:
-    buf = gst_omx_port_acquire_buffer (self->in_port);
-    if (!buf) {
-      if (gst_omx_component_get_last_error (self->component) != OMX_ErrorNone) {
-        goto component_error;
-      } else if (gst_omx_port_is_settings_changed (self->in_port)) {
-        if (gst_omx_port_reconfigure (self->in_port) != OMX_ErrorNone)
-          goto reconfigure_error;
-        goto retry_codec_data;
-      } else {
-        goto flushing;
-      }
+    if (acq_ret == GST_OMX_ACQUIRE_BUFFER_ERROR) {
+      goto component_error;
+    } else if (acq_ret == GST_OMX_ACQUIRE_BUFFER_FLUSHING) {
+      goto flushing;
+    } else if (acq_ret == GST_OMX_ACQUIRE_BUFFER_RECONFIGURE) {
+      if (gst_omx_port_reconfigure (self->in_port) != OMX_ErrorNone)
+        goto reconfigure_error;
+      /* Now get a new buffer and fill it */
+      continue;
     }
 
-    if (buf->omx_buf->nAllocLen < GST_BUFFER_SIZE (codec_data)) {
-      gst_omx_port_release_buffer (self->in_port, buf);
-      goto too_large_codec_data;
-    }
+    g_assert (acq_ret == GST_OMX_ACQUIRE_BUFFER_OK && buf != NULL);
 
-    buf->omx_buf->nFlags |= OMX_BUFFERFLAG_CODECCONFIG;
-    buf->omx_buf->nFilledLen = GST_BUFFER_SIZE (codec_data);
-    memcpy (buf->omx_buf->pBuffer + buf->omx_buf->nOffset,
-        GST_BUFFER_DATA (codec_data), GST_BUFFER_SIZE (codec_data));
+    if (self->codec_data) {
+      codec_data = self->codec_data;
 
-    gst_omx_port_release_buffer (self->in_port, buf);
-    gst_buffer_replace (&self->codec_data, NULL);
-  }
-
-  {
-    guint offset = 0;
-    GstClockTime timestamp, duration, timestamp_offset = 0;
-
-    GST_OBJECT_LOCK (self);
-    self->pending_frames = g_list_append (self->pending_frames, frame);
-    GST_OBJECT_UNLOCK (self);
-
-    timestamp = frame->presentation_timestamp;
-    duration = frame->presentation_duration;
-
-    while (offset < GST_BUFFER_SIZE (frame->sink_buffer)) {
-      buf = gst_omx_port_acquire_buffer (self->in_port);
-
-      if (!buf) {
-        if (gst_omx_component_get_last_error (self->component) != OMX_ErrorNone) {
-          goto component_error;
-        } else if (gst_omx_port_is_settings_changed (self->in_port)) {
-          if (gst_omx_port_reconfigure (self->in_port) != OMX_ErrorNone)
-            goto reconfigure_error;
-          continue;
-        } else {
-          goto flushing;
-        }
+      if (buf->omx_buf->nAllocLen < GST_BUFFER_SIZE (codec_data)) {
+        gst_omx_port_release_buffer (self->in_port, buf);
+        goto too_large_codec_data;
       }
 
-      /* Copy the buffer content in chunks of size as requested
-       * by the port */
-      buf->omx_buf->nFilledLen =
-          MIN (GST_BUFFER_SIZE (frame->sink_buffer) - offset,
-          buf->omx_buf->nAllocLen - buf->omx_buf->nOffset);
+      buf->omx_buf->nFlags |= OMX_BUFFERFLAG_CODECCONFIG;
+      buf->omx_buf->nFilledLen = GST_BUFFER_SIZE (codec_data);
       memcpy (buf->omx_buf->pBuffer + buf->omx_buf->nOffset,
-          GST_BUFFER_DATA (frame->sink_buffer) + offset,
-          buf->omx_buf->nFilledLen);
+          GST_BUFFER_DATA (codec_data), GST_BUFFER_SIZE (codec_data));
 
-      /* Interpolate timestamps if we're passing the buffer
-       * in multiple chunks */
-      if (offset != 0 && duration != GST_CLOCK_TIME_NONE) {
-        timestamp_offset =
-            gst_util_uint64_scale (offset, duration,
-            GST_BUFFER_SIZE (frame->sink_buffer));
-      }
-
-      if (timestamp != GST_CLOCK_TIME_NONE) {
-        buf->omx_buf->nTimeStamp =
-            gst_util_uint64_scale (timestamp + timestamp_offset,
-            OMX_TICKS_PER_SECOND, GST_SECOND);
-      }
-      if (duration != GST_CLOCK_TIME_NONE) {
-        buf->omx_buf->nTickCount =
-            gst_util_uint64_scale (buf->omx_buf->nFilledLen, duration,
-            GST_BUFFER_SIZE (frame->sink_buffer));
-      }
-
-      if (offset == 0) {
-        BufferIdentification *id = g_slice_new0 (BufferIdentification);
-
-        id->timestamp = buf->omx_buf->nTimeStamp;
-        frame->coder_hook = id;
-      }
-
-      /* TODO: Set flags
-       *   - OMX_BUFFERFLAG_DECODEONLY for buffers that are outside
-       *     the segment
-       *   - OMX_BUFFERFLAG_SYNCFRAME for non-delta frames
-       *   - OMX_BUFFERFLAG_ENDOFFRAME for parsed input
-       */
-
-      offset += buf->omx_buf->nFilledLen;
       gst_omx_port_release_buffer (self->in_port, buf);
+      gst_buffer_replace (&self->codec_data, NULL);
+      /* Acquire new buffer for the actual frame */
+      continue;
     }
+
+    /* Now handle the frame */
+
+    /* Copy the buffer content in chunks of size as requested
+     * by the port */
+    buf->omx_buf->nFilledLen =
+        MIN (GST_BUFFER_SIZE (frame->sink_buffer) - offset,
+        buf->omx_buf->nAllocLen - buf->omx_buf->nOffset);
+    memcpy (buf->omx_buf->pBuffer + buf->omx_buf->nOffset,
+        GST_BUFFER_DATA (frame->sink_buffer) + offset,
+        buf->omx_buf->nFilledLen);
+
+    /* Interpolate timestamps if we're passing the buffer
+     * in multiple chunks */
+    if (offset != 0 && duration != GST_CLOCK_TIME_NONE) {
+      timestamp_offset =
+          gst_util_uint64_scale (offset, duration,
+          GST_BUFFER_SIZE (frame->sink_buffer));
+    }
+
+    if (timestamp != GST_CLOCK_TIME_NONE) {
+      buf->omx_buf->nTimeStamp =
+          gst_util_uint64_scale (timestamp + timestamp_offset,
+          OMX_TICKS_PER_SECOND, GST_SECOND);
+    }
+    if (duration != GST_CLOCK_TIME_NONE) {
+      buf->omx_buf->nTickCount =
+          gst_util_uint64_scale (buf->omx_buf->nFilledLen, duration,
+          GST_BUFFER_SIZE (frame->sink_buffer));
+    }
+
+    if (offset == 0) {
+      BufferIdentification *id = g_slice_new0 (BufferIdentification);
+
+      id->timestamp = buf->omx_buf->nTimeStamp;
+      frame->coder_hook = id;
+    }
+
+    /* TODO: Set flags
+     *   - OMX_BUFFERFLAG_DECODEONLY for buffers that are outside
+     *     the segment
+     *   - OMX_BUFFERFLAG_SYNCFRAME for non-delta frames
+     *   - OMX_BUFFERFLAG_ENDOFFRAME for parsed input
+     */
+
+    offset += buf->omx_buf->nFilledLen;
+    gst_omx_port_release_buffer (self->in_port, buf);
   }
 
   return GST_FLOW_OK;
@@ -793,6 +770,7 @@ gst_omx_video_dec_finish (GstBaseVideoDecoder * decoder)
 {
   GstOMXVideoDec *self;
   GstOMXBuffer *buf;
+  GstOMXAcquireBufferReturn acq_ret;
 
   self = GST_OMX_VIDEO_DEC (decoder);
 
@@ -801,8 +779,8 @@ gst_omx_video_dec_finish (GstBaseVideoDecoder * decoder)
   /* Send an EOS buffer to the component and let the base
    * class drop the EOS event. We will send it later when
    * the EOS buffer arrives on the output port. */
-  buf = gst_omx_port_acquire_buffer (self->in_port);
-  if (buf) {
+  acq_ret = gst_omx_port_acquire_buffer (self->in_port, &buf);
+  if (acq_ret == GST_OMX_ACQUIRE_BUFFER_OK) {
     buf->omx_buf->nFlags |= OMX_BUFFERFLAG_EOS;
     gst_omx_port_release_buffer (self->in_port, buf);
   }
