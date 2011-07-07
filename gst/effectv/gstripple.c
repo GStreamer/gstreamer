@@ -52,7 +52,6 @@
 #include "gstripple.h"
 #include "gsteffectv.h"
 
-#include <gst/video/video.h>
 #include <gst/controller/gstcontroller.h>
 
 #define DEFAULT_MODE 0
@@ -84,24 +83,21 @@ gst_rippletv_mode_get_type (void)
   return type;
 }
 
-
-GST_BOILERPLATE (GstRippleTV, gst_rippletv, GstVideoFilter,
-    GST_TYPE_VIDEO_FILTER);
+#define gst_rippletv_parent_class parent_class
+G_DEFINE_TYPE (GstRippleTV, gst_rippletv, GST_TYPE_VIDEO_FILTER);
 
 static GstStaticPadTemplate gst_rippletv_src_template =
-    GST_STATIC_PAD_TEMPLATE ("src",
+GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_BGRx "; " GST_VIDEO_CAPS_RGBx ";"
-        GST_VIDEO_CAPS_xBGR "; " GST_VIDEO_CAPS_xRGB)
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ BGRx, RGBx, xBGR, xRGB }"))
     );
 
 static GstStaticPadTemplate gst_rippletv_sink_template =
-    GST_STATIC_PAD_TEMPLATE ("sink",
+GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_BGRx "; " GST_VIDEO_CAPS_RGBx ";"
-        GST_VIDEO_CAPS_xBGR "; " GST_VIDEO_CAPS_xRGB)
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ BGRx, RGBx, xBGR, xRGB }"))
     );
 
 static const gint point = 16;
@@ -145,7 +141,9 @@ image_bgset_y (guint32 * src, gint16 * background, gint video_area)
 static gint
 setBackground (GstRippleTV * filter, guint32 * src)
 {
-  image_bgset_y (src, filter->background, filter->width * filter->height);
+  image_bgset_y (src, filter->background,
+      GST_VIDEO_INFO_WIDTH (&filter->info) *
+      GST_VIDEO_INFO_HEIGHT (&filter->info));
   filter->bg_is_set = TRUE;
 
   return 0;
@@ -183,18 +181,21 @@ static void
 motiondetect (GstRippleTV * filter, guint32 * src)
 {
   guint8 *diff = filter->diff;
-  gint width = filter->width;
+  gint width, height;
   gint *p, *q;
   gint x, y, h;
+
+  width = GST_VIDEO_INFO_WIDTH (&filter->info);
+  height = GST_VIDEO_INFO_HEIGHT (&filter->info);
 
   if (!filter->bg_is_set)
     setBackground (filter, src);
 
   image_bgsubtract_update_y (src, filter->background, filter->diff,
-      filter->width * filter->height);
+      width * height);
   p = filter->map1 + filter->map_w + 1;
   q = filter->map2 + filter->map_w + 1;
-  diff += filter->width + 2;
+  diff += width + 2;
 
   for (y = filter->map_h - 2; y > 0; y--) {
     for (x = filter->map_w - 2; x > 0; x--) {
@@ -310,7 +311,7 @@ gst_rippletv_transform (GstBaseTransform * trans, GstBuffer * in,
 {
   GstRippleTV *filter = GST_RIPPLETV (trans);
   guint32 *src, *dest;
-  GstFlowReturn ret = GST_FLOW_OK;
+  GstVideoFrame in_frame, out_frame;
   gint x, y, i;
   gint dx, dy;
   gint h, v;
@@ -329,8 +330,14 @@ gst_rippletv_transform (GstBaseTransform * trans, GstBuffer * in,
   if (GST_CLOCK_TIME_IS_VALID (stream_time))
     gst_object_sync_values (G_OBJECT (filter), stream_time);
 
-  src = (guint32 *) GST_BUFFER_DATA (in);
-  dest = (guint32 *) GST_BUFFER_DATA (out);
+  if (!gst_video_frame_map (&in_frame, &filter->info, in, GST_MAP_READ))
+    goto invalid_in;
+
+  if (!gst_video_frame_map (&out_frame, &filter->info, out, GST_MAP_WRITE))
+    goto invalid_out;
+
+  src = GST_VIDEO_FRAME_PLANE_DATA (&in_frame, 0);
+  dest = GST_VIDEO_FRAME_PLANE_DATA (&out_frame, 0);
 
   GST_OBJECT_LOCK (filter);
   /* impact from the motion or rain drop */
@@ -402,8 +409,8 @@ gst_rippletv_transform (GstBaseTransform * trans, GstBuffer * in,
     vp += 2;
   }
 
-  height = filter->height;
-  width = filter->width;
+  width = GST_VIDEO_FRAME_WIDTH (&in_frame);
+  height = GST_VIDEO_FRAME_HEIGHT (&in_frame);
   vp = filter->vtable;
 
   /* draw refracted image. The vector table is stretched. */
@@ -443,12 +450,29 @@ gst_rippletv_transform (GstBaseTransform * trans, GstBuffer * in,
       dest += 2;
       vp += 2;
     }
-    dest += filter->width;
+    dest += width;
     vp += 2;
   }
   GST_OBJECT_UNLOCK (filter);
 
-  return ret;
+  gst_video_frame_unmap (&in_frame);
+  gst_video_frame_unmap (&out_frame);
+
+  return GST_FLOW_OK;
+
+  /* ERRORS */
+invalid_in:
+  {
+    GST_DEBUG_OBJECT (filter, "invalid input frame");
+    return GST_FLOW_ERROR;
+  }
+invalid_out:
+  {
+    GST_DEBUG_OBJECT (filter, "invalid output frame");
+    gst_video_frame_unmap (&in_frame);
+    return GST_FLOW_ERROR;
+  }
+
 }
 
 static gboolean
@@ -456,43 +480,50 @@ gst_rippletv_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
     GstCaps * outcaps)
 {
   GstRippleTV *filter = GST_RIPPLETV (btrans);
-  GstStructure *structure;
-  gboolean ret = FALSE;
+  GstVideoInfo info;
+  gint width, height;
 
-  structure = gst_caps_get_structure (incaps, 0);
+  if (!gst_video_info_from_caps (&info, incaps))
+    goto invalid_caps;
+
+  filter->info = info;
+
+  width = GST_VIDEO_INFO_WIDTH (&info);
+  height = GST_VIDEO_INFO_HEIGHT (&info);
 
   GST_OBJECT_LOCK (filter);
-  if (gst_structure_get_int (structure, "width", &filter->width) &&
-      gst_structure_get_int (structure, "height", &filter->height)) {
+  filter->map_h = height / 2 + 1;
+  filter->map_w = width / 2 + 1;
 
-    filter->map_h = filter->height / 2 + 1;
-    filter->map_w = filter->width / 2 + 1;
+  if (filter->map)
+    g_free (filter->map);
+  filter->map = g_new0 (gint, filter->map_h * filter->map_w * 3);
 
-    if (filter->map)
-      g_free (filter->map);
-    filter->map = g_new0 (gint, filter->map_h * filter->map_w * 3);
+  filter->map1 = filter->map;
+  filter->map2 = filter->map + filter->map_w * filter->map_h;
+  filter->map3 = filter->map + filter->map_w * filter->map_h * 2;
 
-    filter->map1 = filter->map;
-    filter->map2 = filter->map + filter->map_w * filter->map_h;
-    filter->map3 = filter->map + filter->map_w * filter->map_h * 2;
+  if (filter->vtable)
+    g_free (filter->vtable);
+  filter->vtable = g_new0 (gint8, filter->map_h * filter->map_w * 2);
 
-    if (filter->vtable)
-      g_free (filter->vtable);
-    filter->vtable = g_new0 (gint8, filter->map_h * filter->map_w * 2);
+  if (filter->background)
+    g_free (filter->background);
+  filter->background = g_new0 (gint16, width * height);
 
-    if (filter->background)
-      g_free (filter->background);
-    filter->background = g_new0 (gint16, filter->width * filter->height);
-
-    if (filter->diff)
-      g_free (filter->diff);
-    filter->diff = g_new0 (guint8, filter->width * filter->height);
-
-    ret = TRUE;
-  }
+  if (filter->diff)
+    g_free (filter->diff);
+  filter->diff = g_new0 (guint8, width * height);
   GST_OBJECT_UNLOCK (filter);
 
-  return ret;
+  return TRUE;
+
+  /* ERRORS */
+invalid_caps:
+  {
+    GST_DEBUG_OBJECT (filter, "invalid caps received");
+    return FALSE;
+  }
 }
 
 static gboolean
@@ -577,26 +608,10 @@ gst_rippletv_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static void
-gst_rippletv_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (element_class, "RippleTV effect",
-      "Filter/Effect/Video",
-      "RippleTV does ripple mark effect on the video input",
-      "FUKUCHI, Kentarou <fukuchi@users.sourceforge.net>, "
-      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rippletv_sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rippletv_src_template));
-}
-
-static void
 gst_rippletv_class_init (GstRippleTVClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstElementClass *gstelement_class = (GstElementClass *) klass;
   GstBaseTransformClass *trans_class = (GstBaseTransformClass *) klass;
 
   gobject_class->set_property = gst_rippletv_set_property;
@@ -614,6 +629,17 @@ gst_rippletv_class_init (GstRippleTVClass * klass)
           "Mode", GST_TYPE_RIPPLETV_MODE, DEFAULT_MODE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
 
+  gst_element_class_set_details_simple (gstelement_class, "RippleTV effect",
+      "Filter/Effect/Video",
+      "RippleTV does ripple mark effect on the video input",
+      "FUKUCHI, Kentarou <fukuchi@users.sourceforge.net>, "
+      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rippletv_sink_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rippletv_src_template));
+
   trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_rippletv_set_caps);
   trans_class->transform = GST_DEBUG_FUNCPTR (gst_rippletv_transform);
   trans_class->start = GST_DEBUG_FUNCPTR (gst_rippletv_start);
@@ -622,7 +648,7 @@ gst_rippletv_class_init (GstRippleTVClass * klass)
 }
 
 static void
-gst_rippletv_init (GstRippleTV * filter, GstRippleTVClass * klass)
+gst_rippletv_init (GstRippleTV * filter)
 {
   filter->mode = DEFAULT_MODE;
 
