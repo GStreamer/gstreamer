@@ -37,7 +37,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v videotestsrc ! rippletv ! ffmpegcolorspace ! autovideosink
+ * gst-launch -v videotestsrc ! rippletv ! videoconvert ! autovideosink
  * ]| This pipeline shows the effect of rippletv on a test stream.
  * </refsect2>
  */

@@ -41,7 +41,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v videotestsrc ! warptv ! ffmpegcolorspace ! autovideosink
+ * gst-launch -v videotestsrc ! warptv ! videoconvert ! autovideosink
  * ]| This pipeline shows the effect of warptv on a test stream.
  * </refsect2>
  */

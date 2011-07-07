@@ -40,7 +40,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v videotestsrc ! radioactv ! ffmpegcolorspace ! autovideosink
+ * gst-launch -v videotestsrc ! radioactv ! videoconvert ! autovideosink
  * ]| This pipeline shows the effect of radioactv on a test stream.
  * </refsect2>
  */

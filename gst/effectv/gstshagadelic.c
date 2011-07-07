@@ -30,7 +30,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v videotestsrc ! shagadelictv ! ffmpegcolorspace ! autovideosink
+ * gst-launch -v videotestsrc ! shagadelictv ! videoconvert ! autovideosink
  * ]| This pipeline shows the effect of shagadelictv on a test stream.
  * </refsect2>
  */
