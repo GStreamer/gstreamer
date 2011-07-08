@@ -54,8 +54,6 @@ struct _GstOMXVideoDec
   GstOMXPort *in_port, *out_port;
 
   /* < private > */
-  GList *pending_frames;
-
   GstBuffer *codec_data;
 };
 

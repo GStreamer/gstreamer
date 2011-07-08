@@ -229,7 +229,7 @@ _find_nearest_frame (GstOMXVideoDec * self, GstOMXBuffer * buf)
   BufferIdentification *best_id = NULL;
 
   GST_OBJECT_LOCK (self);
-  for (l = self->pending_frames; l; l = l->next) {
+  for (l = GST_BASE_VIDEO_CODEC (self)->frames; l; l = l->next) {
     GstVideoFrame *tmp = l->data;
     BufferIdentification *id = tmp->coder_hook;
     guint64 timestamp, diff;
@@ -262,7 +262,7 @@ _find_nearest_frame (GstOMXVideoDec * self, GstOMXBuffer * buf)
   }
 
   if (best_id) {
-    for (l = self->pending_frames; l && l != best_l;) {
+    for (l = GST_BASE_VIDEO_CODEC (self)->frames; l && l != best_l;) {
       GstVideoFrame *tmp = l->data;
       BufferIdentification *id = tmp->coder_hook;
       guint64 diff_ticks, diff_frames;
@@ -281,16 +281,13 @@ _find_nearest_frame (GstOMXVideoDec * self, GstOMXBuffer * buf)
         g_warning ("Too old frame, bug in decoder -- please file a bug");
         gst_base_video_decoder_finish_frame (GST_BASE_VIDEO_DECODER (self),
             tmp);
-        self->pending_frames = g_list_delete_link (self->pending_frames, l);
-        l = self->pending_frames;
+        l = GST_BASE_VIDEO_CODEC (self)->frames;
       } else {
         l = l->next;
       }
     }
   }
 
-  if (best_l)
-    self->pending_frames = g_list_delete_link (self->pending_frames, best_l);
   GST_OBJECT_UNLOCK (self);
 
   return best;
@@ -479,9 +476,6 @@ gst_omx_video_dec_stop (GstBaseVideoDecoder * decoder)
 
   gst_omx_component_get_state (self->component, 5 * GST_SECOND);
 
-  g_list_free (self->pending_frames);
-  self->pending_frames = NULL;
-
   gst_buffer_replace (&self->codec_data, NULL);
 
   return ret;
@@ -610,9 +604,6 @@ gst_omx_video_dec_reset (GstBaseVideoDecoder * decoder)
   GST_PAD_STREAM_LOCK (GST_BASE_VIDEO_CODEC_SRC_PAD (self));
   GST_PAD_STREAM_UNLOCK (GST_BASE_VIDEO_CODEC_SRC_PAD (self));
 
-  g_list_free (self->pending_frames);
-  self->pending_frames = NULL;
-
   gst_omx_port_set_flushing (self->in_port, FALSE);
   gst_omx_port_set_flushing (self->out_port, FALSE);
 
@@ -643,10 +634,6 @@ gst_omx_video_dec_handle_frame (GstBaseVideoDecoder * decoder,
   self = GST_OMX_VIDEO_DEC (decoder);
 
   GST_DEBUG_OBJECT (self, "Handling frame");
-
-  GST_OBJECT_LOCK (self);
-  self->pending_frames = g_list_append (self->pending_frames, frame);
-  GST_OBJECT_UNLOCK (self);
 
   timestamp = frame->presentation_timestamp;
   duration = frame->presentation_duration;
