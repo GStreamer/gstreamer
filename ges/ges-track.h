@@ -98,6 +98,8 @@ gboolean ges_track_remove_object (GESTrack * track,
 GESTrack *ges_track_video_raw_new (void);
 GESTrack *ges_track_audio_raw_new (void);
 
+GList* ges_track_get_objects (GESTrack *track);
+
 G_END_DECLS
 
 #endif /* _GES_TRACK */
