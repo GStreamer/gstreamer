@@ -568,40 +568,44 @@ gst_v4l2sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
             (v4l2sink)));
   }
 
-  if (v4l2sink->probed_caps) {
-    LOG_CAPS (v4l2sink, v4l2sink->probed_caps);
-    return gst_caps_ref (v4l2sink->probed_caps);
-  }
+  if (v4l2sink->probed_caps == NULL) {
+    formats = gst_v4l2_object_get_format_list (v4l2sink->v4l2object);
 
-  formats = gst_v4l2_object_get_format_list (v4l2sink->v4l2object);
+    ret = gst_caps_new_empty ();
 
-  ret = gst_caps_new_empty ();
+    for (walk = formats; walk; walk = walk->next) {
+      struct v4l2_fmtdesc *format;
 
-  for (walk = formats; walk; walk = walk->next) {
-    struct v4l2_fmtdesc *format;
+      GstStructure *template;
 
-    GstStructure *template;
+      format = (struct v4l2_fmtdesc *) walk->data;
 
-    format = (struct v4l2_fmtdesc *) walk->data;
+      template = gst_v4l2_object_v4l2fourcc_to_structure (format->pixelformat);
 
-    template = gst_v4l2_object_v4l2fourcc_to_structure (format->pixelformat);
+      if (template) {
+        GstCaps *tmp;
 
-    if (template) {
-      GstCaps *tmp;
+        tmp =
+            gst_v4l2_object_probe_caps_for_format (v4l2sink->v4l2object,
+            format->pixelformat, template);
+        if (tmp)
+          gst_caps_append (ret, tmp);
 
-      tmp =
-          gst_v4l2_object_probe_caps_for_format (v4l2sink->v4l2object,
-          format->pixelformat, template);
-      if (tmp)
-        gst_caps_append (ret, tmp);
-
-      gst_structure_free (template);
-    } else {
-      GST_DEBUG_OBJECT (v4l2sink, "unknown format %u", format->pixelformat);
+        gst_structure_free (template);
+      } else {
+        GST_DEBUG_OBJECT (v4l2sink, "unknown format %u", format->pixelformat);
+      }
     }
+    v4l2sink->probed_caps = ret;
   }
 
-  v4l2sink->probed_caps = gst_caps_ref (ret);
+  if (filter) {
+    ret =
+        gst_caps_intersect_full (filter, v4l2sink->probed_caps,
+        GST_CAPS_INTERSECT_FIRST);
+  } else {
+    ret = gst_caps_ref (v4l2sink->probed_caps);
+  }
 
   GST_INFO_OBJECT (v4l2sink, "probed caps: %p", ret);
   LOG_CAPS (v4l2sink, ret);

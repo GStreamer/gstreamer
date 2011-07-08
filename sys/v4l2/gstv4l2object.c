@@ -1149,10 +1149,6 @@ gst_v4l2_object_v4l2fourcc_to_structure (guint32 fourcc)
     case V4L2_PIX_FMT_JPEG:    /* JFIF JPEG */
       structure = gst_structure_new ("image/jpeg", NULL);
       break;
-    case V4L2_PIX_FMT_GREY:    /*  8  Greyscale     */
-      structure = gst_structure_new ("video/x-raw-gray",
-          "bpp", G_TYPE_INT, 8, NULL);
-      break;
     case V4L2_PIX_FMT_YYUV:    /* 16  YUV 4:2:2     */
     case V4L2_PIX_FMT_HI240:   /*  8  8-bit color   */
       /* FIXME: get correct fourccs here */
@@ -1162,6 +1158,7 @@ gst_v4l2_object_v4l2fourcc_to_structure (guint32 fourcc)
     case V4L2_PIX_FMT_RGB565X:
       /* FIXME: get correct fourccs here */
       break;
+    case V4L2_PIX_FMT_GREY:    /*  8  Greyscale     */
     case V4L2_PIX_FMT_RGB555:
     case V4L2_PIX_FMT_RGB565:
     case V4L2_PIX_FMT_RGB24:
@@ -1187,6 +1184,9 @@ gst_v4l2_object_v4l2fourcc_to_structure (guint32 fourcc)
       GstVideoFormat format;
 
       switch (fourcc) {
+        case V4L2_PIX_FMT_GREY:        /*  8  Greyscale     */
+          format = GST_VIDEO_FORMAT_GRAY8;
+          break;
         case V4L2_PIX_FMT_RGB555:
           format = GST_VIDEO_FORMAT_RGB15;
           break;
@@ -1450,6 +1450,8 @@ gst_v4l2_object_get_caps_info (GstV4l2Object * v4l2object, GstCaps * caps,
       case GST_VIDEO_FORMAT_BGRA:
         fourcc = V4L2_PIX_FMT_BGR32;
         break;
+      case GST_VIDEO_FORMAT_GRAY8:
+        fourcc = V4L2_PIX_FMT_GREY;
       default:
         break;
     }
@@ -1472,10 +1474,8 @@ gst_v4l2_object_get_caps_info (GstV4l2Object * v4l2object, GstCaps * caps,
 #ifdef V4L2_PIX_FMT_PWC2
   } else if (strcmp (mimetype, "video/x-pwc2") == 0) {
     fourcc = V4L2_PIX_FMT_PWC2;
-#endif
-  } else if (strcmp (mimetype, "video/x-raw-gray") == 0) {
-    fourcc = V4L2_PIX_FMT_GREY;
   }
+#endif
 
   if (fourcc == 0)
     goto unhandled_format;
