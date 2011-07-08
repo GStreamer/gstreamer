@@ -257,67 +257,20 @@ GST_IMPLEMENT_V4L2_TUNER_METHODS (GstV4l2Radio, gst_v4l2radio);
 static void gst_v4l2radio_uri_handler_init (gpointer g_iface,
     gpointer iface_data);
 
-static gboolean
-gst_v4l2radio_interface_supported (GstImplementsInterface * iface,
-    GType iface_type)
-{
-  if (iface_type == GST_TYPE_TUNER)
-    return TRUE;
-  else
-    return FALSE;
-}
-
-static void
-gst_v4l2radio_implements_interface_init (GstImplementsInterfaceClass * iface)
-{
-  iface->supported = gst_v4l2radio_interface_supported;
-}
-
 static void
 gst_v4l2radio_tuner_interface_reinit (GstTunerClass * iface)
 {
   gst_v4l2radio_tuner_interface_init (iface);
 }
 
-static void
-gst_v4l2radio_interfaces (GType type)
-{
-  static const GInterfaceInfo urihandler_info = {
-    (GInterfaceInitFunc) gst_v4l2radio_uri_handler_init,
-    NULL,
-    NULL
-  };
-
-  static const GInterfaceInfo implements_interface_info = {
-    (GInterfaceInitFunc) gst_v4l2radio_implements_interface_init,
-    NULL,
-    NULL,
-  };
-
-  static const GInterfaceInfo propertyprobe_info = {
-    (GInterfaceInitFunc) gst_v4l2radio_property_probe_interface_init,
-    NULL,
-    NULL,
-  };
-
-  static const GInterfaceInfo tuner_interface_info = {
-    (GInterfaceInitFunc) gst_v4l2radio_tuner_interface_reinit,
-    NULL,
-    NULL,
-  };
-
-  g_type_add_interface_static (type, GST_TYPE_URI_HANDLER, &urihandler_info);
-  g_type_add_interface_static (type,
-      GST_TYPE_IMPLEMENTS_INTERFACE, &implements_interface_info);
-
-  g_type_add_interface_static (type, GST_TYPE_TUNER, &tuner_interface_info);
-
-  g_type_add_interface_static (type,
-      GST_TYPE_PROPERTY_PROBE, &propertyprobe_info);
-}
-
-GST_BOILERPLATE_FULL (GstV4l2Radio, gst_v4l2radio, GstElement, GST_TYPE_ELEMENT,
-    gst_v4l2radio_interfaces);
+#define gst_v4l2radio_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstV4l2Radio, gst_v4l2radio, GST_TYPE_ELEMENT,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER,
+        gst_v4l2radio_uri_handler_init);
+    G_IMPLEMENT_INTERFACE (GST_TYPE_TUNER,
+        gst_v4l2radio_tuner_interface_reinit);
+    G_IMPLEMENT_INTERFACE (GST_TYPE_PROPERTY_PROBE,
+        gst_v4l2radio_property_probe_interface_init));
 
 static void gst_v4l2radio_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -329,24 +282,6 @@ static GstStateChangeReturn gst_v4l2radio_change_state (GstElement * element,
     GstStateChange transition);
 
 static void
-gst_v4l2radio_base_init (gpointer gclass)
-{
-  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (gclass);
-  GstV4l2RadioClass *gstv4l2radio_class = GST_V4L2RADIO_CLASS (gclass);
-
-  GST_DEBUG_CATEGORY_INIT (v4l2radio_debug, "v4l2radio", 0,
-      "V4l2 radio element");
-
-  gstv4l2radio_class->v4l2_class_devices = NULL;
-
-  gst_element_class_set_details_simple (gstelement_class,
-      "Radio (video4linux2) Tuner",
-      "Tuner",
-      "Controls a Video4Linux2 radio device",
-      "Alexey Chernov <4ernov@gmail.com>");
-}
-
-static void
 gst_v4l2radio_class_init (GstV4l2RadioClass * klass)
 {
   GObjectClass *gobject_class;
@@ -355,6 +290,8 @@ gst_v4l2radio_class_init (GstV4l2RadioClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
+  gobject_class->dispose = gst_v4l2radio_dispose;
+  gobject_class->finalize = (GObjectFinalizeFunc) gst_v4l2radio_finalize;
   gobject_class->set_property = gst_v4l2radio_set_property;
   gobject_class->get_property = gst_v4l2radio_get_property;
 
@@ -368,16 +305,23 @@ gst_v4l2radio_class_init (GstV4l2RadioClass * klass)
           "Station frequency in Hz",
           MIN_FREQUENCY, MAX_FREQUENCY, DEFAULT_FREQUENCY, G_PARAM_READWRITE));
 
-  gobject_class->dispose = gst_v4l2radio_dispose;
-  gobject_class->finalize = (GObjectFinalizeFunc) gst_v4l2radio_finalize;
-
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_v4l2radio_change_state);
 
+  gst_element_class_set_details_simple (gstelement_class,
+      "Radio (video4linux2) Tuner",
+      "Tuner",
+      "Controls a Video4Linux2 radio device",
+      "Alexey Chernov <4ernov@gmail.com>");
+
+  klass->v4l2_class_devices = NULL;
+
+  GST_DEBUG_CATEGORY_INIT (v4l2radio_debug, "v4l2radio", 0,
+      "V4l2 radio element");
 }
 
 static void
-gst_v4l2radio_init (GstV4l2Radio * filter, GstV4l2RadioClass * gclass)
+gst_v4l2radio_init (GstV4l2Radio * filter)
 {
   filter->v4l2object = gst_v4l2_object_new (GST_ELEMENT (filter),
       V4L2_BUF_TYPE_VIDEO_CAPTURE, DEFAULT_PROP_DEVICE,
@@ -563,13 +507,13 @@ gst_v4l2radio_get_property (GObject * object, guint prop_id,
 
 /* GstURIHandler interface */
 static GstURIType
-gst_v4l2radio_uri_get_type (void)
+gst_v4l2radio_uri_get_type (GType type)
 {
   return GST_URI_SRC;
 }
 
 static gchar **
-gst_v4l2radio_uri_get_protocols (void)
+gst_v4l2radio_uri_get_protocols (GType type)
 {
   static gchar *protocols[] = { (char *) "radio", NULL };
   return protocols;

@@ -165,7 +165,6 @@ gst_v4l2src_grab_frame (GstV4l2Src * v4l2src, GstBuffer ** buf)
           "running out of buffers, making a copy to reuse current one");
     }
     *buf = gst_buffer_copy (pool_buffer);
-    GST_BUFFER_FLAG_UNSET (*buf, GST_BUFFER_FLAG_READONLY);
     /* this will requeue */
     gst_buffer_unref (pool_buffer);
   } else {

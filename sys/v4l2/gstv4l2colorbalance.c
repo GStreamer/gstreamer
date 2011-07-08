@@ -29,14 +29,9 @@
 #include "gstv4l2colorbalance.h"
 #include "gstv4l2object.h"
 
-GST_BOILERPLATE (GstV4l2ColorBalanceChannel,
-    gst_v4l2_color_balance_channel,
-    GstColorBalanceChannel, GST_TYPE_COLOR_BALANCE_CHANNEL);
-
-static void
-gst_v4l2_color_balance_channel_base_init (gpointer g_class)
-{
-}
+#define gst_v4l2_color_balance_channel_parent_class parent_class
+G_DEFINE_TYPE (GstV4l2ColorBalanceChannel,
+    gst_v4l2_color_balance_channel, GST_TYPE_COLOR_BALANCE_CHANNEL);
 
 static void
 gst_v4l2_color_balance_channel_class_init (GstV4l2ColorBalanceChannelClass *
@@ -45,8 +40,7 @@ gst_v4l2_color_balance_channel_class_init (GstV4l2ColorBalanceChannelClass *
 }
 
 static void
-gst_v4l2_color_balance_channel_init (GstV4l2ColorBalanceChannel * channel,
-    GstV4l2ColorBalanceChannelClass * klass)
+gst_v4l2_color_balance_channel_init (GstV4l2ColorBalanceChannel * channel)
 {
   channel->id = (guint32) - 1;
 }

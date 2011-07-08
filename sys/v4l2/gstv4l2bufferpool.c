@@ -64,8 +64,8 @@ gst_meta_v4l2_get_info (void)
     meta_info =
         gst_meta_register ("GstMetaV4l2", "GstMetaV4l2",
         sizeof (GstMetaV4l2), (GstMetaInitFunction) NULL,
-        (GstMetaFreeFunction) NULL, (GstMetaTransformFunction) NULL,
-        (GstMetaSerializeFunction) NULL, (GstMetaDeserializeFunction) NULL);
+        (GstMetaFreeFunction) NULL, (GstMetaCopyFunction) NULL,
+        (GstMetaTransformFunction) NULL);
   }
   return meta_info;
 }
@@ -110,7 +110,6 @@ gst_v4l2_buffer_dispose (GstBuffer * buffer)
     /* FIXME: check that the caps didn't change */
     GST_LOG_OBJECT (pool->v4l2elem, "reviving buffer %p, %d", buffer, index);
     gst_buffer_ref (buffer);
-    GST_BUFFER_SIZE (buffer) = 0;
     pool->buffers[index] = buffer;
   }
 
@@ -119,8 +118,8 @@ gst_v4l2_buffer_dispose (GstBuffer * buffer)
   if (!resuscitated) {
     GST_LOG_OBJECT (pool->v4l2elem,
         "buffer %p (data %p, len %u) not recovered, unmapping",
-        buffer, GST_BUFFER_DATA (buffer), meta->vbuffer.length);
-    v4l2_munmap ((void *) GST_BUFFER_DATA (buffer), meta->vbuffer.length);
+        buffer, meta->mem, meta->vbuffer.length);
+    v4l2_munmap (meta->mem, meta->vbuffer.length);
 
     g_object_unref (pool);
   }
@@ -130,7 +129,6 @@ static GstBuffer *
 gst_v4l2_buffer_new (GstV4l2BufferPool * pool, guint index, GstCaps * caps)
 {
   GstBuffer *ret;
-  guint8 *mem;
   GstMetaV4l2 *meta;
 
   ret = gst_buffer_new ();
@@ -163,19 +161,15 @@ gst_v4l2_buffer_new (GstV4l2BufferPool * pool, guint index, GstCaps * caps)
   GST_LOG_OBJECT (pool->v4l2elem, "  length:    %u", meta->vbuffer.length);
   GST_LOG_OBJECT (pool->v4l2elem, "  input:     %u", meta->vbuffer.input);
 
-  mem = (guint8 *) v4l2_mmap (0, meta->vbuffer.length,
+  meta->mem = v4l2_mmap (0, meta->vbuffer.length,
       PROT_READ | PROT_WRITE, MAP_SHARED, pool->video_fd,
       meta->vbuffer.m.offset);
-
-  if (mem == MAP_FAILED)
+  if (meta->mem == MAP_FAILED)
     goto mmap_failed;
 
-  GST_BUFFER_DATA (ret) = mem;
-  GST_BUFFER_SIZE (ret) = meta->vbuffer.length;
-
-  GST_BUFFER_FLAG_SET (ret, GST_BUFFER_FLAG_READONLY);
-
-  gst_buffer_set_caps (ret, caps);
+  gst_buffer_take_memory (ret, -1,
+      gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY,
+          meta->mem, NULL, meta->vbuffer.length, 0, meta->vbuffer.length));
 
   return ret;
 
@@ -468,7 +462,7 @@ gst_v4l2_buffer_pool_get (GstV4l2BufferPool * pool, gboolean blocking)
     GstMetaV4l2 *meta = GST_META_V4L2_GET (buf);
 
     GST_V4L2_BUFFER_POOL_LOCK (pool);
-    GST_BUFFER_SIZE (buf) = meta->vbuffer.length;
+    gst_buffer_resize (buf, 0, meta->vbuffer.length);
     GST_BUFFER_FLAG_UNSET (buf, 0xffffffff);
     GST_V4L2_BUFFER_POOL_UNLOCK (pool);
   }
@@ -563,7 +557,7 @@ gst_v4l2_buffer_pool_dqbuf (GstV4l2BufferPool * pool)
       GST_BUFFER_FLAG_UNSET (pool_buffer, GST_VIDEO_BUFFER_TFF);
 
     /* this can change at every frame, esp. with jpeg */
-    GST_BUFFER_SIZE (pool_buffer) = buffer.bytesused;
+    gst_buffer_resize (pool_buffer, 0, buffer.bytesused);
 
     GST_V4L2_BUFFER_POOL_UNLOCK (pool);
 

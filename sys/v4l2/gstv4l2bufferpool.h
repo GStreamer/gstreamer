@@ -69,6 +69,7 @@ struct _GstV4l2BufferPool
 struct _GstMetaV4l2 {
   GstMeta meta;
 
+  gpointer mem;
   struct v4l2_buffer vbuffer;
 
   /* FIXME: have GstV4l2Src* instead, as this has GstV4l2BufferPool* */

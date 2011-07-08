@@ -89,102 +89,21 @@ GST_IMPLEMENT_V4L2_VIDORIENT_METHODS (GstV4l2Src, gst_v4l2src);
 static void gst_v4l2src_uri_handler_init (gpointer g_iface,
     gpointer iface_data);
 
-static gboolean
-gst_v4l2src_iface_supported (GstImplementsInterface * iface, GType iface_type)
-{
-  GstV4l2Object *v4l2object = GST_V4L2SRC (iface)->v4l2object;
-
+#define gst_v4l2src_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstV4l2Src, gst_v4l2src, GST_TYPE_PUSH_SRC,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER, gst_v4l2src_uri_handler_init);
+    G_IMPLEMENT_INTERFACE (GST_TYPE_TUNER, gst_v4l2src_tuner_interface_init);
 #ifdef HAVE_XVIDEO
-  g_assert (iface_type == GST_TYPE_TUNER ||
-      iface_type == GST_TYPE_X_OVERLAY ||
-      iface_type == GST_TYPE_COLOR_BALANCE ||
-      iface_type == GST_TYPE_VIDEO_ORIENTATION);
-#else
-  g_assert (iface_type == GST_TYPE_TUNER ||
-      iface_type == GST_TYPE_COLOR_BALANCE ||
-      iface_type == GST_TYPE_VIDEO_ORIENTATION);
+    /* FIXME: does GstXOverlay for v4l2src make sense in a GStreamer context? */
+    G_IMPLEMENT_INTERFACE (GST_TYPE_X_OVERLAY,
+        gst_v4l2src_xoverlay_interface_init);
 #endif
-
-  if (v4l2object->video_fd == -1)
-    return FALSE;
-
-#ifdef HAVE_XVIDEO
-  if (iface_type == GST_TYPE_X_OVERLAY && !GST_V4L2_IS_OVERLAY (v4l2object))
-    return FALSE;
-#endif
-
-  return TRUE;
-}
-
-static void
-gst_v4l2src_interface_init (GstImplementsInterfaceClass * klass)
-{
-  /*
-   * default virtual functions 
-   */
-  klass->supported = gst_v4l2src_iface_supported;
-}
-
-static void
-gst_v4l2src_init_interfaces (GType type)
-{
-  static const GInterfaceInfo urihandler_info = {
-    gst_v4l2src_uri_handler_init,
-    NULL,
-    NULL
-  };
-
-  static const GInterfaceInfo v4l2iface_info = {
-    (GInterfaceInitFunc) gst_v4l2src_interface_init,
-    NULL,
-    NULL,
-  };
-  static const GInterfaceInfo v4l2_tuner_info = {
-    (GInterfaceInitFunc) gst_v4l2src_tuner_interface_init,
-    NULL,
-    NULL,
-  };
-#ifdef HAVE_XVIDEO
-  /* FIXME: does GstXOverlay for v4l2src make sense in a GStreamer context? */
-  static const GInterfaceInfo v4l2_xoverlay_info = {
-    (GInterfaceInitFunc) gst_v4l2src_xoverlay_interface_init,
-    NULL,
-    NULL,
-  };
-#endif
-  static const GInterfaceInfo v4l2_colorbalance_info = {
-    (GInterfaceInitFunc) gst_v4l2src_color_balance_interface_init,
-    NULL,
-    NULL,
-  };
-  static const GInterfaceInfo v4l2_videoorientation_info = {
-    (GInterfaceInitFunc) gst_v4l2src_video_orientation_interface_init,
-    NULL,
-    NULL,
-  };
-  static const GInterfaceInfo v4l2_propertyprobe_info = {
-    (GInterfaceInitFunc) gst_v4l2src_property_probe_interface_init,
-    NULL,
-    NULL,
-  };
-
-  g_type_add_interface_static (type, GST_TYPE_URI_HANDLER, &urihandler_info);
-  g_type_add_interface_static (type,
-      GST_TYPE_IMPLEMENTS_INTERFACE, &v4l2iface_info);
-  g_type_add_interface_static (type, GST_TYPE_TUNER, &v4l2_tuner_info);
-#ifdef HAVE_XVIDEO
-  g_type_add_interface_static (type, GST_TYPE_X_OVERLAY, &v4l2_xoverlay_info);
-#endif
-  g_type_add_interface_static (type,
-      GST_TYPE_COLOR_BALANCE, &v4l2_colorbalance_info);
-  g_type_add_interface_static (type,
-      GST_TYPE_VIDEO_ORIENTATION, &v4l2_videoorientation_info);
-  g_type_add_interface_static (type, GST_TYPE_PROPERTY_PROBE,
-      &v4l2_propertyprobe_info);
-}
-
-GST_BOILERPLATE_FULL (GstV4l2Src, gst_v4l2src, GstPushSrc, GST_TYPE_PUSH_SRC,
-    gst_v4l2src_init_interfaces);
+    G_IMPLEMENT_INTERFACE (GST_TYPE_COLOR_BALANCE,
+        gst_v4l2src_color_balance_interface_init);
+    G_IMPLEMENT_INTERFACE (GST_TYPE_VIDEO_ORIENTATION,
+        gst_v4l2src_video_orientation_interface_init);
+    G_IMPLEMENT_INTERFACE (GST_TYPE_PROPERTY_PROBE,
+        gst_v4l2src_property_probe_interface_init));
 
 static void gst_v4l2src_dispose (GObject * object);
 static void gst_v4l2src_finalize (GstV4l2Src * v4l2src);
@@ -199,7 +118,7 @@ static gboolean gst_v4l2src_unlock (GstBaseSrc * src);
 static gboolean gst_v4l2src_unlock_stop (GstBaseSrc * src);
 static gboolean gst_v4l2src_stop (GstBaseSrc * src);
 static gboolean gst_v4l2src_set_caps (GstBaseSrc * src, GstCaps * caps);
-static GstCaps *gst_v4l2src_get_caps (GstBaseSrc * src);
+static GstCaps *gst_v4l2src_get_caps (GstBaseSrc * src, GstCaps * filter);
 static gboolean gst_v4l2src_query (GstBaseSrc * bsrc, GstQuery * query);
 static GstFlowReturn gst_v4l2src_create (GstPushSrc * src, GstBuffer ** out);
 static void gst_v4l2src_fixate (GstBaseSrc * basesrc, GstCaps * caps);
@@ -215,28 +134,6 @@ static GstFlowReturn
 gst_v4l2src_get_read (GstV4l2Src * v4l2src, GstBuffer ** buf);
 static GstFlowReturn
 gst_v4l2src_get_mmap (GstV4l2Src * v4l2src, GstBuffer ** buf);
-
-static void
-gst_v4l2src_base_init (gpointer g_class)
-{
-  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
-  GstV4l2SrcClass *gstv4l2src_class = GST_V4L2SRC_CLASS (g_class);
-
-  gstv4l2src_class->v4l2_class_devices = NULL;
-
-  GST_DEBUG_CATEGORY_INIT (v4l2src_debug, "v4l2src", 0, "V4L2 source element");
-
-  gst_element_class_set_details_simple (gstelement_class,
-      "Video (video4linux2) Source", "Source/Video",
-      "Reads frames from a Video4Linux2 device",
-      "Edgard Lima <edgard.lima@indt.org.br>,"
-      " Stefan Kost <ensonic@users.sf.net>");
-
-  gst_element_class_add_pad_template
-      (gstelement_class,
-      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-          gst_v4l2_object_get_all_caps ()));
-}
 
 static void
 gst_v4l2src_class_init (GstV4l2SrcClass * klass)
@@ -281,6 +178,17 @@ gst_v4l2src_class_init (GstV4l2SrcClass * klass)
           "Only use every nth frame", 1, G_MAXINT,
           PROP_DEF_DECIMATE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_set_details_simple (element_class,
+      "Video (video4linux2) Source", "Source/Video",
+      "Reads frames from a Video4Linux2 device",
+      "Edgard Lima <edgard.lima@indt.org.br>,"
+      " Stefan Kost <ensonic@users.sf.net>");
+
+  gst_element_class_add_pad_template
+      (element_class,
+      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
+          gst_v4l2_object_get_all_caps ()));
+
   basesrc_class->get_caps = GST_DEBUG_FUNCPTR (gst_v4l2src_get_caps);
   basesrc_class->set_caps = GST_DEBUG_FUNCPTR (gst_v4l2src_set_caps);
   basesrc_class->start = GST_DEBUG_FUNCPTR (gst_v4l2src_start);
@@ -292,10 +200,14 @@ gst_v4l2src_class_init (GstV4l2SrcClass * klass)
   basesrc_class->negotiate = GST_DEBUG_FUNCPTR (gst_v4l2src_negotiate);
 
   pushsrc_class->create = GST_DEBUG_FUNCPTR (gst_v4l2src_create);
+
+  klass->v4l2_class_devices = NULL;
+
+  GST_DEBUG_CATEGORY_INIT (v4l2src_debug, "v4l2src", 0, "V4L2 source element");
 }
 
 static void
-gst_v4l2src_init (GstV4l2Src * v4l2src, GstV4l2SrcClass * klass)
+gst_v4l2src_init (GstV4l2Src * v4l2src)
 {
   /* fixme: give an update_fps_function */
   v4l2src->v4l2object = gst_v4l2_object_new (GST_ELEMENT (v4l2src),
@@ -441,7 +353,7 @@ gst_v4l2src_negotiate (GstBaseSrc * basesrc)
   gboolean result = FALSE;
 
   /* first see what is possible on our source pad */
-  thiscaps = gst_pad_get_caps (GST_BASE_SRC_PAD (basesrc));
+  thiscaps = gst_pad_get_caps (GST_BASE_SRC_PAD (basesrc), NULL);
   GST_DEBUG_OBJECT (basesrc, "caps of src: %" GST_PTR_FORMAT, thiscaps);
   LOG_CAPS (basesrc, thiscaps);
 
@@ -450,7 +362,7 @@ gst_v4l2src_negotiate (GstBaseSrc * basesrc)
     goto no_nego_needed;
 
   /* get the peer caps */
-  peercaps = gst_pad_peer_get_caps (GST_BASE_SRC_PAD (basesrc));
+  peercaps = gst_pad_peer_get_caps (GST_BASE_SRC_PAD (basesrc), thiscaps);
   GST_DEBUG_OBJECT (basesrc, "caps of peer: %" GST_PTR_FORMAT, peercaps);
   LOG_CAPS (basesrc, peercaps);
   if (peercaps && !gst_caps_is_any (peercaps)) {
@@ -557,7 +469,7 @@ no_nego_needed:
 }
 
 static GstCaps *
-gst_v4l2src_get_caps (GstBaseSrc * src)
+gst_v4l2src_get_caps (GstBaseSrc * src, GstCaps * filter)
 {
   GstV4l2Src *v4l2src = GST_V4L2SRC (src);
   GstCaps *ret;
@@ -822,9 +734,10 @@ gst_v4l2src_change_state (GstElement * element, GstStateChange transition)
 static GstFlowReturn
 gst_v4l2src_get_read (GstV4l2Src * v4l2src, GstBuffer ** buf)
 {
+  GstFlowReturn res;
   gint amount;
   gint ret;
-
+  gpointer data;
   gint buffersize;
 
   buffersize = v4l2src->frame_byte_size;
@@ -834,6 +747,7 @@ gst_v4l2src_get_read (GstV4l2Src * v4l2src, GstBuffer ** buf)
     buffersize = GST_BASE_SRC (v4l2src)->blocksize;
 
   *buf = gst_buffer_new_and_alloc (buffersize);
+  data = gst_buffer_map (*buf, NULL, NULL, GST_MAP_WRITE);
 
   do {
     ret = gst_poll_wait (v4l2src->v4l2object->poll, GST_CLOCK_TIME_NONE);
@@ -849,9 +763,8 @@ gst_v4l2src_get_read (GstV4l2Src * v4l2src, GstBuffer ** buf)
           goto select_error;
       }
     }
-    amount =
-        v4l2_read (v4l2src->v4l2object->video_fd, GST_BUFFER_DATA (*buf),
-        buffersize);
+    amount = v4l2_read (v4l2src->v4l2object->video_fd, data, buffersize);
+
     if (amount == buffersize) {
       break;
     } else if (amount == -1) {
@@ -865,6 +778,8 @@ gst_v4l2src_get_read (GstV4l2Src * v4l2src, GstBuffer ** buf)
     }
   } while (TRUE);
 
+  gst_buffer_unmap (*buf, data, amount);
+
   /* we set the buffer metadata in gst_v4l2src_create() */
 
   return GST_FLOW_OK;
@@ -874,20 +789,28 @@ select_error:
   {
     GST_ELEMENT_ERROR (v4l2src, RESOURCE, READ, (NULL),
         ("select error %d: %s (%d)", ret, g_strerror (errno), errno));
-    return GST_FLOW_ERROR;
+    res = GST_FLOW_ERROR;
+    goto cleanup;
   }
 stopped:
   {
     GST_DEBUG ("stop called");
-    return GST_FLOW_WRONG_STATE;
+    res = GST_FLOW_WRONG_STATE;
+    goto cleanup;
   }
 read_error:
   {
     GST_ELEMENT_ERROR (v4l2src, RESOURCE, READ,
         (_("Error reading %d bytes from device '%s'."),
             buffersize, v4l2src->v4l2object->videodev), GST_ERROR_SYSTEM);
+    res = GST_FLOW_ERROR;
+    goto cleanup;
+  }
+cleanup:
+  {
+    gst_buffer_unmap (*buf, data, 0);
     gst_buffer_unref (*buf);
-    return GST_FLOW_ERROR;
+    return res;
   }
 }
 
@@ -905,7 +828,7 @@ again:
     goto done;
 
   if (v4l2src->frame_byte_size > 0) {
-    size = GST_BUFFER_SIZE (temp);
+    size = gst_buffer_get_size (temp);
 
     /* if size does not match what we expected, try again */
     if (size != v4l2src->frame_byte_size) {
@@ -1009,13 +932,13 @@ gst_v4l2src_create (GstPushSrc * src, GstBuffer ** buf)
 
 /* GstURIHandler interface */
 static GstURIType
-gst_v4l2src_uri_get_type (void)
+gst_v4l2src_uri_get_type (GType type)
 {
   return GST_URI_SRC;
 }
 
 static gchar **
-gst_v4l2src_uri_get_protocols (void)
+gst_v4l2src_uri_get_protocols (GType type)
 {
   static gchar *protocols[] = { (char *) "v4l2", NULL };
 
