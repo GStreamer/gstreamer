@@ -3358,7 +3358,7 @@ gst_mxf_demux_seek_pull (GstMXFDemux * demux, GstEvent * event)
 
   GST_PAD_STREAM_UNLOCK (demux->sinkpad);
 
-  return TRUE;
+  return ret;
 
   /* ERRORS */
 wrong_format:
