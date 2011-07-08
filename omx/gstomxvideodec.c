@@ -279,6 +279,7 @@ _find_nearest_frame (GstOMXVideoDec * self, GstOMXBuffer * buf)
       if (diff_ticks > MAX_FRAME_DIST_TICKS
           || diff_frames > MAX_FRAME_DIST_FRAMES) {
         g_warning ("Too old frame, bug in decoder -- please file a bug");
+        g_slice_free (BufferIdentification, id);
         gst_base_video_decoder_finish_frame (GST_BASE_VIDEO_DECODER (self),
             tmp);
         l = GST_BASE_VIDEO_CODEC (self)->frames;
@@ -618,10 +619,18 @@ static gboolean
 gst_omx_video_dec_reset (GstBaseVideoDecoder * decoder)
 {
   GstOMXVideoDec *self;
+  GList *l;
 
   self = GST_OMX_VIDEO_DEC (decoder);
 
   GST_DEBUG_OBJECT (self, "Resetting decoder");
+
+  for (l = GST_BASE_VIDEO_CODEC (self)->frames; l; l = l->next) {
+    GstVideoFrame *frame = l->data;
+
+    g_slice_free (BufferIdentification, frame->coder_hook);
+    frame->coder_hook = NULL;
+  }
 
   gst_omx_port_set_flushing (self->in_port, TRUE);
   gst_omx_port_set_flushing (self->out_port, TRUE);
