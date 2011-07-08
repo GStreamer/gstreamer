@@ -98,43 +98,6 @@ GST_IMPLEMENT_V4L2_XOVERLAY_METHODS (GstV4l2Sink, gst_v4l2sink);
 #endif
 GST_IMPLEMENT_V4L2_VIDORIENT_METHODS (GstV4l2Sink, gst_v4l2sink);
 
-static gboolean
-gst_v4l2sink_iface_supported (GstImplementsInterface * iface, GType iface_type)
-{
-  GstV4l2Object *v4l2object = GST_V4L2SINK (iface)->v4l2object;
-
-#ifdef HAVE_XVIDEO
-  g_assert (iface_type == GST_TYPE_X_OVERLAY ||
-      iface_type == GST_TYPE_NAVIGATION ||
-      iface_type == GST_TYPE_COLOR_BALANCE ||
-      iface_type == GST_TYPE_VIDEO_ORIENTATION || iface_type == GST_TYPE_TUNER);
-#else
-  g_assert (iface_type == GST_TYPE_COLOR_BALANCE ||
-      iface_type == GST_TYPE_VIDEO_ORIENTATION || iface_type == GST_TYPE_TUNER);
-#endif
-
-  if (v4l2object->video_fd == -1)
-    return FALSE;
-
-#ifdef HAVE_XVIDEO
-  if (!GST_V4L2_IS_OVERLAY (v4l2object)) {
-    if (iface_type == GST_TYPE_X_OVERLAY || iface_type == GST_TYPE_NAVIGATION)
-      return FALSE;
-  }
-#endif
-
-  return TRUE;
-}
-
-static void
-gst_v4l2sink_interface_init (GstImplementsInterfaceClass * klass)
-{
-  /*
-   * default virtual functions
-   */
-  klass->supported = gst_v4l2sink_iface_supported;
-}
-
 #ifdef HAVE_XVIDEO
 static void gst_v4l2sink_navigation_send_event (GstNavigation * navigation,
     GstStructure * structure);
@@ -145,66 +108,20 @@ gst_v4l2sink_navigation_init (GstNavigationInterface * iface)
 }
 #endif
 
-static void
-gst_v4l2sink_init_interfaces (GType type)
-{
-  static const GInterfaceInfo v4l2iface_info = {
-    (GInterfaceInitFunc) gst_v4l2sink_interface_init,
-    NULL,
-    NULL,
-  };
-  static const GInterfaceInfo v4l2_tuner_info = {
-    (GInterfaceInitFunc) gst_v4l2sink_tuner_interface_init,
-    NULL,
-    NULL,
-  };
+#define gst_v4l2sink_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstV4l2Sink, gst_v4l2sink, GST_TYPE_VIDEO_SINK,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_TUNER, gst_v4l2sink_tuner_interface_init);
 #ifdef HAVE_XVIDEO
-  static const GInterfaceInfo v4l2_xoverlay_info = {
-    (GInterfaceInitFunc) gst_v4l2sink_xoverlay_interface_init,
-    NULL,
-    NULL,
-  };
-  static const GInterfaceInfo v4l2_navigation_info = {
-    (GInterfaceInitFunc) gst_v4l2sink_navigation_init,
-    NULL,
-    NULL,
-  };
+    G_IMPLEMENT_INTERFACE (GST_TYPE_X_OVERLAY,
+        gst_v4l2sink_xoverlay_interface_init);
+    G_IMPLEMENT_INTERFACE (GST_TYPE_NAVIGATION, gst_v4l2sink_navigation_init);
 #endif
-  static const GInterfaceInfo v4l2_colorbalance_info = {
-    (GInterfaceInitFunc) gst_v4l2sink_color_balance_interface_init,
-    NULL,
-    NULL,
-  };
-  static const GInterfaceInfo v4l2_videoorientation_info = {
-    (GInterfaceInitFunc) gst_v4l2sink_video_orientation_interface_init,
-    NULL,
-    NULL,
-  };
-  static const GInterfaceInfo v4l2_propertyprobe_info = {
-    (GInterfaceInitFunc) gst_v4l2sink_property_probe_interface_init,
-    NULL,
-    NULL,
-  };
-
-  g_type_add_interface_static (type,
-      GST_TYPE_IMPLEMENTS_INTERFACE, &v4l2iface_info);
-  g_type_add_interface_static (type, GST_TYPE_TUNER, &v4l2_tuner_info);
-#ifdef HAVE_XVIDEO
-  g_type_add_interface_static (type, GST_TYPE_X_OVERLAY, &v4l2_xoverlay_info);
-  g_type_add_interface_static (type,
-      GST_TYPE_NAVIGATION, &v4l2_navigation_info);
-#endif
-  g_type_add_interface_static (type,
-      GST_TYPE_COLOR_BALANCE, &v4l2_colorbalance_info);
-  g_type_add_interface_static (type,
-      GST_TYPE_VIDEO_ORIENTATION, &v4l2_videoorientation_info);
-  g_type_add_interface_static (type, GST_TYPE_PROPERTY_PROBE,
-      &v4l2_propertyprobe_info);
-}
-
-
-GST_BOILERPLATE_FULL (GstV4l2Sink, gst_v4l2sink, GstVideoSink,
-    GST_TYPE_VIDEO_SINK, gst_v4l2sink_init_interfaces);
+    G_IMPLEMENT_INTERFACE (GST_TYPE_COLOR_BALANCE,
+        gst_v4l2sink_color_balance_interface_init);
+    G_IMPLEMENT_INTERFACE (GST_TYPE_VIDEO_ORIENTATION,
+        gst_v4l2sink_video_orientation_interface_init);
+    G_IMPLEMENT_INTERFACE (GST_TYPE_PROPERTY_PROBE,
+        gst_v4l2sink_property_probe_interface_init));
 
 
 static void gst_v4l2sink_dispose (GObject * object);
@@ -222,32 +139,14 @@ static GstStateChangeReturn gst_v4l2sink_change_state (GstElement * element,
     GstStateChange transition);
 
 /* GstBaseSink methods: */
-static GstCaps *gst_v4l2sink_get_caps (GstBaseSink * bsink);
+static GstCaps *gst_v4l2sink_get_caps (GstBaseSink * bsink, GstCaps * filter);
 static gboolean gst_v4l2sink_set_caps (GstBaseSink * bsink, GstCaps * caps);
+#if 0
 static GstFlowReturn gst_v4l2sink_buffer_alloc (GstBaseSink * bsink,
     guint64 offset, guint size, GstCaps * caps, GstBuffer ** buf);
+#endif
 static GstFlowReturn gst_v4l2sink_show_frame (GstBaseSink * bsink,
     GstBuffer * buf);
-
-static void
-gst_v4l2sink_base_init (gpointer g_class)
-{
-  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
-  GstV4l2SinkClass *gstv4l2sink_class = GST_V4L2SINK_CLASS (g_class);
-
-  gstv4l2sink_class->v4l2_class_devices = NULL;
-
-  GST_DEBUG_CATEGORY_INIT (v4l2sink_debug, "v4l2sink", 0, "V4L2 sink element");
-
-  gst_element_class_set_details_simple (gstelement_class,
-      "Video (video4linux2) Sink", "Sink/Video",
-      "Displays frames on a video4linux2 device", "Rob Clark <rob@ti.com>,");
-
-  gst_element_class_add_pad_template
-      (gstelement_class,
-      gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-          gst_v4l2_object_get_all_caps ()));
-}
 
 static void
 gst_v4l2sink_class_init (GstV4l2SinkClass * klass)
@@ -314,14 +213,26 @@ gst_v4l2sink_class_init (GstV4l2SinkClass * klass)
           "The height of the video crop; default is equal to negotiated image height",
           0, 0xffffffff, 0, G_PARAM_READWRITE));
 
+  gst_element_class_set_details_simple (element_class,
+      "Video (video4linux2) Sink", "Sink/Video",
+      "Displays frames on a video4linux2 device", "Rob Clark <rob@ti.com>,");
+
+  gst_element_class_add_pad_template (element_class,
+      gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
+          gst_v4l2_object_get_all_caps ()));
+
   basesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_v4l2sink_get_caps);
   basesink_class->set_caps = GST_DEBUG_FUNCPTR (gst_v4l2sink_set_caps);
-  basesink_class->buffer_alloc = GST_DEBUG_FUNCPTR (gst_v4l2sink_buffer_alloc);
   basesink_class->render = GST_DEBUG_FUNCPTR (gst_v4l2sink_show_frame);
+
+  klass->v4l2_class_devices = NULL;
+
+  GST_DEBUG_CATEGORY_INIT (v4l2sink_debug, "v4l2sink", 0, "V4L2 sink element");
+
 }
 
 static void
-gst_v4l2sink_init (GstV4l2Sink * v4l2sink, GstV4l2SinkClass * klass)
+gst_v4l2sink_init (GstV4l2Sink * v4l2sink)
 {
   v4l2sink->v4l2object = gst_v4l2_object_new (GST_ELEMENT (v4l2sink),
       V4L2_BUF_TYPE_VIDEO_OUTPUT, DEFAULT_PROP_DEVICE,
@@ -642,7 +553,7 @@ gst_v4l2sink_change_state (GstElement * element, GstStateChange transition)
 
 
 static GstCaps *
-gst_v4l2sink_get_caps (GstBaseSink * bsink)
+gst_v4l2sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
 {
   GstV4l2Sink *v4l2sink = GST_V4L2SINK (bsink);
   GstCaps *ret;
@@ -769,6 +680,7 @@ gst_v4l2sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   return TRUE;
 }
 
+#if 0
 /* buffer alloc function to implement pad_alloc for upstream element */
 static GstFlowReturn
 gst_v4l2sink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
@@ -829,6 +741,7 @@ gst_v4l2sink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
     return GST_FLOW_ERROR;
   }
 }
+#endif
 
 /* called after A/V sync to render frame */
 static GstFlowReturn
@@ -839,6 +752,7 @@ gst_v4l2sink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
 
   GST_DEBUG_OBJECT (v4l2sink, "render buffer: %p", buf);
 
+#if 0
   if (!GST_IS_V4L2_BUFFER (buf)) {
     GstFlowReturn ret;
 
@@ -886,8 +800,9 @@ gst_v4l2sink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
 
     buf = newbuf;
   }
+#endif
 
-  if (!gst_v4l2_buffer_pool_qbuf (v4l2sink->pool, GST_V4L2_BUFFER (buf))) {
+  if (!gst_v4l2_buffer_pool_qbuf (v4l2sink->pool, buf)) {
     return GST_FLOW_ERROR;
   }
   if (v4l2sink->state == STATE_PENDING_STREAMON) {
@@ -907,7 +822,7 @@ gst_v4l2sink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
    */
   if (gst_v4l2_buffer_pool_available_buffers (v4l2sink->pool) >
       v4l2sink->min_queued_bufs) {
-    GstV4l2Buffer *v4l2buf = gst_v4l2_buffer_pool_dqbuf (v4l2sink->pool);
+    GstBuffer *v4l2buf = gst_v4l2_buffer_pool_dqbuf (v4l2sink->pool);
 
     /* note: if we get a buf, we don't want to use it directly (because
      * someone else could still hold a ref).. but instead we release our

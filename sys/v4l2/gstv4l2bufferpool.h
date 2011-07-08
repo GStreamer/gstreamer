@@ -33,17 +33,10 @@ GST_DEBUG_CATEGORY_EXTERN (v4l2buffer_debug);
 G_BEGIN_DECLS
 
 
-GType gst_v4l2_buffer_get_type (void);
-#define GST_TYPE_V4L2_BUFFER (gst_v4l2_buffer_get_type())
-#define GST_IS_V4L2_BUFFER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_V4L2_BUFFER))
-#define GST_V4L2_BUFFER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_V4L2_BUFFER, GstV4l2Buffer))
-
 GType gst_v4l2_buffer_pool_get_type (void);
 #define GST_TYPE_V4L2_BUFFER_POOL (gst_v4l2_buffer_pool_get_type())
 #define GST_IS_V4L2_BUFFER_POOL(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_V4L2_BUFFER_POOL))
 #define GST_V4L2_BUFFER_POOL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_V4L2_BUFFER_POOL, GstV4l2BufferPool))
-
-
 
 typedef struct _GstV4l2BufferPool GstV4l2BufferPool;
 typedef struct _GstMetaV4l2 GstMetaV4l2;

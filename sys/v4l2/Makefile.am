@@ -19,10 +19,7 @@ libgstvideo4linux2_la_SOURCES = gstv4l2.c \
 				v4l2_calls.c \
 				v4l2src_calls.c \
 				$(xv_source)
-
-if BUILD_EXPERIMENTAL
 libgstvideo4linux2_la_SOURCES += gstv4l2sink.c
-endif
 
 libgstvideo4linux2_la_CFLAGS =   $(GST_PLUGINS_BASE_CFLAGS) \
 				 $(GST_BASE_CFLAGS) \
