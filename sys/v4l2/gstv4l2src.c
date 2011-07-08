@@ -330,13 +330,13 @@ gst_v4l2src_fixate (GstBaseSrc * basesrc, GstCaps * caps)
         G_MAXINT, 1);
 
     v = gst_structure_get_value (structure, "format");
-    if (v && G_VALUE_TYPE (v) != GST_TYPE_FOURCC) {
-      guint32 fourcc;
+    if (v && G_VALUE_TYPE (v) != G_TYPE_STRING) {
+      const gchar *format;
 
       g_return_if_fail (G_VALUE_TYPE (v) == GST_TYPE_LIST);
 
-      fourcc = gst_value_get_fourcc (gst_value_list_get_value (v, 0));
-      gst_structure_set (structure, "format", GST_TYPE_FOURCC, fourcc, NULL);
+      format = g_value_get_string (gst_value_list_get_value (v, 0));
+      gst_structure_set (structure, "format", G_TYPE_STRING, format, NULL);
     }
   }
 
@@ -451,8 +451,9 @@ gst_v4l2src_negotiate (GstBaseSrc * basesrc)
         result = TRUE;
       } else if (gst_caps_is_fixed (caps)) {
         /* yay, fixed caps, use those then */
-        if (gst_pad_set_caps (GST_BASE_SRC_PAD (basesrc), caps))
-          result = TRUE;
+        gst_pad_push_event (GST_BASE_SRC_PAD (basesrc),
+            gst_event_new_caps (caps));
+        result = gst_v4l2src_set_caps (basesrc, caps);
       }
     }
     gst_caps_unref (caps);
@@ -864,6 +865,9 @@ gst_v4l2src_create (GstPushSrc * src, GstBuffer ** buf)
   int i;
   GstFlowReturn ret;
 
+  if (v4l2src->get_frame == NULL)
+    goto not_negotiated;
+
   for (i = 0; i < v4l2src->decimate - 1; i++) {
     ret = v4l2src->get_frame (v4l2src, buf);
     if (ret != GST_FLOW_OK) {
@@ -927,6 +931,13 @@ gst_v4l2src_create (GstPushSrc * src, GstBuffer ** buf)
     GST_BUFFER_DURATION (*buf) = v4l2src->duration;
   }
   return ret;
+
+  /* ERRORS */
+not_negotiated:
+  {
+    GST_DEBUG_OBJECT (src, "we are not negotiated");
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
 }
 
 
