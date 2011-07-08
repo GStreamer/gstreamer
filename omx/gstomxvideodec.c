@@ -307,12 +307,19 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
     goto component_error;
   } else if (acq_return == GST_OMX_ACQUIRE_BUFFER_FLUSHING) {
     goto flushing;
+  } else if (acq_return == GST_OMX_ACQUIRE_BUFFER_RECONFIGURE) {
+    if (gst_omx_port_reconfigure (self->out_port) != OMX_ErrorNone)
+      goto reconfigure_error;
+    /* And restart the loop */
+    return;
   }
 
   if (!GST_PAD_CAPS (GST_BASE_VIDEO_CODEC_SRC_PAD (self))
-      || acq_return == GST_OMX_ACQUIRE_BUFFER_RECONFIGURE) {
+      || acq_return == GST_OMX_ACQUIRE_BUFFER_RECONFIGURED) {
     GstVideoState *state = &GST_BASE_VIDEO_CODEC (self)->state;
     OMX_PARAM_PORTDEFINITIONTYPE port_def;
+
+    GST_DEBUG_OBJECT (self, "Port settings have changed, updating caps");
 
     gst_omx_port_get_port_definition (port, &port_def);
     g_assert (port_def.format.video.eCompressionFormat ==
@@ -331,13 +338,15 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
     state->height = port_def.format.video.nFrameHeight;
     /* FIXME XXX: Bellagio does not set this to something useful... */
     /* gst_util_double_to_fraction (port_def.format.video.xFramerate / ((gdouble) 0xffff), &state->fps_n, &state->fps_d); */
-    gst_base_video_decoder_set_src_caps (GST_BASE_VIDEO_DECODER (self));
-
-    if (acq_return == GST_OMX_ACQUIRE_BUFFER_RECONFIGURE) {
-      if (gst_omx_port_reconfigure (self->out_port) != OMX_ErrorNone)
-        goto reconfigure_error;
-      return;
+    if (!gst_base_video_decoder_set_src_caps (GST_BASE_VIDEO_DECODER (self))) {
+      if (buf)
+        gst_omx_port_release_buffer (self->out_port, buf);
+      goto caps_failed;
     }
+
+    /* Now get a buffer */
+    if (acq_return != GST_OMX_ACQUIRE_BUFFER_OK)
+      return;
   }
 
   g_assert (acq_return == GST_OMX_ACQUIRE_BUFFER_OK && buf != NULL);
@@ -349,8 +358,16 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
   if (!frame) {
     GST_ERROR_OBJECT (self, "No corresponding frame found");
   } else if (buf->omx_buf->nFilledLen > 0) {
-    if (gst_base_video_decoder_alloc_src_frame (GST_BASE_VIDEO_DECODER (self),
-            frame) == GST_FLOW_OK) {
+    if (GST_BASE_VIDEO_CODEC (self)->state.bytes_per_picture == 0) {
+      /* FIXME: If the sinkpad caps change we have currently no way
+       * to allocate new src buffers because basevideodecoder assumes
+       * that the caps on both pads are equivalent all the time
+       */
+      GST_WARNING_OBJECT (self,
+          "Caps change pending and still have buffers for old caps -- dropping");
+    } else
+        if (gst_base_video_decoder_alloc_src_frame (GST_BASE_VIDEO_DECODER
+            (self), frame) == GST_FLOW_OK) {
       /* FIXME: This currently happens because of a race condition too.
        * We first need to reconfigure the output port and then the input
        * port if both need reconfiguration.
@@ -437,6 +454,14 @@ reconfigure_error:
 invalid_frame_size:
   {
     GST_ELEMENT_ERROR (self, LIBRARY, SETTINGS, (NULL), ("Invalid frame size"));
+    gst_pad_push_event (GST_BASE_VIDEO_CODEC_SRC_PAD (self),
+        gst_event_new_eos ());
+    gst_pad_pause_task (GST_BASE_VIDEO_CODEC_SRC_PAD (self));
+    return;
+  }
+caps_failed:
+  {
+    GST_ELEMENT_ERROR (self, LIBRARY, SETTINGS, (NULL), ("Failed to set caps"));
     gst_pad_push_event (GST_BASE_VIDEO_CODEC_SRC_PAD (self),
         gst_event_new_eos ());
     gst_pad_pause_task (GST_BASE_VIDEO_CODEC_SRC_PAD (self));
@@ -550,6 +575,7 @@ gst_omx_video_dec_set_format (GstBaseVideoDecoder * decoder,
   if (needs_disable) {
     if (gst_omx_port_set_enabled (self->in_port, TRUE) != OMX_ErrorNone)
       return FALSE;
+    gst_omx_component_trigger_settings_changed (self->component);
   } else {
     if (gst_omx_component_set_state (self->component,
             OMX_StateIdle) != OMX_ErrorNone)
@@ -649,6 +675,9 @@ gst_omx_video_dec_handle_frame (GstBaseVideoDecoder * decoder,
       if (gst_omx_port_reconfigure (self->in_port) != OMX_ErrorNone)
         goto reconfigure_error;
       /* Now get a new buffer and fill it */
+      continue;
+    } else if (acq_ret == GST_OMX_ACQUIRE_BUFFER_RECONFIGURED) {
+      /* TODO: Anything to do here? Don't think so */
       continue;
     }
 

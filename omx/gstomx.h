@@ -34,9 +34,16 @@ typedef struct _GstOMXComponent GstOMXComponent;
 typedef struct _GstOMXBuffer GstOMXBuffer;
 
 typedef enum {
+  /* Everything good and the buffer is valid */
   GST_OMX_ACQUIRE_BUFFER_OK = 0,
+  /* The port is flushing, exit ASAP */
   GST_OMX_ACQUIRE_BUFFER_FLUSHING,
+  /* The port must be reconfigured */
   GST_OMX_ACQUIRE_BUFFER_RECONFIGURE,
+  /* The port was reconfigured and the caps might have changed
+   * NOTE: This is only returned a single time! */
+  GST_OMX_ACQUIRE_BUFFER_RECONFIGURED,
+  /* A fatal error happened */
   GST_OMX_ACQUIRE_BUFFER_ERROR
 } GstOMXAcquireBufferReturn;
 
@@ -64,13 +71,16 @@ struct _GstOMXPort {
   guint32 index;
 
   /* Protects port_def, buffers, pending_buffers,
-   * settings_changed, flushing, flushed, enabled_changed.
+   * settings_changed, flushing, flushed, enabled_changed
+   * and settings_cookie.
    *
    * Signalled if pending_buffers gets a
    * new buffer or flushing/flushed is set
-   * to TRUE or an error happens. Always
-   * check comp->last_error after being
-   * signalled!
+   * to TRUE or the port is enabled/disabled
+   * or the settings change or an error happens.
+   *
+   * Note: Always check comp->last_error before
+   * waiting and after being signalled!
    *
    * Note: flushed==TRUE implies flushing==TRUE!
    *
@@ -82,12 +92,15 @@ struct _GstOMXPort {
   OMX_PARAM_PORTDEFINITIONTYPE port_def;
   GPtrArray *buffers; /* Contains GstOMXBuffer* */
   GQueue *pending_buffers; /* Contains GstOMXBuffer* */
-  /* If TRUE we need to get the new caps
-   * of this port */
+  /* If TRUE we need to get the new caps of this port */
   gboolean settings_changed;
   gboolean flushing;
   gboolean flushed; /* TRUE after OMX_CommandFlush was done */
   gboolean enabled_changed; /* TRUE after OMX_Command{En,Dis}able was done */
+
+  /* If not equal to comp->settings_cookie we need
+   * to reconfigure this port */
+  gint settings_cookie;
 };
 
 struct _GstOMXComponent {
@@ -96,8 +109,10 @@ struct _GstOMXComponent {
   GstOMXCore *core;
 
   GPtrArray *ports; /* Contains GstOMXPort* */
+  gint n_in_ports, n_out_ports;
 
-  /* Protecting state, pending_state and last_error
+  /* Protecting state, pending_state, last_error
+   * and settings_cookie.
    * Signalled if one of them changes
    */
   GMutex *state_lock;
@@ -107,6 +122,14 @@ struct _GstOMXComponent {
   OMX_STATETYPE pending_state;
   /* OMX_ErrorNone usually, if different nothing will work */
   OMX_ERRORTYPE last_error;
+  /* Updated whenever settings of any port are changing.
+   * We always reconfigure all ports */
+  gint settings_cookie;
+  /* Number of output ports that must still be reconfigured.
+   * If any are pending no input port will be reconfigured
+   * or will accept any data and wait.
+   */
+  gint reconfigure_out_pending;
 };
 
 struct _GstOMXBuffer {
@@ -117,6 +140,9 @@ struct _GstOMXBuffer {
    * between {Empty,Fill}ThisBuffer and the callback
    */
   gboolean used;
+
+  /* Cookie of the settings when this buffer was allocated */
+  gint settings_cookie;
 };
 
 GstOMXCore *      gst_omx_core_acquire (const gchar * filename);
@@ -135,6 +161,9 @@ OMX_ERRORTYPE     gst_omx_component_get_last_error (GstOMXComponent * comp);
 GstOMXPort *      gst_omx_component_add_port (GstOMXComponent * comp, guint32 index);
 GstOMXPort *      gst_omx_component_get_port (GstOMXComponent * comp, guint32 index);
 
+gint              gst_omx_component_get_settings_cookie (GstOMXComponent * comp);
+void              gst_omx_component_trigger_settings_changed (GstOMXComponent * comp);
+
 
 void              gst_omx_port_get_port_definition (GstOMXPort * port, OMX_PARAM_PORTDEFINITIONTYPE * port_def);
 gboolean          gst_omx_port_update_port_definition (GstOMXPort *port, OMX_PARAM_PORTDEFINITIONTYPE *port_definition);
@@ -152,8 +181,6 @@ OMX_ERRORTYPE     gst_omx_port_reconfigure (GstOMXPort * port);
 
 OMX_ERRORTYPE     gst_omx_port_set_enabled (GstOMXPort * port, gboolean enabled);
 gboolean          gst_omx_port_is_enabled (GstOMXPort * port);
-
-gboolean          gst_omx_port_is_settings_changed (GstOMXPort * port);
 
 G_END_DECLS
 
