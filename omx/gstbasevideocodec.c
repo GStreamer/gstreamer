@@ -166,7 +166,7 @@ gst_base_video_codec_new_frame (GstBaseVideoCodec * base_video_codec)
 {
   GstVideoFrame *frame;
 
-  frame = g_malloc0 (sizeof (GstVideoFrame));
+  frame = g_slice_new0 (GstVideoFrame);
 
   frame->system_frame_number = base_video_codec->system_frame_number;
   base_video_codec->system_frame_number++;
@@ -177,6 +177,8 @@ gst_base_video_codec_new_frame (GstBaseVideoCodec * base_video_codec)
 void
 gst_base_video_codec_free_frame (GstVideoFrame * frame)
 {
+  g_return_if_fail (frame != NULL);
+
   if (frame->sink_buffer) {
     gst_buffer_unref (frame->sink_buffer);
   }
@@ -191,5 +193,5 @@ gst_base_video_codec_free_frame (GstVideoFrame * frame)
   if (frame->coder_hook_destroy_notify && frame->coder_hook)
     frame->coder_hook_destroy_notify (frame->coder_hook);
 
-  g_free (frame);
+  g_slice_free (GstVideoFrame, frame);
 }
