@@ -128,6 +128,7 @@
 #endif
 
 #include "gstbasevideodecoder.h"
+#include "gstbasevideoutils.h"
 
 #include <string.h>
 

@@ -4,14 +4,15 @@ lib_LTLIBRARIES = libgstbasevideo-@GST_MAJORMINOR@.la
 CLEANFILES = $(BUILT_SOURCES)
 
 libgstbasevideo_@GST_MAJORMINOR@_la_SOURCES = \
-	gstbasevideoutils.c \
 	gstbasevideocodec.c \
+	gstbasevideoutils.c \
 	gstbasevideodecoder.c \
 	gstbasevideoencoder.c
 
 libgstbasevideo_@GST_MAJORMINOR@includedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/video
 libgstbasevideo_@GST_MAJORMINOR@include_HEADERS = \
 	gstbasevideocodec.h \
+	gstbasevideoutils.h \
 	gstbasevideodecoder.h \
 	gstbasevideoencoder.h
 
