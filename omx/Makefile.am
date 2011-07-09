@@ -14,7 +14,8 @@ noinst_HEADERS = \
 	gstomxmpeg4videodec.h \
 	gstbasevideocodec.h \
 	gstbasevideodecoder.h \
-	gstbasevideoencoder.h
+	gstbasevideoencoder.h \
+	gstbasevideoutils.h
 
 fixbaseclasses = \
         -DGstBaseVideoCodec=OMXBaseVideoCodec \

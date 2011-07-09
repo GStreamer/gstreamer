@@ -21,7 +21,7 @@
 #include "config.h"
 #endif
 
-#include "gstbasevideocodec.h"
+#include "gstbasevideoutils.h"
 
 #include <string.h>
 
