@@ -65,6 +65,24 @@ typedef struct
   GList *invisible;
 } GstVP8EncCoderHook;
 
+static void
+_gst_mini_object_unref0 (GstMiniObject * obj)
+{
+  if (obj)
+    gst_mini_object_unref (obj);
+}
+
+static void
+gst_vp8_enc_coder_hook_free (GstVP8EncCoderHook * hook)
+{
+  if (hook->image)
+    g_slice_free (vpx_image_t, hook->image);
+
+  g_list_foreach (hook->invisible, (GFunc) _gst_mini_object_unref0, NULL);
+  g_list_free (hook->invisible);
+  g_slice_free (GstVP8EncCoderHook, hook);
+}
+
 #define DEFAULT_BITRATE 0
 #define DEFAULT_MODE VPX_VBR
 #define DEFAULT_MIN_QUANTIZER 0
@@ -866,6 +884,8 @@ gst_vp8_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
   hook = g_slice_new0 (GstVP8EncCoderHook);
   hook->image = image;
   frame->coder_hook = hook;
+  frame->coder_hook_destroy_notify =
+      (GDestroyNotify) gst_vp8_enc_coder_hook_free;
 
   if (frame->force_keyframe) {
     flags |= VPX_EFLAG_FORCE_KF;
@@ -897,13 +917,6 @@ _to_granulepos (guint64 frame_end_number, guint inv_count, guint keyframe_dist)
 
   granulepos = (frame_end_number << 32) | (inv << 30) | (keyframe_dist << 3);
   return granulepos;
-}
-
-static void
-_gst_mini_object_unref0 (GstMiniObject * obj)
-{
-  if (obj)
-    gst_mini_object_unref (obj);
 }
 
 static GstFlowReturn
@@ -981,13 +994,6 @@ gst_vp8_enc_shape_output (GstBaseVideoEncoder * base_video_encoder,
   }
 
 done:
-  if (hook) {
-    g_list_foreach (hook->invisible, (GFunc) _gst_mini_object_unref0, NULL);
-    g_list_free (hook->invisible);
-    g_slice_free (GstVP8EncCoderHook, hook);
-    frame->coder_hook = NULL;
-  }
-
   return ret;
 }
 
