@@ -188,5 +188,8 @@ gst_base_video_codec_free_frame (GstVideoFrame * frame)
   g_list_foreach (frame->events, (GFunc) gst_event_unref, NULL);
   g_list_free (frame->events);
 
+  if (frame->coder_hook_destroy_notify && frame->coder_hook)
+    frame->coder_hook_destroy_notify (frame->coder_hook);
+
   g_free (frame);
 }

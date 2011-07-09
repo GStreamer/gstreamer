@@ -126,6 +126,8 @@ struct _GstVideoFrame
   int n_fields;
 
   void *coder_hook;
+  GDestroyNotify coder_hook_destroy_notify;
+
   GstClockTime deadline;
 
   gboolean force_keyframe;
