@@ -182,5 +182,8 @@ gst_base_video_codec_free_frame (GstVideoFrame * frame)
     gst_buffer_unref (frame->src_buffer);
   }
 
+  if (frame->coder_hook_destroy_notify && frame->coder_hook)
+    frame->coder_hook_destroy_notify (frame->coder_hook);
+
   g_free (frame);
 }
