@@ -91,6 +91,12 @@
     "rate = (int) {" SAMPLE_RATES "}, "   \
     "stream-format = (string) { adts, raw }, " \
     "profile = (string) { main, lc }"
+    enum
+{
+  VBR = 1,
+  ABR
+};
+
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -104,7 +110,9 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
 enum
 {
   PROP_0,
+  PROP_QUALITY,
   PROP_BITRATE,
+  PROP_RATE_CONTROL,
   PROP_PROFILE,
   PROP_TNS,
   PROP_MIDSIDE,
@@ -137,7 +145,9 @@ GST_DEBUG_CATEGORY_STATIC (faac_debug);
 #define GST_CAT_DEFAULT faac_debug
 
 #define FAAC_DEFAULT_OUTPUTFORMAT 0     /* RAW */
+#define FAAC_DEFAULT_QUALITY      100
 #define FAAC_DEFAULT_BITRATE      128 * 1000
+#define FAAC_DEFAULT_RATE_CONTROL       VBR
 #define FAAC_DEFAULT_TNS          FALSE
 #define FAAC_DEFAULT_MIDSIDE      TRUE
 #define FAAC_DEFAULT_SHORTCTL     SHORTCTL_NORMAL
@@ -193,6 +203,26 @@ gst_faac_base_init (GstFaacClass * klass)
   GST_DEBUG_CATEGORY_INIT (faac_debug, "faac", 0, "AAC encoding");
 }
 
+#define GST_TYPE_FAAC_RATE_CONTROL (gst_faac_brtype_get_type ())
+static GType
+gst_faac_brtype_get_type (void)
+{
+  static GType gst_faac_brtype_type = 0;
+
+  if (!gst_faac_brtype_type) {
+    static GEnumValue gst_faac_brtype[] = {
+      {VBR, "VBR", "VBR encoding"},
+      {ABR, "ABR", "ABR encoding"},
+      {0, NULL, NULL},
+    };
+
+    gst_faac_brtype_type = g_enum_register_static ("GstFaacBrtype",
+        gst_faac_brtype);
+  }
+
+  return gst_faac_brtype_type;
+}
+
 #define GST_TYPE_FAAC_SHORTCTL (gst_faac_shortctl_get_type ())
 static GType
 gst_faac_shortctl_get_type (void)
@@ -227,10 +257,18 @@ gst_faac_class_init (GstFaacClass * klass)
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_faac_finalize);
 
   /* properties */
+  g_object_class_install_property (gobject_class, PROP_QUALITY,
+      g_param_spec_int ("quality", "Quality (%)",
+          "Variable bitrate (VBR) quantizer quality in %", 1, 1000,
+          FAAC_DEFAULT_QUALITY, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, PROP_BITRATE,
-      g_param_spec_int ("bitrate", "Bitrate (bps)", "Bitrate in bits/sec",
-          8 * 1000, 320 * 1000, FAAC_DEFAULT_BITRATE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      g_param_spec_int ("bitrate", "Bitrate (bps)",
+          "Average bitrate (ABR) in bits/sec", 8 * 1000, 320 * 1000,
+          FAAC_DEFAULT_BITRATE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_RATE_CONTROL,
+      g_param_spec_enum ("rate-control", "Rate Control (ABR/VBR)",
+          "Encoding bitrate type (VBR/ABR)", GST_TYPE_FAAC_RATE_CONTROL,
+          FAAC_DEFAULT_RATE_CONTROL, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, PROP_TNS,
       g_param_spec_boolean ("tns", "TNS", "Use temporal noise shaping",
           FAAC_DEFAULT_TNS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
@@ -271,7 +309,9 @@ gst_faac_init (GstFaac * faac)
   faac->mpegversion = 4;
 
   /* default properties */
+  faac->quality = FAAC_DEFAULT_QUALITY;
   faac->bitrate = FAAC_DEFAULT_BITRATE;
+  faac->brtype = FAAC_DEFAULT_RATE_CONTROL;
   faac->shortctl = FAAC_DEFAULT_SHORTCTL;
   faac->outputformat = FAAC_DEFAULT_OUTPUTFORMAT;
   faac->tns = FAAC_DEFAULT_TNS;
@@ -557,7 +597,13 @@ gst_faac_configure_source_pad (GstFaac * faac)
   conf->allowMidside = faac->midside;
   conf->useLfe = 0;
   conf->useTns = faac->tns;
-  conf->bitRate = faac->bitrate / faac->channels;
+
+  if (faac->brtype == VBR) {
+    conf->quantqual = faac->quality;
+  } else if (faac->brtype == ABR) {
+    conf->bitRate = faac->bitrate / faac->channels;
+  }
+
   conf->inputFormat = faac->format;
   conf->outputFormat = faac->outputformat;
   conf->shortctl = faac->shortctl;
@@ -879,8 +925,14 @@ gst_faac_set_property (GObject * object,
   GST_OBJECT_LOCK (faac);
 
   switch (prop_id) {
+    case PROP_QUALITY:
+      faac->quality = g_value_get_int (value);
+      break;
     case PROP_BITRATE:
       faac->bitrate = g_value_get_int (value);
+      break;
+    case PROP_RATE_CONTROL:
+      faac->brtype = g_value_get_enum (value);
       break;
     case PROP_TNS:
       faac->tns = g_value_get_boolean (value);
@@ -908,8 +960,14 @@ gst_faac_get_property (GObject * object,
   GST_OBJECT_LOCK (faac);
 
   switch (prop_id) {
+    case PROP_QUALITY:
+      g_value_set_int (value, faac->quality);
+      break;
     case PROP_BITRATE:
       g_value_set_int (value, faac->bitrate);
+      break;
+    case PROP_RATE_CONTROL:
+      g_value_set_enum (value, faac->brtype);
       break;
     case PROP_TNS:
       g_value_set_boolean (value, faac->tns);
