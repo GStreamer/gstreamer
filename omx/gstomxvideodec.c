@@ -36,6 +36,12 @@ struct _BufferIdentification
   guint64 timestamp;
 };
 
+static void
+buffer_identification_free (BufferIdentification * id)
+{
+  g_slice_free (BufferIdentification, id);
+}
+
 /* prototypes */
 static void gst_omx_video_dec_finalize (GObject * object);
 
@@ -279,7 +285,6 @@ _find_nearest_frame (GstOMXVideoDec * self, GstOMXBuffer * buf)
       if (diff_ticks > MAX_FRAME_DIST_TICKS
           || diff_frames > MAX_FRAME_DIST_FRAMES) {
         g_warning ("Too old frame, bug in decoder -- please file a bug");
-        g_slice_free (BufferIdentification, id);
         gst_base_video_decoder_finish_frame (GST_BASE_VIDEO_DECODER (self),
             tmp);
         l = GST_BASE_VIDEO_CODEC (self)->frames;
@@ -381,18 +386,15 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
         GST_ERROR_OBJECT (self, "Invalid frame size (%u < %u)",
             GST_BUFFER_SIZE (frame->src_buffer), buf->omx_buf->nFilledLen);
         gst_buffer_replace (&frame->src_buffer, NULL);
-        g_slice_free (BufferIdentification, frame->coder_hook);
         gst_base_video_decoder_finish_frame (GST_BASE_VIDEO_DECODER (self),
             frame);
         goto invalid_frame_size;
       }
     }
-    g_slice_free (BufferIdentification, frame->coder_hook);
     flow_ret =
         gst_base_video_decoder_finish_frame (GST_BASE_VIDEO_DECODER (self),
         frame);
   } else if (frame != NULL) {
-    g_slice_free (BufferIdentification, frame->coder_hook);
     flow_ret =
         gst_base_video_decoder_finish_frame (GST_BASE_VIDEO_DECODER (self),
         frame);
@@ -619,18 +621,10 @@ static gboolean
 gst_omx_video_dec_reset (GstBaseVideoDecoder * decoder)
 {
   GstOMXVideoDec *self;
-  GList *l;
 
   self = GST_OMX_VIDEO_DEC (decoder);
 
   GST_DEBUG_OBJECT (self, "Resetting decoder");
-
-  for (l = GST_BASE_VIDEO_CODEC (self)->frames; l; l = l->next) {
-    GstVideoFrame *frame = l->data;
-
-    g_slice_free (BufferIdentification, frame->coder_hook);
-    frame->coder_hook = NULL;
-  }
 
   gst_omx_port_set_flushing (self->in_port, TRUE);
   gst_omx_port_set_flushing (self->out_port, TRUE);
@@ -746,6 +740,8 @@ gst_omx_video_dec_handle_frame (GstBaseVideoDecoder * decoder,
 
       id->timestamp = buf->omx_buf->nTimeStamp;
       frame->coder_hook = id;
+      frame->coder_hook_destroy_notify =
+          (GDestroyNotify) buffer_identification_free;
     }
 
     /* TODO: Set flags
