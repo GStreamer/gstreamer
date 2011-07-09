@@ -16,12 +16,21 @@ noinst_HEADERS = \
 	gstbasevideodecoder.h \
 	gstbasevideoencoder.h
 
+fixbaseclasses = \
+        -DGstBaseVideoCodec=OMXBaseVideoCodec \
+        -DGstBaseVideoCodecClass=OMXBaseVideoCodecClass \
+        -DGstBaseVideoEncoder=OMXBaseVideoEncoder \
+        -DGstBaseVideoEncoderClass=OMXBaseVideoEncoderClass \
+        -DGstBaseVideoDecoder=OMXBaseVideoDecoder \
+        -DGstBaseVideoDecoderClass=OMXBaseVideoDecoderClass
+
 libgstomx_la_CFLAGS = \
 	-DGST_USE_UNSTABLE_API=1 \
 	-I$(srcdir)/openmax \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) \
-	$(GST_CFLAGS)
+	$(GST_CFLAGS) \
+	$(fixbaseclasses)
 libgstomx_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) \
 	-lgstvideo-@GST_MAJORMINOR@ \
