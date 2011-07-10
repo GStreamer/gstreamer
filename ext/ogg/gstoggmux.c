@@ -1319,14 +1319,31 @@ gst_ogg_mux_process_best_pad (GstOggMux * ogg_mux, GstOggPadData * best)
 
   GST_LOG_OBJECT (ogg_mux, "best pad %" GST_PTR_FORMAT
       ", currently pulling from %" GST_PTR_FORMAT, best->collect.pad,
-      ogg_mux->pulling);
+      ogg_mux->pulling ? ogg_mux->pulling->collect.pad : NULL);
 
-  next_buf = gst_collect_pads_peek (ogg_mux->collect, &best->collect);
-  if (next_buf) {
-    best->eos = FALSE;
-    gst_buffer_unref (next_buf);
-  } else {
-    best->eos = TRUE;
+  if (ogg_mux->pulling) {
+    next_buf = gst_collect_pads_peek (ogg_mux->collect,
+        &ogg_mux->pulling->collect);
+    if (next_buf) {
+      ogg_mux->pulling->eos = FALSE;
+      gst_buffer_unref (next_buf);
+    } else {
+      GST_DEBUG_OBJECT (ogg_mux->pulling->collect.pad, "setting eos to true");
+      ogg_mux->pulling->eos = TRUE;
+    }
+  }
+
+  /* We could end up pushing from the best pad instead, so check that
+   * as well */
+  if (best && best != ogg_mux->pulling) {
+    next_buf = gst_collect_pads_peek (ogg_mux->collect, &best->collect);
+    if (next_buf) {
+      best->eos = FALSE;
+      gst_buffer_unref (next_buf);
+    } else {
+      GST_DEBUG_OBJECT (best->collect.pad, "setting eos to true");
+      best->eos = TRUE;
+    }
   }
 
   /* if we were already pulling from one pad, but the new "best" buffer is
@@ -1432,7 +1449,7 @@ gst_ogg_mux_process_best_pad (GstOggMux * ogg_mux, GstOggPadData * best)
         GST_GP_CAST (packet.granulepos), (gint64) packet.packetno,
         packet.bytes);
 
-    packet.e_o_s = best->eos ? 1 : 0;
+    packet.e_o_s = ogg_mux->pulling->eos ? 1 : 0;
     tmpbuf = NULL;
 
     /* we flush when we see a new keyframe */
@@ -1620,7 +1637,8 @@ all_pads_eos (GstCollectPads * pads)
   while (walk) {
     GstOggPadData *oggpad = (GstOggPadData *) walk->data;
 
-    GST_DEBUG ("oggpad %p eos %d", oggpad, oggpad->eos);
+    GST_DEBUG_OBJECT (oggpad->collect.pad,
+        "oggpad %p eos %d", oggpad, oggpad->eos);
 
     if (oggpad->eos == FALSE)
       return FALSE;

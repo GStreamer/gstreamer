@@ -4564,7 +4564,7 @@ plugin_init (GstPlugin * plugin)
   TYPE_FIND_REGISTER_START_WITH (plugin, "audio/x-vgm",
       GST_RANK_SECONDARY, vgm_exts, "Vgm\x20", 4, GST_TYPE_FIND_MAXIMUM);
   TYPE_FIND_REGISTER_START_WITH (plugin, "audio/x-sap",
-      GST_RANK_SECONDARY, sap_exts, "SAP\x0d\x0aAUTHOR\x20", 12,
+      GST_RANK_SECONDARY, sap_exts, "SAP\x0d\x0a" "AUTHOR\x20", 12,
       GST_TYPE_FIND_MAXIMUM);
   TYPE_FIND_REGISTER_START_WITH (plugin, "video/x-ivf", GST_RANK_SECONDARY,
       ivf_exts, "DKIF", 4, GST_TYPE_FIND_NEARLY_CERTAIN);
