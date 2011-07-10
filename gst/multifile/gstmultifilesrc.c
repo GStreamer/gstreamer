@@ -74,6 +74,8 @@ enum
   ARG_0,
   ARG_LOCATION,
   ARG_INDEX,
+  ARG_START_INDEX,
+  ARG_STOP_INDEX,
   ARG_CAPS,
   ARG_LOOP
 };
@@ -123,6 +125,18 @@ gst_multi_file_src_class_init (GstMultiFileSrcClass * klass)
           "index is incremented by one for each buffer read.",
           0, INT_MAX, DEFAULT_INDEX,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, ARG_START_INDEX,
+      g_param_spec_int ("start-index", "Start Index",
+          "Start value of index.  The initial value of index can be set "
+          "either by setting index or start-index.  When the end of the loop "
+          "is reached, the index will be set to the value start-index.",
+          0, INT_MAX, DEFAULT_INDEX,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, ARG_STOP_INDEX,
+      g_param_spec_int ("stop-index", "Start Index",
+          "Stop value of index.  The special value -1 means no stop.",
+          -1, INT_MAX, DEFAULT_INDEX,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_CAPS,
       g_param_spec_boxed ("caps", "Caps",
           "Caps describing the format of the data.",
@@ -149,8 +163,9 @@ static void
 gst_multi_file_src_init (GstMultiFileSrc * multifilesrc,
     GstMultiFileSrcClass * g_class)
 {
-  multifilesrc->original_index = DEFAULT_INDEX;
-  multifilesrc->index = multifilesrc->original_index;
+  multifilesrc->start_index = DEFAULT_INDEX;
+  multifilesrc->index = DEFAULT_INDEX;
+  multifilesrc->stop_index = -1;
   multifilesrc->filename = g_strdup (DEFAULT_LOCATION);
   multifilesrc->successful_read = FALSE;
 }
@@ -239,8 +254,13 @@ gst_multi_file_src_set_property (GObject * object, guint prop_id,
       gst_multi_file_src_set_location (src, g_value_get_string (value));
       break;
     case ARG_INDEX:
-      src->original_index = g_value_get_int (value);
-      src->index = src->original_index;
+      src->index = g_value_get_int (value);
+      break;
+    case ARG_START_INDEX:
+      src->start_index = g_value_get_int (value);
+      break;
+    case ARG_STOP_INDEX:
+      src->stop_index = g_value_get_int (value);
       break;
     case ARG_CAPS:
     {
@@ -278,6 +298,12 @@ gst_multi_file_src_get_property (GObject * object, guint prop_id,
     case ARG_INDEX:
       g_value_set_int (value, src->index);
       break;
+    case ARG_START_INDEX:
+      g_value_set_int (value, src->start_index);
+      break;
+    case ARG_STOP_INDEX:
+      g_value_set_int (value, src->stop_index);
+      break;
     case ARG_CAPS:
       gst_value_set_caps (value, src->caps);
       break;
@@ -295,6 +321,7 @@ gst_multi_file_src_get_filename (GstMultiFileSrc * multifilesrc)
 {
   gchar *filename;
 
+  GST_ERROR ("%d", multifilesrc->index);
   filename = g_strdup_printf (multifilesrc->filename, multifilesrc->index);
 
   return filename;
@@ -313,6 +340,9 @@ gst_multi_file_src_create (GstPushSrc * src, GstBuffer ** buffer)
 
   multifilesrc = GST_MULTI_FILE_SRC (src);
 
+  if (multifilesrc->index < multifilesrc->start_index) {
+    multifilesrc->index = multifilesrc->start_index;
+  }
   filename = gst_multi_file_src_get_filename (multifilesrc);
 
   GST_DEBUG_OBJECT (multifilesrc, "reading from file \"%s\".", filename);
@@ -326,13 +356,19 @@ gst_multi_file_src_create (GstPushSrc * src, GstBuffer ** buffer)
       if (error != NULL)
         g_error_free (error);
 
-      if (multifilesrc->loop
-          && multifilesrc->index != multifilesrc->original_index) {
-        /* But we might be expected to loop, so let's go again. Make
-         * sure the original index and index aren't the same otherwise
-         * we'll just recurse to death in some error case. */
-        multifilesrc->index = multifilesrc->original_index;
-        return gst_multi_file_src_create (src, buffer);
+      if (multifilesrc->loop) {
+        error = NULL;
+        multifilesrc->index = multifilesrc->start_index;
+
+        filename = gst_multi_file_src_get_filename (multifilesrc);
+        ret = g_file_get_contents (filename, &data, &size, &error);
+        if (!ret) {
+          g_free (filename);
+          if (error != NULL)
+            g_error_free (error);
+
+          return GST_FLOW_UNEXPECTED;
+        }
       } else {
         return GST_FLOW_UNEXPECTED;
       }
@@ -343,6 +379,10 @@ gst_multi_file_src_create (GstPushSrc * src, GstBuffer ** buffer)
 
   multifilesrc->successful_read = TRUE;
   multifilesrc->index++;
+  if (multifilesrc->stop_index != -1 &&
+      multifilesrc->index >= multifilesrc->stop_index) {
+    multifilesrc->index = multifilesrc->start_index;
+  }
 
   buf = gst_buffer_new ();
   GST_BUFFER_DATA (buf) = (unsigned char *) data;

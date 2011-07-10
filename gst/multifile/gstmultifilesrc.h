@@ -46,7 +46,8 @@ struct _GstMultiFileSrc
   GstPushSrc parent;
 
   gchar *filename;
-  int original_index;
+  int start_index;
+  int stop_index;
   int index;
 
   int offset;
