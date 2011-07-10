@@ -1374,6 +1374,19 @@ gst_ogg_mux_process_best_pad (GstOggMux * ogg_mux, GstOggPadData * best)
     }
   }
 
+  /* We could end up pushing from the best pad instead, so check that
+   * as well */
+  if (best && best != ogg_mux->pulling) {
+    next_buf = gst_collect_pads_peek (ogg_mux->collect, &best->collect);
+    if (next_buf) {
+      best->eos = FALSE;
+      gst_buffer_unref (next_buf);
+    } else {
+      GST_DEBUG_OBJECT (best->collect.pad, "setting eos to true");
+      best->eos = TRUE;
+    }
+  }
+
   /* if we were already pulling from one pad, but the new "best" buffer is
    * from another pad, we need to check if we have reason to flush a page
    * for the pad we were pulling from before */
