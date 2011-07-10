@@ -572,6 +572,11 @@ gst_video_info_init (GstVideoInfo * info)
   g_return_if_fail (info != NULL);
 
   memset (info, 0, sizeof (GstVideoInfo));
+  /* arrange for sensible defaults, e.g. if turned into caps */
+  info->fps_n = 0;
+  info->fps_d = 1;
+  info->par_n = 1;
+  info->par_d = 1;
 }
 
 /**
