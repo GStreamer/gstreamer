@@ -78,37 +78,34 @@ static gboolean gst_rtp_mp4v_pay_setcaps (GstBaseRTPPayload * payload,
     GstCaps * caps);
 static GstFlowReturn gst_rtp_mp4v_pay_handle_buffer (GstBaseRTPPayload *
     payload, GstBuffer * buffer);
-static gboolean gst_rtp_mp4v_pay_handle_event (GstPad * pad, GstEvent * event);
+static gboolean gst_rtp_mp4v_pay_handle_event (GstBaseRTPPayload * pay,
+    GstEvent * event);
 
-GST_BOILERPLATE (GstRtpMP4VPay, gst_rtp_mp4v_pay, GstBaseRTPPayload,
-    GST_TYPE_BASE_RTP_PAYLOAD)
+#define gst_rtp_mp4v_pay_parent_class parent_class
+G_DEFINE_TYPE (GstRtpMP4VPay, gst_rtp_mp4v_pay, GST_TYPE_BASE_RTP_PAYLOAD)
 
-     static void gst_rtp_mp4v_pay_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_mp4v_pay_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_mp4v_pay_sink_template));
-
-  gst_element_class_set_details_simple (element_class,
-      "RTP MPEG4 Video payloader", "Codec/Payloader/Network/RTP",
-      "Payload MPEG-4 video as RTP packets (RFC 3016)",
-      "Wim Taymans <wim.taymans@gmail.com>");
-}
-
-static void
-gst_rtp_mp4v_pay_class_init (GstRtpMP4VPayClass * klass)
+     static void gst_rtp_mp4v_pay_class_init (GstRtpMP4VPayClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
   GstBaseRTPPayloadClass *gstbasertppayload_class;
 
   gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
   gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
 
   gobject_class->set_property = gst_rtp_mp4v_pay_set_property;
   gobject_class->get_property = gst_rtp_mp4v_pay_get_property;
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_mp4v_pay_src_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_mp4v_pay_sink_template));
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "RTP MPEG4 Video payloader", "Codec/Payloader/Network/RTP",
+      "Payload MPEG-4 video as RTP packets (RFC 3016)",
+      "Wim Taymans <wim.taymans@gmail.com>");
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SEND_CONFIG,
       g_param_spec_boolean ("send-config", "Send Config",
@@ -140,7 +137,7 @@ gst_rtp_mp4v_pay_class_init (GstRtpMP4VPayClass * klass)
 }
 
 static void
-gst_rtp_mp4v_pay_init (GstRtpMP4VPay * rtpmp4vpay, GstRtpMP4VPayClass * klass)
+gst_rtp_mp4v_pay_init (GstRtpMP4VPay * rtpmp4vpay)
 {
   rtpmp4vpay->adapter = gst_adapter_new ();
   rtpmp4vpay->rate = 90000;
@@ -216,20 +213,15 @@ gst_rtp_mp4v_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
     GST_LOG_OBJECT (rtpmp4vpay, "got codec_data");
     if (G_VALUE_TYPE (codec_data) == GST_TYPE_BUFFER) {
       GstBuffer *buffer;
-      guint8 *data;
-      guint size;
 
       buffer = gst_value_get_buffer (codec_data);
 
-      data = GST_BUFFER_DATA (buffer);
-      size = GST_BUFFER_SIZE (buffer);
-
-      if (size < 5)
+      if (gst_buffer_get_size (buffer) < 5)
         goto done;
 
-      rtpmp4vpay->profile = data[4];
+      gst_buffer_extract (buffer, 4, &rtpmp4vpay->profile, 1);
       GST_LOG_OBJECT (rtpmp4vpay, "configuring codec_data, profile %d",
-          data[4]);
+          rtpmp4vpay->profile);
 
       if (rtpmp4vpay->config)
         gst_buffer_unref (rtpmp4vpay->config);
@@ -256,7 +248,6 @@ gst_rtp_mp4v_pay_flush (GstRtpMP4VPay * rtpmp4vpay)
   GstBuffer *outbuf_data = NULL;
   GstFlowReturn ret;
   GstBufferList *list = NULL;
-  GstBufferListIterator *it = NULL;
 
   /* the data available in the adapter is either smaller
    * than the MTU or bigger. In the case it is smaller, the complete
@@ -281,14 +272,13 @@ gst_rtp_mp4v_pay_flush (GstRtpMP4VPay * rtpmp4vpay)
      * of buffers and the whole list will be pushed downstream
      * at once */
     list = gst_buffer_list_new ();
-    it = gst_buffer_list_iterate (list);
   }
 
   while (avail > 0) {
     guint towrite;
-    guint8 *payload;
     guint payload_len;
     guint packet_len;
+    GstRTPBuffer rtp;
 
     /* this will be the total lenght of the packet */
     packet_len = gst_rtp_buffer_calc_packet_len (avail, 0, 0);
@@ -299,43 +289,32 @@ gst_rtp_mp4v_pay_flush (GstRtpMP4VPay * rtpmp4vpay)
     /* this is the payload length */
     payload_len = gst_rtp_buffer_calc_payload_len (towrite, 0, 0);
 
-    if (rtpmp4vpay->buffer_list) {
-      /* create buffer without payload. The payload will be put
-       * in next buffer instead. Both buffers will be then added
-       * to the list */
-      outbuf = gst_rtp_buffer_new_allocate (0, 0, 0);
+    /* create buffer without payload. The payload will be put
+     * in next buffer instead. Both buffers will be merged */
+    outbuf = gst_rtp_buffer_new_allocate (0, 0, 0);
 
-      /* Take buffer with the payload from the adapter */
-      outbuf_data = gst_adapter_take_buffer (rtpmp4vpay->adapter, payload_len);
-    } else {
-      /* create buffer to hold the payload */
-      outbuf = gst_rtp_buffer_new_allocate (payload_len, 0, 0);
-
-      /* copy payload */
-      payload = gst_rtp_buffer_get_payload (outbuf);
-
-      gst_adapter_copy (rtpmp4vpay->adapter, payload, 0, payload_len);
-      gst_adapter_flush (rtpmp4vpay->adapter, payload_len);
-    }
+    /* Take buffer with the payload from the adapter */
+    outbuf_data = gst_adapter_take_buffer (rtpmp4vpay->adapter, payload_len);
 
     avail -= payload_len;
 
-    gst_rtp_buffer_set_marker (outbuf, avail == 0);
+    gst_rtp_buffer_map (outbuf, GST_MAP_WRITE, &rtp);
+    gst_rtp_buffer_set_marker (&rtp, avail == 0);
+    gst_rtp_buffer_unmap (&rtp);
+
+    outbuf = gst_buffer_join (outbuf, outbuf_data);
 
     GST_BUFFER_TIMESTAMP (outbuf) = rtpmp4vpay->first_timestamp;
 
     if (rtpmp4vpay->buffer_list) {
-      /* create a new group to hold the rtp header and the payload */
-      gst_buffer_list_iterator_add_group (it);
-      gst_buffer_list_iterator_add (it, outbuf);
-      gst_buffer_list_iterator_add (it, outbuf_data);
+      /* add to list */
+      gst_buffer_list_insert (list, -1, outbuf);
     } else {
       ret = gst_basertppayload_push (GST_BASE_RTP_PAYLOAD (rtpmp4vpay), outbuf);
     }
   }
 
   if (rtpmp4vpay->buffer_list) {
-    gst_buffer_list_iterator_free (it);
     /* push the whole buffer list at once */
     ret =
         gst_basertppayload_push_list (GST_BASE_RTP_PAYLOAD (rtpmp4vpay), list);
@@ -400,16 +379,20 @@ gst_rtp_mp4v_pay_depay_data (GstRtpMP4VPay * enc, guint8 * data, guint size,
       /* see if config changed */
       equal = FALSE;
       if (enc->config) {
-        if (GST_BUFFER_SIZE (enc->config) == i) {
-          equal = memcmp (GST_BUFFER_DATA (enc->config), data, i) == 0;
+        if (gst_buffer_get_size (enc->config) == i) {
+          equal = gst_buffer_memcmp (enc->config, 0, data, i) == 0;
         }
       }
       /* if config string changed or new profile, make new caps */
       if (!equal || newprofile) {
+        guint8 *bdata;
+
         if (enc->config)
           gst_buffer_unref (enc->config);
         enc->config = gst_buffer_new_and_alloc (i);
-        memcpy (GST_BUFFER_DATA (enc->config), data, i);
+        bdata = gst_buffer_map (enc->config, NULL, NULL, GST_MAP_WRITE);
+        memcpy (bdata, data, i);
+        gst_buffer_unmap (enc->config, bdata, -1);
         gst_rtp_mp4v_pay_new_caps (enc);
       }
       *strip = i;
@@ -458,7 +441,8 @@ gst_rtp_mp4v_pay_handle_buffer (GstBaseRTPPayload * basepayload,
 {
   GstRtpMP4VPay *rtpmp4vpay;
   GstFlowReturn ret;
-  guint size, avail;
+  guint avail;
+  gsize size;
   guint packet_len;
   guint8 *data;
   gboolean flush;
@@ -472,8 +456,7 @@ gst_rtp_mp4v_pay_handle_buffer (GstBaseRTPPayload * basepayload,
 
   rtpmp4vpay = GST_RTP_MP4V_PAY (basepayload);
 
-  size = GST_BUFFER_SIZE (buffer);
-  data = GST_BUFFER_DATA (buffer);
+  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
   duration = GST_BUFFER_DURATION (buffer);
   avail = gst_adapter_available (rtpmp4vpay->adapter);
@@ -490,21 +473,25 @@ gst_rtp_mp4v_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   /* depay incomming data and see if we need to start a new RTP
    * packet */
   flush = gst_rtp_mp4v_pay_depay_data (rtpmp4vpay, data, size, &strip, &vopi);
+  gst_buffer_unmap (buffer, data, -1);
+  data = NULL;
+
   if (strip) {
     /* strip off config if requested */
     if (!(rtpmp4vpay->config_interval > 0)) {
       GstBuffer *subbuf;
 
       GST_LOG_OBJECT (rtpmp4vpay, "stripping config at %d, size %d", strip,
-          size - strip);
+          (gint) size - strip);
 
       /* strip off header */
-      subbuf = gst_buffer_create_sub (buffer, strip, size - strip);
+      subbuf = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_MEMORY, strip,
+          size - strip);
       GST_BUFFER_TIMESTAMP (subbuf) = timestamp;
       gst_buffer_unref (buffer);
       buffer = subbuf;
 
-      size = GST_BUFFER_SIZE (buffer);
+      size = gst_buffer_get_size (buffer);
     } else {
       GST_LOG_OBJECT (rtpmp4vpay, "found config in stream");
       rtpmp4vpay->last_config = timestamp;
@@ -555,7 +542,7 @@ gst_rtp_mp4v_pay_handle_buffer (GstBaseRTPPayload * basepayload,
       gst_buffer_unref (buffer);
       buffer = superbuf;
 
-      size = GST_BUFFER_SIZE (buffer);
+      size = gst_buffer_get_size (buffer);
 
       if (timestamp != -1) {
         rtpmp4vpay->last_config = timestamp;
@@ -590,16 +577,16 @@ gst_rtp_mp4v_pay_handle_buffer (GstBaseRTPPayload * basepayload,
 }
 
 static gboolean
-gst_rtp_mp4v_pay_handle_event (GstPad * pad, GstEvent * event)
+gst_rtp_mp4v_pay_handle_event (GstBaseRTPPayload * pay, GstEvent * event)
 {
   GstRtpMP4VPay *rtpmp4vpay;
 
-  rtpmp4vpay = GST_RTP_MP4V_PAY (gst_pad_get_parent (pad));
+  rtpmp4vpay = GST_RTP_MP4V_PAY (pay);
 
   GST_DEBUG ("Got event: %s", GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_NEWSEGMENT:
+    case GST_EVENT_SEGMENT:
     case GST_EVENT_EOS:
       /* This flush call makes sure that the last buffer is always pushed
        * to the base payloader */
@@ -611,8 +598,6 @@ gst_rtp_mp4v_pay_handle_event (GstPad * pad, GstEvent * event)
     default:
       break;
   }
-
-  g_object_unref (rtpmp4vpay);
 
   /* let parent handle event too */
   return FALSE;

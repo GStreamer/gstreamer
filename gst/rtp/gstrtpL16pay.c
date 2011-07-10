@@ -70,43 +70,39 @@ static GstStaticPadTemplate gst_rtp_L16_pay_src_template =
 static gboolean gst_rtp_L16_pay_setcaps (GstBaseRTPPayload * basepayload,
     GstCaps * caps);
 static GstCaps *gst_rtp_L16_pay_getcaps (GstBaseRTPPayload * rtppayload,
-    GstPad * pad);
+    GstPad * pad, GstCaps * filter);
 
-GST_BOILERPLATE (GstRtpL16Pay, gst_rtp_L16_pay, GstBaseRTPAudioPayload,
-    GST_TYPE_BASE_RTP_AUDIO_PAYLOAD);
-
-static void
-gst_rtp_L16_pay_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_L16_pay_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_L16_pay_sink_template));
-
-  gst_element_class_set_details_simple (element_class, "RTP audio payloader",
-      "Codec/Payloader/Network/RTP",
-      "Payload-encode Raw audio into RTP packets (RFC 3551)",
-      "Wim Taymans <wim.taymans@gmail.com>");
-}
+#define gst_rtp_L16_pay_parent_class parent_class
+G_DEFINE_TYPE (GstRtpL16Pay, gst_rtp_L16_pay, GST_TYPE_BASE_RTP_AUDIO_PAYLOAD);
 
 static void
 gst_rtp_L16_pay_class_init (GstRtpL16PayClass * klass)
 {
+  GstElementClass *gstelement_class;
   GstBaseRTPPayloadClass *gstbasertppayload_class;
 
+  gstelement_class = (GstElementClass *) klass;
   gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
 
   gstbasertppayload_class->set_caps = gst_rtp_L16_pay_setcaps;
   gstbasertppayload_class->get_caps = gst_rtp_L16_pay_getcaps;
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_L16_pay_src_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_L16_pay_sink_template));
+
+  gst_element_class_set_details_simple (gstelement_class, "RTP audio payloader",
+      "Codec/Payloader/Network/RTP",
+      "Payload-encode Raw audio into RTP packets (RFC 3551)",
+      "Wim Taymans <wim.taymans@gmail.com>");
 
   GST_DEBUG_CATEGORY_INIT (rtpL16pay_debug, "rtpL16pay", 0,
       "L16 RTP Payloader");
 }
 
 static void
-gst_rtp_L16_pay_init (GstRtpL16Pay * rtpL16pay, GstRtpL16PayClass * klass)
+gst_rtp_L16_pay_init (GstRtpL16Pay * rtpL16pay)
 {
   GstBaseRTPAudioPayload *basertpaudiopayload;
 
@@ -191,7 +187,8 @@ no_channels:
 }
 
 static GstCaps *
-gst_rtp_L16_pay_getcaps (GstBaseRTPPayload * rtppayload, GstPad * pad)
+gst_rtp_L16_pay_getcaps (GstBaseRTPPayload * rtppayload, GstPad * pad,
+    GstCaps * filter)
 {
   GstCaps *otherpadcaps;
   GstCaps *caps;
@@ -227,6 +224,14 @@ gst_rtp_L16_pay_getcaps (GstBaseRTPPayload * rtppayload, GstPad * pad)
     }
     gst_caps_unref (otherpadcaps);
   }
+
+  if (filter) {
+    GstCaps *tcaps = caps;
+
+    caps = gst_caps_intersect_full (filter, tcaps, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (tcaps);
+  }
+
   return caps;
 }
 

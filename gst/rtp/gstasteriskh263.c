@@ -44,8 +44,8 @@ typedef struct _GstAsteriskH263Header
   guint16 length;               /* Length */
 } GstAsteriskH263Header;
 
-#define GST_ASTERISKH263_HEADER_TIMESTAMP(buf) (((GstAsteriskH263Header *)(GST_BUFFER_DATA (buf)))->timestamp)
-#define GST_ASTERISKH263_HEADER_LENGTH(buf) (((GstAsteriskH263Header *)(GST_BUFFER_DATA (buf)))->length)
+#define GST_ASTERISKH263_HEADER_TIMESTAMP(data) (((GstAsteriskH263Header *)(data))->timestamp)
+#define GST_ASTERISKH263_HEADER_LENGTH(data) (((GstAsteriskH263Header *)(data))->length)
 
 static GstStaticPadTemplate gst_asteriskh263_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
@@ -71,24 +71,8 @@ static GstFlowReturn gst_asteriskh263_chain (GstPad * pad, GstBuffer * buffer);
 static GstStateChangeReturn gst_asteriskh263_change_state (GstElement *
     element, GstStateChange transition);
 
-GST_BOILERPLATE (GstAsteriskh263, gst_asteriskh263, GstElement,
-    GST_TYPE_ELEMENT);
-
-static void
-gst_asteriskh263_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_asteriskh263_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_asteriskh263_sink_template));
-
-  gst_element_class_set_details_simple (element_class,
-      "RTP Asterisk H263 depayloader", "Codec/Depayloader/Network/RTP",
-      "Extracts H263 video from RTP and encodes in Asterisk H263 format",
-      "Neil Stratford <neils@vipadia.com>");
-}
+#define gst_asteriskh263_parent_class parent_class
+G_DEFINE_TYPE (GstAsteriskh263, gst_asteriskh263, GST_TYPE_ELEMENT);
 
 static void
 gst_asteriskh263_class_init (GstAsteriskh263Class * klass)
@@ -102,11 +86,20 @@ gst_asteriskh263_class_init (GstAsteriskh263Class * klass)
   gobject_class->finalize = gst_asteriskh263_finalize;
 
   gstelement_class->change_state = gst_asteriskh263_change_state;
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_asteriskh263_src_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_asteriskh263_sink_template));
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "RTP Asterisk H263 depayloader", "Codec/Depayloader/Network/RTP",
+      "Extracts H263 video from RTP and encodes in Asterisk H263 format",
+      "Neil Stratford <neils@vipadia.com>");
 }
 
 static void
-gst_asteriskh263_init (GstAsteriskh263 * asteriskh263,
-    GstAsteriskh263Class * klass)
+gst_asteriskh263_init (GstAsteriskh263 * asteriskh263)
 {
   asteriskh263->srcpad =
       gst_pad_new_from_static_template (&gst_asteriskh263_src_template, "src");
@@ -153,12 +146,18 @@ gst_asteriskh263_chain (GstPad * pad, GstBuffer * buf)
     guint32 timestamp;
     guint32 samples;
     guint16 asterisk_len;
+    GstRTPBuffer rtp;
+    guint8 *data;
 
-    payload_len = gst_rtp_buffer_get_payload_len (buf);
-    payload = gst_rtp_buffer_get_payload (buf);
+    gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp);
 
-    M = gst_rtp_buffer_get_marker (buf);
-    timestamp = gst_rtp_buffer_get_timestamp (buf);
+    payload_len = gst_rtp_buffer_get_payload_len (&rtp);
+    payload = gst_rtp_buffer_get_payload (&rtp);
+
+    M = gst_rtp_buffer_get_marker (&rtp);
+    timestamp = gst_rtp_buffer_get_timestamp (&rtp);
+
+    gst_rtp_buffer_unmap (&rtp);
 
     outbuf = gst_buffer_new_and_alloc (payload_len +
         GST_ASTERISKH263_HEADER_LEN);
@@ -172,16 +171,24 @@ gst_asteriskh263_chain (GstPad * pad, GstBuffer * buf)
     samples = timestamp - asteriskh263->lastts;
     asteriskh263->lastts = timestamp;
 
-    GST_ASTERISKH263_HEADER_TIMESTAMP (outbuf) = g_htonl (samples);
-    GST_ASTERISKH263_HEADER_LENGTH (outbuf) = g_htons (asterisk_len);
+    data = gst_buffer_map (outbuf, NULL, NULL, GST_MAP_WRITE);
+    GST_ASTERISKH263_HEADER_TIMESTAMP (data) = g_htonl (samples);
+    GST_ASTERISKH263_HEADER_LENGTH (data) = g_htons (asterisk_len);
 
     /* copy the data into place */
-    memcpy (GST_BUFFER_DATA (outbuf) + GST_ASTERISKH263_HEADER_LEN, payload,
-        payload_len);
+    memcpy (data + GST_ASTERISKH263_HEADER_LEN, payload, payload_len);
+
+    gst_buffer_unmap (outbuf, data, -1);
 
     GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
-    gst_buffer_set_caps (outbuf,
-        (GstCaps *) gst_pad_get_pad_template_caps (asteriskh263->srcpad));
+    if (!gst_pad_has_current_caps (asteriskh263->srcpad)) {
+      GstCaps *caps;
+
+      caps = gst_caps_copy
+          (gst_pad_get_pad_template_caps (asteriskh263->srcpad));
+      gst_pad_set_caps (asteriskh263->srcpad, caps);
+      gst_caps_unref (caps);
+    }
 
     ret = gst_pad_push (asteriskh263->srcpad, outbuf);
 

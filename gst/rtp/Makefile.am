@@ -83,6 +83,7 @@ endif
 libgstrtp_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS)
 libgstrtp_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) \
 		-lgstaudio-@GST_MAJORMINOR@ \
+		-lgstvideo-@GST_MAJORMINOR@ \
                 -lgsttag-@GST_MAJORMINOR@ \
                 -lgstrtp-@GST_MAJORMINOR@ \
 		$(GST_BASE_LIBS) $(GST_LIBS) \

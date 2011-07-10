@@ -46,7 +46,8 @@ GST_STATIC_PAD_TEMPLATE ("sink",
         "encoding-name = (string)\"X-QDM\"")
     );
 
-GST_BOILERPLATE (GstRtpQDM2Depay, gst_rtp_qdm2_depay, GstBaseRTPDepayload,
+#define gst_rtp_qdm2_depay_parent_class parent_class
+G_DEFINE_TYPE (GstRtpQDM2Depay, gst_rtp_qdm2_depay,
     GST_TYPE_BASE_RTP_DEPAYLOAD);
 
 static const guint8 headheader[20] = {
@@ -66,23 +67,6 @@ gboolean gst_rtp_qdm2_depay_setcaps (GstBaseRTPDepayload * filter,
     GstCaps * caps);
 
 static void
-gst_rtp_qdm2_depay_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_qdm2_depay_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_qdm2_depay_sink_template));
-
-
-  gst_element_class_set_details_simple (element_class, "RTP QDM2 depayloader",
-      "Codec/Depayloader/Network/RTP",
-      "Extracts QDM2 audio from RTP packets (no RFC)",
-      "Edward Hervey <bilboed@bilboed.com>");
-}
-
-static void
 gst_rtp_qdm2_depay_class_init (GstRtpQDM2DepayClass * klass)
 {
   GObjectClass *gobject_class;
@@ -99,11 +83,21 @@ gst_rtp_qdm2_depay_class_init (GstRtpQDM2DepayClass * klass)
   gobject_class->finalize = gst_rtp_qdm2_depay_finalize;
 
   gstelement_class->change_state = gst_rtp_qdm2_depay_change_state;
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_qdm2_depay_src_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_qdm2_depay_sink_template));
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "RTP QDM2 depayloader",
+      "Codec/Depayloader/Network/RTP",
+      "Extracts QDM2 audio from RTP packets (no RFC)",
+      "Edward Hervey <bilboed@bilboed.com>");
 }
 
 static void
-gst_rtp_qdm2_depay_init (GstRtpQDM2Depay * rtpqdm2depay,
-    GstRtpQDM2DepayClass * klass)
+gst_rtp_qdm2_depay_init (GstRtpQDM2Depay * rtpqdm2depay)
 {
   rtpqdm2depay->adapter = gst_adapter_new ();
 }
@@ -187,9 +181,9 @@ flush_data (GstRtpQDM2Depay * depay)
     GST_MEMDUMP ("Extracted packet", data, depay->packetsize);
 
     buf = gst_buffer_new ();
-    GST_BUFFER_DATA (buf) = data;
-    GST_BUFFER_MALLOCDATA (buf) = data;
-    GST_BUFFER_SIZE (buf) = depay->packetsize;
+    gst_buffer_take_memory (buf, -1,
+        gst_memory_new_wrapped (0, data, g_free, depay->packetsize, 0,
+            depay->packetsize));
 
     gst_adapter_push (depay->adapter, buf);
 
@@ -236,8 +230,9 @@ static GstBuffer *
 gst_rtp_qdm2_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 {
   GstRtpQDM2Depay *rtpqdm2depay;
-  GstBuffer *outbuf;
+  GstBuffer *outbuf = NULL;
   guint16 seq;
+  GstRTPBuffer rtp;
 
   rtpqdm2depay = GST_RTP_QDM2_DEPAY (depayload);
 
@@ -247,12 +242,13 @@ gst_rtp_qdm2_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     guint avail;
     guint pos = 0;
 
-    payload_len = gst_rtp_buffer_get_payload_len (buf);
+    gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp);
+    payload_len = gst_rtp_buffer_get_payload_len (&rtp);
     if (payload_len < 3)
       goto bad_packet;
 
-    payload = gst_rtp_buffer_get_payload (buf);
-    seq = gst_rtp_buffer_get_seq (buf);
+    payload = gst_rtp_buffer_get_payload (&rtp);
+    seq = gst_rtp_buffer_get_seq (&rtp);
     if (G_UNLIKELY (seq != rtpqdm2depay->nextseq)) {
       GST_DEBUG ("GAP in sequence number, Resetting data !");
       /* Flush previous data */
@@ -287,6 +283,7 @@ gst_rtp_qdm2_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
           if (G_UNLIKELY (!rtpqdm2depay->configured)) {
             guint8 *ourdata;
             GstBuffer *codecdata;
+            guint8 *cdata;
             GstCaps *caps;
 
             /* First bytes are unknown */
@@ -309,8 +306,10 @@ gst_rtp_qdm2_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 
             /* Caps */
             codecdata = gst_buffer_new_and_alloc (48);
-            memcpy (GST_BUFFER_DATA (codecdata), headheader, 20);
-            memcpy (GST_BUFFER_DATA (codecdata) + 20, ourdata, 28);
+            cdata = gst_buffer_map (codecdata, NULL, NULL, GST_MAP_WRITE);
+            memcpy (cdata, headheader, 20);
+            memcpy (cdata + 20, ourdata, 28);
+            gst_buffer_unmap (codecdata, cdata, -1);
 
             caps = gst_caps_new_simple ("audio/x-qdm2",
                 "samplesize", G_TYPE_INT, 16,
@@ -364,16 +363,18 @@ gst_rtp_qdm2_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
       GST_BUFFER_TIMESTAMP (outbuf) = rtpqdm2depay->ptimestamp;
       GST_DEBUG ("Outgoing buffer timestamp %" GST_TIME_FORMAT,
           GST_TIME_ARGS (rtpqdm2depay->ptimestamp));
-      return outbuf;
     }
   }
-  return NULL;
+
+  gst_rtp_buffer_unmap (&rtp);
+  return outbuf;
 
   /* ERRORS */
 bad_packet:
   {
     GST_ELEMENT_WARNING (rtpqdm2depay, STREAM, DECODE,
         (NULL), ("Packet was too short"));
+    gst_rtp_buffer_unmap (&rtp);
     return NULL;
   }
 }

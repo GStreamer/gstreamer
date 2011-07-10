@@ -34,46 +34,8 @@ static GstStaticPadTemplate gst_rtp_vraw_pay_sink_template =
     GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw-rgb, "
-        "bpp = (int) 24, "
-        "depth = (int) 24, "
-        "endianness = (int) BIG_ENDIAN, "
-        "red_mask = (int) 0xFF000000, "
-        "green_mask = (int) 0x00FF0000, "
-        "blue_mask = (int) 0x0000FF00, "
-        "width = (int) [ 1, 32767 ], "
-        "height = (int) [ 1, 32767 ]; "
-        "video/x-raw-rgb, "
-        "bpp = (int) 32, "
-        "depth = (int) 32, "
-        "endianness = (int) BIG_ENDIAN, "
-        "red_mask = (int) 0xFF000000, "
-        "green_mask = (int) 0x00FF0000, "
-        "blue_mask = (int) 0x0000FF00, "
-        "alpha_mask = (int) 0x000000FF, "
-        "width = (int) [ 1, 32767 ], "
-        "height = (int) [ 1, 32767 ]; "
-        "video/x-raw-rgb, "
-        "bpp = (int) 24, "
-        "depth = (int) 24, "
-        "endianness = (int) BIG_ENDIAN, "
-        "red_mask = (int) 0x0000FF00, "
-        "green_mask = (int) 0x00FF0000, "
-        "blue_mask = (int) 0xFF000000, "
-        "width = (int) [ 1, 32767 ], "
-        "height = (int) [ 1, 32767 ]; "
-        "video/x-raw-rgb, "
-        "bpp = (int) 32, "
-        "depth = (int) 32, "
-        "endianness = (int) BIG_ENDIAN, "
-        "red_mask = (int) 0x0000FF00, "
-        "green_mask = (int) 0x00FF0000, "
-        "blue_mask = (int) 0xFF000000, "
-        "alpha_mask = (int) 0x000000FF, "
-        "width = (int) [ 1, 32767 ], "
-        "height = (int) [ 1, 32767 ]; "
-        "video/x-raw-yuv, "
-        "format = (fourcc) { AYUV, UYVY, I420, Y41B, UYVP }, "
+    GST_STATIC_CAPS ("video/x-raw, "
+        "format = (string) { RGB, RGBA, BGR, BGRA, AYUYV, UYVY, I420, Y41B, UYVP, I420, Y42B, Y444 }, "
         "width = (int) [ 1, 32767 ], " "height = (int) [ 1, 32767 ]; ")
     );
 
@@ -109,40 +71,35 @@ static gboolean gst_rtp_vraw_pay_setcaps (GstBaseRTPPayload * payload,
 static GstFlowReturn gst_rtp_vraw_pay_handle_buffer (GstBaseRTPPayload *
     payload, GstBuffer * buffer);
 
-GST_BOILERPLATE (GstRtpVRawPay, gst_rtp_vraw_pay, GstBaseRTPPayload,
-    GST_TYPE_BASE_RTP_PAYLOAD)
+G_DEFINE_TYPE (GstRtpVRawPay, gst_rtp_vraw_pay, GST_TYPE_BASE_RTP_PAYLOAD)
 
-     static void gst_rtp_vraw_pay_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_vraw_pay_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_vraw_pay_sink_template));
-
-  gst_element_class_set_details_simple (element_class,
-      "RTP Raw Video payloader", "Codec/Payloader/Network/RTP",
-      "Payload raw video as RTP packets (RFC 4175)",
-      "Wim Taymans <wim.taymans@gmail.com>");
-}
-
-static void
-gst_rtp_vraw_pay_class_init (GstRtpVRawPayClass * klass)
+     static void gst_rtp_vraw_pay_class_init (GstRtpVRawPayClass * klass)
 {
   GstBaseRTPPayloadClass *gstbasertppayload_class;
+  GstElementClass *gstelement_class;
 
+  gstelement_class = (GstElementClass *) klass;
   gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
 
   gstbasertppayload_class->set_caps = gst_rtp_vraw_pay_setcaps;
   gstbasertppayload_class->handle_buffer = gst_rtp_vraw_pay_handle_buffer;
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_vraw_pay_src_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_vraw_pay_sink_template));
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "RTP Raw Video payloader", "Codec/Payloader/Network/RTP",
+      "Payload raw video as RTP packets (RFC 4175)",
+      "Wim Taymans <wim.taymans@gmail.com>");
 
   GST_DEBUG_CATEGORY_INIT (rtpvrawpay_debug, "rtpvrawpay", 0,
       "Raw video RTP Payloader");
 }
 
 static void
-gst_rtp_vraw_pay_init (GstRtpVRawPay * rtpvrawpay, GstRtpVRawPayClass * klass)
+gst_rtp_vraw_pay_init (GstRtpVRawPay * rtpvrawpay)
 {
 }
 
@@ -150,177 +107,101 @@ static gboolean
 gst_rtp_vraw_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
 {
   GstRtpVRawPay *rtpvrawpay;
-  GstStructure *s;
   gboolean res;
-  const gchar *name;
-  gint width, height;
-  gint yp, up, vp;
-  gint pgroup, ystride, uvstride = 0, xinc, yinc;
-  GstVideoFormat sampling;
+  gint pgroup, xinc, yinc;
   const gchar *depthstr, *samplingstr, *colorimetrystr;
   gchar *wstr, *hstr;
-  gboolean interlaced;
-  const gchar *color_matrix;
   gint depth;
+  GstVideoInfo info;
 
   rtpvrawpay = GST_RTP_VRAW_PAY (payload);
 
-  s = gst_caps_get_structure (caps, 0);
+  if (!gst_video_info_from_caps (&info, caps))
+    goto invalid_caps;
 
-  /* start parsing the format */
-  name = gst_structure_get_name (s);
+  rtpvrawpay->vinfo = info;
 
-  /* these values are the only thing we can do */
-  depthstr = "8";
-
-  /* parse common width/height */
-  res = gst_structure_get_int (s, "width", &width);
-  res &= gst_structure_get_int (s, "height", &height);
-  if (!res)
-    goto missing_dimension;
-
-  if (!gst_structure_get_boolean (s, "interlaced", &interlaced))
-    interlaced = FALSE;
-
-  color_matrix = gst_structure_get_string (s, "color-matrix");
   colorimetrystr = "SMPTE240M";
-  if (color_matrix) {
-    if (g_str_equal (color_matrix, "sdtv")) {
+  if (info.color_matrix) {
+    if (g_str_equal (info.color_matrix, "sdtv")) {
       /* BT.601 implies a bit more than just color-matrix */
       colorimetrystr = "BT601-5";
-    } else if (g_str_equal (color_matrix, "hdtv")) {
+    } else if (g_str_equal (info.color_matrix, "hdtv")) {
       colorimetrystr = "BT709-2";
     }
   }
 
-  yp = up = vp = 0;
   xinc = yinc = 1;
 
-  if (!strcmp (name, "video/x-raw-rgb")) {
-    gint amask, rmask;
-    gboolean has_alpha;
+  /* these values are the only thing we can do */
+  depthstr = "8";
+  depth = 8;
 
-    has_alpha = gst_structure_get_int (s, "alpha_mask", &amask);
-    depth = 8;
-
-    if (!gst_structure_get_int (s, "red_mask", &rmask))
-      goto unknown_mask;
-
-    if (has_alpha) {
+  switch (GST_VIDEO_INFO_FORMAT (&info)) {
+    case GST_VIDEO_FORMAT_RGBA:
+      samplingstr = "RGBA";
       pgroup = 4;
-      ystride = width * 4;
-      if (rmask == 0xFF000000) {
-        sampling = GST_VIDEO_FORMAT_RGBA;
-        samplingstr = "RGBA";
-      } else {
-        sampling = GST_VIDEO_FORMAT_BGRA;
-        samplingstr = "BGRA";
-      }
-    } else {
+      break;
+    case GST_VIDEO_FORMAT_BGRA:
+      samplingstr = "BGRA";
+      pgroup = 4;
+      break;
+    case GST_VIDEO_FORMAT_RGB:
+      samplingstr = "RGB";
       pgroup = 3;
-      ystride = GST_ROUND_UP_4 (width * 3);
-      if (rmask == 0xFF000000) {
-        sampling = GST_VIDEO_FORMAT_RGB;
-        samplingstr = "RGB";
-      } else {
-        sampling = GST_VIDEO_FORMAT_BGR;
-        samplingstr = "BGR";
-      }
-    }
-  } else if (!strcmp (name, "video/x-raw-yuv")) {
-    guint32 fourcc;
+    case GST_VIDEO_FORMAT_BGR:
+      samplingstr = "BGR";
+      pgroup = 3;
+      break;
+    case GST_VIDEO_FORMAT_AYUV:
+      samplingstr = "YCbCr-4:4:4";
+      pgroup = 3;
+      break;
+    case GST_VIDEO_FORMAT_UYVY:
+      samplingstr = "YCbCr-4:2:2";
+      pgroup = 4;
+      xinc = 2;
+      break;
+    case GST_VIDEO_FORMAT_Y41B:
+      samplingstr = "YCbCr-4:1:1";
+      pgroup = 6;
+      xinc = 4;
+      break;
+    case GST_VIDEO_FORMAT_I420:
+      samplingstr = "YCbCr-4:2:0";
+      pgroup = 6;
+      xinc = yinc = 2;
+      break;
+    case GST_VIDEO_FORMAT_UYVP:
+      samplingstr = "YCbCr-4:2:2";
+      pgroup = 4;
+      xinc = 2;
+      depth = 10;
+      depthstr = "10";
+      break;
+    default:
+      goto unknown_format;
+      break;
+  }
 
-    if (!gst_structure_get_fourcc (s, "format", &fourcc))
-      goto unknown_fourcc;
-
-    GST_LOG_OBJECT (payload, "have fourcc %" GST_FOURCC_FORMAT,
-        GST_FOURCC_ARGS (fourcc));
-
-    switch (fourcc) {
-      case GST_MAKE_FOURCC ('A', 'Y', 'U', 'V'):
-        sampling = GST_VIDEO_FORMAT_AYUV;
-        samplingstr = "YCbCr-4:4:4";
-        pgroup = 3;
-        ystride = width * 4;
-        depth = 8;
-        break;
-      case GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y'):
-        sampling = GST_VIDEO_FORMAT_UYVY;
-        samplingstr = "YCbCr-4:2:2";
-        pgroup = 4;
-        xinc = 2;
-        ystride = GST_ROUND_UP_2 (width) * 2;
-        depth = 8;
-        break;
-      case GST_MAKE_FOURCC ('Y', '4', '1', 'B'):
-        sampling = GST_VIDEO_FORMAT_Y41B;
-        samplingstr = "YCbCr-4:1:1";
-        pgroup = 6;
-        xinc = 4;
-        ystride = GST_ROUND_UP_4 (width);
-        uvstride = GST_ROUND_UP_8 (width) / 4;
-        up = ystride * height;
-        vp = up + uvstride * height;
-        depth = 8;
-        break;
-      case GST_MAKE_FOURCC ('I', '4', '2', '0'):
-        sampling = GST_VIDEO_FORMAT_I420;
-        samplingstr = "YCbCr-4:2:0";
-        pgroup = 6;
-        xinc = yinc = 2;
-        ystride = GST_ROUND_UP_4 (width);
-        uvstride = GST_ROUND_UP_8 (width) / 2;
-        up = ystride * GST_ROUND_UP_2 (height);
-        vp = up + uvstride * GST_ROUND_UP_2 (height) / 2;
-        depth = 8;
-        break;
-      case GST_MAKE_FOURCC ('U', 'Y', 'V', 'P'):
-#define GST_VIDEO_FORMAT_UYVP GST_VIDEO_FORMAT_UYVY     /* FIXME */
-        sampling = GST_VIDEO_FORMAT_UYVP;
-        samplingstr = "YCbCr-4:2:2";
-        pgroup = 4;
-        xinc = 2;
-        ystride = GST_ROUND_UP_2 (width) * 2;
-        depth = 10;
-        break;
-      default:
-        goto unknown_fourcc;
-    }
-  } else
-    goto unknown_format;
-
-  if (interlaced) {
+  if (info.flags & GST_VIDEO_FLAG_INTERLACED) {
     yinc *= 2;
   }
-  if (depth == 10) {
-    depthstr = "10";
-  }
 
-  rtpvrawpay->width = width;
-  rtpvrawpay->height = height;
-  rtpvrawpay->sampling = sampling;
   rtpvrawpay->pgroup = pgroup;
   rtpvrawpay->xinc = xinc;
   rtpvrawpay->yinc = yinc;
-  rtpvrawpay->yp = yp;
-  rtpvrawpay->up = up;
-  rtpvrawpay->vp = vp;
-  rtpvrawpay->ystride = ystride;
-  rtpvrawpay->uvstride = uvstride;
-  rtpvrawpay->interlaced = interlaced;
   rtpvrawpay->depth = depth;
 
-  GST_DEBUG_OBJECT (payload, "width %d, height %d, sampling %d", width, height,
-      sampling);
-  GST_DEBUG_OBJECT (payload, "yp %d, up %d, vp %d", yp, up, vp);
-  GST_DEBUG_OBJECT (payload, "pgroup %d, ystride %d, uvstride %d", pgroup,
-      ystride, uvstride);
+  GST_DEBUG_OBJECT (payload, "width %d, height %d, sampling %s",
+      GST_VIDEO_INFO_WIDTH (&info), GST_VIDEO_INFO_HEIGHT (&info), samplingstr);
+  GST_DEBUG_OBJECT (payload, "xinc %d, yinc %d, pgroup %d", xinc, yinc, pgroup);
 
-  wstr = g_strdup_printf ("%d", rtpvrawpay->width);
-  hstr = g_strdup_printf ("%d", rtpvrawpay->height);
+  wstr = g_strdup_printf ("%d", GST_VIDEO_INFO_WIDTH (&info));
+  hstr = g_strdup_printf ("%d", GST_VIDEO_INFO_HEIGHT (&info));
 
   gst_basertppayload_set_options (payload, "video", TRUE, "RAW", 90000);
-  if (interlaced) {
+  if (info.flags & GST_VIDEO_FLAG_INTERLACED) {
     res = gst_basertppayload_set_outcaps (payload, "sampling", G_TYPE_STRING,
         samplingstr, "depth", G_TYPE_STRING, depthstr, "width", G_TYPE_STRING,
         wstr, "height", G_TYPE_STRING, hstr, "colorimetry", G_TYPE_STRING,
@@ -337,24 +218,14 @@ gst_rtp_vraw_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
   return res;
 
   /* ERRORS */
-unknown_mask:
+invalid_caps:
   {
-    GST_ERROR_OBJECT (payload, "unknown red mask specified");
+    GST_ERROR_OBJECT (payload, "could not parse caps");
     return FALSE;
   }
 unknown_format:
   {
     GST_ERROR_OBJECT (payload, "unknown caps format");
-    return FALSE;
-  }
-unknown_fourcc:
-  {
-    GST_ERROR_OBJECT (payload, "invalid or missing fourcc");
-    return FALSE;
-  }
-missing_dimension:
-  {
-    GST_ERROR_OBJECT (payload, "missing width or height property");
     return FALSE;
   }
 }
@@ -365,38 +236,42 @@ gst_rtp_vraw_pay_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buffer)
   GstRtpVRawPay *rtpvrawpay;
   GstFlowReturn ret = GST_FLOW_OK;
   guint line, offset;
-  guint8 *data, *yp, *up, *vp;
+  guint8 *yp, *up, *vp;
   guint ystride, uvstride;
-  guint size, pgroup;
+  guint pgroup;
   guint mtu;
   guint width, height;
   gint field;
+  GstVideoFrame frame;
+  gint interlaced;
+  GstRTPBuffer rtp;
 
   rtpvrawpay = GST_RTP_VRAW_PAY (payload);
 
-  data = GST_BUFFER_DATA (buffer);
-  size = GST_BUFFER_SIZE (buffer);
+  gst_video_frame_map (&frame, &rtpvrawpay->vinfo, buffer, GST_MAP_READ);
 
-  GST_LOG_OBJECT (rtpvrawpay, "new frame of %u bytes", size);
+  GST_LOG_OBJECT (rtpvrawpay, "new frame of %u bytes",
+      gst_buffer_get_size (buffer));
 
   /* get pointer and strides of the planes */
-  yp = data + rtpvrawpay->yp;
-  up = data + rtpvrawpay->up;
-  vp = data + rtpvrawpay->vp;
+  yp = GST_VIDEO_FRAME_COMP_DATA (&frame, 0);
+  up = GST_VIDEO_FRAME_COMP_DATA (&frame, 1);
+  vp = GST_VIDEO_FRAME_COMP_DATA (&frame, 2);
 
-  ystride = rtpvrawpay->ystride;
-  uvstride = rtpvrawpay->uvstride;
+  ystride = GST_VIDEO_FRAME_COMP_STRIDE (&frame, 0);
+  uvstride = GST_VIDEO_FRAME_COMP_STRIDE (&frame, 1);
 
   mtu = GST_BASE_RTP_PAYLOAD_MTU (payload);
 
   /* amount of bytes for one pixel */
   pgroup = rtpvrawpay->pgroup;
-  width = rtpvrawpay->width;
-  height = rtpvrawpay->height;
+  width = GST_VIDEO_INFO_WIDTH (&rtpvrawpay->vinfo);
+  height = GST_VIDEO_INFO_HEIGHT (&rtpvrawpay->vinfo);
+
+  interlaced = !!(rtpvrawpay->vinfo.flags & GST_VIDEO_FLAG_INTERLACED);
 
   /* start with line 0, offset 0 */
-
-  for (field = 0; field < 1 + rtpvrawpay->interlaced; field++) {
+  for (field = 0; field < 1 + interlaced; field++) {
     line = field;
     offset = 0;
 
@@ -419,7 +294,8 @@ gst_rtp_vraw_pay_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buffer)
             GST_BUFFER_DURATION (buffer) / 2;
       }
 
-      outdata = gst_rtp_buffer_get_payload (out);
+      gst_rtp_buffer_map (out, GST_MAP_WRITE, &rtp);
+      outdata = gst_rtp_buffer_get_payload (&rtp);
 
       GST_LOG_OBJECT (rtpvrawpay, "created buffer of size %u for MTU %u", left,
           mtu);
@@ -524,7 +400,7 @@ gst_rtp_vraw_pay_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buffer)
             "writing length %u, line %u, offset %u, cont %d", length, lin, offs,
             cont);
 
-        switch (rtpvrawpay->sampling) {
+        switch (GST_VIDEO_INFO_FORMAT (&rtpvrawpay->vinfo)) {
           case GST_VIDEO_FORMAT_RGB:
           case GST_VIDEO_FORMAT_RGBA:
           case GST_VIDEO_FORMAT_BGR:
@@ -595,6 +471,7 @@ gst_rtp_vraw_pay_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buffer)
             break;
           }
           default:
+            gst_rtp_buffer_unmap (&rtp);
             gst_buffer_unref (out);
             goto unknown_sampling;
         }
@@ -605,11 +482,12 @@ gst_rtp_vraw_pay_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buffer)
 
       if (line >= height) {
         GST_LOG_OBJECT (rtpvrawpay, "field/frame complete, set marker");
-        gst_rtp_buffer_set_marker (out, TRUE);
+        gst_rtp_buffer_set_marker (&rtp, TRUE);
       }
+      gst_rtp_buffer_unmap (&rtp);
       if (left > 0) {
         GST_LOG_OBJECT (rtpvrawpay, "we have %u bytes left", left);
-        GST_BUFFER_SIZE (out) -= left;
+        gst_buffer_resize (out, 0, gst_buffer_get_size (out) - left);
       }
 
       /* push buffer */
@@ -617,6 +495,8 @@ gst_rtp_vraw_pay_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buffer)
     }
 
   }
+
+  gst_video_frame_unmap (&frame);
   gst_buffer_unref (buffer);
 
   return ret;
@@ -626,6 +506,7 @@ unknown_sampling:
   {
     GST_ELEMENT_ERROR (payload, STREAM, FORMAT,
         (NULL), ("unimplemented sampling"));
+    gst_video_frame_unmap (&frame);
     gst_buffer_unref (buffer);
     return GST_FLOW_NOT_SUPPORTED;
   }

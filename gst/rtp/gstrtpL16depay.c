@@ -67,8 +67,8 @@ static GstStaticPadTemplate gst_rtp_L16_depay_sink_template =
     )
     );
 
-GST_BOILERPLATE (GstRtpL16Depay, gst_rtp_L16_depay, GstBaseRTPDepayload,
-    GST_TYPE_BASE_RTP_DEPAYLOAD);
+#define gst_rtp_L16_depay_parent_class parent_class
+G_DEFINE_TYPE (GstRtpL16Depay, gst_rtp_L16_depay, GST_TYPE_BASE_RTP_DEPAYLOAD);
 
 static gboolean gst_rtp_L16_depay_setcaps (GstBaseRTPDepayload * depayload,
     GstCaps * caps);
@@ -76,38 +76,33 @@ static GstBuffer *gst_rtp_L16_depay_process (GstBaseRTPDepayload * depayload,
     GstBuffer * buf);
 
 static void
-gst_rtp_L16_depay_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_L16_depay_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_L16_depay_sink_template));
-
-  gst_element_class_set_details_simple (element_class, "RTP audio depayloader",
-      "Codec/Depayloader/Network/RTP",
-      "Extracts raw audio from RTP packets",
-      "Zeeshan Ali <zak147@yahoo.com>," "Wim Taymans <wim.taymans@gmail.com>");
-}
-
-static void
 gst_rtp_L16_depay_class_init (GstRtpL16DepayClass * klass)
 {
+  GstElementClass *gstelement_class;
   GstBaseRTPDepayloadClass *gstbasertpdepayload_class;
 
+  gstelement_class = (GstElementClass *) klass;
   gstbasertpdepayload_class = (GstBaseRTPDepayloadClass *) klass;
 
   gstbasertpdepayload_class->set_caps = gst_rtp_L16_depay_setcaps;
   gstbasertpdepayload_class->process = gst_rtp_L16_depay_process;
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_L16_depay_src_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_L16_depay_sink_template));
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "RTP audio depayloader", "Codec/Depayloader/Network/RTP",
+      "Extracts raw audio from RTP packets",
+      "Zeeshan Ali <zak147@yahoo.com>," "Wim Taymans <wim.taymans@gmail.com>");
 
   GST_DEBUG_CATEGORY_INIT (rtpL16depay_debug, "rtpL16depay", 0,
       "Raw Audio RTP Depayloader");
 }
 
 static void
-gst_rtp_L16_depay_init (GstRtpL16Depay * rtpL16depay,
-    GstRtpL16DepayClass * klass)
+gst_rtp_L16_depay_init (GstRtpL16Depay * rtpL16depay)
 {
   /* needed because of GST_BOILERPLATE */
 }
@@ -228,23 +223,27 @@ gst_rtp_L16_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   GstBuffer *outbuf;
   gint payload_len;
   gboolean marker;
+  GstRTPBuffer rtp;
 
   rtpL16depay = GST_RTP_L16_DEPAY (depayload);
 
-  payload_len = gst_rtp_buffer_get_payload_len (buf);
+  gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp);
+  payload_len = gst_rtp_buffer_get_payload_len (&rtp);
 
   if (payload_len <= 0)
     goto empty_packet;
 
   GST_DEBUG_OBJECT (rtpL16depay, "got payload of %d bytes", payload_len);
 
-  outbuf = gst_rtp_buffer_get_payload_buffer (buf);
-  marker = gst_rtp_buffer_get_marker (buf);
+  outbuf = gst_rtp_buffer_get_payload_buffer (&rtp);
+  marker = gst_rtp_buffer_get_marker (&rtp);
 
   if (marker) {
     /* mark talk spurt with DISCONT */
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
   }
+
+  gst_rtp_buffer_unmap (&rtp);
 
   return outbuf;
 
@@ -253,6 +252,7 @@ empty_packet:
   {
     GST_ELEMENT_WARNING (rtpL16depay, STREAM, DECODE,
         ("Empty Payload."), (NULL));
+    gst_rtp_buffer_unmap (&rtp);
     return NULL;
   }
 }

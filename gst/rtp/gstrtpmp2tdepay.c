@@ -68,7 +68,7 @@ static GstStaticPadTemplate gst_rtp_mp2t_depay_sink_template =
         "clock-rate = (int) [1, MAX ]")
     );
 
-GST_BOILERPLATE (GstRtpMP2TDepay, gst_rtp_mp2t_depay, GstBaseRTPDepayload,
+G_DEFINE_TYPE (GstRtpMP2TDepay, gst_rtp_mp2t_depay,
     GST_TYPE_BASE_RTP_DEPAYLOAD);
 
 static gboolean gst_rtp_mp2t_depay_setcaps (GstBaseRTPDepayload * depayload,
@@ -82,30 +82,14 @@ static void gst_rtp_mp2t_depay_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 static void
-gst_rtp_mp2t_depay_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_mp2t_depay_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_mp2t_depay_sink_template));
-
-  gst_element_class_set_details_simple (element_class,
-      "RTP MPEG Transport Stream depayloader", "Codec/Depayloader/Network/RTP",
-      "Extracts MPEG2 TS from RTP packets (RFC 2250)",
-      "Wim Taymans <wim.taymans@gmail.com>, "
-      "Thijs Vermeir <thijs.vermeir@barco.com>");
-}
-
-static void
 gst_rtp_mp2t_depay_class_init (GstRtpMP2TDepayClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
   GstBaseRTPDepayloadClass *gstbasertpdepayload_class;
 
   gobject_class = (GObjectClass *) klass;
-
+  gstelement_class = (GstElementClass *) klass;
   gstbasertpdepayload_class = (GstBaseRTPDepayloadClass *) klass;
 
   gstbasertpdepayload_class->process = gst_rtp_mp2t_depay_process;
@@ -113,6 +97,17 @@ gst_rtp_mp2t_depay_class_init (GstRtpMP2TDepayClass * klass)
 
   gobject_class->set_property = gst_rtp_mp2t_depay_set_property;
   gobject_class->get_property = gst_rtp_mp2t_depay_get_property;
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_mp2t_depay_src_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_mp2t_depay_sink_template));
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "RTP MPEG Transport Stream depayloader", "Codec/Depayloader/Network/RTP",
+      "Extracts MPEG2 TS from RTP packets (RFC 2250)",
+      "Wim Taymans <wim.taymans@gmail.com>, "
+      "Thijs Vermeir <thijs.vermeir@barco.com>");
 
   g_object_class_install_property (gobject_class, PROP_SKIP_FIRST_BYTES,
       g_param_spec_uint ("skip-first-bytes",
@@ -123,8 +118,7 @@ gst_rtp_mp2t_depay_class_init (GstRtpMP2TDepayClass * klass)
 }
 
 static void
-gst_rtp_mp2t_depay_init (GstRtpMP2TDepay * rtpmp2tdepay,
-    GstRtpMP2TDepayClass * klass)
+gst_rtp_mp2t_depay_init (GstRtpMP2TDepay * rtpmp2tdepay)
 {
   rtpmp2tdepay->skip_first_bytes = DEFAULT_SKIP_FIRST_BYTES;
 }
@@ -157,21 +151,24 @@ gst_rtp_mp2t_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   GstRtpMP2TDepay *rtpmp2tdepay;
   GstBuffer *outbuf;
   gint payload_len;
+  GstRTPBuffer rtp;
 
   rtpmp2tdepay = GST_RTP_MP2T_DEPAY (depayload);
 
-  payload_len = gst_rtp_buffer_get_payload_len (buf);
+  gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp);
+  payload_len = gst_rtp_buffer_get_payload_len (&rtp);
 
   if (G_UNLIKELY (payload_len <= rtpmp2tdepay->skip_first_bytes))
     goto empty_packet;
 
-  outbuf =
-      gst_rtp_buffer_get_payload_subbuffer (buf, rtpmp2tdepay->skip_first_bytes,
-      -1);
+  outbuf = gst_rtp_buffer_get_payload_subbuffer (&rtp,
+      rtpmp2tdepay->skip_first_bytes, -1);
+
+  gst_rtp_buffer_unmap (&rtp);
 
   if (outbuf)
     GST_DEBUG ("gst_rtp_mp2t_depay_chain: pushing buffer of size %d",
-        GST_BUFFER_SIZE (outbuf));
+        gst_buffer_get_size (outbuf));
 
   return outbuf;
 
@@ -180,6 +177,7 @@ empty_packet:
   {
     GST_ELEMENT_WARNING (rtpmp2tdepay, STREAM, DECODE,
         (NULL), ("Packet was empty"));
+    gst_rtp_buffer_unmap (&rtp);
     return NULL;
   }
 }

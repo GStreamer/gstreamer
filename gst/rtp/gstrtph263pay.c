@@ -887,8 +887,9 @@ gst_rtp_h263_pay_move_window_right (GstRtpH263PayContext * context, guint n,
     } else {
       if (n > rest_bits) {
         context->window =
-            (context->window << rest_bits) | (*context->
-            win_end & (((guint) pow (2.0, (double) rest_bits)) - 1));
+            (context->
+            window << rest_bits) | (*context->win_end & (((guint) pow (2.0,
+                        (double) rest_bits)) - 1));
         n -= rest_bits;
         rest_bits = 0;
       } else {
@@ -1655,8 +1656,8 @@ gst_rtp_h263_pay_flush (GstRtpH263Pay * rtph263pay)
 
     gst_rtp_h263_pay_boundry_init (&bound, NULL, rtph263pay->data - 1, 0, 0);
     context->gobs =
-        (GstRtpH263PayGob **) g_malloc0 (format_props[context->piclayer->
-            ptype_srcformat][0] * sizeof (GstRtpH263PayGob *));
+        (GstRtpH263PayGob **) g_malloc0 (format_props[context->
+            piclayer->ptype_srcformat][0] * sizeof (GstRtpH263PayGob *));
 
 
     for (i = 0; i < format_props[context->piclayer->ptype_srcformat][0]; i++) {

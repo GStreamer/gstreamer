@@ -51,40 +51,35 @@ GST_STATIC_PAD_TEMPLATE ("src",
 static gboolean gst_rtp_siren_pay_setcaps (GstBaseRTPPayload * payload,
     GstCaps * caps);
 
-GST_BOILERPLATE (GstRTPSirenPay, gst_rtp_siren_pay, GstBaseRTPAudioPayload,
+G_DEFINE_TYPE (GstRTPSirenPay, gst_rtp_siren_pay,
     GST_TYPE_BASE_RTP_AUDIO_PAYLOAD);
-
-static void
-gst_rtp_siren_pay_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_siren_pay_sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_siren_pay_src_template));
-  gst_element_class_set_details_simple (element_class,
-      "RTP Payloader for Siren Audio", "Codec/Payloader/Network/RTP",
-      "Packetize Siren audio streams into RTP packets",
-      "Youness Alaoui <kakaroto@kakaroto.homelinux.net>");
-}
 
 static void
 gst_rtp_siren_pay_class_init (GstRTPSirenPayClass * klass)
 {
+  GstElementClass *gstelement_class;
   GstBaseRTPPayloadClass *gstbasertppayload_class;
 
+  gstelement_class = (GstElementClass *) klass;
   gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
 
   gstbasertppayload_class->set_caps = gst_rtp_siren_pay_setcaps;
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_siren_pay_sink_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_siren_pay_src_template));
+  gst_element_class_set_details_simple (gstelement_class,
+      "RTP Payloader for Siren Audio", "Codec/Payloader/Network/RTP",
+      "Packetize Siren audio streams into RTP packets",
+      "Youness Alaoui <kakaroto@kakaroto.homelinux.net>");
 
   GST_DEBUG_CATEGORY_INIT (rtpsirenpay_debug, "rtpsirenpay", 0,
       "siren audio RTP payloader");
 }
 
 static void
-gst_rtp_siren_pay_init (GstRTPSirenPay * rtpsirenpay,
-    GstRTPSirenPayClass * klass)
+gst_rtp_siren_pay_init (GstRTPSirenPay * rtpsirenpay)
 {
   GstBaseRTPPayload *basertppayload;
   GstBaseRTPAudioPayload *basertpaudiopayload;

@@ -44,15 +44,14 @@ struct _GstRtpVRawPay
 {
   GstBaseRTPPayload payload;
 
-  gint width, height;
-  GstVideoFormat sampling;
+  GstVideoInfo vinfo;
 
   gint pgroup;
   gint xinc, yinc;
-  guint yp, up, vp;
-  gint ystride;
-  gint uvstride;
-  gboolean interlaced;
+//   guint yp, up, vp;
+//   gint ystride;
+//   gint uvstride;
+//   gboolean interlaced;
   gint depth;
 };
 

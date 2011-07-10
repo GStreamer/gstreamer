@@ -56,30 +56,12 @@ static GstStateChangeReturn gst_rtp_speex_pay_change_state (GstElement *
 static gboolean gst_rtp_speex_pay_setcaps (GstBaseRTPPayload * payload,
     GstCaps * caps);
 static GstCaps *gst_rtp_speex_pay_getcaps (GstBaseRTPPayload * payload,
-    GstPad * pad);
+    GstPad * pad, GstCaps * filter);
 static GstFlowReturn gst_rtp_speex_pay_handle_buffer (GstBaseRTPPayload *
     payload, GstBuffer * buffer);
 
-GST_BOILERPLATE (GstRtpSPEEXPay, gst_rtp_speex_pay, GstBaseRTPPayload,
-    GST_TYPE_BASE_RTP_PAYLOAD);
-
-static void
-gst_rtp_speex_pay_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_speex_pay_sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_speex_pay_src_template));
-  gst_element_class_set_details_simple (element_class, "RTP Speex payloader",
-      "Codec/Payloader/Network/RTP",
-      "Payload-encodes Speex audio into a RTP packet",
-      "Edgard Lima <edgard.lima@indt.org.br>");
-
-  GST_DEBUG_CATEGORY_INIT (rtpspeexpay_debug, "rtpspeexpay", 0,
-      "Speex RTP Payloader");
-}
+#define gst_rtp_speex_pay_parent_class parent_class
+G_DEFINE_TYPE (GstRtpSPEEXPay, gst_rtp_speex_pay, GST_TYPE_BASE_RTP_PAYLOAD);
 
 static void
 gst_rtp_speex_pay_class_init (GstRtpSPEEXPayClass * klass)
@@ -95,11 +77,22 @@ gst_rtp_speex_pay_class_init (GstRtpSPEEXPayClass * klass)
   gstbasertppayload_class->set_caps = gst_rtp_speex_pay_setcaps;
   gstbasertppayload_class->get_caps = gst_rtp_speex_pay_getcaps;
   gstbasertppayload_class->handle_buffer = gst_rtp_speex_pay_handle_buffer;
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_speex_pay_sink_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_speex_pay_src_template));
+  gst_element_class_set_details_simple (gstelement_class, "RTP Speex payloader",
+      "Codec/Payloader/Network/RTP",
+      "Payload-encodes Speex audio into a RTP packet",
+      "Edgard Lima <edgard.lima@indt.org.br>");
+
+  GST_DEBUG_CATEGORY_INIT (rtpspeexpay_debug, "rtpspeexpay", 0,
+      "Speex RTP Payloader");
 }
 
 static void
-gst_rtp_speex_pay_init (GstRtpSPEEXPay * rtpspeexpay,
-    GstRtpSPEEXPayClass * klass)
+gst_rtp_speex_pay_init (GstRtpSPEEXPay * rtpspeexpay)
 {
   GST_BASE_RTP_PAYLOAD (rtpspeexpay)->clock_rate = 8000;
   GST_BASE_RTP_PAYLOAD_PT (rtpspeexpay) = 110;  /* Create String */
@@ -114,7 +107,8 @@ gst_rtp_speex_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
 
 
 static GstCaps *
-gst_rtp_speex_pay_getcaps (GstBaseRTPPayload * payload, GstPad * pad)
+gst_rtp_speex_pay_getcaps (GstBaseRTPPayload * payload, GstPad * pad,
+    GstCaps * filter)
 {
   GstCaps *otherpadcaps;
   GstCaps *caps;
@@ -133,6 +127,13 @@ gst_rtp_speex_pay_getcaps (GstBaseRTPPayload * payload, GstPad * pad)
       }
     }
     gst_caps_unref (otherpadcaps);
+  }
+
+  if (filter) {
+    GstCaps *tcaps = caps;
+
+    caps = gst_caps_intersect_full (filter, tcaps, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (tcaps);
   }
 
   return caps;
@@ -231,16 +232,17 @@ gst_rtp_speex_pay_handle_buffer (GstBaseRTPPayload * basepayload,
     GstBuffer * buffer)
 {
   GstRtpSPEEXPay *rtpspeexpay;
-  guint size, payload_len;
+  guint payload_len;
+  gsize size;
   GstBuffer *outbuf;
   guint8 *payload, *data;
   GstClockTime timestamp, duration;
   GstFlowReturn ret;
+  GstRTPBuffer rtp;
 
   rtpspeexpay = GST_RTP_SPEEX_PAY (basepayload);
 
-  size = GST_BUFFER_SIZE (buffer);
-  data = GST_BUFFER_DATA (buffer);
+  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
 
   switch (rtpspeexpay->packet) {
     case 0:
@@ -279,15 +281,19 @@ gst_rtp_speex_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
   GST_BUFFER_DURATION (outbuf) = duration;
 
+  gst_rtp_buffer_map (outbuf, GST_MAP_WRITE, &rtp);
   /* get payload */
-  payload = gst_rtp_buffer_get_payload (outbuf);
+  payload = gst_rtp_buffer_get_payload (&rtp);
 
   /* copy data in payload */
   memcpy (&payload[0], data, size);
 
+  gst_rtp_buffer_unmap (&rtp);
+
   ret = gst_basertppayload_push (basepayload, outbuf);
 
 done:
+  gst_buffer_unmap (buffer, data, -1);
   gst_buffer_unref (buffer);
 
   rtpspeexpay->packet++;
@@ -299,6 +305,7 @@ parse_error:
   {
     GST_ELEMENT_ERROR (rtpspeexpay, STREAM, DECODE, (NULL),
         ("Error parsing first identification packet."));
+    gst_buffer_unmap (buffer, data, -1);
     gst_buffer_unref (buffer);
     return GST_FLOW_ERROR;
   }

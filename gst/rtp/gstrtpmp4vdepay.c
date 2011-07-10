@@ -53,7 +53,8 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     )
     );
 
-GST_BOILERPLATE (GstRtpMP4VDepay, gst_rtp_mp4v_depay, GstBaseRTPDepayload,
+#define gst_rtp_mp4v_depay_parent_class parent_class
+G_DEFINE_TYPE (GstRtpMP4VDepay, gst_rtp_mp4v_depay,
     GST_TYPE_BASE_RTP_DEPAYLOAD);
 
 static void gst_rtp_mp4v_depay_finalize (GObject * object);
@@ -65,23 +66,6 @@ static GstBuffer *gst_rtp_mp4v_depay_process (GstBaseRTPDepayload * depayload,
 
 static GstStateChangeReturn gst_rtp_mp4v_depay_change_state (GstElement *
     element, GstStateChange transition);
-
-
-static void
-gst_rtp_mp4v_depay_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_mp4v_depay_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_mp4v_depay_sink_template));
-
-  gst_element_class_set_details_simple (element_class,
-      "RTP MPEG4 video depayloader", "Codec/Depayloader/Network/RTP",
-      "Extracts MPEG4 video from RTP packets (RFC 3016)",
-      "Wim Taymans <wim.taymans@gmail.com>");
-}
 
 static void
 gst_rtp_mp4v_depay_class_init (GstRtpMP4VDepayClass * klass)
@@ -101,13 +85,22 @@ gst_rtp_mp4v_depay_class_init (GstRtpMP4VDepayClass * klass)
   gstbasertpdepayload_class->process = gst_rtp_mp4v_depay_process;
   gstbasertpdepayload_class->set_caps = gst_rtp_mp4v_depay_setcaps;
 
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_mp4v_depay_src_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_mp4v_depay_sink_template));
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "RTP MPEG4 video depayloader", "Codec/Depayloader/Network/RTP",
+      "Extracts MPEG4 video from RTP packets (RFC 3016)",
+      "Wim Taymans <wim.taymans@gmail.com>");
+
   GST_DEBUG_CATEGORY_INIT (rtpmp4vdepay_debug, "rtpmp4vdepay", 0,
       "MPEG4 video RTP Depayloader");
 }
 
 static void
-gst_rtp_mp4v_depay_init (GstRtpMP4VDepay * rtpmp4vdepay,
-    GstRtpMP4VDepayClass * klass)
+gst_rtp_mp4v_depay_init (GstRtpMP4VDepay * rtpmp4vdepay)
 {
   rtpmp4vdepay->adapter = gst_adapter_new ();
 }
@@ -170,7 +163,8 @@ static GstBuffer *
 gst_rtp_mp4v_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 {
   GstRtpMP4VDepay *rtpmp4vdepay;
-  GstBuffer *outbuf;
+  GstBuffer *outbuf = NULL;
+  GstRTPBuffer rtp;
 
   rtpmp4vdepay = GST_RTP_MP4V_DEPAY (depayload);
 
@@ -178,11 +172,12 @@ gst_rtp_mp4v_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   if (GST_BUFFER_IS_DISCONT (buf))
     gst_adapter_clear (rtpmp4vdepay->adapter);
 
-  outbuf = gst_rtp_buffer_get_payload_buffer (buf);
+  gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp);
+  outbuf = gst_rtp_buffer_get_payload_buffer (&rtp);
   gst_adapter_push (rtpmp4vdepay->adapter, outbuf);
 
   /* if this was the last packet of the VOP, create and push a buffer */
-  if (gst_rtp_buffer_get_marker (buf)) {
+  if (gst_rtp_buffer_get_marker (&rtp)) {
     guint avail;
 
     avail = gst_adapter_available (rtpmp4vdepay->adapter);
@@ -190,11 +185,12 @@ gst_rtp_mp4v_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     outbuf = gst_adapter_take_buffer (rtpmp4vdepay->adapter, avail);
 
     GST_DEBUG ("gst_rtp_mp4v_depay_chain: pushing buffer of size %d",
-        GST_BUFFER_SIZE (outbuf));
-
-    return outbuf;
+        gst_buffer_get_size (outbuf));
   }
-  return NULL;
+
+  gst_rtp_buffer_unmap (&rtp);
+
+  return outbuf;
 }
 
 static GstStateChangeReturn
