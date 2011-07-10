@@ -32,8 +32,8 @@ gst_meta_ximage_get_info (void)
     meta_ximage_info =
         gst_meta_register ("GstMetaXImageSrc", "GstMetaXImageSrc",
         sizeof (GstMetaXImage), (GstMetaInitFunction) NULL,
-        (GstMetaFreeFunction) NULL, (GstMetaTransformFunction) NULL,
-        (GstMetaSerializeFunction) NULL, (GstMetaDeserializeFunction) NULL);
+        (GstMetaFreeFunction) NULL, (GstMetaCopyFunction) NULL,
+        (GstMetaTransformFunction) NULL);
   }
   return meta_ximage_info;
 }
@@ -421,8 +421,9 @@ gst_ximageutil_ximage_new (GstXContext * xcontext,
   }
   succeeded = TRUE;
 
-  GST_BUFFER_DATA (ximage) = (guchar *) meta->ximage->data;
-  GST_BUFFER_SIZE (ximage) = meta->size;
+  gst_buffer_take_memory (ximage, -1,
+      gst_memory_new_wrapped (GST_MEMORY_FLAG_NO_SHARE, meta->ximage->data,
+          NULL, meta->size, 0, meta->size));
 
   /* Keep a ref to our src */
   meta->parent = gst_object_ref (parent);

@@ -73,7 +73,8 @@ enum
   PROP_REMOTE,
 };
 
-GST_BOILERPLATE (GstXImageSrc, gst_ximage_src, GstPushSrc, GST_TYPE_PUSH_SRC);
+#define gst_ximage_src_parent_class parent_class
+G_DEFINE_TYPE (GstXImageSrc, gst_ximage_src, GST_TYPE_PUSH_SRC);
 
 static void gst_ximage_src_fixate (GstPad * pad, GstCaps * caps);
 static void gst_ximage_src_clear_bufpool (GstXImageSrc * ximagesrc);
@@ -355,6 +356,17 @@ composite_pixel (GstXContext * xcontext, guchar * dest, guchar * src)
 }
 #endif
 
+static void
+copy_buffer (GstBuffer * dest, GstBuffer * src)
+{
+  guint8 *data;
+  gsize size;
+
+  data = gst_buffer_map (src, &size, NULL, GST_MAP_READ);
+  gst_buffer_fill (dest, 0, data, size);
+  gst_buffer_unmap (src, data, size);
+}
+
 /* Retrieve an XImageSrcBuffer, preferably from our
  * pool of existing images and populate it from the window */
 static GstBuffer *
@@ -400,7 +412,6 @@ gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
 
     xcontext = ximagesrc->xcontext;
 
-
     caps = gst_caps_new_simple ("video/x-raw-rgb",
         "bpp", G_TYPE_INT, xcontext->bpp,
         "depth", G_TYPE_INT, xcontext->depth,
@@ -415,7 +426,6 @@ gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
         gst_value_get_fraction_numerator (xcontext->par),
         gst_value_get_fraction_denominator (xcontext->par), NULL);
 
-    gst_buffer_set_caps (ximage, caps);
     g_mutex_unlock (ximagesrc->x_lock);
 
     gst_caps_unref (caps);
@@ -455,10 +465,8 @@ gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
           if (!have_frame) {
             GST_LOG_OBJECT (ximagesrc,
                 "Copying from last frame ximage->size: %d",
-                GST_BUFFER_SIZE (GST_BUFFER (ximage)));
-            memcpy (GST_BUFFER_DATA (GST_BUFFER (ximage)),
-                GST_BUFFER_DATA (GST_BUFFER (ximagesrc->last_ximage)),
-                GST_BUFFER_SIZE (GST_BUFFER (ximage)));
+                gst_buffer_get_size (ximage));
+            copy_buffer (ximage, ximagesrc->last_ximage);
             have_frame = TRUE;
           }
           for (i = 0; i < nrects; i++) {
@@ -519,10 +527,8 @@ gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
     if (!have_frame) {
       GST_LOG_OBJECT (ximagesrc,
           "Copying from last frame ximage->size: %d",
-          GST_BUFFER_SIZE (GST_BUFFER (ximage)));
-      memcpy (GST_BUFFER_DATA (GST_BUFFER (ximage)),
-          GST_BUFFER_DATA (GST_BUFFER (ximagesrc->last_ximage)),
-          GST_BUFFER_SIZE (GST_BUFFER (ximage)));
+          gst_buffer_get_size (ximage));
+      copy_buffer (ximage, ximagesrc->last_ximage);
     }
 #ifdef HAVE_XFIXES
     /* re-get area where last mouse pointer was  but only if in our clipping
@@ -698,9 +704,9 @@ gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
 #ifdef HAVE_XDAMAGE
   if (ximagesrc->have_xdamage && ximagesrc->use_damage) {
     /* need to ref ximage to put in last_ximage */
-    gst_buffer_ref (GST_BUFFER (ximage));
+    gst_buffer_ref (ximage);
     if (ximagesrc->last_ximage) {
-      gst_buffer_unref (GST_BUFFER (ximagesrc->last_ximage));
+      gst_buffer_unref (ximagesrc->last_ximage);
     }
     ximagesrc->last_ximage = ximage;
     GST_LOG_OBJECT (ximagesrc, "reffing current buffer for last_ximage");
@@ -797,7 +803,7 @@ gst_ximage_src_create (GstPushSrc * bs, GstBuffer ** buf)
   if (!image)
     return GST_FLOW_ERROR;
 
-  *buf = GST_BUFFER (image);
+  *buf = image;
   GST_BUFFER_TIMESTAMP (*buf) = next_capture_ts;
   GST_BUFFER_DURATION (*buf) = dur;
 
@@ -905,20 +911,6 @@ gst_ximage_src_clear_bufpool (GstXImageSrc * ximagesrc)
 }
 
 static void
-gst_ximage_src_base_init (gpointer g_class)
-{
-  GstElementClass *ec = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (ec, "Ximage video source",
-      "Source/Video",
-      "Creates a screenshot video stream",
-      "Lutz Mueller <lutz@users.sourceforge.net>, "
-      "Jan Schmidt <thaytan@mad.scientist.com>, "
-      "Zaheer Merali <zaheerabbas at merali dot org>");
-  gst_element_class_add_pad_template (ec, gst_static_pad_template_get (&t));
-}
-
-static void
 gst_ximage_src_dispose (GObject * object)
 {
   /* Drop references in the buffer_pool */
@@ -942,7 +934,7 @@ gst_ximage_src_finalize (GObject * object)
 }
 
 static GstCaps *
-gst_ximage_src_get_caps (GstBaseSrc * bs)
+gst_ximage_src_get_caps (GstBaseSrc * bs, GstCaps * filter)
 {
   GstXImageSrc *s = GST_XIMAGE_SRC (bs);
   GstXContext *xcontext;
@@ -1051,6 +1043,7 @@ static void
 gst_ximage_src_class_init (GstXImageSrcClass * klass)
 {
   GObjectClass *gc = G_OBJECT_CLASS (klass);
+  GstElementClass *ec = GST_ELEMENT_CLASS (klass);
   GstBaseSrcClass *bc = GST_BASE_SRC_CLASS (klass);
   GstPushSrcClass *push_class = GST_PUSH_SRC_CLASS (klass);
 
@@ -1142,7 +1135,13 @@ gst_ximage_src_class_init (GstXImageSrcClass * klass)
           "Whether the display is remote", FALSE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  parent_class = g_type_class_peek_parent (klass);
+  gst_element_class_set_details_simple (ec, "Ximage video source",
+      "Source/Video",
+      "Creates a screenshot video stream",
+      "Lutz Mueller <lutz@users.sourceforge.net>, "
+      "Jan Schmidt <thaytan@mad.scientist.com>, "
+      "Zaheer Merali <zaheerabbas at merali dot org>");
+  gst_element_class_add_pad_template (ec, gst_static_pad_template_get (&t));
 
   push_class->create = gst_ximage_src_create;
   bc->get_caps = gst_ximage_src_get_caps;
@@ -1153,7 +1152,7 @@ gst_ximage_src_class_init (GstXImageSrcClass * klass)
 }
 
 static void
-gst_ximage_src_init (GstXImageSrc * ximagesrc, GstXImageSrcClass * klass)
+gst_ximage_src_init (GstXImageSrc * ximagesrc)
 {
   gst_base_src_set_format (GST_BASE_SRC (ximagesrc), GST_FORMAT_TIME);
   gst_base_src_set_live (GST_BASE_SRC (ximagesrc), TRUE);
