@@ -99,6 +99,14 @@ gst_vp8_enc_coder_hook_free (GstVP8EncCoderHook * hook)
 #define DEFAULT_MULTIPASS_CACHE_FILE "multipass.cache"
 #define DEFAULT_AUTO_ALT_REF_FRAMES FALSE
 #define DEFAULT_LAG_IN_FRAMES 0
+#define DEFAULT_SHARPNESS 0
+#define DEFAULT_NOISE_SENSITIVITY 0
+#define DEFAULT_TUNE VP8_TUNE_PSNR
+#define DEFAULT_STATIC_THRESHOLD 0
+#define DEFAULT_DROP_FRAME 0
+#define DEFAULT_RESIZE_ALLOWED TRUE
+#define DEFAULT_TOKEN_PARTS 0
+
 
 enum
 {
@@ -118,7 +126,14 @@ enum
   PROP_MULTIPASS_MODE,
   PROP_MULTIPASS_CACHE_FILE,
   PROP_AUTO_ALT_REF_FRAMES,
-  PROP_LAG_IN_FRAMES
+  PROP_LAG_IN_FRAMES,
+  PROP_SHARPNESS,
+  PROP_NOISE_SENSITIVITY,
+  PROP_TUNE,
+  PROP_STATIC_THRESHOLD,
+  PROP_DROP_FRAME,
+  PROP_RESIZE_ALLOWED,
+  PROP_TOKEN_PARTS
 };
 
 #define GST_VP8_ENC_MODE_TYPE (gst_vp8_enc_mode_get_type())
@@ -159,6 +174,28 @@ gst_vp8_enc_multipass_mode_get_type (void)
     GType _id;
 
     _id = g_enum_register_static ("GstVP8EncMultipassMode", values);
+
+    g_once_init_leave ((gsize *) & id, _id);
+  }
+
+  return id;
+}
+
+#define GST_VP8_ENC_TUNE_TYPE (gst_vp8_enc_tune_get_type())
+static GType
+gst_vp8_enc_tune_get_type (void)
+{
+  static const GEnumValue values[] = {
+    {VP8_TUNE_PSNR, "Tune for PSNR", "psnr"},
+    {VP8_TUNE_SSIM, "Tune for SSIM", "ssim"},
+    {0, NULL, NULL}
+  };
+  static volatile GType id = 0;
+
+  if (g_once_init_enter ((gsize *) & id)) {
+    GType _id;
+
+    _id = g_enum_register_static ("GstVP8EncTune", values);
 
     g_once_init_leave ((gsize *) & id, _id);
   }
@@ -355,6 +392,48 @@ gst_vp8_enc_class_init (GstVP8EncClass * klass)
           0, 64, DEFAULT_LAG_IN_FRAMES,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+  g_object_class_install_property (gobject_class, PROP_SHARPNESS,
+      g_param_spec_int ("sharpness", "Sharpness",
+          "Sharpness",
+          0, 7, DEFAULT_SHARPNESS,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  g_object_class_install_property (gobject_class, PROP_NOISE_SENSITIVITY,
+      g_param_spec_int ("noise-sensitivity", "Noise Sensitivity",
+          "Noise Sensitivity",
+          0, 6, DEFAULT_NOISE_SENSITIVITY,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  g_object_class_install_property (gobject_class, PROP_TUNE,
+      g_param_spec_enum ("tune", "Tune",
+          "Tune",
+          GST_VP8_ENC_TUNE_TYPE, DEFAULT_TUNE,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  g_object_class_install_property (gobject_class, PROP_STATIC_THRESHOLD,
+      g_param_spec_int ("static-threshold", "Static Threshold",
+          "Static Threshold",
+          0, 1000, DEFAULT_STATIC_THRESHOLD,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  g_object_class_install_property (gobject_class, PROP_DROP_FRAME,
+      g_param_spec_int ("drop-frame", "Drop Frame",
+          "Drop Frame",
+          0, 100, DEFAULT_DROP_FRAME,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  g_object_class_install_property (gobject_class, PROP_RESIZE_ALLOWED,
+      g_param_spec_boolean ("resize-allowed", "Resize Allowed",
+          "Resize Allowed",
+          DEFAULT_RESIZE_ALLOWED,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  g_object_class_install_property (gobject_class, PROP_TOKEN_PARTS,
+      g_param_spec_int ("token-parts", "Token Parts",
+          "Token Parts",
+          0, 3, DEFAULT_TOKEN_PARTS,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
   GST_DEBUG_CATEGORY_INIT (gst_vp8enc_debug, "vp8enc", 0, "VP8 Encoder");
 }
 
@@ -458,6 +537,27 @@ gst_vp8_enc_set_property (GObject * object, guint prop_id,
     case PROP_LAG_IN_FRAMES:
       gst_vp8_enc->lag_in_frames = g_value_get_uint (value);
       break;
+    case PROP_SHARPNESS:
+      gst_vp8_enc->sharpness = g_value_get_int (value);
+      break;
+    case PROP_NOISE_SENSITIVITY:
+      gst_vp8_enc->noise_sensitivity = g_value_get_int (value);
+      break;
+    case PROP_TUNE:
+      gst_vp8_enc->tuning = g_value_get_enum (value);
+      break;
+    case PROP_STATIC_THRESHOLD:
+      gst_vp8_enc->static_threshold = g_value_get_int (value);
+      break;
+    case PROP_DROP_FRAME:
+      gst_vp8_enc->drop_frame = g_value_get_boolean (value);
+      break;
+    case PROP_RESIZE_ALLOWED:
+      gst_vp8_enc->resize_allowed = g_value_get_boolean (value);
+      break;
+    case PROP_TOKEN_PARTS:
+      gst_vp8_enc->partitions = g_value_get_int (value);
+      break;
     default:
       break;
   }
@@ -520,6 +620,27 @@ gst_vp8_enc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_LAG_IN_FRAMES:
       g_value_set_uint (value, gst_vp8_enc->lag_in_frames);
+      break;
+    case PROP_SHARPNESS:
+      g_value_set_int (value, gst_vp8_enc->sharpness);
+      break;
+    case PROP_NOISE_SENSITIVITY:
+      g_value_set_int (value, gst_vp8_enc->noise_sensitivity);
+      break;
+    case PROP_TUNE:
+      g_value_set_enum (value, gst_vp8_enc->tuning);
+      break;
+    case PROP_STATIC_THRESHOLD:
+      g_value_set_int (value, gst_vp8_enc->static_threshold);
+      break;
+    case PROP_DROP_FRAME:
+      g_value_set_boolean (value, gst_vp8_enc->drop_frame);
+      break;
+    case PROP_RESIZE_ALLOWED:
+      g_value_set_boolean (value, gst_vp8_enc->resize_allowed);
+      break;
+    case PROP_TOKEN_PARTS:
+      g_value_set_int (value, gst_vp8_enc->partitions);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -616,6 +737,8 @@ gst_vp8_enc_set_format (GstBaseVideoEncoder * base_video_encoder,
     cfg.rc_max_quantizer = (gint) (63 - encoder->quality * 6.2);
     cfg.rc_target_bitrate = encoder->bitrate;
   }
+  cfg.rc_dropframe_thresh = encoder->drop_frame;
+  cfg.rc_resize_allowed = encoder->resize_allowed;
 
   cfg.kf_mode = VPX_KF_AUTO;
   cfg.kf_min_dist = 0;
@@ -660,6 +783,25 @@ gst_vp8_enc_set_format (GstBaseVideoEncoder * base_video_encoder,
     GST_WARNING_OBJECT (encoder, "Failed to set VP8E_SET_CPUUSED to 0: %s",
         gst_vpx_error_name (status));
   }
+
+  status = vpx_codec_control (&encoder->encoder, VP8E_SET_NOISE_SENSITIVITY,
+      encoder->noise_sensitivity);
+  status = vpx_codec_control (&encoder->encoder, VP8E_SET_SHARPNESS,
+      encoder->sharpness);
+  status = vpx_codec_control (&encoder->encoder, VP8E_SET_STATIC_THRESHOLD,
+      encoder->static_threshold);
+  status = vpx_codec_control (&encoder->encoder, VP8E_SET_TOKEN_PARTITIONS,
+      encoder->partitions);
+#if 0
+  status = vpx_codec_control (&encoder->encoder, VP8E_SET_ARNR_MAXFRAMES,
+      encoder->arnr_maxframes);
+  status = vpx_codec_control (&encoder->encoder, VP8E_SET_ARNR_STRENGTH,
+      encoder->arnr_strength);
+  status = vpx_codec_control (&encoder->encoder, VP8E_SET_ARNR_TYPE,
+      encoder->arnr_type);
+#endif
+  status = vpx_codec_control (&encoder->encoder, VP8E_SET_TUNING,
+      encoder->tuning);
 
   status =
       vpx_codec_control (&encoder->encoder, VP8E_SET_ENABLEAUTOALTREF,
