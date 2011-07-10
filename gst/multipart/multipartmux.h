@@ -47,6 +47,7 @@ typedef struct
   GstBuffer *buffer;            /* the queued buffer for this pad */
   GstClockTime timestamp;       /* its timestamp, converted to running_time so that we can
                                    correctly sort over multiple segments. */
+  GstPad *pad;
 }
 GstMultipartPadData;
 
