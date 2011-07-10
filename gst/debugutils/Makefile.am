@@ -1,7 +1,7 @@
 if GST_HAVE_MMAP
-EFENCE_PLUGIN=libgstefence.la
-else
 EFENCE_PLUGIN=
+else
+EFENCE_PLUGIN=libgstefence.la
 endif
 
 plugin_LTLIBRARIES = $(EFENCE_PLUGIN) libgstdebug.la libgstnavigationtest.la 
@@ -35,7 +35,6 @@ libgstnavigationtest_la_LIBTOOLFLAGS = --tag=disable-static
 libgstdebug_la_SOURCES = \
 	gstdebug.c \
 	breakmydata.c \
-	gstcapsdebug.c \
 	gstcapssetter.c \
 	gstnavseek.c \
 	gstpushfilesrc.c \
@@ -45,6 +44,8 @@ libgstdebug_la_SOURCES = \
 	tests.c \
 	cpureport.c \
 	testplugin.c
+
+#	gstcapsdebug.c
 
 libgstdebug_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS)
 libgstdebug_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS)

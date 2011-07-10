@@ -247,8 +247,7 @@ gst_progress_report_do_query (GstProgressReport * filter, GstFormat format,
     GstBaseTransform *base = GST_BASE_TRANSFORM (filter);
 
     GST_LOG_OBJECT (filter, "using buffer metadata");
-    if (format == GST_FORMAT_TIME && base->have_newsegment &&
-        base->segment.format == GST_FORMAT_TIME) {
+    if (format == GST_FORMAT_TIME && base->segment.format == GST_FORMAT_TIME) {
       cur = gst_segment_to_stream_time (&base->segment, format,
           GST_BUFFER_TIMESTAMP (buf));
       total = base->segment.duration;
@@ -276,17 +275,20 @@ gst_progress_report_do_query (GstProgressReport * filter, GstFormat format,
       GstCaps *caps;
 
       format_name = "bogounits";
-      caps = GST_PAD_CAPS (GST_BASE_TRANSFORM (filter)->sinkpad);
-      if (caps && gst_caps_is_fixed (caps) && !gst_caps_is_any (caps)) {
-        GstStructure *s = gst_caps_get_structure (caps, 0);
-        const gchar *mime_type = gst_structure_get_name (s);
+      caps = gst_pad_get_current_caps (GST_BASE_TRANSFORM (filter)->sinkpad);
+      if (caps) {
+        if (gst_caps_is_fixed (caps) && !gst_caps_is_any (caps)) {
+          GstStructure *s = gst_caps_get_structure (caps, 0);
+          const gchar *mime_type = gst_structure_get_name (s);
 
-        if (g_str_has_prefix (mime_type, "video/") ||
-            g_str_has_prefix (mime_type, "image/")) {
-          format_name = "frames";
-        } else if (g_str_has_prefix (mime_type, "audio/")) {
-          format_name = "samples";
+          if (g_str_has_prefix (mime_type, "video/") ||
+              g_str_has_prefix (mime_type, "image/")) {
+            format_name = "frames";
+          } else if (g_str_has_prefix (mime_type, "audio/")) {
+            format_name = "samples";
+          }
         }
+        gst_caps_unref (caps);
       }
       break;
     }

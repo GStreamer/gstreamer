@@ -97,10 +97,10 @@ GST_STATIC_PAD_TEMPLATE (GST_BASE_TRANSFORM_SINK_NAME,
 
 
 static gboolean gst_caps_setter_transform_size (GstBaseTransform * trans,
-    GstPadDirection direction, GstCaps * caps, guint size,
-    GstCaps * othercaps, guint * othersize);
+    GstPadDirection direction, GstCaps * caps, gsize size,
+    GstCaps * othercaps, gsize * othersize);
 static GstCaps *gst_caps_setter_transform_caps (GstBaseTransform * trans,
-    GstPadDirection direction, GstCaps * caps);
+    GstPadDirection direction, GstCaps * caps, GstCaps * cfilter);
 static GstFlowReturn gst_caps_setter_transform_ip (GstBaseTransform * btrans,
     GstBuffer * in);
 
@@ -179,8 +179,8 @@ gst_caps_setter_finalize (GObject * object)
 
 static gboolean
 gst_caps_setter_transform_size (GstBaseTransform * trans,
-    GstPadDirection direction, GstCaps * caps, guint size,
-    GstCaps * othercaps, guint * othersize)
+    GstPadDirection direction, GstCaps * caps, gsize size,
+    GstCaps * othercaps, gsize * othersize)
 {
   *othersize = size;
 
@@ -189,7 +189,7 @@ gst_caps_setter_transform_size (GstBaseTransform * trans,
 
 static GstCaps *
 gst_caps_setter_transform_caps (GstBaseTransform * trans,
-    GstPadDirection direction, GstCaps * caps)
+    GstPadDirection direction, GstCaps * caps, GstCaps * cfilter)
 {
   GstCapsSetter *filter = GST_CAPS_SETTER (trans);
   GstCaps *ret, *filter_caps;

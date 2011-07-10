@@ -102,8 +102,7 @@ gst_meta_fenced_get_info (void)
         sizeof (GstMetaFenced),
         (GstMetaInitFunction) NULL,
         (GstMetaFreeFunction) NULL,
-        (GstMetaTransformFunction) NULL,
-        (GstMetaSerializeFunction) NULL, (GstMetaDeserializeFunction) NULL);
+        (GstMetaCopyFunction) NULL, (GstMetaTransformFunction) NULL);
   }
   return meta_fenced_info;
 }

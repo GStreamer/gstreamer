@@ -24,7 +24,7 @@
 #include <gst/gst.h>
 
 GType gst_break_my_data_get_type (void);
-GType gst_caps_debug_get_type (void);
+//GType gst_caps_debug_get_type (void);
 GType gst_caps_setter_get_type (void);
 GType gst_rnd_buffer_size_get_type (void);
 GType gst_navseek_get_type (void);
@@ -57,8 +57,10 @@ plugin_init (GstPlugin * plugin)
           gst_tag_inject_get_type ())
       || !gst_element_register (plugin, "testsink", GST_RANK_NONE,
           gst_test_get_type ())
+#if 0
       || !gst_element_register (plugin, "capsdebug", GST_RANK_NONE,
           gst_caps_debug_get_type ())
+#endif
       || !gst_element_register (plugin, "cpureport", GST_RANK_NONE,
           gst_cpu_report_get_type ()))
 

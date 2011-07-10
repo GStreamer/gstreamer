@@ -217,10 +217,28 @@ gst_rnd_buffer_size_get_property (GObject * object, guint prop_id,
 static gboolean
 gst_rnd_buffer_size_activate (GstPad * pad)
 {
-  if (gst_pad_check_pull_range (pad)) {
-    return gst_pad_activate_pull (pad, TRUE);
-  } else {
-    GST_INFO_OBJECT (pad, "push mode not supported");
+  GstQuery *query;
+  gboolean pull_mode;
+
+  query = gst_query_new_scheduling ();
+
+  if (!gst_pad_peer_query (pad, query)) {
+    gst_query_unref (query);
+    goto no_pull;
+  }
+
+  gst_query_parse_scheduling (query, &pull_mode, NULL, NULL, NULL, NULL, NULL);
+
+  if (!pull_mode)
+    goto no_pull;
+
+  GST_DEBUG_OBJECT (pad, "activating pull");
+  return gst_pad_activate_pull (pad, TRUE);
+
+  /* ERRORS */
+no_pull:
+  {
+    GST_DEBUG_OBJECT (pad, "pull mode not supported");
     return FALSE;
   }
 }
@@ -247,7 +265,7 @@ gst_rnd_buffer_size_loop (GstRndBufferSize * self)
 {
   GstBuffer *buf = NULL;
   GstFlowReturn ret;
-  guint num_bytes;
+  guint num_bytes, size;
 
   if (G_UNLIKELY (self->min > self->max))
     goto bogus_minmax;
@@ -266,11 +284,13 @@ gst_rnd_buffer_size_loop (GstRndBufferSize * self)
   if (ret != GST_FLOW_OK)
     goto pull_failed;
 
-  if (GST_BUFFER_SIZE (buf) < num_bytes) {
-    GST_WARNING_OBJECT (self, "short buffer: %u bytes", GST_BUFFER_SIZE (buf));
+  size = gst_buffer_get_size (buf);
+
+  if (size < num_bytes) {
+    GST_WARNING_OBJECT (self, "short buffer: %u bytes", size);
   }
 
-  self->offset += GST_BUFFER_SIZE (buf);
+  self->offset += size;
 
   ret = gst_pad_push (self->srcpad, buf);
 

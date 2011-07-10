@@ -102,9 +102,20 @@ gst_push_file_src_class_init (GstPushFileSrcClass * g_class)
 }
 
 static gboolean
-gst_push_file_src_ghostpad_checkgetrange (GstPad * pad)
+gst_push_file_src_ghostpad_query (GstPad * pad, GstQuery * query)
 {
-  return FALSE;
+  gboolean res;
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_SCHEDULING:
+      gst_query_set_scheduling (query, FALSE, TRUE, FALSE, 1, -1, 1);
+      res = TRUE;
+      break;
+    default:
+      res = gst_proxy_pad_query_default (pad, query);
+      break;
+  }
+  return res;
 }
 
 static void
@@ -120,8 +131,8 @@ gst_push_file_src_init (GstPushFileSrc * src)
     src->srcpad = gst_ghost_pad_new ("src", pad);
     /* FIXME^H^HCORE: try pushfile:///foo/bar.ext ! typefind ! fakesink without
      * this and watch core bugginess (some pad stays in flushing state) */
-    gst_pad_set_checkgetrange_function (src->srcpad,
-        GST_DEBUG_FUNCPTR (gst_push_file_src_ghostpad_checkgetrange));
+    gst_pad_set_query_function (src->srcpad,
+        GST_DEBUG_FUNCPTR (gst_push_file_src_ghostpad_query));
     gst_element_add_pad (GST_ELEMENT (src), src->srcpad);
     gst_object_unref (pad);
   }
@@ -130,13 +141,13 @@ gst_push_file_src_init (GstPushFileSrc * src)
 /*** GSTURIHANDLER INTERFACE *************************************************/
 
 static GstURIType
-gst_push_file_src_uri_get_type (void)
+gst_push_file_src_uri_get_type (GType type)
 {
   return GST_URI_SRC;
 }
 
 static gchar **
-gst_push_file_src_uri_get_protocols (void)
+gst_push_file_src_uri_get_protocols (GType type)
 {
   static gchar *protocols[] = { (char *) "pushfile", NULL };
 

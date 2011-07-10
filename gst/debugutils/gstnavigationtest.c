@@ -39,14 +39,14 @@ static GstStaticPadTemplate gst_navigationtest_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("I420"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("I420"))
     );
 
 static GstStaticPadTemplate gst_navigationtest_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("I420"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("I420"))
     );
 
 static GstVideoFilterClass *parent_class = NULL;
@@ -65,8 +65,8 @@ gst_navigationtest_handle_src_event (GstPad * pad, GstEvent * event)
       const GstStructure *s = gst_event_get_structure (event);
       gint fps_n, fps_d;
 
-      fps_n = gst_value_get_fraction_numerator ((&navtest->framerate));
-      fps_d = gst_value_get_fraction_denominator ((&navtest->framerate));
+      fps_n = GST_VIDEO_INFO_FPS_N (&navtest->info);
+      fps_d = GST_VIDEO_INFO_FPS_D (&navtest->info);
 
       type = gst_structure_get_string (s, "event");
       if (g_str_equal (type, "mouse-move")) {
@@ -116,7 +116,7 @@ gst_navigationtest_handle_src_event (GstPad * pad, GstEvent * event)
 
 static gboolean
 gst_navigationtest_get_unit_size (GstBaseTransform * btrans, GstCaps * caps,
-    guint * size)
+    gsize * size)
 {
   GstNavigationtest *navtest;
   GstStructure *structure;
@@ -143,31 +143,34 @@ gst_navigationtest_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
     GstCaps * outcaps)
 {
   GstNavigationtest *navtest = GST_NAVIGATIONTEST (btrans);
-  gboolean ret = FALSE;
-  GstStructure *structure;
+  GstVideoInfo info;
 
-  structure = gst_caps_get_structure (incaps, 0);
+  if (!gst_video_info_from_caps (&info, incaps))
+    goto invalid_caps;
 
-  if (gst_structure_get_int (structure, "width", &navtest->width) &&
-      gst_structure_get_int (structure, "height", &navtest->height)) {
-    const GValue *framerate;
+  navtest->info = info;
 
-    framerate = gst_structure_get_value (structure, "framerate");
-    if (framerate && GST_VALUE_HOLDS_FRACTION (framerate)) {
-      g_value_copy (framerate, &navtest->framerate);
-      ret = TRUE;
-    }
+  return TRUE;
+
+  /* ERRORS */
+invalid_caps:
+  {
+    GST_ERROR_OBJECT (navtest, "invalid caps");
+    return FALSE;
   }
-
-  return ret;
 }
 
 static void
-draw_box_planar411 (guint8 * dest, int width, int height, int x, int y,
+draw_box_planar411 (GstVideoFrame * frame, int x, int y,
     guint8 colory, guint8 coloru, guint8 colorv)
 {
+  gint width, height;
   int x1, x2, y1, y2;
-  guint8 *d = dest;
+  guint8 *d;
+  gint stride;
+
+  width = GST_VIDEO_FRAME_WIDTH (frame);
+  height = GST_VIDEO_FRAME_HEIGHT (frame);
 
   if (x < 0 || y < 0 || x >= width || y >= height)
     return;
@@ -177,27 +180,34 @@ draw_box_planar411 (guint8 * dest, int width, int height, int x, int y,
   y1 = MAX (y - 5, 0);
   y2 = MIN (y + 5, height);
 
+  d = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  stride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
+
   for (y = y1; y < y2; y++) {
     for (x = x1; x < x2; x++) {
-      ((guint8 *) d)[y * GST_VIDEO_I420_Y_ROWSTRIDE (width) + x] = colory;
+      d[y * stride + x] = colory;
     }
   }
 
-  d = dest + GST_VIDEO_I420_U_OFFSET (width, height);
+  d = GST_VIDEO_FRAME_PLANE_DATA (frame, 1);
+  stride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 1);
+
   x1 /= 2;
   x2 /= 2;
   y1 /= 2;
   y2 /= 2;
   for (y = y1; y < y2; y++) {
     for (x = x1; x < x2; x++) {
-      ((guint8 *) d)[y * GST_VIDEO_I420_U_ROWSTRIDE (width) + x] = coloru;
+      d[y * stride + x] = coloru;
     }
   }
 
-  d = dest + GST_VIDEO_I420_V_OFFSET (width, height);
+  d = GST_VIDEO_FRAME_PLANE_DATA (frame, 2);
+  stride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 2);
+
   for (y = y1; y < y2; y++) {
     for (x = x1; x < x2; x++) {
-      ((guint8 *) d)[y * GST_VIDEO_I420_V_ROWSTRIDE (width) + x] = colorv;
+      d[y * stride + x] = colorv;
     }
   }
 }
@@ -208,31 +218,48 @@ gst_navigationtest_transform (GstBaseTransform * trans, GstBuffer * in,
 {
   GstNavigationtest *navtest = GST_NAVIGATIONTEST (trans);
   GSList *walk;
-  GstFlowReturn ret = GST_FLOW_OK;
+  GstVideoFrame in_frame, out_frame;
 
-  /* do something interesting here.  This simply copies the source
-   * to the destination. */
-  gst_buffer_copy_metadata (out, in, GST_BUFFER_COPY_TIMESTAMPS);
+  if (!gst_video_frame_map (&in_frame, &navtest->info, in, GST_MAP_READ))
+    goto invalid_in;
 
-  memcpy (GST_BUFFER_DATA (out), GST_BUFFER_DATA (in),
-      MIN (GST_BUFFER_SIZE (in), GST_BUFFER_SIZE (out)));
+  if (!gst_video_frame_map (&out_frame, &navtest->info, out, GST_MAP_WRITE))
+    goto invalid_out;
+
+  gst_video_frame_copy (&out_frame, &in_frame);
 
   walk = navtest->clicks;
   while (walk) {
     ButtonClick *click = walk->data;
 
     walk = g_slist_next (walk);
-    draw_box_planar411 (GST_BUFFER_DATA (out), navtest->width, navtest->height,
+    draw_box_planar411 (&out_frame,
         rint (click->x), rint (click->y), click->cy, click->cu, click->cv);
     if (--click->images_left < 1) {
       navtest->clicks = g_slist_remove (navtest->clicks, click);
       g_free (click);
     }
   }
-  draw_box_planar411 (GST_BUFFER_DATA (out), navtest->width, navtest->height,
+  draw_box_planar411 (&out_frame,
       rint (navtest->x), rint (navtest->y), 0, 128, 128);
 
-  return ret;
+  gst_video_frame_unmap (&out_frame);
+  gst_video_frame_unmap (&in_frame);
+
+  return GST_FLOW_OK;
+
+  /* ERRORS */
+invalid_in:
+  {
+    GST_ERROR_OBJECT (navtest, "received invalid input buffer");
+    return GST_FLOW_OK;
+  }
+invalid_out:
+  {
+    GST_ERROR_OBJECT (navtest, "received invalid output buffer");
+    gst_video_frame_unmap (&in_frame);
+    return GST_FLOW_OK;
+  }
 }
 
 static GstStateChangeReturn
@@ -308,7 +335,6 @@ gst_navigationtest_init (GTypeInstance * instance, gpointer g_class)
 
   navtest->x = -1;
   navtest->y = -1;
-  g_value_init (&navtest->framerate, GST_TYPE_FRACTION);
 }
 
 GType
