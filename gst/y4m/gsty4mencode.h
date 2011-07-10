@@ -48,11 +48,9 @@ struct _GstY4mEncode {
   GstPad *sinkpad,*srcpad;
 
   /* caps information */
-  gint width, height;
-  gint fps_num, fps_den;
-  gint par_num, par_den;
-  gboolean interlaced;
-  gboolean top_field_first;
+  GstVideoInfo info;
+  gboolean negotiated;
+
   const gchar *colorspace;
   /* state information */
   gboolean header;
