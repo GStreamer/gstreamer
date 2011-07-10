@@ -316,6 +316,10 @@ struct _GstVideoInfo {
 #define GST_VIDEO_INFO_WIDTH(i)          ((i)->width)
 #define GST_VIDEO_INFO_HEIGHT(i)         ((i)->height)
 #define GST_VIDEO_INFO_SIZE(i)           ((i)->size)
+#define GST_VIDEO_INFO_PAR_N(i)          ((i)->par_n)
+#define GST_VIDEO_INFO_PAR_D(i)          ((i)->par_d)
+#define GST_VIDEO_INFO_FPS_N(i)          ((i)->fps_n)
+#define GST_VIDEO_INFO_FPS_D(i)          ((i)->fps_d)
 
 /* dealing with planes */
 #define GST_VIDEO_INFO_N_PLANES(i)       (GST_VIDEO_FORMAT_INFO_N_PLANES((i)->finfo))
