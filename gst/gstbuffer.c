@@ -307,7 +307,7 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
     /* copy and make regions of the memory */
     for (i = 0; i < len && left > 0; i++) {
       mem = GST_BUFFER_MEM_PTR (src, i);
-      bsize = gst_memory_get_sizes (mem, NULL);
+      bsize = gst_memory_get_sizes (mem, NULL, NULL);
 
       if (bsize <= skip) {
         /* don't copy buffer */
@@ -743,43 +743,71 @@ gst_buffer_remove_memory_range (GstBuffer * buffer, guint idx, guint length)
 }
 
 /**
- * gst_buffer_get_size:
+ * gst_buffer_get_sizes:
  * @buffer: a #GstBuffer.
+ * @offset: a pointer to the offset
+ * @maxsize: a pointer to the maxsize
  *
  * Get the total size of all memory blocks in @buffer.
+ *
+ * When not %NULL, @offset will contain the offset of the data in the first
+ * memory block in @buffer and @maxsize will contain the sum of the size
+ * and @offset and the amount of extra padding on the last memory block.
+ * @offset and @maxsize can be used to resize the buffer with
+ * gst_buffer_resize().
  *
  * Returns: the total size of the memory in @buffer.
  */
 gsize
-gst_buffer_get_size (GstBuffer * buffer)
+gst_buffer_get_sizes (GstBuffer * buffer, gsize * offset, gsize * maxsize)
 {
-  guint i, size, len;
+  guint i, len;
+  gsize extra, size, offs;
 
   g_return_val_if_fail (GST_IS_BUFFER (buffer), 0);
 
   len = GST_BUFFER_MEM_LEN (buffer);
 
-  size = 0;
+  size = offs = extra = 0;
   for (i = 0; i < len; i++) {
-    size += gst_memory_get_sizes (GST_BUFFER_MEM_PTR (buffer, i), NULL);
+    gsize s, o, ms;
+
+    s = gst_memory_get_sizes (GST_BUFFER_MEM_PTR (buffer, i), &o, &ms);
+
+    /* add sizes */
+    size += s;
+
+    /* keep offset of first memory block */
+    if (i == 0)
+      offs = o;
+    /* this is the amount of extra bytes in this block, we only keep this for
+     * the last block */
+    else if (i + 1 == len)
+      extra = ms - (o + s);
   }
+
+  if (offset)
+    *offset = offs;
+  if (maxsize)
+    *maxsize = offs + size + extra;
+
   return size;
 }
 
 /**
  * gst_buffer_resize:
  * @buffer: a #GstBuffer.
- * @offset: the new offset
+ * @offset: the offset adjustement
  * @size: the new size
  *
  * Set the total size of the buffer
  */
 void
-gst_buffer_resize (GstBuffer * buffer, gsize offset, gsize size)
+gst_buffer_resize (GstBuffer * buffer, gssize offset, gsize size)
 {
   guint len;
   guint si, di;
-  gsize bsize, bufsize;
+  gsize bsize, bufsize, bufoffs, bufmax;
   GstMemory *mem;
 
   GST_CAT_LOG (GST_CAT_BUFFER, "trim %p %" G_GSIZE_FORMAT "-%" G_GSIZE_FORMAT,
@@ -787,8 +815,10 @@ gst_buffer_resize (GstBuffer * buffer, gsize offset, gsize size)
 
   g_return_if_fail (gst_buffer_is_writable (buffer));
 
-  bufsize = gst_buffer_get_size (buffer);
+  /* FIXME, handle negative offsets */
+  bufsize = gst_buffer_get_sizes (buffer, &bufoffs, &bufmax);
   g_return_if_fail (bufsize >= offset);
+
   if (size == -1)
     size = bufsize - offset;
   g_return_if_fail (bufsize >= offset + size);
@@ -798,27 +828,27 @@ gst_buffer_resize (GstBuffer * buffer, gsize offset, gsize size)
   /* copy and trim */
   for (di = si = 0; si < len && size > 0; si++) {
     mem = GST_BUFFER_MEM_PTR (buffer, si);
-    bsize = gst_memory_get_sizes (mem, NULL);
+    bsize = gst_memory_get_sizes (mem, NULL, NULL);
 
     if (bsize <= offset) {
       /* remove buffer */
       gst_memory_unref (mem);
       offset -= bsize;
     } else {
-      gsize tocopy;
+      gsize left;
 
-      tocopy = MIN (bsize - offset, size);
-      if (tocopy < bsize) {
+      left = MIN (bsize - offset, size);
+      if (left < bsize) {
         /* we need to clip something */
         if (GST_MEMORY_IS_WRITABLE (mem)) {
-          gst_memory_resize (mem, offset, tocopy);
+          gst_memory_resize (mem, offset, left);
         } else {
           GstMemory *tmp;
 
           if (mem->flags & GST_MEMORY_FLAG_NO_SHARE)
-            tmp = gst_memory_copy (mem, offset, tocopy);
+            tmp = gst_memory_copy (mem, offset, left);
           else
-            tmp = gst_memory_share (mem, offset, tocopy);
+            tmp = gst_memory_share (mem, offset, left);
 
           gst_memory_unref (mem);
           mem = tmp;
@@ -826,7 +856,7 @@ gst_buffer_resize (GstBuffer * buffer, gsize offset, gsize size)
         offset = 0;
       }
       GST_BUFFER_MEM_PTR (buffer, di++) = mem;
-      size -= tocopy;
+      size -= left;
     }
   }
   GST_BUFFER_MEM_LEN (buffer) = di;

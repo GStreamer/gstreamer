@@ -102,7 +102,7 @@ EXPORTS
 	gst_buffer_fill
 	gst_buffer_flag_get_type
 	gst_buffer_get_meta
-	gst_buffer_get_size
+	gst_buffer_get_sizes
 	gst_buffer_is_span_fast
 	gst_buffer_iterate_meta
 	gst_buffer_join

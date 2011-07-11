@@ -176,8 +176,10 @@ _default_mem_alloc (const GstAllocator * allocator, gsize maxsize, gsize align)
 }
 
 static gsize
-_default_mem_get_sizes (GstMemoryDefault * mem, gsize * maxsize)
+_default_mem_get_sizes (GstMemoryDefault * mem, gsize * offset, gsize * maxsize)
 {
+  if (offset)
+    *offset = mem->offset;
   if (maxsize)
     *maxsize = mem->maxsize;
 
@@ -185,7 +187,7 @@ _default_mem_get_sizes (GstMemoryDefault * mem, gsize * maxsize)
 }
 
 static void
-_default_mem_resize (GstMemoryDefault * mem, gsize offset, gsize size)
+_default_mem_resize (GstMemoryDefault * mem, gssize offset, gsize size)
 {
   g_return_if_fail (size + mem->offset + offset <= mem->maxsize);
 
@@ -399,18 +401,19 @@ gst_memory_unref (GstMemory * mem)
 /**
  * gst_memory_get_sizes:
  * @mem: a #GstMemory
+ * @offset: pointer to offset
  * @maxsize: pointer to maxsize
  *
- * Get the current @size and @maxsize of @mem.
+ * Get the current @size, @offset and @maxsize of @mem.
  *
  * Returns: the current sizes of @mem
  */
 gsize
-gst_memory_get_sizes (GstMemory * mem, gsize * maxsize)
+gst_memory_get_sizes (GstMemory * mem, gsize * offset, gsize * maxsize)
 {
   g_return_val_if_fail (mem != NULL, 0);
 
-  return mem->allocator->info.get_sizes (mem, maxsize);
+  return mem->allocator->info.get_sizes (mem, offset, maxsize);
 }
 
 /**
@@ -423,7 +426,7 @@ gst_memory_get_sizes (GstMemory * mem, gsize * maxsize)
  * less than the maxsize of @mem.
  */
 void
-gst_memory_resize (GstMemory * mem, gsize offset, gsize size)
+gst_memory_resize (GstMemory * mem, gssize offset, gsize size)
 {
   g_return_if_fail (mem != NULL);
   g_return_if_fail (GST_MEMORY_IS_WRITABLE (mem));

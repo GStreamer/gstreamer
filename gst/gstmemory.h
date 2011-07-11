@@ -127,27 +127,28 @@ typedef GstMemory *  (*GstMemoryAllocFunction)  (const GstAllocator *allocator,
 /**
  * GstMemoryGetSizesFunction:
  * @mem: a #GstMemory
+ * @offset: result pointer for offset
  * @maxsize: result pointer for maxsize
  *
- * Retrieve the size and maxsize of @mem.
+ * Retrieve the size, offset and maxsize of @mem.
  *
- * Returns: the size of @mem and the maximum allocated size in @maxsize.
+ * Returns: the size of @mem, the offset and the maximum allocated size in @maxsize.
  */
-typedef gsize       (*GstMemoryGetSizesFunction)  (GstMemory *mem, gsize *maxsize);
+typedef gsize       (*GstMemoryGetSizesFunction)  (GstMemory *mem, gsize *offset, gsize *maxsize);
 
 /**
  * GstMemoryResizeFunction:
  * @mem: a #GstMemory
- * @offset: the new offset
+ * @offset: the offset adjustement
  * @size: the new size
  *
- * Adjust the size and offset of @mem. @offset bytes will be skipped from the
+ * Adjust the size and offset of @mem. @offset bytes will be adjusted from the
  * current first byte in @mem as retrieved with gst_memory_map() and the new
  * size will be set to @size.
  *
  * @size can be set to -1, which will only adjust the offset.
  */
-typedef void        (*GstMemoryResizeFunction)    (GstMemory *mem, gsize offset, gsize size);
+typedef void        (*GstMemoryResizeFunction)    (GstMemory *mem, gssize offset, gsize size);
 
 /**
  * GstMemoryMapFunction:
@@ -283,8 +284,8 @@ GstMemory * gst_memory_ref        (GstMemory *mem);
 void        gst_memory_unref      (GstMemory *mem);
 
 /* getting/setting memory properties */
-gsize       gst_memory_get_sizes  (GstMemory *mem, gsize *maxsize);
-void        gst_memory_resize     (GstMemory *mem, gsize offset, gsize size);
+gsize       gst_memory_get_sizes  (GstMemory *mem, gsize *offset, gsize *maxsize);
+void        gst_memory_resize     (GstMemory *mem, gssize offset, gsize size);
 
 /* retrieving data */
 gpointer    gst_memory_map        (GstMemory *mem, gsize *size, gsize *maxsize,

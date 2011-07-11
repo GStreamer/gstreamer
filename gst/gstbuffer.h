@@ -254,9 +254,16 @@ gint        gst_buffer_memcmp              (GstBuffer *buffer, gsize offset,
 void        gst_buffer_memset              (GstBuffer *buffer, gsize offset,
                                             guint8 val, gsize size);
 
-gsize       gst_buffer_get_size            (GstBuffer *buffer);
-void        gst_buffer_resize              (GstBuffer *buffer, gsize offset, gsize size);
+gsize       gst_buffer_get_sizes           (GstBuffer *buffer, gsize *offset, gsize *maxsize);
+void        gst_buffer_resize              (GstBuffer *buffer, gssize offset, gsize size);
 
+/**
+ * gst_buffer_get_size:
+ * @b: a #GstBuffer.
+ *
+ * Get the size of @b.
+ */
+#define     gst_buffer_get_size(b)         gst_buffer_get_sizes ((b), NULL, NULL)
 /**
  * gst_buffer_set_size:
  * @b: a #GstBuffer.
