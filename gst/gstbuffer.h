@@ -227,6 +227,8 @@ struct _GstBuffer {
 /* allocation */
 GstBuffer * gst_buffer_new                 (void);
 GstBuffer * gst_buffer_new_allocate        (const GstAllocator * allocator, gsize maxsize, gsize align);
+GstBuffer * gst_buffer_new_wrapped_full    (gpointer data, GFreeFunc free_func, gsize offset, gsize size);
+GstBuffer * gst_buffer_new_wrapped         (gpointer data, gsize size);
 
 /* memory blocks */
 guint       gst_buffer_n_memory            (GstBuffer *buffer);

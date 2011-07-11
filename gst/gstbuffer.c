@@ -565,6 +565,54 @@ no_memory:
 }
 
 /**
+ * gst_buffer_new_wrapped_full:
+ * @data: data to wrap
+ * @free_func: function to free @data
+ * @offset: offset in @data of valid data
+ * @size: size of valid data in @data starting at @offset
+ *
+ * Creates a new buffer that wraps the given @data.  Valid data is set
+ * to start at @offset and up to @size.  If no @free_func is provided,
+ * buffer memory is marked READONLY.
+ *
+ * MT safe.
+ *
+ * Returns: (transfer full): a new #GstBuffer
+ */
+GstBuffer *
+gst_buffer_new_wrapped_full (gpointer data, GFreeFunc free_func, gsize offset,
+    gsize size)
+{
+  GstBuffer *newbuf;
+
+  g_return_val_if_fail (offset <= size, NULL);
+
+  newbuf = gst_buffer_new ();
+  gst_buffer_take_memory (newbuf, -1,
+      gst_memory_new_wrapped (free_func ? 0 : GST_MEMORY_FLAG_READONLY,
+          data, free_func, offset + size, offset, size));
+
+  return newbuf;
+}
+
+/**
+ * gst_buffer_new_wrapped:
+ * @data: data to wrap
+ * @size: allocated size of @data
+ *
+ * Creates a new buffer that wraps the given @data.
+ *
+ * MT safe.
+ *
+ * Returns: (transfer full): a new #GstBuffer
+ */
+GstBuffer *
+gst_buffer_new_wrapped (gpointer data, gsize size)
+{
+  return gst_buffer_new_wrapped_full (data, g_free, 0, size);
+}
+
+/**
  * gst_buffer_n_memory:
  * @buffer: a #GstBuffer.
  *
