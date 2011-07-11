@@ -642,7 +642,9 @@ mpegtsmux_choose_best_stream (MpegTsMux * mux)
     }
   }
   if (c_best) {
-    gst_buffer_unref (gst_collect_pads_pop (mux->collect, c_best));
+    GstBuffer *buffer;
+    if ((buffer = gst_collect_pads_pop (mux->collect, c_best)))
+      gst_buffer_unref (buffer);
   }
 
   return best;
