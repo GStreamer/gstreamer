@@ -1250,11 +1250,12 @@ gst_base_video_decoder_chain (GstPad * pad, GstBuffer * buf)
     gint64 ts, index;
 
     GST_DEBUG_OBJECT (base_video_decoder, "received DISCONT buffer");
-    gst_base_video_decoder_flush (base_video_decoder, FALSE);
 
     /* track present position */
     ts = base_video_decoder->timestamp_offset;
     index = base_video_decoder->field_index;
+
+    gst_base_video_decoder_flush (base_video_decoder, FALSE);
 
     /* buffer may claim DISCONT loudly, if it can't tell us where we are now,
      * we'll stick to where we were ...
