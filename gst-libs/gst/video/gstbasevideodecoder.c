@@ -270,7 +270,7 @@ gst_base_video_decoder_sink_setcaps (GstPad * pad, GstCaps * caps)
   GstBaseVideoDecoderClass *base_video_decoder_class;
   GstStructure *structure;
   const GValue *codec_data;
-  GstVideoState *state;
+  GstVideoState state;
   gboolean ret = TRUE;
 
   base_video_decoder = GST_BASE_VIDEO_DECODER (gst_pad_get_parent (pad));
@@ -279,41 +279,47 @@ gst_base_video_decoder_sink_setcaps (GstPad * pad, GstCaps * caps)
 
   GST_DEBUG_OBJECT (base_video_decoder, "setcaps %" GST_PTR_FORMAT, caps);
 
-  state = &GST_BASE_VIDEO_CODEC (base_video_decoder)->state;
+  memset (&state, 0, sizeof (state));
 
-  gst_buffer_replace (&state->codec_data, NULL);
-  gst_caps_replace (&state->caps, NULL);
-  memset (state, 0, sizeof (GstVideoState));
-
-  state->caps = gst_caps_ref (caps);
+  state.caps = gst_caps_ref (caps);
 
   structure = gst_caps_get_structure (caps, 0);
 
-  gst_video_format_parse_caps (caps, NULL, &state->width, &state->height);
+  gst_video_format_parse_caps (caps, NULL, &state.width, &state.height);
   /* this one fails if no framerate in caps */
-  if (!gst_video_parse_caps_framerate (caps, &state->fps_n, &state->fps_d)) {
-    state->fps_n = 0;
-    state->fps_d = 1;
+  if (!gst_video_parse_caps_framerate (caps, &state.fps_n, &state.fps_d)) {
+    state.fps_n = 0;
+    state.fps_d = 1;
   }
   /* but the p-a-r sets 1/1 instead, which is not quite informative ... */
   if (!gst_structure_has_field (structure, "pixel-aspect-ratio") ||
       !gst_video_parse_caps_pixel_aspect_ratio (caps,
-          &state->par_n, &state->par_d)) {
-    state->par_n = 0;
-    state->par_d = 1;
+          &state.par_n, &state.par_d)) {
+    state.par_n = 0;
+    state.par_d = 1;
   }
 
-  state->have_interlaced =
-      gst_video_format_parse_caps_interlaced (caps, &state->interlaced);
+  state.have_interlaced =
+      gst_video_format_parse_caps_interlaced (caps, &state.interlaced);
 
   codec_data = gst_structure_get_value (structure, "codec_data");
   if (codec_data && G_VALUE_TYPE (codec_data) == GST_TYPE_BUFFER) {
-    state->codec_data = gst_value_get_buffer (codec_data);
+    state.codec_data = GST_BUFFER (gst_value_dup_mini_object (codec_data));
   }
 
   if (base_video_decoder_class->set_format) {
-    ret = base_video_decoder_class->set_format (base_video_decoder,
-        &GST_BASE_VIDEO_CODEC (base_video_decoder)->state);
+    ret = base_video_decoder_class->set_format (base_video_decoder, &state);
+  }
+
+  if (ret) {
+    gst_buffer_replace (&GST_BASE_VIDEO_CODEC (base_video_decoder)->
+        state.codec_data, NULL);
+    gst_caps_replace (&GST_BASE_VIDEO_CODEC (base_video_decoder)->state.caps,
+        NULL);
+    GST_BASE_VIDEO_CODEC (base_video_decoder)->state = state;
+  } else {
+    gst_buffer_replace (&state.codec_data, NULL);
+    gst_caps_replace (&state.caps, NULL);
   }
 
   g_object_unref (base_video_decoder);
