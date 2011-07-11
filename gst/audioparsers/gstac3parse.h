@@ -53,6 +53,7 @@ struct _GstAc3Parse {
   /*< private >*/
   gint         sample_rate;
   gint         channels;
+  gint         blocks;
   gboolean     eac;
 };
 
