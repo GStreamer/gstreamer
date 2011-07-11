@@ -119,7 +119,7 @@ find_mem_for_offset (GstBuffer * buffer, guint * offset, GstMapFlags flags)
     gsize size;
 
     mem = gst_buffer_peek_memory (buffer, i, flags);
-    size = gst_memory_get_sizes (mem, NULL);
+    size = gst_memory_get_sizes (mem, NULL, NULL);
 
     if (*offset < size) {
       res = mem;
