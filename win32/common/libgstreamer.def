@@ -120,6 +120,8 @@ EXPORTS
 	gst_buffer_n_memory
 	gst_buffer_new
 	gst_buffer_new_allocate
+	gst_buffer_new_wrapped
+	gst_buffer_new_wrapped_full
 	gst_buffer_peek_memory
 	gst_buffer_pool_acquire_buffer
 	gst_buffer_pool_config_add_meta
