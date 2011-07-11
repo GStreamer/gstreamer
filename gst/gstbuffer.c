@@ -815,13 +815,17 @@ gst_buffer_resize (GstBuffer * buffer, gssize offset, gsize size)
 
   g_return_if_fail (gst_buffer_is_writable (buffer));
 
-  /* FIXME, handle negative offsets */
   bufsize = gst_buffer_get_sizes (buffer, &bufoffs, &bufmax);
-  g_return_if_fail (bufsize >= offset);
 
-  if (size == -1)
+  /* we can't go back further than the current offset or past the end of the
+   * buffer */
+  g_return_if_fail ((offset < 0 && bufoffs >= -offset) || (offset >= 0
+          && bufoffs + offset <= bufmax));
+  if (size == -1) {
+    g_return_if_fail (bufsize >= offset);
     size = bufsize - offset;
-  g_return_if_fail (bufsize >= offset + size);
+  }
+  g_return_if_fail (bufmax >= bufoffs + offset + size);
 
   len = GST_BUFFER_MEM_LEN (buffer);
 
