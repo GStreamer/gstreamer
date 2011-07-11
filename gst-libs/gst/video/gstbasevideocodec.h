@@ -147,7 +147,7 @@ struct _GstBaseVideoCodec
 
   guint64 system_frame_number;
 
-  GList *frames;
+  GList *frames;  /* Protected with OBJECT_LOCK */
   GstVideoState state;
   GstSegment segment;
 

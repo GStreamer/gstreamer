@@ -106,11 +106,13 @@ gst_base_video_codec_reset (GstBaseVideoCodec * base_video_codec)
 
   GST_DEBUG_OBJECT (base_video_codec, "reset");
 
+  GST_OBJECT_LOCK (base_video_codec);
   for (g = base_video_codec->frames; g; g = g_list_next (g)) {
     gst_base_video_codec_free_frame ((GstVideoFrame *) g->data);
   }
   g_list_free (base_video_codec->frames);
   base_video_codec->frames = NULL;
+  GST_OBJECT_UNLOCK (base_video_codec);
 
   base_video_codec->bytes = 0;
   base_video_codec->time = 0;

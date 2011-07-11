@@ -1359,10 +1359,14 @@ gst_base_video_decoder_finish_frame (GstBaseVideoDecoder * base_video_decoder,
   GList *l;
 
   GST_LOG_OBJECT (base_video_decoder, "finish frame");
+#ifndef GST_DISABLE_GST_DEBUG
+  GST_OBJECT_LOCK (base_video_decoder);
   GST_LOG_OBJECT (base_video_decoder, "n %d in %d out %d",
       g_list_length (GST_BASE_VIDEO_CODEC (base_video_decoder)->frames),
       gst_adapter_available (base_video_decoder->input_adapter),
       gst_adapter_available (base_video_decoder->output_adapter));
+  GST_OBJECT_UNLOCK (base_video_decoder);
+#endif
 
   GST_LOG_OBJECT (base_video_decoder,
       "finish frame sync=%d pts=%" GST_TIME_FORMAT, frame->is_sync_point,
@@ -1553,8 +1557,10 @@ gst_base_video_decoder_finish_frame (GstBaseVideoDecoder * base_video_decoder,
   }
 
 done:
+  GST_OBJECT_LOCK (base_video_decoder);
   GST_BASE_VIDEO_CODEC (base_video_decoder)->frames =
       g_list_remove (GST_BASE_VIDEO_CODEC (base_video_decoder)->frames, frame);
+  GST_OBJECT_UNLOCK (base_video_decoder);
   gst_base_video_codec_free_frame (frame);
 
   return ret;
@@ -1718,8 +1724,10 @@ gst_base_video_decoder_have_frame_2 (GstBaseVideoDecoder * base_video_decoder)
       GST_TIME_ARGS (frame->decode_timestamp));
   GST_LOG_OBJECT (base_video_decoder, "dist %d", frame->distance_from_sync);
 
+  GST_OBJECT_LOCK (base_video_decoder);
   GST_BASE_VIDEO_CODEC (base_video_decoder)->frames =
       g_list_append (GST_BASE_VIDEO_CODEC (base_video_decoder)->frames, frame);
+  GST_OBJECT_UNLOCK (base_video_decoder);
 
   frame->deadline =
       gst_segment_to_running_time (&GST_BASE_VIDEO_CODEC
@@ -1801,7 +1809,9 @@ gst_base_video_decoder_get_oldest_frame (GstBaseVideoDecoder *
 {
   GList *g;
 
+  GST_OBJECT_LOCK (base_video_decoder);
   g = g_list_first (GST_BASE_VIDEO_CODEC (base_video_decoder)->frames);
+  GST_OBJECT_UNLOCK (base_video_decoder);
 
   if (g == NULL)
     return NULL;
@@ -1820,17 +1830,21 @@ gst_base_video_decoder_get_frame (GstBaseVideoDecoder * base_video_decoder,
     int frame_number)
 {
   GList *g;
+  GstVideoFrame *frame = NULL;
 
+  GST_OBJECT_LOCK (base_video_decoder);
   for (g = g_list_first (GST_BASE_VIDEO_CODEC (base_video_decoder)->frames);
       g; g = g_list_next (g)) {
-    GstVideoFrame *frame = g->data;
+    GstVideoFrame *tmp = g->data;
 
     if (frame->system_frame_number == frame_number) {
-      return frame;
+      frame = tmp;
+      break;
     }
   }
+  GST_OBJECT_UNLOCK (base_video_decoder);
 
-  return NULL;
+  return frame;
 }
 
 /**
