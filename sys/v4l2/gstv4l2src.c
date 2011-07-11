@@ -181,8 +181,8 @@ gst_v4l2src_class_init (GstV4l2SrcClass * klass)
   gst_element_class_set_details_simple (element_class,
       "Video (video4linux2) Source", "Source/Video",
       "Reads frames from a Video4Linux2 device",
-      "Edgard Lima <edgard.lima@indt.org.br>,"
-      " Stefan Kost <ensonic@users.sf.net>");
+      "Edgard Lima <edgard.lima@indt.org.br>, "
+      "Stefan Kost <ensonic@users.sf.net>");
 
   gst_element_class_add_pad_template
       (element_class,
@@ -277,7 +277,6 @@ gst_v4l2src_set_property (GObject * object,
   }
 }
 
-
 static void
 gst_v4l2src_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec)
@@ -303,7 +302,6 @@ gst_v4l2src_get_property (GObject * object,
   }
 }
 
-
 /* this function is a bit of a last resort */
 static void
 gst_v4l2src_fixate (GstBaseSrc * basesrc, GstCaps * caps)
@@ -318,14 +316,10 @@ gst_v4l2src_fixate (GstBaseSrc * basesrc, GstCaps * caps)
 
     structure = gst_caps_get_structure (caps, i);
 
-    /* FIXME such sizes? we usually fixate to something in the 320x200
-     * range... */
-    /* We are fixating to greater possble size (limited to GST_V4L2_MAX_SIZE)
+    /* We are fixating to a resonable 320x200 resolution
        and the maximum framerate resolution for that size */
-    gst_structure_fixate_field_nearest_int (structure, "width",
-        GST_V4L2_MAX_SIZE);
-    gst_structure_fixate_field_nearest_int (structure, "height",
-        GST_V4L2_MAX_SIZE);
+    gst_structure_fixate_field_nearest_int (structure, "width", 320);
+    gst_structure_fixate_field_nearest_int (structure, "height", 200);
     gst_structure_fixate_field_nearest_fraction (structure, "framerate",
         G_MAXINT, 1);
 
@@ -394,11 +388,8 @@ gst_v4l2src_negotiate (GstBaseSrc * basesrc)
        * resolution strictly bigger then the first peer caps */
       if (gst_caps_get_size (icaps) > 1) {
         GstStructure *s = gst_caps_get_structure (peercaps, 0);
-
         int best = 0;
-
         int twidth, theight;
-
         int width = G_MAXINT, height = G_MAXINT;
 
         if (gst_structure_get_int (s, "width", &twidth)
@@ -409,7 +400,6 @@ gst_v4l2src_negotiate (GstBaseSrc * basesrc)
            */
           for (i = gst_caps_get_size (icaps) - 1; i >= 0; i--) {
             GstStructure *is = gst_caps_get_structure (icaps, i);
-
             int w, h;
 
             if (gst_structure_get_int (is, "width", &w)
@@ -493,7 +483,6 @@ gst_v4l2src_get_caps (GstBaseSrc * src, GstCaps * filter)
 
   for (walk = formats; walk; walk = walk->next) {
     struct v4l2_fmtdesc *format;
-
     GstStructure *template;
 
     format = (struct v4l2_fmtdesc *) walk->data;
@@ -868,6 +857,7 @@ gst_v4l2src_create (GstPushSrc * src, GstBuffer ** buf)
   if (v4l2src->get_frame == NULL)
     goto not_negotiated;
 
+  /* decimate, just capture and throw away frames */
   for (i = 0; i < v4l2src->decimate - 1; i++) {
     ret = v4l2src->get_frame (v4l2src, buf);
     if (ret != GST_FLOW_OK) {
@@ -918,7 +908,7 @@ gst_v4l2src_create (GstPushSrc * src, GstBuffer ** buf)
       v4l2src->ctrl_time += v4l2src->duration;
     } else {
       /* this is not very good (as it should be the next timestamp),
-       * still good enough for linear fades (as long as it is not -1) 
+       * still good enough for linear fades (as long as it is not -1)
        */
       v4l2src->ctrl_time = timestamp;
     }

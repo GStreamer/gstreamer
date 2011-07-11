@@ -34,9 +34,7 @@
 
 #include <gstv4l2bufferpool.h>
 #include "gstv4l2src.h"
-#ifdef HAVE_EXPERIMENTAL
 #include "gstv4l2sink.h"
-#endif
 #include "v4l2_calls.h"
 #include "gst/gst-i18n-plugin.h"
 
@@ -194,12 +192,11 @@ mmap_failed:
   }
 }
 
-
 /*
  * GstV4l2BufferPool:
  */
-
-static GObjectClass *buffer_pool_parent_class = NULL;
+#define gst_v4l2_buffer_pool_parent_class parent_class
+G_DEFINE_TYPE (GstV4l2BufferPool, gst_v4l2_buffer_pool, G_TYPE_OBJECT);
 
 static void
 gst_v4l2_buffer_pool_finalize (GObject * object)
@@ -220,11 +217,11 @@ gst_v4l2_buffer_pool_finalize (GObject * object)
     pool->buffers = NULL;
   }
 
-  buffer_pool_parent_class->finalize (object);
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
-gst_v4l2_buffer_pool_init (GstV4l2BufferPool * pool, gpointer g_class)
+gst_v4l2_buffer_pool_init (GstV4l2BufferPool * pool)
 {
   pool->lock = g_mutex_new ();
   pool->running = FALSE;
@@ -232,39 +229,12 @@ gst_v4l2_buffer_pool_init (GstV4l2BufferPool * pool, gpointer g_class)
 }
 
 static void
-gst_v4l2_buffer_pool_class_init (gpointer g_class, gpointer class_data)
+gst_v4l2_buffer_pool_class_init (GstV4l2BufferPoolClass * klass)
 {
-  GObjectClass *object_class = G_OBJECT_CLASS (g_class);
-
-  buffer_pool_parent_class = g_type_class_peek_parent (g_class);
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
   object_class->finalize = gst_v4l2_buffer_pool_finalize;
 }
-
-GType
-gst_v4l2_buffer_pool_get_type (void)
-{
-  static GType _gst_v4l2_buffer_pool_type;
-
-  if (G_UNLIKELY (_gst_v4l2_buffer_pool_type == 0)) {
-    static const GTypeInfo v4l2_buffer_pool_info = {
-      sizeof (GObjectClass),
-      NULL,
-      NULL,
-      gst_v4l2_buffer_pool_class_init,
-      NULL,
-      NULL,
-      sizeof (GstV4l2BufferPool),
-      0,
-      (GInstanceInitFunc) gst_v4l2_buffer_pool_init,
-      NULL
-    };
-    _gst_v4l2_buffer_pool_type = g_type_register_static (G_TYPE_OBJECT,
-        "GstV4l2BufferPool", &v4l2_buffer_pool_info, 0);
-  }
-  return _gst_v4l2_buffer_pool_type;
-}
-
 
 /* this is somewhat of a hack.. but better to keep the hack in
  * one place than copy/pasting it around..
@@ -275,17 +245,13 @@ get_v4l2_object (GstElement * v4l2elem)
   GstV4l2Object *v4l2object = NULL;
   if (GST_IS_V4L2SRC (v4l2elem)) {
     v4l2object = (GST_V4L2SRC (v4l2elem))->v4l2object;
-#ifdef HAVE_EXPERIMENTAL
   } else if (GST_IS_V4L2SINK (v4l2elem)) {
     v4l2object = (GST_V4L2SINK (v4l2elem))->v4l2object;
-#endif
   } else {
     GST_ERROR_OBJECT (v4l2elem, "unknown v4l2 element");
   }
   return v4l2object;
 }
-
-
 
 /**
  * gst_v4l2_buffer_pool_new:
@@ -315,7 +281,6 @@ gst_v4l2_buffer_pool_new (GstElement * v4l2elem, gint fd, gint num_buffers,
   pool->video_fd = v4l2_dup (fd);
   if (pool->video_fd < 0)
     goto dup_failed;
-
 
   /* first, lets request buffers, and see how many we can get: */
   GST_DEBUG_OBJECT (v4l2elem, "STREAMING, requesting %d MMAP buffers",
@@ -428,7 +393,7 @@ gst_v4l2_buffer_pool_destroy (GstV4l2BufferPool * pool)
     GstBuffer *buf;
 
     GST_V4L2_BUFFER_POOL_LOCK (pool);
-    buf = GST_BUFFER (pool->buffers[n]);
+    buf = pool->buffers[n];
     GST_V4L2_BUFFER_POOL_UNLOCK (pool);
 
     if (buf)
@@ -493,13 +458,20 @@ gst_v4l2_buffer_pool_qbuf (GstV4l2BufferPool * pool, GstBuffer * buf)
       meta->vbuffer.index);
 
   if (v4l2_ioctl (pool->video_fd, VIDIOC_QBUF, &meta->vbuffer) < 0)
-    return FALSE;
+    goto queue_failed;
 
   pool->num_live_buffers--;
   GST_DEBUG_OBJECT (pool->v4l2elem, "num_live_buffers--: %d",
       pool->num_live_buffers);
 
   return TRUE;
+
+  /* ERRORS */
+queue_failed:
+  {
+    GST_WARNING_OBJECT (pool->v4l2elem, "could not queue a buffer");
+    return FALSE;
+  }
 }
 
 /**
@@ -523,97 +495,100 @@ gst_v4l2_buffer_pool_dqbuf (GstV4l2BufferPool * pool)
   buffer.type = pool->type;
   buffer.memory = V4L2_MEMORY_MMAP;
 
-  if (v4l2_ioctl (pool->video_fd, VIDIOC_DQBUF, &buffer) >= 0) {
+  if (v4l2_ioctl (pool->video_fd, VIDIOC_DQBUF, &buffer) < 0)
+    goto error;
 
-    GST_V4L2_BUFFER_POOL_LOCK (pool);
+  GST_V4L2_BUFFER_POOL_LOCK (pool);
 
-    /* get our GstBuffer with that index from the pool, if the buffer was
-     * outstanding we have a serious problem.
-     */
-    pool_buffer = pool->buffers[buffer.index];
+  /* get our GstBuffer with that index from the pool, if the buffer was
+   * outstanding we have a serious problem.
+   */
+  pool_buffer = pool->buffers[buffer.index];
 
-    if (pool_buffer == NULL) {
-      GST_ELEMENT_ERROR (pool->v4l2elem, RESOURCE, FAILED,
-          (_("Failed trying to get video frames from device '%s'."),
-              v4l2object->videodev),
-          (_("No free buffers found in the pool at index %d."), buffer.index));
-      GST_V4L2_BUFFER_POOL_UNLOCK (pool);
-      return NULL;
+  if (pool_buffer == NULL)
+    goto no_buffers;
+
+  GST_LOG_OBJECT (pool->v4l2elem,
+      "grabbed frame %d (ix=%d), flags %08x, pool-ct=%d, buffer=%p",
+      buffer.sequence, buffer.index, buffer.flags, pool->num_live_buffers,
+      pool_buffer);
+
+  pool->num_live_buffers++;
+  GST_DEBUG_OBJECT (pool->v4l2elem, "num_live_buffers++: %d",
+      pool->num_live_buffers);
+
+  /* set top/bottom field first if v4l2_buffer has the information */
+  if (buffer.field == V4L2_FIELD_INTERLACED_TB)
+    GST_BUFFER_FLAG_SET (pool_buffer, GST_VIDEO_BUFFER_TFF);
+  if (buffer.field == V4L2_FIELD_INTERLACED_BT)
+    GST_BUFFER_FLAG_UNSET (pool_buffer, GST_VIDEO_BUFFER_TFF);
+
+  /* this can change at every frame, esp. with jpeg */
+  gst_buffer_resize (pool_buffer, 0, buffer.bytesused);
+
+  GST_V4L2_BUFFER_POOL_UNLOCK (pool);
+
+  return pool_buffer;
+
+  /* ERRORS */
+error:
+  {
+    GST_WARNING_OBJECT (pool->v4l2elem,
+        "problem grabbing frame %d (ix=%d), pool-ct=%d, buf.flags=%d",
+        buffer.sequence, buffer.index,
+        GST_MINI_OBJECT_REFCOUNT (pool), buffer.flags);
+
+    switch (errno) {
+      case EAGAIN:
+        GST_WARNING_OBJECT (pool->v4l2elem,
+            "Non-blocking I/O has been selected using O_NONBLOCK and"
+            " no buffer was in the outgoing queue. device %s",
+            v4l2object->videodev);
+        break;
+      case EINVAL:
+        GST_ELEMENT_ERROR (pool->v4l2elem, RESOURCE, FAILED,
+            (_("Failed trying to get video frames from device '%s'."),
+                v4l2object->videodev),
+            (_("The buffer type is not supported, or the index is out of bounds," " or no buffers have been allocated yet, or the userptr" " or length are invalid. device %s"), v4l2object->videodev));
+        break;
+      case ENOMEM:
+        GST_ELEMENT_ERROR (pool->v4l2elem, RESOURCE, FAILED,
+            (_("Failed trying to get video frames from device '%s'. Not enough memory."), v4l2object->videodev), (_("insufficient memory to enqueue a user pointer buffer. device %s."), v4l2object->videodev));
+        break;
+      case EIO:
+        GST_INFO_OBJECT (pool->v4l2elem,
+            "VIDIOC_DQBUF failed due to an internal error."
+            " Can also indicate temporary problems like signal loss."
+            " Note the driver might dequeue an (empty) buffer despite"
+            " returning an error, or even stop capturing."
+            " device %s", v4l2object->videodev);
+        /* have we de-queued a buffer ? */
+        if (!(buffer.flags & (V4L2_BUF_FLAG_QUEUED | V4L2_BUF_FLAG_DONE))) {
+          GST_DEBUG_OBJECT (pool->v4l2elem, "reenqueing buffer");
+          /* FIXME ... should we do something here? */
+        }
+        break;
+      case EINTR:
+        GST_WARNING_OBJECT (pool->v4l2elem,
+            "could not sync on a buffer on device %s", v4l2object->videodev);
+        break;
+      default:
+        GST_WARNING_OBJECT (pool->v4l2elem,
+            "Grabbing frame got interrupted on %s unexpectedly. %d: %s.",
+            v4l2object->videodev, errno, g_strerror (errno));
+        break;
     }
-
-    GST_LOG_OBJECT (pool->v4l2elem,
-        "grabbed frame %d (ix=%d), flags %08x, pool-ct=%d, buffer=%p",
-        buffer.sequence, buffer.index, buffer.flags, pool->num_live_buffers,
-        pool_buffer);
-
-    pool->num_live_buffers++;
-    GST_DEBUG_OBJECT (pool->v4l2elem, "num_live_buffers++: %d",
-        pool->num_live_buffers);
-
-    /* set top/bottom field first if v4l2_buffer has the information */
-    if (buffer.field == V4L2_FIELD_INTERLACED_TB)
-      GST_BUFFER_FLAG_SET (pool_buffer, GST_VIDEO_BUFFER_TFF);
-    if (buffer.field == V4L2_FIELD_INTERLACED_BT)
-      GST_BUFFER_FLAG_UNSET (pool_buffer, GST_VIDEO_BUFFER_TFF);
-
-    /* this can change at every frame, esp. with jpeg */
-    gst_buffer_resize (pool_buffer, 0, buffer.bytesused);
-
+    return NULL;
+  }
+no_buffers:
+  {
+    GST_ELEMENT_ERROR (pool->v4l2elem, RESOURCE, FAILED,
+        (_("Failed trying to get video frames from device '%s'."),
+            v4l2object->videodev),
+        (_("No free buffers found in the pool at index %d."), buffer.index));
     GST_V4L2_BUFFER_POOL_UNLOCK (pool);
-
-    return pool_buffer;
+    return NULL;
   }
-
-
-  GST_WARNING_OBJECT (pool->v4l2elem,
-      "problem grabbing frame %d (ix=%d), pool-ct=%d, buf.flags=%d",
-      buffer.sequence, buffer.index,
-      GST_MINI_OBJECT_REFCOUNT (pool), buffer.flags);
-
-  switch (errno) {
-    case EAGAIN:
-      GST_WARNING_OBJECT (pool->v4l2elem,
-          "Non-blocking I/O has been selected using O_NONBLOCK and"
-          " no buffer was in the outgoing queue. device %s",
-          v4l2object->videodev);
-      break;
-    case EINVAL:
-      GST_ELEMENT_ERROR (pool->v4l2elem, RESOURCE, FAILED,
-          (_("Failed trying to get video frames from device '%s'."),
-              v4l2object->videodev),
-          (_("The buffer type is not supported, or the index is out of bounds,"
-                  " or no buffers have been allocated yet, or the userptr"
-                  " or length are invalid. device %s"), v4l2object->videodev));
-      break;
-    case ENOMEM:
-      GST_ELEMENT_ERROR (pool->v4l2elem, RESOURCE, FAILED,
-          (_("Failed trying to get video frames from device '%s'. Not enough memory."), v4l2object->videodev), (_("insufficient memory to enqueue a user pointer buffer. device %s."), v4l2object->videodev));
-      break;
-    case EIO:
-      GST_INFO_OBJECT (pool->v4l2elem,
-          "VIDIOC_DQBUF failed due to an internal error."
-          " Can also indicate temporary problems like signal loss."
-          " Note the driver might dequeue an (empty) buffer despite"
-          " returning an error, or even stop capturing."
-          " device %s", v4l2object->videodev);
-      /* have we de-queued a buffer ? */
-      if (!(buffer.flags & (V4L2_BUF_FLAG_QUEUED | V4L2_BUF_FLAG_DONE))) {
-        GST_DEBUG_OBJECT (pool->v4l2elem, "reenqueing buffer");
-        /* FIXME ... should we do something here? */
-      }
-      break;
-    case EINTR:
-      GST_WARNING_OBJECT (pool->v4l2elem,
-          "could not sync on a buffer on device %s", v4l2object->videodev);
-      break;
-    default:
-      GST_WARNING_OBJECT (pool->v4l2elem,
-          "Grabbing frame got interrupted on %s unexpectedly. %d: %s.",
-          v4l2object->videodev, errno, g_strerror (errno));
-      break;
-  }
-
-  return NULL;
 }
 
 /**

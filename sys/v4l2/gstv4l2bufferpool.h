@@ -39,6 +39,7 @@ GType gst_v4l2_buffer_pool_get_type (void);
 #define GST_V4L2_BUFFER_POOL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_V4L2_BUFFER_POOL, GstV4l2BufferPool))
 
 typedef struct _GstV4l2BufferPool GstV4l2BufferPool;
+typedef struct _GstV4l2BufferPoolClass GstV4l2BufferPoolClass;
 typedef struct _GstMetaV4l2 GstMetaV4l2;
 
 
@@ -57,6 +58,11 @@ struct _GstV4l2BufferPool
   gint video_fd;             /* a dup(2) of the v4l2object's video_fd */
   guint buffer_count;
   GstBuffer **buffers;
+};
+
+struct _GstV4l2BufferPoolClass
+{
+  GObjectClass parent_class;
 };
 
 struct _GstMetaV4l2 {

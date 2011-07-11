@@ -127,7 +127,7 @@ gst_v4l2src_grab_frame (GstV4l2Src * v4l2src, GstBuffer ** buf)
       }
     }
 
-    pool_buffer = GST_BUFFER (gst_v4l2_buffer_pool_dqbuf (pool));
+    pool_buffer = gst_v4l2_buffer_pool_dqbuf (pool);
     if (pool_buffer)
       break;
 

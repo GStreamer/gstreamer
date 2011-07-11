@@ -733,7 +733,7 @@ gst_v4l2sink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
 
     if (G_LIKELY (v4l2buf)) {
       GST_DEBUG_OBJECT (v4l2sink, "allocated buffer: %p", v4l2buf);
-      *buf = GST_BUFFER (v4l2buf);
+      *buf = v4l2buf;
       return GST_FLOW_OK;
     } else {
       GST_DEBUG_OBJECT (v4l2sink, "failed to allocate buffer");
@@ -834,7 +834,7 @@ gst_v4l2sink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
      * to the pool of available buffers..  and if not, we keep looping.
      */
     if (v4l2buf) {
-      gst_buffer_unref (GST_BUFFER (v4l2buf));
+      gst_buffer_unref (v4l2buf);
     }
   }
 
