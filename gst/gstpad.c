@@ -4539,7 +4539,11 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
     gst_event_unref (event);
 
     result = TRUE;
-  } else {
+  }
+
+  /* ensure to pass on event;
+   * note that a sticky event has already been updated above */
+  if (G_LIKELY (!needs_events || !sticky)) {
     GstPadEventFunction eventfunc;
 
     if (G_UNLIKELY ((eventfunc = GST_PAD_EVENTFUNC (pad)) == NULL))
