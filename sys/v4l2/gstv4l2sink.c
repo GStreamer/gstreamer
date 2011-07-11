@@ -622,6 +622,7 @@ gst_v4l2sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   struct v4l2_fmtdesc *format;
   guint fps_n, fps_d;
   guint size;
+  GstV4l2BufferPool *newpool;
 
   LOG_CAPS (v4l2sink, caps);
 
@@ -640,34 +641,52 @@ gst_v4l2sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
     GST_DEBUG_OBJECT (v4l2sink, "no they aren't!");
   }
 
-  if (v4l2sink->pool) {
-    /* TODO: if we've already allocated buffers, we probably need to
-     * do something here to free and reallocate....
-     *
-     *   gst_v4l2_object_stop_streaming()
-     *   gst_v4l2_buffer_pool_destroy()
-     *
-     */
-    GST_DEBUG_OBJECT (v4l2sink, "warning, changing caps not supported yet");
-    return FALSE;
-  }
-
   /* we want our own v4l2 type of fourcc codes */
   if (!gst_v4l2_object_get_caps_info (v4l2sink->v4l2object, caps,
-          &format, &w, &h, &interlaced, &fps_n, &fps_d, &size)) {
-    GST_DEBUG_OBJECT (v4l2sink, "can't get capture format from caps %p", caps);
-    return FALSE;
-  }
+          &format, &w, &h, &interlaced, &fps_n, &fps_d, &size))
+    goto invalid_caps;
 
-  if (!format) {
-    GST_DEBUG_OBJECT (v4l2sink, "unrecognized caps!!");
-    return FALSE;
+  if (v4l2sink->pool) {
+    /* we have a pool already, stop and destroy the old pool */
+    if (v4l2sink->state == STATE_STREAMING) {
+      if (!gst_v4l2_object_stop_streaming (v4l2sink->v4l2object))
+        goto stop_failed;
+
+      v4l2sink->state = STATE_PENDING_STREAMON;
+    }
+    gst_v4l2_buffer_pool_destroy (v4l2sink->pool);
+    v4l2sink->pool = NULL;
   }
 
   if (!gst_v4l2_object_set_format (v4l2sink->v4l2object, format->pixelformat,
-          w, h, interlaced)) {
-    /* error already posted */
-    return FALSE;
+          w, h, interlaced))
+    goto invalid_format;
+
+  if (!(v4l2sink->v4l2object->vcap.capabilities & V4L2_CAP_STREAMING))
+    goto no_streaming;
+
+  newpool = gst_v4l2_buffer_pool_new (GST_ELEMENT (v4l2sink),
+      v4l2sink->v4l2object->video_fd,
+      v4l2sink->num_buffers, caps, FALSE, V4L2_BUF_TYPE_VIDEO_OUTPUT);
+  if (newpool == NULL)
+    goto no_pool;
+
+  v4l2sink->pool = newpool;
+
+  gst_v4l2sink_sync_overlay_fields (v4l2sink);
+  gst_v4l2sink_sync_crop_fields (v4l2sink);
+
+#ifdef HAVE_XVIDEO
+  gst_v4l2_xoverlay_prepare_xwindow_id (v4l2sink->v4l2object, TRUE);
+#endif
+
+  v4l2sink->state = STATE_PENDING_STREAMON;
+
+  GST_INFO_OBJECT (v4l2sink, "outputting buffers via mmap()");
+
+  if (v4l2sink->num_buffers != v4l2sink->pool->buffer_count) {
+    v4l2sink->num_buffers = v4l2sink->pool->buffer_count;
+    g_object_notify (G_OBJECT (v4l2sink), "queue-size");
   }
 
   v4l2sink->video_width = w;
@@ -682,70 +701,36 @@ gst_v4l2sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   v4l2sink->current_caps = gst_caps_ref (caps);
 
   return TRUE;
-}
 
-#if 0
-/* buffer alloc function to implement pad_alloc for upstream element */
-static GstFlowReturn
-gst_v4l2sink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
-    GstCaps * caps, GstBuffer ** buf)
-{
-  GstV4l2Sink *v4l2sink = GST_V4L2SINK (bsink);
-  GstV4l2Buffer *v4l2buf;
-
-  if (v4l2sink->v4l2object->vcap.capabilities & V4L2_CAP_STREAMING) {
-
-    /* initialize the buffer pool if not initialized yet (first buffer): */
-    if (G_UNLIKELY (!v4l2sink->pool)) {
-
-      /* set_caps() might not be called yet.. so just to make sure: */
-      if (!gst_v4l2sink_set_caps (bsink, caps)) {
-        return GST_FLOW_ERROR;
-      }
-
-      GST_V4L2_CHECK_OPEN (v4l2sink->v4l2object);
-
-      if (!(v4l2sink->pool = gst_v4l2_buffer_pool_new (GST_ELEMENT (v4l2sink),
-                  v4l2sink->v4l2object->video_fd,
-                  v4l2sink->num_buffers, caps, FALSE,
-                  V4L2_BUF_TYPE_VIDEO_OUTPUT))) {
-        return GST_FLOW_ERROR;
-      }
-
-      gst_v4l2sink_sync_overlay_fields (v4l2sink);
-      gst_v4l2sink_sync_crop_fields (v4l2sink);
-
-#ifdef HAVE_XVIDEO
-      gst_v4l2_xoverlay_prepare_xwindow_id (v4l2sink->v4l2object, TRUE);
-#endif
-
-      v4l2sink->state = STATE_PENDING_STREAMON;
-
-      GST_INFO_OBJECT (v4l2sink, "outputting buffers via mmap()");
-
-      if (v4l2sink->num_buffers != v4l2sink->pool->buffer_count) {
-        v4l2sink->num_buffers = v4l2sink->pool->buffer_count;
-        g_object_notify (G_OBJECT (v4l2sink), "queue-size");
-      }
-    }
-
-    v4l2buf = gst_v4l2_buffer_pool_get (v4l2sink->pool, TRUE);
-
-    if (G_LIKELY (v4l2buf)) {
-      GST_DEBUG_OBJECT (v4l2sink, "allocated buffer: %p", v4l2buf);
-      *buf = v4l2buf;
-      return GST_FLOW_OK;
-    } else {
-      GST_DEBUG_OBJECT (v4l2sink, "failed to allocate buffer");
-      return GST_FLOW_ERROR;
-    }
-
-  } else {
-    GST_ERROR_OBJECT (v4l2sink, "only supporting streaming mode for now...");
-    return GST_FLOW_ERROR;
+  /* ERRORS */
+invalid_caps:
+  {
+    GST_DEBUG_OBJECT (v4l2sink,
+        "can't get capture format from caps %" GST_PTR_FORMAT, caps);
+    return FALSE;
+  }
+stop_failed:
+  {
+    GST_DEBUG_OBJECT (v4l2sink, "failed to stop streaming");
+    return FALSE;
+  }
+invalid_format:
+  {
+    /* error already posted */
+    GST_DEBUG_OBJECT (v4l2sink, "can't set format");
+    return FALSE;
+  }
+no_streaming:
+  {
+    GST_DEBUG_OBJECT (v4l2sink, "we don't support streaming");
+    return FALSE;
+  }
+no_pool:
+  {
+    GST_DEBUG_OBJECT (v4l2sink, "can't create new pool");
+    return FALSE;
   }
 }
-#endif
 
 /* called after A/V sync to render frame */
 static GstFlowReturn
@@ -753,62 +738,32 @@ gst_v4l2sink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
 {
   GstV4l2Sink *v4l2sink = GST_V4L2SINK (bsink);
   GstBuffer *newbuf = NULL;
+  GstMetaV4l2 *meta;
 
   GST_DEBUG_OBJECT (v4l2sink, "render buffer: %p", buf);
 
-#if 0
-  if (!GST_IS_V4L2_BUFFER (buf)) {
-    GstFlowReturn ret;
+  meta = GST_META_V4L2_GET (buf);
 
-    /* special case check for sub-buffers:  In certain cases, places like
-     * GstBaseTransform, which might check that the buffer is writable
-     * before copying metadata, timestamp, and such, will find that the
-     * buffer has more than one reference to it.  In these cases, they
-     * will create a sub-buffer with an offset=0 and length equal to the
-     * original buffer size.
-     *
-     * This could happen in two scenarios: (1) a tee in the pipeline, and
-     * (2) because the refcnt is incremented in gst_mini_object_free()
-     * before the finalize function is called, and decremented after it
-     * returns..  but returning this buffer to the buffer pool in the
-     * finalize function, could wake up a thread blocked in _buffer_alloc()
-     * which could run and get a buffer w/ refcnt==2 before the thread
-     * originally unref'ing the buffer returns from finalize function and
-     * decrements the refcnt back to 1!
-     */
-    if (buf->parent &&
-        (GST_BUFFER_DATA (buf) == GST_BUFFER_DATA (buf->parent)) &&
-        (GST_BUFFER_SIZE (buf) == GST_BUFFER_SIZE (buf->parent))) {
-      GST_DEBUG_OBJECT (v4l2sink, "I have a sub-buffer!");
-      return gst_v4l2sink_show_frame (bsink, buf->parent);
-    }
+  if (meta == NULL) {
+    guint8 *data;
+    gsize size;
 
-    GST_DEBUG_OBJECT (v4l2sink, "slow-path.. I got a %s so I need to memcpy",
-        g_type_name (G_OBJECT_TYPE (buf)));
+    /* not our buffer */
+    GST_DEBUG_OBJECT (v4l2sink, "slow-path.. need to memcpy");
+    newbuf = gst_v4l2_buffer_pool_get (v4l2sink->pool, TRUE);
 
-    ret = gst_v4l2sink_buffer_alloc (bsink,
-        GST_BUFFER_OFFSET (buf), GST_BUFFER_SIZE (buf), GST_BUFFER_CAPS (buf),
-        &newbuf);
-
-    if (GST_FLOW_OK != ret) {
-      GST_DEBUG_OBJECT (v4l2sink,
-          "dropping frame!  Consider increasing 'queue-size' property!");
-      return GST_FLOW_OK;
-    }
-
-    memcpy (GST_BUFFER_DATA (newbuf),
-        GST_BUFFER_DATA (buf),
-        MIN (GST_BUFFER_SIZE (newbuf), GST_BUFFER_SIZE (buf)));
+    data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+    gst_buffer_fill (newbuf, 0, data, size);
+    gst_buffer_unmap (buf, data, size);
 
     GST_DEBUG_OBJECT (v4l2sink, "render copied buffer: %p", newbuf);
 
     buf = newbuf;
   }
-#endif
 
-  if (!gst_v4l2_buffer_pool_qbuf (v4l2sink->pool, buf)) {
-    return GST_FLOW_ERROR;
-  }
+  if (!gst_v4l2_buffer_pool_qbuf (v4l2sink->pool, buf))
+    goto queue_failed;
+
   if (v4l2sink->state == STATE_PENDING_STREAMON) {
     if (!gst_v4l2_object_start_streaming (v4l2sink->v4l2object)) {
       return GST_FLOW_ERROR;
@@ -839,6 +794,13 @@ gst_v4l2sink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
   }
 
   return GST_FLOW_OK;
+
+  /* ERRORS */
+queue_failed:
+  {
+    GST_DEBUG_OBJECT (v4l2sink, "failed to queue buffer");
+    return GST_FLOW_ERROR;
+  }
 }
 
 #ifdef HAVE_XVIDEO
