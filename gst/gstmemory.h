@@ -204,7 +204,7 @@ typedef void        (*GstMemoryFreeFunction)      (GstMemory *mem);
  * Returns: a new #GstMemory object wrapping a copy of the requested region in
  * @mem.
  */
-typedef GstMemory * (*GstMemoryCopyFunction)      (GstMemory *mem, gsize offset, gsize size);
+typedef GstMemory * (*GstMemoryCopyFunction)      (GstMemory *mem, gssize offset, gsize size);
 
 /**
  * GstMemoryShareFunction:
@@ -218,7 +218,7 @@ typedef GstMemory * (*GstMemoryCopyFunction)      (GstMemory *mem, gsize offset,
  *
  * Returns: a new #GstMemory object sharing the requested region in @mem.
  */
-typedef GstMemory * (*GstMemoryShareFunction)     (GstMemory *mem, gsize offset, gsize size);
+typedef GstMemory * (*GstMemoryShareFunction)     (GstMemory *mem, gssize offset, gsize size);
 
 /**
  * GstMemoryIsSpanFunction:
@@ -293,8 +293,8 @@ gpointer    gst_memory_map        (GstMemory *mem, gsize *size, gsize *maxsize,
 gboolean    gst_memory_unmap      (GstMemory *mem, gpointer data, gsize size);
 
 /* copy and subregions */
-GstMemory * gst_memory_copy       (GstMemory *mem, gsize offset, gsize size);
-GstMemory * gst_memory_share      (GstMemory *mem, gsize offset, gsize size);
+GstMemory * gst_memory_copy       (GstMemory *mem, gssize offset, gsize size);
+GstMemory * gst_memory_share      (GstMemory *mem, gssize offset, gsize size);
 
 /* span memory */
 gboolean    gst_memory_is_span    (GstMemory *mem1, GstMemory *mem2, gsize *offset);

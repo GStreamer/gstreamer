@@ -228,7 +228,7 @@ _default_mem_free (GstMemoryDefault * mem)
 }
 
 static GstMemoryDefault *
-_default_mem_copy (GstMemoryDefault * mem, gsize offset, gsize size)
+_default_mem_copy (GstMemoryDefault * mem, gssize offset, gsize size)
 {
   GstMemoryDefault *copy;
 
@@ -242,7 +242,7 @@ _default_mem_copy (GstMemoryDefault * mem, gsize offset, gsize size)
 }
 
 static GstMemoryDefault *
-_default_mem_share (GstMemoryDefault * mem, gsize offset, gsize size)
+_default_mem_share (GstMemoryDefault * mem, gssize offset, gsize size)
 {
   GstMemoryDefault *sub;
   GstMemory *parent;
@@ -278,7 +278,7 @@ _default_mem_is_span (GstMemoryDefault * mem1, GstMemoryDefault * mem2,
 }
 
 static GstMemory *
-_fallback_copy (GstMemory * mem, gsize offset, gsize size)
+_fallback_copy (GstMemory * mem, gssize offset, gsize size)
 {
   GstMemory *copy;
   guint8 *data, *dest;
@@ -492,7 +492,7 @@ gst_memory_unmap (GstMemory * mem, gpointer data, gsize size)
  * Returns: a new #GstMemory.
  */
 GstMemory *
-gst_memory_copy (GstMemory * mem, gsize offset, gsize size)
+gst_memory_copy (GstMemory * mem, gssize offset, gsize size)
 {
   g_return_val_if_fail (mem != NULL, NULL);
 
@@ -513,7 +513,7 @@ gst_memory_copy (GstMemory * mem, gsize offset, gsize size)
  * Returns: a new #GstMemory.
  */
 GstMemory *
-gst_memory_share (GstMemory * mem, gsize offset, gsize size)
+gst_memory_share (GstMemory * mem, gssize offset, gsize size)
 {
   g_return_val_if_fail (mem != NULL, NULL);
 

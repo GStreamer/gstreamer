@@ -761,36 +761,46 @@ gst_buffer_remove_memory_range (GstBuffer * buffer, guint idx, guint length)
 gsize
 gst_buffer_get_sizes (GstBuffer * buffer, gsize * offset, gsize * maxsize)
 {
-  guint i, len;
-  gsize extra, size, offs;
+  guint len;
+  gsize size;
+  GstMemory *mem;
 
   g_return_val_if_fail (GST_IS_BUFFER (buffer), 0);
 
   len = GST_BUFFER_MEM_LEN (buffer);
 
-  size = offs = extra = 0;
-  for (i = 0; i < len; i++) {
-    gsize s, o, ms;
+  if (G_LIKELY (len == 1)) {
+    /* common case */
+    mem = GST_BUFFER_MEM_PTR (buffer, 0);
+    size = gst_memory_get_sizes (mem, offset, maxsize);
+  } else {
+    guint i;
+    gsize extra, offs;
 
-    s = gst_memory_get_sizes (GST_BUFFER_MEM_PTR (buffer, i), &o, &ms);
+    size = offs = extra = 0;
+    for (i = 0; i < len; i++) {
+      gsize s, o, ms;
 
-    /* add sizes */
-    size += s;
+      mem = GST_BUFFER_MEM_PTR (buffer, i);
+      s = gst_memory_get_sizes (mem, &o, &ms);
 
-    /* keep offset of first memory block */
-    if (i == 0)
-      offs = o;
-    /* this is the amount of extra bytes in this block, we only keep this for
-     * the last block */
-    else if (i + 1 == len)
-      extra = ms - (o + s);
+      /* add sizes */
+      size += s;
+
+      /* keep offset of first memory block */
+      if (i == 0)
+        offs = o;
+      /* this is the amount of extra bytes in this block, we only keep this for
+       * the last block */
+      if (i + 1 == len)
+        extra = ms - (o + s);
+    }
+
+    if (offset)
+      *offset = offs;
+    if (maxsize)
+      *maxsize = offs + size + extra;
   }
-
-  if (offset)
-    *offset = offs;
-  if (maxsize)
-    *maxsize = offs + size + extra;
-
   return size;
 }
 
@@ -810,7 +820,7 @@ gst_buffer_resize (GstBuffer * buffer, gssize offset, gsize size)
   gsize bsize, bufsize, bufoffs, bufmax;
   GstMemory *mem;
 
-  GST_CAT_LOG (GST_CAT_BUFFER, "trim %p %" G_GSIZE_FORMAT "-%" G_GSIZE_FORMAT,
+  GST_CAT_LOG (GST_CAT_BUFFER, "trim %p %" G_GSSIZE_FORMAT "-%" G_GSIZE_FORMAT,
       buffer, offset, size);
 
   g_return_if_fail (gst_buffer_is_writable (buffer));
@@ -834,15 +844,20 @@ gst_buffer_resize (GstBuffer * buffer, gssize offset, gsize size)
     mem = GST_BUFFER_MEM_PTR (buffer, si);
     bsize = gst_memory_get_sizes (mem, NULL, NULL);
 
-    if (bsize <= offset) {
+    if ((gssize) bsize <= offset) {
       /* remove buffer */
       gst_memory_unref (mem);
       offset -= bsize;
     } else {
       gsize left;
 
-      left = MIN (bsize - offset, size);
-      if (left < bsize) {
+      /* last buffer always gets resized to the remaining size */
+      if (si + 1 == len)
+        left = size;
+      else
+        left = MIN (bsize - offset, size);
+
+      if (left) {
         /* we need to clip something */
         if (GST_MEMORY_IS_WRITABLE (mem)) {
           gst_memory_resize (mem, offset, left);

@@ -441,6 +441,85 @@ GST_START_TEST (test_try_new_and_alloc)
 
 GST_END_TEST;
 
+GST_START_TEST (test_resize)
+{
+  GstBuffer *buf;
+  gsize maxalloc;
+  gsize size, maxsize, offset;
+
+  /* one memory block */
+  buf = gst_buffer_new_allocate (NULL, 100, 0);
+
+  size = gst_buffer_get_sizes (buf, &offset, &maxalloc);
+  fail_unless (size == 100);
+  fail_unless (offset == 0);
+  fail_unless (maxalloc >= 100);
+
+  ASSERT_CRITICAL (gst_buffer_resize (buf, 200, 50));
+  ASSERT_CRITICAL (gst_buffer_resize (buf, 0, 150));
+  ASSERT_CRITICAL (gst_buffer_resize (buf, 1, maxalloc));
+  ASSERT_CRITICAL (gst_buffer_resize (buf, maxalloc, 1));
+
+  /* this does nothing */
+  gst_buffer_resize (buf, 0, 100);
+
+  /* nothing should have changed */
+  size = gst_buffer_get_sizes (buf, &offset, &maxsize);
+  fail_unless (size == 100);
+  fail_unless (offset == 0);
+  fail_unless (maxsize == maxalloc);
+
+  gst_buffer_resize (buf, 0, 50);
+  size = gst_buffer_get_sizes (buf, &offset, &maxsize);
+  fail_unless (size == 50);
+  fail_unless (offset == 0);
+  fail_unless (maxsize == maxalloc);
+
+  gst_buffer_resize (buf, 0, 100);
+  size = gst_buffer_get_sizes (buf, &offset, &maxsize);
+  fail_unless (size == 100);
+  fail_unless (offset == 0);
+  fail_unless (maxsize == maxalloc);
+
+  gst_buffer_resize (buf, 1, 99);
+  size = gst_buffer_get_sizes (buf, &offset, &maxsize);
+  fail_unless (size == 99);
+  fail_unless (offset == 1);
+  fail_unless (maxsize == maxalloc);
+
+  ASSERT_CRITICAL (gst_buffer_resize (buf, 1, maxalloc - 1));
+
+  gst_buffer_resize (buf, 0, 99);
+  size = gst_buffer_get_sizes (buf, &offset, &maxsize);
+  fail_unless (size == 99);
+  fail_unless (offset == 1);
+  fail_unless (maxsize == maxalloc);
+
+  gst_buffer_resize (buf, -1, 100);
+  size = gst_buffer_get_sizes (buf, &offset, &maxsize);
+  fail_unless (size == 100);
+  fail_unless (offset == 0);
+  fail_unless (maxsize == maxalloc);
+
+  ASSERT_CRITICAL (gst_buffer_resize (buf, -1, 100));
+
+  gst_buffer_resize (buf, 50, 40);
+  size = gst_buffer_get_sizes (buf, &offset, &maxsize);
+  fail_unless (size == 40);
+  fail_unless (offset == 50);
+  fail_unless (maxsize == maxalloc);
+
+  gst_buffer_resize (buf, -50, 100);
+  size = gst_buffer_get_sizes (buf, &offset, &maxsize);
+  fail_unless (size == 100);
+  fail_unless (offset == 0);
+  fail_unless (maxsize == maxalloc);
+
+  gst_buffer_unref (buf);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_buffer_suite (void)
 {
@@ -456,6 +535,7 @@ gst_buffer_suite (void)
   tcase_add_test (tc_chain, test_metadata_writable);
   tcase_add_test (tc_chain, test_copy);
   tcase_add_test (tc_chain, test_try_new_and_alloc);
+  tcase_add_test (tc_chain, test_resize);
 
   return s;
 }
