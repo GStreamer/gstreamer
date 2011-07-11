@@ -923,6 +923,8 @@ gst_base_parse_sink_eventfunc (GstBaseParse * parse, GstEvent * event)
       if (klass->set_sink_caps)
         klass->set_sink_caps (parse, caps);
 
+      /* will send our own caps downstream */
+      gst_event_unref (event);
       handled = TRUE;
       break;
     }
