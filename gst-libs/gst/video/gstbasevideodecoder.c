@@ -359,6 +359,11 @@ gst_base_video_decoder_flush (GstBaseVideoDecoder * dec, gboolean hard)
 
   GST_LOG_OBJECT (dec, "flush hard %d", hard);
 
+  /* Inform subclass */
+  /* FIXME ? only if hard, or tell it if hard ? */
+  if (klass->reset)
+    klass->reset (dec);
+
   /* FIXME make some more distinction between hard and soft,
    * but subclass may not be prepared for that */
   /* FIXME perhaps also clear pending frames ?,
@@ -376,11 +381,6 @@ gst_base_video_decoder_flush (GstBaseVideoDecoder * dec, gboolean hard)
   }
   /* and get (re)set for the sequel */
   gst_base_video_decoder_reset (dec, FALSE);
-
-  /* also inform subclass */
-  /* FIXME ? only if hard, or tell it if hard ? */
-  if (klass->reset)
-    klass->reset (dec);
 
   return ret;
 }
