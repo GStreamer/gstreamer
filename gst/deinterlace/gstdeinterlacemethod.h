@@ -61,7 +61,9 @@ typedef struct
  * This structure defines the deinterlacer plugin.
  */
 
-typedef void (*GstDeinterlaceMethodDeinterlaceFunction) (GstDeinterlaceMethod *self, const GstDeinterlaceField *history, guint history_count, GstBuffer *outbuf);
+typedef void (*GstDeinterlaceMethodDeinterlaceFunction) (
+    GstDeinterlaceMethod *self, const GstDeinterlaceField *history,
+    guint history_count, GstBuffer *outbuf, int cur_field_idx);
 
 struct _GstDeinterlaceMethod {
   GstObject parent;
@@ -112,7 +114,8 @@ GType gst_deinterlace_method_get_type (void);
 
 gboolean gst_deinterlace_method_supported (GType type, GstVideoFormat format, gint width, gint height);
 void gst_deinterlace_method_setup (GstDeinterlaceMethod * self, GstVideoFormat format, gint width, gint height);
-void gst_deinterlace_method_deinterlace_frame (GstDeinterlaceMethod * self, const GstDeinterlaceField * history, guint history_count, GstBuffer * outbuf);
+void gst_deinterlace_method_deinterlace_frame (GstDeinterlaceMethod * self, const GstDeinterlaceField * history, guint history_count, GstBuffer * outbuf,
+    int cur_field_idx);
 gint gst_deinterlace_method_get_fields_required (GstDeinterlaceMethod * self);
 gint gst_deinterlace_method_get_latency (GstDeinterlaceMethod * self);
 
@@ -133,32 +136,32 @@ typedef struct _GstDeinterlaceScanlineData GstDeinterlaceScanlineData;
  */
 
 struct _GstDeinterlaceScanlineData {
+ const guint8 *ttp, *tp, *mp, *bp, *bbp;
  const guint8 *tt0, *t0, *m0, *b0, *bb0;
  const guint8 *tt1, *t1, *m1, *b1, *bb1;
  const guint8 *tt2, *t2, *m2, *b2, *bb2;
- const guint8 *tt3, *t3, *m3, *b3, *bb3;
  gboolean bottom_field;
 };
 
 /*
  * For interpolate_scanline the input is:
  *
- * |   t-3       t-2       t-1       t
- * | Field 3 | Field 2 | Field 1 | Field 0 |
- * |  TT3    |         |   TT1   |         |
+ * |   t-3       t-2       t-1       t        t+1
+ * | Field 3 | Field 2 | Field 1 | Field 0 | Field -1
+ * |  TT3    |         |   TT1   |         |   TTp
  * |         |   T2    |         |   T0    |
- * |   M3    |         |    M1   |         |
+ * |   M3    |         |    M1   |         |    Mp
  * |         |   B2    |         |   B0    |
- * |  BB3    |         |   BB1   |         |
+ * |  BB3    |         |   BB1   |         |   BBp
  *
  * For copy_scanline the input is:
  *
- * |   t-3       t-2       t-1       t
- * | Field 3 | Field 2 | Field 1 | Field 0 |
+ * |   t-3       t-2       t-1       t         t+1
+ * | Field 3 | Field 2 | Field 1 | Field 0 | Field -1
  * |         |   TT2   |         |  TT0    |
- * |   T3    |         |   T1    |         |
+ * |   T3    |         |   T1    |         |   Tp
  * |         |    M2   |         |   M0    |
- * |   B3    |         |   B1    |         |
+ * |   B3    |         |   B1    |         |   Bp
  * |         |   BB2   |         |  BB0    |
  *
  * All other values are NULL.

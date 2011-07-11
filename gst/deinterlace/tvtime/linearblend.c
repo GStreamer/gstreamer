@@ -56,7 +56,11 @@ deinterlace_scanline_linear_blend_c (GstDeinterlaceSimpleMethod * self,
     guint8 * out, const guint8 * t0, const guint8 * b0, const guint8 * m1,
     gint size)
 {
-  deinterlace_line_linear_blend (out, t0, b0, m1, size);
+  if (m1 == NULL) {
+    deinterlace_line_linear (out, t0, b0, size);
+  } else {
+    deinterlace_line_linear_blend (out, t0, b0, m1, size);
+  }
 }
 
 static void
@@ -96,7 +100,11 @@ deinterlace_scanline_linear_blend2_c (GstDeinterlaceSimpleMethod * self,
     guint8 * out, const guint8 * m0, const guint8 * t1, const guint8 * b1,
     gint size)
 {
-  deinterlace_line_linear_blend (out, t1, b1, m0, size);
+  if (t1 == NULL) {
+    memcpy (out, m0, size);
+  } else {
+    deinterlace_line_linear_blend (out, t1, b1, m0, size);
+  }
 }
 
 static void
@@ -145,7 +153,7 @@ static void
   dim_class->fields_required = 2;
   dim_class->name = "Blur: Temporal";
   dim_class->nick = "linearblend";
-  dim_class->latency = 0;
+  dim_class->latency = 1;
 
   dism_class->interpolate_scanline_yuy2 =
       deinterlace_scanline_linear_blend_packed_c;

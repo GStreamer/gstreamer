@@ -146,6 +146,7 @@ struct _GstDeinterlace
    */
   GstDeinterlaceField field_history[GST_DEINTERLACE_MAX_FIELD_HISTORY];
   guint history_count;
+  int cur_field_idx;
 
   /* Set to TRUE if we're in still frame mode,
      i.e. just forward all buffers
