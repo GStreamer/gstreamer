@@ -1356,7 +1356,7 @@ gst_base_video_decoder_finish_frame (GstBaseVideoDecoder * base_video_decoder,
   GstVideoState *state = &GST_BASE_VIDEO_CODEC (base_video_decoder)->state;
   GstBuffer *src_buffer;
   GstFlowReturn ret = GST_FLOW_OK;
-  GList *l;
+  GList *l, *events = NULL;
 
   GST_LOG_OBJECT (base_video_decoder, "finish frame");
 #ifndef GST_DISABLE_GST_DEBUG
@@ -1373,24 +1373,28 @@ gst_base_video_decoder_finish_frame (GstBaseVideoDecoder * base_video_decoder,
       GST_TIME_ARGS (frame->presentation_timestamp));
 
   /* Push all pending events that arrived before this frame */
+  GST_OBJECT_LOCK (base_video_decoder);
   for (l = base_video_decoder->base_video_codec.frames; l; l = l->next) {
     GstVideoFrame *tmp = l->data;
 
     if (tmp->events) {
-      GList *k, *events;
+      GList *k;
 
-      events = tmp->events;
+      for (k = g_list_last (tmp->events); k; k = k->prev)
+        events = g_list_prepend (events, k->data);
+      g_list_free (tmp->events);
       tmp->events = NULL;
-
-      for (k = g_list_last (events); k; k = k->prev)
-        gst_pad_push_event (base_video_decoder->base_video_codec.srcpad,
-            k->data);
-      g_list_free (events);
     }
 
     if (tmp == frame)
       break;
   }
+  GST_OBJECT_UNLOCK (base_video_decoder);
+
+  for (l = g_list_last (events); l; l = l->next)
+    gst_pad_push_event (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_decoder),
+        l->data);
+  g_list_free (events);
 
   if (GST_CLOCK_TIME_IS_VALID (frame->presentation_timestamp)) {
     if (frame->presentation_timestamp != base_video_decoder->timestamp_offset) {
