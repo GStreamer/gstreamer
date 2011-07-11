@@ -917,11 +917,11 @@ gst_base_video_decoder_clear_queues (GstBaseVideoDecoder * dec)
   dec->decode = NULL;
   g_list_foreach (dec->parse, (GFunc) gst_mini_object_unref, NULL);
   g_list_free (dec->parse);
-  dec->decode = NULL;
+  dec->parse = NULL;
   g_list_foreach (dec->parse_gather, (GFunc) gst_base_video_codec_free_frame,
       NULL);
   g_list_free (dec->parse_gather);
-  dec->decode = NULL;
+  dec->parse_gather = NULL;
 }
 
 static void
