@@ -44,7 +44,7 @@ enum
 /* class initialization */
 
 #define DEBUG_INIT(bla) \
-  GST_DEBUG_CATEGORY_INIT (gst_omx_mpeg4_video_dec_debug_category, "omxvideodec", 0, \
+  GST_DEBUG_CATEGORY_INIT (gst_omx_mpeg4_video_dec_debug_category, "omxmpeg4videodec", 0, \
       "debug category for gst-omx video decoder base class");
 
 GST_BOILERPLATE_FULL (GstOMXMPEG4VideoDec, gst_omx_mpeg4_video_dec,
