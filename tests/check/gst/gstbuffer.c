@@ -515,6 +515,24 @@ GST_START_TEST (test_resize)
   fail_unless (offset == 0);
   fail_unless (maxsize == maxalloc);
 
+  gst_buffer_resize (buf, 0, 0);
+  size = gst_buffer_get_sizes (buf, &offset, &maxsize);
+  fail_unless (size == 0);
+  fail_unless (offset == 0);
+  fail_unless (maxsize == maxalloc);
+
+  gst_buffer_resize (buf, 0, 100);
+  size = gst_buffer_get_sizes (buf, &offset, &maxsize);
+  fail_unless (size == 100);
+  fail_unless (offset == 0);
+  fail_unless (maxsize == maxalloc);
+
+  gst_buffer_resize (buf, 0, 100);
+  size = gst_buffer_get_sizes (buf, &offset, &maxsize);
+  fail_unless (size == 100);
+  fail_unless (offset == 0);
+  fail_unless (maxsize == maxalloc);
+
   gst_buffer_unref (buf);
 }
 

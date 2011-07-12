@@ -820,12 +820,13 @@ gst_buffer_resize (GstBuffer * buffer, gssize offset, gsize size)
   gsize bsize, bufsize, bufoffs, bufmax;
   GstMemory *mem;
 
-  GST_CAT_LOG (GST_CAT_BUFFER, "trim %p %" G_GSSIZE_FORMAT "-%" G_GSIZE_FORMAT,
-      buffer, offset, size);
-
   g_return_if_fail (gst_buffer_is_writable (buffer));
 
   bufsize = gst_buffer_get_sizes (buffer, &bufoffs, &bufmax);
+
+  GST_CAT_LOG (GST_CAT_BUFFER, "trim %p %" G_GSSIZE_FORMAT "-%" G_GSIZE_FORMAT
+      " size:%" G_GSIZE_FORMAT " offs:%" G_GSIZE_FORMAT " max:%" G_GSIZE_FORMAT,
+      buffer, offset, size, bufsize, bufoffs, bufmax);
 
   /* we can't go back further than the current offset or past the end of the
    * buffer */
@@ -840,12 +841,13 @@ gst_buffer_resize (GstBuffer * buffer, gssize offset, gsize size)
   len = GST_BUFFER_MEM_LEN (buffer);
 
   /* copy and trim */
-  for (di = si = 0; si < len && size > 0; si++) {
+  for (di = si = 0; si < len; si++) {
     mem = GST_BUFFER_MEM_PTR (buffer, si);
     bsize = gst_memory_get_sizes (mem, NULL, NULL);
 
     if ((gssize) bsize <= offset) {
       /* remove buffer */
+      GST_CAT_LOG (GST_CAT_BUFFER, "remove memory %p", mem);
       gst_memory_unref (mem);
       offset -= bsize;
     } else {
@@ -857,7 +859,7 @@ gst_buffer_resize (GstBuffer * buffer, gssize offset, gsize size)
       else
         left = MIN (bsize - offset, size);
 
-      if (left) {
+      if (offset != 0 || left != bsize) {
         /* we need to clip something */
         if (GST_MEMORY_IS_WRITABLE (mem)) {
           gst_memory_resize (mem, offset, left);
