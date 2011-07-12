@@ -54,7 +54,9 @@ static GstStaticPadTemplate gst_omx_h264_video_dec_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-h264, " "parsed=(boolean) true")
+    GST_STATIC_CAPS ("video/x-h264, "
+        "parsed=(boolean) true, "
+        "alignment=(string)au, " "stream-format=(string) {avc, byte-stream}")
     );
 
 static GstStaticPadTemplate gst_omx_h264_video_dec_src_template =
