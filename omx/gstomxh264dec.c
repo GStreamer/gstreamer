@@ -56,9 +56,9 @@ gst_omx_h264_dec_base_init (gpointer g_class)
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
   gst_element_class_set_details_simple (element_class,
-      "OpenMAX H264 Video Decoder",
+      "OpenMAX H.264 Video Decoder",
       "Codec/Decoder/Video",
-      "Decode H264 video streams",
+      "Decode H.264 video streams",
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
 }
 
