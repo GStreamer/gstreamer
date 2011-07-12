@@ -623,6 +623,7 @@ gst_v4l2sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   guint fps_n, fps_d;
   guint size;
   GstV4l2BufferPool *newpool;
+  guint bytesperline;
 
   LOG_CAPS (v4l2sink, caps);
 
@@ -659,7 +660,7 @@ gst_v4l2sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   }
 
   if (!gst_v4l2_object_set_format (v4l2sink->v4l2object, format->pixelformat,
-          w, h, interlaced))
+          w, h, interlaced, &bytesperline))
     goto invalid_format;
 
   if (!(v4l2sink->v4l2object->vcap.capabilities & V4L2_CAP_STREAMING))

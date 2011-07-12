@@ -2061,7 +2061,7 @@ gst_v4l2_object_get_nearest_size (GstV4l2Object * v4l2object,
 
 gboolean
 gst_v4l2_object_set_format (GstV4l2Object * v4l2object, guint32 pixelformat,
-    guint32 width, guint32 height, gboolean interlaced)
+    guint32 width, guint32 height, gboolean interlaced, guint32 * bytesperline)
 {
   gint fd = v4l2object->video_fd;
   struct v4l2_format format;
@@ -2095,11 +2095,17 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, guint32 pixelformat,
   if (v4l2_ioctl (fd, VIDIOC_G_FMT, &format) < 0)
     goto get_fmt_failed;
 
+  GST_DEBUG_OBJECT (v4l2object->element, "Got format to %dx%d, format "
+      "%" GST_FOURCC_FORMAT " stride %d", format.fmt.pix.width,
+      format.fmt.pix.height, GST_FOURCC_ARGS (format.fmt.pix.pixelformat),
+      format.fmt.pix.bytesperline);
+
   if (format.type == v4l2object->type &&
       format.fmt.pix.width == width &&
       format.fmt.pix.height == height &&
       format.fmt.pix.pixelformat == pixelformat &&
       format.fmt.pix.field == field) {
+    GST_DEBUG_OBJECT (v4l2object->element, "format was good");
     /* Nothing to do. We want to succeed immediately
      * here because setting the same format back
      * can still fail due to EBUSY. By short-circuiting
@@ -2109,8 +2115,12 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, guint32 pixelformat,
      * any caps change would require us to go to NULL
      * state to close the device and set format.
      */
+    *bytesperline = format.fmt.pix.bytesperline;
     return TRUE;
   }
+
+  GST_DEBUG_OBJECT (v4l2object->element, "Setting format to %dx%d, format "
+      "%" GST_FOURCC_FORMAT, width, height, GST_FOURCC_ARGS (pixelformat));
 
   format.type = v4l2object->type;
   format.fmt.pix.width = width;
@@ -2118,15 +2128,21 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, guint32 pixelformat,
   format.fmt.pix.pixelformat = pixelformat;
   format.fmt.pix.field = field;
 
-  if (v4l2_ioctl (fd, VIDIOC_S_FMT, &format) < 0) {
+  if (v4l2_ioctl (fd, VIDIOC_S_FMT, &format) < 0)
     goto set_fmt_failed;
-  }
+
+  GST_DEBUG_OBJECT (v4l2object->element, "Got format to %dx%d, format "
+      "%" GST_FOURCC_FORMAT " stride %d", format.fmt.pix.width,
+      format.fmt.pix.height, GST_FOURCC_ARGS (format.fmt.pix.pixelformat),
+      format.fmt.pix.bytesperline);
 
   if (format.fmt.pix.width != width || format.fmt.pix.height != height)
     goto invalid_dimensions;
 
   if (format.fmt.pix.pixelformat != pixelformat)
     goto invalid_pixelformat;
+
+  *bytesperline = format.fmt.pix.bytesperline;
 
   return TRUE;
 

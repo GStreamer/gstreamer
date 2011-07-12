@@ -219,12 +219,13 @@ gst_v4l2src_set_capture (GstV4l2Src * v4l2src, guint32 pixelformat,
 {
   gint fd = v4l2src->v4l2object->video_fd;
   struct v4l2_streamparm stream;
+  guint32 bytesperline;
 
   if (pixelformat == GST_MAKE_FOURCC ('M', 'P', 'E', 'G'))
     return TRUE;
 
   if (!gst_v4l2_object_set_format (v4l2src->v4l2object, pixelformat, width,
-          height, interlaced)) {
+          height, interlaced, &bytesperline)) {
     /* error already reported */
     return FALSE;
   }
