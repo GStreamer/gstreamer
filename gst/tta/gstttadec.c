@@ -106,7 +106,6 @@ gst_tta_dec_setcaps (GstPad * pad, GstCaps * caps)
   GstTtaDec *ttadec = GST_TTA_DEC (gst_pad_get_parent (pad));
   GstStructure *structure = gst_caps_get_structure (caps, 0);
   GstCaps *srccaps;
-  guint64 outsize;
   gint bits, channels;
   gint32 samplerate;
 
@@ -135,8 +134,6 @@ gst_tta_dec_setcaps (GstPad * pad, GstCaps * caps)
 
   ttadec->tta = g_malloc (ttadec->channels * sizeof (decoder));
   ttadec->cache = g_malloc (ttadec->channels * sizeof (long));
-
-  outsize = ttadec->channels * ttadec->frame_length * ttadec->bytes;
 
   ttadec->decdata =
       (guchar *) g_malloc (ttadec->channels * ttadec->frame_length *
