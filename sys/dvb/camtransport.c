@@ -224,7 +224,6 @@ cam_tl_read_tpdu_next (CamTL * tl, CamTLConnection ** out_connection)
 {
   CamReturn ret;
   CamTLConnection *connection;
-  guint8 slot;
   guint8 connection_id;
   guint8 *tpdu;
   guint8 length_field_len;
@@ -244,7 +243,7 @@ cam_tl_read_tpdu_next (CamTL * tl, CamTLConnection ** out_connection)
   }
 
   /* LPDU slot */
-  slot = tpdu[0];
+  /* slot = tpdu[0]; */
   /* LPDU connection id */
   connection_id = tpdu[1];
 
