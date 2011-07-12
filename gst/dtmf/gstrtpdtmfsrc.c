@@ -605,10 +605,11 @@ gst_rtp_dtmf_prepare_buffer_data (GstRTPDTMFSrc * dtmfsrc, GstBuffer * buf)
 
   /* duration of DTMF payloadfor the NEXT packet */
   /* not updated for redundant packets */
-  if (dtmfsrc->redundancy_count == 0)
+  if (dtmfsrc->redundancy_count <= 1)
     dtmfsrc->payload->duration += dtmfsrc->ptime * dtmfsrc->clock_rate / 1000;
 
-  if (dtmfsrc->redundancy_count == 0 && dtmfsrc->last_packet) {
+
+  if (dtmfsrc->redundancy_count <= 1 && dtmfsrc->last_packet) {
     GstClockTime inter_digit_interval = MIN_INTER_DIGIT_INTERVAL;
 
     if (inter_digit_interval % dtmfsrc->ptime != 0)
