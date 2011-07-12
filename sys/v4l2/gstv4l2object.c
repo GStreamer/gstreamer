@@ -2189,24 +2189,36 @@ gboolean
 gst_v4l2_object_start_streaming (GstV4l2Object * v4l2object)
 {
   if (v4l2_ioctl (v4l2object->video_fd, VIDIOC_STREAMON,
-          &(v4l2object->type)) < 0) {
+          &(v4l2object->type)) < 0)
+    goto start_failed;
+
+  return TRUE;
+
+  /* ERRORS */
+start_failed:
+  {
     GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, OPEN_READ,
         (_("Error starting streaming on device '%s'."), v4l2object->videodev),
         GST_ERROR_SYSTEM);
     return FALSE;
   }
-  return TRUE;
 }
 
 gboolean
 gst_v4l2_object_stop_streaming (GstV4l2Object * v4l2object)
 {
   if (v4l2_ioctl (v4l2object->video_fd, VIDIOC_STREAMOFF,
-          &(v4l2object->type)) < 0) {
+          &(v4l2object->type)) < 0)
+    goto stop_failed;
+
+  return FALSE;
+
+  /* ERRORS */
+stop_failed:
+  {
     GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, OPEN_READ,
         (_("Error stopping streaming on device '%s'."), v4l2object->videodev),
         GST_ERROR_SYSTEM);
     return FALSE;
   }
-  return TRUE;
 }
