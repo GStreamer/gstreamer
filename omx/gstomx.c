@@ -1451,11 +1451,13 @@ plugin_init (GstPlugin * plugin)
   GError *err = NULL;
   gchar **config_dirs;
   gchar **elements;
+  gchar *env_config_dir;
   const gchar *user_config_dir;
   const gchar *const *system_config_dirs;
   gint i, j;
   gsize n_elements;
   static const gchar *config_name[] = { "gstomx.conf", NULL };
+  static const gchar *env_config_name[] = { "GST_OMX_CONFIG_DIR", NULL };
 
   GST_DEBUG_CATEGORY_INIT (gstomx_debug, "omx", 0, "gst-omx");
 
@@ -1464,23 +1466,27 @@ plugin_init (GstPlugin * plugin)
 
   /* Read configuration file gstomx.conf from the preferred
    * configuration directories */
+  env_config_dir = g_strdup (g_getenv (*env_config_name));
   user_config_dir = g_get_user_config_dir ();
   system_config_dirs = g_get_system_config_dirs ();
   config_dirs =
-      g_new (gchar *, g_strv_length ((gchar **) system_config_dirs) + 2);
+      g_new (gchar *, g_strv_length ((gchar **) system_config_dirs) + 3);
 
   i = 0;
   j = 0;
+  if (env_config_dir)
+    config_dirs[i++] = (gchar *) env_config_dir;
   config_dirs[i++] = (gchar *) user_config_dir;
   while (system_config_dirs[j])
     config_dirs[i++] = (gchar *) system_config_dirs[j++];
   config_dirs[i++] = NULL;
 
-  gst_plugin_add_dependency (plugin, NULL, (const gchar **) config_dirs,
-      config_name, GST_PLUGIN_DEPENDENCY_FLAG_NONE);
+  gst_plugin_add_dependency (plugin, env_config_name,
+      (const gchar **) (config_dirs + (env_config_dir ? 1 : 0)), config_name,
+      GST_PLUGIN_DEPENDENCY_FLAG_NONE);
 
   config = g_key_file_new ();
-  if (!g_key_file_load_from_dirs (config, "gstomx.conf",
+  if (!g_key_file_load_from_dirs (config, *config_name,
           (const gchar **) config_dirs, NULL, G_KEY_FILE_NONE, &err)) {
     GST_ERROR ("Failed to load configuration file: %s", err->message);
     g_error_free (err);
@@ -1586,6 +1592,7 @@ plugin_init (GstPlugin * plugin)
   g_strfreev (elements);
 
 done:
+  g_free (env_config_dir);
   g_free (config_dirs);
 
   return ret;
