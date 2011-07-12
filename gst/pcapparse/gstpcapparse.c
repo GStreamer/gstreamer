@@ -466,7 +466,6 @@ gst_pcap_parse_chain (GstPad * pad, GstBuffer * buffer)
         guint32 ts_sec;
         guint32 ts_usec;
         guint32 incl_len;
-        guint32 orig_len;
 
         if (avail < 16)
           break;
@@ -476,7 +475,7 @@ gst_pcap_parse_chain (GstPad * pad, GstBuffer * buffer)
         ts_sec = gst_pcap_parse_read_uint32 (self, data + 0);
         ts_usec = gst_pcap_parse_read_uint32 (self, data + 4);
         incl_len = gst_pcap_parse_read_uint32 (self, data + 8);
-        orig_len = gst_pcap_parse_read_uint32 (self, data + 12);
+        /* orig_len = gst_pcap_parse_read_uint32 (self, data + 12); */
 
         gst_adapter_flush (self->adapter, 16);
 
