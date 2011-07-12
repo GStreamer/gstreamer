@@ -101,7 +101,6 @@ gst_pes_filter_parse (GstPESFilter * filter)
   GstFlowReturn ret;
   guint32 start_code;
 
-  gboolean STD_buffer_bound_scale;
   guint16 STD_buffer_size_bound;
   const guint8 *data;
   gint avail, datalen;
@@ -213,7 +212,7 @@ gst_pes_filter_parse (GstPESFilter * filter)
     if (datalen < 3)
       goto need_more_data;
 
-    STD_buffer_bound_scale = *data & 0x20;
+    /* STD_buffer_bound_scale = *data & 0x20; */
     STD_buffer_size_bound = ((guint16) (*data++ & 0x1F)) << 8;
     STD_buffer_size_bound |= *data++;
 

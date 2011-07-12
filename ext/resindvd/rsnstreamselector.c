@@ -424,7 +424,6 @@ ignore:
 }
 
 static void rsn_stream_selector_dispose (GObject * object);
-static void rsn_stream_selector_finalize (GObject * object);
 
 static void rsn_stream_selector_init (RsnStreamSelector * sel);
 static void rsn_stream_selector_base_init (RsnStreamSelectorClass * klass);
@@ -497,7 +496,6 @@ rsn_stream_selector_class_init (RsnStreamSelectorClass * klass)
   parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->dispose = rsn_stream_selector_dispose;
-  gobject_class->finalize = rsn_stream_selector_finalize;
 
   gobject_class->set_property =
       GST_DEBUG_FUNCPTR (rsn_stream_selector_set_property);
@@ -543,16 +541,6 @@ rsn_stream_selector_dispose (GObject * object)
   }
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
-}
-
-static void
-rsn_stream_selector_finalize (GObject * object)
-{
-  RsnStreamSelector *sel;
-
-  sel = RSN_STREAM_SELECTOR (object);
-
-  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
@@ -653,10 +641,7 @@ rsn_stream_selector_getcaps (GstPad * pad)
 static gboolean
 rsn_stream_selector_is_active_sinkpad (RsnStreamSelector * sel, GstPad * pad)
 {
-  RsnSelectorPad *selpad;
   gboolean res;
-
-  selpad = GST_SELECTOR_PAD_CAST (pad);
 
   GST_OBJECT_LOCK (sel);
   res = (pad == sel->active_sinkpad);
