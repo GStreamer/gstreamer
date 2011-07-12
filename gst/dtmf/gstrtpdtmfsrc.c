@@ -514,8 +514,7 @@ gst_rtp_dtmf_prepare_timestamps (GstRTPDTMFSrc * dtmfsrc)
     if (clock == NULL)
       return FALSE;
 
-    dtmfsrc->timestamp = gst_clock_get_time (clock)
-        + (MIN_INTER_DIGIT_INTERVAL * GST_MSECOND)
+    dtmfsrc->start_timestamp = gst_clock_get_time (clock)
         - gst_element_get_base_time (GST_ELEMENT (dtmfsrc));
     dtmfsrc->start_timestamp = dtmfsrc->timestamp;
     gst_object_unref (clock);
@@ -591,7 +590,6 @@ gst_rtp_dtmf_prepare_buffer_data (GstRTPDTMFSrc * dtmfsrc, GstBuffer * buf)
     GST_BUFFER_DURATION (buf) = dtmfsrc->ptime * GST_MSECOND;
   GST_BUFFER_TIMESTAMP (buf) = dtmfsrc->timestamp;
 
-  dtmfsrc->timestamp += GST_BUFFER_DURATION (buf);
 
   payload = (GstRTPDTMFPayload *) gst_rtp_buffer_get_payload (buf);
 
@@ -606,6 +604,18 @@ gst_rtp_dtmf_prepare_buffer_data (GstRTPDTMFSrc * dtmfsrc, GstBuffer * buf)
   if (dtmfsrc->redundancy_count == 0)
     dtmfsrc->payload->duration += dtmfsrc->ptime * dtmfsrc->clock_rate / 1000;
 
+  if (dtmfsrc->redundancy_count == 0 && dtmfsrc->last_packet) {
+    GstClockTime inter_digit_interval = MIN_INTER_DIGIT_INTERVAL;
+
+    if (inter_digit_interval % dtmfsrc->ptime != 0)
+      inter_digit_interval += dtmfsrc->ptime -
+          (MIN_INTER_DIGIT_INTERVAL % dtmfsrc->ptime);
+
+    GST_BUFFER_DURATION (buf) += inter_digit_interval * GST_MSECOND;
+  }
+
+  if (GST_CLOCK_TIME_IS_VALID (dtmfsrc->timestamp))
+    dtmfsrc->timestamp += GST_BUFFER_DURATION (buf);
 }
 
 static GstBuffer *
