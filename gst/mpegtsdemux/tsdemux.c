@@ -865,7 +865,6 @@ gst_ts_demux_do_seek (MpegTSBase * base, GstEvent * event, guint16 pid)
   GstTSDemux *demux = (GstTSDemux *) base;
   GstFlowReturn res = GST_FLOW_ERROR;
   gdouble rate;
-  gboolean accurate, flush;
   GstFormat format;
   GstSeekFlags flags;
   GstSeekType start_type, stop_type;
@@ -883,9 +882,6 @@ gst_ts_demux_do_seek (MpegTSBase * base, GstEvent * event, guint16 pid)
   GST_DEBUG ("seek event, rate: %f start: %" GST_TIME_FORMAT
       " stop: %" GST_TIME_FORMAT, rate, GST_TIME_ARGS (start),
       GST_TIME_ARGS (stop));
-
-  accurate = flags & GST_SEEK_FLAG_ACCURATE;
-  flush = flags & GST_SEEK_FLAG_FLUSH;
 
   if (flags & (GST_SEEK_FLAG_SEGMENT | GST_SEEK_FLAG_SKIP)) {
     GST_WARNING ("seek flags 0x%x are not supported", (int) flags);
