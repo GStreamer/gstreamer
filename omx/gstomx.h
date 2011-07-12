@@ -145,6 +145,10 @@ struct _GstOMXBuffer {
   gint settings_cookie;
 };
 
+extern GQuark     gst_omx_element_name_quark;
+
+GKeyFile *        gst_omx_get_configuration (void);
+
 GstOMXCore *      gst_omx_core_acquire (const gchar * filename);
 void              gst_omx_core_release (GstOMXCore * core);
 

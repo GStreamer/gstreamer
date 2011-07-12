@@ -1432,21 +1432,161 @@ done:
   return err;
 }
 
+GQuark gst_omx_element_name_quark = 0;
+
+static GType (*types[]) (void) = {
+gst_omx_mpeg4_video_dec_get_type, gst_omx_h264_dec_get_type};
+
+static GKeyFile *config = NULL;
+GKeyFile *
+gst_omx_get_configuration (void)
+{
+  return config;
+}
+
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
   gboolean ret = FALSE;
+  GError *err = NULL;
+  gchar **config_dirs;
+  gchar **elements;
+  const gchar *user_config_dir;
+  const gchar *const *system_config_dirs;
+  gint i, j;
+  gsize n_elements;
+  static const gchar *config_name[] = { "gstomx.conf", NULL };
 
   GST_DEBUG_CATEGORY_INIT (gstomx_debug, "omx", 0, "gst-omx");
 
-  /* TODO: Use configuration file */
-  ret |=
-      gst_element_register (plugin, "omxmpeg4videodec", GST_RANK_PRIMARY,
-      GST_TYPE_OMX_MPEG4_VIDEO_DEC);
+  gst_omx_element_name_quark =
+      g_quark_from_static_string ("gst-omx-element-name");
 
-  ret |=
-      gst_element_register (plugin, "omxh264dec", GST_RANK_PRIMARY,
-      GST_TYPE_OMX_H264_DEC);
+  /* Read configuration file gstomx.conf from the preferred
+   * configuration directories */
+  user_config_dir = g_get_user_config_dir ();
+  system_config_dirs = g_get_system_config_dirs ();
+  config_dirs =
+      g_new (gchar *, g_strv_length ((gchar **) system_config_dirs) + 2);
+
+  i = 0;
+  j = 0;
+  config_dirs[i++] = (gchar *) user_config_dir;
+  while (system_config_dirs[j])
+    config_dirs[i++] = (gchar *) system_config_dirs[j++];
+  config_dirs[i++] = NULL;
+
+  gst_plugin_add_dependency (plugin, NULL, (const gchar **) config_dirs,
+      config_name, GST_PLUGIN_DEPENDENCY_FLAG_NONE);
+
+  config = g_key_file_new ();
+  if (!g_key_file_load_from_dirs (config, "gstomx.conf",
+          (const gchar **) config_dirs, NULL, G_KEY_FILE_NONE, &err)) {
+    GST_ERROR ("Failed to load configuration file: %s", err->message);
+    g_error_free (err);
+    goto done;
+  }
+
+  /* Initialize all types */
+  for (i = 0; i < G_N_ELEMENTS (types); i++)
+    types[i] ();
+
+  elements = g_key_file_get_groups (config, &n_elements);
+  for (i = 0; i < n_elements; i++) {
+    GTypeQuery type_query;
+    GTypeInfo type_info = { 0, };
+    GType type, subtype;
+    gchar *type_name, *core_name, *component_name;
+    gint rank;
+
+    GST_DEBUG ("Registering element '%s'", elements[i]);
+
+    err = NULL;
+    if (!(type_name =
+            g_key_file_get_string (config, elements[i], "type-name", &err))) {
+      GST_ERROR
+          ("Unable to read 'type-name' configuration for element '%s': %s",
+          elements[i], err->message);
+      g_error_free (err);
+      continue;
+    }
+
+    type = g_type_from_name (type_name);
+    if (type == G_TYPE_INVALID) {
+      GST_ERROR ("Invalid type name '%s' for element '%s'", type_name,
+          elements[i]);
+      g_free (type_name);
+      continue;
+    }
+    if (!g_type_is_a (type, GST_TYPE_ELEMENT)) {
+      GST_ERROR ("Type '%s' is no GstElement subtype for element '%s'",
+          type_name, elements[i]);
+      g_free (type_name);
+      continue;
+    }
+    g_free (type_name);
+
+    /* And now some sanity checking */
+    err = NULL;
+    if (!(core_name =
+            g_key_file_get_string (config, elements[i], "core-name", &err))) {
+      GST_ERROR
+          ("Unable to read 'core-name' configuration for element '%s': %s",
+          elements[i], err->message);
+      g_error_free (err);
+      continue;
+    }
+    if (!g_file_test (core_name, G_FILE_TEST_IS_REGULAR)) {
+      GST_ERROR ("Core '%s' does not exist for element '%s'", core_name,
+          elements[i]);
+      g_free (core_name);
+      continue;
+    }
+    g_free (core_name);
+
+    err = NULL;
+    if (!(component_name =
+            g_key_file_get_string (config, elements[i], "component-name",
+                &err))) {
+      GST_ERROR
+          ("Unable to read 'component-name' configuration for element '%s': %s",
+          elements[i], err->message);
+      g_error_free (err);
+      continue;
+    }
+    g_free (component_name);
+
+    err = NULL;
+    rank = g_key_file_get_integer (config, elements[i], "rank", &err);
+    if (err != NULL) {
+      GST_ERROR ("No rank set for element '%s': %s", elements[i], err->message);
+      g_error_free (err);
+      continue;
+    }
+
+    /* And now register the type, all other configuration will
+     * be handled by the type itself */
+    g_type_query (type, &type_query);
+    memset (&type_info, 0, sizeof (type_info));
+    type_info.class_size = type_query.class_size;
+    type_info.instance_size = type_query.instance_size;
+    type_name = g_strdup_printf ("%s-%s", g_type_name (type), elements[i]);
+    if (g_type_from_name (type_name) != G_TYPE_INVALID) {
+      GST_ERROR ("Type '%s' already exists for element '%s'", type_name,
+          elements[i]);
+      g_free (type_name);
+      continue;
+    }
+    subtype = g_type_register_static (type, type_name, &type_info, 0);
+    g_free (type_name);
+    g_type_set_qdata (subtype, gst_omx_element_name_quark,
+        g_strdup (elements[i]));
+    ret |= gst_element_register (plugin, elements[i], rank, subtype);
+  }
+  g_strfreev (elements);
+
+done:
+  g_free (config_dirs);
 
   return ret;
 }
