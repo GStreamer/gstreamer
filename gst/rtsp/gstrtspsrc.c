@@ -6018,8 +6018,12 @@ gst_rtspsrc_play (GstRTSPSrc * src, GstSegment * segment, gboolean async)
    * udp sources */
   gst_rtspsrc_send_dummy_packets (src);
 
-  /* activate receive elements */
-  gst_element_set_state (GST_ELEMENT_CAST (src), GST_STATE_PLAYING);
+  /* activate receive elements;
+   * only in async case, since receive elements may not have been affected
+   * by overall state change (e.g. not around yet),
+   * do not mess with state in sync case (e.g. seeking) */
+  if (async)
+    gst_element_set_state (GST_ELEMENT_CAST (src), GST_STATE_PLAYING);
 
   /* construct a control url */
   if (src->control)
