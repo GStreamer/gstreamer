@@ -27,7 +27,7 @@
 
 #include "gstomx.h"
 #include "gstomxmpeg4videodec.h"
-#include "gstomxh264videodec.h"
+#include "gstomxh264dec.h"
 
 GST_DEBUG_CATEGORY (gstomx_debug);
 #define GST_CAT_DEFAULT gstomx_debug
@@ -1445,8 +1445,8 @@ plugin_init (GstPlugin * plugin)
       GST_TYPE_OMX_MPEG4_VIDEO_DEC);
 
   ret |=
-      gst_element_register (plugin, "omxh264videodec", GST_RANK_PRIMARY,
-      GST_TYPE_OMX_H264_VIDEO_DEC);
+      gst_element_register (plugin, "omxh264dec", GST_RANK_PRIMARY,
+      GST_TYPE_OMX_H264_DEC);
 
   return ret;
 }

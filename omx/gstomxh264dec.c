@@ -24,16 +24,16 @@
 
 #include <gst/gst.h>
 
-#include "gstomxh264videodec.h"
+#include "gstomxh264dec.h"
 
-GST_DEBUG_CATEGORY_STATIC (gst_omx_h264_video_dec_debug_category);
-#define GST_CAT_DEFAULT gst_omx_h264_video_dec_debug_category
+GST_DEBUG_CATEGORY_STATIC (gst_omx_h264_dec_debug_category);
+#define GST_CAT_DEFAULT gst_omx_h264_dec_debug_category
 
 /* prototypes */
-static void gst_omx_h264_video_dec_finalize (GObject * object);
-static gboolean gst_omx_h264_video_dec_is_format_change (GstOMXVideoDec * dec,
+static void gst_omx_h264_dec_finalize (GObject * object);
+static gboolean gst_omx_h264_dec_is_format_change (GstOMXVideoDec * dec,
     GstOMXPort * port, GstVideoState * state);
-static gboolean gst_omx_h264_video_dec_set_format (GstOMXVideoDec * dec,
+static gboolean gst_omx_h264_dec_set_format (GstOMXVideoDec * dec,
     GstOMXPort * port, GstVideoState * state);
 
 enum
@@ -44,13 +44,13 @@ enum
 /* class initialization */
 
 #define DEBUG_INIT(bla) \
-  GST_DEBUG_CATEGORY_INIT (gst_omx_h264_video_dec_debug_category, "omxh264videodec", 0, \
+  GST_DEBUG_CATEGORY_INIT (gst_omx_h264_dec_debug_category, "omxh264dec", 0, \
       "debug category for gst-omx video decoder base class");
 
-GST_BOILERPLATE_FULL (GstOMXH264VideoDec, gst_omx_h264_video_dec,
+GST_BOILERPLATE_FULL (GstOMXH264Dec, gst_omx_h264_dec,
     GstOMXVideoDec, GST_TYPE_OMX_VIDEO_DEC, DEBUG_INIT);
 
-static GstStaticPadTemplate gst_omx_h264_video_dec_sink_template =
+static GstStaticPadTemplate gst_omx_h264_dec_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -59,7 +59,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
         "alignment=(string)au, " "stream-format=(string) {avc, byte-stream}")
     );
 
-static GstStaticPadTemplate gst_omx_h264_video_dec_src_template =
+static GstStaticPadTemplate gst_omx_h264_dec_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -67,14 +67,14 @@ GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 static void
-gst_omx_h264_video_dec_base_init (gpointer g_class)
+gst_omx_h264_dec_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_omx_h264_video_dec_src_template));
+      gst_static_pad_template_get (&gst_omx_h264_dec_src_template));
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_omx_h264_video_dec_sink_template));
+      gst_static_pad_template_get (&gst_omx_h264_dec_sink_template));
 
   gst_element_class_set_details_simple (element_class,
       "OpenMAX H264 Video Decoder",
@@ -84,12 +84,12 @@ gst_omx_h264_video_dec_base_init (gpointer g_class)
 }
 
 static void
-gst_omx_h264_video_dec_class_init (GstOMXH264VideoDecClass * klass)
+gst_omx_h264_dec_class_init (GstOMXH264DecClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstOMXVideoDecClass *videodec_class = GST_OMX_VIDEO_DEC_CLASS (klass);
 
-  gobject_class->finalize = gst_omx_h264_video_dec_finalize;
+  gobject_class->finalize = gst_omx_h264_dec_finalize;
 
   /* TODO: Make this configurable */
   videodec_class->core_name = "/usr/local/lib/libomxil-bellagio.so.0";
@@ -98,34 +98,32 @@ gst_omx_h264_video_dec_class_init (GstOMXH264VideoDecClass * klass)
   videodec_class->out_port_index = 1;
 
   videodec_class->is_format_change =
-      GST_DEBUG_FUNCPTR (gst_omx_h264_video_dec_is_format_change);
-  videodec_class->set_format =
-      GST_DEBUG_FUNCPTR (gst_omx_h264_video_dec_set_format);
+      GST_DEBUG_FUNCPTR (gst_omx_h264_dec_is_format_change);
+  videodec_class->set_format = GST_DEBUG_FUNCPTR (gst_omx_h264_dec_set_format);
 }
 
 static void
-gst_omx_h264_video_dec_init (GstOMXH264VideoDec * self,
-    GstOMXH264VideoDecClass * klass)
+gst_omx_h264_dec_init (GstOMXH264Dec * self, GstOMXH264DecClass * klass)
 {
 }
 
 static void
-gst_omx_h264_video_dec_finalize (GObject * object)
+gst_omx_h264_dec_finalize (GObject * object)
 {
-  /* GstOMXH264VideoDec *self = GST_OMX_H264_VIDEO_DEC (object); */
+  /* GstOMXH264Dec *self = GST_OMX_H264_DEC (object); */
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static gboolean
-gst_omx_h264_video_dec_is_format_change (GstOMXVideoDec * dec,
+gst_omx_h264_dec_is_format_change (GstOMXVideoDec * dec,
     GstOMXPort * port, GstVideoState * state)
 {
   return FALSE;
 }
 
 static gboolean
-gst_omx_h264_video_dec_set_format (GstOMXVideoDec * dec, GstOMXPort * port,
+gst_omx_h264_dec_set_format (GstOMXVideoDec * dec, GstOMXPort * port,
     GstVideoState * state)
 {
   gboolean ret;
