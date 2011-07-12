@@ -77,12 +77,16 @@ GST_BOILERPLATE_FULL (GstOMXVideoDec, gst_omx_video_dec, GstBaseVideoDecoder,
 static void
 gst_omx_video_dec_base_init (gpointer g_class)
 {
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
   GstOMXVideoDecClass *videodec_class = GST_OMX_VIDEO_DEC_CLASS (g_class);
   GKeyFile *config;
   const gchar *element_name;
   GError *err;
   gchar *core_name, *component_name;
   gint in_port_index, out_port_index;
+  gchar *template_caps;
+  GstPadTemplate *templ;
+  GstCaps *caps;
 
   element_name =
       g_type_get_qdata (G_TYPE_FROM_CLASS (g_class),
@@ -124,6 +128,59 @@ gst_omx_video_dec_base_init (gpointer g_class)
     g_error_free (err);
   }
   videodec_class->out_port_index = out_port_index;
+
+  /* Add pad templates */
+  err = NULL;
+  if (!(template_caps =
+          g_key_file_get_string (config, element_name, "sink-template-caps",
+              &err))) {
+    GST_DEBUG
+        ("No sink template caps specified for element '%s', using default '%s'",
+        element_name, videodec_class->default_sink_template_caps);
+    caps = gst_caps_from_string (videodec_class->default_sink_template_caps);
+    g_assert (caps != NULL);
+    g_error_free (err);
+  } else {
+    caps = gst_caps_from_string (template_caps);
+    if (!caps) {
+      GST_DEBUG
+          ("Could not parse sink template caps '%s' for element '%s', using default '%s'",
+          template_caps, element_name,
+          videodec_class->default_sink_template_caps);
+      caps = gst_caps_from_string (videodec_class->default_sink_template_caps);
+      g_assert (caps != NULL);
+    }
+  }
+  templ = gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS, caps);
+  g_free (template_caps);
+  gst_element_class_add_pad_template (element_class, templ);
+  gst_object_unref (templ);
+
+  err = NULL;
+  if (!(template_caps =
+          g_key_file_get_string (config, element_name, "src-template-caps",
+              &err))) {
+    GST_DEBUG
+        ("No src template caps specified for element '%s', using default '%s'",
+        element_name, videodec_class->default_src_template_caps);
+    caps = gst_caps_from_string (videodec_class->default_src_template_caps);
+    g_assert (caps != NULL);
+    g_error_free (err);
+  } else {
+    caps = gst_caps_from_string (template_caps);
+    if (!caps) {
+      GST_DEBUG
+          ("Could not parse src template caps '%s' for element '%s', using default '%s'",
+          template_caps, element_name,
+          videodec_class->default_src_template_caps);
+      caps = gst_caps_from_string (videodec_class->default_src_template_caps);
+      g_assert (caps != NULL);
+    }
+  }
+  templ = gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS, caps);
+  g_free (template_caps);
+  gst_element_class_add_pad_template (element_class, templ);
+  gst_object_unref (templ);
 }
 
 static void
@@ -150,9 +207,6 @@ gst_omx_video_dec_class_init (GstOMXVideoDecClass * klass)
       GST_DEBUG_FUNCPTR (gst_omx_video_dec_handle_frame);
   base_video_decoder_class->finish =
       GST_DEBUG_FUNCPTR (gst_omx_video_dec_finish);
-
-  klass->in_port_index = 0;
-  klass->out_port_index = 1;
 }
 
 static void
@@ -177,7 +231,6 @@ gst_omx_video_dec_open (GstOMXVideoDec * self)
           GST_CLOCK_TIME_NONE) != OMX_StateLoaded)
     return FALSE;
 
-  /* FIXME: Always 0 == input, 1 == output? Make configurable? Let subclass decide? */
   self->in_port =
       gst_omx_component_add_port (self->component, klass->in_port_index);
   self->out_port =

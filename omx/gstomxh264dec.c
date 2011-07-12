@@ -50,31 +50,10 @@ enum
 GST_BOILERPLATE_FULL (GstOMXH264Dec, gst_omx_h264_dec,
     GstOMXVideoDec, GST_TYPE_OMX_VIDEO_DEC, DEBUG_INIT);
 
-static GstStaticPadTemplate gst_omx_h264_dec_sink_template =
-GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-h264, "
-        "parsed=(boolean) true, "
-        "alignment=(string)au, " "stream-format=(string) {avc, byte-stream}")
-    );
-
-static GstStaticPadTemplate gst_omx_h264_dec_src_template =
-GST_STATIC_PAD_TEMPLATE ("src",
-    GST_PAD_SRC,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("I420"))
-    );
-
 static void
 gst_omx_h264_dec_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_omx_h264_dec_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_omx_h264_dec_sink_template));
 
   gst_element_class_set_details_simple (element_class,
       "OpenMAX H264 Video Decoder",
@@ -94,6 +73,11 @@ gst_omx_h264_dec_class_init (GstOMXH264DecClass * klass)
   videodec_class->is_format_change =
       GST_DEBUG_FUNCPTR (gst_omx_h264_dec_is_format_change);
   videodec_class->set_format = GST_DEBUG_FUNCPTR (gst_omx_h264_dec_set_format);
+
+  videodec_class->default_sink_template_caps = "video/x-h264, "
+      "parsed=(boolean) true, "
+      "alignment=(string)au, " "stream-format=(string) avc";
+  videodec_class->default_src_template_caps = GST_VIDEO_CAPS_YUV ("I420");
 }
 
 static void
