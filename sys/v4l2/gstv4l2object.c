@@ -1331,9 +1331,9 @@ gst_v4l2_object_get_all_caps (void)
  * @fps_n/@fps_d: location for framerate
  * @size: location for expected size of the frame or 0 if unknown
  */
-gboolean
+static gboolean
 gst_v4l2_object_get_caps_info (GstV4l2Object * v4l2object, GstCaps * caps,
-    struct v4l2_fmtdesc ** format, gint * w, gint * h,
+    struct v4l2_fmtdesc **format, gint * w, gint * h,
     gboolean * interlaced, guint * fps_n, guint * fps_d, guint * size)
 {
   GstStructure *structure;
@@ -2060,12 +2060,30 @@ gst_v4l2_object_get_nearest_size (GstV4l2Object * v4l2object,
 
 
 gboolean
-gst_v4l2_object_set_format (GstV4l2Object * v4l2object, guint32 pixelformat,
-    guint32 width, guint32 height, gboolean interlaced)
+gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
 {
   gint fd = v4l2object->video_fd;
   struct v4l2_format *format;
   enum v4l2_field field;
+  guint32 pixelformat;
+  gint width;
+  gint height;
+  gboolean interlaced;
+  struct v4l2_fmtdesc *fmtdesc;
+  guint fps_n, fps_d;
+  guint size;
+
+  if (!gst_v4l2_object_get_caps_info (v4l2object, caps,
+          &fmtdesc, &width, &height, &interlaced, &fps_n, &fps_d, &size))
+    goto invalid_caps;
+
+  v4l2object->fps_n = fps_n;
+  v4l2object->fps_d = fps_d;
+  v4l2object->size = size;
+  v4l2object->width = width;
+  v4l2object->height = height;
+
+  pixelformat = fmtdesc->pixelformat;
 
   if (interlaced) {
     GST_DEBUG_OBJECT (v4l2object->element, "interlaced video");
@@ -2146,6 +2164,12 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, guint32 pixelformat,
   return TRUE;
 
   /* ERRORS */
+invalid_caps:
+  {
+    GST_DEBUG_OBJECT (v4l2object->element, "can't parse caps %" GST_PTR_FORMAT,
+        caps);
+    return FALSE;
+  }
 get_fmt_failed:
   {
     GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, SETTINGS,

@@ -617,11 +617,6 @@ static gboolean
 gst_v4l2sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
 {
   GstV4l2Sink *v4l2sink = GST_V4L2SINK (bsink);
-  gint w = 0, h = 0;
-  gboolean interlaced;
-  struct v4l2_fmtdesc *format;
-  guint fps_n, fps_d;
-  guint size;
   GstV4l2BufferPool *newpool;
 
   LOG_CAPS (v4l2sink, caps);
@@ -641,11 +636,6 @@ gst_v4l2sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
     GST_DEBUG_OBJECT (v4l2sink, "no they aren't!");
   }
 
-  /* we want our own v4l2 type of fourcc codes */
-  if (!gst_v4l2_object_get_caps_info (v4l2sink->v4l2object, caps,
-          &format, &w, &h, &interlaced, &fps_n, &fps_d, &size))
-    goto invalid_caps;
-
   if (v4l2sink->pool) {
     /* we have a pool already, stop and destroy the old pool */
     if (v4l2sink->state == STATE_STREAMING) {
@@ -658,8 +648,7 @@ gst_v4l2sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
     v4l2sink->pool = NULL;
   }
 
-  if (!gst_v4l2_object_set_format (v4l2sink->v4l2object, format->pixelformat,
-          w, h, interlaced))
+  if (!gst_v4l2_object_set_format (v4l2sink->v4l2object, caps))
     goto invalid_format;
 
   if (!(v4l2sink->v4l2object->vcap.capabilities & V4L2_CAP_STREAMING))
@@ -688,26 +677,20 @@ gst_v4l2sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
     g_object_notify (G_OBJECT (v4l2sink), "queue-size");
   }
 
-  v4l2sink->video_width = w;
-  v4l2sink->video_height = h;
+  v4l2sink->video_width = v4l2sink->v4l2object->width;
+  v4l2sink->video_height = v4l2sink->v4l2object->height;
 
   /* TODO: videosink width/height should be scaled according to
    * pixel-aspect-ratio
    */
-  GST_VIDEO_SINK_WIDTH (v4l2sink) = w;
-  GST_VIDEO_SINK_HEIGHT (v4l2sink) = h;
+  GST_VIDEO_SINK_WIDTH (v4l2sink) = v4l2sink->video_width;
+  GST_VIDEO_SINK_HEIGHT (v4l2sink) = v4l2sink->video_height;
 
   v4l2sink->current_caps = gst_caps_ref (caps);
 
   return TRUE;
 
   /* ERRORS */
-invalid_caps:
-  {
-    GST_DEBUG_OBJECT (v4l2sink,
-        "can't get capture format from caps %" GST_PTR_FORMAT, caps);
-    return FALSE;
-  }
 stop_failed:
   {
     GST_DEBUG_OBJECT (v4l2sink, "failed to stop streaming");

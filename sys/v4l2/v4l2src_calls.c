@@ -213,21 +213,18 @@ too_many_trials:
  * return value: TRUE on success, FALSE on error
  ******************************************************/
 gboolean
-gst_v4l2src_set_capture (GstV4l2Src * v4l2src, guint32 pixelformat,
-    guint32 width, guint32 height, gboolean interlaced,
-    guint fps_n, guint fps_d)
+gst_v4l2src_set_capture (GstV4l2Src * v4l2src, GstCaps * caps)
 {
   gint fd = v4l2src->v4l2object->video_fd;
   struct v4l2_streamparm stream;
+  guint fps_n, fps_d;
 
-  if (pixelformat == GST_MAKE_FOURCC ('M', 'P', 'E', 'G'))
-    return TRUE;
-
-  if (!gst_v4l2_object_set_format (v4l2src->v4l2object, pixelformat, width,
-          height, interlaced)) {
+  if (!gst_v4l2_object_set_format (v4l2src->v4l2object, caps))
     /* error already reported */
     return FALSE;
-  }
+
+  fps_n = v4l2src->v4l2object->fps_n;
+  fps_d = v4l2src->v4l2object->fps_d;
 
   /* Is there a reason we require the caller to always specify a framerate? */
   GST_DEBUG_OBJECT (v4l2src, "Desired framerate: %u/%u", fps_n, fps_d);
