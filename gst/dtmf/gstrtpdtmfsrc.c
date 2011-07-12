@@ -502,29 +502,27 @@ gst_rtp_dtmf_src_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
-static void
+static gboolean
 gst_rtp_dtmf_prepare_timestamps (GstRTPDTMFSrc * dtmfsrc)
 {
   GstClock *clock;
 
   clock = gst_element_get_clock (GST_ELEMENT (dtmfsrc));
-  if (clock != NULL) {
-    dtmfsrc->timestamp = gst_clock_get_time (clock)
-        + (MIN_INTER_DIGIT_INTERVAL * GST_MSECOND)
-        - gst_element_get_base_time (GST_ELEMENT (dtmfsrc));
-    dtmfsrc->start_timestamp = dtmfsrc->timestamp;
-    gst_object_unref (clock);
-  } else {
-    gchar *dtmf_name = gst_element_get_name (dtmfsrc);
-    GST_ERROR_OBJECT (dtmfsrc, "No clock set for element %s", dtmf_name);
-    dtmfsrc->timestamp = GST_CLOCK_TIME_NONE;
-    g_free (dtmf_name);
-  }
+  if (clock == NULL)
+    return FALSE;
+
+  dtmfsrc->timestamp = gst_clock_get_time (clock)
+      + (MIN_INTER_DIGIT_INTERVAL * GST_MSECOND)
+      - gst_element_get_base_time (GST_ELEMENT (dtmfsrc));
+  dtmfsrc->start_timestamp = dtmfsrc->timestamp;
+  gst_object_unref (clock);
 
   dtmfsrc->rtp_timestamp = dtmfsrc->ts_base +
       gst_util_uint64_scale_int (gst_segment_to_running_time (&GST_BASE_SRC
           (dtmfsrc)->segment, GST_FORMAT_TIME, dtmfsrc->timestamp),
       dtmfsrc->clock_rate, GST_SECOND);
+
+  return TRUE;
 }
 
 
@@ -660,7 +658,8 @@ gst_rtp_dtmf_src_create (GstBaseSrc * basesrc, guint64 offset,
           dtmfsrc->last_packet = FALSE;
           /* Set the redundancy on the first packet */
           dtmfsrc->redundancy_count = dtmfsrc->packet_redundancy;
-          gst_rtp_dtmf_prepare_timestamps (dtmfsrc);
+          if (!gst_rtp_dtmf_prepare_timestamps (dtmfsrc))
+            goto no_clock;
 
           dtmfsrc->payload = event->payload;
           event->payload = NULL;
@@ -727,6 +726,8 @@ gst_rtp_dtmf_src_create (GstBaseSrc * basesrc, guint64 offset,
   GST_DEBUG_OBJECT (dtmfsrc, "Processed events, now lets wait on the clock");
 
   clock = gst_element_get_clock (GST_ELEMENT (basesrc));
+  if (!clock)
+    goto no_clock;
   clockid = gst_clock_new_single_shot_id (clock, dtmfsrc->timestamp +
       gst_element_get_base_time (GST_ELEMENT (dtmfsrc)));
   gst_object_unref (clock);
@@ -793,6 +794,12 @@ paused:
   } else {
     return GST_FLOW_WRONG_STATE;
   }
+
+no_clock:
+  GST_ELEMENT_ERROR (dtmfsrc, STREAM, MUX, ("No available clock"),
+      ("No available clock"));
+  gst_pad_pause_task (GST_BASE_SRC_PAD (dtmfsrc));
+  return GST_FLOW_ERROR;
 }
 
 
