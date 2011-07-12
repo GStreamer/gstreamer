@@ -295,7 +295,7 @@ done:
  * return value: TRUE on success, FALSE on error
  ******************************************************/
 gboolean
-gst_v4l2src_capture_init (GstV4l2Src * v4l2src, GstCaps * caps)
+gst_v4l2src_capture_init (GstV4l2Src * v4l2src)
 {
   GST_DEBUG_OBJECT (v4l2src, "initializing the capture system");
 

@@ -552,7 +552,7 @@ gst_v4l2src_set_caps (GstBaseSrc * src, GstCaps * caps)
     /* error already posted */
     return FALSE;
 
-  if (!gst_v4l2src_capture_init (v4l2src, caps))
+  if (!gst_v4l2src_capture_init (v4l2src))
     return FALSE;
 
   if (v4l2src->use_mmap) {
