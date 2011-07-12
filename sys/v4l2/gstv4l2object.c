@@ -2235,7 +2235,7 @@ gst_v4l2_object_stop_streaming (GstV4l2Object * v4l2object)
           &(v4l2object->type)) < 0)
     goto stop_failed;
 
-  return FALSE;
+  return TRUE;
 
   /* ERRORS */
 stop_failed:
