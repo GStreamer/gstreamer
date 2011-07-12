@@ -336,7 +336,7 @@ static gboolean
 mpegts_packetizer_parse_descriptors (MpegTSPacketizer * packetizer,
     guint8 ** buffer, guint8 * buffer_end, GValueArray * descriptors)
 {
-  guint8 tag, length;
+  guint8 length;
   guint8 *data;
   GValue value = { 0 };
   GString *desc;
@@ -344,7 +344,6 @@ mpegts_packetizer_parse_descriptors (MpegTSPacketizer * packetizer,
   data = *buffer;
 
   while (data < buffer_end) {
-    tag = *data++;
     length = *data++;
 
     if (data + length > buffer_end) {
@@ -353,7 +352,7 @@ mpegts_packetizer_parse_descriptors (MpegTSPacketizer * packetizer,
       goto error;
     }
 
-    /* include tag and length */
+    /* include length */
     desc = g_string_new_len ((gchar *) data - 2, length + 2);
     data += length;
     /* G_TYPE_GSTRING is a GBoxed type and is used so properly marshalled from
@@ -1285,7 +1284,6 @@ mpegts_packetizer_parse_sdt (MpegTSPacketizer * packetizer,
   guint16 transport_stream_id, original_network_id, service_id;
   guint tmp;
   guint sdt_info_length;
-  gboolean EIT_schedule, EIT_present_following;
   guint8 running_status;
   gboolean scrambled;
   guint descriptors_loop_length;
@@ -1355,9 +1353,6 @@ mpegts_packetizer_parse_sdt (MpegTSPacketizer * packetizer,
 
     service_id = GST_READ_UINT16_BE (data);
     data += 2;
-
-    EIT_schedule = ((*data & 0x02) == 2);
-    EIT_present_following = (*data & 0x01) == 1;
 
     data += 1;
     tmp = GST_READ_UINT16_BE (data);
@@ -1489,7 +1484,6 @@ mpegts_packetizer_parse_eit (MpegTSPacketizer * packetizer,
   guint transport_stream_id, original_network_id;
   gboolean free_ca_mode;
   guint event_id, running_status;
-  guint64 start_and_duration;
   guint16 mjd;
   guint year, month, day, hour, minute, second;
   guint duration;
@@ -1566,7 +1560,6 @@ mpegts_packetizer_parse_eit (MpegTSPacketizer * packetizer,
 
     event_id = GST_READ_UINT16_BE (data);
     data += 2;
-    start_and_duration = GST_READ_UINT64_BE (data);
     duration_ptr = data + 5;
     utc_ptr = data + 2;
     mjd = GST_READ_UINT16_BE (data);
@@ -1710,7 +1703,7 @@ mpegts_packetizer_parse_eit (MpegTSPacketizer * packetizer,
           GValue component_value = { 0 };
           gint widescreen = 0;  /* 0 for 4:3, 1 for 16:9, 2 for > 16:9 */
           gint freq = 25;       /* 25 or 30 measured in Hertz */
-          gboolean highdef = FALSE;
+          //gboolean highdef = FALSE;
           gboolean panvectors = FALSE;
           const gchar *comptype = "";
 
@@ -1757,46 +1750,46 @@ mpegts_packetizer_parse_eit (MpegTSPacketizer * packetizer,
                   break;
                 case 0x09:
                   widescreen = 0;
-                  highdef = TRUE;
+                  //highdef = TRUE;
                   freq = 25;
                   break;
                 case 0x0A:
                   widescreen = 1;
-                  highdef = TRUE;
+                  //highdef = TRUE;
                   panvectors = TRUE;
                   freq = 25;
                   break;
                 case 0x0B:
                   widescreen = 1;
-                  highdef = TRUE;
+                  //highdef = TRUE;
                   panvectors = FALSE;
                   freq = 25;
                   break;
                 case 0x0C:
                   widescreen = 2;
-                  highdef = TRUE;
+                  //highdef = TRUE;
                   freq = 25;
                   break;
                 case 0x0D:
                   widescreen = 0;
-                  highdef = TRUE;
+                  //highdef = TRUE;
                   freq = 30;
                   break;
                 case 0x0E:
                   widescreen = 1;
-                  highdef = TRUE;
+                  //highdef = TRUE;
                   panvectors = TRUE;
                   freq = 30;
                   break;
                 case 0x0F:
                   widescreen = 1;
-                  highdef = TRUE;
+                  //highdef = TRUE;
                   panvectors = FALSE;
                   freq = 30;
                   break;
                 case 0x10:
                   widescreen = 2;
-                  highdef = TRUE;
+                  //highdef = TRUE;
                   freq = 30;
                   break;
               }
