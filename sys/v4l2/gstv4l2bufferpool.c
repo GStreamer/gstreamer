@@ -105,7 +105,6 @@ gst_v4l2_buffer_dispose (GstBuffer * buffer)
   }
 
   if (resuscitated) {
-    /* FIXME: check that the caps didn't change */
     GST_LOG_OBJECT (pool->v4l2elem, "reviving buffer %p, %d", buffer, index);
     gst_buffer_ref (buffer);
     pool->buffers[index] = buffer;
@@ -124,7 +123,7 @@ gst_v4l2_buffer_dispose (GstBuffer * buffer)
 }
 
 static GstBuffer *
-gst_v4l2_buffer_new (GstV4l2BufferPool * pool, guint index, GstCaps * caps)
+gst_v4l2_buffer_new (GstV4l2BufferPool * pool, guint index)
 {
   GstBuffer *ret;
   GstMetaV4l2 *meta;
@@ -258,7 +257,6 @@ get_v4l2_object (GstElement * v4l2elem)
  * @v4l2elem:  the v4l2 element (src or sink) that owns this pool
  * @fd:   the video device file descriptor
  * @num_buffers:  the requested number of buffers in the pool
- * @caps:  the caps to set on the buffer
  * @requeuebuf: if %TRUE, and if the pool is still in the running state, a
  *  buffer with no remaining references is immediately passed back to v4l2
  *  (VIDIOC_QBUF), otherwise it is returned to the pool of available buffers
@@ -270,7 +268,7 @@ get_v4l2_object (GstElement * v4l2elem)
  */
 GstV4l2BufferPool *
 gst_v4l2_buffer_pool_new (GstElement * v4l2elem, gint fd, gint num_buffers,
-    GstCaps * caps, gboolean requeuebuf, enum v4l2_buf_type type)
+    gboolean requeuebuf, enum v4l2_buf_type type)
 {
   GstV4l2BufferPool *pool;
   gint n;
@@ -315,7 +313,7 @@ gst_v4l2_buffer_pool_new (GstElement * v4l2elem, gint fd, gint num_buffers,
 
   /* now, map the buffers: */
   for (n = 0; n < num_buffers; n++) {
-    pool->buffers[n] = gst_v4l2_buffer_new (pool, n, caps);
+    pool->buffers[n] = gst_v4l2_buffer_new (pool, n);
     if (!pool->buffers[n])
       goto buffer_new_failed;
     pool->num_live_buffers++;

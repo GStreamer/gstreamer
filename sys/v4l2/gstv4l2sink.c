@@ -668,7 +668,7 @@ gst_v4l2sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
 
   newpool = gst_v4l2_buffer_pool_new (GST_ELEMENT (v4l2sink),
       v4l2sink->v4l2object->video_fd,
-      v4l2sink->num_buffers, caps, FALSE, V4L2_BUF_TYPE_VIDEO_OUTPUT);
+      v4l2sink->num_buffers, FALSE, V4L2_BUF_TYPE_VIDEO_OUTPUT);
   if (newpool == NULL)
     goto no_pool;
 

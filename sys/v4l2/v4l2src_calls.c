@@ -310,7 +310,7 @@ gst_v4l2src_capture_init (GstV4l2Src * v4l2src, GstCaps * caps)
 
     if (!(v4l2src->pool = gst_v4l2_buffer_pool_new (GST_ELEMENT (v4l2src),
                 v4l2src->v4l2object->video_fd,
-                v4l2src->num_buffers, caps, TRUE, V4L2_BUF_TYPE_VIDEO_CAPTURE)))
+                v4l2src->num_buffers, TRUE, V4L2_BUF_TYPE_VIDEO_CAPTURE)))
       goto buffer_pool_new_failed;
 
     GST_INFO_OBJECT (v4l2src, "capturing buffers via mmap()");
