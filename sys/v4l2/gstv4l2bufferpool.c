@@ -166,7 +166,7 @@ gst_v4l2_buffer_new (GstV4l2BufferPool * pool, guint index, GstCaps * caps)
     goto mmap_failed;
 
   gst_buffer_take_memory (ret, -1,
-      gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY,
+      gst_memory_new_wrapped (0,
           meta->mem, NULL, meta->vbuffer.length, 0, meta->vbuffer.length));
 
   return ret;
