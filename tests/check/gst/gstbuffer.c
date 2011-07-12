@@ -441,6 +441,84 @@ GST_START_TEST (test_try_new_and_alloc)
 
 GST_END_TEST;
 
+GST_START_TEST (test_size)
+{
+  GstBuffer *buf;
+  GstMemory *mem;
+  gsize maxalloc, maxalloc2, maxalloc3, maxalloc4;
+  gsize size, maxsize, offset;
+
+  /* one memory block */
+  buf = gst_buffer_new_allocate (NULL, 100, 0);
+
+  size = gst_buffer_get_sizes (buf, &offset, &maxalloc);
+  fail_unless (size == 100);
+  fail_unless (offset == 0);
+  fail_unless (maxalloc >= 100);
+
+  mem = gst_buffer_peek_memory (buf, 0, GST_MAP_WRITE);
+  gst_memory_resize (mem, 10, 70);
+
+  size = gst_buffer_get_sizes (buf, &offset, &maxsize);
+  fail_unless (size == 70);
+  fail_unless (offset == 10);
+  fail_unless (maxsize == maxalloc);
+
+  /* new memory */
+  mem = gst_allocator_alloc (NULL, 100, 0);
+  size = gst_memory_get_sizes (mem, &offset, &maxalloc2);
+  fail_unless (size == 100);
+  fail_unless (offset == 0);
+  fail_unless (maxalloc2 >= 100);
+
+  gst_memory_resize (mem, 20, 60);
+  size = gst_memory_get_sizes (mem, &offset, &maxsize);
+  fail_unless (size == 60);
+  fail_unless (offset == 20);
+  fail_unless (maxsize == maxalloc2);
+
+  /* append */
+  gst_buffer_take_memory (buf, -1, mem);
+
+  size = gst_buffer_get_sizes (buf, &offset, &maxalloc);
+  fail_unless (size == 130);
+  fail_unless (offset == 10);
+  /* the maxsize is the size of the first buffer plus the remaining size in the
+   * second buffer */
+  fail_unless (maxalloc == 80 + (maxalloc2 - 20));
+
+  /* appending an empty block */
+  mem = gst_allocator_alloc (NULL, 100, 0);
+  size = gst_memory_get_sizes (mem, &offset, &maxalloc3);
+  gst_memory_resize (mem, 0, 0);
+  gst_buffer_take_memory (buf, -1, mem);
+
+  size = gst_buffer_get_sizes (buf, &offset, &maxalloc);
+  fail_unless (size == 130);
+  fail_unless (offset == 10);
+  /* the maxsize is the size of the first buffer plus the remaining size in the
+   * second buffer and the last empty buffer*/
+  fail_unless (maxalloc == 80 + (maxalloc2 - 20) + maxalloc3);
+
+  /* prepending an empty block */
+  mem = gst_allocator_alloc (NULL, 100, 0);
+  size = gst_memory_get_sizes (mem, &offset, &maxalloc4);
+  gst_memory_resize (mem, 0, 0);
+  gst_buffer_take_memory (buf, 0, mem);
+
+  size = gst_buffer_get_sizes (buf, &offset, &maxalloc);
+  fail_unless (size == 130);
+  /* empty buffer maxsize can be used as offset */
+  fail_unless (offset == 10 + maxalloc4);
+  /* the maxsize is the size of the first buffer plus the remaining size in the
+   * second buffer and the last empty buffer*/
+  fail_unless (maxalloc == 80 + (maxalloc2 - 20) + maxalloc3 + maxalloc4);
+
+  gst_buffer_unref (buf);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_resize)
 {
   GstBuffer *buf;
@@ -553,6 +631,7 @@ gst_buffer_suite (void)
   tcase_add_test (tc_chain, test_metadata_writable);
   tcase_add_test (tc_chain, test_copy);
   tcase_add_test (tc_chain, test_try_new_and_alloc);
+  tcase_add_test (tc_chain, test_size);
   tcase_add_test (tc_chain, test_resize);
 
   return s;

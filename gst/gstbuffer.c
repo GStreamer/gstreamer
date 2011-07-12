@@ -784,18 +784,19 @@ gst_buffer_get_sizes (GstBuffer * buffer, gsize * offset, gsize * maxsize)
       mem = GST_BUFFER_MEM_PTR (buffer, i);
       s = gst_memory_get_sizes (mem, &o, &ms);
 
-      /* add sizes */
-      size += s;
-
-      /* keep offset of first memory block */
-      if (i == 0)
-        offs = o;
-      /* this is the amount of extra bytes in this block, we only keep this for
-       * the last block */
-      if (i + 1 == len)
+      if (s) {
+        if (size == 0)
+          /* first size, take accumulated data before as the offset */
+          offs = extra + o;
+        /* add sizes */
+        size += s;
+        /* save the amount of data after this block */
         extra = ms - (o + s);
+      } else {
+        /* empty block, add as extra */
+        extra += ms;
+      }
     }
-
     if (offset)
       *offset = offs;
     if (maxsize)
