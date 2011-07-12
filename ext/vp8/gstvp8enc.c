@@ -843,9 +843,6 @@ gst_vp8_enc_buffer_to_image (GstVP8Enc * enc, GstBuffer * buffer)
 {
   vpx_image_t *image = g_slice_new (vpx_image_t);
   guint8 *data = GST_BUFFER_DATA (buffer);
-  const GstVideoState *state;
-
-  state = gst_base_video_encoder_get_state (GST_BASE_VIDEO_ENCODER (enc));
 
   memcpy (image, &enc->image, sizeof (*image));
 
