@@ -44,7 +44,7 @@
  * Includes
  */
 #ifdef HAVE_CONFIG_H
-#  include "config.h"
+#include "config.h"
 #endif
 
 /* save the snapshot images
@@ -300,8 +300,6 @@ img_capture_done (GstElement * camera, GString * fname, gpointer user_data)
       GstClockTime max = 0;
       GstClockTime min = -1;
       GstClockTime total = 0;
-      GstClockTime first_shot = 0;
-      GstClockTime snd_shot = 0;
 
       num_pics_cont = 0;
       signal_cont = FALSE;
@@ -309,13 +307,11 @@ img_capture_done (GstElement * camera, GString * fname, gpointer user_data)
       DIFF_TIME (t_final[0], t_initial, diff);
       max < diff ? max = diff : max;
       min > diff ? min = diff : min;
-      first_shot = diff;
       total += diff;
 
       DIFF_TIME (t_final[1], t_final[0], diff);
       max < diff ? max = diff : max;
       min > diff ? min = diff : min;
-      snd_shot = diff;
       total += diff;
 
       for (i = 2; i < CONT_SHOTS; ++i) {

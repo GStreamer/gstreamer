@@ -26710,7 +26710,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ratiox</NICK>
 <BLURB>x-ratio.</BLURB>
-<DEFAULT>1.21136e-314</DEFAULT>
+<DEFAULT>3.06544e-115</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26720,7 +26720,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ratioy</NICK>
 <BLURB>y-ratio.</BLURB>
-<DEFAULT>2.33156e-310</DEFAULT>
+<DEFAULT>1.53064e-18</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26730,7 +26730,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>DelayTime</NICK>
 <BLURB>the delay time.</BLURB>
-<DEFAULT>1.37974e-309</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26760,7 +26760,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Color</NICK>
 <BLURB>the color of the image.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>0.011489</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26770,7 +26770,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Color</NICK>
 <BLURB>the color of the image.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>9.33458e-15</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26780,7 +26780,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Color-R</NICK>
 <BLURB>the color of the image.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>8.37068e-21</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27120,7 +27120,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>lthresh</NICK>
 <BLURB>threshold for edge lightening.</BLURB>
-<DEFAULT>6.9235e+228</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27130,7 +27130,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>lupscale</NICK>
 <BLURB>multiplier for upscaling edge brightness.</BLURB>
-<DEFAULT>8.20074e-304</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27300,7 +27300,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>blend</NICK>
 <BLURB>blend factor.</BLURB>
-<DEFAULT>7.75037e-304</DEFAULT>
+<DEFAULT>4.62958e-299</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27310,7 +27310,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>fader</NICK>
 <BLURB>the fader position.</BLURB>
-<DEFAULT>3.84008e-315</DEFAULT>
+<DEFAULT>7.06238e-304</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27490,7 +27490,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>HSync</NICK>
 <BLURB>the hsync offset.</BLURB>
-<DEFAULT>1</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -33819,8 +33819,8 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Channel</NICK>
-<BLURB>Channel to adjust levels (1 = RED; 2 = GREEN; 3 = BLUE; 4 = LUMA).</BLURB>
-<DEFAULT>0</DEFAULT>
+<BLURB>Channel to adjust (0 = red, 0.1 = green, 0.2 = blue, 0.3 = alpha, 0.4 = luma, 0.5 = rgb, 0.6 = hue, 0.7 = saturation).</BLURB>
+<DEFAULT>0.5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -33829,7 +33829,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Curve point number</NICK>
-<BLURB>Number of point to use to build curve.</BLURB>
+<BLURB>Number of points to use to build curve.</BLURB>
 <DEFAULT>2</DEFAULT>
 </ARG>
 
@@ -33850,7 +33850,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Point 1 input value</NICK>
 <BLURB>Point 1 input value.</BLURB>
-<DEFAULT>1</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -33860,7 +33860,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Point 1 output value</NICK>
 <BLURB>Point 1 output value.</BLURB>
-<DEFAULT>1</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -33890,7 +33890,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Point 3 input value</NICK>
 <BLURB>Point 3 input value.</BLURB>
-<DEFAULT>1</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -33900,7 +33900,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Point 3 output value</NICK>
 <BLURB>Point 3 output value.</BLURB>
-<DEFAULT>1</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -33910,7 +33910,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Point 4 input value</NICK>
 <BLURB>Point 4 input value.</BLURB>
-<DEFAULT>1</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -33920,7 +33920,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Point 4 output value</NICK>
 <BLURB>Point 4 output value.</BLURB>
-<DEFAULT>1</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -33930,7 +33930,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Point 5 input value</NICK>
 <BLURB>Point 5 input value.</BLURB>
-<DEFAULT>1</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -33940,7 +33940,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Point 5 output value</NICK>
 <BLURB>Point 5 output value.</BLURB>
-<DEFAULT>1</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -33950,6 +33950,26 @@
 <FLAGS>rw</FLAGS>
 <NICK>Show curves</NICK>
 <BLURB>Draw curve graph on output image.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-curves::b--zier-spline</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bézier spline</NICK>
+<BLURB>Use cubic Bézier spline. Has to be a sorted list of points in the format "handle1x;handle1y#pointx;pointy#handle2x;handle2y"(pointx = in, pointy = out). Points are separated by a "|".The values can have "double" precision. x, y for points should be in the range 0-1. x,y for handles might also be out of this range.</BLURB>
+<DEFAULT>""</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-curves::luma-formula</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Luma formula</NICK>
+<BLURB>Use Rec. 601 (false) or Rec. 709 (true).</BLURB>
 <DEFAULT>TRUE</DEFAULT>
 </ARG>
 
@@ -45686,7 +45706,7 @@
 <ARG>
 <NAME>GstVP8Enc::speed</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[0,2]</RANGE>
+<RANGE>[0,7]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Speed</NICK>
 <BLURB>Speed.</BLURB>
@@ -46091,6 +46111,266 @@
 <NICK>test</NICK>
 <BLURB>test.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-opencvfacedetect::alpha</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Alpha</NICK>
+<BLURB>The alpha channel value for the shapes.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-opencvfacedetect::antialias</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Antialias</NICK>
+<BLURB>Draw with antialiasing.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-opencvfacedetect::classifier</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Classifier</NICK>
+<BLURB>Full path to the XML pattern model for recognition; look in /usr/share/opencv/haarcascades.</BLURB>
+<DEFAULT>"/usr/share/opencv/haarcascades/haarcascade_frontalface_default.xml"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-opencvfacedetect::color-1-b</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Color 1</NICK>
+<BLURB>The color of the first object.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-opencvfacedetect::color-1-g</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Color 1</NICK>
+<BLURB>The color of the first object.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-opencvfacedetect::color-1-r</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Color 1-R</NICK>
+<BLURB>The color of the first object.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-opencvfacedetect::color-2-b</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Color 2</NICK>
+<BLURB>The color of the second object.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-opencvfacedetect::color-2-g</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Color 2</NICK>
+<BLURB>The color of the second object.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-opencvfacedetect::color-2-r</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Color 2-R</NICK>
+<BLURB>The color of the second object.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-opencvfacedetect::color-3-b</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Color 3</NICK>
+<BLURB>The color of the third object.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-opencvfacedetect::color-3-g</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Color 3</NICK>
+<BLURB>The color of the third object.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-opencvfacedetect::color-3-r</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Color 3-R</NICK>
+<BLURB>The color of the third object.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-opencvfacedetect::color-4-b</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Color 4</NICK>
+<BLURB>The color of the fourth object.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-opencvfacedetect::color-4-g</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Color 4</NICK>
+<BLURB>The color of the fourth object.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-opencvfacedetect::color-4-r</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Color 4-R</NICK>
+<BLURB>The color of the fourth object.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-opencvfacedetect::color-5-b</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Color 5</NICK>
+<BLURB>The color of the fifth object.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-opencvfacedetect::color-5-g</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Color 5</NICK>
+<BLURB>The color of the fifth object.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-opencvfacedetect::color-5-r</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Color 5-R</NICK>
+<BLURB>The color of the fifth object.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-opencvfacedetect::neighbors</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Neighbors</NICK>
+<BLURB>Minimum number of rectangles that makes up an object, divided by 100.</BLURB>
+<DEFAULT>0.02</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-opencvfacedetect::recheck</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Recheck</NICK>
+<BLURB>How often to detect an object in number of frames, divided by 1000.</BLURB>
+<DEFAULT>0.025</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-opencvfacedetect::scale</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Scale</NICK>
+<BLURB>Down scale the image prior detection.</BLURB>
+<DEFAULT>0.666667</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-opencvfacedetect::search-scale</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Search scale</NICK>
+<BLURB>The search window scale factor, divided by 10.</BLURB>
+<DEFAULT>0.12</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-opencvfacedetect::shape</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Shape</NICK>
+<BLURB>The shape to draw: 0=circle, 0.1=ellipse, 0.2=rectangle, 1=random.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-opencvfacedetect::smallest</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Smallest</NICK>
+<BLURB>Minimum window size in pixels, divided by 1000.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-opencvfacedetect::stroke</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Stroke</NICK>
+<BLURB>Line width, divided by 100, or fill if 0.</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-opencvfacedetect::threads</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Threads</NICK>
+<BLURB>How many threads to use divided by 100; 0 uses CPU count.</BLURB>
+<DEFAULT>0.01</DEFAULT>
 </ARG>
 
 <ARG>
@@ -57651,5 +57931,1595 @@
 <NICK>Mode</NICK>
 <BLURB>Mode.</BLURB>
 <DEFAULT>ntsc</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-test-pat-r::amplitude</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Amplitude</NICK>
+<BLURB>Amplitude (contrast) of the pattern.</BLURB>
+<DEFAULT>0.8</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-test-pat-r::aspect-type</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Aspect type</NICK>
+<BLURB>Pixel aspect ratio presets.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-test-pat-r::channel</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Channel</NICK>
+<BLURB>Into which color channel to draw.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-test-pat-r::freq-1</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Freq 1</NICK>
+<BLURB>Pattern 7 H frequency.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-test-pat-r::freq-2</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Freq 2</NICK>
+<BLURB>Pattern 7 V frequency.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-test-pat-r::lin-p-swp</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Lin P swp</NICK>
+<BLURB>Use linear period sweep.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-test-pat-r::manual-aspect</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Manual aspect</NICK>
+<BLURB>Manual pixel aspect ratio.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-test-pat-r::type</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Type</NICK>
+<BLURB>Type of test pattern.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-test-pat-l::channel</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Channel</NICK>
+<BLURB>Into which color channel to draw.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-test-pat-l::type</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Type</NICK>
+<BLURB>Type of test pattern.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-test-pat-i::amplitude</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Amplitude</NICK>
+<BLURB>Amplitude (contrast) of the pattern.</BLURB>
+<DEFAULT>0.8</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-test-pat-i::channel</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Channel</NICK>
+<BLURB>Into which color channel to draw.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-test-pat-i::tilt</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Tilt</NICK>
+<BLURB>Angle of step function.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-test-pat-i::type</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Type</NICK>
+<BLURB>Type of test pattern.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-test-pat-i::width</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Width</NICK>
+<BLURB>Width of impulse.</BLURB>
+<DEFAULT>0.040404</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-test-pat-g::aspect-type</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Aspect type</NICK>
+<BLURB>Pixel aspect ratio presets.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-test-pat-g::manual-aspect</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Manual Aspect</NICK>
+<BLURB>Manual pixel aspect ratio.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-test-pat-g::size-1</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Size 1</NICK>
+<BLURB>Size of major features.</BLURB>
+<DEFAULT>0.28125</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-test-pat-g::size-2</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Size 2</NICK>
+<BLURB>Size of minor features.</BLURB>
+<DEFAULT>0.0625</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-test-pat-g::type</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Type</NICK>
+<BLURB>Type of test pattern.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-test-pat-c::color-space</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Color space</NICK>
+<BLURB></BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-test-pat-c::cross-section</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Cross section</NICK>
+<BLURB></BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-test-pat-c::third-axis-value</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Third axis value</NICK>
+<BLURB></BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-test-pat-b::aspect-type</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Aspect type</NICK>
+<BLURB>7 choices, pixel aspect ratio.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-test-pat-b::manual-aspect</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Manual Aspect</NICK>
+<BLURB>Manual pixel aspect ratio (Aspect type 6).</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-test-pat-b::type</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Type</NICK>
+<BLURB>8 choices, select test pattern.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-sop-sat::aoffset</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>aOffset</NICK>
+<BLURB>Offset of the alpha component.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-sop-sat::apower</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>aPower</NICK>
+<BLURB>Power (Gamma) of the alpha component.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-sop-sat::aslope</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>aSlope</NICK>
+<BLURB>Slope of the alpha component.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-sop-sat::boffset</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>bOffset</NICK>
+<BLURB>Offset of the blue color component.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-sop-sat::bpower</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>bPower</NICK>
+<BLURB>Power (Gamma) of the blue color component.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-sop-sat::bslope</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>bSlope</NICK>
+<BLURB>Slope of the blue color component.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-sop-sat::goffset</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>gOffset</NICK>
+<BLURB>Offset of the green color component.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-sop-sat::gpower</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>gPower</NICK>
+<BLURB>Power (Gamma) of the green color component.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-sop-sat::gslope</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>gSlope</NICK>
+<BLURB>Slope of the green color component.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-sop-sat::roffset</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>rOffset</NICK>
+<BLURB>Offset of the red color component.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-sop-sat::rpower</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>rPower</NICK>
+<BLURB>Power (Gamma) of the red color component.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-sop-sat::rslope</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>rSlope</NICK>
+<BLURB>Slope of the red color component.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-sop-sat::saturation</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>saturation</NICK>
+<BLURB>Overall saturation.</BLURB>
+<DEFAULT>200</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-sharpness::amount</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Amount</NICK>
+<BLURB></BLURB>
+<DEFAULT>0.3</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-sharpness::size</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Size</NICK>
+<BLURB></BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-select0r::color-to-select-b</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Color to select</NICK>
+<BLURB></BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-select0r::color-to-select-g</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Color to select</NICK>
+<BLURB></BLURB>
+<DEFAULT>0.8</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-select0r::color-to-select-r</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Color to select-R</NICK>
+<BLURB></BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-select0r::delta-b---i---i</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Delta B / I / I</NICK>
+<BLURB></BLURB>
+<DEFAULT>0.2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-select0r::delta-g---b---chroma</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Delta G / B / Chroma</NICK>
+<BLURB></BLURB>
+<DEFAULT>0.2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-select0r::delta-r---a---hue</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Delta R / A / Hue</NICK>
+<BLURB></BLURB>
+<DEFAULT>0.2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-select0r::edge-mode</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Edge mode</NICK>
+<BLURB></BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-select0r::invert-selection</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Invert selection</NICK>
+<BLURB></BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-select0r::operation</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Operation</NICK>
+<BLURB></BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-select0r::selection-subspace</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Selection subspace</NICK>
+<BLURB></BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-select0r::subspace-shape</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Subspace shape</NICK>
+<BLURB></BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-pr0file::alpha-trace</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Alpha trace</NICK>
+<BLURB>Show Alpha trace on scope.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-pr0file::b-trace</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>B trace</NICK>
+<BLURB>Show B trace on scope.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-pr0file::channel</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Channel</NICK>
+<BLURB>Channel to numerically display.</BLURB>
+<DEFAULT>0.375005</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-pr0file::color</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Color</NICK>
+<BLURB>rec 601 or rec 709.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-pr0file::crosshair-color</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Crosshair color</NICK>
+<BLURB>Color of the profile marker.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-pr0file::display-average</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Display average</NICK>
+<BLURB>e.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-pr0file::display-maximum</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Display maximum</NICK>
+<BLURB></BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-pr0file::display-minimum</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Display minimum</NICK>
+<BLURB></BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-pr0file::display-rms</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Display RMS</NICK>
+<BLURB></BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-pr0file::g-trace</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>G trace</NICK>
+<BLURB>Show G trace on scope.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-pr0file::length</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Length</NICK>
+<BLURB>Length of profile.</BLURB>
+<DEFAULT>0.589744</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-pr0file::marker-1</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Marker 1</NICK>
+<BLURB>Position of marker 1.</BLURB>
+<DEFAULT>-0.2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-pr0file::marker-2</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Marker 2</NICK>
+<BLURB>Position of marker 2.</BLURB>
+<DEFAULT>-0.2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-pr0file::param-256-scale</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>256 scale</NICK>
+<BLURB>use 0-255 instead of 0.0-1.0.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-pr0file::pb-trace</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Pb trace</NICK>
+<BLURB>Show Pb trace on scope.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-pr0file::pr-trace</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Pr trace</NICK>
+<BLURB>Show Pr trace on scope.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-pr0file::r-trace</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>R trace</NICK>
+<BLURB>Show R trace on scope.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-pr0file::tilt</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Tilt</NICK>
+<BLURB>Tilt of profile.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-pr0file::x</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>X</NICK>
+<BLURB>X position of profile.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-pr0file::y</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Y</NICK>
+<BLURB>Y position of profile.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-pr0file::y-trace</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Y trace</NICK>
+<BLURB>Show Y' trace on scope.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-pr0be::big-window</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Big window</NICK>
+<BLURB>Display more data.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-pr0be::measurement</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Measurement</NICK>
+<BLURB>What measurement to display.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-pr0be::param-256-scale</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>256 scale</NICK>
+<BLURB>use 0-255 instead of 0.0-1.0.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-pr0be::show-alpha</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Show alpha</NICK>
+<BLURB>Display alpha value too.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-pr0be::x</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>X</NICK>
+<BLURB>X position of probe.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-pr0be::x-size</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>X size</NICK>
+<BLURB>X size of probe.</BLURB>
+<DEFAULT>0.25</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-pr0be::y</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Y</NICK>
+<BLURB>Y position of probe.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-pr0be::y-size</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Y size</NICK>
+<BLURB>Y size of probe.</BLURB>
+<DEFAULT>0.25</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-light-graffiti::backgroundweight</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>backgroundWeight</NICK>
+<BLURB>Describes how strong the (accumulated) background should shine through.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-light-graffiti::blackreference</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>blackReference</NICK>
+<BLURB>Uses black as background image instead of the first frame.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-light-graffiti::dim</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>dim</NICK>
+<BLURB>Dimming of the light mask.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-light-graffiti::longalpha</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>longAlpha</NICK>
+<BLURB>Alpha value for moving average.</BLURB>
+<DEFAULT>0.0078125</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-light-graffiti::loweroverexposure</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>lowerOverexposure</NICK>
+<BLURB>Prevents some overexposure if the light source stays steady too long (varying speed).</BLURB>
+<DEFAULT>5.23869e-11</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-light-graffiti::nonlineardim</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>nonlinearDim</NICK>
+<BLURB>Nonlinear dimming (may look more natural).</BLURB>
+<DEFAULT>5.23869e-11</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-light-graffiti::reset</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>reset</NICK>
+<BLURB>Reset filter masks.</BLURB>
+<DEFAULT>5.23869e-11</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-light-graffiti::saturation</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>saturation</NICK>
+<BLURB>Saturation of lights.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-light-graffiti::sensitivity</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>sensitivity</NICK>
+<BLURB>Sensitivity of the effect for light (higher sensitivity will lead to brighter lights).</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-light-graffiti::statsbrightness</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>statsBrightness</NICK>
+<BLURB>Display the brightness and threshold, for adjusting the brightness threshold parameter.</BLURB>
+<DEFAULT>5.23869e-11</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-light-graffiti::statsdifference</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>statsDifference</NICK>
+<BLURB>Display the background difference and threshold.</BLURB>
+<DEFAULT>5.23869e-11</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-light-graffiti::statsdiffsum</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>statsDiffSum</NICK>
+<BLURB>Display the sum of the background difference and the threshold.</BLURB>
+<DEFAULT>5.23869e-11</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-light-graffiti::thresholdbrightness</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>thresholdBrightness</NICK>
+<BLURB>Brightness threshold to distinguish between foreground and background.</BLURB>
+<DEFAULT>450</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-light-graffiti::thresholddifference</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>thresholdDifference</NICK>
+<BLURB>Threshold: Difference to background to distinguish between fore- and background.</BLURB>
+<DEFAULT>5.23869e-11</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-light-graffiti::thresholddiffsum</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>thresholdDiffSum</NICK>
+<BLURB>Threshold for sum of differences. Can in most cases be ignored (set to 0).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-light-graffiti::transparentbackground</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>transparentBackground</NICK>
+<BLURB>Make the background transparent.</BLURB>
+<DEFAULT>5.23869e-11</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-hqdn3d::spatial</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Spatial</NICK>
+<BLURB>Amount of spatial filtering.</BLURB>
+<DEFAULT>0.04</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-hqdn3d::temporal</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Temporal</NICK>
+<BLURB>Amount of temporal filtering.</BLURB>
+<DEFAULT>0.06</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-facebl0r::classifier</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Classifier</NICK>
+<BLURB>Full path to the XML pattern model for recognition; look in /usr/share/opencv/haarcascades.</BLURB>
+<DEFAULT>"/usr/share/opencv/haarcascades/haarcascade_frontalface_default.xml"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-facebl0r::ellipse</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ellipse</NICK>
+<BLURB>Draw a red ellipse around the object.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-facebl0r::largest</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Largest</NICK>
+<BLURB>Maximum object size in pixels, divided by 10000.</BLURB>
+<DEFAULT>0.05</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-facebl0r::neighbors</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Neighbors</NICK>
+<BLURB>Minimum number of rectangles that makes up an object, divided by 100.</BLURB>
+<DEFAULT>0.02</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-facebl0r::recheck</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Recheck</NICK>
+<BLURB>How often to detect an object in number of frames, divided by 1000.</BLURB>
+<DEFAULT>0.025</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-facebl0r::search-scale</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Search scale</NICK>
+<BLURB>The search window scale factor, divided by 10.</BLURB>
+<DEFAULT>0.12</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-facebl0r::smallest</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Smallest</NICK>
+<BLURB>Minimum window size in pixels, divided by 1000.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-facebl0r::threads</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Threads</NICK>
+<BLURB>How many threads to use divided by 100; 0 uses CPU count.</BLURB>
+<DEFAULT>0.01</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-defish0r::amount</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Amount</NICK>
+<BLURB>Focal Ratio.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-defish0r::aspect-type</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Aspect type</NICK>
+<BLURB>Pixel aspect ratio presets.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-defish0r::defish</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>DeFish</NICK>
+<BLURB>Fish or Defish.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-defish0r::interpolator</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Interpolator</NICK>
+<BLURB>Quality of interpolation.</BLURB>
+<DEFAULT>0.166667</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-defish0r::manual-aspect</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Manual Aspect</NICK>
+<BLURB>Manual Pixel Aspect ratio.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-defish0r::manual-scale</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Manual Scale</NICK>
+<BLURB>Manual Scale.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-defish0r::scaling</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Scaling</NICK>
+<BLURB>Scaling method.</BLURB>
+<DEFAULT>0.666667</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-defish0r::type</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Type</NICK>
+<BLURB>Mapping function.</BLURB>
+<DEFAULT>0.666667</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-coloradj-rgb::action</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Action</NICK>
+<BLURB>Type of color adjustment.</BLURB>
+<DEFAULT>0.333344</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-coloradj-rgb::alpha-controlled</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Alpha controlled</NICK>
+<BLURB>Adjust only areas with nonzero alpha.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-coloradj-rgb::b</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>B</NICK>
+<BLURB>Amount of blue.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-coloradj-rgb::g</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>G</NICK>
+<BLURB>Amount of green.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-coloradj-rgb::keep-luma</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Keep luma</NICK>
+<BLURB>Don't change brightness.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-coloradj-rgb::luma-formula</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Luma formula</NICK>
+<BLURB></BLURB>
+<DEFAULT>0.500025</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-coloradj-rgb::r</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>R</NICK>
+<BLURB>Amount of red.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-c0rners::alpha-operation</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Alpha operation</NICK>
+<BLURB></BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-c0rners::corner-1-x</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Corner 1 X</NICK>
+<BLURB>X coordinate of corner 1.</BLURB>
+<DEFAULT>0.333333</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-c0rners::corner-1-y</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Corner 1 Y</NICK>
+<BLURB>Y coordinate of corner 1.</BLURB>
+<DEFAULT>0.333333</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-c0rners::corner-2-x</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Corner 2 X</NICK>
+<BLURB>X coordinate of corner 2.</BLURB>
+<DEFAULT>0.666666</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-c0rners::corner-2-y</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Corner 2 Y</NICK>
+<BLURB>Y coordinate of corner 2.</BLURB>
+<DEFAULT>0.333333</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-c0rners::corner-3-x</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Corner 3 X</NICK>
+<BLURB>X coordinate of corner 3.</BLURB>
+<DEFAULT>0.666666</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-c0rners::corner-3-y</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Corner 3 Y</NICK>
+<BLURB>Y coordinate of corner 3.</BLURB>
+<DEFAULT>0.666666</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-c0rners::corner-4-x</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Corner 4 X</NICK>
+<BLURB>X coordinate of corner 4.</BLURB>
+<DEFAULT>0.333333</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-c0rners::corner-4-y</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Corner 4 Y</NICK>
+<BLURB>Y coordinate of corner 4.</BLURB>
+<DEFAULT>0.666666</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-c0rners::enable-stretch</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Enable Stretch</NICK>
+<BLURB>Enable stretching.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-c0rners::feather-alpha</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Feather Alpha</NICK>
+<BLURB>Makes smooth transition into transparent.</BLURB>
+<DEFAULT>0.01</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-c0rners::interpolator</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Interpolator</NICK>
+<BLURB>Quality of interpolation.</BLURB>
+<DEFAULT>0.166667</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-c0rners::stretch-x</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Stretch X</NICK>
+<BLURB>Amount of stretching in X direction.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-c0rners::stretch-y</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Stretch Y</NICK>
+<BLURB>Amount of stretching in Y direction.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-c0rners::transparent-background</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Transparent Background</NICK>
+<BLURB>Makes background transparent.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-alphaspot::max</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max</NICK>
+<BLURB></BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-alphaspot::min</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Min</NICK>
+<BLURB></BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-alphaspot::operation</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Operation</NICK>
+<BLURB></BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-alphaspot::position-x</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Position X</NICK>
+<BLURB></BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-alphaspot::position-y</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Position Y</NICK>
+<BLURB></BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-alphaspot::shape</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Shape</NICK>
+<BLURB></BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-alphaspot::size-x</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Size X</NICK>
+<BLURB></BLURB>
+<DEFAULT>0.1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-alphaspot::size-y</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Size Y</NICK>
+<BLURB></BLURB>
+<DEFAULT>0.1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-alphaspot::tilt</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Tilt</NICK>
+<BLURB></BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-alphaspot::transition-width</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Transition width</NICK>
+<BLURB></BLURB>
+<DEFAULT>0.2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-alphagrad::max</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max</NICK>
+<BLURB></BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-alphagrad::min</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Min</NICK>
+<BLURB></BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-alphagrad::operation</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Operation</NICK>
+<BLURB></BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-alphagrad::position</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Position</NICK>
+<BLURB></BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-alphagrad::tilt</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Tilt</NICK>
+<BLURB></BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-alphagrad::transition-width</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Transition width</NICK>
+<BLURB></BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-alpha0ps::display</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Display</NICK>
+<BLURB></BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-alpha0ps::display-input-alpha</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Display input alpha</NICK>
+<BLURB></BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-alpha0ps::invert</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Invert</NICK>
+<BLURB></BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-alpha0ps::operation</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Operation</NICK>
+<BLURB></BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-alpha0ps::shrink-grow-amount</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Shrink/grow amount</NICK>
+<BLURB></BLURB>
+<DEFAULT>0.333344</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-alpha0ps::threshold</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Threshold</NICK>
+<BLURB></BLURB>
+<DEFAULT>0.5</DEFAULT>
 </ARG>
 

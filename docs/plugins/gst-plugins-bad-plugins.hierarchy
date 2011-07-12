@@ -13,7 +13,6 @@ GObject
       GstAiffParse
       GstAsfMux
       GstAsfParse
-      GstAssRender
       GstBaseAudioVisualizer
         GstSpaceScope
         GstSpectraScope
@@ -35,42 +34,48 @@ GObject
         GstBaseAudioSink
           GstAudioSink
             GstApExSink
-            GstNasSink
             GstSDLAudioSink
         GstChecksumSink
+        GstCurlSink
         GstDCCPClientSink
         GstDCCPServerSink
         GstFBDEVSink
         GstInterAudioSink
         GstInterVideoSink
         GstLinsysSdiSink
-        GstSFSink
         GstShmSink
         GstVideoSink
-          GstDfbVideoSink
           GstSDLVideoSink
       GstBaseSrc
         GstDTMFSrc
         GstDataURISrc
-        GstFliteTestSrc
         GstInterAudioSrc
         GstInterVideoSrc
         GstLinsysSdiSrc
         GstPushSrc
           GstDCCPClientSrc
           GstDCCPServerSrc
-          GstDc1394
           GstDvbSrc
           GstMMS
+          GstNeonhttpSrc
           GstRfbSrc
           GstShmSrc
           GstVCDSrc
+          frei0r-src-ising0r
+          frei0r-src-lissajous0r
+          frei0r-src-nois0r
+          frei0r-src-onecol0r
+          frei0r-src-partik0l
+          frei0r-src-plasma
+          frei0r-src-test-pat-b
+          frei0r-src-test-pat-c
+          frei0r-src-test-pat-g
+          frei0r-src-test-pat-i
+          frei0r-src-test-pat-l
+          frei0r-src-test-pat-r
         GstRTPDTMFSrc
-        GstSFSrc
       GstBaseTransform
         GstAudioFilter
-          GstBPMDetect
-          GstOFA
           GstStereo
         GstBayer2RGB
         GstCogScale
@@ -113,34 +118,99 @@ GObject
             GstMirror
             GstRotate
             GstSquare
-          GstRsvgOverlay
           GstSolarize
           GstVideoAnalyse
           GstVideoDetect
           GstVideoMark
+          frei0r-filter-3-point-color-balance
+          frei0r-filter-3dflippo
+          frei0r-filter-alpha0ps
+          frei0r-filter-alphagrad
+          frei0r-filter-alphaspot
+          frei0r-filter-b
+          frei0r-filter-baltan
+          frei0r-filter-bluescreen0r
+          frei0r-filter-brightness
+          frei0r-filter-bw0r
+          frei0r-filter-c0rners
+          frei0r-filter-cartoon
+          frei0r-filter-color-distance
+          frei0r-filter-coloradj-rgb
+          frei0r-filter-contrast0r
+          frei0r-filter-curves
+          frei0r-filter-defish0r
+          frei0r-filter-delay0r
+          frei0r-filter-delaygrab
+          frei0r-filter-distort0r
+          frei0r-filter-edgeglow
+          frei0r-filter-equaliz0r
+          frei0r-filter-facebl0r
+          frei0r-filter-flippo
+          frei0r-filter-g
+          frei0r-filter-gamma
+          frei0r-filter-glow
+          frei0r-filter-hqdn3d
+          frei0r-filter-hueshift0r
+          frei0r-filter-invert0r
+          frei0r-filter-k-means-clustering
+          frei0r-filter-lens-correction
+          frei0r-filter-letterb0xed
+          frei0r-filter-levels
+          frei0r-filter-light-graffiti
+          frei0r-filter-luminance
+          frei0r-filter-mask0mate
+          frei0r-filter-nervous
+          frei0r-filter-nikon-d90-stairstepping-fix
+          frei0r-filter-nosync0r
+          frei0r-filter-opencvfacedetect
+          frei0r-filter-perspective
+          frei0r-filter-pixeliz0r
+          frei0r-filter-pr0be
+          frei0r-filter-pr0file
+          frei0r-filter-primaries
+          frei0r-filter-r
+          frei0r-filter-rgb-parade
+          frei0r-filter-saturat0r
+          frei0r-filter-scale0tilt
+          frei0r-filter-scanline0r
+          frei0r-filter-select0r
+          frei0r-filter-sharpness
+          frei0r-filter-sobel
+          frei0r-filter-sop-sat
+          frei0r-filter-squareblur
+          frei0r-filter-tehroxx0r
+          frei0r-filter-threelay0r
+          frei0r-filter-threshold0r
+          frei0r-filter-tint0r
+          frei0r-filter-transparency
+          frei0r-filter-twolay0r
+          frei0r-filter-vectorscope
+          frei0r-filter-vertigo
+          frei0r-filter-white-balance
         GstVideoFilter2
           GstSceneChange
           GstZebraStripe
         GstVideoMaxRate
       GstBaseVideoCodec
         GstBaseVideoDecoder
-          GstSchroDec
+          GstVP8Dec
         GstBaseVideoEncoder
-          GstDiracEnc
-          GstSchroEnc
+          GstVP8Enc
       GstBin
         DvbBaseBin
         GstAutoConvert
         GstAutoVideoConvert
-        GstBaseCameraSrc
-          GstWrapperCameraBinSrc
         GstFPSDisplaySink
         GstFaceOverlay
+        GstGSettingsSwitchSink
+          GstGSettingsAudioSink
+          GstGSettingsVideoSink
+        GstGSettingsSwitchSrc
+          GstGSettingsAudioSrc
+          GstGSettingsVideoSrc
         GstPipeline
           GstCameraBin
-          GstCameraBin2
         GstSDPDemux
-        GstViewfinderBin
         RsnDvdBin
       GstBz2dec
       GstBz2enc
@@ -154,26 +224,20 @@ GObject
       GstDVDSpu
       GstDecklinkSink
       GstDecklinkSrc
-      GstDtsDec
+      GstFaac
       GstFaad
       GstFestival
       GstFieldAnalysis
       GstFreeze
-      GstGSMDec
-      GstGSMEnc
-      GstGmeDec
       GstHLSDemux
       GstId3BaseMux
         GstId3Mux
       GstInterlace
+      GstInvtelecine
       GstIvfParse
       GstJP2kDecimator
       GstJifMux
       GstJpegParse
-      GstKateDec
-      GstKateEnc
-      GstKateParse
-        GstKateTag
       GstLegacyH264Parse
       GstLiveAdder
       GstMSE
@@ -181,16 +245,13 @@ GObject
       GstMXFMux
       GstMimDec
       GstMimEnc
-      GstModPlug
       GstMpegPSDemux
       GstMpegTSDemux
-      GstMusepackDec
       GstMveDemux
       GstMveMux
       GstNsfDec
       GstNuvDemux
       GstPcapParse
-      GstPitch
       GstPnmdec
       GstPnmenc
       GstRTPMux
@@ -200,34 +261,20 @@ GObject
         GstVideoParse
       GstRealAudioDec
       GstRealVideoDec
-      GstRsvgDec
       GstSSim
       GstSdiDemux
       GstSdiMux
       GstSegmentClip
         GstAudioSegmentClip
         GstVideoSegmentClip
-      GstSignalProcessor
-        ladspa-amp-mono
-        ladspa-amp-stereo
-        ladspa-delay-5s
-        ladspa-hpf
-        ladspa-lpf
-        ladspa-noise-white
-        ladspa-sine-faaa
-        ladspa-sine-faac
-        ladspa-sine-fcaa
-        ladspa-sine-fcac
       GstSirenDec
       GstSirenEnc
       GstSpeed
       GstSrtEnc
-      GstTRM
       GstTtaDec
       GstTtaParse
       GstVMncDec
       GstVcdParse
-      GstWildmidi
       GstY4mDec
       MpegPsMux
       MpegTSBase
@@ -236,9 +283,39 @@ GObject
       MpegTSParse
       MpegTsMux
       MpegVideoParse
+      frei0r-mixer-addition
+      frei0r-mixer-addition-alpha
+      frei0r-mixer-alpha-injection
+      frei0r-mixer-alphaatop
+      frei0r-mixer-alphain
+      frei0r-mixer-alphaout
+      frei0r-mixer-alphaover
+      frei0r-mixer-alphaxor
+      frei0r-mixer-blend
+      frei0r-mixer-burn
+      frei0r-mixer-color-only
+      frei0r-mixer-composition
+      frei0r-mixer-darken
+      frei0r-mixer-difference
+      frei0r-mixer-divide
+      frei0r-mixer-dodge
+      frei0r-mixer-grain-extract
+      frei0r-mixer-grain-merge
+      frei0r-mixer-hardlight
+      frei0r-mixer-hue
+      frei0r-mixer-lighten
+      frei0r-mixer-multiply
+      frei0r-mixer-overlay
+      frei0r-mixer-rgb
+      frei0r-mixer-saturation
+      frei0r-mixer-screen
+      frei0r-mixer-softlight
+      frei0r-mixer-subtract
+      frei0r-mixer-uv-map
+      frei0r-mixer-value
+      frei0r-mixer-xfade0r
     GstPad
     GstPadTemplate
-      GstSignalProcessorPadTemplate
     GstPlugin
     GstPluginFeature
       GstElementFactory
