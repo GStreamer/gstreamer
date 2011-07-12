@@ -1040,16 +1040,6 @@ gst_h264_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
   /* negotiate with downstream, sets ->format and ->align */
   gst_h264_parse_negotiate (h264parse);
 
-  /* if upstream sets codec_data without setting stream-format and alignment, we
-   * assume stream-format=avc,alignment=au */
-  if (format == GST_H264_PARSE_FORMAT_NONE) {
-    if (codec_data == NULL)
-      goto unknown_input_format;
-
-    format = GST_H264_PARSE_FORMAT_AVC;
-    align = GST_H264_PARSE_ALIGN_AU;
-  }
-
   if (format == h264parse->format && align == h264parse->align) {
     gst_base_parse_set_passthrough (parse, TRUE);
 
@@ -1080,11 +1070,6 @@ wrong_version:
 wrong_type:
   {
     GST_DEBUG_OBJECT (h264parse, "wrong codec-data type");
-    goto refuse_caps;
-  }
-unknown_input_format:
-  {
-    GST_DEBUG_OBJECT (h264parse, "unknown stream-format and no codec_data");
     goto refuse_caps;
   }
 refuse_caps:
