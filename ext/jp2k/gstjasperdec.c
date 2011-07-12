@@ -68,11 +68,6 @@ static GstStaticPadTemplate gst_jasper_dec_src_template =
         GST_VIDEO_CAPS_YUV ("{ I420, YV12, YUY2, UYVY, Y41B, Y42B, v308 }"))
     );
 
-static void gst_jasper_dec_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec);
-static void gst_jasper_dec_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec);
-
 static void gst_jasper_dec_reset (GstJasperDec * dec);
 static GstStateChangeReturn gst_jasper_dec_change_state (GstElement * element,
     GstStateChange transition);
@@ -114,17 +109,12 @@ gst_jasper_dec_base_init (gpointer g_class)
 static void
 gst_jasper_dec_class_init (GstJasperDecClass * klass)
 {
-  GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
 
-  gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
   GST_DEBUG_CATEGORY_INIT (gst_jasper_dec_debug, "jp2kdec", 0,
       "Jasper JPEG2000 decoder");
-
-  gobject_class->set_property = gst_jasper_dec_set_property;
-  gobject_class->get_property = gst_jasper_dec_get_property;
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_jasper_dec_change_state);
@@ -816,36 +806,6 @@ invalid_bytes_segment:
         "with a non-0 start or non-0 time value");
     gst_event_unref (event);
     goto done;
-  }
-}
-
-static void
-gst_jasper_dec_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GstJasperDec *filter;
-
-  filter = GST_JASPER_DEC (object);
-
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-static void
-gst_jasper_dec_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec)
-{
-  GstJasperDec *filter;
-
-  filter = GST_JASPER_DEC (object);
-
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
   }
 }
 

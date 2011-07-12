@@ -65,11 +65,6 @@ static GstStaticPadTemplate gst_jasper_enc_src_template =
         "image/jp2")
     );
 
-static void gst_jasper_enc_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec);
-static void gst_jasper_enc_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec);
-
 static void gst_jasper_enc_reset (GstJasperEnc * enc);
 static GstStateChangeReturn gst_jasper_enc_change_state (GstElement * element,
     GstStateChange transition);
@@ -118,17 +113,12 @@ gst_jasper_enc_base_init (gpointer g_class)
 static void
 gst_jasper_enc_class_init (GstJasperEncClass * klass)
 {
-  GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
 
-  gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
   GST_DEBUG_CATEGORY_INIT (gst_jasper_enc_debug, "jp2kenc", 0,
       "Jasper JPEG2000 encoder");
-
-  gobject_class->set_property = gst_jasper_enc_set_property;
-  gobject_class->get_property = gst_jasper_enc_get_property;
 
   /* FIXME add some encoder properties */
 
@@ -532,36 +522,6 @@ not_negotiated:
         ("format wasn't negotiated before chain function"));
     ret = GST_FLOW_NOT_NEGOTIATED;
     goto done;
-  }
-}
-
-static void
-gst_jasper_enc_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GstJasperEnc *filter;
-
-  filter = GST_JASPER_ENC (object);
-
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-static void
-gst_jasper_enc_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec)
-{
-  GstJasperEnc *filter;
-
-  filter = GST_JASPER_ENC (object);
-
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
   }
 }
 
