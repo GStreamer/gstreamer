@@ -4,6 +4,7 @@ libgstomx_la_SOURCES = \
 	gstomx.c \
 	gstomxvideodec.c \
 	gstomxmpeg4videodec.c \
+	gstomxh264videodec.c \
 	gstbasevideocodec.c \
 	gstbasevideodecoder.c \
 	gstbasevideoencoder.c \
@@ -12,6 +13,7 @@ libgstomx_la_SOURCES = \
 noinst_HEADERS = \
 	gstomxvideodec.h \
 	gstomxmpeg4videodec.h \
+	gstomxh264videodec.h \
 	gstbasevideocodec.h \
 	gstbasevideodecoder.h \
 	gstbasevideoencoder.h \
