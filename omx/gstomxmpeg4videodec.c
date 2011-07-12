@@ -93,12 +93,6 @@ gst_omx_mpeg4_video_dec_class_init (GstOMXMPEG4VideoDecClass * klass)
 
   gobject_class->finalize = gst_omx_mpeg4_video_dec_finalize;
 
-  /* TODO: Make this configurable */
-  videodec_class->core_name = "/usr/local/lib/libomxil-bellagio.so.0";
-  videodec_class->component_name = "OMX.st.video_decoder.mpeg4";
-  videodec_class->in_port_index = 0;
-  videodec_class->out_port_index = 1;
-
   videodec_class->is_format_change =
       GST_DEBUG_FUNCPTR (gst_omx_mpeg4_video_dec_is_format_change);
   videodec_class->set_format =

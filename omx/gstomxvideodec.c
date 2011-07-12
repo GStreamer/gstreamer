@@ -77,6 +77,53 @@ GST_BOILERPLATE_FULL (GstOMXVideoDec, gst_omx_video_dec, GstBaseVideoDecoder,
 static void
 gst_omx_video_dec_base_init (gpointer g_class)
 {
+  GstOMXVideoDecClass *videodec_class = GST_OMX_VIDEO_DEC_CLASS (g_class);
+  GKeyFile *config;
+  const gchar *element_name;
+  GError *err;
+  gchar *core_name, *component_name;
+  gint in_port_index, out_port_index;
+
+  element_name =
+      g_type_get_qdata (G_TYPE_FROM_CLASS (g_class),
+      gst_omx_element_name_quark);
+  /* This happens for the base class and abstract subclasses */
+  if (!element_name)
+    return;
+
+  config = gst_omx_get_configuration ();
+
+  /* This will always succeed, see check in plugin_init */
+  core_name = g_key_file_get_string (config, element_name, "core-name", NULL);
+  g_assert (core_name != NULL);
+  videodec_class->core_name = core_name;
+  component_name =
+      g_key_file_get_string (config, element_name, "component-name", NULL);
+  g_assert (component_name != NULL);
+  videodec_class->component_name = component_name;
+
+  /* Now set the inport/outport indizes and assume sane defaults */
+  err = NULL;
+  in_port_index =
+      g_key_file_get_integer (config, element_name, "in-port-index", &err);
+  if (err != NULL) {
+    GST_DEBUG ("No 'in-port-index' set for element '%s', assuming 0: %s",
+        element_name, err->message);
+    in_port_index = 0;
+    g_error_free (err);
+  }
+  videodec_class->in_port_index = in_port_index;
+
+  err = NULL;
+  out_port_index =
+      g_key_file_get_integer (config, element_name, "out-port-index", &err);
+  if (err != NULL) {
+    GST_DEBUG ("No 'out-port-index' set for element '%s', assuming 1: %s",
+        element_name, err->message);
+    out_port_index = 1;
+    g_error_free (err);
+  }
+  videodec_class->out_port_index = out_port_index;
 }
 
 static void
