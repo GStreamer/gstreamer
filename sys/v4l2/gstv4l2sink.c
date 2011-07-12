@@ -623,7 +623,6 @@ gst_v4l2sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   guint fps_n, fps_d;
   guint size;
   GstV4l2BufferPool *newpool;
-  guint bytesperline;
 
   LOG_CAPS (v4l2sink, caps);
 
@@ -660,15 +659,14 @@ gst_v4l2sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   }
 
   if (!gst_v4l2_object_set_format (v4l2sink->v4l2object, format->pixelformat,
-          w, h, interlaced, &bytesperline))
+          w, h, interlaced))
     goto invalid_format;
 
   if (!(v4l2sink->v4l2object->vcap.capabilities & V4L2_CAP_STREAMING))
     goto no_streaming;
 
-  newpool = gst_v4l2_buffer_pool_new (GST_ELEMENT (v4l2sink),
-      v4l2sink->v4l2object->video_fd,
-      v4l2sink->num_buffers, FALSE, V4L2_BUF_TYPE_VIDEO_OUTPUT);
+  newpool = gst_v4l2_buffer_pool_new (v4l2sink->v4l2object,
+      v4l2sink->num_buffers, FALSE);
   if (newpool == NULL)
     goto no_pool;
 

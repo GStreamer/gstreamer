@@ -91,6 +91,9 @@ struct _GstV4l2Object {
 
   enum v4l2_buf_type type;   /* V4L2_BUF_TYPE_VIDEO_CAPTURE, V4L2_BUF_TYPE_VIDEO_OUTPUT */
 
+  /* the current format */
+  struct v4l2_format format;
+
   /* the video device's capabilities */
   struct v4l2_capability vcap;
 
@@ -190,7 +193,7 @@ GstCaps*      gst_v4l2_object_get_all_caps (void);
 
 GstStructure* gst_v4l2_object_v4l2fourcc_to_structure (guint32 fourcc);
 
-gboolean      gst_v4l2_object_set_format (GstV4l2Object *v4l2object, guint32 pixelformat, guint32 width, guint32 height, gboolean interlaced, guint32 *bytesperline);
+gboolean      gst_v4l2_object_set_format (GstV4l2Object *v4l2object, guint32 pixelformat, guint32 width, guint32 height, gboolean interlaced);
 
 gboolean      gst_v4l2_object_start_streaming (GstV4l2Object *v4l2object);
 gboolean      gst_v4l2_object_stop_streaming (GstV4l2Object *v4l2object);

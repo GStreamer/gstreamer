@@ -47,7 +47,7 @@ struct _GstV4l2BufferPool
 {
   GObject parent;
 
-  GstElement *v4l2elem;      /* the v4l2 src/sink that owns us.. maybe we should be owned by v4l2object? */
+  GstV4l2Object *obj;       /* the v4l2 object */
   gboolean requeuebuf;       /* if true, unusued buffers are automatically re-QBUF'd */
   enum v4l2_buf_type type;   /* V4L2_BUF_TYPE_VIDEO_CAPTURE, V4L2_BUF_TYPE_VIDEO_OUTPUT */
 
@@ -83,8 +83,7 @@ const GstMetaInfo * gst_meta_v4l2_get_info (void);
 #define GST_META_V4L2_ADD(buf) ((GstMetaV4l2 *)gst_buffer_add_meta(buf,gst_meta_v4l2_get_info(),NULL))
 
 void gst_v4l2_buffer_pool_destroy (GstV4l2BufferPool * pool);
-GstV4l2BufferPool *gst_v4l2_buffer_pool_new (GstElement *v4l2elem, gint fd, gint num_buffers, gboolean requeuebuf, enum v4l2_buf_type type);
-
+GstV4l2BufferPool *gst_v4l2_buffer_pool_new (GstV4l2Object *obj, gint num_buffers, gboolean requeuebuf);
 
 GstBuffer *gst_v4l2_buffer_pool_get (GstV4l2BufferPool *pool, gboolean blocking);
 gboolean gst_v4l2_buffer_pool_qbuf (GstV4l2BufferPool *pool, GstBuffer *buf);

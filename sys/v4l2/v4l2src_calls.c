@@ -131,7 +131,7 @@ gst_v4l2src_grab_frame (GstV4l2Src * v4l2src, GstBuffer ** buf)
     if (pool_buffer)
       break;
 
-    GST_WARNING_OBJECT (pool->v4l2elem, "trials=%d", trials);
+    GST_WARNING_OBJECT (v4l2src, "trials=%d", trials);
 
     /* if the sync() got interrupted, we can retry */
     switch (errno) {
@@ -182,7 +182,7 @@ no_buffer_pool:
   }
 select_error:
   {
-    GST_ELEMENT_ERROR (pool->v4l2elem, RESOURCE, READ, (NULL),
+    GST_ELEMENT_ERROR (v4l2src, RESOURCE, READ, (NULL),
         ("select error %d: %s (%d)", ret, g_strerror (errno), errno));
     return GST_FLOW_ERROR;
   }
@@ -193,7 +193,7 @@ stopped:
   }
 too_many_trials:
   {
-    GST_ELEMENT_ERROR (pool->v4l2elem, RESOURCE, FAILED,
+    GST_ELEMENT_ERROR (v4l2src, RESOURCE, FAILED,
         (_("Failed trying to get video frames from device '%s'."),
             v4l2object->videodev),
         (_("Failed after %d tries. device %s. system error: %s"),
@@ -219,13 +219,12 @@ gst_v4l2src_set_capture (GstV4l2Src * v4l2src, guint32 pixelformat,
 {
   gint fd = v4l2src->v4l2object->video_fd;
   struct v4l2_streamparm stream;
-  guint32 bytesperline;
 
   if (pixelformat == GST_MAKE_FOURCC ('M', 'P', 'E', 'G'))
     return TRUE;
 
   if (!gst_v4l2_object_set_format (v4l2src->v4l2object, pixelformat, width,
-          height, interlaced, &bytesperline)) {
+          height, interlaced)) {
     /* error already reported */
     return FALSE;
   }
@@ -308,9 +307,8 @@ gst_v4l2src_capture_init (GstV4l2Src * v4l2src, GstCaps * caps)
     /* Map the buffers */
     GST_LOG_OBJECT (v4l2src, "initiating buffer pool");
 
-    if (!(v4l2src->pool = gst_v4l2_buffer_pool_new (GST_ELEMENT (v4l2src),
-                v4l2src->v4l2object->video_fd,
-                v4l2src->num_buffers, TRUE, V4L2_BUF_TYPE_VIDEO_CAPTURE)))
+    if (!(v4l2src->pool = gst_v4l2_buffer_pool_new (v4l2src->v4l2object,
+                v4l2src->num_buffers, TRUE)))
       goto buffer_pool_new_failed;
 
     GST_INFO_OBJECT (v4l2src, "capturing buffers via mmap()");
