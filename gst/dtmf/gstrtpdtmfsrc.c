@@ -506,7 +506,6 @@ gst_rtp_dtmf_prepare_timestamps (GstRTPDTMFSrc * dtmfsrc)
   GST_OBJECT_UNLOCK (dtmfsrc);
 
   if (GST_CLOCK_TIME_IS_VALID (last_stop)) {
-    dtmfsrc->timestamp = last_stop;
     dtmfsrc->start_timestamp = last_stop;
   } else {
     GstClock *clock = gst_element_get_clock (GST_ELEMENT (dtmfsrc));
@@ -516,9 +515,14 @@ gst_rtp_dtmf_prepare_timestamps (GstRTPDTMFSrc * dtmfsrc)
 
     dtmfsrc->start_timestamp = gst_clock_get_time (clock)
         - gst_element_get_base_time (GST_ELEMENT (dtmfsrc));
-    dtmfsrc->start_timestamp = dtmfsrc->timestamp;
     gst_object_unref (clock);
   }
+
+  /* If the last stop was in the past, then lets add the buffers together */
+  if (dtmfsrc->start_timestamp < dtmfsrc->timestamp)
+    dtmfsrc->start_timestamp = dtmfsrc->timestamp;
+
+  dtmfsrc->timestamp = dtmfsrc->start_timestamp;
 
   dtmfsrc->rtp_timestamp = dtmfsrc->ts_base +
       gst_util_uint64_scale_int (gst_segment_to_running_time (&GST_BASE_SRC
@@ -976,6 +980,7 @@ gst_rtp_dtmf_src_ready_to_paused (GstRTPDTMFSrc * dtmfsrc)
   else
     dtmfsrc->ts_base = dtmfsrc->ts_offset;
 
+  dtmfsrc->timestamp = 0;
 }
 
 static GstStateChangeReturn
