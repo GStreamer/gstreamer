@@ -141,6 +141,11 @@ gst_rtp_vp8_pay_parse_frame (GstRtpVP8Pay * self, GstBuffer * buffer)
   self->is_keyframe = keyframe = ((data[0] & 0x1) == 0);
   version = (data[0] >> 1) & 0x7;
 
+  if (G_UNLIKELY (version > 3)) {
+    GST_ERROR_OBJECT (self, "Unknown VP8 version %u", version);
+    goto error;
+  }
+
   /* keyframe, version and show_frame use 5 bits */
   header_size = data[2] << 11 | data[1] << 3 | (data[0] >> 5);
 
