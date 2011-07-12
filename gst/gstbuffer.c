@@ -817,7 +817,7 @@ void
 gst_buffer_resize (GstBuffer * buffer, gssize offset, gsize size)
 {
   guint len;
-  guint si, di;
+  guint i;
   gsize bsize, bufsize, bufoffs, bufmax;
   GstMemory *mem;
 
@@ -842,46 +842,47 @@ gst_buffer_resize (GstBuffer * buffer, gssize offset, gsize size)
   len = GST_BUFFER_MEM_LEN (buffer);
 
   /* copy and trim */
-  for (di = si = 0; si < len; si++) {
-    mem = GST_BUFFER_MEM_PTR (buffer, si);
+  for (i = 0; i < len; i++) {
+    gsize left, noffs;
+
+    mem = GST_BUFFER_MEM_PTR (buffer, i);
     bsize = gst_memory_get_sizes (mem, NULL, NULL);
 
-    if ((gssize) bsize <= offset) {
-      /* remove buffer */
-      GST_CAT_LOG (GST_CAT_BUFFER, "remove memory %p", mem);
-      gst_memory_unref (mem);
-      offset -= bsize;
-    } else {
-      gsize left;
-
-      /* last buffer always gets resized to the remaining size */
-      if (si + 1 == len)
-        left = size;
-      else
-        left = MIN (bsize - offset, size);
-
-      if (offset != 0 || left != bsize) {
-        /* we need to clip something */
-        if (GST_MEMORY_IS_WRITABLE (mem)) {
-          gst_memory_resize (mem, offset, left);
-        } else {
-          GstMemory *tmp;
-
-          if (mem->flags & GST_MEMORY_FLAG_NO_SHARE)
-            tmp = gst_memory_copy (mem, offset, left);
-          else
-            tmp = gst_memory_share (mem, offset, left);
-
-          gst_memory_unref (mem);
-          mem = tmp;
-        }
-        offset = 0;
-      }
-      GST_BUFFER_MEM_PTR (buffer, di++) = mem;
-      size -= left;
+    noffs = 0;
+    /* last buffer always gets resized to the remaining size */
+    if (i + 1 == len)
+      left = size;
+    /* shrink buffers before the offset */
+    else if ((gssize) bsize <= offset) {
+      left = 0;
+      noffs = offset - bsize;
+      offset = 0;
     }
+    /* clip other buffers */
+    else
+      left = MIN (bsize - offset, size);
+
+    if (offset != 0 || left != bsize) {
+      /* we need to clip something */
+      if (GST_MEMORY_IS_WRITABLE (mem)) {
+        gst_memory_resize (mem, offset, left);
+      } else {
+        GstMemory *tmp;
+
+        if (mem->flags & GST_MEMORY_FLAG_NO_SHARE)
+          tmp = gst_memory_copy (mem, offset, left);
+        else
+          tmp = gst_memory_share (mem, offset, left);
+
+        gst_memory_unref (mem);
+        mem = tmp;
+      }
+    }
+    offset = noffs;
+    size -= left;
+
+    GST_BUFFER_MEM_PTR (buffer, i) = mem;
   }
-  GST_BUFFER_MEM_LEN (buffer) = di;
 }
 
 /**
