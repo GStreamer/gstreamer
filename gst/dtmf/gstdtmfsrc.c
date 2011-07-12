@@ -65,7 +65,7 @@
  * <row>
  * <entry>number</entry>
  * <entry>G_TYPE_INT</entry>
- * <entry>0-16</entry>
+ * <entry>0-15</entry>
  * <entry>The event number.</entry>
  * </row>
  * <row>

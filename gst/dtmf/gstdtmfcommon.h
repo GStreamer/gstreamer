@@ -9,9 +9,9 @@
 #define MAX_VOLUME               36
 
 #define MIN_EVENT                0
-#define MAX_EVENT                16
+#define MAX_EVENT                15
 #define MIN_EVENT_STRING         "0"
-#define MAX_EVENT_STRING         "16"
+#define MAX_EVENT_STRING         "15"
 
 #ifndef M_PI
 #define M_PI           3.14159265358979323846  /* pi */
