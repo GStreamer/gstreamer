@@ -42,5 +42,5 @@ libgstomx_la_LIBADD = \
 	$(GST_LIBS)
 libgstomx_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
-EXTRA_DIST = openmax
+EXTRA_DIST = openmax gstomx.conf
 
