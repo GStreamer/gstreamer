@@ -880,6 +880,10 @@ gst_omx_video_dec_handle_frame (GstBaseVideoDecoder * decoder,
     if (offset == 0) {
       BufferIdentification *id = g_slice_new0 (BufferIdentification);
 
+      if (!GST_BUFFER_FLAG_IS_SET (frame->sink_buffers,
+              GST_BUFFER_FLAG_DELTA_UNIT))
+        buf->omx_buf->nFlags |= OMX_BUFFERFLAG_SYNCFRAME;
+
       id->timestamp = buf->omx_buf->nTimeStamp;
       frame->coder_hook = id;
       frame->coder_hook_destroy_notify =
@@ -889,7 +893,6 @@ gst_omx_video_dec_handle_frame (GstBaseVideoDecoder * decoder,
     /* TODO: Set flags
      *   - OMX_BUFFERFLAG_DECODEONLY for buffers that are outside
      *     the segment
-     *   - OMX_BUFFERFLAG_SYNCFRAME for non-delta frames
      *   - OMX_BUFFERFLAG_ENDOFFRAME for parsed input
      */
 
