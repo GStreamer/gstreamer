@@ -465,8 +465,36 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
       buf->omx_buf->nTimeStamp);
 
   frame = _find_nearest_frame (self, buf);
-  if (!frame) {
+  if (!frame && buf->omx_buf->nFilledLen > 0) {
+    GstBuffer *outbuf;
+
+    /* This sometimes happens at EOS or if the input is not properly framed,
+     * let's handle it gracefully by allocating a new buffer for the current
+     * caps and filling it
+     */
+
     GST_ERROR_OBJECT (self, "No corresponding frame found");
+
+    outbuf =
+        gst_base_video_decoder_alloc_src_buffer (GST_BASE_VIDEO_DECODER (self));
+    if (GST_BUFFER_SIZE (outbuf) >= buf->omx_buf->nFilledLen) {
+      memcpy (GST_BUFFER_DATA (outbuf),
+          buf->omx_buf->pBuffer + buf->omx_buf->nOffset,
+          buf->omx_buf->nFilledLen);
+      GST_BUFFER_TIMESTAMP (outbuf) =
+          gst_util_uint64_scale (buf->omx_buf->nTimeStamp, GST_SECOND,
+          OMX_TICKS_PER_SECOND);
+      if (buf->omx_buf->nTickCount != 0)
+        GST_BUFFER_DURATION (outbuf) =
+            gst_util_uint64_scale (buf->omx_buf->nTickCount, GST_SECOND,
+            OMX_TICKS_PER_SECOND);
+      flow_ret = gst_pad_push (GST_BASE_VIDEO_CODEC_SRC_PAD (self), outbuf);
+    } else {
+      GST_ERROR_OBJECT (self, "Invalid frame size (%u < %u)",
+          GST_BUFFER_SIZE (outbuf), buf->omx_buf->nFilledLen);
+      gst_buffer_unref (outbuf);
+      goto invalid_frame_size;
+    }
   } else if (buf->omx_buf->nFilledLen > 0) {
     if (GST_BASE_VIDEO_CODEC (self)->state.bytes_per_picture == 0) {
       /* FIXME: If the sinkpad caps change we have currently no way
