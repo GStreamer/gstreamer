@@ -478,7 +478,7 @@ gst_v4l2_object_new (GstElement * element,
 
   v4l2object->video_fd = -1;
   v4l2object->poll = gst_poll_new (TRUE);
-  v4l2object->buffer = NULL;
+  v4l2object->active = FALSE;
   v4l2object->videodev = g_strdup (default_device);
 
   v4l2object->norms = NULL;
@@ -2058,12 +2058,18 @@ gst_v4l2_object_get_nearest_size (GstV4l2Object * v4l2object,
   return TRUE;
 }
 
+/* Note about fraction simplification
+ *  * n1/d1 == n2/d2  is also written as  n1 == ( n2 * d1 ) / d2
+ *   */
+#define fractions_are_equal(n1,d1,n2,d2) ((n1) == gst_util_uint64_scale_int((n2), (d1), (d2)))
+
 
 gboolean
 gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
 {
   gint fd = v4l2object->video_fd;
   struct v4l2_format *format;
+  struct v4l2_streamparm *streamparm;
   enum v4l2_field field;
   guint32 pixelformat;
   gint width;
@@ -2077,11 +2083,7 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
           &fmtdesc, &width, &height, &interlaced, &fps_n, &fps_d, &size))
     goto invalid_caps;
 
-  v4l2object->fps_n = fps_n;
-  v4l2object->fps_d = fps_d;
   v4l2object->size = size;
-  v4l2object->width = width;
-  v4l2object->height = height;
 
   pixelformat = fmtdesc->pixelformat;
 
@@ -2096,7 +2098,7 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
     field = V4L2_FIELD_NONE;
   }
 
-  GST_DEBUG_OBJECT (v4l2object->element, "Setting format to %dx%d, format "
+  GST_DEBUG_OBJECT (v4l2object->element, "Desired format %dx%d, format "
       "%" GST_FOURCC_FORMAT, width, height, GST_FOURCC_ARGS (pixelformat));
 
   GST_V4L2_CHECK_OPEN (v4l2object);
@@ -2105,7 +2107,7 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
   /* Only unconditionally accept mpegts for sources */
   if ((v4l2object->type == V4L2_BUF_TYPE_VIDEO_CAPTURE) &&
       (pixelformat == GST_MAKE_FOURCC ('M', 'P', 'E', 'G')))
-    return TRUE;
+    goto done;
 
   format = &v4l2object->format;
 
@@ -2116,50 +2118,92 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
     goto get_fmt_failed;
 
   GST_DEBUG_OBJECT (v4l2object->element, "Got format to %dx%d, format "
-      "%" GST_FOURCC_FORMAT " stride %d", format->fmt.pix.width,
+      "%" GST_FOURCC_FORMAT " bytesperline %d", format->fmt.pix.width,
       format->fmt.pix.height, GST_FOURCC_ARGS (format->fmt.pix.pixelformat),
       format->fmt.pix.bytesperline);
 
-  if (format->type == v4l2object->type &&
-      format->fmt.pix.width == width &&
-      format->fmt.pix.height == height &&
-      format->fmt.pix.pixelformat == pixelformat &&
-      format->fmt.pix.field == field) {
-    GST_DEBUG_OBJECT (v4l2object->element, "format was good");
-    /* Nothing to do. We want to succeed immediately
-     * here because setting the same format back
-     * can still fail due to EBUSY. By short-circuiting
-     * here, we allow pausing and re-playing pipelines
-     * with changed caps, as long as the changed caps
-     * do not change the webcam's format. Otherwise,
-     * any caps change would require us to go to NULL
-     * state to close the device and set format.
-     */
-    return TRUE;
+  if (format->type != v4l2object->type ||
+      GST_V4L2_WIDTH (v4l2object) != width ||
+      GST_V4L2_HEIGHT (v4l2object) != height ||
+      GST_V4L2_PIXELFORMAT (v4l2object) != pixelformat ||
+      GST_V4L2_FIELD (v4l2object) != field) {
+    /* something different, set the format */
+    GST_DEBUG_OBJECT (v4l2object->element, "Setting format to %dx%d, format "
+        "%" GST_FOURCC_FORMAT, width, height, GST_FOURCC_ARGS (pixelformat));
+
+    format->type = v4l2object->type;
+    format->fmt.pix.width = width;
+    format->fmt.pix.height = height;
+    format->fmt.pix.pixelformat = pixelformat;
+    format->fmt.pix.field = field;
+
+    if (v4l2_ioctl (fd, VIDIOC_S_FMT, format) < 0)
+      goto set_fmt_failed;
+
+    GST_DEBUG_OBJECT (v4l2object->element, "Got format to %dx%d, format "
+        "%" GST_FOURCC_FORMAT " stride %d", format->fmt.pix.width,
+        format->fmt.pix.height, GST_FOURCC_ARGS (format->fmt.pix.pixelformat),
+        format->fmt.pix.bytesperline);
+
+    if (format->fmt.pix.width != width || format->fmt.pix.height != height)
+      goto invalid_dimensions;
+
+    if (format->fmt.pix.pixelformat != pixelformat)
+      goto invalid_pixelformat;
   }
 
-  GST_DEBUG_OBJECT (v4l2object->element, "Setting format to %dx%d, format "
-      "%" GST_FOURCC_FORMAT, width, height, GST_FOURCC_ARGS (pixelformat));
+  /* Is there a reason we require the caller to always specify a framerate? */
+  GST_DEBUG_OBJECT (v4l2object->element, "Desired framerate: %u/%u", fps_n,
+      fps_d);
 
-  format->type = v4l2object->type;
-  format->fmt.pix.width = width;
-  format->fmt.pix.height = height;
-  format->fmt.pix.pixelformat = pixelformat;
-  format->fmt.pix.field = field;
+  streamparm = &v4l2object->streamparm;
 
-  if (v4l2_ioctl (fd, VIDIOC_S_FMT, format) < 0)
-    goto set_fmt_failed;
+  memset (streamparm, 0x00, sizeof (struct v4l2_streamparm));
+  streamparm->type = v4l2object->type;
 
-  GST_DEBUG_OBJECT (v4l2object->element, "Got format to %dx%d, format "
-      "%" GST_FOURCC_FORMAT " stride %d", format->fmt.pix.width,
-      format->fmt.pix.height, GST_FOURCC_ARGS (format->fmt.pix.pixelformat),
-      format->fmt.pix.bytesperline);
+  if (v4l2_ioctl (fd, VIDIOC_G_PARM, streamparm) < 0)
+    goto get_parm_failed;
 
-  if (format->fmt.pix.width != width || format->fmt.pix.height != height)
-    goto invalid_dimensions;
+  GST_DEBUG_OBJECT (v4l2object->element, "Got framerate: %u/%u",
+      streamparm->parm.capture.timeperframe.denominator,
+      streamparm->parm.capture.timeperframe.numerator);
 
-  if (format->fmt.pix.pixelformat != pixelformat)
-    goto invalid_pixelformat;
+  /* Note: V4L2 provides the frame interval, we have the frame rate */
+  if (!fractions_are_equal (streamparm->parm.capture.timeperframe.numerator,
+          streamparm->parm.capture.timeperframe.denominator, fps_d, fps_n)) {
+    GST_LOG_OBJECT (v4l2object->element, "Setting framerate to %u/%u", fps_n,
+        fps_d);
+    /* We want to change the frame rate, so check whether we can. Some cheap USB
+     * cameras don't have the capability */
+    if ((streamparm->parm.capture.capability & V4L2_CAP_TIMEPERFRAME) == 0) {
+      GST_DEBUG_OBJECT (v4l2object->element,
+          "Not setting framerate (not supported)");
+      goto done;
+    }
+
+    /* Note: V4L2 wants the frame interval, we have the frame rate */
+    streamparm->parm.capture.timeperframe.numerator = fps_d;
+    streamparm->parm.capture.timeperframe.denominator = fps_n;
+
+    /* some cheap USB cam's won't accept any change */
+    if (v4l2_ioctl (fd, VIDIOC_S_PARM, streamparm) < 0)
+      goto set_parm_failed;
+
+    /* get new values */
+    fps_d = streamparm->parm.capture.timeperframe.numerator;
+    fps_n = streamparm->parm.capture.timeperframe.denominator;
+
+    GST_INFO_OBJECT (v4l2object->element, "Set framerate to %u/%u", fps_n,
+        fps_d);
+  }
+
+done:
+  /* if we have a framerate pre-calculate duration */
+  if (fps_n > 0 && fps_d > 0) {
+    v4l2object->duration = gst_util_uint64_scale_int (GST_SECOND, fps_d, fps_n);
+  } else {
+    v4l2object->duration = GST_CLOCK_TIME_NONE;
+  }
 
   return TRUE;
 
@@ -2206,6 +2250,20 @@ invalid_pixelformat:
             GST_FOURCC_ARGS (pixelformat),
             GST_FOURCC_ARGS (format->fmt.pix.pixelformat)));
     return FALSE;
+  }
+get_parm_failed:
+  {
+    GST_ELEMENT_WARNING (v4l2object->element, RESOURCE, SETTINGS,
+        (_("Could not get parameters on device '%s'"),
+            v4l2object->videodev), GST_ERROR_SYSTEM);
+    goto done;
+  }
+set_parm_failed:
+  {
+    GST_ELEMENT_WARNING (v4l2object->element, RESOURCE, SETTINGS,
+        (_("Video input device did not accept new frame rate setting.")),
+        GST_ERROR_SYSTEM);
+    goto done;
   }
 }
 

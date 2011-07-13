@@ -75,8 +75,25 @@ typedef gboolean  (*GstV4l2GetInOutFunction)  (GstV4l2Object * v4l2object, gint 
 typedef gboolean  (*GstV4l2SetInOutFunction)  (GstV4l2Object * v4l2object, gint input);
 typedef gboolean  (*GstV4l2UpdateFpsFunction) (GstV4l2Object * v4l2object);
 
+#define GST_V4L2_WIDTH(o)        ((o)->format.fmt.pix.width)
+#define GST_V4L2_HEIGHT(o)       ((o)->format.fmt.pix.height)
+#define GST_V4L2_PIXELFORMAT(o)  ((o)->format.fmt.pix.pixelformat)
+#define GST_V4L2_FIELD(o)        ((o)->format.fmt.pix.field)
+#define GST_V4L2_FPS_N(o)        ((o)->streamparm.parm.capture.timeperframe.denominator)
+#define GST_V4L2_FPS_D(o)        ((o)->streamparm.parm.capture.timeperframe.numerator)
+
+/* simple check whether the device is open */
+#define GST_V4L2_IS_OPEN(o)      ((o)->video_fd > 0)
+
+/* check whether the device is 'active' */
+#define GST_V4L2_IS_ACTIVE(o)    ((o)->active)
+#define GST_V4L2_SET_ACTIVE(o)   ((o)->active = TRUE)
+#define GST_V4L2_SET_INACTIVE(o) ((o)->active = FALSE)
+
 struct _GstV4l2Object {
   GstElement * element;
+
+  enum v4l2_buf_type type;   /* V4L2_BUF_TYPE_VIDEO_CAPTURE, V4L2_BUF_TYPE_VIDEO_OUTPUT */
 
   /* the video device */
   char *videodev;
@@ -86,16 +103,13 @@ struct _GstV4l2Object {
   GstPoll * poll;
   gboolean can_poll_device;
 
-  /* the video buffer (mmap()'ed) */
-  guint8 **buffer;
-
-  enum v4l2_buf_type type;   /* V4L2_BUF_TYPE_VIDEO_CAPTURE, V4L2_BUF_TYPE_VIDEO_OUTPUT */
+  gboolean active;
 
   /* the current format */
   struct v4l2_format format;
-  guint width, height;
-  guint fps_n, fps_d;
+  struct v4l2_streamparm streamparm;
   guint size;
+  GstClockTime duration;
 
   /* the video device's capabilities */
   struct v4l2_capability vcap;

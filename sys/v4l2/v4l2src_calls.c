@@ -50,16 +50,6 @@
 #define GST_CAT_DEFAULT v4l2src_debug
 GST_DEBUG_CATEGORY_EXTERN (GST_CAT_PERFORMANCE);
 
-/* lalala... */
-#define GST_V4L2_SET_ACTIVE(element) (element)->buffer = GINT_TO_POINTER (-1)
-#define GST_V4L2_SET_INACTIVE(element) (element)->buffer = NULL
-
-/* On some systems MAP_FAILED seems to be missing */
-#ifndef MAP_FAILED
-#define MAP_FAILED ((caddr_t) -1)
-#endif
-
-
 /* Local functions */
 
 static gboolean
@@ -202,90 +192,6 @@ too_many_trials:
   }
 }
 
-/* Note about fraction simplification
- * n1/d1 == n2/d2  is also written as  n1 == ( n2 * d1 ) / d2
- */
-#define fractions_are_equal(n1,d1,n2,d2) ((n1) == gst_util_uint64_scale_int((n2), (d1), (d2)))
-
-/******************************************************
- * gst_v4l2src_set_capture():
- *   set capture parameters
- * return value: TRUE on success, FALSE on error
- ******************************************************/
-gboolean
-gst_v4l2src_set_capture (GstV4l2Src * v4l2src, GstCaps * caps)
-{
-  gint fd = v4l2src->v4l2object->video_fd;
-  struct v4l2_streamparm stream;
-  guint fps_n, fps_d;
-
-  if (!gst_v4l2_object_set_format (v4l2src->v4l2object, caps))
-    /* error already reported */
-    return FALSE;
-
-  fps_n = v4l2src->v4l2object->fps_n;
-  fps_d = v4l2src->v4l2object->fps_d;
-
-  /* Is there a reason we require the caller to always specify a framerate? */
-  GST_DEBUG_OBJECT (v4l2src, "Desired framerate: %u/%u", fps_n, fps_d);
-
-  memset (&stream, 0x00, sizeof (struct v4l2_streamparm));
-  stream.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-  if (v4l2_ioctl (fd, VIDIOC_G_PARM, &stream) < 0) {
-    GST_ELEMENT_WARNING (v4l2src, RESOURCE, SETTINGS,
-        (_("Could not get parameters on device '%s'"),
-            v4l2src->v4l2object->videodev), GST_ERROR_SYSTEM);
-    goto done;
-  }
-
-  /* Note: V4L2 provides the frame interval, we have the frame rate */
-  if (fractions_are_equal (stream.parm.capture.timeperframe.numerator,
-          stream.parm.capture.timeperframe.denominator, fps_d, fps_n)) {
-    GST_DEBUG_OBJECT (v4l2src, "Desired framerate already set");
-    goto already_set;
-  }
-
-  /* We want to change the frame rate, so check whether we can. Some cheap USB
-   * cameras don't have the capability */
-  if ((stream.parm.capture.capability & V4L2_CAP_TIMEPERFRAME) == 0) {
-    GST_DEBUG_OBJECT (v4l2src, "Not setting framerate (not supported)");
-    goto done;
-  }
-
-  GST_LOG_OBJECT (v4l2src, "Setting framerate to %u/%u", fps_n, fps_d);
-
-  /* Note: V4L2 wants the frame interval, we have the frame rate */
-  stream.parm.capture.timeperframe.numerator = fps_d;
-  stream.parm.capture.timeperframe.denominator = fps_n;
-
-  /* some cheap USB cam's won't accept any change */
-  if (v4l2_ioctl (fd, VIDIOC_S_PARM, &stream) < 0) {
-    GST_ELEMENT_WARNING (v4l2src, RESOURCE, SETTINGS,
-        (_("Video input device did not accept new frame rate setting.")),
-        GST_ERROR_SYSTEM);
-    goto done;
-  }
-
-already_set:
-
-  v4l2src->fps_n = fps_n;
-  v4l2src->fps_d = fps_d;
-
-  /* if we have a framerate pre-calculate duration */
-  if (fps_n > 0 && fps_d > 0) {
-    v4l2src->duration = gst_util_uint64_scale_int (GST_SECOND, fps_d, fps_n);
-  } else {
-    v4l2src->duration = GST_CLOCK_TIME_NONE;
-  }
-
-  GST_INFO_OBJECT (v4l2src,
-      "Set framerate to %u/%u and duration to %" GST_TIME_FORMAT, fps_n, fps_d,
-      GST_TIME_ARGS (v4l2src->duration));
-done:
-
-  return TRUE;
-}
-
 /******************************************************
  * gst_v4l2src_capture_init():
  *   initialize the capture system
@@ -386,12 +292,10 @@ gst_v4l2src_capture_stop (GstV4l2Src * v4l2src)
 {
   GST_DEBUG_OBJECT (v4l2src, "stopping capturing");
 
-  if (!GST_V4L2_IS_OPEN (v4l2src->v4l2object)) {
+  if (!GST_V4L2_IS_OPEN (v4l2src->v4l2object))
     goto done;
-  }
-  if (!GST_V4L2_IS_ACTIVE (v4l2src->v4l2object)) {
+  if (!GST_V4L2_IS_ACTIVE (v4l2src->v4l2object))
     goto done;
-  }
 
   if (v4l2src->use_mmap) {
     /* we actually need to sync on all queued buffers but not

@@ -80,9 +80,6 @@ struct _GstV4l2Src
 
   guint64 offset;
 
-  gint     fps_d, fps_n;       /* framerate if device is open */
-  GstClockTime duration;       /* duration of one frame */
-
   GstClockTime ctrl_time;
 
   GstV4l2SrcGetFunc get_frame;

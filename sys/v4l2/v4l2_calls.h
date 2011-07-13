@@ -40,14 +40,6 @@
 #  define v4l2_munmap   munmap
 #endif
 
-/* simple check whether the device is open */
-#define GST_V4L2_IS_OPEN(v4l2object) \
-  (v4l2object->video_fd > 0)
-
-/* check whether the device is 'active' */
-#define GST_V4L2_IS_ACTIVE(v4l2object) \
-  (v4l2object->buffer != NULL)
-
 #define GST_V4L2_IS_OVERLAY(v4l2object) \
   (v4l2object->vcap.capabilities & V4L2_CAP_VIDEO_OVERLAY)
 

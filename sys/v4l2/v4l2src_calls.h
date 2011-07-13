@@ -27,8 +27,6 @@
 #include "gstv4l2src.h"
 #include "v4l2_calls.h"
 
-gboolean   gst_v4l2src_set_capture       (GstV4l2Src * v4l2src, GstCaps *caps);
-
 gboolean   gst_v4l2src_capture_init      (GstV4l2Src * v4l2src);
 gboolean   gst_v4l2src_capture_start     (GstV4l2Src * v4l2src);
 

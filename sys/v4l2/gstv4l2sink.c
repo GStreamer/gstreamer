@@ -677,8 +677,8 @@ gst_v4l2sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
     g_object_notify (G_OBJECT (v4l2sink), "queue-size");
   }
 
-  v4l2sink->video_width = v4l2sink->v4l2object->width;
-  v4l2sink->video_height = v4l2sink->v4l2object->height;
+  v4l2sink->video_width = GST_V4L2_WIDTH (v4l2sink->v4l2object);
+  v4l2sink->video_height = GST_V4L2_HEIGHT (v4l2sink->v4l2object);
 
   /* TODO: videosink width/height should be scaled according to
    * pixel-aspect-ratio

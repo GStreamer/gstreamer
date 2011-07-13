@@ -224,11 +224,7 @@ gst_v4l2src_init (GstV4l2Src * v4l2src)
 
   gst_base_src_set_format (GST_BASE_SRC (v4l2src), GST_FORMAT_TIME);
   gst_base_src_set_live (GST_BASE_SRC (v4l2src), TRUE);
-
-  v4l2src->fps_d = 0;
-  v4l2src->fps_n = 0;
 }
-
 
 static void
 gst_v4l2src_dispose (GObject * object)
@@ -531,7 +527,7 @@ gst_v4l2src_set_caps (GstBaseSrc * src, GstCaps * caps)
       return FALSE;
   }
 
-  if (!gst_v4l2src_set_capture (v4l2src, caps))
+  if (!gst_v4l2_object_set_format (v4l2src->v4l2object, caps))
     /* error already posted */
     return FALSE;
 
@@ -565,6 +561,7 @@ gst_v4l2src_query (GstBaseSrc * bsrc, GstQuery * query)
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_LATENCY:{
       GstClockTime min_latency, max_latency;
+      guint32 fps_n, fps_d;
 
       /* device must be open */
       if (!GST_V4L2_IS_OPEN (src->v4l2object)) {
@@ -573,16 +570,18 @@ gst_v4l2src_query (GstBaseSrc * bsrc, GstQuery * query)
         goto done;
       }
 
+      fps_n = GST_V4L2_FPS_N (src->v4l2object);
+      fps_d = GST_V4L2_FPS_D (src->v4l2object);
+
       /* we must have a framerate */
-      if (src->fps_n <= 0 || src->fps_d <= 0) {
+      if (fps_n <= 0 || fps_d <= 0) {
         GST_WARNING_OBJECT (src,
             "Can't give latency since framerate isn't fixated !");
         goto done;
       }
 
       /* min latency is the time to capture one frame */
-      min_latency =
-          gst_util_uint64_scale_int (GST_SECOND, src->fps_d, src->fps_n);
+      min_latency = gst_util_uint64_scale_int (GST_SECOND, fps_d, fps_n);
 
       /* max latency is total duration of the frame buffer */
       max_latency = src->num_buffers * min_latency;
@@ -653,18 +652,12 @@ gst_v4l2src_stop (GstBaseSrc * src)
 {
   GstV4l2Src *v4l2src = GST_V4L2SRC (src);
 
-  if (GST_V4L2_IS_ACTIVE (v4l2src->v4l2object)
-      && !gst_v4l2src_capture_stop (v4l2src))
-    return FALSE;
-
-  if (v4l2src->v4l2object->buffer != NULL) {
+  if (GST_V4L2_IS_ACTIVE (v4l2src->v4l2object)) {
+    if (!gst_v4l2src_capture_stop (v4l2src))
+      return FALSE;
     if (!gst_v4l2src_capture_deinit (v4l2src))
       return FALSE;
   }
-
-  v4l2src->fps_d = 0;
-  v4l2src->fps_n = 0;
-
   return TRUE;
 }
 
@@ -854,7 +847,7 @@ gst_v4l2src_create (GstPushSrc * src, GstBuffer ** buf)
   /* set buffer metadata */
   if (G_LIKELY (ret == GST_FLOW_OK && *buf)) {
     GstClock *clock;
-    GstClockTime timestamp;
+    GstClockTime timestamp, duration;
 
     GST_BUFFER_OFFSET (*buf) = v4l2src->offset++;
     GST_BUFFER_OFFSET_END (*buf) = v4l2src->offset;
@@ -872,23 +865,25 @@ gst_v4l2src_create (GstPushSrc * src, GstBuffer ** buf)
     }
     GST_OBJECT_UNLOCK (v4l2src);
 
+    duration = v4l2src->v4l2object->duration;
+
     if (G_LIKELY (clock)) {
       /* the time now is the time of the clock minus the base time */
       timestamp = gst_clock_get_time (clock) - timestamp;
       gst_object_unref (clock);
 
       /* if we have a framerate adjust timestamp for frame latency */
-      if (GST_CLOCK_TIME_IS_VALID (v4l2src->duration)) {
-        if (timestamp > v4l2src->duration)
-          timestamp -= v4l2src->duration;
+      if (GST_CLOCK_TIME_IS_VALID (duration)) {
+        if (timestamp > duration)
+          timestamp -= duration;
         else
           timestamp = 0;
       }
     }
 
     /* activate settings for next frame */
-    if (GST_CLOCK_TIME_IS_VALID (v4l2src->duration)) {
-      v4l2src->ctrl_time += v4l2src->duration;
+    if (GST_CLOCK_TIME_IS_VALID (duration)) {
+      v4l2src->ctrl_time += duration;
     } else {
       /* this is not very good (as it should be the next timestamp),
        * still good enough for linear fades (as long as it is not -1)
@@ -901,7 +896,7 @@ gst_v4l2src_create (GstPushSrc * src, GstBuffer ** buf)
 
     /* FIXME: use the timestamp from the buffer itself! */
     GST_BUFFER_TIMESTAMP (*buf) = timestamp;
-    GST_BUFFER_DURATION (*buf) = v4l2src->duration;
+    GST_BUFFER_DURATION (*buf) = duration;
   }
   return ret;
 
