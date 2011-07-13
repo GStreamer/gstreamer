@@ -63,6 +63,7 @@ struct _GstOMXVideoDecClass
 
   const gchar *core_name;
   const gchar *component_name;
+  const gchar *component_role;
 
   const gchar *default_src_template_caps;
   const gchar *default_sink_template_caps;

@@ -82,7 +82,7 @@ gst_omx_video_dec_base_init (gpointer g_class)
   GKeyFile *config;
   const gchar *element_name;
   GError *err;
-  gchar *core_name, *component_name;
+  gchar *core_name, *component_name, *component_role;
   gint in_port_index, out_port_index;
   gchar *template_caps;
   GstPadTemplate *templ;
@@ -105,6 +105,16 @@ gst_omx_video_dec_base_init (gpointer g_class)
       g_key_file_get_string (config, element_name, "component-name", NULL);
   g_assert (component_name != NULL);
   videodec_class->component_name = component_name;
+
+  /* If this fails we simply don't set a role */
+  if ((component_role =
+          g_key_file_get_string (config, element_name, "component-role",
+              NULL))) {
+    GST_DEBUG ("Using component-role '%s' for element '%s'", component_role,
+        element_name);
+    videodec_class->component_role = component_role;
+  }
+
 
   /* Now set the inport/outport indizes and assume sane defaults */
   err = NULL;
@@ -222,7 +232,7 @@ gst_omx_video_dec_open (GstOMXVideoDec * self)
 
   self->component =
       gst_omx_component_new (GST_OBJECT_CAST (self), klass->core_name,
-      klass->component_name);
+      klass->component_name, klass->component_role);
 
   if (!self->component)
     return FALSE;

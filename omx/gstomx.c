@@ -314,7 +314,7 @@ static OMX_CALLBACKTYPE callbacks =
 
 GstOMXComponent *
 gst_omx_component_new (GstObject * parent, const gchar * core_name,
-    const gchar * component_name)
+    const gchar * component_name, const gchar * component_role)
 {
   OMX_ERRORTYPE err;
   GstOMXCore *core;
@@ -353,6 +353,25 @@ gst_omx_component_new (GstObject * parent, const gchar * core_name,
   comp->last_error = OMX_ErrorNone;
   comp->settings_cookie = 0;
   comp->reconfigure_out_pending = 0;
+
+  /* Set component role if any */
+  if (component_role) {
+    OMX_PARAM_COMPONENTROLETYPE param;
+
+    memset (&param, 0, sizeof (param));
+    param.nSize = sizeof (param);
+    param.nVersion.s.nVersionMajor = 1;
+    param.nVersion.s.nVersionMinor = 1;
+
+    g_strlcpy ((gchar *) param.cRole, component_role, sizeof (param.cRole));
+    err =
+        OMX_SetParameter (comp->handle, OMX_IndexParamStandardComponentRole,
+        &param);
+
+    GST_DEBUG_OBJECT (parent, "Setting component role to '%s': %s (0x%08x)",
+        component_role, gst_omx_error_to_string (err), err);
+  }
+
 
   OMX_GetState (comp->handle, &comp->state);
 
