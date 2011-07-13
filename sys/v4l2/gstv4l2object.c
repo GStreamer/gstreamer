@@ -2347,8 +2347,8 @@ gst_v4l2_object_start (GstV4l2Object * v4l2object)
       case V4L2_BUF_TYPE_VIDEO_CAPTURE:
         /* for capture, queue all the buffers so the device can start filling
          * them */
-        while ((buf =
-                gst_v4l2_buffer_pool_get (v4l2object->pool, FALSE)) != NULL)
+        GST_DEBUG_OBJECT (v4l2object->element, "queueing buffers");
+        while ((buf = gst_v4l2_buffer_pool_get (v4l2object->pool, FALSE)))
           if (!gst_v4l2_buffer_pool_qbuf (v4l2object->pool, buf))
             goto queue_failed;
         break;
@@ -2359,6 +2359,7 @@ gst_v4l2_object_start (GstV4l2Object * v4l2object)
         break;
     }
     if (!v4l2object->streaming) {
+      GST_DEBUG_OBJECT (v4l2object->element, "STREAMON");
       if (v4l2_ioctl (v4l2object->video_fd, VIDIOC_STREAMON,
               &(v4l2object->type)) < 0)
         goto start_failed;
@@ -2401,6 +2402,7 @@ gst_v4l2_object_stop (GstV4l2Object * v4l2object)
     if (v4l2object->streaming) {
       /* we actually need to sync on all queued buffers but not
        * on the non-queued ones */
+      GST_DEBUG_OBJECT (v4l2object->element, "STREAMOFF");
       if (v4l2_ioctl (v4l2object->video_fd, VIDIOC_STREAMOFF,
               &(v4l2object->type)) < 0)
         goto stop_failed;
