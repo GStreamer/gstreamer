@@ -285,6 +285,31 @@ _wrap_ges_timeline_object_get_track_objects(PyGObject *self)
 }
 
 %%
+override ges_track_get_objects noargs
+static PyObject *
+_wrap_ges_track_get_objects(PyGObject *self)
+{
+    const GList *l, *list;
+    PyObject *py_list;
+
+    g_return_val_if_fail (GES_IS_TRACK (self->obj), PyList_New(0));
+
+    pyg_begin_allow_threads;
+    list = ges_track_get_objects(GES_TRACK(self->obj));
+    pyg_end_allow_threads;
+
+    py_list = PyList_New(0);
+    for (l = list; l; l = l->next) {
+    GESTrackObject *object = (GESTrackObject*)l->data;
+    PyObject *py_object = pygobject_new(G_OBJECT(object));
+    PyList_Append(py_list, py_object);
+    Py_DECREF(py_object);
+    }
+
+    return py_list;
+}
+
+%%
 override ges_track_object_get_child_property kwargs
 static PyObject *
 _wrap_ges_track_object_get_child_property (PyGObject *self, PyObject *args, PyObject *kwargs)

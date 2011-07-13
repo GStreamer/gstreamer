@@ -1572,6 +1572,12 @@
   )
 )
 
+(define-method get_objects
+  (of-object "GESTrack")
+  (c-name "ges_track_get_objects")
+  (return-type "GList*")
+)
+
 (define-method set_timeline
   (of-object "GESTrack")
   (c-name "ges_track_set_timeline")
