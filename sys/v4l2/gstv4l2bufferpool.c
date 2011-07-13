@@ -31,6 +31,7 @@
 #include <unistd.h>
 
 #include "gst/video/video.h"
+#include "gst/video/gstmetavideo.h"
 
 #include <gstv4l2bufferpool.h>
 #include "gstv4l2src.h"
@@ -131,8 +132,10 @@ gst_v4l2_buffer_new (GstV4l2BufferPool * pool, guint index)
   GstBuffer *ret;
   GstMetaV4l2 *meta;
   GstV4l2Object *obj;
+  GstVideoInfo *info;
 
   obj = pool->obj;
+  info = &obj->info;
 
   ret = gst_buffer_new ();
   GST_MINI_OBJECT_CAST (ret)->dispose =
@@ -173,11 +176,14 @@ gst_v4l2_buffer_new (GstV4l2BufferPool * pool, guint index)
       gst_memory_new_wrapped (0,
           meta->mem, NULL, meta->vbuffer.length, 0, meta->vbuffer.length));
 
-  /* add metadata to buffers */
-
-
-
-
+  /* add metadata to raw video buffers */
+  if (info->finfo) {
+    GST_DEBUG ("adding video meta");
+    gst_buffer_add_meta_video_full (ret, info->flags,
+        GST_VIDEO_INFO_FORMAT (info), GST_VIDEO_INFO_WIDTH (info),
+        GST_VIDEO_INFO_HEIGHT (info), GST_VIDEO_INFO_N_PLANES (info),
+        info->offset, info->stride);
+  }
   return ret;
 
   /* ERRORS */
