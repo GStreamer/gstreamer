@@ -5044,6 +5044,12 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
   }
 
   switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
+      /* completed transition, so need not be marked any longer
+       * And it should be unmarked, since e.g. losing our position upon flush
+       * does not really change state to PAUSED ... */
+      g_atomic_int_set (&basesink->priv->to_playing, FALSE);
+      break;
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       g_atomic_int_set (&basesink->priv->to_playing, FALSE);
       GST_DEBUG_OBJECT (basesink, "PLAYING to PAUSED");
