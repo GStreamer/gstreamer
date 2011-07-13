@@ -24,6 +24,7 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/video/gstbasevideoencoder.h>
+#include <gst/video/gstbasevideoutils.h>
 #include <string.h>
 #include <libdirac_encoder/dirac_encoder.h>
 #include <math.h>
@@ -223,13 +224,11 @@ static void
 gst_dirac_enc_class_init (GstDiracEncClass * klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
   GstBaseVideoEncoderClass *basevideoencoder_class;
 
   //int i;
 
   gobject_class = G_OBJECT_CLASS (klass);
-  gstelement_class = GST_ELEMENT_CLASS (klass);
   basevideoencoder_class = GST_BASE_VIDEO_ENCODER_CLASS (klass);
 
   gobject_class->set_property = gst_dirac_enc_set_property;
@@ -1136,7 +1135,6 @@ gst_dirac_enc_process (GstDiracEnc * dirac_enc, gboolean end_sequence)
 {
   GstBuffer *outbuf;
   GstFlowReturn ret;
-  int presentation_frame;
   int parse_code;
   int state;
   GstVideoFrame *frame;
@@ -1192,8 +1190,6 @@ gst_dirac_enc_process (GstDiracEnc * dirac_enc, gboolean end_sequence)
         dirac_enc->pull_frame_num++;
 
         parse_code = ((guint8 *) GST_BUFFER_DATA (outbuf))[4];
-        /* FIXME */
-        presentation_frame = 0;
 
         if (DIRAC_PARSE_CODE_IS_SEQ_HEADER (parse_code)) {
           frame->is_sync_point = TRUE;
@@ -1230,7 +1226,6 @@ gst_dirac_enc_shape_output_ogg (GstBaseVideoEncoder * base_video_encoder,
     GstVideoFrame * frame)
 {
   GstDiracEnc *dirac_enc;
-  int dpn;
   int delay;
   int dist;
   int pt;
@@ -1240,8 +1235,6 @@ gst_dirac_enc_shape_output_ogg (GstBaseVideoEncoder * base_video_encoder,
   GstBuffer *buf = frame->src_buffer;
 
   dirac_enc = GST_DIRAC_ENC (base_video_encoder);
-
-  dpn = frame->decode_frame_number;
 
   pt = frame->presentation_frame_number * 2 + dirac_enc->granule_offset;
   dt = frame->decode_frame_number * 2 + dirac_enc->granule_offset;
