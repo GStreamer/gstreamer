@@ -758,6 +758,16 @@ gst_omx_video_dec_reset (GstBaseVideoDecoder * decoder)
 
   GST_DEBUG_OBJECT (self, "Resetting decoder");
 
+  /* FIXME: Workaround for 
+   * https://bugzilla.gnome.org/show_bug.cgi?id=654529
+   */
+  GST_OBJECT_LOCK (self);
+  g_list_foreach (GST_BASE_VIDEO_CODEC (self)->frames,
+      (GFunc) gst_base_video_codec_free_frame, NULL);
+  g_list_free (GST_BASE_VIDEO_CODEC (self)->frames);
+  GST_BASE_VIDEO_CODEC (self)->frames = NULL;
+  GST_OBJECT_UNLOCK (self);
+
   gst_omx_port_set_flushing (self->in_port, TRUE);
   gst_omx_port_set_flushing (self->out_port, TRUE);
 
