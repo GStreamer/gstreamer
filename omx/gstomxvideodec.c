@@ -329,6 +329,7 @@ static GstVideoFrame *
 _find_nearest_frame (GstOMXVideoDec * self, GstOMXBuffer * buf)
 {
   GList *l, *best_l = NULL;
+  GList *finish_frames = NULL;
   GstVideoFrame *best = NULL;
   guint64 best_timestamp = 0;
   guint64 best_diff = G_MAXUINT64;
@@ -368,7 +369,7 @@ _find_nearest_frame (GstOMXVideoDec * self, GstOMXBuffer * buf)
   }
 
   if (best_id) {
-    for (l = GST_BASE_VIDEO_CODEC (self)->frames; l && l != best_l;) {
+    for (l = GST_BASE_VIDEO_CODEC (self)->frames; l && l != best_l; l = l->next) {
       GstVideoFrame *tmp = l->data;
       BufferIdentification *id = tmp->coder_hook;
       guint64 diff_ticks, diff_frames;
@@ -384,17 +385,20 @@ _find_nearest_frame (GstOMXVideoDec * self, GstOMXBuffer * buf)
 
       if (diff_ticks > MAX_FRAME_DIST_TICKS
           || diff_frames > MAX_FRAME_DIST_FRAMES) {
-        g_warning ("Too old frame, bug in decoder -- please file a bug");
-        gst_base_video_decoder_finish_frame (GST_BASE_VIDEO_DECODER (self),
-            tmp);
-        l = GST_BASE_VIDEO_CODEC (self)->frames;
-      } else {
-        l = l->next;
+        finish_frames = g_list_prepend (finish_frames, tmp);
       }
     }
   }
 
   GST_OBJECT_UNLOCK (self);
+
+  if (finish_frames) {
+    g_warning ("Too old frames, bug in decoder -- please file a bug");
+    for (l = finish_frames; l; l = l->next) {
+      gst_base_video_decoder_finish_frame (GST_BASE_VIDEO_DECODER (self),
+          l->data);
+    }
+  }
 
   return best;
 }
