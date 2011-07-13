@@ -2351,20 +2351,18 @@ gst_v4l2_object_start (GstV4l2Object * v4l2object)
                 gst_v4l2_buffer_pool_get (v4l2object->pool, FALSE)) != NULL)
           if (!gst_v4l2_buffer_pool_qbuf (v4l2object->pool, buf))
             goto queue_failed;
-
-        if (!v4l2object->streaming) {
-          if (v4l2_ioctl (v4l2object->video_fd, VIDIOC_STREAMON,
-                  &(v4l2object->type)) < 0)
-            goto start_failed;
-          v4l2object->streaming = TRUE;
-        }
         break;
       case V4L2_BUF_TYPE_VIDEO_OUTPUT:
-        /* for output, do nothing. We will start streaming when we get the
-         * first buffer */
+        /* for output, we assume we already queued a buffer */
         break;
       default:
         break;
+    }
+    if (!v4l2object->streaming) {
+      if (v4l2_ioctl (v4l2object->video_fd, VIDIOC_STREAMON,
+              &(v4l2object->type)) < 0)
+        goto start_failed;
+      v4l2object->streaming = TRUE;
     }
   }
   return TRUE;
