@@ -2072,8 +2072,8 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
   struct v4l2_streamparm *streamparm;
   enum v4l2_field field;
   guint32 pixelformat;
-  gint width;
-  gint height;
+  gint ret;
+  gint width, height;
   gboolean interlaced;
   struct v4l2_fmtdesc *fmtdesc;
   guint fps_n, fps_d;
@@ -2161,7 +2161,7 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
   memset (streamparm, 0x00, sizeof (struct v4l2_streamparm));
   streamparm->type = v4l2object->type;
 
-  if (v4l2_ioctl (fd, VIDIOC_G_PARM, streamparm) < 0)
+  if ((ret = v4l2_ioctl (fd, VIDIOC_G_PARM, streamparm)) < 0)
     goto get_parm_failed;
 
   if (v4l2object->type == V4L2_BUF_TYPE_VIDEO_CAPTURE) {
@@ -2255,9 +2255,12 @@ invalid_pixelformat:
   }
 get_parm_failed:
   {
-    GST_ELEMENT_WARNING (v4l2object->element, RESOURCE, SETTINGS,
-        (_("Could not get parameters on device '%s'"),
-            v4l2object->videodev), GST_ERROR_SYSTEM);
+    /* it's possible that this call is not supported */
+    if (ret != EINVAL) {
+      GST_ELEMENT_WARNING (v4l2object->element, RESOURCE, SETTINGS,
+          (_("Could not get parameters on device '%s'"),
+              v4l2object->videodev), GST_ERROR_SYSTEM);
+    }
     goto done;
   }
 set_parm_failed:
