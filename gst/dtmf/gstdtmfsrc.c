@@ -611,6 +611,12 @@ gst_dtmf_src_create_next_tone_packet (GstDTMFSrc * dtmfsrc,
   /* timestamp and duration of GstBuffer */
   GST_BUFFER_DURATION (buf) = dtmfsrc->interval * GST_MSECOND;
   GST_BUFFER_TIMESTAMP (buf) = dtmfsrc->timestamp;
+
+  GST_LOG_OBJECT (dtmfsrc, "Creating new buffer with event %u duration "
+      " gst: %" GST_TIME_FORMAT " at %" GST_TIME_FORMAT,
+      event->event_number, GST_TIME_ARGS (GST_BUFFER_DURATION (buf)),
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
+
   dtmfsrc->timestamp += GST_BUFFER_DURATION (buf);
 
   /* Set caps on the buffer before pushing it */
