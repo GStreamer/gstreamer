@@ -51,6 +51,7 @@
 #include <gst/base/gstpushsrc.h>
 #include <gst/controller/gstcontroller.h>
 
+#include <gst/video/video.h>
 #include <gst/interfaces/propertyprobe.h>
 
 
@@ -75,12 +76,11 @@ typedef gboolean  (*GstV4l2GetInOutFunction)  (GstV4l2Object * v4l2object, gint 
 typedef gboolean  (*GstV4l2SetInOutFunction)  (GstV4l2Object * v4l2object, gint input);
 typedef gboolean  (*GstV4l2UpdateFpsFunction) (GstV4l2Object * v4l2object);
 
-#define GST_V4L2_WIDTH(o)        ((o)->format.fmt.pix.width)
-#define GST_V4L2_HEIGHT(o)       ((o)->format.fmt.pix.height)
-#define GST_V4L2_PIXELFORMAT(o)  ((o)->format.fmt.pix.pixelformat)
-#define GST_V4L2_FIELD(o)        ((o)->format.fmt.pix.field)
-#define GST_V4L2_FPS_N(o)        ((o)->streamparm.parm.capture.timeperframe.denominator)
-#define GST_V4L2_FPS_D(o)        ((o)->streamparm.parm.capture.timeperframe.numerator)
+#define GST_V4L2_WIDTH(o)        (GST_VIDEO_INFO_WIDTH (&(o)->info))
+#define GST_V4L2_HEIGHT(o)       (GST_VIDEO_INFO_HEIGHT (&(o)->info))
+#define GST_V4L2_PIXELFORMAT(o)  ((o)->fmtdesc->pixelformat)
+#define GST_V4L2_FPS_N(o)        (GST_VIDEO_INFO_FPS_N (&(o)->info))
+#define GST_V4L2_FPS_D(o)        (GST_VIDEO_INFO_FPS_D (&(o)->info))
 
 /* simple check whether the device is open */
 #define GST_V4L2_IS_OPEN(o)      ((o)->video_fd > 0)
@@ -106,8 +106,10 @@ struct _GstV4l2Object {
   gboolean active;
 
   /* the current format */
-  struct v4l2_format format;
-  struct v4l2_streamparm streamparm;
+  struct v4l2_fmtdesc *fmtdesc;
+  GstVideoInfo info;
+  gboolean custom_stride;
+
   guint size;
   GstClockTime duration;
 
