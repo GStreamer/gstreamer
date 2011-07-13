@@ -255,12 +255,12 @@ gst_omx_video_dec_open (GstOMXVideoDec * self)
 static gboolean
 gst_omx_video_dec_close (GstOMXVideoDec * self)
 {
-  OMX_STATETYPE state;
-
-  gst_omx_component_set_state (self->component, OMX_StateLoaded);
-  gst_omx_port_deallocate_buffers (self->in_port);
-  gst_omx_port_deallocate_buffers (self->out_port);
-  state = gst_omx_component_get_state (self->component, 5 * GST_SECOND);
+  if (gst_omx_component_get_state (self->component, 0) > OMX_StateLoaded) {
+    gst_omx_component_set_state (self->component, OMX_StateLoaded);
+    gst_omx_port_deallocate_buffers (self->in_port);
+    gst_omx_port_deallocate_buffers (self->out_port);
+    gst_omx_component_get_state (self->component, 5 * GST_SECOND);
+  }
 
   self->in_port = NULL;
   self->out_port = NULL;
@@ -268,7 +268,7 @@ gst_omx_video_dec_close (GstOMXVideoDec * self)
     gst_omx_component_free (self->component);
   self->component = NULL;
 
-  return (state == OMX_StateLoaded);
+  return TRUE;
 }
 
 static void
@@ -634,13 +634,13 @@ static gboolean
 gst_omx_video_dec_stop (GstBaseVideoDecoder * decoder)
 {
   GstOMXVideoDec *self;
-  gboolean ret;
 
   self = GST_OMX_VIDEO_DEC (decoder);
 
-  ret = gst_pad_stop_task (GST_BASE_VIDEO_CODEC_SRC_PAD (decoder));
+  gst_pad_stop_task (GST_BASE_VIDEO_CODEC_SRC_PAD (decoder));
 
-  gst_omx_component_set_state (self->component, OMX_StateIdle);
+  if (gst_omx_component_get_state (self->component, 0) > OMX_StateIdle)
+    gst_omx_component_set_state (self->component, OMX_StateIdle);
 
   gst_omx_port_set_flushing (self->in_port, TRUE);
   gst_omx_port_set_flushing (self->out_port, TRUE);
@@ -649,7 +649,7 @@ gst_omx_video_dec_stop (GstBaseVideoDecoder * decoder)
 
   gst_buffer_replace (&self->codec_data, NULL);
 
-  return ret;
+  return TRUE;
 }
 
 static gboolean
