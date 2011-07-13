@@ -602,13 +602,6 @@ gst_rtp_dtmf_prepare_buffer_data (GstRTPDTMFSrc * dtmfsrc, GstBuffer * buf)
 
   payload->duration = g_htons (payload->duration);
 
-
-  /* duration of DTMF payloadfor the NEXT packet */
-  /* not updated for redundant packets */
-  if (dtmfsrc->redundancy_count <= 1)
-    dtmfsrc->payload->duration += dtmfsrc->ptime * dtmfsrc->clock_rate / 1000;
-
-
   if (dtmfsrc->redundancy_count <= 1 && dtmfsrc->last_packet) {
     GstClockTime inter_digit_interval = MIN_INTER_DIGIT_INTERVAL;
 
@@ -619,8 +612,20 @@ gst_rtp_dtmf_prepare_buffer_data (GstRTPDTMFSrc * dtmfsrc, GstBuffer * buf)
     GST_BUFFER_DURATION (buf) += inter_digit_interval * GST_MSECOND;
   }
 
+  GST_LOG_OBJECT (dtmfsrc, "Creating new buffer with event %u duration "
+      " gst: %" GST_TIME_FORMAT " at %" GST_TIME_FORMAT "(rtp ts:%u dur:%u)",
+      dtmfsrc->payload->event, GST_TIME_ARGS (GST_BUFFER_DURATION (buf)),
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)), dtmfsrc->rtp_timestamp,
+      dtmfsrc->payload->duration);
+
+  /* duration of DTMF payloadfor the NEXT packet */
+  /* not updated for redundant packets */
+  if (dtmfsrc->redundancy_count <= 1)
+    dtmfsrc->payload->duration += dtmfsrc->ptime * dtmfsrc->clock_rate / 1000;
+
   if (GST_CLOCK_TIME_IS_VALID (dtmfsrc->timestamp))
     dtmfsrc->timestamp += GST_BUFFER_DURATION (buf);
+
 }
 
 static GstBuffer *
