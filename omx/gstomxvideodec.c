@@ -545,7 +545,8 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
 component_error:
   {
     GST_ELEMENT_ERROR (self, LIBRARY, FAILED, (NULL),
-        ("OpenMAX component in error state %d",
+        ("OpenMAX component in error state %s (0x%08x)",
+            gst_omx_component_get_last_error_string (self->component),
             gst_omx_component_get_last_error (self->component)));
     gst_pad_push_event (GST_BASE_VIDEO_CODEC_SRC_PAD (self),
         gst_event_new_eos ());
@@ -736,7 +737,8 @@ gst_omx_video_dec_set_format (GstBaseVideoDecoder * decoder,
   gst_omx_port_set_flushing (self->out_port, FALSE);
 
   if (gst_omx_component_get_last_error (self->component) != OMX_ErrorNone) {
-    GST_ERROR_OBJECT (self, "Component in error state: %d",
+    GST_ERROR_OBJECT (self, "Component in error state: %s (0x%08x)",
+        gst_omx_component_get_last_error_string (self->component),
         gst_omx_component_get_last_error (self->component));
     return FALSE;
   }
@@ -913,7 +915,8 @@ too_large_codec_data:
 component_error:
   {
     GST_ELEMENT_ERROR (self, LIBRARY, FAILED, (NULL),
-        ("OpenMAX component in error state %d",
+        ("OpenMAX component in error state %s (0x%08x)",
+            gst_omx_component_get_last_error_string (self->component),
             gst_omx_component_get_last_error (self->component)));
     return GST_FLOW_ERROR;
   }

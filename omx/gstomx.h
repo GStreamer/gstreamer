@@ -149,6 +149,8 @@ extern GQuark     gst_omx_element_name_quark;
 
 GKeyFile *        gst_omx_get_configuration (void);
 
+const gchar *     gst_omx_error_to_string (OMX_ERRORTYPE err);
+
 GstOMXCore *      gst_omx_core_acquire (const gchar * filename);
 void              gst_omx_core_release (GstOMXCore * core);
 
@@ -161,6 +163,7 @@ OMX_STATETYPE     gst_omx_component_get_state (GstOMXComponent * comp, GstClockT
 
 void              gst_omx_component_set_last_error (GstOMXComponent * comp, OMX_ERRORTYPE err);
 OMX_ERRORTYPE     gst_omx_component_get_last_error (GstOMXComponent * comp);
+const gchar *     gst_omx_component_get_last_error_string (GstOMXComponent * comp);
 
 GstOMXPort *      gst_omx_component_add_port (GstOMXComponent * comp, guint32 index);
 GstOMXPort *      gst_omx_component_get_port (GstOMXComponent * comp, guint32 index);
