@@ -521,8 +521,10 @@ mpeg_util_parse_extension_packet (MPEGSeqHdr * hdr, guint8 * data, guint8 * end)
       hdr->profile = data[0] & 0x0f;    /* profile (0:2) + escape bit (3) */
       hdr->level = (data[1] >> 4) & 0x0f;
       hdr->progressive = data[1] & 0x08;
+      /* chroma_format = (data[1] >> 2) & 0x03; */
       horiz_size_ext = ((data[1] << 1) & 0x02) | ((data[2] >> 7) & 0x01);
       vert_size_ext = (data[2] >> 5) & 0x03;
+      /* low_delay = data[5] >> 7; */
       fps_n_ext = (data[5] >> 5) & 0x03;
       fps_d_ext = data[5] & 0x1f;
 
@@ -579,6 +581,7 @@ mpeg_util_parse_sequence_hdr (MPEGSeqHdr * hdr, guint8 * data, guint8 * end)
     hdr->bitrate *= 400;
   }
 
+  /* constrained_flag = (data[7] >> 2) & 0x01; */
   load_intra_flag = (data[7] >> 1) & 0x01;
   if (load_intra_flag) {
     if (G_UNLIKELY ((end - data) < 64))
