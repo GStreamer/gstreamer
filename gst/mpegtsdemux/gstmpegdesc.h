@@ -293,7 +293,7 @@
 #define DESC_DVB_SATELLITE_DELIVERY_SYSTEM_orbital_position(desc)	(desc + 6)
 #define DESC_DVB_SATELLITE_DELIVERY_SYSTEM_west_east_flag(desc)	((desc[8] & 0x80) == 0x80)
 #define DESC_DVB_SATELLITE_DELIVERY_SYSTEM_polarization(desc)	((desc[8] >> 5) & 0x3)
-#define DESC_DVB_SATELLITE_DELIVERY_SYSTEM_modulation(desc)	(desc[8] & 0x1F)
+#define DESC_DVB_SATELLITE_DELIVERY_SYSTEM_modulation(desc)	(desc[8] & 0x3)
 #define DESC_DVB_SATELLITE_DELIVERY_SYSTEM_symbol_rate(desc)	(desc + 9)
 #define DESC_DVB_SATELLITE_DELIVERY_SYSTEM_fec_inner(desc)	(desc[12] & 0x0F)
 

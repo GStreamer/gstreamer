@@ -155,6 +155,7 @@ gst_dvbsrc_modulation_get_type (void)
     {QAM_AUTO, "AUTO", "auto"},
     {VSB_8, "8VSB", "8vsb"},
     {VSB_16, "16VSB", "16vsb"},
+    {PSK_8, "8PSK", "8psk"},
     {0, NULL, NULL},
   };
 

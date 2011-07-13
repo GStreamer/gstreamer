@@ -1086,25 +1086,20 @@ mpegts_packetizer_parse_nit (MpegTSPacketizer2 * packetizer,
         }
         switch (modulation) {
           case 0x00:
-            modulation_str = "undefined";
+            modulation_str = "auto";
             break;
           case 0x01:
-            modulation_str = "QAM16";
+            modulation_str = "QPSK";
             break;
           case 0x02:
-            modulation_str = "QAM32";
+            modulation_str = "8PSK";
             break;
           case 0x03:
-            modulation_str = "QAM64";
-            break;
-          case 0x04:
-            modulation_str = "QAM128";
-            break;
-          case 0x05:
-            modulation_str = "QAM256";
+            modulation_str = "QAM16";
             break;
           default:
-            modulation_str = "reserved";
+            modulation_str = "";
+            break;
         }
         delivery_structure = gst_structure_new ("satellite",
             "orbital", G_TYPE_FLOAT, orbital,
