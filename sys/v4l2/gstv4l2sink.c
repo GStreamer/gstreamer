@@ -517,16 +517,13 @@ gst_v4l2sink_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-#if 0
-      if (v4l2sink->state == STATE_STREAMING) {
-        if (!gst_v4l2_object_stop_streaming (v4l2sink->v4l2object)) {
-          return GST_STATE_CHANGE_FAILURE;
-        }
-        v4l2sink->state = STATE_PENDING_STREAMON;
-      }
-#endif
+      if (!gst_v4l2_object_stop (v4l2sink->v4l2object))
+        return GST_STATE_CHANGE_FAILURE;
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
+      /* we need to call stop here too */
+      if (!gst_v4l2_object_stop (v4l2sink->v4l2object))
+        return GST_STATE_CHANGE_FAILURE;
       /* close the device */
       if (!gst_v4l2_object_close (v4l2sink->v4l2object))
         return GST_STATE_CHANGE_FAILURE;
