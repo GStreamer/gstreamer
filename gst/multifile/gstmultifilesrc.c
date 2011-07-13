@@ -321,7 +321,7 @@ gst_multi_file_src_get_filename (GstMultiFileSrc * multifilesrc)
 {
   gchar *filename;
 
-  GST_ERROR ("%d", multifilesrc->index);
+  GST_DEBUG ("%d", multifilesrc->index);
   filename = g_strdup_printf (multifilesrc->filename, multifilesrc->index);
 
   return filename;
