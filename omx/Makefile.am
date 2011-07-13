@@ -11,6 +11,7 @@ libgstomx_la_SOURCES = \
 	gstbasevideoutils.c
 
 noinst_HEADERS = \
+	gstomx.h \
 	gstomxvideodec.h \
 	gstomxmpeg4videodec.h \
 	gstomxh264dec.h \
