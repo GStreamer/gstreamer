@@ -721,6 +721,7 @@ gst_v4l2sink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
   GstV4l2Sink *v4l2sink = GST_V4L2SINK (bsink);
   GstBuffer *newbuf = NULL;
   GstMetaV4l2 *meta;
+  GstV4l2Object *obj = v4l2sink->v4l2object;
 
   GST_DEBUG_OBJECT (v4l2sink, "render buffer: %p", buf);
 
@@ -734,12 +735,25 @@ gst_v4l2sink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
     GST_DEBUG_OBJECT (v4l2sink, "slow-path.. need to memcpy");
     newbuf = gst_v4l2_buffer_pool_get (v4l2sink->pool, TRUE);
 
-    data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
-    gst_buffer_fill (newbuf, 0, data, size);
-    gst_buffer_unmap (buf, data, size);
+    if (obj->info.finfo) {
+      GstVideoFrame src_frame, dest_frame;
 
+      GST_DEBUG_OBJECT (v4l2sink, "copy video frame");
+      /* we have raw video, use videoframe copy to get strides right */
+      gst_video_frame_map (&src_frame, &obj->info, buf, GST_MAP_READ);
+      gst_video_frame_map (&dest_frame, &obj->info, newbuf, GST_MAP_WRITE);
+
+      gst_video_frame_copy (&dest_frame, &src_frame);
+
+      gst_video_frame_unmap (&src_frame);
+      gst_video_frame_unmap (&dest_frame);
+    } else {
+      GST_DEBUG_OBJECT (v4l2sink, "copy raw bytes");
+      data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+      gst_buffer_fill (newbuf, 0, data, size);
+      gst_buffer_unmap (buf, data, size);
+    }
     GST_DEBUG_OBJECT (v4l2sink, "render copied buffer: %p", newbuf);
-
     buf = newbuf;
   }
 
