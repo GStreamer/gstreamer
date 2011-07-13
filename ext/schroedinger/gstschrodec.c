@@ -78,10 +78,6 @@ enum
 };
 
 static void gst_schro_dec_finalize (GObject * object);
-static void gst_schro_dec_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec);
-static void gst_schro_dec_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec);
 
 static gboolean gst_schro_dec_sink_query (GstPad * pad, GstQuery * query);
 
@@ -137,8 +133,6 @@ gst_schro_dec_class_init (GstSchroDecClass * klass)
   gobject_class = G_OBJECT_CLASS (klass);
   base_video_decoder_class = GST_BASE_VIDEO_DECODER_CLASS (klass);
 
-  gobject_class->set_property = gst_schro_dec_set_property;
-  gobject_class->get_property = gst_schro_dec_get_property;
   gobject_class->finalize = gst_schro_dec_finalize;
 
   base_video_decoder_class->start = GST_DEBUG_FUNCPTR (gst_schro_dec_start);
@@ -172,21 +166,16 @@ static gint64
 granulepos_to_frame (gint64 granulepos)
 {
   guint64 pt;
-  int dist_h;
-  int dist_l;
-  int dist;
-  int delay;
-  guint64 dt;
 
   if (granulepos == -1)
     return -1;
 
   pt = ((granulepos >> 22) + (granulepos & OGG_DIRAC_GRANULE_LOW_MASK)) >> 9;
-  dist_h = (granulepos >> 22) & 0xff;
-  dist_l = granulepos & 0xff;
-  dist = (dist_h << 8) | dist_l;
-  delay = (granulepos >> 9) & 0x1fff;
-  dt = pt - delay;
+  /* dist_h = (granulepos >> 22) & 0xff;
+   * dist_l = granulepos & 0xff;
+   * dist = (dist_h << 8) | dist_l;
+   * delay = (granulepos >> 9) & 0x1fff;
+   * dt = pt - delay; */
 
   return pt >> 1;
 }
@@ -306,38 +295,6 @@ gst_schro_dec_finalize (GObject * object)
   }
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
-}
-
-static void
-gst_schro_dec_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GstSchroDec *src;
-
-  g_return_if_fail (GST_IS_SCHRO_DEC (object));
-  src = GST_SCHRO_DEC (object);
-
-  GST_DEBUG ("gst_schro_dec_set_property");
-  switch (prop_id) {
-    default:
-      break;
-  }
-}
-
-static void
-gst_schro_dec_get_property (GObject * object, guint prop_id, GValue * value,
-    GParamSpec * pspec)
-{
-  GstSchroDec *src;
-
-  g_return_if_fail (GST_IS_SCHRO_DEC (object));
-  src = GST_SCHRO_DEC (object);
-
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
 }
 
 static void
@@ -642,7 +599,6 @@ gst_schro_dec_handle_frame (GstBaseVideoDecoder * base_video_decoder,
     GstVideoFrame * frame)
 {
   GstSchroDec *schro_dec;
-  int schro_ret;
   SchroBuffer *input_buffer;
 
   schro_dec = GST_SCHRO_DEC (base_video_decoder);
@@ -654,7 +610,7 @@ gst_schro_dec_handle_frame (GstBaseVideoDecoder * base_video_decoder,
 
   input_buffer->tag = schro_tag_new (frame, NULL);
 
-  schro_ret = schro_decoder_autoparse_push (schro_dec->decoder, input_buffer);
+  schro_decoder_autoparse_push (schro_dec->decoder, input_buffer);
 
   return gst_schro_dec_process (schro_dec, FALSE);
 }

@@ -24,6 +24,7 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/video/gstbasevideoencoder.h>
+#include <gst/video/gstbasevideoutils.h>
 #include <string.h>
 
 #include <schroedinger/schro.h>
@@ -612,7 +613,6 @@ gst_schro_enc_shape_output_ogg (GstBaseVideoEncoder * base_video_encoder,
     GstVideoFrame * frame)
 {
   GstSchroEnc *schro_enc;
-  int dpn;
   int delay;
   int dist;
   int pt;
@@ -622,8 +622,6 @@ gst_schro_enc_shape_output_ogg (GstBaseVideoEncoder * base_video_encoder,
   GstBuffer *buf = frame->src_buffer;
 
   schro_enc = GST_SCHRO_ENC (base_video_encoder);
-
-  dpn = frame->decode_frame_number;
 
   pt = frame->presentation_frame_number * 2 + schro_enc->granule_offset;
   dt = frame->decode_frame_number * 2 + schro_enc->granule_offset;
