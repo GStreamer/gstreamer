@@ -42,6 +42,8 @@ typedef struct _GstV4l2BufferPool GstV4l2BufferPool;
 typedef struct _GstV4l2BufferPoolClass GstV4l2BufferPoolClass;
 typedef struct _GstMetaV4l2 GstMetaV4l2;
 
+#define GST_V4L2_BUFFER_POOL_LOCK(pool)     g_mutex_lock ((pool)->lock)
+#define GST_V4L2_BUFFER_POOL_UNLOCK(pool)   g_mutex_unlock ((pool)->lock)
 
 struct _GstV4l2BufferPool
 {
@@ -71,10 +73,6 @@ struct _GstMetaV4l2 {
   gpointer mem;
   struct v4l2_buffer vbuffer;
 
-  /* FIXME: have GstV4l2Src* instead, as this has GstV4l2BufferPool* */
-  /* FIXME: do we really want to fix this if GstV4l2Buffer/Pool is shared
-   * between v4l2src and v4l2sink??
-   */
   GstV4l2BufferPool *pool;
 };
 
@@ -82,18 +80,14 @@ const GstMetaInfo * gst_meta_v4l2_get_info (void);
 #define GST_META_V4L2_GET(buf) ((GstMetaV4l2 *)gst_buffer_get_meta(buf,gst_meta_v4l2_get_info()))
 #define GST_META_V4L2_ADD(buf) ((GstMetaV4l2 *)gst_buffer_add_meta(buf,gst_meta_v4l2_get_info(),NULL))
 
-void gst_v4l2_buffer_pool_destroy (GstV4l2BufferPool * pool);
-GstV4l2BufferPool *gst_v4l2_buffer_pool_new (GstV4l2Object *obj, gint num_buffers, gboolean requeuebuf);
+GstV4l2BufferPool * gst_v4l2_buffer_pool_new     (GstV4l2Object *obj, gint num_buffers, gboolean requeuebuf);
+void                gst_v4l2_buffer_pool_destroy (GstV4l2BufferPool * pool);
 
-GstBuffer *gst_v4l2_buffer_pool_get (GstV4l2BufferPool *pool, gboolean blocking);
-gboolean gst_v4l2_buffer_pool_qbuf (GstV4l2BufferPool *pool, GstBuffer *buf);
-GstBuffer *gst_v4l2_buffer_pool_dqbuf (GstV4l2BufferPool *pool);
+GstBuffer *         gst_v4l2_buffer_pool_get     (GstV4l2BufferPool *pool, gboolean blocking);
+gboolean            gst_v4l2_buffer_pool_qbuf    (GstV4l2BufferPool *pool, GstBuffer *buf);
+GstBuffer *         gst_v4l2_buffer_pool_dqbuf   (GstV4l2BufferPool *pool);
 
-gint gst_v4l2_buffer_pool_available_buffers (GstV4l2BufferPool *pool);
-
-
-#define GST_V4L2_BUFFER_POOL_LOCK(pool)     g_mutex_lock ((pool)->lock)
-#define GST_V4L2_BUFFER_POOL_UNLOCK(pool)   g_mutex_unlock ((pool)->lock)
+gint                gst_v4l2_buffer_pool_available_buffers (GstV4l2BufferPool *pool);
 
 G_END_DECLS
 
