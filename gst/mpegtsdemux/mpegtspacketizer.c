@@ -384,6 +384,7 @@ mpegts_packetizer_parse_descriptors (MpegTSPacketizer2 * packetizer,
   data = *buffer;
 
   while (data < buffer_end) {
+    data++;                     /* skip tag */
     length = *data++;
 
     if (data + length > buffer_end) {
@@ -1404,6 +1405,9 @@ mpegts_packetizer_parse_sdt (MpegTSPacketizer2 * packetizer,
     service_id = GST_READ_UINT16_BE (data);
     data += 2;
 
+    /* EIT_schedule = ((*data & 0x02) == 2); */
+    /* EIT_present_following = (*data & 0x01) == 1; */
+
     data += 1;
     tmp = GST_READ_UINT16_BE (data);
 
@@ -1610,6 +1614,7 @@ mpegts_packetizer_parse_eit (MpegTSPacketizer2 * packetizer,
 
     event_id = GST_READ_UINT16_BE (data);
     data += 2;
+    /* start_and_duration = GST_READ_UINT64_BE (data); */
     duration_ptr = data + 5;
     utc_ptr = data + 2;
     mjd = GST_READ_UINT16_BE (data);
@@ -2514,14 +2519,15 @@ get_encoding (const gchar * text, guint * start_text, gboolean * is_multibyte)
     *start_text = 1;
     *is_multibyte = TRUE;
   } else if (firstbyte == 0x12) {
-    // That's korean encoding.
-    // The spec says it's encoded in KSC 5601, but iconv only knows KSC 5636.
-    // Couldn't find any information about either of them.
+    /* That's korean encoding.
+     * The spec says it's encoded in KSC 5601, but iconv only knows KSC 5636.
+     * Couldn't find any information about either of them.
+     */
     encoding = NULL;
     *start_text = 1;
     *is_multibyte = TRUE;
   } else {
-    // reserved
+    /* reserved */
     encoding = NULL;
     *start_text = 0;
     *is_multibyte = FALSE;
@@ -2571,7 +2577,7 @@ convert_to_utf8 (const gchar * text, gint length, guint start,
             /* skip it */
             break;
           case 0xE08A:{
-            guint8 nl[] = { 0x0A, 0x00 };       // new line
+            guint8 nl[] = { 0x0A, 0x00 };       /* new line */
             g_byte_array_append (sb, nl, 2);
             break;
           }
@@ -2592,7 +2598,7 @@ convert_to_utf8 (const gchar * text, gint length, guint start,
             /* skip it */
             break;
           case 0xE08A:{
-            guint8 nl[] = { 0x0A, 0x00 };       // new line
+            guint8 nl[] = { 0x0A, 0x00 };       /* new line */
             g_byte_array_append (sb, nl, 2);
             break;
           }
