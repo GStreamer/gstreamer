@@ -2101,13 +2101,11 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
       format.fmt.pix.height, GST_FOURCC_ARGS (format.fmt.pix.pixelformat),
       format.fmt.pix.bytesperline);
 
-  v4l2object->custom_stride = format.fmt.pix.bytesperline != stride;
-
   if (format.type != v4l2object->type ||
       format.fmt.pix.width != width ||
       format.fmt.pix.height != height ||
       format.fmt.pix.pixelformat != pixelformat ||
-      format.fmt.pix.field != field || v4l2object->custom_stride) {
+      format.fmt.pix.field != field || format.fmt.pix.bytesperline != stride) {
     /* something different, set the format */
     GST_DEBUG_OBJECT (v4l2object->element, "Setting format to %dx%d, format "
         "%" GST_FOURCC_FORMAT " bytesperline %d", width, height,
@@ -2135,12 +2133,7 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
     if (format.fmt.pix.pixelformat != pixelformat)
       goto invalid_pixelformat;
 
-    if (v4l2object->custom_stride) {
-      stride = format.fmt.pix.bytesperline;
-      GST_DEBUG_OBJECT (v4l2object->element, "We need custom stride %d",
-          stride);
-      GST_VIDEO_INFO_PLANE_STRIDE (&info, 0) = stride;
-    }
+    v4l2object->bytesperline = format.fmt.pix.bytesperline;
   }
 
   /* Is there a reason we require the caller to always specify a framerate? */

@@ -108,7 +108,7 @@ struct _GstV4l2Object {
   /* the current format */
   struct v4l2_fmtdesc *fmtdesc;
   GstVideoInfo info;
-  gboolean custom_stride;
+  guint32 bytesperline;
 
   guint size;
   GstClockTime duration;

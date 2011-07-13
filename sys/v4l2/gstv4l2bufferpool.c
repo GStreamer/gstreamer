@@ -178,11 +178,17 @@ gst_v4l2_buffer_new (GstV4l2BufferPool * pool, guint index)
 
   /* add metadata to raw video buffers */
   if (info->finfo) {
+    gsize offset[GST_VIDEO_MAX_PLANES];
+    gint stride[GST_VIDEO_MAX_PLANES];
+
+    offset[0] = 0;
+    stride[0] = obj->bytesperline;
+
     GST_DEBUG ("adding video meta");
     gst_buffer_add_meta_video_full (ret, info->flags,
         GST_VIDEO_INFO_FORMAT (info), GST_VIDEO_INFO_WIDTH (info),
         GST_VIDEO_INFO_HEIGHT (info), GST_VIDEO_INFO_N_PLANES (info),
-        info->offset, info->stride);
+        offset, stride);
   }
   return ret;
 
