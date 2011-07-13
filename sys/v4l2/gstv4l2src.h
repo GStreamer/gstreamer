@@ -62,21 +62,12 @@ struct _GstV4l2Src
   /* pads */
   GstCaps *probed_caps;
 
-  /* buffer handling */
-  GstV4l2BufferPool *pool;
-
-  guint32 num_buffers;
-  gboolean use_mmap;
   guint32 frame_byte_size;
 
   /* if the buffer will be or not used from directly mmap */
   gboolean always_copy;
 
   int decimate;
-
-  /* True if we want to stop */
-  gboolean quit;
-  gboolean is_capturing;
 
   guint64 offset;
 

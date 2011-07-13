@@ -27,13 +27,6 @@
 #include "gstv4l2src.h"
 #include "v4l2_calls.h"
 
-gboolean   gst_v4l2src_capture_init      (GstV4l2Src * v4l2src);
-gboolean   gst_v4l2src_capture_start     (GstV4l2Src * v4l2src);
-
 GstFlowReturn gst_v4l2src_grab_frame     (GstV4l2Src * v4l2src, GstBuffer **buf);
-
-gboolean   gst_v4l2src_capture_stop      (GstV4l2Src * v4l2src);
-gboolean   gst_v4l2src_capture_deinit    (GstV4l2Src * v4l2src);
-
 
 #endif /* __V4L2SRC_CALLS_H__ */

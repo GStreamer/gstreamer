@@ -50,32 +50,6 @@
 #define GST_CAT_DEFAULT v4l2src_debug
 GST_DEBUG_CATEGORY_EXTERN (GST_CAT_PERFORMANCE);
 
-/* Local functions */
-
-static gboolean
-gst_v4l2src_buffer_pool_activate (GstV4l2BufferPool * pool,
-    GstV4l2Src * v4l2src)
-{
-  GstBuffer *buf;
-
-  while ((buf = gst_v4l2_buffer_pool_get (pool, FALSE)) != NULL)
-    if (!gst_v4l2_buffer_pool_qbuf (pool, buf))
-      goto queue_failed;
-
-  return TRUE;
-
-  /* ERRORS */
-queue_failed:
-  {
-    GST_ELEMENT_ERROR (v4l2src, RESOURCE, READ,
-        (_("Could not enqueue buffers in device '%s'."),
-            v4l2src->v4l2object->videodev),
-        ("enqueing buffer %d/%d failed: %s",
-            GST_META_V4L2_GET (buf)->vbuffer.index, v4l2src->num_buffers,
-            g_strerror (errno)));
-    return FALSE;
-  }
-}
 
 /******************************************************
  * gst_v4l2src_grab_frame ():
@@ -94,7 +68,7 @@ gst_v4l2src_grab_frame (GstV4l2Src * v4l2src, GstBuffer ** buf)
   gint ret;
 
   v4l2object = v4l2src->v4l2object;
-  pool = v4l2src->pool;
+  pool = v4l2object->pool;
   if (!pool)
     goto no_buffer_pool;
 
@@ -190,153 +164,4 @@ too_many_trials:
             NUM_TRIALS, v4l2object->videodev, g_strerror (errno)));
     return GST_FLOW_ERROR;
   }
-}
-
-/******************************************************
- * gst_v4l2src_capture_init():
- *   initialize the capture system
- * return value: TRUE on success, FALSE on error
- ******************************************************/
-gboolean
-gst_v4l2src_capture_init (GstV4l2Src * v4l2src)
-{
-  GST_DEBUG_OBJECT (v4l2src, "initializing the capture system");
-
-  GST_V4L2_CHECK_OPEN (v4l2src->v4l2object);
-  GST_V4L2_CHECK_NOT_ACTIVE (v4l2src->v4l2object);
-
-  if (v4l2src->v4l2object->vcap.capabilities & V4L2_CAP_STREAMING) {
-
-    /* Map the buffers */
-    GST_LOG_OBJECT (v4l2src, "initiating buffer pool");
-
-    if (!(v4l2src->pool = gst_v4l2_buffer_pool_new (v4l2src->v4l2object,
-                v4l2src->num_buffers, TRUE)))
-      goto buffer_pool_new_failed;
-
-    GST_INFO_OBJECT (v4l2src, "capturing buffers via mmap()");
-    v4l2src->use_mmap = TRUE;
-
-    if (v4l2src->num_buffers != v4l2src->pool->buffer_count) {
-      v4l2src->num_buffers = v4l2src->pool->buffer_count;
-      g_object_notify (G_OBJECT (v4l2src), "queue-size");
-    }
-
-  } else if (v4l2src->v4l2object->vcap.capabilities & V4L2_CAP_READWRITE) {
-    GST_INFO_OBJECT (v4l2src, "capturing buffers via read()");
-    v4l2src->use_mmap = FALSE;
-    v4l2src->pool = NULL;
-  } else {
-    goto no_supported_capture_method;
-  }
-
-  GST_V4L2_SET_ACTIVE (v4l2src->v4l2object);
-
-  return TRUE;
-
-  /* ERRORS */
-buffer_pool_new_failed:
-  {
-    GST_ELEMENT_ERROR (v4l2src, RESOURCE, READ,
-        (_("Could not map buffers from device '%s'"),
-            v4l2src->v4l2object->videodev),
-        ("Failed to create buffer pool: %s", g_strerror (errno)));
-    return FALSE;
-  }
-no_supported_capture_method:
-  {
-    GST_ELEMENT_ERROR (v4l2src, RESOURCE, READ,
-        (_("The driver of device '%s' does not support any known capture "
-                "method."), v4l2src->v4l2object->videodev), (NULL));
-    return FALSE;
-  }
-}
-
-
-/******************************************************
- * gst_v4l2src_capture_start():
- *   start streaming capture
- * return value: TRUE on success, FALSE on error
- ******************************************************/
-gboolean
-gst_v4l2src_capture_start (GstV4l2Src * v4l2src)
-{
-  GST_DEBUG_OBJECT (v4l2src, "starting the capturing");
-  //GST_V4L2_CHECK_OPEN (v4l2src->v4l2object);
-  GST_V4L2_CHECK_ACTIVE (v4l2src->v4l2object);
-
-  v4l2src->quit = FALSE;
-
-  if (v4l2src->use_mmap) {
-    if (!gst_v4l2src_buffer_pool_activate (v4l2src->pool, v4l2src)) {
-      return FALSE;
-    }
-
-    if (!gst_v4l2_object_start_streaming (v4l2src->v4l2object)) {
-      return FALSE;
-    }
-  }
-
-  v4l2src->is_capturing = TRUE;
-
-  return TRUE;
-}
-
-/******************************************************
- * gst_v4l2src_capture_stop():
- *   stop streaming capture
- * return value: TRUE on success, FALSE on error
- ******************************************************/
-gboolean
-gst_v4l2src_capture_stop (GstV4l2Src * v4l2src)
-{
-  GST_DEBUG_OBJECT (v4l2src, "stopping capturing");
-
-  if (!GST_V4L2_IS_OPEN (v4l2src->v4l2object))
-    goto done;
-  if (!GST_V4L2_IS_ACTIVE (v4l2src->v4l2object))
-    goto done;
-
-  if (v4l2src->use_mmap) {
-    /* we actually need to sync on all queued buffers but not
-     * on the non-queued ones */
-    if (!gst_v4l2_object_stop_streaming (v4l2src->v4l2object)) {
-      return FALSE;
-    }
-  }
-
-done:
-
-  /* make an optional pending wait stop */
-  v4l2src->quit = TRUE;
-  v4l2src->is_capturing = FALSE;
-
-  return TRUE;
-}
-
-/******************************************************
- * gst_v4l2src_capture_deinit():
- *   deinitialize the capture system
- * return value: TRUE on success, FALSE on error
- ******************************************************/
-gboolean
-gst_v4l2src_capture_deinit (GstV4l2Src * v4l2src)
-{
-  GST_DEBUG_OBJECT (v4l2src, "deinitting capture system");
-
-  if (!GST_V4L2_IS_OPEN (v4l2src->v4l2object)) {
-    return TRUE;
-  }
-  if (!GST_V4L2_IS_ACTIVE (v4l2src->v4l2object)) {
-    return TRUE;
-  }
-
-  if (v4l2src->pool) {
-    gst_v4l2_buffer_pool_destroy (v4l2src->pool);
-    v4l2src->pool = NULL;
-  }
-
-  GST_V4L2_SET_INACTIVE (v4l2src->v4l2object);
-
-  return TRUE;
 }

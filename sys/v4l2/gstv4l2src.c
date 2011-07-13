@@ -215,12 +215,10 @@ gst_v4l2src_init (GstV4l2Src * v4l2src)
       gst_v4l2_get_input, gst_v4l2_set_input, NULL);
 
   /* number of buffers requested */
-  v4l2src->num_buffers = PROP_DEF_QUEUE_SIZE;
+  v4l2src->v4l2object->num_buffers = PROP_DEF_QUEUE_SIZE;
 
   v4l2src->always_copy = PROP_DEF_ALWAYS_COPY;
   v4l2src->decimate = PROP_DEF_DECIMATE;
-
-  v4l2src->is_capturing = FALSE;
 
   gst_base_src_set_format (GST_BASE_SRC (v4l2src), GST_FORMAT_TIME);
   gst_base_src_set_live (GST_BASE_SRC (v4l2src), TRUE);
@@ -258,7 +256,7 @@ gst_v4l2src_set_property (GObject * object,
           prop_id, value, pspec)) {
     switch (prop_id) {
       case PROP_QUEUE_SIZE:
-        v4l2src->num_buffers = g_value_get_uint (value);
+        v4l2src->v4l2object->num_buffers = g_value_get_uint (value);
         break;
       case PROP_ALWAYS_COPY:
         v4l2src->always_copy = g_value_get_boolean (value);
@@ -283,7 +281,7 @@ gst_v4l2src_get_property (GObject * object,
           prop_id, value, pspec)) {
     switch (prop_id) {
       case PROP_QUEUE_SIZE:
-        g_value_set_uint (value, v4l2src->num_buffers);
+        g_value_set_uint (value, v4l2src->v4l2object->num_buffers);
         break;
       case PROP_ALWAYS_COPY:
         g_value_set_boolean (value, v4l2src->always_copy);
@@ -458,12 +456,16 @@ no_nego_needed:
 static GstCaps *
 gst_v4l2src_get_caps (GstBaseSrc * src, GstCaps * filter)
 {
-  GstV4l2Src *v4l2src = GST_V4L2SRC (src);
+  GstV4l2Src *v4l2src;
+  GstV4l2Object *obj;
   GstCaps *ret;
   GSList *walk;
   GSList *formats;
 
-  if (!GST_V4L2_IS_OPEN (v4l2src->v4l2object)) {
+  v4l2src = GST_V4L2SRC (src);
+  obj = v4l2src->v4l2object;
+
+  if (!GST_V4L2_IS_OPEN (obj)) {
     /* FIXME: copy? */
     return
         gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_SRC_PAD
@@ -473,7 +475,7 @@ gst_v4l2src_get_caps (GstBaseSrc * src, GstCaps * filter)
   if (v4l2src->probed_caps)
     return gst_caps_ref (v4l2src->probed_caps);
 
-  formats = gst_v4l2_object_get_format_list (v4l2src->v4l2object);
+  formats = gst_v4l2_object_get_format_list (obj);
 
   ret = gst_caps_new_empty ();
 
@@ -489,7 +491,7 @@ gst_v4l2src_get_caps (GstBaseSrc * src, GstCaps * filter)
       GstCaps *tmp;
 
       tmp =
-          gst_v4l2_object_probe_caps_for_format (v4l2src->v4l2object,
+          gst_v4l2_object_probe_caps_for_format (obj,
           format->pixelformat, template);
       if (tmp)
         gst_caps_append (ret, tmp);
@@ -511,40 +513,30 @@ static gboolean
 gst_v4l2src_set_caps (GstBaseSrc * src, GstCaps * caps)
 {
   GstV4l2Src *v4l2src;
+  GstV4l2Object *obj;
 
   v4l2src = GST_V4L2SRC (src);
-
-  /* if we're not open, punt -- we'll get setcaps'd later via negotiate */
-  if (!GST_V4L2_IS_OPEN (v4l2src->v4l2object))
-    return FALSE;
+  obj = v4l2src->v4l2object;
 
   /* make sure we stop capturing and dealloc buffers */
-  if (GST_V4L2_IS_ACTIVE (v4l2src->v4l2object)) {
-    /* both will throw an element-error on failure */
-    if (!gst_v4l2src_capture_stop (v4l2src))
-      return FALSE;
-    if (!gst_v4l2src_capture_deinit (v4l2src))
-      return FALSE;
-  }
+  if (!gst_v4l2_object_stop (obj))
+    return FALSE;
 
-  if (!gst_v4l2_object_set_format (v4l2src->v4l2object, caps))
+  if (!gst_v4l2_object_set_format (obj, caps))
     /* error already posted */
     return FALSE;
 
-  if (!gst_v4l2src_capture_init (v4l2src))
-    return FALSE;
-
-  if (v4l2src->use_mmap) {
+  if (obj->use_mmap) {
     v4l2src->get_frame = gst_v4l2src_get_mmap;
   } else {
     v4l2src->get_frame = gst_v4l2src_get_read;
   }
 
-  if (!gst_v4l2src_capture_start (v4l2src))
+  if (!gst_v4l2_object_start (obj))
     return FALSE;
 
   /* now store the expected output size */
-  v4l2src->frame_byte_size = v4l2src->v4l2object->size;
+  v4l2src->frame_byte_size = obj->size;
 
   return TRUE;
 }
@@ -584,7 +576,7 @@ gst_v4l2src_query (GstBaseSrc * bsrc, GstQuery * query)
       min_latency = gst_util_uint64_scale_int (GST_SECOND, fps_d, fps_n);
 
       /* max latency is total duration of the frame buffer */
-      max_latency = src->num_buffers * min_latency;
+      max_latency = src->v4l2object->num_buffers * min_latency;
 
       GST_DEBUG_OBJECT (bsrc,
           "report latency min %" GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
@@ -651,11 +643,10 @@ static gboolean
 gst_v4l2src_stop (GstBaseSrc * src)
 {
   GstV4l2Src *v4l2src = GST_V4L2SRC (src);
+  GstV4l2Object *obj = v4l2src->v4l2object;
 
-  if (GST_V4L2_IS_ACTIVE (v4l2src->v4l2object)) {
-    if (!gst_v4l2src_capture_stop (v4l2src))
-      return FALSE;
-    if (!gst_v4l2src_capture_deinit (v4l2src))
+  if (GST_V4L2_IS_ACTIVE (obj)) {
+    if (!gst_v4l2_object_stop (obj))
       return FALSE;
   }
   return TRUE;
@@ -666,11 +657,12 @@ gst_v4l2src_change_state (GstElement * element, GstStateChange transition)
 {
   GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
   GstV4l2Src *v4l2src = GST_V4L2SRC (element);
+  GstV4l2Object *obj = v4l2src->v4l2object;
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
       /* open the device */
-      if (!gst_v4l2_object_start (v4l2src->v4l2object))
+      if (!gst_v4l2_object_open (obj))
         return GST_STATE_CHANGE_FAILURE;
       break;
     default:
@@ -682,7 +674,7 @@ gst_v4l2src_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_NULL:
       /* close the device */
-      if (!gst_v4l2_object_stop (v4l2src->v4l2object))
+      if (!gst_v4l2_object_close (obj))
         return GST_STATE_CHANGE_FAILURE;
 
       if (v4l2src->probed_caps) {

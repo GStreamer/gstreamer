@@ -417,7 +417,7 @@ gst_v4l2radio_start (GstV4l2Radio * radio)
 static gboolean
 gst_v4l2radio_stop (GstV4l2Radio * radio)
 {
-  if (!gst_v4l2_object_stop (radio->v4l2object))
+  if (!gst_v4l2_object_close (radio->v4l2object))
     return FALSE;
 
   return TRUE;

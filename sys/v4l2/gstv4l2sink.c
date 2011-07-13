@@ -246,7 +246,7 @@ gst_v4l2sink_init (GstV4l2Sink * v4l2sink)
   g_object_set (v4l2sink, "device", "/dev/video1", NULL);
 
   /* number of buffers requested */
-  v4l2sink->num_buffers = PROP_DEF_QUEUE_SIZE;
+  v4l2sink->v4l2object->num_buffers = PROP_DEF_QUEUE_SIZE;
   v4l2sink->min_queued_bufs = PROP_DEF_MIN_QUEUED_BUFS;
 
   v4l2sink->probed_caps = NULL;
@@ -254,7 +254,6 @@ gst_v4l2sink_init (GstV4l2Sink * v4l2sink)
 
   v4l2sink->overlay_fields_set = 0;
   v4l2sink->crop_fields_set = 0;
-  v4l2sink->state = 0;
 }
 
 
@@ -283,16 +282,6 @@ gst_v4l2sink_finalize (GstV4l2Sink * v4l2sink)
   G_OBJECT_CLASS (parent_class)->finalize ((GObject *) (v4l2sink));
 }
 
-
-/*
- * State values
- */
-enum
-{
-  STATE_OFF = 0,
-  STATE_PENDING_STREAMON,
-  STATE_STREAMING
-};
 
 /*
  * flags to indicate which overlay/crop properties the user has set (and
@@ -405,7 +394,7 @@ gst_v4l2sink_set_property (GObject * object,
           prop_id, value, pspec)) {
     switch (prop_id) {
       case PROP_QUEUE_SIZE:
-        v4l2sink->num_buffers = g_value_get_uint (value);
+        v4l2sink->v4l2object->num_buffers = g_value_get_uint (value);
         break;
       case PROP_MIN_QUEUED_BUFS:
         v4l2sink->min_queued_bufs = g_value_get_uint (value);
@@ -468,7 +457,7 @@ gst_v4l2sink_get_property (GObject * object,
           prop_id, value, pspec)) {
     switch (prop_id) {
       case PROP_QUEUE_SIZE:
-        g_value_set_uint (value, v4l2sink->num_buffers);
+        g_value_set_uint (value, v4l2sink->v4l2object->num_buffers);
         break;
       case PROP_MIN_QUEUED_BUFS:
         g_value_set_uint (value, v4l2sink->min_queued_bufs);
@@ -517,7 +506,7 @@ gst_v4l2sink_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
       /* open the device */
-      if (!gst_v4l2_object_start (v4l2sink->v4l2object))
+      if (!gst_v4l2_object_open (v4l2sink->v4l2object))
         return GST_STATE_CHANGE_FAILURE;
       break;
     default:
@@ -528,21 +517,19 @@ gst_v4l2sink_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+#if 0
       if (v4l2sink->state == STATE_STREAMING) {
         if (!gst_v4l2_object_stop_streaming (v4l2sink->v4l2object)) {
           return GST_STATE_CHANGE_FAILURE;
         }
         v4l2sink->state = STATE_PENDING_STREAMON;
       }
+#endif
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
-      if (NULL != v4l2sink->pool)
-        gst_v4l2_buffer_pool_destroy (v4l2sink->pool);
-      v4l2sink->pool = NULL;
       /* close the device */
-      if (!gst_v4l2_object_stop (v4l2sink->v4l2object))
+      if (!gst_v4l2_object_close (v4l2sink->v4l2object))
         return GST_STATE_CHANGE_FAILURE;
-      v4l2sink->state = STATE_OFF;
       break;
     default:
       break;
@@ -617,7 +604,7 @@ static gboolean
 gst_v4l2sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
 {
   GstV4l2Sink *v4l2sink = GST_V4L2SINK (bsink);
-  GstV4l2BufferPool *newpool;
+  GstV4l2Object *obj = v4l2sink->v4l2object;
 
   LOG_CAPS (v4l2sink, caps);
 
@@ -636,30 +623,11 @@ gst_v4l2sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
     GST_DEBUG_OBJECT (v4l2sink, "no they aren't!");
   }
 
-  if (v4l2sink->pool) {
-    /* we have a pool already, stop and destroy the old pool */
-    if (v4l2sink->state == STATE_STREAMING) {
-      if (!gst_v4l2_object_stop_streaming (v4l2sink->v4l2object))
-        goto stop_failed;
-
-      v4l2sink->state = STATE_PENDING_STREAMON;
-    }
-    gst_v4l2_buffer_pool_destroy (v4l2sink->pool);
-    v4l2sink->pool = NULL;
-  }
+  if (!gst_v4l2_object_stop (obj))
+    goto stop_failed;
 
   if (!gst_v4l2_object_set_format (v4l2sink->v4l2object, caps))
     goto invalid_format;
-
-  if (!(v4l2sink->v4l2object->vcap.capabilities & V4L2_CAP_STREAMING))
-    goto no_streaming;
-
-  newpool = gst_v4l2_buffer_pool_new (v4l2sink->v4l2object,
-      v4l2sink->num_buffers, FALSE);
-  if (newpool == NULL)
-    goto no_pool;
-
-  v4l2sink->pool = newpool;
 
   gst_v4l2sink_sync_overlay_fields (v4l2sink);
   gst_v4l2sink_sync_crop_fields (v4l2sink);
@@ -668,14 +636,7 @@ gst_v4l2sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   gst_v4l2_xoverlay_prepare_xwindow_id (v4l2sink->v4l2object, TRUE);
 #endif
 
-  v4l2sink->state = STATE_PENDING_STREAMON;
-
   GST_INFO_OBJECT (v4l2sink, "outputting buffers via mmap()");
-
-  if (v4l2sink->num_buffers != v4l2sink->pool->buffer_count) {
-    v4l2sink->num_buffers = v4l2sink->pool->buffer_count;
-    g_object_notify (G_OBJECT (v4l2sink), "queue-size");
-  }
 
   v4l2sink->video_width = GST_V4L2_WIDTH (v4l2sink->v4l2object);
   v4l2sink->video_height = GST_V4L2_HEIGHT (v4l2sink->v4l2object);
@@ -702,16 +663,6 @@ invalid_format:
     GST_DEBUG_OBJECT (v4l2sink, "can't set format");
     return FALSE;
   }
-no_streaming:
-  {
-    GST_DEBUG_OBJECT (v4l2sink, "we don't support streaming");
-    return FALSE;
-  }
-no_pool:
-  {
-    GST_DEBUG_OBJECT (v4l2sink, "can't create new pool");
-    return FALSE;
-  }
 }
 
 /* called after A/V sync to render frame */
@@ -733,7 +684,7 @@ gst_v4l2sink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
 
     /* not our buffer */
     GST_DEBUG_OBJECT (v4l2sink, "slow-path.. need to memcpy");
-    newbuf = gst_v4l2_buffer_pool_get (v4l2sink->pool, TRUE);
+    newbuf = gst_v4l2_buffer_pool_get (obj->pool, TRUE);
 
     if (obj->info.finfo) {
       GstVideoFrame src_frame, dest_frame;
@@ -757,14 +708,13 @@ gst_v4l2sink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
     buf = newbuf;
   }
 
-  if (!gst_v4l2_buffer_pool_qbuf (v4l2sink->pool, buf))
+  if (!gst_v4l2_buffer_pool_qbuf (obj->pool, buf))
     goto queue_failed;
 
-  if (v4l2sink->state == STATE_PENDING_STREAMON) {
-    if (!gst_v4l2_object_start_streaming (v4l2sink->v4l2object)) {
+  if (!obj->streaming) {
+    if (!gst_v4l2_object_start (obj)) {
       return GST_FLOW_ERROR;
     }
-    v4l2sink->state = STATE_STREAMING;
   }
 
   if (!newbuf) {
@@ -775,9 +725,9 @@ gst_v4l2sink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
    * just queued, then dequeue one immediately to make it available via
    * _buffer_alloc():
    */
-  if (gst_v4l2_buffer_pool_available_buffers (v4l2sink->pool) >
+  if (gst_v4l2_buffer_pool_available_buffers (obj->pool) >
       v4l2sink->min_queued_bufs) {
-    GstBuffer *v4l2buf = gst_v4l2_buffer_pool_dqbuf (v4l2sink->pool);
+    GstBuffer *v4l2buf = gst_v4l2_buffer_pool_dqbuf (obj->pool);
 
     /* note: if we get a buf, we don't want to use it directly (because
      * someone else could still hold a ref).. but instead we release our

@@ -751,7 +751,7 @@ gst_v4l2_set_defaults (GstV4l2Object * v4l2object)
 }
 
 gboolean
-gst_v4l2_object_start (GstV4l2Object * v4l2object)
+gst_v4l2_object_open (GstV4l2Object * v4l2object)
 {
   if (gst_v4l2_open (v4l2object))
     gst_v4l2_set_defaults (v4l2object);
@@ -766,7 +766,7 @@ gst_v4l2_object_start (GstV4l2Object * v4l2object)
 }
 
 gboolean
-gst_v4l2_object_stop (GstV4l2Object * v4l2object)
+gst_v4l2_object_close (GstV4l2Object * v4l2object)
 {
 #ifdef HAVE_XVIDEO
   gst_v4l2_xoverlay_stop (v4l2object);
@@ -2041,6 +2041,65 @@ gst_v4l2_object_get_nearest_size (GstV4l2Object * v4l2object,
   return TRUE;
 }
 
+static gboolean
+gst_v4l2_object_setup_pool (GstV4l2Object * v4l2object)
+{
+  GST_DEBUG_OBJECT (v4l2object->element, "initializing the capture system");
+
+  GST_V4L2_CHECK_OPEN (v4l2object);
+  GST_V4L2_CHECK_NOT_ACTIVE (v4l2object);
+
+  if (v4l2object->vcap.capabilities & V4L2_CAP_STREAMING) {
+    gboolean requeuebuf;
+
+    requeuebuf = v4l2object->type == V4L2_BUF_TYPE_VIDEO_CAPTURE;
+
+    /* Map the buffers */
+    GST_LOG_OBJECT (v4l2object->element, "initiating buffer pool");
+
+    if (!(v4l2object->pool = gst_v4l2_buffer_pool_new (v4l2object,
+                v4l2object->num_buffers, requeuebuf)))
+      goto buffer_pool_new_failed;
+
+    GST_INFO_OBJECT (v4l2object->element, "capturing buffers via mmap()");
+    v4l2object->use_mmap = TRUE;
+
+    if (v4l2object->num_buffers != v4l2object->pool->buffer_count) {
+      v4l2object->num_buffers = v4l2object->pool->buffer_count;
+      g_object_notify (G_OBJECT (v4l2object->element), "queue-size");
+    }
+
+  } else if (v4l2object->vcap.capabilities & V4L2_CAP_READWRITE) {
+    GST_INFO_OBJECT (v4l2object->element, "capturing buffers via read()");
+    v4l2object->use_mmap = FALSE;
+    v4l2object->pool = NULL;
+  } else {
+    goto no_supported_capture_method;
+  }
+
+  GST_V4L2_SET_ACTIVE (v4l2object);
+
+  return TRUE;
+
+  /* ERRORS */
+buffer_pool_new_failed:
+  {
+    GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, READ,
+        (_("Could not map buffers from device '%s'"),
+            v4l2object->videodev),
+        ("Failed to create buffer pool: %s", g_strerror (errno)));
+    return FALSE;
+  }
+no_supported_capture_method:
+  {
+    GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, READ,
+        (_("The driver of device '%s' does not support any known capture "
+                "method."), v4l2object->videodev), (NULL));
+    return FALSE;
+  }
+}
+
+
 /* Note about fraction simplification
  *  * n1/d1 == n2/d2  is also written as  n1 == ( n2 * d1 ) / d2
  *   */
@@ -2198,6 +2257,10 @@ done:
   v4l2object->info = info;
   v4l2object->fmtdesc = fmtdesc;
 
+  /* now configure ther pools */
+  if (!gst_v4l2_object_setup_pool (v4l2object))
+    goto pool_failed;
+
   return TRUE;
 
   /* ERRORS */
@@ -2257,22 +2320,66 @@ get_parm_failed:
 set_parm_failed:
   {
     GST_ELEMENT_WARNING (v4l2object->element, RESOURCE, SETTINGS,
-        (_("Video input device did not accept new frame rate setting.")),
+        (_("Video device did not accept new frame rate setting.")),
         GST_ERROR_SYSTEM);
     goto done;
+  }
+pool_failed:
+  {
+    GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, SETTINGS,
+        (_("Video device could not create buffer pool.")), GST_ERROR_SYSTEM);
+    return FALSE;
   }
 }
 
 gboolean
-gst_v4l2_object_start_streaming (GstV4l2Object * v4l2object)
+gst_v4l2_object_start (GstV4l2Object * v4l2object)
 {
-  if (v4l2_ioctl (v4l2object->video_fd, VIDIOC_STREAMON,
-          &(v4l2object->type)) < 0)
-    goto start_failed;
+  GstBuffer *buf;
 
+  GST_DEBUG_OBJECT (v4l2object->element, "starting");
+
+  GST_V4L2_CHECK_OPEN (v4l2object);
+  GST_V4L2_CHECK_ACTIVE (v4l2object);
+
+  if (v4l2object->use_mmap) {
+    switch (v4l2object->type) {
+      case V4L2_BUF_TYPE_VIDEO_CAPTURE:
+        /* for capture, queue all the buffers so the device can start filling
+         * them */
+        while ((buf =
+                gst_v4l2_buffer_pool_get (v4l2object->pool, FALSE)) != NULL)
+          if (!gst_v4l2_buffer_pool_qbuf (v4l2object->pool, buf))
+            goto queue_failed;
+
+        if (!v4l2object->streaming) {
+          if (v4l2_ioctl (v4l2object->video_fd, VIDIOC_STREAMON,
+                  &(v4l2object->type)) < 0)
+            goto start_failed;
+          v4l2object->streaming = TRUE;
+        }
+        break;
+      case V4L2_BUF_TYPE_VIDEO_OUTPUT:
+        /* for output, do nothing. We will start streaming when we get the
+         * first buffer */
+        break;
+      default:
+        break;
+    }
+  }
   return TRUE;
 
   /* ERRORS */
+queue_failed:
+  {
+    GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, READ,
+        (_("Could not enqueue buffers in device '%s'."),
+            v4l2object->videodev),
+        ("enqueing buffer %d/%d failed: %s",
+            GST_META_V4L2_GET (buf)->vbuffer.index, v4l2object->num_buffers,
+            g_strerror (errno)));
+    return FALSE;
+  }
 start_failed:
   {
     GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, OPEN_READ,
@@ -2283,12 +2390,35 @@ start_failed:
 }
 
 gboolean
-gst_v4l2_object_stop_streaming (GstV4l2Object * v4l2object)
+gst_v4l2_object_stop (GstV4l2Object * v4l2object)
 {
-  if (v4l2_ioctl (v4l2object->video_fd, VIDIOC_STREAMOFF,
-          &(v4l2object->type)) < 0)
-    goto stop_failed;
+  GST_DEBUG_OBJECT (v4l2object->element, "stopping");
 
+  if (!GST_V4L2_IS_OPEN (v4l2object))
+    goto done;
+  if (!GST_V4L2_IS_ACTIVE (v4l2object))
+    goto done;
+
+  if (v4l2object->use_mmap) {
+    if (v4l2object->streaming) {
+      /* we actually need to sync on all queued buffers but not
+       * on the non-queued ones */
+      if (v4l2_ioctl (v4l2object->video_fd, VIDIOC_STREAMOFF,
+              &(v4l2object->type)) < 0)
+        goto stop_failed;
+
+      v4l2object->streaming = FALSE;
+    }
+  }
+
+  if (v4l2object->pool) {
+    gst_v4l2_buffer_pool_destroy (v4l2object->pool);
+    v4l2object->pool = NULL;
+  }
+
+  GST_V4L2_SET_INACTIVE (v4l2object);
+
+done:
   return TRUE;
 
   /* ERRORS */

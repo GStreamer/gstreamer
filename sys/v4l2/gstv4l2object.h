@@ -54,6 +54,11 @@
 #include <gst/video/video.h>
 #include <gst/interfaces/propertyprobe.h>
 
+typedef struct _GstV4l2Object GstV4l2Object;
+typedef struct _GstV4l2ObjectClassHelper GstV4l2ObjectClassHelper;
+typedef struct _GstV4l2Xv GstV4l2Xv;
+
+#include <gstv4l2bufferpool.h>
 
 /* size of v4l2 buffer pool in streaming case */
 #define GST_V4L2_MAX_BUFFERS 16
@@ -62,15 +67,10 @@
 /* max frame width/height */
 #define GST_V4L2_MAX_SIZE (1<<15) /* 2^15 == 32768 */
 
-
-
 G_BEGIN_DECLS
 
 #define GST_V4L2_OBJECT(obj) (GstV4l2Object *)(obj)
 
-typedef struct _GstV4l2Object GstV4l2Object;
-typedef struct _GstV4l2ObjectClassHelper GstV4l2ObjectClassHelper;
-typedef struct _GstV4l2Xv GstV4l2Xv;
 
 typedef gboolean  (*GstV4l2GetInOutFunction)  (GstV4l2Object * v4l2object, gint * input);
 typedef gboolean  (*GstV4l2SetInOutFunction)  (GstV4l2Object * v4l2object, gint input);
@@ -104,14 +104,20 @@ struct _GstV4l2Object {
   gboolean can_poll_device;
 
   gboolean active;
+  gboolean streaming;
 
   /* the current format */
   struct v4l2_fmtdesc *fmtdesc;
   GstVideoInfo info;
-  guint32 bytesperline;
 
+  guint32 bytesperline;
   guint size;
   GstClockTime duration;
+
+  /* optional pool */
+  guint32 num_buffers;
+  gboolean use_mmap;
+  GstV4l2BufferPool *pool;
 
   /* the video device's capabilities */
   struct v4l2_capability vcap;
@@ -181,9 +187,9 @@ gboolean  gst_v4l2_object_set_property_helper       (GstV4l2Object *v4l2object,
 gboolean  gst_v4l2_object_get_property_helper       (GstV4l2Object *v4l2object,
 				                     guint prop_id, GValue * value,
 						     GParamSpec * pspec);
-/* starting/stopping */
-gboolean  gst_v4l2_object_start             (GstV4l2Object *v4l2object);
-gboolean  gst_v4l2_object_stop              (GstV4l2Object *v4l2object);
+/* open/close */
+gboolean  gst_v4l2_object_open               (GstV4l2Object *v4l2object);
+gboolean  gst_v4l2_object_close              (GstV4l2Object *v4l2object);
 
 /* probing */
 const GList* gst_v4l2_probe_get_properties  (GstPropertyProbe * probe);
@@ -209,8 +215,8 @@ GstStructure* gst_v4l2_object_v4l2fourcc_to_structure (guint32 fourcc);
 
 gboolean      gst_v4l2_object_set_format (GstV4l2Object *v4l2object, GstCaps * caps);
 
-gboolean      gst_v4l2_object_start_streaming (GstV4l2Object *v4l2object);
-gboolean      gst_v4l2_object_stop_streaming (GstV4l2Object *v4l2object);
+gboolean      gst_v4l2_object_start     (GstV4l2Object *v4l2object);
+gboolean      gst_v4l2_object_stop      (GstV4l2Object *v4l2object);
 
 
 #define GST_IMPLEMENT_V4L2_PROBE_METHODS(Type_Class, interface_as_function)                 \

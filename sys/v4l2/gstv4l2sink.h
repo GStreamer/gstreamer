@@ -56,8 +56,7 @@ struct _GstV4l2Sink {
   GstV4l2Object * v4l2object;
   GstCaps *probed_caps;         /* all supported caps of underlying v4l2 device */
   GstCaps *current_caps;        /* the current negotiated caps */
-  GstV4l2BufferPool *pool;
-  guint32 num_buffers;
+
   guint32 min_queued_bufs;
 
   gint video_width, video_height;      /* original (unscaled) video w/h */
@@ -73,8 +72,6 @@ struct _GstV4l2Sink {
    * setting properties:
    */
   guint8 overlay_fields_set, crop_fields_set;
-
-  guint8 state;
 };
 
 struct _GstV4l2SinkClass {

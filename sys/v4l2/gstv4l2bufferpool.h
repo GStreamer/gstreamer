@@ -22,11 +22,17 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GSTV4L2BUFFER_H__
-#define __GSTV4L2BUFFER_H__
+#ifndef __GST_V4L2_BUFFER_POOL_H__
+#define __GST_V4L2_BUFFER_POOL_H__
 
 #include <gst/gst.h>
-#include "v4l2_calls.h"
+
+typedef struct _GstV4l2BufferPool GstV4l2BufferPool;
+typedef struct _GstV4l2BufferPoolClass GstV4l2BufferPoolClass;
+typedef struct _GstMetaV4l2 GstMetaV4l2;
+
+#include "gstv4l2object.h"
+//#include "v4l2_calls.h"
 
 GST_DEBUG_CATEGORY_EXTERN (v4l2buffer_debug);
 
@@ -37,10 +43,6 @@ GType gst_v4l2_buffer_pool_get_type (void);
 #define GST_TYPE_V4L2_BUFFER_POOL (gst_v4l2_buffer_pool_get_type())
 #define GST_IS_V4L2_BUFFER_POOL(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_V4L2_BUFFER_POOL))
 #define GST_V4L2_BUFFER_POOL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_V4L2_BUFFER_POOL, GstV4l2BufferPool))
-
-typedef struct _GstV4l2BufferPool GstV4l2BufferPool;
-typedef struct _GstV4l2BufferPoolClass GstV4l2BufferPoolClass;
-typedef struct _GstMetaV4l2 GstMetaV4l2;
 
 #define GST_V4L2_BUFFER_POOL_LOCK(pool)     g_mutex_lock ((pool)->lock)
 #define GST_V4L2_BUFFER_POOL_UNLOCK(pool)   g_mutex_unlock ((pool)->lock)
@@ -91,4 +93,4 @@ gint                gst_v4l2_buffer_pool_available_buffers (GstV4l2BufferPool *p
 
 G_END_DECLS
 
-#endif /* __GSTV4L2BUFFER_H__ */
+#endif /*__GST_V4L2_BUFFER_POOL_H__ */
