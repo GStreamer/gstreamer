@@ -258,11 +258,8 @@ capture_bus_cb (GstBus * bus, GstMessage * message, gpointer data)
       break;
     default:
       st = gst_message_get_structure (message);
-      if (st && gst_structure_has_name (st, "image-captured")) {
-        gboolean ready = FALSE;
+      if (st && gst_structure_has_name (st, "image-done")) {
         GST_INFO ("image captured");
-        g_object_get (camera, "ready-for-capture", &ready, NULL);
-        fail_if (!ready, "not ready for capture");
       } else if (st && gst_structure_has_name (st,
               GST_BASE_CAMERA_SRC_PREVIEW_MESSAGE_NAME)) {
         GstBuffer *buf;
