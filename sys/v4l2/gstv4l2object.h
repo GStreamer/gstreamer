@@ -116,6 +116,7 @@ struct _GstV4l2Object {
 
   /* optional pool */
   guint32 num_buffers;
+  gboolean always_copy;
   gboolean use_mmap;
   GstV4l2BufferPool *pool;
 
@@ -215,8 +216,14 @@ GstStructure* gst_v4l2_object_v4l2fourcc_to_structure (guint32 fourcc);
 
 gboolean      gst_v4l2_object_set_format (GstV4l2Object *v4l2object, GstCaps * caps);
 
-gboolean      gst_v4l2_object_start     (GstV4l2Object *v4l2object);
-gboolean      gst_v4l2_object_stop      (GstV4l2Object *v4l2object);
+gboolean      gst_v4l2_object_start       (GstV4l2Object *v4l2object);
+gboolean      gst_v4l2_object_stop        (GstV4l2Object *v4l2object);
+
+
+/* capture returns a filled buffer, output returns an empty buffer */
+GstFlowReturn gst_v4l2_object_get_buffer     (GstV4l2Object * v4l2object, GstBuffer ** buf);
+/* output the filled buffer */
+GstFlowReturn gst_v4l2_object_output_buffer  (GstV4l2Object * v4l2object, GstBuffer * buf);
 
 
 #define GST_IMPLEMENT_V4L2_PROBE_METHODS(Type_Class, interface_as_function)                 \

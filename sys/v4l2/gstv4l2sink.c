@@ -675,7 +675,7 @@ gst_v4l2sink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
 
   meta = GST_META_V4L2_GET (buf);
 
-  if (meta == NULL) {
+  if (meta == NULL || meta->pool != obj->pool) {
     guint8 *data;
     gsize size;
 

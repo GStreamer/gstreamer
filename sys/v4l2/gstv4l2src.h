@@ -45,8 +45,6 @@ G_BEGIN_DECLS
 typedef struct _GstV4l2Src GstV4l2Src;
 typedef struct _GstV4l2SrcClass GstV4l2SrcClass;
 
-typedef GstFlowReturn (*GstV4l2SrcGetFunc)(GstV4l2Src * v4l2src, GstBuffer ** buf);
-
 /**
  * GstV4l2Src:
  *
@@ -64,16 +62,11 @@ struct _GstV4l2Src
 
   guint32 frame_byte_size;
 
-  /* if the buffer will be or not used from directly mmap */
-  gboolean always_copy;
-
   int decimate;
 
   guint64 offset;
 
   GstClockTime ctrl_time;
-
-  GstV4l2SrcGetFunc get_frame;
 };
 
 struct _GstV4l2SrcClass

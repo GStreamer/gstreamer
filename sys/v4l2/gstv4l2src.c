@@ -48,8 +48,9 @@
 
 #include <string.h>
 #include <sys/time.h>
-#include "v4l2src_calls.h"
 #include <unistd.h>
+
+#include "gstv4l2src.h"
 
 #include "gstv4l2colorbalance.h"
 #include "gstv4l2tuner.h"
@@ -128,12 +129,6 @@ static void gst_v4l2src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_v4l2src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-
-/* get_frame io methods */
-static GstFlowReturn
-gst_v4l2src_get_read (GstV4l2Src * v4l2src, GstBuffer ** buf);
-static GstFlowReturn
-gst_v4l2src_get_mmap (GstV4l2Src * v4l2src, GstBuffer ** buf);
 
 static void
 gst_v4l2src_class_init (GstV4l2SrcClass * klass)
@@ -217,7 +212,7 @@ gst_v4l2src_init (GstV4l2Src * v4l2src)
   /* number of buffers requested */
   v4l2src->v4l2object->num_buffers = PROP_DEF_QUEUE_SIZE;
 
-  v4l2src->always_copy = PROP_DEF_ALWAYS_COPY;
+  v4l2src->v4l2object->always_copy = PROP_DEF_ALWAYS_COPY;
   v4l2src->decimate = PROP_DEF_DECIMATE;
 
   gst_base_src_set_format (GST_BASE_SRC (v4l2src), GST_FORMAT_TIME);
@@ -259,7 +254,7 @@ gst_v4l2src_set_property (GObject * object,
         v4l2src->v4l2object->num_buffers = g_value_get_uint (value);
         break;
       case PROP_ALWAYS_COPY:
-        v4l2src->always_copy = g_value_get_boolean (value);
+        v4l2src->v4l2object->always_copy = g_value_get_boolean (value);
         break;
       case PROP_DECIMATE:
         v4l2src->decimate = g_value_get_int (value);
@@ -284,7 +279,7 @@ gst_v4l2src_get_property (GObject * object,
         g_value_set_uint (value, v4l2src->v4l2object->num_buffers);
         break;
       case PROP_ALWAYS_COPY:
-        g_value_set_boolean (value, v4l2src->always_copy);
+        g_value_set_boolean (value, v4l2src->v4l2object->always_copy);
         break;
       case PROP_DECIMATE:
         g_value_set_int (value, v4l2src->decimate);
@@ -526,12 +521,6 @@ gst_v4l2src_set_caps (GstBaseSrc * src, GstCaps * caps)
     /* error already posted */
     return FALSE;
 
-  if (obj->use_mmap) {
-    v4l2src->get_frame = gst_v4l2src_get_mmap;
-  } else {
-    v4l2src->get_frame = gst_v4l2src_get_read;
-  }
-
   if (!gst_v4l2_object_start (obj))
     return FALSE;
 
@@ -690,151 +679,23 @@ gst_v4l2src_change_state (GstElement * element, GstStateChange transition)
 }
 
 static GstFlowReturn
-gst_v4l2src_get_read (GstV4l2Src * v4l2src, GstBuffer ** buf)
-{
-  GstFlowReturn res;
-  gint amount;
-  gint ret;
-  gpointer data;
-  gint buffersize;
-
-  buffersize = v4l2src->frame_byte_size;
-  /* In case the size per frame is unknown assume it's a streaming format (e.g.
-   * mpegts) and grab a reasonable default size instead */
-  if (buffersize == 0)
-    buffersize = GST_BASE_SRC (v4l2src)->blocksize;
-
-  *buf = gst_buffer_new_and_alloc (buffersize);
-  data = gst_buffer_map (*buf, NULL, NULL, GST_MAP_WRITE);
-
-  do {
-    ret = gst_poll_wait (v4l2src->v4l2object->poll, GST_CLOCK_TIME_NONE);
-    if (G_UNLIKELY (ret < 0)) {
-      if (errno == EBUSY)
-        goto stopped;
-      if (errno == ENXIO) {
-        GST_DEBUG_OBJECT (v4l2src,
-            "v4l2 device doesn't support polling. Disabling");
-        v4l2src->v4l2object->can_poll_device = FALSE;
-      } else {
-        if (errno != EAGAIN && errno != EINTR)
-          goto select_error;
-      }
-    }
-    amount = v4l2_read (v4l2src->v4l2object->video_fd, data, buffersize);
-
-    if (amount == buffersize) {
-      break;
-    } else if (amount == -1) {
-      if (errno == EAGAIN || errno == EINTR) {
-        continue;
-      } else
-        goto read_error;
-    } else {
-      /* short reads can happen if a signal interrupts the read */
-      continue;
-    }
-  } while (TRUE);
-
-  gst_buffer_unmap (*buf, data, amount);
-
-  /* we set the buffer metadata in gst_v4l2src_create() */
-
-  return GST_FLOW_OK;
-
-  /* ERRORS */
-select_error:
-  {
-    GST_ELEMENT_ERROR (v4l2src, RESOURCE, READ, (NULL),
-        ("select error %d: %s (%d)", ret, g_strerror (errno), errno));
-    res = GST_FLOW_ERROR;
-    goto cleanup;
-  }
-stopped:
-  {
-    GST_DEBUG ("stop called");
-    res = GST_FLOW_WRONG_STATE;
-    goto cleanup;
-  }
-read_error:
-  {
-    GST_ELEMENT_ERROR (v4l2src, RESOURCE, READ,
-        (_("Error reading %d bytes from device '%s'."),
-            buffersize, v4l2src->v4l2object->videodev), GST_ERROR_SYSTEM);
-    res = GST_FLOW_ERROR;
-    goto cleanup;
-  }
-cleanup:
-  {
-    gst_buffer_unmap (*buf, data, 0);
-    gst_buffer_unref (*buf);
-    return res;
-  }
-}
-
-static GstFlowReturn
-gst_v4l2src_get_mmap (GstV4l2Src * v4l2src, GstBuffer ** buf)
-{
-  GstBuffer *temp;
-  GstFlowReturn ret;
-  guint size;
-  guint count = 0;
-
-again:
-  ret = gst_v4l2src_grab_frame (v4l2src, &temp);
-  if (G_UNLIKELY (ret != GST_FLOW_OK))
-    goto done;
-
-  if (v4l2src->frame_byte_size > 0) {
-    size = gst_buffer_get_size (temp);
-
-    /* if size does not match what we expected, try again */
-    if (size != v4l2src->frame_byte_size) {
-      GST_ELEMENT_WARNING (v4l2src, RESOURCE, READ,
-          (_("Got unexpected frame size of %u instead of %u."),
-              size, v4l2src->frame_byte_size), (NULL));
-      gst_buffer_unref (temp);
-      if (count++ > 50)
-        goto size_error;
-
-      goto again;
-    }
-  }
-
-  *buf = temp;
-done:
-  return ret;
-
-  /* ERRORS */
-size_error:
-  {
-    GST_ELEMENT_ERROR (v4l2src, RESOURCE, READ,
-        (_("Error reading %d bytes on device '%s'."),
-            v4l2src->frame_byte_size, v4l2src->v4l2object->videodev), (NULL));
-    return GST_FLOW_ERROR;
-  }
-}
-
-static GstFlowReturn
 gst_v4l2src_create (GstPushSrc * src, GstBuffer ** buf)
 {
   GstV4l2Src *v4l2src = GST_V4L2SRC (src);
+  GstV4l2Object *obj = v4l2src->v4l2object;
   int i;
   GstFlowReturn ret;
 
-  if (v4l2src->get_frame == NULL)
-    goto not_negotiated;
-
   /* decimate, just capture and throw away frames */
   for (i = 0; i < v4l2src->decimate - 1; i++) {
-    ret = v4l2src->get_frame (v4l2src, buf);
+    ret = gst_v4l2_object_get_buffer (obj, buf);
     if (ret != GST_FLOW_OK) {
       return ret;
     }
     gst_buffer_unref (*buf);
   }
 
-  ret = v4l2src->get_frame (v4l2src, buf);
+  ret = gst_v4l2_object_get_buffer (obj, buf);
 
   /* set buffer metadata */
   if (G_LIKELY (ret == GST_FLOW_OK && *buf)) {
@@ -857,7 +718,7 @@ gst_v4l2src_create (GstPushSrc * src, GstBuffer ** buf)
     }
     GST_OBJECT_UNLOCK (v4l2src);
 
-    duration = v4l2src->v4l2object->duration;
+    duration = obj->duration;
 
     if (G_LIKELY (clock)) {
       /* the time now is the time of the clock minus the base time */
@@ -891,13 +752,6 @@ gst_v4l2src_create (GstPushSrc * src, GstBuffer ** buf)
     GST_BUFFER_DURATION (*buf) = duration;
   }
   return ret;
-
-  /* ERRORS */
-not_negotiated:
-  {
-    GST_DEBUG_OBJECT (src, "we are not negotiated");
-    return GST_FLOW_NOT_NEGOTIATED;
-  }
 }
 
 

@@ -30,7 +30,6 @@
 #include "gstv4l2tuner.h"
 #include "gstv4l2object.h"
 #include "v4l2_calls.h"
-#include "v4l2src_calls.h"
 
 static void gst_v4l2_tuner_channel_class_init (GstV4l2TunerChannelClass *
     klass);

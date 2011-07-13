@@ -52,8 +52,8 @@
 #endif
 
 GST_DEBUG_CATEGORY_EXTERN (v4l2_debug);
+GST_DEBUG_CATEGORY_EXTERN (GST_CAT_PERFORMANCE);
 #define GST_CAT_DEFAULT v4l2_debug
-
 
 #define DEFAULT_PROP_DEVICE_NAME 	NULL
 #define DEFAULT_PROP_DEVICE_FD          -1
@@ -2429,4 +2429,265 @@ stop_failed:
         GST_ERROR_SYSTEM);
     return FALSE;
   }
+}
+
+static GstFlowReturn
+gst_v4l2_object_get_read (GstV4l2Object * v4l2object, GstBuffer ** buf)
+{
+  GstFlowReturn res;
+  gint amount;
+  gint ret;
+  gpointer data;
+  gint buffersize;
+
+  buffersize = v4l2object->size;
+
+  /* In case the size per frame is unknown assume it's a streaming format (e.g.
+   * mpegts) and grab a reasonable default size instead */
+  if (buffersize == 0)
+    buffersize = 4096;
+
+  *buf = gst_buffer_new_and_alloc (buffersize);
+  data = gst_buffer_map (*buf, NULL, NULL, GST_MAP_WRITE);
+
+  do {
+    ret = gst_poll_wait (v4l2object->poll, GST_CLOCK_TIME_NONE);
+    if (G_UNLIKELY (ret < 0)) {
+      if (errno == EBUSY)
+        goto stopped;
+      if (errno == ENXIO) {
+        GST_DEBUG_OBJECT (v4l2object->element,
+            "v4l2 device doesn't support polling. Disabling");
+        v4l2object->can_poll_device = FALSE;
+      } else {
+        if (errno != EAGAIN && errno != EINTR)
+          goto select_error;
+      }
+    }
+    amount = v4l2_read (v4l2object->video_fd, data, buffersize);
+
+    if (amount == buffersize) {
+      break;
+    } else if (amount == -1) {
+      if (errno == EAGAIN || errno == EINTR) {
+        continue;
+      } else
+        goto read_error;
+    } else {
+      /* short reads can happen if a signal interrupts the read */
+      continue;
+    }
+  } while (TRUE);
+
+  gst_buffer_unmap (*buf, data, amount);
+
+  return GST_FLOW_OK;
+
+  /* ERRORS */
+select_error:
+  {
+    GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, READ, (NULL),
+        ("select error %d: %s (%d)", ret, g_strerror (errno), errno));
+    res = GST_FLOW_ERROR;
+    goto cleanup;
+  }
+stopped:
+  {
+    GST_DEBUG ("stop called");
+    res = GST_FLOW_WRONG_STATE;
+    goto cleanup;
+  }
+read_error:
+  {
+    GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, READ,
+        (_("Error reading %d bytes from device '%s'."),
+            buffersize, v4l2object->videodev), GST_ERROR_SYSTEM);
+    res = GST_FLOW_ERROR;
+    goto cleanup;
+  }
+cleanup:
+  {
+    gst_buffer_unmap (*buf, data, 0);
+    gst_buffer_unref (*buf);
+    return res;
+  }
+}
+
+static GstFlowReturn
+gst_v4l2_object_grab_frame (GstV4l2Object * v4l2object, GstBuffer ** buf)
+{
+#define NUM_TRIALS 50
+  GstV4l2BufferPool *pool;
+  gint32 trials = NUM_TRIALS;
+  GstBuffer *pool_buffer;
+  gboolean need_copy;
+  gint ret;
+
+  pool = v4l2object->pool;
+  if (!pool)
+    goto no_buffer_pool;
+
+  GST_DEBUG_OBJECT (v4l2object->element, "grab frame");
+
+  for (;;) {
+    if (v4l2object->can_poll_device) {
+      ret = gst_poll_wait (v4l2object->poll, GST_CLOCK_TIME_NONE);
+      if (G_UNLIKELY (ret < 0)) {
+        if (errno == EBUSY)
+          goto stopped;
+        if (errno == ENXIO) {
+          GST_DEBUG_OBJECT (v4l2object->element,
+              "v4l2 device doesn't support polling. Disabling");
+          v4l2object->can_poll_device = FALSE;
+        } else {
+          if (errno != EAGAIN && errno != EINTR)
+            goto select_error;
+        }
+      }
+    }
+
+    pool_buffer = gst_v4l2_buffer_pool_dqbuf (pool);
+    if (pool_buffer)
+      break;
+
+    GST_WARNING_OBJECT (v4l2object->element, "trials=%d", trials);
+
+    /* if the sync() got interrupted, we can retry */
+    switch (errno) {
+      case EINVAL:
+      case ENOMEM:
+        /* fatal */
+        return GST_FLOW_ERROR;
+
+      case EAGAIN:
+      case EIO:
+      case EINTR:
+      default:
+        /* try again, until too many trials */
+        break;
+    }
+
+    /* check nr. of attempts to capture */
+    if (--trials == -1) {
+      goto too_many_trials;
+    }
+  }
+
+  /* if we are handing out the last buffer in the pool, we need to make a
+   * copy and bring the buffer back in the pool. */
+  need_copy = v4l2object->always_copy
+      || !gst_v4l2_buffer_pool_available_buffers (pool);
+
+  if (G_UNLIKELY (need_copy)) {
+    if (!v4l2object->always_copy) {
+      GST_CAT_LOG_OBJECT (GST_CAT_PERFORMANCE, v4l2object->element,
+          "running out of buffers, making a copy to reuse current one");
+    }
+    *buf = gst_buffer_copy (pool_buffer);
+    /* this will requeue */
+    gst_buffer_unref (pool_buffer);
+  } else {
+    *buf = pool_buffer;
+  }
+
+  return GST_FLOW_OK;
+
+  /* ERRORS */
+no_buffer_pool:
+  {
+    GST_DEBUG_OBJECT (v4l2object->element, "no buffer pool");
+    return GST_FLOW_WRONG_STATE;
+  }
+select_error:
+  {
+    GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, READ, (NULL),
+        ("select error %d: %s (%d)", ret, g_strerror (errno), errno));
+    return GST_FLOW_ERROR;
+  }
+stopped:
+  {
+    GST_DEBUG ("stop called");
+    return GST_FLOW_WRONG_STATE;
+  }
+too_many_trials:
+  {
+    GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, FAILED,
+        (_("Failed trying to get video frames from device '%s'."),
+            v4l2object->videodev),
+        (_("Failed after %d tries. device %s. system error: %s"),
+            NUM_TRIALS, v4l2object->videodev, g_strerror (errno)));
+    return GST_FLOW_ERROR;
+  }
+}
+
+static GstFlowReturn
+gst_v4l2_object_get_mmap (GstV4l2Object * v4l2object, GstBuffer ** buf)
+{
+  GstBuffer *temp;
+  GstFlowReturn ret;
+  guint size;
+  guint count = 0;
+
+again:
+  ret = gst_v4l2_object_grab_frame (v4l2object, &temp);
+  if (G_UNLIKELY (ret != GST_FLOW_OK))
+    goto done;
+
+  if (v4l2object->size > 0) {
+    size = gst_buffer_get_size (temp);
+
+    /* if size does not match what we expected, try again */
+    if (size != v4l2object->size) {
+      GST_ELEMENT_WARNING (v4l2object->element, RESOURCE, READ,
+          (_("Got unexpected frame size of %u instead of %u."),
+              size, v4l2object->size), (NULL));
+      gst_buffer_unref (temp);
+      if (count++ > 50)
+        goto size_error;
+
+      goto again;
+    }
+  }
+
+  *buf = temp;
+done:
+  return ret;
+
+  /* ERRORS */
+size_error:
+  {
+    GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, READ,
+        (_("Error reading %d bytes on device '%s'."),
+            v4l2object->size, v4l2object->videodev), (NULL));
+    return GST_FLOW_ERROR;
+  }
+}
+
+GstFlowReturn
+gst_v4l2_object_get_buffer (GstV4l2Object * v4l2object, GstBuffer ** buf)
+{
+  GstFlowReturn ret;
+
+  switch (v4l2object->type) {
+    case V4L2_BUF_TYPE_VIDEO_CAPTURE:
+      if (v4l2object->use_mmap) {
+        ret = gst_v4l2_object_get_mmap (v4l2object, buf);
+      } else {
+        ret = gst_v4l2_object_get_read (v4l2object, buf);
+      }
+      break;
+    case V4L2_BUF_TYPE_VIDEO_OUTPUT:
+      ret = GST_FLOW_ERROR;
+      break;
+    default:
+      ret = GST_FLOW_ERROR;
+      break;
+  }
+  return ret;
+}
+
+GstFlowReturn
+gst_v4l2_object_output_buffer (GstV4l2Object * v4l2object, GstBuffer * buf)
+{
+  return GST_FLOW_ERROR;
 }
