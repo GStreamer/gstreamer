@@ -880,7 +880,7 @@ gst_omx_video_dec_handle_frame (GstBaseVideoDecoder * decoder,
     if (offset == 0) {
       BufferIdentification *id = g_slice_new0 (BufferIdentification);
 
-      if (!GST_BUFFER_FLAG_IS_SET (frame->sink_buffers,
+      if (!GST_BUFFER_FLAG_IS_SET (frame->sink_buffer,
               GST_BUFFER_FLAG_DELTA_UNIT))
         buf->omx_buf->nFlags |= OMX_BUFFERFLAG_SYNCFRAME;
 
