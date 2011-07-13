@@ -380,7 +380,11 @@ gst_omx_component_free (GstOMXComponent * comp)
 
       g_slice_free (GstOMXPort, port);
     }
+#if GLIB_CHECK_VERSION(2,22,0)
     g_ptr_array_unref (comp->ports);
+#else
+    g_ptr_array_free (comp->ports, TRUE);
+#endif
   }
 
   g_cond_free (comp->state_cond);
@@ -1189,7 +1193,11 @@ gst_omx_port_deallocate_buffers_unlocked (GstOMXPort * port)
   }
 
   g_queue_clear (port->pending_buffers);
+#if GLIB_CHECK_VERSION(2,22,0)
   g_ptr_array_unref (port->buffers);
+#else
+  g_ptr_array_free (port->buffers, TRUE);
+#endif
   port->buffers = NULL;
 
 done:
