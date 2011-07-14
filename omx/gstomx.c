@@ -1380,6 +1380,26 @@ gst_omx_port_set_enabled_unlocked (GstOMXPort * port, gboolean enabled)
         port->index, (enabled ? "enabled" : "disabled"),
         gst_omx_error_to_string (err), err);
     err = last_error;
+  } else {
+    /* If everything went fine and we have an output port we
+     * should provide all newly allocated buffers to the port
+     */
+    if (enabled && port->port_def.eDir == OMX_DirOutput) {
+      GstOMXBuffer *buf;
+
+      /* Enqueue all buffers for the component to fill */
+      while ((buf = g_queue_pop_head (port->pending_buffers))) {
+        g_assert (!buf->used);
+
+        err = OMX_FillThisBuffer (comp->handle, buf->omx_buf);
+        if (err != OMX_ErrorNone) {
+          GST_ERROR_OBJECT (comp->parent,
+              "Failed to pass buffer %p to port %u: %s (0x%08x)", buf,
+              port->index, gst_omx_error_to_string (err), err);
+          goto error;
+        }
+      }
+    }
   }
 
 done:
