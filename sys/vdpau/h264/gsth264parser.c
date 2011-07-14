@@ -768,7 +768,7 @@ gst_h264_slice_parse_ref_pic_list_reordering (GstH264Slice * slice,
       do {
         READ_UE_ALLOWED (reader, reordering_of_pic_nums_idc, 0, 3);
         if (reordering_of_pic_nums_idc == 0 || reordering_of_pic_nums_idc == 1) {
-          guint32 abs_diff_pic_num_minus1;
+          guint32 abs_diff_pic_num_minus1 G_GNUC_UNUSED;
 
           READ_UE_ALLOWED (reader, abs_diff_pic_num_minus1, 0,
               slice->MaxPicNum - 1);

@@ -1391,11 +1391,9 @@ static void
 gst_vdp_sink_class_init (VdpSinkClass * klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
   GstBaseSinkClass *gstbasesink_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
   gstbasesink_class = (GstBaseSinkClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);

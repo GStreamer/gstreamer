@@ -132,12 +132,9 @@ gst_h264_dpb_bump (GstH264DPB * dpb, guint poc, GstFlowReturn * ret)
 GstFlowReturn
 gst_h264_dpb_add (GstH264DPB * dpb, GstH264Frame * h264_frame)
 {
-  GstH264Frame **frames;
   GstFlowReturn ret;
 
   GST_DEBUG ("add frame with poc: %d", h264_frame->poc);
-
-  frames = dpb->frames;
 
   if (h264_frame->is_reference && h264_frame->is_long_term &&
       (h264_frame->frame_idx > dpb->max_longterm_frame_idx))
