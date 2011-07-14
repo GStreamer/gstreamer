@@ -1926,7 +1926,7 @@ gst_base_parse_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
   } else if (ret == GST_FLOW_OK) {
     if (parse->segment.rate > 0.0) {
       GST_LOG_OBJECT (parse, "pushing frame (%d bytes) now..",
-          GST_BUFFER_SIZE (buffer), gst_flow_get_name (ret));
+          GST_BUFFER_SIZE (buffer));
       ret = gst_pad_push (parse->srcpad, buffer);
       GST_LOG_OBJECT (parse, "frame pushed, flow %s", gst_flow_get_name (ret));
     } else {
