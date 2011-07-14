@@ -233,6 +233,7 @@ gst_omx_video_dec_open (GstOMXVideoDec * self)
   self->component =
       gst_omx_component_new (GST_OBJECT_CAST (self), klass->core_name,
       klass->component_name, klass->component_role);
+  self->started = FALSE;
 
   if (!self->component)
     return FALSE;
@@ -780,15 +781,17 @@ gst_omx_video_dec_reset (GstBaseVideoDecoder * decoder)
   GST_BASE_VIDEO_CODEC (self)->frames = NULL;
   GST_OBJECT_UNLOCK (self);
 
-  gst_omx_port_set_flushing (self->in_port, TRUE);
-  gst_omx_port_set_flushing (self->out_port, TRUE);
+  if (self->started) {
+    gst_omx_port_set_flushing (self->in_port, TRUE);
+    gst_omx_port_set_flushing (self->out_port, TRUE);
 
-  /* Wait until the srcpad loop is finished */
-  GST_PAD_STREAM_LOCK (GST_BASE_VIDEO_CODEC_SRC_PAD (self));
-  GST_PAD_STREAM_UNLOCK (GST_BASE_VIDEO_CODEC_SRC_PAD (self));
+    /* Wait until the srcpad loop is finished */
+    GST_PAD_STREAM_LOCK (GST_BASE_VIDEO_CODEC_SRC_PAD (self));
+    GST_PAD_STREAM_UNLOCK (GST_BASE_VIDEO_CODEC_SRC_PAD (self));
 
-  gst_omx_port_set_flushing (self->in_port, FALSE);
-  gst_omx_port_set_flushing (self->out_port, FALSE);
+    gst_omx_port_set_flushing (self->in_port, FALSE);
+    gst_omx_port_set_flushing (self->out_port, FALSE);
+  }
 
   /* Start the srcpad loop again */
   gst_pad_start_task (GST_BASE_VIDEO_CODEC_SRC_PAD (self),
@@ -853,6 +856,7 @@ gst_omx_video_dec_handle_frame (GstBaseVideoDecoder * decoder,
       memcpy (buf->omx_buf->pBuffer + buf->omx_buf->nOffset,
           GST_BUFFER_DATA (codec_data), GST_BUFFER_SIZE (codec_data));
 
+      self->started = TRUE;
       gst_omx_port_release_buffer (self->in_port, buf);
       gst_buffer_replace (&self->codec_data, NULL);
       /* Acquire new buffer for the actual frame */
@@ -909,6 +913,7 @@ gst_omx_video_dec_handle_frame (GstBaseVideoDecoder * decoder,
      */
 
     offset += buf->omx_buf->nFilledLen;
+    self->started = TRUE;
     gst_omx_port_release_buffer (self->in_port, buf);
   }
 

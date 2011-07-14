@@ -55,6 +55,9 @@ struct _GstOMXVideoDec
 
   /* < private > */
   GstBuffer *codec_data;
+  /* TRUE if the component is configured and saw
+   * the first buffer */
+  gboolean started;
 };
 
 struct _GstOMXVideoDecClass
