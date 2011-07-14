@@ -247,7 +247,7 @@ gst_v4l2sink_init (GstV4l2Sink * v4l2sink)
 
   /* number of buffers requested */
   v4l2sink->v4l2object->num_buffers = PROP_DEF_QUEUE_SIZE;
-  v4l2sink->min_queued_bufs = PROP_DEF_MIN_QUEUED_BUFS;
+  v4l2sink->v4l2object->min_queued_bufs = PROP_DEF_MIN_QUEUED_BUFS;
 
   v4l2sink->probed_caps = NULL;
   v4l2sink->current_caps = NULL;
@@ -397,7 +397,7 @@ gst_v4l2sink_set_property (GObject * object,
         v4l2sink->v4l2object->num_buffers = g_value_get_uint (value);
         break;
       case PROP_MIN_QUEUED_BUFS:
-        v4l2sink->min_queued_bufs = g_value_get_uint (value);
+        v4l2sink->v4l2object->min_queued_bufs = g_value_get_uint (value);
         break;
       case PROP_OVERLAY_TOP:
         v4l2sink->overlay.top = g_value_get_int (value);
@@ -460,7 +460,7 @@ gst_v4l2sink_get_property (GObject * object,
         g_value_set_uint (value, v4l2sink->v4l2object->num_buffers);
         break;
       case PROP_MIN_QUEUED_BUFS:
-        g_value_set_uint (value, v4l2sink->min_queued_bufs);
+        g_value_set_uint (value, v4l2sink->v4l2object->min_queued_bufs);
         break;
       case PROP_OVERLAY_TOP:
         g_value_set_int (value, v4l2sink->overlay.top);
@@ -666,84 +666,15 @@ invalid_format:
 static GstFlowReturn
 gst_v4l2sink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
 {
+  GstFlowReturn ret;
   GstV4l2Sink *v4l2sink = GST_V4L2SINK (bsink);
-  GstBuffer *newbuf = NULL;
-  GstMetaV4l2 *meta;
   GstV4l2Object *obj = v4l2sink->v4l2object;
 
   GST_DEBUG_OBJECT (v4l2sink, "render buffer: %p", buf);
 
-  meta = GST_META_V4L2_GET (buf);
+  ret = gst_v4l2_object_output_buffer (obj, buf);
 
-  if (meta == NULL || meta->pool != obj->pool) {
-    guint8 *data;
-    gsize size;
-
-    /* not our buffer */
-    GST_DEBUG_OBJECT (v4l2sink, "slow-path.. need to memcpy");
-    newbuf = gst_v4l2_buffer_pool_get (obj->pool, TRUE);
-
-    if (obj->info.finfo) {
-      GstVideoFrame src_frame, dest_frame;
-
-      GST_DEBUG_OBJECT (v4l2sink, "copy video frame");
-      /* we have raw video, use videoframe copy to get strides right */
-      gst_video_frame_map (&src_frame, &obj->info, buf, GST_MAP_READ);
-      gst_video_frame_map (&dest_frame, &obj->info, newbuf, GST_MAP_WRITE);
-
-      gst_video_frame_copy (&dest_frame, &src_frame);
-
-      gst_video_frame_unmap (&src_frame);
-      gst_video_frame_unmap (&dest_frame);
-    } else {
-      GST_DEBUG_OBJECT (v4l2sink, "copy raw bytes");
-      data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
-      gst_buffer_fill (newbuf, 0, data, size);
-      gst_buffer_unmap (buf, data, size);
-    }
-    GST_DEBUG_OBJECT (v4l2sink, "render copied buffer: %p", newbuf);
-    buf = newbuf;
-  }
-
-  if (!gst_v4l2_buffer_pool_qbuf (obj->pool, buf))
-    goto queue_failed;
-
-  if (!obj->streaming) {
-    if (!gst_v4l2_object_start (obj)) {
-      return GST_FLOW_ERROR;
-    }
-  }
-
-  if (!newbuf) {
-    gst_buffer_ref (buf);
-  }
-
-  /* if the driver has more than one buffer, ie. more than just the one we
-   * just queued, then dequeue one immediately to make it available via
-   * _buffer_alloc():
-   */
-  if (gst_v4l2_buffer_pool_available_buffers (obj->pool) >
-      v4l2sink->min_queued_bufs) {
-    GstBuffer *v4l2buf = gst_v4l2_buffer_pool_dqbuf (obj->pool);
-
-    /* note: if we get a buf, we don't want to use it directly (because
-     * someone else could still hold a ref).. but instead we release our
-     * reference to it, and if no one else holds a ref it will be returned
-     * to the pool of available buffers..  and if not, we keep looping.
-     */
-    if (v4l2buf) {
-      gst_buffer_unref (v4l2buf);
-    }
-  }
-
-  return GST_FLOW_OK;
-
-  /* ERRORS */
-queue_failed:
-  {
-    GST_DEBUG_OBJECT (v4l2sink, "failed to queue buffer");
-    return GST_FLOW_ERROR;
-  }
+  return ret;
 }
 
 #ifdef HAVE_XVIDEO

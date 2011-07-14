@@ -86,6 +86,8 @@ GstV4l2BufferPool * gst_v4l2_buffer_pool_new     (GstV4l2Object *obj, gint num_b
 void                gst_v4l2_buffer_pool_destroy (GstV4l2BufferPool * pool);
 
 GstBuffer *         gst_v4l2_buffer_pool_get     (GstV4l2BufferPool *pool, gboolean blocking);
+
+
 gboolean            gst_v4l2_buffer_pool_qbuf    (GstV4l2BufferPool *pool, GstBuffer *buf);
 GstBuffer *         gst_v4l2_buffer_pool_dqbuf   (GstV4l2BufferPool *pool);
 

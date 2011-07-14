@@ -2689,5 +2689,76 @@ gst_v4l2_object_get_buffer (GstV4l2Object * v4l2object, GstBuffer ** buf)
 GstFlowReturn
 gst_v4l2_object_output_buffer (GstV4l2Object * v4l2object, GstBuffer * buf)
 {
-  return GST_FLOW_ERROR;
+  GstBuffer *newbuf = NULL;
+  GstMetaV4l2 *meta;
+
+  meta = GST_META_V4L2_GET (buf);
+
+  if (meta == NULL || meta->pool != v4l2object->pool) {
+    guint8 *data;
+    gsize size;
+
+    /* not our buffer */
+    GST_DEBUG_OBJECT (v4l2object->element, "slow-path.. need to memcpy");
+    newbuf = gst_v4l2_buffer_pool_get (v4l2object->pool, TRUE);
+
+    if (v4l2object->info.finfo) {
+      GstVideoFrame src_frame, dest_frame;
+
+      GST_DEBUG_OBJECT (v4l2object->element, "copy video frame");
+      /* we have raw video, use videoframe copy to get strides right */
+      gst_video_frame_map (&src_frame, &v4l2object->info, buf, GST_MAP_READ);
+      gst_video_frame_map (&dest_frame, &v4l2object->info, newbuf,
+          GST_MAP_WRITE);
+
+      gst_video_frame_copy (&dest_frame, &src_frame);
+
+      gst_video_frame_unmap (&src_frame);
+      gst_video_frame_unmap (&dest_frame);
+    } else {
+      GST_DEBUG_OBJECT (v4l2object->element, "copy raw bytes");
+      data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+      gst_buffer_fill (newbuf, 0, data, size);
+      gst_buffer_unmap (buf, data, size);
+    }
+    GST_DEBUG_OBJECT (v4l2object->element, "render copied buffer: %p", newbuf);
+    buf = newbuf;
+  }
+
+  if (!gst_v4l2_buffer_pool_qbuf (v4l2object->pool, buf))
+    goto queue_failed;
+
+  if (!v4l2object->streaming) {
+    if (!gst_v4l2_object_start (v4l2object)) {
+      return GST_FLOW_ERROR;
+    }
+  }
+  if (!newbuf)
+    gst_buffer_ref (buf);
+
+  /* if the driver has more than one buffer, ie. more than just the one we
+   * just queued, then dequeue one immediately to make it available via
+   * _buffer_alloc():
+   */
+  if (gst_v4l2_buffer_pool_available_buffers (v4l2object->pool) >
+      v4l2object->min_queued_bufs) {
+    GstBuffer *v4l2buf = gst_v4l2_buffer_pool_dqbuf (v4l2object->pool);
+
+    /* note: if we get a buf, we don't want to use it directly (because
+     * someone else could still hold a ref).. but instead we release our
+     * reference to it, and if no one else holds a ref it will be returned
+     * to the pool of available buffers..  and if not, we keep looping.
+     */
+    if (v4l2buf) {
+      gst_buffer_unref (v4l2buf);
+    }
+  }
+  return GST_FLOW_OK;
+
+  /* ERRORS */
+queue_failed:
+  {
+    GST_DEBUG_OBJECT (v4l2object->element, "failed to queue buffer");
+    return GST_FLOW_ERROR;
+  }
 }

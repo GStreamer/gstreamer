@@ -57,8 +57,6 @@ struct _GstV4l2Sink {
   GstCaps *probed_caps;         /* all supported caps of underlying v4l2 device */
   GstCaps *current_caps;        /* the current negotiated caps */
 
-  guint32 min_queued_bufs;
-
   gint video_width, video_height;      /* original (unscaled) video w/h */
 
   /*

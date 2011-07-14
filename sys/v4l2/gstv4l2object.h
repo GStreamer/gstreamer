@@ -116,6 +116,7 @@ struct _GstV4l2Object {
 
   /* optional pool */
   guint32 num_buffers;
+  guint32 min_queued_bufs;
   gboolean always_copy;
   gboolean use_mmap;
   GstV4l2BufferPool *pool;
