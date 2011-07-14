@@ -2514,7 +2514,7 @@ cleanup:
 }
 
 static GstFlowReturn
-gst_v4l2_object_grab_frame (GstV4l2Object * v4l2object, GstBuffer ** buf)
+gst_v4l2_object_get_mmap (GstV4l2Object * v4l2object, GstBuffer ** buf)
 {
 #define NUM_TRIALS 50
   GstV4l2BufferPool *pool;
@@ -2547,9 +2547,25 @@ gst_v4l2_object_grab_frame (GstV4l2Object * v4l2object, GstBuffer ** buf)
     }
 
     pool_buffer = gst_v4l2_buffer_pool_dqbuf (pool);
-    if (pool_buffer)
-      break;
+    if (pool_buffer == NULL)
+      goto no_buffer;
 
+    if (v4l2object->size > 0) {
+      gsize size = gst_buffer_get_size (pool_buffer);
+
+      /* if size does not match what we expected, try again */
+      if (size != v4l2object->size) {
+        GST_ELEMENT_WARNING (v4l2object->element, RESOURCE, READ,
+            (_("Got unexpected frame size of %u instead of %u."),
+                size, v4l2object->size), (NULL));
+        gst_buffer_unref (pool_buffer);
+        goto no_buffer;
+      }
+    }
+    /* when we get here all is fine */
+    break;
+
+  no_buffer:
     GST_WARNING_OBJECT (v4l2object->element, "trials=%d", trials);
 
     /* if the sync() got interrupted, we can retry */
@@ -2572,6 +2588,7 @@ gst_v4l2_object_grab_frame (GstV4l2Object * v4l2object, GstBuffer ** buf)
       goto too_many_trials;
     }
   }
+
 
   /* if we are handing out the last buffer in the pool, we need to make a
    * copy and bring the buffer back in the pool. */
@@ -2616,49 +2633,6 @@ too_many_trials:
             v4l2object->videodev),
         (_("Failed after %d tries. device %s. system error: %s"),
             NUM_TRIALS, v4l2object->videodev, g_strerror (errno)));
-    return GST_FLOW_ERROR;
-  }
-}
-
-static GstFlowReturn
-gst_v4l2_object_get_mmap (GstV4l2Object * v4l2object, GstBuffer ** buf)
-{
-  GstBuffer *temp;
-  GstFlowReturn ret;
-  guint size;
-  guint count = 0;
-
-again:
-  ret = gst_v4l2_object_grab_frame (v4l2object, &temp);
-  if (G_UNLIKELY (ret != GST_FLOW_OK))
-    goto done;
-
-  if (v4l2object->size > 0) {
-    size = gst_buffer_get_size (temp);
-
-    /* if size does not match what we expected, try again */
-    if (size != v4l2object->size) {
-      GST_ELEMENT_WARNING (v4l2object->element, RESOURCE, READ,
-          (_("Got unexpected frame size of %u instead of %u."),
-              size, v4l2object->size), (NULL));
-      gst_buffer_unref (temp);
-      if (count++ > 50)
-        goto size_error;
-
-      goto again;
-    }
-  }
-
-  *buf = temp;
-done:
-  return ret;
-
-  /* ERRORS */
-size_error:
-  {
-    GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, READ,
-        (_("Error reading %d bytes on device '%s'."),
-            v4l2object->size, v4l2object->videodev), (NULL));
     return GST_FLOW_ERROR;
   }
 }
