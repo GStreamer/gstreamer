@@ -64,6 +64,7 @@ enum
   PROP_SRC_PORT,
   PROP_DST_PORT,
   PROP_CAPS,
+  PROP_OFFSET,
   PROP_LAST
 };
 
@@ -143,6 +144,11 @@ gst_pcap_parse_class_init (GstPcapParseClass * klass)
           "The caps of the source pad", GST_TYPE_CAPS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_OFFSET,
+      g_param_spec_int64 ("offset", "Offset",
+          "Relative timestamp offset (ns) to apply (-1 = use absolute packet time)",
+          -1, G_MAXINT64, -1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   GST_DEBUG_CATEGORY_INIT (gst_pcap_parse_debug, "pcapparse", 0, "pcap parser");
 }
 
@@ -165,6 +171,7 @@ gst_pcap_parse_init (GstPcapParse * self, GstPcapParseClass * gclass)
   self->dst_ip = -1;
   self->src_port = -1;
   self->dst_port = -1;
+  self->offset = -1;
 
   self->adapter = gst_adapter_new ();
 
@@ -234,6 +241,10 @@ gst_pcap_parse_get_property (GObject * object, guint prop_id,
       gst_value_set_caps (value, self->caps);
       break;
 
+    case PROP_OFFSET:
+      g_value_set_int64 (value, self->offset);
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -283,6 +294,11 @@ gst_pcap_parse_set_property (GObject * object, guint prop_id,
       gst_pad_set_caps (self->src_pad, new_caps);
       break;
     }
+
+    case PROP_OFFSET:
+      self->offset = g_value_get_int64 (value);
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -297,6 +313,7 @@ gst_pcap_parse_reset (GstPcapParse * self)
   self->cur_packet_size = -1;
   self->buffer_offset = 0;
   self->cur_ts = GST_CLOCK_TIME_NONE;
+  self->base_ts = GST_CLOCK_TIME_NONE;
   self->newsegment_sent = FALSE;
 
   gst_adapter_clear (self->adapter);
@@ -460,6 +477,13 @@ gst_pcap_parse_chain (GstPad * pad, GstBuffer * buffer)
                 self->buffer_offset, payload_size, self->caps, &out_buf);
 
             if (ret == GST_FLOW_OK) {
+
+              if (GST_CLOCK_TIME_IS_VALID (self->cur_ts)) {
+                if (!GST_CLOCK_TIME_IS_VALID (self->base_ts))
+                  self->base_ts = self->cur_ts;
+                if (self->offset >= 0)
+                  self->cur_ts -= self->base_ts + self->offset;
+              }
 
               memcpy (GST_BUFFER_DATA (out_buf), payload_data, payload_size);
               GST_BUFFER_TIMESTAMP (out_buf) = self->cur_ts;
