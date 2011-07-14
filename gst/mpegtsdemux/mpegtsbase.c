@@ -239,6 +239,7 @@ mpegts_base_init (MpegTSBase * base, MpegTSBaseClass * klass)
   base->stream_size = sizeof (MpegTSBaseStream);
 
   base->mode = BASE_MODE_STREAMING;
+  base->seen_pat = FALSE;
   base->first_pat_offset = -1;
 }
 
@@ -705,7 +706,7 @@ mpegts_base_apply_pmt (MpegTSBase * base,
   const GValue *value;
   MpegTSBaseClass *klass = GST_MPEGTS_BASE_GET_CLASS (base);
 
-  if (G_UNLIKELY (base->first_pat_offset == -1)) {
+  if (G_UNLIKELY (base->seen_pat == FALSE)) {
     GST_WARNING ("Got pmt without pat first. Returning");
     /* remove the stream since we won't get another PMT otherwise */
     mpegts_packetizer_remove_stream (base->packetizer, pmt_pid);
@@ -832,7 +833,7 @@ mpegts_base_handle_psi (MpegTSBase * base, MpegTSPacketizerSection * section)
       structure = mpegts_packetizer_parse_pat (base->packetizer, section);
       if (G_LIKELY (structure)) {
         mpegts_base_apply_pat (base, structure);
-        if (base->first_pat_offset == -1) {
+        if (base->seen_pat == FALSE) {
 
           base->first_pat_offset = GST_BUFFER_OFFSET (section->buffer);
           GST_DEBUG ("First PAT offset: %" G_GUINT64_FORMAT,

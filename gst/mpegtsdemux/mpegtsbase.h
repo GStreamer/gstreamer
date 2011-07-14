@@ -117,6 +117,9 @@ struct _MpegTSBase {
    * by subclasses if they have their own MpegTSBaseStream subclasses */
   gsize stream_size;
 
+  /* Whether we saw a PAT yet */
+  gboolean seen_pat;
+
   /*Offset from the origin to the first PAT (pullmode) */
   guint64    first_pat_offset;
 };
