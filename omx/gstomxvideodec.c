@@ -450,6 +450,9 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
       case OMX_COLOR_FormatYUV420Planar:
         state->format = GST_VIDEO_FORMAT_I420;
         break;
+      case OMX_COLOR_FormatYUV420SemiPlanar:
+        state->format = GST_VIDEO_FORMAT_NV12;
+        break;
       default:
         g_assert_not_reached ();
         break;
