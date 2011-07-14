@@ -55,7 +55,6 @@
 #include <string.h>
 
 #include "gstid3demux.h"
-#include "id3tags.h"
 
 enum
 {
@@ -67,6 +66,9 @@ enum
 
 GST_DEBUG_CATEGORY (id3demux_debug);
 #define GST_CAT_DEFAULT (id3demux_debug)
+
+#define ID3V1_TAG_SIZE 128
+#define ID3V2_HDR_SIZE GST_TAG_ID3V2_HEADER_SIZE
 
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -142,7 +144,7 @@ gst_id3demux_identify_tag (GstTagDemux * demux, GstBuffer * buf,
     if (data[0] != 'I' || data[1] != 'D' || data[2] != '3')
       goto no_marker;
 
-    *tag_size = id3demux_calc_id3v2_tag_size (buf);
+    *tag_size = gst_tag_get_id3v2_tag_size (buf);
   } else {
     if (data[0] != 'T' || data[1] != 'A' || data[2] != 'G')
       goto no_marker;
@@ -178,11 +180,10 @@ gst_id3demux_parse_tag (GstTagDemux * demux, GstBuffer * buffer,
     gboolean start_tag, guint * tag_size, GstTagList ** tags)
 {
   if (start_tag) {
-    ID3TagsResult res;          /* FIXME: make id3tags.c return tagmuxresult values */
+    *tag_size = gst_tag_get_id3v2_tag_size (buffer);
+    *tags = gst_tag_list_from_id3v2_tag (buffer);
 
-    res = id3demux_read_id3v2_tag (buffer, tag_size, tags);
-
-    if (G_LIKELY (res == ID3TAGS_READ_TAG)) {
+    if (G_LIKELY (*tags != NULL)) {
       gst_id3demux_add_container_format (*tags);
       return GST_TAG_DEMUX_RESULT_OK;
     } else {
@@ -275,11 +276,6 @@ plugin_init (GstPlugin * plugin)
       "GStreamer ID3 tag demuxer");
 
   gst_tag_register_musicbrainz_tags ();
-
-  /* ensure private tag is registered */
-  gst_tag_register (GST_ID3_DEMUX_TAG_ID3V2_FRAME, GST_TAG_FLAG_META,
-      GST_TYPE_BUFFER, "ID3v2 frame", "unparsed id3v2 tag frame",
-      gst_tag_merge_use_first);
 
   return gst_element_register (plugin, "id3demux",
       GST_RANK_PRIMARY, GST_TYPE_ID3DEMUX);
