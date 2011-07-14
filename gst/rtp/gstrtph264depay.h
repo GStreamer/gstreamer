@@ -61,6 +61,11 @@ struct _GstRtpH264Depay
   guint8 current_fu_type;
   GstClockTime fu_timestamp;
   gboolean fu_marker;
+
+  /* misc */
+  GPtrArray *sps;
+  GPtrArray *pps;
+  gboolean new_codec_data;
 };
 
 struct _GstRtpH264DepayClass
