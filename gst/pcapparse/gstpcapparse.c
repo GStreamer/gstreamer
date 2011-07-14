@@ -481,8 +481,10 @@ gst_pcap_parse_chain (GstPad * pad, GstBuffer * buffer)
               if (GST_CLOCK_TIME_IS_VALID (self->cur_ts)) {
                 if (!GST_CLOCK_TIME_IS_VALID (self->base_ts))
                   self->base_ts = self->cur_ts;
-                if (self->offset >= 0)
-                  self->cur_ts -= self->base_ts + self->offset;
+                if (self->offset >= 0) {
+                  self->cur_ts -= self->base_ts;
+                  self->cur_ts += self->offset;
+                }
               }
 
               memcpy (GST_BUFFER_DATA (out_buf), payload_data, payload_size);
