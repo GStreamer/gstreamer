@@ -20,8 +20,8 @@
 /**
  * SECTION:element-pcapparse
  *
- * Extracts payloads from Ethernet-encapsulated IP packets, currently limited
- * to UDP. Use #GstPcapParse:src-ip, #GstPcapParse:dst-ip,
+ * Extracts payloads from Ethernet-encapsulated IP packets.
+ * Use #GstPcapParse:src-ip, #GstPcapParse:dst-ip,
  * #GstPcapParse:src-port and #GstPcapParse:dst-port to restrict which packets
  * should be included.
  *
@@ -324,6 +324,8 @@ gst_pcap_parse_read_uint32 (GstPcapParse * self, const guint8 * p)
 #define UDP_HEADER_LEN     8
 
 #define IP_PROTO_UDP      17
+#define IP_PROTO_TCP      6
+
 
 static gboolean
 gst_pcap_parse_scan_frame (GstPcapParse * self,
@@ -331,16 +333,16 @@ gst_pcap_parse_scan_frame (GstPcapParse * self,
     gint buf_size, const guint8 ** payload, gint * payload_size)
 {
   const guint8 *buf_ip = 0;
-  const guint8 *buf_udp;
+  const guint8 *buf_proto;
   guint16 eth_type;
   guint8 b;
   guint8 ip_header_size;
   guint8 ip_protocol;
   guint32 ip_src_addr;
   guint32 ip_dst_addr;
-  guint16 udp_src_port;
-  guint16 udp_dst_port;
-  guint16 udp_len;
+  guint16 src_port;
+  guint16 dst_port;
+  guint16 len;
 
   switch (self->linktype) {
     case DLT_ETHER:
@@ -375,33 +377,52 @@ gst_pcap_parse_scan_frame (GstPcapParse * self,
     return FALSE;
 
   ip_protocol = *(buf_ip + 9);
-  if (ip_protocol != IP_PROTO_UDP)
+  GST_LOG_OBJECT (self, "ip proto %d", (gint) ip_protocol);
+
+  if (ip_protocol != IP_PROTO_UDP && ip_protocol != IP_PROTO_TCP)
     return FALSE;
 
+  /* ip info */
   ip_src_addr = *((guint32 *) (buf_ip + 12));
+  ip_dst_addr = *((guint32 *) (buf_ip + 16));
+  buf_proto = buf_ip + ip_header_size;
+
+  /* ok for tcp and udp */
+  src_port = GUINT16_FROM_BE (*((guint16 *) (buf_proto + 0)));
+  dst_port = GUINT16_FROM_BE (*((guint16 *) (buf_proto + 2)));
+
+  /* extract some params and data according to protocol */
+  if (ip_protocol == IP_PROTO_UDP) {
+    len = GUINT16_FROM_BE (*((guint16 *) (buf_proto + 4)));
+    if (len < UDP_HEADER_LEN || buf_proto + len > buf + buf_size)
+      return FALSE;
+
+    *payload = buf_proto + UDP_HEADER_LEN;
+    *payload_size = len - UDP_HEADER_LEN;
+  } else {
+    if (buf_proto + 12 >= buf + buf_size)
+      return FALSE;
+    len = (buf_proto[12] >> 4) * 4;
+    if (buf_proto + len > buf + buf_size)
+      return FALSE;
+
+    /* all remaining data following tcp header is payload */
+    *payload = buf_proto + len;
+    *payload_size = self->cur_packet_size - (buf_proto - buf) - len;
+  }
+
+  /* but still filter as configured */
   if (self->src_ip >= 0 && ip_src_addr != self->src_ip)
     return FALSE;
 
-  ip_dst_addr = *((guint32 *) (buf_ip + 16));
   if (self->dst_ip >= 0 && ip_dst_addr != self->dst_ip)
     return FALSE;
 
-  buf_udp = buf_ip + ip_header_size;
-
-  udp_src_port = GUINT16_FROM_BE (*((guint16 *) (buf_udp + 0)));
-  if (self->src_port >= 0 && udp_src_port != self->src_port)
+  if (self->src_port >= 0 && src_port != self->src_port)
     return FALSE;
 
-  udp_dst_port = GUINT16_FROM_BE (*((guint16 *) (buf_udp + 2)));
-  if (self->dst_port >= 0 && udp_dst_port != self->dst_port)
+  if (self->dst_port >= 0 && dst_port != self->dst_port)
     return FALSE;
-
-  udp_len = GUINT16_FROM_BE (*((guint16 *) (buf_udp + 4)));
-  if (udp_len < UDP_HEADER_LEN || buf_udp + udp_len > buf + buf_size)
-    return FALSE;
-
-  *payload = buf_udp + UDP_HEADER_LEN;
-  *payload_size = udp_len - UDP_HEADER_LEN;
 
   return TRUE;
 }
