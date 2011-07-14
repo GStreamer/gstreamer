@@ -529,14 +529,15 @@ gst_codec_utils_h264_get_level (const guint8 * sps, guint len)
 }
 
 /**
- * gst_codec_utils_h264_get_level_id:
+ * gst_codec_utils_h264_get_level_idc:
  * @level: A level string from caps
  *
  * Transform a level string from the caps into the level_idc
  *
  * Returns: the level_idc or 0 if the level is unknown
+ *
+ * Since: 0.10.36
  */
-
 guint8
 gst_codec_utils_h264_get_level_idc (const gchar * level)
 {
