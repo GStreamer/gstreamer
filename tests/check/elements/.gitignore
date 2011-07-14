@@ -12,6 +12,8 @@ faac
 faad
 gdpdepay
 gdppay
+h263parse
+h264parse
 id3mux
 imagecapturebin
 interleave
@@ -21,6 +23,8 @@ kate
 legacyresample
 logoinsert
 mpeg2enc
+mpegvideoparse
+mpeg4videoparse
 mplex
 mxfdemux
 mxfmux
