@@ -194,9 +194,10 @@ default_start (GstBufferPool * pool)
       goto alloc_failed;
 
     GST_LOG_OBJECT (pool, "prealloced buffer %d: %p", i, buffer);
-    /* store in the queue */
-    gst_atomic_queue_push (pool->queue, buffer);
-    gst_poll_write_control (pool->poll);
+    /* release to the queue, we call the vmethod directly, we don't need to do
+     * the other refcount handling right now. */
+    if (G_LIKELY (pclass->release_buffer))
+      pclass->release_buffer (pool, buffer);
   }
   return TRUE;
 
@@ -252,6 +253,7 @@ default_stop (GstBufferPool * pool)
 
   /* clear the pool */
   while ((buffer = gst_atomic_queue_pop (pool->queue))) {
+    GST_LOG_OBJECT (pool, "freeing %p", buffer);
     gst_poll_read_control (pool->poll);
 
     if (G_LIKELY (pclass->free_buffer))
@@ -316,13 +318,17 @@ gst_buffer_pool_set_active (GstBufferPool * pool, gboolean active)
     gst_poll_read_control (pool->poll);
     g_atomic_int_set (&pool->flushing, FALSE);
   } else {
+    gint outstanding;
+
     /* set to flushing first */
     g_atomic_int_set (&pool->flushing, TRUE);
     gst_poll_write_control (pool->poll);
 
     /* when all buffers are in the pool, free them. Else they will be
      * freed when they are released */
-    if (g_atomic_int_get (&pool->outstanding) == 0) {
+    outstanding = g_atomic_int_get (&pool->outstanding);
+    GST_LOG_OBJECT (pool, "outstanding buffers %d", outstanding);
+    if (outstanding == 0) {
       if (!do_stop (pool))
         goto stop_failed;
     }
