@@ -1,5 +1,4 @@
 /* GStreamer tag muxer base class
- *
  * Copyright (C) 2006 Christophe Fergeau  <teuf@gnome.org>
  * Copyright (C) 2006 Tim-Philipp Müller <tim centricular net>
  * Copyright (C) 2006 Sebastian Dröge <slomo@circular-chaos.org>
@@ -30,6 +29,23 @@
 #include <gst/tag/tag.h>
 
 #include "gsttagmux.h"
+
+struct _GstTagMuxPrivate
+{
+  GstPad *srcpad;
+  GstPad *sinkpad;
+  GstTagList *event_tags;       /* tags received from upstream elements */
+  GstTagList *final_tags;       /* Final set of tags used for muxing */
+  gsize start_tag_size;
+  gsize end_tag_size;
+  gboolean render_start_tag;
+  gboolean render_end_tag;
+
+  gint64 current_offset;
+  gint64 max_offset;
+
+  GstEvent *newsegment_ev;      /* cached newsegment event from upstream */
+};
 
 GST_DEBUG_CATEGORY_STATIC (gst_tag_mux_debug);
 #define GST_CAT_DEFAULT gst_tag_mux_debug
@@ -74,19 +90,19 @@ gst_tag_mux_finalize (GObject * obj)
 {
   GstTagMux *mux = GST_TAG_MUX (obj);
 
-  if (mux->newsegment_ev) {
-    gst_event_unref (mux->newsegment_ev);
-    mux->newsegment_ev = NULL;
+  if (mux->priv->newsegment_ev) {
+    gst_event_unref (mux->priv->newsegment_ev);
+    mux->priv->newsegment_ev = NULL;
   }
 
-  if (mux->event_tags) {
-    gst_tag_list_free (mux->event_tags);
-    mux->event_tags = NULL;
+  if (mux->priv->event_tags) {
+    gst_tag_list_free (mux->priv->event_tags);
+    mux->priv->event_tags = NULL;
   }
 
-  if (mux->final_tags) {
-    gst_tag_list_free (mux->final_tags);
-    mux->final_tags = NULL;
+  if (mux->priv->final_tags) {
+    gst_tag_list_free (mux->priv->final_tags);
+    mux->priv->final_tags = NULL;
   }
 
   G_OBJECT_CLASS (parent_class)->finalize (obj);
@@ -115,6 +131,8 @@ gst_tag_mux_class_init (GstTagMuxClass * klass)
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_tag_mux_finalize);
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_tag_mux_change_state);
+
+  g_type_class_add_private (klass, sizeof (GstTagMuxPrivate));
 }
 
 static void
@@ -123,26 +141,30 @@ gst_tag_mux_init (GstTagMux * mux, GstTagMuxClass * mux_class)
   GstElementClass *element_klass = GST_ELEMENT_CLASS (mux_class);
   GstPadTemplate *tmpl;
 
+  mux->priv =
+      G_TYPE_INSTANCE_GET_PRIVATE (mux, GST_TYPE_TAG_MUX, GstTagMuxPrivate);
+
   /* pad through which data comes in to the element */
-  mux->sinkpad =
+  mux->priv->sinkpad =
       gst_pad_new_from_static_template (&gst_tag_mux_sink_template, "sink");
-  gst_pad_set_chain_function (mux->sinkpad,
+  gst_pad_set_chain_function (mux->priv->sinkpad,
       GST_DEBUG_FUNCPTR (gst_tag_mux_chain));
-  gst_pad_set_event_function (mux->sinkpad,
+  gst_pad_set_event_function (mux->priv->sinkpad,
       GST_DEBUG_FUNCPTR (gst_tag_mux_sink_event));
-  gst_element_add_pad (GST_ELEMENT (mux), mux->sinkpad);
+  gst_element_add_pad (GST_ELEMENT (mux), mux->priv->sinkpad);
 
   /* pad through which data goes out of the element */
   tmpl = gst_element_class_get_pad_template (element_klass, "src");
   if (tmpl) {
-    mux->srcpad = gst_pad_new_from_template (tmpl, "src");
-    gst_pad_use_fixed_caps (mux->srcpad);
-    gst_pad_set_caps (mux->srcpad, gst_pad_template_get_caps (tmpl));
-    gst_element_add_pad (GST_ELEMENT (mux), mux->srcpad);
+    mux->priv->srcpad = gst_pad_new_from_template (tmpl, "src");
+    gst_pad_use_fixed_caps (mux->priv->srcpad);
+    /* FIXME: we assume the template caps are fixed.. */
+    gst_pad_set_caps (mux->priv->srcpad, gst_pad_template_get_caps (tmpl));
+    gst_element_add_pad (GST_ELEMENT (mux), mux->priv->srcpad);
   }
 
-  mux->render_start_tag = TRUE;
-  mux->render_end_tag = TRUE;
+  mux->priv->render_start_tag = TRUE;
+  mux->priv->render_end_tag = TRUE;
 }
 
 static GstTagList *
@@ -152,22 +174,22 @@ gst_tag_mux_get_tags (GstTagMux * mux)
   const GstTagList *tagsetter_tags;
   GstTagMergeMode merge_mode;
 
-  if (mux->final_tags)
-    return mux->final_tags;
+  if (mux->priv->final_tags)
+    return mux->priv->final_tags;
 
   tagsetter_tags = gst_tag_setter_get_tag_list (tagsetter);
   merge_mode = gst_tag_setter_get_tag_merge_mode (tagsetter);
 
   GST_LOG_OBJECT (mux, "merging tags, merge mode = %d", merge_mode);
-  GST_LOG_OBJECT (mux, "event tags: %" GST_PTR_FORMAT, mux->event_tags);
+  GST_LOG_OBJECT (mux, "event tags: %" GST_PTR_FORMAT, mux->priv->event_tags);
   GST_LOG_OBJECT (mux, "set   tags: %" GST_PTR_FORMAT, tagsetter_tags);
 
-  mux->final_tags =
-      gst_tag_list_merge (tagsetter_tags, mux->event_tags, merge_mode);
+  mux->priv->final_tags =
+      gst_tag_list_merge (tagsetter_tags, mux->priv->event_tags, merge_mode);
 
-  GST_LOG_OBJECT (mux, "final tags: %" GST_PTR_FORMAT, mux->final_tags);
+  GST_LOG_OBJECT (mux, "final tags: %" GST_PTR_FORMAT, mux->priv->final_tags);
 
-  return mux->final_tags;
+  return mux->priv->final_tags;
 }
 
 static GstFlowReturn
@@ -191,29 +213,35 @@ gst_tag_mux_render_start_tag (GstTagMux * mux)
   /* Null buffer is ok, just means we're not outputting anything */
   if (buffer == NULL) {
     GST_INFO_OBJECT (mux, "No start tag generated");
-    mux->start_tag_size = 0;
+    mux->priv->start_tag_size = 0;
     return GST_FLOW_OK;
   }
 
-  mux->start_tag_size = GST_BUFFER_SIZE (buffer);
+  if (GST_BUFFER_CAPS (buffer) == NULL) {
+    buffer = gst_buffer_make_metadata_writable (buffer);
+    gst_buffer_set_caps (buffer, GST_PAD_CAPS (mux->priv->srcpad));
+  }
+
+  mux->priv->start_tag_size = GST_BUFFER_SIZE (buffer);
   GST_LOG_OBJECT (mux, "tag size = %" G_GSIZE_FORMAT " bytes",
-      mux->start_tag_size);
+      mux->priv->start_tag_size);
 
   /* Send newsegment event from byte position 0, so the tag really gets
    * written to the start of the file, independent of the upstream segment */
-  gst_pad_push_event (mux->srcpad,
+  gst_pad_push_event (mux->priv->srcpad,
       gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_BYTES, 0, -1, 0));
 
   /* Send an event about the new tags to downstream elements */
   /* gst_event_new_tag takes ownership of the list, so use a copy */
   event = gst_event_new_tag (gst_tag_list_copy (taglist));
-  gst_pad_push_event (mux->srcpad, event);
+  gst_pad_push_event (mux->priv->srcpad, event);
 
   GST_BUFFER_OFFSET (buffer) = 0;
-  ret = gst_pad_push (mux->srcpad, buffer);
+  ret = gst_pad_push (mux->priv->srcpad, buffer);
 
-  mux->current_offset = mux->start_tag_size;
-  mux->max_offset = MAX (mux->max_offset, mux->current_offset);
+  mux->priv->current_offset = mux->priv->start_tag_size;
+  mux->priv->max_offset =
+      MAX (mux->priv->max_offset, mux->priv->current_offset);
 
   return ret;
 
@@ -244,22 +272,27 @@ gst_tag_mux_render_end_tag (GstTagMux * mux)
 
   if (buffer == NULL) {
     GST_INFO_OBJECT (mux, "No end tag generated");
-    mux->end_tag_size = 0;
+    mux->priv->end_tag_size = 0;
     return GST_FLOW_OK;
   }
 
-  mux->end_tag_size = GST_BUFFER_SIZE (buffer);
+  if (GST_BUFFER_CAPS (buffer) == NULL) {
+    buffer = gst_buffer_make_metadata_writable (buffer);
+    gst_buffer_set_caps (buffer, GST_PAD_CAPS (mux->priv->srcpad));
+  }
+
+  mux->priv->end_tag_size = GST_BUFFER_SIZE (buffer);
   GST_LOG_OBJECT (mux, "tag size = %" G_GSIZE_FORMAT " bytes",
-      mux->end_tag_size);
+      mux->priv->end_tag_size);
 
   /* Send newsegment event from the end of the file, so it gets written there,
      independent of whatever new segment events upstream has sent us */
-  gst_pad_push_event (mux->srcpad,
-      gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_BYTES, mux->max_offset,
-          -1, 0));
+  gst_pad_push_event (mux->priv->srcpad,
+      gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_BYTES,
+          mux->priv->max_offset, -1, 0));
 
-  GST_BUFFER_OFFSET (buffer) = mux->max_offset;
-  ret = gst_pad_push (mux->srcpad, buffer);
+  GST_BUFFER_OFFSET (buffer) = mux->priv->max_offset;
+  ret = gst_pad_push (mux->priv->srcpad, buffer);
 
   return ret;
 
@@ -284,15 +317,16 @@ gst_tag_mux_adjust_event_offsets (GstTagMux * mux,
   g_assert (format == GST_FORMAT_BYTES);
 
   if (start != -1)
-    start += mux->start_tag_size;
+    start += mux->priv->start_tag_size;
   if (stop != -1)
-    stop += mux->start_tag_size;
+    stop += mux->priv->start_tag_size;
   if (cur != -1)
-    cur += mux->start_tag_size;
+    cur += mux->priv->start_tag_size;
 
   GST_DEBUG_OBJECT (mux, "adjusting newsegment event offsets to start=%"
       G_GINT64_FORMAT ", stop=%" G_GINT64_FORMAT ", cur=%" G_GINT64_FORMAT
-      " (delta = +%" G_GSIZE_FORMAT ")", start, stop, cur, mux->start_tag_size);
+      " (delta = +%" G_GSIZE_FORMAT ")", start, stop, cur,
+      mux->priv->start_tag_size);
 
   return gst_event_new_new_segment (TRUE, 1.0, format, start, stop, cur);
 }
@@ -304,7 +338,7 @@ gst_tag_mux_chain (GstPad * pad, GstBuffer * buffer)
   GstFlowReturn ret;
   int length;
 
-  if (mux->render_start_tag) {
+  if (mux->priv->render_start_tag) {
 
     GST_INFO_OBJECT (mux, "Adding tags to stream");
     ret = gst_tag_mux_render_start_tag (mux);
@@ -315,26 +349,27 @@ gst_tag_mux_chain (GstPad * pad, GstBuffer * buffer)
     }
 
     /* Now send the cached newsegment event that we got from upstream */
-    if (mux->newsegment_ev) {
+    if (mux->priv->newsegment_ev) {
       gint64 start;
       GstEvent *newseg;
 
       GST_DEBUG_OBJECT (mux, "sending cached newsegment event");
-      newseg = gst_tag_mux_adjust_event_offsets (mux, mux->newsegment_ev);
-      gst_event_unref (mux->newsegment_ev);
-      mux->newsegment_ev = NULL;
+      newseg = gst_tag_mux_adjust_event_offsets (mux, mux->priv->newsegment_ev);
+      gst_event_unref (mux->priv->newsegment_ev);
+      mux->priv->newsegment_ev = NULL;
 
       gst_event_parse_new_segment (newseg, NULL, NULL, NULL, &start, NULL,
           NULL);
 
-      gst_pad_push_event (mux->srcpad, newseg);
-      mux->current_offset = start;
-      mux->max_offset = MAX (mux->max_offset, mux->current_offset);
+      gst_pad_push_event (mux->priv->srcpad, newseg);
+      mux->priv->current_offset = start;
+      mux->priv->max_offset =
+          MAX (mux->priv->max_offset, mux->priv->current_offset);
     } else {
       /* upstream sent no newsegment event or only one in a non-BYTE format */
     }
 
-    mux->render_start_tag = FALSE;
+    mux->priv->render_start_tag = FALSE;
   }
 
   buffer = gst_buffer_make_metadata_writable (buffer);
@@ -342,17 +377,18 @@ gst_tag_mux_chain (GstPad * pad, GstBuffer * buffer)
   if (GST_BUFFER_OFFSET (buffer) != GST_BUFFER_OFFSET_NONE) {
     GST_LOG_OBJECT (mux, "Adjusting buffer offset from %" G_GINT64_FORMAT
         " to %" G_GINT64_FORMAT, GST_BUFFER_OFFSET (buffer),
-        GST_BUFFER_OFFSET (buffer) + mux->start_tag_size);
-    GST_BUFFER_OFFSET (buffer) += mux->start_tag_size;
+        GST_BUFFER_OFFSET (buffer) + mux->priv->start_tag_size);
+    GST_BUFFER_OFFSET (buffer) += mux->priv->start_tag_size;
   }
 
   length = GST_BUFFER_SIZE (buffer);
 
-  gst_buffer_set_caps (buffer, GST_PAD_CAPS (mux->srcpad));
-  ret = gst_pad_push (mux->srcpad, buffer);
+  gst_buffer_set_caps (buffer, GST_PAD_CAPS (mux->priv->srcpad));
+  ret = gst_pad_push (mux->priv->srcpad, buffer);
 
-  mux->current_offset += length;
-  mux->max_offset = MAX (mux->max_offset, mux->current_offset);
+  mux->priv->current_offset += length;
+  mux->priv->max_offset =
+      MAX (mux->priv->max_offset, mux->priv->current_offset);
 
   return ret;
 }
@@ -374,14 +410,15 @@ gst_tag_mux_sink_event (GstPad * pad, GstEvent * event)
 
       GST_INFO_OBJECT (mux, "Got tag event: %" GST_PTR_FORMAT, tags);
 
-      if (mux->event_tags != NULL) {
-        gst_tag_list_insert (mux->event_tags, tags, GST_TAG_MERGE_REPLACE);
+      if (mux->priv->event_tags != NULL) {
+        gst_tag_list_insert (mux->priv->event_tags, tags,
+            GST_TAG_MERGE_REPLACE);
       } else {
-        mux->event_tags = gst_tag_list_copy (tags);
+        mux->priv->event_tags = gst_tag_list_copy (tags);
       }
 
       GST_INFO_OBJECT (mux, "Event tags are now: %" GST_PTR_FORMAT,
-          mux->event_tags);
+          mux->priv->event_tags);
 
       /* just drop the event, we'll push a new tag event in render_start_tag */
       gst_event_unref (event);
@@ -401,34 +438,35 @@ gst_tag_mux_sink_event (GstPad * pad, GstEvent * event)
         break;
       }
 
-      if (mux->render_start_tag) {
+      if (mux->priv->render_start_tag) {
         /* we have not rendered the tag yet, which means that we don't know
          * how large it is going to be yet, so we can't adjust the offsets
          * here at this point and need to cache the newsegment event for now
          * (also, there could be tag events coming after this newsegment event
          *  and before the first buffer). */
-        if (mux->newsegment_ev) {
+        if (mux->priv->newsegment_ev) {
           GST_WARNING_OBJECT (mux, "discarding old cached newsegment event");
-          gst_event_unref (mux->newsegment_ev);
+          gst_event_unref (mux->priv->newsegment_ev);
         }
 
         GST_LOG_OBJECT (mux, "caching newsegment event for later");
-        mux->newsegment_ev = event;
+        mux->priv->newsegment_ev = event;
       } else {
         GST_DEBUG_OBJECT (mux, "got newsegment event, adjusting offsets");
-        gst_pad_push_event (mux->srcpad,
+        gst_pad_push_event (mux->priv->srcpad,
             gst_tag_mux_adjust_event_offsets (mux, event));
         gst_event_unref (event);
 
-        mux->current_offset = start;
-        mux->max_offset = MAX (mux->max_offset, mux->current_offset);
+        mux->priv->current_offset = start;
+        mux->priv->max_offset =
+            MAX (mux->priv->max_offset, mux->priv->current_offset);
       }
       event = NULL;
       result = TRUE;
       break;
     }
     case GST_EVENT_EOS:{
-      if (mux->render_end_tag) {
+      if (mux->priv->render_end_tag) {
         GstFlowReturn ret;
 
         GST_INFO_OBJECT (mux, "Adding tags to stream");
@@ -438,7 +476,7 @@ gst_tag_mux_sink_event (GstPad * pad, GstEvent * event)
           return ret;
         }
 
-        mux->render_end_tag = FALSE;
+        mux->priv->render_end_tag = FALSE;
       }
 
       /* Now forward EOS */
@@ -471,20 +509,20 @@ gst_tag_mux_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:{
-      if (mux->newsegment_ev) {
-        gst_event_unref (mux->newsegment_ev);
-        mux->newsegment_ev = NULL;
+      if (mux->priv->newsegment_ev) {
+        gst_event_unref (mux->priv->newsegment_ev);
+        mux->priv->newsegment_ev = NULL;
       }
-      if (mux->event_tags) {
-        gst_tag_list_free (mux->event_tags);
-        mux->event_tags = NULL;
+      if (mux->priv->event_tags) {
+        gst_tag_list_free (mux->priv->event_tags);
+        mux->priv->event_tags = NULL;
       }
-      mux->start_tag_size = 0;
-      mux->end_tag_size = 0;
-      mux->render_start_tag = TRUE;
-      mux->render_end_tag = TRUE;
-      mux->current_offset = 0;
-      mux->max_offset = 0;
+      mux->priv->start_tag_size = 0;
+      mux->priv->end_tag_size = 0;
+      mux->priv->render_start_tag = TRUE;
+      mux->priv->render_end_tag = TRUE;
+      mux->priv->current_offset = 0;
+      mux->priv->max_offset = 0;
       break;
     }
     default:

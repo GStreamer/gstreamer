@@ -1159,7 +1159,6 @@ id3_mux_render_v2_tag (GstTagMux * mux, GstTagList * taglist, int version)
 
   /* Create buffer with tag */
   buf = id3v2_tag_to_buffer (&tag);
-  gst_buffer_set_caps (buf, GST_PAD_CAPS (mux->srcpad));
   GST_LOG_OBJECT (mux, "tag size = %d bytes", GST_BUFFER_SIZE (buf));
 
   id3v2_tag_unset (&tag);
@@ -1312,6 +1311,5 @@ id3_mux_render_v1_tag (GstTagMux * mux, GstTagList * taglist)
     return NULL;
   }
 
-  gst_buffer_set_caps (buf, GST_PAD_CAPS (mux->srcpad));
   return buf;
 }
