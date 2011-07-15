@@ -299,18 +299,21 @@ buffer_new_failed:
 static gboolean
 gst_v4l2_buffer_pool_stop (GstBufferPool * bpool)
 {
+  gboolean ret;
   GstV4l2BufferPool *pool = GST_V4L2_BUFFER_POOL (bpool);
   guint n;
 
   GST_DEBUG_OBJECT (pool, "stopping pool");
 
-  /* free the buffers: */
+  /* first free the buffers in the queue */
+  ret = GST_BUFFER_POOL_CLASS (parent_class)->stop (bpool);
+
+  /* then free the remaining buffers */
   for (n = 0; n < pool->num_buffers; n++) {
     if (pool->buffers[n])
       gst_v4l2_buffer_pool_free_buffer (bpool, pool->buffers[n]);
   }
-  /* also free the buffers in the queue */
-  return GST_BUFFER_POOL_CLASS (parent_class)->stop (bpool);
+  return ret;
 }
 
 static GstFlowReturn
@@ -436,11 +439,10 @@ gst_v4l2_buffer_pool_acquire_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
   else {
     if (pool->num_queued == pool->num_buffers) {
       ret = gst_v4l2_buffer_pool_dqbuf (bpool, buffer);
-    } else {
-      ret =
-          GST_BUFFER_POOL_CLASS (parent_class)->acquire_buffer (bpool, buffer,
-          params);
     }
+    ret =
+        GST_BUFFER_POOL_CLASS (parent_class)->acquire_buffer (bpool, buffer,
+        params);
   }
 
   return ret;
