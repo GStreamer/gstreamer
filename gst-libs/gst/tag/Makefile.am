@@ -84,7 +84,18 @@ else
 ISO_CODE_PROGS =
 endif
 
-noinst_PROGRAMS = $(ISO_CODE_PROGS)
+LICENSE_PROGS = mklicensestables
+mklicensestables_SOURCES = mklicensestables.c
+mklicensestables_CFLAGS = $(GST_CFLAGS)
+mklicensestables_LDADD = $(GST_LIBS)
+
+noinst_PROGRAMS = $(ISO_CODE_PROGS) $(LICENSE_PROGS)
+
+update-licenses: mklicensestables
+	$(builddir)/mklicensestables \
+		--translation-dictionary=$(builddir)/license-translations.dict \
+		> $(builddir)/licenses-tables.dat && \
+		echo "Updated licenses-tables.dat and license-translations.dict"
 
 #if USE_NLS
 # Yes, this is not great, but it's only an implementation detail. The
