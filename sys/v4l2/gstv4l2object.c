@@ -2042,7 +2042,7 @@ gst_v4l2_object_get_nearest_size (GstV4l2Object * v4l2object,
 }
 
 static gboolean
-gst_v4l2_object_setup_pool (GstV4l2Object * v4l2object)
+gst_v4l2_object_setup_pool (GstV4l2Object * v4l2object, GstCaps * caps)
 {
   GST_DEBUG_OBJECT (v4l2object->element, "initializing the capture system");
 
@@ -2066,13 +2066,9 @@ gst_v4l2_object_setup_pool (GstV4l2Object * v4l2object)
     v4l2object->use_mmap = TRUE;
 
     config = gst_buffer_pool_get_config (v4l2object->pool);
-    gst_buffer_pool_config_set (config, NULL, 0, num_buffers, num_buffers,
-        0, 0);
+    gst_buffer_pool_config_set (config, caps, v4l2object->info.size,
+        num_buffers, num_buffers, 0, 0);
     gst_buffer_pool_set_config (v4l2object->pool, config);
-
-    if (!gst_buffer_pool_set_active (v4l2object->pool, TRUE))
-      goto activate_failed;
-
   } else if (v4l2object->vcap.capabilities & V4L2_CAP_READWRITE) {
     GST_INFO_OBJECT (v4l2object->element, "capturing buffers via read()");
     v4l2object->use_mmap = FALSE;
@@ -2099,14 +2095,6 @@ no_supported_capture_method:
     GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, READ,
         (_("The driver of device '%s' does not support any known capture "
                 "method."), v4l2object->videodev), (NULL));
-    return FALSE;
-  }
-activate_failed:
-  {
-    GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, READ,
-        (_("Could not map buffers from device '%s'"),
-            v4l2object->videodev),
-        ("Failed to activate buffer pool: %s", g_strerror (errno)));
     return FALSE;
   }
 }
@@ -2270,7 +2258,7 @@ done:
   v4l2object->fmtdesc = fmtdesc;
 
   /* now configure ther pools */
-  if (!gst_v4l2_object_setup_pool (v4l2object))
+  if (!gst_v4l2_object_setup_pool (v4l2object, caps))
     goto pool_failed;
 
   return TRUE;
@@ -2671,18 +2659,27 @@ GstFlowReturn
 gst_v4l2_object_output_buffer (GstV4l2Object * v4l2object, GstBuffer * buf)
 {
   GstFlowReturn ret;
-  GstBuffer *newbuf = NULL;
+  GstBuffer *to_queue = NULL;
   GstMetaV4l2 *meta;
 
   meta = GST_META_V4L2_GET (buf);
 
-  if (meta == NULL || buf->pool != v4l2object->pool) {
+  if (meta && buf->pool == v4l2object->pool) {
+    GST_LOG_OBJECT (v4l2object->element,
+        "buffer from our pool, queueing directly");
+    to_queue = buf;
+    ret = GST_FLOW_OK;
+  } else {
     guint8 *data;
     gsize size;
 
     /* not our buffer */
-    GST_DEBUG_OBJECT (v4l2object->element, "slow-path.. need to memcpy");
-    ret = gst_buffer_pool_acquire_buffer (v4l2object->pool, &newbuf, NULL);
+    GST_LOG_OBJECT (v4l2object->element, "buffer not from our pool, copying");
+
+    if (!gst_buffer_pool_set_active (v4l2object->pool, TRUE))
+      goto activate_failed;
+
+    ret = gst_buffer_pool_acquire_buffer (v4l2object->pool, &to_queue, NULL);
     if (ret != GST_FLOW_OK)
       goto acquire_failed;
 
@@ -2691,9 +2688,15 @@ gst_v4l2_object_output_buffer (GstV4l2Object * v4l2object, GstBuffer * buf)
 
       GST_DEBUG_OBJECT (v4l2object->element, "copy video frame");
       /* we have raw video, use videoframe copy to get strides right */
-      gst_video_frame_map (&src_frame, &v4l2object->info, buf, GST_MAP_READ);
-      gst_video_frame_map (&dest_frame, &v4l2object->info, newbuf,
-          GST_MAP_WRITE);
+      if (!gst_video_frame_map (&src_frame, &v4l2object->info, buf,
+              GST_MAP_READ))
+        goto invalid_buffer;
+
+      if (!gst_video_frame_map (&dest_frame, &v4l2object->info, to_queue,
+              GST_MAP_WRITE)) {
+        gst_video_frame_unmap (&src_frame);
+        goto invalid_buffer;
+      }
 
       gst_video_frame_copy (&dest_frame, &src_frame);
 
@@ -2702,35 +2705,57 @@ gst_v4l2_object_output_buffer (GstV4l2Object * v4l2object, GstBuffer * buf)
     } else {
       GST_DEBUG_OBJECT (v4l2object->element, "copy raw bytes");
       data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
-      gst_buffer_fill (newbuf, 0, data, size);
+      gst_buffer_fill (to_queue, 0, data, size);
       gst_buffer_unmap (buf, data, size);
     }
-    GST_DEBUG_OBJECT (v4l2object->element, "render copied buffer: %p", newbuf);
-    buf = newbuf;
+    GST_CAT_LOG_OBJECT (GST_CAT_PERFORMANCE, v4l2object->element,
+        "slow copy into bufferpool buffer %p", to_queue);
   }
 
-  if (!gst_v4l2_buffer_pool_qbuf (v4l2object->pool, buf))
+  if (!gst_v4l2_buffer_pool_qbuf (v4l2object->pool, to_queue))
     goto queue_failed;
 
   if (!v4l2object->streaming) {
     if (!gst_v4l2_object_start (v4l2object)) {
-      return GST_FLOW_ERROR;
+      goto start_failed;
     }
   }
-  if (newbuf)
-    gst_buffer_unref (newbuf);
 
-  return GST_FLOW_OK;
+done:
+  if (to_queue != buf)
+    gst_buffer_unref (to_queue);
+
+  return ret;
 
   /* ERRORS */
+activate_failed:
+  {
+    GST_ERROR_OBJECT (v4l2object->element, "failed to activate bufferpool.");
+    ret = GST_FLOW_ERROR;
+    goto done;
+  }
 acquire_failed:
   {
     GST_DEBUG_OBJECT (v4l2object->element, "could not get buffer from pool");
     return ret;
   }
+invalid_buffer:
+  {
+    /* No Window available to put our image into */
+    GST_WARNING_OBJECT (v4l2object->element, "could not map image");
+    ret = GST_FLOW_OK;
+    goto done;
+  }
 queue_failed:
   {
     GST_DEBUG_OBJECT (v4l2object->element, "failed to queue buffer");
-    return GST_FLOW_ERROR;
+    ret = GST_FLOW_ERROR;
+    goto done;
+  }
+start_failed:
+  {
+    GST_DEBUG_OBJECT (v4l2object->element, "failed to start streaming");
+    ret = GST_FLOW_ERROR;
+    goto done;
   }
 }
