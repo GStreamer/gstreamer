@@ -2613,6 +2613,7 @@ gst_base_src_set_allocation (GstBaseSrc * basesrc, GstBufferPool * pool,
   GstBaseSrcPrivate *priv = basesrc->priv;
 
   if (pool) {
+    GST_DEBUG_OBJECT (basesrc, "activate pool");
     if (!gst_buffer_pool_set_active (pool, TRUE))
       goto activate_failed;
   }
@@ -2628,7 +2629,11 @@ gst_base_src_set_allocation (GstBaseSrc * basesrc, GstBufferPool * pool,
   GST_OBJECT_UNLOCK (basesrc);
 
   if (oldpool) {
-    gst_buffer_pool_set_active (oldpool, FALSE);
+    /* only deactivate if the pool is not the one we're using */
+    if (oldpool != pool) {
+      GST_DEBUG_OBJECT (basesrc, "deactivate old pool");
+      gst_buffer_pool_set_active (oldpool, FALSE);
+    }
     gst_object_unref (oldpool);
   }
   return TRUE;
@@ -2684,7 +2689,8 @@ gst_base_src_prepare_allocation (GstBaseSrc * basesrc, GstCaps * caps)
   if (G_LIKELY (bclass->setup_allocation))
     result = bclass->setup_allocation (basesrc, query);
 
-  GST_DEBUG_OBJECT (basesrc, "ALLOCATION params: %" GST_PTR_FORMAT, query);
+  GST_DEBUG_OBJECT (basesrc, "ALLOCATION (%d) params: %" GST_PTR_FORMAT, result,
+      query);
   gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
       &alignment, &pool);
 
@@ -2695,6 +2701,8 @@ gst_base_src_prepare_allocation (GstBaseSrc * basesrc, GstCaps * caps)
     if (gst_query_get_n_allocation_memories (query) > 0) {
       mem = gst_query_parse_nth_allocation_memory (query, 0);
     }
+    GST_DEBUG_OBJECT (basesrc, "0 size, getting allocator %s",
+        GST_STR_NULL (mem));
     allocator = gst_allocator_find (mem);
   } else if (pool == NULL) {
     /* fixed size, we can use a bufferpool */
@@ -2702,6 +2710,7 @@ gst_base_src_prepare_allocation (GstBaseSrc * basesrc, GstCaps * caps)
 
     /* we did not get a pool, make one ourselves then */
     pool = gst_buffer_pool_new ();
+    GST_DEBUG_OBJECT (basesrc, "no pool, making new pool");
 
     config = gst_buffer_pool_get_config (pool);
     gst_buffer_pool_config_set (config, caps, size, min, max, prefix,
