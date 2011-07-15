@@ -1,6 +1,7 @@
 plugin_LTLIBRARIES = libgstvaapisink.la
 
 libgstvaapi_CFLAGS = \
+	$(LIBVA_CFLAGS)		\
 	-I$(top_srcdir)/gst-libs
 
 if USE_VAAPISINK_GLX

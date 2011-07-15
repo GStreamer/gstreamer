@@ -11,7 +11,7 @@ noinst_PROGRAMS +=	\
 	$(NULL)
 endif
 
-TEST_CFLAGS		= -I$(top_srcdir)/gst-libs $(GST_CFLAGS)
+TEST_CFLAGS		= $(LIBVA_CFLAGS) -I$(top_srcdir)/gst-libs $(GST_CFLAGS)
 TEST_X11_CFLAGS		= -DUSE_X11 $(X11_CFLAGS)
 TEST_GLX_CFLAGS		= -DUSE_GLX $(GLX_CFLAGS)
 TEST_MIX_CFLAGS		= $(TEST_X11_CFLAGS)
