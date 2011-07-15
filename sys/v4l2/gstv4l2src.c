@@ -121,6 +121,8 @@ static gboolean gst_v4l2src_stop (GstBaseSrc * src);
 static gboolean gst_v4l2src_set_caps (GstBaseSrc * src, GstCaps * caps);
 static GstCaps *gst_v4l2src_get_caps (GstBaseSrc * src, GstCaps * filter);
 static gboolean gst_v4l2src_query (GstBaseSrc * bsrc, GstQuery * query);
+static gboolean gst_v4l2src_setup_allocation (GstBaseSrc * src,
+    GstQuery * query);
 static GstFlowReturn gst_v4l2src_create (GstPushSrc * src, GstBuffer ** out);
 static void gst_v4l2src_fixate (GstBaseSrc * basesrc, GstCaps * caps);
 static gboolean gst_v4l2src_negotiate (GstBaseSrc * basesrc);
@@ -193,6 +195,8 @@ gst_v4l2src_class_init (GstV4l2SrcClass * klass)
   basesrc_class->query = GST_DEBUG_FUNCPTR (gst_v4l2src_query);
   basesrc_class->fixate = GST_DEBUG_FUNCPTR (gst_v4l2src_fixate);
   basesrc_class->negotiate = GST_DEBUG_FUNCPTR (gst_v4l2src_negotiate);
+  basesrc_class->setup_allocation =
+      GST_DEBUG_FUNCPTR (gst_v4l2src_setup_allocation);
 
   pushsrc_class->create = GST_DEBUG_FUNCPTR (gst_v4l2src_create);
 
@@ -531,10 +535,29 @@ gst_v4l2src_set_caps (GstBaseSrc * src, GstCaps * caps)
 }
 
 static gboolean
+gst_v4l2src_setup_allocation (GstBaseSrc * bsrc, GstQuery * query)
+{
+  GstV4l2Src *src;
+  GstBufferPool *pool;
+  guint size, min, max, prefix, alignment;
+
+  src = GST_V4L2SRC (bsrc);
+
+  gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
+      &alignment, &pool);
+
+  /* do something clever here */
+
+  gst_query_set_allocation_params (query, size, min, max, prefix,
+      alignment, pool);
+
+  return TRUE;
+}
+
+static gboolean
 gst_v4l2src_query (GstBaseSrc * bsrc, GstQuery * query)
 {
   GstV4l2Src *src;
-
   gboolean res = FALSE;
 
   src = GST_V4L2SRC (bsrc);
