@@ -210,6 +210,8 @@ mpegts_base_reset (MpegTSBase * base)
   /* base->pat = NULL; */
   /* pmt pids will be added and removed dynamically */
 
+  gst_segment_init (&base->segment, GST_FORMAT_UNDEFINED);
+
   if (klass->reset)
     klass->reset (base);
 }
@@ -241,6 +243,8 @@ mpegts_base_init (MpegTSBase * base, MpegTSBaseClass * klass)
   base->mode = BASE_MODE_STREAMING;
   base->seen_pat = FALSE;
   base->first_pat_offset = -1;
+
+  gst_segment_init (&base->segment, GST_FORMAT_UNDEFINED);
 }
 
 static void
@@ -1008,7 +1012,7 @@ mpegts_base_get_tags_from_eit (MpegTSBase * base, GstStructure * eit_info)
 static gboolean
 mpegts_base_sink_event (GstPad * pad, GstEvent * event)
 {
-  gboolean res;
+  gboolean res = TRUE;
   MpegTSBase *base = GST_MPEGTS_BASE (gst_object_get_parent (GST_OBJECT (pad)));
 
   GST_WARNING_OBJECT (base, "Got event %s",
@@ -1016,11 +1020,27 @@ mpegts_base_sink_event (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NEWSEGMENT:
-      /* FIXME : STORE NEW SEGMENT ! */
+    {
+      gboolean update;
+      gdouble rate, applied_rate;
+      GstFormat format;
+      gint64 start, stop, position;
+
+      gst_event_parse_new_segment_full (event, &update, &rate, &applied_rate,
+          &format, &start, &stop, &position);
+      GST_DEBUG_OBJECT (base,
+          "Segment update:%d, rate:%f, applied_rate:%f, format:%s", update,
+          rate, applied_rate, gst_format_get_name (format));
+      GST_DEBUG_OBJECT (base,
+          "        start:%" G_GINT64_FORMAT ", stop:%" G_GINT64_FORMAT
+          ", position:%" G_GINT64_FORMAT, start, stop, position);
+      gst_segment_set_newsegment_full (&base->segment, update, rate,
+          applied_rate, format, start, stop, position);
       gst_event_unref (event);
-      res = FALSE;
+    }
       break;
     case GST_EVENT_FLUSH_START:
+      gst_segment_init (&base->segment, GST_FORMAT_UNDEFINED);
       mpegts_packetizer_flush (base->packetizer);
       /* Passthrough */
     default:

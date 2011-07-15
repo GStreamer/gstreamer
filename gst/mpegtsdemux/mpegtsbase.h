@@ -120,8 +120,11 @@ struct _MpegTSBase {
   /* Whether we saw a PAT yet */
   gboolean seen_pat;
 
-  /*Offset from the origin to the first PAT (pullmode) */
+  /* Offset from the origin to the first PAT (pullmode) */
   guint64    first_pat_offset;
+
+  /* Upstream segment */
+  GstSegment segment;
 };
 
 struct _MpegTSBaseClass {
