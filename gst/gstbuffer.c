@@ -1494,8 +1494,8 @@ gst_buffer_add_meta (GstBuffer * buffer, const GstMetaInfo * info,
   g_return_val_if_fail (info != NULL, NULL);
 
   /* create a new slice */
-  GST_CAT_DEBUG (GST_CAT_BUFFER, "alloc metadata of size %" G_GSIZE_FORMAT,
-      info->size);
+  GST_CAT_DEBUG (GST_CAT_BUFFER, "alloc metadata %s of size %" G_GSIZE_FORMAT,
+      g_type_name (info->type), info->size);
 
   size = ITEM_SIZE (info);
   item = g_slice_alloc (size);
