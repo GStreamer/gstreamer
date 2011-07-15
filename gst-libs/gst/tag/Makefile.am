@@ -7,14 +7,19 @@ libgsttaginclude_HEADERS = \
 lib_LTLIBRARIES = libgsttag-@GST_MAJORMINOR@.la
 
 libgsttag_@GST_MAJORMINOR@_la_SOURCES = \
-    gstvorbistag.c gstid3tag.c gstxmptag.c gstexiftag.c \
-    lang.c tags.c gsttagdemux.c gsttagmux.c gsttageditingprivate.c xmpwriter.c
-libgsttag_@GST_MAJORMINOR@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS)
+	gstvorbistag.c gstid3tag.c gstxmptag.c gstexiftag.c \
+	lang.c licenses.c tags.c gsttagdemux.c gsttagmux.c \
+	gsttageditingprivate.c xmpwriter.c
+
+libgsttag_@GST_MAJORMINOR@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) \
+	$(GST_BASE_CFLAGS) $(GST_CFLAGS) \
+	-DLICENSE_TRANSLATIONS_PATH=\"$(pkgdatadir)/license-translations.dict\"
 libgsttag_@GST_MAJORMINOR@_la_LIBADD = $(GST_BASE_LIBS) $(GST_LIBS) $(LIBM)
 libgsttag_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
 
 # lang-tables.dat contains generated static data and is included by lang.c
-EXTRA_DIST = lang-tables.dat
+# licenses-tables.dat contains generated data and is included by licenses.c
+EXTRA_DIST = lang-tables.dat licenses-tables.dat
 
 noinst_HEADERS = gsttageditingprivate.h
 
@@ -80,6 +85,15 @@ ISO_CODE_PROGS =
 endif
 
 noinst_PROGRAMS = $(ISO_CODE_PROGS)
+
+#if USE_NLS
+# Yes, this is not great, but it's only an implementation detail. The
+# translations come from an external source here, so we don't want the
+# strings retranslated, but also we don't want to create 30 1kB .mo files,
+# so just do something for now, we can change it later if someone really cares.
+licensetransdir = $(pkgdatadir)
+licensetrans_DATA = $(builddir)/license-translations.dict
+#endif
 
 Android.mk: Makefile.am
 	androgenizer -:PROJECT libgsttag -:SHARED libgsttag-@GST_MAJORMINOR@ \
