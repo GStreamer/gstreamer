@@ -47,16 +47,16 @@ struct _GstV4l2BufferPool
 {
   GstBufferPool parent;
 
-  GstV4l2Object *obj;       /* the v4l2 object */
+  GstV4l2Object *obj;        /* the v4l2 object */
   gint video_fd;             /* a dup(2) of the v4l2object's video_fd */
   gboolean requeuebuf;       /* if true, unusued buffers are automatically re-QBUF'd */
 
   guint min_buffers;
   guint max_buffers;
 
-  guint buffer_count;
+  guint num_buffers;         /* number of buffers allocated by the driver */
+  guint num_queued;           /* number of buffers queued in the driver */
   gint index;
-  gint num_live_buffers;     /* number of buffers not with driver */
 
   GstBuffer **buffers;
 };

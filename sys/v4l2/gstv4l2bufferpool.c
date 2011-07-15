@@ -260,7 +260,7 @@ gst_v4l2_buffer_pool_start (GstBufferPool * bpool)
 
   pool->obj = obj;
   pool->requeuebuf = (obj->type == V4L2_BUF_TYPE_VIDEO_CAPTURE ? TRUE : FALSE);
-  pool->buffer_count = num_buffers;
+  pool->num_buffers = num_buffers;
   pool->buffers = g_new0 (GstBuffer *, num_buffers);
   pool->index = 0;
 
@@ -305,10 +305,12 @@ gst_v4l2_buffer_pool_stop (GstBufferPool * bpool)
   GST_DEBUG_OBJECT (pool, "stopping pool");
 
   /* free the buffers: */
-  for (n = 0; n < pool->buffer_count; n++)
-    gst_v4l2_buffer_pool_free_buffer (bpool, pool->buffers[n]);
-
-  return TRUE;
+  for (n = 0; n < pool->num_buffers; n++) {
+    if (pool->buffers[n])
+      gst_v4l2_buffer_pool_free_buffer (bpool, pool->buffers[n]);
+  }
+  /* also free the buffers in the queue */
+  return GST_BUFFER_POOL_CLASS (parent_class)->stop (bpool);
 }
 
 static GstFlowReturn
@@ -337,12 +339,12 @@ gst_v4l2_buffer_pool_dqbuf (GstBufferPool * bpool, GstBuffer ** buffer)
   pool->buffers[vbuffer.index] = NULL;
 
   GST_LOG_OBJECT (pool,
-      "dequeued frame %d (ix=%d), flags %08x, pool-ct=%d, buffer=%p",
-      vbuffer.sequence, vbuffer.index, vbuffer.flags, pool->num_live_buffers,
-      outbuf);
+      "dequeued frame %d (ix=%d), used %d, flags %08x, pool-queued=%d, buffer=%p",
+      vbuffer.sequence, vbuffer.index, vbuffer.bytesused, vbuffer.flags,
+      pool->num_queued, outbuf);
 
-  pool->num_live_buffers++;
-  GST_DEBUG_OBJECT (pool, "num_live_buffers++: %d", pool->num_live_buffers);
+  pool->num_queued--;
+  GST_DEBUG_OBJECT (pool, "num_queued: %d", pool->num_queued);
 
   /* set top/bottom field first if v4l2_buffer has the information */
   if (vbuffer.field == V4L2_FIELD_INTERLACED_TB)
@@ -351,7 +353,10 @@ gst_v4l2_buffer_pool_dqbuf (GstBufferPool * bpool, GstBuffer ** buffer)
     GST_BUFFER_FLAG_UNSET (outbuf, GST_VIDEO_BUFFER_TFF);
 
   /* this can change at every frame, esp. with jpeg */
-  gst_buffer_resize (outbuf, 0, vbuffer.bytesused);
+  if (obj->type == V4L2_BUF_TYPE_VIDEO_CAPTURE)
+    gst_buffer_resize (outbuf, 0, vbuffer.bytesused);
+  else
+    gst_buffer_resize (outbuf, 0, vbuffer.length);
 
   *buffer = outbuf;
 
@@ -428,10 +433,15 @@ gst_v4l2_buffer_pool_acquire_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
 
   if (pool->requeuebuf)
     ret = gst_v4l2_buffer_pool_dqbuf (bpool, buffer);
-  else
-    ret =
-        GST_BUFFER_POOL_CLASS (parent_class)->acquire_buffer (bpool, buffer,
-        params);
+  else {
+    if (pool->num_queued == pool->num_buffers) {
+      ret = gst_v4l2_buffer_pool_dqbuf (bpool, buffer);
+    } else {
+      ret =
+          GST_BUFFER_POOL_CLASS (parent_class)->acquire_buffer (bpool, buffer,
+          params);
+    }
+  }
 
   return ret;
 
@@ -563,8 +573,8 @@ gst_v4l2_buffer_pool_qbuf (GstBufferPool * bpool, GstBuffer * buf)
 
   pool->buffers[index] = buf;
 
-  pool->num_live_buffers--;
-  GST_DEBUG_OBJECT (pool, "num_live_buffers--: %d", pool->num_live_buffers);
+  pool->num_queued++;
+  GST_DEBUG_OBJECT (pool, "num_queued: %d", pool->num_queued);
 
   return TRUE;
 
@@ -595,5 +605,5 @@ gst_v4l2_buffer_pool_available_buffers (GstBufferPool * bpool)
 {
   GstV4l2BufferPool *pool = GST_V4L2_BUFFER_POOL (bpool);
 
-  return pool->buffer_count - pool->num_live_buffers;
+  return pool->num_queued;
 }
