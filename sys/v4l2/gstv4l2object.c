@@ -2717,28 +2717,9 @@ gst_v4l2_object_output_buffer (GstV4l2Object * v4l2object, GstBuffer * buf)
       return GST_FLOW_ERROR;
     }
   }
-  if (!newbuf)
-    gst_buffer_ref (buf);
+  if (newbuf)
+    gst_buffer_unref (newbuf);
 
-#if 0
-  /* if the driver has more than one buffer, ie. more than just the one we
-   * just queued, then dequeue one immediately to make it available via
-   * _buffer_alloc():
-   */
-  if (gst_v4l2_buffer_pool_available_buffers (v4l2object->pool) >
-      v4l2object->min_queued_bufs) {
-    GstBuffer *v4l2buf = gst_v4l2_buffer_pool_dqbuf (v4l2object->pool);
-
-    /* note: if we get a buf, we don't want to use it directly (because
-     * someone else could still hold a ref).. but instead we release our
-     * reference to it, and if no one else holds a ref it will be returned
-     * to the pool of available buffers..  and if not, we keep looping.
-     */
-    if (v4l2buf) {
-      gst_buffer_unref (v4l2buf);
-    }
-  }
-#endif
   return GST_FLOW_OK;
 
   /* ERRORS */
