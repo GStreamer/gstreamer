@@ -99,7 +99,7 @@ struct _GstDiscovererPrivate
   GstElement *uridecodebin;
   GstBus *bus;
 
-  GType decodebin2_type;
+  GType decodebin_type;
 
   /* Custom main context variables */
   GMainContext *ctx;
@@ -242,7 +242,7 @@ uridecodebin_element_added_cb (GstElement * uridecodebin,
   GST_DEBUG ("New element added to uridecodebin : %s",
       GST_ELEMENT_NAME (child));
 
-  if (G_OBJECT_TYPE (child) == dc->priv->decodebin2_type) {
+  if (G_OBJECT_TYPE (child) == dc->priv->decodebin_type) {
     g_object_set (child, "post-stream-topology", TRUE, NULL);
   }
 }
@@ -289,14 +289,14 @@ gst_discoverer_init (GstDiscoverer * dc)
 
   GST_DEBUG_OBJECT (dc, "Done initializing Discoverer");
 
-  /* This is ugly. We get the GType of decodebin2 so we can quickly detect
-   * when a decodebin2 is added to uridecodebin so we can set the
+  /* This is ugly. We get the GType of decodebin so we can quickly detect
+   * when a decodebin is added to uridecodebin so we can set the
    * post-stream-topology setting to TRUE */
   dc->priv->element_added_id =
       g_signal_connect_object (dc->priv->uridecodebin, "element-added",
       G_CALLBACK (uridecodebin_element_added_cb), dc, 0);
-  tmp = gst_element_factory_make ("decodebin2", NULL);
-  dc->priv->decodebin2_type = G_OBJECT_TYPE (tmp);
+  tmp = gst_element_factory_make ("decodebin", NULL);
+  dc->priv->decodebin_type = G_OBJECT_TYPE (tmp);
   gst_object_unref (tmp);
 
   /* create queries */
