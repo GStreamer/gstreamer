@@ -22,8 +22,10 @@
 #endif
 
 #include <string.h>
+#include <stdlib.h>
 
 #include <gst/rtp/gstrtpbuffer.h>
+#include <gst/pbutils/pbutils.h>
 
 #include "gstrtph264pay.h"
 
@@ -108,6 +110,8 @@ static void gst_rtp_h264_pay_set_property (GObject * object, guint prop_id,
 static void gst_rtp_h264_pay_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
+static GstCaps *gst_rtp_h264_pay_getcaps (GstBaseRTPPayload * payload,
+    GstPad * pad);
 static gboolean gst_rtp_h264_pay_setcaps (GstBaseRTPPayload * basepayload,
     GstCaps * caps);
 static GstFlowReturn gst_rtp_h264_pay_handle_buffer (GstBaseRTPPayload * pad,
@@ -186,6 +190,7 @@ gst_rtp_h264_pay_class_init (GstRtpH264PayClass * klass)
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_basertppayload_change_state);
 
+  gstbasertppayload_class->get_caps = gst_rtp_h264_pay_getcaps;
   gstbasertppayload_class->set_caps = gst_rtp_h264_pay_setcaps;
   gstbasertppayload_class->handle_buffer = gst_rtp_h264_pay_handle_buffer;
   gstbasertppayload_class->handle_event = gst_rtp_h264_pay_handle_event;
@@ -236,6 +241,123 @@ gst_rtp_h264_pay_finalize (GObject * object)
   g_object_unref (rtph264pay->adapter);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+static const gchar *all_levels[] = {
+  "1",
+  "1b",
+  "1.1",
+  "1.2",
+  "1.3",
+  "2",
+  "2.1",
+  "2.2",
+  "3",
+  "3.1",
+  "3.2",
+  "4",
+  "4.1",
+  "4.2",
+  "5",
+  "5.1",
+  NULL
+};
+
+static GstCaps *
+gst_rtp_h264_pay_getcaps (GstBaseRTPPayload * payload, GstPad * pad)
+{
+  GstCaps *allowed_caps;
+
+  allowed_caps =
+      gst_pad_peer_get_caps_reffed (GST_BASE_RTP_PAYLOAD_SRCPAD (payload));
+
+  if (allowed_caps) {
+    GstCaps *caps = NULL;
+    guint i;
+
+    if (gst_caps_is_any (allowed_caps)) {
+      gst_caps_unref (allowed_caps);
+      goto any;
+    }
+
+    if (gst_caps_is_empty (allowed_caps))
+      return allowed_caps;
+
+    caps = gst_caps_new_empty ();
+
+    for (i = 0; i < gst_caps_get_size (allowed_caps); i++) {
+      GstStructure *s = gst_caps_get_structure (allowed_caps, i);
+      GstStructure *new_s = gst_structure_new ("video/x-h264", NULL);
+      const gchar *profile_level_id;
+
+      profile_level_id = gst_structure_get_string (s, "profile-level-id");
+
+      if (profile_level_id && strlen (profile_level_id) == 6) {
+        const gchar *profile;
+        const gchar *level;
+        long int spsint;
+        guint8 sps[3];
+
+        spsint = strtol (profile_level_id, NULL, 16);
+        sps[0] = spsint >> 16;
+        sps[1] = spsint >> 8;
+        sps[2] = spsint;
+
+        profile = gst_codec_utils_h264_get_profile (sps, 3);
+        level = gst_codec_utils_h264_get_level (sps, 3);
+
+        if (profile && level) {
+          GST_LOG_OBJECT (payload, "In caps, have profile %s and level %s",
+              profile, level);
+
+          if (!strcmp (profile, "constrained-baseline"))
+            gst_structure_set (new_s, "profile", G_TYPE_STRING, profile, NULL);
+          else {
+            GValue val = { 0, };
+            GValue profiles = { 0, };
+
+            g_value_init (&profiles, GST_TYPE_LIST);
+            g_value_init (&val, G_TYPE_STRING);
+
+            g_value_set_static_string (&val, profile);
+            gst_value_list_append_value (&profiles, &val);
+
+            g_value_set_static_string (&val, "constrained-baseline");
+            gst_value_list_append_value (&profiles, &val);
+
+            gst_structure_take_value (new_s, "profile", &profiles);
+          }
+
+          if (!strcmp (level, "1"))
+            gst_structure_set (new_s, "level", G_TYPE_STRING, level, NULL);
+          else {
+            GValue levels = { 0, };
+            GValue val = { 0, };
+            int j;
+
+            g_value_init (&levels, GST_TYPE_LIST);
+            g_value_init (&val, G_TYPE_STRING);
+
+            for (j = 0; all_levels[j]; j++) {
+              g_value_set_static_string (&val, all_levels[j]);
+              gst_value_list_prepend_value (&levels, &val);
+              if (!strcmp (level, all_levels[j]))
+                break;
+            }
+            gst_structure_take_value (new_s, "level", &levels);
+          }
+        }
+      }
+
+      gst_caps_merge_structure (caps, new_s);
+    }
+
+    gst_caps_unref (allowed_caps);
+    return caps;
+  }
+
+any:
+  return gst_caps_new_simple ("video/x-h264", NULL);
 }
 
 /* take the currently configured SPS and PPS lists and set them on the caps as

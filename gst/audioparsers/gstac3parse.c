@@ -200,6 +200,7 @@ gst_ac3_parse_reset (GstAc3Parse * ac3parse)
 {
   ac3parse->channels = -1;
   ac3parse->sample_rate = -1;
+  ac3parse->blocks = -1;
   ac3parse->eac = FALSE;
 }
 
@@ -499,13 +500,14 @@ gst_ac3_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
   GstAc3Parse *ac3parse = GST_AC3_PARSE (parse);
   GstBuffer *buf = frame->buffer;
   guint fsize, rate, chans, blocks, sid;
-  gboolean eac;
+  gboolean eac, update_rate = FALSE;
 
   if (!gst_ac3_parse_frame_header (ac3parse, buf, &fsize, &rate, &chans,
           &blocks, &sid, &eac))
     goto broken_header;
 
-  GST_LOG_OBJECT (parse, "size: %u, rate: %u, chans: %u", fsize, rate, chans);
+  GST_LOG_OBJECT (parse, "size: %u, blocks: %u, rate: %u, chans: %u", fsize,
+      blocks, rate, chans);
 
   if (G_UNLIKELY (sid)) {
     /* dependent frame, no need to (ac)count for or consider further */
@@ -533,8 +535,17 @@ gst_ac3_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     ac3parse->channels = chans;
     ac3parse->eac = eac;
 
-    gst_base_parse_set_frame_rate (parse, rate, 256 * blocks, 2, 2);
+    update_rate = TRUE;
   }
+
+  if (G_UNLIKELY (ac3parse->blocks != blocks)) {
+    ac3parse->blocks = blocks;
+
+    update_rate = TRUE;
+  }
+
+  if (G_UNLIKELY (update_rate))
+    gst_base_parse_set_frame_rate (parse, rate, 256 * blocks, 2, 2);
 
   return GST_FLOW_OK;
 
