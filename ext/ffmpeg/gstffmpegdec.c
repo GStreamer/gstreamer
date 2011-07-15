@@ -193,7 +193,7 @@ gst_ts_info_get (GstFFMpegDec * dec, gint idx)
 #define DEFAULT_DO_PADDING		TRUE
 #define DEFAULT_DEBUG_MV		FALSE
 #define DEFAULT_CROP			TRUE
-#define DEFAULT_MAX_THREADS		0
+#define DEFAULT_MAX_THREADS		1
 
 enum
 {
