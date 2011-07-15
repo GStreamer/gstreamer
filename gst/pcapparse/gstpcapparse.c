@@ -64,7 +64,7 @@ enum
   PROP_SRC_PORT,
   PROP_DST_PORT,
   PROP_CAPS,
-  PROP_OFFSET,
+  PROP_TS_OFFSET,
   PROP_LAST
 };
 
@@ -144,8 +144,8 @@ gst_pcap_parse_class_init (GstPcapParseClass * klass)
           "The caps of the source pad", GST_TYPE_CAPS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  g_object_class_install_property (gobject_class, PROP_OFFSET,
-      g_param_spec_int64 ("offset", "Offset",
+  g_object_class_install_property (gobject_class, PROP_TS_OFFSET,
+      g_param_spec_int64 ("ts-offset", "Timestamp Offset",
           "Relative timestamp offset (ns) to apply (-1 = use absolute packet time)",
           -1, G_MAXINT64, -1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
@@ -241,7 +241,7 @@ gst_pcap_parse_get_property (GObject * object, guint prop_id,
       gst_value_set_caps (value, self->caps);
       break;
 
-    case PROP_OFFSET:
+    case PROP_TS_OFFSET:
       g_value_set_int64 (value, self->offset);
       break;
 
@@ -295,7 +295,7 @@ gst_pcap_parse_set_property (GObject * object, guint prop_id,
       break;
     }
 
-    case PROP_OFFSET:
+    case PROP_TS_OFFSET:
       self->offset = g_value_get_int64 (value);
       break;
 
@@ -469,6 +469,9 @@ gst_pcap_parse_chain (GstPad * pad, GstBuffer * buffer)
 
           data = gst_adapter_peek (self->adapter, self->cur_packet_size);
 
+          GST_LOG_OBJECT (self, "examining packet size %d",
+              self->cur_packet_size);
+
           if (gst_pcap_parse_scan_frame (self, data, self->cur_packet_size,
                   &payload_data, &payload_size)) {
             GstBuffer *out_buf;
@@ -571,6 +574,7 @@ gst_pcap_parse_chain (GstPad * pad, GstBuffer * buffer)
         goto out;
       }
 
+      GST_DEBUG_OBJECT (self, "linktype %u", linktype);
       self->linktype = linktype;
 
       gst_adapter_flush (self->adapter, 24);
