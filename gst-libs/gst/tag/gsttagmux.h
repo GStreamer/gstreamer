@@ -27,33 +27,6 @@
 
 G_BEGIN_DECLS
 
-typedef struct _GstTagMux GstTagMux;
-typedef struct _GstTagMuxClass GstTagMuxClass;
-typedef struct _GstTagMuxPrivate GstTagMuxPrivate;
-
-/* Definition of structure storing data for this element. */
-struct _GstTagMux {
-  GstElement    element;
-
-  /*< private >*/
-  GstTagMuxPrivate *priv;
-
-  gpointer _gst_reserved[GST_PADDING];
-};
-
-/* Standard definition defining a class for this element. */
-struct _GstTagMuxClass {
-  GstElementClass parent_class;
-
-  /* vfuncs */
-  GstBuffer  * (*render_start_tag) (GstTagMux * mux, GstTagList * tag_list);
-  GstBuffer  * (*render_end_tag) (GstTagMux * mux, GstTagList * tag_list);
-
-  /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
-};
-
-/* Standard macros for defining types for this element.  */
 #define GST_TYPE_TAG_MUX \
   (gst_tag_mux_get_type())
 #define GST_TAG_MUX(obj) \
@@ -65,7 +38,30 @@ struct _GstTagMuxClass {
 #define GST_IS_TAG_MUX_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_TAG_MUX))
 
-/* Standard function returning type information. */
+typedef struct _GstTagMux GstTagMux;
+typedef struct _GstTagMuxClass GstTagMuxClass;
+typedef struct _GstTagMuxPrivate GstTagMuxPrivate;
+
+struct _GstTagMux {
+  GstElement    element;
+
+  /*< private >*/
+  GstTagMuxPrivate *priv;
+
+  gpointer _gst_reserved[GST_PADDING];
+};
+
+struct _GstTagMuxClass {
+  GstElementClass parent_class;
+
+  /* vfuncs */
+  GstBuffer  * (*render_start_tag) (GstTagMux * mux, const GstTagList * tag_list);
+  GstBuffer  * (*render_end_tag)   (GstTagMux * mux, const GstTagList * tag_list);
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
+};
+
 GType gst_tag_mux_get_type (void);
 
 G_END_DECLS
