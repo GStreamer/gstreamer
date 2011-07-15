@@ -2070,7 +2070,8 @@ gst_v4l2_object_setup_pool (GstV4l2Object * v4l2object)
         0, 0);
     gst_buffer_pool_set_config (v4l2object->pool, config);
 
-    gst_buffer_pool_set_active (v4l2object->pool, TRUE);
+    if (!gst_buffer_pool_set_active (v4l2object->pool, TRUE))
+      goto activate_failed;
 
   } else if (v4l2object->vcap.capabilities & V4L2_CAP_READWRITE) {
     GST_INFO_OBJECT (v4l2object->element, "capturing buffers via read()");
@@ -2098,6 +2099,14 @@ no_supported_capture_method:
     GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, READ,
         (_("The driver of device '%s' does not support any known capture "
                 "method."), v4l2object->videodev), (NULL));
+    return FALSE;
+  }
+activate_failed:
+  {
+    GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, READ,
+        (_("Could not map buffers from device '%s'"),
+            v4l2object->videodev),
+        ("Failed to activate buffer pool: %s", g_strerror (errno)));
     return FALSE;
   }
 }

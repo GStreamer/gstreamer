@@ -276,23 +276,20 @@ gst_v4l2_buffer_pool_start (GstBufferPool * bpool)
   /* ERRORS */
 reqbufs_failed:
   {
-    GST_ELEMENT_ERROR (pool, RESOURCE, READ,
-        (_("Could not get buffers from device '%s'."),
-            obj->videodev),
-        ("error requesting %d buffers: %s", num_buffers, g_strerror (errno)));
+    GST_ERROR_OBJECT (pool,
+        "error requesting %d buffers: %s", num_buffers, g_strerror (errno));
     return FALSE;
   }
 no_buffers:
   {
-    GST_ELEMENT_ERROR (pool, RESOURCE, READ,
-        (_("Could not get enough buffers from device '%s'."),
-            obj->videodev),
-        ("we received %d from device '%s', we want at least %d",
-            breq.count, obj->videodev, GST_V4L2_MIN_BUFFERS));
+    GST_ERROR_OBJECT (pool,
+        "we received %d from device '%s', we want at least %d",
+        breq.count, obj->videodev, GST_V4L2_MIN_BUFFERS);
     return FALSE;
   }
 buffer_new_failed:
   {
+    GST_ERROR_OBJECT (pool, "failed to create a buffer");
     return FALSE;
   }
 }
@@ -381,14 +378,14 @@ error:
             " no buffer was in the outgoing queue. device %s", obj->videodev);
         break;
       case EINVAL:
-        GST_ELEMENT_ERROR (pool, RESOURCE, FAILED,
-            (_("Failed trying to get video frames from device '%s'."),
-                obj->videodev),
-            (_("The buffer type is not supported, or the index is out of bounds," " or no buffers have been allocated yet, or the userptr" " or length are invalid. device %s"), obj->videodev));
+        GST_ERROR_OBJECT (pool,
+            "The buffer type is not supported, or the index is out of bounds, "
+            "or no buffers have been allocated yet, or the userptr "
+            "or length are invalid. device %s", obj->videodev);
         break;
       case ENOMEM:
-        GST_ELEMENT_ERROR (pool, RESOURCE, FAILED,
-            (_("Failed trying to get video frames from device '%s'. Not enough memory."), obj->videodev), (_("insufficient memory to enqueue a user pointer buffer. device %s."), obj->videodev));
+        GST_ERROR_OBJECT (pool,
+            "insufficient memory to enqueue a user pointer buffer");
         break;
       case EIO:
         GST_INFO_OBJECT (pool,
@@ -417,10 +414,8 @@ error:
   }
 no_buffers:
   {
-    GST_ELEMENT_ERROR (pool, RESOURCE, FAILED,
-        (_("Failed trying to get video frames from device '%s'."),
-            obj->videodev),
-        (_("No free buffers found in the pool at index %d."), vbuffer.index));
+    GST_ERROR_OBJECT (pool, "No free buffers found in the pool at index %d.",
+        vbuffer.index);
     return GST_FLOW_ERROR;
   }
 }
