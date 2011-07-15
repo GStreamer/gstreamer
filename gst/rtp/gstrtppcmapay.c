@@ -47,7 +47,7 @@ static GstStaticPadTemplate gst_rtp_pcma_pay_src_template =
         "application/x-rtp, "
         "media = (string) \"audio\", "
         "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
-        "clock-rate = (int) 8000, " "encoding-name = (string) \"PCMA\"")
+        "clock-rate = (int) [1, MAX ], " "encoding-name = (string) \"PCMA\"")
     );
 
 static gboolean gst_rtp_pcma_pay_setcaps (GstBaseRTPPayload * payload,
