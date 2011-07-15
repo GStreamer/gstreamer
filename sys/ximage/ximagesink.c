@@ -1292,7 +1292,7 @@ gst_ximagesink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
 
   meta = gst_buffer_get_meta_ximage (buf);
 
-  if (meta) {
+  if (meta && buf->pool == ximagesink->pool) {
     /* If this buffer has been allocated using our buffer management we simply
        put the ximage which is in the PRIVATE pointer */
     GST_LOG_OBJECT (ximagesink, "buffer from our pool, writing directly");
