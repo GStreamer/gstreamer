@@ -24,9 +24,11 @@ G_BEGIN_DECLS
 #define ID3_VERSION_2_3 3
 #define ID3_VERSION_2_4 4
 
-GstBuffer * id3_mux_render_v2_tag (GstTagMux * mux, GstTagList * taglist,
-        int version);
-GstBuffer * id3_mux_render_v1_tag (GstTagMux * mux, GstTagList * taglist);
+GstBuffer * id3_mux_render_v2_tag (GstTagMux        * mux,
+                                   const GstTagList * taglist,
+                                   int                version);
+
+GstBuffer * id3_mux_render_v1_tag (GstTagMux        * mux,
+                                   const GstTagList * taglist);
 
 G_END_DECLS
-

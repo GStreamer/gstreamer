@@ -79,9 +79,9 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
 GST_BOILERPLATE (GstId3Mux, gst_id3_mux, GstTagMux, GST_TYPE_TAG_MUX);
 
 static GstBuffer *gst_id3_mux_render_v2_tag (GstTagMux * mux,
-    GstTagList * taglist);
+    const GstTagList * taglist);
 static GstBuffer *gst_id3_mux_render_v1_tag (GstTagMux * mux,
-    GstTagList * taglist);
+    const GstTagList * taglist);
 
 static void gst_id3_mux_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -129,8 +129,8 @@ gst_id3_mux_class_init (GstId3MuxClass * klass)
 
   GST_TAG_MUX_CLASS (klass)->render_start_tag =
       GST_DEBUG_FUNCPTR (gst_id3_mux_render_v2_tag);
-
-  GST_TAG_MUX_CLASS (klass)->render_end_tag = gst_id3_mux_render_v1_tag;
+  GST_TAG_MUX_CLASS (klass)->render_end_tag =
+      GST_DEBUG_FUNCPTR (gst_id3_mux_render_v1_tag);
 }
 
 static void
@@ -187,7 +187,7 @@ gst_id3_mux_get_property (GObject * object, guint prop_id,
 }
 
 static GstBuffer *
-gst_id3_mux_render_v2_tag (GstTagMux * mux, GstTagList * taglist)
+gst_id3_mux_render_v2_tag (GstTagMux * mux, const GstTagList * taglist)
 {
   GstId3Mux *id3mux = GST_ID3_MUX (mux);
 
@@ -198,7 +198,7 @@ gst_id3_mux_render_v2_tag (GstTagMux * mux, GstTagList * taglist)
 }
 
 static GstBuffer *
-gst_id3_mux_render_v1_tag (GstTagMux * mux, GstTagList * taglist)
+gst_id3_mux_render_v1_tag (GstTagMux * mux, const GstTagList * taglist)
 {
   GstId3Mux *id3mux = GST_ID3_MUX (mux);
 
