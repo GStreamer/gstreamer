@@ -85,6 +85,15 @@ typedef struct _GstBufferPoolParams {
 } GstBufferPoolParams;
 
 /**
+ * GST_BUFFER_POOL_IS_FLUSHING:
+ * @pool: a GstBufferPool
+ *
+ * Check if the bufferpool is flushing. Subclasses might want to check the
+ * state of the pool in the acquire function.
+ */
+#define GST_BUFFER_POOL_IS_FLUSHING(pool)  (g_atomic_int_get (&pool->flushing))
+
+/**
  * GstBufferPool:
  * @object: the parent structure
  *

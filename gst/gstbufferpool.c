@@ -397,7 +397,7 @@ wrong_config:
  * allocated form this pool must be returned or else this function will do
  * nothing and return FALSE.
  *
- * @condfig is a #GstStructure that contains the configuration parameters for
+ * @config is a #GstStructure that contains the configuration parameters for
  * the pool. A default and mandatory set of parameters can be configured with
  * gst_buffer_pool_config_set(). This function takes ownership of @config.
  *
