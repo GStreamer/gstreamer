@@ -29,24 +29,16 @@ G_BEGIN_DECLS
 
 typedef struct _GstTagMux GstTagMux;
 typedef struct _GstTagMuxClass GstTagMuxClass;
+typedef struct _GstTagMuxPrivate GstTagMuxPrivate;
 
 /* Definition of structure storing data for this element. */
 struct _GstTagMux {
   GstElement    element;
 
-  GstPad       *srcpad;
-  GstPad       *sinkpad;
-  GstTagList   *event_tags; /* tags received from upstream elements */
-  GstTagList   *final_tags; /* Final set of tags used for muxing */
-  gsize         start_tag_size;
-  gsize         end_tag_size;
-  gboolean      render_start_tag;
-  gboolean      render_end_tag;
+  /*< private >*/
+  GstTagMuxPrivate *priv;
 
-  gint64        current_offset;
-  gint64        max_offset;
-
-  GstEvent     *newsegment_ev; /* cached newsegment event from upstream */
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 /* Standard definition defining a class for this element. */
@@ -56,6 +48,9 @@ struct _GstTagMuxClass {
   /* vfuncs */
   GstBuffer  * (*render_start_tag) (GstTagMux * mux, GstTagList * tag_list);
   GstBuffer  * (*render_end_tag) (GstTagMux * mux, GstTagList * tag_list);
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 /* Standard macros for defining types for this element.  */
@@ -76,4 +71,3 @@ GType gst_tag_mux_get_type (void);
 G_END_DECLS
 
 #endif
-
