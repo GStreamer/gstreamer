@@ -76,6 +76,9 @@ gst_meta_v4l2_get_info (void)
 #define gst_v4l2_buffer_pool_parent_class parent_class
 G_DEFINE_TYPE (GstV4l2BufferPool, gst_v4l2_buffer_pool, GST_TYPE_BUFFER_POOL);
 
+static void gst_v4l2_buffer_pool_release_buffer (GstBufferPool * bpool,
+    GstBuffer * buffer);
+
 static void
 gst_v4l2_buffer_pool_free_buffer (GstBufferPool * bpool, GstBuffer * buffer)
 {
@@ -268,8 +271,7 @@ gst_v4l2_buffer_pool_start (GstBufferPool * bpool)
     if (gst_v4l2_buffer_pool_alloc_buffer (bpool, &buffer, NULL) != GST_FLOW_OK)
       goto buffer_new_failed;
 
-    if (pool->requeuebuf)
-      gst_v4l2_buffer_pool_qbuf (bpool, buffer);
+    gst_v4l2_buffer_pool_release_buffer (bpool, buffer);
   }
   return TRUE;
 
@@ -310,16 +312,12 @@ gst_v4l2_buffer_pool_stop (GstBufferPool * bpool)
 }
 
 static GstFlowReturn
-gst_v4l2_buffer_pool_acquire_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
-    GstBufferPoolParams * params)
+gst_v4l2_buffer_pool_dqbuf (GstBufferPool * bpool, GstBuffer ** buffer)
 {
   GstV4l2BufferPool *pool = GST_V4L2_BUFFER_POOL (bpool);
   GstBuffer *outbuf;
   struct v4l2_buffer vbuffer;
   GstV4l2Object *obj = pool->obj;
-
-  if (GST_BUFFER_POOL_IS_FLUSHING (bpool))
-    goto flushing;
 
   memset (&vbuffer, 0x00, sizeof (vbuffer));
   vbuffer.type = obj->type;
@@ -360,14 +358,10 @@ gst_v4l2_buffer_pool_acquire_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
   return GST_FLOW_OK;
 
   /* ERRORS */
-flushing:
-  {
-    return GST_FLOW_WRONG_STATE;
-  }
 error:
   {
     GST_WARNING_OBJECT (pool,
-        "problem grabbing frame %d (ix=%d), pool-ct=%d, buf.flags=%d",
+        "problem dequeuing frame %d (ix=%d), pool-ct=%d, buf.flags=%d",
         vbuffer.sequence, vbuffer.index,
         GST_MINI_OBJECT_REFCOUNT (pool), vbuffer.flags);
 
@@ -420,6 +414,35 @@ no_buffers:
   }
 }
 
+static GstFlowReturn
+gst_v4l2_buffer_pool_acquire_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
+    GstBufferPoolParams * params)
+{
+  GstV4l2BufferPool *pool = GST_V4L2_BUFFER_POOL (bpool);
+  GstFlowReturn ret;
+
+  GST_DEBUG_OBJECT (pool, "acquire");
+
+  if (GST_BUFFER_POOL_IS_FLUSHING (bpool))
+    goto flushing;
+
+  if (pool->requeuebuf)
+    ret = gst_v4l2_buffer_pool_dqbuf (bpool, buffer);
+  else
+    ret =
+        GST_BUFFER_POOL_CLASS (parent_class)->acquire_buffer (bpool, buffer,
+        params);
+
+  return ret;
+
+  /* ERRORS */
+flushing:
+  {
+    GST_DEBUG_OBJECT (bpool, "We are flushing");
+    return GST_FLOW_WRONG_STATE;
+  }
+}
+
 static void
 gst_v4l2_buffer_pool_release_buffer (GstBufferPool * bpool, GstBuffer * buffer)
 {
@@ -429,6 +452,8 @@ gst_v4l2_buffer_pool_release_buffer (GstBufferPool * bpool, GstBuffer * buffer)
 
   if (pool->requeuebuf)
     gst_v4l2_buffer_pool_qbuf (bpool, buffer);
+  else
+    GST_BUFFER_POOL_CLASS (parent_class)->release_buffer (bpool, buffer);
 }
 
 static void
