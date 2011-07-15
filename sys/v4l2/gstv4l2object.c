@@ -2050,24 +2050,27 @@ gst_v4l2_object_setup_pool (GstV4l2Object * v4l2object)
   GST_V4L2_CHECK_NOT_ACTIVE (v4l2object);
 
   if (v4l2object->vcap.capabilities & V4L2_CAP_STREAMING) {
-    gboolean requeuebuf;
+    guint num_buffers;
+    GstStructure *config;
 
-    requeuebuf = v4l2object->type == V4L2_BUF_TYPE_VIDEO_CAPTURE;
+    /* keep track of current number of buffers */
+    num_buffers = v4l2object->num_buffers;
 
     /* Map the buffers */
     GST_LOG_OBJECT (v4l2object->element, "initiating buffer pool");
 
-    if (!(v4l2object->pool = gst_v4l2_buffer_pool_new (v4l2object,
-                v4l2object->num_buffers, requeuebuf)))
+    if (!(v4l2object->pool = gst_v4l2_buffer_pool_new (v4l2object)))
       goto buffer_pool_new_failed;
 
     GST_INFO_OBJECT (v4l2object->element, "capturing buffers via mmap()");
     v4l2object->use_mmap = TRUE;
 
-    if (v4l2object->num_buffers != v4l2object->pool->buffer_count) {
-      v4l2object->num_buffers = v4l2object->pool->buffer_count;
-      g_object_notify (G_OBJECT (v4l2object->element), "queue-size");
-    }
+    config = gst_buffer_pool_get_config (v4l2object->pool);
+    gst_buffer_pool_config_set (config, NULL, 0, num_buffers, num_buffers,
+        0, 0);
+    gst_buffer_pool_set_config (v4l2object->pool, config);
+
+    gst_buffer_pool_set_active (v4l2object->pool, TRUE);
 
   } else if (v4l2object->vcap.capabilities & V4L2_CAP_READWRITE) {
     GST_INFO_OBJECT (v4l2object->element, "capturing buffers via read()");
@@ -2335,22 +2338,18 @@ pool_failed:
 gboolean
 gst_v4l2_object_start (GstV4l2Object * v4l2object)
 {
-  GstBuffer *buf;
-
   GST_DEBUG_OBJECT (v4l2object->element, "starting");
 
   GST_V4L2_CHECK_OPEN (v4l2object);
   GST_V4L2_CHECK_ACTIVE (v4l2object);
 
+  if (v4l2object->pool)
+    if (!gst_buffer_pool_set_active (v4l2object->pool, TRUE))
+      goto activate_failed;
+
   if (v4l2object->use_mmap) {
     switch (v4l2object->type) {
       case V4L2_BUF_TYPE_VIDEO_CAPTURE:
-        /* for capture, queue all the buffers so the device can start filling
-         * them */
-        GST_DEBUG_OBJECT (v4l2object->element, "queueing buffers");
-        while ((buf = gst_v4l2_buffer_pool_get (v4l2object->pool, FALSE)))
-          if (!gst_v4l2_buffer_pool_qbuf (v4l2object->pool, buf))
-            goto queue_failed;
         break;
       case V4L2_BUF_TYPE_VIDEO_OUTPUT:
         /* for output, we assume we already queued a buffer */
@@ -2369,14 +2368,10 @@ gst_v4l2_object_start (GstV4l2Object * v4l2object)
   return TRUE;
 
   /* ERRORS */
-queue_failed:
+activate_failed:
   {
-    GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, READ,
-        (_("Could not enqueue buffers in device '%s'."),
-            v4l2object->videodev),
-        ("enqueing buffer %d/%d failed: %s",
-            GST_META_V4L2_GET (buf)->vbuffer.index, v4l2object->num_buffers,
-            g_strerror (errno)));
+    GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, OPEN_READ,
+        (_("Error starting bufferpool")), (NULL));
     return FALSE;
   }
 start_failed:
@@ -2412,7 +2407,9 @@ gst_v4l2_object_stop (GstV4l2Object * v4l2object)
   }
 
   if (v4l2object->pool) {
-    gst_v4l2_buffer_pool_destroy (v4l2object->pool);
+    GST_DEBUG_OBJECT (v4l2object->element, "deactivating pool");
+    gst_buffer_pool_set_active (v4l2object->pool, FALSE);
+    gst_object_unref (v4l2object->pool);
     v4l2object->pool = NULL;
   }
 
@@ -2516,8 +2513,9 @@ cleanup:
 static GstFlowReturn
 gst_v4l2_object_get_mmap (GstV4l2Object * v4l2object, GstBuffer ** buf)
 {
+  GstFlowReturn res;
 #define NUM_TRIALS 50
-  GstV4l2BufferPool *pool;
+  GstBufferPool *pool;
   gint32 trials = NUM_TRIALS;
   GstBuffer *pool_buffer;
   gboolean need_copy;
@@ -2546,8 +2544,8 @@ gst_v4l2_object_get_mmap (GstV4l2Object * v4l2object, GstBuffer ** buf)
       }
     }
 
-    pool_buffer = gst_v4l2_buffer_pool_dqbuf (pool);
-    if (pool_buffer == NULL)
+    res = gst_buffer_pool_acquire_buffer (pool, &pool_buffer, NULL);
+    if (res != GST_FLOW_OK)
       goto no_buffer;
 
     if (v4l2object->size > 0) {
@@ -2651,7 +2649,7 @@ gst_v4l2_object_get_buffer (GstV4l2Object * v4l2object, GstBuffer ** buf)
       }
       break;
     case V4L2_BUF_TYPE_VIDEO_OUTPUT:
-      ret = GST_FLOW_ERROR;
+      ret = gst_buffer_pool_acquire_buffer (v4l2object->pool, buf, NULL);
       break;
     default:
       ret = GST_FLOW_ERROR;
@@ -2663,18 +2661,21 @@ gst_v4l2_object_get_buffer (GstV4l2Object * v4l2object, GstBuffer ** buf)
 GstFlowReturn
 gst_v4l2_object_output_buffer (GstV4l2Object * v4l2object, GstBuffer * buf)
 {
+  GstFlowReturn ret;
   GstBuffer *newbuf = NULL;
   GstMetaV4l2 *meta;
 
   meta = GST_META_V4L2_GET (buf);
 
-  if (meta == NULL || meta->pool != v4l2object->pool) {
+  if (meta == NULL || buf->pool != v4l2object->pool) {
     guint8 *data;
     gsize size;
 
     /* not our buffer */
     GST_DEBUG_OBJECT (v4l2object->element, "slow-path.. need to memcpy");
-    newbuf = gst_v4l2_buffer_pool_get (v4l2object->pool, TRUE);
+    ret = gst_buffer_pool_acquire_buffer (v4l2object->pool, &newbuf, NULL);
+    if (ret != GST_FLOW_OK)
+      goto acquire_failed;
 
     if (v4l2object->info.finfo) {
       GstVideoFrame src_frame, dest_frame;
@@ -2710,6 +2711,7 @@ gst_v4l2_object_output_buffer (GstV4l2Object * v4l2object, GstBuffer * buf)
   if (!newbuf)
     gst_buffer_ref (buf);
 
+#if 0
   /* if the driver has more than one buffer, ie. more than just the one we
    * just queued, then dequeue one immediately to make it available via
    * _buffer_alloc():
@@ -2727,9 +2729,15 @@ gst_v4l2_object_output_buffer (GstV4l2Object * v4l2object, GstBuffer * buf)
       gst_buffer_unref (v4l2buf);
     }
   }
+#endif
   return GST_FLOW_OK;
 
   /* ERRORS */
+acquire_failed:
+  {
+    GST_DEBUG_OBJECT (v4l2object->element, "could not get buffer from pool");
+    return ret;
+  }
 queue_failed:
   {
     GST_DEBUG_OBJECT (v4l2object->element, "failed to queue buffer");

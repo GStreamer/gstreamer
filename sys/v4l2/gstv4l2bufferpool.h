@@ -39,34 +39,31 @@ GST_DEBUG_CATEGORY_EXTERN (v4l2buffer_debug);
 G_BEGIN_DECLS
 
 
-GType gst_v4l2_buffer_pool_get_type (void);
 #define GST_TYPE_V4L2_BUFFER_POOL (gst_v4l2_buffer_pool_get_type())
 #define GST_IS_V4L2_BUFFER_POOL(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_V4L2_BUFFER_POOL))
 #define GST_V4L2_BUFFER_POOL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_V4L2_BUFFER_POOL, GstV4l2BufferPool))
 
-#define GST_V4L2_BUFFER_POOL_LOCK(pool)     g_mutex_lock ((pool)->lock)
-#define GST_V4L2_BUFFER_POOL_UNLOCK(pool)   g_mutex_unlock ((pool)->lock)
-
 struct _GstV4l2BufferPool
 {
-  GObject parent;
+  GstBufferPool parent;
 
   GstV4l2Object *obj;       /* the v4l2 object */
-  gboolean requeuebuf;       /* if true, unusued buffers are automatically re-QBUF'd */
-  enum v4l2_buf_type type;   /* V4L2_BUF_TYPE_VIDEO_CAPTURE, V4L2_BUF_TYPE_VIDEO_OUTPUT */
-
-  GMutex *lock;
-  gboolean running;          /* with lock */
-  gint num_live_buffers;     /* number of buffers not with driver */
-  GAsyncQueue* avail_buffers;/* pool of available buffers, not with the driver and which aren't held outside the bufferpool */
   gint video_fd;             /* a dup(2) of the v4l2object's video_fd */
+  gboolean requeuebuf;       /* if true, unusued buffers are automatically re-QBUF'd */
+
+  guint min_buffers;
+  guint max_buffers;
+
   guint buffer_count;
+  gint index;
+  gint num_live_buffers;     /* number of buffers not with driver */
+
   GstBuffer **buffers;
 };
 
 struct _GstV4l2BufferPoolClass
 {
-  GObjectClass parent_class;
+  GstBufferPoolClass parent_class;
 };
 
 struct _GstMetaV4l2 {
@@ -74,24 +71,19 @@ struct _GstMetaV4l2 {
 
   gpointer mem;
   struct v4l2_buffer vbuffer;
-
-  GstV4l2BufferPool *pool;
 };
 
 const GstMetaInfo * gst_meta_v4l2_get_info (void);
 #define GST_META_V4L2_GET(buf) ((GstMetaV4l2 *)gst_buffer_get_meta(buf,gst_meta_v4l2_get_info()))
 #define GST_META_V4L2_ADD(buf) ((GstMetaV4l2 *)gst_buffer_add_meta(buf,gst_meta_v4l2_get_info(),NULL))
 
-GstV4l2BufferPool * gst_v4l2_buffer_pool_new     (GstV4l2Object *obj, gint num_buffers, gboolean requeuebuf);
-void                gst_v4l2_buffer_pool_destroy (GstV4l2BufferPool * pool);
+GType gst_v4l2_buffer_pool_get_type (void);
 
-GstBuffer *         gst_v4l2_buffer_pool_get     (GstV4l2BufferPool *pool, gboolean blocking);
+GstBufferPool *     gst_v4l2_buffer_pool_new     (GstV4l2Object *obj);
 
+gboolean            gst_v4l2_buffer_pool_qbuf    (GstBufferPool * bpool, GstBuffer * buf);
 
-gboolean            gst_v4l2_buffer_pool_qbuf    (GstV4l2BufferPool *pool, GstBuffer *buf);
-GstBuffer *         gst_v4l2_buffer_pool_dqbuf   (GstV4l2BufferPool *pool);
-
-gint                gst_v4l2_buffer_pool_available_buffers (GstV4l2BufferPool *pool);
+gint                gst_v4l2_buffer_pool_available_buffers (GstBufferPool *pool);
 
 G_END_DECLS
 

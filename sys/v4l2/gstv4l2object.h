@@ -119,7 +119,7 @@ struct _GstV4l2Object {
   guint32 min_queued_bufs;
   gboolean always_copy;
   gboolean use_mmap;
-  GstV4l2BufferPool *pool;
+  GstBufferPool *pool;
 
   /* the video device's capabilities */
   struct v4l2_capability vcap;
