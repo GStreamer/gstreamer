@@ -110,6 +110,7 @@ struct _TSDemuxStream
   GstBufferListIterator *currentit;
   GList *currentlist;
 
+  /* Current PTS for this stream */
   GstClockTime pts;
 };
 
@@ -305,6 +306,7 @@ static void
 gst_ts_demux_reset (MpegTSBase * base)
 {
   GstTSDemux *demux = (GstTSDemux *) base;
+
   if (demux->index) {
     g_array_free (demux->index, TRUE);
     demux->index = NULL;
@@ -2409,5 +2411,5 @@ gst_ts_demux_plugin_init (GstPlugin * plugin)
       "MPEG transport stream demuxer");
 
   return gst_element_register (plugin, "tsdemux",
-      GST_RANK_SECONDARY, GST_TYPE_TS_DEMUX);
+      GST_RANK_PRIMARY + 42, GST_TYPE_TS_DEMUX);
 }

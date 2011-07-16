@@ -72,9 +72,12 @@ struct _MpegTSBaseProgram
 };
 
 typedef enum {
-  BASE_MODE_SCANNING,
-  BASE_MODE_SEEKING,
-  BASE_MODE_STREAMING,
+  /* PULL MODE */
+  BASE_MODE_SCANNING,		/* Looking for PAT/PMT */
+  BASE_MODE_SEEKING,		/* Seeking */
+  BASE_MODE_STREAMING,		/* Normal mode (pushing out data) */
+
+  /* PUSH MODE */
   BASE_MODE_PUSHING
 } MpegTSBaseMode;
 
@@ -134,6 +137,7 @@ struct _MpegTSBaseClass {
   void (*reset) (MpegTSBase *base);
   GstFlowReturn (*push) (MpegTSBase *base, MpegTSPacketizerPacket *packet, MpegTSPacketizerSection * section);
   gboolean (*push_event) (MpegTSBase *base, GstEvent * event);
+
   /* program_started gets called when program's pmt arrives for first time */
   void (*program_started) (MpegTSBase *base, MpegTSBaseProgram *program);
   /* program_stopped gets called when pat no longer has program's pmt */
@@ -145,7 +149,7 @@ struct _MpegTSBaseClass {
   void (*stream_removed) (MpegTSBase *base, MpegTSBaseStream *stream);
 
   /* find_timestamps is called to find PCR */
- GstFlowReturn (*find_timestamps) (MpegTSBase * base, guint64 initoff, guint64 *offset);
+  GstFlowReturn (*find_timestamps) (MpegTSBase * base, guint64 initoff, guint64 *offset);
 
   /* seek is called to wait for seeking */
   GstFlowReturn (*seek) (MpegTSBase * base, GstEvent * event, guint16 pid);
