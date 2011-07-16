@@ -35,8 +35,6 @@
 
 
 #if defined (HAVE_CPU_PPC64) || defined (HAVE_CPU_PPC)
-#include <sys/types.h>
-#include <sys/sysctl.h>
 #include "ppc_zoom_ultimate.h"
 #include "ppc_drawings.h"
 #endif /* HAVE_CPU_PPC64 || HAVE_CPU_PPC */
