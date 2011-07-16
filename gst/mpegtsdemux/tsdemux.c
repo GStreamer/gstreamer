@@ -2208,16 +2208,80 @@ gst_ts_demux_queue_data (GstTSDemux * demux, TSDemuxStream * stream,
   return;
 }
 
+static void
+calculate_and_push_newsegment (GstTSDemux * demux, TSDemuxStream * stream)
+{
+  MpegTSBase *base = (MpegTSBase *) demux;
+  GstClockTime firstpts = GST_CLOCK_TIME_NONE;
+  GstEvent *newsegmentevent;
+  guint i;
+  gint64 start, stop, position;
+
+  GST_DEBUG ("Creating new newsegment");
+
+  /* Outgoing newsegment values
+   * start    : The first/start PTS
+   * stop     : The last PTS (or -1)
+   * position : The stream time corresponding to start
+   *
+   * Except for live mode with incoming GST_TIME_FORMAT newsegment where
+   * it is the same values as that incoming newsegment (and we convert the
+   * PTS to that remote clock).
+   */
+
+  /* Find the earliest current PTS we're going to push */
+  for (i = 0; i < 0x2000; i++) {
+    if (demux->program->streams[i]) {
+      if ((!GST_CLOCK_TIME_IS_VALID (firstpts))
+          || (((TSDemuxStream *) demux->program->streams[i])->pts < firstpts))
+        firstpts = ((TSDemuxStream *) demux->program->streams[i])->pts;
+    }
+  }
+
+  if (base->mode == BASE_MODE_PUSHING) {
+    /* FIXME : We're just ignore the upstream format for the time being */
+    /* FIXME : We should use base->segment.format and a upstream latency query
+     * to decide if we need to use live values or not */
+
+    start = firstpts;
+    stop = GST_CLOCK_TIME_NONE;
+    position = demux->segment.time;
+  } else {
+    /* pull mode */
+    GST_DEBUG ("pull-based. Segment start:%" GST_TIME_FORMAT " duration:%"
+        GST_TIME_FORMAT ", time:%" GST_TIME_FORMAT,
+        GST_TIME_ARGS (demux->segment.start),
+        GST_TIME_ARGS (demux->segment.duration),
+        GST_TIME_ARGS (demux->segment.time));
+
+    GST_DEBUG ("firstpcr gsttime : %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (demux->first_pcr.gsttime));
+
+    /* FIXME : This is not entirely correct. We should be using the PTS time
+     * realm and not the PCR one. Doesn't matter *too* much if PTS/PCR values
+     * aren't too far apart, but still.  */
+    start = demux->first_pcr.gsttime + demux->segment.start;
+    stop = demux->first_pcr.gsttime + demux->segment.duration;
+    position = demux->segment.time;
+  }
+
+  GST_DEBUG ("new segment:   start: %" GST_TIME_FORMAT " stop: %"
+      GST_TIME_FORMAT " time: %" GST_TIME_FORMAT, GST_TIME_ARGS (start),
+      GST_TIME_ARGS (stop), GST_TIME_ARGS (position));
+  newsegmentevent =
+      gst_event_new_new_segment (0, 1.0, GST_FORMAT_TIME, start, stop,
+      position);
+
+  push_event ((MpegTSBase *) demux, newsegmentevent);
+
+  demux->need_newsegment = FALSE;
+}
+
 static GstFlowReturn
 gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream)
 {
   GstFlowReturn res = GST_FLOW_OK;
   MpegTSBaseStream *bs = (MpegTSBaseStream *) stream;
-
-
-  guint i;
-  GstClockTime tinypts = GST_CLOCK_TIME_NONE;
-  GstEvent *newsegmentevent;
 
   GST_DEBUG ("stream:%p, pid:0x%04x stream_type:%d state:%d pad:%s:%s",
       stream, bs->pid, bs->stream_type, stream->state,
@@ -2233,81 +2297,43 @@ gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream)
     goto beach;
   }
 
-  /* We have a confirmed buffer, let's push it out */
-  if (stream->state == PENDING_PACKET_BUFFER) {
-    GST_LOG ("BUFFER: pushing out pending data");
-    stream->currentlist = g_list_reverse (stream->currentlist);
-    gst_buffer_list_iterator_add_list (stream->currentit, stream->currentlist);
+  if (G_UNLIKELY (stream->state != PENDING_PACKET_BUFFER))
+    goto beach;
+
+  if (G_UNLIKELY (stream->pad == NULL)) {
+    g_list_foreach (stream->currentlist, (GFunc) gst_buffer_unref, NULL);
+    g_list_free (stream->currentlist);
     gst_buffer_list_iterator_free (stream->currentit);
-
-
-    if (stream->pad) {
-
-      if (demux->need_newsegment) {
-
-        for (i = 0; i < 0x2000; i++) {
-
-          if (demux->program->streams[i]) {
-            if ((!GST_CLOCK_TIME_IS_VALID (tinypts))
-                || (((TSDemuxStream *) demux->program->streams[i])->pts <
-                    tinypts))
-              tinypts = ((TSDemuxStream *) demux->program->streams[i])->pts;
-          }
-        }
-
-        GST_DEBUG ("old segment: tinypts: %" GST_TIME_FORMAT " stop: %"
-            GST_TIME_FORMAT " time: %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (tinypts),
-            GST_TIME_ARGS (demux->first_pcr.gsttime + demux->duration),
-            GST_TIME_ARGS (tinypts - demux->first_pcr.gsttime));
-/*         newsegmentevent = */
-/*             gst_event_new_new_segment (0, 1.0, GST_FORMAT_TIME, tinypts, */
-/*             demux->first_pcr.gsttime + demux->duration, */
-/*             tinypts - demux->first_pcr.gsttime); */
-        GST_DEBUG ("new segment:   start: %" GST_TIME_FORMAT " stop: %"
-            GST_TIME_FORMAT " time: %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (demux->first_pcr.gsttime + demux->segment.start),
-            GST_TIME_ARGS (demux->first_pcr.gsttime + demux->segment.duration),
-            GST_TIME_ARGS (demux->segment.time));
-        newsegmentevent =
-            gst_event_new_new_segment (0, 1.0, GST_FORMAT_TIME,
-            demux->first_pcr.gsttime + demux->segment.start,
-            demux->first_pcr.gsttime + demux->segment.duration,
-            demux->segment.time);
-
-        push_event ((MpegTSBase *) demux, newsegmentevent);
-
-        demux->need_newsegment = FALSE;
-      }
-
-      GST_DEBUG_OBJECT (stream->pad,
-          "Pushing buffer list with timestamp: %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (gst_buffer_list_get
-                  (stream->current, 0, 0))));
-
-      res = gst_pad_push_list (stream->pad, stream->current);
-      GST_DEBUG_OBJECT (stream->pad, "Returned %s", gst_flow_get_name (res));
-      /* FIXME : combine flow returns */
-      res = tsdemux_combine_flows (demux, stream, res);
-      GST_DEBUG_OBJECT (stream->pad, "combined %s", gst_flow_get_name (res));
-    } else {
-      gst_buffer_list_unref (stream->current);
-    }
+    gst_buffer_list_unref (stream->current);
+    goto beach;
   }
+
+  if (G_UNLIKELY (demux->need_newsegment))
+    calculate_and_push_newsegment (demux, stream);
+
+  /* We have a confirmed buffer, let's push it out */
+  GST_LOG ("Putting pending data into GstBufferList");
+  stream->currentlist = g_list_reverse (stream->currentlist);
+  gst_buffer_list_iterator_add_list (stream->currentit, stream->currentlist);
+  gst_buffer_list_iterator_free (stream->currentit);
+
+  GST_DEBUG_OBJECT (stream->pad,
+      "Pushing buffer list with timestamp: %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (gst_buffer_list_get
+              (stream->current, 0, 0))));
+
+  res = gst_pad_push_list (stream->pad, stream->current);
+  GST_DEBUG_OBJECT (stream->pad, "Returned %s", gst_flow_get_name (res));
+  res = tsdemux_combine_flows (demux, stream, res);
+  GST_DEBUG_OBJECT (stream->pad, "combined %s", gst_flow_get_name (res));
 
 beach:
   /* Reset everything */
   GST_LOG ("Resetting to EMPTY");
   stream->state = PENDING_PACKET_EMPTY;
-
-  /* for (i = 0; i < stream->nbpending; i++) */
-  /*   gst_buffer_unref (stream->pendingbuffers[i]); */
   memset (stream->pendingbuffers, 0, TS_MAX_PENDING_BUFFERS);
   stream->nbpending = 0;
-
   stream->current = NULL;
-
-
 
   return res;
 }
