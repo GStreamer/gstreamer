@@ -369,7 +369,7 @@ gst_event_has_name (GstEvent * event, const gchar * name)
  * required.
  *
  * Note that events and messages share the same sequence number incrementor;
- * two events or messages will never not have the same sequence number unless
+ * two events or messages will never have the same sequence number unless
  * that correspondence was made explicitly.
  *
  * Returns: The event's sequence number.

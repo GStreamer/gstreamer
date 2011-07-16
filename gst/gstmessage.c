@@ -301,7 +301,7 @@ gst_message_new_custom (GstMessageType type, GstObject * src,
  * it is not required.
  *
  * Note that events and messages share the same sequence number incrementor;
- * two events or messages will never not have the same sequence number unless
+ * two events or messages will never have the same sequence number unless
  * that correspondence was made explicitly.
  *
  * Returns: The message's sequence number.
