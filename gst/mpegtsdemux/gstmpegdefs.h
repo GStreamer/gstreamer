@@ -44,7 +44,11 @@
  * 1111 0111                ITU-T Rec. H.222.1 type D
  * 1111 1000                ITU-T Rec. H.222.1 type E
  * 1111 1001                ancillary_stream
- * 1111 1010 E 1111 1110    reserved data stream
+ * 1111 1010                ISO/IEC 14496-1_SL-packetized_stream
+ * 1111 1011                ISO/IEC 14496-1_FlexMux_stream
+ * 1111 1100                metadata stream
+ * 1111 1101                extended_stream_id
+ * 1111 1110                reserved data stream
  * 1111 1111                program_stream_directory
  */
 
@@ -69,9 +73,9 @@
 #define ID_ITU_TREC_H222_TYPE_D_STREAM          0x000001F7
 #define ID_ITU_TREC_H222_TYPE_E_STREAM          0x000001F8
 #define ID_ANCILLARY_STREAM                     0x000001F9
-#define ID_RESERVED_STREAM_1                    0x000001FA
-#define ID_RESERVED_STREAM_2                    0x000001FB
-#define ID_EXTENDED_METADATA                    0x000001FC
+#define ID_14496_1_SL_PACKETIZED_STREAM         0x000001FA
+#define ID_14496_1_SL_FLEXMUX_STREAM            0x000001FB
+#define ID_METADATA_STREAM                      0x000001FC
 #define ID_EXTENDED_STREAM_ID                   0x000001FD
 #define ID_RESERVED_STREAM_3                    0x000001FE
 #define ID_PROGRAM_STREAM_DIRECTORY             0x000001FF
