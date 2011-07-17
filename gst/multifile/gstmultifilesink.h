@@ -55,7 +55,8 @@ typedef struct _GstMultiFileSinkClass GstMultiFileSinkClass;
 typedef enum {
   GST_MULTI_FILE_SINK_NEXT_BUFFER,
   GST_MULTI_FILE_SINK_NEXT_DISCONT,
-  GST_MULTI_FILE_SINK_NEXT_KEY_FRAME
+  GST_MULTI_FILE_SINK_NEXT_KEY_FRAME,
+  GST_MULTI_FILE_SINK_NEXT_KEY_UNIT_EVENT
 } GstMultiFileSinkNext;
 
 struct _GstMultiFileSink
@@ -75,6 +76,7 @@ struct _GstMultiFileSink
 
   int n_streamheaders;
   GstBuffer **streamheaders;
+  guint force_key_unit_count;
 };
 
 struct _GstMultiFileSinkClass

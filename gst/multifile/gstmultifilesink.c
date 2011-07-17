@@ -110,6 +110,7 @@
 #  include "config.h"
 #endif
 #include <gst/base/gstbasetransform.h>
+#include <gst/video/video.h>
 #include <glib/gstdio.h>
 #include "gstmultifilesink.h"
 
@@ -156,6 +157,8 @@ static void gst_multi_file_sink_close_file (GstMultiFileSink * multifilesink,
     GstBuffer * buffer);
 static void gst_multi_file_sink_ensure_max_files (GstMultiFileSink *
     multifilesink);
+static gboolean gst_multi_file_sink_event (GstBaseSink * sink,
+    GstEvent * event);
 
 #define GST_TYPE_MULTI_FILE_SINK_NEXT (gst_multi_file_sink_next_get_type ())
 static GType
@@ -168,6 +171,8 @@ gst_multi_file_sink_next_get_type (void)
         "discont"},
     {GST_MULTI_FILE_SINK_NEXT_KEY_FRAME, "New file at each key frame "
           "(Useful for MPEG-TS segmenting)", "key-frame"},
+    {GST_MULTI_FILE_SINK_NEXT_KEY_UNIT_EVENT,
+        "New file after a force key unit event", "key-unit-event"},
     {0, NULL, NULL}
   };
 
@@ -265,6 +270,7 @@ gst_multi_file_sink_class_init (GstMultiFileSinkClass * klass)
   gstbasesink_class->render = GST_DEBUG_FUNCPTR (gst_multi_file_sink_render);
   gstbasesink_class->set_caps =
       GST_DEBUG_FUNCPTR (gst_multi_file_sink_set_caps);
+  gstbasesink_class->event = GST_DEBUG_FUNCPTR (gst_multi_file_sink_event);
 }
 
 static void
@@ -281,6 +287,7 @@ gst_multi_file_sink_init (GstMultiFileSink * multifilesink,
   gst_base_sink_set_sync (GST_BASE_SINK (multifilesink), FALSE);
 
   multifilesink->next_segment = GST_CLOCK_TIME_NONE;
+  multifilesink->force_key_unit_count = -1;
 }
 
 static void
@@ -383,7 +390,35 @@ gst_multi_file_sink_stop (GstBaseSink * sink)
     multifilesink->streamheaders = NULL;
   }
 
+  multifilesink->force_key_unit_count = -1;
+
   return TRUE;
+}
+
+
+static void
+gst_multi_file_sink_post_message_full (GstMultiFileSink * multifilesink,
+    GstClockTime timestamp, GstClockTime duration, GstClockTime offset,
+    GstClockTime offset_end, GstClockTime running_time,
+    GstClockTime stream_time, const char *filename)
+{
+  GstStructure *s;
+
+  if (!multifilesink->post_messages)
+    return;
+
+  s = gst_structure_new ("GstMultiFileSink",
+      "filename", G_TYPE_STRING, filename,
+      "index", G_TYPE_INT, multifilesink->index,
+      "timestamp", G_TYPE_UINT64, timestamp,
+      "stream-time", G_TYPE_UINT64, stream_time,
+      "running-time", G_TYPE_UINT64, running_time,
+      "duration", G_TYPE_UINT64, duration,
+      "offset", G_TYPE_UINT64, offset,
+      "offset-end", G_TYPE_UINT64, offset_end, NULL);
+
+  gst_element_post_message (GST_ELEMENT_CAST (multifilesink),
+      gst_message_new_element (GST_OBJECT_CAST (multifilesink), s));
 }
 
 
@@ -391,38 +426,28 @@ static void
 gst_multi_file_sink_post_message (GstMultiFileSink * multifilesink,
     GstBuffer * buffer, const char *filename)
 {
-  if (multifilesink->post_messages) {
-    GstClockTime duration, timestamp;
-    GstClockTime running_time, stream_time;
-    guint64 offset, offset_end;
-    GstStructure *s;
-    GstSegment *segment;
-    GstFormat format;
+  GstClockTime duration, timestamp;
+  GstClockTime running_time, stream_time;
+  guint64 offset, offset_end;
+  GstSegment *segment;
+  GstFormat format;
 
-    segment = &GST_BASE_SINK (multifilesink)->segment;
-    format = segment->format;
+  if (!multifilesink->post_messages)
+    return;
 
-    timestamp = GST_BUFFER_TIMESTAMP (buffer);
-    duration = GST_BUFFER_DURATION (buffer);
-    offset = GST_BUFFER_OFFSET (buffer);
-    offset_end = GST_BUFFER_OFFSET_END (buffer);
+  segment = &GST_BASE_SINK (multifilesink)->segment;
+  format = segment->format;
 
-    running_time = gst_segment_to_running_time (segment, format, timestamp);
-    stream_time = gst_segment_to_stream_time (segment, format, timestamp);
+  timestamp = GST_BUFFER_TIMESTAMP (buffer);
+  duration = GST_BUFFER_DURATION (buffer);
+  offset = GST_BUFFER_OFFSET (buffer);
+  offset_end = GST_BUFFER_OFFSET_END (buffer);
 
-    s = gst_structure_new ("GstMultiFileSink",
-        "filename", G_TYPE_STRING, filename,
-        "index", G_TYPE_INT, multifilesink->index,
-        "timestamp", G_TYPE_UINT64, timestamp,
-        "stream-time", G_TYPE_UINT64, stream_time,
-        "running-time", G_TYPE_UINT64, running_time,
-        "duration", G_TYPE_UINT64, duration,
-        "offset", G_TYPE_UINT64, offset,
-        "offset-end", G_TYPE_UINT64, offset_end, NULL);
+  running_time = gst_segment_to_running_time (segment, format, timestamp);
+  stream_time = gst_segment_to_stream_time (segment, format, timestamp);
 
-    gst_element_post_message (GST_ELEMENT_CAST (multifilesink),
-        gst_message_new_element (GST_OBJECT_CAST (multifilesink), s));
-  }
+  gst_multi_file_sink_post_message_full (multifilesink, timestamp, duration,
+      offset, offset_end, running_time, stream_time, filename);
 }
 
 static GstFlowReturn
@@ -506,6 +531,18 @@ gst_multi_file_sink_render (GstBaseSink * sink, GstBuffer * buffer)
               goto stdio_write_error;
           }
         }
+      }
+
+      ret = fwrite (GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer), 1,
+          multifilesink->file);
+      if (ret != 1)
+        goto stdio_write_error;
+
+      break;
+    case GST_MULTI_FILE_SINK_NEXT_KEY_UNIT_EVENT:
+      if (multifilesink->file == NULL) {
+        if (!gst_multi_file_sink_open_next_file (multifilesink))
+          goto stdio_write_error;
       }
 
       ret = fwrite (GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer), 1,
@@ -602,6 +639,71 @@ gst_multi_file_sink_ensure_max_files (GstMultiFileSink * multifilesink)
 }
 
 static gboolean
+gst_multi_file_sink_event (GstBaseSink * sink, GstEvent * event)
+{
+  GstMultiFileSink *multifilesink;
+  gchar *filename;
+  gboolean res = TRUE;
+
+  multifilesink = GST_MULTI_FILE_SINK (sink);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CUSTOM_DOWNSTREAM:
+    {
+      GstClockTime timestamp, duration;
+      GstClockTime running_time, stream_time;
+      guint64 offset, offset_end;
+      gboolean all_headers;
+      guint count;
+
+      if (multifilesink->next_file != GST_MULTI_FILE_SINK_NEXT_KEY_UNIT_EVENT ||
+          !gst_video_event_is_force_key_unit (event))
+        goto out;
+
+      gst_video_event_parse_downstream_force_key_unit (event, &timestamp,
+          &stream_time, &running_time, &all_headers, &count);
+
+      if (multifilesink->force_key_unit_count != -1 &&
+          multifilesink->force_key_unit_count == count)
+        goto out;
+
+      multifilesink->force_key_unit_count = count;
+
+      if (multifilesink->file) {
+        duration = GST_CLOCK_TIME_NONE;
+        offset = offset_end = -1;
+        filename = g_strdup_printf (multifilesink->filename,
+            multifilesink->index);
+        gst_multi_file_sink_post_message_full (multifilesink, timestamp,
+            duration, offset, offset_end, running_time, stream_time, filename);
+
+        g_free (filename);
+
+        gst_multi_file_sink_close_file (multifilesink, NULL);
+
+      }
+
+      if (multifilesink->file == NULL) {
+        if (!gst_multi_file_sink_open_next_file (multifilesink))
+          goto stdio_write_error;
+      }
+
+      break;
+    }
+    default:
+      break;
+  }
+
+out:
+  return res;
+
+stdio_write_error:
+  GST_ELEMENT_ERROR (multifilesink, RESOURCE, WRITE,
+      ("Error while writing to file."), (NULL));
+  return FALSE;
+}
+
+static gboolean
 gst_multi_file_sink_open_next_file (GstMultiFileSink * multifilesink)
 {
   char *filename;
@@ -616,6 +718,7 @@ gst_multi_file_sink_open_next_file (GstMultiFileSink * multifilesink)
     return FALSE;
   }
 
+  GST_INFO_OBJECT (multifilesink, "opening file %s", filename);
   multifilesink->files = g_slist_append (multifilesink->files, filename);
   multifilesink->n_files += 1;
 

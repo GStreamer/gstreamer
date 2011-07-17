@@ -237,6 +237,8 @@ elements_level_LDADD = $(LDADD) $(LIBM)
 
 elements_matroskamux_LDADD = $(GST_BASE_LIBS) $(LDADD) $(LIBM)
 
+elements_multifile_LDADD = $(GST_BASE_LIBS) -lgstvideo-$(GST_MAJORMINOR) $(LDADD) $(LIBM)
+
 elements_qtmux_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) $(AM_CFLAGS)
 elements_qtmux_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstpbutils-@GST_MAJORMINOR@ \
              $(GST_BASE_LIBS) $(GST_LIBS) $(GST_CHECK_LIBS)
