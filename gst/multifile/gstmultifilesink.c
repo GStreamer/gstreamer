@@ -148,6 +148,10 @@ static GstFlowReturn gst_multi_file_sink_render (GstBaseSink * sink,
     GstBuffer * buffer);
 static gboolean gst_multi_file_sink_set_caps (GstBaseSink * sink,
     GstCaps * caps);
+static gboolean gst_multi_file_sink_open_next_file (GstMultiFileSink *
+    multifilesink);
+static void gst_multi_file_sink_close_file (GstMultiFileSink * multifilesink,
+    GstBuffer * buffer);
 
 #define GST_TYPE_MULTI_FILE_SINK_NEXT (gst_multi_file_sink_next_get_type ())
 static GType
@@ -420,25 +424,12 @@ gst_multi_file_sink_render (GstBaseSink * sink, GstBuffer * buffer)
       break;
     case GST_MULTI_FILE_SINK_NEXT_DISCONT:
       if (GST_BUFFER_IS_DISCONT (buffer)) {
-        if (multifilesink->file) {
-          fclose (multifilesink->file);
-          multifilesink->file = NULL;
-
-          filename = g_strdup_printf (multifilesink->filename,
-              multifilesink->index);
-          gst_multi_file_sink_post_message (multifilesink, buffer, filename);
-          g_free (filename);
-          multifilesink->index++;
-        }
+        if (multifilesink->file)
+          gst_multi_file_sink_close_file (multifilesink, buffer);
       }
 
       if (multifilesink->file == NULL) {
-        filename = g_strdup_printf (multifilesink->filename,
-            multifilesink->index);
-        multifilesink->file = g_fopen (filename, "wb");
-        g_free (filename);
-
-        if (multifilesink->file == NULL)
+        if (!gst_multi_file_sink_open_next_file (multifilesink))
           goto stdio_write_error;
       }
 
@@ -459,16 +450,8 @@ gst_multi_file_sink_render (GstBaseSink * sink, GstBuffer * buffer)
       if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer) &&
           GST_BUFFER_TIMESTAMP (buffer) >= multifilesink->next_segment &&
           !GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT)) {
-        if (multifilesink->file) {
-          fclose (multifilesink->file);
-          multifilesink->file = NULL;
-
-          filename = g_strdup_printf (multifilesink->filename,
-              multifilesink->index);
-          gst_multi_file_sink_post_message (multifilesink, buffer, filename);
-          g_free (filename);
-          multifilesink->index++;
-        }
+        if (multifilesink->file)
+          gst_multi_file_sink_close_file (multifilesink, buffer);
 
         multifilesink->next_segment += 10 * GST_SECOND;
       }
@@ -476,12 +459,7 @@ gst_multi_file_sink_render (GstBaseSink * sink, GstBuffer * buffer)
       if (multifilesink->file == NULL) {
         int i;
 
-        filename = g_strdup_printf (multifilesink->filename,
-            multifilesink->index);
-        multifilesink->file = g_fopen (filename, "wb");
-        g_free (filename);
-
-        if (multifilesink->file == NULL)
+        if (!gst_multi_file_sink_open_next_file (multifilesink))
           goto stdio_write_error;
 
         if (multifilesink->streamheaders) {
@@ -570,4 +548,39 @@ gst_multi_file_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
   }
 
   return TRUE;
+}
+
+static gboolean
+gst_multi_file_sink_open_next_file (GstMultiFileSink * multifilesink)
+{
+  char *filename;
+
+  g_return_val_if_fail (multifilesink->file == NULL, FALSE);
+
+  filename = g_strdup_printf (multifilesink->filename, multifilesink->index);
+  multifilesink->file = g_fopen (filename, "wb");
+  g_free (filename);
+
+  if (multifilesink->file == NULL)
+    return FALSE;
+
+  return TRUE;
+}
+
+static void
+gst_multi_file_sink_close_file (GstMultiFileSink * multifilesink,
+    GstBuffer * buffer)
+{
+  char *filename;
+
+  fclose (multifilesink->file);
+  multifilesink->file = NULL;
+
+  if (buffer) {
+    filename = g_strdup_printf (multifilesink->filename, multifilesink->index);
+    gst_multi_file_sink_post_message (multifilesink, buffer, filename);
+    g_free (filename);
+  }
+
+  multifilesink->index++;
 }
