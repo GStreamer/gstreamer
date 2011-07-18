@@ -414,6 +414,135 @@ _find_nearest_frame (GstOMXVideoDec * self, GstOMXBuffer * buf)
   return best;
 }
 
+static gboolean
+gst_omx_video_dec_fill_buffer (GstOMXVideoDec * self, GstOMXBuffer * inbuf,
+    GstBuffer * outbuf)
+{
+  GstVideoState *state = &GST_BASE_VIDEO_CODEC (self)->state;
+  OMX_PARAM_PORTDEFINITIONTYPE *port_def = &self->out_port->port_def;
+  gboolean ret = FALSE;
+
+  if (state->width != port_def->format.video.nFrameWidth ||
+      state->height != port_def->format.video.nFrameHeight) {
+    GST_ERROR_OBJECT (self, "Width or height do not match");
+    goto done;
+  }
+
+  /* Same strides and everything */
+  if (GST_BUFFER_SIZE (outbuf) == inbuf->omx_buf->nFilledLen) {
+    memcpy (GST_BUFFER_DATA (outbuf),
+        inbuf->omx_buf->pBuffer + inbuf->omx_buf->nOffset,
+        inbuf->omx_buf->nFilledLen);
+    ret = TRUE;
+    goto done;
+  }
+  /* Different strides */
+
+  switch (state->format) {
+    case GST_VIDEO_FORMAT_I420:{
+      gint i, j, height;
+      guint8 *src, *dest;
+      gint src_stride, dest_stride;
+
+      for (i = 0; i < 3; i++) {
+        if (i == 0) {
+          src_stride = port_def->format.video.nStride;
+          dest_stride =
+              gst_video_format_get_row_stride (state->format, 0, state->width);
+        } else {
+          src_stride = port_def->format.video.nStride / 2;
+          dest_stride =
+              gst_video_format_get_row_stride (state->format, 1, state->width);
+        }
+
+        src = inbuf->omx_buf->pBuffer + inbuf->omx_buf->nOffset;
+        if (i > 0)
+          src +=
+              port_def->format.video.nSliceHeight *
+              port_def->format.video.nStride;
+        if (i == 2)
+          src +=
+              (port_def->format.video.nSliceHeight / 2) *
+              (port_def->format.video.nStride / 2);
+
+        dest =
+            GST_BUFFER_DATA (outbuf) +
+            gst_video_format_get_component_offset (state->format, i,
+            state->width, state->height);
+
+        height =
+            gst_video_format_get_component_height (state->format, i,
+            state->height);
+
+        for (j = 0; j < height; j++) {
+          memcpy (dest, src, MIN (src_stride, dest_stride));
+          src += src_stride;
+          dest += dest_stride;
+        }
+      }
+      ret = TRUE;
+      break;
+    }
+    case GST_VIDEO_FORMAT_NV12:{
+      gint i, j, height;
+      guint8 *src, *dest;
+      gint src_stride, dest_stride;
+
+      for (i = 0; i < 2; i++) {
+        if (i == 0) {
+          src_stride = port_def->format.video.nStride;
+          dest_stride =
+              gst_video_format_get_row_stride (state->format, 0, state->width);
+        } else {
+          src_stride = port_def->format.video.nStride;
+          dest_stride =
+              gst_video_format_get_row_stride (state->format, 1, state->width);
+        }
+
+        src = inbuf->omx_buf->pBuffer + inbuf->omx_buf->nOffset;
+        if (i == 1)
+          src +=
+              port_def->format.video.nSliceHeight *
+              port_def->format.video.nStride;
+
+        dest =
+            GST_BUFFER_DATA (outbuf) +
+            gst_video_format_get_component_offset (state->format, i,
+            state->width, state->height);
+
+        height =
+            gst_video_format_get_component_height (state->format, i,
+            state->height);
+        for (j = 0; j < height; j++) {
+          memcpy (dest, src, MIN (src_stride, dest_stride));
+          src += src_stride;
+          dest += dest_stride;
+        }
+      }
+      ret = TRUE;
+      break;
+    }
+    default:
+      GST_ERROR_OBJECT (self, "Unsupported format");
+      goto done;
+      break;
+  }
+
+
+done:
+  if (ret) {
+    GST_BUFFER_TIMESTAMP (outbuf) =
+        gst_util_uint64_scale (inbuf->omx_buf->nTimeStamp, GST_SECOND,
+        OMX_TICKS_PER_SECOND);
+    if (inbuf->omx_buf->nTickCount != 0)
+      GST_BUFFER_DURATION (outbuf) =
+          gst_util_uint64_scale (inbuf->omx_buf->nTickCount, GST_SECOND,
+          OMX_TICKS_PER_SECOND);
+  }
+
+  return ret;
+}
+
 static void
 gst_omx_video_dec_loop (GstOMXVideoDec * self)
 {
@@ -460,6 +589,7 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
 
     state->width = port_def.format.video.nFrameWidth;
     state->height = port_def.format.video.nFrameHeight;
+
     /* FIXME XXX: Bellagio does not set this to something useful... */
     /* gst_util_double_to_fraction (port_def.format.video.xFramerate / ((gdouble) 0xffff), &state->fps_n, &state->fps_d); */
     if (!gst_base_video_decoder_set_src_caps (GST_BASE_VIDEO_DECODER (self))) {
@@ -491,23 +621,10 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
 
     outbuf =
         gst_base_video_decoder_alloc_src_buffer (GST_BASE_VIDEO_DECODER (self));
-    if (GST_BUFFER_SIZE (outbuf) >= buf->omx_buf->nFilledLen) {
-      memcpy (GST_BUFFER_DATA (outbuf),
-          buf->omx_buf->pBuffer + buf->omx_buf->nOffset,
-          buf->omx_buf->nFilledLen);
-      GST_BUFFER_TIMESTAMP (outbuf) =
-          gst_util_uint64_scale (buf->omx_buf->nTimeStamp, GST_SECOND,
-          OMX_TICKS_PER_SECOND);
-      if (buf->omx_buf->nTickCount != 0)
-        GST_BUFFER_DURATION (outbuf) =
-            gst_util_uint64_scale (buf->omx_buf->nTickCount, GST_SECOND,
-            OMX_TICKS_PER_SECOND);
-      flow_ret = gst_pad_push (GST_BASE_VIDEO_CODEC_SRC_PAD (self), outbuf);
-    } else {
-      GST_ERROR_OBJECT (self, "Invalid frame size (%u < %u)",
-          GST_BUFFER_SIZE (outbuf), buf->omx_buf->nFilledLen);
+
+    if (!gst_omx_video_dec_fill_buffer (self, buf, outbuf)) {
       gst_buffer_unref (outbuf);
-      goto invalid_frame_size;
+      goto invalid_buffer;
     }
   } else if (buf->omx_buf->nFilledLen > 0) {
     if (GST_BASE_VIDEO_CODEC (self)->state.bytes_per_picture == 0) {
@@ -524,17 +641,11 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
        * We first need to reconfigure the output port and then the input
        * port if both need reconfiguration.
        */
-      if (GST_BUFFER_SIZE (frame->src_buffer) >= buf->omx_buf->nFilledLen) {
-        memcpy (GST_BUFFER_DATA (frame->src_buffer),
-            buf->omx_buf->pBuffer + buf->omx_buf->nOffset,
-            buf->omx_buf->nFilledLen);
-      } else {
-        GST_ERROR_OBJECT (self, "Invalid frame size (%u < %u)",
-            GST_BUFFER_SIZE (frame->src_buffer), buf->omx_buf->nFilledLen);
+      if (!gst_omx_video_dec_fill_buffer (self, buf, frame->src_buffer)) {
         gst_buffer_replace (&frame->src_buffer, NULL);
         gst_base_video_decoder_finish_frame (GST_BASE_VIDEO_DECODER (self),
             frame);
-        goto invalid_frame_size;
+        goto invalid_buffer;
       }
     }
     flow_ret =
@@ -601,9 +712,10 @@ reconfigure_error:
     gst_pad_pause_task (GST_BASE_VIDEO_CODEC_SRC_PAD (self));
     return;
   }
-invalid_frame_size:
+invalid_buffer:
   {
-    GST_ELEMENT_ERROR (self, LIBRARY, SETTINGS, (NULL), ("Invalid frame size"));
+    GST_ELEMENT_ERROR (self, LIBRARY, SETTINGS, (NULL),
+        ("Invalid sized input buffer"));
     gst_pad_push_event (GST_BASE_VIDEO_CODEC_SRC_PAD (self),
         gst_event_new_eos ());
     gst_pad_pause_task (GST_BASE_VIDEO_CODEC_SRC_PAD (self));
