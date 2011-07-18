@@ -95,6 +95,8 @@ static GstBuffer *gst_rtp_h264_depay_process (GstBaseRTPDepayload * depayload,
     GstBuffer * buf);
 static gboolean gst_rtp_h264_depay_setcaps (GstBaseRTPDepayload * filter,
     GstCaps * caps);
+static gboolean gst_rtp_h264_depay_handle_event (GstBaseRTPDepayload * depay,
+    GstEvent * event);
 
 static void
 gst_rtp_h264_depay_base_init (gpointer klass)
@@ -141,6 +143,7 @@ gst_rtp_h264_depay_class_init (GstRtpH264DepayClass * klass)
 
   gstbasertpdepayload_class->process = gst_rtp_h264_depay_process;
   gstbasertpdepayload_class->set_caps = gst_rtp_h264_depay_setcaps;
+  gstbasertpdepayload_class->handle_event = gst_rtp_h264_depay_handle_event;
 
   GST_DEBUG_CATEGORY_INIT (rtph264depay_debug, "rtph264depay", 0,
       "H264 Video RTP Depayloader");
@@ -154,6 +157,17 @@ gst_rtp_h264_depay_init (GstRtpH264Depay * rtph264depay,
   rtph264depay->picture_adapter = gst_adapter_new ();
   rtph264depay->byte_stream = DEFAULT_BYTE_STREAM;
   rtph264depay->merge = DEFAULT_ACCESS_UNIT;
+}
+
+static void
+gst_rtp_h264_depay_reset (GstRtpH264Depay * rtph264depay)
+{
+  gst_adapter_clear (rtph264depay->adapter);
+  rtph264depay->wait_start = TRUE;
+  gst_adapter_clear (rtph264depay->picture_adapter);
+  rtph264depay->picture_start = FALSE;
+  rtph264depay->last_keyframe = FALSE;
+  rtph264depay->last_ts = 0;
 }
 
 static void
@@ -835,6 +849,25 @@ not_implemented:
   }
 }
 
+static gboolean
+gst_rtp_h264_depay_handle_event (GstBaseRTPDepayload * depay, GstEvent * event)
+{
+  GstRtpH264Depay *rtph264depay;
+
+  rtph264depay = GST_RTP_H264_DEPAY (depay);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH_STOP:
+      gst_rtp_h264_depay_reset (rtph264depay);
+      break;
+    default:
+      break;
+  }
+
+  return
+      GST_BASE_RTP_DEPAYLOAD_CLASS (parent_class)->handle_event (depay, event);
+}
+
 static GstStateChangeReturn
 gst_rtp_h264_depay_change_state (GstElement * element,
     GstStateChange transition)
@@ -848,11 +881,7 @@ gst_rtp_h264_depay_change_state (GstElement * element,
     case GST_STATE_CHANGE_NULL_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      gst_adapter_clear (rtph264depay->adapter);
-      rtph264depay->wait_start = TRUE;
-      gst_adapter_clear (rtph264depay->picture_adapter);
-      rtph264depay->picture_start = FALSE;
-      rtph264depay->last_keyframe = FALSE;
+      gst_rtp_h264_depay_reset (rtph264depay);
       break;
     default:
       break;
