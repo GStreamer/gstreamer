@@ -211,6 +211,7 @@ gst_pulsesrc_class_init (GstPulseSrcClass * klass)
   GstAudioSrcClass *gstaudiosrc_class = GST_AUDIO_SRC_CLASS (klass);
   GstBaseSrcClass *gstbasesrc_class = GST_BASE_SRC_CLASS (klass);
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
+  gchar *clientname;
 
   gobject_class->finalize = gst_pulsesrc_finalize;
   gobject_class->set_property = gst_pulsesrc_set_property;
@@ -247,6 +248,7 @@ gst_pulsesrc_class_init (GstPulseSrcClass * klass)
           "Human-readable name of the sound device", DEFAULT_DEVICE_NAME,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
+  clientname = gst_pulse_client_name ();
   /**
    * GstPulseSink:client
    *
@@ -257,9 +259,10 @@ gst_pulsesrc_class_init (GstPulseSrcClass * klass)
   g_object_class_install_property (gobject_class,
       PROP_CLIENT,
       g_param_spec_string ("client", "Client",
-          "The PulseAudio client_name_to_use", gst_pulse_client_name (),
+          "The PulseAudio client_name_to_use", clientname,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_READY));
+  g_free (clientname);
 
   /**
    * GstPulseSrc:stream-properties
