@@ -1482,7 +1482,8 @@ gst_ximagesink_sink_query (GstPad * sinkpad, GstQuery * query)
         if (!gst_buffer_pool_set_config (pool, config))
           goto config_failed;
       }
-      gst_query_set_allocation_params (query, size, 0, 0, 0, 15, pool);
+      /* we need at least 2 buffer because we hold on to the last one */
+      gst_query_set_allocation_params (query, size, 2, 0, 0, 15, pool);
 
       /* we also support various metadata */
       gst_query_add_allocation_meta (query, GST_META_API_VIDEO);
