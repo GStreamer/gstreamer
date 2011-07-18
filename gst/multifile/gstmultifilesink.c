@@ -125,6 +125,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_multi_file_sink_debug);
 #define DEFAULT_INDEX 0
 #define DEFAULT_POST_MESSAGES FALSE
 #define DEFAULT_NEXT_FILE GST_MULTI_FILE_SINK_NEXT_BUFFER
+#define DEFAULT_MAX_FILES 0
 
 enum
 {
@@ -133,6 +134,7 @@ enum
   PROP_INDEX,
   PROP_POST_MESSAGES,
   PROP_NEXT_FILE,
+  PROP_MAX_FILES,
   PROP_LAST
 };
 
@@ -152,6 +154,8 @@ static gboolean gst_multi_file_sink_open_next_file (GstMultiFileSink *
     multifilesink);
 static void gst_multi_file_sink_close_file (GstMultiFileSink * multifilesink,
     GstBuffer * buffer);
+static void gst_multi_file_sink_ensure_max_files (GstMultiFileSink *
+    multifilesink);
 
 #define GST_TYPE_MULTI_FILE_SINK_NEXT (gst_multi_file_sink_next_get_type ())
 static GType
@@ -238,6 +242,22 @@ gst_multi_file_sink_class_init (GstMultiFileSinkClass * klass)
           GST_TYPE_MULTI_FILE_SINK_NEXT, DEFAULT_NEXT_FILE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_STATIC_STRINGS));
 
+
+  /**
+   * GstMultiFileSink:max-files
+   *
+   * Maximum number of files to keep on disk. Once the maximum is reached, old
+   * files start to be deleted to make room for new ones.
+   *
+   * Since: 0.10.31
+   */
+  g_object_class_install_property (gobject_class, PROP_MAX_FILES,
+      g_param_spec_uint ("max-files", "Max files",
+          "Maximum number of files to keep on disk. Once the maximum is reached,"
+          "old files start to be deleted to make room for new ones.",
+          0, G_MAXUINT, DEFAULT_MAX_FILES,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gobject_class->finalize = gst_multi_file_sink_finalize;
 
   gstbasesink_class->get_times = NULL;
@@ -254,6 +274,9 @@ gst_multi_file_sink_init (GstMultiFileSink * multifilesink,
   multifilesink->filename = g_strdup (DEFAULT_LOCATION);
   multifilesink->index = DEFAULT_INDEX;
   multifilesink->post_messages = DEFAULT_POST_MESSAGES;
+  multifilesink->max_files = DEFAULT_MAX_FILES;
+  multifilesink->files = NULL;
+  multifilesink->n_files = 0;
 
   gst_base_sink_set_sync (GST_BASE_SINK (multifilesink), FALSE);
 
@@ -266,6 +289,7 @@ gst_multi_file_sink_finalize (GObject * object)
   GstMultiFileSink *sink = GST_MULTI_FILE_SINK (object);
 
   g_free (sink->filename);
+  g_slist_free_full (sink->files, (GDestroyNotify) g_free);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -300,6 +324,9 @@ gst_multi_file_sink_set_property (GObject * object, guint prop_id,
     case PROP_NEXT_FILE:
       sink->next_file = g_value_get_enum (value);
       break;
+    case PROP_MAX_FILES:
+      sink->max_files = g_value_get_uint (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -324,6 +351,9 @@ gst_multi_file_sink_get_property (GObject * object, guint prop_id,
       break;
     case PROP_NEXT_FILE:
       g_value_set_enum (value, sink->next_file);
+      break;
+    case PROP_MAX_FILES:
+      g_value_set_uint (value, sink->max_files);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -410,17 +440,20 @@ gst_multi_file_sink_render (GstBaseSink * sink, GstBuffer * buffer)
 
   switch (multifilesink->next_file) {
     case GST_MULTI_FILE_SINK_NEXT_BUFFER:
+      gst_multi_file_sink_ensure_max_files (multifilesink);
+
       filename = g_strdup_printf (multifilesink->filename,
           multifilesink->index);
-
       ret = g_file_set_contents (filename, (char *) data, size, &error);
       if (!ret)
         goto write_error;
 
+      multifilesink->files = g_slist_append (multifilesink->files, filename);
+      multifilesink->n_files += 1;
+
       gst_multi_file_sink_post_message (multifilesink, buffer, filename);
       multifilesink->index++;
 
-      g_free (filename);
       break;
     case GST_MULTI_FILE_SINK_NEXT_DISCONT:
       if (GST_BUFFER_IS_DISCONT (buffer)) {
@@ -550,6 +583,21 @@ gst_multi_file_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
   return TRUE;
 }
 
+static void
+gst_multi_file_sink_ensure_max_files (GstMultiFileSink * multifilesink)
+{
+  char *filename;
+
+  while (multifilesink->max_files &&
+      multifilesink->n_files >= multifilesink->max_files) {
+    filename = multifilesink->files->data;
+    g_remove (filename);
+    multifilesink->files = g_slist_delete_link (multifilesink->files,
+        multifilesink->files);
+    multifilesink->n_files -= 1;
+  }
+}
+
 static gboolean
 gst_multi_file_sink_open_next_file (GstMultiFileSink * multifilesink)
 {
@@ -557,12 +605,16 @@ gst_multi_file_sink_open_next_file (GstMultiFileSink * multifilesink)
 
   g_return_val_if_fail (multifilesink->file == NULL, FALSE);
 
+  gst_multi_file_sink_ensure_max_files (multifilesink);
   filename = g_strdup_printf (multifilesink->filename, multifilesink->index);
   multifilesink->file = g_fopen (filename, "wb");
-  g_free (filename);
-
-  if (multifilesink->file == NULL)
+  if (multifilesink->file == NULL) {
+    g_free (filename);
     return FALSE;
+  }
+
+  multifilesink->files = g_slist_append (multifilesink->files, filename);
+  multifilesink->n_files += 1;
 
   return TRUE;
 }
