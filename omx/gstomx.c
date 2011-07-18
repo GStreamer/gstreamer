@@ -772,12 +772,12 @@ retry:
     goto done;
   }
 
-  /* If this is an input port and it needs to be reconfigured we
-   * first wait here until all output ports are reconfigured and
-   * then return
+  /* If this is an input port and at least one of the output ports
+   * needs to be reconfigured, we wait until all output ports are
+   * reconfigured. Afterwards this port is reconfigured if required
+   * or buffers are returned to be filled as usual.
    */
-  if (port->port_def.eDir == OMX_DirInput &&
-      port->settings_cookie != gst_omx_component_get_settings_cookie (comp)) {
+  if (port->port_def.eDir == OMX_DirInput) {
     g_mutex_unlock (port->port_lock);
     g_mutex_lock (comp->state_lock);
     while (comp->reconfigure_out_pending > 0 &&
@@ -800,9 +800,13 @@ retry:
       goto done;
     }
 
-    ret = GST_OMX_ACQUIRE_BUFFER_RECONFIGURE;
-    port->settings_changed = TRUE;
-    goto done;
+    /* Only if this port needs to be reconfigured too notify
+     * the caller about it */
+    if (port->settings_cookie != gst_omx_component_get_settings_cookie (comp)) {
+      ret = GST_OMX_ACQUIRE_BUFFER_RECONFIGURE;
+      port->settings_changed = TRUE;
+      goto done;
+    }
   }
 
   /* If we have an output port that needs to be reconfigured
