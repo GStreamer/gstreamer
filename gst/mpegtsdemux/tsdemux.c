@@ -38,6 +38,7 @@
 #include "gstmpegdefs.h"
 #include "mpegtspacketizer.h"
 #include "payload_parsers.h"
+#include "pesparse.h"
 
 /* latency in mseconds */
 #define TS_LATENCY 700
@@ -444,85 +445,15 @@ static GstFlowReturn
 gst_ts_demux_parse_pes_header_pts (GstTSDemux * demux,
     MpegTSPacketizerPacket * packet, guint64 * time)
 {
-  GstFlowReturn res = GST_FLOW_ERROR;
-  guint8 *data;
-  guint32 length;
-  guint32 psc_stid;
-  guint8 stid;
-  guint16 pesplength;
-  guint8 PES_header_data_length = 0;
+  PESHeader header;
+  gint offset = 0;
 
-  data = packet->payload;
-  length = packet->data_end - data;
+  if (mpegts_parse_pes_header (packet->payload,
+          packet->data_end - packet->payload, &header, &offset))
+    return GST_FLOW_ERROR;
 
-  GST_MEMDUMP ("Header buffer", data, MIN (length, 32));
-
-  /* packet_start_code_prefix           24
-   * stream_id                          8*/
-  psc_stid = GST_READ_UINT32_BE (data);
-  data += 4;
-  length -= 4;
-  if (G_UNLIKELY ((psc_stid & 0xffffff00) != 0x00000100)) {
-    GST_DEBUG ("WRONG PACKET START CODE! pid: 0x%x", packet->pid);
-    goto discont;
-  }
-  stid = psc_stid & 0x000000ff;
-  GST_LOG ("stream_id:0x%02x", stid);
-
-  /* PES_packet_length                  16 */
-  /* FIXME : store the expected pes length somewhere ? */
-  pesplength = GST_READ_UINT16_BE (data);
-  data += 2;
-  length -= 2;
-  GST_LOG ("PES_packet_length:%d", pesplength);
-
-  /* FIXME : Only parse header on streams which require it (see table 2-21) */
-  if (stid != 0xbf) {
-    guint64 pts;
-    guint8 p1, p2;
-    p1 = *data++;
-    p2 = *data++;
-    PES_header_data_length = *data++ + 3;
-    length -= 3;
-
-    GST_LOG ("0x%02x 0x%02x 0x%02x", p1, p2, PES_header_data_length);
-    GST_LOG ("PES header data length:%d", PES_header_data_length);
-
-    /* '10'                             2
-     * PES_scrambling_control           2
-     * PES_priority                     1
-     * data_alignment_indicator         1
-     * copyright                        1
-     * original_or_copy                 1 */
-    if (G_UNLIKELY ((p1 & 0xc0) != 0x80)) {
-      GST_WARNING ("p1 >> 6 != 0x2");
-      goto discont;
-    }
-
-    /* PTS_DTS_flags                    2
-     * ESCR_flag                        1
-     * ES_rate_flag                     1
-     * DSM_trick_mode_flag              1
-     * additional_copy_info_flag        1
-     * PES_CRC_flag                     1
-     * PES_extension_flag               1*/
-
-    /* PES_header_data_length           8 */
-    if (G_UNLIKELY (length < PES_header_data_length)) {
-      GST_WARNING ("length < PES_header_data_length");
-      goto discont;
-    }
-
-    /*  PTS                             32 */
-    if ((p2 & 0x80)) {          /* PTS */
-      READ_TS (data, pts, discont);
-      length -= 4;
-      *time = pts;
-      res = GST_FLOW_OK;
-    }
-  }
-discont:
-  return res;
+  *time = header.PTS;
+  return GST_FLOW_OK;
 }
 
 /* performs a accurate/key_unit seek */
@@ -1977,15 +1908,10 @@ calc_gsttime_from_pts (TSPcrOffset * start, guint64 pts)
   return time;
 }
 
+#if 0
 static gint
 TSPcrOffset_find_offset (gconstpointer a, gconstpointer b, gpointer user_data)
 {
-
-/*   GST_INFO ("a: %" GST_TIME_FORMAT " offset: %" G_GINT64_FORMAT, */
-/*       GST_TIME_ARGS (((TSPcrOffset *) a)->gsttime), ((TSPcrOffset *) a)->offset); */
-/*   GST_INFO ("b: %" GST_TIME_FORMAT " offset: %" G_GINT64_FORMAT, */
-/*       GST_TIME_ARGS (((TSPcrOffset *) b)->gsttime), ((TSPcrOffset *) b)->offset); */
-
   if (((TSPcrOffset *) a)->offset < ((TSPcrOffset *) b)->offset)
     return -1;
   else if (((TSPcrOffset *) a)->offset > ((TSPcrOffset *) b)->offset)
@@ -1993,144 +1919,69 @@ TSPcrOffset_find_offset (gconstpointer a, gconstpointer b, gpointer user_data)
   else
     return 0;
 }
+#endif
 
 static GstFlowReturn
 gst_ts_demux_parse_pes_header (GstTSDemux * demux, TSDemuxStream * stream)
 {
+  PESHeader header;
   GstFlowReturn res = GST_FLOW_OK;
+  gint offset = 0;
   guint8 *data;
   guint32 length;
-  guint32 psc_stid;
-  guint8 stid;
-  guint16 pesplength;
-  guint8 PES_header_data_length = 0;
+  guint64 bufferoffset;
+  GstClockTime time;
+  PESParsingResult parseres;
 
   data = GST_BUFFER_DATA (stream->pendingbuffers[0]);
   length = GST_BUFFER_SIZE (stream->pendingbuffers[0]);
+  bufferoffset = GST_BUFFER_OFFSET (stream->pendingbuffers[0]);
 
   GST_MEMDUMP ("Header buffer", data, MIN (length, 32));
 
-  /* packet_start_code_prefix           24
-   * stream_id                          8*/
-  psc_stid = GST_READ_UINT32_BE (data);
-  data += 4;
-  length -= 4;
-  if (G_UNLIKELY ((psc_stid & 0xffffff00) != 0x00000100)) {
-    GST_WARNING ("WRONG PACKET START CODE! pid: 0x%x stream_type: 0x%x",
+  parseres = mpegts_parse_pes_header (data, length, &header, &offset);
+  if (G_UNLIKELY (parseres == PES_PARSING_NEED_MORE))
+    goto discont;
+  if (G_UNLIKELY (parseres == PES_PARSING_BAD)) {
+    GST_WARNING ("Error parsing PES header. pid: 0x%x stream_type: 0x%x",
         stream->stream.pid, stream->stream.stream_type);
     goto discont;
   }
-  stid = psc_stid & 0x000000ff;
-  GST_LOG ("stream_id:0x%02x", stid);
 
-  /* PES_packet_length                  16 */
-  /* FIXME : store the expected pes length somewhere ? */
-  pesplength = GST_READ_UINT16_BE (data);
-  data += 2;
-  length -= 2;
-  GST_LOG ("PES_packet_length:%d", pesplength);
+  if (header.PTS != -1) {
+    gst_ts_demux_record_pts (demux, stream, header.PTS, bufferoffset);
 
-  /* FIXME : Only parse header on streams which require it (see table 2-21) */
-  if (stid != 0xbf) {
-    guint8 p1, p2;
-    guint64 pts, dts;
-    p1 = *data++;
-    p2 = *data++;
-    PES_header_data_length = *data++ + 3;
-    length -= 3;
+#if 0
+    /* WTH IS THIS ??? */
+    if (demux->index_pcr.offset + PCR_WRAP_SIZE_128KBPS + 1000 * 128 < offset
+        || (demux->index_pcr.offset > offset)) {
+      /* find next entry */
+      TSPcrOffset *next;
+      demux->index_pcr.offset = offset;
+      next = gst_util_array_binary_search (demux->index->data,
+          demux->index_size, sizeof (*next), TSPcrOffset_find_offset,
+          GST_SEARCH_MODE_BEFORE, &demux->index_pcr, NULL);
+      if (next) {
+        GST_INFO ("new index_pcr %" GST_TIME_FORMAT " offset: %"
+            G_GINT64_FORMAT, GST_TIME_ARGS (next->gsttime), next->offset);
 
-    GST_LOG ("0x%02x 0x%02x 0x%02x", p1, p2, PES_header_data_length);
-    GST_LOG ("PES header data length:%d", PES_header_data_length);
-
-    /* '10'                             2
-     * PES_scrambling_control           2
-     * PES_priority                     1
-     * data_alignment_indicator         1
-     * copyright                        1
-     * original_or_copy                 1 */
-    if (G_UNLIKELY ((p1 & 0xc0) != 0x80)) {
-      GST_WARNING ("p1 >> 6 != 0x2");
-      goto discont;
-    }
-
-    /* PTS_DTS_flags                    2
-     * ESCR_flag                        1
-     * ES_rate_flag                     1
-     * DSM_trick_mode_flag              1
-     * additional_copy_info_flag        1
-     * PES_CRC_flag                     1
-     * PES_extension_flag               1*/
-
-    /* PES_header_data_length           8 */
-    if (G_UNLIKELY (length < PES_header_data_length)) {
-      GST_WARNING ("length < PES_header_data_length");
-      goto discont;
-    }
-
-    /*  PTS                             32 */
-    if ((p2 & 0x80)) {          /* PTS */
-      GstClockTime time;
-      guint64 offset = GST_BUFFER_OFFSET (stream->pendingbuffers[0]);
-
-      READ_TS (data, pts, discont);
-      gst_ts_demux_record_pts (demux, stream, pts, offset);
-      length -= 4;
-
-      if (demux->index_pcr.offset + PCR_WRAP_SIZE_128KBPS + 1000 * 128 < offset
-          || (demux->index_pcr.offset > offset)) {
-        /* find next entry */
-        TSPcrOffset *next;
-        demux->index_pcr.offset = offset;
-        next = gst_util_array_binary_search (demux->index->data,
-            demux->index_size, sizeof (*next), TSPcrOffset_find_offset,
-            GST_SEARCH_MODE_BEFORE, &demux->index_pcr, NULL);
-        if (next) {
-          GST_INFO ("new index_pcr %" GST_TIME_FORMAT " offset: %"
-              G_GINT64_FORMAT, GST_TIME_ARGS (next->gsttime), next->offset);
-
-          demux->index_pcr = *next;
-        }
+        demux->index_pcr = *next;
       }
+    }
+    time = calc_gsttime_from_pts (&demux->index_pcr, pts);
+#endif
 
-      time = calc_gsttime_from_pts (&demux->index_pcr, pts);
-
-      GST_BUFFER_TIMESTAMP (stream->pendingbuffers[0]) = time;
-
-      if (!GST_CLOCK_TIME_IS_VALID (stream->pts)) {
-        stream->pts = GST_BUFFER_TIMESTAMP (stream->pendingbuffers[0]);
-      }
-
-    }
-    /*  DTS                             32 */
-    if ((p2 & 0x40)) {          /* DTS */
-      READ_TS (data, dts, discont);
-      gst_ts_demux_record_dts (demux, stream, dts,
-          GST_BUFFER_OFFSET (stream->pendingbuffers[0]));
-      length -= 4;
-    }
-    /* ESCR                             48 */
-    if ((p2 & 0x20)) {
-      GST_LOG ("ESCR present");
-      data += 6;
-      length -= 6;
-    }
-    /* ES_rate                          24 */
-    if ((p2 & 0x10)) {
-      GST_LOG ("ES_rate present");
-      data += 3;
-      length -= 3;
-    }
-    /* DSM_trick_mode                   8 */
-    if ((p2 & 0x08)) {
-      GST_LOG ("DSM_trick_mode present");
-      data += 1;
-      length -= 1;
-    }
+    stream->pts = time = MPEGTIME_TO_GSTTIME (header.PTS);
+    GST_BUFFER_TIMESTAMP (stream->pendingbuffers[0]) = time;
   }
 
+  if (header.DTS != -1)
+    gst_ts_demux_record_dts (demux, stream, header.DTS, bufferoffset);
+
   /* Remove PES headers */
-  GST_BUFFER_DATA (stream->pendingbuffers[0]) += 6 + PES_header_data_length;
-  GST_BUFFER_SIZE (stream->pendingbuffers[0]) -= 6 + PES_header_data_length;
+  GST_DEBUG ("Moving data forward  by %d bytes", header.header_size);
+  GST_BUFFER_DATA (stream->pendingbuffers[0]) += header.header_size;
+  GST_BUFFER_SIZE (stream->pendingbuffers[0]) -= header.header_size;
 
   /* FIXME : responsible for switching to PENDING_PACKET_BUFFER and
    * creating the bufferlist */
@@ -2409,6 +2260,7 @@ gst_ts_demux_plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (ts_demux_debug, "tsdemux", 0,
       "MPEG transport stream demuxer");
+  init_pes_parser ();
 
   return gst_element_register (plugin, "tsdemux",
       GST_RANK_SECONDARY, GST_TYPE_TS_DEMUX);
