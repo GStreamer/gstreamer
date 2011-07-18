@@ -64,7 +64,7 @@
 GST_DEBUG_CATEGORY (v4l2src_debug);
 #define GST_CAT_DEFAULT v4l2src_debug
 
-#define PROP_DEF_QUEUE_SIZE         2
+#define PROP_DEF_QUEUE_SIZE         4
 #define PROP_DEF_ALWAYS_COPY        TRUE
 #define PROP_DEF_DECIMATE           1
 
@@ -123,7 +123,7 @@ static GstCaps *gst_v4l2src_get_caps (GstBaseSrc * src, GstCaps * filter);
 static gboolean gst_v4l2src_query (GstBaseSrc * bsrc, GstQuery * query);
 static gboolean gst_v4l2src_setup_allocation (GstBaseSrc * src,
     GstQuery * query);
-static GstFlowReturn gst_v4l2src_create (GstPushSrc * src, GstBuffer ** out);
+static GstFlowReturn gst_v4l2src_fill (GstPushSrc * src, GstBuffer * out);
 static void gst_v4l2src_fixate (GstBaseSrc * basesrc, GstCaps * caps);
 static gboolean gst_v4l2src_negotiate (GstBaseSrc * basesrc);
 
@@ -198,7 +198,7 @@ gst_v4l2src_class_init (GstV4l2SrcClass * klass)
   basesrc_class->setup_allocation =
       GST_DEBUG_FUNCPTR (gst_v4l2src_setup_allocation);
 
-  pushsrc_class->create = GST_DEBUG_FUNCPTR (gst_v4l2src_create);
+  pushsrc_class->fill = GST_DEBUG_FUNCPTR (gst_v4l2src_fill);
 
   klass->v4l2_class_devices = NULL;
 
@@ -525,12 +525,6 @@ gst_v4l2src_set_caps (GstBaseSrc * src, GstCaps * caps)
     /* error already posted */
     return FALSE;
 
-  if (!gst_v4l2_object_start (obj))
-    return FALSE;
-
-  /* now store the expected output size */
-  v4l2src->frame_byte_size = obj->size;
-
   return TRUE;
 }
 
@@ -538,15 +532,71 @@ static gboolean
 gst_v4l2src_setup_allocation (GstBaseSrc * bsrc, GstQuery * query)
 {
   GstV4l2Src *src;
+  GstV4l2Object *obj;
   GstBufferPool *pool;
   guint size, min, max, prefix, alignment;
 
   src = GST_V4L2SRC (bsrc);
+  obj = src->v4l2object;
 
   gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
       &alignment, &pool);
 
-  /* do something clever here */
+  GST_DEBUG_OBJECT (src, "allocation: size:%u min:%u max:%u prefix:%u "
+      "align:%u pool:%" GST_PTR_FORMAT, size, min, max, prefix, alignment,
+      pool);
+
+  if (min != 0) {
+    /* if there is a min-buffers suggestion, use it. We add 1 because we need 1
+     * buffer extra to capture while the other two buffers are downstream */
+    min += 1;
+  } else {
+    min = obj->num_buffers;
+  }
+
+  /* select a pool */
+  switch (obj->mode) {
+    case GST_V4L2_IO_RW:
+      if (pool == NULL) {
+        /* no downstream pool, use our own then */
+        GST_DEBUG_OBJECT (src,
+            "read/write mode: no downstream pool, using our own");
+        pool = obj->pool;
+        size = obj->size;
+      } else {
+        /* in READ/WRITE mode, prefer a downstream pool because our own pool
+         * doesn't help much, we have to write to it as well */
+        GST_DEBUG_OBJECT (src, "read/write mode: using downstream pool");
+        /* use the bigest size, when we use our own pool we can't really do any
+         * other size than what the hardware gives us but for downstream pools
+         * we can try */
+        size = MAX (size, obj->size);
+      }
+      break;
+    case GST_V4L2_IO_MMAP:
+    case GST_V4L2_IO_USERPTR:
+      /* in streaming mode, prefer our own pool */
+      pool = obj->pool;
+      size = obj->size;
+      GST_DEBUG_OBJECT (src,
+          "streaming mode: using our own pool %" GST_PTR_FORMAT, pool);
+      break;
+    case GST_V4L2_IO_AUTO:
+    default:
+      GST_WARNING_OBJECT (src, "unhandled mode");
+      break;
+  }
+
+  if (pool) {
+    GstStructure *config;
+    const GstCaps *caps;
+
+    config = gst_buffer_pool_get_config (pool);
+    gst_buffer_pool_config_get (config, &caps, NULL, NULL, NULL, NULL, NULL);
+    gst_buffer_pool_config_set (config, caps, size, min, max, prefix,
+        alignment);
+    gst_buffer_pool_set_config (pool, config);
+  }
 
   gst_query_set_allocation_params (query, size, min, max, prefix,
       alignment, pool);
@@ -633,22 +683,14 @@ static gboolean
 gst_v4l2src_unlock (GstBaseSrc * src)
 {
   GstV4l2Src *v4l2src = GST_V4L2SRC (src);
-
-  GST_LOG_OBJECT (src, "Flushing");
-  gst_poll_set_flushing (v4l2src->v4l2object->poll, TRUE);
-
-  return TRUE;
+  return gst_v4l2_object_unlock (v4l2src->v4l2object);
 }
 
 static gboolean
 gst_v4l2src_unlock_stop (GstBaseSrc * src)
 {
   GstV4l2Src *v4l2src = GST_V4L2SRC (src);
-
-  GST_LOG_OBJECT (src, "No longer flushing");
-  gst_poll_set_flushing (v4l2src->v4l2object->poll, FALSE);
-
-  return TRUE;
+  return gst_v4l2_object_unlock_stop (v4l2src->v4l2object);
 }
 
 static gboolean
@@ -702,79 +744,89 @@ gst_v4l2src_change_state (GstElement * element, GstStateChange transition)
 }
 
 static GstFlowReturn
-gst_v4l2src_create (GstPushSrc * src, GstBuffer ** buf)
+gst_v4l2src_fill (GstPushSrc * src, GstBuffer * buf)
 {
   GstV4l2Src *v4l2src = GST_V4L2SRC (src);
   GstV4l2Object *obj = v4l2src->v4l2object;
-  int i;
   GstFlowReturn ret;
+  GstClock *clock;
+  GstClockTime timestamp, duration;
 
+#if 0
+  int i;
   /* decimate, just capture and throw away frames */
   for (i = 0; i < v4l2src->decimate - 1; i++) {
-    ret = gst_v4l2_object_get_buffer (obj, buf);
+    ret = gst_v4l2_buffer_pool_process (obj, buf);
     if (ret != GST_FLOW_OK) {
       return ret;
     }
     gst_buffer_unref (*buf);
   }
+#endif
 
-  ret = gst_v4l2_object_get_buffer (obj, buf);
+  ret = gst_v4l2_buffer_pool_process (obj->pool, buf);
+
+  if (G_UNLIKELY (ret != GST_FLOW_OK))
+    goto error;
 
   /* set buffer metadata */
-  if (G_LIKELY (ret == GST_FLOW_OK && *buf)) {
-    GstClock *clock;
-    GstClockTime timestamp, duration;
+  GST_BUFFER_OFFSET (buf) = v4l2src->offset++;
+  GST_BUFFER_OFFSET_END (buf) = v4l2src->offset;
 
-    GST_BUFFER_OFFSET (*buf) = v4l2src->offset++;
-    GST_BUFFER_OFFSET_END (*buf) = v4l2src->offset;
-
-    /* timestamps, LOCK to get clock and base time. */
-    /* FIXME: element clock and base_time is rarely changing */
-    GST_OBJECT_LOCK (v4l2src);
-    if ((clock = GST_ELEMENT_CLOCK (v4l2src))) {
-      /* we have a clock, get base time and ref clock */
-      timestamp = GST_ELEMENT (v4l2src)->base_time;
-      gst_object_ref (clock);
-    } else {
-      /* no clock, can't set timestamps */
-      timestamp = GST_CLOCK_TIME_NONE;
-    }
-    GST_OBJECT_UNLOCK (v4l2src);
-
-    duration = obj->duration;
-
-    if (G_LIKELY (clock)) {
-      /* the time now is the time of the clock minus the base time */
-      timestamp = gst_clock_get_time (clock) - timestamp;
-      gst_object_unref (clock);
-
-      /* if we have a framerate adjust timestamp for frame latency */
-      if (GST_CLOCK_TIME_IS_VALID (duration)) {
-        if (timestamp > duration)
-          timestamp -= duration;
-        else
-          timestamp = 0;
-      }
-    }
-
-    /* activate settings for next frame */
-    if (GST_CLOCK_TIME_IS_VALID (duration)) {
-      v4l2src->ctrl_time += duration;
-    } else {
-      /* this is not very good (as it should be the next timestamp),
-       * still good enough for linear fades (as long as it is not -1)
-       */
-      v4l2src->ctrl_time = timestamp;
-    }
-    gst_object_sync_values (G_OBJECT (src), v4l2src->ctrl_time);
-    GST_INFO_OBJECT (src, "sync to %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (v4l2src->ctrl_time));
-
-    /* FIXME: use the timestamp from the buffer itself! */
-    GST_BUFFER_TIMESTAMP (*buf) = timestamp;
-    GST_BUFFER_DURATION (*buf) = duration;
+  /* timestamps, LOCK to get clock and base time. */
+  /* FIXME: element clock and base_time is rarely changing */
+  GST_OBJECT_LOCK (v4l2src);
+  if ((clock = GST_ELEMENT_CLOCK (v4l2src))) {
+    /* we have a clock, get base time and ref clock */
+    timestamp = GST_ELEMENT (v4l2src)->base_time;
+    gst_object_ref (clock);
+  } else {
+    /* no clock, can't set timestamps */
+    timestamp = GST_CLOCK_TIME_NONE;
   }
+  GST_OBJECT_UNLOCK (v4l2src);
+
+  duration = obj->duration;
+
+  if (G_LIKELY (clock)) {
+    /* the time now is the time of the clock minus the base time */
+    timestamp = gst_clock_get_time (clock) - timestamp;
+    gst_object_unref (clock);
+
+    /* if we have a framerate adjust timestamp for frame latency */
+    if (GST_CLOCK_TIME_IS_VALID (duration)) {
+      if (timestamp > duration)
+        timestamp -= duration;
+      else
+        timestamp = 0;
+    }
+  }
+
+  /* activate settings for next frame */
+  if (GST_CLOCK_TIME_IS_VALID (duration)) {
+    v4l2src->ctrl_time += duration;
+  } else {
+    /* this is not very good (as it should be the next timestamp),
+     * still good enough for linear fades (as long as it is not -1)
+     */
+    v4l2src->ctrl_time = timestamp;
+  }
+  gst_object_sync_values (G_OBJECT (src), v4l2src->ctrl_time);
+  GST_INFO_OBJECT (src, "sync to %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (v4l2src->ctrl_time));
+
+  /* FIXME: use the timestamp from the buffer itself! */
+  GST_BUFFER_TIMESTAMP (buf) = timestamp;
+  GST_BUFFER_DURATION (buf) = duration;
+
   return ret;
+
+  /* ERROR */
+error:
+  {
+    GST_ERROR_OBJECT (src, "error processing buffer");
+    return ret;
+  }
 }
 
 

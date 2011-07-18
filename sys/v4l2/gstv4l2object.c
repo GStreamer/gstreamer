@@ -61,6 +61,7 @@ GST_DEBUG_CATEGORY_EXTERN (GST_CAT_PERFORMANCE);
 #define DEFAULT_PROP_TV_NORM            0
 #define DEFAULT_PROP_CHANNEL            NULL
 #define DEFAULT_PROP_FREQUENCY          0
+#define DEFAULT_PROP_IO_MODE            GST_V4L2_IO_AUTO
 
 enum
 {
@@ -370,6 +371,26 @@ gst_v4l2_tv_norm_get_type (void)
   return v4l2_tv_norm;
 }
 
+#define GST_TYPE_V4L2_IO_MODE (gst_v4l2_io_mode_get_type ())
+static GType
+gst_v4l2_io_mode_get_type (void)
+{
+  static GType v4l2_io_mode = 0;
+
+  if (!v4l2_io_mode) {
+    static const GEnumValue io_modes[] = {
+      {GST_V4L2_IO_AUTO, "GST_V4L2_IO_AUTO", "auto"},
+      {GST_V4L2_IO_RW, "GST_V4L2_IO_RW", "rw"},
+      {GST_V4L2_IO_MMAP, "GST_V4L2_IO_MMAP", "mmap"},
+      {GST_V4L2_IO_USERPTR, "GST_V4L2_IO_USERPTR", "userptr"},
+
+      {0, NULL, NULL}
+    };
+    v4l2_io_mode = g_enum_register_static ("GstV4l2IOMode", io_modes);
+  }
+  return v4l2_io_mode;
+}
+
 void
 gst_v4l2_object_install_properties_helper (GObjectClass * gobject_class,
     const char *default_device)
@@ -450,6 +471,17 @@ gst_v4l2_object_install_properties_helper (GObjectClass * gobject_class,
       g_param_spec_enum ("norm", "TV norm",
           "video standard",
           GST_TYPE_V4L2_TV_NORM, DEFAULT_PROP_TV_NORM,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstV4l2Src:io-mode
+   *
+   * IO Mode
+   */
+  g_object_class_install_property (gobject_class, PROP_IO_MODE,
+      g_param_spec_enum ("io-mode", "IO mode",
+          "I/O mode",
+          GST_TYPE_V4L2_IO_MODE, DEFAULT_PROP_IO_MODE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
@@ -612,6 +644,9 @@ gst_v4l2_object_set_property_helper (GstV4l2Object * v4l2object,
       }
       break;
 #endif
+    case PROP_IO_MODE:
+      v4l2object->req_mode = g_value_get_enum (value);
+      break;
     default:
       return FALSE;
       break;
@@ -684,6 +719,9 @@ gst_v4l2_object_get_property_helper (GstV4l2Object * v4l2object,
       break;
     case PROP_TV_NORM:
       g_value_set_enum (value, v4l2object->tv_norm);
+      break;
+    case PROP_IO_MODE:
+      g_value_set_enum (value, v4l2object->req_mode);
       break;
     default:
       return FALSE;
@@ -2044,39 +2082,46 @@ gst_v4l2_object_get_nearest_size (GstV4l2Object * v4l2object,
 static gboolean
 gst_v4l2_object_setup_pool (GstV4l2Object * v4l2object, GstCaps * caps)
 {
+  guint num_buffers;
+  GstStructure *config;
+
   GST_DEBUG_OBJECT (v4l2object->element, "initializing the capture system");
 
   GST_V4L2_CHECK_OPEN (v4l2object);
   GST_V4L2_CHECK_NOT_ACTIVE (v4l2object);
 
-  if (v4l2object->vcap.capabilities & V4L2_CAP_STREAMING) {
-    guint num_buffers;
-    GstStructure *config;
+  /* use specified mode */
+  v4l2object->mode = v4l2object->req_mode;
 
-    /* keep track of current number of buffers */
-    num_buffers = v4l2object->num_buffers;
-
-    /* Map the buffers */
-    GST_LOG_OBJECT (v4l2object->element, "initiating buffer pool");
-
-    if (!(v4l2object->pool = gst_v4l2_buffer_pool_new (v4l2object)))
-      goto buffer_pool_new_failed;
-
-    GST_INFO_OBJECT (v4l2object->element, "accessing buffers via mmap()");
-    v4l2object->mode = GST_V4L2_IO_MMAP;
-
-    config = gst_buffer_pool_get_config (v4l2object->pool);
-    gst_buffer_pool_config_set (config, caps, v4l2object->info.size,
-        num_buffers, num_buffers, 0, 0);
-    gst_buffer_pool_set_config (v4l2object->pool, config);
-  } else if (v4l2object->vcap.capabilities & V4L2_CAP_READWRITE) {
-    GST_INFO_OBJECT (v4l2object->element,
-        "accessing buffers via read()/write()");
-    v4l2object->mode = GST_V4L2_IO_RW;
-    v4l2object->pool = NULL;
-  } else {
-    goto no_supported_capture_method;
+  if (v4l2object->req_mode == GST_V4L2_IO_AUTO) {
+    /* automatic mode, find transport */
+    if (v4l2object->vcap.capabilities & V4L2_CAP_READWRITE) {
+      GST_INFO_OBJECT (v4l2object->element,
+          "accessing buffers via read()/write()");
+      v4l2object->mode = GST_V4L2_IO_RW;
+    }
+    if (v4l2object->vcap.capabilities & V4L2_CAP_STREAMING) {
+      GST_INFO_OBJECT (v4l2object->element, "accessing buffers via mmap()");
+      v4l2object->mode = GST_V4L2_IO_MMAP;
+    }
   }
+  /* if still no transport selected, error out */
+  if (v4l2object->mode == GST_V4L2_IO_AUTO)
+    goto no_supported_capture_method;
+
+  /* keep track of current number of buffers */
+  num_buffers = v4l2object->num_buffers;
+
+  /* Map the buffers */
+  GST_LOG_OBJECT (v4l2object->element, "initiating buffer pool");
+
+  if (!(v4l2object->pool = gst_v4l2_buffer_pool_new (v4l2object)))
+    goto buffer_pool_new_failed;
+
+  config = gst_buffer_pool_get_config (v4l2object->pool);
+  gst_buffer_pool_config_set (config, caps, v4l2object->info.size,
+      num_buffers, num_buffers, 0, 0);
+  gst_buffer_pool_set_config (v4l2object->pool, config);
 
   GST_V4L2_SET_ACTIVE (v4l2object);
 
@@ -2140,7 +2185,8 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
   }
 
   GST_DEBUG_OBJECT (v4l2object->element, "Desired format %dx%d, format "
-      "%" GST_FOURCC_FORMAT, width, height, GST_FOURCC_ARGS (pixelformat));
+      "%" GST_FOURCC_FORMAT " stride: %d", width, height,
+      GST_FOURCC_ARGS (pixelformat), stride);
 
   GST_V4L2_CHECK_OPEN (v4l2object);
   GST_V4L2_CHECK_NOT_ACTIVE (v4l2object);
@@ -2192,9 +2238,10 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
 
     if (format.fmt.pix.pixelformat != pixelformat)
       goto invalid_pixelformat;
-
-    v4l2object->bytesperline = format.fmt.pix.bytesperline;
   }
+  v4l2object->bytesperline = format.fmt.pix.bytesperline;
+  /* FIXME, size for only one plane */
+  v4l2object->size = v4l2object->bytesperline * height;
 
   /* Is there a reason we require the caller to always specify a framerate? */
   GST_DEBUG_OBJECT (v4l2object->element, "Desired framerate: %u/%u", fps_n,
@@ -2334,50 +2381,21 @@ pool_failed:
 }
 
 gboolean
-gst_v4l2_object_start (GstV4l2Object * v4l2object)
+gst_v4l2_object_unlock (GstV4l2Object * v4l2object)
 {
-  GST_DEBUG_OBJECT (v4l2object->element, "starting");
+  GST_LOG_OBJECT (v4l2object->element, "flush poll");
+  gst_poll_set_flushing (v4l2object->poll, TRUE);
 
-  GST_V4L2_CHECK_OPEN (v4l2object);
-  GST_V4L2_CHECK_ACTIVE (v4l2object);
-
-  if (v4l2object->pool)
-    if (!gst_buffer_pool_set_active (v4l2object->pool, TRUE))
-      goto activate_failed;
-
-  switch (v4l2object->mode) {
-    case GST_V4L2_IO_RW:
-      break;
-    case GST_V4L2_IO_MMAP:
-    case GST_V4L2_IO_USERPTR:
-      if (!v4l2object->streaming) {
-        GST_DEBUG_OBJECT (v4l2object->element, "STREAMON");
-        if (v4l2_ioctl (v4l2object->video_fd, VIDIOC_STREAMON,
-                &(v4l2object->type)) < 0)
-          goto start_failed;
-        v4l2object->streaming = TRUE;
-      }
-      break;
-    default:
-      g_assert_not_reached ();
-      break;
-  }
   return TRUE;
+}
 
-  /* ERRORS */
-activate_failed:
-  {
-    GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, OPEN_READ,
-        (_("Error starting bufferpool")), (NULL));
-    return FALSE;
-  }
-start_failed:
-  {
-    GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, OPEN_READ,
-        (_("Error starting streaming on device '%s'."), v4l2object->videodev),
-        GST_ERROR_SYSTEM);
-    return FALSE;
-  }
+gboolean
+gst_v4l2_object_unlock_stop (GstV4l2Object * v4l2object)
+{
+  GST_LOG_OBJECT (v4l2object->element, "flush stop poll");
+  gst_poll_set_flushing (v4l2object->poll, FALSE);
+
+  return TRUE;
 }
 
 gboolean
@@ -2390,27 +2408,6 @@ gst_v4l2_object_stop (GstV4l2Object * v4l2object)
   if (!GST_V4L2_IS_ACTIVE (v4l2object))
     goto done;
 
-  switch (v4l2object->mode) {
-    case GST_V4L2_IO_RW:
-      break;
-    case GST_V4L2_IO_MMAP:
-    case GST_V4L2_IO_USERPTR:
-      if (v4l2object->streaming) {
-        /* we actually need to sync on all queued buffers but not
-         * on the non-queued ones */
-        GST_DEBUG_OBJECT (v4l2object->element, "STREAMOFF");
-        if (v4l2_ioctl (v4l2object->video_fd, VIDIOC_STREAMOFF,
-                &(v4l2object->type)) < 0)
-          goto stop_failed;
-
-        v4l2object->streaming = FALSE;
-      }
-      break;
-    default:
-      g_assert_not_reached ();
-      break;
-  }
-
   if (v4l2object->pool) {
     GST_DEBUG_OBJECT (v4l2object->element, "deactivating pool");
     gst_buffer_pool_set_active (v4l2object->pool, FALSE);
@@ -2422,99 +2419,9 @@ gst_v4l2_object_stop (GstV4l2Object * v4l2object)
 
 done:
   return TRUE;
-
-  /* ERRORS */
-stop_failed:
-  {
-    GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, OPEN_READ,
-        (_("Error stopping streaming on device '%s'."), v4l2object->videodev),
-        GST_ERROR_SYSTEM);
-    return FALSE;
-  }
 }
 
-static GstFlowReturn
-gst_v4l2_object_get_read (GstV4l2Object * v4l2object, GstBuffer ** buf)
-{
-  GstFlowReturn res;
-  gint amount;
-  gint ret;
-  gpointer data;
-  gint buffersize;
-
-  buffersize = v4l2object->size;
-
-  /* In case the size per frame is unknown assume it's a streaming format (e.g.
-   * mpegts) and grab a reasonable default size instead */
-  if (buffersize == 0)
-    buffersize = 4096;
-
-  *buf = gst_buffer_new_and_alloc (buffersize);
-  data = gst_buffer_map (*buf, NULL, NULL, GST_MAP_WRITE);
-
-  do {
-    ret = gst_poll_wait (v4l2object->poll, GST_CLOCK_TIME_NONE);
-    if (G_UNLIKELY (ret < 0)) {
-      if (errno == EBUSY)
-        goto stopped;
-      if (errno == ENXIO) {
-        GST_DEBUG_OBJECT (v4l2object->element,
-            "v4l2 device doesn't support polling. Disabling");
-        v4l2object->can_poll_device = FALSE;
-      } else {
-        if (errno != EAGAIN && errno != EINTR)
-          goto select_error;
-      }
-    }
-    amount = v4l2_read (v4l2object->video_fd, data, buffersize);
-
-    if (amount == buffersize) {
-      break;
-    } else if (amount == -1) {
-      if (errno == EAGAIN || errno == EINTR) {
-        continue;
-      } else
-        goto read_error;
-    } else {
-      /* short reads can happen if a signal interrupts the read */
-      continue;
-    }
-  } while (TRUE);
-
-  gst_buffer_unmap (*buf, data, amount);
-
-  return GST_FLOW_OK;
-
-  /* ERRORS */
-select_error:
-  {
-    GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, READ, (NULL),
-        ("select error %d: %s (%d)", ret, g_strerror (errno), errno));
-    res = GST_FLOW_ERROR;
-    goto cleanup;
-  }
-stopped:
-  {
-    GST_DEBUG ("stop called");
-    res = GST_FLOW_WRONG_STATE;
-    goto cleanup;
-  }
-read_error:
-  {
-    GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, READ,
-        (_("Error reading %d bytes from device '%s'."),
-            buffersize, v4l2object->videodev), GST_ERROR_SYSTEM);
-    res = GST_FLOW_ERROR;
-    goto cleanup;
-  }
-cleanup:
-  {
-    gst_buffer_unmap (*buf, data, 0);
-    gst_buffer_unref (*buf);
-    return res;
-  }
-}
-
+#if 0
 static GstFlowReturn
 gst_v4l2_object_get_mmap (GstV4l2Object * v4l2object, GstBuffer ** buf)
 {
@@ -2524,7 +2431,6 @@ gst_v4l2_object_get_mmap (GstV4l2Object * v4l2object, GstBuffer ** buf)
   gint32 trials = NUM_TRIALS;
   GstBuffer *pool_buffer;
   gboolean need_copy;
-  gint ret;
 
   pool = v4l2object->pool;
   if (!pool)
@@ -2533,21 +2439,8 @@ gst_v4l2_object_get_mmap (GstV4l2Object * v4l2object, GstBuffer ** buf)
   GST_DEBUG_OBJECT (v4l2object->element, "grab frame");
 
   for (;;) {
-    if (v4l2object->can_poll_device) {
-      ret = gst_poll_wait (v4l2object->poll, GST_CLOCK_TIME_NONE);
-      if (G_UNLIKELY (ret < 0)) {
-        if (errno == EBUSY)
-          goto stopped;
-        if (errno == ENXIO) {
-          GST_DEBUG_OBJECT (v4l2object->element,
-              "v4l2 device doesn't support polling. Disabling");
-          v4l2object->can_poll_device = FALSE;
-        } else {
-          if (errno != EAGAIN && errno != EINTR)
-            goto select_error;
-        }
-      }
-    }
+    if ((res = gst_v4l2_object_poll (v4l2object)) != GST_FLOW_OK)
+      goto poll_error;
 
     res = gst_buffer_pool_acquire_buffer (pool, &pool_buffer, NULL);
     if (res != GST_FLOW_OK)
@@ -2618,16 +2511,9 @@ no_buffer_pool:
     GST_DEBUG_OBJECT (v4l2object->element, "no buffer pool");
     return GST_FLOW_WRONG_STATE;
   }
-select_error:
+poll_error:
   {
-    GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, READ, (NULL),
-        ("select error %d: %s (%d)", ret, g_strerror (errno), errno));
-    return GST_FLOW_ERROR;
-  }
-stopped:
-  {
-    GST_DEBUG ("stop called");
-    return GST_FLOW_WRONG_STATE;
+    return res;
   }
 too_many_trials:
   {
@@ -2639,32 +2525,57 @@ too_many_trials:
     return GST_FLOW_ERROR;
   }
 }
+#endif
 
-GstFlowReturn
-gst_v4l2_object_get_buffer (GstV4l2Object * v4l2object, GstBuffer ** buf)
+gboolean
+gst_v4l2_object_copy (GstV4l2Object * v4l2object, GstBuffer * dest,
+    GstBuffer * src)
 {
-  GstFlowReturn ret;
+  guint8 *data;
+  gsize size;
 
-  switch (v4l2object->type) {
-    case V4L2_BUF_TYPE_VIDEO_CAPTURE:
-      if (v4l2object->mode == GST_V4L2_IO_MMAP) {
-        ret = gst_v4l2_object_get_mmap (v4l2object, buf);
-      } else {
-        ret = gst_v4l2_object_get_read (v4l2object, buf);
-      }
-      break;
-    case V4L2_BUF_TYPE_VIDEO_OUTPUT:
-      ret = gst_buffer_pool_acquire_buffer (v4l2object->pool, buf, NULL);
-      break;
-    default:
-      ret = GST_FLOW_ERROR;
-      break;
+  if (v4l2object->info.finfo) {
+    GstVideoFrame src_frame, dest_frame;
+
+    GST_DEBUG_OBJECT (v4l2object->element, "copy video frame");
+
+    /* we have raw video, use videoframe copy to get strides right */
+    if (!gst_video_frame_map (&src_frame, &v4l2object->info, src, GST_MAP_READ))
+      goto invalid_buffer;
+
+    if (!gst_video_frame_map (&dest_frame, &v4l2object->info, dest,
+            GST_MAP_WRITE)) {
+      gst_video_frame_unmap (&src_frame);
+      goto invalid_buffer;
+    }
+
+    gst_video_frame_copy (&dest_frame, &src_frame);
+
+    gst_video_frame_unmap (&src_frame);
+    gst_video_frame_unmap (&dest_frame);
+  } else {
+    GST_DEBUG_OBJECT (v4l2object->element, "copy raw bytes");
+    data = gst_buffer_map (src, &size, NULL, GST_MAP_READ);
+    gst_buffer_fill (dest, 0, data, size);
+    gst_buffer_unmap (src, data, size);
   }
-  return ret;
+  GST_CAT_LOG_OBJECT (GST_CAT_PERFORMANCE, v4l2object->element,
+      "slow copy into buffer %p", dest);
+
+  return TRUE;
+
+  /* ERRORS */
+invalid_buffer:
+  {
+    /* No Window available to put our image into */
+    GST_WARNING_OBJECT (v4l2object->element, "could not map image");
+    return FALSE;
+  }
 }
 
+
 GstFlowReturn
-gst_v4l2_object_output_buffer (GstV4l2Object * v4l2object, GstBuffer * buf)
+gst_v4l2_object_process_buffer (GstV4l2Object * v4l2object, GstBuffer * buf)
 {
   GstFlowReturn ret;
   GstBuffer *to_queue = NULL;
@@ -2678,9 +2589,6 @@ gst_v4l2_object_output_buffer (GstV4l2Object * v4l2object, GstBuffer * buf)
     to_queue = buf;
     ret = GST_FLOW_OK;
   } else {
-    guint8 *data;
-    gsize size;
-
     /* not our buffer */
     GST_LOG_OBJECT (v4l2object->element, "buffer not from our pool, copying");
 
@@ -2691,43 +2599,12 @@ gst_v4l2_object_output_buffer (GstV4l2Object * v4l2object, GstBuffer * buf)
     if (ret != GST_FLOW_OK)
       goto acquire_failed;
 
-    if (v4l2object->info.finfo) {
-      GstVideoFrame src_frame, dest_frame;
-
-      GST_DEBUG_OBJECT (v4l2object->element, "copy video frame");
-      /* we have raw video, use videoframe copy to get strides right */
-      if (!gst_video_frame_map (&src_frame, &v4l2object->info, buf,
-              GST_MAP_READ))
-        goto invalid_buffer;
-
-      if (!gst_video_frame_map (&dest_frame, &v4l2object->info, to_queue,
-              GST_MAP_WRITE)) {
-        gst_video_frame_unmap (&src_frame);
-        goto invalid_buffer;
-      }
-
-      gst_video_frame_copy (&dest_frame, &src_frame);
-
-      gst_video_frame_unmap (&src_frame);
-      gst_video_frame_unmap (&dest_frame);
-    } else {
-      GST_DEBUG_OBJECT (v4l2object->element, "copy raw bytes");
-      data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
-      gst_buffer_fill (to_queue, 0, data, size);
-      gst_buffer_unmap (buf, data, size);
-    }
-    GST_CAT_LOG_OBJECT (GST_CAT_PERFORMANCE, v4l2object->element,
-        "slow copy into bufferpool buffer %p", to_queue);
+    if (!gst_v4l2_object_copy (v4l2object, to_queue, buf))
+      goto copy_failed;
   }
 
-  if (!gst_v4l2_buffer_pool_qbuf (v4l2object->pool, to_queue))
+  if (!gst_v4l2_buffer_pool_process (v4l2object->pool, to_queue))
     goto queue_failed;
-
-  if (!v4l2object->streaming) {
-    if (!gst_v4l2_object_start (v4l2object)) {
-      goto start_failed;
-    }
-  }
 
 done:
   if (to_queue != buf)
@@ -2747,22 +2624,16 @@ acquire_failed:
     GST_DEBUG_OBJECT (v4l2object->element, "could not get buffer from pool");
     return ret;
   }
-invalid_buffer:
+copy_failed:
   {
     /* No Window available to put our image into */
-    GST_WARNING_OBJECT (v4l2object->element, "could not map image");
+    GST_WARNING_OBJECT (v4l2object->element, "could not copy image");
     ret = GST_FLOW_OK;
     goto done;
   }
 queue_failed:
   {
     GST_DEBUG_OBJECT (v4l2object->element, "failed to queue buffer");
-    ret = GST_FLOW_ERROR;
-    goto done;
-  }
-start_failed:
-  {
-    GST_DEBUG_OBJECT (v4l2object->element, "failed to start streaming");
     ret = GST_FLOW_ERROR;
     goto done;
   }

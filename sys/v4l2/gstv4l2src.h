@@ -60,8 +60,6 @@ struct _GstV4l2Src
   /* pads */
   GstCaps *probed_caps;
 
-  guint32 frame_byte_size;
-
   int decimate;
 
   guint64 offset;

@@ -49,14 +49,19 @@ struct _GstV4l2BufferPool
 
   GstV4l2Object *obj;        /* the v4l2 object */
   gint video_fd;             /* a dup(2) of the v4l2object's video_fd */
-  gboolean requeuebuf;       /* if true, unusued buffers are automatically re-QBUF'd */
 
+  GstAllocator *allocator;
+  guint size;
   guint min_buffers;
   guint max_buffers;
+  guint prefix;
+  guint align;
 
   guint num_buffers;         /* number of buffers allocated by the driver */
   guint num_queued;           /* number of buffers queued in the driver */
   gint index;
+
+  gboolean streaming;
 
   GstBuffer **buffers;
 };
@@ -81,7 +86,7 @@ GType gst_v4l2_buffer_pool_get_type (void);
 
 GstBufferPool *     gst_v4l2_buffer_pool_new     (GstV4l2Object *obj);
 
-gboolean            gst_v4l2_buffer_pool_qbuf    (GstBufferPool * bpool, GstBuffer * buf);
+GstFlowReturn       gst_v4l2_buffer_pool_process (GstBufferPool * bpool, GstBuffer * buf);
 
 gint                gst_v4l2_buffer_pool_available_buffers (GstBufferPool *pool);
 

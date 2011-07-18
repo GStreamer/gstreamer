@@ -747,7 +747,7 @@ gst_v4l2sink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
 
   GST_DEBUG_OBJECT (v4l2sink, "render buffer: %p", buf);
 
-  ret = gst_v4l2_object_output_buffer (obj, buf);
+  ret = gst_v4l2_object_process_buffer (obj, buf);
 
   return ret;
 }

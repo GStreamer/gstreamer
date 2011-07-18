@@ -72,7 +72,7 @@ G_BEGIN_DECLS
 #define GST_V4L2_OBJECT(obj) (GstV4l2Object *)(obj)
 
 typedef enum {
-  GST_V4L2_IO_NONE    = 0,
+  GST_V4L2_IO_AUTO    = 0,
   GST_V4L2_IO_RW      = 1,
   GST_V4L2_IO_MMAP    = 2,
   GST_V4L2_IO_USERPTR = 3
@@ -120,6 +120,9 @@ struct _GstV4l2Object {
   guint32 bytesperline;
   guint size;
   GstClockTime duration;
+
+  /* wanted mode */
+  GstV4l2IOMode req_mode;
 
   /* optional pool */
   guint32 num_buffers;
@@ -174,7 +177,8 @@ GType gst_v4l2_object_get_type (void);
     PROP_CONTRAST,			\
     PROP_SATURATION,			\
     PROP_HUE,                           \
-    PROP_TV_NORM
+    PROP_TV_NORM,                       \
+    PROP_IO_MODE
 
 /* create/destroy */
 GstV4l2Object *	gst_v4l2_object_new 		 (GstElement * element,
@@ -223,14 +227,17 @@ GstStructure* gst_v4l2_object_v4l2fourcc_to_structure (guint32 fourcc);
 
 gboolean      gst_v4l2_object_set_format (GstV4l2Object *v4l2object, GstCaps * caps);
 
-gboolean      gst_v4l2_object_start       (GstV4l2Object *v4l2object);
+gboolean      gst_v4l2_object_unlock      (GstV4l2Object *v4l2object);
+gboolean      gst_v4l2_object_unlock_stop (GstV4l2Object *v4l2object);
+
 gboolean      gst_v4l2_object_stop        (GstV4l2Object *v4l2object);
 
 
-/* capture returns a filled buffer, output returns an empty buffer */
-GstFlowReturn gst_v4l2_object_get_buffer     (GstV4l2Object * v4l2object, GstBuffer ** buf);
-/* output the filled buffer */
-GstFlowReturn gst_v4l2_object_output_buffer  (GstV4l2Object * v4l2object, GstBuffer * buf);
+gboolean      gst_v4l2_object_copy        (GstV4l2Object * v4l2object,
+                                           GstBuffer * dest, GstBuffer *src);
+
+/* capture writes into the buffer, output renders the buffer */
+GstFlowReturn gst_v4l2_object_process_buffer (GstV4l2Object * v4l2object, GstBuffer * buf);
 
 
 #define GST_IMPLEMENT_V4L2_PROBE_METHODS(Type_Class, interface_as_function)                 \
