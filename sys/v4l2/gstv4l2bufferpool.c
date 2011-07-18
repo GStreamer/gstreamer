@@ -523,13 +523,14 @@ GstBufferPool *
 gst_v4l2_buffer_pool_new (GstV4l2Object * obj)
 {
   GstV4l2BufferPool *pool;
+  gint fd;
 
-  pool = (GstV4l2BufferPool *) g_object_new (GST_TYPE_V4L2_BUFFER_POOL, NULL);
-
-  pool->video_fd = v4l2_dup (obj->video_fd);
-  if (pool->video_fd < 0)
+  fd = v4l2_dup (obj->video_fd);
+  if (fd < 0)
     goto dup_failed;
 
+  pool = (GstV4l2BufferPool *) g_object_new (GST_TYPE_V4L2_BUFFER_POOL, NULL);
+  pool->video_fd = fd;
   pool->obj = obj;
 
   return GST_BUFFER_POOL_CAST (pool);
@@ -537,9 +538,7 @@ gst_v4l2_buffer_pool_new (GstV4l2Object * obj)
   /* ERRORS */
 dup_failed:
   {
-    gint errnosave = errno;
-    gst_object_unref (pool);
-    errno = errnosave;
+    GST_DEBUG ("failed to dup fd %d (%s)", errno, g_strerror (errno));
     return NULL;
   }
 }
