@@ -289,7 +289,8 @@ gst_multi_file_sink_finalize (GObject * object)
   GstMultiFileSink *sink = GST_MULTI_FILE_SINK (object);
 
   g_free (sink->filename);
-  g_slist_free_full (sink->files, (GDestroyNotify) g_free);
+  g_slist_foreach (sink->files, (GFunc) g_free, NULL);
+  g_slist_free (sink->files);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
