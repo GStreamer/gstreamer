@@ -470,6 +470,7 @@ struct _GstXvImageBufferPoolPrivate
   gboolean add_metavideo;
 };
 
+#define gst_xvimage_buffer_pool_parent_class parent_class
 G_DEFINE_TYPE (GstXvImageBufferPool, gst_xvimage_buffer_pool,
     GST_TYPE_BUFFER_POOL);
 
@@ -518,7 +519,7 @@ xvimage_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   if (priv->im_format == -1)
     goto unknown_format;
 
-  return TRUE;
+  return GST_BUFFER_POOL_CLASS (parent_class)->set_config (pool, config);
 
   /* ERRORS */
 wrong_config:

@@ -437,6 +437,7 @@ struct _GstXImageBufferPoolPrivate
   gboolean add_metavideo;
 };
 
+#define gst_ximage_buffer_pool_parent_class parent_class
 G_DEFINE_TYPE (GstXImageBufferPool, gst_ximage_buffer_pool,
     GST_TYPE_BUFFER_POOL);
 
@@ -480,7 +481,7 @@ ximage_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   priv->add_metavideo =
       gst_buffer_pool_config_has_meta (config, GST_META_API_VIDEO);
 
-  return TRUE;
+  return GST_BUFFER_POOL_CLASS (parent_class)->set_config (pool, config);
 
   /* ERRORS */
 wrong_config:
