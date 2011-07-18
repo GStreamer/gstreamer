@@ -622,7 +622,6 @@ gst_lv2_setup (GstSignalProcessor * gsp, GstCaps * caps)
   GstLV2Group *group = NULL;
   GstAudioChannelPosition *positions = NULL;
   GstPad *pad;
-  GstCaps *pad_caps;
 
   gsp_class = GST_SIGNAL_PROCESSOR_GET_CLASS (gsp);
   lv2 = (GstLV2 *) gsp;
@@ -655,7 +654,6 @@ gst_lv2_setup (GstSignalProcessor * gsp, GstCaps * caps)
                     slv2_value_as_string (group->symbol)))) {
           GST_INFO_OBJECT (lv2, "set audio channel positions on sink pad %s",
               slv2_value_as_string (group->symbol));
-          pad_caps = GST_PAD_CAPS (pad);
           s = gst_caps_get_structure (caps, 0);
           gst_audio_set_channel_positions (s, positions);
           gst_object_unref (pad);
@@ -674,7 +672,6 @@ gst_lv2_setup (GstSignalProcessor * gsp, GstCaps * caps)
                     slv2_value_as_string (group->symbol)))) {
           GST_INFO_OBJECT (lv2, "set audio channel positions on src pad %s",
               slv2_value_as_string (group->symbol));
-          pad_caps = GST_PAD_CAPS (pad);
           s = gst_caps_get_structure (caps, 0);
           gst_audio_set_channel_positions (s, positions);
           gst_object_unref (pad);
