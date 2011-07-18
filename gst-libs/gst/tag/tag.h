@@ -442,6 +442,14 @@ typedef enum {
 #define GST_TYPE_TAG_IMAGE_TYPE  (gst_tag_image_type_get_type ())
 GType   gst_tag_image_type_get_type (void);
 
+/**
+ * GST_TAG_ID3V2_HEADER_SIZE:
+ *
+ * ID3V2 header size considered minimum input for some functions.
+ *
+ * Since: 0.10.36
+ */
+#define GST_TAG_ID3V2_HEADER_SIZE            10
 
 /* functions for vorbis comment manipulation */
 
@@ -466,6 +474,10 @@ GstBuffer *             gst_tag_list_to_vorbiscomment_buffer    (const GstTagLis
 
 /* functions for ID3 tag manipulation */
 
+/* FIXME 0.11: inconsistent API naming: gst_tag_list_new_from_id3v1(), gst_tag_list_from_*_buffer(),
+ * gst_tag_list_from_id3v2_tag(). Also, note gst.tag.list_xyz() namespace vs. gst.tag_list_xyz(),
+ * which is a bit confusing and possibly doesn't map too well */
+
 guint                   gst_tag_id3_genre_count                 (void);
 const gchar *           gst_tag_id3_genre_get                   (const guint            id);
 GstTagList *            gst_tag_list_new_from_id3v1             (const guint8 *         data);
@@ -479,6 +491,10 @@ gboolean                gst_tag_list_add_id3_image (GstTagList   * tag_list,
                                                     const guint8 * image_data,
                                                     guint          image_data_len,
                                                     guint          id3_picture_type);
+
+GstTagList *            gst_tag_list_from_id3v2_tag (GstBuffer * buffer);
+
+guint                   gst_tag_get_id3v2_tag_size  (GstBuffer * buffer);
 
 /* functions to  convert GstBuffers with xmp packets contents to GstTagLists and back */
 GstTagList *            gst_tag_list_from_xmp_buffer  (const GstBuffer *  buffer);

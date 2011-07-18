@@ -33,10 +33,7 @@
 #include <zlib.h>
 #endif
 
-#include "id3tags.h"
-
-GST_DEBUG_CATEGORY_EXTERN (id3demux_debug);
-#define GST_CAT_DEFAULT (id3demux_debug)
+#include "id3v2.h"
 
 static gboolean parse_comment_frame (ID3TagsWorking * work);
 static gchar *parse_url_link_frame (ID3TagsWorking * work,
@@ -65,7 +62,7 @@ static gboolean parse_picture_frame (ID3TagsWorking * work);
 #define ID3V2_ENCODING_UTF8    0x03
 
 gboolean
-id3demux_id3v2_parse_frame (ID3TagsWorking * work)
+id3v2_parse_frame (ID3TagsWorking * work)
 {
   const gchar *tag_name;
   gboolean result = FALSE;
@@ -112,7 +109,7 @@ id3demux_id3v2_parse_frame (ID3TagsWorking * work)
     if (ID3V2_VER_MAJOR (work->hdr.version) == 3) {
       work->parse_size = GST_READ_UINT32_BE (frame_data);
     } else {
-      work->parse_size = read_synch_uint (frame_data, 4);
+      work->parse_size = id3v2_read_synch_uint (frame_data, 4);
     }
     frame_data += 4;
     frame_data_size -= 4;
@@ -132,7 +129,7 @@ id3demux_id3v2_parse_frame (ID3TagsWorking * work)
     if ((work->hdr.flags & ID3V2_HDR_FLAG_UNSYNC) != 0 ||
         ((work->frame_flags & ID3V2_FRAME_FORMAT_UNSYNCHRONISATION) != 0)) {
       GST_DEBUG ("Un-unsyncing frame %s", work->frame_id);
-      uu_data = id3demux_ununsync_data (frame_data, &frame_data_size);
+      uu_data = id3v2_ununsync_data (frame_data, &frame_data_size);
       frame_data = uu_data;
       GST_MEMDUMP ("ID3v2 frame (un-unsyced)", frame_data, frame_data_size);
     }
@@ -165,8 +162,8 @@ id3demux_id3v2_parse_frame (ID3TagsWorking * work)
     }
     work->parse_data = uncompressed_data;
 #else
-    GST_WARNING ("Compressed ID3v2 tag frame could not be decompressed"
-        " because gstid3demux was compiled without zlib support");
+    GST_WARNING ("Compressed ID3v2 tag frame could not be decompressed, because"
+        " libgsttag-" GST_MAJORMINOR " was compiled without zlib support");
     g_free (uu_data);
     return FALSE;
 #endif

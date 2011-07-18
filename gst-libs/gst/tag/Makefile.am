@@ -9,19 +9,19 @@ lib_LTLIBRARIES = libgsttag-@GST_MAJORMINOR@.la
 libgsttag_@GST_MAJORMINOR@_la_SOURCES = \
 	gstvorbistag.c gstid3tag.c gstxmptag.c gstexiftag.c \
 	lang.c licenses.c tags.c gsttagdemux.c gsttagmux.c \
-	gsttageditingprivate.c xmpwriter.c
+	gsttageditingprivate.c id3v2.c id3v2frames.c xmpwriter.c
 
 libgsttag_@GST_MAJORMINOR@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) \
-	$(GST_BASE_CFLAGS) $(GST_CFLAGS) \
+	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(ZLIB_CFLAGS) \
 	-DLICENSE_TRANSLATIONS_PATH=\"$(pkgdatadir)/license-translations.dict\"
-libgsttag_@GST_MAJORMINOR@_la_LIBADD = $(GST_BASE_LIBS) $(GST_LIBS) $(LIBM)
+libgsttag_@GST_MAJORMINOR@_la_LIBADD = $(GST_BASE_LIBS) $(GST_LIBS) $(LIBM) $(ZLIB_LIBS)
 libgsttag_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
 
 # lang-tables.dat contains generated static data and is included by lang.c
 # licenses-tables.dat contains generated data and is included by licenses.c
 EXTRA_DIST = lang-tables.dat licenses-tables.dat
 
-noinst_HEADERS = gsttageditingprivate.h
+noinst_HEADERS = gsttageditingprivate.h id3v2.h
 
 if HAVE_INTROSPECTION
 BUILT_GIRSOURCES = GstTag-@GST_MAJORMINOR@.gir

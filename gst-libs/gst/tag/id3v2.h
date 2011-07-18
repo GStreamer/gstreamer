@@ -23,25 +23,11 @@
 
 G_BEGIN_DECLS
 
-/* private tag for storing unprocessed ID3v2 frames */
-#define GST_ID3_DEMUX_TAG_ID3V2_FRAME "private-id3v2-frame"
-
-#define ID3V1_TAG_SIZE 128
 #define ID3V2_MARK_SIZE 3
-#define ID3V2_HDR_SIZE 10
+#define ID3V2_HDR_SIZE GST_TAG_ID3V2_HEADER_SIZE
 
-typedef enum {
-  ID3TAGS_MORE_DATA,
-  ID3TAGS_READ_TAG,
-  ID3TAGS_BROKEN_TAG
-} ID3TagsResult;
-
-/* From id3tags.c */
-guint id3demux_calc_id3v2_tag_size (GstBuffer * buf);
-ID3TagsResult id3demux_read_id3v2_tag (GstBuffer *buffer, guint *id3v2_size,
-  GstTagList **tags);
-
-guint read_synch_uint (const guint8 * data, guint size);
+/* From id3v2.c */
+guint id3v2_read_synch_uint (const guint8 * data, guint size);
 
 /* Things shared by id3tags.c and id3v2frames.c */
 #define ID3V2_VERSION 0x0400
@@ -112,10 +98,20 @@ enum {
    ID3V2_FRAME_FORMAT_COMPRESSION |           \
    ID3V2_FRAME_FORMAT_ENCRYPTION)
 
-/* From id3v2frames.c */
-gboolean id3demux_id3v2_parse_frame (ID3TagsWorking *work);
+/* FIXME 0.11: remove 'private' bit from GST_TAG_ID3V2_FRAME */
+/**
+ * GST_TAG_ID3V2_FRAME:
+ *
+ * Contains a single unprocessed ID3v2 frame. (buffer)
+ *
+ * (Not public API for now)
+ */
+#define GST_TAG_ID3V2_FRAME                  "private-id3v2-frame"
 
-guint8 * id3demux_ununsync_data (const guint8 * unsync_data, guint32 * size);
+/* From id3v2frames.c */
+gboolean id3v2_parse_frame (ID3TagsWorking *work);
+
+guint8 * id3v2_ununsync_data (const guint8 * unsync_data, guint32 * size);
 
 G_END_DECLS
 
