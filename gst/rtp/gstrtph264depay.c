@@ -480,13 +480,34 @@ incomplete_caps:
   }
 }
 
+static GstBuffer *
+gst_rtp_h264_complete_au (GstRtpH264Depay * rtph264depay,
+    GstClockTime * out_timestamp, gboolean * out_keyframe)
+{
+  guint outsize;
+  GstBuffer *outbuf;
+
+  /* we had a picture in the adapter and we completed it */
+  GST_DEBUG_OBJECT (rtph264depay, "taking completed AU");
+  outsize = gst_adapter_available (rtph264depay->picture_adapter);
+  outbuf = gst_adapter_take_buffer (rtph264depay->picture_adapter, outsize);
+
+  *out_timestamp = rtph264depay->last_ts;
+  *out_keyframe = rtph264depay->last_keyframe;
+
+  rtph264depay->last_keyframe = FALSE;
+  rtph264depay->picture_start = FALSE;
+
+  return outbuf;
+}
+
 /* SPS/PPS/IDR considered key, all others DELTA;
  * so downstream waiting for keyframe can pick up at SPS/PPS/IDR */
 #define NAL_TYPE_IS_KEY(nt) (((nt) == 5) || ((nt) == 7) || ((nt) == 8))
 
 static gboolean
 gst_rtp_h264_depay_handle_nal (GstRtpH264Depay * rtph264depay, GstBuffer * nal,
-    GstClockTime in_timestamp)
+    GstClockTime in_timestamp, gboolean marker)
 {
   GstBaseRTPDepayload *depayload = GST_BASE_RTP_DEPAYLOAD (rtph264depay);
   gint nal_type;
@@ -532,20 +553,9 @@ gst_rtp_h264_depay_handle_nal (GstRtpH264Depay * rtph264depay, GstBuffer * nal,
     }
     GST_DEBUG_OBJECT (depayload, "start %d, complete %d", start, complete);
 
-    if (complete && rtph264depay->picture_start) {
-      guint outsize;
-
-      /* we had a picture in the adapter and we completed it */
-      GST_DEBUG_OBJECT (depayload, "taking completed AU");
-      outsize = gst_adapter_available (rtph264depay->picture_adapter);
-      outbuf = gst_adapter_take_buffer (rtph264depay->picture_adapter, outsize);
-
-      out_timestamp = rtph264depay->last_ts;
-      out_keyframe = rtph264depay->last_keyframe;
-
-      rtph264depay->last_keyframe = FALSE;
-      rtph264depay->picture_start = FALSE;
-    }
+    if (complete && rtph264depay->picture_start)
+      outbuf = gst_rtp_h264_complete_au (rtph264depay, &out_timestamp,
+          &out_keyframe);
 
     /* add to adapter */
     GST_DEBUG_OBJECT (depayload, "adding NAL to picture adapter");
@@ -553,6 +563,10 @@ gst_rtp_h264_depay_handle_nal (GstRtpH264Depay * rtph264depay, GstBuffer * nal,
     rtph264depay->last_ts = in_timestamp;
     rtph264depay->last_keyframe |= keyframe;
     rtph264depay->picture_start |= start;
+
+    if (marker)
+      outbuf = gst_rtp_h264_complete_au (rtph264depay, &out_timestamp,
+          &out_keyframe);
   } else {
     /* no merge, output is input nal */
     GST_DEBUG_OBJECT (depayload, "using NAL as output");
@@ -615,11 +629,13 @@ gst_rtp_h264_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     guint8 *outdata;
     guint outsize, nalu_size;
     GstClockTime timestamp;
+    gboolean marker;
 
     timestamp = GST_BUFFER_TIMESTAMP (buf);
 
     payload_len = gst_rtp_buffer_get_payload_len (buf);
     payload = gst_rtp_buffer_get_payload (buf);
+    marker = gst_rtp_buffer_get_marker (buf);
 
     GST_DEBUG_OBJECT (rtph264depay, "receiving %d bytes", payload_len);
 
@@ -703,7 +719,7 @@ gst_rtp_h264_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
         outsize = gst_adapter_available (rtph264depay->adapter);
         outbuf = gst_adapter_take_buffer (rtph264depay->adapter, outsize);
 
-        gst_rtp_h264_depay_handle_nal (rtph264depay, outbuf, timestamp);
+        gst_rtp_h264_depay_handle_nal (rtph264depay, outbuf, timestamp, marker);
         break;
       }
       case 26:
@@ -797,7 +813,8 @@ gst_rtp_h264_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
             outdata[2] = (outsize >> 8);
             outdata[3] = (outsize);
           }
-          gst_rtp_h264_depay_handle_nal (rtph264depay, outbuf, timestamp);
+          gst_rtp_h264_depay_handle_nal (rtph264depay, outbuf, timestamp,
+              marker);
         }
         break;
       }
@@ -821,7 +838,7 @@ gst_rtp_h264_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
         outdata += sizeof (sync_bytes);
         memcpy (outdata, payload, nalu_size);
 
-        gst_rtp_h264_depay_handle_nal (rtph264depay, outbuf, timestamp);
+        gst_rtp_h264_depay_handle_nal (rtph264depay, outbuf, timestamp, marker);
         break;
       }
     }
