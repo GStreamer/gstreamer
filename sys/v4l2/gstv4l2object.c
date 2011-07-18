@@ -2062,16 +2062,17 @@ gst_v4l2_object_setup_pool (GstV4l2Object * v4l2object, GstCaps * caps)
     if (!(v4l2object->pool = gst_v4l2_buffer_pool_new (v4l2object)))
       goto buffer_pool_new_failed;
 
-    GST_INFO_OBJECT (v4l2object->element, "capturing buffers via mmap()");
-    v4l2object->use_mmap = TRUE;
+    GST_INFO_OBJECT (v4l2object->element, "accessing buffers via mmap()");
+    v4l2object->mode = GST_V4L2_IO_MMAP;
 
     config = gst_buffer_pool_get_config (v4l2object->pool);
     gst_buffer_pool_config_set (config, caps, v4l2object->info.size,
         num_buffers, num_buffers, 0, 0);
     gst_buffer_pool_set_config (v4l2object->pool, config);
   } else if (v4l2object->vcap.capabilities & V4L2_CAP_READWRITE) {
-    GST_INFO_OBJECT (v4l2object->element, "capturing buffers via read()");
-    v4l2object->use_mmap = FALSE;
+    GST_INFO_OBJECT (v4l2object->element,
+        "accessing buffers via read()/write()");
+    v4l2object->mode = GST_V4L2_IO_RW;
     v4l2object->pool = NULL;
   } else {
     goto no_supported_capture_method;
@@ -2344,23 +2345,22 @@ gst_v4l2_object_start (GstV4l2Object * v4l2object)
     if (!gst_buffer_pool_set_active (v4l2object->pool, TRUE))
       goto activate_failed;
 
-  if (v4l2object->use_mmap) {
-    switch (v4l2object->type) {
-      case V4L2_BUF_TYPE_VIDEO_CAPTURE:
-        break;
-      case V4L2_BUF_TYPE_VIDEO_OUTPUT:
-        /* for output, we assume we already queued a buffer */
-        break;
-      default:
-        break;
-    }
-    if (!v4l2object->streaming) {
-      GST_DEBUG_OBJECT (v4l2object->element, "STREAMON");
-      if (v4l2_ioctl (v4l2object->video_fd, VIDIOC_STREAMON,
-              &(v4l2object->type)) < 0)
-        goto start_failed;
-      v4l2object->streaming = TRUE;
-    }
+  switch (v4l2object->mode) {
+    case GST_V4L2_IO_RW:
+      break;
+    case GST_V4L2_IO_MMAP:
+    case GST_V4L2_IO_USERPTR:
+      if (!v4l2object->streaming) {
+        GST_DEBUG_OBJECT (v4l2object->element, "STREAMON");
+        if (v4l2_ioctl (v4l2object->video_fd, VIDIOC_STREAMON,
+                &(v4l2object->type)) < 0)
+          goto start_failed;
+        v4l2object->streaming = TRUE;
+      }
+      break;
+    default:
+      g_assert_not_reached ();
+      break;
   }
   return TRUE;
 
@@ -2390,17 +2390,25 @@ gst_v4l2_object_stop (GstV4l2Object * v4l2object)
   if (!GST_V4L2_IS_ACTIVE (v4l2object))
     goto done;
 
-  if (v4l2object->use_mmap) {
-    if (v4l2object->streaming) {
-      /* we actually need to sync on all queued buffers but not
-       * on the non-queued ones */
-      GST_DEBUG_OBJECT (v4l2object->element, "STREAMOFF");
-      if (v4l2_ioctl (v4l2object->video_fd, VIDIOC_STREAMOFF,
-              &(v4l2object->type)) < 0)
-        goto stop_failed;
+  switch (v4l2object->mode) {
+    case GST_V4L2_IO_RW:
+      break;
+    case GST_V4L2_IO_MMAP:
+    case GST_V4L2_IO_USERPTR:
+      if (v4l2object->streaming) {
+        /* we actually need to sync on all queued buffers but not
+         * on the non-queued ones */
+        GST_DEBUG_OBJECT (v4l2object->element, "STREAMOFF");
+        if (v4l2_ioctl (v4l2object->video_fd, VIDIOC_STREAMOFF,
+                &(v4l2object->type)) < 0)
+          goto stop_failed;
 
-      v4l2object->streaming = FALSE;
-    }
+        v4l2object->streaming = FALSE;
+      }
+      break;
+    default:
+      g_assert_not_reached ();
+      break;
   }
 
   if (v4l2object->pool) {
@@ -2639,7 +2647,7 @@ gst_v4l2_object_get_buffer (GstV4l2Object * v4l2object, GstBuffer ** buf)
 
   switch (v4l2object->type) {
     case V4L2_BUF_TYPE_VIDEO_CAPTURE:
-      if (v4l2object->use_mmap) {
+      if (v4l2object->mode == GST_V4L2_IO_MMAP) {
         ret = gst_v4l2_object_get_mmap (v4l2object, buf);
       } else {
         ret = gst_v4l2_object_get_read (v4l2object, buf);

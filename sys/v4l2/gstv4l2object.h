@@ -71,6 +71,12 @@ G_BEGIN_DECLS
 
 #define GST_V4L2_OBJECT(obj) (GstV4l2Object *)(obj)
 
+typedef enum {
+  GST_V4L2_IO_NONE    = 0,
+  GST_V4L2_IO_RW      = 1,
+  GST_V4L2_IO_MMAP    = 2,
+  GST_V4L2_IO_USERPTR = 3
+} GstV4l2IOMode;
 
 typedef gboolean  (*GstV4l2GetInOutFunction)  (GstV4l2Object * v4l2object, gint * input);
 typedef gboolean  (*GstV4l2SetInOutFunction)  (GstV4l2Object * v4l2object, gint input);
@@ -100,6 +106,7 @@ struct _GstV4l2Object {
 
   /* the video-device's file descriptor */
   gint video_fd;
+  GstV4l2IOMode mode;
   GstPoll * poll;
   gboolean can_poll_device;
 
@@ -118,7 +125,6 @@ struct _GstV4l2Object {
   guint32 num_buffers;
   guint32 min_queued_bufs;
   gboolean always_copy;
-  gboolean use_mmap;
   GstBufferPool *pool;
 
   /* the video device's capabilities */
