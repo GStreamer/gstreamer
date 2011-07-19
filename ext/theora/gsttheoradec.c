@@ -808,11 +808,11 @@ theora_negotiate_pool (GstTheoraDec * dec, GstCaps * caps, GstVideoInfo * info)
         &alignment, &pool);
   } else {
     GST_DEBUG_OBJECT (dec, "didn't get downstream ALLOCATION hints");
-    size = info->size;
     min = max = 0;
     prefix = 0;
     alignment = 0;
   }
+  size = MAX (size, info->size);
 
   if (pool == NULL) {
     /* we did not get a pool, make one ourselves then */
