@@ -108,6 +108,8 @@
 #include "gstbasevideoencoder.h"
 #include "gstbasevideoutils.h"
 
+#include <string.h>
+
 GST_DEBUG_CATEGORY (basevideoencoder_debug);
 #define GST_CAT_DEFAULT basevideoencoder_debug
 
@@ -263,11 +265,9 @@ gst_base_video_encoder_sink_setcaps (GstPad * pad, GstCaps * caps)
   GstBaseVideoEncoder *base_video_encoder;
   GstBaseVideoEncoderClass *base_video_encoder_class;
   GstStructure *structure;
-  GstVideoState *state;
+  GstVideoState *state, tmp_state;
   gboolean ret;
-  gboolean changed = FALSE, u, v;
-  GstVideoFormat fmt;
-  gint w, h, num, den;
+  gboolean changed = FALSE;
 
   base_video_encoder = GST_BASE_VIDEO_ENCODER (gst_pad_get_parent (pad));
   base_video_encoder_class =
@@ -279,58 +279,49 @@ gst_base_video_encoder_sink_setcaps (GstPad * pad, GstCaps * caps)
   GST_DEBUG_OBJECT (base_video_encoder, "setcaps %" GST_PTR_FORMAT, caps);
 
   state = &GST_BASE_VIDEO_CODEC (base_video_encoder)->state;
+  memset (&tmp_state, 0, sizeof (tmp_state));
+
+  tmp_state.caps = gst_caps_ref (caps);
   structure = gst_caps_get_structure (caps, 0);
 
-  ret = gst_video_format_parse_caps (caps, &fmt, &w, &h);
+  ret =
+      gst_video_format_parse_caps (caps, &tmp_state.format, &tmp_state.width,
+      &tmp_state.height);
   if (!ret)
     goto exit;
 
-  if (fmt != state->format || w != state->width || h != state->height) {
-    changed = TRUE;
-    state->format = fmt;
-    state->width = w;
-    state->height = h;
-  }
+  changed = (tmp_state.format != state->format
+      || tmp_state.width != state->width || tmp_state.height != state->height);
 
-  num = 0;
-  den = 1;
-  gst_video_parse_caps_framerate (caps, &num, &den);
-  if (den == 0) {
-    num = 0;
-    den = 1;
+  if (!gst_video_parse_caps_framerate (caps, &tmp_state.fps_n,
+          &tmp_state.fps_d)) {
+    tmp_state.fps_n = 0;
+    tmp_state.fps_d = 1;
   }
-  if (num != state->fps_n || den != state->fps_d) {
-    changed = TRUE;
-    state->fps_n = num;
-    state->fps_d = den;
-  }
+  changed = changed || (tmp_state.fps_n != state->fps_n
+      || tmp_state.fps_d != state->fps_d);
 
-  num = 0;
-  den = 1;
-  gst_video_parse_caps_pixel_aspect_ratio (caps, &num, &den);
-  if (den == 0) {
-    num = 0;
-    den = 1;
+  if (!gst_video_parse_caps_pixel_aspect_ratio (caps, &tmp_state.par_n,
+          &tmp_state.par_d)) {
+    tmp_state.par_n = 1;
+    tmp_state.par_d = 1;
   }
-  if (num != state->par_n || den != state->par_d) {
-    changed = TRUE;
-    state->par_n = num;
-    state->par_d = den;
-  }
+  changed = changed || (tmp_state.par_n != state->par_n
+      || tmp_state.par_d != state->par_d);
 
-  u = gst_structure_get_boolean (structure, "interlaced", &v);
-  if (u != state->have_interlaced || v != state->interlaced) {
-    changed = TRUE;
-    state->have_interlaced = u;
-    state->interlaced = v;
-  }
+  tmp_state.have_interlaced =
+      gst_structure_get_boolean (structure, "interlaced",
+      &tmp_state.interlaced);
+  changed = changed || (tmp_state.have_interlaced != state->have_interlaced
+      || tmp_state.interlaced != state->interlaced);
 
-  state->bytes_per_picture =
-      gst_video_format_get_size (state->format, state->width, state->height);
-  state->clean_width = state->width;
-  state->clean_height = state->height;
-  state->clean_offset_left = 0;
-  state->clean_offset_top = 0;
+  tmp_state.bytes_per_picture =
+      gst_video_format_get_size (tmp_state.format, tmp_state.width,
+      tmp_state.height);
+  tmp_state.clean_width = tmp_state.width;
+  tmp_state.clean_height = tmp_state.height;
+  tmp_state.clean_offset_left = 0;
+  tmp_state.clean_offset_top = 0;
 
   if (changed) {
     /* arrange draining pending frames */
@@ -338,11 +329,17 @@ gst_base_video_encoder_sink_setcaps (GstPad * pad, GstCaps * caps)
 
     /* and subclass should be ready to configure format at any time around */
     if (base_video_encoder_class->set_format)
-      ret = base_video_encoder_class->set_format (base_video_encoder, state);
+      ret =
+          base_video_encoder_class->set_format (base_video_encoder, &tmp_state);
+    if (ret) {
+      gst_caps_replace (&state->caps, NULL);
+      *state = tmp_state;
+    }
   } else {
     /* no need to stir things up */
     GST_DEBUG_OBJECT (base_video_encoder,
         "new video format identical to configured format");
+    gst_caps_unref (tmp_state.caps);
     ret = TRUE;
   }
 
