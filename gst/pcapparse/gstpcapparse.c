@@ -469,7 +469,7 @@ gst_pcap_parse_chain (GstPad * pad, GstBuffer * buffer)
 
           data = gst_adapter_peek (self->adapter, self->cur_packet_size);
 
-          GST_LOG_OBJECT (self, "examining packet size %d",
+          GST_LOG_OBJECT (self, "examining packet size %" G_GINT64_FORMAT,
               self->cur_packet_size);
 
           if (gst_pcap_parse_scan_frame (self, data, self->cur_packet_size,
