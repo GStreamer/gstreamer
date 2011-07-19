@@ -806,13 +806,14 @@ theora_negotiate_pool (GstTheoraDec * dec, GstCaps * caps, GstVideoInfo * info)
     /* we got configuration from our peer, parse them */
     gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
         &alignment, &pool);
+    size = MAX (size, info->size);
   } else {
     GST_DEBUG_OBJECT (dec, "didn't get downstream ALLOCATION hints");
+    size = info->size;
     min = max = 0;
     prefix = 0;
     alignment = 0;
   }
-  size = MAX (size, info->size);
 
   if (pool == NULL) {
     /* we did not get a pool, make one ourselves then */
