@@ -749,6 +749,12 @@ gst_au_parse_sink_event (GstPad * pad, GstEvent * event)
       gst_event_unref (event);
       break;
     }
+    case GST_EVENT_EOS:
+      if (!auparse->srcpad) {
+        GST_ELEMENT_ERROR (auparse, STREAM, WRONG_TYPE,
+            ("No valid input found before end of stream"), (NULL));
+      }
+      /* fall-through */
     default:
       ret = gst_pad_event_default (pad, event);
       break;
