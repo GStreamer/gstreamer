@@ -110,9 +110,12 @@ struct _GstOMXPort {
   gboolean flushed; /* TRUE after OMX_CommandFlush was done */
   gboolean enabled_changed; /* TRUE after OMX_Command{En,Dis}able was done */
 
-  /* If not equal to comp->settings_cookie we need
-   * to reconfigure this port */
+  /* Increased whenever the settings of these port change.
+   * If settings_cookie != configured_settings_cookie
+   * the port has to be reconfigured.
+   */
   gint settings_cookie;
+  gint configured_settings_cookie;
 };
 
 struct _GstOMXComponent {
@@ -125,8 +128,8 @@ struct _GstOMXComponent {
   GPtrArray *ports; /* Contains GstOMXPort* */
   gint n_in_ports, n_out_ports;
 
-  /* Protecting state, pending_state, last_error
-   * and settings_cookie.
+  /* Protecting state, pending_state, last_error,
+   * pending_reconfigure_outports.
    * Signalled if one of them changes
    */
   GMutex *state_lock;
@@ -136,14 +139,9 @@ struct _GstOMXComponent {
   OMX_STATETYPE pending_state;
   /* OMX_ErrorNone usually, if different nothing will work */
   OMX_ERRORTYPE last_error;
-  /* Updated whenever settings of any port are changing.
-   * We always reconfigure all ports */
-  gint settings_cookie;
-  /* Number of output ports that must still be reconfigured.
-   * If any are pending no input port will be reconfigured
-   * or will accept any data and wait.
-   */
-  gint reconfigure_out_pending;
+
+  gint have_pending_reconfigure_outports; /* atomic */
+  GList *pending_reconfigure_outports;
 };
 
 struct _GstOMXBuffer {
@@ -183,8 +181,7 @@ const gchar *     gst_omx_component_get_last_error_string (GstOMXComponent * com
 GstOMXPort *      gst_omx_component_add_port (GstOMXComponent * comp, guint32 index);
 GstOMXPort *      gst_omx_component_get_port (GstOMXComponent * comp, guint32 index);
 
-gint              gst_omx_component_get_settings_cookie (GstOMXComponent * comp);
-void              gst_omx_component_trigger_settings_changed (GstOMXComponent * comp);
+void              gst_omx_component_trigger_settings_changed (GstOMXComponent * comp, guint32 port_index);
 
 
 void              gst_omx_port_get_port_definition (GstOMXPort * port, OMX_PARAM_PORTDEFINITIONTYPE * port_def);
@@ -203,6 +200,8 @@ OMX_ERRORTYPE     gst_omx_port_reconfigure (GstOMXPort * port);
 
 OMX_ERRORTYPE     gst_omx_port_set_enabled (GstOMXPort * port, gboolean enabled);
 gboolean          gst_omx_port_is_enabled (GstOMXPort * port);
+
+OMX_ERRORTYPE     gst_omx_port_manual_reconfigure (GstOMXPort * port, gboolean start);
 
 G_END_DECLS
 

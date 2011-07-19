@@ -236,23 +236,61 @@ EventHandler (OMX_HANDLETYPE hComponent, OMX_PTR pAppData, OMX_EVENTTYPE eEvent,
     case OMX_EventPortSettingsChanged:
     {
       gint i, n;
+      guint32 port_index;
+      GList *outports = NULL, *l, *k;
 
-      g_mutex_lock (comp->state_lock);
-      GST_DEBUG_OBJECT (comp->parent, "Settings changed (cookie: %d -> %d)",
-          comp->settings_cookie, comp->settings_cookie + 1);
-      comp->settings_cookie++;
-      comp->reconfigure_out_pending = comp->n_out_ports;
-      g_mutex_unlock (comp->state_lock);
+      if (!(comp->hacks &
+              GST_OMX_HACK_EVENT_PORT_SETTINGS_CHANGED_NDATA_PARAMETER_SWAP)) {
+        port_index = nData1;
+      } else {
+        port_index = nData2;
+      }
 
-      /* Now wake up all ports */
+      if (port_index == 0
+          && (comp->hacks &
+              GST_OMX_HACK_EVENT_PORT_SETTINGS_CHANGED_PORT_0_TO_1))
+        port_index = 1;
+
+      GST_DEBUG_OBJECT (comp->parent, "Settings changed (port_index: %d)",
+          port_index);
+
+      /* Now update the ports' states */
       n = comp->ports->len;
       for (i = 0; i < n; i++) {
         GstOMXPort *port = g_ptr_array_index (comp->ports, i);
 
         g_mutex_lock (port->port_lock);
-        g_cond_broadcast (port->port_cond);
+        if (port_index == OMX_ALL || port_index == port->index) {
+          port->settings_cookie++;
+          if (port->port_def.eDir == OMX_DirOutput)
+            outports = g_list_prepend (outports, port);
+          g_cond_broadcast (port->port_cond);
+        }
         g_mutex_unlock (port->port_lock);
       }
+
+      g_mutex_lock (comp->state_lock);
+      for (k = outports; k; k = k->next) {
+        gboolean found = FALSE;
+
+        for (l = comp->pending_reconfigure_outports; l; l = l->next) {
+          if (l->data == k->data) {
+            found = TRUE;
+            break;
+          }
+        }
+
+        if (!found)
+          comp->pending_reconfigure_outports =
+              g_list_prepend (comp->pending_reconfigure_outports, k->data);
+      }
+
+      if (comp->pending_reconfigure_outports)
+        g_atomic_int_set (&comp->have_pending_reconfigure_outports, 1);
+      g_mutex_unlock (comp->state_lock);
+
+      g_list_free (outports);
+
       break;
     }
     case OMX_EventPortFormatDetected:
@@ -352,8 +390,6 @@ gst_omx_component_new (GstObject * parent, const gchar * core_name,
   comp->state_cond = g_cond_new ();
   comp->pending_state = OMX_StateInvalid;
   comp->last_error = OMX_ErrorNone;
-  comp->settings_cookie = 0;
-  comp->reconfigure_out_pending = 0;
 
   /* Set component role if any */
   if (component_role) {
@@ -443,8 +479,13 @@ gst_omx_component_set_state (GstOMXComponent * comp, OMX_STATETYPE state)
   err = OMX_SendCommand (comp->handle, OMX_CommandStateSet, state, NULL);
 
   /* Reset some things */
-  if (old_state == OMX_StateExecuting && state == OMX_StateIdle)
-    comp->reconfigure_out_pending = 0;
+  if (old_state == OMX_StateExecuting && state == OMX_StateIdle) {
+    g_atomic_int_set (&comp->have_pending_reconfigure_outports, 0);
+    g_list_free (comp->pending_reconfigure_outports);
+    comp->pending_reconfigure_outports = NULL;
+    /* Notify all inports that are still waiting */
+    g_cond_broadcast (comp->state_cond);
+  }
 
 done:
   g_mutex_unlock (comp->state_lock);
@@ -575,7 +616,6 @@ gst_omx_component_add_port (GstOMXComponent * comp, guint32 index)
   port->flushed = FALSE;
   port->settings_changed = FALSE;
   port->enabled_changed = FALSE;
-  port->settings_cookie = comp->settings_cookie;
 
   if (port->port_def.eDir == OMX_DirInput)
     comp->n_in_ports++;
@@ -608,27 +648,25 @@ gst_omx_component_get_port (GstOMXComponent * comp, guint32 index)
   return NULL;
 }
 
-gint
-gst_omx_component_get_settings_cookie (GstOMXComponent * comp)
-{
-  gint cookie;
-
-  g_return_val_if_fail (comp != NULL, -1);
-
-  g_mutex_lock (comp->state_lock);
-  cookie = comp->settings_cookie;
-  g_mutex_unlock (comp->state_lock);
-
-  return cookie;
-}
-
 void
-gst_omx_component_trigger_settings_changed (GstOMXComponent * comp)
+gst_omx_component_trigger_settings_changed (GstOMXComponent * comp,
+    guint32 port_index)
 {
   g_return_if_fail (comp != NULL);
 
-  EventHandler (comp->handle, comp, OMX_EventPortSettingsChanged, OMX_ALL, 0,
-      NULL);
+  /* Reverse hacks */
+  if (port_index == 1
+      && (comp->hacks & GST_OMX_HACK_EVENT_PORT_SETTINGS_CHANGED_PORT_0_TO_1))
+    port_index = 0;
+
+  if (!(comp->hacks &
+          GST_OMX_HACK_EVENT_PORT_SETTINGS_CHANGED_NDATA_PARAMETER_SWAP)) {
+    EventHandler (comp->handle, comp, OMX_EventPortSettingsChanged, port_index,
+        0, NULL);
+  } else {
+    EventHandler (comp->handle, comp, OMX_EventPortSettingsChanged, 0,
+        port_index, NULL);
+  }
 }
 
 /* NOTE: This takes comp->state_lock *and* *all* port->port_lock! */
@@ -779,31 +817,23 @@ retry:
    * or buffers are returned to be filled as usual.
    */
   if (port->port_def.eDir == OMX_DirInput) {
-    g_mutex_unlock (port->port_lock);
-    g_mutex_lock (comp->state_lock);
-    while (comp->reconfigure_out_pending > 0 &&
-        (err = comp->last_error) == OMX_ErrorNone && !port->flushing) {
-      GST_DEBUG_OBJECT (comp->parent,
-          "Waiting for %d output ports to reconfigure",
-          comp->reconfigure_out_pending);
-      g_cond_wait (comp->state_cond, comp->state_lock);
-    }
-    g_mutex_unlock (comp->state_lock);
-    g_mutex_lock (port->port_lock);
-    if (err != OMX_ErrorNone) {
-      GST_ERROR_OBJECT (comp->parent, "Got error while waiting: %s (0x%08x)",
-          gst_omx_error_to_string (err), err);
-      ret = GST_OMX_ACQUIRE_BUFFER_ERROR;
-      goto done;
-    } else if (port->flushing) {
-      GST_DEBUG_OBJECT (comp->parent, "Port %u is flushing now", port->index);
-      ret = GST_OMX_ACQUIRE_BUFFER_FLUSHING;
-      goto done;
+    if (g_atomic_int_get (&comp->have_pending_reconfigure_outports)) {
+      g_mutex_unlock (port->port_lock);
+      g_mutex_lock (comp->state_lock);
+      while (g_atomic_int_get (&comp->have_pending_reconfigure_outports) &&
+          (err = comp->last_error) == OMX_ErrorNone && !port->flushing) {
+        GST_DEBUG_OBJECT (comp->parent,
+            "Waiting for output ports to reconfigure");
+        g_cond_wait (comp->state_cond, comp->state_lock);
+      }
+      g_mutex_unlock (comp->state_lock);
+      g_mutex_lock (port->port_lock);
+      goto retry;
     }
 
     /* Only if this port needs to be reconfigured too notify
      * the caller about it */
-    if (port->settings_cookie != gst_omx_component_get_settings_cookie (comp)) {
+    if (port->settings_cookie != port->configured_settings_cookie) {
       ret = GST_OMX_ACQUIRE_BUFFER_RECONFIGURE;
       port->settings_changed = TRUE;
       goto done;
@@ -816,7 +846,7 @@ retry:
    * NOTE: If buffers for this configuration arrive later
    * we have to drop them... */
   if (port->port_def.eDir == OMX_DirOutput &&
-      port->settings_cookie != gst_omx_component_get_settings_cookie (comp)) {
+      port->settings_cookie != port->configured_settings_cookie) {
     if (!g_queue_is_empty (port->pending_buffers)) {
       GST_DEBUG_OBJECT (comp->parent,
           "Output port %u needs reconfiguration but has buffers pending",
@@ -1480,6 +1510,9 @@ gst_omx_port_reconfigure (GstOMXPort * port)
   if (!port->settings_changed)
     goto done;
 
+  if ((err = gst_omx_component_get_last_error (comp)) != OMX_ErrorNone)
+    goto done;
+
   /* Disable and enable the port. This already takes
    * care of deallocating and allocating buffers.
    */
@@ -1491,16 +1524,27 @@ gst_omx_port_reconfigure (GstOMXPort * port)
   if (err != OMX_ErrorNone)
     goto done;
 
-  port->settings_cookie = comp->settings_cookie;
+  port->configured_settings_cookie = port->settings_cookie;
 
   /* If this is an output port, notify all input ports
    * that might wait for us to reconfigure in
    * acquire_buffer()
    */
   if (port->port_def.eDir == OMX_DirOutput) {
+    GList *l;
+
     g_mutex_lock (comp->state_lock);
-    comp->reconfigure_out_pending--;
-    g_cond_broadcast (comp->state_cond);
+    for (l = comp->pending_reconfigure_outports; l; l = l->next) {
+      if (l->data == (gpointer) port) {
+        comp->pending_reconfigure_outports =
+            g_list_delete_link (comp->pending_reconfigure_outports, l);
+        break;
+      }
+    }
+    if (!comp->pending_reconfigure_outports) {
+      g_atomic_int_set (&comp->have_pending_reconfigure_outports, 0);
+      g_cond_broadcast (comp->state_cond);
+    }
     g_mutex_unlock (comp->state_lock);
   }
 
@@ -1509,6 +1553,72 @@ done:
       port->index, gst_omx_error_to_string (err), err);
 
   g_mutex_unlock (port->port_lock);
+  return err;
+}
+
+OMX_ERRORTYPE
+gst_omx_port_manual_reconfigure (GstOMXPort * port, gboolean start)
+{
+  GstOMXComponent *comp;
+  OMX_ERRORTYPE err = OMX_ErrorNone;
+
+  g_return_val_if_fail (port != NULL, OMX_ErrorUndefined);
+
+  comp = port->comp;
+
+  GST_DEBUG_OBJECT (comp->parent, "Manual reconfigure of port %u %s",
+      port->index, (start ? "start" : "stsop"));
+
+  g_mutex_lock (port->port_lock);
+
+  if ((err = gst_omx_component_get_last_error (comp)) != OMX_ErrorNone)
+    goto done;
+
+  if (start)
+    port->settings_cookie++;
+  else
+    port->configured_settings_cookie = port->settings_cookie;
+
+  if (port->port_def.eDir == OMX_DirOutput) {
+    GList *l;
+
+    if (start) {
+      g_mutex_lock (comp->state_lock);
+      for (l = comp->pending_reconfigure_outports; l; l = l->next) {
+        if (l->data == (gpointer) port)
+          break;
+      }
+
+      if (!l) {
+        comp->pending_reconfigure_outports =
+            g_list_prepend (comp->pending_reconfigure_outports, port);
+        g_atomic_int_set (&comp->have_pending_reconfigure_outports, 1);
+      }
+      g_mutex_unlock (comp->state_lock);
+    } else {
+      g_mutex_lock (comp->state_lock);
+      for (l = comp->pending_reconfigure_outports; l; l = l->next) {
+        if (l->data == (gpointer) port) {
+          comp->pending_reconfigure_outports =
+              g_list_delete_link (comp->pending_reconfigure_outports, l);
+          break;
+        }
+      }
+      if (!comp->pending_reconfigure_outports) {
+        g_atomic_int_set (&comp->have_pending_reconfigure_outports, 0);
+        g_cond_broadcast (comp->state_cond);
+      }
+      g_mutex_unlock (comp->state_lock);
+    }
+  }
+
+
+done:
+  g_mutex_unlock (port->port_lock);
+
+  GST_DEBUG_OBJECT (comp->parent, "Manual reconfigure of port %u: %s (0x%08x)",
+      port->index, gst_omx_error_to_string (err), err);
+
   return err;
 }
 
