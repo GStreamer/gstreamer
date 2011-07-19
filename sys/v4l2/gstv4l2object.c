@@ -2408,6 +2408,8 @@ gst_v4l2_object_stop (GstV4l2Object * v4l2object)
   if (!GST_V4L2_IS_ACTIVE (v4l2object))
     goto done;
 
+  gst_poll_set_flushing (v4l2object->poll, TRUE);
+
   if (v4l2object->pool) {
     GST_DEBUG_OBJECT (v4l2object->element, "deactivating pool");
     gst_buffer_pool_set_active (v4l2object->pool, FALSE);
@@ -2570,71 +2572,5 @@ invalid_buffer:
     /* No Window available to put our image into */
     GST_WARNING_OBJECT (v4l2object->element, "could not map image");
     return FALSE;
-  }
-}
-
-
-GstFlowReturn
-gst_v4l2_object_process_buffer (GstV4l2Object * v4l2object, GstBuffer * buf)
-{
-  GstFlowReturn ret;
-  GstBuffer *to_queue = NULL;
-  GstMetaV4l2 *meta;
-
-  meta = GST_META_V4L2_GET (buf);
-
-  if (meta && buf->pool == v4l2object->pool) {
-    GST_LOG_OBJECT (v4l2object->element,
-        "buffer from our pool, queueing directly");
-    to_queue = buf;
-    ret = GST_FLOW_OK;
-  } else {
-    /* not our buffer */
-    GST_LOG_OBJECT (v4l2object->element, "buffer not from our pool, copying");
-
-    if (!gst_buffer_pool_set_active (v4l2object->pool, TRUE))
-      goto activate_failed;
-
-    ret = gst_buffer_pool_acquire_buffer (v4l2object->pool, &to_queue, NULL);
-    if (ret != GST_FLOW_OK)
-      goto acquire_failed;
-
-    if (!gst_v4l2_object_copy (v4l2object, to_queue, buf))
-      goto copy_failed;
-  }
-
-  if (!gst_v4l2_buffer_pool_process (v4l2object->pool, to_queue))
-    goto queue_failed;
-
-done:
-  if (to_queue != buf)
-    gst_buffer_unref (to_queue);
-
-  return ret;
-
-  /* ERRORS */
-activate_failed:
-  {
-    GST_ERROR_OBJECT (v4l2object->element, "failed to activate bufferpool.");
-    ret = GST_FLOW_ERROR;
-    goto done;
-  }
-acquire_failed:
-  {
-    GST_DEBUG_OBJECT (v4l2object->element, "could not get buffer from pool");
-    return ret;
-  }
-copy_failed:
-  {
-    /* No Window available to put our image into */
-    GST_WARNING_OBJECT (v4l2object->element, "could not copy image");
-    ret = GST_FLOW_OK;
-    goto done;
-  }
-queue_failed:
-  {
-    GST_DEBUG_OBJECT (v4l2object->element, "failed to queue buffer");
-    ret = GST_FLOW_ERROR;
-    goto done;
   }
 }

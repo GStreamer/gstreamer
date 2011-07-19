@@ -236,9 +236,6 @@ gboolean      gst_v4l2_object_stop        (GstV4l2Object *v4l2object);
 gboolean      gst_v4l2_object_copy        (GstV4l2Object * v4l2object,
                                            GstBuffer * dest, GstBuffer *src);
 
-/* capture writes into the buffer, output renders the buffer */
-GstFlowReturn gst_v4l2_object_process_buffer (GstV4l2Object * v4l2object, GstBuffer * buf);
-
 
 #define GST_IMPLEMENT_V4L2_PROBE_METHODS(Type_Class, interface_as_function)                 \
                                                                                             \
