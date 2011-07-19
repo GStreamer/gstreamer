@@ -1581,7 +1581,7 @@ gst_x264_enc_sink_set_caps (GstPad * pad, GstCaps * caps)
     GstStructure *s;
     const gchar *profile;
     const gchar *level;
-    const gchar *bytestream;
+    const gchar *stream_format;
 
     if (gst_caps_is_empty (allowed_caps)) {
       gst_caps_unref (allowed_caps);
@@ -1647,12 +1647,12 @@ gst_x264_enc_sink_set_caps (GstPad * pad, GstCaps * caps)
       }
     }
 
-    bytestream = gst_structure_get_string (s, "stream-format");
+    stream_format = gst_structure_get_string (s, "stream-format");
     encoder->current_byte_stream = GST_X264_ENC_STREAM_FORMAT_FROM_PROPERTY;
-    if (bytestream) {
-      if (!strcmp (bytestream, "avc")) {
+    if (stream_format) {
+      if (!strcmp (stream_format, "avc")) {
         encoder->current_byte_stream = GST_X264_ENC_STREAM_FORMAT_AVC;
-      } else if (!strcmp (profile, "byte-stream")) {
+      } else if (!strcmp (stream_format, "byte-stream")) {
         encoder->current_byte_stream = GST_X264_ENC_STREAM_FORMAT_BYTE_STREAM;
       } else {
         /* means we have both in caps and _FROM_PROPERTY should be the option */
