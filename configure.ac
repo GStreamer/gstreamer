@@ -1946,6 +1946,7 @@ gst-libs/gst/Makefile
 gst-libs/gst/basecamerabinsrc/Makefile
 gst-libs/gst/interfaces/Makefile
 gst-libs/gst/signalprocessor/Makefile
+gst-libs/gst/codecparsers/Makefile
 gst-libs/gst/video/Makefile
 sys/Makefile
 sys/dshowdecwrapper/Makefile

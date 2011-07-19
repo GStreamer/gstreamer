@@ -20,6 +20,16 @@
       package.
     </para>
     <xi:include href="compiling.sgml" />
+
+    <chapter id="codecparsers">
+      <title>Bitstream parsing Library</title>
+      <para>
+        This library should be linked to by getting cflags and libs from
+        <filename>gstreamer-plugins-bad-&GST_MAJORMINOR;.pc</filename> and adding
+        <filename>-lgscodeparsers-&GST_MAJORMINOR;</filename> to the library flags.
+      </para>
+      <xi:include href="xml/gstmpegvideoparser.xml" />
+    </chapter>
   </part>
 
   <part id="gstreamer-libs-hierarchy">

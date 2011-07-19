@@ -1,0 +1,28 @@
+# codecparsers
+<SECTION>
+<FILE>gstmpegvideoparser</FILE>
+<TITLE>mpegvideoparser</TITLE>
+<INCLUDE>gst/codecparsers/gstmpegvideoparser.h</INCLUDE>
+GstMpegVideoPacketTypeCode
+GstMpegVideoPacketExtensionCode
+GstMpegVideoLevel
+GstMpegVideoProfile
+GstMpegVideoPictureType
+GstMpegVideoPictureStructure
+GstMpegVideoSequenceHdr
+GstMpegVideoSequenceExt
+GstMpegVideoPictureHdr
+GstMpegVideoGop
+GstMpegVideoPictureExt
+GstMpegVideoQuantMatrixExt
+GstMpegVideoTypeOffsetSize
+gst_mpeg_video_parse
+gst_mpeg_video_parse_sequence_header
+gst_mpeg_video_parse_picture_header
+gst_mpeg_video_parse_picture_extension
+gst_mpeg_video_parse_gop
+gst_mpeg_video_parse_sequence_extension
+gst_mpeg_video_parse_quant_matrix_extension
+<SUBSECTION Standard>
+<SUBSECTION Private>
+</SECTION>

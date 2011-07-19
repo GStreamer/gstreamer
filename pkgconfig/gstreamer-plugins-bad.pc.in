@@ -7,6 +7,7 @@ Name: GStreamer Bad Plugin libraries
 Description: Currently includes the photography interface library
 Requires: gstreamer-@GST_MAJORMINOR@ gstreamer-base-@GST_MAJORMINOR@
 Version: @VERSION@
-Libs: -L${libdir} -lgstphotography-@GST_MAJORMINOR@
+Libs: -L${libdir} -lgstphotography-@GST_MAJORMINOR@\
+    -L${libdir} -lgstcodecparsers-@GST_MAJORMINOR@\
 Cflags: -I${includedir}
 

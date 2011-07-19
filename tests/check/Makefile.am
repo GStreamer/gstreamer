@@ -183,6 +183,7 @@ check_PROGRAMS = \
 	pipelines/colorspace \
 	$(check_mimic) \
 	elements/rtpmux \
+	libs/mpegvideoparser \
 	$(check_schro) \
 	$(check_vp8) \
         elements/viewfinderbin \
@@ -213,6 +214,15 @@ elements_mpeg4videoparse_LDADD = libparser.la $(LDADD)
 elements_h263parse_LDADD = libparser.la $(LDADD)
 
 elements_h264parse_LDADD = libparser.la $(LDADD)
+
+libs_mpegvideoparser_CFLAGS = \
+	$(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
+	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(AM_CFLAGS)
+
+libs_mpegvideoparser_LDADD = \
+	$(top_builddir)/gst-libs/gst/codecparsers/libgstcodecparsers-@GST_MAJORMINOR@.la \
+	$(GST_PLUGINS_BAD_LIBS) -lgstcodecparsers-@GST_MAJORMINOR@ \
+	$(GST_BASE_LIBS) $(GST_LIBS) $(LDADD)
 
 elements_voaacenc_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
