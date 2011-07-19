@@ -747,9 +747,19 @@ gst_v4l2sink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
 
   GST_DEBUG_OBJECT (v4l2sink, "render buffer: %p", buf);
 
+  if (G_UNLIKELY (obj->pool == NULL))
+    goto not_negotiated;
+
   ret = gst_v4l2_buffer_pool_process (obj->pool, buf);
 
   return ret;
+
+  /* ERRORS */
+not_negotiated:
+  {
+    GST_ERROR_OBJECT (bsink, "not negotiated");
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
 }
 
 #ifdef HAVE_XVIDEO

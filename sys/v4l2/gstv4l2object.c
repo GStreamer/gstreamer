@@ -1376,6 +1376,7 @@ gst_v4l2_object_get_caps_info (GstV4l2Object * v4l2object, GstCaps * caps,
   GstStructure *structure;
   guint32 fourcc;
   const gchar *mimetype;
+  struct v4l2_fmtdesc *fmt;
 
   /* default unknown values */
   fourcc = 0;
@@ -1503,7 +1504,11 @@ gst_v4l2_object_get_caps_info (GstV4l2Object * v4l2object, GstCaps * caps,
   if (fourcc == 0)
     goto unhandled_format;
 
-  *format = gst_v4l2_object_get_format_from_fourcc (v4l2object, fourcc);
+  fmt = gst_v4l2_object_get_format_from_fourcc (v4l2object, fourcc);
+  if (fmt == NULL)
+    goto unsupported_format;
+
+  *format = fmt;
 
   return TRUE;
 
@@ -1531,6 +1536,11 @@ invalid_format:
 unhandled_format:
   {
     GST_DEBUG_OBJECT (v4l2object, "unhandled format");
+    return FALSE;
+  }
+unsupported_format:
+  {
+    GST_DEBUG_OBJECT (v4l2object, "unsupported format");
     return FALSE;
   }
 }
