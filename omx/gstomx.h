@@ -27,6 +27,18 @@
 
 G_BEGIN_DECLS
 
+/* Different hacks that are required to work around
+ * bugs in different OpenMAX implementations
+ */
+/* In the EventSettingsChanged callback use nData2 instead of nData1 for
+ * the port index. Happens with Bellagio.
+ */
+#define GST_OMX_HACK_EVENT_PORT_SETTINGS_CHANGED_NDATA_PARAMETER_SWAP G_GUINT64_CONSTANT (0x0000000000000001)
+/* In the EventSettingsChanged callback assume that port index 0 really
+ * means port index 1. Happens with the Bellagio ffmpegdist video decoder.
+ */
+#define GST_OMX_HACK_EVENT_PORT_SETTINGS_CHANGED_PORT_0_TO_1 G_GUINT64_CONSTANT          (0x0000000000000002)
+
 typedef struct _GstOMXCore GstOMXCore;
 typedef struct _GstOMXPort GstOMXPort;
 typedef enum _GstOMXPortDirection GstOMXPortDirection;
@@ -108,6 +120,8 @@ struct _GstOMXComponent {
   OMX_HANDLETYPE handle;
   GstOMXCore *core;
 
+  guint64 hacks; /* Flags, GST_OMX_HACK_* */
+
   GPtrArray *ports; /* Contains GstOMXPort* */
   gint n_in_ports, n_out_ports;
 
@@ -150,12 +164,13 @@ extern GQuark     gst_omx_element_name_quark;
 GKeyFile *        gst_omx_get_configuration (void);
 
 const gchar *     gst_omx_error_to_string (OMX_ERRORTYPE err);
+guint64           gst_omx_parse_hacks (gchar ** hacks);
 
 GstOMXCore *      gst_omx_core_acquire (const gchar * filename);
 void              gst_omx_core_release (GstOMXCore * core);
 
 
-GstOMXComponent * gst_omx_component_new  (GstObject *parent, const gchar * core_name, const gchar * component_name, const gchar *component_role);
+GstOMXComponent * gst_omx_component_new  (GstObject *parent, const gchar * core_name, const gchar * component_name, const gchar *component_role, guint64 hacks);
 void              gst_omx_component_free (GstOMXComponent * comp);
 
 OMX_ERRORTYPE     gst_omx_component_set_state (GstOMXComponent * comp, OMX_STATETYPE state);

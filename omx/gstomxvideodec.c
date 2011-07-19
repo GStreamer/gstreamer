@@ -87,6 +87,7 @@ gst_omx_video_dec_base_init (gpointer g_class)
   gchar *template_caps;
   GstPadTemplate *templ;
   GstCaps *caps;
+  gchar **hacks;
 
   element_name =
       g_type_get_qdata (G_TYPE_FROM_CLASS (g_class),
@@ -191,6 +192,21 @@ gst_omx_video_dec_base_init (gpointer g_class)
   g_free (template_caps);
   gst_element_class_add_pad_template (element_class, templ);
   gst_object_unref (templ);
+
+  if ((hacks =
+          g_key_file_get_string_list (config, element_name, "hacks", NULL,
+              NULL))) {
+#ifndef GST_DISABLE_GST_DEBUG
+    gchar **walk = hacks;
+
+    while (*walk) {
+      GST_DEBUG ("Using hack: %s", *walk);
+      walk++;
+    }
+#endif
+
+    videodec_class->hacks = gst_omx_parse_hacks (hacks);
+  }
 }
 
 static void
@@ -232,7 +248,7 @@ gst_omx_video_dec_open (GstOMXVideoDec * self)
 
   self->component =
       gst_omx_component_new (GST_OBJECT_CAST (self), klass->core_name,
-      klass->component_name, klass->component_role);
+      klass->component_name, klass->component_role, klass->hacks);
   self->started = FALSE;
 
   if (!self->component)

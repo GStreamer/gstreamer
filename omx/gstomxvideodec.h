@@ -73,6 +73,8 @@ struct _GstOMXVideoDecClass
   
   guint32 in_port_index, out_port_index;
 
+  guint64 hacks;
+
   gboolean (*is_format_change) (GstOMXVideoDec * self, GstOMXPort * port, GstVideoState * state);
   gboolean (*set_format)       (GstOMXVideoDec * self, GstOMXPort * port, GstVideoState * state);
 };

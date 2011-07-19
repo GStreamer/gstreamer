@@ -314,7 +314,7 @@ static OMX_CALLBACKTYPE callbacks =
 
 GstOMXComponent *
 gst_omx_component_new (GstObject * parent, const gchar * core_name,
-    const gchar * component_name, const gchar * component_role)
+    const gchar * component_name, const gchar * component_role, guint64 hacks)
 {
   OMX_ERRORTYPE err;
   GstOMXCore *core;
@@ -342,6 +342,7 @@ gst_omx_component_new (GstObject * parent, const gchar * core_name,
       "Successfully got component handle %p (%s) from core '%s'", comp->handle,
       component_name, core_name);
   comp->parent = gst_object_ref (parent);
+  comp->hacks = hacks;
 
   comp->ports = g_ptr_array_new ();
   comp->n_in_ports = 0;
@@ -1614,6 +1615,29 @@ gst_omx_error_to_string (OMX_ERRORTYPE err)
         return "Unknown error";
       }
   }
+}
+
+guint64
+gst_omx_parse_hacks (gchar ** hacks)
+{
+  guint64 hacks_flags = 0;
+
+  if (!hacks)
+    return 0;
+
+  while (*hacks) {
+    if (g_str_equal (*hacks,
+            "event-port-settings-changed-ndata-parameter-swap"))
+      hacks_flags |=
+          GST_OMX_HACK_EVENT_PORT_SETTINGS_CHANGED_NDATA_PARAMETER_SWAP;
+    else if (g_str_equal (*hacks, "event-port-settings-changed-port-0-to-1"))
+      hacks_flags |= GST_OMX_HACK_EVENT_PORT_SETTINGS_CHANGED_PORT_0_TO_1;
+    else
+      GST_WARNING ("Unknown hack: %s", *hacks);
+    hacks++;
+  }
+
+  return hacks_flags;
 }
 
 static gboolean
