@@ -55,6 +55,7 @@ struct _GstRtpH264Pay
   GList *sps, *pps;
 
   gboolean packetized;
+  gboolean au_alignment;
   guint nal_length_size;
   GArray *queue;
 
