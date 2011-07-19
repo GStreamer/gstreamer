@@ -192,11 +192,11 @@ mpegts_base_reset (MpegTSBase * base)
   MpegTSBaseClass *klass = GST_MPEGTS_BASE_GET_CLASS (base);
 
   mpegts_packetizer_clear (base->packetizer);
-  memset (base->is_pes, 0, 8192);
-  memset (base->known_psi, 0, 8192);
+  memset (base->is_pes, 0, 1024);
+  memset (base->known_psi, 0, 1024);
 
   /* PAT */
-  base->known_psi[0] = TRUE;
+  MPEGTS_BIT_SET (base->known_psi, 0);
 
   /* FIXME : Commenting the Following lines is to be in sync with the following
    * commit
@@ -234,8 +234,8 @@ mpegts_base_init (MpegTSBase * base, MpegTSBaseClass * klass)
   base->programs = g_hash_table_new_full (g_direct_hash, g_direct_equal,
       NULL, (GDestroyNotify) mpegts_base_free_program);
 
-  base->is_pes = g_new0 (gboolean, 8192);
-  base->known_psi = g_new0 (gboolean, 8192);
+  base->is_pes = g_new0 (guint8, 1024);
+  base->known_psi = g_new0 (guint8, 1024);
   mpegts_base_reset (base);
   base->program_size = sizeof (MpegTSBaseProgram);
   base->stream_size = sizeof (MpegTSBaseStream);
@@ -533,11 +533,11 @@ mpegts_base_deactivate_pmt (MpegTSBase * base, MpegTSBaseProgram * program)
       gst_structure_id_get (stream, QUARK_PID, G_TYPE_UINT, &pid,
           QUARK_STREAM_TYPE, G_TYPE_UINT, &stream_type, NULL);
       mpegts_base_program_remove_stream (base, program, (guint16) pid);
-      base->is_pes[pid] = FALSE;
+      MPEGTS_BIT_UNSET (base->is_pes, pid);
     }
     /* remove pcr stream */
     mpegts_base_program_remove_stream (base, program, program->pcr_pid);
-    base->is_pes[program->pcr_pid] = FALSE;
+    MPEGTS_BIT_UNSET (base->is_pes, program->pcr_pid);
   }
 }
 
@@ -556,11 +556,11 @@ mpegts_base_is_psi (MpegTSBase * base, MpegTSPacketizerPacket * packet)
     0x72, 0x73, 0x7E, 0x7F, TABLE_ID_UNSET
   };
 
-  if (base->known_psi[packet->pid])
+  if (MPEGTS_BIT_IS_SET (base->known_psi, packet->pid))
     retval = TRUE;
 
   /* check is it is a pes pid */
-  if (base->is_pes[packet->pid])
+  if (MPEGTS_BIT_IS_SET (base->is_pes, packet->pid))
     return FALSE;
 
   if (!retval) {
@@ -637,14 +637,14 @@ mpegts_base_apply_pat (MpegTSBase * base, GstStructure * pat_info)
           /* FIXME: when this happens it may still be pmt pid of another
            * program, so setting to False may make it go through expensive
            * path in is_psi unnecessarily */
-          base->known_psi[program->pmt_pid] = FALSE;
+          MPEGTS_BIT_UNSET (base->known_psi, program->pmt_pid);
         }
 
         program->pmt_pid = pid;
-        base->known_psi[pid] = TRUE;
+        MPEGTS_BIT_SET (base->known_psi, pid);
       }
     } else {
-      base->known_psi[pid] = TRUE;
+      MPEGTS_BIT_SET (base->known_psi, pid);
       program = mpegts_base_add_program (base, program_number, pid);
     }
     program->patcount += 1;
@@ -684,7 +684,7 @@ mpegts_base_apply_pat (MpegTSBase * base, GstStructure * pat_info)
       /* FIXME: when this happens it may still be pmt pid of another
        * program, so setting to False may make it go through expensive
        * path in is_psi unnecessarily */
-      base->known_psi[pid] = TRUE;
+      MPEGTS_BIT_SET (base->known_psi, pid);
       mpegts_packetizer_remove_stream (base->packetizer, pid);
     }
 
@@ -731,7 +731,7 @@ mpegts_base_apply_pmt (MpegTSBase * base,
     program->pmt_info = NULL;
   } else {
     /* no PAT?? */
-    base->known_psi[pmt_pid] = TRUE;
+    MPEGTS_BIT_SET (base->known_psi, pmt_pid);
     program = mpegts_base_add_program (base, program_number, pid);
   }
 
@@ -740,7 +740,7 @@ mpegts_base_apply_pmt (MpegTSBase * base,
   program->pmt_pid = pmt_pid;
   program->pcr_pid = pcr_pid;
   mpegts_base_program_add_stream (base, program, (guint16) pcr_pid, -1, NULL);
-  base->is_pes[pcr_pid] = TRUE;
+  MPEGTS_BIT_SET (base->is_pes, pcr_pid);
 
   for (i = 0; i < gst_value_list_get_size (new_streams); ++i) {
     value = gst_value_list_get_value (new_streams, i);
@@ -748,7 +748,7 @@ mpegts_base_apply_pmt (MpegTSBase * base,
 
     gst_structure_id_get (stream, QUARK_PID, G_TYPE_UINT, &pid,
         QUARK_STREAM_TYPE, G_TYPE_UINT, &stream_type, NULL);
-    base->is_pes[pid] = TRUE;
+    MPEGTS_BIT_SET (base->is_pes, pid);
     mpegts_base_program_add_stream (base, program,
         (guint16) pid, (guint8) stream_type, stream);
 
@@ -1108,7 +1108,7 @@ mpegts_base_chain (GstPad * pad, GstBuffer * buf)
       /* we need to push section packet downstream */
       res = mpegts_base_push (base, &packet, &section);
 
-    } else if (base->is_pes[packet.pid]) {
+    } else if (MPEGTS_BIT_IS_SET (base->is_pes, packet.pid)) {
       /* push the packet downstream */
       res = mpegts_base_push (base, &packet, NULL);
     } else

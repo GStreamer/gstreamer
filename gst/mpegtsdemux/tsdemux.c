@@ -1051,7 +1051,7 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
     case ST_DSMCC_B:
     case ST_DSMCC_C:
     case ST_DSMCC_D:
-      base->is_pes[bstream->pid] = FALSE;
+      MPEGTS_BIT_UNSET (base->is_pes, bstream->pid);
       break;
     case ST_AUDIO_AAC:
       template = gst_static_pad_template_get (&audio_template);

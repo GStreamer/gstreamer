@@ -105,10 +105,10 @@ struct _MpegTSBase {
   GstStructure *pat;
   MpegTSPacketizer2 *packetizer;
 
-  /* arrays that say whether a pid is a known psi pid or a pes pid
-   * FIXME: Make these bit arrays so we can make them 8 times smaller */
-  gboolean *known_psi;
-  gboolean *is_pes;
+  /* arrays that say whether a pid is a known psi pid or a pes pid */
+  /* Use MPEGTS_BIT_* to set/unset/check the values */
+  guint8 *known_psi;
+  guint8 *is_pes;
 
   gboolean disposed;
 
@@ -161,6 +161,10 @@ struct _MpegTSBaseClass {
   void (*sdt_info) (GstStructure *sdt);
   void (*eit_info) (GstStructure *eit);
 };
+
+#define MPEGTS_BIT_SET(field, offs)    ((field)[(offs) / 8] |=  (1 << ((offs) % 8)))
+#define MPEGTS_BIT_UNSET(field, offs)  ((field)[(offs) / 8] &= ~(1 << ((offs) % 8)))
+#define MPEGTS_BIT_IS_SET(field, offs) ((field)[(offs) / 8] &   (1 << ((offs) % 8)))
 
 GType mpegts_base_get_type(void);
 
