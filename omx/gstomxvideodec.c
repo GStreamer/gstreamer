@@ -797,6 +797,8 @@ gst_omx_video_dec_set_format (GstBaseVideoDecoder * decoder,
   self = GST_OMX_VIDEO_DEC (decoder);
   klass = GST_OMX_VIDEO_DEC_GET_CLASS (decoder);
 
+  GST_DEBUG_OBJECT (self, "Setting new caps %" GST_PTR_FORMAT, state->caps);
+
   gst_omx_port_get_port_definition (self->in_port, &port_def);
 
   /* Check if the caps change is a real format change or if only irrelevant

@@ -251,7 +251,7 @@ EventHandler (OMX_HANDLETYPE hComponent, OMX_PTR pAppData, OMX_EVENTTYPE eEvent,
               GST_OMX_HACK_EVENT_PORT_SETTINGS_CHANGED_PORT_0_TO_1))
         port_index = 1;
 
-      GST_DEBUG_OBJECT (comp->parent, "Settings changed (port_index: %d)",
+      GST_DEBUG_OBJECT (comp->parent, "Settings changed (port index: %d)",
           port_index);
 
       /* Now update the ports' states */
