@@ -502,11 +502,18 @@ void
 mpegts_base_program_remove_stream (MpegTSBase * base,
     MpegTSBaseProgram * program, guint16 pid)
 {
-  MpegTSBaseClass *klass = GST_MPEGTS_BASE_GET_CLASS (base);
+  MpegTSBaseClass *klass;
   MpegTSBaseStream *stream = program->streams[pid];
 
   GST_DEBUG ("pid:0x%04x", pid);
 
+  if (G_UNLIKELY (stream == NULL)) {
+    /* Can happen if the PCR PID is the same as a audio/video PID */
+    GST_DEBUG ("Stream already removed");
+    return;
+  }
+
+  klass = GST_MPEGTS_BASE_GET_CLASS (base);
 
   /* If subclass needs it, inform it of the stream we are about to remove */
   if (klass->stream_removed)
