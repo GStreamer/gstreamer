@@ -398,23 +398,24 @@ gst_v4l2_buffer_pool_stop (GstBufferPool * bpool)
 
   GST_DEBUG_OBJECT (pool, "stopping pool");
 
-  switch (obj->mode) {
-    case GST_V4L2_IO_RW:
-      break;
-    case GST_V4L2_IO_MMAP:
-    case GST_V4L2_IO_USERPTR:
-      /* we actually need to sync on all queued buffers but not
-       * on the non-queued ones */
-      GST_DEBUG_OBJECT (pool, "STREAMOFF");
-      if (v4l2_ioctl (pool->video_fd, VIDIOC_STREAMOFF, &obj->type) < 0)
-        goto stop_failed;
-      break;
-    default:
-      g_assert_not_reached ();
-      break;
+  if (pool->streaming) {
+    switch (obj->mode) {
+      case GST_V4L2_IO_RW:
+        break;
+      case GST_V4L2_IO_MMAP:
+      case GST_V4L2_IO_USERPTR:
+        /* we actually need to sync on all queued buffers but not
+         * on the non-queued ones */
+        GST_DEBUG_OBJECT (pool, "STREAMOFF");
+        if (v4l2_ioctl (pool->video_fd, VIDIOC_STREAMOFF, &obj->type) < 0)
+          goto stop_failed;
+        break;
+      default:
+        g_assert_not_reached ();
+        break;
+    }
+    pool->streaming = FALSE;
   }
-
-  pool->streaming = FALSE;
 
   /* first free the buffers in the queue */
   ret = GST_BUFFER_POOL_CLASS (parent_class)->stop (bpool);
