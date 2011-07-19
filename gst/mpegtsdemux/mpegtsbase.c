@@ -369,6 +369,9 @@ mpegts_base_add_program (MpegTSBase * base,
 {
   MpegTSBaseProgram *program;
 
+  GST_DEBUG_OBJECT (base, "program_number : %d, pmt_pid : %d",
+      program_number, pmt_pid);
+
   program = g_malloc0 (base->program_size);
   program->program_number = program_number;
   program->pmt_pid = pmt_pid;
@@ -456,6 +459,8 @@ mpegts_base_remove_program (MpegTSBase * base, gint program_number)
   MpegTSBaseProgram *program;
   MpegTSBaseClass *klass = GST_MPEGTS_BASE_GET_CLASS (base);
 
+  GST_DEBUG_OBJECT (base, "program_number : %d", program_number);
+
   if (klass->program_stopped) {
     program =
         (MpegTSBaseProgram *) g_hash_table_lookup (base->programs,
@@ -464,7 +469,6 @@ mpegts_base_remove_program (MpegTSBase * base, gint program_number)
       klass->program_stopped (base, program);
   }
   g_hash_table_remove (base->programs, GINT_TO_POINTER (program_number));
-
 }
 
 static MpegTSBaseStream *
@@ -534,6 +538,8 @@ mpegts_base_deactivate_pmt (MpegTSBase * base, MpegTSBaseProgram * program)
   const GValue *streams;
   const GValue *value;
   MpegTSBaseClass *klass = GST_MPEGTS_BASE_GET_CLASS (base);
+
+  GST_DEBUG_OBJECT (base, "Deactivating PMT");
 
   if (program->pmt_info) {
     /* Inform subclasses we're deactivating this program */
@@ -732,6 +738,8 @@ mpegts_base_apply_pmt (MpegTSBase * base,
     return;
   }
 
+  GST_DEBUG ("Applying PMT (pid:0x%04x)", pmt_pid);
+
   gst_structure_id_get (pmt_info,
       QUARK_PROGRAM_NUMBER, G_TYPE_UINT, &program_number,
       QUARK_PCR_PID, G_TYPE_UINT, &pcr_pid, NULL);
@@ -739,6 +747,7 @@ mpegts_base_apply_pmt (MpegTSBase * base,
 
   program = mpegts_base_get_program (base, program_number);
   if (program) {
+    GST_DEBUG ("Deactivating old program");
     /* deactivate old pmt */ ;
     mpegts_base_deactivate_pmt (base, program);
     if (program->pmt_info)
@@ -749,6 +758,8 @@ mpegts_base_apply_pmt (MpegTSBase * base,
     MPEGTS_BIT_SET (base->known_psi, pmt_pid);
     program = mpegts_base_add_program (base, program_number, pid);
   }
+
+  GST_DEBUG ("Now activating new program");
 
   /* activate new pmt */
   program->pmt_info = gst_structure_copy (pmt_info);

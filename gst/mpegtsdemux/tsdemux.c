@@ -92,9 +92,6 @@ struct _TSDemuxStream
 
   GstPad *pad;
 
-  /* set to FALSE before a push and TRUE after */
-  gboolean pushed;
-
   /* the return of the latest push */
   GstFlowReturn flow_return;
 
