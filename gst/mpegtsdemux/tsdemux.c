@@ -891,18 +891,16 @@ static gboolean
 push_event (MpegTSBase * base, GstEvent * event)
 {
   GstTSDemux *demux = (GstTSDemux *) base;
-  guint i;
+  GList *tmp;
 
   if (G_UNLIKELY (demux->program == NULL))
     return FALSE;
 
-  for (i = 0; i < 0x2000; i++) {
-    if (demux->program->streams[i]) {
-      if (((TSDemuxStream *) demux->program->streams[i])->pad) {
-        gst_event_ref (event);
-        gst_pad_push_event (((TSDemuxStream *) demux->program->streams[i])->pad,
-            event);
-      }
+  for (tmp = demux->program->stream_list; tmp; tmp = tmp->next) {
+    TSDemuxStream *stream = (TSDemuxStream *) tmp->data;
+    if (stream->pad) {
+      gst_event_ref (event);
+      gst_pad_push_event (stream->pad, event);
     }
   }
 
@@ -913,7 +911,7 @@ static GstFlowReturn
 tsdemux_combine_flows (GstTSDemux * demux, TSDemuxStream * stream,
     GstFlowReturn ret)
 {
-  guint i;
+  GList *tmp;
 
   /* Store the value */
   stream->flow_return = ret;
@@ -923,16 +921,14 @@ tsdemux_combine_flows (GstTSDemux * demux, TSDemuxStream * stream,
     goto done;
 
   /* Only return NOT_LINKED if all other pads returned NOT_LINKED */
-  for (i = 0; i < 0x2000; i++) {
-    if (demux->program->streams[i]) {
-      stream = (TSDemuxStream *) demux->program->streams[i];
-      if (stream->pad) {
-        ret = stream->flow_return;
-        /* some other return value (must be SUCCESS but we can return
-         * other values as well) */
-        if (ret != GST_FLOW_NOT_LINKED)
-          goto done;
-      }
+  for (tmp = demux->program->stream_list; tmp; tmp = tmp->next) {
+    stream = (TSDemuxStream *) tmp->data;
+    if (stream->pad) {
+      ret = stream->flow_return;
+      /* some other return value (must be SUCCESS but we can return
+       * other values as well) */
+      if (ret != GST_FLOW_NOT_LINKED)
+        goto done;
     }
     /* if we get here, all other pads were unlinked and we return
      * NOT_LINKED then */
@@ -1262,13 +1258,8 @@ gst_ts_demux_stream_flush (TSDemuxStream * stream)
 static void
 gst_ts_demux_flush_streams (GstTSDemux * demux)
 {
-  gint i;
-
-  for (i = 0; i < 0x2000; i++) {
-    if (demux->program->streams[i]) {
-      gst_ts_demux_stream_flush ((TSDemuxStream *) demux->program->streams[i]);
-    }
-  }
+  g_list_foreach (demux->program->stream_list,
+      (GFunc) gst_ts_demux_stream_flush, NULL);
 }
 
 static void
@@ -1278,7 +1269,7 @@ gst_ts_demux_program_started (MpegTSBase * base, MpegTSBaseProgram * program)
 
   if (demux->program_number == -1 ||
       demux->program_number == program->program_number) {
-    guint i;
+    GList *tmp;
 
     GST_LOG ("program %d started", program->program_number);
     demux->program_number = program->program_number;
@@ -1290,10 +1281,8 @@ gst_ts_demux_program_started (MpegTSBase * base, MpegTSBaseProgram * program)
      * For example, we don't want to expose HDV AUX private streams, we will just
      * be using them directly for seeking and metadata. */
     if (base->mode != BASE_MODE_SCANNING)
-      for (i = 0; i < 0x2000; i++)
-        if (program->streams[i])
-          activate_pad_for_stream (demux,
-              (TSDemuxStream *) program->streams[i]);
+      for (tmp = program->stream_list; tmp; tmp = tmp->next)
+        activate_pad_for_stream (demux, (TSDemuxStream *) tmp->data);
 
     /* Inform scanner we have got our program */
     demux->current_program_number = program->program_number;
@@ -1303,7 +1292,7 @@ gst_ts_demux_program_started (MpegTSBase * base, MpegTSBaseProgram * program)
 static void
 gst_ts_demux_program_stopped (MpegTSBase * base, MpegTSBaseProgram * program)
 {
-  guint i;
+  GList *tmp;
   GstTSDemux *demux = GST_TS_DEMUX (base);
   TSDemuxStream *localstream = NULL;
 
@@ -1312,19 +1301,18 @@ gst_ts_demux_program_stopped (MpegTSBase * base, MpegTSBaseProgram * program)
   if (demux->program == NULL || program != demux->program)
     return;
 
-  for (i = 0; i < 0x2000; i++) {
-    if (demux->program->streams[i]) {
-      localstream = (TSDemuxStream *) program->streams[i];
-      if (localstream->pad) {
-        GST_DEBUG ("HAVE PAD %s:%s", GST_DEBUG_PAD_NAME (localstream->pad));
-        if (gst_pad_is_active (localstream->pad))
-          gst_element_remove_pad (GST_ELEMENT_CAST (demux), localstream->pad);
-        else
-          gst_object_unref (localstream->pad);
-        localstream->pad = NULL;
-      }
+  for (tmp = demux->program->stream_list; tmp; tmp = tmp->next) {
+    localstream = (TSDemuxStream *) tmp->data;
+    if (localstream->pad) {
+      GST_DEBUG ("HAVE PAD %s:%s", GST_DEBUG_PAD_NAME (localstream->pad));
+      if (gst_pad_is_active (localstream->pad))
+        gst_element_remove_pad (GST_ELEMENT_CAST (demux), localstream->pad);
+      else
+        gst_object_unref (localstream->pad);
+      localstream->pad = NULL;
     }
   }
+
   demux->program = NULL;
   demux->program_number = -1;
 }
@@ -2067,7 +2055,7 @@ calculate_and_push_newsegment (GstTSDemux * demux, TSDemuxStream * stream)
   MpegTSBase *base = (MpegTSBase *) demux;
   GstClockTime firstpts = GST_CLOCK_TIME_NONE;
   GstEvent *newsegmentevent;
-  guint i;
+  GList *tmp;
   gint64 start, stop, position;
 
   GST_DEBUG ("Creating new newsegment");
@@ -2083,12 +2071,10 @@ calculate_and_push_newsegment (GstTSDemux * demux, TSDemuxStream * stream)
    */
 
   /* Find the earliest current PTS we're going to push */
-  for (i = 0; i < 0x2000; i++) {
-    if (demux->program->streams[i]) {
-      if ((!GST_CLOCK_TIME_IS_VALID (firstpts))
-          || (((TSDemuxStream *) demux->program->streams[i])->pts < firstpts))
-        firstpts = ((TSDemuxStream *) demux->program->streams[i])->pts;
-    }
+  for (tmp = demux->program->stream_list; tmp; tmp = tmp->next) {
+    TSDemuxStream *pstream = (TSDemuxStream *) tmp->data;
+    if (!GST_CLOCK_TIME_IS_VALID (firstpts) || pstream->pts < firstpts)
+      firstpts = pstream->pts;
   }
 
   if (base->mode == BASE_MODE_PUSHING) {

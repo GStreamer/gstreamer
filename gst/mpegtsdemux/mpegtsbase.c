@@ -432,14 +432,16 @@ mpegts_base_deactivate_program (MpegTSBase * base, MpegTSBaseProgram * program)
 static void
 mpegts_base_free_program (MpegTSBaseProgram * program)
 {
-  guint i;
+  GList *tmp;
 
   if (program->pmt_info)
     gst_structure_free (program->pmt_info);
 
-  for (i = 0; i < 0x2000; i++)
-    if (program->streams[i])
-      mpegts_base_free_stream (program->streams[i]);
+  for (tmp = program->stream_list; tmp; tmp = tmp->next)
+    mpegts_base_free_stream ((MpegTSBaseStream *) tmp->data);
+  if (program->stream_list)
+    g_list_free (program->stream_list);
+
   g_free (program->streams);
 
   if (program->tags)
@@ -482,6 +484,7 @@ mpegts_base_program_add_stream (MpegTSBase * base,
   stream->stream_info = stream_info;
 
   program->streams[pid] = stream;
+  program->stream_list = g_list_append (program->stream_list, stream);
 
   if (klass->stream_added)
     klass->stream_added (base, stream, program);
@@ -500,12 +503,17 @@ mpegts_base_program_remove_stream (MpegTSBase * base,
     MpegTSBaseProgram * program, guint16 pid)
 {
   MpegTSBaseClass *klass = GST_MPEGTS_BASE_GET_CLASS (base);
+  MpegTSBaseStream *stream = program->streams[pid];
+
+  GST_DEBUG ("pid:0x%04x", pid);
+
 
   /* If subclass needs it, inform it of the stream we are about to remove */
   if (klass->stream_removed)
-    klass->stream_removed (base, program->streams[pid]);
+    klass->stream_removed (base, stream);
 
-  mpegts_base_free_stream (program->streams[pid]);
+  program->stream_list = g_list_remove_all (program->stream_list, stream);
+  mpegts_base_free_stream (stream);
   program->streams[pid] = NULL;
 }
 

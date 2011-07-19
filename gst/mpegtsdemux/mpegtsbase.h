@@ -64,6 +64,7 @@ struct _MpegTSBaseProgram
   guint16 pcr_pid;
   GstStructure *pmt_info;
   MpegTSBaseStream **streams;
+  GList *stream_list;
   gint patcount;
 
   /* Pending Tags for the program */
