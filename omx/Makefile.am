@@ -1,6 +1,6 @@
-plugin_LTLIBRARIES = libgstomx.la
+plugin_LTLIBRARIES = libgstopenmax.la
 
-libgstomx_la_SOURCES = \
+libgstopenmax_la_SOURCES = \
 	gstomx.c \
 	gstomxvideodec.c \
 	gstomxvideoenc.c \
@@ -32,19 +32,19 @@ fixbaseclasses = \
         -DGstBaseVideoDecoder=OMXBaseVideoDecoder \
         -DGstBaseVideoDecoderClass=OMXBaseVideoDecoderClass
 
-libgstomx_la_CFLAGS = \
+libgstopenmax_la_CFLAGS = \
 	-DGST_USE_UNSTABLE_API=1 \
 	-I$(srcdir)/openmax \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) \
 	$(GST_CFLAGS) \
 	$(fixbaseclasses)
-libgstomx_la_LIBADD = \
+libgstopenmax_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) \
 	-lgstvideo-@GST_MAJORMINOR@ \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS)
-libgstomx_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstopenmax_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 EXTRA_DIST = openmax gstomx.conf
 
