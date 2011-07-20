@@ -239,9 +239,9 @@ gst_base_video_encoder_drain (GstBaseVideoEncoder * enc)
     return TRUE;
   }
 
-  if (enc_class->finish) {
+  if (enc_class->reset) {
     GST_DEBUG_OBJECT (enc, "requesting subclass to finish");
-    ret = enc_class->finish (enc);
+    ret = enc_class->reset (enc);
   }
   /* everything should be away now */
   if (codec->frames) {
@@ -366,13 +366,26 @@ static gboolean
 gst_base_video_encoder_sink_eventfunc (GstBaseVideoEncoder * base_video_encoder,
     GstEvent * event)
 {
+  GstBaseVideoEncoderClass *base_video_encoder_class;
   gboolean ret = FALSE;
+
+  base_video_encoder_class =
+      GST_BASE_VIDEO_ENCODER_GET_CLASS (base_video_encoder);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
     {
+      GstFlowReturn flow_ret;
+
       base_video_encoder->a.at_eos = TRUE;
-      gst_base_video_encoder_drain (base_video_encoder);
+
+      if (base_video_encoder_class->finish) {
+        flow_ret = base_video_encoder_class->finish (base_video_encoder);
+      } else {
+        flow_ret = GST_FLOW_OK;
+      }
+
+      ret = (flow_ret == GST_BASE_VIDEO_ENCODER_FLOW_DROPPED);
       break;
     }
     case GST_EVENT_NEWSEGMENT:
