@@ -52,6 +52,7 @@ mpegts_parse_pes_header (const guint8 * data, gsize length, PESHeader * res,
 {
   PESParsingResult ret = PES_PARSING_NEED_MORE;
   gsize origlength = length;
+  const guint8 *origdata = data;
   guint32 val32;
   guint8 val8, flags;
 
@@ -81,6 +82,8 @@ mpegts_parse_pes_header (const guint8 * data, gsize length, PESHeader * res,
   res->stream_id = val32 & 0x000000ff;
 
   res->packet_length = GST_READ_UINT16_BE (data);
+  if (res->packet_length)
+    res->packet_length += 6;
   data += 2;
   length -= 2;
 
@@ -122,10 +125,14 @@ mpegts_parse_pes_header (const guint8 * data, gsize length, PESHeader * res,
   GST_DEBUG ("PES_flag 0x%02x", flags);
 
   /* PES_header_data_length           8 */
-  val8 = *data++;
+  res->header_size = *data++;
   length -= 3;
-  if (G_UNLIKELY (length < val8))
+  if (G_UNLIKELY (length < res->header_size))
     goto need_more_data;
+
+  res->header_size += 9;        /* We add 9 since that's the offset
+                                 * of the field in the header*/
+  GST_DEBUG ("header_size : %d", res->header_size);
 
   /* PTS/DTS */
 
@@ -230,6 +237,7 @@ mpegts_parse_pes_header (const guint8 * data, gsize length, PESHeader * res,
     data += 2;
     length -= 2;
   }
+
 
   /* jump if we don't have a PES extension */
   if (!(flags & 0x01))
@@ -344,19 +352,14 @@ mpegts_parse_pes_header (const guint8 * data, gsize length, PESHeader * res,
   }
 
 stuffing_byte:
-  /* There can be no more than 32 stuff bytes */
-  while (length && *data == 0xff) {
-    data++;
-    length--;
-  }
+  /* Go to the expected data start position */
+  data = origdata + res->header_size;
+  length = origlength - res->header_size;
 
 done_parsing:
   GST_DEBUG ("origlength:%" G_GSSIZE_FORMAT ", length:%" G_GSSIZE_FORMAT,
       origlength, length);
 
-  /* Update the length based on parsed size */
-  if (res->packet_length)
-    res->packet_length += 6;
   res->header_size = origlength - length;
   *offset += res->header_size;
   ret = PES_PARSING_OK;

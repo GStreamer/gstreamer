@@ -58,7 +58,7 @@ typedef enum {
 
 typedef struct {
   guint8	stream_id;	/* See ID_* in gstmpegdefs.h */
-  guint16	packet_length;	/* The size of the remaining data
+  guint16	packet_length;	/* The size of the PES header and PES data
 				 * (if 0 => unbounded packet) */
   guint16	header_size;	/* The complete size of the PES header */
 
