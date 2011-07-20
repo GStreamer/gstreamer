@@ -188,6 +188,11 @@ gst_base_video_encoder_reset (GstBaseVideoEncoder * base_video_encoder)
     gst_event_unref (base_video_encoder->force_keyunit_event);
     base_video_encoder->force_keyunit_event = NULL;
   }
+
+  g_list_foreach (base_video_encoder->current_frame_events,
+      (GFunc) gst_event_unref, NULL);
+  g_list_free (base_video_encoder->current_frame_events);
+  base_video_encoder->current_frame_events = NULL;
 }
 
 static void
@@ -464,8 +469,27 @@ gst_base_video_encoder_sink_event (GstPad * pad, GstEvent * event)
   if (!handled)
     handled = gst_base_video_encoder_sink_eventfunc (enc, event);
 
-  if (!handled)
-    ret = gst_pad_event_default (pad, event);
+  if (!handled) {
+    /* Forward non-serialized events and EOS/FLUSH_STOP immediately.
+     * For EOS this is required because no buffer or serialized event
+     * will come after EOS and nothing could trigger another
+     * _finish_frame() call.   *
+     * If the subclass handles sending of EOS manually it can return
+     * _DROPPED from ::finish() and all other subclasses should have
+     * decoded/flushed all remaining data before this
+     *
+     * For FLUSH_STOP this is required because it is expected
+     * to be forwarded immediately and no buffers are queued anyway.
+     */
+    if (!GST_EVENT_IS_SERIALIZED (event)
+        || GST_EVENT_TYPE (event) == GST_EVENT_EOS
+        || GST_EVENT_TYPE (event) == GST_EVENT_FLUSH_STOP) {
+      ret = gst_pad_push_event (enc->base_video_codec.srcpad, event);
+    } else {
+      enc->current_frame_events =
+          g_list_prepend (enc->current_frame_events, event);
+    }
+  }
 
   GST_DEBUG_OBJECT (enc, "event handled");
 
@@ -641,6 +665,8 @@ gst_base_video_encoder_chain (GstPad * pad, GstBuffer * buf)
   frame =
       gst_base_video_codec_new_frame (GST_BASE_VIDEO_CODEC
       (base_video_encoder));
+  frame->events = base_video_encoder->current_frame_events;
+  base_video_encoder->current_frame_events = NULL;
   frame->sink_buffer = buf;
   frame->presentation_timestamp = GST_BUFFER_TIMESTAMP (buf);
   frame->presentation_duration = GST_BUFFER_DURATION (buf);
@@ -724,6 +750,7 @@ gst_base_video_encoder_finish_frame (GstBaseVideoEncoder * base_video_encoder,
 {
   GstFlowReturn ret;
   GstBaseVideoEncoderClass *base_video_encoder_class;
+  GList *l;
 
   g_return_val_if_fail (frame->src_buffer != NULL, GST_FLOW_ERROR);
 
@@ -797,6 +824,24 @@ gst_base_video_encoder_finish_frame (GstBaseVideoEncoder * base_video_encoder,
 
   gst_buffer_set_caps (GST_BUFFER (frame->src_buffer),
       GST_PAD_CAPS (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder)));
+
+  /* Push all pending events that arrived before this frame */
+  for (l = base_video_encoder->base_video_codec.frames; l; l = l->next) {
+    GstVideoFrame *tmp = l->data;
+
+    if (tmp->events) {
+      GList *k;
+
+      for (k = g_list_last (tmp->events); k; k = k->prev)
+        gst_pad_push_event (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder),
+            k->data);
+      g_list_free (tmp->events);
+      tmp->events = NULL;
+    }
+
+    if (tmp == frame)
+      break;
+  }
 
   if (frame->force_keyframe) {
     GstClockTime stream_time;
