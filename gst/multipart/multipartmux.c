@@ -551,7 +551,7 @@ gst_multipart_mux_collected (GstCollectPads * pads, GstMultipartMux * mux)
   GST_BUFFER_OFFSET_END (footerbuf) = mux->offset;
   GST_BUFFER_FLAG_SET (footerbuf, GST_BUFFER_FLAG_DELTA_UNIT);
 
-  GST_DEBUG_OBJECT (mux, "pushing %" G_GSIZE_FORMAT " bytes footer buffer", 2);
+  GST_DEBUG_OBJECT (mux, "pushing 2 bytes footer buffer");
   ret = gst_pad_push (mux->srcpad, footerbuf);
 
 beach:
