@@ -415,7 +415,7 @@ gst_base_audio_sink_query (GstElement * element, GstQuery * query)
       if ((res =
               gst_base_sink_query_latency (GST_BASE_SINK_CAST (basesink), &live,
                   &us_live, &min_l, &max_l))) {
-        GstClockTime min_latency, max_latency;
+        GstClockTime base_latency, min_latency, max_latency;
 
         /* we and upstream are both live, adjust the min_latency */
         if (live && us_live) {
@@ -434,16 +434,16 @@ gst_base_audio_sink_query (GstElement * element, GstQuery * query)
 
           basesink->priv->us_latency = min_l;
 
-          min_latency =
+          base_latency =
               gst_util_uint64_scale_int (spec->seglatency * spec->segsize,
               GST_SECOND, spec->rate * spec->bytes_per_sample);
           GST_OBJECT_UNLOCK (basesink);
 
           /* we cannot go lower than the buffer size and the min peer latency */
-          min_latency = min_latency + min_l;
+          min_latency = base_latency + min_l;
           /* the max latency is the max of the peer, we can delay an infinite
            * amount of time. */
-          max_latency = (max_l == -1) ? -1 : (min_latency + max_l);
+          max_latency = (max_l == -1) ? -1 : (base_latency + max_l);
 
           GST_DEBUG_OBJECT (basesink,
               "peer min %" GST_TIME_FORMAT ", our min latency: %"
