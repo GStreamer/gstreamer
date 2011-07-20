@@ -37,7 +37,16 @@ G_BEGIN_DECLS
 /* In the EventSettingsChanged callback assume that port index 0 really
  * means port index 1. Happens with the Bellagio ffmpegdist video decoder.
  */
-#define GST_OMX_HACK_EVENT_PORT_SETTINGS_CHANGED_PORT_0_TO_1 G_GUINT64_CONSTANT          (0x0000000000000002)
+#define GST_OMX_HACK_EVENT_PORT_SETTINGS_CHANGED_PORT_0_TO_1          G_GUINT64_CONSTANT (0x0000000000000002)
+/* If the video framerate is not specified as fraction (Q.16) but as
+ * integer number. Happens with the Bellagio ffmpegdist video encoder.
+ */
+#define GST_OMX_HACK_VIDEO_FRAMERATE_INTEGER                          G_GUINT64_CONSTANT (0x0000000000000004)
+/* If the SYNCFRAME flag on encoder output buffers is not used and we
+ * have to assume that all frames are sync frames.
+ * Happens with the Bellagio ffmpegdist video encoder.
+ */
+#define GST_OMX_HACK_SYNCFRAME_FLAG_NOT_USED                          G_GUINT64_CONSTANT (0x0000000000000008)
 
 typedef struct _GstOMXCore GstOMXCore;
 typedef struct _GstOMXPort GstOMXPort;

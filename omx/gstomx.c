@@ -28,6 +28,7 @@
 #include "gstomx.h"
 #include "gstomxmpeg4videodec.h"
 #include "gstomxh264dec.h"
+#include "gstomxmpeg4videoenc.h"
 
 GST_DEBUG_CATEGORY (gstomx_debug);
 #define GST_CAT_DEFAULT gstomx_debug
@@ -1625,7 +1626,8 @@ done:
 GQuark gst_omx_element_name_quark = 0;
 
 static GType (*types[]) (void) = {
-gst_omx_mpeg4_video_dec_get_type, gst_omx_h264_dec_get_type};
+gst_omx_mpeg4_video_dec_get_type, gst_omx_h264_dec_get_type,
+      gst_omx_mpeg4_video_enc_get_type};
 
 static GKeyFile *config = NULL;
 GKeyFile *
@@ -1742,6 +1744,10 @@ gst_omx_parse_hacks (gchar ** hacks)
           GST_OMX_HACK_EVENT_PORT_SETTINGS_CHANGED_NDATA_PARAMETER_SWAP;
     else if (g_str_equal (*hacks, "event-port-settings-changed-port-0-to-1"))
       hacks_flags |= GST_OMX_HACK_EVENT_PORT_SETTINGS_CHANGED_PORT_0_TO_1;
+    else if (g_str_equal (*hacks, "video-framerate-integer"))
+      hacks_flags |= GST_OMX_HACK_VIDEO_FRAMERATE_INTEGER;
+    else if (g_str_equal (*hacks, "syncframe-flag-not-used"))
+      hacks_flags |= GST_OMX_HACK_SYNCFRAME_FLAG_NOT_USED;
     else
       GST_WARNING ("Unknown hack: %s", *hacks);
     hacks++;

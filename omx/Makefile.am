@@ -3,8 +3,10 @@ plugin_LTLIBRARIES = libgstomx.la
 libgstomx_la_SOURCES = \
 	gstomx.c \
 	gstomxvideodec.c \
+	gstomxvideoenc.c \
 	gstomxmpeg4videodec.c \
 	gstomxh264dec.c \
+	gstomxmpeg4videoenc.c \
 	gstbasevideocodec.c \
 	gstbasevideodecoder.c \
 	gstbasevideoencoder.c \
@@ -13,8 +15,10 @@ libgstomx_la_SOURCES = \
 noinst_HEADERS = \
 	gstomx.h \
 	gstomxvideodec.h \
+	gstomxvideoenc.h \
 	gstomxmpeg4videodec.h \
 	gstomxh264dec.h \
+	gstomxmpeg4videoenc.h \
 	gstbasevideocodec.h \
 	gstbasevideodecoder.h \
 	gstbasevideoencoder.h \
