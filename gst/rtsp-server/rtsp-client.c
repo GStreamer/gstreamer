@@ -1666,9 +1666,9 @@ message_received (GstRTSPWatch * watch, GstRTSPMessage * message,
 static GstRTSPResult
 message_sent (GstRTSPWatch * watch, guint cseq, gpointer user_data)
 {
-  GstRTSPClient *client;
+  /* GstRTSPClient *client; */
 
-  client = GST_RTSP_CLIENT (user_data);
+  /* client = GST_RTSP_CLIENT (user_data); */
 
   /* GST_INFO ("client %p: sent a message with cseq %d", client, cseq); */
 

@@ -1842,7 +1842,6 @@ gst_rtsp_media_set_state (GstRTSPMedia * media, GstState state,
     GArray * transports)
 {
   gint i;
-  GstStateChangeReturn ret;
   gboolean add, remove, do_state;
   gint old_active;
 
@@ -1961,7 +1960,7 @@ gst_rtsp_media_set_state (GstRTSPMedia * media, GstState state,
         GST_INFO ("state %s media %p", gst_element_state_get_name (state),
             media);
         media->target_state = state;
-        ret = gst_element_set_state (media->pipeline, state);
+        gst_element_set_state (media->pipeline, state);
       }
     }
     g_signal_emit (media, gst_rtsp_media_signals[SIGNAL_NEW_STATE], 0, state,
