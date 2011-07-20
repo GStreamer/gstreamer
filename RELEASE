@@ -1,5 +1,5 @@
 
-Release notes for GStreamer FFmpeg Plug-ins 0.10.11 "Feeding trolls is strictly forbidden"
+Release notes for GStreamer FFmpeg Plug-ins 0.10.12 "A year in hell"
         
 
 The GStreamer team is proud to announce a new release
@@ -34,21 +34,37 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * Synced to FFmpeg 0.6 branch
-      * Add mappings for all new codecs
-      * encoders: proxy downstream width/height/framerate
-      * encoders: Fix timestamps
-      * Parallel installability with 0.8.x series
-      * Threadsafe design and API
+      * Bump to LibAV 0.7
+      * Timestamp tracking fixes
+      * New codecs
+      * Multi-threaded decoding
 
 Bugs fixed in this release
      
-      * 566250 : [ffdec_aac] Crash in gst_ffmpegdec_audio_frame
-      * 613231 : [ffdec] Aspect ratio change is not detected
-      * 622736 : [ffdeinterlace] [PATCH] Set the 'interlaced' field to FALSE in the source pad's caps
-      * 622773 : Encourage people to not use ffmpeg muxers
-      * 623388 : [audio encoders] Wrong output timestamps when receiving big input buffers
-      * 623671 : Various klass/description/rank fixes
+      * 595590 : Conditional jump or move depends on uninitialised value in ff_h264_find_frame_end
+      * 611500 : [regression] Wrong outgoing timestamps
+      * 613901 : No support for PIX_FMT_YUVA420P, prevents vp6a decoding
+      * 629648 : ffenc_dvdsub wrongly categorized as audio encoder
+      * 631075 : RTP based decoding degrades over time
+      * 632691 : [ffenc_ac3] does not support changing the number of channels on the fly
+      * 632877 : [ffdec_h264] always outputs same timestamp
+      * 639681 : [ffdec_wmv3] regression: video very unsmooth with various mms streams
+      * 639993 : h.263+ support is broken
+      * 642015 : [ffvideoscale] add support for UYVY
+      * 642507 : [mingw/cygwin build] ensure building of plugin dll
+      * 646838 : ffdec_h264 fail to decode some stream
+      * 648816 : [compile] with-ffmpeg-extra-configure passes incorrect cflags
+      * 649297 : regression: ffdemux_ape fails with gst_ffmpegdata_open: assertion `GST_PAD_IS_SRC (pad)' failed
+      * 649372 : ffdec: make the time threshold to skip to next keyframe configurable
+      * 650596 : ffenc_aac needs AAC profile support in caps
+      * 650695 : Patch adds LATM/LOAS support to codecmap and make distinction between ADTS and LATM/LOAS
+      * 651447 : [ffdec_aac] Add mpegversion 2 to caps
+      * 651625 : [ffdec] Check for AV_NOPTS_VALUE in PTS
+      * 651714 : [ffdec] Fix calculating frame duration from last timestamp and frame count
+      * 652812 : Don't create dummy extradata for AAC LATM
+      * 653648 : [ffmpegdec] allocates and leaks avpacket helper structs
+      * 653649 : [ffmpegdec] complains in basic encoding / decoding pipeline
+      * 653717 : [ffmpegdec] wrong audio template src caps
 
 Download
 
@@ -77,21 +93,21 @@ Applications
   
 Contributors to this release
     
-      * Albert Lee
-      * Andoni Morales Alastruey
-      * Benjamin Otte
       * David Schleef
       * Edward Hervey
+      * Jan Schmidt
+      * Julien Isorce
+      * Luis de Bethencourt
+      * Marc Plano-Lesay
       * Mark Nauwelaerts
-      * Olivier Crête
+      * Miguel Angel Cabrera Moya
+      * Punya Prakash
+      * Rafael Diniz
       * Raimo Järvi
       * Sebastian Dröge
       * Stefan Kost
-      * Thiago Santos
-      * Thijs Vermeir
+      * Thadeu Lima de Souza Cascardo
       * Tim-Philipp Müller
-      * Zaheer Abbas Merali
-
-In addition to the above contributors, we would like to extend our
-thanks to the FFmpeg developers without which these plugins would have
-no reason to exist.
+      * Vincent Penquerc'h
+      * Wim Taymans
+ 
