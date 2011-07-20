@@ -2390,16 +2390,22 @@ gst_text_overlay_text_chain (GstPad * pad, GstBuffer * buffer)
     else if (GST_BUFFER_DURATION_IS_VALID (buffer))
       GST_BUFFER_DURATION (buffer) = clip_stop - clip_start;
 
-    /* Wait for the previous buffer to go away */
-    while (overlay->text_buffer != NULL) {
-      GST_DEBUG ("Pad %s:%s has a buffer queued, waiting",
-          GST_DEBUG_PAD_NAME (pad));
-      GST_TEXT_OVERLAY_WAIT (overlay);
-      GST_DEBUG ("Pad %s:%s resuming", GST_DEBUG_PAD_NAME (pad));
-      if (overlay->text_flushing) {
-        GST_OBJECT_UNLOCK (overlay);
-        ret = GST_FLOW_WRONG_STATE;
-        goto beach;
+    if (overlay->text_buffer
+        && (!GST_BUFFER_TIMESTAMP_IS_VALID (overlay->text_buffer)
+            || !GST_BUFFER_DURATION_IS_VALID (overlay->text_buffer))) {
+      gst_text_overlay_pop_text (overlay);
+    } else {
+      /* Wait for the previous buffer to go away */
+      while (overlay->text_buffer != NULL) {
+        GST_DEBUG ("Pad %s:%s has a buffer queued, waiting",
+            GST_DEBUG_PAD_NAME (pad));
+        GST_TEXT_OVERLAY_WAIT (overlay);
+        GST_DEBUG ("Pad %s:%s resuming", GST_DEBUG_PAD_NAME (pad));
+        if (overlay->text_flushing) {
+          GST_OBJECT_UNLOCK (overlay);
+          ret = GST_FLOW_WRONG_STATE;
+          goto beach;
+        }
       }
     }
 
@@ -2548,7 +2554,6 @@ wait_for_text_buf:
           !GST_BUFFER_DURATION_IS_VALID (overlay->text_buffer)) {
         GST_WARNING_OBJECT (overlay,
             "Got text buffer with invalid timestamp or duration");
-        pop_text = TRUE;
         valid_text_time = FALSE;
       } else {
         text_start = GST_BUFFER_TIMESTAMP (overlay->text_buffer);
