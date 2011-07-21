@@ -181,7 +181,13 @@ struct _GstBaseTransform {
  *                         allocation of output buffers.  Elements that only do
  *                         analysis can return a subbuffer or even just
  *                         increment the reference to the input buffer (if in
- *                         passthrough mode)
+ *                         passthrough mode). The default implementation will
+ *                         use the negotiated allocator or bufferpool and
+ *                         transform_size to allocate an output buffer.
+ * @copy_metadata: Optional.
+ *                 Copy the metadata from the input buffer to the output buffer.
+ *                 The default implementation will copy the flags, timestamps and
+ *                 offsets of the buffer.
  * @before_transform: Optional. Since 0.10.22
  *                    This method is called right before the base class will
  *                    start processing. Dynamic properties or other delayed
@@ -235,7 +241,9 @@ struct _GstBaseTransformClass {
   gboolean      (*src_event)    (GstBaseTransform *trans, GstEvent *event);
 
   GstFlowReturn (*prepare_output_buffer) (GstBaseTransform * trans,
-     GstBuffer *input, GstBuffer **buf);
+     GstBuffer *input, GstBuffer **outbuf);
+
+  gboolean      (*copy_metadata) (GstBaseTransform * trans, GstBuffer *input, GstBuffer *outbuf);
 
   void          (*before_transform)  (GstBaseTransform *trans, GstBuffer *buffer);
 

@@ -328,6 +328,8 @@ static const GstQueryType *gst_base_transform_query_type (GstPad * pad);
 
 static GstFlowReturn default_prepare_output_buffer (GstBaseTransform * trans,
     GstBuffer * inbuf, GstBuffer ** outbuf);
+static gboolean default_copy_metadata (GstBaseTransform * trans,
+    GstBuffer * inbuf, GstBuffer * outbuf);
 
 /* static guint gst_base_transform_signals[LAST_SIGNAL] = { 0 }; */
 
@@ -375,6 +377,7 @@ gst_base_transform_class_init (GstBaseTransformClass * klass)
       GST_DEBUG_FUNCPTR (gst_base_transform_acceptcaps_default);
   klass->prepare_output_buffer =
       GST_DEBUG_FUNCPTR (default_prepare_output_buffer);
+  klass->copy_metadata = GST_DEBUG_FUNCPTR (default_copy_metadata);
 }
 
 static void
@@ -1379,9 +1382,6 @@ default_prepare_output_buffer (GstBaseTransform * trans,
     GST_DEBUG_OBJECT (trans, "passthrough: reusing input buffer");
     *outbuf = gst_buffer_ref (inbuf);
   } else {
-    gboolean copymeta;
-    guint mask;
-
     /* we can't reuse the input buffer */
     if (priv->pool) {
       GST_DEBUG_OBJECT (trans, "using pool alloc");
@@ -1428,45 +1428,6 @@ default_prepare_output_buffer (GstBaseTransform * trans,
       *outbuf =
           gst_buffer_new_allocate (priv->allocator, outsize, priv->alignment);
     }
-
-    /* now copy the metadata */
-    mask = GST_BUFFER_FLAG_PREROLL | GST_BUFFER_FLAG_IN_CAPS |
-        GST_BUFFER_FLAG_DELTA_UNIT | GST_BUFFER_FLAG_DISCONT |
-        GST_BUFFER_FLAG_GAP | GST_BUFFER_FLAG_MEDIA1 |
-        GST_BUFFER_FLAG_MEDIA2 | GST_BUFFER_FLAG_MEDIA3;
-
-    /* see if the flags and timestamps match */
-    copymeta =
-        (GST_MINI_OBJECT_FLAGS (*outbuf) & mask) !=
-        (GST_MINI_OBJECT_FLAGS (inbuf) & mask);
-    copymeta |=
-        GST_BUFFER_TIMESTAMP (*outbuf) != GST_BUFFER_TIMESTAMP (inbuf) ||
-        GST_BUFFER_DURATION (*outbuf) != GST_BUFFER_DURATION (inbuf) ||
-        GST_BUFFER_OFFSET (*outbuf) != GST_BUFFER_OFFSET (inbuf) ||
-        GST_BUFFER_OFFSET_END (*outbuf) != GST_BUFFER_OFFSET_END (inbuf);
-    /* we need to modify the metadata when the element is not gap aware,
-     * passthrough is not used and the gap flag is set */
-    copymeta |= !priv->gap_aware && !trans->passthrough
-        && (GST_MINI_OBJECT_FLAGS (*outbuf) & GST_BUFFER_FLAG_GAP);
-
-    if (copymeta) {
-      GST_DEBUG_OBJECT (trans, "copying metadata");
-
-      if (!gst_buffer_is_writable (*outbuf)) {
-        /* this should not happen, buffers allocated from a pool or with
-         * new_allocate should always be writable. */
-        GST_WARNING_OBJECT (trans, "buffer %p not writable", *outbuf);
-        *outbuf = gst_buffer_make_writable (*outbuf);
-      }
-
-      /* when we get here, the metadata should be writable */
-      gst_buffer_copy_into (*outbuf, inbuf,
-          GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
-
-      /* clear the GAP flag when the subclass does not understand it */
-      if (!priv->gap_aware)
-        GST_BUFFER_FLAG_UNSET (*outbuf, GST_BUFFER_FLAG_GAP);
-    }
   }
   return ret;
 
@@ -1475,6 +1436,62 @@ unknown_size:
   {
     GST_ERROR_OBJECT (trans, "unknown output size");
     return GST_FLOW_ERROR;
+  }
+}
+
+static gboolean
+default_copy_metadata (GstBaseTransform * trans,
+    GstBuffer * inbuf, GstBuffer * outbuf)
+{
+  GstBaseTransformPrivate *priv;
+  gboolean copymeta;
+  guint mask;
+
+  priv = trans->priv;
+
+  /* now copy the metadata */
+  mask = GST_BUFFER_FLAG_PREROLL | GST_BUFFER_FLAG_IN_CAPS |
+      GST_BUFFER_FLAG_DELTA_UNIT | GST_BUFFER_FLAG_DISCONT |
+      GST_BUFFER_FLAG_GAP | GST_BUFFER_FLAG_MEDIA1 |
+      GST_BUFFER_FLAG_MEDIA2 | GST_BUFFER_FLAG_MEDIA3;
+
+  /* see if the flags and timestamps match */
+  copymeta =
+      (GST_MINI_OBJECT_FLAGS (outbuf) & mask) !=
+      (GST_MINI_OBJECT_FLAGS (inbuf) & mask);
+  copymeta |=
+      GST_BUFFER_TIMESTAMP (outbuf) != GST_BUFFER_TIMESTAMP (inbuf) ||
+      GST_BUFFER_DURATION (outbuf) != GST_BUFFER_DURATION (inbuf) ||
+      GST_BUFFER_OFFSET (outbuf) != GST_BUFFER_OFFSET (inbuf) ||
+      GST_BUFFER_OFFSET_END (outbuf) != GST_BUFFER_OFFSET_END (inbuf);
+  /* we need to modify the metadata when the element is not gap aware,
+   * passthrough is not used and the gap flag is set */
+  copymeta |= !priv->gap_aware && !trans->passthrough
+      && (GST_MINI_OBJECT_FLAGS (outbuf) & GST_BUFFER_FLAG_GAP);
+
+  if (copymeta) {
+    GST_DEBUG_OBJECT (trans, "copying metadata");
+
+    /* this should not happen, buffers allocated from a pool or with
+     * new_allocate should always be writable. */
+    if (!gst_buffer_is_writable (outbuf))
+      goto not_writable;
+
+    /* when we get here, the metadata should be writable */
+    gst_buffer_copy_into (outbuf, inbuf,
+        GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
+
+    /* clear the GAP flag when the subclass does not understand it */
+    if (!priv->gap_aware)
+      GST_BUFFER_FLAG_UNSET (outbuf, GST_BUFFER_FLAG_GAP);
+  }
+  return TRUE;
+
+  /* ERRORS */
+not_writable:
+  {
+    GST_WARNING_OBJECT (trans, "buffer %p not writable", outbuf);
+    return FALSE;
   }
 }
 
@@ -1830,6 +1847,14 @@ no_qos:
         "prepare_output_buffer implementation");
     gst_buffer_unref (*outbuf);
     *outbuf = inbuf;
+  } else {
+    /* copy the metadata */
+    if (bclass->copy_metadata)
+      if (!bclass->copy_metadata (trans, inbuf, *outbuf)) {
+        /* something failed, post a warning */
+        GST_ELEMENT_WARNING (trans, STREAM, NOT_IMPLEMENTED,
+            ("could not copy metadata"), (NULL));
+      }
   }
   GST_DEBUG_OBJECT (trans, "using allocated buffer in %p, out %p", inbuf,
       *outbuf);
