@@ -523,9 +523,9 @@ gst_omx_video_enc_loop (GstOMXVideoEnc * self)
       flow_ret = gst_pad_push (GST_BASE_VIDEO_CODEC_SRC_PAD (self), outbuf);
     }
   } else if (frame != NULL) {
-    /*flow_ret =
-       gst_base_video_encoder_finish_frame (GST_BASE_VIDEO_ENCODER (self),
-       frame); */
+    flow_ret =
+        gst_base_video_encoder_finish_frame (GST_BASE_VIDEO_ENCODER (self),
+        frame);
   }
 
   if (flow_ret == GST_FLOW_OK && (buf->omx_buf->nFlags & OMX_BUFFERFLAG_EOS))
