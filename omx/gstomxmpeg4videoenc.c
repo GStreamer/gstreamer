@@ -54,12 +54,18 @@ static void
 gst_omx_mpeg4_video_enc_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GstOMXVideoEncClass *videoenc_class = GST_OMX_VIDEO_ENC_CLASS (g_class);
 
   gst_element_class_set_details_simple (element_class,
       "OpenMAX MPEG4 Video Encoder",
       "Codec/Encoder/Video",
       "Encode MPEG4 video streams",
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
+
+  /* If no role was set from the config file we set the
+   * default MPEG4 video encoder role */
+  if (!videoenc_class->component_role)
+    videoenc_class->component_role = "video_encoder.mpeg4";
 }
 
 static void
