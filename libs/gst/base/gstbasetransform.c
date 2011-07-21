@@ -1743,7 +1743,6 @@ gst_base_transform_handle_buffer (GstBaseTransform * trans, GstBuffer * inbuf,
   gboolean want_in_place;
   GstClockTime running_time;
   GstClockTime timestamp;
-  gsize insize;
   gboolean reconfigure;
 
   bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
@@ -1775,16 +1774,15 @@ gst_base_transform_handle_buffer (GstBaseTransform * trans, GstBuffer * inbuf,
   }
 
 no_reconfigure:
-  insize = gst_buffer_get_size (inbuf);
-
   if (GST_BUFFER_OFFSET_IS_VALID (inbuf))
     GST_DEBUG_OBJECT (trans,
         "handling buffer %p of size %" G_GSIZE_FORMAT " and offset %"
-        G_GUINT64_FORMAT, inbuf, insize, GST_BUFFER_OFFSET (inbuf));
+        G_GUINT64_FORMAT, inbuf, gst_buffer_get_size (inbuf),
+        GST_BUFFER_OFFSET (inbuf));
   else
     GST_DEBUG_OBJECT (trans,
         "handling buffer %p of size %" G_GSIZE_FORMAT " and offset NONE", inbuf,
-        insize);
+        gst_buffer_get_size (inbuf));
 
   /* Don't allow buffer handling before negotiation, except in passthrough mode
    * or if the class doesn't implement a set_caps function (in which case it doesn't
