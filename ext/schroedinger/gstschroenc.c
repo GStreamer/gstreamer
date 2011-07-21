@@ -108,7 +108,8 @@ static gboolean gst_schro_enc_set_format (GstBaseVideoEncoder *
     base_video_encoder, GstVideoState * state);
 static gboolean gst_schro_enc_start (GstBaseVideoEncoder * base_video_encoder);
 static gboolean gst_schro_enc_stop (GstBaseVideoEncoder * base_video_encoder);
-static gboolean gst_schro_enc_finish (GstBaseVideoEncoder * base_video_encoder);
+static GstFlowReturn gst_schro_enc_finish (GstBaseVideoEncoder *
+    base_video_encoder);
 static GstFlowReturn gst_schro_enc_handle_frame (GstBaseVideoEncoder *
     base_video_encoder, GstVideoFrame * frame);
 static GstFlowReturn gst_schro_enc_shape_output (GstBaseVideoEncoder *
@@ -440,7 +441,7 @@ gst_schro_enc_stop (GstBaseVideoEncoder * base_video_encoder)
   return TRUE;
 }
 
-static gboolean
+static GstFlowReturn
 gst_schro_enc_finish (GstBaseVideoEncoder * base_video_encoder)
 {
   GstSchroEnc *schro_enc = GST_SCHRO_ENC (base_video_encoder);
@@ -450,7 +451,7 @@ gst_schro_enc_finish (GstBaseVideoEncoder * base_video_encoder)
   schro_encoder_end_of_stream (schro_enc->encoder);
   gst_schro_enc_process (schro_enc);
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
 static GstFlowReturn
