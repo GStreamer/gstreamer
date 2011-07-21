@@ -512,7 +512,6 @@ gst_omx_video_enc_loop (GstOMXVideoEnc * self)
       else
         GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
     }
-    /* TODO: OMX_BUFFERFLAG_SYNCFRAME -> not delta frame */
 
     if (frame) {
       frame->src_buffer = outbuf;
