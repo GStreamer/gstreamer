@@ -82,7 +82,7 @@ static gboolean gst_capsfilter_accept_caps (GstBaseTransform * base,
 static GstFlowReturn gst_capsfilter_transform_ip (GstBaseTransform * base,
     GstBuffer * buf);
 static GstFlowReturn gst_capsfilter_prepare_buf (GstBaseTransform * trans,
-    GstBuffer * input, gint size, GstCaps * caps, GstBuffer ** buf);
+    GstBuffer * input, GstBuffer ** buf);
 
 static void
 gst_capsfilter_class_init (GstCapsFilterClass * klass)
@@ -326,7 +326,7 @@ gst_capsfilter_transform_ip (GstBaseTransform * base, GstBuffer * buf)
  */
 static GstFlowReturn
 gst_capsfilter_prepare_buf (GstBaseTransform * trans, GstBuffer * input,
-    gint size, GstCaps * caps, GstBuffer ** buf)
+    GstBuffer ** buf)
 {
   GstFlowReturn ret = GST_FLOW_OK;
 

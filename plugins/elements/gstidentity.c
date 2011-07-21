@@ -107,8 +107,7 @@ static gboolean gst_identity_event (GstBaseTransform * trans, GstEvent * event);
 static GstFlowReturn gst_identity_transform_ip (GstBaseTransform * trans,
     GstBuffer * buf);
 static GstFlowReturn gst_identity_prepare_output_buffer (GstBaseTransform
-    * trans, GstBuffer * in_buf, gint out_size, GstCaps * out_caps,
-    GstBuffer ** out_buf);
+    * trans, GstBuffer * in_buf, GstBuffer ** out_buf);
 static gboolean gst_identity_start (GstBaseTransform * trans);
 static gboolean gst_identity_stop (GstBaseTransform * trans);
 
@@ -382,7 +381,7 @@ gst_identity_event (GstBaseTransform * trans, GstEvent * event)
 
 static GstFlowReturn
 gst_identity_prepare_output_buffer (GstBaseTransform * trans,
-    GstBuffer * in_buf, gint out_size, GstCaps * out_caps, GstBuffer ** out_buf)
+    GstBuffer * in_buf, GstBuffer ** out_buf)
 {
   GstIdentity *identity = GST_IDENTITY (trans);
 

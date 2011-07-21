@@ -235,7 +235,7 @@ struct _GstBaseTransformClass {
   gboolean      (*src_event)    (GstBaseTransform *trans, GstEvent *event);
 
   GstFlowReturn (*prepare_output_buffer) (GstBaseTransform * trans,
-     GstBuffer *input, gint size, GstCaps *caps, GstBuffer **buf);
+     GstBuffer *input, GstBuffer **buf);
 
   void          (*before_transform)  (GstBaseTransform *trans, GstBuffer *buffer);
 

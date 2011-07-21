@@ -1409,21 +1409,8 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
   }
 
   if (bclass->prepare_output_buffer) {
-    if (outcaps == NULL)
-      outcaps = gst_pad_get_current_caps (trans->srcpad);
-
-    GST_DEBUG_OBJECT (trans,
-        "calling prepare buffer with caps %p %" GST_PTR_FORMAT, outcaps,
-        outcaps);
-    ret =
-        bclass->prepare_output_buffer (trans, in_buf, outsize, outcaps,
-        out_buf);
-
-    /* get a new ref to the srcpad caps, the prepare_output_buffer function can
-     * update the pad caps if it wants */
-    if (outcaps)
-      gst_caps_unref (outcaps);
-    outcaps = gst_pad_get_current_caps (trans->srcpad);
+    GST_DEBUG_OBJECT (trans, "calling prepare buffer");
+    ret = bclass->prepare_output_buffer (trans, in_buf, out_buf);
 
     /* FIXME 0.11:
      * decrease refcount again if vmethod returned refcounted in_buf. This
