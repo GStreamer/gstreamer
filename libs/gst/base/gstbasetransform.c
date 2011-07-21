@@ -258,14 +258,15 @@ struct _GstBaseTransformPrivate
   guint alignment;
 };
 
+
 static GstElementClass *parent_class = NULL;
 
 static void gst_base_transform_class_init (GstBaseTransformClass * klass);
 static void gst_base_transform_init (GstBaseTransform * trans,
     GstBaseTransformClass * klass);
-static GstFlowReturn gst_base_transform_prepare_output_buffer (GstBaseTransform
-    * trans, GstBuffer * input, GstBuffer ** buf);
 
+/* we can't use G_DEFINE_ABSTRACT_TYPE because we need the klass in the _init
+ * method to get to the padtemplates */
 GType
 gst_base_transform_get_type (void)
 {
@@ -325,6 +326,9 @@ static gboolean gst_base_transform_setcaps (GstBaseTransform * trans,
 static gboolean gst_base_transform_query (GstPad * pad, GstQuery * query);
 static const GstQueryType *gst_base_transform_query_type (GstPad * pad);
 
+static GstFlowReturn default_prepare_output_buffer (GstBaseTransform * trans,
+    GstBuffer * in_buf, GstBuffer ** out_buf);
+
 /* static guint gst_base_transform_signals[LAST_SIGNAL] = { 0 }; */
 
 static void
@@ -369,6 +373,8 @@ gst_base_transform_class_init (GstBaseTransformClass * klass)
   klass->src_event = GST_DEBUG_FUNCPTR (gst_base_transform_src_eventfunc);
   klass->accept_caps =
       GST_DEBUG_FUNCPTR (gst_base_transform_acceptcaps_default);
+  klass->prepare_output_buffer =
+      GST_DEBUG_FUNCPTR (default_prepare_output_buffer);
 }
 
 static void
@@ -1366,53 +1372,101 @@ default_prepare_output_buffer (GstBaseTransform * trans,
   priv = trans->priv;
   bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
+  /* figure out how to allocate an output buffer */
   if (trans->passthrough) {
+    /* passthrough, we will not modify the incomming buffer so we can just
+     * reuse it */
     GST_DEBUG_OBJECT (trans, "passthrough: reusing input buffer");
-    *out_buf = in_buf;
-  } else if (priv->pool) {
-    GST_DEBUG_OBJECT (trans, "using pool alloc");
-    ret = gst_buffer_pool_acquire_buffer (priv->pool, out_buf, NULL);
+    *out_buf = gst_buffer_ref (in_buf);
   } else {
-    gsize insize, outsize;
-    gboolean res;
+    gboolean copymeta;
+    guint mask;
 
-    /* no pool, we need to figure out the size of the output buffer first */
-    insize = gst_buffer_get_size (in_buf);
-
-    if (trans->passthrough) {
-      GST_DEBUG_OBJECT (trans, "doing passthrough alloc");
-      /* passthrough, the output size is the same as the input size. */
-      outsize = insize;
+    /* we can't reuse the input buffer */
+    if (priv->pool) {
+      GST_DEBUG_OBJECT (trans, "using pool alloc");
+      ret = gst_buffer_pool_acquire_buffer (priv->pool, out_buf, NULL);
     } else {
-      gboolean want_in_place = (bclass->transform_ip != NULL)
-          && trans->always_in_place;
+      gsize insize, outsize;
+      gboolean res;
 
-      if (want_in_place) {
-        GST_DEBUG_OBJECT (trans, "doing inplace alloc");
-        /* we alloc a buffer of the same size as the input */
+      /* no pool, we need to figure out the size of the output buffer first */
+      insize = gst_buffer_get_size (in_buf);
+
+      if (trans->passthrough) {
+        GST_DEBUG_OBJECT (trans, "doing passthrough alloc");
+        /* passthrough, the output size is the same as the input size. */
         outsize = insize;
       } else {
-        GstCaps *incaps, *outcaps;
+        gboolean want_in_place = (bclass->transform_ip != NULL)
+            && trans->always_in_place;
 
-        /* else use the transform function to get the size */
-        incaps = gst_pad_get_current_caps (trans->sinkpad);
-        outcaps = gst_pad_get_current_caps (trans->srcpad);
+        if (want_in_place) {
+          GST_DEBUG_OBJECT (trans, "doing inplace alloc");
+          /* we alloc a buffer of the same size as the input */
+          outsize = insize;
+        } else {
+          GstCaps *incaps, *outcaps;
 
-        GST_DEBUG_OBJECT (trans, "getting output size for alloc");
-        /* copy transform, figure out the output size */
-        res = gst_base_transform_transform_size (trans,
-            GST_PAD_SINK, incaps, insize, outcaps, &outsize);
+          /* else use the transform function to get the size */
+          incaps = gst_pad_get_current_caps (trans->sinkpad);
+          outcaps = gst_pad_get_current_caps (trans->srcpad);
 
-        gst_caps_unref (incaps);
-        gst_caps_unref (outcaps);
+          GST_DEBUG_OBJECT (trans, "getting output size for alloc");
+          /* copy transform, figure out the output size */
+          res = gst_base_transform_transform_size (trans,
+              GST_PAD_SINK, incaps, insize, outcaps, &outsize);
 
-        if (!res)
-          goto unknown_size;
+          gst_caps_unref (incaps);
+          gst_caps_unref (outcaps);
+
+          if (!res)
+            goto unknown_size;
+        }
       }
+      GST_DEBUG_OBJECT (trans, "doing alloc of size %u", outsize);
+      *out_buf =
+          gst_buffer_new_allocate (priv->allocator, outsize, priv->alignment);
     }
-    GST_DEBUG_OBJECT (trans, "doing alloc of size %u", outsize);
-    *out_buf =
-        gst_buffer_new_allocate (priv->allocator, outsize, priv->alignment);
+
+    /* now copy the metadata */
+    mask = GST_BUFFER_FLAG_PREROLL | GST_BUFFER_FLAG_IN_CAPS |
+        GST_BUFFER_FLAG_DELTA_UNIT | GST_BUFFER_FLAG_DISCONT |
+        GST_BUFFER_FLAG_GAP | GST_BUFFER_FLAG_MEDIA1 |
+        GST_BUFFER_FLAG_MEDIA2 | GST_BUFFER_FLAG_MEDIA3;
+
+    /* see if the flags and timestamps match */
+    copymeta =
+        (GST_MINI_OBJECT_FLAGS (*out_buf) & mask) !=
+        (GST_MINI_OBJECT_FLAGS (in_buf) & mask);
+    copymeta |=
+        GST_BUFFER_TIMESTAMP (*out_buf) != GST_BUFFER_TIMESTAMP (in_buf) ||
+        GST_BUFFER_DURATION (*out_buf) != GST_BUFFER_DURATION (in_buf) ||
+        GST_BUFFER_OFFSET (*out_buf) != GST_BUFFER_OFFSET (in_buf) ||
+        GST_BUFFER_OFFSET_END (*out_buf) != GST_BUFFER_OFFSET_END (in_buf);
+    /* we need to modify the metadata when the element is not gap aware,
+     * passthrough is not used and the gap flag is set */
+    copymeta |= !priv->gap_aware && !trans->passthrough
+        && (GST_MINI_OBJECT_FLAGS (*out_buf) & GST_BUFFER_FLAG_GAP);
+
+    if (copymeta) {
+      GST_DEBUG_OBJECT (trans, "copying metadata");
+
+      if (!gst_buffer_is_writable (*out_buf)) {
+        /* this should not happen, buffers allocated from a pool or with
+         * new_allocate should always be writable. */
+        GST_WARNING_OBJECT (trans, "buffer %p not writable", *out_buf);
+        *out_buf = gst_buffer_make_writable (*out_buf);
+      }
+
+      /* when we get here, the metadata should be writable */
+      gst_buffer_copy_into (*out_buf, in_buf,
+          GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
+
+      /* clear the GAP flag when the subclass does not understand it */
+      if (!priv->gap_aware)
+        GST_BUFFER_FLAG_UNSET (*out_buf, GST_BUFFER_FLAG_GAP);
+    }
   }
   return ret;
 
@@ -1440,7 +1494,6 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
   GstBaseTransformClass *bclass;
   GstBaseTransformPrivate *priv;
   GstFlowReturn ret = GST_FLOW_OK;
-  gboolean copymeta;
 
   bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
@@ -1462,10 +1515,10 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
    * is because we need to make sure that the buffer is writable for the
    * in_place transform. The docs of the vmethod say that you should return
    * a reffed inbuf, which is exactly what we don't want :), oh well.. */
-  if (in_buf == *out_buf)
+  if (in_buf == *out_buf) {
+    GST_DEBUG_OBJECT (trans, "reusing input buffer");
     gst_buffer_unref (in_buf);
-
-  if (trans->passthrough && in_buf != *out_buf) {
+  } else if (trans->passthrough) {
     /* we are asked to perform a passthrough transform but the input and
      * output buffers are different. We have to discard the output buffer and
      * reuse the input buffer. This is rather weird, it means that the prepare
@@ -1477,49 +1530,6 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
   }
   GST_DEBUG_OBJECT (trans, "using allocated buffer in %p, out %p", in_buf,
       *out_buf);
-
-  /* if we have different buffers, check if the metadata is ok */
-  copymeta = FALSE;
-  if (*out_buf != in_buf) {
-    guint mask;
-
-    mask = GST_BUFFER_FLAG_PREROLL | GST_BUFFER_FLAG_IN_CAPS |
-        GST_BUFFER_FLAG_DELTA_UNIT | GST_BUFFER_FLAG_DISCONT |
-        GST_BUFFER_FLAG_GAP | GST_BUFFER_FLAG_MEDIA1 |
-        GST_BUFFER_FLAG_MEDIA2 | GST_BUFFER_FLAG_MEDIA3;
-    /* see if the flags and timestamps match */
-    copymeta =
-        (GST_MINI_OBJECT_FLAGS (*out_buf) & mask) ==
-        (GST_MINI_OBJECT_FLAGS (in_buf) & mask);
-    copymeta |=
-        GST_BUFFER_TIMESTAMP (*out_buf) != GST_BUFFER_TIMESTAMP (in_buf) ||
-        GST_BUFFER_DURATION (*out_buf) != GST_BUFFER_DURATION (in_buf) ||
-        GST_BUFFER_OFFSET (*out_buf) != GST_BUFFER_OFFSET (in_buf) ||
-        GST_BUFFER_OFFSET_END (*out_buf) != GST_BUFFER_OFFSET_END (in_buf);
-  }
-
-  /* we need to modify the metadata when the element is not gap aware,
-   * passthrough is not used and the gap flag is set */
-  copymeta |= !priv->gap_aware && !trans->passthrough
-      && (GST_MINI_OBJECT_FLAGS (*out_buf) & GST_BUFFER_FLAG_GAP);
-
-  if (copymeta) {
-    GST_DEBUG_OBJECT (trans, "copymeta %d", copymeta);
-    if (!gst_buffer_is_writable (*out_buf)) {
-      GST_DEBUG_OBJECT (trans, "buffer %p not writable", *out_buf);
-      if (in_buf == *out_buf)
-        *out_buf = gst_buffer_copy (in_buf);
-      else
-        *out_buf = gst_buffer_make_writable (*out_buf);
-    }
-    /* when we get here, the metadata should be writable */
-    if (copymeta)
-      gst_buffer_copy_into (*out_buf, in_buf,
-          GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
-    /* clear the GAP flag when the subclass does not understand it */
-    if (!priv->gap_aware)
-      GST_BUFFER_FLAG_UNSET (*out_buf, GST_BUFFER_FLAG_GAP);
-  }
 
   return ret;
 
