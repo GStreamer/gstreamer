@@ -180,10 +180,11 @@ struct _GstBaseTransform {
  *                         Subclasses can override this to do their own
  *                         allocation of output buffers.  Elements that only do
  *                         analysis can return a subbuffer or even just
- *                         increment the reference to the input buffer (if in
+ *                         return a reference to the input buffer (if in
  *                         passthrough mode). The default implementation will
  *                         use the negotiated allocator or bufferpool and
- *                         transform_size to allocate an output buffer.
+ *                         transform_size to allocate an output buffer or it
+ *                         will return the input buffer in passthrough mode.
  * @copy_metadata: Optional.
  *                 Copy the metadata from the input buffer to the output buffer.
  *                 The default implementation will copy the flags, timestamps and

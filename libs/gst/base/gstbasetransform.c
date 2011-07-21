@@ -1364,6 +1364,8 @@ gst_base_transform_query_type (GstPad * pad)
   return types;
 }
 
+/* this function either returns the input buffer without incrementing the
+ * refcount or it allocates a new (writable) buffer */
 static GstFlowReturn
 default_prepare_output_buffer (GstBaseTransform * trans,
     GstBuffer * inbuf, GstBuffer ** outbuf)
@@ -1380,7 +1382,7 @@ default_prepare_output_buffer (GstBaseTransform * trans,
     /* passthrough, we will not modify the incomming buffer so we can just
      * reuse it */
     GST_DEBUG_OBJECT (trans, "passthrough: reusing input buffer");
-    *outbuf = gst_buffer_ref (inbuf);
+    *outbuf = inbuf;
   } else {
     /* we can't reuse the input buffer */
     if (priv->pool) {
@@ -1830,14 +1832,8 @@ no_qos:
   if (ret != GST_FLOW_OK || *outbuf == NULL)
     goto no_buffer;
 
-  /* FIXME 0.11:
-   * decrease refcount again if vmethod returned refcounted inbuf. This
-   * is because we need to make sure that the buffer is writable for the
-   * in_place transform. The docs of the vmethod say that you should return
-   * a reffed inbuf, which is exactly what we don't want :), oh well.. */
   if (inbuf == *outbuf) {
     GST_DEBUG_OBJECT (trans, "reusing input buffer");
-    gst_buffer_unref (inbuf);
   } else if (trans->passthrough) {
     /* we are asked to perform a passthrough transform but the input and
      * output buffers are different. We have to discard the output buffer and
@@ -1905,7 +1901,9 @@ no_qos:
   }
 
 skip:
-  /* only unref input buffer if we allocated a new outbuf buffer */
+  /* only unref input buffer if we allocated a new outbuf buffer. If we reused
+   * the input buffer, no refcount is changed to keep the input buffer writable
+   * when needed. */
   if (*outbuf != inbuf)
     gst_buffer_unref (inbuf);
 

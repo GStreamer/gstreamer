@@ -330,9 +330,8 @@ gst_capsfilter_prepare_buf (GstBaseTransform * trans, GstBuffer * input,
 {
   GstFlowReturn ret = GST_FLOW_OK;
 
-  /* always ref input as output buffer */
+  /* always return the input as output buffer */
   *buf = input;
-  gst_buffer_ref (input);
 
   if (!gst_pad_has_current_caps (trans->sinkpad)) {
     /* Buffer has no caps. See if the output pad only supports fixed caps */
