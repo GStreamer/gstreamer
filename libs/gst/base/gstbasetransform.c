@@ -327,7 +327,7 @@ static gboolean gst_base_transform_query (GstPad * pad, GstQuery * query);
 static const GstQueryType *gst_base_transform_query_type (GstPad * pad);
 
 static GstFlowReturn default_prepare_output_buffer (GstBaseTransform * trans,
-    GstBuffer * in_buf, GstBuffer ** out_buf);
+    GstBuffer * inbuf, GstBuffer ** outbuf);
 
 /* static guint gst_base_transform_signals[LAST_SIGNAL] = { 0 }; */
 
@@ -1363,7 +1363,7 @@ gst_base_transform_query_type (GstPad * pad)
 
 static GstFlowReturn
 default_prepare_output_buffer (GstBaseTransform * trans,
-    GstBuffer * in_buf, GstBuffer ** out_buf)
+    GstBuffer * inbuf, GstBuffer ** outbuf)
 {
   GstBaseTransformPrivate *priv;
   GstFlowReturn ret = GST_FLOW_OK;
@@ -1377,7 +1377,7 @@ default_prepare_output_buffer (GstBaseTransform * trans,
     /* passthrough, we will not modify the incomming buffer so we can just
      * reuse it */
     GST_DEBUG_OBJECT (trans, "passthrough: reusing input buffer");
-    *out_buf = gst_buffer_ref (in_buf);
+    *outbuf = gst_buffer_ref (inbuf);
   } else {
     gboolean copymeta;
     guint mask;
@@ -1385,13 +1385,13 @@ default_prepare_output_buffer (GstBaseTransform * trans,
     /* we can't reuse the input buffer */
     if (priv->pool) {
       GST_DEBUG_OBJECT (trans, "using pool alloc");
-      ret = gst_buffer_pool_acquire_buffer (priv->pool, out_buf, NULL);
+      ret = gst_buffer_pool_acquire_buffer (priv->pool, outbuf, NULL);
     } else {
       gsize insize, outsize;
       gboolean res;
 
       /* no pool, we need to figure out the size of the output buffer first */
-      insize = gst_buffer_get_size (in_buf);
+      insize = gst_buffer_get_size (inbuf);
 
       if (trans->passthrough) {
         GST_DEBUG_OBJECT (trans, "doing passthrough alloc");
@@ -1425,7 +1425,7 @@ default_prepare_output_buffer (GstBaseTransform * trans,
         }
       }
       GST_DEBUG_OBJECT (trans, "doing alloc of size %u", outsize);
-      *out_buf =
+      *outbuf =
           gst_buffer_new_allocate (priv->allocator, outsize, priv->alignment);
     }
 
@@ -1437,35 +1437,35 @@ default_prepare_output_buffer (GstBaseTransform * trans,
 
     /* see if the flags and timestamps match */
     copymeta =
-        (GST_MINI_OBJECT_FLAGS (*out_buf) & mask) !=
-        (GST_MINI_OBJECT_FLAGS (in_buf) & mask);
+        (GST_MINI_OBJECT_FLAGS (*outbuf) & mask) !=
+        (GST_MINI_OBJECT_FLAGS (inbuf) & mask);
     copymeta |=
-        GST_BUFFER_TIMESTAMP (*out_buf) != GST_BUFFER_TIMESTAMP (in_buf) ||
-        GST_BUFFER_DURATION (*out_buf) != GST_BUFFER_DURATION (in_buf) ||
-        GST_BUFFER_OFFSET (*out_buf) != GST_BUFFER_OFFSET (in_buf) ||
-        GST_BUFFER_OFFSET_END (*out_buf) != GST_BUFFER_OFFSET_END (in_buf);
+        GST_BUFFER_TIMESTAMP (*outbuf) != GST_BUFFER_TIMESTAMP (inbuf) ||
+        GST_BUFFER_DURATION (*outbuf) != GST_BUFFER_DURATION (inbuf) ||
+        GST_BUFFER_OFFSET (*outbuf) != GST_BUFFER_OFFSET (inbuf) ||
+        GST_BUFFER_OFFSET_END (*outbuf) != GST_BUFFER_OFFSET_END (inbuf);
     /* we need to modify the metadata when the element is not gap aware,
      * passthrough is not used and the gap flag is set */
     copymeta |= !priv->gap_aware && !trans->passthrough
-        && (GST_MINI_OBJECT_FLAGS (*out_buf) & GST_BUFFER_FLAG_GAP);
+        && (GST_MINI_OBJECT_FLAGS (*outbuf) & GST_BUFFER_FLAG_GAP);
 
     if (copymeta) {
       GST_DEBUG_OBJECT (trans, "copying metadata");
 
-      if (!gst_buffer_is_writable (*out_buf)) {
+      if (!gst_buffer_is_writable (*outbuf)) {
         /* this should not happen, buffers allocated from a pool or with
          * new_allocate should always be writable. */
-        GST_WARNING_OBJECT (trans, "buffer %p not writable", *out_buf);
-        *out_buf = gst_buffer_make_writable (*out_buf);
+        GST_WARNING_OBJECT (trans, "buffer %p not writable", *outbuf);
+        *outbuf = gst_buffer_make_writable (*outbuf);
       }
 
       /* when we get here, the metadata should be writable */
-      gst_buffer_copy_into (*out_buf, in_buf,
+      gst_buffer_copy_into (*outbuf, inbuf,
           GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
 
       /* clear the GAP flag when the subclass does not understand it */
       if (!priv->gap_aware)
-        GST_BUFFER_FLAG_UNSET (*out_buf, GST_BUFFER_FLAG_GAP);
+        GST_BUFFER_FLAG_UNSET (*outbuf, GST_BUFFER_FLAG_GAP);
     }
   }
   return ret;
@@ -1475,77 +1475,6 @@ unknown_size:
   {
     GST_ERROR_OBJECT (trans, "unknown output size");
     return GST_FLOW_ERROR;
-  }
-}
-
-
-/* Allocate a buffer using gst_pad_alloc_buffer
- *
- * This function can do renegotiation on the source pad
- *
- * The output buffer is always writable. outbuf can be equal to
- * inbuf, the caller should be prepared for this and perform
- * appropriate refcounting.
- */
-static GstFlowReturn
-gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
-    GstBuffer * in_buf, GstBuffer ** out_buf)
-{
-  GstBaseTransformClass *bclass;
-  GstBaseTransformPrivate *priv;
-  GstFlowReturn ret = GST_FLOW_OK;
-
-  bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
-
-  priv = trans->priv;
-
-  *out_buf = NULL;
-
-  if (bclass->prepare_output_buffer == NULL)
-    goto no_prepare;
-
-  GST_DEBUG_OBJECT (trans, "calling prepare buffer");
-  ret = bclass->prepare_output_buffer (trans, in_buf, out_buf);
-
-  if (ret != GST_FLOW_OK || *out_buf == NULL)
-    goto alloc_failed;
-
-  /* FIXME 0.11:
-   * decrease refcount again if vmethod returned refcounted in_buf. This
-   * is because we need to make sure that the buffer is writable for the
-   * in_place transform. The docs of the vmethod say that you should return
-   * a reffed inbuf, which is exactly what we don't want :), oh well.. */
-  if (in_buf == *out_buf) {
-    GST_DEBUG_OBJECT (trans, "reusing input buffer");
-    gst_buffer_unref (in_buf);
-  } else if (trans->passthrough) {
-    /* we are asked to perform a passthrough transform but the input and
-     * output buffers are different. We have to discard the output buffer and
-     * reuse the input buffer. This is rather weird, it means that the prepare
-     * output buffer does something wrong. */
-    GST_WARNING_OBJECT (trans, "passthrough but different buffers, check the "
-        "prepare_output_buffer implementation");
-    gst_buffer_unref (*out_buf);
-    *out_buf = in_buf;
-  }
-  GST_DEBUG_OBJECT (trans, "using allocated buffer in %p, out %p", in_buf,
-      *out_buf);
-
-  return ret;
-
-  /* ERRORS */
-no_prepare:
-  {
-    GST_ELEMENT_ERROR (trans, STREAM, NOT_IMPLEMENTED,
-        ("Sub-class has no prepare_output_buffer implementation"), (NULL));
-    return GST_FLOW_ERROR;
-  }
-alloc_failed:
-  {
-    GST_ELEMENT_ERROR (trans, STREAM, NOT_IMPLEMENTED,
-        ("Sub-class failed to provide an output buffer (%s)",
-            gst_flow_get_name (ret)), (NULL));
-    return ret;
   }
 }
 
@@ -1875,9 +1804,35 @@ no_qos:
   /* first try to allocate an output buffer based on the currently negotiated
    * format. outbuf will contain a buffer suitable for doing the configured
    * transform after this function. */
-  ret = gst_base_transform_prepare_output_buffer (trans, inbuf, outbuf);
-  if (G_UNLIKELY (ret != GST_FLOW_OK))
+  if (bclass->prepare_output_buffer == NULL)
+    goto no_prepare;
+
+  GST_DEBUG_OBJECT (trans, "calling prepare buffer");
+  ret = bclass->prepare_output_buffer (trans, inbuf, outbuf);
+
+  if (ret != GST_FLOW_OK || *outbuf == NULL)
     goto no_buffer;
+
+  /* FIXME 0.11:
+   * decrease refcount again if vmethod returned refcounted inbuf. This
+   * is because we need to make sure that the buffer is writable for the
+   * in_place transform. The docs of the vmethod say that you should return
+   * a reffed inbuf, which is exactly what we don't want :), oh well.. */
+  if (inbuf == *outbuf) {
+    GST_DEBUG_OBJECT (trans, "reusing input buffer");
+    gst_buffer_unref (inbuf);
+  } else if (trans->passthrough) {
+    /* we are asked to perform a passthrough transform but the input and
+     * output buffers are different. We have to discard the output buffer and
+     * reuse the input buffer. This is rather weird, it means that the prepare
+     * output buffer does something wrong. */
+    GST_WARNING_OBJECT (trans, "passthrough but different buffers, check the "
+        "prepare_output_buffer implementation");
+    gst_buffer_unref (*outbuf);
+    *outbuf = inbuf;
+  }
+  GST_DEBUG_OBJECT (trans, "using allocated buffer in %p, out %p", inbuf,
+      *outbuf);
 
   /* now perform the needed transform */
   if (trans->passthrough) {
@@ -1935,9 +1890,17 @@ skip:
 not_negotiated:
   {
     gst_buffer_unref (inbuf);
+    *outbuf = NULL;
     GST_ELEMENT_ERROR (trans, STREAM, NOT_IMPLEMENTED,
         ("not negotiated"), ("not negotiated"));
     return GST_FLOW_NOT_NEGOTIATED;
+  }
+no_prepare:
+  {
+    gst_buffer_unref (inbuf);
+    GST_ELEMENT_ERROR (trans, STREAM, NOT_IMPLEMENTED,
+        ("Sub-class has no prepare_output_buffer implementation"), (NULL));
+    return GST_FLOW_NOT_SUPPORTED;
   }
 no_buffer:
   {
