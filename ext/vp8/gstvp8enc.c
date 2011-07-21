@@ -799,7 +799,7 @@ gst_vp8_enc_process (GstVP8Enc * encoder)
   return ret;
 }
 
-static gboolean
+static GstFlowReturn
 gst_vp8_enc_finish (GstBaseVideoEncoder * base_video_encoder)
 {
   GstVP8Enc *encoder;
@@ -816,7 +816,7 @@ gst_vp8_enc_finish (GstBaseVideoEncoder * base_video_encoder)
   if (status != 0) {
     GST_ERROR_OBJECT (encoder, "encode returned %d %s", status,
         gst_vpx_error_name (status));
-    return FALSE;
+    return GST_FLOW_ERROR;
   }
 
   /* dispatch remaining frames */
@@ -835,7 +835,7 @@ gst_vp8_enc_finish (GstBaseVideoEncoder * base_video_encoder)
     }
   }
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
 static vpx_image_t *
