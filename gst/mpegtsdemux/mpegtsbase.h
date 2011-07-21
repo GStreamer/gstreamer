@@ -70,6 +70,9 @@ struct _MpegTSBaseProgram
   /* Pending Tags for the program */
   GstTagList *tags;
   guint event_id;
+
+  /* TRUE if the program is currently being used */
+  gboolean active;
 };
 
 typedef enum {

@@ -1177,6 +1177,10 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
       name = g_strdup_printf ("subpicture_%04x", bstream->pid);
       caps = gst_caps_new_simple ("subpicture/x-pgs", NULL);
       break;
+    default:
+      GST_WARNING ("Non-media stream (stream_type:0x%x). Not creating pad",
+          bstream->stream_type);
+      break;
   }
   if (template && name && caps) {
     GST_LOG ("stream:%p creating pad with name %s and caps %s", stream, name,
@@ -1214,6 +1218,7 @@ static void
 gst_ts_demux_stream_removed (MpegTSBase * base, MpegTSBaseStream * bstream)
 {
   TSDemuxStream *stream = (TSDemuxStream *) bstream;
+
   if (stream) {
     if (stream->pad) {
       /* Unref the pad, clear it */
@@ -1234,7 +1239,10 @@ activate_pad_for_stream (GstTSDemux * tsdemux, TSDemuxStream * stream)
     gst_element_add_pad ((GstElement *) tsdemux, stream->pad);
     GST_DEBUG_OBJECT (stream->pad, "done adding pad");
   } else
-    GST_WARNING_OBJECT (tsdemux, "stream %p has no pad", stream);
+    GST_WARNING_OBJECT (tsdemux,
+        "stream %p (pid 0x%04x, type:0x%03x) has no pad", stream,
+        ((MpegTSBaseStream *) stream)->pid,
+        ((MpegTSBaseStream *) stream)->stream_type);
 }
 
 static void
@@ -1264,6 +1272,9 @@ gst_ts_demux_program_started (MpegTSBase * base, MpegTSBaseProgram * program)
 {
   GstTSDemux *demux = GST_TS_DEMUX (base);
 
+  GST_DEBUG ("Current program %d, new program %d",
+      demux->program_number, program->program_number);
+
   if (demux->program_number == -1 ||
       demux->program_number == program->program_number) {
     GList *tmp;
@@ -1272,17 +1283,16 @@ gst_ts_demux_program_started (MpegTSBase * base, MpegTSBaseProgram * program)
     demux->program_number = program->program_number;
     demux->program = program;
 
-    /* Activate all stream pads, the pads will already have been created */
-
-    /* FIXME : Actually, we don't want to activate *ALL* streams !
-     * For example, we don't want to expose HDV AUX private streams, we will just
-     * be using them directly for seeking and metadata. */
-    if (base->mode != BASE_MODE_SCANNING)
+    /* Activate all stream pads, pads will already have been created */
+    if (base->mode != BASE_MODE_SCANNING) {
       for (tmp = program->stream_list; tmp; tmp = tmp->next)
         activate_pad_for_stream (demux, (TSDemuxStream *) tmp->data);
+      gst_element_no_more_pads ((GstElement *) demux);
+    }
 
     /* Inform scanner we have got our program */
     demux->current_program_number = program->program_number;
+    demux->need_newsegment = TRUE;
   }
 }
 
@@ -1295,23 +1305,20 @@ gst_ts_demux_program_stopped (MpegTSBase * base, MpegTSBaseProgram * program)
 
   GST_LOG ("program %d stopped", program->program_number);
 
-  if (demux->program == NULL || program != demux->program)
-    return;
-
-  for (tmp = demux->program->stream_list; tmp; tmp = tmp->next) {
+  for (tmp = program->stream_list; tmp; tmp = tmp->next) {
     localstream = (TSDemuxStream *) tmp->data;
     if (localstream->pad) {
-      GST_DEBUG ("HAVE PAD %s:%s", GST_DEBUG_PAD_NAME (localstream->pad));
-      if (gst_pad_is_active (localstream->pad))
+      if (gst_pad_is_active (localstream->pad)) {
+        GST_DEBUG ("Pushing EOS and deactivating pad %s:%s",
+            GST_DEBUG_PAD_NAME (localstream->pad));
+        gst_pad_push_event (localstream->pad, gst_event_new_eos ());
+        gst_pad_set_active (localstream->pad, FALSE);
         gst_element_remove_pad (GST_ELEMENT_CAST (demux), localstream->pad);
-      else
+      } else
         gst_object_unref (localstream->pad);
       localstream->pad = NULL;
     }
   }
-
-  demux->program = NULL;
-  demux->program_number = -1;
 }
 
 static gboolean
@@ -2081,7 +2088,8 @@ calculate_and_push_newsegment (GstTSDemux * demux, TSDemuxStream * stream)
 
     start = firstpts;
     stop = GST_CLOCK_TIME_NONE;
-    position = demux->segment.time;
+    position = demux->segment.time ? firstpts - demux->segment.time : 0;
+    demux->segment.time = start;
   } else {
     /* pull mode */
     GST_DEBUG ("pull-based. Segment start:%" GST_TIME_FORMAT " duration:%"
