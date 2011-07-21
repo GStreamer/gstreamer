@@ -54,7 +54,8 @@ typedef struct _GstBufferPoolClass GstBufferPoolClass;
  * GstBufferPoolFlags:
  * @GST_BUFFER_POOL_FLAG_NONE: no flags
  * @GST_BUFFER_POOL_FLAG_KEY_UNIT: buffer is keyframe
- * @GST_BUFFER_POOL_FLAG_DONTWAIT: don't wait for buffer
+ * @GST_BUFFER_POOL_FLAG_DONTWAIT: don't wait for buffer. This makes the
+ * acquire_buffer method return GST_FLOW_UNEXPECTED.
  * @GST_BUFFER_POOL_FLAG_DISCONT: buffer is discont
  *
  * Additional flags to control the allocation of a buffer
@@ -76,6 +77,10 @@ typedef enum {
  *
  * Parameters passed to the gst_buffer_pool_acquire_buffer() function to control the
  * allocation of the buffer.
+ *
+ * The default implementation ignores the @start and @stop members but other
+ * implementations can use this extra information to decide what buffer to
+ * return.
  */
 typedef struct _GstBufferPoolParams {
   GstFormat          format;
@@ -119,6 +124,32 @@ struct _GstBufferPool {
   gpointer _gst_reserved[GST_PADDING];
 };
 
+/**
+ * GstBufferPoolClass:
+ * @object_class:  Object parent class
+ * @get_metas: get a list of metadata supported by this pool
+ * @set_config: apply the bufferpool configuration. The default configuration
+ *              will parse the default config parameters
+ * @start: start the bufferpool. The default implementation will preallocate
+ *         min-buffers buffers and put them in the queue
+ * @stop: stop the bufferpool. the default implementation will free the
+ *        preallocated buffers. This function is called when all the buffers are
+ *        returned to the pool.
+ * @acquire_buffer: get a new buffer from the pool. The default implementation
+ *        will take a buffer from the queue and optionally wait for a buffer to
+ *        be released when there are no buffers available.
+ * @alloc_buffer: allocate a buffer. the default implementation allocates
+ *        buffers from the default memory allocator and with the configured
+ *        size, prefix and alignment.
+ * @reset_buffer: reset the buffer to its state when it was freshly allocated.
+ *        The default implementation will clear the flags and timestamps.
+ * @release_buffer: release a buffer back in the pool. The default
+ *        implementation will put the buffer back in the queue and notify any
+ *        blocking acquire_buffer calls.
+ * @free_buffer: free a buffer. The default implementation unrefs the buffer.
+ *
+ * The GstBufferPool class.
+ */
 struct _GstBufferPoolClass {
   GstObjectClass    object_class;
 
@@ -132,6 +163,8 @@ struct _GstBufferPoolClass {
   GstFlowReturn  (*acquire_buffer) (GstBufferPool *pool, GstBuffer **buffer,
                                     GstBufferPoolParams *params);
   GstFlowReturn  (*alloc_buffer)   (GstBufferPool *pool, GstBuffer **buffer,
+                                    GstBufferPoolParams *params);
+  void           (*reset_buffer)   (GstBufferPool *pool, GstBuffer *buffer,
                                     GstBufferPoolParams *params);
   void           (*release_buffer) (GstBufferPool *pool, GstBuffer *buffer);
   void           (*free_buffer)    (GstBufferPool *pool, GstBuffer *buffer);
