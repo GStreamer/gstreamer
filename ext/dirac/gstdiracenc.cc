@@ -150,7 +150,7 @@ static gboolean gst_dirac_enc_set_format (GstBaseVideoEncoder *
     base_video_encoder, GstVideoState * state);
 static gboolean gst_dirac_enc_start (GstBaseVideoEncoder * base_video_encoder);
 static gboolean gst_dirac_enc_stop (GstBaseVideoEncoder * base_video_encoder);
-static gboolean gst_dirac_enc_finish (GstBaseVideoEncoder * base_video_encoder);
+static GstFlowReturn gst_dirac_enc_finish (GstBaseVideoEncoder * base_video_encoder);
 static GstFlowReturn gst_dirac_enc_handle_frame (GstBaseVideoEncoder *
     base_video_encoder, GstVideoFrame * frame);
 static GstFlowReturn gst_dirac_enc_shape_output (GstBaseVideoEncoder *
@@ -842,7 +842,7 @@ gst_dirac_enc_stop (GstBaseVideoEncoder * base_video_encoder)
   return TRUE;
 }
 
-static gboolean
+static GstFlowReturn
 gst_dirac_enc_finish (GstBaseVideoEncoder * base_video_encoder)
 {
   GstDiracEnc *dirac_enc = GST_DIRAC_ENC (base_video_encoder);
@@ -851,7 +851,7 @@ gst_dirac_enc_finish (GstBaseVideoEncoder * base_video_encoder)
 
   gst_dirac_enc_process (dirac_enc, TRUE);
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
 static GstFlowReturn
