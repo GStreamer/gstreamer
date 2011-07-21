@@ -408,8 +408,13 @@ gst_omx_component_new (GstObject * parent, const gchar * core_name,
 
     GST_DEBUG_OBJECT (parent, "Setting component role to '%s': %s (0x%08x)",
         component_role, gst_omx_error_to_string (err), err);
-  }
 
+    /* If setting the role failed this component is unusable */
+    if (err != OMX_ErrorNone) {
+      gst_omx_component_free (comp);
+      return NULL;
+    }
+  }
 
   OMX_GetState (comp->handle, &comp->state);
 
