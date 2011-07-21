@@ -1371,42 +1371,12 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
   GstBaseTransformPrivate *priv;
   GstFlowReturn ret = GST_FLOW_OK;
   gboolean copymeta;
-  gsize insize, outsize;
-  GstCaps *incaps = NULL, *outcaps = NULL;
 
   bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
   priv = trans->priv;
 
   *out_buf = NULL;
-
-  insize = gst_buffer_get_size (in_buf);
-
-  /* figure out how to allocate a buffer based on the current configuration */
-  if (trans->passthrough) {
-    GST_DEBUG_OBJECT (trans, "doing passthrough alloc");
-    /* passthrough, the output size is the same as the input size. */
-    outsize = insize;
-  } else {
-    gboolean want_in_place = (bclass->transform_ip != NULL)
-        && trans->always_in_place;
-
-    if (want_in_place) {
-      GST_DEBUG_OBJECT (trans, "doing inplace alloc");
-      /* we alloc a buffer of the same size as the input */
-      outsize = insize;
-    } else {
-      incaps = gst_pad_get_current_caps (trans->sinkpad);
-      outcaps = gst_pad_get_current_caps (trans->srcpad);
-
-      GST_DEBUG_OBJECT (trans, "getting output size for copy transform");
-      /* copy transform, figure out the output size */
-      if (!gst_base_transform_transform_size (trans,
-              GST_PAD_SINK, incaps, insize, outcaps, &outsize)) {
-        goto unknown_size;
-      }
-    }
-  }
 
   if (bclass->prepare_output_buffer) {
     GST_DEBUG_OBJECT (trans, "calling prepare buffer");
@@ -1432,6 +1402,43 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
       GST_DEBUG_OBJECT (trans, "using pool alloc");
       ret = gst_buffer_pool_acquire_buffer (priv->pool, out_buf, NULL);
     } else {
+      gsize insize, outsize;
+      gboolean res;
+
+      /* no pool, we need to figure out the size of the output buffer first */
+      insize = gst_buffer_get_size (in_buf);
+
+      if (trans->passthrough) {
+        GST_DEBUG_OBJECT (trans, "doing passthrough alloc");
+        /* passthrough, the output size is the same as the input size. */
+        outsize = insize;
+      } else {
+        gboolean want_in_place = (bclass->transform_ip != NULL)
+            && trans->always_in_place;
+
+        if (want_in_place) {
+          GST_DEBUG_OBJECT (trans, "doing inplace alloc");
+          /* we alloc a buffer of the same size as the input */
+          outsize = insize;
+        } else {
+          GstCaps *incaps, *outcaps;
+
+          /* else use the transform function to get the size */
+          incaps = gst_pad_get_current_caps (trans->sinkpad);
+          outcaps = gst_pad_get_current_caps (trans->srcpad);
+
+          GST_DEBUG_OBJECT (trans, "getting output size for alloc");
+          /* copy transform, figure out the output size */
+          res = gst_base_transform_transform_size (trans,
+              GST_PAD_SINK, incaps, insize, outcaps, &outsize);
+
+          gst_caps_unref (incaps);
+          gst_caps_unref (outcaps);
+
+          if (!res)
+            goto unknown_size;
+        }
+      }
       GST_DEBUG_OBJECT (trans, "doing alloc of size %u", outsize);
       *out_buf =
           gst_buffer_new_allocate (priv->allocator, outsize, priv->alignment);
@@ -1500,10 +1507,6 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
   }
 
 done:
-  if (incaps)
-    gst_caps_unref (incaps);
-  if (outcaps)
-    gst_caps_unref (outcaps);
 
   return ret;
 
