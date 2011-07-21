@@ -802,6 +802,130 @@ gst_omx_video_enc_reset (GstBaseVideoEncoder * encoder)
   return TRUE;
 }
 
+static gboolean
+gst_omx_video_enc_fill_buffer (GstOMXVideoEnc * self, GstBuffer * inbuf,
+    GstOMXBuffer * outbuf)
+{
+  GstVideoState *state = &GST_BASE_VIDEO_CODEC (self)->state;
+  OMX_PARAM_PORTDEFINITIONTYPE *port_def = &self->in_port->port_def;
+  gboolean ret = FALSE;
+
+  if (state->width != port_def->format.video.nFrameWidth ||
+      state->height != port_def->format.video.nFrameHeight) {
+    GST_ERROR_OBJECT (self, "Width or height do not match");
+    goto done;
+  }
+
+  /* Same strides and everything */
+  if (GST_BUFFER_SIZE (inbuf) == outbuf->omx_buf->nAllocLen) {
+    outbuf->omx_buf->nFilledLen = outbuf->omx_buf->nAllocLen;
+    memcpy (outbuf->omx_buf->pBuffer + outbuf->omx_buf->nOffset,
+        GST_BUFFER_DATA (inbuf), outbuf->omx_buf->nFilledLen);
+    ret = TRUE;
+    goto done;
+  }
+
+  /* Different strides */
+  switch (state->format) {
+    case GST_VIDEO_FORMAT_I420:{
+      gint i, j, height;
+      guint8 *src, *dest;
+      gint src_stride, dest_stride;
+
+      outbuf->omx_buf->nFilledLen = 0;
+
+      for (i = 0; i < 3; i++) {
+        if (i == 0) {
+          dest_stride = port_def->format.video.nStride;
+          src_stride =
+              gst_video_format_get_row_stride (state->format, 0, state->width);
+        } else {
+          dest_stride = port_def->format.video.nStride / 2;
+          src_stride =
+              gst_video_format_get_row_stride (state->format, 1, state->width);
+        }
+
+        dest = outbuf->omx_buf->pBuffer + outbuf->omx_buf->nOffset;
+        if (i > 0)
+          dest +=
+              port_def->format.video.nSliceHeight *
+              port_def->format.video.nStride;
+        if (i == 2)
+          dest +=
+              (port_def->format.video.nSliceHeight / 2) *
+              (port_def->format.video.nStride / 2);
+
+        src =
+            GST_BUFFER_DATA (inbuf) +
+            gst_video_format_get_component_offset (state->format, i,
+            state->width, state->height);
+
+        height =
+            gst_video_format_get_component_height (state->format, i,
+            state->height);
+
+        for (j = 0; j < height; j++) {
+          memcpy (dest, src, MIN (src_stride, dest_stride));
+          outbuf->omx_buf->nFilledLen += dest_stride;
+          src += src_stride;
+          dest += dest_stride;
+        }
+      }
+      ret = TRUE;
+      break;
+    }
+    case GST_VIDEO_FORMAT_NV12:{
+      gint i, j, height;
+      guint8 *src, *dest;
+      gint src_stride, dest_stride;
+
+      outbuf->omx_buf->nFilledLen = 0;
+
+      for (i = 0; i < 2; i++) {
+        if (i == 0) {
+          dest_stride = port_def->format.video.nStride;
+          src_stride =
+              gst_video_format_get_row_stride (state->format, 0, state->width);
+        } else {
+          dest_stride = port_def->format.video.nStride;
+          src_stride =
+              gst_video_format_get_row_stride (state->format, 1, state->width);
+        }
+
+        dest = outbuf->omx_buf->pBuffer + outbuf->omx_buf->nOffset;
+        if (i == 1)
+          dest +=
+              port_def->format.video.nSliceHeight *
+              port_def->format.video.nStride;
+
+        src =
+            GST_BUFFER_DATA (inbuf) +
+            gst_video_format_get_component_offset (state->format, i,
+            state->width, state->height);
+
+        height =
+            gst_video_format_get_component_height (state->format, i,
+            state->height);
+        for (j = 0; j < height; j++) {
+          memcpy (dest, src, MIN (src_stride, dest_stride));
+          outbuf->omx_buf->nFilledLen += dest_stride;
+          src += src_stride;
+          dest += dest_stride;
+        }
+      }
+      ret = TRUE;
+      break;
+    }
+    default:
+      GST_ERROR_OBJECT (self, "Unsupported format");
+      goto done;
+      break;
+  }
+
+done:
+  return ret;
+}
+
 static GstFlowReturn
 gst_omx_video_enc_handle_frame (GstBaseVideoEncoder * encoder,
     GstVideoFrame * frame)
@@ -809,17 +933,15 @@ gst_omx_video_enc_handle_frame (GstBaseVideoEncoder * encoder,
   GstOMXAcquireBufferReturn acq_ret = GST_OMX_ACQUIRE_BUFFER_ERROR;
   GstOMXVideoEnc *self;
   GstOMXBuffer *buf;
-  guint offset = 0;
-  GstClockTime timestamp, duration, timestamp_offset = 0;
 
   self = GST_OMX_VIDEO_ENC (encoder);
 
   GST_DEBUG_OBJECT (self, "Handling frame");
 
-  timestamp = frame->presentation_timestamp;
-  duration = frame->presentation_duration;
+  while (acq_ret != GST_OMX_ACQUIRE_BUFFER_OK) {
+    BufferIdentification *id;
+    GstClockTime timestamp, duration;
 
-  while (offset < GST_BUFFER_SIZE (frame->sink_buffer)) {
     acq_ret = gst_omx_port_acquire_buffer (self->in_port, &buf);
 
     if (acq_ret == GST_OMX_ACQUIRE_BUFFER_ERROR) {
@@ -842,52 +964,30 @@ gst_omx_video_enc_handle_frame (GstBaseVideoEncoder * encoder,
 
     /* Copy the buffer content in chunks of size as requested
      * by the port */
-    buf->omx_buf->nFilledLen =
-        MIN (GST_BUFFER_SIZE (frame->sink_buffer) - offset,
-        buf->omx_buf->nAllocLen - buf->omx_buf->nOffset);
-    memcpy (buf->omx_buf->pBuffer + buf->omx_buf->nOffset,
-        GST_BUFFER_DATA (frame->sink_buffer) + offset,
-        buf->omx_buf->nFilledLen);
-
-    /* Interpolate timestamps if we're passing the buffer
-     * in multiple chunks */
-    if (offset != 0 && duration != GST_CLOCK_TIME_NONE) {
-      timestamp_offset =
-          gst_util_uint64_scale (offset, duration,
-          GST_BUFFER_SIZE (frame->sink_buffer));
+    if (!gst_omx_video_enc_fill_buffer (self, frame->sink_buffer, buf)) {
+      gst_omx_port_release_buffer (self->in_port, buf);
+      goto buffer_fill_error;
     }
 
+    timestamp = frame->presentation_timestamp;
     if (timestamp != GST_CLOCK_TIME_NONE) {
       buf->omx_buf->nTimeStamp =
-          gst_util_uint64_scale (timestamp + timestamp_offset,
-          OMX_TICKS_PER_SECOND, GST_SECOND);
+          gst_util_uint64_scale (timestamp, OMX_TICKS_PER_SECOND, GST_SECOND);
     }
+
+    duration = frame->presentation_duration;
     if (duration != GST_CLOCK_TIME_NONE) {
       buf->omx_buf->nTickCount =
           gst_util_uint64_scale (buf->omx_buf->nFilledLen, duration,
           GST_BUFFER_SIZE (frame->sink_buffer));
     }
 
-    if (offset == 0) {
-      BufferIdentification *id = g_slice_new0 (BufferIdentification);
+    id = g_slice_new0 (BufferIdentification);
+    id->timestamp = buf->omx_buf->nTimeStamp;
+    frame->coder_hook = id;
+    frame->coder_hook_destroy_notify =
+        (GDestroyNotify) buffer_identification_free;
 
-      if (!GST_BUFFER_FLAG_IS_SET (frame->sink_buffer,
-              GST_BUFFER_FLAG_DELTA_UNIT))
-        buf->omx_buf->nFlags |= OMX_BUFFERFLAG_SYNCFRAME;
-
-      id->timestamp = buf->omx_buf->nTimeStamp;
-      frame->coder_hook = id;
-      frame->coder_hook_destroy_notify =
-          (GDestroyNotify) buffer_identification_free;
-    }
-
-    /* TODO: Set flags
-     *   - OMX_BUFFERFLAG_ENCODEONLY for buffers that are outside
-     *     the segment
-     *   - OMX_BUFFERFLAG_ENDOFFRAME for parsed input
-     */
-
-    offset += buf->omx_buf->nFilledLen;
     self->started = TRUE;
     gst_omx_port_release_buffer (self->in_port, buf);
   }
@@ -912,6 +1012,12 @@ reconfigure_error:
   {
     GST_ELEMENT_ERROR (self, LIBRARY, SETTINGS, (NULL),
         ("Unable to reconfigure input port"));
+    return GST_FLOW_ERROR;
+  }
+buffer_fill_error:
+  {
+    GST_ELEMENT_ERROR (self, RESOURCE, WRITE, (NULL),
+        ("Failed to write input into the OpenMAX buffer"));
     return GST_FLOW_ERROR;
   }
 }
