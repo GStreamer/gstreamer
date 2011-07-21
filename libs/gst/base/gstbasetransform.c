@@ -1455,8 +1455,10 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
   if (trans->passthrough && in_buf != *out_buf) {
     /* we are asked to perform a passthrough transform but the input and
      * output buffers are different. We have to discard the output buffer and
-     * reuse the input buffer. */
-    GST_DEBUG_OBJECT (trans, "passthrough but different buffers");
+     * reuse the input buffer. This is rather weird, it means that the prepare
+     * output buffer does something wrong. */
+    GST_WARNING_OBJECT (trans, "passthrough but different buffers, check the "
+        "prepare_output_buffer implementation");
     gst_buffer_unref (*out_buf);
     *out_buf = in_buf;
   }
