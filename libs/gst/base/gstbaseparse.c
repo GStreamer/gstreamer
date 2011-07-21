@@ -1935,9 +1935,10 @@ gst_base_parse_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     ret = GST_FLOW_OK;
   } else if (ret == GST_FLOW_OK) {
     if (parse->segment.rate > 0.0) {
+      GST_LOG_OBJECT (parse, "pushing frame (%" G_GSIZE_FORMAT " bytes) now..",
+          size);
       ret = gst_pad_push (parse->srcpad, buffer);
-      GST_LOG_OBJECT (parse, "frame (%" G_GSIZE_FORMAT " bytes) pushed: %s",
-          size, gst_flow_get_name (ret));
+      GST_LOG_OBJECT (parse, "frame pushed, flow %s", gst_flow_get_name (ret));
     } else {
       GST_LOG_OBJECT (parse, "frame (%" G_GSIZE_FORMAT " bytes) queued for now",
           size);
@@ -1946,9 +1947,9 @@ gst_base_parse_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
       ret = GST_FLOW_OK;
     }
   } else {
-    gst_buffer_unref (buffer);
     GST_LOG_OBJECT (parse, "frame (%" G_GSIZE_FORMAT " bytes) not pushed: %s",
         size, gst_flow_get_name (ret));
+    gst_buffer_unref (buffer);
     /* if we are not sufficiently in control, let upstream decide on EOS */
     if (ret == GST_FLOW_UNEXPECTED &&
         (parse->priv->passthrough ||

@@ -443,6 +443,9 @@ GST_START_TEST (test_uri_query)
     check_uri_for_location (src, "./foo", NULL);
     check_uri_for_location (src, "../foo", NULL);
     check_uri_for_location (src, "foo/./bar", NULL);
+    /* make sure non-ASCII characters are escaped properly (U+00F6 here) */
+    check_uri_for_location (src, "/i/./d\303\266/not/../exist",
+        "file:///i/d%C3%B6/exist");
   }
 #endif
 

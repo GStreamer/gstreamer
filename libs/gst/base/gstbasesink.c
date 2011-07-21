@@ -227,6 +227,8 @@ struct _GstBaseSinkPrivate
 
   /* if we already commited the state */
   gboolean commited;
+  /* state change to playing ongoing */
+  gboolean to_playing;
 
   /* when we received EOS */
   gboolean received_eos;
@@ -4503,6 +4505,14 @@ gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
   else
     gst_object_ref (clock);
 
+  /* mainloop might be querying position when going to playing async,
+   * while (audio) rendering might be quickly advancing stream position,
+   * so use clock asap rather than last reported position */
+  if (in_paused && with_clock && g_atomic_int_get (&basesink->priv->to_playing)) {
+    GST_DEBUG_OBJECT (basesink, "going to PLAYING, so not PAUSED");
+    in_paused = FALSE;
+  }
+
   /* collect all data we need holding the lock */
   if (GST_CLOCK_TIME_IS_VALID (segment->time))
     time = segment->time;
@@ -4907,6 +4917,7 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       GST_BASE_SINK_PREROLL_LOCK (basesink);
+      g_atomic_int_set (&basesink->priv->to_playing, TRUE);
       if (!gst_base_sink_needs_preroll (basesink)) {
         GST_DEBUG_OBJECT (basesink, "PAUSED to PLAYING, don't need preroll");
         /* no preroll needed anymore now. */
@@ -4952,7 +4963,14 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
   }
 
   switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
+      /* completed transition, so need not be marked any longer
+       * And it should be unmarked, since e.g. losing our position upon flush
+       * does not really change state to PAUSED ... */
+      g_atomic_int_set (&basesink->priv->to_playing, FALSE);
+      break;
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+      g_atomic_int_set (&basesink->priv->to_playing, FALSE);
       GST_DEBUG_OBJECT (basesink, "PLAYING to PAUSED");
       /* FIXME, make sure we cannot enter _render first */
 
