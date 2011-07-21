@@ -482,16 +482,43 @@ gst_omx_video_enc_loop (GstOMXVideoEnc * self)
       buf->omx_buf->nTimeStamp);
 
   frame = _find_nearest_frame (self, buf);
-  if (buf->omx_buf->nFilledLen > 0) {
+  if ((buf->omx_buf->nFlags & OMX_BUFFERFLAG_CODECCONFIG)
+      && buf->omx_buf->nFilledLen > 0) {
+    GstCaps *caps;
+    GstBuffer *codec_data;
+
+    caps = gst_caps_copy (GST_PAD_CAPS (GST_BASE_VIDEO_CODEC_SRC_PAD (self)));
+    codec_data = gst_buffer_new_and_alloc (buf->omx_buf->nFilledLen);
+    memcpy (GST_BUFFER_DATA (codec_data),
+        buf->omx_buf->pBuffer + buf->omx_buf->nOffset,
+        buf->omx_buf->nFilledLen);
+
+    gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, codec_data, NULL);
+    if (!gst_pad_set_caps (GST_BASE_VIDEO_CODEC_SRC_PAD (self), caps)) {
+      gst_caps_unref (caps);
+      if (buf)
+        gst_omx_port_release_buffer (self->out_port, buf);
+      goto caps_failed;
+    }
+    gst_caps_unref (caps);
+    flow_ret = GST_FLOW_OK;
+  } else if (!(buf->omx_buf->nFlags & OMX_BUFFERFLAG_EOS)
+      || buf->omx_buf->nFilledLen > 0) {
     GstBuffer *outbuf;
 
-    outbuf = gst_buffer_new_and_alloc (buf->omx_buf->nFilledLen);
+    if (buf->omx_buf->nFilledLen > 0) {
+      outbuf = gst_buffer_new_and_alloc (buf->omx_buf->nFilledLen);
+
+      memcpy (GST_BUFFER_DATA (outbuf),
+          buf->omx_buf->pBuffer + buf->omx_buf->nOffset,
+          buf->omx_buf->nFilledLen);
+    } else {
+      outbuf = gst_buffer_new ();
+    }
+
     gst_buffer_set_caps (outbuf,
         GST_PAD_CAPS (GST_BASE_VIDEO_CODEC_SRC_PAD (self)));
 
-    memcpy (GST_BUFFER_DATA (outbuf),
-        buf->omx_buf->pBuffer + buf->omx_buf->nOffset,
-        buf->omx_buf->nFilledLen);
     GST_BUFFER_TIMESTAMP (outbuf) =
         gst_util_uint64_scale (buf->omx_buf->nTimeStamp, GST_SECOND,
         OMX_TICKS_PER_SECOND);
