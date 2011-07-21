@@ -1355,6 +1355,76 @@ gst_base_transform_query_type (GstPad * pad)
   return types;
 }
 
+static GstFlowReturn
+default_prepare_output_buffer (GstBaseTransform * trans,
+    GstBuffer * in_buf, GstBuffer ** out_buf)
+{
+  GstBaseTransformPrivate *priv;
+  GstFlowReturn ret = GST_FLOW_OK;
+  GstBaseTransformClass *bclass;
+
+  priv = trans->priv;
+  bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
+
+  if (trans->passthrough) {
+    GST_DEBUG_OBJECT (trans, "passthrough: reusing input buffer");
+    *out_buf = in_buf;
+  } else if (priv->pool) {
+    GST_DEBUG_OBJECT (trans, "using pool alloc");
+    ret = gst_buffer_pool_acquire_buffer (priv->pool, out_buf, NULL);
+  } else {
+    gsize insize, outsize;
+    gboolean res;
+
+    /* no pool, we need to figure out the size of the output buffer first */
+    insize = gst_buffer_get_size (in_buf);
+
+    if (trans->passthrough) {
+      GST_DEBUG_OBJECT (trans, "doing passthrough alloc");
+      /* passthrough, the output size is the same as the input size. */
+      outsize = insize;
+    } else {
+      gboolean want_in_place = (bclass->transform_ip != NULL)
+          && trans->always_in_place;
+
+      if (want_in_place) {
+        GST_DEBUG_OBJECT (trans, "doing inplace alloc");
+        /* we alloc a buffer of the same size as the input */
+        outsize = insize;
+      } else {
+        GstCaps *incaps, *outcaps;
+
+        /* else use the transform function to get the size */
+        incaps = gst_pad_get_current_caps (trans->sinkpad);
+        outcaps = gst_pad_get_current_caps (trans->srcpad);
+
+        GST_DEBUG_OBJECT (trans, "getting output size for alloc");
+        /* copy transform, figure out the output size */
+        res = gst_base_transform_transform_size (trans,
+            GST_PAD_SINK, incaps, insize, outcaps, &outsize);
+
+        gst_caps_unref (incaps);
+        gst_caps_unref (outcaps);
+
+        if (!res)
+          goto unknown_size;
+      }
+    }
+    GST_DEBUG_OBJECT (trans, "doing alloc of size %u", outsize);
+    *out_buf =
+        gst_buffer_new_allocate (priv->allocator, outsize, priv->alignment);
+  }
+  return ret;
+
+  /* ERRORS */
+unknown_size:
+  {
+    GST_ERROR_OBJECT (trans, "unknown output size");
+    return GST_FLOW_ERROR;
+  }
+}
+
+
 /* Allocate a buffer using gst_pad_alloc_buffer
  *
  * This function can do renegotiation on the source pad
@@ -1378,79 +1448,22 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
 
   *out_buf = NULL;
 
-  if (bclass->prepare_output_buffer) {
-    GST_DEBUG_OBJECT (trans, "calling prepare buffer");
-    ret = bclass->prepare_output_buffer (trans, in_buf, out_buf);
+  if (bclass->prepare_output_buffer == NULL)
+    goto no_prepare;
 
-    /* FIXME 0.11:
-     * decrease refcount again if vmethod returned refcounted in_buf. This
-     * is because we need to make sure that the buffer is writable for the
-     * in_place transform. The docs of the vmethod say that you should return
-     * a reffed inbuf, which is exactly what we don't want :), oh well.. */
-    if (in_buf == *out_buf)
-      gst_buffer_unref (in_buf);
-  }
+  GST_DEBUG_OBJECT (trans, "calling prepare buffer");
+  ret = bclass->prepare_output_buffer (trans, in_buf, out_buf);
 
-  if (ret != GST_FLOW_OK)
+  if (ret != GST_FLOW_OK || *out_buf == NULL)
     goto alloc_failed;
 
-  if (*out_buf == NULL) {
-    if (trans->passthrough) {
-      GST_DEBUG_OBJECT (trans, "Reusing input buffer");
-      *out_buf = in_buf;
-    } else if (priv->pool) {
-      GST_DEBUG_OBJECT (trans, "using pool alloc");
-      ret = gst_buffer_pool_acquire_buffer (priv->pool, out_buf, NULL);
-    } else {
-      gsize insize, outsize;
-      gboolean res;
-
-      /* no pool, we need to figure out the size of the output buffer first */
-      insize = gst_buffer_get_size (in_buf);
-
-      if (trans->passthrough) {
-        GST_DEBUG_OBJECT (trans, "doing passthrough alloc");
-        /* passthrough, the output size is the same as the input size. */
-        outsize = insize;
-      } else {
-        gboolean want_in_place = (bclass->transform_ip != NULL)
-            && trans->always_in_place;
-
-        if (want_in_place) {
-          GST_DEBUG_OBJECT (trans, "doing inplace alloc");
-          /* we alloc a buffer of the same size as the input */
-          outsize = insize;
-        } else {
-          GstCaps *incaps, *outcaps;
-
-          /* else use the transform function to get the size */
-          incaps = gst_pad_get_current_caps (trans->sinkpad);
-          outcaps = gst_pad_get_current_caps (trans->srcpad);
-
-          GST_DEBUG_OBJECT (trans, "getting output size for alloc");
-          /* copy transform, figure out the output size */
-          res = gst_base_transform_transform_size (trans,
-              GST_PAD_SINK, incaps, insize, outcaps, &outsize);
-
-          gst_caps_unref (incaps);
-          gst_caps_unref (outcaps);
-
-          if (!res)
-            goto unknown_size;
-        }
-      }
-      GST_DEBUG_OBJECT (trans, "doing alloc of size %u", outsize);
-      *out_buf =
-          gst_buffer_new_allocate (priv->allocator, outsize, priv->alignment);
-    }
-  }
-
-  if (ret != GST_FLOW_OK)
-    goto alloc_failed;
-
-  /* must always have a buffer by now */
-  if (*out_buf == NULL)
-    goto no_buffer;
+  /* FIXME 0.11:
+   * decrease refcount again if vmethod returned refcounted in_buf. This
+   * is because we need to make sure that the buffer is writable for the
+   * in_place transform. The docs of the vmethod say that you should return
+   * a reffed inbuf, which is exactly what we don't want :), oh well.. */
+  if (in_buf == *out_buf)
+    gst_buffer_unref (in_buf);
 
   if (trans->passthrough && in_buf != *out_buf) {
     /* we are asked to perform a passthrough transform but the input and
@@ -1508,28 +1521,21 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
       GST_BUFFER_FLAG_UNSET (*out_buf, GST_BUFFER_FLAG_GAP);
   }
 
-done:
-
   return ret;
 
   /* ERRORS */
-alloc_failed:
-  {
-    GST_WARNING_OBJECT (trans, "pad-alloc failed: %s", gst_flow_get_name (ret));
-    goto done;
-  }
-no_buffer:
+no_prepare:
   {
     GST_ELEMENT_ERROR (trans, STREAM, NOT_IMPLEMENTED,
-        ("Sub-class failed to provide an output buffer"), (NULL));
-    ret = GST_FLOW_ERROR;
-    goto done;
+        ("Sub-class has no prepare_output_buffer implementation"), (NULL));
+    return GST_FLOW_ERROR;
   }
-unknown_size:
+alloc_failed:
   {
-    GST_ERROR_OBJECT (trans, "unknown output size");
-    ret = GST_FLOW_ERROR;
-    goto done;
+    GST_ELEMENT_ERROR (trans, STREAM, NOT_IMPLEMENTED,
+        ("Sub-class failed to provide an output buffer (%s)",
+            gst_flow_get_name (ret)), (NULL));
+    return ret;
   }
 }
 
