@@ -738,7 +738,8 @@ gst_base_video_encoder_change_state (GstElement * element,
  * @frame: an encoded #GstVideoFrame 
  *
  * @frame must have a valid encoded data buffer, whose metadata fields
- * are then appropriately set according to frame data.
+ * are then appropriately set according to frame data or no buffer at
+ * all if the frame should be dropped.
  * It is subsequently pushed downstream or provided to @shape_output.
  * In any case, the frame is considered finished and released.
  *
@@ -748,61 +749,15 @@ GstFlowReturn
 gst_base_video_encoder_finish_frame (GstBaseVideoEncoder * base_video_encoder,
     GstVideoFrame * frame)
 {
-  GstFlowReturn ret;
+  GstFlowReturn ret = GST_FLOW_OK;
   GstBaseVideoEncoderClass *base_video_encoder_class;
   GList *l;
-
-  g_return_val_if_fail (frame->src_buffer != NULL, GST_FLOW_ERROR);
 
   base_video_encoder_class =
       GST_BASE_VIDEO_ENCODER_GET_CLASS (base_video_encoder);
 
   GST_LOG_OBJECT (base_video_encoder,
       "finish frame fpn %d", frame->presentation_frame_number);
-
-  if (frame->is_sync_point) {
-    GST_LOG_OBJECT (base_video_encoder, "key frame");
-    base_video_encoder->distance_from_sync = 0;
-    GST_BUFFER_FLAG_UNSET (frame->src_buffer, GST_BUFFER_FLAG_DELTA_UNIT);
-  } else {
-    GST_BUFFER_FLAG_SET (frame->src_buffer, GST_BUFFER_FLAG_DELTA_UNIT);
-  }
-
-  frame->distance_from_sync = base_video_encoder->distance_from_sync;
-  base_video_encoder->distance_from_sync++;
-
-  frame->decode_frame_number = frame->system_frame_number - 1;
-  if (frame->decode_frame_number < 0) {
-    frame->decode_timestamp = 0;
-  } else {
-    frame->decode_timestamp = gst_util_uint64_scale (frame->decode_frame_number,
-        GST_SECOND * GST_BASE_VIDEO_CODEC (base_video_encoder)->state.fps_d,
-        GST_BASE_VIDEO_CODEC (base_video_encoder)->state.fps_n);
-  }
-
-  GST_BUFFER_TIMESTAMP (frame->src_buffer) = frame->presentation_timestamp;
-  GST_BUFFER_DURATION (frame->src_buffer) = frame->presentation_duration;
-  GST_BUFFER_OFFSET (frame->src_buffer) = frame->decode_timestamp;
-
-  /* update rate estimate */
-  GST_BASE_VIDEO_CODEC (base_video_encoder)->bytes +=
-      GST_BUFFER_SIZE (frame->src_buffer);
-  if (GST_CLOCK_TIME_IS_VALID (frame->presentation_duration)) {
-    GST_BASE_VIDEO_CODEC (base_video_encoder)->time +=
-        frame->presentation_duration;
-  } else {
-    /* better none than nothing valid */
-    GST_BASE_VIDEO_CODEC (base_video_encoder)->time = GST_CLOCK_TIME_NONE;
-  }
-
-  if (G_UNLIKELY (GST_BASE_VIDEO_CODEC (base_video_encoder)->discont)) {
-    GST_LOG_OBJECT (base_video_encoder, "marking discont");
-    GST_BUFFER_FLAG_SET (frame->src_buffer, GST_BUFFER_FLAG_DISCONT);
-    GST_BASE_VIDEO_CODEC (base_video_encoder)->discont = FALSE;
-  }
-
-  GST_BASE_VIDEO_CODEC (base_video_encoder)->frames =
-      g_list_remove (GST_BASE_VIDEO_CODEC (base_video_encoder)->frames, frame);
 
   /* FIXME get rid of this ?
    * seems a roundabout way that adds little benefit to simply get
@@ -824,9 +779,6 @@ gst_base_video_encoder_finish_frame (GstBaseVideoEncoder * base_video_encoder,
     }
     base_video_encoder->set_output_caps = TRUE;
   }
-
-  gst_buffer_set_caps (GST_BUFFER (frame->src_buffer),
-      GST_PAD_CAPS (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder)));
 
   /* Push all pending events that arrived before this frame */
   for (l = base_video_encoder->base_video_codec.frames; l; l = l->next) {
@@ -880,6 +832,57 @@ gst_base_video_encoder_finish_frame (GstBaseVideoEncoder * base_video_encoder,
     gst_pad_push_event (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder), ev);
   }
 
+  /* no buffer data means this frame is skipped/dropped */
+  if (!frame->src_buffer) {
+    GST_DEBUG_OBJECT (base_video_encoder, "skipping frame %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (frame->presentation_timestamp));
+    goto done;
+  }
+
+  if (frame->is_sync_point) {
+    GST_LOG_OBJECT (base_video_encoder, "key frame");
+    base_video_encoder->distance_from_sync = 0;
+    GST_BUFFER_FLAG_UNSET (frame->src_buffer, GST_BUFFER_FLAG_DELTA_UNIT);
+  } else {
+    GST_BUFFER_FLAG_SET (frame->src_buffer, GST_BUFFER_FLAG_DELTA_UNIT);
+  }
+
+  frame->distance_from_sync = base_video_encoder->distance_from_sync;
+  base_video_encoder->distance_from_sync++;
+
+  frame->decode_frame_number = frame->system_frame_number - 1;
+  if (frame->decode_frame_number < 0) {
+    frame->decode_timestamp = 0;
+  } else {
+    frame->decode_timestamp = gst_util_uint64_scale (frame->decode_frame_number,
+        GST_SECOND * GST_BASE_VIDEO_CODEC (base_video_encoder)->state.fps_d,
+        GST_BASE_VIDEO_CODEC (base_video_encoder)->state.fps_n);
+  }
+
+  GST_BUFFER_TIMESTAMP (frame->src_buffer) = frame->presentation_timestamp;
+  GST_BUFFER_DURATION (frame->src_buffer) = frame->presentation_duration;
+  GST_BUFFER_OFFSET (frame->src_buffer) = frame->decode_timestamp;
+
+  /* update rate estimate */
+  GST_BASE_VIDEO_CODEC (base_video_encoder)->bytes +=
+      GST_BUFFER_SIZE (frame->src_buffer);
+  if (GST_CLOCK_TIME_IS_VALID (frame->presentation_duration)) {
+    GST_BASE_VIDEO_CODEC (base_video_encoder)->time +=
+        frame->presentation_duration;
+  } else {
+    /* better none than nothing valid */
+    GST_BASE_VIDEO_CODEC (base_video_encoder)->time = GST_CLOCK_TIME_NONE;
+  }
+
+  if (G_UNLIKELY (GST_BASE_VIDEO_CODEC (base_video_encoder)->discont)) {
+    GST_LOG_OBJECT (base_video_encoder, "marking discont");
+    GST_BUFFER_FLAG_SET (frame->src_buffer, GST_BUFFER_FLAG_DISCONT);
+    GST_BASE_VIDEO_CODEC (base_video_encoder)->discont = FALSE;
+  }
+
+  gst_buffer_set_caps (GST_BUFFER (frame->src_buffer),
+      GST_PAD_CAPS (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder)));
+
   if (base_video_encoder_class->shape_output) {
     ret = base_video_encoder_class->shape_output (base_video_encoder, frame);
   } else {
@@ -887,9 +890,13 @@ gst_base_video_encoder_finish_frame (GstBaseVideoEncoder * base_video_encoder,
         gst_pad_push (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder),
         frame->src_buffer);
   }
-
-  /* handed out */
   frame->src_buffer = NULL;
+
+done:
+  /* handed out */
+  GST_BASE_VIDEO_CODEC (base_video_encoder)->frames =
+      g_list_remove (GST_BASE_VIDEO_CODEC (base_video_encoder)->frames, frame);
+
   gst_base_video_codec_free_frame (frame);
 
   return ret;
