@@ -440,24 +440,24 @@ gst_vaapi_decoder_set_picture_size(
 )
 {
     GstVaapiDecoderPrivate * const priv = decoder->priv;
-
-    g_object_freeze_notify(G_OBJECT(decoder));
+    gboolean size_changed = FALSE;
 
     if (priv->width != width) {
         GST_DEBUG("picture width changed to %d", width);
         priv->width = width;
         gst_caps_set_simple(priv->caps, "width", G_TYPE_INT, width, NULL);
-        g_object_notify(G_OBJECT(decoder), "caps");
+        size_changed = TRUE;
     }
 
     if (priv->height != height) {
         GST_DEBUG("picture height changed to %d", height);
         priv->height = height;
         gst_caps_set_simple(priv->caps, "height", G_TYPE_INT, height, NULL);
-        g_object_notify(G_OBJECT(decoder), "caps");
+        size_changed = TRUE;
     }
 
-    g_object_thaw_notify(G_OBJECT(decoder));
+    if (size_changed)
+        g_object_notify(G_OBJECT(decoder), "caps");
 }
 
 void
