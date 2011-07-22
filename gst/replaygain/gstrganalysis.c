@@ -138,7 +138,7 @@ static gboolean gst_rg_analysis_set_caps (GstBaseTransform * base,
     GstCaps * incaps, GstCaps * outcaps);
 static GstFlowReturn gst_rg_analysis_transform_ip (GstBaseTransform * base,
     GstBuffer * buf);
-static gboolean gst_rg_analysis_event (GstBaseTransform * base,
+static gboolean gst_rg_analysis_sink_event (GstBaseTransform * base,
     GstEvent * event);
 static gboolean gst_rg_analysis_stop (GstBaseTransform * base);
 
@@ -261,7 +261,7 @@ gst_rg_analysis_class_init (GstRgAnalysisClass * klass)
   trans_class->start = GST_DEBUG_FUNCPTR (gst_rg_analysis_start);
   trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_rg_analysis_set_caps);
   trans_class->transform_ip = GST_DEBUG_FUNCPTR (gst_rg_analysis_transform_ip);
-  trans_class->event = GST_DEBUG_FUNCPTR (gst_rg_analysis_event);
+  trans_class->sink_event = GST_DEBUG_FUNCPTR (gst_rg_analysis_sink_event);
   trans_class->stop = GST_DEBUG_FUNCPTR (gst_rg_analysis_stop);
   trans_class->passthrough_on_same_caps = TRUE;
 
@@ -497,7 +497,7 @@ gst_rg_analysis_transform_ip (GstBaseTransform * base, GstBuffer * buf)
 }
 
 static gboolean
-gst_rg_analysis_event (GstBaseTransform * base, GstEvent * event)
+gst_rg_analysis_sink_event (GstBaseTransform * base, GstEvent * event)
 {
   GstRgAnalysis *filter = GST_RG_ANALYSIS (base);
 
@@ -529,7 +529,7 @@ gst_rg_analysis_event (GstBaseTransform * base, GstEvent * event)
       break;
   }
 
-  return GST_BASE_TRANSFORM_CLASS (parent_class)->event (base, event);
+  return GST_BASE_TRANSFORM_CLASS (parent_class)->sink_event (base, event);
 }
 
 static gboolean
