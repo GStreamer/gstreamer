@@ -729,6 +729,7 @@ gst_base_transform_set_allocation (GstBaseTransform * trans,
 
   /* activate */
   if (pool) {
+    GST_DEBUG_OBJECT (trans, "setting pool %p active", pool);
     if (!gst_buffer_pool_set_active (pool, TRUE))
       goto activate_failed;
   }
@@ -742,6 +743,7 @@ gst_base_transform_set_allocation (GstBaseTransform * trans,
   GST_OBJECT_UNLOCK (trans);
 
   if (oldpool) {
+    GST_DEBUG_OBJECT (trans, "deactivating old pool %p", oldpool);
     gst_buffer_pool_set_active (oldpool, FALSE);
     gst_object_unref (oldpool);
   }
@@ -774,6 +776,7 @@ gst_base_transform_do_bufferpool (GstBaseTransform * trans, GstCaps * outcaps)
   /* clear old pool */
   oldpool = trans->priv->pool;
   if (oldpool) {
+    GST_DEBUG_OBJECT (trans, "unreffing old pool");
     gst_buffer_pool_set_active (oldpool, FALSE);
     gst_object_unref (oldpool);
     trans->priv->pool = oldpool = NULL;
@@ -790,6 +793,7 @@ gst_base_transform_do_bufferpool (GstBaseTransform * trans, GstCaps * outcaps)
 
   /* not passthrough, we need to allocate */
   /* find a pool for the negotiated caps now */
+  GST_DEBUG_OBJECT (trans, "doing allocation query");
   query = gst_query_new_allocation (outcaps, TRUE);
   if (!gst_pad_peer_query (trans->srcpad, query)) {
     /* not a problem, just debug a little */
@@ -798,6 +802,7 @@ gst_base_transform_do_bufferpool (GstBaseTransform * trans, GstCaps * outcaps)
 
   klass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
+  GST_DEBUG_OBJECT (trans, "calling setup_allocation");
   if (G_LIKELY (klass->setup_allocation))
     result = klass->setup_allocation (trans, query);
 
@@ -814,12 +819,14 @@ gst_base_transform_do_bufferpool (GstBaseTransform * trans, GstCaps * outcaps)
       mem = gst_query_parse_nth_allocation_memory (query, 0);
     }
     allocator = gst_allocator_find (mem);
+    GST_DEBUG_OBJECT (trans, "no size, using allocator %s", GST_STR_NULL (mem));
   } else if (pool == NULL) {
     GstStructure *config;
 
     /* we did not get a pool, make one ourselves then */
     pool = gst_buffer_pool_new ();
 
+    GST_DEBUG_OBJECT (trans, "no pool, making one");
     config = gst_buffer_pool_get_config (pool);
     gst_buffer_pool_config_set (config, outcaps, size, min, max, prefix,
         alignment);
