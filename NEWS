@@ -1,5 +1,9 @@
-gst-vaapi NEWS -- summary of changes.  2011-06-14
+gst-vaapi NEWS -- summary of changes.  2011-07-DD
 Copyright (C) 2010 Splitted-Desktop Systems
+
+Version 0.2.7 - DD.Jul.2011
+* Fix MPEG-2 TS decoding
+* Fix build with newer versions of FFmpeg
 
 Version 0.2.6 - 14.Jun.2011
 * Fix licensing terms (LGPL v2.1)
