@@ -60,7 +60,9 @@ struct _GstVaapiDecode {
     GstElement          parent_instance;
 
     GstPad             *sinkpad;
+    GstCaps            *sinkpad_caps;
     GstPad             *srcpad;
+    GstCaps            *srcpad_caps;
     GstVaapiDisplay    *display;
     GstVaapiDecoder    *decoder;
     GMutex             *decoder_mutex;

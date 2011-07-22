@@ -93,6 +93,66 @@ enum {
     PROP_USE_FFMPEG,
 };
 
+static gboolean
+gst_vaapidecode_update_src_caps(GstVaapiDecode *decode, GstCaps *caps);
+
+static void
+gst_vaapi_decoder_notify_caps(GObject *obj, GParamSpec *pspec, void *user_data)
+{
+    GstVaapiDecode * const decode = GST_VAAPIDECODE(user_data);
+    GstCaps *caps;
+
+    g_assert(decode->decoder == GST_VAAPI_DECODER(obj));
+
+    caps = gst_vaapi_decoder_get_caps(decode->decoder);
+    gst_vaapidecode_update_src_caps(decode, caps);
+}
+
+static inline gboolean
+gst_vaapidecode_update_sink_caps(GstVaapiDecode *decode, GstCaps *caps)
+{
+    if (decode->sinkpad_caps)
+        gst_caps_unref(decode->sinkpad_caps);
+    decode->sinkpad_caps = gst_caps_ref(caps);
+    return TRUE;
+}
+
+static gboolean
+gst_vaapidecode_update_src_caps(GstVaapiDecode *decode, GstCaps *caps)
+{
+    GstCaps *other_caps;
+    GstStructure *structure;
+    const GValue *v_width, *v_height, *v_framerate, *v_par;
+    gboolean success;
+
+    if (!decode->srcpad_caps) {
+        decode->srcpad_caps = gst_caps_from_string(GST_VAAPI_SURFACE_CAPS_NAME);
+        if (!decode->srcpad_caps)
+            return FALSE;
+    }
+
+    structure    = gst_caps_get_structure(caps, 0);
+    v_width      = gst_structure_get_value(structure, "width");
+    v_height     = gst_structure_get_value(structure, "height");
+    v_framerate  = gst_structure_get_value(structure, "framerate");
+    v_par        = gst_structure_get_value(structure, "pixel-aspect-ratio");
+
+    structure = gst_caps_get_structure(decode->srcpad_caps, 0);
+    if (v_width && v_height) {
+        gst_structure_set_value(structure, "width", v_width);
+        gst_structure_set_value(structure, "height", v_height);
+    }
+    if (v_framerate)
+        gst_structure_set_value(structure, "framerate", v_framerate);
+    if (v_par)
+        gst_structure_set_value(structure, "pixel-aspect-ratio", v_par);
+
+    other_caps = gst_caps_copy(decode->srcpad_caps);
+    success = gst_pad_set_caps(decode->srcpad, other_caps);
+    gst_caps_unref(other_caps);
+    return success;
+}
+
 static void
 gst_vaapidecode_release(GstVaapiDecode *decode, GObject *dead_object)
 {
@@ -231,6 +291,13 @@ gst_vaapidecode_create(GstVaapiDecode *decode, GstCaps *caps)
     if (!decode->decoder)
         return FALSE;
 
+    g_signal_connect(
+        G_OBJECT(decode->decoder),
+        "notify::caps",
+        G_CALLBACK(gst_vaapi_decoder_notify_caps),
+        decode
+    );
+
     decode->decoder_caps = gst_caps_ref(caps);
     return TRUE;
 }
@@ -299,6 +366,16 @@ gst_vaapidecode_finalize(GObject *object)
     GstVaapiDecode * const decode = GST_VAAPIDECODE(object);
 
     gst_vaapidecode_destroy(decode);
+
+    if (decode->sinkpad_caps) {
+        gst_caps_unref(decode->sinkpad_caps);
+        decode->sinkpad_caps = NULL;
+    }
+
+    if (decode->srcpad_caps) {
+        gst_caps_unref(decode->srcpad_caps);
+        decode->srcpad_caps = NULL;
+    }
 
     if (decode->display) {
         g_object_unref(decode->display);
@@ -490,38 +567,14 @@ static gboolean
 gst_vaapidecode_set_caps(GstPad *pad, GstCaps *caps)
 {
     GstVaapiDecode * const decode = GST_VAAPIDECODE(GST_OBJECT_PARENT(pad));
-    GstCaps *other_caps = NULL;
-    GstStructure *structure;
-    const GValue *v_width, *v_height, *v_framerate, *v_par;
-    gboolean success;
 
     g_return_val_if_fail(pad == decode->sinkpad, FALSE);
 
-    other_caps = gst_caps_from_string(gst_vaapidecode_src_caps_str);
-    if (!other_caps)
+    if (!gst_vaapidecode_update_sink_caps(decode, caps))
         return FALSE;
-
-    /* Negotiation succeeded, so now configure ourselves */
-    structure    = gst_caps_get_structure(caps, 0);
-    v_width      = gst_structure_get_value(structure, "width");
-    v_height     = gst_structure_get_value(structure, "height");
-    v_framerate  = gst_structure_get_value(structure, "framerate");
-    v_par        = gst_structure_get_value(structure, "pixel-aspect-ratio");
-
-    structure = gst_caps_get_structure(other_caps, 0);
-    gst_structure_set_value(structure, "width", v_width);
-    gst_structure_set_value(structure, "height", v_height);
-    if (v_framerate)
-        gst_structure_set_value(structure, "framerate", v_framerate);
-    if (v_par)
-        gst_structure_set_value(structure, "pixel-aspect-ratio", v_par);
-
-    success = gst_pad_set_caps(decode->srcpad, other_caps);
-    gst_caps_unref(other_caps);
-    if (!success)
+    if (!gst_vaapidecode_update_src_caps(decode, caps))
         return FALSE;
-
-    return gst_vaapidecode_reset(decode, caps);
+    return gst_vaapidecode_reset(decode, decode->sinkpad_caps);
 }
 
 static GstFlowReturn
@@ -584,6 +637,7 @@ gst_vaapidecode_init(GstVaapiDecode *decode, GstVaapiDecodeClass *klass)
         gst_element_class_get_pad_template(element_class, "sink"),
         "sink"
     );
+    decode->sinkpad_caps = NULL;
 
     gst_pad_set_getcaps_function(decode->sinkpad, gst_vaapidecode_get_caps);
     gst_pad_set_setcaps_function(decode->sinkpad, gst_vaapidecode_set_caps);
@@ -596,6 +650,7 @@ gst_vaapidecode_init(GstVaapiDecode *decode, GstVaapiDecodeClass *klass)
         gst_element_class_get_pad_template(element_class, "src"),
         "src"
     );
+    decode->srcpad_caps = NULL;
 
     gst_pad_use_fixed_caps(decode->srcpad);
     gst_pad_set_event_function(decode->srcpad, gst_vaapidecode_src_event);
