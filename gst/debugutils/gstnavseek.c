@@ -47,10 +47,12 @@ GstStaticPadTemplate navseek_sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
-static gboolean gst_navseek_event (GstBaseTransform * trans, GstEvent * event);
+static gboolean gst_navseek_sink_event (GstBaseTransform * trans,
+    GstEvent * event);
 static GstFlowReturn gst_navseek_transform_ip (GstBaseTransform * basetrans,
     GstBuffer * buf);
-static gboolean gst_navseek_handle_src_event (GstPad * pad, GstEvent * event);
+static gboolean gst_navseek_src_event (GstBaseTransform * trans,
+    GstEvent * event);
 static gboolean gst_navseek_stop (GstBaseTransform * trans);
 static gboolean gst_navseek_start (GstBaseTransform * trans);
 
@@ -92,7 +94,8 @@ gst_navseek_class_init (GstNavSeekClass * klass)
       "Seek based on navigation keys left-right",
       "Jan Schmidt <thaytan@mad.scientist.com>");
 
-  gstbasetrans_class->event = GST_DEBUG_FUNCPTR (gst_navseek_event);
+  gstbasetrans_class->src_event = GST_DEBUG_FUNCPTR (gst_navseek_src_event);
+  gstbasetrans_class->sink_event = GST_DEBUG_FUNCPTR (gst_navseek_sink_event);
   gstbasetrans_class->transform_ip =
       GST_DEBUG_FUNCPTR (gst_navseek_transform_ip);
   gstbasetrans_class->start = GST_DEBUG_FUNCPTR (gst_navseek_start);
@@ -102,9 +105,6 @@ gst_navseek_class_init (GstNavSeekClass * klass)
 static void
 gst_navseek_init (GstNavSeek * navseek)
 {
-  gst_pad_set_event_function (GST_BASE_TRANSFORM (navseek)->srcpad,
-      GST_DEBUG_FUNCPTR (gst_navseek_handle_src_event));
-
   gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (navseek), TRUE);
 
   navseek->seek_offset = 5.0;
@@ -208,17 +208,17 @@ gst_navseek_segseek (GstNavSeek * navseek)
 }
 
 static gboolean
-gst_navseek_handle_src_event (GstPad * pad, GstEvent * event)
+gst_navseek_src_event (GstBaseTransform * trans, GstEvent * event)
 {
   GstNavSeek *navseek;
   gboolean ret = TRUE;
 
-  navseek = GST_NAVSEEK (GST_PAD_PARENT (pad));
+  navseek = GST_NAVSEEK (trans);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NAVIGATION:
-      /* Check for a keyup and convert left/right to a seek event */
     {
+      /* Check for a keyup and convert left/right to a seek event */
       const GstStructure *structure;
       const gchar *event_type;
 
@@ -265,18 +265,14 @@ gst_navseek_handle_src_event (GstPad * pad, GstEvent * event)
       }
       gst_event_unref (event);
       event = NULL;
-    }
       break;
+    }
     default:
       break;
   }
 
-  if (event && GST_PAD_IS_LINKED (GST_BASE_TRANSFORM (navseek)->sinkpad)) {
-    GstPad *peer_pad = gst_pad_get_peer (GST_BASE_TRANSFORM (navseek)->sinkpad);
-
-    ret = gst_pad_send_event (peer_pad, event);
-    gst_object_unref (peer_pad);
-  }
+  if (event)
+    ret = GST_BASE_TRANSFORM_CLASS (parent_class)->src_event (trans, event);
 
   return ret;
 }
@@ -318,7 +314,7 @@ gst_navseek_get_property (GObject * object, guint prop_id,
 }
 
 static gboolean
-gst_navseek_event (GstBaseTransform * trans, GstEvent * event)
+gst_navseek_sink_event (GstBaseTransform * trans, GstEvent * event)
 {
   GstNavSeek *navseek = GST_NAVSEEK (trans);
 
@@ -332,7 +328,7 @@ gst_navseek_event (GstBaseTransform * trans, GstEvent * event)
     default:
       break;
   }
-  return GST_BASE_TRANSFORM_CLASS (parent_class)->event (trans, event);
+  return GST_BASE_TRANSFORM_CLASS (parent_class)->sink_event (trans, event);
 }
 
 static GstFlowReturn

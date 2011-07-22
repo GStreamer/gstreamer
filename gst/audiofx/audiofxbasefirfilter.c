@@ -70,8 +70,8 @@ static GstFlowReturn gst_audio_fx_base_fir_filter_transform (GstBaseTransform *
     base, GstBuffer * inbuf, GstBuffer * outbuf);
 static gboolean gst_audio_fx_base_fir_filter_start (GstBaseTransform * base);
 static gboolean gst_audio_fx_base_fir_filter_stop (GstBaseTransform * base);
-static gboolean gst_audio_fx_base_fir_filter_event (GstBaseTransform * base,
-    GstEvent * event);
+static gboolean gst_audio_fx_base_fir_filter_sink_event (GstBaseTransform *
+    base, GstEvent * event);
 static gboolean gst_audio_fx_base_fir_filter_transform_size (GstBaseTransform *
     base, GstPadDirection direction, GstCaps * caps, gsize size,
     GstCaps * othercaps, gsize * othersize);
@@ -592,7 +592,8 @@ gst_audio_fx_base_fir_filter_class_init (GstAudioFXBaseFIRFilterClass * klass)
       GST_DEBUG_FUNCPTR (gst_audio_fx_base_fir_filter_transform);
   trans_class->start = GST_DEBUG_FUNCPTR (gst_audio_fx_base_fir_filter_start);
   trans_class->stop = GST_DEBUG_FUNCPTR (gst_audio_fx_base_fir_filter_stop);
-  trans_class->event = GST_DEBUG_FUNCPTR (gst_audio_fx_base_fir_filter_event);
+  trans_class->sink_event =
+      GST_DEBUG_FUNCPTR (gst_audio_fx_base_fir_filter_sink_event);
   trans_class->transform_size =
       GST_DEBUG_FUNCPTR (gst_audio_fx_base_fir_filter_transform_size);
   filter_class->setup = GST_DEBUG_FUNCPTR (gst_audio_fx_base_fir_filter_setup);
@@ -1019,7 +1020,8 @@ gst_audio_fx_base_fir_filter_query_type (GstPad * pad)
 }
 
 static gboolean
-gst_audio_fx_base_fir_filter_event (GstBaseTransform * base, GstEvent * event)
+gst_audio_fx_base_fir_filter_sink_event (GstBaseTransform * base,
+    GstEvent * event)
 {
   GstAudioFXBaseFIRFilter *self = GST_AUDIO_FX_BASE_FIR_FILTER (base);
 
@@ -1035,7 +1037,7 @@ gst_audio_fx_base_fir_filter_event (GstBaseTransform * base, GstEvent * event)
       break;
   }
 
-  return GST_BASE_TRANSFORM_CLASS (parent_class)->event (base, event);
+  return GST_BASE_TRANSFORM_CLASS (parent_class)->sink_event (base, event);
 }
 
 void

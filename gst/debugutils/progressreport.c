@@ -107,7 +107,7 @@ static void gst_progress_report_set_property (GObject * object, guint prop_id,
 static void gst_progress_report_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static gboolean gst_progress_report_event (GstBaseTransform * trans,
+static gboolean gst_progress_report_sink_event (GstBaseTransform * trans,
     GstEvent * event);
 static GstFlowReturn gst_progress_report_transform_ip (GstBaseTransform * trans,
     GstBuffer * buf);
@@ -175,7 +175,8 @@ gst_progress_report_class_init (GstProgressReportClass * g_class)
       "Periodically query and report on processing progress",
       "Jan Schmidt <thaytan@mad.scientist.com>");
 
-  gstbasetrans_class->event = GST_DEBUG_FUNCPTR (gst_progress_report_event);
+  gstbasetrans_class->sink_event =
+      GST_DEBUG_FUNCPTR (gst_progress_report_sink_event);
   gstbasetrans_class->transform_ip =
       GST_DEBUG_FUNCPTR (gst_progress_report_transform_ip);
   gstbasetrans_class->start = GST_DEBUG_FUNCPTR (gst_progress_report_start);
@@ -374,19 +375,25 @@ gst_progress_report_report (GstProgressReport * filter, GTimeVal cur_time,
 }
 
 static gboolean
-gst_progress_report_event (GstBaseTransform * trans, GstEvent * event)
+gst_progress_report_sink_event (GstBaseTransform * trans, GstEvent * event)
 {
   GstProgressReport *filter;
 
   filter = GST_PROGRESS_REPORT (trans);
 
-  if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
-    GTimeVal cur_time;
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_EOS:
+    {
+      GTimeVal cur_time;
 
-    g_get_current_time (&cur_time);
-    gst_progress_report_report (filter, cur_time, NULL);
+      g_get_current_time (&cur_time);
+      gst_progress_report_report (filter, cur_time, NULL);
+      break;
+    }
+    default:
+      break;
   }
-  return GST_BASE_TRANSFORM_CLASS (parent_class)->event (trans, event);
+  return GST_BASE_TRANSFORM_CLASS (parent_class)->sink_event (trans, event);
 }
 
 static GstFlowReturn
