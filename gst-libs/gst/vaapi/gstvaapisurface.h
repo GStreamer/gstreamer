@@ -34,12 +34,20 @@ typedef enum _GstVaapiSurfaceStatus             GstVaapiSurfaceStatus;
 typedef enum _GstVaapiSurfaceRenderFlags        GstVaapiSurfaceRenderFlags;
 
 /**
+ * GST_VAAPI_SURFACE_CAPS_NAME:
+ *
+ * Generic caps type for VA surfaces.
+ */
+#define GST_VAAPI_SURFACE_CAPS_NAME     \
+    "video/x-vaapi-surface"
+
+/**
  * GST_VAAPI_SURFACE_CAPS:
  *
  * Generic caps for VA surfaces.
  */
 #define GST_VAAPI_SURFACE_CAPS          \
-    "video/x-vaapi-surface, "           \
+    GST_VAAPI_SURFACE_CAPS_NAME ", "    \
     "width  = (int) [ 1, MAX ],"        \
     "height = (int) [ 1, MAX ],"        \
     "framerate = (fraction) [ 0, MAX ]"
