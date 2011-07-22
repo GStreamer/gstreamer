@@ -2305,7 +2305,7 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
     GST_DEBUG ("have codec data of size %d", size);
 
     gst_buffer_unmap (buf, data, size);
-  } else if (context->extradata == NULL) {
+  } else if (context->extradata == NULL && codec_id != CODEC_ID_AAC_LATM) {
     /* no extradata, alloc dummy with 0 sized, some codecs insist on reading
      * extradata anyway which makes then segfault. */
     context->extradata =

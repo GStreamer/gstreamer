@@ -34,6 +34,17 @@ colorspace conversion elements.
 
  <release>
   <Version>
+   <revision>0.10.12</revision>
+   <branch>0.10</branch>
+   <name>A year in hell</name>
+   <created>2011-07-20</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-ffmpeg/gst-ffmpeg-0.10.12.tar.bz2" />
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-ffmpeg/gst-ffmpeg-0.10.12.tar.gz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
    <revision>0.10.11</revision>
    <branch>0.10</branch>
    <name>Feeding trolls is strictly forbidden</name>

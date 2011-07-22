@@ -1,8 +1,807 @@
-=== release 0.10.11 ===
+=== release 0.10.12 ===
 
-2010-07-15  Edward Hervey <bilboed@bilboed.com>
+2011-07-20  Edward Hervey <edward.hervey@collabora.co.uk>
 
 	* configure.ac:
+	  releasing 0.10.12, "A year in hell"
+
+2011-07-20 12:05:34 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* gst-ffmpeg.doap:
+	  Update dope file
+
+2011-06-17 14:05:58 +0300  Raimo Järvi <raimo.jarvi@gmail.com>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	  codecmap: Don't create dummy extradata for AAC LATM
+	  If extradata is created for LATM, libav will use it for initialising AAC
+	  decoder and decoding will fail.
+	  Fixes bug #652812.
+
+2011-07-12 18:36:35 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* gst-libs/ext/libav:
+	  gst-libs: Update libav checkout to latest 0.7 tip
+	  Contains MT fixes
+
+2011-06-04 19:10:15 -0700  David Schleef <ds@schleef.org>
+
+	* configure.ac:
+	  configure: Remove -gnu from target_os
+	  Fixes #651768.
+
+2011-07-11 10:47:26 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffmpegdec: Set default number of threads to 1
+	  Too many suspicious errors/warnings pop up when more than 1 thread
+	  is used.
+	  Fixes #653649
+
+2011-07-07 18:52:23 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* configure.ac:
+	  remove -Wcast-align
+	  See: https://bugzilla.gnome.org/show_bug.cgi?id=615698
+
+2011-06-30 21:38:57 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffmpegdec: Setting AC3/EAC3/DTS decoders to rank NONE for release
+	  This still causes issues with bad (missing?) downmixing.
+	  They can be handled by existing a52dec/dtsdec
+	  See Bug #608892
+
+2011-06-30 09:06:21 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	  ffmpegcodecmap: really include all supported sample formats in audio caps
+	  Fixes #653717.
+
+2011-06-29 16:22:48 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffmpegdec: avoid allocating and leaking local avpacket helpers
+	  ... by _init'ing them as locals rather than _new'ing them.
+	  Fixes #653648.
+
+2011-06-25 13:05:41 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* configure.ac:
+	  configure.ac: 0.10.11.2 pre-release
+
+2011-06-16 20:02:40 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst-libs/ext/libav:
+	  ext: Bumping libav checkout to current tip of v0.7 branch
+
+2011-06-23 11:29:42 -0700  David Schleef <ds@schleef.org>
+
+	* common:
+	  Automatic update of common submodule
+	  From 69b981f to 605cd9a
+
+2011-06-21 14:33:29 +1000  Jan Schmidt <thaytan@noraisin.net>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	* ext/ffmpeg/gstffmpegutils.c:
+	* ext/ffmpeg/gstffmpegutils.h:
+	  Enable threading in ffmpeg decoders that support it.
+	  Add a max-threads property, which defaults to '0 = auto'
+	  Add a utility function taken from libschroedinger which sets
+	  the ffmpeg worker thread count to match the computer processor
+	  count by default.
+
+2011-06-02 18:02:38 +0300  Raimo Järvi <raimo.jarvi@gmail.com>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffdec: Fix calculating frame duration from last timestamp and frame count.
+	  Fixes bug #651714.
+
+2011-05-31 13:16:26 +0300  Raimo Järvi <raimo.jarvi@gmail.com>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffdec: Check for AV_NOPTS_VALUE in PTS value.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=651625
+
+2011-05-30 13:14:09 +0300  Raimo Järvi <raimo.jarvi@gmail.com>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	  ffdec: Add mpegversion 2 to AAC decoder caps
+	  Fixes bug #651447.
+
+2011-05-29 17:39:38 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffmpegdec: Don't discard timestamps if output AND input are in order
+	  Avoids bogus timestamps for AVCHD-lite streams
+
+2011-05-29 17:43:46 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst-libs/ext/libav:
+	  ext: Update to libav git master as of Sunday 29th May 2011
+
+2011-05-27 10:54:12 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ffmpeg/Makefile.am:
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	  ffenc_aac: Add profile and level to the caps
+	  Fixes bug #650596.
+
+2011-05-26 15:09:18 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffdec: Always use parser for AAC LATM/LOAS
+
+2011-05-25 10:08:06 +0200  Rafael Diniz <rafael@riseup.net>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffmpeg: Add codec mapping for AAC LATM/LOAS
+	  Also add the stream-format fields to the CODEC_ID_AAC caps.
+	  Fixes bug #650695.
+
+2011-05-19 22:59:07 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 9e5bbd5 to 69b981f
+
+2011-05-18 16:12:49 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From fd35073 to 9e5bbd5
+
+2011-05-18 12:26:15 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 46dfcea to fd35073
+
+2011-02-28 21:16:24 +0000  Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffdec: Do not use invalid input timestamp as next timestamp.
+	  When input buffer timestamps are invalid, next timestamp are used for
+	  audio. Then, the next out timestamp is updated with the used timestamp
+	  and the calculated duration. However, if the used timestamp is invalid,
+	  it should not be used. Otherwise, the next buffer will use a wrong
+	  timestamp that is not in the clipped segment, making the buffer to be
+	  dropped.
+	  This fixes playback with SBTVD MPEG TS streams, using AAC LATM.
+
+2011-05-04 17:33:03 +0300  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffdec: do not try to resync to the next keyframe when late
+	  A keyframe may be quite a while in the future, and the decoder
+	  has no way of knowing this. A poor decision could mean quite some
+	  time with no video output.
+	  This decision should be left to the upstream element: a demuxer
+	  might know about incoming keyframes, or some other element might
+	  be able to request a keyframe.
+	  Fixes bug #649372.
+
+2011-05-05 11:12:20 -0500  Punya Prakash <pprakash@ti.com>
+
+	* configure.ac:
+	  configure: Fix ac_cs_config handling
+	  Previously autoconf appended too many additional quotes
+	  to parameters like --with-ffmpeg-extra-configure=" --target-os=linux
+	  --extra-cflags='-mfpu=neon -mfloat-abi=softfp'".
+	  Fixes bug #648816.
+
+2011-04-24 14:05:34 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From c3cafe1 to 46dfcea
+
+2011-04-22 12:53:22 -0700  David Schleef <ds@schleef.org>
+
+	* autogen.sh:
+	  autogen.sh: Also check for libav submodule
+
+2011-04-21 12:57:24 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/libpostproc/gstpostproc.c:
+	  postproc: pp_*_t => pp_*
+
+2011-04-21 12:54:49 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegaudioresample.c:
+	  audioresample: Use new av_audio_resample API
+	  We might want to expose the various properties in the future
+
+2011-04-21 12:53:23 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffmpegdec: Set caps on outgoing audio buffers
+
+2011-04-21 12:52:04 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffmpegdec: Use new AVPacket-based API
+	  Right now it doesn't use any of the extra fields AVPacket provides.
+	  It might be wise to investigate the pts/dts ones to see if we can finally
+	  get rid of the timing-related cruft we have.
+
+2011-04-21 12:51:25 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  gstffmpegdec: Use non-deprecated av_parser_parse2
+
+2011-04-20 19:01:30 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffmpegdec: Use skip_frame instead of deprecated hurry_up
+
+2011-04-20 19:00:49 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcfg.c:
+	  ffmpegcfg: mb_qmin/mb_qmax are deprecated/removed
+	  We just use qmin/qmax instead
+
+2011-04-20 17:38:32 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdemux.c:
+	  ffmpegdemux: Define our own MAX_STREAMS
+
+2011-04-20 17:37:34 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdemux.c:
+	* ext/ffmpeg/gstffmpegmux.c:
+	  ffmpeg: Disable code using old metadata API
+	  It is now gone and we need to switch to the new API
+	  See #566605
+
+2011-04-20 17:36:53 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdemux.c:
+	  ffmpegdemux: The index_built AVFormatContext hasn't been used in over 2 years
+
+2011-04-19 19:31:01 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	  codecmap: _XVID is gone
+	  It was always a bogus one, since it used the external libxvid for encoding.
+
+2011-04-19 19:30:44 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdemux.c:
+	* ext/ffmpeg/gstffmpegmux.c:
+	  ffmpeg: PKT_FLAG_KEY => AV_PKT_FLAG_KEY
+
+2011-04-19 19:30:23 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdemux.c:
+	* ext/ffmpeg/gstffmpegprotocol.c:
+	  ffmpeg: AVERROR_* => AVERROR(*)
+
+2011-04-19 19:29:57 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	* ext/ffmpeg/gstffmpegcodecmap.h:
+	* ext/ffmpeg/gstffmpegdec.c:
+	* ext/ffmpeg/gstffmpegdeinterlace.c:
+	* ext/ffmpeg/gstffmpegdemux.c:
+	* ext/ffmpeg/gstffmpegenc.c:
+	* ext/ffmpeg/gstffmpegmux.c:
+	  ffmpeg: CodecType => AVMediaType
+
+2011-04-19 19:28:30 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpeg.c:
+	  gstffmpeg: register_protocol => av_register_protocol2
+
+2011-04-19 19:27:40 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* configure.ac:
+	  configure.ac: FFmpeg => Libav
+
+2011-04-19 19:25:54 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* Makefile.am:
+	* autogen.sh:
+	* ffmpegrev:
+	* gst-libs/ext/Makefile.am:
+	  Remove usage of SVN now that we use git submodules for libav
+
+2011-04-19 17:30:40 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* .gitmodules:
+	* gst-libs/ext/libav:
+	  ext: Add libav as a git submodule
+
+2011-04-19 16:26:55 +0200  Marc Plano-Lesay <marc.planolesay@gmail.com>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	* ext/ffmpeg/gstffmpegdemux.c:
+	* ext/libpostproc/gstpostproc.c:
+	* ext/libswscale/gstffmpegscale.c:
+	  Fix unused-but-set-variable warnings with gcc 4.6
+
+2011-04-09 01:17:24 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdemux.c:
+	  gstffmpeg(de)mux: Disable known broken (de)muxers
+	  Idea provided by David Schleef
+	  Support provided by Michael Smith and Tim Mueller
+	  Food and Drinks provided by Toronado
+
+2011-02-08 12:17:53 +0200  Stefan Kost <ensonic@users.sf.net>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	  ffmpeg: don't divide by 0 when checking the framerates
+	  Check for denom==0 first and set it to on in that case.
+
+2011-04-07 12:34:51 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  dec: avoid making the buffer writable
+	  Set the caps right after allocation of the buffer because we know the buffer is
+	  writable then and we are correctly negotiated. Since ffmpeg keeps around
+	  references to frames, making the buffer metadata writable where it was done
+	  before pushing will always end up with a copy and that makes the sink do a slow
+	  memcpy all the time.
+
+2011-04-04 16:37:42 +0200  Miguel Angel Cabrera Moya <madmac2501@gmail.com>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffmpegdec: do buffer padding before parsing and before decoding
+	  FFMpeg parsing and decoding calls require to additionally allocate bytes
+	  at the end of the input bitstream and this padding must be initialized
+	  to zero.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=595590
+
+2011-04-04 15:58:24 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 1ccbe09 to c3cafe1
+
+2011-03-25 22:35:11 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 193b717 to 1ccbe09
+
+2011-03-25 14:57:12 +0200  Stefan Kost <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From b77e2bf to 193b717
+
+2011-03-25 09:33:36 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From d8814b6 to b77e2bf
+
+2011-03-25 09:09:54 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 6aaa286 to d8814b6
+
+2011-03-24 18:50:36 +0200  Stefan Kost <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 6aec6b9 to 6aaa286
+
+2011-03-18 19:34:57 +0100  Luis de Bethencourt <luis@debethencourt.com>
+
+	* autogen.sh:
+	  autogen: wingo signed comment
+
+2011-01-23 14:43:26 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* configure.ac:
+	  configure.ac: no need to mess with AS
+
+2011-01-27 22:22:02 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* configure.ac:
+	  configure.ac: cygwin/mingw32; enable linking static non-import libs
+	  ... such as to internal ffmpeg static libs.
+	  Fixes #642507.
+
+2011-01-27 22:22:22 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* configure.ac:
+	  configure.ac: export plugin description more platform independent
+	  Fixes #642504.
+
+2011-02-28 18:33:49 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 1de7f6a to 6aec6b9
+
+2011-02-10 12:00:11 +0100  Julien Isorce <julien.isorce@gmail.com>
+
+	* ext/libswscale/gstffmpegscale.c:
+	  ffvideoscale: add support for UYVY
+	  Fixes #642015
+
+2011-02-14 12:54:26 +0200  Stefan Kost <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From f94d739 to 1de7f6a
+
+2011-01-31 23:28:33 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffmpegdec: improve error message when set_caps is called but we have no mapping
+	  This may happen e.g. if gst-ffmpeg is compiled against an external
+	  libavcodec and the external lib is upgraded.
+	  See e.g.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=640825
+
+2011-01-25 16:34:04 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	  codecmap: Add mapping for g722
+
+2011-01-25 11:30:02 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* gst-libs/ext/Makefile.am:
+	  gst-libs: Remove .config file from ffmpeg build when cleaning up
+
+2011-01-24 18:29:24 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	  codecmap: Add proper caps name for Camstudio
+
+2011-01-24 18:29:00 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdemux.c:
+	  gstffmpegdemux: Ignore more pseudo demuxers
+
+2011-01-24 17:43:44 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegmux.c:
+	  gstffmpegmux: Blacklist some muxer formats
+
+2011-01-24 17:20:56 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	  gstffmpegcodecmap: Add some new codec mappings
+	  VP8
+	  LAGARITH
+	  GSM
+	  GSM_MS
+
+2010-11-07 17:08:50 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/ffmpeg/gstffmpegprotocol.c:
+	  ffmpegprotocol: Slight API change
+
+2010-11-07 17:08:19 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* configure.ac:
+	  configure.ac: Don't forget to include new libavcore library
+
+2010-11-07 17:08:04 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* ffmpegrev:
+	  ffmpegrev: Switch to revision 26402 of ffmpeg
+	  This is the last svn revision. They have switched to using git...
+	  but since there's still some controversy, we'll stick to this version
+	  for the time being and maybe switch to using a git submodule in a month
+	  with the same equivalent revision (or newer/older if needed)
+
+2011-01-14 09:35:17 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	  configure: require core 0.10.31
+	  For gst_util_fraction_compare()
+
+2011-01-11 15:51:38 +0200  Stefan Kost <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From e572c87 to f94d739
+
+2011-01-10 16:37:49 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From ccbaa85 to e572c87
+
+2011-01-10 14:55:03 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 46445ad to ccbaa85
+
+2011-01-07 18:08:15 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffmpegdec: Set the mp3 decoder to a rank of NONE
+	  It's just causing too many headaches. This will force people to use
+	  a working mp3 decoder, like mad.
+
+2011-01-05 16:59:55 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffmpegdec: Fix unitialized variables on macosx
+
+2011-01-03 11:45:04 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegenc.c:
+	  ffmpegenc: Disable non-audio/video encoders
+	  Fixes #629648
+
+2010-12-21 12:11:32 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffmpgdec: work around parser timestamp bug
+	  Sometimes the parser loses track of timestamps and starts to reuse old
+	  timestamp. Feed it some dummy data and clear some context variables to work
+	  around the problem.
+
+2010-12-20 17:47:51 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 169462a to 46445ad
+
+2010-12-16 10:12:02 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegscale.c:
+	  ffvideoscale: Change classification to Filter/Converter/Video/Scaler
+
+2010-12-16 10:05:03 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdeinterlace.c:
+	  ffdeinterlace: Change classification to Filter/Effect/Video/Deinterlace
+
+2010-12-15 14:56:50 +0200  Stefan Kost <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 20742ae to 169462a
+
+2010-12-13 16:24:24 +0200  Stefan Kost <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 011bcc8 to 20742ae
+
+2010-12-12 12:38:55 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  dec: scale the estimated duration by number of frames
+	  When estimating the frame duration, the diff between two incomming timestamps
+	  should be scaled by the amount of frames in the interval. Improves duration
+	  estimation and DTS interpolation.
+
+2010-12-12 10:54:09 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  dec: use input timestamp diff for duration estimation
+	  Use the diff between input timestamps to estimate the duration when no duration
+	  is set on input buffers. Only do this when there are no reordered input
+	  timestamps. Improves interpolation in DTS mode when no input duration is set.
+
+2010-10-27 13:17:43 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 7bbd708 to 011bcc8
+
+2010-10-25 12:14:42 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegenc.c:
+	  ffmpegenc: ensure proper clean state prior to (re-)negotiation
+	  Fixes #632691.
+
+2010-10-22 13:03:12 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffdec: don't destroy the parser state
+	  When we flush the parser cache, we only need to clear the bytes of the cache,
+	  not the complete state of the cache. In the case of H264 this doesn't require
+	  the parser to receive a new SPS/PPS after a DISCONT buffer.
+
+2010-10-22 12:59:02 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffdec: be more careful with DTS timestamp interpolation
+	  Don't use -1 and 0 duration buffers to calculate next output timestamp as they
+	  are very likely wrong.
+	  Fixes #632877
+
+2010-10-19 17:26:08 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* ext/ffmpeg/gstffmpegenc.c:
+	* ext/ffmpeg/gstffmpegmux.c:
+	* ext/libpostproc/gstpostproc.c:
+	  various: add missing G_PARAM_STATIC_STRINGS flags
+
+2010-10-13 20:48:19 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	* ext/ffmpeg/gstffmpegutils.c:
+	  ffmpeg: Add mapping for YUVA420P <-> A420
+	  This is used by VP6a, which is used by Flash.
+	  See bug #613901.
+
+2010-10-14 12:32:28 -0700  David Schleef <ds@schleef.org>
+
+	* common:
+	  Automatic update of common submodule
+	  From 5a668bf to 7bbd708
+
+2010-10-12 16:17:51 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffmpegdec: Fix debug statements
+
+2010-10-08 12:45:01 -0700  David Schleef <ds@schleef.org>
+
+	* common:
+	  Automatic update of common submodule
+	  From c4a8adc to 5a668bf
+
+2010-10-08 12:56:28 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 5e3c9bf to c4a8adc
+
+2010-10-07 17:46:22 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffdec: use a better algorithm to detect DTS timestamps
+	  Add function to reset the timestamp tracking.
+	  Check for reordered timestamps on the input buffers and assume PTS input
+	  timestamps when we see reordered timestamps.
+	  Recover from an occasionally wrong input timestamp by also tracking the output
+	  timestamps. When we detect a reordered output timestamp, assume DTS input
+	  timestamps again.
+	  Fixes #611500
+
+2010-10-06 18:51:24 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffdec: add debug line
+
+2010-10-06 18:23:57 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffdec: add fixmes
+
+2010-10-06 18:15:03 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffdec: add some comments
+
+2010-10-06 16:00:05 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffdec: Add timestamp tracking
+	  Use ffmpeg reordered_opaque to track an id that combines all timing info we have
+	  for a frame. The ids are kept in a 255 item cache.
+	  Fixes #631075
+
+2010-10-06 12:30:57 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffdec: remove broken TSHandler
+	  Remove the TShandler code, it is broken when QoS is enabled and ffmpeg provides
+	  much easier methods for tracking timestamps.
+	  Simplify pcache joining.
+
+2010-10-06 16:43:27 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	  ffcodecmap: avoid setting large framerates
+	  When the framerate is bigger than 1000/1, set it to 0/1 instead. This avoids
+	  letting the videosink do QoS on these very small frame durations.
+
+2010-10-06 12:26:09 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffdec: rename time variable
+	  Rename the time variable to avoid confusion with the time function.
+	  Add some debug to the QoS update function.
+
+2010-10-05 19:22:28 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegenc.c:
+	  ffenc: pass the input size to the encoder
+	  Pass the input buffer size to the encoder instead of the expected output size.
+	  This is needed to make fixed input/output encoder work.
+
+2010-09-21 18:34:43 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From aa0d1d0 to 5e3c9bf
+
+2010-09-07 11:43:15 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From c2e10bf to aa0d1d0
+
+2010-09-05 18:58:59 -0700  David Schleef <ds@schleef.org>
+
+	* common:
+	  Automatic update of common submodule
+	  From d3d9acf to c2e10bf
+
+2010-09-05 12:27:58 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  configure: Require orc >= 0.4.6 for --compat
+
+2010-09-05 12:20:44 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From ec60217 to d3d9acf
+
+2010-08-27 18:29:15 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdemux.c:
+	  ffmpegdemux: Don't use GST_FLOW_IS_FATAL() and GST_FLOW_IS_SUCCESS()
+
+2010-08-13 17:24:53 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 3e8db1d to ec60217
+
+2010-08-10 10:59:24 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From bd2054b to 3e8db1d
+
+2010-08-05 13:57:39 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From a519571 to bd2054b
+
+2010-08-04 19:41:06 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  configure: Use AC_PROG_CC_STDC instead of the automake variant
+
+2010-08-04 19:32:51 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  configure: Fix FIXME comment
+
+2010-07-18 20:15:32 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdeinterlace.c:
+	  ffdeinterlace: some minor clean-ups
+	  Don't use studlyCaps; gboolean != GstFlowReturn; use gst_caps_set_simple()
+	  instead of creating a GValue just to set a boolean field on a caps structure.
+	  See #622736.
+
+2010-07-16 12:45:18 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* configure.ac:
+	  Back to development.
+
+=== release 0.10.11 ===
+
+2010-07-15 21:28:30 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-ffmpeg.doap:
 	  releasing 0.10.11, "Feeding trolls is strictly forbidden"
 
 2010-07-07 12:41:24 +0200  Edward Hervey <bilboed@bilboed.com>

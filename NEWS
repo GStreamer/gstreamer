@@ -1,4 +1,49 @@
-This is GStreamer FFmpeg Plug-ins  0.10.11, "Feeding trolls is strictly forbidden"
+This is GStreamer FFmpeg Plug-ins  0.10.12, "A year in hell"
+
+Changes since 0.10.11:
+
+      * Bump to LibAV 0.7
+      * Timestamp tracking fixes
+      * New codecs
+      * Multi-threaded decoding
+
+Bugs fixed since 0.10.11:
+
+      * 595590 : Conditional jump or move depends on uninitialised 
+value in ff_h264_find_frame_end
+      * 611500 : [regression] Wrong outgoing timestamps
+      * 613901 : No support for PIX_FMT_YUVA420P, prevents vp6a 
+decoding
+      * 629648 : ffenc_dvdsub wrongly categorized as audio encoder
+      * 631075 : RTP based decoding degrades over time
+      * 632691 : [ffenc_ac3] does not support changing the number of 
+channels on the fly
+      * 632877 : [ffdec_h264] always outputs same timestamp
+      * 639681 : [ffdec_wmv3] regression: video very unsmooth with 
+various mms streams
+      * 639993 : h.263+ support is broken
+      * 642015 : [ffvideoscale] add support for UYVY
+      * 642507 : [mingw/cygwin build] ensure building of plugin dll
+      * 646838 : ffdec_h264 fail to decode some stream
+      * 648816 : [compile] with-ffmpeg-extra-configure passes incorrect 
+cflags
+      * 649297 : regression: ffdemux_ape fails with 
+gst_ffmpegdata_open: assertion `GST_PAD_IS_SRC (pad)' failed
+      * 649372 : ffdec: make the time threshold to skip to next 
+keyframe configurable
+      * 650596 : ffenc_aac needs AAC profile support in caps
+      * 650695 : Patch adds LATM/LOAS support to codecmap and make 
+distinction between ADTS and LATM/LOAS
+      * 651447 : [ffdec_aac] Add mpegversion 2 to caps
+      * 651625 : [ffdec] Check for AV_NOPTS_VALUE in PTS
+      * 651714 : [ffdec] Fix calculating frame duration from last 
+timestamp and frame count
+      * 652812 : Don't create dummy extradata for AAC LATM
+      * 653648 : [ffmpegdec] allocates and leaks avpacket helper 
+structs
+      * 653649 : [ffmpegdec] complains in basic encoding / decoding 
+pipeline
+      * 653717 : [ffmpegdec] wrong audio template src caps
 
 Changes since 0.10.10:
 
