@@ -103,11 +103,12 @@ static void gst_identity_set_property (GObject * object, guint prop_id,
 static void gst_identity_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static gboolean gst_identity_event (GstBaseTransform * trans, GstEvent * event);
+static gboolean gst_identity_sink_event (GstBaseTransform * trans,
+    GstEvent * event);
 static GstFlowReturn gst_identity_transform_ip (GstBaseTransform * trans,
     GstBuffer * buf);
-static GstFlowReturn gst_identity_prepare_output_buffer (GstBaseTransform
-    * trans, GstBuffer * in_buf, GstBuffer ** out_buf);
+static GstFlowReturn gst_identity_prepare_output_buffer (GstBaseTransform *
+    trans, GstBuffer * in_buf, GstBuffer ** out_buf);
 static gboolean gst_identity_start (GstBaseTransform * trans);
 static gboolean gst_identity_stop (GstBaseTransform * trans);
 
@@ -266,7 +267,7 @@ gst_identity_class_init (GstIdentityClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sinktemplate));
 
-  gstbasetrans_class->event = GST_DEBUG_FUNCPTR (gst_identity_event);
+  gstbasetrans_class->sink_event = GST_DEBUG_FUNCPTR (gst_identity_sink_event);
   gstbasetrans_class->transform_ip =
       GST_DEBUG_FUNCPTR (gst_identity_transform_ip);
   gstbasetrans_class->prepare_output_buffer =
@@ -318,7 +319,7 @@ gst_identity_notify_last_message (GstIdentity * identity)
 }
 
 static gboolean
-gst_identity_event (GstBaseTransform * trans, GstEvent * event)
+gst_identity_sink_event (GstBaseTransform * trans, GstEvent * event)
 {
   GstIdentity *identity;
   gboolean ret = TRUE;
@@ -353,6 +354,8 @@ gst_identity_event (GstBaseTransform * trans, GstEvent * event)
       GstSegment segment;
 
       gst_event_copy_segment (event, &segment);
+      gst_event_copy_segment (event, &trans->segment);
+      trans->have_segment = TRUE;
 
       /* This is the first segment, send out a (0, -1) segment */
       gst_segment_init (&segment, segment.format);
@@ -369,11 +372,13 @@ gst_identity_event (GstBaseTransform * trans, GstEvent * event)
     identity->prev_offset = identity->prev_offset_end = GST_BUFFER_OFFSET_NONE;
   }
 
-  ret = GST_BASE_TRANSFORM_CLASS (parent_class)->event (trans, event);
 
   if (identity->single_segment && (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT)) {
     /* eat up segments */
-    ret = FALSE;
+    gst_event_unref (event);
+    ret = TRUE;
+  } else {
+    ret = GST_BASE_TRANSFORM_CLASS (parent_class)->sink_event (trans, event);
   }
 
   return ret;

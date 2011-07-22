@@ -371,7 +371,7 @@ gst_base_transform_class_init (GstBaseTransformClass * klass)
   gobject_class->finalize = gst_base_transform_finalize;
 
   klass->passthrough_on_same_caps = FALSE;
-  klass->event = GST_DEBUG_FUNCPTR (gst_base_transform_sink_eventfunc);
+  klass->sink_event = GST_DEBUG_FUNCPTR (gst_base_transform_sink_eventfunc);
   klass->src_event = GST_DEBUG_FUNCPTR (gst_base_transform_src_eventfunc);
   klass->accept_caps =
       GST_DEBUG_FUNCPTR (gst_base_transform_acceptcaps_default);
@@ -1568,7 +1568,6 @@ gst_base_transform_sink_event (GstPad * pad, GstEvent * event)
   GstBaseTransform *trans;
   GstBaseTransformClass *bclass;
   gboolean ret = TRUE;
-  gboolean forward = TRUE;
 
   trans = GST_BASE_TRANSFORM (gst_pad_get_parent (pad));
   if (G_UNLIKELY (trans == NULL)) {
@@ -1577,13 +1576,8 @@ gst_base_transform_sink_event (GstPad * pad, GstEvent * event)
   }
   bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
-  if (bclass->event)
-    forward = bclass->event (trans, event);
-
-  /* FIXME, do this in the default event handler so the subclass can do
-   * something different. */
-  if (forward)
-    ret = gst_pad_push_event (trans->srcpad, event);
+  if (bclass->sink_event)
+    ret = bclass->sink_event (trans, event);
   else
     gst_event_unref (event);
 
@@ -1595,7 +1589,7 @@ gst_base_transform_sink_event (GstPad * pad, GstEvent * event)
 static gboolean
 gst_base_transform_sink_eventfunc (GstBaseTransform * trans, GstEvent * event)
 {
-  gboolean forward = TRUE;
+  gboolean ret = TRUE, forward = TRUE;
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
@@ -1623,7 +1617,7 @@ gst_base_transform_sink_eventfunc (GstBaseTransform * trans, GstEvent * event)
       GstCaps *caps;
 
       gst_event_parse_caps (event, &caps);
-      gst_base_transform_setcaps (trans, trans->sinkpad, caps);
+      ret = gst_base_transform_setcaps (trans, trans->sinkpad, caps);
 
       forward = FALSE;
       break;
@@ -1641,7 +1635,12 @@ gst_base_transform_sink_eventfunc (GstBaseTransform * trans, GstEvent * event)
       break;
   }
 
-  return forward;
+  if (ret && forward)
+    ret = gst_pad_push_event (trans->srcpad, event);
+  else
+    gst_event_unref (event);
+
+  return ret;
 }
 
 static gboolean

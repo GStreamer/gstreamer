@@ -144,11 +144,18 @@ struct _GstBaseTransform {
 /**
  * GstBaseTransformClass:
  * @parent_class:   Element parent class
+ * @passthrough_on_same_caps: If set to TRUE, passthrough mode will be
+ *                            automatically enabled if the caps are the same.
  * @transform_caps: Optional.  Given the pad in this direction and the given
  *                  caps, what caps are allowed on the other pad in this
  *                  element ?
  * @fixate_caps:    Optional. Given the pad in this direction and the given
  *                  caps, fixate the caps on the other pad.
+ * @accept_caps:    Optional. Since 0.10.30
+ *                  Subclasses can override this method to check if @caps can be
+ *                  handled by the element. The default implementation might not be
+ *                  the most optimal way to check this in all cases.
+ * @set_caps:       allows the subclass to be notified of the actual caps set.
  * @transform_size: Optional. Given the size of a buffer in the given direction
  *                  with the given caps, calculate the size in bytes of a buffer
  *                  on the other pad with the given other caps.
@@ -156,7 +163,6 @@ struct _GstBaseTransform {
  *                  the number of units the same.
  * @get_unit_size:  Required if the transform is not in-place.
  *                  get the size in bytes of one unit for the given caps.
- * @set_caps:       allows the subclass to be notified of the actual caps set.
  * @start:          Optional.
  *                  Called when the element starts processing.
  *                  Allows opening external resources.
@@ -169,13 +175,12 @@ struct _GstBaseTransform {
  *                  of the outgoing buffer.
  * @transform_ip:   Required if the element operates in-place.
  *                  Transform the incoming buffer in-place.
- * @event:          Optional.
- *                  Event handler on the sink pad. This function should return
- *                  TRUE if the base class should forward the event.
+ * @sink_event:     Optional.
+ *                  Event handler on the sink pad. The default implementation
+ *                  handles the event and forwards it downstream.
  * @src_event:      Optional.
- *                  Event handler on the source pad.
- * @passthrough_on_same_caps: If set to TRUE, passthrough mode will be
- *                            automatically enabled if the caps are the same.
+ *                  Event handler on the source pad. The default implementation
+ *                  handles the event and forwards it upstream.
  * @prepare_output_buffer: Optional.
  *                         Subclasses can override this to do their own
  *                         allocation of output buffers.  Elements that only do
@@ -193,10 +198,6 @@ struct _GstBaseTransform {
  *                    This method is called right before the base class will
  *                    start processing. Dynamic properties or other delayed
  *                    configuration could be performed in this method.
- * @accept_caps: Optional. Since 0.10.30
- *               Subclasses can override this method to check if @caps can be
- *               handled by the element. The default implementation might not be
- *               the most optimal way to check this in all cases.
  *
  * Subclasses can override any of the available virtual methods or not, as
  * needed. At minimum either @transform or @transform_ip need to be overridden.
@@ -237,8 +238,8 @@ struct _GstBaseTransformClass {
   gboolean      (*start)        (GstBaseTransform *trans);
   gboolean      (*stop)         (GstBaseTransform *trans);
 
-  gboolean      (*event)        (GstBaseTransform *trans, GstEvent *event);
-  /* src event */
+  /* sink and src pad event handlers */
+  gboolean      (*sink_event)   (GstBaseTransform *trans, GstEvent *event);
   gboolean      (*src_event)    (GstBaseTransform *trans, GstEvent *event);
 
   GstFlowReturn (*prepare_output_buffer) (GstBaseTransform * trans,
