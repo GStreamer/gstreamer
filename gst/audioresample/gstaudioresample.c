@@ -138,7 +138,7 @@ static gboolean gst_audio_resample_set_caps (GstBaseTransform * base,
     GstCaps * incaps, GstCaps * outcaps);
 static GstFlowReturn gst_audio_resample_transform (GstBaseTransform * base,
     GstBuffer * inbuf, GstBuffer * outbuf);
-static gboolean gst_audio_resample_event (GstBaseTransform * base,
+static gboolean gst_audio_resample_sink_event (GstBaseTransform * base,
     GstEvent * event);
 static gboolean gst_audio_resample_start (GstBaseTransform * base);
 static gboolean gst_audio_resample_stop (GstBaseTransform * base);
@@ -189,8 +189,8 @@ gst_audio_resample_class_init (GstAudioResampleClass * klass)
       GST_DEBUG_FUNCPTR (gst_audio_resample_set_caps);
   GST_BASE_TRANSFORM_CLASS (klass)->transform =
       GST_DEBUG_FUNCPTR (gst_audio_resample_transform);
-  GST_BASE_TRANSFORM_CLASS (klass)->event =
-      GST_DEBUG_FUNCPTR (gst_audio_resample_event);
+  GST_BASE_TRANSFORM_CLASS (klass)->sink_event =
+      GST_DEBUG_FUNCPTR (gst_audio_resample_sink_event);
 
   GST_BASE_TRANSFORM_CLASS (klass)->passthrough_on_same_caps = TRUE;
 }
@@ -927,7 +927,7 @@ gst_audio_resample_push_drain (GstAudioResample * resample, guint history_len)
 }
 
 static gboolean
-gst_audio_resample_event (GstBaseTransform * base, GstEvent * event)
+gst_audio_resample_sink_event (GstBaseTransform * base, GstEvent * event)
 {
   GstAudioResample *resample = GST_AUDIO_RESAMPLE (base);
 
@@ -973,7 +973,7 @@ gst_audio_resample_event (GstBaseTransform * base, GstEvent * event)
       break;
   }
 
-  return GST_BASE_TRANSFORM_CLASS (parent_class)->event (base, event);
+  return GST_BASE_TRANSFORM_CLASS (parent_class)->sink_event (base, event);
 }
 
 static gboolean
