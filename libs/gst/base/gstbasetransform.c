@@ -747,7 +747,7 @@ gst_base_transform_set_allocation (GstBaseTransform * trans,
     gst_buffer_pool_set_active (oldpool, FALSE);
     gst_object_unref (oldpool);
   }
-  return FALSE;
+  return TRUE;
 
   /* ERRORS */
 activate_failed:
@@ -1262,7 +1262,7 @@ gst_base_transform_setcaps (GstBaseTransform * trans, GstPad * pad,
 
   if (ret) {
     /* try to get a pool when needed */
-    gst_base_transform_do_bufferpool (trans, othercaps);
+    ret = gst_base_transform_do_bufferpool (trans, othercaps);
   }
 
 done:
