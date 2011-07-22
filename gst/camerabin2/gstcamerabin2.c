@@ -232,7 +232,7 @@ gst_camera_bin_start_capture (GstCameraBin2 * camerabin)
   GST_DEBUG_OBJECT (camerabin, "Received start-capture");
 
   /* check that we have a valid location */
-  if (camerabin->location == NULL) {
+  if (camerabin->mode == MODE_VIDEO && camerabin->location == NULL) {
     GST_ELEMENT_ERROR (camerabin, RESOURCE, OPEN_WRITE,
         (_("File location is set to NULL, please set it to a valid filename")),
         (NULL));
@@ -256,11 +256,12 @@ gst_camera_bin_start_capture (GstCameraBin2 * camerabin)
       gst_element_sync_state_with_parent (camerabin->audio_volume);
     }
   } else {
-    gchar *location;
+    gchar *location = NULL;
 
     /* store the next capture buffer filename */
-    location =
-        g_strdup_printf (camerabin->location, camerabin->capture_index++);
+    if (camerabin->location)
+      location =
+          g_strdup_printf (camerabin->location, camerabin->capture_index++);
     camerabin->image_location_list =
         g_slist_append (camerabin->image_location_list, location);
   }
@@ -978,6 +979,7 @@ static gboolean
 gst_camera_bin_image_src_buffer_probe (GstPad * pad, GstBuffer * buf,
     gpointer data)
 {
+  gboolean ret = TRUE;
   GstCameraBin2 *camerabin = data;
   GstEvent *evt;
   gchar *location = NULL;
@@ -988,20 +990,27 @@ gst_camera_bin_image_src_buffer_probe (GstPad * pad, GstBuffer * buf,
     camerabin->image_location_list =
         g_slist_delete_link (camerabin->image_location_list,
         camerabin->image_location_list);
-    GST_DEBUG_OBJECT (camerabin, "Sending image location change to %s",
+    GST_DEBUG_OBJECT (camerabin, "Sending image location change to '%s'",
         location);
   } else {
     GST_DEBUG_OBJECT (camerabin, "No filename location change to send");
-    return TRUE;
+    return ret;
   }
 
-  evt = gst_camera_bin_new_event_file_location (location);
-  peer = gst_pad_get_peer (pad);
-  gst_pad_send_event (peer, evt);
-  g_free (location);
-  gst_object_unref (peer);
+  if (location) {
+    evt = gst_camera_bin_new_event_file_location (location);
+    peer = gst_pad_get_peer (pad);
+    gst_pad_send_event (peer, evt);
+    gst_object_unref (peer);
+    g_free (location);
+  } else {
+    /* This means we don't have to encode the capture, it is used for
+     * signaling the application just wants the preview */
+    ret = FALSE;
+    GST_CAMERA_BIN2_PROCESSING_DEC (camerabin);
+  }
 
-  return TRUE;
+  return ret;
 }
 
 
