@@ -38,7 +38,7 @@ G_BEGIN_DECLS
 typedef struct _GstControlledProperty
 {
   GParamSpec *pspec;            /* GParamSpec for this property */
-  gchar *name;                  /* name of the property */
+  const gchar *name;            /* name of the property */
   GstControlSource *csource;    /* GstControlSource for this property */
   gboolean disabled;
   GValue last_value;
