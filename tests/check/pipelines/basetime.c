@@ -46,7 +46,8 @@ buffer_probe_cb (GstPad * pad, GstBuffer * buffer)
 {
   if (old_ts != GST_CLOCK_TIME_NONE) {
     fail_unless (GST_BUFFER_TIMESTAMP (buffer) != old_ts,
-        "Two buffers had same timestamp");
+        "Two buffers had same timestamp: %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (old_ts));
   }
   old_ts = GST_BUFFER_TIMESTAMP (buffer);
 
