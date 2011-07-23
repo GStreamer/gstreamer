@@ -65,6 +65,12 @@
  * Uh? What are you talking about?
  * I don&apos;t understand  (18-62s)
  * ]|
+ * one can also feed live text into the element
+ * |[
+ * gst-launch fdsrc fd=0 ! text/plain ! txt. videotestsrc ! \
+ * textoverlay  name=txt shaded-background=yes font-desc="Serif 40" wait-text=false ! \
+ * xvimagesink
+ * ]| This shows new text as entered on the terminal (stdin).
  * </para>
  * </refsect2>
  */
