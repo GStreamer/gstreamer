@@ -59,7 +59,7 @@
 	  element will be regarded as the source element for this discussion.
 	</para>
       </footnote> 
-      First, the source element sends a discontinuous event. This event carries information
+      First, the source element sends a newsegment event. This event carries information
       about the current relative time of the next sample. This relative time is
       arbitrary, but it must be consistent with the timestamp that will be
       placed in buffers. It is expected to be the relative time to the start
@@ -81,7 +81,7 @@
     <para>
       If the stream is seeked, the next samples sent will have a timestamp that
       is not adjusted with the element time. Therefore, the source element must
-      send a discontinuous event.
+      send a newsegment event.
     </para>
   </sect1>
   <sect1 id="section-clock-obligations-of-each-element" xreflabel="Obligations
@@ -101,14 +101,14 @@
 	Source elements (or parsers of formats that provide notion of time, such
 	as MPEG, as explained above) must place a timestamp in each buffer that
 	they deliver. The origin of the time used is arbitrary, but it must
-	match the time delivered in the discontinuous event (see below).
+	match the time delivered in the newsegment event (see below).
 	However, it is expected that the origin is the origin of the media
 	stream.
       </para>
       <para>
 	In order to initialize the element time of the rest of the pipeline, a
-	source element must send a discontinuous event before starting to play.
-	In addition, after seeking, a discontinuous event must be sent, because
+	source element must send a newsegment event before starting to play.
+	In addition, after seeking, a newsegment event must be sent, because
 	the timestamp of the next element does not match the element time of the
 	rest of the pipeline.
       </para>
