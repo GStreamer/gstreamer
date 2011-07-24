@@ -318,6 +318,13 @@ The 0.11 porting guide
     GstBaseTransform::transform_caps() now gets the complete caps passed
     instead of getting it passed structure by structure.
 
+    GstBaseTransform::event() was renamed to sink_event(). The old function
+    uses the return value to determine if the event should be forwarded or not.
+    The new function has a default implementation that always forwards the event
+    and the return value is simply returned as a result from the event handler.
+    The semantics of the sink_event are thus the same as those for the src_event
+    function.
+
 * GstImplementsInterface
     has been removed. Interfaces need to be updated to either have
     is_ready/usable/available() methods, or have GError arguments
