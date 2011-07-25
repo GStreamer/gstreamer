@@ -272,11 +272,16 @@ gst_omx_video_dec_open (GstOMXVideoDec * self)
 static gboolean
 gst_omx_video_dec_close (GstOMXVideoDec * self)
 {
-  if (gst_omx_component_get_state (self->component, 0) > OMX_StateLoaded) {
-    gst_omx_component_set_state (self->component, OMX_StateLoaded);
+  OMX_STATETYPE state;
+
+  state = gst_omx_component_get_state (self->component, 0);
+  if (state > OMX_StateLoaded || state == OMX_StateInvalid) {
+    if (state > OMX_StateLoaded)
+      gst_omx_component_set_state (self->component, OMX_StateLoaded);
     gst_omx_port_deallocate_buffers (self->in_port);
     gst_omx_port_deallocate_buffers (self->out_port);
-    gst_omx_component_get_state (self->component, 5 * GST_SECOND);
+    if (state > OMX_StateLoaded)
+      gst_omx_component_get_state (self->component, 5 * GST_SECOND);
   }
 
   self->in_port = NULL;
