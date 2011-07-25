@@ -179,6 +179,7 @@ raise_wakeup (GstPoll * set)
 
   if (G_ATOMIC_INT_ADD (&set->control_pending, 1) == 0) {
     /* raise when nothing pending */
+    GST_LOG ("%p: raise", set);
     result = WAKE_EVENT (set);
   }
   return result;
@@ -193,6 +194,7 @@ release_wakeup (GstPoll * set)
   gboolean result = TRUE;
 
   if (g_atomic_int_dec_and_test (&set->control_pending)) {
+    GST_LOG ("%p: release", set);
     result = RELEASE_EVENT (set);
   }
   return result;
@@ -1418,12 +1420,10 @@ gst_poll_wait (GstPoll * set, GstClockTime timeout)
         restarting = TRUE;
     }
 
-    if (G_UNLIKELY (IS_FLUSHING (set))) {
-      /* we got woken up and we are flushing, we need to stop */
-      errno = EBUSY;
-      res = -1;
-      break;
-    }
+    /* we got woken up and we are flushing, we need to stop */
+    if (G_UNLIKELY (IS_FLUSHING (set)))
+      goto flushing;
+
   } while (G_UNLIKELY (restarting));
 
   DEC_WAITING (set);
@@ -1433,12 +1433,14 @@ gst_poll_wait (GstPoll * set, GstClockTime timeout)
   /* ERRORS */
 already_waiting:
   {
+    GST_LOG ("%p: we are already waiting", set);
     DEC_WAITING (set);
     errno = EPERM;
     return -1;
   }
 flushing:
   {
+    GST_LOG ("%p: we are flushing", set);
     DEC_WAITING (set);
     errno = EBUSY;
     return -1;
@@ -1446,6 +1448,7 @@ flushing:
 #ifdef G_OS_WIN32
 winsock_error:
   {
+    GST_LOG ("%p: winsock error", set);
     g_mutex_unlock (set->lock);
     DEC_WAITING (set);
     return -1;
@@ -1517,6 +1520,8 @@ void
 gst_poll_set_flushing (GstPoll * set, gboolean flushing)
 {
   g_return_if_fail (set != NULL);
+
+  GST_LOG ("%p: flushing: %d", set, flushing);
 
   /* update the new state first */
   SET_FLUSHING (set, flushing);
