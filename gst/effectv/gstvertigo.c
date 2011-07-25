@@ -170,7 +170,7 @@ gst_vertigotv_transform (GstBaseTransform * trans, GstBuffer * in,
   GstVertigoTV *filter = GST_VERTIGOTV (trans);
   guint32 *src, *dest, *p;
   guint32 v;
-  gint x, y, ox, oy, i, width, height, area;
+  gint x, y, ox, oy, i, width, height, area, sstride, dstride;
   GstClockTime timestamp, stream_time;
   GstVideoFrame in_frame, out_frame;
 
@@ -191,21 +191,26 @@ gst_vertigotv_transform (GstBaseTransform * trans, GstBuffer * in,
     goto invalid_out;
 
   src = GST_VIDEO_FRAME_PLANE_DATA (&in_frame, 0);
-  dest = GST_VIDEO_FRAME_PLANE_DATA (&in_frame, 0);
+  sstride = GST_VIDEO_FRAME_PLANE_STRIDE (&in_frame, 0);
+  dest = GST_VIDEO_FRAME_PLANE_DATA (&out_frame, 0);
+  dstride = GST_VIDEO_FRAME_PLANE_STRIDE (&out_frame, 0);
 
   width = GST_VIDEO_FRAME_WIDTH (&in_frame);
   height = GST_VIDEO_FRAME_HEIGHT (&in_frame);
 
   area = width * height;
 
+  sstride /= 4;
+  dstride /= 4;
+
   gst_vertigotv_set_parms (filter);
   p = filter->alt_buffer;
 
-  for (y = height; y > 0; y--) {
+  for (y = 0; y < height; y++) {
     ox = filter->sx;
     oy = filter->sy;
 
-    for (x = width; x > 0; x--) {
+    for (x = 0; x < width; x++) {
       i = (oy >> 16) * width + (ox >> 16);
       if (i < 0)
         i = 0;
@@ -213,17 +218,18 @@ gst_vertigotv_transform (GstBaseTransform * trans, GstBuffer * in,
         i = area;
 
       v = filter->current_buffer[i] & 0xfcfcff;
-      v = (v * 3) + ((*src++) & 0xfcfcff);
+      v = (v * 3) + (src[x] & 0xfcfcff);
 
-      *p++ = (v >> 2);
+      *p++ = dest[x] = (v >> 2);
       ox += filter->dx;
       oy += filter->dy;
     }
     filter->sx -= filter->dy;
     filter->sy += filter->dx;
-  }
 
-  memcpy (dest, filter->alt_buffer, area * sizeof (guint32));
+    src += sstride;
+    dest += dstride;
+  }
 
   p = filter->current_buffer;
   filter->current_buffer = filter->alt_buffer;
