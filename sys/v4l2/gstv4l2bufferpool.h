@@ -88,8 +88,6 @@ GstBufferPool *     gst_v4l2_buffer_pool_new     (GstV4l2Object *obj);
 
 GstFlowReturn       gst_v4l2_buffer_pool_process (GstBufferPool * bpool, GstBuffer * buf);
 
-gint                gst_v4l2_buffer_pool_available_buffers (GstBufferPool *pool);
-
 G_END_DECLS
 
 #endif /*__GST_V4L2_BUFFER_POOL_H__ */

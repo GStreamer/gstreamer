@@ -1026,20 +1026,3 @@ start_failed:
     return GST_FLOW_ERROR;
   }
 }
-
-/**
- * gst_v4l2_buffer_pool_available_buffers:
- * @pool: the pool
- *
- * Check the number of buffers available to the driver, ie. buffers that
- * have been QBUF'd but not yet DQBUF'd.
- *
- * Returns: the number of buffers available.
- */
-gint
-gst_v4l2_buffer_pool_available_buffers (GstBufferPool * bpool)
-{
-  GstV4l2BufferPool *pool = GST_V4L2_BUFFER_POOL (bpool);
-
-  return pool->num_queued;
-}
