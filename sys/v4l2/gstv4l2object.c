@@ -2418,8 +2418,6 @@ gst_v4l2_object_stop (GstV4l2Object * v4l2object)
   if (!GST_V4L2_IS_ACTIVE (v4l2object))
     goto done;
 
-  gst_poll_set_flushing (v4l2object->poll, TRUE);
-
   if (v4l2object->pool) {
     GST_DEBUG_OBJECT (v4l2object->element, "deactivating pool");
     gst_buffer_pool_set_active (v4l2object->pool, FALSE);

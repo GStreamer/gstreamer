@@ -240,8 +240,8 @@ gst_v4l2_buffer_pool_set_config (GstBufferPool * bpool, GstStructure * config)
   GST_DEBUG_OBJECT (pool, "config %" GST_PTR_FORMAT, config);
 
   pool->size = size;
-  pool->min_buffers = min_buffers;
-  pool->max_buffers = max_buffers;
+  pool->max_buffers = MAX (min_buffers, max_buffers);
+  pool->min_buffers = MIN (pool->max_buffers, min_buffers);
   pool->prefix = prefix;
   pool->align = align;
 
@@ -360,6 +360,8 @@ gst_v4l2_buffer_pool_start (GstBufferPool * bpool)
     if (!start_streaming (pool))
       goto start_failed;
 
+  gst_poll_set_flushing (obj->poll, FALSE);
+
   return TRUE;
 
   /* ERRORS */
@@ -397,6 +399,8 @@ gst_v4l2_buffer_pool_stop (GstBufferPool * bpool)
   guint n;
 
   GST_DEBUG_OBJECT (pool, "stopping pool");
+
+  gst_poll_set_flushing (obj->poll, TRUE);
 
   if (pool->streaming) {
     switch (obj->mode) {
