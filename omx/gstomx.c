@@ -435,7 +435,7 @@ gst_omx_component_free (GstOMXComponent * comp)
     for (i = 0; i < n; i++) {
       GstOMXPort *port = g_ptr_array_index (comp->ports, i);
 
-      g_assert (!port->buffers || port->buffers->len == 0);
+      gst_omx_port_deallocate_buffers (port);
 
       g_mutex_free (port->port_lock);
       g_cond_free (port->port_cond);
