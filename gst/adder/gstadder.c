@@ -627,6 +627,9 @@ gst_adder_src_event (GstPad * pad, GstEvent * event)
 
   adder = GST_ADDER (gst_pad_get_parent (pad));
 
+  GST_DEBUG_OBJECT (pad, "Got %s event on src pad",
+      GST_EVENT_TYPE_NAME (event));
+
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
     {
@@ -739,8 +742,8 @@ gst_adder_sink_event (GstPad * pad, GstEvent * event)
 
   adder = GST_ADDER (gst_pad_get_parent (pad));
 
-  GST_DEBUG ("Got %s event on pad %s:%s", GST_EVENT_TYPE_NAME (event),
-      GST_DEBUG_PAD_NAME (pad));
+  GST_DEBUG_OBJECT (pad, "Got %s event on sink pad",
+      GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_STOP:
