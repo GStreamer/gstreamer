@@ -1186,6 +1186,8 @@ gst_omx_port_allocate_buffers_unlocked (GstOMXPort * port)
       goto error;
     }
 
+    g_assert (buf->omx_buf->pAppPrivate == buf);
+
     /* In the beginning all buffers are not owned by the component */
     g_queue_push_tail (port->pending_buffers, buf);
   }
