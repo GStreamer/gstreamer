@@ -65,12 +65,15 @@
  * Uh? What are you talking about?
  * I don&apos;t understand  (18-62s)
  * ]|
- * one can also feed live text into the element
+ * One can also feed arbitrary live text into the element:
  * |[
  * gst-launch fdsrc fd=0 ! text/plain ! txt. videotestsrc ! \
  * textoverlay  name=txt shaded-background=yes font-desc="Serif 40" wait-text=false ! \
  * xvimagesink
- * ]| This shows new text as entered on the terminal (stdin).
+ * ]| This shows new text as entered on the terminal (stdin). This is not suited
+ * for subtitles as the test overlay is not timed. Subtitles should use
+ * timestamped formats. For the above use case one can also read the text from
+ * the application as set the #GstTextOverlay:text property.
  * </para>
  * </refsect2>
  */
