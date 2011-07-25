@@ -141,7 +141,7 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
       newbuf = gst_buffer_new ();
       meta = GST_META_V4L2_ADD (newbuf);
 
-      index = pool->index;
+      index = pool->num_allocated;
 
       GST_LOG_OBJECT (pool, "creating buffer %u, %p", index, newbuf, pool);
 
@@ -195,7 +195,7 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
       break;
   }
 
-  pool->index++;
+  pool->num_allocated++;
 
   *buffer = newbuf;
 
@@ -342,7 +342,7 @@ gst_v4l2_buffer_pool_start (GstBufferPool * bpool)
   pool->obj = obj;
   pool->max_buffers = max_buffers;
   pool->buffers = g_new0 (GstBuffer *, max_buffers);
-  pool->index = 0;
+  pool->num_allocated = 0;
 
   /* now, allocate the buffers: */
   for (n = 0; n < min_buffers; n++) {
@@ -421,7 +421,7 @@ gst_v4l2_buffer_pool_stop (GstBufferPool * bpool)
   ret = GST_BUFFER_POOL_CLASS (parent_class)->stop (bpool);
 
   /* then free the remaining buffers */
-  for (n = 0; n < pool->num_buffers; n++) {
+  for (n = 0; n < pool->num_allocated; n++) {
     if (pool->buffers[n])
       gst_v4l2_buffer_pool_free_buffer (bpool, pool->buffers[n]);
   }
@@ -655,7 +655,8 @@ gst_v4l2_buffer_pool_acquire_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
 
         case GST_V4L2_IO_MMAP:
           /* just dequeue a buffer, we basically use the queue of v4l2 as the
-           * storage for our buffers. */
+           * storage for our buffers. This function does poll first so we can
+           * interrupt it fine. */
           ret = gst_v4l2_buffer_pool_dqbuf (pool, buffer);
           break;
 
@@ -676,24 +677,10 @@ gst_v4l2_buffer_pool_acquire_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
           break;
 
         case GST_V4L2_IO_MMAP:
-        {
-          GstBufferPoolParams tparams = { 0, };
-
-          if (params)
-            tparams = *params;
-
-          tparams.flags |= GST_BUFFER_POOL_FLAG_DONTWAIT;
-
-          /* first try to get a free unqueued buffer */
+          /* get a free unqueued buffer */
           ret = GST_BUFFER_POOL_CLASS (parent_class)->acquire_buffer (bpool,
-              buffer, &tparams);
-          if (ret == GST_FLOW_UNEXPECTED) {
-            GST_DEBUG_OBJECT (pool, "pool empty, try to dequeue a buffer");
-            /* all buffers are queued, try to dequeue one */
-            ret = gst_v4l2_buffer_pool_dqbuf (pool, buffer);
-          }
+              buffer, params);
           break;
-        }
 
         case GST_V4L2_IO_USERPTR:
         default:
@@ -758,6 +745,9 @@ gst_v4l2_buffer_pool_release_buffer (GstBufferPool * bpool, GstBuffer * buffer)
         /* playback, put the buffer back in the queue to refill later. */
         GST_BUFFER_POOL_CLASS (parent_class)->release_buffer (bpool, buffer);
       } else {
+        /* the buffer is queued in the device but maybe not played yet. We just
+         * leave it there and not make it available for future calls to acquire
+         * for now. The buffer will be dequeued and reused later. */
         GST_LOG_OBJECT (pool, "buffer is queued");
       }
       break;
@@ -810,15 +800,10 @@ gst_v4l2_buffer_pool_class_init (GstV4l2BufferPoolClass * klass)
 /**
  * gst_v4l2_buffer_pool_new:
  * @obj:  the v4l2 object owning the pool
- * @num_buffers:  the requested number of buffers in the pool
- * @requeuebuf: if %TRUE, and if the pool is still in the running state, a
- *  buffer with no remaining references is immediately passed back to v4l2
- *  (VIDIOC_QBUF), otherwise it is returned to the pool of available buffers
- *  (which can be accessed via gst_v4l2_buffer_pool_get().
  *
  * Construct a new buffer pool.
  *
- * Returns: the new pool, use gst_v4l2_buffer_pool_destroy() to free resources
+ * Returns: the new pool, use gst_object_unref() to free resources
  */
 GstBufferPool *
 gst_v4l2_buffer_pool_new (GstV4l2Object * obj)
@@ -976,13 +961,11 @@ gst_v4l2_buffer_pool_process (GstBufferPool * bpool, GstBuffer * buf)
             /* nothing, we can queue directly */
             to_queue = buf;
           } else {
+            /* this can block if all buffers are outstanding which would be
+             * strange because we would expect the upstream element to have
+             * allocated them and returned to us.. */
             ret = GST_BUFFER_POOL_CLASS (parent_class)->acquire_buffer (bpool,
                 &to_queue, NULL);
-            if (ret == GST_FLOW_UNEXPECTED) {
-              GST_DEBUG_OBJECT (pool, "pool empty, try to dequeue a buffer");
-              /* all buffers are queued, try to dequeue one */
-              ret = gst_v4l2_buffer_pool_dqbuf (pool, &to_queue);
-            }
             if (ret != GST_FLOW_OK)
               goto done;
 
@@ -999,6 +982,18 @@ gst_v4l2_buffer_pool_process (GstBufferPool * bpool, GstBuffer * buf)
           if (!pool->streaming)
             if (!start_streaming (pool))
               goto start_failed;
+
+          if (pool->num_queued == pool->num_allocated) {
+            /* all buffers are queued, try to dequeue one and release it back
+             * into the pool so that _acquire can get to it again. */
+            ret = gst_v4l2_buffer_pool_dqbuf (pool, &to_queue);
+            if (ret != GST_FLOW_OK)
+              goto done;
+
+            /* release the rendered buffer back into the pool. This wakes up any
+             * thread waiting for a buffer in _acquire() */
+            gst_v4l2_buffer_pool_release_buffer (bpool, to_queue);
+          }
           break;
         }
 

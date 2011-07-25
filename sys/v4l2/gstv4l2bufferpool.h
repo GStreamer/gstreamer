@@ -57,9 +57,9 @@ struct _GstV4l2BufferPool
   guint prefix;
   guint align;
 
-  guint num_buffers;         /* number of buffers allocated by the driver */
-  guint num_queued;           /* number of buffers queued in the driver */
-  gint index;
+  guint num_buffers;
+  guint num_allocated;       /* number of buffers allocated by the driver */
+  guint num_queued;          /* number of buffers queued in the driver */
 
   gboolean streaming;
 
