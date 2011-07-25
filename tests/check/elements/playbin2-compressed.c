@@ -2476,7 +2476,7 @@ GST_END_TEST;
 static Suite *
 playbin2_compressed_suite (void)
 {
-  Suite *s = suite_create ("playbin2_compressed");
+  Suite *s = suite_create ("playbin2-compressed");
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
