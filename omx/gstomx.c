@@ -28,6 +28,7 @@
 #include "gstomx.h"
 #include "gstomxmpeg4videodec.h"
 #include "gstomxh264dec.h"
+#include "gstomxh263dec.h"
 #include "gstomxmpeg4videoenc.h"
 #include "gstomxh264enc.h"
 
@@ -1633,6 +1634,7 @@ GQuark gst_omx_element_name_quark = 0;
 
 static GType (*types[]) (void) = {
 gst_omx_mpeg4_video_dec_get_type, gst_omx_h264_dec_get_type,
+      gst_omx_h263_dec_get_type,
       gst_omx_mpeg4_video_enc_get_type, gst_omx_h264_enc_get_type};
 
 static GKeyFile *config = NULL;
