@@ -317,14 +317,18 @@ gst_omx_video_dec_change_state (GstElement * element, GstStateChange transition)
         ret = GST_STATE_CHANGE_FAILURE;
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      gst_omx_port_set_flushing (self->out_port, FALSE);
-      gst_omx_port_set_flushing (self->in_port, FALSE);
+      if (self->in_port)
+        gst_omx_port_set_flushing (self->in_port, FALSE);
+      if (self->out_port)
+        gst_omx_port_set_flushing (self->out_port, FALSE);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_omx_port_set_flushing (self->out_port, TRUE);
-      gst_omx_port_set_flushing (self->in_port, TRUE);
+      if (self->in_port)
+        gst_omx_port_set_flushing (self->in_port, TRUE);
+      if (self->out_port)
+        gst_omx_port_set_flushing (self->out_port, TRUE);
       break;
     default:
       break;
