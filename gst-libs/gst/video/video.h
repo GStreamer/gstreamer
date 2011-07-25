@@ -166,6 +166,44 @@ typedef enum
 #define GST_VIDEO_COMP_A  3
 
 /**
+ * GstVideoFormatUnpack:
+ * @info: a #GstVideoFormatInfo
+ * @dest: a destination array
+ * @data: pointers to the data planes
+ * @stride: strides of the planes
+ * @x: the x position in the image to start from
+ * @y: the y position in the image to start from
+ * @width: the amount of pixels to unpack.
+ *
+ * Unpacks @width pixels from the given planes and strides containing data of
+ * format @info. The pixels will be unpacked into @dest which each component
+ * interleaved. @dest should at least be big enough to hold @width *
+ * n_components * unpack_size bytes.
+ */
+typedef void (*GstVideoFormatUnpack)         (GstVideoFormatInfo *info, gpointer dest,
+                                              const gpointer data[GST_VIDEO_MAX_PLANES],
+                                              const gint stride[GST_VIDEO_MAX_PLANES],
+                                              gint x, gint y, gint width);
+/**
+ * GstVideoFormatPack:
+ * @info: a #GstVideoFormatInfo
+ * @src: a source array
+ * @data: pointers to the destination data planes
+ * @stride: strides of the destination planes
+ * @x: the x position in the image to pack to
+ * @y: the y position in the image to pack to
+ * @width: the amount of pixels to pack.
+ *
+ * Packs @width pixels from @src to the given planes and strides in the
+ * format @info. The pixels from source have each component interleaved
+ * and will be packed into @src.
+ */
+typedef void (*GstVideoFormatPack)           (GstVideoFormatInfo *info, const gpointer src,
+                                              gpointer data[GST_VIDEO_MAX_PLANES],
+                                              const gint stride[GST_VIDEO_MAX_PLANES],
+                                              gint x, gint y, gint width);
+
+/**
  * GstVideoFormatInfo:
  * @format: #GstVideoFormat
  * @name: string representation of the format
@@ -189,6 +227,10 @@ typedef enum
  *     GST_VIDEO_SUB_SCALE to scale a width.
  * @h_sub: subsampling factor of the height for the component. Use
  *     GST_VIDEO_SUB_SCALE to scale a height.
+ * @unpack_size: the size in bytes of each component item in the unpacked
+ *     format.
+ * @unpack_func: an unpack function for this format
+ * @pack_func: an pack function for this format
  *
  * Information for a video format.
  */
@@ -206,6 +248,10 @@ struct _GstVideoFormatInfo {
   guint offset[GST_VIDEO_MAX_COMPONENTS];
   guint w_sub[GST_VIDEO_MAX_COMPONENTS];
   guint h_sub[GST_VIDEO_MAX_COMPONENTS];
+
+  guint unpack_size;
+  GstVideoFormatUnpack unpack_func;
+  GstVideoFormatPack pack_func;
 };
 
 #define GST_VIDEO_FORMAT_INFO_FORMAT(info)       ((info)->format)
