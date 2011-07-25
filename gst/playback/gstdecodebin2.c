@@ -424,7 +424,7 @@ static void gst_decode_group_free (GstDecodeGroup * group);
 static GstDecodeGroup *gst_decode_group_new (GstDecodeBin * dbin,
     GstDecodeChain * chain);
 static gboolean gst_decode_chain_is_complete (GstDecodeChain * chain);
-static void gst_decode_chain_handle_eos (GstDecodeChain * chain);
+static gboolean gst_decode_chain_handle_eos (GstDecodeChain * chain);
 static gboolean gst_decode_chain_expose (GstDecodeChain * chain,
     GList ** endpads, gboolean * missing_plugin);
 static gboolean gst_decode_chain_is_drained (GstDecodeChain * chain);
@@ -2908,14 +2908,14 @@ out:
 
 /* check if the group is drained, meaning all pads have seen an EOS
  * event.  */
-static void
+static gboolean
 gst_decode_pad_handle_eos (GstDecodePad * pad)
 {
   GstDecodeChain *chain = pad->chain;
 
   GST_LOG_OBJECT (pad->dbin, "chain : %p, pad %p", chain, pad);
   pad->drained = TRUE;
-  gst_decode_chain_handle_eos (chain);
+  return gst_decode_chain_handle_eos (chain);
 }
 
 /* gst_decode_chain_handle_eos:
@@ -2926,17 +2926,23 @@ gst_decode_pad_handle_eos (GstDecodePad * pad)
  * If there are groups to switch to, hide the current active
  * one and expose the new one.
  *
+ * If a group isn't completely drained (i.e. we received EOS
+ * only on one of the streams) this function will return FALSE
+ * to indicate the EOS on the given chain should be dropped
+ * to avoid it from going downstream.
+ *
  * MT-safe, don't call with chain lock!
  */
-static void
+static gboolean
 gst_decode_chain_handle_eos (GstDecodeChain * eos_chain)
 {
   GstDecodeBin *dbin = eos_chain->dbin;
   GstDecodeGroup *group;
   GstDecodeChain *chain = eos_chain;
   gboolean drained;
+  gboolean forward_eos = TRUE;
 
-  g_return_if_fail (eos_chain->endpad);
+  g_return_val_if_fail (eos_chain->endpad, TRUE);
 
   CHAIN_MUTEX_LOCK (chain);
   while ((group = chain->parent)) {
@@ -2956,6 +2962,8 @@ gst_decode_chain_handle_eos (GstDecodeChain * eos_chain)
   /* Now either group == NULL and chain == dbin->decode_chain
    * or chain is the lowest chain that has a non-drained group */
   if (chain->active_group && drained && chain->next_groups) {
+    /* There's an active group which is drained and we have another
+     * one to switch to. */
     GST_DEBUG_OBJECT (dbin, "Hiding current group %p", chain->active_group);
     gst_decode_group_hide (chain->active_group);
     chain->old_groups = g_list_prepend (chain->old_groups, chain->active_group);
@@ -2970,6 +2978,7 @@ gst_decode_chain_handle_eos (GstDecodeChain * eos_chain)
       gst_decode_bin_expose (dbin);
     EXPOSE_UNLOCK (dbin);
   } else if (!chain->active_group || drained) {
+    /* The group is drained and there isn't a future one */
     g_assert (chain == dbin->decode_chain);
     CHAIN_MUTEX_UNLOCK (chain);
 
@@ -2980,7 +2989,11 @@ gst_decode_chain_handle_eos (GstDecodeChain * eos_chain)
     CHAIN_MUTEX_UNLOCK (chain);
     GST_DEBUG_OBJECT (dbin,
         "Current active group in chain %p is not drained yet", chain);
+    /* Instruct caller to drop EOS event */
+    forward_eos = FALSE;
   }
+
+  return forward_eos;
 }
 
 /* gst_decode_group_is_drained:
@@ -3481,18 +3494,24 @@ source_pad_blocked_cb (GstPad * pad, gboolean blocked, GstDecodePad * dpad)
 static gboolean
 source_pad_event_probe (GstPad * pad, GstEvent * event, GstDecodePad * dpad)
 {
+  gboolean res = TRUE;
+
   GST_LOG_OBJECT (pad, "%s dpad:%p", GST_EVENT_TYPE_NAME (event), dpad);
 
   if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
     GST_DEBUG_OBJECT (pad, "we received EOS");
 
-    /* Check if all pads are drained. If there is a next group to expose, we
-     * will remove the ghostpad of the current group first, which unlinks the
-     * peer and so drops the EOS. */
-    gst_decode_pad_handle_eos (dpad);
+    /* Check if all pads are drained.
+     * * If there is no next group, we will let the EOS go through.
+     * * If there is a next group but the current group isn't completely
+     *   drained, we will drop the EOS event.
+     * * If there is a next group to expose and this was the last non-drained
+     *   pad for that group, we will remove the ghostpad of the current group
+     *   first, which unlinks the peer and so drops the EOS. */
+    res = gst_decode_pad_handle_eos (dpad);
   }
-  /* never drop events */
-  return TRUE;
+
+  return res;
 }
 
 static void
