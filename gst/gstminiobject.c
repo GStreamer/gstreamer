@@ -254,17 +254,16 @@ gst_mini_object_unref (GstMiniObject * mini_object)
       GST_MINI_OBJECT_REFCOUNT_VALUE (mini_object) - 1);
 
   if (G_UNLIKELY (g_atomic_int_dec_and_test (&mini_object->refcount))) {
-    /* At this point, the refcount of the object is 0. We increase the refcount
-     * here because if a subclass recycles the object and gives out a new
-     * reference we don't want to free the instance anymore. */
-    gst_mini_object_ref (mini_object);
+    gboolean do_free;
 
     if (mini_object->dispose)
-      mini_object->dispose (mini_object);
+      do_free = mini_object->dispose (mini_object);
+    else
+      do_free = TRUE;
 
-    /* decrement the refcount again, if the subclass recycled the object we don't
+    /* if the subclass recycled the object (and returned FALSE) we don't
      * want to free the instance anymore */
-    if (G_LIKELY (g_atomic_int_dec_and_test (&mini_object->refcount))) {
+    if (G_LIKELY (do_free)) {
       /* The weak reference stack is freed in the notification function */
       if (mini_object->n_weak_refs)
         weak_refs_notify (mini_object);

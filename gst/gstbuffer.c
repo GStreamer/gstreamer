@@ -363,18 +363,22 @@ _gst_buffer_copy (GstBuffer * buffer)
 
 /* the default dispose function revives the buffer and returns it to the
  * pool when there is a pool */
-static void
+static gboolean
 _gst_buffer_dispose (GstBuffer * buffer)
 {
   GstBufferPool *pool;
 
-  if ((pool = buffer->pool) != NULL) {
-    /* keep the buffer alive */
-    gst_buffer_ref (buffer);
-    /* return the buffer to the pool */
-    GST_CAT_LOG (GST_CAT_BUFFER, "release %p to pool %p", buffer, pool);
-    gst_buffer_pool_release_buffer (pool, buffer);
-  }
+  /* no pool, do free */
+  if ((pool = buffer->pool) == NULL)
+    return TRUE;
+
+  /* keep the buffer alive */
+  gst_buffer_ref (buffer);
+  /* return the buffer to the pool */
+  GST_CAT_LOG (GST_CAT_BUFFER, "release %p to pool %p", buffer, pool);
+  gst_buffer_pool_release_buffer (pool, buffer);
+
+  return FALSE;
 }
 
 static void

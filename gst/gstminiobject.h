@@ -52,10 +52,12 @@ typedef GstMiniObject * (*GstMiniObjectCopyFunction) (const GstMiniObject *obj);
  * Function prototype for when a miniobject has lost its last refcount.
  * Implementation of the mini object are allowed to revive the
  * passed object by doing a gst_mini_object_ref(). If the object is not
- * revived after the dispose function, the memory associated with the
- * object is freed.
+ * revived after the dispose function, the function should return %TRUE
+ * and the memory associated with the object is freed.
+ *
+ * Returns: %TRUE if the object should be cleaned up.
  */
-typedef void (*GstMiniObjectDisposeFunction) (GstMiniObject *obj);
+typedef gboolean (*GstMiniObjectDisposeFunction) (GstMiniObject *obj);
 /**
  * GstMiniObjectFreeFunction:
  * @obj: MiniObject to free
