@@ -36,17 +36,17 @@ typedef struct
   GstVideoFormatInfo info;
 } VideoFormat;
 
-/* depths */
-#define DPTH0            0, { 0, 0, 0, 0 }
-#define DPTH8            1, { 8, 0, 0, 0 }
-#define DPTH888          3, { 8, 8, 8, 0 }
-#define DPTH8888         4, { 8, 8, 8, 8 }
-#define DPTH10_10_10     3, { 10, 10, 10, 0 }
-#define DPTH16           1, { 16, 0, 0, 0 }
-#define DPTH16_16_16     3, { 16, 16, 16, 0 }
-#define DPTH16_16_16_16  4, { 16, 16, 16, 16 }
-#define DPTH555          3, { 5, 5, 5, 0 }
-#define DPTH565          3, { 5, 6, 5, 0 }
+/* depths: bits, n_components, shift, depth */
+#define DPTH0            0, 0, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }
+#define DPTH8            8, 1, { 0, 0, 0, 0 }, { 8, 0, 0, 0 }
+#define DPTH888          8, 3, { 0, 0, 0, 0 }, { 8, 8, 8, 0 }
+#define DPTH8888         8, 4, { 0, 0, 0, 0 }, { 8, 8, 8, 8 }
+#define DPTH10_10_10     10, 3, { 0, 0, 0, 0 }, { 10, 10, 10, 0 }
+#define DPTH16           16, 1, { 0, 0, 0, 0 }, { 16, 0, 0, 0 }
+#define DPTH16_16_16     16, 3, { 0, 0, 0, 0 }, { 16, 16, 16, 0 }
+#define DPTH16_16_16_16  16, 4, { 0, 0, 0, 0 }, { 16, 16, 16, 16 }
+#define DPTH555          16, 3, { 10, 5, 0, 0 }, { 5, 5, 5, 0 }
+#define DPTH565          16, 3, { 11, 5, 0, 0 }, { 5, 6, 5, 0 }
 
 /* pixel strides */
 #define PSTR0             { 0, 0, 0, 0 }

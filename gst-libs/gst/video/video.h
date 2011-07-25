@@ -136,15 +136,23 @@ typedef struct _GstVideoFormatInfo GstVideoFormatInfo;
  *   with index 0.
  * @GST_VIDEO_FORMAT_FLAG_ALPHA: The video format has an alpha components with
  *   the number 3.
+ * @GST_VIDEO_FORMAT_FLAG_LE: The video format has data stored in little
+ *   endianness.
+ * @GST_VIDEO_FORMAT_FLAG_PALETTE: The video format has a palette.
+ * @GST_VIDEO_FORMAT_FLAG_COMPLEX: The video format has a complex layout that
+ *   can't be described with the usual information in the #GstVideoFormatInfo.
  *
  * The different video flags that a format info can have.
  */
 typedef enum
 {
-  GST_VIDEO_FORMAT_FLAG_YUV   = (1 << 0),
-  GST_VIDEO_FORMAT_FLAG_RGB   = (1 << 1),
-  GST_VIDEO_FORMAT_FLAG_GRAY  = (1 << 2),
-  GST_VIDEO_FORMAT_FLAG_ALPHA = (1 << 3)
+  GST_VIDEO_FORMAT_FLAG_YUV      = (1 << 0),
+  GST_VIDEO_FORMAT_FLAG_RGB      = (1 << 1),
+  GST_VIDEO_FORMAT_FLAG_GRAY     = (1 << 2),
+  GST_VIDEO_FORMAT_FLAG_ALPHA    = (1 << 3),
+  GST_VIDEO_FORMAT_FLAG_LE       = (1 << 4),
+  GST_VIDEO_FORMAT_FLAG_PALETTE  = (1 << 5),
+  GST_VIDEO_FORMAT_FLAG_COMPLEX  = (1 << 6)
 } GstVideoFormatFlags;
 
 #define GST_VIDEO_COMP_Y  0
@@ -162,16 +170,21 @@ typedef enum
  * @format: #GstVideoFormat
  * @name: string representation of the format
  * @flags: #GstVideoFormatFlags
+ * @bits: The number of bits used to pack data items. This can be 8 when the
+ *    pixels are stored in bytes. for values > 8 multiple bytes should be read
+ *    according to the endianness flag before applying the shift and mask.
  * @n_components: the number of components in the video format.
- * @depth: the depth for each component
+ * @shift: the number of bits to shift away to get the component data
+ * @depth: the depth in bits for each component
  * @pixel_stride: the pixel stride of each component. This is the amount of
- *    bytes to the pixel immediately to the right.
+ *    bytes to the pixel immediately to the right. When bits < 8, the stride is
+ *    expressed in bits.
  * @n_planes: the number of planes for this format. The number of planes can be
- *    less than the amount of components when multiple componets are packed into
+ *    less than the amount of components when multiple components are packed into
  *    one plane.
  * @plane: the plane number where a component can be found
  * @offset: the offset in the plane where the first pixel of the components
- *    can be found.
+ *    can be found. If bits < 8 the amount is specified in bits.
  * @w_sub: subsampling factor of the width for the component. Use
  *     GST_VIDEO_SUB_SCALE to scale a width.
  * @h_sub: subsampling factor of the height for the component. Use
@@ -183,7 +196,9 @@ struct _GstVideoFormatInfo {
   GstVideoFormat format;
   const gchar *name;
   GstVideoFormatFlags flags;
+  guint bits;
   guint n_components;
+  guint shift[GST_VIDEO_MAX_COMPONENTS];
   guint depth[GST_VIDEO_MAX_COMPONENTS];
   gint  pixel_stride[GST_VIDEO_MAX_COMPONENTS];
   guint n_planes;
