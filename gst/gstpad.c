@@ -2697,8 +2697,8 @@ static gboolean
 do_event_function (GstPad * pad, GstEvent * event,
     GstPadEventFunction eventfunc, gboolean * caps_notify)
 {
-  gboolean result = TRUE;
-  GstCaps *caps, *templ;
+  gboolean result = TRUE, call_event = TRUE;
+  GstCaps *caps, *templ, *old;
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CAPS:
@@ -2711,7 +2711,13 @@ do_event_function (GstPad * pad, GstEvent * event,
       if (!gst_caps_can_intersect (caps, templ))
         goto not_accepted;
 
-      *caps_notify = TRUE;
+      /* check if it changed */
+      if ((old = gst_pad_get_current_caps (pad))) {
+        call_event = !gst_caps_is_equal (caps, old);
+        gst_caps_unref (old);
+      }
+      if (call_event)
+        *caps_notify = TRUE;
 
       gst_caps_unref (templ);
       break;
@@ -2720,9 +2726,12 @@ do_event_function (GstPad * pad, GstEvent * event,
       break;
   }
 
-  GST_DEBUG_OBJECT (pad, "calling event function with event %p", event);
-  result = eventfunc (pad, event);
-
+  if (call_event) {
+    GST_DEBUG_OBJECT (pad, "calling event function with event %p", event);
+    result = eventfunc (pad, event);
+  } else {
+    gst_event_unref (event);
+  }
   return result;
 
   /* ERRORS */
@@ -4505,10 +4514,9 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
         idx = GST_EVENT_STICKY_IDX (event);
         ev = &pad->priv->events[idx];
 
-        GST_LOG_OBJECT (pad, "storing sticky event %s at index %u",
-            GST_EVENT_TYPE_NAME (event), idx);
-
         if (ev->event != event) {
+          GST_LOG_OBJECT (pad, "storing sticky event %s at index %u",
+              GST_EVENT_TYPE_NAME (event), idx);
           gst_event_replace (&ev->pending, event);
           /* set the flag so that we update the events next time. We would
            * usually update below but we might be flushing too. */
