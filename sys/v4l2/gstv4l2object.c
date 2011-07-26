@@ -2260,9 +2260,11 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
     if (format.fmt.pix.pixelformat != pixelformat)
       goto invalid_pixelformat;
   }
+
+  /* figure out the frame layout */
   v4l2object->bytesperline = format.fmt.pix.bytesperline;
-  /* FIXME, size for only one plane */
-  v4l2object->size = v4l2object->bytesperline * height;
+  v4l2object->sizeimage = format.fmt.pix.sizeimage;
+
 
   /* Is there a reason we require the caller to always specify a framerate? */
   GST_DEBUG_OBJECT (v4l2object->element, "Desired framerate: %u/%u", fps_n,

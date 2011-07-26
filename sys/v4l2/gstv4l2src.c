@@ -562,7 +562,7 @@ gst_v4l2src_setup_allocation (GstBaseSrc * bsrc, GstQuery * query)
         GST_DEBUG_OBJECT (src,
             "read/write mode: no downstream pool, using our own");
         pool = obj->pool;
-        size = obj->size;
+        size = obj->sizeimage;
       } else {
         /* in READ/WRITE mode, prefer a downstream pool because our own pool
          * doesn't help much, we have to write to it as well */
@@ -570,14 +570,14 @@ gst_v4l2src_setup_allocation (GstBaseSrc * bsrc, GstQuery * query)
         /* use the bigest size, when we use our own pool we can't really do any
          * other size than what the hardware gives us but for downstream pools
          * we can try */
-        size = MAX (size, obj->size);
+        size = MAX (size, obj->sizeimage);
       }
       break;
     case GST_V4L2_IO_MMAP:
     case GST_V4L2_IO_USERPTR:
       /* in streaming mode, prefer our own pool */
       pool = obj->pool;
-      size = obj->size;
+      size = obj->sizeimage;
       GST_DEBUG_OBJECT (src,
           "streaming mode: using our own pool %" GST_PTR_FORMAT, pool);
       break;

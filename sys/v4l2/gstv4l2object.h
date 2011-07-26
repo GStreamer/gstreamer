@@ -118,7 +118,7 @@ struct _GstV4l2Object {
   GstVideoInfo info;
 
   guint32 bytesperline;
-  guint size;
+  guint32 sizeimage;
   GstClockTime duration;
 
   /* wanted mode */
