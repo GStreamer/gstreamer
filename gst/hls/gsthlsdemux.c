@@ -43,9 +43,9 @@
 #include <gst/base/gsttypefindhelper.h>
 #include "gsthlsdemux.h"
 
-static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
+static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src%d",
     GST_PAD_SRC,
-    GST_PAD_ALWAYS,
+    GST_PAD_SOMETIMES,
     GST_STATIC_CAPS_ANY);
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -214,15 +214,6 @@ gst_hls_demux_init (GstHLSDemux * demux, GstHLSDemuxClass * klass)
       GST_DEBUG_FUNCPTR (gst_hls_demux_sink_event));
   gst_element_add_pad (GST_ELEMENT (demux), demux->sinkpad);
 
-  /* demux pad */
-  demux->srcpad = gst_pad_new_from_static_template (&srctemplate, "src");
-  gst_pad_set_event_function (demux->srcpad,
-      GST_DEBUG_FUNCPTR (gst_hls_demux_src_event));
-  gst_pad_set_query_function (demux->srcpad,
-      GST_DEBUG_FUNCPTR (gst_hls_demux_src_query));
-  gst_pad_set_element_private (demux->srcpad, demux);
-  gst_element_add_pad (GST_ELEMENT (demux), demux->srcpad);
-
   /* fetcher pad */
   demux->fetcherpad =
       gst_pad_new_from_static_template (&fetchertemplate, "sink");
@@ -232,6 +223,8 @@ gst_hls_demux_init (GstHLSDemux * demux, GstHLSDemuxClass * klass)
       GST_DEBUG_FUNCPTR (gst_hls_demux_fetcher_sink_event));
   gst_pad_set_element_private (demux->fetcherpad, demux);
   gst_pad_activate_push (demux->fetcherpad, TRUE);
+
+  demux->do_typefind = TRUE;
 
   /* Properties */
   demux->fragments_cache = DEFAULT_FRAGMENTS_CACHE;
@@ -557,6 +550,34 @@ gst_hls_demux_stop (GstHLSDemux * demux)
 }
 
 static void
+switch_pads (GstHLSDemux * demux, GstCaps * newcaps)
+{
+  GstPad *oldpad = demux->srcpad;
+
+  GST_DEBUG ("Switching pads (oldpad:%p)", oldpad);
+
+  /* First create and activate new pad */
+  demux->srcpad = gst_pad_new_from_static_template (&srctemplate, NULL);
+  gst_pad_set_event_function (demux->srcpad,
+      GST_DEBUG_FUNCPTR (gst_hls_demux_src_event));
+  gst_pad_set_query_function (demux->srcpad,
+      GST_DEBUG_FUNCPTR (gst_hls_demux_src_query));
+  gst_pad_set_element_private (demux->srcpad, demux);
+  gst_pad_set_active (demux->srcpad, TRUE);
+  gst_element_add_pad (GST_ELEMENT (demux), demux->srcpad);
+  gst_pad_set_caps (demux->srcpad, newcaps);
+
+  gst_element_no_more_pads (GST_ELEMENT (demux));
+
+  if (oldpad) {
+    /* Push out EOS */
+    gst_pad_push_event (oldpad, gst_event_new_eos ());
+    gst_pad_set_active (oldpad, FALSE);
+    gst_element_remove_pad (GST_ELEMENT (demux), oldpad);
+  }
+}
+
+static void
 gst_hls_demux_loop (GstHLSDemux * demux)
 {
   GstBuffer *buf;
@@ -589,6 +610,13 @@ gst_hls_demux_loop (GstHLSDemux * demux)
   }
 
   buf = g_queue_pop_head (demux->queue);
+
+  /* Figure out if we need to create/switch pads */
+  if (G_UNLIKELY (!demux->srcpad
+          || GST_BUFFER_CAPS (buf) != GST_PAD_CAPS (demux->srcpad))) {
+    switch_pads (demux, GST_BUFFER_CAPS (buf));
+  }
+
   ret = gst_pad_push (demux->srcpad, buf);
   if (ret != GST_FLOW_OK)
     goto error;
@@ -668,6 +696,7 @@ gst_hls_demux_reset (GstHLSDemux * demux, gboolean dispose)
   demux->accumulated_delay = 0;
   demux->end_of_playlist = FALSE;
   demux->cancelled = FALSE;
+  demux->do_typefind = TRUE;
 
   if (demux->input_caps) {
     gst_caps_unref (demux->input_caps);
@@ -947,6 +976,9 @@ gst_hls_demux_change_playlist (GstHLSDemux * demux, gboolean is_fast)
   gst_element_post_message (GST_ELEMENT_CAST (demux),
       gst_message_new_element (GST_OBJECT_CAST (demux), s));
 
+  /* Force typefinding since we might have changed media type */
+  demux->do_typefind = TRUE;
+
   return TRUE;
 }
 
@@ -994,6 +1026,9 @@ gst_hls_demux_switch_playlist (GstHLSDemux * demux)
   limit = demux->client->current->targetduration * GST_SECOND *
       demux->bitrate_switch_tol;
 
+  GST_DEBUG ("diff:%s%" GST_TIME_FORMAT ", limit:%" GST_TIME_FORMAT,
+      diff < 0 ? "-" : " ", GST_TIME_ARGS (ABS (diff)), GST_TIME_ARGS (limit));
+
   /* if we are on time switch to a higher bitrate */
   if (diff > limit) {
     gst_hls_demux_change_playlist (demux, TRUE);
@@ -1036,14 +1071,20 @@ gst_hls_demux_get_next_fragment (GstHLSDemux * demux, gboolean retry)
   buf = gst_adapter_take_buffer (demux->download, avail);
   GST_BUFFER_DURATION (buf) = duration;
 
-  if (G_UNLIKELY (demux->input_caps == NULL)) {
-    demux->input_caps = gst_type_find_helper_for_buffer (NULL, buf, NULL);
-    if (demux->input_caps) {
-      gst_pad_set_caps (demux->srcpad, demux->input_caps);
+  /* We actually need to do this every time we switch bitrate */
+  if (G_UNLIKELY (demux->do_typefind)) {
+    GstCaps *caps = gst_type_find_helper_for_buffer (NULL, buf, NULL);
+
+    if (!demux->input_caps || !gst_caps_is_equal (caps, demux->input_caps)) {
+      gst_caps_replace (&demux->input_caps, caps);
+      /* gst_pad_set_caps (demux->srcpad, demux->input_caps); */
       GST_INFO_OBJECT (demux, "Input source caps: %" GST_PTR_FORMAT,
           demux->input_caps);
-    }
+      demux->do_typefind = FALSE;
+    } else
+      gst_caps_unref (caps);
   }
+  gst_buffer_set_caps (buf, demux->input_caps);
 
   if (discont) {
     GST_DEBUG_OBJECT (demux, "Marking fragment as discontinuous");
