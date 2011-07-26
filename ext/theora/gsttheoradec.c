@@ -1440,7 +1440,7 @@ theora_dec_chain_reverse (GstTheoraDec * dec, gboolean discont, GstBuffer * buf)
 
       /* if we copied a keyframe, flush and decode the decode queue */
       data = GST_BUFFER_DATA (gbuf);
-      if ((data[0] & 0x40) == 0) {
+      if (data && (data[0] & 0x40) == 0) {
         GST_DEBUG_OBJECT (dec, "copied keyframe");
         res = theora_dec_flush_decode (dec);
       }
