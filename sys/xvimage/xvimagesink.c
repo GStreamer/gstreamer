@@ -1660,8 +1660,8 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
 
   /* unref the old sink */
   if (oldpool) {
-    /* deactivate */
-    gst_buffer_pool_set_active (oldpool, FALSE);
+    /* we don't deactivate, some elements might still be using it, it will
+     * be deactivated when the last ref is gone */
     gst_object_unref (oldpool);
   }
 
