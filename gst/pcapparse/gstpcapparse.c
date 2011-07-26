@@ -367,23 +367,19 @@ gst_pcap_parse_scan_frame (GstPcapParse * self,
         return FALSE;
 
       eth_type = GUINT16_FROM_BE (*((guint16 *) (buf + 12)));
-      if (eth_type != 0x800)
-        return FALSE;
-
       buf_ip = buf + ETH_HEADER_LEN;
       break;
     case DLT_SLL:
       if (buf_size < SLL_HEADER_LEN + IP_HEADER_MIN_LEN + UDP_HEADER_LEN)
         return FALSE;
 
-      eth_type = GUINT16_FROM_BE (*((guint16 *) (buf + 2)));
-
-      if (eth_type != 1)
-        return FALSE;
-
+      eth_type = GUINT16_FROM_BE (*((guint16 *) (buf + 14)));
       buf_ip = buf + SLL_HEADER_LEN;
       break;
   }
+
+  if (eth_type != 0x800)
+    return FALSE;
 
   b = *buf_ip;
   if (((b >> 4) & 0x0f) != 4)
