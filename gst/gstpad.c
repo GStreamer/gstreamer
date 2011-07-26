@@ -3337,6 +3337,7 @@ gst_pad_query_default (GstPad * pad, GstQuery * query)
     case GST_QUERY_JITTER:
     case GST_QUERY_RATE:
     case GST_QUERY_CONVERT:
+    case GST_QUERY_ALLOCATION:
     default:
       break;
   }
