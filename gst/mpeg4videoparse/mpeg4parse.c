@@ -47,7 +47,7 @@ GST_DEBUG_CATEGORY_EXTERN (mpeg4v_parse_debug);
 static inline gboolean
 next_start_code (GstBitReader * b)
 {
-  guint32 bits;
+  guint32 bits = 0;
 
   GET_BITS (b, 1, &bits);
   if (bits != 0)
@@ -69,7 +69,7 @@ static inline gboolean
 skip_user_data (GstBitReader * bs, guint32 * bits)
 {
   while (*bits == MPEG4_USER_DATA_STARTCODE_MARKER) {
-    guint32 b;
+    guint32 b = 0;
 
     do {
       GET_BITS (bs, 8, &b);
@@ -205,7 +205,7 @@ failed:
 static gboolean
 gst_mpeg4_params_parse_vos (MPEG4Params * params, GstBitReader * br)
 {
-  guint32 bits;
+  guint32 bits = 0;
 
   GET_BITS (br, 32, &bits);
   if (bits != MPEG4_VOS_STARTCODE_MARKER)
