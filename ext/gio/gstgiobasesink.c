@@ -45,7 +45,7 @@ static gboolean gst_gio_base_sink_event (GstBaseSink * base_sink,
     GstEvent * event);
 static GstFlowReturn gst_gio_base_sink_render (GstBaseSink * base_sink,
     GstBuffer * buffer);
-static gboolean gst_gio_base_sink_query (GstPad * pad, GstQuery * query);
+static gboolean gst_gio_base_sink_query (GstBaseSink * bsink, GstQuery * query);
 
 static void
 gst_gio_base_sink_class_init (GstGioBaseSinkClass * klass)
@@ -67,6 +67,7 @@ gst_gio_base_sink_class_init (GstGioBaseSinkClass * klass)
   gstbasesink_class->unlock = GST_DEBUG_FUNCPTR (gst_gio_base_sink_unlock);
   gstbasesink_class->unlock_stop =
       GST_DEBUG_FUNCPTR (gst_gio_base_sink_unlock_stop);
+  gstbasesink_class->query = GST_DEBUG_FUNCPTR (gst_gio_base_sink_query);
   gstbasesink_class->event = GST_DEBUG_FUNCPTR (gst_gio_base_sink_event);
   gstbasesink_class->render = GST_DEBUG_FUNCPTR (gst_gio_base_sink_render);
 }
@@ -74,9 +75,6 @@ gst_gio_base_sink_class_init (GstGioBaseSinkClass * klass)
 static void
 gst_gio_base_sink_init (GstGioBaseSink * sink)
 {
-  gst_pad_set_query_function (GST_BASE_SINK_PAD (sink),
-      GST_DEBUG_FUNCPTR (gst_gio_base_sink_query));
-
   gst_base_sink_set_sync (GST_BASE_SINK (sink), FALSE);
 
   sink->cancel = g_cancellable_new ();
@@ -312,9 +310,9 @@ gst_gio_base_sink_render (GstBaseSink * base_sink, GstBuffer * buffer)
 }
 
 static gboolean
-gst_gio_base_sink_query (GstPad * pad, GstQuery * query)
+gst_gio_base_sink_query (GstBaseSink * bsink, GstQuery * query)
 {
-  GstGioBaseSink *sink = GST_GIO_BASE_SINK (GST_PAD_PARENT (pad));
+  GstGioBaseSink *sink = GST_GIO_BASE_SINK (bsink);
   GstFormat format;
 
   switch (GST_QUERY_TYPE (query)) {
@@ -341,6 +339,6 @@ gst_gio_base_sink_query (GstPad * pad, GstQuery * query)
       }
       return FALSE;
     default:
-      return gst_pad_query_default (pad, query);
+      return GST_BASE_SINK_CLASS (parent_class)->query (bsink, query);
   }
 }
