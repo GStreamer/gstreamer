@@ -2810,12 +2810,16 @@ static gboolean
 gst_base_src_negotiate (GstBaseSrc * basesrc)
 {
   GstBaseSrcClass *bclass;
-  gboolean result = TRUE;
+  gboolean result;
 
   bclass = GST_BASE_SRC_GET_CLASS (basesrc);
 
+  GST_DEBUG_OBJECT (basesrc, "starting negotiation");
+
   if (G_LIKELY (bclass->negotiate))
     result = bclass->negotiate (basesrc);
+  else
+    result = TRUE;
 
   if (G_LIKELY (result)) {
     GstCaps *caps;
