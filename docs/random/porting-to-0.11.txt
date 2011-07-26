@@ -254,6 +254,19 @@ The 0.11 porting guide
     gst_query_parse_formats_length() -> gst_query_parse_n_formats()
     gst_query_parse_formats_nth() -> gst_query_parse_nth_format()
 
+    Some query utility functionsno longer use an inout parameter for the
+    destination/query format:
+
+      - gst_pad_query_position()
+      - gst_pad_query_duration()
+      - gst_pad_query_convert()
+      - gst_pad_query_peer_position()
+      - gst_pad_query_peer_duration()
+      - gst_pad_query_peer_convert()
+      - gst_element_query_position()
+      - gst_element_query_duration()
+      - gst_element_query_convert()
+
 * GstBufferList
     Is now a boxed type derived from GstMiniObject.
 

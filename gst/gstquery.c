@@ -413,12 +413,15 @@ gst_query_new_position (GstFormat format)
 void
 gst_query_set_position (GstQuery * query, GstFormat format, gint64 cur)
 {
-  GstStructure *structure;
+  GstStructure *s;
 
   g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_POSITION);
 
-  structure = GST_QUERY_STRUCTURE (query);
-  gst_structure_id_set (structure,
+  s = GST_QUERY_STRUCTURE (query);
+  g_return_if_fail (format == g_value_get_enum (gst_structure_id_get_value (s,
+              GST_QUARK (FORMAT))));
+
+  gst_structure_id_set (s,
       GST_QUARK (FORMAT), GST_TYPE_FORMAT, format,
       GST_QUARK (CURRENT), G_TYPE_INT64, cur, NULL);
 }
@@ -488,13 +491,14 @@ gst_query_new_duration (GstFormat format)
 void
 gst_query_set_duration (GstQuery * query, GstFormat format, gint64 duration)
 {
-  GstStructure *structure;
+  GstStructure *s;
 
   g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_DURATION);
 
-  structure = GST_QUERY_STRUCTURE (query);
-  gst_structure_id_set (structure,
-      GST_QUARK (FORMAT), GST_TYPE_FORMAT, format,
+  s = GST_QUERY_STRUCTURE (query);
+  g_return_if_fail (format == g_value_get_enum (gst_structure_id_get_value (s,
+              GST_QUARK (FORMAT))));
+  gst_structure_id_set (s, GST_QUARK (FORMAT), GST_TYPE_FORMAT, format,
       GST_QUARK (DURATION), G_TYPE_INT64, duration, NULL);
 }
 

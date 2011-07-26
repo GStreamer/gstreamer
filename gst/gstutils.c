@@ -2238,8 +2238,7 @@ gst_element_unlink (GstElement * src, GstElement * dest)
 /**
  * gst_element_query_position:
  * @element: a #GstElement to invoke the position query on.
- * @format: (inout): a pointer to the #GstFormat asked for.
- *          On return contains the #GstFormat used.
+ * @format: the #GstFormat requested
  * @cur: (out) (allow-none): a location in which to store the current
  *     position, or NULL.
  *
@@ -2249,20 +2248,20 @@ gst_element_unlink (GstElement * src, GstElement * dest)
  * Returns: TRUE if the query could be performed.
  */
 gboolean
-gst_element_query_position (GstElement * element, GstFormat * format,
+gst_element_query_position (GstElement * element, GstFormat format,
     gint64 * cur)
 {
   GstQuery *query;
   gboolean ret;
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
-  g_return_val_if_fail (format != NULL, FALSE);
+  g_return_val_if_fail (format != GST_FORMAT_UNDEFINED, FALSE);
 
-  query = gst_query_new_position (*format);
+  query = gst_query_new_position (format);
   ret = gst_element_query (element, query);
 
   if (ret)
-    gst_query_parse_position (query, format, cur);
+    gst_query_parse_position (query, NULL, cur);
 
   gst_query_unref (query);
 
@@ -2272,8 +2271,7 @@ gst_element_query_position (GstElement * element, GstFormat * format,
 /**
  * gst_element_query_duration:
  * @element: a #GstElement to invoke the duration query on.
- * @format: (inout): a pointer to the #GstFormat asked for.
- *          On return contains the #GstFormat used.
+ * @format: the #GstFormat requested
  * @duration: (out): A location in which to store the total duration, or NULL.
  *
  * Queries an element for the total stream duration.
@@ -2281,20 +2279,20 @@ gst_element_query_position (GstElement * element, GstFormat * format,
  * Returns: TRUE if the query could be performed.
  */
 gboolean
-gst_element_query_duration (GstElement * element, GstFormat * format,
+gst_element_query_duration (GstElement * element, GstFormat format,
     gint64 * duration)
 {
   GstQuery *query;
   gboolean ret;
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
-  g_return_val_if_fail (format != NULL, FALSE);
+  g_return_val_if_fail (format != GST_FORMAT_UNDEFINED, FALSE);
 
-  query = gst_query_new_duration (*format);
+  query = gst_query_new_duration (format);
   ret = gst_element_query (element, query);
 
   if (ret)
-    gst_query_parse_duration (query, format, duration);
+    gst_query_parse_duration (query, NULL, duration);
 
   gst_query_unref (query);
 
@@ -2306,7 +2304,7 @@ gst_element_query_duration (GstElement * element, GstFormat * format,
  * @element: a #GstElement to invoke the convert query on.
  * @src_format: (inout): a #GstFormat to convert from.
  * @src_val: a value to convert.
- * @dest_format: (inout): a pointer to the #GstFormat to convert to.
+ * @dest_format: the #GstFormat to convert to.
  * @dest_val: (out): a pointer to the result.
  *
  * Queries an element to convert @src_val in @src_format to @dest_format.
@@ -2315,25 +2313,25 @@ gst_element_query_duration (GstElement * element, GstFormat * format,
  */
 gboolean
 gst_element_query_convert (GstElement * element, GstFormat src_format,
-    gint64 src_val, GstFormat * dest_format, gint64 * dest_val)
+    gint64 src_val, GstFormat dest_format, gint64 * dest_val)
 {
   GstQuery *query;
   gboolean ret;
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
-  g_return_val_if_fail (dest_format != NULL, FALSE);
+  g_return_val_if_fail (dest_format != GST_FORMAT_UNDEFINED, FALSE);
   g_return_val_if_fail (dest_val != NULL, FALSE);
 
-  if (*dest_format == src_format || src_val == -1) {
+  if (dest_format == src_format || src_val == -1) {
     *dest_val = src_val;
     return TRUE;
   }
 
-  query = gst_query_new_convert (src_format, src_val, *dest_format);
+  query = gst_query_new_convert (src_format, src_val, dest_format);
   ret = gst_element_query (element, query);
 
   if (ret)
-    gst_query_parse_convert (query, NULL, NULL, dest_format, dest_val);
+    gst_query_parse_convert (query, NULL, NULL, NULL, dest_val);
 
   gst_query_unref (query);
 
@@ -2828,8 +2826,7 @@ error:
 /**
  * gst_pad_query_position:
  * @pad: a #GstPad to invoke the position query on.
- * @format: (inout): a pointer to the #GstFormat asked for.
- *          On return contains the #GstFormat used.
+ * @format: the #GstFormat requested
  * @cur: (out): A location in which to store the current position, or NULL.
  *
  * Queries a pad for the stream position.
@@ -2837,19 +2834,19 @@ error:
  * Returns: TRUE if the query could be performed.
  */
 gboolean
-gst_pad_query_position (GstPad * pad, GstFormat * format, gint64 * cur)
+gst_pad_query_position (GstPad * pad, GstFormat format, gint64 * cur)
 {
   GstQuery *query;
   gboolean ret;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
-  g_return_val_if_fail (format != NULL, FALSE);
+  g_return_val_if_fail (format != GST_FORMAT_UNDEFINED, FALSE);
 
-  query = gst_query_new_position (*format);
+  query = gst_query_new_position (format);
   ret = gst_pad_query (pad, query);
 
   if (ret)
-    gst_query_parse_position (query, format, cur);
+    gst_query_parse_position (query, NULL, cur);
 
   gst_query_unref (query);
 
@@ -2860,8 +2857,7 @@ gst_pad_query_position (GstPad * pad, GstFormat * format, gint64 * cur)
  * gst_pad_query_peer_position:
  * @pad: a #GstPad on whose peer to invoke the position query on.
  *       Must be a sink pad.
- * @format: (inout): a pointer to the #GstFormat asked for.
- *          On return contains the #GstFormat used.
+ * @format: the #GstFormat requested
  * @cur: (out) (allow-none): a location in which to store the current
  *     position, or NULL.
  *
@@ -2870,14 +2866,14 @@ gst_pad_query_position (GstPad * pad, GstFormat * format, gint64 * cur)
  * Returns: TRUE if the query could be performed.
  */
 gboolean
-gst_pad_query_peer_position (GstPad * pad, GstFormat * format, gint64 * cur)
+gst_pad_query_peer_position (GstPad * pad, GstFormat format, gint64 * cur)
 {
   gboolean ret = FALSE;
   GstPad *peer;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
   g_return_val_if_fail (GST_PAD_IS_SINK (pad), FALSE);
-  g_return_val_if_fail (format != NULL, FALSE);
+  g_return_val_if_fail (format != GST_FORMAT_UNDEFINED, FALSE);
 
   peer = gst_pad_get_peer (pad);
   if (peer) {
@@ -2891,8 +2887,7 @@ gst_pad_query_peer_position (GstPad * pad, GstFormat * format, gint64 * cur)
 /**
  * gst_pad_query_duration:
  * @pad: a #GstPad to invoke the duration query on.
- * @format: (inout): a pointer to the #GstFormat asked for.
- *          On return contains the #GstFormat used.
+ * @format: the #GstFormat requested
  * @duration: (out) (allow-none): a location in which to store the total
  *     duration, or NULL.
  *
@@ -2901,19 +2896,19 @@ gst_pad_query_peer_position (GstPad * pad, GstFormat * format, gint64 * cur)
  * Returns: TRUE if the query could be performed.
  */
 gboolean
-gst_pad_query_duration (GstPad * pad, GstFormat * format, gint64 * duration)
+gst_pad_query_duration (GstPad * pad, GstFormat format, gint64 * duration)
 {
   GstQuery *query;
   gboolean ret;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
-  g_return_val_if_fail (format != NULL, FALSE);
+  g_return_val_if_fail (format != GST_FORMAT_UNDEFINED, FALSE);
 
-  query = gst_query_new_duration (*format);
+  query = gst_query_new_duration (format);
   ret = gst_pad_query (pad, query);
 
   if (ret)
-    gst_query_parse_duration (query, format, duration);
+    gst_query_parse_duration (query, NULL, duration);
 
   gst_query_unref (query);
 
@@ -2924,8 +2919,7 @@ gst_pad_query_duration (GstPad * pad, GstFormat * format, gint64 * duration)
  * gst_pad_query_peer_duration:
  * @pad: a #GstPad on whose peer pad to invoke the duration query on.
  *       Must be a sink pad.
- * @format: (inout) :a pointer to the #GstFormat asked for.
- *          On return contains the #GstFormat used.
+ * @format: the #GstFormat requested
  * @duration: (out) (allow-none): a location in which to store the total
  *     duration, or NULL.
  *
@@ -2934,15 +2928,14 @@ gst_pad_query_duration (GstPad * pad, GstFormat * format, gint64 * duration)
  * Returns: TRUE if the query could be performed.
  */
 gboolean
-gst_pad_query_peer_duration (GstPad * pad, GstFormat * format,
-    gint64 * duration)
+gst_pad_query_peer_duration (GstPad * pad, GstFormat format, gint64 * duration)
 {
   gboolean ret = FALSE;
   GstPad *peer;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
   g_return_val_if_fail (GST_PAD_IS_SINK (pad), FALSE);
-  g_return_val_if_fail (format != NULL, FALSE);
+  g_return_val_if_fail (format != GST_FORMAT_UNDEFINED, FALSE);
 
   peer = gst_pad_get_peer (pad);
   if (peer) {
@@ -2958,7 +2951,7 @@ gst_pad_query_peer_duration (GstPad * pad, GstFormat * format,
  * @pad: a #GstPad to invoke the convert query on.
  * @src_format: a #GstFormat to convert from.
  * @src_val: a value to convert.
- * @dest_format: (inout): a pointer to the #GstFormat to convert to.
+ * @dest_format: the #GstFormat to convert to.
  * @dest_val: (out): a pointer to the result.
  *
  * Queries a pad to convert @src_val in @src_format to @dest_format.
@@ -2967,25 +2960,25 @@ gst_pad_query_peer_duration (GstPad * pad, GstFormat * format,
  */
 gboolean
 gst_pad_query_convert (GstPad * pad, GstFormat src_format, gint64 src_val,
-    GstFormat * dest_format, gint64 * dest_val)
+    GstFormat dest_format, gint64 * dest_val)
 {
   GstQuery *query;
   gboolean ret;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
-  g_return_val_if_fail (dest_format != NULL, FALSE);
+  g_return_val_if_fail (dest_format != GST_FORMAT_UNDEFINED, FALSE);
   g_return_val_if_fail (dest_val != NULL, FALSE);
 
-  if (*dest_format == src_format || src_val == -1) {
+  if (dest_format == src_format || src_val == -1) {
     *dest_val = src_val;
     return TRUE;
   }
 
-  query = gst_query_new_convert (src_format, src_val, *dest_format);
+  query = gst_query_new_convert (src_format, src_val, dest_format);
   ret = gst_pad_query (pad, query);
 
   if (ret)
-    gst_query_parse_convert (query, NULL, NULL, dest_format, dest_val);
+    gst_query_parse_convert (query, NULL, NULL, NULL, dest_val);
 
   gst_query_unref (query);
 
@@ -2998,7 +2991,7 @@ gst_pad_query_convert (GstPad * pad, GstFormat src_format, gint64 src_val,
  *       Must be a sink pad.
  * @src_format: a #GstFormat to convert from.
  * @src_val: a value to convert.
- * @dest_format: (inout): a pointer to the #GstFormat to convert to.
+ * @dest_format: the #GstFormat to convert to.
  * @dest_val: (out): a pointer to the result.
  *
  * Queries the peer pad of a given sink pad to convert @src_val in @src_format
@@ -3008,14 +3001,14 @@ gst_pad_query_convert (GstPad * pad, GstFormat src_format, gint64 src_val,
  */
 gboolean
 gst_pad_query_peer_convert (GstPad * pad, GstFormat src_format, gint64 src_val,
-    GstFormat * dest_format, gint64 * dest_val)
+    GstFormat dest_format, gint64 * dest_val)
 {
   gboolean ret = FALSE;
   GstPad *peer;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
   g_return_val_if_fail (GST_PAD_IS_SINK (pad), FALSE);
-  g_return_val_if_fail (dest_format != NULL, FALSE);
+  g_return_val_if_fail (dest_format != GST_FORMAT_UNDEFINED, FALSE);
   g_return_val_if_fail (dest_val != NULL, FALSE);
 
   peer = gst_pad_get_peer (pad);
