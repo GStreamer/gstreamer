@@ -44,12 +44,15 @@ break_mainloop (gpointer data)
 static gboolean
 buffer_probe_cb (GstPad * pad, GstBuffer * buffer)
 {
+  GstClockTime new_ts = GST_BUFFER_TIMESTAMP (buffer);
+
+  GST_LOG ("ts = %" GST_TIME_FORMAT, GST_TIME_ARGS (new_ts));
   if (old_ts != GST_CLOCK_TIME_NONE) {
-    fail_unless (GST_BUFFER_TIMESTAMP (buffer) != old_ts,
+    fail_unless (new_ts != old_ts,
         "Two buffers had same timestamp: %" GST_TIME_FORMAT,
         GST_TIME_ARGS (old_ts));
   }
-  old_ts = GST_BUFFER_TIMESTAMP (buffer);
+  old_ts = new_ts;
 
   return TRUE;
 }
@@ -61,11 +64,6 @@ GST_START_TEST (test_basetime_calculation)
   GstPad *pad;
   GMainLoop *loop;
 
-  /* Don't run with osxaudiosrc . This is because libcheck runs the actual
-   * test in a forked process and causes havoc with osx's API. */
-  if (G_UNLIKELY (!g_ascii_strcasecmp (DEFAULT_AUDIOSRC, "osxaudiosrc")))
-    return;
-
   loop = g_main_loop_new (NULL, FALSE);
 
   /* The "main" pipeline */
@@ -73,10 +71,9 @@ GST_START_TEST (test_basetime_calculation)
   fail_if (p1 == NULL);
 
   /* Create a sub-bin that is activated only in "certain situations" */
-  asrc = gst_element_factory_make (DEFAULT_AUDIOSRC, NULL);
+  asrc = gst_element_factory_make ("audiotestsrc", NULL);
   if (asrc == NULL) {
-    GST_WARNING ("Cannot run test. test audio source %s not available",
-        DEFAULT_AUDIOSRC);
+    GST_WARNING ("Cannot run test. 'audiotestsrc' not available");
     gst_element_set_state (p1, GST_STATE_NULL);
     gst_object_unref (p1);
     return;
