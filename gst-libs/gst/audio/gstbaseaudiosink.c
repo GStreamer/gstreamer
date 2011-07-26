@@ -362,7 +362,7 @@ gst_base_audio_sink_query_pad (GstBaseSink * bsink, GstQuery * query)
       break;
     }
     default:
-      res = GST_BASE_SINK_CLASS (bsink)->query (bsink, query);
+      res = GST_BASE_SINK_CLASS (parent_class)->query (bsink, query);
       break;
   }
   return res;
