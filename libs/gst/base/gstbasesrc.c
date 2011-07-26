@@ -900,7 +900,7 @@ gst_base_src_default_query (GstBaseSrc * src, GstQuery * query)
             /* convert to requested format */
             res =
                 gst_pad_query_convert (src->srcpad, seg_format,
-                position, &format, &position);
+                position, format, &position);
           } else
             res = TRUE;
 
@@ -949,7 +949,7 @@ gst_base_src_default_query (GstBaseSrc * src, GstQuery * query)
              * but we cannot answer the query, we must return FALSE. */
             res =
                 gst_pad_query_convert (src->srcpad, seg_format,
-                duration, &format, &duration);
+                duration, format, &duration);
           } else {
             /* The subclass did not configure a duration, we assume that the
              * media has an unknown duration then and we return TRUE to report
@@ -1086,13 +1086,13 @@ gst_base_src_default_query (GstBaseSrc * src, GstQuery * query)
        * but report TRUE. */
       if (format != GST_FORMAT_PERCENT && stop != -1) {
         res = gst_pad_query_convert (src->srcpad, seg_format,
-            stop, &format, &stop);
+            stop, format, &stop);
       } else {
         res = TRUE;
       }
       if (res && format != GST_FORMAT_PERCENT && start != -1)
         res = gst_pad_query_convert (src->srcpad, seg_format,
-            start, &format, &start);
+            start, format, &start);
 
       gst_query_set_buffering_range (query, format, start, stop, estimated);
       break;
@@ -1210,7 +1210,7 @@ gst_base_src_default_prepare_seek_segment (GstBaseSrc * src, GstEvent * event,
   if (cur_type != GST_SEEK_TYPE_NONE) {
     /* FIXME: Handle seek_cur & seek_end by converting the input segment vals */
     res =
-        gst_pad_query_convert (src->srcpad, seek_format, cur, &dest_format,
+        gst_pad_query_convert (src->srcpad, seek_format, cur, dest_format,
         &cur);
     cur_type = GST_SEEK_TYPE_SET;
   }
@@ -1218,7 +1218,7 @@ gst_base_src_default_prepare_seek_segment (GstBaseSrc * src, GstEvent * event,
   if (res && stop_type != GST_SEEK_TYPE_NONE) {
     /* FIXME: Handle seek_cur & seek_end by converting the input segment vals */
     res =
-        gst_pad_query_convert (src->srcpad, seek_format, stop, &dest_format,
+        gst_pad_query_convert (src->srcpad, seek_format, stop, dest_format,
         &stop);
     stop_type = GST_SEEK_TYPE_SET;
   }

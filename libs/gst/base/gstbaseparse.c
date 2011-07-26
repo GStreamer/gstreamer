@@ -1258,14 +1258,13 @@ gst_base_parse_update_duration (GstBaseParse * baseparse)
 
   peer = gst_pad_get_peer (parse->sinkpad);
   if (peer) {
-    GstFormat pformat = GST_FORMAT_BYTES;
     gboolean qres = FALSE;
     gint64 ptot, dest_value;
 
-    qres = gst_pad_query_duration (peer, &pformat, &ptot);
+    qres = gst_pad_query_duration (peer, GST_FORMAT_BYTES, &ptot);
     gst_object_unref (GST_OBJECT (peer));
     if (qres) {
-      if (gst_base_parse_convert (parse, pformat, ptot,
+      if (gst_base_parse_convert (parse, GST_FORMAT_BYTES, ptot,
               GST_FORMAT_TIME, &dest_value)) {
         parse->priv->estimated_duration = dest_value;
         GST_LOG_OBJECT (parse,
@@ -1518,10 +1517,8 @@ gst_base_parse_check_seekability (GstBaseParse * parse)
 
   /* try harder to query upstream size if we didn't get it the first time */
   if (seekable && stop == -1) {
-    GstFormat fmt = GST_FORMAT_BYTES;
-
     GST_DEBUG_OBJECT (parse, "doing duration query to fix up unset stop");
-    gst_pad_query_peer_duration (parse->sinkpad, &fmt, &stop);
+    gst_pad_query_peer_duration (parse->sinkpad, GST_FORMAT_BYTES, &stop);
   }
 
   /* if upstream doesn't know the size, it's likely that it's not seekable in
@@ -1557,10 +1554,9 @@ done:
 static void
 gst_base_parse_check_upstream (GstBaseParse * parse)
 {
-  GstFormat fmt = GST_FORMAT_TIME;
   gint64 stop;
 
-  if (gst_pad_query_peer_duration (parse->sinkpad, &fmt, &stop))
+  if (gst_pad_query_peer_duration (parse->sinkpad, GST_FORMAT_TIME, &stop))
     if (GST_CLOCK_TIME_IS_VALID (stop) && stop) {
       /* upstream has one, accept it also, and no further updates */
       gst_base_parse_set_duration (parse, GST_FORMAT_TIME, stop, 0);
@@ -2490,10 +2486,8 @@ gst_base_parse_handle_previous_fragment (GstBaseParse * parse)
   if (parse->priv->exact_position) {
     offset = gst_base_parse_find_offset (parse, ts, TRUE, NULL);
   } else {
-    GstFormat dstformat = GST_FORMAT_BYTES;
-
     if (!gst_pad_query_convert (parse->srcpad, GST_FORMAT_TIME, ts,
-            &dstformat, &offset)) {
+            GST_FORMAT_BYTES, &offset)) {
       GST_DEBUG_OBJECT (parse, "conversion failed, only BYTE based");
     }
   }
@@ -3559,7 +3553,6 @@ gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
   gboolean flush, update, res = TRUE, accurate;
   gint64 cur, stop, seekpos, seekstop;
   GstSegment seeksegment = { 0, };
-  GstFormat dstformat;
   GstClockTime start_ts;
 
   gst_event_parse_seek (event, &rate, &format, &flags,
@@ -3626,12 +3619,11 @@ gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
         NULL);
   } else {
     start_ts = seeksegment.position;
-    dstformat = GST_FORMAT_BYTES;
     if (!gst_pad_query_convert (parse->srcpad, format, seeksegment.position,
-            &dstformat, &seekpos))
+            GST_FORMAT_BYTES, &seekpos))
       goto convert_failed;
     if (!gst_pad_query_convert (parse->srcpad, format, seeksegment.stop,
-            &dstformat, &seekstop))
+            GST_FORMAT_BYTES, &seekstop))
       goto convert_failed;
   }
 

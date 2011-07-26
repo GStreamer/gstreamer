@@ -2073,8 +2073,8 @@ gst_base_sink_wait_clock (GstBaseSink * sink, GstClockTime time,
   /* FIXME: Casting to GstClockEntry only works because the types
    * are the same */
   if (G_LIKELY (sink->priv->cached_clock_id != NULL
-          && GST_CLOCK_ENTRY_CLOCK ((GstClockEntry *) sink->
-              priv->cached_clock_id) == clock)) {
+          && GST_CLOCK_ENTRY_CLOCK ((GstClockEntry *) sink->priv->
+              cached_clock_id) == clock)) {
     if (!gst_clock_single_shot_id_reinit (clock, sink->priv->cached_clock_id,
             time)) {
       gst_clock_id_unref (sink->priv->cached_clock_id);
@@ -3727,16 +3727,15 @@ gst_base_sink_default_prepare_seek_segment (GstBaseSink * sink,
   GstSeekType cur_type, stop_type;
   gint64 cur, stop;
   GstSeekFlags flags;
-  GstFormat seek_format, dest_format;
+  GstFormat seek_format;
   gdouble rate;
   gboolean update;
   gboolean res = TRUE;
 
   gst_event_parse_seek (event, &rate, &seek_format, &flags,
       &cur_type, &cur, &stop_type, &stop);
-  dest_format = segment->format;
 
-  if (seek_format == dest_format) {
+  if (seek_format == segment->format) {
     gst_segment_do_seek (segment, rate, seek_format, flags,
         cur_type, cur, stop_type, stop, &update);
     return TRUE;
@@ -3745,7 +3744,7 @@ gst_base_sink_default_prepare_seek_segment (GstBaseSink * sink,
   if (cur_type != GST_SEEK_TYPE_NONE) {
     /* FIXME: Handle seek_cur & seek_end by converting the input segment vals */
     res =
-        gst_pad_query_convert (sink->sinkpad, seek_format, cur, &dest_format,
+        gst_pad_query_convert (sink->sinkpad, seek_format, cur, segment->format,
         &cur);
     cur_type = GST_SEEK_TYPE_SET;
   }
@@ -3753,13 +3752,13 @@ gst_base_sink_default_prepare_seek_segment (GstBaseSink * sink,
   if (res && stop_type != GST_SEEK_TYPE_NONE) {
     /* FIXME: Handle seek_cur & seek_end by converting the input segment vals */
     res =
-        gst_pad_query_convert (sink->sinkpad, seek_format, stop, &dest_format,
-        &stop);
+        gst_pad_query_convert (sink->sinkpad, seek_format, stop,
+        segment->format, &stop);
     stop_type = GST_SEEK_TYPE_SET;
   }
 
   /* And finally, configure our output segment in the desired format */
-  gst_segment_do_seek (segment, rate, dest_format, flags, cur_type, cur,
+  gst_segment_do_seek (segment, rate, segment->format, flags, cur_type, cur,
       stop_type, stop, &update);
 
   if (!res)
@@ -4324,22 +4323,19 @@ gst_base_sink_pad_activate_pull (GstPad * pad, gboolean active)
   bclass = GST_BASE_SINK_GET_CLASS (basesink);
 
   if (active) {
-    GstFormat format;
     gint64 duration;
 
     /* we mark we have a newsegment here because pull based
      * mode works just fine without having a newsegment before the
      * first buffer */
-    format = GST_FORMAT_BYTES;
-
-    gst_segment_init (&basesink->segment, format);
-    gst_segment_init (&basesink->clip_segment, format);
+    gst_segment_init (&basesink->segment, GST_FORMAT_BYTES);
+    gst_segment_init (&basesink->clip_segment, GST_FORMAT_BYTES);
     GST_OBJECT_LOCK (basesink);
     basesink->have_newsegment = TRUE;
     GST_OBJECT_UNLOCK (basesink);
 
     /* get the peer duration in bytes */
-    result = gst_pad_query_peer_duration (pad, &format, &duration);
+    result = gst_pad_query_peer_duration (pad, GST_FORMAT_BYTES, &duration);
     if (result) {
       GST_DEBUG_OBJECT (basesink,
           "setting duration in bytes to %" G_GINT64_FORMAT, duration);
@@ -4460,7 +4456,7 @@ gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
 {
   GstClock *clock = NULL;
   gboolean res = FALSE;
-  GstFormat oformat, tformat;
+  GstFormat oformat;
   GstSegment *segment;
   GstClockTime now, latency;
   GstClockTimeDiff base_time;
@@ -4491,8 +4487,6 @@ gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
   else
     segment = &basesink->segment;
 
-  /* our intermediate time format */
-  tformat = GST_FORMAT_TIME;
   /* get the format in the segment */
   oformat = segment->format;
 
@@ -4597,23 +4591,23 @@ gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
         GST_TIME_ARGS (last));
     *cur = last;
   } else {
-    if (oformat != tformat) {
+    if (oformat != GST_FORMAT_TIME) {
       /* convert base, time and duration to time */
-      if (!gst_pad_query_convert (basesink->sinkpad, oformat, base, &tformat,
-              &base))
+      if (!gst_pad_query_convert (basesink->sinkpad, oformat, base,
+              GST_FORMAT_TIME, &base))
         goto convert_failed;
       if (!gst_pad_query_convert (basesink->sinkpad, oformat, duration,
-              &tformat, &duration))
+              GST_FORMAT_TIME, &duration))
         goto convert_failed;
-      if (!gst_pad_query_convert (basesink->sinkpad, oformat, time, &tformat,
-              &time))
+      if (!gst_pad_query_convert (basesink->sinkpad, oformat, time,
+              GST_FORMAT_TIME, &time))
         goto convert_failed;
-      if (!gst_pad_query_convert (basesink->sinkpad, oformat, last, &tformat,
-              &last))
+      if (!gst_pad_query_convert (basesink->sinkpad, oformat, last,
+              GST_FORMAT_TIME, &last))
         goto convert_failed;
 
       /* assume time format from now on */
-      oformat = tformat;
+      oformat = GST_FORMAT_TIME;
     }
 
     if (!in_paused && with_clock) {
@@ -4658,7 +4652,7 @@ gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
 
   if (oformat != format) {
     /* convert to final format */
-    if (!gst_pad_query_convert (basesink->sinkpad, oformat, *cur, &format, cur))
+    if (!gst_pad_query_convert (basesink->sinkpad, oformat, *cur, format, cur))
       goto convert_failed;
   }
 
@@ -4699,20 +4693,22 @@ gst_base_sink_get_duration (GstBaseSink * basesink, GstFormat format,
   gboolean res = FALSE;
 
   if (basesink->pad_mode == GST_ACTIVATE_PULL) {
-    GstFormat uformat = GST_FORMAT_BYTES;
     gint64 uduration;
 
     /* get the duration in bytes, in pull mode that's all we are sure to
      * know. We have to explicitly get this value from upstream instead of
      * using our cached value because it might change. Duration caching
      * should be done at a higher level. */
-    res = gst_pad_query_peer_duration (basesink->sinkpad, &uformat, &uduration);
+    res =
+        gst_pad_query_peer_duration (basesink->sinkpad, GST_FORMAT_BYTES,
+        &uduration);
     if (res) {
       basesink->segment.duration = uduration;
-      if (format != uformat) {
+      if (format != GST_FORMAT_BYTES) {
         /* convert to the requested format */
-        res = gst_pad_query_convert (basesink->sinkpad, uformat, uduration,
-            &format, dur);
+        res =
+            gst_pad_query_convert (basesink->sinkpad, GST_FORMAT_BYTES,
+            uduration, format, dur);
       } else {
         *dur = uduration;
       }
@@ -4770,20 +4766,21 @@ default_element_query (GstElement * element, GstQuery * query)
         /* we can handle a few things if upstream failed */
         if (format == GST_FORMAT_PERCENT) {
           gint64 dur = 0;
-          GstFormat uformat = GST_FORMAT_TIME;
 
           res = gst_base_sink_get_position (basesink, GST_FORMAT_TIME, &cur,
               &upstream);
           if (!res && upstream) {
-            res = gst_pad_query_peer_position (basesink->sinkpad, &uformat,
+            res =
+                gst_pad_query_peer_position (basesink->sinkpad, GST_FORMAT_TIME,
                 &cur);
           }
           if (res) {
             res = gst_base_sink_get_duration (basesink, GST_FORMAT_TIME, &dur,
                 &upstream);
             if (!res && upstream) {
-              res = gst_pad_query_peer_duration (basesink->sinkpad, &uformat,
-                  &dur);
+              res =
+                  gst_pad_query_peer_duration (basesink->sinkpad,
+                  GST_FORMAT_TIME, &dur);
             }
           }
           if (res) {
