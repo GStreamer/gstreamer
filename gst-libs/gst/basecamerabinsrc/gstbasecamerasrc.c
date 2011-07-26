@@ -222,24 +222,6 @@ gst_base_camera_src_setup_preview (GstBaseCameraSrc * self,
     bclass->set_preview (self, preview_caps);
 }
 
-/**
- * gst_base_camera_src_get_allowed_input_caps:
- * @self: the camerasrc bin
- *
- * Retrieve caps from videosrc describing formats it supports
- *
- * Returns: caps object from videosrc
- */
-GstCaps *
-gst_base_camera_src_get_allowed_input_caps (GstBaseCameraSrc * self)
-{
-  GstBaseCameraSrcClass *bclass = GST_BASE_CAMERA_SRC_GET_CLASS (self);
-
-  g_return_val_if_fail (bclass->get_allowed_input_caps, NULL);
-
-  return bclass->get_allowed_input_caps (self);
-}
-
 static void
 gst_base_camera_src_start_capture (GstBaseCameraSrc * src)
 {
