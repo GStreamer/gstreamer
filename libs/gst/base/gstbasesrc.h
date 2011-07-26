@@ -113,6 +113,7 @@ struct _GstBaseSrc {
  * @fixate: Called during negotiation if caps need fixating. Implement instead of
  *   setting a fixate function on the source pad.
  * @set_caps: Notify subclass of changed output caps
+ * @setup_allocation: configure the allocation query
  * @start: Start processing. Subclasses should open resources and prepare
  *    to produce data.
  * @stop: Stop processing. Subclasses should use this to close resources.
