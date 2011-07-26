@@ -2094,30 +2094,34 @@ gst_v4l2_object_setup_pool (GstV4l2Object * v4l2object, GstCaps * caps)
 {
   guint num_buffers;
   GstStructure *config;
+  GstV4l2IOMode mode;
 
   GST_DEBUG_OBJECT (v4l2object->element, "initializing the capture system");
 
   GST_V4L2_CHECK_OPEN (v4l2object);
   GST_V4L2_CHECK_NOT_ACTIVE (v4l2object);
 
-  /* use specified mode */
-  v4l2object->mode = v4l2object->req_mode;
+  /* find transport */
+  mode = v4l2object->req_mode;
 
-  if (v4l2object->req_mode == GST_V4L2_IO_AUTO) {
-    /* automatic mode, find transport */
-    if (v4l2object->vcap.capabilities & V4L2_CAP_READWRITE) {
-      GST_INFO_OBJECT (v4l2object->element,
-          "accessing buffers via read()/write()");
-      v4l2object->mode = GST_V4L2_IO_RW;
-    }
-    if (v4l2object->vcap.capabilities & V4L2_CAP_STREAMING) {
-      GST_INFO_OBJECT (v4l2object->element, "accessing buffers via mmap()");
-      v4l2object->mode = GST_V4L2_IO_MMAP;
-    }
-  }
+  if (v4l2object->vcap.capabilities & V4L2_CAP_READWRITE) {
+    if (v4l2object->req_mode == GST_V4L2_IO_AUTO)
+      mode = GST_V4L2_IO_RW;
+  } else if (v4l2object->req_mode == GST_V4L2_IO_RW)
+    goto method_not_supported;
+
+  if (v4l2object->vcap.capabilities & V4L2_CAP_STREAMING) {
+    if (v4l2object->req_mode == GST_V4L2_IO_AUTO)
+      mode = GST_V4L2_IO_MMAP;
+  } else if (v4l2object->req_mode == GST_V4L2_IO_MMAP)
+    goto method_not_supported;
+
   /* if still no transport selected, error out */
-  if (v4l2object->mode == GST_V4L2_IO_AUTO)
+  if (mode == GST_V4L2_IO_AUTO)
     goto no_supported_capture_method;
+
+  GST_INFO_OBJECT (v4l2object->element, "accessing buffers via mode %d", mode);
+  v4l2object->mode = mode;
 
   /* keep track of current number of buffers */
   num_buffers = v4l2object->num_buffers;
@@ -2146,10 +2150,17 @@ buffer_pool_new_failed:
         ("Failed to create buffer pool: %s", g_strerror (errno)));
     return FALSE;
   }
+method_not_supported:
+  {
+    GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, READ,
+        (_("The driver of device '%s' does not support the IO method %d"),
+            v4l2object->videodev, mode), (NULL));
+    return FALSE;
+  }
 no_supported_capture_method:
   {
     GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, READ,
-        (_("The driver of device '%s' does not support any known capture "
+        (_("The driver of device '%s' does not support any known IO "
                 "method."), v4l2object->videodev), (NULL));
     return FALSE;
   }
