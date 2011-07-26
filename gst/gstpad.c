@@ -2195,6 +2195,79 @@ gst_pad_get_pad_template (GstPad * pad)
   return (templ ? gst_object_ref (templ) : NULL);
 }
 
+static GstCaps *
+caps_with_getcaps (GstPad * pad, GstCaps * filter)
+{
+  GstCaps *result;
+
+  if (GST_PAD_GETCAPSFUNC (pad) == NULL)
+    return NULL;
+
+  GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
+      "dispatching to pad getcaps function with "
+      "filter %" GST_PTR_FORMAT, filter);
+
+  GST_OBJECT_FLAG_SET (pad, GST_PAD_IN_GETCAPS);
+  GST_OBJECT_UNLOCK (pad);
+  result = GST_PAD_GETCAPSFUNC (pad) (pad, filter);
+  GST_OBJECT_LOCK (pad);
+  GST_OBJECT_FLAG_UNSET (pad, GST_PAD_IN_GETCAPS);
+
+  if (G_UNLIKELY (result == NULL))
+    goto null_caps;
+
+  GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
+      "pad getcaps returned %" GST_PTR_FORMAT, result);
+
+#ifndef G_DISABLE_ASSERT
+  /* check that the returned caps are a real subset of the template caps */
+  if (GST_PAD_PAD_TEMPLATE (pad)) {
+    const GstCaps *templ_caps =
+        GST_PAD_TEMPLATE_CAPS (GST_PAD_PAD_TEMPLATE (pad));
+    if (!gst_caps_is_subset (result, templ_caps)) {
+      GstCaps *temp;
+
+      GST_CAT_ERROR_OBJECT (GST_CAT_CAPS, pad,
+          "pad returned caps %" GST_PTR_FORMAT
+          " which are not a real subset of its template caps %"
+          GST_PTR_FORMAT, result, templ_caps);
+      g_warning
+          ("pad %s:%s returned caps which are not a real "
+          "subset of its template caps", GST_DEBUG_PAD_NAME (pad));
+      temp = gst_caps_intersect (templ_caps, result);
+      gst_caps_unref (result);
+      result = temp;
+    }
+  }
+  if (filter) {
+    if (!gst_caps_is_subset (result, filter)) {
+      GstCaps *temp;
+
+      GST_CAT_ERROR_OBJECT (GST_CAT_CAPS, pad,
+          "pad returned caps %" GST_PTR_FORMAT
+          " which are not a real subset of the filter caps %"
+          GST_PTR_FORMAT, result, filter);
+      g_warning ("pad %s:%s returned caps which are not a real "
+          "subset of the filter caps", GST_DEBUG_PAD_NAME (pad));
+      /* FIXME: Order? But shouldn't happen anyway... */
+      temp = gst_caps_intersect_full (filter, result, GST_CAPS_INTERSECT_FIRST);
+      gst_caps_unref (result);
+      result = temp;
+    }
+  }
+#endif
+
+  return result;
+
+  /* ERRORS */
+null_caps:
+  {
+    g_critical ("pad %s:%s returned NULL caps from getcaps function",
+        GST_DEBUG_PAD_NAME (pad));
+    return NULL;
+  }
+}
+
 /* should be called with the pad LOCK held */
 /* refs the caps, so caller is responsible for getting it unreffed */
 static GstCaps *
@@ -2208,124 +2281,50 @@ gst_pad_get_caps_unlocked (GstPad * pad, GstCaps * filter)
 
   fixed_caps = GST_PAD_IS_FIXED_CAPS (pad);
 
-  if (!fixed_caps && GST_PAD_GETCAPSFUNC (pad)) {
-    GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
-        "dispatching to pad getcaps function with "
-        "filter %" GST_PTR_FORMAT, filter);
-
-    GST_OBJECT_FLAG_SET (pad, GST_PAD_IN_GETCAPS);
-    GST_OBJECT_UNLOCK (pad);
-    result = GST_PAD_GETCAPSFUNC (pad) (pad, filter);
-    GST_OBJECT_LOCK (pad);
-    GST_OBJECT_FLAG_UNSET (pad, GST_PAD_IN_GETCAPS);
-
-    if (result == NULL) {
-      g_critical ("pad %s:%s returned NULL caps from getcaps function",
-          GST_DEBUG_PAD_NAME (pad));
-    } else {
-      GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
-          "pad getcaps returned %" GST_PTR_FORMAT, result);
-#ifndef G_DISABLE_ASSERT
-      /* check that the returned caps are a real subset of the template caps */
-      if (GST_PAD_PAD_TEMPLATE (pad)) {
-        const GstCaps *templ_caps =
-            GST_PAD_TEMPLATE_CAPS (GST_PAD_PAD_TEMPLATE (pad));
-        if (!gst_caps_is_subset (result, templ_caps)) {
-          GstCaps *temp;
-
-          GST_CAT_ERROR_OBJECT (GST_CAT_CAPS, pad,
-              "pad returned caps %" GST_PTR_FORMAT
-              " which are not a real subset of its template caps %"
-              GST_PTR_FORMAT, result, templ_caps);
-          g_warning
-              ("pad %s:%s returned caps which are not a real "
-              "subset of its template caps", GST_DEBUG_PAD_NAME (pad));
-          temp = gst_caps_intersect (templ_caps, result);
-          gst_caps_unref (result);
-          result = temp;
-        }
-      }
-      if (filter) {
-        if (!gst_caps_is_subset (result, filter)) {
-          GstCaps *temp;
-
-          GST_CAT_ERROR_OBJECT (GST_CAT_CAPS, pad,
-              "pad returned caps %" GST_PTR_FORMAT
-              " which are not a real subset of the filter caps %"
-              GST_PTR_FORMAT, result, filter);
-          g_warning ("pad %s:%s returned caps which are not a real "
-              "subset of the filter caps", GST_DEBUG_PAD_NAME (pad));
-          /* FIXME: Order? But shouldn't happen anyway... */
-          temp =
-              gst_caps_intersect_full (filter, result,
-              GST_CAPS_INTERSECT_FIRST);
-          gst_caps_unref (result);
-          result = temp;
-        }
-      }
-#endif
-      goto done;
-    }
+  if (fixed_caps) {
+    /* fixed caps, try the negotiated caps first */
+    GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad, "fixed pad caps: trying pad caps");
+    if ((result = get_pad_caps (pad)))
+      goto filter_done;
   }
-  if (fixed_caps && (result = get_pad_caps (pad))) {
-    if (filter) {
-      GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
-          "using pad caps %p %" GST_PTR_FORMAT " with filter %p %"
-          GST_PTR_FORMAT, result, result, filter, filter);
-      result =
-          gst_caps_intersect_full (filter, result, GST_CAPS_INTERSECT_FIRST);
-      GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad, "result %p %" GST_PTR_FORMAT,
-          result);
-    } else {
-      GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
-          "using pad caps %p %" GST_PTR_FORMAT, result, result);
-      result = gst_caps_ref (result);
-    }
+
+  /* try the getcaps function next */
+  if ((result = caps_with_getcaps (pad, filter)))
     goto done;
-  }
+
   if ((templ = GST_PAD_PAD_TEMPLATE (pad))) {
-    result = GST_PAD_TEMPLATE_CAPS (templ);
-
-    if (filter) {
-      GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
-          "using pad template %p with caps %p %" GST_PTR_FORMAT
-          " and filter %p %" GST_PTR_FORMAT, templ, result, result, filter,
-          filter);
-      result =
-          gst_caps_intersect_full (filter, result, GST_CAPS_INTERSECT_FIRST);
-      GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad, "result %p %" GST_PTR_FORMAT,
-          result);
-    } else {
-      GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
-          "using pad template %p with caps %p %" GST_PTR_FORMAT, templ, result,
-          result);
-      result = gst_caps_ref (result);
-    }
-
-    goto done;
+    GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad, "trying pad template caps");
+    if ((result = GST_PAD_TEMPLATE_CAPS (templ)))
+      goto filter_done;
   }
-  if (!fixed_caps && (result = get_pad_caps (pad))) {
-    if (filter) {
-      GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
-          "using pad caps %p %" GST_PTR_FORMAT " with filter %p %"
-          GST_PTR_FORMAT, result, result, filter, filter);
-      result =
-          gst_caps_intersect_full (filter, result, GST_CAPS_INTERSECT_FIRST);
-      GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad, "result %p %" GST_PTR_FORMAT,
-          result);
-    } else {
-      GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
-          "using pad caps %p %" GST_PTR_FORMAT, result, result);
-      result = gst_caps_ref (result);
-    }
 
-    goto done;
+  if (!fixed_caps) {
+    GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
+        "non-fixed pad caps: trying pad caps");
+    /* non fixed caps, try the negotiated caps */
+    if ((result = get_pad_caps (pad)))
+      goto filter_done;
   }
 
   /* this almost never happens */
   GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad, "pad has no caps");
   result = gst_caps_new_empty ();
+  goto done;
 
+filter_done:
+  /* run the filter on the result */
+  if (filter) {
+    GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
+        "using caps %p %" GST_PTR_FORMAT " with filter %p %"
+        GST_PTR_FORMAT, result, result, filter, filter);
+    result = gst_caps_intersect_full (filter, result, GST_CAPS_INTERSECT_FIRST);
+    GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad, "result %p %" GST_PTR_FORMAT,
+        result);
+  } else {
+    GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
+        "using caps %p %" GST_PTR_FORMAT, result, result);
+    result = gst_caps_ref (result);
+  }
 done:
   return result;
 }
