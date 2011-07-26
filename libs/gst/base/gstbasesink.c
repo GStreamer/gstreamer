@@ -364,7 +364,7 @@ static void gst_base_sink_get_property (GObject * object, guint prop_id,
 
 static gboolean gst_base_sink_send_event (GstElement * element,
     GstEvent * event);
-static gboolean gst_base_sink_query (GstElement * element, GstQuery * query);
+static gboolean default_element_query (GstElement * element, GstQuery * query);
 static const GstQueryType *gst_base_sink_get_query_types (GstElement * element);
 
 static GstCaps *gst_base_sink_get_caps (GstBaseSink * sink, GstCaps * caps);
@@ -383,6 +383,7 @@ static gboolean gst_base_sink_default_prepare_seek_segment (GstBaseSink * sink,
 static GstStateChangeReturn gst_base_sink_change_state (GstElement * element,
     GstStateChange transition);
 
+static gboolean gst_base_sink_sink_query (GstPad * pad, GstQuery * query);
 static GstFlowReturn gst_base_sink_chain (GstPad * pad, GstBuffer * buffer);
 static GstFlowReturn gst_base_sink_chain_list (GstPad * pad,
     GstBufferList * list);
@@ -392,6 +393,8 @@ static gboolean gst_base_sink_pad_activate (GstPad * pad);
 static gboolean gst_base_sink_pad_activate_push (GstPad * pad, gboolean active);
 static gboolean gst_base_sink_pad_activate_pull (GstPad * pad, gboolean active);
 static gboolean gst_base_sink_event (GstPad * pad, GstEvent * event);
+
+static gboolean default_sink_query (GstBaseSink * sink, GstQuery * query);
 
 static gboolean gst_base_sink_negotiate_pull (GstBaseSink * basesink);
 static GstCaps *gst_base_sink_pad_getcaps (GstPad * pad, GstCaps * filter);
@@ -544,7 +547,7 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_base_sink_change_state);
   gstelement_class->send_event = GST_DEBUG_FUNCPTR (gst_base_sink_send_event);
-  gstelement_class->query = GST_DEBUG_FUNCPTR (gst_base_sink_query);
+  gstelement_class->query = GST_DEBUG_FUNCPTR (default_element_query);
   gstelement_class->get_query_types =
       GST_DEBUG_FUNCPTR (gst_base_sink_get_query_types);
 
@@ -553,6 +556,7 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
   klass->get_times = GST_DEBUG_FUNCPTR (gst_base_sink_get_times);
   klass->activate_pull =
       GST_DEBUG_FUNCPTR (gst_base_sink_default_activate_pull);
+  klass->query = GST_DEBUG_FUNCPTR (default_sink_query);
 
   /* Registering debug symbols for function pointers */
   GST_DEBUG_REGISTER_FUNCPTR (gst_base_sink_pad_getcaps);
@@ -644,6 +648,7 @@ gst_base_sink_init (GstBaseSink * basesink, gpointer g_class)
       gst_base_sink_pad_activate_push);
   gst_pad_set_activatepull_function (basesink->sinkpad,
       gst_base_sink_pad_activate_pull);
+  gst_pad_set_query_function (basesink->sinkpad, gst_base_sink_sink_query);
   gst_pad_set_event_function (basesink->sinkpad, gst_base_sink_event);
   gst_pad_set_chain_function (basesink->sinkpad, gst_base_sink_chain);
   gst_pad_set_chain_list_function (basesink->sinkpad, gst_base_sink_chain_list);
@@ -4735,7 +4740,7 @@ gst_base_sink_get_query_types (GstElement * element)
 }
 
 static gboolean
-gst_base_sink_query (GstElement * element, GstQuery * query)
+default_element_query (GstElement * element, GstQuery * query)
 {
   gboolean res = FALSE;
 
@@ -4857,6 +4862,56 @@ gst_base_sink_query (GstElement * element, GstQuery * query)
   }
   GST_DEBUG_OBJECT (basesink, "query %s returns %d",
       GST_QUERY_TYPE_NAME (query), res);
+  return res;
+}
+
+
+static gboolean
+default_sink_query (GstBaseSink * basesink, GstQuery * query)
+{
+  gboolean res;
+  GstBaseSinkClass *bclass;
+
+  bclass = GST_BASE_SINK_GET_CLASS (basesink);
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_ALLOCATION:
+    {
+      if (bclass->setup_allocation)
+        res = bclass->setup_allocation (basesink, query);
+      else
+        res = FALSE;
+      break;
+    }
+    default:
+      res = gst_pad_query_default (basesink->sinkpad, query);
+      break;
+  }
+  return res;
+}
+
+static gboolean
+gst_base_sink_sink_query (GstPad * pad, GstQuery * query)
+{
+  GstBaseSink *basesink;
+  GstBaseSinkClass *bclass;
+  gboolean res;
+
+  basesink = GST_BASE_SINK_CAST (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (basesink == NULL)) {
+    gst_query_unref (query);
+    return FALSE;
+  }
+
+  bclass = GST_BASE_SINK_GET_CLASS (basesink);
+
+  if (bclass->query)
+    res = bclass->query (basesink, query);
+  else
+    res = FALSE;
+
+  gst_object_unref (basesink);
+
   return res;
 }
 

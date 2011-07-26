@@ -117,8 +117,17 @@ struct _GstBaseSink {
  * @parent_class: Element parent class
  * @get_caps: Called to get sink pad caps from the subclass
  * @set_caps: Notify subclass of changed caps
+ * @fixate: Only useful in pull mode, this vmethod will be called in response to
+ *     gst_pad_fixate_caps() being called on the sink pad. Implement if you have
+ *     ideas about what should be the default values for the caps you support.
+ * @activate_pull: Subclasses should override this when they can provide an
+ *     alternate method of spawning a thread to drive the pipeline in pull mode.
+ *     Should start or stop the pulling thread, depending on the value of the
+ *     "active" argument. Called after actually activating the sink pad in pull
+ *     mode. The default implementation starts a task on the sink pad.
  * @get_times: Called to get the start and end times for synchronising
  *     the passed buffer to the clock
+ * @setup_allocation: configure the allocation query
  * @start: Start processing. Ideal for opening resources in the subclass
  * @stop: Stop processing. Subclasses should use this to close resources.
  * @unlock: Unlock any pending access to the resource. Subclasses should
@@ -131,14 +140,6 @@ struct _GstBaseSink {
  *     correct moment if the #GstBaseSink has been set to sync to the clock.
  * @render_list: Same as @render but used whith buffer lists instead of
  *     buffers. Since: 0.10.24
- * @activate_pull: Subclasses should override this when they can provide an
- *     alternate method of spawning a thread to drive the pipeline in pull mode.
- *     Should start or stop the pulling thread, depending on the value of the
- *     "active" argument. Called after actually activating the sink pad in pull
- *     mode. The default implementation starts a task on the sink pad.
- * @fixate: Only useful in pull mode, this vmethod will be called in response to
- *     gst_pad_fixate_caps() being called on the sink pad. Implement if you have
- *     ideas about what should be the default values for the caps you support.
  *
  * Subclasses can override any of the available virtual methods or not, as
  * needed. At the minimum, the @render method should be overridden to
@@ -161,6 +162,9 @@ struct _GstBaseSinkClass {
   void          (*get_times)    (GstBaseSink *sink, GstBuffer *buffer,
                                  GstClockTime *start, GstClockTime *end);
 
+  /* setup allocation query */
+  gboolean      (*setup_allocation)   (GstBaseSink *sink, GstQuery *query);
+
   /* start and stop processing, ideal for opening/closing the resource */
   gboolean      (*start)        (GstBaseSink *sink);
   gboolean      (*stop)         (GstBaseSink *sink);
@@ -172,6 +176,9 @@ struct _GstBaseSinkClass {
    * complete. Sub-classes should clear any command queue or indicator they
    * set during unlock */
   gboolean      (*unlock_stop)  (GstBaseSink *sink);
+
+  /* notify subclass of query */
+  gboolean      (*query)        (GstBaseSink *sink, GstQuery *query);
 
   /* notify subclass of event, preroll buffer or real buffer */
   gboolean      (*event)        (GstBaseSink *sink, GstEvent *event);
