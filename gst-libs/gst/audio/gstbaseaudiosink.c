@@ -160,7 +160,8 @@ static gboolean gst_base_audio_sink_setcaps (GstBaseSink * bsink,
     GstCaps * caps);
 static void gst_base_audio_sink_fixate (GstBaseSink * bsink, GstCaps * caps);
 
-static gboolean gst_base_audio_sink_query_pad (GstPad * pad, GstQuery * query);
+static gboolean gst_base_audio_sink_query_pad (GstBaseSink * bsink,
+    GstQuery * query);
 
 
 /* static guint gst_base_audio_sink_signals[LAST_SIGNAL] = { 0 }; */
@@ -231,6 +232,7 @@ gst_base_audio_sink_class_init (GstBaseAudioSinkClass * klass)
 
   gstbasesink_class->event = GST_DEBUG_FUNCPTR (gst_base_audio_sink_event);
   gstbasesink_class->preroll = GST_DEBUG_FUNCPTR (gst_base_audio_sink_preroll);
+  gstbasesink_class->query = GST_DEBUG_FUNCPTR (gst_base_audio_sink_query_pad);
   gstbasesink_class->render = GST_DEBUG_FUNCPTR (gst_base_audio_sink_render);
   gstbasesink_class->get_times =
       GST_DEBUG_FUNCPTR (gst_base_audio_sink_get_times);
@@ -271,10 +273,6 @@ gst_base_audio_sink_init (GstBaseAudioSink * baseaudiosink)
   basesink->can_activate_pull = DEFAULT_CAN_ACTIVATE_PULL;
 
   gst_base_sink_set_last_buffer_enabled (basesink, FALSE);
-
-  /* install some custom pad_query functions */
-  gst_pad_set_query_function (GST_BASE_SINK_PAD (baseaudiosink),
-      GST_DEBUG_FUNCPTR (gst_base_audio_sink_query_pad));
 }
 
 static void
@@ -338,12 +336,12 @@ clock_disabled:
 }
 
 static gboolean
-gst_base_audio_sink_query_pad (GstPad * pad, GstQuery * query)
+gst_base_audio_sink_query_pad (GstBaseSink * bsink, GstQuery * query)
 {
   gboolean res = FALSE;
   GstBaseAudioSink *basesink;
 
-  basesink = GST_BASE_AUDIO_SINK (gst_pad_get_parent (pad));
+  basesink = GST_BASE_AUDIO_SINK (bsink);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CONVERT:
@@ -351,7 +349,7 @@ gst_base_audio_sink_query_pad (GstPad * pad, GstQuery * query)
       GstFormat src_fmt, dest_fmt;
       gint64 src_val, dest_val;
 
-      GST_LOG_OBJECT (pad, "query convert");
+      GST_LOG_OBJECT (basesink, "query convert");
 
       if (basesink->ringbuffer) {
         gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, NULL);
@@ -364,11 +362,9 @@ gst_base_audio_sink_query_pad (GstPad * pad, GstQuery * query)
       break;
     }
     default:
+      res = GST_BASE_SINK_CLASS (bsink)->query (bsink, query);
       break;
   }
-
-  gst_object_unref (basesink);
-
   return res;
 }
 
