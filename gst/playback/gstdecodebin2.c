@@ -2989,8 +2989,9 @@ gst_decode_chain_handle_eos (GstDecodeChain * eos_chain)
     CHAIN_MUTEX_UNLOCK (chain);
     GST_DEBUG_OBJECT (dbin,
         "Current active group in chain %p is not drained yet", chain);
-    /* Instruct caller to drop EOS event */
-    forward_eos = FALSE;
+    /* Instruct caller to drop EOS event if we have future groups */
+    if (chain->next_groups)
+      forward_eos = FALSE;
   }
 
   return forward_eos;
