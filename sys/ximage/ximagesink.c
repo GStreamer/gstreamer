@@ -1141,7 +1141,7 @@ gst_ximagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   newpool = gst_ximage_buffer_pool_new (ximagesink);
 
   structure = gst_buffer_pool_get_config (newpool);
-  gst_buffer_pool_config_set (structure, caps, size, 0, 0, 0, 15);
+  gst_buffer_pool_config_set (structure, caps, size, 2, 0, 0, 15);
   if (!gst_buffer_pool_set_config (newpool, structure))
     goto config_failed;
 
@@ -1424,94 +1424,83 @@ gst_ximagesink_event (GstBaseSink * sink, GstEvent * event)
 }
 
 static gboolean
-gst_ximagesink_sink_query (GstPad * sinkpad, GstQuery * query)
+gst_ximagesink_setup_allocation (GstBaseSink * bsink, GstQuery * query)
 {
-  GstXImageSink *ximagesink = GST_XIMAGESINK (GST_PAD_PARENT (sinkpad));
-  gboolean res = TRUE;
+  GstXImageSink *ximagesink = GST_XIMAGESINK (bsink);
+  GstBufferPool *pool;
+  GstStructure *config;
+  GstCaps *caps;
+  guint size;
+  gboolean need_pool;
 
-  switch (GST_QUERY_TYPE (query)) {
-    case GST_QUERY_ALLOCATION:
-    {
-      GstBufferPool *pool;
-      GstStructure *config;
-      GstCaps *caps;
-      guint size;
-      gboolean need_pool;
+  gst_query_parse_allocation (query, &caps, &need_pool);
 
-      gst_query_parse_allocation (query, &caps, &need_pool);
+  if (caps == NULL)
+    goto no_caps;
 
-      if (caps == NULL)
-        goto no_caps;
+  g_mutex_lock (ximagesink->flow_lock);
+  if ((pool = ximagesink->pool))
+    gst_object_ref (pool);
+  g_mutex_unlock (ximagesink->flow_lock);
 
-      g_mutex_lock (ximagesink->flow_lock);
-      if ((pool = ximagesink->pool))
-        gst_object_ref (pool);
-      g_mutex_unlock (ximagesink->flow_lock);
+  if (pool != NULL) {
+    const GstCaps *pcaps;
 
-      if (pool != NULL) {
-        const GstCaps *pcaps;
+    /* we had a pool, check caps */
+    config = gst_buffer_pool_get_config (pool);
+    gst_buffer_pool_config_get (config, &pcaps, &size, NULL, NULL, NULL, NULL);
 
-        /* we had a pool, check caps */
-        config = gst_buffer_pool_get_config (pool);
-        gst_buffer_pool_config_get (config, &pcaps, &size, NULL, NULL, NULL,
-            NULL);
-
-        GST_DEBUG_OBJECT (ximagesink,
-            "we had a pool with caps %" GST_PTR_FORMAT, pcaps);
-        if (!gst_caps_is_equal (caps, pcaps)) {
-          /* different caps, we can't use this pool */
-          GST_DEBUG_OBJECT (ximagesink, "pool has different caps");
-          gst_object_unref (pool);
-          pool = NULL;
-        }
-      }
-      if (pool == NULL && need_pool) {
-        GstVideoInfo info;
-
-        GST_DEBUG_OBJECT (ximagesink, "create new pool");
-        pool = gst_ximage_buffer_pool_new (ximagesink);
-
-        if (!gst_video_info_from_caps (&info, caps))
-          goto invalid_caps;
-
-        /* the normal size of a frame */
-        size = info.size;
-
-        config = gst_buffer_pool_get_config (pool);
-        gst_buffer_pool_config_set (config, caps, size, 0, 0, 0, 15);
-        if (!gst_buffer_pool_set_config (pool, config))
-          goto config_failed;
-      }
-      /* we need at least 2 buffer because we hold on to the last one */
-      gst_query_set_allocation_params (query, size, 2, 0, 0, 15, pool);
-
-      /* we also support various metadata */
-      gst_query_add_allocation_meta (query, GST_META_API_VIDEO);
-      gst_query_add_allocation_meta (query, GST_META_API_VIDEO_CROP);
-
+    GST_DEBUG_OBJECT (ximagesink,
+        "we had a pool with caps %" GST_PTR_FORMAT, pcaps);
+    if (!gst_caps_is_equal (caps, pcaps)) {
+      /* different caps, we can't use this pool */
+      GST_DEBUG_OBJECT (ximagesink, "pool has different caps");
       gst_object_unref (pool);
-      break;
+      pool = NULL;
     }
-    default:
-      res = FALSE;
-      break;
   }
-  return res;
+  if (pool == NULL && need_pool) {
+    GstVideoInfo info;
+
+    GST_DEBUG_OBJECT (ximagesink, "create new pool");
+    pool = gst_ximage_buffer_pool_new (ximagesink);
+
+    if (!gst_video_info_from_caps (&info, caps))
+      goto invalid_caps;
+
+    /* the normal size of a frame */
+    size = info.size;
+
+    config = gst_buffer_pool_get_config (pool);
+    gst_buffer_pool_config_set (config, caps, size, 0, 0, 0, 15);
+    if (!gst_buffer_pool_set_config (pool, config))
+      goto config_failed;
+  }
+  /* we need at least 2 buffer because we hold on to the last one */
+  gst_query_set_allocation_params (query, size, 2, 0, 0, 15, pool);
+
+  /* we also support various metadata */
+  gst_query_add_allocation_meta (query, GST_META_API_VIDEO);
+  gst_query_add_allocation_meta (query, GST_META_API_VIDEO_CROP);
+
+  gst_object_unref (pool);
+
+  return TRUE;
 
   /* ERRORS */
 no_caps:
   {
-    GST_DEBUG_OBJECT (sinkpad, "no caps specified");
+    GST_DEBUG_OBJECT (bsink, "no caps specified");
     return FALSE;
   }
 invalid_caps:
   {
-    GST_DEBUG_OBJECT (sinkpad, "invalid caps specified");
+    GST_DEBUG_OBJECT (bsink, "invalid caps specified");
     return FALSE;
   }
 config_failed:
   {
-    GST_DEBUG_OBJECT (sinkpad, "failed setting config");
+    GST_DEBUG_OBJECT (bsink, "failed setting config");
     return FALSE;
   }
 }
@@ -1883,10 +1872,6 @@ gst_ximagesink_finalize (GObject * object)
 static void
 gst_ximagesink_init (GstXImageSink * ximagesink)
 {
-  /* for the ALLOCATION query */
-  gst_pad_set_query_function (GST_BASE_SINK (ximagesink)->sinkpad,
-      gst_ximagesink_sink_query);
-
   ximagesink->display_name = NULL;
   ximagesink->xcontext = NULL;
   ximagesink->xwindow = NULL;
@@ -1990,6 +1975,8 @@ gst_ximagesink_class_init (GstXImageSinkClass * klass)
   gstbasesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_ximagesink_getcaps);
   gstbasesink_class->set_caps = GST_DEBUG_FUNCPTR (gst_ximagesink_setcaps);
   gstbasesink_class->get_times = GST_DEBUG_FUNCPTR (gst_ximagesink_get_times);
+  gstbasesink_class->setup_allocation =
+      GST_DEBUG_FUNCPTR (gst_ximagesink_setup_allocation);
   gstbasesink_class->event = GST_DEBUG_FUNCPTR (gst_ximagesink_event);
 
   videosink_class->show_frame = GST_DEBUG_FUNCPTR (gst_ximagesink_show_frame);
