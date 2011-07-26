@@ -476,6 +476,8 @@ gst_base_camera_src_change_state (GstElement * element,
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       if (!setup_pipeline (self))
         return GST_STATE_CHANGE_FAILURE;
+      /* without this the preview pipeline will not post buffer
+       * messages on the pipeline */
       gst_element_set_state (self->preview_pipeline->pipeline,
           GST_STATE_PLAYING);
       break;
