@@ -92,7 +92,7 @@ struct _GstBaseCameraSrc
 
 /**
  * GstBaseCameraSrcClass:
- * @construct_pipeline: construct pipeline must be implemented by derived class
+ * @construct_pipeline: construct pipeline
  * @setup_pipeline: configure pipeline for the chosen settings
  * @set_zoom: set the zoom
  * @set_mode: set the mode
@@ -101,29 +101,32 @@ struct _GstBaseCameraSrcClass
 {
   GstBinClass parent;
 
-  /* construct pipeline must be implemented by derived class */
+  /* Construct pipeline. (called in GST_STATE_CHANGE_NULL_TO_READY) Optional. */
   gboolean    (*construct_pipeline)  (GstBaseCameraSrc *self);
 
-  /* optional */
+  /* (called in GST_STATE_CHANGE_READY_TO_PAUSED). Optional. */
   gboolean    (*setup_pipeline)      (GstBaseCameraSrc *self);
 
-  /* set the zoom */
+  /* Set the zoom. If set, called when changing 'zoom' property. Optional. */
   void        (*set_zoom)            (GstBaseCameraSrc *self, gfloat zoom);
 
-  /* set the mode */
+  /* Set the mode. If set, called when changing 'mode' property. Optional. */
   gboolean    (*set_mode)            (GstBaseCameraSrc *self,
                                       GstCameraBinMode mode);
 
-  /* set preview caps */
+  /* Set preview caps. If set, called called when setting new 'preview-caps'. Optional. */
   gboolean    (*set_preview)         (GstBaseCameraSrc *self,
                                       GstCaps *preview_caps);
 
-  /* */
+  /* unused */
   GstCaps *   (*get_allowed_input_caps) (GstBaseCameraSrc * self);
 
   void (*private_start_capture) (GstBaseCameraSrc * src);
   void (*private_stop_capture) (GstBaseCameraSrc * src);
+  /* Called by the handler for 'start-capture'. Mandatory. */
   gboolean (*start_capture) (GstBaseCameraSrc * src);
+
+  /* Called by the handler for 'stop-capture'. Mandatory. */
   void (*stop_capture) (GstBaseCameraSrc * src);
 
   gpointer _gst_reserved[GST_PADDING_LARGE];
