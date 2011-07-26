@@ -138,9 +138,9 @@ static void gst_v4l2sink_get_property (GObject * object, guint prop_id,
 static GstStateChangeReturn gst_v4l2sink_change_state (GstElement * element,
     GstStateChange transition);
 
-static gboolean gst_v4l2sink_sink_query (GstPad * sinkpad, GstQuery * query);
-
 /* GstBaseSink methods: */
+static gboolean gst_v4l2sink_setup_allocation (GstBaseSink * bsink,
+    GstQuery * query);
 static GstCaps *gst_v4l2sink_get_caps (GstBaseSink * bsink, GstCaps * filter);
 static gboolean gst_v4l2sink_set_caps (GstBaseSink * bsink, GstCaps * caps);
 #if 0
@@ -225,6 +225,8 @@ gst_v4l2sink_class_init (GstV4l2SinkClass * klass)
 
   basesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_v4l2sink_get_caps);
   basesink_class->set_caps = GST_DEBUG_FUNCPTR (gst_v4l2sink_set_caps);
+  basesink_class->setup_allocation =
+      GST_DEBUG_FUNCPTR (gst_v4l2sink_setup_allocation);
   basesink_class->render = GST_DEBUG_FUNCPTR (gst_v4l2sink_show_frame);
 
   klass->v4l2_class_devices = NULL;
@@ -236,10 +238,6 @@ gst_v4l2sink_class_init (GstV4l2SinkClass * klass)
 static void
 gst_v4l2sink_init (GstV4l2Sink * v4l2sink)
 {
-  /* for the ALLOCATION query */
-  gst_pad_set_query_function (GST_BASE_SINK (v4l2sink)->sinkpad,
-      gst_v4l2sink_sink_query);
-
   v4l2sink->v4l2object = gst_v4l2_object_new (GST_ELEMENT (v4l2sink),
       V4L2_BUF_TYPE_VIDEO_OUTPUT, DEFAULT_PROP_DEVICE,
       gst_v4l2_get_output, gst_v4l2_set_output, NULL);
@@ -669,64 +667,53 @@ invalid_format:
 }
 
 static gboolean
-gst_v4l2sink_sink_query (GstPad * sinkpad, GstQuery * query)
+gst_v4l2sink_setup_allocation (GstBaseSink * bsink, GstQuery * query)
 {
-  GstV4l2Sink *v4l2sink = GST_V4L2SINK (GST_PAD_PARENT (sinkpad));
+  GstV4l2Sink *v4l2sink = GST_V4L2SINK (bsink);
   GstV4l2Object *obj = v4l2sink->v4l2object;
-  gboolean res = TRUE;
+  GstBufferPool *pool;
+  GstStructure *config;
+  GstCaps *caps;
+  guint size = 0;
+  gboolean need_pool;
 
-  switch (GST_QUERY_TYPE (query)) {
-    case GST_QUERY_ALLOCATION:
-    {
-      GstBufferPool *pool;
-      GstStructure *config;
-      GstCaps *caps;
-      guint size = 0;
-      gboolean need_pool;
+  gst_query_parse_allocation (query, &caps, &need_pool);
 
-      gst_query_parse_allocation (query, &caps, &need_pool);
+  if (caps == NULL)
+    goto no_caps;
 
-      if (caps == NULL)
-        goto no_caps;
+  if ((pool = obj->pool))
+    gst_object_ref (pool);
 
-      if ((pool = obj->pool))
-        gst_object_ref (pool);
+  if (pool != NULL) {
+    const GstCaps *pcaps;
 
-      if (pool != NULL) {
-        const GstCaps *pcaps;
+    /* we had a pool, check caps */
+    config = gst_buffer_pool_get_config (pool);
+    gst_buffer_pool_config_get (config, &pcaps, &size, NULL, NULL, NULL, NULL);
 
-        /* we had a pool, check caps */
-        config = gst_buffer_pool_get_config (pool);
-        gst_buffer_pool_config_get (config, &pcaps, &size, NULL, NULL, NULL,
-            NULL);
-
-        GST_DEBUG_OBJECT (v4l2sink,
-            "we had a pool with caps %" GST_PTR_FORMAT, pcaps);
-        if (!gst_caps_is_equal (caps, pcaps)) {
-          gst_object_unref (pool);
-          goto different_caps;
-        }
-      }
-      gst_query_set_allocation_params (query, size, 0, 0, 0, 15, pool);
-
-      /* we also support various metadata */
-      gst_query_add_allocation_meta (query, GST_META_API_VIDEO);
-      gst_query_add_allocation_meta (query, GST_META_API_VIDEO_CROP);
-
-      if (pool)
-        gst_object_unref (pool);
-      break;
+    GST_DEBUG_OBJECT (v4l2sink,
+        "we had a pool with caps %" GST_PTR_FORMAT, pcaps);
+    if (!gst_caps_is_equal (caps, pcaps)) {
+      gst_object_unref (pool);
+      goto different_caps;
     }
-    default:
-      res = FALSE;
-      break;
   }
-  return res;
+  gst_query_set_allocation_params (query, size, 0, 0, 0, 15, pool);
+
+  /* we also support various metadata */
+  gst_query_add_allocation_meta (query, GST_META_API_VIDEO);
+  gst_query_add_allocation_meta (query, GST_META_API_VIDEO_CROP);
+
+  if (pool)
+    gst_object_unref (pool);
+
+  return TRUE;
 
   /* ERRORS */
 no_caps:
   {
-    GST_DEBUG_OBJECT (sinkpad, "no caps specified");
+    GST_DEBUG_OBJECT (v4l2sink, "no caps specified");
     return FALSE;
   }
 different_caps:
