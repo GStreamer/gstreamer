@@ -603,7 +603,6 @@ GST_START_TEST (test_position)
   GstPad *sinkpad;
   GstStateChangeReturn ret;
   gboolean qret;
-  GstFormat qformat;
   gint64 qcur;
   GstBuffer *buffer;
   GstFlowReturn fret;
@@ -627,16 +626,14 @@ GST_START_TEST (test_position)
   fail_if (sinkpad == NULL);
 
   /* do position query, this should fail, we have nothing received yet */
-  qformat = GST_FORMAT_TIME;
-  qret = gst_element_query_position (sink, &qformat, &qcur);
+  qret = gst_element_query_position (sink, GST_FORMAT_TIME, &qcur);
   fail_unless (qret == FALSE);
 
   ret = gst_element_set_state (pipeline, GST_STATE_READY);
   fail_unless (ret == GST_STATE_CHANGE_SUCCESS);
 
   /* do position query, this should fail, we have nothing received yet */
-  qformat = GST_FORMAT_TIME;
-  qret = gst_element_query_position (sink, &qformat, &qcur);
+  qret = gst_element_query_position (sink, GST_FORMAT_TIME, &qcur);
   fail_unless (qret == FALSE);
 
   /* make pipeline and element ready to accept data */
@@ -644,8 +641,7 @@ GST_START_TEST (test_position)
   fail_unless (ret == GST_STATE_CHANGE_ASYNC);
 
   /* do position query, this should fail, we have nothing received yet */
-  qformat = GST_FORMAT_TIME;
-  qret = gst_element_query_position (sink, &qformat, &qcur);
+  qret = gst_element_query_position (sink, GST_FORMAT_TIME, &qcur);
   fail_unless (qret == FALSE);
 
   /* send segment, this should work */
@@ -665,8 +661,7 @@ GST_START_TEST (test_position)
 
   /* FIXME, do position query, this should succeed with the time value from the
    * segment. */
-  qformat = GST_FORMAT_TIME;
-  qret = gst_element_query_position (sink, &qformat, &qcur);
+  qret = gst_element_query_position (sink, GST_FORMAT_TIME, &qcur);
   fail_unless (qret == TRUE);
   fail_unless (qcur == 1 * GST_SECOND);
 
@@ -686,8 +681,7 @@ GST_START_TEST (test_position)
 
   /* do position query, this should succeed with the time value from the
    * segment. */
-  qformat = GST_FORMAT_TIME;
-  qret = gst_element_query_position (sink, &qformat, &qcur);
+  qret = gst_element_query_position (sink, GST_FORMAT_TIME, &qcur);
   fail_unless (qret == TRUE);
   fail_unless (qcur == 1 * GST_SECOND);
 
@@ -706,8 +700,7 @@ GST_START_TEST (test_position)
 
   /* do position query, this should succeed with the time value from the
    * segment before the flush. */
-  qformat = GST_FORMAT_TIME;
-  qret = gst_element_query_position (sink, &qformat, &qcur);
+  qret = gst_element_query_position (sink, GST_FORMAT_TIME, &qcur);
   fail_unless (qret == TRUE);
   fail_unless (qcur == 1 * GST_SECOND);
 
@@ -721,8 +714,7 @@ GST_START_TEST (test_position)
   }
 
   /* do position query, this should fail, the segment is flushed */
-  qformat = GST_FORMAT_TIME;
-  qret = gst_element_query_position (sink, &qformat, &qcur);
+  qret = gst_element_query_position (sink, GST_FORMAT_TIME, &qcur);
   fail_unless (qret == FALSE);
 
   /* send segment, this should work */
@@ -756,8 +748,7 @@ GST_START_TEST (test_position)
 
   /* do position query, this should succeed with the time value from the
    * segment. */
-  qformat = GST_FORMAT_TIME;
-  qret = gst_element_query_position (sink, &qformat, &qcur);
+  qret = gst_element_query_position (sink, GST_FORMAT_TIME, &qcur);
   fail_unless (qret == TRUE);
   fail_unless (qcur == 1 * GST_SECOND);
 
@@ -766,8 +757,7 @@ GST_START_TEST (test_position)
 
   /* position now is increasing but never exceeds the boundaries of the segment */
   for (i = 0; i < 5; i++) {
-    qformat = GST_FORMAT_TIME;
-    qret = gst_element_query_position (sink, &qformat, &qcur);
+    qret = gst_element_query_position (sink, GST_FORMAT_TIME, &qcur);
     GST_DEBUG ("position %" GST_TIME_FORMAT, GST_TIME_ARGS (qcur));
     fail_unless (qret == TRUE);
     fail_unless (qcur >= 1 * GST_SECOND && qcur <= 3 * GST_SECOND);
@@ -780,8 +770,7 @@ GST_START_TEST (test_position)
 
   /* after rendering the position must be bigger then the stream_time of the
    * buffer */
-  qformat = GST_FORMAT_TIME;
-  qret = gst_element_query_position (sink, &qformat, &qcur);
+  qret = gst_element_query_position (sink, GST_FORMAT_TIME, &qcur);
   fail_unless (qret == TRUE);
   fail_unless (qcur >= 2 * GST_SECOND && qcur <= 3 * GST_SECOND);
 
@@ -795,8 +784,7 @@ GST_START_TEST (test_position)
   }
 
   /* this should now just report the stream time of the last buffer */
-  qformat = GST_FORMAT_TIME;
-  qret = gst_element_query_position (sink, &qformat, &qcur);
+  qret = gst_element_query_position (sink, GST_FORMAT_TIME, &qcur);
   fail_unless (qret == TRUE);
   fail_unless (qcur == 2 * GST_SECOND);
 
@@ -809,8 +797,7 @@ GST_START_TEST (test_position)
   }
 
   /* do position query, this should fail, the segment is flushed */
-  qformat = GST_FORMAT_TIME;
-  qret = gst_element_query_position (sink, &qformat, &qcur);
+  qret = gst_element_query_position (sink, GST_FORMAT_TIME, &qcur);
   fail_unless (qret == FALSE);
 
   /* send segment, this should work */
@@ -849,8 +836,7 @@ GST_START_TEST (test_position)
   /* do position query, this should succeed with the stream time of the buffer
    * against the clock. Since the buffer is synced against the clock, the time
    * should be at least the stream time of the buffer. */
-  qformat = GST_FORMAT_TIME;
-  qret = gst_element_query_position (sink, &qformat, &qcur);
+  qret = gst_element_query_position (sink, GST_FORMAT_TIME, &qcur);
   fail_unless (qret == TRUE);
   fail_unless (qcur >= 2 * GST_SECOND && qcur <= 3 * GST_SECOND);
 
@@ -858,8 +844,7 @@ GST_START_TEST (test_position)
    * against the segment */
   g_usleep (2 * G_USEC_PER_SEC);
 
-  qformat = GST_FORMAT_TIME;
-  qret = gst_element_query_position (sink, &qformat, &qcur);
+  qret = gst_element_query_position (sink, GST_FORMAT_TIME, &qcur);
   fail_unless (qret == TRUE);
   fail_unless (qcur == 3 * GST_SECOND);
 
@@ -871,8 +856,7 @@ GST_START_TEST (test_position)
   /* we report the time of the last start of the buffer. This is slightly
    * incorrect, we should report the exact time when we paused but there is no
    * record of that anywhere */
-  qformat = GST_FORMAT_TIME;
-  qret = gst_element_query_position (sink, &qformat, &qcur);
+  qret = gst_element_query_position (sink, GST_FORMAT_TIME, &qcur);
   fail_unless (qret == TRUE);
   fail_unless (qcur >= 4 * GST_SECOND);
 
@@ -880,14 +864,12 @@ GST_START_TEST (test_position)
   fail_unless (ret == GST_STATE_CHANGE_SUCCESS);
 
   /* fails again because we are in the wrong state */
-  qformat = GST_FORMAT_TIME;
-  qret = gst_element_query_position (sink, &qformat, &qcur);
+  qret = gst_element_query_position (sink, GST_FORMAT_TIME, &qcur);
   fail_unless (qret == FALSE);
 
   gst_element_set_state (pipeline, GST_STATE_NULL);
 
-  qformat = GST_FORMAT_TIME;
-  qret = gst_element_query_position (sink, &qformat, &qcur);
+  qret = gst_element_query_position (sink, GST_FORMAT_TIME, &qcur);
   fail_unless (qret == FALSE);
 
   gst_object_unref (sinkpad);

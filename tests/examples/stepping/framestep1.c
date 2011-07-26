@@ -89,7 +89,6 @@ int
 main (int argc, char *argv[])
 {
   GstElement *bin, *videotestsrc, *appsink;
-  GstFormat format;
   gint64 pos;
 
   gst_init (&argc, &argv);
@@ -133,8 +132,7 @@ main (int argc, char *argv[])
   /* wait for step to really complete */
   gst_element_get_state (bin, NULL, NULL, -1);
 
-  format = GST_FORMAT_TIME;
-  gst_element_query_position (bin, &format, &pos);
+  gst_element_query_position (bin, GST_FORMAT_TIME, &pos);
   g_message ("stepped two frames, now at %" GST_TIME_FORMAT,
       GST_TIME_ARGS (pos));
 
@@ -150,8 +148,7 @@ main (int argc, char *argv[])
   /* wait for step to really complete */
   gst_element_get_state (bin, NULL, NULL, -1);
 
-  format = GST_FORMAT_TIME;
-  gst_element_query_position (bin, &format, &pos);
+  gst_element_query_position (bin, GST_FORMAT_TIME, &pos);
   g_message ("stepped 120ms frames, now at %" GST_TIME_FORMAT,
       GST_TIME_ARGS (pos));
 

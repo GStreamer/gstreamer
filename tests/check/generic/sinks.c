@@ -1000,15 +1000,13 @@ static GstBusSyncReply
 async_done_func (GstBus * bus, GstMessage * msg, GstElement * sink)
 {
   if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ASYNC_DONE) {
-    GstFormat format;
     gint64 position;
 
     GST_DEBUG ("we have ASYNC_DONE now");
     fail_unless (have_preroll == TRUE, "no preroll buffer received");
 
     /* get the position now */
-    format = GST_FORMAT_TIME;
-    gst_element_query_position (sink, &format, &position);
+    gst_element_query_position (sink, GST_FORMAT_TIME, &position);
 
     GST_DEBUG ("we have position %" GST_TIME_FORMAT, GST_TIME_ARGS (position));
 
@@ -1052,7 +1050,6 @@ GST_START_TEST (test_async_done)
   GstFlowReturn res;
   GstBus *bus;
   GThread *thread;
-  GstFormat format;
   gint64 position;
   gboolean qret;
   GstSegment segment;
@@ -1085,9 +1082,8 @@ GST_START_TEST (test_async_done)
 
   /* We have not yet received any buffers so we are still in the READY state,
    * the position is therefore still not queryable. */
-  format = GST_FORMAT_TIME;
   position = -1;
-  qret = gst_element_query_position (sink, &format, &position);
+  qret = gst_element_query_position (sink, GST_FORMAT_TIME, &position);
   fail_unless (qret == TRUE, "position wrong");
   fail_unless (position == 10 * GST_SECOND, "position is wrong");
 
@@ -1111,8 +1107,7 @@ GST_START_TEST (test_async_done)
   fail_unless (res == GST_FLOW_OK, "no OK flow return");
 
   /* check if position is still 10 seconds */
-  format = GST_FORMAT_TIME;
-  gst_element_query_position (sink, &format, &position);
+  gst_element_query_position (sink, GST_FORMAT_TIME, &position);
   GST_DEBUG ("first buffer position %" GST_TIME_FORMAT,
       GST_TIME_ARGS (position));
   fail_unless (position == 10 * GST_SECOND, "position is wrong");
@@ -1130,8 +1125,7 @@ GST_START_TEST (test_async_done)
   /* check if position is still 10 seconds. This is racy because  the above
    * thread might not yet have started the push, because of the above sleep,
    * this is very unlikely, though. */
-  format = GST_FORMAT_TIME;
-  gst_element_query_position (sink, &format, &position);
+  gst_element_query_position (sink, GST_FORMAT_TIME, &position);
   GST_DEBUG ("second buffer position %" GST_TIME_FORMAT,
       GST_TIME_ARGS (position));
   fail_unless (position == 10 * GST_SECOND, "position is wrong");
@@ -1146,8 +1140,7 @@ GST_START_TEST (test_async_done)
   GST_DEBUG ("joining thread");
   g_thread_join (thread);
 
-  format = GST_FORMAT_TIME;
-  gst_element_query_position (sink, &format, &position);
+  gst_element_query_position (sink, GST_FORMAT_TIME, &position);
   GST_DEBUG ("last buffer position %" GST_TIME_FORMAT,
       GST_TIME_ARGS (position));
   fail_unless (position == 310 * GST_SECOND, "position is wrong");
@@ -1166,14 +1159,12 @@ static GstBusSyncReply
 async_done_eos_func (GstBus * bus, GstMessage * msg, GstElement * sink)
 {
   if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ASYNC_DONE) {
-    GstFormat format;
     gint64 position;
 
     GST_DEBUG ("we have ASYNC_DONE now");
 
     /* get the position now */
-    format = GST_FORMAT_TIME;
-    gst_element_query_position (sink, &format, &position);
+    gst_element_query_position (sink, GST_FORMAT_TIME, &position);
 
     GST_DEBUG ("we have position %" GST_TIME_FORMAT, GST_TIME_ARGS (position));
 
@@ -1196,7 +1187,6 @@ GST_START_TEST (test_async_done_eos)
   GstPad *sinkpad;
   gboolean res;
   GstBus *bus;
-  GstFormat format;
   gint64 position;
   gboolean qret;
   GstSegment segment;
@@ -1224,9 +1214,8 @@ GST_START_TEST (test_async_done_eos)
 
   /* We have not yet received any buffers so we are still in the READY state,
    * the position is therefore still not queryable. */
-  format = GST_FORMAT_TIME;
   position = -1;
-  qret = gst_element_query_position (sink, &format, &position);
+  qret = gst_element_query_position (sink, GST_FORMAT_TIME, &position);
   fail_unless (qret == TRUE, "position wrong");
   fail_unless (position == 10 * GST_SECOND, "position is wrong");
 
@@ -1239,8 +1228,7 @@ GST_START_TEST (test_async_done_eos)
   fail_unless (res == TRUE, "no TRUE return");
 
   /* check if position is still 10 seconds */
-  format = GST_FORMAT_TIME;
-  gst_element_query_position (sink, &format, &position);
+  gst_element_query_position (sink, GST_FORMAT_TIME, &position);
   GST_DEBUG ("EOS position %" GST_TIME_FORMAT, GST_TIME_ARGS (position));
   fail_unless (position == 10 * GST_SECOND, "position is wrong");
 
