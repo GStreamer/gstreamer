@@ -738,24 +738,39 @@ gst_v4l2_buffer_pool_release_buffer (GstBufferPool * bpool, GstBuffer * buffer)
       break;
 
     case V4L2_BUF_TYPE_VIDEO_OUTPUT:
-    {
-      GstMetaV4l2 *meta;
+      switch (obj->mode) {
+        case GST_V4L2_IO_RW:
+          /* release back in the pool */
+          GST_BUFFER_POOL_CLASS (parent_class)->release_buffer (bpool, buffer);
+          break;
 
-      meta = GST_META_V4L2_GET (buffer);
-      g_assert (meta != NULL);
+        case GST_V4L2_IO_MMAP:
+        {
+          GstMetaV4l2 *meta;
 
-      if (pool->buffers[meta->vbuffer.index] == NULL) {
-        GST_LOG_OBJECT (pool, "buffer not queued, putting on free list");
-        /* playback, put the buffer back in the queue to refill later. */
-        GST_BUFFER_POOL_CLASS (parent_class)->release_buffer (bpool, buffer);
-      } else {
-        /* the buffer is queued in the device but maybe not played yet. We just
-         * leave it there and not make it available for future calls to acquire
-         * for now. The buffer will be dequeued and reused later. */
-        GST_LOG_OBJECT (pool, "buffer is queued");
+          meta = GST_META_V4L2_GET (buffer);
+          g_assert (meta != NULL);
+
+          if (pool->buffers[meta->vbuffer.index] == NULL) {
+            GST_LOG_OBJECT (pool, "buffer not queued, putting on free list");
+            /* playback, put the buffer back in the queue to refill later. */
+            GST_BUFFER_POOL_CLASS (parent_class)->release_buffer (bpool,
+                buffer);
+          } else {
+            /* the buffer is queued in the device but maybe not played yet. We just
+             * leave it there and not make it available for future calls to acquire
+             * for now. The buffer will be dequeued and reused later. */
+            GST_LOG_OBJECT (pool, "buffer is queued");
+          }
+          break;
+        }
+
+        case GST_V4L2_IO_USERPTR:
+        default:
+          g_assert_not_reached ();
+          break;
       }
       break;
-    }
 
     default:
       g_assert_not_reached ();
@@ -955,6 +970,7 @@ gst_v4l2_buffer_pool_process (GstBufferPool * bpool, GstBuffer * buf)
       switch (obj->mode) {
         case GST_V4L2_IO_RW:
           /* FIXME, do write() */
+          GST_WARNING_OBJECT (pool, "implement write()");
           break;
 
         case GST_V4L2_IO_MMAP:
