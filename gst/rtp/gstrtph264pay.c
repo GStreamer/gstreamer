@@ -111,7 +111,7 @@ static void gst_rtp_h264_pay_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 static GstCaps *gst_rtp_h264_pay_getcaps (GstBaseRTPPayload * payload,
-    GstPad * pad);
+    GstPad * pad, GstCaps * filter);
 static gboolean gst_rtp_h264_pay_setcaps (GstBaseRTPPayload * basepayload,
     GstCaps * caps);
 static GstFlowReturn gst_rtp_h264_pay_handle_buffer (GstBaseRTPPayload * pad,
@@ -264,12 +264,13 @@ static const gchar *all_levels[] = {
 };
 
 static GstCaps *
-gst_rtp_h264_pay_getcaps (GstBaseRTPPayload * payload, GstPad * pad)
+gst_rtp_h264_pay_getcaps (GstBaseRTPPayload * payload, GstPad * pad,
+    GstCaps * filter)
 {
   GstCaps *allowed_caps;
 
   allowed_caps =
-      gst_pad_peer_get_caps_reffed (GST_BASE_RTP_PAYLOAD_SRCPAD (payload));
+      gst_pad_peer_get_caps (GST_BASE_RTP_PAYLOAD_SRCPAD (payload), filter);
 
   if (allowed_caps) {
     GstCaps *caps = NULL;
