@@ -591,25 +591,18 @@ gst_base_camera_src_class_init (GstBaseCameraSrcClass * klass)
 
   /* Signals */
   basecamerasrc_signals[START_CAPTURE_SIGNAL] =
-      g_signal_new ("start-capture",
+      g_signal_new_class_handler ("start-capture",
       G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
-      G_STRUCT_OFFSET (GstBaseCameraSrcClass, private_start_capture),
+      G_CALLBACK (gst_base_camera_src_start_capture),
       NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
   basecamerasrc_signals[STOP_CAPTURE_SIGNAL] =
-      g_signal_new ("stop-capture",
+      g_signal_new_class_handler ("stop-capture",
       G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
-      G_STRUCT_OFFSET (GstBaseCameraSrcClass, private_stop_capture),
+      G_CALLBACK (gst_base_camera_src_stop_capture),
       NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
-
-  /* TODO these should be moved to a private struct
-   * that is allocated sequentially to the main struct as said at:
-   * http://library.gnome.org/devel/gobject/unstable/gobject-Type-Information.html#g-type-add-class-private
-   */
-  klass->private_start_capture = gst_base_camera_src_start_capture;
-  klass->private_stop_capture = gst_base_camera_src_stop_capture;
 
   gstelement_class->change_state = gst_base_camera_src_change_state;
 }

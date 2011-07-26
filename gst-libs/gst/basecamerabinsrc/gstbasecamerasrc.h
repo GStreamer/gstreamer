@@ -121,8 +121,6 @@ struct _GstBaseCameraSrcClass
   /* unused */
   GstCaps *   (*get_allowed_input_caps) (GstBaseCameraSrc * self);
 
-  void (*private_start_capture) (GstBaseCameraSrc * src);
-  void (*private_stop_capture) (GstBaseCameraSrc * src);
   /* Called by the handler for 'start-capture'. Mandatory. */
   gboolean (*start_capture) (GstBaseCameraSrc * src);
 
