@@ -940,10 +940,9 @@ gst_type_find_element_activate (GstPad * pad)
     peer = gst_pad_get_peer (pad);
     if (peer) {
       gint64 size;
-      GstFormat format = GST_FORMAT_BYTES;
       gchar *ext;
 
-      if (!gst_pad_query_duration (peer, &format, &size)) {
+      if (!gst_pad_query_duration (peer, GST_FORMAT_BYTES, &size)) {
         GST_WARNING_OBJECT (typefind, "Could not query upstream length!");
         gst_object_unref (peer);
         gst_pad_activate_pull (pad, FALSE);
