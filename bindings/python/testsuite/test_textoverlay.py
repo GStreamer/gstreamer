@@ -30,6 +30,7 @@ class TextOverlay(TestCase):
         ovrl.set_priority(2)
         ovrl.set_layer(lyr)
         tck_obj = ovrl.create_track_object(tck)
+        ovrl.add_track_object(tck_obj)
         self.failIf (ovrl.release_track_object(tck_obj) != True)
         self.failIf (ovrl.add_track_object(tck_obj) != True)
         self.failIf (len(ovrl.get_track_objects()) != 1)

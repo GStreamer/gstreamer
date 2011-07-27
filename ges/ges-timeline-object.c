@@ -392,7 +392,6 @@ ges_timeline_object_create_track_object (GESTimelineObject * object,
   }
 
   res = class->create_track_object (object, track);
-  ges_timeline_object_add_track_object (object, res);
   return res;
 
 }
@@ -434,13 +433,17 @@ ges_timeline_object_create_track_objects_func (GESTimelineObject * object,
     GESTrack * track)
 {
   GESTrackObject *result;
+  gboolean ret;
 
   result = ges_timeline_object_create_track_object (object, track);
   if (!result) {
     GST_WARNING ("couldn't create track object");
     return FALSE;
   }
-  return ges_track_add_object (track, result);
+  ges_track_object_set_timeline_object (result, object);
+  ret = ges_track_add_object (track, result);
+  ges_timeline_object_add_track_object (object, result);
+  return ret;
 }
 
 /**
@@ -474,6 +477,7 @@ ges_timeline_object_add_track_object (GESTimelineObject * object, GESTrackObject
     return FALSE;
 
   ges_track_object_set_timeline_object (trobj, object);
+
   g_object_ref (trobj);
 
   mapping = g_slice_new0 (ObjectMapping);
