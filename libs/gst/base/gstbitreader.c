@@ -250,7 +250,7 @@ gst_bit_reader_skip_to_byte (GstBitReader * reader)
 /**
  * gst_bit_reader_get_bits_uint8:
  * @reader: a #GstBitReader instance
- * @val: Pointer to a #guint8 to store the result
+ * @val: (out): Pointer to a #guint8 to store the result
  * @nbits: number of bits to read
  *
  * Read @nbits bits into @val and update the current position.
@@ -263,7 +263,7 @@ gst_bit_reader_skip_to_byte (GstBitReader * reader)
 /**
  * gst_bit_reader_get_bits_uint16:
  * @reader: a #GstBitReader instance
- * @val: Pointer to a #guint16 to store the result
+ * @val: (out): Pointer to a #guint16 to store the result
  * @nbits: number of bits to read
  *
  * Read @nbits bits into @val and update the current position.
@@ -276,7 +276,7 @@ gst_bit_reader_skip_to_byte (GstBitReader * reader)
 /**
  * gst_bit_reader_get_bits_uint32:
  * @reader: a #GstBitReader instance
- * @val: Pointer to a #guint32 to store the result
+ * @val: (out): Pointer to a #guint32 to store the result
  * @nbits: number of bits to read
  *
  * Read @nbits bits into @val and update the current position.
@@ -289,7 +289,7 @@ gst_bit_reader_skip_to_byte (GstBitReader * reader)
 /**
  * gst_bit_reader_get_bits_uint64:
  * @reader: a #GstBitReader instance
- * @val: Pointer to a #guint64 to store the result
+ * @val: (out): Pointer to a #guint64 to store the result
  * @nbits: number of bits to read
  *
  * Read @nbits bits into @val and update the current position.
@@ -302,7 +302,7 @@ gst_bit_reader_skip_to_byte (GstBitReader * reader)
 /**
  * gst_bit_reader_peek_bits_uint8:
  * @reader: a #GstBitReader instance
- * @val: Pointer to a #guint8 to store the result
+ * @val: (out): Pointer to a #guint8 to store the result
  * @nbits: number of bits to read
  *
  * Read @nbits bits into @val but keep the current position.
@@ -315,7 +315,7 @@ gst_bit_reader_skip_to_byte (GstBitReader * reader)
 /**
  * gst_bit_reader_peek_bits_uint16:
  * @reader: a #GstBitReader instance
- * @val: Pointer to a #guint16 to store the result
+ * @val: (out): Pointer to a #guint16 to store the result
  * @nbits: number of bits to read
  *
  * Read @nbits bits into @val but keep the current position.
@@ -328,7 +328,7 @@ gst_bit_reader_skip_to_byte (GstBitReader * reader)
 /**
  * gst_bit_reader_peek_bits_uint32:
  * @reader: a #GstBitReader instance
- * @val: Pointer to a #guint32 to store the result
+ * @val: (out): Pointer to a #guint32 to store the result
  * @nbits: number of bits to read
  *
  * Read @nbits bits into @val but keep the current position.
@@ -341,7 +341,7 @@ gst_bit_reader_skip_to_byte (GstBitReader * reader)
 /**
  * gst_bit_reader_peek_bits_uint64:
  * @reader: a #GstBitReader instance
- * @val: Pointer to a #guint64 to store the result
+ * @val: (out): Pointer to a #guint64 to store the result
  * @nbits: number of bits to read
  *
  * Read @nbits bits into @val but keep the current position.

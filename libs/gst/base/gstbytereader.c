@@ -243,7 +243,7 @@ gst_byte_reader_skip (GstByteReader * reader, guint nbytes)
 /**
  * gst_byte_reader_get_uint8:
  * @reader: a #GstByteReader instance
- * @val: Pointer to a #guint8 to store the result
+ * @val: (out): Pointer to a #guint8 to store the result
  *
  * Read an unsigned 8 bit integer into @val and update the current position.
  *
@@ -255,7 +255,7 @@ gst_byte_reader_skip (GstByteReader * reader, guint nbytes)
 /**
  * gst_byte_reader_get_int8:
  * @reader: a #GstByteReader instance
- * @val: Pointer to a #gint8 to store the result
+ * @val: (out): Pointer to a #gint8 to store the result
  *
  * Read a signed 8 bit integer into @val and update the current position.
  *
@@ -267,7 +267,7 @@ gst_byte_reader_skip (GstByteReader * reader, guint nbytes)
 /**
  * gst_byte_reader_peek_uint8:
  * @reader: a #GstByteReader instance
- * @val: Pointer to a #guint8 to store the result
+ * @val: (out): Pointer to a #guint8 to store the result
  *
  * Read an unsigned 8 bit integer into @val but keep the current position.
  *
@@ -279,7 +279,7 @@ gst_byte_reader_skip (GstByteReader * reader, guint nbytes)
 /**
  * gst_byte_reader_peek_int8:
  * @reader: a #GstByteReader instance
- * @val: Pointer to a #gint8 to store the result
+ * @val: (out): Pointer to a #gint8 to store the result
  *
  * Read a signed 8 bit integer into @val but keep the current position.
  *
@@ -291,7 +291,7 @@ gst_byte_reader_skip (GstByteReader * reader, guint nbytes)
 /**
  * gst_byte_reader_get_uint16_le:
  * @reader: a #GstByteReader instance
- * @val: Pointer to a #guint16 to store the result
+ * @val: (out): Pointer to a #guint16 to store the result
  *
  * Read an unsigned 16 bit little endian integer into @val
  * and update the current position.
@@ -304,7 +304,7 @@ gst_byte_reader_skip (GstByteReader * reader, guint nbytes)
 /**
  * gst_byte_reader_get_int16_le:
  * @reader: a #GstByteReader instance
- * @val: Pointer to a #gint16 to store the result
+ * @val: (out): Pointer to a #gint16 to store the result
  *
  * Read a signed 16 bit little endian integer into @val
  * and update the current position.
@@ -317,7 +317,7 @@ gst_byte_reader_skip (GstByteReader * reader, guint nbytes)
 /**
  * gst_byte_reader_peek_uint16_le:
  * @reader: a #GstByteReader instance
- * @val: Pointer to a #guint16 to store the result
+ * @val: (out): Pointer to a #guint16 to store the result
  *
  * Read an unsigned 16 bit little endian integer into @val
  * but keep the current position.
@@ -330,7 +330,7 @@ gst_byte_reader_skip (GstByteReader * reader, guint nbytes)
 /**
  * gst_byte_reader_peek_int16_le:
  * @reader: a #GstByteReader instance
- * @val: Pointer to a #gint16 to store the result
+ * @val: (out): Pointer to a #gint16 to store the result
  *
  * Read a signed 16 bit little endian integer into @val
  * but keep the current position.
@@ -343,7 +343,7 @@ gst_byte_reader_skip (GstByteReader * reader, guint nbytes)
 /**
  * gst_byte_reader_get_uint16_be:
  * @reader: a #GstByteReader instance
- * @val: Pointer to a #guint16 to store the result
+ * @val: (out): Pointer to a #guint16 to store the result
  *
  * Read an unsigned 16 bit big endian integer into @val
  * and update the current position.
@@ -356,7 +356,7 @@ gst_byte_reader_skip (GstByteReader * reader, guint nbytes)
 /**
  * gst_byte_reader_get_int16_be:
  * @reader: a #GstByteReader instance
- * @val: Pointer to a #gint16 to store the result
+ * @val: (out): Pointer to a #gint16 to store the result
  *
  * Read a signed 16 bit big endian integer into @val
  * and update the current position.
@@ -369,7 +369,7 @@ gst_byte_reader_skip (GstByteReader * reader, guint nbytes)
 /**
  * gst_byte_reader_peek_uint16_be:
  * @reader: a #GstByteReader instance
- * @val: Pointer to a #guint16 to store the result
+ * @val: (out): Pointer to a #guint16 to store the result
  *
  * Read an unsigned 16 bit big endian integer into @val
  * but keep the current position.
@@ -382,7 +382,7 @@ gst_byte_reader_skip (GstByteReader * reader, guint nbytes)
 /**
  * gst_byte_reader_peek_int16_be:
  * @reader: a #GstByteReader instance
- * @val: Pointer to a #gint16 to store the result
+ * @val: (out): Pointer to a #gint16 to store the result
  *
  * Read a signed 16 bit big endian integer into @val
  * but keep the current position.
@@ -395,7 +395,7 @@ gst_byte_reader_skip (GstByteReader * reader, guint nbytes)
 /**
  * gst_byte_reader_get_uint24_le:
  * @reader: a #GstByteReader instance
- * @val: Pointer to a #guint32 to store the result
+ * @val: (out): Pointer to a #guint32 to store the result
  *
  * Read an unsigned 24 bit little endian integer into @val
  * and update the current position.
@@ -408,7 +408,7 @@ gst_byte_reader_skip (GstByteReader * reader, guint nbytes)
 /**
  * gst_byte_reader_get_int24_le:
  * @reader: a #GstByteReader instance
- * @val: Pointer to a #gint32 to store the result
+ * @val: (out): Pointer to a #gint32 to store the result
  *
  * Read a signed 24 bit little endian integer into @val
  * and update the current position.
@@ -421,7 +421,7 @@ gst_byte_reader_skip (GstByteReader * reader, guint nbytes)
 /**
  * gst_byte_reader_peek_uint24_le:
  * @reader: a #GstByteReader instance
- * @val: Pointer to a #guint32 to store the result
+ * @val: (out): Pointer to a #guint32 to store the result
  *
  * Read an unsigned 24 bit little endian integer into @val
  * but keep the current position.
@@ -434,7 +434,7 @@ gst_byte_reader_skip (GstByteReader * reader, guint nbytes)
 /**
  * gst_byte_reader_peek_int24_le:
  * @reader: a #GstByteReader instance
- * @val: Pointer to a #gint32 to store the result
+ * @val: (out): Pointer to a #gint32 to store the result
  *
  * Read a signed 24 bit little endian integer into @val
  * but keep the current position.
@@ -447,7 +447,7 @@ gst_byte_reader_skip (GstByteReader * reader, guint nbytes)
 /**
  * gst_byte_reader_get_uint24_be:
  * @reader: a #GstByteReader instance
- * @val: Pointer to a #guint32 to store the result
+ * @val: (out): Pointer to a #guint32 to store the result
  *
  * Read an unsigned 24 bit big endian integer into @val
  * and update the current position.
@@ -460,7 +460,7 @@ gst_byte_reader_skip (GstByteReader * reader, guint nbytes)
 /**
  * gst_byte_reader_get_int24_be:
  * @reader: a #GstByteReader instance
- * @val: Pointer to a #gint32 to store the result
+ * @val: (out): Pointer to a #gint32 to store the result
  *
  * Read a signed 24 bit big endian integer into @val
  * and update the current position.
@@ -473,7 +473,7 @@ gst_byte_reader_skip (GstByteReader * reader, guint nbytes)
 /**
  * gst_byte_reader_peek_uint24_be:
  * @reader: a #GstByteReader instance
- * @val: Pointer to a #guint32 to store the result
+ * @val: (out): Pointer to a #guint32 to store the result
  *
  * Read an unsigned 24 bit big endian integer into @val
  * but keep the current position.
@@ -486,7 +486,7 @@ gst_byte_reader_skip (GstByteReader * reader, guint nbytes)
 /**
  * gst_byte_reader_peek_int24_be:
  * @reader: a #GstByteReader instance
- * @val: Pointer to a #gint32 to store the result
+ * @val: (out): Pointer to a #gint32 to store the result
  *
  * Read a signed 24 bit big endian integer into @val
  * but keep the current position.
@@ -500,7 +500,7 @@ gst_byte_reader_skip (GstByteReader * reader, guint nbytes)
 /**
  * gst_byte_reader_get_uint32_le:
  * @reader: a #GstByteReader instance
- * @val: Pointer to a #guint32 to store the result
+ * @val: (out): Pointer to a #guint32 to store the result
  *
  * Read an unsigned 32 bit little endian integer into @val
  * and update the current position.
@@ -513,7 +513,7 @@ gst_byte_reader_skip (GstByteReader * reader, guint nbytes)
 /**
  * gst_byte_reader_get_int32_le:
  * @reader: a #GstByteReader instance
- * @val: Pointer to a #gint32 to store the result
+ * @val: (out): Pointer to a #gint32 to store the result
  *
  * Read a signed 32 bit little endian integer into @val
  * and update the current position.
@@ -526,7 +526,7 @@ gst_byte_reader_skip (GstByteReader * reader, guint nbytes)
 /**
  * gst_byte_reader_peek_uint32_le:
  * @reader: a #GstByteReader instance
- * @val: Pointer to a #guint32 to store the result
+ * @val: (out): Pointer to a #guint32 to store the result
  *
  * Read an unsigned 32 bit little endian integer into @val
  * but keep the current position.
@@ -539,7 +539,7 @@ gst_byte_reader_skip (GstByteReader * reader, guint nbytes)
 /**
  * gst_byte_reader_peek_int32_le:
  * @reader: a #GstByteReader instance
- * @val: Pointer to a #gint32 to store the result
+ * @val: (out): Pointer to a #gint32 to store the result
  *
  * Read a signed 32 bit little endian integer into @val
  * but keep the current position.
@@ -552,7 +552,7 @@ gst_byte_reader_skip (GstByteReader * reader, guint nbytes)
 /**
  * gst_byte_reader_get_uint32_be:
  * @reader: a #GstByteReader instance
- * @val: Pointer to a #guint32 to store the result
+ * @val: (out): Pointer to a #guint32 to store the result
  *
  * Read an unsigned 32 bit big endian integer into @val
  * and update the current position.
@@ -565,7 +565,7 @@ gst_byte_reader_skip (GstByteReader * reader, guint nbytes)
 /**
  * gst_byte_reader_get_int32_be:
  * @reader: a #GstByteReader instance
- * @val: Pointer to a #gint32 to store the result
+ * @val: (out): Pointer to a #gint32 to store the result
  *
  * Read a signed 32 bit big endian integer into @val
  * and update the current position.
@@ -578,7 +578,7 @@ gst_byte_reader_skip (GstByteReader * reader, guint nbytes)
 /**
  * gst_byte_reader_peek_uint32_be:
  * @reader: a #GstByteReader instance
- * @val: Pointer to a #guint32 to store the result
+ * @val: (out): Pointer to a #guint32 to store the result
  *
  * Read an unsigned 32 bit big endian integer into @val
  * but keep the current position.
@@ -591,7 +591,7 @@ gst_byte_reader_skip (GstByteReader * reader, guint nbytes)
 /**
  * gst_byte_reader_peek_int32_be:
  * @reader: a #GstByteReader instance
- * @val: Pointer to a #gint32 to store the result
+ * @val: (out): Pointer to a #gint32 to store the result
  *
  * Read a signed 32 bit big endian integer into @val
  * but keep the current position.
@@ -604,7 +604,7 @@ gst_byte_reader_skip (GstByteReader * reader, guint nbytes)
 /**
  * gst_byte_reader_get_uint64_le:
  * @reader: a #GstByteReader instance
- * @val: Pointer to a #guint64 to store the result
+ * @val: (out): Pointer to a #guint64 to store the result
  *
  * Read an unsigned 64 bit little endian integer into @val
  * and update the current position.
@@ -617,7 +617,7 @@ gst_byte_reader_skip (GstByteReader * reader, guint nbytes)
 /**
  * gst_byte_reader_get_int64_le:
  * @reader: a #GstByteReader instance
- * @val: Pointer to a #gint64 to store the result
+ * @val: (out): Pointer to a #gint64 to store the result
  *
  * Read a signed 64 bit little endian integer into @val
  * and update the current position.
@@ -630,7 +630,7 @@ gst_byte_reader_skip (GstByteReader * reader, guint nbytes)
 /**
  * gst_byte_reader_peek_uint64_le:
  * @reader: a #GstByteReader instance
- * @val: Pointer to a #guint64 to store the result
+ * @val: (out): Pointer to a #guint64 to store the result
  *
  * Read an unsigned 64 bit little endian integer into @val
  * but keep the current position.
@@ -643,7 +643,7 @@ gst_byte_reader_skip (GstByteReader * reader, guint nbytes)
 /**
  * gst_byte_reader_peek_int64_le:
  * @reader: a #GstByteReader instance
- * @val: Pointer to a #gint64 to store the result
+ * @val: (out): Pointer to a #gint64 to store the result
  *
  * Read a signed 64 bit little endian integer into @val
  * but keep the current position.
@@ -656,7 +656,7 @@ gst_byte_reader_skip (GstByteReader * reader, guint nbytes)
 /**
  * gst_byte_reader_get_uint64_be:
  * @reader: a #GstByteReader instance
- * @val: Pointer to a #guint64 to store the result
+ * @val: (out): Pointer to a #guint64 to store the result
  *
  * Read an unsigned 64 bit big endian integer into @val
  * and update the current position.
@@ -669,7 +669,7 @@ gst_byte_reader_skip (GstByteReader * reader, guint nbytes)
 /**
  * gst_byte_reader_get_int64_be:
  * @reader: a #GstByteReader instance
- * @val: Pointer to a #gint64 to store the result
+ * @val: (out): Pointer to a #gint64 to store the result
  *
  * Read a signed 64 bit big endian integer into @val
  * and update the current position.
@@ -682,7 +682,7 @@ gst_byte_reader_skip (GstByteReader * reader, guint nbytes)
 /**
  * gst_byte_reader_peek_uint64_be:
  * @reader: a #GstByteReader instance
- * @val: Pointer to a #guint64 to store the result
+ * @val: (out): Pointer to a #guint64 to store the result
  *
  * Read an unsigned 64 bit big endian integer into @val
  * but keep the current position.
@@ -695,7 +695,7 @@ gst_byte_reader_skip (GstByteReader * reader, guint nbytes)
 /**
  * gst_byte_reader_peek_int64_be:
  * @reader: a #GstByteReader instance
- * @val: Pointer to a #gint64 to store the result
+ * @val: (out): Pointer to a #gint64 to store the result
  *
  * Read a signed 64 bit big endian integer into @val
  * but keep the current position.
@@ -746,7 +746,7 @@ GST_BYTE_READER_PEEK_GET(64,gint64,int64_be)
 /**
  * gst_byte_reader_get_float32_le:
  * @reader: a #GstByteReader instance
- * @val: Pointer to a #gfloat to store the result
+ * @val: (out): Pointer to a #gfloat to store the result
  *
  * Read a 32 bit little endian floating point value into @val
  * and update the current position.
@@ -759,7 +759,7 @@ GST_BYTE_READER_PEEK_GET(64,gint64,int64_be)
 /**
  * gst_byte_reader_peek_float32_le:
  * @reader: a #GstByteReader instance
- * @val: Pointer to a #gfloat to store the result
+ * @val: (out): Pointer to a #gfloat to store the result
  *
  * Read a 32 bit little endian floating point value into @val
  * but keep the current position.
@@ -772,7 +772,7 @@ GST_BYTE_READER_PEEK_GET(64,gint64,int64_be)
 /**
  * gst_byte_reader_get_float32_be:
  * @reader: a #GstByteReader instance
- * @val: Pointer to a #gfloat to store the result
+ * @val: (out): Pointer to a #gfloat to store the result
  *
  * Read a 32 bit big endian floating point value into @val
  * and update the current position.
@@ -785,7 +785,7 @@ GST_BYTE_READER_PEEK_GET(64,gint64,int64_be)
 /**
  * gst_byte_reader_peek_float32_be:
  * @reader: a #GstByteReader instance
- * @val: Pointer to a #gfloat to store the result
+ * @val: (out): Pointer to a #gfloat to store the result
  *
  * Read a 32 bit big endian floating point value into @val
  * but keep the current position.
@@ -798,7 +798,7 @@ GST_BYTE_READER_PEEK_GET(64,gint64,int64_be)
 /**
  * gst_byte_reader_get_float64_le:
  * @reader: a #GstByteReader instance
- * @val: Pointer to a #gdouble to store the result
+ * @val: (out): Pointer to a #gdouble to store the result
  *
  * Read a 64 bit little endian floating point value into @val
  * and update the current position.
@@ -811,7 +811,7 @@ GST_BYTE_READER_PEEK_GET(64,gint64,int64_be)
 /**
  * gst_byte_reader_peek_float64_le:
  * @reader: a #GstByteReader instance
- * @val: Pointer to a #gdouble to store the result
+ * @val: (out): Pointer to a #gdouble to store the result
  *
  * Read a 64 bit little endian floating point value into @val
  * but keep the current position.
@@ -824,7 +824,7 @@ GST_BYTE_READER_PEEK_GET(64,gint64,int64_be)
 /**
  * gst_byte_reader_get_float64_be:
  * @reader: a #GstByteReader instance
- * @val: Pointer to a #gdouble to store the result
+ * @val: (out): Pointer to a #gdouble to store the result
  *
  * Read a 64 bit big endian floating point value into @val
  * and update the current position.
@@ -837,7 +837,7 @@ GST_BYTE_READER_PEEK_GET(64,gint64,int64_be)
 /**
  * gst_byte_reader_peek_float64_be:
  * @reader: a #GstByteReader instance
- * @val: Pointer to a #gdouble to store the result
+ * @val: (out): Pointer to a #gdouble to store the result
  *
  * Read a 64 bit big endian floating point value into @val
  * but keep the current position.
