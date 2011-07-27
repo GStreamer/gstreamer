@@ -56,6 +56,7 @@ struct _GstV4l2BufferPool
   guint max_buffers;
   guint prefix;
   guint align;
+  gboolean add_videometa;
 
   guint num_buffers;
   guint num_allocated;       /* number of buffers allocated by the driver */

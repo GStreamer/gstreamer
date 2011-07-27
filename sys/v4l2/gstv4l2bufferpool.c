@@ -174,7 +174,7 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
               meta->mem, NULL, meta->vbuffer.length, 0, meta->vbuffer.length));
 
       /* add metadata to raw video buffers */
-      if (info->finfo) {
+      if (pool->add_videometa && info->finfo) {
         gsize offset[GST_VIDEO_MAX_PLANES];
         gint stride[GST_VIDEO_MAX_PLANES];
 
@@ -226,11 +226,28 @@ static gboolean
 gst_v4l2_buffer_pool_set_config (GstBufferPool * bpool, GstStructure * config)
 {
   GstV4l2BufferPool *pool = GST_V4L2_BUFFER_POOL (bpool);
+  GstV4l2Object *obj = pool->obj;
   const GstCaps *caps;
   guint size, min_buffers, max_buffers;
   guint prefix, align;
 
   GST_DEBUG_OBJECT (pool, "set config");
+
+  pool->add_videometa =
+      gst_buffer_pool_config_has_meta (config, GST_META_API_VIDEO);
+
+  if (!pool->add_videometa) {
+    gint stride;
+
+    /* we don't have video metadata, see if the strides are compatible */
+    stride = GST_VIDEO_INFO_PLANE_STRIDE (&obj->info, 0);
+
+    GST_DEBUG_OBJECT (pool, "no videometadata, checking strides %d and %u",
+        stride, obj->bytesperline);
+
+    if (stride != obj->bytesperline)
+      goto missing_video_api;
+  }
 
   /* parse the config and keep around */
   if (!gst_buffer_pool_config_get (config, &caps, &size, &min_buffers,
@@ -250,9 +267,17 @@ gst_v4l2_buffer_pool_set_config (GstBufferPool * bpool, GstStructure * config)
 
   return GST_BUFFER_POOL_CLASS (parent_class)->set_config (bpool, config);
 
+  /* ERRORS */
+missing_video_api:
+  {
+    GST_ERROR_OBJECT (pool, "missing GstMetaVideo API in config, "
+        "default stride: %d, wanted stride %u",
+        GST_VIDEO_INFO_PLANE_STRIDE (&obj->info, 0), obj->bytesperline);
+    return FALSE;
+  }
 wrong_config:
   {
-    GST_WARNING_OBJECT (pool, "invalid config %" GST_PTR_FORMAT, config);
+    GST_ERROR_OBJECT (pool, "invalid config %" GST_PTR_FORMAT, config);
     return FALSE;
   }
 }
