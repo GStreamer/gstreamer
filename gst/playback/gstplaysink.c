@@ -127,6 +127,19 @@ typedef struct
   g_static_rec_mutex_unlock (GST_PLAY_SINK_GET_LOCK (playsink)); \
 } G_STMT_END
 
+#define PENDING_FLAG_SET(playsink, flagtype) \
+  ((playsink->pending_blocked_pads) |= (1 << flagtype))
+#define PENDING_FLAG_UNSET(playsink, flagtype) \
+  ((playsink->pending_blocked_pads) &= ~(1 << flagtype))
+#define PENDING_FLAG_IS_SET(playsink, flagtype) \
+  ((playsink->pending_blocked_pads) & (1 << flagtype))
+#define PENDING_VIDEO_BLOCK(playsink) \
+  ((playsink->pending_blocked_pads) & (1 << GST_PLAY_SINK_TYPE_VIDEO_RAW | 1 << GST_PLAY_SINK_TYPE_VIDEO))
+#define PENDING_AUDIO_BLOCK(playsink) \
+  ((playsink->pending_blocked_pads) & (1 << GST_PLAY_SINK_TYPE_AUDIO_RAW | 1 << GST_PLAY_SINK_TYPE_AUDIO))
+#define PENDING_TEXT_BLOCK(playsink) \
+  PENDING_FLAG_IS_SET(playsink, GST_PLAY_SINK_TYPE_TEXT)
+
 struct _GstPlaySink
 {
   GstBin bin;
@@ -169,6 +182,8 @@ struct _GstPlaySink
   gboolean text_pad_blocked;
   GstPad *text_srcpad_stream_synchronizer;
   GstPad *text_sinkpad_stream_synchronizer;
+
+  guint32 pending_blocked_pads;
 
   /* properties */
   GstElement *audio_sink;
@@ -2868,12 +2883,22 @@ sinkpad_blocked_cb (GstPad * blockedpad, gboolean blocked, gpointer user_data)
   if (pad == playsink->video_pad) {
     playsink->video_pad_blocked = blocked;
     GST_DEBUG_OBJECT (pad, "Video pad blocked: %d", blocked);
+    if (!blocked) {
+      PENDING_FLAG_UNSET (playsink, GST_PLAY_SINK_TYPE_VIDEO_RAW);
+      PENDING_FLAG_UNSET (playsink, GST_PLAY_SINK_TYPE_VIDEO);
+    }
   } else if (pad == playsink->audio_pad) {
     playsink->audio_pad_blocked = blocked;
     GST_DEBUG_OBJECT (pad, "Audio pad blocked: %d", blocked);
+    if (!blocked) {
+      PENDING_FLAG_UNSET (playsink, GST_PLAY_SINK_TYPE_AUDIO_RAW);
+      PENDING_FLAG_UNSET (playsink, GST_PLAY_SINK_TYPE_AUDIO);
+    }
   } else if (pad == playsink->text_pad) {
     playsink->text_pad_blocked = blocked;
     GST_DEBUG_OBJECT (pad, "Text pad blocked: %d", blocked);
+    if (!blocked)
+      PENDING_FLAG_UNSET (playsink, GST_PLAY_SINK_TYPE_TEXT);
   }
 
   if (!blocked) {
@@ -2882,9 +2907,17 @@ sinkpad_blocked_cb (GstPad * blockedpad, gboolean blocked, gpointer user_data)
     return;
   }
 
-  if ((!playsink->video_pad || playsink->video_pad_blocked) &&
-      (!playsink->audio_pad || playsink->audio_pad_blocked) &&
-      (!playsink->text_pad || playsink->text_pad_blocked)) {
+  /* We reconfigure when for ALL streams:
+   * * there isn't a pad
+   * * OR the pad is blocked
+   * * OR there are no pending blocks on that pad
+   */
+
+  if ((!playsink->video_pad || playsink->video_pad_blocked
+          || !PENDING_VIDEO_BLOCK (playsink)) && (!playsink->audio_pad
+          || playsink->audio_pad_blocked || !PENDING_AUDIO_BLOCK (playsink))
+      && (!playsink->text_pad || playsink->text_pad_blocked
+          || !PENDING_TEXT_BLOCK (playsink))) {
     GST_DEBUG_OBJECT (playsink, "All pads blocked -- reconfiguring");
 
     if (playsink->video_pad) {
@@ -3104,6 +3137,7 @@ gst_play_sink_request_pad (GstPlaySink * playsink, GstPlaySinkType type)
 
       gst_pad_set_blocked_async_full (blockpad, TRUE, sinkpad_blocked_cb,
           gst_object_ref (playsink), (GDestroyNotify) gst_object_unref);
+      PENDING_FLAG_SET (playsink, type);
       gst_object_unref (blockpad);
     }
     if (!activate)
