@@ -769,8 +769,10 @@ gst_base_transform_do_bufferpool (GstBaseTransform * trans, GstCaps * outcaps)
 
   /* there are these possibilities:
    *
-   * 1) we negotiated passthrough, we can proxy the bufferpool directly.
-   * 2) 
+   * 1) we negotiated passthrough, we can proxy the bufferpool directly and we
+   *    will do that whenever some upstream does an allocation query.
+   * 2) we need to do a transform, we need to get a bufferpool from downstream
+   *    and configure it.
    */
 
   /* clear old pool */
