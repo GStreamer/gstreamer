@@ -1080,22 +1080,20 @@ static void
 gst_cdda_base_src_update_duration (GstCddaBaseSrc * src)
 {
   GstBaseSrc *basesrc;
-  GstFormat format;
-  gint64 duration;
+  gint64 dur;
 
   basesrc = GST_BASE_SRC (src);
 
-  format = GST_FORMAT_TIME;
-  if (!gst_pad_query_duration (GST_BASE_SRC_PAD (src), &format, &duration)) {
-    duration = GST_CLOCK_TIME_NONE;
+  if (!gst_pad_query_duration (GST_BASE_SRC_PAD (src), GST_FORMAT_TIME, &dur)) {
+    dur = GST_CLOCK_TIME_NONE;
   }
-  basesrc->segment.duration = duration;
+  basesrc->segment.duration = dur;
 
   gst_element_post_message (GST_ELEMENT (src),
       gst_message_new_duration (GST_OBJECT (src), GST_FORMAT_TIME, -1));
 
   GST_LOG_OBJECT (src, "duration updated to %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (duration));
+      GST_TIME_ARGS (dur));
 }
 
 #define CD_MSF_OFFSET 150
@@ -1557,7 +1555,6 @@ gst_cdda_base_src_create (GstPushSrc * pushsrc, GstBuffer ** buffer)
   GstCddaBaseSrcClass *klass = GST_CDDA_BASE_SRC_GET_CLASS (pushsrc);
   GstCddaBaseSrc *src = GST_CDDA_BASE_SRC (pushsrc);
   GstBuffer *buf;
-  GstFormat format;
   gboolean eos;
 
   GstClockTime position = GST_CLOCK_TIME_NONE;
@@ -1611,14 +1608,15 @@ gst_cdda_base_src_create (GstPushSrc * pushsrc, GstBuffer ** buffer)
     return GST_FLOW_ERROR;
   }
 
-  format = GST_FORMAT_TIME;
-  if (gst_pad_query_position (GST_BASE_SRC_PAD (src), &format, &qry_position)) {
+  if (gst_pad_query_position (GST_BASE_SRC_PAD (src), GST_FORMAT_TIME,
+          &qry_position)) {
     gint64 next_ts = 0;
 
     position = (GstClockTime) qry_position;
 
     ++src->cur_sector;
-    if (gst_pad_query_position (GST_BASE_SRC_PAD (src), &format, &next_ts)) {
+    if (gst_pad_query_position (GST_BASE_SRC_PAD (src), GST_FORMAT_TIME,
+            &next_ts)) {
       duration = (GstClockTime) (next_ts - qry_position);
     }
     --src->cur_sector;

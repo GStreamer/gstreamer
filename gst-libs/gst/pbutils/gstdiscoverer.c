@@ -937,20 +937,18 @@ discoverer_collect (GstDiscoverer * dc)
     /* FIXME : Make this querying optional */
     if (TRUE) {
       GstElement *pipeline = (GstElement *) dc->priv->pipeline;
-      GstFormat format = GST_FORMAT_TIME;
       gint64 dur;
 
       GST_DEBUG ("Attempting to query duration");
 
-      if (gst_element_query_duration (pipeline, &format, &dur)) {
-        if (format == GST_FORMAT_TIME) {
-          GST_DEBUG ("Got duration %" GST_TIME_FORMAT, GST_TIME_ARGS (dur));
-          dc->priv->current_info->duration = (guint64) dur;
-        }
+      if (gst_element_query_duration (pipeline, GST_FORMAT_TIME, &dur)) {
+        GST_DEBUG ("Got duration %" GST_TIME_FORMAT, GST_TIME_ARGS (dur));
+        dc->priv->current_info->duration = (guint64) dur;
       }
 
       if (dc->priv->seeking_query) {
         if (gst_element_query (pipeline, dc->priv->seeking_query)) {
+          GstFormat format;
           gboolean seekable;
 
           gst_query_parse_seeking (dc->priv->seeking_query, &format,
