@@ -54,6 +54,7 @@
 #include <math.h>
 
 #include "gstwarp.h"
+#include <gst/video/gstmetavideo.h>
 
 #ifndef M_PI
 #define M_PI    3.14159265358979323846
@@ -63,7 +64,6 @@
 G_DEFINE_TYPE (GstWarpTV, gst_warptv, GST_TYPE_VIDEO_FILTER);
 
 static void initSinTable ();
-static void initOffsTable (GstWarpTV * filter, gint width, gint height);
 static void initDistTable (GstWarpTV * filter, gint width, gint height);
 
 static GstStaticPadTemplate gst_warptv_src_template =
@@ -97,10 +97,7 @@ gst_warptv_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
   height = GST_VIDEO_INFO_HEIGHT (&info);
 
   g_free (filter->disttable);
-  g_free (filter->offstable);
-  filter->offstable = g_malloc (height * sizeof (guint32));
   filter->disttable = g_malloc (width * height * sizeof (guint32));
-  initOffsTable (filter, width, height);
   initDistTable (filter, width, height);
 
   return TRUE;
@@ -128,16 +125,6 @@ initSinTable (void)
 
   for (i = 0; i < 256; i++)
     *tptr++ = *tsinptr++;
-}
-
-static void
-initOffsTable (GstWarpTV * filter, gint width, gint height)
-{
-  gint y;
-
-  for (y = 0; y < height; y++) {
-    filter->offstable[y] = y * width;
-  }
 }
 
 static void
@@ -177,6 +164,7 @@ gst_warptv_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
   gint32 skip, *ctptr, *distptr;
   gint32 *ctable;
   guint32 *src, *dest;
+  gint sstride, dstride;
   GstVideoFrame in_frame, out_frame;
 
   gst_video_frame_map (&in_frame, &warptv->info, in, GST_MAP_READ);
@@ -184,6 +172,9 @@ gst_warptv_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
 
   src = GST_VIDEO_FRAME_PLANE_DATA (&in_frame, 0);
   dest = GST_VIDEO_FRAME_PLANE_DATA (&out_frame, 0);
+
+  sstride = GST_VIDEO_FRAME_PLANE_STRIDE (&in_frame, 0) / 4;
+  dstride = GST_VIDEO_FRAME_PLANE_STRIDE (&out_frame, 0) / 4;
 
   width = GST_VIDEO_FRAME_WIDTH (&in_frame);
   height = GST_VIDEO_FRAME_HEIGHT (&in_frame);
@@ -226,9 +217,10 @@ gst_warptv_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
         dy = 0;
       else if (dy > maxy)
         dy = maxy;
-      *dest++ = src[warptv->offstable[dy] + dx];
+
+      dest[x] = src[dy * sstride + dx];
     }
-    dest += skip;
+    dest += dstride;
   }
 
   warptv->tval = (warptv->tval + 1) & 511;
@@ -250,13 +242,30 @@ gst_warptv_start (GstBaseTransform * trans)
   return TRUE;
 }
 
+static gboolean
+gst_wraptv_setup_allocation (GstBaseTransform * trans, GstQuery * query)
+{
+  GstBufferPool *pool = NULL;
+  guint size, min, max, prefix, alignment;
+
+  gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
+      &alignment, &pool);
+
+  if (pool) {
+    GstStructure *config;
+
+    config = gst_buffer_pool_get_config (pool);
+    gst_buffer_pool_config_add_meta (config, GST_META_API_VIDEO);
+    gst_buffer_pool_set_config (pool, config);
+  }
+  return TRUE;
+}
+
 static void
 gst_warptv_finalize (GObject * object)
 {
   GstWarpTV *warptv = GST_WARPTV (object);
 
-  g_free (warptv->offstable);
-  warptv->offstable = NULL;
   g_free (warptv->disttable);
   warptv->disttable = NULL;
 
@@ -284,6 +293,8 @@ gst_warptv_class_init (GstWarpTVClass * klass)
 
   trans_class->start = GST_DEBUG_FUNCPTR (gst_warptv_start);
   trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_warptv_set_caps);
+  trans_class->setup_allocation =
+      GST_DEBUG_FUNCPTR (gst_wraptv_setup_allocation);
   trans_class->transform = GST_DEBUG_FUNCPTR (gst_warptv_transform);
 
   initSinTable ();

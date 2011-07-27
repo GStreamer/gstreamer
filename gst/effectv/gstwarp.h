@@ -52,7 +52,6 @@ struct _GstWarpTV
   /* < private > */
   GstVideoInfo info;
 
-  gint *offstable;
   gint32 *disttable;
   gint32 ctable[1024];
   gint tval;
