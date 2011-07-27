@@ -304,7 +304,7 @@ gst_vorbis_enc_sink_setcaps (GstVorbisEnc * vorbisenc, GstCaps * caps)
 
 static gboolean
 gst_vorbis_enc_convert_src (GstPad * pad, GstFormat src_format,
-    gint64 src_value, GstFormat * dest_format, gint64 * dest_value)
+    gint64 src_value, GstFormat dest_format, gint64 * dest_value)
 {
   gboolean res = TRUE;
   GstVorbisEnc *vorbisenc;
@@ -322,7 +322,7 @@ gst_vorbis_enc_convert_src (GstPad * pad, GstFormat src_format,
 
   switch (src_format) {
     case GST_FORMAT_BYTES:
-      switch (*dest_format) {
+      switch (dest_format) {
         case GST_FORMAT_TIME:
           *dest_value = gst_util_uint64_scale_int (src_value, GST_SECOND, avg);
           break;
@@ -331,7 +331,7 @@ gst_vorbis_enc_convert_src (GstPad * pad, GstFormat src_format,
       }
       break;
     case GST_FORMAT_TIME:
-      switch (*dest_format) {
+      switch (dest_format) {
         case GST_FORMAT_BYTES:
           *dest_value = gst_util_uint64_scale_int (src_value, avg, GST_SECOND);
           break;
@@ -448,45 +448,47 @@ gst_vorbis_enc_src_query (GstPad * pad, GstQuery * query)
   GstPad *peerpad;
 
   vorbisenc = GST_VORBISENC (gst_pad_get_parent (pad));
-  peerpad = gst_pad_get_peer (GST_PAD (vorbisenc->sinkpad));
+  peerpad = gst_pad_get_peer (vorbisenc->sinkpad);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
     {
-      GstFormat fmt, req_fmt;
+      GstFormat req_fmt;
       gint64 pos, val;
 
       gst_query_parse_position (query, &req_fmt, NULL);
-      if ((res = gst_pad_query_position (peerpad, &req_fmt, &val))) {
+      if ((res = gst_pad_query_position (peerpad, req_fmt, &val))) {
         gst_query_set_position (query, req_fmt, val);
         break;
       }
 
-      fmt = GST_FORMAT_TIME;
-      if (!(res = gst_pad_query_position (peerpad, &fmt, &pos)))
+      if (!(res = gst_pad_query_position (peerpad, GST_FORMAT_TIME, &pos)))
         break;
 
-      if ((res = gst_pad_query_convert (peerpad, fmt, pos, &req_fmt, &val))) {
+      if ((res =
+              gst_pad_query_convert (peerpad, GST_FORMAT_TIME, pos, req_fmt,
+                  &val))) {
         gst_query_set_position (query, req_fmt, val);
       }
       break;
     }
     case GST_QUERY_DURATION:
     {
-      GstFormat fmt, req_fmt;
+      GstFormat req_fmt;
       gint64 dur, val;
 
       gst_query_parse_duration (query, &req_fmt, NULL);
-      if ((res = gst_pad_query_duration (peerpad, &req_fmt, &val))) {
+      if ((res = gst_pad_query_duration (peerpad, req_fmt, &val))) {
         gst_query_set_duration (query, req_fmt, val);
         break;
       }
 
-      fmt = GST_FORMAT_TIME;
-      if (!(res = gst_pad_query_duration (peerpad, &fmt, &dur)))
+      if (!(res = gst_pad_query_duration (peerpad, GST_FORMAT_TIME, &dur)))
         break;
 
-      if ((res = gst_pad_query_convert (peerpad, fmt, dur, &req_fmt, &val))) {
+      if ((res =
+              gst_pad_query_convert (peerpad, GST_FORMAT_TIME, dur, req_fmt,
+                  &val))) {
         gst_query_set_duration (query, req_fmt, val);
       }
       break;
@@ -498,7 +500,7 @@ gst_vorbis_enc_src_query (GstPad * pad, GstQuery * query)
 
       gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
       if (!(res =
-              gst_vorbis_enc_convert_src (pad, src_fmt, src_val, &dest_fmt,
+              gst_vorbis_enc_convert_src (pad, src_fmt, src_val, dest_fmt,
                   &dest_val)))
         goto error;
       gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);

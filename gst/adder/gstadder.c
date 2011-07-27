@@ -406,7 +406,7 @@ gst_adder_query_duration (GstAdder * adder, GstQuery * query)
         gint64 duration;
 
         /* ask sink peer for duration */
-        res &= gst_pad_query_peer_duration (pad, &format, &duration);
+        res &= gst_pad_query_peer_duration (pad, format, &duration);
         /* take max from all valid return values */
         if (res) {
           /* valid unknown length, stop searching */

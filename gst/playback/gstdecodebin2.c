@@ -2032,10 +2032,8 @@ check_upstream_seekable (GstDecodeBin * dbin, GstPad * pad)
 
   /* try harder to query upstream size if we didn't get it the first time */
   if (dbin->upstream_seekable && stop == -1) {
-    GstFormat fmt = GST_FORMAT_BYTES;
-
     GST_DEBUG_OBJECT (dbin, "doing duration query to fix up unset stop");
-    gst_pad_query_peer_duration (pad, &fmt, &stop);
+    gst_pad_query_peer_duration (pad, GST_FORMAT_BYTES, &stop);
   }
 
   /* if upstream doesn't know the size, it's likely that it's not seekable in

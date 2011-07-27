@@ -2935,7 +2935,6 @@ gst_ogg_demux_find_chains (GstOggDemux * ogg)
 {
   ogg_page og;
   GstPad *peer;
-  GstFormat format;
   gboolean res;
   gulong serialno;
   GstOggChain *chain;
@@ -2946,8 +2945,7 @@ gst_ogg_demux_find_chains (GstOggDemux * ogg)
     goto no_peer;
 
   /* find length to read last page, we store this for later use. */
-  format = GST_FORMAT_BYTES;
-  res = gst_pad_query_duration (peer, &format, &ogg->length);
+  res = gst_pad_query_duration (peer, GST_FORMAT_BYTES, &ogg->length);
   gst_object_unref (peer);
   if (!res || ogg->length <= 0)
     goto no_length;
