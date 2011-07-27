@@ -2224,9 +2224,10 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
     goto get_fmt_failed;
 
   GST_DEBUG_OBJECT (v4l2object->element, "Got format to %dx%d, format "
-      "%" GST_FOURCC_FORMAT " bytesperline %d", format.fmt.pix.width,
-      format.fmt.pix.height, GST_FOURCC_ARGS (format.fmt.pix.pixelformat),
-      format.fmt.pix.bytesperline);
+      "%" GST_FOURCC_FORMAT " bytesperline %d, colorspace %d",
+      format.fmt.pix.width, format.fmt.pix.height,
+      GST_FOURCC_ARGS (format.fmt.pix.pixelformat), format.fmt.pix.bytesperline,
+      format.fmt.pix.colorspace);
 
   if (format.type != v4l2object->type ||
       format.fmt.pix.width != width ||
