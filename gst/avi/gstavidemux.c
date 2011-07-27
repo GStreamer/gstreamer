@@ -1209,10 +1209,12 @@ gst_avi_demux_parse_superindex (GstAviDemux * avi,
 
   *_indexes = NULL;
 
-  if (buf)
+  if (buf) {
     data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
-  else
+  } else {
+    data = NULL;
     size = 0;
+  }
 
   if (size < 24)
     goto too_small;
