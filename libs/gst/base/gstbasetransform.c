@@ -782,7 +782,7 @@ gst_base_transform_do_bufferpool (GstBaseTransform * trans, GstCaps * outcaps)
     trans->priv->pool = oldpool = NULL;
   }
 
-  if (trans->passthrough) {
+  if (trans->passthrough || trans->always_in_place) {
     /* we are in passthrough, the input buffer is never copied and always passed
      * along. We never allocate an output buffer on the srcpad. What we do is
      * let the upstream element decide if it wants to use a bufferpool and
