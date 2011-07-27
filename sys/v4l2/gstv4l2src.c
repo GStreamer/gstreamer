@@ -50,6 +50,8 @@
 #include <sys/time.h>
 #include <unistd.h>
 
+#include "gst/video/gstmetavideo.h"
+
 #include "gstv4l2src.h"
 
 #include "gstv4l2colorbalance.h"
@@ -595,6 +597,11 @@ gst_v4l2src_setup_allocation (GstBaseSrc * bsrc, GstQuery * query)
     gst_buffer_pool_config_get (config, &caps, NULL, NULL, NULL, NULL, NULL);
     gst_buffer_pool_config_set (config, caps, size, min, max, prefix,
         alignment);
+
+    /* if downstream supports video metadata, add this to the pool config */
+    if (gst_query_has_allocation_meta (query, GST_META_API_VIDEO))
+      gst_buffer_pool_config_add_meta (config, GST_META_API_VIDEO);
+
     gst_buffer_pool_set_config (pool, config);
   }
 
