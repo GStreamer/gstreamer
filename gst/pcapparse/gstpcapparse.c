@@ -376,6 +376,8 @@ gst_pcap_parse_scan_frame (GstPcapParse * self,
       eth_type = GUINT16_FROM_BE (*((guint16 *) (buf + 14)));
       buf_ip = buf + SLL_HEADER_LEN;
       break;
+    default:
+      return FALSE;
   }
 
   if (eth_type != 0x800)
