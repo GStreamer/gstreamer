@@ -125,10 +125,8 @@ struct _GstV4l2Object {
   GstV4l2IOMode req_mode;
 
   /* optional pool */
-  guint32 num_buffers;
-  guint32 min_queued_bufs;
   gboolean always_copy;
-  GstBufferPool *pool;
+  GstV4l2BufferPool *pool;
 
   /* the video device's capabilities */
   struct v4l2_capability vcap;

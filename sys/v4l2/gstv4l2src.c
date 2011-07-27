@@ -66,7 +66,6 @@
 GST_DEBUG_CATEGORY (v4l2src_debug);
 #define GST_CAT_DEFAULT v4l2src_debug
 
-#define PROP_DEF_QUEUE_SIZE         4
 #define PROP_DEF_ALWAYS_COPY        TRUE
 #define PROP_DEF_DECIMATE           1
 
@@ -76,7 +75,6 @@ enum
 {
   PROP_0,
   V4L2_STD_OBJECT_PROPS,
-  PROP_QUEUE_SIZE,
   PROP_ALWAYS_COPY,
   PROP_DECIMATE
 };
@@ -156,11 +154,6 @@ gst_v4l2src_class_init (GstV4l2SrcClass * klass)
 
   gst_v4l2_object_install_properties_helper (gobject_class,
       DEFAULT_PROP_DEVICE);
-  g_object_class_install_property (gobject_class, PROP_QUEUE_SIZE,
-      g_param_spec_uint ("queue-size", "Queue size",
-          "Number of buffers to be enqueud in the driver in streaming mode",
-          GST_V4L2_MIN_BUFFERS, GST_V4L2_MAX_BUFFERS, PROP_DEF_QUEUE_SIZE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_ALWAYS_COPY,
       g_param_spec_boolean ("always-copy", "Always Copy",
           "If the buffer will or not be used directly from mmap",
@@ -215,9 +208,6 @@ gst_v4l2src_init (GstV4l2Src * v4l2src)
       V4L2_BUF_TYPE_VIDEO_CAPTURE, DEFAULT_PROP_DEVICE,
       gst_v4l2_get_input, gst_v4l2_set_input, NULL);
 
-  /* number of buffers requested */
-  v4l2src->v4l2object->num_buffers = PROP_DEF_QUEUE_SIZE;
-
   v4l2src->v4l2object->always_copy = PROP_DEF_ALWAYS_COPY;
   v4l2src->decimate = PROP_DEF_DECIMATE;
 
@@ -256,9 +246,6 @@ gst_v4l2src_set_property (GObject * object,
   if (!gst_v4l2_object_set_property_helper (v4l2src->v4l2object,
           prop_id, value, pspec)) {
     switch (prop_id) {
-      case PROP_QUEUE_SIZE:
-        v4l2src->v4l2object->num_buffers = g_value_get_uint (value);
-        break;
       case PROP_ALWAYS_COPY:
         v4l2src->v4l2object->always_copy = g_value_get_boolean (value);
         break;
@@ -281,9 +268,6 @@ gst_v4l2src_get_property (GObject * object,
   if (!gst_v4l2_object_get_property_helper (v4l2src->v4l2object,
           prop_id, value, pspec)) {
     switch (prop_id) {
-      case PROP_QUEUE_SIZE:
-        g_value_set_uint (value, v4l2src->v4l2object->num_buffers);
-        break;
       case PROP_ALWAYS_COPY:
         g_value_set_boolean (value, v4l2src->v4l2object->always_copy);
         break;
@@ -553,7 +537,7 @@ gst_v4l2src_setup_allocation (GstBaseSrc * bsrc, GstQuery * query)
      * buffer extra to capture while the other two buffers are downstream */
     min += 1;
   } else {
-    min = obj->num_buffers;
+    min = 2;
   }
 
   /* select a pool */
@@ -563,7 +547,7 @@ gst_v4l2src_setup_allocation (GstBaseSrc * bsrc, GstQuery * query)
         /* no downstream pool, use our own then */
         GST_DEBUG_OBJECT (src,
             "read/write mode: no downstream pool, using our own");
-        pool = obj->pool;
+        pool = GST_BUFFER_POOL_CAST (obj->pool);
         size = obj->sizeimage;
       } else {
         /* in READ/WRITE mode, prefer a downstream pool because our own pool
@@ -578,7 +562,7 @@ gst_v4l2src_setup_allocation (GstBaseSrc * bsrc, GstQuery * query)
     case GST_V4L2_IO_MMAP:
     case GST_V4L2_IO_USERPTR:
       /* in streaming mode, prefer our own pool */
-      pool = obj->pool;
+      pool = GST_BUFFER_POOL_CAST (obj->pool);
       size = obj->sizeimage;
       GST_DEBUG_OBJECT (src,
           "streaming mode: using our own pool %" GST_PTR_FORMAT, pool);
@@ -615,9 +599,11 @@ static gboolean
 gst_v4l2src_query (GstBaseSrc * bsrc, GstQuery * query)
 {
   GstV4l2Src *src;
+  GstV4l2Object *obj;
   gboolean res = FALSE;
 
   src = GST_V4L2SRC (bsrc);
+  obj = src->v4l2object;
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_LATENCY:{
@@ -625,14 +611,14 @@ gst_v4l2src_query (GstBaseSrc * bsrc, GstQuery * query)
       guint32 fps_n, fps_d;
 
       /* device must be open */
-      if (!GST_V4L2_IS_OPEN (src->v4l2object)) {
+      if (!GST_V4L2_IS_OPEN (obj)) {
         GST_WARNING_OBJECT (src,
             "Can't give latency since device isn't open !");
         goto done;
       }
 
-      fps_n = GST_V4L2_FPS_N (src->v4l2object);
-      fps_d = GST_V4L2_FPS_D (src->v4l2object);
+      fps_n = GST_V4L2_FPS_N (obj);
+      fps_d = GST_V4L2_FPS_D (obj);
 
       /* we must have a framerate */
       if (fps_n <= 0 || fps_d <= 0) {
@@ -645,7 +631,7 @@ gst_v4l2src_query (GstBaseSrc * bsrc, GstQuery * query)
       min_latency = gst_util_uint64_scale_int (GST_SECOND, fps_d, fps_n);
 
       /* max latency is total duration of the frame buffer */
-      max_latency = src->v4l2object->num_buffers * min_latency;
+      max_latency = obj->pool->max_buffers * min_latency;
 
       GST_DEBUG_OBJECT (bsrc,
           "report latency min %" GST_TIME_FORMAT " max %" GST_TIME_FORMAT,

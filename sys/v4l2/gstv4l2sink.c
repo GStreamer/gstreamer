@@ -70,16 +70,12 @@
 GST_DEBUG_CATEGORY (v4l2sink_debug);
 #define GST_CAT_DEFAULT v4l2sink_debug
 
-#define PROP_DEF_QUEUE_SIZE         12
-#define PROP_DEF_MIN_QUEUED_BUFS    1
 #define DEFAULT_PROP_DEVICE   "/dev/video1"
 
 enum
 {
   PROP_0,
   V4L2_STD_OBJECT_PROPS,
-  PROP_QUEUE_SIZE,
-  PROP_MIN_QUEUED_BUFS,
   PROP_OVERLAY_TOP,
   PROP_OVERLAY_LEFT,
   PROP_OVERLAY_WIDTH,
@@ -170,17 +166,7 @@ gst_v4l2sink_class_init (GstV4l2SinkClass * klass)
 
   gst_v4l2_object_install_properties_helper (gobject_class,
       DEFAULT_PROP_DEVICE);
-  g_object_class_install_property (gobject_class, PROP_QUEUE_SIZE,
-      g_param_spec_uint ("queue-size", "Queue size",
-          "Number of buffers to be enqueud in the driver in streaming mode",
-          GST_V4L2_MIN_BUFFERS, GST_V4L2_MAX_BUFFERS, PROP_DEF_QUEUE_SIZE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_MIN_QUEUED_BUFS,
-      g_param_spec_uint ("min-queued-bufs", "Minimum queued bufs",
-          "Minimum number of queued bufs; v4l2sink won't dqbuf if the driver "
-          "doesn't have more than this number (which normally you shouldn't change)",
-          0, GST_V4L2_MAX_BUFFERS, PROP_DEF_MIN_QUEUED_BUFS,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   g_object_class_install_property (gobject_class, PROP_OVERLAY_TOP,
       g_param_spec_int ("overlay-top", "Overlay top",
           "The topmost (y) coordinate of the video overlay; top left corner of screen is 0,0",
@@ -248,10 +234,6 @@ gst_v4l2sink_init (GstV4l2Sink * v4l2sink)
    * after the constructor returns)
    */
   g_object_set (v4l2sink, "device", "/dev/video1", NULL);
-
-  /* number of buffers requested */
-  v4l2sink->v4l2object->num_buffers = PROP_DEF_QUEUE_SIZE;
-  v4l2sink->v4l2object->min_queued_bufs = PROP_DEF_MIN_QUEUED_BUFS;
 
   v4l2sink->probed_caps = NULL;
   v4l2sink->current_caps = NULL;
@@ -397,12 +379,6 @@ gst_v4l2sink_set_property (GObject * object,
   if (!gst_v4l2_object_set_property_helper (v4l2sink->v4l2object,
           prop_id, value, pspec)) {
     switch (prop_id) {
-      case PROP_QUEUE_SIZE:
-        v4l2sink->v4l2object->num_buffers = g_value_get_uint (value);
-        break;
-      case PROP_MIN_QUEUED_BUFS:
-        v4l2sink->v4l2object->min_queued_bufs = g_value_get_uint (value);
-        break;
       case PROP_OVERLAY_TOP:
         v4l2sink->overlay.top = g_value_get_int (value);
         v4l2sink->overlay_fields_set |= RECT_TOP_SET;
@@ -460,12 +436,6 @@ gst_v4l2sink_get_property (GObject * object,
   if (!gst_v4l2_object_get_property_helper (v4l2sink->v4l2object,
           prop_id, value, pspec)) {
     switch (prop_id) {
-      case PROP_QUEUE_SIZE:
-        g_value_set_uint (value, v4l2sink->v4l2object->num_buffers);
-        break;
-      case PROP_MIN_QUEUED_BUFS:
-        g_value_set_uint (value, v4l2sink->v4l2object->min_queued_bufs);
-        break;
       case PROP_OVERLAY_TOP:
         g_value_set_int (value, v4l2sink->overlay.top);
         break;
@@ -682,7 +652,7 @@ gst_v4l2sink_setup_allocation (GstBaseSink * bsink, GstQuery * query)
   if (caps == NULL)
     goto no_caps;
 
-  if ((pool = obj->pool))
+  if ((pool = GST_BUFFER_POOL_CAST (obj->pool)))
     gst_object_ref (pool);
 
   if (pool != NULL) {
@@ -699,7 +669,8 @@ gst_v4l2sink_setup_allocation (GstBaseSink * bsink, GstQuery * query)
       goto different_caps;
     }
   }
-  gst_query_set_allocation_params (query, size, 0, 0, 0, 15, pool);
+  /* we need at least 2 buffers to operate */
+  gst_query_set_allocation_params (query, size, 2, 0, 0, 15, pool);
 
   /* we also support various metadata */
   gst_query_add_allocation_meta (query, GST_META_API_VIDEO);

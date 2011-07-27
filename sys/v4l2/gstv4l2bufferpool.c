@@ -849,7 +849,7 @@ gst_v4l2_buffer_pool_class_init (GstV4l2BufferPoolClass * klass)
  *
  * Returns: the new pool, use gst_object_unref() to free resources
  */
-GstBufferPool *
+GstV4l2BufferPool *
 gst_v4l2_buffer_pool_new (GstV4l2Object * obj)
 {
   GstV4l2BufferPool *pool;
@@ -863,7 +863,7 @@ gst_v4l2_buffer_pool_new (GstV4l2Object * obj)
   pool->video_fd = fd;
   pool->obj = obj;
 
-  return GST_BUFFER_POOL_CAST (pool);
+  return pool;
 
   /* ERRORS */
 dup_failed:
@@ -880,11 +880,11 @@ gst_v4l2_do_read (GstV4l2BufferPool * pool, GstBuffer * buf)
   GstV4l2Object *obj = pool->obj;
   gint amount;
   gpointer data;
-  gint buffersize;
+  gint toread;
 
-  buffersize = gst_buffer_get_size (buf);
+  toread = obj->sizeimage;
 
-  GST_LOG_OBJECT (pool, "reading %d bytes into buffer %p", buffersize, buf);
+  GST_LOG_OBJECT (pool, "reading %d bytes into buffer %p", toread, buf);
 
   data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
 
@@ -892,9 +892,9 @@ gst_v4l2_do_read (GstV4l2BufferPool * pool, GstBuffer * buf)
     if ((res = gst_v4l2_object_poll (obj)) != GST_FLOW_OK)
       goto poll_error;
 
-    amount = v4l2_read (obj->video_fd, data, buffersize);
+    amount = v4l2_read (obj->video_fd, data, toread);
 
-    if (amount == buffersize) {
+    if (amount == toread) {
       break;
     } else if (amount == -1) {
       if (errno == EAGAIN || errno == EINTR) {
@@ -922,7 +922,7 @@ read_error:
   {
     GST_ELEMENT_ERROR (obj->element, RESOURCE, READ,
         (_("Error reading %d bytes from device '%s'."),
-            buffersize, obj->videodev), GST_ERROR_SYSTEM);
+            toread, obj->videodev), GST_ERROR_SYSTEM);
     res = GST_FLOW_ERROR;
     goto cleanup;
   }
@@ -945,10 +945,10 @@ cleanup:
  * Returns: %GST_FLOW_OK on success.
  */
 GstFlowReturn
-gst_v4l2_buffer_pool_process (GstBufferPool * bpool, GstBuffer * buf)
+gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer * buf)
 {
   GstFlowReturn ret = GST_FLOW_OK;
-  GstV4l2BufferPool *pool = GST_V4L2_BUFFER_POOL (bpool);
+  GstBufferPool *bpool = GST_BUFFER_POOL_CAST (pool);
   GstV4l2Object *obj = pool->obj;
 
   GST_DEBUG_OBJECT (pool, "process buffer %p", buf);

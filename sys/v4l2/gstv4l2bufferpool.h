@@ -84,9 +84,9 @@ const GstMetaInfo * gst_meta_v4l2_get_info (void);
 
 GType gst_v4l2_buffer_pool_get_type (void);
 
-GstBufferPool *     gst_v4l2_buffer_pool_new     (GstV4l2Object *obj);
+GstV4l2BufferPool * gst_v4l2_buffer_pool_new     (GstV4l2Object *obj);
 
-GstFlowReturn       gst_v4l2_buffer_pool_process (GstBufferPool * bpool, GstBuffer * buf);
+GstFlowReturn       gst_v4l2_buffer_pool_process (GstV4l2BufferPool * bpool, GstBuffer * buf);
 
 G_END_DECLS
 

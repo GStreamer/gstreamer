@@ -2092,8 +2092,6 @@ gst_v4l2_object_get_nearest_size (GstV4l2Object * v4l2object,
 static gboolean
 gst_v4l2_object_setup_pool (GstV4l2Object * v4l2object, GstCaps * caps)
 {
-  guint num_buffers;
-  GstStructure *config;
   GstV4l2IOMode mode;
 
   GST_DEBUG_OBJECT (v4l2object->element, "initializing the capture system");
@@ -2123,19 +2121,11 @@ gst_v4l2_object_setup_pool (GstV4l2Object * v4l2object, GstCaps * caps)
   GST_INFO_OBJECT (v4l2object->element, "accessing buffers via mode %d", mode);
   v4l2object->mode = mode;
 
-  /* keep track of current number of buffers */
-  num_buffers = v4l2object->num_buffers;
-
   /* Map the buffers */
   GST_LOG_OBJECT (v4l2object->element, "initiating buffer pool");
 
   if (!(v4l2object->pool = gst_v4l2_buffer_pool_new (v4l2object)))
     goto buffer_pool_new_failed;
-
-  config = gst_buffer_pool_get_config (v4l2object->pool);
-  gst_buffer_pool_config_set (config, caps, v4l2object->info.size,
-      num_buffers, num_buffers, 0, 0);
-  gst_buffer_pool_set_config (v4l2object->pool, config);
 
   GST_V4L2_SET_ACTIVE (v4l2object);
 
@@ -2266,6 +2256,8 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
   v4l2object->bytesperline = format.fmt.pix.bytesperline;
   v4l2object->sizeimage = format.fmt.pix.sizeimage;
 
+  GST_DEBUG_OBJECT (v4l2object->element, "Got sizeimage %u",
+      v4l2object->sizeimage);
 
   /* Is there a reason we require the caller to always specify a framerate? */
   GST_DEBUG_OBJECT (v4l2object->element, "Desired framerate: %u/%u", fps_n,
@@ -2434,7 +2426,7 @@ gst_v4l2_object_stop (GstV4l2Object * v4l2object)
 
   if (v4l2object->pool) {
     GST_DEBUG_OBJECT (v4l2object->element, "deactivating pool");
-    gst_buffer_pool_set_active (v4l2object->pool, FALSE);
+    gst_buffer_pool_set_active (GST_BUFFER_POOL_CAST (v4l2object->pool), FALSE);
     gst_object_unref (v4l2object->pool);
     v4l2object->pool = NULL;
   }
