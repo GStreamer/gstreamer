@@ -83,9 +83,9 @@ run_queries (gpointer user_data)
 
   for (i = GST_FORMAT_DEFAULT; i <= GST_FORMAT_PERCENT; i++) {
     fmt = i;
-    pres = gst_element_query_position (bin, &fmt, &pos);
+    pres = gst_element_query_position (bin, fmt, &pos);
     fmt = i;
-    dres = gst_element_query_duration (bin, &fmt, &dur);
+    dres = gst_element_query_duration (bin, fmt, &dur);
     printf ("%-8s : ", gst_format_get_name (i));
     print_value (pres, fmt, pos);
     printf (" / ");

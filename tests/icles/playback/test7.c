@@ -34,17 +34,16 @@ update_scale (GstElement * element)
 {
   gint64 duration = -1;
   gint64 position = -1;
-  GstFormat format = GST_FORMAT_TIME;
   gchar dur_str[32], pos_str[32];
 
-  if (gst_element_query_position (element, &format, &position) &&
+  if (gst_element_query_position (element, GST_FORMAT_TIME, &position) &&
       position != -1) {
     g_snprintf (pos_str, 32, "%" GST_TIME_FORMAT, GST_TIME_ARGS (position));
   } else {
     g_snprintf (pos_str, 32, "-:--:--.---------");
   }
 
-  if (gst_element_query_duration (element, &format, &duration) &&
+  if (gst_element_query_duration (element, GST_FORMAT_TIME, &duration) &&
       duration != -1) {
     g_snprintf (dur_str, 32, "%" GST_TIME_FORMAT, GST_TIME_ARGS (duration));
   } else {

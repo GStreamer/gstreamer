@@ -68,7 +68,6 @@ GST_START_TEST (test_memory_stream)
   guint8 *in_data;
   guint8 *out_data;
   gint i;
-  GstFormat fmt = GST_FORMAT_BYTES;
   gint64 duration;
   guint bus_watch = 0;
 
@@ -110,7 +109,7 @@ GST_START_TEST (test_memory_stream)
   gst_element_set_state (bin, GST_STATE_PAUSED);
   gst_element_get_state (bin, NULL, NULL, -1);
 
-  fail_unless (gst_element_query_duration (bin, &fmt, &duration));
+  fail_unless (gst_element_query_duration (bin, GST_FORMAT_BYTES, &duration));
   fail_unless_equals_int (duration, 512);
 
   gst_element_set_state (bin, GST_STATE_PLAYING);
@@ -130,7 +129,7 @@ GST_START_TEST (test_memory_stream)
   gst_element_set_state (bin, GST_STATE_PAUSED);
   gst_element_get_state (bin, NULL, NULL, -1);
 
-  fail_unless (gst_element_query_duration (bin, &fmt, &duration));
+  fail_unless (gst_element_query_duration (bin, GST_FORMAT_BYTES, &duration));
   fail_unless_equals_int (duration, 512);
 
   gst_element_set_state (bin, GST_STATE_PLAYING);

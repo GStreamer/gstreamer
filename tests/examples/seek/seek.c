@@ -307,8 +307,8 @@ query_positions_elems (void)
 
       format = seek_formats[i].format;
 
-      if (gst_element_query_position (element, &format, &position) &&
-          gst_element_query_duration (element, &format, &total)) {
+      if (gst_element_query_position (element, format, &position) &&
+          gst_element_query_duration (element, format, &total)) {
         g_print ("%s %13" G_GINT64_FORMAT " / %13" G_GINT64_FORMAT " | ",
             seek_formats[i].name, position, total);
       } else {
@@ -393,16 +393,11 @@ update_fill (gpointer data)
 static gboolean
 update_scale (gpointer data)
 {
-  GstFormat format = GST_FORMAT_TIME;
-
-  //position = 0;
-  //duration = 0;
-
   if (seekable_elements) {
     GstElement *element = GST_ELEMENT (seekable_elements->data);
 
-    gst_element_query_position (element, &format, &position);
-    gst_element_query_duration (element, &format, &duration);
+    gst_element_query_position (element, GST_FORMAT_TIME, &position);
+    gst_element_query_duration (element, GST_FORMAT_TIME, &duration);
   }
 
   if (stats) {

@@ -1075,7 +1075,7 @@ query_rates (void)
 
       format = seek_formats[i].format;
 
-      if (gst_pad_query_convert (pad, GST_FORMAT_TIME, GST_SECOND, &format,
+      if (gst_pad_query_convert (pad, GST_FORMAT_TIME, GST_SECOND, format,
               &value)) {
         g_print ("%s %13" G_GINT64_FORMAT " | ", seek_formats[i].name, value);
       } else {
@@ -1106,8 +1106,8 @@ query_positions_elems (void)
 
       format = seek_formats[i].format;
 
-      if (gst_element_query_position (element, &format, &position) &&
-          gst_element_query_duration (element, &format, &total)) {
+      if (gst_element_query_position (element, format, &position) &&
+          gst_element_query_duration (element, format, &total)) {
         g_print ("%s %13" G_GINT64_FORMAT " / %13" G_GINT64_FORMAT " | ",
             seek_formats[i].name, position, total);
       } else {
@@ -1138,8 +1138,8 @@ query_positions_pads (void)
 
       format = seek_formats[i].format;
 
-      if (gst_pad_query_position (pad, &format, &position) &&
-          gst_pad_query_duration (pad, &format, &total)) {
+      if (gst_pad_query_position (pad, format, &position) &&
+          gst_pad_query_duration (pad, format, &total)) {
         g_print ("%s %13" G_GINT64_FORMAT " / %13" G_GINT64_FORMAT " | ",
             seek_formats[i].name, position, total);
       } else {
@@ -1227,24 +1227,19 @@ update_fill (gpointer data)
 static gboolean
 update_scale (gpointer data)
 {
-  GstFormat format = GST_FORMAT_TIME;
-
-  //position = 0;
-  //duration = 0;
-
   if (elem_seek) {
     if (seekable_elements) {
       GstElement *element = GST_ELEMENT (seekable_elements->data);
 
-      gst_element_query_position (element, &format, &position);
-      gst_element_query_duration (element, &format, &duration);
+      gst_element_query_position (element, GST_FORMAT_TIME, &position);
+      gst_element_query_duration (element, GST_FORMAT_TIME, &duration);
     }
   } else {
     if (seekable_pads) {
       GstPad *pad = GST_PAD (seekable_pads->data);
 
-      gst_pad_query_position (pad, &format, &position);
-      gst_pad_query_duration (pad, &format, &duration);
+      gst_pad_query_position (pad, GST_FORMAT_TIME, &position);
+      gst_pad_query_duration (pad, GST_FORMAT_TIME, &duration);
     }
   }
 

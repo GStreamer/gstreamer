@@ -34,7 +34,6 @@ main (int argc, char *argv[])
   GError *error = NULL;
   GdkPixbuf *pixbuf;
   gint64 duration, position;
-  GstFormat format;
   GstStateChangeReturn ret;
   gboolean res;
   guint8 *data;
@@ -87,8 +86,7 @@ main (int argc, char *argv[])
   }
 
   /* get the duration */
-  format = GST_FORMAT_TIME;
-  gst_element_query_duration (pipeline, &format, &duration);
+  gst_element_query_duration (pipeline, GST_FORMAT_TIME, &duration);
 
   if (duration != -1)
     /* we have a duration, seek to 5% */

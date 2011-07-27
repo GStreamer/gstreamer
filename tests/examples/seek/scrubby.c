@@ -145,15 +145,11 @@ format_value (GtkScale * scale, gdouble value)
 static gboolean
 update_scale (gpointer data)
 {
-  GstFormat format;
-
   position = 0;
   duration = 0;
 
-  format = GST_FORMAT_TIME;
-
-  gst_element_query_position (pipeline, &format, &position);
-  gst_element_query_duration (pipeline, &format, &duration);
+  gst_element_query_position (pipeline, GST_FORMAT_TIME, &position);
+  gst_element_query_duration (pipeline, GST_FORMAT_TIME, &duration);
 
   if (position >= duration)
     duration = position;

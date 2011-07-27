@@ -95,13 +95,11 @@ have_subtitle (GstElement * appsink, App * app)
   if (buffer) {
     guint8 *data;
     gsize size;
-    GstFormat format;
     gint64 position;
     GstClock *clock;
     GstClockTime base_time, running_time;
 
-    format = GST_FORMAT_TIME;
-    gst_element_query_position (appsink, &format, &position);
+    gst_element_query_position (appsink, GST_FORMAT_TIME, &position);
 
     clock = gst_element_get_clock (appsink);
     base_time = gst_element_get_base_time (appsink);
