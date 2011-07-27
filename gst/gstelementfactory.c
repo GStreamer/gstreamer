@@ -341,7 +341,8 @@ detailserror:
 /**
  * gst_element_factory_create:
  * @factory: factory to instantiate
- * @name: name of new element
+ * @name: (allow-none): name of new element, or NULL to automatically create
+ *    a unique name
  *
  * Create a new element of the type defined by the given elementfactory.
  * It will be given the name supplied, since all elements require a name as
@@ -426,7 +427,8 @@ no_element:
 /**
  * gst_element_factory_make:
  * @factoryname: a named factory to instantiate
- * @name: (allow-none): name of new element
+ * @name: (allow-none): name of new element, or NULL to automatically create
+ *    a unique name
  *
  * Create a new element of the type defined by the given element factory.
  * If name is NULL, then the element will receive a guaranteed unique name,
