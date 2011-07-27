@@ -168,6 +168,7 @@ gst_rtp_h264_depay_reset (GstRtpH264Depay * rtph264depay)
   rtph264depay->picture_start = FALSE;
   rtph264depay->last_keyframe = FALSE;
   rtph264depay->last_ts = 0;
+  rtph264depay->current_fu_type = 0;
 }
 
 static void
@@ -606,6 +607,35 @@ short_nal:
   }
 }
 
+static void
+gst_rtp_h264_push_fragmentation_unit (GstRtpH264Depay * rtph264depay)
+{
+  guint outsize;
+  guint8 *outdata;
+  GstBuffer *outbuf;
+
+  outsize = gst_adapter_available (rtph264depay->adapter);
+  outbuf = gst_adapter_take_buffer (rtph264depay->adapter, outsize);
+  outdata = GST_BUFFER_DATA (outbuf);
+
+  GST_DEBUG_OBJECT (rtph264depay, "output %d bytes", outsize);
+
+  if (rtph264depay->byte_stream) {
+    memcpy (outdata, sync_bytes, sizeof (sync_bytes));
+  } else {
+    outsize -= 4;
+    outdata[0] = (outsize >> 24);
+    outdata[1] = (outsize >> 16);
+    outdata[2] = (outsize >> 8);
+    outdata[3] = (outsize);
+  }
+
+  gst_rtp_h264_depay_handle_nal (rtph264depay, outbuf,
+      rtph264depay->fu_timestamp, rtph264depay->fu_marker);
+
+  rtph264depay->current_fu_type = 0;
+}
+
 static GstBuffer *
 gst_rtp_h264_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 {
@@ -619,6 +649,7 @@ gst_rtp_h264_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   if (GST_BUFFER_IS_DISCONT (buf)) {
     gst_adapter_clear (rtph264depay->adapter);
     rtph264depay->wait_start = TRUE;
+    rtph264depay->current_fu_type = 0;
   }
 
   {
@@ -658,6 +689,13 @@ gst_rtp_h264_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 
     GST_DEBUG_OBJECT (rtph264depay, "NRI %d, Type %d", nal_ref_idc,
         nal_unit_type);
+
+    /* If FU unit was being processed, but the current nal is of a different
+     * type.  Assume that the remote payloader is buggy (didn't set the end bit
+     * when the FU ended) and send out what we gathered thusfar */
+    if (G_UNLIKELY (rtph264depay->current_fu_type != 0 &&
+            nal_unit_type != rtph264depay->current_fu_type))
+      gst_rtp_h264_push_fragmentation_unit (rtph264depay);
 
     switch (nal_unit_type) {
       case 0:
@@ -758,6 +796,15 @@ gst_rtp_h264_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
           /* NAL unit starts here */
           guint8 nal_header;
 
+          /* If a new FU unit started, while still processing an older one.
+           * Assume that the remote payloader is buggy (doesn't set the end
+           * bit) and send out what we've gathered thusfar */
+          if (G_UNLIKELY (rtph264depay->current_fu_type != 0))
+            gst_rtp_h264_push_fragmentation_unit (rtph264depay);
+
+          rtph264depay->current_fu_type = nal_unit_type;
+          rtph264depay->fu_timestamp = timestamp;
+
           rtph264depay->wait_start = FALSE;
 
           /* reconstruct NAL header */
@@ -796,26 +843,11 @@ gst_rtp_h264_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
           gst_adapter_push (rtph264depay->adapter, outbuf);
         }
 
+        rtph264depay->fu_marker = marker;
+
         /* if NAL unit ends, flush the adapter */
-        if (E) {
-          GST_DEBUG_OBJECT (rtph264depay, "output %d bytes", outsize);
-
-          outsize = gst_adapter_available (rtph264depay->adapter);
-          outbuf = gst_adapter_take_buffer (rtph264depay->adapter, outsize);
-          outdata = GST_BUFFER_DATA (outbuf);
-
-          if (rtph264depay->byte_stream) {
-            memcpy (outdata, sync_bytes, sizeof (sync_bytes));
-          } else {
-            outsize -= 4;
-            outdata[0] = (outsize >> 24);
-            outdata[1] = (outsize >> 16);
-            outdata[2] = (outsize >> 8);
-            outdata[3] = (outsize);
-          }
-          gst_rtp_h264_depay_handle_nal (rtph264depay, outbuf, timestamp,
-              marker);
-        }
+        if (E)
+          gst_rtp_h264_push_fragmentation_unit (rtph264depay);
         break;
       }
       default:
