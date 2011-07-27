@@ -47,7 +47,7 @@ gst_my_filter_change_state (GstElement * element, GstStateChange transition)
     that buffers are not always writeable. In more advanced elements (the ones
     that do event processing), you may want to additionally specify an event
     handling function, which will be called when stream-events are sent (such
-    as end-of-stream, discontinuities, tags, etc.).
+    as end-of-stream, newsegment, tags, etc.).
   </para>
   <programlisting>
 static void
