@@ -291,7 +291,7 @@ gst_speex_enc_sink_getcaps (GstPad * pad, GstCaps * filter)
 
 static gboolean
 gst_speex_enc_convert_src (GstPad * pad, GstFormat src_format, gint64 src_value,
-    GstFormat * dest_format, gint64 * dest_value)
+    GstFormat dest_format, gint64 * dest_value)
 {
   gboolean res = TRUE;
   GstSpeexEnc *enc;
@@ -306,7 +306,7 @@ gst_speex_enc_convert_src (GstPad * pad, GstFormat src_format, gint64 src_value,
 
   switch (src_format) {
     case GST_FORMAT_BYTES:
-      switch (*dest_format) {
+      switch (dest_format) {
         case GST_FORMAT_TIME:
           *dest_value = src_value * GST_SECOND / avg;
           break;
@@ -315,7 +315,7 @@ gst_speex_enc_convert_src (GstPad * pad, GstFormat src_format, gint64 src_value,
       }
       break;
     case GST_FORMAT_TIME:
-      switch (*dest_format) {
+      switch (dest_format) {
         case GST_FORMAT_BYTES:
           *dest_value = src_value * avg / GST_SECOND;
           break;
@@ -430,44 +430,44 @@ gst_speex_enc_src_query (GstPad * pad, GstQuery * query)
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
     {
-      GstFormat fmt, req_fmt;
+      GstFormat req_fmt;
       gint64 pos, val;
 
       gst_query_parse_position (query, &req_fmt, NULL);
-      if ((res = gst_pad_query_peer_position (enc->sinkpad, &req_fmt, &val))) {
+      if ((res = gst_pad_query_peer_position (enc->sinkpad, req_fmt, &val))) {
         gst_query_set_position (query, req_fmt, val);
         break;
       }
 
-      fmt = GST_FORMAT_TIME;
-      if (!(res = gst_pad_query_peer_position (enc->sinkpad, &fmt, &pos)))
+      res = gst_pad_query_peer_position (enc->sinkpad, GST_FORMAT_TIME, &pos);
+      if (!res)
         break;
 
       if ((res =
-              gst_pad_query_peer_convert (enc->sinkpad, fmt, pos, &req_fmt,
-                  &val)))
+              gst_pad_query_peer_convert (enc->sinkpad, GST_FORMAT_TIME, pos,
+                  req_fmt, &val))) {
         gst_query_set_position (query, req_fmt, val);
-
+      }
       break;
     }
     case GST_QUERY_DURATION:
     {
-      GstFormat fmt, req_fmt;
+      GstFormat req_fmt;
       gint64 dur, val;
 
       gst_query_parse_duration (query, &req_fmt, NULL);
-      if ((res = gst_pad_query_peer_duration (enc->sinkpad, &req_fmt, &val))) {
+      if ((res = gst_pad_query_peer_duration (enc->sinkpad, req_fmt, &val))) {
         gst_query_set_duration (query, req_fmt, val);
         break;
       }
 
-      fmt = GST_FORMAT_TIME;
-      if (!(res = gst_pad_query_peer_duration (enc->sinkpad, &fmt, &dur)))
+      res = gst_pad_query_peer_duration (enc->sinkpad, GST_FORMAT_TIME, &dur);
+      if (!res)
         break;
 
       if ((res =
-              gst_pad_query_peer_convert (enc->sinkpad, fmt, dur, &req_fmt,
-                  &val))) {
+              gst_pad_query_peer_convert (enc->sinkpad, GST_FORMAT_TIME, dur,
+                  req_fmt, &val))) {
         gst_query_set_duration (query, req_fmt, val);
       }
       break;
@@ -478,7 +478,7 @@ gst_speex_enc_src_query (GstPad * pad, GstQuery * query)
       gint64 src_val, dest_val;
 
       gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
-      if (!(res = gst_speex_enc_convert_src (pad, src_fmt, src_val, &dest_fmt,
+      if (!(res = gst_speex_enc_convert_src (pad, src_fmt, src_val, dest_fmt,
                   &dest_val)))
         goto error;
       gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);

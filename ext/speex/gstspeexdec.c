@@ -376,6 +376,7 @@ speex_dec_src_query (GstPad * pad, GstQuery * query)
 
   dec = GST_SPEEX_DEC (gst_pad_get_parent (pad));
 
+  /* FIXME: why not just pass position/duration queries upstream to demuxer? */
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:{
       GstSegment segment;
@@ -400,11 +401,11 @@ speex_dec_src_query (GstPad * pad, GstQuery * query)
       break;
     }
     case GST_QUERY_DURATION:{
-      GstFormat format = GST_FORMAT_TIME;
+      GstFormat format;
       gint64 dur;
 
       /* get duration from demuxer */
-      if (!gst_pad_query_peer_duration (dec->sinkpad, &format, &dur))
+      if (!gst_pad_query_peer_duration (dec->sinkpad, GST_FORMAT_TIME, &dur))
         break;
 
       gst_query_parse_duration (query, &format, NULL);
