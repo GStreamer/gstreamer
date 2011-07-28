@@ -270,6 +270,8 @@ gst_camera_bin_start_capture (GstCameraBin2 * camerabin)
 
   if (camerabin->mode == MODE_VIDEO) {
     if (camerabin->audio_src) {
+      GstClock *clock = gst_pipeline_get_clock (GST_PIPELINE_CAST (camerabin));
+
       gst_element_set_state (camerabin->audio_src, GST_STATE_READY);
       /* need to reset eos status (pads could be flushing) */
       gst_element_set_state (camerabin->audio_capsfilter, GST_STATE_READY);
@@ -278,6 +280,13 @@ gst_camera_bin_start_capture (GstCameraBin2 * camerabin)
       gst_element_sync_state_with_parent (camerabin->audio_capsfilter);
       gst_element_sync_state_with_parent (camerabin->audio_volume);
       gst_element_set_state (camerabin->audio_src, GST_STATE_PAUSED);
+
+      gst_element_set_base_time (camerabin->audio_src,
+          gst_element_get_base_time (GST_ELEMENT_CAST (camerabin)));
+      if (clock) {
+        gst_element_set_clock (camerabin->audio_src, clock);
+        gst_object_unref (clock);
+      }
     }
   } else {
     gchar *location = NULL;
