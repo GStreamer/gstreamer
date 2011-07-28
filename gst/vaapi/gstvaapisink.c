@@ -123,13 +123,13 @@ gst_vaapi_video_sink_iface_init(GstVaapiVideoSinkInterface *iface)
 /* GstXOverlay interface */
 
 static gboolean
-gst_vaapisink_ensure_window_xid(GstVaapiSink *sink, XID xid);
+gst_vaapisink_ensure_window_xid(GstVaapiSink *sink, guintptr window_id);
 
 static GstFlowReturn
 gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *buffer);
 
 static void
-gst_vaapisink_xoverlay_set_xid(GstXOverlay *overlay, XID xid)
+gst_vaapisink_xoverlay_set_window_handle(GstXOverlay *overlay, guintptr window_id)
 {
     GstVaapiSink * const sink = GST_VAAPISINK(overlay);
 
@@ -138,7 +138,7 @@ gst_vaapisink_xoverlay_set_xid(GstXOverlay *overlay, XID xid)
     sink->use_glx = FALSE;
 
     sink->foreign_window = TRUE;
-    gst_vaapisink_ensure_window_xid(sink, xid);
+    gst_vaapisink_ensure_window_xid(sink, window_id);
 }
 
 static void
@@ -157,8 +157,8 @@ gst_vaapisink_xoverlay_expose(GstXOverlay *overlay)
 static void
 gst_vaapisink_xoverlay_iface_init(GstXOverlayClass *iface)
 {
-    iface->set_xwindow_id = gst_vaapisink_xoverlay_set_xid;
-    iface->expose         = gst_vaapisink_xoverlay_expose;
+    iface->set_window_handle = gst_vaapisink_xoverlay_set_window_handle;
+    iface->expose            = gst_vaapisink_xoverlay_expose;
 }
 
 static void
@@ -354,11 +354,12 @@ gst_vaapisink_ensure_window(GstVaapiSink *sink, guint width, guint height)
 }
 
 static gboolean
-gst_vaapisink_ensure_window_xid(GstVaapiSink *sink, XID xid)
+gst_vaapisink_ensure_window_xid(GstVaapiSink *sink, guintptr window_id)
 {
     Window rootwin;
     unsigned int width, height, border_width, depth;
     int x, y;
+    XID xid = window_id;
 
     if (!gst_vaapisink_ensure_display(sink))
         return FALSE;
