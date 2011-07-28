@@ -443,12 +443,16 @@ gst_base_audio_sink_query (GstElement * element, GstQuery * query)
           min_latency = min_latency + min_l;
           /* the max latency is the max of the peer, we can delay an infinite
            * amount of time. */
-          max_latency = min_latency + (max_l == -1 ? 0 : max_l);
+          max_latency = (max_l == -1) ? -1 : (min_latency + max_l);
 
           GST_DEBUG_OBJECT (basesink,
               "peer min %" GST_TIME_FORMAT ", our min latency: %"
               GST_TIME_FORMAT, GST_TIME_ARGS (min_l),
               GST_TIME_ARGS (min_latency));
+          GST_DEBUG_OBJECT (basesink,
+              "peer max %" GST_TIME_FORMAT ", our max latency: %"
+              GST_TIME_FORMAT, GST_TIME_ARGS (max_l),
+              GST_TIME_ARGS (max_latency));
         } else {
           GST_DEBUG_OBJECT (basesink,
               "peer or we are not live, don't care about latency");
