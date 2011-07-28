@@ -118,16 +118,15 @@ gst_navseek_init (GstNavSeek * navseek)
 static void
 gst_navseek_seek (GstNavSeek * navseek, gint64 offset)
 {
-  GstFormat peer_format = GST_FORMAT_TIME;
   gboolean ret;
   GstPad *peer_pad;
   gint64 peer_value;
 
   /* Query for the current time then attempt to set to time + offset */
   peer_pad = gst_pad_get_peer (GST_BASE_TRANSFORM (navseek)->sinkpad);
-  ret = gst_pad_query_position (peer_pad, &peer_format, &peer_value);
+  ret = gst_pad_query_position (peer_pad, GST_FORMAT_TIME, &peer_value);
 
-  if (ret && peer_format == GST_FORMAT_TIME) {
+  if (ret) {
     GstEvent *event;
 
     peer_value += offset;
@@ -147,15 +146,14 @@ gst_navseek_seek (GstNavSeek * navseek, gint64 offset)
 static void
 gst_navseek_change_playback_rate (GstNavSeek * navseek, gdouble rate)
 {
-  GstFormat peer_format = GST_FORMAT_TIME;
   gboolean ret;
   GstPad *peer_pad;
   gint64 current_position;
 
   peer_pad = gst_pad_get_peer (GST_BASE_TRANSFORM (navseek)->sinkpad);
-  ret = gst_pad_query_position (peer_pad, &peer_format, &current_position);
+  ret = gst_pad_query_position (peer_pad, GST_FORMAT_TIME, &current_position);
 
-  if (ret && peer_format == GST_FORMAT_TIME) {
+  if (ret) {
     GstEvent *event;
     gint64 start;
     gint64 stop;

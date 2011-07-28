@@ -240,8 +240,8 @@ gst_progress_report_do_query (GstProgressReport * filter, GstFormat format,
 
   if (filter->do_query || !buf) {
     GST_LOG_OBJECT (filter, "using upstream query");
-    if (!gst_pad_query_peer_position (sink_pad, &format, &cur) ||
-        !gst_pad_query_peer_duration (sink_pad, &format, &total)) {
+    if (!gst_pad_query_peer_position (sink_pad, format, &cur) ||
+        !gst_pad_query_peer_duration (sink_pad, format, &total)) {
       return FALSE;
     }
   } else {

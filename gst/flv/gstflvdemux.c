@@ -119,11 +119,11 @@ gst_flv_demux_parse_and_add_index_entry (GstFlvDemux * demux, GstClockTime ts,
     gboolean key;
 
     gst_index_entry_assoc_map (entry, GST_FORMAT_TIME, &time);
-    key = !!(GST_INDEX_ASSOC_FLAGS (entry) & GST_ASSOCIATION_FLAG_KEY_UNIT);
+    key = ! !(GST_INDEX_ASSOC_FLAGS (entry) & GST_ASSOCIATION_FLAG_KEY_UNIT);
     GST_LOG_OBJECT (demux, "position already mapped to time %" GST_TIME_FORMAT
         ", keyframe %d", GST_TIME_ARGS (time), key);
     /* there is not really a way to delete the existing one */
-    if (time != ts || key != !!keyframe)
+    if (time != ts || key != ! !keyframe)
       GST_DEBUG_OBJECT (demux, "metadata mismatch");
 #endif
     return;
@@ -214,10 +214,8 @@ gst_flv_demux_check_seekability (GstFlvDemux * demux)
 
   /* try harder to query upstream size if we didn't get it the first time */
   if (demux->upstream_seekable && stop == -1) {
-    GstFormat fmt = GST_FORMAT_BYTES;
-
     GST_DEBUG_OBJECT (demux, "doing duration query to fix up unset stop");
-    gst_pad_query_peer_duration (demux->sinkpad, &fmt, &stop);
+    gst_pad_query_peer_duration (demux->sinkpad, GST_FORMAT_BYTES, &stop);
   }
 
   /* if upstream doesn't know the size, it's likely that it's not seekable in
@@ -2194,15 +2192,13 @@ static GstFlowReturn
 gst_flv_demux_create_index (GstFlvDemux * demux, gint64 pos, GstClockTime ts)
 {
   gint64 size;
-  GstFormat fmt = GST_FORMAT_BYTES;
   size_t tag_size;
   guint64 old_offset;
   GstBuffer *buffer;
   GstClockTime tag_time;
   GstFlowReturn ret = GST_FLOW_OK;
 
-  if (G_UNLIKELY (!gst_pad_query_peer_duration (demux->sinkpad, &fmt, &size) ||
-          fmt != GST_FORMAT_BYTES))
+  if (!gst_pad_query_peer_duration (demux->sinkpad, GST_FORMAT_BYTES, &size))
     return GST_FLOW_OK;
 
   GST_DEBUG_OBJECT (demux, "building index at %" G_GINT64_FORMAT
@@ -2240,13 +2236,11 @@ static gint64
 gst_flv_demux_get_metadata (GstFlvDemux * demux)
 {
   gint64 ret = 0, offset;
-  GstFormat fmt = GST_FORMAT_BYTES;
   size_t tag_size, size;
   GstBuffer *buffer = NULL;
   guint8 *data;
 
-  if (G_UNLIKELY (!gst_pad_query_peer_duration (demux->sinkpad, &fmt, &offset)
-          || fmt != GST_FORMAT_BYTES))
+  if (!gst_pad_query_peer_duration (demux->sinkpad, GST_FORMAT_BYTES, &offset))
     goto exit;
 
   ret = offset;
@@ -2497,7 +2491,7 @@ flv_demux_handle_seek_push (GstFlvDemux * demux, GstEvent * event)
   if (format != GST_FORMAT_TIME)
     goto wrong_format;
 
-  flush = !!(flags & GST_SEEK_FLAG_FLUSH);
+  flush = ! !(flags & GST_SEEK_FLAG_FLUSH);
   /* FIXME : the keyframe flag is never used ! */
 
   /* Work on a copy until we are sure the seek succeeded. */
@@ -2586,7 +2580,6 @@ gst_flv_demux_handle_seek_push (GstFlvDemux * demux, GstEvent * event)
   if (!demux->indexed) {
     guint64 seek_offset = 0;
     gboolean building_index;
-    GstFormat fmt;
 
     GST_OBJECT_LOCK (demux);
     /* handle the seek in the chain function */
@@ -2603,13 +2596,10 @@ gst_flv_demux_handle_seek_push (GstFlvDemux * demux, GstEvent * event)
     building_index = demux->building_index;
     if (!building_index) {
       demux->building_index = TRUE;
-      fmt = GST_FORMAT_BYTES;
       if (!demux->file_size
-          && !gst_pad_query_peer_duration (demux->sinkpad, &fmt,
+          && !gst_pad_query_peer_duration (demux->sinkpad, GST_FORMAT_BYTES,
               &demux->file_size)) {
-        GST_WARNING_OBJECT (demux,
-            "Cannot obtain file size - %" G_GINT64_FORMAT ", format %u",
-            demux->file_size, fmt);
+        GST_WARNING_OBJECT (demux, "Failed to query upstream file size");
         GST_OBJECT_UNLOCK (demux);
         return FALSE;
       }
@@ -2662,7 +2652,7 @@ gst_flv_demux_handle_seek_pull (GstFlvDemux * demux, GstEvent * event,
     demux->seeking = seeking;
   GST_OBJECT_UNLOCK (demux);
 
-  flush = !!(flags & GST_SEEK_FLAG_FLUSH);
+  flush = ! !(flags & GST_SEEK_FLAG_FLUSH);
   /* FIXME : the keyframe flag is never used */
 
   if (flush) {

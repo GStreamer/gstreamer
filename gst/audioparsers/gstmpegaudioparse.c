@@ -582,7 +582,6 @@ gst_mpeg_audio_parse_handle_first_frame (GstMpegAudioParse * mp3parse,
   gint offset_xing, offset_vbri;
   guint64 avail;
   gint64 upstream_total_bytes = 0;
-  GstFormat fmt = GST_FORMAT_BYTES;
   guint32 read_id_xing = 0, read_id_vbri = 0;
   guint8 *data, *origdata;
   gsize bufsize;
@@ -623,9 +622,8 @@ gst_mpeg_audio_parse_handle_first_frame (GstMpegAudioParse * mp3parse,
   }
 
   /* obtain real upstream total bytes */
-  fmt = GST_FORMAT_BYTES;
-  if (!gst_pad_query_peer_duration (GST_BASE_PARSE_SINK_PAD (GST_BASE_PARSE
-              (mp3parse)), &fmt, &upstream_total_bytes))
+  if (!gst_pad_query_peer_duration (GST_BASE_PARSE_SINK_PAD (mp3parse),
+          GST_FORMAT_BYTES, &upstream_total_bytes))
     upstream_total_bytes = 0;
 
   if (read_id_xing == xing_id || read_id_xing == info_id) {

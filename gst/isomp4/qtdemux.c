@@ -1184,7 +1184,6 @@ gst_qtdemux_convert_seek (GstPad * pad, GstFormat * format,
     GstSeekType cur_type, gint64 * cur, GstSeekType stop_type, gint64 * stop)
 {
   gboolean res;
-  GstFormat fmt;
 
   g_return_val_if_fail (format != NULL, FALSE);
   g_return_val_if_fail (cur != NULL, FALSE);
@@ -1193,12 +1192,11 @@ gst_qtdemux_convert_seek (GstPad * pad, GstFormat * format,
   if (*format == GST_FORMAT_TIME)
     return TRUE;
 
-  fmt = GST_FORMAT_TIME;
   res = TRUE;
   if (cur_type != GST_SEEK_TYPE_NONE)
-    res = gst_pad_query_convert (pad, *format, *cur, &fmt, cur);
+    res = gst_pad_query_convert (pad, *format, *cur, GST_FORMAT_TIME, cur);
   if (res && stop_type != GST_SEEK_TYPE_NONE)
-    res = gst_pad_query_convert (pad, *format, *stop, &fmt, stop);
+    res = gst_pad_query_convert (pad, *format, *stop, GST_FORMAT_TIME, stop);
 
   if (res)
     *format = GST_FORMAT_TIME;
@@ -7457,7 +7455,6 @@ too_many_streams:
 static void
 gst_qtdemux_guess_bitrate (GstQTDemux * qtdemux)
 {
-  GstFormat format = GST_FORMAT_BYTES;
   QtDemuxStream *stream = NULL;
   gint64 size, duration, sys_bitrate, sum_bitrate = 0;
   gint i;
@@ -7468,8 +7465,7 @@ gst_qtdemux_guess_bitrate (GstQTDemux * qtdemux)
 
   GST_DEBUG_OBJECT (qtdemux, "Looking for streams with unknown bitrate");
 
-  if (!gst_pad_query_peer_duration (qtdemux->sinkpad, &format, &size) ||
-      format != GST_FORMAT_BYTES) {
+  if (!gst_pad_query_peer_duration (qtdemux->sinkpad, GST_FORMAT_BYTES, &size)) {
     GST_DEBUG_OBJECT (qtdemux,
         "Size in bytes of the stream not known - bailing");
     return;

@@ -531,7 +531,7 @@ gst_avi_demux_handle_src_query (GstPad * pad, GstQuery * query)
           if (stream->idx_n >= 0)
             gst_query_set_duration (query, fmt, stream->idx_n);
           else if (gst_pad_query_convert (pad, GST_FORMAT_TIME,
-                  duration, &fmt, &dur))
+                  duration, fmt, &dur))
             gst_query_set_duration (query, fmt, dur);
           break;
         }
@@ -2931,7 +2931,6 @@ gst_avi_demux_stream_scan (GstAviDemux * avi)
 {
   GstFlowReturn res;
   GstAviStream *stream;
-  GstFormat format;
   guint64 pos = 0;
   guint64 length;
   gint64 tmplength;
@@ -2944,8 +2943,7 @@ gst_avi_demux_stream_scan (GstAviDemux * avi)
   GST_DEBUG_OBJECT (avi, "Creating index");
 
   /* get the size of the file */
-  format = GST_FORMAT_BYTES;
-  if (!gst_pad_query_peer_duration (avi->sinkpad, &format, &tmplength))
+  if (!gst_pad_query_peer_duration (avi->sinkpad, GST_FORMAT_BYTES, &tmplength))
     return FALSE;
   length = tmplength;
 
@@ -3107,10 +3105,8 @@ gst_avi_demux_check_seekability (GstAviDemux * avi)
 
   /* try harder to query upstream size if we didn't get it the first time */
   if (seekable && stop == -1) {
-    GstFormat fmt = GST_FORMAT_BYTES;
-
     GST_DEBUG_OBJECT (avi, "doing duration query to fix up unset stop");
-    gst_pad_query_peer_duration (avi->sinkpad, &fmt, &stop);
+    gst_pad_query_peer_duration (avi->sinkpad, GST_FORMAT_BYTES, &stop);
   }
 
   /* if upstream doesn't know the size, it's likely that it's not seekable in
@@ -3983,7 +3979,7 @@ gst_avi_demux_do_seek (GstAviDemux * avi, GstSegment * segment)
   GstAviStream *stream;
 
   seek_time = segment->position;
-  keyframe = !!(segment->flags & GST_SEEK_FLAG_KEY_UNIT);
+  keyframe = ! !(segment->flags & GST_SEEK_FLAG_KEY_UNIT);
 
   GST_DEBUG_OBJECT (avi, "seek to: %" GST_TIME_FORMAT
       " keyframe seeking:%d", GST_TIME_ARGS (seek_time), keyframe);
@@ -4070,17 +4066,16 @@ gst_avi_demux_handle_seek (GstAviDemux * avi, GstPad * pad, GstEvent * event)
     /* we have to have a format as the segment format. Try to convert
      * if not. */
     if (format != GST_FORMAT_TIME) {
-      GstFormat fmt = GST_FORMAT_TIME;
       gboolean res = TRUE;
 
       if (cur_type != GST_SEEK_TYPE_NONE)
-        res = gst_pad_query_convert (pad, format, cur, &fmt, &cur);
+        res = gst_pad_query_convert (pad, format, cur, GST_FORMAT_TIME, &cur);
       if (res && stop_type != GST_SEEK_TYPE_NONE)
-        res = gst_pad_query_convert (pad, format, stop, &fmt, &stop);
+        res = gst_pad_query_convert (pad, format, stop, GST_FORMAT_TIME, &stop);
       if (!res)
         goto no_format;
 
-      format = fmt;
+      format = GST_FORMAT_TIME;
     }
     GST_DEBUG_OBJECT (avi,
         "seek requested: rate %g cur %" GST_TIME_FORMAT " stop %"
@@ -4204,19 +4199,18 @@ avi_demux_handle_seek_push (GstAviDemux * avi, GstPad * pad, GstEvent * event)
       &cur_type, &cur, &stop_type, &stop);
 
   if (format != GST_FORMAT_TIME) {
-    GstFormat fmt = GST_FORMAT_TIME;
     gboolean res = TRUE;
 
     if (cur_type != GST_SEEK_TYPE_NONE)
-      res = gst_pad_query_convert (pad, format, cur, &fmt, &cur);
+      res = gst_pad_query_convert (pad, format, cur, GST_FORMAT_TIME, &cur);
     if (res && stop_type != GST_SEEK_TYPE_NONE)
-      res = gst_pad_query_convert (pad, format, stop, &fmt, &stop);
+      res = gst_pad_query_convert (pad, format, stop, GST_FORMAT_TIME, &stop);
     if (!res) {
       GST_DEBUG_OBJECT (avi, "unsupported format given, seek aborted.");
       return FALSE;
     }
 
-    format = fmt;
+    format = GST_FORMAT_TIME;
   }
 
   /* let gst_segment handle any tricky stuff */
@@ -4225,7 +4219,7 @@ avi_demux_handle_seek_push (GstAviDemux * avi, GstPad * pad, GstEvent * event)
   gst_segment_do_seek (&seeksegment, rate, format, flags,
       cur_type, cur, stop_type, stop, &update);
 
-  keyframe = !!(flags & GST_SEEK_FLAG_KEY_UNIT);
+  keyframe = ! !(flags & GST_SEEK_FLAG_KEY_UNIT);
   cur = seeksegment.position;
 
   GST_DEBUG_OBJECT (avi,
@@ -4819,7 +4813,6 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
   guint32 size = 0;
   gint stream_nr = 0;
   GstFlowReturn res = GST_FLOW_OK;
-  GstFormat format = GST_FORMAT_TIME;
 
   if (G_UNLIKELY (avi->have_eos)) {
     /* Clean adapter, we're done */
@@ -4975,9 +4968,8 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
           gst_buffer_unref (buf);
       } else {
         /* get time of this buffer */
-        gst_pad_query_position (stream->pad, &format, (gint64 *) & next_ts);
-        if (G_UNLIKELY (format != GST_FORMAT_TIME))
-          goto wrong_format;
+        gst_pad_query_position (stream->pad, GST_FORMAT_TIME,
+            (gint64 *) & next_ts);
 
         gst_avi_demux_add_assoc (avi, stream, next_ts, offset, FALSE);
 
@@ -4994,9 +4986,8 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
           /* invert the picture if needed */
           buf = gst_avi_demux_invert (stream, buf);
 
-          gst_pad_query_position (stream->pad, &format, (gint64 *) & dur_ts);
-          if (G_UNLIKELY (format != GST_FORMAT_TIME))
-            goto wrong_format;
+          gst_pad_query_position (stream->pad, GST_FORMAT_TIME,
+              (gint64 *) & dur_ts);
 
           GST_BUFFER_TIMESTAMP (buf) = next_ts;
           GST_BUFFER_DURATION (buf) = dur_ts - next_ts;
@@ -5035,17 +5026,7 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
     }
   }
 
-done:
   return res;
-
-  /* ERRORS */
-wrong_format:
-  {
-    GST_DEBUG_OBJECT (avi, "format %s != GST_FORMAT_TIME",
-        gst_format_get_name (format));
-    res = GST_FLOW_ERROR;
-    goto done;
-  }
 }
 
 /*

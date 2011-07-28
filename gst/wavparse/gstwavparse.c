@@ -782,11 +782,11 @@ gst_wavparse_perform_seek (GstWavParse * wav, GstEvent * event)
       if (cur_type != GST_SEEK_TYPE_NONE)
         res =
             gst_pad_query_convert (wav->srcpad, format, cur,
-            &wav->segment.format, &cur);
+            wav->segment.format, &cur);
       if (res && stop_type != GST_SEEK_TYPE_NONE)
         res =
             gst_pad_query_convert (wav->srcpad, format, stop,
-            &wav->segment.format, &stop);
+            wav->segment.format, &stop);
       if (!res)
         goto no_format;
 
@@ -921,7 +921,7 @@ gst_wavparse_perform_seek (GstWavParse * wav, GstEvent * event)
   /* make sure filesize is not exceeded due to rounding errors or so,
    * same precaution as in _stream_headers */
   bformat = GST_FORMAT_BYTES;
-  if (gst_pad_query_peer_duration (wav->sinkpad, &bformat, &upstream_size))
+  if (gst_pad_query_peer_duration (wav->sinkpad, bformat, &upstream_size))
     wav->end_offset = MIN (wav->end_offset, upstream_size);
 
   /* this is the range of bytes we will use for playback */
@@ -1133,7 +1133,6 @@ gst_wavparse_stream_headers (GstWavParse * wav)
   GstCaps *caps = NULL;
   gchar *codec_name = NULL;
   GstEvent **event_p;
-  GstFormat bformat;
   gint64 upstream_size = 0;
 
   /* search for "_fmt" chunk, which should be first */
@@ -1278,8 +1277,7 @@ gst_wavparse_stream_headers (GstWavParse * wav)
 
   }
 
-  bformat = GST_FORMAT_BYTES;
-  gst_pad_query_peer_duration (wav->sinkpad, &bformat, &upstream_size);
+  gst_pad_query_peer_duration (wav->sinkpad, GST_FORMAT_BYTES, &upstream_size);
   GST_DEBUG_OBJECT (wav, "upstream size %" G_GUINT64_FORMAT, upstream_size);
 
   /* loop headers until we get data */
