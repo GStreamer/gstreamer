@@ -1321,7 +1321,7 @@ gst_element_class_set_metadata (GstElementClass * klass,
  *
  * Returns: the metadata for @key.
  */
-G_CONST_RETURN gchar *
+const gchar *
 gst_element_class_get_metadata (GstElementClass * klass, const gchar * key)
 {
   g_return_val_if_fail (GST_IS_ELEMENT_CLASS (klass), NULL);
