@@ -20,6 +20,11 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * FIXME: documentation
+ *
+ * Since: 0.10.36
+ */
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
@@ -49,15 +54,6 @@ struct _GstTagMuxPrivate
 
 GST_DEBUG_CATEGORY_STATIC (gst_tag_mux_debug);
 #define GST_CAT_DEFAULT gst_tag_mux_debug
-
-/* Subclass provides a src template and pad. We accept anything as input here,
-   however. */
-
-static GstStaticPadTemplate gst_tag_mux_sink_template =
-GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("ANY"));
 
 static void
 gst_tag_mux_iface_init (GType tag_type)
@@ -111,11 +107,6 @@ gst_tag_mux_finalize (GObject * obj)
 static void
 gst_tag_mux_base_init (gpointer g_class)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_tag_mux_sink_template));
-
   GST_DEBUG_CATEGORY_INIT (gst_tag_mux_debug, "id3basemux", 0,
       "tag muxer base class for Id3Mux");
 }
@@ -145,8 +136,14 @@ gst_tag_mux_init (GstTagMux * mux, GstTagMuxClass * mux_class)
       G_TYPE_INSTANCE_GET_PRIVATE (mux, GST_TYPE_TAG_MUX, GstTagMuxPrivate);
 
   /* pad through which data comes in to the element */
-  mux->priv->sinkpad =
-      gst_pad_new_from_static_template (&gst_tag_mux_sink_template, "sink");
+  tmpl = gst_element_class_get_pad_template (element_klass, "sink");
+  if (tmpl) {
+    mux->priv->sinkpad = gst_pad_new_from_template (tmpl, "sink");
+  } else {
+    g_warning ("GstTagMux subclass '%s' did not install a %s pad template!\n",
+        G_OBJECT_CLASS_NAME (mux_class), "sink");
+    mux->priv->sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
+  }
   gst_pad_set_chain_function (mux->priv->sinkpad,
       GST_DEBUG_FUNCPTR (gst_tag_mux_chain));
   gst_pad_set_event_function (mux->priv->sinkpad,
@@ -156,12 +153,19 @@ gst_tag_mux_init (GstTagMux * mux, GstTagMuxClass * mux_class)
   /* pad through which data goes out of the element */
   tmpl = gst_element_class_get_pad_template (element_klass, "src");
   if (tmpl) {
+    GstCaps *tmpl_caps = gst_pad_template_get_caps (tmpl);
+
     mux->priv->srcpad = gst_pad_new_from_template (tmpl, "src");
     gst_pad_use_fixed_caps (mux->priv->srcpad);
-    /* FIXME: we assume the template caps are fixed.. */
-    gst_pad_set_caps (mux->priv->srcpad, gst_pad_template_get_caps (tmpl));
-    gst_element_add_pad (GST_ELEMENT (mux), mux->priv->srcpad);
+    if (tmpl_caps != NULL && gst_caps_is_fixed (tmpl_caps)) {
+      gst_pad_set_caps (mux->priv->srcpad, tmpl_caps);
+    }
+  } else {
+    g_warning ("GstTagMux subclass '%s' did not install a %s pad template!\n",
+        G_OBJECT_CLASS_NAME (mux_class), "source");
+    mux->priv->srcpad = gst_pad_new ("src", GST_PAD_SRC);
   }
+  gst_element_add_pad (GST_ELEMENT (mux), mux->priv->srcpad);
 
   mux->priv->render_start_tag = TRUE;
   mux->priv->render_end_tag = TRUE;

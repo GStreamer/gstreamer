@@ -71,6 +71,11 @@ enum
 #define DEFAULT_WRITE_V2 TRUE
 #define DEFAULT_V2_MAJOR_VERSION 3
 
+static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("ANY"));
+
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -92,6 +97,9 @@ static void
 gst_id3_mux_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&sink_template));
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template));
