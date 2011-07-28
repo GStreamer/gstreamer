@@ -433,7 +433,6 @@ static void gst_decode_group_free (GstDecodeGroup * group);
 static GstDecodeGroup *gst_decode_group_new (GstDecodeBin * dbin,
     GstDecodeChain * chain);
 static gboolean gst_decode_chain_is_complete (GstDecodeChain * chain);
-static gboolean gst_decode_chain_handle_eos (GstDecodeChain * chain);
 static gboolean gst_decode_chain_expose (GstDecodeChain * chain,
     GList ** endpads, gboolean * missing_plugin);
 static gboolean gst_decode_chain_is_drained (GstDecodeChain * chain);
@@ -3040,95 +3039,152 @@ out:
   return complete;
 }
 
+static gboolean
+drain_and_switch_chains (GstDecodeChain * chain, GstDecodePad * drainpad,
+    gboolean * last_group, gboolean * drained, gboolean * switched);
+/* drain_and_switch_chains/groups:
+ *
+ * CALL WITH CHAIN LOCK (or group parent) TAKEN !
+ *
+ * Goes down the chains/groups until it finds the chain
+ * to which the drainpad belongs.
+ *
+ * It marks that pad/chain as drained and then will figure
+ * out which group to switch to or not.
+ *
+ * last_chain will be set to TRUE if the group to which the
+ * pad belongs is the last one.
+ *
+ * drained will be set to TRUE if the chain/group is drained.
+ *
+ * Returns: TRUE if the chain contained the target pad */
+static gboolean
+drain_and_switch_group (GstDecodeGroup * group, GstDecodePad * drainpad,
+    gboolean * last_group, gboolean * drained, gboolean * switched)
+{
+  gboolean handled = FALSE;
+  gboolean alldrained = TRUE;
+  GList *tmp;
+
+  GST_DEBUG ("Checking group %p (target pad %s:%s)",
+      group, GST_DEBUG_PAD_NAME (drainpad));
+
+  /* Definitely can't be in drained groups */
+  if (G_UNLIKELY (group->drained)) {
+    goto beach;
+  }
+
+  /* Figure out if all our chains are drained with the
+   * new information */
+  for (tmp = group->children; tmp; tmp = tmp->next) {
+    GstDecodeChain *chain = (GstDecodeChain *) tmp->data;
+    gboolean subdrained;
+
+    handled |=
+        drain_and_switch_chains (chain, drainpad, last_group, &subdrained,
+        switched);
+    if (!subdrained)
+      alldrained = FALSE;
+  }
+
+beach:
+  GST_DEBUG ("group %p (last_group:%d, drained:%d, switched:%d, handled:%d)",
+      group, *last_group, alldrained, *switched, handled);
+  *drained = alldrained;
+  return handled;
+}
+
+static gboolean
+drain_and_switch_chains (GstDecodeChain * chain, GstDecodePad * drainpad,
+    gboolean * last_group, gboolean * drained, gboolean * switched)
+{
+  gboolean handled = FALSE;
+  GstDecodeBin *dbin = chain->dbin;
+
+  GST_DEBUG ("Checking chain %p (target pad %s:%s)",
+      chain, GST_DEBUG_PAD_NAME (drainpad));
+
+  CHAIN_MUTEX_LOCK (chain);
+
+  if (chain->endpad) {
+    /* Check if we're reached the target endchain */
+    if (chain == drainpad->chain) {
+      GST_DEBUG ("Found the target chain");
+      drainpad->drained = TRUE;
+      handled = TRUE;
+    }
+
+    *drained = chain->endpad->drained;
+    goto beach;
+  }
+
+  /* We known there are groups to switch to */
+  if (chain->next_groups)
+    *last_group = FALSE;
+
+  /* Check the active group */
+  if (chain->active_group) {
+    gboolean subdrained = FALSE;
+    handled = drain_and_switch_group (chain->active_group, drainpad,
+        last_group, &subdrained, switched);
+
+    /* The group is drained, see if we can switch to another */
+    if (handled && subdrained && !*switched) {
+      if (chain->next_groups) {
+        /* Switch to next group */
+        GST_DEBUG_OBJECT (dbin, "Hiding current group %p", chain->active_group);
+        gst_decode_group_hide (chain->active_group);
+        chain->old_groups =
+            g_list_prepend (chain->old_groups, chain->active_group);
+        GST_DEBUG_OBJECT (dbin, "Switching to next group %p",
+            chain->next_groups->data);
+        chain->active_group = chain->next_groups->data;
+        chain->next_groups =
+            g_list_delete_link (chain->next_groups, chain->next_groups);
+        *switched = TRUE;
+        *drained = FALSE;
+      } else {
+        GST_DEBUG ("Group %p was the last in chain %p", chain->active_group,
+            chain);
+        *drained = TRUE;
+        /* We're drained ! */
+      }
+    }
+  }
+
+beach:
+  CHAIN_MUTEX_UNLOCK (chain);
+
+  GST_DEBUG ("Chain %p (handled:%d, last_group:%d, drained:%d, switched:%d)",
+      chain, handled, *last_group, *drained, *switched);
+
+  return handled;
+}
+
 /* check if the group is drained, meaning all pads have seen an EOS
  * event.  */
 static gboolean
 gst_decode_pad_handle_eos (GstDecodePad * pad)
 {
+  gboolean last_group = TRUE;
+  gboolean switched = FALSE;
+  gboolean drained = FALSE;
   GstDecodeChain *chain = pad->chain;
+  GstDecodeBin *dbin = chain->dbin;
 
-  GST_LOG_OBJECT (pad->dbin, "chain : %p, pad %p", chain, pad);
-  pad->drained = TRUE;
-  return gst_decode_chain_handle_eos (chain);
-}
+  GST_LOG_OBJECT (dbin, "pad %p", pad);
+  drain_and_switch_chains (dbin->decode_chain, pad, &last_group, &drained,
+      &switched);
 
-/* gst_decode_chain_handle_eos:
- *
- * Checks if there are next groups in any parent chain
- * to which we can switch or if everything is drained.
- *
- * If there are groups to switch to, hide the current active
- * one and expose the new one.
- *
- * If a group isn't completely drained (i.e. we received EOS
- * only on one of the streams) this function will return FALSE
- * to indicate the EOS on the given chain should be dropped
- * to avoid it from going downstream.
- *
- * MT-safe, don't call with chain lock!
- */
-static gboolean
-gst_decode_chain_handle_eos (GstDecodeChain * eos_chain)
-{
-  GstDecodeBin *dbin = eos_chain->dbin;
-  GstDecodeGroup *group;
-  GstDecodeChain *chain = eos_chain;
-  gboolean drained;
-  gboolean forward_eos = TRUE;
-
-  g_return_val_if_fail (eos_chain->endpad, TRUE);
-
-  CHAIN_MUTEX_LOCK (chain);
-  while ((group = chain->parent)) {
-    CHAIN_MUTEX_UNLOCK (chain);
-    chain = group->parent;
-    CHAIN_MUTEX_LOCK (chain);
-
-    if (gst_decode_group_is_drained (group)) {
-      continue;
-    }
-    break;
-  }
-
-  drained = chain->active_group ?
-      gst_decode_group_is_drained (chain->active_group) : TRUE;
-
-  /* Now either group == NULL and chain == dbin->decode_chain
-   * or chain is the lowest chain that has a non-drained group */
-  if (chain->active_group && drained && chain->next_groups) {
-    /* There's an active group which is drained and we have another
-     * one to switch to. */
-    GST_DEBUG_OBJECT (dbin, "Hiding current group %p", chain->active_group);
-    gst_decode_group_hide (chain->active_group);
-    chain->old_groups = g_list_prepend (chain->old_groups, chain->active_group);
-    GST_DEBUG_OBJECT (dbin, "Switching to next group %p",
-        chain->next_groups->data);
-    chain->active_group = chain->next_groups->data;
-    chain->next_groups =
-        g_list_delete_link (chain->next_groups, chain->next_groups);
-    CHAIN_MUTEX_UNLOCK (chain);
+  if (switched) {
+    /* If we resulted in a group switch, expose what's needed */
     EXPOSE_LOCK (dbin);
     if (gst_decode_chain_is_complete (dbin->decode_chain))
       gst_decode_bin_expose (dbin);
     EXPOSE_UNLOCK (dbin);
-  } else if (!chain->active_group || drained) {
-    /* The group is drained and there isn't a future one */
-    g_assert (chain == dbin->decode_chain);
-    CHAIN_MUTEX_UNLOCK (chain);
-
-    GST_LOG_OBJECT (dbin, "all groups drained, fire signal");
-    g_signal_emit (G_OBJECT (dbin), gst_decode_bin_signals[SIGNAL_DRAINED], 0,
-        NULL);
-  } else {
-    CHAIN_MUTEX_UNLOCK (chain);
-    GST_DEBUG_OBJECT (dbin,
-        "Current active group in chain %p is not drained yet", chain);
-    /* Instruct caller to drop EOS event if we have future groups */
-    if (chain->next_groups)
-      forward_eos = FALSE;
   }
 
-  return forward_eos;
+  return last_group;
 }
 
 /* gst_decode_group_is_drained:
