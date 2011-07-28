@@ -208,6 +208,7 @@ dnl *** checks for dependency libraries ***
 
 dnl GLib is required
 AG_GST_GLIB_CHECK([2.20])
+PKG_CHECK_MODULES(GIO, [ gio-2.0 >= 2.20 ], , AC_MSG_ERROR([gio is required]))
 
 dnl Orc
 ORC_CHECK([0.4.11])
