@@ -511,8 +511,7 @@ gst_omx_video_enc_loop (GstOMXVideoEnc * self)
     }
     gst_caps_unref (caps);
     flow_ret = GST_FLOW_OK;
-  } else if (!(buf->omx_buf->nFlags & OMX_BUFFERFLAG_EOS)
-      || buf->omx_buf->nFilledLen > 0) {
+  } else if (buf->omx_buf->nFilledLen > 0) {
     GstBuffer *outbuf;
 
     if (buf->omx_buf->nFilledLen > 0) {
