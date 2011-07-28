@@ -399,10 +399,7 @@ gst_omx_component_new (GstObject * parent, const gchar * core_name,
   if (component_role) {
     OMX_PARAM_COMPONENTROLETYPE param;
 
-    memset (&param, 0, sizeof (param));
-    param.nSize = sizeof (param);
-    param.nVersion.s.nVersionMajor = 1;
-    param.nVersion.s.nVersionMinor = 1;
+    GST_OMX_INIT_STRUCT (&param);
 
     g_strlcpy ((gchar *) param.cRole, component_role, sizeof (param.cRole));
     err =
@@ -600,10 +597,9 @@ gst_omx_component_add_port (GstOMXComponent * comp, guint32 index)
 
   GST_DEBUG_OBJECT (comp->parent, "Adding port %u", index);
 
-  port_def.nSize = sizeof (port_def);
-  port_def.nVersion.s.nVersionMajor = 1;
-  port_def.nVersion.s.nVersionMinor = 1;
+  GST_OMX_INIT_STRUCT (&port_def);
   port_def.nPortIndex = index;
+
   err = OMX_GetParameter (comp->handle, OMX_IndexParamPortDefinition,
       &port_def);
   if (err != OMX_ErrorNone) {
@@ -750,10 +746,7 @@ gst_omx_port_get_port_definition (GstOMXPort * port,
 
   comp = port->comp;
 
-  memset (port_def, 0, sizeof (*port_def));
-  port_def->nSize = sizeof (*port_def);
-  port_def->nVersion.s.nVersionMajor = 1;
-  port_def->nVersion.s.nVersionMinor = 1;
+  GST_OMX_INIT_STRUCT (port_def);
   port_def->nPortIndex = port->index;
 
   OMX_GetParameter (comp->handle, OMX_IndexParamPortDefinition, port_def);
