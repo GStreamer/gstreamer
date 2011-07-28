@@ -10,7 +10,7 @@ libgstvideoconvert_la_CFLAGS = \
 	$(GST_CFLAGS) \
 	$(ORC_CFLAGS)
 libgstvideoconvert_la_LIBADD = \
-	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_MAJORMINOR) \
+	$(top_builddir)/gst-libs/gst/video/libgstvideo-$(GST_MAJORMINOR).la \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS) \
 	$(ORC_LIBS)
