@@ -358,6 +358,43 @@ video_format_is_packed (GstVideoFormat fmt)
   return FALSE;
 }
 
+GST_START_TEST (test_video_formats_all)
+{
+  GstStructure *s;
+  const GValue *val, *list_val;
+  GstCaps *caps;
+  guint num, n, num_formats;
+
+  num_formats = 100;
+  fail_unless (gst_video_format_to_string (num_formats) == NULL);
+  while (gst_video_format_to_string (num_formats) == NULL)
+    --num_formats;
+  GST_INFO ("number of known video formats: %d", num_formats);
+
+  caps = gst_caps_from_string ("video/x-raw, format=" GST_VIDEO_FORMATS_ALL);
+  s = gst_caps_get_structure (caps, 0);
+  val = gst_structure_get_value (s, "format");
+  fail_unless (val != NULL);
+  fail_unless (GST_VALUE_HOLDS_LIST (val));
+  num = gst_value_list_get_size (val);
+  fail_unless (num > 0);
+  for (n = 0; n < num; ++n) {
+    const gchar *fmt_str;
+
+    list_val = gst_value_list_get_value (val, n);
+    fail_unless (G_VALUE_HOLDS_STRING (list_val));
+    fmt_str = g_value_get_string (list_val);
+    GST_INFO ("format: %s", fmt_str);
+    fail_if (gst_video_format_from_string (fmt_str) ==
+        GST_VIDEO_FORMAT_UNKNOWN);
+  }
+  fail_unless_equals_int (num, num_formats);
+
+  gst_caps_unref (caps);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_video_formats)
 {
   guint i;
@@ -806,6 +843,7 @@ video_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_video_formats);
   tcase_add_test (tc_chain, test_video_formats_rgb);
+  tcase_add_test (tc_chain, test_video_formats_all);
   tcase_add_test (tc_chain, test_dar_calc);
   tcase_add_test (tc_chain, test_parse_caps_rgb);
   tcase_add_test (tc_chain, test_events);

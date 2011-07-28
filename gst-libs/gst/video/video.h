@@ -461,12 +461,11 @@ gboolean    gst_video_frame_copy          (GstVideoFrame *dest, const GstVideoFr
 #define GST_VIDEO_SIZE_RANGE "(int) [ 1, max ]"
 #define GST_VIDEO_FPS_RANGE "(fraction) [ 0, max ]"
 
-#define GST_VIDEO_FORMATS_ALL "{ \"I420\"," "\"YV12\"," "\"YUY2\"," "\"UYVY\"," "\"AYUV\"," "\"RGBx\"," \
-    "\"BGRx\"," "\"xRGB\"," "\"xBGR\"," "\"RGBA\"," "\"BGRA\"," "\"ARGB\"," "\"ABGR\"," "\"RGB\"," \
-    "\"BGR\"," "\"Y41B\"," "\"Y42B\"," "\"YVYU\"," "\"Y444\"," "\"v210\"," "\"v216\"," "\"NV12\"," \
-    "\"NV21\"," "\"GRAY8\"," "\"GRAY16_BE\"," "\"GRAY16_LE\"," "\"v308\"," "\"Y800\"," "\"Y16\"," \
-    "\"RGB16\"," "\"BGR16\"," "\"RGB15\"," "\"BGR15\"," "\"UYVP\"," "\"A420\"," "\"RGB8_PALETTED\"," \
-    "\"YUV9\"," "\"YVU9\"," "\"IYU1\"," "\"ARGB64\"," "\"AYUV64\"," "\"r210\" } "
+#define GST_VIDEO_FORMATS_ALL "{ I420, YV12, YUY2, UYVY, AYUV, RGBx, "  \
+    "BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, "  \
+    "YVYU, Y444, v210, v216, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, " \
+    "v308, Y800, Y16, RGB16, BGR16, RGB15, BGR15, UYVP, A420, "         \
+    "RGB8_PALETTED, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210 }"
 
 /**
  * GST_VIDEO_CAPS_MAKE:
