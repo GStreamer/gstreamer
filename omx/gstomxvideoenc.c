@@ -1160,6 +1160,21 @@ gst_omx_video_enc_handle_frame (GstBaseVideoEncoder * encoder,
     g_assert (acq_ret == GST_OMX_ACQUIRE_BUFFER_OK && buf != NULL);
 
     /* Now handle the frame */
+    if (frame->force_keyframe) {
+      OMX_ERRORTYPE err;
+      OMX_CONFIG_INTRAREFRESHVOPTYPE config;
+
+      GST_OMX_INIT_STRUCT (&config);
+      config.nPortIndex = self->out_port->index;
+      config.IntraRefreshVOP = OMX_TRUE;
+
+      err =
+          gst_omx_component_set_config (self->component,
+          OMX_IndexConfigVideoIntraVOPRefresh, &config);
+      if (err != OMX_ErrorNone)
+        GST_ERROR_OBJECT (self, "Failed to force a keyframe: %s (0x%08x)",
+            gst_omx_error_to_string (err), err);
+    }
 
     /* Copy the buffer content in chunks of size as requested
      * by the port */
