@@ -403,8 +403,8 @@ gst_omx_component_new (GstObject * parent, const gchar * core_name,
 
     g_strlcpy ((gchar *) param.cRole, component_role, sizeof (param.cRole));
     err =
-        OMX_SetParameter (comp->handle, OMX_IndexParamStandardComponentRole,
-        &param);
+        gst_omx_component_set_parameter (comp,
+        OMX_IndexParamStandardComponentRole, &param);
 
     GST_DEBUG_OBJECT (parent, "Setting component role to '%s': %s (0x%08x)",
         component_role, gst_omx_error_to_string (err), err);
@@ -600,7 +600,7 @@ gst_omx_component_add_port (GstOMXComponent * comp, guint32 index)
   GST_OMX_INIT_STRUCT (&port_def);
   port_def.nPortIndex = index;
 
-  err = OMX_GetParameter (comp->handle, OMX_IndexParamPortDefinition,
+  err = gst_omx_component_get_parameter (comp, OMX_IndexParamPortDefinition,
       &port_def);
   if (err != OMX_ErrorNone) {
     GST_ERROR_OBJECT (comp->parent, "Failed to add port %u: %s (0x%08x)", index,
@@ -736,6 +736,74 @@ gst_omx_component_get_last_error_string (GstOMXComponent * comp)
   return gst_omx_error_to_string (gst_omx_component_get_last_error (comp));
 }
 
+OMX_ERRORTYPE
+gst_omx_component_get_parameter (GstOMXComponent * comp, OMX_INDEXTYPE index,
+    gpointer param)
+{
+  OMX_ERRORTYPE err;
+
+  g_return_val_if_fail (comp != NULL, OMX_ErrorUndefined);
+  g_return_val_if_fail (param != NULL, OMX_ErrorUndefined);
+
+  GST_DEBUG_OBJECT (comp->parent, "Getting parameter at index %u", index);
+  err = OMX_GetParameter (comp->handle, index, param);
+  GST_DEBUG_OBJECT (comp->parent, "Got parameter at index %u: %s (0x%08x)",
+      index, gst_omx_error_to_string (err), err);
+
+  return err;
+}
+
+OMX_ERRORTYPE
+gst_omx_component_set_parameter (GstOMXComponent * comp, OMX_INDEXTYPE index,
+    gpointer param)
+{
+  OMX_ERRORTYPE err;
+
+  g_return_val_if_fail (comp != NULL, OMX_ErrorUndefined);
+  g_return_val_if_fail (param != NULL, OMX_ErrorUndefined);
+
+  GST_DEBUG_OBJECT (comp->parent, "Setting parameter at index %u", index);
+  err = OMX_SetParameter (comp->handle, index, param);
+  GST_DEBUG_OBJECT (comp->parent, "Set parameter at index %u: %s (0x%08x)",
+      index, gst_omx_error_to_string (err), err);
+
+  return err;
+}
+
+OMX_ERRORTYPE
+gst_omx_component_get_config (GstOMXComponent * comp, OMX_INDEXTYPE index,
+    gpointer config)
+{
+  OMX_ERRORTYPE err;
+
+  g_return_val_if_fail (comp != NULL, OMX_ErrorUndefined);
+  g_return_val_if_fail (config != NULL, OMX_ErrorUndefined);
+
+  GST_DEBUG_OBJECT (comp->parent, "Getting configuration at index %u", index);
+  err = OMX_GetConfig (comp->handle, index, config);
+  GST_DEBUG_OBJECT (comp->parent, "Got parameter at index %u: %s (0x%08x)",
+      index, gst_omx_error_to_string (err), err);
+
+  return err;
+}
+
+OMX_ERRORTYPE
+gst_omx_component_set_config (GstOMXComponent * comp, OMX_INDEXTYPE index,
+    gpointer config)
+{
+  OMX_ERRORTYPE err;
+
+  g_return_val_if_fail (comp != NULL, OMX_ErrorUndefined);
+  g_return_val_if_fail (config != NULL, OMX_ErrorUndefined);
+
+  GST_DEBUG_OBJECT (comp->parent, "Setting configuration at index %u", index);
+  err = OMX_SetConfig (comp->handle, index, config);
+  GST_DEBUG_OBJECT (comp->parent, "Set parameter at index %u: %s (0x%08x)",
+      index, gst_omx_error_to_string (err), err);
+
+  return err;
+}
+
 void
 gst_omx_port_get_port_definition (GstOMXPort * port,
     OMX_PARAM_PORTDEFINITIONTYPE * port_def)
@@ -749,7 +817,8 @@ gst_omx_port_get_port_definition (GstOMXPort * port,
   GST_OMX_INIT_STRUCT (port_def);
   port_def->nPortIndex = port->index;
 
-  OMX_GetParameter (comp->handle, OMX_IndexParamPortDefinition, port_def);
+  gst_omx_component_get_parameter (comp, OMX_IndexParamPortDefinition,
+      port_def);
 }
 
 gboolean
@@ -766,8 +835,9 @@ gst_omx_port_update_port_definition (GstOMXPort * port,
   g_mutex_lock (port->port_lock);
   if (port_def)
     err =
-        OMX_SetParameter (comp->handle, OMX_IndexParamPortDefinition, port_def);
-  OMX_GetParameter (comp->handle, OMX_IndexParamPortDefinition,
+        gst_omx_component_set_parameter (comp, OMX_IndexParamPortDefinition,
+        port_def);
+  gst_omx_component_get_parameter (comp, OMX_IndexParamPortDefinition,
       &port->port_def);
 
   GST_DEBUG_OBJECT (comp->parent, "Updated port %u definition: %s (0x%08x)",
@@ -1130,7 +1200,7 @@ gst_omx_port_allocate_buffers_unlocked (GstOMXPort * port)
    * buffers after the port configuration was done and to
    * update the buffer size
    */
-  OMX_GetParameter (comp->handle, OMX_IndexParamPortDefinition,
+  gst_omx_component_get_parameter (comp, OMX_IndexParamPortDefinition,
       &port->port_def);
 
   /* If the configured, actual number of buffers is less than
@@ -1139,9 +1209,9 @@ gst_omx_port_allocate_buffers_unlocked (GstOMXPort * port)
    */
   if (port->port_def.nBufferCountActual < port->port_def.nBufferCountMin) {
     port->port_def.nBufferCountActual = port->port_def.nBufferCountMin;
-    err = OMX_SetParameter (comp->handle, OMX_IndexParamPortDefinition,
+    err = gst_omx_component_set_parameter (comp, OMX_IndexParamPortDefinition,
         &port->port_def);
-    OMX_GetParameter (comp->handle, OMX_IndexParamPortDefinition,
+    gst_omx_component_get_parameter (comp, OMX_IndexParamPortDefinition,
         &port->port_def);
   }
 
@@ -1326,7 +1396,7 @@ gst_omx_port_set_enabled_unlocked (GstOMXPort * port, gboolean enabled)
       (enabled ? "enabled" : "disabled"));
 
   /* Check if the port is already enabled/disabled first */
-  OMX_GetParameter (comp->handle, OMX_IndexParamPortDefinition,
+  gst_omx_component_get_parameter (comp, OMX_IndexParamPortDefinition,
       &port->port_def);
   if (! !port->port_def.bEnabled == ! !enabled)
     goto done;
@@ -1395,13 +1465,13 @@ gst_omx_port_set_enabled_unlocked (GstOMXPort * port, gboolean enabled)
   /* And now wait until the enable/disable command is finished */
   signalled = TRUE;
   last_error = OMX_ErrorNone;
-  OMX_GetParameter (comp->handle, OMX_IndexParamPortDefinition,
+  gst_omx_component_get_parameter (comp, OMX_IndexParamPortDefinition,
       &port->port_def);
   while (signalled && last_error == OMX_ErrorNone
       && (! !port->port_def.bEnabled != ! !enabled || !port->enabled_changed)) {
     signalled = g_cond_timed_wait (port->port_cond, port->port_lock, timeval);
     last_error = gst_omx_component_get_last_error (comp);
-    OMX_GetParameter (comp->handle, OMX_IndexParamPortDefinition,
+    gst_omx_component_get_parameter (comp, OMX_IndexParamPortDefinition,
         &port->port_def);
   }
 
@@ -1486,7 +1556,7 @@ gst_omx_port_is_enabled (GstOMXPort * port)
   comp = port->comp;
 
   g_mutex_lock (port->port_lock);
-  OMX_GetParameter (comp->handle, OMX_IndexParamPortDefinition,
+  gst_omx_component_get_parameter (comp, OMX_IndexParamPortDefinition,
       &port->port_def);
   enabled = port->port_def.bEnabled;
   g_mutex_unlock (port->port_lock);
