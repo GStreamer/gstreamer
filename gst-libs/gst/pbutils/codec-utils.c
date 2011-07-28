@@ -712,13 +712,16 @@ gst_codec_utils_mpeg4video_get_profile (const guint8 * vis_obj_seq, guint len)
 const gchar *
 gst_codec_utils_mpeg4video_get_level (const guint8 * vis_obj_seq, guint len)
 {
-  /* The profile/level codes are from 14496-2, table G-1, and the Wireshark
-   * sources: epan/dissectors/packet-mp4ves.c
+  /* The profile/level codes are from 14496-2, table G-1, the Wireshark
+   * sources: epan/dissectors/packet-mp4ves.c and the Xvid Sources:
+   * src/xvid.h.
+   * Levels 4a and 5 for SP were added in Amendment 2, level 6 in Amendment 4
+   * (see Xvid sources vfw/config.c)
    *
    * Each profile has a different maximum level it defines. Some of them still
    * need special case handling, because not all levels start from 1, and the
    * Simple profile defines an intermediate level as well. */
-  static const int level_max[] = { 3, 2, 2, 4, 2, 1, 2, 2, 2, 4, 3, 4, 2, 3, 4,
+  static const int level_max[] = { 6, 2, 2, 4, 2, 1, 2, 2, 2, 4, 3, 4, 2, 3, 4,
     5
   };
   int profile_id, level_id;
@@ -772,6 +775,9 @@ gst_codec_utils_mpeg4video_get_level (const guint8 * vis_obj_seq, guint len)
   else if (profile_id == 0 && level_id == 9)
     /* Simple Profile / Level 0b */
     return "0b";
+  else if (profile_id == 0 && level_id == 4)
+    /* Simple Profile / Level 4a */
+    return "4a";
   else if (profile_id == 0xf && level_id > 7)
     /* Fine Granularity Scalable Profile */
     return digit_to_string (level_id - 8);
