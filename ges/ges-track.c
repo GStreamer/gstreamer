@@ -57,6 +57,7 @@ enum
   ARG_DURATION,
   ARG_LAST,
   TRACK_OBJECT_ADDED,
+  TRACK_OBJECT_REMOVED,
   LAST_SIGNAL
 };
 
@@ -214,6 +215,19 @@ ges_track_class_init (GESTrackClass * klass)
       G_SIGNAL_RUN_FIRST, 0, NULL, NULL, ges_marshal_VOID__OBJECT,
       G_TYPE_NONE, 1, GES_TYPE_TRACK_OBJECT);
 
+  /**
+   * GESTrack::track-object-removed
+   * @object: the #GESTrack
+   * @effect: the #GESTrackObject that was removed.
+   *
+   * Will be emitted after a track object was removed from the track.
+   *
+   * Since: 0.10.2
+   */
+  ges_track_signals[TRACK_OBJECT_REMOVED] =
+      g_signal_new ("track-object-removed", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_FIRST, 0, NULL, NULL, ges_marshal_VOID__OBJECT,
+      G_TYPE_NONE, 1, GES_TYPE_TRACK_OBJECT);
 }
 
 static void
@@ -409,6 +423,7 @@ ges_track_add_object (GESTrack * track, GESTrackObject * object)
   track->priv->trackobjects =
       g_list_insert_sorted (track->priv->trackobjects, object,
       (GCompareFunc) objects_start_compare);
+
   g_signal_emit (track, ges_track_signals[TRACK_OBJECT_ADDED], 0,
       GES_TRACK_OBJECT (object));
 
@@ -480,6 +495,9 @@ ges_track_remove_object (GESTrack * track, GESTrackObject * object)
 
   ges_track_object_set_track (object, NULL);
   priv->trackobjects = g_list_remove (priv->trackobjects, object);
+
+  g_signal_emit (track, ges_track_signals[TRACK_OBJECT_REMOVED], 0,
+      GES_TRACK_OBJECT (object));
 
   g_object_unref (object);
 
