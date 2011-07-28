@@ -37,9 +37,6 @@
 #include "gstffmpegcodecmap.h"
 #include "gstffmpegutils.h"
 
-/* define to enable alternative buffer refcounting algorithm */
-#undef EXTRA_REF
-
 typedef struct _GstFFMpegDec GstFFMpegDec;
 
 #define MAX_TS_MASK 0xff
@@ -690,8 +687,9 @@ gst_ffmpegdec_open (GstFFMpegDec * ffmpegdec)
   }
 
   gst_ffmpegdec_reset_ts (ffmpegdec);
-  /* FIXME, reset_qos holds the LOCK */
-  ffmpegdec->proportion = 0.0;
+  /* FIXME, reset_qos will take the LOCK and this function is already called
+   * with the LOCK */
+  ffmpegdec->proportion = 0.5;
   ffmpegdec->earliest_time = -1;
 
   return TRUE;
@@ -956,7 +954,10 @@ gst_ffmpegdec_get_buffer (AVCodecContext * context, AVFrame * picture)
   GstFFMpegDec *ffmpegdec;
   gint width, height;
   gint coded_width, coded_height;
-  gint res;
+  GstFlowReturn ret;
+  gint clip_width, clip_height;
+  guint8 *data;
+  gsize size;
 
   ffmpegdec = (GstFFMpegDec *) context->opaque;
 
@@ -977,73 +978,41 @@ gst_ffmpegdec_get_buffer (AVCodecContext * context, AVFrame * picture)
 
   GST_LOG_OBJECT (ffmpegdec, "dimension %dx%d, coded %dx%d", width, height,
       coded_width, coded_height);
-  if (!ffmpegdec->current_dr) {
-    GST_LOG_OBJECT (ffmpegdec, "direct rendering disabled, fallback alloc");
-    res = avcodec_default_get_buffer (context, picture);
 
-    GST_LOG_OBJECT (ffmpegdec, "linsize %d %d %d", picture->linesize[0],
-        picture->linesize[1], picture->linesize[2]);
-    GST_LOG_OBJECT (ffmpegdec, "data %u %u %u", 0,
-        (guint) (picture->data[1] - picture->data[0]),
-        (guint) (picture->data[2] - picture->data[0]));
-    return res;
-  }
+  if (!ffmpegdec->current_dr)
+    goto no_dr;
 
-  switch (context->codec_type) {
-    case AVMEDIA_TYPE_VIDEO:
-      /* some ffmpeg video plugins don't see the point in setting codec_type ... */
-    case AVMEDIA_TYPE_UNKNOWN:
-    {
-      GstFlowReturn ret;
-      gint clip_width, clip_height;
-      guint8 *data;
-      gsize size;
+  /* take final clipped output size */
+  if ((clip_width = ffmpegdec->format.video.clip_width) == -1)
+    clip_width = width;
+  if ((clip_height = ffmpegdec->format.video.clip_height) == -1)
+    clip_height = height;
 
-      /* take final clipped output size */
-      if ((clip_width = ffmpegdec->format.video.clip_width) == -1)
-        clip_width = width;
-      if ((clip_height = ffmpegdec->format.video.clip_height) == -1)
-        clip_height = height;
+  GST_LOG_OBJECT (ffmpegdec, "raw outsize %d/%d", width, height);
 
-      GST_LOG_OBJECT (ffmpegdec, "raw outsize %d/%d", width, height);
+  /* this is the size ffmpeg needs for the buffer */
+  avcodec_align_dimensions (context, &width, &height);
 
-      /* this is the size ffmpeg needs for the buffer */
-      avcodec_align_dimensions (context, &width, &height);
+  GST_LOG_OBJECT (ffmpegdec, "aligned outsize %d/%d, clip %d/%d",
+      width, height, clip_width, clip_height);
 
-      GST_LOG_OBJECT (ffmpegdec, "aligned outsize %d/%d, clip %d/%d",
-          width, height, clip_width, clip_height);
+  /* We can't alloc if we need to clip the output buffer later */
+  if (width != clip_width || height != clip_height)
+    goto need_clipping;
 
-      if (width != clip_width || height != clip_height) {
-        /* We can't alloc if we need to clip the output buffer later */
-        GST_LOG_OBJECT (ffmpegdec, "we need clipping, fallback alloc");
-        return avcodec_default_get_buffer (context, picture);
-      }
+  /* alloc with aligned dimensions for ffmpeg */
+  ret = alloc_output_buffer (ffmpegdec, &buf, width, height);
+  if (G_UNLIKELY (ret != GST_FLOW_OK))
+    goto alloc_failed;
 
-      /* alloc with aligned dimensions for ffmpeg */
-      ret = alloc_output_buffer (ffmpegdec, &buf, width, height);
-      if (G_UNLIKELY (ret != GST_FLOW_OK)) {
-        /* alloc default buffer when we can't get one from downstream */
-        GST_LOG_OBJECT (ffmpegdec, "alloc failed, fallback alloc");
-        return avcodec_default_get_buffer (context, picture);
-      }
+  /* FIXME, unmap me later */
+  data = gst_buffer_map (buf, &size, NULL, GST_MAP_WRITE);
+  GST_LOG_OBJECT (ffmpegdec, "buffer data %p, size %" G_GSIZE_FORMAT, data,
+      size);
 
-      /* FIXME, unmap me later */
-      data = gst_buffer_map (buf, &size, NULL, GST_MAP_WRITE);
-      GST_LOG_OBJECT (ffmpegdec, "buffer data %p, size %" G_GSIZE_FORMAT, data,
-          size);
-
-      /* copy the right pointers and strides in the picture object */
-      gst_ffmpeg_avpicture_fill ((AVPicture *) picture,
-          data, context->pix_fmt, width, height);
-      break;
-    }
-    case AVMEDIA_TYPE_AUDIO:
-    default:
-      GST_ERROR_OBJECT (ffmpegdec,
-          "_get_buffer() should never get called for non-video buffers !");
-      g_assert_not_reached ();
-      break;
-  }
+  /* copy the right pointers and strides in the picture object */
+  gst_ffmpeg_avpicture_fill ((AVPicture *) picture,
+      data, context->pix_fmt, width, height);
 
   /* tell ffmpeg we own this buffer, tranfer the ref we have on the buffer to
    * the opaque data. */
@@ -1051,16 +1020,36 @@ gst_ffmpegdec_get_buffer (AVCodecContext * context, AVFrame * picture)
   picture->age = 256 * 256 * 256 * 64;
   picture->opaque = buf;
 
-#ifdef EXTRA_REF
-  if (picture->reference != 0 || ffmpegdec->extra_ref) {
-    GST_DEBUG_OBJECT (ffmpegdec, "adding extra ref");
-    gst_buffer_ref (buf);
-  }
-#endif
-
   GST_LOG_OBJECT (ffmpegdec, "returned buffer %p", buf);
+  GST_LOG_OBJECT (ffmpegdec, "linsize %d %d %d", picture->linesize[0],
+      picture->linesize[1], picture->linesize[2]);
+  GST_LOG_OBJECT (ffmpegdec, "data %u %u %u", 0,
+      (guint) (picture->data[1] - picture->data[0]),
+      (guint) (picture->data[2] - picture->data[0]));
 
   return 0;
+
+  /* fallbacks */
+no_dr:
+  {
+    GST_LOG_OBJECT (ffmpegdec, "direct rendering disabled, fallback alloc");
+    goto fallback;
+  }
+need_clipping:
+  {
+    GST_LOG_OBJECT (ffmpegdec, "we need clipping, fallback alloc");
+    goto fallback;
+  }
+alloc_failed:
+  {
+    /* alloc default buffer when we can't get one from downstream */
+    GST_LOG_OBJECT (ffmpegdec, "alloc failed, fallback alloc");
+    goto fallback;
+  }
+fallback:
+  {
+    return avcodec_default_get_buffer (context, picture);
+  }
 }
 
 static void
@@ -1084,14 +1073,7 @@ gst_ffmpegdec_release_buffer (AVCodecContext * context, AVFrame * picture)
   GST_DEBUG_OBJECT (ffmpegdec, "release buffer %p", buf);
   picture->opaque = NULL;
 
-#ifdef EXTRA_REF
-  if (picture->reference != 0 || ffmpegdec->extra_ref) {
-    GST_DEBUG_OBJECT (ffmpegdec, "remove extra ref");
-    gst_buffer_unref (buf);
-  }
-#else
   gst_buffer_unref (buf);
-#endif
   /* FIXME, unmap buffer data */
 
   /* zero out the reference in ffmpeg */
@@ -1579,9 +1561,7 @@ get_output_buffer (GstFFMpegDec * ffmpegdec, GstBuffer ** outbuf)
      * up and use it now. */
     *outbuf = (GstBuffer *) ffmpegdec->picture->opaque;
     GST_LOG_OBJECT (ffmpegdec, "using opaque buffer %p", *outbuf);
-#ifndef EXTRA_REF
     gst_buffer_ref (*outbuf);
-#endif
   } else {
     AVPicture pic, *outpic;
     gint width, height;
