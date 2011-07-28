@@ -615,7 +615,7 @@ mpegts_base_activate_program (MpegTSBase * base, MpegTSBaseProgram * program,
   guint i, nbstreams;
   guint pcr_pid;
   guint pid;
-  guint16 stream_type;
+  guint stream_type;
   GstStructure *stream;
   const GValue *new_streams;
   const GValue *value;
