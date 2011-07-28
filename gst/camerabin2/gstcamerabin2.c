@@ -170,9 +170,9 @@ gst_cam_flags_get_type (void)
 {
   static const GFlagsValue values[] = {
     {C_FLAGS (GST_CAM_FLAG_NO_AUDIO_CONVERSION), "Do not use audio conversion "
-        "elements", "no-audio-conversion"},
+          "elements", "no-audio-conversion"},
     {C_FLAGS (GST_CAM_FLAG_NO_VIDEO_CONVERSION), "Do not use video conversion "
-        "elements", "no-video-conversion"},
+          "elements", "no-video-conversion"},
     {0, NULL, NULL}
   };
   static volatile GType id = 0;
@@ -1381,6 +1381,10 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
   }
 
   if (new_audio_src) {
+    if (g_object_class_find_property (G_OBJECT_GET_CLASS (camera->audio_src),
+            "provide-clock")) {
+      g_object_set (camera->audio_src, "provide-clock", FALSE, NULL);
+    }
     gst_bin_add (GST_BIN_CAST (camera), gst_object_ref (camera->audio_src));
     gst_bin_add (GST_BIN_CAST (camera), gst_object_ref (camera->audio_volume));
     gst_bin_add (GST_BIN_CAST (camera),
