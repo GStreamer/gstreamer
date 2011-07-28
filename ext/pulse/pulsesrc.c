@@ -63,6 +63,7 @@ enum
   PROP_DEVICE_NAME,
   PROP_CLIENT,
   PROP_STREAM_PROPERTIES,
+  PROP_SOURCE_OUTPUT_INDEX,
   PROP_LAST
 };
 
@@ -286,6 +287,20 @@ gst_pulsesrc_class_init (GstPulseSrcClass * klass)
       g_param_spec_boxed ("stream-properties", "stream properties",
           "list of pulseaudio stream properties",
           GST_TYPE_STRUCTURE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstPulseSrc:source-output-index
+   *
+   * The index of the PulseAudio source output corresponding to this element.
+   *
+   * Since: 0.10.31
+   */
+  g_object_class_install_property (gobject_class,
+      PROP_SOURCE_OUTPUT_INDEX,
+      g_param_spec_uint ("source-output-index", "source output index",
+          "The index of the PulseAudio source output corresponding to this "
+          "record stream", 0, G_MAXUINT, PA_INVALID_INDEX,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -298,6 +313,7 @@ gst_pulsesrc_init (GstPulseSrc * pulsesrc, GstPulseSrcClass * klass)
 
   pulsesrc->context = NULL;
   pulsesrc->stream = NULL;
+  pulsesrc->source_output_idx = PA_INVALID_INDEX;
 
   pulsesrc->read_buffer = NULL;
   pulsesrc->read_buffer_length = 0;
@@ -327,6 +343,8 @@ gst_pulsesrc_destroy_stream (GstPulseSrc * pulsesrc)
     pa_stream_disconnect (pulsesrc->stream);
     pa_stream_unref (pulsesrc->stream);
     pulsesrc->stream = NULL;
+    pulsesrc->source_output_idx = PA_INVALID_INDEX;
+    g_object_notify (G_OBJECT (pulsesrc), "source-output-index");
   }
 
   g_free (pulsesrc->device_description);
@@ -523,6 +541,9 @@ gst_pulsesrc_get_property (GObject * object,
       break;
     case PROP_STREAM_PROPERTIES:
       gst_value_set_structure (value, pulsesrc->properties);
+      break;
+    case PROP_SOURCE_OUTPUT_INDEX:
+      g_value_set_uint (value, pulsesrc->source_output_idx);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1064,6 +1085,10 @@ gst_pulsesrc_prepare (GstAudioSrc * asrc, GstRingBufferSpec * spec)
     /* Wait until the stream is ready */
     pa_threaded_mainloop_wait (pulsesrc->mainloop);
   }
+
+  /* store the source output index so it can be accessed via a property */
+  pulsesrc->source_output_idx = pa_stream_get_index (pulsesrc->stream);
+  g_object_notify (G_OBJECT (pulsesrc), "source-output-index");
 
   /* get the actual buffering properties now */
   actual = pa_stream_get_buffer_attr (pulsesrc->stream);
