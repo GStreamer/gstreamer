@@ -214,7 +214,7 @@ static void gst_ffmpegdec_class_init (GstFFMpegDecClass * klass);
 static void gst_ffmpegdec_init (GstFFMpegDec * ffmpegdec);
 static void gst_ffmpegdec_finalize (GObject * object);
 
-static gboolean gst_ffmpegdec_query (GstPad * pad, GstQuery * query);
+static gboolean gst_ffmpegdec_src_query (GstPad * pad, GstQuery * query);
 static gboolean gst_ffmpegdec_src_event (GstPad * pad, GstEvent * event);
 
 static gboolean gst_ffmpegdec_sink_event (GstPad * pad, GstEvent * event);
@@ -421,7 +421,7 @@ gst_ffmpegdec_init (GstFFMpegDec * ffmpegdec)
   gst_pad_set_event_function (ffmpegdec->srcpad,
       GST_DEBUG_FUNCPTR (gst_ffmpegdec_src_event));
   gst_pad_set_query_function (ffmpegdec->srcpad,
-      GST_DEBUG_FUNCPTR (gst_ffmpegdec_query));
+      GST_DEBUG_FUNCPTR (gst_ffmpegdec_src_query));
   gst_element_add_pad (GST_ELEMENT (ffmpegdec), ffmpegdec->srcpad);
 
   /* some ffmpeg data */
@@ -463,21 +463,15 @@ gst_ffmpegdec_finalize (GObject * object)
 }
 
 static gboolean
-gst_ffmpegdec_query (GstPad * pad, GstQuery * query)
+gst_ffmpegdec_src_query (GstPad * pad, GstQuery * query)
 {
   GstFFMpegDec *ffmpegdec;
-  GstPad *peer;
   gboolean res;
 
   ffmpegdec = (GstFFMpegDec *) gst_pad_get_parent (pad);
 
-  res = FALSE;
-
-  if ((peer = gst_pad_get_peer (ffmpegdec->sinkpad))) {
-    /* just forward to peer */
-    res = gst_pad_query (peer, query);
-    gst_object_unref (peer);
-  }
+  /* just forward to peer */
+  res = gst_pad_peer_query (ffmpegdec->sinkpad, query);
 #if 0
   {
     GstFormat bfmt;
