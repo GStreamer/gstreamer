@@ -57,6 +57,13 @@ struct _GstOMXVideoEnc
   /* TRUE if the component is configured and saw
    * the first buffer */
   gboolean started;
+
+  /* properties */
+  OMX_VIDEO_CONTROLRATETYPE control_rate;
+  guint32 target_bitrate;
+  guint32 quant_i_frames;
+  guint32 quant_p_frames;
+  guint32 quant_b_frames;
 };
 
 struct _GstOMXVideoEncClass

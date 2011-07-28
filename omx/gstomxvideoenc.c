@@ -30,6 +30,29 @@
 GST_DEBUG_CATEGORY_STATIC (gst_omx_video_enc_debug_category);
 #define GST_CAT_DEFAULT gst_omx_video_enc_debug_category
 
+#define GST_TYPE_OMX_VIDEO_ENC_CONTROL_RATE (gst_omx_video_enc_control_rate_get_type ())
+static GType
+gst_omx_video_enc_control_rate_get_type (void)
+{
+  static GType qtype = 0;
+
+  if (qtype == 0) {
+    static const GEnumValue values[] = {
+      {OMX_Video_ControlRateDisable, "Disable", "disable"},
+      {OMX_Video_ControlRateVariable, "Variable", "variable"},
+      {OMX_Video_ControlRateConstant, "Constant", "constant"},
+      {OMX_Video_ControlRateVariableSkipFrames, "Variable Skip Frames",
+          "variable-skip-frames"},
+      {OMX_Video_ControlRateConstantSkipFrames, "Constant Skip Frames",
+          "constant-skip-frames"},
+      {0, NULL, NULL}
+    };
+
+    qtype = g_enum_register_static ("GstOMXVideoEncControlRate", values);
+  }
+  return qtype;
+}
+
 typedef struct _BufferIdentification BufferIdentification;
 struct _BufferIdentification
 {
@@ -44,6 +67,11 @@ buffer_identification_free (BufferIdentification * id)
 
 /* prototypes */
 static void gst_omx_video_enc_finalize (GObject * object);
+static void gst_omx_video_enc_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_omx_video_enc_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
+
 
 static GstStateChangeReturn
 gst_omx_video_enc_change_state (GstElement * element,
@@ -60,8 +88,20 @@ static gboolean gst_omx_video_enc_finish (GstBaseVideoEncoder * encoder);
 
 enum
 {
-  PROP_0
+  PROP_0,
+  PROP_CONTROL_RATE,
+  PROP_TARGET_BITRATE,
+  PROP_QUANT_I_FRAMES,
+  PROP_QUANT_P_FRAMES,
+  PROP_QUANT_B_FRAMES
 };
+
+/* FIXME: Better defaults */
+#define GST_OMX_VIDEO_ENC_CONTROL_RATE_DEFAULT (OMX_Video_ControlRateConstant)
+#define GST_OMX_VIDEO_ENC_TARGET_BITRATE_DEFAULT (64000)
+#define GST_OMX_VIDEO_ENC_QUANT_I_FRAMES_DEFAULT (9)
+#define GST_OMX_VIDEO_ENC_QUANT_P_FRAMES_DEFAULT (6)
+#define GST_OMX_VIDEO_ENC_QUANT_B_FRAMES_DEFAULT (2)
 
 /* class initialization */
 
@@ -216,6 +256,44 @@ gst_omx_video_enc_class_init (GstOMXVideoEncClass * klass)
       GST_BASE_VIDEO_ENCODER_CLASS (klass);
 
   gobject_class->finalize = gst_omx_video_enc_finalize;
+  gobject_class->set_property = gst_omx_video_enc_set_property;
+  gobject_class->get_property = gst_omx_video_enc_get_property;
+
+  g_object_class_install_property (gobject_class, PROP_CONTROL_RATE,
+      g_param_spec_enum ("control-rate", "Control Rate",
+          "Bitrate control method",
+          GST_TYPE_OMX_VIDEO_ENC_CONTROL_RATE,
+          GST_OMX_VIDEO_ENC_CONTROL_RATE_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_READY));
+
+  g_object_class_install_property (gobject_class, PROP_TARGET_BITRATE,
+      g_param_spec_uint ("target-bitrate", "Target Bitrate",
+          "Target bitrate",
+          0, G_MAXUINT, GST_OMX_VIDEO_ENC_TARGET_BITRATE_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_PLAYING));
+
+  g_object_class_install_property (gobject_class, PROP_QUANT_I_FRAMES,
+      g_param_spec_uint ("quant-i-frames", "I-Frame Quantization",
+          "Quantization parameter for I-frames",
+          0, G_MAXUINT, GST_OMX_VIDEO_ENC_QUANT_I_FRAMES_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_READY));
+
+  g_object_class_install_property (gobject_class, PROP_QUANT_P_FRAMES,
+      g_param_spec_uint ("quant-p-frames", "P-Frame Quantization",
+          "Quantization parameter for P-frames",
+          0, G_MAXUINT, GST_OMX_VIDEO_ENC_QUANT_P_FRAMES_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_READY));
+
+  g_object_class_install_property (gobject_class, PROP_QUANT_B_FRAMES,
+      g_param_spec_uint ("quant-b-frames", "B-Frame Quantization",
+          "Quantization parameter for B-frames",
+          0, G_MAXUINT, GST_OMX_VIDEO_ENC_QUANT_B_FRAMES_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_READY));
 
   element_class->change_state =
       GST_DEBUG_FUNCPTR (gst_omx_video_enc_change_state);
@@ -234,6 +312,11 @@ gst_omx_video_enc_class_init (GstOMXVideoEncClass * klass)
 static void
 gst_omx_video_enc_init (GstOMXVideoEnc * self, GstOMXVideoEncClass * klass)
 {
+  self->control_rate = GST_OMX_VIDEO_ENC_CONTROL_RATE_DEFAULT;
+  self->target_bitrate = GST_OMX_VIDEO_ENC_TARGET_BITRATE_DEFAULT;
+  self->quant_i_frames = GST_OMX_VIDEO_ENC_QUANT_I_FRAMES_DEFAULT;
+  self->quant_p_frames = GST_OMX_VIDEO_ENC_QUANT_P_FRAMES_DEFAULT;
+  self->quant_b_frames = GST_OMX_VIDEO_ENC_QUANT_B_FRAMES_DEFAULT;
 }
 
 static gboolean
@@ -260,6 +343,43 @@ gst_omx_video_enc_open (GstOMXVideoEnc * self)
 
   if (!self->in_port || !self->out_port)
     return FALSE;
+
+  /* Set properties */
+  {
+    OMX_VIDEO_PARAM_BITRATETYPE bitrate_param;
+    OMX_VIDEO_PARAM_QUANTIZATIONTYPE quant_param;
+    OMX_ERRORTYPE err;
+
+    GST_OMX_INIT_STRUCT (&bitrate_param);
+    bitrate_param.nPortIndex = self->out_port->index;
+    bitrate_param.eControlRate = self->control_rate;
+    bitrate_param.nTargetBitrate = self->target_bitrate;
+
+    err =
+        gst_omx_component_set_parameter (self->component,
+        OMX_IndexParamVideoBitrate, &bitrate_param);
+    if (err != OMX_ErrorNone) {
+      GST_ERROR_OBJECT (self, "Failed to set bitrate parameters: %s (0x%08x)",
+          gst_omx_error_to_string (err), err);
+      return FALSE;
+    }
+
+    GST_OMX_INIT_STRUCT (&quant_param);
+    quant_param.nPortIndex = self->out_port->index;
+    quant_param.nQpI = self->quant_i_frames;
+    quant_param.nQpP = self->quant_p_frames;
+    quant_param.nQpB = self->quant_b_frames;
+
+    err =
+        gst_omx_component_set_parameter (self->component,
+        OMX_IndexParamVideoQuantization, &quant_param);
+    if (err != OMX_ErrorNone) {
+      GST_ERROR_OBJECT (self,
+          "Failed to set quantization parameters: %s (0x%08x)",
+          gst_omx_error_to_string (err), err);
+      return FALSE;
+    }
+  }
 
   return TRUE;
 }
@@ -294,6 +414,77 @@ gst_omx_video_enc_finalize (GObject * object)
   /* GstOMXVideoEnc *self = GST_OMX_VIDEO_ENC (object); */
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+static void
+gst_omx_video_enc_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstOMXVideoEnc *self = GST_OMX_VIDEO_ENC (object);
+
+  switch (prop_id) {
+    case PROP_CONTROL_RATE:
+      self->control_rate = g_value_get_enum (value);
+      break;
+    case PROP_TARGET_BITRATE:
+      self->target_bitrate = g_value_get_uint (value);
+      if (self->component) {
+        OMX_VIDEO_CONFIG_BITRATETYPE config;
+        OMX_ERRORTYPE err;
+
+        GST_OMX_INIT_STRUCT (&config);
+        config.nPortIndex = self->out_port->index;
+        config.nEncodeBitrate = self->target_bitrate;
+        err =
+            gst_omx_component_set_config (self->component,
+            OMX_IndexConfigVideoBitrate, &config);
+        if (err != OMX_ErrorNone)
+          GST_ERROR_OBJECT (self,
+              "Failed to set bitrate parameter: %s (0x%08x)",
+              gst_omx_error_to_string (err), err);
+      }
+      break;
+    case PROP_QUANT_I_FRAMES:
+      self->quant_i_frames = g_value_get_uint (value);
+      break;
+    case PROP_QUANT_P_FRAMES:
+      self->quant_p_frames = g_value_get_uint (value);
+      break;
+    case PROP_QUANT_B_FRAMES:
+      self->quant_b_frames = g_value_get_uint (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_omx_video_enc_get_property (GObject * object, guint prop_id, GValue * value,
+    GParamSpec * pspec)
+{
+  GstOMXVideoEnc *self = GST_OMX_VIDEO_ENC (object);
+
+  switch (prop_id) {
+    case PROP_CONTROL_RATE:
+      g_value_set_enum (value, self->control_rate);
+      break;
+    case PROP_TARGET_BITRATE:
+      g_value_set_uint (value, self->target_bitrate);
+      break;
+    case PROP_QUANT_I_FRAMES:
+      g_value_set_uint (value, self->quant_i_frames);
+      break;
+    case PROP_QUANT_P_FRAMES:
+      g_value_set_uint (value, self->quant_p_frames);
+      break;
+    case PROP_QUANT_B_FRAMES:
+      g_value_set_uint (value, self->quant_b_frames);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
 }
 
 static GstStateChangeReturn
