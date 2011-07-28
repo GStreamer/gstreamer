@@ -120,8 +120,8 @@
 
 typedef enum
 {
-  GST_ENC_FLAG_NATIVE_AUDIO = (1 << 0),
-  GST_ENC_FLAG_NATIVE_VIDEO = (1 << 1)
+  GST_ENC_FLAG_NO_AUDIO_CONVERSION = (1 << 0),
+  GST_ENC_FLAG_NO_VIDEO_CONVERSION = (1 << 1)
 } GstEncFlags;
 
 #define GST_TYPE_ENC_FLAGS (gst_enc_flags_get_type())
@@ -267,10 +267,10 @@ GType
 gst_enc_flags_get_type (void)
 {
   static const GFlagsValue values[] = {
-    {C_FLAGS (GST_ENC_FLAG_NATIVE_AUDIO), "Only use native audio formats",
-        "native-audio"},
-    {C_FLAGS (GST_ENC_FLAG_NATIVE_VIDEO), "Only use native video formats",
-        "native-video"},
+    {C_FLAGS (GST_ENC_FLAG_NO_AUDIO_CONVERSION), "Do not use audio conversion "
+          "elements", "no-audio-conversion"},
+    {C_FLAGS (GST_ENC_FLAG_NO_VIDEO_CONVERSION), "Do not use video conversion "
+          "elements", "no-video-conversion"},
     {0, NULL, NULL}
   };
   static volatile GType id = 0;
@@ -1261,7 +1261,8 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
   /* 3.2. restriction elements */
   /* FIXME : Once we have properties for specific converters, use those */
   if (GST_IS_ENCODING_VIDEO_PROFILE (sprof)) {
-    const gboolean native_video = ! !(ebin->flags & GST_ENC_FLAG_NATIVE_VIDEO);
+    const gboolean native_video =
+        ! !(ebin->flags & GST_ENC_FLAG_NO_VIDEO_CONVERSION);
     GstElement *cspace = NULL, *scale, *vrate, *cspace2 = NULL;
 
     GST_LOG ("Adding conversion elements for video stream");
@@ -1323,7 +1324,7 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
     }
 
   } else if (GST_IS_ENCODING_AUDIO_PROFILE (sprof)
-      && !(ebin->flags & GST_ENC_FLAG_NATIVE_AUDIO)) {
+      && !(ebin->flags & GST_ENC_FLAG_NO_AUDIO_CONVERSION)) {
     GstElement *aconv, *ares, *arate, *aconv2;
 
     GST_LOG ("Adding conversion elements for audio stream");
