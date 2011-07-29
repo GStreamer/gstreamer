@@ -111,12 +111,10 @@ do_test (GstBuffer * inbuffer)
   /* clean up buffers */
   for (i = 0; i < num_buffers; ++i) {
     gint size;
-    guint8 *data;
 
     outbuffer = GST_BUFFER (buffers->data);
     fail_if (outbuffer == NULL);
 
-    data = GST_BUFFER_DATA (outbuffer);
     size = GST_BUFFER_SIZE (outbuffer);
 
     /* 2 16-bit channels */
