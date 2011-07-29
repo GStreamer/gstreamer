@@ -28,6 +28,7 @@
         <filename>gstreamer-plugins-bad-&GST_MAJORMINOR;.pc</filename> and adding
         <filename>-lgscodeparsers-&GST_MAJORMINOR;</filename> to the library flags.
       </para>
+      <xi:include href="xml/gsth264parser.xml" />
       <xi:include href="xml/gstmpegvideoparser.xml" />
     </chapter>
   </part>
