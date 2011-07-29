@@ -1128,16 +1128,14 @@ gst_ffmpegdec_bufferpool (GstFFMpegDec * ffmpegdec)
   gint linesize_align[4];
   guint edge;
   GstCaps *caps;
+  AVCodecContext *context = ffmpegdec->context;
 
   width = ffmpegdec->ctx_width;
   height = ffmpegdec->ctx_height;
 
   /* let ffmpeg find the alignment and padding */
-  avcodec_align_dimensions2 (ffmpegdec->context, &width, &height,
-      linesize_align);
-  edge =
-      ffmpegdec->context->
-      flags & CODEC_FLAG_EMU_EDGE ? 0 : avcodec_get_edge_width ();
+  avcodec_align_dimensions2 (context, &width, &height, linesize_align);
+  edge = context->flags & CODEC_FLAG_EMU_EDGE ? 0 : avcodec_get_edge_width ();
   /* increase the size for the padding */
   width += edge << 1;
   height += edge << 1;
@@ -1193,14 +1191,16 @@ gst_ffmpegdec_bufferpool (GstFFMpegDec * ffmpegdec)
 static gboolean
 update_video_context (GstFFMpegDec * ffmpegdec, gboolean force)
 {
-  if (!force && ffmpegdec->ctx_width == ffmpegdec->context->width
-      && ffmpegdec->ctx_height == ffmpegdec->context->height
-      && ffmpegdec->ctx_ticks == ffmpegdec->context->ticks_per_frame
-      && ffmpegdec->ctx_time_n == ffmpegdec->context->time_base.num
-      && ffmpegdec->ctx_time_d == ffmpegdec->context->time_base.den
-      && ffmpegdec->ctx_pix_fmt == ffmpegdec->context->pix_fmt
-      && ffmpegdec->ctx_par_n == ffmpegdec->context->sample_aspect_ratio.num
-      && ffmpegdec->ctx_par_d == ffmpegdec->context->sample_aspect_ratio.den)
+  AVCodecContext *context = ffmpegdec->context;
+
+  if (!force && ffmpegdec->ctx_width == context->width
+      && ffmpegdec->ctx_height == context->height
+      && ffmpegdec->ctx_ticks == context->ticks_per_frame
+      && ffmpegdec->ctx_time_n == context->time_base.num
+      && ffmpegdec->ctx_time_d == context->time_base.den
+      && ffmpegdec->ctx_pix_fmt == context->pix_fmt
+      && ffmpegdec->ctx_par_n == context->sample_aspect_ratio.num
+      && ffmpegdec->ctx_par_d == context->sample_aspect_ratio.den)
     return FALSE;
 
   GST_DEBUG_OBJECT (ffmpegdec,
@@ -1208,45 +1208,19 @@ update_video_context (GstFFMpegDec * ffmpegdec, gboolean force)
       ffmpegdec->ctx_width, ffmpegdec->ctx_height,
       ffmpegdec->ctx_par_n, ffmpegdec->ctx_par_d,
       ffmpegdec->ctx_time_n, ffmpegdec->ctx_time_d,
-      ffmpegdec->context->width, ffmpegdec->context->height,
-      ffmpegdec->context->sample_aspect_ratio.num,
-      ffmpegdec->context->sample_aspect_ratio.den,
-      ffmpegdec->context->time_base.num, ffmpegdec->context->time_base.den);
+      context->width, context->height,
+      context->sample_aspect_ratio.num,
+      context->sample_aspect_ratio.den,
+      context->time_base.num, context->time_base.den);
 
-  ffmpegdec->ctx_width = ffmpegdec->context->width;
-  ffmpegdec->ctx_height = ffmpegdec->context->height;
-  ffmpegdec->ctx_ticks = ffmpegdec->context->ticks_per_frame;
-  ffmpegdec->ctx_time_n = ffmpegdec->context->time_base.num;
-  ffmpegdec->ctx_time_d = ffmpegdec->context->time_base.den;
-  ffmpegdec->ctx_pix_fmt = ffmpegdec->context->pix_fmt;
-  ffmpegdec->ctx_par_n = ffmpegdec->context->sample_aspect_ratio.num;
-  ffmpegdec->ctx_par_d = ffmpegdec->context->sample_aspect_ratio.den;
-
-  return TRUE;
-}
-
-static gboolean
-update_audio_context (GstFFMpegDec * ffmpegdec, gboolean force)
-{
-  gint depth;
-
-  depth = av_smp_format_depth (ffmpegdec->context->sample_fmt);
-
-  if (!force && ffmpegdec->format.audio.samplerate ==
-      ffmpegdec->context->sample_rate &&
-      ffmpegdec->format.audio.channels == ffmpegdec->context->channels &&
-      ffmpegdec->format.audio.depth == depth)
-    return FALSE;
-
-  GST_DEBUG_OBJECT (ffmpegdec,
-      "Renegotiating audio from %dHz@%dchannels (%d) to %dHz@%dchannels (%d)",
-      ffmpegdec->format.audio.samplerate, ffmpegdec->format.audio.channels,
-      ffmpegdec->format.audio.depth,
-      ffmpegdec->context->sample_rate, ffmpegdec->context->channels, depth);
-
-  ffmpegdec->format.audio.samplerate = ffmpegdec->context->sample_rate;
-  ffmpegdec->format.audio.channels = ffmpegdec->context->channels;
-  ffmpegdec->format.audio.depth = depth;
+  ffmpegdec->ctx_width = context->width;
+  ffmpegdec->ctx_height = context->height;
+  ffmpegdec->ctx_ticks = context->ticks_per_frame;
+  ffmpegdec->ctx_time_n = context->time_base.num;
+  ffmpegdec->ctx_time_d = context->time_base.den;
+  ffmpegdec->ctx_pix_fmt = context->pix_fmt;
+  ffmpegdec->ctx_par_n = context->sample_aspect_ratio.num;
+  ffmpegdec->ctx_par_d = context->sample_aspect_ratio.den;
 
   return TRUE;
 }
@@ -1377,6 +1351,33 @@ no_bufferpool:
 
     return FALSE;
   }
+}
+
+static gboolean
+update_audio_context (GstFFMpegDec * ffmpegdec, gboolean force)
+{
+  AVCodecContext *context = ffmpegdec->context;
+  gint depth;
+
+  depth = av_smp_format_depth (context->sample_fmt);
+
+  if (!force && ffmpegdec->format.audio.samplerate ==
+      context->sample_rate &&
+      ffmpegdec->format.audio.channels == context->channels &&
+      ffmpegdec->format.audio.depth == depth)
+    return FALSE;
+
+  GST_DEBUG_OBJECT (ffmpegdec,
+      "Renegotiating audio from %dHz@%dchannels (%d) to %dHz@%dchannels (%d)",
+      ffmpegdec->format.audio.samplerate, ffmpegdec->format.audio.channels,
+      ffmpegdec->format.audio.depth,
+      context->sample_rate, context->channels, depth);
+
+  ffmpegdec->format.audio.samplerate = context->sample_rate;
+  ffmpegdec->format.audio.channels = context->channels;
+  ffmpegdec->format.audio.depth = depth;
+
+  return TRUE;
 }
 
 static gboolean
