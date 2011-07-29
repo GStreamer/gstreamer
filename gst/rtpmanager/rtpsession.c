@@ -544,6 +544,9 @@ rtp_session_init (RTPSession * sess)
   sess->stats.active_sources++;
   INIT_AVG (sess->stats.avg_rtcp_packet_size, 100);
 
+  rtp_stats_set_min_interval (&sess->stats,
+      (gdouble) DEFAULT_RTCP_MIN_INTERVAL / GST_SECOND);
+
   /* default UDP header length */
   sess->header_len = 28;
   sess->mtu = DEFAULT_RTCP_MTU;
