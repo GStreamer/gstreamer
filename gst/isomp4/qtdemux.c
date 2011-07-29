@@ -7458,7 +7458,7 @@ gst_qtdemux_guess_bitrate (GstQTDemux * qtdemux)
   /* Subtract the header size */
   GST_DEBUG_OBJECT (qtdemux, "Total size %" G_GINT64_FORMAT ", header size %u",
       size, qtdemux->header_size);
-  g_assert (size > qtdemux->header_size);
+  g_assert (size >= qtdemux->header_size);
   size = size - qtdemux->header_size;
 
   if (!gst_qtdemux_get_duration (qtdemux, &duration) ||
