@@ -25,6 +25,7 @@ EXPORTS
 	gst_tag_list_to_vorbiscomment_buffer
 	gst_tag_list_to_xmp_buffer
 	gst_tag_list_to_xmp_buffer_full
+	gst_tag_mux_get_type
 	gst_tag_parse_extended_comment
 	gst_tag_register_musicbrainz_tags
 	gst_tag_to_id3_tag
