@@ -25,6 +25,7 @@
 #include <gst/base/gstpushsrc.h>
 
 #include <gst/video/gstmetavideo.h>
+#include <gst/video/gstvideopool.h>
 
 G_BEGIN_DECLS
 

@@ -45,6 +45,7 @@
 #include <gst/tag/tag.h>
 #include <gst/video/video.h>
 #include <gst/video/gstmetavideo.h>
+#include <gst/video/gstvideopool.h>
 
 #define GST_CAT_DEFAULT theoradec_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
@@ -826,10 +827,10 @@ theora_negotiate_pool (GstTheoraDec * dec, GstCaps * caps, GstVideoInfo * info)
 
   config = gst_buffer_pool_get_config (pool);
   gst_buffer_pool_config_set (config, caps, size, min, max, prefix, alignment);
-  /* just set the metadata, if the pool can support it we will transparently use
+  /* just set the option, if the pool can support it we will transparently use
    * it through the video info API. We could also see if the pool support this
-   * metadata and only activate it then. */
-  gst_buffer_pool_config_add_meta (config, GST_META_API_VIDEO);
+   * option and only activate it then. */
+  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_META_VIDEO);
 
   /* check if downstream supports cropping */
   dec->use_cropping =

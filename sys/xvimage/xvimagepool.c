@@ -30,6 +30,8 @@
 /* Helper functions */
 #include <gst/video/video.h>
 #include <gst/video/gstmetavideo.h>
+#include <gst/video/gstvideopool.h>
+
 
 GST_DEBUG_CATEGORY_EXTERN (gst_debug_xvimagepool);
 #define GST_CAT_DEFAULT gst_debug_xvimagepool
@@ -475,11 +477,11 @@ G_DEFINE_TYPE (GstXvImageBufferPool, gst_xvimage_buffer_pool,
     GST_TYPE_BUFFER_POOL);
 
 static const gchar **
-xvimage_buffer_pool_get_metas (GstBufferPool * pool)
+xvimage_buffer_pool_get_options (GstBufferPool * pool)
 {
-  static const gchar *metas[] = { "GstMetaVideo", NULL };
+  static const gchar *options[] = { GST_BUFFER_POOL_OPTION_META_VIDEO, NULL };
 
-  return metas;
+  return options;
 }
 
 static gboolean
@@ -514,7 +516,8 @@ xvimage_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
 
   /* enable metadata based on config of the pool */
   priv->add_metavideo =
-      gst_buffer_pool_config_has_meta (config, GST_META_API_VIDEO);
+      gst_buffer_pool_config_has_option (config,
+      GST_BUFFER_POOL_OPTION_META_VIDEO);
 
   if (priv->im_format == -1)
     goto unknown_format;
@@ -622,7 +625,7 @@ gst_xvimage_buffer_pool_class_init (GstXvImageBufferPoolClass * klass)
 
   gobject_class->finalize = gst_xvimage_buffer_pool_finalize;
 
-  gstbufferpool_class->get_metas = xvimage_buffer_pool_get_metas;
+  gstbufferpool_class->get_options = xvimage_buffer_pool_get_options;
   gstbufferpool_class->set_config = xvimage_buffer_pool_set_config;
   gstbufferpool_class->alloc_buffer = xvimage_buffer_pool_alloc;
   gstbufferpool_class->free_buffer = xvimage_buffer_pool_free;
