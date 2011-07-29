@@ -27,6 +27,7 @@
 #endif
 #include <gst/gst.h>
 
+#include <gst/video/video.h>
 #include <gst/audio/multichannel.h>
 
 /*
@@ -100,6 +101,9 @@ gst_ffmpeg_caps_with_codectype (enum AVMediaType  type,
 
 GstCaps *
 gst_ffmpeg_formatid_to_caps (const gchar *format_name);
+
+GstVideoFormat
+gst_ffmpeg_pixfmt_to_video_format (enum PixelFormat pix_fmt);
 
 /* Convert a FFMPEG Pixel Format and optional AVCodecContext
  * to a GstCaps. If the context is ommitted, no fixed values

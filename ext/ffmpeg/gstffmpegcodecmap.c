@@ -1693,6 +1693,70 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
   return caps;
 }
 
+/* Convert a FFMPEG Pixel Format to a GStreamer VideoFormat */
+GstVideoFormat
+gst_ffmpeg_pixfmt_to_video_format (enum PixelFormat pix_fmt)
+{
+  GstVideoFormat fmt;
+
+  switch (pix_fmt) {
+    case PIX_FMT_YUVJ420P:
+    case PIX_FMT_YUV420P:
+      fmt = GST_VIDEO_FORMAT_I420;
+      break;
+    case PIX_FMT_YUVA420P:
+      fmt = GST_VIDEO_FORMAT_A420;
+      break;
+    case PIX_FMT_YUYV422:
+      fmt = GST_VIDEO_FORMAT_YUY2;
+      break;
+    case PIX_FMT_RGB24:
+      fmt = GST_VIDEO_FORMAT_RGB;
+      break;
+    case PIX_FMT_BGR24:
+      fmt = GST_VIDEO_FORMAT_BGR;
+      break;
+    case PIX_FMT_YUVJ422P:
+    case PIX_FMT_YUV422P:
+      fmt = GST_VIDEO_FORMAT_Y42B;
+      break;
+    case PIX_FMT_YUVJ444P:
+    case PIX_FMT_YUV444P:
+      fmt = GST_VIDEO_FORMAT_Y444;
+      break;
+    case PIX_FMT_RGB32:
+#if (G_BYTE_ORDER == G_BIG_ENDIAN)
+      fmt = GST_VIDEO_FORMAT_xRGB;
+#else
+      fmt = GST_VIDEO_FORMAT_BGRx;
+#endif
+      break;
+    case PIX_FMT_YUV410P:
+      fmt = GST_VIDEO_FORMAT_YUV9;
+      break;
+    case PIX_FMT_YUV411P:
+      fmt = GST_VIDEO_FORMAT_Y41B;
+      break;
+    case PIX_FMT_RGB565:
+      fmt = GST_VIDEO_FORMAT_RGB16;
+      break;
+    case PIX_FMT_RGB555:
+      fmt = GST_VIDEO_FORMAT_RGB15;
+      break;
+    case PIX_FMT_PAL8:
+      fmt = GST_VIDEO_FORMAT_RGB8_PALETTED;
+      break;
+    case PIX_FMT_GRAY8:
+      fmt = GST_VIDEO_FORMAT_GRAY8;
+      break;
+    default:
+      /* give up ... */
+      fmt = GST_VIDEO_FORMAT_UNKNOWN;
+      break;
+  }
+  return fmt;
+}
+
 /* Convert a FFMPEG Pixel Format and optional AVCodecContext
  * to a GstCaps. If the context is ommitted, no fixed values
  * for video/audio size will be included in the GstCaps
@@ -1705,68 +1769,13 @@ gst_ffmpeg_pixfmt_to_caps (enum PixelFormat pix_fmt, AVCodecContext * context,
     enum CodecID codec_id)
 {
   GstCaps *caps = NULL;
-  const gchar *fmt = NULL;
+  GstVideoFormat format;
 
-  switch (pix_fmt) {
-    case PIX_FMT_YUVJ420P:
-    case PIX_FMT_YUV420P:
-      fmt = "I420";
-      break;
-    case PIX_FMT_YUVA420P:
-      fmt = "A420";
-      break;
-    case PIX_FMT_YUYV422:
-      fmt = "YUY2";
-      break;
-    case PIX_FMT_RGB24:
-      fmt = "RGB";
-      break;
-    case PIX_FMT_BGR24:
-      fmt = "BGR";
-      break;
-    case PIX_FMT_YUVJ422P:
-    case PIX_FMT_YUV422P:
-      fmt = "YV2B";
-      break;
-    case PIX_FMT_YUVJ444P:
-    case PIX_FMT_YUV444P:
-      fmt = "Y444";
-      break;
-    case PIX_FMT_RGB32:
-#if (G_BYTE_ORDER == G_BIG_ENDIAN)
-      fmt = "xRGB";
-#else
-      fmt = "BGRx";
-#endif
-      break;
-    case PIX_FMT_YUV410P:
-      fmt = "YUV9";
-      break;
-    case PIX_FMT_YUV411P:
-      fmt = "Y41B";
-      break;
-    case PIX_FMT_RGB565:
-      fmt = "RGB16";
-      break;
-    case PIX_FMT_RGB555:
-      fmt = "RGB15";
-      break;
-    case PIX_FMT_PAL8:
-      fmt = "RGB8_PALETTED";
-      break;
-    case PIX_FMT_GRAY8:
-      fmt = "GRAY8";
-      break;
-    default:
-      /* give up ... */
-      break;
-  }
+  format = gst_ffmpeg_pixfmt_to_video_format (pix_fmt);
 
-  if (caps == NULL) {
-    if (fmt) {
-      caps = gst_ff_vid_caps_new (context, codec_id, "video/x-raw",
-          "format", G_TYPE_STRING, fmt, NULL);
-    }
+  if (format != GST_VIDEO_FORMAT_UNKNOWN) {
+    caps = gst_ff_vid_caps_new (context, codec_id, "video/x-raw",
+        "format", G_TYPE_STRING, gst_video_format_to_string (format), NULL);
   }
 
   if (caps != NULL) {
