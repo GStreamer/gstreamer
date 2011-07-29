@@ -540,9 +540,9 @@ gst_ffmpegdemux_perform_seek (GstFFMpegDemux * demux, GstEvent * event)
       res = TRUE;
       /* FIXME, use source pad */
       if (cur_type != GST_SEEK_TYPE_NONE && cur != -1)
-        res = gst_pad_query_convert (demux->sinkpad, format, cur, &fmt, &cur);
+        res = gst_pad_query_convert (demux->sinkpad, format, cur, fmt, &cur);
       if (res && stop_type != GST_SEEK_TYPE_NONE && stop != -1)
-        res = gst_pad_query_convert (demux->sinkpad, format, stop, &fmt, &stop);
+        res = gst_pad_query_convert (demux->sinkpad, format, stop, fmt, &stop);
       if (!res)
         goto no_format;
 
@@ -818,7 +818,7 @@ gst_ffmpegdemux_src_query (GstPad * pad, GstQuery * query)
 
       gst_query_parse_seeking (query, &format, NULL, NULL, NULL);
       seekable = demux->seekable;
-      if (!gst_pad_query_duration (pad, &format, &dur)) {
+      if (!gst_pad_query_duration (pad, format, &dur)) {
         /* unlikely that we don't know duration but can seek */
         seekable = FALSE;
         dur = -1;

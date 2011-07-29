@@ -204,14 +204,13 @@ gst_ffmpegdata_seek (URLContext * h, int64_t pos, int whence)
         case AVSEEK_SIZE:
           /* ffmpeg wants to know the current end position in bytes ! */
         {
-          GstFormat format = GST_FORMAT_BYTES;
           gint64 duration;
 
           GST_DEBUG ("Seek end");
 
           if (gst_pad_is_linked (info->pad))
-            if (gst_pad_query_duration (GST_PAD_PEER (info->pad), &format,
-                    &duration))
+            if (gst_pad_query_duration (GST_PAD_PEER (info->pad),
+                    GST_FORMAT_BYTES, &duration))
               newpos = ((guint64) duration) + pos;
         }
           break;
