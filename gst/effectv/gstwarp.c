@@ -55,6 +55,7 @@
 
 #include "gstwarp.h"
 #include <gst/video/gstmetavideo.h>
+#include <gst/video/gstvideopool.h>
 
 #ifndef M_PI
 #define M_PI    3.14159265358979323846
@@ -255,7 +256,8 @@ gst_wraptv_setup_allocation (GstBaseTransform * trans, GstQuery * query)
     GstStructure *config;
 
     config = gst_buffer_pool_get_config (pool);
-    gst_buffer_pool_config_add_meta (config, GST_META_API_VIDEO);
+    gst_buffer_pool_config_add_option (config,
+        GST_BUFFER_POOL_OPTION_META_VIDEO);
     gst_buffer_pool_set_config (pool, config);
   }
   return TRUE;

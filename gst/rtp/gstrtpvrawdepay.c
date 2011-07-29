@@ -151,7 +151,7 @@ gst_rtp_vraw_depay_negotiate_pool (GstRtpVRawDepay * depay, GstCaps * caps,
   /* just set the metadata, if the pool can support it we will transparently use
    * it through the video info API. We could also see if the pool support this
    * metadata and only activate it then. */
-  gst_buffer_pool_config_add_meta (config, GST_META_API_VIDEO);
+  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_META_VIDEO);
 
   gst_buffer_pool_set_config (pool, config);
   /* and activate */
