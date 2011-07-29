@@ -126,7 +126,6 @@ struct _GstFFMpegDec
   guint padded_size;
 
   gboolean current_dr;          /* if direct rendering is enabled */
-  gboolean extra_ref;           /* keep extra ref around in get/release */
 
   /* some properties */
   enum AVDiscard skip_frame;
@@ -799,7 +798,6 @@ gst_ffmpegdec_setcaps (GstFFMpegDec * ffmpegdec, GstCaps * caps)
 
   /* figure out if we can use direct rendering */
   ffmpegdec->current_dr = FALSE;
-  ffmpegdec->extra_ref = FALSE;
   if (ffmpegdec->direct_rendering) {
     GST_DEBUG_OBJECT (ffmpegdec, "trying to enable direct rendering");
     if (oclass->in_plugin->capabilities & CODEC_CAP_DR1) {
@@ -807,7 +805,6 @@ gst_ffmpegdec_setcaps (GstFFMpegDec * ffmpegdec, GstCaps * caps)
         GST_DEBUG_OBJECT (ffmpegdec, "disable direct rendering setup for H264");
         /* does not work, many stuff reads outside of the planes */
         ffmpegdec->current_dr = FALSE;
-        ffmpegdec->extra_ref = TRUE;
       } else if ((oclass->in_plugin->id == CODEC_ID_SVQ1) ||
           (oclass->in_plugin->id == CODEC_ID_VP5) ||
           (oclass->in_plugin->id == CODEC_ID_VP6) ||
@@ -817,7 +814,6 @@ gst_ffmpegdec_setcaps (GstFFMpegDec * ffmpegdec, GstCaps * caps)
             "disable direct rendering setup for broken stride support");
         /* does not work, uses a incompatible stride. See #610613 */
         ffmpegdec->current_dr = FALSE;
-        ffmpegdec->extra_ref = TRUE;
       } else {
         GST_DEBUG_OBJECT (ffmpegdec, "enabled direct rendering");
         ffmpegdec->current_dr = TRUE;
@@ -938,9 +934,7 @@ gst_ffmpegdec_get_buffer (AVCodecContext * context, AVFrame * picture)
   GST_LOG_OBJECT (ffmpegdec, "buffer data %p, size %" G_GSIZE_FORMAT, data,
       size);
 
-  edge =
-      ffmpegdec->context->
-      flags & CODEC_FLAG_EMU_EDGE ? 0 : avcodec_get_edge_width ();
+  edge = context->flags & CODEC_FLAG_EMU_EDGE ? 0 : avcodec_get_edge_width ();
   data += (edge * width) + edge;
 
   /* copy the right pointers and strides in the picture object */
@@ -1114,8 +1108,8 @@ gst_ffmpegdec_bufferpool (GstFFMpegDec * ffmpegdec)
   avcodec_align_dimensions2 (ffmpegdec->context, &width, &height,
       linesize_align);
   edge =
-      ffmpegdec->context->
-      flags & CODEC_FLAG_EMU_EDGE ? 0 : avcodec_get_edge_width ();
+      ffmpegdec->
+      context->flags & CODEC_FLAG_EMU_EDGE ? 0 : avcodec_get_edge_width ();
   /* increase the size for the padding */
   width += edge << 1;
   height += edge << 1;
