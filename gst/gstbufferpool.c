@@ -491,20 +491,20 @@ gst_buffer_pool_get_config (GstBufferPool * pool)
   return result;
 }
 
-static const gchar *empty_meta[] = { NULL };
+static const gchar *empty_option[] = { NULL };
 
 /**
- * gst_buffer_pool_get_metas:
+ * gst_buffer_pool_get_options:
  * @pool: a #GstBufferPool
  *
- * Get a NULL terminated array of string with supported #GstMeta apis for
- * @pool. The requested api would typically be added to the config with
- * gst_buffer_pool_config_add_meta().
+ * Get a NULL terminated array of string with supported bufferpool options for
+ * @pool. An option would typically be enabled with
+ * gst_buffer_pool_config_add_option().
  *
  * Returns: a NULL terminated array of strings.
  */
 const gchar **
-gst_buffer_pool_get_metas (GstBufferPool * pool)
+gst_buffer_pool_get_options (GstBufferPool * pool)
 {
   GstBufferPoolClass *pclass;
   const gchar **result;
@@ -513,10 +513,10 @@ gst_buffer_pool_get_metas (GstBufferPool * pool)
 
   pclass = GST_BUFFER_POOL_GET_CLASS (pool);
 
-  if (G_LIKELY (pclass->get_metas))
-    result = pclass->get_metas (pool);
+  if (G_LIKELY (pclass->get_options))
+    result = pclass->get_options (pool);
   else
-    result = empty_meta;
+    result = empty_option;
 
   return result;
 }
@@ -549,25 +549,25 @@ gst_buffer_pool_config_set (GstStructure * config, const GstCaps * caps,
 }
 
 /**
- * gst_buffer_pool_config_add_meta:
+ * gst_buffer_pool_config_add_option:
  * @config: a #GstBufferPool configuration
- * @api: an API to add
+ * @option: an option to add
  *
- * Adds the metadata api to @config. This will instruct the @bufferpool to use
- * the specified metadata api on the buffers that it allocates.
+ * Enabled the option in @config. This will instruct the @bufferpool to enable
+ * the specified option on the buffers that it allocates.
  *
- * The supported API by @pool can be retrieved with gst_buffer_pool_get_metas().
+ * The supported options by @pool can be retrieved with gst_buffer_pool_get_options().
  */
 void
-gst_buffer_pool_config_add_meta (GstStructure * config, const gchar * api)
+gst_buffer_pool_config_add_option (GstStructure * config, const gchar * option)
 {
   GValueArray *array;
   const GValue *value;
-  GValue api_value = { 0 };
+  GValue option_value = { 0 };
 
   g_return_if_fail (config != NULL);
 
-  value = gst_structure_id_get_value (config, GST_QUARK (META));
+  value = gst_structure_id_get_value (config, GST_QUARK (OPTIONS));
   if (value) {
     array = (GValueArray *) g_value_get_boxed (value);
   } else {
@@ -578,26 +578,26 @@ gst_buffer_pool_config_add_meta (GstStructure * config, const gchar * api)
     g_value_init (&new_array_val, G_TYPE_VALUE_ARRAY);
     g_value_take_boxed (&new_array_val, array);
 
-    gst_structure_id_take_value (config, GST_QUARK (META), &new_array_val);
+    gst_structure_id_take_value (config, GST_QUARK (OPTIONS), &new_array_val);
   }
 
-  g_value_init (&api_value, G_TYPE_STRING);
-  g_value_set_string (&api_value, api);
-  g_value_array_append (array, &api_value);
-  g_value_unset (&api_value);
+  g_value_init (&option_value, G_TYPE_STRING);
+  g_value_set_string (&option_value, option);
+  g_value_array_append (array, &option_value);
+  g_value_unset (&option_value);
 }
 
 /**
- * gst_buffer_pool_config_n_metas:
+ * gst_buffer_pool_config_n_options:
  * @config: a #GstBufferPool configuration
  *
  * Retrieve the number of values currently stored in the
- * meta API array of the @config structure.
+ * options array of the @config structure.
  *
- * Returns: the metadata API array size as a #guint.
+ * Returns: the options array size as a #guint.
  */
 guint
-gst_buffer_pool_config_n_metas (GstStructure * config)
+gst_buffer_pool_config_n_options (GstStructure * config)
 {
   GValueArray *array;
   const GValue *value;
@@ -605,7 +605,7 @@ gst_buffer_pool_config_n_metas (GstStructure * config)
 
   g_return_val_if_fail (config != NULL, 0);
 
-  value = gst_structure_id_get_value (config, GST_QUARK (META));
+  value = gst_structure_id_get_value (config, GST_QUARK (OPTIONS));
   if (value) {
     array = (GValueArray *) g_value_get_boxed (value);
     size = array->n_values;
@@ -614,63 +614,63 @@ gst_buffer_pool_config_n_metas (GstStructure * config)
 }
 
 /**
- * gst_buffer_pool_config_get_meta:
+ * gst_buffer_pool_config_get_option:
  * @config: a #GstBufferPool configuration
- * @index: position in the metadata API array to read
+ * @index: position in the option array to read
  *
- * Parse an available @config and get the metadata API
- * at @index of the metadata API array.
+ * Parse an available @config and get the option
+ * at @index of the options API array.
  *
- * Returns: a #gchar of the metadata API at @index.
+ * Returns: a #gchar of the option at @index.
  */
 const gchar *
-gst_buffer_pool_config_get_meta (GstStructure * config, guint index)
+gst_buffer_pool_config_get_option (GstStructure * config, guint index)
 {
   const GValue *value;
   const gchar *ret = NULL;
 
   g_return_val_if_fail (config != NULL, 0);
 
-  value = gst_structure_id_get_value (config, GST_QUARK (META));
+  value = gst_structure_id_get_value (config, GST_QUARK (OPTIONS));
   if (value) {
-    GValueArray *meta;
-    GValue *api_value;
+    GValueArray *array;
+    GValue *option_value;
 
-    meta = (GValueArray *) g_value_get_boxed (value);
-    api_value = g_value_array_get_nth (meta, index);
+    array = (GValueArray *) g_value_get_boxed (value);
+    option_value = g_value_array_get_nth (array, index);
 
-    if (api_value)
-      ret = g_value_get_string (api_value);
+    if (option_value)
+      ret = g_value_get_string (option_value);
   }
   return ret;
 }
 
 /**
- * gst_buffer_pool_config_has_meta:
+ * gst_buffer_pool_config_has_option:
  * @config: a #GstBufferPool configuration
- * @api: a metadata api
+ * @option: an option
  *
- * Check if @config contains @api metadata.
+ * Check if @config contains @option
  *
- * Returns: TRUE if the metadata array contain @api.
+ * Returns: TRUE if the options array contains @option.
  */
 gboolean
-gst_buffer_pool_config_has_meta (GstStructure * config, const gchar * api)
+gst_buffer_pool_config_has_option (GstStructure * config, const gchar * option)
 {
   const GValue *value;
 
   g_return_val_if_fail (config != NULL, 0);
 
-  value = gst_structure_id_get_value (config, GST_QUARK (META));
+  value = gst_structure_id_get_value (config, GST_QUARK (OPTIONS));
   if (value) {
     GValueArray *array;
-    GValue *api_value;
+    GValue *option_value;
     gint i;
 
     array = (GValueArray *) g_value_get_boxed (value);
     for (i = 0; i < array->n_values; i++) {
-      api_value = g_value_array_get_nth (array, i);
-      if (!strcmp (api, g_value_get_string (api_value)))
+      option_value = g_value_array_get_nth (array, i);
+      if (!strcmp (option, g_value_get_string (option_value)))
         return TRUE;
     }
   }

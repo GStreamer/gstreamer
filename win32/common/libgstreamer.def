@@ -124,15 +124,15 @@ EXPORTS
 	gst_buffer_new_wrapped_full
 	gst_buffer_peek_memory
 	gst_buffer_pool_acquire_buffer
-	gst_buffer_pool_config_add_meta
+	gst_buffer_pool_config_add_option
 	gst_buffer_pool_config_get
-	gst_buffer_pool_config_get_meta
-	gst_buffer_pool_config_has_meta
-	gst_buffer_pool_config_n_metas
+	gst_buffer_pool_config_get_option
+	gst_buffer_pool_config_has_option
+	gst_buffer_pool_config_n_options
 	gst_buffer_pool_config_set
 	gst_buffer_pool_flags_get_type
 	gst_buffer_pool_get_config
-	gst_buffer_pool_get_metas
+	gst_buffer_pool_get_options
 	gst_buffer_pool_get_type
 	gst_buffer_pool_new
 	gst_buffer_pool_release_buffer

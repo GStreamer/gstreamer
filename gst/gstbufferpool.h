@@ -127,7 +127,7 @@ struct _GstBufferPool {
 /**
  * GstBufferPoolClass:
  * @object_class:  Object parent class
- * @get_metas: get a list of metadata supported by this pool
+ * @get_options: get a list of options supported by this pool
  * @set_config: apply the bufferpool configuration. The default configuration
  *              will parse the default config parameters
  * @start: start the bufferpool. The default implementation will preallocate
@@ -154,7 +154,7 @@ struct _GstBufferPoolClass {
   GstObjectClass    object_class;
 
   /* vmethods */
-  const gchar ** (*get_metas)      (GstBufferPool *pool);
+  const gchar ** (*get_options)    (GstBufferPool *pool);
   gboolean       (*set_config)     (GstBufferPool *pool, GstStructure *config);
 
   gboolean       (*start)          (GstBufferPool *pool);
@@ -183,7 +183,7 @@ gboolean         gst_buffer_pool_set_active      (GstBufferPool *pool, gboolean 
 gboolean         gst_buffer_pool_set_config      (GstBufferPool *pool, GstStructure *config);
 GstStructure *   gst_buffer_pool_get_config      (GstBufferPool *pool);
 
-const gchar **   gst_buffer_pool_get_metas       (GstBufferPool *pool);
+const gchar **   gst_buffer_pool_get_options     (GstBufferPool *pool);
 
 /* helpers for configuring the config structure */
 void             gst_buffer_pool_config_set      (GstStructure *config, const GstCaps *caps,
@@ -193,10 +193,11 @@ gboolean         gst_buffer_pool_config_get      (GstStructure *config, const Gs
                                                   guint *size, guint *min_buffers, guint *max_buffers,
                                                   guint *prefix, guint *align);
 
-guint            gst_buffer_pool_config_n_metas  (GstStructure *config);
-void             gst_buffer_pool_config_add_meta (GstStructure *config, const gchar *api);
-const gchar *    gst_buffer_pool_config_get_meta (GstStructure *config, guint index);
-gboolean         gst_buffer_pool_config_has_meta (GstStructure *config, const gchar *api);
+/* options */
+guint            gst_buffer_pool_config_n_options   (GstStructure *config);
+void             gst_buffer_pool_config_add_option  (GstStructure *config, const gchar *option);
+const gchar *    gst_buffer_pool_config_get_option  (GstStructure *config, guint index);
+gboolean         gst_buffer_pool_config_has_option  (GstStructure *config, const gchar *option);
 
 /* buffer management */
 GstFlowReturn    gst_buffer_pool_acquire_buffer  (GstBufferPool *pool, GstBuffer **buffer,
