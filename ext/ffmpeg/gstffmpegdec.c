@@ -66,19 +66,34 @@ struct _GstFFMpegDec
   AVFrame *picture;
   gboolean opened;
   GstBufferPool *pool;
+
+  /* from incoming caps */
+  gint in_width;
+  gint in_height;
+  gint in_par_n;
+  gint in_par_d;
+  gint in_fps_n;
+  gint in_fps_d;
+
+  /* current context */
+  enum PixelFormat ctx_pix_fmt;
+  gint ctx_width;
+  gint ctx_height;
+  gint ctx_par_n;
+  gint ctx_par_d;
+  gint ctx_ticks;
+  gint ctx_time_d;
+  gint ctx_time_n;
+  gint ctx_interlaced;
+
+  /* current output format */
+  GstVideoInfo out_info;
+  /* current pool format. This can be different from the output format when we
+   * add extra padding to the bufferpool buffers */
+  GstVideoInfo pool_info;
+
   union
   {
-    struct
-    {
-      gint width, height;
-      gint clip_width, clip_height;
-      gint par_n, par_d;
-      gint fps_n, fps_d;
-      gint old_fps_n, old_fps_d;
-      gboolean interlaced;
-
-      enum PixelFormat pix_fmt;
-    } video;
     struct
     {
       gint channels;
@@ -86,6 +101,8 @@ struct _GstFFMpegDec
       gint depth;
     } audio;
   } format;
+
+
   gboolean waiting_for_key;
   gboolean discont;
   gboolean clear_ts;
@@ -108,7 +125,6 @@ struct _GstFFMpegDec
   guint8 *padded;
   guint padded_size;
 
-  GValue *par;                  /* pixel aspect ratio of incoming data */
   gboolean current_dr;          /* if direct rendering is enabled */
   gboolean extra_ref;           /* keep extra ref around in get/release */
 
@@ -225,7 +241,9 @@ static void gst_ffmpegdec_set_property (GObject * object,
 static void gst_ffmpegdec_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
-static gboolean gst_ffmpegdec_negotiate (GstFFMpegDec * ffmpegdec,
+static gboolean gst_ffmpegdec_video_negotiate (GstFFMpegDec * ffmpegdec,
+    gboolean force);
+static gboolean gst_ffmpegdec_audio_negotiate (GstFFMpegDec * ffmpegdec,
     gboolean force);
 
 /* some sort of bufferpool handling, but different */
@@ -426,7 +444,6 @@ gst_ffmpegdec_init (GstFFMpegDec * ffmpegdec)
   ffmpegdec->picture = avcodec_alloc_frame ();
   ffmpegdec->pctx = NULL;
   ffmpegdec->pcache = NULL;
-  ffmpegdec->par = NULL;
   ffmpegdec->opened = FALSE;
   ffmpegdec->waiting_for_key = TRUE;
   ffmpegdec->skip_frame = ffmpegdec->lowres = 0;
@@ -436,9 +453,6 @@ gst_ffmpegdec_init (GstFFMpegDec * ffmpegdec)
   ffmpegdec->crop = DEFAULT_CROP;
   ffmpegdec->max_threads = DEFAULT_MAX_THREADS;
 
-  ffmpegdec->format.video.par_n = -1;
-  ffmpegdec->format.video.fps_n = -1;
-  ffmpegdec->format.video.old_fps_n = -1;
   gst_segment_init (&ffmpegdec->segment, GST_FORMAT_TIME);
 }
 
@@ -578,11 +592,6 @@ gst_ffmpegdec_close (GstFFMpegDec * ffmpegdec)
 
   GST_LOG_OBJECT (ffmpegdec, "closing ffmpeg codec");
 
-  if (ffmpegdec->par) {
-    g_free (ffmpegdec->par);
-    ffmpegdec->par = NULL;
-  }
-
   if (ffmpegdec->context->priv_data)
     gst_ffmpeg_avcodec_close (ffmpegdec->context);
   ffmpegdec->opened = FALSE;
@@ -605,11 +614,6 @@ gst_ffmpegdec_close (GstFFMpegDec * ffmpegdec)
     av_parser_close (ffmpegdec->pctx);
     ffmpegdec->pctx = NULL;
   }
-
-  ffmpegdec->format.video.par_n = -1;
-  ffmpegdec->format.video.fps_n = -1;
-  ffmpegdec->format.video.old_fps_n = -1;
-  ffmpegdec->format.video.interlaced = FALSE;
 }
 
 /* with LOCK */
@@ -670,12 +674,15 @@ gst_ffmpegdec_open (GstFFMpegDec * ffmpegdec)
 
   switch (oclass->in_plugin->type) {
     case AVMEDIA_TYPE_VIDEO:
-      ffmpegdec->format.video.width = 0;
-      ffmpegdec->format.video.height = 0;
-      ffmpegdec->format.video.clip_width = -1;
-      ffmpegdec->format.video.clip_height = -1;
-      ffmpegdec->format.video.pix_fmt = PIX_FMT_NB;
-      ffmpegdec->format.video.interlaced = FALSE;
+      /* clear values */
+      ffmpegdec->ctx_pix_fmt = PIX_FMT_NB;
+      ffmpegdec->ctx_width = 0;
+      ffmpegdec->ctx_height = 0;
+      ffmpegdec->ctx_ticks = 1;
+      ffmpegdec->ctx_time_n = 0;
+      ffmpegdec->ctx_time_d = 0;
+      ffmpegdec->ctx_par_n = 0;
+      ffmpegdec->ctx_par_d = 0;
       break;
     case AVMEDIA_TYPE_AUDIO:
       ffmpegdec->format.audio.samplerate = 0;
@@ -765,28 +772,29 @@ gst_ffmpegdec_setcaps (GstFFMpegDec * ffmpegdec, GstCaps * caps)
   structure = gst_caps_get_structure (caps, 0);
 
   par = gst_structure_get_value (structure, "pixel-aspect-ratio");
-  if (par) {
+  if (par != NULL && GST_VALUE_HOLDS_FRACTION (par)) {
+    ffmpegdec->in_par_n = gst_value_get_fraction_numerator (par);
+    ffmpegdec->in_par_d = gst_value_get_fraction_denominator (par);
     GST_DEBUG_OBJECT (ffmpegdec, "sink caps have pixel-aspect-ratio of %d:%d",
-        gst_value_get_fraction_numerator (par),
-        gst_value_get_fraction_denominator (par));
-    /* should be NULL */
-    if (ffmpegdec->par)
-      g_free (ffmpegdec->par);
-    ffmpegdec->par = g_new0 (GValue, 1);
-    gst_value_init_and_copy (ffmpegdec->par, par);
+        ffmpegdec->in_par_n, ffmpegdec->in_par_d);
+  } else {
+    GST_DEBUG_OBJECT (ffmpegdec, "no input pixel-aspect-ratio");
+    ffmpegdec->in_par_n = 0;
+    ffmpegdec->in_par_d = 0;
   }
 
-  /* get the framerate from incoming caps. fps_n is set to -1 when
+  /* get the framerate from incoming caps. fps_n is set to 0 when
    * there is no valid framerate */
   fps = gst_structure_get_value (structure, "framerate");
   if (fps != NULL && GST_VALUE_HOLDS_FRACTION (fps)) {
-    ffmpegdec->format.video.fps_n = gst_value_get_fraction_numerator (fps);
-    ffmpegdec->format.video.fps_d = gst_value_get_fraction_denominator (fps);
-    GST_DEBUG_OBJECT (ffmpegdec, "Using framerate %d/%d from incoming caps",
-        ffmpegdec->format.video.fps_n, ffmpegdec->format.video.fps_d);
+    ffmpegdec->in_fps_n = gst_value_get_fraction_numerator (fps);
+    ffmpegdec->in_fps_d = gst_value_get_fraction_denominator (fps);
+    GST_DEBUG_OBJECT (ffmpegdec, "sink caps have framerate of %d/%d",
+        ffmpegdec->in_fps_n, ffmpegdec->in_fps_d);
   } else {
-    ffmpegdec->format.video.fps_n = -1;
-    GST_DEBUG_OBJECT (ffmpegdec, "Using framerate from codec");
+    GST_DEBUG_OBJECT (ffmpegdec, "no input framerate ");
+    ffmpegdec->in_fps_n = 0;
+    ffmpegdec->in_fps_d = 0;
   }
 
   /* figure out if we can use direct rendering */
@@ -857,23 +865,19 @@ gst_ffmpegdec_setcaps (GstFFMpegDec * ffmpegdec, GstCaps * caps)
   if (!gst_ffmpegdec_open (ffmpegdec))
     goto open_failed;
 
-  /* clipping region */
-  gst_structure_get_int (structure, "width",
-      &ffmpegdec->format.video.clip_width);
-  gst_structure_get_int (structure, "height",
-      &ffmpegdec->format.video.clip_height);
+  /* clipping region. take into account the lowres property */
+  if (gst_structure_get_int (structure, "width", &ffmpegdec->in_width))
+    ffmpegdec->in_width >>= ffmpegdec->lowres;
+  else
+    ffmpegdec->in_width = -1;
+
+  if (gst_structure_get_int (structure, "height", &ffmpegdec->in_height))
+    ffmpegdec->in_height >>= ffmpegdec->lowres;
+  else
+    ffmpegdec->in_height = -1;
 
   GST_DEBUG_OBJECT (ffmpegdec, "clipping to %dx%d",
-      ffmpegdec->format.video.clip_width, ffmpegdec->format.video.clip_height);
-
-  /* take into account the lowres property */
-  if (ffmpegdec->format.video.clip_width != -1)
-    ffmpegdec->format.video.clip_width >>= ffmpegdec->lowres;
-  if (ffmpegdec->format.video.clip_height != -1)
-    ffmpegdec->format.video.clip_height >>= ffmpegdec->lowres;
-
-  GST_DEBUG_OBJECT (ffmpegdec, "final clipping to %dx%d",
-      ffmpegdec->format.video.clip_width, ffmpegdec->format.video.clip_height);
+      ffmpegdec->in_width, ffmpegdec->in_height);
 
 done:
   GST_OBJECT_UNLOCK (ffmpegdec);
@@ -884,66 +888,8 @@ done:
 open_failed:
   {
     GST_DEBUG_OBJECT (ffmpegdec, "Failed to open");
-    if (ffmpegdec->par) {
-      g_free (ffmpegdec->par);
-      ffmpegdec->par = NULL;
-    }
     ret = FALSE;
     goto done;
-  }
-}
-
-static GstFlowReturn
-alloc_output_buffer (GstFFMpegDec * ffmpegdec, GstBuffer ** outbuf,
-    gint width, gint height)
-{
-  GstFlowReturn ret;
-  gint fsize;
-
-  ret = GST_FLOW_ERROR;
-  *outbuf = NULL;
-
-  GST_LOG_OBJECT (ffmpegdec, "alloc output buffer");
-
-  /* see if we need renegotiation */
-  if (G_UNLIKELY (!gst_ffmpegdec_negotiate (ffmpegdec, FALSE)))
-    goto negotiate_failed;
-
-  /* get the size of the gstreamer output buffer given a
-   * width/height/format */
-  fsize = gst_ffmpeg_avpicture_get_size (ffmpegdec->context->pix_fmt,
-      width, height);
-
-  if (!ffmpegdec->context->palctrl) {
-    GST_LOG_OBJECT (ffmpegdec, "doing alloc from pool");
-    /* no pallete, we can use the buffer size to alloc */
-    ret = gst_buffer_pool_acquire_buffer (ffmpegdec->pool, outbuf, NULL);
-    if (G_UNLIKELY (ret != GST_FLOW_OK))
-      goto alloc_failed;
-  } else {
-    GST_LOG_OBJECT (ffmpegdec,
-        "not calling pad_alloc, we have a pallete or downstream can't give 16 byte aligned buffers.");
-    /* for paletted data we can't use pad_alloc_buffer(), because
-     * fsize contains the size of the palette, so the overall size
-     * is bigger than ffmpegcolorspace's unit size, which will
-     * prompt GstBaseTransform to complain endlessly ... */
-    *outbuf = new_aligned_buffer (fsize);
-    ret = GST_FLOW_OK;
-  }
-
-  return ret;
-
-  /* special cases */
-negotiate_failed:
-  {
-    GST_DEBUG_OBJECT (ffmpegdec, "negotiate failed");
-    return GST_FLOW_NOT_NEGOTIATED;
-  }
-alloc_failed:
-  {
-    GST_DEBUG_OBJECT (ffmpegdec, "pad_alloc failed %d (%s)", ret,
-        gst_flow_get_name (ret));
-    return ret;
   }
 }
 
@@ -953,11 +899,10 @@ gst_ffmpegdec_get_buffer (AVCodecContext * context, AVFrame * picture)
   GstBuffer *buf = NULL;
   GstFFMpegDec *ffmpegdec;
   gint width, height;
-  gint coded_width, coded_height;
   GstFlowReturn ret;
-  gint clip_width, clip_height;
   guint8 *data;
   gsize size;
+  guint edge;
 
   ffmpegdec = (GstFFMpegDec *) context->opaque;
 
@@ -970,45 +915,33 @@ gst_ffmpegdec_get_buffer (AVCodecContext * context, AVFrame * picture)
   /* make sure we don't free the buffer when it's not ours */
   picture->opaque = NULL;
 
-  /* take width and height before clipping */
-  width = context->width;
-  height = context->height;
-  coded_width = context->coded_width;
-  coded_height = context->coded_height;
-
-  GST_LOG_OBJECT (ffmpegdec, "dimension %dx%d, coded %dx%d", width, height,
-      coded_width, coded_height);
+  /* see if we need renegotiation */
+  if (G_UNLIKELY (!gst_ffmpegdec_video_negotiate (ffmpegdec, FALSE)))
+    goto negotiate_failed;
 
   if (!ffmpegdec->current_dr)
     goto no_dr;
 
-  /* take final clipped output size */
-  if ((clip_width = ffmpegdec->format.video.clip_width) == -1)
-    clip_width = width;
-  if ((clip_height = ffmpegdec->format.video.clip_height) == -1)
-    clip_height = height;
-
-  GST_LOG_OBJECT (ffmpegdec, "raw outsize %d/%d", width, height);
-
-  /* this is the size ffmpeg needs for the buffer */
-  avcodec_align_dimensions (context, &width, &height);
-
-  GST_LOG_OBJECT (ffmpegdec, "aligned outsize %d/%d, clip %d/%d",
-      width, height, clip_width, clip_height);
-
-  /* We can't alloc if we need to clip the output buffer later */
-  if (width != clip_width || height != clip_height)
-    goto need_clipping;
-
   /* alloc with aligned dimensions for ffmpeg */
-  ret = alloc_output_buffer (ffmpegdec, &buf, width, height);
+  GST_LOG_OBJECT (ffmpegdec, "doing alloc from pool");
+  ret = gst_buffer_pool_acquire_buffer (ffmpegdec->pool, &buf, NULL);
   if (G_UNLIKELY (ret != GST_FLOW_OK))
     goto alloc_failed;
+
+  /* take width and height before clipping */
+  width = ffmpegdec->pool_info.width;
+  height = ffmpegdec->pool_info.height;
+  GST_LOG_OBJECT (ffmpegdec, "pool dimension %dx%d", width, height);
 
   /* FIXME, unmap me later */
   data = gst_buffer_map (buf, &size, NULL, GST_MAP_WRITE);
   GST_LOG_OBJECT (ffmpegdec, "buffer data %p, size %" G_GSIZE_FORMAT, data,
       size);
+
+  edge =
+      ffmpegdec->context->
+      flags & CODEC_FLAG_EMU_EDGE ? 0 : avcodec_get_edge_width ();
+  data += (edge * width) + edge;
 
   /* copy the right pointers and strides in the picture object */
   gst_ffmpeg_avpicture_fill ((AVPicture *) picture,
@@ -1030,14 +963,14 @@ gst_ffmpegdec_get_buffer (AVCodecContext * context, AVFrame * picture)
   return 0;
 
   /* fallbacks */
+negotiate_failed:
+  {
+    GST_DEBUG_OBJECT (ffmpegdec, "negotiate failed");
+    goto fallback;
+  }
 no_dr:
   {
     GST_LOG_OBJECT (ffmpegdec, "direct rendering disabled, fallback alloc");
-    goto fallback;
-  }
-need_clipping:
-  {
-    GST_LOG_OBJECT (ffmpegdec, "we need clipping, fallback alloc");
     goto fallback;
   }
 alloc_failed:
@@ -1084,8 +1017,7 @@ gst_ffmpegdec_release_buffer (AVCodecContext * context, AVFrame * picture)
 }
 
 static void
-gst_ffmpegdec_add_pixel_aspect_ratio (GstFFMpegDec * ffmpegdec,
-    GstStructure * s)
+gst_ffmpegdec_update_par (GstFFMpegDec * ffmpegdec, gint * par_n, gint * par_d)
 {
   gboolean demuxer_par_set = FALSE;
   gboolean decoder_par_set = FALSE;
@@ -1094,18 +1026,17 @@ gst_ffmpegdec_add_pixel_aspect_ratio (GstFFMpegDec * ffmpegdec,
 
   GST_OBJECT_LOCK (ffmpegdec);
 
-  if (ffmpegdec->par) {
-    demuxer_num = gst_value_get_fraction_numerator (ffmpegdec->par);
-    demuxer_denom = gst_value_get_fraction_denominator (ffmpegdec->par);
+  if (ffmpegdec->in_par_n && ffmpegdec->in_par_d) {
+    demuxer_num = ffmpegdec->in_par_n;
+    demuxer_denom = ffmpegdec->in_par_d;
     demuxer_par_set = TRUE;
     GST_DEBUG_OBJECT (ffmpegdec, "Demuxer PAR: %d:%d", demuxer_num,
         demuxer_denom);
   }
 
-  if (ffmpegdec->context->sample_aspect_ratio.num &&
-      ffmpegdec->context->sample_aspect_ratio.den) {
-    decoder_num = ffmpegdec->context->sample_aspect_ratio.num;
-    decoder_denom = ffmpegdec->context->sample_aspect_ratio.den;
+  if (ffmpegdec->ctx_par_n && ffmpegdec->ctx_par_d) {
+    decoder_num = ffmpegdec->ctx_par_n;
+    decoder_denom = ffmpegdec->ctx_par_d;
     decoder_par_set = TRUE;
     GST_DEBUG_OBJECT (ffmpegdec, "Decoder PAR: %d:%d", decoder_num,
         decoder_denom);
@@ -1139,8 +1070,8 @@ use_decoder_par:
     GST_DEBUG_OBJECT (ffmpegdec,
         "Setting decoder provided pixel-aspect-ratio of %u:%u", decoder_num,
         decoder_denom);
-    gst_structure_set (s, "pixel-aspect-ratio", GST_TYPE_FRACTION, decoder_num,
-        decoder_denom, NULL);
+    *par_n = decoder_num;
+    *par_d = decoder_denom;
     return;
   }
 
@@ -1149,25 +1080,57 @@ use_demuxer_par:
     GST_DEBUG_OBJECT (ffmpegdec,
         "Setting demuxer provided pixel-aspect-ratio of %u:%u", demuxer_num,
         demuxer_denom);
-    gst_structure_set (s, "pixel-aspect-ratio", GST_TYPE_FRACTION, demuxer_num,
-        demuxer_denom, NULL);
+    *par_n = demuxer_num;
+    *par_d = demuxer_denom;
     return;
   }
 no_par:
   {
     GST_DEBUG_OBJECT (ffmpegdec,
         "Neither demuxer nor codec provide a pixel-aspect-ratio");
+    *par_n = 1;
+    *par_d = 1;
     return;
   }
 }
 
 static gboolean
-gst_ffmpegdec_bufferpool (GstFFMpegDec * ffmpegdec, GstCaps * caps)
+gst_ffmpegdec_bufferpool (GstFFMpegDec * ffmpegdec)
 {
   GstQuery *query;
   GstBufferPool *pool = NULL;
   guint size, min, max, prefix, alignment;
   GstStructure *config;
+  gint width, height;
+  GstVideoInfo info;
+  gint linesize_align[4];
+  guint edge;
+  GstCaps *caps;
+
+  width = ffmpegdec->ctx_width;
+  height = ffmpegdec->ctx_height;
+
+  /* let ffmpeg find the alignment and padding */
+  avcodec_align_dimensions2 (ffmpegdec->context, &width, &height,
+      linesize_align);
+  edge =
+      ffmpegdec->context->
+      flags & CODEC_FLAG_EMU_EDGE ? 0 : avcodec_get_edge_width ();
+  /* increase the size for the padding */
+  width += edge << 1;
+  height += edge << 1;
+
+  /* make a new info with padded width/height */
+  gst_video_info_init (&info);
+  gst_video_info_set_format (&info,
+      GST_VIDEO_INFO_FORMAT (&ffmpegdec->out_info), width, height);
+  /* and turn into caps for the allocator */
+  caps = gst_video_info_to_caps (&info);
+
+  GST_DEBUG_OBJECT (ffmpegdec, "padded caps %" GST_PTR_FORMAT, caps);
+
+  /* and store */
+  ffmpegdec->pool_info = info;
 
   /* find a pool for the negotiated caps now */
   query = gst_query_new_allocation (caps, TRUE);
@@ -1177,8 +1140,7 @@ gst_ffmpegdec_bufferpool (GstFFMpegDec * ffmpegdec, GstCaps * caps)
     gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
         &alignment, &pool);
   } else {
-    size = gst_ffmpeg_avpicture_get_size (ffmpegdec->context->pix_fmt,
-        ffmpegdec->context->width, ffmpegdec->context->height);
+    size = info.size;
     min = max = 0;
     prefix = 0;
     alignment = 15;
@@ -1207,116 +1169,147 @@ gst_ffmpegdec_bufferpool (GstFFMpegDec * ffmpegdec, GstCaps * caps)
 }
 
 static gboolean
-gst_ffmpegdec_negotiate (GstFFMpegDec * ffmpegdec, gboolean force)
+update_video_context (GstFFMpegDec * ffmpegdec, gboolean force)
+{
+  if (!force && ffmpegdec->ctx_width == ffmpegdec->context->width
+      && ffmpegdec->ctx_height == ffmpegdec->context->height
+      && ffmpegdec->ctx_ticks == ffmpegdec->context->ticks_per_frame
+      && ffmpegdec->ctx_time_n == ffmpegdec->context->time_base.num
+      && ffmpegdec->ctx_time_d == ffmpegdec->context->time_base.den
+      && ffmpegdec->ctx_pix_fmt == ffmpegdec->context->pix_fmt
+      && ffmpegdec->ctx_par_n == ffmpegdec->context->sample_aspect_ratio.num
+      && ffmpegdec->ctx_par_d == ffmpegdec->context->sample_aspect_ratio.den)
+    return FALSE;
+
+  GST_DEBUG_OBJECT (ffmpegdec,
+      "Renegotiating video from %dx%d@ %d:%d PAR %d/%d fps to %dx%d@ %d:%d PAR %d/%d fps",
+      ffmpegdec->ctx_width, ffmpegdec->ctx_height,
+      ffmpegdec->ctx_par_n, ffmpegdec->ctx_par_d,
+      ffmpegdec->ctx_time_n, ffmpegdec->ctx_time_d,
+      ffmpegdec->context->width, ffmpegdec->context->height,
+      ffmpegdec->context->sample_aspect_ratio.num,
+      ffmpegdec->context->sample_aspect_ratio.den,
+      ffmpegdec->context->time_base.num, ffmpegdec->context->time_base.den);
+
+  ffmpegdec->ctx_width = ffmpegdec->context->width;
+  ffmpegdec->ctx_height = ffmpegdec->context->height;
+  ffmpegdec->ctx_ticks = ffmpegdec->context->ticks_per_frame;
+  ffmpegdec->ctx_time_n = ffmpegdec->context->time_base.num;
+  ffmpegdec->ctx_time_d = ffmpegdec->context->time_base.den;
+  ffmpegdec->ctx_pix_fmt = ffmpegdec->context->pix_fmt;
+  ffmpegdec->ctx_par_n = ffmpegdec->context->sample_aspect_ratio.num;
+  ffmpegdec->ctx_par_d = ffmpegdec->context->sample_aspect_ratio.den;
+
+  return TRUE;
+}
+
+static gboolean
+update_audio_context (GstFFMpegDec * ffmpegdec, gboolean force)
+{
+  gint depth;
+
+  depth = av_smp_format_depth (ffmpegdec->context->sample_fmt);
+
+  if (!force && ffmpegdec->format.audio.samplerate ==
+      ffmpegdec->context->sample_rate &&
+      ffmpegdec->format.audio.channels == ffmpegdec->context->channels &&
+      ffmpegdec->format.audio.depth == depth)
+    return FALSE;
+
+  GST_DEBUG_OBJECT (ffmpegdec,
+      "Renegotiating audio from %dHz@%dchannels (%d) to %dHz@%dchannels (%d)",
+      ffmpegdec->format.audio.samplerate, ffmpegdec->format.audio.channels,
+      ffmpegdec->format.audio.depth,
+      ffmpegdec->context->sample_rate, ffmpegdec->context->channels, depth);
+
+  ffmpegdec->format.audio.samplerate = ffmpegdec->context->sample_rate;
+  ffmpegdec->format.audio.channels = ffmpegdec->context->channels;
+  ffmpegdec->format.audio.depth = depth;
+
+  return TRUE;
+}
+
+static gboolean
+gst_ffmpegdec_video_negotiate (GstFFMpegDec * ffmpegdec, gboolean force)
 {
   GstFFMpegDecClass *oclass;
   GstCaps *caps;
+  gint width, height;
+  gint fps_n, fps_d;
+  GstVideoInfo info;
+  GstVideoFormat fmt;
 
   oclass = (GstFFMpegDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
 
-  switch (oclass->in_plugin->type) {
-    case AVMEDIA_TYPE_VIDEO:
-      if (!force && ffmpegdec->format.video.width == ffmpegdec->context->width
-          && ffmpegdec->format.video.height == ffmpegdec->context->height
-          && ffmpegdec->format.video.fps_n == ffmpegdec->format.video.old_fps_n
-          && ffmpegdec->format.video.fps_d == ffmpegdec->format.video.old_fps_d
-          && ffmpegdec->format.video.pix_fmt == ffmpegdec->context->pix_fmt
-          && ffmpegdec->format.video.par_n ==
-          ffmpegdec->context->sample_aspect_ratio.num
-          && ffmpegdec->format.video.par_d ==
-          ffmpegdec->context->sample_aspect_ratio.den)
-        return TRUE;
-      GST_DEBUG_OBJECT (ffmpegdec,
-          "Renegotiating video from %dx%d@ %d:%d PAR %d/%d fps to %dx%d@ %d:%d PAR %d/%d fps",
-          ffmpegdec->format.video.width, ffmpegdec->format.video.height,
-          ffmpegdec->format.video.par_n, ffmpegdec->format.video.par_d,
-          ffmpegdec->format.video.old_fps_n, ffmpegdec->format.video.old_fps_n,
-          ffmpegdec->context->width, ffmpegdec->context->height,
-          ffmpegdec->context->sample_aspect_ratio.num,
-          ffmpegdec->context->sample_aspect_ratio.den,
-          ffmpegdec->format.video.fps_n, ffmpegdec->format.video.fps_d);
-      ffmpegdec->format.video.width = ffmpegdec->context->width;
-      ffmpegdec->format.video.height = ffmpegdec->context->height;
-      ffmpegdec->format.video.old_fps_n = ffmpegdec->format.video.fps_n;
-      ffmpegdec->format.video.old_fps_d = ffmpegdec->format.video.fps_d;
-      ffmpegdec->format.video.pix_fmt = ffmpegdec->context->pix_fmt;
-      ffmpegdec->format.video.par_n =
-          ffmpegdec->context->sample_aspect_ratio.num;
-      ffmpegdec->format.video.par_d =
-          ffmpegdec->context->sample_aspect_ratio.den;
-      break;
-    case AVMEDIA_TYPE_AUDIO:
-    {
-      gint depth = av_smp_format_depth (ffmpegdec->context->sample_fmt);
-      if (!force && ffmpegdec->format.audio.samplerate ==
-          ffmpegdec->context->sample_rate &&
-          ffmpegdec->format.audio.channels == ffmpegdec->context->channels &&
-          ffmpegdec->format.audio.depth == depth)
-        return TRUE;
-      GST_DEBUG_OBJECT (ffmpegdec,
-          "Renegotiating audio from %dHz@%dchannels (%d) to %dHz@%dchannels (%d)",
-          ffmpegdec->format.audio.samplerate, ffmpegdec->format.audio.channels,
-          ffmpegdec->format.audio.depth,
-          ffmpegdec->context->sample_rate, ffmpegdec->context->channels, depth);
-      ffmpegdec->format.audio.samplerate = ffmpegdec->context->sample_rate;
-      ffmpegdec->format.audio.channels = ffmpegdec->context->channels;
-      ffmpegdec->format.audio.depth = depth;
+  /* first check if anything changed */
+  if (!update_video_context (ffmpegdec, force))
+    return TRUE;
+
+  /* now we're going to construct the video info for the final output
+   * format */
+  gst_video_info_init (&info);
+
+  fmt = gst_ffmpeg_pixfmt_to_video_format (ffmpegdec->ctx_pix_fmt);
+  if (fmt == GST_VIDEO_FORMAT_UNKNOWN)
+    goto unknown_format;
+
+  /* determine the width and height, start with the dimension of the
+   * context */
+  width = ffmpegdec->ctx_width;
+  height = ffmpegdec->ctx_height;
+
+  /* if there is a width/height specified in the input, use that */
+  if (ffmpegdec->in_width != -1 && ffmpegdec->in_width < width)
+    width = ffmpegdec->in_width;
+  if (ffmpegdec->in_height != -1 && ffmpegdec->in_height < height)
+    height = ffmpegdec->in_height;
+
+  /* now store the values */
+  gst_video_info_set_format (&info, fmt, width, height);
+
+  /* set the interlaced flag */
+  if (ffmpegdec->ctx_interlaced)
+    info.flags |= GST_VIDEO_FLAG_INTERLACED;
+  else
+    info.flags &= ~GST_VIDEO_FLAG_INTERLACED;
+
+  /* try to find a good framerate */
+  if (ffmpegdec->in_fps_d) {
+    /* take framerate from input when it was specified (#313970) */
+    fps_n = ffmpegdec->in_fps_n;
+    fps_d = ffmpegdec->in_fps_d;
+  } else {
+    fps_n = ffmpegdec->ctx_time_d / ffmpegdec->ctx_ticks;
+    fps_d = ffmpegdec->ctx_time_n;
+
+    if (!fps_d) {
+      GST_LOG_OBJECT (ffmpegdec, "invalid framerate: %d/0, -> %d/1", fps_n,
+          fps_n);
+      fps_d = 1;
     }
-      break;
-    default:
-      break;
+    if (gst_util_fraction_compare (fps_n, fps_d, 1000, 1) > 0) {
+      GST_LOG_OBJECT (ffmpegdec, "excessive framerate: %d/%d, -> 0/1", fps_n,
+          fps_d);
+      fps_n = 0;
+      fps_d = 1;
+    }
   }
+  GST_LOG_OBJECT (ffmpegdec, "setting framerate: %d/%d", fps_n, fps_d);
+  info.fps_n = fps_n;
+  info.fps_d = fps_d;
 
-  caps = gst_ffmpeg_codectype_to_caps (oclass->in_plugin->type,
-      ffmpegdec->context, oclass->in_plugin->id, FALSE);
+  /* calculate and update par now */
+  gst_ffmpegdec_update_par (ffmpegdec, &info.par_n, &info.par_d);
 
-  if (caps == NULL)
-    goto no_caps;
-
-  switch (oclass->in_plugin->type) {
-    case AVMEDIA_TYPE_VIDEO:
-    {
-      gint width, height;
-      gboolean interlaced;
-
-      width = ffmpegdec->format.video.clip_width;
-      height = ffmpegdec->format.video.clip_height;
-      interlaced = ffmpegdec->format.video.interlaced;
-
-      if (width != -1 && height != -1) {
-        /* overwrite the output size with the dimension of the
-         * clipping region but only if they are smaller. */
-        if (width < ffmpegdec->context->width)
-          gst_caps_set_simple (caps, "width", G_TYPE_INT, width, NULL);
-        if (height < ffmpegdec->context->height)
-          gst_caps_set_simple (caps, "height", G_TYPE_INT, height, NULL);
-      }
-      gst_caps_set_simple (caps, "interlaced", G_TYPE_BOOLEAN, interlaced,
-          NULL);
-
-      /* If a demuxer provided a framerate then use it (#313970) */
-      if (ffmpegdec->format.video.fps_n != -1) {
-        gst_caps_set_simple (caps, "framerate",
-            GST_TYPE_FRACTION, ffmpegdec->format.video.fps_n,
-            ffmpegdec->format.video.fps_d, NULL);
-      }
-      gst_ffmpegdec_add_pixel_aspect_ratio (ffmpegdec,
-          gst_caps_get_structure (caps, 0));
-      break;
-    }
-    case AVMEDIA_TYPE_AUDIO:
-    {
-      break;
-    }
-    default:
-      break;
-  }
+  caps = gst_video_info_to_caps (&info);
 
   if (!gst_pad_set_caps (ffmpegdec->srcpad, caps))
     goto caps_failed;
 
+  ffmpegdec->out_info = info;
+
   /* now figure out a bufferpool */
-  if (!gst_ffmpegdec_bufferpool (ffmpegdec, caps))
+  if (!gst_ffmpegdec_bufferpool (ffmpegdec))
     goto no_bufferpool;
 
   gst_caps_unref (caps);
@@ -1324,7 +1317,7 @@ gst_ffmpegdec_negotiate (GstFFMpegDec * ffmpegdec, gboolean force)
   return TRUE;
 
   /* ERRORS */
-no_caps:
+unknown_format:
   {
 #ifdef HAVE_FFMPEG_UNINSTALLED
     /* using internal ffmpeg snapshot */
@@ -1357,6 +1350,64 @@ no_bufferpool:
   {
     GST_ELEMENT_ERROR (ffmpegdec, CORE, NEGOTIATION, (NULL),
         ("Could not create bufferpool for fmpeg decoder (%s)",
+            oclass->in_plugin->name));
+    gst_caps_unref (caps);
+
+    return FALSE;
+  }
+}
+
+static gboolean
+gst_ffmpegdec_audio_negotiate (GstFFMpegDec * ffmpegdec, gboolean force)
+{
+  GstFFMpegDecClass *oclass;
+  GstCaps *caps;
+
+  oclass = (GstFFMpegDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
+
+  if (!update_audio_context (ffmpegdec, force))
+    return TRUE;
+
+  /* convert the raw output format to caps */
+  caps = gst_ffmpeg_codectype_to_caps (oclass->in_plugin->type,
+      ffmpegdec->context, oclass->in_plugin->id, FALSE);
+  if (caps == NULL)
+    goto no_caps;
+
+  GST_LOG_OBJECT (ffmpegdec, "output caps %" GST_PTR_FORMAT, caps);
+
+  if (!gst_pad_set_caps (ffmpegdec->srcpad, caps))
+    goto caps_failed;
+
+  gst_caps_unref (caps);
+
+  return TRUE;
+
+  /* ERRORS */
+no_caps:
+  {
+#ifdef HAVE_FFMPEG_UNINSTALLED
+    /* using internal ffmpeg snapshot */
+    GST_ELEMENT_ERROR (ffmpegdec, CORE, NEGOTIATION,
+        ("Could not find GStreamer caps mapping for FFmpeg codec '%s'.",
+            oclass->in_plugin->name), (NULL));
+#else
+    /* using external ffmpeg */
+    GST_ELEMENT_ERROR (ffmpegdec, CORE, NEGOTIATION,
+        ("Could not find GStreamer caps mapping for FFmpeg codec '%s', and "
+            "you are using an external libavcodec. This is most likely due to "
+            "a packaging problem and/or libavcodec having been upgraded to a "
+            "version that is not compatible with this version of "
+            "gstreamer-ffmpeg. Make sure your gstreamer-ffmpeg and libavcodec "
+            "packages come from the same source/repository.",
+            oclass->in_plugin->name), (NULL));
+#endif
+    return FALSE;
+  }
+caps_failed:
+  {
+    GST_ELEMENT_ERROR (ffmpegdec, CORE, NEGOTIATION, (NULL),
+        ("Could not set caps for ffmpeg decoder (%s), not fixed?",
             oclass->in_plugin->name));
     gst_caps_unref (caps);
 
@@ -1570,22 +1621,12 @@ get_output_buffer (GstFFMpegDec * ffmpegdec, GstBuffer ** outbuf)
 
     GST_LOG_OBJECT (ffmpegdec, "get output buffer");
 
-    /* figure out size of output buffer, this is the clipped output size because
-     * we will copy the picture into it but only when the clipping region is
-     * smaller than the actual picture size. */
-    if ((width = ffmpegdec->format.video.clip_width) == -1)
-      width = ffmpegdec->context->width;
-    else if (width > ffmpegdec->context->width)
-      width = ffmpegdec->context->width;
+    width = ffmpegdec->out_info.width;
+    height = ffmpegdec->out_info.height;
 
-    if ((height = ffmpegdec->format.video.clip_height) == -1)
-      height = ffmpegdec->context->height;
-    else if (height > ffmpegdec->context->height)
-      height = ffmpegdec->context->height;
+    GST_LOG_OBJECT (ffmpegdec, "width %d/height %d", width, height);
 
-    GST_LOG_OBJECT (ffmpegdec, "clip width %d/height %d", width, height);
-
-    ret = alloc_output_buffer (ffmpegdec, outbuf, width, height);
+    ret = gst_buffer_pool_acquire_buffer (ffmpegdec->pool, outbuf, NULL);
     if (G_UNLIKELY (ret != GST_FLOW_OK))
       goto alloc_failed;
 
@@ -1786,12 +1827,11 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
       ffmpegdec->picture->interlaced_frame);
 
   if (G_UNLIKELY (ffmpegdec->picture->interlaced_frame !=
-          ffmpegdec->format.video.interlaced)) {
+          ffmpegdec->ctx_interlaced)) {
     GST_WARNING ("Change in interlacing ! picture:%d, recorded:%d",
-        ffmpegdec->picture->interlaced_frame,
-        ffmpegdec->format.video.interlaced);
-    ffmpegdec->format.video.interlaced = ffmpegdec->picture->interlaced_frame;
-    gst_ffmpegdec_negotiate (ffmpegdec, TRUE);
+        ffmpegdec->picture->interlaced_frame, ffmpegdec->ctx_interlaced);
+    ffmpegdec->ctx_interlaced = ffmpegdec->picture->interlaced_frame;
+    gst_ffmpegdec_video_negotiate (ffmpegdec, TRUE);
   }
 
   /* check if we are dealing with a keyframe here, this will also check if we
@@ -1929,12 +1969,11 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
     out_duration = ffmpegdec->last_diff;
   } else {
     /* if we have an input framerate, use that */
-    if (ffmpegdec->format.video.fps_n != -1 &&
-        (ffmpegdec->format.video.fps_n != 1000 &&
-            ffmpegdec->format.video.fps_d != 1)) {
+    if (ffmpegdec->out_info.fps_n != -1 &&
+        (ffmpegdec->out_info.fps_n != 1000 && ffmpegdec->out_info.fps_d != 1)) {
       GST_LOG_OBJECT (ffmpegdec, "using input framerate for duration");
       out_duration = gst_util_uint64_scale_int (GST_SECOND,
-          ffmpegdec->format.video.fps_d, ffmpegdec->format.video.fps_n);
+          ffmpegdec->out_info.fps_d, ffmpegdec->out_info.fps_n);
     } else {
       /* don't try to use the decoder's framerate when it seems a bit abnormal,
        * which we assume when den >= 1000... */
@@ -2119,7 +2158,7 @@ gst_ffmpegdec_audio_frame (GstFFMpegDec * ffmpegdec,
     gst_buffer_unmap (*outbuf, odata, have_data);
 
     GST_DEBUG_OBJECT (ffmpegdec, "Creating output buffer");
-    if (!gst_ffmpegdec_negotiate (ffmpegdec, FALSE)) {
+    if (!gst_ffmpegdec_audio_negotiate (ffmpegdec, FALSE)) {
       gst_buffer_unref (*outbuf);
       *outbuf = NULL;
       len = -1;
