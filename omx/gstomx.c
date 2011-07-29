@@ -1124,6 +1124,9 @@ gst_omx_port_set_flushing (GstOMXPort * port, gboolean flush)
     if (port->port_def.eDir == OMX_DirOutput && port->buffers) {
       GstOMXBuffer *buf;
 
+      /* FIXME: Workaround for QCOM 7x30 race condition */
+      g_usleep (G_USEC_PER_SEC / 10);
+
       /* Enqueue all buffers for the component to fill */
       while ((buf = g_queue_pop_head (port->pending_buffers))) {
         g_assert (!buf->used);
