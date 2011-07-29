@@ -32,6 +32,7 @@
 #include "gstomxwmvdec.h"
 #include "gstomxmpeg4videoenc.h"
 #include "gstomxh264enc.h"
+#include "gstomxh263enc.h"
 
 GST_DEBUG_CATEGORY (gstomx_debug);
 #define GST_CAT_DEFAULT gstomx_debug
@@ -1701,7 +1702,8 @@ GQuark gst_omx_element_name_quark = 0;
 static GType (*types[]) (void) = {
 gst_omx_mpeg4_video_dec_get_type, gst_omx_h264_dec_get_type,
       gst_omx_h263_dec_get_type, gst_omx_wmv_dec_get_type,
-      gst_omx_mpeg4_video_enc_get_type, gst_omx_h264_enc_get_type};
+      gst_omx_mpeg4_video_enc_get_type, gst_omx_h264_enc_get_type,
+      gst_omx_h263_enc_get_type};
 
 static GKeyFile *config = NULL;
 GKeyFile *
