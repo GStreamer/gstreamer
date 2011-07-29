@@ -889,16 +889,16 @@ open_failed:
   }
 }
 
+/* called when ffmpeg wants us to allocate a buffer to write the decoded frame
+ * into. We try to give it memory from our pool */
 static int
 gst_ffmpegdec_get_buffer (AVCodecContext * context, AVFrame * picture)
 {
   GstBuffer *buf = NULL;
   GstFFMpegDec *ffmpegdec;
-  gint width, height;
   GstFlowReturn ret;
-  guint8 *data;
-  gsize size;
-  guint edge;
+  GstVideoFrame *frame;
+  guint i;
 
   ffmpegdec = (GstFFMpegDec *) context->opaque;
 
@@ -924,35 +924,48 @@ gst_ffmpegdec_get_buffer (AVCodecContext * context, AVFrame * picture)
   if (G_UNLIKELY (ret != GST_FLOW_OK))
     goto alloc_failed;
 
-  /* take width and height before clipping */
-  width = ffmpegdec->pool_info.width;
-  height = ffmpegdec->pool_info.height;
-  GST_LOG_OBJECT (ffmpegdec, "pool dimension %dx%d", width, height);
+  frame = g_slice_new (GstVideoFrame);
+  if (!gst_video_frame_map (frame, &ffmpegdec->pool_info, buf,
+          GST_MAP_READWRITE))
+    goto invalid_frame;
 
-  /* FIXME, unmap me later */
-  data = gst_buffer_map (buf, &size, NULL, GST_MAP_WRITE);
-  GST_LOG_OBJECT (ffmpegdec, "buffer data %p, size %" G_GSIZE_FORMAT, data,
-      size);
+  /* setup data pointers and strides */
+  for (i = 0; i < GST_VIDEO_FRAME_N_PLANES (frame); i++) {
+    picture->data[i] = GST_VIDEO_FRAME_PLANE_DATA (frame, i);
+    picture->linesize[i] = GST_VIDEO_FRAME_PLANE_STRIDE (frame, i);
 
-  edge = context->flags & CODEC_FLAG_EMU_EDGE ? 0 : avcodec_get_edge_width ();
-  data += (edge * width) + edge;
+    GST_LOG_OBJECT (ffmpegdec, "plane %d: data %p, linesize %d", i,
+        picture->data[i], picture->linesize[i]);
+  }
 
-  /* copy the right pointers and strides in the picture object */
-  gst_ffmpeg_avpicture_fill ((AVPicture *) picture,
-      data, context->pix_fmt, width, height);
+  /* adjust for the borders */
+  if (!(context->flags & CODEC_FLAG_EMU_EDGE)) {
+    gint edge = avcodec_get_edge_width ();
+    const GstVideoFormatInfo *vinfo = frame->info.finfo;
+
+    /* FIXME, not quite correct, NV12 would apply the vedge twice on the second
+     * plane */
+    for (i = 0; i < GST_VIDEO_FRAME_N_COMPONENTS (frame); i++) {
+      gint vedge, hedge, plane;
+
+      hedge = GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (vinfo, i, edge);
+      vedge = GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (vinfo, i, edge);
+      plane = GST_VIDEO_FORMAT_INFO_PLANE (vinfo, i);
+
+      GST_LOG_OBJECT (ffmpegdec, "comp %d, plane %d: hedge %d, vedge %d", i,
+          plane, hedge, vedge);
+
+      picture->data[plane] += (vedge * picture->linesize[plane]) + hedge;
+    }
+  }
 
   /* tell ffmpeg we own this buffer, tranfer the ref we have on the buffer to
    * the opaque data. */
   picture->type = FF_BUFFER_TYPE_USER;
   picture->age = 256 * 256 * 256 * 64;
-  picture->opaque = buf;
+  picture->opaque = frame;
 
-  GST_LOG_OBJECT (ffmpegdec, "returned buffer %p", buf);
-  GST_LOG_OBJECT (ffmpegdec, "linsize %d %d %d", picture->linesize[0],
-      picture->linesize[1], picture->linesize[2]);
-  GST_LOG_OBJECT (ffmpegdec, "data %u %u %u", 0,
-      (guint) (picture->data[1] - picture->data[0]),
-      (guint) (picture->data[2] - picture->data[0]));
+  GST_LOG_OBJECT (ffmpegdec, "returned buffer %p in frame %p", buf, frame);
 
   return 0;
 
@@ -973,18 +986,28 @@ alloc_failed:
     GST_LOG_OBJECT (ffmpegdec, "alloc failed, fallback alloc");
     goto fallback;
   }
+invalid_frame:
+  {
+    /* alloc default buffer when we can't get one from downstream */
+    GST_LOG_OBJECT (ffmpegdec, "failed to map frame, fallback alloc");
+    gst_buffer_unref (buf);
+    g_slice_free (GstVideoFrame, frame);
+    goto fallback;
+  }
 fallback:
   {
     return avcodec_default_get_buffer (context, picture);
   }
 }
 
+/* called when ffmpeg is done with our buffer */
 static void
 gst_ffmpegdec_release_buffer (AVCodecContext * context, AVFrame * picture)
 {
   gint i;
   GstBuffer *buf;
   GstFFMpegDec *ffmpegdec;
+  GstVideoFrame *frame;
 
   ffmpegdec = (GstFFMpegDec *) context->opaque;
 
@@ -996,12 +1019,17 @@ gst_ffmpegdec_release_buffer (AVCodecContext * context, AVFrame * picture)
   }
 
   /* we remove the opaque data now */
-  buf = GST_BUFFER_CAST (picture->opaque);
-  GST_DEBUG_OBJECT (ffmpegdec, "release buffer %p", buf);
+  frame = picture->opaque;
   picture->opaque = NULL;
 
+  /* unmap buffer data */
+  gst_video_frame_unmap (frame);
+  buf = frame->buffer;
+
+  GST_DEBUG_OBJECT (ffmpegdec, "release buffer %p in frame %p", buf, frame);
+
+  g_slice_free (GstVideoFrame, frame);
   gst_buffer_unref (buf);
-  /* FIXME, unmap buffer data */
 
   /* zero out the reference in ffmpeg */
   for (i = 0; i < 4; i++) {
@@ -1108,8 +1136,8 @@ gst_ffmpegdec_bufferpool (GstFFMpegDec * ffmpegdec)
   avcodec_align_dimensions2 (ffmpegdec->context, &width, &height,
       linesize_align);
   edge =
-      ffmpegdec->
-      context->flags & CODEC_FLAG_EMU_EDGE ? 0 : avcodec_get_edge_width ();
+      ffmpegdec->context->
+      flags & CODEC_FLAG_EMU_EDGE ? 0 : avcodec_get_edge_width ();
   /* increase the size for the padding */
   width += edge << 1;
   height += edge << 1;
@@ -1597,6 +1625,7 @@ static GstFlowReturn
 get_output_buffer (GstFFMpegDec * ffmpegdec, GstBuffer ** outbuf)
 {
   GstFlowReturn ret;
+  GstVideoFrame *frame;
 
   ret = GST_FLOW_OK;
   *outbuf = NULL;
@@ -1604,7 +1633,8 @@ get_output_buffer (GstFFMpegDec * ffmpegdec, GstBuffer ** outbuf)
   if (ffmpegdec->picture->opaque != NULL) {
     /* we allocated a picture already for ffmpeg to decode into, let's pick it
      * up and use it now. */
-    *outbuf = (GstBuffer *) ffmpegdec->picture->opaque;
+    frame = ffmpegdec->picture->opaque;
+    *outbuf = frame->buffer;
     GST_LOG_OBJECT (ffmpegdec, "using opaque buffer %p", *outbuf);
     gst_buffer_ref (*outbuf);
   } else {
