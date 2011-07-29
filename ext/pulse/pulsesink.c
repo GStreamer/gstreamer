@@ -999,18 +999,21 @@ static gboolean
 gst_pulseringbuffer_release (GstRingBuffer * buf)
 {
   GstPulseRingBuffer *pbuf;
-  GstPulseSink *psink;
 
   pbuf = GST_PULSERING_BUFFER_CAST (buf);
-  psink = GST_PULSESINK_CAST (GST_OBJECT_PARENT (pbuf));
 
   pa_threaded_mainloop_lock (mainloop);
   gst_pulsering_destroy_stream (pbuf);
   pa_threaded_mainloop_unlock (mainloop);
 
 #ifdef HAVE_PULSE_1_0
-  g_atomic_int_set (&psink->format_lost, FALSE);
-  psink->format_lost_time = GST_CLOCK_TIME_NONE;
+  {
+    GstPulseSink *psink;
+
+    psink = GST_PULSESINK_CAST (GST_OBJECT_PARENT (pbuf));
+    g_atomic_int_set (&psink->format_lost, FALSE);
+    psink->format_lost_time = GST_CLOCK_TIME_NONE;
+  }
 #endif
 
   return TRUE;
