@@ -1922,7 +1922,6 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
     /* out_offset already contains the offset from ts_info */
     GST_LOG_OBJECT (ffmpegdec, "Using offset returned by ffmpeg");
   } else if (out_timestamp != GST_CLOCK_TIME_NONE) {
-    GstFormat out_fmt = GST_FORMAT_DEFAULT;
     GST_LOG_OBJECT (ffmpegdec, "Using offset converted from timestamp");
     /* FIXME, we should really remove this as it's not nice at all to do
      * upstream queries for each frame to get the frame offset. We also can't
@@ -1930,7 +1929,7 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
      * on outgoing buffers. We should have metadata so that the upstream peer
      * can set a frame number on the encoded data. */
     gst_pad_query_peer_convert (ffmpegdec->sinkpad,
-        GST_FORMAT_TIME, out_timestamp, &out_fmt, &out_offset);
+        GST_FORMAT_TIME, out_timestamp, GST_FORMAT_DEFAULT, &out_offset);
   } else if (dec_info->offset != GST_BUFFER_OFFSET_NONE) {
     /* FIXME, the input offset is input media specific and might not
      * be the same for the output media. (byte offset as input, frame number
