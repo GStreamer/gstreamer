@@ -17,7 +17,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include "gsttagmux.h"
+#include <gst/tag/gsttagmux.h>
 
 G_BEGIN_DECLS
 
