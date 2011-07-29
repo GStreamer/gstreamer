@@ -32,6 +32,7 @@
 
 #include "gst/video/video.h"
 #include "gst/video/gstmetavideo.h"
+#include "gst/video/gstvideopool.h"
 
 #include <gstv4l2bufferpool.h>
 
@@ -234,7 +235,8 @@ gst_v4l2_buffer_pool_set_config (GstBufferPool * bpool, GstStructure * config)
   GST_DEBUG_OBJECT (pool, "set config");
 
   pool->add_videometa =
-      gst_buffer_pool_config_has_meta (config, GST_META_API_VIDEO);
+      gst_buffer_pool_config_has_option (config,
+      GST_BUFFER_POOL_OPTION_META_VIDEO);
 
   if (!pool->add_videometa) {
     gint stride;
