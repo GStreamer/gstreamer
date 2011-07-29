@@ -889,45 +889,12 @@ open_failed:
   }
 }
 
-/* called when ffmpeg wants us to allocate a buffer to write the decoded frame
- * into. We try to give it memory from our pool */
-static int
-gst_ffmpegdec_get_buffer (AVCodecContext * context, AVFrame * picture)
+static void
+gst_ffmpegdec_fill_picture (GstFFMpegDec * ffmpegdec, GstVideoFrame * frame,
+    AVFrame * picture)
 {
-  GstBuffer *buf = NULL;
-  GstFFMpegDec *ffmpegdec;
-  GstFlowReturn ret;
-  GstVideoFrame *frame;
   guint i;
-
-  ffmpegdec = (GstFFMpegDec *) context->opaque;
-
-  GST_DEBUG_OBJECT (ffmpegdec, "getting buffer");
-
-  /* apply the last info we have seen to this picture, when we get the
-   * picture back from ffmpeg we can use this to correctly timestamp the output
-   * buffer */
-  picture->reordered_opaque = context->reordered_opaque;
-  /* make sure we don't free the buffer when it's not ours */
-  picture->opaque = NULL;
-
-  /* see if we need renegotiation */
-  if (G_UNLIKELY (!gst_ffmpegdec_video_negotiate (ffmpegdec, FALSE)))
-    goto negotiate_failed;
-
-  if (!ffmpegdec->current_dr)
-    goto no_dr;
-
-  /* alloc with aligned dimensions for ffmpeg */
-  GST_LOG_OBJECT (ffmpegdec, "doing alloc from pool");
-  ret = gst_buffer_pool_acquire_buffer (ffmpegdec->pool, &buf, NULL);
-  if (G_UNLIKELY (ret != GST_FLOW_OK))
-    goto alloc_failed;
-
-  frame = g_slice_new (GstVideoFrame);
-  if (!gst_video_frame_map (frame, &ffmpegdec->pool_info, buf,
-          GST_MAP_READWRITE))
-    goto invalid_frame;
+  AVCodecContext *context = ffmpegdec->context;
 
   /* setup data pointers and strides */
   for (i = 0; i < GST_VIDEO_FRAME_N_PLANES (frame); i++) {
@@ -958,14 +925,56 @@ gst_ffmpegdec_get_buffer (AVCodecContext * context, AVFrame * picture)
       picture->data[plane] += (vedge * picture->linesize[plane]) + hedge;
     }
   }
+}
+
+/* called when ffmpeg wants us to allocate a buffer to write the decoded frame
+ * into. We try to give it memory from our pool */
+static int
+gst_ffmpegdec_get_buffer (AVCodecContext * context, AVFrame * picture)
+{
+  GstBuffer *buf = NULL;
+  GstFFMpegDec *ffmpegdec;
+  GstFlowReturn ret;
+  GstVideoFrame frame;
+
+  ffmpegdec = (GstFFMpegDec *) context->opaque;
+
+  GST_DEBUG_OBJECT (ffmpegdec, "getting buffer");
+
+  /* apply the last info we have seen to this picture, when we get the
+   * picture back from ffmpeg we can use this to correctly timestamp the output
+   * buffer */
+  picture->reordered_opaque = context->reordered_opaque;
+  /* make sure we don't free the buffer when it's not ours */
+  picture->opaque = NULL;
+
+  /* see if we need renegotiation */
+  if (G_UNLIKELY (!gst_ffmpegdec_video_negotiate (ffmpegdec, FALSE)))
+    goto negotiate_failed;
+
+  if (!ffmpegdec->current_dr)
+    goto no_dr;
+
+  /* alloc with aligned dimensions for ffmpeg */
+  GST_LOG_OBJECT (ffmpegdec, "doing alloc from pool");
+  ret = gst_buffer_pool_acquire_buffer (ffmpegdec->pool, &buf, NULL);
+  if (G_UNLIKELY (ret != GST_FLOW_OK))
+    goto alloc_failed;
+
+  if (!gst_video_frame_map (&frame, &ffmpegdec->pool_info, buf,
+          GST_MAP_READWRITE))
+    goto invalid_frame;
+
+  gst_ffmpegdec_fill_picture (ffmpegdec, &frame, picture);
 
   /* tell ffmpeg we own this buffer, tranfer the ref we have on the buffer to
    * the opaque data. */
   picture->type = FF_BUFFER_TYPE_USER;
   picture->age = 256 * 256 * 256 * 64;
-  picture->opaque = frame;
+  picture->opaque = g_slice_dup (GstVideoFrame, &frame);
 
-  GST_LOG_OBJECT (ffmpegdec, "returned buffer %p in frame %p", buf, frame);
+  GST_LOG_OBJECT (ffmpegdec, "returned buffer %p in frame %p", buf,
+      picture->opaque);
 
   return 0;
 
@@ -991,7 +1000,6 @@ invalid_frame:
     /* alloc default buffer when we can't get one from downstream */
     GST_LOG_OBJECT (ffmpegdec, "failed to map frame, fallback alloc");
     gst_buffer_unref (buf);
-    g_slice_free (GstVideoFrame, frame);
     goto fallback;
   }
 fallback:
@@ -1626,62 +1634,71 @@ static GstFlowReturn
 get_output_buffer (GstFFMpegDec * ffmpegdec, GstBuffer ** outbuf)
 {
   GstFlowReturn ret;
-  GstVideoFrame *frame;
-
-  ret = GST_FLOW_OK;
-  *outbuf = NULL;
 
   if (ffmpegdec->picture->opaque != NULL) {
+    GstVideoFrame *frame;
+
     /* we allocated a picture already for ffmpeg to decode into, let's pick it
      * up and use it now. */
     frame = ffmpegdec->picture->opaque;
     *outbuf = frame->buffer;
-    GST_LOG_OBJECT (ffmpegdec, "using opaque buffer %p", *outbuf);
+    GST_LOG_OBJECT (ffmpegdec, "using opaque buffer %p on frame %p", *outbuf,
+        frame);
     gst_buffer_ref (*outbuf);
   } else {
-    AVPicture pic, *outpic;
+    GstVideoFrame frame;
+    AVPicture *src, *dest;
+    AVFrame pic;
     gint width, height;
-    guint8 *data;
-    gsize size;
+    GstBuffer *buf;
 
     GST_LOG_OBJECT (ffmpegdec, "get output buffer");
+
+    if (G_UNLIKELY (!gst_ffmpegdec_video_negotiate (ffmpegdec, FALSE)))
+      goto negotiate_failed;
+
+    ret = gst_buffer_pool_acquire_buffer (ffmpegdec->pool, &buf, NULL);
+    if (G_UNLIKELY (ret != GST_FLOW_OK))
+      goto alloc_failed;
+
+    if (!gst_video_frame_map (&frame, &ffmpegdec->pool_info, buf,
+            GST_MAP_READWRITE))
+      goto invalid_frame;
+
+    gst_ffmpegdec_fill_picture (ffmpegdec, &frame, &pic);
 
     width = ffmpegdec->out_info.width;
     height = ffmpegdec->out_info.height;
 
-    GST_LOG_OBJECT (ffmpegdec, "width %d/height %d", width, height);
+    src = (AVPicture *) ffmpegdec->picture;
+    dest = (AVPicture *) & pic;
 
-    ret = gst_buffer_pool_acquire_buffer (ffmpegdec->pool, outbuf, NULL);
-    if (G_UNLIKELY (ret != GST_FLOW_OK))
-      goto alloc_failed;
+    GST_LOG_OBJECT (ffmpegdec, "copy width %d/height %d", width, height);
+    av_picture_copy (dest, src, ffmpegdec->context->pix_fmt, width, height);
 
-    /* original ffmpeg code does not handle odd sizes correctly.
-     * This patched up version does */
-    data = gst_buffer_map (*outbuf, &size, NULL, GST_MAP_WRITE);
+    gst_video_frame_unmap (&frame);
 
-    gst_ffmpeg_avpicture_fill (&pic, data,
-        ffmpegdec->context->pix_fmt, width, height);
-
-    outpic = (AVPicture *) ffmpegdec->picture;
-
-    GST_LOG_OBJECT (ffmpegdec, "linsize %d %d %d", outpic->linesize[0],
-        outpic->linesize[1], outpic->linesize[2]);
-    GST_LOG_OBJECT (ffmpegdec, "data %u %u %u", 0,
-        (guint) (outpic->data[1] - outpic->data[0]),
-        (guint) (outpic->data[2] - outpic->data[0]));
-
-    av_picture_copy (&pic, outpic, ffmpegdec->context->pix_fmt, width, height);
-    gst_buffer_unmap (*outbuf, data, size);
+    *outbuf = buf;
   }
   ffmpegdec->picture->reordered_opaque = -1;
 
-  return ret;
+  return GST_FLOW_OK;
 
   /* special cases */
+negotiate_failed:
+  {
+    GST_DEBUG_OBJECT (ffmpegdec, "negotiation failed");
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
 alloc_failed:
   {
     GST_DEBUG_OBJECT (ffmpegdec, "buffer alloc failed");
     return ret;
+  }
+invalid_frame:
+  {
+    GST_DEBUG_OBJECT (ffmpegdec, "could not map frame");
+    return GST_FLOW_ERROR;
   }
 }
 
