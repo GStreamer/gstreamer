@@ -1822,6 +1822,21 @@ gst_tag_demux_result_get_type
 </SECTION>
 
 <SECTION>
+<FILE>gsttagmux</FILE>
+<INCLUDE>gst/tag/gsttagmux.h</INCLUDE>
+GstTagMux
+GstTagMuxClass
+<SUBSECTION Standard>
+GstTagMuxPrivate
+GST_IS_TAG_MUX
+GST_IS_TAG_MUX_CLASS
+GST_TAG_MUX
+GST_TAG_MUX_CLASS
+GST_TYPE_TAG_MUX
+gst_tag_demux_get_type
+</SECTION>
+
+<SECTION>
 <FILE>gsttaglanguagecodes</FILE>
 <INCLUDE>gst/tag/tag.h</INCLUDE>
 gst_tag_get_language_codes

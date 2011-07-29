@@ -1,7 +1,6 @@
 /* GStreamer tag muxer base class
- *
  * Copyright (C) 2006 Christophe Fergeau  <teuf@gnome.org>
- * Copyright (C) 2006 Tim-Philipp Müller <tim centricular net>
+ * Copyright (C) 2006,2011 Tim-Philipp Müller <tim centricular net>
  * Copyright (C) 2009 Pioneers of the Inevitable <songbird@songbirdnest.com>
  *
  * This library is free software; you can redistribute it and/or
@@ -42,6 +41,14 @@ typedef struct _GstTagMux GstTagMux;
 typedef struct _GstTagMuxClass GstTagMuxClass;
 typedef struct _GstTagMuxPrivate GstTagMuxPrivate;
 
+/**
+ * GstTagMux:
+ * @element: parent element
+ *
+ * Opaque #GstTagMux structure.
+ *
+ * Since: 0.10.36
+ */
 struct _GstTagMux {
   GstElement    element;
 
@@ -51,6 +58,19 @@ struct _GstTagMux {
   gpointer _gst_reserved[GST_PADDING];
 };
 
+/**
+ * GstTagMuxClass:
+ * @parent_class: the parent class.
+ * @render_start_tag: create a tag buffer to add to the beginning of the
+ *     input stream given a tag list, or NULL
+ * @render_end_tag: create a tag buffer to add to the end of the
+ *     input stream given a tag list, or NULL
+ *
+ * The #GstTagMuxClass structure. Subclasses need to override at least one
+ * of the two render vfuncs.
+ *
+ * Since: 0.10.36
+ */
 struct _GstTagMuxClass {
   GstElementClass parent_class;
 

@@ -191,6 +191,7 @@
       <xi:include href="xml/gsttagxmp.xml" />
       <xi:include href="xml/gsttagxmpwriter.xml" />
       <xi:include href="xml/gsttagdemux.xml" />
+      <xi:include href="xml/gsttagmux.xml" />
       <xi:include href="xml/gsttaglanguagecodes.xml" />
     </chapter>
 
