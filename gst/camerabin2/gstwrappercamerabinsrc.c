@@ -395,7 +395,6 @@ gst_wrapper_camera_bin_src_construct_pipeline (GstBaseCameraSrc * bcamsrc)
   GstElement *src_csp;
   GstElement *capsfilter;
   gboolean ret = FALSE;
-  GstElement *videoscale;
   GstPad *vf_pad;
   GstPad *tee_capture_pad;
   GstPad *src_caps_src_pad;
@@ -473,16 +472,8 @@ gst_wrapper_camera_bin_src_construct_pipeline (GstBaseCameraSrc * bcamsrc)
     /* viewfinder pad */
     vf_pad = gst_element_get_request_pad (tee, "src%d");
     g_object_set (tee, "alloc-pad", vf_pad, NULL);
+    gst_ghost_pad_set_target (GST_GHOST_PAD (self->vfsrc), vf_pad);
     gst_object_unref (vf_pad);
-
-    /* the viewfinder should always work, so we add some converters to it */
-    if (!gst_camerabin_create_and_add_element (cbin, "ffmpegcolorspace",
-            "viewfinder-colorspace"))
-      goto done;
-    if (!(videoscale =
-            gst_camerabin_create_and_add_element (cbin, "videoscale",
-                "viewfinder-scale")))
-      goto done;
 
     /* image/video pad from tee */
     tee_capture_pad = gst_element_get_request_pad (tee, "src%d");
@@ -526,10 +517,7 @@ gst_wrapper_camera_bin_src_construct_pipeline (GstBaseCameraSrc * bcamsrc)
           NULL);
     }
 
-    /* hook-up the vf ghostpad */
-    vf_pad = gst_element_get_static_pad (videoscale, "src");
-    gst_ghost_pad_set_target (GST_GHOST_PAD (self->vfsrc), vf_pad);
-    gst_object_unref (vf_pad);
+
 
     gst_pad_set_active (self->vfsrc, TRUE);
     gst_pad_set_active (self->imgsrc, TRUE);    /* XXX ??? */
