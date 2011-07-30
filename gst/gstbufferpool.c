@@ -513,12 +513,47 @@ gst_buffer_pool_get_options (GstBufferPool * pool)
 
   pclass = GST_BUFFER_POOL_GET_CLASS (pool);
 
-  if (G_LIKELY (pclass->get_options))
-    result = pclass->get_options (pool);
-  else
+  if (G_LIKELY (pclass->get_options)) {
+    if ((result = pclass->get_options (pool)) == NULL)
+      goto invalid_result;
+  } else
     result = empty_option;
 
   return result;
+
+  /* ERROR */
+invalid_result:
+  {
+    g_warning ("bufferpool subclass returned NULL options");
+    return empty_option;
+  }
+}
+
+/**
+ * gst_buffer_pool_has_option:
+ * @pool: a #GstBufferPool
+ * @option: an option
+ *
+ * Check if the bufferpool supports @option.
+ *
+ * Returns: a NULL terminated array of strings.
+ */
+gboolean
+gst_buffer_pool_has_option (GstBufferPool * pool, const gchar * option)
+{
+  guint i;
+  const gchar **options;
+
+  g_return_val_if_fail (GST_IS_BUFFER_POOL (pool), FALSE);
+  g_return_val_if_fail (option != NULL, FALSE);
+
+  options = gst_buffer_pool_get_options (pool);
+
+  for (i = 0; options[i]; i++) {
+    if (g_str_equal (options[i], option))
+      return TRUE;
+  }
+  return FALSE;
 }
 
 /**

@@ -134,6 +134,7 @@ EXPORTS
 	gst_buffer_pool_get_config
 	gst_buffer_pool_get_options
 	gst_buffer_pool_get_type
+	gst_buffer_pool_has_option
 	gst_buffer_pool_new
 	gst_buffer_pool_release_buffer
 	gst_buffer_pool_set_active

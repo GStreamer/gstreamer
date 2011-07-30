@@ -184,6 +184,7 @@ gboolean         gst_buffer_pool_set_config      (GstBufferPool *pool, GstStruct
 GstStructure *   gst_buffer_pool_get_config      (GstBufferPool *pool);
 
 const gchar **   gst_buffer_pool_get_options     (GstBufferPool *pool);
+gboolean         gst_buffer_pool_has_option      (GstBufferPool *pool, const gchar *option);
 
 /* helpers for configuring the config structure */
 void             gst_buffer_pool_config_set      (GstStructure *config, const GstCaps *caps,
