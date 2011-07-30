@@ -1553,20 +1553,21 @@ gst_x264_enc_sink_set_caps (GstPad * pad, GstCaps * caps)
   peer_caps = gst_pad_peer_get_caps_reffed (encoder->srcpad);
   if (peer_caps) {
     gint i;
-    gboolean has_profile_or_level = FALSE;
+    gboolean has_profile_or_level_or_format = FALSE;
 
     for (i = 0; i < gst_caps_get_size (peer_caps); i++) {
       GstStructure *s = gst_caps_get_structure (peer_caps, i);
 
       if (gst_structure_has_name (s, "video/x-h264") &&
           (gst_structure_has_field (s, "profile") ||
-              gst_structure_has_field (s, "level"))) {
-        has_profile_or_level = TRUE;
+              gst_structure_has_field (s, "level") ||
+              gst_structure_has_field (s, "stream-format"))) {
+        has_profile_or_level_or_format = TRUE;
         break;
       }
     }
 
-    if (has_profile_or_level) {
+    if (has_profile_or_level_or_format) {
       template_caps = gst_pad_get_pad_template_caps (encoder->srcpad);
 
       allowed_caps = gst_caps_intersect (peer_caps, template_caps);
@@ -1654,8 +1655,10 @@ gst_x264_enc_sink_set_caps (GstPad * pad, GstCaps * caps)
     if (stream_format) {
       if (!strcmp (stream_format, "avc")) {
         encoder->current_byte_stream = GST_X264_ENC_STREAM_FORMAT_AVC;
+        g_string_append_printf (encoder->option_string, ":annexb=0");
       } else if (!strcmp (stream_format, "byte-stream")) {
         encoder->current_byte_stream = GST_X264_ENC_STREAM_FORMAT_BYTE_STREAM;
+        g_string_append_printf (encoder->option_string, ":annexb=1");
       } else {
         /* means we have both in caps and _FROM_PROPERTY should be the option */
       }
