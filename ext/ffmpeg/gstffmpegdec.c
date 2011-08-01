@@ -32,6 +32,7 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
+#include <gst/video/gstvideopool.h>
 
 #include "gstffmpeg.h"
 #include "gstffmpegcodecmap.h"
@@ -88,9 +89,6 @@ struct _GstFFMpegDec
 
   /* current output format */
   GstVideoInfo out_info;
-  /* current pool format. This can be different from the output format when we
-   * add extra padding to the bufferpool buffers */
-  GstVideoInfo pool_info;
 
   union
   {
@@ -395,12 +393,6 @@ gst_ffmpegdec_class_init (GstFFMpegDecClass * klass)
         g_param_spec_boolean ("debug-mv", "Debug motion vectors",
             "Whether ffmpeg should print motion vectors on top of the image",
             DEFAULT_DEBUG_MV, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-#if 0
-    g_object_class_install_property (gobject_class, PROP_CROP,
-        g_param_spec_boolean ("crop", "Crop",
-            "Crop images to the display region",
-            DEFAULT_CROP, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-#endif
 
     caps = klass->in_plugin->capabilities;
     if (caps & (CODEC_CAP_FRAME_THREADS | CODEC_CAP_SLICE_THREADS)) {
@@ -822,11 +814,6 @@ gst_ffmpegdec_setcaps (GstFFMpegDec * ffmpegdec, GstCaps * caps)
       GST_DEBUG_OBJECT (ffmpegdec, "direct rendering not supported");
     }
   }
-  if (ffmpegdec->current_dr) {
-    /* do *not* draw edges when in direct rendering, for some reason it draws
-     * outside of the memory. */
-    ffmpegdec->context->flags |= CODEC_FLAG_EMU_EDGE;
-  }
 
   /* for AAC we only use av_parse if not on stream-format==raw or ==loas */
   if (oclass->in_plugin->id == CODEC_ID_AAC
@@ -894,7 +881,6 @@ gst_ffmpegdec_fill_picture (GstFFMpegDec * ffmpegdec, GstVideoFrame * frame,
     AVFrame * picture)
 {
   guint i;
-  AVCodecContext *context = ffmpegdec->context;
 
   /* setup data pointers and strides */
   for (i = 0; i < GST_VIDEO_FRAME_N_PLANES (frame); i++) {
@@ -903,27 +889,6 @@ gst_ffmpegdec_fill_picture (GstFFMpegDec * ffmpegdec, GstVideoFrame * frame,
 
     GST_LOG_OBJECT (ffmpegdec, "plane %d: data %p, linesize %d", i,
         picture->data[i], picture->linesize[i]);
-  }
-
-  /* adjust for the borders */
-  if (!(context->flags & CODEC_FLAG_EMU_EDGE)) {
-    gint edge = avcodec_get_edge_width ();
-    const GstVideoFormatInfo *vinfo = frame->info.finfo;
-
-    /* FIXME, not quite correct, NV12 would apply the vedge twice on the second
-     * plane */
-    for (i = 0; i < GST_VIDEO_FRAME_N_COMPONENTS (frame); i++) {
-      gint vedge, hedge, plane;
-
-      hedge = GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (vinfo, i, edge);
-      vedge = GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (vinfo, i, edge);
-      plane = GST_VIDEO_FORMAT_INFO_PLANE (vinfo, i);
-
-      GST_LOG_OBJECT (ffmpegdec, "comp %d, plane %d: hedge %d, vedge %d", i,
-          plane, hedge, vedge);
-
-      picture->data[plane] += (vedge * picture->linesize[plane]) + hedge;
-    }
   }
 }
 
@@ -961,7 +926,7 @@ gst_ffmpegdec_get_buffer (AVCodecContext * context, AVFrame * picture)
   if (G_UNLIKELY (ret != GST_FLOW_OK))
     goto alloc_failed;
 
-  if (!gst_video_frame_map (&frame, &ffmpegdec->pool_info, buf,
+  if (!gst_video_frame_map (&frame, &ffmpegdec->out_info, buf,
           GST_MAP_READWRITE))
     goto invalid_frame;
 
@@ -1125,40 +1090,16 @@ no_par:
 }
 
 static gboolean
-gst_ffmpegdec_bufferpool (GstFFMpegDec * ffmpegdec)
+gst_ffmpegdec_bufferpool (GstFFMpegDec * ffmpegdec, GstCaps * caps)
 {
   GstQuery *query;
   GstBufferPool *pool = NULL;
   guint size, min, max, prefix, alignment;
   GstStructure *config;
-  gint width, height;
-  GstVideoInfo info;
-  gint linesize_align[4];
   guint edge;
-  GstCaps *caps;
   AVCodecContext *context = ffmpegdec->context;
 
-  width = ffmpegdec->ctx_width;
-  height = ffmpegdec->ctx_height;
-
-  /* let ffmpeg find the alignment and padding */
-  avcodec_align_dimensions2 (context, &width, &height, linesize_align);
-  edge = context->flags & CODEC_FLAG_EMU_EDGE ? 0 : avcodec_get_edge_width ();
-  /* increase the size for the padding */
-  width += edge << 1;
-  height += edge << 1;
-
-  /* make a new info with padded width/height */
-  gst_video_info_init (&info);
-  gst_video_info_set_format (&info,
-      GST_VIDEO_INFO_FORMAT (&ffmpegdec->out_info), width, height);
-  /* and turn into caps for the allocator */
-  caps = gst_video_info_to_caps (&info);
-
-  GST_DEBUG_OBJECT (ffmpegdec, "padded caps %" GST_PTR_FORMAT, caps);
-
-  /* and store */
-  ffmpegdec->pool_info = info;
+  GST_DEBUG_OBJECT (ffmpegdec, "setting up bufferpool");
 
   /* find a pool for the negotiated caps now */
   query = gst_query_new_allocation (caps, TRUE);
@@ -1168,7 +1109,8 @@ gst_ffmpegdec_bufferpool (GstFFMpegDec * ffmpegdec)
     gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
         &alignment, &pool);
   } else {
-    size = info.size;
+    GST_DEBUG_OBJECT (ffmpegdec, "peer query failedi, using defaults");
+    size = ffmpegdec->out_info.size;
     min = max = 0;
     prefix = 0;
     alignment = 15;
@@ -1184,6 +1126,44 @@ gst_ffmpegdec_bufferpool (GstFFMpegDec * ffmpegdec)
   config = gst_buffer_pool_get_config (pool);
   gst_buffer_pool_config_set (config, caps, size, min, max, prefix,
       alignment | 15);
+
+  if (gst_buffer_pool_has_option (pool, GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT)) {
+    GstVideoAlignment align;
+    gint width, height;
+    gint linesize_align[4];
+
+    width = ffmpegdec->ctx_width;
+    height = ffmpegdec->ctx_height;
+    /* let ffmpeg find the alignment and padding */
+    avcodec_align_dimensions2 (context, &width, &height, linesize_align);
+    edge = context->flags & CODEC_FLAG_EMU_EDGE ? 0 : avcodec_get_edge_width ();
+    /* increase the size for the padding */
+    width += edge << 1;
+    height += edge << 1;
+
+    align.padding_top = edge;
+    align.padding_left = edge;
+    align.padding_right = width - ffmpegdec->ctx_width - edge;
+    align.padding_bottom = height - ffmpegdec->ctx_height - edge;
+
+    GST_DEBUG_OBJECT (ffmpegdec, "aligned dimension %dx%d -> %dx%d "
+        "padding t:%u l:%u r:%u b:%u",
+        ffmpegdec->ctx_width, ffmpegdec->ctx_height, width, height,
+        align.padding_top, align.padding_left, align.padding_right,
+        align.padding_bottom);
+
+    gst_buffer_pool_config_add_option (config,
+        GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
+    gst_buffer_pool_config_set_video_alignment (config, &align);
+  } else {
+    GST_DEBUG_OBJECT (ffmpegdec,
+        "alignment not supported, disable direct rendering");
+    /* disable direct rendering. This will make us use the fallback ffmpeg
+     * picture allocation code with padding etc. We will then do the final
+     * copy (with cropping) into a buffer from our pool */
+    ffmpegdec->current_dr = FALSE;
+  }
+  /* and store */
   gst_buffer_pool_set_config (pool, config);
 
   if (ffmpegdec->pool)
@@ -1313,7 +1293,7 @@ gst_ffmpegdec_video_negotiate (GstFFMpegDec * ffmpegdec, gboolean force)
   ffmpegdec->out_info = info;
 
   /* now figure out a bufferpool */
-  if (!gst_ffmpegdec_bufferpool (ffmpegdec))
+  if (!gst_ffmpegdec_bufferpool (ffmpegdec, caps))
     goto no_bufferpool;
 
   gst_caps_unref (caps);
@@ -1661,7 +1641,7 @@ get_output_buffer (GstFFMpegDec * ffmpegdec, GstBuffer ** outbuf)
     if (G_UNLIKELY (ret != GST_FLOW_OK))
       goto alloc_failed;
 
-    if (!gst_video_frame_map (&frame, &ffmpegdec->pool_info, buf,
+    if (!gst_video_frame_map (&frame, &ffmpegdec->out_info, buf,
             GST_MAP_READWRITE))
       goto invalid_frame;
 
@@ -1673,7 +1653,7 @@ get_output_buffer (GstFFMpegDec * ffmpegdec, GstBuffer ** outbuf)
     src = (AVPicture *) ffmpegdec->picture;
     dest = (AVPicture *) & pic;
 
-    GST_LOG_OBJECT (ffmpegdec, "copy width %d/height %d", width, height);
+    GST_LOG_OBJECT (ffmpegdec, "copy %dx%d", width, height);
     av_picture_copy (dest, src, ffmpegdec->context->pix_fmt, width, height);
 
     gst_video_frame_unmap (&frame);
