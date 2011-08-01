@@ -55,6 +55,12 @@ G_BEGIN_DECLS
  * Happens with the Bellagio ffmpegdist video encoder.
  */
 #define GST_OMX_HACK_SYNCFRAME_FLAG_NOT_USED                          G_GUINT64_CONSTANT (0x0000000000000008)
+/* Qualcomm 7x30 sometimes fails with an undefined error after
+ * allocating buffers, setting the state to Idle when calling
+ * OMX_FillThisBuffer() on all output buffers too early.
+ */
+#define GST_OMX_HACK_QCOM_7x30_FILL_THIS_BUFFER_RACE                  G_GUINT64_CONSTANT (0x0000000000000010)
+
 
 typedef struct _GstOMXCore GstOMXCore;
 typedef struct _GstOMXPort GstOMXPort;
