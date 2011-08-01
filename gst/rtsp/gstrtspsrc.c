@@ -5955,6 +5955,34 @@ gst_rtspsrc_parse_rtpinfo (GstRTSPSrc * src, gchar * rtpinfo)
   return TRUE;
 }
 
+static void
+gst_rtspsrc_handle_rtcp_interval (GstRTSPSrc * src, gchar * rtcp)
+{
+  guint64 interval;
+  GList *walk;
+
+  interval = strtoul (rtcp, NULL, 10);
+  GST_DEBUG_OBJECT (src, "rtcp interval: %" G_GUINT64_FORMAT " ms", interval);
+
+  if (!interval)
+    return;
+
+  interval *= GST_MSECOND;
+
+  for (walk = src->streams; walk; walk = g_list_next (walk)) {
+    GstRTSPStream *stream = (GstRTSPStream *) walk->data;
+
+    /* already (optionally) retrieved this when configuring manager */
+    if (stream->session) {
+      GObject *rtpsession = stream->session;
+
+      GST_DEBUG_OBJECT (src, "configure rtcp interval in session %p",
+          rtpsession);
+      g_object_set (rtpsession, "rtcp-min-interval", interval, NULL);
+    }
+  }
+}
+
 static gdouble
 gst_rtspsrc_get_float (const gchar * dstr)
 {
@@ -6162,6 +6190,12 @@ gst_rtspsrc_play (GstRTSPSrc * src, GstSegment * segment, gboolean async)
     while (gst_rtsp_message_get_header (&response, GST_RTSP_HDR_RTP_INFO,
             &hval, hval_idx++) == GST_RTSP_OK)
       gst_rtspsrc_parse_rtpinfo (src, hval);
+
+    /* some servers indicate RTCP parameters in PLAY response,
+     * rather than properly in SDP */
+    if (gst_rtsp_message_get_header (&response, GST_RTSP_HDR_RTCP_INTERVAL,
+            &hval, 0) == GST_RTSP_OK)
+      gst_rtspsrc_handle_rtcp_interval (src, hval);
 
     gst_rtsp_message_unset (&response);
 
