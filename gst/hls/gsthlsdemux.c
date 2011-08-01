@@ -242,6 +242,8 @@ gst_hls_demux_init (GstHLSDemux * demux, GstHLSDemuxClass * klass)
   g_static_rec_mutex_init (&demux->task_lock);
   demux->task = gst_task_create ((GstTaskFunction) gst_hls_demux_loop, demux);
   gst_task_set_lock (demux->task, &demux->task_lock);
+
+  demux->position = 0;
 }
 
 static void
@@ -379,6 +381,10 @@ gst_hls_demux_sink_event (GstPad * pad, GstEvent * event)
       gst_event_unref (event);
       return TRUE;
     }
+    case GST_EVENT_NEWSEGMENT:
+      /* Swallow newsegments, we'll push our own */
+      gst_event_unref (event);
+      return TRUE;
     default:
       break;
   }
@@ -615,7 +621,14 @@ gst_hls_demux_loop (GstHLSDemux * demux)
   if (G_UNLIKELY (!demux->srcpad
           || GST_BUFFER_CAPS (buf) != GST_PAD_CAPS (demux->srcpad))) {
     switch_pads (demux, GST_BUFFER_CAPS (buf));
+    /* And send a newsegment */
+    gst_pad_push_event (demux->srcpad,
+        gst_event_new_new_segment (0, 1.0, GST_FORMAT_TIME, demux->position,
+            GST_CLOCK_TIME_NONE, demux->position));
   }
+
+  if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_DURATION (buf)))
+    demux->position += GST_BUFFER_DURATION (buf);
 
   ret = gst_pad_push (demux->srcpad, buf);
   if (ret != GST_FLOW_OK)

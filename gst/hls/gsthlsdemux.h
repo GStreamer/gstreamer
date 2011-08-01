@@ -87,6 +87,8 @@ struct _GstHLSDemux
   gboolean cancelled;
   GstAdapter *download;
 
+  /* Position in the stream */
+  GstClockTime position;
 };
 
 struct _GstHLSDemuxClass
