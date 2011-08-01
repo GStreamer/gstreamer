@@ -793,23 +793,8 @@ gst_ffmpegdec_setcaps (GstFFMpegDec * ffmpegdec, GstCaps * caps)
   if (ffmpegdec->direct_rendering) {
     GST_DEBUG_OBJECT (ffmpegdec, "trying to enable direct rendering");
     if (oclass->in_plugin->capabilities & CODEC_CAP_DR1) {
-      if (oclass->in_plugin->id == CODEC_ID_H264) {
-        GST_DEBUG_OBJECT (ffmpegdec, "disable direct rendering setup for H264");
-        /* does not work, many stuff reads outside of the planes */
-        ffmpegdec->current_dr = FALSE;
-      } else if ((oclass->in_plugin->id == CODEC_ID_SVQ1) ||
-          (oclass->in_plugin->id == CODEC_ID_VP5) ||
-          (oclass->in_plugin->id == CODEC_ID_VP6) ||
-          (oclass->in_plugin->id == CODEC_ID_VP6F) ||
-          (oclass->in_plugin->id == CODEC_ID_VP6A)) {
-        GST_DEBUG_OBJECT (ffmpegdec,
-            "disable direct rendering setup for broken stride support");
-        /* does not work, uses a incompatible stride. See #610613 */
-        ffmpegdec->current_dr = FALSE;
-      } else {
-        GST_DEBUG_OBJECT (ffmpegdec, "enabled direct rendering");
-        ffmpegdec->current_dr = TRUE;
-      }
+      GST_DEBUG_OBJECT (ffmpegdec, "enabled direct rendering");
+      ffmpegdec->current_dr = TRUE;
     } else {
       GST_DEBUG_OBJECT (ffmpegdec, "direct rendering not supported");
     }
