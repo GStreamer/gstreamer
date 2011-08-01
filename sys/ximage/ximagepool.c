@@ -35,6 +35,17 @@
 GST_DEBUG_CATEGORY_EXTERN (gst_debug_ximagepool);
 #define GST_CAT_DEFAULT gst_debug_ximagepool
 
+struct _GstXImageBufferPoolPrivate
+{
+  GstCaps *caps;
+  GstVideoInfo info;
+  GstVideoAlignment align;
+  guint padded_width;
+  guint padded_height;
+  gboolean add_metavideo;
+  gboolean need_alignment;
+};
+
 static void gst_meta_ximage_free (GstMetaXImage * meta, GstBuffer * buffer);
 
 /* ximage metadata */
@@ -67,16 +78,23 @@ gst_ximagesink_handle_xerror (Display * display, XErrorEvent * xevent)
   return 0;
 }
 
-GstMetaXImage *
-gst_buffer_add_meta_ximage (GstBuffer * buffer, GstXImageSink * ximagesink,
-    gint width, gint height)
+static GstMetaXImage *
+gst_buffer_add_meta_ximage (GstBuffer * buffer, GstXImageBufferPool * xpool)
 {
+  GstXImageSink *ximagesink;
   int (*handler) (Display *, XErrorEvent *);
   gboolean success = FALSE;
   GstXContext *xcontext;
   GstMetaXImage *meta;
+  gint width, height;
+  GstXImageBufferPoolPrivate *priv;
 
+  priv = xpool->priv;
+  ximagesink = xpool->sink;
   xcontext = ximagesink->xcontext;
+
+  width = priv->padded_width;
+  height = priv->padded_height;
 
   meta =
       (GstMetaXImage *) gst_buffer_add_meta (buffer, GST_META_INFO_XIMAGE,
@@ -85,12 +103,14 @@ gst_buffer_add_meta_ximage (GstBuffer * buffer, GstXImageSink * ximagesink,
   meta->SHMInfo.shmaddr = ((void *) -1);
   meta->SHMInfo.shmid = -1;
 #endif
-  meta->width = width;
-  meta->height = height;
+  meta->x = priv->align.padding_left;
+  meta->y = priv->align.padding_top;
+  meta->width = GST_VIDEO_INFO_WIDTH (&priv->info);
+  meta->height = GST_VIDEO_INFO_HEIGHT (&priv->info);
   meta->sink = gst_object_ref (ximagesink);
 
   GST_DEBUG_OBJECT (ximagesink, "creating image %p (%dx%d)", buffer,
-      meta->width, meta->height);
+      width, height);
 
   g_mutex_lock (ximagesink->x_lock);
 
@@ -102,8 +122,7 @@ gst_buffer_add_meta_ximage (GstBuffer * buffer, GstXImageSink * ximagesink,
   if (xcontext->use_xshm) {
     meta->ximage = XShmCreateImage (xcontext->disp,
         xcontext->visual,
-        xcontext->depth,
-        ZPixmap, NULL, &meta->SHMInfo, meta->width, meta->height);
+        xcontext->depth, ZPixmap, NULL, &meta->SHMInfo, width, height);
     if (!meta->ximage || error_caught) {
       g_mutex_unlock (ximagesink->x_lock);
 
@@ -113,9 +132,8 @@ gst_buffer_add_meta_ximage (GstBuffer * buffer, GstXImageSink * ximagesink,
       /* Push a warning */
       GST_ELEMENT_WARNING (ximagesink, RESOURCE, WRITE,
           ("Failed to create output image buffer of %dx%d pixels",
-              meta->width, meta->height),
-          ("could not XShmCreateImage a %dx%d image",
-              meta->width, meta->height));
+              width, height),
+          ("could not XShmCreateImage a %dx%d image", width, height));
 
       /* Retry without XShm */
       ximagesink->xcontext->use_xshm = FALSE;
@@ -130,7 +148,7 @@ gst_buffer_add_meta_ximage (GstBuffer * buffer, GstXImageSink * ximagesink,
     meta->size = meta->ximage->bytes_per_line * meta->ximage->height;
     GST_LOG_OBJECT (ximagesink,
         "XShm image size is %" G_GSIZE_FORMAT ", width %d, stride %d",
-        meta->size, meta->width, meta->ximage->bytes_per_line);
+        meta->size, width, meta->ximage->bytes_per_line);
 
     /* get shared memory */
     meta->SHMInfo.shmid = shmget (IPC_PRIVATE, meta->size, IPC_CREAT | 0777);
@@ -166,8 +184,7 @@ gst_buffer_add_meta_ximage (GstBuffer * buffer, GstXImageSink * ximagesink,
 
     meta->ximage = XCreateImage (xcontext->disp,
         xcontext->visual,
-        xcontext->depth,
-        ZPixmap, 0, NULL, meta->width, meta->height, xcontext->bpp, 0);
+        xcontext->depth, ZPixmap, 0, NULL, width, height, xcontext->bpp, 0);
     if (!meta->ximage || error_caught)
       goto create_failed;
 
@@ -190,7 +207,7 @@ gst_buffer_add_meta_ximage (GstBuffer * buffer, GstXImageSink * ximagesink,
     meta->ximage->data = g_malloc (allocsize);
     GST_LOG_OBJECT (ximagesink,
         "non-XShm image size is %" G_GSIZE_FORMAT " (alloced: %u), width %d, "
-        "stride %d", meta->size, allocsize, meta->width,
+        "stride %d", meta->size, allocsize, width,
         meta->ximage->bytes_per_line);
 
     XSync (xcontext->disp, FALSE);
@@ -224,8 +241,8 @@ create_failed:
     /* Push an error */
     GST_ELEMENT_ERROR (ximagesink, RESOURCE, WRITE,
         ("Failed to create output image buffer of %dx%d pixels",
-            meta->width, meta->height),
-        ("could not XShmCreateImage a %dx%d image", meta->width, meta->height));
+            width, height),
+        ("could not XShmCreateImage a %dx%d image", width, height));
     goto beach;
   }
 shmget_failed:
@@ -233,7 +250,7 @@ shmget_failed:
     g_mutex_unlock (ximagesink->x_lock);
     GST_ELEMENT_ERROR (ximagesink, RESOURCE, WRITE,
         ("Failed to create output image buffer of %dx%d pixels",
-            meta->width, meta->height),
+            width, height),
         ("could not get shared memory of %" G_GSIZE_FORMAT " bytes",
             meta->size));
     goto beach;
@@ -243,8 +260,7 @@ shmat_failed:
     g_mutex_unlock (ximagesink->x_lock);
     GST_ELEMENT_ERROR (ximagesink, RESOURCE, WRITE,
         ("Failed to create output image buffer of %dx%d pixels",
-            meta->width, meta->height),
-        ("Failed to shmat: %s", g_strerror (errno)));
+            width, height), ("Failed to shmat: %s", g_strerror (errno)));
     /* Clean up the shared memory segment */
     shmctl (meta->SHMInfo.shmid, IPC_RMID, NULL);
     goto beach;
@@ -257,7 +273,7 @@ xattach_failed:
 
     GST_ELEMENT_ERROR (ximagesink, RESOURCE, WRITE,
         ("Failed to create output image buffer of %dx%d pixels",
-            meta->width, meta->height), ("Failed to XShmAttach"));
+            width, height), ("Failed to XShmAttach"));
     goto beach;
   }
 }
@@ -431,13 +447,6 @@ static void gst_ximage_buffer_pool_finalize (GObject * object);
 #define GST_XIMAGE_BUFFER_POOL_GET_PRIVATE(obj)  \
    (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_XIMAGE_BUFFER_POOL, GstXImageBufferPoolPrivate))
 
-struct _GstXImageBufferPoolPrivate
-{
-  GstCaps *caps;
-  GstVideoInfo info;
-  gboolean add_metavideo;
-};
-
 #define gst_ximage_buffer_pool_parent_class parent_class
 G_DEFINE_TYPE (GstXImageBufferPool, gst_ximage_buffer_pool,
     GST_TYPE_BUFFER_POOL);
@@ -445,7 +454,9 @@ G_DEFINE_TYPE (GstXImageBufferPool, gst_ximage_buffer_pool,
 static const gchar **
 ximage_buffer_pool_get_options (GstBufferPool * pool)
 {
-  static const gchar *options[] = { GST_BUFFER_POOL_OPTION_META_VIDEO, NULL };
+  static const gchar *options[] = { GST_BUFFER_POOL_OPTION_META_VIDEO,
+    GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT, NULL
+  };
 
   return options;
 }
@@ -483,6 +494,29 @@ ximage_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
       gst_buffer_pool_config_has_option (config,
       GST_BUFFER_POOL_OPTION_META_VIDEO);
 
+  /* parse extra alignment info */
+  priv->need_alignment = gst_buffer_pool_config_has_option (config,
+      GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
+
+  if (priv->need_alignment) {
+    gst_buffer_pool_config_get_video_alignment (config, &priv->align);
+
+    GST_LOG_OBJECT (pool, "padding %u-%ux%u-%u", priv->align.padding_top,
+        priv->align.padding_left, priv->align.padding_left,
+        priv->align.padding_bottom);
+
+    /* we need the video metadata too now */
+    priv->add_metavideo = TRUE;
+  }
+
+  /* add the padding */
+  priv->padded_width =
+      GST_VIDEO_INFO_WIDTH (&info) + priv->align.padding_left +
+      priv->align.padding_right;
+  priv->padded_height =
+      GST_VIDEO_INFO_HEIGHT (&info) + priv->align.padding_top +
+      priv->align.padding_bottom;
+
   return GST_BUFFER_POOL_CLASS (parent_class)->set_config (pool, config);
 
   /* ERRORS */
@@ -518,18 +552,31 @@ ximage_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
   info = &priv->info;
 
   ximage = gst_buffer_new ();
-  meta =
-      gst_buffer_add_meta_ximage (ximage, xpool->sink,
-      GST_VIDEO_INFO_WIDTH (info), GST_VIDEO_INFO_HEIGHT (info));
+  meta = gst_buffer_add_meta_ximage (ximage, xpool);
   if (meta == NULL) {
     gst_buffer_unref (ximage);
     goto no_buffer;
   }
   if (priv->add_metavideo) {
+    GstMetaVideo *meta;
+
     GST_DEBUG_OBJECT (pool, "adding GstMetaVideo");
     /* these are just the defaults for now */
-    gst_buffer_add_meta_video (ximage, 0, GST_VIDEO_INFO_FORMAT (info),
-        GST_VIDEO_INFO_WIDTH (info), GST_VIDEO_INFO_HEIGHT (info));
+    meta = gst_buffer_add_meta_video (ximage, 0, GST_VIDEO_INFO_FORMAT (info),
+        priv->padded_width, priv->padded_height);
+
+    if (priv->need_alignment) {
+      gint vpad, hpad, pstride;
+
+      vpad = priv->align.padding_left;
+      hpad = priv->align.padding_top;
+
+      meta->width = GST_VIDEO_INFO_WIDTH (&priv->info);
+      meta->height = GST_VIDEO_INFO_HEIGHT (&priv->info);
+      pstride = GST_VIDEO_INFO_COMP_PSTRIDE (&priv->info, 0);
+
+      meta->offset[0] += (vpad * meta->stride[0]) + (hpad * pstride);
+    }
   }
   *buffer = ximage;
 

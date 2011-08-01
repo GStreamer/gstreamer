@@ -51,8 +51,6 @@ const GstMetaInfo * gst_meta_ximage_get_info (void);
 #define GST_META_INFO_XIMAGE  (gst_meta_ximage_get_info())
 
 #define gst_buffer_get_meta_ximage(b) ((GstMetaXImage*)gst_buffer_get_meta((b),GST_META_INFO_XIMAGE))
-GstMetaXImage * gst_buffer_add_meta_ximage   (GstBuffer *buffer, GstXImageSink * ximagesink,
-                                              gint width, gint height);
 
 /**
  * GstMetaXImage:
@@ -77,6 +75,7 @@ struct _GstMetaXImage
   XShmSegmentInfo SHMInfo;
 #endif                          /* HAVE_XSHM */
 
+  gint x, y;
   gint width, height;
   size_t size;
 };
