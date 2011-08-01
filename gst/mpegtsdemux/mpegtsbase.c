@@ -212,6 +212,10 @@ mpegts_base_reset (MpegTSBase * base)
 
   gst_segment_init (&base->segment, GST_FORMAT_UNDEFINED);
 
+  base->mode = BASE_MODE_STREAMING;
+  base->seen_pat = FALSE;
+  base->first_pat_offset = -1;
+
   if (klass->reset)
     klass->reset (base);
 }
@@ -236,15 +240,10 @@ mpegts_base_init (MpegTSBase * base, MpegTSBaseClass * klass)
 
   base->is_pes = g_new0 (guint8, 1024);
   base->known_psi = g_new0 (guint8, 1024);
-  mpegts_base_reset (base);
   base->program_size = sizeof (MpegTSBaseProgram);
   base->stream_size = sizeof (MpegTSBaseStream);
 
-  base->mode = BASE_MODE_STREAMING;
-  base->seen_pat = FALSE;
-  base->first_pat_offset = -1;
-
-  gst_segment_init (&base->segment, GST_FORMAT_UNDEFINED);
+  mpegts_base_reset (base);
 }
 
 static void
@@ -1135,6 +1134,23 @@ mpegts_base_get_tags_from_eit (MpegTSBase * base, GstStructure * eit_info)
   }
 }
 
+static void
+remove_each_program (gpointer key, MpegTSBaseProgram * program,
+    MpegTSBase * base)
+{
+  /* First deactivate it */
+  mpegts_base_deactivate_program (base, program);
+  /* Then remove it */
+  mpegts_base_remove_program (base, program->program_number);
+}
+
+static gboolean
+gst_mpegts_base_handle_eos (MpegTSBase * base)
+{
+  g_hash_table_foreach (base->programs, (GHFunc) remove_each_program, base);
+  /* finally remove  */
+  return TRUE;
+}
 
 static gboolean
 mpegts_base_sink_event (GstPad * pad, GstEvent * event)
@@ -1165,6 +1181,9 @@ mpegts_base_sink_event (GstPad * pad, GstEvent * event)
           applied_rate, format, start, stop, position);
       gst_event_unref (event);
     }
+      break;
+    case GST_EVENT_EOS:
+      res = gst_mpegts_base_handle_eos (base);
       break;
     case GST_EVENT_FLUSH_START:
       gst_segment_init (&base->segment, GST_FORMAT_UNDEFINED);
