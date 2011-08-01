@@ -272,7 +272,7 @@ struct _GstVideoFormatInfo {
 #define GST_VIDEO_FORMAT_INFO_W_SUB(info,c)      ((info)->w_sub[c])
 #define GST_VIDEO_FORMAT_INFO_H_SUB(info,c)      ((info)->h_sub[c])
 
-#define GST_VIDEO_SUB_SCALE(scale,val)   (-((-(val))>>(scale)))
+#define GST_VIDEO_SUB_SCALE(scale,val)   (-((-((gint)val))>>(scale)))
 
 #define GST_VIDEO_FORMAT_INFO_SCALE_WIDTH(info,c,w)  GST_VIDEO_SUB_SCALE ((info)->w_sub[(c)],(w))
 #define GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT(info,c,h) GST_VIDEO_SUB_SCALE ((info)->h_sub[(c)],(h))
