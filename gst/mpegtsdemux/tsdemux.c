@@ -2066,6 +2066,19 @@ calculate_and_push_newsegment (GstTSDemux * demux, TSDemuxStream * stream)
     /* FIXME : We're just ignore the upstream format for the time being */
     /* FIXME : We should use base->segment.format and a upstream latency query
      * to decide if we need to use live values or not */
+    GST_DEBUG ("push-based. base Segment start:%" GST_TIME_FORMAT " duration:%"
+        GST_TIME_FORMAT ", time:%" GST_TIME_FORMAT,
+        GST_TIME_ARGS (base->segment.start),
+        GST_TIME_ARGS (base->segment.duration),
+        GST_TIME_ARGS (base->segment.time));
+    GST_DEBUG ("push-based. demux Segment start:%" GST_TIME_FORMAT " duration:%"
+        GST_TIME_FORMAT ", time:%" GST_TIME_FORMAT,
+        GST_TIME_ARGS (demux->segment.start),
+        GST_TIME_ARGS (demux->segment.duration),
+        GST_TIME_ARGS (demux->segment.time));
+
+    if (demux->segment.time == 0 && base->segment.format == GST_FORMAT_TIME)
+      demux->segment.time = base->segment.time;
 
     start = firstpts;
     stop = GST_CLOCK_TIME_NONE;
