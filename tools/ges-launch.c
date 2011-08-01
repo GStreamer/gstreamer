@@ -448,15 +448,21 @@ main (int argc, gchar ** argv)
 
   ctx = g_option_context_new ("- plays or renders a timeline.");
   g_option_context_set_summary (ctx,
-      "A timeline is a sequence of files, patterns, and transitions.\n"
-      "Transitions can only go between patterns or files.\n\n"
-      "A file is a tripplet of:\n"
-      " * filename\n"
-      " * inpoint (in seconds)\n"
-      " * duration (in seconds) If 0, full file length\n\n"
-      "Patterns and transitions are triplets of:\n"
-      " * \"+pattern\" | \"+transition\"\n"
-      " * <type>\n" " * duration (in seconds, must be greater than 0)\n");
+      "ges-launch renders a timeline, which can be specified on the commandline,\n"
+      "or loaded from a file using the -q option.\n\n"
+      "A timeline is a list of files, patterns, and transitions to be rendered\n"
+      "one after the other. Files and Patterns provide video and audio as the\n"
+      "primary input, and transitions animate between the end of one file/pattern\n"
+      "and the beginning of a new one. Hence, transitions can only be listed\n"
+      "in between patterns or files.\n\n"
+      "A file is a triplet of filename, inpoint (in seconds) and\n"
+      "duration (in seconds). If the duration is 0, the full file length is used.\n\n"
+      "Patterns and transitions are triplets that begin with either \"+pattern\"\n"
+      "or \"+transition\", followed by a <type> and duration (in seconds, must be\n"
+      "greater than 0)\n\n"
+      "Durations in all cases can be fractions of a second.\n\n"
+      "Example:\n"
+      "ges-launch file1.avi 0 45 +transition crossfade 3.5 file2.avi 0 0");
   g_option_context_add_main_entries (ctx, options, NULL);
   g_option_context_add_group (ctx, gst_init_get_option_group ());
 
