@@ -38,37 +38,35 @@ G_BEGIN_DECLS
  * GST_BUFFER_POOL_OPTION_VIDEO_LAYOUT:
  *
  * A bufferpool option to enable extra padding. When a bufferpool supports this
- * option, gst_buffer_pool_set_video_layout() can be called.
+ * option, gst_buffer_pool_set_video_alignment() can be called.
  */
-#define GST_BUFFER_POOL_OPTION_VIDEO_LAYOUT "GstBufferPoolOptionVideoLayout"
+#define GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT "GstBufferPoolOptionVideoAlignment"
 
-typedef struct _GstBufferPoolOptionVideoLayout GstBufferPoolOptionVideoLayout;
+typedef struct _GstVideoAlignment GstVideoAlignment;
 
 /**
- * GstBufferPoolOptionVideoLayout:
+ * GstVideoAlignment:
  * @padding_left: extra pixels on the left side
  * @padding_right: extra pixels on the right side
  * @padding_top: extra pixels on the top
  * @padding_bottom: extra pixels on the bottom
  * @stride_align: array with extra alignment requirements for the strides
  *
- * Extra parameters to configure the memory layout for video buffers. This
- * structure is used to configure the bufferpool if it supports the
- * #GST_BUFFER_POOL_OPTION_VIDEO_LAYOUT.
+ * Extra alignment paramters for the memory of video buffers. This
+ * structure is usually used to configure the bufferpool if it supports the
+ * #GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT.
  */
-struct _GstBufferPoolOptionVideoLayout
+struct _GstVideoAlignment
 {
-  guint padding_left;
-  guint padding_right;
   guint padding_top;
   guint padding_bottom;
-  gint stride_align[GST_VIDEO_MAX_PLANES];
+  guint padding_left;
+  guint padding_right;
+  guint stride_align[GST_VIDEO_MAX_PLANES];
 };
 
-void             gst_buffer_pool_config_set_video_layout  (GstStructure *config,
-                                                           GstBufferPoolOptionVideoLayout *layout);
-gboolean         gst_buffer_pool_config_get_video_layout  (GstStructure *config,
-                                                           GstBufferPoolOptionVideoLayout *layout);
+void             gst_buffer_pool_config_set_video_alignment  (GstStructure *config, GstVideoAlignment *align);
+gboolean         gst_buffer_pool_config_get_video_alignment  (GstStructure *config, GstVideoAlignment *align);
 
 
 G_END_DECLS

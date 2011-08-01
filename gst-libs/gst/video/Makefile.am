@@ -13,12 +13,12 @@ lib_LTLIBRARIES = libgstvideo-@GST_MAJORMINOR@.la
 CLEANFILES = $(BUILT_SOURCES)
 
 libgstvideo_@GST_MAJORMINOR@_la_SOURCES = \
-	video.c gstvideosink.c gstvideofilter.c convertframe.c gstmetavideo.c
+	video.c gstvideosink.c gstvideofilter.c convertframe.c gstmetavideo.c gstvideopool.c
 nodist_libgstvideo_@GST_MAJORMINOR@_la_SOURCES = $(BUILT_SOURCES)
 
 libgstvideo_@GST_MAJORMINOR@includedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/video
 libgstvideo_@GST_MAJORMINOR@include_HEADERS = \
-	video.h gstvideosink.h gstvideofilter.h gstmetavideo.h
+	video.h gstvideosink.h gstvideofilter.h gstmetavideo.h gstvideopool.h
 nodist_libgstvideo_@GST_MAJORMINOR@include_HEADERS = $(built_headers)
 
 libgstvideo_@GST_MAJORMINOR@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS)
