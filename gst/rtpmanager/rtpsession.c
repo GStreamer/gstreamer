@@ -664,6 +664,12 @@ rtp_session_set_property (GObject * object, guint prop_id,
     case PROP_RTCP_MIN_INTERVAL:
       rtp_stats_set_min_interval (&sess->stats,
           (gdouble) g_value_get_uint64 (value) / GST_SECOND);
+      /* trigger reconsideration */
+      RTP_SESSION_LOCK (sess);
+      sess->next_rtcp_check_time = 0;
+      RTP_SESSION_UNLOCK (sess);
+      if (sess->callbacks.reconsider)
+        sess->callbacks.reconsider (sess, sess->reconsider_user_data);
       break;
     case PROP_RTCP_IMMEDIATE_FEEDBACK_THRESHOLD:
       sess->rtcp_immediate_feedback_threshold = g_value_get_uint (value);
