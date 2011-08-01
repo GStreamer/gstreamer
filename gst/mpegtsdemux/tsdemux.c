@@ -184,8 +184,6 @@ static gboolean gst_ts_demux_srcpad_query (GstPad * pad, GstQuery * query);
 /* mpegtsbase methods */
 static void
 gst_ts_demux_program_started (MpegTSBase * base, MpegTSBaseProgram * program);
-static void
-gst_ts_demux_program_stopped (MpegTSBase * base, MpegTSBaseProgram * program);
 static void gst_ts_demux_reset (MpegTSBase * base);
 static GstFlowReturn
 gst_ts_demux_push (MpegTSBase * base, MpegTSPacketizerPacket * packet,
@@ -210,6 +208,9 @@ static GstFlowReturn
 process_pcr (MpegTSBase * base, guint64 initoff, TSPcrOffset * pcroffset,
     guint numpcr, gboolean isinitial);
 static void gst_ts_demux_flush_streams (GstTSDemux * tsdemux);
+static GstFlowReturn
+gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream);
+
 static gboolean push_event (MpegTSBase * base, GstEvent * event);
 static void _extra_init (GType type);
 
@@ -277,7 +278,6 @@ gst_ts_demux_class_init (GstTSDemuxClass * klass)
   ts_class->push = GST_DEBUG_FUNCPTR (gst_ts_demux_push);
   ts_class->push_event = GST_DEBUG_FUNCPTR (push_event);
   ts_class->program_started = GST_DEBUG_FUNCPTR (gst_ts_demux_program_started);
-  ts_class->program_stopped = GST_DEBUG_FUNCPTR (gst_ts_demux_program_stopped);
   ts_class->stream_added = gst_ts_demux_stream_added;
   ts_class->stream_removed = gst_ts_demux_stream_removed;
   ts_class->find_timestamps = GST_DEBUG_FUNCPTR (find_timestamps);
@@ -1219,14 +1219,20 @@ gst_ts_demux_stream_removed (MpegTSBase * base, MpegTSBaseStream * bstream)
 {
   TSDemuxStream *stream = (TSDemuxStream *) bstream;
 
-  if (stream) {
-    if (stream->pad) {
-      /* Unref the pad, clear it */
-      gst_object_unref (stream->pad);
-      stream->pad = NULL;
+  if (stream->pad) {
+    if (gst_pad_is_active (stream->pad)) {
+      GST_DEBUG_OBJECT (stream->pad, "Flushing out pending data");
+      /* Flush out all data */
+      gst_ts_demux_push_pending_data ((GstTSDemux *) base, stream);
+      GST_DEBUG_OBJECT (stream->pad, "Pushing out EOS");
+      gst_pad_push_event (stream->pad, gst_event_new_eos ());
+      GST_DEBUG_OBJECT (stream->pad, "Deactivating and removing pad");
+      gst_pad_set_active (stream->pad, FALSE);
+      gst_element_remove_pad (GST_ELEMENT_CAST (base), stream->pad);
     }
-    stream->flow_return = GST_FLOW_NOT_LINKED;
+    stream->pad = NULL;
   }
+  stream->flow_return = GST_FLOW_NOT_LINKED;
 }
 
 static void
@@ -1293,31 +1299,6 @@ gst_ts_demux_program_started (MpegTSBase * base, MpegTSBaseProgram * program)
     /* Inform scanner we have got our program */
     demux->current_program_number = program->program_number;
     demux->need_newsegment = TRUE;
-  }
-}
-
-static void
-gst_ts_demux_program_stopped (MpegTSBase * base, MpegTSBaseProgram * program)
-{
-  GList *tmp;
-  GstTSDemux *demux = GST_TS_DEMUX (base);
-  TSDemuxStream *localstream = NULL;
-
-  GST_LOG ("program %d stopped", program->program_number);
-
-  for (tmp = program->stream_list; tmp; tmp = tmp->next) {
-    localstream = (TSDemuxStream *) tmp->data;
-    if (localstream->pad) {
-      if (gst_pad_is_active (localstream->pad)) {
-        GST_DEBUG ("Pushing EOS and deactivating pad %s:%s",
-            GST_DEBUG_PAD_NAME (localstream->pad));
-        gst_pad_push_event (localstream->pad, gst_event_new_eos ());
-        gst_pad_set_active (localstream->pad, FALSE);
-        gst_element_remove_pad (GST_ELEMENT_CAST (demux), localstream->pad);
-      } else
-        gst_object_unref (localstream->pad);
-      localstream->pad = NULL;
-    }
   }
 }
 
