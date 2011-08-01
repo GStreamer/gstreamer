@@ -116,7 +116,7 @@ str_to_time (char *time)
 
 static GstEncodingProfile *
 make_encoding_profile (gchar * audio, gchar * video, gchar * video_restriction,
-    gchar * container)
+    gchar * audio_preset, gchar * video_preset, gchar * container)
 {
   GstEncodingContainerProfile *profile;
   GstEncodingProfile *stream;
@@ -130,13 +130,13 @@ make_encoding_profile (gchar * audio, gchar * video, gchar * video_restriction,
 
   caps = gst_caps_from_string (audio);
   stream = (GstEncodingProfile *)
-      gst_encoding_audio_profile_new (caps, NULL, NULL, 0);
+      gst_encoding_audio_profile_new (caps, audio_preset, NULL, 0);
   gst_encoding_container_profile_add_profile (profile, stream);
   gst_caps_unref (caps);
 
   caps = gst_caps_from_string (video);
   stream = (GstEncodingProfile *)
-      gst_encoding_video_profile_new (caps, NULL, NULL, 0);
+      gst_encoding_video_profile_new (caps, video_preset, NULL, 0);
   if (video_restriction)
     gst_encoding_profile_set_restriction (stream,
         gst_caps_from_string (video_restriction));
@@ -397,6 +397,8 @@ main (int argc, gchar ** argv)
   gchar *audio = (gchar *) "audio/x-vorbis";
   gchar *video = (gchar *) "video/x-theora";
   gchar *video_restriction = (gchar *) "ANY";
+  gchar *audio_preset = NULL;
+  gchar *video_preset = NULL;
   static gboolean render = FALSE;
   static gboolean smartrender = FALSE;
   static gboolean list_transitions = FALSE;
@@ -421,6 +423,10 @@ main (int argc, gchar ** argv)
         "Audio format", "<GstCaps>"},
     {"vrestriction", 'x', 0, G_OPTION_ARG_STRING, &video_restriction,
         "Video restriction", "<GstCaps>"},
+    {"apreset", 0, 0, G_OPTION_ARG_STRING, &audio_preset,
+        "Encoding audio profile preset", "<GstPresetName>"},
+    {"vpreset", 0, 0, G_OPTION_ARG_STRING, &video_preset,
+        "Encoding video profile preset", "<GstPresetName>"},
     {"repeat", 'l', 0, G_OPTION_ARG_INT, &repeat,
         "Number of time to repeat timeline", NULL},
     {"list-transitions", 't', 0, G_OPTION_ARG_NONE, &list_transitions,
@@ -493,7 +499,8 @@ main (int argc, gchar ** argv)
   if (render || smartrender) {
     GstEncodingProfile *prof;
 
-    prof = make_encoding_profile (audio, video, video_restriction, container);
+    prof = make_encoding_profile (audio, video, video_restriction, audio_preset,
+        video_preset, container);
 
     if (!prof ||
         !ges_timeline_pipeline_set_render_settings (pipeline, outputuri, prof)
