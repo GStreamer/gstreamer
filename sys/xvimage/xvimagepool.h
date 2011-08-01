@@ -51,8 +51,6 @@ const GstMetaInfo * gst_meta_xvimage_get_info (void);
 #define GST_META_INFO_XVIMAGE  (gst_meta_xvimage_get_info())
 
 #define gst_buffer_get_meta_xvimage(b) ((GstMetaXvImage*)gst_buffer_get_meta((b),GST_META_INFO_XVIMAGE))
-GstMetaXvImage * gst_buffer_add_meta_xvimage   (GstBuffer *buffer, GstXvImageSink * xvimagesink,
-                                                gint width, gint height, gint im_format);
 
 /**
  * GstMetaXvImage:

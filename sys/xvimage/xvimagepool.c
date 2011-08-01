@@ -36,6 +36,19 @@
 GST_DEBUG_CATEGORY_EXTERN (gst_debug_xvimagepool);
 #define GST_CAT_DEFAULT gst_debug_xvimagepool
 
+
+struct _GstXvImageBufferPoolPrivate
+{
+  GstCaps *caps;
+  gint im_format;
+  GstVideoInfo info;
+  GstVideoAlignment align;
+  guint padded_width;
+  guint padded_height;
+  gboolean add_metavideo;
+  gboolean need_alignment;
+};
+
 static void gst_meta_xvimage_free (GstMetaXvImage * meta, GstBuffer * buffer);
 
 /* xvimage metadata */
@@ -68,16 +81,24 @@ gst_xvimagesink_handle_xerror (Display * display, XErrorEvent * xevent)
   return 0;
 }
 
-GstMetaXvImage *
-gst_buffer_add_meta_xvimage (GstBuffer * buffer, GstXvImageSink * xvimagesink,
-    gint width, gint height, gint im_format)
+static GstMetaXvImage *
+gst_buffer_add_meta_xvimage (GstBuffer * buffer, GstXvImageBufferPool * xvpool)
 {
+  GstXvImageSink *xvimagesink;
   int (*handler) (Display *, XErrorEvent *);
   gboolean success = FALSE;
   GstXContext *xcontext;
   GstMetaXvImage *meta;
+  gint width, height, im_format;
+  GstXvImageBufferPoolPrivate *priv;
 
+  priv = xvpool->priv;
+  xvimagesink = xvpool->sink;
   xcontext = xvimagesink->xcontext;
+
+  width = priv->padded_width;
+  height = priv->padded_height;
+  im_format = priv->im_format;
 
   meta =
       (GstMetaXvImage *) gst_buffer_add_meta (buffer, GST_META_INFO_XVIMAGE,
@@ -92,7 +113,7 @@ gst_buffer_add_meta_xvimage (GstBuffer * buffer, GstXvImageSink * xvimagesink,
   meta->im_format = im_format;
 
   GST_DEBUG_OBJECT (xvimagesink, "creating image %p (%dx%d)", buffer,
-      meta->width, meta->height);
+      width, height);
 
   g_mutex_lock (xvimagesink->x_lock);
 
@@ -105,8 +126,7 @@ gst_buffer_add_meta_xvimage (GstBuffer * buffer, GstXvImageSink * xvimagesink,
     int expected_size;
 
     meta->xvimage = XvShmCreateImage (xcontext->disp,
-        xcontext->xv_port_id,
-        meta->im_format, NULL, meta->width, meta->height, &meta->SHMInfo);
+        xcontext->xv_port_id, im_format, NULL, width, height, &meta->SHMInfo);
     if (!meta->xvimage || error_caught) {
       g_mutex_unlock (xvimagesink->x_lock);
 
@@ -116,9 +136,8 @@ gst_buffer_add_meta_xvimage (GstBuffer * buffer, GstXvImageSink * xvimagesink,
       /* Push a warning */
       GST_ELEMENT_WARNING (xvimagesink, RESOURCE, WRITE,
           ("Failed to create output image buffer of %dx%d pixels",
-              meta->width, meta->height),
-          ("could not XShmCreateImage a %dx%d image",
-              meta->width, meta->height));
+              width, height),
+          ("could not XShmCreateImage a %dx%d image", width, height));
 
       /* Retry without XShm */
       xvimagesink->xcontext->use_xshm = FALSE;
@@ -135,7 +154,7 @@ gst_buffer_add_meta_xvimage (GstBuffer * buffer, GstXvImageSink * xvimagesink,
 
     /* calculate the expected size.  This is only for sanity checking the
      * number we get from X. */
-    switch (meta->im_format) {
+    switch (im_format) {
       case GST_MAKE_FOURCC ('I', '4', '2', '0'):
       case GST_MAKE_FOURCC ('Y', 'V', '1', '2'):
       {
@@ -144,15 +163,13 @@ gst_buffer_add_meta_xvimage (GstBuffer * buffer, GstXvImageSink * xvimagesink,
         guint plane;
 
         offsets[0] = 0;
-        pitches[0] = GST_ROUND_UP_4 (meta->width);
-        offsets[1] = offsets[0] + pitches[0] * GST_ROUND_UP_2 (meta->height);
-        pitches[1] = GST_ROUND_UP_8 (meta->width) / 2;
-        offsets[2] =
-            offsets[1] + pitches[1] * GST_ROUND_UP_2 (meta->height) / 2;
+        pitches[0] = GST_ROUND_UP_4 (width);
+        offsets[1] = offsets[0] + pitches[0] * GST_ROUND_UP_2 (height);
+        pitches[1] = GST_ROUND_UP_8 (width) / 2;
+        offsets[2] = offsets[1] + pitches[1] * GST_ROUND_UP_2 (height) / 2;
         pitches[2] = GST_ROUND_UP_8 (pitches[0]) / 2;
 
-        expected_size =
-            offsets[2] + pitches[2] * GST_ROUND_UP_2 (meta->height) / 2;
+        expected_size = offsets[2] + pitches[2] * GST_ROUND_UP_2 (height) / 2;
 
         for (plane = 0; plane < meta->xvimage->num_planes; plane++) {
           GST_DEBUG_OBJECT (xvimagesink,
@@ -163,7 +180,7 @@ gst_buffer_add_meta_xvimage (GstBuffer * buffer, GstXvImageSink * xvimagesink,
       }
       case GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'):
       case GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y'):
-        expected_size = meta->height * GST_ROUND_UP_4 (meta->width * 2);
+        expected_size = height * GST_ROUND_UP_4 (width * 2);
         break;
       default:
         expected_size = 0;
@@ -217,7 +234,7 @@ gst_buffer_add_meta_xvimage (GstBuffer * buffer, GstXvImageSink * xvimagesink,
 #endif /* HAVE_XSHM */
   {
     meta->xvimage = XvCreateImage (xcontext->disp,
-        xcontext->xv_port_id, meta->im_format, NULL, meta->width, meta->height);
+        xcontext->xv_port_id, im_format, NULL, width, height);
     if (!meta->xvimage || error_caught)
       goto create_failed;
 
@@ -256,9 +273,8 @@ create_failed:
     /* Push an error */
     GST_ELEMENT_ERROR (xvimagesink, RESOURCE, WRITE,
         ("Failed to create output image buffer of %dx%d pixels",
-            meta->width, meta->height),
-        ("could not XvShmCreateImage a %dx%d image", meta->width,
-            meta->height));
+            width, height),
+        ("could not XvShmCreateImage a %dx%d image", width, height));
     goto beach;
   }
 shmget_failed:
@@ -266,7 +282,7 @@ shmget_failed:
     g_mutex_unlock (xvimagesink->x_lock);
     GST_ELEMENT_ERROR (xvimagesink, RESOURCE, WRITE,
         ("Failed to create output image buffer of %dx%d pixels",
-            meta->width, meta->height),
+            width, height),
         ("could not get shared memory of %" G_GSIZE_FORMAT " bytes",
             meta->size));
     goto beach;
@@ -276,8 +292,7 @@ shmat_failed:
     g_mutex_unlock (xvimagesink->x_lock);
     GST_ELEMENT_ERROR (xvimagesink, RESOURCE, WRITE,
         ("Failed to create output image buffer of %dx%d pixels",
-            meta->width, meta->height),
-        ("Failed to shmat: %s", g_strerror (errno)));
+            width, height), ("Failed to shmat: %s", g_strerror (errno)));
     /* Clean up the shared memory segment */
     shmctl (meta->SHMInfo.shmid, IPC_RMID, NULL);
     goto beach;
@@ -290,7 +305,7 @@ xattach_failed:
 
     GST_ELEMENT_ERROR (xvimagesink, RESOURCE, WRITE,
         ("Failed to create output image buffer of %dx%d pixels",
-            meta->width, meta->height), ("Failed to XShmAttach"));
+            width, height), ("Failed to XShmAttach"));
     goto beach;
   }
 }
@@ -464,14 +479,6 @@ static void gst_xvimage_buffer_pool_finalize (GObject * object);
 #define GST_XVIMAGE_BUFFER_POOL_GET_PRIVATE(obj)  \
    (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_XVIMAGE_BUFFER_POOL, GstXvImageBufferPoolPrivate))
 
-struct _GstXvImageBufferPoolPrivate
-{
-  GstCaps *caps;
-  gint im_format;
-  GstVideoInfo info;
-  gboolean add_metavideo;
-};
-
 #define gst_xvimage_buffer_pool_parent_class parent_class
 G_DEFINE_TYPE (GstXvImageBufferPool, gst_xvimage_buffer_pool,
     GST_TYPE_BUFFER_POOL);
@@ -479,7 +486,9 @@ G_DEFINE_TYPE (GstXvImageBufferPool, gst_xvimage_buffer_pool,
 static const gchar **
 xvimage_buffer_pool_get_options (GstBufferPool * pool)
 {
-  static const gchar *options[] = { GST_BUFFER_POOL_OPTION_META_VIDEO, NULL };
+  static const gchar *options[] = { GST_BUFFER_POOL_OPTION_META_VIDEO,
+    GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT, NULL
+  };
 
   return options;
 }
@@ -518,6 +527,29 @@ xvimage_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   priv->add_metavideo =
       gst_buffer_pool_config_has_option (config,
       GST_BUFFER_POOL_OPTION_META_VIDEO);
+
+  /* parse extra alignment info */
+  priv->need_alignment = gst_buffer_pool_config_has_option (config,
+      GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
+
+  if (priv->need_alignment) {
+    gst_buffer_pool_config_get_video_alignment (config, &priv->align);
+
+    GST_LOG_OBJECT (pool, "padding %u-%ux%u-%u", priv->align.padding_top,
+        priv->align.padding_left, priv->align.padding_left,
+        priv->align.padding_bottom);
+
+    /* we need the video metadata too now */
+    priv->add_metavideo = TRUE;
+  }
+
+  /* add the padding */
+  priv->padded_width =
+      GST_VIDEO_INFO_WIDTH (&info) + priv->align.padding_left +
+      priv->align.padding_right;
+  priv->padded_height =
+      GST_VIDEO_INFO_HEIGHT (&info) + priv->align.padding_top +
+      priv->align.padding_bottom;
 
   if (priv->im_format == -1)
     goto unknown_format;
@@ -566,20 +598,45 @@ xvimage_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
   info = &priv->info;
 
   xvimage = gst_buffer_new ();
-  meta =
-      gst_buffer_add_meta_xvimage (xvimage, xvpool->sink,
-      GST_VIDEO_INFO_WIDTH (info), GST_VIDEO_INFO_HEIGHT (info),
-      priv->im_format);
+  meta = gst_buffer_add_meta_xvimage (xvimage, xvpool);
   if (meta == NULL) {
     gst_buffer_unref (xvimage);
     goto no_buffer;
   }
 
   if (priv->add_metavideo) {
+    GstMetaVideo *meta;
+    const GstVideoFormatInfo *vinfo = info->finfo;
+    gint i;
+
     GST_DEBUG_OBJECT (pool, "adding GstMetaVideo");
     /* these are just the defaults for now */
-    gst_buffer_add_meta_video (xvimage, 0, GST_VIDEO_INFO_FORMAT (info),
-        GST_VIDEO_INFO_WIDTH (info), GST_VIDEO_INFO_HEIGHT (info));
+    meta = gst_buffer_add_meta_video (xvimage, 0, GST_VIDEO_INFO_FORMAT (info),
+        priv->padded_width, priv->padded_height);
+
+    if (priv->need_alignment) {
+      meta->width = GST_VIDEO_INFO_WIDTH (&priv->info);
+      meta->height = GST_VIDEO_INFO_HEIGHT (&priv->info);
+
+      /* FIXME, not quite correct, NV12 would apply the vedge twice on the second
+       * plane */
+      for (i = 0; i < GST_VIDEO_INFO_N_COMPONENTS (info); i++) {
+        gint vedge, hedge, plane;
+
+        hedge =
+            GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (vinfo, i,
+            priv->align.padding_left);
+        vedge =
+            GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (vinfo, i,
+            priv->align.padding_top);
+        plane = GST_VIDEO_FORMAT_INFO_PLANE (vinfo, i);
+
+        GST_LOG_OBJECT (pool, "comp %d, plane %d: hedge %d, vedge %d", i,
+            plane, hedge, vedge);
+
+        meta->offset[plane] += (vedge * meta->stride[plane]) + hedge;
+      }
+    }
   }
 
   *buffer = xvimage;
