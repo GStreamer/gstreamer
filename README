@@ -2,7 +2,8 @@
   gstreamer-vaapi
   VA-API support to GStreamer
 
-  Copyright (C) 2010 Splitted-Desktop Systems
+  Copyright (C) 2010-2011 Splitted-Desktop Systems
+  Copyright (C) 2011 Intel Corporation
 
 
 License

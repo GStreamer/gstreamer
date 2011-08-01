@@ -1,5 +1,6 @@
 gst-vaapi NEWS -- summary of changes.  2011-07-DD
-Copyright (C) 2010 Splitted-Desktop Systems
+Copyright (C) 2010-2011 Splitted-Desktop Systems
+Copyright (C) 2011 Intel Corporation
 
 Version 0.2.7 - DD.Jul.2011
 * Fix MPEG-2 TS decoding
