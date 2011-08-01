@@ -313,13 +313,13 @@ gst_xvimagesink_xvimage_put (GstXvImageSink * xvimagesink, GstBuffer * xvimage)
   crop = gst_buffer_get_meta_video_crop (xvimage);
 
   if (crop) {
-    src.x = crop->x;
-    src.y = crop->y;
+    src.x = crop->x + meta->x;
+    src.y = crop->y + meta->y;
     src.w = crop->width;
     src.h = crop->height;
   } else {
-    src.x = 0;
-    src.y = 0;
+    src.x = meta->x;
+    src.y = meta->y;
     src.w = meta->width;
     src.h = meta->height;
   }

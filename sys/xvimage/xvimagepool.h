@@ -76,7 +76,9 @@ struct _GstMetaXvImage
   XShmSegmentInfo SHMInfo;
 #endif                          /* HAVE_XSHM */
 
-  gint width, height, im_format;
+  gint x, y;
+  gint width, height;
+  gint im_format;
   size_t size;
 };
 

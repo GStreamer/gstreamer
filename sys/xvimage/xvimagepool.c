@@ -107,8 +107,10 @@ gst_buffer_add_meta_xvimage (GstBuffer * buffer, GstXvImageBufferPool * xvpool)
   meta->SHMInfo.shmaddr = ((void *) -1);
   meta->SHMInfo.shmid = -1;
 #endif
-  meta->width = width;
-  meta->height = height;
+  meta->x = priv->align.padding_left;
+  meta->y = priv->align.padding_top;
+  meta->width = priv->info.width;
+  meta->height = priv->info.height;
   meta->sink = gst_object_ref (xvimagesink);
   meta->im_format = im_format;
 
