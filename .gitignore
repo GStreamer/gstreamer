@@ -49,3 +49,4 @@ gst*orc.h
 /tests/check/orc
 /tests/examples/shapewipe/shapewipe-example
 /tests/examples/jack/jack_client
+/tests/examples/opencv/gstmotioncells_dynamic_test

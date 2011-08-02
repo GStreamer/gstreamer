@@ -89,7 +89,6 @@ gst_element_print_properties (GstElement * element)
   GParamSpec **property_specs;
   guint num_properties, i;
   gboolean readable;
-  gboolean first_flag;
 
 
   g_return_if_fail (element != NULL);
@@ -108,7 +107,6 @@ gst_element_print_properties (GstElement * element)
     GParamSpec *param = property_specs[i];
 
     readable = FALSE;
-    first_flag = TRUE;
 
     g_value_init (&value, param->value_type);
 

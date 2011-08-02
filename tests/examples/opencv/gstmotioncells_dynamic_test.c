@@ -206,7 +206,11 @@ main (int argc, char *argv[])
   while (TRUE) {
     found_property = FALSE;
     i = 0;
+
     ret = scanf ("%19s %99s", property, prop_value);
+
+    if (ret < 1)
+      g_printerr ("Error parsing command.\n");
 
     if ((g_strcmp0 (property, "q") == 0) || (g_strcmp0 (prop_value, "q") == 0))
       break;
