@@ -9,15 +9,6 @@
 /* poll doesn't work on devices */
 #undef BROKEN_POLL
 
-/* Buffer alignment to use */
-#undef BUFFER_ALIGNMENT
-
-/* Buffer alignment by malloc default */
-#define BUFFER_ALIGNMENT_MALLOC 1
-
-/* Buffer alignment by pagesize */
-#undef BUFFER_ALIGNMENT_PAGESIZE
-
 /* Define to 1 if translation of program messages to the user's native
    language is requested. */
 #undef ENABLE_NLS
@@ -59,13 +50,13 @@
 #define GST_MAJORMINOR "0.11"
 
 /* package name in plugins */
-#define GST_PACKAGE_NAME "GStreamer git"
+#define GST_PACKAGE_NAME "GStreamer source release"
 
 /* package origin */
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
 
 /* GStreamer package release date/time for plugins as YYYY-MM-DD */
-#define GST_PACKAGE_RELEASE_DATETIME "2011-06-18T12:45Z"
+#define GST_PACKAGE_RELEASE_DATETIME "2011-08-02"
 
 /* location of the installed gst-plugin-scanner */
 #define GST_PLUGIN_SCANNER_INSTALLED LIBDIR "\\gst-plugin-scanner"
@@ -321,6 +312,15 @@
    */
 #undef LT_OBJDIR
 
+/* Memory alignment to use */
+#undef MEMORY_ALIGNMENT
+
+/* Memory alignment by malloc default */
+#define MEMORY_ALIGNMENT_MALLOC 1
+
+/* Memory alignment by pagesize */
+#undef MEMORY_ALIGNMENT_PAGESIZE
+
 /* Define if you have no native inet_aton() function. */
 #undef NO_INET_ATON
 
@@ -337,7 +337,7 @@
 #define PACKAGE_NAME "GStreamer"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer 0.11.0.1"
+#define PACKAGE_STRING "GStreamer 0.11.0"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gstreamer"
@@ -346,7 +346,7 @@
 #undef PACKAGE_URL
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.11.0.1"
+#define PACKAGE_VERSION "0.11.0"
 
 /* directory where plugins are located */
 #ifdef _DEBUG
@@ -377,7 +377,7 @@
 #undef USE_POISONING
 
 /* Version number of package */
-#define VERSION "0.11.0.1"
+#define VERSION "0.11.0"
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */

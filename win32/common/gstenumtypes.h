@@ -129,6 +129,8 @@ GType gst_mini_object_flags_get_type (void);
 #define GST_TYPE_MINI_OBJECT_FLAGS (gst_mini_object_flags_get_type())
 
 /* enumerations from "gstpad.h" */
+GType gst_pad_direction_get_type (void);
+#define GST_TYPE_PAD_DIRECTION (gst_pad_direction_get_type())
 GType gst_pad_link_return_get_type (void);
 #define GST_TYPE_PAD_LINK_RETURN (gst_pad_link_return_get_type())
 GType gst_flow_return_get_type (void);
@@ -141,8 +143,6 @@ GType gst_probe_type_get_type (void);
 #define GST_TYPE_PROBE_TYPE (gst_probe_type_get_type())
 GType gst_probe_return_get_type (void);
 #define GST_TYPE_PROBE_RETURN (gst_probe_return_get_type())
-GType gst_pad_direction_get_type (void);
-#define GST_TYPE_PAD_DIRECTION (gst_pad_direction_get_type())
 GType gst_pad_flags_get_type (void);
 #define GST_TYPE_PAD_FLAGS (gst_pad_flags_get_type())
 
@@ -179,6 +179,8 @@ GType gst_seek_type_get_type (void);
 #define GST_TYPE_SEEK_TYPE (gst_seek_type_get_type())
 GType gst_seek_flags_get_type (void);
 #define GST_TYPE_SEEK_FLAGS (gst_seek_flags_get_type())
+GType gst_segment_flags_get_type (void);
+#define GST_TYPE_SEGMENT_FLAGS (gst_segment_flags_get_type())
 
 /* enumerations from "gstsystemclock.h" */
 GType gst_clock_type_get_type (void);

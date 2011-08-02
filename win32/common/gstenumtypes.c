@@ -1040,6 +1040,25 @@ gst_mini_object_flags_get_type (void)
 
 /* enumerations from "gstpad.h" */
 GType
+gst_pad_direction_get_type (void)
+{
+  static gsize id = 0;
+  static const GEnumValue values[] = {
+    {C_ENUM (GST_PAD_UNKNOWN), "GST_PAD_UNKNOWN", "unknown"},
+    {C_ENUM (GST_PAD_SRC), "GST_PAD_SRC", "src"},
+    {C_ENUM (GST_PAD_SINK), "GST_PAD_SINK", "sink"},
+    {0, NULL, NULL}
+  };
+
+  if (g_once_init_enter (&id)) {
+    GType tmp = g_enum_register_static ("GstPadDirection", values);
+    g_once_init_leave (&id, tmp);
+  }
+
+  return (GType) id;
+}
+
+GType
 gst_pad_link_return_get_type (void)
 {
   static gsize id = 0;
@@ -1189,25 +1208,6 @@ gst_probe_return_get_type (void)
 }
 
 GType
-gst_pad_direction_get_type (void)
-{
-  static gsize id = 0;
-  static const GEnumValue values[] = {
-    {C_ENUM (GST_PAD_UNKNOWN), "GST_PAD_UNKNOWN", "unknown"},
-    {C_ENUM (GST_PAD_SRC), "GST_PAD_SRC", "src"},
-    {C_ENUM (GST_PAD_SINK), "GST_PAD_SINK", "sink"},
-    {0, NULL, NULL}
-  };
-
-  if (g_once_init_enter (&id)) {
-    GType tmp = g_enum_register_static ("GstPadDirection", values);
-    g_once_init_leave (&id, tmp);
-  }
-
-  return (GType) id;
-}
-
-GType
 gst_pad_flags_get_type (void)
 {
   static gsize id = 0;
@@ -1215,7 +1215,6 @@ gst_pad_flags_get_type (void)
     {C_FLAGS (GST_PAD_BLOCKED), "GST_PAD_BLOCKED", "blocked"},
     {C_FLAGS (GST_PAD_FLUSHING), "GST_PAD_FLUSHING", "flushing"},
     {C_FLAGS (GST_PAD_IN_GETCAPS), "GST_PAD_IN_GETCAPS", "in-getcaps"},
-    {C_FLAGS (GST_PAD_IN_SETCAPS), "GST_PAD_IN_SETCAPS", "in-setcaps"},
     {C_FLAGS (GST_PAD_BLOCKING), "GST_PAD_BLOCKING", "blocking"},
     {C_FLAGS (GST_PAD_NEED_RECONFIGURE), "GST_PAD_NEED_RECONFIGURE",
         "need-reconfigure"},
@@ -1468,6 +1467,25 @@ gst_seek_flags_get_type (void)
 
   if (g_once_init_enter (&id)) {
     GType tmp = g_flags_register_static ("GstSeekFlags", values);
+    g_once_init_leave (&id, tmp);
+  }
+
+  return (GType) id;
+}
+
+GType
+gst_segment_flags_get_type (void)
+{
+  static gsize id = 0;
+  static const GEnumValue values[] = {
+    {C_ENUM (GST_SEGMENT_FLAG_NONE), "GST_SEGMENT_FLAG_NONE", "none"},
+    {C_ENUM (GST_SEGMENT_FLAG_RESET), "GST_SEGMENT_FLAG_RESET", "reset"},
+    {C_ENUM (GST_SEGMENT_FLAG_SKIP), "GST_SEGMENT_FLAG_SKIP", "skip"},
+    {0, NULL, NULL}
+  };
+
+  if (g_once_init_enter (&id)) {
+    GType tmp = g_enum_register_static ("GstSegmentFlags", values);
     g_once_init_leave (&id, tmp);
   }
 

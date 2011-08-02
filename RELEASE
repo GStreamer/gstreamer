@@ -1,20 +1,20 @@
 
-Release notes for GStreamer 0.10.35 "Nuclear Fission"
+Release notes for GStreamer 0.11.0 "It's a boy"
         
 
 
-The GStreamer team is proud to announce a new release
-in the 0.10.x stable series of the
+The GStreamer team is proud to announce the first release
+in the 0.11.x unstable series of the
 core of the GStreamer streaming media framework.
 
 
-The 0.10.x series is a stable series targeted at end users.
-It is not API or ABI compatible with the stable 0.8.x series.
-It is, however, parallel installable with the 0.8.x series.
+The 0.11.x series is an unstable series targeted at developers.
+It is not API or ABI compatible with the stable 0.10.x series.
+It is, however, parallel installable with the 0.10.x series.
 
 
-The 0.10.x series has been reworked for threadsafety.  It also features
-various feature additions and enhancements.
+The 0.11.x series has improved memory management and features
+various cleanups and enhancements.
 
 
 This module, gstreamer, only contains core functionality.
@@ -37,13 +37,23 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * work around GLib atomic ops API change
-      * some minor win32/mingw fixes
-      * don't use G_CONST_RETURN in public headers
+      * Parallel installability with 0.10.x series
+      * Reworked buffer memory management
+      * Arbitrary buffer metadata
+      * integrated bufferpool management
+      * Improved dynamic pipeline handling
+      * Reworked video caps system
+      * Reworked pad probes
+
 
 Bugs fixed in this release
      
-      * 652211 : Use const instead G_CONST_RETURN
+      * 322851 : basesrc: add fill virtual method
+      * 491501 : Reduce usage of base_init in GstElement subclasses
+      * 518597 : [0.11] Get rid of .gstreamer-X.X folder and follow fd.o xdg base directory specifications
+      * 616237 : Stop allocating buffers for any caps
+      * 643244 : [0.11] gstpad: gst_pad_alloc_buffer(_and_set_caps) take size as gint instead of guint
+      * 648181 : [basetransform] Trigger upstream renegotiation if the sinkpad is (re-)linked
 
 Download
 
@@ -70,14 +80,20 @@ will create more lists as necessary.
         
 Applications
 
-Applications ported to GStreamer 0.10 include Totem, RhythmBox, Sound-Juicer,
-Gnome Media, Flumotion, Amarok, Jamboree, Pitivi, Istanbul, AnnoAmp, Elisa, and others.
-Let us know if you want to be added to this list.
+No applications are ported to 0.11 as of yet. We are looking for more people to
+port plugins and applications.
 
   
 Contributors to this release
-    
+
       * David Schleef
-      * Javier Jardón
-      * Руслан Ижбулатов
+      * Edward Hervey
+      * Johan Dahlin
+      * Koop Mast
+      * Mark Nauwelaerts
+      * Sebastian Dröge
+      * Stefan Kost
+      * Thiago Santos
+      * Tim-Philipp Müller
+      * Wim Taymans
  
