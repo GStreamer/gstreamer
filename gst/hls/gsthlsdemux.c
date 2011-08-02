@@ -855,6 +855,9 @@ gst_hls_demux_cache_fragments (GstHLSDemux * demux)
 
   /* Cache the first fragments */
   for (i = 0; i < demux->fragments_cache - 1; i++) {
+    g_get_current_time (&demux->next_update);
+    g_time_val_add (&demux->next_update,
+        demux->client->current->targetduration * 1000000);
     if (!gst_hls_demux_get_next_fragment (demux, FALSE)) {
       if (!demux->cancelled)
         GST_ERROR_OBJECT (demux, "Error caching the first fragments");
@@ -863,6 +866,7 @@ gst_hls_demux_cache_fragments (GstHLSDemux * demux)
     /* make sure we stop caching fragments if something cancelled it */
     if (demux->cancelled)
       return FALSE;
+    gst_hls_demux_switch_playlist (demux);
   }
 
   g_get_current_time (&demux->next_update);
