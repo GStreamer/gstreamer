@@ -272,7 +272,11 @@ gst_camera_bin_start_capture (GstCameraBin2 * camerabin)
     if (camerabin->audio_src) {
       GstClock *clock = gst_pipeline_get_clock (GST_PIPELINE_CAST (camerabin));
 
-      gst_element_set_state (camerabin->audio_src, GST_STATE_READY);
+      /* FIXME We need to set audiosrc to null to make it resync the ringbuffer
+       * while bug https://bugzilla.gnome.org/show_bug.cgi?id=648359 isn't
+       * fixed */
+      gst_element_set_state (camerabin->audio_src, GST_STATE_NULL);
+
       /* need to reset eos status (pads could be flushing) */
       gst_element_set_state (camerabin->audio_capsfilter, GST_STATE_READY);
       gst_element_set_state (camerabin->audio_volume, GST_STATE_READY);
