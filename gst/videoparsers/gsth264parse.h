@@ -1,7 +1,10 @@
 /* GStreamer H.264 Parser
- * Copyright (C) <2010> Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
- * Copyright (C) <2010> Collabora Multimedia
+ * Copyright (C) <2010> Collabora ltd
  * Copyright (C) <2010> Nokia Corporation
+ * Copyright (C) <2011> Intel Corporation
+ *
+ * Copyright (C) <2010> Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+ * Copyright (C) <2011> Thibault Saunier <thibault.saunier@collabora.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -24,8 +27,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstbaseparse.h>
-
-#include "h264parse.h"
+#include <gst/codecparsers/gsth264parser.h>
 
 G_BEGIN_DECLS
 
@@ -61,16 +63,34 @@ struct _GstH264Parse
   gboolean packetized;
 
   /* state */
-  GstH264Params *params;
+  GstH264NalParser *nalparser;
+  GstH264NalUnit nalu;
   guint align;
   guint format;
+  guint current_off;
 
   GstClockTime last_report;
   gboolean push_codec;
 
+  /* collected SPS and PPS NALUs */
+  GstBuffer *sps_nals[GST_H264_MAX_SPS_COUNT];
+  GstBuffer *pps_nals[GST_H264_MAX_PPS_COUNT];
+
+  /* Infos we need to keep track of */
+  guint32 sei_cpb_removal_delay;
+  guint8 sei_pic_struct;
+  guint8 sei_pic_struct_pres_flag;
+  guint field_pic_flag;
+
+  /* cached timestamps */
+  /* (trying to) track upstream dts and interpolate */
+  GstClockTime dts;
+  /* dts at start of last buffering period */
+  GstClockTime ts_trn_nb;
+
   /* frame parsing */
-  guint last_nal_pos;
-  guint next_sc_pos;
+  /*guint last_nal_pos;*/
+  /*guint next_sc_pos;*/
   gint idr_pos;
   gboolean update_caps;
   GstAdapter *frame_out;
