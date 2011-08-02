@@ -676,8 +676,10 @@ gst_base_video_encoder_chain (GstPad * pad, GstBuffer * buf)
   frame->force_keyframe = base_video_encoder->force_keyframe;
   base_video_encoder->force_keyframe = FALSE;
 
+  GST_OBJECT_LOCK (base_video_encoder);
   GST_BASE_VIDEO_CODEC (base_video_encoder)->frames =
       g_list_append (GST_BASE_VIDEO_CODEC (base_video_encoder)->frames, frame);
+  GST_OBJECT_UNLOCK (base_video_encoder);
 
   /* new data, more finish needed */
   base_video_encoder->drained = FALSE;
@@ -894,8 +896,10 @@ gst_base_video_encoder_finish_frame (GstBaseVideoEncoder * base_video_encoder,
 
 done:
   /* handed out */
+  GST_OBJECT_LOCK (base_video_encoder);
   GST_BASE_VIDEO_CODEC (base_video_encoder)->frames =
       g_list_remove (GST_BASE_VIDEO_CODEC (base_video_encoder)->frames, frame);
+  GST_OBJECT_UNLOCK (base_video_encoder);
 
   gst_base_video_codec_free_frame (frame);
 
@@ -972,7 +976,9 @@ gst_base_video_encoder_get_oldest_frame (GstBaseVideoEncoder *
 {
   GList *g;
 
+  GST_OBJECT_LOCK (base_video_encoder);
   g = g_list_first (GST_BASE_VIDEO_CODEC (base_video_encoder)->frames);
+  GST_OBJECT_UNLOCK (base_video_encoder);
 
   if (g == NULL)
     return NULL;
