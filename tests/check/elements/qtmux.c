@@ -518,7 +518,7 @@ create_qtmux_profile (const gchar * variant)
   return cprof;
 }
 
-GST_START_TEST (test_encodebin)
+GST_START_TEST (test_encodebin_qtmux)
 {
   GstEncodingContainerProfile *cprof;
   GstElement *enc;
@@ -554,6 +554,136 @@ GST_START_TEST (test_encodebin)
 
 GST_END_TEST;
 
+/* Fake mp3 encoder for test */
+typedef GstElement TestMp3Enc;
+typedef GstElementClass TestMp3EncClass;
+
+static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("audio/mpeg, mpegversion=1, layer=[1,3]")
+    );
+
+static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("audio/x-raw-int")
+    );
+
+static GType test_mp3_enc_get_type (void);
+
+GST_BOILERPLATE (TestMp3Enc, test_mp3_enc, GstElement, GST_TYPE_ELEMENT);
+
+static void
+test_mp3_enc_base_init (gpointer klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&sink_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&src_template));
+
+  gst_element_class_set_details_simple (element_class, "MPEG1 Audio Encoder",
+      "Codec/Encoder/Audio", "Pretends to encode mp3", "Foo Bar <foo@bar.com>");
+}
+
+static void
+test_mp3_enc_class_init (TestMp3EncClass * klass)
+{
+  /* doesn't actually need to do anything for this test */
+}
+
+static void
+test_mp3_enc_init (TestMp3Enc * mp3enc, TestMp3EncClass * klass)
+{
+  GstPad *pad;
+
+  pad = gst_pad_new_from_static_template (&sink_template, "sink");
+  gst_element_add_pad (mp3enc, pad);
+
+  pad = gst_pad_new_from_static_template (&src_template, "src");
+  gst_element_add_pad (mp3enc, pad);
+}
+
+static gboolean
+plugin_init (GstPlugin * plugin)
+{
+  return gst_element_register (plugin, "testmp3enc", GST_RANK_NONE,
+      test_mp3_enc_get_type ());
+}
+
+static GstEncodingContainerProfile *
+create_mp4mux_profile (void)
+{
+  GstEncodingContainerProfile *cprof;
+  GstCaps *caps;
+
+  caps = gst_caps_new_simple ("video/quicktime",
+      "variant", G_TYPE_STRING, "iso", NULL);
+
+  cprof = gst_encoding_container_profile_new ("Name", "blah", caps, NULL);
+  gst_caps_unref (caps);
+
+  caps = gst_caps_new_simple ("audio/mpeg", "mpegversion", G_TYPE_INT, 1,
+      "layer", G_TYPE_INT, 3, "channels", G_TYPE_INT, 2, "rate", G_TYPE_INT,
+      44100, NULL);
+  gst_encoding_container_profile_add_profile (cprof,
+      GST_ENCODING_PROFILE (gst_encoding_audio_profile_new (caps, NULL, NULL,
+              1)));
+  gst_caps_unref (caps);
+
+  return cprof;
+}
+
+GST_START_TEST (test_encodebin_mp4mux)
+{
+  GstEncodingContainerProfile *cprof;
+  GstPluginFeature *feature;
+  GstElement *enc, *mux;
+  GstPad *pad;
+
+  /* need a fake mp3 encoder because mp4 only accepts encoded formats */
+  gst_plugin_register_static (GST_VERSION_MAJOR, GST_VERSION_MINOR,
+      "fakemp3enc", "fakemp3enc", plugin_init, VERSION, "LGPL",
+      "gst-plugins-good", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);
+
+  feature = gst_default_registry_find_feature ("testmp3enc",
+      GST_TYPE_ELEMENT_FACTORY);
+  gst_plugin_feature_set_rank (feature, GST_RANK_PRIMARY + 100);
+
+  enc = gst_element_factory_make ("encodebin", NULL);
+  if (enc == NULL)
+    return;
+
+  /* Make sure encodebin finds mp4mux even though qtmux outputs a superset */
+  cprof = create_mp4mux_profile ();
+  g_object_set (enc, "profile", cprof, NULL);
+  gst_encoding_profile_unref (cprof);
+
+  /* should have created a pad after setting the profile */
+  pad = gst_element_get_static_pad (enc, "audio_0");
+  fail_unless (pad != NULL);
+  gst_object_unref (pad);
+
+  mux = gst_bin_get_by_interface (GST_BIN (enc), GST_TYPE_TAG_SETTER);
+  fail_unless (mux != NULL);
+  {
+    GstElementFactory *f = gst_element_get_factory (mux);
+
+    /* make sure we got mp4mux for variant=iso */
+    GST_INFO ("muxer: %s", G_OBJECT_TYPE_NAME (mux));
+    fail_unless_equals_string (GST_PLUGIN_FEATURE_NAME (f), "mp4mux");
+  }
+  gst_object_unref (mux);
+  gst_object_unref (enc);
+
+  gst_plugin_feature_set_rank (feature, GST_RANK_NONE);
+  gst_object_unref (feature);
+}
+
+GST_END_TEST;
+
 static Suite *
 qtmux_suite (void)
 {
@@ -583,7 +713,8 @@ qtmux_suite (void)
   tcase_add_test (tc_chain, test_audio_pad_frag_asc_streamable);
 
   tcase_add_test (tc_chain, test_reuse);
-  tcase_add_test (tc_chain, test_encodebin);
+  tcase_add_test (tc_chain, test_encodebin_qtmux);
+  tcase_add_test (tc_chain, test_encodebin_mp4mux);
 
   return s;
 }
