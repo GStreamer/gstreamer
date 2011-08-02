@@ -667,10 +667,9 @@ gst_asf_demux_handle_seek_event (GstASFDemux * demux, GstEvent * event)
        gstmms will do a time based seek to get the byte offset, this is not a
        problem as the seek to this offset needs to happen anway. */
     gint64 offset;
-    GstFormat dest_format = GST_FORMAT_BYTES;
 
     if (gst_pad_query_peer_convert (demux->sinkpad, GST_FORMAT_TIME, seek_time,
-            &dest_format, &offset) && dest_format == GST_FORMAT_BYTES) {
+            GST_FORMAT_BYTES, &offset)) {
       packet = (offset - demux->data_offset) / demux->packet_size;
       GST_LOG_OBJECT (demux, "convert %" GST_TIME_FORMAT
           " to bytes query result: %" G_GINT64_FORMAT ", data_ofset: %"
