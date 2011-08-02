@@ -105,14 +105,14 @@ gst_omx_h264_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
   GstCaps *peercaps;
   OMX_VIDEO_AVCPROFILETYPE profile = OMX_VIDEO_AVCProfileBaseline;
   OMX_VIDEO_AVCLEVELTYPE level = OMX_VIDEO_AVCLevel11;
+  OMX_VIDEO_PARAM_PROFILELEVELTYPE param;
+  OMX_ERRORTYPE err;
 
   peercaps = gst_pad_peer_get_caps (GST_BASE_VIDEO_CODEC_SRC_PAD (enc));
   if (peercaps) {
     GstStructure *s;
     GstCaps *intersection;
     const gchar *profile_string, *level_string;
-    OMX_VIDEO_PARAM_PROFILELEVELTYPE param;
-    OMX_ERRORTYPE err;
 
     intersection =
         gst_caps_intersect (peercaps,
@@ -185,21 +185,24 @@ gst_omx_h264_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
         return FALSE;
       }
     }
+  }
 
-    GST_OMX_INIT_STRUCT (&param);
-    param.nPortIndex = GST_OMX_VIDEO_ENC (self)->out_port->index;
-    param.eProfile = profile;
-    param.eLevel = level;
+  GST_OMX_INIT_STRUCT (&param);
+  param.nPortIndex = GST_OMX_VIDEO_ENC (self)->out_port->index;
+  param.eProfile = profile;
+  param.eLevel = level;
 
-    err =
-        gst_omx_component_set_parameter (GST_OMX_VIDEO_ENC (self)->component,
-        OMX_IndexParamVideoProfileLevelCurrent, &param);
-    if (err != OMX_ErrorNone) {
-      GST_ERROR_OBJECT (self,
-          "Error setting profile %d and level %d: %s (0x%08x)", profile, level,
-          gst_omx_error_to_string (err), err);
-      return FALSE;
-    }
+  err =
+      gst_omx_component_set_parameter (GST_OMX_VIDEO_ENC (self)->component,
+      OMX_IndexParamVideoProfileLevelCurrent, &param);
+  if (err == OMX_ErrorUnsupportedIndex) {
+    GST_WARNING_OBJECT (self,
+        "Setting profile/level not supported by component");
+  } else if (err != OMX_ErrorNone) {
+    GST_ERROR_OBJECT (self,
+        "Error setting profile %d and level %d: %s (0x%08x)", profile, level,
+        gst_omx_error_to_string (err), err);
+    return FALSE;
   }
 
   return TRUE;
@@ -215,100 +218,9 @@ gst_omx_h264_enc_get_caps (GstOMXVideoEnc * enc, GstOMXPort * port,
   OMX_VIDEO_PARAM_PROFILELEVELTYPE param;
   const gchar *profile, *level;
 
-  GST_OMX_INIT_STRUCT (&param);
-  param.nPortIndex = GST_OMX_VIDEO_ENC (self)->out_port->index;
-
-  err =
-      gst_omx_component_get_parameter (GST_OMX_VIDEO_ENC (self)->component,
-      OMX_IndexParamVideoProfileLevelCurrent, &param);
-  if (err != OMX_ErrorNone)
-    return NULL;
-
-  switch (param.eProfile) {
-    case OMX_VIDEO_AVCProfileBaseline:
-      profile = "baseline";
-      break;
-    case OMX_VIDEO_AVCProfileMain:
-      profile = "main";
-      break;
-    case OMX_VIDEO_AVCProfileExtended:
-      profile = "extended";
-      break;
-    case OMX_VIDEO_AVCProfileHigh:
-      profile = "high";
-      break;
-    case OMX_VIDEO_AVCProfileHigh10:
-      profile = "high-10";
-      break;
-    case OMX_VIDEO_AVCProfileHigh422:
-      profile = "high-4:2:2";
-      break;
-    case OMX_VIDEO_AVCProfileHigh444:
-      profile = "high-4:4:4";
-      break;
-    default:
-      g_assert_not_reached ();
-      break;
-  }
-
-  switch (param.eLevel) {
-    case OMX_VIDEO_AVCLevel1:
-      level = "1";
-      break;
-    case OMX_VIDEO_AVCLevel1b:
-      level = "1b";
-      break;
-    case OMX_VIDEO_AVCLevel11:
-      level = "1.1";
-      break;
-    case OMX_VIDEO_AVCLevel12:
-      level = "1.2";
-      break;
-    case OMX_VIDEO_AVCLevel13:
-      level = "1.3";
-      break;
-    case OMX_VIDEO_AVCLevel2:
-      level = "2";
-      break;
-    case OMX_VIDEO_AVCLevel21:
-      level = "2.1";
-      break;
-    case OMX_VIDEO_AVCLevel22:
-      level = "2.2";
-      break;
-    case OMX_VIDEO_AVCLevel3:
-      level = "3";
-      break;
-    case OMX_VIDEO_AVCLevel31:
-      level = "3.1";
-      break;
-    case OMX_VIDEO_AVCLevel32:
-      level = "3.2";
-      break;
-    case OMX_VIDEO_AVCLevel4:
-      level = "4";
-      break;
-    case OMX_VIDEO_AVCLevel41:
-      level = "4.1";
-      break;
-    case OMX_VIDEO_AVCLevel42:
-      level = "4.2";
-      break;
-    case OMX_VIDEO_AVCLevel5:
-      level = "5";
-      break;
-    case OMX_VIDEO_AVCLevel51:
-      level = "5.1";
-      break;
-    default:
-      g_assert_not_reached ();
-      break;
-  }
-
   caps =
       gst_caps_new_simple ("video/x-h264", "width", G_TYPE_INT, state->width,
-      "height", G_TYPE_INT, state->height,
-      "profile", G_TYPE_STRING, profile, "level", G_TYPE_STRING, level, NULL);
+      "height", G_TYPE_INT, state->height, NULL);
 
   if (state->fps_n != 0)
     gst_caps_set_simple (caps, "framerate", GST_TYPE_FRACTION, state->fps_n,
@@ -316,6 +228,100 @@ gst_omx_h264_enc_get_caps (GstOMXVideoEnc * enc, GstOMXPort * port,
   if (state->par_n != 1 || state->par_d != 1)
     gst_caps_set_simple (caps, "pixel-aspect-ratio", GST_TYPE_FRACTION,
         state->par_n, state->par_d, NULL);
+
+  GST_OMX_INIT_STRUCT (&param);
+  param.nPortIndex = GST_OMX_VIDEO_ENC (self)->out_port->index;
+
+  err =
+      gst_omx_component_get_parameter (GST_OMX_VIDEO_ENC (self)->component,
+      OMX_IndexParamVideoProfileLevelCurrent, &param);
+  if (err != OMX_ErrorNone && err != OMX_ErrorUnsupportedIndex)
+    return NULL;
+
+  if (err == OMX_ErrorNone) {
+    switch (param.eProfile) {
+      case OMX_VIDEO_AVCProfileBaseline:
+        profile = "baseline";
+        break;
+      case OMX_VIDEO_AVCProfileMain:
+        profile = "main";
+        break;
+      case OMX_VIDEO_AVCProfileExtended:
+        profile = "extended";
+        break;
+      case OMX_VIDEO_AVCProfileHigh:
+        profile = "high";
+        break;
+      case OMX_VIDEO_AVCProfileHigh10:
+        profile = "high-10";
+        break;
+      case OMX_VIDEO_AVCProfileHigh422:
+        profile = "high-4:2:2";
+        break;
+      case OMX_VIDEO_AVCProfileHigh444:
+        profile = "high-4:4:4";
+        break;
+      default:
+        g_assert_not_reached ();
+        break;
+    }
+
+    switch (param.eLevel) {
+      case OMX_VIDEO_AVCLevel1:
+        level = "1";
+        break;
+      case OMX_VIDEO_AVCLevel1b:
+        level = "1b";
+        break;
+      case OMX_VIDEO_AVCLevel11:
+        level = "1.1";
+        break;
+      case OMX_VIDEO_AVCLevel12:
+        level = "1.2";
+        break;
+      case OMX_VIDEO_AVCLevel13:
+        level = "1.3";
+        break;
+      case OMX_VIDEO_AVCLevel2:
+        level = "2";
+        break;
+      case OMX_VIDEO_AVCLevel21:
+        level = "2.1";
+        break;
+      case OMX_VIDEO_AVCLevel22:
+        level = "2.2";
+        break;
+      case OMX_VIDEO_AVCLevel3:
+        level = "3";
+        break;
+      case OMX_VIDEO_AVCLevel31:
+        level = "3.1";
+        break;
+      case OMX_VIDEO_AVCLevel32:
+        level = "3.2";
+        break;
+      case OMX_VIDEO_AVCLevel4:
+        level = "4";
+        break;
+      case OMX_VIDEO_AVCLevel41:
+        level = "4.1";
+        break;
+      case OMX_VIDEO_AVCLevel42:
+        level = "4.2";
+        break;
+      case OMX_VIDEO_AVCLevel5:
+        level = "5";
+        break;
+      case OMX_VIDEO_AVCLevel51:
+        level = "5.1";
+        break;
+      default:
+        g_assert_not_reached ();
+        break;
+    }
+    gst_caps_set_simple (caps,
+        "profile", G_TYPE_STRING, profile, "level", G_TYPE_STRING, level, NULL);
+  }
 
   return caps;
 }

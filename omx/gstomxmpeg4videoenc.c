@@ -110,14 +110,14 @@ gst_omx_mpeg4_video_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
   GstCaps *peercaps;
   OMX_VIDEO_MPEG4PROFILETYPE profile = OMX_VIDEO_MPEG4ProfileSimple;
   OMX_VIDEO_MPEG4LEVELTYPE level = OMX_VIDEO_MPEG4Level1;
+  OMX_VIDEO_PARAM_PROFILELEVELTYPE param;
+  OMX_ERRORTYPE err;
 
   peercaps = gst_pad_peer_get_caps (GST_BASE_VIDEO_CODEC_SRC_PAD (enc));
   if (peercaps) {
     GstStructure *s;
     GstCaps *intersection;
     const gchar *profile_string, *level_string;
-    OMX_VIDEO_PARAM_PROFILELEVELTYPE param;
-    OMX_ERRORTYPE err;
 
     intersection =
         gst_caps_intersect (peercaps,
@@ -192,21 +192,24 @@ gst_omx_mpeg4_video_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
         return FALSE;
       }
     }
+  }
 
-    GST_OMX_INIT_STRUCT (&param);
-    param.nPortIndex = GST_OMX_VIDEO_ENC (self)->out_port->index;
-    param.eProfile = profile;
-    param.eLevel = level;
+  GST_OMX_INIT_STRUCT (&param);
+  param.nPortIndex = GST_OMX_VIDEO_ENC (self)->out_port->index;
+  param.eProfile = profile;
+  param.eLevel = level;
 
-    err =
-        gst_omx_component_set_parameter (GST_OMX_VIDEO_ENC (self)->component,
-        OMX_IndexParamVideoProfileLevelCurrent, &param);
-    if (err != OMX_ErrorNone) {
-      GST_ERROR_OBJECT (self,
-          "Error setting profile %d and level %d: %s (0x%08x)", profile, level,
-          gst_omx_error_to_string (err), err);
-      return FALSE;
-    }
+  err =
+      gst_omx_component_set_parameter (GST_OMX_VIDEO_ENC (self)->component,
+      OMX_IndexParamVideoProfileLevelCurrent, &param);
+  if (err == OMX_ErrorUnsupportedIndex) {
+    GST_WARNING_OBJECT (self,
+        "Setting profile/level not supported by component");
+  } else if (err != OMX_ErrorNone) {
+    GST_ERROR_OBJECT (self,
+        "Error setting profile %d and level %d: %s (0x%08x)", profile, level,
+        gst_omx_error_to_string (err), err);
+    return FALSE;
   }
 
   return TRUE;
@@ -222,104 +225,10 @@ gst_omx_mpeg4_video_enc_get_caps (GstOMXVideoEnc * enc, GstOMXPort * port,
   OMX_VIDEO_PARAM_PROFILELEVELTYPE param;
   const gchar *profile, *level;
 
-  GST_OMX_INIT_STRUCT (&param);
-  param.nPortIndex = GST_OMX_VIDEO_ENC (self)->out_port->index;
-
-  err =
-      gst_omx_component_get_parameter (GST_OMX_VIDEO_ENC (self)->component,
-      OMX_IndexParamVideoProfileLevelCurrent, &param);
-  if (err != OMX_ErrorNone)
-    return NULL;
-
-  switch (param.eProfile) {
-    case OMX_VIDEO_MPEG4ProfileSimple:
-      profile = "simple";
-      break;
-    case OMX_VIDEO_MPEG4ProfileSimpleScalable:
-      profile = "simple-scalable";
-      break;
-    case OMX_VIDEO_MPEG4ProfileCore:
-      profile = "core";
-      break;
-    case OMX_VIDEO_MPEG4ProfileMain:
-      profile = "main";
-      break;
-    case OMX_VIDEO_MPEG4ProfileNbit:
-      profile = "n-bit";
-      break;
-    case OMX_VIDEO_MPEG4ProfileScalableTexture:
-      profile = "scalable";
-      break;
-    case OMX_VIDEO_MPEG4ProfileSimpleFace:
-      profile = "simple-face";
-      break;
-    case OMX_VIDEO_MPEG4ProfileSimpleFBA:
-      profile = "simple-fba";
-      break;
-    case OMX_VIDEO_MPEG4ProfileBasicAnimated:
-      profile = "basic-animated-texture";
-      break;
-    case OMX_VIDEO_MPEG4ProfileHybrid:
-      profile = "hybrid";
-      break;
-    case OMX_VIDEO_MPEG4ProfileAdvancedRealTime:
-      profile = "advanced-real-time-simple";
-      break;
-    case OMX_VIDEO_MPEG4ProfileCoreScalable:
-      profile = "core-scalable";
-      break;
-    case OMX_VIDEO_MPEG4ProfileAdvancedCoding:
-      profile = "advanced-coding-efficiency";
-      break;
-    case OMX_VIDEO_MPEG4ProfileAdvancedCore:
-      profile = "advanced-core";
-      break;
-    case OMX_VIDEO_MPEG4ProfileAdvancedScalable:
-      profile = "advanced-scalable-texture";
-      break;
-    case OMX_VIDEO_MPEG4ProfileAdvancedSimple:
-      profile = "advanced-simple";
-      break;
-    default:
-      g_assert_not_reached ();
-      break;
-  }
-
-  switch (param.eLevel) {
-    case OMX_VIDEO_MPEG4Level0:
-      level = "0";
-      break;
-    case OMX_VIDEO_MPEG4Level0b:
-      level = "0b";
-      break;
-    case OMX_VIDEO_MPEG4Level1:
-      level = "1";
-      break;
-    case OMX_VIDEO_MPEG4Level2:
-      level = "2";
-      break;
-    case OMX_VIDEO_MPEG4Level3:
-      level = "3";
-      break;
-    case OMX_VIDEO_MPEG4Level4:
-      level = "4";
-      break;
-    case OMX_VIDEO_MPEG4Level4a:
-      level = "4a";
-      break;
-    case OMX_VIDEO_MPEG4Level5:
-      level = "5";
-      break;
-    default:
-      g_assert_not_reached ();
-      break;
-  }
-
   caps =
       gst_caps_new_simple ("video/mpeg", "mpegversion", G_TYPE_INT, 4,
       "systemstream", G_TYPE_BOOLEAN, FALSE, "width", G_TYPE_INT, state->width,
-      "height", G_TYPE_INT, state->height,
-      "profile", G_TYPE_STRING, profile, "level", G_TYPE_STRING, level, NULL);
+      "height", G_TYPE_INT, state->height, NULL);
 
   if (state->fps_n != 0)
     gst_caps_set_simple (caps, "framerate", GST_TYPE_FRACTION, state->fps_n,
@@ -327,6 +236,106 @@ gst_omx_mpeg4_video_enc_get_caps (GstOMXVideoEnc * enc, GstOMXPort * port,
   if (state->par_n != 1 || state->par_d != 1)
     gst_caps_set_simple (caps, "pixel-aspect-ratio", GST_TYPE_FRACTION,
         state->par_n, state->par_d, NULL);
+
+  GST_OMX_INIT_STRUCT (&param);
+  param.nPortIndex = GST_OMX_VIDEO_ENC (self)->out_port->index;
+
+  err =
+      gst_omx_component_get_parameter (GST_OMX_VIDEO_ENC (self)->component,
+      OMX_IndexParamVideoProfileLevelCurrent, &param);
+  if (err != OMX_ErrorNone && err != OMX_ErrorUnsupportedIndex) {
+    gst_caps_unref (caps);
+    return NULL;
+  }
+
+  if (err == OMX_ErrorNone) {
+    switch (param.eProfile) {
+      case OMX_VIDEO_MPEG4ProfileSimple:
+        profile = "simple";
+        break;
+      case OMX_VIDEO_MPEG4ProfileSimpleScalable:
+        profile = "simple-scalable";
+        break;
+      case OMX_VIDEO_MPEG4ProfileCore:
+        profile = "core";
+        break;
+      case OMX_VIDEO_MPEG4ProfileMain:
+        profile = "main";
+        break;
+      case OMX_VIDEO_MPEG4ProfileNbit:
+        profile = "n-bit";
+        break;
+      case OMX_VIDEO_MPEG4ProfileScalableTexture:
+        profile = "scalable";
+        break;
+      case OMX_VIDEO_MPEG4ProfileSimpleFace:
+        profile = "simple-face";
+        break;
+      case OMX_VIDEO_MPEG4ProfileSimpleFBA:
+        profile = "simple-fba";
+        break;
+      case OMX_VIDEO_MPEG4ProfileBasicAnimated:
+        profile = "basic-animated-texture";
+        break;
+      case OMX_VIDEO_MPEG4ProfileHybrid:
+        profile = "hybrid";
+        break;
+      case OMX_VIDEO_MPEG4ProfileAdvancedRealTime:
+        profile = "advanced-real-time-simple";
+        break;
+      case OMX_VIDEO_MPEG4ProfileCoreScalable:
+        profile = "core-scalable";
+        break;
+      case OMX_VIDEO_MPEG4ProfileAdvancedCoding:
+        profile = "advanced-coding-efficiency";
+        break;
+      case OMX_VIDEO_MPEG4ProfileAdvancedCore:
+        profile = "advanced-core";
+        break;
+      case OMX_VIDEO_MPEG4ProfileAdvancedScalable:
+        profile = "advanced-scalable-texture";
+        break;
+      case OMX_VIDEO_MPEG4ProfileAdvancedSimple:
+        profile = "advanced-simple";
+        break;
+      default:
+        g_assert_not_reached ();
+        break;
+    }
+
+    switch (param.eLevel) {
+      case OMX_VIDEO_MPEG4Level0:
+        level = "0";
+        break;
+      case OMX_VIDEO_MPEG4Level0b:
+        level = "0b";
+        break;
+      case OMX_VIDEO_MPEG4Level1:
+        level = "1";
+        break;
+      case OMX_VIDEO_MPEG4Level2:
+        level = "2";
+        break;
+      case OMX_VIDEO_MPEG4Level3:
+        level = "3";
+        break;
+      case OMX_VIDEO_MPEG4Level4:
+        level = "4";
+        break;
+      case OMX_VIDEO_MPEG4Level4a:
+        level = "4a";
+        break;
+      case OMX_VIDEO_MPEG4Level5:
+        level = "5";
+        break;
+      default:
+        g_assert_not_reached ();
+        break;
+    }
+
+    gst_caps_set_simple (caps,
+        "profile", G_TYPE_STRING, profile, "level", G_TYPE_STRING, level, NULL);
+  }
 
   return caps;
 }

@@ -105,14 +105,14 @@ gst_omx_h263_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
   GstCaps *peercaps;
   OMX_VIDEO_H263PROFILETYPE profile = OMX_VIDEO_H263ProfileBaseline;
   OMX_VIDEO_H263LEVELTYPE level = OMX_VIDEO_H263Level10;
+  OMX_VIDEO_PARAM_PROFILELEVELTYPE param;
+  OMX_ERRORTYPE err;
 
   peercaps = gst_pad_peer_get_caps (GST_BASE_VIDEO_CODEC_SRC_PAD (enc));
   if (peercaps) {
     GstStructure *s;
     GstCaps *intersection;
     guint profile_id, level_id;
-    OMX_VIDEO_PARAM_PROFILELEVELTYPE param;
-    OMX_ERRORTYPE err;
 
     intersection =
         gst_caps_intersect (peercaps,
@@ -187,21 +187,24 @@ gst_omx_h263_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
           return FALSE;
       }
     }
+  }
 
-    GST_OMX_INIT_STRUCT (&param);
-    param.nPortIndex = GST_OMX_VIDEO_ENC (self)->out_port->index;
-    param.eProfile = profile;
-    param.eLevel = level;
+  GST_OMX_INIT_STRUCT (&param);
+  param.nPortIndex = GST_OMX_VIDEO_ENC (self)->out_port->index;
+  param.eProfile = profile;
+  param.eLevel = level;
 
-    err =
-        gst_omx_component_set_parameter (GST_OMX_VIDEO_ENC (self)->component,
-        OMX_IndexParamVideoProfileLevelCurrent, &param);
-    if (err != OMX_ErrorNone) {
-      GST_ERROR_OBJECT (self,
-          "Error setting profile %d and level %d: %s (0x%08x)", profile, level,
-          gst_omx_error_to_string (err), err);
-      return FALSE;
-    }
+  err =
+      gst_omx_component_set_parameter (GST_OMX_VIDEO_ENC (self)->component,
+      OMX_IndexParamVideoProfileLevelCurrent, &param);
+  if (err == OMX_ErrorUnsupportedIndex) {
+    GST_WARNING_OBJECT (self,
+        "Setting profile/level not supported by component");
+  } else if (err != OMX_ErrorNone) {
+    GST_ERROR_OBJECT (self,
+        "Error setting profile %d and level %d: %s (0x%08x)", profile, level,
+        gst_omx_error_to_string (err), err);
+    return FALSE;
   }
 
   return TRUE;
@@ -217,79 +220,9 @@ gst_omx_h263_enc_get_caps (GstOMXVideoEnc * enc, GstOMXPort * port,
   OMX_VIDEO_PARAM_PROFILELEVELTYPE param;
   guint profile, level;
 
-  GST_OMX_INIT_STRUCT (&param);
-  param.nPortIndex = GST_OMX_VIDEO_ENC (self)->out_port->index;
-
-  err =
-      gst_omx_component_get_parameter (GST_OMX_VIDEO_ENC (self)->component,
-      OMX_IndexParamVideoProfileLevelCurrent, &param);
-  if (err != OMX_ErrorNone)
-    return NULL;
-
-  switch (param.eProfile) {
-    case OMX_VIDEO_H263ProfileBaseline:
-      profile = 0;
-      break;
-    case OMX_VIDEO_H263ProfileH320Coding:
-      profile = 1;
-      break;
-    case OMX_VIDEO_H263ProfileBackwardCompatible:
-      profile = 2;
-      break;
-    case OMX_VIDEO_H263ProfileISWV2:
-      profile = 3;
-      break;
-    case OMX_VIDEO_H263ProfileISWV3:
-      profile = 4;
-      break;
-    case OMX_VIDEO_H263ProfileHighCompression:
-      profile = 5;
-      break;
-    case OMX_VIDEO_H263ProfileInternet:
-      profile = 6;
-      break;
-    case OMX_VIDEO_H263ProfileInterlace:
-      profile = 7;
-      break;
-    case OMX_VIDEO_H263ProfileHighLatency:
-      profile = 8;
-      break;
-    default:
-      g_assert_not_reached ();
-      break;
-  }
-
-  switch (param.eLevel) {
-    case OMX_VIDEO_H263Level10:
-      level = 10;
-      break;
-    case OMX_VIDEO_H263Level20:
-      level = 20;
-      break;
-    case OMX_VIDEO_H263Level30:
-      level = 30;
-      break;
-    case OMX_VIDEO_H263Level40:
-      level = 40;
-      break;
-    case OMX_VIDEO_H263Level50:
-      level = 50;
-      break;
-    case OMX_VIDEO_H263Level60:
-      level = 60;
-      break;
-    case OMX_VIDEO_H263Level70:
-      level = 70;
-      break;
-    default:
-      g_assert_not_reached ();
-      break;
-  }
-
   caps =
       gst_caps_new_simple ("video/x-h263", "width", G_TYPE_INT, state->width,
-      "height", G_TYPE_INT, state->height,
-      "profile", G_TYPE_UINT, profile, "level", G_TYPE_UINT, level, NULL);
+      "height", G_TYPE_INT, state->height, NULL);
 
   if (state->fps_n != 0)
     gst_caps_set_simple (caps, "framerate", GST_TYPE_FRACTION, state->fps_n,
@@ -297,6 +230,82 @@ gst_omx_h263_enc_get_caps (GstOMXVideoEnc * enc, GstOMXPort * port,
   if (state->par_n != 1 || state->par_d != 1)
     gst_caps_set_simple (caps, "pixel-aspect-ratio", GST_TYPE_FRACTION,
         state->par_n, state->par_d, NULL);
+
+  GST_OMX_INIT_STRUCT (&param);
+  param.nPortIndex = GST_OMX_VIDEO_ENC (self)->out_port->index;
+
+  err =
+      gst_omx_component_get_parameter (GST_OMX_VIDEO_ENC (self)->component,
+      OMX_IndexParamVideoProfileLevelCurrent, &param);
+  if (err != OMX_ErrorNone && err != OMX_ErrorUnsupportedIndex) {
+    gst_caps_unref (caps);
+    return NULL;
+  }
+
+  if (err == OMX_ErrorNone) {
+    switch (param.eProfile) {
+      case OMX_VIDEO_H263ProfileBaseline:
+        profile = 0;
+        break;
+      case OMX_VIDEO_H263ProfileH320Coding:
+        profile = 1;
+        break;
+      case OMX_VIDEO_H263ProfileBackwardCompatible:
+        profile = 2;
+        break;
+      case OMX_VIDEO_H263ProfileISWV2:
+        profile = 3;
+        break;
+      case OMX_VIDEO_H263ProfileISWV3:
+        profile = 4;
+        break;
+      case OMX_VIDEO_H263ProfileHighCompression:
+        profile = 5;
+        break;
+      case OMX_VIDEO_H263ProfileInternet:
+        profile = 6;
+        break;
+      case OMX_VIDEO_H263ProfileInterlace:
+        profile = 7;
+        break;
+      case OMX_VIDEO_H263ProfileHighLatency:
+        profile = 8;
+        break;
+      default:
+        g_assert_not_reached ();
+        break;
+    }
+
+    switch (param.eLevel) {
+      case OMX_VIDEO_H263Level10:
+        level = 10;
+        break;
+      case OMX_VIDEO_H263Level20:
+        level = 20;
+        break;
+      case OMX_VIDEO_H263Level30:
+        level = 30;
+        break;
+      case OMX_VIDEO_H263Level40:
+        level = 40;
+        break;
+      case OMX_VIDEO_H263Level50:
+        level = 50;
+        break;
+      case OMX_VIDEO_H263Level60:
+        level = 60;
+        break;
+      case OMX_VIDEO_H263Level70:
+        level = 70;
+        break;
+      default:
+        g_assert_not_reached ();
+        break;
+    }
+
+    gst_caps_set_simple (caps,
+        "profile", G_TYPE_UINT, profile, "level", G_TYPE_UINT, level, NULL);
+  }
 
   return caps;
 }

@@ -358,7 +358,11 @@ gst_omx_video_enc_open (GstOMXVideoEnc * self)
     err =
         gst_omx_component_set_parameter (self->component,
         OMX_IndexParamVideoBitrate, &bitrate_param);
-    if (err != OMX_ErrorNone) {
+    if (err == OMX_ErrorUnsupportedIndex) {
+      GST_WARNING_OBJECT (self,
+          "Setting a bitrate not supported by the component");
+      goto done;
+    } else if (err != OMX_ErrorNone) {
       GST_ERROR_OBJECT (self, "Failed to set bitrate parameters: %s (0x%08x)",
           gst_omx_error_to_string (err), err);
       return FALSE;
@@ -373,13 +377,18 @@ gst_omx_video_enc_open (GstOMXVideoEnc * self)
     err =
         gst_omx_component_set_parameter (self->component,
         OMX_IndexParamVideoQuantization, &quant_param);
-    if (err != OMX_ErrorNone) {
+    if (err == OMX_ErrorUnsupportedIndex) {
+      GST_WARNING_OBJECT (self,
+          "Setting quantization parameters not supported by the component");
+      goto done;
+    } else if (err != OMX_ErrorNone) {
       GST_ERROR_OBJECT (self,
           "Failed to set quantization parameters: %s (0x%08x)",
           gst_omx_error_to_string (err), err);
       return FALSE;
     }
   }
+done:
 
   return TRUE;
 }
