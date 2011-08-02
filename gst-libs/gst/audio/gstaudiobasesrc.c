@@ -766,6 +766,7 @@ gst_audio_base_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
   GstClockTime rb_timestamp = GST_CLOCK_TIME_NONE;
   GstClock *clock;
   gboolean first;
+  gboolean first_sample = src->next_sample == -1;
 
   ringbuffer = src->ringbuffer;
   spec = &ringbuffer->spec;
@@ -938,7 +939,7 @@ gst_audio_base_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
          *    the first time we are ran.
          */
         if ((segment_skew >= ringbuffer->spec.segtotal) ||
-            (last_read_segment == 0)) {
+            (last_read_segment == 0) || first_sample) {
           gint new_read_segment;
           gint segment_diff;
           guint64 new_sample;
