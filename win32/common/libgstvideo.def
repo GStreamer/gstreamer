@@ -1,6 +1,8 @@
 EXPORTS
 	gst_buffer_add_meta_video
 	gst_buffer_add_meta_video_full
+	gst_buffer_pool_config_get_video_alignment
+	gst_buffer_pool_config_set_video_alignment
 	gst_meta_video_crop_get_info
 	gst_meta_video_get_info
 	gst_meta_video_map
