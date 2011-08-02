@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-06-16 01:38+1000\n"
+"POT-Creation-Date: 2011-08-02 12:20+0200\n"
 "PO-Revision-Date: 2010-04-26 22:01+0700\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
@@ -574,6 +574,12 @@ msgstr "Plugin atau elemen dari tipe yang tak diketahui"
 #~ msgid "Both autoaudiosink and alsasink elements are missing."
 #~ msgstr "Baik elemen autoaudiosink maupun alsasink hilang."
 
+#~ msgid "Error while sending gdp header data to \"%s:%d\"."
+#~ msgstr "Galat ketika mengirim data tajuk gdp ke \"%s:%d\"."
+
+#~ msgid "Error while sending gdp payload data to \"%s:%d\"."
+#~ msgstr "Galat ketika mengirim data pemuat gdp ke \"%s:%d\"."
+
 #~ msgid "No device specified."
 #~ msgstr "Tak ada divais yang ditentukan."
 
@@ -585,12 +591,6 @@ msgstr "Plugin atau elemen dari tipe yang tak diketahui"
 
 #~ msgid "Could not open device \"%s\" for reading and writing."
 #~ msgstr "Tak dapat membuka divaus \"%s\" untuk dibaca dan ditulis."
-
-#~ msgid "Error while sending gdp header data to \"%s:%d\"."
-#~ msgstr "Galat ketika mengirim data tajuk gdp ke \"%s:%d\"."
-
-#~ msgid "Error while sending gdp payload data to \"%s:%d\"."
-#~ msgstr "Galat ketika mengirim data pemuat gdp ke \"%s:%d\"."
 
 #~ msgid "Can't display both text subtitles and subpictures."
 #~ msgstr "Tak dapat menampilkan baik teks subjudul dan subgambar."

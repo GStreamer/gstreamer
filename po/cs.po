@@ -1,15 +1,15 @@
 # Czech translations of gst-plugins-base.
-# Copyright (C) 2007, 2008, 2009, 2010 the author(s) of gst-plugins-base.
+# Copyright (C) 2007, 2008, 2009, 2010, 2011 the author(s) of gst-plugins-base.
 # Copyright (C) 2004 Miloslav Trmac <mitr@volny.cz>.
 # This file is put in the public domain.
 # Miloslav Trmac <mitr@volny.cz>, 2004.
-# Petr Kovar <pknbe@volny.cz>, 2007, 2008, 2009, 2010.
+# Petr Kovar <pknbe@volny.cz>, 2007, 2008, 2009, 2010, 2011.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base-0.10.30.3\n"
+"Project-Id-Version: gst-plugins-base-0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-06-16 01:38+1000\n"
-"PO-Revision-Date: 2010-10-31 10:51+0100\n"
+"POT-Creation-Date: 2011-08-02 12:20+0200\n"
+"PO-Revision-Date: 2011-05-29 16:49+0200\n"
 "Last-Translator: Petr Kovar <pknbe@volny.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
 "Language: cs\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
-"X-Generator: Lokalize 1.1\n"
+"X-Generator: Lokalize 1.2\n"
 
 msgid "Master"
 msgstr "Master"
@@ -272,13 +272,11 @@ msgstr "režim expozice záznamu"
 msgid "The exposure mode used when capturing an image"
 msgstr "Režim expozice při záznamu obrazu"
 
-#, fuzzy
 msgid "capturing exposure compensation"
-msgstr "režim expozice záznamu"
+msgstr "kompenzace expozice záznamu"
 
-#, fuzzy
 msgid "The exposure compensation used when capturing an image"
-msgstr "Režim expozice při záznamu obrazu"
+msgstr "Kompenzace expozice při záznamu obrazu"
 
 msgid "capturing scene capture type"
 msgstr "typ zachycení scény záznamu"
@@ -586,6 +584,12 @@ msgstr "Zásuvný modul nebo prvek neznámého typu"
 #~ msgid "Both autoaudiosink and alsasink elements are missing."
 #~ msgstr "Schází jak prvek autoaudiosink, tak alsasink."
 
+#~ msgid "Error while sending gdp header data to \"%s:%d\"."
+#~ msgstr "Chyba při odesílání dat záhlaví gdp na \"%s:%d\"."
+
+#~ msgid "Error while sending gdp payload data to \"%s:%d\"."
+#~ msgstr "Chyba při odesílání zátěžových dat gdp na \"%s:%d\"."
+
 #~ msgid "No device specified."
 #~ msgstr "Nezadáno zařízení."
 
@@ -597,9 +601,3 @@ msgstr "Zásuvný modul nebo prvek neznámého typu"
 
 #~ msgid "Could not open device \"%s\" for reading and writing."
 #~ msgstr "Zařízení \"%s\" se nezdařilo otevřít ke čtení a k zápisu."
-
-#~ msgid "Error while sending gdp header data to \"%s:%d\"."
-#~ msgstr "Chyba při odesílání dat záhlaví gdp na \"%s:%d\"."
-
-#~ msgid "Error while sending gdp payload data to \"%s:%d\"."
-#~ msgstr "Chyba při odesílání zátěžových dat gdp na \"%s:%d\"."

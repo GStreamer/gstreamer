@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.21.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-06-16 01:38+1000\n"
+"POT-Creation-Date: 2011-08-02 12:20+0200\n"
 "PO-Revision-Date: 2009-01-14 12:41+0800\n"
 "Last-Translator: Ji ZhengYu <zhengyuji@gmail.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
@@ -568,11 +568,24 @@ msgstr "未知类型的插件或组件"
 #~ msgid "A subtitle stream was detected, but no video stream."
 #~ msgstr "检测到了字幕流，但无视频流。"
 
-#~ msgid "Both autovideosink and xvimagesink elements are missing."
-#~ msgstr "autovideosink 和 xvimagesink 组件都缺少。"
+#~ msgid "No file name specified."
+#~ msgstr "未给定文件名。"
 
-#~ msgid "Both autoaudiosink and alsasink elements are missing."
-#~ msgstr "autovideosink 和 alsasink 组件都缺少。"
+#~ msgid "Could not open file \"%s\" for reading."
+#~ msgstr "无法打开文件“%s”读取。"
+
+#~ msgid "Could not create \"decodebin2\" element."
+#~ msgstr "无法创建“decodebin”组件。"
+
+#~ msgid "Could not create \"queue2\" element."
+#~ msgstr "无法创建“queue2”组件。"
+
+#, fuzzy
+#~ msgid "Error while sending gdp header data to \"%s:%d\"."
+#~ msgstr "发送 gdp 头部数据至“%s:%d”时出错。"
+
+#~ msgid "Error while sending gdp payload data to \"%s:%d\"."
+#~ msgstr "发送 gdp 负载数据至“%s:%d”时出错。"
 
 #~ msgid "No device specified."
 #~ msgstr "未指定设备。"
@@ -585,22 +598,3 @@ msgstr "未知类型的插件或组件"
 
 #~ msgid "Could not open device \"%s\" for reading and writing."
 #~ msgstr "无法打开设备“%s”读取。"
-
-#, fuzzy
-#~ msgid "Error while sending gdp header data to \"%s:%d\"."
-#~ msgstr "发送 gdp 头部数据至“%s:%d”时出错。"
-
-#~ msgid "Error while sending gdp payload data to \"%s:%d\"."
-#~ msgstr "发送 gdp 负载数据至“%s:%d”时出错。"
-
-#~ msgid "No file name specified."
-#~ msgstr "未给定文件名。"
-
-#~ msgid "Could not open file \"%s\" for reading."
-#~ msgstr "无法打开文件“%s”读取。"
-
-#~ msgid "Could not create \"decodebin2\" element."
-#~ msgstr "无法创建“decodebin”组件。"
-
-#~ msgid "Could not create \"queue2\" element."
-#~ msgstr "无法创建“queue2”组件。"

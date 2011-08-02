@@ -1,122 +1,116 @@
-# Translation of gstreamer plugin messages to Afrikaans. 
-# Copyright (C) 2004 Free Software Foundation, Inc.
-# This file is put in the public domain.
-# Petri Jooste <rkwjpj@puk.ac.za>, 2004.
+# Esperanto translation for gst-plugins-base.
+# Copyright (C) 2011 Free Software Foundation, Inc.
+# This file is distributed under the same license as the gst-plugins-base package.
+# Kristjan SCHMIDT <kristjan.schmidt@googlemail.com>, 2011.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins 0.7.6\n"
+"Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
 "POT-Creation-Date: 2011-08-02 12:20+0200\n"
-"PO-Revision-Date: 2004-03-18 14:16+0200\n"
-"Last-Translator: Petri Jooste <rkwjpj@puk.ac.za>\n"
-"Language-Team: Afrikaans <i18n@af.org.za>\n"
-"Language: af\n"
+"PO-Revision-Date: 2011-06-04 21:11+0100\n"
+"Last-Translator: Kristjan SCHMIDT <kristjan.schmidt@googlemail.com>\n"
+"Language-Team: Esperanto <translation-team-eo@lists.sourceforge.net>\n"
+"Language: eo\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 msgid "Master"
-msgstr ""
+msgstr "Ĉefa regilo"
 
 msgid "Bass"
-msgstr "Bas"
+msgstr "Baso"
 
 msgid "Treble"
-msgstr "Treble"
+msgstr ""
 
 msgid "PCM"
-msgstr "PCM"
+msgstr ""
 
 msgid "Synth"
-msgstr "Sintetiseerder"
+msgstr "Sintezilo"
 
 msgid "Line-in"
-msgstr "Lyn-in"
+msgstr ""
 
 msgid "CD"
-msgstr "CD"
+msgstr "KD"
 
 msgid "Microphone"
-msgstr "Mikrofoon"
+msgstr "Mikrofono"
 
-#, fuzzy
 msgid "PC Speaker"
-msgstr "Luidspreker"
+msgstr "Komputila laŭtparolilo"
 
 msgid "Playback"
-msgstr ""
+msgstr "Reproduktado"
 
 msgid "Capture"
-msgstr ""
+msgstr "Kapti"
 
-#, fuzzy
 msgid "Could not open device for playback in mono mode."
-msgstr "Kon nie CD-toestel oopmaak om te lees nie."
+msgstr "Ne eblis malfermi aparaton por reproduktado per unukanala reĝimo."
 
-#, fuzzy
 msgid "Could not open device for playback in stereo mode."
-msgstr "Kon nie CD-toestel oopmaak om te lees nie."
+msgstr "Ne eblis malfermi aparaton por reproduktado per dukanala reĝimo."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Could not open device for playback in %d-channel mode."
-msgstr "Kon nie CD-toestel oopmaak om te lees nie."
+msgstr "Ne eblis malfermi la aparaton por reproduktado per %d-kanala reĝimo."
 
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
 "application."
 msgstr ""
+"Ne eblis malfermi la sonaparaton por reproduktado. Ĝi estas uzate de alia "
+"aplikaĵo."
 
-#, fuzzy
 msgid "Could not open audio device for playback."
-msgstr "Kon nie oudio-toestel \"%s\" oopmaak vir skryf nie."
+msgstr "Ne eblis malfermi la sonaparaton por reproduktado."
 
-#, fuzzy
 msgid "Could not open device for recording in mono mode."
-msgstr "Kon nie CD-toestel oopmaak om te lees nie."
+msgstr "Ne eblis malfermi la aparaton por registrado per unukanala reĝimo."
 
-#, fuzzy
 msgid "Could not open device for recording in stereo mode."
-msgstr "Kon nie CD-toestel oopmaak om te lees nie."
+msgstr "Ne eblis malfermi la aparaton por registrado per dukanala reĝimo."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Could not open device for recording in %d-channel mode"
-msgstr "Kon nie CD-toestel oopmaak om te lees nie."
+msgstr "Ne eblis malfermi la aparaton por registrado per %d-kanala reĝimo."
 
-#, fuzzy
 msgid ""
 "Could not open audio device for recording. Device is being used by another "
 "application."
-msgstr "Kon nie toestel \"%s\" oopmaak vir lees en skryf nie."
+msgstr ""
+"Ne eblis malfermi la aparaton por registrado. Ĝi estas uzate de alia "
+"aplikaĵo."
 
-#, fuzzy
 msgid "Could not open audio device for recording."
-msgstr "Kon nie CD-toestel oopmaak om te lees nie."
+msgstr "Ne eblis malfermi sonaparaton por registrado."
 
 msgid "Could not open CD device for reading."
-msgstr "Kon nie CD-toestel oopmaak om te lees nie."
+msgstr "Ne eblis malfermi KD-aparaton por legado."
 
-#, fuzzy
 msgid "Could not seek CD."
-msgstr "Kon nie vfs-lêer \"%s\" toemaak nie."
+msgstr "Ne eblis traserĉi la KD-n."
 
-#, fuzzy
 msgid "Could not read CD."
-msgstr "Kon nie skryf na toestel \"%s\" nie."
+msgstr "Ne eblis legi la KD-n."
 
 msgid "Internal data stream error."
-msgstr ""
+msgstr "Interna datumflu-eraro."
 
 #, c-format
 msgid "A %s plugin is required to play this stream, but not installed."
-msgstr ""
+msgstr "%s-kromprogramo bezonatas, sed tia ne estas instalite."
 
-#, fuzzy
 msgid "Could not determine type of stream"
-msgstr "Kon nie skryf na lêer \"%s\" nie."
+msgstr "Ne eblis rekoni la tipon de la fluo"
 
 msgid "This appears to be a text file"
-msgstr ""
+msgstr "Tio ŝajnas esti tekstdosiero"
 
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
@@ -144,7 +138,7 @@ msgid "Custom text sink element is not usable."
 msgstr ""
 
 msgid "No volume control found"
-msgstr ""
+msgstr "Ne trovis laŭtec-regilon"
 
 #, c-format
 msgid "Both autoaudiosink and %s elements are missing."
@@ -176,7 +170,7 @@ msgstr ""
 
 #, c-format
 msgid "Invalid URI \"%s\"."
-msgstr ""
+msgstr "Nevalida URI \"%s\"."
 
 msgid "This stream type cannot be played yet."
 msgstr ""
@@ -186,18 +180,18 @@ msgid "No URI handler implemented for \"%s\"."
 msgstr ""
 
 msgid "Source element is invalid."
-msgstr ""
+msgstr "Font-elemento estas nevalide."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Error while sending data to \"%s:%d\"."
-msgstr "Fout tydens toemaak van lêer \"%s\"."
+msgstr "Eraro dum sendado de datumoj al \"%s:%d\"."
 
 #, c-format
 msgid "Connection to %s:%d refused."
 msgstr ""
 
 msgid "Can't record audio fast enough"
-msgstr ""
+msgstr "Ne eblas registri la sonon sufiĉe rapide"
 
 msgid "Failed to read tag: not enough data"
 msgstr ""
@@ -215,7 +209,7 @@ msgid "MusicBrainz artist ID"
 msgstr ""
 
 msgid "album ID"
-msgstr ""
+msgstr "album-ID"
 
 msgid "MusicBrainz album ID"
 msgstr ""
@@ -381,7 +375,7 @@ msgid "CYUV Lossless"
 msgstr ""
 
 msgid "FFMpeg v1"
-msgstr ""
+msgstr "FFMpeg v1"
 
 msgid "Lossless MSZH"
 msgstr ""
@@ -440,7 +434,7 @@ msgstr ""
 
 #, c-format
 msgid "DivX MPEG-4 Version %d"
-msgstr ""
+msgstr "\"DivX MPEG-4\"-versio %d"
 
 #, c-format
 msgid "Raw %d-bit PCM audio"
@@ -457,10 +451,10 @@ msgid "Raw floating-point audio"
 msgstr ""
 
 msgid "Audio CD source"
-msgstr ""
+msgstr "Son-KD-fonto"
 
 msgid "DVD source"
-msgstr ""
+msgstr "DVD-fonto"
 
 msgid "Real Time Streaming Protocol (RTSP) source"
 msgstr ""
@@ -470,7 +464,7 @@ msgstr ""
 
 #, c-format
 msgid "%s protocol source"
-msgstr ""
+msgstr "%s protokolfonto"
 
 #, c-format
 msgid "%s video RTP depayloader"
@@ -517,13 +511,13 @@ msgid "GStreamer element %s"
 msgstr ""
 
 msgid "Unknown source element"
-msgstr ""
+msgstr "Nekonata fontelemento"
 
 msgid "Unknown sink element"
 msgstr ""
 
 msgid "Unknown element"
-msgstr ""
+msgstr "Nekonata elemento"
 
 msgid "Unknown decoder element"
 msgstr ""
@@ -534,161 +528,38 @@ msgstr ""
 msgid "Plugin or element of unknown type"
 msgstr ""
 
-#, fuzzy
 #~ msgid "Could not open vfs file \"%s\" for writing: %s."
-#~ msgstr "Kon nie vfs-lêer \"%s\" oopmaak vir skryf nie."
+#~ msgstr "Ne eblis malfermi la vfs-dosieron \"%s\" por skribado: %s."
 
-#, fuzzy
 #~ msgid "No filename given"
-#~ msgstr "Geen lêernaam gespesifiseer."
+#~ msgstr "Ne donis dosiernomon"
 
 #~ msgid "Could not close vfs file \"%s\"."
-#~ msgstr "Kon nie vfs-lêer \"%s\" toemaak nie."
+#~ msgstr "Ne eblis fermi vfs-dosieron \"%s\"."
 
-#, fuzzy
 #~ msgid "Error while writing to file \"%s\"."
-#~ msgstr "Fout tydens toemaak van lêer \"%s\"."
+#~ msgstr "Eraro dum skribo al dosiero \"%s\"."
 
-#, fuzzy
+#~ msgid "Invalid subtitle URI \"%s\", subtitles disabled."
+#~ msgstr "Nevalida subtekst-adreso \"%s\", subtekstoj estos elŝaltate."
+
+#~ msgid "RTSP streams cannot be played yet."
+#~ msgstr "Ankoraŭ ne eblas ludi RTSP-fluojn."
+
+#~ msgid "Could not create \"decodebin\" element."
+#~ msgstr "Ne eblis krei \"decodebin\"-elementon."
+
 #~ msgid "This is not a media file"
-#~ msgstr "Toestel \"%s\" is nie 'n vasleggingtoestel nie."
+#~ msgstr "Tio ne estas aŭdvidaĵa dosiero"
 
-#~ msgid "No device specified."
-#~ msgstr "Geen toestel gespesifiseer"
+#~ msgid "Both autovideosink and xvimagesink elements are missing."
+#~ msgstr "Ambaŭ elementoj \"autovideosink\" kaj \"xvimagesink\" mankas."
 
 #~ msgid "Device \"%s\" does not exist."
-#~ msgstr "Toestel \"%s\" bestaan nie."
+#~ msgstr "Aparato \"%s\" ne ekzistas."
 
-#, fuzzy
 #~ msgid "Device \"%s\" is already being used."
-#~ msgstr "OSS-toestel \"%s\" is reeds in gebruik deur 'n ander program."
+#~ msgstr "Aparato \"%s\" jam estas uzata."
 
 #~ msgid "Could not open device \"%s\" for reading and writing."
-#~ msgstr "Kon nie toestel \"%s\" oopmaak vir lees en skryf nie."
-
-#, fuzzy
-#~ msgid "Could not create \"typefind\" element."
-#~ msgstr "Kon nie skryf na lêer \"%s\" nie."
-
-#, fuzzy
-#~ msgid "No Temp directory specified."
-#~ msgstr "Geen toestel gespesifiseer"
-
-#, fuzzy
-#~ msgid "Could not create temp file \"%s\"."
-#~ msgstr "Kon nie skryf na lêer \"%s\" nie."
-
-#~ msgid "Could not open file \"%s\" for reading."
-#~ msgstr "Kon nie lêer \"%s\" oopmaak om te lees nie."
-
-#~ msgid "Device is not open."
-#~ msgstr "Toestel is nie oop nie."
-
-#~ msgid "Device is open."
-#~ msgstr "Toestel is oop."
-
-#~ msgid "Could not open vfs file \"%s\" for reading."
-#~ msgstr "Kon nie vfs-lêer \"%s\" oopmaak vir lees nie."
-
-#, fuzzy
-#~ msgid "No filename given."
-#~ msgstr "Geen lêernaam gespesifiseer."
-
-#~ msgid "Could not open file \"%s\" for writing."
-#~ msgstr "Kon nie lêer \"%s\" oopmaak om in te skryf nie."
-
-#~ msgid "No filename specified."
-#~ msgstr "Geen lêernaam gespesifiseer."
-
-#~ msgid "No or invalid input audio, AVI stream will be corrupt."
-#~ msgstr "Geen of ongeldige klanktoevoer, AVI-stroom sal korrup wees."
-
-#~ msgid "Could not open control device \"%s\" for writing."
-#~ msgstr "Kon nie beheertoestel \"%s\" oopmaak vir skryf nie."
-
-#~ msgid "Could not configure audio device \"%s\"."
-#~ msgstr "Kon nie oudio-toestel \"%s\" konfigureer nie."
-
-#~ msgid "Could not set audio device \"%s\" to %d Hz."
-#~ msgstr "Kon nie klanktoestel \"%s\" verstel na %d Hz nie."
-
-#~ msgid "Could not close audio device \"%s\"."
-#~ msgstr "Kon nie oudio-toestel \"%s\" toemaak nie."
-
-#~ msgid "Could not close control device \"%s\"."
-#~ msgstr "Kon nie beheertoestel \"%s\" toemaak nie."
-
-#~ msgid "Could not open video device \"%s\" for writing."
-#~ msgstr "Kon nie video-toestel \"%s\" oopmaak vir skryf nie."
-
-#~ msgid "Could not close video device \"%s\"."
-#~ msgstr "Kon nie video-toestel \"%s\" toemaak nie."
-
-#~ msgid "Could not access device \"%s\", check its permissions."
-#~ msgstr "Kon nie toegang kry tot toestel \"%s\" nie, kyk na toegangsregte."
-
-#~ msgid "Could not open device \"%s\" for writing."
-#~ msgstr "Kon nie toestel \"%s\" oopmaak vir skryf nie."
-
-#~ msgid "Could not open device \"%s\" for reading."
-#~ msgstr "Kon nie toestel \"%s\" oopmaak vir lees nie."
-
-#~ msgid "Volume"
-#~ msgstr "Volume"
-
-#~ msgid "Speaker"
-#~ msgstr "Luidspreker"
-
-#~ msgid "Mixer"
-#~ msgstr "Menger"
-
-#~ msgid "PCM-2"
-#~ msgstr "PCM-2"
-
-#~ msgid "Record"
-#~ msgstr "Neem op"
-
-#~ msgid "In-gain"
-#~ msgstr "In-versterking"
-
-#~ msgid "Out-gain"
-#~ msgstr "Uit-versterking"
-
-#~ msgid "Line-1"
-#~ msgstr "Lyn-1"
-
-#~ msgid "Line-2"
-#~ msgstr "Lyn-2"
-
-#~ msgid "Line-3"
-#~ msgstr "Lyn-3"
-
-#~ msgid "Digital-1"
-#~ msgstr "Digitaal-1"
-
-#~ msgid "Digital-2"
-#~ msgstr "Digitaal-2"
-
-#~ msgid "Digital-3"
-#~ msgstr "Digitaal-3"
-
-#~ msgid "Phone-in"
-#~ msgstr "Telefoon-in"
-
-#~ msgid "Phone-out"
-#~ msgstr "Telefoon-uit"
-
-#~ msgid "Video"
-#~ msgstr "Video"
-
-#~ msgid "Radio"
-#~ msgstr "Radio"
-
-#~ msgid "Monitor"
-#~ msgstr "Monitor"
-
-#~ msgid "Could not get buffers from device \"%s\"."
-#~ msgstr "Kon nie buffers vanaf toestel \"%s\" verkry nie."
-
-#~ msgid "Could not get enough buffers from device \"%s\"."
-#~ msgstr "Kon nie genoeg buffers vanaf toestel \"%s\" kry nie."
+#~ msgstr "Ne eblis malfermi aparaton  \"%s\" por legado aŭ skribado."
