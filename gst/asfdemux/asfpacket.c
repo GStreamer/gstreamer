@@ -395,7 +395,8 @@ gst_asf_demux_parse_payload (GstASFDemux * demux, AsfPacket * packet,
           }
           /* note: buffer join/merge might not preserve buffer flags */
           prev->buf = gst_buffer_join (prev->buf, payload.buf);
-          GST_LOG_OBJECT (demux, "Merged fragments, merged size: %u",
+          GST_LOG_OBJECT (demux,
+              "Merged fragments, merged size: %" G_GSIZE_FORMAT,
               gst_buffer_get_size (prev->buf));
         } else {
           gst_buffer_unref (payload.buf);
