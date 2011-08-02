@@ -291,6 +291,24 @@ dnl used in examples
 AG_GST_DEFAULT_ELEMENTS
 
 dnl *** plug-ins to include ***
+dnl Non ported plugins (non-dependant, then dependant)
+dnl Make sure you have a space before and after all plugins
+GST_PLUGINS_NONPORTED=" adpcmdec adpcmenc aiff asfmux \
+ audiovisualizers autoconvert bayer camerabin cdxaparse coloreffects \
+ dataurisrc dccp debugutils dtmf dvbsuboverlay dvdspu faceoverlay festival \
+ fieldanalysis freeze frei0r gaudieffects geometrictransform h264parse \
+ hdvparse hls id3tag interlace ivfparse jpegformat jp2kdecimator \
+ liveadder legacyresample librfb mpegdemux mpegtsdemux mpegtsmux \
+ mpegpsmux mpeg4videoparse mpegvideoparse mve mxf nsf nuvdemux \
+ patchdetect pcapparse pnm rawparse real rtpmux rtpvp8 scaletempo \
+ sdi sdp segmentclip siren speed subenc stereo tta videofilters \
+ videomaxrate videomeasure videoparsers videosignal vmnc y4m \
+ decklink dvb fbdev linsys shm vcd \
+ voaacenc assrender apexsink bz2 cog curl dc1394 dirac dts resindvd \
+ faac faad gsettings jp2k ladspa libmms modplug mpeg2enc mimic \
+ musepack musicbrainz neon rsvg schro sdl sndfile soundtouch \
+ vp8 xvid "
+AC_SUBST(GST_PLUGINS_NONPORTED)
 
 dnl these are all the gst plug-ins, compilable without additional libs
 AG_GST_CHECK_PLUGIN(adpcmdec)
