@@ -208,6 +208,13 @@ AG_GST_DEFAULT_ELEMENTS
 
 dnl *** plug-ins to include ***
 
+dnl Non ported plugins (non-dependant, then dependant)
+dnl Make sure you have a space before and after all plugins
+GST_PLUGINS_NONPORTED=" dvdlpcmdec dvdsub iec958 mpegaudioparse mpegstream \
+ realmedia \
+ a52dec amrnb amrwb cdio dvdread lame mpeg2dec twolame x264 "
+AC_SUBST(GST_PLUGINS_NONPORTED)
+
 dnl these are all the gst plug-ins, compilable without additional libs
 AG_GST_CHECK_PLUGIN(asfdemux)
 AG_GST_CHECK_PLUGIN(dvdlpcmdec)
