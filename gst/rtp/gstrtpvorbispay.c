@@ -291,11 +291,10 @@ gst_rtp_vorbis_pay_finish_headers (GstBaseRTPPayload * basepayload)
   ident = fnv1_hash_32_new ();
   for (walk = rtpvorbispay->headers; walk; walk = g_list_next (walk)) {
     GstBuffer *buf = GST_BUFFER_CAST (walk->data);
-    guint bsize;
+    guint bsize, osize;
     guint8 *data;
-    gsize size;
 
-    bsize = gst_buffer_get_size (buf);
+    bsize = osize = gst_buffer_get_size (buf);
     length += bsize;
     n_headers++;
 
@@ -309,7 +308,7 @@ gst_rtp_vorbis_pay_finish_headers (GstBaseRTPPayload * basepayload)
     }
     /* update hash */
     data = gst_buffer_map (buf, NULL, NULL, GST_MAP_READ);
-    ident = fnv1_hash_32_update (ident, data, size);
+    ident = fnv1_hash_32_update (ident, data, osize);
     gst_buffer_unmap (buf, data, -1);
   }
 
