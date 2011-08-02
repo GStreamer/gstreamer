@@ -511,7 +511,6 @@ gst_mad_src_query (GstPad * pad, GstQuery * query)
     }
     case GST_QUERY_DURATION:
     {
-      GstFormat bytes_format = GST_FORMAT_BYTES;
       GstFormat time_format = GST_FORMAT_TIME;
       GstFormat req_format;
       gint64 total, total_bytes;
@@ -531,7 +530,7 @@ gst_mad_src_query (GstPad * pad, GstQuery * query)
       }
 
       /* query peer for total length in bytes */
-      if (!gst_pad_query_peer_duration (mad->sinkpad, &bytes_format,
+      if (!gst_pad_query_peer_duration (mad->sinkpad, GST_FORMAT_BYTES,
               &total_bytes) || total_bytes <= 0) {
         GST_LOG_OBJECT (mad, "duration query on peer pad failed");
         goto error;
@@ -1637,12 +1636,11 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
       } else {
         /* if we have a pending timestamp, we can use it now to calculate the sample offset */
         if (GST_CLOCK_TIME_IS_VALID (mad->last_ts)) {
-          GstFormat format = GST_FORMAT_DEFAULT;
           gint64 total;
 
           /* Convert incoming timestamp to a number of encoded samples */
           gst_pad_query_convert (mad->srcpad, GST_FORMAT_TIME, mad->last_ts,
-              &format, &total);
+              GST_FORMAT_DEFAULT, &total);
 
           GST_DEBUG_OBJECT (mad, "calculated samples offset from ts is %"
               G_GUINT64_FORMAT " accumulated samples offset is %"
