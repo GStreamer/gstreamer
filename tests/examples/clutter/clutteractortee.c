@@ -47,14 +47,11 @@ create_actor (GstGLClutterActor * actor)
 {
   static gint xpos = 0;
   static gint ypos = 0;
-  Display *disp;
   actor->texture = g_object_new (CLUTTER_GLX_TYPE_TEXTURE_PIXMAP,
       "window", actor->win, "automatic-updates", TRUE, NULL);
   clutter_container_add_actor (CLUTTER_CONTAINER (actor->stage),
       actor->texture);
   clutter_actor_set_position (actor->texture, xpos, ypos);
-
-  disp = clutter_x11_get_default_display ();
 
   if (xpos > (COLS - 1) * W) {
     xpos = 0;
