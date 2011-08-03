@@ -75,13 +75,13 @@
 #define GST_MAJORMINOR "0.11"
 
 /* package name in plugins */
-#define GST_PACKAGE_NAME "GStreamer Base Plug-ins source release"
+#define GST_PACKAGE_NAME "GStreamer Base Plug-ins prerelease"
 
 /* package origin */
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
 
 /* GStreamer package release date/time for plugins as YYYY-MM-DD */
-#define GST_PACKAGE_RELEASE_DATETIME "2011-08-02"
+#define GST_PACKAGE_RELEASE_DATETIME "2011-08-03T09:53Z"
 
 /* Define to enable ALSA (used by alsa). */
 #undef HAVE_ALSA
@@ -322,7 +322,7 @@
 #define PACKAGE_NAME "GStreamer Base Plug-ins"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer Base Plug-ins 0.11.0"
+#define PACKAGE_STRING "GStreamer Base Plug-ins 0.11.0.2"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gst-plugins-base"
@@ -331,7 +331,7 @@
 #undef PACKAGE_URL
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.11.0"
+#define PACKAGE_VERSION "0.11.0.2"
 
 /* directory where plugins are located */
 #ifdef _DEBUG
@@ -362,7 +362,7 @@
 #undef USE_TREMOLO
 
 /* Version number of package */
-#define VERSION "0.11.0"
+#define VERSION "0.11.0.2"
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */
