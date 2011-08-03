@@ -1143,6 +1143,10 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
 
     camera->videosink =
         gst_element_factory_make ("filesink", "videobin-filesink");
+    if (!camera->videosink) {
+      missing_element_name = "filesink";
+      goto missing_element;
+    }
     g_object_set (camera->videosink, "async", FALSE, NULL);
 
     /* audio elements */
@@ -1223,6 +1227,10 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
 
     camera->viewfinderbin_queue =
         gst_element_factory_make ("queue", "viewfinderbin-queue");
+    if (!camera->viewfinderbin_queue) {
+      missing_element_name = "queue";
+      goto missing_element;
+    }
 
     g_object_set (camera->viewfinderbin_queue, "leaky", 2, "silent", TRUE,
         NULL);
@@ -1390,6 +1398,10 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
     } else {
       camera->audio_src =
           gst_element_factory_make (DEFAULT_AUDIO_SRC, "audiosrc");
+      if (!camera->audio_src) {
+        missing_element_name = DEFAULT_AUDIO_SRC;
+        goto missing_element;
+      }
     }
 
     gst_element_set_locked_state (camera->audio_src, TRUE);
