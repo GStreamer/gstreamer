@@ -1104,3 +1104,31 @@ ges_timeline_get_layers (GESTimeline * timeline)
 
   return res;
 }
+
+/**
+ * ges_timeline_enable_update:
+ * @timeline : a #GESTimeline
+ * @enabled : TRUE if the timeline must be updated, FALSE otherwise.
+ *
+ * Calls the enable_update function of the tracks contained by the timeline.
+ *
+ * Returns : True if success, FALSE otherwise.
+ */
+gboolean
+ges_timeline_enable_update (GESTimeline * timeline, gboolean enabled)
+{
+  GList *tmp, *tracks;
+  gboolean res = TRUE;
+
+  tracks = ges_timeline_get_tracks (timeline);
+
+  for (tmp = tracks; tmp; tmp = tmp->next) {
+    if (!ges_track_enable_update (tmp->data, enabled)) {
+      res = FALSE;
+    }
+  }
+
+  g_list_free (tracks);
+
+  return res;
+}

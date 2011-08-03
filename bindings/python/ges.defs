@@ -853,6 +853,15 @@
   (return-type "GList*")
 )
 
+(define-method enable_update
+  (of-object "GESTimeline")
+  (c-name "ges_timeline_enable_update")
+  (return-type "gboolean")
+  (parameters
+    '("gboolean" "enabled")
+  )
+)
+
 
 
 ;; From ges-timeline-layer.h
@@ -1634,6 +1643,15 @@
 (define-function track_audio_raw_new
   (c-name "ges_track_audio_raw_new")
   (return-type "GESTrack*")
+)
+
+(define-method enable_update
+  (of-object "GESTrack")
+  (c-name "ges_track_enable_update")
+  (return-type "gboolean")
+  (parameters
+    '("gboolean" "enabled")
+  )
 )
 
 

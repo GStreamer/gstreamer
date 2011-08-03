@@ -601,3 +601,28 @@ ges_track_get_timeline (GESTrack * track)
 
   return track->priv->timeline;
 }
+
+/**
+ * ges_track_enable_update:
+ * @track : a #GESTrack
+ * @enabled : TRUE if the composition must be updated, FALSE otherwise.
+ *
+ * Sets the @track 's composition update property to @enabled .
+ *
+ * Returns : True if success, FALSE otherwise.
+ */
+gboolean
+ges_track_enable_update (GESTrack * track, gboolean enabled)
+{
+  gboolean update;
+
+  g_object_set (track->priv->composition, "update", enabled, NULL);
+
+  g_object_get (track->priv->composition, "update", &update, NULL);
+
+  if (update == enabled) {
+    return TRUE;
+  } else {
+    return FALSE;
+  }
+}
