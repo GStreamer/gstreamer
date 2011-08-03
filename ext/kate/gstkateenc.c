@@ -407,6 +407,9 @@ gst_kate_enc_create_buffer (GstKateEnc * ke, kate_packet * kp,
 {
   GstBuffer *buffer;
 
+  g_return_val_if_fail (kp != NULL, NULL);
+  g_return_val_if_fail (kp->data != NULL, NULL);
+
   buffer = gst_buffer_try_new_and_alloc (kp->nbytes);
   if (G_UNLIKELY (!buffer)) {
     GST_WARNING_OBJECT (ke, "Failed to allocate buffer for %u bytes",
@@ -933,7 +936,7 @@ static GstFlowReturn
 gst_kate_enc_chain_text (GstKateEnc * ke, GstBuffer * buf,
     const char *mime_type)
 {
-  kate_packet kp;
+  kate_packet kp = { 0 };
   int ret = 0;
   GstFlowReturn rflow;
   GstClockTime start = GST_BUFFER_TIMESTAMP (buf);
