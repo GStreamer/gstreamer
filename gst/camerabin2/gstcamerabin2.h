@@ -63,7 +63,6 @@ struct _GstCameraBin2
   GstElement *image_encodebin;
   gulong image_encodebin_signal_id;
   GstElement *imagesink;
-  GstElement *imagebin_queue;
   GstElement *imagebin_capsfilter;
 
   GstElement *video_filter;
