@@ -1116,7 +1116,12 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
   gint encbin_flags = 0;
 
   if (!camera->elements_created) {
-    /* TODO check that elements created in _init were really created */
+    /* Check that elements created in _init were really created */
+    if (!(camera->audio_capsfilter && camera->videobin_capsfilter &&
+            camera->imagebin_capsfilter && camera->viewfinderbin_capsfilter)) {
+      missing_element_name = "capsfilter";
+      goto missing_element;
+    }
 
     camera->video_encodebin =
         gst_element_factory_make ("encodebin", "video-encodebin");
