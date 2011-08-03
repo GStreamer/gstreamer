@@ -72,7 +72,7 @@ new_decoded_pad (GstElement * dec, GstPad * new_pad, gboolean last,
 
   /* FIXME: is this racy or does decodebin2 make sure caps are always
    * negotiated at this point? */
-  caps = gst_pad_get_caps (new_pad);
+  caps = gst_pad_get_caps (new_pad, NULL);
   g_return_if_fail (caps != NULL);
 
   s = gst_caps_get_structure (caps, 0);
@@ -122,8 +122,6 @@ bus_message_cb (GstBus * bus, GstMessage * msg, AppInfo * info)
 {
   switch (GST_MESSAGE_TYPE (msg)) {
     case GST_MESSAGE_ASYNC_DONE:{
-      GstFormat fmt = GST_FORMAT_TIME;
-
       /* only interested in async-done messages from the top-level pipeline */
       if (msg->src != GST_OBJECT_CAST (info->pipe))
         break;
@@ -138,26 +136,29 @@ bus_message_cb (GstBus * bus, GstMessage * msg, AppInfo * info)
       }
 
       /* update position */
-      if (!gst_element_query_position (info->pipe, &fmt, &info->cur_pos))
+      if (!gst_element_query_position (info->pipe, GST_FORMAT_TIME,
+              &info->cur_pos))
         info->cur_pos = -1;
       break;
     }
     case GST_MESSAGE_ELEMENT:{
       const GValue *val;
       GdkPixbuf *pixbuf = NULL;
+      const GstStructure *structure;
 
       /* only interested in element messages from our gdkpixbufsink */
       if (msg->src != GST_OBJECT_CAST (info->sink))
         break;
 
       /* only interested in these two messages */
-      if (!gst_structure_has_name (msg->structure, "preroll-pixbuf") &&
-          !gst_structure_has_name (msg->structure, "pixbuf")) {
+      if (!gst_message_has_name (msg, "preroll-pixbuf") &&
+          !gst_message_has_name (msg, "pixbuf")) {
         break;
       }
 
       g_print ("pixbuf\n");
-      val = gst_structure_get_value (msg->structure, "pixbuf");
+      structure = gst_message_get_structure (msg);
+      val = gst_structure_get_value (structure, "pixbuf");
       g_return_if_fail (val != NULL);
 
       pixbuf = GDK_PIXBUF (g_value_dup_object (val));
@@ -211,10 +212,10 @@ static void
 seek_to (AppInfo * info, gdouble percent)
 {
   GstSeekFlags seek_flags;
-  GstFormat fmt = GST_FORMAT_TIME;
   gint64 seek_pos, dur = -1;
 
-  if (!gst_element_query_duration (info->pipe, &fmt, &dur) || dur <= 0) {
+  if (!gst_element_query_duration (info->pipe, GST_FORMAT_TIME, &dur)
+      || dur <= 0) {
     g_printerr ("Could not query duration\n");
     return;
   }
