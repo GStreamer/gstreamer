@@ -608,7 +608,9 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
         state->format = GST_VIDEO_FORMAT_NV12;
         break;
       default:
-        g_assert_not_reached ();
+        GST_ERROR_OBJECT (self, "Unsupported color format: %d",
+            port_def.format.video.eColorFormat);
+        goto caps_failed;
         break;
     }
 
