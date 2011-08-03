@@ -96,7 +96,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstasf.so
 %{_libdir}/gstreamer-%{majorminor}/libgstdvdlpcmdec.so
 %{_libdir}/gstreamer-%{majorminor}/libgstiec958.so
-%{_libdir}/gstreamer-%{majorminor}/libgstmpegaudioparse.so
+%{_libdir}/gstreamer-%{majorminor}/libgstxingmux.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmpegstream.so
 %{_libdir}/gstreamer-%{majorminor}/libgstrmdemux.so
 %{_libdir}/gstreamer-%{majorminor}/libgstdvdsub.so

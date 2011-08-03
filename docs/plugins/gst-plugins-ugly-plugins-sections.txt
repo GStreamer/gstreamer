@@ -122,22 +122,6 @@ gst_mad_get_type
 </SECTION>
 
 <SECTION>
-<FILE>element-mp3parse</FILE>
-<TITLE>mp3parse</TITLE>
-GstMPEGAudioParse
-<SUBSECTION Standard>
-GstMPEGAudioParseClass
-MPEGAudioPendingAccurateSeek
-MPEGAudioSeekEntry
-GST_MP3PARSE
-GST_MP3PARSE_CLASS
-GST_IS_MP3PARSE
-GST_IS_MP3PARSE_CLASS
-GST_TYPE_MP3PARSE
-gst_mp3parse_get_type
-</SECTION>
-
-<SECTION>
 <FILE>element-rademux</FILE>
 <TITLE>rademux</TITLE>
 GstRealAudioDemux

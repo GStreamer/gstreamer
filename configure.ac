@@ -210,7 +210,7 @@ dnl *** plug-ins to include ***
 
 dnl Non ported plugins (non-dependant, then dependant)
 dnl Make sure you have a space before and after all plugins
-GST_PLUGINS_NONPORTED=" dvdlpcmdec dvdsub iec958 mpegaudioparse mpegstream \
+GST_PLUGINS_NONPORTED=" dvdlpcmdec dvdsub iec958 xingmux mpegstream \
  realmedia \
  a52dec amrnb amrwb cdio dvdread lame mpeg2dec twolame x264 "
 AC_SUBST(GST_PLUGINS_NONPORTED)
@@ -220,7 +220,7 @@ AG_GST_CHECK_PLUGIN(asfdemux)
 AG_GST_CHECK_PLUGIN(dvdlpcmdec)
 AG_GST_CHECK_PLUGIN(dvdsub)
 AG_GST_CHECK_PLUGIN(iec958)
-AG_GST_CHECK_PLUGIN(mpegaudioparse)
+AG_GST_CHECK_PLUGIN(xingmux)
 AG_GST_CHECK_PLUGIN(mpegstream)
 AG_GST_CHECK_PLUGIN(realmedia)
 AG_GST_CHECK_PLUGIN(synaesthesia)
@@ -467,10 +467,10 @@ gst/asfdemux/Makefile
 gst/dvdlpcmdec/Makefile
 gst/dvdsub/Makefile
 gst/iec958/Makefile
-gst/mpegaudioparse/Makefile
 gst/mpegstream/Makefile
 gst/realmedia/Makefile
 gst/synaesthesia/Makefile
+gst/xingmux/Makefile
 ext/Makefile
 ext/a52dec/Makefile
 ext/amrnb/Makefile

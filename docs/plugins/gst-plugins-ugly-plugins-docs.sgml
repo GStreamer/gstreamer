@@ -25,7 +25,6 @@
     <xi:include href="xml/element-lame.xml" />
     <xi:include href="xml/element-lamemp3enc.xml" />
     <xi:include href="xml/element-mad.xml" />
-    <xi:include href="xml/element-mp3parse.xml" />
     <xi:include href="xml/element-rademux.xml" />
     <xi:include href="xml/element-rmdemux.xml" />
     <xi:include href="xml/element-rdtmanager.xml" />
@@ -52,7 +51,6 @@
     <xi:include href="xml/plugin-lame.xml" />
     <xi:include href="xml/plugin-mad.xml" />
     <xi:include href="xml/plugin-mpeg2dec.xml" />
-    <xi:include href="xml/plugin-mpegaudioparse.xml" />
     <xi:include href="xml/plugin-mpegstream.xml" />
     <xi:include href="xml/plugin-realmedia.xml" />
     <xi:include href="xml/plugin-siddec.xml" />
