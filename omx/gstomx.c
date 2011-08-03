@@ -746,9 +746,9 @@ gst_omx_component_get_parameter (GstOMXComponent * comp, OMX_INDEXTYPE index,
   g_return_val_if_fail (comp != NULL, OMX_ErrorUndefined);
   g_return_val_if_fail (param != NULL, OMX_ErrorUndefined);
 
-  GST_DEBUG_OBJECT (comp->parent, "Getting parameter at index %u", index);
+  GST_DEBUG_OBJECT (comp->parent, "Getting parameter at index 0x%08x", index);
   err = OMX_GetParameter (comp->handle, index, param);
-  GST_DEBUG_OBJECT (comp->parent, "Got parameter at index %u: %s (0x%08x)",
+  GST_DEBUG_OBJECT (comp->parent, "Got parameter at index 0x%08x: %s (0x%08x)",
       index, gst_omx_error_to_string (err), err);
 
   return err;
@@ -763,9 +763,9 @@ gst_omx_component_set_parameter (GstOMXComponent * comp, OMX_INDEXTYPE index,
   g_return_val_if_fail (comp != NULL, OMX_ErrorUndefined);
   g_return_val_if_fail (param != NULL, OMX_ErrorUndefined);
 
-  GST_DEBUG_OBJECT (comp->parent, "Setting parameter at index %u", index);
+  GST_DEBUG_OBJECT (comp->parent, "Setting parameter at index 0x%08x", index);
   err = OMX_SetParameter (comp->handle, index, param);
-  GST_DEBUG_OBJECT (comp->parent, "Set parameter at index %u: %s (0x%08x)",
+  GST_DEBUG_OBJECT (comp->parent, "Set parameter at index 0x%08x: %s (0x%08x)",
       index, gst_omx_error_to_string (err), err);
 
   return err;
@@ -780,9 +780,10 @@ gst_omx_component_get_config (GstOMXComponent * comp, OMX_INDEXTYPE index,
   g_return_val_if_fail (comp != NULL, OMX_ErrorUndefined);
   g_return_val_if_fail (config != NULL, OMX_ErrorUndefined);
 
-  GST_DEBUG_OBJECT (comp->parent, "Getting configuration at index %u", index);
+  GST_DEBUG_OBJECT (comp->parent, "Getting configuration at index 0x%08x",
+      index);
   err = OMX_GetConfig (comp->handle, index, config);
-  GST_DEBUG_OBJECT (comp->parent, "Got parameter at index %u: %s (0x%08x)",
+  GST_DEBUG_OBJECT (comp->parent, "Got parameter at index 0x%08x: %s (0x%08x)",
       index, gst_omx_error_to_string (err), err);
 
   return err;
@@ -797,9 +798,10 @@ gst_omx_component_set_config (GstOMXComponent * comp, OMX_INDEXTYPE index,
   g_return_val_if_fail (comp != NULL, OMX_ErrorUndefined);
   g_return_val_if_fail (config != NULL, OMX_ErrorUndefined);
 
-  GST_DEBUG_OBJECT (comp->parent, "Setting configuration at index %u", index);
+  GST_DEBUG_OBJECT (comp->parent, "Setting configuration at index 0x%08x",
+      index);
   err = OMX_SetConfig (comp->handle, index, config);
-  GST_DEBUG_OBJECT (comp->parent, "Set parameter at index %u: %s (0x%08x)",
+  GST_DEBUG_OBJECT (comp->parent, "Set parameter at index 0x%08x: %s (0x%08x)",
       index, gst_omx_error_to_string (err), err);
 
   return err;
