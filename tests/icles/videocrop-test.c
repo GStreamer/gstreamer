@@ -105,10 +105,10 @@ test_with_caps (GstElement * src, GstElement * videocrop, GstCaps * caps)
     /* need to block the streaming thread while changing these properties,
      * otherwise we might get random not-negotiated errors (when caps are
      * changed in between upstream calling pad_alloc_buffer() and pushing
-     * the processed buffer?) */
-    gst_pad_set_blocked (pad, TRUE);
+     * the processed buffer?)  FIXME should not be needed */
+    /* gst_pad_set_blocked (pad, TRUE); */
     g_object_set (videocrop, "left", hcrop, "top", vcrop, NULL);
-    gst_pad_set_blocked (pad, FALSE);
+    /* gst_pad_set_blocked (pad, FALSE); */
 
     waited_for_block = g_timer_elapsed (timer, NULL) * (double) GST_SECOND;
     /* GST_LOG ("waited: %" GST_TIME_FORMAT ", frame len: %" GST_TIME_FORMAT,
