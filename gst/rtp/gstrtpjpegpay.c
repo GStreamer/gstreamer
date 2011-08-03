@@ -89,6 +89,7 @@ typedef enum _RtpJpegMarker RtpJpegMarker;
  * @JPEG_MARKER_SOS: Start of Scan marker
  * @JPEG_MARKER_EOI: End of Image marker
  * @JPEG_MARKER_DRI: Define Restart Interval marker
+ * @JPEG_MARKER_H264: H264 marker
  *
  * Identifers for markers in JPEG header
  */
@@ -103,7 +104,8 @@ enum _RtpJpegMarker
   JPEG_MARKER_DHT = 0xC4,
   JPEG_MARKER_SOS = 0xDA,
   JPEG_MARKER_EOI = 0xD9,
-  JPEG_MARKER_DRI = 0xDD
+  JPEG_MARKER_DRI = 0xDD,
+  JPEG_MARKER_H264 = 0xE4
 };
 
 #define DEFAULT_JPEG_QUANT    255
@@ -590,7 +592,7 @@ gst_rtp_jpeg_pay_scan_marker (const guint8 * data, guint size, guint * offset)
     guint8 marker;
 
     marker = data[*offset];
-    GST_LOG ("found %02x marker at offset %u", marker, *offset);
+    GST_LOG ("found 0x%02x marker at offset %u", marker, *offset);
     (*offset)++;
     return marker;
   }
@@ -644,6 +646,7 @@ gst_rtp_jpeg_pay_handle_buffer (GstBaseRTPPayload * basepayload,
       case JPEG_MARKER_JFIF:
       case JPEG_MARKER_CMT:
       case JPEG_MARKER_DHT:
+      case JPEG_MARKER_H264:
         GST_LOG_OBJECT (pay, "skipping marker");
         offset += gst_rtp_jpeg_pay_header_size (data, offset);
         break;
