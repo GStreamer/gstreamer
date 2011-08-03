@@ -320,9 +320,6 @@ gst_rtp_asf_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   guint payload_len, hdr_len, offset;
   guint len_offs;
   GstClockTime timestamp;
-  gpointer bufdata;
-  guint8 *data;
-  gsize bufsize;
   GstRTPBuffer rtpbuf;
 
   depay = GST_RTP_ASF_DEPAY (depayload);
@@ -345,6 +342,7 @@ gst_rtp_asf_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 
   do {
     guint packet_len;
+    gsize plen;
 
     /* packet header is at least 4 bytes */
     if (payload_len < 4)
@@ -462,25 +460,20 @@ gst_rtp_asf_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
       return NULL;
 
     /* we need to pad with zeroes to packet_size if it's smaller */
-    bufdata = gst_buffer_map (outbuf, &bufsize, NULL, GST_MAP_READ);
-    g_assert (packet_len == bufsize);
-    packet_len = bufsize;
-    if (packet_len < depay->packet_size) {
+    plen = gst_buffer_get_size (outbuf);
+    if (plen < depay->packet_size) {
       GstBuffer *tmp;
 
       GST_LOG_OBJECT (depay, "padding buffer size %d to packet size %d",
-          packet_len, depay->packet_size);
+          plen, depay->packet_size);
+
       tmp = gst_buffer_new_and_alloc (depay->packet_size);
-      gst_buffer_copy_into (tmp, outbuf, GST_BUFFER_COPY_ALL, 0, packet_len);
-      gst_buffer_unmap (outbuf, bufdata, bufsize);
+      gst_buffer_copy_into (tmp, outbuf, GST_BUFFER_COPY_ALL, 0, plen);
       gst_buffer_unref (outbuf);
       outbuf = tmp;
 
-      bufdata = gst_buffer_map (outbuf, &bufsize, NULL, GST_MAP_WRITE);
-      data = (guint8 *) bufdata;
-      memset (data + packet_len, 0, depay->packet_size - packet_len);
-      gst_rtp_asf_depay_set_padding (depay, outbuf,
-          depay->packet_size - packet_len);
+      gst_buffer_memset (outbuf, plen, 0, depay->packet_size - plen);
+      gst_rtp_asf_depay_set_padding (depay, outbuf, depay->packet_size - plen);
     }
 
     if (!S)
@@ -494,7 +487,6 @@ gst_rtp_asf_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 
     GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
 
-    gst_buffer_unmap (outbuf, bufdata, bufsize);
     gst_base_rtp_depayload_push (depayload, outbuf);
 
     /* only apply the timestamp to the first buffer of this packet */

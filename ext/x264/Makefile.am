@@ -6,7 +6,9 @@ libgstx264_la_CFLAGS = \
 	$(GST_CFLAGS) \
 	$(X264_CFLAGS)
 libgstx264_la_LIBADD = \
-	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_MAJORMINOR) \
+	$(GST_PLUGINS_BASE_LIBS) \
+	-lgstvideo-$(GST_MAJORMINOR) \
+	-lgstpbutils-$(GST_MAJORMINOR) \
 	$(GST_LIBS) \
 	$(X264_LIBS)
 libgstx264_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)

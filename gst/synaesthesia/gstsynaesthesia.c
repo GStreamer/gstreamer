@@ -312,7 +312,8 @@ done:
   /* Errors */
 missing_caps_details:
   {
-    GST_WARNING_OBJECT (synaesthesia, "missing channels or rate in the caps");
+    GST_WARNING_OBJECT (synaesthesia,
+        "missing width, height or framerate in the caps");
     res = FALSE;
     goto done;
   }
