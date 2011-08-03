@@ -27,24 +27,17 @@
 #include <ges/ges-track.h>
 
 G_BEGIN_DECLS
-
 #define GES_TYPE_TIMELINE_TEXT_OVERLAY ges_timeline_text_overlay_get_type()
-
 #define GES_TIMELINE_TEXT_OVERLAY(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_TIMELINE_TEXT_OVERLAY, GESTimelineTextOverlay))
-
 #define GES_TIMELINE_TEXT_OVERLAY_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_TIMELINE_TEXT_OVERLAY, GESTimelineTextOverlayClass))
-
 #define GES_IS_TIMELINE_TEXT_OVERLAY(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_TIMELINE_TEXT_OVERLAY))
-
 #define GES_IS_TIMELINE_TEXT_OVERLAY_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_TIMELINE_TEXT_OVERLAY))
-
 #define GES_TIMELINE_TEXT_OVERLAY_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TIMELINE_TEXT_OVERLAY, GESTimelineTextOverlayClass))
-
 typedef struct _GESTimelineTextOverlayPrivate GESTimelineTextOverlayPrivate;
 
 /**
@@ -52,10 +45,11 @@ typedef struct _GESTimelineTextOverlayPrivate GESTimelineTextOverlayPrivate;
  * 
  */
 
-struct _GESTimelineTextOverlay {
+struct _GESTimelineTextOverlay
+{
   GESTimelineOverlay parent;
 
-  /*< private >*/
+  /*< private > */
   GESTimelineTextOverlayPrivate *priv;
 
   /* Padding for API extension */
@@ -66,8 +60,9 @@ struct _GESTimelineTextOverlay {
  * GESTimelineTextOverlayClass:
  */
 
-struct _GESTimelineTextOverlayClass {
-  /*< private >*/
+struct _GESTimelineTextOverlayClass
+{
+  /*< private > */
 
   GESTimelineOverlayClass parent_class;
 
@@ -97,10 +92,10 @@ void
 ges_timeline_text_overlay_set_color (GESTimelineTextOverlay * self,
     guint32 color);
 
-const gchar* ges_timeline_text_overlay_get_text (GESTimelineTextOverlay * self);
+const gchar *ges_timeline_text_overlay_get_text (GESTimelineTextOverlay * self);
 
-const gchar* 
-ges_timeline_text_overlay_get_font_desc (GESTimelineTextOverlay * self);
+const gchar *ges_timeline_text_overlay_get_font_desc (GESTimelineTextOverlay *
+    self);
 
 GESTextVAlign
 ges_timeline_text_overlay_get_valignment (GESTimelineTextOverlay * self);
@@ -111,8 +106,7 @@ ges_timeline_text_overlay_get_color (GESTimelineTextOverlay * self);
 GESTextHAlign
 ges_timeline_text_overlay_get_halignment (GESTimelineTextOverlay * self);
 
-GESTimelineTextOverlay* ges_timeline_text_overlay_new (void);
+GESTimelineTextOverlay *ges_timeline_text_overlay_new (void);
 
 G_END_DECLS
-
 #endif /* _GES_TL_OVERLAY */

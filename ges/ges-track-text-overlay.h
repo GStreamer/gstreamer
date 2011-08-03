@@ -27,43 +27,38 @@
 #include <ges/ges-track-operation.h>
 
 G_BEGIN_DECLS
-
 #define GES_TYPE_TRACK_TEXT_OVERLAY ges_track_text_overlay_get_type()
-
 #define GES_TRACK_TEXT_OVERLAY(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_TRACK_TEXT_OVERLAY, GESTrackTextOverlay))
-
 #define GES_TRACK_TEXT_OVERLAY_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_TRACK_TEXT_OVERLAY, GESTrackTextOverlayClass))
-
 #define GES_IS_TRACK_TEXT_OVERLAY(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_TRACK_TEXT_OVERLAY))
-
 #define GES_IS_TRACK_TEXT_OVERLAY_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_TRACK_TEXT_OVERLAY))
-
 #define GES_TRACK_TEXT_OVERLAY_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TRACK_TEXT_OVERLAY, GESTrackTextOverlayClass))
-
 typedef struct _GESTrackTextOverlayPrivate GESTrackTextOverlayPrivate;
 
 /**
  * GESTrackTextOverlay:
  */
-struct _GESTrackTextOverlay {
+struct _GESTrackTextOverlay
+{
   GESTrackOperation parent;
 
-  /*< private >*/
+  /*< private > */
   GESTrackTextOverlayPrivate *priv;
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };
 
-struct _GESTrackTextOverlayClass {
+struct _GESTrackTextOverlayClass
+{
   GESTrackOperationClass parent_class;
 
-  /*< private >*/
+  /*< private > */
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
@@ -71,27 +66,28 @@ struct _GESTrackTextOverlayClass {
 
 GType ges_track_text_overlay_get_type (void);
 
-void ges_track_text_overlay_set_text(GESTrackTextOverlay *self,
-                                     const gchar *text);
-void ges_track_text_overlay_set_font_desc(GESTrackTextOverlay *self,
-                                          const gchar *font_desc);
+void ges_track_text_overlay_set_text (GESTrackTextOverlay * self,
+    const gchar * text);
+void ges_track_text_overlay_set_font_desc (GESTrackTextOverlay * self,
+    const gchar * font_desc);
 
-void ges_track_text_overlay_set_halignment(GESTrackTextOverlay *self,
-                                           GESTextHAlign halign);
+void ges_track_text_overlay_set_halignment (GESTrackTextOverlay * self,
+    GESTextHAlign halign);
 
-void ges_track_text_overlay_set_valignment(GESTrackTextOverlay *self,
-                                           GESTextVAlign valign);
-void ges_track_text_overlay_set_color(GESTrackTextOverlay *self,
-                                      guint32 color);
+void ges_track_text_overlay_set_valignment (GESTrackTextOverlay * self,
+    GESTextVAlign valign);
+void ges_track_text_overlay_set_color (GESTrackTextOverlay * self,
+    guint32 color);
 
-const gchar *ges_track_text_overlay_get_text(GESTrackTextOverlay *self);
-const char *ges_track_text_overlay_get_font_desc(GESTrackTextOverlay *self);
-GESTextHAlign ges_track_text_overlay_get_halignment(GESTrackTextOverlay *self);
-GESTextVAlign ges_track_text_overlay_get_valignment(GESTrackTextOverlay *self);
-const guint32 ges_track_text_overlay_get_color (GESTrackTextOverlay *self);
+const gchar *ges_track_text_overlay_get_text (GESTrackTextOverlay * self);
+const char *ges_track_text_overlay_get_font_desc (GESTrackTextOverlay * self);
+GESTextHAlign ges_track_text_overlay_get_halignment (GESTrackTextOverlay *
+    self);
+GESTextVAlign ges_track_text_overlay_get_valignment (GESTrackTextOverlay *
+    self);
+const guint32 ges_track_text_overlay_get_color (GESTrackTextOverlay * self);
 
-GESTrackTextOverlay* ges_track_text_overlay_new (void);
+GESTrackTextOverlay *ges_track_text_overlay_new (void);
 
 G_END_DECLS
-
 #endif /* _GES_TRACK_TEXT_OVERLAY */
