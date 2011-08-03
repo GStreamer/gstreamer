@@ -65,6 +65,7 @@ struct _GstJackAudioSink {
   /* our ports */
   jack_port_t    **ports;
   int              port_count;
+  sample_t       **buffers;
 };
 
 struct _GstJackAudioSinkClass {

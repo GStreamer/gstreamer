@@ -83,6 +83,7 @@ gst_jack_audio_sink_allocate_channels (GstJackAudioSink * sink, gint channels)
 
   /* alloc enough output ports */
   sink->ports = g_realloc (sink->ports, sizeof (jack_port_t *) * channels);
+  sink->buffers = g_realloc (sink->buffers, sizeof (sample_t *) * channels);
 
   /* create an output port for each channel */
   while (sink->port_count < channels) {
@@ -123,6 +124,8 @@ gst_jack_audio_sink_free_channels (GstJackAudioSink * sink)
   }
   g_free (sink->ports);
   sink->ports = NULL;
+  g_free (sink->buffers);
+  sink->buffers = NULL;
 }
 
 /* ringbuffer abstract base class */
@@ -187,19 +190,17 @@ jack_process_cb (jack_nframes_t nframes, void *arg)
   gint readseg, len;
   guint8 *readptr;
   gint i, j, flen, channels;
-  sample_t **buffers, *data;
+  sample_t *data;
 
   buf = GST_RING_BUFFER_CAST (arg);
   sink = GST_JACK_AUDIO_SINK (GST_OBJECT_PARENT (buf));
 
   channels = buf->spec.channels;
 
-  /* alloc pointers to samples */
-  buffers = g_alloca (sizeof (sample_t *) * channels);
-
   /* get target buffers */
   for (i = 0; i < channels; i++) {
-    buffers[i] = (sample_t *) jack_port_get_buffer (sink->ports[i], nframes);
+    sink->buffers[i] =
+        (sample_t *) jack_port_get_buffer (sink->ports[i], nframes);
   }
 
   if (gst_ring_buffer_prepare_read (buf, &readseg, &readptr, &len)) {
@@ -217,7 +218,7 @@ jack_process_cb (jack_nframes_t nframes, void *arg)
      * deinterleave into the jack target buffers */
     for (i = 0; i < nframes; i++) {
       for (j = 0; j < channels; j++) {
-        buffers[j][i] = *data++;
+        sink->buffers[j][i] = *data++;
       }
     }
 
@@ -231,7 +232,7 @@ jack_process_cb (jack_nframes_t nframes, void *arg)
     /* We are not allowed to read from the ringbuffer, write silence to all
      * jack output buffers */
     for (i = 0; i < channels; i++) {
-      memset (buffers[i], 0, nframes * sizeof (sample_t));
+      memset (sink->buffers[i], 0, nframes * sizeof (sample_t));
     }
   }
   return 0;
@@ -737,6 +738,7 @@ gst_jack_audio_sink_init (GstJackAudioSink * sink,
   sink->jclient = NULL;
   sink->ports = NULL;
   sink->port_count = 0;
+  sink->buffers = NULL;
 }
 
 static void
