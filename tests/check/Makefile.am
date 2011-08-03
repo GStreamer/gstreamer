@@ -118,6 +118,7 @@ check_PROGRAMS = \
 	elements/audiopanorama \
 	elements/audiowsincband \
 	elements/audiowsinclimit \
+	elements/autodetect \
 	elements/avimux \
 	elements/avisubtitle \
 	elements/capssetter \
@@ -166,11 +167,6 @@ VALGRIND_TO_FIX = \
 	elements/rtp-payloading
 
 TESTS = $(check_PROGRAMS)
-
-# these tests don't even pass
-# autodetect: temporarily disabled because of broken videosinks in -bad
-noinst_PROGRAMS = \
-	elements/autodetect
 
 AM_CFLAGS = $(GST_OBJ_CFLAGS) $(GST_CHECK_CFLAGS) $(CHECK_CFLAGS) \
 	$(GST_OPTION_CFLAGS) -DGST_TEST_FILES_PATH="\"$(TEST_FILES_DIRECTORY)\"" \
