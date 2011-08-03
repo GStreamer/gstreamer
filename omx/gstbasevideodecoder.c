@@ -1917,11 +1917,9 @@ gst_base_video_decoder_alloc_src_buffer (GstBaseVideoDecoder *
 {
   GstBuffer *buffer;
   GstFlowReturn flow_ret;
-  int num_bytes;
   GstVideoState *state = &GST_BASE_VIDEO_CODEC (base_video_decoder)->state;
+  int num_bytes = state->bytes_per_picture;
 
-  num_bytes = gst_video_format_get_size (state->format, state->width,
-      state->height);
   GST_DEBUG ("alloc src buffer caps=%" GST_PTR_FORMAT,
       GST_PAD_CAPS (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_decoder)));
   flow_ret =
