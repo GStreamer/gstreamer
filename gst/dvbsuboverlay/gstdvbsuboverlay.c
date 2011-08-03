@@ -1,5 +1,6 @@
 /* GStreamer DVB subtitles overlay
  * Copyright (c) 2010 Mart Raudsepp <mart.raudsepp@collabora.co.uk>
+ * Copyright (c) 2010 ONELAN Ltd.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
