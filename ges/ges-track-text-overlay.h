@@ -81,11 +81,14 @@ void ges_track_text_overlay_set_halignment(GESTrackTextOverlay *self,
 
 void ges_track_text_overlay_set_valignment(GESTrackTextOverlay *self,
                                            GESTextVAlign valign);
+void ges_track_text_overlay_set_color(GESTrackTextOverlay *self,
+                                      guint32 color);
 
 const gchar *ges_track_text_overlay_get_text(GESTrackTextOverlay *self);
 const char *ges_track_text_overlay_get_font_desc(GESTrackTextOverlay *self);
 GESTextHAlign ges_track_text_overlay_get_halignment(GESTrackTextOverlay *self);
 GESTextVAlign ges_track_text_overlay_get_valignment(GESTrackTextOverlay *self);
+const guint32 ges_track_text_overlay_get_color (GESTrackTextOverlay *self);
 
 GESTrackTextOverlay* ges_track_text_overlay_new (void);
 

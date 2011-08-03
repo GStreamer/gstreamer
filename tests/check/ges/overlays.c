@@ -112,6 +112,7 @@ GST_START_TEST (test_overlay_in_layer)
   GESTimelineTextOverlay *source;
   gchar *text;
   gint halign, valign;
+  guint32 color;
 
   ges_init ();
 
@@ -163,6 +164,14 @@ GST_START_TEST (test_overlay_in_layer)
       ges_track_text_overlay_get_valignment (GES_TRACK_TEXT_OVERLAY (trobj));
   assert_equals_int (halign, GES_TEXT_HALIGN_LEFT);
   assert_equals_int (valign, GES_TEXT_VALIGN_TOP);
+
+  /* test color */
+  g_object_set (source, "color", (gint) 2147483647, NULL);
+  g_object_get (source, "color", &color, NULL);
+  assert_equals_int (color, 2147483647);
+
+  color = ges_track_text_overlay_get_color (GES_TRACK_TEXT_OVERLAY (trobj));
+  assert_equals_int (color, 2147483647);
 
   GST_DEBUG ("removing the source");
 

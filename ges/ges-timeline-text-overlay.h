@@ -93,6 +93,10 @@ void
 ges_timeline_text_overlay_set_halign (GESTimelineTextOverlay * self,
     GESTextHAlign halign);
 
+void
+ges_timeline_text_overlay_set_color (GESTimelineTextOverlay * self,
+    guint32 color);
+
 const gchar* ges_timeline_text_overlay_get_text (GESTimelineTextOverlay * self);
 
 const gchar* 
@@ -100,6 +104,9 @@ ges_timeline_text_overlay_get_font_desc (GESTimelineTextOverlay * self);
 
 GESTextVAlign
 ges_timeline_text_overlay_get_valignment (GESTimelineTextOverlay * self);
+
+const guint32
+ges_timeline_text_overlay_get_color (GESTimelineTextOverlay * self);
 
 GESTextHAlign
 ges_timeline_text_overlay_get_halignment (GESTimelineTextOverlay * self);

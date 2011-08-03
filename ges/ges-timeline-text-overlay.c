@@ -46,6 +46,7 @@ struct _GESTimelineTextOverlayPrivate
   gchar *font_desc;
   GESTextHAlign halign;
   GESTextVAlign valign;
+  guint32 color;
 };
 
 enum
@@ -55,6 +56,7 @@ enum
   PROP_FONT_DESC,
   PROP_HALIGNMENT,
   PROP_VALIGNMENT,
+  PROP_COLOR,
 };
 
 static GESTrackObject
@@ -81,6 +83,9 @@ ges_timeline_text_overlay_get_property (GObject * object, guint property_id,
     case PROP_VALIGNMENT:
       g_value_set_enum (value, priv->valign);
       break;
+    case PROP_COLOR:
+      g_value_set_uint (value, priv->color);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
   }
@@ -104,6 +109,9 @@ ges_timeline_text_overlay_set_property (GObject * object, guint property_id,
       break;
     case PROP_VALIGNMENT:
       ges_timeline_text_overlay_set_valign (tfs, g_value_get_enum (value));
+      break;
+    case PROP_COLOR:
+      ges_timeline_text_overlay_set_color (tfs, g_value_get_uint (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -183,6 +191,16 @@ ges_timeline_text_overlay_class_init (GESTimelineTextOverlayClass * klass)
   timobj_class->create_track_object =
       ges_timeline_text_overlay_create_track_object;
   timobj_class->need_fill_track = FALSE;
+
+  /**
+   * GESTimelineTextOverlay:color
+   *
+   * The color of the text
+   */
+
+  g_object_class_install_property (object_class, PROP_COLOR,
+      g_param_spec_uint ("color", "Color", "The color of the text",
+          0, G_MAXUINT32, G_MAXUINT32, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 }
 
 static void
@@ -197,6 +215,7 @@ ges_timeline_text_overlay_init (GESTimelineTextOverlay * self)
   self->priv->font_desc = NULL;
   self->priv->halign = DEFAULT_PROP_HALIGNMENT;
   self->priv->valign = DEFAULT_PROP_VALIGNMENT;
+  self->priv->color = G_MAXUINT32;
 }
 
 /**
@@ -338,6 +357,38 @@ ges_timeline_text_overlay_set_valign (GESTimelineTextOverlay * self,
 }
 
 /**
+ * ges_timeline_text_overlay_set_color:
+ * @self: the #GESTimelineTextOverlay* to set
+ * @color: The color @self is being set to
+ *
+ * Sets the color of the text.
+ *
+ */
+void
+ges_timeline_text_overlay_set_color (GESTimelineTextOverlay * self,
+    guint32 color)
+{
+  GList *tmp, *trackobjects;
+  GESTimelineObject *object = (GESTimelineObject *) self;
+
+  GST_DEBUG ("self:%p, color:%d", self, color);
+
+  self->priv->color = color;
+
+  trackobjects = ges_timeline_object_get_track_objects (object);
+  for (tmp = trackobjects; tmp; tmp = tmp->next) {
+    GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
+
+    if (ges_track_object_get_track (trackobject)->type == GES_TRACK_TYPE_VIDEO)
+      ges_track_text_overlay_set_color (GES_TRACK_TEXT_OVERLAY
+          (trackobject), self->priv->color);
+
+    g_object_unref (GES_TRACK_OBJECT (tmp->data));
+  }
+  g_list_free (trackobjects);
+}
+
+/**
  * ges_timeline_text_overlay_get_text:
  * @self: a #GESTimelineTextOverlay
  *
@@ -394,6 +445,22 @@ ges_timeline_text_overlay_get_valignment (GESTimelineTextOverlay * self)
   return self->priv->valign;
 }
 
+/**
+ * ges_timeline_text_overlay_get_color:
+ * @self: a #GESTimelineTextOverlay
+ *
+ * Get the color used by @source.
+ *
+ * Returns: The color used by @source.
+ */
+
+const guint32
+ges_timeline_text_overlay_get_color (GESTimelineTextOverlay * self)
+{
+  return self->priv->color;
+}
+
+
 static GESTrackObject *
 ges_timeline_text_overlay_create_track_object (GESTimelineObject * obj,
     GESTrack * track)
@@ -414,6 +481,7 @@ ges_timeline_text_overlay_create_track_object (GESTimelineObject * obj,
         priv->halign);
     ges_track_text_overlay_set_valignment ((GESTrackTextOverlay *) res,
         priv->valign);
+    ges_track_text_overlay_set_color ((GESTrackTextOverlay *) res, priv->color);
   }
 
   return res;

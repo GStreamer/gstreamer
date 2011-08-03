@@ -39,6 +39,7 @@ struct _GESTrackTextOverlayPrivate
   gchar *font_desc;
   GESTextHAlign halign;
   GESTextVAlign valign;
+  guint32 color;
   GstElement *text_el;
 };
 
@@ -87,6 +88,7 @@ ges_track_text_overlay_init (GESTrackTextOverlay * self)
   self->priv->text_el = NULL;
   self->priv->halign = DEFAULT_HALIGNMENT;
   self->priv->valign = DEFAULT_VALIGNMENT;
+  self->priv->color = G_MAXUINT32;
 }
 
 static void
@@ -156,6 +158,7 @@ ges_track_text_overlay_create_element (GESTrackObject * object)
 
   g_object_set (text, "halignment", (gint) self->priv->halign, "valignment",
       (gint) self->priv->valign, NULL);
+  g_object_set (text, "color", (guint32) self->priv->color, NULL);
 
   ret = gst_bin_new ("overlay-bin");
   gst_bin_add_many (GST_BIN (ret), text, iconv, oconv, NULL);
@@ -187,6 +190,8 @@ ges_track_text_overlay_create_element (GESTrackObject * object)
 void
 ges_track_text_overlay_set_text (GESTrackTextOverlay * self, const gchar * text)
 {
+  GST_DEBUG ("self:%p, text:%s", self, text);
+
   if (self->priv->text)
     g_free (self->priv->text);
 
@@ -208,6 +213,8 @@ void
 ges_track_text_overlay_set_font_desc (GESTrackTextOverlay * self,
     const gchar * font_desc)
 {
+  GST_DEBUG ("self:%p, font_desc:%s", self, font_desc);
+
   if (self->priv->font_desc)
     g_free (self->priv->font_desc);
 
@@ -230,8 +237,9 @@ void
 ges_track_text_overlay_set_valignment (GESTrackTextOverlay * self,
     GESTextVAlign valign)
 {
+  GST_DEBUG ("self:%p, halign:%d", self, valign);
+
   self->priv->valign = valign;
-  GST_LOG ("set valignment to: %d", valign);
   if (self->priv->text_el)
     g_object_set (self->priv->text_el, "valignment", valign, NULL);
 }
@@ -249,10 +257,29 @@ void
 ges_track_text_overlay_set_halignment (GESTrackTextOverlay * self,
     GESTextHAlign halign)
 {
+  GST_DEBUG ("self:%p, halign:%d", self, halign);
+
   self->priv->halign = halign;
-  GST_LOG ("set halignment to: %d", halign);
   if (self->priv->text_el)
     g_object_set (self->priv->text_el, "halignment", halign, NULL);
+}
+
+/**
+ * ges_track_text_overlay_set_color:
+ * @self: the #GESTrackTextOverlay* to set
+ * @color: The color @self is being set to
+ *
+ * Sets the color of the text.
+ *
+ */
+void
+ges_track_text_overlay_set_color (GESTrackTextOverlay * self, guint32 color)
+{
+  GST_DEBUG ("self:%p, color:%d", self, color);
+
+  self->priv->color = color;
+  if (self->priv->text_el)
+    g_object_set (self->priv->text_el, "color", color, NULL);
 }
 
 /**
@@ -309,6 +336,21 @@ GESTextVAlign
 ges_track_text_overlay_get_valignment (GESTrackTextOverlay * self)
 {
   return self->priv->valign;
+}
+
+/**
+ * ges_track_text_overlay_get_color:
+ * @self: a GESTrackTextOverlay
+ *
+ * Get the color used by @source.
+ *
+ * Returns: The color used by @source.
+ */
+
+const guint32
+ges_track_text_overlay_get_color (GESTrackTextOverlay * self)
+{
+  return self->priv->color;
 }
 
 /**
