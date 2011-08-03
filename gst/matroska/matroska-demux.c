@@ -4873,15 +4873,19 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
       /* pixel width and height are the w and h of the video in pixels */
       if (videocontext->pixel_width > 0 && videocontext->pixel_height > 0) {
         gint w = videocontext->pixel_width;
-
         gint h = videocontext->pixel_height;
 
         gst_structure_set (structure,
             "width", G_TYPE_INT, w, "height", G_TYPE_INT, h, NULL);
       }
 
-      if (videocontext->display_width > 0 && videocontext->display_height > 0) {
+      if (videocontext->display_width > 0 || videocontext->display_height > 0) {
         int n, d;
+
+        if (videocontext->display_width <= 0)
+          videocontext->display_width = videocontext->pixel_width;
+        if (videocontext->display_height <= 0)
+          videocontext->display_height = videocontext->pixel_height;
 
         /* calculate the pixel aspect ratio using the display and pixel w/h */
         n = videocontext->display_width * videocontext->pixel_height;

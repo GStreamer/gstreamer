@@ -510,6 +510,8 @@ gst_rtspsrc_init (GstRTSPSrc * src)
   g_static_rec_mutex_init (src->state_rec_lock);
 
   src->state = GST_RTSP_STATE_INVALID;
+
+  GST_OBJECT_FLAG_SET (src, GST_ELEMENT_IS_SOURCE);
 }
 
 static void
@@ -5438,7 +5440,6 @@ gst_rtspsrc_open_from_sdp (GstRTSPSrc * src, GstSDPMessage * sdp,
   }
 
   src->state = GST_RTSP_STATE_INIT;
-  GST_OBJECT_FLAG_SET (src, GST_ELEMENT_IS_SOURCE);
 
   /* setup streams */
   if ((res = gst_rtspsrc_setup_streams (src, async)) < 0)

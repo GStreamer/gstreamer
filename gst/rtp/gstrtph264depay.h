@@ -56,6 +56,11 @@ struct _GstRtpH264Depay
   gboolean    picture_start;
   GstClockTime last_ts;
   gboolean    last_keyframe;
+
+  /* Work around broken payloaders wrt. FU-A & FU-B */
+  guint8 current_fu_type;
+  GstClockTime fu_timestamp;
+  gboolean fu_marker;
 };
 
 struct _GstRtpH264DepayClass

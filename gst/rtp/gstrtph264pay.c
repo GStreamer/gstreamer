@@ -423,6 +423,7 @@ gst_rtp_h264_pay_setcaps (GstBaseRTPPayload * basepayload, GstCaps * caps)
   guint8 *data, *bdata;
   gsize size, bsize;
   GstBuffer *buffer;
+  const gchar *alignment;
 
   rtph264pay = GST_RTP_H264_PAY (basepayload);
 
@@ -431,6 +432,12 @@ gst_rtp_h264_pay_setcaps (GstBaseRTPPayload * basepayload, GstCaps * caps)
   /* we can only set the output caps when we found the sprops and profile
    * NALs */
   gst_basertppayload_set_options (basepayload, "video", TRUE, "H264", 90000);
+
+  alignment = gst_structure_get_string (str, "alignment");
+  if (alignment && !strcmp (alignment, "au"))
+    rtph264pay->au_alignment = TRUE;
+  else
+    rtph264pay->au_alignment = FALSE;
 
   /* packetized AVC video has a codec_data */
   if ((value = gst_structure_get_value (str, "codec_data"))) {
@@ -777,7 +784,7 @@ gst_rtp_h264_pay_decode_nal (GstRtpH264Pay * payloader,
 static GstFlowReturn
 gst_rtp_h264_pay_payload_nal (GstBaseRTPPayload * basepayload,
     const guint8 * data, guint size, GstClockTime timestamp,
-    GstBuffer * buffer_orig);
+    GstBuffer * buffer_orig, gboolean end_of_au);
 
 static GstFlowReturn
 gst_rtp_h264_pay_send_sps_pps (GstBaseRTPPayload * basepayload,
@@ -795,7 +802,7 @@ gst_rtp_h264_pay_send_sps_pps (GstBaseRTPPayload * basepayload,
     /* resend SPS */
     data = gst_buffer_map (sps_buf, &size, NULL, GST_MAP_READ);
     ret = gst_rtp_h264_pay_payload_nal (basepayload,
-        data, size, timestamp, sps_buf);
+        data, size, timestamp, sps_buf, FALSE);
     gst_buffer_unmap (sps_buf, data, size);
     /* Not critical here; but throw a warning */
     if (ret != GST_FLOW_OK)
@@ -808,7 +815,7 @@ gst_rtp_h264_pay_send_sps_pps (GstBaseRTPPayload * basepayload,
     /* resend PPS */
     data = gst_buffer_map (pps_buf, &size, NULL, GST_MAP_READ);
     ret = gst_rtp_h264_pay_payload_nal (basepayload,
-        data, size, timestamp, pps_buf);
+        data, size, timestamp, pps_buf, FALSE);
     gst_buffer_unmap (pps_buf, data, size);
     /* Not critical here; but throw a warning */
     if (ret != GST_FLOW_OK)
@@ -824,7 +831,7 @@ gst_rtp_h264_pay_send_sps_pps (GstBaseRTPPayload * basepayload,
 static GstFlowReturn
 gst_rtp_h264_pay_payload_nal (GstBaseRTPPayload * basepayload,
     const guint8 * data, guint size, GstClockTime timestamp,
-    GstBuffer * buffer_orig)
+    GstBuffer * buffer_orig, gboolean end_of_au)
 {
   GstRtpH264Pay *rtph264pay;
   GstFlowReturn ret;
@@ -910,7 +917,7 @@ gst_rtp_h264_pay_payload_nal (GstBaseRTPPayload * basepayload,
     gst_rtp_buffer_map (outbuf, GST_MAP_WRITE, &rtp);
 
     /* only set the marker bit on packets containing access units */
-    if (IS_ACCESS_UNIT (nalType)) {
+    if (IS_ACCESS_UNIT (nalType) && end_of_au) {
       gst_rtp_buffer_set_marker (&rtp, 1);
     }
 
@@ -1007,7 +1014,7 @@ gst_rtp_h264_pay_payload_nal (GstBaseRTPPayload * basepayload,
         end = 1;
       }
       if (IS_ACCESS_UNIT (nalType)) {
-        gst_rtp_buffer_set_marker (&rtp, end);
+        gst_rtp_buffer_set_marker (&rtp, end && end_of_au);
       }
 
       /* FU indicator */
@@ -1120,6 +1127,7 @@ gst_rtp_h264_pay_handle_buffer (GstBaseRTPPayload * basepayload,
 
     while (size > nal_length_size) {
       gint i;
+      gboolean end_of_au = FALSE;
 
       nal_len = 0;
       for (i = 0; i < nal_length_size; i++) {
@@ -1138,9 +1146,16 @@ gst_rtp_h264_pay_handle_buffer (GstBaseRTPPayload * basepayload,
             nal_len);
       }
 
+      /* If we're at the end of the buffer, then we're at the end of the
+       * access unit
+       */
+      if (rtph264pay->au_alignment && size - nal_len <= nal_length_size) {
+        end_of_au = TRUE;
+      }
+
       ret =
           gst_rtp_h264_pay_payload_nal (basepayload, data, nal_len, timestamp,
-          buffer);
+          buffer, end_of_au);
       if (ret != GST_FLOW_OK)
         break;
 
@@ -1242,6 +1257,7 @@ gst_rtp_h264_pay_handle_buffer (GstBaseRTPPayload * basepayload,
 
     for (i = 0; i < nal_queue->len; i++) {
       guint size;
+      gboolean end_of_au = FALSE;
 
       nal_len = g_array_index (nal_queue, guint, i);
       /* skip start code */
@@ -1257,10 +1273,22 @@ gst_rtp_h264_pay_handle_buffer (GstBaseRTPPayload * basepayload,
         for (; size > 1 && data[size - 1] == 0x0; size--)
           /* skip */ ;
 
+      /* If it's the last nal unit we have in non-bytestream mode, we can
+       * assume it's the end of an access-unit
+       *
+       * FIXME: We need to wait until the next packet or EOS to
+       * actually payload the NAL so we can know if the current NAL is
+       * the last one of an access unit or not if we are in bytestream mode
+       */
+      if (rtph264pay->au_alignment &&
+          rtph264pay->scan_mode != GST_H264_SCAN_MODE_BYTESTREAM &&
+          i == nal_queue->len - 1)
+        end_of_au = TRUE;
+
       /* put the data in one or more RTP packets */
       ret =
           gst_rtp_h264_pay_payload_nal (basepayload, data, size, timestamp,
-          buffer);
+          buffer, end_of_au);
       if (ret != GST_FLOW_OK) {
         break;
       }

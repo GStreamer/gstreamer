@@ -465,7 +465,7 @@ gst_v4l2_object_install_properties_helper (GObjectClass * gobject_class,
    *
    * TV norm
    *
-   * Since: 0.10.30
+   * Since: 0.10.31
    */
   g_object_class_install_property (gobject_class, PROP_TV_NORM,
       g_param_spec_enum ("norm", "TV norm",

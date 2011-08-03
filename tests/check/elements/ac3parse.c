@@ -110,7 +110,7 @@ GST_END_TEST;
 GST_START_TEST (test_parse_detect_stream)
 {
   gst_parser_test_output_caps (ac3_frame, sizeof (ac3_frame),
-      NULL, SINK_CAPS_TMPL ",channels=1,rate=48000");
+      NULL, SINK_CAPS_TMPL ",channels=1,rate=48000,alignment=frame");
 }
 
 GST_END_TEST;

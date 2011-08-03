@@ -60,6 +60,7 @@ enum
 #define DEFAULT_SOURCES              NULL
 #define DEFAULT_RTCP_MIN_INTERVAL    (RTP_STATS_MIN_INTERVAL * GST_SECOND)
 #define DEFAULT_RTCP_FEEDBACK_RETENTION_WINDOW (2 * GST_SECOND)
+#define DEFAULT_RTCP_IMMEDIATE_FEEDBACK_THRESHOLD (3)
 
 enum
 {
@@ -78,6 +79,7 @@ enum
   PROP_FAVOR_NEW,
   PROP_RTCP_MIN_INTERVAL,
   PROP_RTCP_FEEDBACK_RETENTION_WINDOW,
+  PROP_RTCP_IMMEDIATE_FEEDBACK_THRESHOLD,
   PROP_LAST
 };
 
@@ -492,6 +494,14 @@ rtp_session_class_init (RTPSessionClass * klass)
           0, G_MAXUINT64, DEFAULT_RTCP_FEEDBACK_RETENTION_WINDOW,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class,
+      PROP_RTCP_IMMEDIATE_FEEDBACK_THRESHOLD,
+      g_param_spec_uint ("rtcp-immediate-feedback-threshold",
+          "RTCP Immediate Feedback threshold",
+          "The maximum number of members of a RTP session for which immediate"
+          " feedback is used",
+          0, G_MAXUINT, DEFAULT_RTCP_IMMEDIATE_FEEDBACK_THRESHOLD,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   klass->get_source_by_ssrc =
       GST_DEBUG_FUNCPTR (rtp_session_get_source_by_ssrc);
@@ -534,6 +544,9 @@ rtp_session_init (RTPSession * sess)
   sess->stats.active_sources++;
   INIT_AVG (sess->stats.avg_rtcp_packet_size, 100);
 
+  rtp_stats_set_min_interval (&sess->stats,
+      (gdouble) DEFAULT_RTCP_MIN_INTERVAL / GST_SECOND);
+
   /* default UDP header length */
   sess->header_len = 28;
   sess->mtu = DEFAULT_RTCP_MTU;
@@ -550,6 +563,8 @@ rtp_session_init (RTPSession * sess)
   sess->first_rtcp = TRUE;
   sess->allow_early = TRUE;
   sess->rtcp_feedback_retention_window = DEFAULT_RTCP_FEEDBACK_RETENTION_WINDOW;
+  sess->rtcp_immediate_feedback_threshold =
+      DEFAULT_RTCP_IMMEDIATE_FEEDBACK_THRESHOLD;
 
   sess->rtcp_pli_requests = g_array_new (FALSE, FALSE, sizeof (guint32));
 
@@ -649,6 +664,9 @@ rtp_session_set_property (GObject * object, guint prop_id,
       rtp_stats_set_min_interval (&sess->stats,
           (gdouble) g_value_get_uint64 (value) / GST_SECOND);
       break;
+    case PROP_RTCP_IMMEDIATE_FEEDBACK_THRESHOLD:
+      sess->rtcp_immediate_feedback_threshold = g_value_get_uint (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -702,6 +720,9 @@ rtp_session_get_property (GObject * object, guint prop_id,
       break;
     case PROP_RTCP_MIN_INTERVAL:
       g_value_set_uint64 (value, sess->stats.min_interval * GST_SECOND);
+      break;
+    case PROP_RTCP_IMMEDIATE_FEEDBACK_THRESHOLD:
+      g_value_set_uint (value, sess->rtcp_immediate_feedback_threshold);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2465,7 +2486,7 @@ calculate_rtcp_interval (RTPSession * sess, gboolean deterministic,
       g_hash_table_foreach (sess->cnames, (GHFunc) add_bitrates, &bandwidth);
       bandwidth /= 8.0;
     }
-    if (bandwidth == 0)
+    if (bandwidth < 8000)
       bandwidth = RTP_STATS_BANDWIDTH;
 
     rtp_stats_set_bandwidths (&sess->stats, bandwidth,
@@ -3083,7 +3104,8 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
   /* check for outdated collisions */
   GST_DEBUG ("Timing out collisions");
   rtp_source_timeout (sess->source, current_time,
-      data.interval * RTCP_INTERVAL_COLLISION_TIMEOUT,
+      /* "a relatively long time" -- RFC 3550 section 8.2 */
+      RTP_STATS_MIN_INTERVAL * GST_SECOND * 10,
       running_time - sess->rtcp_feedback_retention_window);
 
   if (sess->change_ssrc) {
@@ -3175,8 +3197,13 @@ rtp_session_request_early_rtcp (RTPSession * sess, GstClockTime current_time,
   if (current_time + T_dither_max > sess->next_rtcp_check_time)
     goto dont_send;
 
-  /*  RFC 4585 section 3.5.2 step 4 */
-  if (sess->allow_early == FALSE)
+  /*  RFC 4585 section 3.5.2 step 4
+   * Don't send if allow_early is FALSE, but not if we are in
+   * immediate mode, meaning we are part of a group of at most the
+   * application-specific threshold.
+   */
+  if (sess->total_sources > sess->rtcp_immediate_feedback_threshold &&
+      sess->allow_early == FALSE)
     goto dont_send;
 
   if (T_dither_max) {

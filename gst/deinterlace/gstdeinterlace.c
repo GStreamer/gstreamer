@@ -609,7 +609,7 @@ gst_deinterlace_class_init (GstDeinterlaceClass * klass)
    * processing latency and accuracy of timestamp adjustment for telecine
    * streams.
    *
-   * Since: 0.10.29.
+   * Since: 0.10.31
    *
    */
   g_object_class_install_property (gobject_class, PROP_LOCKING,
@@ -623,7 +623,7 @@ gst_deinterlace_class_init (GstDeinterlaceClass * klass)
    * This selects whether to ignore obscure/rare telecine patterns.
    * NTSC 2:3 pulldown variants are the only really common patterns.
    *
-   * Since: 0.10.29.
+   * Since: 0.10.31
    *
    */
   g_object_class_install_property (gobject_class, PROP_IGNORE_OBSCURE,
@@ -638,7 +638,7 @@ gst_deinterlace_class_init (GstDeinterlaceClass * klass)
    * This selects whether to drop orphan fields at the beginning of telecine
    * patterns in active locking mode.
    *
-   * Since: 0.10.29.
+   * Since: 0.10.31
    *
    */
   g_object_class_install_property (gobject_class, PROP_DROP_ORPHANS,
