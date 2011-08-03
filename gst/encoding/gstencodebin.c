@@ -1046,7 +1046,8 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
    * in the input queue */
   last = sgroup->outqueue = gst_element_factory_make ("queue", NULL);
   g_object_set (sgroup->outqueue, "max-size-buffers", (guint32) 1,
-      "max-size-bytes", (guint32) 0, "max-size-time", (guint64) 0, NULL);
+      "max-size-bytes", (guint32) 0, "max-size-time", (guint64) 0,
+      "silent", TRUE, NULL);
 
   gst_bin_add (GST_BIN (ebin), sgroup->outqueue);
   tosync = g_list_append (tosync, sgroup->outqueue);
@@ -1166,7 +1167,7 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
   g_object_set (sgroup->inqueue, "max-size-buffers",
       (guint32) ebin->queue_buffers_max, "max-size-bytes",
       (guint32) ebin->queue_bytes_max, "max-size-time",
-      (guint64) ebin->queue_time_max, NULL);
+      (guint64) ebin->queue_time_max, "silent", TRUE, NULL);
 
   gst_bin_add (GST_BIN (ebin), sgroup->inqueue);
   tosync = g_list_append (tosync, sgroup->inqueue);
