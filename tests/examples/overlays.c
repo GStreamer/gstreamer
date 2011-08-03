@@ -30,9 +30,10 @@ GESTimelineObject *make_source (char *path, guint64 start, guint64 duration,
     gint priority);
 
 GESTimelineObject *make_overlay (char *text, guint64 start, guint64 duration,
-    gint priority);
+    gint priority, guint32 color);
 
-GESTimelinePipeline *make_timeline (char *path, float duration, char *text);
+GESTimelinePipeline *make_timeline (char *path, float duration, char *text,
+    guint32 color);
 
 GESTimelineObject *
 make_source (char *path, guint64 start, guint64 duration, gint priority)
@@ -53,7 +54,8 @@ make_source (char *path, guint64 start, guint64 duration, gint priority)
 }
 
 GESTimelineObject *
-make_overlay (char *text, guint64 start, guint64 duration, gint priority)
+make_overlay (char *text, guint64 start, guint64 duration, gint priority,
+    guint32 color)
 {
   GESTimelineObject *ret =
       GES_TIMELINE_OBJECT (ges_timeline_text_overlay_new ());
@@ -62,13 +64,14 @@ make_overlay (char *text, guint64 start, guint64 duration, gint priority)
       "text", (gchar *) text,
       "start", (guint64) start,
       "duration", (guint64) duration,
-      "priority", (guint32) priority, "in-point", (guint64) 0, NULL);
+      "priority", (guint32) priority,
+      "in-point", (guint64) 0, "color", (guint32) color, NULL);
 
   return ret;
 }
 
 GESTimelinePipeline *
-make_timeline (char *path, float duration, char *text)
+make_timeline (char *path, float duration, char *text, guint32 color)
 {
   GESTimeline *timeline;
   GESTrack *trackv, *tracka;
@@ -99,7 +102,7 @@ make_timeline (char *path, float duration, char *text)
 
   aduration = (guint64) (duration * GST_SECOND);
   srca = make_source (path, 0, aduration, 1);
-  overlay = make_overlay (text, 0, aduration, 0);
+  overlay = make_overlay (text, 0, aduration, 0, color);
   ges_timeline_layer_add_object (layer1, srca);
   ges_timeline_layer_add_object (layer1, overlay);
 
@@ -115,6 +118,7 @@ main (int argc, char **argv)
   GMainLoop *mainloop;
   gdouble duration;
   char *path, *text;
+  guint64 color;
 
   GOptionEntry options[] = {
     {"duration", 'd', 0, G_OPTION_ARG_DOUBLE, &duration,
@@ -123,6 +127,8 @@ main (int argc, char **argv)
         "path to file", "path"},
     {"text", 't', 0, G_OPTION_ARG_STRING, &text,
         "text to render", "text"},
+    {"color", 'c', 0, G_OPTION_ARG_INT64, &color,
+        "color of the text", "color"},
     {NULL}
   };
 
@@ -147,7 +153,7 @@ main (int argc, char **argv)
 
   ges_init ();
 
-  pipeline = make_timeline (path, duration, text);
+  pipeline = make_timeline (path, duration, text, color);
 
   mainloop = g_main_loop_new (NULL, FALSE);
   g_timeout_add_seconds ((duration) + 1, (GSourceFunc) g_main_loop_quit,
