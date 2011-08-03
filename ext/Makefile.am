@@ -28,12 +28,6 @@ else
 GDK_PIXBUF_DIR =
 endif
 
-if USE_HAL
-HAL_DIR = hal
-else
-HAL_DIR =
-endif
-
 if USE_JACK
 JACK_DIR=jack
 else
@@ -126,7 +120,6 @@ SUBDIRS = \
 	$(DV1394_DIR) \
 	$(FLAC_DIR) \
 	$(GDK_PIXBUF_DIR) \
-	$(HAL_DIR) \
 	$(JACK_DIR) \
 	$(JPEG_DIR) \
 	$(LIBCACA_DIR) \
@@ -148,7 +141,6 @@ DIST_SUBDIRS = \
 	dv \
 	flac \
 	gdk_pixbuf \
-	hal \
 	jack \
 	jpeg \
 	libcaca \

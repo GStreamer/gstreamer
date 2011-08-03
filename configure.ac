@@ -315,7 +315,7 @@ dnl Make sure you have a space before and after all plugins
 GST_PLUGINS_NONPORTED=" deinterlace flx  goom goom2k1 icydemux id3demux \
  imagefreeze interleave isomp4 law matroska monoscope shapewipe smpte \
  videobox videocrop videomixer \
- annodex apetag cairo dv1394 flac gdk_pixbuf hal jpeg libdv libpng \
+ annodex apetag cairo dv1394 flac gdk_pixbuf jpeg libdv libpng \
  oss oss4 shout2 \
  soup taglib wavpack "
 AC_SUBST(GST_PLUGINS_NONPORTED)
@@ -741,12 +741,6 @@ AG_GST_CHECK_FEATURE(GDK_PIXBUF, [GDK pixbuf], gdkpixbuf, [
   AG_GST_PKG_CHECK_MODULES(GDK_PIXBUF, gdk-pixbuf-2.0 >= 2.8.0)
 ])
 
-dnl *** HAL ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_HAL, true)
-AG_GST_CHECK_FEATURE(HAL, [HAL libraries], halelements, [
-  AG_GST_PKG_CHECK_MODULES(HAL, [hal >= 0.5.6, dbus-1 >= 0.32])
-])
-
 dnl *** Jack ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_JACK, true)
 AG_GST_CHECK_FEATURE(JACK, Jack, jack, [
@@ -997,7 +991,6 @@ AM_CONDITIONAL(USE_DV1394, false)
 AM_CONDITIONAL(USE_FLAC, false)
 AM_CONDITIONAL(USE_GDK_PIXBUF, false)
 AM_CONDITIONAL(USE_GST_V4L2, false)
-AM_CONDITIONAL(USE_HAL, false)
 AM_CONDITIONAL(USE_JACK, false)
 AM_CONDITIONAL(USE_JPEG, false)
 AM_CONDITIONAL(USE_LIBCACA, false)
@@ -1132,7 +1125,6 @@ ext/cairo/Makefile
 ext/dv/Makefile
 ext/flac/Makefile
 ext/gdk_pixbuf/Makefile
-ext/hal/Makefile
 ext/jack/Makefile
 ext/jpeg/Makefile
 ext/libcaca/Makefile
