@@ -113,7 +113,7 @@ gst_quarktv_transform (GstBaseTransform * trans, GstBuffer * in,
     GstBuffer * out)
 {
   GstQuarkTV *filter = GST_QUARKTV (trans);
-  gint area, width, height, sstride, dstride;
+  gint area;
   guint32 *src, *dest;
   GstClockTime timestamp;
   GstBuffer **planetable;
@@ -140,12 +140,7 @@ gst_quarktv_transform (GstBaseTransform * trans, GstBuffer * in,
     goto invalid_out;
 
   src = GST_VIDEO_FRAME_PLANE_DATA (&in_frame, 0);
-  sstride = GST_VIDEO_FRAME_PLANE_STRIDE (&in_frame, 0);
   dest = GST_VIDEO_FRAME_PLANE_DATA (&out_frame, 0);
-  dstride = GST_VIDEO_FRAME_PLANE_STRIDE (&out_frame, 0);
-
-  width = GST_VIDEO_FRAME_WIDTH (&in_frame);
-  height = GST_VIDEO_FRAME_HEIGHT (&in_frame);
 
   GST_OBJECT_LOCK (filter);
   area = filter->area;

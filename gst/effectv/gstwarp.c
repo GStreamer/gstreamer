@@ -162,7 +162,7 @@ gst_warptv_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
   gint width, height;
   gint xw, yw, cw;
   gint32 c, i, x, y, dx, dy, maxx, maxy;
-  gint32 skip, *ctptr, *distptr;
+  gint32 *ctptr, *distptr;
   gint32 *ctable;
   guint32 *src, *dest;
   gint sstride, dstride;
@@ -191,7 +191,6 @@ gst_warptv_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
   distptr = warptv->disttable;
   ctable = warptv->ctable;
 
-  skip = 0;                     /* video_width*sizeof(RGB32)/4 - video_width;; */
   c = 0;
 
   for (x = 0; x < 512; x++) {
