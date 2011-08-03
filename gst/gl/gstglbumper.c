@@ -168,7 +168,7 @@ gst_gl_bumper_init_resources (GstGLFilter * filter)
   guchar *raw_data = NULL;
   guchar **rows = NULL;
   png_byte magic[8];
-  gint n_read = 0;
+  gint n_read;
 
   if (!filter->display)
     return;
@@ -180,6 +180,10 @@ gst_gl_bumper_init_resources (GstGLFilter * filter)
 
   /* Read magic number */
   n_read = fread (magic, 1, sizeof (magic), fp);
+  if (n_read != sizeof (magic)) {
+    fclose (fp);
+    LOAD_ERROR ("can't read PNG magic number");
+  }
 
   /* Check for valid magic number */
   if (png_sig_cmp (magic, 0, sizeof (magic))) {

@@ -70,7 +70,7 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
 #ifndef OPENGL_ES2
 #define ADDITIONAL_CAPS \
-        
+
 #else
 #define ADDITIONAL_CAPS
 #endif
@@ -80,11 +80,10 @@ static GstStaticPadTemplate gst_gl_download_src_pad_template =
     GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (
-        GST_VIDEO_CAPS_RGB  ";"
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB ";"
         GST_VIDEO_CAPS_RGBx ";"
         GST_VIDEO_CAPS_RGBA ";"
-        GST_VIDEO_CAPS_BGR  ";"
+        GST_VIDEO_CAPS_BGR ";"
         GST_VIDEO_CAPS_BGRx ";"
         GST_VIDEO_CAPS_BGRA ";"
         GST_VIDEO_CAPS_xRGB ";"
@@ -98,11 +97,9 @@ static GstStaticPadTemplate gst_gl_download_src_pad_template =
     GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (
-        GST_VIDEO_CAPS_RGB  ";"
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB ";"
         GST_VIDEO_CAPS_RGBx ";"
-        GST_VIDEO_CAPS_RGBA ";"
-        GST_VIDEO_CAPS_YUV ("{ YUY2, UYVY, AYUV }"))
+        GST_VIDEO_CAPS_RGBA ";" GST_VIDEO_CAPS_YUV ("{ YUY2, UYVY, AYUV }"))
     );
 #endif
 
@@ -129,7 +126,7 @@ static void gst_gl_download_set_property (GObject * object, guint prop_id,
 static void gst_gl_download_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static gboolean gst_gl_download_src_query (GstPad *pad, GstQuery * query);
+static gboolean gst_gl_download_src_query (GstPad * pad, GstQuery * query);
 
 static void gst_gl_download_reset (GstGLDownload * download);
 static gboolean gst_gl_download_set_caps (GstBaseTransform * bt,
@@ -184,10 +181,10 @@ static void
 gst_gl_download_init (GstGLDownload * download, GstGLDownloadClass * klass)
 {
   GstBaseTransform *base_trans = GST_BASE_TRANSFORM (download);
-  
+
   gst_pad_set_query_function (base_trans->srcpad,
       GST_DEBUG_FUNCPTR (gst_gl_download_src_query));
-  
+
   gst_gl_download_reset (download);
 }
 
@@ -229,7 +226,8 @@ gst_gl_download_src_query (GstPad * pad, GstQuery * query)
     case GST_QUERY_CUSTOM:
     {
       GstStructure *structure = gst_query_get_structure (query);
-      gst_structure_set (structure, "gstgldisplay", G_TYPE_POINTER, download->display, NULL);
+      gst_structure_set (structure, "gstgldisplay", G_TYPE_POINTER,
+          download->display, NULL);
       res = gst_pad_query_default (pad, query);
       break;
     }
@@ -254,7 +252,7 @@ gst_gl_download_reset (GstGLDownload * download)
 static gboolean
 gst_gl_download_start (GstBaseTransform * bt)
 {
-  GstGLDownload* download = GST_GL_DOWNLOAD (bt);
+  GstGLDownload *download = GST_GL_DOWNLOAD (bt);
 
   download->display = gst_gl_display_new ();
   gst_gl_display_create_context (download->display, 0);
@@ -276,7 +274,6 @@ static GstCaps *
 gst_gl_download_transform_caps (GstBaseTransform * bt,
     GstPadDirection direction, GstCaps * caps)
 {
-  GstGLDownload *download;
   GstStructure *structure;
   GstCaps *newcaps, *newothercaps;
   GstStructure *newstruct;
@@ -284,8 +281,6 @@ gst_gl_download_transform_caps (GstBaseTransform * bt,
   const GValue *height_value;
   const GValue *framerate_value;
   const GValue *par_value;
-
-  download = GST_GL_DOWNLOAD (bt);
 
   GST_DEBUG ("transform caps %" GST_PTR_FORMAT, caps);
 
@@ -350,7 +345,6 @@ gst_gl_download_set_caps (GstBaseTransform * bt, GstCaps * incaps,
     GST_ERROR ("display is null");
     return FALSE;
   }
-
   //blocking call, init color space conversion if needed
   gst_gl_display_init_download (download->display, download->video_format,
       download->width, download->height);
