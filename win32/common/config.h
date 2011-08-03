@@ -42,7 +42,7 @@
 #undef ENABLE_NLS
 
 /* gettext package name */
-#define GETTEXT_PACKAGE "gst-plugins-base-0.10"
+#define GETTEXT_PACKAGE "gst-plugins-base-0.11"
 
 /* The GIO library directory. */
 #undef GIO_LIBDIR
@@ -50,11 +50,11 @@
 /* The GIO modules directory. */
 #undef GIO_MODULE_DIR
 
-/* The GnomeVFS modules directory. */
-#undef GNOME_VFS_MODULES_DIR
-
 /* system wide data directory */
 #define GST_DATADIR PREFIX "\\share"
+
+/* set to disable libxml2-dependent code in subparse */
+#undef GST_DISABLE_XML
 
 /* macro to use to show function name */
 #undef GST_FUNCTION
@@ -72,19 +72,16 @@
 #define GST_LICENSE "LGPL"
 
 /* major/minor version */
-#define GST_MAJORMINOR "0.10"
+#define GST_MAJORMINOR "0.11"
 
 /* package name in plugins */
-#define GST_PACKAGE_NAME "GStreamer Base Plug-ins git"
+#define GST_PACKAGE_NAME "GStreamer Base Plug-ins source release"
 
 /* package origin */
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
 
 /* GStreamer package release date/time for plugins as YYYY-MM-DD */
-#define GST_PACKAGE_RELEASE_DATETIME "2011-05-18T13:30Z"
-
-/* I know the API is subject to change. */
-#undef G_UDEV_API_IS_SUBJECT_TO_CHANGE
+#define GST_PACKAGE_RELEASE_DATETIME "2011-08-02"
 
 /* Define to enable ALSA (used by alsa). */
 #undef HAVE_ALSA
@@ -179,15 +176,6 @@
 /* Define to 1 if you have the `gmtime_r' function. */
 #undef HAVE_GMTIME_R
 
-/* Define to enable GNOME VFS (used by gnomevfs). */
-#undef HAVE_GNOME_VFS
-
-/* Define to enable Video 4 Linux (used by video4linux). */
-#undef HAVE_GST_V4L
-
-/* Whether gudev is available for device detection */
-#undef HAVE_GUDEV
-
 /* Define if you have the iconv() function and it works. */
 #undef HAVE_ICONV
 
@@ -226,9 +214,6 @@
 
 /* Define if you have C99's lrintf function. */
 #undef HAVE_LRINTF
-
-/* Define to 1 if you have the <malloc.h> header file. */
-#undef HAVE_MALLOC_H
 
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
@@ -337,7 +322,7 @@
 #define PACKAGE_NAME "GStreamer Base Plug-ins"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer Base Plug-ins 0.10.35.1"
+#define PACKAGE_STRING "GStreamer Base Plug-ins 0.11.0"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gst-plugins-base"
@@ -346,13 +331,13 @@
 #undef PACKAGE_URL
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.10.35.1"
+#define PACKAGE_VERSION "0.11.0"
 
 /* directory where plugins are located */
 #ifdef _DEBUG
-#  define PLUGINDIR PREFIX "\\debug\\lib\\gstreamer-0.10"
+#  define PLUGINDIR PREFIX "\\debug\\lib\\gstreamer-0.11"
 #else
-#  define PLUGINDIR PREFIX "\\lib\\gstreamer-0.10"
+#  define PLUGINDIR PREFIX "\\lib\\gstreamer-0.11"
 #endif
 
 /* The size of `char', as computed by sizeof. */
@@ -377,7 +362,7 @@
 #undef USE_TREMOLO
 
 /* Version number of package */
-#define VERSION "0.10.35.1"
+#define VERSION "0.11.0"
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */

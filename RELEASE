@@ -1,16 +1,15 @@
 
-Release notes for GStreamer Base Plug-ins 0.10.35 "Short Notice"
+Release notes for GStreamer Base Plug-ins 0.11.0 "Just like a pacifier"
         
 
 
 The GStreamer team is proud to announce a new release
-in the 0.10.x stable series of the
-GStreamer Base Plug-ins.
+in the 0.11.x unstable series of the GStreamer Base Plug-ins.
 
 
-The 0.10.x series is a stable series targeted at end users.
-It is not API or ABI compatible with the stable 0.8.x series.
-It is, however, parallel installable with the 0.8.x series.
+The 0.11.x series is an unstable series targeted at developers
+It is not API or ABI compatible with the stable 0.10.x series.
+It is, however, parallel installable with the 0.10.x series.
 
 
 
@@ -55,13 +54,11 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * work around GLib atomic ops API change
-      * don't use G_CONST_RETURN in public headers
-      * subparse: typefinding fixes for subtitles in non-UTF8 charsets
-
-Bugs fixed in this release
-     
-      * 600043 : subparse: fails to recognise Cyrillic subtitles in windows-1251 encoding
+      * Parallel installability with 0.10.x series
+      * Ported to the new 0.11 core API
+      * Improved video helper classes
+There were no bugs fixed in this release
+    
 
 Download
 
@@ -91,9 +88,15 @@ Applications
 Contributors to this release
     
       * David Schleef
-      * Debarshi Ray
+      * Edward Hervey
+      * Jan Schmidt
+      * Jonathan Matthew
+      * Luis de Bethencourt
       * Mark Nauwelaerts
-      * Sebastian Dröge
-      * Stefan Kost
+      * Philip Jägenstedt
+      * Piotr Fusik
+      * Robert Swain
+      * Thiago Santos
       * Tim-Philipp Müller
+      * Wim Taymans
  

@@ -63,3 +63,48 @@ gst_video_format_get_type (void)
   }
   return g_define_type_id__volatile;
 }
+
+GType
+gst_video_format_flags_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
+    static const GFlagsValue values[] = {
+      {GST_VIDEO_FORMAT_FLAG_YUV, "GST_VIDEO_FORMAT_FLAG_YUV", "yuv"},
+      {GST_VIDEO_FORMAT_FLAG_RGB, "GST_VIDEO_FORMAT_FLAG_RGB", "rgb"},
+      {GST_VIDEO_FORMAT_FLAG_GRAY, "GST_VIDEO_FORMAT_FLAG_GRAY", "gray"},
+      {GST_VIDEO_FORMAT_FLAG_ALPHA, "GST_VIDEO_FORMAT_FLAG_ALPHA", "alpha"},
+      {GST_VIDEO_FORMAT_FLAG_LE, "GST_VIDEO_FORMAT_FLAG_LE", "le"},
+      {GST_VIDEO_FORMAT_FLAG_PALETTE, "GST_VIDEO_FORMAT_FLAG_PALETTE",
+          "palette"},
+      {GST_VIDEO_FORMAT_FLAG_COMPLEX, "GST_VIDEO_FORMAT_FLAG_COMPLEX",
+          "complex"},
+      {0, NULL, NULL}
+    };
+    GType g_define_type_id =
+        g_flags_register_static ("GstVideoFormatFlags", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+  }
+  return g_define_type_id__volatile;
+}
+
+GType
+gst_video_flags_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
+    static const GFlagsValue values[] = {
+      {GST_VIDEO_FLAG_NONE, "GST_VIDEO_FLAG_NONE", "none"},
+      {GST_VIDEO_FLAG_INTERLACED, "GST_VIDEO_FLAG_INTERLACED", "interlaced"},
+      {GST_VIDEO_FLAG_TTF, "GST_VIDEO_FLAG_TTF", "ttf"},
+      {GST_VIDEO_FLAG_RFF, "GST_VIDEO_FLAG_RFF", "rff"},
+      {GST_VIDEO_FLAG_ONEFIELD, "GST_VIDEO_FLAG_ONEFIELD", "onefield"},
+      {GST_VIDEO_FLAG_TELECINE, "GST_VIDEO_FLAG_TELECINE", "telecine"},
+      {GST_VIDEO_FLAG_PROGRESSIVE, "GST_VIDEO_FLAG_PROGRESSIVE", "progressive"},
+      {0, NULL, NULL}
+    };
+    GType g_define_type_id = g_flags_register_static ("GstVideoFlags", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+  }
+  return g_define_type_id__volatile;
+}
