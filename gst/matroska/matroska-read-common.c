@@ -45,7 +45,7 @@
 #include "ebml-read.h"
 #include "matroska-read-common.h"
 
-GST_DEBUG_CATEGORY_STATIC (matroskareadcommon_debug);
+GST_DEBUG_CATEGORY (matroskareadcommon_debug);
 #define GST_CAT_DEFAULT matroskareadcommon_debug
 
 #define DEBUG_ELEMENT_START(common, ebml, element) \
