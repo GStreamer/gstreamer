@@ -609,7 +609,7 @@ gst_rtp_h264_push_fragmentation_unit (GstRtpH264Depay * rtph264depay)
 
   outsize = gst_adapter_available (rtph264depay->adapter);
   outbuf = gst_adapter_take_buffer (rtph264depay->adapter, outsize);
-  outdata = GST_BUFFER_DATA (outbuf);
+  outdata = gst_buffer_map (outbuf, NULL, NULL, GST_MAP_WRITE);
 
   GST_DEBUG_OBJECT (rtph264depay, "output %d bytes", outsize);
 
@@ -622,6 +622,7 @@ gst_rtp_h264_push_fragmentation_unit (GstRtpH264Depay * rtph264depay)
     outdata[2] = (outsize >> 8);
     outdata[3] = (outsize);
   }
+  gst_buffer_unmap (outbuf, outdata, -1);
 
   gst_rtp_h264_depay_handle_nal (rtph264depay, outbuf,
       rtph264depay->fu_timestamp, rtph264depay->fu_marker);

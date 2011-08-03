@@ -1822,20 +1822,30 @@ gst_pulsesink_payload (GstBaseAudioSink * sink, GstBuffer * buf)
       /* FIXME: alloc memory from PA if possible */
       gint framesize = gst_audio_iec61937_frame_size (&sink->ringbuffer->spec);
       GstBuffer *out;
+      guint8 *indata, *outdata;
+      gsize insize, outsize;
+      gboolean res;
 
       if (framesize <= 0)
         return NULL;
 
       out = gst_buffer_new_and_alloc (framesize);
 
-      if (!gst_audio_iec61937_payload (GST_BUFFER_DATA (buf),
-              GST_BUFFER_SIZE (buf), GST_BUFFER_DATA (out),
-              GST_BUFFER_SIZE (out), &sink->ringbuffer->spec)) {
+      indata = gst_buffer_map (buf, &insize, NULL, GST_MAP_READ);
+      outdata = gst_buffer_map (out, &outsize, NULL, GST_MAP_WRITE);
+
+      res = gst_audio_iec61937_payload (indata, insize,
+          outdata, outsize, &sink->ringbuffer->spec);
+
+      gst_buffer_unmap (buf, indata, insize);
+      gst_buffer_unmap (out, outdata, outsize);
+
+      if (!res) {
         gst_buffer_unref (out);
         return NULL;
       }
 
-      gst_buffer_copy_metadata (out, buf, GST_BUFFER_COPY_ALL);
+      gst_buffer_copy_into (out, buf, GST_BUFFER_COPY_METADATA, 0, -1);
       return out;
     }
 

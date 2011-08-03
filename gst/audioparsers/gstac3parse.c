@@ -553,8 +553,7 @@ gst_ac3_parse_check_valid_frame (GstBaseParse * parse,
       do {
         *framesize += frmsiz;
 
-        if (!gst_byte_reader_skip (&reader, frmsiz) ||
-            GST_BUFFER_SIZE (buf) < (*framesize + 6)) {
+        if (!gst_byte_reader_skip (&reader, frmsiz) || size < (*framesize + 6)) {
           more = TRUE;
           break;
         }
