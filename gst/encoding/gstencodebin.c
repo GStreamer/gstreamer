@@ -348,13 +348,13 @@ gst_encode_bin_class_init (GstEncodeBinClass * klass)
           "The GstEncodingProfile to use", GST_TYPE_ENCODING_PROFILE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  g_object_class_install_property (gobject_klass, PROP_QUEUE_BUFFERS_MAX,
+  g_object_class_install_property (gobject_klass, PROP_QUEUE_BYTES_MAX,
       g_param_spec_uint ("queue-bytes-max", "Max. size (kB)",
           "Max. amount of data in the queue (bytes, 0=disable)",
           0, G_MAXUINT, DEFAULT_QUEUE_BYTES_MAX,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  g_object_class_install_property (gobject_klass, PROP_QUEUE_BYTES_MAX,
+  g_object_class_install_property (gobject_klass, PROP_QUEUE_BUFFERS_MAX,
       g_param_spec_uint ("queue-buffers-max", "Max. size (buffers)",
           "Max. number of buffers in the queue (0=disable)", 0, G_MAXUINT,
           DEFAULT_QUEUE_BUFFERS_MAX,
