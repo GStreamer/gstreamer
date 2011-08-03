@@ -344,3 +344,7 @@ The 0.11 porting guide
     to their methods so we can return an appropriate error if a
     particular interface isn't supported for a particular device.
 
+* GstIterator
+    uses a GValue based API now that is similar to the 0.10 API but
+    allows bindings to properly use GstIterator and prevents complex
+    return value ownership issues.
