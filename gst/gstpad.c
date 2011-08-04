@@ -1264,6 +1264,23 @@ gst_pad_check_reconfigure (GstPad * pad)
 }
 
 /**
+ * gst_pad_mark_reconfigure:
+ * @pad: the #GstPad to mark
+ *
+ * Mark a pad for needing reconfiguration. The next call to
+ * gst_pad_check_reconfigure() will return %TRUE after this call.
+ */
+void
+gst_pad_mark_reconfigure (GstPad * pad)
+{
+  g_return_if_fail (GST_IS_PAD (pad));
+
+  GST_OBJECT_LOCK (pad);
+  GST_OBJECT_FLAG_SET (pad, GST_PAD_NEED_RECONFIGURE);
+  GST_OBJECT_UNLOCK (pad);
+}
+
+/**
  * gst_pad_set_activate_function:
  * @pad: a #GstPad.
  * @activate: the #GstPadActivateFunction to set.
