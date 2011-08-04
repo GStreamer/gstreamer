@@ -1093,8 +1093,9 @@ gst_ffmpegdec_bufferpool (GstFFMpegDec * ffmpegdec, GstCaps * caps)
     /* we got configuration from our peer, parse them */
     gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
         &alignment, &pool);
+    size = MAX (size, ffmpegdec->out_info.size);
   } else {
-    GST_DEBUG_OBJECT (ffmpegdec, "peer query failedi, using defaults");
+    GST_DEBUG_OBJECT (ffmpegdec, "peer query failed, using defaults");
     size = ffmpegdec->out_info.size;
     min = max = 0;
     prefix = 0;
@@ -1617,7 +1618,7 @@ get_output_buffer (GstFFMpegDec * ffmpegdec, GstBuffer ** outbuf)
     gint width, height;
     GstBuffer *buf;
 
-    GST_LOG_OBJECT (ffmpegdec, "get output buffer");
+    GST_LOG_OBJECT (ffmpegdec, "allocating an output buffer");
 
     if (G_UNLIKELY (!gst_ffmpegdec_video_negotiate (ffmpegdec, FALSE)))
       goto negotiate_failed;
@@ -1638,7 +1639,8 @@ get_output_buffer (GstFFMpegDec * ffmpegdec, GstBuffer ** outbuf)
     src = (AVPicture *) ffmpegdec->picture;
     dest = (AVPicture *) & pic;
 
-    GST_LOG_OBJECT (ffmpegdec, "copy %dx%d", width, height);
+    GST_LOG_OBJECT (ffmpegdec, "copy picture to output buffer %dx%d", width,
+        height);
     av_picture_copy (dest, src, ffmpegdec->context->pix_fmt, width, height);
 
     gst_video_frame_unmap (&frame);
