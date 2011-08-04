@@ -293,6 +293,13 @@ do_stop (GstBufferPool * pool)
  * Control the active state of @pool. When the pool is active, new calls to
  * gst_buffer_pool_acquire_buffer() will return with GST_FLOW_WRONG_STATE.
  *
+ * Activating the bufferpool will preallocate all resources in the pool based on
+ * the configuration of the pool.
+ *
+ * Deactivating will free the resources again when there are no outstanding
+ * buffers. When there are outstanding buffers, they will be freed as soon as
+ * they are all returned to the pool.
+ *
  * Returns: %FALSE when the pool was not configured or when preallocation of the
  * buffers failed.
  */
@@ -366,6 +373,27 @@ stop_failed:
     GST_BUFFER_POOL_UNLOCK (pool);
     return FALSE;
   }
+}
+
+/**
+ * gst_buffer_pool_is_active:
+ * @pool: a #GstBufferPool
+ *
+ * Check if @pool is active. A pool can be activated with the
+ * gst_buffer_pool_set_active() call.
+ *
+ * Returns: %TRUE when the pool is active.
+ */
+gboolean
+gst_buffer_pool_is_active (GstBufferPool * pool)
+{
+  gboolean res;
+
+  GST_BUFFER_POOL_LOCK (pool);
+  res = pool->active;
+  GST_BUFFER_POOL_UNLOCK (pool);
+
+  return res;
 }
 
 static gboolean

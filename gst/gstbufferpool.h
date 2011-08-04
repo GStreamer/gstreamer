@@ -179,6 +179,7 @@ GstBufferPool *  gst_buffer_pool_new  (void);
 
 /* state management */
 gboolean         gst_buffer_pool_set_active      (GstBufferPool *pool, gboolean active);
+gboolean         gst_buffer_pool_is_active       (GstBufferPool *pool);
 
 gboolean         gst_buffer_pool_set_config      (GstBufferPool *pool, GstStructure *config);
 GstStructure *   gst_buffer_pool_get_config      (GstBufferPool *pool);
