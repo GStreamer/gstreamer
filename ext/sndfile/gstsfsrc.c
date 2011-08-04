@@ -200,7 +200,10 @@ gst_sf_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
 {
   GstSFSrc *this;
   GstBuffer *buf;
+/* FIXME discont is set but not used */
+#if 0
   gboolean discont = FALSE;
+#endif
   sf_count_t bytes_read;
 
   this = GST_SF_SRC (bsrc);
@@ -221,7 +224,9 @@ gst_sf_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
       goto seek_failed;
 
     this->offset = offset;
+#if 0
     discont = TRUE;
+#endif
   }
 
   buf = gst_buffer_new_and_alloc (length);

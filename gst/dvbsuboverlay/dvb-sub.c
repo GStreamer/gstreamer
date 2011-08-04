@@ -1,7 +1,6 @@
-/* -*- Mode: C; indent-tabs-mode: t; c-basic-offset: 4; tab-width: 4 -*- */
-/*
- * libdvbsub - DVB subtitle decoding
+/* dvb-sub.c - DVB subtitle decoding
  * Copyright (C) Mart Raudsepp 2009 <mart.raudsepp@artecdesign.ee>
+ * Copyright (C) 2010 ONELAN Ltd.
  * 
  * Heavily uses code algorithms ported from ffmpeg's libavcodec/dvbsubdec.c,
  * especially the segment parsers. The original license applies to this

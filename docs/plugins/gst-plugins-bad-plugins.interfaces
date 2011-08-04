@@ -33,6 +33,7 @@ GstMpeg2enc GstPreset
 GstMythtvSrc GstURIHandler
 GstNeonhttpSrc GstURIHandler
 GstPipeline GstChildProxy
+GstRTMPSink GstURIHandler
 GstRTMPSrc GstURIHandler
 GstSDLVideoSink GstImplementsInterface GstXOverlay GstNavigation
 GstSDPDemux GstChildProxy

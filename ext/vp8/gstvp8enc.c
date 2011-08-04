@@ -65,6 +65,24 @@ typedef struct
   GList *invisible;
 } GstVP8EncCoderHook;
 
+static void
+_gst_mini_object_unref0 (GstMiniObject * obj)
+{
+  if (obj)
+    gst_mini_object_unref (obj);
+}
+
+static void
+gst_vp8_enc_coder_hook_free (GstVP8EncCoderHook * hook)
+{
+  if (hook->image)
+    g_slice_free (vpx_image_t, hook->image);
+
+  g_list_foreach (hook->invisible, (GFunc) _gst_mini_object_unref0, NULL);
+  g_list_free (hook->invisible);
+  g_slice_free (GstVP8EncCoderHook, hook);
+}
+
 #define DEFAULT_BITRATE 0
 #define DEFAULT_MODE VPX_VBR
 #define DEFAULT_MIN_QUANTIZER 0
@@ -283,7 +301,7 @@ gst_vp8_enc_class_init (GstVP8EncClass * klass)
   g_object_class_install_property (gobject_class, PROP_SPEED,
       g_param_spec_int ("speed", "Speed",
           "Speed",
-          0, 2, DEFAULT_SPEED,
+          0, 7, DEFAULT_SPEED,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_THREADS,
@@ -586,7 +604,9 @@ gst_vp8_enc_set_format (GstBaseVideoEncoder * base_video_encoder,
     return FALSE;
   }
 
-  status = vpx_codec_control (&encoder->encoder, VP8E_SET_CPUUSED, 0);
+  /* FIXME move this to a set_speed() function */
+  status = vpx_codec_control (&encoder->encoder, VP8E_SET_CPUUSED,
+      (encoder->speed == 0) ? 0 : (encoder->speed - 1));
   if (status != VPX_CODEC_OK) {
     GST_WARNING_OBJECT (encoder, "Failed to set VP8E_SET_CPUUSED to 0: %s",
         gst_vpx_error_name (status));
@@ -779,7 +799,7 @@ gst_vp8_enc_process (GstVP8Enc * encoder)
   return ret;
 }
 
-static gboolean
+static GstFlowReturn
 gst_vp8_enc_finish (GstBaseVideoEncoder * base_video_encoder)
 {
   GstVP8Enc *encoder;
@@ -796,7 +816,7 @@ gst_vp8_enc_finish (GstBaseVideoEncoder * base_video_encoder)
   if (status != 0) {
     GST_ERROR_OBJECT (encoder, "encode returned %d %s", status,
         gst_vpx_error_name (status));
-    return FALSE;
+    return GST_FLOW_ERROR;
   }
 
   /* dispatch remaining frames */
@@ -815,7 +835,7 @@ gst_vp8_enc_finish (GstBaseVideoEncoder * base_video_encoder)
     }
   }
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
 static vpx_image_t *
@@ -823,9 +843,6 @@ gst_vp8_enc_buffer_to_image (GstVP8Enc * enc, GstBuffer * buffer)
 {
   vpx_image_t *image = g_slice_new (vpx_image_t);
   guint8 *data = GST_BUFFER_DATA (buffer);
-  const GstVideoState *state;
-
-  state = gst_base_video_encoder_get_state (GST_BASE_VIDEO_ENCODER (enc));
 
   memcpy (image, &enc->image, sizeof (*image));
 
@@ -837,12 +854,6 @@ gst_vp8_enc_buffer_to_image (GstVP8Enc * enc, GstBuffer * buffer)
   return image;
 }
 
-static const int speed_table[] = {
-  VPX_DL_BEST_QUALITY,
-  VPX_DL_GOOD_QUALITY,
-  VPX_DL_REALTIME,
-};
-
 static GstFlowReturn
 gst_vp8_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
     GstVideoFrame * frame)
@@ -853,6 +864,7 @@ gst_vp8_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
   int flags = 0;
   vpx_image_t *image;
   GstVP8EncCoderHook *hook;
+  int quality;
 
   GST_DEBUG_OBJECT (base_video_encoder, "handle_frame");
 
@@ -869,13 +881,17 @@ gst_vp8_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
   hook = g_slice_new0 (GstVP8EncCoderHook);
   hook->image = image;
   frame->coder_hook = hook;
+  frame->coder_hook_destroy_notify =
+      (GDestroyNotify) gst_vp8_enc_coder_hook_free;
 
   if (frame->force_keyframe) {
     flags |= VPX_EFLAG_FORCE_KF;
   }
 
+  quality = (encoder->speed == 0) ? VPX_DL_BEST_QUALITY : VPX_DL_GOOD_QUALITY;
+
   status = vpx_codec_encode (&encoder->encoder, image,
-      encoder->n_frames, 1, flags, speed_table[encoder->speed]);
+      encoder->n_frames, 1, flags, quality);
   if (status != 0) {
     GST_ELEMENT_ERROR (encoder, LIBRARY, ENCODE,
         ("Failed to encode frame"), ("%s", gst_vpx_error_name (status)));
@@ -898,13 +914,6 @@ _to_granulepos (guint64 frame_end_number, guint inv_count, guint keyframe_dist)
 
   granulepos = (frame_end_number << 32) | (inv << 30) | (keyframe_dist << 3);
   return granulepos;
-}
-
-static void
-_gst_mini_object_unref0 (GstMiniObject * obj)
-{
-  if (obj)
-    gst_mini_object_unref (obj);
 }
 
 static GstFlowReturn
@@ -939,6 +948,8 @@ gst_vp8_enc_shape_output (GstBaseVideoEncoder * base_video_encoder,
       encoder->keyframe_distance++;
     }
 
+    GST_BUFFER_TIMESTAMP (buf) = GST_BUFFER_TIMESTAMP (frame->src_buffer);
+    GST_BUFFER_DURATION (buf) = 0;
     GST_BUFFER_OFFSET_END (buf) =
         _to_granulepos (frame->presentation_frame_number + 1,
         inv_count, encoder->keyframe_distance);
@@ -980,13 +991,6 @@ gst_vp8_enc_shape_output (GstBaseVideoEncoder * base_video_encoder,
   }
 
 done:
-  if (hook) {
-    g_list_foreach (hook->invisible, (GFunc) _gst_mini_object_unref0, NULL);
-    g_list_free (hook->invisible);
-    g_slice_free (GstVP8EncCoderHook, hook);
-    frame->coder_hook = NULL;
-  }
-
   return ret;
 }
 

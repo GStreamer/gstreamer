@@ -376,7 +376,7 @@ static gboolean
 mpegts_packetizer_parse_descriptors (MpegTSPacketizer2 * packetizer,
     guint8 ** buffer, guint8 * buffer_end, GValueArray * descriptors)
 {
-  guint8 tag, length;
+  guint8 length;
   guint8 *data;
   GValue value = { 0 };
   GString *desc;
@@ -384,7 +384,7 @@ mpegts_packetizer_parse_descriptors (MpegTSPacketizer2 * packetizer,
   data = *buffer;
 
   while (data < buffer_end) {
-    tag = *data++;
+    data++;                     /* skip tag */
     length = *data++;
 
     if (data + length > buffer_end) {
@@ -393,7 +393,7 @@ mpegts_packetizer_parse_descriptors (MpegTSPacketizer2 * packetizer,
       goto error;
     }
 
-    /* include tag and length */
+    /* include length */
     desc = g_string_new_len ((gchar *) data - 2, length + 2);
     data += length;
     /* G_TYPE_GSTING is a GBoxed type and is used so properly marshalled from python */
@@ -1335,7 +1335,6 @@ mpegts_packetizer_parse_sdt (MpegTSPacketizer2 * packetizer,
   guint16 transport_stream_id, original_network_id, service_id;
   guint tmp;
   guint sdt_info_length;
-  gboolean EIT_schedule, EIT_present_following;
   guint8 running_status;
   gboolean scrambled;
   guint descriptors_loop_length;
@@ -1406,8 +1405,8 @@ mpegts_packetizer_parse_sdt (MpegTSPacketizer2 * packetizer,
     service_id = GST_READ_UINT16_BE (data);
     data += 2;
 
-    EIT_schedule = ((*data & 0x02) == 2);
-    EIT_present_following = (*data & 0x01) == 1;
+    /* EIT_schedule = ((*data & 0x02) == 2); */
+    /* EIT_present_following = (*data & 0x01) == 1; */
 
     data += 1;
     tmp = GST_READ_UINT16_BE (data);
@@ -1539,7 +1538,6 @@ mpegts_packetizer_parse_eit (MpegTSPacketizer2 * packetizer,
   guint transport_stream_id, original_network_id;
   gboolean free_ca_mode;
   guint event_id, running_status;
-  guint64 start_and_duration;
   guint16 mjd;
   guint year, month, day, hour, minute, second;
   guint duration;
@@ -1616,7 +1614,7 @@ mpegts_packetizer_parse_eit (MpegTSPacketizer2 * packetizer,
 
     event_id = GST_READ_UINT16_BE (data);
     data += 2;
-    start_and_duration = GST_READ_UINT64_BE (data);
+    /* start_and_duration = GST_READ_UINT64_BE (data); */
     duration_ptr = data + 5;
     utc_ptr = data + 2;
     mjd = GST_READ_UINT16_BE (data);
@@ -1760,7 +1758,7 @@ mpegts_packetizer_parse_eit (MpegTSPacketizer2 * packetizer,
           GValue component_value = { 0 };
           gint widescreen = 0;  /* 0 for 4:3, 1 for 16:9, 2 for > 16:9 */
           gint freq = 25;       /* 25 or 30 measured in Hertz */
-          gboolean highdef = FALSE;
+          /* gboolean highdef = FALSE; */
           gboolean panvectors = FALSE;
           const gchar *comptype = "";
 
@@ -1807,46 +1805,46 @@ mpegts_packetizer_parse_eit (MpegTSPacketizer2 * packetizer,
                   break;
                 case 0x09:
                   widescreen = 0;
-                  highdef = TRUE;
+                  /* highdef = TRUE; */
                   freq = 25;
                   break;
                 case 0x0A:
                   widescreen = 1;
-                  highdef = TRUE;
+                  /* highdef = TRUE; */
                   panvectors = TRUE;
                   freq = 25;
                   break;
                 case 0x0B:
                   widescreen = 1;
-                  highdef = TRUE;
+                  /* highdef = TRUE; */
                   panvectors = FALSE;
                   freq = 25;
                   break;
                 case 0x0C:
                   widescreen = 2;
-                  highdef = TRUE;
+                  /* highdef = TRUE; */
                   freq = 25;
                   break;
                 case 0x0D:
                   widescreen = 0;
-                  highdef = TRUE;
+                  /* highdef = TRUE; */
                   freq = 30;
                   break;
                 case 0x0E:
                   widescreen = 1;
-                  highdef = TRUE;
+                  /* highdef = TRUE; */
                   panvectors = TRUE;
                   freq = 30;
                   break;
                 case 0x0F:
                   widescreen = 1;
-                  highdef = TRUE;
+                  /* highdef = TRUE; */
                   panvectors = FALSE;
                   freq = 30;
                   break;
                 case 0x10:
                   widescreen = 2;
-                  highdef = TRUE;
+                  /* highdef = TRUE; */
                   freq = 30;
                   break;
               }
@@ -2521,14 +2519,15 @@ get_encoding (const gchar * text, guint * start_text, gboolean * is_multibyte)
     *start_text = 1;
     *is_multibyte = TRUE;
   } else if (firstbyte == 0x12) {
-    // That's korean encoding.
-    // The spec says it's encoded in KSC 5601, but iconv only knows KSC 5636.
-    // Couldn't find any information about either of them.
+    /* That's korean encoding.
+     * The spec says it's encoded in KSC 5601, but iconv only knows KSC 5636.
+     * Couldn't find any information about either of them.
+     */
     encoding = NULL;
     *start_text = 1;
     *is_multibyte = TRUE;
   } else {
-    // reserved
+    /* reserved */
     encoding = NULL;
     *start_text = 0;
     *is_multibyte = FALSE;
@@ -2578,7 +2577,7 @@ convert_to_utf8 (const gchar * text, gint length, guint start,
             /* skip it */
             break;
           case 0xE08A:{
-            guint8 nl[] = { 0x0A, 0x00 };       // new line
+            guint8 nl[] = { 0x0A, 0x00 };       /* new line */
             g_byte_array_append (sb, nl, 2);
             break;
           }
@@ -2599,7 +2598,7 @@ convert_to_utf8 (const gchar * text, gint length, guint start,
             /* skip it */
             break;
           case 0xE08A:{
-            guint8 nl[] = { 0x0A, 0x00 };       // new line
+            guint8 nl[] = { 0x0A, 0x00 };       /* new line */
             g_byte_array_append (sb, nl, 2);
             break;
           }

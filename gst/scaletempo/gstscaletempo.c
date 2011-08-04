@@ -21,41 +21,39 @@
 /**
  * SECTION:element-scaletempo
  *
- * <refsect2>
- * <para>
  * Scale tempo while maintaining pitch
  * (WSOLA-like technique with cross correlation)
  * Inspired by SoundTouch library by Olli Parviainen
- * </para>
- * <para>
+ *
  * Use Sceletempo to apply playback rates without the chipmunk effect.
- * </para>
+ *
+ * <refsect2>
  * <title>Example pipelines</title>
  * <para>
- * <programlisting>
+ * |[
  * filesrc location=media.ext ! decodebin name=d \
  *     d. ! queue ! audioconvert ! audioresample ! scaletempo ! audioconvert ! audioresample ! autoaudiosink \
  *     d. ! queue ! ffmpegcolorspace ! autovideosink
- * </programlisting>
+ * ]|
  * OR
- * <programlisting>
+ * |[
  * playbin uri=... audio_sink="scaletempo ! audioconvert ! audioresample ! autoaudiosink"
- * </programlisting>
+ * ]|
  * When an application sends a seek event with rate != 1.0, Scaletempo applies
  * the rate change by scaling the tempo without scaling the pitch.
- * </para>
- * <para>
- * Scaletempo works by producing audio in constant sized chunks (a "stride") but
- * consuming chunks proportional to the playback rate.
- * </para>
- * <para>
+ *
+ * Scaletempo works by producing audio in constant sized chunks
+ * (#GstScaletempo:stride) but consuming chunks proportional to the playback
+ * rate.
+ *
  * Scaletempo then smooths the output by blending the end of one stride with
- * the next ("overlap").
- * </para>
- * <para>
+ * the next (#GstScaletempo:overlap).
+ *
  * Scaletempo smooths the overlap further by searching within the input buffer
- * for the best overlap position.  Scaletempo uses a statistical cross correlation
- * (roughly a dot-product).  Scaletempo consumes most of its CPU cycles here.
+ * for the best overlap position.  Scaletempo uses a statistical cross
+ * correlation (roughly a dot-product).  Scaletempo consumes most of its CPU
+ * cycles here. One can use the #GstScaletempo:search propery to tune how far
+ * the algoritm looks.
  * </para>
  * </refsect2>
  */

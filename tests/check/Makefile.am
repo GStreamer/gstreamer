@@ -138,7 +138,8 @@ endif
 VALGRIND_TO_FIX = \
 	elements/mpeg2enc \
 	elements/mplex    \
-	elements/zbar
+	elements/zbar     \
+	pipeline/colorspace
 
 # valgrind testing
 VALGRIND_TESTS_DISABLE = \
@@ -183,6 +184,7 @@ check_PROGRAMS = \
 	elements/mxfmux \
 	elements/id3mux \
 	pipelines/mxf \
+	pipelines/colorspace \
 	$(check_mimic) \
 	elements/rtpmux \
 	$(check_schro) \

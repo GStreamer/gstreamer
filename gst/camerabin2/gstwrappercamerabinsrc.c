@@ -395,7 +395,6 @@ gst_wrapper_camera_bin_src_construct_pipeline (GstBaseCameraSrc * bcamsrc)
   GstElement *src_csp;
   GstElement *capsfilter;
   gboolean ret = FALSE;
-  GstElement *videoscale;
   GstPad *vf_pad;
   GstPad *tee_capture_pad;
   GstPad *src_caps_src_pad;
@@ -473,16 +472,8 @@ gst_wrapper_camera_bin_src_construct_pipeline (GstBaseCameraSrc * bcamsrc)
     /* viewfinder pad */
     vf_pad = gst_element_get_request_pad (tee, "src%d");
     g_object_set (tee, "alloc-pad", vf_pad, NULL);
+    gst_ghost_pad_set_target (GST_GHOST_PAD (self->vfsrc), vf_pad);
     gst_object_unref (vf_pad);
-
-    /* the viewfinder should always work, so we add some converters to it */
-    if (!gst_camerabin_create_and_add_element (cbin, "ffmpegcolorspace",
-            "viewfinder-colorspace"))
-      goto done;
-    if (!(videoscale =
-            gst_camerabin_create_and_add_element (cbin, "videoscale",
-                "viewfinder-scale")))
-      goto done;
 
     /* image/video pad from tee */
     tee_capture_pad = gst_element_get_request_pad (tee, "src%d");
@@ -526,10 +517,7 @@ gst_wrapper_camera_bin_src_construct_pipeline (GstBaseCameraSrc * bcamsrc)
           NULL);
     }
 
-    /* hook-up the vf ghostpad */
-    vf_pad = gst_element_get_static_pad (videoscale, "src");
-    gst_ghost_pad_set_target (GST_GHOST_PAD (self->vfsrc), vf_pad);
-    gst_object_unref (vf_pad);
+
 
     gst_pad_set_active (self->vfsrc, TRUE);
     gst_pad_set_active (self->imgsrc, TRUE);    /* XXX ??? */
@@ -854,73 +842,6 @@ gst_wrapper_camera_bin_src_set_zoom (GstBaseCameraSrc * bcamsrc, gfloat zoom)
   }
 }
 
-static GstCaps *
-gst_wrapper_camera_bin_src_get_allowed_input_caps (GstBaseCameraSrc * bcamsrc)
-{
-  GstWrapperCameraBinSrc *self = GST_WRAPPER_CAMERA_BIN_SRC (bcamsrc);
-  GstCaps *caps = NULL;
-  GstPad *pad = NULL, *peer_pad = NULL;
-  GstState state;
-  GstElement *videosrc;
-
-  videosrc = self->src_vid_src ? self->src_vid_src : self->app_vid_src;
-
-  if (!videosrc) {
-    GST_WARNING_OBJECT (self, "no videosrc, can't get allowed caps");
-    goto failed;
-  }
-
-  if (self->allowed_caps) {
-    GST_DEBUG_OBJECT (self, "returning cached caps");
-    goto done;
-  }
-
-  pad = gst_element_get_static_pad (videosrc, "src");
-
-  if (!pad) {
-    GST_WARNING_OBJECT (self, "no srcpad in videosrc");
-    goto failed;
-  }
-
-  state = GST_STATE (videosrc);
-
-  /* Make this function work also in NULL state */
-  if (state == GST_STATE_NULL) {
-    GST_DEBUG_OBJECT (self, "setting videosrc to ready temporarily");
-    peer_pad = gst_pad_get_peer (pad);
-    if (peer_pad) {
-      gst_pad_unlink (pad, peer_pad);
-    }
-    /* Set videosrc to READY to open video device */
-    gst_element_set_locked_state (videosrc, TRUE);
-    gst_element_set_state (videosrc, GST_STATE_READY);
-  }
-
-  self->allowed_caps = gst_pad_get_caps (pad);
-
-  /* Restore state and re-link if necessary */
-  if (state == GST_STATE_NULL) {
-    GST_DEBUG_OBJECT (self, "restoring videosrc state %d", state);
-    /* Reset videosrc to NULL state, some drivers seem to need this */
-    gst_element_set_state (videosrc, GST_STATE_NULL);
-    if (peer_pad) {
-      gst_pad_link (pad, peer_pad);
-      gst_object_unref (peer_pad);
-    }
-    gst_element_set_locked_state (videosrc, FALSE);
-  }
-
-  gst_object_unref (pad);
-
-done:
-  if (self->allowed_caps) {
-    caps = gst_caps_copy (self->allowed_caps);
-  }
-  GST_DEBUG_OBJECT (self, "allowed caps:%" GST_PTR_FORMAT, caps);
-failed:
-  return caps;
-}
-
 /**
  * update_aspect_filter:
  * @self: camerasrc object
@@ -1172,8 +1093,6 @@ gst_wrapper_camera_bin_src_class_init (GstWrapperCameraBinSrcClass * klass)
       gst_wrapper_camera_bin_src_construct_pipeline;
   gstbasecamerasrc_class->set_zoom = gst_wrapper_camera_bin_src_set_zoom;
   gstbasecamerasrc_class->set_mode = gst_wrapper_camera_bin_src_set_mode;
-  gstbasecamerasrc_class->get_allowed_input_caps =
-      gst_wrapper_camera_bin_src_get_allowed_input_caps;
   gstbasecamerasrc_class->start_capture =
       gst_wrapper_camera_bin_src_start_capture;
   gstbasecamerasrc_class->stop_capture =

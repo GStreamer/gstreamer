@@ -22,6 +22,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstbaseparse.h>
+#include "dirac_parse.h"
 
 G_BEGIN_DECLS
 
@@ -38,6 +39,9 @@ struct _GstDiracParse
 {
   GstBaseParse base_diracparse;
 
+  DiracSequenceHeader sequence_header;
+
+  guint32 frame_number;
 };
 
 struct _GstDiracParseClass

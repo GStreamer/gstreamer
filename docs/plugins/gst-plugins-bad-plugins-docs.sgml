@@ -24,6 +24,7 @@
     <xi:include href="xml/element-bulge.xml" />
     <xi:include href="xml/element-burn.xml" />
     <xi:include href="xml/element-camerabin.xml" />
+    <xi:include href="xml/element-camerabin2.xml" />
     <xi:include href="xml/element-celtdec.xml" />
     <xi:include href="xml/element-celtenc.xml" />
     <xi:include href="xml/element-chromium.xml" />
@@ -89,7 +90,9 @@
     <xi:include href="xml/element-pyramidsegment.xml" />
     <xi:include href="xml/element-rsvgdec.xml" />
     <xi:include href="xml/element-rsvgoverlay.xml" />
-    <xi:include href="xml/element-rtpdtmfdepay.xml" />
+    <xi:include href="xml/element-rtmpsink.xml" />
+    <xi:include href="xml/element-rtmpsrc.xml" />
+    <xi:include href="xml/element-rtpmux.xml" />
     <xi:include href="xml/element-rtpdtmfsrc.xml" />
     <xi:include href="xml/element-rtpdtmfmux.xml" />
     <xi:include href="xml/element-rtpmux.xml" />
@@ -140,6 +143,7 @@
     <xi:include href="xml/plugin-bayer.xml" />
     <xi:include href="xml/plugin-bz2.xml" />
     <xi:include href="xml/plugin-camerabin.xml" />
+    <xi:include href="xml/plugin-camerabin2.xml" />
     <xi:include href="xml/plugin-cdaudio.xml" />
     <xi:include href="xml/plugin-cdxaparse.xml" />
     <xi:include href="xml/plugin-celt.xml" />
@@ -196,6 +200,7 @@
     <xi:include href="xml/plugin-real.xml" />
     <xi:include href="xml/plugin-rfbsrc.xml" />
     <xi:include href="xml/plugin-rsvg.xml" />
+    <xi:include href="xml/plugin-rtmp.xml" />
     <xi:include href="xml/plugin-rtpmux.xml" />
     <xi:include href="xml/plugin-scaletempo.xml" />
     <xi:include href="xml/plugin-sdl.xml" />

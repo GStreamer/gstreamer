@@ -76,18 +76,6 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer user_data)
 }
 
 static GstFlowReturn
-gst_camerabin_preview_pipeline_new_preroll (GstAppSink * appsink,
-    gpointer user_data)
-{
-  GstBuffer *buffer;
-
-  buffer = gst_app_sink_pull_preroll (appsink);
-  gst_buffer_unref (buffer);
-
-  return GST_FLOW_OK;
-}
-
-static GstFlowReturn
 gst_camerabin_preview_pipeline_new_buffer (GstAppSink * appsink,
     gpointer user_data)
 {
@@ -175,7 +163,6 @@ gst_camerabin_create_preview_pipeline (GstElement * element,
       goto error;
   }
 
-  callbacks.new_preroll = gst_camerabin_preview_pipeline_new_preroll;
   callbacks.new_buffer = gst_camerabin_preview_pipeline_new_buffer;
   gst_app_sink_set_callbacks ((GstAppSink *) data->appsink, &callbacks, data,
       NULL);

@@ -2223,8 +2223,8 @@ gst_dfbvideosink_init (GstDfbVideoSink * dfbvideosink)
 {
   dfbvideosink->pool_lock = g_mutex_new ();
   dfbvideosink->buffer_pool = NULL;
-  dfbvideosink->video_height = dfbvideosink->out_width = 0;
-  dfbvideosink->video_width = dfbvideosink->out_height = 0;
+  dfbvideosink->video_height = dfbvideosink->out_height = 0;
+  dfbvideosink->video_width = dfbvideosink->out_width = 0;
   dfbvideosink->fps_d = 0;
   dfbvideosink->fps_n = 0;
 

@@ -36,6 +36,7 @@
 
 #include <gst/gst.h>
 #include <gst/gst.h>
+#include "gstdecklink.h"
 #include "gstdecklinksink.h"
 #include <string.h>
 
@@ -67,7 +68,8 @@ static gboolean gst_decklink_sink_query (GstElement * element,
     GstQuery * query);
 
 static GstCaps *gst_decklink_sink_videosink_getcaps (GstPad * pad);
-static gboolean gst_decklink_sink_videosink_setcaps (GstPad * pad, GstCaps * caps);
+static gboolean gst_decklink_sink_videosink_setcaps (GstPad * pad,
+    GstCaps * caps);
 static gboolean gst_decklink_sink_videosink_acceptcaps (GstPad * pad,
     GstCaps * caps);
 static gboolean gst_decklink_sink_videosink_activate (GstPad * pad);
@@ -81,15 +83,18 @@ static GstFlowReturn gst_decklink_sink_videosink_chain (GstPad * pad,
     GstBuffer * buffer);
 static GstFlowReturn gst_decklink_sink_videosink_chainlist (GstPad * pad,
     GstBufferList * bufferlist);
-static gboolean gst_decklink_sink_videosink_event (GstPad * pad, GstEvent * event);
-static gboolean gst_decklink_sink_videosink_query (GstPad * pad, GstQuery * query);
+static gboolean gst_decklink_sink_videosink_event (GstPad * pad,
+    GstEvent * event);
+static gboolean gst_decklink_sink_videosink_query (GstPad * pad,
+    GstQuery * query);
 static GstFlowReturn gst_decklink_sink_videosink_bufferalloc (GstPad * pad,
     guint64 offset, guint size, GstCaps * caps, GstBuffer ** buf);
 static GstIterator *gst_decklink_sink_videosink_iterintlink (GstPad * pad);
 
 
 static GstCaps *gst_decklink_sink_audiosink_getcaps (GstPad * pad);
-static gboolean gst_decklink_sink_audiosink_setcaps (GstPad * pad, GstCaps * caps);
+static gboolean gst_decklink_sink_audiosink_setcaps (GstPad * pad,
+    GstCaps * caps);
 static gboolean gst_decklink_sink_audiosink_acceptcaps (GstPad * pad,
     GstCaps * caps);
 static gboolean gst_decklink_sink_audiosink_activate (GstPad * pad);
@@ -103,8 +108,10 @@ static GstFlowReturn gst_decklink_sink_audiosink_chain (GstPad * pad,
     GstBuffer * buffer);
 static GstFlowReturn gst_decklink_sink_audiosink_chainlist (GstPad * pad,
     GstBufferList * bufferlist);
-static gboolean gst_decklink_sink_audiosink_event (GstPad * pad, GstEvent * event);
-static gboolean gst_decklink_sink_audiosink_query (GstPad * pad, GstQuery * query);
+static gboolean gst_decklink_sink_audiosink_event (GstPad * pad,
+    GstEvent * event);
+static gboolean gst_decklink_sink_audiosink_query (GstPad * pad,
+    GstQuery * query);
 static GstFlowReturn gst_decklink_sink_audiosink_bufferalloc (GstPad * pad,
     guint64 offset, guint size, GstCaps * caps, GstBuffer ** buf);
 static GstIterator *gst_decklink_sink_audiosink_iterintlink (GstPad * pad);
@@ -112,37 +119,17 @@ static GstIterator *gst_decklink_sink_audiosink_iterintlink (GstPad * pad);
 
 enum
 {
-  PROP_0
+  PROP_0,
+  PROP_MODE
 };
 
 /* pad templates */
-
-#define MODE(w,h,n,d,i) \
-  "video/x-raw-yuv,format=(fourcc)UYVY,width=" #w ",height=" #h \
-  ",framerate=" #n "/" #d ",interlaced=" #i
 
 static GstStaticPadTemplate gst_decklink_sink_videosink_template =
 GST_STATIC_PAD_TEMPLATE ("videosink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (
-      MODE(720,486,30000,1001,true)
-    ));
-#if 0
-      MODE(720,486,24000,1001,true) ";"
-      MODE(720,576,25,1,true) ";"
-      MODE(1920,1080,24000,1001,false) ";"
-      MODE(1920,1080,24,1,false) ";"
-      MODE(1920,1080,25,1,false) ";"
-      MODE(1920,1080,30000,1001,false) ";"
-      MODE(1920,1080,30,1,false) ";"
-      MODE(1920,1080,25,1,true) ";"
-      MODE(1920,1080,30000,1001,true) ";"
-      MODE(1920,1080,30,1,true) ";"
-      MODE(1280,720,50,1,true) ";"
-      MODE(1280,720,60000,1001,true) ";"
-      MODE(1280,720,60,1,true)
-#endif
+    GST_STATIC_CAPS (GST_DECKLINK_CAPS));
 
 static GstStaticPadTemplate gst_decklink_sink_audiosink_template =
 GST_STATIC_PAD_TEMPLATE ("audiosink",
@@ -150,33 +137,6 @@ GST_STATIC_PAD_TEMPLATE ("audiosink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-int,width=16,depth=16,channels=2,rate=48000")
     );
-
-typedef struct _DecklinkMode DecklinkMode;
-struct _DecklinkMode {
-  BMDDisplayMode mode;
-  int width;
-  int height;
-  int fps_n;
-  int fps_d;
-  gboolean interlaced;
-};
-
-static DecklinkMode modes[] = {
-  { bmdModeNTSC, 720,486,30000,1001,true },
-  { bmdModeNTSC2398, 720,486,24000,1001,true },
-  { bmdModePAL, 720,576,25,1,true },
-  { bmdModeHD1080p2398, 1920,1080,24000,1001,false },
-  { bmdModeHD1080p24, 1920,1080,24,1,false },
-  { bmdModeHD1080p25, 1920,1080,25,1,false },
-  { bmdModeHD1080p2997, 1920,1080,30000,1001,false },
-  { bmdModeHD1080p30, 1920,1080,30,1,false },
-  { bmdModeHD1080i50, 1920,1080,25,1,true },
-  { bmdModeHD1080i5994, 1920,1080,30000,1001,true },
-  { bmdModeHD1080i6000, 1920,1080,30,1,true },
-  { bmdModeHD720p50, 1280,720,50,1,true },
-  { bmdModeHD720p5994, 1280,720,60000,1001,true },
-  { bmdModeHD720p60, 1280,720,60,1,true }
-};
 
 
 /* class initialization */
@@ -221,6 +181,12 @@ gst_decklink_sink_class_init (GstDecklinkSinkClass * klass)
   element_class->set_index = GST_DEBUG_FUNCPTR (gst_decklink_sink_set_index);
   element_class->send_event = GST_DEBUG_FUNCPTR (gst_decklink_sink_send_event);
   element_class->query = GST_DEBUG_FUNCPTR (gst_decklink_sink_query);
+
+  g_object_class_install_property (gobject_class, PROP_MODE,
+      g_param_spec_enum ("mode", "Mode", "Mode",
+          GST_TYPE_DECKLINK_MODE, GST_DECKLINK_MODE_NTSC,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+              G_PARAM_CONSTRUCT)));
 
 }
 
@@ -294,17 +260,11 @@ gst_decklink_sink_init (GstDecklinkSink * decklinksink,
   gst_element_add_pad (GST_ELEMENT (decklinksink), decklinksink->audiosinkpad);
 
 
-  decklinksink->cond = g_cond_new();
-  decklinksink->mutex = g_mutex_new();
+  decklinksink->cond = g_cond_new ();
+  decklinksink->mutex = g_mutex_new ();
+  decklinksink->audio_mutex = g_mutex_new ();
 
-  decklinksink->mode = 0;
-
-  decklinksink->width = modes[decklinksink->mode].width;
-  decklinksink->height = modes[decklinksink->mode].height;
-  decklinksink->fps_n = modes[decklinksink->mode].fps_n;
-  decklinksink->fps_d = modes[decklinksink->mode].fps_d;
-  decklinksink->interlaced = modes[decklinksink->mode].interlaced;
-  decklinksink->bmd_mode = modes[decklinksink->mode].mode;
+  decklinksink->mode = GST_DECKLINK_MODE_NTSC;
 
   decklinksink->callback = new Output;
   decklinksink->callback->decklinksink = decklinksink;
@@ -314,9 +274,15 @@ void
 gst_decklink_sink_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
+  GstDecklinkSink *decklinksink;
+
   g_return_if_fail (GST_IS_DECKLINK_SINK (object));
+  decklinksink = GST_DECKLINK_SINK (object);
 
   switch (property_id) {
+    case PROP_MODE:
+      decklinksink->mode = (GstDecklinkModeEnum) g_value_get_enum (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -327,9 +293,15 @@ void
 gst_decklink_sink_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
+  GstDecklinkSink *decklinksink;
+
   g_return_if_fail (GST_IS_DECKLINK_SINK (object));
+  decklinksink = GST_DECKLINK_SINK (object);
 
   switch (property_id) {
+    case PROP_MODE:
+      g_value_set_enum (value, decklinksink->mode);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -357,6 +329,7 @@ gst_decklink_sink_finalize (GObject * object)
   /* clean up object here */
   g_cond_free (decklinksink->cond);
   g_mutex_free (decklinksink->mutex);
+  g_mutex_free (decklinksink->audio_mutex);
 
   delete decklinksink->callback;
 
@@ -364,29 +337,26 @@ gst_decklink_sink_finalize (GObject * object)
 }
 
 static gboolean
-gst_decklink_sink_start (GstDecklinkSink *decklinksink)
+gst_decklink_sink_start (GstDecklinkSink * decklinksink)
 {
   IDeckLinkIterator *iterator;
   HRESULT ret;
-  IDeckLinkDisplayModeIterator *mode_iterator;
-  IDeckLinkDisplayMode *mode;
-  BMDTimeValue fps_n;
-  BMDTimeScale fps_d;
+  const GstDecklinkMode *mode;
 
   iterator = CreateDeckLinkIteratorInstance ();
   if (iterator == NULL) {
-    GST_ERROR("no driver");
+    GST_ERROR ("no driver");
     return FALSE;
   }
 
   ret = iterator->Next (&decklinksink->decklink);
   if (ret != S_OK) {
-    GST_ERROR("no card");
+    GST_ERROR ("no card");
     return FALSE;
   }
 
   ret = decklinksink->decklink->QueryInterface (IID_IDeckLinkOutput,
-      (void **)&decklinksink->output);
+      (void **) &decklinksink->output);
   if (ret != S_OK) {
     GST_ERROR ("no output");
     return FALSE;
@@ -394,29 +364,9 @@ gst_decklink_sink_start (GstDecklinkSink *decklinksink)
 
   decklinksink->output->SetAudioCallback (decklinksink->callback);
 
-  ret = decklinksink->output->GetDisplayModeIterator (&mode_iterator);
-  if (ret != S_OK) {
-    GST_ERROR ("failed to get display mode iterator");
-    return FALSE;
-  }
+  mode = gst_decklink_get_mode (decklinksink->mode);
 
-  while (mode_iterator->Next (&mode) == S_OK) {
-    break;
-  }
-  if (!mode) {
-    GST_ERROR ("bad mode");
-    return FALSE;
-  }
-
-  decklinksink->width = mode->GetWidth ();
-  decklinksink->height = mode->GetHeight ();
-  mode->GetFrameRate (&fps_n, &fps_d);
-  decklinksink->fps_n = fps_n;
-  decklinksink->fps_d = fps_d;
-
-  decklinksink->display_mode = mode->GetDisplayMode ();
-
-  ret = decklinksink->output->EnableVideoOutput (decklinksink->display_mode,
+  ret = decklinksink->output->EnableVideoOutput (mode->mode,
       bmdVideoOutputFlagDefault);
   if (ret != S_OK) {
     GST_ERROR ("failed to enable video output");
@@ -424,16 +374,16 @@ gst_decklink_sink_start (GstDecklinkSink *decklinksink)
   }
   //decklinksink->video_enabled = TRUE;
 
-  decklinksink->output->SetScheduledFrameCompletionCallback (decklinksink->callback);
+  decklinksink->output->
+      SetScheduledFrameCompletionCallback (decklinksink->callback);
 
-  if (0) {
-    ret = decklinksink->output->EnableAudioOutput (bmdAudioSampleRate48kHz,
-        16, 2, bmdAudioOutputStreamContinuous);
-    if (ret != S_OK) {
-      GST_ERROR ("failed to enable audio output");
-      return FALSE;
-    }
+  ret = decklinksink->output->EnableAudioOutput (bmdAudioSampleRate48kHz,
+      16, 2, bmdAudioOutputStreamContinuous);
+  if (ret != S_OK) {
+    GST_ERROR ("failed to enable audio output");
+    return FALSE;
   }
+  decklinksink->audio_buffer = gst_buffer_new ();
 
   decklinksink->num_frames = 0;
 
@@ -441,7 +391,7 @@ gst_decklink_sink_start (GstDecklinkSink *decklinksink)
 }
 
 static gboolean
-gst_decklink_sink_force_stop (GstDecklinkSink *decklinksink)
+gst_decklink_sink_force_stop (GstDecklinkSink * decklinksink)
 {
   g_mutex_lock (decklinksink->mutex);
   decklinksink->stop = TRUE;
@@ -452,7 +402,7 @@ gst_decklink_sink_force_stop (GstDecklinkSink *decklinksink)
 }
 
 static gboolean
-gst_decklink_sink_stop (GstDecklinkSink *decklinksink)
+gst_decklink_sink_stop (GstDecklinkSink * decklinksink)
 {
   decklinksink->output->StopScheduledPlayback (0, NULL, 0);
   decklinksink->output->DisableAudioOutput ();
@@ -556,7 +506,7 @@ gst_decklink_sink_videosink_getcaps (GstPad * pad)
 
   GST_DEBUG_OBJECT (decklinksink, "getcaps");
 
-  caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+  caps = gst_decklink_mode_get_caps (decklinksink->mode);
 
   gst_object_unref (decklinksink);
   return caps;
@@ -661,6 +611,7 @@ gst_decklink_sink_videosink_chain (GstPad * pad, GstBuffer * buffer)
   IDeckLinkMutableVideoFrame *frame;
   void *data;
   GstFlowReturn ret;
+  const GstDecklinkMode *mode;
 
   decklinksink = GST_DECKLINK_SINK (gst_pad_get_parent (pad));
 
@@ -679,8 +630,10 @@ gst_decklink_sink_videosink_chain (GstPad * pad, GstBuffer * buffer)
   }
 #endif
 
-  decklinksink->output->CreateVideoFrame (decklinksink->width,
-      decklinksink->height, decklinksink->width * 2, bmdFormat8BitYUV,
+  mode = gst_decklink_get_mode (decklinksink->mode);
+
+  decklinksink->output->CreateVideoFrame (mode->width,
+      mode->height, mode->width * 2, bmdFormat8BitYUV,
       bmdFrameFlagDefault, &frame);
 
   frame->GetBytes (&data);
@@ -698,12 +651,11 @@ gst_decklink_sink_videosink_chain (GstPad * pad, GstBuffer * buffer)
 
   if (!decklinksink->stop) {
     decklinksink->output->ScheduleVideoFrame (frame,
-        decklinksink->num_frames * decklinksink->fps_n,
-        decklinksink->fps_n, decklinksink->fps_d);
+        decklinksink->num_frames * mode->fps_d, mode->fps_d, mode->fps_n);
     decklinksink->num_frames++;
 
     if (!decklinksink->sched_started) {
-      decklinksink->output->StartScheduledPlayback (0, 100, 1.0);
+      decklinksink->output->StartScheduledPlayback (0, mode->fps_d, 1.0);
       decklinksink->sched_started = TRUE;
     }
 
@@ -773,8 +725,8 @@ gst_decklink_sink_videosink_query (GstPad * pad, GstQuery * query)
 }
 
 static GstFlowReturn
-gst_decklink_sink_videosink_bufferalloc (GstPad * pad, guint64 offset, guint size,
-    GstCaps * caps, GstBuffer ** buf)
+gst_decklink_sink_videosink_bufferalloc (GstPad * pad, guint64 offset,
+    guint size, GstCaps * caps, GstBuffer ** buf)
 {
   GstDecklinkSink *decklinksink;
 
@@ -919,14 +871,24 @@ static GstFlowReturn
 gst_decklink_sink_audiosink_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstDecklinkSink *decklinksink;
+  GstFlowReturn ret;
 
   decklinksink = GST_DECKLINK_SINK (gst_pad_get_parent (pad));
 
   GST_DEBUG_OBJECT (decklinksink, "chain");
 
+  // concatenate both buffers
+  g_mutex_lock (decklinksink->audio_mutex);
+  decklinksink->audio_buffer =
+      gst_buffer_join (decklinksink->audio_buffer, buffer);
+  g_mutex_unlock (decklinksink->audio_mutex);
+
+  // GST_DEBUG("Audio Buffer Size: %d", GST_BUFFER_SIZE (decklinksink->audio_buffer));
 
   gst_object_unref (decklinksink);
-  return GST_FLOW_OK;
+
+  ret = GST_FLOW_OK;
+  return ret;
 }
 
 static GstFlowReturn
@@ -984,8 +946,8 @@ gst_decklink_sink_audiosink_query (GstPad * pad, GstQuery * query)
 }
 
 static GstFlowReturn
-gst_decklink_sink_audiosink_bufferalloc (GstPad * pad, guint64 offset, guint size,
-    GstCaps * caps, GstBuffer ** buf)
+gst_decklink_sink_audiosink_bufferalloc (GstPad * pad, guint64 offset,
+    guint size, GstCaps * caps, GstBuffer ** buf)
 {
   GstDecklinkSink *decklinksink;
 
@@ -1020,10 +982,10 @@ gst_decklink_sink_audiosink_iterintlink (GstPad * pad)
 
 
 HRESULT
-Output::ScheduledFrameCompleted (IDeckLinkVideoFrame * completedFrame,
+    Output::ScheduledFrameCompleted (IDeckLinkVideoFrame * completedFrame,
     BMDOutputFrameCompletionResult result)
-{   
-  GST_DEBUG("ScheduledFrameCompleted");
+{
+  GST_DEBUG ("ScheduledFrameCompleted");
 
   g_mutex_lock (decklinksink->mutex);
   g_cond_signal (decklinksink->cond);
@@ -1033,18 +995,47 @@ Output::ScheduledFrameCompleted (IDeckLinkVideoFrame * completedFrame,
   return S_OK;
 }
 
-HRESULT
-Output::ScheduledPlaybackHasStopped ()
+HRESULT Output::ScheduledPlaybackHasStopped ()
 {
-  GST_ERROR("ScheduledPlaybackHasStopped");
+  GST_ERROR ("ScheduledPlaybackHasStopped");
   return S_OK;
 }
 
-HRESULT
-Output::RenderAudioSamples (bool preroll)
+HRESULT Output::RenderAudioSamples (bool preroll)
 {
-  GST_ERROR("RenderAudioSamples");
-  
+  guint
+      samplesWritten;
+  GstBuffer *
+      buffer;
+
+  // guint64 samplesToWrite;
+
+  if (decklinksink->stop) {
+    GST_DEBUG ("decklinksink->stop set TRUE!");
+    decklinksink->output->BeginAudioPreroll ();
+    // running = true;
+  } else {
+    g_mutex_lock (decklinksink->audio_mutex);
+    decklinksink->output->ScheduleAudioSamples (GST_BUFFER_DATA (decklinksink->audio_buffer), GST_BUFFER_SIZE (decklinksink->audio_buffer) / 4, // 2 bytes per sample, stereo
+        0, 0, &samplesWritten);
+
+    buffer =
+        gst_buffer_new_and_alloc (GST_BUFFER_SIZE (decklinksink->audio_buffer) -
+        (samplesWritten * 4));
+
+    memcpy (GST_BUFFER_DATA (buffer),
+        GST_BUFFER_DATA (decklinksink->audio_buffer) + (samplesWritten * 4),
+        GST_BUFFER_SIZE (decklinksink->audio_buffer) - (samplesWritten * 4));
+
+    gst_buffer_unref (decklinksink->audio_buffer);
+
+    decklinksink->audio_buffer = buffer;
+
+    g_mutex_unlock (decklinksink->audio_mutex);
+
+  }
+
+  GST_DEBUG ("RenderAudioSamples");
+
   return S_OK;
 }
-

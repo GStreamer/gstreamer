@@ -106,14 +106,19 @@ gst_base_video_codec_reset (GstBaseVideoCodec * base_video_codec)
 
   GST_DEBUG_OBJECT (base_video_codec, "reset");
 
+  GST_OBJECT_LOCK (base_video_codec);
   for (g = base_video_codec->frames; g; g = g_list_next (g)) {
     gst_base_video_codec_free_frame ((GstVideoFrame *) g->data);
   }
   g_list_free (base_video_codec->frames);
   base_video_codec->frames = NULL;
+  GST_OBJECT_UNLOCK (base_video_codec);
 
   base_video_codec->bytes = 0;
   base_video_codec->time = 0;
+
+  gst_buffer_replace (&base_video_codec->state.codec_data, NULL);
+  gst_caps_replace (&base_video_codec->state.caps, NULL);
 }
 
 static void
@@ -163,7 +168,7 @@ gst_base_video_codec_new_frame (GstBaseVideoCodec * base_video_codec)
 {
   GstVideoFrame *frame;
 
-  frame = g_malloc0 (sizeof (GstVideoFrame));
+  frame = g_slice_new0 (GstVideoFrame);
 
   frame->system_frame_number = base_video_codec->system_frame_number;
   base_video_codec->system_frame_number++;
@@ -174,6 +179,8 @@ gst_base_video_codec_new_frame (GstBaseVideoCodec * base_video_codec)
 void
 gst_base_video_codec_free_frame (GstVideoFrame * frame)
 {
+  g_return_if_fail (frame != NULL);
+
   if (frame->sink_buffer) {
     gst_buffer_unref (frame->sink_buffer);
   }
@@ -182,5 +189,11 @@ gst_base_video_codec_free_frame (GstVideoFrame * frame)
     gst_buffer_unref (frame->src_buffer);
   }
 
-  g_free (frame);
+  g_list_foreach (frame->events, (GFunc) gst_event_unref, NULL);
+  g_list_free (frame->events);
+
+  if (frame->coder_hook_destroy_notify && frame->coder_hook)
+    frame->coder_hook_destroy_notify (frame->coder_hook);
+
+  g_slice_free (GstVideoFrame, frame);
 }

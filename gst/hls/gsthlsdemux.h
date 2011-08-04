@@ -61,7 +61,7 @@ struct _GstHLSDemux
   GQueue *queue;                /* Queue storing the fetched fragments */
   gboolean need_cache;          /* Wheter we need to cache some fragments before starting to push data */
   gboolean end_of_playlist;
-
+  gboolean do_typefind;		/* Whether we need to typefind the next buffer */
 
   /* Properties */
   guint fragments_cache;        /* number of fragments needed to be cached to start playing */
@@ -87,6 +87,8 @@ struct _GstHLSDemux
   gboolean cancelled;
   GstAdapter *download;
 
+  /* Position in the stream */
+  GstClockTime position;
 };
 
 struct _GstHLSDemuxClass

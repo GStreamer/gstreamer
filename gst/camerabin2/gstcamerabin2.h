@@ -16,25 +16,34 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-#ifndef _GST_CAMERA_BIN_H_
-#define _GST_CAMERA_BIN_H_
+#ifndef _GST_CAMERA_BIN2_H_
+#define _GST_CAMERA_BIN2_H_
 
 #include <gst/gst.h>
 #include <gst/pbutils/encoding-profile.h>
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_CAMERA_BIN   (gst_camera_bin_get_type())
-#define GST_CAMERA_BIN(obj)   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_CAMERA_BIN,GstCameraBin))
-#define GST_CAMERA_BIN_CAST(obj)   ((GstCameraBin *) obj)
-#define GST_CAMERA_BIN_CLASS(klass)   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_CAMERA_BIN,GstCameraBinClass))
-#define GST_IS_CAMERA_BIN(obj)   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_CAMERA_BIN))
-#define GST_IS_CAMERA_BIN_CLASS(obj)   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_CAMERA_BIN))
+#define GST_TYPE_CAMERA_BIN2   (gst_camera_bin2_get_type())
+#define GST_CAMERA_BIN2(obj)   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_CAMERA_BIN2,GstCameraBin2))
+#define GST_CAMERA_BIN2_CAST(obj)   ((GstCameraBin2 *) obj)
+#define GST_CAMERA_BIN2_CLASS(klass)   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_CAMERA_BIN2,GstCameraBin2Class))
+#define GST_IS_CAMERA_BIN2(obj)   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_CAMERA_BIN2))
+#define GST_IS_CAMERA_BIN2_CLASS(obj)   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_CAMERA_BIN2))
 
-typedef struct _GstCameraBin GstCameraBin;
-typedef struct _GstCameraBinClass GstCameraBinClass;
+typedef enum
+{
+  /* matches GstEncFlags GST_ENC_FLAG_NO_AUDIO_CONVERSION in encodebin */
+  GST_CAM_FLAG_NO_AUDIO_CONVERSION = (1 << 0),
+  /* matches GstEncFlags GST_ENC_FLAG_NO_VIDEO_CONVERSION in encodebin */
+  GST_CAM_FLAG_NO_VIDEO_CONVERSION = (1 << 1)
+} GstCamFlags;
 
-struct _GstCameraBin
+
+typedef struct _GstCameraBin2 GstCameraBin2;
+typedef struct _GstCameraBin2Class GstCameraBin2Class;
+
+struct _GstCameraBin2
 {
   GstPipeline pipeline;
 
@@ -45,8 +54,6 @@ struct _GstCameraBin
   GstElement *video_encodebin;
   gulong video_encodebin_signal_id;
   GstElement *videosink;
-  gulong videosink_probe;
-  GstElement *videobin_queue;
   GstElement *videobin_capsfilter;
 
   GstElement *viewfinderbin;
@@ -68,23 +75,25 @@ struct _GstCameraBin
 
   GstElement *audio_src;
   GstElement *user_audio_src;
-  GstElement *audio_queue;
   GstElement *audio_volume;
   GstElement *audio_capsfilter;
-  GstElement *audio_convert;
 
   gint processing_counter; /* atomic int */
 
-  /* Index of the auto incrementing file index for video recordings */
-  gint video_index;
+  /* Index of the auto incrementing file index for captures */
+  gint capture_index;
+
+  /* stores list of image locations to be pushed to the image sink
+   * as file location change notifications, they are pushed before
+   * each buffer capture */
+  GSList *image_location_list;
 
   gboolean video_profile_switch;
   gboolean image_profile_switch;
 
   /* properties */
   gint mode;
-  gchar *video_location;
-  gchar *image_location;
+  gchar *location;
   gboolean post_previews;
   GstCaps *preview_caps;
   GstElement *preview_filter;
@@ -92,21 +101,22 @@ struct _GstCameraBin
   GstEncodingProfile *image_profile;
   gfloat zoom;
   gfloat max_zoom;
+  GstCamFlags flags;
 
   gboolean elements_created;
 };
 
-struct _GstCameraBinClass
+struct _GstCameraBin2Class
 {
   GstPipelineClass pipeline_class;
 
   /* Action signals */
-  void (*start_capture) (GstCameraBin * camera);
-  void (*stop_capture) (GstCameraBin * camera);
+  void (*start_capture) (GstCameraBin2 * camera);
+  void (*stop_capture) (GstCameraBin2 * camera);
 };
 
-GType gst_camera_bin_get_type (void);
-gboolean gst_camera_bin_plugin_init (GstPlugin * plugin);
+GType gst_camera_bin2_get_type (void);
+gboolean gst_camera_bin2_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS
 

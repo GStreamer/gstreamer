@@ -7,7 +7,8 @@ libgstmpegtsdemux_la_SOURCES = \
 	mpegtspacketizer.c \
 	mpegtsparse.c \
 	payload_parsers.c \
-	tsdemux.c
+	tsdemux.c	\
+	pesparse.c
 
 libgstmpegtsdemux_la_CFLAGS = \
 	$(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
@@ -25,7 +26,8 @@ noinst_HEADERS = \
 	mpegtspacketizer.h \
 	mpegtsparse.h \
 	payload_parsers.h \
-	tsdemux.h
+	tsdemux.h	\
+	pesparse.h
 
 Android.mk: Makefile.am $(BUILT_SOURCES)
 	androgenizer \

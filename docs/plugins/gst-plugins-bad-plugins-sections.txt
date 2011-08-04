@@ -28,34 +28,6 @@ gst_aiff_parse_get_type
 </SECTION>
 
 <SECTION>
-<FILE>element-voaacenc</FILE>
-<TITLE>voaacenc</TITLE>
-GstVoAacEnc
-<SUBSECTION Standard>
-GstVoAacEncClass
-GST_VOAACENC
-GST_VOAACENC_CLASS
-GST_IS_VOAACENC
-GST_IS_VOAACENC_CLASS
-GST_TYPE_VOAACENC
-gst_voaacenc_get_type
-</SECTION>
-
-<SECTION>
-<FILE>element-voamrwbenc</FILE>
-<TITLE>voamrwbenc</TITLE>
-GstVoAmrwbEnc
-<SUBSECTION Standard>
-GstVoAmrwbEncClass
-GST_VOAMRWBENC
-GST_VOAMRWBENC_CLASS
-GST_IS_VOAMRWBENC
-GST_IS_VOAMRWBENC_CLASS
-GST_TYPE_VOAMRWBENC
-gst_voamrwbenc_get_type
-</SECTION>
-
-<SECTION>
 <FILE>element-assrender</FILE>
 <TITLE>assrender</TITLE>
 GstAssRender
@@ -141,6 +113,20 @@ GST_TYPE_CAMERABIN
 GST_CAMERABIN_CLASS
 GST_IS_CAMERABIN_CLASS
 gst_camerabin_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-camerabin2</FILE>
+<TITLE>camerabin2</TITLE>
+GstCameraBin2
+<SUBSECTION Standard>
+GstCameraBin2Class
+GST_CAMERABIN2
+GST_IS_CAMERABIN2
+GST_TYPE_CAMERABIN2
+GST_CAMERABIN2_CLASS
+GST_IS_CAMERABIN2_CLASS
+gst_camerabin2_get_type
 </SECTION>
 
 <SECTION>
@@ -1161,6 +1147,34 @@ gst_rsvg_dec_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-rtmpsink</FILE>
+<TITLE>rtmpsink</TITLE>
+GstRTMPSink
+<SUBSECTION Standard>
+GstRTMPSinkClass
+GST_RTMP_SINK
+GST_IS_RTMP_SINK
+GST_TYPE_RTMP_SINK
+gst_rtmp_sink_get_type
+GST_RTMP_SINK_CLASS
+GST_IS_RTMP_SINK_CLASS
+</SECTION>
+
+<SECTION>
+<FILE>element-rtmpsrc</FILE>
+<TITLE>rtmpsrc</TITLE>
+GstRTMPSrc
+<SUBSECTION Standard>
+GstRTMPSrcClass
+GST_RTMP_SRC
+GST_IS_RTMP_SRC
+GST_TYPE_RTMP_SRC
+gst_rtmp_src_get_type
+GST_RTMP_SRC_CLASS
+GST_IS_RTMP_SRC_CLASS
+</SECTION>
+
+<SECTION>
 <FILE>element-rtpdtmfdepay</FILE>
 <TITLE>rtpdtmfdepay</TITLE>
 GstRtpDTMFDepay
@@ -1637,6 +1651,34 @@ GST_WILDMIDI_CLASS
 GST_IS_WILDMIDI
 GST_IS_WILDMIDI_CLASS
 GST_TYPE_WILDMIDI
+</SECTION>
+
+<SECTION>
+<FILE>element-voaacenc</FILE>
+<TITLE>voaacenc</TITLE>
+GstVoAacEnc
+<SUBSECTION Standard>
+GstVoAacEncClass
+GST_VOAACENC
+GST_VOAACENC_CLASS
+GST_IS_VOAACENC
+GST_IS_VOAACENC_CLASS
+GST_TYPE_VOAACENC
+gst_voaacenc_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-voamrwbenc</FILE>
+<TITLE>voamrwbenc</TITLE>
+GstVoAmrwbEnc
+<SUBSECTION Standard>
+GstVoAmrwbEncClass
+GST_VOAMRWBENC
+GST_VOAMRWBENC_CLASS
+GST_IS_VOAMRWBENC
+GST_IS_VOAMRWBENC_CLASS
+GST_TYPE_VOAMRWBENC
+gst_voamrwbenc_get_type
 </SECTION>
 
 <SECTION>

@@ -71,6 +71,11 @@ enum
 #define DEFAULT_WRITE_V2 TRUE
 #define DEFAULT_V2_MAJOR_VERSION 3
 
+static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("ANY"));
+
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -79,9 +84,9 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
 GST_BOILERPLATE (GstId3Mux, gst_id3_mux, GstTagMux, GST_TYPE_TAG_MUX);
 
 static GstBuffer *gst_id3_mux_render_v2_tag (GstTagMux * mux,
-    GstTagList * taglist);
+    const GstTagList * taglist);
 static GstBuffer *gst_id3_mux_render_v1_tag (GstTagMux * mux,
-    GstTagList * taglist);
+    const GstTagList * taglist);
 
 static void gst_id3_mux_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -92,6 +97,9 @@ static void
 gst_id3_mux_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&sink_template));
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template));
@@ -129,8 +137,8 @@ gst_id3_mux_class_init (GstId3MuxClass * klass)
 
   GST_TAG_MUX_CLASS (klass)->render_start_tag =
       GST_DEBUG_FUNCPTR (gst_id3_mux_render_v2_tag);
-
-  GST_TAG_MUX_CLASS (klass)->render_end_tag = gst_id3_mux_render_v1_tag;
+  GST_TAG_MUX_CLASS (klass)->render_end_tag =
+      GST_DEBUG_FUNCPTR (gst_id3_mux_render_v1_tag);
 }
 
 static void
@@ -187,7 +195,7 @@ gst_id3_mux_get_property (GObject * object, guint prop_id,
 }
 
 static GstBuffer *
-gst_id3_mux_render_v2_tag (GstTagMux * mux, GstTagList * taglist)
+gst_id3_mux_render_v2_tag (GstTagMux * mux, const GstTagList * taglist)
 {
   GstId3Mux *id3mux = GST_ID3_MUX (mux);
 
@@ -198,7 +206,7 @@ gst_id3_mux_render_v2_tag (GstTagMux * mux, GstTagList * taglist)
 }
 
 static GstBuffer *
-gst_id3_mux_render_v1_tag (GstTagMux * mux, GstTagList * taglist)
+gst_id3_mux_render_v1_tag (GstTagMux * mux, const GstTagList * taglist)
 {
   GstId3Mux *id3mux = GST_ID3_MUX (mux);
 

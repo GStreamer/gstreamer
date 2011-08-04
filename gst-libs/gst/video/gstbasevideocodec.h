@@ -86,6 +86,7 @@ typedef struct _GstBaseVideoCodecClass GstBaseVideoCodecClass;
 
 struct _GstVideoState
 {
+  GstCaps *caps;
   GstVideoFormat format;
   int width, height;
   int fps_n, fps_d;
@@ -125,9 +126,15 @@ struct _GstVideoFrame
   int n_fields;
 
   void *coder_hook;
+  GDestroyNotify coder_hook_destroy_notify;
+
   GstClockTime deadline;
 
   gboolean force_keyframe;
+
+  /* Events that should be pushed downstream *before*
+   * the next src_buffer */
+  GList *events;
 };
 
 struct _GstBaseVideoCodec
@@ -140,7 +147,7 @@ struct _GstBaseVideoCodec
 
   guint64 system_frame_number;
 
-  GList *frames;
+  GList *frames;  /* Protected with OBJECT_LOCK */
   GstVideoState state;
   GstSegment segment;
 
@@ -167,17 +174,6 @@ GType gst_base_video_codec_get_type (void);
 
 GstVideoFrame * gst_base_video_codec_new_frame (GstBaseVideoCodec *base_video_codec);
 void gst_base_video_codec_free_frame (GstVideoFrame *frame);
-
-
-gboolean gst_base_video_rawvideo_convert (GstVideoState *state,
-    GstFormat src_format, gint64 src_value,
-    GstFormat * dest_format, gint64 *dest_value);
-gboolean gst_base_video_encoded_video_convert (GstVideoState * state,
-    gint64 bytes, gint64 time, GstFormat src_format,
-    gint64 src_value, GstFormat * dest_format, gint64 * dest_value);
-
-GstClockTime gst_video_state_get_timestamp (const GstVideoState *state,
-    GstSegment *segment, int frame_number);
 
 G_END_DECLS
 

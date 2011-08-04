@@ -277,7 +277,7 @@ gst_zbar_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
 {
   GstZBar *zbar = GST_ZBAR (base);
   guint8 *data;
-  guint size, rowstride;
+  guint rowstride;
   zbar_image_t *image;
   const zbar_symbol_t *symbol;
   int n;
@@ -286,7 +286,6 @@ gst_zbar_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
     goto done;
 
   data = GST_BUFFER_DATA (outbuf);
-  size = GST_BUFFER_SIZE (outbuf);
 
   image = zbar_image_create ();
 

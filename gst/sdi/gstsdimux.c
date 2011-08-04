@@ -285,7 +285,7 @@ gst_sdi_mux_sink_event (GstPad * pad, GstEvent * event)
   }
 
   gst_object_unref (sdimux);
-  return TRUE;
+  return res;
 }
 
 static gboolean
@@ -308,5 +308,5 @@ gst_sdi_mux_src_event (GstPad * pad, GstEvent * event)
   }
 
   gst_object_unref (sdimux);
-  return TRUE;
+  return res;
 }

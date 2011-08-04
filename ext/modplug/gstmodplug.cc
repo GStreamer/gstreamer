@@ -370,15 +370,20 @@ gst_modplug_src_event (GstPad * pad, GstEvent * event)
       GstSeekType cur_type, stop_type;
       gboolean flush;
       gint64 cur, stop;
+/* FIXME timestamp is set but not used */
+#if 0
       guint64 timestamp;
+#endif
 
       if (modplug->frequency == 0) {
         GST_DEBUG_OBJECT (modplug, "no song loaded yet");
         break;
       }
 
+#if 0
       timestamp = gst_util_uint64_scale_int (modplug->offset, GST_SECOND,
           modplug->frequency);
+#endif
 
       gst_event_parse_seek (event, &rate, &format, &flags,
           &cur_type, &cur, &stop_type, &stop);

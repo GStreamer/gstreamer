@@ -530,7 +530,7 @@ gst_y4m_dec_chain (GstPad * pad, GstBuffer * buffer)
     GST_BUFFER_TIMESTAMP (buffer) =
         gst_y4m_dec_frames_to_timestamp (y4mdec, y4mdec->frame_index);
     GST_BUFFER_DURATION (buffer) =
-        gst_y4m_dec_frames_to_timestamp (y4mdec, y4mdec->frame_index) -
+        gst_y4m_dec_frames_to_timestamp (y4mdec, y4mdec->frame_index + 1) -
         GST_BUFFER_TIMESTAMP (buffer);
     if (y4mdec->interlaced && y4mdec->tff) {
       GST_BUFFER_FLAG_SET (buffer, GST_VIDEO_BUFFER_TFF);

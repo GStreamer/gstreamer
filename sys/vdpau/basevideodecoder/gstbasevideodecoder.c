@@ -266,12 +266,9 @@ static gboolean
 gst_base_video_decoder_sink_event (GstPad * pad, GstEvent * event)
 {
   GstBaseVideoDecoder *base_video_decoder;
-  GstBaseVideoDecoderClass *base_video_decoder_class;
   gboolean res = FALSE;
 
   base_video_decoder = GST_BASE_VIDEO_DECODER (gst_pad_get_parent (pad));
-  base_video_decoder_class =
-      GST_BASE_VIDEO_DECODER_GET_CLASS (base_video_decoder);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
@@ -634,7 +631,6 @@ static GstFlowReturn
 gst_base_video_decoder_chain (GstPad * pad, GstBuffer * buf)
 {
   GstBaseVideoDecoder *base_video_decoder;
-  GstBaseVideoDecoderClass *base_video_decoder_class;
   GstFlowReturn ret;
 
   GST_DEBUG ("chain %" GST_TIME_FORMAT " duration %" GST_TIME_FORMAT,
@@ -651,8 +647,6 @@ gst_base_video_decoder_chain (GstPad * pad, GstBuffer * buf)
 #endif
 
   base_video_decoder = GST_BASE_VIDEO_DECODER (gst_pad_get_parent (pad));
-  base_video_decoder_class =
-      GST_BASE_VIDEO_DECODER_GET_CLASS (base_video_decoder);
 
   GST_DEBUG_OBJECT (base_video_decoder, "chain");
 
@@ -968,15 +962,10 @@ void
 gst_base_video_decoder_skip_frame (GstBaseVideoDecoder * base_video_decoder,
     GstVideoFrame * frame)
 {
-  GstBaseVideoDecoderClass *base_video_decoder_class;
-
   GstClockTime presentation_timestamp;
   GstClockTime presentation_duration;
 
   GST_DEBUG ("skip frame");
-
-  base_video_decoder_class =
-      GST_BASE_VIDEO_DECODER_GET_CLASS (base_video_decoder);
 
   gst_base_video_decoder_calculate_timestamps (base_video_decoder, frame,
       &presentation_timestamp, &presentation_duration);
@@ -1112,11 +1101,9 @@ static void
 gst_base_video_decoder_finalize (GObject * object)
 {
   GstBaseVideoDecoder *base_video_decoder;
-  GstBaseVideoDecoderClass *base_video_decoder_class;
 
   g_return_if_fail (GST_IS_BASE_VIDEO_DECODER (object));
   base_video_decoder = GST_BASE_VIDEO_DECODER (object);
-  base_video_decoder_class = GST_BASE_VIDEO_DECODER_GET_CLASS (object);
 
   g_object_unref (base_video_decoder->input_adapter);
 

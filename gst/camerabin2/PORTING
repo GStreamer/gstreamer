@@ -26,6 +26,8 @@ property and encodebin manages to instantiate the elements for the format.
 
 * Previews
 new "post-previews" property for enabling/disabling preview image posting
+set location=NULL to skip writing image to file but to receive the preview,
+useful for scenarios that wants the image in memory.
 
 * Configuring resolution and framerate
 Camerabin2 has new GstCaps type properties for configuring capture and

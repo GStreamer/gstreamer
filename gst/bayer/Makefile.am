@@ -3,6 +3,9 @@ plugin_LTLIBRARIES = libgstbayer.la
 ORC_SOURCE=gstbayerorc
 include $(top_srcdir)/common/orc.mak
 
+# orc-generated code creates warnings
+ERROR_CFLAGS=
+
 libgstbayer_la_SOURCES = \
 	gstbayer.c \
 	gstbayer2rgb.c \

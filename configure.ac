@@ -339,6 +339,7 @@ AG_GST_CHECK_PLUGIN(h264parse)
 AG_GST_CHECK_PLUGIN(hdvparse)
 AG_GST_CHECK_PLUGIN(hls)
 AG_GST_CHECK_PLUGIN(id3tag)
+AG_GST_CHECK_PLUGIN(inter)
 AG_GST_CHECK_PLUGIN(interlace)
 AG_GST_CHECK_PLUGIN(ivfparse)
 AG_GST_CHECK_PLUGIN(jp2kdecimator)
@@ -480,16 +481,15 @@ AG_GST_CHECK_FEATURE(DIRECT3D, [Direct3D plug-in], direct3dsink, [
   save_LIBS="$LIBS"
   CFLAGS="$CFLAGS $DIRECTX_CFLAGS"
   LDFLAGS="$LDFLAGS $DIRECTX_LDFLAGS"
-  LIBS="$LIBS -ld3d -lgdi32"
+  LIBS="$LIBS -ld3d9 -lgdi32"
   AC_MSG_CHECKING(for Direct3D LDFLAGS)
   AC_LINK_IFELSE([
 #include <windows.h>
-#include <d3d.h>
+#include <d3d9.h>
 
 int main ()
 {
-  GetStockObject(0);
-  Direct3DCreate(NULL, NULL, NULL);
+  Direct3DCreate9(D3D_SDK_VERSION);
 
   return 0;
 }
@@ -502,8 +502,7 @@ int main ()
   LIBS=$save_LIBS
 
   if test "x$HAVE_DIRECT3D" = "xyes";  then
-    dnl this is much more than we want
-    DIRECT3D_LIBS="-ld3d -ldxguid -lgdi32"
+    DIRECT3D_LIBS="-lgdi32"
     AC_SUBST(DIRECT3D_LIBS)
   fi
   AC_SUBST(HAVE_DIRECT3D)
@@ -1403,6 +1402,19 @@ AG_GST_CHECK_FEATURE(OPENCV, [opencv plugins], opencv, [
   AC_SUBST(OPENCV_LIBS)
 ])
 
+dnl *** Opus ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_OPUS, true)
+AG_GST_CHECK_FEATURE(OPUS, [opus], opus, [
+  PKG_CHECK_MODULES(OPUS, opus >= 0.9.4, [
+          AC_DEFINE([HAVE_OPUS], 1, [Define if Opus >= 0.9.4 is installed])
+          HAVE_OPUS="yes"
+  ], [
+          HAVE_OPUS="no"
+  ])
+  AC_SUBST(OPUS_CFLAGS)
+  AC_SUBST(OPUS_LIBS)
+])
+
 dnl *** rsvg ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_RSVG, true)
 AG_GST_CHECK_FEATURE(RSVG, [rsvg decoder], rsvg, [
@@ -1605,7 +1617,9 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_WININET, true)
 AG_GST_CHECK_FEATURE(WININET, [Windows internet library], wininet, [
   AC_MSG_CHECKING([Checking for windows internet support])
   AC_CHECK_HEADERS([windows.h wininet.h],
-      [HAVE_WININET="yes"], [HAVE_WININET="no"])
+      [HAVE_WININET="yes"], [HAVE_WININET="no"],
+      [AC_INCLUDES_DEFAULT
+#include <windows.h>])
 ])
 
 dnl *** acm ***
@@ -1766,6 +1780,7 @@ AM_CONDITIONAL(USE_NEON, false)
 AM_CONDITIONAL(USE_OFA, false)
 AM_CONDITIONAL(USE_OPENAL, false)
 AM_CONDITIONAL(USE_OPENCV, false)
+AM_CONDITIONAL(USE_OPUS, false)
 AM_CONDITIONAL(USE_RSVG, false)
 AM_CONDITIONAL(USE_TIMIDITY, false)
 AM_CONDITIONAL(USE_WILDMIDI, false)
@@ -1890,6 +1905,7 @@ gst/h264parse/Makefile
 gst/hdvparse/Makefile
 gst/hls/Makefile
 gst/id3tag/Makefile
+gst/inter/Makefile
 gst/interlace/Makefile
 gst/ivfparse/Makefile
 gst/jp2kdecimator/Makefile
@@ -1972,6 +1988,7 @@ tests/examples/camerabin2/Makefile
 tests/examples/directfb/Makefile
 tests/examples/mxf/Makefile
 tests/examples/scaletempo/Makefile
+tests/examples/opencv/Makefile
 tests/icles/Makefile
 ext/voamrwbenc/Makefile
 ext/voaacenc/Makefile
@@ -2009,6 +2026,7 @@ ext/neon/Makefile
 ext/ofa/Makefile
 ext/openal/Makefile
 ext/opencv/Makefile
+ext/opus/Makefile
 ext/rsvg/Makefile
 ext/resindvd/Makefile
 ext/rtmp/Makefile

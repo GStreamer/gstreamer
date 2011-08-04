@@ -16,7 +16,12 @@ libgstopencv_la_SOURCES = gstopencv.c \
 			gstfacedetect.c \
 			gstpyramidsegment.c \
 			gsttemplatematch.c \
-			gsttextoverlay.c
+			gsttextoverlay.c \
+			gstmotioncells.c \
+			motioncells_wrapper.cpp \
+			MotionCells.cpp
+
+libgstopencv_la_CXXFLAGS = $(GST_CXXFLAGS) $(OPENCV_CFLAGS)
 
 # flags used to compile this facedetect
 # add other _CFLAGS and _LIBS as needed
@@ -46,4 +51,7 @@ noinst_HEADERS = gstopencvvideofilter.h gstopencvutils.h \
 		gstfacedetect.h \
 		gstpyramidsegment.h \
 		gsttemplatematch.h \
-		gsttextoverlay.h
+		gsttextoverlay.h \
+		gstmotioncells.h \
+		motioncells_wrapper.h \
+		MotionCells.h

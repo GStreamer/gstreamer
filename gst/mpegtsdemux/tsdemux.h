@@ -70,6 +70,7 @@ struct _GstTSDemux
   MpegTSBaseProgram *program;	/* Current program */
   guint	current_program_number;
   gboolean need_newsegment;
+  /* Downstream segment */
   GstSegment segment;
   GstClockTime duration;	/* Total duration */
 

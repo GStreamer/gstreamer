@@ -23,7 +23,7 @@
 #ifndef GST_ID3_MUX_H
 #define GST_ID3_MUX_H
 
-#include "gsttagmux.h"
+#include <gst/tag/gsttagmux.h>
 #include "id3tag.h"
 
 G_BEGIN_DECLS

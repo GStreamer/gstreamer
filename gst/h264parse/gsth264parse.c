@@ -1134,11 +1134,11 @@ gst_h264_parse_make_codec_data (GstH264Parse * h264parse)
       num_sps++;
       /* size bytes also count */
       sps_size += GST_BUFFER_SIZE (nal) - 4 + 2;
-      if (GST_BUFFER_SIZE (nal) >= 7) {
+      if (GST_BUFFER_SIZE (nal) >= 8) {
         found = TRUE;
-        profile_idc = (GST_BUFFER_DATA (nal))[4];
-        profile_comp = (GST_BUFFER_DATA (nal))[5];
-        level_idc = (GST_BUFFER_DATA (nal))[6];
+        profile_idc = (GST_BUFFER_DATA (nal))[5];
+        profile_comp = (GST_BUFFER_DATA (nal))[6];
+        level_idc = (GST_BUFFER_DATA (nal))[7];
       }
     }
   }
@@ -1313,16 +1313,18 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
     alignment = "au";
   } else {
     if (h264parse->packetized) {
-      /* if packetized input, take upstream alignment if validly provided,
-       * otherwise assume au aligned ... */
-      alignment = gst_structure_get_string (structure, "alignment");
-      if (!alignment || (alignment &&
-              strcmp (alignment, "au") != 0 &&
-              strcmp (alignment, "nal") != 0)) {
-        if (h264parse->split_packetized)
-          alignment = "nal";
-        else
+      if (h264parse->split_packetized)
+        alignment = "nal";
+      else {
+        /* if packetized input is not split,
+         * take upstream alignment if validly provided,
+         * otherwise assume au aligned ... */
+        alignment = gst_structure_get_string (structure, "alignment");
+        if (!alignment || (alignment &&
+                strcmp (alignment, "au") != 0 &&
+                strcmp (alignment, "nal") != 0)) {
           alignment = "au";
+        }
       }
     } else {
       alignment = "nal";

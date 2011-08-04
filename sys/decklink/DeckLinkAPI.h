@@ -1,5 +1,5 @@
 /* -LICENSE-START-
-** Copyright (c) 2009 Blackmagic Design
+** Copyright (c) 2011 Blackmagic Design
 **
 ** Permission is hereby granted, free of charge, to any person or organization
 ** obtaining a copy of the software and accompanying documentation covered by
@@ -70,7 +70,7 @@ typedef uint32_t BMDTimecodeUserBits;
 #define IID_IDeckLinkKeyer                               /* 89AFCAF5-65F8-421E-98F7-96FE5F5BFBA3 */ (REFIID){0x89,0xAF,0xCA,0xF5,0x65,0xF8,0x42,0x1E,0x98,0xF7,0x96,0xFE,0x5F,0x5B,0xFB,0xA3}
 #define IID_IDeckLinkVideoConversion                     /* 3BBCB8A2-DA2C-42D9-B5D8-88083644E99A */ (REFIID){0x3B,0xBC,0xB8,0xA2,0xDA,0x2C,0x42,0xD9,0xB5,0xD8,0x88,0x08,0x36,0x44,0xE9,0x9A}
 #define IID_IDeckLinkDeckControlStatusCallback           /* E5F693C1-4283-4716-B18F-C1431521955B */ (REFIID){0xE5,0xF6,0x93,0xC1,0x42,0x83,0x47,0x16,0xB1,0x8F,0xC1,0x43,0x15,0x21,0x95,0x5B}
-#define IID_IDeckLinkDeckControl                         /* A4D81043-0619-42B7-8ED6-602D29041DF7 */ (REFIID){0xA4,0xD8,0x10,0x43,0x06,0x19,0x42,0xB7,0x8E,0xD6,0x60,0x2D,0x29,0x04,0x1D,0xF7}
+#define IID_IDeckLinkDeckControl                         /* 522A9E39-0F3C-4742-94EE-D80DE335DA1D */ (REFIID){0x52,0x2A,0x9E,0x39,0x0F,0x3C,0x47,0x42,0x94,0xEE,0xD8,0x0D,0xE3,0x35,0xDA,0x1D}
 
 
 /* Enum BMDDisplayMode - Video display modes */
@@ -264,7 +264,9 @@ enum _BMDDisplayModeSupport {
 typedef uint32_t BMDTimecodeFormat;
 enum _BMDTimecodeFormat {
     bmdTimecodeRP188                                   = /* 'rp18' */ 0x72703138,
+    bmdTimecodeRP188Field2                             = /* 'rp12' */ 0x72703132,
     bmdTimecodeVITC                                    = /* 'vitc' */ 0x76697463,
+    bmdTimecodeVITCField2                              = /* 'vit2' */ 0x76697432,
     bmdTimecodeSerial                                  = /* 'seri' */ 0x73657269
 };
 
@@ -367,10 +369,23 @@ enum _BMDVideo3DPackingFormat {
 };
 
 
+/* Enum BMDIdleVideoOutputOperation - Video output operation when not playing video */
+
+typedef uint32_t BMDIdleVideoOutputOperation;
+enum _BMDIdleVideoOutputOperation {
+    bmdIdleVideoOutputBlack                            = /* 'blac' */ 0x626C6163,
+    bmdIdleVideoOutputLastFrame                        = /* 'lafa' */ 0x6C616661
+};
+
+
 /* Enum BMDDeckLinkConfigurationID - DeckLink Configuration ID */
 
 typedef uint32_t BMDDeckLinkConfigurationID;
 enum _BMDDeckLinkConfigurationID {
+
+    /* Serial port Flags */
+
+    bmdDeckLinkConfigSwapSerialRxTx                    = /* 'ssrt' */ 0x73737274,
 
     /* Video Input/Output Flags */
 
@@ -379,6 +394,7 @@ enum _BMDDeckLinkConfigurationID {
     /* Video Input/Output Integers */
 
     bmdDeckLinkConfigHDMI3DPackingFormat               = /* '3dpf' */ 0x33647066,
+    bmdDeckLinkConfigBypass                            = /* 'byps' */ 0x62797073,
 
     /* Audio Input/Output Flags */
 
@@ -399,6 +415,17 @@ enum _BMDDeckLinkConfigurationID {
     bmdDeckLinkConfigVideoOutputConversionMode         = /* 'vocm' */ 0x766F636D,
     bmdDeckLinkConfigAnalogVideoOutputFlags            = /* 'avof' */ 0x61766F66,
     bmdDeckLinkConfigReferenceInputTimingOffset        = /* 'glot' */ 0x676C6F74,
+    bmdDeckLinkConfigVideoOutputIdleOperation          = /* 'voio' */ 0x766F696F,
+
+    /* Video Output Floats */
+
+    bmdDeckLinkConfigVideoOutputComponentLumaGain      = /* 'oclg' */ 0x6F636C67,
+    bmdDeckLinkConfigVideoOutputComponentChromaBlueGain = /* 'occb' */ 0x6F636362,
+    bmdDeckLinkConfigVideoOutputComponentChromaRedGain = /* 'occr' */ 0x6F636372,
+    bmdDeckLinkConfigVideoOutputCompositeLumaGain      = /* 'oilg' */ 0x6F696C67,
+    bmdDeckLinkConfigVideoOutputCompositeChromaGain    = /* 'oicg' */ 0x6F696367,
+    bmdDeckLinkConfigVideoOutputSVideoLumaGain         = /* 'oslg' */ 0x6F736C67,
+    bmdDeckLinkConfigVideoOutputSVideoChromaGain       = /* 'oscg' */ 0x6F736367,
 
     /* Video Input Integers */
 
@@ -409,6 +436,16 @@ enum _BMDDeckLinkConfigurationID {
     bmdDeckLinkConfigVANCSourceLine1Mapping            = /* 'vsl1' */ 0x76736C31,
     bmdDeckLinkConfigVANCSourceLine2Mapping            = /* 'vsl2' */ 0x76736C32,
     bmdDeckLinkConfigVANCSourceLine3Mapping            = /* 'vsl3' */ 0x76736C33,
+
+    /* Video Input Floats */
+
+    bmdDeckLinkConfigVideoInputComponentLumaGain       = /* 'iclg' */ 0x69636C67,
+    bmdDeckLinkConfigVideoInputComponentChromaBlueGain = /* 'iccb' */ 0x69636362,
+    bmdDeckLinkConfigVideoInputComponentChromaRedGain  = /* 'iccr' */ 0x69636372,
+    bmdDeckLinkConfigVideoInputCompositeLumaGain       = /* 'iilg' */ 0x69696C67,
+    bmdDeckLinkConfigVideoInputCompositeChromaGain     = /* 'iicg' */ 0x69696367,
+    bmdDeckLinkConfigVideoInputSVideoLumaGain          = /* 'islg' */ 0x69736C67,
+    bmdDeckLinkConfigVideoInputSVideoChromaGain        = /* 'iscg' */ 0x69736367,
 
     /* Audio Input Integers */
 
@@ -449,6 +486,10 @@ enum _BMDDeckLinkAttributeID {
     BMDDeckLinkSupportsInputFormatDetection            = /* 'infd' */ 0x696E6664,
     BMDDeckLinkHasReferenceInput                       = /* 'hrin' */ 0x6872696E,
     BMDDeckLinkHasSerialPort                           = /* 'hspt' */ 0x68737074,
+    BMDDeckLinkHasAnalogVideoOutputGain                = /* 'avog' */ 0x61766F67,
+    BMDDeckLinkCanOnlyAdjustOverallVideoOutputGain     = /* 'ovog' */ 0x6F766F67,
+    BMDDeckLinkHasVideoInputAntiAliasingFilter         = /* 'aafl' */ 0x6161666C,
+    BMDDeckLinkHasBypass                               = /* 'byps' */ 0x62797073,
 
     /* Integers */
 
@@ -457,6 +498,13 @@ enum _BMDDeckLinkAttributeID {
     BMDDeckLinkSubDeviceIndex                          = /* 'subi' */ 0x73756269,
     BMDDeckLinkVideoOutputConnections                  = /* 'vocn' */ 0x766F636E,
     BMDDeckLinkVideoInputConnections                   = /* 'vicn' */ 0x7669636E,
+
+    /* Floats */
+
+    BMDDeckLinkVideoInputGainMinimum                   = /* 'vigm' */ 0x7669676D,
+    BMDDeckLinkVideoInputGainMaximum                   = /* 'vigx' */ 0x76696778,
+    BMDDeckLinkVideoOutputGainMinimum                  = /* 'vogm' */ 0x766F676D,
+    BMDDeckLinkVideoOutputGainMaximum                  = /* 'vogx' */ 0x766F6778,
 
     /* Strings */
 
@@ -566,6 +614,8 @@ enum _BMDDeckControlError {
     bmdDeckControlNoTapeInDeckError                    = /* 'nter' */ 0x6E746572,
     bmdDeckControlNoVideoFromCardError                 = /* 'nvfc' */ 0x6E766663,
     bmdDeckControlNoCommunicationError                 = /* 'ncom' */ 0x6E636F6D,
+    bmdDeckControlBufferTooSmallError                  = /* 'btsm' */ 0x6274736D,
+    bmdDeckControlBadChecksumError                     = /* 'chks' */ 0x63686B73,
     bmdDeckControlUnknownError                         = /* 'uner' */ 0x756E6572
 };
 
@@ -1046,6 +1096,7 @@ public:
     virtual HRESULT Close (/* in */ bool standbyOn) = 0;
     virtual HRESULT GetCurrentState (/* out */ BMDDeckControlMode *mode, /* out */ BMDDeckControlVTRControlState *vtrControlState, /* out */ BMDDeckControlStatusFlags *flags) = 0;
     virtual HRESULT SetStandby (/* in */ bool standbyOn) = 0;
+    virtual HRESULT SendCommand (/* in */ uint8_t *inBuffer, /* in */ uint32_t inBufferSize, /* out */ uint8_t *outBuffer, /* out */ uint32_t *outDataSize, /* in */ uint32_t outBufferSize, /* out */ BMDDeckControlError *error) = 0;
     virtual HRESULT Play (/* out */ BMDDeckControlError *error) = 0;
     virtual HRESULT Stop (/* out */ BMDDeckControlError *error) = 0;
     virtual HRESULT TogglePlayStop (/* out */ BMDDeckControlError *error) = 0;
@@ -1085,6 +1136,7 @@ protected:
 extern "C" {
 
     IDeckLinkIterator* CreateDeckLinkIteratorInstance (void);
+    IDeckLinkAPIInformation* CreateDeckLinkAPIInformationInstance (void);
     IDeckLinkGLScreenPreviewHelper* CreateOpenGLScreenPreviewHelper (void);
     IDeckLinkVideoConversion* CreateVideoConversionInstance (void);
 

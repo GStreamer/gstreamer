@@ -34,7 +34,7 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
   if (!gst_wrapper_camera_bin_src_plugin_init (plugin))
     return FALSE;
-  if (!gst_camera_bin_plugin_init (plugin))
+  if (!gst_camera_bin2_plugin_init (plugin))
     return FALSE;
 
   return TRUE;

@@ -507,6 +507,8 @@ gst_h264_parse_check_valid_frame (GstBaseParse * parse,
     if (sc_pos == -1) {
       /* SC not found, need more data */
       sc_pos = GST_BUFFER_SIZE (buffer) - 3;
+      /* avoid going < 0 later on */
+      nal_pos = next_sc_pos = sc_pos;
       goto more;
     }
 
@@ -950,8 +952,12 @@ gst_h264_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
   gst_structure_get_fraction (str, "framerate", &h264parse->fps_num,
       &h264parse->fps_den);
 
+  /* get upstream format and align from caps */
+  gst_h264_parse_format_from_caps (caps, &format, &align);
+
   /* packetized video has a codec_data */
-  if ((value = gst_structure_get_value (str, "codec_data"))) {
+  if (format != GST_H264_PARSE_FORMAT_BYTE &&
+      (value = gst_structure_get_value (str, "codec_data"))) {
     guint8 *data;
     guint num_sps, num_pps, profile, len;
     gint i;
@@ -1011,41 +1017,41 @@ gst_h264_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
     }
 
     h264parse->codec_data = gst_buffer_ref (codec_data);
+
+    /* if upstream sets codec_data without setting stream-format and alignment, we
+     * assume stream-format=avc,alignment=au */
+    if (format == GST_H264_PARSE_FORMAT_NONE) {
+      format = GST_H264_PARSE_FORMAT_AVC;
+      align = GST_H264_PARSE_ALIGN_AU;
+    }
   } else {
     GST_DEBUG_OBJECT (h264parse, "have bytestream h264");
     /* nothing to pre-process */
     h264parse->packetized = FALSE;
     /* we have 4 sync bytes */
     h264parse->nal_length_size = 4;
+
+    if (format == GST_H264_PARSE_FORMAT_NONE) {
+      format = GST_H264_PARSE_FORMAT_BYTE;
+      align = GST_H264_PARSE_ALIGN_AU;
+    }
   }
 
   /* negotiate with downstream, sets ->format and ->align */
   gst_h264_parse_negotiate (h264parse);
-
-  /* get upstream format and align from caps */
-  gst_h264_parse_format_from_caps (caps, &format, &align);
-
-  /* if upstream sets codec_data without setting stream-format and alignment, we
-   * assume stream-format=avc,alignment=au */
-  if (format == GST_H264_PARSE_FORMAT_NONE) {
-    if (codec_data == NULL)
-      goto unknown_input_format;
-
-    format = GST_H264_PARSE_FORMAT_AVC;
-    align = GST_H264_PARSE_ALIGN_AU;
-  }
 
   if (format == h264parse->format && align == h264parse->align) {
     gst_base_parse_set_passthrough (parse, TRUE);
 
     /* we did parse codec-data and might supplement src caps */
     gst_h264_parse_update_src_caps (h264parse, caps);
-  } else if (format == GST_H264_PARSE_FORMAT_AVC &&
-      h264parse->format == GST_H264_PARSE_FORMAT_BYTE) {
+  } else if (format == GST_H264_PARSE_FORMAT_AVC) {
+    /* if input != output, and input is avc, must split before anything else */
     /* arrange to insert codec-data in-stream if needed.
      * src caps are only arranged for later on */
     h264parse->push_codec = TRUE;
     h264parse->split_packetized = TRUE;
+    h264parse->packetized = TRUE;
   }
 
   return TRUE;
@@ -1064,11 +1070,6 @@ wrong_version:
 wrong_type:
   {
     GST_DEBUG_OBJECT (h264parse, "wrong codec-data type");
-    goto refuse_caps;
-  }
-unknown_input_format:
-  {
-    GST_DEBUG_OBJECT (h264parse, "unknown stream-format and no codec_data");
     goto refuse_caps;
   }
 refuse_caps:

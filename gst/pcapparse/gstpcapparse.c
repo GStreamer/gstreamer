@@ -20,8 +20,8 @@
 /**
  * SECTION:element-pcapparse
  *
- * Extracts payloads from Ethernet-encapsulated IP packets, currently limited
- * to UDP. Use #GstPcapParse:src-ip, #GstPcapParse:dst-ip,
+ * Extracts payloads from Ethernet-encapsulated IP packets.
+ * Use #GstPcapParse:src-ip, #GstPcapParse:dst-ip,
  * #GstPcapParse:src-port and #GstPcapParse:dst-port to restrict which packets
  * should be included.
  *
@@ -64,6 +64,7 @@ enum
   PROP_SRC_PORT,
   PROP_DST_PORT,
   PROP_CAPS,
+  PROP_TS_OFFSET,
   PROP_LAST
 };
 
@@ -143,6 +144,11 @@ gst_pcap_parse_class_init (GstPcapParseClass * klass)
           "The caps of the source pad", GST_TYPE_CAPS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_TS_OFFSET,
+      g_param_spec_int64 ("ts-offset", "Timestamp Offset",
+          "Relative timestamp offset (ns) to apply (-1 = use absolute packet time)",
+          -1, G_MAXINT64, -1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   GST_DEBUG_CATEGORY_INIT (gst_pcap_parse_debug, "pcapparse", 0, "pcap parser");
 }
 
@@ -165,6 +171,7 @@ gst_pcap_parse_init (GstPcapParse * self, GstPcapParseClass * gclass)
   self->dst_ip = -1;
   self->src_port = -1;
   self->dst_port = -1;
+  self->offset = -1;
 
   self->adapter = gst_adapter_new ();
 
@@ -234,6 +241,10 @@ gst_pcap_parse_get_property (GObject * object, guint prop_id,
       gst_value_set_caps (value, self->caps);
       break;
 
+    case PROP_TS_OFFSET:
+      g_value_set_int64 (value, self->offset);
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -283,6 +294,11 @@ gst_pcap_parse_set_property (GObject * object, guint prop_id,
       gst_pad_set_caps (self->src_pad, new_caps);
       break;
     }
+
+    case PROP_TS_OFFSET:
+      self->offset = g_value_get_int64 (value);
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -297,6 +313,7 @@ gst_pcap_parse_reset (GstPcapParse * self)
   self->cur_packet_size = -1;
   self->buffer_offset = 0;
   self->cur_ts = GST_CLOCK_TIME_NONE;
+  self->base_ts = GST_CLOCK_TIME_NONE;
   self->newsegment_sent = FALSE;
 
   gst_adapter_clear (self->adapter);
@@ -324,6 +341,8 @@ gst_pcap_parse_read_uint32 (GstPcapParse * self, const guint8 * p)
 #define UDP_HEADER_LEN     8
 
 #define IP_PROTO_UDP      17
+#define IP_PROTO_TCP      6
+
 
 static gboolean
 gst_pcap_parse_scan_frame (GstPcapParse * self,
@@ -331,16 +350,16 @@ gst_pcap_parse_scan_frame (GstPcapParse * self,
     gint buf_size, const guint8 ** payload, gint * payload_size)
 {
   const guint8 *buf_ip = 0;
-  const guint8 *buf_udp;
+  const guint8 *buf_proto;
   guint16 eth_type;
   guint8 b;
   guint8 ip_header_size;
   guint8 ip_protocol;
   guint32 ip_src_addr;
   guint32 ip_dst_addr;
-  guint16 udp_src_port;
-  guint16 udp_dst_port;
-  guint16 udp_len;
+  guint16 src_port;
+  guint16 dst_port;
+  guint16 len;
 
   switch (self->linktype) {
     case DLT_ETHER:
@@ -348,23 +367,21 @@ gst_pcap_parse_scan_frame (GstPcapParse * self,
         return FALSE;
 
       eth_type = GUINT16_FROM_BE (*((guint16 *) (buf + 12)));
-      if (eth_type != 0x800)
-        return FALSE;
-
       buf_ip = buf + ETH_HEADER_LEN;
       break;
     case DLT_SLL:
       if (buf_size < SLL_HEADER_LEN + IP_HEADER_MIN_LEN + UDP_HEADER_LEN)
         return FALSE;
 
-      eth_type = GUINT16_FROM_BE (*((guint16 *) (buf + 2)));
-
-      if (eth_type != 1)
-        return FALSE;
-
+      eth_type = GUINT16_FROM_BE (*((guint16 *) (buf + 14)));
       buf_ip = buf + SLL_HEADER_LEN;
       break;
+    default:
+      return FALSE;
   }
+
+  if (eth_type != 0x800)
+    return FALSE;
 
   b = *buf_ip;
   if (((b >> 4) & 0x0f) != 4)
@@ -375,33 +392,52 @@ gst_pcap_parse_scan_frame (GstPcapParse * self,
     return FALSE;
 
   ip_protocol = *(buf_ip + 9);
-  if (ip_protocol != IP_PROTO_UDP)
+  GST_LOG_OBJECT (self, "ip proto %d", (gint) ip_protocol);
+
+  if (ip_protocol != IP_PROTO_UDP && ip_protocol != IP_PROTO_TCP)
     return FALSE;
 
+  /* ip info */
   ip_src_addr = *((guint32 *) (buf_ip + 12));
+  ip_dst_addr = *((guint32 *) (buf_ip + 16));
+  buf_proto = buf_ip + ip_header_size;
+
+  /* ok for tcp and udp */
+  src_port = GUINT16_FROM_BE (*((guint16 *) (buf_proto + 0)));
+  dst_port = GUINT16_FROM_BE (*((guint16 *) (buf_proto + 2)));
+
+  /* extract some params and data according to protocol */
+  if (ip_protocol == IP_PROTO_UDP) {
+    len = GUINT16_FROM_BE (*((guint16 *) (buf_proto + 4)));
+    if (len < UDP_HEADER_LEN || buf_proto + len > buf + buf_size)
+      return FALSE;
+
+    *payload = buf_proto + UDP_HEADER_LEN;
+    *payload_size = len - UDP_HEADER_LEN;
+  } else {
+    if (buf_proto + 12 >= buf + buf_size)
+      return FALSE;
+    len = (buf_proto[12] >> 4) * 4;
+    if (buf_proto + len > buf + buf_size)
+      return FALSE;
+
+    /* all remaining data following tcp header is payload */
+    *payload = buf_proto + len;
+    *payload_size = self->cur_packet_size - (buf_proto - buf) - len;
+  }
+
+  /* but still filter as configured */
   if (self->src_ip >= 0 && ip_src_addr != self->src_ip)
     return FALSE;
 
-  ip_dst_addr = *((guint32 *) (buf_ip + 16));
   if (self->dst_ip >= 0 && ip_dst_addr != self->dst_ip)
     return FALSE;
 
-  buf_udp = buf_ip + ip_header_size;
-
-  udp_src_port = GUINT16_FROM_BE (*((guint16 *) (buf_udp + 0)));
-  if (self->src_port >= 0 && udp_src_port != self->src_port)
+  if (self->src_port >= 0 && src_port != self->src_port)
     return FALSE;
 
-  udp_dst_port = GUINT16_FROM_BE (*((guint16 *) (buf_udp + 2)));
-  if (self->dst_port >= 0 && udp_dst_port != self->dst_port)
+  if (self->dst_port >= 0 && dst_port != self->dst_port)
     return FALSE;
-
-  udp_len = GUINT16_FROM_BE (*((guint16 *) (buf_udp + 4)));
-  if (udp_len < UDP_HEADER_LEN || buf_udp + udp_len > buf + buf_size)
-    return FALSE;
-
-  *payload = buf_udp + UDP_HEADER_LEN;
-  *payload_size = udp_len - UDP_HEADER_LEN;
 
   return TRUE;
 }
@@ -431,6 +467,9 @@ gst_pcap_parse_chain (GstPad * pad, GstBuffer * buffer)
 
           data = gst_adapter_peek (self->adapter, self->cur_packet_size);
 
+          GST_LOG_OBJECT (self, "examining packet size %" G_GINT64_FORMAT,
+              self->cur_packet_size);
+
           if (gst_pcap_parse_scan_frame (self, data, self->cur_packet_size,
                   &payload_data, &payload_size)) {
             GstBuffer *out_buf;
@@ -439,6 +478,15 @@ gst_pcap_parse_chain (GstPad * pad, GstBuffer * buffer)
                 self->buffer_offset, payload_size, self->caps, &out_buf);
 
             if (ret == GST_FLOW_OK) {
+
+              if (GST_CLOCK_TIME_IS_VALID (self->cur_ts)) {
+                if (!GST_CLOCK_TIME_IS_VALID (self->base_ts))
+                  self->base_ts = self->cur_ts;
+                if (self->offset >= 0) {
+                  self->cur_ts -= self->base_ts;
+                  self->cur_ts += self->offset;
+                }
+              }
 
               memcpy (GST_BUFFER_DATA (out_buf), payload_data, payload_size);
               GST_BUFFER_TIMESTAMP (out_buf) = self->cur_ts;
@@ -466,7 +514,6 @@ gst_pcap_parse_chain (GstPad * pad, GstBuffer * buffer)
         guint32 ts_sec;
         guint32 ts_usec;
         guint32 incl_len;
-        guint32 orig_len;
 
         if (avail < 16)
           break;
@@ -476,7 +523,7 @@ gst_pcap_parse_chain (GstPad * pad, GstBuffer * buffer)
         ts_sec = gst_pcap_parse_read_uint32 (self, data + 0);
         ts_usec = gst_pcap_parse_read_uint32 (self, data + 4);
         incl_len = gst_pcap_parse_read_uint32 (self, data + 8);
-        orig_len = gst_pcap_parse_read_uint32 (self, data + 12);
+        /* orig_len = gst_pcap_parse_read_uint32 (self, data + 12); */
 
         gst_adapter_flush (self->adapter, 16);
 
@@ -525,6 +572,7 @@ gst_pcap_parse_chain (GstPad * pad, GstBuffer * buffer)
         goto out;
       }
 
+      GST_DEBUG_OBJECT (self, "linktype %u", linktype);
       self->linktype = linktype;
 
       gst_adapter_flush (self->adapter, 24);

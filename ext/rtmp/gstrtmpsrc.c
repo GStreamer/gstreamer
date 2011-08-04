@@ -98,6 +98,8 @@ _do_init (GType gtype)
   };
 
   g_type_add_interface_static (gtype, GST_TYPE_URI_HANDLER, &urihandler_info);
+
+  GST_DEBUG_CATEGORY_INIT (rtmpsrc_debug, "rtmpsrc", 0, "RTMP Source");
 }
 
 GST_BOILERPLATE_FULL (GstRTMPSrc, gst_rtmp_src, GstPushSrc, GST_TYPE_PUSH_SRC,
@@ -581,18 +583,3 @@ gst_rtmp_src_stop (GstBaseSrc * basesrc)
 
   return TRUE;
 }
-
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (rtmpsrc_debug, "rtmpsrc", 0, "RTMP Source");
-
-  return gst_element_register (plugin, "rtmpsrc", GST_RANK_PRIMARY,
-      GST_TYPE_RTMP_SRC);
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "rtmpsrc",
-    "RTMP source",
-    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);

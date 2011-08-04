@@ -71,6 +71,7 @@ struct _GstPcapParse
   gint32 src_port;
   gint32 dst_port;
   GstCaps *caps;
+  gint64 offset;
 
   /* state */
   GstAdapter * adapter;
@@ -78,6 +79,7 @@ struct _GstPcapParse
   gboolean swap_endian;
   gint64 cur_packet_size;
   GstClockTime cur_ts;
+  GstClockTime base_ts;
   GstPcapParseLinktype linktype;
 
   gboolean newsegment_sent;

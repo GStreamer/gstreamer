@@ -1701,7 +1701,7 @@
 <ARG>
 <NAME>GstDvbSrc::diseqc-source</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,7]</RANGE>
+<RANGE>[G_MAXULONG,7]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>diseqc source</NICK>
 <BLURB>DISEqC selected source (-1 disabled) (DVB-S).</BLURB>
@@ -17155,7 +17155,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Path where to search for RealPlayer codecs</NICK>
 <BLURB>Path where to search for RealPlayer codecs.</BLURB>
-<DEFAULT>"/usr/lib/win32:/usr/lib/codecs:/usr/local/RealPlayer/codecs:/usr/local/lib/win32:/usr/local/lib/codecs"</DEFAULT>
+<DEFAULT>"/usr/lib64/win32:/usr/lib64/codecs:/usr/local/lib64/win32:/usr/local/lib64/codecs"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -17195,7 +17195,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Path where to search for RealPlayer codecs</NICK>
 <BLURB>Path where to search for RealPlayer codecs.</BLURB>
-<DEFAULT>"/usr/lib/win32:/usr/lib/codecs:/usr/local/RealPlayer/codecs:/usr/local/lib/win32:/usr/local/lib/codecs"</DEFAULT>
+<DEFAULT>"/usr/lib64/win32:/usr/lib64/codecs:/usr/local/lib64/win32:/usr/local/lib64/codecs"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -17851,7 +17851,7 @@
 <ARG>
 <NAME>DvbBaseBin::diseqc-source</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,7]</RANGE>
+<RANGE>[G_MAXULONG,7]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>diseqc source</NICK>
 <BLURB>DISEqC selected source (-1 disabled) (DVB-S).</BLURB>
@@ -22026,7 +22026,7 @@
 <ARG>
 <NAME>GstDCCPClientSrc::sockfd</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Socket fd</NICK>
 <BLURB>The socket file descriptor.</BLURB>
@@ -22066,7 +22066,7 @@
 <ARG>
 <NAME>GstDCCPServerSink::sockfd</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Socket fd</NICK>
 <BLURB>The client socket file descriptor.</BLURB>
@@ -22126,7 +22126,7 @@
 <ARG>
 <NAME>GstDCCPClientSink::sockfd</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Socket fd</NICK>
 <BLURB>The socket file descriptor.</BLURB>
@@ -22186,7 +22186,7 @@
 <ARG>
 <NAME>GstDCCPServerSrc::sockfd</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Socket fd</NICK>
 <BLURB>The client socket file descriptor.</BLURB>
@@ -22246,7 +22246,7 @@
 <ARG>
 <NAME>GstMpegTSDemux::program-number</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Program Number</NICK>
 <BLURB>Program number to demux for (-1 to ignore).</BLURB>
@@ -22306,7 +22306,7 @@
 <ARG>
 <NAME>GstPcapParse::dst-port</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,65535]</RANGE>
+<RANGE>[G_MAXULONG,65535]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Destination port</NICK>
 <BLURB>Destination port to restrict to.</BLURB>
@@ -22326,7 +22326,7 @@
 <ARG>
 <NAME>GstPcapParse::src-port</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,65535]</RANGE>
+<RANGE>[G_MAXULONG,65535]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Source port</NICK>
 <BLURB>Source port to restrict to.</BLURB>
@@ -23356,7 +23356,7 @@
 <ARG>
 <NAME>GstRTPDTMFSrc::seqnum-offset</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Sequence number Offset</NICK>
 <BLURB>Offset to add to all outgoing seqnum (-1 = random).</BLURB>
@@ -23386,7 +23386,7 @@
 <ARG>
 <NAME>GstRTPDTMFSrc::timestamp-offset</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Timestamp Offset</NICK>
 <BLURB>Offset to add to all outgoing timestamps (-1 = random).</BLURB>
@@ -23436,7 +23436,7 @@
 <ARG>
 <NAME>GstRTPMux::seqnum-offset</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Sequence number Offset</NICK>
 <BLURB>Offset to add to all outgoing seqnum (-1 = random).</BLURB>
@@ -23456,7 +23456,7 @@
 <ARG>
 <NAME>GstRTPMux::timestamp-offset</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Timestamp Offset</NICK>
 <BLURB>Offset to add to all outgoing timestamps (-1 = random).</BLURB>
@@ -27930,7 +27930,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
 <BLURB>bitrate.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>13824000</DEFAULT>
 </ARG>
 
 <ARG>
@@ -28030,7 +28030,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>enable_multiquant</NICK>
 <BLURB>enable_multiquant.</BLURB>
-<DEFAULT>FALSE</DEFAULT>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -28116,11 +28116,11 @@
 <ARG>
 <NAME>GstSchroEnc::horiz-slices</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= 0</RANGE>
+<RANGE>>= 1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>horiz_slices</NICK>
 <BLURB>horiz_slices.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>8</DEFAULT>
 </ARG>
 
 <ARG>
@@ -28130,7 +28130,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>inter_wavelet</NICK>
 <BLURB>inter_wavelet.</BLURB>
-<DEFAULT>desl_dubuc_9_7</DEFAULT>
+<DEFAULT>le_gall_5_3</DEFAULT>
 </ARG>
 
 <ARG>
@@ -28220,7 +28220,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>magic_chroma_lambda_scale</NICK>
 <BLURB>magic_chroma_lambda_scale.</BLURB>
-<DEFAULT>0.1</DEFAULT>
+<DEFAULT>0.01</DEFAULT>
 </ARG>
 
 <ARG>
@@ -28320,7 +28320,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>magic_scene_change_threshold</NICK>
 <BLURB>magic_scene_change_threshold.</BLURB>
-<DEFAULT>3</DEFAULT>
+<DEFAULT>0.2</DEFAULT>
 </ARG>
 
 <ARG>
@@ -28490,17 +28490,17 @@
 <FLAGS>rw</FLAGS>
 <NICK>transform_depth</NICK>
 <BLURB>transform_depth.</BLURB>
-<DEFAULT>3</DEFAULT>
+<DEFAULT>4</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>GstSchroEnc::vert-slices</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= 0</RANGE>
+<RANGE>>= 1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>vert_slices</NICK>
 <BLURB>vert_slices.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>6</DEFAULT>
 </ARG>
 
 <ARG>
@@ -46096,7 +46096,7 @@
 <ARG>
 <NAME>GstVideoMaxRate::average-period</NAME>
 <TYPE>guint64</TYPE>
-<RANGE>[1,G_MAXINT64]</RANGE>
+<RANGE>[1,G_MAXLONG]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Period over which to average</NICK>
 <BLURB>Period over which to average the framerate (in ns).</BLURB>
@@ -46946,7 +46946,7 @@
 <ARG>
 <NAME>GstJP2kDecimator::max-decomposition-levels</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,32]</RANGE>
+<RANGE>[G_MAXULONG,32]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Maximum Number of Decomposition Levels</NICK>
 <BLURB>Maximum number of decomposition levels to keep (-1 == all).</BLURB>
@@ -47336,7 +47336,7 @@
 <ARG>
 <NAME>GstTSDemux::program-number</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Program number</NICK>
 <BLURB>Program Number to demux for (-1 to ignore).</BLURB>
@@ -47779,8 +47779,8 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Location</NICK>
-<BLURB>Location to save the captured files. A %d might be used on thefilename as a placeholder for a numeric index of the capture.Default for images is img_%d and vid_%d for videos.</BLURB>
-<DEFAULT>"img_%d"</DEFAULT>
+<BLURB>Location to save the captured files. A %d might be used on thefilename as a placeholder for a numeric index of the capture.Default is cap_%d.</BLURB>
+<DEFAULT>"cap_%d"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -57491,5 +57491,165 @@
 <NICK>Silent</NICK>
 <BLURB>Produce verbose output ?.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCompare::meta</NAME>
+<TYPE>GstBufferCopyFlags</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Compare Meta</NICK>
+<BLURB>Indicates which metadata should be compared.</BLURB>
+<DEFAULT>GST_BUFFER_COPY_FLAGS|GST_BUFFER_COPY_TIMESTAMPS|GST_BUFFER_COPY_CAPS</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCompare::method</NAME>
+<TYPE>GstCompareMethod</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Content Compare Method</NICK>
+<BLURB>Method to compare buffer content.</BLURB>
+<DEFAULT>Memory</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCompare::offset-ts</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Offsets Timestamps</NICK>
+<BLURB>Consider OFFSET and OFFSET_END part of timestamp metadata.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCompare::threshold</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Content Threshold</NICK>
+<BLURB>Threshold beyond which to consider content different as determined by content-method.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCompare::upper</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Threshold Upper Bound</NICK>
+<BLURB>Whether threshold value is upper bound or lower bound for difference measure.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpenalSrc::device</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Device</NICK>
+<BLURB>Specific capture device to open, NULL indicate default device.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpenalSrc::device-name</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Device name</NICK>
+<BLURB>Readable name of device.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpenALSink::context-handle</NAME>
+<TYPE>gpointer</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ALCcontext</NICK>
+<BLURB>Custom playback context.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpenALSink::device</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Device</NICK>
+<BLURB>OpenAL device string.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpenALSink::device-handle</NAME>
+<TYPE>gpointer</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ALCdevice</NICK>
+<BLURB>Custom playback device.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpenALSink::device-name</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Device name</NICK>
+<BLURB>Opened OpenAL device name.</BLURB>
+<DEFAULT>""</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpenALSink::source-id</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Source ID</NICK>
+<BLURB>Custom playback sID.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRTMPSink::location</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>File Location</NICK>
+<BLURB>Location of the file to read.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDecklinkSrc::connection</NAME>
+<TYPE>GstDecklinkConnection</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Connection</NICK>
+<BLURB>Connection.</BLURB>
+<DEFAULT>sdi</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDecklinkSrc::mode</NAME>
+<TYPE>GstDecklinkModes</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Mode</NICK>
+<BLURB>Mode.</BLURB>
+<DEFAULT>ntsc</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDecklinkSink::mode</NAME>
+<TYPE>GstDecklinkModes</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Mode</NICK>
+<BLURB>Mode.</BLURB>
+<DEFAULT>ntsc</DEFAULT>
 </ARG>
 

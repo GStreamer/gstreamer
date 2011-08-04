@@ -262,6 +262,12 @@ else
 OPENCV_DIR=
 endif
 
+if USE_OPUS
+OPUS_DIR=opus
+else
+OPUS_DIR=
+endif
+
 if USE_RSVG
 RSVG_DIR=rsvg
 else
@@ -419,6 +425,7 @@ SUBDIRS=\
 	$(OFA_DIR) \
 	$(OPENAL_DIR) \
 	$(OPENCV_DIR) \
+	$(OPUS_DIR) \
 	$(RSVG_DIR) \
 	$(SCHRO_DIR) \
 	$(SDL_DIR) \
@@ -471,6 +478,7 @@ DIST_SUBDIRS = \
 	ofa \
 	openal \
 	opencv \
+	opus \
 	rsvg \
 	resindvd \
 	schroedinger \

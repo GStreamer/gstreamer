@@ -1132,7 +1132,7 @@ foreach_add_tag (const GstTagList * list, const gchar * tag, gpointer userdata)
 }
 
 GstBuffer *
-id3_mux_render_v2_tag (GstTagMux * mux, GstTagList * taglist, int version)
+id3_mux_render_v2_tag (GstTagMux * mux, const GstTagList * taglist, int version)
 {
   GstId3v2Tag tag;
   GstBuffer *buf;
@@ -1159,7 +1159,6 @@ id3_mux_render_v2_tag (GstTagMux * mux, GstTagList * taglist, int version)
 
   /* Create buffer with tag */
   buf = id3v2_tag_to_buffer (&tag);
-  gst_buffer_set_caps (buf, GST_PAD_CAPS (mux->srcpad));
   GST_LOG_OBJECT (mux, "tag size = %d bytes", GST_BUFFER_SIZE (buf));
 
   id3v2_tag_unset (&tag);
@@ -1285,7 +1284,7 @@ static const struct
 };
 
 GstBuffer *
-id3_mux_render_v1_tag (GstTagMux * mux, GstTagList * taglist)
+id3_mux_render_v1_tag (GstTagMux * mux, const GstTagList * taglist)
 {
   GstBuffer *buf = gst_buffer_new_and_alloc (ID3_V1_TAG_SIZE);
   guint8 *data = GST_BUFFER_DATA (buf);
@@ -1312,6 +1311,5 @@ id3_mux_render_v1_tag (GstTagMux * mux, GstTagList * taglist)
     return NULL;
   }
 
-  gst_buffer_set_caps (buf, GST_PAD_CAPS (mux->srcpad));
   return buf;
 }

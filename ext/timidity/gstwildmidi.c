@@ -443,7 +443,10 @@ gst_wildmidi_do_seek (GstWildmidi * wildmidi, GstEvent * event)
   GstSeekFlags flags;
   GstSeekType start_type, stop_type;
   gint64 start, stop;
-  gboolean flush, update, accurate;
+  gboolean flush, update;
+#ifdef HAVE_WILDMIDI_0_2_2
+  gboolean accurate;
+#endif
   gboolean res;
   unsigned long int sample;
   GstSegment *segment;
@@ -472,7 +475,9 @@ gst_wildmidi_do_seek (GstWildmidi * wildmidi, GstEvent * event)
     return res;
 
   flush = ((flags & GST_SEEK_FLAG_FLUSH) == GST_SEEK_FLAG_FLUSH);
+#ifdef HAVE_WILDMIDI_0_2_2
   accurate = ((flags & GST_SEEK_FLAG_ACCURATE) == GST_SEEK_FLAG_ACCURATE);
+#endif
 
   if (flush) {
     GST_DEBUG ("performing flush");

@@ -24,6 +24,7 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/video/gstbasevideoencoder.h>
+#include <gst/video/gstbasevideoutils.h>
 #include <string.h>
 
 #include <schroedinger/schro.h>
@@ -107,7 +108,8 @@ static gboolean gst_schro_enc_set_format (GstBaseVideoEncoder *
     base_video_encoder, GstVideoState * state);
 static gboolean gst_schro_enc_start (GstBaseVideoEncoder * base_video_encoder);
 static gboolean gst_schro_enc_stop (GstBaseVideoEncoder * base_video_encoder);
-static gboolean gst_schro_enc_finish (GstBaseVideoEncoder * base_video_encoder);
+static GstFlowReturn gst_schro_enc_finish (GstBaseVideoEncoder *
+    base_video_encoder);
 static GstFlowReturn gst_schro_enc_handle_frame (GstBaseVideoEncoder *
     base_video_encoder, GstVideoFrame * frame);
 static GstFlowReturn gst_schro_enc_shape_output (GstBaseVideoEncoder *
@@ -439,7 +441,7 @@ gst_schro_enc_stop (GstBaseVideoEncoder * base_video_encoder)
   return TRUE;
 }
 
-static gboolean
+static GstFlowReturn
 gst_schro_enc_finish (GstBaseVideoEncoder * base_video_encoder)
 {
   GstSchroEnc *schro_enc = GST_SCHRO_ENC (base_video_encoder);
@@ -449,7 +451,7 @@ gst_schro_enc_finish (GstBaseVideoEncoder * base_video_encoder)
   schro_encoder_end_of_stream (schro_enc->encoder);
   gst_schro_enc_process (schro_enc);
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
 static GstFlowReturn
@@ -612,7 +614,6 @@ gst_schro_enc_shape_output_ogg (GstBaseVideoEncoder * base_video_encoder,
     GstVideoFrame * frame)
 {
   GstSchroEnc *schro_enc;
-  int dpn;
   int delay;
   int dist;
   int pt;
@@ -622,8 +623,6 @@ gst_schro_enc_shape_output_ogg (GstBaseVideoEncoder * base_video_encoder,
   GstBuffer *buf = frame->src_buffer;
 
   schro_enc = GST_SCHRO_ENC (base_video_encoder);
-
-  dpn = frame->decode_frame_number;
 
   pt = frame->presentation_frame_number * 2 + schro_enc->granule_offset;
   dt = frame->decode_frame_number * 2 + schro_enc->granule_offset;

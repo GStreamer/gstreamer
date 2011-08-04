@@ -58,6 +58,12 @@ G_BEGIN_DECLS
  */
 #define GST_BASE_VIDEO_ENCODER_SRC_NAME     "src"
 
+/**
+ * GST_BASE_VIDEO_ENCODER_FLOW_DROPPED:
+ *
+ * Returned when the event/buffer should be dropped.
+ */
+#define GST_BASE_VIDEO_ENCODER_FLOW_DROPPED GST_FLOW_CUSTOM_SUCCESS_1
 
 typedef struct _GstBaseVideoEncoder GstBaseVideoEncoder;
 typedef struct _GstBaseVideoEncoderClass GstBaseVideoEncoderClass;
@@ -90,6 +96,7 @@ struct _GstBaseVideoEncoder
   gint64            max_latency;
 
   GstEvent         *force_keyunit_event;
+  GList            *current_frame_events;
 
   union {
     void *padding;
@@ -148,7 +155,8 @@ struct _GstBaseVideoEncoderClass
   GstFlowReturn (*handle_frame)       (GstBaseVideoEncoder *coder,
                                        GstVideoFrame *frame);
 
-  gboolean      (*finish)             (GstBaseVideoEncoder *coder);
+  gboolean      (*reset)              (GstBaseVideoEncoder *coder);
+  GstFlowReturn (*finish)             (GstBaseVideoEncoder *coder);
 
   GstFlowReturn (*shape_output)       (GstBaseVideoEncoder *coder,
                                        GstVideoFrame *frame);

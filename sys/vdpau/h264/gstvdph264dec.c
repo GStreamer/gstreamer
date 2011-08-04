@@ -471,8 +471,8 @@ gst_vdp_h264_dec_handle_frame (GstBaseVideoDecoder * base_video_decoder,
 
   GstH264Frame *h264_frame;
   GstH264Slice *slice;
-  GstH264Picture *pic;
-  GstH264Sequence *seq;
+  GstH264Picture *pic G_GNUC_UNUSED;
+  GstH264Sequence *seq G_GNUC_UNUSED;
 
   GstFlowReturn ret;
   GstVdpVideoBuffer *outbuf;

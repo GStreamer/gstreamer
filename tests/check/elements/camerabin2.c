@@ -164,6 +164,7 @@ gst_test_camera_src_init (GstTestCameraSrc * self,
 static GstElement *camera;
 static guint bus_source;
 static GMainLoop *main_loop;
+static gint capture_count = 0;
 guint32 test_id = 0;
 
 static GstBuffer *preview_buffer;
@@ -257,11 +258,8 @@ capture_bus_cb (GstBus * bus, GstMessage * message, gpointer data)
       break;
     default:
       st = gst_message_get_structure (message);
-      if (st && gst_structure_has_name (st, "image-captured")) {
-        gboolean ready = FALSE;
+      if (st && gst_structure_has_name (st, "image-done")) {
         GST_INFO ("image captured");
-        g_object_get (camera, "ready-for-capture", &ready, NULL);
-        fail_if (!ready, "not ready for capture");
       } else if (st && gst_structure_has_name (st,
               GST_BASE_CAMERA_SRC_PREVIEW_MESSAGE_NAME)) {
         GstBuffer *buf;
@@ -359,6 +357,7 @@ setup_wrappercamerabinsrc_videotestsrc (void)
   gst_object_unref (bus);
 
   tags_found = NULL;
+  capture_count = 0;
 
   GST_INFO ("init finished");
 }
@@ -744,14 +743,6 @@ GST_START_TEST (test_image_video_cycle)
   if (!camera)
     return;
 
-  /* set filepaths for image and videos */
-  g_object_set (camera, "mode", 1, NULL);
-  g_object_set (camera, "location", make_test_file_name (IMAGE_FILENAME, -1),
-      NULL);
-  g_object_set (camera, "mode", 2, NULL);
-  g_object_set (camera, "location", make_test_file_name (VIDEO_FILENAME, -1),
-      NULL);
-
   if (gst_element_set_state (GST_ELEMENT (camera), GST_STATE_PLAYING) ==
       GST_STATE_CHANGE_FAILURE) {
     GST_WARNING ("setting camerabin to PLAYING failed");
@@ -767,6 +758,8 @@ GST_START_TEST (test_image_video_cycle)
 
     /* take a picture */
     g_object_set (camera, "mode", 1, NULL);
+    g_object_set (camera, "location", make_test_file_name (IMAGE_FILENAME, i),
+        NULL);
     g_signal_emit_by_name (camera, "start-capture", NULL);
     g_timeout_add_seconds (3, (GSourceFunc) g_main_loop_quit, main_loop);
     g_main_loop_run (main_loop);
@@ -775,6 +768,8 @@ GST_START_TEST (test_image_video_cycle)
 
     /* now go to video */
     g_object_set (camera, "mode", 2, NULL);
+    g_object_set (camera, "location", make_test_file_name (VIDEO_FILENAME, i),
+        NULL);
     g_signal_emit_by_name (camera, "start-capture", NULL);
     g_timeout_add_seconds (VIDEO_DURATION, (GSourceFunc) g_main_loop_quit,
         main_loop);
@@ -1233,6 +1228,103 @@ GST_START_TEST (test_video_custom_filter)
 
 GST_END_TEST;
 
+#define LOCATION_SWITCHING_FILENAMES_COUNT 5
+
+static gboolean
+image_location_switch_do_capture (gpointer data)
+{
+  gchar **filenames = data;
+  if (capture_count >= LOCATION_SWITCHING_FILENAMES_COUNT) {
+    g_main_loop_quit (main_loop);
+  }
+
+  g_object_set (camera, "location", filenames[capture_count], NULL);
+  g_signal_emit_by_name (camera, "start-capture", NULL);
+  capture_count++;
+  return FALSE;
+}
+
+static void
+image_location_switch_readyforcapture (GObject * obj, GParamSpec * pspec,
+    gpointer user_data)
+{
+  gboolean ready;
+
+  g_object_get (obj, "ready-for-capture", &ready, NULL);
+  if (ready) {
+    g_idle_add (image_location_switch_do_capture, user_data);
+  }
+};
+
+/*
+ * Tests that setting the location and then doing an image
+ * capture will set this capture resulting filename to the
+ * correct location.
+ *
+ * There was a bug in which setting the location, issuing a capture 
+ * and then setting a new location would cause this capture to have
+ * the location set after this capture. This test should prevent it
+ * from happening again.
+ */
+GST_START_TEST (test_image_location_switching)
+{
+  gchar *filenames[LOCATION_SWITCHING_FILENAMES_COUNT + 1];
+  gint i;
+  glong notify_id;
+  GstCaps *caps;
+  GstElement *src;
+
+  if (!camera)
+    return;
+
+  g_object_get (camera, "camera-source", &src, NULL);
+
+  for (i = 0; i < LOCATION_SWITCHING_FILENAMES_COUNT; i++) {
+    filenames[i] =
+        g_strdup (make_test_file_name ("image-switching-filename-test", i));
+  }
+  filenames[LOCATION_SWITCHING_FILENAMES_COUNT] = NULL;
+
+  /* set still image mode */
+  g_object_set (camera, "mode", 1, NULL);
+  caps = gst_caps_new_simple ("video/x-raw-rgb", "width", G_TYPE_INT,
+      800, "height", G_TYPE_INT, 600, NULL);
+  g_object_set (camera, "image-capture-caps", caps, NULL);
+  gst_caps_unref (caps);
+
+  if (gst_element_set_state (GST_ELEMENT (camera), GST_STATE_PLAYING) ==
+      GST_STATE_CHANGE_FAILURE) {
+    GST_WARNING ("setting camerabin to PLAYING failed");
+    gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
+    gst_object_unref (camera);
+    camera = NULL;
+  }
+  fail_unless (camera != NULL);
+  GST_INFO ("starting capture");
+
+  notify_id = g_signal_connect (G_OBJECT (src),
+      "notify::ready-for-capture",
+      G_CALLBACK (image_location_switch_readyforcapture), filenames);
+
+  g_idle_add (image_location_switch_do_capture, filenames);
+  g_main_loop_run (main_loop);
+
+  g_usleep (G_USEC_PER_SEC * 3);
+  gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
+
+  for (i = 0; i < LOCATION_SWITCHING_FILENAMES_COUNT; i++) {
+    GST_INFO ("Checking for file: %s", filenames[i]);
+    fail_unless (g_file_test (filenames[i], G_FILE_TEST_IS_REGULAR));
+  }
+
+  for (i = 0; i < LOCATION_SWITCHING_FILENAMES_COUNT; i++) {
+    g_free (filenames[i]);
+  }
+  g_signal_handler_disconnect (src, notify_id);
+}
+
+GST_END_TEST;
+
 
 typedef struct _TestCaseDef
 {
@@ -1291,6 +1383,8 @@ camerabin_suite (void)
 
     tcase_add_test (tc_basic, test_image_custom_filter);
     tcase_add_test (tc_basic, test_video_custom_filter);
+
+    tcase_add_test (tc_basic, test_image_location_switching);
   }
 
 end:

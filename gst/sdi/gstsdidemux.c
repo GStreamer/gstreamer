@@ -296,7 +296,6 @@ copy_line (GstSdiDemux * sdidemux, guint8 * line)
   if (sdidemux->line == format->lines) {
     ret = gst_pad_push (sdidemux->srcpad, sdidemux->output_buffer);
     gst_sdi_demux_get_output_buffer (sdidemux);
-    output_data = GST_BUFFER_DATA (sdidemux->output_buffer);
     sdidemux->line = 0;
   }
 
@@ -318,7 +317,6 @@ gst_sdi_demux_chain (GstPad * pad, GstBuffer * buffer)
   int offset = 0;
   guint8 *data = GST_BUFFER_DATA (buffer);
   int size = GST_BUFFER_SIZE (buffer);
-  guint8 *output_data;
   GstFlowReturn ret = GST_FLOW_OK;
   GstSdiFormat *format;
 
@@ -366,8 +364,6 @@ gst_sdi_demux_chain (GstPad * pad, GstBuffer * buffer)
   if (sdidemux->output_buffer == NULL) {
     gst_sdi_demux_get_output_buffer (sdidemux);
   }
-  output_data = GST_BUFFER_DATA (sdidemux->output_buffer);
-
 #if 0
   if (sdidemux->offset) {
     int n;
@@ -488,7 +484,7 @@ out:
 static gboolean
 gst_sdi_demux_sink_event (GstPad * pad, GstEvent * event)
 {
-  gboolean res;
+  gboolean res = TRUE;
   GstSdiDemux *sdidemux;
 
   sdidemux = GST_SDI_DEMUX (gst_pad_get_parent (pad));
@@ -514,7 +510,7 @@ gst_sdi_demux_sink_event (GstPad * pad, GstEvent * event)
   }
 
   gst_object_unref (sdidemux);
-  return TRUE;
+  return res;
 }
 
 static gboolean
@@ -537,5 +533,5 @@ gst_sdi_demux_src_event (GstPad * pad, GstEvent * event)
   }
 
   gst_object_unref (sdidemux);
-  return TRUE;
+  return res;
 }

@@ -16,7 +16,9 @@ else
 CAMERABIN2=
 endif
 
-SUBDIRS= $(DIRECTFB_DIR) $(GTK_EXAMPLES)
-DIST_SUBDIRS= camerabin camerabin2 directfb mxf scaletempo
+OPENCV_EXAMPLES=opencv
+
+SUBDIRS= $(DIRECTFB_DIR) $(GTK_EXAMPLES) $(OPENCV_EXAMPLES)
+DIST_SUBDIRS= camerabin camerabin2 directfb mxf scaletempo opencv
 
 include $(top_srcdir)/common/parallel-subdirs.mak

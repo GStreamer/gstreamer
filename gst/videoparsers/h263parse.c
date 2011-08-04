@@ -21,7 +21,7 @@
  */
 
 #ifdef HAVE_CONFIG_H
-#  include "config.h"
+#include "config.h"
 #endif
 
 #include <gst/base/gstbitreader.h>
@@ -455,7 +455,7 @@ beach:
 gint
 gst_h263_parse_get_profile (const H263Params * params)
 {
-  gboolean c, d, d1, d21, d22, e, f, f2, g, h, i, j, k, k0, k1, k2, l, m, n, o,
+  gboolean c, d, d1, d21, e, f, f2, g, h, i, j, k, k0, k1, l, m, n, o,
       p, q, r, s, t, u, v, w;
 
   /* FIXME: some parts of Annex C can be discovered, others can not */
@@ -464,7 +464,7 @@ gst_h263_parse_get_profile (const H263Params * params)
   /* d1: Annex D.1; d21: Annex D.2 with UUI=1; d22: Annex D.2 with UUI=01 */
   d1 = (d && params->uui == UUI_ABSENT);
   d21 = (d && params->uui == UUI_IS_1);
-  d22 = (d && params->uui == UUI_IS_01);
+  /* d22 = (d && params->uui == UUI_IS_01); */
   e = (params->features & H263_OPTION_SAC_MODE) != 0;
   /* f:Annex  F.2 or F.3 may be used; f2: only Annex F.2 is used (we have no
    * way of detecting this right now */
@@ -478,7 +478,7 @@ gst_h263_parse_get_profile (const H263Params * params)
   /* k0: Annex K without submodes; k1: Annex K with ASO; k2: Annex K with RS */
   k0 = (k && params->sss == 0x0);
   k1 = (k && params->sss == 0x2);
-  k2 = (k && params->sss == 0x1);
+  /* k2 = (k && params->sss == 0x1); */
   l = FALSE;
   m = (params->type == PICTURE_IMPROVED_PB);
   n = (params->features & H263_OPTION_RPS_MODE) != 0;

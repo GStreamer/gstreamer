@@ -520,12 +520,11 @@ cog_virt_frame_render_resample_vert_1tap (CogFrame * frame, void *_dest,
   int n_src;
   int scale = frame->param1;
   int acc;
-  int x;
   int src_i;
 
   acc = scale * i;
   src_i = acc >> 8;
-  x = acc & 0xff;
+  /* x = acc & 0xff; */
 
   n_src = frame->virt_frame1->components[component].height;
   src1 = cog_virt_frame_get_line (frame->virt_frame1, component,
@@ -634,10 +633,9 @@ cog_virt_frame_render_resample_horiz_1tap (CogFrame * frame, void *_dest,
 {
   uint8_t *dest = _dest;
   uint8_t *src;
-  int n_src;
   int scale = frame->param1;
 
-  n_src = frame->virt_frame1->components[component].width;
+  /* n_src = frame->virt_frame1->components[component].width; */
   src = cog_virt_frame_get_line (frame->virt_frame1, component, i);
 
   cogorc_resample_horiz_1tap (dest, src, 0, scale,
@@ -650,10 +648,9 @@ cog_virt_frame_render_resample_horiz_2tap (CogFrame * frame, void *_dest,
 {
   uint8_t *dest = _dest;
   uint8_t *src;
-  int n_src;
   int scale = frame->param1;
 
-  n_src = frame->virt_frame1->components[component].width;
+  /* n_src = frame->virt_frame1->components[component].width; */
   src = cog_virt_frame_get_line (frame->virt_frame1, component, i);
 
   cogorc_resample_horiz_2tap (dest, src, 0, scale,

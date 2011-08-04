@@ -108,12 +108,9 @@ gst_timidity_base_init (gpointer gclass)
 static void
 gst_timidity_class_init (GstTimidityClass * klass)
 {
-  GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
 
-  gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
-
   gstelement_class->change_state = gst_timidity_change_state;
 }
 

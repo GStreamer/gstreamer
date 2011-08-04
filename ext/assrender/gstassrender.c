@@ -570,10 +570,13 @@ blit_i420 (GstAssRender * render, ASS_Image * ass_image, GstBuffer * buffer)
   const guint8 *src;
   guint8 *dst_y, *dst_u, *dst_v;
   gint x, y, w, h;
+/* FIXME ignoring source image stride might be wrong here */
+#if 0
   gint w2;
+  gint src_stride;
+#endif
   gint width = render->width;
   gint height = render->height;
-  gint src_stride;
   gint y_offset, y_stride;
   gint u_offset, u_stride;
   gint v_offset, v_stride;
@@ -609,9 +612,11 @@ blit_i420 (GstAssRender * render, ASS_Image * ass_image, GstBuffer * buffer)
     w = MIN (ass_image->w, width - ass_image->dst_x);
     h = MIN (ass_image->h, height - ass_image->dst_y);
 
+#if 0
     w2 = (w + 1) / 2;
 
     src_stride = ass_image->stride;
+#endif
 
     src = ass_image->bitmap;
     dst_y =
