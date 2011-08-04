@@ -1006,12 +1006,8 @@ gst_pulsesrc_prepare (GstAudioSrc * asrc, GstRingBufferSpec * spec)
   if (pa_stream_connect_record (pulsesrc->stream, pulsesrc->device, &wanted,
           PA_STREAM_INTERPOLATE_TIMING | PA_STREAM_AUTO_TIMING_UPDATE |
           PA_STREAM_NOT_MONOTONIC | PA_STREAM_ADJUST_LATENCY |
-          PA_STREAM_START_CORKED) < 0) {
-    GST_ELEMENT_ERROR (pulsesrc, RESOURCE, FAILED,
-        ("Failed to connect stream: %s",
-            pa_strerror (pa_context_errno (pulsesrc->context))), (NULL));
-    goto unlock_and_fail;
-  }
+          PA_STREAM_START_CORKED) < 0)
+    goto connect_failed;
 
   pulsesrc->corked = TRUE;
 
@@ -1020,12 +1016,8 @@ gst_pulsesrc_prepare (GstAudioSrc * asrc, GstRingBufferSpec * spec)
 
     state = pa_stream_get_state (pulsesrc->stream);
 
-    if (!PA_STREAM_IS_GOOD (state)) {
-      GST_ELEMENT_ERROR (pulsesrc, RESOURCE, FAILED,
-          ("Failed to connect stream: %s",
-              pa_strerror (pa_context_errno (pulsesrc->context))), (NULL));
-      goto unlock_and_fail;
-    }
+    if (!PA_STREAM_IS_GOOD (state))
+      goto stream_is_bad;
 
     if (state == PA_STREAM_READY)
       break;
@@ -1061,6 +1053,21 @@ gst_pulsesrc_prepare (GstAudioSrc * asrc, GstRingBufferSpec * spec)
 
   return TRUE;
 
+  /* ERRORS */
+connect_failed:
+  {
+    GST_ELEMENT_ERROR (pulsesrc, RESOURCE, FAILED,
+        ("Failed to connect stream: %s",
+            pa_strerror (pa_context_errno (pulsesrc->context))), (NULL));
+    goto unlock_and_fail;
+  }
+stream_is_bad:
+  {
+    GST_ELEMENT_ERROR (pulsesrc, RESOURCE, FAILED,
+        ("Failed to connect stream: %s",
+            pa_strerror (pa_context_errno (pulsesrc->context))), (NULL));
+    goto unlock_and_fail;
+  }
 unlock_and_fail:
   {
     gst_pulsesrc_destroy_stream (pulsesrc);
