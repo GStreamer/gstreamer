@@ -105,9 +105,6 @@ GST_DEBUG_CATEGORY_STATIC (gst_motion_cells_debug);
 			POINTER = NULL;\
 		}
 
-int instanceCounter = 0;
-gboolean element_id_was_max = false;
-
 /* Filter signals and args */
 enum
 {
@@ -396,8 +393,7 @@ gst_motion_cells_init (GstMotioncells * filter, GstMotioncellsClass * gclass)
 
   filter->datafileidx = 0;
   g_mutex_lock (filter->propset_mutex);
-  filter->id = instanceCounter;
-  motion_cells_init ();
+  filter->id = motion_cells_init ();
   g_mutex_unlock (filter->propset_mutex);
 
 }
