@@ -816,7 +816,8 @@ gst_video_frame_map (GstVideoFrame * frame, GstVideoInfo * info,
   /* ERRORS */
 invalid_size:
   {
-    GST_ERROR ("invalid buffer size");
+    GST_ERROR ("invalid buffer size %" G_GSIZE_FORMAT " < %" G_GSIZE_FORMAT,
+        size, info->size);
     gst_buffer_unmap (buffer, data, size);
     return FALSE;
   }
