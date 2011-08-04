@@ -625,7 +625,7 @@ gst_v4l2sink_setup_allocation (GstBaseSink * bsink, GstQuery * query)
   GstV4l2Sink *v4l2sink = GST_V4L2SINK (bsink);
   GstV4l2Object *obj = v4l2sink->v4l2object;
   GstBufferPool *pool;
-  gsize size = 0;
+  guint size = 0;
   GstCaps *caps;
   gboolean need_pool;
 
