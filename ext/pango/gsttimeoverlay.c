@@ -48,7 +48,7 @@
 
 #include <gst/video/video.h>
 
-#include <gsttimeoverlay.h>
+#include "gsttimeoverlay.h"
 
 GST_BOILERPLATE (GstTimeOverlay, gst_time_overlay, GstTextOverlay,
     GST_TYPE_TEXT_OVERLAY);

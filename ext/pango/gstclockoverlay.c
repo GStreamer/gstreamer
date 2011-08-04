@@ -46,7 +46,7 @@
 #include "config.h"
 #endif
 
-#include <gstclockoverlay.h>
+#include "gstclockoverlay.h"
 #include <gst/video/video.h>
 #include <time.h>
 
