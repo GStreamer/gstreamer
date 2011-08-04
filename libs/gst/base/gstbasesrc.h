@@ -238,6 +238,9 @@ void            gst_base_src_set_do_timestamp (GstBaseSrc *src, gboolean timesta
 gboolean        gst_base_src_get_do_timestamp (GstBaseSrc *src);
 
 gboolean        gst_base_src_new_seamless_segment (GstBaseSrc *src, gint64 start, gint64 stop, gint64 position);
+
+gboolean        gst_base_src_set_caps         (GstBaseSrc *src, GstCaps *caps);
+
 G_END_DECLS
 
 #endif /* __GST_BASE_SRC_H__ */

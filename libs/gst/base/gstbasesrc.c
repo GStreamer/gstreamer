@@ -780,8 +780,17 @@ gst_base_src_new_seamless_segment (GstBaseSrc * src, gint64 start, gint64 stop,
   return res;
 }
 
-static gboolean
-gst_base_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
+/**
+ * gst_base_src_set_caps:
+ * @bsrc: a #GstBaseSrc
+ * @caps: a #GstCaps
+ *
+ * Set new caps on the basesrc source pad.
+ *
+ * Returns: %TRUE if the caps could be set
+ */
+gboolean
+gst_base_src_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
 {
   GstBaseSrcClass *bclass;
   gboolean res = TRUE;
@@ -2779,7 +2788,7 @@ gst_base_src_default_negotiate (GstBaseSrc * basesrc)
       if (gst_caps_is_fixed (caps)) {
         /* yay, fixed caps, use those then, it's possible that the subclass does
          * not accept this caps after all and we have to fail. */
-        result = gst_base_src_setcaps (basesrc, caps);
+        result = gst_base_src_set_caps (basesrc, caps);
       }
     }
     gst_caps_unref (caps);
@@ -2906,7 +2915,7 @@ gst_base_src_start (GstBaseSrc * basesrc)
     if (!(caps = gst_type_find_helper (basesrc->srcpad, size)))
       goto typefind_failed;
 
-    result = gst_base_src_setcaps (basesrc, caps);
+    result = gst_base_src_set_caps (basesrc, caps);
     gst_caps_unref (caps);
   } else {
     /* use class or default negotiate function */
