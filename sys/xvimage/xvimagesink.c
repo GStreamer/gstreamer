@@ -1986,12 +1986,12 @@ gst_xvimagesink_setup_allocation (GstBaseSink * bsink, GstQuery * query)
     size = info.size;
 
     config = gst_buffer_pool_get_config (pool);
-    gst_buffer_pool_config_set (config, caps, size, 0, 0, 0, 15);
+    gst_buffer_pool_config_set (config, caps, size, 0, 0, 0, 0);
     if (!gst_buffer_pool_set_config (pool, config))
       goto config_failed;
   }
   /* we need at least 2 buffer because we hold on to the last one */
-  gst_query_set_allocation_params (query, size, 2, 0, 0, 15, pool);
+  gst_query_set_allocation_params (query, size, 2, 0, 0, 0, pool);
 
   /* we also support various metadata */
   gst_query_add_allocation_meta (query, GST_META_API_VIDEO);
