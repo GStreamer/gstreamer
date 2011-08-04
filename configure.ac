@@ -242,7 +242,7 @@ AC_SUBST(GST_OPTION_CFLAGS)
 dnl FIXME: do we want to rename to GST_ALL_* ?
 dnl prefer internal headers to already installed ones
 dnl add GST_OPTION_CFLAGS, but overridable
-GST_CFLAGS="$GST_CFLAGS \$(GST_OPTION_CFLAGS)"
+GST_CFLAGS="$GST_CFLAGS -DGST_USE_UNSTABLE_API \$(GST_OPTION_CFLAGS)"
 AC_SUBST(GST_CFLAGS)
 AC_SUBST(GST_LIBS)
 
