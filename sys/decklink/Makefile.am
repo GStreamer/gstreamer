@@ -20,6 +20,7 @@ libgstdecklink_la_SOURCES = \
 	DeckLinkAPIDispatch.cpp
 
 noinst_HEADERS = \
+	gstdecklink.h \
 	gstdecklinksrc.h \
 	gstdecklinksink.h \
 	capture.h \
