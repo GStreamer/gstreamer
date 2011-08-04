@@ -832,26 +832,19 @@ gst_pulsesrc_create_stream (GstPulseSrc * pulsesrc, GstCaps * caps)
 
   memset (&spec, 0, sizeof (GstRingBufferSpec));
   spec.latency_time = GST_SECOND;
-  if (!gst_ring_buffer_parse_caps (&spec, caps)) {
-    GST_ELEMENT_ERROR (pulsesrc, RESOURCE, SETTINGS,
-        ("Can't parse caps."), (NULL));
-    goto fail;
-  }
+  if (!gst_ring_buffer_parse_caps (&spec, caps))
+    goto invalid_caps;
+
   /* Keep the refcount of the caps at 1 to make them writable */
   gst_caps_unref (spec.caps);
 
-  if (!gst_pulse_fill_sample_spec (&spec, &pulsesrc->sample_spec)) {
-    GST_ELEMENT_ERROR (pulsesrc, RESOURCE, SETTINGS,
-        ("Invalid sample specification."), (NULL));
-    goto fail;
-  }
+  if (!gst_pulse_fill_sample_spec (&spec, &pulsesrc->sample_spec))
+    goto invalid_spec;
 
   pa_threaded_mainloop_lock (pulsesrc->mainloop);
 
-  if (!pulsesrc->context) {
-    GST_ELEMENT_ERROR (pulsesrc, RESOURCE, FAILED, ("Bad context"), (NULL));
-    goto unlock_and_fail;
-  }
+  if (!pulsesrc->context)
+    goto bad_context;
 
   s = gst_caps_get_structure (caps, 0);
   if (!gst_structure_has_field (s, "channel-layout") ||
@@ -869,20 +862,13 @@ gst_pulsesrc_create_stream (GstPulseSrc * pulsesrc, GstCaps * caps)
     if (!(pulsesrc->stream = pa_stream_new_with_proplist (pulsesrc->context,
                 name, &pulsesrc->sample_spec,
                 (need_channel_layout) ? NULL : &channel_map,
-                pulsesrc->proplist))) {
-      GST_ELEMENT_ERROR (pulsesrc, RESOURCE, FAILED,
-          ("Failed to create stream: %s",
-              pa_strerror (pa_context_errno (pulsesrc->context))), (NULL));
-      goto unlock_and_fail;
-    }
+                pulsesrc->proplist)))
+      goto create_failed;
+
   } else if (!(pulsesrc->stream = pa_stream_new (pulsesrc->context,
               name, &pulsesrc->sample_spec,
-              (need_channel_layout) ? NULL : &channel_map))) {
-    GST_ELEMENT_ERROR (pulsesrc, RESOURCE, FAILED,
-        ("Failed to create stream: %s",
-            pa_strerror (pa_context_errno (pulsesrc->context))), (NULL));
-    goto unlock_and_fail;
-  }
+              (need_channel_layout) ? NULL : &channel_map)))
+    goto create_failed;
 
   if (need_channel_layout) {
     const pa_channel_map *m = pa_stream_get_channel_map (pulsesrc->stream);
@@ -908,13 +894,40 @@ gst_pulsesrc_create_stream (GstPulseSrc * pulsesrc, GstCaps * caps)
 
   return TRUE;
 
+  /* ERRORS */
+invalid_caps:
+  {
+    GST_ELEMENT_ERROR (pulsesrc, RESOURCE, SETTINGS,
+        ("Can't parse caps."), (NULL));
+    goto fail;
+  }
+invalid_spec:
+  {
+    GST_ELEMENT_ERROR (pulsesrc, RESOURCE, SETTINGS,
+        ("Invalid sample specification."), (NULL));
+    goto fail;
+  }
+bad_context:
+  {
+    GST_ELEMENT_ERROR (pulsesrc, RESOURCE, FAILED, ("Bad context"), (NULL));
+    goto unlock_and_fail;
+  }
+create_failed:
+  {
+    GST_ELEMENT_ERROR (pulsesrc, RESOURCE, FAILED,
+        ("Failed to create stream: %s",
+            pa_strerror (pa_context_errno (pulsesrc->context))), (NULL));
+    goto unlock_and_fail;
+  }
 unlock_and_fail:
-  gst_pulsesrc_destroy_stream (pulsesrc);
+  {
+    gst_pulsesrc_destroy_stream (pulsesrc);
 
-  pa_threaded_mainloop_unlock (pulsesrc->mainloop);
+    pa_threaded_mainloop_unlock (pulsesrc->mainloop);
 
-fail:
-  return FALSE;
+  fail:
+    return FALSE;
+  }
 }
 
 /* This is essentially gst_base_src_negotiate_default() but the caps
