@@ -209,6 +209,10 @@ gst_mpeg_video_params_parse_sequence (MPEGVParams * params, GstBitReader * br)
     params->bitrate *= 400;
   }
 
+  /* skip 1 + VBV buffer size */
+  if (!gst_bit_reader_skip (br, 11))
+    goto failed;
+
   /* constrained_parameters_flag */
   GET_BITS (br, 1, &bits);
 
