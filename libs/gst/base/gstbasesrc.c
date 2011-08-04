@@ -2908,21 +2908,6 @@ gst_base_src_start (GstBaseSrc * basesrc)
 
   GST_DEBUG_OBJECT (basesrc, "is random_access: %d", basesrc->random_access);
 
-  /* run typefind if we are random_access and the typefinding is enabled. */
-  if (basesrc->random_access && basesrc->typefind && size != -1) {
-    GstCaps *caps;
-
-    if (!(caps = gst_type_find_helper (basesrc->srcpad, size)))
-      goto typefind_failed;
-
-    result = gst_base_src_set_caps (basesrc, caps);
-    gst_caps_unref (caps);
-  } else {
-    /* use class or default negotiate function */
-    if (!(result = gst_base_src_negotiate (basesrc)))
-      goto could_not_negotiate;
-  }
-
   return result;
 
   /* ERROR */
@@ -2930,23 +2915,6 @@ could_not_start:
   {
     GST_DEBUG_OBJECT (basesrc, "could not start");
     /* subclass is supposed to post a message. We don't have to call _stop. */
-    return FALSE;
-  }
-could_not_negotiate:
-  {
-    GST_DEBUG_OBJECT (basesrc, "could not negotiate, stopping");
-    GST_ELEMENT_ERROR (basesrc, STREAM, FORMAT,
-        ("Could not negotiate format"), ("Check your filtered caps, if any"));
-    /* we must call stop */
-    gst_base_src_stop (basesrc);
-    return FALSE;
-  }
-typefind_failed:
-  {
-    GST_DEBUG_OBJECT (basesrc, "could not typefind, stopping");
-    GST_ELEMENT_ERROR (basesrc, STREAM, TYPE_NOT_FOUND, (NULL), (NULL));
-    /* we must call stop */
-    gst_base_src_stop (basesrc);
     return FALSE;
   }
 }
