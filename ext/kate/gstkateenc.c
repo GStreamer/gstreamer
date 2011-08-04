@@ -952,27 +952,25 @@ gst_kate_enc_chain_text (GstKateEnc * ke, GstBuffer * buf,
     rflow = GST_FLOW_ERROR;
   } else {
     const char *text = (const char *) GST_BUFFER_DATA (buf);
-    if (text) {
-      size_t text_len = GST_BUFFER_SIZE (buf);
-      kate_float t0 = start / (double) GST_SECOND;
-      kate_float t1 = stop / (double) GST_SECOND;
-      GST_LOG_OBJECT (ke, "Encoding text: %*.*s (%u bytes) from %f to %f",
-          (int) text_len, (int) text_len, GST_BUFFER_DATA (buf),
-          GST_BUFFER_SIZE (buf), t0, t1);
-      ret = kate_encode_text (&ke->k, t0, t1, text, text_len, &kp);
-      if (G_UNLIKELY (ret < 0)) {
-        GST_ELEMENT_ERROR (ke, STREAM, ENCODE, (NULL),
-            ("Failed to encode text: %d", ret));
-        rflow = GST_FLOW_ERROR;
-      } else {
-        rflow =
-            gst_kate_enc_chain_push_packet (ke, &kp, start, stop - start + 1);
-      }
-    } else {
-      /* FIXME: this should not be an error, we should ignore it and move on */
+    size_t text_len = GST_BUFFER_SIZE (buf);
+    kate_float t0 = start / (double) GST_SECOND;
+    kate_float t1 = stop / (double) GST_SECOND;
+
+    if (text == NULL) {
+      text = "";
+      text_len = 0;
+    }
+
+    GST_LOG_OBJECT (ke, "Encoding text: %*.*s (%u bytes) from %f to %f",
+        (int) text_len, (int) text_len, GST_BUFFER_DATA (buf),
+        GST_BUFFER_SIZE (buf), t0, t1);
+    ret = kate_encode_text (&ke->k, t0, t1, text, text_len, &kp);
+    if (G_UNLIKELY (ret < 0)) {
       GST_ELEMENT_ERROR (ke, STREAM, ENCODE, (NULL),
-          ("no text in text packet"));
+          ("Failed to encode text: %d", ret));
       rflow = GST_FLOW_ERROR;
+    } else {
+      rflow = gst_kate_enc_chain_push_packet (ke, &kp, start, stop - start + 1);
     }
   }
 
