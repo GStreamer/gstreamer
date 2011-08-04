@@ -288,7 +288,7 @@ _fallback_copy (GstMemory * mem, gssize offset, gsize size)
   if (size == -1)
     size = msize > offset ? msize - offset : 0;
   /* use the same allocator as the memory we copy, FIXME, alignment?  */
-  copy = gst_allocator_alloc (mem->allocator, size, 1);
+  copy = gst_allocator_alloc (mem->allocator, size, 0);
   dest = gst_memory_map (copy, NULL, NULL, GST_MAP_WRITE);
   memcpy (dest, data + offset, size);
   gst_memory_unmap (copy, dest, size);
