@@ -3041,7 +3041,6 @@ gst_base_src_set_playing (GstBaseSrc * basesrc, gboolean live_play)
   /* unlock subclasses locked in ::create, we only do this when we stop playing. */
   if (!live_play) {
     GST_DEBUG_OBJECT (basesrc, "unlock");
-    gst_base_src_activate_pool (basesrc, FALSE);
     if (bclass->unlock)
       bclass->unlock (basesrc);
   }
@@ -3065,7 +3064,6 @@ gst_base_src_set_playing (GstBaseSrc * basesrc, gboolean live_play)
 
     /* clear our unlock request when going to PLAYING */
     GST_DEBUG_OBJECT (basesrc, "unlock stop");
-    gst_base_src_activate_pool (basesrc, TRUE);
     if (bclass->unlock_stop)
       bclass->unlock_stop (basesrc);
 
