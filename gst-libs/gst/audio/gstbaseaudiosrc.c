@@ -749,6 +749,7 @@ static GstFlowReturn
 gst_base_audio_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
     GstBuffer ** outbuf)
 {
+  GstFlowReturn ret;
   GstBaseAudioSrc *src = GST_BASE_AUDIO_SRC (bsrc);
   GstBuffer *buf;
   guchar *data, *ptr;
@@ -789,13 +790,17 @@ gst_base_audio_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
     sample = gst_base_audio_src_get_offset (src);
   }
 
-  GST_DEBUG_OBJECT (src, "reading from sample %" G_GUINT64_FORMAT, sample);
+  GST_DEBUG_OBJECT (src, "reading from sample %" G_GUINT64_FORMAT " length %u",
+      sample, length);
 
   /* get the number of samples to read */
   total_samples = samples = length / bps;
 
-  /* FIXME, using a bufferpool would be nice here */
-  buf = gst_buffer_new_and_alloc (length);
+  /* use the basesrc allocation code to use bufferpools or custom allocators */
+  ret = GST_BASE_SRC_CLASS (parent_class)->alloc (bsrc, offset, length, &buf);
+  if (G_UNLIKELY (ret != GST_FLOW_OK))
+    goto alloc_failed;
+
   data = ptr = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
   do {
     read = gst_ring_buffer_read (ringbuffer, sample, ptr, samples);
@@ -1024,6 +1029,11 @@ wrong_offset:
         (NULL), ("resource can only be operated on sequentially but offset %"
             G_GUINT64_FORMAT " was given", offset));
     return GST_FLOW_ERROR;
+  }
+alloc_failed:
+  {
+    GST_DEBUG_OBJECT (src, "alloc failed: %s", gst_flow_get_name (ret));
+    return ret;
   }
 stopped:
   {
