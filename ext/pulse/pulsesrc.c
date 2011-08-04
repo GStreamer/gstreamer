@@ -923,6 +923,7 @@ fail:
 static gboolean
 gst_pulsesrc_negotiate (GstBaseSrc * basesrc)
 {
+  GstPulseSrc *pulsesrc = GST_PULSESRC_CAST (basesrc);
   GstCaps *thiscaps;
   GstCaps *caps = NULL;
   GstCaps *peercaps = NULL;
@@ -964,9 +965,9 @@ gst_pulsesrc_negotiate (GstBaseSrc * basesrc)
         result = TRUE;
       } else if (gst_caps_is_fixed (caps)) {
         /* yay, fixed caps, use those then */
-        result = gst_pulsesrc_create_stream (GST_PULSESRC_CAST (basesrc), caps);
+        result = gst_pulsesrc_create_stream (pulsesrc, caps);
         if (result)
-          result = gst_pad_set_caps (GST_BASE_SRC_PAD (basesrc), caps);
+          result = gst_base_src_set_caps (basesrc, caps);
       }
     }
     gst_caps_unref (caps);
