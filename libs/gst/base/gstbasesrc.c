@@ -305,6 +305,8 @@ static gboolean gst_base_src_default_prepare_seek_segment (GstBaseSrc * src,
     GstEvent * event, GstSegment * segment);
 static GstFlowReturn gst_base_src_default_create (GstBaseSrc * basesrc,
     guint64 offset, guint size, GstBuffer ** buf);
+static GstFlowReturn gst_base_src_default_alloc (GstBaseSrc * basesrc,
+    guint64 offset, guint size, GstBuffer ** buf);
 
 static gboolean gst_base_src_set_flushing (GstBaseSrc * basesrc,
     gboolean flushing, gboolean live_play, gboolean unlock, gboolean * playing);
@@ -374,6 +376,7 @@ gst_base_src_class_init (GstBaseSrcClass * klass)
   klass->prepare_seek_segment =
       GST_DEBUG_FUNCPTR (gst_base_src_default_prepare_seek_segment);
   klass->create = GST_DEBUG_FUNCPTR (gst_base_src_default_create);
+  klass->alloc = GST_DEBUG_FUNCPTR (gst_base_src_default_alloc);
 
   /* Registering debug symbols for function pointers */
   GST_DEBUG_REGISTER_FUNCPTR (gst_base_src_activate_push);
@@ -1264,7 +1267,7 @@ gst_base_src_prepare_seek_segment (GstBaseSrc * src, GstEvent * event,
 }
 
 static GstFlowReturn
-gst_base_src_alloc_buffer (GstBaseSrc * src, guint64 offset,
+gst_base_src_default_alloc (GstBaseSrc * src, guint64 offset,
     guint size, GstBuffer ** buffer)
 {
   GstFlowReturn ret;
@@ -1298,10 +1301,12 @@ gst_base_src_default_create (GstBaseSrc * src, guint64 offset,
 
   bclass = GST_BASE_SRC_GET_CLASS (src);
 
+  if (G_UNLIKELY (!bclass->alloc))
+    goto no_function;
   if (G_UNLIKELY (!bclass->fill))
     goto no_function;
 
-  ret = gst_base_src_alloc_buffer (src, offset, size, buffer);
+  ret = bclass->alloc (src, offset, size, buffer);
   if (G_UNLIKELY (ret != GST_FLOW_OK))
     goto alloc_failed;
 
@@ -1317,7 +1322,7 @@ gst_base_src_default_create (GstBaseSrc * src, guint64 offset,
   /* ERRORS */
 no_function:
   {
-    GST_DEBUG_OBJECT (src, "no fill function");
+    GST_DEBUG_OBJECT (src, "no fill or alloc function");
     return GST_FLOW_NOT_SUPPORTED;
   }
 alloc_failed:

@@ -205,8 +205,12 @@ struct _GstBaseSrcClass {
   gboolean      (*event)        (GstBaseSrc *src, GstEvent *event);
 
   /* ask the subclass to create a buffer with offset and size, the default
-   * implementation will use the negotiated allocator and call fill. */
+   * implementation will call alloc and fill. */
   GstFlowReturn (*create)       (GstBaseSrc *src, guint64 offset, guint size,
+                                 GstBuffer **buf);
+  /* ask the subclass to allocate an output buffer. The default implementation
+   * will use the negotiated allocator. */
+  GstFlowReturn (*alloc)        (GstBaseSrc *src, guint64 offset, guint size,
                                  GstBuffer **buf);
   /* ask the subclass to fill the buffer with data from offset and size */
   GstFlowReturn (*fill)         (GstBaseSrc *src, guint64 offset, guint size,
