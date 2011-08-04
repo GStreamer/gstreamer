@@ -299,7 +299,6 @@ do_loop (GstRTSPMediaClass * klass)
 static void
 collect_media_stats (GstRTSPMedia * media)
 {
-  GstFormat format;
   gint64 position, duration;
 
   media->range.unit = GST_RTSP_RANGE_NPT;
@@ -311,15 +310,15 @@ collect_media_stats (GstRTSPMedia * media)
     media->range.max.seconds = -1;
   } else {
     /* get the position */
-    format = GST_FORMAT_TIME;
-    if (!gst_element_query_position (media->pipeline, &format, &position)) {
+    if (!gst_element_query_position (media->pipeline, GST_FORMAT_TIME,
+            &position)) {
       GST_INFO ("position query failed");
       position = 0;
     }
 
     /* get the duration */
-    format = GST_FORMAT_TIME;
-    if (!gst_element_query_duration (media->pipeline, &format, &duration)) {
+    if (!gst_element_query_duration (media->pipeline, GST_FORMAT_TIME,
+            &duration)) {
       GST_INFO ("duration query failed");
       duration = -1;
     }
