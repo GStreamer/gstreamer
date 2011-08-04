@@ -36,6 +36,31 @@ gboolean
 vaapi_check_status(VAStatus status, const char *msg)
     attribute_hidden;
 
+/** Maps VA buffer */
+void *
+vaapi_map_buffer(VADisplay dpy, VABufferID buf_id)
+    attribute_hidden;
+
+/** Unmaps VA buffer */
+void
+vaapi_unmap_buffer(VADisplay dpy, VABufferID buf_id, void **pbuf)
+    attribute_hidden;
+
+/** Creates and maps VA buffer */
+void *
+vaapi_create_buffer(
+    VADisplay    dpy,
+    VAContextID  ctx,
+    int          type,
+    unsigned int size,
+    VABufferID  *buf_id
+) attribute_hidden;
+
+/** Destroy VA buffer */
+void
+vaapi_destroy_buffer(VADisplay dpy, VABufferID *buf_id)
+    attribute_hidden;
+
 /** Return a string representation of a VAProfile */
 const char *string_of_VAProfile(VAProfile profile)
     attribute_hidden;

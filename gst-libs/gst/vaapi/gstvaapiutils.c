@@ -47,6 +47,74 @@ vaapi_check_status(VAStatus status, const char *msg)
     return TRUE;
 }
 
+/* Maps VA buffer */
+void *
+vaapi_map_buffer(VADisplay dpy, VABufferID buf_id)
+{
+    VAStatus status;
+    void *data = NULL;
+
+    status = vaMapBuffer(dpy, buf_id, &data);
+    if (!vaapi_check_status(status, "vaMapBuffer()"))
+        return NULL;
+    return data;
+}
+
+/* Unmaps VA buffer */
+void
+vaapi_unmap_buffer(VADisplay dpy, VABufferID buf_id, void **pbuf)
+{
+    VAStatus status;
+
+    if (pbuf)
+        *pbuf = NULL;
+
+    status = vaUnmapBuffer(dpy, buf_id);
+    if (!vaapi_check_status(status, "vaUnmapBuffer()"))
+        return;
+}
+
+/* Creates and maps VA buffer */
+void *
+vaapi_create_buffer(
+    VADisplay    dpy,
+    VAContextID  ctx,
+    int          type,
+    unsigned int size,
+    VABufferID  *buf_id_ptr
+)
+{
+    VABufferID buf_id;
+    VAStatus status;
+    void *data;
+
+    status = vaCreateBuffer(dpy, ctx, type, size, 1, NULL, &buf_id);
+    if (!vaapi_check_status(status, "vaCreateBuffer()"))
+        return NULL;
+
+    data = vaapi_map_buffer(dpy, buf_id);
+    if (!data)
+        goto error;
+
+    *buf_id_ptr = buf_id;
+    return data;
+
+error:
+    vaapi_destroy_buffer(dpy, &buf_id);
+    return NULL;
+}
+
+/* Destroy VA buffer */
+void
+vaapi_destroy_buffer(VADisplay dpy, VABufferID *buf_id_ptr)
+{
+    if (!buf_id_ptr || *buf_id_ptr == VA_INVALID_ID)
+        return;
+
+    vaDestroyBuffer(dpy, *buf_id_ptr);
+    *buf_id_ptr = VA_INVALID_ID;
+}
+
 /* Return a string representation of a VAProfile */
 const char *string_of_VAProfile(VAProfile profile)
 {
