@@ -85,6 +85,8 @@ gst_vp8_enc_coder_hook_free (GstVP8EncCoderHook * hook)
 
 #define DEFAULT_BITRATE 0
 #define DEFAULT_MODE VPX_VBR
+#define DEFAULT_MINSECTION_PCT 5
+#define DEFAULT_MAXSECTION_PCT 800
 #define DEFAULT_MIN_QUANTIZER 0
 #define DEFAULT_MAX_QUANTIZER 63
 #define DEFAULT_QUALITY 5
@@ -94,14 +96,25 @@ gst_vp8_enc_coder_hook_free (GstVP8EncCoderHook * hook)
 #define DEFAULT_SPEED 0
 #define DEFAULT_THREADS 1
 #define DEFAULT_MULTIPASS_MODE VPX_RC_ONE_PASS
-#define DEFAULT_MULTIPASS_CACHE_FILE NULL
+#define DEFAULT_MULTIPASS_CACHE_FILE "multipass.cache"
 #define DEFAULT_AUTO_ALT_REF_FRAMES FALSE
+#define DEFAULT_LAG_IN_FRAMES 0
+#define DEFAULT_SHARPNESS 0
+#define DEFAULT_NOISE_SENSITIVITY 0
+#define DEFAULT_TUNE VP8_TUNE_PSNR
+#define DEFAULT_STATIC_THRESHOLD 0
+#define DEFAULT_DROP_FRAME 0
+#define DEFAULT_RESIZE_ALLOWED TRUE
+#define DEFAULT_TOKEN_PARTS 0
+
 
 enum
 {
   PROP_0,
   PROP_BITRATE,
   PROP_MODE,
+  PROP_MINSECTION_PCT,
+  PROP_MAXSECTION_PCT,
   PROP_MIN_QUANTIZER,
   PROP_MAX_QUANTIZER,
   PROP_QUALITY,
@@ -112,7 +125,15 @@ enum
   PROP_THREADS,
   PROP_MULTIPASS_MODE,
   PROP_MULTIPASS_CACHE_FILE,
-  PROP_AUTO_ALT_REF_FRAMES
+  PROP_AUTO_ALT_REF_FRAMES,
+  PROP_LAG_IN_FRAMES,
+  PROP_SHARPNESS,
+  PROP_NOISE_SENSITIVITY,
+  PROP_TUNE,
+  PROP_STATIC_THRESHOLD,
+  PROP_DROP_FRAME,
+  PROP_RESIZE_ALLOWED,
+  PROP_TOKEN_PARTS
 };
 
 #define GST_VP8_ENC_MODE_TYPE (gst_vp8_enc_mode_get_type())
@@ -153,6 +174,28 @@ gst_vp8_enc_multipass_mode_get_type (void)
     GType _id;
 
     _id = g_enum_register_static ("GstVP8EncMultipassMode", values);
+
+    g_once_init_leave ((gsize *) & id, _id);
+  }
+
+  return id;
+}
+
+#define GST_VP8_ENC_TUNE_TYPE (gst_vp8_enc_tune_get_type())
+static GType
+gst_vp8_enc_tune_get_type (void)
+{
+  static const GEnumValue values[] = {
+    {VP8_TUNE_PSNR, "Tune for PSNR", "psnr"},
+    {VP8_TUNE_SSIM, "Tune for SSIM", "ssim"},
+    {0, NULL, NULL}
+  };
+  static volatile GType id = 0;
+
+  if (g_once_init_enter ((gsize *) & id)) {
+    GType _id;
+
+    _id = g_enum_register_static ("GstVP8EncTune", values);
 
     g_once_init_leave ((gsize *) & id, _id);
   }
@@ -262,6 +305,20 @@ gst_vp8_enc_class_init (GstVP8EncClass * klass)
           GST_VP8_ENC_MODE_TYPE, DEFAULT_MODE,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+  g_object_class_install_property (gobject_class, PROP_MINSECTION_PCT,
+      g_param_spec_uint ("minsection-pct",
+          "minimum percentage allocation per section",
+          "The numbers represent a percentage of the average allocation per section (frame)",
+          0, 20, DEFAULT_MINSECTION_PCT,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  g_object_class_install_property (gobject_class, PROP_MAXSECTION_PCT,
+      g_param_spec_uint ("maxsection-pct",
+          "maximum percentage allocation per section",
+          "The numbers represent a percentage of the average allocation per section (frame)",
+          200, 800, DEFAULT_MAXSECTION_PCT,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
   g_object_class_install_property (gobject_class, PROP_MIN_QUANTIZER,
       g_param_spec_int ("min-quantizer", "Minimum quantizer",
           "Minimum (best) quantizer",
@@ -328,6 +385,54 @@ gst_vp8_enc_class_init (GstVP8EncClass * klass)
           DEFAULT_AUTO_ALT_REF_FRAMES,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+  g_object_class_install_property (gobject_class, PROP_LAG_IN_FRAMES,
+      g_param_spec_uint ("lag-in-frames", "Max number of frames to lag",
+          "If set, this value allows the encoder to consume a number of input "
+          "frames before producing output frames.",
+          0, 64, DEFAULT_LAG_IN_FRAMES,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  g_object_class_install_property (gobject_class, PROP_SHARPNESS,
+      g_param_spec_int ("sharpness", "Sharpness",
+          "Sharpness",
+          0, 7, DEFAULT_SHARPNESS,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  g_object_class_install_property (gobject_class, PROP_NOISE_SENSITIVITY,
+      g_param_spec_int ("noise-sensitivity", "Noise Sensitivity",
+          "Noise Sensitivity",
+          0, 6, DEFAULT_NOISE_SENSITIVITY,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  g_object_class_install_property (gobject_class, PROP_TUNE,
+      g_param_spec_enum ("tune", "Tune",
+          "Tune",
+          GST_VP8_ENC_TUNE_TYPE, DEFAULT_TUNE,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  g_object_class_install_property (gobject_class, PROP_STATIC_THRESHOLD,
+      g_param_spec_int ("static-threshold", "Static Threshold",
+          "Static Threshold",
+          0, 1000, DEFAULT_STATIC_THRESHOLD,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  g_object_class_install_property (gobject_class, PROP_DROP_FRAME,
+      g_param_spec_int ("drop-frame", "Drop Frame",
+          "Drop Frame",
+          0, 100, DEFAULT_DROP_FRAME,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  g_object_class_install_property (gobject_class, PROP_RESIZE_ALLOWED,
+      g_param_spec_boolean ("resize-allowed", "Resize Allowed",
+          "Resize Allowed",
+          DEFAULT_RESIZE_ALLOWED,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  g_object_class_install_property (gobject_class, PROP_TOKEN_PARTS,
+      g_param_spec_int ("token-parts", "Token Parts",
+          "Token Parts",
+          0, 3, DEFAULT_TOKEN_PARTS,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   GST_DEBUG_CATEGORY_INIT (gst_vp8enc_debug, "vp8enc", 0, "VP8 Encoder");
 }
@@ -339,6 +444,8 @@ gst_vp8_enc_init (GstVP8Enc * gst_vp8_enc, GstVP8EncClass * klass)
   GST_DEBUG_OBJECT (gst_vp8_enc, "init");
 
   gst_vp8_enc->bitrate = DEFAULT_BITRATE;
+  gst_vp8_enc->minsection_pct = DEFAULT_MINSECTION_PCT;
+  gst_vp8_enc->maxsection_pct = DEFAULT_MAXSECTION_PCT;
   gst_vp8_enc->min_quantizer = DEFAULT_MIN_QUANTIZER;
   gst_vp8_enc->max_quantizer = DEFAULT_MAX_QUANTIZER;
   gst_vp8_enc->mode = DEFAULT_MODE;
@@ -347,8 +454,9 @@ gst_vp8_enc_init (GstVP8Enc * gst_vp8_enc, GstVP8EncClass * klass)
   gst_vp8_enc->max_latency = DEFAULT_MAX_LATENCY;
   gst_vp8_enc->max_keyframe_distance = DEFAULT_MAX_KEYFRAME_DISTANCE;
   gst_vp8_enc->multipass_mode = DEFAULT_MULTIPASS_MODE;
-  gst_vp8_enc->multipass_cache_file = DEFAULT_MULTIPASS_CACHE_FILE;
+  gst_vp8_enc->multipass_cache_file = g_strdup (DEFAULT_MULTIPASS_CACHE_FILE);
   gst_vp8_enc->auto_alt_ref_frames = DEFAULT_AUTO_ALT_REF_FRAMES;
+  gst_vp8_enc->lag_in_frames = DEFAULT_LAG_IN_FRAMES;
 }
 
 static void
@@ -385,6 +493,12 @@ gst_vp8_enc_set_property (GObject * object, guint prop_id,
     case PROP_MODE:
       gst_vp8_enc->mode = g_value_get_enum (value);
       break;
+    case PROP_MINSECTION_PCT:
+      gst_vp8_enc->minsection_pct = g_value_get_uint (value);
+      break;
+    case PROP_MAXSECTION_PCT:
+      gst_vp8_enc->maxsection_pct = g_value_get_uint (value);
+      break;
     case PROP_MIN_QUANTIZER:
       gst_vp8_enc->min_quantizer = g_value_get_int (value);
       break;
@@ -420,6 +534,30 @@ gst_vp8_enc_set_property (GObject * object, guint prop_id,
     case PROP_AUTO_ALT_REF_FRAMES:
       gst_vp8_enc->auto_alt_ref_frames = g_value_get_boolean (value);
       break;
+    case PROP_LAG_IN_FRAMES:
+      gst_vp8_enc->lag_in_frames = g_value_get_uint (value);
+      break;
+    case PROP_SHARPNESS:
+      gst_vp8_enc->sharpness = g_value_get_int (value);
+      break;
+    case PROP_NOISE_SENSITIVITY:
+      gst_vp8_enc->noise_sensitivity = g_value_get_int (value);
+      break;
+    case PROP_TUNE:
+      gst_vp8_enc->tuning = g_value_get_enum (value);
+      break;
+    case PROP_STATIC_THRESHOLD:
+      gst_vp8_enc->static_threshold = g_value_get_int (value);
+      break;
+    case PROP_DROP_FRAME:
+      gst_vp8_enc->drop_frame = g_value_get_boolean (value);
+      break;
+    case PROP_RESIZE_ALLOWED:
+      gst_vp8_enc->resize_allowed = g_value_get_boolean (value);
+      break;
+    case PROP_TOKEN_PARTS:
+      gst_vp8_enc->partitions = g_value_get_int (value);
+      break;
     default:
       break;
   }
@@ -440,6 +578,12 @@ gst_vp8_enc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_MODE:
       g_value_set_enum (value, gst_vp8_enc->mode);
+      break;
+    case PROP_MINSECTION_PCT:
+      g_value_set_uint (value, gst_vp8_enc->minsection_pct);
+      break;
+    case PROP_MAXSECTION_PCT:
+      g_value_set_uint (value, gst_vp8_enc->maxsection_pct);
       break;
     case PROP_MIN_QUANTIZER:
       g_value_set_int (value, gst_vp8_enc->min_quantizer);
@@ -473,6 +617,30 @@ gst_vp8_enc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_AUTO_ALT_REF_FRAMES:
       g_value_set_boolean (value, gst_vp8_enc->auto_alt_ref_frames);
+      break;
+    case PROP_LAG_IN_FRAMES:
+      g_value_set_uint (value, gst_vp8_enc->lag_in_frames);
+      break;
+    case PROP_SHARPNESS:
+      g_value_set_int (value, gst_vp8_enc->sharpness);
+      break;
+    case PROP_NOISE_SENSITIVITY:
+      g_value_set_int (value, gst_vp8_enc->noise_sensitivity);
+      break;
+    case PROP_TUNE:
+      g_value_set_enum (value, gst_vp8_enc->tuning);
+      break;
+    case PROP_STATIC_THRESHOLD:
+      g_value_set_int (value, gst_vp8_enc->static_threshold);
+      break;
+    case PROP_DROP_FRAME:
+      g_value_set_boolean (value, gst_vp8_enc->drop_frame);
+      break;
+    case PROP_RESIZE_ALLOWED:
+      g_value_set_boolean (value, gst_vp8_enc->resize_allowed);
+      break;
+    case PROP_TOKEN_PARTS:
+      g_value_set_int (value, gst_vp8_enc->partitions);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -553,6 +721,8 @@ gst_vp8_enc_set_format (GstBaseVideoEncoder * base_video_encoder,
   cfg.g_lag_in_frames = encoder->max_latency;
   cfg.g_threads = encoder->threads;
   cfg.rc_end_usage = encoder->mode;
+  cfg.rc_2pass_vbr_minsection_pct = encoder->minsection_pct;
+  cfg.rc_2pass_vbr_maxsection_pct = encoder->maxsection_pct;
   /* Standalone qp-min do not make any sence, with bitrate=0 and qp-min=1
    * encoder will use only default qp-max=63. Also this will make
    * worst possbile quality.
@@ -567,6 +737,8 @@ gst_vp8_enc_set_format (GstBaseVideoEncoder * base_video_encoder,
     cfg.rc_max_quantizer = (gint) (63 - encoder->quality * 6.2);
     cfg.rc_target_bitrate = encoder->bitrate;
   }
+  cfg.rc_dropframe_thresh = encoder->drop_frame;
+  cfg.rc_resize_allowed = encoder->resize_allowed;
 
   cfg.kf_mode = VPX_KF_AUTO;
   cfg.kf_min_dist = 0;
@@ -612,6 +784,25 @@ gst_vp8_enc_set_format (GstBaseVideoEncoder * base_video_encoder,
         gst_vpx_error_name (status));
   }
 
+  status = vpx_codec_control (&encoder->encoder, VP8E_SET_NOISE_SENSITIVITY,
+      encoder->noise_sensitivity);
+  status = vpx_codec_control (&encoder->encoder, VP8E_SET_SHARPNESS,
+      encoder->sharpness);
+  status = vpx_codec_control (&encoder->encoder, VP8E_SET_STATIC_THRESHOLD,
+      encoder->static_threshold);
+  status = vpx_codec_control (&encoder->encoder, VP8E_SET_TOKEN_PARTITIONS,
+      encoder->partitions);
+#if 0
+  status = vpx_codec_control (&encoder->encoder, VP8E_SET_ARNR_MAXFRAMES,
+      encoder->arnr_maxframes);
+  status = vpx_codec_control (&encoder->encoder, VP8E_SET_ARNR_STRENGTH,
+      encoder->arnr_strength);
+  status = vpx_codec_control (&encoder->encoder, VP8E_SET_ARNR_TYPE,
+      encoder->arnr_type);
+#endif
+  status = vpx_codec_control (&encoder->encoder, VP8E_SET_TUNING,
+      encoder->tuning);
+
   status =
       vpx_codec_control (&encoder->encoder, VP8E_SET_ENABLEAUTOALTREF,
       (encoder->auto_alt_ref_frames ? 1 : 0));
@@ -620,6 +811,8 @@ gst_vp8_enc_set_format (GstBaseVideoEncoder * base_video_encoder,
         "Failed to set VP8E_ENABLEAUTOALTREF to %d: %s",
         (encoder->auto_alt_ref_frames ? 1 : 0), gst_vpx_error_name (status));
   }
+
+  cfg.g_lag_in_frames = encoder->lag_in_frames;
 
   gst_base_video_encoder_set_latency (base_video_encoder, 0,
       gst_util_uint64_scale (encoder->max_latency,

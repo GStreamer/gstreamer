@@ -19,10 +19,12 @@ noinst_HEADERS = \
 
 libgstinter_la_CFLAGS = \
 	$(GST_CFLAGS) \
-	$(GST_PLUGINS_BASE_CFLAGS)
+	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(GST_BASE_CFLAGS)
 
 libgstinter_la_LIBADD = \
 	$(GST_LIBS) \
+	$(GST_BASE_LIBS) \
 	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-@GST_MAJORMINOR@ -lgstaudio-@GST_MAJORMINOR@ \
 	$(LIBM)
 

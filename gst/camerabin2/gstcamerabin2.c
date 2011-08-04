@@ -440,8 +440,6 @@ gst_camera_bin_dispose (GObject * object)
     gst_object_unref (camerabin->imagesink);
   if (camerabin->image_encodebin)
     gst_object_unref (camerabin->image_encodebin);
-  if (camerabin->imagebin_queue)
-    gst_object_unref (camerabin->imagebin_queue);
   if (camerabin->imagebin_capsfilter)
     gst_object_unref (camerabin->imagebin_capsfilter);
 
@@ -1118,7 +1116,12 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
   gint encbin_flags = 0;
 
   if (!camera->elements_created) {
-    /* TODO check that elements created in _init were really created */
+    /* Check that elements created in _init were really created */
+    if (!(camera->audio_capsfilter && camera->videobin_capsfilter &&
+            camera->imagebin_capsfilter && camera->viewfinderbin_capsfilter)) {
+      missing_element_name = "capsfilter";
+      goto missing_element;
+    }
 
     camera->video_encodebin =
         gst_element_factory_make ("encodebin", "video-encodebin");
@@ -1140,6 +1143,10 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
 
     camera->videosink =
         gst_element_factory_make ("filesink", "videobin-filesink");
+    if (!camera->videosink) {
+      missing_element_name = "filesink";
+      goto missing_element;
+    }
     g_object_set (camera->videosink, "async", FALSE, NULL);
 
     /* audio elements */
@@ -1183,6 +1190,9 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
       missing_element_name = "encodebin";
       goto missing_element;
     }
+    /* durations have no meaning for image captures */
+    g_object_set (camera->image_encodebin, "queue-time-max", (guint64) 0, NULL);
+
     camera->image_encodebin_signal_id =
         g_signal_connect (camera->image_encodebin, "element-added",
         (GCallback) encodebin_element_added, camera);
@@ -1215,29 +1225,25 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
       camera->image_profile_switch = TRUE;
     }
 
-    camera->imagebin_queue =
-        gst_element_factory_make ("queue", "imagebin-queue");
     camera->viewfinderbin_queue =
         gst_element_factory_make ("queue", "viewfinderbin-queue");
+    if (!camera->viewfinderbin_queue) {
+      missing_element_name = "queue";
+      goto missing_element;
+    }
 
     g_object_set (camera->viewfinderbin_queue, "leaky", 2, "silent", TRUE,
         NULL);
-    g_object_set (camera->imagebin_queue, "max-size-time", (guint64) 0,
-        "silent", TRUE, NULL);
 
     gst_bin_add_many (GST_BIN_CAST (camera),
         gst_object_ref (camera->video_encodebin),
         gst_object_ref (camera->videosink),
         gst_object_ref (camera->image_encodebin),
         gst_object_ref (camera->imagesink),
-        gst_object_ref (camera->imagebin_queue),
         gst_object_ref (camera->viewfinderbin_queue), NULL);
 
     /* Linking can be optimized TODO */
     gst_element_link (camera->video_encodebin, camera->videosink);
-
-    gst_element_link_many (camera->imagebin_queue, camera->imagebin_capsfilter,
-        NULL);
     gst_element_link (camera->image_encodebin, camera->imagesink);
     gst_element_link_many (camera->viewfinderbin_queue,
         camera->viewfinderbin_capsfilter, camera->viewfinderbin, NULL);
@@ -1344,8 +1350,13 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
         G_CALLBACK (gst_camera_bin_src_notify_readyforcapture), camera);
     gst_element_link_pads (camera->src, "vfsrc", camera->viewfinderbin_queue,
         "sink");
-    gst_element_link_pads (camera->src, "imgsrc", camera->imagebin_queue,
-        "sink");
+
+    if (!gst_element_link_pads (camera->src, "imgsrc",
+            camera->imagebin_capsfilter, "sink")) {
+      GST_ERROR_OBJECT (camera,
+          "Failed to link camera source's imgsrc pad to image bin capsfilter");
+      goto fail;
+    }
     if (!gst_element_link_pads (camera->src, "vidsrc",
             camera->videobin_capsfilter, "sink")) {
       GST_ERROR_OBJECT (camera,
@@ -1359,8 +1370,8 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
   }
 
   gst_camera_bin_check_and_replace_filter (camera, &camera->image_filter,
-      camera->user_image_filter, camera->imagebin_queue,
-      camera->imagebin_capsfilter, NULL);
+      camera->user_image_filter, camera->src, camera->imagebin_capsfilter,
+      "imgsrc");
   gst_camera_bin_check_and_replace_filter (camera, &camera->video_filter,
       camera->user_video_filter, camera->src, camera->videobin_capsfilter,
       "vidsrc");
@@ -1387,6 +1398,10 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
     } else {
       camera->audio_src =
           gst_element_factory_make (DEFAULT_AUDIO_SRC, "audiosrc");
+      if (!camera->audio_src) {
+        missing_element_name = DEFAULT_AUDIO_SRC;
+        goto missing_element;
+      }
     }
 
     gst_element_set_locked_state (camera->audio_src, TRUE);

@@ -86,6 +86,25 @@ gst_decklink_connection_get_type (void)
   return type;
 }
 
+GType
+gst_decklink_audio_connection_get_type (void)
+{
+  static GType type;
+
+  if (!type) {
+    static const GEnumValue connections[] = {
+      {GST_DECKLINK_AUDIO_CONNECTION_AUTO, "auto", "Automatic"},
+      {GST_DECKLINK_AUDIO_CONNECTION_EMBEDDED, "embedded", "SDI/HDMI embedded audio"},
+      {GST_DECKLINK_AUDIO_CONNECTION_AES_EBU, "aes", "AES/EBU input"},
+      {GST_DECKLINK_AUDIO_CONNECTION_ANALOG, "analog", "Analog input"},
+      {0, NULL, NULL}
+    };
+
+    type = g_enum_register_static ("GstDecklinkAudioConnection", connections);
+  }
+  return type;
+}
+
 #define NTSC 10, 11, false, false
 #define PAL 12, 11, true, false
 #define HD 1, 1, false, true

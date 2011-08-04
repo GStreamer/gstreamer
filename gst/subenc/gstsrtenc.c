@@ -46,7 +46,6 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("text/plain; text/x-pango-markup"));
 
 static GstFlowReturn gst_srt_enc_chain (GstPad * pad, GstBuffer * buf);
-static gboolean plugin_init (GstPlugin * plugin);
 static gchar *gst_srt_enc_timeconvertion (GstSrtEnc * srtenc, GstBuffer * buf);
 static gchar *gst_srt_enc_timestamp_to_string (GstClockTime timestamp);
 static void gst_srt_enc_get_property (GObject * object, guint prop_id,
@@ -241,16 +240,3 @@ gst_srt_enc_init (GstSrtEnc * srtenc, GstSrtEncClass * klass)
   gst_element_add_pad (GST_ELEMENT (srtenc), srtenc->sinkpad);
   gst_pad_set_chain_function (srtenc->sinkpad, gst_srt_enc_chain);
 }
-
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "srtenc", GST_RANK_NONE,
-      GST_TYPE_SRT_ENC);
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "subenc",
-    "subtitle encoders",
-    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

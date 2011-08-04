@@ -63,6 +63,15 @@ typedef enum {
 #define GST_TYPE_DECKLINK_CONNECTION (gst_decklink_connection_get_type ())
 GType gst_decklink_connection_get_type (void);
 
+typedef enum {
+  GST_DECKLINK_AUDIO_CONNECTION_AUTO,
+  GST_DECKLINK_AUDIO_CONNECTION_EMBEDDED,
+  GST_DECKLINK_AUDIO_CONNECTION_AES_EBU,
+  GST_DECKLINK_AUDIO_CONNECTION_ANALOG
+} GstDecklinkAudioConnectionEnum;
+#define GST_TYPE_DECKLINK_AUDIO_CONNECTION (gst_decklink_audio_connection_get_type ())
+GType gst_decklink_audio_connection_get_type (void);
+
 typedef struct _GstDecklinkMode GstDecklinkMode;
 struct _GstDecklinkMode {
   BMDDisplayMode mode;

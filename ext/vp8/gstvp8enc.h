@@ -60,6 +60,8 @@ struct _GstVP8Enc
   /* properties */
   int bitrate;
   enum vpx_rc_mode mode;
+  unsigned int minsection_pct;
+  unsigned int maxsection_pct;
   int min_quantizer;
   int max_quantizer;
   double quality;
@@ -73,6 +75,14 @@ struct _GstVP8Enc
   GByteArray *first_pass_cache_content;
   vpx_fixed_buf_t last_pass_cache_content;
   gboolean auto_alt_ref_frames;
+  unsigned int lag_in_frames;
+  int sharpness;
+  int noise_sensitivity;
+  vp8e_tuning tuning;
+  int static_threshold;
+  gboolean drop_frame;
+  gboolean resize_allowed;
+  gboolean partitions;
 
   /* state */
   gboolean inited;
