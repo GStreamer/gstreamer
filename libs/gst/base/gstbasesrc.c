@@ -2844,7 +2844,7 @@ static gboolean
 gst_base_src_start (GstBaseSrc * basesrc)
 {
   GstBaseSrcClass *bclass;
-  gboolean result;
+  gboolean result, have_size;
   guint64 size;
   gboolean seekable;
   GstFormat format;
@@ -2877,13 +2877,12 @@ gst_base_src_start (GstBaseSrc * basesrc)
   format = basesrc->segment.format;
 
   /* figure out the size */
+  have_size = FALSE;
+  size = -1;
   if (format == GST_FORMAT_BYTES) {
     if (bclass->get_size) {
-      if (!(result = bclass->get_size (basesrc, &size)))
+      if (!(have_size = bclass->get_size (basesrc, &size)))
         size = -1;
-    } else {
-      result = FALSE;
-      size = -1;
     }
     GST_DEBUG_OBJECT (basesrc, "setting size %" G_GUINT64_FORMAT, size);
     /* only update the size when operating in bytes, subclass is supposed
@@ -2891,13 +2890,11 @@ gst_base_src_start (GstBaseSrc * basesrc)
     GST_OBJECT_LOCK (basesrc);
     basesrc->segment.duration = size;
     GST_OBJECT_UNLOCK (basesrc);
-  } else {
-    size = -1;
   }
 
   GST_DEBUG_OBJECT (basesrc,
       "format: %s, have size: %d, size: %" G_GUINT64_FORMAT ", duration: %"
-      G_GINT64_FORMAT, gst_format_get_name (format), result, size,
+      G_GINT64_FORMAT, gst_format_get_name (format), have_size, size,
       basesrc->segment.duration);
 
   seekable = gst_base_src_seekable (basesrc);
@@ -2908,7 +2905,9 @@ gst_base_src_start (GstBaseSrc * basesrc)
 
   GST_DEBUG_OBJECT (basesrc, "is random_access: %d", basesrc->random_access);
 
-  return result;
+  gst_pad_mark_reconfigure (GST_BASE_SRC_PAD (basesrc));
+
+  return TRUE;
 
   /* ERROR */
 could_not_start:
