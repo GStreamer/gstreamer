@@ -2124,7 +2124,7 @@ gst_v4l2_object_setup_pool (GstV4l2Object * v4l2object, GstCaps * caps)
   /* Map the buffers */
   GST_LOG_OBJECT (v4l2object->element, "initiating buffer pool");
 
-  if (!(v4l2object->pool = gst_v4l2_buffer_pool_new (v4l2object)))
+  if (!(v4l2object->pool = gst_v4l2_buffer_pool_new (v4l2object, caps)))
     goto buffer_pool_new_failed;
 
   GST_V4L2_SET_ACTIVE (v4l2object);

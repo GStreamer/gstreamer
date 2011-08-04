@@ -236,7 +236,6 @@ gst_v4l2sink_init (GstV4l2Sink * v4l2sink)
   g_object_set (v4l2sink, "device", "/dev/video1", NULL);
 
   v4l2sink->probed_caps = NULL;
-  v4l2sink->current_caps = NULL;
 
   v4l2sink->overlay_fields_set = 0;
   v4l2sink->crop_fields_set = 0;
@@ -250,10 +249,6 @@ gst_v4l2sink_dispose (GObject * object)
 
   if (v4l2sink->probed_caps) {
     gst_caps_unref (v4l2sink->probed_caps);
-  }
-
-  if (v4l2sink->current_caps) {
-    gst_caps_unref (v4l2sink->current_caps);
   }
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
@@ -584,16 +579,6 @@ gst_v4l2sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
     return FALSE;
   }
 
-  if (v4l2sink->current_caps) {
-    GST_DEBUG_OBJECT (v4l2sink, "already have caps set.. are they equal?");
-    LOG_CAPS (v4l2sink, v4l2sink->current_caps);
-    if (gst_caps_is_equal (v4l2sink->current_caps, caps)) {
-      GST_DEBUG_OBJECT (v4l2sink, "yes they are!");
-      return TRUE;
-    }
-    GST_DEBUG_OBJECT (v4l2sink, "no they aren't!");
-  }
-
   if (!gst_v4l2_object_stop (obj))
     goto stop_failed;
 
@@ -618,8 +603,6 @@ gst_v4l2sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   GST_VIDEO_SINK_WIDTH (v4l2sink) = v4l2sink->video_width;
   GST_VIDEO_SINK_HEIGHT (v4l2sink) = v4l2sink->video_height;
 
-  v4l2sink->current_caps = gst_caps_ref (caps);
-
   return TRUE;
 
   /* ERRORS */
@@ -642,9 +625,8 @@ gst_v4l2sink_setup_allocation (GstBaseSink * bsink, GstQuery * query)
   GstV4l2Sink *v4l2sink = GST_V4L2SINK (bsink);
   GstV4l2Object *obj = v4l2sink->v4l2object;
   GstBufferPool *pool;
-  GstStructure *config;
+  gsize size = 0;
   GstCaps *caps;
-  guint size = 0;
   gboolean need_pool;
 
   gst_query_parse_allocation (query, &caps, &need_pool);
@@ -652,11 +634,12 @@ gst_v4l2sink_setup_allocation (GstBaseSink * bsink, GstQuery * query)
   if (caps == NULL)
     goto no_caps;
 
-  if ((pool = GST_BUFFER_POOL_CAST (obj->pool)))
+  if ((pool = obj->pool))
     gst_object_ref (pool);
 
   if (pool != NULL) {
     const GstCaps *pcaps;
+    GstStructure *config;
 
     /* we had a pool, check caps */
     config = gst_buffer_pool_get_config (pool);
@@ -670,7 +653,7 @@ gst_v4l2sink_setup_allocation (GstBaseSink * bsink, GstQuery * query)
     }
   }
   /* we need at least 2 buffers to operate */
-  gst_query_set_allocation_params (query, size, 2, 0, 0, 15, pool);
+  gst_query_set_allocation_params (query, size, 2, 0, 0, 0, pool);
 
   /* we also support various metadata */
   gst_query_add_allocation_meta (query, GST_META_API_VIDEO);
@@ -708,7 +691,8 @@ gst_v4l2sink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
   if (G_UNLIKELY (obj->pool == NULL))
     goto not_negotiated;
 
-  ret = gst_v4l2_buffer_pool_process (obj->pool, buf);
+  ret =
+      gst_v4l2_buffer_pool_process (GST_V4L2_BUFFER_POOL_CAST (obj->pool), buf);
 
   return ret;
 

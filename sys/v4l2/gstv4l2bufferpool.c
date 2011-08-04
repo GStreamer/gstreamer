@@ -339,6 +339,9 @@ gst_v4l2_buffer_pool_start (GstBufferPool * bpool)
       GST_DEBUG_OBJECT (pool, "starting, requesting %d MMAP buffers",
           max_buffers);
 
+      if (max_buffers == 0)
+        max_buffers = 4;
+
       memset (&breq, 0, sizeof (struct v4l2_requestbuffers));
       breq.type = obj->type;
       breq.count = max_buffers;
@@ -456,6 +459,9 @@ gst_v4l2_buffer_pool_stop (GstBufferPool * bpool)
     if (pool->buffers[n])
       gst_v4l2_buffer_pool_free_buffer (bpool, pool->buffers[n]);
   }
+  g_free (pool->buffers);
+  pool->buffers = NULL;
+
   return ret;
 
   /* ERRORS */
@@ -813,10 +819,7 @@ gst_v4l2_buffer_pool_finalize (GObject * object)
   if (pool->video_fd >= 0)
     v4l2_close (pool->video_fd);
 
-  if (pool->buffers) {
-    g_free (pool->buffers);
-    pool->buffers = NULL;
-  }
+  g_free (pool->buffers);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -851,8 +854,8 @@ gst_v4l2_buffer_pool_class_init (GstV4l2BufferPoolClass * klass)
  *
  * Returns: the new pool, use gst_object_unref() to free resources
  */
-GstV4l2BufferPool *
-gst_v4l2_buffer_pool_new (GstV4l2Object * obj)
+GstBufferPool *
+gst_v4l2_buffer_pool_new (GstV4l2Object * obj, GstCaps * caps)
 {
   GstV4l2BufferPool *pool;
   gint fd;
@@ -865,7 +868,10 @@ gst_v4l2_buffer_pool_new (GstV4l2Object * obj)
   pool->video_fd = fd;
   pool->obj = obj;
 
-  return pool;
+  gst_buffer_pool_config_set (GST_BUFFER_POOL_CAST (pool)->config, caps,
+      obj->sizeimage, 2, 0, 0, 0);
+
+  return GST_BUFFER_POOL (pool);
 
   /* ERRORS */
 dup_failed:
@@ -1007,14 +1013,31 @@ gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer * buf)
           if (buf->pool == bpool) {
             /* nothing, we can queue directly */
             to_queue = buf;
+            GST_LOG_OBJECT (pool, "processing buffer from our pool");
           } else {
+            GST_LOG_OBJECT (pool, "alloc buffer from our pool");
+            if (!gst_buffer_pool_is_active (bpool)) {
+              GstStructure *config;
+
+              /* this pool was not activated, configure and activate */
+              GST_DEBUG_OBJECT (pool, "activating pool");
+
+              config = gst_buffer_pool_get_config (bpool);
+              gst_buffer_pool_config_add_option (config,
+                  GST_BUFFER_POOL_OPTION_META_VIDEO);
+              gst_buffer_pool_set_config (bpool, config);
+
+              if (!gst_buffer_pool_set_active (bpool, TRUE))
+                goto activate_failed;
+            }
+
             /* this can block if all buffers are outstanding which would be
              * strange because we would expect the upstream element to have
              * allocated them and returned to us.. */
             ret = GST_BUFFER_POOL_CLASS (parent_class)->acquire_buffer (bpool,
                 &to_queue, NULL);
             if (ret != GST_FLOW_OK)
-              goto done;
+              goto acquire_failed;
 
             /* copy into it and queue */
             if (!gst_v4l2_object_copy (obj, to_queue, buf))
@@ -1058,6 +1081,17 @@ done:
   return ret;
 
   /* ERRORS */
+activate_failed:
+  {
+    GST_ERROR_OBJECT (obj->element, "failed to activate pool");
+    return GST_FLOW_ERROR;
+  }
+acquire_failed:
+  {
+    GST_WARNING_OBJECT (obj->element, "failed to acquire a buffer: %s",
+        gst_flow_get_name (ret));
+    return ret;
+  }
 copy_failed:
   {
     GST_ERROR_OBJECT (obj->element, "failed to copy data");

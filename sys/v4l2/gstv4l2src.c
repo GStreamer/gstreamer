@@ -633,7 +633,8 @@ gst_v4l2src_query (GstBaseSrc * bsrc, GstQuery * query)
       min_latency = gst_util_uint64_scale_int (GST_SECOND, fps_d, fps_n);
 
       /* max latency is total duration of the frame buffer */
-      max_latency = obj->pool->max_buffers * min_latency;
+      max_latency =
+          GST_V4L2_BUFFER_POOL_CAST (obj->pool)->max_buffers * min_latency;
 
       GST_DEBUG_OBJECT (bsrc,
           "report latency min %" GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
@@ -759,7 +760,8 @@ gst_v4l2src_fill (GstPushSrc * src, GstBuffer * buf)
   }
 #endif
 
-  ret = gst_v4l2_buffer_pool_process (obj->pool, buf);
+  ret =
+      gst_v4l2_buffer_pool_process (GST_V4L2_BUFFER_POOL_CAST (obj->pool), buf);
 
   if (G_UNLIKELY (ret != GST_FLOW_OK))
     goto error;
