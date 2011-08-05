@@ -75,7 +75,7 @@
   gint bef = g_atomic_int_exchange_and_add (&c->processing_counter, 1); \
   if (bef == 0)                                                         \
     g_object_notify (G_OBJECT (c), "idle");                             \
-  GST_DEBUG_OBJECT ((c), "Processing counter increModemented to: %d",       \
+  GST_DEBUG_OBJECT ((c), "Processing counter incremented to: %d",       \
       bef + 1);                                                         \
 }
 
