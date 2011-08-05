@@ -136,8 +136,8 @@ GES-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libges-@GST_MAJORMINOR@.la
 		$(gir_cincludes) \
 		-I$(top_srcdir) \
 		-I$(top_builddir) \
-		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-0.10` \
-		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-pbutils-0.10` \
+		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-0.11` \
+		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-pbutils-0.11` \
 		--library=libges-@GST_MAJORMINOR@.la \
 		--include=Gst-@GST_MAJORMINOR@ \
 		--include=GstPbutils-@GST_MAJORMINOR@ \
@@ -165,8 +165,8 @@ typelibs_DATA = $(BUILT_GIRSOURCES:.gir=.typelib)
 		--includedir=$(srcdir) \
 		--includedir=$(srcdir)/../video \
 		--includedir=$(builddir) \
-		--includedir=`$(PKG_CONFIG) --variable=girdir gstreamer-0.10` \
-		--includedir=`$(PKG_CONFIG) --variable=girdir gstreamer-pbutils-0.10` \
+		--includedir=`$(PKG_CONFIG) --variable=girdir gstreamer-0.11` \
+		--includedir=`$(PKG_CONFIG) --variable=girdir gstreamer-pbutils-0.11` \
 		$(INTROSPECTION_COMPILER_OPTS) $< -o $(@F)
 
 CLEANFILES += $(BUILT_GIRSOURCES) $(typelibs_DATA)

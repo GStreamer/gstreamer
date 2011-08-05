@@ -1,7 +1,7 @@
 %define majorminor  @GST_MAJORMINOR@
 %define gstreamer   gstreamer
 
-%define gst_minver   0.10.0
+%define gst_minver   0.11.0
 
 Name: 		%{gstreamer}-editing-services
 Version: 	@VERSION@
