@@ -33,6 +33,7 @@
 # include <gst/vaapi/gstvaapidecoder_ffmpeg.h>
 #endif
 #if USE_CODEC_PARSERS
+# include <gst/vaapi/gstvaapidecoder_mpeg2.h>
 #endif
 
 /* Set to 1 to check display cache works (shared VA display) */
@@ -160,6 +161,9 @@ main(int argc, char *argv[])
     else {
 #if USE_CODEC_PARSERS
         switch (gst_vaapi_profile_get_codec(info.profile)) {
+        case GST_VAAPI_CODEC_MPEG2:
+            decoder = gst_vaapi_decoder_mpeg2_new(display, decoder_caps);
+            break;
         default:
             decoder = NULL;
             break;

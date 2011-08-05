@@ -31,6 +31,7 @@
 #include "config.h"
 
 #include <gst/vaapi/gstvaapidisplay.h>
+#include <gst/vaapi/gstvaapidecoder_mpeg2.h>
 #include <gst/vaapi/gstvaapivideosink.h>
 #include <gst/vaapi/gstvaapivideobuffer.h>
 #include <gst/vaapi/gstvaapidecoder_ffmpeg.h>
@@ -49,6 +50,7 @@
 # include <gst/vaapi/gstvaapidecoder_ffmpeg.h>
 #endif
 #if USE_CODEC_PARSERS
+# include <gst/vaapi/gstvaapidecoder_mpeg2.h>
 #endif
 
 /* Favor codecparsers-based decoders for 0.3.x series */
@@ -283,6 +285,7 @@ gst_vaapidecode_create(GstVaapiDecode *decode, GstCaps *caps)
 {
     VADisplay dpy;
     GstStructure *structure;
+    int version;
 
     if (!gst_vaapi_ensure_display(decode, &decode->display))
         return FALSE;
@@ -306,6 +309,12 @@ gst_vaapidecode_create(GstVaapiDecode *decode, GstCaps *caps)
         structure = gst_caps_get_structure(caps, 0);
         if (!structure)
             return FALSE;
+        if (gst_structure_has_name(structure, "video/mpeg")) {
+            if (!gst_structure_get_int(structure, "mpegversion", &version))
+                return FALSE;
+            if (version == 2)
+                decode->decoder = gst_vaapi_decoder_mpeg2_new(dpy, caps);
+        }
 #endif
     }
     if (!decode->decoder)

@@ -144,8 +144,10 @@ endif
 
 if USE_CODEC_PARSERS
 libgstvaapi_source_c	+= \
+	gstvaapidecoder_mpeg2.c			\
 	$(NULL)
 libgstvaapi_source_h	+= \
+	gstvaapidecoder_mpeg2.h			\
 	$(NULL)
 libgstvaapi_cflags	+= $(GST_CODEC_PARSERS_CFLAGS)
 libgstvaapi_libs	+= $(GST_CODEC_PARSERS_LIBS)
