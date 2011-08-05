@@ -356,6 +356,11 @@ main (int argc, char **argv)
   candidates = get_candidates (dir, base);
   g_free (dir);
 
+  /* only look for 0.10, we don't want 0.11 tools to be picked up accidentally
+   * (and from 0.11 on the unversioned tools are discontinued anyway) */
+  if (_arg_mm == NULL)
+    _arg_mm = GST_MAJORMINOR;
+
   if (_arg_mm) {
     /* if a version was forced, look it up in the hash table */
     dir = g_hash_table_lookup (candidates, _arg_mm);
