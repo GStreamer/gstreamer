@@ -513,17 +513,18 @@ xvimage_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   if (!gst_video_info_from_caps (&info, caps))
     goto wrong_caps;
 
-  priv->info = info;
-
   GST_LOG_OBJECT (pool, "%dx%d, caps %" GST_PTR_FORMAT, info.width, info.height,
       caps);
 
-  /* keep track of the width and height and caps */
+  priv->im_format =
+      gst_xvimagesink_get_format_from_caps (xvpool->sink, (GstCaps *) caps);
+  if (priv->im_format == -1)
+    goto unknown_format;
+
   if (priv->caps)
     gst_caps_unref (priv->caps);
   priv->caps = gst_caps_copy (caps);
-  priv->im_format =
-      gst_xvimagesink_get_format_from_caps (xvpool->sink, (GstCaps *) caps);
+  priv->info = info;
 
   /* enable metadata based on config of the pool */
   priv->add_metavideo =
@@ -552,9 +553,6 @@ xvimage_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   priv->padded_height =
       GST_VIDEO_INFO_HEIGHT (&info) + priv->align.padding_top +
       priv->align.padding_bottom;
-
-  if (priv->im_format == -1)
-    goto unknown_format;
 
   return GST_BUFFER_POOL_CLASS (parent_class)->set_config (pool, config);
 
