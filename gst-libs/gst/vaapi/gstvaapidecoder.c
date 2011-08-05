@@ -26,7 +26,6 @@
  */
 
 #include "config.h"
-#include <assert.h>
 #include <string.h>
 #include "gstvaapicompat.h"
 #include "gstvaapidecoder.h"
@@ -44,6 +43,7 @@ enum {
 
     PROP_DISPLAY,
     PROP_CAPS,
+    PROP_CODEC_INFO,
 };
 
 static void
@@ -202,6 +202,20 @@ set_caps(GstVaapiDecoder *decoder, GstCaps *caps)
         set_codec_data(decoder, gst_value_get_buffer(v_codec_data));
 }
 
+static inline void
+set_codec_info(GstVaapiDecoder *decoder, GstVaapiCodecInfo *codec_info)
+{
+    GstVaapiDecoderPrivate * const priv = decoder->priv;
+
+    if (codec_info) {
+        priv->codec_info = *codec_info;
+        if (!priv->codec_info.pic_size)
+            priv->codec_info.pic_size = sizeof(GstVaapiPicture);
+        if (!priv->codec_info.slice_size)
+            priv->codec_info.slice_size = sizeof(GstVaapiSlice);
+    }
+}
+
 static void
 clear_queue(GQueue *q, GDestroyNotify destroy)
 {
@@ -225,6 +239,7 @@ gst_vaapi_decoder_finalize(GObject *object)
     if (priv->context) {
         g_object_unref(priv->context);
         priv->context = NULL;
+        priv->va_context = VA_INVALID_ID;
     }
  
     if (priv->buffers) {
@@ -242,6 +257,7 @@ gst_vaapi_decoder_finalize(GObject *object)
     if (priv->display) {
         g_object_unref(priv->display);
         priv->display = NULL;
+        priv->va_display = NULL;
     }
 
     G_OBJECT_CLASS(gst_vaapi_decoder_parent_class)->finalize(object);
@@ -261,9 +277,16 @@ gst_vaapi_decoder_set_property(
     switch (prop_id) {
     case PROP_DISPLAY:
         priv->display = g_object_ref(g_value_get_object(value));
+        if (priv->display)
+            priv->va_display = gst_vaapi_display_get_display(priv->display);
+        else
+            priv->va_display = NULL;
         break;
     case PROP_CAPS:
         set_caps(decoder, g_value_get_pointer(value));
+        break;
+    case PROP_CODEC_INFO:
+        set_codec_info(decoder, g_value_get_pointer(value));
         break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -326,6 +349,14 @@ gst_vaapi_decoder_class_init(GstVaapiDecoderClass *klass)
                               "Decoder caps",
                               "The decoder caps",
                               G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
+
+    g_object_class_install_property
+        (object_class,
+         PROP_CODEC_INFO,
+         g_param_spec_pointer("codec-info",
+                              "Codec info",
+                              "The codec info",
+                              G_PARAM_WRITABLE|G_PARAM_CONSTRUCT_ONLY));
 }
 
 static void
@@ -334,7 +365,10 @@ gst_vaapi_decoder_init(GstVaapiDecoder *decoder)
     GstVaapiDecoderPrivate *priv = GST_VAAPI_DECODER_GET_PRIVATE(decoder);
 
     decoder->priv               = priv;
+    priv->display               = NULL;
+    priv->va_display            = NULL;
     priv->context               = NULL;
+    priv->va_context            = VA_INVALID_ID;
     priv->caps                  = NULL;
     priv->codec                 = 0;
     priv->codec_data            = NULL;
@@ -527,7 +561,11 @@ gst_vaapi_decoder_ensure_context(
         width,
         height
     );
-    return priv->context != NULL;
+    if (!priv->context)
+        return FALSE;
+
+    priv->va_context = gst_vaapi_context_get_id(priv->context);
+    return TRUE;
 }
 
 gboolean
@@ -572,4 +610,282 @@ gst_vaapi_decoder_push_surface_proxy(
 )
 {
     return push_surface(decoder, g_object_ref(proxy), timestamp);
+}
+
+static void
+destroy_iq_matrix(GstVaapiDecoder *decoder, GstVaapiIqMatrix *iq_matrix);
+
+static void
+destroy_slice(GstVaapiDecoder *decoder, GstVaapiSlice *slice);
+
+static void
+destroy_slice_cb(gpointer data, gpointer user_data)
+{
+    GstVaapiDecoder * const decoder = GST_VAAPI_DECODER(user_data);
+    GstVaapiSlice * const   slice   = data;
+
+    destroy_slice(decoder, slice);
+}
+
+static void
+destroy_picture(GstVaapiDecoder *decoder, GstVaapiPicture *picture)
+{
+    GstVaapiDecoderPrivate * const priv = decoder->priv;
+
+    if (picture->slices) {
+        g_ptr_array_foreach(picture->slices, destroy_slice_cb, decoder);
+        g_ptr_array_free(picture->slices, TRUE);
+        picture->slices = NULL;
+    }
+
+    if (picture->iq_matrix) {
+        destroy_iq_matrix(decoder, picture->iq_matrix);
+        picture->iq_matrix = NULL;
+    }
+
+    picture->surface = NULL;
+    picture->surface_id = VA_INVALID_ID;
+
+    vaapi_destroy_buffer(priv->va_display, &picture->param_id);
+    picture->param = NULL;
+    g_slice_free1(priv->codec_info.pic_size, picture);
+}
+
+static GstVaapiPicture *
+create_picture(GstVaapiDecoder *decoder)
+{
+    GstVaapiDecoderPrivate * const priv = decoder->priv;
+    GstVaapiPicture *picture;
+
+    picture = g_slice_alloc(priv->codec_info.pic_size);
+    if (!picture)
+        return NULL;
+
+    picture->type       = GST_VAAPI_PICTURE_TYPE_NONE;
+    picture->flags      = 0;
+    picture->surface_id = VA_INVALID_ID;
+    picture->surface    = NULL;
+    picture->param_id   = VA_INVALID_ID;
+    picture->param      = NULL;
+    picture->slices     = NULL;
+    picture->iq_matrix  = NULL;
+    picture->pts        = GST_CLOCK_TIME_NONE;
+
+    picture->surface = gst_vaapi_context_get_surface(priv->context);
+    if (!picture->surface)
+        goto error;
+    picture->surface_id = gst_vaapi_surface_get_id(picture->surface);
+
+    picture->param = vaapi_create_buffer(
+        priv->va_display,
+        priv->va_context,
+        VAPictureParameterBufferType,
+        priv->codec_info.pic_param_size,
+        &picture->param_id
+    );
+    if (!picture->param)
+        goto error;
+
+    picture->slices = g_ptr_array_new();
+    if (!picture->slices)
+        goto error;
+    return picture;
+
+error:
+    destroy_picture(priv->va_display, picture);
+    return NULL;
+}
+
+GstVaapiPicture *
+gst_vaapi_decoder_new_picture(GstVaapiDecoder *decoder)
+{
+    return create_picture(decoder);
+}
+
+void
+gst_vaapi_decoder_free_picture(GstVaapiDecoder *decoder, GstVaapiPicture *picture)
+{
+    destroy_picture(decoder, picture);
+}
+
+static void
+destroy_iq_matrix(GstVaapiDecoder *decoder, GstVaapiIqMatrix *iq_matrix)
+{
+    GstVaapiDecoderPrivate * const priv = decoder->priv;
+
+    vaapi_destroy_buffer(priv->va_display, &iq_matrix->param_id);
+    iq_matrix->param = NULL;
+    g_slice_free(GstVaapiIqMatrix, iq_matrix);
+}
+
+static GstVaapiIqMatrix *
+create_iq_matrix(GstVaapiDecoder *decoder)
+{
+    GstVaapiDecoderPrivate * const priv = decoder->priv;
+    GstVaapiIqMatrix *iq_matrix;
+
+    iq_matrix = g_slice_new(GstVaapiIqMatrix);
+    if (!iq_matrix)
+        return NULL;
+
+    iq_matrix->param_id = VA_INVALID_ID;
+
+    iq_matrix->param = vaapi_create_buffer(
+        priv->va_display,
+        priv->va_context,
+        VAIQMatrixBufferType,
+        priv->codec_info.iq_matrix_size,
+        &iq_matrix->param_id
+    );
+    if (!iq_matrix->param)
+        goto error;
+    return iq_matrix;
+
+error:
+    destroy_iq_matrix(decoder, iq_matrix);
+    return NULL;
+}
+
+GstVaapiIqMatrix *
+gst_vaapi_decoder_new_iq_matrix(GstVaapiDecoder *decoder)
+{
+    return create_iq_matrix(decoder);
+}
+
+static void
+destroy_slice(GstVaapiDecoder *decoder, GstVaapiSlice *slice)
+{
+    GstVaapiDecoderPrivate * const priv = decoder->priv;
+
+    vaapi_destroy_buffer(priv->va_display, &slice->data_id);
+    vaapi_destroy_buffer(priv->va_display, &slice->param_id);
+    slice->param = NULL;
+    g_slice_free1(priv->codec_info.slice_size, slice);
+}
+
+static GstVaapiSlice *
+create_slice(GstVaapiDecoder *decoder, guchar *buf, guint buf_size)
+{
+    GstVaapiDecoderPrivate * const priv = decoder->priv;
+    GstVaapiSlice *slice;
+    VASliceParameterBufferBase *slice_param;
+    guchar *data;
+
+    slice = g_slice_alloc(priv->codec_info.slice_size);
+    if (!slice)
+        return NULL;
+
+    slice->data_id  = VA_INVALID_ID;
+    slice->param_id = VA_INVALID_ID;
+
+    data = vaapi_create_buffer(
+        priv->va_display,
+        priv->va_context,
+        VASliceDataBufferType,
+        buf_size,
+        &slice->data_id
+    );
+    if (!data)
+        goto error;
+    memcpy(data, buf, buf_size);
+    vaapi_unmap_buffer(priv->va_display, slice->data_id, NULL);
+
+    slice->param = vaapi_create_buffer(
+        priv->va_display,
+        priv->va_context,
+        VASliceParameterBufferType,
+        priv->codec_info.slice_param_size,
+        &slice->param_id
+    );
+    if (!slice->param)
+        goto error;
+
+    slice_param                    = slice->param;
+    slice_param->slice_data_size   = buf_size;
+    slice_param->slice_data_offset = 0;
+    slice_param->slice_data_flag   = VA_SLICE_DATA_FLAG_ALL;
+    return slice;
+
+error:
+    destroy_slice(decoder, slice);
+    return NULL;
+}
+
+GstVaapiSlice *
+gst_vaapi_decoder_new_slice(
+    GstVaapiDecoder *decoder,
+    GstVaapiPicture *picture,
+    guchar          *buf,
+    guint            buf_size
+)
+{
+    GstVaapiSlice *slice;
+
+    slice = create_slice(decoder, buf, buf_size);
+    if (!slice)
+        return NULL;
+    g_ptr_array_add(picture->slices, slice);
+    return slice;
+}
+
+gboolean
+gst_vaapi_decoder_decode_picture(
+    GstVaapiDecoder *decoder,
+    GstVaapiPicture *picture
+)
+{
+    GstVaapiDecoderPrivate * const priv = decoder->priv;
+    GstVaapiIqMatrix * const iq_matrix = picture->iq_matrix;
+    GstVaapiSlice *slice;
+    VABufferID va_buffers[3];
+    guint i, n_va_buffers = 0;
+    VAStatus status;
+
+    GST_DEBUG("decode picture 0x%08x", gst_vaapi_surface_get_id(picture->surface));
+
+    vaapi_unmap_buffer(priv->va_display, picture->param_id, &picture->param);
+    va_buffers[n_va_buffers++] = picture->param_id;
+
+    if (iq_matrix) {
+        vaapi_unmap_buffer(priv->va_display, iq_matrix->param_id, &iq_matrix->param);
+        va_buffers[n_va_buffers++] = iq_matrix->param_id;
+    }
+
+    status = vaBeginPicture(
+        priv->va_display,
+        priv->va_context,
+        picture->surface_id
+    );
+    if (!vaapi_check_status(status, "vaBeginPicture()"))
+        return FALSE;
+
+    status = vaRenderPicture(
+        priv->va_display,
+        priv->va_context,
+        va_buffers, n_va_buffers
+    );
+    if (!vaapi_check_status(status, "vaRenderPicture()"))
+        return FALSE;
+
+    for (i = 0; i < picture->slices->len; i++) {
+        slice = g_ptr_array_index(picture->slices, i);
+
+        vaapi_unmap_buffer(priv->va_display, slice->param_id, NULL);
+        va_buffers[0] = slice->param_id;
+        va_buffers[1] = slice->data_id;
+        n_va_buffers  = 2;
+
+        status = vaRenderPicture(
+            priv->va_display,
+            priv->va_context,
+            va_buffers, n_va_buffers
+        );
+        if (!vaapi_check_status(status, "vaRenderPicture()"))
+            return FALSE;
+    }
+
+    status = vaEndPicture(priv->va_display, priv->va_context);
+    if (!vaapi_check_status(status, "vaEndPicture()"))
+        return FALSE;
+    return TRUE;
 }

@@ -108,12 +108,74 @@ G_BEGIN_DECLS
                                  GST_VAAPI_TYPE_DECODER,        \
                                  GstVaapiDecoderPrivate))
 
+typedef enum _GstVaapiPictureType       GstVaapiPictureType;
+typedef struct _GstVaapiCodecInfo       GstVaapiCodecInfo;
+typedef struct _GstVaapiPicture         GstVaapiPicture;
+typedef struct _GstVaapiSlice           GstVaapiSlice;
+typedef struct _GstVaapiIqMatrix        GstVaapiIqMatrix;
+
+enum _GstVaapiPictureType {
+    GST_VAAPI_PICTURE_TYPE_NONE = 0,        // Undefined
+    GST_VAAPI_PICTURE_TYPE_I,               // Intra
+    GST_VAAPI_PICTURE_TYPE_P,               // Predicted
+    GST_VAAPI_PICTURE_TYPE_B,               // Bi-directional predicted
+    GST_VAAPI_PICTURE_TYPE_S,               // S(GMC)-VOP (MPEG-4)
+    GST_VAAPI_PICTURE_TYPE_SI,              // Switching Intra
+    GST_VAAPI_PICTURE_TYPE_SP,              // Switching Predicted
+    GST_VAAPI_PICTURE_TYPE_BI,              // BI type (VC-1)
+};
+
+enum {
+    GST_VAAPI_PICTURE_SKIPPED   = 1 << 0,   // Skipped frame
+    GST_VAAPI_PICTURE_REFERENCE = 1 << 1,   // Reference frame
+};
+
+#define GST_VAAPI_PICTURE(picture) \
+    ((GstVaapiPicture *)(picture))
+
+#define GST_VAAPI_PICTURE_IS_REFERENCE(picture) \
+    ((GST_VAAPI_PICTURE(picture)->flags & GST_VAAPI_PICTURE_REFERENCE) != 0)
+
+struct _GstVaapiCodecInfo {
+    guint               pic_size;           // GstVaapiPicture size
+    guint               slice_size;         // GstVaapiSlice size
+    guint               pic_param_size;     // VAPictureParameterBuffer size
+    guint               slice_param_size;   // VASliceParameterBuffer size
+    guint               iq_matrix_size;     // VAIQMatrixBuffer size
+};
+
+struct _GstVaapiPicture {
+    GstVaapiPictureType type;
+    guint               flags;
+    VASurfaceID         surface_id;
+    GstVaapiSurface    *surface;
+    VABufferID          param_id;
+    void               *param;
+    GPtrArray          *slices;
+    GstVaapiIqMatrix   *iq_matrix;
+    GstClockTime        pts;
+};
+
+struct _GstVaapiSlice {
+    VABufferID          param_id;
+    void               *param;
+    VABufferID          data_id;
+};
+
+struct _GstVaapiIqMatrix {
+    VABufferID          param_id;
+    void               *param;
+};
+
 struct _GstVaapiDecoderPrivate {
     GstVaapiDisplay    *display;
+    VADisplay           va_display;
     GstVaapiContext    *context;
+    VAContextID         va_context;
     GstCaps            *caps;
     GstVaapiCodec       codec;
     GstBuffer          *codec_data;
+    GstVaapiCodecInfo   codec_info;
     guint               width;
     guint               height;
     guint               fps_n;
@@ -174,6 +236,32 @@ gst_vaapi_decoder_push_surface_proxy(
     GstVaapiDecoder      *decoder,
     GstVaapiSurfaceProxy *proxy,
     GstClockTime          timestamp
+) attribute_hidden;
+
+GstVaapiPicture *
+gst_vaapi_decoder_new_picture(GstVaapiDecoder *decoder)
+    attribute_hidden;
+
+void
+gst_vaapi_decoder_free_picture(GstVaapiDecoder *decoder, GstVaapiPicture *picture)
+    attribute_hidden;
+
+GstVaapiIqMatrix *
+gst_vaapi_decoder_new_iq_matrix(GstVaapiDecoder *decoder)
+    attribute_hidden;
+
+GstVaapiSlice *
+gst_vaapi_decoder_new_slice(
+    GstVaapiDecoder *decoder,
+    GstVaapiPicture *picture,
+    guchar          *buf,
+    guint            buf_size
+) attribute_hidden;
+
+gboolean
+gst_vaapi_decoder_decode_picture(
+    GstVaapiDecoder *decoder,
+    GstVaapiPicture *picture
 ) attribute_hidden;
 
 G_END_DECLS
