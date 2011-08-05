@@ -1211,6 +1211,8 @@ gst_ffmpegdec_video_negotiate (GstFFMpegDec * ffmpegdec, gboolean force)
 
   oclass = (GstFFMpegDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
 
+  force |= gst_pad_check_reconfigure (ffmpegdec->srcpad);
+
   /* first check if anything changed */
   if (!update_video_context (ffmpegdec, force))
     return TRUE;
