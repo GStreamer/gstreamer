@@ -237,7 +237,7 @@ _gst_buffer_initialize (void)
  * @src: a source #GstBuffer
  * @flags: flags indicating what metadata fields should be copied.
  * @offset: offset to copy from
- * @size: total size to copy
+ * @size: total size to copy. If -1, all data is copied.
  *
  * Copies the information from @src into @dest.
  *
