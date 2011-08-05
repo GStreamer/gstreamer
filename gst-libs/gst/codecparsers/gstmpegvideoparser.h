@@ -35,6 +35,7 @@ G_BEGIN_DECLS
  * @GST_MPEG_VIDEO_PACKET_PICTURE: Picture packet starting code
  * @GST_MPEG_VIDEO_PACKET_SLICE_MIN: Picture packet starting code
  * @GST_MPEG_VIDEO_PACKET_SLICE_MAX: Slice max packet starting code
+ * @GST_MPEG_VIDEO_PACKET_USER_DATA: User data packet starting code
  * @GST_MPEG_VIDEO_PACKET_SEQUENCE : Sequence packet starting code
  * @GST_MPEG_VIDEO_PACKET_EXTENSION: Extension packet starting code
  * @GST_MPEG_VIDEO_PACKET_SEQUENCE_END: Sequence end packet code
@@ -47,6 +48,7 @@ typedef enum {
   GST_MPEG_VIDEO_PACKET_PICTURE      = 0x00,
   GST_MPEG_VIDEO_PACKET_SLICE_MIN    = 0x01,
   GST_MPEG_VIDEO_PACKET_SLICE_MAX    = 0xaf,
+  GST_MPEG_VIDEO_PACKET_USER_DATA    = 0xb2,
   GST_MPEG_VIDEO_PACKET_SEQUENCE     = 0xb3,
   GST_MPEG_VIDEO_PACKET_EXTENSION    = 0xb5,
   GST_MPEG_VIDEO_PACKET_SEQUENCE_END = 0xb7,
