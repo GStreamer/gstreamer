@@ -544,7 +544,7 @@ orc_process_int16 (gint16 * ORC_RESTRICT d1, int p1, int n)
     /* 2: mulswl */
     var36.i = var33.i * var34.i;
     /* 3: shrsl */
-    var37.i = var36.i >> 13;
+    var37.i = var36.i >> 11;
     /* 4: convlw */
     var35.i = var37.i;
     /* 5: storew */
@@ -577,7 +577,7 @@ _backup_orc_process_int16 (OrcExecutor * ORC_RESTRICT ex)
     /* 2: mulswl */
     var36.i = var33.i * var34.i;
     /* 3: shrsl */
-    var37.i = var36.i >> 13;
+    var37.i = var36.i >> 11;
     /* 4: convlw */
     var35.i = var37.i;
     /* 5: storew */
@@ -630,7 +630,7 @@ orc_process_int16_clamp (gint16 * ORC_RESTRICT d1, int p1, int n)
     /* 2: mulswl */
     var36.i = var33.i * var34.i;
     /* 3: shrsl */
-    var37.i = var36.i >> 13;
+    var37.i = var36.i >> 11;
     /* 4: convssslw */
     var35.i = ORC_CLAMP_SW (var37.i);
     /* 5: storew */
@@ -663,7 +663,7 @@ _backup_orc_process_int16_clamp (OrcExecutor * ORC_RESTRICT ex)
     /* 2: mulswl */
     var36.i = var33.i * var34.i;
     /* 3: shrsl */
-    var37.i = var36.i >> 13;
+    var37.i = var36.i >> 11;
     /* 4: convssslw */
     var35.i = ORC_CLAMP_SW (var37.i);
     /* 5: storew */
@@ -716,7 +716,7 @@ orc_process_int8 (gint8 * ORC_RESTRICT d1, int p1, int n)
     /* 2: mulsbw */
     var36.i = var33 * var34;
     /* 3: shrsw */
-    var37.i = var36.i >> 5;
+    var37.i = var36.i >> 3;
     /* 4: convwb */
     var35 = var37.i;
     /* 5: storeb */
@@ -749,7 +749,7 @@ _backup_orc_process_int8 (OrcExecutor * ORC_RESTRICT ex)
     /* 2: mulsbw */
     var36.i = var33 * var34;
     /* 3: shrsw */
-    var37.i = var36.i >> 5;
+    var37.i = var36.i >> 3;
     /* 4: convwb */
     var35 = var37.i;
     /* 5: storeb */
@@ -802,7 +802,7 @@ orc_process_int8_clamp (gint8 * ORC_RESTRICT d1, int p1, int n)
     /* 2: mulsbw */
     var36.i = var33 * var34;
     /* 3: shrsw */
-    var37.i = var36.i >> 5;
+    var37.i = var36.i >> 3;
     /* 4: convssswb */
     var35 = ORC_CLAMP_SB (var37.i);
     /* 5: storeb */
@@ -835,7 +835,7 @@ _backup_orc_process_int8_clamp (OrcExecutor * ORC_RESTRICT ex)
     /* 2: mulsbw */
     var36.i = var33 * var34;
     /* 3: shrsw */
-    var37.i = var36.i >> 5;
+    var37.i = var36.i >> 3;
     /* 4: convssswb */
     var35 = ORC_CLAMP_SB (var37.i);
     /* 5: storeb */
@@ -2375,7 +2375,7 @@ gst_volume_orc_init (void)
     orc_program_set_name (p, "orc_process_int16");
     orc_program_set_backup_function (p, _backup_orc_process_int16);
     orc_program_add_destination (p, 2, "d1");
-    orc_program_add_constant (p, 4, 0x0000000d, "c1");
+    orc_program_add_constant (p, 4, 0x0000000b, "c1");
     orc_program_add_parameter (p, 2, "p1");
     orc_program_add_temporary (p, 4, "t1");
 
@@ -2398,7 +2398,7 @@ gst_volume_orc_init (void)
     orc_program_set_name (p, "orc_process_int16_clamp");
     orc_program_set_backup_function (p, _backup_orc_process_int16_clamp);
     orc_program_add_destination (p, 2, "d1");
-    orc_program_add_constant (p, 4, 0x0000000d, "c1");
+    orc_program_add_constant (p, 4, 0x0000000b, "c1");
     orc_program_add_parameter (p, 2, "p1");
     orc_program_add_temporary (p, 4, "t1");
 
@@ -2421,7 +2421,7 @@ gst_volume_orc_init (void)
     orc_program_set_name (p, "orc_process_int8");
     orc_program_set_backup_function (p, _backup_orc_process_int8);
     orc_program_add_destination (p, 1, "d1");
-    orc_program_add_constant (p, 4, 0x00000005, "c1");
+    orc_program_add_constant (p, 4, 0x00000003, "c1");
     orc_program_add_parameter (p, 1, "p1");
     orc_program_add_temporary (p, 2, "t1");
 
@@ -2444,7 +2444,7 @@ gst_volume_orc_init (void)
     orc_program_set_name (p, "orc_process_int8_clamp");
     orc_program_set_backup_function (p, _backup_orc_process_int8_clamp);
     orc_program_add_destination (p, 1, "d1");
-    orc_program_add_constant (p, 4, 0x00000005, "c1");
+    orc_program_add_constant (p, 4, 0x00000003, "c1");
     orc_program_add_parameter (p, 1, "p1");
     orc_program_add_temporary (p, 2, "t1");
 
