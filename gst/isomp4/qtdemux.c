@@ -3411,6 +3411,7 @@ gst_qtdemux_clip_buffer (GstQTDemux * qtdemux, QtDemuxStream * stream,
   guint offset;
 
   size = gst_buffer_get_size (buf);
+  offset = 0;
 
   /* depending on the type, setup the clip parameters */
   if (stream->subtype == FOURCC_soun) {
@@ -3529,6 +3530,8 @@ gst_qtdemux_process_buffer (GstQTDemux * qtdemux, QtDemuxStream * stream,
     return buf;
   }
 
+  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+
   if (G_LIKELY (size >= 2)) {
     nsize = GST_READ_UINT16_BE (data);
     nsize = MIN (nsize, size - 2);
@@ -3538,7 +3541,6 @@ gst_qtdemux_process_buffer (GstQTDemux * qtdemux, QtDemuxStream * stream,
 
   /* takes care of UTF-8 validation or UTF-16 recognition,
    * no other encoding expected */
-  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
   str = gst_tag_freeform_string_to_utf8 ((gchar *) data + 2, nsize, NULL);
   gst_buffer_unmap (buf, data, size);
   if (str) {
@@ -5253,7 +5255,7 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
   /* sync sample atom */
   stream->stps_present = FALSE;
   if ((stream->stss_present =
-          !!qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stss,
+          ! !qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stss,
               &stream->stss) ? TRUE : FALSE) == TRUE) {
     /* copy atom data into a new buffer for later use */
     stream->stss.data = g_memdup (stream->stss.data, stream->stss.size);
@@ -5271,7 +5273,7 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
 
     /* partial sync sample atom */
     if ((stream->stps_present =
-            !!qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stps,
+            ! !qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stps,
                 &stream->stps) ? TRUE : FALSE) == TRUE) {
       /* copy atom data into a new buffer for later use */
       stream->stps.data = g_memdup (stream->stps.data, stream->stps.size);
@@ -5390,7 +5392,7 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
 
   /* composition time-to-sample */
   if ((stream->ctts_present =
-          !!qtdemux_tree_get_child_by_type_full (stbl, FOURCC_ctts,
+          ! !qtdemux_tree_get_child_by_type_full (stbl, FOURCC_ctts,
               &stream->ctts) ? TRUE : FALSE) == TRUE) {
     /* copy atom data into a new buffer for later use */
     stream->ctts.data = g_memdup (stream->ctts.data, stream->ctts.size);

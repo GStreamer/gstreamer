@@ -1265,7 +1265,7 @@ gst_qt_mux_send_buffered_data (GstQTMux * qtmux, guint64 * offset)
     gsize size;
 
     buf = gst_buffer_new_and_alloc (bufsize);
-    gst_buffer_map (buf, &size, NULL, GST_MAP_WRITE);
+    data = gst_buffer_map (buf, &size, NULL, GST_MAP_WRITE);
     size = fread (data, sizeof (guint8), bufsize, qtmux->fast_start_file);
     if (size == 0) {
       gst_buffer_unmap (buf, data, -1);
@@ -2963,9 +2963,11 @@ gst_qt_mux_video_sink_set_caps (GstPad * pad, GstCaps * caps)
   if (strcmp (mimetype, "video/x-raw") == 0) {
     const gchar *format;
     GstVideoFormat fmt;
+    const GstVideoFormatInfo *vinfo;
 
     format = gst_structure_get_string (structure, "format");
     fmt = gst_video_format_from_string (format);
+    vinfo = gst_video_format_get_info (fmt);
 
     switch (fmt) {
       case GST_VIDEO_FORMAT_UYVY:
@@ -2976,9 +2978,9 @@ gst_qt_mux_video_sink_set_caps (GstPad * pad, GstCaps * caps)
         sync = FALSE;
         break;
       default:
-        if (gst_video_format_is_rgb (fmt)) {
+        if (GST_VIDEO_FORMAT_INFO_FLAGS (vinfo) & GST_VIDEO_FORMAT_FLAG_RGB) {
           entry.fourcc = FOURCC_raw_;
-          entry.depth = gst_video_format_get_pixel_stride (fmt, 0) * 8;
+          entry.depth = GST_VIDEO_FORMAT_INFO_PSTRIDE (vinfo, 0) * 8;
           sync = FALSE;
         }
         break;
