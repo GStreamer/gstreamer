@@ -64,8 +64,8 @@
  * recording, then send a #GstCameraBin2:stop-capture to stop recording.
  * Note that both signals are asynchronous, so, calling
  * #GstCameraBin2:stop-capture doesn't guarantee that the video has been
- * properly finished yet. Users can check the #GstCameraBin2:idle property
- * to verify that it has stopped.
+ * properly finished yet. Applications should wait for the 'video-done'
+ * message to be posted on the bus.
  *
  * In both modes, if #GstCameraBin2:post-previews is %TRUE, a #GstBuffer
  * will be post to the #GstBus in a field named 'buffer', in a
@@ -877,6 +877,18 @@ gst_image_capture_bin_post_image_done (GstCameraBin2 * camera,
 }
 
 static void
+gst_video_capture_bin_post_video_done (GstCameraBin2 * camera)
+{
+  GstMessage *msg;
+
+  msg = gst_message_new_element (GST_OBJECT_CAST (camera),
+      gst_structure_new ("video-done", NULL));
+
+  if (!gst_element_post_message (GST_ELEMENT_CAST (camera), msg))
+    GST_WARNING_OBJECT (camera, "Failed to post video-done message");
+}
+
+static void
 gst_camera_bin_handle_message (GstBin * bin, GstMessage * message)
 {
   switch (GST_MESSAGE_TYPE (message)) {
@@ -910,6 +922,7 @@ gst_camera_bin_handle_message (GstBin * bin, GstMessage * message)
       if (src == GST_CAMERA_BIN2_CAST (bin)->videosink) {
         GST_DEBUG_OBJECT (bin, "EOS from video branch");
         GST_CAMERA_BIN2_PROCESSING_DEC (GST_CAMERA_BIN2_CAST (bin));
+        gst_video_capture_bin_post_video_done (GST_CAMERA_BIN2_CAST (bin));
       }
     }
       break;
