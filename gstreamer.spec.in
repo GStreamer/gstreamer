@@ -1,4 +1,4 @@
-%define		gstreamer	gstreamer
+%define		gstreamer	gstreamer011
 %define		majorminor	@GST_MAJORMINOR@
 
 %define 	_glib2		@GLIB_REQ@
@@ -13,8 +13,6 @@ License: 	LGPL
 URL:		http://gstreamer.freedesktop.org/
 Source: 	http://gstreamer.freedesktop.org/src/gstreamer/gstreamer-%{version}.tar.bz2
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-
-Requires:	gstreamer-tools >= %{version}
 
 BuildRequires: 	glib2-devel >= %{_glib2}
 BuildRequires: 	bison
@@ -70,28 +68,13 @@ This package contains the libraries and includes files necessary to develop
 applications and plugins for GStreamer, as well as general and API
 documentation.
 
-%package -n gstreamer-tools
-Summary: 	common tools and files for GStreamer streaming media framework
-Group: 		Applications/Multimedia
-
-%description -n gstreamer-tools
-GStreamer is a streaming media framework, based on graphs of filters which
-operate on media data. Applications using this library can do anything
-from real-time sound processing to playing videos, and just about anything
-else media-related.  Its plugin-based architecture means that new data
-types or processing capabilities can be added simply by installing new   
-plugins.
-
-This package contains wrapper scripts for the command-line tools that work
-with different major/minor versions of GStreamer.
-
 %prep
 %setup -q -n gstreamer-%{version}
 
 %build
 # 0.10.0: manuals do not build due to an openjade error; disable for now
 %configure \
-  --with-package-name='CVS gstreamer package' \
+  --with-package-name='gstreamer package' \
   --with-package-origin='http://gstreamer.freedesktop.org' \
   --enable-debug \
   --enable-gtk-doc \
@@ -148,22 +131,16 @@ rm -rf $RPM_BUILD_ROOT
 %doc %{_datadir}/doc/gstreamer-%{majorminor}/manual
 %doc %{_datadir}/doc/gstreamer-%{majorminor}/pwg
 %doc %{_datadir}/doc/gstreamer-%{majorminor}/faq/
-%{_libdir}/girepository-1.0/Gst-0.10.typelib
-%{_libdir}/girepository-1.0/GstBase-0.10.typelib
-%{_libdir}/girepository-1.0/GstCheck-0.10.typelib
-%{_libdir}/girepository-1.0/GstController-0.10.typelib
-%{_libdir}/girepository-1.0/GstNet-0.10.typelib
-%{_datadir}/gir-1.0/Gst-0.10.gir
-%{_datadir}/gir-1.0/GstBase-0.10.gir
-%{_datadir}/gir-1.0/GstCheck-0.10.gir
-%{_datadir}/gir-1.0/GstController-0.10.gir
-%{_datadir}/gir-1.0/GstNet-0.10.gir
-
-%files -n gstreamer-tools
-%defattr(-, root, root, -)
-%{_bindir}/gst-inspect
-%{_bindir}/gst-launch
-%{_bindir}/gst-typefind
+%{_libdir}/girepository-1.0/Gst-%{majorminor}.typelib
+%{_libdir}/girepository-1.0/GstBase-%{majorminor}.typelib
+%{_libdir}/girepository-1.0/GstCheck-%{majorminor}.typelib
+%{_libdir}/girepository-1.0/GstController-%{majorminor}.typelib
+%{_libdir}/girepository-1.0/GstNet-%{majorminor}.typelib
+%{_datadir}/gir-1.0/Gst-%{majorminor}.gir
+%{_datadir}/gir-1.0/GstBase-%{majorminor}.gir
+%{_datadir}/gir-1.0/GstCheck-%{majorminor}.gir
+%{_datadir}/gir-1.0/GstController-%{majorminor}.gir
+%{_datadir}/gir-1.0/GstNet-%{majorminor}.gir
 
 %files devel
 %defattr(-, root, root, -)
@@ -197,6 +174,12 @@ rm -rf $RPM_BUILD_ROOT
 %doc %{_datadir}/gtk-doc/html/gstreamer-plugins-%{majorminor}/*
 
 %changelog
+* Sat Aug 06 2011 Thomas Vander Stichele <thomas at apestaart dot org>
+- Use majorminor correctly for .gir files
+- Remove gstreamer-tools completely since the unversioned tools have been
+  removed
+- Rename package to gstreamer011 to be parallel-installable
+
 * Thu Apr 3 2008 Christian Schaller <christian.schaller at collabora co uk>
 - Update spec file to make inclusion of all docs explicit
 
