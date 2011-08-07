@@ -15,7 +15,7 @@ gst_interfaces_COPY_HEADERS_BASE := \
 	gst-libs/gst/interfaces/tunerchannel.h \
 	gst-libs/gst/interfaces/tunernorm.h \
 	gst-libs/gst/interfaces/videoorientation.h \
-	gst-libs/gst/interfaces/xoverlay.h \
+	gst-libs/gst/interfaces/videooverlay.h \
 	gst-libs/gst/interfaces/interfaces-enumtypes.h 
 
 gst_interfaces_COPY_HEADERS := $(addprefix ../,$(gst_interfaces_COPY_HEADERS_BASE))
@@ -37,7 +37,7 @@ interfaces_LOCAL_SRC_FILES_BASE:= \
    	gst-libs/gst/interfaces/tunernorm.c \
    	gst-libs/gst/interfaces/tunerchannel.c \
    	gst-libs/gst/interfaces/videoorientation.c \
-   	gst-libs/gst/interfaces/xoverlay.c \
+   	gst-libs/gst/interfaces/videooverlay.c \
    	gst-libs/gst/interfaces/interfaces-marshal.c \
    	gst-libs/gst/interfaces/interfaces-enumtypes.c
 

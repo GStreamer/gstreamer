@@ -1,7 +1,6 @@
-/* GStreamer X-based Overlay
+/* GStreamer Video Overlay interface
  * Copyright (C) 2003 Ronald Bultje <rbultje@ronald.bitfreak.net>
- *
- * x-overlay.c: X-based overlay interface design
+ * Copyright (C) 2011 Tim-Philipp Müller <tim@centricular.net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -19,13 +18,14 @@
  * Boston, MA 02111-1307, USA.
  */
 /**
- * SECTION:gstxoverlay
- * @short_description: Interface for setting/getting a Window on elements
- * supporting it
+ * SECTION:gstvideooverlay
+ * @short_description: Interface for setting/getting a window system resource
+ *    on elements supporting it to configure a window into which to render a
+ *    video.
  *
  * <refsect2>
  * <para>
- * The XOverlay interface is used for 2 main purposes :
+ * The #GstVideoOverlay interface is used for 2 main purposes :
  * <itemizedlist>
  * <listitem>
  * <para>
@@ -63,11 +63,11 @@
  * static GstBusSyncReply
  * create_window (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
  * {
- *  // ignore anything but 'prepare-xwindow-id' element messages
+ *  // ignore anything but 'prepare-window-handle' element messages
  *  if (GST_MESSAGE_TYPE (message) != GST_MESSAGE_ELEMENT)
  *    return GST_BUS_PASS;
  *
- *  if (!gst_structure_has_name (message-&gt;structure, "prepare-xwindow-id"))
+ *  if (!gst_structure_has_name (message-&gt;structure, "prepare-window-handle"))
  *    return GST_BUS_PASS;
  *
  *  win = XCreateSimpleWindow (disp, root, 0, 0, 320, 240, 0, 0, 0);
@@ -78,7 +78,7 @@
  *
  *  XSync (disp, FALSE);
  *
- *  gst_x_overlay_set_window_handle (GST_X_OVERLAY (GST_MESSAGE_SRC (message)),
+ *  gst_video_overlay_set_window_handle (GST_VIDEO_OVERLAY (GST_MESSAGE_SRC (message)),
  *      win);
  *
  *  gst_message_unref (message);
@@ -105,7 +105,7 @@
  * usually the case when the application creates the videosink to use
  * (e.g. #xvimagesink, #ximagesink, etc.) itself; in this case, the application
  * can just create the videosink element, create and realize the window to
- * render the video on and then call gst_x_overlay_set_window_handle() directly
+ * render the video on and then call gst_video_overlay_set_window_handle() directly
  * with the XID or native window handle, before starting up the pipeline.
  * </para>
  * <para>
@@ -117,18 +117,18 @@
  * pipeline has been started up. When that happens, however, the video sink
  * will need to know right then whether to render onto an already existing
  * application window or whether to create its own window. This is when it
- * posts a prepare-xwindow-id message, and that is also why this message needs
+ * posts a prepare-window-handle message, and that is also why this message needs
  * to be handled in a sync bus handler which will be called from the streaming
  * thread directly (because the video sink will need an answer right then).
  * </para>
  * <para>
- * As response to the prepare-xwindow-id element message in the bus sync
- * handler, the application may use gst_x_overlay_set_window_handle() to tell
+ * As response to the prepare-window-handle element message in the bus sync
+ * handler, the application may use gst_video_overlay_set_window_handle() to tell
  * the video sink to render onto an existing window surface. At this point the
  * application should already have obtained the window handle / XID, so it
  * just needs to set it. It is generally not advisable to call any GUI toolkit
  * functions or window system functions from the streaming thread in which the
- * prepare-xwindow-id message is handled, because most GUI toolkits and
+ * prepare-window-handle message is handled, because most GUI toolkits and
  * windowing systems are not thread-safe at all and a lot of care would be
  * required to co-ordinate the toolkit and window system calls of the
  * different threads (Gtk+ users please note: prior to Gtk+ 2.18
@@ -140,7 +140,7 @@
  * </para>
  * </refsect2>
  * <refsect2>
- * <title>GstXOverlay and Gtk+</title>
+ * <title>GstVideoOverlay and Gtk+</title>
  * <para>
  * |[
  * #include &lt;gtk/gtk.h&gt;
@@ -153,18 +153,18 @@
  * static GstBusSyncReply
  * bus_sync_handler (GstBus * bus, GstMessage * message, gpointer user_data)
  * {
- *  // ignore anything but 'prepare-xwindow-id' element messages
+ *  // ignore anything but 'prepare-window-handle' element messages
  *  if (GST_MESSAGE_TYPE (message) != GST_MESSAGE_ELEMENT)
  *    return GST_BUS_PASS;
- *  if (!gst_structure_has_name (message-&gt;structure, "prepare-xwindow-id"))
+ *  if (!gst_structure_has_name (message-&gt;structure, "prepare-window-handle"))
  *    return GST_BUS_PASS;
  *
  *  if (video_window_xid != 0) {
- *    GstXOverlay *xoverlay;
+ *    GstVideoOverlay *xoverlay;
  *
  *    // GST_MESSAGE_SRC (message) will be the video sink element
- *    xoverlay = GST_X_OVERLAY (GST_MESSAGE_SRC (message));
- *    gst_x_overlay_set_window_handle (xoverlay, video_window_xid);
+ *    xoverlay = GST_VIDEO_OVERLAY (GST_MESSAGE_SRC (message));
+ *    gst_video_overlay_set_window_handle (xoverlay, video_window_xid);
  *  } else {
  *    g_warning ("Should have obtained video_window_xid by now!");
  *  }
@@ -180,7 +180,7 @@
  *   // This is here just for pedagogical purposes, GDK_WINDOW_XID will call
  *   // it as well in newer Gtk versions
  *   if (!gdk_window_ensure_native (widget->window))
- *     g_error ("Couldn't create native window needed for GstXOverlay!");
+ *     g_error ("Couldn't create native window needed for GstVideoOverlay!");
  * #endif
  *
  * #ifdef GDK_WINDOWING_X11
@@ -229,12 +229,12 @@
  * </para>
  * </refsect2>
  * <refsect2>
- * <title>GstXOverlay and Qt</title>
+ * <title>GstVideoOverlay and Qt</title>
  * <para>
  * |[
  * #include &lt;glib.h&gt;
  * #include &lt;gst/gst.h&gt;
- * #include &lt;gst/interfaces/xoverlay.h&gt;
+ * #include &lt;gst/interfaces/videooverlay.h&gt;
  *
  * #include &lt;QApplication&gt;
  * #include &lt;QTimer&gt;
@@ -264,7 +264,7 @@
  *   window.show();
  *
  *   WId xwinid = window.winId();
- *   gst_x_overlay_set_window_handle (GST_X_OVERLAY (sink), xwinid);
+ *   gst_video_overlay_set_window_handle (GST_VIDEO_OVERLAY (sink), xwinid);
  *
  *   // run the pipeline
  *
@@ -294,19 +294,17 @@
 #include "config.h"
 #endif
 
-#include "xoverlay.h"
-
-static void gst_x_overlay_base_init (gpointer g_class);
+#include "videooverlay.h"
 
 GType
-gst_x_overlay_get_type (void)
+gst_video_overlay_get_type (void)
 {
-  static GType gst_x_overlay_type = 0;
+  static GType gst_video_overlay_type = 0;
 
-  if (!gst_x_overlay_type) {
-    static const GTypeInfo gst_x_overlay_info = {
-      sizeof (GstXOverlayClass),
-      gst_x_overlay_base_init,
+  if (!gst_video_overlay_type) {
+    static const GTypeInfo gst_video_overlay_info = {
+      sizeof (GstVideoOverlayIface),
+      NULL,
       NULL,
       NULL,
       NULL,
@@ -316,47 +314,16 @@ gst_x_overlay_get_type (void)
       NULL,
     };
 
-    gst_x_overlay_type = g_type_register_static (G_TYPE_INTERFACE,
-        "GstXOverlay", &gst_x_overlay_info, 0);
+    gst_video_overlay_type = g_type_register_static (G_TYPE_INTERFACE,
+        "GstVideoOverlay", &gst_video_overlay_info, 0);
   }
 
-  return gst_x_overlay_type;
-}
-
-static void
-gst_x_overlay_base_init (gpointer g_class)
-{
-
+  return gst_video_overlay_type;
 }
 
 /**
- * gst_x_overlay_set_xwindow_id:
- * @overlay: a #GstXOverlay to set the window on.
- * @xwindow_id: a XID referencing the XWindow.
- *
- * This will call the video overlay's set_xwindow_id method. You should
- * use this method to tell to a XOverlay to display video output to a
- * specific XWindow. Passing 0 as the @xwindow_id will tell the overlay to
- * stop using that window and create an internal one.
- *
- * Deprecated: Use gst_x_overlay_set_window_handle() instead.
- */
-#ifndef GST_REMOVE_DEPRECATED
-#ifdef GST_DISABLE_DEPRECATED
-void gst_x_overlay_set_xwindow_id (GstXOverlay * overlay, gulong xwindow_id);
-#endif
-void
-gst_x_overlay_set_xwindow_id (GstXOverlay * overlay, gulong xwindow_id)
-{
-  GST_WARNING_OBJECT (overlay,
-      "Using deprecated gst_x_overlay_set_xwindow_id()");
-  gst_x_overlay_set_window_handle (overlay, xwindow_id);
-}
-#endif
-
-/**
- * gst_x_overlay_set_window_handle:
- * @overlay: a #GstXOverlay to set the window on.
+ * gst_video_overlay_set_window_handle:
+ * @overlay: a #GstVideoOverlay to set the window on.
  * @handle: a handle referencing the window.
  *
  * This will call the video overlay's set_window_handle method. You
@@ -367,135 +334,97 @@ gst_x_overlay_set_xwindow_id (GstXOverlay * overlay, gulong xwindow_id)
  * Since: 0.10.31
  */
 void
-gst_x_overlay_set_window_handle (GstXOverlay * overlay, guintptr handle)
+gst_video_overlay_set_window_handle (GstVideoOverlay * overlay, guintptr handle)
 {
-  GstXOverlayClass *klass;
+  GstVideoOverlayIface *iface;
 
   g_return_if_fail (overlay != NULL);
-  g_return_if_fail (GST_IS_X_OVERLAY (overlay));
+  g_return_if_fail (GST_IS_VIDEO_OVERLAY (overlay));
 
-  klass = GST_X_OVERLAY_GET_CLASS (overlay);
+  iface = GST_VIDEO_OVERLAY_GET_IFACE (overlay);
 
-  if (klass->set_window_handle) {
-    klass->set_window_handle (overlay, handle);
-  } else {
-#ifndef GST_REMOVE_DEPRECATED
-#ifdef GST_DISABLE_DEPRECATED
-#define set_xwindow_id set_xwindow_id_disabled
-#endif
-    if (sizeof (guintptr) <= sizeof (gulong) && klass->set_xwindow_id) {
-      GST_WARNING_OBJECT (overlay,
-          "Calling deprecated set_xwindow_id() method");
-      klass->set_xwindow_id (overlay, handle);
-    } else {
-      g_warning ("Refusing to cast guintptr to smaller gulong");
-    }
-#endif
+  if (iface->set_window_handle) {
+    iface->set_window_handle (overlay, handle);
   }
 }
 
 /**
- * gst_x_overlay_got_xwindow_id:
- * @overlay: a #GstXOverlay which got a XWindow.
- * @xwindow_id: a #XID referencing the XWindow.
- *
- * This will post a "have-xwindow-id" element message on the bus.
- *
- * This function should only be used by video overlay plugin developers.
- *
- * Deprecated: Use gst_x_overlay_got_window_handle() instead.
- */
-#ifndef GST_REMOVE_DEPRECATED
-#ifdef GST_DISABLE_DEPRECATED
-void gst_x_overlay_got_xwindow_id (GstXOverlay * overlay, gulong xwindow_id);
-#endif
-void
-gst_x_overlay_got_xwindow_id (GstXOverlay * overlay, gulong xwindow_id)
-{
-  GST_WARNING_OBJECT (overlay,
-      "Using deprecated gst_x_overlay_got_xwindow_id()");
-  gst_x_overlay_got_window_handle (overlay, xwindow_id);
-}
-#endif
-
-/**
- * gst_x_overlay_got_window_handle:
- * @overlay: a #GstXOverlay which got a window
+ * gst_video_overlay_got_window_handle:
+ * @overlay: a #GstVideoOverlay which got a window
  * @handle: a platform-specific handle referencing the window
  *
- * This will post a "have-xwindow-id" element message on the bus.
+ * This will post a "have-window-handle" element message on the bus.
  *
  * This function should only be used by video overlay plugin developers.
  */
 void
-gst_x_overlay_got_window_handle (GstXOverlay * overlay, guintptr handle)
+gst_video_overlay_got_window_handle (GstVideoOverlay * overlay, guintptr handle)
 {
   GstStructure *s;
   GstMessage *msg;
 
   g_return_if_fail (overlay != NULL);
-  g_return_if_fail (GST_IS_X_OVERLAY (overlay));
+  g_return_if_fail (GST_IS_VIDEO_OVERLAY (overlay));
 
-  GST_LOG_OBJECT (GST_OBJECT (overlay), "xwindow_id = %p", (gpointer)
+  GST_LOG_OBJECT (GST_OBJECT (overlay), "window_handle = %p", (gpointer)
       handle);
-  s = gst_structure_new ("have-xwindow-id",
-      "xwindow-id", G_TYPE_ULONG, (unsigned long) handle,
+  s = gst_structure_new ("have-window-handle",
       "window-handle", G_TYPE_UINT64, (guint64) handle, NULL);
   msg = gst_message_new_element (GST_OBJECT (overlay), s);
   gst_element_post_message (GST_ELEMENT (overlay), msg);
 }
 
 /**
- * gst_x_overlay_prepare_xwindow_id:
- * @overlay: a #GstXOverlay which does not yet have an XWindow.
+ * gst_video_overlay_prepare_window_handle:
+ * @overlay: a #GstVideoOverlay which does not yet have an Window handle set
  *
- * This will post a "prepare-xwindow-id" element message on the bus
+ * This will post a "prepare-window-handle" element message on the bus
  * to give applications an opportunity to call
- * gst_x_overlay_set_xwindow_id() before a plugin creates its own
+ * gst_video_overlay_set_window_handle() before a plugin creates its own
  * window.
  *
  * This function should only be used by video overlay plugin developers.
  */
 void
-gst_x_overlay_prepare_xwindow_id (GstXOverlay * overlay)
+gst_video_overlay_prepare_window_handle (GstVideoOverlay * overlay)
 {
   GstStructure *s;
   GstMessage *msg;
 
   g_return_if_fail (overlay != NULL);
-  g_return_if_fail (GST_IS_X_OVERLAY (overlay));
+  g_return_if_fail (GST_IS_VIDEO_OVERLAY (overlay));
 
-  GST_LOG_OBJECT (GST_OBJECT (overlay), "prepare xwindow_id");
-  s = gst_structure_new ("prepare-xwindow-id", NULL);
+  GST_LOG_OBJECT (GST_OBJECT (overlay), "prepare window handle");
+  s = gst_structure_new ("prepare-window-handle", NULL);
   msg = gst_message_new_element (GST_OBJECT (overlay), s);
   gst_element_post_message (GST_ELEMENT (overlay), msg);
 }
 
 /**
- * gst_x_overlay_expose:
- * @overlay: a #GstXOverlay to expose.
+ * gst_video_overlay_expose:
+ * @overlay: a #GstVideoOverlay to expose.
  *
  * Tell an overlay that it has been exposed. This will redraw the current frame
  * in the drawable even if the pipeline is PAUSED.
  */
 void
-gst_x_overlay_expose (GstXOverlay * overlay)
+gst_video_overlay_expose (GstVideoOverlay * overlay)
 {
-  GstXOverlayClass *klass;
+  GstVideoOverlayIface *iface;
 
   g_return_if_fail (overlay != NULL);
-  g_return_if_fail (GST_IS_X_OVERLAY (overlay));
+  g_return_if_fail (GST_IS_VIDEO_OVERLAY (overlay));
 
-  klass = GST_X_OVERLAY_GET_CLASS (overlay);
+  iface = GST_VIDEO_OVERLAY_GET_IFACE (overlay);
 
-  if (klass->expose) {
-    klass->expose (overlay);
+  if (iface->expose) {
+    iface->expose (overlay);
   }
 }
 
 /**
- * gst_x_overlay_handle_events:
- * @overlay: a #GstXOverlay to expose.
+ * gst_video_overlay_handle_events:
+ * @overlay: a #GstVideoOverlay to expose.
  * @handle_events: a #gboolean indicating if events should be handled or not.
  *
  * Tell an overlay that it should handle events from the window system. These
@@ -507,34 +436,35 @@ gst_x_overlay_expose (GstXOverlay * overlay)
  * Since: 0.10.12
  */
 void
-gst_x_overlay_handle_events (GstXOverlay * overlay, gboolean handle_events)
+gst_video_overlay_handle_events (GstVideoOverlay * overlay,
+    gboolean handle_events)
 {
-  GstXOverlayClass *klass;
+  GstVideoOverlayIface *iface;
 
   g_return_if_fail (overlay != NULL);
-  g_return_if_fail (GST_IS_X_OVERLAY (overlay));
+  g_return_if_fail (GST_IS_VIDEO_OVERLAY (overlay));
 
-  klass = GST_X_OVERLAY_GET_CLASS (overlay);
+  iface = GST_VIDEO_OVERLAY_GET_IFACE (overlay);
 
-  if (klass->handle_events) {
-    klass->handle_events (overlay, handle_events);
+  if (iface->handle_events) {
+    iface->handle_events (overlay, handle_events);
   }
 }
 
 /**
- * gst_x_overlay_set_render_rectangle:
- * @overlay: a #GstXOverlay
+ * gst_video_overlay_set_render_rectangle:
+ * @overlay: a #GstVideoOverlay
  * @x: the horizontal offset of the render area inside the window
  * @y: the vertical offset of the render area inside the window
  * @width: the width of the render area inside the window
  * @height: the height of the render area inside the window
  *
  * Configure a subregion as a video target within the window set by
- * gst_x_overlay_set_window_handle(). If this is not used or not supported
+ * gst_video_overlay_set_window_handle(). If this is not used or not supported
  * the video will fill the area of the window set as the overlay to 100%.
  * By specifying the rectangle, the video can be overlayed to a specific region
  * of that window only. After setting the new rectangle one should call
- * gst_x_overlay_expose() to force a redraw. To unset the region pass -1 for
+ * gst_video_overlay_expose() to force a redraw. To unset the region pass -1 for
  * the @width and @height parameters.
  *
  * This method is needed for non fullscreen video overlay in UI toolkits that
@@ -545,20 +475,20 @@ gst_x_overlay_handle_events (GstXOverlay * overlay, gboolean handle_events)
  * Since: 0.10.29
  */
 gboolean
-gst_x_overlay_set_render_rectangle (GstXOverlay * overlay,
+gst_video_overlay_set_render_rectangle (GstVideoOverlay * overlay,
     gint x, gint y, gint width, gint height)
 {
-  GstXOverlayClass *klass;
+  GstVideoOverlayIface *iface;
 
   g_return_val_if_fail (overlay != NULL, FALSE);
-  g_return_val_if_fail (GST_IS_X_OVERLAY (overlay), FALSE);
+  g_return_val_if_fail (GST_IS_VIDEO_OVERLAY (overlay), FALSE);
   g_return_val_if_fail ((width == -1 && height == -1) ||
       (width > 0 && height > 0), FALSE);
 
-  klass = GST_X_OVERLAY_GET_CLASS (overlay);
+  iface = GST_VIDEO_OVERLAY_GET_IFACE (overlay);
 
-  if (klass->set_render_rectangle) {
-    klass->set_render_rectangle (overlay, x, y, width, height);
+  if (iface->set_render_rectangle) {
+    iface->set_render_rectangle (overlay, x, y, width, height);
     return TRUE;
   }
   return FALSE;

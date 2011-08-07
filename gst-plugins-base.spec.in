@@ -166,7 +166,7 @@ GStreamer Plugins Base library development and header files.
 %{_includedir}/gstreamer-%{majorminor}/gst/interfaces/tuner.h
 %{_includedir}/gstreamer-%{majorminor}/gst/interfaces/tunerchannel.h
 %{_includedir}/gstreamer-%{majorminor}/gst/interfaces/tunernorm.h
-%{_includedir}/gstreamer-%{majorminor}/gst/interfaces/xoverlay.h
+%{_includedir}/gstreamer-%{majorminor}/gst/interfaces/videooverlay.h
 %{_includedir}/gstreamer-%{majorminor}/gst/audio/gstaudiosrc.h
 %{_includedir}/gstreamer-%{majorminor}/gst/audio/gstbaseaudiosrc.h
 %{_includedir}/gstreamer-%{majorminor}/gst/rtp/gstbasertpaudiopayload.h

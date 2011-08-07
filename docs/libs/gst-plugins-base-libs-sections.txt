@@ -795,26 +795,22 @@ gst_video_orientation_get_type
 </SECTION>
 
 <SECTION>
-<FILE>gstxoverlay</FILE>
-<INCLUDE>gst/interfaces/xoverlay.h</INCLUDE>
+<FILE>gstvideooverlay</FILE>
+<INCLUDE>gst/interfaces/videooverlay.h</INCLUDE>
 GstXOverlay
-GstXOverlayClass
-gst_x_overlay_set_xwindow_id
-gst_x_overlay_got_xwindow_id
-gst_x_overlay_got_window_handle
-gst_x_overlay_set_window_handle
-gst_x_overlay_prepare_xwindow_id
-gst_x_overlay_expose
-gst_x_overlay_handle_events
-gst_x_overlay_set_render_rectangle
+GstXOverlayIface
+gst_video_overlay_got_window_handle
+gst_video_overlay_set_window_handle
+gst_video_overlay_prepare_window_handle
+gst_video_overlay_expose
+gst_video_overlay_handle_events
+gst_video_overlay_set_render_rectangle
 <SUBSECTION Standard>
-GST_TYPE_X_OVERLAY
-GST_X_OVERLAY
-GST_X_OVERLAY_CLASS
-GST_X_OVERLAY_GET_CLASS
-GST_IS_X_OVERLAY
-GST_IS_X_OVERLAY_CLASS
-gst_x_overlay_get_type
+GST_TYPE_VIDEO_OVERLAY
+GST_VIDEO_OVERLAY
+GST_IS_VIDEO_OVERLAY
+GST_VIDEO_OVERLAY_GET_IFACE
+gst_video_overlay_get_type
 </SECTION>
 
 

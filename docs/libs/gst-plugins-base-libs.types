@@ -40,8 +40,8 @@ gst_tuner_norm_get_type
 gst_stream_volume_get_type
 #include <gst/interfaces/videoorientation.h>
 gst_video_orientation_get_type
-#include <gst/interfaces/xoverlay.h>
-gst_x_overlay_get_type
+#include <gst/interfaces/videooverlay.h>
+gst_video_overlay_get_type
 
 
 #include <gst/rtp/gstbasertpdepayload.h>
