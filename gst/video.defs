@@ -369,3 +369,57 @@
     '("GDestroyNotify" "destroy_notify")
   )
 )
+
+(define-function event_new_downstream_force_key_unit
+  (c-name "gst_video_event_new_downstream_force_key_unit")
+  (return-type "GstEvent*")
+  (parameters
+    '("GstClockTime" "timestamp")
+    '("GstClockTime" "streamtime")
+    '("GstClockTime" "runningtime")
+    '("gboolean" "all_headers")
+    '("guint" "count")
+  )
+)
+
+(define-function event_parse_downstream_force_key_unit
+  (c-name "gst_video_event_parse_downstream_force_key_unit")
+  (return-type "gboolean")
+  (parameters
+    '("GstEvent*" "event")
+    '("GstClockTime*" "timestamp")
+    '("GstClockTime*" "streamtime")
+    '("GstClockTime*" "runningtime")
+    '("gboolean*" "all_headers")
+    '("guint*" "count")
+  )
+)
+
+(define-function event_new_upstream_force_key_unit
+  (c-name "gst_video_event_new_upstream_force_key_unit")
+  (return-type "GstEvent*")
+  (parameters
+    '("GstClockTime" "running_time")
+    '("gboolean" "all_headers")
+    '("guint" "count")
+  )
+)
+
+(define-function event_parse_upstream_force_key_unit
+  (c-name "gst_video_event_parse_upstream_force_key_unit")
+  (return-type "gboolean")
+  (parameters
+    '("GstEvent*" "event")
+    '("GstClockTime*" "running_time")
+    '("gboolean*" "all_headers")
+    '("guint*" "count")
+  )
+)
+
+(define-function event_is_force_key_unit
+  (c-name "gst_video_event_is_force_key_unit")
+  (return-type "gboolean")
+  (parameters
+    '("GstEvent*" "event")
+  )
+)

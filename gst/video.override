@@ -55,6 +55,7 @@ import gst.Message as PyGstMessage_Type
 import gst.SystemClock as PyGstSystemClock_Type
 import gst.BaseTransform as PyGstBaseTransform_Type
 import gst.BaseSink as PyGstBaseSink_Type
+import gst.Event as PyGstEvent_Type
 %%
 include
   gstversion.override
