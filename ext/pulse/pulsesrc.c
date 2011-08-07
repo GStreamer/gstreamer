@@ -76,6 +76,8 @@ static void gst_pulsesrc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_pulsesrc_finalize (GObject * object);
 
+static gboolean gst_pulsesrc_set_corked (GstPulseSrc * psrc, gboolean corked,
+    gboolean wait);
 static gboolean gst_pulsesrc_open (GstAudioSrc * asrc);
 
 static gboolean gst_pulsesrc_close (GstAudioSrc * asrc);
@@ -261,6 +263,7 @@ gst_pulsesrc_init (GstPulseSrc * pulsesrc)
 
   pulsesrc->context = NULL;
   pulsesrc->stream = NULL;
+  pulsesrc->stream_connected = FALSE;
   pulsesrc->source_output_idx = PA_INVALID_INDEX;
 
   pulsesrc->read_buffer = NULL;
@@ -269,7 +272,7 @@ gst_pulsesrc_init (GstPulseSrc * pulsesrc)
   pa_sample_spec_init (&pulsesrc->sample_spec);
 
   pulsesrc->operation_success = FALSE;
-  pulsesrc->paused = FALSE;
+  pulsesrc->paused = TRUE;
   pulsesrc->in_read = FALSE;
 
   pulsesrc->mixer = NULL;
@@ -291,6 +294,7 @@ gst_pulsesrc_destroy_stream (GstPulseSrc * pulsesrc)
     pa_stream_disconnect (pulsesrc->stream);
     pa_stream_unref (pulsesrc->stream);
     pulsesrc->stream = NULL;
+    pulsesrc->stream_connected = FALSE;
     pulsesrc->source_output_idx = PA_INVALID_INDEX;
     g_object_notify (G_OBJECT (pulsesrc), "source-output-index");
   }
@@ -1039,6 +1043,7 @@ gst_pulsesrc_prepare (GstAudioSrc * asrc, GstRingBufferSpec * spec)
     /* Wait until the stream is ready */
     pa_threaded_mainloop_wait (pulsesrc->mainloop);
   }
+  pulsesrc->stream_connected = TRUE;
 
   /* store the source output index so it can be accessed via a property */
   pulsesrc->source_output_idx = pa_stream_get_index (pulsesrc->stream);
@@ -1063,6 +1068,10 @@ gst_pulsesrc_prepare (GstAudioSrc * asrc, GstRingBufferSpec * spec)
   }
   spec->segtotal = actual->maxlength / spec->segsize;
 
+  if (!pulsesrc->paused) {
+    GST_DEBUG_OBJECT (pulsesrc, "uncorking because we are playing");
+    gst_pulsesrc_set_corked (pulsesrc, FALSE, FALSE);
+  }
   pa_threaded_mainloop_unlock (pulsesrc->mainloop);
 
   return TRUE;
@@ -1096,7 +1105,7 @@ gst_pulsesrc_success_cb (pa_stream * s, int success, void *userdata)
 {
   GstPulseSrc *pulsesrc = GST_PULSESRC_CAST (userdata);
 
-  pulsesrc->operation_success = !!success;
+  pulsesrc->operation_success = ! !success;
   pa_threaded_mainloop_signal (pulsesrc->mainloop, 0);
 }
 
@@ -1161,6 +1170,9 @@ gst_pulsesrc_set_corked (GstPulseSrc * psrc, gboolean corked, gboolean wait)
   gboolean res = FALSE;
 
   GST_DEBUG_OBJECT (psrc, "setting corked state to %d", corked);
+  if (!psrc->stream_connected)
+    return TRUE;
+
   if (psrc->corked != corked) {
     if (!(o = pa_stream_cork (psrc->stream, corked,
                 gst_pulsesrc_success_cb, psrc)))

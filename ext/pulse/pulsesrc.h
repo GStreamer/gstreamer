@@ -73,6 +73,7 @@ struct _GstPulseSrc
   GstPulseProbe *probe;
 
   gboolean corked:1;
+  gboolean stream_connected:1;
   gboolean operation_success:1;
   gboolean paused:1;
   gboolean in_read:1;
