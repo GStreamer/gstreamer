@@ -213,14 +213,18 @@ GType ges_video_standard_transition_type_get_type (void);
  * GESTextVAlign:
  * @GES_TEXT_VALIGN_BASELINE: draw text on the baseline
  * @GES_TEXT_VALIGN_BOTTOM: draw text on the bottom
- * @GES_TEXT_VALIGN_TOP: draw test on top
+ * @GES_TEXT_VALIGN_TOP: draw text on top
+ * @GES_TEXT_VALIGN_POSITION: draw text on ypos position
+ * @GES_TEXT_VALIGN_CENTER: draw text on the center
  *
  * Vertical alignment of the text.
  */
 typedef enum {
     GES_TEXT_VALIGN_BASELINE,
     GES_TEXT_VALIGN_BOTTOM,
-    GES_TEXT_VALIGN_TOP
+    GES_TEXT_VALIGN_TOP,
+    GES_TEXT_VALIGN_POSITION,
+    GES_TEXT_VALIGN_CENTER
 } GESTextVAlign;
 
 #define DEFAULT_VALIGNMENT GES_TEXT_VALIGN_BASELINE
@@ -235,13 +239,15 @@ GType ges_text_valign_get_type (void);
  * @GES_TEXT_HALIGN_LEFT: align text left
  * @GES_TEXT_HALIGN_CENTER: align text center
  * @GES_TEXT_HALIGN_RIGHT: align text right
+ * @GES_TEXT_HALIGN_POSITION: align text on xpos position
  *
  * Horizontal alignment of the text.
  */
 typedef enum {
-    GES_TEXT_HALIGN_LEFT,
-    GES_TEXT_HALIGN_CENTER,
-    GES_TEXT_HALIGN_RIGHT
+    GES_TEXT_HALIGN_LEFT = 0,
+    GES_TEXT_HALIGN_CENTER = 1,
+    GES_TEXT_HALIGN_RIGHT = 2,
+    GES_TEXT_HALIGN_POSITION = 4
 } GESTextHAlign;
 
 #define DEFAULT_HALIGNMENT GES_TEXT_HALIGN_CENTER

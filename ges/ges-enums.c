@@ -436,6 +436,8 @@ ges_text_valign_get_type (void)
     {GES_TEXT_VALIGN_BASELINE, "baseline", "baseline"},
     {GES_TEXT_VALIGN_BOTTOM, "bottom", "bottom"},
     {GES_TEXT_VALIGN_TOP, "top", "top"},
+    {GES_TEXT_VALIGN_POSITION, "position", "position"},
+    {GES_TEXT_VALIGN_CENTER, "center", "center"},
     {0, NULL, NULL},
   };
 
@@ -456,6 +458,7 @@ ges_text_halign_get_type (void)
     {GES_TEXT_HALIGN_LEFT, "left", "left"},
     {GES_TEXT_HALIGN_CENTER, "center", "center"},
     {GES_TEXT_HALIGN_RIGHT, "right", "right"},
+    {GES_TEXT_HALIGN_POSITION, "position", "position"},
     {0, NULL, NULL},
   };
 
