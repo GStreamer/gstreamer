@@ -213,6 +213,9 @@ struct _GstRtpBinPrivate
   gint shutdown;
 
   gboolean autoremove;
+
+  /* UNIX (ntp) time of last SR sync used */
+  guint64 last_unix;
 };
 
 /* signals and args */
@@ -245,6 +248,7 @@ enum
 #define DEFAULT_AUTOREMOVE           FALSE
 #define DEFAULT_BUFFER_MODE          RTP_JITTER_BUFFER_MODE_SLAVE
 #define DEFAULT_USE_PIPELINE_CLOCK   FALSE
+#define DEFAULT_RTCP_SYNC_INTERVAL   0
 
 enum
 {
@@ -254,6 +258,7 @@ enum
   PROP_DO_LOST,
   PROP_IGNORE_PT,
   PROP_NTP_SYNC,
+  PROP_RTCP_SYNC_INTERVAL,
   PROP_AUTOREMOVE,
   PROP_BUFFER_MODE,
   PROP_USE_PIPELINE_CLOCK,
@@ -1103,6 +1108,16 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream, guint8 len,
     GST_DEBUG_OBJECT (bin, "client %p min delta %" G_GINT64_FORMAT, client,
         min);
 
+    /* bail out if we adjusted recently enough */
+    if (all_sync && (last_unix - bin->priv->last_unix) <
+        bin->rtcp_sync_interval * GST_MSECOND) {
+      GST_DEBUG_OBJECT (bin, "discarding RTCP sender packet for sync; "
+          "previous sender info too recent "
+          "(previous UNIX %" G_GUINT64_FORMAT ")", bin->priv->last_unix);
+      return;
+    }
+    bin->priv->last_unix = last_unix;
+
     /* calculate offsets for each stream */
     for (walk = client->streams; walk; walk = g_slist_next (walk)) {
       GstRtpBinStream *ostream = (GstRtpBinStream *) walk->data;
@@ -1677,6 +1692,19 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
           "Synchronize received streams to the NTP clock", DEFAULT_NTP_SYNC,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstRtpBin::rtcp-sync-interval:
+   *
+   * Determines how often to sync streams using RTCP data.
+   *
+   * Since: 0.10.31
+   */
+  g_object_class_install_property (gobject_class, PROP_RTCP_SYNC_INTERVAL,
+      g_param_spec_uint ("rtcp-sync-interval", "RTCP Sync Interval",
+          "RTCP SR interval synchronization (ms) (0 = always)",
+          0, G_MAXUINT, DEFAULT_RTCP_SYNC_INTERVAL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_rtp_bin_change_state);
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_rtp_bin_request_new_pad);
@@ -1706,6 +1734,7 @@ gst_rtp_bin_init (GstRtpBin * rtpbin, GstRtpBinClass * klass)
   rtpbin->do_lost = DEFAULT_DO_LOST;
   rtpbin->ignore_pt = DEFAULT_IGNORE_PT;
   rtpbin->ntp_sync = DEFAULT_NTP_SYNC;
+  rtpbin->rtcp_sync_interval = DEFAULT_RTCP_SYNC_INTERVAL;
   rtpbin->priv->autoremove = DEFAULT_AUTOREMOVE;
   rtpbin->buffer_mode = DEFAULT_BUFFER_MODE;
   rtpbin->use_pipeline_clock = DEFAULT_USE_PIPELINE_CLOCK;
@@ -1821,6 +1850,9 @@ gst_rtp_bin_set_property (GObject * object, guint prop_id,
     case PROP_NTP_SYNC:
       rtpbin->ntp_sync = g_value_get_boolean (value);
       break;
+    case PROP_RTCP_SYNC_INTERVAL:
+      rtpbin->rtcp_sync_interval = g_value_get_uint (value);
+      break;
     case PROP_IGNORE_PT:
       rtpbin->ignore_pt = g_value_get_boolean (value);
       break;
@@ -1882,6 +1914,9 @@ gst_rtp_bin_get_property (GObject * object, guint prop_id,
       break;
     case PROP_NTP_SYNC:
       g_value_set_boolean (value, rtpbin->ntp_sync);
+      break;
+    case PROP_RTCP_SYNC_INTERVAL:
+      g_value_set_uint (value, rtpbin->rtcp_sync_interval);
       break;
     case PROP_AUTOREMOVE:
       g_value_set_boolean (value, rtpbin->priv->autoremove);
@@ -2108,6 +2143,7 @@ gst_rtp_bin_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      priv->last_unix = 0;
       GST_LOG_OBJECT (rtpbin, "clearing shutdown flag");
       g_atomic_int_set (&priv->shutdown, 0);
       break;
