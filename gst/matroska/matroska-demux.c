@@ -4340,6 +4340,20 @@ pause:
     if (ret == GST_FLOW_UNEXPECTED) {
       /* perform EOS logic */
 
+      /* If we were in the headers, make sure we send no-more-pads.
+         This will ensure decodebin2 does not get stuck thinking
+         the chain is not complete yet, and waiting indefinitely. */
+      if (G_UNLIKELY (demux->common.state == GST_MATROSKA_READ_STATE_HEADER)) {
+        if (demux->common.src->len == 0) {
+          GST_ELEMENT_ERROR (demux, STREAM, FAILED, (NULL),
+              ("No pads created"));
+        } else {
+          GST_ELEMENT_WARNING (demux, STREAM, DEMUX, (NULL),
+              ("Failed to finish reading headers"));
+        }
+        gst_element_no_more_pads (GST_ELEMENT (demux));
+      }
+
       /* Close the segment, i.e. update segment stop with the duration
        * if no stop was set */
       if (GST_CLOCK_TIME_IS_VALID (demux->last_stop_end) &&
