@@ -471,7 +471,7 @@ gst_omx_component_set_state (GstOMXComponent * comp, OMX_STATETYPE state)
   old_state = comp->state;
   GST_DEBUG_OBJECT (comp->parent, "Setting state from %d to %d", old_state,
       state);
-  if ((err = comp->last_error) != OMX_ErrorNone) {
+  if ((err = comp->last_error) != OMX_ErrorNone && state > old_state) {
     GST_ERROR_OBJECT (comp->parent, "Component in error state: %s (0x%08x)",
         gst_omx_error_to_string (err), err);
     goto done;
