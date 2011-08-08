@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-0.10.18.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-06-15 15:02+0100\n"
+"POT-Creation-Date: 2011-08-08 15:23+0100\n"
 "PO-Revision-Date: 2010-03-25 12:37+0100\n"
 "Last-Translator: Mikel Olasagasti Uranga <hey_neken@mundurat.net>\n"
 "Language-Team: Basque <translation-team-eu@lists.sourceforge.net>\n"
@@ -541,12 +541,84 @@ msgid "Error reading %d bytes from device '%s'."
 msgstr "Errorea gertatu da '%2$s' gailuan %1$d byte irakurtzean."
 
 #, c-format
+msgid "Failed to enumerate possible video formats device '%s' can work with"
+msgstr ""
+
+#, c-format
+msgid "Could not map buffers from device '%s'"
+msgstr "Ezin izan dira '%s' gailuaren bufferrak mapatu."
+
+#, fuzzy, c-format
+msgid "The driver of device '%s' does not support the IO method %d"
+msgstr ""
+"'%s' gailuaren kontrolatzaileak ez du onartzen kaptura-metodo ezagunik."
+
+#, fuzzy, c-format
+msgid "The driver of device '%s' does not support any known IO method."
+msgstr ""
+"'%s' gailuaren kontrolatzaileak ez du onartzen kaptura-metodo ezagunik."
+
+#, fuzzy, c-format
+msgid "Device '%s' does not support video capture"
+msgstr "'%s' gailua ez da irteerako gailu bat."
+
+#, fuzzy, c-format
+msgid "Device '%s' cannot capture at %dx%d"
+msgstr "'%s' gailua ez da kaptura-gailu bat."
+
+#, fuzzy, c-format
+msgid "Device '%s' cannot capture in the specified format"
+msgstr "'%s' gailua ez da kaptura-gailu bat."
+
+#, c-format
+msgid "Could not get parameters on device '%s'"
+msgstr "Ezin izan dira '%s' gailuaren parametroak eskuratu"
+
+#, fuzzy
+msgid "Video device did not accept new frame rate setting."
+msgstr ""
+"Bideoaren sarrerako gailuak ez du fotograma-tamainaren ezarpen berria "
+"onartzen."
+
+msgid "Video device could not create buffer pool."
+msgstr ""
+
+#, c-format
 msgid "Got unexpected frame size of %u instead of %u."
 msgstr "Ustekabeko fotograma-tamaina jaso da (%u), %u ordez."
 
 #, c-format
-msgid "Error reading %d bytes on device '%s'."
+msgid "Failed trying to get video frames from device '%s'."
+msgstr "Huts egin du '%s' gailutik bideo-fotogramak eskuratzen saiatzean."
+
+#, c-format
+msgid "Failed after %d tries. device %s. system error: %s"
+msgstr "Huts egin du %d saio eta gero. %s gailua. Sistema-errorea: %s"
+
+#, fuzzy, c-format
+msgid "Failed to get settings of tuner %d on device '%s'."
+msgstr ""
+"Huts egin du '%2$s' gailuko %1$d. sintonizadorearen ezarpenak eskuratzean."
+
+#, fuzzy, c-format
+msgid "Error getting capabilities for device '%s'."
 msgstr "Errorea gertatu da '%2$s' gailuan %1$d byte irakurtzean."
+
+#, fuzzy, c-format
+msgid "Device '%s' is not a tuner."
+msgstr "'%s' gailua ez da irteerako gailu bat."
+
+#, fuzzy, c-format
+msgid "Failed to get radio input on device '%s'. "
+msgstr "Huts egin du '%2$s' gailuko %1$d. sarrera ezartzean."
+
+#, c-format
+msgid "Failed to set input %d on device %s."
+msgstr "Huts egin du '%2$s' gailuko %1$d. sarrera ezartzean."
+
+#, fuzzy, c-format
+msgid "Failed to change mute state for device '%s'."
+msgstr "Huts egin du '%s' gailuaren seinalearen indarra eskuratzean."
 
 #, c-format
 msgid ""
@@ -627,10 +699,6 @@ msgstr ""
 "Huts egin du '%s' gailuko uneko sarrera eskuratzean. Litekeena da irrati-"
 "gailu bat izatea."
 
-#, c-format
-msgid "Failed to set input %d on device %s."
-msgstr "Huts egin du '%2$s' gailuko %1$d. sarrera ezartzean."
-
 #, fuzzy, c-format
 msgid ""
 "Failed to get current output on device '%s'. May be it is a radio device"
@@ -642,41 +710,17 @@ msgstr ""
 msgid "Failed to set output %d on device %s."
 msgstr "Huts egin du '%2$s' gailuko %1$d. sarrera ezartzean."
 
-#, c-format
-msgid "Could not enqueue buffers in device '%s'."
-msgstr "Ezin izan dira bufferrak ilaran jarri '%s' gailuan."
-
-#, c-format
-msgid "Failed trying to get video frames from device '%s'."
-msgstr "Huts egin du '%s' gailutik bideo-fotogramak eskuratzen saiatzean."
-
-#, c-format
-msgid "Failed after %d tries. device %s. system error: %s"
-msgstr "Huts egin du %d saio eta gero. %s gailua. Sistema-errorea: %s"
-
-#, c-format
-msgid "Could not get parameters on device '%s'"
-msgstr "Ezin izan dira '%s' gailuaren parametroak eskuratu"
-
-msgid "Video input device did not accept new frame rate setting."
-msgstr ""
-"Bideoaren sarrerako gailuak ez du fotograma-tamainaren ezarpen berria "
-"onartzen."
-
-#, c-format
-msgid "Could not map buffers from device '%s'"
-msgstr "Ezin izan dira '%s' gailuaren bufferrak mapatu."
-
-#, c-format
-msgid "The driver of device '%s' does not support any known capture method."
-msgstr ""
-"'%s' gailuaren kontrolatzaileak ez du onartzen kaptura-metodo ezagunik."
-
 msgid "Changing resolution at runtime is not yet supported."
 msgstr "Oraindik ez dago onartua exekutatu bitartean bereizmena aldatzea."
 
 msgid "Cannot operate without a clock"
 msgstr "Ezin du funtzionatu erlojurik gabe"
+
+#~ msgid "Error reading %d bytes on device '%s'."
+#~ msgstr "Errorea gertatu da '%2$s' gailuan %1$d byte irakurtzean."
+
+#~ msgid "Could not enqueue buffers in device '%s'."
+#~ msgstr "Ezin izan dira bufferrak ilaran jarri '%s' gailuan."
 
 #~ msgid "Could not establish connection to sound server"
 #~ msgstr "Ezin izan da konexioa ezarri soinu-zerbitzariarekin"

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.25.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-06-15 15:02+0100\n"
+"POT-Creation-Date: 2011-08-08 15:23+0100\n"
 "PO-Revision-Date: 2010-11-08 15:48+0100\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
@@ -535,12 +535,84 @@ msgid "Error reading %d bytes from device '%s'."
 msgstr "Chyba pri čítaní %d bajtov na zariadení '%s'."
 
 #, c-format
+msgid "Failed to enumerate possible video formats device '%s' can work with"
+msgstr ""
+"Nepodarilo sa zistiť možné video formáty, '%s' s ktorými vie zariadenie "
+"pracovať"
+
+#, c-format
+msgid "Could not map buffers from device '%s'"
+msgstr "Nepodarilo sa namapovať vyrovnávaciu pamäť zariadenia '%s'"
+
+#, fuzzy, c-format
+msgid "The driver of device '%s' does not support the IO method %d"
+msgstr ""
+"Tento ovládač zariadenia '%s' nepodporuje žiadnu známu metódu nahrávania."
+
+#, fuzzy, c-format
+msgid "The driver of device '%s' does not support any known IO method."
+msgstr ""
+"Tento ovládač zariadenia '%s' nepodporuje žiadnu známu metódu nahrávania."
+
+#, fuzzy, c-format
+msgid "Device '%s' does not support video capture"
+msgstr "Zariadenie '%s' nie je určené pre výstup."
+
+#, c-format
+msgid "Device '%s' cannot capture at %dx%d"
+msgstr "Zariadenie '%s' nevie zachytávať na %dx%d"
+
+#, c-format
+msgid "Device '%s' cannot capture in the specified format"
+msgstr "Zariadenie '%s' nedokáže zachytávať v uvedenom formáte"
+
+#, c-format
+msgid "Could not get parameters on device '%s'"
+msgstr "Nepodarilo sa získať parametre zariadenia '%s'"
+
+#, fuzzy
+msgid "Video device did not accept new frame rate setting."
+msgstr ""
+"Zariadenie video vstupu neakceptovalo nové nastavenie frekvencie snímok."
+
+msgid "Video device could not create buffer pool."
+msgstr ""
+
+#, c-format
 msgid "Got unexpected frame size of %u instead of %u."
 msgstr "Nastala neočakávaná veľkosť snímky %u namiesto %u."
 
 #, c-format
-msgid "Error reading %d bytes on device '%s'."
+msgid "Failed trying to get video frames from device '%s'."
+msgstr "Nepodarilo sa získať videosnímky zo zariadenia '%s'."
+
+#, c-format
+msgid "Failed after %d tries. device %s. system error: %s"
+msgstr "Nepodarilo sa po %d pokusoch. Zariadenie %s. Systémová chyba: %s"
+
+#, fuzzy, c-format
+msgid "Failed to get settings of tuner %d on device '%s'."
+msgstr "Nepodarilo sa získať nastavenie prijímača %d od zariadenia '%s'."
+
+#, fuzzy, c-format
+msgid "Error getting capabilities for device '%s'."
 msgstr "Chyba pri čítaní %d bajtov na zariadení '%s'."
+
+#, fuzzy, c-format
+msgid "Device '%s' is not a tuner."
+msgstr "Zariadenie '%s' nie je určené pre výstup."
+
+#, fuzzy, c-format
+msgid "Failed to get radio input on device '%s'. "
+msgstr "Nepodarilo sa nastaviť vstup %d na zariadení %s."
+
+#, c-format
+msgid "Failed to set input %d on device %s."
+msgstr "Nepodarilo sa nastaviť vstup %d na zariadení %s."
+
+#, fuzzy, c-format
+msgid "Failed to change mute state for device '%s'."
+msgstr "Nepodarilo sa zistiť silu signálu pre zariadenie '%s'."
 
 #, c-format
 msgid ""
@@ -619,10 +691,6 @@ msgid "Failed to get current input on device '%s'. May be it is a radio device"
 msgstr ""
 "Nepodarilo sa zistiť súčasný vstup na zariadení '%s'. Možno je to rádio."
 
-#, c-format
-msgid "Failed to set input %d on device %s."
-msgstr "Nepodarilo sa nastaviť vstup %d na zariadení %s."
-
 #, fuzzy, c-format
 msgid ""
 "Failed to get current output on device '%s'. May be it is a radio device"
@@ -633,40 +701,17 @@ msgstr ""
 msgid "Failed to set output %d on device %s."
 msgstr "Nepodarilo sa nastaviť vstup %d na zariadení %s."
 
-#, c-format
-msgid "Could not enqueue buffers in device '%s'."
-msgstr "Nepodarilo sa zaradiť vyrovnávaciu pamäť na zariadení '%s'."
-
-#, c-format
-msgid "Failed trying to get video frames from device '%s'."
-msgstr "Nepodarilo sa získať videosnímky zo zariadenia '%s'."
-
-#, c-format
-msgid "Failed after %d tries. device %s. system error: %s"
-msgstr "Nepodarilo sa po %d pokusoch. Zariadenie %s. Systémová chyba: %s"
-
-#, c-format
-msgid "Could not get parameters on device '%s'"
-msgstr "Nepodarilo sa získať parametre zariadenia '%s'"
-
-msgid "Video input device did not accept new frame rate setting."
-msgstr ""
-"Zariadenie video vstupu neakceptovalo nové nastavenie frekvencie snímok."
-
-#, c-format
-msgid "Could not map buffers from device '%s'"
-msgstr "Nepodarilo sa namapovať vyrovnávaciu pamäť zariadenia '%s'"
-
-#, c-format
-msgid "The driver of device '%s' does not support any known capture method."
-msgstr ""
-"Tento ovládač zariadenia '%s' nepodporuje žiadnu známu metódu nahrávania."
-
 msgid "Changing resolution at runtime is not yet supported."
 msgstr "Zmena rozlíšenia za chodu nie je zatiaľ podporovaná."
 
 msgid "Cannot operate without a clock"
 msgstr "Nemôžem fungovať bez hodín"
+
+#~ msgid "Error reading %d bytes on device '%s'."
+#~ msgstr "Chyba pri čítaní %d bajtov na zariadení '%s'."
+
+#~ msgid "Could not enqueue buffers in device '%s'."
+#~ msgstr "Nepodarilo sa zaradiť vyrovnávaciu pamäť na zariadení '%s'."
 
 #~ msgid "Could not establish connection to sound server"
 #~ msgstr "Nepodarilo sa nadviazať spojenie so zvukovým serverom"
@@ -676,11 +721,6 @@ msgstr "Nemôžem fungovať bez hodín"
 
 #~ msgid "Failed getting controls attributes on device '%s.'"
 #~ msgstr "Nepodarilo sa získať atribúty ovládacích prvkov na zariadení '%s.'"
-
-#~ msgid "Failed to enumerate possible video formats device '%s' can work with"
-#~ msgstr ""
-#~ "Nepodarilo sa zistiť možné video formáty, '%s' s ktorými vie zariadenie "
-#~ "pracovať"
 
 #~ msgid ""
 #~ "The buffer type is not supported, or the index is out of bounds, or no "
@@ -704,12 +744,6 @@ msgstr "Nemôžem fungovať bez hodín"
 #~ msgid "No free buffers found in the pool at index %d."
 #~ msgstr ""
 #~ "Nenašli sa žiadne voľné oblasti vyrovnávacei pamäte v bloku na indexe %d."
-
-#~ msgid "Device '%s' cannot capture at %dx%d"
-#~ msgstr "Zariadenie '%s' nevie zachytávať na %dx%d"
-
-#~ msgid "Device '%s' cannot capture in the specified format"
-#~ msgstr "Zariadenie '%s' nedokáže zachytávať v uvedenom formáte"
 
 #~ msgid "Could not get buffers from device '%s'."
 #~ msgstr "Nepodarilo sa získať vyrovnávaciu pamäť od zariadenia '%s'."

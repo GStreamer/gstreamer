@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.23.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-06-15 15:02+0100\n"
+"POT-Creation-Date: 2011-08-08 15:23+0100\n"
 "PO-Revision-Date: 2010-07-07 11:53+0100\n"
 "Last-Translator: Rihards Priedītis <rprieditis@gmail.com>\n"
 "Language-Team: Latvian <translation-team-lv@lists.sourceforge.net>\n"
@@ -537,12 +537,81 @@ msgid "Error reading %d bytes from device '%s'."
 msgstr "Radās kļūda nolasot %d baitus no ierīces \"%s\"."
 
 #, c-format
+msgid "Failed to enumerate possible video formats device '%s' can work with"
+msgstr ""
+
+#, c-format
+msgid "Could not map buffers from device '%s'"
+msgstr "Nevar izvietot buferus no ierīces \"%s\""
+
+#, fuzzy, c-format
+msgid "The driver of device '%s' does not support the IO method %d"
+msgstr ""
+"Ierīces \"%s\" draiveris neatbalsta nevienu zināmo ierakstīšanas metodi."
+
+#, fuzzy, c-format
+msgid "The driver of device '%s' does not support any known IO method."
+msgstr ""
+"Ierīces \"%s\" draiveris neatbalsta nevienu zināmo ierakstīšanas metodi."
+
+#, fuzzy, c-format
+msgid "Device '%s' does not support video capture"
+msgstr "Ierīce \"%s\" nav izvades ierīce."
+
+#, fuzzy, c-format
+msgid "Device '%s' cannot capture at %dx%d"
+msgstr "Ierīce \"%s\" nav ierakstīšanas ierīce."
+
+#, fuzzy, c-format
+msgid "Device '%s' cannot capture in the specified format"
+msgstr "Ierīce \"%s\" nav ierakstīšanas ierīce."
+
+#, c-format
+msgid "Could not get parameters on device '%s'"
+msgstr "Nevar nolasīt parametrus no ierīces \"%s\""
+
+#, fuzzy
+msgid "Video device did not accept new frame rate setting."
+msgstr "Video ievades ierīce nepieņem jaunos kadra frekvences uzstādījumus."
+
+msgid "Video device could not create buffer pool."
+msgstr ""
+
+#, c-format
 msgid "Got unexpected frame size of %u instead of %u."
 msgstr "Saņēmu negaidītu kadra izmēru %u, nevis %u."
 
 #, c-format
-msgid "Error reading %d bytes on device '%s'."
+msgid "Failed trying to get video frames from device '%s'."
+msgstr "Neizdevās saņemt video kadrus no ierīces \"%s\"."
+
+#, c-format
+msgid "Failed after %d tries. device %s. system error: %s"
+msgstr "Neveiksme pēc %d mēģinājumiem. ierīce %s. sistēmas kļūda: %s"
+
+#, fuzzy, c-format
+msgid "Failed to get settings of tuner %d on device '%s'."
+msgstr "Neizdevās saņemt skaņotāja %d uzstādījumus no ierīces \"%s\"."
+
+#, fuzzy, c-format
+msgid "Error getting capabilities for device '%s'."
 msgstr "Radās kļūda nolasot %d baitus no ierīces \"%s\"."
+
+#, fuzzy, c-format
+msgid "Device '%s' is not a tuner."
+msgstr "Ierīce \"%s\" nav izvades ierīce."
+
+#, fuzzy, c-format
+msgid "Failed to get radio input on device '%s'. "
+msgstr "Neizdevās uzstādīt ievadi %d uz ierīces %s."
+
+#, c-format
+msgid "Failed to set input %d on device %s."
+msgstr "Neizdevās uzstādīt ievadi %d uz ierīces %s."
+
+#, fuzzy, c-format
+msgid "Failed to change mute state for device '%s'."
+msgstr "Neizdevās saņemt signāla stiprumu no ierīces \"%s\"."
 
 #, c-format
 msgid ""
@@ -619,10 +688,6 @@ msgstr ""
 "Neizdevās saņemt pašreizējo ievadi no ierīces \"%s\". Iespējams tā ir radio "
 "ierīce"
 
-#, c-format
-msgid "Failed to set input %d on device %s."
-msgstr "Neizdevās uzstādīt ievadi %d uz ierīces %s."
-
 #, fuzzy, c-format
 msgid ""
 "Failed to get current output on device '%s'. May be it is a radio device"
@@ -634,39 +699,17 @@ msgstr ""
 msgid "Failed to set output %d on device %s."
 msgstr "Neizdevās uzstādīt ievadi %d uz ierīces %s."
 
-#, c-format
-msgid "Could not enqueue buffers in device '%s'."
-msgstr "Nevar ierindod buferus ierīcē \"%s\"."
-
-#, c-format
-msgid "Failed trying to get video frames from device '%s'."
-msgstr "Neizdevās saņemt video kadrus no ierīces \"%s\"."
-
-#, c-format
-msgid "Failed after %d tries. device %s. system error: %s"
-msgstr "Neveiksme pēc %d mēģinājumiem. ierīce %s. sistēmas kļūda: %s"
-
-#, c-format
-msgid "Could not get parameters on device '%s'"
-msgstr "Nevar nolasīt parametrus no ierīces \"%s\""
-
-msgid "Video input device did not accept new frame rate setting."
-msgstr "Video ievades ierīce nepieņem jaunos kadra frekvences uzstādījumus."
-
-#, c-format
-msgid "Could not map buffers from device '%s'"
-msgstr "Nevar izvietot buferus no ierīces \"%s\""
-
-#, c-format
-msgid "The driver of device '%s' does not support any known capture method."
-msgstr ""
-"Ierīces \"%s\" draiveris neatbalsta nevienu zināmo ierakstīšanas metodi."
-
 msgid "Changing resolution at runtime is not yet supported."
 msgstr "Izšķirtspējas mainīšana izpildlaikā pašalik netiek atbalstīta."
 
 msgid "Cannot operate without a clock"
 msgstr "Nevar veikt darbības bez pulksteņa"
+
+#~ msgid "Error reading %d bytes on device '%s'."
+#~ msgstr "Radās kļūda nolasot %d baitus no ierīces \"%s\"."
+
+#~ msgid "Could not enqueue buffers in device '%s'."
+#~ msgstr "Nevar ierindod buferus ierīcē \"%s\"."
 
 #~ msgid "Could not establish connection to sound server"
 #~ msgstr "Nevar izveidot savienojumu ar skaņas serveri"

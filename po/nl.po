@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-06-15 15:02+0100\n"
+"POT-Creation-Date: 2011-08-08 15:23+0100\n"
 "PO-Revision-Date: 2011-04-27 00:05+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -537,12 +537,82 @@ msgid "Error reading %d bytes from device '%s'."
 msgstr "Fout bij het lezen van %d bytes van apparaat '%s'."
 
 #, c-format
+msgid "Failed to enumerate possible video formats device '%s' can work with"
+msgstr ""
+
+#, c-format
+msgid "Could not map buffers from device '%s'"
+msgstr "Kan de buffers van apparaat '%s' niet vinden"
+
+#, fuzzy, c-format
+msgid "The driver of device '%s' does not support the IO method %d"
+msgstr ""
+"Het stuurprogramma van apparaat '%s' ondersteunt geen  bekende opnamemethode."
+
+#, fuzzy, c-format
+msgid "The driver of device '%s' does not support any known IO method."
+msgstr ""
+"Het stuurprogramma van apparaat '%s' ondersteunt geen  bekende opnamemethode."
+
+#, fuzzy, c-format
+msgid "Device '%s' does not support video capture"
+msgstr "Apparaat '%s' is geen uitvoerapparaat."
+
+#, fuzzy, c-format
+msgid "Device '%s' cannot capture at %dx%d"
+msgstr "Apparaat '%s' is geen opnameapparaat."
+
+#, fuzzy, c-format
+msgid "Device '%s' cannot capture in the specified format"
+msgstr "Apparaat '%s' is geen opnameapparaat."
+
+#, c-format
+msgid "Could not get parameters on device '%s'"
+msgstr "Kan de parameters op apparaat '%s' niet verkrijgen"
+
+#, fuzzy
+msgid "Video device did not accept new frame rate setting."
+msgstr ""
+"Invoerapparaat voor video heeft de nieuwe frame-snelheid niet geaccepteerd."
+
+msgid "Video device could not create buffer pool."
+msgstr ""
+
+#, c-format
 msgid "Got unexpected frame size of %u instead of %u."
 msgstr "Onverwachte framegrootte, %u in plaats van %u."
 
 #, c-format
-msgid "Error reading %d bytes on device '%s'."
+msgid "Failed trying to get video frames from device '%s'."
+msgstr "Kan geen videoframes verkrijgen van apparaat '%s'."
+
+#, c-format
+msgid "Failed after %d tries. device %s. system error: %s"
+msgstr "Fout na %d pogingen. Apparaat %s. Systeemfout: %s"
+
+#, fuzzy, c-format
+msgid "Failed to get settings of tuner %d on device '%s'."
+msgstr "Kan de instelling van tuner %d op apparaat '%s' niet verkrijgen."
+
+#, fuzzy, c-format
+msgid "Error getting capabilities for device '%s'."
 msgstr "Fout bij het lezen van %d bytes van apparaat '%s'."
+
+#, fuzzy, c-format
+msgid "Device '%s' is not a tuner."
+msgstr "Apparaat '%s' is geen uitvoerapparaat."
+
+#, fuzzy, c-format
+msgid "Failed to get radio input on device '%s'. "
+msgstr "Kan invoer %d op apparaat '%s' niet instellen."
+
+#, c-format
+msgid "Failed to set input %d on device %s."
+msgstr "Kan invoer %d op apparaat '%s' niet instellen."
+
+#, fuzzy, c-format
+msgid "Failed to change mute state for device '%s'."
+msgstr "Kan de signaalsterkte van apparaat '%s' niet verkrijgen."
 
 #, c-format
 msgid ""
@@ -620,10 +690,6 @@ msgstr ""
 "mogelijk een radio"
 
 #, c-format
-msgid "Failed to set input %d on device %s."
-msgstr "Kan invoer %d op apparaat '%s' niet instellen."
-
-#, c-format
 msgid ""
 "Failed to get current output on device '%s'. May be it is a radio device"
 msgstr ""
@@ -634,40 +700,17 @@ msgstr ""
 msgid "Failed to set output %d on device %s."
 msgstr "Kan uitvoer %d op apparaat %s niet instellen."
 
-#, c-format
-msgid "Could not enqueue buffers in device '%s'."
-msgstr "Kan geen buffers toekennen in apparaat '%s'."
-
-#, c-format
-msgid "Failed trying to get video frames from device '%s'."
-msgstr "Kan geen videoframes verkrijgen van apparaat '%s'."
-
-#, c-format
-msgid "Failed after %d tries. device %s. system error: %s"
-msgstr "Fout na %d pogingen. Apparaat %s. Systeemfout: %s"
-
-#, c-format
-msgid "Could not get parameters on device '%s'"
-msgstr "Kan de parameters op apparaat '%s' niet verkrijgen"
-
-msgid "Video input device did not accept new frame rate setting."
-msgstr ""
-"Invoerapparaat voor video heeft de nieuwe frame-snelheid niet geaccepteerd."
-
-#, c-format
-msgid "Could not map buffers from device '%s'"
-msgstr "Kan de buffers van apparaat '%s' niet vinden"
-
-#, c-format
-msgid "The driver of device '%s' does not support any known capture method."
-msgstr ""
-"Het stuurprogramma van apparaat '%s' ondersteunt geen  bekende opnamemethode."
-
 msgid "Changing resolution at runtime is not yet supported."
 msgstr "Tijdens het draaien kan de resolutie nog niet gewijzigd worden."
 
 msgid "Cannot operate without a clock"
 msgstr "Kan niet werken zonder een klok."
+
+#~ msgid "Error reading %d bytes on device '%s'."
+#~ msgstr "Fout bij het lezen van %d bytes van apparaat '%s'."
+
+#~ msgid "Could not enqueue buffers in device '%s'."
+#~ msgstr "Kan geen buffers toekennen in apparaat '%s'."
 
 #~ msgid "Could not establish connection to sound server"
 #~ msgstr "Kan geen verbinding maken met de geluidsserver"

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.7.6\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-06-15 15:02+0100\n"
+"POT-Creation-Date: 2011-08-08 15:23+0100\n"
 "PO-Revision-Date: 2004-03-13 00:18+0100\n"
 "Last-Translator: Danilo Segan <dsegan@gmx.net>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
@@ -543,12 +543,78 @@ msgid "Error reading %d bytes from device '%s'."
 msgstr "Не могу да примим бафере са уређаја „%s“."
 
 #, c-format
-msgid "Got unexpected frame size of %u instead of %u."
+msgid "Failed to enumerate possible video formats device '%s' can work with"
+msgstr ""
+
+#, fuzzy, c-format
+msgid "Could not map buffers from device '%s'"
+msgstr "Не могу да примим бафере са уређаја „%s“."
+
+#, c-format
+msgid "The driver of device '%s' does not support the IO method %d"
 msgstr ""
 
 #, c-format
-msgid "Error reading %d bytes on device '%s'."
+msgid "The driver of device '%s' does not support any known IO method."
 msgstr ""
+
+#, fuzzy, c-format
+msgid "Device '%s' does not support video capture"
+msgstr "Уређај „%s“ не представља уређај за снимање."
+
+#, fuzzy, c-format
+msgid "Device '%s' cannot capture at %dx%d"
+msgstr "Уређај „%s“ не представља уређај за снимање."
+
+#, fuzzy, c-format
+msgid "Device '%s' cannot capture in the specified format"
+msgstr "Уређај „%s“ не представља уређај за снимање."
+
+#, fuzzy, c-format
+msgid "Could not get parameters on device '%s'"
+msgstr "Не могу да примим бафере са уређаја „%s“."
+
+msgid "Video device did not accept new frame rate setting."
+msgstr ""
+
+msgid "Video device could not create buffer pool."
+msgstr ""
+
+#, c-format
+msgid "Got unexpected frame size of %u instead of %u."
+msgstr ""
+
+#, fuzzy, c-format
+msgid "Failed trying to get video frames from device '%s'."
+msgstr "Не могу да примим довољно бафера са уређаја „%s“."
+
+#, c-format
+msgid "Failed after %d tries. device %s. system error: %s"
+msgstr ""
+
+#, fuzzy, c-format
+msgid "Failed to get settings of tuner %d on device '%s'."
+msgstr "Не могу да примим довољно бафера са уређаја „%s“."
+
+#, fuzzy, c-format
+msgid "Error getting capabilities for device '%s'."
+msgstr "Не могу да примим бафере са уређаја „%s“."
+
+#, fuzzy, c-format
+msgid "Device '%s' is not a tuner."
+msgstr "Уређај „%s“ не представља уређај за снимање."
+
+#, fuzzy, c-format
+msgid "Failed to get radio input on device '%s'. "
+msgstr "Не могу да отворим радио уређај '%s'"
+
+#, fuzzy, c-format
+msgid "Failed to set input %d on device %s."
+msgstr "Не могу да отворим радио уређај '%s'"
+
+#, fuzzy, c-format
+msgid "Failed to change mute state for device '%s'."
+msgstr "Не могу да примим бафере са уређаја „%s“."
 
 #, c-format
 msgid ""
@@ -621,10 +687,6 @@ msgid "Failed to get current input on device '%s'. May be it is a radio device"
 msgstr ""
 
 #, fuzzy, c-format
-msgid "Failed to set input %d on device %s."
-msgstr "Не могу да отворим радио уређај '%s'"
-
-#, fuzzy, c-format
 msgid ""
 "Failed to get current output on device '%s'. May be it is a radio device"
 msgstr "Не могу да примим довољно бафера са уређаја „%s“."
@@ -633,38 +695,15 @@ msgstr "Не могу да примим довољно бафера са уре�
 msgid "Failed to set output %d on device %s."
 msgstr "Не могу да отворим радио уређај '%s'"
 
-#, fuzzy, c-format
-msgid "Could not enqueue buffers in device '%s'."
-msgstr "Не могу да примим бафере са уређаја „%s“."
-
-#, fuzzy, c-format
-msgid "Failed trying to get video frames from device '%s'."
-msgstr "Не могу да примим довољно бафера са уређаја „%s“."
-
-#, c-format
-msgid "Failed after %d tries. device %s. system error: %s"
-msgstr ""
-
-#, fuzzy, c-format
-msgid "Could not get parameters on device '%s'"
-msgstr "Не могу да примим бафере са уређаја „%s“."
-
-msgid "Video input device did not accept new frame rate setting."
-msgstr ""
-
-#, fuzzy, c-format
-msgid "Could not map buffers from device '%s'"
-msgstr "Не могу да примим бафере са уређаја „%s“."
-
-#, c-format
-msgid "The driver of device '%s' does not support any known capture method."
-msgstr ""
-
 msgid "Changing resolution at runtime is not yet supported."
 msgstr ""
 
 msgid "Cannot operate without a clock"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Could not enqueue buffers in device '%s'."
+#~ msgstr "Не могу да примим бафере са уређаја „%s“."
 
 #~ msgid "Could not open file \"%s\" for writing."
 #~ msgstr "Не могу да отворим датотеку „%s“ ради уписа."

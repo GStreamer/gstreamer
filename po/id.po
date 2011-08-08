@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-06-15 15:02+0100\n"
+"POT-Creation-Date: 2011-08-08 15:23+0100\n"
 "PO-Revision-Date: 2011-02-26 18:09+0700\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
@@ -534,12 +534,83 @@ msgid "Error reading %d bytes from device '%s'."
 msgstr "Galat membaca %d bita dari divais '%s'."
 
 #, c-format
+msgid "Failed to enumerate possible video formats device '%s' can work with"
+msgstr ""
+"Gagal menyebutkan kemungkinan format video yang dapat bekerja dengan divais "
+"'%s'."
+
+#, c-format
+msgid "Could not map buffers from device '%s'"
+msgstr "Tak dapat memetakan penyangga dari divais '%s'"
+
+#, fuzzy, c-format
+msgid "The driver of device '%s' does not support the IO method %d"
+msgstr ""
+"Driver dari divais '%s' tak mendukung metode penangkap apapun yang dikenal."
+
+#, fuzzy, c-format
+msgid "The driver of device '%s' does not support any known IO method."
+msgstr ""
+"Driver dari divais '%s' tak mendukung metode penangkap apapun yang dikenal."
+
+#, fuzzy, c-format
+msgid "Device '%s' does not support video capture"
+msgstr "Divais '%s' bukan divais keluaran."
+
+#, c-format
+msgid "Device '%s' cannot capture at %dx%d"
+msgstr "Divais '%s' tak dapat menangkap di %dx%d"
+
+#, c-format
+msgid "Device '%s' cannot capture in the specified format"
+msgstr "Divais '%s' tak dapat menangkap dalam format yang ditentukan"
+
+#, c-format
+msgid "Could not get parameters on device '%s'"
+msgstr "Tak bisa mendapatkan parameter di divais '%s'"
+
+#, fuzzy
+msgid "Video device did not accept new frame rate setting."
+msgstr "Divais masukan video tak menerima pengaturan rasio bingkai baru."
+
+msgid "Video device could not create buffer pool."
+msgstr ""
+
+#, c-format
 msgid "Got unexpected frame size of %u instead of %u."
 msgstr "Mendapatkan ukuran bingkai %u ketimbang %u yang tak diharapkan."
 
 #, c-format
-msgid "Error reading %d bytes on device '%s'."
-msgstr "Galat membaca %d bita pada divais '%s'."
+msgid "Failed trying to get video frames from device '%s'."
+msgstr "Gagal mencoba untuk mendapatkan bingkai video dari divais '%s'."
+
+#, c-format
+msgid "Failed after %d tries. device %s. system error: %s"
+msgstr "Gagal setelah %d percobaan. divais %s. galat sistem: %s"
+
+#, fuzzy, c-format
+msgid "Failed to get settings of tuner %d on device '%s'."
+msgstr "Gagal mendapatkan pengaturan tuner %d di divais '%s'."
+
+#, fuzzy, c-format
+msgid "Error getting capabilities for device '%s'."
+msgstr "Galat membaca %d bita dari divais '%s'."
+
+#, fuzzy, c-format
+msgid "Device '%s' is not a tuner."
+msgstr "Divais '%s' bukan divais keluaran."
+
+#, fuzzy, c-format
+msgid "Failed to get radio input on device '%s'. "
+msgstr "Gagal mengatur masukan %d di divais %s."
+
+#, c-format
+msgid "Failed to set input %d on device %s."
+msgstr "Gagal mengatur masukan %d di divais %s."
+
+#, fuzzy, c-format
+msgid "Failed to change mute state for device '%s'."
+msgstr "Gagal mendapatkan kekuatan sinyal untuk divais '%s'."
 
 #, c-format
 msgid ""
@@ -615,10 +686,6 @@ msgstr ""
 "Gagal mendapatkan masukan terkini di divais '%s'. Mungkin itu divais radio"
 
 #, c-format
-msgid "Failed to set input %d on device %s."
-msgstr "Gagal mengatur masukan %d di divais %s."
-
-#, c-format
 msgid ""
 "Failed to get current output on device '%s'. May be it is a radio device"
 msgstr ""
@@ -628,50 +695,23 @@ msgstr ""
 msgid "Failed to set output %d on device %s."
 msgstr "Gagal mengatur keluaran %d di divais %s."
 
-#, c-format
-msgid "Could not enqueue buffers in device '%s'."
-msgstr "Tak dapat mengantrekan penyangga di divais '%s'."
-
-#, c-format
-msgid "Failed trying to get video frames from device '%s'."
-msgstr "Gagal mencoba untuk mendapatkan bingkai video dari divais '%s'."
-
-#, c-format
-msgid "Failed after %d tries. device %s. system error: %s"
-msgstr "Gagal setelah %d percobaan. divais %s. galat sistem: %s"
-
-#, c-format
-msgid "Could not get parameters on device '%s'"
-msgstr "Tak bisa mendapatkan parameter di divais '%s'"
-
-msgid "Video input device did not accept new frame rate setting."
-msgstr "Divais masukan video tak menerima pengaturan rasio bingkai baru."
-
-#, c-format
-msgid "Could not map buffers from device '%s'"
-msgstr "Tak dapat memetakan penyangga dari divais '%s'"
-
-#, c-format
-msgid "The driver of device '%s' does not support any known capture method."
-msgstr ""
-"Driver dari divais '%s' tak mendukung metode penangkap apapun yang dikenal."
-
 msgid "Changing resolution at runtime is not yet supported."
 msgstr "Mengubah resolusi saat waktu berjalan belum didukung."
 
 msgid "Cannot operate without a clock"
 msgstr "Tak dapat beroperasi tanpa jam"
 
+#~ msgid "Error reading %d bytes on device '%s'."
+#~ msgstr "Galat membaca %d bita pada divais '%s'."
+
+#~ msgid "Could not enqueue buffers in device '%s'."
+#~ msgstr "Tak dapat mengantrekan penyangga di divais '%s'."
+
 #~ msgid "Could not establish connection to sound server"
 #~ msgstr "Tak dapat membangun koneksi ke server suara"
 
 #~ msgid "Failed to query sound server capabilities"
 #~ msgstr "Gagal untuk kueri kemampuan server suara"
-
-#~ msgid "Failed to enumerate possible video formats device '%s' can work with"
-#~ msgstr ""
-#~ "Gagal menyebutkan kemungkinan format video yang dapat bekerja dengan "
-#~ "divais '%s'."
 
 #~ msgid ""
 #~ "The buffer type is not supported, or the index is out of bounds, or no "
@@ -695,12 +735,6 @@ msgstr "Tak dapat beroperasi tanpa jam"
 
 #~ msgid "No free buffers found in the pool at index %d."
 #~ msgstr "Tak ada penyangga bebas ditemukan di lubuk pada indeks %d."
-
-#~ msgid "Device '%s' cannot capture at %dx%d"
-#~ msgstr "Divais '%s' tak dapat menangkap di %dx%d"
-
-#~ msgid "Device '%s' cannot capture in the specified format"
-#~ msgstr "Divais '%s' tak dapat menangkap dalam format yang ditentukan"
 
 #~ msgid "Could not get buffers from device '%s'."
 #~ msgstr "Tak bisa mendapatkan penyangga dari divais '%s'."

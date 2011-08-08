@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-06-15 15:02+0100\n"
+"POT-Creation-Date: 2011-08-08 15:23+0100\n"
 "PO-Revision-Date: 2011-01-07 23:54+0200\n"
 "Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
@@ -544,6 +544,46 @@ msgstr "Hovedtelefon"
 msgid "Error reading %d bytes from device '%s'."
 msgstr "Fejl ved læsning af %d byte på enhed '%s'."
 
+#, c-format
+msgid "Failed to enumerate possible video formats device '%s' can work with"
+msgstr ""
+
+#, c-format
+msgid "Could not map buffers from device '%s'"
+msgstr "Kunne ikke afbilde mellemlager fra enhed '%s'"
+
+#, fuzzy, c-format
+msgid "The driver of device '%s' does not support the IO method %d"
+msgstr "Driveren til enhed '%s' understøtter ingen kendt optagemetode."
+
+#, fuzzy, c-format
+msgid "The driver of device '%s' does not support any known IO method."
+msgstr "Driveren til enhed '%s' understøtter ingen kendt optagemetode."
+
+#, fuzzy, c-format
+msgid "Device '%s' does not support video capture"
+msgstr "Enhed '%s' er ikke en uddataenhed."
+
+#, fuzzy, c-format
+msgid "Device '%s' cannot capture at %dx%d"
+msgstr "Enhed '%s' er ikke en optageenhed."
+
+#, fuzzy, c-format
+msgid "Device '%s' cannot capture in the specified format"
+msgstr "Enhed '%s' er ikke en optageenhed."
+
+#, c-format
+msgid "Could not get parameters on device '%s'"
+msgstr "Kunne ikke hente parametre fra enhed '%s'"
+
+#, fuzzy
+msgid "Video device did not accept new frame rate setting."
+msgstr ""
+"Enheden til videoinddata accepterede ikke ny indstilling for billedrate."
+
+msgid "Video device could not create buffer pool."
+msgstr ""
+
 # Er rammestørrelse ikke mere passende? Jeg er dog ikke helt sikker på
 # konteksten her. 
 #, c-format
@@ -551,8 +591,36 @@ msgid "Got unexpected frame size of %u instead of %u."
 msgstr "Fik uventet billedstørrelse på %u i steden for %u."
 
 #, c-format
-msgid "Error reading %d bytes on device '%s'."
+msgid "Failed trying to get video frames from device '%s'."
+msgstr "Forsøg på at hente videorammer fra enhed '%s' mislykkedes."
+
+#, c-format
+msgid "Failed after %d tries. device %s. system error: %s"
+msgstr "Fejlede efter %d forsøg. enhed %s. systemfejl: %s"
+
+#, fuzzy, c-format
+msgid "Failed to get settings of tuner %d on device '%s'."
+msgstr "Hentning af indstillinger for tuner %d på enhed '%s' fejlede."
+
+#, fuzzy, c-format
+msgid "Error getting capabilities for device '%s'."
 msgstr "Fejl ved læsning af %d byte på enhed '%s'."
+
+#, fuzzy, c-format
+msgid "Device '%s' is not a tuner."
+msgstr "Enhed '%s' er ikke en uddataenhed."
+
+#, fuzzy, c-format
+msgid "Failed to get radio input on device '%s'. "
+msgstr "Kunne ikke sætte inddata %d for enhed %s."
+
+#, c-format
+msgid "Failed to set input %d on device %s."
+msgstr "Kunne ikke sætte inddata %d for enhed %s."
+
+#, fuzzy, c-format
+msgid "Failed to change mute state for device '%s'."
+msgstr "Kunne ikke hente signalstyrke for enhed '%s'."
 
 #, c-format
 msgid ""
@@ -628,10 +696,6 @@ msgstr ""
 "Kunne ikke hente nuværende inddata for enhed '%s'. Måske er det en radioenhed"
 
 #, c-format
-msgid "Failed to set input %d on device %s."
-msgstr "Kunne ikke sætte inddata %d for enhed %s."
-
-#, c-format
 msgid ""
 "Failed to get current output on device '%s'. May be it is a radio device"
 msgstr ""
@@ -641,39 +705,17 @@ msgstr ""
 msgid "Failed to set output %d on device %s."
 msgstr "Kunne ikke sætte uddata %d for enhed %s."
 
-#, c-format
-msgid "Could not enqueue buffers in device '%s'."
-msgstr "Kunne ikke sætte mellemlager fra enhed '%s' i kø."
-
-#, c-format
-msgid "Failed trying to get video frames from device '%s'."
-msgstr "Forsøg på at hente videorammer fra enhed '%s' mislykkedes."
-
-#, c-format
-msgid "Failed after %d tries. device %s. system error: %s"
-msgstr "Fejlede efter %d forsøg. enhed %s. systemfejl: %s"
-
-#, c-format
-msgid "Could not get parameters on device '%s'"
-msgstr "Kunne ikke hente parametre fra enhed '%s'"
-
-msgid "Video input device did not accept new frame rate setting."
-msgstr ""
-"Enheden til videoinddata accepterede ikke ny indstilling for billedrate."
-
-#, c-format
-msgid "Could not map buffers from device '%s'"
-msgstr "Kunne ikke afbilde mellemlager fra enhed '%s'"
-
-#, c-format
-msgid "The driver of device '%s' does not support any known capture method."
-msgstr "Driveren til enhed '%s' understøtter ingen kendt optagemetode."
-
 msgid "Changing resolution at runtime is not yet supported."
 msgstr "Ændring af opløsning under kørsel er endnu ikke understøttet."
 
 msgid "Cannot operate without a clock"
 msgstr "Kan ikke fungere uden et ur"
+
+#~ msgid "Error reading %d bytes on device '%s'."
+#~ msgstr "Fejl ved læsning af %d byte på enhed '%s'."
+
+#~ msgid "Could not enqueue buffers in device '%s'."
+#~ msgstr "Kunne ikke sætte mellemlager fra enhed '%s' i kø."
 
 #~ msgid "Could not establish connection to sound server"
 #~ msgstr "Kunne ikke skabe kontakt til lyd-serveren"

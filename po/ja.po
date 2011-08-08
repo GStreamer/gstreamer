@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-06-15 15:02+0100\n"
+"POT-Creation-Date: 2011-08-08 15:23+0100\n"
 "PO-Revision-Date: 2011-04-26 20:15+0900\n"
 "Last-Translator: Makoto Kato <makoto.kt@gmail.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -568,12 +568,84 @@ msgid "Error reading %d bytes from device '%s'."
 msgstr "デバイス %2$s から　%1$d バイト読み込み時にエラーが発生しました。"
 
 #, c-format
+msgid "Failed to enumerate possible video formats device '%s' can work with"
+msgstr ""
+
+#, c-format
+msgid "Could not map buffers from device '%s'"
+msgstr "デバイス '%s' からバッファをマップできません。"
+
+#, fuzzy, c-format
+msgid "The driver of device '%s' does not support the IO method %d"
+msgstr ""
+"デバイス '%s' のドライバーはよく知られたキャプチャーメソッドをサポートしてい"
+"ません"
+
+#, fuzzy, c-format
+msgid "The driver of device '%s' does not support any known IO method."
+msgstr ""
+"デバイス '%s' のドライバーはよく知られたキャプチャーメソッドをサポートしてい"
+"ません"
+
+#, fuzzy, c-format
+msgid "Device '%s' does not support video capture"
+msgstr "デバイス '%s' は出力デバイスではありません"
+
+#, c-format
+msgid "Device '%s' cannot capture at %dx%d"
+msgstr "デバイス '%s' は %dx%d でキャプチャできません"
+
+#, c-format
+msgid "Device '%s' cannot capture in the specified format"
+msgstr "デバイス '%s' は指定されたフォーマットでキャプチャできません"
+
+# SUN REVIEWED
+#, c-format
+msgid "Could not get parameters on device '%s'"
+msgstr "デバイス '%s' 上のパラメータを取得できません。"
+
+#, fuzzy
+msgid "Video device did not accept new frame rate setting."
+msgstr "ビデオ入力デバイスは新しいフレームレート設定にすることができません"
+
+msgid "Video device could not create buffer pool."
+msgstr ""
+
+#, c-format
 msgid "Got unexpected frame size of %u instead of %u."
 msgstr "予期しないフレームサイズ (%2$u ではなく %1$u) を取得しました。"
 
 #, c-format
-msgid "Error reading %d bytes on device '%s'."
-msgstr "デバイス '%2$s' 上で %1$d バイトの読み込み時ににエラーが発生しました。"
+msgid "Failed trying to get video frames from device '%s'."
+msgstr "デバイス '%s' からビデオフレームの取得に失敗しました。"
+
+#, c-format
+msgid "Failed after %d tries. device %s. system error: %s"
+msgstr "%d 回リトライしましたが失敗しました。デバイス %s。システムエラー: %s"
+
+#, fuzzy, c-format
+msgid "Failed to get settings of tuner %d on device '%s'."
+msgstr "デバイス '%2$s' 上のチューナー %1$d の設定の取得に失敗しました。"
+
+#, fuzzy, c-format
+msgid "Error getting capabilities for device '%s'."
+msgstr "デバイス %2$s から　%1$d バイト読み込み時にエラーが発生しました。"
+
+#, fuzzy, c-format
+msgid "Device '%s' is not a tuner."
+msgstr "デバイス '%s' は出力デバイスではありません"
+
+#, fuzzy, c-format
+msgid "Failed to get radio input on device '%s'. "
+msgstr "デバイス '%2$s' 上のチューナー %1$d の設定の取得に失敗しました。"
+
+#, c-format
+msgid "Failed to set input %d on device %s."
+msgstr ""
+
+#, fuzzy, c-format
+msgid "Failed to change mute state for device '%s'."
+msgstr "デバイス '%s' の現在のチューナーの周波数の取得に失敗しました"
 
 #, c-format
 msgid ""
@@ -652,10 +724,6 @@ msgstr ""
 "デバイス '%s' 上の現在の入力の取得に失敗しました。ラジオデバイスかもしれませ"
 "ん"
 
-#, c-format
-msgid "Failed to set input %d on device %s."
-msgstr ""
-
 #, fuzzy, c-format
 msgid ""
 "Failed to get current output on device '%s'. May be it is a radio device"
@@ -667,41 +735,15 @@ msgstr ""
 msgid "Failed to set output %d on device %s."
 msgstr "デバイス '%2$s' 上のチューナー %1$d の設定の取得に失敗しました。"
 
-#, c-format
-msgid "Could not enqueue buffers in device '%s'."
-msgstr ""
-
-#, c-format
-msgid "Failed trying to get video frames from device '%s'."
-msgstr "デバイス '%s' からビデオフレームの取得に失敗しました。"
-
-#, c-format
-msgid "Failed after %d tries. device %s. system error: %s"
-msgstr "%d 回リトライしましたが失敗しました。デバイス %s。システムエラー: %s"
-
-# SUN REVIEWED
-#, c-format
-msgid "Could not get parameters on device '%s'"
-msgstr "デバイス '%s' 上のパラメータを取得できません。"
-
-msgid "Video input device did not accept new frame rate setting."
-msgstr "ビデオ入力デバイスは新しいフレームレート設定にすることができません"
-
-#, c-format
-msgid "Could not map buffers from device '%s'"
-msgstr "デバイス '%s' からバッファをマップできません。"
-
-#, c-format
-msgid "The driver of device '%s' does not support any known capture method."
-msgstr ""
-"デバイス '%s' のドライバーはよく知られたキャプチャーメソッドをサポートしてい"
-"ません"
-
 msgid "Changing resolution at runtime is not yet supported."
 msgstr ""
 
 msgid "Cannot operate without a clock"
 msgstr ""
+
+#~ msgid "Error reading %d bytes on device '%s'."
+#~ msgstr ""
+#~ "デバイス '%2$s' 上で %1$d バイトの読み込み時ににエラーが発生しました。"
 
 #~ msgid "Could not establish connection to sound server"
 #~ msgstr "サウンドサーバーへの接続に失敗しました"
@@ -717,12 +759,6 @@ msgstr ""
 
 #~ msgid "No free buffers found in the pool at index %d."
 #~ msgstr "インデックス %d でプール内に空きバッファがありません。"
-
-#~ msgid "Device '%s' cannot capture at %dx%d"
-#~ msgstr "デバイス '%s' は %dx%d でキャプチャできません"
-
-#~ msgid "Device '%s' cannot capture in the specified format"
-#~ msgstr "デバイス '%s' は指定されたフォーマットでキャプチャできません"
 
 #~ msgid "Could not get buffers from device '%s'."
 #~ msgstr "デバイス '%s' からバッファを取得できませんでした。"

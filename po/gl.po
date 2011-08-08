@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-06-15 15:02+0100\n"
+"POT-Creation-Date: 2011-08-08 15:23+0100\n"
 "PO-Revision-Date: 2011-01-09 21:20+0100\n"
 "Last-Translator: Fran Diéguez <frandieguez@ubuntu.com>\n"
 "Language-Team: Galician <proxecto@trasno.net>\n"
@@ -539,12 +539,90 @@ msgid "Error reading %d bytes from device '%s'."
 msgstr "Produciuse un erro ao ler %d bytes desde o dispositivo «%s»."
 
 #, c-format
+msgid "Failed to enumerate possible video formats device '%s' can work with"
+msgstr ""
+
+#, c-format
+msgid "Could not map buffers from device '%s'"
+msgstr "Non foi posíbel mapear os búferes do dispositivo «%s»"
+
+#, fuzzy, c-format
+msgid "The driver of device '%s' does not support the IO method %d"
+msgstr ""
+"O controlador do dispositivo «%s» non admite ningún método de captura "
+"coñecido."
+
+#, fuzzy, c-format
+msgid "The driver of device '%s' does not support any known IO method."
+msgstr ""
+"O controlador do dispositivo «%s» non admite ningún método de captura "
+"coñecido."
+
+#, fuzzy, c-format
+msgid "Device '%s' does not support video capture"
+msgstr "O dispositivo «%s» non é un dispositivo de captura."
+
+#, fuzzy, c-format
+msgid "Device '%s' cannot capture at %dx%d"
+msgstr "O dispositivo «%s» non é un dispositivo de captura."
+
+#, fuzzy, c-format
+msgid "Device '%s' cannot capture in the specified format"
+msgstr "O dispositivo «%s» non é un dispositivo de captura."
+
+#, c-format
+msgid "Could not get parameters on device '%s'"
+msgstr "Non foi posíbel obter os parámetros para o dispositivo «%s»"
+
+#, fuzzy
+msgid "Video device did not accept new frame rate setting."
+msgstr ""
+"O dispositivo de entrada de vídeo non aceptou o axuste da nova taxa de "
+"fotogramas."
+
+msgid "Video device could not create buffer pool."
+msgstr ""
+
+#, c-format
 msgid "Got unexpected frame size of %u instead of %u."
 msgstr "Obtívose un tamaño de marco de %u non esperado no lugar de %u."
 
 #, c-format
-msgid "Error reading %d bytes on device '%s'."
-msgstr "Produciuse un erro ao ler %d bytes do dispositivo «%s»."
+msgid "Failed trying to get video frames from device '%s'."
+msgstr ""
+"Produciuse un fallo ao tentar obter cadros de vídeo do dispositivo «%s»."
+
+#, c-format
+msgid "Failed after %d tries. device %s. system error: %s"
+msgstr ""
+"Prouciuse un fallo despois de %d intentos. Dispositivo %s. Error do sistema: "
+"%s"
+
+#, fuzzy, c-format
+msgid "Failed to get settings of tuner %d on device '%s'."
+msgstr ""
+"Produciuse un erro ao configurar o sintonizador %d no dispositivo «%s»."
+
+#, fuzzy, c-format
+msgid "Error getting capabilities for device '%s'."
+msgstr "Produciuse un erro ao ler %d bytes desde o dispositivo «%s»."
+
+#, fuzzy, c-format
+msgid "Device '%s' is not a tuner."
+msgstr "O dispositivo «%s» non é un dispositivo de captura."
+
+#, fuzzy, c-format
+msgid "Failed to get radio input on device '%s'. "
+msgstr "Produciuse un fallo ao estabelecer a entrada %d no dispositivo %s."
+
+#, c-format
+msgid "Failed to set input %d on device %s."
+msgstr "Produciuse un fallo ao estabelecer a entrada %d no dispositivo %s."
+
+#, fuzzy, c-format
+msgid "Failed to change mute state for device '%s'."
+msgstr ""
+"Produciuse un erro ao obter a potencia do sinal para o dispositivo «%s»."
 
 #, c-format
 msgid ""
@@ -632,10 +710,6 @@ msgstr ""
 "sexa un dispositivo de radio."
 
 #, c-format
-msgid "Failed to set input %d on device %s."
-msgstr "Produciuse un fallo ao estabelecer a entrada %d no dispositivo %s."
-
-#, c-format
 msgid ""
 "Failed to get current output on device '%s'. May be it is a radio device"
 msgstr ""
@@ -646,45 +720,17 @@ msgstr ""
 msgid "Failed to set output %d on device %s."
 msgstr "Produciuse un fallo ao estabelecer a saída %d no dispositivo %s."
 
-#, c-format
-msgid "Could not enqueue buffers in device '%s'."
-msgstr "Non é posíbel meter na cola os búferes no dispositivo «%s»."
-
-#, c-format
-msgid "Failed trying to get video frames from device '%s'."
-msgstr ""
-"Produciuse un fallo ao tentar obter cadros de vídeo do dispositivo «%s»."
-
-#, c-format
-msgid "Failed after %d tries. device %s. system error: %s"
-msgstr ""
-"Prouciuse un fallo despois de %d intentos. Dispositivo %s. Error do sistema: "
-"%s"
-
-#, c-format
-msgid "Could not get parameters on device '%s'"
-msgstr "Non foi posíbel obter os parámetros para o dispositivo «%s»"
-
-msgid "Video input device did not accept new frame rate setting."
-msgstr ""
-"O dispositivo de entrada de vídeo non aceptou o axuste da nova taxa de "
-"fotogramas."
-
-#, c-format
-msgid "Could not map buffers from device '%s'"
-msgstr "Non foi posíbel mapear os búferes do dispositivo «%s»"
-
-#, c-format
-msgid "The driver of device '%s' does not support any known capture method."
-msgstr ""
-"O controlador do dispositivo «%s» non admite ningún método de captura "
-"coñecido."
-
 msgid "Changing resolution at runtime is not yet supported."
 msgstr "Aínda non se admite o cambio de resolución durante a reprodución."
 
 msgid "Cannot operate without a clock"
 msgstr "Non é posíbel operar sen reloxo"
+
+#~ msgid "Error reading %d bytes on device '%s'."
+#~ msgstr "Produciuse un erro ao ler %d bytes do dispositivo «%s»."
+
+#~ msgid "Could not enqueue buffers in device '%s'."
+#~ msgstr "Non é posíbel meter na cola os búferes no dispositivo «%s»."
 
 #~ msgid "Could not establish connection to sound server"
 #~ msgstr "Non foi posíbel estabelecer a conexión co servidor de son"

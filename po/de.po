@@ -14,7 +14,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-06-15 15:02+0100\n"
+"POT-Creation-Date: 2011-08-08 15:23+0100\n"
 "PO-Revision-Date: 2011-01-21 22:36+0100\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@googlemail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
@@ -549,14 +549,89 @@ msgstr "Kopfhörer"
 msgid "Error reading %d bytes from device '%s'."
 msgstr "Fehler beim Lesen von %d Bytes von Gerät »%s«."
 
+#, c-format
+msgid "Failed to enumerate possible video formats device '%s' can work with"
+msgstr ""
+"Aufzählen möglicher Videoformate, mit denen Gerät »%s« arbeiten kann, schlug "
+"fehl"
+
+# »Geholt« ist auch noch nicht optimal, aber »abgebildet« geht auch nicht wirklich.
+#, c-format
+msgid "Could not map buffers from device '%s'"
+msgstr "Die Puffer des Gerätes »%s« konnten nicht geholt werden."
+
+#, fuzzy, c-format
+msgid "The driver of device '%s' does not support the IO method %d"
+msgstr ""
+"Der Treiber von Gerät »%s« unterstützt keine der bekannten Aufnahmemethoden."
+
+#, fuzzy, c-format
+msgid "The driver of device '%s' does not support any known IO method."
+msgstr ""
+"Der Treiber von Gerät »%s« unterstützt keine der bekannten Aufnahmemethoden."
+
+#, fuzzy, c-format
+msgid "Device '%s' does not support video capture"
+msgstr "»%s« ist kein Wiedergabegerät."
+
+#, c-format
+msgid "Device '%s' cannot capture at %dx%d"
+msgstr "Das Gerät »%s« kann nicht bei %dx%d aufnehmen"
+
+#, c-format
+msgid "Device '%s' cannot capture in the specified format"
+msgstr "Das angegebene Format kann nicht vom Gerät »%s« ausgelesen werden"
+
+#, c-format
+msgid "Could not get parameters on device '%s'"
+msgstr "Parameter konnten nicht von Gerät »%s« ausgelesen werden"
+
+#, fuzzy
+msgid "Video device did not accept new frame rate setting."
+msgstr ""
+"Vom Video-Eingabegerät wurde die Einstellung zur Bildwiederholungsrate nicht "
+"akzeptiert."
+
+msgid "Video device could not create buffer pool."
+msgstr ""
+
 # »Frame« sollten wir im Zusammenhang mit Videos vielleicht besser so belassen. Habe ich in gnome-subtitles auch so gemacht.
 #, c-format
 msgid "Got unexpected frame size of %u instead of %u."
 msgstr "Unerwartete Frame-Größe von %u anstatt %u wurde erhalten."
 
 #, c-format
-msgid "Error reading %d bytes on device '%s'."
-msgstr "Fehler beim Lesen von %d Bytes auf Gerät »%s«."
+msgid "Failed trying to get video frames from device '%s'."
+msgstr "Der Versuch Videobilder von Gerät »%s« auszulesen schlug fehl."
+
+#, c-format
+msgid "Failed after %d tries. device %s. system error: %s"
+msgstr "%d Versuche sind fehlgeschlagen. Gerät »%s«. Systemfehler: %s"
+
+#, fuzzy, c-format
+msgid "Failed to get settings of tuner %d on device '%s'."
+msgstr ""
+"Auslesen der Einstellungen der Senderwahl »%d« auf Gerät »%s« schlug fehl."
+
+#, fuzzy, c-format
+msgid "Error getting capabilities for device '%s'."
+msgstr "Fehler beim Lesen von %d Bytes von Gerät »%s«."
+
+#, fuzzy, c-format
+msgid "Device '%s' is not a tuner."
+msgstr "»%s« ist kein Wiedergabegerät."
+
+#, fuzzy, c-format
+msgid "Failed to get radio input on device '%s'. "
+msgstr "Festlegen der Eingabe »%d« des Geräts »%s« schlug fehl."
+
+#, c-format
+msgid "Failed to set input %d on device %s."
+msgstr "Festlegen der Eingabe »%d« des Geräts »%s« schlug fehl."
+
+#, fuzzy, c-format
+msgid "Failed to change mute state for device '%s'."
+msgstr "Auslesen der aktuellen Signalstärke des Geräts »%s« schlug fehl."
 
 #, c-format
 msgid ""
@@ -636,10 +711,6 @@ msgstr ""
 "Auslesen der aktuellen Eingabe auf dem Gerät »%s« schlug fehl. Vielleicht "
 "ist es ein Funkgerät."
 
-#, c-format
-msgid "Failed to set input %d on device %s."
-msgstr "Festlegen der Eingabe »%d« des Geräts »%s« schlug fehl."
-
 # Sendegerät sicherlich nicht, eben eher ein Radio. Warum diese Fehlermeldung beie einem Radiogerät kommen könnte, weiß ich allerdings auch nicht.
 #, c-format
 msgid ""
@@ -652,37 +723,6 @@ msgstr ""
 msgid "Failed to set output %d on device %s."
 msgstr "Festlegen der Ausgabe »%d« des Geräts »%s« schlug fehl."
 
-#, c-format
-msgid "Could not enqueue buffers in device '%s'."
-msgstr "Auf Gerät »%s« konnten keine Puffer eingereiht werden."
-
-#, c-format
-msgid "Failed trying to get video frames from device '%s'."
-msgstr "Der Versuch Videobilder von Gerät »%s« auszulesen schlug fehl."
-
-#, c-format
-msgid "Failed after %d tries. device %s. system error: %s"
-msgstr "%d Versuche sind fehlgeschlagen. Gerät »%s«. Systemfehler: %s"
-
-#, c-format
-msgid "Could not get parameters on device '%s'"
-msgstr "Parameter konnten nicht von Gerät »%s« ausgelesen werden"
-
-msgid "Video input device did not accept new frame rate setting."
-msgstr ""
-"Vom Video-Eingabegerät wurde die Einstellung zur Bildwiederholungsrate nicht "
-"akzeptiert."
-
-# »Geholt« ist auch noch nicht optimal, aber »abgebildet« geht auch nicht wirklich.
-#, c-format
-msgid "Could not map buffers from device '%s'"
-msgstr "Die Puffer des Gerätes »%s« konnten nicht geholt werden."
-
-#, c-format
-msgid "The driver of device '%s' does not support any known capture method."
-msgstr ""
-"Der Treiber von Gerät »%s« unterstützt keine der bekannten Aufnahmemethoden."
-
 msgid "Changing resolution at runtime is not yet supported."
 msgstr "Ein Wechsel der Auflösung zur Laufzeit wird noch nicht unterstützt."
 
@@ -690,16 +730,17 @@ msgstr "Ein Wechsel der Auflösung zur Laufzeit wird noch nicht unterstützt."
 msgid "Cannot operate without a clock"
 msgstr "Es kann nicht ohne einen Taktgeber gearbeitet werden."
 
+#~ msgid "Error reading %d bytes on device '%s'."
+#~ msgstr "Fehler beim Lesen von %d Bytes auf Gerät »%s«."
+
+#~ msgid "Could not enqueue buffers in device '%s'."
+#~ msgstr "Auf Gerät »%s« konnten keine Puffer eingereiht werden."
+
 #~ msgid "Could not establish connection to sound server"
 #~ msgstr "Es konnte keine Verbindung zum Audio-Server hergestellt werden"
 
 #~ msgid "Failed to query sound server capabilities"
 #~ msgstr "Abfrage der Fähigkeiten des Audio-Servers ist fehlgeschlagen"
-
-#~ msgid "Failed to enumerate possible video formats device '%s' can work with"
-#~ msgstr ""
-#~ "Aufzählen möglicher Videoformate, mit denen Gerät »%s« arbeiten kann, "
-#~ "schlug fehl"
 
 #~ msgid ""
 #~ "The buffer type is not supported, or the index is out of bounds, or no "
@@ -725,12 +766,6 @@ msgstr "Es kann nicht ohne einen Taktgeber gearbeitet werden."
 
 #~ msgid "No free buffers found in the pool at index %d."
 #~ msgstr "Es wurden keine freien Puffer im Vorrat bei Index %d gefunden."
-
-#~ msgid "Device '%s' cannot capture at %dx%d"
-#~ msgstr "Das Gerät »%s« kann nicht bei %dx%d aufnehmen"
-
-#~ msgid "Device '%s' cannot capture in the specified format"
-#~ msgstr "Das angegebene Format kann nicht vom Gerät »%s« ausgelesen werden"
 
 #~ msgid "Could not get buffers from device '%s'."
 #~ msgstr "Die Puffer konnten nicht von Gerät »%s« ausgelesen werden."

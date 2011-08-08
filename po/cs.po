@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-06-15 15:02+0100\n"
+"POT-Creation-Date: 2011-08-08 15:23+0100\n"
 "PO-Revision-Date: 2011-01-12 23:07+0100\n"
 "Last-Translator: Petr Kovar <pknbe@volny.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -537,12 +537,79 @@ msgid "Error reading %d bytes from device '%s'."
 msgstr "Chyba při čtení %d bajtů na zařízení \"%s\"."
 
 #, c-format
+msgid "Failed to enumerate possible video formats device '%s' can work with"
+msgstr ""
+
+#, c-format
+msgid "Could not map buffers from device '%s'"
+msgstr "Nezdařilo se mapování vyrovnávací paměti ze zařízení \"%s\""
+
+#, fuzzy, c-format
+msgid "The driver of device '%s' does not support the IO method %d"
+msgstr "Ovladač zařízení \"%s\" nepodporuje žádnou známou záznamovou metodu."
+
+#, fuzzy, c-format
+msgid "The driver of device '%s' does not support any known IO method."
+msgstr "Ovladač zařízení \"%s\" nepodporuje žádnou známou záznamovou metodu."
+
+#, fuzzy, c-format
+msgid "Device '%s' does not support video capture"
+msgstr "Zařízení \"%s\" není výstupním zařízením."
+
+#, fuzzy, c-format
+msgid "Device '%s' cannot capture at %dx%d"
+msgstr "Zařízení \"%s\" není záznamovým zařízením."
+
+#, fuzzy, c-format
+msgid "Device '%s' cannot capture in the specified format"
+msgstr "Zařízení \"%s\" není záznamovým zařízením."
+
+#, c-format
+msgid "Could not get parameters on device '%s'"
+msgstr "Nezdařilo se zjištění parametrů na zařízení \"%s\""
+
+#, fuzzy
+msgid "Video device did not accept new frame rate setting."
+msgstr "Vstupní videozařízení nepřijalo nové nastavení vzorkovací frekvence."
+
+msgid "Video device could not create buffer pool."
+msgstr ""
+
+#, c-format
 msgid "Got unexpected frame size of %u instead of %u."
 msgstr "Získána neočekávaná velikost snímku %u namísto %u."
 
 #, c-format
-msgid "Error reading %d bytes on device '%s'."
+msgid "Failed trying to get video frames from device '%s'."
+msgstr "Nezdařil se pokus o získání videosnímků ze zařízení \"%s\"."
+
+#, c-format
+msgid "Failed after %d tries. device %s. system error: %s"
+msgstr "Selhání po %d pokusech. Zařízení %s. Systémová chyba: %s"
+
+#, fuzzy, c-format
+msgid "Failed to get settings of tuner %d on device '%s'."
+msgstr "Selhalo zjištění nastavení tuneru %d na zařízení \"%s\"."
+
+#, fuzzy, c-format
+msgid "Error getting capabilities for device '%s'."
 msgstr "Chyba při čtení %d bajtů na zařízení \"%s\"."
+
+#, fuzzy, c-format
+msgid "Device '%s' is not a tuner."
+msgstr "Zařízení \"%s\" není výstupním zařízením."
+
+#, fuzzy, c-format
+msgid "Failed to get radio input on device '%s'. "
+msgstr "Nezdařilo se nastavení vstupu \"%d\" na zařízení \"%s\"."
+
+#, c-format
+msgid "Failed to set input %d on device %s."
+msgstr "Nezdařilo se nastavení vstupu \"%d\" na zařízení \"%s\"."
+
+#, fuzzy, c-format
+msgid "Failed to change mute state for device '%s'."
+msgstr "Nezdařilo se zjištění síly signálu u zařízení \"%s\"."
 
 #, c-format
 msgid ""
@@ -623,10 +690,6 @@ msgstr ""
 "radiopřijímač."
 
 #, c-format
-msgid "Failed to set input %d on device %s."
-msgstr "Nezdařilo se nastavení vstupu \"%d\" na zařízení \"%s\"."
-
-#, c-format
 msgid ""
 "Failed to get current output on device '%s'. May be it is a radio device"
 msgstr ""
@@ -637,38 +700,17 @@ msgstr ""
 msgid "Failed to set output %d on device %s."
 msgstr "Nezdařilo se nastavení výstupu %d na zařízení %s."
 
-#, c-format
-msgid "Could not enqueue buffers in device '%s'."
-msgstr "Nezdařilo se zařazení vyrovnávací paměti na zařízení \"%s\"."
-
-#, c-format
-msgid "Failed trying to get video frames from device '%s'."
-msgstr "Nezdařil se pokus o získání videosnímků ze zařízení \"%s\"."
-
-#, c-format
-msgid "Failed after %d tries. device %s. system error: %s"
-msgstr "Selhání po %d pokusech. Zařízení %s. Systémová chyba: %s"
-
-#, c-format
-msgid "Could not get parameters on device '%s'"
-msgstr "Nezdařilo se zjištění parametrů na zařízení \"%s\""
-
-msgid "Video input device did not accept new frame rate setting."
-msgstr "Vstupní videozařízení nepřijalo nové nastavení vzorkovací frekvence."
-
-#, c-format
-msgid "Could not map buffers from device '%s'"
-msgstr "Nezdařilo se mapování vyrovnávací paměti ze zařízení \"%s\""
-
-#, c-format
-msgid "The driver of device '%s' does not support any known capture method."
-msgstr "Ovladač zařízení \"%s\" nepodporuje žádnou známou záznamovou metodu."
-
 msgid "Changing resolution at runtime is not yet supported."
 msgstr "Změna rozlišení za běhu doposud není podporována."
 
 msgid "Cannot operate without a clock"
 msgstr "Není možné fungovat bez hodin"
+
+#~ msgid "Error reading %d bytes on device '%s'."
+#~ msgstr "Chyba při čtení %d bajtů na zařízení \"%s\"."
+
+#~ msgid "Could not enqueue buffers in device '%s'."
+#~ msgstr "Nezdařilo se zařazení vyrovnávací paměti na zařízení \"%s\"."
 
 #~ msgid "Could not establish connection to sound server"
 #~ msgstr "Nezdařilo se navázání spojení se zvukovým serverem"

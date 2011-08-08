@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.23.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-06-15 15:02+0100\n"
+"POT-Creation-Date: 2011-08-08 15:23+0100\n"
 "PO-Revision-Date: 2010-08-16 03:22+0300\n"
 "Last-Translator: Lucian Adrian Grijincu <lucian.grijincu@gmail.com>\n"
 "Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
@@ -541,12 +541,85 @@ msgid "Error reading %d bytes from device '%s'."
 msgstr "Eroare citire %d octeți de la dispozitivul „%s”."
 
 #, c-format
+msgid "Failed to enumerate possible video formats device '%s' can work with"
+msgstr ""
+
+#, c-format
+msgid "Could not map buffers from device '%s'"
+msgstr "Nu s-a putut mapa memoria tampon din dispozitivul „%s”"
+
+#, fuzzy, c-format
+msgid "The driver of device '%s' does not support the IO method %d"
+msgstr ""
+"Driverul pentru dispozitivul „%s” nu suport nici o metodă de captură "
+"cunoscută."
+
+#, fuzzy, c-format
+msgid "The driver of device '%s' does not support any known IO method."
+msgstr ""
+"Driverul pentru dispozitivul „%s” nu suport nici o metodă de captură "
+"cunoscută."
+
+#, fuzzy, c-format
+msgid "Device '%s' does not support video capture"
+msgstr "Dispozitivul „%s” nu este un dispozitiv de ieșire."
+
+#, fuzzy, c-format
+msgid "Device '%s' cannot capture at %dx%d"
+msgstr "Dispozitivul „%s” nu este un dispozitiv de captură."
+
+#, fuzzy, c-format
+msgid "Device '%s' cannot capture in the specified format"
+msgstr "Dispozitivul „%s” nu este un dispozitiv de captură."
+
+#, c-format
+msgid "Could not get parameters on device '%s'"
+msgstr "Nu s-au putut obține parametrii pentru dispozitivul „%s”"
+
+#, fuzzy
+msgid "Video device did not accept new frame rate setting."
+msgstr ""
+"Dispozitivul de intrare video nu a acceptat noua configurare de rate cadre."
+
+msgid "Video device could not create buffer pool."
+msgstr ""
+
+#, c-format
 msgid "Got unexpected frame size of %u instead of %u."
 msgstr "S-a obținut o dimensiune neașteptată pentru cadru, %u în loc de %u."
 
 #, c-format
-msgid "Error reading %d bytes on device '%s'."
-msgstr "Eroare citire %d octeți pe dispozitivul „%s”."
+msgid "Failed trying to get video frames from device '%s'."
+msgstr "Obținerea cadrelor video pentru dispozitivul „%s” a eșuat."
+
+#, c-format
+msgid "Failed after %d tries. device %s. system error: %s"
+msgstr "A eșuat după %d încercări. dispozitiv %s. eroare sistem: %s"
+
+#, fuzzy, c-format
+msgid "Failed to get settings of tuner %d on device '%s'."
+msgstr ""
+"A eșuat obținerea configurării receptorului %d pentru dispozitivul „%s”."
+
+#, fuzzy, c-format
+msgid "Error getting capabilities for device '%s'."
+msgstr "Eroare citire %d octeți de la dispozitivul „%s”."
+
+#, fuzzy, c-format
+msgid "Device '%s' is not a tuner."
+msgstr "Dispozitivul „%s” nu este un dispozitiv de ieșire."
+
+#, fuzzy, c-format
+msgid "Failed to get radio input on device '%s'. "
+msgstr "Definirea valorii %d pentru dispozitivul „%s” a eșuat."
+
+#, c-format
+msgid "Failed to set input %d on device %s."
+msgstr "Definirea valorii %d pentru dispozitivul „%s” a eșuat."
+
+#, fuzzy, c-format
+msgid "Failed to change mute state for device '%s'."
+msgstr "Obținerea nivelului semnalului pentru dispozitivul „%s” a eșuat."
 
 #, c-format
 msgid ""
@@ -626,10 +699,6 @@ msgstr ""
 "Obținerea intrări curente pentru dispozitivul „%s” a eșuat. Posibil să fie "
 "un dispozitiv radio."
 
-#, c-format
-msgid "Failed to set input %d on device %s."
-msgstr "Definirea valorii %d pentru dispozitivul „%s” a eșuat."
-
 #, fuzzy, c-format
 msgid ""
 "Failed to get current output on device '%s'. May be it is a radio device"
@@ -641,41 +710,17 @@ msgstr ""
 msgid "Failed to set output %d on device %s."
 msgstr "Definirea valorii %d pentru dispozitivul „%s” a eșuat."
 
-#, c-format
-msgid "Could not enqueue buffers in device '%s'."
-msgstr "Nu s-a putut programa memoria tampon în dispozitivul „%s”."
-
-#, c-format
-msgid "Failed trying to get video frames from device '%s'."
-msgstr "Obținerea cadrelor video pentru dispozitivul „%s” a eșuat."
-
-#, c-format
-msgid "Failed after %d tries. device %s. system error: %s"
-msgstr "A eșuat după %d încercări. dispozitiv %s. eroare sistem: %s"
-
-#, c-format
-msgid "Could not get parameters on device '%s'"
-msgstr "Nu s-au putut obține parametrii pentru dispozitivul „%s”"
-
-msgid "Video input device did not accept new frame rate setting."
-msgstr ""
-"Dispozitivul de intrare video nu a acceptat noua configurare de rate cadre."
-
-#, c-format
-msgid "Could not map buffers from device '%s'"
-msgstr "Nu s-a putut mapa memoria tampon din dispozitivul „%s”"
-
-#, c-format
-msgid "The driver of device '%s' does not support any known capture method."
-msgstr ""
-"Driverul pentru dispozitivul „%s” nu suport nici o metodă de captură "
-"cunoscută."
-
 msgid "Changing resolution at runtime is not yet supported."
 msgstr "Schimbarea rezoluției pe durata rulării nu este incă suportată."
 
 msgid "Cannot operate without a clock"
 msgstr "Nu se poate opera fără un ceas"
+
+#~ msgid "Error reading %d bytes on device '%s'."
+#~ msgstr "Eroare citire %d octeți pe dispozitivul „%s”."
+
+#~ msgid "Could not enqueue buffers in device '%s'."
+#~ msgstr "Nu s-a putut programa memoria tampon în dispozitivul „%s”."
 
 #~ msgid "Could not establish connection to sound server"
 #~ msgstr "Nu se poate stabili o conexiune la serverul de sunet"

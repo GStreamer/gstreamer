@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-06-15 15:02+0100\n"
+"POT-Creation-Date: 2011-08-08 15:23+0100\n"
 "PO-Revision-Date: 2011-03-12 18:35+0100\n"
 "Last-Translator: Klemen Košir <klemen.kosir@gmx.com>\n"
 "Language-Team: Slovenian <translation-team-sl@lists.sourceforge.net>\n"
@@ -540,13 +540,82 @@ msgid "Error reading %d bytes from device '%s'."
 msgstr "Napaka med branjem %d bajtov iz naprave '%s'."
 
 #, c-format
+msgid "Failed to enumerate possible video formats device '%s' can work with"
+msgstr ""
+
+#, c-format
+msgid "Could not map buffers from device '%s'"
+msgstr "Medpomnilnika naprave '%s' ni mogoče preslikati"
+
+#, fuzzy, c-format
+msgid "The driver of device '%s' does not support the IO method %d"
+msgstr "Gonilnik naprave '%s' ne podpira nobenega znanega načina zajemanja."
+
+#, fuzzy, c-format
+msgid "The driver of device '%s' does not support any known IO method."
+msgstr "Gonilnik naprave '%s' ne podpira nobenega znanega načina zajemanja."
+
+#, fuzzy, c-format
+msgid "Device '%s' does not support video capture"
+msgstr "Naprava '%s' ni izhodna naprava."
+
+#, fuzzy, c-format
+msgid "Device '%s' cannot capture at %dx%d"
+msgstr "Naprava '%s' ni naprava za zajemanje."
+
+#, fuzzy, c-format
+msgid "Device '%s' cannot capture in the specified format"
+msgstr "Naprava '%s' ni naprava za zajemanje."
+
+#, c-format
+msgid "Could not get parameters on device '%s'"
+msgstr "Parametrov na napravi '%s' ni mogoče pridobiti."
+
+#, fuzzy
+msgid "Video device did not accept new frame rate setting."
+msgstr ""
+"Vhodni video napravi ni mogoče določiti novih nastavitev hitrosti sličic."
+
+msgid "Video device could not create buffer pool."
+msgstr ""
+
+#, c-format
 msgid "Got unexpected frame size of %u instead of %u."
 msgstr ""
 "Nepričakovana vrednost velikosti okvirja (%u). Pričakovana vrednost je %u."
 
 #, c-format
-msgid "Error reading %d bytes on device '%s'."
-msgstr "Napaka med branjem %d bajtov na napravi '%s'."
+msgid "Failed trying to get video frames from device '%s'."
+msgstr "Napaka med poskusom pridobivanja video sličic z naprave '%s'."
+
+#, c-format
+msgid "Failed after %d tries. device %s. system error: %s"
+msgstr ""
+"Neuspešen zagon po %d poskusih na napravi %s. Sporočilo sistemske napake: %s"
+
+#, fuzzy, c-format
+msgid "Failed to get settings of tuner %d on device '%s'."
+msgstr "Napaka med pridobivanjem nastavitev uglaševalnika %d naprave '%s'."
+
+#, fuzzy, c-format
+msgid "Error getting capabilities for device '%s'."
+msgstr "Napaka med branjem %d bajtov iz naprave '%s'."
+
+#, fuzzy, c-format
+msgid "Device '%s' is not a tuner."
+msgstr "Naprava '%s' ni izhodna naprava."
+
+#, fuzzy, c-format
+msgid "Failed to get radio input on device '%s'. "
+msgstr "Napaka med nastavljanjem vhoda %d na napravi %s."
+
+#, c-format
+msgid "Failed to set input %d on device %s."
+msgstr "Napaka med nastavljanjem vhoda %d na napravi %s."
+
+#, fuzzy, c-format
+msgid "Failed to change mute state for device '%s'."
+msgstr "Napaka med pridobivanjem moči signala za napravo '%s'."
 
 #, c-format
 msgid ""
@@ -625,10 +694,6 @@ msgstr ""
 "naprava."
 
 #, c-format
-msgid "Failed to set input %d on device %s."
-msgstr "Napaka med nastavljanjem vhoda %d na napravi %s."
-
-#, c-format
 msgid ""
 "Failed to get current output on device '%s'. May be it is a radio device"
 msgstr ""
@@ -639,40 +704,17 @@ msgstr ""
 msgid "Failed to set output %d on device %s."
 msgstr "Napaka med nastavljanjem izhoda %d na napravi %s."
 
-#, c-format
-msgid "Could not enqueue buffers in device '%s'."
-msgstr "Medpomnilnika na napravi '%s' ni mogoče uvrstiti."
-
-#, c-format
-msgid "Failed trying to get video frames from device '%s'."
-msgstr "Napaka med poskusom pridobivanja video sličic z naprave '%s'."
-
-#, c-format
-msgid "Failed after %d tries. device %s. system error: %s"
-msgstr ""
-"Neuspešen zagon po %d poskusih na napravi %s. Sporočilo sistemske napake: %s"
-
-#, c-format
-msgid "Could not get parameters on device '%s'"
-msgstr "Parametrov na napravi '%s' ni mogoče pridobiti."
-
-msgid "Video input device did not accept new frame rate setting."
-msgstr ""
-"Vhodni video napravi ni mogoče določiti novih nastavitev hitrosti sličic."
-
-#, c-format
-msgid "Could not map buffers from device '%s'"
-msgstr "Medpomnilnika naprave '%s' ni mogoče preslikati"
-
-#, c-format
-msgid "The driver of device '%s' does not support any known capture method."
-msgstr "Gonilnik naprave '%s' ne podpira nobenega znanega načina zajemanja."
-
 msgid "Changing resolution at runtime is not yet supported."
 msgstr "Spreminjanje ločljivosti med delovanjem še ni podprto."
 
 msgid "Cannot operate without a clock"
 msgstr "Delovanje brez ure ni mogoče"
+
+#~ msgid "Error reading %d bytes on device '%s'."
+#~ msgstr "Napaka med branjem %d bajtov na napravi '%s'."
+
+#~ msgid "Could not enqueue buffers in device '%s'."
+#~ msgstr "Medpomnilnika na napravi '%s' ni mogoče uvrstiti."
 
 #~ msgid "Could not establish connection to sound server"
 #~ msgstr "Povezave z zvočnim strežnikom ni mogoče vzpostaviti"

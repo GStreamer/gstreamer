@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-06-15 15:02+0100\n"
+"POT-Creation-Date: 2011-08-08 15:23+0100\n"
 "PO-Revision-Date: 2011-04-26 22:35+0300\n"
 "Last-Translator: Alexander Shopov <ash@kambanaria.org>\n"
 "Language-Team: Bulgarian <dict@fsa-bg.org>\n"
@@ -533,12 +533,80 @@ msgid "Error reading %d bytes from device '%s'."
 msgstr "Грешка при прочитане %d байта от устройство „%s“."
 
 #, c-format
+msgid "Failed to enumerate possible video formats device '%s' can work with"
+msgstr ""
+
+#, c-format
+msgid "Could not map buffers from device '%s'"
+msgstr "Не могат да се получат буферите от устройството „%s“."
+
+#, fuzzy, c-format
+msgid "The driver of device '%s' does not support the IO method %d"
+msgstr "Драйверът за устройството „%s“ не поддържа познати методи за запис."
+
+#, fuzzy, c-format
+msgid "The driver of device '%s' does not support any known IO method."
+msgstr "Драйверът за устройството „%s“ не поддържа познати методи за запис."
+
+#, fuzzy, c-format
+msgid "Device '%s' does not support video capture"
+msgstr "Устройството „%s“ не е изходно устройство."
+
+#, fuzzy, c-format
+msgid "Device '%s' cannot capture at %dx%d"
+msgstr "Устройството „%s“ не е устройство за запис."
+
+#, fuzzy, c-format
+msgid "Device '%s' cannot capture in the specified format"
+msgstr "Устройството „%s“ не е устройство за запис."
+
+#, c-format
+msgid "Could not get parameters on device '%s'"
+msgstr "Не могат да се получат параметрите на устройството „%s“."
+
+#, fuzzy
+msgid "Video device did not accept new frame rate setting."
+msgstr ""
+"Устройството за видео вход не приема новите настройки за честотата на кадри."
+
+msgid "Video device could not create buffer pool."
+msgstr ""
+
+#, c-format
 msgid "Got unexpected frame size of %u instead of %u."
 msgstr "Получена е рамка с размер %u вместо очаквания %u."
 
 #, c-format
-msgid "Error reading %d bytes on device '%s'."
-msgstr "Грешка при прочитане на %d байта на устройство „%s“."
+msgid "Failed trying to get video frames from device '%s'."
+msgstr "Неуспешен опит за получаване на видео кадрите от устройство „%s“."
+
+#, c-format
+msgid "Failed after %d tries. device %s. system error: %s"
+msgstr "Неуспех след %d опита. Устройство „%s“. Системна грешка: %s"
+
+#, fuzzy, c-format
+msgid "Failed to get settings of tuner %d on device '%s'."
+msgstr "Неуспешно получаване на настройките на тунер %d на устройство „%s“."
+
+#, fuzzy, c-format
+msgid "Error getting capabilities for device '%s'."
+msgstr "Грешка при прочитане %d байта от устройство „%s“."
+
+#, fuzzy, c-format
+msgid "Device '%s' is not a tuner."
+msgstr "Устройството „%s“ не е изходно устройство."
+
+#, fuzzy, c-format
+msgid "Failed to get radio input on device '%s'. "
+msgstr "Неуспешно задаване на вход %d на устройство „%s“."
+
+#, c-format
+msgid "Failed to set input %d on device %s."
+msgstr "Неуспешно задаване на вход %d на устройство „%s“."
+
+#, fuzzy, c-format
+msgid "Failed to change mute state for device '%s'."
+msgstr "Неуспешно получаване на силата на сигнала на устройство „%s“."
 
 #, c-format
 msgid ""
@@ -617,10 +685,6 @@ msgstr ""
 "Неуспешно получаване на текущия вход на устройство „%s“. Може би е радио."
 
 #, c-format
-msgid "Failed to set input %d on device %s."
-msgstr "Неуспешно задаване на вход %d на устройство „%s“."
-
-#, c-format
 msgid ""
 "Failed to get current output on device '%s'. May be it is a radio device"
 msgstr ""
@@ -630,34 +694,6 @@ msgstr ""
 msgid "Failed to set output %d on device %s."
 msgstr "Неуспешно задаване на изход %d на устройство „%s“."
 
-#, c-format
-msgid "Could not enqueue buffers in device '%s'."
-msgstr "Буферите в устройство „%s“ не могат да се подредят в опашка."
-
-#, c-format
-msgid "Failed trying to get video frames from device '%s'."
-msgstr "Неуспешен опит за получаване на видео кадрите от устройство „%s“."
-
-#, c-format
-msgid "Failed after %d tries. device %s. system error: %s"
-msgstr "Неуспех след %d опита. Устройство „%s“. Системна грешка: %s"
-
-#, c-format
-msgid "Could not get parameters on device '%s'"
-msgstr "Не могат да се получат параметрите на устройството „%s“."
-
-msgid "Video input device did not accept new frame rate setting."
-msgstr ""
-"Устройството за видео вход не приема новите настройки за честотата на кадри."
-
-#, c-format
-msgid "Could not map buffers from device '%s'"
-msgstr "Не могат да се получат буферите от устройството „%s“."
-
-#, c-format
-msgid "The driver of device '%s' does not support any known capture method."
-msgstr "Драйверът за устройството „%s“ не поддържа познати методи за запис."
-
 msgid "Changing resolution at runtime is not yet supported."
 msgstr ""
 "Промяната на разделителната способност по време на работа все още не се "
@@ -665,6 +701,12 @@ msgstr ""
 
 msgid "Cannot operate without a clock"
 msgstr "Работата без часовник е невъзможна."
+
+#~ msgid "Error reading %d bytes on device '%s'."
+#~ msgstr "Грешка при прочитане на %d байта на устройство „%s“."
+
+#~ msgid "Could not enqueue buffers in device '%s'."
+#~ msgstr "Буферите в устройство „%s“ не могат да се подредят в опашка."
 
 #~ msgid "Could not establish connection to sound server"
 #~ msgstr "Не може да се осъществи връзка към звуковия сървър."

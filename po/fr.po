@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-06-15 15:02+0100\n"
+"POT-Creation-Date: 2011-08-08 15:23+0100\n"
 "PO-Revision-Date: 2011-04-28 09:22+0200\n"
 "Last-Translator: Claude Paroz <claude@2xlibre.net>\n"
 "Language-Team: French <traduc@traduc.org>\n"
@@ -542,12 +542,86 @@ msgid "Error reading %d bytes from device '%s'."
 msgstr "Erreur de lecture de %d octets sur le périphérique « %s »."
 
 #, c-format
+msgid "Failed to enumerate possible video formats device '%s' can work with"
+msgstr ""
+
+#, c-format
+msgid "Could not map buffers from device '%s'"
+msgstr "Impossible de mapper les tampons du périphérique « %s »."
+
+#, fuzzy, c-format
+msgid "The driver of device '%s' does not support the IO method %d"
+msgstr ""
+"Le pilote du périphérique « %s » ne prend en charge aucune méthode "
+"d'enregistrement connue."
+
+#, fuzzy, c-format
+msgid "The driver of device '%s' does not support any known IO method."
+msgstr ""
+"Le pilote du périphérique « %s » ne prend en charge aucune méthode "
+"d'enregistrement connue."
+
+#, fuzzy, c-format
+msgid "Device '%s' does not support video capture"
+msgstr "Le périphérique « %s » n'est pas un périphérique de sortie."
+
+#, fuzzy, c-format
+msgid "Device '%s' cannot capture at %dx%d"
+msgstr "Le périphérique « %s » n'est pas un périphérique d'enregistrement."
+
+#, fuzzy, c-format
+msgid "Device '%s' cannot capture in the specified format"
+msgstr "Le périphérique « %s » n'est pas un périphérique d'enregistrement."
+
+#, c-format
+msgid "Could not get parameters on device '%s'"
+msgstr "Impossible d'obtenir les paramètres du périphérique « %s »"
+
+#, fuzzy
+msgid "Video device did not accept new frame rate setting."
+msgstr ""
+"Le périphérique d'entrée vidéo n'a pas accepté le nouveau paramètre de "
+"fréquence d'image."
+
+msgid "Video device could not create buffer pool."
+msgstr ""
+
+#, c-format
 msgid "Got unexpected frame size of %u instead of %u."
 msgstr "Taille de trame imprévue de %u à la place de %u."
 
 #, c-format
-msgid "Error reading %d bytes on device '%s'."
+msgid "Failed trying to get video frames from device '%s'."
+msgstr "L'obtention de trames vidéo du périphérique « %s » a échoué."
+
+#, c-format
+msgid "Failed after %d tries. device %s. system error: %s"
+msgstr "Échec après %d tentatives. périphérique %s. erreur système : %s"
+
+#, fuzzy, c-format
+msgid "Failed to get settings of tuner %d on device '%s'."
+msgstr ""
+"Impossible d'obtenir les paramètres du syntoniseur %d du périphérique « %s »."
+
+#, fuzzy, c-format
+msgid "Error getting capabilities for device '%s'."
 msgstr "Erreur de lecture de %d octets sur le périphérique « %s »."
+
+#, fuzzy, c-format
+msgid "Device '%s' is not a tuner."
+msgstr "Le périphérique « %s » n'est pas un périphérique de sortie."
+
+#, fuzzy, c-format
+msgid "Failed to get radio input on device '%s'. "
+msgstr "Impossible de définir l'entrée %d du périphérique %s."
+
+#, c-format
+msgid "Failed to set input %d on device %s."
+msgstr "Impossible de définir l'entrée %d du périphérique %s."
+
+#, fuzzy, c-format
+msgid "Failed to change mute state for device '%s'."
+msgstr "Impossible d'obtenir la force du signal du périphérique « %s »."
 
 #, c-format
 msgid ""
@@ -630,10 +704,6 @@ msgstr ""
 "être un périphérique radio"
 
 #, c-format
-msgid "Failed to set input %d on device %s."
-msgstr "Impossible de définir l'entrée %d du périphérique %s."
-
-#, c-format
 msgid ""
 "Failed to get current output on device '%s'. May be it is a radio device"
 msgstr ""
@@ -644,39 +714,6 @@ msgstr ""
 msgid "Failed to set output %d on device %s."
 msgstr "Impossible de définir la sortie %d du périphérique %s."
 
-#, c-format
-msgid "Could not enqueue buffers in device '%s'."
-msgstr ""
-"Impossible de mettre les tampons en file d'attente sur le périphérique "
-"« %s »."
-
-#, c-format
-msgid "Failed trying to get video frames from device '%s'."
-msgstr "L'obtention de trames vidéo du périphérique « %s » a échoué."
-
-#, c-format
-msgid "Failed after %d tries. device %s. system error: %s"
-msgstr "Échec après %d tentatives. périphérique %s. erreur système : %s"
-
-#, c-format
-msgid "Could not get parameters on device '%s'"
-msgstr "Impossible d'obtenir les paramètres du périphérique « %s »"
-
-msgid "Video input device did not accept new frame rate setting."
-msgstr ""
-"Le périphérique d'entrée vidéo n'a pas accepté le nouveau paramètre de "
-"fréquence d'image."
-
-#, c-format
-msgid "Could not map buffers from device '%s'"
-msgstr "Impossible de mapper les tampons du périphérique « %s »."
-
-#, c-format
-msgid "The driver of device '%s' does not support any known capture method."
-msgstr ""
-"Le pilote du périphérique « %s » ne prend en charge aucune méthode "
-"d'enregistrement connue."
-
 msgid "Changing resolution at runtime is not yet supported."
 msgstr ""
 "La modification de résolution en cours d'exécution n'est pas encore prise en "
@@ -684,6 +721,14 @@ msgstr ""
 
 msgid "Cannot operate without a clock"
 msgstr "Impossible de fonctionner sans horloge"
+
+#~ msgid "Error reading %d bytes on device '%s'."
+#~ msgstr "Erreur de lecture de %d octets sur le périphérique « %s »."
+
+#~ msgid "Could not enqueue buffers in device '%s'."
+#~ msgstr ""
+#~ "Impossible de mettre les tampons en file d'attente sur le périphérique "
+#~ "« %s »."
 
 #~ msgid "Could not establish connection to sound server"
 #~ msgstr "Impossible d'établir une connexion vers le serveur de son"

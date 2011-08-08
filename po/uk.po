@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-06-15 15:02+0100\n"
+"POT-Creation-Date: 2011-08-08 15:23+0100\n"
 "PO-Revision-Date: 2011-05-01 11:55+0300\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
@@ -540,12 +540,82 @@ msgid "Error reading %d bytes from device '%s'."
 msgstr "Помилка під час спроби читання %d байтів з пристрою «%s»."
 
 #, c-format
+msgid "Failed to enumerate possible video formats device '%s' can work with"
+msgstr ""
+"Не вдається отримати список усіх можливих відеоформатів, які підтримує "
+"пристрій \"%s\""
+
+#, c-format
+msgid "Could not map buffers from device '%s'"
+msgstr "Не вдалося пов’язати буфери з пристрою «%s»."
+
+#, fuzzy, c-format
+msgid "The driver of device '%s' does not support the IO method %d"
+msgstr "Драйвер пристрою «%s» не підтримує жоден відомий метод захоплення."
+
+#, fuzzy, c-format
+msgid "The driver of device '%s' does not support any known IO method."
+msgstr "Драйвер пристрою «%s» не підтримує жоден відомий метод захоплення."
+
+#, fuzzy, c-format
+msgid "Device '%s' does not support video capture"
+msgstr "Пристрій «%s» не є пристроєм виведення даних."
+
+#, c-format
+msgid "Device '%s' cannot capture at %dx%d"
+msgstr "Пристрій \"%s\" не здатний захоплювати відео у форматі %dx%d"
+
+#, c-format
+msgid "Device '%s' cannot capture in the specified format"
+msgstr "Пристрій \"%s\" не здатний захоплювати відео у вказаному форматі"
+
+#, c-format
+msgid "Could not get parameters on device '%s'"
+msgstr "Не вдалося отримати параметри пристрою «%s»."
+
+#, fuzzy
+msgid "Video device did not accept new frame rate setting."
+msgstr ""
+"Пристроєм відеовходу не підтримується нове значення параметра частоти кадрів."
+
+msgid "Video device could not create buffer pool."
+msgstr ""
+
+#, c-format
 msgid "Got unexpected frame size of %u instead of %u."
 msgstr "Отримано неочікуваний розмір блоку %u замість %u."
 
 #, c-format
-msgid "Error reading %d bytes on device '%s'."
-msgstr "Помилка під час спроби читання %d байтів на пристрої «%s»."
+msgid "Failed trying to get video frames from device '%s'."
+msgstr "Не вдалося отримати відеокадри з пристрою «%s»."
+
+#, c-format
+msgid "Failed after %d tries. device %s. system error: %s"
+msgstr "Помилка після %d спроб. Пристрій %s. Системна помилка: %s"
+
+#, fuzzy, c-format
+msgid "Failed to get settings of tuner %d on device '%s'."
+msgstr "Помилка при встановленні приймача %d пристрою «%s»."
+
+#, fuzzy, c-format
+msgid "Error getting capabilities for device '%s'."
+msgstr "Помилка під час спроби читання %d байтів з пристрою «%s»."
+
+#, fuzzy, c-format
+msgid "Device '%s' is not a tuner."
+msgstr "Пристрій «%s» не є пристроєм виведення даних."
+
+#, fuzzy, c-format
+msgid "Failed to get radio input on device '%s'. "
+msgstr "Не вдалося встановити ввід %d пристрою «%s»."
+
+#, c-format
+msgid "Failed to set input %d on device %s."
+msgstr "Не вдалося встановити ввід %d пристрою «%s»."
+
+#, fuzzy, c-format
+msgid "Failed to change mute state for device '%s'."
+msgstr "Помилка при отриманні сили сигналу пристрою «%s»."
 
 #, c-format
 msgid ""
@@ -623,10 +693,6 @@ msgstr ""
 "радіо."
 
 #, c-format
-msgid "Failed to set input %d on device %s."
-msgstr "Не вдалося встановити ввід %d пристрою «%s»."
-
-#, c-format
 msgid ""
 "Failed to get current output on device '%s'. May be it is a radio device"
 msgstr ""
@@ -637,39 +703,17 @@ msgstr ""
 msgid "Failed to set output %d on device %s."
 msgstr "Не вдалося встановити вихід %d пристрою «%s»."
 
-#, c-format
-msgid "Could not enqueue buffers in device '%s'."
-msgstr "Не вдалося опитати буфери від пристрою «%s»."
-
-#, c-format
-msgid "Failed trying to get video frames from device '%s'."
-msgstr "Не вдалося отримати відеокадри з пристрою «%s»."
-
-#, c-format
-msgid "Failed after %d tries. device %s. system error: %s"
-msgstr "Помилка після %d спроб. Пристрій %s. Системна помилка: %s"
-
-#, c-format
-msgid "Could not get parameters on device '%s'"
-msgstr "Не вдалося отримати параметри пристрою «%s»."
-
-msgid "Video input device did not accept new frame rate setting."
-msgstr ""
-"Пристроєм відеовходу не підтримується нове значення параметра частоти кадрів."
-
-#, c-format
-msgid "Could not map buffers from device '%s'"
-msgstr "Не вдалося пов’язати буфери з пристрою «%s»."
-
-#, c-format
-msgid "The driver of device '%s' does not support any known capture method."
-msgstr "Драйвер пристрою «%s» не підтримує жоден відомий метод захоплення."
-
 msgid "Changing resolution at runtime is not yet supported."
 msgstr "Зміна роздільної здатності при відтворенні ще не підтримується."
 
 msgid "Cannot operate without a clock"
 msgstr "Робота без годинника неможлива"
+
+#~ msgid "Error reading %d bytes on device '%s'."
+#~ msgstr "Помилка під час спроби читання %d байтів на пристрої «%s»."
+
+#~ msgid "Could not enqueue buffers in device '%s'."
+#~ msgstr "Не вдалося опитати буфери від пристрою «%s»."
 
 #~ msgid "Could not establish connection to sound server"
 #~ msgstr "Не вдалося встановити з'єднання із звуковим сервером."
@@ -688,11 +732,6 @@ msgstr "Робота без годинника неможлива"
 
 #~ msgid "Failed getting controls attributes on device '%s.'"
 #~ msgstr "Не вдається отримати атрибути органів керування пристрою \"%s\"."
-
-#~ msgid "Failed to enumerate possible video formats device '%s' can work with"
-#~ msgstr ""
-#~ "Не вдається отримати список усіх можливих відеоформатів, які підтримує "
-#~ "пристрій \"%s\""
 
 #~ msgid ""
 #~ "The buffer type is not supported, or the index is out of bounds, or no "
@@ -715,12 +754,6 @@ msgstr "Робота без годинника неможлива"
 
 #~ msgid "Could not exchange data with device '%s'."
 #~ msgstr "Помилка при обміні даними з пристроєм \"%s\"."
-
-#~ msgid "Device '%s' cannot capture at %dx%d"
-#~ msgstr "Пристрій \"%s\" не здатний захоплювати відео у форматі %dx%d"
-
-#~ msgid "Device '%s' cannot capture in the specified format"
-#~ msgstr "Пристрій \"%s\" не здатний захоплювати відео у вказаному форматі"
 
 #~ msgid "Could not set parameters on device '%s'"
 #~ msgstr "Не вдається встановити параметри пристрою \"%s\"."

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-06-15 15:02+0100\n"
+"POT-Creation-Date: 2011-08-08 15:23+0100\n"
 "PO-Revision-Date: 2011-01-09 19:36+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -536,12 +536,83 @@ msgid "Error reading %d bytes from device '%s'."
 msgstr "Fel vid läsning av %d byte från enheten \"%s\"."
 
 #, c-format
+msgid "Failed to enumerate possible video formats device '%s' can work with"
+msgstr ""
+"Misslyckades med att räkna upp möjliga videoformat som enheten \"%s\" kan "
+"arbeta med"
+
+#, c-format
+msgid "Could not map buffers from device '%s'"
+msgstr "Kunde inte mappa buffertar från enheten \"%s\"."
+
+#, fuzzy, c-format
+msgid "The driver of device '%s' does not support the IO method %d"
+msgstr "Drivrutinen för enheten \"%s\" saknar stöd för någon känd fångstmetod."
+
+#, fuzzy, c-format
+msgid "The driver of device '%s' does not support any known IO method."
+msgstr "Drivrutinen för enheten \"%s\" saknar stöd för någon känd fångstmetod."
+
+#, fuzzy, c-format
+msgid "Device '%s' does not support video capture"
+msgstr "Enheten \"%s\" är ingen utgångsenhet."
+
+#, c-format
+msgid "Device '%s' cannot capture at %dx%d"
+msgstr "Enheten \"%s\" kan inte fånga i %dx%d"
+
+#, c-format
+msgid "Device '%s' cannot capture in the specified format"
+msgstr "Enheten \"%s\" kan inte fånga i det angivna formatet"
+
+#, c-format
+msgid "Could not get parameters on device '%s'"
+msgstr "Kunde inte få tag i parametrar på enheten \"%s\""
+
+#, fuzzy
+msgid "Video device did not accept new frame rate setting."
+msgstr "Videoingångsenheten accepterade inte ny inställning för bildfrekvens."
+
+msgid "Video device could not create buffer pool."
+msgstr ""
+
+#, c-format
 msgid "Got unexpected frame size of %u instead of %u."
 msgstr "Fick oväntade bildrutstorleken %u istället för %u."
 
 #, c-format
-msgid "Error reading %d bytes on device '%s'."
-msgstr "Fel vid läsning av %d byte på enheten \"%s\"."
+msgid "Failed trying to get video frames from device '%s'."
+msgstr "Misslyckades med att få videobildrutor från enheten \"%s\"."
+
+#, c-format
+msgid "Failed after %d tries. device %s. system error: %s"
+msgstr "Misslyckades efter %d försök. enhet %s. systemfel: %s"
+
+#, fuzzy, c-format
+msgid "Failed to get settings of tuner %d on device '%s'."
+msgstr ""
+"Misslyckades med att få tag i inställningen för mottagare %d på enheten \"%s"
+"\"."
+
+#, fuzzy, c-format
+msgid "Error getting capabilities for device '%s'."
+msgstr "Fel vid läsning av %d byte från enheten \"%s\"."
+
+#, fuzzy, c-format
+msgid "Device '%s' is not a tuner."
+msgstr "Enheten \"%s\" är ingen utgångsenhet."
+
+#, fuzzy, c-format
+msgid "Failed to get radio input on device '%s'. "
+msgstr "Kunde inte ställa in ingång %d på enheten %s."
+
+#, c-format
+msgid "Failed to set input %d on device %s."
+msgstr "Kunde inte ställa in ingång %d på enheten %s."
+
+#, fuzzy, c-format
+msgid "Failed to change mute state for device '%s'."
+msgstr "Misslyckades med att få tag på signalstyrka för enheten \"%s\"."
 
 #, c-format
 msgid ""
@@ -624,10 +695,6 @@ msgstr ""
 "radioenhet"
 
 #, c-format
-msgid "Failed to set input %d on device %s."
-msgstr "Kunde inte ställa in ingång %d på enheten %s."
-
-#, c-format
 msgid ""
 "Failed to get current output on device '%s'. May be it is a radio device"
 msgstr ""
@@ -638,49 +705,23 @@ msgstr ""
 msgid "Failed to set output %d on device %s."
 msgstr "Misslyckades med att ställa in utgång %d på enheten %s."
 
-#, c-format
-msgid "Could not enqueue buffers in device '%s'."
-msgstr "Kunde inte kölägga buffertar i enheten \"%s\"."
-
-#, c-format
-msgid "Failed trying to get video frames from device '%s'."
-msgstr "Misslyckades med att få videobildrutor från enheten \"%s\"."
-
-#, c-format
-msgid "Failed after %d tries. device %s. system error: %s"
-msgstr "Misslyckades efter %d försök. enhet %s. systemfel: %s"
-
-#, c-format
-msgid "Could not get parameters on device '%s'"
-msgstr "Kunde inte få tag i parametrar på enheten \"%s\""
-
-msgid "Video input device did not accept new frame rate setting."
-msgstr "Videoingångsenheten accepterade inte ny inställning för bildfrekvens."
-
-#, c-format
-msgid "Could not map buffers from device '%s'"
-msgstr "Kunde inte mappa buffertar från enheten \"%s\"."
-
-#, c-format
-msgid "The driver of device '%s' does not support any known capture method."
-msgstr "Drivrutinen för enheten \"%s\" saknar stöd för någon känd fångstmetod."
-
 msgid "Changing resolution at runtime is not yet supported."
 msgstr "Ändring av upplösning vid körtid stöds inte än."
 
 msgid "Cannot operate without a clock"
 msgstr "Kan inte fungera utan en klocka"
 
+#~ msgid "Error reading %d bytes on device '%s'."
+#~ msgstr "Fel vid läsning av %d byte på enheten \"%s\"."
+
+#~ msgid "Could not enqueue buffers in device '%s'."
+#~ msgstr "Kunde inte kölägga buffertar i enheten \"%s\"."
+
 #~ msgid "Could not establish connection to sound server"
 #~ msgstr "Kunde inte etablera en anslutning till ljudservern"
 
 #~ msgid "Failed to query sound server capabilities"
 #~ msgstr "Misslyckades med att fråga efter ljudserverförmågor"
-
-#~ msgid "Failed to enumerate possible video formats device '%s' can work with"
-#~ msgstr ""
-#~ "Misslyckades med att räkna upp möjliga videoformat som enheten \"%s\" kan "
-#~ "arbeta med"
 
 #~ msgid ""
 #~ "The buffer type is not supported, or the index is out of bounds, or no "
@@ -702,12 +743,6 @@ msgstr "Kan inte fungera utan en klocka"
 
 #~ msgid "No free buffers found in the pool at index %d."
 #~ msgstr "Inga lediga buffertar hittades i poolen på index %d."
-
-#~ msgid "Device '%s' cannot capture at %dx%d"
-#~ msgstr "Enheten \"%s\" kan inte fånga i %dx%d"
-
-#~ msgid "Device '%s' cannot capture in the specified format"
-#~ msgstr "Enheten \"%s\" kan inte fånga i det angivna formatet"
 
 #~ msgid "Could not get buffers from device '%s'."
 #~ msgstr "Kunde inte få tag i buffertar från enheten \"%s\"."

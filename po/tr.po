@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-06-15 15:02+0100\n"
+"POT-Creation-Date: 2011-08-08 15:23+0100\n"
 "PO-Revision-Date: 2011-01-08 00:03+0200\n"
 "Last-Translator: Server Acim <serveracim@gmail.com>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
@@ -529,12 +529,83 @@ msgid "Error reading %d bytes from device '%s'."
 msgstr "%d bayt bilgili '%s' aygıtından okumada hata."
 
 #, c-format
+msgid "Failed to enumerate possible video formats device '%s' can work with"
+msgstr "Aygıtın '%s' birlikte çalışabileceği vidyo kiplerini sıralamada hata"
+
+#, c-format
+msgid "Could not map buffers from device '%s'"
+msgstr "Aygıttan '%s' bellekler eşlenemiyor"
+
+#, fuzzy, c-format
+msgid "The driver of device '%s' does not support the IO method %d"
+msgstr ""
+"Bu aygıtın sürücüsü '%s' bilinen görüntü yakalama yöntemlerinden herhangi "
+"birisi desteklemiyor."
+
+#, fuzzy, c-format
+msgid "The driver of device '%s' does not support any known IO method."
+msgstr ""
+"Bu aygıtın sürücüsü '%s' bilinen görüntü yakalama yöntemlerinden herhangi "
+"birisi desteklemiyor."
+
+#, fuzzy, c-format
+msgid "Device '%s' does not support video capture"
+msgstr "Aygıt '%s' bir çıkış aygıtı değil."
+
+#, c-format
+msgid "Device '%s' cannot capture at %dx%d"
+msgstr "Aygıt '%s' görüntü yakalayamadı%dx%d"
+
+#, c-format
+msgid "Device '%s' cannot capture in the specified format"
+msgstr "Aygıt '%s' belirtilen kipte görüntü yakalayamadı"
+
+#, c-format
+msgid "Could not get parameters on device '%s'"
+msgstr "Değiştirgeler aygıttan '%s' alınamıyor"
+
+#, fuzzy
+msgid "Video device did not accept new frame rate setting."
+msgstr "Vidyo giriş aygıtı yeni çerçeve oranı ayarlarını kabul etmedi."
+
+msgid "Video device could not create buffer pool."
+msgstr ""
+
+#, c-format
 msgid "Got unexpected frame size of %u instead of %u."
 msgstr "Beklenmeyen bir çerçevece boyutu %u bunun yerine %u görüntülendi."
 
 #, c-format
-msgid "Error reading %d bytes on device '%s'."
-msgstr "%d baytı şu aygıtta '%s' okumada hata."
+msgid "Failed trying to get video frames from device '%s'."
+msgstr "Aygıttan device '%s' vidyo çerçeveleri alınamadı."
+
+#, c-format
+msgid "Failed after %d tries. device %s. system error: %s"
+msgstr "Şu denemeden sonra %d başarılamadı. aygıt %s. sistem hatası: %s"
+
+#, fuzzy, c-format
+msgid "Failed to get settings of tuner %d on device '%s'."
+msgstr "Radyo istasyonu ayarlarını bulma %d şu aygıtta '%s' başarılamadı."
+
+#, fuzzy, c-format
+msgid "Error getting capabilities for device '%s'."
+msgstr "%d bayt bilgili '%s' aygıtından okumada hata."
+
+#, fuzzy, c-format
+msgid "Device '%s' is not a tuner."
+msgstr "Aygıt '%s' bir çıkış aygıtı değil."
+
+#, fuzzy, c-format
+msgid "Failed to get radio input on device '%s'. "
+msgstr "Giriş değeri olarak bu %d şu aygıtta %s ayarlanamadı."
+
+#, c-format
+msgid "Failed to set input %d on device %s."
+msgstr "Giriş değeri olarak bu %d şu aygıtta %s ayarlanamadı."
+
+#, fuzzy, c-format
+msgid "Failed to change mute state for device '%s'."
+msgstr "Aygıt için '%s' güçlü sinyal alımı gerçekleşemedi."
 
 #, c-format
 msgid ""
@@ -610,10 +681,6 @@ msgstr ""
 "Şu aygıtta '%s' geçerli giriş elde edilemedi. O bir radyo aygıtı olabilir."
 
 #, c-format
-msgid "Failed to set input %d on device %s."
-msgstr "Giriş değeri olarak bu %d şu aygıtta %s ayarlanamadı."
-
-#, c-format
 msgid ""
 "Failed to get current output on device '%s'. May be it is a radio device"
 msgstr ""
@@ -623,50 +690,23 @@ msgstr ""
 msgid "Failed to set output %d on device %s."
 msgstr "Çıkış değeri olarak %d şu aygıtta %s elde edilemedi."
 
-#, c-format
-msgid "Could not enqueue buffers in device '%s'."
-msgstr "Aygıtta '%s' arabellek kuyruğa sokulamıyor."
-
-#, c-format
-msgid "Failed trying to get video frames from device '%s'."
-msgstr "Aygıttan device '%s' vidyo çerçeveleri alınamadı."
-
-#, c-format
-msgid "Failed after %d tries. device %s. system error: %s"
-msgstr "Şu denemeden sonra %d başarılamadı. aygıt %s. sistem hatası: %s"
-
-#, c-format
-msgid "Could not get parameters on device '%s'"
-msgstr "Değiştirgeler aygıttan '%s' alınamıyor"
-
-msgid "Video input device did not accept new frame rate setting."
-msgstr "Vidyo giriş aygıtı yeni çerçeve oranı ayarlarını kabul etmedi."
-
-#, c-format
-msgid "Could not map buffers from device '%s'"
-msgstr "Aygıttan '%s' bellekler eşlenemiyor"
-
-#, c-format
-msgid "The driver of device '%s' does not support any known capture method."
-msgstr ""
-"Bu aygıtın sürücüsü '%s' bilinen görüntü yakalama yöntemlerinden herhangi "
-"birisi desteklemiyor."
-
 msgid "Changing resolution at runtime is not yet supported."
 msgstr "Çalışırken çözünürlüğü değiştirmek henüz desteklenmiyor."
 
 msgid "Cannot operate without a clock"
 msgstr "Saat olmadan çalışamaz"
 
+#~ msgid "Error reading %d bytes on device '%s'."
+#~ msgstr "%d baytı şu aygıtta '%s' okumada hata."
+
+#~ msgid "Could not enqueue buffers in device '%s'."
+#~ msgstr "Aygıtta '%s' arabellek kuyruğa sokulamıyor."
+
 #~ msgid "Could not establish connection to sound server"
 #~ msgstr "Ses sunucusuyla bağlantı kurulumayor"
 
 #~ msgid "Failed to query sound server capabilities"
 #~ msgstr "Ses sunucusu olanakları sorgulanamadı"
-
-#~ msgid "Failed to enumerate possible video formats device '%s' can work with"
-#~ msgstr ""
-#~ "Aygıtın '%s' birlikte çalışabileceği vidyo kiplerini sıralamada hata"
 
 #~ msgid ""
 #~ "The buffer type is not supported, or the index is out of bounds, or no "
@@ -687,12 +727,6 @@ msgstr "Saat olmadan çalışamaz"
 
 #~ msgid "No free buffers found in the pool at index %d."
 #~ msgstr "Dizindeki %d havuzda boş bellek bulunamadı."
-
-#~ msgid "Device '%s' cannot capture at %dx%d"
-#~ msgstr "Aygıt '%s' görüntü yakalayamadı%dx%d"
-
-#~ msgid "Device '%s' cannot capture in the specified format"
-#~ msgstr "Aygıt '%s' belirtilen kipte görüntü yakalayamadı"
 
 #~ msgid "Could not get buffers from device '%s'."
 #~ msgstr "Arabellek aygıttan '%s' alınamıyor."

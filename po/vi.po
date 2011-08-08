@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.23.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-06-15 15:02+0100\n"
+"POT-Creation-Date: 2011-08-08 15:23+0100\n"
 "PO-Revision-Date: 2010-10-03 18:48+1030\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
@@ -537,12 +537,83 @@ msgid "Error reading %d bytes from device '%s'."
 msgstr "Gặp lỗi khi đọc %d byte từ thiết bị « %s »."
 
 #, c-format
+msgid "Failed to enumerate possible video formats device '%s' can work with"
+msgstr ""
+
+#, c-format
+msgid "Could not map buffers from device '%s'"
+msgstr "Không thể ánh xạ các bộ đệm từ thiết bị « %s »."
+
+#, fuzzy, c-format
+msgid "The driver of device '%s' does not support the IO method %d"
+msgstr ""
+"Trình điều khiển của thiết bị « %s » không hỗ trợ phương pháp bắt đã biết "
+"nào."
+
+#, fuzzy, c-format
+msgid "The driver of device '%s' does not support any known IO method."
+msgstr ""
+"Trình điều khiển của thiết bị « %s » không hỗ trợ phương pháp bắt đã biết "
+"nào."
+
+#, fuzzy, c-format
+msgid "Device '%s' does not support video capture"
+msgstr "Thiết bị « %s » không phải là thiết bị xuất ra."
+
+#, fuzzy, c-format
+msgid "Device '%s' cannot capture at %dx%d"
+msgstr "Thiết bị « %s » không phải là thiết bị bắt gì."
+
+#, fuzzy, c-format
+msgid "Device '%s' cannot capture in the specified format"
+msgstr "Thiết bị « %s » không phải là thiết bị bắt gì."
+
+#, c-format
+msgid "Could not get parameters on device '%s'"
+msgstr "Không thể lấy các tham số về thiết bị « %s »."
+
+#, fuzzy
+msgid "Video device did not accept new frame rate setting."
+msgstr "Thiết bị nhập ảnh động vào không chấp nhận thiết lập tốc độ khung mới."
+
+msgid "Video device could not create buffer pool."
+msgstr ""
+
+#, c-format
 msgid "Got unexpected frame size of %u instead of %u."
 msgstr "Nhận được kích cỡ khung bất thường %u, thay cho %u."
 
 #, c-format
-msgid "Error reading %d bytes on device '%s'."
-msgstr "Gặp lỗi khi đọc %d byte trên thiết bị « %s »."
+msgid "Failed trying to get video frames from device '%s'."
+msgstr "Lỗi khi thử lấy các khung ảnh động từ thiết bị « %s »."
+
+#, c-format
+msgid "Failed after %d tries. device %s. system error: %s"
+msgstr "Lỗi sau %d lần thử. Thiết bị %s. Lỗi hệ thống: %s"
+
+#, fuzzy, c-format
+msgid "Failed to get settings of tuner %d on device '%s'."
+msgstr "Lỗi lấy thiết lập của thiết bị điều hưởng %d trên thiết bị « %s »."
+
+#, fuzzy, c-format
+msgid "Error getting capabilities for device '%s'."
+msgstr "Gặp lỗi khi đọc %d byte từ thiết bị « %s »."
+
+#, fuzzy, c-format
+msgid "Device '%s' is not a tuner."
+msgstr "Thiết bị « %s » không phải là thiết bị xuất ra."
+
+#, fuzzy, c-format
+msgid "Failed to get radio input on device '%s'. "
+msgstr "Lỗi đặt dữ liệu nhập %d vào thiết bị « %s »."
+
+#, c-format
+msgid "Failed to set input %d on device %s."
+msgstr "Lỗi đặt dữ liệu nhập %d vào thiết bị « %s »."
+
+#, fuzzy, c-format
+msgid "Failed to change mute state for device '%s'."
+msgstr "Lỗi lấy biên độ tín hiệu cho thiết bị « %s »."
 
 #, c-format
 msgid ""
@@ -619,10 +690,6 @@ msgid "Failed to get current input on device '%s'. May be it is a radio device"
 msgstr ""
 "Lỗi lấy kết nhập hiện thời vào thiết bị « %s ». Có thể là thiết bị thu thanh."
 
-#, c-format
-msgid "Failed to set input %d on device %s."
-msgstr "Lỗi đặt dữ liệu nhập %d vào thiết bị « %s »."
-
 #, fuzzy, c-format
 msgid ""
 "Failed to get current output on device '%s'. May be it is a radio device"
@@ -633,40 +700,17 @@ msgstr ""
 msgid "Failed to set output %d on device %s."
 msgstr "Lỗi đặt dữ liệu nhập %d vào thiết bị « %s »."
 
-#, c-format
-msgid "Could not enqueue buffers in device '%s'."
-msgstr "Không thể phụ thêm các bộ đệm vào hàng đợi trên thiết bị « %s »."
-
-#, c-format
-msgid "Failed trying to get video frames from device '%s'."
-msgstr "Lỗi khi thử lấy các khung ảnh động từ thiết bị « %s »."
-
-#, c-format
-msgid "Failed after %d tries. device %s. system error: %s"
-msgstr "Lỗi sau %d lần thử. Thiết bị %s. Lỗi hệ thống: %s"
-
-#, c-format
-msgid "Could not get parameters on device '%s'"
-msgstr "Không thể lấy các tham số về thiết bị « %s »."
-
-msgid "Video input device did not accept new frame rate setting."
-msgstr "Thiết bị nhập ảnh động vào không chấp nhận thiết lập tốc độ khung mới."
-
-#, c-format
-msgid "Could not map buffers from device '%s'"
-msgstr "Không thể ánh xạ các bộ đệm từ thiết bị « %s »."
-
-#, c-format
-msgid "The driver of device '%s' does not support any known capture method."
-msgstr ""
-"Trình điều khiển của thiết bị « %s » không hỗ trợ phương pháp bắt đã biết "
-"nào."
-
 msgid "Changing resolution at runtime is not yet supported."
 msgstr "Chưa hỗ trợ khả năng thay đổi độ phân giải trong khi chạy."
 
 msgid "Cannot operate without a clock"
 msgstr "Không thể thao tác khi không có đồng hồ."
+
+#~ msgid "Error reading %d bytes on device '%s'."
+#~ msgstr "Gặp lỗi khi đọc %d byte trên thiết bị « %s »."
+
+#~ msgid "Could not enqueue buffers in device '%s'."
+#~ msgstr "Không thể phụ thêm các bộ đệm vào hàng đợi trên thiết bị « %s »."
 
 #~ msgid "Could not establish connection to sound server"
 #~ msgstr "Không thể thiết lập sự kết nối tới máy phục vụ âm thanh"

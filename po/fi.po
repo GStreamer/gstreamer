@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.25.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-06-15 15:02+0100\n"
+"POT-Creation-Date: 2011-08-08 15:23+0100\n"
 "PO-Revision-Date: 2010-11-17 23:03+0200\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
@@ -540,12 +540,79 @@ msgid "Error reading %d bytes from device '%s'."
 msgstr "Virhe luettaessa %d tavua laitteelta ”%s”."
 
 #, c-format
+msgid "Failed to enumerate possible video formats device '%s' can work with"
+msgstr ""
+
+#, c-format
+msgid "Could not map buffers from device '%s'"
+msgstr "Puskereita laitteelta ”%s” ei voitu kartoittaa"
+
+#, fuzzy, c-format
+msgid "The driver of device '%s' does not support the IO method %d"
+msgstr "Laitteen ”%s” ajuri ei tue mitään tunnettua kaappaustapaa."
+
+#, fuzzy, c-format
+msgid "The driver of device '%s' does not support any known IO method."
+msgstr "Laitteen ”%s” ajuri ei tue mitään tunnettua kaappaustapaa."
+
+#, fuzzy, c-format
+msgid "Device '%s' does not support video capture"
+msgstr "Laite ”%s” ei ole ulostulolaite."
+
+#, fuzzy, c-format
+msgid "Device '%s' cannot capture at %dx%d"
+msgstr "Laitteelta ”%s” ei voi kaapata."
+
+#, fuzzy, c-format
+msgid "Device '%s' cannot capture in the specified format"
+msgstr "Laitteelta ”%s” ei voi kaapata."
+
+#, c-format
+msgid "Could not get parameters on device '%s'"
+msgstr "Laitteelta ”%s” ei voitu saada parametreja"
+
+#, fuzzy
+msgid "Video device did not accept new frame rate setting."
+msgstr "Videosyötelaite ei hyväksy uutta kehysnopeusasetusta."
+
+msgid "Video device could not create buffer pool."
+msgstr ""
+
+#, c-format
 msgid "Got unexpected frame size of %u instead of %u."
 msgstr "Saatiin odottamaton kehys kooltaan %u odotetun %u sijaan."
 
 #, c-format
-msgid "Error reading %d bytes on device '%s'."
+msgid "Failed trying to get video frames from device '%s'."
+msgstr "Videoruutujen noutaminen laitteelta ”%s” epäonnistui."
+
+#, c-format
+msgid "Failed after %d tries. device %s. system error: %s"
+msgstr "Epäonnistui %d yrityksen jälkeen: laite %s, järjestelmävirhe: %s"
+
+#, fuzzy, c-format
+msgid "Failed to get settings of tuner %d on device '%s'."
+msgstr "Virittimen %d asetuksia ei voitu lukea laitteelta ”%s”."
+
+#, fuzzy, c-format
+msgid "Error getting capabilities for device '%s'."
 msgstr "Virhe luettaessa %d tavua laitteelta ”%s”."
+
+#, fuzzy, c-format
+msgid "Device '%s' is not a tuner."
+msgstr "Laite ”%s” ei ole ulostulolaite."
+
+#, fuzzy, c-format
+msgid "Failed to get radio input on device '%s'. "
+msgstr "Sisääntuloa %d ei voitu asettaa laitteelle %s."
+
+#, c-format
+msgid "Failed to set input %d on device %s."
+msgstr "Sisääntuloa %d ei voitu asettaa laitteelle %s."
+
+#, fuzzy, c-format
+msgid "Failed to change mute state for device '%s'."
+msgstr "Laitteelta ”%s” ei saatu signaalinvoimakkuutta."
 
 #, c-format
 msgid ""
@@ -621,10 +688,6 @@ msgstr ""
 "Laitteen ”%s” tämänhetkistä sisääntuloa ei voitu lukea, se ei ehkä ole "
 "radiolaite"
 
-#, c-format
-msgid "Failed to set input %d on device %s."
-msgstr "Sisääntuloa %d ei voitu asettaa laitteelle %s."
-
 #, fuzzy, c-format
 msgid ""
 "Failed to get current output on device '%s'. May be it is a radio device"
@@ -636,38 +699,17 @@ msgstr ""
 msgid "Failed to set output %d on device %s."
 msgstr "Sisääntuloa %d ei voitu asettaa laitteelle %s."
 
-#, c-format
-msgid "Could not enqueue buffers in device '%s'."
-msgstr "Puskureita ei voitu laittaa jonoon laitteella ”%s”."
-
-#, c-format
-msgid "Failed trying to get video frames from device '%s'."
-msgstr "Videoruutujen noutaminen laitteelta ”%s” epäonnistui."
-
-#, c-format
-msgid "Failed after %d tries. device %s. system error: %s"
-msgstr "Epäonnistui %d yrityksen jälkeen: laite %s, järjestelmävirhe: %s"
-
-#, c-format
-msgid "Could not get parameters on device '%s'"
-msgstr "Laitteelta ”%s” ei voitu saada parametreja"
-
-msgid "Video input device did not accept new frame rate setting."
-msgstr "Videosyötelaite ei hyväksy uutta kehysnopeusasetusta."
-
-#, c-format
-msgid "Could not map buffers from device '%s'"
-msgstr "Puskereita laitteelta ”%s” ei voitu kartoittaa"
-
-#, c-format
-msgid "The driver of device '%s' does not support any known capture method."
-msgstr "Laitteen ”%s” ajuri ei tue mitään tunnettua kaappaustapaa."
-
 msgid "Changing resolution at runtime is not yet supported."
 msgstr "Resoluution vaihto käytön aikana ei ole vielä mahdollista."
 
 msgid "Cannot operate without a clock"
 msgstr "Ei voitu toimia ilman kelloa"
+
+#~ msgid "Error reading %d bytes on device '%s'."
+#~ msgstr "Virhe luettaessa %d tavua laitteelta ”%s”."
+
+#~ msgid "Could not enqueue buffers in device '%s'."
+#~ msgstr "Puskureita ei voitu laittaa jonoon laitteella ”%s”."
 
 #~ msgid "Could not establish connection to sound server"
 #~ msgstr "Yhteyttä äänipalvelimeen ei voitu avata"

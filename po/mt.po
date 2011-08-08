@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-0.10.10.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-06-15 15:02+0100\n"
+"POT-Creation-Date: 2011-08-08 15:23+0100\n"
 "PO-Revision-Date: 2008-10-26 19:09+0100\n"
 "Last-Translator: Michel Bugeja <michelbugeja@rabatmalta.com>\n"
 "Language-Team: Maltese <translation-team-mt@lists.sourceforge.net>\n"
@@ -568,12 +568,82 @@ msgid "Error reading %d bytes from device '%s'."
 msgstr "Problema fil-qar()i %d bytes fid-device '%s'."
 
 #, c-format
+msgid "Failed to enumerate possible video formats device '%s' can work with"
+msgstr "Failed to enumerate possible video formats device '%s' can work with"
+
+#, c-format
+msgid "Could not map buffers from device '%s'"
+msgstr "Ma nistax nqabbel buffers mill-apparat '%s'."
+
+#, fuzzy, c-format
+msgid "The driver of device '%s' does not support the IO method %d"
+msgstr ""
+"Id-driver tal-apparat '%s' ma jissapportja l-ebda capture method mifhum."
+
+#, fuzzy, c-format
+msgid "The driver of device '%s' does not support any known IO method."
+msgstr ""
+"Id-driver tal-apparat '%s' ma jissapportja l-ebda capture method mifhum."
+
+#, fuzzy, c-format
+msgid "Device '%s' does not support video capture"
+msgstr "Device '%s' mhux capture device."
+
+#, c-format
+msgid "Device '%s' cannot capture at %dx%d"
+msgstr "Appart '%s' ma jistax jagħmel capture bi %dx%d"
+
+#, c-format
+msgid "Device '%s' cannot capture in the specified format"
+msgstr "Appart '%s' ma jistax jagħmel capture f'dan il-format"
+
+#, c-format
+msgid "Could not get parameters on device '%s'"
+msgstr "Mhux possibli nġib parametri tal-apparat '%s'"
+
+#, fuzzy
+msgid "Video device did not accept new frame rate setting."
+msgstr ""
+"Apparat li jaqra video input ma aċċettax is-settings ġodda tal-frame rate."
+
+msgid "Video device could not create buffer pool."
+msgstr ""
+
+#, c-format
 msgid "Got unexpected frame size of %u instead of %u."
 msgstr "Irċivejt frame size ta' %u minflok kif kien mistenni ta' %u."
 
+#, c-format
+msgid "Failed trying to get video frames from device '%s'."
+msgstr "Problema biex inġib video frames mill-apparat '%s'."
+
+#, c-format
+msgid "Failed after %d tries. device %s. system error: %s"
+msgstr "Problema wara li pruvajt %d drabi. apparat %s. żball fis-sistema: %s"
+
 #, fuzzy, c-format
-msgid "Error reading %d bytes on device '%s'."
+msgid "Failed to get settings of tuner %d on device '%s'."
+msgstr "Problema biex inġib settings tat-tuner %d fuq l-appart '%s'"
+
+#, fuzzy, c-format
+msgid "Error getting capabilities for device '%s'."
 msgstr "Problema fil-qar()i %d bytes fid-device '%s'."
+
+#, fuzzy, c-format
+msgid "Device '%s' is not a tuner."
+msgstr "Device '%s' mhux capture device."
+
+#, fuzzy, c-format
+msgid "Failed to get radio input on device '%s'. "
+msgstr "Problema biex nissettja input %d fuq apparat %s."
+
+#, c-format
+msgid "Failed to set input %d on device %s."
+msgstr "Problema biex nissettja input %d fuq apparat %s."
+
+#, fuzzy, c-format
+msgid "Failed to change mute state for device '%s'."
+msgstr "Problema biex inġib signal strength fuq l-apparat '%s'."
 
 #, c-format
 msgid ""
@@ -651,10 +721,6 @@ msgstr ""
 "Problema biex inġib current input fuq apparat '%s'. Jista jkun li huwa "
 "apparat tar-radju."
 
-#, c-format
-msgid "Failed to set input %d on device %s."
-msgstr "Problema biex nissettja input %d fuq apparat %s."
-
 #, fuzzy, c-format
 msgid ""
 "Failed to get current output on device '%s'. May be it is a radio device"
@@ -666,40 +732,18 @@ msgstr ""
 msgid "Failed to set output %d on device %s."
 msgstr "Problema biex nissettja input %d fuq apparat %s."
 
-#, c-format
-msgid "Could not enqueue buffers in device '%s'."
-msgstr "Could not enqueue buffers in device '%s'."
-
-#, c-format
-msgid "Failed trying to get video frames from device '%s'."
-msgstr "Problema biex inġib video frames mill-apparat '%s'."
-
-#, c-format
-msgid "Failed after %d tries. device %s. system error: %s"
-msgstr "Problema wara li pruvajt %d drabi. apparat %s. żball fis-sistema: %s"
-
-#, c-format
-msgid "Could not get parameters on device '%s'"
-msgstr "Mhux possibli nġib parametri tal-apparat '%s'"
-
-msgid "Video input device did not accept new frame rate setting."
-msgstr ""
-"Apparat li jaqra video input ma aċċettax is-settings ġodda tal-frame rate."
-
-#, c-format
-msgid "Could not map buffers from device '%s'"
-msgstr "Ma nistax nqabbel buffers mill-apparat '%s'."
-
-#, c-format
-msgid "The driver of device '%s' does not support any known capture method."
-msgstr ""
-"Id-driver tal-apparat '%s' ma jissapportja l-ebda capture method mifhum."
-
 msgid "Changing resolution at runtime is not yet supported."
 msgstr "Ma tistax tibdel ir-resolution waqt runtime."
 
 msgid "Cannot operate without a clock"
 msgstr "Ma nistax nħaddem mingħajr arloġġ"
+
+#, fuzzy
+#~ msgid "Error reading %d bytes on device '%s'."
+#~ msgstr "Problema fil-qar()i %d bytes fid-device '%s'."
+
+#~ msgid "Could not enqueue buffers in device '%s'."
+#~ msgstr "Could not enqueue buffers in device '%s'."
 
 #~ msgid "Could not establish connection to sound server"
 #~ msgstr "Kuntatt mas-sound server ma ġiex stabbilit"
@@ -718,12 +762,6 @@ msgstr "Ma nistax nħaddem mingħajr arloġġ"
 
 #~ msgid "Could not get buffers from device '%s'."
 #~ msgstr "Ma nistax nirċievi buffers mill-apparat '%s'."
-
-#~ msgid "Device '%s' cannot capture in the specified format"
-#~ msgstr "Appart '%s' ma jistax jagħmel capture f'dan il-format"
-
-#~ msgid "Device '%s' cannot capture at %dx%d"
-#~ msgstr "Appart '%s' ma jistax jagħmel capture bi %dx%d"
 
 #~ msgid "No free buffers found in the pool at index %d."
 #~ msgstr "Ma nstab l-ebda buffer free fl-indiċi %d tal-pool."
@@ -745,10 +783,6 @@ msgstr "Ma nistax nħaddem mingħajr arloġġ"
 #~ "The buffer type is not supported, or the index is out of bounds, or no "
 #~ "buffers have been allocated yet, or the userptr or length are invalid. "
 #~ "device %s"
-
-#~ msgid "Failed to enumerate possible video formats device '%s' can work with"
-#~ msgstr ""
-#~ "Failed to enumerate possible video formats device '%s' can work with"
 
 #~ msgid "Failed getting controls attributes on device '%s.'"
 #~ msgstr "L-attributi ta' kontroll ta' device '%s' ma nqrawx."

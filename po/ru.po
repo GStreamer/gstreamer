@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-06-15 15:02+0100\n"
+"POT-Creation-Date: 2011-08-08 15:23+0100\n"
 "PO-Revision-Date: 2011-04-26 21:13+0400\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@mx.ru>\n"
@@ -539,12 +539,83 @@ msgid "Error reading %d bytes from device '%s'."
 msgstr "Ошибка чтения %d байт из устройства «%s»."
 
 #, c-format
+msgid "Failed to enumerate possible video formats device '%s' can work with"
+msgstr ""
+"Не удалось создать список видео-форматов, с которыми может работать "
+"устройство «%s»"
+
+#, c-format
+msgid "Could not map buffers from device '%s'"
+msgstr "Не удалось распределить буферы устройства «%s»"
+
+#, fuzzy, c-format
+msgid "The driver of device '%s' does not support the IO method %d"
+msgstr ""
+"Драйвер устройства «%s» не поддерживает ни один из известных методов захвата."
+
+#, fuzzy, c-format
+msgid "The driver of device '%s' does not support any known IO method."
+msgstr ""
+"Драйвер устройства «%s» не поддерживает ни один из известных методов захвата."
+
+#, fuzzy, c-format
+msgid "Device '%s' does not support video capture"
+msgstr "Устройство «%s» не является устройством вывода."
+
+#, c-format
+msgid "Device '%s' cannot capture at %dx%d"
+msgstr "Устройство «%s» не может осуществлять захват в разрешении %dx%d"
+
+#, c-format
+msgid "Device '%s' cannot capture in the specified format"
+msgstr "Устройство «%s» не может осуществлять захват в указанном формате"
+
+#, c-format
+msgid "Could not get parameters on device '%s'"
+msgstr "Не удалось получить параметры устройства «%s»"
+
+#, fuzzy
+msgid "Video device did not accept new frame rate setting."
+msgstr "Устройство видео-захвата не приняло новый параметр кадровой частоты."
+
+msgid "Video device could not create buffer pool."
+msgstr ""
+
+#, c-format
 msgid "Got unexpected frame size of %u instead of %u."
 msgstr "Получен неожиданный размер кадра: %u вместо %u."
 
 #, c-format
-msgid "Error reading %d bytes on device '%s'."
+msgid "Failed trying to get video frames from device '%s'."
+msgstr "Ошибка при попытке получения кадров видео с устройства «%s»."
+
+#, c-format
+msgid "Failed after %d tries. device %s. system error: %s"
+msgstr "Ошибка после %d попыток. Устройство: %s. Системная ошибка: %s"
+
+#, fuzzy, c-format
+msgid "Failed to get settings of tuner %d on device '%s'."
+msgstr "Ошибка получения установок тюнера %d устройства «%s»."
+
+#, fuzzy, c-format
+msgid "Error getting capabilities for device '%s'."
 msgstr "Ошибка чтения %d байт из устройства «%s»."
+
+#, fuzzy, c-format
+msgid "Device '%s' is not a tuner."
+msgstr "Устройство «%s» не является устройством вывода."
+
+#, fuzzy, c-format
+msgid "Failed to get radio input on device '%s'. "
+msgstr "Не удалось выбрать вход %d для устройства %s."
+
+#, c-format
+msgid "Failed to set input %d on device %s."
+msgstr "Не удалось выбрать вход %d для устройства %s."
+
+#, fuzzy, c-format
+msgid "Failed to change mute state for device '%s'."
+msgstr "Ошибка получения мощности сигнала для устройства «%s»."
 
 #, c-format
 msgid ""
@@ -622,10 +693,6 @@ msgstr ""
 "устройство"
 
 #, c-format
-msgid "Failed to set input %d on device %s."
-msgstr "Не удалось выбрать вход %d для устройства %s."
-
-#, c-format
 msgid ""
 "Failed to get current output on device '%s'. May be it is a radio device"
 msgstr ""
@@ -636,34 +703,6 @@ msgstr ""
 msgid "Failed to set output %d on device %s."
 msgstr "Не удалось выбрать выход %d для устройства %s."
 
-#, c-format
-msgid "Could not enqueue buffers in device '%s'."
-msgstr "Не удалось добавить в очередь буферы устройства «%s»"
-
-#, c-format
-msgid "Failed trying to get video frames from device '%s'."
-msgstr "Ошибка при попытке получения кадров видео с устройства «%s»."
-
-#, c-format
-msgid "Failed after %d tries. device %s. system error: %s"
-msgstr "Ошибка после %d попыток. Устройство: %s. Системная ошибка: %s"
-
-#, c-format
-msgid "Could not get parameters on device '%s'"
-msgstr "Не удалось получить параметры устройства «%s»"
-
-msgid "Video input device did not accept new frame rate setting."
-msgstr "Устройство видео-захвата не приняло новый параметр кадровой частоты."
-
-#, c-format
-msgid "Could not map buffers from device '%s'"
-msgstr "Не удалось распределить буферы устройства «%s»"
-
-#, c-format
-msgid "The driver of device '%s' does not support any known capture method."
-msgstr ""
-"Драйвер устройства «%s» не поддерживает ни один из известных методов захвата."
-
 msgid "Changing resolution at runtime is not yet supported."
 msgstr ""
 "Изменение разрешения видео во время выполнения не поддерживается в настоящий "
@@ -672,16 +711,17 @@ msgstr ""
 msgid "Cannot operate without a clock"
 msgstr "Операция невозможна без часов"
 
+#~ msgid "Error reading %d bytes on device '%s'."
+#~ msgstr "Ошибка чтения %d байт из устройства «%s»."
+
+#~ msgid "Could not enqueue buffers in device '%s'."
+#~ msgstr "Не удалось добавить в очередь буферы устройства «%s»"
+
 #~ msgid "Could not establish connection to sound server"
 #~ msgstr "Не удалось установить соединение с сервером звука"
 
 #~ msgid "Failed to query sound server capabilities"
 #~ msgstr "Ошибка при запросе возможностей сервера звука"
-
-#~ msgid "Failed to enumerate possible video formats device '%s' can work with"
-#~ msgstr ""
-#~ "Не удалось создать список видео-форматов, с которыми может работать "
-#~ "устройство «%s»"
 
 #~ msgid ""
 #~ "The buffer type is not supported, or the index is out of bounds, or no "
@@ -705,12 +745,6 @@ msgstr "Операция невозможна без часов"
 
 #~ msgid "No free buffers found in the pool at index %d."
 #~ msgstr "В пуле не найдено свободных буферов для индекса %d."
-
-#~ msgid "Device '%s' cannot capture at %dx%d"
-#~ msgstr "Устройство «%s» не может осуществлять захват в разрешении %dx%d"
-
-#~ msgid "Device '%s' cannot capture in the specified format"
-#~ msgstr "Устройство «%s» не может осуществлять захват в указанном формате"
 
 #~ msgid "Could not get buffers from device '%s'."
 #~ msgstr "Не удалось получить буферы устройства «%s»"

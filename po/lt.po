@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.23.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-06-15 15:02+0100\n"
+"POT-Creation-Date: 2011-08-08 15:23+0100\n"
 "PO-Revision-Date: 2010-07-16 19:34+0300\n"
 "Last-Translator: Žygimantas Beručka <uid0@akl.lt>\n"
 "Language-Team: Lithuanian <komp_lt@konferencijos.lt>\n"
@@ -536,12 +536,79 @@ msgid "Error reading %d bytes from device '%s'."
 msgstr "Klaida skaitant %d baitus (-ų) iš įrenginio „%s“."
 
 #, c-format
+msgid "Failed to enumerate possible video formats device '%s' can work with"
+msgstr ""
+
+#, c-format
+msgid "Could not map buffers from device '%s'"
+msgstr "Nepavyko išdėstyti buferių iš įrenginio „%s“"
+
+#, fuzzy, c-format
+msgid "The driver of device '%s' does not support the IO method %d"
+msgstr "Įrenginio „%s“ tvarkyklė nepalaiko jokių žinomų įrašymo būdų."
+
+#, fuzzy, c-format
+msgid "The driver of device '%s' does not support any known IO method."
+msgstr "Įrenginio „%s“ tvarkyklė nepalaiko jokių žinomų įrašymo būdų."
+
+#, fuzzy, c-format
+msgid "Device '%s' does not support video capture"
+msgstr "Įrenginys „%s“ nėra išvesties įrenginys."
+
+#, fuzzy, c-format
+msgid "Device '%s' cannot capture at %dx%d"
+msgstr "Įrenginys „%s“ nėra įrašymo įrenginys."
+
+#, fuzzy, c-format
+msgid "Device '%s' cannot capture in the specified format"
+msgstr "Įrenginys „%s“ nėra įrašymo įrenginys."
+
+#, c-format
+msgid "Could not get parameters on device '%s'"
+msgstr "Nepavyko įrenginio „%s“ parametrų"
+
+#, fuzzy
+msgid "Video device did not accept new frame rate setting."
+msgstr "Vaizdo įvesties įrenginys nepriėmė naujų kadrų dažnio nustatymų."
+
+msgid "Video device could not create buffer pool."
+msgstr ""
+
+#, c-format
 msgid "Got unexpected frame size of %u instead of %u."
 msgstr "Gautas netikėtas kadro dydis %u vietoje %u."
 
 #, c-format
-msgid "Error reading %d bytes on device '%s'."
-msgstr "Klaida skaitant %d baitus (-ų) įrenginyje „%s“."
+msgid "Failed trying to get video frames from device '%s'."
+msgstr "Nepavyko gauti vaizdo kadrų iš įrenginio „%s“."
+
+#, c-format
+msgid "Failed after %d tries. device %s. system error: %s"
+msgstr "Nepavyko po %d bandymų. Įrenginys %s. Sistemos klaida: %s"
+
+#, fuzzy, c-format
+msgid "Failed to get settings of tuner %d on device '%s'."
+msgstr "Nepavyko gauti derintuvo %d įrenginyje „%s“ parametrų."
+
+#, fuzzy, c-format
+msgid "Error getting capabilities for device '%s'."
+msgstr "Klaida skaitant %d baitus (-ų) iš įrenginio „%s“."
+
+#, fuzzy, c-format
+msgid "Device '%s' is not a tuner."
+msgstr "Įrenginys „%s“ nėra išvesties įrenginys."
+
+#, fuzzy, c-format
+msgid "Failed to get radio input on device '%s'. "
+msgstr "Nepavyko nustatyti įvesties %d įrenginyje %s."
+
+#, c-format
+msgid "Failed to set input %d on device %s."
+msgstr "Nepavyko nustatyti įvesties %d įrenginyje %s."
+
+#, fuzzy, c-format
+msgid "Failed to change mute state for device '%s'."
+msgstr "Nepavyko gauti įrenginio „%s“ signalo stiprumo."
 
 #, c-format
 msgid ""
@@ -617,10 +684,6 @@ msgstr ""
 "Nepavyko gauti dabartinės įvesties įrenginyje „%s“. Galbūt tai radijo "
 "įrenginys"
 
-#, c-format
-msgid "Failed to set input %d on device %s."
-msgstr "Nepavyko nustatyti įvesties %d įrenginyje %s."
-
 #, fuzzy, c-format
 msgid ""
 "Failed to get current output on device '%s'. May be it is a radio device"
@@ -632,38 +695,17 @@ msgstr ""
 msgid "Failed to set output %d on device %s."
 msgstr "Nepavyko nustatyti įvesties %d įrenginyje %s."
 
-#, c-format
-msgid "Could not enqueue buffers in device '%s'."
-msgstr "Nepavyko sustatyti į eilė buferių įrenginyje „%s“."
-
-#, c-format
-msgid "Failed trying to get video frames from device '%s'."
-msgstr "Nepavyko gauti vaizdo kadrų iš įrenginio „%s“."
-
-#, c-format
-msgid "Failed after %d tries. device %s. system error: %s"
-msgstr "Nepavyko po %d bandymų. Įrenginys %s. Sistemos klaida: %s"
-
-#, c-format
-msgid "Could not get parameters on device '%s'"
-msgstr "Nepavyko įrenginio „%s“ parametrų"
-
-msgid "Video input device did not accept new frame rate setting."
-msgstr "Vaizdo įvesties įrenginys nepriėmė naujų kadrų dažnio nustatymų."
-
-#, c-format
-msgid "Could not map buffers from device '%s'"
-msgstr "Nepavyko išdėstyti buferių iš įrenginio „%s“"
-
-#, c-format
-msgid "The driver of device '%s' does not support any known capture method."
-msgstr "Įrenginio „%s“ tvarkyklė nepalaiko jokių žinomų įrašymo būdų."
-
 msgid "Changing resolution at runtime is not yet supported."
 msgstr "Galimybės keisti skiriamąją gebą operacijos vykdymo metu dar nėra."
 
 msgid "Cannot operate without a clock"
 msgstr "Negali veikti be laikrodžio"
+
+#~ msgid "Error reading %d bytes on device '%s'."
+#~ msgstr "Klaida skaitant %d baitus (-ų) įrenginyje „%s“."
+
+#~ msgid "Could not enqueue buffers in device '%s'."
+#~ msgstr "Nepavyko sustatyti į eilė buferių įrenginyje „%s“."
 
 #~ msgid "Could not establish connection to sound server"
 #~ msgstr "Nepavyko prisijungti prie garso serverio"

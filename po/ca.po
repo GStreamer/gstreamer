@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.9.7\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-06-15 15:02+0100\n"
+"POT-Creation-Date: 2011-08-08 15:23+0100\n"
 "PO-Revision-Date: 2005-12-04 21:54+0100\n"
 "Last-Translator: Jordi Mallach <jordi@sindominio.net>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -535,11 +535,77 @@ msgid "Error reading %d bytes from device '%s'."
 msgstr ""
 
 #, c-format
+msgid "Failed to enumerate possible video formats device '%s' can work with"
+msgstr ""
+
+#, c-format
+msgid "Could not map buffers from device '%s'"
+msgstr ""
+
+#, c-format
+msgid "The driver of device '%s' does not support the IO method %d"
+msgstr ""
+
+#, c-format
+msgid "The driver of device '%s' does not support any known IO method."
+msgstr ""
+
+#, c-format
+msgid "Device '%s' does not support video capture"
+msgstr ""
+
+#, c-format
+msgid "Device '%s' cannot capture at %dx%d"
+msgstr ""
+
+#, c-format
+msgid "Device '%s' cannot capture in the specified format"
+msgstr ""
+
+#, c-format
+msgid "Could not get parameters on device '%s'"
+msgstr ""
+
+msgid "Video device did not accept new frame rate setting."
+msgstr ""
+
+msgid "Video device could not create buffer pool."
+msgstr ""
+
+#, c-format
 msgid "Got unexpected frame size of %u instead of %u."
 msgstr ""
 
 #, c-format
-msgid "Error reading %d bytes on device '%s'."
+msgid "Failed trying to get video frames from device '%s'."
+msgstr ""
+
+#, c-format
+msgid "Failed after %d tries. device %s. system error: %s"
+msgstr ""
+
+#, c-format
+msgid "Failed to get settings of tuner %d on device '%s'."
+msgstr ""
+
+#, c-format
+msgid "Error getting capabilities for device '%s'."
+msgstr ""
+
+#, c-format
+msgid "Device '%s' is not a tuner."
+msgstr ""
+
+#, c-format
+msgid "Failed to get radio input on device '%s'. "
+msgstr ""
+
+#, c-format
+msgid "Failed to set input %d on device %s."
+msgstr ""
+
+#, c-format
+msgid "Failed to change mute state for device '%s'."
 msgstr ""
 
 #, c-format
@@ -613,43 +679,12 @@ msgid "Failed to get current input on device '%s'. May be it is a radio device"
 msgstr ""
 
 #, c-format
-msgid "Failed to set input %d on device %s."
-msgstr ""
-
-#, c-format
 msgid ""
 "Failed to get current output on device '%s'. May be it is a radio device"
 msgstr ""
 
 #, c-format
 msgid "Failed to set output %d on device %s."
-msgstr ""
-
-#, c-format
-msgid "Could not enqueue buffers in device '%s'."
-msgstr ""
-
-#, c-format
-msgid "Failed trying to get video frames from device '%s'."
-msgstr ""
-
-#, c-format
-msgid "Failed after %d tries. device %s. system error: %s"
-msgstr ""
-
-#, c-format
-msgid "Could not get parameters on device '%s'"
-msgstr ""
-
-msgid "Video input device did not accept new frame rate setting."
-msgstr ""
-
-#, c-format
-msgid "Could not map buffers from device '%s'"
-msgstr ""
-
-#, c-format
-msgid "The driver of device '%s' does not support any known capture method."
 msgstr ""
 
 msgid "Changing resolution at runtime is not yet supported."

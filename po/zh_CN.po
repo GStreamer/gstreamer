@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.16.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-06-15 15:02+0100\n"
+"POT-Creation-Date: 2011-08-08 15:23+0100\n"
 "PO-Revision-Date: 2009-11-13 22:20+0800\n"
 "Last-Translator: Ji ZhengYu <zhengyuji@gmail.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
@@ -549,12 +549,79 @@ msgid "Error reading %d bytes from device '%s'."
 msgstr "从设备‘%2$s’中读取 %1$d 个字节时出错。"
 
 #, c-format
+msgid "Failed to enumerate possible video formats device '%s' can work with"
+msgstr "枚举设备‘%s’可能支持的视频格式时出错"
+
+#, c-format
+msgid "Could not map buffers from device '%s'"
+msgstr "无法从设备‘%s’中映射出缓冲区"
+
+#, fuzzy, c-format
+msgid "The driver of device '%s' does not support the IO method %d"
+msgstr "设备‘%s’的驱动不支持任何已知的捕获方式。"
+
+#, fuzzy, c-format
+msgid "The driver of device '%s' does not support any known IO method."
+msgstr "设备‘%s’的驱动不支持任何已知的捕获方式。"
+
+#, fuzzy, c-format
+msgid "Device '%s' does not support video capture"
+msgstr "‘%s’不是输出设备。"
+
+#, c-format
+msgid "Device '%s' cannot capture at %dx%d"
+msgstr "设备‘%s’不能在 %dx%d 处捕获"
+
+#, c-format
+msgid "Device '%s' cannot capture in the specified format"
+msgstr "设备‘%s’无法以指定格式捕获"
+
+#, c-format
+msgid "Could not get parameters on device '%s'"
+msgstr "无法获取设备‘%s’的参数"
+
+#, fuzzy
+msgid "Video device did not accept new frame rate setting."
+msgstr "视频输入设备不接受新的帧率设置。"
+
+msgid "Video device could not create buffer pool."
+msgstr ""
+
+#, c-format
 msgid "Got unexpected frame size of %u instead of %u."
 msgstr "取得了 %u 的不需要的帧大小，而不是 %u。"
 
 #, c-format
-msgid "Error reading %d bytes on device '%s'."
-msgstr "读取设备‘%2$s’中的 %1$d 字节时出错。"
+msgid "Failed trying to get video frames from device '%s'."
+msgstr "从设备‘%s’上获取视频的尝试失败了。"
+
+#, c-format
+msgid "Failed after %d tries. device %s. system error: %s"
+msgstr "在 %d 次尝试后失败。设备 %s。系统错误: %s"
+
+#, fuzzy, c-format
+msgid "Failed to get settings of tuner %d on device '%s'."
+msgstr "获取设备 %2$s 上的微调钮 %1$d 的设置时出错"
+
+#, fuzzy, c-format
+msgid "Error getting capabilities for device '%s'."
+msgstr "从设备‘%2$s’中读取 %1$d 个字节时出错。"
+
+#, fuzzy, c-format
+msgid "Device '%s' is not a tuner."
+msgstr "‘%s’不是输出设备。"
+
+#, fuzzy, c-format
+msgid "Failed to get radio input on device '%s'. "
+msgstr "设置设备 %2$s 上的输入 %1$d 时出错。"
+
+#, c-format
+msgid "Failed to set input %d on device %s."
+msgstr "设置设备 %2$s 上的输入 %1$d 时出错。"
+
+#, fuzzy, c-format
+msgid "Failed to change mute state for device '%s'."
+msgstr "获取设备‘%s’的信号长度时出错。"
 
 #, c-format
 msgid ""
@@ -626,10 +693,6 @@ msgstr "设置设备‘%3$s’的控制器 %2$d 的值为 %1$d 时出错。"
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
 msgstr "获取设备‘%s’上的当前输入出错。也许它是一个广播设备"
 
-#, c-format
-msgid "Failed to set input %d on device %s."
-msgstr "设置设备 %2$s 上的输入 %1$d 时出错。"
-
 #, fuzzy, c-format
 msgid ""
 "Failed to get current output on device '%s'. May be it is a radio device"
@@ -639,47 +702,23 @@ msgstr "获取设备‘%s’上的当前输入出错。也许它是一个广播�
 msgid "Failed to set output %d on device %s."
 msgstr "设置设备 %2$s 上的输入 %1$d 时出错。"
 
-#, c-format
-msgid "Could not enqueue buffers in device '%s'."
-msgstr "无法对设备‘%s’中的缓冲区进行排序。"
-
-#, c-format
-msgid "Failed trying to get video frames from device '%s'."
-msgstr "从设备‘%s’上获取视频的尝试失败了。"
-
-#, c-format
-msgid "Failed after %d tries. device %s. system error: %s"
-msgstr "在 %d 次尝试后失败。设备 %s。系统错误: %s"
-
-#, c-format
-msgid "Could not get parameters on device '%s'"
-msgstr "无法获取设备‘%s’的参数"
-
-msgid "Video input device did not accept new frame rate setting."
-msgstr "视频输入设备不接受新的帧率设置。"
-
-#, c-format
-msgid "Could not map buffers from device '%s'"
-msgstr "无法从设备‘%s’中映射出缓冲区"
-
-#, c-format
-msgid "The driver of device '%s' does not support any known capture method."
-msgstr "设备‘%s’的驱动不支持任何已知的捕获方式。"
-
 msgid "Changing resolution at runtime is not yet supported."
 msgstr "尚不支持在运行时更改分辨率。"
 
 msgid "Cannot operate without a clock"
 msgstr "没有时钟的话无法操作"
 
+#~ msgid "Error reading %d bytes on device '%s'."
+#~ msgstr "读取设备‘%2$s’中的 %1$d 字节时出错。"
+
+#~ msgid "Could not enqueue buffers in device '%s'."
+#~ msgstr "无法对设备‘%s’中的缓冲区进行排序。"
+
 #~ msgid "Could not establish connection to sound server"
 #~ msgstr "无法建立与音频服务器的连接"
 
 #~ msgid "Failed to query sound server capabilities"
 #~ msgstr "查寻音频服务器的服务失败"
-
-#~ msgid "Failed to enumerate possible video formats device '%s' can work with"
-#~ msgstr "枚举设备‘%s’可能支持的视频格式时出错"
 
 #~ msgid ""
 #~ "The buffer type is not supported, or the index is out of bounds, or no "
@@ -698,12 +737,6 @@ msgstr "没有时钟的话无法操作"
 
 #~ msgid "No free buffers found in the pool at index %d."
 #~ msgstr "在内存池中 %d 处没有可分配的缓冲区。"
-
-#~ msgid "Device '%s' cannot capture at %dx%d"
-#~ msgstr "设备‘%s’不能在 %dx%d 处捕获"
-
-#~ msgid "Device '%s' cannot capture in the specified format"
-#~ msgstr "设备‘%s’无法以指定格式捕获"
 
 #~ msgid "Could not get buffers from device '%s'."
 #~ msgstr "无法从设备‘%s’中获取缓冲区。"
