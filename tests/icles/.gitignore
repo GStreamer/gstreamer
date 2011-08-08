@@ -4,9 +4,9 @@ output-selector-test
 playbin-text
 position-formats
 stress-playbin
-stress-xoverlay
+stress-videooverlay
 test-textoverlay
 test-scale
 test-box
 test-colorkey
-test-xoverlay
+test-videooverlay

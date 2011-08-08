@@ -31,7 +31,7 @@
 #include <gtk/gtk.h>
 
 #include <gst/gst.h>
-#include <gst/interfaces/xoverlay.h>
+#include <gst/interfaces/videooverlay.h>
 #include <gst/interfaces/propertyprobe.h>
 
 #if !GTK_CHECK_VERSION (2, 17, 7)
@@ -105,7 +105,7 @@ realize_cb (GtkWidget * widget, gpointer data)
     /* This is here just for pedagogical purposes, GDK_WINDOW_XID will call it
      * as well */
     if (!gdk_window_ensure_native (window))
-      g_error ("Couldn't create native window needed for GstXOverlay!");
+      g_error ("Couldn't create native window needed for GstVideoOverlay!");
   }
 #endif
 
@@ -270,10 +270,11 @@ main (int argc, char **argv)
   g_assert (embed_xid != 0);
 
   /* we know what the video sink is in this case (xvimagesink), so we can
-   * just set it directly here now (instead of waiting for a prepare-xwindow-id
-   * element message in a sync bus handler and setting it there) */
+   * just set it directly here now (instead of waiting for a
+   * prepare-window-handle element message in a sync bus handler and setting
+   * it there) */
   g_print ("setting XID %lu\n", embed_xid);
-  gst_x_overlay_set_window_handle (GST_X_OVERLAY (sink), embed_xid);
+  gst_video_overlay_set_window_handle (GST_VIDEO_OVERLAY (sink), embed_xid);
 
   g_idle_add (start_pipeline, pipeline);
   gtk_main ();

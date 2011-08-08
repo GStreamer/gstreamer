@@ -22,7 +22,7 @@
 #endif
 
 #include <gst/gst.h>
-#include <gst/interfaces/xoverlay.h>
+#include <gst/interfaces/videooverlay.h>
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -94,11 +94,11 @@ move_window (GstPipeline * pipeline)
 }
 
 static gboolean
-toggle_events (GstXOverlay * ov)
+toggle_events (GstVideoOverlay * ov)
 {
   static gboolean events_toggled;
 
-  gst_x_overlay_handle_events (ov, events_toggled);
+  gst_video_overlay_handle_events (ov, events_toggled);
 
   if (events_toggled) {
     g_print ("Events are handled\n");
@@ -112,7 +112,7 @@ toggle_events (GstXOverlay * ov)
 }
 
 static gboolean
-cycle_window (GstXOverlay * ov)
+cycle_window (GstVideoOverlay * ov)
 {
   XGCValues values;
   Window old_win = win;
@@ -128,7 +128,7 @@ cycle_window (GstXOverlay * ov)
 
   XSync (disp, FALSE);
 
-  gst_x_overlay_set_window_handle (ov, win);
+  gst_video_overlay_set_window_handle (ov, win);
 
   if (old_win) {
     XDestroyWindow (disp, old_win);
@@ -143,14 +143,14 @@ static GstBusSyncReply
 create_window (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
 {
   const GstStructure *s;
-  GstXOverlay *ov = NULL;
+  GstVideoOverlay *ov = NULL;
 
   s = gst_message_get_structure (message);
-  if (s == NULL || !gst_structure_has_name (s, "prepare-xwindow-id")) {
+  if (s == NULL || !gst_structure_has_name (s, "prepare-window-handle")) {
     return GST_BUS_PASS;
   }
 
-  ov = GST_X_OVERLAY (GST_MESSAGE_SRC (message));
+  ov = GST_VIDEO_OVERLAY (GST_MESSAGE_SRC (message));
 
   g_print ("Creating our own window\n");
 
@@ -206,7 +206,8 @@ main (int argc, char **argv)
   if (argc != 2) {
     g_print ("Usage: %s \"pipeline description with launch format\"\n",
         argv[0]);
-    g_print ("The pipeline should contain an element implementing XOverlay.\n");
+    g_print
+        ("The pipeline should contain an element implementing GstVideoOverlay.\n");
     g_print ("Example: %s \"videotestsrc ! ximagesink\"\n", argv[0]);
     return -1;
   }

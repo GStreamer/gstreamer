@@ -1,5 +1,5 @@
-gtk-xoverlay
-qt-xoverlay
-qtgv-xoverlay
+gtk-videooverlay
+qt-videooverlay
+qtgv-videooverlay
 moc_*.cpp
 

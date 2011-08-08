@@ -23,12 +23,12 @@
 #include "config.h"
 #endif
 
-#include "qtgv-xoverlay.h"
+#include "qtgv-videooverlay.h"
 
 #include <QApplication>
 #include <QTimer>
 
-#include <gst/interfaces/xoverlay.h>
+#include <gst/interfaces/videooverlay.h>
 
 SinkPipeline::SinkPipeline(QGraphicsView *parent) : QObject(parent)
 {
@@ -90,10 +90,10 @@ void SinkPipeline::startPipeline()
   GstStateChangeReturn sret;
 
   /* we know what the video sink is in this case (xvimagesink), so we can
-   * just set it directly here now (instead of waiting for a prepare-xwindow-id
-   * element message in a sync bus handler and setting it there) */
-
-  gst_x_overlay_set_window_handle (GST_X_OVERLAY (sink), xwinid);
+   * just set it directly here now (instead of waiting for a
+   * prepare-window-handle element message in a sync bus handler and setting
+   * it there) */
+  gst_video_overlay_set_window_handle (GST_VIDEO_OVERLAY (sink), xwinid);
 
   sret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
   if (sret == GST_STATE_CHANGE_FAILURE) {

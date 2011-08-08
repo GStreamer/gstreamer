@@ -39,7 +39,7 @@
 #include <gdk/gdkwin32.h>
 #endif
 
-#include <gst/interfaces/xoverlay.h>
+#include <gst/interfaces/videooverlay.h>
 
 #if (!GTK_CHECK_VERSION(2, 23, 0) || GTK_CHECK_VERSION(2, 90, 0)) && !GTK_CHECK_VERSION(2, 91, 1)
 #define gtk_combo_box_text_new gtk_combo_box_new_text
@@ -1575,7 +1575,7 @@ msg_clock_lost (GstBus * bus, GstMessage * message, GstPipeline * data)
 
 static gulong embed_xid = 0;
 
-/* We set the xid here in response to the prepare-xwindow-id message via a
+/* We set the xid here in response to the prepare-window-handle message via a
  * bus sync handler because we don't know the actual videosink used from the
  * start (as we don't know the pipeline, or bin elements such as autovideosink
  * or gconfvideosink may be used which create the actual videosink only once
@@ -1584,10 +1584,10 @@ static GstBusSyncReply
 bus_sync_handler (GstBus * bus, GstMessage * message, GstPipeline * data)
 {
   if ((GST_MESSAGE_TYPE (message) == GST_MESSAGE_ELEMENT) &&
-      gst_message_has_name (message, "prepare-xwindow-id")) {
+      gst_message_has_name (message, "prepare-window-handle")) {
     GstElement *element = GST_ELEMENT (GST_MESSAGE_SRC (message));
 
-    g_print ("got prepare-xwindow-id, setting XID %lu\n", embed_xid);
+    g_print ("got prepare-window-handle, setting XID %lu\n", embed_xid);
 
     if (g_object_class_find_property (G_OBJECT_GET_CLASS (element),
             "force-aspect-ratio")) {
@@ -1601,7 +1601,8 @@ bus_sync_handler (GstBus * bus, GstMessage * message, GstPipeline * data)
      * shouldn't be done from a non-GUI thread without explicit locking).  */
     g_assert (embed_xid != 0);
 
-    gst_x_overlay_set_window_handle (GST_X_OVERLAY (element), embed_xid);
+    gst_video_overlay_set_window_handle (GST_VIDEO_OVERLAY (element),
+        embed_xid);
   }
   return GST_BUS_PASS;
 }
@@ -1635,7 +1636,7 @@ realize_cb (GtkWidget * widget, gpointer data)
     /* This is here just for pedagogical purposes, GDK_WINDOW_XID will call it
      * as well */
     if (!gdk_window_ensure_native (window))
-      g_error ("Couldn't create native window needed for GstXOverlay!");
+      g_error ("Couldn't create native window needed for GstVideoOverlay!");
   }
 #endif
 
@@ -1682,7 +1683,7 @@ connect_bus_signals (GstElement * pipeline)
   GstBus *bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
 
 #if defined (GDK_WINDOWING_X11) || defined (GDK_WINDOWING_WIN32)
-  /* handle prepare-xwindow-id element message synchronously */
+  /* handle prepare-window-handle element message synchronously */
   gst_bus_set_sync_handler (bus, (GstBusSyncHandler) bus_sync_handler,
       pipeline);
 #endif

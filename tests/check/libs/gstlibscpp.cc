@@ -64,7 +64,7 @@
 #include <gst/interfaces/tuner.h>
 #include <gst/interfaces/tunernorm.h>
 #include <gst/interfaces/videoorientation.h>
-#include <gst/interfaces/xoverlay.h>
+#include <gst/interfaces/videooverlay.h>
 
 #include <gst/netbuffer/gstnetbuffer.h>
 

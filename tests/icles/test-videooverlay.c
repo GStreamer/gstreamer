@@ -1,7 +1,7 @@
 /* GStreamer
  * Copyright (C) <2008> Stefan Kost <ensonic@users.sf.net>
  *
- * test-xoverlay: test xoverlay custom event handling and subregions
+ * test-videooverlay: test videooverlay custom event handling and subregions
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -32,7 +32,7 @@
 #include <gtk/gtk.h>
 
 #include <gst/gst.h>
-#include <gst/interfaces/xoverlay.h>
+#include <gst/interfaces/videooverlay.h>
 #include <gst/video/gstvideosink.h>
 
 #if !GTK_CHECK_VERSION (2, 17, 7)
@@ -46,7 +46,7 @@ gtk_widget_get_allocation (GtkWidget * w, GtkAllocation * a)
 static struct
 {
   gint w, h;
-  GstXOverlay *overlay;
+  GstVideoOverlay *overlay;
   GtkWidget *widget;
   gdouble a, p;
   GstVideoRectangle rect;
@@ -72,7 +72,7 @@ animate_render_rect (gpointer user_data)
     r->h = anim_state.h / 2;
     r->y = (r->h - (r->h / 2)) + s * (r->h / 2);
 
-    gst_x_overlay_set_render_rectangle (anim_state.overlay, r->x, r->y,
+    gst_video_overlay_set_render_rectangle (anim_state.overlay, r->x, r->y,
         r->w, r->h);
     gtk_widget_queue_draw (anim_state.widget);
   }
@@ -131,7 +131,7 @@ handle_expose_cb (GtkWidget * widget, GdkEventExpose * event,
   if (verbose) {
     g_print ("expose(%p)\n", widget);
   }
-  gst_x_overlay_expose (anim_state.overlay);
+  gst_video_overlay_expose (anim_state.overlay);
   return FALSE;
 }
 
@@ -214,11 +214,12 @@ main (gint argc, gchar ** argv)
   }
 
   /* we know what the video sink is in this case (xvimagesink), so we can
-   * just set it directly here now (instead of waiting for a prepare-xwindow-id
-   * element message in a sync bus handler and setting it there) */
-  gst_x_overlay_set_window_handle (GST_X_OVERLAY (sink), embed_xid);
+   * just set it directly here now (instead of waiting for a
+   * prepare-window-handle element message in a sync bus handler and setting
+   * it there) */
+  gst_video_overlay_set_window_handle (GST_VIDEO_OVERLAY (sink), embed_xid);
 
-  anim_state.overlay = GST_X_OVERLAY (sink);
+  anim_state.overlay = GST_VIDEO_OVERLAY (sink);
   anim_state.widget = video_window;
   anim_state.w = 320;
   anim_state.h = 240;
