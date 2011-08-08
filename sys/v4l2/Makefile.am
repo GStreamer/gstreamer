@@ -1,7 +1,7 @@
 plugin_LTLIBRARIES = libgstvideo4linux2.la
 
 if USE_XVIDEO
-xv_source = gstv4l2xoverlay.c
+xv_source = gstv4l2videooverlay.c
 xv_libs = $(X_LIBS) $(XVIDEO_LIBS)
 else
 xv_source =
@@ -51,5 +51,5 @@ noinst_HEADERS = \
 	gstv4l2radio.h \
 	gstv4l2tuner.h \
 	gstv4l2vidorient.h \
-	gstv4l2xoverlay.h \
+	gstv4l2videooverlay.h \
 	v4l2_calls.h

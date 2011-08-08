@@ -35,7 +35,7 @@
 #include "v4l2_calls.h"
 #include "gstv4l2tuner.h"
 #ifdef HAVE_XVIDEO
-#include "gstv4l2xoverlay.h"
+#include "gstv4l2videooverlay.h"
 #endif
 #include "gstv4l2colorbalance.h"
 
@@ -797,7 +797,7 @@ gst_v4l2_object_open (GstV4l2Object * v4l2object)
     return FALSE;
 
 #ifdef HAVE_XVIDEO
-  gst_v4l2_xoverlay_start (v4l2object);
+  gst_v4l2_video_overlay_start (v4l2object);
 #endif
 
   return TRUE;
@@ -807,7 +807,7 @@ gboolean
 gst_v4l2_object_close (GstV4l2Object * v4l2object)
 {
 #ifdef HAVE_XVIDEO
-  gst_v4l2_xoverlay_stop (v4l2object);
+  gst_v4l2_video_overlay_stop (v4l2object);
 #endif
 
   if (!gst_v4l2_close (v4l2object))

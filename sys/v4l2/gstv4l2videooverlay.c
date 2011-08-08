@@ -1,9 +1,8 @@
 /* GStreamer
- *
  * Copyright (C) 2003 Ronald Bultje <rbultje@ronald.bitfreak.net>
  *               2006 Edgard Lima <edgard.lima@indt.org.br>
  *
- * gstv4l2xoverlay.c: X-based overlay interface implementation for V4L2
+ * gstv4l2video_overlay.c: X-based overlay interface implementation for V4L2
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -35,7 +34,7 @@
 
 #include <gst/interfaces/navigation.h>
 
-#include "gstv4l2xoverlay.h"
+#include "gstv4l2videooverlay.h"
 #include "gstv4l2object.h"
 #include "v4l2_calls.h"
 
@@ -52,14 +51,14 @@ GST_DEBUG_CATEGORY_STATIC (v4l2xv_debug);
 #define GST_CAT_DEFAULT v4l2xv_debug
 
 void
-gst_v4l2_xoverlay_interface_init (GstXOverlayClass * klass)
+gst_v4l2_video_overlay_interface_init (GstVideoOverlayIface * klass)
 {
   GST_DEBUG_CATEGORY_INIT (v4l2xv_debug, "v4l2xv", 0,
-      "V4L2 XOverlay interface debugging");
+      "V4L2 GstVideoOverlay interface debugging");
 }
 
 static void
-gst_v4l2_xoverlay_open (GstV4l2Object * v4l2object)
+gst_v4l2_video_overlay_open (GstV4l2Object * v4l2object)
 {
   struct stat s;
   GstV4l2Xv *v4l2xv;
@@ -137,12 +136,13 @@ gst_v4l2_xoverlay_open (GstV4l2Object * v4l2object)
   v4l2object->xv = v4l2xv;
 
   if (v4l2object->xwindow_id) {
-    gst_v4l2_xoverlay_set_window_handle (v4l2object, v4l2object->xwindow_id);
+    gst_v4l2_video_overlay_set_window_handle (v4l2object,
+        v4l2object->xwindow_id);
   }
 }
 
 static void
-gst_v4l2_xoverlay_close (GstV4l2Object * v4l2object)
+gst_v4l2_video_overlay_close (GstV4l2Object * v4l2object)
 {
   GstV4l2Xv *v4l2xv = v4l2object->xv;
 
@@ -150,7 +150,7 @@ gst_v4l2_xoverlay_close (GstV4l2Object * v4l2object)
     return;
 
   if (v4l2object->xwindow_id) {
-    gst_v4l2_xoverlay_set_window_handle (v4l2object, 0);
+    gst_v4l2_video_overlay_set_window_handle (v4l2object, 0);
   }
 
   XCloseDisplay (v4l2xv->dpy);
@@ -164,17 +164,17 @@ gst_v4l2_xoverlay_close (GstV4l2Object * v4l2object)
 }
 
 void
-gst_v4l2_xoverlay_start (GstV4l2Object * v4l2object)
+gst_v4l2_video_overlay_start (GstV4l2Object * v4l2object)
 {
   if (v4l2object->xwindow_id) {
-    gst_v4l2_xoverlay_open (v4l2object);
+    gst_v4l2_video_overlay_open (v4l2object);
   }
 }
 
 void
-gst_v4l2_xoverlay_stop (GstV4l2Object * v4l2object)
+gst_v4l2_video_overlay_stop (GstV4l2Object * v4l2object)
 {
-  gst_v4l2_xoverlay_close (v4l2object);
+  gst_v4l2_video_overlay_close (v4l2object);
 }
 
 /* should be called with mutex held */
@@ -197,7 +197,7 @@ get_render_rect (GstV4l2Object * v4l2object, GstVideoRectangle * rect)
 }
 
 gboolean
-gst_v4l2_xoverlay_get_render_rect (GstV4l2Object * v4l2object,
+gst_v4l2_video_overlay_get_render_rect (GstV4l2Object * v4l2object,
     GstVideoRectangle * rect)
 {
   GstV4l2Xv *v4l2xv = v4l2object->xv;
@@ -363,7 +363,8 @@ event_refresh (gpointer data)
 }
 
 void
-gst_v4l2_xoverlay_set_window_handle (GstV4l2Object * v4l2object, guintptr id)
+gst_v4l2_video_overlay_set_window_handle (GstV4l2Object * v4l2object,
+    guintptr id)
 {
   GstV4l2Xv *v4l2xv;
   XID xwindow_id = id;
@@ -373,7 +374,7 @@ gst_v4l2_xoverlay_set_window_handle (GstV4l2Object * v4l2object, guintptr id)
       (gulong) xwindow_id);
 
   if (!v4l2object->xv && GST_V4L2_IS_OPEN (v4l2object))
-    gst_v4l2_xoverlay_open (v4l2object);
+    gst_v4l2_video_overlay_open (v4l2object);
 
   v4l2xv = v4l2object->xv;
 
@@ -417,7 +418,7 @@ gst_v4l2_xoverlay_set_window_handle (GstV4l2Object * v4l2object, guintptr id)
 }
 
 /**
- * gst_v4l2_xoverlay_prepare_xwindow_id:
+ * gst_v4l2_video_overlay_prepare_window_handle:
  * @v4l2object: the v4l2object
  * @required: %TRUE if display is required (ie. TRUE for v4l2sink, but
  *   FALSE for any other element with optional overlay capabilities)
@@ -425,13 +426,16 @@ gst_v4l2_xoverlay_set_window_handle (GstV4l2Object * v4l2object, guintptr id)
  * Helper function to create a windo if none is set from the application.
  */
 void
-gst_v4l2_xoverlay_prepare_xwindow_id (GstV4l2Object * v4l2object,
+gst_v4l2_video_overlay_prepare_window_handle (GstV4l2Object * v4l2object,
     gboolean required)
 {
+  GstVideoOverlay *overlay;
+
   if (!GST_V4L2_IS_OVERLAY (v4l2object))
     return;
 
-  gst_x_overlay_prepare_xwindow_id (GST_X_OVERLAY (v4l2object->element));
+  overlay = GST_VIDEO_OVERLAY (v4l2object->element);
+  gst_video_overlay_prepare_window_handle (overlay);
 
   if (required && !v4l2object->xwindow_id) {
     GstV4l2Xv *v4l2xv;
@@ -440,15 +444,15 @@ gst_v4l2_xoverlay_prepare_xwindow_id (GstV4l2Object * v4l2object,
     long event_mask;
 
     if (!v4l2object->xv && GST_V4L2_IS_OPEN (v4l2object))
-      gst_v4l2_xoverlay_open (v4l2object);
+      gst_v4l2_video_overlay_open (v4l2object);
 
     v4l2xv = v4l2object->xv;
 
-    /* if xoverlay is not supported, just bail */
+    /* if video_overlay is not supported, just bail */
     if (!v4l2xv)
       return;
 
-    /* xoverlay is supported, but we don't have a window.. so create one */
+    /* video_overlay is supported, but we don't have a window.. so create one */
     GST_DEBUG_OBJECT (v4l2object->element, "creating window");
 
     g_mutex_lock (v4l2xv->mutex);
@@ -480,6 +484,6 @@ gst_v4l2_xoverlay_prepare_xwindow_id (GstV4l2Object * v4l2object,
 
     GST_DEBUG_OBJECT (v4l2object->element, "got window");
 
-    gst_v4l2_xoverlay_set_window_handle (v4l2object, win);
+    gst_v4l2_video_overlay_set_window_handle (v4l2object, win);
   }
 }
