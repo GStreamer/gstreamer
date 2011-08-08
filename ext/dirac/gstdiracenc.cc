@@ -330,29 +330,8 @@ gst_dirac_enc_set_format (GstBaseVideoEncoder * base_video_encoder,
     GstVideoState * state)
 {
   GstDiracEnc *dirac_enc = GST_DIRAC_ENC (base_video_encoder);
-  GstCaps *caps;
-  GstStructure *structure;
 
   GST_DEBUG ("set_format");
-
-  caps =
-      gst_pad_get_allowed_caps (GST_BASE_VIDEO_CODEC_SRC_PAD
-      (base_video_encoder));
-
-  if (caps == NULL) {
-    caps =
-        gst_caps_copy (gst_pad_get_pad_template_caps
-        (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder)));
-  }
-
-  if (gst_caps_is_empty (caps)) {
-    gst_caps_unref (caps);
-    return FALSE;
-  }
-
-  structure = gst_caps_get_structure (caps, 0);
-
-  gst_caps_unref (caps);
 
   gst_base_video_encoder_set_latency_fields (base_video_encoder, 2 * 2);
 
@@ -1245,10 +1224,6 @@ static GstFlowReturn
 gst_dirac_enc_shape_output (GstBaseVideoEncoder * base_video_encoder,
     GstVideoFrame * frame)
 {
-  GstDiracEnc *dirac_enc;
-
-  dirac_enc = GST_DIRAC_ENC (base_video_encoder);
-
   gst_dirac_enc_shape_output_ogg (base_video_encoder, frame);
 
   return GST_FLOW_ERROR;
