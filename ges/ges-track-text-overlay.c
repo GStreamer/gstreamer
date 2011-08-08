@@ -40,6 +40,8 @@ struct _GESTrackTextOverlayPrivate
   GESTextHAlign halign;
   GESTextVAlign valign;
   guint32 color;
+  gdouble xpos;
+  gdouble ypos;
   GstElement *text_el;
 };
 
@@ -89,6 +91,8 @@ ges_track_text_overlay_init (GESTrackTextOverlay * self)
   self->priv->halign = DEFAULT_HALIGNMENT;
   self->priv->valign = DEFAULT_VALIGNMENT;
   self->priv->color = G_MAXUINT32;
+  self->priv->xpos = 0.5;
+  self->priv->ypos = 0.5;
 }
 
 static void
@@ -159,6 +163,8 @@ ges_track_text_overlay_create_element (GESTrackObject * object)
   g_object_set (text, "halignment", (gint) self->priv->halign, "valignment",
       (gint) self->priv->valign, NULL);
   g_object_set (text, "color", (guint32) self->priv->color, NULL);
+  g_object_set (text, "xpos", (gdouble) self->priv->xpos, NULL);
+  g_object_set (text, "ypos", (gdouble) self->priv->ypos, NULL);
 
   ret = gst_bin_new ("overlay-bin");
   gst_bin_add_many (GST_BIN (ret), text, iconv, oconv, NULL);
@@ -283,6 +289,42 @@ ges_track_text_overlay_set_color (GESTrackTextOverlay * self, guint32 color)
 }
 
 /**
+ * ges_track_text_overlay_set_xpos:
+ * @self: the #GESTrackTextOverlay* to set
+ * @position: The horizontal position @self is being set to
+ *
+ * Sets the horizontal position of the text.
+ *
+ */
+void
+ges_track_text_overlay_set_xpos (GESTrackTextOverlay * self, gdouble position)
+{
+  GST_DEBUG ("self:%p, xpos:%f", self, position);
+
+  self->priv->xpos = position;
+  if (self->priv->text_el)
+    g_object_set (self->priv->text_el, "xpos", position, NULL);
+}
+
+/**
+ * ges_track_text_overlay_set_ypos:
+ * @self: the #GESTrackTextOverlay* to set
+ * @position: The vertical position @self is being set to
+ *
+ * Sets the vertical position of the text.
+ *
+ */
+void
+ges_track_text_overlay_set_ypos (GESTrackTextOverlay * self, gdouble position)
+{
+  GST_DEBUG ("self:%p, ypos:%f", self, position);
+
+  self->priv->ypos = position;
+  if (self->priv->text_el)
+    g_object_set (self->priv->text_el, "ypos", position, NULL);
+}
+
+/**
  * ges_track_text_overlay_get_text:
  * @self: a GESTrackTextOverlay
  *
@@ -346,11 +388,38 @@ ges_track_text_overlay_get_valignment (GESTrackTextOverlay * self)
  *
  * Returns: The color used by @source.
  */
-
 const guint32
 ges_track_text_overlay_get_color (GESTrackTextOverlay * self)
 {
   return self->priv->color;
+}
+
+/**
+ * ges_track_text_overlay_get_xpos:
+ * @self: a GESTrackTextOverlay
+ *
+ * Get the horizontal position used by @source.
+ *
+ * Returns: The horizontal position used by @source.
+ */
+const gdouble
+ges_track_text_overlay_get_xpos (GESTrackTextOverlay * self)
+{
+  return self->priv->xpos;
+}
+
+/**
+ * ges_track_text_overlay_get_ypos:
+ * @self: a GESTrackTextOverlay
+ *
+ * Get the vertical position used by @source.
+ *
+ * Returns: The vertical position used by @source.
+ */
+const gdouble
+ges_track_text_overlay_get_ypos (GESTrackTextOverlay * self)
+{
+  return self->priv->ypos;
 }
 
 /**

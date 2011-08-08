@@ -113,6 +113,8 @@ GST_START_TEST (test_overlay_in_layer)
   gchar *text;
   gint halign, valign;
   guint32 color;
+  gdouble xpos;
+  gdouble ypos;
 
   ges_init ();
 
@@ -172,6 +174,22 @@ GST_START_TEST (test_overlay_in_layer)
 
   color = ges_track_text_overlay_get_color (GES_TRACK_TEXT_OVERLAY (trobj));
   assert_equals_int (color, 2147483647);
+
+  /* test xpos */
+  g_object_set (source, "xpos", (gdouble) 0.5, NULL);
+  g_object_get (source, "xpos", &xpos, NULL);
+  assert_equals_int (xpos, 0.5);
+
+  xpos = ges_track_text_overlay_get_xpos (GES_TRACK_TEXT_OVERLAY (trobj));
+  assert_equals_int (xpos, 0.5);
+
+  /* test ypos */
+  g_object_set (source, "ypos", (gdouble) 0.33, NULL);
+  g_object_get (source, "ypos", &ypos, NULL);
+  assert_equals_int (ypos, 0.33);
+
+  ypos = ges_track_text_overlay_get_ypos (GES_TRACK_TEXT_OVERLAY (trobj));
+  assert_equals_int (ypos, 0.33);
 
   GST_DEBUG ("removing the source");
 
