@@ -241,28 +241,9 @@ static gboolean
 gst_schro_enc_set_format (GstBaseVideoEncoder * base_video_encoder,
     GstVideoState * state)
 {
-  GstCaps *caps;
-  GstStructure *structure;
   GstSchroEnc *schro_enc = GST_SCHRO_ENC (base_video_encoder);
 
   GST_DEBUG ("set_output_caps");
-  caps =
-      gst_pad_get_allowed_caps (GST_BASE_VIDEO_CODEC_SRC_PAD
-      (base_video_encoder));
-  if (caps == NULL) {
-    caps =
-        gst_caps_copy (gst_pad_get_pad_template_caps
-        (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder)));
-  }
-
-  if (gst_caps_is_empty (caps)) {
-    gst_caps_unref (caps);
-    return FALSE;
-  }
-
-  structure = gst_caps_get_structure (caps, 0);
-
-  gst_caps_unref (caps);
 
   gst_base_video_encoder_set_latency_fields (base_video_encoder,
       2 * (int) schro_encoder_setting_get_double (schro_enc->encoder,
