@@ -128,6 +128,13 @@ enum
   LAST_SIGNAL
 };
 
+enum _GstRtspSrcRtcpSyncMode
+{
+  RTCP_SYNC_ALWAYS,
+  RTCP_SYNC_INITIAL,
+  RTCP_SYNC_RTP
+};
+
 enum _GstRtspSrcBufferMode
 {
   BUFFER_MODE_NONE,
@@ -5979,6 +5986,19 @@ gst_rtspsrc_handle_rtcp_interval (GstRTSPSrc * src, gchar * rtcp)
       GST_DEBUG_OBJECT (src, "configure rtcp interval in session %p",
           rtpsession);
       g_object_set (rtpsession, "rtcp-min-interval", interval, NULL);
+    }
+  }
+
+  /* now it happens that (Xenon) server sending this may also provide bogus
+   * RTCP SR sync data (i.e. with quite some jitter), so never mind those
+   * and just use RTP-Info to sync */
+  if (src->manager) {
+    GObjectClass *klass;
+
+    klass = G_OBJECT_GET_CLASS (G_OBJECT (src->manager));
+    if (g_object_class_find_property (klass, "rtcp-sync")) {
+      GST_DEBUG_OBJECT (src, "configuring rtp sync method");
+      g_object_set (src->manager, "rtcp-sync", RTCP_SYNC_RTP, NULL);
     }
   }
 }
