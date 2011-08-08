@@ -207,6 +207,16 @@ gst_registry_chunks_save_pad_template (GList ** list,
   return TRUE;
 }
 
+#define VALIDATE_UTF8(__details, __entry)                                   \
+G_STMT_START {                                                              \
+  if (!g_utf8_validate (__details->__entry, -1, NULL)) {                    \
+    g_warning ("Invalid UTF-8 in " G_STRINGIFY (__entry) ": %s",            \
+        __details->__entry);                                                \
+    g_free (__details->__entry);                                            \
+    __details->__entry = g_strdup ("[ERROR: invalid UTF-8]");               \
+  }                                                                         \
+} G_STMT_END
+
 /*
  * gst_registry_chunks_save_feature:
  *
@@ -230,6 +240,14 @@ gst_registry_chunks_save_feature (GList ** list, GstPluginFeature * feature)
   if (GST_IS_ELEMENT_FACTORY (feature)) {
     GstRegistryChunkElementFactory *ef;
     GstElementFactory *factory = GST_ELEMENT_FACTORY (feature);
+    GstElementDetails *details = &factory->details;
+
+    /* do the utf-8 validation of the element factory details here to avoid
+     * doing it every time we load */
+    VALIDATE_UTF8 (details, longname);
+    VALIDATE_UTF8 (details, klass);
+    VALIDATE_UTF8 (details, description);
+    VALIDATE_UTF8 (details, author);
 
     /* Initialize with zeroes because of struct padding and
      * valgrind complaining about copying unitialized memory
@@ -285,10 +303,10 @@ gst_registry_chunks_save_feature (GList ** list, GstPluginFeature * feature)
     }
 
     /* pack element factory strings */
-    gst_registry_chunks_save_const_string (list, factory->details.author);
-    gst_registry_chunks_save_const_string (list, factory->details.description);
-    gst_registry_chunks_save_const_string (list, factory->details.klass);
-    gst_registry_chunks_save_const_string (list, factory->details.longname);
+    gst_registry_chunks_save_const_string (list, details->author);
+    gst_registry_chunks_save_const_string (list, details->description);
+    gst_registry_chunks_save_const_string (list, details->klass);
+    gst_registry_chunks_save_const_string (list, details->longname);
     if (factory->meta_data) {
       gst_registry_chunks_save_string (list,
           gst_structure_to_string (factory->meta_data));
