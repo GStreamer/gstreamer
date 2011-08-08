@@ -115,7 +115,7 @@
 
 /* Our interfaces */
 #include <gst/interfaces/navigation.h>
-#include <gst/interfaces/xoverlay.h>
+#include <gst/interfaces/videooverlay.h>
 #include <gst/interfaces/colorbalance.h>
 #include <gst/interfaces/propertyprobe.h>
 /* Helper functions */
@@ -146,7 +146,7 @@ MotifWmHints, MwmHints;
 static void gst_xvimagesink_reset (GstXvImageSink * xvimagesink);
 static void gst_xvimagesink_xwindow_update_geometry (GstXvImageSink *
     xvimagesink);
-static void gst_xvimagesink_expose (GstXOverlay * overlay);
+static void gst_xvimagesink_expose (GstVideoOverlay * overlay);
 
 /* Default template - initiated with class struct to allow gst-register to work
    without X running */
@@ -194,7 +194,7 @@ enum
 /*                                             */
 /* =========================================== */
 static void gst_xvimagesink_navigation_init (GstNavigationInterface * iface);
-static void gst_xvimagesink_xoverlay_init (GstXOverlayClass * iface);
+static void gst_xvimagesink_video_overlay_init (GstVideoOverlayIface * iface);
 static void gst_xvimagesink_colorbalance_init (GstColorBalanceClass * iface);
 static void
 gst_xvimagesink_property_probe_interface_init (GstPropertyProbeInterface *
@@ -203,7 +203,8 @@ gst_xvimagesink_property_probe_interface_init (GstPropertyProbeInterface *
 G_DEFINE_TYPE_WITH_CODE (GstXvImageSink, gst_xvimagesink, GST_TYPE_VIDEO_SINK,
     G_IMPLEMENT_INTERFACE (GST_TYPE_NAVIGATION,
         gst_xvimagesink_navigation_init);
-    G_IMPLEMENT_INTERFACE (GST_TYPE_X_OVERLAY, gst_xvimagesink_xoverlay_init);
+    G_IMPLEMENT_INTERFACE (GST_TYPE_VIDEO_OVERLAY,
+        gst_xvimagesink_video_overlay_init);
     G_IMPLEMENT_INTERFACE (GST_TYPE_COLOR_BALANCE,
         gst_xvimagesink_colorbalance_init);
     G_IMPLEMENT_INTERFACE (GST_TYPE_PROPERTY_PROBE,
@@ -514,7 +515,8 @@ gst_xvimagesink_xwindow_new (GstXvImageSink * xvimagesink,
 
   gst_xvimagesink_xwindow_decorate (xvimagesink, xwindow);
 
-  gst_x_overlay_got_window_handle (GST_X_OVERLAY (xvimagesink), xwindow->win);
+  gst_video_overlay_got_window_handle (GST_VIDEO_OVERLAY (xvimagesink),
+      xwindow->win);
 
   return xwindow;
 }
@@ -791,7 +793,7 @@ gst_xvimagesink_handle_xevents (GstXvImageSink * xvimagesink)
     g_mutex_unlock (xvimagesink->x_lock);
     g_mutex_unlock (xvimagesink->flow_lock);
 
-    gst_xvimagesink_expose (GST_X_OVERLAY (xvimagesink));
+    gst_xvimagesink_expose (GST_VIDEO_OVERLAY (xvimagesink));
 
     g_mutex_lock (xvimagesink->flow_lock);
     g_mutex_lock (xvimagesink->x_lock);
@@ -1623,7 +1625,7 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   g_mutex_lock (xvimagesink->flow_lock);
   if (!xvimagesink->xwindow) {
     g_mutex_unlock (xvimagesink->flow_lock);
-    gst_x_overlay_prepare_xwindow_id (GST_X_OVERLAY (xvimagesink));
+    gst_video_overlay_prepare_window_handle (GST_VIDEO_OVERLAY (xvimagesink));
   } else {
     g_mutex_unlock (xvimagesink->flow_lock);
   }
@@ -2090,7 +2092,7 @@ gst_xvimagesink_navigation_init (GstNavigationInterface * iface)
 }
 
 static void
-gst_xvimagesink_set_window_handle (GstXOverlay * overlay, guintptr id)
+gst_xvimagesink_set_window_handle (GstVideoOverlay * overlay, guintptr id)
 {
   XID xwindow_id = id;
   GstXvImageSink *xvimagesink = GST_XVIMAGESINK (overlay);
@@ -2170,7 +2172,7 @@ gst_xvimagesink_set_window_handle (GstXOverlay * overlay, guintptr id)
 }
 
 static void
-gst_xvimagesink_expose (GstXOverlay * overlay)
+gst_xvimagesink_expose (GstVideoOverlay * overlay)
 {
   GstXvImageSink *xvimagesink = GST_XVIMAGESINK (overlay);
 
@@ -2180,7 +2182,7 @@ gst_xvimagesink_expose (GstXOverlay * overlay)
 }
 
 static void
-gst_xvimagesink_set_event_handling (GstXOverlay * overlay,
+gst_xvimagesink_set_event_handling (GstVideoOverlay * overlay,
     gboolean handle_events)
 {
   GstXvImageSink *xvimagesink = GST_XVIMAGESINK (overlay);
@@ -2216,7 +2218,7 @@ gst_xvimagesink_set_event_handling (GstXOverlay * overlay,
 }
 
 static void
-gst_xvimagesink_set_render_rectangle (GstXOverlay * overlay, gint x, gint y,
+gst_xvimagesink_set_render_rectangle (GstVideoOverlay * overlay, gint x, gint y,
     gint width, gint height)
 {
   GstXvImageSink *xvimagesink = GST_XVIMAGESINK (overlay);
@@ -2238,7 +2240,7 @@ gst_xvimagesink_set_render_rectangle (GstXOverlay * overlay, gint x, gint y,
 }
 
 static void
-gst_xvimagesink_xoverlay_init (GstXOverlayClass * iface)
+gst_xvimagesink_video_overlay_init (GstVideoOverlayIface * iface)
 {
   iface->set_window_handle = gst_xvimagesink_set_window_handle;
   iface->expose = gst_xvimagesink_expose;
@@ -2551,7 +2553,7 @@ gst_xvimagesink_set_property (GObject * object, guint prop_id,
       xvimagesink->keep_aspect = g_value_get_boolean (value);
       break;
     case PROP_HANDLE_EVENTS:
-      gst_xvimagesink_set_event_handling (GST_X_OVERLAY (xvimagesink),
+      gst_xvimagesink_set_event_handling (GST_VIDEO_OVERLAY (xvimagesink),
           g_value_get_boolean (value));
       gst_xvimagesink_manage_event_thread (xvimagesink);
       break;

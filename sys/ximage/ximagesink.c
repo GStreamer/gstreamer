@@ -22,9 +22,9 @@
  *
  * XImageSink renders video frames to a drawable (XWindow) on a local or remote
  * display. This element can receive a Window ID from the application through
- * the XOverlay interface and will then render video frames in this drawable.
- * If no Window ID was provided by the application, the element will create its
- * own internal window and render into it.
+ * the #GstVideoOverlay interface and will then render video frames in this
+ * drawable. If no Window ID was provided by the application, the element will
+ * create its own internal window and render into it.
  *
  * <refsect2>
  * <title>Scaling</title>
@@ -105,7 +105,7 @@
 
 /* Our interfaces */
 #include <gst/interfaces/navigation.h>
-#include <gst/interfaces/xoverlay.h>
+#include <gst/interfaces/videooverlay.h>
 
 #include <gst/video/gstmetavideo.h>
 
@@ -133,7 +133,7 @@ MotifWmHints, MwmHints;
 
 static void gst_ximagesink_reset (GstXImageSink * ximagesink);
 static void gst_ximagesink_xwindow_update_geometry (GstXImageSink * ximagesink);
-static void gst_ximagesink_expose (GstXOverlay * overlay);
+static void gst_ximagesink_expose (GstVideoOverlay * overlay);
 
 static GstStaticPadTemplate gst_ximagesink_sink_template_factory =
 GST_STATIC_PAD_TEMPLATE ("sink",
@@ -169,11 +169,12 @@ enum
 /*                                             */
 /* =========================================== */
 static void gst_ximagesink_navigation_init (GstNavigationInterface * klass);
-static void gst_ximagesink_xoverlay_init (GstXOverlayClass * klass);
+static void gst_ximagesink_video_overlay_init (GstVideoOverlayIface * iface);
 #define gst_ximagesink_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstXImageSink, gst_ximagesink, GST_TYPE_VIDEO_SINK,
     G_IMPLEMENT_INTERFACE (GST_TYPE_NAVIGATION, gst_ximagesink_navigation_init);
-    G_IMPLEMENT_INTERFACE (GST_TYPE_X_OVERLAY, gst_ximagesink_xoverlay_init));
+    G_IMPLEMENT_INTERFACE (GST_TYPE_VIDEO_OVERLAY,
+        gst_ximagesink_video_overlay_init));
 
 /* ============================================================= */
 /*                                                               */
@@ -452,7 +453,8 @@ gst_ximagesink_xwindow_new (GstXImageSink * ximagesink, gint width, gint height)
 
   gst_ximagesink_xwindow_decorate (ximagesink, xwindow);
 
-  gst_x_overlay_got_window_handle (GST_X_OVERLAY (ximagesink), xwindow->win);
+  gst_video_overlay_got_window_handle (GST_VIDEO_OVERLAY (ximagesink),
+      xwindow->win);
 
   return xwindow;
 }
@@ -659,7 +661,7 @@ gst_ximagesink_handle_xevents (GstXImageSink * ximagesink)
     g_mutex_unlock (ximagesink->x_lock);
     g_mutex_unlock (ximagesink->flow_lock);
 
-    gst_ximagesink_expose (GST_X_OVERLAY (ximagesink));
+    gst_ximagesink_expose (GST_VIDEO_OVERLAY (ximagesink));
 
     g_mutex_lock (ximagesink->flow_lock);
     g_mutex_lock (ximagesink->x_lock);
@@ -1116,7 +1118,7 @@ gst_ximagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   g_mutex_lock (ximagesink->flow_lock);
   if (!ximagesink->xwindow) {
     g_mutex_unlock (ximagesink->flow_lock);
-    gst_x_overlay_prepare_xwindow_id (GST_X_OVERLAY (ximagesink));
+    gst_video_overlay_prepare_window_handle (GST_VIDEO_OVERLAY (ximagesink));
   } else {
     g_mutex_unlock (ximagesink->flow_lock);
   }
@@ -1562,7 +1564,7 @@ gst_ximagesink_navigation_init (GstNavigationInterface * iface)
 }
 
 static void
-gst_ximagesink_set_window_handle (GstXOverlay * overlay, guintptr id)
+gst_ximagesink_set_window_handle (GstVideoOverlay * overlay, guintptr id)
 {
   XID xwindow_id = id;
   GstXImageSink *ximagesink = GST_XIMAGESINK (overlay);
@@ -1632,7 +1634,7 @@ gst_ximagesink_set_window_handle (GstXOverlay * overlay, guintptr id)
 }
 
 static void
-gst_ximagesink_expose (GstXOverlay * overlay)
+gst_ximagesink_expose (GstVideoOverlay * overlay)
 {
   GstXImageSink *ximagesink = GST_XIMAGESINK (overlay);
 
@@ -1641,7 +1643,7 @@ gst_ximagesink_expose (GstXOverlay * overlay)
 }
 
 static void
-gst_ximagesink_set_event_handling (GstXOverlay * overlay,
+gst_ximagesink_set_event_handling (GstVideoOverlay * overlay,
     gboolean handle_events)
 {
   GstXImageSink *ximagesink = GST_XIMAGESINK (overlay);
@@ -1677,7 +1679,7 @@ gst_ximagesink_set_event_handling (GstXOverlay * overlay,
 }
 
 static void
-gst_ximagesink_xoverlay_init (GstXOverlayClass * iface)
+gst_ximagesink_video_overlay_init (GstVideoOverlayIface * iface)
 {
   iface->set_window_handle = gst_ximagesink_set_window_handle;
   iface->expose = gst_ximagesink_expose;
@@ -1738,7 +1740,7 @@ gst_ximagesink_set_property (GObject * object, guint prop_id,
     }
       break;
     case PROP_HANDLE_EVENTS:
-      gst_ximagesink_set_event_handling (GST_X_OVERLAY (ximagesink),
+      gst_ximagesink_set_event_handling (GST_VIDEO_OVERLAY (ximagesink),
           g_value_get_boolean (value));
       gst_ximagesink_manage_event_thread (ximagesink);
       break;
