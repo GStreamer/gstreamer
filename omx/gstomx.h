@@ -29,8 +29,8 @@
 G_BEGIN_DECLS
 
 #define GST_OMX_INIT_STRUCT(st) G_STMT_START { \
-  memset ((st), 0, sizeof ((*st))); \
-  (st)->nSize = sizeof ((*st)); \
+  memset ((st), 0, sizeof (*(st))); \
+  (st)->nSize = sizeof (*(st)); \
   (st)->nVersion.s.nVersionMajor = 1; \
   (st)->nVersion.s.nVersionMinor = 1; \
 } G_STMT_END
