@@ -7,8 +7,9 @@ X_TESTS = stress-videooverlay
 stress_videooverlay_SOURCES = stress-videooverlay.c
 stress_videooverlay_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(X_CFLAGS)
-stress_videooverlay_LDADD = $(GST_LIBS) $(X_LIBS) $(LIBM) \
-	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-$(GST_MAJORMINOR).la
+stress_videooverlay_LDADD = \
+	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-$(GST_MAJORMINOR).la \
+	$(GST_LIBS) $(X_LIBS) $(LIBM)
 
 if HAVE_GTK_X11
 X_TESTS += test-colorkey test-videooverlay
@@ -16,14 +17,16 @@ X_TESTS += test-colorkey test-videooverlay
 test_colorkey_SOURCES = test-colorkey.c
 test_colorkey_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(X_CFLAGS) $(GTK_CFLAGS)
-test_colorkey_LDADD = $(GST_LIBS) $(X_LIBS) $(LIBM) $(GTK_LIBS) \
-	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-$(GST_MAJORMINOR).la
+test_colorkey_LDADD = \
+	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-$(GST_MAJORMINOR).la \
+	$(GST_LIBS) $(X_LIBS) $(LIBM) $(GTK_LIBS)
 
 test_videooverlay_SOURCES = test-videooverlay.c
 test_videooverlay_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(X_CFLAGS) $(GTK_CFLAGS)
-test_videooverlay_LDADD = $(GST_LIBS) $(X_LIBS) $(LIBM) $(GTK_LIBS) \
-	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-$(GST_MAJORMINOR).la
+test_videooverlay_LDADD = \
+	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-$(GST_MAJORMINOR).la \
+	$(GST_LIBS) $(X_LIBS) $(LIBM) $(GTK_LIBS)
 endif
 
 output_selector_test_SOURCES = output-selector-test.c
