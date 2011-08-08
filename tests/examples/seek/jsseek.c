@@ -2446,27 +2446,28 @@ static gulong embed_xid = 0;
 static GstBusSyncReply
 bus_sync_handler (GstBus * bus, GstMessage * message, GstPipeline * data)
 {
-  if ((GST_MESSAGE_TYPE (message) == GST_MESSAGE_ELEMENT) &&
-      gst_message_has_name (message, "prepare-window-handle")) {
-    GstElement *element = GST_ELEMENT (GST_MESSAGE_SRC (message));
+  GstElement *element;
 
-    g_print ("got prepare-window-handle, setting XID %lu\n", embed_xid);
+  if (!gst_is_video_overlay_prepare_window_handle_message (message))
+    return GST_BUS_PASS;
 
-    if (g_object_class_find_property (G_OBJECT_GET_CLASS (element),
-            "force-aspect-ratio")) {
-      g_object_set (element, "force-aspect-ratio", TRUE, NULL);
-    }
+  element = GST_ELEMENT (GST_MESSAGE_SRC (message));
 
-    /* Should have been initialised from main thread before (can't use
-     * GDK_WINDOW_XID here with Gtk+ >= 2.18, because the sync handler will
-     * be called from a streaming thread and GDK_WINDOW_XID maps to more than
-     * a simple structure lookup with Gtk+ >= 2.18, where 'more' is stuff that
-     * shouldn't be done from a non-GUI thread without explicit locking).  */
-    g_assert (embed_xid != 0);
+  g_print ("got prepare-window-handle, setting XID %lu\n", embed_xid);
 
-    gst_video_overlay_set_window_handle (GST_VIDEO_OVERLAY (element),
-        embed_xid);
+  if (g_object_class_find_property (G_OBJECT_GET_CLASS (element),
+          "force-aspect-ratio")) {
+    g_object_set (element, "force-aspect-ratio", TRUE, NULL);
   }
+
+  /* Should have been initialised from main thread before (can't use
+   * GDK_WINDOW_XID here with Gtk+ >= 2.18, because the sync handler will
+   * be called from a streaming thread and GDK_WINDOW_XID maps to more than
+   * a simple structure lookup with Gtk+ >= 2.18, where 'more' is stuff that
+   * shouldn't be done from a non-GUI thread without explicit locking).  */
+  g_assert (embed_xid != 0);
+
+  gst_video_overlay_set_window_handle (GST_VIDEO_OVERLAY (element), embed_xid);
   return GST_BUS_PASS;
 }
 #endif

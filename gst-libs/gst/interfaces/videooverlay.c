@@ -64,10 +64,7 @@
  * create_window (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
  * {
  *  // ignore anything but 'prepare-window-handle' element messages
- *  if (GST_MESSAGE_TYPE (message) != GST_MESSAGE_ELEMENT)
- *    return GST_BUS_PASS;
- *
- *  if (!gst_structure_has_name (message-&gt;structure, "prepare-window-handle"))
+ *  if (!gst_is_video_overlay_prepare_window_handle_message (message))
  *    return GST_BUS_PASS;
  *
  *  win = XCreateSimpleWindow (disp, root, 0, 0, 320, 240, 0, 0, 0);
@@ -154,9 +151,7 @@
  * bus_sync_handler (GstBus * bus, GstMessage * message, gpointer user_data)
  * {
  *  // ignore anything but 'prepare-window-handle' element messages
- *  if (GST_MESSAGE_TYPE (message) != GST_MESSAGE_ELEMENT)
- *    return GST_BUS_PASS;
- *  if (!gst_structure_has_name (message-&gt;structure, "prepare-window-handle"))
+ *  if (!gst_is_video_overlay_prepare_window_handle_message (message))
  *    return GST_BUS_PASS;
  *
  *  if (video_window_xid != 0) {
@@ -492,4 +487,26 @@ gst_video_overlay_set_render_rectangle (GstVideoOverlay * overlay,
     return TRUE;
   }
   return FALSE;
+}
+
+/**
+ * gst_is_video_overlay_prepare_window_handle_message:
+ * @msg: a #GstMessage
+ *
+ * Convenience function to check if the given message is a
+ * "prepare-window-handle" message from a #GstVideoOverlay.
+ *
+ * Since: 0.11.2
+ *
+ * Returns: whether @msg is a "prepare-window-handle" message
+ */
+gboolean
+gst_is_video_overlay_prepare_window_handle_message (GstMessage * msg)
+{
+  g_return_val_if_fail (msg != NULL, FALSE);
+
+  if (GST_MESSAGE_TYPE (msg) != GST_MESSAGE_ELEMENT)
+    return FALSE;
+
+  return gst_message_has_name (msg, "prepare-window-handle");
 }

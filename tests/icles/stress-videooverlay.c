@@ -145,10 +145,8 @@ create_window (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
   const GstStructure *s;
   GstVideoOverlay *ov = NULL;
 
-  s = gst_message_get_structure (message);
-  if (s == NULL || !gst_structure_has_name (s, "prepare-window-handle")) {
+  if (!gst_is_video_overlay_prepare_window_handle_message (message))
     return GST_BUS_PASS;
-  }
 
   ov = GST_VIDEO_OVERLAY (GST_MESSAGE_SRC (message));
 

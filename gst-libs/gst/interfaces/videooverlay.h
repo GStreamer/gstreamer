@@ -92,6 +92,8 @@ void gst_video_overlay_got_window_handle  (GstVideoOverlay * overlay,
 
 void gst_video_overlay_prepare_window_handle (GstVideoOverlay * overlay);
 
+gboolean gst_is_video_overlay_prepare_window_handle_message (GstMessage * msg);
+
 G_END_DECLS
 
 #endif /* __GST_VIDEO_OVERLAY_H__ */
