@@ -166,7 +166,7 @@ gst_caps_new_empty (void)
 
   caps->type = GST_TYPE_CAPS;
   caps->refcount = 1;
-  caps->flags = 0;
+  caps->flags = GST_CAPS_FLAGS_NONE;
   caps->structs = g_ptr_array_new ();
   /* the 32 has been determined by logging caps sizes in _gst_caps_free
    * but g_ptr_array uses 16 anyway if it expands once, so this does not help
@@ -492,7 +492,7 @@ gst_static_caps_get (GstStaticCaps * static_caps)
      * of the result caps to 0 so that other threads don't run away with the
      * caps while we are constructing it. */
     temp.type = GST_TYPE_CAPS;
-    temp.flags = 0;
+    temp.flags = GST_CAPS_FLAGS_NONE;
     temp.structs = g_ptr_array_new ();
 
     /* initialize the caps to a refcount of 1 so the caps can be writable for

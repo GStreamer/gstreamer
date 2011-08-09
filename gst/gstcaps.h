@@ -34,12 +34,14 @@ G_BEGIN_DECLS
 
 /**
  * GstCapsFlags:
+ * @GST_CAPS_FLAGS_NONE: no extra flags (Since 0.10.36)
  * @GST_CAPS_FLAGS_ANY: Caps has no specific content, but can contain
  *    anything.
  *
  * Extra flags for a caps.
  */
 typedef enum {
+  GST_CAPS_FLAGS_NONE = 0,
   GST_CAPS_FLAGS_ANY	= (1 << 0)
 } GstCapsFlags;
 
