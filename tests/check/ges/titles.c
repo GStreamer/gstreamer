@@ -121,6 +121,7 @@ GST_START_TEST (test_title_source_in_layer)
   GESTimelineTitleSource *source;
   gchar *text;
   gint halign, valign;
+  guint32 color;
 
   ges_init ();
 
@@ -174,6 +175,14 @@ GST_START_TEST (test_title_source_in_layer)
       (GES_TRACK_TITLE_SOURCE (trobj)), GES_TEXT_HALIGN_LEFT);
   assert_equals_int (ges_track_title_source_get_valignment
       (GES_TRACK_TITLE_SOURCE (trobj)), GES_TEXT_VALIGN_TOP);
+
+  /* test color */
+  g_object_set (source, "color", (gint) 2147483647, NULL);
+  g_object_get (source, "color", &color, NULL);
+  assert_equals_int (color, 2147483647);
+
+  color = ges_track_title_source_get_color (GES_TRACK_TITLE_SOURCE (trobj));
+  assert_equals_int (color, 2147483647);
 
   GST_DEBUG ("removing the source");
 

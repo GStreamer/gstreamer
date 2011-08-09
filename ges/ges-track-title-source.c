@@ -38,6 +38,7 @@ struct _GESTrackTitleSourcePrivate
   gchar *font_desc;
   GESTextHAlign halign;
   GESTextVAlign valign;
+  guint32 color;
   GstElement *text_el;
   GstElement *background_el;
 };
@@ -84,6 +85,7 @@ ges_track_title_source_init (GESTrackTitleSource * self)
   self->priv->text_el = NULL;
   self->priv->halign = DEFAULT_HALIGNMENT;
   self->priv->valign = DEFAULT_VALIGNMENT;
+  self->priv->color = G_MAXUINT32;
   self->priv->background_el = NULL;
 }
 
@@ -155,6 +157,7 @@ ges_track_title_source_create_element (GESTrackObject * object)
 
   g_object_set (background, "pattern", (gint) GES_VIDEO_TEST_PATTERN_BLACK,
       NULL);
+  g_object_set (text, "color", (guint32) self->priv->color, NULL);
 
   gst_bin_add_many (GST_BIN (topbin), background, text, NULL);
 
@@ -188,6 +191,8 @@ ges_track_title_source_set_text (GESTrackTitleSource * self, const gchar * text)
   if (self->priv->text)
     g_free (self->priv->text);
 
+  GST_DEBUG ("self:%p, text:%s", self, text);
+
   self->priv->text = g_strdup (text);
   if (self->priv->text_el)
     g_object_set (self->priv->text_el, "text", text, NULL);
@@ -209,8 +214,9 @@ ges_track_title_source_set_font_desc (GESTrackTitleSource * self,
   if (self->priv->font_desc)
     g_free (self->priv->font_desc);
 
+  GST_DEBUG ("self:%p, font_dec:%s", self, font_desc);
+
   self->priv->font_desc = g_strdup (font_desc);
-  GST_LOG ("setting font-desc to '%s'", font_desc);
   if (self->priv->text_el)
     g_object_set (self->priv->text_el, "font-desc", font_desc, NULL);
 }
@@ -226,8 +232,9 @@ void
 ges_track_title_source_set_valignment (GESTrackTitleSource * self,
     GESTextVAlign valign)
 {
+  GST_DEBUG ("self:%p, valign:%d", self, valign);
+
   self->priv->valign = valign;
-  GST_LOG ("set valignment to: %d", valign);
   if (self->priv->text_el)
     g_object_set (self->priv->text_el, "valignment", valign, NULL);
 }
@@ -243,10 +250,28 @@ void
 ges_track_title_source_set_halignment (GESTrackTitleSource * self,
     GESTextHAlign halign)
 {
+  GST_DEBUG ("self:%p, halign:%d", self, halign);
+
   self->priv->halign = halign;
-  GST_LOG ("set halignment to: %d", halign);
   if (self->priv->text_el)
     g_object_set (self->priv->text_el, "halignment", halign, NULL);
+}
+
+/**
+ * ges_track_title_source_set_color:
+ * @self: the #GESTrackTitleSource* to set
+ * @color: the color @self is being set to
+ *
+ * Sets the color of the text.
+ */
+void
+ges_track_title_source_set_color (GESTrackTitleSource * self, guint32 color)
+{
+  GST_DEBUG ("self:%p, color:%d", self, color);
+
+  self->priv->color = color;
+  if (self->priv->text_el)
+    g_object_set (self->priv->text_el, "color", color, NULL);
 }
 
 /**
@@ -282,9 +307,9 @@ ges_track_title_source_get_font_desc (GESTrackTitleSource * source)
  * ges_track_title_source_get_halignment:
  * @source: a #GESTrackTitleSource
  *
- * Get the horizontal aligment used by this source.
+ * Get the horizontal aligment used by @source.
  *
- * Returns: The horizontal aligment used by this source.
+ * Returns: The horizontal aligment used by @source.
  */
 GESTextHAlign
 ges_track_title_source_get_halignment (GESTrackTitleSource * source)
@@ -296,14 +321,28 @@ ges_track_title_source_get_halignment (GESTrackTitleSource * source)
  * ges_track_title_source_get_valignment:
  * @source: a #GESTrackTitleSource
  *
- * Get the vertical aligment used by this source.
+ * Get the vertical aligment used by @source.
  *
- * Returns: The vertical aligment used by this source.
+ * Returns: The vertical aligment used by @source.
  */
 GESTextVAlign
 ges_track_title_source_get_valignment (GESTrackTitleSource * source)
 {
   return source->priv->valign;
+}
+
+/**
+ * ges_track_title_source_get_color:
+ * @source: a #GESTrackTitleSource
+ *
+ * Get the color used by @source.
+ *
+ * Returns: The color used by @source.
+ */
+const guint32
+ges_track_title_source_get_color (GESTrackTitleSource * source)
+{
+  return source->priv->color;
 }
 
 

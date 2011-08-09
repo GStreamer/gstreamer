@@ -93,6 +93,10 @@ void
 ges_timeline_title_source_set_halignment (GESTimelineTitleSource * self,
     GESTextHAlign halign);
 
+void
+ges_timeline_title_source_set_color (GESTimelineTitleSource * self,
+    guint32 color);
+
 const gchar* 
 ges_timeline_title_source_get_font_desc (GESTimelineTitleSource * self);
 
@@ -101,6 +105,9 @@ ges_timeline_title_source_get_valignment (GESTimelineTitleSource * self);
 
 GESTextHAlign
 ges_timeline_title_source_get_halignment (GESTimelineTitleSource * self);
+
+const guint32
+ges_timeline_title_source_get_color (GESTimelineTitleSource * self);
 
 gboolean ges_timeline_title_source_is_muted (GESTimelineTitleSource * self);
 const gchar* ges_timeline_title_source_get_text (GESTimelineTitleSource * self);

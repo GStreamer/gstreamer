@@ -52,6 +52,7 @@ struct _GESTimelineTitleSourcePrivate
   GESTextVAlign halign;
   GESTextHAlign valign;
   GSList *track_titles;
+  guint32 color;
 };
 
 enum
@@ -62,6 +63,7 @@ enum
   PROP_FONT_DESC,
   PROP_HALIGNMENT,
   PROP_VALIGNMENT,
+  PROP_COLOR,
 };
 
 static GESTrackObject
@@ -98,6 +100,9 @@ ges_timeline_title_source_get_property (GObject * object, guint property_id,
     case PROP_VALIGNMENT:
       g_value_set_enum (value, priv->valign);
       break;
+    case PROP_COLOR:
+      g_value_set_uint (value, priv->color);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
   }
@@ -124,6 +129,9 @@ ges_timeline_title_source_set_property (GObject * object, guint property_id,
       break;
     case PROP_VALIGNMENT:
       ges_timeline_title_source_set_valignment (tfs, g_value_get_enum (value));
+      break;
+    case PROP_COLOR:
+      ges_timeline_title_source_set_color (tfs, g_value_get_uint (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -212,6 +220,17 @@ ges_timeline_title_source_class_init (GESTimelineTitleSourceClass * klass)
       ges_timeline_title_source_track_object_added;
   timobj_class->track_object_released =
       ges_timeline_title_source_track_object_released;
+
+  /**
+   * GESTimelineTitleSource:color
+   *
+   * The color of the text
+   */
+
+  g_object_class_install_property (object_class, PROP_COLOR,
+      g_param_spec_uint ("color", "Color", "The color of the text",
+          0, G_MAXUINT32, G_MAXUINT32, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+
 }
 
 static void
@@ -227,6 +246,7 @@ ges_timeline_title_source_init (GESTimelineTitleSource * self)
   self->priv->font_desc = NULL;
   self->priv->halign = DEFAULT_HALIGNMENT;
   self->priv->valign = DEFAULT_VALIGNMENT;
+  self->priv->color = G_MAXUINT32;
 }
 
 /**
@@ -366,6 +386,30 @@ ges_timeline_title_source_set_mute (GESTimelineTitleSource * self,
 }
 
 /**
+ * ges_timeline_title_source_set_color:
+ * @self: the #GESTimelineTitleSource* to set
+ * @color: The color @self is being set to
+ *
+ * Sets the color of the text.
+ *
+ */
+void
+ges_timeline_title_source_set_color (GESTimelineTitleSource * self,
+    guint32 color)
+{
+  GSList *tmp;
+
+  GST_DEBUG ("self:%p, color:%d", self, color);
+
+  self->priv->color = color;
+
+  for (tmp = self->priv->track_titles; tmp; tmp = tmp->next) {
+    ges_track_title_source_set_color (GES_TRACK_TITLE_SOURCE (tmp->data),
+        self->priv->color);
+  }
+}
+
+/**
  * ges_timeline_title_source_get_text:
  * @self: a #GESTimelineTitleSource
  *
@@ -425,7 +469,6 @@ ges_timeline_title_source_get_valignment (GESTimelineTitleSource * self)
   return self->priv->valign;
 }
 
-
 /**
  * ges_timeline_title_source_is_muted:
  * @self: a #GESTimelineTitleSource
@@ -439,6 +482,21 @@ gboolean
 ges_timeline_title_source_is_muted (GESTimelineTitleSource * self)
 {
   return self->priv->mute;
+}
+
+/**
+ * ges_timeline_title_source_get_color:
+ * @self: a #GESTimelineTitleSource
+ *
+ * Get the color used by @self.
+ *
+ * Returns: The color used by @self.
+ *
+ */
+const guint32
+ges_timeline_title_source_get_color (GESTimelineTitleSource * self)
+{
+  return self->priv->color;
 }
 
 static void
@@ -488,6 +546,7 @@ ges_timeline_title_source_create_track_object (GESTimelineObject * obj,
         priv->halign);
     ges_track_title_source_set_valignment ((GESTrackTitleSource *) res,
         priv->valign);
+    ges_track_title_source_set_color ((GESTrackTitleSource *) res, priv->color);
   }
 
   else if (track->type == GES_TRACK_TYPE_AUDIO) {

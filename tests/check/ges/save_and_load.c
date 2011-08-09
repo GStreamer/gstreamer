@@ -188,6 +188,7 @@ GST_START_TEST (test_keyfile_save)
   KEY ("Object3", "font-desc", "\"Serif\\\\ 36\"");
   KEY ("Object3", "halignment", "center");
   KEY ("Object3", "valignment", "baseline");
+  KEY ("Object3", "color", "4294967295");
   COMPARE;
 
   /* tear-down */
