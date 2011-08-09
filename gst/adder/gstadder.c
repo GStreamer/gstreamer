@@ -1158,8 +1158,8 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
          * asked for the max size above */
         g_assert (insize == outsize);
 
-        GST_LOG_OBJECT (adder, "channel %p: mixing %d bytes from data %p",
-            collect_data, insize, indata);
+        GST_LOG_OBJECT (adder, "channel %p: mixing %" G_GSIZE_FORMAT " bytes"
+            " from data %p", collect_data, insize, indata);
 
         /* further buffers, need to add them */
         adder->func ((gpointer) outdata, (gpointer) indata,

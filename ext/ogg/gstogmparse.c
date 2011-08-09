@@ -765,8 +765,8 @@ gst_ogm_parse_data_packet (GstOgmParse * ogm, GstBuffer * buf,
     xsize = (xsize << 8) | data[n];
   }
 
-  GST_LOG_OBJECT (ogm, "[0x%02x] samples: %d, hdrbytes: %d, datasize: %d",
-      data[0], xsize, len, size - len - 1);
+  GST_LOG_OBJECT (ogm, "[0x%02x] samples: %d, hdrbytes: %d, datasize: %"
+      G_GSIZE_FORMAT, data[0], xsize, len, size - len - 1);
 
   sbuf =
       gst_buffer_copy_region (buf, GST_BUFFER_COPY_ALL, len + 1,
@@ -847,7 +847,7 @@ invalid_startcode:
 buffer_too_small:
   {
     GST_ELEMENT_ERROR (ogm, STREAM, DECODE, (NULL),
-        ("buffer too small, len+1=%u, size=%u", len + 1, size));
+        ("buffer too small, len+1=%u, size=%" G_GSIZE_FORMAT, len + 1, size));
     return GST_FLOW_ERROR;
   }
 }

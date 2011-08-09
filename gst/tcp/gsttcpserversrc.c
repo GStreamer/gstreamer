@@ -198,7 +198,7 @@ restart:
 
   if (ret == GST_FLOW_OK) {
     GST_LOG_OBJECT (src,
-        "Returning buffer from _get of size %d, ts %"
+        "Returning buffer from _get of size %" G_GSIZE_FORMAT ", ts %"
         GST_TIME_FORMAT ", dur %" GST_TIME_FORMAT
         ", offset %" G_GINT64_FORMAT ", offset_end %" G_GINT64_FORMAT,
         gst_buffer_get_size (*outbuf),

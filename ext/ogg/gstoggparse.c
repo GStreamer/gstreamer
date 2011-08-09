@@ -307,8 +307,8 @@ gst_ogg_parse_submit_buffer (GstOggParse * ogg, GstBuffer * buffer)
 
   memcpy (oggbuffer, data, size);
   if (G_UNLIKELY (ogg_sync_wrote (&ogg->sync, size) < 0)) {
-    GST_ELEMENT_ERROR (ogg, STREAM, DECODE,
-        (NULL), ("failed to write %d bytes to the sync buffer", size));
+    GST_ELEMENT_ERROR (ogg, STREAM, DECODE, (NULL),
+        ("failed to write %" G_GSIZE_FORMAT " bytes to the sync buffer", size));
     ret = GST_FLOW_ERROR;
   }
 

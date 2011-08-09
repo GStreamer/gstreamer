@@ -1180,8 +1180,8 @@ parse_exif_ascii_tag (GstExifReader * reader, const GstExifTagMatch * tag,
 
     data = gst_buffer_map (reader->buffer, &size, NULL, GST_MAP_READ);
     if (real_offset >= size) {
-      GST_WARNING ("Invalid offset %u for buffer of size %u, not adding tag %s",
-          real_offset, size, tag->gst_tag);
+      GST_WARNING ("Invalid offset %u for buffer of size %" G_GSIZE_FORMAT
+          ", not adding tag %s", real_offset, size, tag->gst_tag);
       gst_buffer_unmap (reader->buffer, data, size);
       return;
     }
@@ -1262,8 +1262,8 @@ parse_exif_undefined_tag (GstExifReader * reader, const GstExifTagMatch * tag,
     bdata = gst_buffer_map (reader->buffer, &bsize, NULL, GST_MAP_READ);
 
     if (real_offset >= bsize) {
-      GST_WARNING ("Invalid offset %u for buffer of size %u, not adding tag %s",
-          real_offset, bsize, tag->gst_tag);
+      GST_WARNING ("Invalid offset %u for buffer of size %" G_GSIZE_FORMAT
+          ", not adding tag %s", real_offset, bsize, tag->gst_tag);
       gst_buffer_unmap (reader->buffer, bdata, bsize);
       return;
     }
@@ -1329,7 +1329,8 @@ exif_reader_read_rational_tag (GstExifReader * exif_reader,
   data = gst_buffer_map (exif_reader->buffer, &size, NULL, GST_MAP_READ);
 
   if (real_offset >= size) {
-    GST_WARNING ("Invalid offset %u for buffer of size %u", real_offset, size);
+    GST_WARNING ("Invalid offset %u for buffer of size %" G_GSIZE_FORMAT,
+        real_offset, size);
     goto reader_fail;
   }
 
@@ -1830,7 +1831,7 @@ gst_tag_list_from_exif_buffer_with_tiff_header (GstBuffer * buffer)
 
   data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
 
-  GST_LOG ("Parsing exif tags with tiff header of size %u", size);
+  GST_LOG ("Parsing exif tags with tiff header of size %" G_GSIZE_FORMAT, size);
 
   gst_byte_reader_init (&reader, data, size);
 

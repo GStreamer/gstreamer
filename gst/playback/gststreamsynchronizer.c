@@ -560,8 +560,8 @@ gst_stream_synchronizer_sink_chain (GstPad * pad, GstBuffer * buffer)
     goto done;
   }
 
-  GST_LOG_OBJECT (pad, "Handling buffer %p: size=%u, timestamp=%"
-      GST_TIME_FORMAT " duration=%" GST_TIME_FORMAT
+  GST_LOG_OBJECT (pad, "Handling buffer %p: size=%" G_GSIZE_FORMAT
+      ", timestamp=%" GST_TIME_FORMAT " duration=%" GST_TIME_FORMAT
       " offset=%" G_GUINT64_FORMAT " offset_end=%" G_GUINT64_FORMAT,
       buffer, gst_buffer_get_size (buffer),
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),

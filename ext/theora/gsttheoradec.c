@@ -1548,7 +1548,7 @@ theora_dec_chain_reverse (GstTheoraDec * dec, gboolean discont, GstBuffer * buf)
   }
 
   /* add buffer to gather queue */
-  GST_DEBUG_OBJECT (dec, "gathering buffer %p, size %u", buf,
+  GST_DEBUG_OBJECT (dec, "gathering buffer %p, size %" G_GSIZE_FORMAT, buf,
       gst_buffer_get_size (buf));
   dec->gather = g_list_prepend (dec->gather, buf);
 

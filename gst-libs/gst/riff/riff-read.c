@@ -102,8 +102,8 @@ skip_junk:
 too_small:
   {
     /* short read, we return UNEXPECTED to mark the EOS case */
-    GST_DEBUG_OBJECT (element, "not enough data (available=%u, needed=%u)",
-        gst_buffer_get_size (buf), size);
+    GST_DEBUG_OBJECT (element, "not enough data (available=%" G_GSIZE_FORMAT
+        ", needed=%u)", gst_buffer_get_size (buf), size);
     gst_buffer_unref (buf);
     return GST_FLOW_UNEXPECTED;
   }
@@ -249,8 +249,8 @@ gst_riff_parse_file_header (GstElement * element,
 too_small:
   {
     GST_ELEMENT_ERROR (element, STREAM, WRONG_TYPE, (NULL),
-        ("Not enough data to parse RIFF header (%d available, %d needed)",
-            size, 12));
+        ("Not enough data to parse RIFF header (%" G_GSIZE_FORMAT " available,"
+            " %d needed)", size, 12));
     gst_buffer_unmap (buf, data, size);
     gst_buffer_unref (buf);
     return FALSE;
@@ -345,7 +345,7 @@ gst_riff_parse_strh (GstElement * element,
 too_small:
   {
     GST_ERROR_OBJECT (element,
-        "Too small strh (%d available, %d needed)",
+        "Too small strh (%" G_GSIZE_FORMAT " available, %d needed)",
         size, (int) sizeof (gst_riff_strh));
     gst_buffer_unmap (buf, data, size);
     gst_buffer_unref (buf);
@@ -407,8 +407,8 @@ gst_riff_parse_strf_vids (GstElement * element,
   *data = NULL;
   if (strf->size > size) {
     GST_WARNING_OBJECT (element,
-        "strf_vids header gave %d bytes data, only %d available",
-        strf->size, size);
+        "strf_vids header gave %d bytes data, only %" G_GSIZE_FORMAT
+        " available", strf->size, size);
     strf->size = size;
   }
   if (sizeof (gst_riff_strf_vids) < size) {
@@ -433,7 +433,7 @@ gst_riff_parse_strf_vids (GstElement * element,
   GST_INFO_OBJECT (element, " num_colors  %d", strf->num_colors);
   GST_INFO_OBJECT (element, " imp_colors  %d", strf->imp_colors);
   if (*data)
-    GST_INFO_OBJECT (element, " %d bytes extradata",
+    GST_INFO_OBJECT (element, " %" G_GSIZE_FORMAT " bytes extradata",
         gst_buffer_get_size (*data));
 
   *_strf = strf;
@@ -444,7 +444,7 @@ gst_riff_parse_strf_vids (GstElement * element,
 too_small:
   {
     GST_ERROR_OBJECT (element,
-        "Too small strf_vids (%d available, %d needed)",
+        "Too small strf_vids (%" G_GSIZE_FORMAT " available, %d needed)",
         size, (int) sizeof (gst_riff_strf_vids));
     gst_buffer_unmap (buf, data, size);
     gst_buffer_unref (buf);
@@ -522,7 +522,7 @@ gst_riff_parse_strf_auds (GstElement * element,
   GST_INFO_OBJECT (element, " blockalign  %d", strf->blockalign);
   GST_INFO_OBJECT (element, " size        %d", strf->size);
   if (*data)
-    GST_INFO_OBJECT (element, " %d bytes extradata",
+    GST_INFO_OBJECT (element, " %" G_GSIZE_FORMAT " bytes extradata",
         gst_buffer_get_size (*data));
 
   gst_buffer_unmap (buf, bdata, bsize);
@@ -536,8 +536,8 @@ gst_riff_parse_strf_auds (GstElement * element,
 too_small:
   {
     GST_ERROR_OBJECT (element,
-        "Too small strf_auds (%d available, %" G_GSSIZE_FORMAT " needed)",
-        bsize, sizeof (gst_riff_strf_auds));
+        "Too small strf_auds (%" G_GSIZE_FORMAT " available"
+        ", %" G_GSSIZE_FORMAT " needed)", bsize, sizeof (gst_riff_strf_auds));
     gst_buffer_unmap (buf, bdata, bsize);
     gst_buffer_unref (buf);
     return FALSE;
@@ -613,8 +613,8 @@ gst_riff_parse_strf_iavs (GstElement * element,
 too_small:
   {
     GST_ERROR_OBJECT (element,
-        "Too small strf_iavs (%d available, %" G_GSSIZE_FORMAT " needed)",
-        bsize, sizeof (gst_riff_strf_iavs));
+        "Too small strf_iavs (%" G_GSIZE_FORMAT "available"
+        ", %" G_GSSIZE_FORMAT " needed)", bsize, sizeof (gst_riff_strf_iavs));
     gst_buffer_unmap (buf, bdata, bsize);
     gst_buffer_unref (buf);
     return FALSE;
@@ -666,7 +666,8 @@ gst_riff_parse_info (GstElement * element,
 
     if (tsize > left) {
       GST_WARNING_OBJECT (element,
-          "Tagsize %d is larger than available data %d", tsize, left);
+          "Tagsize %d is larger than available data %" G_GSIZE_FORMAT,
+          tsize, left);
       tsize = left;
     }
 

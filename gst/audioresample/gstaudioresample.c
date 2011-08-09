@@ -535,8 +535,8 @@ gst_audio_resample_transform_size (GstBaseTransform * base,
   gint inrate, outrate, gcd;
   gint bytes_per_samp, channels;
 
-  GST_LOG_OBJECT (base, "asked to transform size %d in direction %s",
-      size, direction == GST_PAD_SINK ? "SINK" : "SRC");
+  GST_LOG_OBJECT (base, "asked to transform size %" G_GSIZE_FORMAT
+      " in direction %s", size, direction == GST_PAD_SINK ? "SINK" : "SRC");
 
   /* Get sample width -> bytes_per_samp, channels, inrate, outrate */
   ret =
@@ -567,8 +567,9 @@ gst_audio_resample_transform_size (GstBaseTransform * base,
     *othersize *= bytes_per_samp;
   }
 
-  GST_LOG_OBJECT (base, "transformed size %d to %d", size * bytes_per_samp,
-      *othersize);
+  GST_LOG_OBJECT (base,
+      "transformed size %" G_GSIZE_FORMAT " to %" G_GSIZE_FORMAT,
+      size * bytes_per_samp, *othersize);
 
   return ret;
 }
@@ -1162,9 +1163,9 @@ gst_audio_resample_process (GstAudioResample * resample, GstBuffer * inbuf,
 
   GST_LOG_OBJECT (resample,
       "Converted to buffer of %" G_GUINT32_FORMAT
-      " samples (%u bytes) with timestamp %" GST_TIME_FORMAT ", duration %"
-      GST_TIME_FORMAT ", offset %" G_GUINT64_FORMAT ", offset_end %"
-      G_GUINT64_FORMAT, out_processed, out_size,
+      " samples (%" G_GSIZE_FORMAT " bytes) with timestamp %" GST_TIME_FORMAT
+      ", duration %" GST_TIME_FORMAT ", offset %" G_GUINT64_FORMAT
+      ", offset_end %" G_GUINT64_FORMAT, out_processed, out_size,
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)),
       GST_BUFFER_OFFSET (outbuf), GST_BUFFER_OFFSET_END (outbuf));

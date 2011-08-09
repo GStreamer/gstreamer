@@ -225,7 +225,7 @@ gst_ogg_avi_parse_setcaps (GstPad * pad, GstCaps * caps)
   ptr = data;
   left = size;
 
-  GST_LOG_OBJECT (ogg, "configuring codec_data of size %u", left);
+  GST_LOG_OBJECT (ogg, "configuring codec_data of size %" G_GSIZE_FORMAT, left);
 
   /* skip headers */
   ptr += 22;

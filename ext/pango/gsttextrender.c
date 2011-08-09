@@ -488,7 +488,7 @@ gst_text_render_chain (GstPad * pad, GstBuffer * inbuf)
   }
 
   /* render text */
-  GST_DEBUG ("rendering '%*s'", size, data);
+  GST_DEBUG ("rendering '%*s'", (gint) size, data);
   pango_layout_set_markup (render->layout, (gchar *) data, size);
   gst_text_render_render_pangocairo (render);
   gst_buffer_unmap (inbuf, data, size);

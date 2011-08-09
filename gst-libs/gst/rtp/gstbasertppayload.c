@@ -815,11 +815,10 @@ gst_basertppayload_prepare_push (GstBaseRTPPayload * payload,
   priv->next_seqnum = data.seqnum;
   payload->timestamp = data.rtptime;
 
-  GST_LOG_OBJECT (payload,
-      "Preparing to push packet with size %d, seq=%d, rtptime=%u, timestamp %"
-      GST_TIME_FORMAT, (is_list) ? -1 :
-      gst_buffer_get_size (GST_BUFFER (obj)), payload->seqnum, data.rtptime,
-      GST_TIME_ARGS (data.timestamp));
+  GST_LOG_OBJECT (payload, "Preparing to push packet with size %"
+      G_GSIZE_FORMAT ", seq=%d, rtptime=%u, timestamp %" GST_TIME_FORMAT,
+      (is_list) ? -1 : gst_buffer_get_size (GST_BUFFER (obj)),
+      payload->seqnum, data.rtptime, GST_TIME_ARGS (data.timestamp));
 
   if (g_atomic_int_compare_and_exchange (&payload->priv->
           notified_first_timestamp, 1, 0)) {

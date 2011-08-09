@@ -142,7 +142,6 @@ cycle_window (GstVideoOverlay * ov)
 static GstBusSyncReply
 create_window (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
 {
-  const GstStructure *s;
   GstVideoOverlay *ov = NULL;
 
   if (!gst_is_video_overlay_prepare_window_handle_message (message))

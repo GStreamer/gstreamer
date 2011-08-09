@@ -619,7 +619,7 @@ gst_tag_demux_chain (GstPad * pad, GstBuffer * buf)
           TYPE_FIND_MIN_SIZE + demux->priv->strip_start)
         break;                  /* Go get more data first */
 
-      GST_DEBUG_OBJECT (demux, "Typefinding with size %d",
+      GST_DEBUG_OBJECT (demux, "Typefinding with size %" G_GSIZE_FORMAT,
           demux->priv->collect_size);
 
       /* Trim the buffer and adjust offset for typefinding */
@@ -914,8 +914,8 @@ gst_tag_demux_pull_end_tag (GstTagDemux * demux, GstTagList ** tags)
   bsize = gst_buffer_get_size (buffer);
 
   if (bsize < klass->min_end_size) {
-    GST_DEBUG_OBJECT (demux, "Only managed to read %u bytes from file "
-        "(required: %u bytes)", bsize, klass->min_end_size);
+    GST_DEBUG_OBJECT (demux, "Only managed to read %" G_GSIZE_FORMAT " bytes"
+        "from file (required: %u bytes)", bsize, klass->min_end_size);
     goto done;
   }
 
@@ -956,8 +956,8 @@ gst_tag_demux_pull_end_tag (GstTagDemux * demux, GstTagList ** tags)
       bsize = gst_buffer_get_size (buffer);
 
       if (bsize < tagsize) {
-        GST_DEBUG_OBJECT (demux, "Only managed to read %u bytes from file",
-            bsize);
+        GST_DEBUG_OBJECT (demux, "Only managed to read %" G_GSIZE_FORMAT
+            " bytes from file", bsize);
         goto done;
       }
     }
@@ -1043,8 +1043,8 @@ gst_tag_demux_pull_start_tag (GstTagDemux * demux, GstTagList ** tags)
   bsize = gst_buffer_get_size (buffer);
 
   if (bsize < klass->min_start_size) {
-    GST_DEBUG_OBJECT (demux, "Only managed to read %u bytes from file - "
-        "no tag in this file", bsize);
+    GST_DEBUG_OBJECT (demux, "Only managed to read %" G_GSIZE_FORMAT
+        " bytes from file - no tag in this file", bsize);
     goto done;
   }
 
@@ -1080,8 +1080,8 @@ gst_tag_demux_pull_start_tag (GstTagDemux * demux, GstTagList ** tags)
       bsize = gst_buffer_get_size (buffer);
 
       if (bsize < tagsize) {
-        GST_DEBUG_OBJECT (demux, "Only managed to read %u bytes from file",
-            bsize);
+        GST_DEBUG_OBJECT (demux, "Only managed to read %" G_GSIZE_FORMAT
+            " bytes from file", bsize);
         GST_ELEMENT_ERROR (demux, STREAM, DECODE,
             (_("Failed to read tag: not enough data")), (NULL));
         goto done;

@@ -1391,7 +1391,7 @@ gst_multi_fd_sink_client_queue_buffer (GstMultiFdSink * sink,
         g_assert (G_VALUE_TYPE (bufval) == GST_TYPE_BUFFER);
         buffer = g_value_peek_pointer (bufval);
         GST_DEBUG_OBJECT (sink,
-            "[fd %5d] queueing streamheader buffer of length %d",
+            "[fd %5d] queueing streamheader buffer of length %" G_GSIZE_FORMAT,
             client->fd.fd, gst_buffer_get_size (buffer));
         gst_buffer_ref (buffer);
 
@@ -1403,7 +1403,7 @@ gst_multi_fd_sink_client_queue_buffer (GstMultiFdSink * sink,
   gst_caps_unref (caps);
   caps = NULL;
 
-  GST_LOG_OBJECT (sink, "[fd %5d] queueing buffer of length %d",
+  GST_LOG_OBJECT (sink, "[fd %5d] queueing buffer of length %" G_GSIZE_FORMAT,
       client->fd.fd, gst_buffer_get_size (buffer));
 
   gst_buffer_ref (buffer);
@@ -2560,9 +2560,8 @@ gst_multi_fd_sink_render (GstBaseSink * bsink, GstBuffer * buf)
    * We don't send the buffer to the client, since streamheaders are sent
    * separately when necessary. */
   if (in_caps) {
-    GST_DEBUG_OBJECT (sink,
-        "appending IN_CAPS buffer with length %d to streamheader",
-        gst_buffer_get_size (buf));
+    GST_DEBUG_OBJECT (sink, "appending IN_CAPS buffer with length %"
+        G_GSIZE_FORMAT " to streamheader", gst_buffer_get_size (buf));
     sink->streamheader = g_slist_append (sink->streamheader, buf);
   } else {
     /* queue the buffer, this is a regular data buffer. */

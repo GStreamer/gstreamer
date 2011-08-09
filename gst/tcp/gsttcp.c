@@ -226,7 +226,7 @@ gst_tcp_read_buffer (GstElement * this, int socket, GstPoll * fdset,
     GstBuffer ** buf)
 {
   int ret;
-  ssize_t bytes_read;
+  gssize bytes_read;
   int readsize;
   guint8 *data;
 
@@ -263,7 +263,8 @@ gst_tcp_read_buffer (GstElement * this, int socket, GstPoll * fdset,
     /* but mom, you promised to give me readsize bytes! */
     goto short_read;
 
-  GST_LOG_OBJECT (this, "returning buffer of size %d", bytes_read);
+  GST_LOG_OBJECT (this,
+      "returning buffer of size %" G_GSSIZE_FORMAT, bytes_read);
   return GST_FLOW_OK;
 
   /* ERRORS */

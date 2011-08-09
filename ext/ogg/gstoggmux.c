@@ -1053,7 +1053,7 @@ gst_ogg_mux_set_header_on_caps (GstCaps * caps, GList * buffers)
     walk = walk->next;
 
     /* mark buffer */
-    GST_LOG ("Setting IN_CAPS on buffer of length %d",
+    GST_LOG ("Setting IN_CAPS on buffer of length %" G_GSIZE_FORMAT,
         gst_buffer_get_size (buf));
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_IN_CAPS);
 

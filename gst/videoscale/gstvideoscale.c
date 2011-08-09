@@ -430,8 +430,9 @@ gst_video_scale_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
   gst_base_transform_set_passthrough (trans,
       (in_info.width == out_info.width && in_info.height == out_info.height));
 
-  GST_DEBUG_OBJECT (videoscale, "from=%dx%d (par=%d/%d dar=%d/%d), size %d "
-      "-> to=%dx%d (par=%d/%d dar=%d/%d borders=%d:%d), size %d",
+  GST_DEBUG_OBJECT (videoscale, "from=%dx%d (par=%d/%d dar=%d/%d), size %"
+      G_GSIZE_FORMAT " -> to=%dx%d (par=%d/%d dar=%d/%d borders=%d:%d), "
+      "size %" G_GSIZE_FORMAT,
       in_info.width, in_info.height, out_info.par_n, out_info.par_d,
       from_dar_n, from_dar_d, in_info.size, out_info.width,
       out_info.height, out_info.par_n, out_info.par_d, to_dar_n, to_dar_d,
@@ -1248,7 +1249,7 @@ gst_video_scale_transform (GstBaseTransform * trans, GstBuffer * in,
       goto unsupported;
   }
 
-  GST_LOG_OBJECT (videoscale, "pushing buffer of %d bytes",
+  GST_LOG_OBJECT (videoscale, "pushing buffer of %" G_GSIZE_FORMAT " bytes",
       gst_buffer_get_size (out));
 
 done:

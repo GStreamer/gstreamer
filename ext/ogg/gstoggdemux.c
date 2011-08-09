@@ -1432,8 +1432,8 @@ no_buffer:
   }
 write_failed:
   {
-    GST_ELEMENT_ERROR (ogg, STREAM, DECODE,
-        (NULL), ("failed to write %d bytes to the sync buffer", size));
+    GST_ELEMENT_ERROR (ogg, STREAM, DECODE, (NULL),
+        ("failed to write %" G_GSIZE_FORMAT " bytes to the sync buffer", size));
     ret = GST_FLOW_ERROR;
     goto done;
   }

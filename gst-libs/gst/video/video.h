@@ -356,7 +356,7 @@ struct _GstVideoInfo {
   GstVideoFlags             flags;
   gint                      width;
   gint                      height;
-  guint                     size;
+  gsize                     size;
 
   const gchar              *color_matrix;
   const gchar              *chroma_site;

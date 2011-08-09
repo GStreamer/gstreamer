@@ -1429,9 +1429,8 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   if (!GST_CLOCK_TIME_IS_VALID (time)) {
     render_start = gst_base_audio_sink_get_offset (sink);
     render_stop = render_start + samples;
-    GST_DEBUG_OBJECT (sink,
-        "Buffer of size %u has no time. Using render_start=%" G_GUINT64_FORMAT,
-        size, render_start);
+    GST_DEBUG_OBJECT (sink, "Buffer of size %" G_GSIZE_FORMAT " has no time."
+        " Using render_start=%" G_GUINT64_FORMAT, size, render_start);
     /* we don't have a start so we don't know stop either */
     stop = -1;
     goto no_sync;
@@ -1783,7 +1782,7 @@ gst_base_audio_sink_callback (GstRingBuffer * rbuf, guint8 * data, guint len,
 
   /* would be nice to arrange for pad_alloc_buffer to return data -- as it is we
      will copy twice, once into data, once into DMA */
-  GST_LOG_OBJECT (basesink, "pulling %d bytes offset %" G_GUINT64_FORMAT
+  GST_LOG_OBJECT (basesink, "pulling %u bytes offset %" G_GUINT64_FORMAT
       " to fill audio buffer", len, basesink->offset);
   ret =
       gst_pad_pull_range (basesink->sinkpad, basesink->segment.position, len,
@@ -1809,7 +1808,8 @@ gst_base_audio_sink_callback (GstRingBuffer * rbuf, guint8 * data, guint len,
 
   if (len != size) {
     GST_INFO_OBJECT (basesink,
-        "got different size than requested from sink pad: %u != %u", len, size);
+        "got different size than requested from sink pad: %u"
+        " != %" G_GSIZE_FORMAT, len, size);
     len = MIN (size, len);
   }
 

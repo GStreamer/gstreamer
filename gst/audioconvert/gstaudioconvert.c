@@ -1143,7 +1143,8 @@ wrong_size:
   {
     GST_ELEMENT_ERROR (this, STREAM, FORMAT,
         (NULL),
-        ("input/output buffers are of wrong size in: %d < %d or out: %d < %d",
+        ("input/output buffers are of wrong size in: %" G_GSIZE_FORMAT " < %d"
+            " or out: %" G_GSIZE_FORMAT " < %d",
             srcsize, insize, dstsize, outsize));
     ret = GST_FLOW_ERROR;
     goto done;

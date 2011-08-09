@@ -841,7 +841,7 @@ gst_vorbis_enc_buffer_from_packet (GstVorbisEnc * vorbisenc,
     vorbisenc->next_discont = FALSE;
   }
 
-  GST_LOG_OBJECT (vorbisenc, "encoded buffer of %d bytes",
+  GST_LOG_OBJECT (vorbisenc, "encoded buffer of %" G_GSIZE_FORMAT " bytes",
       gst_buffer_get_size (outbuf));
   return outbuf;
 }
@@ -861,7 +861,7 @@ gst_vorbis_enc_buffer_from_header_packet (GstVorbisEnc * vorbisenc,
   GST_BUFFER_TIMESTAMP (outbuf) = GST_CLOCK_TIME_NONE;
   GST_BUFFER_DURATION (outbuf) = GST_CLOCK_TIME_NONE;
 
-  GST_DEBUG ("created header packet buffer, %d bytes",
+  GST_DEBUG ("created header packet buffer, %" G_GSIZE_FORMAT " bytes",
       gst_buffer_get_size (outbuf));
   return outbuf;
 }

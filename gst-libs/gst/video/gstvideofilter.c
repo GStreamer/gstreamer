@@ -86,8 +86,8 @@ gst_video_filter_get_unit_size (GstBaseTransform * btrans, GstCaps * caps,
 
   *size = info.size;
 
-  GST_DEBUG_OBJECT (btrans, "Returning size %u bytes for caps %"
-      GST_PTR_FORMAT, *size, caps);
+  GST_DEBUG_OBJECT (btrans, "Returning size %" G_GSIZE_FORMAT " bytes"
+      "for caps %" GST_PTR_FORMAT, *size, caps);
 
   return TRUE;
 }

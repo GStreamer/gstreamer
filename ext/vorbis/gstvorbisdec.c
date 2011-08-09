@@ -900,8 +900,8 @@ vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet,
     goto done;
 
   size = sample_count * vd->vi.channels * vd->width;
-  GST_LOG_OBJECT (vd, "%d samples ready for reading, size %d", sample_count,
-      size);
+  GST_LOG_OBJECT (vd, "%d samples ready for reading, size %" G_GSIZE_FORMAT,
+      sample_count, size);
 
   /* alloc buffer for it */
   out = gst_buffer_new_and_alloc (size);
@@ -923,7 +923,7 @@ vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet,
       sample_count, vd->vi.channels, vd->width);
 #endif
 
-  GST_LOG_OBJECT (vd, "setting output size to %d", size);
+  GST_LOG_OBJECT (vd, "setting output size to %" G_GSIZE_FORMAT, size);
   gst_buffer_unmap (out, data, size);
 
   /* this should not overflow */
@@ -1284,8 +1284,9 @@ vorbis_dec_chain_reverse (GstVorbisDec * vd, gboolean discont, GstBuffer * buf)
 
   if (G_LIKELY (buf)) {
     GST_DEBUG_OBJECT (vd,
-        "gathering buffer %p of size %u, time %" GST_TIME_FORMAT
-        ", dur %" GST_TIME_FORMAT, buf, gst_buffer_get_size (buf),
+        "gathering buffer %p of size %" G_GSIZE_FORMAT
+        ", time %" GST_TIME_FORMAT ", dur %" GST_TIME_FORMAT,
+        buf, gst_buffer_get_size (buf),
         GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
         GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
 
