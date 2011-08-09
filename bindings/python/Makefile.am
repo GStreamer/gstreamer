@@ -33,7 +33,7 @@ CLEANFILES = ges.c
 
 .defs.c: 
 	($(PYTHON) $(srcdir)/codegen/codegen.py \
-		--load-types $(srcdir)/codegen/argtypes.py \
+		--load-types $(srcdir)/arg-types.py \
 		--register $(srcdir)/ges-types.defs \
 		--override $(srcdir)/$*.override \
 		--prefix pyges $<) > gen-$*.c \
