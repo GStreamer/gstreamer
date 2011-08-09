@@ -1072,6 +1072,31 @@
   )
 )
 
+(define-method move_to_layer
+  (of-object "GESTimelineObject")
+  (c-name "ges_timeline_object_move_to_layer")
+  (return-type "gboolean")
+  (parameters
+    '("GESTimelineLayer*" "layer")
+  )
+)
+
+(define-method is_moving_from_layer
+  (of-object "GESTimelineObject")
+  (c-name "ges_timeline_object_is_moving_from_layer")
+  (return-type "gboolean")
+)
+
+(define-method set_moving_from_layer
+  (of-object "GESTimelineObject")
+  (c-name "ges_timeline_object_set_moving_from_layer")
+  (return-type "none")
+  (parameters
+    '("gboolean" "is_moving")
+  )
+)
+
+
 
 
 ;; From ges-timeline-operation.h
