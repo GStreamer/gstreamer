@@ -27,16 +27,18 @@ typedef struct
   char *name;
 } transition_type;
 
-GESTimelineObject *make_source (char *path, guint64 start, guint64 duration,
-    gint priority);
+GESTimelineObject *make_source (gchar * path, guint64 start, guint64 inpoint,
+    guint64 duration, gint priority);
 
 gboolean print_transition_data (GESTimelineObject * tr);
 
-GESTimelinePipeline *make_timeline (char *nick, double tdur, char *patha,
-    float adur, char *pathb, float bdur);
+GESTimelinePipeline *make_timeline (gchar * nick, double tdur, gchar * patha,
+    gfloat adur, gdouble ainpoint, gchar * pathb, gfloat bdur,
+    gdouble binpoint);
 
 GESTimelineObject *
-make_source (char *path, guint64 start, guint64 duration, gint priority)
+make_source (gchar * path, guint64 start, guint64 duration, guint64 inpoint,
+    gint priority)
 {
   char *uri = g_strdup_printf ("file://%s", path);
 
@@ -46,7 +48,7 @@ make_source (char *path, guint64 start, guint64 duration, gint priority)
   g_object_set (ret,
       "start", (guint64) start,
       "duration", (guint64) duration,
-      "priority", (guint32) priority, "in-point", (guint64) 0, NULL);
+      "priority", (guint32) priority, "in-point", (guint64) inpoint, NULL);
 
   g_free (uri);
 
@@ -89,15 +91,15 @@ print_transition_data (GESTimelineObject * tr)
 }
 
 GESTimelinePipeline *
-make_timeline (char *nick, double tdur, char *patha, float adur,
-    char *pathb, float bdur)
+make_timeline (gchar * nick, gdouble tdur, gchar * patha, gfloat adur,
+    gdouble ainp, gchar * pathb, gfloat bdur, gdouble binp)
 {
   GESTimeline *timeline;
   GESTrack *trackv, *tracka;
   GESTimelineLayer *layer1;
   GESTimelineObject *srca, *srcb;
   GESTimelinePipeline *pipeline;
-  guint64 aduration, bduration, tduration, tstart;
+  guint64 aduration, bduration, tduration, tstart, ainpoint, binpoint;
   GESTimelineStandardTransition *tr = NULL;
 
   pipeline = ges_timeline_pipeline_new ();
@@ -122,9 +124,11 @@ make_timeline (char *nick, double tdur, char *patha, float adur,
   aduration = (guint64) (adur * GST_SECOND);
   bduration = (guint64) (bdur * GST_SECOND);
   tduration = (guint64) (tdur * GST_SECOND);
+  ainpoint = (guint64) (ainp * GST_SECOND);
+  binpoint = (guint64) (binp * GST_SECOND);
   tstart = aduration - tduration;
-  srca = make_source (patha, 0, aduration, 1);
-  srcb = make_source (pathb, tstart, bduration, 2);
+  srca = make_source (patha, 0, aduration, ainpoint, 1);
+  srcb = make_source (pathb, tstart, bduration, binpoint, 2);
   ges_timeline_layer_add_object (layer1, srca);
   ges_timeline_layer_add_object (layer1, srcb);
   g_timeout_add_seconds (1, (GSourceFunc) print_transition_data, srca);
@@ -155,7 +159,8 @@ main (int argc, char **argv)
   GESTimelinePipeline *pipeline;
   GMainLoop *mainloop;
   gchar *type = (gchar *) "crossfade";
-  gdouble adur, bdur, tdur;
+  gchar *patha, *pathb;
+  gdouble adur, bdur, tdur, ainpoint, binpoint;
 
   GOptionEntry options[] = {
     {"type", 't', 0, G_OPTION_ARG_STRING, &type,
@@ -169,6 +174,10 @@ main (int argc, char **argv)
     g_thread_init (NULL);
 
   ctx = g_option_context_new ("- transition between two media files");
+  g_option_context_set_summary (ctx,
+      "Select two files, and optionally a transition duration and type.\n"
+      "A file is a triplet of filename, inpoint (in seconds) and duration (in seconds).\n"
+      "Example:\n" "transition file1.avi 0 5 file2.avi 25 5 -d 2 -t crossfade");
   g_option_context_add_main_entries (ctx, options, NULL);
   g_option_context_add_group (ctx, gst_init_get_option_group ());
 
@@ -186,11 +195,15 @@ main (int argc, char **argv)
 
   ges_init ();
 
+  patha = argv[1];
+  ainpoint = (gdouble) atof (argv[2]);
+  adur = (gdouble) atof (argv[3]);
+  pathb = argv[4];
+  binpoint = (gdouble) atof (argv[5]);
+  bdur = (gdouble) atof (argv[6]);
 
-  adur = (gdouble) atof (argv[2]);
-  bdur = (gdouble) atof (argv[4]);
-
-  pipeline = make_timeline (type, tdur, argv[1], adur, argv[3], bdur);
+  pipeline =
+      make_timeline (type, tdur, patha, adur, ainpoint, pathb, bdur, binpoint);
 
   mainloop = g_main_loop_new (NULL, FALSE);
   g_timeout_add_seconds ((adur + bdur) + 1, (GSourceFunc) g_main_loop_quit,
