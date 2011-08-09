@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) 2011 David A. Schleef <ds@schleef.org>
+ * Copyright (C) 2011 David Schleef <ds@entropywave.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -23,6 +23,8 @@
 
 #include "gstinteraudiosrc.h"
 #include "gstinteraudiosink.h"
+#include "gstintersubsrc.h"
+#include "gstintersubsink.h"
 #include "gstintervideosrc.h"
 #include "gstintervideosink.h"
 #include "gstintersurface.h"
@@ -34,6 +36,10 @@ plugin_init (GstPlugin * plugin)
       GST_TYPE_INTER_AUDIO_SRC);
   gst_element_register (plugin, "interaudiosink", GST_RANK_NONE,
       GST_TYPE_INTER_AUDIO_SINK);
+  gst_element_register (plugin, "intersubsrc", GST_RANK_NONE,
+      GST_TYPE_INTER_SUB_SRC);
+  gst_element_register (plugin, "intersubsink", GST_RANK_NONE,
+      GST_TYPE_INTER_SUB_SINK);
   gst_element_register (plugin, "intervideosrc", GST_RANK_NONE,
       GST_TYPE_INTER_VIDEO_SRC);
   gst_element_register (plugin, "intervideosink", GST_RANK_NONE,

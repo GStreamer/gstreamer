@@ -45,6 +45,7 @@ struct _GstInterSurface
   int n_channels;
 
   GstBuffer *video_buffer;
+  GstBuffer *sub_buffer;
   GstAdapter *audio_adapter;
 };
 

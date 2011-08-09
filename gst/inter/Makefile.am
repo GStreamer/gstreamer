@@ -5,6 +5,8 @@ noinst_PROGRAMS = gstintertest
 libgstinter_la_SOURCES = \
 	gstinteraudiosink.c \
 	gstinteraudiosrc.c \
+	gstintersubsink.c \
+	gstintersubsrc.c \
 	gstintervideosink.c \
 	gstintervideosrc.c \
 	gstinter.c \
@@ -13,6 +15,8 @@ libgstinter_la_SOURCES = \
 noinst_HEADERS = \
 	gstinteraudiosink.h \
 	gstinteraudiosrc.h \
+	gstintersubsink.h \
+	gstintersubsrc.h \
 	gstintervideosink.h \
 	gstintervideosrc.h \
 	gstintersurface.h
