@@ -6379,8 +6379,12 @@ mxf_descriptive_metadata_new (guint8 scheme, guint32 type,
   _MXFDescriptiveMetadataScheme *s = NULL;
   MXFDescriptiveMetadata *ret = NULL;
 
-  g_return_val_if_fail (type != 0, NULL);
   g_return_val_if_fail (primer != NULL, NULL);
+
+  if (G_UNLIKELY (type == 0)) {
+    GST_WARNING ("Type 0 is invalid");
+    return NULL;
+  }
 
   for (i = 0; i < _dm_schemes->len; i++) {
     _MXFDescriptiveMetadataScheme *data =
