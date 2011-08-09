@@ -664,7 +664,7 @@ gst_event_parse_new_segment_full (GstEvent * event, gboolean * update,
         g_value_get_double (gst_structure_id_get_value (structure,
             GST_QUARK (APPLIED_RATE)));
   if (G_LIKELY (format))
-    *format =
+    *format = (GstFormat)
         g_value_get_enum (gst_structure_id_get_value (structure,
             GST_QUARK (FORMAT)));
   if (G_LIKELY (start))
@@ -776,7 +776,7 @@ gst_event_parse_buffer_size (GstEvent * event, GstFormat * format,
 
   structure = event->structure;
   if (format)
-    *format =
+    *format = (GstFormat)
         g_value_get_enum (gst_structure_id_get_value (structure,
             GST_QUARK (FORMAT)));
   if (minsize)
@@ -940,7 +940,7 @@ gst_event_parse_qos_full (GstEvent * event, GstQOSType * type,
 
   structure = event->structure;
   if (type)
-    *type =
+    *type = (GstQOSType)
         g_value_get_enum (gst_structure_id_get_value (structure,
             GST_QUARK (TYPE)));
   if (proportion)
@@ -1068,15 +1068,15 @@ gst_event_parse_seek (GstEvent * event, gdouble * rate,
         g_value_get_double (gst_structure_id_get_value (structure,
             GST_QUARK (RATE)));
   if (format)
-    *format =
+    *format = (GstFormat)
         g_value_get_enum (gst_structure_id_get_value (structure,
             GST_QUARK (FORMAT)));
   if (flags)
-    *flags =
+    *flags = (GstSeekFlags)
         g_value_get_flags (gst_structure_id_get_value (structure,
             GST_QUARK (FLAGS)));
   if (start_type)
-    *start_type =
+    *start_type = (GstSeekType)
         g_value_get_enum (gst_structure_id_get_value (structure,
             GST_QUARK (CUR_TYPE)));
   if (start)
@@ -1084,7 +1084,7 @@ gst_event_parse_seek (GstEvent * event, gdouble * rate,
         g_value_get_int64 (gst_structure_id_get_value (structure,
             GST_QUARK (CUR)));
   if (stop_type)
-    *stop_type =
+    *stop_type = (GstSeekType)
         g_value_get_enum (gst_structure_id_get_value (structure,
             GST_QUARK (STOP_TYPE)));
   if (stop)
@@ -1234,7 +1234,8 @@ gst_event_parse_step (GstEvent * event, GstFormat * format, guint64 * amount,
 
   structure = event->structure;
   if (format)
-    *format = g_value_get_enum (gst_structure_id_get_value (structure,
+    *format =
+        (GstFormat) g_value_get_enum (gst_structure_id_get_value (structure,
             GST_QUARK (FORMAT)));
   if (amount)
     *amount = g_value_get_uint64 (gst_structure_id_get_value (structure,
