@@ -309,13 +309,13 @@ gst_error_get_message (GQuark domain, gint code)
   const gchar *message = NULL;
 
   if (domain == GST_CORE_ERROR)
-    message = gst_error_get_core_error (code);
+    message = gst_error_get_core_error ((GstCoreError) code);
   else if (domain == GST_LIBRARY_ERROR)
-    message = gst_error_get_library_error (code);
+    message = gst_error_get_library_error ((GstLibraryError) code);
   else if (domain == GST_RESOURCE_ERROR)
-    message = gst_error_get_resource_error (code);
+    message = gst_error_get_resource_error ((GstResourceError) code);
   else if (domain == GST_STREAM_ERROR)
-    message = gst_error_get_stream_error (code);
+    message = gst_error_get_stream_error ((GstStreamError) code);
   else {
     g_warning ("No error messages for domain %s", g_quark_to_string (domain));
     return g_strdup_printf (_("No error message for domain %s."),
