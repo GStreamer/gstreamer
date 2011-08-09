@@ -77,7 +77,7 @@ debug_dump_get_element_state (GstElement * element)
 {
   gchar *state_name = NULL;
   const gchar *state_icons = "~0-=>";
-  GstState state = 0, pending = 0;
+  GstState state = GST_STATE_VOID_PENDING, pending = GST_STATE_VOID_PENDING;
 
   gst_element_get_state (element, &state, &pending, 0);
   if (pending == GST_STATE_VOID_PENDING) {
