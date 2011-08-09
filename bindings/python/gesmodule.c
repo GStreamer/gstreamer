@@ -5,6 +5,7 @@
 #include <Python.h>
 #include <pygobject.h>
 #include <pyglib.h>
+#include <pygst/pygst.h>
 
 /* include any extra headers needed here */
 
@@ -24,7 +25,9 @@ initges (void)
   d = PyModule_GetDict (m);
 
   init_pygobject ();
+  pygst_init ();
 
+  pygst_init ();
   pyges_register_classes (d);
 
   /* add anything else to the module dictionary (such as constants) */

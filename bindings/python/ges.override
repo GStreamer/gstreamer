@@ -3,9 +3,11 @@
 headers
 #define NO_IMPORT_PYGOBJECT
 #include <pygobject.h>
+#include <pygst/pygst.h>
 
 #include <gst/gst.h>
 #include <ges/ges.h>
+#include <pygst/pygst.h>
 
 #include <glib.h>
 #include <pyglib.h>
