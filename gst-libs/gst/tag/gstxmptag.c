@@ -175,6 +175,7 @@ xmp_tag_type_get_name (GstXmpTagType tagtype)
     default:
       g_assert_not_reached ();
   }
+  return NULL;                  /* make compiler happy with -DG_DISABLE_ASSERT */
 }
 
 struct _PendingXmpTag
