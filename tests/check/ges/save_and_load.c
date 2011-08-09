@@ -189,6 +189,8 @@ GST_START_TEST (test_keyfile_save)
   KEY ("Object3", "halignment", "center");
   KEY ("Object3", "valignment", "baseline");
   KEY ("Object3", "color", "4294967295");
+  KEY ("Object3", "xpos", "0.5");
+  KEY ("Object3", "ypos", "0.5");
   COMPARE;
 
   /* tear-down */

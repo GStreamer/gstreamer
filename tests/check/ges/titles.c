@@ -122,6 +122,8 @@ GST_START_TEST (test_title_source_in_layer)
   gchar *text;
   gint halign, valign;
   guint32 color;
+  gdouble xpos;
+  gdouble ypos;
 
   ges_init ();
 
@@ -183,6 +185,22 @@ GST_START_TEST (test_title_source_in_layer)
 
   color = ges_track_title_source_get_color (GES_TRACK_TITLE_SOURCE (trobj));
   assert_equals_int (color, 2147483647);
+
+  /* test xpos */
+  g_object_set (source, "xpos", (gdouble) 0.25, NULL);
+  g_object_get (source, "xpos", &xpos, NULL);
+  assert_equals_int (xpos, 0.25);
+
+  xpos = ges_track_title_source_get_xpos (GES_TRACK_TITLE_SOURCE (trobj));
+  assert_equals_int (xpos, 0.25);
+
+  /* test ypos */
+  g_object_set (source, "ypos", (gdouble) 0.66, NULL);
+  g_object_get (source, "ypos", &ypos, NULL);
+  assert_equals_int (ypos, 0.66);
+
+  xpos = ges_track_title_source_get_xpos (GES_TRACK_TITLE_SOURCE (trobj));
+  assert_equals_int (ypos, 0.66);
 
   GST_DEBUG ("removing the source");
 

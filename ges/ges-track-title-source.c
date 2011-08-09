@@ -39,6 +39,8 @@ struct _GESTrackTitleSourcePrivate
   GESTextHAlign halign;
   GESTextVAlign valign;
   guint32 color;
+  gdouble xpos;
+  gdouble ypos;
   GstElement *text_el;
   GstElement *background_el;
 };
@@ -86,6 +88,8 @@ ges_track_title_source_init (GESTrackTitleSource * self)
   self->priv->halign = DEFAULT_HALIGNMENT;
   self->priv->valign = DEFAULT_VALIGNMENT;
   self->priv->color = G_MAXUINT32;
+  self->priv->xpos = 0.5;
+  self->priv->ypos = 0.5;
   self->priv->background_el = NULL;
 }
 
@@ -158,6 +162,8 @@ ges_track_title_source_create_element (GESTrackObject * object)
   g_object_set (background, "pattern", (gint) GES_VIDEO_TEST_PATTERN_BLACK,
       NULL);
   g_object_set (text, "color", (guint32) self->priv->color, NULL);
+  g_object_set (text, "xpos", (gdouble) self->priv->xpos, NULL);
+  g_object_set (text, "ypos", (gdouble) self->priv->ypos, NULL);
 
   gst_bin_add_many (GST_BIN (topbin), background, text, NULL);
 
@@ -275,6 +281,40 @@ ges_track_title_source_set_color (GESTrackTitleSource * self, guint32 color)
 }
 
 /**
+ * ges_track_title_source_set_xpos:
+ * @self: the #GESTrackTitleSource* to set
+ * @position: the horizontal position @self is being set to
+ *
+ * Sets the horizontal position of the text.
+ */
+void
+ges_track_title_source_set_xpos (GESTrackTitleSource * self, gdouble position)
+{
+  GST_DEBUG ("self:%p, xpos:%f", self, position);
+
+  self->priv->xpos = position;
+  if (self->priv->text_el)
+    g_object_set (self->priv->text_el, "xpos", position, NULL);
+}
+
+/**
+ * ges_track_title_source_set_ypos:
+ * @self: the #GESTrackTitleSource* to set
+ * @position: the color @self is being set to
+ *
+ * Sets the vertical position of the text.
+ */
+void
+ges_track_title_source_set_ypos (GESTrackTitleSource * self, gdouble position)
+{
+  GST_DEBUG ("self:%p, ypos:%d", self, position);
+
+  self->priv->ypos = position;
+  if (self->priv->text_el)
+    g_object_set (self->priv->text_el, "ypos", position, NULL);
+}
+
+/**
  * ges_track_title_source_get_text:
  * @source: a #GESTrackTitleSource
  *
@@ -345,6 +385,33 @@ ges_track_title_source_get_color (GESTrackTitleSource * source)
   return source->priv->color;
 }
 
+/**
+ * ges_track_title_source_get_xpos:
+ * @source: a #GESTrackTitleSource
+ *
+ * Get the horizontal position used by @source.
+ *
+ * Returns: The horizontal position used by @source.
+ */
+const gdouble
+ges_track_title_source_get_xpos (GESTrackTitleSource * source)
+{
+  return source->priv->xpos;
+}
+
+/**
+ * ges_track_title_source_get_ypos:
+ * @source: a #GESTrackTitleSource
+ *
+ * Get the vertical position used by @source.
+ *
+ * Returns: The vertical position used by @source.
+ */
+const gdouble
+ges_track_title_source_get_ypos (GESTrackTitleSource * source)
+{
+  return source->priv->ypos;
+}
 
 /**
  * ges_track_title_source_new:
