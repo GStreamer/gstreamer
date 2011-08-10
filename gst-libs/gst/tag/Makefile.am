@@ -75,26 +75,24 @@ endif
 # little program that reads iso_639.xml and outputs tables for us as fallback
 # for when iso-codes are not available (and so we don't have to read the xml
 # just to map codes)
-if USE_ISO_CODES
-ISO_CODE_PROGS = mklangtables
 mklangtables_SOURCES = mklangtables.c
 mklangtables_CFLAGS = $(GST_CFLAGS)
 mklangtables_LDADD = $(GST_LIBS)
-else
-ISO_CODE_PROGS =
-endif
 
-LICENSE_PROGS = mklicensestables
 mklicensestables_SOURCES = mklicensestables.c
 mklicensestables_CFLAGS = $(GST_CFLAGS)
 mklicensestables_LDADD = $(GST_LIBS)
 
-noinst_PROGRAMS = $(ISO_CODE_PROGS) $(LICENSE_PROGS)
+EXTRA_PROGRAMS = mklangtables mklicensestables
+
+update-isocodes: mklangtables
+	$(builddir)/mklangtables > $(srcdir)/lang-tables.dat && \
+		echo "Updated lang-tables.dat"
 
 update-licenses: mklicensestables
 	$(builddir)/mklicensestables \
-		--translation-dictionary=$(builddir)/license-translations.dict \
-		> $(builddir)/licenses-tables.dat && \
+		--translation-dictionary=$(srcdir)/license-translations.dict \
+		> $(srcdir)/licenses-tables.dat && \
 		echo "Updated licenses-tables.dat and license-translations.dict"
 
 #if USE_NLS
