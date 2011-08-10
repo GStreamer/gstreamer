@@ -503,7 +503,6 @@ gst_omx_component_set_state (GstOMXComponent * comp, OMX_STATETYPE state)
   }
 
   comp->pending_state = state;
-  err = OMX_SendCommand (comp->handle, OMX_CommandStateSet, state, NULL);
 
   /* Reset some things */
   if (old_state == OMX_StateExecuting && state < old_state) {
@@ -513,6 +512,13 @@ gst_omx_component_set_state (GstOMXComponent * comp, OMX_STATETYPE state)
     /* Notify all inports that are still waiting */
     g_cond_broadcast (comp->state_cond);
   }
+
+  /* Release lock because the command could call into the callbacks,
+   * which take the lock again */
+  g_mutex_unlock (comp->state_lock);
+  err = OMX_SendCommand (comp->handle, OMX_CommandStateSet, state, NULL);
+  g_mutex_lock (comp->state_lock);
+  /* No need to check if anything has changed here */
 
 done:
   g_mutex_unlock (comp->state_lock);
@@ -1106,12 +1112,30 @@ gst_omx_port_set_flushing (GstOMXPort * port, gboolean flush)
     g_cond_broadcast (comp->state_cond);
     g_mutex_unlock (comp->state_lock);
 
+    /* Now flush the port */
     port->flushed = FALSE;
+    /* Unlock because this could call one of the callbacks which
+     * also take the lock */
+    g_mutex_unlock (port->port_lock);
     err = OMX_SendCommand (comp->handle, OMX_CommandFlush, port->index, NULL);
+    g_mutex_lock (port->port_lock);
+
     if (err != OMX_ErrorNone) {
       GST_ERROR_OBJECT (comp->parent,
           "Error sending flush command to port %u: %s (0x%08x)", port->index,
           gst_omx_error_to_string (err), err);
+      goto done;
+    }
+
+    if ((err = gst_omx_component_get_last_error (comp)) != OMX_ErrorNone) {
+      GST_ERROR_OBJECT (comp->parent,
+          "Component is in error state: %s (0x%08x)",
+          gst_omx_error_to_string (err), err);
+      goto done;
+    }
+
+    if (! !port->flushing != ! !flush) {
+      GST_ERROR_OBJECT (comp->parent, "Another flush happened in the meantime");
       goto done;
     }
 
@@ -1123,12 +1147,14 @@ gst_omx_port_set_flushing (GstOMXPort * port, gboolean flush)
     /* Retry until timeout or until an error happend or
      * until all buffers were released by the component and
      * the flush command completed */
-    do {
+    signalled = TRUE;
+    last_error = OMX_ErrorNone;
+    while (signalled && last_error == OMX_ErrorNone && !port->flushed
+        && port->buffers->len != g_queue_get_length (port->pending_buffers)) {
       signalled = g_cond_timed_wait (port->port_cond, port->port_lock, timeval);
 
       last_error = gst_omx_component_get_last_error (comp);
-    } while (signalled && last_error == OMX_ErrorNone && !port->flushed
-        && port->buffers->len != g_queue_get_length (port->pending_buffers));
+    }
     port->flushed = FALSE;
 
     GST_DEBUG_OBJECT (comp->parent, "Port %d flushed", port->index);
@@ -1433,6 +1459,7 @@ gst_omx_port_set_enabled_unlocked (GstOMXPort * port, gboolean enabled)
 
   port->enabled_changed = FALSE;
 
+  g_mutex_unlock (port->port_lock);
   if (enabled)
     err =
         OMX_SendCommand (comp->handle, OMX_CommandPortEnable, port->index,
@@ -1441,12 +1468,24 @@ gst_omx_port_set_enabled_unlocked (GstOMXPort * port, gboolean enabled)
     err =
         OMX_SendCommand (comp->handle, OMX_CommandPortDisable,
         port->index, NULL);
+  g_mutex_lock (port->port_lock);
 
   if (err != OMX_ErrorNone) {
     GST_ERROR_OBJECT (comp->parent,
         "Failed to send enable/disable command to port %u: %s (0x%08x)",
         port->index, gst_omx_error_to_string (err), err);
     goto error;
+  }
+
+  if ((err = gst_omx_component_get_last_error (comp)) != OMX_ErrorNone) {
+    GST_ERROR_OBJECT (comp->parent, "Component in error state: %s (0x%08x)",
+        gst_omx_error_to_string (err), err);
+    goto done;
+  }
+
+  if (port->enabled_changed) {
+    GST_ERROR_OBJECT (comp->parent, "Port enabled/disabled in the meantime");
+    goto done;
   }
 
   g_get_current_time (&abstimeout);
@@ -1504,8 +1543,6 @@ gst_omx_port_set_enabled_unlocked (GstOMXPort * port, gboolean enabled)
     gst_omx_component_get_parameter (comp, OMX_IndexParamPortDefinition,
         &port->port_def);
   }
-
-  port->enabled_changed = FALSE;
 
   if (!signalled) {
     GST_ERROR_OBJECT (comp->parent,
