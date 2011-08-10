@@ -207,6 +207,16 @@ gst_registry_chunks_save_pad_template (GList ** list,
   return TRUE;
 }
 
+#define VALIDATE_UTF8(__details, __entry)                                   \
+G_STMT_START {                                                              \
+  if (!g_utf8_validate (__details->__entry, -1, NULL)) {                    \
+    g_warning ("Invalid UTF-8 in " G_STRINGIFY (__entry) ": %s",            \
+        __details->__entry);                                                \
+    g_free (__details->__entry);                                            \
+    __details->__entry = g_strdup ("[ERROR: invalid UTF-8]");               \
+  }                                                                         \
+} G_STMT_END
+
 /*
  * gst_registry_chunks_save_feature:
  *
