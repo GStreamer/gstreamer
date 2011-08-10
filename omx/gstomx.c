@@ -971,8 +971,10 @@ retry:
 done:
   g_mutex_unlock (port->port_lock);
 
-  if (_buf)
+  if (_buf) {
+    g_assert (_buf == _buf->omx_buf->pAppPrivate);
     *buf = _buf;
+  }
 
   GST_DEBUG_OBJECT (comp->parent, "Acquired buffer %p from port %u: %d", _buf,
       port->index, ret);
@@ -1008,6 +1010,8 @@ gst_omx_port_release_buffer (GstOMXPort * port, GstOMXBuffer * buf)
         port->index);
     goto done;
   }
+
+  g_assert (buf == buf->omx_buf->pAppPrivate);
 
   /* FIXME: What if the settings cookies don't match? */
 
@@ -1339,6 +1343,7 @@ gst_omx_port_deallocate_buffers_unlocked (GstOMXPort * port)
      * to deallocate as much as possible.
      */
     if (buf->omx_buf) {
+      g_assert (buf == buf->omx_buf->pAppPrivate);
       tmp = OMX_FreeBuffer (comp->handle, port->index, buf->omx_buf);
       if (tmp != OMX_ErrorNone) {
         GST_ERROR_OBJECT (comp->parent,
