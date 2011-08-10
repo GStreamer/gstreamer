@@ -312,8 +312,16 @@ EmptyBufferDone (OMX_HANDLETYPE hComponent, OMX_PTR pAppData,
     OMX_BUFFERHEADERTYPE * pBuffer)
 {
   GstOMXBuffer *buf = pBuffer->pAppPrivate;
-  GstOMXPort *port = buf->port;
-  GstOMXComponent *comp = port->comp;
+  GstOMXPort *port;
+  GstOMXComponent *comp;
+
+  if (buf == NULL) {
+    GST_ERROR ("Have unknown or deallocated buffer %p", pBuffer);
+    return OMX_ErrorNone;
+  }
+
+  port = buf->port;
+  comp = port->comp;
 
   g_assert (buf->omx_buf == pBuffer);
 
@@ -335,8 +343,16 @@ FillBufferDone (OMX_HANDLETYPE hComponent, OMX_PTR pAppData,
     OMX_BUFFERHEADERTYPE * pBuffer)
 {
   GstOMXBuffer *buf = pBuffer->pAppPrivate;
-  GstOMXPort *port = buf->port;
-  GstOMXComponent *comp = port->comp;
+  GstOMXPort *port;
+  GstOMXComponent *comp;
+
+  if (buf == NULL) {
+    GST_ERROR ("Have unknown or deallocated buffer %p", pBuffer);
+    return OMX_ErrorNone;
+  }
+
+  port = buf->port;
+  comp = port->comp;
 
   g_assert (buf->omx_buf == pBuffer);
 
@@ -1344,6 +1360,7 @@ gst_omx_port_deallocate_buffers_unlocked (GstOMXPort * port)
      */
     if (buf->omx_buf) {
       g_assert (buf == buf->omx_buf->pAppPrivate);
+      buf->omx_buf->pAppPrivate = NULL;
       tmp = OMX_FreeBuffer (comp->handle, port->index, buf->omx_buf);
       if (tmp != OMX_ErrorNone) {
         GST_ERROR_OBJECT (comp->parent,
