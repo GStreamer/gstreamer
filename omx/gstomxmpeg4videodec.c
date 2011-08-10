@@ -83,9 +83,7 @@ gst_omx_mpeg4_video_dec_class_init (GstOMXMPEG4VideoDecClass * klass)
 
   videodec_class->default_sink_template_caps = "video/mpeg, "
       "mpegversion=(int) 4, "
-      "systemstream=(boolean) false, "
-      "parsed=(boolean) true, "
-      "width=(int) [ 16, 4096 ], " "height=(int) [ 16, 4096 ]";
+      "systemstream=(boolean) false, " "parsed=(boolean) true";
 }
 
 static void
