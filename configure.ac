@@ -398,6 +398,8 @@ dnl full installation path
 AS_AC_EXPAND(PYTHONDIR, $pythondir)
 AS_AC_EXPAND(PYEXECDIR, $pyexecdir)
 
+PYGST_CFLAGS="-I\$(top_srcdir)/gst -I\$(top_builddir)/gst"
+AC_SUBST(PYGST_CFLAGS)
 dnl add debugging options ...
 # changequote(,)dnl
 # if test "x$GCC" = xyes; then

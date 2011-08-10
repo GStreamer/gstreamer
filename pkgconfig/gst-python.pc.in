@@ -4,7 +4,9 @@ datadir=@datadir@
 pyexecdir=@pyexecdir@
 
 # same here.  Useful when calling the code generator in addon packages.
+pygstincludedir=@includedir@/gstreamer-@GST_MAJORMINOR@
 defsdir=${datadir}/gst-python/@GST_MAJORMINOR@/defs
+codegendir=${datadir}/pygst/0.10/codegen
 
 Name: gst-python
 Description: Python bindings for GStreamer

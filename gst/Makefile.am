@@ -22,8 +22,8 @@ defs_DATA = gst-types.defs \
 	pbutils.defs
 defsdir = $(pkgdatadir)/$(GST_MAJORMINOR)/defs
 
-noinst_HEADERS = common.h pygstvalue.h pygstminiobject.h pygstexception.h \
-	pygst.h pygst-private.h
+pygst_installdir = $(includedir)/gstreamer-@GST_MAJORMINOR@/pygst/
+pygst_install_HEADERS = pygst.h common.h pygstvalue.h pygstminiobject.h pygstexception.h
 
 versioned_overrides = \
 	gst-0.10.21.ignore 	\
