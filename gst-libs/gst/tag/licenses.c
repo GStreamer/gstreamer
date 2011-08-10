@@ -114,6 +114,64 @@ gst_tag_get_license_translations_dictionary (void)
 #endif
 
 #ifdef ENABLE_NLS
+
+#if !GLIB_CHECK_VERSION(2,28,0)
+static GVariant *
+gst_g_variant_lookup_value (GVariant * dictionary, const gchar * key,
+    const GVariantType * expected_type)
+{
+  GVariantIter iter;
+  GVariant *entry;
+  GVariant *value;
+
+  GST_ERROR ("here, using fallback");
+
+  g_assert (g_variant_is_of_type (dictionary, G_VARIANT_TYPE ("a{s*}")));
+  g_assert (expected_type != NULL);
+
+  g_variant_iter_init (&iter, dictionary);
+  while ((entry = g_variant_iter_next_value (&iter))) {
+    GVariant *entry_key;
+    gboolean matches;
+
+    entry_key = g_variant_get_child_value (entry, 0);
+    matches = strcmp (g_variant_get_string (entry_key, NULL), key) == 0;
+    g_variant_unref (entry_key);
+
+    if (matches)
+      break;
+
+    g_variant_unref (entry);
+  }
+
+  if (entry == NULL)
+    return NULL;
+
+  value = g_variant_get_child_value (entry, 1);
+  g_variant_unref (entry);
+
+  if (g_variant_is_of_type (value, G_VARIANT_TYPE_VARIANT)) {
+    GVariant *tmp;
+
+    tmp = g_variant_get_variant (value);
+    g_variant_unref (value);
+
+    if (expected_type && !g_variant_is_of_type (tmp, expected_type)) {
+      g_variant_unref (tmp);
+      tmp = NULL;
+    }
+
+    value = tmp;
+  }
+
+  g_assert (value == NULL || g_variant_is_of_type (value, expected_type));
+
+  return value;
+}
+
+#define g_variant_lookup_value gst_g_variant_lookup_value
+#endif /* !GLIB_CHECK_VERSION(2,28,0) */
+
 static gboolean
 gst_variant_lookup_string_value (GVariant * dict, const gchar * lang,
     const gchar ** translation)
