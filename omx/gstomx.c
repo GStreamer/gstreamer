@@ -475,6 +475,8 @@ gst_omx_component_free (GstOMXComponent * comp)
   g_mutex_free (comp->state_lock);
 
   gst_object_unref (comp->parent);
+
+  g_slice_free (GstOMXComponent, comp);
 }
 
 OMX_ERRORTYPE
