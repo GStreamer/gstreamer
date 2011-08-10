@@ -931,8 +931,8 @@ gst_queue_chain (GstPad * pad, GstBuffer * buffer)
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
   duration = GST_BUFFER_DURATION (buffer);
 
-  GST_CAT_LOG_OBJECT (queue_dataflow, queue,
-      "received buffer %p of size %d, time %" GST_TIME_FORMAT ", duration %"
+  GST_CAT_LOG_OBJECT (queue_dataflow, queue, "received buffer %p of size %"
+      G_GSIZE_FORMAT ", time %" GST_TIME_FORMAT ", duration %"
       GST_TIME_FORMAT, buffer, gst_buffer_get_size (buffer),
       GST_TIME_ARGS (timestamp), GST_TIME_ARGS (duration));
 

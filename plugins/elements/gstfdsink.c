@@ -235,8 +235,8 @@ gst_fd_sink_render (GstBaseSink * sink, GstBuffer * buffer)
 again:
 #ifndef HAVE_WIN32
   do {
-    GST_DEBUG_OBJECT (fdsink, "going into select, have %d bytes to write",
-        size);
+    GST_DEBUG_OBJECT (fdsink, "going into select, have %" G_GSIZE_FORMAT
+        " bytes to write", size);
     retval = gst_poll_wait (fdsink->fdset, GST_CLOCK_TIME_NONE);
   } while (retval == -1 && (errno == EINTR || errno == EAGAIN));
 
@@ -248,8 +248,8 @@ again:
   }
 #endif
 
-  GST_DEBUG_OBJECT (fdsink, "writing %d bytes to file descriptor %d", size,
-      fdsink->fd);
+  GST_DEBUG_OBJECT (fdsink, "writing %" G_GSIZE_FORMAT " bytes to"
+      " file descriptor %d", size, fdsink->fd);
 
   written = write (fdsink->fd, ptr, left);
 

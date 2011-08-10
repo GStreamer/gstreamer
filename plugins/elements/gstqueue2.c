@@ -2123,8 +2123,8 @@ gst_queue2_chain (GstPad * pad, GstBuffer * buffer)
 
   queue = GST_QUEUE2 (GST_OBJECT_PARENT (pad));
 
-  GST_CAT_LOG_OBJECT (queue_dataflow, queue,
-      "received buffer %p of size %d, time %" GST_TIME_FORMAT ", duration %"
+  GST_CAT_LOG_OBJECT (queue_dataflow, queue, "received buffer %p of size %"
+      G_GSIZE_FORMAT ", time %" GST_TIME_FORMAT ", duration %"
       GST_TIME_FORMAT, buffer, gst_buffer_get_size (buffer),
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)));
@@ -2792,7 +2792,7 @@ gst_queue2_src_activate_pull (GstPad * pad, gboolean active)
         result = gst_queue2_open_temp_location_file (queue);
       } else if (!queue->ring_buffer) {
         queue->ring_buffer = g_malloc (queue->ring_buffer_max_size);
-        result = ! !queue->ring_buffer;
+        result = !!queue->ring_buffer;
       } else {
         result = TRUE;
       }

@@ -508,8 +508,8 @@ gst_check_element_push_buffer_list (const gchar * element_name,
     newdata = gst_buffer_map (new, &newsize, NULL, GST_MAP_READ);
     origdata = gst_buffer_map (orig, &origsize, NULL, GST_MAP_READ);
 
-    GST_LOG ("orig buffer: size %u", origsize);
-    GST_LOG ("new  buffer: size %u", newsize);
+    GST_LOG ("orig buffer: size %" G_GSIZE_FORMAT, origsize);
+    GST_LOG ("new  buffer: size %" G_GSIZE_FORMAT, newsize);
     GST_MEMDUMP ("orig buffer", origdata, origsize);
     GST_MEMDUMP ("new  buffer", newdata, newsize);
 

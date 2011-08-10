@@ -633,7 +633,7 @@ gst_type_find_element_setcaps (GstTypeFindElement * typefind, GstCaps * caps)
     buffer = gst_adapter_take_buffer (typefind->adapter, avail);
     GST_OBJECT_UNLOCK (typefind);
 
-    GST_DEBUG_OBJECT (typefind, "Pushing buffer: %d", avail);
+    GST_DEBUG_OBJECT (typefind, "Pushing buffer: %" G_GSIZE_FORMAT, avail);
     gst_pad_push (typefind->src, buffer);
   }
 

@@ -535,7 +535,8 @@ gst_base_transform_transform_size (GstBaseTransform * trans,
 
   klass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
-  GST_DEBUG_OBJECT (trans, "asked to transform size %d for caps %"
+  GST_DEBUG_OBJECT (trans,
+      "asked to transform size %" G_GSIZE_FORMAT " for caps %"
       GST_PTR_FORMAT " to size for caps %" GST_PTR_FORMAT " in direction %s",
       size, caps, othercaps, direction == GST_PAD_SRC ? "SRC" : "SINK");
 
@@ -555,8 +556,9 @@ gst_base_transform_transform_size (GstBaseTransform * trans,
     if (!gst_base_transform_get_unit_size (trans, caps, &inunitsize))
       goto no_in_size;
 
-    GST_DEBUG_OBJECT (trans, "input size %d, input unit size %d", size,
-        inunitsize);
+    GST_DEBUG_OBJECT (trans,
+        "input size %" G_GSIZE_FORMAT ", input unit size %" G_GSIZE_FORMAT,
+        size, inunitsize);
 
     /* input size must be a multiple of the unit_size of the input caps */
     if (inunitsize == 0 || (size % inunitsize != 0))
@@ -572,7 +574,8 @@ gst_base_transform_transform_size (GstBaseTransform * trans,
     /* the output size is the unit_size times the amount of units on the
      * input */
     *othersize = units * outunitsize;
-    GST_DEBUG_OBJECT (trans, "transformed size to %d", *othersize);
+    GST_DEBUG_OBJECT (trans, "transformed size to %" G_GSIZE_FORMAT,
+        *othersize);
 
     ret = TRUE;
   }
@@ -587,8 +590,8 @@ no_in_size:
   }
 no_multiple:
   {
-    GST_DEBUG_OBJECT (trans, "Size %u is not a multiple of unit size %u", size,
-        inunitsize);
+    GST_DEBUG_OBJECT (trans, "Size %" G_GSIZE_FORMAT " is not a multiple of"
+        "unit size %" G_GSIZE_FORMAT, size, inunitsize);
     g_warning ("%s: size %" G_GSIZE_FORMAT " is not a multiple of unit size %"
         G_GSIZE_FORMAT, GST_ELEMENT_NAME (trans), size, inunitsize);
     return FALSE;
@@ -1435,7 +1438,7 @@ default_prepare_output_buffer (GstBaseTransform * trans,
             goto unknown_size;
         }
       }
-      GST_DEBUG_OBJECT (trans, "doing alloc of size %u", outsize);
+      GST_DEBUG_OBJECT (trans, "doing alloc of size %" G_GSIZE_FORMAT, outsize);
       *outbuf =
           gst_buffer_new_allocate (priv->allocator, outsize, priv->alignment);
     }
@@ -1529,31 +1532,36 @@ gst_base_transform_get_unit_size (GstBaseTransform * trans, GstCaps * caps,
   /* see if we have the result cached */
   if (trans->cache_caps1 == caps) {
     *size = trans->cache_caps1_size;
-    GST_DEBUG_OBJECT (trans, "returned %d from first cache", *size);
+    GST_DEBUG_OBJECT (trans,
+        "returned %" G_GSIZE_FORMAT " from first cache", *size);
     return TRUE;
   }
   if (trans->cache_caps2 == caps) {
     *size = trans->cache_caps2_size;
-    GST_DEBUG_OBJECT (trans, "returned %d from second cached", *size);
+    GST_DEBUG_OBJECT (trans,
+        "returned %" G_GSIZE_FORMAT " from second cached", *size);
     return TRUE;
   }
 
   bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
   if (bclass->get_unit_size) {
     res = bclass->get_unit_size (trans, caps, size);
-    GST_DEBUG_OBJECT (trans, "caps %" GST_PTR_FORMAT
-        ") has unit size %d, result %s", caps, *size, res ? "TRUE" : "FALSE");
+    GST_DEBUG_OBJECT (trans,
+        "caps %" GST_PTR_FORMAT ") has unit size %" G_GSIZE_FORMAT ", res %s",
+        caps, *size, res ? "TRUE" : "FALSE");
 
     if (res) {
       /* and cache the values */
       if (trans->cache_caps1 == NULL) {
         gst_caps_replace (&trans->cache_caps1, caps);
         trans->cache_caps1_size = *size;
-        GST_DEBUG_OBJECT (trans, "caching %d in first cache", *size);
+        GST_DEBUG_OBJECT (trans,
+            "caching %" G_GSIZE_FORMAT " in first cache", *size);
       } else if (trans->cache_caps2 == NULL) {
         gst_caps_replace (&trans->cache_caps2, caps);
         trans->cache_caps2_size = *size;
-        GST_DEBUG_OBJECT (trans, "caching %d in second cache", *size);
+        GST_DEBUG_OBJECT (trans,
+            "caching %" G_GSIZE_FORMAT " in second cache", *size);
       } else {
         GST_DEBUG_OBJECT (trans, "no free spot to cache unit_size");
       }

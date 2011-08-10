@@ -2336,7 +2336,7 @@ filter_done:
         GST_PTR_FORMAT, result, result, filter, filter);
     result = gst_caps_intersect_full (filter, result, GST_CAPS_INTERSECT_FIRST);
     GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad, "result %p %" GST_PTR_FORMAT,
-        result);
+        result, result);
   } else {
     GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
         "using caps %p %" GST_PTR_FORMAT, result, result);

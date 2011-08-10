@@ -597,7 +597,7 @@ gst_allocator_register (const gchar * name, const GstMemoryInfo * info)
   INSTALL_FALLBACK (is_span);
 #undef INSTALL_FALLBACK
 
-  GST_DEBUG ("register \"%s\" of size %" G_GSIZE_FORMAT, name);
+  GST_DEBUG ("registering allocator \"%s\"", name);
 
   g_static_rw_lock_writer_lock (&lock);
   g_hash_table_insert (allocators, (gpointer) name, (gpointer) allocator);

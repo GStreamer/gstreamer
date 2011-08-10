@@ -1327,7 +1327,7 @@ no_function:
   }
 alloc_failed:
   {
-    GST_DEBUG_OBJECT (src, "Failed to allocate buffer", size);
+    GST_DEBUG_OBJECT (src, "Failed to allocate buffer of %u bytes", size);
     return ret;
   }
 not_ok:

@@ -632,7 +632,8 @@ gst_file_sink_render (GstBaseSink * sink, GstBuffer * buffer)
 
   data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
 
-  GST_DEBUG_OBJECT (filesink, "writing %u bytes at %" G_GUINT64_FORMAT,
+  GST_DEBUG_OBJECT (filesink,
+      "writing %" G_GSIZE_FORMAT " bytes at %" G_GUINT64_FORMAT,
       size, filesink->current_pos);
 
   if (size > 0 && data != NULL) {

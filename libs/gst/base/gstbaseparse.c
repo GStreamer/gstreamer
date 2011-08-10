@@ -996,7 +996,7 @@ gst_base_parse_sink_eventfunc (GstBaseParse * parse, GstEvent * event)
 
         event = gst_event_new_segment (&out_segment);
 
-        GST_DEBUG_OBJECT (parse, "Converted incoming segment to TIME. "
+        GST_DEBUG_OBJECT (parse, "Converted incoming segment to TIME. %"
             GST_SEGMENT_FORMAT, in_segment);
 
       } else if (in_segment->format != GST_FORMAT_TIME) {
@@ -1646,7 +1646,7 @@ gst_base_parse_handle_and_push_frame (GstBaseParse * parse,
 
   GST_LOG_OBJECT (parse,
       "parsing frame at offset %" G_GUINT64_FORMAT
-      " (%#" G_GINT64_MODIFIER "x) of size %d",
+      " (%#" G_GINT64_MODIFIER "x) of size %" G_GSIZE_FORMAT,
       GST_BUFFER_OFFSET (buffer), GST_BUFFER_OFFSET (buffer),
       gst_buffer_get_size (buffer));
 
@@ -1767,7 +1767,7 @@ gst_base_parse_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
   buffer = frame->buffer;
 
   GST_LOG_OBJECT (parse,
-      "processing buffer of size %d with ts %" GST_TIME_FORMAT
+      "processing buffer of size %" G_GSIZE_FORMAT " with ts %" GST_TIME_FORMAT
       ", duration %" GST_TIME_FORMAT, gst_buffer_get_size (buffer),
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)));
@@ -2062,7 +2062,7 @@ gst_base_parse_process_fragment (GstBaseParse * parse, gboolean push_only)
   parse->priv->buffers_pending = g_slist_reverse (parse->priv->buffers_pending);
   while (parse->priv->buffers_pending) {
     buf = GST_BUFFER_CAST (parse->priv->buffers_pending->data);
-    GST_LOG_OBJECT (parse, "adding pending buffer (size %d)",
+    GST_LOG_OBJECT (parse, "adding pending buffer (size %" G_GSIZE_FORMAT ")",
         gst_buffer_get_size (buf));
     gst_adapter_push (parse->priv->adapter, buf);
     parse->priv->buffers_pending =
@@ -2148,7 +2148,7 @@ push:
 
   /* any trailing unused no longer usable (ideally none) */
   if (G_UNLIKELY (gst_adapter_available (parse->priv->adapter))) {
-    GST_DEBUG_OBJECT (parse, "discarding %d trailing bytes",
+    GST_DEBUG_OBJECT (parse, "discarding %" G_GSIZE_FORMAT " trailing bytes",
         gst_adapter_available (parse->priv->adapter));
     gst_adapter_clear (parse->priv->adapter);
   }
@@ -2190,7 +2190,8 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
   frame = &parse->priv->frame;
 
   if (G_LIKELY (buffer)) {
-    GST_LOG_OBJECT (parse, "buffer size: %d, offset = %" G_GINT64_FORMAT,
+    GST_LOG_OBJECT (parse,
+        "buffer size: %" G_GSIZE_FORMAT ", offset = %" G_GINT64_FORMAT,
         gst_buffer_get_size (buffer), GST_BUFFER_OFFSET (buffer));
     if (G_UNLIKELY (parse->priv->passthrough)) {
       gst_base_parse_frame_init (frame);
@@ -2277,8 +2278,8 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
       gst_buffer_replace (&frame->buffer, NULL);
       if (res) {
         if (gst_adapter_available (parse->priv->adapter) < fsize) {
-          GST_DEBUG_OBJECT (parse,
-              "found valid frame but not enough data available (only %d bytes)",
+          GST_DEBUG_OBJECT (parse, "found valid frame but not enough data"
+              " available (only %" G_GSIZE_FORMAT " bytes)",
               gst_adapter_available (parse->priv->adapter));
           gst_buffer_unref (tmpbuf);
           goto done;
@@ -2443,8 +2444,8 @@ gst_base_parse_pull_range (GstBaseParse * parse, guint size,
 
   if (gst_buffer_get_size (parse->priv->cache) < size) {
     GST_DEBUG_OBJECT (parse, "Returning short buffer at offset %"
-        G_GUINT64_FORMAT ": wanted %u bytes, got %u bytes", parse->priv->offset,
-        size, gst_buffer_get_size (parse->priv->cache));
+        G_GUINT64_FORMAT ": wanted %u bytes, got %" G_GSIZE_FORMAT " bytes",
+        parse->priv->offset, size, gst_buffer_get_size (parse->priv->cache));
 
     *buffer = parse->priv->cache;
     parse->priv->cache = NULL;
@@ -3331,7 +3332,7 @@ gst_base_parse_find_frame (GstBaseParse * parse, gint64 * pos,
   buf = frame.buffer;
   GST_LOG_OBJECT (parse,
       "peek parsing frame at offset %" G_GUINT64_FORMAT
-      " (%#" G_GINT64_MODIFIER "x) of size %d",
+      " (%#" G_GINT64_MODIFIER "x) of size %" G_GSIZE_FORMAT,
       GST_BUFFER_OFFSET (buf), GST_BUFFER_OFFSET (buf),
       gst_buffer_get_size (buf));
 

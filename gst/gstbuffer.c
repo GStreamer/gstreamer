@@ -512,7 +512,8 @@ gst_buffer_new_allocate (const GstAllocator * allocator, gsize size,
   if (mem != NULL)
     _memory_add (newbuf, -1, mem);
 
-  GST_CAT_LOG (GST_CAT_BUFFER, "new %p of size %d from allocator %p", newbuf,
+  GST_CAT_LOG (GST_CAT_BUFFER,
+      "new buffer %p of size %" G_GSIZE_FORMAT " from allocator %p", newbuf,
       size, allocator);
 #endif
 
@@ -563,7 +564,8 @@ gst_buffer_new_allocate (const GstAllocator * allocator, gsize size,
   /* ERRORS */
 no_memory:
   {
-    GST_CAT_WARNING (GST_CAT_BUFFER, "failed to allocate %d bytes", size);
+    GST_CAT_WARNING (GST_CAT_BUFFER,
+        "failed to allocate %" G_GSIZE_FORMAT " bytes", size);
     return NULL;
   }
 }

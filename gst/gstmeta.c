@@ -112,7 +112,8 @@ meta_timing_copy (GstBuffer * copybuf, GstMetaTiming * meta,
 {
   GstMetaTiming *timing;
 
-  GST_DEBUG ("trans called from buffer %p to %p, meta %p, %u-%u", buffer,
+  GST_DEBUG ("trans called from buffer %p to %p, meta %p,"
+      "offset %" G_GSIZE_FORMAT ", size %" G_GSIZE_FORMAT, buffer,
       copybuf, meta, offset, size);
 
   timing = gst_buffer_add_meta_timing (copybuf);
