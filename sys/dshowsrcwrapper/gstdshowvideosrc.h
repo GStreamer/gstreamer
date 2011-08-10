@@ -72,6 +72,13 @@ struct _GstDshowVideoSrc
   IMediaFilter *media_filter;
   IFilterGraph *filter_graph;
 
+  IGraphBuilder	*graph_builder;
+  ICaptureGraphBuilder2 *capture_builder;
+  IAMVideoCompression *pVC;
+  //IAMVfwCaptureDialogs *pDlg;
+  //IAMStreamConfig *pASC;      // for audio cap
+  IAMStreamConfig *pVSC;      // for video cap
+
   /* the last buffer from DirectShow */
   GCond *buffer_cond;
   GMutex *buffer_mutex;

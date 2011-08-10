@@ -199,6 +199,12 @@ gst_dshowvideosrc_init (GstDshowVideoSrc * src, GstDshowVideoSrcClass * klass)
   src->pins_mediatypes = NULL;
   src->is_rgb = FALSE;
 
+  /*added for analog input*/
+  src->graph_builder = NULL;
+  src->capture_builder = NULL;
+  src->pVC = NULL;
+  src->pVSC = NULL;
+
   src->buffer_cond = g_cond_new ();
   src->buffer_mutex = g_mutex_new ();
   src->buffer = NULL;
@@ -610,14 +616,37 @@ gst_dshowvideosrc_start (GstBaseSrc * bsrc)
 {
   HRESULT hres = S_FALSE;
   GstDshowVideoSrc *src = GST_DSHOWVIDEOSRC (bsrc);
+  
+  /*
+  The filter graph now is created via the IGraphBuilder Interface   
+  Code added to build upstream filters, needed for USB Analog TV Tuners / DVD Maker, based on AMCap code.
+  by Fabrice Costa <fabricio.costa@moldeointeractive.com.ar>
+  */
 
-  hres = CoCreateInstance (CLSID_FilterGraph, NULL, CLSCTX_INPROC,
-      IID_IFilterGraph, (LPVOID *) & src->filter_graph);
-  if (hres != S_OK || !src->filter_graph) {
+  hres =  CoCreateInstance(CLSID_FilterGraph, NULL,
+    CLSCTX_INPROC_SERVER, IID_IGraphBuilder, (LPVOID *) & src->graph_builder );
+  if (hres != S_OK || !src->graph_builder ) {
     GST_ERROR
-        ("Can't create an instance of the dshow graph manager (error=0x%x)",
+        ("Can't create an instance of the dshow graph builder (error=0x%x)",
         hres);
     goto error;
+  } else {
+	/*graph builder is derived from IFilterGraph so we can assign it to the old src->filter_graph*/
+	src->filter_graph = (IFilterGraph*) src->graph_builder;
+  }
+  
+  /*adding capture graph builder to correctly create upstream filters, Analog TV, TV Tuner */
+
+  hres = CoCreateInstance(CLSID_CaptureGraphBuilder2, NULL,
+        CLSCTX_INPROC_SERVER, IID_ICaptureGraphBuilder2, 
+        (LPVOID *) & src->capture_builder);
+  if ( hres != S_OK || !src->capture_builder ) {	
+    GST_ERROR
+        ("Can't create an instance of the dshow capture graph builder manager (error=0x%x)",
+        hres);
+	goto error;
+  } else {	
+	src->capture_builder->SetFiltergraph(src->graph_builder);
   }
 
   hres = src->filter_graph->QueryInterface (IID_IMediaFilter,
@@ -639,6 +668,34 @@ gst_dshowvideosrc_start (GstBaseSrc * bsrc)
     goto error;
   }
 
+  /* Finding interfaces really creates the upstream filters */
+
+  hres = src->capture_builder->FindInterface(&PIN_CATEGORY_CAPTURE,
+                                      &MEDIATYPE_Interleaved, src->video_cap_filter, 
+                                      IID_IAMVideoCompression, (LPVOID *)&src->pVC);
+  
+  if(hres != S_OK)
+  {
+	hres = src->capture_builder->FindInterface(&PIN_CATEGORY_CAPTURE,
+                                          &MEDIATYPE_Video, src->video_cap_filter, 
+                                          IID_IAMVideoCompression, (LPVOID *)&src->pVC);
+  }
+  
+  hres = src->capture_builder->FindInterface(&PIN_CATEGORY_CAPTURE,
+                                      &MEDIATYPE_Interleaved,
+                                      src->video_cap_filter, IID_IAMStreamConfig, (LPVOID *)&src->pVSC);
+  if(hres != S_OK)
+  {
+	  hres = src->capture_builder->FindInterface(&PIN_CATEGORY_CAPTURE,
+											&MEDIATYPE_Video, src->video_cap_filter,
+											IID_IAMStreamConfig, (LPVOID *)&src->pVSC);
+	  if (hres != S_OK) {
+		  // this means we can't set frame rate (non-DV only)
+		  GST_ERROR ("Error %x: Cannot find VCapture:IAMStreamConfig",	hres);
+			goto error;
+	  }
+  }
+
   hres = src->filter_graph->AddFilter (src->dshow_fakesink, L"sink");
   if (hres != S_OK) {
     GST_ERROR ("Can't add our fakesink filter to the graph (error=0x%x)", hres);
@@ -657,9 +714,21 @@ error:
     src->media_filter->Release ();
     src->media_filter = NULL;
   }
-  if (src->filter_graph) {
-    src->filter_graph->Release ();
-    src->filter_graph = NULL;
+  if (src->graph_builder) {
+    src->graph_builder->Release ();
+    src->graph_builder = NULL;
+  }
+  if (src->capture_builder) {
+    src->capture_builder->Release ();
+    src->capture_builder = NULL;
+  }
+  if (src->pVC) {
+    src->pVC->Release ();
+    src->pVC = NULL;
+  }
+  if (src->pVSC) {
+    src->pVSC->Release ();
+    src->pVSC = NULL;
   }
 
   return FALSE;
@@ -739,6 +808,7 @@ gst_dshowvideosrc_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
           goto error;
         }
 
+
         hres = src->filter_graph->ConnectDirect (pin_mediatype->capture_pin,
             input_pin, pin_mediatype->mediatype);
         input_pin->Release ();
@@ -810,9 +880,29 @@ gst_dshowvideosrc_stop (GstBaseSrc * bsrc)
   src->media_filter->Release ();
   src->media_filter = NULL;
 
-  /* release the filter graph manager */
-  src->filter_graph->Release ();
-  src->filter_graph = NULL;
+  /* release any upstream filter */
+  if (src->pVC) {
+      src->pVC->Release ();
+      src->pVC = NULL;
+  }
+
+  if (src->pVSC) {
+      src->pVSC->Release ();
+      src->pVSC = NULL;
+  }
+
+/* release the graph builder */
+  if (src->graph_builder) {
+    src->graph_builder->Release ();
+    src->graph_builder = NULL;
+    src->filter_graph = NULL;
+  }
+
+/* release the capture builder */
+  if (src->capture_builder) {
+    src->capture_builder->Release ();
+    src->capture_builder = NULL;
+  }
 
   /* reset caps */
   if (src->caps) {
