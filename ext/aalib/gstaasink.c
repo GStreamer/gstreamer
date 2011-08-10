@@ -234,7 +234,6 @@ static gboolean
 gst_aasink_setcaps (GstBaseSink * basesink, GstCaps * caps)
 {
   GstAASink *aasink;
-  GstStructure *structure;
   GstVideoInfo info;
 
   aasink = GST_AASINK (basesink);
@@ -323,7 +322,6 @@ static GstFlowReturn
 gst_aasink_render (GstBaseSink * basesink, GstBuffer * buffer)
 {
   GstAASink *aasink;
-  guint8 *data;
   GstVideoFrame frame;
 
   aasink = GST_AASINK (basesink);
