@@ -1407,7 +1407,6 @@ do_simple_exif_tag_serialization_deserialization (const gchar * gsttag,
   GstTagList *taglist = gst_tag_list_new ();
 
   gst_tag_list_add_value (taglist, GST_TAG_MERGE_REPLACE, gsttag, value);
-
   do_exif_tag_serialization_deserialization (taglist);
 
   gst_tag_list_free (taglist);
@@ -1465,6 +1464,12 @@ GST_START_TEST (test_exif_tags_serialization_deserialization)
   g_value_set_static_string (&value, "Company Software 1.2b (info)");
   do_simple_exif_tag_serialization_deserialization (GST_TAG_APPLICATION_NAME,
       &value);
+
+  /* non ascii chars */
+  g_value_set_static_string (&value, "AaÄäEeËëIiÏïOoÖöUuÜü");
+  do_simple_exif_tag_serialization_deserialization (GST_TAG_ARTIST, &value);
+  g_value_set_static_string (&value, "Äë");
+  do_simple_exif_tag_serialization_deserialization (GST_TAG_ARTIST, &value);
 
   /* image orientation tests */
   g_value_set_static_string (&value, "rotate-0");
