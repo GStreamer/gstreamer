@@ -260,7 +260,7 @@ EventHandler (OMX_HANDLETYPE hComponent, OMX_PTR pAppData, OMX_EVENTTYPE eEvent,
           port_index);
 
       /* Now update the ports' states */
-      n = comp->ports->len;
+      n = (comp->ports ? comp->ports->len : 0);
       for (i = 0; i < n; i++) {
         GstOMXPort *port = g_ptr_array_index (comp->ports, i);
 
@@ -465,13 +465,15 @@ gst_omx_component_free (GstOMXComponent * comp)
 #else
     g_ptr_array_free (comp->ports, TRUE);
 #endif
+    comp->ports = NULL;
   }
+
+  comp->core->free_handle (comp->handle);
+  gst_omx_core_release (comp->core);
 
   g_cond_free (comp->state_cond);
   g_mutex_free (comp->state_lock);
 
-  comp->core->free_handle (comp->handle);
-  gst_omx_core_release (comp->core);
   gst_object_unref (comp->parent);
 }
 
