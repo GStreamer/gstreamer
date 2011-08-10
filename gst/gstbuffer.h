@@ -412,7 +412,7 @@ typedef enum {
  *
  * Since: 0.10.13
  */
-#define GST_BUFFER_COPY_ALL (GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS | GST_BUFFER_COPY_CAPS)
+#define GST_BUFFER_COPY_ALL ((GstBufferCopyFlags) (GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS | GST_BUFFER_COPY_CAPS))
 
 /* copies metadata into newly allocated buffer */
 void            gst_buffer_copy_metadata        (GstBuffer *dest, const GstBuffer *src,
