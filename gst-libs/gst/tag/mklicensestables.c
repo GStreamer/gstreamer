@@ -606,7 +606,7 @@ create_translation_dict (GHashTable * ht_strings, const gchar * en)
     trans = g_hash_table_lookup (ht_strings, (gpointer) lang);
     if (trans != NULL && *trans != '\0' && strcmp (en, trans) != 0 &&
         !skip_translation (ht_strings, lang, trans)) {
-      g_print ("%s (%s) => %s\n", en, lang, trans);
+      /* g_print ("%s (%s) => %s\n", en, lang, trans); */
       g_variant_builder_add_value (&array,
           g_variant_new_dict_entry (g_variant_new_string (lang),
               g_variant_new_string (trans)));
