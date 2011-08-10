@@ -86,7 +86,6 @@ gst_omx_mpeg4_video_dec_class_init (GstOMXMPEG4VideoDecClass * klass)
       "systemstream=(boolean) false, "
       "parsed=(boolean) true, "
       "width=(int) [ 16, 4096 ], " "height=(int) [ 16, 4096 ]";
-  videodec_class->default_src_template_caps = GST_VIDEO_CAPS_YUV ("I420");
 }
 
 static void

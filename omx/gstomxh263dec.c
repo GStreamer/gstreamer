@@ -82,7 +82,6 @@ gst_omx_h263_dec_class_init (GstOMXH263DecClass * klass)
 
   videodec_class->default_sink_template_caps = "video/x-h263, "
       "parsed=(boolean) true";
-  videodec_class->default_src_template_caps = GST_VIDEO_CAPS_YUV ("I420");
 }
 
 static void

@@ -81,7 +81,6 @@ gst_omx_wmv_dec_class_init (GstOMXWMVDecClass * klass)
   videodec_class->set_format = GST_DEBUG_FUNCPTR (gst_omx_wmv_dec_set_format);
 
   videodec_class->default_sink_template_caps = "video/x-wmv";
-  videodec_class->default_src_template_caps = GST_VIDEO_CAPS_YUV ("I420");
 }
 
 static void
