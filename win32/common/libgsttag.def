@@ -10,10 +10,18 @@ EXPORTS
 	gst_tag_get_language_code_iso_639_2T
 	gst_tag_get_language_codes
 	gst_tag_get_language_name
+	gst_tag_get_license_description
+	gst_tag_get_license_flags
+	gst_tag_get_license_jurisdiction
+	gst_tag_get_license_nick
+	gst_tag_get_license_title
+	gst_tag_get_license_version
+	gst_tag_get_licenses
 	gst_tag_id3_genre_count
 	gst_tag_id3_genre_get
 	gst_tag_image_data_to_image_buffer
 	gst_tag_image_type_get_type
+	gst_tag_license_flags_get_type
 	gst_tag_list_add_id3_image
 	gst_tag_list_from_exif_buffer
 	gst_tag_list_from_exif_buffer_with_tiff_header
