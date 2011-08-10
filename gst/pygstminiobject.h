@@ -20,15 +20,6 @@ G_BEGIN_DECLS
 #define PYGIL_API_IS_BUGGY FALSE
 #endif
 
-typedef struct {
-    PyObject_HEAD
-    GstMiniObject *obj;
-    PyObject *inst_dict; /* the instance dictionary -- must be last */
-    PyObject *weakreflist; /* list of weak references */
-} PyGstMiniObject;
-
-#define pygstminiobject_get(v) (((PyGstMiniObject *)(v))->obj)
-#define pygstminiobject_check(v,base) (PyObject_TypeCheck(v,base))
 
 void
 pygstminiobject_register_class(PyObject *dict, const gchar *type_name,

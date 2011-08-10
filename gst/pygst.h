@@ -25,6 +25,8 @@
 
 #include <glib.h>
 #include <glib-object.h>
+#include <gst/gst.h>
+
 #include "common.h"
 
 G_BEGIN_DECLS
@@ -34,6 +36,16 @@ struct _PyGst_Functions {
   PyObject*	(*iterator_new) (GstIterator *iter);
   PyObject*     (*miniobject_new) (GstMiniObject *obj);
 };
+
+#define pygstminiobject_get(v) (((PyGstMiniObject *)(v))->obj)
+#define pygstminiobject_check(v,base) (PyObject_TypeCheck(v,base))
+
+typedef struct {
+    PyObject_HEAD
+    GstMiniObject *obj;
+    PyObject *inst_dict; /* the instance dictionary -- must be last */
+    PyObject *weakreflist; /* list of weak references */
+} PyGstMiniObject;
 
 #ifndef _INSIDE_PYGST_
 

@@ -21,7 +21,9 @@
  */
 
 #define NO_IMPORT_PYGOBJECT
+#define _INSIDE_PYGST_
 #include "pygstminiobject.h"
+#include "pygst.h"
 #include <gst/gst.h>
 
 static const gchar pygstminiobject_class_id[] = "PyGstMiniObject::class";
