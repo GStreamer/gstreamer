@@ -506,7 +506,7 @@ gst_omx_component_set_state (GstOMXComponent * comp, OMX_STATETYPE state)
   err = OMX_SendCommand (comp->handle, OMX_CommandStateSet, state, NULL);
 
   /* Reset some things */
-  if (old_state == OMX_StateExecuting && state == OMX_StateIdle) {
+  if (old_state == OMX_StateExecuting && state < old_state) {
     g_atomic_int_set (&comp->have_pending_reconfigure_outports, 0);
     g_list_free (comp->pending_reconfigure_outports);
     comp->pending_reconfigure_outports = NULL;
