@@ -722,7 +722,7 @@ gst_omx_component_set_last_error (GstOMXComponent * comp, OMX_ERRORTYPE err)
    * very beginning and never change again until
    * component destruction.
    */
-  n = comp->ports->len;
+  n = (comp->ports ? comp->ports->len : 0);
   for (i = 0; i < n; i++) {
     GstOMXPort *tmp = g_ptr_array_index (comp->ports, i);
 
