@@ -1751,6 +1751,7 @@ GstTagImageType
 <SUBSECTION Standard>
 GST_TYPE_TAG_IMAGE_TYPE
 gst_tag_image_type_get_type
+gst_tag_license_flags_get_type
 <SUBSECTION Private>
 GstTagEntryMatch
 </SECTION>

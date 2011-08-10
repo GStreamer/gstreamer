@@ -621,6 +621,8 @@ const gchar *       gst_tag_get_license_description  (const gchar * license_ref)
 
 const gchar *       gst_tag_get_license_jurisdiction (const gchar * license_ref);
 
+GType               gst_tag_license_flags_get_type (void);
+
 G_END_DECLS
 
 #endif /* __GST_TAG_TAG_H__ */
