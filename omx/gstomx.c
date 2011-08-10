@@ -1089,6 +1089,10 @@ gst_omx_port_set_flushing (GstOMXPort * port, gboolean flush)
 
   port->flushing = flush;
   if (flush) {
+    GTimeVal abstimeout, *timeval;
+    gboolean signalled;
+    OMX_ERRORTYPE last_error;
+
     g_cond_broadcast (port->port_cond);
 
     /* We also need to signal the state cond because
@@ -1101,12 +1105,6 @@ gst_omx_port_set_flushing (GstOMXPort * port, gboolean flush)
     g_mutex_lock (comp->state_lock);
     g_cond_broadcast (comp->state_cond);
     g_mutex_unlock (comp->state_lock);
-  }
-
-  if (flush) {
-    GTimeVal abstimeout, *timeval;
-    gboolean signalled;
-    OMX_ERRORTYPE last_error;
 
     port->flushed = FALSE;
     err = OMX_SendCommand (comp->handle, OMX_CommandFlush, port->index, NULL);
