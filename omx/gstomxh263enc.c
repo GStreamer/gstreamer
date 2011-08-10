@@ -81,7 +81,6 @@ gst_omx_h263_enc_class_init (GstOMXH263EncClass * klass)
 
   videoenc_class->default_src_template_caps = "video/x-h263, "
       "width=(int) [ 16, 4096 ], " "height=(int) [ 16, 4096 ]";
-  videoenc_class->default_sink_template_caps = GST_VIDEO_CAPS_YUV ("I420");
 }
 
 static void

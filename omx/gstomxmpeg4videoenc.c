@@ -85,7 +85,6 @@ gst_omx_mpeg4_video_enc_class_init (GstOMXMPEG4VideoEncClass * klass)
       "mpegversion=(int) 4, "
       "systemstream=(boolean) false, "
       "width=(int) [ 16, 4096 ], " "height=(int) [ 16, 4096 ]";
-  videoenc_class->default_sink_template_caps = GST_VIDEO_CAPS_YUV ("I420");
 }
 
 static void

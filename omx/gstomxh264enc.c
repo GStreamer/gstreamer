@@ -81,7 +81,6 @@ gst_omx_h264_enc_class_init (GstOMXH264EncClass * klass)
 
   videoenc_class->default_src_template_caps = "video/x-h264, "
       "width=(int) [ 16, 4096 ], " "height=(int) [ 16, 4096 ]";
-  videoenc_class->default_sink_template_caps = GST_VIDEO_CAPS_YUV ("I420");
 }
 
 static void
