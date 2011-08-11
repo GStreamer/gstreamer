@@ -774,7 +774,7 @@ plugin_init (GstPlugin *plugin)
 
           <row>
             <entry morerows="3">video/x-raw-rgb</entry>
-            <entry morerows="3">Red-Green-Blue (RBG) video.</entry>
+            <entry morerows="3">Red-Green-Blue (RGB) video.</entry>
             <entry>bpp</entry>
             <entry>integer</entry>
             <entry>greater than 0</entry>
