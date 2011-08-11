@@ -1209,14 +1209,22 @@ parse_exif_ascii_tag (GstExifReader * reader, const GstExifTagMatch * tag,
   }
 
   /* convert from ascii to utf8 */
-  utfstr = g_convert (str, count, "utf8", "latin1", NULL, NULL, &error);
-  g_free (str);
-  if (error) {
-    GST_WARNING ("Skipping tag %d:%s. Failed to convert ascii string "
-        "to utf8 : %s - %s", tag->exif_tag, tag->gst_tag, str, error->message);
-    g_error_free (error);
-    g_free (utfstr);
-    return;
+  if (g_utf8_validate (str, -1, NULL)) {
+    GST_DEBUG ("Exif string is already on utf8: %s", str);
+    utfstr = str;
+  } else {
+    GST_DEBUG ("Exif string isn't utf8, trying to convert from latin1: %s",
+        str);
+    utfstr = g_convert (str, count, "utf8", "latin1", NULL, NULL, &error);
+    g_free (str);
+    if (error) {
+      GST_WARNING ("Skipping tag %d:%s. Failed to convert ascii string "
+          "to utf8 : %s - %s", tag->exif_tag, tag->gst_tag, str,
+          error->message);
+      g_error_free (error);
+      g_free (utfstr);
+      return;
+    }
   }
 
   tagtype = gst_tag_get_type (tag->gst_tag);
