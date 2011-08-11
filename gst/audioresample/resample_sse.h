@@ -34,7 +34,9 @@
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#ifdef HAVE_XMMINTRIN_H
 #include <xmmintrin.h>
+#endif
 
 #define OVERRIDE_INNER_PRODUCT_SINGLE
 static inline float inner_product_single(const float *a, const float *b, unsigned int len)
@@ -72,7 +74,9 @@ static inline float interpolate_product_single(const float *a, const float *b, u
 }
 
 #ifdef _USE_SSE2
+#ifdef HAVE_EMMINTRIN_H
 #include <emmintrin.h>
+#endif
 #define OVERRIDE_INNER_PRODUCT_DOUBLE
 
 #ifdef DOUBLE_PRECISION

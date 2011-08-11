@@ -213,6 +213,8 @@ LIBS="$save_libs"
 dnl used in gst-libs/gst/pbutils and associated unit test
 AC_CHECK_HEADERS([process.h sys/types.h sys/wait.h sys/stat.h])
 
+AC_CHECK_HEADERS([xmmintrin.h emmintrin.h])
+
 dnl ffmpegcolorspace includes _stdint.h
 dnl also, Windows does not have long long
 AX_CREATE_STDINT_H

@@ -17,6 +17,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#define _USE_SSE
+#define _USE_SSE2
 #define FLOATING_POINT
 #define OUTSIDE_SPEEX
 #define RANDOM_PREFIX resample_float

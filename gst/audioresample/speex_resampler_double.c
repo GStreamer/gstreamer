@@ -17,6 +17,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#define _USE_SSE2
 #define FLOATING_POINT
 #define DOUBLE_PRECISION
 #define OUTSIDE_SPEEX
