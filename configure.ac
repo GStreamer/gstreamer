@@ -350,7 +350,7 @@ common/m4/Makefile
 gst-editing-services.spec
 m4/Makefile
 ges/Makefile
-bindings/makefile
+bindings/Makefile
 bindings/python/Makefile
 bindings/python/codegen/Makefile
 bindings/python/examples/Makefile
