@@ -1,4 +1,4 @@
-SUBDIRS = codegen
+SUBDIRS = codegen examples testsuite
 pkgpyexecdir = $(pyexecdir)/gst-$(GST_MAJORMINOR)/gst
 
 # we install everything in pyexecdir; otherwise you end up with a mess for
@@ -40,5 +40,3 @@ CLEANFILES = ges.c
 	&& cp gen-$*.c $*.c \
 	&& rm -f gen-$*.c
 
-check:
-	@PYTHONPATH=$(top_srcdir):$(PYTHONPATH) $(PYTHON) $(srcdir)/testsuite/runtests.py

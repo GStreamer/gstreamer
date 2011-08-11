@@ -353,6 +353,8 @@ ges/Makefile
 bindings/makefile
 bindings/python/Makefile
 bindings/python/codegen/Makefile
+bindings/python/examples/Makefile
+bindings/python/testsuite/Makefile
 tests/Makefile
 tests/check/Makefile
 tests/examples/Makefile
