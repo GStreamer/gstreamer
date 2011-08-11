@@ -96,7 +96,6 @@ class TestCase(unittest.TestCase):
             objs = [o for o in gc.get_objects() if isinstance(o, c)]
             new.extend([o for o in objs if o not in self._tracked[c]])
 
-        print new
         self.failIf(new, new)
         #self.failIf(new, ["%r:%d" % (type(o), id(o)) for o in new])
         del self._tracked
