@@ -68,9 +68,11 @@ struct _GstCameraBin2
   GstElement *video_filter;
   GstElement *image_filter;
   GstElement *viewfinder_filter;
+  GstElement *audio_filter;
   GstElement *user_video_filter;
   GstElement *user_image_filter;
   GstElement *user_viewfinder_filter;
+  GstElement *user_audio_filter;
 
   GstElement *audio_src;
   GstElement *user_audio_src;

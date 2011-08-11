@@ -221,7 +221,8 @@ enum
   PROP_MAX_ZOOM,
   PROP_IMAGE_ENCODING_PROFILE,
   PROP_IDLE,
-  PROP_FLAGS
+  PROP_FLAGS,
+  PROP_AUDIO_FILTER
 };
 
 enum
@@ -545,9 +546,13 @@ gst_camera_bin_dispose (GObject * object)
     gst_object_unref (camerabin->image_filter);
   if (camerabin->viewfinder_filter)
     gst_object_unref (camerabin->viewfinder_filter);
+  if (camerabin->audio_filter)
+    gst_object_unref (camerabin->audio_filter);
 
   if (camerabin->user_video_filter)
     gst_object_unref (camerabin->user_video_filter);
+  if (camerabin->user_audio_filter)
+    gst_object_unref (camerabin->user_audio_filter);
   if (camerabin->user_image_filter)
     gst_object_unref (camerabin->user_image_filter);
   if (camerabin->user_viewfinder_filter)
@@ -720,6 +725,12 @@ gst_camera_bin_class_init (GstCameraBin2Class * klass)
       g_param_spec_object ("viewfinder-filter", "Viewfinder filter",
           "The element that will process frames going to the viewfinder."
           " (Should be set on NULL state)",
+          GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (object_class, PROP_AUDIO_FILTER,
+      g_param_spec_object ("audio-filter", "Audio filter",
+          "The element that will process captured audio buffers when recording"
+          ". (Should be set on NULL state)",
           GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (object_class, PROP_PREVIEW_FILTER,
@@ -1530,6 +1541,11 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
     gst_element_link_many (camera->audio_src, camera->audio_volume,
         camera->audio_capsfilter, NULL);
   }
+  if (has_audio) {
+    gst_camera_bin_check_and_replace_filter (camera, &camera->audio_filter,
+        camera->user_audio_filter, camera->audio_src, camera->audio_volume,
+        "src");
+  }
 
   if ((profile_switched && has_audio) || new_audio_src) {
     if (GST_PAD_LINK_FAILED (gst_camera_bin_link_encodebin (camera,
@@ -1843,6 +1859,12 @@ gst_camera_bin_set_property (GObject * object, guint prop_id,
         g_object_set (camera->src, "preview-filter", camera->preview_filter,
             NULL);
       break;
+    case PROP_AUDIO_FILTER:
+      if (camera->user_audio_filter)
+        g_object_unref (camera->user_audio_filter);
+
+      camera->user_audio_filter = g_value_dup_object (value);
+      break;
     case PROP_VIEWFINDER_SINK:
       g_object_set (camera->viewfinderbin, "video-sink",
           g_value_get_object (value), NULL);
@@ -1998,6 +2020,10 @@ gst_camera_bin_get_property (GObject * object, guint prop_id,
     case PROP_VIEWFINDER_FILTER:
       if (camera->user_viewfinder_filter)
         g_value_set_object (value, camera->user_viewfinder_filter);
+      break;
+    case PROP_AUDIO_FILTER:
+      if (camera->user_audio_filter)
+        g_value_set_object (value, camera->user_audio_filter);
       break;
     case PROP_PREVIEW_FILTER:
       if (camera->preview_filter)
