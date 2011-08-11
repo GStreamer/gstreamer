@@ -1,5 +1,5 @@
 SUBDIRS = codegen examples testsuite
-pkgpyexecdir = $(pyexecdir)/gst-$(GST_MAJORMINOR)/gst
+pkgpyexecdir = $(pyexecdir)
 
 # we install everything in pyexecdir; otherwise you end up with a mess for
 # multilib

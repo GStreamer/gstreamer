@@ -2,7 +2,7 @@ import glib
 import gst
 
 from common import TestCase
-from gst import ges
+import ges
 
 class GlobalFunctions(TestCase):
 

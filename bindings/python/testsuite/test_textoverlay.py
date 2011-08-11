@@ -1,7 +1,7 @@
 import gst
 
 from common import TestCase
-from gst import ges
+import ges
 from time import sleep
 
 class TextOverlay(TestCase):
