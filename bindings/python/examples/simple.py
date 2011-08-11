@@ -23,28 +23,45 @@
 # the Free Software Foundation; either version 3, or (at your option)
 # any later version.
 
-from gst import ges
-
 import sys
-import getopt
-import gst
+import optparse
+
 import glib
+import gobject
+gobject.threads_init()
 
-class Demo:
-    def __init__(self, files):
-        self.tl_objs = []
-        self.set_pipeline (files)
+import gst
+import ges
 
-        for f in files:
-            self.add_tl_object(f)
-            self.mainloop = glib.MainLoop()
+class Simple:
+    def __init__(self, uris):
+        # init ges to have debug logs
+        ges.init()
+        self.mainloop = glib.MainLoop()
 
-    def add_tl_object(self, file):
-        self.tl_objs.append(ges.TimelineFileSource (file))
-        self.layer.add_object(self.tl_objs[-1], -1)
-        transition = ges.TimelineStandardTransition("crossfade")
-        transition.duration = gst.SECOND * 2
-        self.layer.add_object(transition, -1)
+        timeline = ges.timeline_new_audio_video()
+        self.layer = ges.SimpleTimelineLayer()
+        timeline.add_layer(self.layer)
+
+        self.pipeline = ges.TimelinePipeline()
+        self.pipeline.add_timeline(timeline)
+        bus = self.pipeline.get_bus()
+        bus.set_sync_handler(self.bus_handler)
+
+        # all timeline objects except the last will have a transition at the end
+        for n in uris[:-1]:
+            self.add_timeline_object(n, True)
+        self.add_timeline_object(uris[-1], False)
+
+    def add_timeline_object(self, uri, do_transition):
+        filesource = ges.TimelineFileSource (uri)
+        filesource.set_duration(long (gst.SECOND * 5))
+        self.layer.add_object(filesource, -1)
+
+        if do_transition:
+            transition = ges.TimelineStandardTransition("crossfade")
+            transition.duration = gst.SECOND * 2
+            self.layer.add_object(transition, -1)
 
     def bus_handler(self, unused_bus, message):
         if message.type == gst.MESSAGE_ERROR:
@@ -56,50 +73,26 @@ class Demo:
 
         return gst.BUS_PASS
 
-    def set_pipeline (self, files):
-        try:
-            opts, args = getopt.getopt(sys.argv[1:], "h", ["help"])
-        except getopt.error, msg:
-            print msg
-            print "for help use --help"
-
-        ges.init()
-
-        tl = ges.timeline_new_audio_video()
-        layer = ges.SimpleTimelineLayer()
-        tl.add_layer(layer)
-
-        pipeline = ges.TimelinePipeline()
-        pipeline.add_timeline (tl)
-        bus = pipeline.get_bus()
-        bus.set_sync_handler(self.bus_handler)
-
-        self.pipeline = pipeline
-        self.layer = layer
-
     def run(self):
-        if (self.pipeline.set_state(gst.STATE_PLAYING) == gst.STATE_CHANGE_FAILURE):
+        if (self.pipeline.set_state(gst.STATE_PLAYING) == \
+                gst.STATE_CHANGE_FAILURE):
             print "Couldn't start pipeline"
 
         self.mainloop.run()
 
 
-def main():
-    try:
-        opts, args = getopt.getopt(sys.argv[1:], "h", ["help"])
-    except getopt.error, msg:
-        print msg
-        print "for help use --help"
-        sys.exit(2)
-        # process options
-    for o, a in opts:
-        if o in ("-h", "--help"):
-            print __doc__
-            sys.exit(0)
+def main(args):
+    usage = "usage: %s URI-OF-VIDEO-1 ... URI-OF-VIDEO-n\n" % args[0]
 
-    demo = Demo(args)
-    demo.run()
+    if len(args) < 2:
+        sys.stderr.write(usage)
+        sys.exit(1)
 
+    parser = optparse.OptionParser (usage=usage)
+    (options, args) = parser.parse_args ()
+
+    simple = Simple(args)
+    simple.run()
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main(sys.argv))
