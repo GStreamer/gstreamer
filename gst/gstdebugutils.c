@@ -459,8 +459,6 @@ debug_dump_element_pad_link (GstPad * pad, GstElement * element,
   }
 }
 
-/* New function
- */
 static void
 debug_dump_element_pads (GstIterator * pad_iter, GstPad * pad,
     GstElement * element, GstDebugGraphDetails details, FILE * out,
