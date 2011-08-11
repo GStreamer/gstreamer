@@ -6,7 +6,7 @@ import ges
 class TimelineFileSource(TestCase):
 
     def testTimelineFileSource(self):
-        src = ges.TimelineFileSource("blahblahblah")
+        src = ges.TimelineFileSource("file://blahblahblah")
 
         src.set_mute(True)
         src.set_max_duration(long(100))
@@ -15,4 +15,4 @@ class TimelineFileSource(TestCase):
         src.set_is_image(True)
         assert (src.get_max_duration() == 100)
         assert (src.is_image() == True)
-        assert (src.get_uri() == "blahblahblah")
+        assert (src.get_uri() == "file://blahblahblah")
