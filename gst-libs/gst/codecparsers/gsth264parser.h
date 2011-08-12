@@ -57,7 +57,7 @@ G_BEGIN_DECLS
  * @GST_H264_NAL_AU_DELIMITER: Access unit delimiter nal unit
  * @GST_H264_NAL_SEQ_END: End of sequence nal unit
  * @GST_H264_NAL_STREAM_END: End of stream nal unit
- * @GST_H264_NAL_FILTER_DATA: Filler data na lunit
+ * @GST_H264_NAL_FILLER_DATA: Filler data na lunit
  *
  * Indicates the type of H264 Nal Units
  */
