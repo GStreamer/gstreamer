@@ -298,7 +298,7 @@ gst_iterator_pop (GstIterator * it)
 /**
  * gst_iterator_next:
  * @it: The #GstIterator to iterate
- * @elem: pointer to hold next element
+ * @elem: (out caller-allocates): pointer to hold next element
  *
  * Get the next item from the iterator in @elem. 
  *
