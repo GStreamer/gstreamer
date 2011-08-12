@@ -130,8 +130,6 @@ struct _GstBaseVideoEncoder
  *                  Event handler on the sink pad. This function should return
  *                  TRUE if the event was handled and should be discarded
  *                  (i.e. not unref'ed).
- * @getcaps:        Optional, but recommended.
- *                  Provides src pad caps to baseclass.
  *
  * Subclasses can override any of the available virtual methods or not, as
  * needed. At minimum @handle_frame needs to be overridden, and @set_format
