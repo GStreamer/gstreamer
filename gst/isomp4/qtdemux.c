@@ -7472,6 +7472,7 @@ gst_qtdemux_guess_bitrate (GstQTDemux * qtdemux)
       case FOURCC_soun:
       case FOURCC_vide:
         /* retrieve bitrate, prefer avg then max */
+        bitrate = 0;
         if (qtdemux->streams[i]->pending_tags) {
           gst_tag_list_get_uint (qtdemux->streams[i]->pending_tags,
               GST_TAG_MAXIMUM_BITRATE, &bitrate);
