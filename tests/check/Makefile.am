@@ -400,6 +400,7 @@ elements_audioresample_CFLAGS = \
 	$(AM_CFLAGS)
 
 elements_audioresample_LDADD = \
+	$(top_builddir)/gst-libs/gst/fft/libgstfft-@GST_MAJORMINOR@.la \
 	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_MAJORMINOR@.la \
 	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_MAJORMINOR@.la \
 	$(GST_BASE_LIBS) \
