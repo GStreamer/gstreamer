@@ -45,6 +45,16 @@
 #include "gstvaapidecode.h"
 #include "gstvaapipluginutil.h"
 
+#if USE_FFMPEG
+# include <gst/vaapi/gstvaapidecoder_ffmpeg.h>
+#endif
+#if USE_CODEC_PARSERS
+#endif
+
+/* Favor codecparsers-based decoders for 0.3.x series */
+#define USE_FFMPEG_DEFAULT \
+    (USE_FFMPEG && !USE_CODEC_PARSERS)
+
 #define GST_PLUGIN_NAME "vaapidecode"
 #define GST_PLUGIN_DESC "A VA-API based video decoder"
 
@@ -271,6 +281,9 @@ error_commit_buffer:
 static gboolean
 gst_vaapidecode_create(GstVaapiDecode *decode, GstCaps *caps)
 {
+    VADisplay dpy;
+    GstStructure *structure;
+
     if (!gst_vaapi_ensure_display(decode, &decode->display))
         return FALSE;
 
@@ -282,8 +295,19 @@ gst_vaapidecode_create(GstVaapiDecode *decode, GstCaps *caps)
     if (!decode->decoder_ready)
         return FALSE;
 
-    if (decode->use_ffmpeg)
-        decode->decoder = gst_vaapi_decoder_ffmpeg_new(decode->display, caps);
+    dpy = decode->display;
+    if (decode->use_ffmpeg) {
+#if USE_FFMPEG
+        decode->decoder = gst_vaapi_decoder_ffmpeg_new(dpy, caps);
+#endif
+    }
+    else {
+#if USE_CODEC_PARSERS
+        structure = gst_caps_get_structure(caps, 0);
+        if (!structure)
+            return FALSE;
+#endif
+    }
     if (!decode->decoder)
         return FALSE;
 
@@ -504,14 +528,16 @@ gst_vaapidecode_class_init(GstVaapiDecodeClass *klass)
 
     element_class->change_state = gst_vaapidecode_change_state;
 
+#if USE_FFMPEG
     g_object_class_install_property
         (object_class,
          PROP_USE_FFMPEG,
          g_param_spec_boolean("use-ffmpeg",
                               "Use FFmpeg/VAAPI for decoding",
                               "Uses FFmpeg/VAAPI for decoding",
-                              TRUE,
+                              USE_FFMPEG_DEFAULT,
                               G_PARAM_READWRITE));
+#endif
 }
 
 static gboolean
@@ -672,7 +698,7 @@ gst_vaapidecode_init(GstVaapiDecode *decode, GstVaapiDecodeClass *klass)
     decode->decoder_ready       = NULL;
     decode->decoder_caps        = NULL;
     decode->allowed_caps        = NULL;
-    decode->use_ffmpeg          = TRUE;
+    decode->use_ffmpeg          = USE_FFMPEG_DEFAULT;
     decode->is_ready            = FALSE;
 
     /* Pad through which data comes in to the element */

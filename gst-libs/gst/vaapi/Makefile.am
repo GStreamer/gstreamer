@@ -10,15 +10,21 @@ endif
 libgstvaapi_includedir =			\
 	$(includedir)/gstreamer-@GST_MAJORMINOR@/gst/vaapi
 
-libgstvaapi_ffmpeg_source_c =			\
-	gstvaapidecoder_ffmpeg.c		\
+libgstvaapi_cflags =				\
+	-DGST_USE_UNSTABLE_API			\
+	-I$(top_srcdir)/gst-libs		\
+	$(GST_BASE_CFLAGS)			\
+	$(GST_BASEVIDEO_CFLAGS)			\
+	$(GST_VIDEO_CFLAGS)			\
+	$(GST_CFLAGS)				\
+	$(LIBVA_CFLAGS)				\
 	$(NULL)
 
-libgstvaapi_ffmpeg_source_h =			\
-	gstvaapidecoder_ffmpeg.h		\
-	$(NULL)
-
-libgstvaapi_ffmpeg_source_priv_h =		\
+libgstvaapi_libs =				\
+	$(GST_BASE_LIBS)			\
+	$(GST_BASEVIDEO_LIBS)			\
+	$(GST_LIBS)				\
+	$(LIBVA_LIBS)				\
 	$(NULL)
 
 libgstvaapi_source_c =				\
@@ -44,7 +50,6 @@ libgstvaapi_source_c =				\
 	gstvaapivideopool.c			\
 	gstvaapivideosink.c			\
 	gstvaapiwindow.c			\
-	$(libgstvaapi_ffmpeg_source_c)		\
 	$(NULL)
 
 libgstvaapi_source_h =				\
@@ -68,7 +73,6 @@ libgstvaapi_source_h =				\
 	gstvaapivideopool.h			\
 	gstvaapivideosink.h			\
 	gstvaapiwindow.h			\
-	$(libgstvaapi_ffmpeg_source_h)		\
 	$(NULL)
 
 libgstvaapi_source_priv_h =			\
@@ -131,6 +135,22 @@ libgstvaapi_glx_source_priv_h =			\
 	gstvaapiutils_x11.h			\
 	$(NULL)
 
+if USE_FFMPEG
+libgstvaapi_source_c	+= gstvaapidecoder_ffmpeg.c
+libgstvaapi_source_h	+= gstvaapidecoder_ffmpeg.h
+libgstvaapi_cflags	+= $(LIBAVCODEC_CFLAGS)
+libgstvaapi_libs	+= $(LIBAVCODEC_LIBS)
+endif
+
+if USE_CODEC_PARSERS
+libgstvaapi_source_c	+= \
+	$(NULL)
+libgstvaapi_source_h	+= \
+	$(NULL)
+libgstvaapi_cflags	+= $(GST_CODEC_PARSERS_CFLAGS)
+libgstvaapi_libs	+= $(GST_CODEC_PARSERS_LIBS)
+endif
+
 libgstvaapi_@GST_MAJORMINOR@_la_SOURCES =	\
 	$(libgstvaapi_source_c)			\
 	$(libgstvaapi_source_priv_h)		\
@@ -144,22 +164,11 @@ libgstvaapi_@GST_MAJORMINOR@includedir =	\
 	$(libgstvaapi_includedir)
 
 libgstvaapi_@GST_MAJORMINOR@_la_CFLAGS =	\
-	-DGST_USE_UNSTABLE_API			\
-	-I$(top_srcdir)/gst-libs		\
-	$(GST_BASE_CFLAGS)			\
-	$(GST_BASEVIDEO_CFLAGS)			\
-	$(GST_VIDEO_CFLAGS)			\
-	$(GST_CFLAGS)				\
-	$(LIBAVCODEC_CFLAGS)			\
-	$(LIBVA_CFLAGS)				\
+	$(libgstvaapi_cflags)			\
 	$(NULL)
 
 libgstvaapi_@GST_MAJORMINOR@_la_LIBADD =	\
-	$(GST_BASE_LIBS)			\
-	$(GST_BASEVIDEO_LIBS)			\
-	$(GST_LIBS)				\
-	$(LIBAVCODEC_LIBS)			\
-	$(LIBVA_LIBS)				\
+	$(libgstvaapi_libs)			\
 	$(NULL)
 
 libgstvaapi_@GST_MAJORMINOR@_la_LDFLAGS =	\

@@ -99,6 +99,16 @@ AC_ARG_ENABLE(vaapisink-glx,
                    [enable OpenGL/X11 to vaapisink @<:@default=yes@:>@]),
     [], [enable_vaapisink_glx="no"])
 
+AC_ARG_ENABLE(ffmpeg,
+    AC_HELP_STRING([--enable-ffmpeg],
+                   [enable bitstream parsing from FFmpeg @<:@default=yes@:>@]),
+    [], [enable_ffmpeg="yes"])
+
+AC_ARG_ENABLE(codecparsers,
+    AC_HELP_STRING([--enable-codecparsers],
+                   [enable adhoc bitstream parsers from GStreamer @<:@default=yes@:>@]),
+    [], [enable_codecparsers="yes"])
+
 dnl Check for __attribute__((visibility()))
 AC_CACHE_CHECK([whether __attribute__((visibility())) is supported],
   vaapi_cv_visibility_attribute,
@@ -220,6 +230,20 @@ PKG_CHECK_MODULES([GST_BASEVIDEO],
 AC_SUBST(GST_BASEVIDEO_CFLAGS)
 AC_SUBST(GST_BASEVIDEO_LIBS)
 
+dnl Check for GStreamer codec parsers
+USE_CODEC_PARSERS=0
+if test "$enable_codecparsers" = "yes"; then
+PKG_CHECK_MODULES([GST_CODEC_PARSERS],
+    [gstreamer-codecparsers-$GST_MAJORMINOR >= $GST_VERSION_REQUIRED],
+    [enable_codecparsers="yes" USE_CODEC_PARSERS=1],
+    [enable_codecparsers="no"  USE_CODEC_PARSERS=0]
+)
+fi
+
+AC_DEFINE_UNQUOTED(USE_CODEC_PARSERS, $USE_CODEC_PARSERS,
+    [Defined to 1 if GStreamer codec parsers are used])
+AM_CONDITIONAL(USE_CODEC_PARSERS, test $USE_CODEC_PARSERS -eq 1)
+
 dnl Check for GStreamer interfaces
 PKG_CHECK_MODULES([GST_INTERFACES],
     [gstreamer-interfaces-$GST_MAJORMINOR >= $GST_PLUGINS_BASE_VERSION_REQUIRED]
@@ -338,10 +362,28 @@ else
 fi
 
 dnl Check for FFmpeg
-PKG_CHECK_MODULES(LIBAVCODEC, [libavcodec])
+USE_FFMPEG=0
+if test "$enable_ffmpeg" = "yes"; then
+PKG_CHECK_MODULES(LIBAVCODEC, [libavcodec],
+    [enable_ffmpeg="yes" USE_FFMPEG=1],
+    [enable_ffmpeg="no"  USE_FFMPEG=0]
+)
+fi
+if test "$enable_ffmpeg" = "yes"; then
 AC_CHECK_HEADERS([libavcodec/avcodec.h ffmpeg/avcodec.h])
-AC_CHECK_HEADERS([libavcodec/vaapi.h ffmpeg/vaapi.h], [break],
-    AC_MSG_ERROR([The system FFmpeg headers do not support VA-API]))
+AC_CHECK_HEADERS([libavcodec/vaapi.h ffmpeg/vaapi.h],
+    [break],
+    [enable_ffmpeg="no"  USE_FFMPEG=0]
+)
+fi
+
+if test "$enable_ffmpeg:$enable_codecparsers" = "no:no"; then
+    AC_MSG_ERROR([Found neither suitable FFmpeg with VA-API support nor GStreamer bitstream parsers])
+fi
+
+AC_DEFINE_UNQUOTED(USE_FFMPEG, $USE_FFMPEG,
+    [Defined to 1 if FFmpeg is used])
+AM_CONDITIONAL(USE_FFMPEG, test $USE_FFMPEG -eq 1)
 
 AC_DEFINE_UNQUOTED(USE_GLX, $USE_GLX,
     [Defined to 1 if GLX is enabled])
@@ -414,4 +456,6 @@ echo VA-API version ................... : $VA_VERSION_STR
 echo GLX support ...................... : $(yesno $USE_GLX)
 echo VA/GLX support ................... : $(yesno $USE_VAAPI_GLX)
 echo VaapiSink/GL ..................... : $(yesno $USE_VAAPISINK_GLX)
+echo FFmpeg bitstream parsers ......... : $(yesno $USE_FFMPEG)
+echo GStreamer bitstream parsers ...... : $(yesno $USE_CODEC_PARSERS)
 echo

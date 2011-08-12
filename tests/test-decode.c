@@ -19,15 +19,21 @@
  *  Boston, MA 02110-1301 USA
 */
 
+#include "config.h"
 #include <string.h>
 #include <gst/vaapi/gstvaapidisplay_x11.h>
 #include <gst/vaapi/gstvaapiwindow_x11.h>
 #include <gst/vaapi/gstvaapidecoder.h>
-#include <gst/vaapi/gstvaapidecoder_ffmpeg.h>
 #include <gst/vaapi/gstvaapisurface.h>
 #include "test-mpeg2.h"
 #include "test-h264.h"
 #include "test-vc1.h"
+
+#if USE_FFMPEG
+# include <gst/vaapi/gstvaapidecoder_ffmpeg.h>
+#endif
+#if USE_CODEC_PARSERS
+#endif
 
 /* Set to 1 to check display cache works (shared VA display) */
 #define CHECK_DISPLAY_CACHE 1
@@ -66,12 +72,21 @@ static inline void pause(void)
 }
 
 static gchar *g_codec_str;
+static gboolean g_use_ffmpeg = FALSE;
 
 static GOptionEntry g_options[] = {
     { "codec", 'c',
       0,
       G_OPTION_ARG_STRING, &g_codec_str,
       "codec to test", NULL },
+    { "ffmpeg", 0,
+      0,
+      G_OPTION_ARG_NONE, &g_use_ffmpeg,
+      "use ffmpeg", NULL },
+    { "codecparsers", 0,
+      G_OPTION_FLAG_REVERSE,
+      G_OPTION_ARG_NONE, &g_use_ffmpeg,
+      "use codec parsers", NULL },
     { NULL, }
 };
 
@@ -137,9 +152,22 @@ main(int argc, char *argv[])
             NULL
         );
 
-    decoder = gst_vaapi_decoder_ffmpeg_new(display, decoder_caps);
+    if (g_use_ffmpeg) {
+#if USE_FFMPEG
+        decoder = gst_vaapi_decoder_ffmpeg_new(display, decoder_caps);
+#endif
+    }
+    else {
+#if USE_CODEC_PARSERS
+        switch (gst_vaapi_profile_get_codec(info.profile)) {
+        default:
+            decoder = NULL;
+            break;
+        }
+#endif
+    }
     if (!decoder)
-        g_error("could not create FFmpeg decoder");
+        g_error("could not create decoder");
     gst_caps_unref(decoder_caps);
 
     buffer = gst_buffer_new();
