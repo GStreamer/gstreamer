@@ -50,6 +50,7 @@
 # include <gst/vaapi/gstvaapidecoder_ffmpeg.h>
 #endif
 #if USE_CODEC_PARSERS
+# include <gst/vaapi/gstvaapidecoder_h264.h>
 # include <gst/vaapi/gstvaapidecoder_mpeg2.h>
 # include <gst/vaapi/gstvaapidecoder_mpeg4.h>
 # include <gst/vaapi/gstvaapidecoder_vc1.h>
@@ -311,7 +312,9 @@ gst_vaapidecode_create(GstVaapiDecode *decode, GstCaps *caps)
         structure = gst_caps_get_structure(caps, 0);
         if (!structure)
             return FALSE;
-        if (gst_structure_has_name(structure, "video/mpeg")) {
+        if (gst_structure_has_name(structure, "video/x-h264"))
+            decode->decoder = gst_vaapi_decoder_h264_new(dpy, caps);
+        else if (gst_structure_has_name(structure, "video/mpeg")) {
             if (!gst_structure_get_int(structure, "mpegversion", &version))
                 return FALSE;
             if (version == 2)

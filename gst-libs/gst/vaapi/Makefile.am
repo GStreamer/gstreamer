@@ -146,12 +146,14 @@ endif
 if USE_CODEC_PARSERS
 libgstvaapi_source_c	+= \
 	gstvaapicodec_objects.c			\
+	gstvaapidecoder_h264.c			\
 	gstvaapidecoder_mpeg2.c			\
 	gstvaapidecoder_mpeg4.c			\
 	gstvaapidecoder_objects.c		\
 	gstvaapidecoder_vc1.c			\
 	$(NULL)
 libgstvaapi_source_h	+= \
+	gstvaapidecoder_h264.h			\
 	gstvaapidecoder_mpeg2.h			\
 	gstvaapidecoder_mpeg4.h			\
 	gstvaapidecoder_vc1.h			\
