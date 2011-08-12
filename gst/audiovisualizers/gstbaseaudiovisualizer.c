@@ -20,10 +20,13 @@
 /**
  * SECTION:gstbaseaudiovisualizer
  *
- * A basclass for scopes. It takes care of re-fitting the audio-rate to
- * video-rate. It also provides several background shading effects. These
- * effects are applied to a previous picture before the render() implementation
- * can draw a new frame.
+ * A basclass for scopes (visualizers). It takes care of re-fitting the
+ * audio-rate to video-rate and handles renegotiation (downstream video size
+ * changes).
+ * 
+ * It also provides several background shading effects. These effects are
+ * applied to a previous picture before the render() implementation can draw a
+ * new frame.
  */
 
 #ifdef HAVE_CONFIG_H
