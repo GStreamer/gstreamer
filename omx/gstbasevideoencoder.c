@@ -117,6 +117,7 @@ static void gst_base_video_encoder_finalize (GObject * object);
 
 static gboolean gst_base_video_encoder_sink_setcaps (GstPad * pad,
     GstCaps * caps);
+static GstCaps *gst_base_video_encoder_sink_getcaps (GstPad * pad);
 static gboolean gst_base_video_encoder_src_event (GstPad * pad,
     GstEvent * event);
 static gboolean gst_base_video_encoder_sink_event (GstPad * pad,
@@ -210,6 +211,8 @@ gst_base_video_encoder_init (GstBaseVideoEncoder * base_video_encoder,
       GST_DEBUG_FUNCPTR (gst_base_video_encoder_sink_event));
   gst_pad_set_setcaps_function (pad,
       GST_DEBUG_FUNCPTR (gst_base_video_encoder_sink_setcaps));
+  gst_pad_set_getcaps_function (pad,
+      GST_DEBUG_FUNCPTR (gst_base_video_encoder_sink_getcaps));
 
   pad = GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder);
 
@@ -356,6 +359,74 @@ exit:
   }
 
   return ret;
+}
+
+static GstCaps *
+gst_base_video_encoder_sink_getcaps (GstPad * pad)
+{
+  GstBaseVideoEncoder *base_video_encoder;
+  const GstCaps *templ_caps;
+  GstCaps *allowed;
+  GstCaps *fcaps, *filter_caps;
+  gint i, j;
+
+  base_video_encoder = GST_BASE_VIDEO_ENCODER (gst_pad_get_parent (pad));
+
+  /* FIXME: Allow subclass to override this? */
+
+  /* Allow downstream to specify width/height/framerate/PAR constraints
+   * and forward them upstream for video converters to handle
+   */
+  templ_caps =
+      gst_pad_get_pad_template_caps (GST_BASE_VIDEO_CODEC_SINK_PAD
+      (base_video_encoder));
+  allowed =
+      gst_pad_get_allowed_caps (GST_BASE_VIDEO_CODEC_SRC_PAD
+      (base_video_encoder));
+  if (!allowed || gst_caps_is_empty (allowed) || gst_caps_is_any (allowed)) {
+    fcaps = gst_caps_copy (templ_caps);
+    goto done;
+  }
+
+  GST_LOG_OBJECT (base_video_encoder, "template caps %" GST_PTR_FORMAT,
+      templ_caps);
+  GST_LOG_OBJECT (base_video_encoder, "allowed caps %" GST_PTR_FORMAT, allowed);
+
+  filter_caps = gst_caps_new_empty ();
+
+  for (i = 0; i < gst_caps_get_size (templ_caps); i++) {
+    GQuark q_name =
+        gst_structure_get_name_id (gst_caps_get_structure (templ_caps, i));
+
+    for (j = 0; j < gst_caps_get_size (allowed); j++) {
+      const GstStructure *allowed_s = gst_caps_get_structure (allowed, j);
+      const GValue *val;
+      GstStructure *s;
+
+      s = gst_structure_id_empty_new (q_name);
+      if ((val = gst_structure_get_value (allowed_s, "width")))
+        gst_structure_set_value (s, "width", val);
+      if ((val = gst_structure_get_value (allowed_s, "height")))
+        gst_structure_set_value (s, "height", val);
+      if ((val = gst_structure_get_value (allowed_s, "framerate")))
+        gst_structure_set_value (s, "framerate", val);
+      if ((val = gst_structure_get_value (allowed_s, "pixel-aspect-ratio")))
+        gst_structure_set_value (s, "pixel-aspect-ratio", val);
+
+      gst_caps_merge_structure (filter_caps, s);
+    }
+  }
+
+  fcaps = gst_caps_intersect (filter_caps, templ_caps);
+  gst_caps_unref (filter_caps);
+
+done:
+
+  gst_caps_replace (&allowed, NULL);
+
+  GST_LOG_OBJECT (base_video_encoder, "Returning caps %" GST_PTR_FORMAT, fcaps);
+
+  return fcaps;
 }
 
 static void
