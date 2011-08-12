@@ -89,6 +89,9 @@ struct _GstBaseAudioVisualizer
   /* audio state */
   gint sample_rate;
   gint rate;
+  
+  /* configuration mutex */
+  GMutex *config_lock;
 };
 
 struct _GstBaseAudioVisualizerClass

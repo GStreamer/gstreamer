@@ -463,6 +463,7 @@ gst_base_audio_visualizer_init (GstBaseAudioVisualizer * scope,
 
   scope->next_ts = GST_CLOCK_TIME_NONE;
 
+  scope->config_lock = g_mutex_new ();
 }
 
 static void
@@ -520,6 +521,10 @@ gst_base_audio_visualizer_dispose (GObject * object)
   if (scope->pixelbuf) {
     g_free (scope->pixelbuf);
     scope->pixelbuf = NULL;
+  }
+  if (scope->config_lock) {
+    g_mutex_free (scope->config_lock);
+    scope->config_lock = NULL;
   }
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -644,6 +649,8 @@ gst_base_audio_visualizer_src_setcaps (GstPad * pad, GstCaps * caps)
     goto missing_caps_details;
   }
 
+  g_mutex_lock (scope->config_lock);
+
   scope->width = w;
   scope->height = h;
   scope->fps_n = num;
@@ -669,6 +676,9 @@ gst_base_audio_visualizer_src_setcaps (GstPad * pad, GstCaps * caps)
       scope->width, scope->height, scope->fps_n, scope->fps_d);
   GST_DEBUG_OBJECT (scope, "blocks: spf %u, req_spf %u",
       scope->spf, scope->req_spf);
+
+  g_mutex_unlock (scope->config_lock);
+
 done:
   gst_object_unref (scope);
   return res;
@@ -691,6 +701,7 @@ gst_base_audio_visualizer_chain (GstPad * pad, GstBuffer * buffer)
   GstBaseAudioVisualizerClass *klass;
   GstBuffer *inbuf;
   guint avail, sbpf;
+  guint8 *adata;
   gboolean (*render) (GstBaseAudioVisualizer * scope, GstBuffer * audio,
       GstBuffer * video);
 
@@ -718,6 +729,8 @@ gst_base_audio_visualizer_chain (GstPad * pad, GstBuffer * buffer)
 
   gst_adapter_push (scope->adapter, buffer);
 
+  g_mutex_lock (scope->config_lock);
+
   /* this is what we want */
   sbpf = scope->req_spf * scope->channels * sizeof (gint16);
 
@@ -731,9 +744,13 @@ gst_base_audio_visualizer_chain (GstPad * pad, GstBuffer * buffer)
   while (avail >= sbpf) {
     GstBuffer *outbuf;
 
+    g_mutex_unlock (scope->config_lock);
     ret = gst_pad_alloc_buffer_and_set_caps (scope->srcpad,
         GST_BUFFER_OFFSET_NONE,
         scope->bpf, GST_PAD_CAPS (scope->srcpad), &outbuf);
+    g_mutex_lock (scope->config_lock);
+    /* recheck as the value could have changed */
+    sbpf = scope->req_spf * scope->channels * sizeof (gint16);
 
     /* no buffer allocated, we don't care why. */
     if (ret != GST_FLOW_OK)
@@ -750,8 +767,11 @@ gst_base_audio_visualizer_chain (GstPad * pad, GstBuffer * buffer)
       memset (GST_BUFFER_DATA (outbuf), 0, scope->bpf);
     }
 
-    GST_BUFFER_DATA (inbuf) =
-        (guint8 *) gst_adapter_peek (scope->adapter, sbpf);
+    /* this can fail as the data size we need could have changed */
+    if (!(adata = (guint8 *) gst_adapter_peek (scope->adapter, sbpf)))
+      break;
+
+    GST_BUFFER_DATA (inbuf) = adata;
     GST_BUFFER_SIZE (inbuf) = sbpf;
 
     /* call class->render() vmethod */
@@ -766,9 +786,13 @@ gst_base_audio_visualizer_chain (GstPad * pad, GstBuffer * buffer)
       }
     }
 
+    g_mutex_unlock (scope->config_lock);
     ret = gst_pad_push (scope->srcpad, outbuf);
     outbuf = NULL;
+    g_mutex_lock (scope->config_lock);
 
+    /* recheck as the value could have changed */
+    sbpf = scope->req_spf * scope->channels * sizeof (gint16);
     GST_LOG_OBJECT (scope, "avail: %u, bpf: %u", avail, sbpf);
     /* we want to take less or more, depending on spf : req_spf */
     if (avail - sbpf >= sbpf) {
@@ -786,6 +810,8 @@ gst_base_audio_visualizer_chain (GstPad * pad, GstBuffer * buffer)
     if (scope->next_ts != GST_CLOCK_TIME_NONE)
       scope->next_ts += scope->frame_duration;
   }
+
+  g_mutex_unlock (scope->config_lock);
 
   gst_object_unref (scope);
 
