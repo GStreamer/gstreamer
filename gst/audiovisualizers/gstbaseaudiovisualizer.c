@@ -88,9 +88,19 @@ gst_base_audio_visualizer_shader_get_type (void)
         "fade-and-move-up"},
     {GST_BASE_AUDIO_VISUALIZER_SHADER_FADE_AND_MOVE_DOWN, "Fade and move down",
         "fade-and-move-down"},
+    {GST_BASE_AUDIO_VISUALIZER_SHADER_FADE_AND_MOVE_LEFT, "Fade and move left",
+        "fade-and-move-left"},
+    {GST_BASE_AUDIO_VISUALIZER_SHADER_FADE_AND_MOVE_RIGHT,
+          "Fade and move right",
+        "fade-and-move-right"},
     {GST_BASE_AUDIO_VISUALIZER_SHADER_FADE_AND_MOVE_HORIZ_OUT,
-          "Fade and move horizontaly out",
-        "fade-and-move-horiz-out"},
+        "Fade and move horizontally out", "fade-and-move-horiz-out"},
+    {GST_BASE_AUDIO_VISUALIZER_SHADER_FADE_AND_MOVE_HORIZ_IN,
+        "Fade and move horizontally in", "fade-and-move-horiz-in"},
+    {GST_BASE_AUDIO_VISUALIZER_SHADER_FADE_AND_MOVE_VERT_OUT,
+        "Fade and move vertically out", "fade-and-move-vert-out"},
+    {GST_BASE_AUDIO_VISUALIZER_SHADER_FADE_AND_MOVE_VERT_IN,
+        "Fade and move vertically in", "fade-and-move-vert-in"},
     {0, NULL, NULL},
   };
 
@@ -101,6 +111,59 @@ gst_base_audio_visualizer_shader_get_type (void)
   return shader_type;
 }
 
+/* we're only supporting GST_VIDEO_FORMAT_xRGB right now) */
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+
+#define SHADE1(_d, _s, _i, _r, _g, _b)          \
+G_STMT_START {                                  \
+    _d[_i] = (_s[_i] > _b) ? _s[_i] - _b : 0;   \
+    _i++;                                       \
+    _d[_i] = (_s[_i] > _g) ? _s[_i] - _g : 0;   \
+    _i++;                                       \
+    _d[_i] = (_s[_i] > _r) ? _s[_i] - _r : 0;   \
+    _i++;                                       \
+    _d[_i++] = 0;                               \
+} G_STMT_END
+
+#define SHADE2(_d, _s, _j, _i, _r, _g, _b)      \
+G_STMT_START {                                  \
+    _d[_j++] = (_s[_i] > _b) ? _s[_i] - _b : 0; \
+    _i++;                                       \
+    _d[_j++] = (_s[_i] > _g) ? _s[_i] - _g : 0; \
+    _i++;                                       \
+    _d[_j++] = (_s[_i] > _r) ? _s[_i] - _r : 0; \
+    _i++;                                       \
+    _d[_j++] = 0;                               \
+    _i++;                                       \
+} G_STMT_END
+
+#else
+
+#define SHADE1(_d, _s, _i, _r, _g, _b)          \
+G_STMT_START {                                  \
+    _d[_i++] = 0;                               \
+    _d[_i] = (_s[_i] > _r) ? _s[_i] - _r : 0;   \
+    _i++;                                       \
+    _d[_i] = (_s[_i] > _g) ? _s[_i] - _g : 0;   \
+    _i++;                                       \
+    _d[_i] = (_s[_i] > _b) ? _s[_i] - _b : 0;   \
+    _i++;                                       \
+} G_STMT_END
+
+#define SHADE2(_d, _s, _j, _i, _r, _g, _b)      \
+G_STMT_START {                                  \
+    _d[_j++] = 0;                               \
+    _i++;                                       \
+    _d[_j++] = (_s[_i] > _r) ? _s[_i] - _r : 0; \
+    _i++;                                       \
+    _d[_j++] = (_s[_i] > _g) ? _s[_i] - _g : 0; \
+    _i++;                                       \
+    _d[_j++] = (_s[_i] > _b) ? _s[_i] - _b : 0; \
+    _i++;                                       \
+} G_STMT_END
+
+#endif
+
 static void
 shader_fade (GstBaseAudioVisualizer * scope, const guint8 * s, guint8 * d)
 {
@@ -109,28 +172,9 @@ shader_fade (GstBaseAudioVisualizer * scope, const guint8 * s, guint8 * d)
   guint g = (scope->shade_amount >> 8) & 0xff;
   guint b = (scope->shade_amount >> 0) & 0xff;
 
-  /* we're only supporting GST_VIDEO_FORMAT_xRGB right now) */
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
   for (i = 0; i < bpf;) {
-    d[i] = (s[i] > b) ? s[i] - b : 0;
-    i++;
-    d[i] = (s[i] > g) ? s[i] - g : 0;
-    i++;
-    d[i] = (s[i] > r) ? s[i] - r : 0;
-    i++;
-    d[i++] = 0;
+    SHADE1 (d, s, i, r, g, b);
   }
-#else
-  for (i = 0; i < bpf;) {
-    d[i++] = 0;
-    d[i] = (s[i] > r) ? s[i] - r : 0;
-    i++;
-    d[i] = (s[i] > g) ? s[i] - g : 0;
-    i++;
-    d[i] = (s[i] > b) ? s[i] - b : 0;
-    i++;
-  }
-#endif
 }
 
 static void
@@ -143,47 +187,9 @@ shader_fade_and_move_up (GstBaseAudioVisualizer * scope, const guint8 * s,
   guint g = (scope->shade_amount >> 8) & 0xff;
   guint b = (scope->shade_amount >> 0) & 0xff;
 
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
   for (j = 0, i = bpl; i < bpf;) {
-    d[j++] = (s[i] > b) ? s[i] - b : 0;
-    i++;
-    d[j++] = (s[i] > g) ? s[i] - g : 0;
-    i++;
-    d[j++] = (s[i] > r) ? s[i] - r : 0;
-    i++;
-    d[j++] = 0;
-    i++;
+    SHADE2 (d, s, j, i, r, g, b);
   }
-  for (i = 0; i < bpl; i += 4) {
-    d[j] = (s[j] > b) ? s[j] - b : 0;
-    j++;
-    d[j] = (s[j] > g) ? s[j] - g : 0;
-    j++;
-    d[j] = (s[j] > r) ? s[j] - r : 0;
-    j++;
-    d[j++] = 0;
-  }
-#else
-  for (j = 0, i = bpl; i < bpf;) {
-    d[j++] = 0;
-    i++;
-    d[j++] = (s[i] > r) ? s[i] - r : 0;
-    i++;
-    d[j++] = (s[i] > g) ? s[i] - g : 0;
-    i++;
-    d[j++] = (s[i] > b) ? s[i] - b : 0;
-    i++;
-  }
-  for (i = 0; i < bpl; i += 4) {
-    d[j++] = 0;
-    d[j] = (s[j] > r) ? s[j] - r : 0;
-    j++;
-    d[j] = (s[j] > g) ? s[j] - g : 0;
-    j++;
-    d[j] = (s[j] > b) ? s[j] - b : 0;
-    j++;
-  }
-#endif
 }
 
 static void
@@ -196,47 +202,49 @@ shader_fade_and_move_down (GstBaseAudioVisualizer * scope, const guint8 * s,
   guint g = (scope->shade_amount >> 8) & 0xff;
   guint b = (scope->shade_amount >> 0) & 0xff;
 
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-  for (i = 0; i < bpl;) {
-    d[i] = (s[i] > b) ? s[i] - b : 0;
-    i++;
-    d[i] = (s[i] > g) ? s[i] - g : 0;
-    i++;
-    d[i] = (s[i] > r) ? s[i] - r : 0;
-    i++;
-    d[i++] = 0;
-  }
   for (j = bpl, i = 0; j < bpf;) {
-    d[j++] = (s[i] > b) ? s[i] - b : 0;
-    i++;
-    d[j++] = (s[i] > g) ? s[i] - g : 0;
-    i++;
-    d[j++] = (s[i] > r) ? s[i] - r : 0;
-    i++;
-    d[j++] = 0;
-    i++;
+    SHADE2 (d, s, j, i, r, g, b);
   }
-#else
-  for (i = 0; i < bpl;) {
-    d[i++] = 0;
-    d[i] = (s[i] > r) ? s[i] - r : 0;
-    i++;
-    d[i] = (s[i] > g) ? s[i] - g : 0;
-    i++;
-    d[i] = (s[i] > b) ? s[i] - b : 0;
-    i++;
+}
+
+static void
+shader_fade_and_move_left (GstBaseAudioVisualizer * scope,
+    const guint8 * s, guint8 * d)
+{
+  guint i, j, k, bpf = scope->bpf;
+  guint w = scope->width;
+  guint r = (scope->shade_amount >> 16) & 0xff;
+  guint g = (scope->shade_amount >> 8) & 0xff;
+  guint b = (scope->shade_amount >> 0) & 0xff;
+
+  /* move to the left */
+  for (j = 0, i = 4; i < bpf;) {
+    for (k = 0; k < w - 1; k++) {
+      SHADE2 (d, s, j, i, r, g, b);
+    }
+    i += 4;
+    j += 4;
   }
-  for (j = bpl, i = 0; j < bpf;) {
-    d[j++] = 0;
-    i++;
-    d[j++] = (s[i] > r) ? s[i] - r : 0;
-    i++;
-    d[j++] = (s[i] > g) ? s[i] - g : 0;
-    i++;
-    d[j++] = (s[i] > b) ? s[i] - b : 0;
-    i++;
+}
+
+static void
+shader_fade_and_move_right (GstBaseAudioVisualizer * scope,
+    const guint8 * s, guint8 * d)
+{
+  guint i, j, k, bpf = scope->bpf;
+  guint w = scope->width;
+  guint r = (scope->shade_amount >> 16) & 0xff;
+  guint g = (scope->shade_amount >> 8) & 0xff;
+  guint b = (scope->shade_amount >> 0) & 0xff;
+
+  /* move to the left */
+  for (j = 4, i = 0; i < bpf;) {
+    for (k = 0; k < w - 1; k++) {
+      SHADE2 (d, s, j, i, r, g, b);
+    }
+    i += 4;
+    j += 4;
   }
-#endif
 }
 
 static void
@@ -249,91 +257,91 @@ shader_fade_and_move_horiz_out (GstBaseAudioVisualizer * scope,
   guint g = (scope->shade_amount >> 8) & 0xff;
   guint b = (scope->shade_amount >> 0) & 0xff;
 
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-  /* middle up */
+  /* move upper half up */
   for (j = 0, i = bpl; i < bpf;) {
-    d[j++] = (s[i] > b) ? s[i] - b : 0;
-    i++;
-    d[j++] = (s[i] > g) ? s[i] - g : 0;
-    i++;
-    d[j++] = (s[i] > r) ? s[i] - r : 0;
-    i++;
-    d[j++] = 0;
-    i++;
+    SHADE2 (d, s, j, i, r, g, b);
   }
-  for (i = 0; i < bpl; i += 4) {
-    d[j] = (s[j] > b) ? s[j] - b : 0;
-    j++;
-    d[j] = (s[j] > g) ? s[j] - g : 0;
-    j++;
-    d[j] = (s[j] > r) ? s[j] - r : 0;
-    j++;
-    d[j++] = 0;
-  }
-  /* middle down */
-  for (i = bpf; i < bpf + bpl;) {
-    d[i] = (s[i] > b) ? s[i] - b : 0;
-    i++;
-    d[i] = (s[i] > g) ? s[i] - g : 0;
-    i++;
-    d[i] = (s[i] > r) ? s[i] - r : 0;
-    i++;
-    d[i++] = 0;
-  }
+  /* move lower half down */
   for (j = bpf + bpl, i = bpf; j < bpf + bpf;) {
-    d[j++] = (s[i] > b) ? s[i] - b : 0;
-    i++;
-    d[j++] = (s[i] > g) ? s[i] - g : 0;
-    i++;
-    d[j++] = (s[i] > r) ? s[i] - r : 0;
-    i++;
-    d[j++] = 0;
-    i++;
+    SHADE2 (d, s, j, i, r, g, b);
   }
-#else
-  /* middle up */
-  for (j = 0, i = bpl; i < bpf;) {
-    d[j++] = 0;
-    i++;
-    d[j++] = (s[i] > r) ? s[i] - r : 0;
-    i++;
-    d[j++] = (s[i] > g) ? s[i] - g : 0;
-    i++;
-    d[j++] = (s[i] > b) ? s[i] - b : 0;
-    i++;
-  }
-  for (i = 0; i < bpl; i += 4) {
-    d[j++] = 0;
-    d[j] = (s[j] > r) ? s[j] - r : 0;
-    j++;
-    d[j] = (s[j] > g) ? s[j] - g : 0;
-    j++;
-    d[j] = (s[j] > b) ? s[j] - b : 0;
-    j++;
-  }
-  /* middle down */
-  for (i = bpf; i < bpf + bpl;) {
-    d[i++] = 0;
-    d[i] = (s[i] > r) ? s[i] - r : 0;
-    i++;
-    d[i] = (s[i] > g) ? s[i] - g : 0;
-    i++;
-    d[i] = (s[i] > b) ? s[i] - b : 0;
-    i++;
-  }
-  for (j = bpf + bpl, i = bpf; j < bpf + bpf;) {
-    d[j++] = 0;
-    i++;
-    d[j++] = (s[i] > r) ? s[i] - r : 0;
-    i++;
-    d[j++] = (s[i] > g) ? s[i] - g : 0;
-    i++;
-    d[j++] = (s[i] > b) ? s[i] - b : 0;
-    i++;
-  }
-#endif
 }
 
+static void
+shader_fade_and_move_horiz_in (GstBaseAudioVisualizer * scope,
+    const guint8 * s, guint8 * d)
+{
+  guint i, j, bpf = scope->bpf / 2;
+  guint bpl = 4 * scope->width;
+  guint r = (scope->shade_amount >> 16) & 0xff;
+  guint g = (scope->shade_amount >> 8) & 0xff;
+  guint b = (scope->shade_amount >> 0) & 0xff;
+
+  /* move upper half down */
+  for (i = 0, j = bpl; i < bpf;) {
+    SHADE2 (d, s, j, i, r, g, b);
+  }
+  /* move lower half up */
+  for (i = bpf + bpl, j = bpf; i < bpf + bpf;) {
+    SHADE2 (d, s, j, i, r, g, b);
+  }
+}
+
+static void
+shader_fade_and_move_vert_out (GstBaseAudioVisualizer * scope,
+    const guint8 * s, guint8 * d)
+{
+  guint i, j, k, bpf = scope->bpf;
+  guint m = scope->width / 2;
+  guint r = (scope->shade_amount >> 16) & 0xff;
+  guint g = (scope->shade_amount >> 8) & 0xff;
+  guint b = (scope->shade_amount >> 0) & 0xff;
+
+  /* move left half to the left */
+  for (j = 0, i = 4; i < bpf;) {
+    for (k = 0; k < m; k++) {
+      SHADE2 (d, s, j, i, r, g, b);
+    }
+    j += 4 * m;
+    i += 4 * m;
+  }
+  /* move right half to the right */
+  for (j = 4 * (m + 1), i = 4 * m; j < bpf;) {
+    for (k = 0; k < m; k++) {
+      SHADE2 (d, s, j, i, r, g, b);
+    }
+    j += 4 * m;
+    i += 4 * m;
+  }
+}
+
+static void
+shader_fade_and_move_vert_in (GstBaseAudioVisualizer * scope,
+    const guint8 * s, guint8 * d)
+{
+  guint i, j, k, bpf = scope->bpf;
+  guint m = scope->width / 2;
+  guint r = (scope->shade_amount >> 16) & 0xff;
+  guint g = (scope->shade_amount >> 8) & 0xff;
+  guint b = (scope->shade_amount >> 0) & 0xff;
+
+  /* move left half to the right */
+  for (j = 4, i = 0; j < bpf;) {
+    for (k = 0; k < m; k++) {
+      SHADE2 (d, s, j, i, r, g, b);
+    }
+    j += 4 * m;
+    i += 4 * m;
+  }
+  /* move right half to the left */
+  for (j = 4 * m, i = 4 * (m + 1); i < bpf;) {
+    for (k = 0; k < m; k++) {
+      SHADE2 (d, s, j, i, r, g, b);
+    }
+    j += 4 * m;
+    i += 4 * m;
+  }
+}
 
 static void
 gst_base_audio_visualizer_change_shader (GstBaseAudioVisualizer * scope)
@@ -351,8 +359,23 @@ gst_base_audio_visualizer_change_shader (GstBaseAudioVisualizer * scope)
     case GST_BASE_AUDIO_VISUALIZER_SHADER_FADE_AND_MOVE_DOWN:
       scope->shader = shader_fade_and_move_down;
       break;
+    case GST_BASE_AUDIO_VISUALIZER_SHADER_FADE_AND_MOVE_LEFT:
+      scope->shader = shader_fade_and_move_left;
+      break;
+    case GST_BASE_AUDIO_VISUALIZER_SHADER_FADE_AND_MOVE_RIGHT:
+      scope->shader = shader_fade_and_move_right;
+      break;
     case GST_BASE_AUDIO_VISUALIZER_SHADER_FADE_AND_MOVE_HORIZ_OUT:
       scope->shader = shader_fade_and_move_horiz_out;
+      break;
+    case GST_BASE_AUDIO_VISUALIZER_SHADER_FADE_AND_MOVE_HORIZ_IN:
+      scope->shader = shader_fade_and_move_horiz_in;
+      break;
+    case GST_BASE_AUDIO_VISUALIZER_SHADER_FADE_AND_MOVE_VERT_OUT:
+      scope->shader = shader_fade_and_move_vert_out;
+      break;
+    case GST_BASE_AUDIO_VISUALIZER_SHADER_FADE_AND_MOVE_VERT_IN:
+      scope->shader = shader_fade_and_move_vert_in;
       break;
     default:
       GST_ERROR ("invalid shader function");
