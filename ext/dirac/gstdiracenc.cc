@@ -145,8 +145,6 @@ static GstFlowReturn gst_dirac_enc_handle_frame (GstBaseVideoEncoder *
     base_video_encoder, GstVideoFrame * frame);
 static GstFlowReturn gst_dirac_enc_shape_output (GstBaseVideoEncoder *
     base_video_encoder, GstVideoFrame * frame);
-static GstCaps *gst_dirac_enc_get_caps (GstBaseVideoEncoder *
-    base_video_encoder);
 static void gst_dirac_enc_create_codec_data (GstDiracEnc * dirac_enc,
     GstBuffer * seq_header);
 
@@ -314,7 +312,6 @@ gst_dirac_enc_class_init (GstDiracEncClass * klass)
       GST_DEBUG_FUNCPTR (gst_dirac_enc_handle_frame);
   basevideoencoder_class->shape_output =
       GST_DEBUG_FUNCPTR (gst_dirac_enc_shape_output);
-  basevideoencoder_class->get_caps = GST_DEBUG_FUNCPTR (gst_dirac_enc_get_caps);
 }
 
 static void
@@ -330,6 +327,8 @@ gst_dirac_enc_set_format (GstBaseVideoEncoder * base_video_encoder,
     GstVideoState * state)
 {
   GstDiracEnc *dirac_enc = GST_DIRAC_ENC (base_video_encoder);
+  GstCaps *caps;
+  gboolean ret;
 
   GST_DEBUG ("set_format");
 
@@ -381,7 +380,18 @@ gst_dirac_enc_set_format (GstBaseVideoEncoder * base_video_encoder,
 
   dirac_enc->encoder = dirac_encoder_init (&dirac_enc->enc_ctx, FALSE);
 
-  return TRUE;
+  caps = gst_caps_new_simple ("video/x-dirac",
+      "width", G_TYPE_INT, state->width,
+      "height", G_TYPE_INT, state->height,
+      "framerate", GST_TYPE_FRACTION, state->fps_n,
+      state->fps_d,
+      "pixel-aspect-ratio", GST_TYPE_FRACTION, state->par_n,
+      state->par_d, NULL);
+
+  ret = gst_pad_set_caps (GST_BASE_VIDEO_CODEC_SRC_PAD (dirac_enc), caps);
+  gst_caps_unref (caps);
+
+  return ret;
 }
 
 static void
@@ -1091,7 +1101,7 @@ static GstFlowReturn
 gst_dirac_enc_process (GstDiracEnc * dirac_enc, gboolean end_sequence)
 {
   GstBuffer *outbuf;
-  GstFlowReturn ret;
+  GstFlowReturn ret = GST_FLOW_OK;
   int parse_code;
   int state;
   GstVideoFrame *frame;
@@ -1153,7 +1163,28 @@ gst_dirac_enc_process (GstDiracEnc * dirac_enc, gboolean end_sequence)
         }
 
         if (!dirac_enc->codec_data) {
+          GstCaps *caps;
+          const GstVideoState *state = gst_base_video_encoder_get_state (GST_BASE_VIDEO_ENCODER (dirac_enc));
+
           gst_dirac_enc_create_codec_data (dirac_enc, outbuf);
+          
+          caps = gst_caps_new_simple ("video/x-dirac",
+              "width", G_TYPE_INT, state->width,
+              "height", G_TYPE_INT, state->height,
+              "framerate", GST_TYPE_FRACTION, state->fps_n,
+              state->fps_d,
+              "pixel-aspect-ratio", GST_TYPE_FRACTION, state->par_n,
+              state->par_d, "streamheader", GST_TYPE_BUFFER, dirac_enc->codec_data,
+              NULL);
+          if (!gst_pad_set_caps (GST_BASE_VIDEO_CODEC_SRC_PAD (dirac_enc), caps))
+            ret = GST_FLOW_NOT_NEGOTIATED;
+          gst_caps_unref (caps);
+
+          if (ret != GST_FLOW_OK) {
+            GST_ERROR ("Failed to set srcpad caps");
+            gst_buffer_unref (outbuf);
+            return ret;
+          }
         }
 
         frame->src_buffer = outbuf;
@@ -1261,25 +1292,4 @@ gst_dirac_enc_create_codec_data (GstDiracEnc * dirac_enc,
   dirac_enc->codec_data = buf;
 }
 
-static GstCaps *
-gst_dirac_enc_get_caps (GstBaseVideoEncoder * base_video_encoder)
-{
-  GstCaps *caps;
-  const GstVideoState *state;
-  GstDiracEnc *dirac_enc;
 
-  dirac_enc = GST_DIRAC_ENC (base_video_encoder);
-
-  state = gst_base_video_encoder_get_state (base_video_encoder);
-
-  caps = gst_caps_new_simple ("video/x-dirac",
-      "width", G_TYPE_INT, state->width,
-      "height", G_TYPE_INT, state->height,
-      "framerate", GST_TYPE_FRACTION, state->fps_n,
-      state->fps_d,
-      "pixel-aspect-ratio", GST_TYPE_FRACTION, state->par_n,
-      state->par_d,
-      "streamheader", GST_TYPE_BUFFER, dirac_enc->codec_data, NULL);
-
-  return caps;
-}
