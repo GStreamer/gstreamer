@@ -37,6 +37,47 @@
 #include "gstffmpegcodecmap.h"
 #include "gstffmpegutils.h"
 
+
+/* Properties */
+
+#define DEFAULT_MODE            GST_FFMPEGDEINTERLACE_MODE_AUTO
+
+enum
+{
+  PROP_0,
+  PROP_MODE,
+  PROP_LAST
+};
+
+typedef enum
+{
+  GST_FFMPEGDEINTERLACE_MODE_AUTO,
+  GST_FFMPEGDEINTERLACE_MODE_INTERLACED,
+  GST_FFMPEGDEINTERLACE_MODE_DISABLED
+} GstFFMpegDeinterlaceMode;
+
+#define GST_TYPE_FFMPEGDEINTERLACE_MODES (gst_ffmpegdeinterlace_modes_get_type ())
+static GType
+gst_ffmpegdeinterlace_modes_get_type (void)
+{
+  static GType deinterlace_modes_type = 0;
+
+  static const GEnumValue modes_types[] = {
+    {GST_FFMPEGDEINTERLACE_MODE_AUTO, "Auto detection", "auto"},
+    {GST_FFMPEGDEINTERLACE_MODE_INTERLACED, "Force deinterlacing",
+        "interlaced"},
+    {GST_FFMPEGDEINTERLACE_MODE_DISABLED, "Run in passthrough mode",
+        "disabled"},
+    {0, NULL, NULL},
+  };
+
+  if (!deinterlace_modes_type) {
+    deinterlace_modes_type =
+        g_enum_register_static ("GstFFMpegDeinterlaceModes", modes_types);
+  }
+  return deinterlace_modes_type;
+}
+
 typedef struct _GstFFMpegDeinterlace
 {
   GstElement element;
@@ -45,6 +86,14 @@ typedef struct _GstFFMpegDeinterlace
 
   gint width, height;
   gint to_size;
+
+  GstFFMpegDeinterlaceMode mode;
+
+  gboolean interlaced;          /* is input interlaced? */
+  gboolean passthrough;
+
+  gboolean reconfigure;
+  GstFFMpegDeinterlaceMode new_mode;
 
   enum PixelFormat pixfmt;
   AVPicture from_frame, to_frame;
@@ -67,6 +116,11 @@ typedef struct _GstFFMpegDeinterlaceClass
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FFMPEGDEINTERLACE))
 
 GType gst_ffmpegdeinterlace_get_type (void);
+
+static void gst_ffmpegdeinterlace_set_property (GObject * self, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_ffmpegdeinterlace_get_property (GObject * self, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -103,6 +157,35 @@ gst_ffmpegdeinterlace_base_init (gpointer g_class)
 static void
 gst_ffmpegdeinterlace_class_init (GstFFMpegDeinterlaceClass * klass)
 {
+  GObjectClass *gobject_class = (GObjectClass *) klass;
+
+  gobject_class->set_property = gst_ffmpegdeinterlace_set_property;
+  gobject_class->get_property = gst_ffmpegdeinterlace_get_property;
+
+  /**
+   * GstFFMpegDeinterlace:mode
+   *
+   * This selects whether the deinterlacing methods should
+   * always be applied or if they should only be applied
+   * on content that has the "interlaced" flag on the caps.
+   *
+   * Since: 0.10.13
+   */
+  g_object_class_install_property (gobject_class, PROP_MODE,
+      g_param_spec_enum ("mode", "Mode", "Deinterlace Mode",
+          GST_TYPE_FFMPEGDEINTERLACE_MODES,
+          DEFAULT_MODE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
+      );
+}
+
+static void
+gst_ffmpegdeinterlace_update_passthrough (GstFFMpegDeinterlace * deinterlace)
+{
+  deinterlace->passthrough =
+      (deinterlace->mode == GST_FFMPEGDEINTERLACE_MODE_DISABLED
+      || (!deinterlace->interlaced
+          && deinterlace->mode != GST_FFMPEGDEINTERLACE_MODE_INTERLACED));
+  GST_DEBUG_OBJECT (deinterlace, "Passthrough: %d", deinterlace->passthrough);
 }
 
 static gboolean
@@ -119,6 +202,10 @@ gst_ffmpegdeinterlace_sink_setcaps (GstPad * pad, GstCaps * caps)
     return FALSE;
   if (!gst_structure_get_int (structure, "height", &deinterlace->height))
     return FALSE;
+
+  deinterlace->interlaced = FALSE;
+  gst_structure_get_boolean (structure, "interlaced", &deinterlace->interlaced);
+  gst_ffmpegdeinterlace_update_passthrough (deinterlace);
 
   ctx = avcodec_alloc_context ();
   ctx->width = deinterlace->width;
@@ -139,7 +226,8 @@ gst_ffmpegdeinterlace_sink_setcaps (GstPad * pad, GstCaps * caps)
       deinterlace->height);
 
   src_caps = gst_caps_copy (caps);
-  gst_caps_set_simple (src_caps, "interlaced", G_TYPE_BOOLEAN, FALSE, NULL);
+  gst_caps_set_simple (src_caps, "interlaced", G_TYPE_BOOLEAN,
+      deinterlace->interlaced, NULL);
   ret = gst_pad_set_caps (deinterlace->srcpad, src_caps);
   gst_caps_unref (src_caps);
 
@@ -162,6 +250,12 @@ gst_ffmpegdeinterlace_init (GstFFMpegDeinterlace * deinterlace,
   gst_element_add_pad (GST_ELEMENT (deinterlace), deinterlace->srcpad);
 
   deinterlace->pixfmt = PIX_FMT_NB;
+
+  deinterlace->interlaced = FALSE;
+  deinterlace->passthrough = FALSE;
+  deinterlace->reconfigure = FALSE;
+  deinterlace->mode = DEFAULT_MODE;
+  deinterlace->new_mode = -1;
 }
 
 static GstFlowReturn
@@ -171,6 +265,24 @@ gst_ffmpegdeinterlace_chain (GstPad * pad, GstBuffer * inbuf)
       GST_FFMPEGDEINTERLACE (gst_pad_get_parent (pad));
   GstBuffer *outbuf = NULL;
   GstFlowReturn result;
+
+  GST_OBJECT_LOCK (deinterlace);
+  if (deinterlace->reconfigure) {
+    if (deinterlace->new_mode != -1)
+      deinterlace->mode = deinterlace->new_mode;
+    deinterlace->new_mode = -1;
+
+    deinterlace->reconfigure = FALSE;
+    GST_OBJECT_UNLOCK (deinterlace);
+    if (GST_PAD_CAPS (deinterlace->srcpad))
+      gst_ffmpegdeinterlace_sink_setcaps (deinterlace->sinkpad,
+          GST_PAD_CAPS (deinterlace->sinkpad));
+  } else {
+    GST_OBJECT_UNLOCK (deinterlace);
+  }
+
+  if (deinterlace->passthrough)
+    return gst_pad_push (deinterlace->srcpad, inbuf);
 
   result =
       gst_pad_alloc_buffer (deinterlace->srcpad, GST_BUFFER_OFFSET_NONE,
@@ -201,4 +313,53 @@ gst_ffmpegdeinterlace_register (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "ffdeinterlace",
       GST_RANK_NONE, GST_TYPE_FFMPEGDEINTERLACE);
+}
+
+static void
+gst_ffmpegdeinterlace_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstFFMpegDeinterlace *self;
+
+  g_return_if_fail (GST_IS_FFMPEGDEINTERLACE (object));
+  self = GST_FFMPEGDEINTERLACE (object);
+
+  switch (prop_id) {
+    case PROP_MODE:{
+      gint new_mode;
+
+      GST_OBJECT_LOCK (self);
+      new_mode = g_value_get_enum (value);
+      if (self->mode != new_mode && GST_PAD_CAPS (self->srcpad)) {
+        self->reconfigure = TRUE;
+        self->new_mode = new_mode;
+      } else {
+        self->mode = new_mode;
+        gst_ffmpegdeinterlace_update_passthrough (self);
+      }
+      GST_OBJECT_UNLOCK (self);
+      break;
+    }
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (self, prop_id, pspec);
+  }
+
+}
+
+static void
+gst_ffmpegdeinterlace_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstFFMpegDeinterlace *self;
+
+  g_return_if_fail (GST_IS_FFMPEGDEINTERLACE (object));
+  self = GST_FFMPEGDEINTERLACE (object);
+
+  switch (prop_id) {
+    case PROP_MODE:
+      g_value_set_enum (value, self->mode);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (self, prop_id, pspec);
+  }
 }
