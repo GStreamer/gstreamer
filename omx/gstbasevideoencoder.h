@@ -89,7 +89,6 @@ struct _GstBaseVideoEncoder
   /*< private >*/
   /* FIXME move to real private part ?
    * (and introduce a context ?) */
-  gboolean          set_output_caps;
   gboolean          drained;
 
   gint64            min_latency;
@@ -163,8 +162,6 @@ struct _GstBaseVideoEncoderClass
 
   gboolean      (*event)              (GstBaseVideoEncoder *coder,
                                        GstEvent *event);
-
-  GstCaps *     (*get_caps)           (GstBaseVideoEncoder *coder);
 
   /*< private >*/
   /* FIXME before moving to base */

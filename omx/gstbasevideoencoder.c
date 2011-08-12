@@ -91,7 +91,7 @@
  * <itemizedlist>
  *   <listitem><para>Provide pad templates</para></listitem>
  *   <listitem><para>
- *      Provide source pad caps in @get_caps.
+ *      Provide source pad caps before pushing the first buffer
  *   </para></listitem>
  *   <listitem><para>
  *      Accept data in @handle_frame and provide encoded results to
@@ -179,7 +179,6 @@ gst_base_video_encoder_reset (GstBaseVideoEncoder * base_video_encoder)
   base_video_encoder->distance_from_sync = 0;
   base_video_encoder->force_keyframe = FALSE;
 
-  base_video_encoder->set_output_caps = FALSE;
   base_video_encoder->drained = TRUE;
   base_video_encoder->min_latency = 0;
   base_video_encoder->max_latency = 0;
@@ -760,27 +759,6 @@ gst_base_video_encoder_finish_frame (GstBaseVideoEncoder * base_video_encoder,
 
   GST_LOG_OBJECT (base_video_encoder,
       "finish frame fpn %d", frame->presentation_frame_number);
-
-  /* FIXME get rid of this ?
-   * seems a roundabout way that adds little benefit to simply get
-   * and subsequently set.  subclass is adult enough to set_caps itself ...
-   * so simply check/ensure/assert that src pad caps are set by now */
-  if (!base_video_encoder->set_output_caps) {
-    if (!GST_PAD_CAPS (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder))) {
-      GstCaps *caps;
-
-      if (base_video_encoder_class->get_caps) {
-        caps = base_video_encoder_class->get_caps (base_video_encoder);
-      } else {
-        caps = gst_caps_new_simple ("video/unknown", NULL);
-      }
-      GST_DEBUG_OBJECT (base_video_encoder, "src caps %" GST_PTR_FORMAT, caps);
-      gst_pad_set_caps (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder),
-          caps);
-      gst_caps_unref (caps);
-    }
-    base_video_encoder->set_output_caps = TRUE;
-  }
 
   /* Push all pending events that arrived before this frame */
   for (l = base_video_encoder->base_video_codec.frames; l; l = l->next) {
