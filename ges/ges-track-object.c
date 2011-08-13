@@ -220,7 +220,7 @@ ges_track_object_class_init (GESTrackObjectClass * klass)
    * The in-point at which this #GESTrackObject will start outputting data
    * from its contents (in nanoseconds).
    *
-   * Ex : an in-point of 5 seconds means that the first outputted buffer will
+   * Ex: an in-point of 5 seconds means that the first outputted buffer will
    * be the one located 5 seconds in the controlled resource.
    */
   properties[PROP_INPOINT] =
@@ -278,6 +278,8 @@ ges_track_object_class_init (GESTrackObjectClass * klass)
    *
    * The deep notify signal is used to be notified of property changes of all
    * the childs of @track_object
+   *
+   * Since: 0.10.2
    */
   ges_track_object_signals[DEEP_NOTIFY] =
       g_signal_new ("deep-notify", G_TYPE_FROM_CLASS (klass),
@@ -1115,7 +1117,7 @@ prop_hash_not_set:
  *
  * Sets a property of a child of @object. If there are various child elements
  * that have the same property name, you can distinguish them using the following
- * synthaxe: 'ClasseName::property_name' as property name. If you don't, the
+ * syntax: 'ClasseName::property_name' as property name. If you don't, the
  * corresponding property of the first element found will be set.
  *
  * Since: 0.10.2
@@ -1186,7 +1188,7 @@ cant_copy:
  *
  * Sets a property of a child of @object. If there are various child elements
  * that have the same property name, you can distinguish them using the following
- * synthaxe: 'ClasseName::property_name' as property name. If you don't, the
+ * syntax: 'ClasseName::property_name' as property name. If you don't, the
  * corresponding property of the first element found will be set.
  *
  * Since: 0.10.2
@@ -1212,7 +1214,7 @@ ges_track_object_set_child_property (GESTrackObject * object,
  *
  * Gets a property of a child of @object. If there are various child elements
  * that have the same property name, you can distinguish them using the following
- * synthaxe: 'ClasseName::property_name' as property name. If you don't, the
+ * syntax: 'ClasseName::property_name' as property name. If you don't, the
  * corresponding property of the first element found will be set.
  *
  * Since: 0.10.2
