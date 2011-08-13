@@ -355,12 +355,12 @@ gst_jack_ring_buffer_open_device (GstRingBuffer * buf)
   /* ERRORS */
 could_not_open:
   {
-    if (status & JackServerFailed) {
+    if (status & (JackServerFailed | JackFailure)) {
       GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND,
           (_("Jack server not found")),
           ("Cannot connect to the Jack server (status %d)", status));
     } else {
-      GST_ELEMENT_ERROR (src, RESOURCE, OPEN_WRITE,
+      GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
           (NULL), ("Jack client open error (status %d)", status));
     }
     return FALSE;
