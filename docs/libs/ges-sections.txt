@@ -17,24 +17,27 @@ GES_PADDING
 <SECTION>
 <FILE>ges-enums</FILE>
 <TITLE>GES Enums</TITLE>
-GESVideoStandardTransitionType
 GESTrackType
+GESVideoStandardTransitionType
 GESTextHAlign
 DEFAULT_HALIGNMENT
 GESTextVAlign
 DEFAULT_VALIGNMENT
 GESVideoTestPattern
+GESPipelineFlags
 <SUBSECTION Standard>
 GES_TYPE_TRACK_TYPE
 ges_track_type_get_type
+GES_VIDEO_STANDARD_TRANSITION_TYPE_TYPE
+ges_video_standard_transition_type_get_type
 GES_TEXT_HALIGN_TYPE
 ges_text_halign_get_type
 GES_TEXT_VALIGN_TYPE
 ges_text_valign_get_type
 GES_VIDEO_TEST_PATTERN_TYPE
 ges_video_test_pattern_get_type
-GES_VIDEO_STANDARD_TRANSITION_TYPE_TYPE
-ges_video_standard_transition_type_get_type
+GES_TYPE_PIPELINE_FLAGS
+ges_pipeline_flags_get_type
 </SECTION>
 
 <SECTION>
