@@ -101,6 +101,7 @@ static gboolean gst_ogg_demux_collect_chain_info (GstOggDemux * ogg,
     GstOggChain * chain);
 static gboolean gst_ogg_demux_activate_chain (GstOggDemux * ogg,
     GstOggChain * chain, GstEvent * event);
+static void gst_ogg_pad_mark_discont (GstOggPad * pad);
 static void gst_ogg_chain_mark_discont (GstOggChain * chain);
 
 static gboolean gst_ogg_demux_perform_seek (GstOggDemux * ogg,
@@ -959,7 +960,11 @@ gst_ogg_pad_stream_out (GstOggPad * pad, gint npackets)
         break;
       case -1:
         GST_LOG_OBJECT (ogg, "packetout discont");
-        gst_ogg_chain_mark_discont (pad->chain);
+        if (!pad->map.is_sparse) {
+          gst_ogg_chain_mark_discont (pad->chain);
+        } else {
+          gst_ogg_pad_mark_discont (pad);
+        }
         break;
       case 1:
         GST_LOG_OBJECT (ogg, "packetout gave packet of size %ld", packet.bytes);
