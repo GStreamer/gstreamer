@@ -269,6 +269,8 @@ ges_track_title_source_set_halignment (GESTrackTitleSource * self,
  * @color: the color @self is being set to
  *
  * Sets the color of the text.
+ *
+ * Since: 0.10.2
  */
 void
 ges_track_title_source_set_color (GESTrackTitleSource * self, guint32 color)
@@ -286,6 +288,8 @@ ges_track_title_source_set_color (GESTrackTitleSource * self, guint32 color)
  * @position: the horizontal position @self is being set to
  *
  * Sets the horizontal position of the text.
+ *
+ * Since: 0.10.2
  */
 void
 ges_track_title_source_set_xpos (GESTrackTitleSource * self, gdouble position)
@@ -303,6 +307,8 @@ ges_track_title_source_set_xpos (GESTrackTitleSource * self, gdouble position)
  * @position: the color @self is being set to
  *
  * Sets the vertical position of the text.
+ *
+ * Since: 0.10.2
  */
 void
 ges_track_title_source_set_ypos (GESTrackTitleSource * self, gdouble position)
@@ -378,6 +384,8 @@ ges_track_title_source_get_valignment (GESTrackTitleSource * source)
  * Get the color used by @source.
  *
  * Returns: The color used by @source.
+ *
+ * Since: 0.10.2
  */
 const guint32
 ges_track_title_source_get_color (GESTrackTitleSource * source)
@@ -392,6 +400,8 @@ ges_track_title_source_get_color (GESTrackTitleSource * source)
  * Get the horizontal position used by @source.
  *
  * Returns: The horizontal position used by @source.
+ *
+ * Since: 0.10.2
  */
 const gdouble
 ges_track_title_source_get_xpos (GESTrackTitleSource * source)
@@ -406,6 +416,8 @@ ges_track_title_source_get_xpos (GESTrackTitleSource * source)
  * Get the vertical position used by @source.
  *
  * Returns: The vertical position used by @source.
+ *
+ * Since: 0.10.2
  */
 const gdouble
 ges_track_title_source_get_ypos (GESTrackTitleSource * source)

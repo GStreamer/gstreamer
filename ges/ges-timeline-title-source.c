@@ -429,6 +429,7 @@ ges_timeline_title_source_set_mute (GESTimelineTitleSource * self,
  *
  * Sets the color of the text.
  *
+ * Since: 0.10.2
  */
 void
 ges_timeline_title_source_set_color (GESTimelineTitleSource * self,
@@ -453,6 +454,7 @@ ges_timeline_title_source_set_color (GESTimelineTitleSource * self,
  *
  * Sets the horizontal position of the text.
  *
+ * Since: 0.10.2
  */
 void
 ges_timeline_title_source_set_xpos (GESTimelineTitleSource * self,
@@ -477,6 +479,7 @@ ges_timeline_title_source_set_xpos (GESTimelineTitleSource * self,
  *
  * Sets the vertical position of the text.
  *
+ * Since: 0.10.2
  */
 void
 ges_timeline_title_source_set_ypos (GESTimelineTitleSource * self,
@@ -577,6 +580,7 @@ ges_timeline_title_source_is_muted (GESTimelineTitleSource * self)
  *
  * Returns: The color used by @self.
  *
+ * Since: 0.10.2
  */
 const guint32
 ges_timeline_title_source_get_color (GESTimelineTitleSource * self)
@@ -592,6 +596,7 @@ ges_timeline_title_source_get_color (GESTimelineTitleSource * self)
  *
  * Returns: The horizontal position used by @self.
  *
+ * Since: 0.10.2
  */
 const gdouble
 ges_timeline_title_source_get_xpos (GESTimelineTitleSource * self)
@@ -607,6 +612,7 @@ ges_timeline_title_source_get_xpos (GESTimelineTitleSource * self)
  *
  * Returns: The vertical position used by @self.
  *
+ * Since: 0.10.2
  */
 const gdouble
 ges_timeline_title_source_get_ypos (GESTimelineTitleSource * self)
