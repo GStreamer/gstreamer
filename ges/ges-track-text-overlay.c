@@ -277,6 +277,7 @@ ges_track_text_overlay_set_halignment (GESTrackTextOverlay * self,
  *
  * Sets the color of the text.
  *
+ * Since: 0.10.2
  */
 void
 ges_track_text_overlay_set_color (GESTrackTextOverlay * self, guint32 color)
@@ -295,6 +296,7 @@ ges_track_text_overlay_set_color (GESTrackTextOverlay * self, guint32 color)
  *
  * Sets the horizontal position of the text.
  *
+ * Since: 0.10.2
  */
 void
 ges_track_text_overlay_set_xpos (GESTrackTextOverlay * self, gdouble position)
@@ -313,6 +315,7 @@ ges_track_text_overlay_set_xpos (GESTrackTextOverlay * self, gdouble position)
  *
  * Sets the vertical position of the text.
  *
+ * Since: 0.10.2
  */
 void
 ges_track_text_overlay_set_ypos (GESTrackTextOverlay * self, gdouble position)
@@ -387,6 +390,8 @@ ges_track_text_overlay_get_valignment (GESTrackTextOverlay * self)
  * Get the color used by @source.
  *
  * Returns: The color used by @source.
+ *
+ * Since: 0.10.2
  */
 const guint32
 ges_track_text_overlay_get_color (GESTrackTextOverlay * self)
@@ -401,6 +406,8 @@ ges_track_text_overlay_get_color (GESTrackTextOverlay * self)
  * Get the horizontal position used by @source.
  *
  * Returns: The horizontal position used by @source.
+ *
+ * Since: 0.10.2
  */
 const gdouble
 ges_track_text_overlay_get_xpos (GESTrackTextOverlay * self)
@@ -415,6 +422,8 @@ ges_track_text_overlay_get_xpos (GESTrackTextOverlay * self)
  * Get the vertical position used by @source.
  *
  * Returns: The vertical position used by @source.
+ *
+ * Since: 0.10.2
  */
 const gdouble
 ges_track_text_overlay_get_ypos (GESTrackTextOverlay * self)

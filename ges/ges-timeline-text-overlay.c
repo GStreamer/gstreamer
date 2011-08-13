@@ -401,6 +401,7 @@ ges_timeline_text_overlay_set_valign (GESTimelineTextOverlay * self,
  *
  * Sets the color of the text.
  *
+ * Since: 0.10.2
  */
 void
 ges_timeline_text_overlay_set_color (GESTimelineTextOverlay * self,
@@ -433,6 +434,7 @@ ges_timeline_text_overlay_set_color (GESTimelineTextOverlay * self,
  *
  * Sets the horizontal position of the text.
  *
+ * Since: 0.10.2
  */
 void
 ges_timeline_text_overlay_set_xpos (GESTimelineTextOverlay * self,
@@ -465,6 +467,7 @@ ges_timeline_text_overlay_set_xpos (GESTimelineTextOverlay * self,
  *
  * Sets the vertical position of the text.
  *
+ * Since: 0.10.2
  */
 void
 ges_timeline_text_overlay_set_ypos (GESTimelineTextOverlay * self,
@@ -554,6 +557,8 @@ ges_timeline_text_overlay_get_valignment (GESTimelineTextOverlay * self)
  * Get the color used by @source.
  *
  * Returns: The color used by @source.
+ *
+ * Since: 0.10.2
  */
 
 const guint32
@@ -569,6 +574,8 @@ ges_timeline_text_overlay_get_color (GESTimelineTextOverlay * self)
  * Get the horizontal position used by @source.
  *
  * Returns: The horizontal position used by @source.
+ *
+ * Since: 0.10.2
  */
 
 const gdouble
@@ -584,6 +591,8 @@ ges_timeline_text_overlay_get_xpos (GESTimelineTextOverlay * self)
  * Get the vertical position used by @source.
  *
  * Returns: The vertical position used by @source.
+ *
+ * Since: 0.10.2
  */
 
 const gdouble
