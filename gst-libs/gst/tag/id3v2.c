@@ -265,16 +265,15 @@ id3v2_frame_hdr_size (guint id3v2ver)
   }
 }
 
-static const gchar *obsolete_frame_ids[] = {
-  "CRM", "EQU", "LNK", "RVA", "TIM", "TSI",     /* From 2.2 */
-  "EQUA", "RVAD", "TIME", "TRDA", "TSIZ",       /* From 2.3 */
-  NULL
+static const gchar obsolete_frame_ids[][5] = {
+  {"CRM"}, {"EQU"}, {"LNK"}, {"RVA"}, {"TIM"}, {"TSI"}, /* From 2.2 */
+  {"EQUA"}, {"RVAD"}, {"TIME"}, {"TRDA"}, {"TSIZ"}      /* From 2.3 */
 };
 
-const struct ID3v2FrameIDConvert
+static const struct ID3v2FrameIDConvert
 {
-  const gchar *orig;
-  const gchar *new;
+  const gchar orig[5];
+  const gchar new[5];
 } frame_id_conversions[] = {
   /* 2.3.x frames */
   {
@@ -338,28 +337,24 @@ const struct ID3v2FrameIDConvert
   "WCM", "WCOM"}, {
   "WCP", "WCOP"}, {
   "WPB", "WPUB"}, {
-  "WXX", "WXXX"}, {
-  NULL, NULL}
+  "WXX", "WXXX"}
 };
 
 static gboolean
 convert_fid_to_v240 (gchar * frame_id)
 {
-  gint i = 0;
+  gint i;
 
-  while (obsolete_frame_ids[i] != NULL) {
+  for (i = 0; i < G_N_ELEMENTS (obsolete_frame_ids); ++i) {
     if (strncmp (frame_id, obsolete_frame_ids[i], 5) == 0)
       return TRUE;
-    i++;
   }
 
-  i = 0;
-  while (frame_id_conversions[i].orig != NULL) {
+  for (i = 0; i < G_N_ELEMENTS (frame_id_conversions); ++i) {
     if (strncmp (frame_id, frame_id_conversions[i].orig, 5) == 0) {
       strcpy (frame_id, frame_id_conversions[i].new);
       return FALSE;
     }
-    i++;
   }
   return FALSE;
 }
