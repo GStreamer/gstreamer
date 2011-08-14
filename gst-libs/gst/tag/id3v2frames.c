@@ -35,6 +35,10 @@
 
 #include "id3v2.h"
 
+#ifndef GST_DISABLE_GST_DEBUG
+#define GST_CAT_DEFAULT id3v2_ensure_debug_category()
+#endif
+
 static gboolean parse_comment_frame (ID3TagsWorking * work);
 static gchar *parse_url_link_frame (ID3TagsWorking * work,
     const gchar ** tag_name);

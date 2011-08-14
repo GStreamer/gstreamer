@@ -113,6 +113,8 @@ gboolean id3v2_parse_frame (ID3TagsWorking *work);
 
 guint8 * id3v2_ununsync_data (const guint8 * unsync_data, guint32 * size);
 
+GstDebugCategory * id3v2_ensure_debug_category (void);
+
 G_END_DECLS
 
 #endif
