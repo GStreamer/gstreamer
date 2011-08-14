@@ -1751,7 +1751,6 @@ GstTagImageType
 <SUBSECTION Standard>
 GST_TYPE_TAG_IMAGE_TYPE
 gst_tag_image_type_get_type
-gst_tag_license_flags_get_type
 <SUBSECTION Private>
 GstTagEntryMatch
 </SECTION>
@@ -1848,6 +1847,20 @@ gst_tag_get_language_code
 gst_tag_get_language_code_iso_639_1
 gst_tag_get_language_code_iso_639_2B
 gst_tag_get_language_code_iso_639_2T
+</SECTION>
+
+<SECTION>
+<FILE>gsttaglicenses</FILE>
+<INCLUDE>gst/tag/tag.h</INCLUDE>
+gst_tag_get_license_flags
+gst_tag_get_license_nick
+gst_tag_get_license_title
+gst_tag_get_license_description
+gst_tag_get_license_jurisdiction
+gst_tag_get_license_version
+gst_tag_get_licenses
+<SUBSECTION Standard>
+gst_tag_license_flags_get_type
 </SECTION>
 
 <SECTION>
