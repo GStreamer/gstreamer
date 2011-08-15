@@ -95,6 +95,8 @@ MotionCells::MotionCells ()
   m_saveerrorcode = 0;
   m_alpha = 0.5;
   m_beta = 0.5;
+  m_useAlpha = false;
+  m_isVisible = false;
 
 }
 
