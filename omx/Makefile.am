@@ -4,6 +4,7 @@ libgstopenmax_la_SOURCES = \
 	gstomx.c \
 	gstomxvideodec.c \
 	gstomxvideoenc.c \
+	gstomxaudioenc.c \
 	gstomxmpeg4videodec.c \
 	gstomxh264dec.c \
 	gstomxh263dec.c \
@@ -23,6 +24,7 @@ noinst_HEADERS = \
 	gstomx.h \
 	gstomxvideodec.h \
 	gstomxvideoenc.h \
+	gstomxaudioenc.h \
 	gstomxmpeg4videodec.h \
 	gstomxh264dec.h \
 	gstomxh263dec.h \
