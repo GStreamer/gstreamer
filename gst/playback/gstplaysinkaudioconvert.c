@@ -86,7 +86,7 @@ pad_blocked_cb (GstPad * pad, GstProbeType type, gpointer type_data,
 
   /* There must be a peer at this point */
   peer = gst_pad_get_peer (self->sinkpad);
-  caps = gst_pad_get_negotiated_caps (peer);
+  caps = gst_pad_get_current_caps (peer);
   if (!caps)
     caps = gst_pad_get_caps (peer, NULL);
   gst_object_unref (peer);

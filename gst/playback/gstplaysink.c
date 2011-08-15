@@ -2835,7 +2835,7 @@ is_raw_pad (GstPad * pad)
   if (!peer)
     return raw;
 
-  caps = gst_pad_get_negotiated_caps (peer);
+  caps = gst_pad_get_current_caps (peer);
   if (!caps) {
     guint i, n;
 

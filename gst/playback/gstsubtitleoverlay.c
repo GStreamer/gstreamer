@@ -736,7 +736,7 @@ _pad_blocked_cb (GstPad * pad, GstProbeType type, gpointer type_data,
 
     peer = gst_pad_get_peer (self->subtitle_sinkpad);
     if (peer) {
-      subcaps = gst_pad_get_negotiated_caps (peer);
+      subcaps = gst_pad_get_current_caps (peer);
       if (!subcaps) {
         subcaps = gst_pad_get_caps (peer, NULL);
         if (!gst_caps_is_fixed (subcaps)) {
@@ -870,7 +870,7 @@ _pad_blocked_cb (GstPad * pad, GstProbeType type, gpointer type_data,
         GstCaps *video_caps;
         gint fps_n, fps_d;
 
-        video_caps = gst_pad_get_negotiated_caps (video_peer);
+        video_caps = gst_pad_get_current_caps (video_peer);
         if (!video_caps) {
           video_caps = gst_pad_get_caps (video_peer, NULL);
           if (!gst_caps_is_fixed (video_caps)) {
@@ -1811,7 +1811,7 @@ gst_subtitle_overlay_subtitle_sink_link (GstPad * pad, GstPad * peer)
 
   GST_DEBUG_OBJECT (pad, "Linking pad to peer %" GST_PTR_FORMAT, peer);
 
-  caps = gst_pad_get_negotiated_caps (peer);
+  caps = gst_pad_get_current_caps (peer);
   if (!caps) {
     caps = gst_pad_get_caps (peer, NULL);
     if (!gst_caps_is_fixed (caps)) {

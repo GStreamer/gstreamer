@@ -292,7 +292,7 @@ test_pipeline (const char *pipeline)
     GstStructure *s;
     GstCaps *muxcaps;
 
-    muxcaps = gst_pad_get_negotiated_caps (sinkpad);
+    muxcaps = gst_pad_get_current_caps (sinkpad);
     fail_unless (muxcaps != NULL);
     s = gst_caps_get_structure (muxcaps, 0);
     fail_unless (gst_structure_has_name (s, "application/ogg"));

@@ -91,6 +91,6 @@ GstCheckABIStruct list[] = {
   {"GstVideoRectangle", sizeof (GstVideoRectangle), 16},
   {"GstVideoSinkClass", sizeof (GstVideoSinkClass), 760},
   {"GstVideoSink", sizeof (GstVideoSink), 640},
-  {"GstXOverlayClass", sizeof (GstXOverlayClass), 64},
+  {"GstVideoOverlayIface", sizeof (GstVideoOverlayIface), 64},
   {NULL, 0, 0}
 };

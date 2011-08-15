@@ -983,7 +983,7 @@ gst_ogg_mux_get_headers (GstOggPadData * pad)
 
   GST_LOG_OBJECT (thepad, "getting headers");
 
-  caps = gst_pad_get_negotiated_caps (thepad);
+  caps = gst_pad_get_current_caps (thepad);
   if (caps != NULL) {
     const GValue *streamheader;
 
@@ -1126,7 +1126,7 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
 
     pad = (GstOggPadData *) walk->data;
     thepad = pad->collect.pad;
-    caps = gst_pad_get_negotiated_caps (thepad);
+    caps = gst_pad_get_current_caps (thepad);
     structure = gst_caps_get_structure (caps, 0);
 
     walk = walk->next;

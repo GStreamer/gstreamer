@@ -3083,7 +3083,7 @@ _gst_element_get_linked_caps (GstElement * src, GstElement * sink)
         if (peer) {
           parent = gst_pad_get_parent_element (peer);
           if (parent == sink) {
-            caps = gst_pad_get_negotiated_caps (pad);
+            caps = gst_pad_get_current_caps (pad);
             done = TRUE;
           }
 
@@ -3179,7 +3179,7 @@ gst_decode_chain_get_topology (GstDecodeChain * chain)
   }
 
   /* Caps that resulted in this chain */
-  caps = gst_pad_get_negotiated_caps (chain->pad);
+  caps = gst_pad_get_current_caps (chain->pad);
   if (!caps) {
     caps = get_pad_caps (chain->pad);
     if (G_UNLIKELY (!gst_caps_is_fixed (caps))) {

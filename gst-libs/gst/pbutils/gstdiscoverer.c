@@ -580,7 +580,7 @@ collect_stream_information (GstDiscoverer * dc, PrivateStream * ps, guint idx)
   g_free (stname);
 
   /* Get caps */
-  caps = gst_pad_get_negotiated_caps (ps->pad);
+  caps = gst_pad_get_current_caps (ps->pad);
   if (!caps) {
     GST_WARNING ("Couldn't get negotiated caps from %s:%s",
         GST_DEBUG_PAD_NAME (ps->pad));
