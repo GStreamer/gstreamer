@@ -514,7 +514,6 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstEvent * event)
         if (!seen_data) {
           GstBuffer *buf = gst_buffer_new ();
 
-          GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_PREROLL);
           gst_pad_push (srcpad, buf);
         }
       }
