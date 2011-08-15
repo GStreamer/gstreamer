@@ -120,6 +120,8 @@ The 0.11 porting guide
 
     The request-link signal was removed. It was never used.
 
+    gst_pad_get_negotiated_caps() -> get_pad_get_current_caps()
+
 * GstPadTemplate
     gst_pad_template_get_caps() returns a new reference of the caps
     and the return value needs to be unreffed after usage.
