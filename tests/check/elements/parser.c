@@ -286,7 +286,7 @@ gst_parser_test_run (GstParserTest * test, GstCaps ** out_caps)
     fail_unless_equals_int (datasum, size);
   }
 
-  src_caps = gst_pad_get_negotiated_caps (sinkpad);
+  src_caps = gst_pad_get_current_caps (sinkpad);
   GST_LOG ("output caps: %" GST_PTR_FORMAT, src_caps);
 
   if (test->sink_caps) {
