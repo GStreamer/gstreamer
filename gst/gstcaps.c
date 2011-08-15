@@ -1239,7 +1239,7 @@ gst_caps_can_intersect (const GstCaps * caps1, const GstCaps * caps2)
     j = MIN (i, len1 - 1);
     /* subset index stays 0 until i reaches superset->structs->len, then it
      * counts up from 1 to subset->structs->len - 1 */
-    k = MAX (0, i - j);
+    k = (i > j) ? (i - j) : 0;  /* MAX (0, i - j) */
 
     /* now run the diagonal line, end condition is the left or bottom
      * border */
@@ -1310,7 +1310,7 @@ gst_caps_intersect_zig_zag (const GstCaps * caps1, const GstCaps * caps2)
     j = MIN (i, len1 - 1);
     /* caps2 index stays 0 until i reaches caps1->structs->len, then it counts
      * up from 1 to caps2->structs->len - 1 */
-    k = MAX (0, i - j);
+    k = (i > j) ? (i - j) : 0;  /* MAX (0, i - j) */
 
     /* now run the diagonal line, end condition is the left or bottom
      * border */
