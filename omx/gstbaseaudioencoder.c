@@ -217,6 +217,9 @@ struct _GstBaseAudioEncoderPrivate
 
   /* context storage */
   GstBaseAudioEncoderContext ctx;
+
+  /* pending serialized sink events, will be sent from finish_frame() */
+  GList *pending_events;
 };
 
 
@@ -372,6 +375,10 @@ gst_base_audio_encoder_reset (GstBaseAudioEncoder * enc, gboolean full)
     enc->priv->bytes_out = 0;
     g_free (enc->ctx->state.channel_pos);
     memset (enc->ctx, 0, sizeof (enc->ctx));
+
+    g_list_foreach (enc->priv->pending_events, (GFunc) gst_event_unref, NULL);
+    g_list_free (enc->priv->pending_events);
+    enc->priv->pending_events = NULL;
   }
 
   gst_segment_init (&enc->segment, GST_FORMAT_TIME);
@@ -445,6 +452,19 @@ gst_base_audio_encoder_finish_frame (GstBaseAudioEncoder * enc, GstBuffer * buf,
 
   /* mark subclass still alive and providing */
   priv->got_data = TRUE;
+
+  if (priv->pending_events) {
+    GList *pending_events, *l;
+    GST_OBJECT_LOCK (enc);
+    pending_events = priv->pending_events;
+    priv->pending_events = NULL;
+    GST_OBJECT_UNLOCK (enc);
+
+    GST_DEBUG_OBJECT (enc, "Pushing pending events");
+    for (l = priv->pending_events; l; l = l->next)
+      gst_pad_push_event (enc->srcpad, l->data);
+    g_list_free (pending_events);
+  }
 
   /* remove corresponding samples from input */
   if (samples < 0)
@@ -1108,6 +1128,13 @@ gst_base_audio_encoder_sink_eventfunc (GstBaseAudioEncoder * enc,
         klass->flush (enc);
       /* and get (re)set for the sequel */
       gst_base_audio_encoder_reset (enc, FALSE);
+
+      GST_OBJECT_LOCK (enc);
+      g_list_foreach (enc->priv->pending_events, (GFunc) gst_event_unref, NULL);
+      g_list_free (enc->priv->pending_events);
+      enc->priv->pending_events = NULL;
+      GST_OBJECT_UNLOCK (enc);
+
       break;
 
     case GST_EVENT_EOS:
@@ -1141,8 +1168,27 @@ gst_base_audio_encoder_sink_event (GstPad * pad, GstEvent * event)
   if (!handled)
     handled = gst_base_audio_encoder_sink_eventfunc (enc, event);
 
-  if (!handled)
-    ret = gst_pad_event_default (pad, event);
+  if (!handled) {
+    /* Forward non-serialized events and EOS/FLUSH_STOP immediately.
+     * For EOS this is required because no buffer or serialized event
+     * will come after EOS and nothing could trigger another
+     * _finish_frame() call.
+     *
+     * For FLUSH_STOP this is required because it is expected
+     * to be forwarded immediately and no buffers are queued anyway.
+     */
+    if (!GST_EVENT_IS_SERIALIZED (event)
+        || GST_EVENT_TYPE (event) == GST_EVENT_EOS
+        || GST_EVENT_TYPE (event) == GST_EVENT_FLUSH_STOP) {
+      ret = gst_pad_event_default (pad, event);
+    } else {
+      GST_OBJECT_LOCK (enc);
+      enc->priv->pending_events =
+          g_list_append (enc->priv->pending_events, event);
+      GST_OBJECT_UNLOCK (enc);
+      ret = TRUE;
+    }
+  }
 
   GST_DEBUG_OBJECT (enc, "event handled");
 
