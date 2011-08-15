@@ -578,6 +578,7 @@ GST_START_TEST (test_id3_tags)
     const gchar *genre;
 
     genre = gst_tag_id3_genre_get (i);
+    GST_LOG ("genre: %s", genre);
     fail_unless (genre != NULL);
   }
 
