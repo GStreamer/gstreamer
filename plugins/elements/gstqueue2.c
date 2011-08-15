@@ -2804,17 +2804,15 @@ gst_queue2_src_activate_pull (GstPad * pad, gboolean active)
       queue->is_eos = FALSE;
       queue->unexpected = FALSE;
       queue->upstream_size = 0;
-      GST_QUEUE2_MUTEX_UNLOCK (queue);
     } else {
-      GST_QUEUE2_MUTEX_LOCK (queue);
       GST_DEBUG_OBJECT (queue, "no temp file, cannot activate pull mode");
       /* this is not allowed, we cannot operate in pull mode without a temp
        * file. */
       queue->srcresult = GST_FLOW_WRONG_STATE;
       queue->sinkresult = GST_FLOW_WRONG_STATE;
       result = FALSE;
-      GST_QUEUE2_MUTEX_UNLOCK (queue);
     }
+    GST_QUEUE2_MUTEX_UNLOCK (queue);
   } else {
     GST_QUEUE2_MUTEX_LOCK (queue);
     GST_DEBUG_OBJECT (queue, "deactivating pull mode");
