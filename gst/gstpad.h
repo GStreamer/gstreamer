@@ -227,15 +227,6 @@ typedef enum {
   GST_ACTIVATE_PULL
 } GstActivateMode;
 
-/**
- * GST_PAD_MODE_ACTIVATE:
- * @mode: a #GstActivateMode
- *
- * Macro to test if the given #GstActivateMode value indicates that datapassing
- * is possible or not.
- */
-#define GST_PAD_MODE_ACTIVATE(mode) ((mode) != GST_ACTIVATE_NONE)
-
 /* pad states */
 /**
  * GstPadActivateFunction:
@@ -717,6 +708,8 @@ struct _GstPadClass {
 #define GST_PAD_IS_SINK(pad)		(GST_PAD_DIRECTION(pad) == GST_PAD_SINK)
 
 #define GST_PAD_IS_LINKED(pad)		(GST_PAD_PEER(pad) != NULL)
+
+#define GST_PAD_IS_ACTIVE(pad)          (GST_PAD_ACTIVATE_MODE(pad) != GST_ACTIVATE_NONE)
 
 #define GST_PAD_IS_BLOCKED(pad)		(GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_BLOCKED))
 #define GST_PAD_IS_BLOCKING(pad)	(GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_BLOCKING))
