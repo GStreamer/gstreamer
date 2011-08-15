@@ -2350,7 +2350,7 @@ done:
  * gst_pad_has_current_caps:
  * @pad: a  #GstPad to check
  *
- * Check if @pad has caps set on it with gst_pad_set_caps().
+ * Check if @pad has caps set on it with a #GST_EVENT_CAPS event.
  *
  * Returns: TRUE when @pad has caps associated with it.
  */
@@ -2373,8 +2373,8 @@ gst_pad_has_current_caps (GstPad * pad)
  * gst_pad_get_current_caps:
  * @pad: a  #GstPad to get the current capabilities of.
  *
- * Gets the capabilities currently configured on @pad with the last call to
- * gst_pad_set_caps().
+ * Gets the capabilities currently configured on @pad with the last
+ * #GST_EVENT_CAPS event.
  *
  * Returns: the current caps of the pad with incremented ref-count.
  */
@@ -2598,27 +2598,26 @@ gst_pad_accept_caps (GstPad * pad, GstCaps * caps)
     return TRUE;
 
   /* lock for checking the existing caps */
-  GST_OBJECT_LOCK (pad);
   GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad, "accept caps of %p", caps);
 #if 0
+  GST_OBJECT_LOCK (pad);
   /* The current caps on a pad are trivially acceptable */
   if (G_LIKELY ((existing = GST_PAD_CAPS (pad)))) {
     if (caps == existing || gst_caps_is_equal (caps, existing))
       goto is_same_caps;
   }
+  GST_OBJECT_UNLOCK (pad);
 #endif
   acceptfunc = GST_PAD_ACCEPTCAPSFUNC (pad);
-  GST_OBJECT_UNLOCK (pad);
 
-  if (G_LIKELY (acceptfunc)) {
-    /* we can call the function */
-    result = acceptfunc (pad, caps);
-    GST_DEBUG_OBJECT (pad, "acceptfunc returned %d", result);
-  } else {
-    /* Only null if the element explicitly unset it */
-    result = gst_pad_acceptcaps_default (pad, caps);
-    GST_DEBUG_OBJECT (pad, "default acceptcaps returned %d", result);
-  }
+  /* Only null if the element explicitly unset it */
+  if (G_UNLIKELY (acceptfunc == NULL))
+    goto no_func;
+
+  /* we can call the function */
+  result = acceptfunc (pad, caps);
+  GST_DEBUG_OBJECT (pad, "acceptfunc returned %d", result);
+
   return result;
 
 #if 0
@@ -2629,6 +2628,11 @@ is_same_caps:
     return TRUE;
   }
 #endif
+no_func:
+  {
+    GST_DEBUG_OBJECT (pad, "no acceptcase function");
+    return FALSE;
+  }
 }
 
 /**
