@@ -30,8 +30,8 @@
 #endif
 
 #include <gst/gst.h>
-#include <gst/audio/gstbaseaudioutils.h>
 #include <gst/base/gstadapter.h>
+#include "gstbaseaudioutils.h"
 
 G_BEGIN_DECLS
 

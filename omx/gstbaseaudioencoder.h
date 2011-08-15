@@ -28,7 +28,7 @@
 #endif
 
 #include <gst/gst.h>
-#include <gst/audio/gstbaseaudioutils.h>
+#include "gstbaseaudioutils.h"
 
 G_BEGIN_DECLS
 

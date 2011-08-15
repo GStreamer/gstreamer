@@ -1463,11 +1463,9 @@ static gboolean
 gst_base_audio_decoder_src_event (GstPad * pad, GstEvent * event)
 {
   GstBaseAudioDecoder *dec;
-  GstBaseAudioDecoderClass *klass;
   gboolean res = FALSE;
 
   dec = GST_BASE_AUDIO_DECODER (gst_pad_get_parent (pad));
-  klass = GST_BASE_AUDIO_DECODER_GET_CLASS (dec);
 
   GST_DEBUG_OBJECT (dec, "received event %d, %s", GST_EVENT_TYPE (event),
       GST_EVENT_TYPE_NAME (event));
@@ -1807,11 +1805,9 @@ gst_base_audio_decoder_change_state (GstElement * element,
     GstStateChange transition)
 {
   GstBaseAudioDecoder *codec;
-  GstBaseAudioDecoderClass *codec_class;
   GstStateChangeReturn ret;
 
   codec = GST_BASE_AUDIO_DECODER (element);
-  codec_class = GST_BASE_AUDIO_DECODER_GET_CLASS (element);
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:

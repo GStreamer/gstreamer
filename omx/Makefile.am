@@ -14,7 +14,10 @@ libgstopenmax_la_SOURCES = \
 	gstbasevideocodec.c \
 	gstbasevideodecoder.c \
 	gstbasevideoencoder.c \
-	gstbasevideoutils.c
+	gstbasevideoutils.c \
+	gstbaseaudiodecoder.c \
+	gstbaseaudioencoder.c \
+	gstbaseaudioutils.c
 
 noinst_HEADERS = \
 	gstomx.h \
@@ -30,7 +33,10 @@ noinst_HEADERS = \
 	gstbasevideocodec.h \
 	gstbasevideodecoder.h \
 	gstbasevideoencoder.h \
-	gstbasevideoutils.h
+	gstbasevideoutils.h \
+	gstbaseaudiodecoder.h \
+	gstbaseaudioencoder.h \
+	gstbaseaudioutils.h
 
 fixbaseclasses = \
         -DGstBaseVideoCodec=OMXBaseVideoCodec \
@@ -38,7 +44,11 @@ fixbaseclasses = \
         -DGstBaseVideoEncoder=OMXBaseVideoEncoder \
         -DGstBaseVideoEncoderClass=OMXBaseVideoEncoderClass \
         -DGstBaseVideoDecoder=OMXBaseVideoDecoder \
-        -DGstBaseVideoDecoderClass=OMXBaseVideoDecoderClass
+        -DGstBaseVideoDecoderClass=OMXBaseVideoDecoderClass \
+	-DGstBaseAudioDecoder=OMXBaseAudioDecoder \
+	-DGstBaseAudioDecoderClass=OMXBaseAudioDecoderClass \
+	-DGstBaseAudioEncoder=OMXBaseAudioEncoder \
+	-DGstBaseAudioEncoderClass=OMXBaseAudioEncoderClass
 
 libgstopenmax_la_CFLAGS = \
 	-DGST_USE_UNSTABLE_API=1 \
@@ -49,6 +59,8 @@ libgstopenmax_la_CFLAGS = \
 	$(fixbaseclasses)
 libgstopenmax_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) \
+	-lgstaudio-@GST_MAJORMINOR@ \
+	-lgstpbutils-@GST_MAJORMINOR@ \
 	-lgstvideo-@GST_MAJORMINOR@ \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS)
