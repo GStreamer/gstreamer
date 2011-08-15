@@ -661,7 +661,6 @@ EXPORTS
 	gst_pad_get_current_caps
 	gst_pad_get_direction
 	gst_pad_get_element_private
-	gst_pad_get_negotiated_caps
 	gst_pad_get_offset
 	gst_pad_get_pad_template
 	gst_pad_get_pad_template_caps

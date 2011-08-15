@@ -2933,56 +2933,6 @@ no_peer:
 }
 
 /**
- * gst_pad_get_negotiated_caps:
- * @pad: a #GstPad.
- *
- * Gets the capabilities of the media type that currently flows through @pad
- * and its peer.
- *
- * This function can be used on both src and sinkpads. Note that srcpads are
- * always negotiated before sinkpads so it is possible that the negotiated caps
- * on the srcpad do not match the negotiated caps of the peer.
- *
- * Returns: (transfer full): the negotiated #GstCaps of the pad link. Unref
- *     the caps when you no longer need it. This function returns NULL when
- *     the @pad has no peer or is not negotiated yet.
- *
- * MT safe.
- */
-GstCaps *
-gst_pad_get_negotiated_caps (GstPad * pad)
-{
-  GstCaps *caps = NULL;
-  GstPad *peer;
-
-  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
-
-  GST_OBJECT_LOCK (pad);
-
-  if (G_UNLIKELY ((peer = GST_PAD_PEER (pad)) == NULL))
-    goto no_peer;
-
-  GST_CAT_DEBUG_OBJECT (GST_CAT_PROPERTIES, pad, "getting negotiated caps");
-
-  if ((caps = get_pad_caps (pad)))
-    gst_caps_ref (caps);
-
-  GST_OBJECT_UNLOCK (pad);
-
-  GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad, "negotiated caps %" GST_PTR_FORMAT,
-      caps);
-
-  return caps;
-
-no_peer:
-  {
-    GST_CAT_DEBUG_OBJECT (GST_CAT_PROPERTIES, pad, "no peer");
-    GST_OBJECT_UNLOCK (pad);
-    return NULL;
-  }
-}
-
-/**
  * gst_pad_iterate_internal_links_default:
  * @pad: the #GstPad to get the internal links of.
  *

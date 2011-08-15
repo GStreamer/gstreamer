@@ -331,10 +331,10 @@ debug_dump_element_pad_link (GstPad * pad, GstElement * element,
     if ((details & GST_DEBUG_GRAPH_SHOW_MEDIA_TYPE) ||
         (details & GST_DEBUG_GRAPH_SHOW_CAPS_DETAILS)
         ) {
-      caps = gst_pad_get_negotiated_caps (pad);
+      caps = gst_pad_get_current_caps (pad);
       if (!caps)
         caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
-      peer_caps = gst_pad_get_negotiated_caps (peer_pad);
+      peer_caps = gst_pad_get_current_caps (peer_pad);
       if (!peer_caps)
         peer_caps = gst_caps_copy (gst_pad_get_pad_template_caps (peer_pad));
 
@@ -510,7 +510,7 @@ debug_dump_element (GstBin * bin, GstDebugGraphDetails details, FILE * out,
   GValue item = { 0, };
   GValue item2 = { 0, };
   GstElement *element;
-  GstPad *pad;
+  GstPad *pad = NULL;
   guint src_pads, sink_pads;
   gchar *element_name;
   gchar *state_name = NULL;

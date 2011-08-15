@@ -879,7 +879,6 @@ gboolean		gst_pad_peer_accept_caps		(GstPad * pad, GstCaps *caps);
 
 /* capsnego for linked pads */
 GstCaps *		gst_pad_get_allowed_caps		(GstPad * pad);
-GstCaps *               gst_pad_get_negotiated_caps             (GstPad * pad);
 
 /* pad offsets */
 gint64                  gst_pad_get_offset                      (GstPad *pad);
