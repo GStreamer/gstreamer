@@ -109,8 +109,8 @@ GstBufferPool *gst_xvimage_buffer_pool_new (GstXvImageSink * xvimagesink);
 gboolean gst_xvimagesink_check_xshm_calls (GstXvImageSink * xvimagesink,
       GstXContext * xcontext);
 
-gint gst_xvimagesink_get_format_from_caps (GstXvImageSink * xvimagesink,
-    GstCaps * caps);
+gint gst_xvimagesink_get_format_from_info (GstXvImageSink * xvimagesink,
+    GstVideoInfo * info);
 
 G_END_DECLS
 

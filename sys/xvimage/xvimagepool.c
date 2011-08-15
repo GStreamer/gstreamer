@@ -516,8 +516,7 @@ xvimage_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   GST_LOG_OBJECT (pool, "%dx%d, caps %" GST_PTR_FORMAT, info.width, info.height,
       caps);
 
-  priv->im_format =
-      gst_xvimagesink_get_format_from_caps (xvpool->sink, (GstCaps *) caps);
+  priv->im_format = gst_xvimagesink_get_format_from_info (xvpool->sink, &info);
   if (priv->im_format == -1)
     goto unknown_format;
 
@@ -712,8 +711,8 @@ gst_xvimage_buffer_pool_finalize (GObject * object)
 /* This function tries to get a format matching with a given caps in the
    supported list of formats we generated in gst_xvimagesink_get_xv_support */
 gint
-gst_xvimagesink_get_format_from_caps (GstXvImageSink * xvimagesink,
-    GstCaps * caps)
+gst_xvimagesink_get_format_from_info (GstXvImageSink * xvimagesink,
+    GstVideoInfo * info)
 {
   GList *list = NULL;
 
@@ -724,11 +723,9 @@ gst_xvimagesink_get_format_from_caps (GstXvImageSink * xvimagesink,
   while (list) {
     GstXvImageFormat *format = list->data;
 
-    if (format) {
-      if (gst_caps_can_intersect (caps, format->caps)) {
-        return format->format;
-      }
-    }
+    if (format && format->vformat == GST_VIDEO_INFO_FORMAT (info))
+      return format->format;
+
     list = g_list_next (list);
   }
 

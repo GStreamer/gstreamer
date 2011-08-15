@@ -1043,6 +1043,7 @@ gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
   for (i = 0; i < nb_formats; i++) {
     GstCaps *format_caps = NULL;
     gboolean is_rgb_format = FALSE;
+    GstVideoFormat vformat;
 
     /* We set the image format of the xcontext to an existing one. This
        is just some valid image format for making our xshm calls check before
@@ -1054,7 +1055,6 @@ gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
       {
         XvImageFormatValues *fmt = &(formats[i]);
         gint endianness;
-        GstVideoFormat vformat;
 
         endianness =
             (fmt->byte_order == LSBFirst ? G_LITTLE_ENDIAN : G_BIG_ENDIAN);
@@ -1075,8 +1075,6 @@ gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
       }
       case XvYUV:
       {
-        GstVideoFormat vformat;
-
         vformat = gst_video_format_from_fourcc (formats[i].id);
         if (vformat == GST_VIDEO_FORMAT_UNKNOWN)
           break;
@@ -1099,6 +1097,7 @@ gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
       format = g_new0 (GstXvImageFormat, 1);
       if (format) {
         format->format = formats[i].id;
+        format->vformat = vformat;
         format->caps = gst_caps_copy (format_caps);
         xcontext->formats_list = g_list_append (xcontext->formats_list, format);
       }
@@ -1565,7 +1564,7 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   xvimagesink->video_width = info.width;
   xvimagesink->video_height = info.height;
 
-  im_format = gst_xvimagesink_get_format_from_caps (xvimagesink, caps);
+  im_format = gst_xvimagesink_get_format_from_info (xvimagesink, &info);
   if (im_format == -1)
     goto invalid_format;
 

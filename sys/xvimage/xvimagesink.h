@@ -163,6 +163,7 @@ struct _GstXWindow
 struct _GstXvImageFormat
 {
   gint format;
+  GstVideoFormat vformat;
   GstCaps *caps;
 };
 
