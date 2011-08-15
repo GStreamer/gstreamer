@@ -4,10 +4,10 @@ libgstmad_la_SOURCES = gstmad.c
 
 libgstmad_la_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) \
-	$(MAD_CFLAGS) $(ID3TAG_CFLAGS)
+	$(MAD_CFLAGS)
 libgstmad_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) -lgsttag-$(GST_MAJORMINOR) \
-	-lgstaudio-$(GST_MAJORMINOR) $(MAD_LIBS) $(ID3TAG_LIBS)
+	-lgstaudio-$(GST_MAJORMINOR) $(MAD_LIBS)
 libgstmad_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstmad_la_LIBTOOLFLAGS = --tag=disable-static
 

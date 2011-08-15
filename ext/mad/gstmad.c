@@ -40,10 +40,6 @@
 #include "gstmad.h"
 #include <gst/audio/audio.h>
 
-#ifdef HAVE_ID3TAG
-#include <id3tag.h>
-#endif
-
 enum
 {
   ARG_0,
@@ -106,10 +102,6 @@ static GstStateChangeReturn gst_mad_change_state (GstElement * element,
 
 static void gst_mad_set_index (GstElement * element, GstIndex * index);
 static GstIndex *gst_mad_get_index (GstElement * element);
-
-#ifdef HAVE_ID3TAG
-static GstTagList *gst_mad_id3_to_tag_list (const struct id3_tag *tag);
-#endif
 
 GST_BOILERPLATE (GstMad, gst_mad, GstElement, GST_TYPE_ELEMENT);
 
@@ -1534,53 +1526,6 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
         } else if (mad->stream.error == MAD_ERROR_LOSTSYNC) {
           /* lost sync, force a resync */
           GST_INFO ("recoverable lost sync error");
-
-#ifdef HAVE_ID3TAG
-          {
-            signed long tagsize;
-
-            tagsize = id3_tag_query (mad->stream.this_frame,
-                mad->stream.bufend - mad->stream.this_frame);
-
-            if (tagsize > mad->tempsize) {
-              GST_INFO ("mad: got partial id3 tag in buffer, skipping");
-            } else if (tagsize > 0) {
-              struct id3_tag *tag;
-              id3_byte_t const *data;
-
-              GST_INFO ("mad: got ID3 tag size %ld", tagsize);
-
-              data = mad->stream.this_frame;
-
-              /* mad has moved the pointer to the next frame over the start of the
-               * id3 tags, so we need to flush one byte less than the tagsize */
-              mad_stream_skip (&mad->stream, tagsize - 1);
-
-              tag = id3_tag_parse (data, tagsize);
-              if (tag) {
-                GstTagList *list;
-
-                list = gst_mad_id3_to_tag_list (tag);
-                id3_tag_delete (tag);
-                GST_DEBUG ("found tag");
-                gst_element_post_message (GST_ELEMENT (mad),
-                    gst_message_new_tag (GST_OBJECT (mad),
-                        gst_tag_list_copy (list)));
-                if (mad->tags) {
-                  gst_tag_list_insert (mad->tags, list, GST_TAG_MERGE_PREPEND);
-                } else {
-                  mad->tags = gst_tag_list_copy (list);
-                }
-                if (mad->need_newsegment)
-                  mad->pending_events =
-                      g_list_append (mad->pending_events,
-                      gst_event_new_tag (list));
-                else
-                  gst_pad_push_event (mad->srcpad, gst_event_new_tag (list));
-              }
-            }
-          }
-#endif /* HAVE_ID3TAG */
         }
 
         mad_frame_mute (&mad->frame);
@@ -1924,184 +1869,6 @@ gst_mad_change_state (GstElement * element, GstStateChange transition)
   }
   return ret;
 }
-
-#ifdef HAVE_ID3TAG
-/* id3 tag helper (FIXME: why does mad parse id3 tags at all? It shouldn't) */
-static GstTagList *
-gst_mad_id3_to_tag_list (const struct id3_tag *tag)
-{
-  const struct id3_frame *frame;
-  const id3_ucs4_t *ucs4;
-  id3_utf8_t *utf8;
-  GstTagList *tag_list;
-  GType tag_type;
-  guint i = 0;
-
-  tag_list = gst_tag_list_new ();
-
-  while ((frame = id3_tag_findframe (tag, NULL, i++)) != NULL) {
-    const union id3_field *field;
-    unsigned int nstrings, j;
-    const gchar *tag_name;
-
-    /* find me the function to query the frame id */
-    gchar *id = g_strndup (frame->id, 5);
-
-    tag_name = gst_tag_from_id3_tag (id);
-    if (tag_name == NULL) {
-      g_free (id);
-      continue;
-    }
-
-    if (strcmp (id, "COMM") == 0) {
-      if (frame->nfields < 4)
-        continue;
-
-      ucs4 = id3_field_getfullstring (&frame->fields[3]);
-      g_assert (ucs4);
-
-      utf8 = id3_ucs4_utf8duplicate (ucs4);
-      if (utf8 == 0)
-        continue;
-
-      if (!g_utf8_validate ((char *) utf8, -1, NULL)) {
-        GST_ERROR ("converted string is not valid utf-8");
-        g_free (utf8);
-        continue;
-      }
-
-      gst_tag_list_add (tag_list, GST_TAG_MERGE_APPEND,
-          GST_TAG_COMMENT, utf8, NULL);
-
-      g_free (utf8);
-      continue;
-    }
-
-    if (frame->nfields < 2)
-      continue;
-
-    field = &frame->fields[1];
-    nstrings = id3_field_getnstrings (field);
-
-    for (j = 0; j < nstrings; ++j) {
-      ucs4 = id3_field_getstrings (field, j);
-      g_assert (ucs4);
-
-      if (strcmp (id, ID3_FRAME_GENRE) == 0)
-        ucs4 = id3_genre_name (ucs4);
-
-      utf8 = id3_ucs4_utf8duplicate (ucs4);
-      if (utf8 == 0)
-        continue;
-
-      if (!g_utf8_validate ((char *) utf8, -1, NULL)) {
-        GST_ERROR ("converted string is not valid utf-8");
-        free (utf8);
-        continue;
-      }
-
-      tag_type = gst_tag_get_type (tag_name);
-
-      /* be sure to add non-string tags here */
-      switch (tag_type) {
-        case G_TYPE_UINT:
-        {
-          guint tmp;
-          gchar *check;
-
-          tmp = strtoul ((char *) utf8, &check, 10);
-
-          if (strcmp (tag_name, GST_TAG_DATE) == 0) {
-            GDate *d;
-
-            if (*check != '\0')
-              break;
-            if (tmp == 0)
-              break;
-            d = g_date_new_dmy (1, 1, tmp);
-            tmp = g_date_get_julian (d);
-            g_date_free (d);
-          } else if (strcmp (tag_name, GST_TAG_TRACK_NUMBER) == 0) {
-            if (*check == '/') {
-              guint total;
-
-              check++;
-              total = strtoul (check, &check, 10);
-              if (*check != '\0')
-                break;
-
-              gst_tag_list_add (tag_list, GST_TAG_MERGE_APPEND,
-                  GST_TAG_TRACK_COUNT, total, NULL);
-            }
-          } else if (strcmp (tag_name, GST_TAG_ALBUM_VOLUME_NUMBER) == 0) {
-            if (*check == '/') {
-              guint total;
-
-              check++;
-              total = strtoul (check, &check, 10);
-              if (*check != '\0')
-                break;
-
-              gst_tag_list_add (tag_list, GST_TAG_MERGE_APPEND,
-                  GST_TAG_ALBUM_VOLUME_COUNT, total, NULL);
-            }
-          }
-
-          if (*check != '\0')
-            break;
-          gst_tag_list_add (tag_list, GST_TAG_MERGE_APPEND, tag_name, tmp,
-              NULL);
-          break;
-        }
-        case G_TYPE_UINT64:
-        {
-          guint64 tmp;
-
-          g_assert (strcmp (tag_name, GST_TAG_DURATION) == 0);
-          tmp = strtoul ((char *) utf8, NULL, 10);
-          if (tmp == 0) {
-            break;
-          }
-          gst_tag_list_add (tag_list, GST_TAG_MERGE_APPEND,
-              GST_TAG_DURATION, tmp * 1000 * 1000, NULL);
-          break;
-        }
-        case G_TYPE_STRING:{
-          gst_tag_list_add (tag_list, GST_TAG_MERGE_APPEND,
-              tag_name, (const gchar *) utf8, NULL);
-          break;
-        }
-          /* handles GST_TYPE_DATE and anything else */
-        default:{
-          GValue src = { 0, };
-          GValue dest = { 0, };
-
-          g_value_init (&src, G_TYPE_STRING);
-          g_value_set_string (&src, (const gchar *) utf8);
-
-          g_value_init (&dest, tag_type);
-          if (g_value_transform (&src, &dest)) {
-            gst_tag_list_add_values (tag_list, GST_TAG_MERGE_APPEND,
-                tag_name, &dest, NULL);
-          } else {
-            GST_WARNING ("Failed to transform tag from string to type '%s'",
-                g_type_name (tag_type));
-          }
-          g_value_unset (&src);
-          g_value_unset (&dest);
-          break;
-        }
-      }
-      free (utf8);
-    }
-    g_free (id);
-  }
-
-  return tag_list;
-}
-#endif /* HAVE_ID3TAG */
-
-/* plugin initialisation */
 
 static gboolean
 plugin_init (GstPlugin * plugin)
