@@ -3215,5 +3215,7 @@ default_fixate (GQuark field_id, const GValue * value, gpointer data)
 void
 gst_structure_fixate (GstStructure * structure)
 {
+  g_return_if_fail (GST_IS_STRUCTURE (structure));
+
   gst_structure_foreach (structure, default_fixate, structure);
 }

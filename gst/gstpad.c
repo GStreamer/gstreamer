@@ -2491,12 +2491,8 @@ no_peer:
 static void
 gst_pad_default_fixate (GstPad * pad, GstCaps * caps)
 {
-  GstStructure *s;
-
   /* default fixation */
-  gst_caps_truncate (caps);
-  s = gst_caps_get_structure (caps, 0);
-  gst_structure_fixate (s);
+  gst_caps_fixate (caps);
 }
 
 /**

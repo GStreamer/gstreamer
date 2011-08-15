@@ -406,6 +406,8 @@ GstCaps *         gst_caps_union                   (const GstCaps *caps1,
 GstCaps *         gst_caps_normalize               (const GstCaps *caps);
 gboolean          gst_caps_do_simplify             (GstCaps       *caps);
 
+void              gst_caps_fixate                  (GstCaps       *caps);
+
 /* utility */
 gchar *           gst_caps_to_string               (const GstCaps *caps);
 GstCaps *         gst_caps_from_string             (const gchar   *string);

@@ -1776,6 +1776,28 @@ gst_caps_do_simplify (GstCaps * caps)
   return TRUE;
 }
 
+/**
+ * gst_caps_fixate:
+ * @caps: a #GstCaps to fixate
+ *
+ * Modifies the given @caps inplace into a representation with only fixed
+ * values. First the caps will be truncated and then the first structure will be
+ * fixated with gst_structure_fixate(). @caps should be writable.
+ */
+void
+gst_caps_fixate (GstCaps * caps)
+{
+  GstStructure *s;
+
+  g_return_if_fail (GST_IS_CAPS (caps));
+  g_return_if_fail (IS_WRITABLE (caps));
+
+  /* default fixation */
+  gst_caps_truncate (caps);
+  s = gst_caps_get_structure (caps, 0);
+  gst_structure_fixate (s);
+}
+
 /* utility */
 
 /**
