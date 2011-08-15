@@ -251,6 +251,7 @@ gboolean                 gst_structure_can_intersect(const GstStructure *struct1
 						     const GstStructure *struct2);
 GstStructure*            gst_structure_intersect (const GstStructure *struct1,
                                                   const GstStructure *struct2);
+void                     gst_structure_fixate    (GstStructure *structure);
 
 G_END_DECLS
 

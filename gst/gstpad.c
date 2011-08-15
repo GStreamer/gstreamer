@@ -2488,19 +2488,6 @@ no_peer:
   }
 }
 
-static gboolean
-default_fixate (GQuark field_id, const GValue * value, gpointer data)
-{
-  GstStructure *s = data;
-  GValue v = { 0 };
-
-  if (gst_value_fixate (&v, value)) {
-    gst_structure_id_set_value (s, field_id, &v);
-    g_value_unset (&v);
-  }
-  return TRUE;
-}
-
 static void
 gst_pad_default_fixate (GstPad * pad, GstCaps * caps)
 {
@@ -2509,7 +2496,7 @@ gst_pad_default_fixate (GstPad * pad, GstCaps * caps)
   /* default fixation */
   gst_caps_truncate (caps);
   s = gst_caps_get_structure (caps, 0);
-  gst_structure_foreach (s, default_fixate, s);
+  gst_structure_fixate (s);
 }
 
 /**
@@ -2630,7 +2617,7 @@ is_same_caps:
 #endif
 no_func:
   {
-    GST_DEBUG_OBJECT (pad, "no acceptcase function");
+    GST_DEBUG_OBJECT (pad, "no acceptcaps function");
     return FALSE;
   }
 }

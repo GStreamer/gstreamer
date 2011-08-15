@@ -3191,3 +3191,29 @@ gst_structure_is_subset (const GstStructure * subset,
   return gst_structure_foreach ((GstStructure *) subset,
       gst_caps_structure_is_subset_field, (gpointer) superset);
 }
+
+static gboolean
+default_fixate (GQuark field_id, const GValue * value, gpointer data)
+{
+  GstStructure *s = data;
+  GValue v = { 0 };
+
+  if (gst_value_fixate (&v, value)) {
+    gst_structure_id_set_value (s, field_id, &v);
+    g_value_unset (&v);
+  }
+  return TRUE;
+}
+
+/**
+ * gst_structure_fixate:
+ * @structure: a #GstStructure
+ *
+ * Fixate all values in @structure using gst_value_fixate().
+ * @structure will be modified in-place and should be writable.
+ */
+void
+gst_structure_fixate (GstStructure * structure)
+{
+  gst_structure_foreach (structure, default_fixate, structure);
+}
