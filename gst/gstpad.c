@@ -142,6 +142,7 @@ static GstCaps *gst_pad_get_caps_unlocked (GstPad * pad, GstCaps * filter);
 static void gst_pad_set_pad_template (GstPad * pad, GstPadTemplate * templ);
 static gboolean gst_pad_activate_default (GstPad * pad);
 static gboolean gst_pad_acceptcaps_default (GstPad * pad, GstCaps * caps);
+static void gst_pad_fixate_caps_default (GstPad * pad, GstCaps * caps);
 static GstFlowReturn gst_pad_chain_list_default (GstPad * pad,
     GstBufferList * list);
 
@@ -305,6 +306,7 @@ gst_pad_class_init (GstPadClass * klass)
   GST_DEBUG_REGISTER_FUNCPTR (gst_pad_iterate_internal_links_default);
   GST_DEBUG_REGISTER_FUNCPTR (gst_pad_acceptcaps_default);
   GST_DEBUG_REGISTER_FUNCPTR (gst_pad_chain_list_default);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_pad_fixate_caps_default);
 }
 
 static void
@@ -320,6 +322,7 @@ gst_pad_init (GstPad * pad)
   GST_PAD_QUERYFUNC (pad) = gst_pad_query_default;
   GST_PAD_ITERINTLINKFUNC (pad) = gst_pad_iterate_internal_links_default;
   GST_PAD_ACCEPTCAPSFUNC (pad) = gst_pad_acceptcaps_default;
+  GST_PAD_FIXATECAPSFUNC (pad) = gst_pad_fixate_caps_default;
   GST_PAD_CHAINLISTFUNC (pad) = gst_pad_chain_list_default;
 
   GST_PAD_SET_FLUSHING (pad);
@@ -2489,7 +2492,7 @@ no_peer:
 }
 
 static void
-gst_pad_default_fixate (GstPad * pad, GstCaps * caps)
+gst_pad_fixate_caps_default (GstPad * pad, GstCaps * caps)
 {
   /* default fixation */
   gst_caps_fixate (caps);
@@ -2518,11 +2521,8 @@ gst_pad_fixate_caps (GstPad * pad, GstCaps * caps)
 
   g_return_if_fail (gst_caps_is_writable (caps));
 
-  fixatefunc = GST_PAD_FIXATECAPSFUNC (pad);
-  if (fixatefunc) {
+  if (G_LIKELY ((fixatefunc = GST_PAD_FIXATECAPSFUNC (pad))))
     fixatefunc (pad, caps);
-  }
-  gst_pad_default_fixate (pad, caps);
 }
 
 /* Default accept caps implementation just checks against
