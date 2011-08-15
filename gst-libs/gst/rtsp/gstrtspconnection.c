@@ -592,6 +592,14 @@ do_connect (const gchar * ip, guint16 port, GstPollFD * fdout,
     getsockopt (fd, SOL_SOCKET, SO_ERROR, (char *) &errno, &len);
 #endif
     goto sys_error;
+  } else {
+#ifdef __APPLE__
+    /* osx wakes up select with POLLOUT if the connection is refused... */
+    socklen_t len = sizeof (errno);
+    getsockopt (fd, SOL_SOCKET, SO_ERROR, (char *) &errno, &len);
+    if (errno != 0)
+      goto sys_error;
+#endif
   }
 
   gst_poll_fd_ignored (fdset, fdout);
