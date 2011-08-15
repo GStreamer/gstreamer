@@ -100,6 +100,8 @@ $GST_PREFIX/lib/pkgconfig\
 :$GST/gst-python/pkgconfig\
 :$GST/gst-rtsp-server/pkgconfig\
 :$GST/gstreamer-sharp/pkgconfig\
+:$GST/farsight2\
+:$GST/libnice/nice\
 ${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}"
 
 export GST_PLUGIN_PATH="\
@@ -121,6 +123,9 @@ $GST/gstreamer/plugins\
 :$GST/gst-openmax\
 :$GST/gst-plugins-gl/gst\
 :$GST/plugins\
+:$GST/farsight2/gst\
+:$GST/farsight2/transmitters\
+:$GST/libnice/gst\
 ${GST_PLUGIN_PATH:+:$GST_PLUGIN_PATH}"
 
 # don't use any system-installed plug-ins at all
