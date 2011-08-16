@@ -793,6 +793,7 @@ default_configure (GstRTSPMediaFactory * factory, GstRTSPMedia * media)
   gboolean shared, eos_shutdown;
   guint size;
   GstRTSPAuth *auth;
+  gchar *mc;
 
   /* configure the sharedness */
   GST_RTSP_MEDIA_FACTORY_LOCK (factory);
@@ -808,5 +809,9 @@ default_configure (GstRTSPMediaFactory * factory, GstRTSPMedia * media)
   if ((auth = gst_rtsp_media_factory_get_auth (factory))) {
     gst_rtsp_media_set_auth (media, auth);
     g_object_unref (auth);
+  }
+  if ((mc = gst_rtsp_media_factory_get_multicast_group (factory))) {
+    gst_rtsp_media_set_multicast_group (media, mc);
+    g_free (mc);
   }
 }
