@@ -1096,19 +1096,22 @@ create_sdp (GstRTSPClient * client, GstRTSPMedia * media)
 
   info.server_proto = proto;
   if (media->protocols & GST_RTSP_LOWER_TRANS_UDP_MCAST)
-    info.server_ip = MCAST_ADDRESS;
+    info.server_ip = g_strdup (MCAST_ADDRESS);
   else
-    info.server_ip = client->server_ip;
+    info.server_ip = g_strdup (client->server_ip);
 
   /* create an SDP for the media object */
   if (!gst_rtsp_sdp_from_media (sdp, &info, media))
     goto no_sdp;
+
+  g_free (info.server_ip);
 
   return sdp;
 
   /* ERRORS */
 no_sdp:
   {
+    g_free (info.server_ip);
     gst_sdp_message_free (sdp);
     return NULL;
   }
