@@ -424,7 +424,7 @@ gst_flac_dec_scan_got_frame (GstFlacDec * flacdec, guint8 * data, guint size,
   GST_LOG_OBJECT (flacdec,
       "got sync, bs=%x,sr=%x,ca=%x,ss=%x,pb=%x", bs, sr, ca, ss, pb);
 
-  if (sr == 0x0F || ca >= 0x0B || ss == 0x03 || ss == 0x07) {
+  if (bs == 0 || sr == 0x0F || ca >= 0x0B || ss == 0x03 || ss == 0x07) {
     return FALSE;
   }
 
