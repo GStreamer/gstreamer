@@ -442,9 +442,11 @@ _find_next (GstM3U8MediaFile * file, GstM3U8Client * client)
 
 gboolean
 gst_m3u8_client_get_next_fragment (GstM3U8Client * client,
-    gboolean * discontinuity, const gchar ** uri, GstClockTime * duration)
+    gboolean * discontinuity, const gchar ** uri, GstClockTime * duration,
+    GstClockTime * timestamp)
 {
   GList *l;
+  GList *walk;
   GstM3U8MediaFile *file;
 
   g_return_val_if_fail (client != NULL, FALSE);
@@ -464,6 +466,15 @@ gst_m3u8_client_get_next_fragment (GstM3U8Client * client,
 
   *uri = file->uri;
   *duration = file->duration * GST_SECOND;
+
+  *timestamp = 0;
+  for (walk = client->current->files; walk; walk = walk->next) {
+    if (walk == l)
+      break;
+    *timestamp += GST_M3U8_MEDIA_FILE (walk->data)->duration;
+  }
+  *timestamp *= GST_SECOND;
+
   return TRUE;
 }
 

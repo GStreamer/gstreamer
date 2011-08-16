@@ -1069,10 +1069,11 @@ gst_hls_demux_get_next_fragment (GstHLSDemux * demux, gboolean retry)
   guint avail;
   const gchar *next_fragment_uri;
   GstClockTime duration;
+  GstClockTime timestamp;
   gboolean discont;
 
   if (!gst_m3u8_client_get_next_fragment (demux->client, &discont,
-          &next_fragment_uri, &duration)) {
+          &next_fragment_uri, &duration, &timestamp)) {
     GST_INFO_OBJECT (demux, "This playlist doesn't contain more fragments");
     demux->end_of_playlist = TRUE;
     GST_TASK_SIGNAL (demux->task);
@@ -1087,6 +1088,7 @@ gst_hls_demux_get_next_fragment (GstHLSDemux * demux, gboolean retry)
   avail = gst_adapter_available (demux->download);
   buf = gst_adapter_take_buffer (demux->download, avail);
   GST_BUFFER_DURATION (buf) = duration;
+  GST_BUFFER_TIMESTAMP (buf) = timestamp;
 
   /* We actually need to do this every time we switch bitrate */
   if (G_UNLIKELY (demux->do_typefind)) {
