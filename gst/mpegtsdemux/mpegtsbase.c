@@ -215,6 +215,8 @@ mpegts_base_reset (MpegTSBase * base)
   base->mode = BASE_MODE_STREAMING;
   base->seen_pat = FALSE;
   base->first_pat_offset = -1;
+  base->in_gap = 0;
+  base->first_buf_ts = GST_CLOCK_TIME_NONE;
 
   if (klass->reset)
     klass->reset (base);
@@ -1180,6 +1182,8 @@ mpegts_base_sink_event (GstPad * pad, GstEvent * event)
       gst_segment_set_newsegment_full (&base->segment, update, rate,
           applied_rate, format, start, stop, position);
       gst_event_unref (event);
+      base->in_gap = GST_CLOCK_TIME_NONE;
+      base->first_buf_ts = GST_CLOCK_TIME_NONE;
     }
       break;
     case GST_EVENT_EOS:
@@ -1231,6 +1235,13 @@ mpegts_base_chain (GstPad * pad, GstBuffer * buf)
 
   base = GST_MPEGTS_BASE (gst_object_get_parent (GST_OBJECT (pad)));
   packetizer = base->packetizer;
+
+  if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (base->first_buf_ts)) &&
+      GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
+    base->first_buf_ts = GST_BUFFER_TIMESTAMP (buf);
+    GST_DEBUG_OBJECT (base, "first buffer timestamp %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (base->first_buf_ts));
+  }
 
   mpegts_packetizer_push (base->packetizer, buf);
   while (((pret =

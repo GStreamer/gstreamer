@@ -130,6 +130,10 @@ struct _MpegTSBase {
   /* Offset from the origin to the first PAT (pullmode) */
   guint64    first_pat_offset;
 
+  /* interpolation gap between the upstream timestamp and the pts */
+  GstClockTime in_gap;
+  GstClockTime first_buf_ts;
+
   /* Upstream segment */
   GstSegment segment;
 };

@@ -1897,6 +1897,7 @@ TSPcrOffset_find_offset (gconstpointer a, gconstpointer b, gpointer user_data)
 static GstFlowReturn
 gst_ts_demux_parse_pes_header (GstTSDemux * demux, TSDemuxStream * stream)
 {
+  MpegTSBase *base = (MpegTSBase *) demux;
   PESHeader header;
   GstFlowReturn res = GST_FLOW_OK;
   gint offset = 0;
@@ -1945,7 +1946,36 @@ gst_ts_demux_parse_pes_header (GstTSDemux * demux, TSDemuxStream * stream)
 #endif
 
     stream->pts = time = MPEGTIME_TO_GSTTIME (header.PTS);
-    GST_BUFFER_TIMESTAMP (stream->pendingbuffers[0]) = time;
+
+    /* safe default if insufficient upstream info */
+    if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (base->in_gap) &&
+            GST_CLOCK_TIME_IS_VALID (base->first_buf_ts) &&
+            base->mode == BASE_MODE_PUSHING &&
+            base->segment.format == GST_FORMAT_TIME)) {
+      /* Find the earliest current PTS we're going to push */
+      GstClockTime firstpts = GST_CLOCK_TIME_NONE;
+      GList *tmp;
+
+      for (tmp = demux->program->stream_list; tmp; tmp = tmp->next) {
+        TSDemuxStream *pstream = (TSDemuxStream *) tmp->data;
+        if (!GST_CLOCK_TIME_IS_VALID (firstpts) || pstream->pts < firstpts)
+          firstpts = pstream->pts;
+      }
+
+      base->in_gap = base->first_buf_ts - firstpts;
+      GST_DEBUG_OBJECT (base, "upstream segment start %" GST_TIME_FORMAT
+          ", first buffer timestamp: %" GST_TIME_FORMAT
+          ", first PTS: %" GST_TIME_FORMAT
+          ", interpolation gap: %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (base->segment.start),
+          GST_TIME_ARGS (base->first_buf_ts), GST_TIME_ARGS (firstpts),
+          GST_TIME_ARGS (base->in_gap));
+    }
+
+    if (!GST_CLOCK_TIME_IS_VALID (base->in_gap))
+      base->in_gap = 0;
+
+    GST_BUFFER_TIMESTAMP (stream->pendingbuffers[0]) = time + base->in_gap;
   }
 
   if (header.DTS != -1)
@@ -2038,9 +2068,7 @@ static void
 calculate_and_push_newsegment (GstTSDemux * demux, TSDemuxStream * stream)
 {
   MpegTSBase *base = (MpegTSBase *) demux;
-  GstClockTime firstpts = GST_CLOCK_TIME_NONE;
   GstEvent *newsegmentevent;
-  GList *tmp;
   gint64 start, stop, position;
 
   GST_DEBUG ("Creating new newsegment");
@@ -2054,13 +2082,6 @@ calculate_and_push_newsegment (GstTSDemux * demux, TSDemuxStream * stream)
    * it is the same values as that incoming newsegment (and we convert the
    * PTS to that remote clock).
    */
-
-  /* Find the earliest current PTS we're going to push */
-  for (tmp = demux->program->stream_list; tmp; tmp = tmp->next) {
-    TSDemuxStream *pstream = (TSDemuxStream *) tmp->data;
-    if (!GST_CLOCK_TIME_IS_VALID (firstpts) || pstream->pts < firstpts)
-      firstpts = pstream->pts;
-  }
 
   if (base->mode == BASE_MODE_PUSHING) {
     /* FIXME : We're just ignore the upstream format for the time being */
@@ -2080,10 +2101,9 @@ calculate_and_push_newsegment (GstTSDemux * demux, TSDemuxStream * stream)
     if (demux->segment.time == 0 && base->segment.format == GST_FORMAT_TIME)
       demux->segment.time = base->segment.time;
 
-    start = firstpts;
-    stop = GST_CLOCK_TIME_NONE;
-    position = demux->segment.time ? firstpts - demux->segment.time : 0;
-    demux->segment.time = start;
+    start = base->segment.start;
+    stop = base->segment.stop;
+    position = base->segment.time;
   } else {
     /* pull mode */
     GST_DEBUG ("pull-based. Segment start:%" GST_TIME_FORMAT " duration:%"
