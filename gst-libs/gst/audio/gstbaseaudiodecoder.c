@@ -321,7 +321,7 @@ gst_base_audio_decoder_class_init (GstBaseAudioDecoderClass * klass)
 
   /* Properties */
   g_object_class_install_property (gobject_class, PROP_LATENCY,
-      g_param_spec_int64 ("latency", "Latency",
+      g_param_spec_int64 ("min-latency", "Minimum Latency",
           "Aggregate output data to a minimum of latency time (ns)",
           0, G_MAXINT64, DEFAULT_LATENCY,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
