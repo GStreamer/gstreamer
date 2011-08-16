@@ -203,6 +203,7 @@ struct _GstRTSPMedia {
   gboolean           eos_shutdown;
   guint              buffer_size;
   GstRTSPAuth       *auth;
+  gchar             *multicast_group;
 
   GstElement        *element;
   GArray            *streams;
@@ -281,6 +282,10 @@ GstRTSPAuth *         gst_rtsp_media_get_auth         (GstRTSPMedia *media);
 
 void                  gst_rtsp_media_set_buffer_size  (GstRTSPMedia *media, guint size);
 guint                 gst_rtsp_media_get_buffer_size  (GstRTSPMedia *media);
+
+void                  gst_rtsp_media_set_multicast_group (GstRTSPMedia *media, const gchar * mc);
+gchar *               gst_rtsp_media_get_multicast_group (GstRTSPMedia *media);
+
 
 /* prepare the media for playback */
 gboolean              gst_rtsp_media_prepare          (GstRTSPMedia *media);

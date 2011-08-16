@@ -25,12 +25,13 @@
 
 #include "rtsp-media.h"
 
-#define DEFAULT_SHARED         FALSE
-#define DEFAULT_REUSABLE       FALSE
-#define DEFAULT_PROTOCOLS      GST_RTSP_LOWER_TRANS_UDP | GST_RTSP_LOWER_TRANS_TCP
+#define DEFAULT_SHARED          FALSE
+#define DEFAULT_REUSABLE        FALSE
+#define DEFAULT_PROTOCOLS       GST_RTSP_LOWER_TRANS_UDP | GST_RTSP_LOWER_TRANS_TCP
 //#define DEFAULT_PROTOCOLS      GST_RTSP_LOWER_TRANS_UDP_MCAST
-#define DEFAULT_EOS_SHUTDOWN   FALSE
-#define DEFAULT_BUFFER_SIZE    0x80000
+#define DEFAULT_EOS_SHUTDOWN    FALSE
+#define DEFAULT_BUFFER_SIZE     0x80000
+#define DEFAULT_MULTICAST_GROUP "224.2.0.1"
 
 /* define to dump received RTCP packets */
 #undef DUMP_STATS
@@ -43,6 +44,7 @@ enum
   PROP_PROTOCOLS,
   PROP_EOS_SHUTDOWN,
   PROP_BUFFER_SIZE,
+  PROP_MULTICAST_GROUP,
   PROP_LAST
 };
 
@@ -112,6 +114,11 @@ gst_rtsp_media_class_init (GstRTSPMediaClass * klass)
           "The kernel UDP buffer size to use", 0, G_MAXUINT,
           DEFAULT_BUFFER_SIZE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_MULTICAST_GROUP,
+      g_param_spec_string ("multicast-group", "Multicast Group",
+          "The Multicast group to send media to",
+          DEFAULT_MULTICAST_GROUP, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_rtsp_media_signals[SIGNAL_PREPARED] =
       g_signal_new ("prepared", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstRTSPMediaClass, prepared), NULL, NULL,
@@ -154,6 +161,7 @@ gst_rtsp_media_init (GstRTSPMedia * media)
   media->protocols = DEFAULT_PROTOCOLS;
   media->eos_shutdown = DEFAULT_EOS_SHUTDOWN;
   media->buffer_size = DEFAULT_BUFFER_SIZE;
+  media->multicast_group = g_strdup (DEFAULT_MULTICAST_GROUP);
 }
 
 void
@@ -226,6 +234,7 @@ gst_rtsp_media_finalize (GObject * obj)
     g_source_destroy (media->source);
     g_source_unref (media->source);
   }
+  g_free (media->multicast_group);
   g_mutex_free (media->lock);
   g_cond_free (media->cond);
 
@@ -254,6 +263,9 @@ gst_rtsp_media_get_property (GObject * object, guint propid,
     case PROP_BUFFER_SIZE:
       g_value_set_uint (value, gst_rtsp_media_get_buffer_size (media));
       break;
+    case PROP_MULTICAST_GROUP:
+      g_value_take_string (value, gst_rtsp_media_get_multicast_group (media));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
   }
@@ -280,6 +292,9 @@ gst_rtsp_media_set_property (GObject * object, guint propid,
       break;
     case PROP_BUFFER_SIZE:
       gst_rtsp_media_set_buffer_size (media, g_value_get_uint (value));
+      break;
+    case PROP_MULTICAST_GROUP:
+      gst_rtsp_media_set_multicast_group (media, g_value_get_string (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
@@ -521,6 +536,46 @@ gst_rtsp_media_get_buffer_size (GstRTSPMedia * media)
   g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
 
   return media->buffer_size;
+}
+
+/**
+ * gst_rtsp_media_set_multicast_group:
+ * @media: a #GstRTSPMedia
+ * @mc: the new multicast group
+ *
+ * Set the multicast group that media from @media will be streamed to.
+ */
+void
+gst_rtsp_media_set_multicast_group (GstRTSPMedia * media, const gchar * mc)
+{
+  g_return_if_fail (GST_IS_RTSP_MEDIA (media));
+
+  g_mutex_lock (media->lock);
+  g_free (media->multicast_group);
+  media->multicast_group = g_strdup (mc);
+  g_mutex_unlock (media->lock);
+}
+
+/**
+ * gst_rtsp_media_get_multicast_group:
+ * @media: a #GstRTSPMedia
+ *
+ * Get the multicast group that media from @media will be streamed to.
+ *
+ * Returns: the multicast group
+ */
+gchar *
+gst_rtsp_media_get_multicast_group (GstRTSPMedia * media)
+{
+  gchar *result;
+
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), NULL);
+
+  g_mutex_lock (media->lock);
+  result = g_strdup (media->multicast_group);
+  g_mutex_unlock (media->lock);
+
+  return result;
 }
 
 /**
