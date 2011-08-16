@@ -468,10 +468,6 @@ gst_omx_audio_enc_loop (GstOMXAudioEnc * self)
           gst_util_uint64_scale (buf->omx_buf->nTickCount, GST_SECOND,
           OMX_TICKS_PER_SECOND);
 
-    if ((klass->hacks & GST_OMX_HACK_SYNCFRAME_FLAG_NOT_USED)
-        || (buf->omx_buf->nFlags & OMX_BUFFERFLAG_SYNCFRAME)) {
-    }
-
     flow_ret =
         gst_base_audio_encoder_finish_frame (GST_BASE_AUDIO_ENCODER (self),
         outbuf, -1);
