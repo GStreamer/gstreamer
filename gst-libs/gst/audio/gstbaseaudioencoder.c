@@ -320,11 +320,11 @@ gst_base_audio_encoder_class_init (GstBaseAudioEncoderClass * klass)
 
   /* properties */
   g_object_class_install_property (gobject_class, PROP_PERFECT_TS,
-      g_param_spec_boolean ("perfect-ts", "Perfect Timestamps",
+      g_param_spec_boolean ("perfect-timestamp", "Perfect Timestamps",
           "Favour perfect timestamps over tracking upstream timestamps",
           DEFAULT_PERFECT_TS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_GRANULE,
-      g_param_spec_boolean ("granule", "Granule Marking",
+      g_param_spec_boolean ("mark-granule", "Granule Marking",
           "Apply granule semantics to buffer metadata (implies perfect-ts)",
           DEFAULT_GRANULE, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_HARD_RESYNC,
