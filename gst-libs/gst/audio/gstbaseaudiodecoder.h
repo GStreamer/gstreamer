@@ -81,7 +81,6 @@ typedef struct _GstBaseAudioDecoder GstBaseAudioDecoder;
 typedef struct _GstBaseAudioDecoderClass GstBaseAudioDecoderClass;
 
 typedef struct _GstBaseAudioDecoderPrivate GstBaseAudioDecoderPrivate;
-typedef struct _GstBaseAudioDecoderContext GstBaseAudioDecoderContext;
 
 /* do not use this one, use macro below */
 GstFlowReturn _gst_base_audio_decoder_error (GstBaseAudioDecoder *dec, gint weight,
@@ -122,40 +121,6 @@ G_STMT_START {                                                              \
 } G_STMT_END
 
 /**
- * GstBaseAudioDecoderContext:
- * @state: a #GstAudioState describing input audio format
- * @eos: no (immediate) subsequent data in stream
- * @sync: stream parsing in sync
- * @delay: number of frames pending decoding (typically at least 1 for current)
- * @do_plc: whether subclass is prepared to handle (packet) loss concealment
- * @min_latency: min latency of element
- * @max_latency: max latency of element
- * @lookahead: decoder lookahead (in units of input rate samples)
- *
- * Transparent #GstBaseAudioEncoderContext data structure.
- */
-struct _GstBaseAudioDecoderContext {
-  /* input */
-  /* (output) audio format */
-  GstAudioFormatInfo state;
-
-  /* parsing state */
-  gboolean eos;
-  gboolean sync;
-
-  /* misc */
-  gint delay;
-
-  /* output */
-  gboolean do_plc;
-  gboolean do_byte_time;
-  gint max_errors;
-  /* MT-protected (with LOCK) */
-  GstClockTime min_latency;
-  GstClockTime max_latency;
-};
-
-/**
  * GstBaseAudioDecoder:
  *
  * The opaque #GstBaseAudioDecoder data structure.
@@ -171,7 +136,6 @@ struct _GstBaseAudioDecoder
 
   /* MT-protected (with STREAM_LOCK) */
   GstSegment      segment;
-  GstBaseAudioDecoderContext *ctx;
 
   /* properties */
   GstClockTime    latency;
@@ -253,6 +217,30 @@ struct _GstBaseAudioDecoderClass
 
 GstFlowReturn     gst_base_audio_decoder_finish_frame (GstBaseAudioDecoder * dec,
                                                        GstBuffer * buf, gint frames);
+
+GstAudioFormatInfo *gst_base_audio_decoder_get_info (GstBaseAudioDecoder * dec);
+
+void              gst_base_audio_decoder_set_plc_aware (GstBaseAudioDecoder * dec,
+                                                        gboolean plc);
+gint              gst_base_audio_decoder_get_plc_aware (GstBaseAudioDecoder * dec);
+
+void              gst_base_audio_decoder_set_byte_time (GstBaseAudioDecoder * dec,
+                                                        gboolean enabled);
+gint              gst_base_audio_decoder_get_byte_time (GstBaseAudioDecoder * dec);
+
+gint              gst_base_audio_decoder_get_delay (GstBaseAudioDecoder * dec);
+
+void              gst_base_audio_decoder_set_max_errors (GstBaseAudioDecoder * enc,
+                                                         gint num);
+gint              gst_base_audio_decoder_get_max_errors (GstBaseAudioDecoder * dec);
+
+void              gst_base_audio_decoder_set_latency (GstBaseAudioDecoder * dec,
+                                                      GstClockTime min, GstClockTime max);
+void              gst_base_audio_decoder_get_latency (GstBaseAudioDecoder * dec,
+                                                      GstClockTime * min, GstClockTime * max);
+
+void              gst_base_audio_decoder_get_parse_state (GstBaseAudioDecoder * dec,
+                                                          gboolean * sync, gboolean * eos);
 
 GType gst_base_audio_decoder_get_type (void);
 
