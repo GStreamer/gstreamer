@@ -19,10 +19,11 @@
 
 #include "rtsp-media-factory.h"
 
-#define DEFAULT_LAUNCH         NULL
-#define DEFAULT_SHARED         FALSE
-#define DEFAULT_EOS_SHUTDOWN   FALSE
-#define DEFAULT_BUFFER_SIZE    0x80000
+#define DEFAULT_LAUNCH          NULL
+#define DEFAULT_SHARED          FALSE
+#define DEFAULT_EOS_SHUTDOWN    FALSE
+#define DEFAULT_BUFFER_SIZE     0x80000
+#define DEFAULT_MULTICAST_GROUP "224.2.0.1"
 
 enum
 {
@@ -31,6 +32,7 @@ enum
   PROP_SHARED,
   PROP_EOS_SHUTDOWN,
   PROP_BUFFER_SIZE,
+  PROP_MULTICAST_GROUP,
   PROP_LAST
 };
 
@@ -111,6 +113,11 @@ gst_rtsp_media_factory_class_init (GstRTSPMediaFactoryClass * klass)
           "The kernel UDP buffer size to use", 0, G_MAXUINT,
           DEFAULT_BUFFER_SIZE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_MULTICAST_GROUP,
+      g_param_spec_string ("multicast-group", "Multicast Group",
+          "The Multicast group to send media to",
+          DEFAULT_MULTICAST_GROUP, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_rtsp_media_factory_signals[SIGNAL_MEDIA_CONSTRUCTED] =
       g_signal_new ("media-constructed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPMediaFactoryClass,
@@ -134,6 +141,7 @@ gst_rtsp_media_factory_init (GstRTSPMediaFactory * factory)
   factory->shared = DEFAULT_SHARED;
   factory->eos_shutdown = DEFAULT_EOS_SHUTDOWN;
   factory->buffer_size = DEFAULT_BUFFER_SIZE;
+  factory->multicast_group = g_strdup (DEFAULT_MULTICAST_GROUP);
 
   factory->lock = g_mutex_new ();
   factory->medias_lock = g_mutex_new ();
@@ -149,6 +157,7 @@ gst_rtsp_media_factory_finalize (GObject * obj)
   g_hash_table_unref (factory->medias);
   g_mutex_free (factory->medias_lock);
   g_free (factory->launch);
+  g_free (factory->multicast_group);
   g_mutex_free (factory->lock);
   if (factory->auth)
     g_object_unref (factory->auth);
@@ -177,6 +186,10 @@ gst_rtsp_media_factory_get_property (GObject * object, guint propid,
       g_value_set_uint (value,
           gst_rtsp_media_factory_get_buffer_size (factory));
       break;
+    case PROP_MULTICAST_GROUP:
+      g_value_take_string (value,
+          gst_rtsp_media_factory_get_multicast_group (factory));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
   }
@@ -202,6 +215,10 @@ gst_rtsp_media_factory_set_property (GObject * object, guint propid,
     case PROP_BUFFER_SIZE:
       gst_rtsp_media_factory_set_buffer_size (factory,
           g_value_get_uint (value));
+      break;
+    case PROP_MULTICAST_GROUP:
+      gst_rtsp_media_factory_set_multicast_group (factory,
+          g_value_get_string (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
@@ -394,6 +411,47 @@ gst_rtsp_media_factory_get_buffer_size (GstRTSPMediaFactory * factory)
 
   GST_RTSP_MEDIA_FACTORY_LOCK (factory);
   result = factory->buffer_size;
+  GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
+
+  return result;
+}
+
+/**
+ * gst_rtsp_media_factory_set_multicast_group:
+ * @factory: a #GstRTSPMedia
+ * @mc: the new multicast group
+ *
+ * Set the multicast group that media from @factory will be streamed to.
+ */
+void
+gst_rtsp_media_factory_set_multicast_group (GstRTSPMediaFactory * factory,
+    const gchar * mc)
+{
+  g_return_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory));
+
+  GST_RTSP_MEDIA_FACTORY_LOCK (factory);
+  g_free (factory->multicast_group);
+  factory->multicast_group = g_strdup (mc);
+  GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
+}
+
+/**
+ * gst_rtsp_media_factory_get_multicast_group:
+ * @factory: a #GstRTSPMedia
+ *
+ * Get the multicast group that media from @factory will be streamed to.
+ *
+ * Returns: the multicast group
+ */
+gchar *
+gst_rtsp_media_factory_get_multicast_group (GstRTSPMediaFactory * factory)
+{
+  gchar *result;
+
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory), NULL);
+
+  GST_RTSP_MEDIA_FACTORY_LOCK (factory);
+  result = g_strdup (factory->multicast_group);
   GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
 
   return result;
