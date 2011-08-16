@@ -1070,6 +1070,7 @@ create_sdp (GstRTSPClient * client, GstRTSPMedia * media)
   GstSDPMessage *sdp;
   GstSDPInfo info;
   const gchar *proto;
+  GstRTSPLowerTrans protocols;
 
   gst_sdp_message_new (&sdp);
 
@@ -1092,7 +1093,8 @@ create_sdp (GstRTSPClient * client, GstRTSPMedia * media)
   gst_sdp_message_add_attribute (sdp, "control", "*");
 
   info.server_proto = proto;
-  if (media->protocols & GST_RTSP_LOWER_TRANS_UDP_MCAST)
+  protocols = gst_rtsp_media_get_protocols (media);
+  if (protocols & GST_RTSP_LOWER_TRANS_UDP_MCAST)
     info.server_ip = gst_rtsp_media_get_multicast_group (media);
   else
     info.server_ip = g_strdup (client->server_ip);
