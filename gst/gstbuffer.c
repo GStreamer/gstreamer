@@ -273,7 +273,7 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
     guint mask;
 
     /* copy relevant flags */
-    mask = GST_BUFFER_FLAG_PREROLL | GST_BUFFER_FLAG_IN_CAPS |
+    mask = GST_BUFFER_FLAG_LIVE | GST_BUFFER_FLAG_IN_CAPS |
         GST_BUFFER_FLAG_DELTA_UNIT | GST_BUFFER_FLAG_DISCONT |
         GST_BUFFER_FLAG_GAP | GST_BUFFER_FLAG_MEDIA1 |
         GST_BUFFER_FLAG_MEDIA2 | GST_BUFFER_FLAG_MEDIA3;

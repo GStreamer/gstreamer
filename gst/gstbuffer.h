@@ -159,26 +159,27 @@ typedef struct _GstBufferPool GstBufferPool;
 
 /**
  * GstBufferFlag:
- * @GST_BUFFER_FLAG_PREROLL: the buffer is part of a preroll and should not be
- * displayed.
+ * @GST_BUFFER_FLAG_LIVE:    the buffer is live data and should be discarded in
+ *                           the PAUSED state.
  * @GST_BUFFER_FLAG_DISCONT: the buffer marks a discontinuity in the stream.
- * This typically occurs after a seek or a dropped buffer from a live or
- * network source.
+ *                           This typically occurs after a seek or a dropped buffer
+ *                           from a live or network source.
  * @GST_BUFFER_FLAG_IN_CAPS: the buffer has been added as a field in a #GstCaps.
- * @GST_BUFFER_FLAG_GAP: the buffer has been created to fill a gap in the
- * stream and contains media neutral data (elements can switch to optimized code
- * path that ignores the buffer content).
+ * @GST_BUFFER_FLAG_GAP:     the buffer has been created to fill a gap in the
+ *                           stream and contains media neutral data (elements can
+ *                           switch to optimized code path that ignores the buffer
+ *                           content).
  * @GST_BUFFER_FLAG_DELTA_UNIT: this unit cannot be decoded independently.
- * @GST_BUFFER_FLAG_MEDIA1: a flag whose use is specific to the caps of the buffer. Since: 0.10.23.
- * @GST_BUFFER_FLAG_MEDIA2: a flag whose use is specific to the caps of the buffer. Since: 0.10.23.
- * @GST_BUFFER_FLAG_MEDIA3: a flag whose use is specific to the caps of the buffer. Since: 0.10.23.
- * @GST_BUFFER_FLAG_MEDIA4: a flag whose use is specific to the caps of the buffer. Since: 0.10.33.
- * @GST_BUFFER_FLAG_LAST: additional flags can be added starting from this flag.
+ * @GST_BUFFER_FLAG_MEDIA1:  a flag whose use is specific to the caps of the buffer. Since: 0.10.23.
+ * @GST_BUFFER_FLAG_MEDIA2:  a flag whose use is specific to the caps of the buffer. Since: 0.10.23.
+ * @GST_BUFFER_FLAG_MEDIA3:  a flag whose use is specific to the caps of the buffer. Since: 0.10.23.
+ * @GST_BUFFER_FLAG_MEDIA4:  a flag whose use is specific to the caps of the buffer. Since: 0.10.33.
+ * @GST_BUFFER_FLAG_LAST:    additional flags can be added starting from this flag.
  *
  * A set of buffer flags used to describe properties of a #GstBuffer.
  */
 typedef enum {
-  GST_BUFFER_FLAG_PREROLL    = (GST_MINI_OBJECT_FLAG_LAST << 0),
+  GST_BUFFER_FLAG_LIVE       = (GST_MINI_OBJECT_FLAG_LAST << 0),
   GST_BUFFER_FLAG_DISCONT    = (GST_MINI_OBJECT_FLAG_LAST << 1),
   GST_BUFFER_FLAG_IN_CAPS    = (GST_MINI_OBJECT_FLAG_LAST << 2),
   GST_BUFFER_FLAG_GAP        = (GST_MINI_OBJECT_FLAG_LAST << 3),
