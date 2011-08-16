@@ -857,7 +857,6 @@ handle_setup_request (GstRTSPClient * client, GstRTSPClientState * state)
   gchar *trans_str, *pos;
   guint streamid;
   GstRTSPSessionMedia *media;
-  GstRTSPUrl *url;
 
   uri = state->uri;
 
@@ -932,15 +931,6 @@ handle_setup_request (GstRTSPClient * client, GstRTSPClientState * state)
   if (client->session_pool == NULL)
     goto no_pool;
 
-  /* we have a valid transport now, set the destination of the client. */
-  g_free (ct->destination);
-  if (ct->lower_transport == GST_RTSP_LOWER_TRANS_UDP_MCAST) {
-    ct->destination = g_strdup (MCAST_ADDRESS);
-  } else {
-    url = gst_rtsp_connection_get_url (client->connection);
-    ct->destination = g_strdup (url->host);
-  }
-
   session = state->session;
 
   if (session) {
@@ -977,11 +967,21 @@ handle_setup_request (GstRTSPClient * client, GstRTSPClientState * state)
 
   state->sessmedia = media;
 
-  /* fix the transports */
-  if (ct->lower_transport & GST_RTSP_LOWER_TRANS_TCP) {
-    /* check if the client selected channels for TCP */
-    if (ct->interleaved.min == -1 || ct->interleaved.max == -1) {
-      gst_rtsp_session_media_alloc_channels (media, &ct->interleaved);
+  /* we have a valid transport now, set the destination of the client. */
+  g_free (ct->destination);
+  if (ct->lower_transport == GST_RTSP_LOWER_TRANS_UDP_MCAST) {
+    ct->destination = g_strdup (MCAST_ADDRESS);
+  } else {
+    GstRTSPUrl *url;
+
+    url = gst_rtsp_connection_get_url (client->connection);
+    ct->destination = g_strdup (url->host);
+
+    if (ct->lower_transport & GST_RTSP_LOWER_TRANS_TCP) {
+      /* check if the client selected channels for TCP */
+      if (ct->interleaved.min == -1 || ct->interleaved.max == -1) {
+        gst_rtsp_session_media_alloc_channels (media, &ct->interleaved);
+      }
     }
   }
 
