@@ -10,4 +10,5 @@
 	<dllmap dll="libgstcontroller-0.10.dll" target="libgstcontroller-0.10@LIB_PREFIX@.0@LIB_SUFFIX@"/>
 	<dllmap dll="libgstinterfaces-0.10.dll" target="libgstinterfaces-0.10@LIB_PREFIX@.0@LIB_SUFFIX@"/>
 	<dllmap dll="libgstvideo-0.10.dll" target="libgstvideo-0.10@LIB_PREFIX@.0@LIB_SUFFIX@"/>
+	<dllmap dll="gstreamersharpglue-0.10.dll" target="libgstreamersharpglue-0.10@LIB_PREFIX@"/>
 </configuration>
