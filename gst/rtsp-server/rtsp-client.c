@@ -121,8 +121,12 @@ client_unlink_session (GstRTSPClient * client, GstRTSPSession * session)
 
   /* unlink all media managed in this session */
   for (medias = session->medias; medias; medias = g_list_next (medias)) {
-    unlink_session_streams (client, session,
-        (GstRTSPSessionMedia *) medias->data);
+    GstRTSPSessionMedia *media = medias->data;
+
+    gst_rtsp_session_media_set_state (media, GST_STATE_NULL);
+    unlink_session_streams (client, session, media);
+    /* unmanage the media in the session. */
+    gst_rtsp_session_release_media (session, media);
   }
 }
 
