@@ -22,6 +22,7 @@
 #define DEFAULT_LAUNCH          NULL
 #define DEFAULT_SHARED          FALSE
 #define DEFAULT_EOS_SHUTDOWN    FALSE
+#define DEFAULT_PROTOCOLS       GST_RTSP_LOWER_TRANS_UDP | GST_RTSP_LOWER_TRANS_TCP
 #define DEFAULT_BUFFER_SIZE     0x80000
 #define DEFAULT_MULTICAST_GROUP "224.2.0.1"
 
@@ -31,6 +32,7 @@ enum
   PROP_LAUNCH,
   PROP_SHARED,
   PROP_EOS_SHUTDOWN,
+  PROP_PROTOCOLS,
   PROP_BUFFER_SIZE,
   PROP_MULTICAST_GROUP,
   PROP_LAST
@@ -109,6 +111,11 @@ gst_rtsp_media_factory_class_init (GstRTSPMediaFactoryClass * klass)
           "Send EOS down the pipeline before shutting down",
           DEFAULT_EOS_SHUTDOWN, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_PROTOCOLS,
+      g_param_spec_flags ("protocols", "Protocols",
+          "Allowed lower transport protocols", GST_TYPE_RTSP_LOWER_TRANS,
+          DEFAULT_PROTOCOLS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   g_object_class_install_property (gobject_class, PROP_BUFFER_SIZE,
       g_param_spec_uint ("buffer-size", "Buffer Size",
           "The kernel UDP buffer size to use", 0, G_MAXUINT,
@@ -147,6 +154,7 @@ gst_rtsp_media_factory_init (GstRTSPMediaFactory * factory)
   factory->launch = g_strdup (DEFAULT_LAUNCH);
   factory->shared = DEFAULT_SHARED;
   factory->eos_shutdown = DEFAULT_EOS_SHUTDOWN;
+  factory->protocols = DEFAULT_PROTOCOLS;
   factory->buffer_size = DEFAULT_BUFFER_SIZE;
   factory->multicast_group = g_strdup (DEFAULT_MULTICAST_GROUP);
 
@@ -189,6 +197,9 @@ gst_rtsp_media_factory_get_property (GObject * object, guint propid,
       g_value_set_boolean (value,
           gst_rtsp_media_factory_is_eos_shutdown (factory));
       break;
+    case PROP_PROTOCOLS:
+      g_value_set_flags (value, gst_rtsp_media_factory_get_protocols (factory));
+      break;
     case PROP_BUFFER_SIZE:
       g_value_set_uint (value,
           gst_rtsp_media_factory_get_buffer_size (factory));
@@ -218,6 +229,9 @@ gst_rtsp_media_factory_set_property (GObject * object, guint propid,
     case PROP_EOS_SHUTDOWN:
       gst_rtsp_media_factory_set_eos_shutdown (factory,
           g_value_get_boolean (value));
+      break;
+    case PROP_PROTOCOLS:
+      gst_rtsp_media_factory_set_protocols (factory, g_value_get_flags (value));
       break;
     case PROP_BUFFER_SIZE:
       gst_rtsp_media_factory_set_buffer_size (factory,
@@ -512,6 +526,39 @@ gst_rtsp_media_factory_get_auth (GstRTSPMediaFactory * factory)
   return result;
 }
 
+/**
+ * gst_rtsp_media_factory_set_protocols:
+ * @factory: a #GstRTSPMediaFactory
+ * @protocols: the new flags
+ *
+ * Configure the allowed lower transport for @factory.
+ */
+void
+gst_rtsp_media_factory_set_protocols (GstRTSPMediaFactory * factory,
+    GstRTSPLowerTrans protocols)
+{
+  g_return_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory));
+
+  factory->protocols = protocols;
+}
+
+/**
+ * gst_rtsp_media_factory_get_protocols:
+ * @factory: a #GstRTSPMediaFactory
+ *
+ * Get the allowed protocols of @factory.
+ *
+ * Returns: a #GstRTSPLowerTrans
+ */
+GstRTSPLowerTrans
+gst_rtsp_media_factory_get_protocols (GstRTSPMediaFactory * factory)
+{
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory),
+      GST_RTSP_LOWER_TRANS_UNKNOWN);
+
+  return factory->protocols;
+}
+
 static gboolean
 compare_media (gpointer key, GstRTSPMedia * media1, GstRTSPMedia * media2)
 {
@@ -804,6 +851,7 @@ default_configure (GstRTSPMediaFactory * factory, GstRTSPMedia * media)
   gboolean shared, eos_shutdown;
   guint size;
   GstRTSPAuth *auth;
+  GstRTSPLowerTrans protocols;
   gchar *mc;
 
   /* configure the sharedness */
@@ -811,11 +859,13 @@ default_configure (GstRTSPMediaFactory * factory, GstRTSPMedia * media)
   shared = factory->shared;
   eos_shutdown = factory->eos_shutdown;
   size = factory->buffer_size;
+  protocols = factory->protocols;
   GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
 
   gst_rtsp_media_set_shared (media, shared);
   gst_rtsp_media_set_eos_shutdown (media, eos_shutdown);
   gst_rtsp_media_set_buffer_size (media, size);
+  gst_rtsp_media_set_protocols (media, protocols);
 
   if ((auth = gst_rtsp_media_factory_get_auth (factory))) {
     gst_rtsp_media_set_auth (media, auth);
