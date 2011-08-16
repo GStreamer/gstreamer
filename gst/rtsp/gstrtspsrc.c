@@ -4947,7 +4947,7 @@ static GstRTSPResult
 gst_rtspsrc_setup_streams (GstRTSPSrc * src, gboolean async)
 {
   GList *walk;
-  GstRTSPResult res;
+  GstRTSPResult res = GST_RTSP_ERROR;
   GstRTSPMessage request = { 0 };
   GstRTSPMessage response = { 0 };
   GstRTSPStream *stream = NULL;
@@ -4978,6 +4978,9 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src, gboolean async)
   /* keep track of next port number, 0 is random */
   src->next_port_num = src->client_port_range.min;
   rtpport = rtcpport = 0;
+
+  if (G_UNLIKELY (src->streams == NULL))
+    goto no_streams;
 
   for (walk = src->streams; walk; walk = g_list_next (walk)) {
     GstRTSPConnection *conn;
@@ -5229,6 +5232,12 @@ no_protocols:
     /* no transport possible, post an error and stop */
     GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
         ("Could not connect to server, no protocols left"));
+    return GST_RTSP_ERROR;
+  }
+no_streams:
+  {
+    GST_ELEMENT_ERROR (src, RESOURCE, SETTINGS, (NULL),
+        ("SDP contains no streams"));
     return GST_RTSP_ERROR;
   }
 create_request_failed:

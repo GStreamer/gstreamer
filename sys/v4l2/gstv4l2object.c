@@ -2001,9 +2001,10 @@ static gboolean
 gst_v4l2_object_get_nearest_size (GstV4l2Object * v4l2object,
     guint32 pixelformat, gint * width, gint * height, gboolean * interlaced)
 {
-  struct v4l2_format fmt;
+  struct v4l2_format fmt, prevfmt;
   int fd;
   int r;
+  int prevfmt_valid;
 
   g_return_val_if_fail (width != NULL, FALSE);
   g_return_val_if_fail (height != NULL, FALSE);
@@ -2013,6 +2014,11 @@ gst_v4l2_object_get_nearest_size (GstV4l2Object * v4l2object,
       *width, *height, GST_FOURCC_ARGS (pixelformat));
 
   fd = v4l2object->video_fd;
+
+  /* Some drivers are buggy and will modify the currently set format
+     when processing VIDIOC_TRY_FMT, so we remember what is set at the
+     minute, and will reset it when done. */
+  prevfmt_valid = (v4l2_ioctl (fd, VIDIOC_G_FMT, &prevfmt) >= 0);
 
   /* get size delimiters */
   memset (&fmt, 0, sizeof (fmt));
@@ -2036,12 +2042,12 @@ gst_v4l2_object_get_nearest_size (GstV4l2Object * v4l2object,
     /* The driver might not implement TRY_FMT, in which case we will try
        S_FMT to probe */
     if (errno != ENOTTY)
-      return FALSE;
+      goto error;
 
     /* Only try S_FMT if we're not actively capturing yet, which we shouldn't
        be, because we're still probing */
     if (GST_V4L2_IS_ACTIVE (v4l2object))
-      return FALSE;
+      goto error;
 
     GST_LOG_OBJECT (v4l2object->element,
         "Failed to probe size limit with VIDIOC_TRY_FMT, trying VIDIOC_S_FMT");
@@ -2060,7 +2066,7 @@ gst_v4l2_object_get_nearest_size (GstV4l2Object * v4l2object,
     }
 
     if (r < 0)
-      return FALSE;
+      goto error;
   }
 
   GST_LOG_OBJECT (v4l2object->element,
@@ -2083,10 +2089,17 @@ gst_v4l2_object_get_nearest_size (GstV4l2Object * v4l2object,
       GST_WARNING_OBJECT (v4l2object->element,
           "Unsupported field type for %" GST_FOURCC_FORMAT "@%ux%u",
           GST_FOURCC_ARGS (pixelformat), *width, *height);
-      return FALSE;
+      goto error;
   }
 
+  if (prevfmt_valid)
+    v4l2_ioctl (fd, VIDIOC_S_FMT, &prevfmt);
   return TRUE;
+
+error:
+  if (prevfmt_valid)
+    v4l2_ioctl (fd, VIDIOC_S_FMT, &prevfmt);
+  return FALSE;
 }
 
 static gboolean

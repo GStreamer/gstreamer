@@ -99,6 +99,7 @@ gst_ximage_src_return_buf (GstXImageSrc * ximagesrc, GstBuffer * ximage)
     /* need to increment the refcount again to recycle */
     gst_buffer_ref (ximage);
     g_mutex_lock (ximagesrc->pool_lock);
+    GST_BUFFER_FLAGS (GST_BUFFER (ximage)) = 0; /* clear out any flags from the previous use */
     ximagesrc->buffer_pool = g_slist_prepend (ximagesrc->buffer_pool, ximage);
     g_mutex_unlock (ximagesrc->pool_lock);
   }
