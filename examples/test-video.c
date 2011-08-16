@@ -99,6 +99,7 @@ main (int argc, char *argv[])
   g_timeout_add_seconds (2, (GSourceFunc) timeout, server);
 
   /* start serving, this never stops */
+  g_print ("stream ready at rtsp://127.0.0.1:8554/test\n");
   g_main_loop_run (loop);
 
   return 0;

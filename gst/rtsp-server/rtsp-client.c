@@ -337,6 +337,8 @@ find_media (GstRTSPClient * client, GstRTSPClientState * state)
       goto no_media;
 
     g_object_unref (factory);
+    factory = NULL;
+    state->factory = NULL;
 
     /* set ipv6 on the media before preparing */
     media->is_ipv6 = client->is_ipv6;
@@ -389,7 +391,6 @@ no_prepare:
   {
     send_generic_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, state);
     g_object_unref (media);
-    g_object_unref (factory);
     return NULL;
   }
 }
@@ -1665,9 +1666,9 @@ message_received (GstRTSPWatch * watch, GstRTSPMessage * message,
 static GstRTSPResult
 message_sent (GstRTSPWatch * watch, guint cseq, gpointer user_data)
 {
-  GstRTSPClient *client;
+  /* GstRTSPClient *client; */
 
-  client = GST_RTSP_CLIENT (user_data);
+  /* client = GST_RTSP_CLIENT (user_data); */
 
   /* GST_INFO ("client %p: sent a message with cseq %d", client, cseq); */
 

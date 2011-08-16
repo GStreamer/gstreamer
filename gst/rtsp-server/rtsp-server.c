@@ -706,11 +706,13 @@ unmanage_client (GstRTSPClient * client, GstRTSPServer * server)
 {
   GST_DEBUG_OBJECT (server, "unmanage client %p", client);
 
+  g_object_ref (server);
   gst_rtsp_client_set_server (client, NULL);
 
   GST_RTSP_SERVER_LOCK (server);
   server->clients = g_list_remove (server->clients, client);
   GST_RTSP_SERVER_UNLOCK (server);
+  g_object_unref (server);
 
   g_object_unref (client);
 }
