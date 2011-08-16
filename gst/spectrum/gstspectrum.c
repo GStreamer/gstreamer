@@ -1134,7 +1134,7 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
         spectrum->message_ts +=
             gst_util_uint64_scale (spectrum->num_frames, GST_SECOND, rate);
 
-      for (c = 0; c < channels; c++) {
+      for (c = 0; c < output_channels; c++) {
         cd = &spectrum->channel_data[c];
         gst_spectrum_reset_message_data (spectrum, cd);
       }
