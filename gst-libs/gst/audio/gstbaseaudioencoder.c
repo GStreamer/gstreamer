@@ -231,6 +231,12 @@ struct _GstBaseAudioEncoderPrivate
 
   /* context storage */
   GstBaseAudioEncoderContext ctx;
+
+  /* properties */
+  gint64 tolerance;
+  gboolean perfect_ts;
+  gboolean hard_resync;
+  gboolean granule;
 };
 
 
@@ -385,9 +391,10 @@ gst_base_audio_encoder_init (GstBaseAudioEncoder * enc,
   enc->priv->adapter = gst_adapter_new ();
 
   /* property default */
-  enc->perfect_ts = DEFAULT_PERFECT_TS;
-  enc->hard_resync = DEFAULT_HARD_RESYNC;
-  enc->tolerance = DEFAULT_TOLERANCE;
+  enc->priv->granule = DEFAULT_GRANULE;
+  enc->priv->perfect_ts = DEFAULT_PERFECT_TS;
+  enc->priv->hard_resync = DEFAULT_HARD_RESYNC;
+  enc->priv->tolerance = DEFAULT_TOLERANCE;
 
   /* init state */
   gst_base_audio_encoder_reset (enc, TRUE);
@@ -485,7 +492,7 @@ gst_base_audio_encoder_finish_frame (GstBaseAudioEncoder * enc, GstBuffer * buf,
 
   if (G_LIKELY (samples)) {
     /* track upstream ts if so configured */
-    if (!enc->perfect_ts) {
+    if (!enc->priv->perfect_ts) {
       guint64 ts, distance;
 
       ts = gst_adapter_prev_timestamp (priv->adapter, &distance);
@@ -509,7 +516,8 @@ gst_base_audio_encoder_finish_frame (GstBaseAudioEncoder * enc, GstBuffer * buf,
         diff = GST_CLOCK_DIFF (next_ts, old_ts);
         GST_LOG_OBJECT (enc, "ts diff %d ms", (gint) (diff / GST_MSECOND));
         /* only mark discontinuity if beyond tolerance */
-        if (G_UNLIKELY (diff < -enc->tolerance || diff > enc->tolerance)) {
+        if (G_UNLIKELY (diff < -enc->priv->tolerance ||
+                diff > enc->priv->tolerance)) {
           GST_DEBUG_OBJECT (enc, "marked discont");
           priv->discont = TRUE;
         }
@@ -738,7 +746,7 @@ gst_base_audio_encoder_set_base_gp (GstBaseAudioEncoder * enc)
 {
   GstClockTime ts;
 
-  if (!enc->granule)
+  if (!enc->priv->granule)
     return;
 
   /* use running time for granule */
@@ -840,7 +848,7 @@ gst_base_audio_encoder_chain (GstPad * pad, GstBuffer * buffer)
 
   /* check for continuity;
    * checked elsewhere in non-perfect case */
-  if (enc->perfect_ts) {
+  if (enc->priv->perfect_ts) {
     GstClockTimeDiff diff = 0;
     GstClockTime next_ts = 0;
 
@@ -861,14 +869,15 @@ gst_base_audio_encoder_chain (GstPad * pad, GstBuffer * buffer)
       /* if within tolerance,
        * discard buffer ts and carry on producing perfect stream,
        * otherwise clip or resync to ts */
-      if (G_UNLIKELY (diff < -enc->tolerance || diff > enc->tolerance)) {
+      if (G_UNLIKELY (diff < -enc->priv->tolerance ||
+              diff > enc->priv->tolerance)) {
         GST_DEBUG_OBJECT (enc, "marked discont");
         discont = TRUE;
       }
     }
 
     /* do some fancy tweaking in hard resync case */
-    if (discont && enc->hard_resync) {
+    if (discont && enc->priv->hard_resync) {
       if (diff < 0) {
         guint64 diff_bytes;
 
@@ -1370,16 +1379,16 @@ gst_base_audio_encoder_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_PERFECT_TS:
-      if (enc->granule && !g_value_get_boolean (value))
+      if (enc->priv->granule && !g_value_get_boolean (value))
         GST_WARNING_OBJECT (enc, "perfect-ts can not be set FALSE");
       else
-        enc->perfect_ts = g_value_get_boolean (value);
+        enc->priv->perfect_ts = g_value_get_boolean (value);
       break;
     case PROP_HARD_RESYNC:
-      enc->hard_resync = g_value_get_boolean (value);
+      enc->priv->hard_resync = g_value_get_boolean (value);
       break;
     case PROP_TOLERANCE:
-      enc->tolerance = g_value_get_int64 (value);
+      enc->priv->tolerance = g_value_get_int64 (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1397,16 +1406,16 @@ gst_base_audio_encoder_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_PERFECT_TS:
-      g_value_set_boolean (value, enc->perfect_ts);
+      g_value_set_boolean (value, enc->priv->perfect_ts);
       break;
     case PROP_GRANULE:
-      g_value_set_boolean (value, enc->granule);
+      g_value_set_boolean (value, enc->priv->granule);
       break;
     case PROP_HARD_RESYNC:
-      g_value_set_boolean (value, enc->hard_resync);
+      g_value_set_boolean (value, enc->priv->hard_resync);
       break;
     case PROP_TOLERANCE:
-      g_value_set_int64 (value, enc->tolerance);
+      g_value_set_int64 (value, enc->priv->tolerance);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1422,7 +1431,7 @@ gst_base_audio_encoder_activate (GstBaseAudioEncoder * enc, gboolean active)
 
   klass = GST_BASE_AUDIO_ENCODER_GET_CLASS (enc);
 
-  g_return_val_if_fail (!enc->granule || enc->perfect_ts, FALSE);
+  g_return_val_if_fail (!enc->priv->granule || enc->priv->perfect_ts, FALSE);
 
   GST_DEBUG_OBJECT (enc, "activate %d", active);
 
@@ -1609,4 +1618,190 @@ gst_base_audio_encoder_get_latency (GstBaseAudioEncoder * enc,
   if (max)
     *max = enc->priv->ctx.max_latency;
   GST_OBJECT_UNLOCK (enc);
+}
+
+/**
+ * gst_base_audio_encoder_set_mark_granule:
+ * @enc: a #GstBaseAudioEncoder
+ * @enabled: new state
+ *
+ * Enable or disable encoder granule handling.
+ *
+ * MT safe.
+ *
+ */
+void
+gst_base_audio_encoder_set_mark_granule (GstBaseAudioEncoder * enc,
+    gboolean enabled)
+{
+  g_return_if_fail (GST_IS_BASE_AUDIO_ENCODER (enc));
+
+  GST_LOG_OBJECT (enc, "enabled: %d", enabled);
+
+  GST_OBJECT_LOCK (enc);
+  enc->priv->granule = enabled;
+  GST_OBJECT_UNLOCK (enc);
+}
+
+/**
+ * gst_base_audio_encoder_get_mark_granule:
+ * @enc: a #GstBaseAudioEncoder
+ *
+ * Queries if the encoder will handle granule marking.
+ *
+ * Returns: TRUE if granule marking is enabled.
+ *
+ * MT safe.
+ */
+gboolean
+gst_base_audio_encoder_get_mark_granule (GstBaseAudioEncoder * enc)
+{
+  gboolean result;
+
+  g_return_val_if_fail (GST_IS_BASE_AUDIO_ENCODER (enc), FALSE);
+
+  GST_OBJECT_LOCK (enc);
+  result = enc->priv->granule;
+  GST_OBJECT_UNLOCK (enc);
+
+  return result;
+}
+
+/**
+ * gst_base_audio_encoder_set_perfect_timestamp:
+ * @enc: a #GstBaseAudioEncoder
+ * @enabled: new state
+ *
+ * Enable or disable encoder perfect output timestamp preference.
+ *
+ * MT safe.
+ *
+ */
+void
+gst_base_audio_encoder_set_perfect_timestamp (GstBaseAudioEncoder * enc,
+    gboolean enabled)
+{
+  g_return_if_fail (GST_IS_BASE_AUDIO_ENCODER (enc));
+
+  GST_LOG_OBJECT (enc, "enabled: %d", enabled);
+
+  GST_OBJECT_LOCK (enc);
+  enc->priv->perfect_ts = enabled;
+  GST_OBJECT_UNLOCK (enc);
+}
+
+/**
+ * gst_base_audio_encoder_get_perfect_timestamp:
+ * @enc: a #GstBaseAudioEncoder
+ *
+ * Queries encoder perfect timestamp behaviour.
+ *
+ * Returns: TRUE if pefect timestamp setting enabled.
+ *
+ * MT safe.
+ */
+gboolean
+gst_base_audio_encoder_get_perfect_timestamp (GstBaseAudioEncoder * enc)
+{
+  gboolean result;
+
+  g_return_val_if_fail (GST_IS_BASE_AUDIO_ENCODER (enc), FALSE);
+
+  GST_OBJECT_LOCK (enc);
+  result = enc->priv->perfect_ts;
+  GST_OBJECT_UNLOCK (enc);
+
+  return result;
+}
+
+/**
+ * gst_base_audio_encoder_set_hard_sync:
+ * @enc: a #GstBaseAudioEncoder
+ * @enabled: new state
+ *
+ * Sets encoder hard resync handling.
+ *
+ * MT safe.
+ *
+ */
+void
+gst_base_audio_encoder_set_hard_resync (GstBaseAudioEncoder * enc,
+    gboolean enabled)
+{
+  g_return_if_fail (GST_IS_BASE_AUDIO_ENCODER (enc));
+
+  GST_LOG_OBJECT (enc, "enabled: %d", enabled);
+
+  GST_OBJECT_LOCK (enc);
+  enc->priv->hard_resync = enabled;
+  GST_OBJECT_UNLOCK (enc);
+}
+
+/**
+ * gst_base_audio_encoder_get_hard_sync:
+ * @enc: a #GstBaseAudioEncoder
+ *
+ * Queries encoder's hard resync setting.
+ *
+ * Returns: TRUE if hard resync is enabled.
+ *
+ * MT safe.
+ */
+gboolean
+gst_base_audio_encoder_get_hard_resync (GstBaseAudioEncoder * enc)
+{
+  gboolean result;
+
+  g_return_val_if_fail (GST_IS_BASE_AUDIO_ENCODER (enc), FALSE);
+
+  GST_OBJECT_LOCK (enc);
+  result = enc->priv->hard_resync;
+  GST_OBJECT_UNLOCK (enc);
+
+  return result;
+}
+
+/**
+ * gst_base_audio_encoder_set_tolerance:
+ * @enc: a #GstBaseAudioEncoder
+ * @tolerance: new tolerance
+ *
+ * Configures encoder audio jitter tolerance threshold.
+ *
+ * MT safe.
+ *
+ */
+void
+gst_base_audio_encoder_set_tolerance (GstBaseAudioEncoder * enc,
+    gint64 tolerance)
+{
+  g_return_if_fail (GST_IS_BASE_AUDIO_ENCODER (enc));
+
+  GST_OBJECT_LOCK (enc);
+  enc->priv->tolerance = tolerance;
+  GST_OBJECT_UNLOCK (enc);
+}
+
+/**
+ * gst_base_audio_encoder_get_tolerance:
+ * @enc: a #GstBaseAudioEncoder
+ *
+ * Queries current audio jitter tolerance threshold.
+ *
+ * Returns: encoder audio jitter tolerance threshold.
+ *
+ * MT safe.
+ */
+gint64
+gst_base_audio_encoder_get_tolerance (GstBaseAudioEncoder * enc)
+{
+  gint64 result;
+
+  g_return_val_if_fail (GST_IS_BASE_AUDIO_ENCODER (enc), 0);
+
+  GST_OBJECT_LOCK (enc);
+  result = enc->priv->tolerance;
+  GST_OBJECT_UNLOCK (enc);
+
+  return result;
 }

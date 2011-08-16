@@ -106,12 +106,6 @@ struct _GstBaseAudioEncoder {
   /* MT-protected (with STREAM_LOCK) */
   GstSegment      segment;
 
-  /* properties */
-  gint64          tolerance;
-  gboolean        perfect_ts;
-  gboolean        hard_resync;
-  gboolean        granule;
-
   /*< private >*/
   GstBaseAudioEncoderPrivate *priv;
   gpointer       _gst_reserved[GST_PADDING_LARGE];
@@ -192,6 +186,7 @@ GstCaps *       gst_base_audio_encoder_proxy_getcaps (GstBaseAudioEncoder * enc,
                                                       GstCaps * caps);
 
 
+/* context parameters */
 GstAudioFormatInfo * gst_base_audio_encoder_get_info (GstBaseAudioEncoder * enc);
 
 gint            gst_base_audio_encoder_get_frame_samples (GstBaseAudioEncoder * enc);
@@ -210,6 +205,23 @@ void            gst_base_audio_encoder_get_latency (GstBaseAudioEncoder * enc,
                                                     GstClockTime * min, GstClockTime * max);
 void            gst_base_audio_encoder_set_latency (GstBaseAudioEncoder * enc,
                                                     GstClockTime min, GstClockTime max);
+
+/* object properties */
+void            gst_base_audio_encoder_set_mark_granule (GstBaseAudioEncoder * enc,
+                                                    gboolean enabled);
+gboolean        gst_base_audio_encoder_get_mark_granule (GstBaseAudioEncoder * enc);
+
+void            gst_base_audio_encoder_set_perfect_timestamp (GstBaseAudioEncoder * enc,
+                                                      gboolean enabled);
+gboolean        gst_base_audio_encoder_get_perfect_timestamp (GstBaseAudioEncoder * enc);
+
+void            gst_base_audio_encoder_set_hard_resync (GstBaseAudioEncoder * enc,
+                                                        gboolean enabled);
+gboolean        gst_base_audio_encoder_get_hard_resync (GstBaseAudioEncoder * enc);
+
+void            gst_base_audio_encoder_set_tolerance (GstBaseAudioEncoder * enc,
+                                                      gint64 tolerance);
+gint64          gst_base_audio_encoder_get_tolerance (GstBaseAudioEncoder * enc);
 
 G_END_DECLS
 
