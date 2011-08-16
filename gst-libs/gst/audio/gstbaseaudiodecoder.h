@@ -137,7 +137,7 @@ G_STMT_START {                                                              \
 struct _GstBaseAudioDecoderContext {
   /* input */
   /* (output) audio format */
-  GstAudioState state;
+  GstAudioFormatInfo state;
 
   /* parsing state */
   gboolean eos;

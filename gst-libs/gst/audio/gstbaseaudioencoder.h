@@ -105,7 +105,7 @@ typedef struct _GstBaseAudioEncoderContext GstBaseAudioEncoderContext;
  */
 struct _GstBaseAudioEncoderContext {
   /* input */
-  GstAudioState state;
+  GstAudioFormatInfo state;
 
   /* output */
   gint  frame_samples;
@@ -192,7 +192,7 @@ struct _GstBaseAudioEncoderClass {
   gboolean      (*stop)               (GstBaseAudioEncoder *enc);
 
   gboolean      (*set_format)         (GstBaseAudioEncoder *enc,
-                                       GstAudioState *state);
+                                       GstAudioFormatInfo *info);
 
   GstFlowReturn (*handle_frame)       (GstBaseAudioEncoder *enc,
                                        GstBuffer *buffer);

@@ -33,7 +33,7 @@
 G_BEGIN_DECLS
 
 /**
- * GstAudioState:
+ * GstAudioFormatInfo:
  * @is_int: whether sample data is int or float
  * @rate: rate of sample data
  * @channels: number of channels in sample data
@@ -43,7 +43,7 @@ G_BEGIN_DECLS
  * @endian: endianness of sample data
  * @bpf: bytes per audio frame
  */
-typedef struct _GstAudioState {
+typedef struct _GstAudioFormatInfo {
   gboolean is_int;
   gint  rate;
   gint  channels;
@@ -54,18 +54,18 @@ typedef struct _GstAudioState {
   GstAudioChannelPosition *channel_pos;
 
   gint  bpf;
-} GstAudioState;
+} GstAudioFormatInfo;
 
 gboolean gst_base_audio_parse_caps (GstCaps * caps,
-    GstAudioState * state, gboolean * changed);
+    GstAudioFormatInfo * state, gboolean * changed);
 
 GstCaps *gst_base_audio_add_streamheader (GstCaps * caps, GstBuffer * buf, ...);
 
-gboolean gst_base_audio_encoded_audio_convert (GstAudioState * fmt,
+gboolean gst_base_audio_encoded_audio_convert (GstAudioFormatInfo * fmt,
     gint64 bytes, gint64 samples, GstFormat src_format,
     gint64 src_value, GstFormat * dest_format, gint64 * dest_value);
 
-gboolean gst_base_audio_raw_audio_convert (GstAudioState * fmt, GstFormat src_format,
+gboolean gst_base_audio_raw_audio_convert (GstAudioFormatInfo * fmt, GstFormat src_format,
     gint64 src_value, GstFormat * dest_format, gint64 * dest_value);
 
 G_END_DECLS

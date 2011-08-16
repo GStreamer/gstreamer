@@ -919,7 +919,7 @@ gst_base_audio_encoder_sink_setcaps (GstPad * pad, GstCaps * caps)
   GstBaseAudioEncoder *enc;
   GstBaseAudioEncoderClass *klass;
   GstBaseAudioEncoderContext *ctx;
-  GstAudioState *state;
+  GstAudioFormatInfo *state;
   gboolean res = TRUE, changed = FALSE;
 
   enc = GST_BASE_AUDIO_ENCODER (GST_PAD_PARENT (pad));

@@ -37,7 +37,7 @@ G_STMT_START { \
 /**
  * gst_base_audio_parse_caps:
  * @caps: a #GstCaps
- * @state: a #GstAudioState
+ * @state: a #GstAudioFormatInfo
  * @changed: whether @caps introduced a change in current @state
  *
  * Parses audio format as represented by @caps into a more concise form
@@ -47,7 +47,7 @@ G_STMT_START { \
  * Returns: TRUE if parsing succeeded, otherwise FALSE
  */
 gboolean
-gst_base_audio_parse_caps (GstCaps * caps, GstAudioState * state,
+gst_base_audio_parse_caps (GstCaps * caps, GstAudioFormatInfo * state,
     gboolean * _changed)
 {
   gboolean res = TRUE, changed = FALSE;
@@ -168,7 +168,7 @@ gst_base_audio_add_streamheader (GstCaps * caps, GstBuffer * buf, ...)
  * @samples and @bytes (and @fmt).
  */
 gboolean
-gst_base_audio_encoded_audio_convert (GstAudioState * fmt,
+gst_base_audio_encoded_audio_convert (GstAudioFormatInfo * fmt,
     gint64 bytes, gint64 samples, GstFormat src_format,
     gint64 src_value, GstFormat * dest_format, gint64 * dest_value)
 {
@@ -236,8 +236,9 @@ exit:
  * by @fmt.
  */
 gboolean
-gst_base_audio_raw_audio_convert (GstAudioState * fmt, GstFormat src_format,
-    gint64 src_value, GstFormat * dest_format, gint64 * dest_value)
+gst_base_audio_raw_audio_convert (GstAudioFormatInfo * fmt,
+    GstFormat src_format, gint64 src_value,
+    GstFormat * dest_format, gint64 * dest_value)
 {
   gboolean res = FALSE;
   guint scale = 1;

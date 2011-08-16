@@ -442,7 +442,7 @@ static gboolean
 gst_base_audio_decoder_src_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstBaseAudioDecoder *dec;
-  GstAudioState *state;
+  GstAudioFormatInfo *state;
   gboolean res = TRUE, changed;
 
   dec = GST_BASE_AUDIO_DECODER (gst_pad_get_parent (pad));
