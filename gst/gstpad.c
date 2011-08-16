@@ -483,7 +483,7 @@ gst_pad_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PAD_PROP_DIRECTION:
-      GST_PAD_DIRECTION (object) = g_value_get_enum (value);
+      GST_PAD_DIRECTION (object) = (GstPadDirection) g_value_get_enum (value);
       break;
     case PAD_PROP_TEMPLATE:
       gst_pad_set_pad_template (GST_PAD_CAST (object),
