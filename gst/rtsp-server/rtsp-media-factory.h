@@ -103,6 +103,7 @@ struct _GstRTSPMediaFactoryClass {
 
   /* signals */
   void            (*media_constructed)  (GstRTSPMediaFactory *factory, GstRTSPMedia *media);
+  void            (*media_configure)    (GstRTSPMediaFactory *factory, GstRTSPMedia *media);
 };
 
 GType                 gst_rtsp_media_factory_get_type     (void);
