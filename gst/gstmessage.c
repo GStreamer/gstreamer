@@ -1134,7 +1134,8 @@ gst_message_parse_buffering_stats (GstMessage * message,
   g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_BUFFERING);
 
   if (mode)
-    *mode = g_value_get_enum (gst_structure_id_get_value (message->structure,
+    *mode = (GstBufferingMode)
+        g_value_get_enum (gst_structure_id_get_value (message->structure,
             GST_QUARK (BUFFERING_MODE)));
   if (avg_in)
     *avg_in = g_value_get_int (gst_structure_id_get_value (message->structure,
@@ -1186,15 +1187,16 @@ gst_message_parse_state_changed (GstMessage * message,
   g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_STATE_CHANGED);
 
   if (oldstate)
-    *oldstate =
+    *oldstate = (GstState)
         g_value_get_enum (gst_structure_id_get_value (message->structure,
             GST_QUARK (OLD_STATE)));
   if (newstate)
-    *newstate =
+    *newstate = (GstState)
         g_value_get_enum (gst_structure_id_get_value (message->structure,
             GST_QUARK (NEW_STATE)));
   if (pending)
-    *pending = g_value_get_enum (gst_structure_id_get_value (message->structure,
+    *pending = (GstState)
+        g_value_get_enum (gst_structure_id_get_value (message->structure,
             GST_QUARK (PENDING_STATE)));
 }
 
@@ -1317,7 +1319,8 @@ gst_message_parse_structure_change (GstMessage * message,
   g_return_if_fail (G_VALUE_TYPE (owner_gvalue) == GST_TYPE_ELEMENT);
 
   if (type)
-    *type = g_value_get_enum (gst_structure_id_get_value (message->structure,
+    *type = (GstStructureChangeType)
+        g_value_get_enum (gst_structure_id_get_value (message->structure,
             GST_QUARK (TYPE)));
   if (owner)
     *owner = (GstElement *) g_value_get_object (owner_gvalue);
@@ -1483,7 +1486,7 @@ gst_message_parse_segment_start (GstMessage * message, GstFormat * format,
   g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_SEGMENT_START);
 
   if (format)
-    *format =
+    *format = (GstFormat)
         g_value_get_enum (gst_structure_id_get_value (message->structure,
             GST_QUARK (FORMAT)));
   if (position)
@@ -1510,7 +1513,7 @@ gst_message_parse_segment_done (GstMessage * message, GstFormat * format,
   g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_SEGMENT_DONE);
 
   if (format)
-    *format =
+    *format = (GstFormat)
         g_value_get_enum (gst_structure_id_get_value (message->structure,
             GST_QUARK (FORMAT)));
   if (position)
@@ -1540,7 +1543,7 @@ gst_message_parse_duration (GstMessage * message, GstFormat * format,
   g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_DURATION);
 
   if (format)
-    *format =
+    *format = (GstFormat)
         g_value_get_enum (gst_structure_id_get_value (message->structure,
             GST_QUARK (FORMAT)));
   if (duration)
@@ -1590,7 +1593,8 @@ gst_message_parse_request_state (GstMessage * message, GstState * state)
   g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_REQUEST_STATE);
 
   if (state)
-    *state = g_value_get_enum (gst_structure_id_get_value (message->structure,
+    *state = (GstState)
+        g_value_get_enum (gst_structure_id_get_value (message->structure,
             GST_QUARK (NEW_STATE)));
 }
 
@@ -1652,7 +1656,8 @@ gst_message_parse_stream_status (GstMessage * message,
   g_return_if_fail (owner_gvalue != NULL);
 
   if (type)
-    *type = g_value_get_enum (gst_structure_id_get_value (message->structure,
+    *type = (GstStreamStatusType)
+        g_value_get_enum (gst_structure_id_get_value (message->structure,
             GST_QUARK (TYPE)));
   if (owner)
     *owner = (GstElement *) g_value_get_object (owner_gvalue);
