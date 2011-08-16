@@ -29,7 +29,7 @@ G_BEGIN_DECLS
 
 typedef struct {
   const gchar *server_proto;
-  const gchar *server_ip;
+  gchar *server_ip;
 } GstSDPInfo;
 
 /* creating SDP */
