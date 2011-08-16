@@ -253,7 +253,7 @@ gst_index_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case ARG_RESOLVER:
-      index->method = g_value_get_enum (value);
+      index->method = (GstIndexResolverMethod) g_value_get_enum (value);
       index->resolver = resolvers[index->method].resolver;
       index->resolver_user_data = resolvers[index->method].user_data;
       break;
