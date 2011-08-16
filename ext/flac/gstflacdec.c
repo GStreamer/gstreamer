@@ -415,9 +415,9 @@ gst_flac_dec_scan_got_frame (GstFlacDec * flacdec, guint8 * data, guint size,
     return FALSE;
   }
 
-  bs = (data[2] & 0xF0) >> 8;   /* blocksize marker   */
+  bs = (data[2] & 0xF0) >> 4;   /* blocksize marker   */
   sr = (data[2] & 0x0F);        /* samplerate marker  */
-  ca = (data[3] & 0xF0) >> 8;   /* channel assignment */
+  ca = (data[3] & 0xF0) >> 4;   /* channel assignment */
   ss = (data[3] & 0x0F) >> 1;   /* sample size marker */
   pb = (data[3] & 0x01);        /* padding bit        */
 
