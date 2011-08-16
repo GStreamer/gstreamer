@@ -34,8 +34,16 @@ enum
   PROP_LAST
 };
 
+enum
+{
+  SIGNAL_MEDIA_CONSTRUCTED,
+  SIGNAL_LAST
+};
+
 GST_DEBUG_CATEGORY_STATIC (rtsp_media_debug);
 #define GST_CAT_DEFAULT rtsp_media_debug
+
+static guint gst_rtsp_media_factory_signals[SIGNAL_LAST] = { 0 };
 
 static void gst_rtsp_media_factory_get_property (GObject * object, guint propid,
     GValue * value, GParamSpec * pspec);
@@ -102,6 +110,12 @@ gst_rtsp_media_factory_class_init (GstRTSPMediaFactoryClass * klass)
       g_param_spec_uint ("buffer-size", "Buffer Size",
           "The kernel UDP buffer size to use", 0, G_MAXUINT,
           DEFAULT_BUFFER_SIZE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gst_rtsp_media_factory_signals[SIGNAL_MEDIA_CONSTRUCTED] =
+      g_signal_new ("media-constructed", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPMediaFactoryClass,
+          media_constructed), NULL, NULL, g_cclosure_marshal_VOID__OBJECT,
+      G_TYPE_NONE, 1, GST_TYPE_RTSP_MEDIA);
 
   klass->gen_key = default_gen_key;
   klass->get_element = default_get_element;
@@ -490,9 +504,13 @@ gst_rtsp_media_factory_construct (GstRTSPMediaFactory * factory,
 
   if (media == NULL) {
     /* nothing cached found, try to create one */
-    if (klass->construct)
+    if (klass->construct) {
       media = klass->construct (factory, url);
-    else
+      if (media)
+        g_signal_emit (factory,
+            gst_rtsp_media_factory_signals[SIGNAL_MEDIA_CONSTRUCTED], 0, media,
+            NULL);
+    } else
       media = NULL;
 
     if (media) {

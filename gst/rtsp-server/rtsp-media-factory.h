@@ -93,12 +93,15 @@ struct _GstRTSPMediaFactory {
 struct _GstRTSPMediaFactoryClass {
   GObjectClass  parent_class;
 
-  gchar *           (*gen_key)        (GstRTSPMediaFactory *factory, const GstRTSPUrl *url);
+  gchar *           (*gen_key)		(GstRTSPMediaFactory *factory, const GstRTSPUrl *url);
 
-  GstElement *      (*get_element)    (GstRTSPMediaFactory *factory, const GstRTSPUrl *url);
-  GstRTSPMedia *    (*construct)      (GstRTSPMediaFactory *factory, const GstRTSPUrl *url);
-  void              (*configure)      (GstRTSPMediaFactory *factory, GstRTSPMedia *media);
-  GstElement *      (*create_pipeline)(GstRTSPMediaFactory *factory, GstRTSPMedia *media);
+  GstElement *      (*get_element)	(GstRTSPMediaFactory *factory, const GstRTSPUrl *url);
+  GstRTSPMedia *    (*construct)	(GstRTSPMediaFactory *factory, const GstRTSPUrl *url);
+  void              (*configure)	(GstRTSPMediaFactory *factory, GstRTSPMedia *media);
+  GstElement *      (*create_pipeline)	(GstRTSPMediaFactory *factory, GstRTSPMedia *media);
+
+  /* signals */
+  void		    (*media_constructed)(GstRTSPMediaFactory *factory, GstRTSPMedia *media);
 };
 
 GType                 gst_rtsp_media_factory_get_type     (void);
