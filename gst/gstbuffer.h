@@ -246,13 +246,13 @@ void        gst_buffer_remove_memory_range (GstBuffer *buffer, guint idx, guint 
  */
 #define     gst_buffer_remove_memory(b,i)  gst_buffer_remove_memory_range ((b), (i), 1)
 
-void        gst_buffer_fill                (GstBuffer *buffer, gsize offset,
+gsize       gst_buffer_fill                (GstBuffer *buffer, gsize offset,
                                             gconstpointer src, gsize size);
-void        gst_buffer_extract             (GstBuffer *buffer, gsize offset,
+gsize       gst_buffer_extract             (GstBuffer *buffer, gsize offset,
                                             gpointer dest, gsize size);
 gint        gst_buffer_memcmp              (GstBuffer *buffer, gsize offset,
                                             gconstpointer mem, gsize size);
-void        gst_buffer_memset              (GstBuffer *buffer, gsize offset,
+gsize       gst_buffer_memset              (GstBuffer *buffer, gsize offset,
                                             guint8 val, gsize size);
 
 gsize       gst_buffer_get_sizes           (GstBuffer *buffer, gsize *offset, gsize *maxsize);

@@ -1034,21 +1034,25 @@ gst_buffer_unmap (GstBuffer * buffer, gpointer data, gsize size)
  * @size: the size to fill
  *
  * Copy @size bytes from @src to @buffer at @offset.
+ *
+ * Returns: The amount of bytes copied. This value can be lower than @size
+ *    when @buffer did not contain enough data.
  */
-void
+gsize
 gst_buffer_fill (GstBuffer * buffer, gsize offset, gconstpointer src,
     gsize size)
 {
-  gsize i, len;
+  gsize i, len, left;
   const guint8 *ptr = src;
 
-  g_return_if_fail (GST_IS_BUFFER (buffer));
-  g_return_if_fail (gst_buffer_is_writable (buffer));
-  g_return_if_fail (src != NULL);
+  g_return_val_if_fail (GST_IS_BUFFER (buffer), 0);
+  g_return_val_if_fail (gst_buffer_is_writable (buffer), 0);
+  g_return_val_if_fail (src != NULL, 0);
 
   len = GST_BUFFER_MEM_LEN (buffer);
+  left = size;
 
-  for (i = 0; i < len && size > 0; i++) {
+  for (i = 0; i < len && left > 0; i++) {
     guint8 *data;
     gsize ssize, tocopy;
     GstMemory *mem;
@@ -1058,9 +1062,9 @@ gst_buffer_fill (GstBuffer * buffer, gsize offset, gconstpointer src,
     data = gst_memory_map (mem, &ssize, NULL, GST_MAP_WRITE);
     if (ssize > offset) {
       /* we have enough */
-      tocopy = MIN (ssize - offset, size);
+      tocopy = MIN (ssize - offset, left);
       memcpy (data + offset, ptr, tocopy);
-      size -= tocopy;
+      left -= tocopy;
       ptr += tocopy;
       offset = 0;
     } else {
@@ -1069,6 +1073,7 @@ gst_buffer_fill (GstBuffer * buffer, gsize offset, gconstpointer src,
     }
     gst_memory_unmap (mem, data, ssize);
   }
+  return size - left;
 }
 
 /**
@@ -1079,19 +1084,23 @@ gst_buffer_fill (GstBuffer * buffer, gsize offset, gconstpointer src,
  * @size: the size to extract
  *
  * Copy @size bytes starting from @offset in @buffer to @dest.
+ *
+ * Returns: The amount of bytes extracted. This value can be lower than @size
+ *    when @buffer did not contain enough data.
  */
-void
+gsize
 gst_buffer_extract (GstBuffer * buffer, gsize offset, gpointer dest, gsize size)
 {
-  gsize i, len;
+  gsize i, len, left;
   guint8 *ptr = dest;
 
-  g_return_if_fail (GST_IS_BUFFER (buffer));
-  g_return_if_fail (dest != NULL);
+  g_return_val_if_fail (GST_IS_BUFFER (buffer), 0);
+  g_return_val_if_fail (dest != NULL, 0);
 
   len = GST_BUFFER_MEM_LEN (buffer);
+  left = size;
 
-  for (i = 0; i < len && size > 0; i++) {
+  for (i = 0; i < len && left > 0; i++) {
     guint8 *data;
     gsize ssize, tocopy;
     GstMemory *mem;
@@ -1101,9 +1110,9 @@ gst_buffer_extract (GstBuffer * buffer, gsize offset, gpointer dest, gsize size)
     data = gst_memory_map (mem, &ssize, NULL, GST_MAP_READ);
     if (ssize > offset) {
       /* we have enough */
-      tocopy = MIN (ssize - offset, size);
+      tocopy = MIN (ssize - offset, left);
       memcpy (ptr, data + offset, tocopy);
-      size -= tocopy;
+      left -= tocopy;
       ptr += tocopy;
       offset = 0;
     } else {
@@ -1112,6 +1121,7 @@ gst_buffer_extract (GstBuffer * buffer, gsize offset, gpointer dest, gsize size)
     }
     gst_memory_unmap (mem, data, ssize);
   }
+  return size - left;
 }
 
 /**
@@ -1170,18 +1180,22 @@ gst_buffer_memcmp (GstBuffer * buffer, gsize offset, gconstpointer mem,
  * @size: the size to set
  *
  * Fill @buf with @size bytes with @val starting from @offset.
+ *
+ * Returns: The amount of bytes filled. This value can be lower than @size
+ *    when @buffer did not contain enough data.
  */
-void
+gsize
 gst_buffer_memset (GstBuffer * buffer, gsize offset, guint8 val, gsize size)
 {
-  gsize i, len;
+  gsize i, len, left;
 
-  g_return_if_fail (GST_IS_BUFFER (buffer));
-  g_return_if_fail (gst_buffer_is_writable (buffer));
+  g_return_val_if_fail (GST_IS_BUFFER (buffer), 0);
+  g_return_val_if_fail (gst_buffer_is_writable (buffer), 0);
 
   len = GST_BUFFER_MEM_LEN (buffer);
+  left = size;
 
-  for (i = 0; i < len && size > 0; i++) {
+  for (i = 0; i < len && left > 0; i++) {
     guint8 *data;
     gsize ssize, toset;
     GstMemory *mem;
@@ -1191,9 +1205,9 @@ gst_buffer_memset (GstBuffer * buffer, gsize offset, guint8 val, gsize size)
     data = gst_memory_map (mem, &ssize, NULL, GST_MAP_WRITE);
     if (ssize > offset) {
       /* we have enough */
-      toset = MIN (ssize - offset, size);
+      toset = MIN (ssize - offset, left);
       memset (data + offset, val, toset);
-      size -= toset;
+      left -= toset;
       offset = 0;
     } else {
       /* offset past buffer, skip */
@@ -1201,6 +1215,7 @@ gst_buffer_memset (GstBuffer * buffer, gsize offset, guint8 val, gsize size)
     }
     gst_memory_unmap (mem, data, ssize);
   }
+  return size - left;
 }
 
 /**
