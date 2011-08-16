@@ -41,155 +41,45 @@
 #include <stdlib.h>
 #include <string.h>
 
-static const gchar *genres[] = {
-  "Blues",
-  "Classic Rock",
-  "Country",
-  "Dance",
-  "Disco",
-  "Funk",
-  "Grunge",
-  "Hip-Hop",
-  "Jazz",
-  "Metal",
-  "New Age",
-  "Oldies",
-  "Other",
-  "Pop",
-  "R&B",
-  "Rap",
-  "Reggae",
-  "Rock",
-  "Techno",
-  "Industrial",
-  "Alternative",
-  "Ska",
-  "Death Metal",
-  "Pranks",
-  "Soundtrack",
-  "Euro-Techno",
-  "Ambient",
-  "Trip-Hop",
-  "Vocal",
-  "Jazz+Funk",
-  "Fusion",
-  "Trance",
-  "Classical",
-  "Instrumental",
-  "Acid",
-  "House",
-  "Game",
-  "Sound Clip",
-  "Gospel",
-  "Noise",
-  "Alternative Rock",
-  "Bass",
-  "Soul",
-  "Punk",
-  "Space",
-  "Meditative",
-  "Instrumental Pop",
-  "Instrumental Rock",
-  "Ethnic",
-  "Gothic",
-  "Darkwave",
-  "Techno-Industrial",
-  "Electronic",
-  "Pop-Folk",
-  "Eurodance",
-  "Dream",
-  "Southern Rock",
-  "Comedy",
-  "Cult",
-  "Gangsta",
-  "Top 40",
-  "Christian Rap",
-  "Pop/Funk",
-  "Jungle",
-  "Native American",
-  "Cabaret",
-  "New Wave",
-  "Psychedelic",
-  "Rave",
-  "Showtunes",
-  "Trailer",
-  "Lo-Fi",
-  "Tribal",
-  "Acid Punk",
-  "Acid Jazz",
-  "Polka",
-  "Retro",
-  "Musical",
-  "Rock & Roll",
-  "Hard Rock",
-  "Folk",
-  "Folk/Rock",
-  "National Folk",
-  "Swing",
-  "Fusion",
-  "Bebob",
-  "Latin",
-  "Revival",
-  "Celtic",
-  "Bluegrass",
-  "Avantgarde",
-  "Gothic Rock",
-  "Progressive Rock",
-  "Psychedelic Rock",
-  "Symphonic Rock",
-  "Slow Rock",
-  "Big Band",
-  "Chorus",
-  "Easy Listening",
-  "Acoustic",
-  "Humour",
-  "Speech",
-  "Chanson",
-  "Opera",
-  "Chamber Music",
-  "Sonata",
-  "Symphony",
-  "Booty Bass",
-  "Primus",
-  "Porn Groove",
-  "Satire",
-  "Slow Jam",
-  "Club",
-  "Tango",
-  "Samba",
-  "Folklore",
-  "Ballad",
-  "Power Ballad",
-  "Rhythmic Soul",
-  "Freestyle",
-  "Duet",
-  "Punk Rock",
-  "Drum Solo",
-  "A Capella",
-  "Euro-House",
-  "Dance Hall",
-  "Goa",
-  "Drum & Bass",
-  "Club-House",
-  "Hardcore",
-  "Terror",
-  "Indie",
-  "BritPop",
-  "Negerpunk",
-  "Polsk Punk",
-  "Beat",
-  "Christian Gangsta Rap",
-  "Heavy Metal",
-  "Black Metal",
-  "Crossover",
-  "Contemporary Christian",
-  "Christian Rock",
-  "Merengue",
-  "Salsa",
-  "Thrash Metal",
-  "Anime",
-  "Jpop",
-  "Synthpop"
+static const gchar genres[] =
+    "Blues\000Classic Rock\000Country\000Dance\000Disco\000Funk\000Grunge\000"
+    "Hip-Hop\000Jazz\000Metal\000New Age\000Oldies\000Other\000Pop\000R&B\000"
+    "Rap\000Reggae\000Rock\000Techno\000Industrial\000Alternative\000Ska\000"
+    "Death Metal\000Pranks\000Soundtrack\000Euro-Techno\000Ambient\000Trip-Hop"
+    "\000Vocal\000Jazz+Funk\000Fusion\000Trance\000Classical\000Instrumental\000"
+    "Acid\000House\000Game\000Sound Clip\000Gospel\000Noise\000Alternative Rock"
+    "\000Bass\000Soul\000Punk\000Space\000Meditative\000Instrumental Pop\000"
+    "Instrumental Rock\000Ethnic\000Gothic\000Darkwave\000Techno-Industrial\000"
+    "Electronic\000Pop-Folk\000Eurodance\000Dream\000Southern Rock\000Comedy"
+    "\000Cult\000Gangsta\000Top 40\000Christian Rap\000Pop/Funk\000Jungle\000"
+    "Native American\000Cabaret\000New Wave\000Psychedelic\000Rave\000Showtunes"
+    "\000Trailer\000Lo-Fi\000Tribal\000Acid Punk\000Acid Jazz\000Polka\000"
+    "Retro\000Musical\000Rock & Roll\000Hard Rock\000Folk\000Folk/Rock\000"
+    "National Folk\000Swing\000Bebob\000Latin\000Revival\000Celtic\000Bluegrass"
+    "\000Avantgarde\000Gothic Rock\000Progressive Rock\000Psychedelic Rock\000"
+    "Symphonic Rock\000Slow Rock\000Big Band\000Chorus\000Easy Listening\000"
+    "Acoustic\000Humour\000Speech\000Chanson\000Opera\000Chamber Music\000"
+    "Sonata\000Symphony\000Booty Bass\000Primus\000Porn Groove\000Satire\000"
+    "Slow Jam\000Club\000Tango\000Samba\000Folklore\000Ballad\000Power Ballad\000"
+    "Rhythmic Soul\000Freestyle\000Duet\000Punk Rock\000Drum Solo\000A Capella"
+    "\000Euro-House\000Dance Hall\000Goa\000Drum & Bass\000Club-House\000"
+    "Hardcore\000Terror\000Indie\000BritPop\000Negerpunk\000Polsk Punk\000"
+    "Beat\000Christian Gangsta Rap\000Heavy Metal\000Black Metal\000"
+    "Crossover\000Contemporary Christian\000Christian Rock\000Merengue\000"
+    "Salsa\000Thrash Metal\000Anime\000Jpop\000Synthpop";
+
+static const guint16 genres_idx[] = {
+  0, 6, 19, 27, 33, 39, 44, 51, 59, 64, 70, 78, 85, 91, 95, 99, 103, 110, 115,
+  122, 133, 145, 149, 161, 168, 179, 191, 199, 208, 214, 224, 231, 238, 248,
+  261, 266, 272, 277, 288, 295, 301, 318, 323, 328, 333, 339, 350, 367, 385,
+  392, 399, 408, 426, 437, 446, 456, 462, 476, 483, 488, 496, 503, 517, 526,
+  533, 549, 557, 566, 578, 583, 593, 601, 607, 614, 624, 634, 640, 646, 654,
+  666, 676, 681, 691, 705, 224, 711, 717, 723, 731, 738, 748, 759, 771, 788,
+  805, 820, 830, 839, 846, 861, 870, 877, 884, 892, 898, 912, 919, 928, 939,
+  946, 958, 965, 974, 979, 985, 991, 1000, 1007, 1020, 1034, 1044, 1049,
+  1059, 1069, 1079, 1090, 1101, 1105, 1117, 1128, 1137, 1144, 1150, 1158,
+  1168, 1179, 1184, 1206, 1218, 1230, 1240, 1263, 1278, 1287, 1293, 1306,
+  1312, 1317
 };
 
 static const GstTagEntryMatch tag_matches[] = {
@@ -412,7 +302,7 @@ gst_tag_list_new_from_id3v1 (const guint8 * data)
 guint
 gst_tag_id3_genre_count (void)
 {
-  return G_N_ELEMENTS (genres);
+  return G_N_ELEMENTS (genres_idx);
 }
 
 /**
@@ -426,9 +316,13 @@ gst_tag_id3_genre_count (void)
 const gchar *
 gst_tag_id3_genre_get (const guint id)
 {
-  if (id >= G_N_ELEMENTS (genres))
+  guint idx;
+
+  if (id >= G_N_ELEMENTS (genres_idx))
     return NULL;
-  return genres[id];
+  idx = genres_idx[id];
+  g_assert (idx < sizeof (genres));
+  return &genres[idx];
 }
 
 /**

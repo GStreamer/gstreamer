@@ -37,6 +37,8 @@
 
 #include "pbutils.h"
 
+#include <string.h>
+
 #define GST_SIMPLE_CAPS_HAS_NAME(caps,name) \
     gst_structure_has_name(gst_caps_get_structure((caps),0),(name))
 
@@ -527,6 +529,58 @@ gst_codec_utils_h264_get_level (const guint8 * sps, guint len)
 }
 
 /**
+ * gst_codec_utils_h264_get_level_idc:
+ * @level: A level string from caps
+ *
+ * Transform a level string from the caps into the level_idc
+ *
+ * Returns: the level_idc or 0 if the level is unknown
+ *
+ * Since: 0.10.36
+ */
+guint8
+gst_codec_utils_h264_get_level_idc (const gchar * level)
+{
+  g_return_val_if_fail (level != NULL, 0);
+
+  if (!strcmp (level, "1"))
+    return 10;
+  else if (!strcmp (level, "1b"))
+    return 9;
+  else if (!strcmp (level, "1.1"))
+    return 11;
+  else if (!strcmp (level, "1.2"))
+    return 12;
+  else if (!strcmp (level, "1.3"))
+    return 13;
+  else if (!strcmp (level, "2"))
+    return 20;
+  else if (!strcmp (level, "2.1"))
+    return 21;
+  else if (!strcmp (level, "2.2"))
+    return 22;
+  else if (!strcmp (level, "3"))
+    return 30;
+  else if (!strcmp (level, "3.1"))
+    return 31;
+  else if (!strcmp (level, "3.2"))
+    return 32;
+  else if (!strcmp (level, "4"))
+    return 40;
+  else if (!strcmp (level, "4.1"))
+    return 41;
+  else if (!strcmp (level, "4.2"))
+    return 42;
+  else if (!strcmp (level, "5"))
+    return 50;
+  else if (!strcmp (level, "5.1"))
+    return 51;
+
+  GST_WARNING ("Invalid level %s", level);
+  return 0;
+}
+
+/**
  * gst_codec_utils_h264_caps_set_level_and_profile:
  * @caps: the #GstCaps to which the level and profile are to be added
  * @sps: Pointer to the sequence parameter set for the stream.
@@ -658,13 +712,16 @@ gst_codec_utils_mpeg4video_get_profile (const guint8 * vis_obj_seq, guint len)
 const gchar *
 gst_codec_utils_mpeg4video_get_level (const guint8 * vis_obj_seq, guint len)
 {
-  /* The profile/level codes are from 14496-2, table G-1, and the Wireshark
-   * sources: epan/dissectors/packet-mp4ves.c
+  /* The profile/level codes are from 14496-2, table G-1, the Wireshark
+   * sources: epan/dissectors/packet-mp4ves.c and the Xvid Sources:
+   * src/xvid.h.
+   * Levels 4a and 5 for SP were added in Amendment 2, level 6 in Amendment 4
+   * (see Xvid sources vfw/config.c)
    *
    * Each profile has a different maximum level it defines. Some of them still
    * need special case handling, because not all levels start from 1, and the
    * Simple profile defines an intermediate level as well. */
-  static const int level_max[] = { 3, 2, 2, 4, 2, 1, 2, 2, 2, 4, 3, 4, 2, 3, 4,
+  static const int level_max[] = { 6, 2, 2, 4, 2, 1, 2, 2, 2, 4, 3, 4, 2, 3, 4,
     5
   };
   int profile_id, level_id;
@@ -718,6 +775,9 @@ gst_codec_utils_mpeg4video_get_level (const guint8 * vis_obj_seq, guint len)
   else if (profile_id == 0 && level_id == 9)
     /* Simple Profile / Level 0b */
     return "0b";
+  else if (profile_id == 0 && level_id == 4)
+    /* Simple Profile / Level 4a */
+    return "4a";
   else if (profile_id == 0xf && level_id > 7)
     /* Fine Granularity Scalable Profile */
     return digit_to_string (level_id - 8);

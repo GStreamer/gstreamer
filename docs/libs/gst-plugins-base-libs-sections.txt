@@ -1777,6 +1777,8 @@ gst_tag_from_id3_tag
 gst_tag_from_id3_user_tag
 gst_tag_to_id3_tag
 gst_tag_list_add_id3_image
+gst_tag_get_id3v2_tag_size
+gst_tag_list_from_id3v2_tag
 </SECTION>
 
 <SECTION>
@@ -1818,6 +1820,21 @@ gst_tag_demux_result_get_type
 </SECTION>
 
 <SECTION>
+<FILE>gsttagmux</FILE>
+<INCLUDE>gst/tag/gsttagmux.h</INCLUDE>
+GstTagMux
+GstTagMuxClass
+<SUBSECTION Standard>
+GstTagMuxPrivate
+GST_IS_TAG_MUX
+GST_IS_TAG_MUX_CLASS
+GST_TAG_MUX
+GST_TAG_MUX_CLASS
+GST_TYPE_TAG_MUX
+gst_tag_demux_get_type
+</SECTION>
+
+<SECTION>
 <FILE>gsttaglanguagecodes</FILE>
 <INCLUDE>gst/tag/tag.h</INCLUDE>
 gst_tag_get_language_codes
@@ -1826,6 +1843,20 @@ gst_tag_get_language_code
 gst_tag_get_language_code_iso_639_1
 gst_tag_get_language_code_iso_639_2B
 gst_tag_get_language_code_iso_639_2T
+</SECTION>
+
+<SECTION>
+<FILE>gsttaglicenses</FILE>
+<INCLUDE>gst/tag/tag.h</INCLUDE>
+gst_tag_get_license_flags
+gst_tag_get_license_nick
+gst_tag_get_license_title
+gst_tag_get_license_description
+gst_tag_get_license_jurisdiction
+gst_tag_get_license_version
+gst_tag_get_licenses
+<SUBSECTION Standard>
+gst_tag_license_flags_get_type
 </SECTION>
 
 <SECTION>
@@ -1940,6 +1971,7 @@ gst_codec_utils_aac_caps_set_level_and_profile
 gst_codec_utils_h264_get_profile
 gst_codec_utils_h264_get_level
 gst_codec_utils_h264_caps_set_level_and_profile
+gst_codec_utils_h264_get_level_idc
 <SUBSECTION>
 gst_codec_utils_mpeg4video_get_profile
 gst_codec_utils_mpeg4video_get_level

@@ -27,6 +27,12 @@
 
 #include <gst/audio/audio.h>
 
+#include <gst/fft/gstfft.h>
+#include <gst/fft/gstffts16.h>
+#include <gst/fft/gstffts32.h>
+#include <gst/fft/gstfftf32.h>
+#include <gst/fft/gstfftf64.h>
+
 /* For ease of programming we use globals to keep refs for our floating
  * src and sink pads we create; otherwise we always have to do get_pad,
  * get_peer, and then remove references in every test function */
@@ -44,8 +50,8 @@ static GstPad *mysrcpad, *mysinkpad;
     "channels = (int) [ 1, MAX ], "     \
     "rate = (int) [ 1,  MAX ], "        \
     "endianness = (int) BYTE_ORDER, "   \
-    "width = (int) 16, "                \
-    "depth = (int) 16, "                \
+    "width = (int) { 16, 32 }, "        \
+    "depth = (int) { 16, 32 }, "        \
     "signed = (bool) TRUE"
 
 #define RESAMPLE_CAPS_TEMPLATE_STRING   \
@@ -915,6 +921,190 @@ GST_START_TEST (test_timestamp_drift)
 
 } GST_END_TEST;
 
+#define FFT_HELPERS(type,ffttag,ffttag2,scale);                                                 \
+static gdouble magnitude##ffttag (const GstFFT##ffttag##Complex *c)                             \
+{                                                                                               \
+  gdouble mag = (gdouble) c->r * (gdouble) c->r;                                                \
+  mag += (gdouble) c->i * (gdouble) c->i;                                                       \
+  mag /= scale * scale;                                                                         \
+  mag = 10.0 * log10 (mag);                                                                     \
+  return mag;                                                                                   \
+}                                                                                               \
+static gdouble find_main_frequency_spot_##ffttag (const GstFFT##ffttag##Complex *v,             \
+                                                  int elements)                                 \
+{                                                                                               \
+  int i;                                                                                        \
+  gdouble maxmag = -9999;                                                                       \
+  int maxidx = 0;                                                                               \
+  for (i=0; i<elements; ++i) {                                                                  \
+    gdouble mag = magnitude##ffttag (v+i);                                                      \
+    if (mag > maxmag) {                                                                         \
+      maxmag = mag;                                                                             \
+      maxidx = i;                                                                               \
+    }                                                                                           \
+  }                                                                                             \
+  return maxidx / (gdouble) elements;                                                           \
+}                                                                                               \
+static gboolean is_zero_except_##ffttag (const GstFFT##ffttag##Complex *v, int elements,        \
+                                gdouble spot)                                                   \
+{                                                                                               \
+  int i;                                                                                        \
+  for (i=0; i<elements; ++i) {                                                                  \
+    gdouble pos = i / (gdouble) elements;                                                       \
+    gdouble mag = magnitude##ffttag (v+i);                                                      \
+    if (fabs (pos - spot) > 0.01) {                                                             \
+      if (mag > -55.0) {                                                                        \
+        return FALSE;                                                                           \
+      }                                                                                         \
+    }                                                                                           \
+  }                                                                                             \
+  return TRUE;                                                                                  \
+}                                                                                               \
+static void compare_ffts_##ffttag (const GstBuffer *inbuffer, const GstBuffer *outbuffer)       \
+{                                                                                               \
+  int insamples = GST_BUFFER_SIZE (inbuffer) / sizeof(type) & ~1;                               \
+  int outsamples = GST_BUFFER_SIZE (outbuffer) / sizeof(type) & ~1;                             \
+  gdouble inspot, outspot;                                                                      \
+                                                                                                \
+  GstFFT##ffttag *inctx = gst_fft_##ffttag2##_new (insamples, FALSE);                           \
+  GstFFT##ffttag##Complex *in = g_new (GstFFT##ffttag##Complex, insamples / 2 + 1);             \
+  GstFFT##ffttag *outctx = gst_fft_##ffttag2##_new (outsamples, FALSE);                         \
+  GstFFT##ffttag##Complex *out = g_new (GstFFT##ffttag##Complex, outsamples / 2 + 1);           \
+                                                                                                \
+  gst_fft_##ffttag2##_window (inctx, (type*)GST_BUFFER_DATA (inbuffer),                         \
+      GST_FFT_WINDOW_HAMMING);                                                                  \
+  gst_fft_##ffttag2##_fft (inctx, (type*)GST_BUFFER_DATA (inbuffer), in);                       \
+  gst_fft_##ffttag2##_window (outctx, (type*)GST_BUFFER_DATA (outbuffer),                       \
+      GST_FFT_WINDOW_HAMMING);                                                                  \
+  gst_fft_##ffttag2##_fft (outctx, (type*)GST_BUFFER_DATA (outbuffer), out);                    \
+                                                                                                \
+  inspot = find_main_frequency_spot_##ffttag (in, insamples / 2 + 1);                           \
+  outspot = find_main_frequency_spot_##ffttag (out, outsamples / 2 + 1);                        \
+  GST_LOG ("Spots are %.3f and %.3f", inspot, outspot);                                         \
+  fail_unless (fabs (outspot - inspot) < 0.05);                                                 \
+  fail_unless (is_zero_except_##ffttag (in, insamples / 2 + 1, inspot));                        \
+  fail_unless (is_zero_except_##ffttag (out, outsamples / 2 + 1, outspot));                     \
+                                                                                                \
+  gst_fft_##ffttag2##_free (inctx);                                                             \
+  gst_fft_##ffttag2##_free (outctx);                                                            \
+  g_free (in);                                                                                  \
+  g_free (out);                                                                                 \
+}
+FFT_HELPERS (float, F32, f32, 2048.0f);
+FFT_HELPERS (double, F64, f64, 2048.0);
+FFT_HELPERS (gint16, S16, s16, 32767.0);
+FFT_HELPERS (gint32, S32, s32, 2147483647.0);
+
+#define FILL_BUFFER(type, desc, value);                         \
+  static void init_##type##_##desc (GstBuffer *buffer)          \
+  {                                                             \
+    type *ptr = (type *) GST_BUFFER_DATA (buffer);              \
+    int i, nsamples = GST_BUFFER_SIZE (buffer) / sizeof (type); \
+    for (i = 0; i < nsamples; ++i) {                            \
+      *ptr++ = value;                                           \
+    }                                                           \
+  }
+
+FILL_BUFFER (float, silence, 0.0f);
+FILL_BUFFER (double, silence, 0.0);
+FILL_BUFFER (gint16, silence, 0);
+FILL_BUFFER (gint32, silence, 0);
+FILL_BUFFER (float, sine, sinf (i * 0.01f));
+FILL_BUFFER (float, sine2, sinf (i * 1.8f));
+FILL_BUFFER (double, sine, sin (i * 0.01));
+FILL_BUFFER (double, sine2, sin (i * 1.8));
+FILL_BUFFER (gint16, sine, (gint16) (32767 * sinf (i * 0.01f)));
+FILL_BUFFER (gint16, sine2, (gint16) (32767 * sinf (i * 1.8f)));
+FILL_BUFFER (gint32, sine, (gint32) (2147483647 * sinf (i * 0.01f)));
+FILL_BUFFER (gint32, sine2, (gint32) (2147483647 * sinf (i * 1.8f)));
+
+static void
+run_fft_pipeline (int inrate, int outrate, int quality, int width, gboolean fp,
+    void (*init) (GstBuffer *),
+    void (*compare_ffts) (const GstBuffer *, const GstBuffer *))
+{
+  GstElement *audioresample;
+  GstBuffer *inbuffer, *outbuffer;
+  GstCaps *caps;
+  const int nsamples = 2048;
+
+  audioresample = setup_audioresample (1, inrate, outrate, width, fp);
+  fail_unless (audioresample != NULL);
+  g_object_set (audioresample, "quality", quality, NULL);
+  caps = gst_pad_get_negotiated_caps (mysrcpad);
+  fail_unless (gst_caps_is_fixed (caps));
+
+  fail_unless (gst_element_set_state (audioresample,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  inbuffer = gst_buffer_new_and_alloc (nsamples * width / 8);
+  GST_BUFFER_DURATION (inbuffer) = GST_FRAMES_TO_CLOCK_TIME (nsamples, inrate);
+  GST_BUFFER_TIMESTAMP (inbuffer) = 0;
+  gst_buffer_set_caps (inbuffer, caps);
+  gst_buffer_ref (inbuffer);
+
+  (*init) (inbuffer);
+
+  /* pushing gives away my reference ... */
+  fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
+  /* ... but it ends up being collected on the global buffer list */
+  fail_unless_equals_int (g_list_length (buffers), 1);
+  /* retrieve out buffer */
+  fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
+
+  fail_unless (gst_element_set_state (audioresample,
+          GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS, "could not set to null");
+
+  (*compare_ffts) (inbuffer, outbuffer);
+
+  /* cleanup */
+  gst_buffer_unref (inbuffer);
+  cleanup_audioresample (audioresample);
+}
+
+GST_START_TEST (test_fft)
+{
+  int quality;
+  size_t f0, f1;
+  static const int frequencies[] =
+      { 8000, 16000, 44100, 48000, 128000, 12345, 54321 };
+
+  /* audioresample uses a mixed float/double code path for floats with quality>8, make sure we test it */
+  for (quality = 0; quality <= 10; quality += 5) {
+    for (f0 = 0; f0 < G_N_ELEMENTS (frequencies); ++f0) {
+      for (f1 = 0; f1 < G_N_ELEMENTS (frequencies); ++f1) {
+        run_fft_pipeline (frequencies[f0], frequencies[f0], quality, 32, TRUE,
+            &init_float_silence, &compare_ffts_F32);
+        run_fft_pipeline (frequencies[f0], frequencies[f0], quality, 32, TRUE,
+            &init_float_sine, &compare_ffts_F32);
+        run_fft_pipeline (frequencies[f0], frequencies[f0], quality, 32, TRUE,
+            &init_float_sine2, &compare_ffts_F32);
+        run_fft_pipeline (frequencies[f0], frequencies[f0], quality, 64, TRUE,
+            &init_double_silence, &compare_ffts_F64);
+        run_fft_pipeline (frequencies[f0], frequencies[f0], quality, 64, TRUE,
+            &init_double_sine, &compare_ffts_F64);
+        run_fft_pipeline (frequencies[f0], frequencies[f0], quality, 64, TRUE,
+            &init_double_sine2, &compare_ffts_F64);
+        run_fft_pipeline (frequencies[f0], frequencies[f0], quality, 16, FALSE,
+            &init_gint16_silence, &compare_ffts_S16);
+        run_fft_pipeline (frequencies[f0], frequencies[f0], quality, 16, FALSE,
+            &init_gint16_sine, &compare_ffts_S16);
+        run_fft_pipeline (frequencies[f0], frequencies[f0], quality, 16, FALSE,
+            &init_gint16_sine2, &compare_ffts_S16);
+        run_fft_pipeline (frequencies[f0], frequencies[f0], quality, 32, FALSE,
+            &init_gint32_silence, &compare_ffts_S32);
+        run_fft_pipeline (frequencies[f0], frequencies[f0], quality, 32, FALSE,
+            &init_gint32_sine, &compare_ffts_S32);
+        run_fft_pipeline (frequencies[f0], frequencies[f0], quality, 32, FALSE,
+            &init_gint32_sine2, &compare_ffts_S32);
+      }
+    }
+  }
+}
+
+GST_END_TEST;
+
 static Suite *
 audioresample_suite (void)
 {
@@ -928,6 +1118,7 @@ audioresample_suite (void)
   tcase_add_test (tc_chain, test_shutdown);
   tcase_add_test (tc_chain, test_live_switch);
   tcase_add_test (tc_chain, test_timestamp_drift);
+  tcase_add_test (tc_chain, test_fft);
 
 #ifndef GST_DISABLE_PARSE
   tcase_set_timeout (tc_chain, 360);

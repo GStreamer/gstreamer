@@ -1014,6 +1014,7 @@ mp3_type_find_at_offset (GstTypeFind * tf, guint64 start_off,
       guint layer = 0, bitrate, samplerate, channels;
       guint found = 0;          /* number of valid headers found */
       guint64 offset = skipped;
+      gboolean changed = FALSE;
 
       while (found < GST_MP3_TYPEFIND_TRY_HEADERS) {
         guint32 head;
@@ -1064,6 +1065,8 @@ mp3_type_find_at_offset (GstTypeFind * tf, guint64 start_off,
            * that this is not a mp3 but just a random bytestream. It could
            * be a freaking funky encoded mp3 though. We'll just not count
            * this header*/
+          if (prev_layer)
+            changed = TRUE;
           prev_layer = layer;
           prev_channels = channels;
           prev_samplerate = samplerate;
@@ -1094,6 +1097,8 @@ mp3_type_find_at_offset (GstTypeFind * tf, guint64 start_off,
           probability = GST_TYPE_FIND_MINIMUM;
         if (start_off > 0)
           probability /= 2;
+        if (!changed)
+          probability = (probability + GST_TYPE_FIND_MAXIMUM) / 2;
 
         GST_INFO
             ("audio/mpeg calculated %u  =  %u  *  %u / %u  *  (%u - %"

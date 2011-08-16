@@ -120,8 +120,8 @@
 
 typedef enum
 {
-  GST_ENC_FLAG_NATIVE_AUDIO = (1 << 0),
-  GST_ENC_FLAG_NATIVE_VIDEO = (1 << 1)
+  GST_ENC_FLAG_NO_AUDIO_CONVERSION = (1 << 0),
+  GST_ENC_FLAG_NO_VIDEO_CONVERSION = (1 << 1)
 } GstEncFlags;
 
 #define GST_TYPE_ENC_FLAGS (gst_enc_flags_get_type())
@@ -265,10 +265,10 @@ GType
 gst_enc_flags_get_type (void)
 {
   static const GFlagsValue values[] = {
-    {C_FLAGS (GST_ENC_FLAG_NATIVE_AUDIO), "Only use native audio formats",
-        "native-audio"},
-    {C_FLAGS (GST_ENC_FLAG_NATIVE_VIDEO), "Only use native video formats",
-        "native-video"},
+    {C_FLAGS (GST_ENC_FLAG_NO_AUDIO_CONVERSION), "Do not use audio conversion "
+          "elements", "no-audio-conversion"},
+    {C_FLAGS (GST_ENC_FLAG_NO_VIDEO_CONVERSION), "Do not use video conversion "
+          "elements", "no-video-conversion"},
     {0, NULL, NULL}
   };
   static volatile GType id = 0;
@@ -346,13 +346,13 @@ gst_encode_bin_class_init (GstEncodeBinClass * klass)
           "The GstEncodingProfile to use", GST_TYPE_ENCODING_PROFILE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  g_object_class_install_property (gobject_klass, PROP_QUEUE_BUFFERS_MAX,
+  g_object_class_install_property (gobject_klass, PROP_QUEUE_BYTES_MAX,
       g_param_spec_uint ("queue-bytes-max", "Max. size (kB)",
           "Max. amount of data in the queue (bytes, 0=disable)",
           0, G_MAXUINT, DEFAULT_QUEUE_BYTES_MAX,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  g_object_class_install_property (gobject_klass, PROP_QUEUE_BYTES_MAX,
+  g_object_class_install_property (gobject_klass, PROP_QUEUE_BUFFERS_MAX,
       g_param_spec_uint ("queue-buffers-max", "Max. size (buffers)",
           "Max. number of buffers in the queue (0=disable)", 0, G_MAXUINT,
           DEFAULT_QUEUE_BUFFERS_MAX,
@@ -1044,7 +1044,8 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
    * in the input queue */
   last = sgroup->outqueue = gst_element_factory_make ("queue", NULL);
   g_object_set (sgroup->outqueue, "max-size-buffers", (guint32) 1,
-      "max-size-bytes", (guint32) 0, "max-size-time", (guint64) 0, NULL);
+      "max-size-bytes", (guint32) 0, "max-size-time", (guint64) 0,
+      "silent", TRUE, NULL);
 
   gst_bin_add (GST_BIN (ebin), sgroup->outqueue);
   tosync = g_list_append (tosync, sgroup->outqueue);
@@ -1163,7 +1164,7 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
   g_object_set (sgroup->inqueue, "max-size-buffers",
       (guint32) ebin->queue_buffers_max, "max-size-bytes",
       (guint32) ebin->queue_bytes_max, "max-size-time",
-      (guint64) ebin->queue_time_max, NULL);
+      (guint64) ebin->queue_time_max, "silent", TRUE, NULL);
 
   gst_bin_add (GST_BIN (ebin), sgroup->inqueue);
   tosync = g_list_append (tosync, sgroup->inqueue);
@@ -1262,7 +1263,8 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
   /* 3.2. restriction elements */
   /* FIXME : Once we have properties for specific converters, use those */
   if (GST_IS_ENCODING_VIDEO_PROFILE (sprof)) {
-    const gboolean native_video = !!(ebin->flags & GST_ENC_FLAG_NATIVE_VIDEO);
+    const gboolean native_video =
+        !!(ebin->flags & GST_ENC_FLAG_NO_VIDEO_CONVERSION);
     GstElement *cspace = NULL, *scale, *vrate, *cspace2 = NULL;
 
     GST_LOG ("Adding conversion elements for video stream");
@@ -1324,7 +1326,7 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
     }
 
   } else if (GST_IS_ENCODING_AUDIO_PROFILE (sprof)
-      && !(ebin->flags & GST_ENC_FLAG_NATIVE_AUDIO)) {
+      && !(ebin->flags & GST_ENC_FLAG_NO_AUDIO_CONVERSION)) {
     GstElement *aconv, *ares, *arate, *aconv2;
 
     GST_LOG ("Adding conversion elements for audio stream");

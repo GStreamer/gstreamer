@@ -2,7 +2,7 @@
  *
  * unit tests for the tag support library
  *
- * Copyright (C) 2006-2009 Tim-Philipp Müller <tim centricular net>
+ * Copyright (C) 2006-2011 Tim-Philipp Müller <tim centricular net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -29,6 +29,7 @@
 #include <gst/tag/tag.h>
 #include <gst/base/gstbytewriter.h>
 #include <string.h>
+#include <locale.h>
 
 GST_START_TEST (test_parse_extended_comment)
 {
@@ -588,6 +589,7 @@ GST_START_TEST (test_id3_tags)
     const gchar *genre;
 
     genre = gst_tag_id3_genre_get (i);
+    GST_LOG ("genre: %s", genre);
     fail_unless (genre != NULL);
   }
 
@@ -757,6 +759,190 @@ GST_START_TEST (test_language_utils)
   ASSERT_STRINGS_EQUAL (gst_tag_get_language_code_iso_639_2B ("de"), "ger");
   ASSERT_STRINGS_EQUAL (gst_tag_get_language_code_iso_639_2B ("deu"), "ger");
   ASSERT_STRINGS_EQUAL (gst_tag_get_language_code_iso_639_2B ("ger"), "ger");
+}
+
+GST_END_TEST;
+
+#define SPECIFIC_L "http://creativecommons.org/licenses/by-nc-sa/2.5/scotland/"
+#define GENERIC_L "http://creativecommons.org/licenses/by/1.0/"
+#define DERIVED_L "http://creativecommons.org/licenses/sampling+/1.0/tw/"
+
+GST_START_TEST (test_license_utils)
+{
+  GHashTable *ht;
+  GError *err = NULL;
+  gchar **liblicense_refs, **r;
+  gchar **lrefs, **l;
+  gchar *path, *data = NULL;
+  gsize data_len;
+
+  /* test jurisdiction-specific license */
+  fail_unless_equals_int (gst_tag_get_license_flags (SPECIFIC_L), 0x01010703);
+  fail_unless_equals_string (gst_tag_get_license_nick (SPECIFIC_L),
+      "CC BY-NC-SA 2.5 SCOTLAND");
+  fail_unless_equals_string (gst_tag_get_license_version (SPECIFIC_L), "2.5");
+  fail_unless_equals_string (gst_tag_get_license_jurisdiction (SPECIFIC_L),
+      "scotland");
+
+  g_setenv ("GST_TAG_LICENSE_TRANSLATIONS_LANG", "C", TRUE);
+  fail_unless_equals_string (gst_tag_get_license_title (SPECIFIC_L),
+      "Attribution-NonCommercial-ShareAlike");
+  fail_unless (gst_tag_get_license_description (SPECIFIC_L) == NULL);
+
+  /* test generic license */
+  fail_unless_equals_int (gst_tag_get_license_flags (GENERIC_L), 0x01000307);
+  fail_unless_equals_string (gst_tag_get_license_nick (GENERIC_L), "CC BY 1.0");
+  fail_unless_equals_string (gst_tag_get_license_version (GENERIC_L), "1.0");
+  fail_unless (gst_tag_get_license_jurisdiction (GENERIC_L) == NULL);
+
+  g_setenv ("GST_TAG_LICENSE_TRANSLATIONS_LANG", "C", TRUE);
+  fail_unless_equals_string (gst_tag_get_license_title (GENERIC_L),
+      "Attribution");
+  fail_unless_equals_string (gst_tag_get_license_description (GENERIC_L),
+      "You must attribute the work in the manner specified by the author or licensor.");
+
+#ifdef ENABLE_NLS
+  g_setenv ("GST_TAG_LICENSE_TRANSLATIONS_LANG", "fr", TRUE);
+  fail_unless_equals_string (gst_tag_get_license_title (GENERIC_L),
+      "Paternité");
+  fail_unless_equals_string (gst_tag_get_license_description (GENERIC_L),
+      "L'offrant autorise les autres à reproduire, distribuer et communiquer cette création au public. En échange, les personnes qui acceptent ce contrat doivent citer le nom de l'auteur original.");
+#endif
+
+  /* test derived (for a certain jurisdiction) license */
+  fail_unless_equals_int (gst_tag_get_license_flags (DERIVED_L), 0x0100030d);
+  fail_unless_equals_string (gst_tag_get_license_nick (DERIVED_L),
+      "CC SAMPLING+ 1.0 TW");
+  fail_unless_equals_string (gst_tag_get_license_version (DERIVED_L), "1.0");
+  fail_unless_equals_string (gst_tag_get_license_jurisdiction (DERIVED_L),
+      "tw");
+
+  g_setenv ("GST_TAG_LICENSE_TRANSLATIONS_LANG", "C", TRUE);
+  fail_unless_equals_string (gst_tag_get_license_title (DERIVED_L),
+      "Sampling Plus");
+  fail_unless_equals_string (gst_tag_get_license_description (GENERIC_L),
+      "You must attribute the work in the manner specified by the author or licensor.");
+
+  /* test all we know about */
+  lrefs = gst_tag_get_licenses ();
+  fail_unless (lrefs != NULL);
+  fail_unless (*lrefs != NULL);
+
+  GST_INFO ("%d licenses", g_strv_length (lrefs));
+  fail_unless (g_strv_length (lrefs) >= 376);
+
+  ht = g_hash_table_new (g_str_hash, g_str_equal);
+
+  for (l = lrefs; l != NULL && *l != NULL; ++l) {
+    const gchar *ref, *nick, *title, *desc G_GNUC_UNUSED;
+
+    ref = (const gchar *) *l;
+    nick = gst_tag_get_license_nick (ref);
+    title = gst_tag_get_license_title (ref);
+    desc = gst_tag_get_license_description (ref);
+    fail_unless (nick != NULL, "no nick for license '%s'", ref);
+    fail_unless (title != NULL, "no title for license '%s'", ref);
+    GST_LOG ("ref: %s [nick %s]", ref, (nick) ? nick : "none");
+    GST_TRACE ("    %s : %s", title, (desc) ? desc : "(no description)");
+
+    /* make sure the list contains no duplicates */
+    fail_if (g_hash_table_lookup (ht, (gpointer) ref) != NULL);
+    g_hash_table_insert (ht, (gpointer) ref, (gpointer) "meep");
+  }
+  g_hash_table_destroy (ht);
+
+  /* trailing slash shouldn't make a difference */
+  fail_unless_equals_int (gst_tag_get_license_flags
+      ("http://creativecommons.org/licenses/by-nd/1.0/"),
+      gst_tag_get_license_flags
+      ("http://creativecommons.org/licenses/by-nd/1.0"));
+  fail_unless_equals_string (gst_tag_get_license_nick
+      ("http://creativecommons.org/licenses/by-nd/1.0/"),
+      gst_tag_get_license_nick
+      ("http://creativecommons.org/licenses/by-nd/1.0"));
+  fail_unless_equals_int (gst_tag_get_license_flags
+      ("http://creativecommons.org/licenses/by-nd/2.5/ca/"),
+      gst_tag_get_license_flags
+      ("http://creativecommons.org/licenses/by-nd/2.5/ca"));
+  fail_unless_equals_string (gst_tag_get_license_nick
+      ("http://creativecommons.org/licenses/by-nd/2.5/ca/"),
+      gst_tag_get_license_nick
+      ("http://creativecommons.org/licenses/by-nd/2.5/ca"));
+
+  /* unknown licenses */
+  fail_unless (gst_tag_get_license_nick
+      ("http://creativecommons.org/licenses/by-nd/25/ca/") == NULL);
+  fail_unless (gst_tag_get_license_flags
+      ("http://creativecommons.org/licenses/by-nd/25/ca") == 0);
+  fail_unless (gst_tag_get_license_jurisdiction
+      ("http://creativecommons.org/licenses/by-nd/25/ca/") == NULL);
+  fail_unless (gst_tag_get_license_jurisdiction
+      ("http://creativecommons.org/licenses/by-nd/25/ca") == NULL);
+  fail_unless (gst_tag_get_license_title
+      ("http://creativecommons.org/licenses/by-nd/25/ca") == NULL);
+  fail_unless (gst_tag_get_license_jurisdiction
+      ("http://creativecommons.org/licenses/by-nd/25/ca") == NULL);
+
+  /* unknown prefixes even */
+  fail_unless (gst_tag_get_license_nick
+      ("http://copycats.org/licenses/by-nd/2.5/ca/") == NULL);
+  fail_unless (gst_tag_get_license_flags
+      ("http://copycats.org/licenses/by-nd/2.5/ca") == 0);
+  fail_unless (gst_tag_get_license_jurisdiction
+      ("http://copycats.org/licenses/by-nd/2.5/ca/") == NULL);
+  fail_unless (gst_tag_get_license_title
+      ("http://copycats.org/licenses/by-nd/2.5/ca/") == NULL);
+  fail_unless (gst_tag_get_license_description
+      ("http://copycats.org/licenses/by-nd/2.5/ca/") == NULL);
+
+  /* read list of liblicense refs from file */
+  path = g_build_filename (GST_TEST_FILES_PATH, "license-uris", NULL);
+  GST_LOG ("reading file '%s'", path);
+  if (!g_file_get_contents (path, &data, &data_len, &err)) {
+    g_error ("error loading test file: %s", err->message);
+  }
+
+  while (data_len > 0 && data[data_len - 1] == '\n') {
+    data[--data_len] = '\0';
+  }
+
+  liblicense_refs = g_strsplit (data, "\n", -1);
+  g_free (data);
+  g_free (path);
+
+  fail_unless (g_strv_length (lrefs) >= g_strv_length (liblicense_refs));
+
+  for (r = liblicense_refs; r != NULL && *r != NULL; ++r) {
+    GstTagLicenseFlags flags;
+    const gchar *version, *nick, *jur;
+    const gchar *ref = *r;
+
+    GST_LOG ("liblicense ref: %s", ref);
+
+    version = gst_tag_get_license_version (ref);
+    if (strstr (ref, "publicdomain") != NULL)
+      fail_unless (version == NULL);
+    else
+      fail_unless (version != NULL, "expected version for license %s", ref);
+
+    flags = gst_tag_get_license_flags (ref);
+    fail_unless (flags != 0, "expected non-zero flags for license %s", ref);
+
+    nick = gst_tag_get_license_nick (ref);
+    fail_unless (nick != NULL, "expected nick for license %s", ref);
+
+    jur = gst_tag_get_license_jurisdiction (ref);
+    if (g_str_has_suffix (ref, "de/")) {
+      fail_unless_equals_string (jur, "de");
+    } else if (g_str_has_suffix (ref, "scotland")) {
+      fail_unless_equals_string (jur, "scotland");
+    } else if (g_str_has_suffix (ref, ".0") || g_str_has_suffix (ref, ".1")) {
+      fail_unless (jur == NULL);
+    }
+  }
+
+  g_strfreev (liblicense_refs);
+  g_strfreev (lrefs);
 }
 
 GST_END_TEST;
@@ -1234,7 +1420,6 @@ do_simple_exif_tag_serialization_deserialization (const gchar * gsttag,
   GstTagList *taglist = gst_tag_list_new ();
 
   gst_tag_list_add_value (taglist, GST_TAG_MERGE_REPLACE, gsttag, value);
-
   do_exif_tag_serialization_deserialization (taglist);
 
   gst_tag_list_free (taglist);
@@ -1293,6 +1478,12 @@ GST_START_TEST (test_exif_tags_serialization_deserialization)
   g_value_set_static_string (&value, "Company Software 1.2b (info)");
   do_simple_exif_tag_serialization_deserialization (GST_TAG_APPLICATION_NAME,
       &value);
+
+  /* non ascii chars */
+  g_value_set_static_string (&value, "AaÄäEeËëIiÏïOoÖöUuÜü");
+  do_simple_exif_tag_serialization_deserialization (GST_TAG_ARTIST, &value);
+  g_value_set_static_string (&value, "Äë");
+  do_simple_exif_tag_serialization_deserialization (GST_TAG_ARTIST, &value);
 
   /* image orientation tests */
   g_value_set_static_string (&value, "rotate-0");
@@ -1649,6 +1840,7 @@ tag_suite (void)
   tcase_add_test (tc_chain, test_id3_tags);
   tcase_add_test (tc_chain, test_id3v1_utf8_tag);
   tcase_add_test (tc_chain, test_language_utils);
+  tcase_add_test (tc_chain, test_license_utils);
   tcase_add_test (tc_chain, test_xmp_formatting);
   tcase_add_test (tc_chain, test_xmp_parsing);
   tcase_add_test (tc_chain, test_xmp_tags_serialization_deserialization);

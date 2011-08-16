@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) 2003 Benjamin Otte <in7y118@public.uni-hamburg.de>
+ * Copyright (C) 2006-2011 Tim-Philipp Müller <tim centricular net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -441,6 +442,14 @@ typedef enum {
 #define GST_TYPE_TAG_IMAGE_TYPE  (gst_tag_image_type_get_type ())
 GType   gst_tag_image_type_get_type (void);
 
+/**
+ * GST_TAG_ID3V2_HEADER_SIZE:
+ *
+ * ID3V2 header size considered minimum input for some functions.
+ *
+ * Since: 0.10.36
+ */
+#define GST_TAG_ID3V2_HEADER_SIZE            10
 
 /* functions for vorbis comment manipulation */
 
@@ -470,6 +479,10 @@ GstBuffer *             gst_tag_list_to_vorbiscomment_buffer    (const GstTagLis
 
 /* functions for ID3 tag manipulation */
 
+/* FIXME 0.11: inconsistent API naming: gst_tag_list_new_from_id3v1(), gst_tag_list_from_*_buffer(),
+ * gst_tag_list_from_id3v2_tag(). Also, note gst.tag.list_xyz() namespace vs. gst.tag_list_xyz(),
+ * which is a bit confusing and possibly doesn't map too well */
+
 guint                   gst_tag_id3_genre_count                 (void);
 const gchar *           gst_tag_id3_genre_get                   (const guint            id);
 GstTagList *            gst_tag_list_new_from_id3v1             (const guint8 *         data);
@@ -483,6 +496,10 @@ gboolean                gst_tag_list_add_id3_image (GstTagList   * tag_list,
                                                     const guint8 * image_data,
                                                     guint          image_data_len,
                                                     guint          id3_picture_type);
+
+GstTagList *            gst_tag_list_from_id3v2_tag (GstBuffer * buffer);
+
+guint                   gst_tag_get_id3v2_tag_size  (GstBuffer * buffer);
 
 /* functions to  convert GstBuffers with xmp packets contents to GstTagLists and back */
 GstTagList *            gst_tag_list_from_xmp_buffer  (GstBuffer *  buffer);
@@ -548,6 +565,84 @@ const gchar *  gst_tag_get_language_code_iso_639_2T (const gchar * lang_code);
  */
 #define gst_tag_get_language_code(lang_code) \
     gst_tag_get_language_code_iso_639_1(lang_code)
+
+
+/* functions to deal with (mostly) Creative Commons licenses */
+
+/**
+ * GstTagLicenseFlags:
+ * @GST_TAG_LICENSE_PERMITS_REPRODUCTION: making multiple copies
+ *     is allowed
+ * @GST_TAG_LICENSE_PERMITS_DISTRIBUTION: distribution, public display
+ *     and public performance are allowed
+ * @GST_TAG_LICENSE_PERMITS_DERIVATIVE_WORKS: distribution of derivative
+ *     works is allowed
+ * @GST_TAG_LICENSE_PERMITS_SHARING: commercial derivatives are allowed,
+ *     but only non-commercial distribution is allowed
+ * @GST_TAG_LICENSE_REQUIRES_NOTICE: copyright and license notices
+ *     must be kept intact
+ * @GST_TAG_LICENSE_REQUIRES_ATTRIBUTION: credit must be given to
+ *     copyright holder and/or author
+ * @GST_TAG_LICENSE_REQUIRES_SHARE_ALIKE: derivative works must be
+ *     licensed under the same terms or compatible terms as the original work
+ * @GST_TAG_LICENSE_REQUIRES_SOURCE_CODE: source code (the preferred
+ *     form for making modifications) must be provided when exercising some
+ *     rights granted by the license
+ * @GST_TAG_LICENSE_REQUIRES_COPYLEFT: derivative and combined works
+ *     must be licensed under specified terms, similar to those of the original
+ *     work
+ * @GST_TAG_LICENSE_REQUIRES_LESSER_COPYLEFT: derivative works must be
+ *     licensed under specified terms, with at least the same conditions as
+ *     the original work; combinations with the work may be licensed under
+ *     different terms
+ * @GST_TAG_LICENSE_PROHIBITS_COMMERCIAL_USE: exercising rights for
+ *     commercial purposes is prohibited
+ * @GST_TAG_LICENSE_PROHIBITS_HIGH_INCOME_NATION_USE: use in a
+ *     non-developing country is prohibited
+ * @GST_TAG_LICENSE_CREATIVE_COMMONS_LICENSE: this license was created
+ *     by the Creative Commons project
+ * @GST_TAG_LICENSE_FREE_SOFTWARE_FOUNDATION_LICENSE: this license was
+ *     created by the Free Software Foundation (FSF)
+ *
+ * See http://creativecommons.org/ns for more information.
+ *
+ * Since: 0.10.36
+ */
+typedef enum {
+  GST_TAG_LICENSE_PERMITS_REPRODUCTION             = (1 << 0),
+  GST_TAG_LICENSE_PERMITS_DISTRIBUTION             = (1 << 1),
+  GST_TAG_LICENSE_PERMITS_DERIVATIVE_WORKS         = (1 << 2),
+  GST_TAG_LICENSE_PERMITS_SHARING                  = (1 << 3),
+
+  GST_TAG_LICENSE_REQUIRES_NOTICE                  = (1 << 8),
+  GST_TAG_LICENSE_REQUIRES_ATTRIBUTION             = (1 << 9),
+  GST_TAG_LICENSE_REQUIRES_SHARE_ALIKE             = (1 << 10),
+  GST_TAG_LICENSE_REQUIRES_SOURCE_CODE             = (1 << 11),
+  GST_TAG_LICENSE_REQUIRES_COPYLEFT                = (1 << 12),
+  GST_TAG_LICENSE_REQUIRES_LESSER_COPYLEFT         = (1 << 13),
+
+  GST_TAG_LICENSE_PROHIBITS_COMMERCIAL_USE         = (1 << 16),
+  GST_TAG_LICENSE_PROHIBITS_HIGH_INCOME_NATION_USE = (1 << 17),
+
+  GST_TAG_LICENSE_CREATIVE_COMMONS_LICENSE         = (1 << 24),
+  GST_TAG_LICENSE_FREE_SOFTWARE_FOUNDATION_LICENSE = (1 << 25)
+} GstTagLicenseFlags;
+
+gchar **            gst_tag_get_licenses (void);
+
+GstTagLicenseFlags  gst_tag_get_license_flags (const gchar * license_ref);
+
+const gchar *       gst_tag_get_license_nick  (const gchar * license_ref);
+
+const gchar *       gst_tag_get_license_title (const gchar * license_ref);
+
+const gchar *       gst_tag_get_license_version (const gchar * license_ref);
+
+const gchar *       gst_tag_get_license_description  (const gchar * license_ref);
+
+const gchar *       gst_tag_get_license_jurisdiction (const gchar * license_ref);
+
+GType               gst_tag_license_flags_get_type (void);
 
 G_END_DECLS
 

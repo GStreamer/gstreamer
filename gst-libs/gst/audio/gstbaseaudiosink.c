@@ -388,7 +388,7 @@ gst_base_audio_sink_query (GstElement * element, GstQuery * query)
       if ((res =
               gst_base_sink_query_latency (GST_BASE_SINK_CAST (basesink), &live,
                   &us_live, &min_l, &max_l))) {
-        GstClockTime min_latency, max_latency;
+        GstClockTime base_latency, min_latency, max_latency;
 
         /* we and upstream are both live, adjust the min_latency */
         if (live && us_live) {
@@ -407,21 +407,25 @@ gst_base_audio_sink_query (GstElement * element, GstQuery * query)
 
           basesink->priv->us_latency = min_l;
 
-          min_latency =
+          base_latency =
               gst_util_uint64_scale_int (spec->seglatency * spec->segsize,
               GST_SECOND, spec->rate * spec->bytes_per_sample);
           GST_OBJECT_UNLOCK (basesink);
 
           /* we cannot go lower than the buffer size and the min peer latency */
-          min_latency = min_latency + min_l;
+          min_latency = base_latency + min_l;
           /* the max latency is the max of the peer, we can delay an infinite
            * amount of time. */
-          max_latency = min_latency + (max_l == -1 ? 0 : max_l);
+          max_latency = (max_l == -1) ? -1 : (base_latency + max_l);
 
           GST_DEBUG_OBJECT (basesink,
               "peer min %" GST_TIME_FORMAT ", our min latency: %"
               GST_TIME_FORMAT, GST_TIME_ARGS (min_l),
               GST_TIME_ARGS (min_latency));
+          GST_DEBUG_OBJECT (basesink,
+              "peer max %" GST_TIME_FORMAT ", our max latency: %"
+              GST_TIME_FORMAT, GST_TIME_ARGS (max_l),
+              GST_TIME_ARGS (max_latency));
         } else {
           GST_DEBUG_OBJECT (basesink,
               "peer or we are not live, don't care about latency");
@@ -1577,6 +1581,12 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   else
     render_stop = 0;
 
+  /* in some clock slaving cases, all late samples end up at 0 first,
+   * and subsequent ones align with that until threshold exceeded,
+   * and then sync back to 0 and so on, so avoid that altogether */
+  if (G_UNLIKELY (render_start == 0 && render_stop == 0))
+    goto too_late;
+
   /* and bring the time to the rate corrected offset in the buffer */
   render_start = gst_util_uint64_scale_int (render_start,
       ringbuf->spec.rate, GST_SECOND);
@@ -1702,6 +1712,11 @@ out_of_segment:
         GST_TIME_ARGS (bsink->segment.start));
     ret = GST_FLOW_OK;
     goto done;
+  }
+too_late:
+  {
+    GST_DEBUG_OBJECT (sink, "dropping late sample");
+    return GST_FLOW_OK;
   }
   /* ERRORS */
 payload_failed:

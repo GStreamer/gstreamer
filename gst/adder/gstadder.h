@@ -84,10 +84,11 @@ struct _GstAdder {
   /* sink event handling */
   GstPadEventFunction  collect_event;
   GstSegment      segment;
-  gboolean        segment_pending;
+  volatile gboolean new_segment_pending;
+  volatile gboolean wait_for_new_segment;
   /* src event handling */
-  gboolean        flush_stop_pending;
-  
+  volatile gboolean flush_stop_pending;
+
   /* target caps */
   GstCaps *filter_caps;
 

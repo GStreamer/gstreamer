@@ -34,7 +34,9 @@
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#ifdef HAVE_XMMINTRIN_H
 #include <xmmintrin.h>
+#endif
 
 #define OVERRIDE_INNER_PRODUCT_SINGLE
 static inline float inner_product_single(const float *a, const float *b, unsigned int len)
@@ -72,9 +74,27 @@ static inline float interpolate_product_single(const float *a, const float *b, u
 }
 
 #ifdef _USE_SSE2
+#ifdef HAVE_EMMINTRIN_H
 #include <emmintrin.h>
+#endif
 #define OVERRIDE_INNER_PRODUCT_DOUBLE
 
+#ifdef DOUBLE_PRECISION
+static inline double inner_product_double(const double *a, const double *b, unsigned int len)
+{
+   int i;
+   double ret;
+   __m128d sum = _mm_setzero_pd();
+   for (i=0;i<len;i+=4)
+   {
+      sum = _mm_add_pd(sum, _mm_mul_pd(_mm_loadu_pd(a+i), _mm_loadu_pd(b+i)));
+      sum = _mm_add_pd(sum, _mm_mul_pd(_mm_loadu_pd(a+i+2), _mm_loadu_pd(b+i+2)));
+   }
+   sum = _mm_add_sd(sum, _mm_unpackhi_pd(sum, sum));
+   _mm_store_sd(&ret, sum);
+   return ret;
+}
+#else
 static inline double inner_product_double(const float *a, const float *b, unsigned int len)
 {
    int i;
@@ -95,8 +115,39 @@ static inline double inner_product_double(const float *a, const float *b, unsign
    _mm_store_sd(&ret, sum);
    return ret;
 }
+#endif
+
 
 #define OVERRIDE_INTERPOLATE_PRODUCT_DOUBLE
+
+#ifdef DOUBLE_PRECISION
+static inline double interpolate_product_double(const double *a, const double *b, unsigned int len, const spx_uint32_t oversample, double *frac) {
+  int i;
+  double ret;
+  __m128d sum;
+  __m128d sum1 = _mm_setzero_pd();
+  __m128d sum2 = _mm_setzero_pd();
+  __m128d f1 = _mm_loadu_pd(frac);
+  __m128d f2 = _mm_loadu_pd(frac+2);
+  __m128d t;
+  for(i=0;i<len;i+=2)
+  {
+    t = _mm_mul_pd(_mm_load1_pd(a+i), _mm_loadu_pd(b+i*oversample));
+    sum1 = _mm_add_pd(sum1, t);
+    sum2 = _mm_add_pd(sum2, _mm_unpackhi_pd(t, t));
+
+    t = _mm_mul_pd(_mm_load1_pd(a+i+1), _mm_loadu_pd(b+(i+1)*oversample));
+    sum1 = _mm_add_pd(sum1, t);
+    sum2 = _mm_add_pd(sum2, _mm_unpackhi_pd(t, t));
+  }
+  sum1 = _mm_mul_pd(f1, sum1);
+  sum2 = _mm_mul_pd(f2, sum2);
+  sum = _mm_add_pd(sum1, sum2);
+  sum = _mm_add_sd(sum, _mm_unpackhi_pd(sum, sum));
+  _mm_store_sd(&ret, sum);
+  return ret;
+}
+#else
 static inline double interpolate_product_double(const float *a, const float *b, unsigned int len, const spx_uint32_t oversample, float *frac) {
   int i;
   double ret;
@@ -124,5 +175,6 @@ static inline double interpolate_product_double(const float *a, const float *b, 
   _mm_store_sd(&ret, sum);
   return ret;
 }
+#endif
 
 #endif

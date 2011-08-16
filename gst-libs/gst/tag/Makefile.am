@@ -2,21 +2,26 @@ libgsttagincludedir = \
 	$(includedir)/gstreamer-@GST_MAJORMINOR@/gst/tag
 
 libgsttaginclude_HEADERS = \
-	tag.h gsttagdemux.h xmpwriter.h
+	tag.h gsttagdemux.h gsttagmux.h xmpwriter.h
 
 lib_LTLIBRARIES = libgsttag-@GST_MAJORMINOR@.la
 
 libgsttag_@GST_MAJORMINOR@_la_SOURCES = \
-    gstvorbistag.c gstid3tag.c gstxmptag.c gstexiftag.c \
-    lang.c tags.c gsttagdemux.c gsttageditingprivate.c xmpwriter.c
-libgsttag_@GST_MAJORMINOR@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS)
-libgsttag_@GST_MAJORMINOR@_la_LIBADD = $(GST_BASE_LIBS) $(GST_LIBS) $(LIBM)
+	gstvorbistag.c gstid3tag.c gstxmptag.c gstexiftag.c \
+	lang.c licenses.c tags.c gsttagdemux.c gsttagmux.c \
+	gsttageditingprivate.c id3v2.c id3v2frames.c xmpwriter.c
+
+libgsttag_@GST_MAJORMINOR@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) \
+	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(ZLIB_CFLAGS) \
+	-DLICENSE_TRANSLATIONS_PATH=\"$(pkgdatadir)/license-translations.dict\"
+libgsttag_@GST_MAJORMINOR@_la_LIBADD = $(GST_BASE_LIBS) $(GST_LIBS) $(LIBM) $(ZLIB_LIBS)
 libgsttag_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
 
 # lang-tables.dat contains generated static data and is included by lang.c
-EXTRA_DIST = lang-tables.dat
+# licenses-tables.dat contains generated data and is included by licenses.c
+EXTRA_DIST = lang-tables.dat licenses-tables.dat
 
-noinst_HEADERS = gsttageditingprivate.h
+noinst_HEADERS = gsttageditingprivate.h id3v2.h
 
 if HAVE_INTROSPECTION
 BUILT_GIRSOURCES = GstTag-@GST_MAJORMINOR@.gir
@@ -71,16 +76,34 @@ endif
 # little program that reads iso_639.xml and outputs tables for us as fallback
 # for when iso-codes are not available (and so we don't have to read the xml
 # just to map codes)
-if USE_ISO_CODES
-ISO_CODE_PROGS = mklangtables
 mklangtables_SOURCES = mklangtables.c
 mklangtables_CFLAGS = $(GST_CFLAGS)
 mklangtables_LDADD = $(GST_LIBS)
-else
-ISO_CODE_PROGS =
-endif
 
-noinst_PROGRAMS = $(ISO_CODE_PROGS)
+mklicensestables_SOURCES = mklicensestables.c
+mklicensestables_CFLAGS = $(GST_CFLAGS)
+mklicensestables_LDADD = $(GST_LIBS)
+
+EXTRA_PROGRAMS = mklangtables mklicensestables
+
+update-isocodes: mklangtables
+	$(builddir)/mklangtables > $(srcdir)/lang-tables.dat && \
+		echo "Updated lang-tables.dat"
+
+update-licenses: mklicensestables
+	$(builddir)/mklicensestables \
+		--translation-dictionary=$(srcdir)/license-translations.dict \
+		> $(srcdir)/licenses-tables.dat && \
+		echo "Updated licenses-tables.dat and license-translations.dict"
+
+#if USE_NLS
+# Yes, this is not great, but it's only an implementation detail. The
+# translations come from an external source here, so we don't want the
+# strings retranslated, but also we don't want to create 30 1kB .mo files,
+# so just do something for now, we can change it later if someone really cares.
+licensetransdir = $(pkgdatadir)
+licensetrans_DATA = $(builddir)/license-translations.dict
+#endif
 
 Android.mk: Makefile.am
 	androgenizer -:PROJECT libgsttag -:SHARED libgsttag-@GST_MAJORMINOR@ \

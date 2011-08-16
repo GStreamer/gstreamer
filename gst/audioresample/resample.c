@@ -64,9 +64,29 @@
 #ifdef OUTSIDE_SPEEX
 #include <stdlib.h>
 
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif
+
 #include <glib.h>
 
+#ifdef HAVE_ORC
+#include <orc/orc.h>
+#endif
+
 #define EXPORT G_GNUC_INTERNAL
+
+#ifdef _USE_SSE
+#ifndef HAVE_XMMINTRIN_H
+#undef _USE_SSE
+#endif
+#endif
+
+#ifdef _USE_SSE2
+#ifndef HAVE_EMMINTRIN_H
+#undef _USE_SSE2
+#endif
+#endif
 
 static inline void *
 speex_alloc (int size)
@@ -110,7 +130,7 @@ speex_free (void *ptr)
 #define NULL 0
 #endif
 
-#ifdef _USE_SSE
+#if defined _USE_SSE || defined _USE_SSE2
 #include "resample_sse.h"
 #endif
 
@@ -120,6 +140,28 @@ speex_free (void *ptr)
 #else
 #define FIXED_STACK_ALLOC 1024
 #endif
+
+/* Allow selecting SSE or not when compiled with SSE support */
+#ifdef _USE_SSE
+#define SSE_FALLBACK(macro) \
+  if (st->use_sse) goto sse_##macro##_sse; {
+#define SSE_IMPLEMENTATION(macro) \
+  goto sse_##macro##_end; } sse_##macro##_sse: {
+#define SSE_END(macro) sse_##macro##_end:; }
+#else
+#define SSE_FALLBACK(macro)
+#endif
+
+#ifdef _USE_SSE2
+#define SSE2_FALLBACK(macro) \
+  if (st->use_sse2) goto sse2_##macro##_sse2; {
+#define SSE2_IMPLEMENTATION(macro) \
+  goto sse2_##macro##_end; } sse2_##macro##_sse2: {
+#define SSE2_END(macro) sse2_##macro##_end:; }
+#else
+#define SSE2_FALLBACK(macro)
+#endif
+
 
 typedef int (*resampler_basic_func) (SpeexResamplerState *, spx_uint32_t,
     const spx_word16_t *, spx_uint32_t *, spx_word16_t *, spx_uint32_t *);
@@ -155,6 +197,9 @@ struct SpeexResamplerState_
 
   int in_stride;
   int out_stride;
+
+  int use_sse:1;
+  int use_sse2:1;
 };
 
 static double kaiser12_table[68] = {
@@ -410,8 +455,8 @@ resampler_basic_direct_single (SpeexResamplerState * st,
     const spx_word16_t *sinc = &sinc_table[samp_frac_num * N];
     const spx_word16_t *iptr = &in[last_sample];
 
-#ifndef OVERRIDE_INNER_PRODUCT_SINGLE
-    sum = 0;
+    SSE_FALLBACK (INNER_PRODUCT_SINGLE)
+        sum = 0;
     for (j = 0; j < N; j++)
       sum += MULT16_16 (sinc[j], iptr[j]);
 
@@ -427,11 +472,12 @@ resampler_basic_direct_single (SpeexResamplerState * st,
       }
       sum = accum[0] + accum[1] + accum[2] + accum[3];
 */
-#else
-    sum = inner_product_single (sinc, iptr, N);
+#ifdef OVERRIDE_INNER_PRODUCT_SINGLE
+    SSE_IMPLEMENTATION (INNER_PRODUCT_SINGLE)
+        sum = inner_product_single (sinc, iptr, N);
+    SSE_END (INNER_PRODUCT_SINGLE)
 #endif
-
-    out[out_stride * out_sample++] = SATURATE32 (PSHR32 (sum, 15), 32767);
+        out[out_stride * out_sample++] = SATURATE32 (PSHR32 (sum, 15), 32767);
     last_sample += int_advance;
     samp_frac_num += frac_advance;
     if (samp_frac_num >= den_rate) {
@@ -471,7 +517,7 @@ resampler_basic_direct_double (SpeexResamplerState * st,
     const spx_word16_t *sinc = &sinc_table[samp_frac_num * N];
     const spx_word16_t *iptr = &in[last_sample];
 
-#ifndef OVERRIDE_INNER_PRODUCT_DOUBLE
+    SSE2_FALLBACK (INNER_PRODUCT_DOUBLE)
     double accum[4] = { 0, 0, 0, 0 };
 
     for (j = 0; j < N; j += 4) {
@@ -481,11 +527,12 @@ resampler_basic_direct_double (SpeexResamplerState * st,
       accum[3] += sinc[j + 3] * iptr[j + 3];
     }
     sum = accum[0] + accum[1] + accum[2] + accum[3];
-#else
-    sum = inner_product_double (sinc, iptr, N);
+#ifdef OVERRIDE_INNER_PRODUCT_DOUBLE
+    SSE2_IMPLEMENTATION (INNER_PRODUCT_DOUBLE)
+        sum = inner_product_double (sinc, iptr, N);
+    SSE2_END (INNER_PRODUCT_DOUBLE)
 #endif
-
-    out[out_stride * out_sample++] = PSHR32 (sum, 15);
+        out[out_stride * out_sample++] = PSHR32 (sum, 15);
     last_sample += int_advance;
     samp_frac_num += frac_advance;
     if (samp_frac_num >= den_rate) {
@@ -534,7 +581,7 @@ resampler_basic_interpolate_single (SpeexResamplerState * st,
     spx_word16_t interp[4];
 
 
-#ifndef OVERRIDE_INTERPOLATE_PRODUCT_SINGLE
+    SSE_FALLBACK (INTERPOLATE_PRODUCT_SINGLE)
     spx_word32_t accum[4] = { 0, 0, 0, 0 };
 
     for (j = 0; j < N; j++) {
@@ -559,15 +606,16 @@ resampler_basic_interpolate_single (SpeexResamplerState * st,
             1)) + MULT16_32_Q15 (interp[1], SHR32 (accum[1],
             1)) + MULT16_32_Q15 (interp[2], SHR32 (accum[2],
             1)) + MULT16_32_Q15 (interp[3], SHR32 (accum[3], 1));
-#else
-    cubic_coef (frac, interp);
+#ifdef OVERRIDE_INTERPOLATE_PRODUCT_SINGLE
+    SSE_IMPLEMENTATION (INTERPOLATE_PRODUCT_SINGLE)
+        cubic_coef (frac, interp);
     sum =
         interpolate_product_single (iptr,
         st->sinc_table + st->oversample + 4 - offset - 2, N, st->oversample,
         interp);
+    SSE_END (INTERPOLATE_PRODUCT_SINGLE)
 #endif
-
-    out[out_stride * out_sample++] = SATURATE32 (PSHR32 (sum, 14), 32767);
+        out[out_stride * out_sample++] = SATURATE32 (PSHR32 (sum, 14), 32767);
     last_sample += int_advance;
     samp_frac_num += frac_advance;
     if (samp_frac_num >= den_rate) {
@@ -624,7 +672,7 @@ resampler_basic_interpolate_double (SpeexResamplerState * st,
     spx_word16_t interp[4];
 
 
-#ifndef OVERRIDE_INTERPOLATE_PRODUCT_DOUBLE
+    SSE2_FALLBACK (INTERPOLATE_PRODUCT_DOUBLE)
     double accum[4] = { 0, 0, 0, 0 };
 
     for (j = 0; j < N; j++) {
@@ -648,15 +696,16 @@ resampler_basic_interpolate_double (SpeexResamplerState * st,
         MULT16_32_Q15 (interp[0], accum[0]) + MULT16_32_Q15 (interp[1],
         accum[1]) + MULT16_32_Q15 (interp[2],
         accum[2]) + MULT16_32_Q15 (interp[3], accum[3]);
-#else
-    cubic_coef (frac, interp);
+#ifdef OVERRIDE_INTERPOLATE_PRODUCT_DOUBLE
+    SSE2_IMPLEMENTATION (INTERPOLATE_PRODUCT_DOUBLE)
+        cubic_coef (frac, interp);
     sum =
         interpolate_product_double (iptr,
         st->sinc_table + st->oversample + 4 - offset - 2, N, st->oversample,
         interp);
+    SSE2_END (INTERPOLATE_PRODUCT_DOUBLE)
 #endif
-
-    out[out_stride * out_sample++] = PSHR32 (sum, 15);
+        out[out_stride * out_sample++] = PSHR32 (sum, 15);
     last_sample += int_advance;
     samp_frac_num += frac_advance;
     if (samp_frac_num >= den_rate) {
@@ -875,6 +924,17 @@ speex_resampler_init (spx_uint32_t nb_channels, spx_uint32_t in_rate,
       out_rate, quality, err);
 }
 
+static void
+check_insn_set (SpeexResamplerState * st, const char *name)
+{
+  if (!name)
+    return;
+  if (!strcmp (name, "sse"))
+    st->use_sse = 1;
+  if (!strcmp (name, "sse2"))
+    st->use_sse = st->use_sse2 = 1;
+}
+
 EXPORT SpeexResamplerState *
 speex_resampler_init_frac (spx_uint32_t nb_channels, spx_uint32_t ratio_num,
     spx_uint32_t ratio_den, spx_uint32_t in_rate, spx_uint32_t out_rate,
@@ -910,6 +970,23 @@ speex_resampler_init_frac (spx_uint32_t nb_channels, spx_uint32_t ratio_num,
   st->buffer_size = 160;
 #else
   st->buffer_size = 160;
+#endif
+
+  st->use_sse = st->use_sse2 = 0;
+#if defined HAVE_ORC && !defined DISABLE_ORC
+  orc_init ();
+  {
+    OrcTarget *target = orc_target_get_default ();
+    if (target) {
+      unsigned int flags = orc_target_get_default_flags (target);
+      check_insn_set (st, orc_target_get_name (target));
+      for (i = 0; i < 32; ++i) {
+        if (flags & (1 << i)) {
+          check_insn_set (st, orc_target_get_flag_name (target, i));
+        }
+      }
+    }
+  }
 #endif
 
   /* Per channel data */

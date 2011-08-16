@@ -227,6 +227,7 @@ gst_sub_parse_src_query (GstPad * pad, GstQuery * query)
         ret = TRUE;
         gst_query_set_position (query, GST_FORMAT_TIME, self->segment.position);
       }
+      break;
     }
     case GST_QUERY_SEEKING:
     {
@@ -246,7 +247,6 @@ gst_sub_parse_src_query (GstPad * pad, GstQuery * query)
       }
 
       gst_query_set_seeking (query, fmt, seekable, seekable ? 0 : -1, -1);
-
       break;
     }
     default:

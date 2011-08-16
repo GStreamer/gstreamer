@@ -2792,20 +2792,26 @@ no_more_pads_cb (GstElement * decodebin, GstSourceGroup * group)
     /* if we have custom sinks, configure them now */
     GST_SOURCE_GROUP_LOCK (group);
 
-    GST_INFO_OBJECT (playbin, "setting custom audio sink %" GST_PTR_FORMAT,
-        group->audio_sink);
-    gst_play_sink_set_sink (playbin->playsink, GST_PLAY_SINK_TYPE_AUDIO,
-        group->audio_sink);
+    if (group->audio_sink) {
+      GST_INFO_OBJECT (playbin, "setting custom audio sink %" GST_PTR_FORMAT,
+          group->audio_sink);
+      gst_play_sink_set_sink (playbin->playsink, GST_PLAY_SINK_TYPE_AUDIO,
+          group->audio_sink);
+    }
 
-    GST_INFO_OBJECT (playbin, "setting custom video sink %" GST_PTR_FORMAT,
-        group->video_sink);
-    gst_play_sink_set_sink (playbin->playsink, GST_PLAY_SINK_TYPE_VIDEO,
-        group->video_sink);
+    if (group->video_sink) {
+      GST_INFO_OBJECT (playbin, "setting custom video sink %" GST_PTR_FORMAT,
+          group->video_sink);
+      gst_play_sink_set_sink (playbin->playsink, GST_PLAY_SINK_TYPE_VIDEO,
+          group->video_sink);
+    }
 
-    GST_INFO_OBJECT (playbin, "setting custom text sink %" GST_PTR_FORMAT,
-        playbin->text_sink);
-    gst_play_sink_set_sink (playbin->playsink, GST_PLAY_SINK_TYPE_TEXT,
-        playbin->text_sink);
+    if (playbin->text_sink) {
+      GST_INFO_OBJECT (playbin, "setting custom text sink %" GST_PTR_FORMAT,
+          playbin->text_sink);
+      gst_play_sink_set_sink (playbin->playsink, GST_PLAY_SINK_TYPE_TEXT,
+          playbin->text_sink);
+    }
 
     GST_SOURCE_GROUP_UNLOCK (group);
 

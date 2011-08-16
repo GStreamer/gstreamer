@@ -781,22 +781,41 @@ write_exif_ascii_tag (GstExifWriter * writer, guint16 tag, const gchar * str)
 {
   gint size;
   guint32 offset = 0;
+  gchar *ascii_str;
+  gsize ascii_size;
+  GError *error = NULL;
 
   size = strlen (str) + 1;
 
-  if (size > 4) {
+  ascii_str =
+      g_convert (str, size, "latin1", "utf8", NULL, &ascii_size, &error);
+
+  if (error) {
+    GST_WARNING ("Failed to convert exif tag to ascii: 0x%x - %s. Error: %s",
+        tag, str, error->message);
+    g_error_free (error);
+    g_free (ascii_str);
+    return;
+  }
+
+  /* add the \0 at the end */
+  ascii_size++;
+
+  if (ascii_size > 4) {
     /* we only use the data offset here, later we add up the
      * resulting tag headers offset and the base offset */
     offset = gst_byte_writer_get_size (&writer->datawriter);
     gst_exif_writer_write_tag_header (writer, tag, EXIF_TYPE_ASCII,
-        size, offset, FALSE);
-    gst_byte_writer_put_string (&writer->datawriter, str);
+        ascii_size, offset, FALSE);
+    gst_byte_writer_put_string (&writer->datawriter, ascii_str);
   } else {
     /* small enough to go in the offset */
-    memcpy ((guint8 *) & offset, str, size);
+    memcpy ((guint8 *) & offset, ascii_str, ascii_size);
     gst_exif_writer_write_tag_header (writer, tag, EXIF_TYPE_ASCII,
-        size, offset, TRUE);
+        ascii_size, offset, TRUE);
   }
+
+  g_free (ascii_str);
 }
 
 static void
@@ -1164,7 +1183,9 @@ parse_exif_ascii_tag (GstExifReader * reader, const GstExifTagMatch * tag,
 {
   GType tagtype;
   gchar *str;
+  gchar *utfstr;
   guint32 real_offset;
+  GError *error = NULL;
 
   if (count > 4) {
     guint8 *data;
@@ -1192,11 +1213,30 @@ parse_exif_ascii_tag (GstExifReader * reader, const GstExifTagMatch * tag,
     str = g_strndup ((gchar *) offset_as_data, count);
   }
 
+  /* convert from ascii to utf8 */
+  if (g_utf8_validate (str, -1, NULL)) {
+    GST_DEBUG ("Exif string is already on utf8: %s", str);
+    utfstr = str;
+  } else {
+    GST_DEBUG ("Exif string isn't utf8, trying to convert from latin1: %s",
+        str);
+    utfstr = g_convert (str, count, "utf8", "latin1", NULL, NULL, &error);
+    g_free (str);
+    if (error) {
+      GST_WARNING ("Skipping tag %d:%s. Failed to convert ascii string "
+          "to utf8 : %s - %s", tag->exif_tag, tag->gst_tag, str,
+          error->message);
+      g_error_free (error);
+      g_free (utfstr);
+      return;
+    }
+  }
+
   tagtype = gst_tag_get_type (tag->gst_tag);
   if (tagtype == GST_TYPE_DATE_TIME) {
     gint year = 0, month = 1, day = 1, hour = 0, minute = 0, second = 0;
 
-    if (sscanf (str, "%04d:%02d:%02d %02d:%02d:%02d", &year, &month, &day,
+    if (sscanf (utfstr, "%04d:%02d:%02d %02d:%02d:%02d", &year, &month, &day,
             &hour, &minute, &second) > 0) {
       GstDateTime *d;
 
@@ -1208,13 +1248,13 @@ parse_exif_ascii_tag (GstExifReader * reader, const GstExifTagMatch * tag,
       GST_WARNING ("Failed to parse %s into a datetime tag", str);
     }
   } else if (tagtype == G_TYPE_STRING) {
-    gst_tag_list_add (reader->taglist, GST_TAG_MERGE_REPLACE, tag->gst_tag, str,
-        NULL);
+    gst_tag_list_add (reader->taglist, GST_TAG_MERGE_REPLACE, tag->gst_tag,
+        utfstr, NULL);
   } else {
     GST_WARNING ("No parsing function associated to %x(%s)", tag->exif_tag,
         tag->gst_tag);
   }
-  g_free (str);
+  g_free (utfstr);
 }
 
 static void

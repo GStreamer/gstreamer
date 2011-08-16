@@ -26,6 +26,7 @@
 #include <gst/base/gsttypefindhelper.h>
 #include <gst/gst.h>
 #include "tag.h"
+#include "id3v2.h"
 
 #include <string.h>
 
@@ -188,6 +189,10 @@ gst_tag_register_tags_internal (gpointer unused)
   gst_tag_register (GST_TAG_IMAGE_VERTICAL_PPI, GST_TAG_FLAG_META,
       G_TYPE_DOUBLE, _("image vertical ppi"),
       _("Media (image/video) intended vertical pixel density in ppi"), NULL);
+
+  gst_tag_register (GST_TAG_ID3V2_FRAME, GST_TAG_FLAG_META,
+      GST_TYPE_BUFFER, _("ID3v2 frame"), _("unparsed id3v2 tag frame"),
+      gst_tag_merge_use_first);
 
   return NULL;
 }

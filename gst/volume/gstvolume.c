@@ -241,7 +241,7 @@ volume_choose_func (GstVolume * self)
         case 8:
           /* only clamp if the gain is greater than 1.0
            */
-          if (self->current_vol_i16 > VOLUME_UNITY_INT8) {
+          if (self->current_vol_i8 > VOLUME_UNITY_INT8) {
             self->process = volume_process_int8_clamp;
           } else {
             self->process = volume_process_int8;

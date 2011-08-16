@@ -496,6 +496,20 @@ else
   AM_CONDITIONAL(USE_ISO_CODES, false)
 fi
 
+dnl *** zlib is optionally used by id3 tag parsing in libgsttag ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_ZLIB, true)
+AG_GST_CHECK_FEATURE(ZLIB, [zlib support for ID3 parsing in libgsttag],, [
+  PKG_CHECK_MODULES(ZLIB, [ zlib ], [
+      HAVE_ZLIB="yes"
+    ], [
+      AG_GST_CHECK_LIBHEADER(ZLIB, z, uncompress,, zlib.h, [
+        HAVE_ZLIB="yes"
+        ZLIB_LIBS="-lz"
+        AC_SUBST(ZLIB_LIBS)
+      ])
+    ])
+])
+
 dnl *** sys plug-ins ***
 
 echo

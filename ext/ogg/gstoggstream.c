@@ -785,7 +785,7 @@ packet_duration_vorbis (GstOggStream * pad, ogg_packet * packet)
   int size;
   int duration;
 
-  if (packet->packet[0] & 1)
+  if (packet->bytes == 0 || packet->packet[0] & 1)
     return 0;
 
   mode = (packet->packet[0] >> 1) & ((1 << pad->vorbis_log2_num_modes) - 1);
