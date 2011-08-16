@@ -706,12 +706,19 @@ gst_hls_demux_loop (GstHLSDemux * demux)
 
   /* Figure out if we need to create/switch pads */
   if (G_UNLIKELY (!demux->srcpad
-          || GST_BUFFER_CAPS (buf) != GST_PAD_CAPS (demux->srcpad))) {
+          || GST_BUFFER_CAPS (buf) != GST_PAD_CAPS (demux->srcpad)
+          || demux->need_segment)) {
     switch_pads (demux, GST_BUFFER_CAPS (buf));
+    demux->need_segment = TRUE;
+  }
+  if (demux->need_segment) {
     /* And send a newsegment */
+    GST_DEBUG_OBJECT (demux, "Sending new-segment. Segment start:%"
+        GST_TIME_FORMAT, GST_TIME_ARGS (demux->position));
     gst_pad_push_event (demux->srcpad,
         gst_event_new_new_segment (0, 1.0, GST_FORMAT_TIME, demux->position,
             GST_CLOCK_TIME_NONE, demux->position));
+    demux->need_segment = FALSE;
   }
 
   if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_DURATION (buf)))
