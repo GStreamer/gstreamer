@@ -408,8 +408,12 @@ gst_flac_dec_scan_got_frame (GstFlacDec * flacdec, guint8 * data, guint size,
     return FALSE;
 
   /* sync */
-  if (data[0] != 0xFF || data[1] != 0xF8)
+  if (data[0] != 0xFF || (data[1] & 0xFC) != 0xF8)
     return FALSE;
+  if (data[1] & 1) {
+    GST_WARNING_OBJECT (flacdec, "Variable block size FLAC unsupported");
+    return FALSE;
+  }
 
   bs = (data[2] & 0xF0) >> 8;   /* blocksize marker   */
   sr = (data[2] & 0x0F);        /* samplerate marker  */
