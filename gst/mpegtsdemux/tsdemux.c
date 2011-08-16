@@ -1946,6 +1946,8 @@ gst_ts_demux_parse_pes_header (GstTSDemux * demux, TSDemuxStream * stream)
 #endif
 
     stream->pts = time = MPEGTIME_TO_GSTTIME (header.PTS);
+    GST_DEBUG_OBJECT (base, "stream PTS %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (stream->pts));
 
     /* safe default if insufficient upstream info */
     if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (base->in_gap) &&
@@ -2070,8 +2072,10 @@ calculate_and_push_newsegment (GstTSDemux * demux, TSDemuxStream * stream)
   MpegTSBase *base = (MpegTSBase *) demux;
   GstEvent *newsegmentevent;
   gint64 start, stop, position;
+  GstClockTime firstpts = GST_CLOCK_TIME_NONE;
+  GList *tmp;
 
-  GST_DEBUG ("Creating new newsegment");
+  GST_DEBUG ("Creating new newsegment for stream %p", stream);
 
   /* Outgoing newsegment values
    * start    : The first/start PTS
@@ -2082,6 +2086,13 @@ calculate_and_push_newsegment (GstTSDemux * demux, TSDemuxStream * stream)
    * it is the same values as that incoming newsegment (and we convert the
    * PTS to that remote clock).
    */
+
+  for (tmp = demux->program->stream_list; tmp; tmp = tmp->next) {
+    TSDemuxStream *pstream = (TSDemuxStream *) tmp->data;
+
+    if (!GST_CLOCK_TIME_IS_VALID (firstpts) || pstream->pts < firstpts)
+      firstpts = pstream->pts;
+  }
 
   if (base->mode == BASE_MODE_PUSHING) {
     /* FIXME : We're just ignore the upstream format for the time being */
@@ -2098,12 +2109,14 @@ calculate_and_push_newsegment (GstTSDemux * demux, TSDemuxStream * stream)
         GST_TIME_ARGS (demux->segment.duration),
         GST_TIME_ARGS (demux->segment.time));
 
-    if (demux->segment.time == 0 && base->segment.format == GST_FORMAT_TIME)
-      demux->segment.time = base->segment.time;
+    GST_DEBUG ("stream pts: %" GST_TIME_FORMAT " first pts: %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (stream->pts), GST_TIME_ARGS (firstpts));
 
     start = base->segment.start;
     stop = base->segment.stop;
-    position = base->segment.time;
+    /* Shift the start depending on our position in the stream */
+    start += firstpts + base->in_gap - base->first_buf_ts;
+    position = start;
   } else {
     /* pull mode */
     GST_DEBUG ("pull-based. Segment start:%" GST_TIME_FORMAT " duration:%"
