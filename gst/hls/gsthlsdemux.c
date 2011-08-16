@@ -608,11 +608,7 @@ gst_hls_demux_loop (GstHLSDemux * demux)
     if (demux->end_of_playlist)
       goto end_of_playlist;
 
-    GST_TASK_WAIT (demux->task);
-    /* If the queue is still empty check again if it's the end of the
-     * playlist in case we reached it after beeing woken up */
-    if (g_queue_is_empty (demux->queue) && demux->end_of_playlist)
-      goto end_of_playlist;
+    goto empty_queue;
   }
 
   buf = g_queue_pop_head (demux->queue);
@@ -655,7 +651,14 @@ cache_error:
 error:
   {
     /* FIXME: handle error */
+    GST_DEBUG_OBJECT (demux, "error, stopping task");
     gst_hls_demux_stop (demux);
+    return;
+  }
+
+empty_queue:
+  {
+    gst_task_pause (demux->task);
     return;
   }
 }
@@ -1076,7 +1079,7 @@ gst_hls_demux_get_next_fragment (GstHLSDemux * demux, gboolean retry)
           &next_fragment_uri, &duration, &timestamp)) {
     GST_INFO_OBJECT (demux, "This playlist doesn't contain more fragments");
     demux->end_of_playlist = TRUE;
-    GST_TASK_SIGNAL (demux->task);
+    gst_task_start (demux->task);
     return FALSE;
   }
 
@@ -1111,7 +1114,7 @@ gst_hls_demux_get_next_fragment (GstHLSDemux * demux, gboolean retry)
   }
 
   g_queue_push_tail (demux->queue, buf);
-  GST_TASK_SIGNAL (demux->task);
+  gst_task_start (demux->task);
   gst_adapter_clear (demux->download);
   return TRUE;
 }
