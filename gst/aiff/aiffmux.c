@@ -160,7 +160,7 @@ gst_aiff_mux_class_init (GstAiffMuxClass * klass)
   (AIFF_FORM_HEADER_LEN + AIFF_COMM_HEADER_LEN + AIFF_SSND_HEADER_LEN)
 
 static void
-gst_aiff_mux_write_form_header (GstAiffMux * aiffmux, guint audio_data_size,
+gst_aiff_mux_write_form_header (GstAiffMux * aiffmux, guint32 audio_data_size,
     GstByteWriter * writer)
 {
   /* ckID == 'FORM' */
@@ -228,7 +228,7 @@ gst_aiff_mux_write_ext (GstByteWriter * writer, double d)
  */
 
 static void
-gst_aiff_mux_write_comm_header (GstAiffMux * aiffmux, guint audio_data_size,
+gst_aiff_mux_write_comm_header (GstAiffMux * aiffmux, guint32 audio_data_size,
     GstByteWriter * writer)
 {
   gst_byte_writer_put_uint32_le (writer, GST_MAKE_FOURCC ('C', 'O', 'M', 'M'));
@@ -242,7 +242,7 @@ gst_aiff_mux_write_comm_header (GstAiffMux * aiffmux, guint audio_data_size,
 }
 
 static void
-gst_aiff_mux_write_ssnd_header (GstAiffMux * aiffmux, guint audio_data_size,
+gst_aiff_mux_write_ssnd_header (GstAiffMux * aiffmux, guint32 audio_data_size,
     GstByteWriter * writer)
 {
   gst_byte_writer_put_uint32_le (writer, GST_MAKE_FOURCC ('S', 'S', 'N', 'D'));
@@ -255,7 +255,7 @@ gst_aiff_mux_write_ssnd_header (GstAiffMux * aiffmux, guint audio_data_size,
 }
 
 static GstFlowReturn
-gst_aiff_mux_push_header (GstAiffMux * aiffmux, guint audio_data_size)
+gst_aiff_mux_push_header (GstAiffMux * aiffmux, guint32 audio_data_size)
 {
   GstFlowReturn ret;
   GstBuffer *outbuf;
