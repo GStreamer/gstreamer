@@ -149,35 +149,6 @@ GstClockTime gst_audio_duration_from_pad_buffer (GstPad * pad, GstBuffer * buf);
 /* check if the buffer size is a whole multiple of the frame size */
 gboolean gst_audio_is_buffer_framed     (GstPad* pad, GstBuffer* buf);
 
-/* functions useful for _getcaps functions */
-/**
- * GstAudioFieldFlag:
- * @GST_AUDIO_FIELD_RATE: add rate field to caps
- * @GST_AUDIO_FIELD_CHANNELS: add channels field to caps
- * @GST_AUDIO_FIELD_ENDIANNESS: add endianness field to caps
- * @GST_AUDIO_FIELD_WIDTH: add width field to caps
- * @GST_AUDIO_FIELD_DEPTH: add depth field to caps
- * @GST_AUDIO_FIELD_SIGNED: add signed field to caps
- *
- * Do not use anymore.
- *
- * Deprecated: use gst_structure_set() directly
- */
-#ifndef GST_DISABLE_DEPRECATED
-typedef enum {
-  GST_AUDIO_FIELD_RATE          = (1 << 0),
-  GST_AUDIO_FIELD_CHANNELS      = (1 << 1),
-  GST_AUDIO_FIELD_ENDIANNESS    = (1 << 2),
-  GST_AUDIO_FIELD_WIDTH         = (1 << 3),
-  GST_AUDIO_FIELD_DEPTH         = (1 << 4),
-  GST_AUDIO_FIELD_SIGNED        = (1 << 5)
-} GstAudioFieldFlag;
-#endif
-
-#ifndef GST_DISABLE_DEPRECATED
-void gst_audio_structure_set_int (GstStructure *structure, GstAudioFieldFlag flag);
-#endif /* GST_DISABLE_DEPRECATED */
-
 GstBuffer *gst_audio_buffer_clip (GstBuffer *buffer, GstSegment *segment, gint rate, gint frame_size);
 
 G_END_DECLS
