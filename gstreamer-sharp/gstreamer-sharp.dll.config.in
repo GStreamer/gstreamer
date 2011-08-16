@@ -1,6 +1,7 @@
 <configuration>
 	<dllmap dll="libglib-2.0-0.dll" target="libglib-2.0@LIB_PREFIX@.0@LIB_SUFFIX@"/>
 	<dllmap dll="libgobject-2.0-0.dll" target="libgobject-2.0@LIB_PREFIX@.0@LIB_SUFFIX@"/>
+	<dllmap dll="libgthread-2.0-0.dll" target="libgthread-2.0@LIB_PREFIX@.0"/>
 	<dllmap dll="libgstreamer-0.10.dll" target="libgstreamer-0.10@LIB_PREFIX@.0@LIB_SUFFIX@"/>
 	<dllmap dll="libgstapp-0.10.dll" target="libgstapp-0.10@LIB_PREFIX@.0@LIB_SUFFIX@"/>
 	<dllmap dll="libgstbase-0.10.dll" target="libgstbase-0.10@LIB_PREFIX@.0@LIB_SUFFIX@"/>
