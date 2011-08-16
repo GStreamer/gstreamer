@@ -1186,8 +1186,14 @@ mpegts_base_sink_event (GstPad * pad, GstEvent * event)
       res = gst_mpegts_base_handle_eos (base);
       break;
     case GST_EVENT_FLUSH_START:
-      gst_segment_init (&base->segment, GST_FORMAT_UNDEFINED);
       mpegts_packetizer_flush (base->packetizer);
+      res = GST_MPEGTS_BASE_GET_CLASS (base)->push_event (base, event);
+      gst_event_unref (event);
+      break;
+    case GST_EVENT_FLUSH_STOP:
+      gst_segment_init (&base->segment, GST_FORMAT_UNDEFINED);
+      base->seen_pat = FALSE;
+      base->first_pat_offset = -1;
       /* Passthrough */
     default:
       res = GST_MPEGTS_BASE_GET_CLASS (base)->push_event (base, event);
