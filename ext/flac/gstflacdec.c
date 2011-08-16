@@ -1391,8 +1391,10 @@ gst_flac_dec_chain (GstPad * pad, GstBuffer * buf)
 
   dec = GST_FLAC_DEC (GST_PAD_PARENT (pad));
 
-  GST_LOG_OBJECT (dec, "buffer with ts=%" GST_TIME_FORMAT ", end_offset=%"
-      G_GINT64_FORMAT ", size=%u", GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
+  GST_LOG_OBJECT (dec,
+      "buffer with ts=%" GST_TIME_FORMAT ", offset=%" G_GINT64_FORMAT
+      ", end_offset=%" G_GINT64_FORMAT ", size=%u",
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)), GST_BUFFER_OFFSET (buf),
       GST_BUFFER_OFFSET_END (buf), GST_BUFFER_SIZE (buf));
 
   if (dec->init) {
@@ -1483,6 +1485,19 @@ gst_flac_dec_chain (GstPad * pad, GstBuffer * buf)
     /* framed - there should always be enough data to decode something */
     GST_LOG_OBJECT (dec, "%u bytes available",
         gst_adapter_available (dec->adapter));
+    if (G_UNLIKELY (!dec->got_headers)) {
+      /* The first time we get audio data, we know we got all the headers.
+       * We then loop until all the metadata is processed, then do an extra
+       * "process_single" step for the audio frame. */
+      GST_DEBUG_OBJECT (dec,
+          "First audio frame, ensuring all metadata is processed");
+      if (!FLAC__stream_decoder_process_until_end_of_metadata (dec->decoder)) {
+        GST_DEBUG_OBJECT (dec, "process_until_end_of_metadata failed");
+      }
+      GST_DEBUG_OBJECT (dec,
+          "All metadata is now processed, reading to process audio data");
+      dec->got_headers = TRUE;
+    }
     if (!FLAC__stream_decoder_process_single (dec->decoder)) {
       GST_DEBUG_OBJECT (dec, "process_single failed");
     }
