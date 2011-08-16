@@ -546,6 +546,16 @@ struct _GstH264SliceHdr
   /* if nal_unit.ref_idc != 0 */
   GstH264DecRefPicMarking dec_ref_pic_marking;
 
+  guint8 cabac_init_idc;
+  gint8 slice_qp_delta;
+  gint8 slice_qs_delta;
+
+  guint8 disable_deblocking_filter_idc;
+  gint8 slice_alpha_c0_offset_div2;
+  gint8 slice_beta_offset_div2;
+
+  guint16 slice_group_change_cycle;
+
   /* calculated values */
   guint32 max_pic_num;
   gboolean valid;
