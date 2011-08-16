@@ -49,7 +49,7 @@ static GstFormatDefinition standard_definitions[] = {
   {GST_FORMAT_TIME, "time", "Time", 0},
   {GST_FORMAT_BUFFERS, "buffers", "Buffers", 0},
   {GST_FORMAT_PERCENT, "percent", "Percent", 0},
-  {0, NULL, NULL, 0}
+  {GST_FORMAT_UNDEFINED, NULL, NULL, 0}
 };
 
 void
@@ -144,8 +144,8 @@ gst_format_register (const gchar * nick, const gchar * description)
   GstFormatDefinition *format;
   GstFormat query;
 
-  g_return_val_if_fail (nick != NULL, 0);
-  g_return_val_if_fail (description != NULL, 0);
+  g_return_val_if_fail (nick != NULL, GST_FORMAT_UNDEFINED);
+  g_return_val_if_fail (description != NULL, GST_FORMAT_UNDEFINED);
 
   query = gst_format_get_by_nick (nick);
   if (query != GST_FORMAT_UNDEFINED)
@@ -153,7 +153,7 @@ gst_format_register (const gchar * nick, const gchar * description)
 
   g_static_mutex_lock (&mutex);
   format = g_slice_new (GstFormatDefinition);
-  format->value = _n_values;
+  format->value = (GstFormat) _n_values;
   format->nick = g_strdup (nick);
   format->description = g_strdup (description);
   format->quark = g_quark_from_static_string (format->nick);
@@ -182,7 +182,7 @@ gst_format_get_by_nick (const gchar * nick)
 {
   GstFormatDefinition *format;
 
-  g_return_val_if_fail (nick != NULL, 0);
+  g_return_val_if_fail (nick != NULL, GST_FORMAT_UNDEFINED);
 
   g_static_mutex_lock (&mutex);
   format = g_hash_table_lookup (_nick_to_format, nick);
