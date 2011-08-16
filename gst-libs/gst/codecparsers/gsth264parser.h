@@ -474,19 +474,20 @@ struct _GstH264PredWeightTable
   guint8 luma_log2_weight_denom;
   guint8 chroma_log2_weight_denom;
 
-  guint8 luma_weight_l0[32];
-  guint8 luma_offset_l0[32];
+  gint16 luma_weight_l0[32];
+  gint8 luma_offset_l0[32];
 
   /* if seq->ChromaArrayType != 0 */
-  guint8 chroma_weight_l0[32][2];
-  guint8 chroma_offset_l0[32][2];
+  gint16 chroma_weight_l0[32][2];
+  gint8 chroma_offset_l0[32][2];
 
   /* if slice->slice_type % 5 == 1 */
-  guint8 luma_weight_l1[32];
-  guint8 luma_offset_l1[32];
+  gint16 luma_weight_l1[32];
+  gint8 luma_offset_l1[32];
+
   /* and if seq->ChromaArrayType != 0 */
-  guint8 chroma_weight_l1[32][2];
-  guint8 chroma_offset_l1[32][2];
+  gint16 chroma_weight_l1[32][2];
+  gint8 chroma_offset_l1[32][2];
 };
 
 struct _GstH264RefPicMarking

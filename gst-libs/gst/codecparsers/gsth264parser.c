@@ -827,6 +827,7 @@ gst_h264_slice_parse_pred_weight_table (GstH264SliceHdr * slice,
     NalReader * nr, guint8 chroma_array_type)
 {
   GstH264PredWeightTable *p;
+  gint16 default_luma_weight, default_chroma_weight;
   gint i;
 
   GST_DEBUG ("parsing \"Prediction weight table\"");
