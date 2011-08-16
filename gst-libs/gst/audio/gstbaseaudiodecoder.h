@@ -137,11 +137,6 @@ struct _GstBaseAudioDecoder
   /* MT-protected (with STREAM_LOCK) */
   GstSegment      segment;
 
-  /* properties */
-  GstClockTime    latency;
-  GstClockTime    tolerance;
-  gboolean        plc;
-
   /*< private >*/
   GstBaseAudioDecoderPrivate *priv;
   gpointer       _gst_reserved[GST_PADDING_LARGE];
@@ -218,6 +213,7 @@ struct _GstBaseAudioDecoderClass
 GstFlowReturn     gst_base_audio_decoder_finish_frame (GstBaseAudioDecoder * dec,
                                                        GstBuffer * buf, gint frames);
 
+/* context parameters */
 GstAudioFormatInfo *gst_base_audio_decoder_get_info (GstBaseAudioDecoder * dec);
 
 void              gst_base_audio_decoder_set_plc_aware (GstBaseAudioDecoder * dec,
@@ -241,6 +237,21 @@ void              gst_base_audio_decoder_get_latency (GstBaseAudioDecoder * dec,
 
 void              gst_base_audio_decoder_get_parse_state (GstBaseAudioDecoder * dec,
                                                           gboolean * sync, gboolean * eos);
+
+
+/* object properties */
+void              gst_base_audio_decoder_set_plc (GstBaseAudioDecoder * dec,
+                                                  gboolean enabled);
+gboolean          gst_base_audio_decoder_get_plc (GstBaseAudioDecoder * dec);
+
+void              gst_base_audio_decoder_set_min_latency (GstBaseAudioDecoder * dec,
+                                                          gint64 num);
+gint64            gst_base_audio_decoder_get_min_latency (GstBaseAudioDecoder * dec);
+
+void              gst_base_audio_decoder_set_tolerance (GstBaseAudioDecoder * dec,
+                                                        gint64 tolerance);
+
+gint64            gst_base_audio_decoder_get_tolerance (GstBaseAudioDecoder * dec);
 
 GType gst_base_audio_decoder_get_type (void);
 

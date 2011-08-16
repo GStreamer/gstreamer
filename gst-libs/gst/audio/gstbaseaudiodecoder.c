@@ -254,6 +254,12 @@ struct _GstBaseAudioDecoderPrivate
 
   /* context storage */
   GstBaseAudioDecoderContext ctx;
+
+  /* properties */
+  GstClockTime latency;
+  GstClockTime tolerance;
+  gboolean plc;
+
 };
 
 
@@ -388,8 +394,9 @@ gst_base_audio_decoder_init (GstBaseAudioDecoder * dec,
   g_queue_init (&dec->priv->frames);
 
   /* property default */
-  dec->latency = DEFAULT_LATENCY;
-  dec->tolerance = DEFAULT_TOLERANCE;
+  dec->priv->latency = DEFAULT_LATENCY;
+  dec->priv->tolerance = DEFAULT_TOLERANCE;
+  dec->priv->plc = DEFAULT_PLC;
 
   /* init state */
   gst_base_audio_decoder_reset (dec, TRUE);
@@ -587,7 +594,7 @@ gst_base_audio_decoder_output (GstBaseAudioDecoder * dec, GstBuffer * buf)
 
 again:
   inbuf = NULL;
-  if (priv->agg && dec->latency > 0) {
+  if (priv->agg && dec->priv->latency > 0) {
     gint av;
     gboolean assemble = FALSE;
     const GstClockTimeDiff tol = 10 * GST_MSECOND;
@@ -618,7 +625,7 @@ again:
       av += GST_BUFFER_SIZE (buf);
       buf = NULL;
     }
-    if (priv->out_dur > dec->latency)
+    if (priv->out_dur > dec->priv->latency)
       assemble = TRUE;
     if (av && assemble) {
       GST_LOG_OBJECT (dec, "assembling fragment");
@@ -757,7 +764,7 @@ gst_base_audio_decoder_finish_frame (GstBaseAudioDecoder * dec, GstBuffer * buf,
 
   /* slightly convoluted approach caters for perfect ts if subclass desires */
   if (GST_CLOCK_TIME_IS_VALID (ts)) {
-    if (dec->tolerance > 0) {
+    if (dec->priv->tolerance > 0) {
       GstClockTimeDiff diff;
 
       g_assert (GST_CLOCK_TIME_IS_VALID (priv->base_ts));
@@ -771,7 +778,8 @@ gst_base_audio_decoder_finish_frame (GstBaseAudioDecoder * dec, GstBuffer * buf,
       /* if within tolerance,
        * discard buffer ts and carry on producing perfect stream,
        * otherwise resync to ts */
-      if (G_UNLIKELY (diff < -dec->tolerance || diff > dec->tolerance)) {
+      if (G_UNLIKELY (diff < -dec->priv->tolerance ||
+              diff > dec->priv->tolerance)) {
         GST_DEBUG_OBJECT (dec, "base_ts resync");
         priv->base_ts = ts;
         priv->samples = 0;
@@ -1338,10 +1346,10 @@ gst_base_audio_decoder_sink_eventfunc (GstBaseAudioDecoder * dec,
          * some concealment data */
         GST_DEBUG_OBJECT (dec,
             "segment update: plc %d, do_plc %d, last_stop %" GST_TIME_FORMAT,
-            dec->plc, dec->priv->ctx.do_plc,
+            dec->priv->plc, dec->priv->ctx.do_plc,
             GST_TIME_ARGS (dec->segment.last_stop));
-        if (dec->plc && dec->priv->ctx.do_plc && dec->segment.rate > 0.0 &&
-            dec->segment.last_stop < start) {
+        if (dec->priv->plc && dec->priv->ctx.do_plc &&
+            dec->segment.rate > 0.0 && dec->segment.last_stop < start) {
           GstBaseAudioDecoderClass *klass;
           GstBuffer *buf;
 
@@ -1785,13 +1793,13 @@ gst_base_audio_decoder_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_LATENCY:
-      g_value_set_int64 (value, dec->latency);
+      g_value_set_int64 (value, dec->priv->latency);
       break;
     case PROP_TOLERANCE:
-      g_value_set_int64 (value, dec->tolerance);
+      g_value_set_int64 (value, dec->priv->tolerance);
       break;
     case PROP_PLC:
-      g_value_set_boolean (value, dec->plc);
+      g_value_set_boolean (value, dec->priv->plc);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1809,13 +1817,13 @@ gst_base_audio_decoder_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_LATENCY:
-      dec->latency = g_value_get_int64 (value);
+      dec->priv->latency = g_value_get_int64 (value);
       break;
     case PROP_TOLERANCE:
-      dec->tolerance = g_value_get_int64 (value);
+      dec->priv->tolerance = g_value_get_int64 (value);
       break;
     case PROP_PLC:
-      dec->plc = g_value_get_boolean (value);
+      dec->priv->plc = g_value_get_boolean (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2075,4 +2083,140 @@ gst_base_audio_decoder_get_parse_state (GstBaseAudioDecoder * dec,
     *sync = dec->priv->ctx.sync;
   if (eos)
     *eos = dec->priv->ctx.eos;
+}
+
+/**
+ * gst_base_audio_decoder_set_plc:
+ * @dec: a #GstBaseAudioDecoder
+ * @enabled: new state
+ *
+ * Enable or disable decoder packet loss concealment, provided subclass
+ * and codec are capable and allow handling plc.
+ *
+ * MT safe.
+ *
+ */
+void
+gst_base_audio_decoder_set_plc (GstBaseAudioDecoder * dec, gboolean enabled)
+{
+  g_return_if_fail (GST_IS_BASE_AUDIO_DECODER (dec));
+
+  GST_LOG_OBJECT (dec, "enabled: %d", enabled);
+
+  GST_OBJECT_LOCK (dec);
+  dec->priv->plc = enabled;
+  GST_OBJECT_UNLOCK (dec);
+}
+
+/**
+ * gst_base_audio_decoder_get_plc:
+ * @dec: a #GstBaseAudioDecoder
+ *
+ * Queries decoder packet loss concealment handling.
+ *
+ * Returns: TRUE if packet loss concealment is enabled.
+ *
+ * MT safe.
+ */
+gboolean
+gst_base_audio_decoder_get_plc (GstBaseAudioDecoder * dec)
+{
+  gboolean result;
+
+  g_return_val_if_fail (GST_IS_BASE_AUDIO_DECODER (dec), FALSE);
+
+  GST_OBJECT_LOCK (dec);
+  result = dec->priv->plc;
+  GST_OBJECT_UNLOCK (dec);
+
+  return result;
+}
+
+/**
+ * gst_base_audio_decoder_set_min_latency:
+ * @dec: a #GstBaseAudioDecoder
+ * @num: new minimum latency
+ *
+ * Sets decoder minimum aggregation latency.
+ *
+ * MT safe.
+ *
+ */
+void
+gst_base_audio_decoder_set_min_latency (GstBaseAudioDecoder * dec, gint64 num)
+{
+  g_return_if_fail (GST_IS_BASE_AUDIO_DECODER (dec));
+
+  GST_OBJECT_LOCK (dec);
+  dec->priv->latency = num;
+  GST_OBJECT_UNLOCK (dec);
+}
+
+/**
+ * gst_base_audio_decoder_get_min_latency:
+ * @enc: a #GstBaseAudioDecoder
+ *
+ * Queries decoder's latency aggregation.
+ *
+ * Returns: aggregation latency.
+ *
+ * MT safe.
+ */
+gint64
+gst_base_audio_decoder_get_min_latency (GstBaseAudioDecoder * dec)
+{
+  gint64 result;
+
+  g_return_val_if_fail (GST_IS_BASE_AUDIO_DECODER (dec), FALSE);
+
+  GST_OBJECT_LOCK (dec);
+  result = dec->priv->latency;
+  GST_OBJECT_UNLOCK (dec);
+
+  return result;
+}
+
+/**
+ * gst_base_audio_decoder_set_tolerance:
+ * @dec: a #GstBaseAudioDecoder
+ * @tolerance: new tolerance
+ *
+ * Configures decoder audio jitter tolerance threshold.
+ *
+ * MT safe.
+ *
+ */
+void
+gst_base_audio_decoder_set_tolerance (GstBaseAudioDecoder * dec,
+    gint64 tolerance)
+{
+  g_return_if_fail (GST_IS_BASE_AUDIO_DECODER (dec));
+
+  GST_OBJECT_LOCK (dec);
+  dec->priv->tolerance = tolerance;
+  GST_OBJECT_UNLOCK (dec);
+}
+
+/**
+ * gst_base_audio_decoder_get_tolerance:
+ * @dec: a #GstBaseAudioDecoder
+ *
+ * Queries current audio jitter tolerance threshold.
+ *
+ * Returns: decoder audio jitter tolerance threshold.
+ *
+ * MT safe.
+ */
+gint64
+gst_base_audio_decoder_get_tolerance (GstBaseAudioDecoder * dec)
+{
+  gint64 result;
+
+  g_return_val_if_fail (GST_IS_BASE_AUDIO_DECODER (dec), 0);
+
+  GST_OBJECT_LOCK (dec);
+  result = dec->priv->tolerance;
+  GST_OBJECT_UNLOCK (dec);
+
+  return result;
 }
