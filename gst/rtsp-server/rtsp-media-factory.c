@@ -39,6 +39,7 @@ enum
 enum
 {
   SIGNAL_MEDIA_CONSTRUCTED,
+  SIGNAL_MEDIA_CONFIGURE,
   SIGNAL_LAST
 };
 
@@ -122,6 +123,12 @@ gst_rtsp_media_factory_class_init (GstRTSPMediaFactoryClass * klass)
       g_signal_new ("media-constructed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPMediaFactoryClass,
           media_constructed), NULL, NULL, g_cclosure_marshal_VOID__OBJECT,
+      G_TYPE_NONE, 1, GST_TYPE_RTSP_MEDIA);
+
+  gst_rtsp_media_factory_signals[SIGNAL_MEDIA_CONFIGURE] =
+      g_signal_new ("media-configure", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPMediaFactoryClass,
+          media_configure), NULL, NULL, g_cclosure_marshal_VOID__OBJECT,
       G_TYPE_NONE, 1, GST_TYPE_RTSP_MEDIA);
 
   klass->gen_key = default_gen_key;
@@ -575,6 +582,10 @@ gst_rtsp_media_factory_construct (GstRTSPMediaFactory * factory,
       /* configure the media */
       if (klass->configure)
         klass->configure (factory, media);
+
+      g_signal_emit (factory,
+          gst_rtsp_media_factory_signals[SIGNAL_MEDIA_CONFIGURE], 0, media,
+          NULL);
 
       /* check if we can cache this media */
       if (gst_rtsp_media_is_shared (media)) {
