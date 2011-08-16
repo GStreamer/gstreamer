@@ -559,6 +559,9 @@ struct _GstH264SliceHdr
   /* calculated values */
   guint32 max_pic_num;
   gboolean valid;
+
+  /* Size of the slice_header() in bits */
+  guint header_size;
 };
 
 
