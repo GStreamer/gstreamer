@@ -65,6 +65,7 @@ struct _GstRTSPMediaFactory {
   gboolean      eos_shutdown;
   GstRTSPAuth  *auth;
   guint         buffer_size;
+  gchar        *multicast_group;
 
   GMutex       *medias_lock;
   GHashTable   *medias;
@@ -128,6 +129,8 @@ GstRTSPAuth *         gst_rtsp_media_factory_get_auth     (GstRTSPMediaFactory *
 void                  gst_rtsp_media_factory_set_buffer_size    (GstRTSPMediaFactory * factory, guint size);
 guint                 gst_rtsp_media_factory_get_buffer_size    (GstRTSPMediaFactory * factory);
 
+void                  gst_rtsp_media_factory_set_multicast_group (GstRTSPMediaFactory * factory, const gchar *mc);
+gchar *               gst_rtsp_media_factory_get_multicast_group (GstRTSPMediaFactory * factory);
 
 /* creating the media from the factory and a url */
 GstRTSPMedia *        gst_rtsp_media_factory_construct    (GstRTSPMediaFactory *factory,
