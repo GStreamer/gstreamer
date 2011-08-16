@@ -746,7 +746,7 @@ typedef struct
  * @factory: a #GstElementFactory
  * @type: a #GstElementFactoryListType
  *
- * Check if @factory if of the given types.
+ * Check if @factory is of the given types.
  *
  * Returns: %TRUE if @factory is of @type.
  *
