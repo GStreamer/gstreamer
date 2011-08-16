@@ -89,7 +89,7 @@ struct _GstRTSPServerClass {
 
   GstRTSPClient * (*create_client)      (GstRTSPServer *server);
   gboolean        (*accept_client)      (GstRTSPServer *server, GstRTSPClient *client, GIOChannel *channel);
-  
+
   /* signals */
   void            (*client_connected)   (GstRTSPServer *server, GstRTSPClient *client);
 };

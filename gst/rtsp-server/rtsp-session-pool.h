@@ -143,7 +143,7 @@ gboolean              gst_rtsp_session_pool_remove            (GstRTSPSessionPoo
 /* perform session maintenance */
 GList *               gst_rtsp_session_pool_filter            (GstRTSPSessionPool *pool,
                                                                GstRTSPSessionFilterFunc func,
-							       gpointer user_data);
+                                                               gpointer user_data);
 guint                 gst_rtsp_session_pool_cleanup           (GstRTSPSessionPool *pool);
 GSource *             gst_rtsp_session_pool_create_watch      (GstRTSPSessionPool *pool);
 

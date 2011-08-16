@@ -132,7 +132,7 @@ gboolean               gst_rtsp_session_is_expired           (GstRTSPSession *se
 /* handle media in a session */
 GstRTSPSessionMedia *  gst_rtsp_session_manage_media         (GstRTSPSession *sess,
                                                               const GstRTSPUrl *uri,
-							      GstRTSPMedia *media);
+                                                              GstRTSPMedia *media);
 gboolean               gst_rtsp_session_release_media        (GstRTSPSession *sess,
                                                               GstRTSPSessionMedia *media);
 /* get media in a session */
