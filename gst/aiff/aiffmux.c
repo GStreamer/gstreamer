@@ -236,7 +236,7 @@ gst_aiff_mux_write_comm_header (GstAiffMux * aiffmux, guint audio_data_size,
   gst_byte_writer_put_uint16_be (writer, aiffmux->channels);
   /* numSampleFrames value will be overwritten when known */
   gst_byte_writer_put_uint32_be (writer,
-      (audio_data_size * 8) / (aiffmux->width * aiffmux->channels));
+      audio_data_size / (aiffmux->width / 8 * aiffmux->channels));
   gst_byte_writer_put_uint16_be (writer, aiffmux->depth);
   gst_aiff_mux_write_ext (writer, aiffmux->rate);
 }
