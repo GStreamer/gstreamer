@@ -88,33 +88,6 @@ typedef struct _GstBaseAudioEncoder GstBaseAudioEncoder;
 typedef struct _GstBaseAudioEncoderClass GstBaseAudioEncoderClass;
 
 typedef struct _GstBaseAudioEncoderPrivate GstBaseAudioEncoderPrivate;
-typedef struct _GstBaseAudioEncoderContext GstBaseAudioEncoderContext;
-
-/**
- * GstBaseAudioEncoderContext:
- * @state: a #GstAudioState describing input audio format
- * @frame_samples: number of samples (per channel) subclass needs to be handed,
- *   or will be handed all available if 0.
- * @frame_max: max number of frames of size @frame_bytes accepted at once
- *  (assumed minimally 1)
- * @min_latency: min latency of element
- * @max_latency: max latency of element
- * @lookahead: encoder lookahead (in units of input rate samples)
- *
- * Transparent #GstBaseAudioEncoderContext data structure.
- */
-struct _GstBaseAudioEncoderContext {
-  /* input */
-  GstAudioFormatInfo state;
-
-  /* output */
-  gint  frame_samples;
-  gint  frame_max;
-  gint  lookahead;
-  /* MT-protected (with LOCK) */
-  GstClockTime min_latency;
-  GstClockTime max_latency;
-};
 
 /**
  * GstBaseAudioEncoder:
@@ -132,7 +105,6 @@ struct _GstBaseAudioEncoder {
 
   /* MT-protected (with STREAM_LOCK) */
   GstSegment      segment;
-  GstBaseAudioEncoderContext *ctx;
 
   /* properties */
   gint64          tolerance;
@@ -218,6 +190,26 @@ GstFlowReturn   gst_base_audio_encoder_finish_frame (GstBaseAudioEncoder * enc,
 
 GstCaps *       gst_base_audio_encoder_proxy_getcaps (GstBaseAudioEncoder * enc,
                                                       GstCaps * caps);
+
+
+GstAudioFormatInfo * gst_base_audio_encoder_get_info (GstBaseAudioEncoder * enc);
+
+gint            gst_base_audio_encoder_get_frame_samples (GstBaseAudioEncoder * enc);
+void            gst_base_audio_encoder_set_frame_samples (GstBaseAudioEncoder * enc,
+                                                          gint num);
+
+gint            gst_base_audio_encoder_get_frame_max (GstBaseAudioEncoder * enc);
+void            gst_base_audio_encoder_set_frame_max (GstBaseAudioEncoder * enc,
+                                                      gint num);
+
+gint            gst_base_audio_encoder_get_lookahead (GstBaseAudioEncoder * enc);
+void            gst_base_audio_encoder_set_lookahead (GstBaseAudioEncoder * enc,
+                                                      gint num);
+
+void            gst_base_audio_encoder_get_latency (GstBaseAudioEncoder * enc,
+                                                    GstClockTime * min, GstClockTime * max);
+void            gst_base_audio_encoder_set_latency (GstBaseAudioEncoder * enc,
+                                                    GstClockTime min, GstClockTime max);
 
 G_END_DECLS
 

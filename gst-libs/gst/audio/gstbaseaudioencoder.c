@@ -38,7 +38,7 @@
  *   <listitem><para>
  *     GstBaseAudioEncoder calls @set_format to inform subclass of the format
  *     of input audio data that it is about to receive.  Subclass should
- *     setup for encoding and configure various base class context parameters
+ *     setup for encoding and configure various base class parameters
  *     appropriately, notably those directing desired input data handling.
  *     While unlikely, it might be called more than once, if changing input
  *     parameters require reconfiguration.
@@ -49,10 +49,10 @@
  *   </itemizedlist>
  * </listitem>
  * As of configuration stage, and throughout processing, GstBaseAudioEncoder
- * provides a GstBaseAudioEncoderContext that provides required context,
+ * maintains various parameters that provide required context,
  * e.g. describing the format of input audio data.
- * Conversely, subclass can and should configure context to inform
- * base class of its expectation w.r.t. buffer handling.
+ * Conversely, subclass can and should configure these context parameters
+ * to inform base class of its expectation w.r.t. buffer handling.
  * <listitem>
  *   <itemizedlist>
  *   <title>Data processing</title>
@@ -178,6 +178,20 @@ enum
 #define DEFAULT_GRANULE      FALSE
 #define DEFAULT_HARD_RESYNC  FALSE
 #define DEFAULT_TOLERANCE    40000000
+
+typedef struct _GstBaseAudioEncoderContext
+{
+  /* input */
+  GstAudioFormatInfo info;
+
+  /* output */
+  gint frame_samples;
+  gint frame_max;
+  gint lookahead;
+  /* MT-protected (with LOCK) */
+  GstClockTime min_latency;
+  GstClockTime max_latency;
+} GstBaseAudioEncoderContext;
 
 struct _GstBaseAudioEncoderPrivate
 {
@@ -369,7 +383,6 @@ gst_base_audio_encoder_init (GstBaseAudioEncoder * enc,
   GST_DEBUG_OBJECT (enc, "src created");
 
   enc->priv->adapter = gst_adapter_new ();
-  enc->ctx = &enc->priv->ctx;
 
   /* property default */
   enc->perfect_ts = DEFAULT_PERFECT_TS;
@@ -390,8 +403,8 @@ gst_base_audio_encoder_reset (GstBaseAudioEncoder * enc, gboolean full)
     enc->priv->active = FALSE;
     enc->priv->samples_in = 0;
     enc->priv->bytes_out = 0;
-    g_free (enc->ctx->state.channel_pos);
-    memset (enc->ctx, 0, sizeof (enc->ctx));
+    g_free (enc->priv->ctx.info.channel_pos);
+    memset (&enc->priv->ctx, 0, sizeof (enc->priv->ctx));
   }
 
   gst_segment_init (&enc->segment, GST_FORMAT_TIME);
@@ -452,7 +465,7 @@ gst_base_audio_encoder_finish_frame (GstBaseAudioEncoder * enc, GstBuffer * buf,
 
   klass = GST_BASE_AUDIO_ENCODER_GET_CLASS (enc);
   priv = enc->priv;
-  ctx = enc->ctx;
+  ctx = &enc->priv->ctx;
 
   /* subclass should know what it is producing by now */
   g_return_val_if_fail (GST_PAD_CAPS (enc->srcpad) != NULL, GST_FLOW_ERROR);
@@ -468,7 +481,7 @@ gst_base_audio_encoder_finish_frame (GstBaseAudioEncoder * enc, GstBuffer * buf,
 
   /* remove corresponding samples from input */
   if (samples < 0)
-    samples = (enc->priv->offset / ctx->state.bpf);
+    samples = (enc->priv->offset / ctx->info.bpf);
 
   if (G_LIKELY (samples)) {
     /* track upstream ts if so configured */
@@ -476,8 +489,8 @@ gst_base_audio_encoder_finish_frame (GstBaseAudioEncoder * enc, GstBuffer * buf,
       guint64 ts, distance;
 
       ts = gst_adapter_prev_timestamp (priv->adapter, &distance);
-      g_assert (distance % ctx->state.bpf == 0);
-      distance /= ctx->state.bpf;
+      g_assert (distance % ctx->info.bpf == 0);
+      distance /= ctx->info.bpf;
       GST_LOG_OBJECT (enc, "%" G_GUINT64_FORMAT " samples past prev_ts %"
           GST_TIME_FORMAT, distance, GST_TIME_ARGS (ts));
       GST_LOG_OBJECT (enc, "%" G_GUINT64_FORMAT " samples past base_ts %"
@@ -490,9 +503,9 @@ gst_base_audio_encoder_finish_frame (GstBaseAudioEncoder * enc, GstBuffer * buf,
         /* passed into another buffer;
          * mild check for discontinuity and only mark if so */
         next_ts = ts +
-            gst_util_uint64_scale (distance, GST_SECOND, ctx->state.rate);
+            gst_util_uint64_scale (distance, GST_SECOND, ctx->info.rate);
         old_ts = priv->base_ts +
-            gst_util_uint64_scale (priv->samples, GST_SECOND, ctx->state.rate);
+            gst_util_uint64_scale (priv->samples, GST_SECOND, ctx->info.rate);
         diff = GST_CLOCK_DIFF (next_ts, old_ts);
         GST_LOG_OBJECT (enc, "ts diff %d ms", (gint) (diff / GST_MSECOND));
         /* only mark discontinuity if beyond tolerance */
@@ -500,8 +513,8 @@ gst_base_audio_encoder_finish_frame (GstBaseAudioEncoder * enc, GstBuffer * buf,
           GST_DEBUG_OBJECT (enc, "marked discont");
           priv->discont = TRUE;
         }
-        if (TRUE || diff > GST_SECOND / ctx->state.rate / 2 ||
-            diff < -GST_SECOND / ctx->state.rate / 2) {
+        if (TRUE || diff > GST_SECOND / ctx->info.rate / 2 ||
+            diff < -GST_SECOND / ctx->info.rate / 2) {
           GST_LOG_OBJECT (enc, "new upstream ts %" GST_TIME_FORMAT
               " at distance %" G_GUINT64_FORMAT, GST_TIME_ARGS (ts), distance);
           /* re-sync to upstream ts */
@@ -513,7 +526,7 @@ gst_base_audio_encoder_finish_frame (GstBaseAudioEncoder * enc, GstBuffer * buf,
       }
     }
     /* advance sample view */
-    if (G_UNLIKELY (samples * ctx->state.bpf > priv->offset)) {
+    if (G_UNLIKELY (samples * ctx->info.bpf > priv->offset)) {
       if (G_LIKELY (!priv->force)) {
         /* no way we can let this pass */
         g_assert_not_reached ();
@@ -521,14 +534,14 @@ gst_base_audio_encoder_finish_frame (GstBaseAudioEncoder * enc, GstBuffer * buf,
         goto overflow;
       } else {
         priv->offset = 0;
-        if (samples * ctx->state.bpf >= gst_adapter_available (priv->adapter))
+        if (samples * ctx->info.bpf >= gst_adapter_available (priv->adapter))
           gst_adapter_clear (priv->adapter);
         else
-          gst_adapter_flush (priv->adapter, samples * ctx->state.bpf);
+          gst_adapter_flush (priv->adapter, samples * ctx->info.bpf);
       }
     } else {
-      gst_adapter_flush (priv->adapter, samples * ctx->state.bpf);
-      priv->offset -= samples * ctx->state.bpf;
+      gst_adapter_flush (priv->adapter, samples * ctx->info.bpf);
+      priv->offset -= samples * ctx->info.bpf;
       /* avoid subsequent stray prev_ts */
       if (G_UNLIKELY (gst_adapter_available (priv->adapter) == 0))
         gst_adapter_clear (priv->adapter);
@@ -549,13 +562,13 @@ gst_base_audio_encoder_finish_frame (GstBaseAudioEncoder * enc, GstBuffer * buf,
       /* mind sample rounding and produce perfect output */
       GST_BUFFER_TIMESTAMP (buf) = priv->base_ts +
           gst_util_uint64_scale (priv->samples - ctx->lookahead, GST_SECOND,
-          ctx->state.rate);
+          ctx->info.rate);
       GST_DEBUG_OBJECT (enc, "out samples %d", samples);
       if (G_LIKELY (samples > 0)) {
         priv->samples += samples;
         GST_BUFFER_DURATION (buf) = priv->base_ts +
             gst_util_uint64_scale (priv->samples - ctx->lookahead, GST_SECOND,
-            ctx->state.rate) - GST_BUFFER_TIMESTAMP (buf);
+            ctx->info.rate) - GST_BUFFER_TIMESTAMP (buf);
         priv->last_duration = GST_BUFFER_DURATION (buf);
       } else {
         /* duration forecast in case of handling remainder;
@@ -567,11 +580,11 @@ gst_base_audio_encoder_finish_frame (GstBaseAudioEncoder * enc, GstBuffer * buf,
         /* FIXME: in longer run, muxer should take care of this ... */
         /* offset_end = granulepos for ogg muxer */
         GST_BUFFER_OFFSET_END (buf) = priv->base_gp + priv->samples -
-            enc->ctx->lookahead;
+            enc->priv->ctx.lookahead;
         /* offset = timestamp corresponding to granulepos for ogg muxer */
         GST_BUFFER_OFFSET (buf) =
             GST_FRAMES_TO_CLOCK_TIME (GST_BUFFER_OFFSET_END (buf),
-            ctx->state.rate);
+            ctx->info.rate);
       } else {
         GST_BUFFER_OFFSET (buf) = priv->bytes_out;
         GST_BUFFER_OFFSET_END (buf) = priv->bytes_out + GST_BUFFER_SIZE (buf);
@@ -618,7 +631,7 @@ overflow:
   {
     GST_ELEMENT_ERROR (enc, STREAM, ENCODE,
         ("received more encoded samples %d than provided %d",
-            samples, priv->offset / ctx->state.bpf), (NULL));
+            samples, priv->offset / ctx->info.bpf), (NULL));
     if (buf)
       gst_buffer_unref (buf);
     return GST_FLOW_ERROR;
@@ -644,7 +657,7 @@ gst_base_audio_encoder_push_buffers (GstBaseAudioEncoder * enc, gboolean force)
   g_return_val_if_fail (klass->handle_frame != NULL, GST_FLOW_ERROR);
 
   priv = enc->priv;
-  ctx = enc->ctx;
+  ctx = &enc->priv->ctx;
 
   while (ret == GST_FLOW_OK) {
 
@@ -654,7 +667,7 @@ gst_base_audio_encoder_push_buffers (GstBaseAudioEncoder * enc, gboolean force)
     g_assert (priv->offset <= av);
     av -= priv->offset;
 
-    need = ctx->frame_samples > 0 ? ctx->frame_samples * ctx->state.bpf : av;
+    need = ctx->frame_samples > 0 ? ctx->frame_samples * ctx->info.bpf : av;
     GST_LOG_OBJECT (enc, "available: %d, needed: %d, force: %d",
         av, need, force);
 
@@ -692,7 +705,7 @@ gst_base_audio_encoder_push_buffers (GstBaseAudioEncoder * enc, gboolean force)
     /* mark this already as consumed,
      * which it should be when subclass gives us data in exchange for samples */
     priv->offset += need;
-    priv->samples_in += need / ctx->state.bpf;
+    priv->samples_in += need / ctx->info.bpf;
 
     priv->got_data = FALSE;
     ret = klass->handle_frame (enc, buf);
@@ -734,7 +747,7 @@ gst_base_audio_encoder_set_base_gp (GstBaseAudioEncoder * enc)
       enc->priv->base_ts);
   if (GST_CLOCK_TIME_IS_VALID (ts)) {
     enc->priv->base_gp =
-        GST_CLOCK_TIME_TO_FRAMES (enc->priv->base_ts, enc->ctx->state.rate);
+        GST_CLOCK_TIME_TO_FRAMES (enc->priv->base_ts, enc->priv->ctx.info.rate);
     GST_DEBUG_OBJECT (enc, "new base gp %" G_GINT64_FORMAT, enc->priv->base_gp);
   } else {
     /* should reasonably have a valid base,
@@ -761,10 +774,10 @@ gst_base_audio_encoder_chain (GstPad * pad, GstBuffer * buffer)
   bclass = GST_BASE_AUDIO_ENCODER_GET_CLASS (enc);
 
   priv = enc->priv;
-  ctx = enc->ctx;
+  ctx = &enc->priv->ctx;
 
   /* should know what is coming by now */
-  if (!ctx->state.bpf)
+  if (!ctx->info.bpf)
     goto not_negotiated;
 
   GST_LOG_OBJECT (enc,
@@ -774,7 +787,7 @@ gst_base_audio_encoder_chain (GstPad * pad, GstBuffer * buffer)
       GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)));
 
   /* input shoud be whole number of sample frames */
-  if (GST_BUFFER_SIZE (buffer) % ctx->state.bpf)
+  if (GST_BUFFER_SIZE (buffer) % ctx->info.bpf)
     goto wrong_buffer;
 
 #ifndef GST_DISABLE_GST_DEBUG
@@ -784,11 +797,11 @@ gst_base_audio_encoder_chain (GstPad * pad, GstBuffer * buffer)
 
     /* verify buffer duration */
     duration = gst_util_uint64_scale (GST_BUFFER_SIZE (buffer), GST_SECOND,
-        ctx->state.rate * ctx->state.bpf);
+        ctx->info.rate * ctx->info.bpf);
     diff = GST_CLOCK_DIFF (duration, GST_BUFFER_DURATION (buffer));
     if (GST_BUFFER_DURATION (buffer) != GST_CLOCK_TIME_NONE &&
-        (diff > GST_SECOND / ctx->state.rate / 2 ||
-            diff < -GST_SECOND / ctx->state.rate / 2)) {
+        (diff > GST_SECOND / ctx->info.rate / 2 ||
+            diff < -GST_SECOND / ctx->info.rate / 2)) {
       GST_DEBUG_OBJECT (enc, "incoming buffer had incorrect duration %"
           GST_TIME_FORMAT ", expected duration %" GST_TIME_FORMAT,
           GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)),
@@ -805,8 +818,8 @@ gst_base_audio_encoder_chain (GstPad * pad, GstBuffer * buffer)
 
   /* clip to segment */
   /* NOTE: slightly painful linking -laudio only for this one ... */
-  buffer = gst_audio_buffer_clip (buffer, &enc->segment, ctx->state.rate,
-      ctx->state.bpf);
+  buffer = gst_audio_buffer_clip (buffer, &enc->segment, ctx->info.rate,
+      ctx->info.bpf);
   if (G_UNLIKELY (!buffer)) {
     GST_DEBUG_OBJECT (buffer, "no data after clipping to segment");
     goto done;
@@ -836,9 +849,9 @@ gst_base_audio_encoder_chain (GstPad * pad, GstBuffer * buffer)
       guint64 samples;
 
       samples = priv->samples +
-          gst_adapter_available (priv->adapter) / ctx->state.bpf;
+          gst_adapter_available (priv->adapter) / ctx->info.bpf;
       next_ts = priv->base_ts +
-          gst_util_uint64_scale (samples, GST_SECOND, ctx->state.rate);
+          gst_util_uint64_scale (samples, GST_SECOND, ctx->info.rate);
       GST_LOG_OBJECT (enc, "buffer is %" G_GUINT64_FORMAT
           " samples past base_ts %" GST_TIME_FORMAT
           ", expected ts %" GST_TIME_FORMAT, samples,
@@ -863,7 +876,7 @@ gst_base_audio_encoder_chain (GstPad * pad, GstBuffer * buffer)
             GST_TIME_FORMAT ".  Clipping buffer", GST_TIME_ARGS (next_ts));
 
         diff_bytes =
-            GST_CLOCK_TIME_TO_FRAMES (-diff, ctx->state.rate) * ctx->state.bpf;
+            GST_CLOCK_TIME_TO_FRAMES (-diff, ctx->info.rate) * ctx->info.bpf;
         if (diff_bytes >= GST_BUFFER_SIZE (buffer)) {
           gst_buffer_unref (buffer);
           goto done;
@@ -907,7 +920,7 @@ wrong_buffer:
   {
     GST_ELEMENT_ERROR (enc, STREAM, ENCODE, (NULL),
         ("buffer size %d not a multiple of %d", GST_BUFFER_SIZE (buffer),
-            ctx->state.bpf));
+            ctx->info.bpf));
     gst_buffer_unref (buffer);
     return GST_FLOW_ERROR;
   }
@@ -928,8 +941,8 @@ gst_base_audio_encoder_sink_setcaps (GstPad * pad, GstCaps * caps)
   /* subclass must do something here ... */
   g_return_val_if_fail (klass->set_format != NULL, FALSE);
 
-  ctx = enc->ctx;
-  state = &ctx->state;
+  ctx = &enc->priv->ctx;
+  state = &ctx->info;
 
   GST_DEBUG_OBJECT (enc, "caps: %" GST_PTR_FORMAT, caps);
 
@@ -954,9 +967,9 @@ gst_base_audio_encoder_sink_setcaps (GstPad * pad, GstCaps * caps)
     gst_base_audio_encoder_drain (enc);
 
     /* context defaults */
-    enc->ctx->frame_samples = 0;
-    enc->ctx->frame_max = 0;
-    enc->ctx->lookahead = 0;
+    enc->priv->ctx.frame_samples = 0;
+    enc->priv->ctx.frame_max = 0;
+    enc->priv->ctx.lookahead = 0;
 
     /* element might report latency */
     GST_OBJECT_LOCK (enc);
@@ -996,7 +1009,7 @@ refuse_caps:
 /**
  * gst_base_audio_encoder_proxy_getcaps:
  * @enc: a #GstBaseAudioEncoder
- * @caps: initial
+ * @caps: initial caps
  *
  * Returns caps that express @caps (or sink template caps if @caps == NULL)
  * restricted to channel/rate combinations supported by downstream elements
@@ -1199,7 +1212,7 @@ gst_base_audio_encoder_sink_query (GstPad * pad, GstQuery * query)
       gint64 src_val, dest_val;
 
       gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
-      if (!(res = gst_base_audio_raw_audio_convert (&enc->ctx->state,
+      if (!(res = gst_base_audio_raw_audio_convert (&enc->priv->ctx.info,
                   src_fmt, src_val, &dest_fmt, &dest_val)))
         goto error;
       gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
@@ -1308,7 +1321,7 @@ gst_base_audio_encoder_src_query (GstPad * pad, GstQuery * query)
       gint64 src_val, dest_val;
 
       gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
-      if (!(res = gst_base_audio_encoded_audio_convert (&enc->ctx->state,
+      if (!(res = gst_base_audio_encoded_audio_convert (&enc->priv->ctx.info,
                   enc->priv->bytes_out, enc->priv->samples_in, src_fmt, src_val,
                   &dest_fmt, &dest_val)))
         break;
@@ -1329,9 +1342,9 @@ gst_base_audio_encoder_src_query (GstPad * pad, GstQuery * query)
         GST_OBJECT_LOCK (enc);
         /* add our latency */
         if (min_latency != -1)
-          min_latency += enc->ctx->min_latency;
+          min_latency += enc->priv->ctx.min_latency;
         if (max_latency != -1)
-          max_latency += enc->ctx->max_latency;
+          max_latency += enc->priv->ctx.max_latency;
         GST_OBJECT_UNLOCK (enc);
 
         gst_query_set_latency (query, live, min_latency, max_latency);
@@ -1452,4 +1465,148 @@ gst_base_audio_encoder_sink_activate_push (GstPad * pad, gboolean active)
 
   gst_object_unref (enc);
   return result;
+}
+
+/**
+ * gst_base_audio_encoder_get_info:
+ * @enc: a #GstBaseAudioEncoder
+ *
+ * Returns: a #AudioFormatInfo describing input audio format
+ */
+GstAudioFormatInfo *
+gst_base_audio_encoder_get_info (GstBaseAudioEncoder * enc)
+{
+  g_return_val_if_fail (GST_IS_BASE_AUDIO_ENCODER (enc), NULL);
+
+  return &enc->priv->ctx.info;
+}
+
+/**
+ * gst_base_audio_encoder_set_frame_samples:
+ * @enc: a #GstBaseAudioEncoder
+ * @num: number of samples per frame
+ *
+ * Sets number of samples (per channel) subclass needs to be handed,
+ * or will be handed all available if 0.
+ */
+void
+gst_base_audio_encoder_set_frame_samples (GstBaseAudioEncoder * enc, gint num)
+{
+  g_return_if_fail (GST_IS_BASE_AUDIO_ENCODER (enc));
+
+  enc->priv->ctx.frame_samples = num;
+}
+
+/**
+ * gst_base_audio_encoder_get_frame_samples:
+ * @enc: a #GstBaseAudioEncoder
+ *
+ * Returns: currently requested samples per frame
+ */
+gint
+gst_base_audio_encoder_get_frame_samples (GstBaseAudioEncoder * enc)
+{
+  g_return_val_if_fail (GST_IS_BASE_AUDIO_ENCODER (enc), 0);
+
+  return enc->priv->ctx.frame_samples;
+}
+
+/**
+ * gst_base_audio_encoder_set_frame_max:
+ * @enc: a #GstBaseAudioEncoder
+ * @num: number of frames
+ *
+ * Sets max number of frames accepted at once (assumed minimally 1)
+ */
+void
+gst_base_audio_encoder_set_frame_max (GstBaseAudioEncoder * enc, gint num)
+{
+  g_return_if_fail (GST_IS_BASE_AUDIO_ENCODER (enc));
+
+  enc->priv->ctx.frame_max = num;
+}
+
+/**
+ * gst_base_audio_encoder_get_frame_max:
+ * @enc: a #GstBaseAudioEncoder
+ *
+ * Returns: currently configured maximum handled frames
+ */
+gint
+gst_base_audio_encoder_get_frame_max (GstBaseAudioEncoder * enc)
+{
+  g_return_val_if_fail (GST_IS_BASE_AUDIO_ENCODER (enc), 0);
+
+  return enc->priv->ctx.frame_max;
+}
+
+/**
+ * gst_base_audio_encoder_set_lookahead:
+ * @enc: a #GstBaseAudioEncoder
+ * @num: lookahead
+ *
+ * Sets encoder lookahead (in units of input rate samples)
+ */
+void
+gst_base_audio_encoder_set_lookahead (GstBaseAudioEncoder * enc, gint num)
+{
+  g_return_if_fail (GST_IS_BASE_AUDIO_ENCODER (enc));
+
+  enc->priv->ctx.lookahead = num;
+}
+
+/**
+ * gst_base_audio_encoder_get_lookahead:
+ * @enc: a #GstBaseAudioEncoder
+ *
+ * Returns: currently configured encoder lookahead
+ */
+gint
+gst_base_audio_encoder_get_lookahead (GstBaseAudioEncoder * enc)
+{
+  g_return_val_if_fail (GST_IS_BASE_AUDIO_ENCODER (enc), 0);
+
+  return enc->priv->ctx.lookahead;
+}
+
+/**
+ * gst_base_audio_encoder_set_latency:
+ * @enc: a #GstBaseAudioEncoder
+ * @min: minimum latency
+ * @max: maximum latency
+ *
+ * Sets encoder latency.
+ */
+void
+gst_base_audio_encoder_set_latency (GstBaseAudioEncoder * enc,
+    GstClockTime min, GstClockTime max)
+{
+  g_return_if_fail (GST_IS_BASE_AUDIO_ENCODER (enc));
+
+  GST_OBJECT_LOCK (enc);
+  enc->priv->ctx.min_latency = min;
+  enc->priv->ctx.max_latency = max;
+  GST_OBJECT_UNLOCK (enc);
+}
+
+/**
+ * gst_base_audio_encoder_get_latency:
+ * @enc: a #GstBaseAudioEncoder
+ * @min: a pointer to storage to hold minimum latency
+ * @max: a pointer to storage to hold maximum latency
+ *
+ * Returns currently configured latency.
+ */
+void
+gst_base_audio_encoder_get_latency (GstBaseAudioEncoder * enc,
+    GstClockTime * min, GstClockTime * max)
+{
+  g_return_if_fail (GST_IS_BASE_AUDIO_ENCODER (enc));
+
+  GST_OBJECT_LOCK (enc);
+  if (min)
+    *min = enc->priv->ctx.min_latency;
+  if (max)
+    *max = enc->priv->ctx.max_latency;
+  GST_OBJECT_UNLOCK (enc);
 }
