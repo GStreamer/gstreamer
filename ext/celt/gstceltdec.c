@@ -734,7 +734,12 @@ celt_dec_chain_parse_data (GstCeltDec * dec, GstBuffer * buf,
   }
 
   if (dec->discont) {
+#ifdef CELT_GET_LOOKAHEAD_REQUEST
+    /* what will be 0.11.5, I guess, but no versioning yet in git */
+    celt_decoder_ctl (dec->state, CELT_GET_LOOKAHEAD_REQUEST, &skip);
+#else
     celt_mode_info (dec->mode, CELT_GET_LOOKAHEAD, &skip);
+#endif
   }
 
   res = gst_pad_alloc_buffer_and_set_caps (dec->srcpad,
