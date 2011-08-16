@@ -155,7 +155,7 @@ gst_dp_header_from_buffer_any (const GstBuffer * buffer, GstDPHeaderFlag flags,
 
   /* data flags; eats two bytes from the ABI area */
   /* we copy everything but the read-only flags */
-  flags_mask = GST_BUFFER_FLAG_PREROLL | GST_BUFFER_FLAG_DISCONT |
+  flags_mask = GST_BUFFER_FLAG_LIVE | GST_BUFFER_FLAG_DISCONT |
       GST_BUFFER_FLAG_IN_CAPS | GST_BUFFER_FLAG_GAP |
       GST_BUFFER_FLAG_DELTA_UNIT;
 
