@@ -242,8 +242,6 @@ gst_hls_demux_init (GstHLSDemux * demux, GstHLSDemuxClass * klass)
   g_static_rec_mutex_init (&demux->task_lock);
   demux->task = gst_task_create ((GstTaskFunction) gst_hls_demux_loop, demux);
   gst_task_set_lock (demux->task, &demux->task_lock);
-
-  demux->position = 0;
 }
 
 static void
@@ -314,11 +312,89 @@ gst_hls_demux_change_state (GstElement * element, GstStateChange transition)
 static gboolean
 gst_hls_demux_src_event (GstPad * pad, GstEvent * event)
 {
+  GstHLSDemux *demux;
+
+  demux = GST_HLS_DEMUX (gst_pad_get_element_private (pad));
+
   switch (event->type) {
-      /* FIXME: ignore seek event for the moment */
     case GST_EVENT_SEEK:
-      gst_event_unref (event);
-      return FALSE;
+    {
+      gdouble rate;
+      GstFormat format;
+      GstSeekFlags flags;
+      GstSeekType start_type, stop_type;
+      gint64 start, stop;
+      GList *walk;
+      gint current_pos;
+      gint current_sequence;
+      gint target_second;
+      GstM3U8MediaFile *file;
+
+      GST_INFO_OBJECT (demux, "Received GST_EVENT_SEEK");
+      gst_event_parse_seek (event, &rate, &format, &flags, &start_type, &start,
+          &stop_type, &stop);
+
+      if (format != GST_FORMAT_TIME)
+        return FALSE;
+
+      GST_DEBUG_OBJECT (demux, "seek event, rate: %f start: %" GST_TIME_FORMAT
+          " stop: %" GST_TIME_FORMAT, rate, GST_TIME_ARGS (start),
+          GST_TIME_ARGS (stop));
+
+      file = GST_M3U8_MEDIA_FILE (demux->client->current->files->data);
+      current_sequence = file->sequence;
+      current_pos = 0;
+      target_second = start / GST_SECOND;
+      GST_DEBUG_OBJECT (demux, "Target seek to %d", target_second);
+      for (walk = demux->client->current->files; walk; walk = walk->next) {
+        file = walk->data;
+
+        current_sequence = file->sequence;
+        if (current_pos <= target_second
+            && target_second < current_pos + file->duration) {
+          break;
+        }
+        current_pos += file->duration;
+      }
+
+      if (walk == NULL) {
+        GST_WARNING_OBJECT (demux, "Could not find seeked fragment");
+        return FALSE;
+      }
+
+      if (flags & GST_SEEK_FLAG_FLUSH) {
+        GST_DEBUG_OBJECT (demux, "sending flush start");
+        gst_pad_push_event (demux->srcpad, gst_event_new_flush_start ());
+      }
+
+      gst_hls_demux_stop_fetcher (demux, TRUE);
+      gst_task_pause (demux->task);
+      g_cond_signal (demux->thread_cond);
+
+      /* wait for streaming to finish */
+      GST_PAD_STREAM_LOCK (demux->srcpad);
+
+      demux->need_cache = TRUE;
+      while (!g_queue_is_empty (demux->queue)) {
+        GstBuffer *buf = g_queue_pop_head (demux->queue);
+        gst_buffer_unref (buf);
+      }
+
+      GST_DEBUG_OBJECT (demux, "seeking to sequence %d", current_sequence);
+      demux->client->sequence = current_sequence;
+      demux->position = start;
+      demux->need_segment = TRUE;
+
+      if (flags & GST_SEEK_FLAG_FLUSH) {
+        GST_DEBUG_OBJECT (demux, "sending flush stop");
+        gst_pad_push_event (demux->srcpad, gst_event_new_flush_stop ());
+      }
+
+      gst_task_start (demux->task);
+      GST_PAD_STREAM_UNLOCK (demux->srcpad);
+
+      return TRUE;
+    }
     default:
       break;
   }
@@ -746,6 +822,9 @@ gst_hls_demux_reset (GstHLSDemux * demux, gboolean dispose)
     gst_buffer_unref (buf);
   }
   g_queue_clear (demux->queue);
+
+  demux->position = 0;
+  demux->need_segment = TRUE;
 }
 
 static gboolean
