@@ -581,7 +581,7 @@ gst_flac_parse_frame_is_valid (GstFlacParse * flacparse,
   data = GST_BUFFER_DATA (buffer);
   size = GST_BUFFER_SIZE (buffer);
 
-  if (size <= flacparse->min_framesize)
+  if (size < flacparse->min_framesize)
     goto need_more;
 
   header_ret =
