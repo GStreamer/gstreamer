@@ -279,6 +279,7 @@ gst_base_src_get_type (void)
 }
 
 static GstCaps *gst_base_src_getcaps (GstPad * pad, GstCaps * filter);
+static void gst_base_src_default_fixate (GstBaseSrc * src, GstCaps * caps);
 static void gst_base_src_fixate (GstPad * pad, GstCaps * caps);
 
 static gboolean gst_base_src_is_random_access (GstBaseSrc * src);
@@ -375,6 +376,7 @@ gst_base_src_class_init (GstBaseSrcClass * klass)
   klass->query = GST_DEBUG_FUNCPTR (gst_base_src_default_query);
   klass->prepare_seek_segment =
       GST_DEBUG_FUNCPTR (gst_base_src_default_prepare_seek_segment);
+  klass->fixate = GST_DEBUG_FUNCPTR (gst_base_src_default_fixate);
   klass->create = GST_DEBUG_FUNCPTR (gst_base_src_default_create);
   klass->alloc = GST_DEBUG_FUNCPTR (gst_base_src_default_alloc);
 
@@ -839,6 +841,13 @@ gst_base_src_getcaps (GstPad * pad, GstCaps * filter)
     }
   }
   return caps;
+}
+
+static void
+gst_base_src_default_fixate (GstBaseSrc * src, GstCaps * caps)
+{
+  GST_DEBUG_OBJECT (src, "using default caps fixate function");
+  gst_caps_fixate (caps);
 }
 
 static void
@@ -2784,6 +2793,7 @@ gst_base_src_default_negotiate (GstBaseSrc * basesrc)
     /* now fixate */
     GST_DEBUG_OBJECT (basesrc, "have caps: %" GST_PTR_FORMAT, caps);
     if (gst_caps_is_any (caps)) {
+      GST_DEBUG_OBJECT (basesrc, "any caps, we stop");
       /* hmm, still anything, so element can do anything and
        * nego is not needed */
       result = TRUE;
