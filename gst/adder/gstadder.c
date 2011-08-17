@@ -729,9 +729,6 @@ gst_adder_src_event (GstPad * pad, GstEvent * event)
         adder->segment.stop = end;
       else
         adder->segment.stop = GST_CLOCK_TIME_NONE;
-      /* make sure we push a new segment, to inform about new basetime
-       * see FIXME in gst_adder_collected() */
-      adder->segment_pending = TRUE;
       if (flush) {
         /* Yes, we need to call _set_flushing again *WHEN* the streaming threads
          * have stopped so that the cookie gets properly updated. */
@@ -825,7 +822,7 @@ gst_adder_sink_event (GstPad * pad, GstEvent * event)
       adder->pending_events = g_list_append (adder->pending_events, event);
       GST_OBJECT_UNLOCK (adder->collect);
       goto beach;
-    case GST_EVENT_NEWSEGMENT:
+    case GST_EVENT_SEGMENT:
       if (g_atomic_int_compare_and_exchange (&adder->wait_for_new_segment,
               TRUE, FALSE)) {
         /* make sure we push a new segment, to inform about new basetime
