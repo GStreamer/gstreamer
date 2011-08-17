@@ -474,6 +474,7 @@ setup_dirac_mapper (GstOggStream * pad, ogg_packet * packet)
   }
 
   pad->is_video = TRUE;
+  pad->always_flush_page = TRUE;
   pad->granulerate_n = header.frame_rate_numerator * 2;
   pad->granulerate_d = header.frame_rate_denominator;
   pad->granuleshift = 22;
@@ -1668,6 +1669,7 @@ setup_cmml_mapper (GstOggStream * pad, ogg_packet * packet)
   GST_DEBUG ("blocksize1: %u", 1 << (data[0] & 0x0F));
 
   pad->caps = gst_caps_new_simple ("text/x-cmml", NULL);
+  pad->always_flush_page = TRUE;
   pad->is_sparse = TRUE;
 
   return TRUE;
@@ -1729,6 +1731,7 @@ setup_kate_mapper (GstOggStream * pad, ogg_packet * packet)
   }
 
   pad->is_sparse = TRUE;
+  pad->always_flush_page = TRUE;
 
   return TRUE;
 }

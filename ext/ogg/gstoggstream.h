@@ -73,6 +73,8 @@ struct _GstOggStream
   GstCaps *caps;
 
   gboolean is_video;
+  gboolean always_flush_page;
+
   /* vorbis stuff */
   int nln_increments[4];
   int nsn_increment;

@@ -83,8 +83,6 @@ typedef struct
   gint64  keyframe_granule;     /* granule of last preceding keyframe */
 
   GstPadEventFunction collect_event;
-
-  gboolean always_flush_page;
 }
 GstOggPadData;
 

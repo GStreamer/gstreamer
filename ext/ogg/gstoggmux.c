@@ -1069,13 +1069,9 @@ gst_ogg_mux_get_headers (GstOggPadData * pad)
         GST_LOG_OBJECT (thepad, "streamheader is not fixed list");
       }
 
-      /* Start a new page for every CMML buffer */
-      if (gst_structure_has_name (structure, "text/x-cmml"))
-        pad->always_flush_page = TRUE;
     } else if (gst_structure_has_name (structure, "video/x-dirac")) {
       res = g_list_append (res, pad->buffer);
       pad->buffer = NULL;
-      pad->always_flush_page = TRUE;
     } else {
       GST_LOG_OBJECT (thepad, "caps don't have streamheader");
     }
@@ -1246,9 +1242,6 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
       hbufs = g_list_append (hbufs, hbuf);
     }
 
-    if (gst_structure_has_name (structure, "video/x-dirac")) {
-      pad->always_flush_page = TRUE;
-    }
     gst_caps_unref (caps);
   }
 
@@ -1494,7 +1487,8 @@ gst_ogg_mux_process_best_pad (GstOggMux * ogg_mux, GstOggPadData * best)
     tmpbuf = NULL;
 
     /* we flush when we see a new keyframe */
-    force_flush = (pad->prev_delta && !delta_unit) || pad->always_flush_page;
+    force_flush = (pad->prev_delta && !delta_unit)
+        || pad->map.always_flush_page;
     if (duration != -1) {
       pad->duration += duration;
       /* if page duration exceeds max, flush page */
