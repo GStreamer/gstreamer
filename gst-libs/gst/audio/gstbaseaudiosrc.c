@@ -529,6 +529,8 @@ gst_base_audio_src_fixate (GstBaseSrc * bsrc, GstCaps * caps)
     gst_structure_fixate_field_boolean (s, "signed", TRUE);
   if (gst_structure_has_field (s, "endianness"))
     gst_structure_fixate_field_nearest_int (s, "endianness", G_BYTE_ORDER);
+
+  GST_BASE_SRC_CLASS (parent_class)->fixate (bsrc, caps);
 }
 
 static gboolean
