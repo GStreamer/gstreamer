@@ -46,8 +46,6 @@ G_BEGIN_DECLS
 typedef struct _GstJpegEnc GstJpegEnc;
 typedef struct _GstJpegEncClass GstJpegEncClass;
 
-#define GST_JPEG_ENC_MAX_COMPONENT  4
-
 struct _GstJpegEnc
 {
   GstElement element;
@@ -56,20 +54,15 @@ struct _GstJpegEnc
   GstPad *sinkpad, *srcpad;
 
   /* stream/image properties */
-  GstVideoFormat format;
-  gint width;
-  gint height;
+  GstVideoInfo info;
   gint channels;
-  gint fps_num, fps_den;
-  gint par_num, par_den;
+
   /* standard video_format indexed */
-  gint stride[GST_JPEG_ENC_MAX_COMPONENT];
-  gint offset[GST_JPEG_ENC_MAX_COMPONENT];
-  gint inc[GST_JPEG_ENC_MAX_COMPONENT];
-  gint cwidth[GST_JPEG_ENC_MAX_COMPONENT];
-  gint cheight[GST_JPEG_ENC_MAX_COMPONENT];
-  gint h_samp[GST_JPEG_ENC_MAX_COMPONENT];
-  gint v_samp[GST_JPEG_ENC_MAX_COMPONENT];
+  gint inc[GST_VIDEO_MAX_COMPONENTS];
+  gint cwidth[GST_VIDEO_MAX_COMPONENTS];
+  gint cheight[GST_VIDEO_MAX_COMPONENTS];
+  gint h_samp[GST_VIDEO_MAX_COMPONENTS];
+  gint v_samp[GST_VIDEO_MAX_COMPONENTS];
   gint h_max_samp;
   gint v_max_samp;
   gboolean planar;
@@ -92,15 +85,14 @@ struct _GstJpegEnc
   /* cached return state for any problems that may occur in callbacks */
   GstFlowReturn last_ret;
 
-  GstBuffer *output_buffer;
+  GstMemory *output_mem;
+  gpointer output_data;
+  gsize output_size;
 };
 
 struct _GstJpegEncClass
 {
   GstElementClass parent_class;
-
-  /* signals */
-  void (*frame_encoded) (GstElement * element);
 };
 
 GType gst_jpegenc_get_type (void);

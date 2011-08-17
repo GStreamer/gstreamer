@@ -315,7 +315,7 @@ dnl Make sure you have a space before and after all plugins
 GST_PLUGINS_NONPORTED=" deinterlace flx goom2k1 icydemux id3demux \
  imagefreeze interleave law matroska monoscope shapewipe smpte \
  videobox videocrop videomixer \
- annodex apetag cairo cairo_gobject dv1394 flac gdk_pixbuf jpeg libdv libpng \
+ annodex apetag cairo cairo_gobject dv1394 flac gdk_pixbuf libdv libpng \
  oss oss4 shout2 \
  soup taglib wavpack "
 AC_SUBST(GST_PLUGINS_NONPORTED)

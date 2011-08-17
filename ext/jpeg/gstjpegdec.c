@@ -66,12 +66,10 @@ static GstStaticPadTemplate gst_jpeg_dec_src_pad_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("I420") "; "
-        GST_VIDEO_CAPS_RGB "; " GST_VIDEO_CAPS_BGR "; "
-        GST_VIDEO_CAPS_RGBx "; " GST_VIDEO_CAPS_xRGB "; "
-        GST_VIDEO_CAPS_BGRx "; " GST_VIDEO_CAPS_xBGR "; "
-        GST_VIDEO_CAPS_GRAY8)
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE
+        ("{ I420, RGB, BGR, RGBx, xRGB, BGRx, xBGR, GRAY8 }"))
     );
+
 /* *INDENT-ON* */
 
 static GstStaticPadTemplate gst_jpeg_dec_sink_pad_template =
@@ -88,31 +86,12 @@ GST_DEBUG_CATEGORY_STATIC (jpeg_dec_debug);
 #define GST_CAT_DEFAULT jpeg_dec_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_PERFORMANCE);
 
-/* These macros are adapted from videotestsrc.c 
- *  and/or gst-plugins/gst/games/gstvideoimage.c */
-#define I420_Y_ROWSTRIDE(width) (GST_ROUND_UP_4(width))
-#define I420_U_ROWSTRIDE(width) (GST_ROUND_UP_8(width)/2)
-#define I420_V_ROWSTRIDE(width) ((GST_ROUND_UP_8(I420_Y_ROWSTRIDE(width)))/2)
-
-#define I420_Y_OFFSET(w,h) (0)
-#define I420_U_OFFSET(w,h) (I420_Y_OFFSET(w,h)+(I420_Y_ROWSTRIDE(w)*GST_ROUND_UP_2(h)))
-#define I420_V_OFFSET(w,h) (I420_U_OFFSET(w,h)+(I420_U_ROWSTRIDE(w)*GST_ROUND_UP_2(h)/2))
-
-#define I420_SIZE(w,h)     (I420_V_OFFSET(w,h)+(I420_V_ROWSTRIDE(w)*GST_ROUND_UP_2(h)/2))
-
-static GstElementClass *parent_class;   /* NULL */
-
-static void gst_jpeg_dec_base_init (gpointer g_class);
-static void gst_jpeg_dec_class_init (GstJpegDecClass * klass);
-static void gst_jpeg_dec_init (GstJpegDec * jpegdec);
-
 static void gst_jpeg_dec_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_jpeg_dec_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 static GstFlowReturn gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buffer);
-static gboolean gst_jpeg_dec_setcaps (GstPad * pad, GstCaps * caps);
 static gboolean gst_jpeg_dec_sink_event (GstPad * pad, GstEvent * event);
 static gboolean gst_jpeg_dec_src_event (GstPad * pad, GstEvent * event);
 static GstStateChangeReturn gst_jpeg_dec_change_state (GstElement * element,
@@ -123,29 +102,8 @@ static void gst_jpeg_dec_reset_qos (GstJpegDec * dec);
 static void gst_jpeg_dec_read_qos (GstJpegDec * dec, gdouble * proportion,
     GstClockTime * time);
 
-GType
-gst_jpeg_dec_get_type (void)
-{
-  static GType type = 0;
-
-  if (!type) {
-    static const GTypeInfo jpeg_dec_info = {
-      sizeof (GstJpegDecClass),
-      (GBaseInitFunc) gst_jpeg_dec_base_init,
-      NULL,
-      (GClassInitFunc) gst_jpeg_dec_class_init,
-      NULL,
-      NULL,
-      sizeof (GstJpegDec),
-      0,
-      (GInstanceInitFunc) gst_jpeg_dec_init,
-    };
-
-    type = g_type_register_static (GST_TYPE_ELEMENT, "GstJpegDec",
-        &jpeg_dec_info, 0);
-  }
-  return type;
-}
+#define gst_jpeg_dec_parent_class parent_class
+G_DEFINE_TYPE (GstJpegDec, gst_jpeg_dec, GST_TYPE_ELEMENT);
 
 static void
 gst_jpeg_dec_finalize (GObject * object)
@@ -157,20 +115,6 @@ gst_jpeg_dec_finalize (GObject * object)
   g_object_unref (dec->adapter);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
-}
-
-static void
-gst_jpeg_dec_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_jpeg_dec_src_pad_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_jpeg_dec_sink_pad_template));
-  gst_element_class_set_details_simple (element_class, "JPEG image decoder",
-      "Codec/Decoder/Image",
-      "Decode images from JPEG format", "Wim Taymans <wim@fluendo.com>");
 }
 
 static void
@@ -208,6 +152,14 @@ gst_jpeg_dec_class_init (GstJpegDecClass * klass)
           "(-1 = never fail, 0 = automatic, 1 = fail on first error)",
           -1, G_MAXINT, JPEG_DEFAULT_MAX_ERRORS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_jpeg_dec_src_pad_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_jpeg_dec_sink_pad_template));
+  gst_element_class_set_details_simple (gstelement_class, "JPEG image decoder",
+      "Codec/Decoder/Image",
+      "Decode images from JPEG format", "Wim Taymans <wim@fluendo.com>");
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_jpeg_dec_change_state);
@@ -404,8 +356,6 @@ gst_jpeg_dec_init (GstJpegDec * dec)
       gst_pad_new_from_static_template (&gst_jpeg_dec_sink_pad_template,
       "sink");
   gst_element_add_pad (GST_ELEMENT (dec), dec->sinkpad);
-  gst_pad_set_setcaps_function (dec->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_jpeg_dec_setcaps));
   gst_pad_set_chain_function (dec->sinkpad,
       GST_DEBUG_FUNCPTR (gst_jpeg_dec_chain));
   gst_pad_set_event_function (dec->sinkpad,
@@ -743,21 +693,19 @@ guarantee_huff_tables (j_decompress_ptr dinfo)
 }
 
 static gboolean
-gst_jpeg_dec_setcaps (GstPad * pad, GstCaps * caps)
+gst_jpeg_dec_setcaps (GstJpegDec * dec, GstCaps * caps)
 {
   GstStructure *s;
-  GstJpegDec *dec;
   const GValue *framerate;
 
-  dec = GST_JPEG_DEC (GST_OBJECT_PARENT (pad));
   s = gst_caps_get_structure (caps, 0);
 
   if ((framerate = gst_structure_get_value (s, "framerate")) != NULL) {
-    dec->framerate_numerator = gst_value_get_fraction_numerator (framerate);
-    dec->framerate_denominator = gst_value_get_fraction_denominator (framerate);
+    dec->in_fps_n = gst_value_get_fraction_numerator (framerate);
+    dec->in_fps_d = gst_value_get_fraction_denominator (framerate);
     dec->packetized = TRUE;
     GST_DEBUG ("got framerate of %d/%d fps => packetized mode",
-        dec->framerate_numerator, dec->framerate_denominator);
+        dec->in_fps_n, dec->in_fps_d);
   }
 
   /* do not extract width/height here. we do that in the chain
@@ -806,7 +754,7 @@ gst_jpeg_dec_ensure_buffers (GstJpegDec * dec, guint maxrowbytes)
 {
   gint i;
 
-  if (G_LIKELY (dec->idr_width_allocated == maxrowbytes))
+  if (G_LIKELY (dec->idr_width_allocated >= maxrowbytes))
     return TRUE;
 
   /* FIXME: maybe just alloc one or three blocks altogether? */
@@ -827,18 +775,27 @@ gst_jpeg_dec_ensure_buffers (GstJpegDec * dec, guint maxrowbytes)
 }
 
 static void
-gst_jpeg_dec_decode_grayscale (GstJpegDec * dec, guchar * base[1],
-    guint width, guint height, guint pstride, guint rstride)
+gst_jpeg_dec_decode_grayscale (GstJpegDec * dec, GstVideoFrame * frame)
 {
   guchar *rows[16];
   guchar **scanarray[1] = { rows };
   gint i, j, k;
   gint lines;
+  guint8 *base[1];
+  gint width, height;
+  gint pstride, rstride;
 
   GST_DEBUG_OBJECT (dec, "indirect decoding of grayscale");
 
+  width = GST_VIDEO_FRAME_WIDTH (frame);
+  height = GST_VIDEO_FRAME_HEIGHT (frame);
+
   if (G_UNLIKELY (!gst_jpeg_dec_ensure_buffers (dec, GST_ROUND_UP_32 (width))))
     return;
+
+  base[0] = GST_VIDEO_FRAME_COMP_DATA (frame, 0);
+  pstride = GST_VIDEO_FRAME_COMP_PSTRIDE (frame, 0);
+  rstride = GST_VIDEO_FRAME_COMP_STRIDE (frame, 0);
 
   memcpy (rows, dec->idr_y, 16 * sizeof (gpointer));
 
@@ -863,18 +820,29 @@ gst_jpeg_dec_decode_grayscale (GstJpegDec * dec, guchar * base[1],
 }
 
 static void
-gst_jpeg_dec_decode_rgb (GstJpegDec * dec, guchar * base[3],
-    guint width, guint height, guint pstride, guint rstride)
+gst_jpeg_dec_decode_rgb (GstJpegDec * dec, GstVideoFrame * frame)
 {
   guchar *r_rows[16], *g_rows[16], *b_rows[16];
   guchar **scanarray[3] = { r_rows, g_rows, b_rows };
   gint i, j, k;
   gint lines;
+  guint8 *base[3];
+  guint pstride, rstride;
+  gint width, height;
 
   GST_DEBUG_OBJECT (dec, "indirect decoding of RGB");
 
+  width = GST_VIDEO_FRAME_WIDTH (frame);
+  height = GST_VIDEO_FRAME_HEIGHT (frame);
+
   if (G_UNLIKELY (!gst_jpeg_dec_ensure_buffers (dec, GST_ROUND_UP_32 (width))))
     return;
+
+  for (i = 0; i < 3; i++)
+    base[i] = GST_VIDEO_FRAME_COMP_DATA (frame, i);
+
+  pstride = GST_VIDEO_FRAME_COMP_PSTRIDE (frame, 0);
+  rstride = GST_VIDEO_FRAME_COMP_STRIDE (frame, 0);
 
   memcpy (r_rows, dec->idr_y, 16 * sizeof (gpointer));
   memcpy (g_rows, dec->idr_u, 16 * sizeof (gpointer));
@@ -905,19 +873,34 @@ gst_jpeg_dec_decode_rgb (GstJpegDec * dec, guchar * base[3],
 }
 
 static void
-gst_jpeg_dec_decode_indirect (GstJpegDec * dec, guchar * base[3],
-    guchar * last[3], guint width, guint height, gint r_v, gint r_h, gint comp)
+gst_jpeg_dec_decode_indirect (GstJpegDec * dec, GstVideoFrame * frame,
+    gint r_v, gint r_h, gint comp)
 {
   guchar *y_rows[16], *u_rows[16], *v_rows[16];
   guchar **scanarray[3] = { y_rows, u_rows, v_rows };
   gint i, j, k;
   gint lines;
+  guchar *base[3], *last[3];
+  gint stride[3];
+  gint width, height;
 
   GST_DEBUG_OBJECT (dec,
       "unadvantageous width or r_h, taking slow route involving memcpy");
 
+  width = GST_VIDEO_FRAME_WIDTH (frame);
+  height = GST_VIDEO_FRAME_HEIGHT (frame);
+
   if (G_UNLIKELY (!gst_jpeg_dec_ensure_buffers (dec, GST_ROUND_UP_32 (width))))
     return;
+
+  for (i = 0; i < 3; i++) {
+    base[i] = GST_VIDEO_FRAME_COMP_DATA (frame, i);
+    stride[i] = GST_VIDEO_FRAME_COMP_STRIDE (frame, i);
+    /* make sure we don't make jpeglib write beyond our buffer,
+     * which might happen if (height % (r_v*DCTSIZE)) != 0 */
+    last[i] = base[i] + (GST_VIDEO_FRAME_COMP_STRIDE (frame, i) *
+        (GST_VIDEO_FRAME_COMP_HEIGHT (frame, i) - 1));
+  }
 
   memcpy (y_rows, dec->idr_y, 16 * sizeof (gpointer));
   memcpy (u_rows, dec->idr_u, 16 * sizeof (gpointer));
@@ -937,30 +920,30 @@ gst_jpeg_dec_decode_indirect (GstJpegDec * dec, guchar * base[3],
     if (G_LIKELY (lines > 0)) {
       for (j = 0, k = 0; j < (r_v * DCTSIZE); j += r_v, k++) {
         if (G_LIKELY (base[0] <= last[0])) {
-          memcpy (base[0], y_rows[j], I420_Y_ROWSTRIDE (width));
-          base[0] += I420_Y_ROWSTRIDE (width);
+          memcpy (base[0], y_rows[j], stride[0]);
+          base[0] += stride[0];
         }
         if (r_v == 2) {
           if (G_LIKELY (base[0] <= last[0])) {
-            memcpy (base[0], y_rows[j + 1], I420_Y_ROWSTRIDE (width));
-            base[0] += I420_Y_ROWSTRIDE (width);
+            memcpy (base[0], y_rows[j + 1], stride[0]);
+            base[0] += stride[0];
           }
         }
         if (G_LIKELY (base[1] <= last[1] && base[2] <= last[2])) {
           if (r_h == 2) {
-            memcpy (base[1], u_rows[k], I420_U_ROWSTRIDE (width));
-            memcpy (base[2], v_rows[k], I420_V_ROWSTRIDE (width));
+            memcpy (base[1], u_rows[k], stride[1]);
+            memcpy (base[2], v_rows[k], stride[2]);
           } else if (r_h == 1) {
-            hresamplecpy1 (base[1], u_rows[k], I420_U_ROWSTRIDE (width));
-            hresamplecpy1 (base[2], v_rows[k], I420_V_ROWSTRIDE (width));
+            hresamplecpy1 (base[1], u_rows[k], stride[1]);
+            hresamplecpy1 (base[2], v_rows[k], stride[2]);
           } else {
             /* FIXME: implement (at least we avoid crashing by doing nothing) */
           }
         }
 
         if (r_v == 2 || (k & 1) != 0) {
-          base[1] += I420_U_ROWSTRIDE (width);
-          base[2] += I420_V_ROWSTRIDE (width);
+          base[1] += stride[1];
+          base[2] += stride[2];
         }
       }
     } else {
@@ -969,27 +952,8 @@ gst_jpeg_dec_decode_indirect (GstJpegDec * dec, guchar * base[3],
   }
 }
 
-#ifndef GST_DISABLE_GST_DEBUG
-static inline void
-dump_lines (guchar * base[3], guchar ** line[3], int v_samp0, int width)
-{
-  int j;
-
-  for (j = 0; j < (v_samp0 * DCTSIZE); ++j) {
-    GST_LOG ("[%02d]  %5d  %5d  %5d", j,
-        (line[0][j] >= base[0]) ?
-        (int) (line[0][j] - base[0]) / I420_Y_ROWSTRIDE (width) : -1,
-        (line[1][j] >= base[1]) ?
-        (int) (line[1][j] - base[1]) / I420_U_ROWSTRIDE (width) : -1,
-        (line[2][j] >= base[2]) ?
-        (int) (line[2][j] - base[2]) / I420_V_ROWSTRIDE (width) : -1);
-  }
-}
-#endif
-
 static GstFlowReturn
-gst_jpeg_dec_decode_direct (GstJpegDec * dec, guchar * base[3],
-    guchar * last[3], guint width, guint height)
+gst_jpeg_dec_decode_direct (GstJpegDec * dec, GstVideoFrame * frame)
 {
   guchar **line[3];             /* the jpeg line buffer         */
   guchar *y[4 * DCTSIZE] = { NULL, };   /* alloc enough for the lines   */
@@ -997,6 +961,9 @@ gst_jpeg_dec_decode_direct (GstJpegDec * dec, guchar * base[3],
   guchar *v[4 * DCTSIZE] = { NULL, };
   gint i, j;
   gint lines, v_samp[3];
+  guchar *base[3], *last[3];
+  gint stride[3];
+  guint width, height;
 
   line[0] = y;
   line[1] = u;
@@ -1009,34 +976,44 @@ gst_jpeg_dec_decode_direct (GstJpegDec * dec, guchar * base[3],
   if (G_UNLIKELY (v_samp[0] > 2 || v_samp[1] > 2 || v_samp[2] > 2))
     goto format_not_supported;
 
+  width = GST_VIDEO_FRAME_WIDTH (frame);
+  height = GST_VIDEO_FRAME_HEIGHT (frame);
+
+  for (i = 0; i < 3; i++) {
+    base[i] = GST_VIDEO_FRAME_COMP_DATA (frame, i);
+    stride[i] = GST_VIDEO_FRAME_COMP_STRIDE (frame, i);
+    /* make sure we don't make jpeglib write beyond our buffer,
+     * which might happen if (height % (r_v*DCTSIZE)) != 0 */
+    last[i] = base[i] + (GST_VIDEO_FRAME_COMP_STRIDE (frame, i) *
+        (GST_VIDEO_FRAME_COMP_HEIGHT (frame, i) - 1));
+  }
+
   /* let jpeglib decode directly into our final buffer */
   GST_DEBUG_OBJECT (dec, "decoding directly into output buffer");
 
   for (i = 0; i < height; i += v_samp[0] * DCTSIZE) {
     for (j = 0; j < (v_samp[0] * DCTSIZE); ++j) {
       /* Y */
-      line[0][j] = base[0] + (i + j) * I420_Y_ROWSTRIDE (width);
+      line[0][j] = base[0] + (i + j) * stride[0];
       if (G_UNLIKELY (line[0][j] > last[0]))
         line[0][j] = last[0];
       /* U */
       if (v_samp[1] == v_samp[0]) {
-        line[1][j] = base[1] + ((i + j) / 2) * I420_U_ROWSTRIDE (width);
+        line[1][j] = base[1] + ((i + j) / 2) * stride[1];
       } else if (j < (v_samp[1] * DCTSIZE)) {
-        line[1][j] = base[1] + ((i / 2) + j) * I420_U_ROWSTRIDE (width);
+        line[1][j] = base[1] + ((i / 2) + j) * stride[1];
       }
       if (G_UNLIKELY (line[1][j] > last[1]))
         line[1][j] = last[1];
       /* V */
       if (v_samp[2] == v_samp[0]) {
-        line[2][j] = base[2] + ((i + j) / 2) * I420_V_ROWSTRIDE (width);
+        line[2][j] = base[2] + ((i + j) / 2) * stride[2];
       } else if (j < (v_samp[2] * DCTSIZE)) {
-        line[2][j] = base[2] + ((i / 2) + j) * I420_V_ROWSTRIDE (width);
+        line[2][j] = base[2] + ((i / 2) + j) * stride[2];
       }
       if (G_UNLIKELY (line[2][j] > last[2]))
         line[2][j] = last[2];
     }
-
-    /* dump_lines (base, line, v_samp[0], width); */
 
     lines = jpeg_read_raw_data (&dec->cinfo, line, v_samp[0] * DCTSIZE);
     if (G_UNLIKELY (!lines)) {
@@ -1127,38 +1104,96 @@ gst_jpeg_dec_do_qos (GstJpegDec * dec, GstClockTime timestamp)
   return TRUE;
 }
 
-static void
+static gboolean
+gst_jpeg_dec_buffer_pool (GstJpegDec * dec, GstCaps * caps)
+{
+  GstQuery *query;
+  GstBufferPool *pool = NULL;
+  guint size, min, max, prefix, alignment;
+  GstStructure *config;
+
+  GST_DEBUG_OBJECT (dec, "setting up bufferpool");
+
+  /* find a pool for the negotiated caps now */
+  query = gst_query_new_allocation (caps, TRUE);
+
+  if (gst_pad_peer_query (dec->srcpad, query)) {
+    /* we got configuration from our peer, parse them */
+    gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
+        &alignment, &pool);
+    size = MAX (size, dec->info.size);
+  } else {
+    GST_DEBUG_OBJECT (dec, "peer query failed, using defaults");
+    size = dec->info.size;
+    min = max = 0;
+    prefix = 0;
+    alignment = 15;
+  }
+  gst_query_unref (query);
+
+  if (pool == NULL) {
+    /* we did not get a pool, make one ourselves then */
+    pool = gst_buffer_pool_new ();
+  }
+
+  config = gst_buffer_pool_get_config (pool);
+  gst_buffer_pool_config_set (config, caps, size, min, max, prefix,
+      alignment | 15);
+  /* and store */
+  gst_buffer_pool_set_config (pool, config);
+
+  if (dec->pool) {
+    gst_buffer_pool_set_active (dec->pool, FALSE);
+    gst_object_unref (dec->pool);
+  }
+  dec->pool = pool;
+
+  /* and activate */
+  gst_buffer_pool_set_active (pool, TRUE);
+
+  return TRUE;
+}
+
+static gboolean
 gst_jpeg_dec_negotiate (GstJpegDec * dec, gint width, gint height, gint clrspc)
 {
   GstCaps *caps;
   GstVideoFormat format;
+  GstVideoInfo info;
 
-  if (G_UNLIKELY (width == dec->caps_width && height == dec->caps_height &&
-          dec->framerate_numerator == dec->caps_framerate_numerator &&
-          dec->framerate_denominator == dec->caps_framerate_denominator &&
-          clrspc == dec->clrspc))
-    return;
+  if (G_UNLIKELY (width == dec->info.width && height == dec->info.height &&
+          dec->in_fps_n == dec->info.fps_n && dec->in_fps_d == dec->info.fps_d
+          && clrspc == dec->clrspc))
+    return TRUE;
+
+  gst_video_info_init (&info);
 
   /* framerate == 0/1 is a still frame */
-  if (dec->framerate_denominator == 0) {
-    dec->framerate_numerator = 0;
-    dec->framerate_denominator = 1;
+  if (dec->in_fps_d == 0) {
+    info.fps_n = 0;
+    info.fps_d = 1;
+  } else {
+    info.fps_n = dec->in_fps_n;
+    info.fps_d = dec->in_fps_d;
   }
 
   /* calculate or assume an average frame duration for QoS purposes */
   GST_OBJECT_LOCK (dec);
-  if (dec->framerate_numerator != 0) {
-    dec->qos_duration = gst_util_uint64_scale (GST_SECOND,
-        dec->framerate_denominator, dec->framerate_numerator);
+  if (info.fps_n != 0) {
+    dec->qos_duration =
+        gst_util_uint64_scale (GST_SECOND, info.fps_d, info.fps_n);
+    dec->duration = dec->qos_duration;
   } else {
     /* if not set just use 25fps */
     dec->qos_duration = gst_util_uint64_scale (GST_SECOND, 1, 25);
+    dec->duration = GST_CLOCK_TIME_NONE;
   }
   GST_OBJECT_UNLOCK (dec);
 
   if (dec->cinfo.jpeg_color_space == JCS_RGB) {
     gint i;
     GstCaps *allowed_caps;
+    GstVideoInfo tmpinfo;
 
     GST_DEBUG_OBJECT (dec, "selecting RGB format");
     /* retrieve allowed caps, and find the first one that reasonably maps
@@ -1170,7 +1205,7 @@ gst_jpeg_dec_negotiate (GstJpegDec * dec, gint width, gint height, gint clrspc)
        * and get_pad_template_caps doesn't */
       caps = gst_caps_copy (gst_pad_get_pad_template_caps (dec->srcpad));
     }
-    /* avoid lists of fourcc, etc */
+    /* avoid lists of formats, etc */
     allowed_caps = gst_caps_normalize (caps);
     gst_caps_unref (caps);
     caps = NULL;
@@ -1183,10 +1218,11 @@ gst_jpeg_dec_negotiate (GstJpegDec * dec, gint width, gint height, gint clrspc)
       /* sigh, ds and _parse_caps need fixed caps for parsing, fixate */
       gst_pad_fixate_caps (dec->srcpad, caps);
       GST_LOG_OBJECT (dec, "checking caps %" GST_PTR_FORMAT, caps);
-      if (!gst_video_format_parse_caps (caps, &format, NULL, NULL))
+
+      if (!gst_video_info_from_caps (&tmpinfo, caps))
         continue;
       /* we'll settle for the first (preferred) downstream rgb format */
-      if (gst_video_format_is_rgb (format))
+      if (GST_VIDEO_INFO_IS_RGB (&tmpinfo))
         break;
       /* default fall-back */
       format = GST_VIDEO_FORMAT_RGB;
@@ -1194,51 +1230,31 @@ gst_jpeg_dec_negotiate (GstJpegDec * dec, gint width, gint height, gint clrspc)
     if (caps)
       gst_caps_unref (caps);
     gst_caps_unref (allowed_caps);
-    caps = gst_video_format_new_caps (format, width, height,
-        dec->framerate_numerator, dec->framerate_denominator, 1, 1);
-    dec->outsize = gst_video_format_get_size (format, width, height);
-    /* some format info */
-    dec->offset[0] =
-        gst_video_format_get_component_offset (format, 0, width, height);
-    dec->offset[1] =
-        gst_video_format_get_component_offset (format, 1, width, height);
-    dec->offset[2] =
-        gst_video_format_get_component_offset (format, 2, width, height);
-    /* equal for all components */
-    dec->stride = gst_video_format_get_row_stride (format, 0, width);
-    dec->inc = gst_video_format_get_pixel_stride (format, 0);
   } else if (dec->cinfo.jpeg_color_space == JCS_GRAYSCALE) {
     /* TODO is anything else then 8bit supported in jpeg? */
     format = GST_VIDEO_FORMAT_GRAY8;
-    caps = gst_video_format_new_caps (format, width, height,
-        dec->framerate_numerator, dec->framerate_denominator, 1, 1);
-    dec->outsize = gst_video_format_get_size (format, width, height);
-    dec->offset[0] =
-        gst_video_format_get_component_offset (format, 0, width, height);
-    dec->stride = gst_video_format_get_row_stride (format, 0, width);
-    dec->inc = gst_video_format_get_pixel_stride (format, 0);
   } else {
     /* go for plain and simple I420 */
     /* TODO other YUV cases ? */
-    caps = gst_caps_new_simple ("video/x-raw-yuv",
-        "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('I', '4', '2', '0'),
-        "width", G_TYPE_INT, width, "height", G_TYPE_INT, height,
-        "framerate", GST_TYPE_FRACTION, dec->framerate_numerator,
-        dec->framerate_denominator, NULL);
-    dec->outsize = I420_SIZE (width, height);
+    format = GST_VIDEO_FORMAT_I420;
   }
+
+  gst_video_info_set_format (&info, format, width, height);
+  caps = gst_video_info_to_caps (&info);
 
   GST_DEBUG_OBJECT (dec, "setting caps %" GST_PTR_FORMAT, caps);
   GST_DEBUG_OBJECT (dec, "max_v_samp_factor=%d", dec->cinfo.max_v_samp_factor);
   GST_DEBUG_OBJECT (dec, "max_h_samp_factor=%d", dec->cinfo.max_h_samp_factor);
 
   gst_pad_set_caps (dec->srcpad, caps);
+
+  dec->info = info;
+  dec->clrspc = clrspc;
+
+  gst_jpeg_dec_buffer_pool (dec, caps);
   gst_caps_unref (caps);
 
-  dec->caps_width = width;
-  dec->caps_height = height;
-  dec->caps_framerate_numerator = dec->framerate_numerator;
-  dec->caps_framerate_denominator = dec->framerate_denominator;
+  return TRUE;
 }
 
 static GstFlowReturn
@@ -1247,17 +1263,12 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
   GstFlowReturn ret = GST_FLOW_OK;
   GstJpegDec *dec;
   GstBuffer *outbuf = NULL;
-#ifndef GST_DISABLE_GST_DEBUG
-  guchar *data;
-#endif
-  guchar *outdata;
-  guchar *base[3], *last[3];
   gint img_len;
-  guint outsize;
   gint width, height;
   gint r_h, r_v;
   guint code, hdr_ok;
   GstClockTime timestamp, duration;
+  GstVideoFrame frame;
 
   dec = GST_JPEG_DEC (GST_PAD_PARENT (pad));
 
@@ -1323,9 +1334,13 @@ again:
     goto skip_decoding;
 
 #ifndef GST_DISABLE_GST_DEBUG
-  data = (guint8 *) gst_adapter_peek (dec->adapter, 4);
-  GST_LOG_OBJECT (dec, "reading header %02x %02x %02x %02x", data[0], data[1],
-      data[2], data[3]);
+  {
+    guchar data[4];
+
+    gst_adapter_copy (dec->adapter, data, 0, 4);
+    GST_LOG_OBJECT (dec, "reading header %02x %02x %02x %02x", data[0], data[1],
+        data[2], data[3]);
+  }
 #endif
 
   gst_jpeg_dec_fill_input_buffer (&dec->cinfo);
@@ -1425,16 +1440,14 @@ again:
 
   gst_jpeg_dec_negotiate (dec, width, height, dec->cinfo.jpeg_color_space);
 
-  ret = gst_pad_alloc_buffer_and_set_caps (dec->srcpad, GST_BUFFER_OFFSET_NONE,
-      dec->outsize, GST_PAD_CAPS (dec->srcpad), &outbuf);
+  ret = gst_buffer_pool_acquire_buffer (dec->pool, &outbuf, NULL);
   if (G_UNLIKELY (ret != GST_FLOW_OK))
     goto alloc_failed;
 
-  outdata = GST_BUFFER_DATA (outbuf);
-  outsize = GST_BUFFER_SIZE (outbuf);
+  if (!gst_video_frame_map (&frame, &dec->info, outbuf, GST_MAP_READWRITE))
+    goto invalid_frame;
 
-  GST_LOG_OBJECT (dec, "width %d, height %d, buffer size %d, required size %d",
-      width, height, outsize, dec->outsize);
+  GST_LOG_OBJECT (dec, "width %d, height %d", width, height);
 
   GST_BUFFER_TIMESTAMP (outbuf) = dec->next_ts;
 
@@ -1442,10 +1455,9 @@ again:
     if (GST_CLOCK_TIME_IS_VALID (duration)) {
       /* use duration from incoming buffer for outgoing buffer */
       dec->next_ts += duration;
-    } else if (dec->framerate_numerator != 0) {
-      duration = gst_util_uint64_scale (GST_SECOND,
-          dec->framerate_denominator, dec->framerate_numerator);
-      dec->next_ts += duration;
+    } else if (GST_CLOCK_TIME_IS_VALID (dec->duration)) {
+      duration = dec->duration;
+      dec->next_ts += dec->duration;
     } else {
       duration = GST_CLOCK_TIME_NONE;
       dec->next_ts = GST_CLOCK_TIME_NONE;
@@ -1457,32 +1469,10 @@ again:
   GST_BUFFER_DURATION (outbuf) = duration;
 
   if (dec->cinfo.jpeg_color_space == JCS_RGB) {
-    base[0] = outdata + dec->offset[0];
-    base[1] = outdata + dec->offset[1];
-    base[2] = outdata + dec->offset[2];
-    gst_jpeg_dec_decode_rgb (dec, base, width, height, dec->inc, dec->stride);
+    gst_jpeg_dec_decode_rgb (dec, &frame);
   } else if (dec->cinfo.jpeg_color_space == JCS_GRAYSCALE) {
-    base[0] = outdata + dec->offset[0];
-    gst_jpeg_dec_decode_grayscale (dec, base, width, height, dec->inc,
-        dec->stride);
+    gst_jpeg_dec_decode_grayscale (dec, &frame);
   } else {
-    /* mind the swap, jpeglib outputs blue chroma first
-     * ensonic: I see no swap?
-     */
-    base[0] = outdata + I420_Y_OFFSET (width, height);
-    base[1] = outdata + I420_U_OFFSET (width, height);
-    base[2] = outdata + I420_V_OFFSET (width, height);
-
-    /* make sure we don't make jpeglib write beyond our buffer,
-     * which might happen if (height % (r_v*DCTSIZE)) != 0 */
-    last[0] = base[0] + (I420_Y_ROWSTRIDE (width) * (height - 1));
-    last[1] =
-        base[1] + (I420_U_ROWSTRIDE (width) * ((GST_ROUND_UP_2 (height) / 2) -
-            1));
-    last[2] =
-        base[2] + (I420_V_ROWSTRIDE (width) * ((GST_ROUND_UP_2 (height) / 2) -
-            1));
-
     GST_LOG_OBJECT (dec, "decompressing (reqired scanline buffer height = %u)",
         dec->cinfo.rec_outbuf_height);
 
@@ -1497,11 +1487,10 @@ again:
             || dec->cinfo.comp_info[2].h_samp_factor != 1)) {
       GST_CAT_LOG_OBJECT (GST_CAT_PERFORMANCE, dec,
           "indirect decoding using extra buffer copy");
-      gst_jpeg_dec_decode_indirect (dec, base, last, width, height, r_v, r_h,
+      gst_jpeg_dec_decode_indirect (dec, &frame, r_v, r_h,
           dec->cinfo.num_components);
     } else {
-      ret = gst_jpeg_dec_decode_direct (dec, base, last, width, height);
-
+      ret = gst_jpeg_dec_decode_direct (dec, &frame);
       if (G_UNLIKELY (ret != GST_FLOW_OK))
         goto decode_direct_failed;
     }
@@ -1510,9 +1499,11 @@ again:
   GST_LOG_OBJECT (dec, "decompressing finished");
   jpeg_finish_decompress (&dec->cinfo);
 
+  gst_video_frame_unmap (&frame);
+
   /* Clipping */
   if (dec->segment.format == GST_FORMAT_TIME) {
-    gint64 start, stop, clip_start, clip_stop;
+    guint64 start, stop, clip_start, clip_stop;
 
     GST_LOG_OBJECT (dec, "Attempting clipping");
 
@@ -1618,6 +1609,13 @@ alloc_failed:
     }
     goto exit;
   }
+invalid_frame:
+  {
+    jpeg_abort_decompress (&dec->cinfo);
+    gst_buffer_unref (outbuf);
+    ret = GST_FLOW_OK;
+    goto exit;
+  }
 drop_buffer:
   {
     GST_WARNING_OBJECT (dec, "Outgoing buffer is outside configured segment");
@@ -1663,11 +1661,12 @@ gst_jpeg_dec_src_event (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_QOS:{
+      GstQOSType type;
       GstClockTimeDiff diff;
       GstClockTime timestamp;
       gdouble proportion;
 
-      gst_event_parse_qos (event, &proportion, &diff, &timestamp);
+      gst_event_parse_qos (event, &type, &proportion, &diff, &timestamp);
       gst_jpeg_dec_update_qos (dec, proportion, diff, timestamp);
       break;
     }
@@ -1684,7 +1683,7 @@ gst_jpeg_dec_src_event (GstPad * pad, GstEvent * event)
 static gboolean
 gst_jpeg_dec_sink_event (GstPad * pad, GstEvent * event)
 {
-  gboolean ret = TRUE;
+  gboolean ret = TRUE, forward = TRUE;
   GstJpegDec *dec = GST_JPEG_DEC (GST_OBJECT_PARENT (pad));
 
   GST_DEBUG_OBJECT (dec, "event : %s", GST_EVENT_TYPE_NAME (event));
@@ -1702,30 +1701,28 @@ gst_jpeg_dec_sink_event (GstPad * pad, GstEvent * event)
       dec->parse_resync = FALSE;
       gst_jpeg_dec_reset_qos (dec);
       break;
-    case GST_EVENT_NEWSEGMENT:{
-      gboolean update;
-      gdouble rate, applied_rate;
-      GstFormat format;
-      gint64 start, stop, position;
+    case GST_EVENT_SEGMENT:
+      gst_event_copy_segment (event, &dec->segment);
+      GST_DEBUG_OBJECT (dec, "Got NEWSEGMENT %" GST_SEGMENT_FORMAT,
+          &dec->segment);
+      break;
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
 
-      gst_event_parse_new_segment_full (event, &update, &rate, &applied_rate,
-          &format, &start, &stop, &position);
-
-      GST_DEBUG_OBJECT (dec, "Got NEWSEGMENT [%" GST_TIME_FORMAT
-          " - %" GST_TIME_FORMAT " / %" GST_TIME_FORMAT "]",
-          GST_TIME_ARGS (start), GST_TIME_ARGS (stop),
-          GST_TIME_ARGS (position));
-
-      gst_segment_set_newsegment_full (&dec->segment, update, rate,
-          applied_rate, format, start, stop, position);
-
+      gst_event_parse_caps (event, &caps);
+      ret = gst_jpeg_dec_setcaps (dec, caps);
+      forward = FALSE;
       break;
     }
     default:
       break;
   }
 
-  ret = gst_pad_push_event (dec->srcpad, event);
+  if (forward)
+    ret = gst_pad_push_event (dec->srcpad, event);
+  else
+    gst_event_unref (event);
 
   return ret;
 }
@@ -1786,11 +1783,9 @@ gst_jpeg_dec_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       dec->error_count = 0;
       dec->good_count = 0;
-      dec->framerate_numerator = 0;
-      dec->framerate_denominator = 1;
-      dec->caps_framerate_numerator = dec->caps_framerate_denominator = 0;
-      dec->caps_width = -1;
-      dec->caps_height = -1;
+      dec->in_fps_n = 0;
+      dec->in_fps_d = 1;
+      gst_video_info_init (&dec->info);
       dec->clrspc = -1;
       dec->packetized = FALSE;
       dec->next_ts = 0;
@@ -1815,6 +1810,11 @@ gst_jpeg_dec_change_state (GstElement * element, GstStateChange transition)
       g_free (dec->cur_buf);
       dec->cur_buf = NULL;
       gst_jpeg_dec_free_buffers (dec);
+      if (dec->pool) {
+        gst_buffer_pool_set_active (dec->pool, FALSE);
+        gst_object_unref (dec->pool);
+      }
+      dec->pool = NULL;
       break;
     default:
       break;

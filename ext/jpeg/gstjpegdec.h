@@ -90,21 +90,16 @@ struct _GstJpegDec {
   GstClockTime earliest_time;
   GstClockTime qos_duration;
 
-  /* video state */
-  gint framerate_numerator;
-  gint framerate_denominator;
+  /* input state */
+  gint in_fps_n;
+  gint in_fps_d;
 
-  /* negotiated state */
-  gint     caps_framerate_numerator;
-  gint     caps_framerate_denominator;
-  gint     caps_width;
-  gint     caps_height;
-  gint     outsize;
+  /* negotiated output state */
+  GstBufferPool *pool;
+  GstVideoInfo info;
+  GstClockTime duration;
+
   gint     clrspc;
-
-  gint     offset[3];
-  gint     stride;
-  gint     inc;
 
   /* parse state */
   gint     parse_offset;
