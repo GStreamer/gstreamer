@@ -137,7 +137,8 @@ create_fingerprint (GstOFA * ofa)
     endianness = OFA_LITTLE_ENDIAN;
 
 
-  GST_DEBUG_OBJECT (ofa, "Generating fingerprint");
+  GST_DEBUG_OBJECT (ofa, "Generating fingerprint for %u samples",
+      available / 2);
 
   buf = gst_adapter_take_buffer (ofa->adapter, available);
 
@@ -145,16 +146,22 @@ create_fingerprint (GstOFA * ofa)
           endianness, GST_BUFFER_SIZE (buf) / 2, rate,
           (channels == 2) ? 1 : 0));
 
-  GST_DEBUG_OBJECT (ofa, "Generated fingerprint");
+  if (ofa->fingerprint) {
+    GST_INFO_OBJECT (ofa, "Generated fingerprint: %s", ofa->fingerprint);
+  } else {
+    GST_WARNING_OBJECT (ofa, "Failed to generate fingerprint");
+  }
 
   gst_buffer_unref (buf);
 
-  tags = gst_tag_list_new ();
-  gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE,
-      GST_TAG_OFA_FINGERPRINT, ofa->fingerprint, NULL);
-  gst_element_found_tags (GST_ELEMENT (ofa), tags);
+  if (ofa->fingerprint) {
+    tags = gst_tag_list_new ();
+    gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE,
+        GST_TAG_OFA_FINGERPRINT, ofa->fingerprint, NULL);
+    gst_element_found_tags (GST_ELEMENT (ofa), tags);
 
-  g_object_notify (G_OBJECT (ofa), "fingerprint");
+    g_object_notify (G_OBJECT (ofa), "fingerprint");
+  }
 
   ofa->record = FALSE;
 }
