@@ -95,10 +95,13 @@ typedef struct _GstBaseAudioEncoderContext GstBaseAudioEncoderContext;
 /**
  * GstBaseAudioEncoderContext:
  * @state: a #GstAudioState describing input audio format
- * @frame_samples: number of samples (per channel) subclass needs to be handed,
- *   or will be handed all available if 0.
- * @frame_max: max number of frames of size @frame_bytes accepted at once
- *  (assumed minimally 1)
+ * @frame_samples_min: number of samples (per channel) subclass needs to be handed
+ *   at least, or will be handed all available if 0.
+ * @frame_samples_max: number of samples (per channel) subclass needs to be handed
+ *   at most, or will be handed all available if 0.
+ * @frame_max: max number of frames of size @frame_samples accepted at once
+ *  (assumed minimally 1). Requires @frame_samples_min and @frame_samples_max
+ *  to be the equal.
  * @min_latency: min latency of element
  * @max_latency: max latency of element
  * @lookahead: encoder lookahead (in units of input rate samples)
@@ -110,7 +113,7 @@ struct _GstBaseAudioEncoderContext {
   GstAudioState state;
 
   /* output */
-  gint  frame_samples;
+  gint  frame_samples_min, frame_samples_max;
   gint  frame_max;
   gint  lookahead;
   /* MT-protected (with LOCK) */

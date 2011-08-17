@@ -657,9 +657,11 @@ gst_base_audio_encoder_push_buffers (GstBaseAudioEncoder * enc, gboolean force)
     g_assert (priv->offset <= av);
     av -= priv->offset;
 
-    need = ctx->frame_samples > 0 ? ctx->frame_samples * ctx->state.bpf : av;
-    GST_LOG_OBJECT (enc, "available: %d, needed: %d, force: %d",
-        av, need, force);
+    need =
+        ctx->frame_samples_min >
+        0 ? ctx->frame_samples_min * ctx->state.bpf : av;
+    GST_LOG_OBJECT (enc, "available: %d, needed: %d, force: %d", av, need,
+        force);
 
     if ((need > av) || !av) {
       if (G_UNLIKELY (force)) {
@@ -672,14 +674,19 @@ gst_base_audio_encoder_push_buffers (GstBaseAudioEncoder * enc, gboolean force)
       priv->force = FALSE;
     }
 
-    /* if we have some extra metadata,
-     * provide for integer multiple of frames to allow for better granularity
-     * of processing */
-    if (ctx->frame_samples > 0 && need) {
-      if (ctx->frame_max > 1)
-        need = need * MIN ((av / need), ctx->frame_max);
-      else if (ctx->frame_max == 0)
-        need = need * (av / need);
+    if (ctx->frame_samples_max > 0)
+      need = MIN (av, ctx->frame_samples_max * ctx->state.bpf);
+
+    if (ctx->frame_samples_min == ctx->frame_samples_max) {
+      /* if we have some extra metadata,
+       * provide for integer multiple of frames to allow for better granularity
+       * of processing */
+      if (ctx->frame_samples_min > 0 && need) {
+        if (ctx->frame_max > 1)
+          need = need * MIN ((av / need), ctx->frame_max);
+        else if (ctx->frame_max == 0)
+          need = need * (av / need);
+      }
     }
 
     if (need) {
@@ -964,7 +971,8 @@ gst_base_audio_encoder_sink_setcaps (GstPad * pad, GstCaps * caps)
     gst_base_audio_encoder_drain (enc);
 
     /* context defaults */
-    enc->ctx->frame_samples = 0;
+    enc->ctx->frame_samples_min = 0;
+    enc->ctx->frame_samples_max = 0;
     enc->ctx->frame_max = 0;
     enc->ctx->lookahead = 0;
 
