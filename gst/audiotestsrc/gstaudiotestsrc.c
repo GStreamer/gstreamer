@@ -143,7 +143,7 @@ static void gst_audio_test_src_get_property (GObject * object,
 
 static gboolean gst_audio_test_src_setcaps (GstBaseSrc * basesrc,
     GstCaps * caps);
-static void gst_audio_test_src_src_fixate (GstPad * pad, GstCaps * caps);
+static void gst_audio_test_src_fixate (GstBaseSrc * bsrc, GstCaps * caps);
 
 static gboolean gst_audio_test_src_is_seekable (GstBaseSrc * basesrc);
 static gboolean gst_audio_test_src_do_seek (GstBaseSrc * basesrc,
@@ -219,6 +219,7 @@ gst_audio_test_src_class_init (GstAudioTestSrcClass * klass)
       "Stefan Kost <ensonic@users.sf.net>");
 
   gstbasesrc_class->set_caps = GST_DEBUG_FUNCPTR (gst_audio_test_src_setcaps);
+  gstbasesrc_class->fixate = GST_DEBUG_FUNCPTR (gst_audio_test_src_fixate);
   gstbasesrc_class->is_seekable =
       GST_DEBUG_FUNCPTR (gst_audio_test_src_is_seekable);
   gstbasesrc_class->do_seek = GST_DEBUG_FUNCPTR (gst_audio_test_src_do_seek);
@@ -233,10 +234,6 @@ gst_audio_test_src_class_init (GstAudioTestSrcClass * klass)
 static void
 gst_audio_test_src_init (GstAudioTestSrc * src)
 {
-  GstPad *pad = GST_BASE_SRC_PAD (src);
-
-  gst_pad_set_fixatecaps_function (pad, gst_audio_test_src_src_fixate);
-
   src->samplerate = 44100;
   src->format = GST_AUDIO_TEST_SRC_FORMAT_NONE;
 
@@ -271,9 +268,9 @@ gst_audio_test_src_finalize (GObject * object)
 }
 
 static void
-gst_audio_test_src_src_fixate (GstPad * pad, GstCaps * caps)
+gst_audio_test_src_fixate (GstBaseSrc * bsrc, GstCaps * caps)
 {
-  GstAudioTestSrc *src = GST_AUDIO_TEST_SRC (GST_PAD_PARENT (pad));
+  GstAudioTestSrc *src = GST_AUDIO_TEST_SRC (bsrc);
   const gchar *name;
   GstStructure *structure;
 
@@ -291,6 +288,8 @@ gst_audio_test_src_src_fixate (GstPad * pad, GstCaps * caps)
 
   /* fixate to mono unless downstream requires stereo, for backwards compat */
   gst_structure_fixate_field_nearest_int (structure, "channels", 1);
+
+  GST_BASE_SRC_CLASS (parent_class)->fixate (bsrc, caps);
 }
 
 static gboolean
