@@ -4039,10 +4039,6 @@ gst_pad_get_range (GstPad * pad, guint64 offset, guint size,
  * See gst_pad_get_range() for a list of return values and for the
  * semantics of the arguments of this function.
  *
- * @buffer's caps must either be unset or the same as what is already
- * configured on @pad. Renegotiation within a running pull-mode pipeline is not
- * supported.
- *
  * Returns: a #GstFlowReturn from the peer pad.
  * When this function returns #GST_FLOW_OK, @buffer will contain a valid
  * #GstBuffer that should be freed with gst_buffer_unref() after usage.

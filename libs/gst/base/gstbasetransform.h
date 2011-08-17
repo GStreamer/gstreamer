@@ -222,7 +222,7 @@ struct _GstBaseTransformClass {
   gboolean      (*set_caps)       (GstBaseTransform *trans, GstCaps *incaps,
                                    GstCaps *outcaps);
 
-  /* setup allocation query */
+  /* setup allocation query for output buffers */
   gboolean      (*setup_allocation) (GstBaseTransform *trans, GstQuery *query);
 
   /* transform size */
