@@ -292,8 +292,6 @@ gst_v4l2src_fixate (GstBaseSrc * basesrc, GstCaps * caps)
   GST_DEBUG_OBJECT (basesrc, "fixating caps %" GST_PTR_FORMAT, caps);
 
   for (i = 0; i < gst_caps_get_size (caps); ++i) {
-    const GValue *v;
-
     structure = gst_caps_get_structure (caps, i);
 
     /* We are fixating to a resonable 320x200 resolution
@@ -302,19 +300,12 @@ gst_v4l2src_fixate (GstBaseSrc * basesrc, GstCaps * caps)
     gst_structure_fixate_field_nearest_int (structure, "height", 200);
     gst_structure_fixate_field_nearest_fraction (structure, "framerate",
         G_MAXINT, 1);
-
-    v = gst_structure_get_value (structure, "format");
-    if (v && G_VALUE_TYPE (v) != G_TYPE_STRING) {
-      const gchar *format;
-
-      g_return_if_fail (G_VALUE_TYPE (v) == GST_TYPE_LIST);
-
-      format = g_value_get_string (gst_value_list_get_value (v, 0));
-      gst_structure_set (structure, "format", G_TYPE_STRING, format, NULL);
-    }
+    gst_structure_fixate_field (structure, "format");
   }
 
   GST_DEBUG_OBJECT (basesrc, "fixated caps %" GST_PTR_FORMAT, caps);
+
+  GST_BASE_SRC_CLASS (parent_class)->fixate (basesrc, caps);
 }
 
 
