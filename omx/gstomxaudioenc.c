@@ -595,6 +595,12 @@ gst_omx_audio_enc_set_format (GstBaseAudioEncoder * encoder,
 
   GST_DEBUG_OBJECT (self, "Setting new caps");
 
+  /* Set audio encoder base class properties */
+  encoder->ctx->frame_samples_min =
+      gst_util_uint64_scale_ceil (OMX_MIN_PCMPAYLOAD_MSEC,
+      GST_MSECOND * state->rate, GST_SECOND);
+  encoder->ctx->frame_samples_max = 0;
+
   gst_omx_port_get_port_definition (self->in_port, &port_def);
 
   needs_disable =
