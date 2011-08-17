@@ -76,6 +76,7 @@ struct _GstOMXAudioEncClass
 
   gboolean (*set_format)       (GstOMXAudioEnc * self, GstOMXPort * port, GstAudioState * state);
   GstCaps *(*get_caps)         (GstOMXAudioEnc * self, GstOMXPort * port, GstAudioState * state);
+  guint    (*get_num_samples)  (GstOMXAudioEnc * self, GstOMXPort * port, GstAudioState * state, GstOMXBuffer * buffer);
 };
 
 GType gst_omx_audio_enc_get_type (void);

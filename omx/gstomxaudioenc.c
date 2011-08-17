@@ -446,6 +446,11 @@ gst_omx_audio_enc_loop (GstOMXAudioEnc * self)
     flow_ret = GST_FLOW_OK;
   } else if (buf->omx_buf->nFilledLen > 0) {
     GstBuffer *outbuf;
+    guint n_samples;
+
+    n_samples =
+        klass->get_num_samples (self, self->out_port,
+        &GST_BASE_AUDIO_ENCODER (self)->ctx->state, buf);
 
     if (buf->omx_buf->nFilledLen > 0) {
       outbuf = gst_buffer_new_and_alloc (buf->omx_buf->nFilledLen);
@@ -470,7 +475,7 @@ gst_omx_audio_enc_loop (GstOMXAudioEnc * self)
 
     flow_ret =
         gst_base_audio_encoder_finish_frame (GST_BASE_AUDIO_ENCODER (self),
-        outbuf, 1024);
+        outbuf, n_samples);
   }
 
   if (flow_ret == GST_FLOW_OK && (buf->omx_buf->nFlags & OMX_BUFFERFLAG_EOS))
