@@ -410,7 +410,7 @@ gst_base_audio_encoder_reset (GstBaseAudioEncoder * enc, gboolean full)
     enc->priv->active = FALSE;
     enc->priv->samples_in = 0;
     enc->priv->bytes_out = 0;
-    g_free (enc->priv->ctx.info.channel_pos);
+    gst_base_audio_format_info_clear (&enc->priv->ctx.info);
     memset (&enc->priv->ctx, 0, sizeof (enc->priv->ctx));
   }
 
@@ -941,7 +941,7 @@ gst_base_audio_encoder_sink_setcaps (GstPad * pad, GstCaps * caps)
   GstBaseAudioEncoder *enc;
   GstBaseAudioEncoderClass *klass;
   GstBaseAudioEncoderContext *ctx;
-  GstAudioFormatInfo *state;
+  GstAudioFormatInfo *state, *ostate;
   gboolean res = TRUE, changed = FALSE;
 
   enc = GST_BASE_AUDIO_ENCODER (GST_PAD_PARENT (pad));
@@ -965,8 +965,12 @@ gst_base_audio_encoder_sink_setcaps (GstPad * pad, GstCaps * caps)
     enc->priv->samples = 0;
   }
 
-  if (!gst_base_audio_parse_caps (caps, state, &changed))
+  ostate = gst_base_audio_format_info_copy (state);
+  if (!gst_base_audio_parse_caps (caps, state))
     goto refuse_caps;
+
+  changed = gst_base_audio_compare_format_info (state, ostate);
+  gst_base_audio_format_info_free (ostate);
 
   if (changed) {
     GstClockTime old_min_latency;

@@ -56,8 +56,15 @@ typedef struct _GstAudioFormatInfo {
   gint  bpf;
 } GstAudioFormatInfo;
 
-gboolean gst_base_audio_parse_caps (GstCaps * caps,
-    GstAudioFormatInfo * state, gboolean * changed);
+void gst_base_audio_format_info_init (GstAudioFormatInfo * info);
+void gst_base_audio_format_info_clear (GstAudioFormatInfo * info);
+GstAudioFormatInfo *gst_base_audio_format_info_new (void);
+void gst_base_audio_format_info_free (GstAudioFormatInfo * info);
+GstAudioFormatInfo *gst_base_audio_format_info_copy (GstAudioFormatInfo * info);
+
+gboolean gst_base_audio_parse_caps (GstCaps * caps, GstAudioFormatInfo * info);
+gboolean gst_base_audio_compare_format_info (GstAudioFormatInfo * from,
+                                             GstAudioFormatInfo * to);
 
 GstCaps *gst_base_audio_add_streamheader (GstCaps * caps, GstBuffer * buf, ...);
 

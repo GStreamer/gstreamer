@@ -418,7 +418,7 @@ gst_base_audio_decoder_reset (GstBaseAudioDecoder * dec, gboolean full)
     dec->priv->error_count = 0;
     gst_base_audio_decoder_clear_queues (dec);
 
-    g_free (dec->priv->ctx.info.channel_pos);
+    gst_base_audio_format_info_clear (&dec->priv->ctx.info);
     memset (&dec->priv->ctx, 0, sizeof (dec->priv->ctx));
 
     if (dec->priv->taglist) {
@@ -470,7 +470,7 @@ gst_base_audio_decoder_src_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstBaseAudioDecoder *dec;
   GstAudioFormatInfo *state;
-  gboolean res = TRUE, changed;
+  gboolean res = TRUE;
 
   dec = GST_BASE_AUDIO_DECODER (gst_pad_get_parent (pad));
   state = &dec->priv->ctx.info;
@@ -489,7 +489,7 @@ gst_base_audio_decoder_src_setcaps (GstPad * pad, GstCaps * caps)
     dec->priv->samples = 0;
   }
 
-  if (!gst_base_audio_parse_caps (caps, state, &changed))
+  if (!gst_base_audio_parse_caps (caps, state))
     goto refuse_caps;
 
   gst_object_unref (dec);

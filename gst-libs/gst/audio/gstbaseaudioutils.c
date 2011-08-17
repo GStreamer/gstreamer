@@ -24,13 +24,98 @@
 #include <gst/gst.h>
 #include <gst/audio/multichannel.h>
 
+#include <string.h>
+
+/**
+ * gst_base_audio_format_init:
+ * @info: (transfer none): a #GstAudioFormatInfo instance
+ *
+ * Initializes a #GstAudioFormatInfo instance for subsequent use.
+ * The instance must either have been previously cleared or set to 0
+ * upon allocation.
+ */
+void
+gst_base_audio_format_info_init (GstAudioFormatInfo * info)
+{
+  g_return_if_fail (info != NULL);
+
+  /* no-op for now */
+}
+
+/**
+ * gst_base_audio_format_info_new:
+ *
+ * Allocate a new #GstAudioFormatInfo structure and initialize it using
+ * gst_base_audio_format_info().
+ *
+ * Free-function: gst_base_audio_format_info_free
+ *
+ * Returns: (transfer full): a new #GstAudioFormatInfo,
+ * free with gst_base_audio_format_info_free().
+ */
+GstAudioFormatInfo *
+gst_base_audio_format_info_new (void)
+{
+  GstAudioFormatInfo *result;
+
+  result = g_slice_new0 (GstAudioFormatInfo);
+  gst_base_audio_format_info_init (result);
+
+  return result;
+}
+
+/**
+ * gst_base_audio_format_clear:
+ * @info: (transfer none): a #GstAudioFormatInfo instance
+ *
+ * Clears a #GstAudioFormatInfo instance.
+ */
+void
+gst_base_audio_format_info_clear (GstAudioFormatInfo * info)
+{
+  g_return_if_fail (info != NULL);
+
+  g_free (info->channel_pos);
+  memset (info, 0, sizeof (*info));
+}
+
+/**
+ * gst_base_audio_format_copy:
+ * @info: (transfer none): a #GstAudioFormatInfo instance
+ *
+ * Create a copy of a given #GstAudioFormatInfo instance.
+ *
+ * Returns: (transfer full): a new #GstAudioFormatInfo,
+ * free with gst_base_audio_format_info_free()
+ */
+GstAudioFormatInfo *
+gst_base_audio_format_info_copy (GstAudioFormatInfo * info)
+{
+  GstAudioFormatInfo *result = NULL;
+
+  if (info) {
+    result = (GstAudioFormatInfo *) g_slice_copy (sizeof (GstAudioFormatInfo),
+        info);
+  }
+  return result;
+}
+
+/**
+ * gst_base_audio_format_free:
+ * @info: (in) (transfer full): a #GstAudioFormatInfo instance
+ *
+ * Frees the allocated @info.
+ */
+void
+gst_base_audio_format_info_free (GstAudioFormatInfo * info)
+{
+  g_slice_free (GstAudioFormatInfo, info);
+}
 
 #define CHECK_VALUE(var, val) \
 G_STMT_START { \
   if (!res) \
     goto fail; \
-  if (var != val) \
-    changed = TRUE; \
   var = val; \
 } G_STMT_END
 
@@ -38,19 +123,16 @@ G_STMT_START { \
  * gst_base_audio_parse_caps:
  * @caps: a #GstCaps
  * @state: a #GstAudioFormatInfo
- * @changed: whether @caps introduced a change in current @state
  *
  * Parses audio format as represented by @caps into a more concise form
- * as represented by @state, while checking if for changes to currently
- * defined audio format.
+ * as represented by @state.
  *
  * Returns: TRUE if parsing succeeded, otherwise FALSE
  */
 gboolean
-gst_base_audio_parse_caps (GstCaps * caps, GstAudioFormatInfo * state,
-    gboolean * _changed)
+gst_base_audio_parse_caps (GstCaps * caps, GstAudioFormatInfo * info)
 {
-  gboolean res = TRUE, changed = FALSE;
+  gboolean res = TRUE;
   GstStructure *s;
   gboolean vb;
   gint vi;
@@ -58,37 +140,35 @@ gst_base_audio_parse_caps (GstCaps * caps, GstAudioFormatInfo * state,
   g_return_val_if_fail (caps != NULL, FALSE);
   g_return_val_if_fail (gst_caps_is_fixed (caps), FALSE);
 
+  gst_base_audio_format_info_clear (info);
+
   s = gst_caps_get_structure (caps, 0);
   if (gst_structure_has_name (s, "audio/x-raw-int"))
-    state->is_int = TRUE;
+    info->is_int = TRUE;
   else if (gst_structure_has_name (s, "audio/x-raw-float"))
-    state->is_int = FALSE;
+    info->is_int = FALSE;
   else
     goto fail;
 
   res = gst_structure_get_int (s, "rate", &vi);
-  CHECK_VALUE (state->rate, vi);
+  CHECK_VALUE (info->rate, vi);
   res &= gst_structure_get_int (s, "channels", &vi);
-  CHECK_VALUE (state->channels, vi);
+  CHECK_VALUE (info->channels, vi);
   res &= gst_structure_get_int (s, "width", &vi);
-  CHECK_VALUE (state->width, vi);
-  res &= (!state->is_int || gst_structure_get_int (s, "depth", &vi));
-  CHECK_VALUE (state->depth, vi);
+  CHECK_VALUE (info->width, vi);
+  res &= (!info->is_int || gst_structure_get_int (s, "depth", &vi));
+  CHECK_VALUE (info->depth, vi);
   res &= gst_structure_get_int (s, "endianness", &vi);
-  CHECK_VALUE (state->endian, vi);
-  res &= (!state->is_int || gst_structure_get_boolean (s, "signed", &vb));
-  CHECK_VALUE (state->sign, vb);
+  CHECK_VALUE (info->endian, vi);
+  res &= (!info->is_int || gst_structure_get_boolean (s, "signed", &vb));
+  CHECK_VALUE (info->sign, vb);
 
-  state->bpf = (state->width / 8) * state->channels;
-  GST_LOG ("bpf: %d", state->bpf);
-  if (!state->bpf)
+  info->bpf = (info->width / 8) * info->channels;
+  GST_LOG ("bpf: %d", info->bpf);
+  if (!info->bpf)
     goto fail;
 
-  g_free (state->channel_pos);
-  state->channel_pos = gst_audio_get_channel_positions (s);
-
-  if (_changed)
-    *_changed = changed;
+  info->channel_pos = gst_audio_get_channel_positions (s);
 
   return res;
 
@@ -99,6 +179,27 @@ fail:
     GST_WARNING ("failed to parse caps %" GST_PTR_FORMAT, caps);
     return res;
   }
+}
+
+/**
+ * gst_base_audio_compare_format_info:
+ * @from: a #GstAudioFormatInfo
+ * @to: a #GstAudioFormatInfo
+ *
+ * Checks whether provides #GstAudioFormatInfo instances represent identical
+ * audio dat.
+ *
+ * Returns: TRUE if represent audio formats are identical
+ */
+gboolean
+gst_base_audio_compare_format_info (GstAudioFormatInfo * from,
+    GstAudioFormatInfo * to)
+{
+  g_return_val_if_fail (from != NULL, FALSE);
+  g_return_val_if_fail (to != NULL, FALSE);
+
+  /* this is a bit silly, so maybe should not need this function at all */
+  return memcmp (from, to, sizeof (*from));
 }
 
 /**
