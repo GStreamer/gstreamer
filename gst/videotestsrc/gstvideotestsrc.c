@@ -93,7 +93,7 @@ static void gst_video_test_src_get_property (GObject * object, guint prop_id,
 static GstCaps *gst_video_test_src_getcaps (GstBaseSrc * bsrc,
     GstCaps * filter);
 static gboolean gst_video_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps);
-static void gst_video_test_src_src_fixate (GstPad * pad, GstCaps * caps);
+static void gst_video_test_src_src_fixate (GstBaseSrc * bsrc, GstCaps * caps);
 
 static gboolean gst_video_test_src_is_seekable (GstBaseSrc * psrc);
 static gboolean gst_video_test_src_do_seek (GstBaseSrc * bsrc,
@@ -300,6 +300,7 @@ gst_video_test_src_class_init (GstVideoTestSrcClass * klass)
 
   gstbasesrc_class->get_caps = gst_video_test_src_getcaps;
   gstbasesrc_class->set_caps = gst_video_test_src_setcaps;
+  gstbasesrc_class->fixate = gst_video_test_src_src_fixate;
   gstbasesrc_class->is_seekable = gst_video_test_src_is_seekable;
   gstbasesrc_class->do_seek = gst_video_test_src_do_seek;
   gstbasesrc_class->query = gst_video_test_src_query;
@@ -314,10 +315,6 @@ gst_video_test_src_class_init (GstVideoTestSrcClass * klass)
 static void
 gst_video_test_src_init (GstVideoTestSrc * src)
 {
-  GstPad *pad = GST_BASE_SRC_PAD (src);
-
-  gst_pad_set_fixatecaps_function (pad, gst_video_test_src_src_fixate);
-
   gst_video_test_src_set_pattern (src, DEFAULT_PATTERN);
 
   src->timestamp_offset = DEFAULT_TIMESTAMP_OFFSET;
@@ -331,7 +328,7 @@ gst_video_test_src_init (GstVideoTestSrc * src)
 }
 
 static void
-gst_video_test_src_src_fixate (GstPad * pad, GstCaps * caps)
+gst_video_test_src_src_fixate (GstBaseSrc * bsrc, GstCaps * caps)
 {
   GstStructure *structure;
 
@@ -350,6 +347,8 @@ gst_video_test_src_src_fixate (GstPad * pad, GstCaps * caps)
 
   if (gst_structure_has_field (structure, "interlaced"))
     gst_structure_fixate_field_boolean (structure, "interlaced", FALSE);
+
+  GST_BASE_SRC_CLASS (parent_class)->fixate (bsrc, caps);
 }
 
 static void
