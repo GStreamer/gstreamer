@@ -470,7 +470,7 @@ gst_omx_audio_enc_loop (GstOMXAudioEnc * self)
 
     flow_ret =
         gst_base_audio_encoder_finish_frame (GST_BASE_AUDIO_ENCODER (self),
-        outbuf, -1);
+        outbuf, 1024);
   }
 
   if (flow_ret == GST_FLOW_OK && (buf->omx_buf->nFlags & OMX_BUFFERFLAG_EOS))
@@ -767,7 +767,12 @@ gst_omx_audio_enc_handle_frame (GstBaseAudioEncoder * encoder,
   duration = GST_BUFFER_DURATION (inbuf);
 
   while (offset < GST_BUFFER_SIZE (inbuf)) {
+    /* Make sure to release the base class stream lock, otherwise
+     * _loop() can't call _finish_frame() and we might block forever
+     * because no input buffers are released */
+    GST_BASE_AUDIO_ENCODER_STREAM_UNLOCK (self);
     acq_ret = gst_omx_port_acquire_buffer (self->in_port, &buf);
+    GST_BASE_AUDIO_ENCODER_STREAM_LOCK (self);
 
     if (acq_ret == GST_OMX_ACQUIRE_BUFFER_ERROR) {
       goto component_error;
