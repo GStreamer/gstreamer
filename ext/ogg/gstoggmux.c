@@ -41,6 +41,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstcollectpads.h>
+#include <gst/base/gstbytewriter.h>
 #include <gst/tag/tag.h>
 
 #include "gstoggmux.h"
@@ -83,12 +84,15 @@ enum
 #define DEFAULT_MAX_DELAY       G_GINT64_CONSTANT(500000000)
 #define DEFAULT_MAX_PAGE_DELAY  G_GINT64_CONSTANT(500000000)
 #define DEFAULT_MAX_TOLERANCE   G_GINT64_CONSTANT(40000000)
+#define DEFAULT_SKELETON        FALSE
+
 enum
 {
   ARG_0,
   ARG_MAX_DELAY,
   ARG_MAX_PAGE_DELAY,
-  ARG_MAX_TOLERANCE
+  ARG_MAX_TOLERANCE,
+  ARG_SKELETON
 };
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
@@ -210,6 +214,11 @@ gst_ogg_mux_class_init (GstOggMuxClass * klass)
       g_param_spec_uint64 ("max-tolerance", "Max time tolerance",
           "Maximum timestamp difference for maintaining perfect granules",
           0, G_MAXUINT64, DEFAULT_MAX_TOLERANCE,
+          (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, ARG_SKELETON,
+      g_param_spec_boolean ("skeleton", "Skeleton",
+          "Whether to include a Skeleton track",
+          DEFAULT_SKELETON,
           (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state = gst_ogg_mux_change_state;
@@ -1121,16 +1130,103 @@ gst_ogg_mux_set_header_on_caps (GstCaps * caps, GList * buffers)
 }
 
 static void
-create_header_packet (ogg_packet * packet, GstBuffer * buf, GstOggPadData * pad)
+gst_ogg_mux_create_header_packet_with_flags (ogg_packet * packet,
+    GstBuffer * buf, gboolean bos, gboolean eos)
 {
   packet->packet = GST_BUFFER_DATA (buf);
   packet->bytes = GST_BUFFER_SIZE (buf);
   packet->granulepos = 0;
   /* mark BOS and packet number */
-  packet->b_o_s = (pad->packetno == 0);
-  packet->packetno = pad->packetno++;
+  packet->b_o_s = bos;
   /* mark EOS */
-  packet->e_o_s = 0;
+  packet->e_o_s = eos;
+}
+
+static void
+gst_ogg_mux_create_header_packet (ogg_packet * packet, GstBuffer * buf,
+    GstOggPadData * pad)
+{
+  gst_ogg_mux_create_header_packet_with_flags (packet, buf, pad->packetno == 0,
+      0);
+  packet->packetno = pad->packetno++;
+}
+
+static void
+gst_ogg_mux_submit_skeleton_header_packet (GstOggMux * mux,
+    ogg_stream_state * os, GstBuffer * buf, gboolean bos, gboolean eos)
+{
+  ogg_packet packet;
+  gst_ogg_mux_create_header_packet_with_flags (&packet, buf, bos, eos);
+  ogg_stream_packetin (os, &packet);
+  gst_buffer_unref (buf);
+}
+
+static void
+gst_ogg_mux_make_fishead (GstOggMux * mux, ogg_stream_state * os)
+{
+  GstByteWriter bw;
+  GstBuffer *fishead;
+
+  GST_DEBUG_OBJECT (mux, "Creating fishead");
+
+  fishead = gst_buffer_new_and_alloc (64);
+  gst_byte_writer_init_with_buffer (&bw, fishead, TRUE);
+  gst_byte_writer_put_string_utf8 (&bw, "fishead");
+  gst_byte_writer_put_int16_le (&bw, 3);        /* version major */
+  gst_byte_writer_put_int16_le (&bw, 0);        /* version minor */
+  gst_byte_writer_put_int64_le (&bw, 0);        /* presentation time numerator */
+  gst_byte_writer_put_int64_le (&bw, 1000);     /* ...and denominator */
+  gst_byte_writer_put_int64_le (&bw, 0);        /* base time numerator */
+  gst_byte_writer_put_int64_le (&bw, 1000);     /* ...and denominator */
+  gst_byte_writer_fill (&bw, ' ', 20);  /* UTC time */
+  g_assert (gst_byte_writer_get_pos (&bw) == GST_BUFFER_SIZE (fishead));
+  gst_ogg_mux_submit_skeleton_header_packet (mux, os, fishead, 1, 0);
+}
+
+static void
+gst_ogg_mux_byte_writer_put_string_utf8 (GstByteWriter * bw, const char *s)
+{
+  gst_byte_writer_put_data (bw, (const guint8 *) s, strlen (s));
+}
+
+static void
+gst_ogg_mux_make_fisbone (GstOggMux * mux, ogg_stream_state * os,
+    GstOggPadData * pad)
+{
+  GstByteWriter bw;
+
+  GST_DEBUG_OBJECT (mux,
+      "Creating %s fisbone for serial %08x",
+      gst_ogg_stream_get_media_type (&pad->map), pad->map.serialno);
+
+  gst_byte_writer_init (&bw);
+  gst_byte_writer_put_string_utf8 (&bw, "fisbone");
+  gst_byte_writer_put_int32_le (&bw, 44);       /* offset to message headers */
+  gst_byte_writer_put_uint32_le (&bw, pad->map.serialno);
+  gst_byte_writer_put_uint32_le (&bw, pad->map.n_header_packets);
+  gst_byte_writer_put_uint64_le (&bw, pad->map.granulerate_n);
+  gst_byte_writer_put_uint64_le (&bw, pad->map.granulerate_d);
+  gst_byte_writer_put_uint64_le (&bw, 0);       /* base granule */
+  gst_byte_writer_put_uint32_le (&bw, pad->map.preroll);
+  gst_byte_writer_put_uint8 (&bw, pad->map.granuleshift);
+  gst_byte_writer_fill (&bw, 0, 3);     /* padding */
+  /* message header fields - MIME type for now */
+  gst_ogg_mux_byte_writer_put_string_utf8 (&bw, "Content-Type: ");
+  gst_ogg_mux_byte_writer_put_string_utf8 (&bw,
+      gst_ogg_stream_get_media_type (&pad->map));
+  gst_ogg_mux_byte_writer_put_string_utf8 (&bw, "\r\n");
+
+  gst_ogg_mux_submit_skeleton_header_packet (mux, os,
+      gst_byte_writer_reset_and_get_buffer (&bw), 0, 0);
+}
+
+static void
+gst_ogg_mux_make_fistail (GstOggMux * mux, ogg_stream_state * os)
+{
+  GST_DEBUG_OBJECT (mux, "Creating fistail");
+
+  gst_ogg_mux_submit_skeleton_header_packet (mux, os,
+      gst_buffer_new_and_alloc (0), 0, 1);
 }
 
 /*
@@ -1148,6 +1244,8 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
   GList *hbufs, *hwalk;
   GstCaps *caps;
   GstFlowReturn ret;
+  ogg_page page;
+  ogg_stream_state skeleton_stream;
 
   hbufs = NULL;
   ret = GST_FLOW_OK;
@@ -1180,7 +1278,6 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
     GstOggPadData *pad;
     GstBuffer *buf;
     ogg_packet packet;
-    ogg_page page;
     GstPad *thepad;
     GstCaps *caps;
     GstStructure *structure;
@@ -1213,7 +1310,7 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
     }
 
     /* create a packet from the buffer */
-    create_header_packet (&packet, buf, pad);
+    gst_ogg_mux_create_header_packet (&packet, buf, pad);
 
     /* swap the packet in */
     ogg_stream_packetin (&pad->map.stream, &packet);
@@ -1245,6 +1342,16 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
     gst_caps_unref (caps);
   }
 
+  /* The Skeleton BOS goes first - even before the video that went first before */
+  if (mux->use_skeleton) {
+    ogg_stream_init (&skeleton_stream, gst_ogg_mux_generate_serialno (mux));
+    gst_ogg_mux_make_fishead (mux, &skeleton_stream);
+    while (ogg_stream_flush (&skeleton_stream, &page) > 0) {
+      GstBuffer *hbuf = gst_ogg_mux_buffer_from_page (mux, &page, FALSE);
+      hbufs = g_list_append (hbufs, hbuf);
+    }
+  }
+
   GST_LOG_OBJECT (mux, "creating next headers");
   walk = mux->collect->data;
   while (walk) {
@@ -1256,6 +1363,9 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
 
     walk = walk->next;
 
+    if (mux->use_skeleton)
+      gst_ogg_mux_make_fisbone (mux, &skeleton_stream, pad);
+
     GST_LOG_OBJECT (mux, "looping over headers for pad %s:%s",
         GST_DEBUG_PAD_NAME (thepad));
 
@@ -1263,12 +1373,11 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
     while (hwalk) {
       GstBuffer *buf = GST_BUFFER (hwalk->data);
       ogg_packet packet;
-      ogg_page page;
 
       hwalk = hwalk->next;
 
       /* create a packet from the buffer */
-      create_header_packet (&packet, buf, pad);
+      gst_ogg_mux_create_header_packet (&packet, buf, pad);
 
       /* swap the packet in */
       ogg_stream_packetin (&pad->map.stream, &packet);
@@ -1299,6 +1408,21 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
     g_list_free (pad->map.headers);
     pad->map.headers = NULL;
   }
+
+  if (mux->use_skeleton) {
+    /* flush accumulated fisbones, the fistail must be on a separate page */
+    while (ogg_stream_flush (&skeleton_stream, &page) > 0) {
+      GstBuffer *hbuf = gst_ogg_mux_buffer_from_page (mux, &page, FALSE);
+      hbufs = g_list_append (hbufs, hbuf);
+    }
+    gst_ogg_mux_make_fistail (mux, &skeleton_stream);
+    while (ogg_stream_flush (&skeleton_stream, &page) > 0) {
+      GstBuffer *hbuf = gst_ogg_mux_buffer_from_page (mux, &page, FALSE);
+      hbufs = g_list_append (hbufs, hbuf);
+    }
+    ogg_stream_clear (&skeleton_stream);
+  }
+
   /* hbufs holds all buffers for the headers now */
 
   /* create caps with the buffers */
@@ -1741,6 +1865,9 @@ gst_ogg_mux_get_property (GObject * object,
     case ARG_MAX_TOLERANCE:
       g_value_set_uint64 (value, ogg_mux->max_tolerance);
       break;
+    case ARG_SKELETON:
+      g_value_set_boolean (value, ogg_mux->use_skeleton);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1764,6 +1891,9 @@ gst_ogg_mux_set_property (GObject * object,
       break;
     case ARG_MAX_TOLERANCE:
       ogg_mux->max_tolerance = g_value_get_uint64 (value);
+      break;
+    case ARG_SKELETON:
+      ogg_mux->use_skeleton = g_value_get_boolean (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

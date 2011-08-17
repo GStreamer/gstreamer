@@ -127,6 +127,9 @@ struct _GstOggMux
                                    pages as delta frames up to the page that has the
                                    keyframe */
 
+
+  /* whether to create a skeleton track */
+  gboolean use_skeleton;
 };
 
 struct _GstOggMuxClass
