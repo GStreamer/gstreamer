@@ -1116,6 +1116,19 @@ gst_ogg_mux_set_header_on_caps (GstCaps * caps, GList * buffers)
   return caps;
 }
 
+static void
+create_header_packet (ogg_packet * packet, GstBuffer * buf, GstOggPadData * pad)
+{
+  packet->packet = GST_BUFFER_DATA (buf);
+  packet->bytes = GST_BUFFER_SIZE (buf);
+  packet->granulepos = 0;
+  /* mark BOS and packet number */
+  packet->b_o_s = (pad->packetno == 0);
+  packet->packetno = pad->packetno++;
+  /* mark EOS */
+  packet->e_o_s = 0;
+}
+
 /*
  * For each pad we need to write out one (small) header in one
  * page that allows decoders to identify the type of the stream.
@@ -1196,14 +1209,7 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
     }
 
     /* create a packet from the buffer */
-    packet.packet = GST_BUFFER_DATA (buf);
-    packet.bytes = GST_BUFFER_SIZE (buf);
-    packet.granulepos = 0;
-    /* mark BOS and packet number */
-    packet.b_o_s = (pad->packetno == 0);
-    packet.packetno = pad->packetno++;
-    /* mark EOS */
-    packet.e_o_s = 0;
+    create_header_packet (&packet, buf, pad);
 
     /* swap the packet in */
     ogg_stream_packetin (&pad->map.stream, &packet);
@@ -1263,14 +1269,7 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
       hwalk = hwalk->next;
 
       /* create a packet from the buffer */
-      packet.packet = GST_BUFFER_DATA (buf);
-      packet.bytes = GST_BUFFER_SIZE (buf);
-      packet.granulepos = 0;
-      /* mark BOS and packet number */
-      packet.b_o_s = (pad->packetno == 0);
-      packet.packetno = pad->packetno++;
-      /* mark EOS */
-      packet.e_o_s = 0;
+      create_header_packet (&packet, buf, pad);
 
       /* swap the packet in */
       ogg_stream_packetin (&pad->map.stream, &packet);
