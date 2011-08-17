@@ -91,7 +91,7 @@
  * <itemizedlist>
  *   <listitem><para>Provide pad templates</para></listitem>
  *   <listitem><para>
- *      Provide source pad caps in @get_caps.
+ *      Provide source pad caps before pushing the first buffer
  *   </para></listitem>
  *   <listitem><para>
  *      Accept data in @handle_frame and provide encoded results to
@@ -117,6 +117,7 @@ static void gst_base_video_encoder_finalize (GObject * object);
 
 static gboolean gst_base_video_encoder_sink_setcaps (GstPad * pad,
     GstCaps * caps);
+static GstCaps *gst_base_video_encoder_sink_getcaps (GstPad * pad);
 static gboolean gst_base_video_encoder_src_event (GstPad * pad,
     GstEvent * event);
 static gboolean gst_base_video_encoder_sink_event (GstPad * pad,
@@ -179,7 +180,6 @@ gst_base_video_encoder_reset (GstBaseVideoEncoder * base_video_encoder)
   base_video_encoder->distance_from_sync = 0;
   base_video_encoder->force_keyframe = FALSE;
 
-  base_video_encoder->set_output_caps = FALSE;
   base_video_encoder->drained = TRUE;
   base_video_encoder->min_latency = 0;
   base_video_encoder->max_latency = 0;
@@ -211,6 +211,8 @@ gst_base_video_encoder_init (GstBaseVideoEncoder * base_video_encoder,
       GST_DEBUG_FUNCPTR (gst_base_video_encoder_sink_event));
   gst_pad_set_setcaps_function (pad,
       GST_DEBUG_FUNCPTR (gst_base_video_encoder_sink_setcaps));
+  gst_pad_set_getcaps_function (pad,
+      GST_DEBUG_FUNCPTR (gst_base_video_encoder_sink_getcaps));
 
   pad = GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder);
 
@@ -357,6 +359,74 @@ exit:
   }
 
   return ret;
+}
+
+static GstCaps *
+gst_base_video_encoder_sink_getcaps (GstPad * pad)
+{
+  GstBaseVideoEncoder *base_video_encoder;
+  const GstCaps *templ_caps;
+  GstCaps *allowed;
+  GstCaps *fcaps, *filter_caps;
+  gint i, j;
+
+  base_video_encoder = GST_BASE_VIDEO_ENCODER (gst_pad_get_parent (pad));
+
+  /* FIXME: Allow subclass to override this? */
+
+  /* Allow downstream to specify width/height/framerate/PAR constraints
+   * and forward them upstream for video converters to handle
+   */
+  templ_caps =
+      gst_pad_get_pad_template_caps (GST_BASE_VIDEO_CODEC_SINK_PAD
+      (base_video_encoder));
+  allowed =
+      gst_pad_get_allowed_caps (GST_BASE_VIDEO_CODEC_SRC_PAD
+      (base_video_encoder));
+  if (!allowed || gst_caps_is_empty (allowed) || gst_caps_is_any (allowed)) {
+    fcaps = gst_caps_copy (templ_caps);
+    goto done;
+  }
+
+  GST_LOG_OBJECT (base_video_encoder, "template caps %" GST_PTR_FORMAT,
+      templ_caps);
+  GST_LOG_OBJECT (base_video_encoder, "allowed caps %" GST_PTR_FORMAT, allowed);
+
+  filter_caps = gst_caps_new_empty ();
+
+  for (i = 0; i < gst_caps_get_size (templ_caps); i++) {
+    GQuark q_name =
+        gst_structure_get_name_id (gst_caps_get_structure (templ_caps, i));
+
+    for (j = 0; j < gst_caps_get_size (allowed); j++) {
+      const GstStructure *allowed_s = gst_caps_get_structure (allowed, j);
+      const GValue *val;
+      GstStructure *s;
+
+      s = gst_structure_id_empty_new (q_name);
+      if ((val = gst_structure_get_value (allowed_s, "width")))
+        gst_structure_set_value (s, "width", val);
+      if ((val = gst_structure_get_value (allowed_s, "height")))
+        gst_structure_set_value (s, "height", val);
+      if ((val = gst_structure_get_value (allowed_s, "framerate")))
+        gst_structure_set_value (s, "framerate", val);
+      if ((val = gst_structure_get_value (allowed_s, "pixel-aspect-ratio")))
+        gst_structure_set_value (s, "pixel-aspect-ratio", val);
+
+      gst_caps_merge_structure (filter_caps, s);
+    }
+  }
+
+  fcaps = gst_caps_intersect (filter_caps, templ_caps);
+  gst_caps_unref (filter_caps);
+
+done:
+
+  gst_caps_replace (&allowed, NULL);
+
+  GST_LOG_OBJECT (base_video_encoder, "Returning caps %" GST_PTR_FORMAT, fcaps);
+
+  return fcaps;
 }
 
 static void
@@ -760,27 +830,6 @@ gst_base_video_encoder_finish_frame (GstBaseVideoEncoder * base_video_encoder,
 
   GST_LOG_OBJECT (base_video_encoder,
       "finish frame fpn %d", frame->presentation_frame_number);
-
-  /* FIXME get rid of this ?
-   * seems a roundabout way that adds little benefit to simply get
-   * and subsequently set.  subclass is adult enough to set_caps itself ...
-   * so simply check/ensure/assert that src pad caps are set by now */
-  if (!base_video_encoder->set_output_caps) {
-    if (!GST_PAD_CAPS (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder))) {
-      GstCaps *caps;
-
-      if (base_video_encoder_class->get_caps) {
-        caps = base_video_encoder_class->get_caps (base_video_encoder);
-      } else {
-        caps = gst_caps_new_simple ("video/unknown", NULL);
-      }
-      GST_DEBUG_OBJECT (base_video_encoder, "src caps %" GST_PTR_FORMAT, caps);
-      gst_pad_set_caps (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder),
-          caps);
-      gst_caps_unref (caps);
-    }
-    base_video_encoder->set_output_caps = TRUE;
-  }
 
   /* Push all pending events that arrived before this frame */
   for (l = base_video_encoder->base_video_codec.frames; l; l = l->next) {

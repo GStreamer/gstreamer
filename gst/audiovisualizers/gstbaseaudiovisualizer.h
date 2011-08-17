@@ -45,7 +45,12 @@ typedef void (*GstBaseAudioVisualizerShaderFunc)(GstBaseAudioVisualizer *scope, 
  * @GST_BASE_AUDIO_VISUALIZER_SHADER_FADE: plain fading
  * @GST_BASE_AUDIO_VISUALIZER_SHADER_FADE_AND_MOVE_UP: fade and move up
  * @GST_BASE_AUDIO_VISUALIZER_SHADER_FADE_AND_MOVE_DOWN: fade and move down
- * @GST_BASE_AUDIO_VISUALIZER_SHADER_FADE_AND_MOVE_HORIZ_OUT: fade and move horizontaly out
+ * @GST_BASE_AUDIO_VISUALIZER_SHADER_FADE_AND_MOVE_LEFT: fade and move left
+ * @GST_BASE_AUDIO_VISUALIZER_SHADER_FADE_AND_MOVE_RIGHT: fade and move right
+ * @GST_BASE_AUDIO_VISUALIZER_SHADER_FADE_AND_MOVE_HORIZ_OUT: fade and move horizontally out
+ * @GST_BASE_AUDIO_VISUALIZER_SHADER_FADE_AND_MOVE_HORIZ_IN: fade and move horizontally in
+ * @GST_BASE_AUDIO_VISUALIZER_SHADER_FADE_AND_MOVE_VERT_OUT: fade and move vertically out
+ * @GST_BASE_AUDIO_VISUALIZER_SHADER_FADE_AND_MOVE_VERT_IN: fade and move vertically in
  *
  * Different types of supported background shading functions.
  */
@@ -54,7 +59,12 @@ typedef enum {
   GST_BASE_AUDIO_VISUALIZER_SHADER_FADE,
   GST_BASE_AUDIO_VISUALIZER_SHADER_FADE_AND_MOVE_UP,
   GST_BASE_AUDIO_VISUALIZER_SHADER_FADE_AND_MOVE_DOWN,
-  GST_BASE_AUDIO_VISUALIZER_SHADER_FADE_AND_MOVE_HORIZ_OUT
+  GST_BASE_AUDIO_VISUALIZER_SHADER_FADE_AND_MOVE_LEFT,
+  GST_BASE_AUDIO_VISUALIZER_SHADER_FADE_AND_MOVE_RIGHT,
+  GST_BASE_AUDIO_VISUALIZER_SHADER_FADE_AND_MOVE_HORIZ_OUT,
+  GST_BASE_AUDIO_VISUALIZER_SHADER_FADE_AND_MOVE_HORIZ_IN,
+  GST_BASE_AUDIO_VISUALIZER_SHADER_FADE_AND_MOVE_VERT_OUT,
+  GST_BASE_AUDIO_VISUALIZER_SHADER_FADE_AND_MOVE_VERT_IN
 } GstBaseAudioVisualizerShader;
 
 struct _GstBaseAudioVisualizer
@@ -89,6 +99,9 @@ struct _GstBaseAudioVisualizer
   /* audio state */
   gint sample_rate;
   gint rate;
+  
+  /* configuration mutex */
+  GMutex *config_lock;
 };
 
 struct _GstBaseAudioVisualizerClass

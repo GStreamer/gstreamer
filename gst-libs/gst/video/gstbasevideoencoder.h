@@ -89,7 +89,6 @@ struct _GstBaseVideoEncoder
   /*< private >*/
   /* FIXME move to real private part ?
    * (and introduce a context ?) */
-  gboolean          set_output_caps;
   gboolean          drained;
 
   gint64            min_latency;
@@ -131,8 +130,6 @@ struct _GstBaseVideoEncoder
  *                  Event handler on the sink pad. This function should return
  *                  TRUE if the event was handled and should be discarded
  *                  (i.e. not unref'ed).
- * @getcaps:        Optional, but recommended.
- *                  Provides src pad caps to baseclass.
  *
  * Subclasses can override any of the available virtual methods or not, as
  * needed. At minimum @handle_frame needs to be overridden, and @set_format
@@ -163,8 +160,6 @@ struct _GstBaseVideoEncoderClass
 
   gboolean      (*event)              (GstBaseVideoEncoder *coder,
                                        GstEvent *event);
-
-  GstCaps *     (*get_caps)           (GstBaseVideoEncoder *coder);
 
   /*< private >*/
   /* FIXME before moving to base */

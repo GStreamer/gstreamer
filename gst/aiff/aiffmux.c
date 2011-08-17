@@ -130,6 +130,7 @@ gst_aiff_mux_change_state (GstElement * element, GstStateChange transition)
       aiffmux->length = 0;
       aiffmux->rate = 0.0;
       aiffmux->sent_header = FALSE;
+      aiffmux->overflow = FALSE;
       break;
     default:
       break;
@@ -160,7 +161,7 @@ gst_aiff_mux_class_init (GstAiffMuxClass * klass)
   (AIFF_FORM_HEADER_LEN + AIFF_COMM_HEADER_LEN + AIFF_SSND_HEADER_LEN)
 
 static void
-gst_aiff_mux_write_form_header (GstAiffMux * aiffmux, guint audio_data_size,
+gst_aiff_mux_write_form_header (GstAiffMux * aiffmux, guint32 audio_data_size,
     GstByteWriter * writer)
 {
   /* ckID == 'FORM' */
@@ -228,7 +229,7 @@ gst_aiff_mux_write_ext (GstByteWriter * writer, double d)
  */
 
 static void
-gst_aiff_mux_write_comm_header (GstAiffMux * aiffmux, guint audio_data_size,
+gst_aiff_mux_write_comm_header (GstAiffMux * aiffmux, guint32 audio_data_size,
     GstByteWriter * writer)
 {
   gst_byte_writer_put_uint32_le (writer, GST_MAKE_FOURCC ('C', 'O', 'M', 'M'));
@@ -236,13 +237,13 @@ gst_aiff_mux_write_comm_header (GstAiffMux * aiffmux, guint audio_data_size,
   gst_byte_writer_put_uint16_be (writer, aiffmux->channels);
   /* numSampleFrames value will be overwritten when known */
   gst_byte_writer_put_uint32_be (writer,
-      (audio_data_size * 8) / (aiffmux->width * aiffmux->channels));
+      audio_data_size / (aiffmux->width / 8 * aiffmux->channels));
   gst_byte_writer_put_uint16_be (writer, aiffmux->depth);
   gst_aiff_mux_write_ext (writer, aiffmux->rate);
 }
 
 static void
-gst_aiff_mux_write_ssnd_header (GstAiffMux * aiffmux, guint audio_data_size,
+gst_aiff_mux_write_ssnd_header (GstAiffMux * aiffmux, guint32 audio_data_size,
     GstByteWriter * writer)
 {
   gst_byte_writer_put_uint32_le (writer, GST_MAKE_FOURCC ('S', 'S', 'N', 'D'));
@@ -255,7 +256,7 @@ gst_aiff_mux_write_ssnd_header (GstAiffMux * aiffmux, guint audio_data_size,
 }
 
 static GstFlowReturn
-gst_aiff_mux_push_header (GstAiffMux * aiffmux, guint audio_data_size)
+gst_aiff_mux_push_header (GstAiffMux * aiffmux, guint32 audio_data_size)
 {
   GstFlowReturn ret;
   GstBuffer *outbuf;
@@ -296,11 +297,15 @@ gst_aiff_mux_chain (GstPad * pad, GstBuffer * buf)
 {
   GstAiffMux *aiffmux = GST_AIFF_MUX (GST_PAD_PARENT (pad));
   GstFlowReturn flow = GST_FLOW_OK;
+  guint64 cur_size;
 
   if (!aiffmux->channels) {
     gst_buffer_unref (buf);
     return GST_FLOW_NOT_NEGOTIATED;
   }
+
+  if (G_UNLIKELY (aiffmux->overflow))
+    goto overflow;
 
   if (!aiffmux->sent_header) {
     /* use bogus size initially, we'll write the real
@@ -314,6 +319,20 @@ gst_aiff_mux_chain (GstPad * pad, GstBuffer * buf)
 
     GST_DEBUG_OBJECT (aiffmux, "wrote dummy header");
     aiffmux->sent_header = TRUE;
+  }
+
+  /* AIFF has an audio data size limit of slightly under 4 GB.
+     A value of audiosize + AIFF_HEADER_LEN - 8 is written, so
+     I'll error out if writing data that makes this overflow. */
+  cur_size = aiffmux->length + AIFF_HEADER_LEN - 8;
+  if (G_UNLIKELY (cur_size + GST_BUFFER_SIZE (buf) >= G_MAXUINT32)) {
+    GST_ERROR_OBJECT (aiffmux, "AIFF only supports about 4 GB worth of "
+        "audio data, dropping any further data on the floor");
+    GST_ELEMENT_WARNING (aiffmux, STREAM, MUX, ("AIFF has a 4GB size limit"),
+        ("AIFF only supports about 4 GB worth of audio data, "
+            "dropping any further data on the floor"));
+    aiffmux->overflow = TRUE;
+    goto overflow;
   }
 
   GST_LOG_OBJECT (aiffmux, "pushing %u bytes raw audio, ts=%" GST_TIME_FORMAT,
@@ -330,6 +349,13 @@ gst_aiff_mux_chain (GstPad * pad, GstBuffer * buf)
   flow = gst_pad_push (aiffmux->srcpad, buf);
 
   return flow;
+
+overflow:
+  {
+    GST_WARNING_OBJECT (aiffmux, "output file too large, dropping buffer");
+    gst_buffer_unref (buf);
+    return GST_FLOW_OK;
+  }
 }
 
 static gboolean

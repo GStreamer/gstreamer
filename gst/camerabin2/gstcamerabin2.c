@@ -19,19 +19,115 @@
 /**
  * SECTION:element-camerabin2
  *
- * GstCameraBin22 is a high-level camera object that encapsulates the gstreamer
- * internals and provides a task based API for the application.
+ * CameraBin2 is a high-level camera object that encapsulates gstreamer
+ * elements, providing an API for controlling a digital camera.
  *
  * <note>
- * Note that camerabin2 is still UNSTABLE, EXPERIMENTAL and under heavy
+ * Note that camerabin2 is still UNSTABLE, EXPERIMENTAL and under
  * development.
  * </note>
  *
+ * CameraBin2 has the following main features:
+ * <itemizedlist>
+ * <listitem>
+ * Record videos
+ * </listitem>
+ * <listitem>
+ * Capture pictures
+ * </listitem>
+ * <listitem>
+ * Display a viewfinder
+ * </listitem>
+ * <listitem>
+ * Post preview images for each capture (video and image)
+ * </listitem>
+ * </itemizedlist>
+ *
+ * <refsect2>
+ * <title>Usage</title>
+ * <para>
+ * Camerabin2 can be created using gst_element_factory_make() just like
+ * any other element. Video or image capture mode can be selected using
+ * the #GstCameraBin2:mode property and the file to save the capture is
+ * selected using #GstCameraBin2:location property.
+ *
+ * After creating camerabin2, applications might want to do some
+ * customization (there's a section about this below), then select
+ * the desired mode and start capturing.
+ *
+ * In image capture mode, just send a #GstCameraBin:start-capture and a
+ * picture will be captured. When the picture is stored on the selected
+ * location, a %GST_MESSAGE_ELEMENT named 'image-done' will be posted on
+ * the #GstBus.
+ *
+ * In video capture mode, send a #GstCameraBin2:start-capture to start
+ * recording, then send a #GstCameraBin2:stop-capture to stop recording.
+ * Note that both signals are asynchronous, so, calling
+ * #GstCameraBin2:stop-capture doesn't guarantee that the video has been
+ * properly finished yet. Applications should wait for the 'video-done'
+ * message to be posted on the bus.
+ *
+ * In both modes, if #GstCameraBin2:post-previews is %TRUE, a #GstBuffer
+ * will be post to the #GstBus in a field named 'buffer', in a
+ * 'preview-image' message of type %GST_MESSAGE_ELEMENT.
+ * </para>
+ * </refsect2>
+
+ * <refsect2>
+ * <title>Customization</title>
+ * <para>
+ * Camerabin2 provides various customization properties, allowing the user
+ * to set custom filters, selecting the viewfinder sink and formats to
+ * use to encode the captured images/videos.
+ *
+ * #GstEncodingProfile<!-- -->s are used to tell camerabin2 which formats it
+ * should encode the captures to, those should be set to
+ * #GstCameraBin2:image-profile and #GstCameraBin2:video-profile. Default is
+ * jpeg for images, and ogg (theora and vorbis) for video. If a profile without
+ * an audio stream is set for video, audio will be disabled on recordings.
+ *
+ * #GstCameraBin2:preview-caps can be used to select which format preview
+ * images should be posted on the #GstBus. It has to be a raw video format.
+ *
+ * Camerabin2 has a #GstCameraBin2:camera-source property so applications can
+ * set their source that will provide buffers for the viewfinder and for
+ * captures. This camera source is a special type of source that has 3 pads.
+ * To use a 'regular' source with a single pad you should use
+ * #GstWrapperCameraBinSource, it will adapt your source and provide 3 pads.
+ *
+ * Applications can also select the desired viewfinder sink using
+ * #GstCameraBin2:viewfinder-sink, it is also possible to select the audio
+ * source using #GstCameraBin2:audio-source.
+ *
+ * The viewfinder resolution can be configured using
+ * #GstCameraBin2:viewfinder-caps, these #GstCaps should be a subset of
+ * #GstCameraBin2:viewfinder-supported-caps.
+ *
+ * To select the desired resolution for captures, camerabin2 provides
+ * #GstCameraBin2:image-capture-caps and #GstCameraBin2:video-capture-caps,
+ * these caps must be a subset of what the source can produce. The allowed
+ * caps can be probed using #GstCameraBin2:image-capture-supported-caps and
+ * #GstCameraBin2:video-capture-supported-caps. In an analogous way, there
+ * are #GstCameraBin2:audio-capture-caps and
+ * #GstCameraBin2:audio-capture-supported-caps.
+ *
+ * Camerabin2 also allows applications to insert custom #GstElements on any
+ * of its branches: video capture, image capture, viewfinder and preview.
+ * Check #GstCameraBin2:video-filter, #GstCameraBin2:image-filter,
+ * #GstCameraBin2:viewfinder-filter and #GstCameraBin2:preview-filter.
+ * </para>
+ * </refsect2>
+ *
  * <refsect2>
  * <title>Example launch line</title>
+ * <para>
+ * Unfortunatelly, camerabin2 can't be really used from gst-launch, as you need
+ * to send signals to control it. The following pipeline might be able
+ * to show the viewfinder using all the default elements.
  * |[
  * gst-launch -v -m camerabin2
  * ]|
+ * </para>
  * </refsect2>
 
  */
@@ -75,7 +171,7 @@
   gint bef = g_atomic_int_exchange_and_add (&c->processing_counter, 1); \
   if (bef == 0)                                                         \
     g_object_notify (G_OBJECT (c), "idle");                             \
-  GST_DEBUG_OBJECT ((c), "Processing counter increModemented to: %d",       \
+  GST_DEBUG_OBJECT ((c), "Processing counter incremented to: %d",       \
       bef + 1);                                                         \
 }
 
@@ -125,7 +221,8 @@ enum
   PROP_MAX_ZOOM,
   PROP_IMAGE_ENCODING_PROFILE,
   PROP_IDLE,
-  PROP_FLAGS
+  PROP_FLAGS,
+  PROP_AUDIO_FILTER
 };
 
 enum
@@ -449,9 +546,13 @@ gst_camera_bin_dispose (GObject * object)
     gst_object_unref (camerabin->image_filter);
   if (camerabin->viewfinder_filter)
     gst_object_unref (camerabin->viewfinder_filter);
+  if (camerabin->audio_filter)
+    gst_object_unref (camerabin->audio_filter);
 
   if (camerabin->user_video_filter)
     gst_object_unref (camerabin->user_video_filter);
+  if (camerabin->user_audio_filter)
+    gst_object_unref (camerabin->user_audio_filter);
   if (camerabin->user_image_filter)
     gst_object_unref (camerabin->user_image_filter);
   if (camerabin->user_viewfinder_filter)
@@ -626,6 +727,12 @@ gst_camera_bin_class_init (GstCameraBin2Class * klass)
           " (Should be set on NULL state)",
           GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (object_class, PROP_AUDIO_FILTER,
+      g_param_spec_object ("audio-filter", "Audio filter",
+          "The element that will process captured audio buffers when recording"
+          ". (Should be set on NULL state)",
+          GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   g_object_class_install_property (object_class, PROP_PREVIEW_FILTER,
       g_param_spec_object ("preview-filter", "Preview filter",
           "The element that will process preview buffers."
@@ -781,6 +888,18 @@ gst_image_capture_bin_post_image_done (GstCameraBin2 * camera,
 }
 
 static void
+gst_video_capture_bin_post_video_done (GstCameraBin2 * camera)
+{
+  GstMessage *msg;
+
+  msg = gst_message_new_element (GST_OBJECT_CAST (camera),
+      gst_structure_new ("video-done", NULL));
+
+  if (!gst_element_post_message (GST_ELEMENT_CAST (camera), msg))
+    GST_WARNING_OBJECT (camera, "Failed to post video-done message");
+}
+
+static void
 gst_camera_bin_handle_message (GstBin * bin, GstMessage * message)
 {
   switch (GST_MESSAGE_TYPE (message)) {
@@ -814,6 +933,7 @@ gst_camera_bin_handle_message (GstBin * bin, GstMessage * message)
       if (src == GST_CAMERA_BIN2_CAST (bin)->videosink) {
         GST_DEBUG_OBJECT (bin, "EOS from video branch");
         GST_CAMERA_BIN2_PROCESSING_DEC (GST_CAMERA_BIN2_CAST (bin));
+        gst_video_capture_bin_post_video_done (GST_CAMERA_BIN2_CAST (bin));
       }
     }
       break;
@@ -1421,6 +1541,11 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
     gst_element_link_many (camera->audio_src, camera->audio_volume,
         camera->audio_capsfilter, NULL);
   }
+  if (has_audio) {
+    gst_camera_bin_check_and_replace_filter (camera, &camera->audio_filter,
+        camera->user_audio_filter, camera->audio_src, camera->audio_volume,
+        "src");
+  }
 
   if ((profile_switched && has_audio) || new_audio_src) {
     if (GST_PAD_LINK_FAILED (gst_camera_bin_link_encodebin (camera,
@@ -1734,6 +1859,12 @@ gst_camera_bin_set_property (GObject * object, guint prop_id,
         g_object_set (camera->src, "preview-filter", camera->preview_filter,
             NULL);
       break;
+    case PROP_AUDIO_FILTER:
+      if (camera->user_audio_filter)
+        g_object_unref (camera->user_audio_filter);
+
+      camera->user_audio_filter = g_value_dup_object (value);
+      break;
     case PROP_VIEWFINDER_SINK:
       g_object_set (camera->viewfinderbin, "video-sink",
           g_value_get_object (value), NULL);
@@ -1889,6 +2020,10 @@ gst_camera_bin_get_property (GObject * object, guint prop_id,
     case PROP_VIEWFINDER_FILTER:
       if (camera->user_viewfinder_filter)
         g_value_set_object (value, camera->user_viewfinder_filter);
+      break;
+    case PROP_AUDIO_FILTER:
+      if (camera->user_audio_filter)
+        g_value_set_object (value, camera->user_audio_filter);
       break;
     case PROP_PREVIEW_FILTER:
       if (camera->preview_filter)

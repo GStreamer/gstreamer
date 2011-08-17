@@ -165,7 +165,8 @@ gst_spectra_scope_render (GstBaseAudioVisualizer * bscope, GstBuffer * audio,
 {
   GstSpectraScope *scope = GST_SPECTRA_SCOPE (bscope);
   guint32 *vdata = (guint32 *) GST_BUFFER_DATA (video);
-  gint16 *adata = (gint16 *) GST_BUFFER_DATA (audio);
+  gint16 *adata = (gint16 *) g_memdup (GST_BUFFER_DATA (audio),
+      GST_BUFFER_SIZE (audio));
   GstFFTS16Complex *fdata = scope->freq_data;
   guint x, y, off;
   guint l, h = bscope->height - 1;
@@ -190,6 +191,7 @@ gst_spectra_scope_render (GstBaseAudioVisualizer * bscope, GstBuffer * audio,
   /* run fft */
   gst_fft_s16_window (scope->fft_ctx, adata, GST_FFT_WINDOW_HAMMING);
   gst_fft_s16_fft (scope->fft_ctx, adata, fdata);
+  g_free (adata);
 
   /* draw lines */
   for (x = 0; x < bscope->width; x++) {

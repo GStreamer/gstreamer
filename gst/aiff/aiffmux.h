@@ -81,6 +81,7 @@ struct _GstAiffMux
   gdouble rate;
 
   gboolean sent_header;
+  gboolean overflow;
 };
 
 struct _GstAiffMuxClass

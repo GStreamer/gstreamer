@@ -46,12 +46,13 @@
 #include <limits.h>
 #include "motioncells_wrapper.h"
 
-extern int instanceCounter;
-extern bool element_id_was_max;
+static int instanceCounter = 0;
+static gboolean element_id_was_max = false;
+
 MotionCells *mc;
 char p_str[] = "idx failed";
 
-void
+int
 motion_cells_init ()
 {
   mc = new MotionCells ();
@@ -67,6 +68,7 @@ motion_cells_init ()
     instanceCounter = motioncellsfreeids.back ();
     motioncellsfreeids.pop_back ();
   }
+  return tmpmc.id;
 }
 
 int

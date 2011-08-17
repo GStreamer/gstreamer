@@ -140,7 +140,8 @@ gst_mpeg4_params_parse_vo (MPEG4Params * params, GstBitReader * br)
     GET_BITS (br, 1, &bits);
     if (bits) {
       /* skip vbv_parameters */
-      GET_BITS (br, 79, &bits);
+      if (!gst_bit_reader_skip (br, 79))
+        goto failed;
     }
   }
 

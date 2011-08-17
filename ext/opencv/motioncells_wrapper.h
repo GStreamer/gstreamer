@@ -62,7 +62,7 @@ extern "C"
 {
 #endif
 
-  void motion_cells_init ();
+  int motion_cells_init ();
   int perform_detection_motion_cells (IplImage * p_image, double p_sensitivity,
       double p_framerate, int p_gridx, int p_gridy,
       long int p_timestamp_millisec, bool p_isVisible, bool p_useAlpha,

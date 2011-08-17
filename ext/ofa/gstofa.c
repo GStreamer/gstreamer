@@ -117,16 +117,27 @@ create_fingerprint (GstOFA * ofa)
   GstBuffer *buf;
   gint rate = GST_AUDIO_FILTER (ofa)->format.rate;
   gint channels = GST_AUDIO_FILTER (ofa)->format.channels;
-  gint endianness =
-      (GST_AUDIO_FILTER (ofa)->format.
-      bigend) ? OFA_BIG_ENDIAN : OFA_LITTLE_ENDIAN;
+  gint endianness;
   GstTagList *tags;
+  guint available;
+
+  available = gst_adapter_available (ofa->adapter);
+
+  if (available == 0) {
+    GST_WARNING_OBJECT (ofa, "No data to take fingerprint from");
+    ofa->record = FALSE;
+    return;
+  }
+
+  if (GST_AUDIO_FILTER (ofa)->format.bigend)
+    endianness = OFA_BIG_ENDIAN;
+  else
+    endianness = OFA_LITTLE_ENDIAN;
+
 
   GST_DEBUG ("Generating fingerprint");
 
-  buf =
-      gst_adapter_take_buffer (ofa->adapter,
-      gst_adapter_available (ofa->adapter));
+  buf = gst_adapter_take_buffer (ofa->adapter, available);
 
   ofa->fingerprint = g_strdup (ofa_create_print (GST_BUFFER_DATA (buf),
           endianness, GST_BUFFER_SIZE (buf) / 2, rate,

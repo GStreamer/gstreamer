@@ -42,40 +42,35 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
             "format = (fourcc) " DEVICE_YUV_FOURCC ", "
             "width = (int) 640, "
             "height = (int) 480, "
-            "framerate = (fraction) " G_STRINGIFY (DEVICE_FPS_N) "/"
-                G_STRINGIFY (DEVICE_FPS_D) ", "
+            "framerate = [0/1, 100/1], "
             "pixel-aspect-ratio = (fraction) 1/1"
             "; "
         "video/x-raw-yuv, "
             "format = (fourcc) " DEVICE_YUV_FOURCC ", "
             "width = (int) 160, "
             "height = (int) 120, "
-            "framerate = (fraction) " G_STRINGIFY (DEVICE_FPS_N) "/"
-                G_STRINGIFY (DEVICE_FPS_D) ", "
+            "framerate = [0/1, 100/1], "
             "pixel-aspect-ratio = (fraction) 1/1"
             "; "
         "video/x-raw-yuv, "
             "format = (fourcc) " DEVICE_YUV_FOURCC ", "
             "width = (int) 176, "
             "height = (int) 144, "
-            "framerate = (fraction) " G_STRINGIFY (DEVICE_FPS_N) "/"
-                G_STRINGIFY (DEVICE_FPS_D) ", "
+            "framerate = [0/1, 100/1], "
             "pixel-aspect-ratio = (fraction) 12/11"
             "; "
         "video/x-raw-yuv, "
             "format = (fourcc) " DEVICE_YUV_FOURCC ", "
             "width = (int) 320, "
             "height = (int) 240, "
-            "framerate = (fraction) " G_STRINGIFY (DEVICE_FPS_N) "/"
-                G_STRINGIFY (DEVICE_FPS_D) ", "
+            "framerate = [0/1, 100/1], "
             "pixel-aspect-ratio = (fraction) 1/1"
             "; "
         "video/x-raw-yuv, "
             "format = (fourcc) " DEVICE_YUV_FOURCC ", "
             "width = (int) 352, "
             "height = (int) 288, "
-            "framerate = (fraction) " G_STRINGIFY (DEVICE_FPS_N) "/"
-                G_STRINGIFY (DEVICE_FPS_D) ", "
+            "framerate = [0/1, 100/1], "
             "pixel-aspect-ratio = (fraction) 12/11"
             ";"
     )
@@ -107,6 +102,7 @@ GST_BOILERPLATE (GstQTKitVideoSrc, gst_qtkit_video_src, GstPushSrc,
   BOOL stopRequest;
 
   gint width, height;
+  gint fps_n, fps_d;  
   GstClockTime duration;
   guint64 offset;
 }
@@ -123,6 +119,7 @@ GST_BOILERPLATE (GstQTKitVideoSrc, gst_qtkit_video_src, GstPushSrc,
 - (BOOL)stop;
 - (BOOL)unlock;
 - (BOOL)unlockStop;
+- (void)fixate:(GstCaps *)caps;
 - (BOOL)query:(GstQuery *)query;
 - (GstStateChangeReturn)changeState:(GstStateChange)transition;
 - (GstFlowReturn)create:(GstBuffer **)buf;
@@ -243,6 +240,7 @@ openFailed:
   NSDictionary *outputAttrs;
   BOOL success;
   NSRunLoop *mainRunLoop;
+  NSTimeInterval interval;
 
   g_assert (device != nil);
 
@@ -251,7 +249,12 @@ openFailed:
   s = gst_caps_get_structure (caps, 0);
   gst_structure_get_int (s, "width", &width);
   gst_structure_get_int (s, "height", &height);
+  if (!gst_structure_get_fraction (s, "framerate", &fps_n, &fps_d)) {
+    fps_n = DEVICE_FPS_N;
+    fps_d = DEVICE_FPS_D;
+  }
 
+  GST_INFO ("got caps %dx%d %d/%d", width, height, fps_n, fps_d);
   input = [[QTCaptureDeviceInput alloc] initWithDevice:device];
 
   output = [[QTCaptureDecompressedVideoOutput alloc] init];
@@ -268,6 +271,16 @@ openFailed:
       nil
   ];
   [output setPixelBufferAttributes:outputAttrs];
+
+  if (fps_n != 0) {
+    duration = gst_util_uint64_scale (GST_SECOND, fps_d, fps_n);
+    gst_util_fraction_to_double (fps_d, fps_n, (gdouble *) &interval);
+  } else {
+    duration = GST_CLOCK_TIME_NONE;
+    interval = 0;
+  }
+
+  [output setMinimumVideoFrameInterval:interval];
 
   session = [[QTCaptureSession alloc] init];
   success = [session addInput:input
@@ -299,8 +312,11 @@ openFailed:
   queue = [[NSMutableArray alloc] initWithCapacity:FRAME_QUEUE_SIZE];
   stopRequest = NO;
 
-  duration = gst_util_uint64_scale (GST_SECOND, DEVICE_FPS_D, DEVICE_FPS_N);
   offset = 0;
+  width = height = 0;
+  fps_n = 0;
+  fps_d = 1;
+  duration = GST_CLOCK_TIME_NONE;
 
   return YES;
 }
@@ -357,6 +373,18 @@ openFailed:
   [queueLock unlockWithCondition:NO_FRAMES];
 
   return YES;
+}
+
+- (void)fixate:(GstCaps *)caps
+{
+  GstStructure *structure;
+
+  gst_caps_truncate (caps);
+  structure = gst_caps_get_structure (caps, 0);
+  if (gst_structure_has_field (structure, "framerate")) {
+    gst_structure_fixate_field_nearest_fraction (structure, "framerate",
+        DEVICE_FPS_N, DEVICE_FPS_D);
+  }
 }
 
 - (GstStateChangeReturn)changeState:(GstStateChange)transition
@@ -484,6 +512,7 @@ static gboolean gst_qtkit_video_src_unlock (GstBaseSrc * basesrc);
 static gboolean gst_qtkit_video_src_unlock_stop (GstBaseSrc * basesrc);
 static GstFlowReturn gst_qtkit_video_src_create (GstPushSrc * pushsrc,
     GstBuffer ** buf);
+static void gst_qtkit_video_src_fixate (GstBaseSrc * basesrc, GstCaps * caps);
 
 static void
 gst_qtkit_video_src_base_init (gpointer gclass)
@@ -519,6 +548,7 @@ gst_qtkit_video_src_class_init (GstQTKitVideoSrcClass * klass)
   gstbasesrc_class->query = gst_qtkit_video_src_query;
   gstbasesrc_class->unlock = gst_qtkit_video_src_unlock;
   gstbasesrc_class->unlock_stop = gst_qtkit_video_src_unlock_stop;
+  gstbasesrc_class->fixate = gst_qtkit_video_src_fixate;
 
   gstpushsrc_class->create = gst_qtkit_video_src_create;
 
@@ -683,4 +713,12 @@ gst_qtkit_video_src_create (GstPushSrc * pushsrc, GstBuffer ** buf)
   OBJC_CALLOUT_END ();
 
   return ret;
+}
+
+static void
+gst_qtkit_video_src_fixate (GstBaseSrc * basesrc, GstCaps * caps)
+{
+  OBJC_CALLOUT_BEGIN ();
+  [GST_QTKIT_VIDEO_SRC_IMPL (basesrc) fixate: caps];
+  OBJC_CALLOUT_END ();
 }

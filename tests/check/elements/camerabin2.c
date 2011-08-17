@@ -1162,10 +1162,12 @@ GST_START_TEST (test_video_custom_filter)
   GstElement *vf_filter;
   GstElement *video_filter;
   GstElement *preview_filter;
+  GstElement *audio_filter;
   GstPad *pad;
   gint vf_probe_counter = 0;
   gint video_probe_counter = 0;
   gint preview_probe_counter = 0;
+  gint audio_probe_counter = 0;
 
   if (!camera)
     return;
@@ -1173,6 +1175,7 @@ GST_START_TEST (test_video_custom_filter)
   vf_filter = gst_element_factory_make ("identity", "vf-filter");
   video_filter = gst_element_factory_make ("identity", "video-filter");
   preview_filter = gst_element_factory_make ("identity", "preview-filter");
+  audio_filter = gst_element_factory_make ("identity", "audio-filter");
 
   pad = gst_element_get_static_pad (vf_filter, "src");
   gst_pad_add_buffer_probe (pad, (GCallback) filter_buffer_count,
@@ -1184,6 +1187,11 @@ GST_START_TEST (test_video_custom_filter)
       &video_probe_counter);
   gst_object_unref (pad);
 
+  pad = gst_element_get_static_pad (audio_filter, "src");
+  gst_pad_add_buffer_probe (pad, (GCallback) filter_buffer_count,
+      &audio_probe_counter);
+  gst_object_unref (pad);
+
   pad = gst_element_get_static_pad (preview_filter, "src");
   gst_pad_add_buffer_probe (pad, (GCallback) filter_buffer_count,
       &preview_probe_counter);
@@ -1193,11 +1201,12 @@ GST_START_TEST (test_video_custom_filter)
   g_object_set (camera, "mode", 2,
       "location", make_test_file_name (VIDEO_FILENAME, -1),
       "viewfinder-filter", vf_filter, "video-filter", video_filter,
-      "preview-filter", preview_filter, NULL);
+      "preview-filter", preview_filter, "audio-filter", audio_filter, NULL);
 
   gst_object_unref (vf_filter);
   gst_object_unref (preview_filter);
   gst_object_unref (video_filter);
+  gst_object_unref (audio_filter);
 
   if (gst_element_set_state (GST_ELEMENT (camera), GST_STATE_PLAYING) ==
       GST_STATE_CHANGE_FAILURE) {
@@ -1223,6 +1232,7 @@ GST_START_TEST (test_video_custom_filter)
 
   fail_unless (vf_probe_counter > 0);
   fail_unless (video_probe_counter > 0);
+  fail_unless (audio_probe_counter > 0);
   fail_unless (preview_probe_counter == 1);
 }
 
