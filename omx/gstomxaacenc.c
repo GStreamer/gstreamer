@@ -39,6 +39,8 @@ static gboolean gst_omx_aac_enc_set_format (GstOMXAudioEnc * enc,
     GstOMXPort * port, GstAudioState * state);
 static GstCaps *gst_omx_aac_enc_get_caps (GstOMXAudioEnc * enc,
     GstOMXPort * port, GstAudioState * state);
+static guint gst_omx_aac_enc_get_num_samples (GstOMXAudioEnc * enc,
+    GstOMXPort * port, GstAudioState * state, GstOMXBuffer * buf);
 
 enum
 {
@@ -156,6 +158,8 @@ gst_omx_aac_enc_class_init (GstOMXAACEncClass * klass)
 
   audioenc_class->set_format = GST_DEBUG_FUNCPTR (gst_omx_aac_enc_set_format);
   audioenc_class->get_caps = GST_DEBUG_FUNCPTR (gst_omx_aac_enc_get_caps);
+  audioenc_class->get_num_samples =
+      GST_DEBUG_FUNCPTR (gst_omx_aac_enc_get_num_samples);
 
   audioenc_class->default_src_template_caps = "audio/mpeg, "
       "mpegversion=(int){2, 4}, "
@@ -429,4 +433,12 @@ gst_omx_aac_enc_get_caps (GstOMXAudioEnc * enc, GstOMXPort * port,
         NULL);
 
   return caps;
+}
+
+static guint
+gst_omx_aac_enc_get_num_samples (GstOMXAudioEnc * enc, GstOMXPort * port,
+    GstAudioState * state, GstOMXBuffer * buf)
+{
+  /* FIXME: Depends on the profile at least */
+  return 1024;
 }
