@@ -1232,24 +1232,22 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
     GST_LOG_OBJECT (mux, "swapped out page with mime type %s",
         gst_structure_get_name (structure));
 
-    /* quick hack: put Theora, VP8 and Dirac video pages at the front.
+    /* quick hack: put video pages at the front.
      * Ideally, we would have a settable enum for which Ogg
      * profile we work with, and order based on that.
      * (FIXME: if there is more than one video stream, shouldn't we only put
      * one's BOS into the first page, followed by an audio stream's BOS, and
      * only then followed by the remaining video and audio streams?) */
-    if (gst_structure_has_name (structure, "video/x-theora")) {
-      GST_DEBUG_OBJECT (thepad, "putting %s page at the front", "Theora");
-      hbufs = g_list_prepend (hbufs, hbuf);
-    } else if (gst_structure_has_name (structure, "video/x-dirac")) {
-      GST_DEBUG_OBJECT (thepad, "putting %s page at the front", "Dirac");
-      hbufs = g_list_prepend (hbufs, hbuf);
-      pad->always_flush_page = TRUE;
-    } else if (gst_structure_has_name (structure, "video/x-vp8")) {
-      GST_DEBUG_OBJECT (thepad, "putting %s page at the front", "VP8");
+    if (pad->map.is_video) {
+      GST_DEBUG_OBJECT (thepad, "putting %s page at the front",
+          gst_structure_get_name (structure));
       hbufs = g_list_prepend (hbufs, hbuf);
     } else {
       hbufs = g_list_append (hbufs, hbuf);
+    }
+
+    if (gst_structure_has_name (structure, "video/x-dirac")) {
+      pad->always_flush_page = TRUE;
     }
     gst_caps_unref (caps);
   }
