@@ -521,7 +521,7 @@ gst_base_audio_encoder_finish_frame (GstBaseAudioEncoder * enc, GstBuffer * buf,
           GST_DEBUG_OBJECT (enc, "marked discont");
           priv->discont = TRUE;
         }
-        if (TRUE || diff > GST_SECOND / ctx->info.rate / 2 ||
+        if (diff > GST_SECOND / ctx->info.rate / 2 ||
             diff < -GST_SECOND / ctx->info.rate / 2) {
           GST_LOG_OBJECT (enc, "new upstream ts %" GST_TIME_FORMAT
               " at distance %" G_GUINT64_FORMAT, GST_TIME_ARGS (ts), distance);
