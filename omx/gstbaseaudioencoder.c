@@ -367,8 +367,6 @@ gst_base_audio_encoder_init (GstBaseAudioEncoder * enc,
 static void
 gst_base_audio_encoder_reset (GstBaseAudioEncoder * enc, gboolean full)
 {
-  GST_OBJECT_LOCK (enc);
-
   if (full) {
     enc->priv->active = FALSE;
     enc->priv->samples_in = 0;
@@ -391,8 +389,6 @@ gst_base_audio_encoder_reset (GstBaseAudioEncoder * enc, gboolean full)
   enc->priv->base_gp = -1;
   enc->priv->samples = 0;
   enc->priv->discont = FALSE;
-
-  GST_OBJECT_UNLOCK (enc);
 }
 
 static void
