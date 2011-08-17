@@ -766,6 +766,9 @@ gst_omx_audio_enc_handle_frame (GstBaseAudioEncoder * encoder,
 
   self = GST_OMX_AUDIO_ENC (encoder);
 
+  if (inbuf == NULL)
+    return GST_FLOW_OK;
+
   GST_DEBUG_OBJECT (self, "Handling frame");
 
   timestamp = GST_BUFFER_TIMESTAMP (inbuf);
