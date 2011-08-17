@@ -45,7 +45,7 @@ struct _GstOggStream
 {
   ogg_stream_state stream;
 
-  glong serialno;
+  guint32 serialno;
   GList *headers;
   gboolean have_headers;
   GList *queued;

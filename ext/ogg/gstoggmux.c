@@ -414,7 +414,7 @@ gst_ogg_mux_request_new_pad (GstElement * element,
     goto wrong_template;
 
   {
-    gint serial;
+    guint32 serial;
     gchar *name;
 
     if (req_name == NULL || strlen (req_name) < 6) {
@@ -422,7 +422,15 @@ gst_ogg_mux_request_new_pad (GstElement * element,
       serial = gst_ogg_mux_generate_serialno (ogg_mux);
     } else {
       /* parse serial number from requested padname */
-      serial = atoi (&req_name[5]);
+      unsigned long long_serial;
+      char *endptr = NULL;
+      long_serial = strtoul (&req_name[5], &endptr, 10);
+      if ((endptr && *endptr) || (long_serial & ~0xffffffff)) {
+        GST_WARNING_OBJECT (ogg_mux, "Invalid serial number specification: %s",
+            req_name + 5);
+        return NULL;
+      }
+      serial = (guint32) long_serial;
     }
     /* create new pad with the name */
     GST_DEBUG_OBJECT (ogg_mux, "Creating new pad for serial %d", serial);
