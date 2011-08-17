@@ -2683,6 +2683,42 @@ gst_structure_fixate_field_nearest_fraction (GstStructure * structure,
   return FALSE;
 }
 
+static gboolean
+default_fixate (GQuark field_id, const GValue * value, gpointer data)
+{
+  GstStructure *s = data;
+  GValue v = { 0 };
+
+  if (gst_value_fixate (&v, value)) {
+    gst_structure_id_set_value (s, field_id, &v);
+    g_value_unset (&v);
+  }
+  return TRUE;
+}
+
+/**
+ * gst_structure_fixate_field:
+ * @structure: a #GstStructure
+ * @field_name: a field in @structure
+ *
+ * Fixates a #GstStructure by changing the given field with its fixated value.
+ *
+ * Returns: TRUE if the structure field could be fixated
+ */
+gboolean
+gst_structure_fixate_field (GstStructure * structure, const char *field_name)
+{
+  GstStructureField *field;
+
+  g_return_val_if_fail (structure != NULL, FALSE);
+  g_return_val_if_fail (IS_MUTABLE (structure), FALSE);
+
+  if (!(field = gst_structure_get_field (structure, field_name)))
+    return FALSE;
+
+  return default_fixate (field->name, &field->value, structure);
+}
+
 /* our very own version of G_VALUE_LCOPY that allows NULL return locations
  * (useful for message parsing functions where the return location is user
  * supplied and the user may pass NULL if the value isn't of interest) */
@@ -3192,18 +3228,6 @@ gst_structure_is_subset (const GstStructure * subset,
       gst_caps_structure_is_subset_field, (gpointer) superset);
 }
 
-static gboolean
-default_fixate (GQuark field_id, const GValue * value, gpointer data)
-{
-  GstStructure *s = data;
-  GValue v = { 0 };
-
-  if (gst_value_fixate (&v, value)) {
-    gst_structure_id_set_value (s, field_id, &v);
-    g_value_unset (&v);
-  }
-  return TRUE;
-}
 
 /**
  * gst_structure_fixate:

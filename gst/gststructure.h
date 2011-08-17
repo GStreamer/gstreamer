@@ -242,6 +242,8 @@ gboolean                 gst_structure_fixate_field_nearest_fraction (GstStructu
 									 const char   *field_name,
 									 const gint target_numerator,
 									 const gint target_denominator);
+gboolean                 gst_structure_fixate_field  (GstStructure *structure,
+						      const char   *field_name);
 
 gboolean                 gst_structure_is_equal(const GstStructure *structure1,
 						const GstStructure *structure2);

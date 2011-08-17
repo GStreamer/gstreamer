@@ -970,6 +970,7 @@ EXPORTS
 	gst_structure_copy
 	gst_structure_empty_new
 	gst_structure_fixate
+	gst_structure_fixate_field
 	gst_structure_fixate_field_boolean
 	gst_structure_fixate_field_nearest_double
 	gst_structure_fixate_field_nearest_fraction
