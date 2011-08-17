@@ -175,7 +175,7 @@ gst_ofa_event (GstBaseTransform * trans, GstEvent * event)
       /* we got to the end of the stream but never generated a fingerprint
        * (probably under 135 seconds)
        */
-      if (!ofa->fingerprint)
+      if (!ofa->fingerprint && ofa->record)
         create_fingerprint (ofa);
       break;
     default:
