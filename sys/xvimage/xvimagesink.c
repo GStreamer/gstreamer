@@ -1087,6 +1087,7 @@ gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
         break;
       }
       default:
+        vformat = GST_VIDEO_FORMAT_UNKNOWN;
         g_assert_not_reached ();
         break;
     }
