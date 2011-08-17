@@ -96,37 +96,57 @@ guint
 gst_tag_get_id3v2_tag_size (GstBuffer * buffer)
 {
   guint8 *data, flags;
-  guint size;
+  gsize size;
+  guint result = 0;
 
   g_return_val_if_fail (buffer != NULL, 0);
 
-  if (GST_BUFFER_SIZE (buffer) < ID3V2_HDR_SIZE)
-    return 0;
+  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
 
-  data = GST_BUFFER_DATA (buffer);
+  if (size < ID3V2_HDR_SIZE)
+    goto too_small;
 
   /* Check for 'ID3' string at start of buffer */
-  if (data[0] != 'I' || data[1] != 'D' || data[2] != '3') {
-    GST_DEBUG ("No ID3v2 tag in data");
-    return 0;
-  }
+  if (data[0] != 'I' || data[1] != 'D' || data[2] != '3')
+    goto no_tag;
 
   /* Read the flags */
   flags = data[5];
 
   /* Read the size from the header */
-  size = id3v2_read_synch_uint (data + 6, 4);
-  if (size == 0)
-    return ID3V2_HDR_SIZE;
+  result = id3v2_read_synch_uint (data + 6, 4);
+  if (result == 0)
+    goto empty;
 
-  size += ID3V2_HDR_SIZE;
+  result += ID3V2_HDR_SIZE;
 
   /* Expand the read size to include a footer if there is one */
   if ((flags & ID3V2_HDR_FLAG_FOOTER))
-    size += 10;
+    result += 10;
 
-  GST_DEBUG ("ID3v2 tag, size: %u bytes", size);
-  return size;
+  GST_DEBUG ("ID3v2 tag, size: %u bytes", result);
+
+done:
+  gst_buffer_unmap (buffer, data, size);
+
+  return result;
+
+too_small:
+  {
+    GST_DEBUG ("size too small");
+    goto done;
+  }
+no_tag:
+  {
+    GST_DEBUG ("No ID3v2 tag in data");
+    goto done;
+  }
+empty:
+  {
+    GST_DEBUG ("Empty tag size");
+    result = ID3V2_HDR_SIZE;
+    goto done;
+  }
 }
 
 guint8 *
@@ -174,6 +194,7 @@ gst_tag_list_from_id3v2_tag (GstBuffer * buffer)
 {
   guint8 *data, *uu_data = NULL;
   guint read_size;
+  gsize size;
   ID3TagsWorking work;
   guint8 flags;
   guint16 version;
@@ -184,7 +205,7 @@ gst_tag_list_from_id3v2_tag (GstBuffer * buffer)
   if (read_size < ID3V2_HDR_SIZE)
     return NULL;
 
-  data = GST_BUFFER_DATA (buffer);
+  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
 
   /* Read the version */
   version = GST_READ_UINT16_BE (data + 3);
@@ -193,12 +214,8 @@ gst_tag_list_from_id3v2_tag (GstBuffer * buffer)
   flags = data[5];
 
   /* Validate the version. At the moment, we only support up to 2.4.0 */
-  if (ID3V2_VER_MAJOR (version) > 4 || ID3V2_VER_MINOR (version) > 0) {
-    GST_WARNING ("ID3v2 tag is from revision 2.%d.%d, "
-        "but decoder only supports 2.%d.%d. Ignoring as per spec.",
-        version >> 8, version & 0xff, ID3V2_VERSION >> 8, ID3V2_VERSION & 0xff);
-    return NULL;
-  }
+  if (ID3V2_VER_MAJOR (version) > 4 || ID3V2_VER_MINOR (version) > 0)
+    goto wrong_version;
 
   GST_DEBUG ("ID3v2 header flags: %s %s %s %s",
       (flags & ID3V2_HDR_FLAG_UNSYNC) ? "UNSYNC" : "",
@@ -207,25 +224,20 @@ gst_tag_list_from_id3v2_tag (GstBuffer * buffer)
       (flags & ID3V2_HDR_FLAG_FOOTER) ? "FOOTER" : "");
 
   /* This shouldn't really happen! Caller should have checked first */
-  if (GST_BUFFER_SIZE (buffer) < read_size) {
-    GST_DEBUG
-        ("Found ID3v2 tag with revision 2.%d.%d - need %u more bytes to read",
-        version >> 8, version & 0xff,
-        (guint) (read_size - GST_BUFFER_SIZE (buffer)));
-    return NULL;
-  }
+  if (size < read_size)
+    goto not_enough_data;
 
   GST_DEBUG ("Reading ID3v2 tag with revision 2.%d.%d of size %u", version >> 8,
       version & 0xff, read_size);
 
-  GST_MEMDUMP ("ID3v2 tag", GST_BUFFER_DATA (buffer), read_size);
+  GST_MEMDUMP ("ID3v2 tag", data, read_size);
 
   memset (&work, 0, sizeof (ID3TagsWorking));
   work.buffer = buffer;
   work.hdr.version = version;
   work.hdr.size = read_size;
   work.hdr.flags = flags;
-  work.hdr.frame_data = GST_BUFFER_DATA (buffer) + ID3V2_HDR_SIZE;
+  work.hdr.frame_data = data + ID3V2_HDR_SIZE;
   if (flags & ID3V2_HDR_FLAG_FOOTER)
     work.hdr.frame_data_size = read_size - ID3V2_HDR_SIZE - 10;
   else
@@ -246,7 +258,27 @@ gst_tag_list_from_id3v2_tag (GstBuffer * buffer)
 
   g_free (uu_data);
 
+  gst_buffer_unmap (buffer, data, size);
+
   return work.tags;
+
+  /* ERRORS */
+wrong_version:
+  {
+    GST_WARNING ("ID3v2 tag is from revision 2.%d.%d, "
+        "but decoder only supports 2.%d.%d. Ignoring as per spec.",
+        version >> 8, version & 0xff, ID3V2_VERSION >> 8, ID3V2_VERSION & 0xff);
+    gst_buffer_unmap (buffer, data, size);
+    return NULL;
+  }
+not_enough_data:
+  {
+    GST_DEBUG
+        ("Found ID3v2 tag with revision 2.%d.%d - need %u more bytes to read",
+        version >> 8, version & 0xff, (guint) (read_size - size));
+    gst_buffer_unmap (buffer, data, size);
+    return NULL;
+  }
 }
 
 static guint
@@ -365,9 +397,11 @@ static void
 id3v2_add_id3v2_frame_blob_to_taglist (ID3TagsWorking * work, guint size)
 {
   GstBuffer *blob;
-  GstCaps *caps;
   guint8 *frame_data;
+#if 0
+  GstCaps *caps;
   gchar *media_type;
+#endif
   guint frame_size, header_size;
   guint i;
 
@@ -388,7 +422,7 @@ id3v2_add_id3v2_frame_blob_to_taglist (ID3TagsWorking * work, guint size)
   frame_size = size + header_size;
 
   blob = gst_buffer_new_and_alloc (frame_size);
-  memcpy (GST_BUFFER_DATA (blob), frame_data, frame_size);
+  gst_buffer_fill (blob, 0, frame_data, frame_size);
 
   /* Sanitize frame id */
   for (i = 0; i < 4; i++) {
@@ -396,6 +430,7 @@ id3v2_add_id3v2_frame_blob_to_taglist (ID3TagsWorking * work, guint size)
       frame_data[i] = '_';
   }
 
+#if 0
   media_type = g_strdup_printf ("application/x-gst-id3v2-%c%c%c%c-frame",
       g_ascii_tolower (frame_data[0]), g_ascii_tolower (frame_data[1]),
       g_ascii_tolower (frame_data[2]), g_ascii_tolower (frame_data[3]));
@@ -404,6 +439,7 @@ id3v2_add_id3v2_frame_blob_to_taglist (ID3TagsWorking * work, guint size)
   gst_buffer_set_caps (blob, caps);
   gst_caps_unref (caps);
   g_free (media_type);
+#endif
 
   /* gst_util_dump_mem (GST_BUFFER_DATA (blob), GST_BUFFER_SIZE (blob)); */
 
@@ -416,7 +452,6 @@ static gboolean
 id3v2_frames_to_tag_list (ID3TagsWorking * work, guint size)
 {
   guint frame_hdr_size;
-  guint8 *start;
 
   /* Extended header if present */
   if (work->hdr.flags & ID3V2_HDR_FLAG_EXTHDR) {
@@ -438,7 +473,6 @@ id3v2_frames_to_tag_list (ID3TagsWorking * work, guint size)
     work->hdr.frame_data_size -= work->hdr.ext_hdr_size;
   }
 
-  start = GST_BUFFER_DATA (work->buffer);
   frame_hdr_size = id3v2_frame_hdr_size (work->hdr.version);
   if (work->hdr.frame_data_size <= frame_hdr_size) {
     GST_DEBUG ("Tag has no data frames. Broken tag");
@@ -520,6 +554,7 @@ id3v2_frames_to_tag_list (ID3TagsWorking * work, guint size)
         }
     }
 #if 1
+#if 0
     GST_LOG
         ("Frame @ %ld (0x%02lx) id %s size %u, next=%ld (0x%02lx) obsolete=%d",
         (glong) (work->hdr.frame_data - start),
@@ -527,6 +562,7 @@ id3v2_frames_to_tag_list (ID3TagsWorking * work, guint size)
         (glong) (work->hdr.frame_data + frame_hdr_size + frame_size - start),
         (glong) (work->hdr.frame_data + frame_hdr_size + frame_size - start),
         obsolete_id);
+#endif
 #define flag_string(flag,str) \
         ((frame_flags & (flag)) ? (str) : "")
     GST_LOG ("Frame header flags: 0x%04x %s %s %s %s %s %s %s", frame_flags,

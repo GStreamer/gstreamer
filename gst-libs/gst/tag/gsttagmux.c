@@ -82,21 +82,9 @@ struct _GstTagMuxPrivate
 GST_DEBUG_CATEGORY_STATIC (gst_tag_mux_debug);
 #define GST_CAT_DEFAULT gst_tag_mux_debug
 
-static void
-gst_tag_mux_iface_init (GType tag_type)
-{
-  static const GInterfaceInfo tag_setter_info = {
-    NULL,
-    NULL,
-    NULL
-  };
-
-  g_type_add_interface_static (tag_type, GST_TYPE_TAG_SETTER, &tag_setter_info);
-}
-
-GST_BOILERPLATE_FULL (GstTagMux, gst_tag_mux,
-    GstElement, GST_TYPE_ELEMENT, gst_tag_mux_iface_init);
-
+#define gst_tag_mux_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstTagMux, gst_tag_mux, GST_TYPE_ELEMENT,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_TAG_SETTER, NULL));
 
 static GstStateChangeReturn
 gst_tag_mux_change_state (GstElement * element, GstStateChange transition);
@@ -127,13 +115,6 @@ gst_tag_mux_finalize (GObject * obj)
 }
 
 static void
-gst_tag_mux_base_init (gpointer g_class)
-{
-  GST_DEBUG_CATEGORY_INIT (gst_tag_mux_debug, "tagmux", 0,
-      "tag muxer base class");
-}
-
-static void
 gst_tag_mux_class_init (GstTagMuxClass * klass)
 {
   GObjectClass *gobject_class;
@@ -146,12 +127,15 @@ gst_tag_mux_class_init (GstTagMuxClass * klass)
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_tag_mux_change_state);
 
   g_type_class_add_private (klass, sizeof (GstTagMuxPrivate));
+
+  GST_DEBUG_CATEGORY_INIT (gst_tag_mux_debug, "tagmux", 0,
+      "tag muxer base class");
 }
 
 static void
-gst_tag_mux_init (GstTagMux * mux, GstTagMuxClass * mux_class)
+gst_tag_mux_init (GstTagMux * mux)
 {
-  GstElementClass *element_klass = GST_ELEMENT_CLASS (mux_class);
+  GstElementClass *element_klass = GST_ELEMENT_GET_CLASS (mux);
   GstPadTemplate *tmpl;
 
   mux->priv =
@@ -163,7 +147,7 @@ gst_tag_mux_init (GstTagMux * mux, GstTagMuxClass * mux_class)
     mux->priv->sinkpad = gst_pad_new_from_template (tmpl, "sink");
   } else {
     g_warning ("GstTagMux subclass '%s' did not install a %s pad template!\n",
-        G_OBJECT_CLASS_NAME (mux_class), "sink");
+        G_OBJECT_CLASS_NAME (element_klass), "sink");
     mux->priv->sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
   }
   gst_pad_set_chain_function (mux->priv->sinkpad,
@@ -184,7 +168,7 @@ gst_tag_mux_init (GstTagMux * mux, GstTagMuxClass * mux_class)
     }
   } else {
     g_warning ("GstTagMux subclass '%s' did not install a %s pad template!\n",
-        G_OBJECT_CLASS_NAME (mux_class), "source");
+        G_OBJECT_CLASS_NAME (element_klass), "source");
     mux->priv->srcpad = gst_pad_new ("src", GST_PAD_SRC);
   }
   gst_element_add_pad (GST_ELEMENT (mux), mux->priv->srcpad);
@@ -226,6 +210,7 @@ gst_tag_mux_render_start_tag (GstTagMux * mux)
   GstTagList *taglist;
   GstEvent *event;
   GstFlowReturn ret;
+  GstSegment segment;
 
   taglist = gst_tag_mux_get_tags (mux);
 
@@ -243,19 +228,14 @@ gst_tag_mux_render_start_tag (GstTagMux * mux)
     return GST_FLOW_OK;
   }
 
-  if (GST_BUFFER_CAPS (buffer) == NULL) {
-    buffer = gst_buffer_make_metadata_writable (buffer);
-    gst_buffer_set_caps (buffer, GST_PAD_CAPS (mux->priv->srcpad));
-  }
-
-  mux->priv->start_tag_size = GST_BUFFER_SIZE (buffer);
+  mux->priv->start_tag_size = gst_buffer_get_size (buffer);
   GST_LOG_OBJECT (mux, "tag size = %" G_GSIZE_FORMAT " bytes",
       mux->priv->start_tag_size);
 
   /* Send newsegment event from byte position 0, so the tag really gets
    * written to the start of the file, independent of the upstream segment */
-  gst_pad_push_event (mux->priv->srcpad,
-      gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_BYTES, 0, -1, 0));
+  gst_segment_init (&segment, GST_FORMAT_BYTES);
+  gst_pad_push_event (mux->priv->srcpad, gst_event_new_segment (&segment));
 
   /* Send an event about the new tags to downstream elements */
   /* gst_event_new_tag takes ownership of the list, so use a copy */
@@ -286,6 +266,7 @@ gst_tag_mux_render_end_tag (GstTagMux * mux)
   GstBuffer *buffer;
   GstTagList *taglist;
   GstFlowReturn ret;
+  GstSegment segment;
 
   taglist = gst_tag_mux_get_tags (mux);
 
@@ -302,20 +283,15 @@ gst_tag_mux_render_end_tag (GstTagMux * mux)
     return GST_FLOW_OK;
   }
 
-  if (GST_BUFFER_CAPS (buffer) == NULL) {
-    buffer = gst_buffer_make_metadata_writable (buffer);
-    gst_buffer_set_caps (buffer, GST_PAD_CAPS (mux->priv->srcpad));
-  }
-
-  mux->priv->end_tag_size = GST_BUFFER_SIZE (buffer);
+  mux->priv->end_tag_size = gst_buffer_get_size (buffer);
   GST_LOG_OBJECT (mux, "tag size = %" G_GSIZE_FORMAT " bytes",
       mux->priv->end_tag_size);
 
   /* Send newsegment event from the end of the file, so it gets written there,
      independent of whatever new segment events upstream has sent us */
-  gst_pad_push_event (mux->priv->srcpad,
-      gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_BYTES,
-          mux->priv->max_offset, -1, 0));
+  gst_segment_init (&segment, GST_FORMAT_BYTES);
+  segment.start = mux->priv->max_offset;
+  gst_pad_push_event (mux->priv->srcpad, gst_event_new_segment (&segment));
 
   GST_BUFFER_OFFSET (buffer) = mux->priv->max_offset;
   ret = gst_pad_push (mux->priv->srcpad, buffer);
@@ -334,27 +310,25 @@ static GstEvent *
 gst_tag_mux_adjust_event_offsets (GstTagMux * mux,
     const GstEvent * newsegment_event)
 {
-  GstFormat format;
-  gint64 start, stop, cur;
+  GstSegment segment;
 
-  gst_event_parse_new_segment ((GstEvent *) newsegment_event, NULL, NULL,
-      &format, &start, &stop, &cur);
+  gst_event_copy_segment ((GstEvent *) newsegment_event, &segment);
 
-  g_assert (format == GST_FORMAT_BYTES);
+  g_assert (segment.format == GST_FORMAT_BYTES);
 
-  if (start != -1)
-    start += mux->priv->start_tag_size;
-  if (stop != -1)
-    stop += mux->priv->start_tag_size;
-  if (cur != -1)
-    cur += mux->priv->start_tag_size;
+  if (segment.start != -1)
+    segment.start += mux->priv->start_tag_size;
+  if (segment.stop != -1)
+    segment.stop += mux->priv->start_tag_size;
+  if (segment.time != -1)
+    segment.time += mux->priv->start_tag_size;
 
   GST_DEBUG_OBJECT (mux, "adjusting newsegment event offsets to start=%"
       G_GINT64_FORMAT ", stop=%" G_GINT64_FORMAT ", cur=%" G_GINT64_FORMAT
-      " (delta = +%" G_GSIZE_FORMAT ")", start, stop, cur,
-      mux->priv->start_tag_size);
+      " (delta = +%" G_GSIZE_FORMAT ")", segment.start, segment.stop,
+      segment.time, mux->priv->start_tag_size);
 
-  return gst_event_new_new_segment (TRUE, 1.0, format, start, stop, cur);
+  return gst_event_new_segment (&segment);
 }
 
 static GstFlowReturn
@@ -376,19 +350,18 @@ gst_tag_mux_chain (GstPad * pad, GstBuffer * buffer)
 
     /* Now send the cached newsegment event that we got from upstream */
     if (mux->priv->newsegment_ev) {
-      gint64 start;
       GstEvent *newseg;
+      GstSegment segment;
 
       GST_DEBUG_OBJECT (mux, "sending cached newsegment event");
       newseg = gst_tag_mux_adjust_event_offsets (mux, mux->priv->newsegment_ev);
       gst_event_unref (mux->priv->newsegment_ev);
       mux->priv->newsegment_ev = NULL;
 
-      gst_event_parse_new_segment (newseg, NULL, NULL, NULL, &start, NULL,
-          NULL);
+      gst_event_copy_segment (newseg, &segment);
 
       gst_pad_push_event (mux->priv->srcpad, newseg);
-      mux->priv->current_offset = start;
+      mux->priv->current_offset = segment.start;
       mux->priv->max_offset =
           MAX (mux->priv->max_offset, mux->priv->current_offset);
     } else {
@@ -398,7 +371,7 @@ gst_tag_mux_chain (GstPad * pad, GstBuffer * buffer)
     mux->priv->render_start_tag = FALSE;
   }
 
-  buffer = gst_buffer_make_metadata_writable (buffer);
+  buffer = gst_buffer_make_writable (buffer);
 
   if (GST_BUFFER_OFFSET (buffer) != GST_BUFFER_OFFSET_NONE) {
     GST_LOG_OBJECT (mux, "Adjusting buffer offset from %" G_GINT64_FORMAT
@@ -407,9 +380,8 @@ gst_tag_mux_chain (GstPad * pad, GstBuffer * buffer)
     GST_BUFFER_OFFSET (buffer) += mux->priv->start_tag_size;
   }
 
-  length = GST_BUFFER_SIZE (buffer);
+  length = gst_buffer_get_size (buffer);
 
-  gst_buffer_set_caps (buffer, GST_PAD_CAPS (mux->priv->srcpad));
   ret = gst_pad_push (mux->priv->srcpad, buffer);
 
   mux->priv->current_offset += length;
@@ -451,15 +423,15 @@ gst_tag_mux_sink_event (GstPad * pad, GstEvent * event)
       result = TRUE;
       break;
     }
-    case GST_EVENT_NEWSEGMENT:{
-      GstFormat fmt;
-      gint64 start;
+    case GST_EVENT_SEGMENT:
+    {
+      GstSegment segment;
 
-      gst_event_parse_new_segment (event, NULL, NULL, &fmt, &start, NULL, NULL);
+      gst_event_copy_segment (event, &segment);
 
-      if (fmt != GST_FORMAT_BYTES) {
+      if (segment.format != GST_FORMAT_BYTES) {
         GST_WARNING_OBJECT (mux, "dropping newsegment event in %s format",
-            gst_format_get_name (fmt));
+            gst_format_get_name (segment.format));
         gst_event_unref (event);
         break;
       }
@@ -483,7 +455,7 @@ gst_tag_mux_sink_event (GstPad * pad, GstEvent * event)
             gst_tag_mux_adjust_event_offsets (mux, event));
         gst_event_unref (event);
 
-        mux->priv->current_offset = start;
+        mux->priv->current_offset = segment.start;
         mux->priv->max_offset =
             MAX (mux->priv->max_offset, mux->priv->current_offset);
       }
