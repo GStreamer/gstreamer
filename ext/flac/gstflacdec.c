@@ -404,19 +404,23 @@ gst_flac_dec_scan_got_frame (GstFlacDec * flacdec, guint8 * data, guint size,
     return FALSE;
 
   /* sync */
-  if (data[0] != 0xFF || data[1] != 0xF8)
+  if (data[0] != 0xFF || (data[1] & 0xFC) != 0xF8)
     return FALSE;
+  if (data[1] & 1) {
+    GST_WARNING_OBJECT (flacdec, "Variable block size FLAC unsupported");
+    return FALSE;
+  }
 
-  bs = (data[2] & 0xF0) >> 8;   /* blocksize marker   */
+  bs = (data[2] & 0xF0) >> 4;   /* blocksize marker   */
   sr = (data[2] & 0x0F);        /* samplerate marker  */
-  ca = (data[3] & 0xF0) >> 8;   /* channel assignment */
+  ca = (data[3] & 0xF0) >> 4;   /* channel assignment */
   ss = (data[3] & 0x0F) >> 1;   /* sample size marker */
   pb = (data[3] & 0x01);        /* padding bit        */
 
   GST_LOG_OBJECT (flacdec,
       "got sync, bs=%x,sr=%x,ca=%x,ss=%x,pb=%x", bs, sr, ca, ss, pb);
 
-  if (sr == 0x0F || ca >= 0x0B || ss == 0x03 || ss == 0x07) {
+  if (bs == 0 || sr == 0x0F || ca >= 0x0B || ss == 0x03 || ss == 0x07) {
     return FALSE;
   }
 
@@ -1392,8 +1396,10 @@ gst_flac_dec_chain (GstPad * pad, GstBuffer * buf)
 
   dec = GST_FLAC_DEC (GST_PAD_PARENT (pad));
 
-  GST_LOG_OBJECT (dec, "buffer with ts=%" GST_TIME_FORMAT ", end_offset=%"
-      G_GINT64_FORMAT ", size=%u", GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
+  GST_LOG_OBJECT (dec,
+      "buffer with ts=%" GST_TIME_FORMAT ", offset=%" G_GINT64_FORMAT
+      ", end_offset=%" G_GINT64_FORMAT ", size=%" G_GSIZE_FORMAT,
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)), GST_BUFFER_OFFSET (buf),
       GST_BUFFER_OFFSET_END (buf), gst_buffer_get_size (buf));
 
   if (dec->init) {
@@ -1487,6 +1493,19 @@ gst_flac_dec_chain (GstPad * pad, GstBuffer * buf)
     /* framed - there should always be enough data to decode something */
     GST_LOG_OBJECT (dec, "%u bytes available",
         gst_adapter_available (dec->adapter));
+    if (G_UNLIKELY (!dec->got_headers)) {
+      /* The first time we get audio data, we know we got all the headers.
+       * We then loop until all the metadata is processed, then do an extra
+       * "process_single" step for the audio frame. */
+      GST_DEBUG_OBJECT (dec,
+          "First audio frame, ensuring all metadata is processed");
+      if (!FLAC__stream_decoder_process_until_end_of_metadata (dec->decoder)) {
+        GST_DEBUG_OBJECT (dec, "process_until_end_of_metadata failed");
+      }
+      GST_DEBUG_OBJECT (dec,
+          "All metadata is now processed, reading to process audio data");
+      dec->got_headers = TRUE;
+    }
     if (!FLAC__stream_decoder_process_single (dec->decoder)) {
       GST_DEBUG_OBJECT (dec, "process_single failed");
     }
