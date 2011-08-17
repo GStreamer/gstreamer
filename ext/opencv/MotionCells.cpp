@@ -168,8 +168,6 @@ MotionCells::performDetectionMotionCells (IplImage * p_frame,
     m_pbwImage = cvCreateImage (m_frameSize, IPL_DEPTH_8U, 1);
     cvPyrDown (m_pprevFrame, m_pprevDown);
     cvCvtColor (m_pprevDown, m_pprevgreyImage, CV_RGB2GRAY);
-    if (m_pprevFrame)
-      cvReleaseImage (&m_pprevFrame);
     cvPyrDown (m_pcurFrame, m_pcurDown);
     cvCvtColor (m_pcurDown, m_pcurgreyImage, CV_RGB2GRAY);
     m_pdifferenceImage = cvCloneImage (m_pcurgreyImage);
@@ -268,6 +266,8 @@ MotionCells::performDetectionMotionCells (IplImage * p_frame,
         cvReleaseImage (&transparencyimg);
     }
 
+    if (m_pprevFrame)
+      cvReleaseImage (&m_pprevFrame);
     m_pprevFrame = cvCloneImage (m_pcurFrame);
     m_framecnt = 0;
     if (m_pcurFrame)
