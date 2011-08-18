@@ -79,6 +79,9 @@ G_BEGIN_DECLS
  */
 #define GST_BASE_VIDEO_CODEC_FLOW_NEED_DATA GST_FLOW_CUSTOM_SUCCESS
 
+#define GST_BASE_VIDEO_CODEC_STREAM_LOCK(codec) g_static_rec_mutex_lock (&GST_BASE_VIDEO_CODEC (codec)->stream_lock)
+#define GST_BASE_VIDEO_CODEC_STREAM_UNLOCK(codec) g_static_rec_mutex_unlock (&GST_BASE_VIDEO_CODEC (codec)->stream_lock)
+
 typedef struct _GstVideoState GstVideoState;
 typedef struct _GstVideoFrame GstVideoFrame;
 typedef struct _GstBaseVideoCodec GstBaseVideoCodec;
@@ -144,6 +147,11 @@ struct _GstBaseVideoCodec
   /*< private >*/
   GstPad *sinkpad;
   GstPad *srcpad;
+
+  /* protects all data processing, i.e. is locked
+   * in the chain function, finish_frame and when
+   * processing serialized events */
+  GStaticRecMutex stream_lock;
 
   guint64 system_frame_number;
 
