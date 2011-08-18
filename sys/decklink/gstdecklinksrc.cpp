@@ -125,7 +125,8 @@ enum
   PROP_0,
   PROP_MODE,
   PROP_CONNECTION,
-  PROP_AUDIO_INPUT
+  PROP_AUDIO_INPUT,
+  PROP_SUBDEVICE
 };
 
 /* pad templates */
@@ -157,7 +158,7 @@ gst_decklink_src_base_init (gpointer g_class)
       gst_static_pad_template_get (&gst_decklink_src_audio_src_template));
   gst_element_class_add_pad_template (element_class,
       gst_pad_template_new ("videosrc", GST_PAD_SRC, GST_PAD_ALWAYS,
-        gst_decklink_mode_get_template_caps ()));
+          gst_decklink_mode_get_template_caps ()));
 
   gst_element_class_set_details_simple (element_class, "Decklink source",
       "Source/Video", "DeckLink Source", "David Schleef <ds@entropywave.com>");
@@ -200,7 +201,14 @@ gst_decklink_src_class_init (GstDecklinkSrcClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_AUDIO_INPUT,
       g_param_spec_enum ("audio-input", "Audio Input", "Audio Input Connection",
-          GST_TYPE_DECKLINK_AUDIO_CONNECTION, GST_DECKLINK_AUDIO_CONNECTION_AUTO,
+          GST_TYPE_DECKLINK_AUDIO_CONNECTION,
+          GST_DECKLINK_AUDIO_CONNECTION_AUTO,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+              G_PARAM_CONSTRUCT)));
+
+  g_object_class_install_property (gobject_class, PROP_SUBDEVICE,
+      g_param_spec_int ("subdevice", "Subdevice", "Subdevice",
+          0, 3, 0,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
               G_PARAM_CONSTRUCT)));
 }
@@ -244,9 +252,9 @@ gst_decklink_src_init (GstDecklinkSrc * decklinksrc,
 
 
 
-  decklinksrc->videosrcpad = gst_pad_new_from_template (
-      gst_element_class_get_pad_template(GST_ELEMENT_CLASS(decklinksrc_class),
-        "videosrc"), "videosrc");
+  decklinksrc->videosrcpad =
+      gst_pad_new_from_template (gst_element_class_get_pad_template
+      (GST_ELEMENT_CLASS (decklinksrc_class), "videosrc"), "videosrc");
   gst_pad_set_getcaps_function (decklinksrc->videosrcpad,
       GST_DEBUG_FUNCPTR (gst_decklink_src_video_src_getcaps));
   gst_pad_set_setcaps_function (decklinksrc->videosrcpad,
@@ -281,6 +289,7 @@ gst_decklink_src_init (GstDecklinkSrc * decklinksrc,
   decklinksrc->mode = GST_DECKLINK_MODE_NTSC;
   decklinksrc->connection = GST_DECKLINK_CONNECTION_SDI;
   decklinksrc->audio_connection = GST_DECKLINK_AUDIO_CONNECTION_AUTO;
+  decklinksrc->subdevice = 0;
 
   decklinksrc->stop = FALSE;
   decklinksrc->dropped_frames = 0;
@@ -327,6 +336,9 @@ gst_decklink_src_set_property (GObject * object, guint property_id,
       decklinksrc->audio_connection =
           (GstDecklinkAudioConnectionEnum) g_value_get_enum (value);
       break;
+    case PROP_SUBDEVICE:
+      decklinksrc->subdevice = g_value_get_int (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -351,6 +363,9 @@ gst_decklink_src_get_property (GObject * object, guint property_id,
       break;
     case PROP_AUDIO_INPUT:
       g_value_set_enum (value, decklinksrc->audio_connection);
+      break;
+    case PROP_SUBDEVICE:
+      g_value_set_int (value, decklinksrc->subdevice);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -478,6 +493,7 @@ gst_decklink_src_start (GstElement * element)
   IDeckLinkConfiguration *config;
   BMDVideoConnection conn;
   BMDAudioConnection aconn;
+  int i;
 
   GST_DEBUG_OBJECT (decklinksrc, "start");
 
@@ -491,6 +507,13 @@ gst_decklink_src_start (GstElement * element)
   if (ret != S_OK) {
     GST_ERROR ("no card");
     return FALSE;
+  }
+  for (i = 0; i < decklinksrc->subdevice; i++) {
+    ret = iterator->Next (&decklinksrc->decklink);
+    if (ret != S_OK) {
+      GST_ERROR ("no card");
+      return FALSE;
+    }
   }
 
   ret = decklinksrc->decklink->QueryInterface (IID_IDeckLinkInput,
@@ -573,7 +596,6 @@ gst_decklink_src_start (GstElement * element)
     GST_ERROR ("set configuration (audio input connection)");
     return FALSE;
   }
-
 #if 0
   ret = decklinksrc->input->GetDisplayModeIterator (&mode_iterator);
   if (ret != S_OK) {
