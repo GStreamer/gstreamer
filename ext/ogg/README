@@ -30,7 +30,7 @@ The granulepos in theora is an encoding of the frame number of the last
 key frame ("i frame"), and the number of frames since the last key frame
 ("p frame").  The granulepos is constructed as the sum of the first number,
 shifted to the left for granuleshift bits, and the second number:
-granulepos = pframe << granuleshift + iframe
+granulepos = (pframe << granuleshift) + iframe
 
 (This means that given a framenumber or a timestamp, one cannot generate
  the one and only granulepos for that page; several granulepos possibilities
