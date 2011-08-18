@@ -196,8 +196,6 @@ gst_base_video_decoder_class_init (GstBaseVideoDecoderClass * klass)
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_base_video_decoder_change_state);
-
-  parent_class = g_type_class_peek_parent (klass);
 }
 
 static void
