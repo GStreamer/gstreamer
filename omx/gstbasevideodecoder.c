@@ -1292,7 +1292,7 @@ gst_base_video_decoder_chain (GstPad * pad, GstBuffer * buf)
     ret = gst_base_video_decoder_chain_reverse (base_video_decoder, buf);
 
 done:
-  GST_BASE_VIDEO_CODEC_STREAM_LOCK (base_video_decoder);
+  GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (base_video_decoder);
   return ret;
 }
 
