@@ -97,6 +97,7 @@ gst_base_video_codec_init (GstBaseVideoCodec * base_video_codec,
 
   gst_segment_init (&base_video_codec->segment, GST_FORMAT_TIME);
 
+  g_static_rec_mutex_init (&base_video_codec->stream_lock);
 }
 
 static void
@@ -106,24 +107,28 @@ gst_base_video_codec_reset (GstBaseVideoCodec * base_video_codec)
 
   GST_DEBUG_OBJECT (base_video_codec, "reset");
 
-  GST_OBJECT_LOCK (base_video_codec);
+  GST_BASE_VIDEO_CODEC_STREAM_LOCK (base_video_codec);
   for (g = base_video_codec->frames; g; g = g_list_next (g)) {
     gst_base_video_codec_free_frame ((GstVideoFrame *) g->data);
   }
   g_list_free (base_video_codec->frames);
   base_video_codec->frames = NULL;
-  GST_OBJECT_UNLOCK (base_video_codec);
 
   base_video_codec->bytes = 0;
   base_video_codec->time = 0;
 
   gst_buffer_replace (&base_video_codec->state.codec_data, NULL);
   gst_caps_replace (&base_video_codec->state.caps, NULL);
+  GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (base_video_codec);
 }
 
 static void
 gst_base_video_codec_finalize (GObject * object)
 {
+  GstBaseVideoCodec *base_video_codec = GST_BASE_VIDEO_CODEC (object);
+
+  g_static_rec_mutex_free (&base_video_codec->stream_lock);
+
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -170,8 +175,10 @@ gst_base_video_codec_new_frame (GstBaseVideoCodec * base_video_codec)
 
   frame = g_slice_new0 (GstVideoFrame);
 
+  GST_BASE_VIDEO_CODEC_STREAM_LOCK (base_video_codec);
   frame->system_frame_number = base_video_codec->system_frame_number;
   base_video_codec->system_frame_number++;
+  GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (base_video_codec);
 
   return frame;
 }
