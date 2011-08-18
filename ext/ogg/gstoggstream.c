@@ -717,6 +717,7 @@ setup_vorbis_mapper (GstOggStream * pad, ogg_packet * packet)
   pad->granulerate_n = GST_READ_UINT32_LE (data);
   pad->granulerate_d = 1;
   pad->granuleshift = 0;
+  pad->preroll = 2;
   pad->last_size = 0;
   GST_LOG ("sample rate: %d", pad->granulerate_n);
 
