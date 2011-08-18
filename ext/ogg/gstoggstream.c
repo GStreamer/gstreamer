@@ -225,6 +225,19 @@ gst_ogg_stream_extract_tags (GstOggStream * pad, ogg_packet * packet)
   mappers[pad->map].extract_tags_func (pad, packet);
 }
 
+const char *
+gst_ogg_stream_get_media_type (GstOggStream * pad)
+{
+  const GstCaps *caps = pad->caps;
+  const GstStructure *structure;
+  if (!caps)
+    return NULL;
+  structure = gst_caps_get_structure (caps, 0);
+  if (!structure)
+    return NULL;
+  return gst_structure_get_name (structure);
+}
+
 /* some generic functions */
 
 static gboolean
@@ -467,6 +480,7 @@ setup_dirac_mapper (GstOggStream * pad, ogg_packet * packet)
   }
 
   pad->is_video = TRUE;
+  pad->always_flush_page = TRUE;
   pad->granulerate_n = header.frame_rate_numerator * 2;
   pad->granulerate_d = header.frame_rate_denominator;
   pad->granuleshift = 22;
@@ -696,6 +710,7 @@ setup_vorbis_mapper (GstOggStream * pad, ogg_packet * packet)
   pad->granulerate_n = GST_READ_UINT32_LE (data);
   pad->granulerate_d = 1;
   pad->granuleshift = 0;
+  pad->preroll = 2;
   pad->last_size = 0;
   GST_LOG ("sample rate: %d", pad->granulerate_n);
 
@@ -1661,6 +1676,7 @@ setup_cmml_mapper (GstOggStream * pad, ogg_packet * packet)
   GST_DEBUG ("blocksize1: %u", 1 << (data[0] & 0x0F));
 
   pad->caps = gst_caps_new_simple ("text/x-cmml", NULL);
+  pad->always_flush_page = TRUE;
   pad->is_sparse = TRUE;
 
   return TRUE;
@@ -1722,6 +1738,7 @@ setup_kate_mapper (GstOggStream * pad, ogg_packet * packet)
   }
 
   pad->is_sparse = TRUE;
+  pad->always_flush_page = TRUE;
 
   return TRUE;
 }

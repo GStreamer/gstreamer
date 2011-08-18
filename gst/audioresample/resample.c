@@ -924,6 +924,7 @@ speex_resampler_init (spx_uint32_t nb_channels, spx_uint32_t in_rate,
       out_rate, quality, err);
 }
 
+#if defined HAVE_ORC && !defined DISABLE_ORC
 static void
 check_insn_set (SpeexResamplerState * st, const char *name)
 {
@@ -934,6 +935,7 @@ check_insn_set (SpeexResamplerState * st, const char *name)
   if (!strcmp (name, "sse2"))
     st->use_sse = st->use_sse2 = 1;
 }
+#endif
 
 EXPORT SpeexResamplerState *
 speex_resampler_init_frac (spx_uint32_t nb_channels, spx_uint32_t ratio_num,

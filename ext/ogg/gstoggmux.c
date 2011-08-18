@@ -366,7 +366,7 @@ gst_ogg_mux_request_new_pad (GstElement * element,
     goto wrong_template;
 
   {
-    gint serial;
+    guint32 serial;
     gchar *name;
 
     if (req_name == NULL || strlen (req_name) < 6) {
@@ -374,7 +374,15 @@ gst_ogg_mux_request_new_pad (GstElement * element,
       serial = gst_ogg_mux_generate_serialno (ogg_mux);
     } else {
       /* parse serial number from requested padname */
-      serial = atoi (&req_name[5]);
+      unsigned long long_serial;
+      char *endptr = NULL;
+      long_serial = strtoul (&req_name[5], &endptr, 10);
+      if ((endptr && *endptr) || (long_serial & ~0xffffffff)) {
+        GST_WARNING_OBJECT (ogg_mux, "Invalid serial number specification: %s",
+            req_name + 5);
+        return NULL;
+      }
+      serial = (guint32) long_serial;
     }
     /* create new pad with the name */
     GST_DEBUG_OBJECT (ogg_mux, "Creating new pad for serial %d", serial);
@@ -1014,13 +1022,9 @@ gst_ogg_mux_get_headers (GstOggPadData * pad)
         GST_LOG_OBJECT (thepad, "streamheader is not fixed list");
       }
 
-      /* Start a new page for every CMML buffer */
-      if (gst_structure_has_name (structure, "text/x-cmml"))
-        pad->always_flush_page = TRUE;
     } else if (gst_structure_has_name (structure, "video/x-dirac")) {
       res = g_list_append (res, pad->buffer);
       pad->buffer = NULL;
-      pad->always_flush_page = TRUE;
     } else {
       GST_LOG_OBJECT (thepad, "caps don't have streamheader");
     }
@@ -1068,6 +1072,21 @@ gst_ogg_mux_set_header_on_caps (GstCaps * caps, GList * buffers)
   g_value_unset (&array);
 
   return caps;
+}
+
+static void
+create_header_packet (ogg_packet * packet, GstBuffer * buf, GstOggPadData * pad)
+{
+  gsize size;
+
+  packet->packet = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+  packet->bytes = size;
+  packet->granulepos = 0;
+  /* mark BOS and packet number */
+  packet->b_o_s = (pad->packetno == 0);
+  packet->packetno = pad->packetno++;
+  /* mark EOS */
+  packet->e_o_s = 0;
 }
 
 /*
@@ -1151,16 +1170,7 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
     }
 
     /* create a packet from the buffer */
-    packet.packet = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
-    packet.bytes = size;
-    packet.granulepos = GST_BUFFER_OFFSET_END (buf);
-    if (packet.granulepos == -1)
-      packet.granulepos = 0;
-    /* mark BOS and packet number */
-    packet.b_o_s = (pad->packetno == 0);
-    packet.packetno = pad->packetno++;
-    /* mark EOS */
-    packet.e_o_s = 0;
+    create_header_packet (&packet, buf, pad);
 
     /* swap the packet in */
     ogg_stream_packetin (&pad->map.stream, &packet);
@@ -1177,25 +1187,20 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
     GST_LOG_OBJECT (mux, "swapped out page with mime type %s",
         gst_structure_get_name (structure));
 
-    /* quick hack: put Theora, VP8 and Dirac video pages at the front.
+    /* quick hack: put video pages at the front.
      * Ideally, we would have a settable enum for which Ogg
      * profile we work with, and order based on that.
      * (FIXME: if there is more than one video stream, shouldn't we only put
      * one's BOS into the first page, followed by an audio stream's BOS, and
      * only then followed by the remaining video and audio streams?) */
-    if (gst_structure_has_name (structure, "video/x-theora")) {
-      GST_DEBUG_OBJECT (thepad, "putting %s page at the front", "Theora");
-      hbufs = g_list_prepend (hbufs, hbuf);
-    } else if (gst_structure_has_name (structure, "video/x-dirac")) {
-      GST_DEBUG_OBJECT (thepad, "putting %s page at the front", "Dirac");
-      hbufs = g_list_prepend (hbufs, hbuf);
-      pad->always_flush_page = TRUE;
-    } else if (gst_structure_has_name (structure, "video/x-vp8")) {
-      GST_DEBUG_OBJECT (thepad, "putting %s page at the front", "VP8");
+    if (pad->map.is_video) {
+      GST_DEBUG_OBJECT (thepad, "putting %s page at the front",
+          gst_structure_get_name (structure));
       hbufs = g_list_prepend (hbufs, hbuf);
     } else {
       hbufs = g_list_append (hbufs, hbuf);
     }
+
     gst_caps_unref (caps);
   }
 
@@ -1223,16 +1228,7 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
       hwalk = hwalk->next;
 
       /* create a packet from the buffer */
-      packet.packet = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
-      packet.bytes = size;
-      packet.granulepos = GST_BUFFER_OFFSET_END (buf);
-      if (packet.granulepos == -1)
-        packet.granulepos = 0;
-      /* mark BOS and packet number */
-      packet.b_o_s = (pad->packetno == 0);
-      packet.packetno = pad->packetno++;
-      /* mark EOS */
-      packet.e_o_s = 0;
+      create_header_packet (&packet, buf, pad);
 
       /* swap the packet in */
       ogg_stream_packetin (&pad->map.stream, &packet);
@@ -1453,7 +1449,8 @@ gst_ogg_mux_process_best_pad (GstOggMux * ogg_mux, GstOggPadData * best)
     tmpbuf = NULL;
 
     /* we flush when we see a new keyframe */
-    force_flush = (pad->prev_delta && !delta_unit) || pad->always_flush_page;
+    force_flush = (pad->prev_delta && !delta_unit)
+        || pad->map.always_flush_page;
     if (duration != -1) {
       pad->duration += duration;
       /* if page duration exceeds max, flush page */

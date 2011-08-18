@@ -45,7 +45,7 @@ struct _GstOggStream
 {
   ogg_stream_state stream;
 
-  glong serialno;
+  guint32 serialno;
   GList *headers;
   gboolean have_headers;
   GList *queued;
@@ -73,6 +73,8 @@ struct _GstOggStream
   GstCaps *caps;
 
   gboolean is_video;
+  gboolean always_flush_page;
+
   /* vorbis stuff */
   int nln_increments[4];
   int nsn_increment;
@@ -123,6 +125,7 @@ gboolean gst_ogg_stream_granulepos_is_key_frame (GstOggStream *pad,
 gboolean gst_ogg_stream_packet_is_header (GstOggStream *pad, ogg_packet *packet);
 gint64 gst_ogg_stream_get_packet_duration (GstOggStream * pad, ogg_packet *packet);
 void gst_ogg_stream_extract_tags (GstOggStream * pad, ogg_packet * packet);
+const char *gst_ogg_stream_get_media_type (GstOggStream * pad);
 
 gboolean gst_ogg_map_parse_fisbone (GstOggStream * pad, const guint8 * data, guint size,
     guint32 * serialno, GstOggSkeleton *type);
