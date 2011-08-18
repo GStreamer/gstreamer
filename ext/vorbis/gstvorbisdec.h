@@ -65,7 +65,7 @@ struct _GstVorbisDec {
 #endif
 
   gboolean          initialized;
-  guint             width;
+  GstAudioInfo      info;
 
   /* list of buffers that need timestamps */
   GList            *queued;

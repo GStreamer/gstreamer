@@ -53,9 +53,6 @@ struct _GstAudioResample {
   GstBaseTransform element;
 
   /* <private> */
-
-  GstCaps *srccaps, *sinkcaps;
-
   gboolean need_discont;
 
   GstClockTime t0;
@@ -67,12 +64,18 @@ struct _GstAudioResample {
   guint64 num_gap_samples;
   guint64 num_nongap_samples;
 
+  GstAudioInfo in;
+  GstAudioInfo out;
+
+  /* properties */
+  gint quality;
+
+  /* state */
+  gboolean fp;
+  gint width;
   gint channels;
   gint inrate;
   gint outrate;
-  gint quality;
-  gint width;
-  gboolean fp;
 
   guint8 *tmp_in;
   guint tmp_in_size;

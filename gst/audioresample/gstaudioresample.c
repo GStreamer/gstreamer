@@ -28,7 +28,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v filesrc location=sine.ogg ! oggdemux ! vorbisdec ! audioconvert ! audioresample ! audio/x-raw-int, rate=8000 ! alsasink
+ * gst-launch -v filesrc location=sine.ogg ! oggdemux ! vorbisdec ! audioconvert ! audioresample ! audio/x-raw, rate=8000 ! alsasink
  * ]| Decode an Ogg/Vorbis downsample to 8Khz and play sound through alsa.
  * To create the Ogg/Vorbis file refer to the documentation of vorbisenc.
  * </refsect2>
@@ -65,42 +65,13 @@ enum
   PROP_QUALITY
 };
 
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
 #define SUPPORTED_CAPS \
-GST_STATIC_CAPS ( \
-    "audio/x-raw-float, " \
-      "rate = (int) [ 1, MAX ], "	\
-      "channels = (int) [ 1, MAX ], " \
-      "endianness = (int) BYTE_ORDER, " \
-      "width = (int) { 32, 64 }; " \
-    "audio/x-raw-int, " \
-      "rate = (int) [ 1, MAX ], " \
-      "channels = (int) [ 1, MAX ], " \
-      "endianness = (int) BYTE_ORDER, " \
-      "width = (int) 32, " \
-      "depth = (int) 32, " \
-      "signed = (boolean) true; " \
-    "audio/x-raw-int, " \
-      "rate = (int) [ 1, MAX ], " \
-      "channels = (int) [ 1, MAX ], " \
-      "endianness = (int) BYTE_ORDER, " \
-      "width = (int) 24, " \
-      "depth = (int) 24, " \
-      "signed = (boolean) true; " \
-    "audio/x-raw-int, " \
-      "rate = (int) [ 1, MAX ], " \
-      "channels = (int) [ 1, MAX ], " \
-      "endianness = (int) BYTE_ORDER, " \
-      "width = (int) 16, " \
-      "depth = (int) 16, " \
-      "signed = (boolean) true; " \
-    "audio/x-raw-int, " \
-      "rate = (int) [ 1, MAX ], " \
-      "channels = (int) [ 1, MAX ], " \
-      "endianness = (int) BYTE_ORDER, " \
-      "width = (int) 8, " \
-      "depth = (int) 8, " \
-      "signed = (boolean) true" \
-)
+  GST_AUDIO_CAPS_MAKE ("{ F32_LE, F64_LE, S32_LE, S24_3LE, S16_LE, S8 }")
+#else
+#define SUPPORTED_CAPS \
+  GST_AUDIO_CAPS_MAKE ("{ F32_BE, F64_BE, S32_BE, S24_3BE, S16_BE, S8 }")
+#endif
 
 /* If TRUE integer arithmetic resampling is faster and will be used if appropiate */
 #if defined AUDIORESAMPLE_FORMAT_INT
@@ -113,11 +84,15 @@ static gboolean gst_audio_resample_use_int = FALSE;
 
 static GstStaticPadTemplate gst_audio_resample_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK, GST_PAD_ALWAYS, SUPPORTED_CAPS);
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (SUPPORTED_CAPS));
 
 static GstStaticPadTemplate gst_audio_resample_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
-    GST_PAD_SRC, GST_PAD_ALWAYS, SUPPORTED_CAPS);
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (SUPPORTED_CAPS));
 
 static void gst_audio_resample_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
@@ -252,9 +227,6 @@ gst_audio_resample_stop (GstBaseTransform * base)
   resample->tmp_out = NULL;
   resample->tmp_out_size = 0;
 
-  gst_caps_replace (&resample->sinkcaps, NULL);
-  gst_caps_replace (&resample->srccaps, NULL);
-
   return TRUE;
 }
 
@@ -262,23 +234,21 @@ static gboolean
 gst_audio_resample_get_unit_size (GstBaseTransform * base, GstCaps * caps,
     gsize * size)
 {
-  gint width, channels;
-  GstStructure *structure;
-  gboolean ret;
+  GstAudioInfo info;
 
-  g_return_val_if_fail (size != NULL, FALSE);
+  if (!gst_audio_info_from_caps (&info, caps))
+    goto invalid_caps;
 
-  /* this works for both float and int */
-  structure = gst_caps_get_structure (caps, 0);
-  ret = gst_structure_get_int (structure, "width", &width);
-  ret &= gst_structure_get_int (structure, "channels", &channels);
-
-  if (G_UNLIKELY (!ret))
-    return FALSE;
-
-  *size = (width / 8) * channels;
+  *size = GST_AUDIO_INFO_BPF (&info);
 
   return TRUE;
+
+  /* ERRORS */
+invalid_caps:
+  {
+    GST_ERROR_OBJECT (base, "invalid caps");
+    return FALSE;
+  }
 }
 
 static GstCaps *
@@ -455,63 +425,6 @@ gst_audio_resample_reset_state (GstAudioResample * resample)
     resample->funcs->reset_mem (resample->state);
 }
 
-static gboolean
-gst_audio_resample_parse_caps (GstCaps * incaps,
-    GstCaps * outcaps, gint * width, gint * channels, gint * inrate,
-    gint * outrate, gboolean * fp)
-{
-  GstStructure *structure;
-  gboolean ret;
-  gint mywidth, myinrate, myoutrate, mychannels;
-  gboolean myfp;
-
-  GST_DEBUG ("incaps %" GST_PTR_FORMAT ", outcaps %"
-      GST_PTR_FORMAT, incaps, outcaps);
-
-  structure = gst_caps_get_structure (incaps, 0);
-
-  if (gst_structure_has_name (structure, "audio/x-raw-float"))
-    myfp = TRUE;
-  else
-    myfp = FALSE;
-
-  ret = gst_structure_get_int (structure, "rate", &myinrate);
-  ret &= gst_structure_get_int (structure, "channels", &mychannels);
-  ret &= gst_structure_get_int (structure, "width", &mywidth);
-  if (G_UNLIKELY (!ret))
-    goto no_in_rate_channels;
-
-  structure = gst_caps_get_structure (outcaps, 0);
-  ret = gst_structure_get_int (structure, "rate", &myoutrate);
-  if (G_UNLIKELY (!ret))
-    goto no_out_rate;
-
-  if (channels)
-    *channels = mychannels;
-  if (inrate)
-    *inrate = myinrate;
-  if (outrate)
-    *outrate = myoutrate;
-  if (width)
-    *width = mywidth;
-  if (fp)
-    *fp = myfp;
-
-  return TRUE;
-
-  /* ERRORS */
-no_in_rate_channels:
-  {
-    GST_DEBUG ("could not get input rate and channels");
-    return FALSE;
-  }
-no_out_rate:
-  {
-    GST_DEBUG ("could not get output rate");
-    return FALSE;
-  }
-}
-
 static gint
 _gcd (gint a, gint b)
 {
@@ -531,26 +444,29 @@ gst_audio_resample_transform_size (GstBaseTransform * base,
     gsize * othersize)
 {
   gboolean ret = TRUE;
+  GstAudioInfo in, out;
   guint32 ratio_den, ratio_num;
   gint inrate, outrate, gcd;
-  gint bytes_per_samp, channels;
+  gint bpf;
 
   GST_LOG_OBJECT (base, "asked to transform size %" G_GSIZE_FORMAT
       " in direction %s", size, direction == GST_PAD_SINK ? "SINK" : "SRC");
 
   /* Get sample width -> bytes_per_samp, channels, inrate, outrate */
-  ret =
-      gst_audio_resample_parse_caps (caps, othercaps, &bytes_per_samp,
-      &channels, &inrate, &outrate, NULL);
+  ret = gst_audio_info_from_caps (&in, caps);
+  ret &= gst_audio_info_from_caps (&out, othercaps);
   if (G_UNLIKELY (!ret)) {
     GST_ERROR_OBJECT (base, "Wrong caps");
     return FALSE;
   }
   /* Number of samples in either buffer is size / (width*channels) ->
    * calculate the factor */
-  bytes_per_samp = bytes_per_samp * channels / 8;
+  bpf = GST_AUDIO_INFO_BPF (&in);
+  inrate = GST_AUDIO_INFO_RATE (&in);
+  outrate = GST_AUDIO_INFO_RATE (&out);
+
   /* Convert source buffer size to samples */
-  size /= bytes_per_samp;
+  size /= bpf;
 
   /* Simplify the conversion ratio factors */
   gcd = _gcd (inrate, outrate);
@@ -560,16 +476,16 @@ gst_audio_resample_transform_size (GstBaseTransform * base,
   if (direction == GST_PAD_SINK) {
     /* asked to convert size of an incoming buffer. Round up the output size */
     *othersize = gst_util_uint64_scale_int_ceil (size, ratio_den, ratio_num);
-    *othersize *= bytes_per_samp;
+    *othersize *= bpf;
   } else {
     /* asked to convert size of an outgoing buffer. Round down the input size */
     *othersize = gst_util_uint64_scale_int (size, ratio_num, ratio_den);
-    *othersize *= bytes_per_samp;
+    *othersize *= bpf;
   }
 
   GST_LOG_OBJECT (base,
       "transformed size %" G_GSIZE_FORMAT " to %" G_GSIZE_FORMAT,
-      size * bytes_per_samp, *othersize);
+      size * bpf, *othersize);
 
   return ret;
 }
@@ -579,18 +495,27 @@ gst_audio_resample_set_caps (GstBaseTransform * base, GstCaps * incaps,
     GstCaps * outcaps)
 {
   gboolean ret;
-  gint width = 0, inrate = 0, outrate = 0, channels = 0;
+  gint width, inrate, outrate, channels;
   gboolean fp;
   GstAudioResample *resample = GST_AUDIO_RESAMPLE (base);
+  GstAudioInfo in, out;
 
   GST_LOG ("incaps %" GST_PTR_FORMAT ", outcaps %"
       GST_PTR_FORMAT, incaps, outcaps);
 
-  ret = gst_audio_resample_parse_caps (incaps, outcaps,
-      &width, &channels, &inrate, &outrate, &fp);
+  if (!gst_audio_info_from_caps (&in, incaps))
+    goto invalid_incaps;
+  if (!gst_audio_info_from_caps (&out, outcaps))
+    goto invalid_outcaps;
 
-  if (G_UNLIKELY (!ret))
-    return FALSE;
+  /* FIXME do some checks */
+
+  /* take new values */
+  width = GST_AUDIO_FORMAT_INFO_WIDTH (in.finfo);
+  channels = GST_AUDIO_INFO_CHANNELS (&in);
+  inrate = GST_AUDIO_INFO_RATE (&in);
+  outrate = GST_AUDIO_INFO_RATE (&out);
+  fp = GST_AUDIO_FORMAT_INFO_IS_FLOAT (in.finfo);
 
   ret =
       gst_audio_resample_update_state (resample, width, channels, inrate,
@@ -599,12 +524,19 @@ gst_audio_resample_set_caps (GstBaseTransform * base, GstCaps * incaps,
   if (G_UNLIKELY (!ret))
     return FALSE;
 
-  /* save caps so we can short-circuit in the size_transform if the caps
-   * are the same */
-  gst_caps_replace (&resample->sinkcaps, incaps);
-  gst_caps_replace (&resample->srccaps, outcaps);
-
   return TRUE;
+
+  /* ERROR */
+invalid_incaps:
+  {
+    GST_ERROR_OBJECT (base, "invalid incaps");
+    return FALSE;
+  }
+invalid_outcaps:
+  {
+    GST_ERROR_OBJECT (base, "invalid outcaps");
+    return FALSE;
+  }
 }
 
 #define GST_MAXINT24 (8388607)

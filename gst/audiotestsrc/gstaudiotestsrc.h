@@ -24,6 +24,8 @@
 #include <gst/gst.h>
 #include <gst/base/gstbasesrc.h>
 
+#include <gst/audio/audio.h>
+
 G_BEGIN_DECLS
 
 
@@ -86,14 +88,6 @@ typedef struct {
   gdouble    state;         /* noise state */
 } GstRedNoise;
 
-typedef enum {
-  GST_AUDIO_TEST_SRC_FORMAT_NONE = -1,
-  GST_AUDIO_TEST_SRC_FORMAT_S16 = 0,
-  GST_AUDIO_TEST_SRC_FORMAT_S32,
-  GST_AUDIO_TEST_SRC_FORMAT_F32,
-  GST_AUDIO_TEST_SRC_FORMAT_F64
-} GstAudioTestSrcFormat;
-
 typedef struct _GstAudioTestSrc GstAudioTestSrc;
 typedef struct _GstAudioTestSrcClass GstAudioTestSrcClass;
 
@@ -115,11 +109,8 @@ struct _GstAudioTestSrc {
   gdouble freq;
 
   /* audio parameters */
-  gint channels;
-  gint samplerate;
+  GstAudioInfo info;
   gint samples_per_buffer;
-  gint sample_size;
-  GstAudioTestSrcFormat format;
 
   /*< private >*/
   gboolean tags_pushed;			/* send tags just once ? */

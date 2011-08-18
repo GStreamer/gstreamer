@@ -24,6 +24,7 @@
 #define __GST_RING_BUFFER_H__
 
 #include <gst/gst.h>
+#include <gst/audio/audio.h>
 
 G_BEGIN_DECLS
 
@@ -83,8 +84,7 @@ typedef enum {
 
 /**
  * GstBufferFormatType:
- * @GST_BUFTYPE_LINEAR: samples in linear PCM
- * @GST_BUFTYPE_FLOAT: samples in float
+ * @GST_BUFTYPE_RAW: samples in linear or float
  * @GST_BUFTYPE_MU_LAW: samples in mulaw
  * @GST_BUFTYPE_A_LAW: samples in alaw
  * @GST_BUFTYPE_IMA_ADPCM: samples in ima adpcm
@@ -101,8 +101,7 @@ typedef enum {
  */
 typedef enum
 {
-  GST_BUFTYPE_LINEAR,
-  GST_BUFTYPE_FLOAT,
+  GST_BUFTYPE_RAW,
   GST_BUFTYPE_MU_LAW,
   GST_BUFTYPE_A_LAW,
   GST_BUFTYPE_IMA_ADPCM,
@@ -115,107 +114,6 @@ typedef enum
   GST_BUFTYPE_MPEG2_AAC,
   GST_BUFTYPE_MPEG4_AAC,
 } GstBufferFormatType;
-
-/**
- * GstBufferFormat:
- * @GST_UNKNOWN: unspecified
- * @GST_S8: integer signed 8 bit
- * @GST_U8: integer unsigned 8 bit
- * @GST_S16_LE: integer signed 16 bit little endian
- * @GST_S16_BE: integer signed 16 bit big endian
- * @GST_U16_LE: integer unsigned 16 bit little endian
- * @GST_U16_BE: integer unsigned 16 bit big endian
- * @GST_S24_LE: integer signed 24 bit little endian
- * @GST_S24_BE: integer signed 24 bit big endian
- * @GST_U24_LE: integer unsigned 24 bit little endian
- * @GST_U24_BE: integer unsigned 24 bit big endian
- * @GST_S32_LE: integer signed 32 bit little endian
- * @GST_S32_BE: integer signed 32 bit big endian
- * @GST_U32_LE: integer unsigned 32 bit little endian
- * @GST_U32_BE: integer unsigned 32 bit big endian
- * @GST_S24_3LE: integer signed 24 bit little endian packed in 3 bytes
- * @GST_S24_3BE: integer signed 24 bit big endian packed in 3 bytes
- * @GST_U24_3LE: integer unsigned 24 bit little endian packed in 3 bytes
- * @GST_U24_3BE: integer unsigned 24 bit big endian packed in 3 bytes
- * @GST_S20_3LE: integer signed 20 bit little endian packed in 3 bytes
- * @GST_S20_3BE: integer signed 20 bit big endian packed in 3 bytes
- * @GST_U20_3LE: integer unsigned 20 bit little endian packed in 3 bytes
- * @GST_U20_3BE: integer unsigned 20 bit big endian packed in 3 bytes
- * @GST_S18_3LE: integer signed 18 bit little endian packed in 3 bytes
- * @GST_S18_3BE: integer signed 18 bit big endian packed in 3 bytes
- * @GST_U18_3LE: integer unsigned 18 bit little endian packed in 3 bytes
- * @GST_U18_3BE: integer unsigned 18 bit big endian packed in 3 bytes
- * @GST_FLOAT32_LE: floating 32 bit little endian
- * @GST_FLOAT32_BE: floating 32 bit big endian
- * @GST_FLOAT64_LE: floating 64 bit little endian
- * @GST_FLOAT64_BE: floating 64 bit big endian
- * @GST_MU_LAW: mu-law
- * @GST_A_LAW: a-law
- * @GST_IMA_ADPCM: ima adpcm
- * @GST_MPEG: mpeg audio (but not aac)
- * @GST_GSM: gsm
- * @GST_IEC958: IEC958 frames
- * @GST_AC3: ac3
- * @GST_EAC3: eac3
- * @GST_DTS: dts
- * @GST_MPEG2_AAC: mpeg-2 aac
- * @GST_MPEG4_AAC: mpeg-4 aac
- *
- * The detailed format of the samples in the ringbuffer.
- */
-typedef enum
-{
-  GST_UNKNOWN,
-
-  GST_S8,
-  GST_U8,
-
-  GST_S16_LE,
-  GST_S16_BE,
-  GST_U16_LE,
-  GST_U16_BE,
-
-  GST_S24_LE,
-  GST_S24_BE,
-  GST_U24_LE,
-  GST_U24_BE,
-
-  GST_S32_LE,
-  GST_S32_BE,
-  GST_U32_LE,
-  GST_U32_BE,
-
-  GST_S24_3LE,
-  GST_S24_3BE,
-  GST_U24_3LE,
-  GST_U24_3BE,
-  GST_S20_3LE,
-  GST_S20_3BE,
-  GST_U20_3LE,
-  GST_U20_3BE,
-  GST_S18_3LE,
-  GST_S18_3BE,
-  GST_U18_3LE,
-  GST_U18_3BE,
-
-  GST_FLOAT32_LE,
-  GST_FLOAT32_BE,
-
-  GST_FLOAT64_LE,
-  GST_FLOAT64_BE,
-
-  GST_MU_LAW,
-  GST_A_LAW,
-  GST_IMA_ADPCM,
-  GST_MPEG,
-  GST_GSM,
-  GST_IEC958,
-  GST_AC3,
-  GST_EAC3,
-  GST_DTS,
-  GST_MPEG2_AAC,
-  GST_MPEG4_AAC,
-} GstBufferFormat;
 
 /**
  * GstRingBufferSpec:
@@ -246,14 +144,8 @@ struct _GstRingBufferSpec
   GstCaps  *caps;               /* the caps of the buffer */
 
   /* in/out */
-  GstBufferFormatType   type;
-  GstBufferFormat format;
-  gboolean  sign;
-  gboolean  bigend;
-  gint      width;
-  gint      depth;
-  gint      rate;
-  gint      channels;
+  GstBufferFormatType type;
+  GstAudioInfo        info;
 
   guint64  latency_time;        /* the required/actual latency time, this is the
 				 * actual the size of one segment and the
@@ -268,10 +160,6 @@ struct _GstRingBufferSpec
 				 * number of segments of @segsize and should be
 				 * chosen so that it matches buffer_time as
 				 * close as possible. */
-  /* out */
-  gint     bytes_per_sample;    /* number of bytes of one sample */
-  guint8   silence_sample[32];  /* bytes representing silence */
-
   /* ABI added 0.10.20 */
   gint     seglatency;          /* number of segments queued in the lower
 				 * level device, defaults to segtotal. */

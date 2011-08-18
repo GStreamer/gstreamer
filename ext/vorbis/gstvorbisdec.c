@@ -224,7 +224,7 @@ vorbis_dec_convert (GstPad * pad,
     case GST_FORMAT_TIME:
       switch (*dest_format) {
         case GST_FORMAT_BYTES:
-          scale = dec->width * dec->vi.channels;
+          scale = dec->info.bpf;
         case GST_FORMAT_DEFAULT:
           *dest_value =
               scale * gst_util_uint64_scale_int (src_value, dec->vi.rate,
@@ -237,7 +237,7 @@ vorbis_dec_convert (GstPad * pad,
     case GST_FORMAT_DEFAULT:
       switch (*dest_format) {
         case GST_FORMAT_BYTES:
-          *dest_value = src_value * dec->width * dec->vi.channels;
+          *dest_value = src_value * dec->info.bpf;
           break;
         case GST_FORMAT_TIME:
           *dest_value =
@@ -250,11 +250,11 @@ vorbis_dec_convert (GstPad * pad,
     case GST_FORMAT_BYTES:
       switch (*dest_format) {
         case GST_FORMAT_DEFAULT:
-          *dest_value = src_value / (dec->width * dec->vi.channels);
+          *dest_value = src_value / dec->info.bpf;
           break;
         case GST_FORMAT_TIME:
           *dest_value = gst_util_uint64_scale_int (src_value, GST_SECOND,
-              dec->vi.rate * dec->width * dec->vi.channels);
+              dec->vi.rate * dec->info.bpf);
           break;
         default:
           res = FALSE;
@@ -545,10 +545,13 @@ static GstFlowReturn
 vorbis_handle_identification_packet (GstVorbisDec * vd)
 {
   GstCaps *caps;
+  GstAudioInfo info;
   const GstAudioChannelPosition *pos = NULL;
-  gint width = GST_VORBIS_DEC_DEFAULT_SAMPLE_WIDTH;
 
-  switch (vd->vi.channels) {
+  gst_audio_info_set_format (&info, GST_VORBIS_AUDIO_FORMAT, vd->vi.rate,
+      vd->vi.channels);
+
+  switch (info.channels) {
     case 1:
     case 2:
       /* nothing */
@@ -559,59 +562,27 @@ vorbis_handle_identification_packet (GstVorbisDec * vd)
     case 6:
     case 7:
     case 8:
-      pos = gst_vorbis_channel_positions[vd->vi.channels - 1];
+      pos = gst_vorbis_channel_positions[info.channels - 1];
       break;
-    default:{
-      gint i;
-      GstAudioChannelPosition *posn =
-          g_new (GstAudioChannelPosition, vd->vi.channels);
+    default:
+    {
+      gint i, max_pos = MAX (info.channels, 64);
 
-      GST_ELEMENT_WARNING (GST_ELEMENT (vd), STREAM, DECODE,
+      GST_ELEMENT_WARNING (vd, STREAM, DECODE,
           (NULL), ("Using NONE channel layout for more than 8 channels"));
-
-      for (i = 0; i < vd->vi.channels; i++)
-        posn[i] = GST_AUDIO_CHANNEL_POSITION_NONE;
-
-      pos = posn;
+      for (i = 0; i < max_pos; i++)
+        info.position[i] = GST_AUDIO_CHANNEL_POSITION_NONE;
     }
   }
 
-  /* negotiate width with downstream */
-  caps = gst_pad_get_allowed_caps (vd->srcpad);
-  if (caps) {
-    if (!gst_caps_is_empty (caps)) {
-      GstStructure *s;
-
-      s = gst_caps_get_structure (caps, 0);
-      /* template ensures 16 or 32 */
-      gst_structure_get_int (s, "width", &width);
-
-      GST_INFO_OBJECT (vd, "using %s with %d channels and %d bit audio depth",
-          gst_structure_get_name (s), vd->vi.channels, width);
-    }
-    gst_caps_unref (caps);
-  }
-  vd->width = width >> 3;
-
-  /* select a copy_samples function, this way we can have specialized versions
-   * for mono/stereo and avoid the depth switch in tremor case */
-  vd->copy_samples = get_copy_sample_func (vd->vi.channels, vd->width);
-
-  caps = gst_caps_make_writable (gst_pad_get_pad_template_caps (vd->srcpad));
-  gst_caps_set_simple (caps, "rate", G_TYPE_INT, vd->vi.rate,
-      "channels", G_TYPE_INT, vd->vi.channels,
-      "width", G_TYPE_INT, width, NULL);
-
-  if (pos) {
-    gst_audio_set_channel_positions (gst_caps_get_structure (caps, 0), pos);
-  }
-
-  if (vd->vi.channels > 8) {
-    g_free ((GstAudioChannelPosition *) pos);
-  }
-
+  caps = gst_audio_info_to_caps (&info);
   gst_pad_set_caps (vd->srcpad, caps);
   gst_caps_unref (caps);
+
+  vd->info = info;
+  /* select a copy_samples function, this way we can have specialized versions
+   * for mono/stereo and avoid the depth switch in tremor case */
+  vd->copy_samples = get_copy_sample_func (info.channels);
 
   return GST_FLOW_OK;
 }
@@ -792,7 +763,7 @@ vorbis_dec_push_forward (GstVorbisDec * dec, GstBuffer * buf)
 
   /* clip */
   if (!(buf = gst_audio_buffer_clip (buf, &dec->segment, dec->vi.rate,
-              dec->vi.channels * dec->width))) {
+              dec->info.bpf))) {
     GST_LOG_OBJECT (dec, "clipped buffer");
     return GST_FLOW_OK;
   }
@@ -856,9 +827,7 @@ static GstFlowReturn
 vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet,
     GstClockTime timestamp, GstClockTime duration)
 {
-#ifdef USE_TREMOLO
-  vorbis_sample_t *pcm;
-#else
+#ifndef USE_TREMOLO
   vorbis_sample_t **pcm;
 #endif
   guint sample_count;
@@ -899,17 +868,17 @@ vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet,
 #endif
     goto done;
 
-  size = sample_count * vd->vi.channels * vd->width;
+  size = sample_count * vd->info.bpf;
   GST_LOG_OBJECT (vd, "%d samples ready for reading, size %" G_GSIZE_FORMAT,
       sample_count, size);
 
   /* alloc buffer for it */
   out = gst_buffer_new_and_alloc (size);
 
+  data = gst_buffer_map (out, NULL, NULL, GST_MAP_WRITE);
   /* get samples ready for reading now, should be sample_count */
 #ifdef USE_TREMOLO
-  pcm = GST_BUFFER_DATA (out);
-  if (G_UNLIKELY ((vorbis_dsp_pcmout (&vd->vd, pcm,
+  if (G_UNLIKELY ((vorbis_dsp_pcmout (&vd->vd, data,
                   sample_count)) != sample_count))
 #else
   if (G_UNLIKELY ((vorbis_synthesis_pcmout (&vd->vd, &pcm)) != sample_count))
@@ -918,9 +887,8 @@ vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet,
 
 #ifndef USE_TREMOLO
   /* copy samples in buffer */
-  data = gst_buffer_map (out, NULL, NULL, GST_MAP_WRITE);
   vd->copy_samples ((vorbis_sample_t *) data, pcm,
-      sample_count, vd->vi.channels, vd->width);
+      sample_count, vd->info.channels);
 #endif
 
   GST_LOG_OBJECT (vd, "setting output size to %" G_GSIZE_FORMAT, size);

@@ -61,7 +61,7 @@ struct _GstAlsaSink {
   snd_pcm_format_t format;
   guint rate;
   guint channels;
-  gint bytes_per_sample;
+  gint bpf;
   gboolean iec958;
   gboolean need_swap;
 

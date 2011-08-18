@@ -51,8 +51,7 @@ struct _GstAudioRate
   GstPad *sinkpad, *srcpad;
 
   /* audio format */
-  gint bytes_per_sample;
-  gint rate;
+  GstAudioInfo info;
 
   /* stats */
   guint64 in, out, add, drop;

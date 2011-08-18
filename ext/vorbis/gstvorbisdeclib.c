@@ -34,14 +34,14 @@
  * is allowed, downstream elements are supposed to clip */
 static void
 copy_samples_m (vorbis_sample_t * out, vorbis_sample_t ** in, guint samples,
-    gint channels, gint width)
+    gint channels)
 {
   memcpy (out, in[0], samples * sizeof (float));
 }
 
 static void
 copy_samples_s (vorbis_sample_t * out, vorbis_sample_t ** in, guint samples,
-    gint channels, gint width)
+    gint channels)
 {
 #ifdef GST_VORBIS_DEC_SEQUENTIAL
   memcpy (out, in[0], samples * sizeof (float));
@@ -59,7 +59,7 @@ copy_samples_s (vorbis_sample_t * out, vorbis_sample_t ** in, guint samples,
 
 static void
 copy_samples (vorbis_sample_t * out, vorbis_sample_t ** in, guint samples,
-    gint channels, gint width)
+    gint channels)
 {
 #ifdef GST_VORBIS_DEC_SEQUENTIAL
   gint i;
@@ -80,11 +80,9 @@ copy_samples (vorbis_sample_t * out, vorbis_sample_t ** in, guint samples,
 }
 
 CopySampleFunc
-get_copy_sample_func (gint channels, gint width)
+get_copy_sample_func (gint channels)
 {
   CopySampleFunc f = NULL;
-
-  g_assert (width == 4);
 
   switch (channels) {
     case 1:
@@ -131,50 +129,8 @@ CLIP_TO_15 (ogg_int32_t x)
 #endif
 
 static void
-copy_samples_32_m (vorbis_sample_t * _out, vorbis_sample_t ** _in,
-    guint samples, gint channels, gint width)
-{
-  gint32 *out = (gint32 *) _out;
-  ogg_int32_t **in = (ogg_int32_t **) _in;
-  gint j;
-
-  for (j = 0; j < samples; j++) {
-    *out++ = CLIP_TO_15 (in[0][j] >> 9);
-  }
-}
-
-static void
-copy_samples_32_s (vorbis_sample_t * _out, vorbis_sample_t ** _in,
-    guint samples, gint channels, gint width)
-{
-  gint32 *out = (gint32 *) _out;
-  ogg_int32_t **in = (ogg_int32_t **) _in;
-  gint j;
-
-  for (j = 0; j < samples; j++) {
-    *out++ = CLIP_TO_15 (in[0][j] >> 9);
-    *out++ = CLIP_TO_15 (in[1][j] >> 9);
-  }
-}
-
-static void
-copy_samples_32 (vorbis_sample_t * _out, vorbis_sample_t ** _in, guint samples,
-    gint channels, gint width)
-{
-  gint32 *out = (gint32 *) _out;
-  ogg_int32_t **in = (ogg_int32_t **) _in;
-  gint i, j;
-
-  for (j = 0; j < samples; j++) {
-    for (i = 0; i < channels; i++) {
-      *out++ = CLIP_TO_15 (in[i][j] >> 9);
-    }
-  }
-}
-
-static void
 copy_samples_16_m (vorbis_sample_t * _out, vorbis_sample_t ** _in,
-    guint samples, gint channels, gint width)
+    guint samples, gint channels)
 {
   gint16 *out = (gint16 *) _out;
   ogg_int32_t **in = (ogg_int32_t **) _in;
@@ -187,7 +143,7 @@ copy_samples_16_m (vorbis_sample_t * _out, vorbis_sample_t ** _in,
 
 static void
 copy_samples_16_s (vorbis_sample_t * _out, vorbis_sample_t ** _in,
-    guint samples, gint channels, gint width)
+    guint samples, gint channels)
 {
   gint16 *out = (gint16 *) _out;
   ogg_int32_t **in = (ogg_int32_t **) _in;
@@ -201,7 +157,7 @@ copy_samples_16_s (vorbis_sample_t * _out, vorbis_sample_t ** _in,
 
 static void
 copy_samples_16 (vorbis_sample_t * _out, vorbis_sample_t ** _in, guint samples,
-    gint channels, gint width)
+    gint channels)
 {
   gint16 *out = (gint16 *) _out;
   ogg_int32_t **in = (ogg_int32_t **) _in;
@@ -215,36 +171,20 @@ copy_samples_16 (vorbis_sample_t * _out, vorbis_sample_t ** _in, guint samples,
 }
 
 CopySampleFunc
-get_copy_sample_func (gint channels, gint width)
+get_copy_sample_func (gint channels)
 {
   CopySampleFunc f = NULL;
 
-  if (width == 4) {
-    switch (channels) {
-      case 1:
-        f = copy_samples_32_m;
-        break;
-      case 2:
-        f = copy_samples_32_s;
-        break;
-      default:
-        f = copy_samples_32;
-        break;
-    }
-  } else if (width == 2) {
-    switch (channels) {
-      case 1:
-        f = copy_samples_16_m;
-        break;
-      case 2:
-        f = copy_samples_16_s;
-        break;
-      default:
-        f = copy_samples_16;
-        break;
-    }
-  } else {
-    g_assert_not_reached ();
+  switch (channels) {
+    case 1:
+      f = copy_samples_16_m;
+      break;
+    case 2:
+      f = copy_samples_16_s;
+      break;
+    default:
+      f = copy_samples_16;
+      break;
   }
   return f;
 }

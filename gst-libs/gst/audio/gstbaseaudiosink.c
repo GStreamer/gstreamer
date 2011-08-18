@@ -395,7 +395,7 @@ gst_base_audio_sink_query (GstElement * element, GstQuery * query)
           GstRingBufferSpec *spec;
 
           GST_OBJECT_LOCK (basesink);
-          if (!basesink->ringbuffer || !basesink->ringbuffer->spec.rate) {
+          if (!basesink->ringbuffer || !basesink->ringbuffer->spec.info.rate) {
             GST_OBJECT_UNLOCK (basesink);
 
             GST_DEBUG_OBJECT (basesink,
@@ -409,7 +409,7 @@ gst_base_audio_sink_query (GstElement * element, GstQuery * query)
 
           base_latency =
               gst_util_uint64_scale_int (spec->seglatency * spec->segsize,
-              GST_SECOND, spec->rate * spec->bytes_per_sample);
+              GST_SECOND, spec->info.rate * spec->info.bpf);
           GST_OBJECT_UNLOCK (basesink);
 
           /* we cannot go lower than the buffer size and the min peer latency */
@@ -470,7 +470,7 @@ gst_base_audio_sink_get_time (GstClock * clock, GstBaseAudioSink * sink)
   guint delay;
   GstClockTime result;
 
-  if (sink->ringbuffer == NULL || sink->ringbuffer->spec.rate == 0)
+  if (sink->ringbuffer == NULL || sink->ringbuffer->spec.info.rate == 0)
     return GST_CLOCK_TIME_NONE;
 
   /* our processed samples are always increasing */
@@ -486,7 +486,7 @@ gst_base_audio_sink_get_time (GstClock * clock, GstBaseAudioSink * sink)
     samples = 0;
 
   result = gst_util_uint64_scale_int (samples, GST_SECOND,
-      sink->ringbuffer->spec.rate);
+      sink->ringbuffer->spec.info.rate);
 
   GST_DEBUG_OBJECT (sink,
       "processed samples: raw %" G_GUINT64_FORMAT ", delay %u, real %"
@@ -756,7 +756,7 @@ gst_base_audio_sink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   /* calculate actual latency and buffer times.
    * FIXME: In 0.11, store the latency_time internally in ns */
   spec->latency_time = gst_util_uint64_scale (spec->segsize,
-      (GST_SECOND / GST_USECOND), spec->rate * spec->bytes_per_sample);
+      (GST_SECOND / GST_USECOND), spec->info.rate * spec->info.bpf);
 
   spec->buffer_time = spec->segtotal * spec->latency_time;
 
@@ -821,7 +821,7 @@ gst_base_audio_sink_drain (GstBaseAudioSink * sink)
 {
   if (!sink->ringbuffer)
     return TRUE;
-  if (!sink->ringbuffer->spec.rate)
+  if (!sink->ringbuffer->spec.info.rate)
     return TRUE;
 
   /* if PLAYING is interrupted,
@@ -1066,7 +1066,7 @@ gst_base_audio_sink_skew_slaving (GstBaseAudioSink * sink,
     cexternal = cexternal > mdrift ? cexternal - mdrift : 0;
     sink->priv->avg_skew -= mdrift;
 
-    driftsamples = (sink->ringbuffer->spec.rate * mdrift) / GST_SECOND;
+    driftsamples = (sink->ringbuffer->spec.info.rate * mdrift) / GST_SECOND;
     last_align = sink->priv->last_align;
 
     /* if we were aligning in the wrong direction or we aligned more than what we
@@ -1088,7 +1088,7 @@ gst_base_audio_sink_skew_slaving (GstBaseAudioSink * sink,
     cexternal += mdrift;
     sink->priv->avg_skew += mdrift;
 
-    driftsamples = (sink->ringbuffer->spec.rate * mdrift) / GST_SECOND;
+    driftsamples = (sink->ringbuffer->spec.info.rate * mdrift) / GST_SECOND;
     last_align = sink->priv->last_align;
 
     /* if we were aligning in the wrong direction or we aligned more than what we
@@ -1308,6 +1308,7 @@ gst_base_audio_sink_get_alignment (GstBaseAudioSink * sink,
   gint64 samples_done = segdone * ringbuf->samples_per_seg;
   gint64 headroom = sample_offset - samples_done;
   gboolean allow_align = TRUE;
+  gint rate;
 
   /* now try to align the sample to the previous one, first see how big the
    * difference is. */
@@ -1316,9 +1317,11 @@ gst_base_audio_sink_get_alignment (GstBaseAudioSink * sink,
   else
     diff = sink->next_sample - sample_offset;
 
+  rate = GST_AUDIO_INFO_RATE (&ringbuf->spec.info);
+
   /* calculate the max allowed drift in units of samples. By default this is
    * 20ms and should be anough to compensate for timestamp rounding errors. */
-  maxdrift = (ringbuf->spec.rate * sink->priv->drift_tolerance) / GST_MSECOND;
+  maxdrift = (rate * sink->priv->drift_tolerance) / GST_MSECOND;
 
   /* calc align with previous sample */
   align = sink->next_sample - sample_offset;
@@ -1333,8 +1336,7 @@ gst_base_audio_sink_get_alignment (GstBaseAudioSink * sink,
         G_GINT64_FORMAT, align, maxdrift);
   } else {
     /* calculate sample diff in seconds for error message */
-    gint64 diff_s =
-        gst_util_uint64_scale_int (diff, GST_SECOND, ringbuf->spec.rate);
+    gint64 diff_s = gst_util_uint64_scale_int (diff, GST_SECOND, rate);
     /* timestamps drifted apart from previous samples too much, we need to
      * resync. We log this as an element warning. */
     GST_WARNING_OBJECT (sink,
@@ -1362,7 +1364,7 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   guint8 *data;
   gsize size;
   guint samples, written;
-  gint bps;
+  gint bpf, rate;
   gint accum;
   gint out_samples;
   GstClockTime base_time, render_delay, latency;
@@ -1409,13 +1411,14 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
     buf = out;
   }
 
-  bps = ringbuf->spec.bytes_per_sample;
+  bpf = GST_AUDIO_INFO_BPF (&ringbuf->spec.info);
+  rate = GST_AUDIO_INFO_RATE (&ringbuf->spec.info);
 
   size = gst_buffer_get_size (buf);
-  if (G_UNLIKELY (size % bps) != 0)
+  if (G_UNLIKELY (size % bpf) != 0)
     goto wrong_size;
 
-  samples = size / bps;
+  samples = size / bpf;
   out_samples = samples;
 
   in_offset = GST_BUFFER_OFFSET (buf);
@@ -1442,8 +1445,7 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 
   /* let's calc stop based on the number of samples in the buffer instead
    * of trusting the DURATION */
-  stop = time + gst_util_uint64_scale_int (samples, GST_SECOND,
-      ringbuf->spec.rate);
+  stop = time + gst_util_uint64_scale_int (samples, GST_SECOND, rate);
 
   /* prepare the clipping segment. Since we will be subtracting ts-offset and
    * device-delay later we scale the start and stop with those values so that we
@@ -1484,17 +1486,17 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   diff = ctime - time;
   if (diff > 0) {
     /* bring clipped time to samples */
-    diff = gst_util_uint64_scale_int (diff, ringbuf->spec.rate, GST_SECOND);
+    diff = gst_util_uint64_scale_int (diff, rate, GST_SECOND);
     GST_DEBUG_OBJECT (sink, "clipping start to %" GST_TIME_FORMAT " %"
         G_GUINT64_FORMAT " samples", GST_TIME_ARGS (ctime), diff);
     samples -= diff;
-    offset += diff * bps;
+    offset += diff * bpf;
     time = ctime;
   }
   diff = stop - cstop;
   if (diff > 0) {
     /* bring clipped time to samples */
-    diff = gst_util_uint64_scale_int (diff, ringbuf->spec.rate, GST_SECOND);
+    diff = gst_util_uint64_scale_int (diff, rate, GST_SECOND);
     GST_DEBUG_OBJECT (sink, "clipping stop to %" GST_TIME_FORMAT " %"
         G_GUINT64_FORMAT " samples", GST_TIME_ARGS (cstop), diff);
     samples -= diff;
@@ -1588,10 +1590,8 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
     goto too_late;
 
   /* and bring the time to the rate corrected offset in the buffer */
-  render_start = gst_util_uint64_scale_int (render_start,
-      ringbuf->spec.rate, GST_SECOND);
-  render_stop = gst_util_uint64_scale_int (render_stop,
-      ringbuf->spec.rate, GST_SECOND);
+  render_start = gst_util_uint64_scale_int (render_start, rate, GST_SECOND);
+  render_stop = gst_util_uint64_scale_int (render_stop, rate, GST_SECOND);
 
   /* positive playback rate, first sample is render_start, negative rate, first
    * sample is render_stop. When no rate conversion is active, render exactly
@@ -1677,7 +1677,7 @@ no_sync:
       break;
 
     samples -= written;
-    offset += written * bps;
+    offset += written * bpf;
   } while (TRUE);
   gst_buffer_unmap (buf, data, size);
 

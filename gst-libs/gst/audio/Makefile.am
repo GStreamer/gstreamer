@@ -69,6 +69,7 @@ GstAudio-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstaudio-@GST_MAJORMI
 		GST_PLUGIN_SYSTEM_PATH="" GST_PLUGIN_PATH="" GST_REGISTRY_UPDATE=no \
 		$(INTROSPECTION_SCANNER) -v --namespace GstAudio \
 		--nsversion=@GST_MAJORMINOR@ \
+		--warn-all \
 		--strip-prefix=Gst \
 		-DGST_USE_UNSTABLE_API \
 		-I$(top_srcdir)/gst-libs \

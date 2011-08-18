@@ -231,13 +231,9 @@ GstAudioChannelPosition *
 gst_audio_get_channel_positions (GstStructure * str)
 {
   GstAudioChannelPosition *pos;
-
   gint channels, n;
-
   const GValue *pos_val_arr, *pos_val_entry;
-
   gboolean res;
-
   GType t;
 
   /* get number of channels, general type checkups */

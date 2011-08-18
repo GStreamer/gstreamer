@@ -26,6 +26,7 @@
 #define __GST_VORBIS_DEC_LIB_H__
 
 #include <gst/gst.h>
+#include <gst/audio/audio.h>
 
 #ifndef TREMOR
 
@@ -36,12 +37,19 @@ typedef ogg_packet                     ogg_packet_wrapper;
 
 #define GST_VORBIS_DEC_DESCRIPTION "decode raw vorbis streams to float audio"
 
-#define GST_VORBIS_DEC_SRC_CAPS \
-    GST_STATIC_CAPS ("audio/x-raw-float, " \
-        "rate = (int) [ 1, MAX ], " \
-        "channels = (int) [ 1, 256 ], " \
-        "endianness = (int) BYTE_ORDER, " \
-        "width = (int) 32")
+#define GST_VORBIS_AUDIO_FORMAT     GST_AUDIO_FORMAT_F32
+
+#if G_BYTE_ORDER == G_BIG_ENDIAN
+#define GST_VORBIS_AUDIO_FORMAT_STR "F32_BE"
+#else
+#define GST_VORBIS_AUDIO_FORMAT_STR "F32_LE"
+#endif
+
+#define GST_VORBIS_DEC_SRC_CAPS       \
+    GST_STATIC_CAPS ("audio/x-raw, "  \
+        "format = (string)" GST_VORBIS_AUDIO_FORMAT_STR ", "     \
+        "rate = (int) [ 1, MAX ], "   \
+        "channels = (int) [ 1, 256 ]")
 
 #define GST_VORBIS_DEC_DEFAULT_SAMPLE_WIDTH           (32)
 
@@ -101,16 +109,19 @@ struct _ogg_packet_wrapper {
 
 #define GST_VORBIS_DEC_DESCRIPTION "decode raw vorbis streams to integer audio"
 
-#define GST_VORBIS_DEC_SRC_CAPS \
-    GST_STATIC_CAPS ("audio/x-raw-int, "   \
-        "rate = (int) [ 1, MAX ], "        \
-        "channels = (int) [ 1, 6 ], "      \
-        "endianness = (int) BYTE_ORDER, "  \
-        "width = (int) { 16, 32 }, "       \
-        "depth = (int) 16, "               \
-        "signed = (boolean) true")
+#define GST_VORBIS_AUDIO_FORMAT GST_AUDIO_FORMAT_S16
 
-#define GST_VORBIS_DEC_DEFAULT_SAMPLE_WIDTH           (16)
+#if G_BYTE_ORDER == G_BIG_ENDIAN
+#define GST_VORBIS_AUDIO_FORMAT_STR "S16_BE"
+#else
+#define GST_VORBIS_AUDIO_FORMAT_STR "S16_LE"
+#endif
+
+#define GST_VORBIS_DEC_SRC_CAPS        \
+    GST_STATIC_CAPS ("audio/x-raw, "   \
+        "format = (string) " GST_VORBIS_AUDIO_FORMAT_STR ", "      \
+        "rate = (int) [ 1, MAX ], "    \
+        "channels = (int) [ 1, 6 ]")
 
 /* we need a different type name here */
 #define GST_VORBIS_DEC_GLIB_TYPE_NAME      GstIVorbisDec
@@ -176,8 +187,8 @@ gst_ogg_packet_from_wrapper (ogg_packet_wrapper * packet)
 #endif
 
 typedef void (*CopySampleFunc)(vorbis_sample_t *out, vorbis_sample_t **in,
-                           guint samples, gint channels, gint width);
+                           guint samples, gint channels);
 
-CopySampleFunc get_copy_sample_func (gint channels, gint width);
+CopySampleFunc get_copy_sample_func (gint channels);
 
 #endif /* __GST_VORBIS_DEC_LIB_H__ */

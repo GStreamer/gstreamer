@@ -23,7 +23,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstbasetransform.h>
-#include <gst/audio/gstringbuffer.h>
+#include <gst/audio/audio.h>
 
 G_BEGIN_DECLS
 
@@ -56,7 +56,7 @@ struct _GstAudioFilter {
   GstBaseTransform basetransform;
 
   /*< protected >*/
-  GstRingBufferSpec format;   /* currently configured format */
+  GstAudioInfo info;   /* currently configured format */
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
@@ -78,7 +78,7 @@ struct _GstAudioFilterClass {
   GstBaseTransformClass basetransformclass;
 
   /* virtual function, called whenever the format changes */
-  gboolean  (*setup) (GstAudioFilter * filter, GstRingBufferSpec * format);
+  gboolean  (*setup) (GstAudioFilter * filter, GstAudioInfo * info);
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];

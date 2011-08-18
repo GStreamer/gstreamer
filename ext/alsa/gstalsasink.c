@@ -95,46 +95,13 @@ static gint output_ref;         /* 0    */
 static snd_output_t *output;    /* NULL */
 static GStaticMutex output_mutex = G_STATIC_MUTEX_INIT;
 
-
-#if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
-# define ALSA_SINK_FACTORY_ENDIANNESS	"LITTLE_ENDIAN, BIG_ENDIAN"
-#else
-# define ALSA_SINK_FACTORY_ENDIANNESS	"BIG_ENDIAN, LITTLE_ENDIAN"
-#endif
-
 static GstStaticPadTemplate alsasink_sink_factory =
     GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, "
-        "endianness = (int) { " ALSA_SINK_FACTORY_ENDIANNESS " }, "
-        "signed = (boolean) { TRUE, FALSE }, "
-        "width = (int) 32, "
-        "depth = (int) 32, "
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "formats = (string) " GST_AUDIO_FORMATS_ALL ", "
         "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, MAX ]; "
-        "audio/x-raw-int, "
-        "endianness = (int) { " ALSA_SINK_FACTORY_ENDIANNESS " }, "
-        "signed = (boolean) { TRUE, FALSE }, "
-        "width = (int) 24, "
-        "depth = (int) 24, "
-        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, MAX ]; "
-        "audio/x-raw-int, "
-        "endianness = (int) { " ALSA_SINK_FACTORY_ENDIANNESS " }, "
-        "signed = (boolean) { TRUE, FALSE }, "
-        "width = (int) 32, "
-        "depth = (int) 24, "
-        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, MAX ]; "
-        "audio/x-raw-int, "
-        "endianness = (int) { " ALSA_SINK_FACTORY_ENDIANNESS " }, "
-        "signed = (boolean) { TRUE, FALSE }, "
-        "width = (int) 16, "
-        "depth = (int) 16, "
-        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, MAX ]; "
-        "audio/x-raw-int, "
-        "signed = (boolean) { TRUE, FALSE }, "
-        "width = (int) 8, "
-        "depth = (int) 8, "
-        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, MAX ];"
         "audio/x-iec958")
     );
 
@@ -627,26 +594,96 @@ alsasink_parse_spec (GstAlsaSink * alsa, GstRingBufferSpec * spec)
   alsa->iec958 = FALSE;
 
   switch (spec->type) {
-    case GST_BUFTYPE_LINEAR:
-      GST_DEBUG_OBJECT (alsa,
-          "Linear format : depth=%d, width=%d, sign=%d, bigend=%d", spec->depth,
-          spec->width, spec->sign, spec->bigend);
-
-      alsa->format = snd_pcm_build_linear_format (spec->depth, spec->width,
-          spec->sign ? 0 : 1, spec->bigend ? 1 : 0);
-      break;
-    case GST_BUFTYPE_FLOAT:
-      switch (spec->format) {
-        case GST_FLOAT32_LE:
+    case GST_BUFTYPE_RAW:
+      switch (GST_AUDIO_INFO_FORMAT (&spec->info)) {
+        case GST_AUDIO_FORMAT_U8:
+          alsa->format = SND_PCM_FORMAT_U8;
+          break;
+        case GST_AUDIO_FORMAT_S8:
+          alsa->format = SND_PCM_FORMAT_S8;
+          break;
+        case GST_AUDIO_FORMAT_S16_LE:
+          alsa->format = SND_PCM_FORMAT_S16_LE;
+          break;
+        case GST_AUDIO_FORMAT_S16_BE:
+          alsa->format = SND_PCM_FORMAT_S16_BE;
+          break;
+        case GST_AUDIO_FORMAT_U16_LE:
+          alsa->format = SND_PCM_FORMAT_U16_LE;
+          break;
+        case GST_AUDIO_FORMAT_U16_BE:
+          alsa->format = SND_PCM_FORMAT_U16_BE;
+          break;
+        case GST_AUDIO_FORMAT_S24_LE:
+          alsa->format = SND_PCM_FORMAT_S24_LE;
+          break;
+        case GST_AUDIO_FORMAT_S24_BE:
+          alsa->format = SND_PCM_FORMAT_S24_BE;
+          break;
+        case GST_AUDIO_FORMAT_U24_LE:
+          alsa->format = SND_PCM_FORMAT_U24_LE;
+          break;
+        case GST_AUDIO_FORMAT_U24_BE:
+          alsa->format = SND_PCM_FORMAT_U24_BE;
+          break;
+        case GST_AUDIO_FORMAT_S32_LE:
+          alsa->format = SND_PCM_FORMAT_S32_LE;
+          break;
+        case GST_AUDIO_FORMAT_S32_BE:
+          alsa->format = SND_PCM_FORMAT_S32_BE;
+          break;
+        case GST_AUDIO_FORMAT_U32_LE:
+          alsa->format = SND_PCM_FORMAT_U32_LE;
+          break;
+        case GST_AUDIO_FORMAT_U32_BE:
+          alsa->format = SND_PCM_FORMAT_U32_BE;
+          break;
+        case GST_AUDIO_FORMAT_S24_3LE:
+          alsa->format = SND_PCM_FORMAT_S24_3LE;
+          break;
+        case GST_AUDIO_FORMAT_S24_3BE:
+          alsa->format = SND_PCM_FORMAT_S24_3BE;
+          break;
+        case GST_AUDIO_FORMAT_U24_3LE:
+          alsa->format = SND_PCM_FORMAT_U24_3LE;
+          break;
+        case GST_AUDIO_FORMAT_U24_3BE:
+          alsa->format = SND_PCM_FORMAT_U24_3BE;
+          break;
+        case GST_AUDIO_FORMAT_S20_3LE:
+          alsa->format = SND_PCM_FORMAT_S20_3LE;
+          break;
+        case GST_AUDIO_FORMAT_S20_3BE:
+          alsa->format = SND_PCM_FORMAT_S20_3BE;
+          break;
+        case GST_AUDIO_FORMAT_U20_3LE:
+          alsa->format = SND_PCM_FORMAT_U20_3LE;
+          break;
+        case GST_AUDIO_FORMAT_U20_3BE:
+          alsa->format = SND_PCM_FORMAT_U20_3BE;
+          break;
+        case GST_AUDIO_FORMAT_S18_3LE:
+          alsa->format = SND_PCM_FORMAT_S18_3LE;
+          break;
+        case GST_AUDIO_FORMAT_S18_3BE:
+          alsa->format = SND_PCM_FORMAT_S18_3BE;
+          break;
+        case GST_AUDIO_FORMAT_U18_3LE:
+          alsa->format = SND_PCM_FORMAT_U18_3LE;
+          break;
+        case GST_AUDIO_FORMAT_U18_3BE:
+          alsa->format = SND_PCM_FORMAT_U18_3BE;
+          break;
+        case GST_AUDIO_FORMAT_F32_LE:
           alsa->format = SND_PCM_FORMAT_FLOAT_LE;
           break;
-        case GST_FLOAT32_BE:
+        case GST_AUDIO_FORMAT_F32_BE:
           alsa->format = SND_PCM_FORMAT_FLOAT_BE;
           break;
-        case GST_FLOAT64_LE:
+        case GST_AUDIO_FORMAT_F64_LE:
           alsa->format = SND_PCM_FORMAT_FLOAT64_LE;
           break;
-        case GST_FLOAT64_BE:
+        case GST_AUDIO_FORMAT_F64_BE:
           alsa->format = SND_PCM_FORMAT_FLOAT64_BE;
           break;
         default:
@@ -667,8 +704,8 @@ alsasink_parse_spec (GstAlsaSink * alsa, GstRingBufferSpec * spec)
       goto error;
 
   }
-  alsa->rate = spec->rate;
-  alsa->channels = spec->channels;
+  alsa->rate = GST_AUDIO_INFO_RATE (&spec->info);
+  alsa->channels = GST_AUDIO_INFO_CHANNELS (&spec->info);
   alsa->buffer_time = spec->buffer_time;
   alsa->period_time = spec->latency_time;
   alsa->access = SND_PCM_ACCESS_RW_INTERLEAVED;
@@ -724,7 +761,7 @@ gst_alsasink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
 
   alsa = GST_ALSA_SINK (asink);
 
-  if (spec->format == GST_IEC958) {
+  if (spec->type == GST_BUFTYPE_IEC958) {
     snd_pcm_close (alsa->handle);
     alsa->handle = gst_alsa_open_iec958_pcm (GST_OBJECT (alsa));
     if (G_UNLIKELY (!alsa->handle)) {
@@ -738,8 +775,8 @@ gst_alsasink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
   CHECK (set_hwparams (alsa), hw_params_failed);
   CHECK (set_swparams (alsa), sw_params_failed);
 
-  alsa->bytes_per_sample = spec->bytes_per_sample;
-  spec->segsize = alsa->period_size * spec->bytes_per_sample;
+  alsa->bpf = GST_AUDIO_INFO_BPF (&spec->info);
+  spec->segsize = alsa->period_size * alsa->bpf;
   spec->segtotal = alsa->buffer_size / alsa->period_size;
 
   {
@@ -867,7 +904,7 @@ gst_alsasink_write (GstAudioSink * asink, gpointer data, guint length)
 
   GST_LOG_OBJECT (asink, "received audio samples buffer of %u bytes", length);
 
-  cptr = length / alsa->bytes_per_sample;
+  cptr = length / alsa->bpf;
 
   GST_ALSA_SINK_LOCK (asink);
   while (cptr > 0) {
@@ -896,7 +933,7 @@ gst_alsasink_write (GstAudioSink * asink, gpointer data, guint length)
   }
   GST_ALSA_SINK_UNLOCK (asink);
 
-  return length - (cptr * alsa->bytes_per_sample);
+  return length - (cptr * alsa->bpf);
 
 write_error:
   {

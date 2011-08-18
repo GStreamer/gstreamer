@@ -24,7 +24,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstbasetransform.h>
-#include <gst/audio/multichannel.h>
+#include <gst/audio/audio.h>
 
 #include "audioconvert.h"
 

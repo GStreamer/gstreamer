@@ -323,7 +323,8 @@ gst_base_audio_src_get_time (GstClock * clock, GstBaseAudioSrc * src)
   guint delay;
   GstClockTime result;
 
-  if (G_UNLIKELY (src->ringbuffer == NULL || src->ringbuffer->spec.rate == 0))
+  if (G_UNLIKELY (src->ringbuffer == NULL
+          || src->ringbuffer->spec.info.rate == 0))
     return GST_CLOCK_TIME_NONE;
 
   raw = samples = gst_ring_buffer_samples_done (src->ringbuffer);
@@ -335,7 +336,7 @@ gst_base_audio_src_get_time (GstClock * clock, GstBaseAudioSrc * src)
   samples += delay;
 
   result = gst_util_uint64_scale_int (samples, GST_SECOND,
-      src->ringbuffer->spec.rate);
+      src->ringbuffer->spec.info.rate);
 
   GST_DEBUG_OBJECT (src,
       "processed samples: raw %" G_GUINT64_FORMAT ", delay %u, real %"
@@ -509,26 +510,14 @@ static void
 gst_base_audio_src_fixate (GstBaseSrc * bsrc, GstCaps * caps)
 {
   GstStructure *s;
-  gint width, depth;
 
   s = gst_caps_get_structure (caps, 0);
 
   /* fields for all formats */
-  gst_structure_fixate_field_nearest_int (s, "rate", 44100);
-  gst_structure_fixate_field_nearest_int (s, "channels", 2);
-  gst_structure_fixate_field_nearest_int (s, "width", 16);
-
-  /* fields for int */
-  if (gst_structure_has_field (s, "depth")) {
-    gst_structure_get_int (s, "width", &width);
-    /* round width to nearest multiple of 8 for the depth */
-    depth = GST_ROUND_UP_8 (width);
-    gst_structure_fixate_field_nearest_int (s, "depth", depth);
-  }
-  if (gst_structure_has_field (s, "signed"))
-    gst_structure_fixate_field_boolean (s, "signed", TRUE);
-  if (gst_structure_has_field (s, "endianness"))
-    gst_structure_fixate_field_nearest_int (s, "endianness", G_BYTE_ORDER);
+  gst_structure_fixate_field_nearest_int (s, "rate", GST_AUDIO_DEF_RATE);
+  gst_structure_fixate_field_nearest_int (s, "channels",
+      GST_AUDIO_DEF_CHANNELS);
+  gst_structure_fixate_field_string (s, "format", GST_AUDIO_DEF_FORMAT);
 
   GST_BASE_SRC_CLASS (parent_class)->fixate (bsrc, caps);
 }
@@ -538,6 +527,7 @@ gst_base_audio_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
 {
   GstBaseAudioSrc *src = GST_BASE_AUDIO_SRC (bsrc);
   GstRingBufferSpec *spec;
+  gint bpf, rate;
 
   spec = &src->ringbuffer->spec;
 
@@ -550,9 +540,11 @@ gst_base_audio_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
     goto parse_error;
   }
 
+  bpf = GST_AUDIO_INFO_BPF (&spec->info);
+  rate = GST_AUDIO_INFO_RATE (&spec->info);
+
   /* calculate suggested segsize and segtotal */
-  spec->segsize =
-      spec->rate * spec->bytes_per_sample * spec->latency_time / GST_MSECOND;
+  spec->segsize = rate * bpf * spec->latency_time / GST_MSECOND;
   spec->segtotal = spec->buffer_time / spec->latency_time;
 
   GST_OBJECT_UNLOCK (src);
@@ -569,11 +561,9 @@ gst_base_audio_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
     goto acquire_error;
 
   /* calculate actual latency and buffer times */
-  spec->latency_time =
-      spec->segsize * GST_MSECOND / (spec->rate * spec->bytes_per_sample);
+  spec->latency_time = spec->segsize * GST_MSECOND / (rate * bpf);
   spec->buffer_time =
-      spec->segtotal * spec->segsize * GST_MSECOND / (spec->rate *
-      spec->bytes_per_sample);
+      spec->segtotal * spec->segsize * GST_MSECOND / (rate * bpf);
 
   gst_ring_buffer_debug_spec_buff (spec);
 
@@ -616,24 +606,26 @@ gst_base_audio_src_query (GstBaseSrc * bsrc, GstQuery * query)
     {
       GstClockTime min_latency, max_latency;
       GstRingBufferSpec *spec;
+      gint bpf, rate;
 
       GST_OBJECT_LOCK (src);
       if (G_UNLIKELY (src->ringbuffer == NULL
-              || src->ringbuffer->spec.rate == 0)) {
+              || src->ringbuffer->spec.info.rate == 0)) {
         GST_OBJECT_UNLOCK (src);
         goto done;
       }
 
       spec = &src->ringbuffer->spec;
+      rate = GST_AUDIO_INFO_RATE (&spec->info);
+      bpf = GST_AUDIO_INFO_BPF (&spec->info);
 
       /* we have at least 1 segment of latency */
       min_latency =
-          gst_util_uint64_scale_int (spec->segsize, GST_SECOND,
-          spec->rate * spec->bytes_per_sample);
+          gst_util_uint64_scale_int (spec->segsize, GST_SECOND, rate * bpf);
       /* we cannot delay more than the buffersize else we lose data */
       max_latency =
           gst_util_uint64_scale_int (spec->segtotal * spec->segsize, GST_SECOND,
-          spec->rate * spec->bytes_per_sample);
+          rate * bpf);
       GST_OBJECT_UNLOCK (src);
 
       GST_DEBUG_OBJECT (src,
@@ -757,7 +749,7 @@ gst_base_audio_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
   guchar *data, *ptr;
   guint samples, total_samples;
   guint64 sample;
-  gint bps;
+  gint bpf, rate;
   GstRingBuffer *ringbuffer;
   GstRingBufferSpec *spec;
   guint read;
@@ -770,18 +762,19 @@ gst_base_audio_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
   if (G_UNLIKELY (!gst_ring_buffer_is_acquired (ringbuffer)))
     goto wrong_state;
 
-  bps = spec->bytes_per_sample;
+  bpf = GST_AUDIO_INFO_BPF (&spec->info);
+  rate = GST_AUDIO_INFO_RATE (&spec->info);
 
   if ((length == 0 && bsrc->blocksize == 0) || length == -1)
     /* no length given, use the default segment size */
     length = spec->segsize;
   else
     /* make sure we round down to an integral number of samples */
-    length -= length % bps;
+    length -= length % bpf;
 
   /* figure out the offset in the ringbuffer */
   if (G_UNLIKELY (offset != -1)) {
-    sample = offset / bps;
+    sample = offset / bpf;
     /* if a specific offset was given it must be the next sequential
      * offset we expect or we fail for now. */
     if (src->next_sample != -1 && sample != src->next_sample)
@@ -796,7 +789,7 @@ gst_base_audio_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
       sample, length);
 
   /* get the number of samples to read */
-  total_samples = samples = length / bps;
+  total_samples = samples = length / bpf;
 
   /* use the basesrc allocation code to use bufferpools or custom allocators */
   ret = GST_BASE_SRC_CLASS (parent_class)->alloc (bsrc, offset, length, &buf);
@@ -821,7 +814,7 @@ gst_base_audio_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
     /* read next samples */
     sample += read;
     samples -= read;
-    ptr += read * bps;
+    ptr += read * bpf;
   } while (TRUE);
   gst_buffer_unmap (buf, data, length);
 
@@ -841,9 +834,9 @@ gst_base_audio_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
   src->next_sample = sample + samples;
 
   /* get the normal timestamp to get the duration. */
-  timestamp = gst_util_uint64_scale_int (sample, GST_SECOND, spec->rate);
+  timestamp = gst_util_uint64_scale_int (sample, GST_SECOND, rate);
   duration = gst_util_uint64_scale_int (src->next_sample, GST_SECOND,
-      spec->rate) - timestamp;
+      rate) - timestamp;
 
   GST_OBJECT_LOCK (src);
   if (!(clock = GST_ELEMENT_CLOCK (src)))
@@ -890,7 +883,7 @@ gst_base_audio_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
 
         /* the running_time converted to a sample (relative to the ringbuffer) */
         running_time_sample =
-            gst_util_uint64_scale_int (running_time, spec->rate, GST_SECOND);
+            gst_util_uint64_scale_int (running_time, rate, GST_SECOND);
 
         /* the segmentnr corrensponding to running_time, round down */
         running_time_segment = running_time_sample / sps;
@@ -944,8 +937,7 @@ gst_base_audio_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
           new_sample = ((guint64) new_read_segment) * sps;
 
           /* and get the relative time to this -> our new timestamp */
-          timestamp =
-              gst_util_uint64_scale_int (new_sample, GST_SECOND, spec->rate);
+          timestamp = gst_util_uint64_scale_int (new_sample, GST_SECOND, rate);
 
           /* we update the next sample accordingly */
           src->next_sample = new_sample + samples;
@@ -974,8 +966,7 @@ gst_base_audio_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
           timestamp = 0;
 
         /* subtract latency */
-        latency =
-            gst_util_uint64_scale_int (total_samples, GST_SECOND, spec->rate);
+        latency = gst_util_uint64_scale_int (total_samples, GST_SECOND, rate);
         if (timestamp > latency)
           timestamp -= latency;
         else

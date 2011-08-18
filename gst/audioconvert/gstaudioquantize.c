@@ -439,7 +439,7 @@ gst_audio_quantize_setup_dither (AudioConvertCtx * ctx)
 {
   switch (ctx->dither) {
     case DITHER_TPDF_HF:
-      if (ctx->out.is_int)
+      if (GST_AUDIO_FORMAT_INFO_IS_INT (ctx->out.finfo))
         ctx->last_random = g_new0 (gint32, ctx->out.channels);
       else
         ctx->last_random = g_new0 (gdouble, ctx->out.channels);
@@ -469,14 +469,14 @@ gst_audio_quantize_setup_quantize_func (AudioConvertCtx * ctx)
 {
   gint index = 0;
 
-  if (!ctx->out.is_int) {
+  if (!GST_AUDIO_FORMAT_INFO_IS_INT (ctx->out.finfo)) {
     ctx->quantize = NULL;
     return;
   }
 
   if (ctx->ns == NOISE_SHAPING_NONE) {
     index += ctx->dither;
-    index += (ctx->out.sign) ? 0 : 4;
+    index += GST_AUDIO_FORMAT_INFO_IS_SIGNED (ctx->out.finfo) ? 0 : 4;
   } else {
     index += 8 + (4 * ctx->dither);
     index += ctx->ns - 1;

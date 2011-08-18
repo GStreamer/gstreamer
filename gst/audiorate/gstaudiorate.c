@@ -93,19 +93,17 @@ enum
 };
 
 static GstStaticPadTemplate gst_audio_rate_src_template =
-    GST_STATIC_PAD_TEMPLATE ("src",
+GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_AUDIO_INT_PAD_TEMPLATE_CAPS ";"
-        GST_AUDIO_FLOAT_PAD_TEMPLATE_CAPS)
+    GST_STATIC_CAPS (GST_AUDIO_CAPS_MAKE (GST_AUDIO_FORMATS_ALL))
     );
 
 static GstStaticPadTemplate gst_audio_rate_sink_template =
-    GST_STATIC_PAD_TEMPLATE ("sink",
+GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_AUDIO_INT_PAD_TEMPLATE_CAPS ";"
-        GST_AUDIO_FLOAT_PAD_TEMPLATE_CAPS)
+    GST_STATIC_CAPS (GST_AUDIO_CAPS_MAKE (GST_AUDIO_FORMATS_ALL))
     );
 
 static gboolean gst_audio_rate_sink_event (GstPad * pad, GstEvent * event);
@@ -208,35 +206,19 @@ gst_audio_rate_reset (GstAudioRate * audiorate)
 static gboolean
 gst_audio_rate_setcaps (GstAudioRate * audiorate, GstCaps * caps)
 {
-  GstStructure *structure;
-  gint channels, width, rate;
+  GstAudioInfo info;
 
-  structure = gst_caps_get_structure (caps, 0);
-
-  if (!gst_structure_get_int (structure, "channels", &channels))
-    goto wrong_caps;
-  if (!gst_structure_get_int (structure, "width", &width))
-    goto wrong_caps;
-  if (!gst_structure_get_int (structure, "rate", &rate))
+  if (!gst_audio_info_from_caps (&info, caps))
     goto wrong_caps;
 
-  audiorate->bytes_per_sample = channels * (width / 8);
-  if (audiorate->bytes_per_sample == 0)
-    goto wrong_format;
-
-  audiorate->rate = rate;
+  audiorate->info = info;
 
   return TRUE;
 
   /* ERRORS */
 wrong_caps:
   {
-    GST_DEBUG_OBJECT (audiorate, "could not get channels/width from caps");
-    return FALSE;
-  }
-wrong_format:
-  {
-    GST_DEBUG_OBJECT (audiorate, "bytes_per_samples gave 0");
+    GST_DEBUG_OBJECT (audiorate, "could not parse caps");
     return FALSE;
   }
 }
@@ -386,20 +368,24 @@ static gboolean
 gst_audio_rate_convert (GstAudioRate * audiorate,
     GstFormat src_fmt, guint64 src_val, GstFormat dest_fmt, guint64 * dest_val)
 {
+  gint rate, bpf;
+
   if (src_fmt == dest_fmt) {
     *dest_val = src_val;
     return TRUE;
   }
 
+  rate = GST_AUDIO_INFO_RATE (&audiorate->info);
+  bpf = GST_AUDIO_INFO_BPF (&audiorate->info);
+
   switch (src_fmt) {
     case GST_FORMAT_DEFAULT:
       switch (dest_fmt) {
         case GST_FORMAT_BYTES:
-          *dest_val = src_val * audiorate->bytes_per_sample;
+          *dest_val = src_val * bpf;
           break;
         case GST_FORMAT_TIME:
-          *dest_val =
-              gst_util_uint64_scale_int (src_val, GST_SECOND, audiorate->rate);
+          *dest_val = gst_util_uint64_scale_int (src_val, GST_SECOND, rate);
           break;
         default:
           return FALSE;;
@@ -408,11 +394,11 @@ gst_audio_rate_convert (GstAudioRate * audiorate,
     case GST_FORMAT_BYTES:
       switch (dest_fmt) {
         case GST_FORMAT_DEFAULT:
-          *dest_val = src_val / audiorate->bytes_per_sample;
+          *dest_val = src_val / bpf;
           break;
         case GST_FORMAT_TIME:
           *dest_val = gst_util_uint64_scale_int (src_val, GST_SECOND,
-              audiorate->rate * audiorate->bytes_per_sample);
+              rate * bpf);
           break;
         default:
           return FALSE;;
@@ -422,14 +408,13 @@ gst_audio_rate_convert (GstAudioRate * audiorate,
       switch (dest_fmt) {
         case GST_FORMAT_BYTES:
           *dest_val = gst_util_uint64_scale_int (src_val,
-              audiorate->rate * audiorate->bytes_per_sample, GST_SECOND);
+              rate * bpf, GST_SECOND);
           break;
         case GST_FORMAT_DEFAULT:
-          *dest_val =
-              gst_util_uint64_scale_int (src_val, audiorate->rate, GST_SECOND);
+          *dest_val = gst_util_uint64_scale_int (src_val, rate, GST_SECOND);
           break;
         default:
-          return FALSE;;
+          return FALSE;
       }
       break;
     default:
@@ -493,11 +478,15 @@ gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
   guint in_size;
   GstFlowReturn ret = GST_FLOW_OK;
   GstClockTimeDiff diff;
+  gint rate, bpf;
 
   audiorate = GST_AUDIO_RATE (gst_pad_get_parent (pad));
 
+  rate = GST_AUDIO_INFO_RATE (&audiorate->info);
+  bpf = GST_AUDIO_INFO_BPF (&audiorate->info);
+
   /* need to be negotiated now */
-  if (audiorate->bytes_per_sample == 0)
+  if (bpf == 0)
     goto not_negotiated;
 
   /* we have a new pending segment */
@@ -514,7 +503,7 @@ gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
      */
     /* convert first timestamp of segment to sample position */
     pos = gst_util_uint64_scale_int (audiorate->src_segment.start,
-        audiorate->rate, GST_SECOND);
+        GST_AUDIO_INFO_RATE (&audiorate->info), GST_SECOND);
 
     GST_DEBUG_OBJECT (audiorate, "resync to offset %" G_GINT64_FORMAT, pos);
 
@@ -523,12 +512,12 @@ gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
 
     audiorate->next_offset = pos;
     audiorate->next_ts = gst_util_uint64_scale_int (audiorate->next_offset,
-        GST_SECOND, audiorate->rate);
+        GST_SECOND, GST_AUDIO_INFO_RATE (&audiorate->info));
 
     if (audiorate->skip_to_first && GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
       GST_DEBUG_OBJECT (audiorate, "but skipping to first buffer instead");
       pos = gst_util_uint64_scale_int (GST_BUFFER_TIMESTAMP (buf),
-          audiorate->rate, GST_SECOND);
+          GST_AUDIO_INFO_RATE (&audiorate->info), GST_SECOND);
       GST_DEBUG_OBJECT (audiorate, "so resync to offset %" G_GINT64_FORMAT,
           pos);
       audiorate->next_offset = pos;
@@ -545,11 +534,10 @@ gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
   }
 
   in_size = gst_buffer_get_size (buf);
-  in_samples = in_size / audiorate->bytes_per_sample;
+  in_samples = in_size / bpf;
 
   /* calculate the buffer offset */
-  in_offset = gst_util_uint64_scale_int_round (in_time, audiorate->rate,
-      GST_SECOND);
+  in_offset = gst_util_uint64_scale_int_round (in_time, rate, GST_SECOND);
   in_offset_end = in_offset + in_samples;
 
   GST_LOG_OBJECT (audiorate,
@@ -557,7 +545,7 @@ gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
       ", in_size:%u, in_offset:%" G_GUINT64_FORMAT ", in_offset_end:%"
       G_GUINT64_FORMAT ", ->next_offset:%" G_GUINT64_FORMAT ", ->next_ts:%"
       GST_TIME_FORMAT, GST_TIME_ARGS (in_time),
-      GST_TIME_ARGS (GST_FRAMES_TO_CLOCK_TIME (in_samples, audiorate->rate)),
+      GST_TIME_ARGS (GST_FRAMES_TO_CLOCK_TIME (in_samples, rate)),
       in_size, in_offset, in_offset_end, audiorate->next_offset,
       GST_TIME_ARGS (audiorate->next_ts));
 
@@ -587,11 +575,11 @@ gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
     fillsamples = in_offset - audiorate->next_offset;
 
     while (fillsamples > 0) {
-      guint64 cursamples = MIN (fillsamples, audiorate->rate);
+      guint64 cursamples = MIN (fillsamples, rate);
       guint8 *data;
 
       fillsamples -= cursamples;
-      fillsize = cursamples * audiorate->bytes_per_sample;
+      fillsize = cursamples * bpf;
 
       fill = gst_buffer_new_and_alloc (fillsize);
 
@@ -612,7 +600,7 @@ gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
        * streams */
       GST_BUFFER_TIMESTAMP (fill) = audiorate->next_ts;
       audiorate->next_ts = gst_util_uint64_scale_int (audiorate->next_offset,
-          GST_SECOND, audiorate->rate);
+          GST_SECOND, rate);
       GST_BUFFER_DURATION (fill) = audiorate->next_ts -
           GST_BUFFER_TIMESTAMP (fill);
 
@@ -638,7 +626,7 @@ gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
   } else if (in_offset < audiorate->next_offset) {
     /* need to remove samples */
     if (in_offset_end <= audiorate->next_offset) {
-      guint64 drop = in_size / audiorate->bytes_per_sample;
+      guint64 drop = in_size / bpf;
 
       audiorate->drop += drop;
 
@@ -660,7 +648,7 @@ gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
 
       /* truncate buffer */
       truncsamples = audiorate->next_offset - in_offset;
-      truncsize = truncsamples * audiorate->bytes_per_sample;
+      truncsize = truncsamples * bpf;
       leftsize = in_size - truncsize;
 
       trunc =
@@ -690,7 +678,7 @@ send:
 
   GST_BUFFER_TIMESTAMP (buf) = audiorate->next_ts;
   audiorate->next_ts = gst_util_uint64_scale_int (in_offset_end,
-      GST_SECOND, audiorate->rate);
+      GST_SECOND, rate);
   GST_BUFFER_DURATION (buf) = audiorate->next_ts - GST_BUFFER_TIMESTAMP (buf);
 
   if (audiorate->discont) {
@@ -804,8 +792,8 @@ gst_audio_rate_change_state (GstElement * element, GstStateChange transition)
       audiorate->in = 0;
       audiorate->out = 0;
       audiorate->drop = 0;
-      audiorate->bytes_per_sample = 0;
       audiorate->add = 0;
+      gst_audio_info_init (&audiorate->info);
       gst_audio_rate_reset (audiorate);
       break;
     default:

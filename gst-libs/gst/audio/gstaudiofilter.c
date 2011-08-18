@@ -78,12 +78,6 @@ gst_audio_filter_class_init (GstAudioFilterClass * klass)
   basetrans_class->set_caps = GST_DEBUG_FUNCPTR (gst_audio_filter_set_caps);
   basetrans_class->get_unit_size =
       GST_DEBUG_FUNCPTR (gst_audio_filter_get_unit_size);
-
-  /* FIXME: Ref the GstRingerBuffer class to get it's debug category
-   * initialized. gst_ring_buffer_parse_caps () which we use later
-   * uses this debug category.
-   */
-  g_type_class_ref (GST_TYPE_RING_BUFFER);
 }
 
 static void
@@ -103,9 +97,7 @@ gst_audio_filter_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
-      memset (&filter->format, 0, sizeof (GstRingBufferSpec));
-      /* to make gst_buffer_spec_parse_caps() happy */
-      filter->format.latency_time = GST_SECOND;
+      gst_audio_info_init (&filter->info);
       break;
     default:
       break;
@@ -120,7 +112,7 @@ gst_audio_filter_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
     case GST_STATE_CHANGE_READY_TO_NULL:
-      gst_caps_replace (&filter->format.caps, NULL);
+      gst_audio_info_init (&filter->info);
       break;
     default:
       break;
@@ -139,17 +131,22 @@ gst_audio_filter_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
 
   GST_LOG_OBJECT (filter, "caps: %" GST_PTR_FORMAT, incaps);
 
-  if (!gst_ring_buffer_parse_caps (&filter->format, incaps)) {
-    GST_WARNING_OBJECT (filter, "couldn't parse %" GST_PTR_FORMAT, incaps);
-    return FALSE;
-  }
+  if (!gst_audio_info_from_caps (&filter->info, incaps))
+    goto invalid_format;
 
   klass = GST_AUDIO_FILTER_CLASS_CAST (G_OBJECT_GET_CLASS (filter));
 
   if (klass->setup)
-    ret = klass->setup (filter, &filter->format);
+    ret = klass->setup (filter, &filter->info);
 
   return ret;
+
+  /* ERROR */
+invalid_format:
+  {
+    GST_WARNING_OBJECT (filter, "couldn't parse %" GST_PTR_FORMAT, incaps);
+    return FALSE;
+  }
 }
 
 static gboolean

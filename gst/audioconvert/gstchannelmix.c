@@ -70,7 +70,7 @@ gst_channel_mix_fill_identical (AudioConvertCtx * this)
   for (co = 0; co < this->out.channels; co++) {
     /* find a channel in input with same position */
     for (ci = 0; ci < this->in.channels; ci++) {
-      if (this->in.pos[ci] == this->out.pos[co]) {
+      if (this->in.position[ci] == this->out.position[co]) {
         this->matrix[ci][co] = 1.0;
       }
     }
@@ -118,19 +118,19 @@ gst_channel_mix_fill_compatible (AudioConvertCtx * this)
     gint n;
 
     for (n = 0; n < this->in.channels; n++) {
-      if (this->in.pos[n] == conv[c].pos1[0])
+      if (this->in.position[n] == conv[c].pos1[0])
         pos1_0 = n;
-      else if (this->in.pos[n] == conv[c].pos1[1])
+      else if (this->in.position[n] == conv[c].pos1[1])
         pos1_1 = n;
-      else if (this->in.pos[n] == conv[c].pos2[0])
+      else if (this->in.position[n] == conv[c].pos2[0])
         pos1_2 = n;
     }
     for (n = 0; n < this->out.channels; n++) {
-      if (this->out.pos[n] == conv[c].pos1[0])
+      if (this->out.position[n] == conv[c].pos1[0])
         pos2_0 = n;
-      else if (this->out.pos[n] == conv[c].pos1[1])
+      else if (this->out.position[n] == conv[c].pos1[1])
         pos2_1 = n;
-      else if (this->out.pos[n] == conv[c].pos2[0])
+      else if (this->out.position[n] == conv[c].pos2[0])
         pos2_2 = n;
     }
 
@@ -182,15 +182,15 @@ gst_channel_mix_fill_compatible (AudioConvertCtx * this)
  */
 
 static void
-gst_channel_mix_detect_pos (AudioConvertFmt * caps,
+gst_channel_mix_detect_pos (GstAudioInfo * info,
     gint * f, gboolean * has_f,
     gint * c, gboolean * has_c, gint * r, gboolean * has_r,
     gint * s, gboolean * has_s, gint * b, gboolean * has_b)
 {
   gint n;
 
-  for (n = 0; n < caps->channels; n++) {
-    switch (caps->pos[n]) {
+  for (n = 0; n < info->channels; n++) {
+    switch (info->position[n]) {
       case GST_AUDIO_CHANNEL_POSITION_FRONT_MONO:
         f[1] = n;
         *has_f = TRUE;
@@ -247,8 +247,8 @@ gst_channel_mix_detect_pos (AudioConvertFmt * caps,
 
 static void
 gst_channel_mix_fill_one_other (gfloat ** matrix,
-    AudioConvertFmt * from_caps, gint * from_idx,
-    AudioConvertFmt * to_caps, gint * to_idx, gfloat ratio)
+    GstAudioInfo * from_info, gint * from_idx,
+    GstAudioInfo * to_info, gint * to_idx, gfloat ratio)
 {
 
   /* src & dst have center => passthrough */
@@ -542,26 +542,26 @@ gst_channel_mix_fill_normalize (AudioConvertCtx * this)
 static gboolean
 gst_channel_mix_fill_special (AudioConvertCtx * this)
 {
-  AudioConvertFmt *in = &this->in, *out = &this->out;
+  GstAudioInfo *in = &this->in, *out = &this->out;
 
   /* Special, standard conversions here */
 
   /* Mono<->Stereo, just a fast-path */
   if (in->channels == 2 && out->channels == 1 &&
-      ((in->pos[0] == GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT &&
-              in->pos[1] == GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT) ||
-          (in->pos[0] == GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT &&
-              in->pos[1] == GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT)) &&
-      out->pos[0] == GST_AUDIO_CHANNEL_POSITION_FRONT_MONO) {
+      ((in->position[0] == GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT &&
+              in->position[1] == GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT) ||
+          (in->position[0] == GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT &&
+              in->position[1] == GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT)) &&
+      out->position[0] == GST_AUDIO_CHANNEL_POSITION_FRONT_MONO) {
     this->matrix[0][0] = 0.5;
     this->matrix[1][0] = 0.5;
     return TRUE;
   } else if (in->channels == 1 && out->channels == 2 &&
-      ((out->pos[0] == GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT &&
-              out->pos[1] == GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT) ||
-          (out->pos[0] == GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT &&
-              out->pos[1] == GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT)) &&
-      in->pos[0] == GST_AUDIO_CHANNEL_POSITION_FRONT_MONO) {
+      ((out->position[0] == GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT &&
+              out->position[1] == GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT) ||
+          (out->position[0] == GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT &&
+              out->position[1] == GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT)) &&
+      in->position[0] == GST_AUDIO_CHANNEL_POSITION_FRONT_MONO) {
     this->matrix[0][0] = 1.0;
     this->matrix[0][1] = 1.0;
     return TRUE;
@@ -584,7 +584,7 @@ gst_channel_mix_fill_matrix (AudioConvertCtx * this)
 
   gst_channel_mix_fill_identical (this);
 
-  if (!this->in.unpositioned_layout) {
+  if (!GST_AUDIO_INFO_IS_UNPOSITIONED (&this->in)) {
     gst_channel_mix_fill_compatible (this);
     gst_channel_mix_fill_others (this);
     gst_channel_mix_fill_normalize (this);
@@ -601,7 +601,8 @@ gst_channel_mix_setup_matrix (AudioConvertCtx * this)
   gst_channel_mix_unset_matrix (this);
 
   /* temp storage */
-  if (this->in.is_int || this->out.is_int) {
+  if (GST_AUDIO_FORMAT_INFO_IS_INT (this->in.finfo) ||
+      GST_AUDIO_FORMAT_INFO_IS_INT (this->out.finfo)) {
     this->tmp = (gpointer) g_new (gint32, this->out.channels);
   } else {
     this->tmp = (gpointer) g_new (gdouble, this->out.channels);

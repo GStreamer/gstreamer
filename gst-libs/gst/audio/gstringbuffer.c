@@ -111,141 +111,12 @@ gst_ring_buffer_finalize (GObject * object)
       (ringbuffer));
 }
 
-typedef struct
-{
-  const GstBufferFormat format;
-  const guint8 silence[4];
-} FormatDef;
-
-static const FormatDef linear_defs[4 * 2 * 2] = {
-  {GST_S8, {0x00, 0x00, 0x00, 0x00}},
-  {GST_S8, {0x00, 0x00, 0x00, 0x00}},
-  {GST_U8, {0x80, 0x80, 0x80, 0x80}},
-  {GST_U8, {0x80, 0x80, 0x80, 0x80}},
-  {GST_S16_LE, {0x00, 0x00, 0x00, 0x00}},
-  {GST_S16_BE, {0x00, 0x00, 0x00, 0x00}},
-  {GST_U16_LE, {0x00, 0x80, 0x00, 0x80}},
-  {GST_U16_BE, {0x80, 0x00, 0x80, 0x00}},
-  {GST_S24_LE, {0x00, 0x00, 0x00, 0x00}},
-  {GST_S24_BE, {0x00, 0x00, 0x00, 0x00}},
-  {GST_U24_LE, {0x00, 0x00, 0x80, 0x00}},
-  {GST_U24_BE, {0x80, 0x00, 0x00, 0x00}},
-  {GST_S32_LE, {0x00, 0x00, 0x00, 0x00}},
-  {GST_S32_BE, {0x00, 0x00, 0x00, 0x00}},
-  {GST_U32_LE, {0x00, 0x00, 0x00, 0x80}},
-  {GST_U32_BE, {0x80, 0x00, 0x00, 0x00}}
-};
-
-static const FormatDef linear24_defs[3 * 2 * 2] = {
-  {GST_S24_3LE, {0x00, 0x00, 0x00, 0x00}},
-  {GST_S24_3BE, {0x00, 0x00, 0x00, 0x00}},
-  {GST_U24_3LE, {0x00, 0x00, 0x80, 0x00}},
-  {GST_U24_3BE, {0x80, 0x00, 0x00, 0x00}},
-  {GST_S20_3LE, {0x00, 0x00, 0x00, 0x00}},
-  {GST_S20_3BE, {0x00, 0x00, 0x00, 0x00}},
-  {GST_U20_3LE, {0x00, 0x00, 0x08, 0x00}},
-  {GST_U20_3BE, {0x08, 0x00, 0x00, 0x00}},
-  {GST_S18_3LE, {0x00, 0x00, 0x00, 0x00}},
-  {GST_S18_3BE, {0x00, 0x00, 0x00, 0x00}},
-  {GST_U18_3LE, {0x00, 0x00, 0x02, 0x00}},
-  {GST_U18_3BE, {0x02, 0x00, 0x00, 0x00}}
-};
-
-static const FormatDef *
-build_linear_format (int depth, int width, int unsignd, int big_endian)
-{
-  const FormatDef *formats;
-
-  if (width == 24) {
-    switch (depth) {
-      case 24:
-        formats = &linear24_defs[0];
-        break;
-      case 20:
-        formats = &linear24_defs[4];
-        break;
-      case 18:
-        formats = &linear24_defs[8];
-        break;
-      default:
-        return NULL;
-    }
-  } else {
-    switch (depth) {
-      case 8:
-        formats = &linear_defs[0];
-        break;
-      case 16:
-        formats = &linear_defs[4];
-        break;
-      case 24:
-        formats = &linear_defs[8];
-        break;
-      case 32:
-        formats = &linear_defs[12];
-        break;
-      default:
-        return NULL;
-    }
-  }
-  if (unsignd)
-    formats += 2;
-  if (big_endian)
-    formats += 1;
-
-  return formats;
-}
-
 #ifndef GST_DISABLE_GST_DEBUG
 static const gchar *format_type_names[] = {
-  "linear",
-  "float",
+  "raw",
   "mu law",
   "a law",
   "ima adpcm",
-  "mpeg",
-  "gsm",
-  "iec958",
-  "ac3",
-  "eac3",
-  "dts"
-};
-
-static const gchar *format_names[] = {
-  "unknown",
-  "s8",
-  "u8",
-  "s16_le",
-  "s16_be",
-  "u16_le",
-  "u16_be",
-  "s24_le",
-  "s24_be",
-  "u24_le",
-  "u24_be",
-  "s32_le",
-  "s32_be",
-  "u32_le",
-  "u32_be",
-  "s24_3le",
-  "s24_3be",
-  "u24_3le",
-  "u24_3be",
-  "s20_3le",
-  "s20_3be",
-  "u20_3le",
-  "u20_3be",
-  "s18_3le",
-  "s18_3be",
-  "u18_3le",
-  "u18_3be",
-  "float32_le",
-  "float32_be",
-  "float64_le",
-  "float64_be",
-  "mu_law",
-  "a_law",
-  "ima_adpcm",
   "mpeg",
   "gsm",
   "iec958",
@@ -264,15 +135,15 @@ static const gchar *format_names[] = {
 void
 gst_ring_buffer_debug_spec_caps (GstRingBufferSpec * spec)
 {
+#if 0
   gint i, bytes;
+#endif
 
   GST_DEBUG ("spec caps: %p %" GST_PTR_FORMAT, spec->caps, spec->caps);
   GST_DEBUG ("parsed caps: type:         %d, '%s'", spec->type,
       format_type_names[spec->type]);
-  GST_DEBUG ("parsed caps: format:       %d, '%s'", spec->format,
-      format_names[spec->format]);
+#if 0
   GST_DEBUG ("parsed caps: width:        %d", spec->width);
-  GST_DEBUG ("parsed caps: depth:        %d", spec->depth);
   GST_DEBUG ("parsed caps: sign:         %d", spec->sign);
   GST_DEBUG ("parsed caps: bigend:       %d", spec->bigend);
   GST_DEBUG ("parsed caps: rate:         %d", spec->rate);
@@ -282,6 +153,7 @@ gst_ring_buffer_debug_spec_caps (GstRingBufferSpec * spec)
   for (i = 0; i < bytes; i++) {
     GST_DEBUG ("silence byte %d: %02x", i, spec->silence_sample[i]);
   }
+#endif
 }
 
 /**
@@ -293,6 +165,8 @@ gst_ring_buffer_debug_spec_caps (GstRingBufferSpec * spec)
 void
 gst_ring_buffer_debug_spec_buff (GstRingBufferSpec * spec)
 {
+  gint bpf = GST_AUDIO_INFO_BPF (&spec->info);
+
   GST_DEBUG ("acquire ringbuffer: buffer time: %" G_GINT64_FORMAT " usec",
       spec->buffer_time);
   GST_DEBUG ("acquire ringbuffer: latency time: %" G_GINT64_FORMAT " usec",
@@ -300,10 +174,9 @@ gst_ring_buffer_debug_spec_buff (GstRingBufferSpec * spec)
   GST_DEBUG ("acquire ringbuffer: total segments: %d", spec->segtotal);
   GST_DEBUG ("acquire ringbuffer: latency segments: %d", spec->seglatency);
   GST_DEBUG ("acquire ringbuffer: segment size: %d bytes = %d samples",
-      spec->segsize, spec->segsize / spec->bytes_per_sample);
+      spec->segsize, spec->segsize / bpf);
   GST_DEBUG ("acquire ringbuffer: buffer size: %d bytes = %d samples",
-      spec->segsize * spec->segtotal,
-      spec->segsize * spec->segtotal / spec->bytes_per_sample);
+      spec->segsize * spec->segtotal, spec->segsize * spec->segtotal / bpf);
 }
 
 /**
@@ -321,159 +194,76 @@ gst_ring_buffer_parse_caps (GstRingBufferSpec * spec, GstCaps * caps)
   const gchar *mimetype;
   GstStructure *structure;
   gint i;
+  GstAudioInfo info;
 
   structure = gst_caps_get_structure (caps, 0);
+  gst_audio_info_init (&info);
 
   /* we have to differentiate between int and float formats */
   mimetype = gst_structure_get_name (structure);
 
-  if (g_str_equal (mimetype, "audio/x-raw-int")) {
-    gint endianness;
-    const FormatDef *def;
-    gint j, bytes;
-
-    spec->type = GST_BUFTYPE_LINEAR;
-
-    /* extract the needed information from the cap */
-    if (!(gst_structure_get_int (structure, "rate", &spec->rate) &&
-            gst_structure_get_int (structure, "channels", &spec->channels) &&
-            gst_structure_get_int (structure, "width", &spec->width) &&
-            gst_structure_get_int (structure, "depth", &spec->depth) &&
-            gst_structure_get_boolean (structure, "signed", &spec->sign)))
+  if (g_str_equal (mimetype, "audio/x-raw")) {
+    if (!gst_audio_info_from_caps (&info, caps))
       goto parse_error;
 
-    /* extract endianness if needed */
-    if (spec->width > 8) {
-      if (!gst_structure_get_int (structure, "endianness", &endianness))
-        goto parse_error;
-    } else {
-      endianness = G_BYTE_ORDER;
-    }
-
-    spec->bigend = endianness == G_LITTLE_ENDIAN ? FALSE : TRUE;
-
-    def = build_linear_format (spec->depth, spec->width, spec->sign ? 0 : 1,
-        spec->bigend ? 1 : 0);
-
-    if (def == NULL)
-      goto parse_error;
-
-    spec->format = def->format;
-
-    bytes = spec->width >> 3;
-
-    for (i = 0; i < spec->channels; i++) {
-      for (j = 0; j < bytes; j++) {
-        spec->silence_sample[i * bytes + j] = def->silence[j];
-      }
-    }
-  } else if (g_str_equal (mimetype, "audio/x-raw-float")) {
-
-    spec->type = GST_BUFTYPE_FLOAT;
-
-    /* extract the needed information from the cap */
-    if (!(gst_structure_get_int (structure, "rate", &spec->rate) &&
-            gst_structure_get_int (structure, "channels", &spec->channels) &&
-            gst_structure_get_int (structure, "width", &spec->width)))
-      goto parse_error;
-
-    /* match layout to format wrt to endianness */
-    switch (spec->width) {
-      case 32:
-        spec->format =
-            G_BYTE_ORDER == G_LITTLE_ENDIAN ? GST_FLOAT32_LE : GST_FLOAT32_BE;
-        break;
-      case 64:
-        spec->format =
-            G_BYTE_ORDER == G_LITTLE_ENDIAN ? GST_FLOAT64_LE : GST_FLOAT64_BE;
-        break;
-      default:
-        goto parse_error;
-    }
-    /* float silence is all zeros.. */
-    memset (spec->silence_sample, 0, 32);
+    spec->type = GST_BUFTYPE_RAW;
   } else if (g_str_equal (mimetype, "audio/x-alaw")) {
     /* extract the needed information from the cap */
-    if (!(gst_structure_get_int (structure, "rate", &spec->rate) &&
-            gst_structure_get_int (structure, "channels", &spec->channels)))
+    if (!(gst_structure_get_int (structure, "rate", &info.rate) &&
+            gst_structure_get_int (structure, "channels", &info.channels)))
       goto parse_error;
 
     spec->type = GST_BUFTYPE_A_LAW;
-    spec->format = GST_A_LAW;
-    spec->width = 8;
-    spec->depth = 8;
-    for (i = 0; i < spec->channels; i++)
-      spec->silence_sample[i] = 0xd5;
+    spec->info.bpf = info.channels;
   } else if (g_str_equal (mimetype, "audio/x-mulaw")) {
     /* extract the needed information from the cap */
-    if (!(gst_structure_get_int (structure, "rate", &spec->rate) &&
-            gst_structure_get_int (structure, "channels", &spec->channels)))
+    if (!(gst_structure_get_int (structure, "rate", &info.rate) &&
+            gst_structure_get_int (structure, "channels", &info.channels)))
       goto parse_error;
 
     spec->type = GST_BUFTYPE_MU_LAW;
-    spec->format = GST_MU_LAW;
-    spec->width = 8;
-    spec->depth = 8;
-    for (i = 0; i < spec->channels; i++)
-      spec->silence_sample[i] = 0xff;
+    spec->info.bpf = info.channels;
   } else if (g_str_equal (mimetype, "audio/x-iec958")) {
     /* extract the needed information from the cap */
-    if (!(gst_structure_get_int (structure, "rate", &spec->rate)))
+    if (!(gst_structure_get_int (structure, "rate", &info.rate)))
       goto parse_error;
 
     spec->type = GST_BUFTYPE_IEC958;
-    spec->format = GST_IEC958;
-    spec->width = 16;
-    spec->depth = 16;
-    spec->channels = 2;
+    spec->info.bpf = 4;
   } else if (g_str_equal (mimetype, "audio/x-ac3")) {
     /* extract the needed information from the cap */
-    if (!(gst_structure_get_int (structure, "rate", &spec->rate)))
+    if (!(gst_structure_get_int (structure, "rate", &info.rate)))
       goto parse_error;
 
     spec->type = GST_BUFTYPE_AC3;
-    spec->format = GST_AC3;
-    spec->width = 16;
-    spec->depth = 16;
-    spec->channels = 2;
+    spec->info.bpf = 4;
   } else if (g_str_equal (mimetype, "audio/x-eac3")) {
     /* extract the needed information from the cap */
-    if (!(gst_structure_get_int (structure, "rate", &spec->rate)))
+    if (!(gst_structure_get_int (structure, "rate", &info.rate)))
       goto parse_error;
 
     spec->type = GST_BUFTYPE_EAC3;
-    spec->format = GST_EAC3;
-    spec->width = 64;
-    spec->depth = 64;
-    spec->channels = 2;
+    spec->info.bpf = 16;
   } else if (g_str_equal (mimetype, "audio/x-dts")) {
     /* extract the needed information from the cap */
-    if (!(gst_structure_get_int (structure, "rate", &spec->rate)))
+    if (!(gst_structure_get_int (structure, "rate", &info.rate)))
       goto parse_error;
 
     spec->type = GST_BUFTYPE_DTS;
-    spec->format = GST_DTS;
-    spec->width = 16;
-    spec->depth = 16;
-    spec->channels = 2;
+    spec->info.bpf = 4;
   } else if (g_str_equal (mimetype, "audio/mpeg") &&
       gst_structure_get_int (structure, "mpegaudioversion", &i) &&
       (i == 1 || i == 2)) {
     /* Now we know this is MPEG-1 or MPEG-2 (non AAC) */
     /* extract the needed information from the cap */
-    if (!(gst_structure_get_int (structure, "rate", &spec->rate)))
+    if (!(gst_structure_get_int (structure, "rate", &info.rate)))
       goto parse_error;
 
     spec->type = GST_BUFTYPE_MPEG;
-    spec->format = GST_MPEG;
-    spec->width = 16;
-    spec->depth = 16;
-    spec->channels = 2;
+    spec->info.bpf = 4;
   } else {
     goto parse_error;
   }
-
-  spec->bytes_per_sample = (spec->width >> 3) * spec->channels;
 
   gst_caps_replace (&spec->caps, caps);
 
@@ -482,10 +272,10 @@ gst_ring_buffer_parse_caps (GstRingBufferSpec * spec, GstCaps * caps)
   /* calculate suggested segsize and segtotal. segsize should be one unit
    * of 'latency_time' samples, scaling for the fact that latency_time is
    * currently stored in microseconds (FIXME: in 0.11) */
-  spec->segsize = gst_util_uint64_scale (spec->rate * spec->bytes_per_sample,
+  spec->segsize = gst_util_uint64_scale (info.rate * info.bpf,
       spec->latency_time, GST_SECOND / GST_USECOND);
   /* Round to an integer number of samples */
-  spec->segsize -= spec->segsize % spec->bytes_per_sample;
+  spec->segsize -= spec->segsize % info.bpf;
 
   spec->segtotal = spec->buffer_time / spec->latency_time;
   /* leave the latency undefined now, implementations can change it but if it's
@@ -494,6 +284,8 @@ gst_ring_buffer_parse_caps (GstRingBufferSpec * spec, GstCaps * caps)
 
   gst_ring_buffer_debug_spec_caps (spec);
   gst_ring_buffer_debug_spec_buff (spec);
+
+  spec->info = info;
 
   return TRUE;
 
@@ -525,7 +317,7 @@ gst_ring_buffer_convert (GstRingBuffer * buf,
     GstFormat src_fmt, gint64 src_val, GstFormat dest_fmt, gint64 * dest_val)
 {
   gboolean res = TRUE;
-  gint bps, rate;
+  gint bpf, rate;
 
   GST_DEBUG ("converting value %" G_GINT64_FORMAT " from %s (%d) to %s (%d)",
       src_val, gst_format_get_name (src_fmt), src_fmt,
@@ -538,12 +330,12 @@ gst_ring_buffer_convert (GstRingBuffer * buf,
 
   /* get important info */
   GST_OBJECT_LOCK (buf);
-  bps = buf->spec.bytes_per_sample;
-  rate = buf->spec.rate;
+  bpf = GST_AUDIO_INFO_BPF (&buf->spec.info);
+  rate = GST_AUDIO_INFO_RATE (&buf->spec.info);
   GST_OBJECT_UNLOCK (buf);
 
-  if (bps == 0 || rate == 0) {
-    GST_DEBUG ("no rate or bps configured");
+  if (bpf == 0 || rate == 0) {
+    GST_DEBUG ("no rate or bpf configured");
     res = FALSE;
     goto done;
   }
@@ -552,11 +344,11 @@ gst_ring_buffer_convert (GstRingBuffer * buf,
     case GST_FORMAT_BYTES:
       switch (dest_fmt) {
         case GST_FORMAT_TIME:
-          *dest_val = gst_util_uint64_scale_int (src_val / bps, GST_SECOND,
+          *dest_val = gst_util_uint64_scale_int (src_val / bpf, GST_SECOND,
               rate);
           break;
         case GST_FORMAT_DEFAULT:
-          *dest_val = src_val / bps;
+          *dest_val = src_val / bpf;
           break;
         default:
           res = FALSE;
@@ -569,7 +361,7 @@ gst_ring_buffer_convert (GstRingBuffer * buf,
           *dest_val = gst_util_uint64_scale_int (src_val, GST_SECOND, rate);
           break;
         case GST_FORMAT_BYTES:
-          *dest_val = src_val * bps;
+          *dest_val = src_val * bpf;
           break;
         default:
           res = FALSE;
@@ -583,7 +375,7 @@ gst_ring_buffer_convert (GstRingBuffer * buf,
           break;
         case GST_FORMAT_BYTES:
           *dest_val = gst_util_uint64_scale_int (src_val, rate, GST_SECOND);
-          *dest_val *= bps;
+          *dest_val *= bpf;
           break;
         default:
           res = FALSE;
@@ -794,8 +586,7 @@ gst_ring_buffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
 {
   gboolean res = FALSE;
   GstRingBufferClass *rclass;
-  gint i, j;
-  gint segsize, bps;
+  gint segsize, bpf;
 
   g_return_val_if_fail (GST_IS_RING_BUFFER (buf), FALSE);
 
@@ -817,8 +608,8 @@ gst_ring_buffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
   if (G_UNLIKELY (!res))
     goto acquire_failed;
 
-  if (G_UNLIKELY ((bps = buf->spec.bytes_per_sample) == 0))
-    goto invalid_bps;
+  if (G_UNLIKELY ((bpf = buf->spec.info.bpf) == 0))
+    goto invalid_bpf;
 
   /* if the seglatency was overwritten with something else than -1, use it, else
    * assume segtotal as the latency */
@@ -827,18 +618,18 @@ gst_ring_buffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
 
   segsize = buf->spec.segsize;
 
-  buf->samples_per_seg = segsize / bps;
+  buf->samples_per_seg = segsize / bpf;
 
   /* create an empty segment */
   g_free (buf->empty_seg);
   buf->empty_seg = g_malloc (segsize);
 
-  /* FIXME, we only have 32 silence samples, which might not be enough to
-   * represent silence in all channels */
-  bps = MIN (bps, 32);
-  for (i = 0, j = 0; i < segsize; i++) {
-    buf->empty_seg[i] = buf->spec.silence_sample[j];
-    j = (j + 1) % bps;
+  if (buf->spec.type == GST_BUFTYPE_RAW) {
+    gst_audio_format_fill_silence (buf->spec.info.finfo, buf->empty_seg,
+        segsize);
+  } else {
+    /* FIXME, non-raw formats get 0 as the empty sample */
+    memset (buf->empty_seg, 0, segsize);
   }
   GST_DEBUG_OBJECT (buf, "acquired device");
 
@@ -867,10 +658,10 @@ acquire_failed:
     GST_DEBUG_OBJECT (buf, "failed to acquire device");
     goto done;
   }
-invalid_bps:
+invalid_bpf:
   {
     g_warning
-        ("invalid bytes_per_sample from acquire ringbuffer %p, fix the element",
+        ("invalid bytes_per_frame from acquire ringbuffer %p, fix the element",
         buf);
     buf->acquired = FALSE;
     res = FALSE;
@@ -1547,12 +1338,12 @@ no_start:
 #define FWD_SAMPLES(s,se,d,de)		 	\
 G_STMT_START {					\
   /* no rate conversion */			\
-  guint towrite = MIN (se + bps - s, de - d);	\
+  guint towrite = MIN (se + bpf - s, de - d);	\
   /* simple copy */				\
   if (!skip)					\
     memcpy (d, s, towrite);			\
-  in_samples -= towrite / bps;			\
-  out_samples -= towrite / bps;			\
+  in_samples -= towrite / bpf;			\
+  out_samples -= towrite / bpf;			\
   s += towrite;					\
   GST_DEBUG ("copy %u bytes", towrite);		\
 } G_STMT_END
@@ -1563,16 +1354,16 @@ G_STMT_START {					\
   guint8 *sb = s, *db = d;			\
   while (s <= se && d < de) {			\
     if (!skip)					\
-      memcpy (d, s, bps);			\
-    s += bps;					\
+      memcpy (d, s, bpf);			\
+    s += bpf;					\
     *accum += outr;				\
     if ((*accum << 1) >= inr) {			\
       *accum -= inr;				\
-      d += bps;					\
+      d += bpf;					\
     }						\
   }						\
-  in_samples -= (s - sb)/bps;			\
-  out_samples -= (d - db)/bps;			\
+  in_samples -= (s - sb)/bpf;			\
+  out_samples -= (d - db)/bpf;			\
   GST_DEBUG ("fwd_up end %d/%d",*accum,*toprocess);	\
 } G_STMT_END
 
@@ -1582,16 +1373,16 @@ G_STMT_START {					\
   guint8 *sb = s, *db = d;			\
   while (s <= se && d < de) {			\
     if (!skip)					\
-      memcpy (d, s, bps);			\
-    d += bps;					\
+      memcpy (d, s, bpf);			\
+    d += bpf;					\
     *accum += inr;				\
     if ((*accum << 1) >= outr) {		\
       *accum -= outr;				\
-      s += bps;					\
+      s += bpf;					\
     }						\
   }						\
-  in_samples -= (s - sb)/bps;			\
-  out_samples -= (d - db)/bps;			\
+  in_samples -= (s - sb)/bpf;			\
+  out_samples -= (d - db)/bpf;			\
   GST_DEBUG ("fwd_down end %d/%d",*accum,*toprocess);	\
 } G_STMT_END
 
@@ -1600,16 +1391,16 @@ G_STMT_START {					\
   guint8 *sb = se, *db = d;			\
   while (s <= se && d < de) {			\
     if (!skip)					\
-      memcpy (d, se, bps);			\
-    se -= bps;					\
+      memcpy (d, se, bpf);			\
+    se -= bpf;					\
     *accum += outr;				\
     while (d < de && (*accum << 1) >= inr) {	\
       *accum -= inr;				\
-      d += bps;					\
+      d += bpf;					\
     }						\
   }						\
-  in_samples -= (sb - se)/bps;			\
-  out_samples -= (d - db)/bps;			\
+  in_samples -= (sb - se)/bpf;			\
+  out_samples -= (d - db)/bpf;			\
   GST_DEBUG ("rev_up end %d/%d",*accum,*toprocess);	\
 } G_STMT_END
 
@@ -1618,16 +1409,16 @@ G_STMT_START {					\
   guint8 *sb = se, *db = d;			\
   while (s <= se && d < de) {			\
     if (!skip)					\
-      memcpy (d, se, bps);			\
-    d += bps;					\
+      memcpy (d, se, bpf);			\
+    d += bpf;					\
     *accum += inr;				\
     while (s <= se && (*accum << 1) >= outr) {	\
       *accum -= outr;				\
-      se -= bps;				\
+      se -= bpf;				\
     }						\
   }						\
-  in_samples -= (sb - se)/bps;			\
-  out_samples -= (d - db)/bps;			\
+  in_samples -= (sb - se)/bpf;			\
+  out_samples -= (d - db)/bpf;			\
   GST_DEBUG ("rev_down end %d/%d",*accum,*toprocess);	\
 } G_STMT_END
 
@@ -1636,7 +1427,7 @@ default_commit (GstRingBuffer * buf, guint64 * sample,
     guchar * data, gint in_samples, gint out_samples, gint * accum)
 {
   gint segdone;
-  gint segsize, segtotal, bps, sps;
+  gint segsize, segtotal, bpf, sps;
   guint8 *dest, *data_end;
   gint writeseg, sampleoff;
   gint *toprocess;
@@ -1649,7 +1440,7 @@ default_commit (GstRingBuffer * buf, guint64 * sample,
   dest = buf->memory;
   segsize = buf->spec.segsize;
   segtotal = buf->spec.segtotal;
-  bps = buf->spec.bytes_per_sample;
+  bpf = buf->spec.info.bpf;
   sps = buf->samples_per_seg;
 
   reverse = out_samples < 0;
@@ -1665,12 +1456,12 @@ default_commit (GstRingBuffer * buf, guint64 * sample,
 
   /* data_end points to the last sample we have to write, not past it. This is
    * needed to properly handle reverse playback: it points to the last sample. */
-  data_end = data + (bps * inr);
+  data_end = data + (bpf * inr);
 
   /* figure out the segment and the offset inside the segment where
    * the first sample should be written. */
   writeseg = *sample / sps;
-  sampleoff = (*sample % sps) * bps;
+  sampleoff = (*sample % sps) * bpf;
 
   /* write out all samples */
   while (*toprocess > 0) {
@@ -1714,11 +1505,11 @@ default_commit (GstRingBuffer * buf, guint64 * sample,
 
     /* we can write now */
     ws = writeseg % segtotal;
-    avail = MIN (segsize - sampleoff, bps * out_samples);
+    avail = MIN (segsize - sampleoff, bpf * out_samples);
 
     d = dest + (ws * segsize) + sampleoff;
     d_end = d + avail;
-    *sample += avail / bps;
+    *sample += avail / bpf;
 
     GST_DEBUG_OBJECT (buf, "write @%p seg %d, sps %d, off %d, avail %d",
         dest + ws * segsize, ws, sps, sampleoff, avail);
@@ -1747,10 +1538,10 @@ default_commit (GstRingBuffer * buf, guint64 * sample,
     sampleoff = 0;
   }
   /* we consumed all samples here */
-  data = data_end + bps;
+  data = data_end + bpf;
 
 done:
-  return inr - ((data_end - data) / bps);
+  return inr - ((data_end - data) / bpf);
 
   /* ERRORS */
 not_started:
@@ -1867,7 +1658,7 @@ gst_ring_buffer_read (GstRingBuffer * buf, guint64 sample, guchar * data,
     guint len)
 {
   gint segdone;
-  gint segsize, segtotal, bps, sps;
+  gint segsize, segtotal, bpf, sps;
   guint8 *dest;
   guint to_read;
 
@@ -1878,7 +1669,7 @@ gst_ring_buffer_read (GstRingBuffer * buf, guint64 sample, guchar * data,
   dest = buf->memory;
   segsize = buf->spec.segsize;
   segtotal = buf->spec.segtotal;
-  bps = buf->spec.bytes_per_sample;
+  bpf = buf->spec.info.bpf;
   sps = buf->samples_per_seg;
 
   to_read = len;
@@ -1913,7 +1704,7 @@ gst_ring_buffer_read (GstRingBuffer * buf, guint64 sample, guchar * data,
       if (G_UNLIKELY (diff >= segtotal)) {
         /* pretend we read an empty segment. */
         sampleslen = MIN (sps, to_read);
-        memcpy (data, buf->empty_seg, sampleslen * bps);
+        memcpy (data, buf->empty_seg, sampleslen * bpf);
         goto next;
       }
 
@@ -1934,13 +1725,13 @@ gst_ring_buffer_read (GstRingBuffer * buf, guint64 sample, guchar * data,
     GST_DEBUG_OBJECT (buf, "read @%p seg %d, off %d, sampleslen %d",
         dest + readseg * segsize, readseg, sampleoff, sampleslen);
 
-    memcpy (data, dest + (readseg * segsize) + (sampleoff * bps),
-        (sampleslen * bps));
+    memcpy (data, dest + (readseg * segsize) + (sampleoff * bpf),
+        (sampleslen * bpf));
 
   next:
     to_read -= sampleslen;
     sample += sampleslen;
-    data += sampleslen * bps;
+    data += sampleslen * bpf;
   }
 
   return len - to_read;

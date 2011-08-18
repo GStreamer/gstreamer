@@ -27,10 +27,346 @@
 #  include "config.h"
 #endif
 
+#include <string.h>
+
 #include "audio.h"
 #include "audio-enumtypes.h"
 
 #include <gst/gststructure.h>
+
+#define SINT (GST_AUDIO_FORMAT_FLAG_INT | GST_AUDIO_FORMAT_FLAG_SIGNED)
+#define UINT (GST_AUDIO_FORMAT_FLAG_INT)
+
+#define MAKE_FORMAT(str,flags,end,width,depth,silent) \
+  { GST_AUDIO_FORMAT_ ##str, G_STRINGIFY(str), flags, end, width, depth, silent }
+
+#define SILENT_0       { 0, 0, 0, 0, 0, 0, 0, 0 }
+#define SILENT_U8      { 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80 }
+#define SILENT_U16_LE  { 0x00, 0x80,  0x00, 0x80,  0x00, 0x80,  0x00, 0x80 }
+#define SILENT_U16_BE  { 0x80, 0x00,  0x80, 0x00,  0x80, 0x00,  0x80, 0x00 }
+#define SILENT_U24_LE  { 0x00, 0x00, 0x80, 0x00,  0x00, 0x00, 0x80, 0x00 }
+#define SILENT_U24_BE  { 0x00, 0x80, 0x00, 0x00,  0x00, 0x80, 0x00, 0x00 }
+#define SILENT_U32_LE  { 0x00, 0x00, 0x00, 0x80,  0x00, 0x00, 0x00, 0x80 }
+#define SILENT_U32_BE  { 0x80, 0x00, 0x00, 0x00,  0x80, 0x00, 0x00, 0x00 }
+#define SILENT_U24_3LE { 0x00, 0x00, 0x80,  0x00, 0x00, 0x80 }
+#define SILENT_U24_3BE { 0x80, 0x00, 0x00,  0x80, 0x00, 0x00 }
+#define SILENT_U20_3LE { 0x00, 0x00, 0x08,  0x00, 0x00, 0x08 }
+#define SILENT_U20_3BE { 0x08, 0x00, 0x00,  0x08, 0x00, 0x00 }
+#define SILENT_U18_3LE { 0x00, 0x00, 0x02,  0x00, 0x00, 0x02 }
+#define SILENT_U18_3BE { 0x02, 0x00, 0x00,  0x02, 0x00, 0x00 }
+
+static GstAudioFormatInfo formats[] = {
+  {GST_AUDIO_FORMAT_UNKNOWN, "UNKNOWN", 0, 0, 0, 0},
+  /* 8 bit */
+  MAKE_FORMAT (S8, SINT, 0, 8, 8, SILENT_0),
+  MAKE_FORMAT (U8, UINT, 0, 8, 8, SILENT_U8),
+  /* 16 bit */
+  MAKE_FORMAT (S16_LE, SINT, G_LITTLE_ENDIAN, 16, 16, SILENT_0),
+  MAKE_FORMAT (S16_BE, SINT, G_BIG_ENDIAN, 16, 16, SILENT_0),
+  MAKE_FORMAT (U16_LE, UINT, G_LITTLE_ENDIAN, 16, 16, SILENT_U16_LE),
+  MAKE_FORMAT (U16_BE, UINT, G_BIG_ENDIAN, 16, 16, SILENT_U16_BE),
+  /* 24 bit in low 3 bytes of 32 bits */
+  MAKE_FORMAT (S24_LE, SINT, G_LITTLE_ENDIAN, 32, 24, SILENT_0),
+  MAKE_FORMAT (S24_BE, SINT, G_BIG_ENDIAN, 32, 24, SILENT_0),
+  MAKE_FORMAT (U24_LE, UINT, G_LITTLE_ENDIAN, 32, 24, SILENT_U24_LE),
+  MAKE_FORMAT (U24_BE, UINT, G_BIG_ENDIAN, 32, 24, SILENT_U24_BE),
+  /* 32 bit */
+  MAKE_FORMAT (S32_LE, SINT, G_LITTLE_ENDIAN, 32, 32, SILENT_0),
+  MAKE_FORMAT (S32_BE, SINT, G_BIG_ENDIAN, 32, 32, SILENT_0),
+  MAKE_FORMAT (U32_LE, UINT, G_LITTLE_ENDIAN, 32, 32, SILENT_U32_LE),
+  MAKE_FORMAT (U32_BE, UINT, G_BIG_ENDIAN, 32, 32, SILENT_U32_BE),
+  /* 24 bit in 3 bytes */
+  MAKE_FORMAT (S24_3LE, SINT, G_LITTLE_ENDIAN, 24, 24, SILENT_0),
+  MAKE_FORMAT (S24_3BE, SINT, G_BIG_ENDIAN, 24, 24, SILENT_0),
+  MAKE_FORMAT (U24_3LE, UINT, G_LITTLE_ENDIAN, 24, 24, SILENT_U24_3LE),
+  MAKE_FORMAT (U24_3BE, UINT, G_BIG_ENDIAN, 24, 24, SILENT_U24_3BE),
+  /* 20 bit in 3 bytes */
+  MAKE_FORMAT (S20_3LE, SINT, G_LITTLE_ENDIAN, 24, 20, SILENT_0),
+  MAKE_FORMAT (S20_3BE, SINT, G_BIG_ENDIAN, 24, 20, SILENT_0),
+  MAKE_FORMAT (U20_3LE, UINT, G_LITTLE_ENDIAN, 24, 20, SILENT_U20_3LE),
+  MAKE_FORMAT (U20_3BE, UINT, G_BIG_ENDIAN, 24, 20, SILENT_U20_3BE),
+  /* 18 bit in 3 bytes */
+  MAKE_FORMAT (S18_3LE, SINT, G_LITTLE_ENDIAN, 24, 18, SILENT_0),
+  MAKE_FORMAT (S18_3BE, SINT, G_BIG_ENDIAN, 24, 18, SILENT_0),
+  MAKE_FORMAT (U18_3LE, UINT, G_LITTLE_ENDIAN, 24, 18, SILENT_U18_3LE),
+  MAKE_FORMAT (U18_3BE, UINT, G_BIG_ENDIAN, 24, 18, SILENT_U18_3BE),
+  /* float */
+  MAKE_FORMAT (F32_LE, GST_AUDIO_FORMAT_FLAG_FLOAT, G_LITTLE_ENDIAN, 32, 32,
+      SILENT_0),
+  MAKE_FORMAT (F32_BE, GST_AUDIO_FORMAT_FLAG_FLOAT, G_BIG_ENDIAN, 32, 32,
+      SILENT_0),
+  MAKE_FORMAT (F64_LE, GST_AUDIO_FORMAT_FLAG_FLOAT, G_LITTLE_ENDIAN, 64, 64,
+      SILENT_0),
+  MAKE_FORMAT (F64_BE, GST_AUDIO_FORMAT_FLAG_FLOAT, G_BIG_ENDIAN, 64, 64,
+      SILENT_0)
+};
+
+/**
+ * gst_audio_format_from_string:
+ * @format: a format string
+ *
+ * Convert the @format string to its #GstAudioFormat.
+ *
+ * Returns: the #GstAudioFormat for @format or GST_AUDIO_FORMAT_UNKNOWN when the
+ * string is not a known format.
+ */
+GstAudioFormat
+gst_audio_format_from_string (const gchar * format)
+{
+  guint i;
+
+  for (i = 0; i < G_N_ELEMENTS (formats); i++) {
+    if (strcmp (GST_AUDIO_FORMAT_INFO_NAME (&formats[i]), format) == 0)
+      return GST_AUDIO_FORMAT_INFO_FORMAT (&formats[i]);
+  }
+  return GST_AUDIO_FORMAT_UNKNOWN;
+}
+
+const gchar *
+gst_audio_format_to_string (GstAudioFormat format)
+{
+  g_return_val_if_fail (format != GST_AUDIO_FORMAT_UNKNOWN, NULL);
+
+  if (format >= G_N_ELEMENTS (formats))
+    return NULL;
+
+  return GST_AUDIO_FORMAT_INFO_NAME (&formats[format]);
+}
+
+/**
+ * gst_audio_format_get_info:
+ * @format: a #GstAudioFormat
+ *
+ * Get the #GstAudioFormatInfo for @format
+ *
+ * Returns: The #GstAudioFormatInfo for @format.
+ */
+const GstAudioFormatInfo *
+gst_audio_format_get_info (GstAudioFormat format)
+{
+  g_return_val_if_fail (format != GST_AUDIO_FORMAT_UNKNOWN, NULL);
+  g_return_val_if_fail (format < G_N_ELEMENTS (formats), NULL);
+
+  return &formats[format];
+}
+
+/**
+ * gst_audio_format_fill_silence:
+ * @info: a #GstAudioFormatInfo
+ * @dest: a destination to fill
+ * @lenfth: the length to fill
+ *
+ * Fill @length bytes in @dest with silence samples for @info.
+ */
+void
+gst_audio_format_fill_silence (const GstAudioFormatInfo * info,
+    gpointer dest, gsize length)
+{
+  guint8 *dptr = dest;
+
+  g_return_if_fail (info != NULL);
+  g_return_if_fail (dest != NULL);
+
+  if (info->flags & GST_AUDIO_FORMAT_FLAG_FLOAT ||
+      info->flags & GST_AUDIO_FORMAT_FLAG_SIGNED) {
+    /* float or signed always 0 */
+    memset (dest, 0, length);
+  } else {
+    gint i, j, bps = info->width >> 3;
+
+    switch (bps) {
+      case 1:
+        memset (dest, info->silence[0], length);
+        break;
+      default:
+        for (i = 0; i < length; i += bps) {
+          for (j = 0; j < bps; j++)
+            *dptr++ = info->silence[j];
+        }
+        break;
+    }
+  }
+}
+
+
+/**
+ * gst_audio_info_init:
+ * @info: a #GstAudioInfo
+ *
+ * Initialize @info with default values.
+ */
+void
+gst_audio_info_init (GstAudioInfo * info)
+{
+  g_return_if_fail (info != NULL);
+
+  memset (info, 0, sizeof (GstAudioInfo));
+}
+
+/**
+ * gst_audio_info_set_format:
+ * @info: a #GstAudioInfo
+ * @format: the format
+ * @rate: the samplerate
+ * @channels: the number of channels
+ *
+ * Set the default info for the audio info of @format and @rate and @channels.
+ */
+void
+gst_audio_info_set_format (GstAudioInfo * info, GstAudioFormat format,
+    gint rate, gint channels)
+{
+  const GstAudioFormatInfo *finfo;
+
+  g_return_if_fail (info != NULL);
+  g_return_if_fail (format != GST_AUDIO_FORMAT_UNKNOWN);
+
+  finfo = &formats[format];
+
+  info->flags = 0;
+  info->finfo = finfo;
+  info->rate = rate;
+  info->channels = channels;
+  info->bpf = (finfo->width * channels) / 8;
+}
+
+/**
+ * gst_audio_info_from_caps:
+ * @info: a #GstAudioInfo
+ * @caps: a #GstCaps
+ *
+ * Parse @caps and update @info.
+ *
+ * Returns: TRUE if @caps could be parsed
+ */
+gboolean
+gst_audio_info_from_caps (GstAudioInfo * info, const GstCaps * caps)
+{
+  GstStructure *str;
+  const gchar *s;
+  GstAudioFormat format;
+  gint rate, channels;
+  const GValue *pos_val_arr, *pos_val_entry;
+  gint i;
+
+  g_return_val_if_fail (info != NULL, FALSE);
+  g_return_val_if_fail (caps != NULL, FALSE);
+  g_return_val_if_fail (gst_caps_is_fixed (caps), FALSE);
+
+  GST_DEBUG ("parsing caps %" GST_PTR_FORMAT, caps);
+
+  str = gst_caps_get_structure (caps, 0);
+
+  if (!gst_structure_has_name (str, "audio/x-raw"))
+    goto wrong_name;
+
+  if (!(s = gst_structure_get_string (str, "format")))
+    goto no_format;
+
+  format = gst_audio_format_from_string (s);
+  if (format == GST_AUDIO_FORMAT_UNKNOWN)
+    goto unknown_format;
+
+  if (!gst_structure_get_int (str, "rate", &rate))
+    goto no_rate;
+  if (!gst_structure_get_int (str, "channels", &channels))
+    goto no_channels;
+
+  gst_audio_info_set_format (info, format, rate, channels);
+
+  pos_val_arr = gst_structure_get_value (str, "channel-positions");
+  if (pos_val_arr) {
+    guint max_pos = MAX (channels, 64);
+    for (i = 0; i < max_pos; i++) {
+      pos_val_entry = gst_value_array_get_value (pos_val_arr, i);
+      info->position[i] = g_value_get_enum (pos_val_entry);
+    }
+  } else {
+    info->flags |= GST_AUDIO_FLAG_UNPOSITIONED;
+  }
+
+  return TRUE;
+
+  /* ERROR */
+wrong_name:
+  {
+    GST_ERROR ("wrong name, expected audio/x-raw");
+    return FALSE;
+  }
+no_format:
+  {
+    GST_ERROR ("no format given");
+    return FALSE;
+  }
+unknown_format:
+  {
+    GST_ERROR ("unknown format given");
+    return FALSE;
+  }
+no_rate:
+  {
+    GST_ERROR ("no rate property given");
+    return FALSE;
+  }
+no_channels:
+  {
+    GST_ERROR ("no channels property given");
+    return FALSE;
+  }
+}
+
+/**
+ * gst_audio_info_to_caps:
+ * @info: a #GstAudioInfo
+ *
+ * Convert the values of @info into a #GstCaps.
+ *
+ * Returns: a new #GstCaps containing the info of @info.
+ */
+GstCaps *
+gst_audio_info_to_caps (GstAudioInfo * info)
+{
+  GstCaps *caps;
+  const gchar *format;
+
+  g_return_val_if_fail (info != NULL, NULL);
+  g_return_val_if_fail (info->finfo != NULL, NULL);
+  g_return_val_if_fail (info->finfo->format != GST_AUDIO_FORMAT_UNKNOWN, NULL);
+
+  format = gst_audio_format_to_string (info->finfo->format);
+  g_return_val_if_fail (format != NULL, NULL);
+
+  caps = gst_caps_new_simple ("audio/x-raw",
+      "format", G_TYPE_STRING, format,
+      "rate", G_TYPE_INT, info->rate,
+      "channels", G_TYPE_INT, info->channels, NULL);
+
+  if (info->channels > 2) {
+    GValue pos_val_arr = { 0 }
+    , pos_val_entry = {
+    0};
+    gint i, max_pos;
+    GstStructure *str;
+
+    /* build gvaluearray from positions */
+    g_value_init (&pos_val_arr, GST_TYPE_ARRAY);
+    g_value_init (&pos_val_entry, GST_TYPE_AUDIO_CHANNEL_POSITION);
+    max_pos = MAX (info->channels, 64);
+    for (i = 0; i < max_pos; i++) {
+      g_value_set_enum (&pos_val_entry, info->position[i]);
+      gst_value_array_append_value (&pos_val_arr, &pos_val_entry);
+    }
+    g_value_unset (&pos_val_entry);
+
+    /* add to structure */
+    str = gst_caps_get_structure (caps, 0);
+    gst_structure_set_value (str, "channel-positions", &pos_val_arr);
+    g_value_unset (&pos_val_arr);
+  }
+
+  return caps;
+}
+
 
 /**
  * gst_audio_frame_byte_size:

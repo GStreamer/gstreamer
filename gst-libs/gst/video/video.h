@@ -1,6 +1,5 @@
 /* GStreamer
- * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
- * Library       <2002> Ronald Bultje <rbultje@ronald.bitfreak.net>
+ * Copyright (C) <2011> Wim Taymans <wim.taymans@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -196,7 +195,7 @@ typedef void (*GstVideoFormatUnpack)         (GstVideoFormatInfo *info, gpointer
  *
  * Packs @width pixels from @src to the given planes and strides in the
  * format @info. The pixels from source have each component interleaved
- * and will be packed into @src.
+ * and will be packed into the planes in @data.
  */
 typedef void (*GstVideoFormatPack)           (GstVideoFormatInfo *info, const gpointer src,
                                               gpointer data[GST_VIDEO_MAX_PLANES],
@@ -529,7 +528,7 @@ gboolean    gst_video_frame_copy          (GstVideoFrame *dest, const GstVideoFr
  */
 #define GST_VIDEO_BUFFER_PROGRESSIVE GST_BUFFER_FLAG_MEDIA4
 
-/* functions */
+/* some helper functions */
 gboolean       gst_video_calculate_display_ratio (guint * dar_n,
                                                   guint * dar_d,
                                                   guint   video_width,

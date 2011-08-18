@@ -20,6 +20,7 @@ libgstaudioresample_la_CFLAGS = \
 	$(ORC_CFLAGS)
 
 libgstaudioresample_la_LIBADD = \
+	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_MAJORMINOR@.la \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS) \
 	$(ORC_LIBS) $(ORC_TEST_LIBS) \

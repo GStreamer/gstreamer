@@ -556,24 +556,27 @@ static AudioConvertPack pack_funcs[] = {
   (AudioConvertPack) MAKE_PACK_FUNC_NAME (s32_be_float),
 };
 
-#define DOUBLE_INTERMEDIATE_FORMAT(ctx)                                 \
-    ((!ctx->in.is_int && !ctx->out.is_int) || (ctx->ns != NOISE_SHAPING_NONE))
+#define DOUBLE_INTERMEDIATE_FORMAT(ctx)                   \
+    ((!GST_AUDIO_FORMAT_INFO_IS_INT (ctx->in.finfo) &&    \
+      !GST_AUDIO_FORMAT_INFO_IS_INT (ctx->out.finfo)) ||  \
+     (ctx->ns != NOISE_SHAPING_NONE))
 
 static gint
-audio_convert_get_func_index (AudioConvertCtx * ctx, AudioConvertFmt * fmt)
+audio_convert_get_func_index (AudioConvertCtx * ctx,
+    const GstAudioFormatInfo * fmt)
 {
   gint index = 0;
 
-  if (fmt->is_int) {
-    index += (fmt->width / 8 - 1) * 4;
-    index += fmt->endianness == G_LITTLE_ENDIAN ? 0 : 2;
-    index += fmt->sign ? 1 : 0;
+  if (GST_AUDIO_FORMAT_INFO_IS_INT (fmt)) {
+    index += (GST_AUDIO_FORMAT_INFO_WIDTH (fmt) / 8 - 1) * 4;
+    index += GST_AUDIO_FORMAT_INFO_IS_LE (fmt) ? 0 : 2;
+    index += GST_AUDIO_FORMAT_INFO_IS_SIGNED (fmt) ? 1 : 0;
     index += (ctx->ns == NOISE_SHAPING_NONE) ? 0 : 24;
   } else {
     /* this is float/double */
     index = 16;
-    index += (fmt->width == 32) ? 0 : 2;
-    index += (fmt->endianness == G_LITTLE_ENDIAN) ? 0 : 1;
+    index += (GST_AUDIO_FORMAT_INFO_WIDTH (fmt) == 32) ? 0 : 2;
+    index += GST_AUDIO_FORMAT_INFO_IS_LE (fmt) ? 0 : 1;
     index += (DOUBLE_INTERMEDIATE_FORMAT (ctx)) ? 4 : 0;
   }
 
@@ -581,34 +584,22 @@ audio_convert_get_func_index (AudioConvertCtx * ctx, AudioConvertFmt * fmt)
 }
 
 static inline gboolean
-check_default (AudioConvertCtx * ctx, AudioConvertFmt * fmt)
+check_default (AudioConvertCtx * ctx, const GstAudioFormatInfo * fmt)
 {
   if (!DOUBLE_INTERMEDIATE_FORMAT (ctx)) {
-    return (fmt->width == 32 && fmt->depth == 32 &&
-        fmt->endianness == G_BYTE_ORDER && fmt->sign == TRUE);
+    return GST_AUDIO_FORMAT_INFO_FORMAT (fmt) == GST_AUDIO_FORMAT_S32;
   } else {
-    return (fmt->width == 64 && fmt->endianness == G_BYTE_ORDER);
+    return GST_AUDIO_FORMAT_INFO_FORMAT (fmt) == GST_AUDIO_FORMAT_F64;
   }
 }
 
 gboolean
-audio_convert_clean_fmt (AudioConvertFmt * fmt)
-{
-  g_return_val_if_fail (fmt != NULL, FALSE);
-
-  g_free (fmt->pos);
-  fmt->pos = NULL;
-
-  return TRUE;
-}
-
-
-gboolean
-audio_convert_prepare_context (AudioConvertCtx * ctx, AudioConvertFmt * in,
-    AudioConvertFmt * out, GstAudioConvertDithering dither,
+audio_convert_prepare_context (AudioConvertCtx * ctx, GstAudioInfo * in,
+    GstAudioInfo * out, GstAudioConvertDithering dither,
     GstAudioConvertNoiseShaping ns)
 {
   gint idx_in, idx_out;
+  gint in_depth, out_depth;
 
   g_return_val_if_fail (ctx != NULL, FALSE);
   g_return_val_if_fail (in != NULL, FALSE);
@@ -617,18 +608,21 @@ audio_convert_prepare_context (AudioConvertCtx * ctx, AudioConvertFmt * in,
   /* first clean the existing context */
   audio_convert_clean_context (ctx);
 
-  g_return_val_if_fail (in->unpositioned_layout == out->unpositioned_layout,
-      FALSE);
+  g_return_val_if_fail (GST_AUDIO_INFO_IS_UNPOSITIONED (in) ==
+      GST_AUDIO_INFO_IS_UNPOSITIONED (out), FALSE);
 
   ctx->in = *in;
   ctx->out = *out;
+
+  in_depth = GST_AUDIO_FORMAT_INFO_DEPTH (in->finfo);
+  out_depth = GST_AUDIO_FORMAT_INFO_DEPTH (out->finfo);
 
   /* Don't dither or apply noise shaping if target depth is bigger than 20 bits
    * as DA converters only can do a SNR up to 20 bits in reality.
    * Also don't dither or apply noise shaping if target depth is larger than
    * source depth. */
-  if (ctx->out.depth <= 20 && (!ctx->in.is_int
-          || ctx->in.depth >= ctx->out.depth)) {
+  if (out_depth <= 20 && (!GST_AUDIO_FORMAT_INFO_IS_INT (in->finfo)
+          || in_depth >= out_depth)) {
     ctx->dither = dither;
     ctx->ns = ns;
   } else {
@@ -638,15 +632,15 @@ audio_convert_prepare_context (AudioConvertCtx * ctx, AudioConvertFmt * in,
 
   /* Use simple error feedback when output sample rate is smaller than
    * 32000 as the other methods might move the noise to audible ranges */
-  if (ctx->ns > NOISE_SHAPING_ERROR_FEEDBACK && ctx->out.rate < 32000)
+  if (ctx->ns > NOISE_SHAPING_ERROR_FEEDBACK && out->rate < 32000)
     ctx->ns = NOISE_SHAPING_ERROR_FEEDBACK;
 
   gst_channel_mix_setup_matrix (ctx);
 
-  idx_in = audio_convert_get_func_index (ctx, in);
+  idx_in = audio_convert_get_func_index (ctx, in->finfo);
   ctx->unpack = unpack_funcs[idx_in];
 
-  idx_out = audio_convert_get_func_index (ctx, out);
+  idx_out = audio_convert_get_func_index (ctx, out->finfo);
   ctx->pack = pack_funcs[idx_out];
 
   /* if both formats are float/double or we use noise shaping use double as
@@ -658,20 +652,22 @@ audio_convert_prepare_context (AudioConvertCtx * ctx, AudioConvertFmt * in,
     GST_INFO ("use float mixing");
     ctx->channel_mix = (AudioConvertMix) gst_channel_mix_mix_float;
   }
-  GST_INFO ("unitsizes: %d -> %d", in->unit_size, out->unit_size);
+  GST_INFO ("unitsizes: %d -> %d", in->bpf, out->bpf);
 
   /* check if input is in default format */
-  ctx->in_default = check_default (ctx, in);
+  ctx->in_default = check_default (ctx, in->finfo);
   /* check if channel mixer is passthrough */
   ctx->mix_passthrough = gst_channel_mix_passthrough (ctx);
   /* check if output is in default format */
-  ctx->out_default = check_default (ctx, out);
+  ctx->out_default = check_default (ctx, out->finfo);
 
   GST_INFO ("in default %d, mix passthrough %d, out default %d",
       ctx->in_default, ctx->mix_passthrough, ctx->out_default);
 
-  ctx->in_scale = (in->is_int) ? (32 - in->depth) : 0;
-  ctx->out_scale = (out->is_int) ? (32 - out->depth) : 0;
+  ctx->in_scale =
+      GST_AUDIO_FORMAT_INFO_IS_INT (in->finfo) ? (32 - in_depth) : 0;
+  ctx->out_scale =
+      GST_AUDIO_FORMAT_INFO_IS_INT (out->finfo) ? (32 - out_depth) : 0;
 
   gst_audio_quantize_setup (ctx);
 
@@ -684,8 +680,8 @@ audio_convert_clean_context (AudioConvertCtx * ctx)
   g_return_val_if_fail (ctx != NULL, FALSE);
 
   gst_audio_quantize_free (ctx);
-  audio_convert_clean_fmt (&ctx->in);
-  audio_convert_clean_fmt (&ctx->out);
+  gst_audio_info_init (&ctx->in);
+  gst_audio_info_init (&ctx->out);
   gst_channel_mix_unset_matrix (ctx);
 
   g_free (ctx->tmpbuf);
@@ -702,9 +698,9 @@ audio_convert_get_sizes (AudioConvertCtx * ctx, gint samples, gint * srcsize,
   g_return_val_if_fail (ctx != NULL, FALSE);
 
   if (srcsize)
-    *srcsize = samples * ctx->in.unit_size;
+    *srcsize = samples * ctx->in.bpf;
   if (dstsize)
-    *dstsize = samples * ctx->out.unit_size;
+    *dstsize = samples * ctx->out.bpf;
 
   return TRUE;
 }
@@ -716,6 +712,7 @@ audio_convert_convert (AudioConvertCtx * ctx, gpointer src,
   guint insize, outsize, size;
   gpointer outbuf, tmpbuf;
   guint intemp = 0, outtemp = 0, biggest;
+  gint in_width, out_width;
 
   g_return_val_if_fail (ctx != NULL, FALSE);
   g_return_val_if_fail (src != NULL, FALSE);
@@ -725,23 +722,26 @@ audio_convert_convert (AudioConvertCtx * ctx, gpointer src,
   if (samples == 0)
     return TRUE;
 
-  insize = ctx->in.unit_size * samples;
-  outsize = ctx->out.unit_size * samples;
+  insize = ctx->in.bpf * samples;
+  outsize = ctx->out.bpf * samples;
+
+  in_width = GST_AUDIO_FORMAT_INFO_WIDTH (ctx->in.finfo);
+  out_width = GST_AUDIO_FORMAT_INFO_WIDTH (ctx->out.finfo);
 
   /* find biggest temp buffer size */
   size = (DOUBLE_INTERMEDIATE_FORMAT (ctx)) ? sizeof (gdouble)
       : sizeof (gint32);
 
   if (!ctx->in_default)
-    intemp = gst_util_uint64_scale (insize, size * 8, ctx->in.width);
+    intemp = gst_util_uint64_scale (insize, size * 8, in_width);
   if (!ctx->mix_passthrough || !ctx->out_default)
-    outtemp = gst_util_uint64_scale (outsize, size * 8, ctx->out.width);
+    outtemp = gst_util_uint64_scale (outsize, size * 8, out_width);
   biggest = MAX (intemp, outtemp);
 
   /* see if one of the buffers can be used as temp */
-  if ((outsize >= biggest) && (ctx->out.unit_size <= size))
+  if ((outsize >= biggest) && (ctx->out.bpf <= size))
     tmpbuf = dst;
-  else if ((insize >= biggest) && src_writable && (ctx->in.unit_size >= size))
+  else if ((insize >= biggest) && src_writable && (ctx->in.bpf >= size))
     tmpbuf = src;
   else {
     if (biggest > ctx->tmpbufsize) {
@@ -779,7 +779,7 @@ audio_convert_convert (AudioConvertCtx * ctx, gpointer src,
   }
 
   /* we only need to quantize if output format is int */
-  if (ctx->out.is_int) {
+  if (GST_AUDIO_FORMAT_INFO_IS_INT (ctx->out.finfo)) {
     if (ctx->out_default)
       outbuf = dst;
     else

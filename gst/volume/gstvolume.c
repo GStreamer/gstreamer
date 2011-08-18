@@ -104,40 +104,13 @@ enum
   PROP_VOLUME
 };
 
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
 #define ALLOWED_CAPS \
-        "audio/x-raw-float, " \
-        "rate = (int) [ 1, MAX ], " \
-        "channels = (int) [ 1, MAX ], " \
-        "endianness = (int) BYTE_ORDER, " \
-        "width = (int) {32, 64}; " \
-        "audio/x-raw-int, " \
-        "channels = (int) [ 1, MAX ], " \
-        "rate = (int) [ 1,  MAX ], " \
-        "endianness = (int) BYTE_ORDER, " \
-        "width = (int) 8, " \
-        "depth = (int) 8, " \
-        "signed = (bool) TRUE; " \
-        "audio/x-raw-int, " \
-        "channels = (int) [ 1, MAX ], " \
-        "rate = (int) [ 1,  MAX ], " \
-        "endianness = (int) BYTE_ORDER, " \
-        "width = (int) 16, " \
-        "depth = (int) 16, " \
-        "signed = (bool) TRUE; " \
-        "audio/x-raw-int, " \
-        "channels = (int) [ 1, MAX ], " \
-        "rate = (int) [ 1,  MAX ], " \
-        "endianness = (int) BYTE_ORDER, " \
-        "width = (int) 24, " \
-        "depth = (int) 24, " \
-        "signed = (bool) TRUE; " \
-        "audio/x-raw-int, " \
-        "channels = (int) [ 1, MAX ], " \
-        "rate = (int) [ 1,  MAX ], " \
-        "endianness = (int) BYTE_ORDER, " \
-        "width = (int) 32, " \
-	"depth = (int) 32, " \
-	"signed = (bool) TRUE"
+    GST_AUDIO_CAPS_MAKE ("{ F32_LE, F64_LE, S8, S16_LE, S24_3LE, S32_LE }")
+#else
+#define ALLOWED_CAPS \
+    GST_AUDIO_CAPS_MAKE ("{ F32_BE, F64_BE, S8, S16_BE, S24_3BE, S32_BE }")
+#endif
 
 static void gst_volume_mixer_init (GstMixerClass * iface);
 
@@ -157,8 +130,7 @@ static void volume_before_transform (GstBaseTransform * base,
 static GstFlowReturn volume_transform_ip (GstBaseTransform * base,
     GstBuffer * outbuf);
 static gboolean volume_stop (GstBaseTransform * base);
-static gboolean volume_setup (GstAudioFilter * filter,
-    GstRingBufferSpec * format);
+static gboolean volume_setup (GstAudioFilter * filter, GstAudioInfo * info);
 
 static void volume_process_double (GstVolume * self, gpointer bytes,
     guint n_bytes);
@@ -199,68 +171,61 @@ static void volume_process_controlled_int8_clamp (GstVolume * self,
 static gboolean
 volume_choose_func (GstVolume * self)
 {
+  GstAudioFilter *filter = GST_AUDIO_FILTER (self);
+  GstAudioFormat format;
+
   self->process = NULL;
   self->process_controlled = NULL;
 
-  if (GST_AUDIO_FILTER (self)->format.caps == NULL)
+  format = GST_AUDIO_FORMAT_INFO_FORMAT (filter->info.finfo);
+
+  if (format == GST_AUDIO_FORMAT_UNKNOWN)
     return FALSE;
 
-  switch (GST_AUDIO_FILTER (self)->format.type) {
-    case GST_BUFTYPE_LINEAR:
-      switch (GST_AUDIO_FILTER (self)->format.width) {
-        case 32:
-          /* only clamp if the gain is greater than 1.0
-           */
-          if (self->current_vol_i32 > VOLUME_UNITY_INT32) {
-            self->process = volume_process_int32_clamp;
-          } else {
-            self->process = volume_process_int32;
-          }
-          self->process_controlled = volume_process_controlled_int32_clamp;
-          break;
-        case 24:
-          /* only clamp if the gain is greater than 1.0
-           */
-          if (self->current_vol_i24 > VOLUME_UNITY_INT24) {
-            self->process = volume_process_int24_clamp;
-          } else {
-            self->process = volume_process_int24;
-          }
-          self->process_controlled = volume_process_controlled_int24_clamp;
-          break;
-        case 16:
-          /* only clamp if the gain is greater than 1.0
-           */
-          if (self->current_vol_i16 > VOLUME_UNITY_INT16) {
-            self->process = volume_process_int16_clamp;
-          } else {
-            self->process = volume_process_int16;
-          }
-          self->process_controlled = volume_process_controlled_int16_clamp;
-          break;
-        case 8:
-          /* only clamp if the gain is greater than 1.0
-           */
-          if (self->current_vol_i8 > VOLUME_UNITY_INT8) {
-            self->process = volume_process_int8_clamp;
-          } else {
-            self->process = volume_process_int8;
-          }
-          self->process_controlled = volume_process_controlled_int8_clamp;
-          break;
+  switch (format) {
+    case GST_AUDIO_FORMAT_S32:
+      /* only clamp if the gain is greater than 1.0 */
+      if (self->current_vol_i32 > VOLUME_UNITY_INT32) {
+        self->process = volume_process_int32_clamp;
+      } else {
+        self->process = volume_process_int32;
       }
+      self->process_controlled = volume_process_controlled_int32_clamp;
       break;
-    case GST_BUFTYPE_FLOAT:
-      switch (GST_AUDIO_FILTER (self)->format.width) {
-        case 32:
-          self->process = volume_process_float;
-          self->process_controlled = volume_process_controlled_float;
-          break;
-        case 64:
-          self->process = volume_process_double;
-          self->process_controlled = volume_process_controlled_double;
-          break;
+    case GST_AUDIO_FORMAT_S24_3:
+      /* only clamp if the gain is greater than 1.0 */
+      if (self->current_vol_i24 > VOLUME_UNITY_INT24) {
+        self->process = volume_process_int24_clamp;
+      } else {
+        self->process = volume_process_int24;
       }
+      self->process_controlled = volume_process_controlled_int24_clamp;
+      break;
+    case GST_AUDIO_FORMAT_S16:
+      /* only clamp if the gain is greater than 1.0 */
+      if (self->current_vol_i16 > VOLUME_UNITY_INT16) {
+        self->process = volume_process_int16_clamp;
+      } else {
+        self->process = volume_process_int16;
+      }
+      self->process_controlled = volume_process_controlled_int16_clamp;
+      break;
+    case GST_AUDIO_FORMAT_S8:
+      /* only clamp if the gain is greater than 1.0 */
+      if (self->current_vol_i8 > VOLUME_UNITY_INT8) {
+        self->process = volume_process_int8_clamp;
+      } else {
+        self->process = volume_process_int8;
+      }
+      self->process_controlled = volume_process_controlled_int8_clamp;
+      break;
+    case GST_AUDIO_FORMAT_F32:
+      self->process = volume_process_float;
+      self->process_controlled = volume_process_controlled_float;
+      break;
+    case GST_AUDIO_FORMAT_F64:
+      self->process = volume_process_double;
+      self->process_controlled = volume_process_controlled_double;
       break;
     default:
       break;
@@ -756,7 +721,7 @@ volume_process_controlled_int8_clamp (GstVolume * self, gpointer bytes,
 
 /* get notified of caps and plug in the correct process function */
 static gboolean
-volume_setup (GstAudioFilter * filter, GstRingBufferSpec * format)
+volume_setup (GstAudioFilter * filter, GstAudioInfo * info)
 {
   gboolean res;
   GstVolume *self = GST_VOLUME (filter);
@@ -833,6 +798,7 @@ volume_before_transform (GstBaseTransform * base, GstBuffer * buffer)
 static GstFlowReturn
 volume_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
 {
+  GstAudioFilter *filter = GST_AUDIO_FILTER_CAST (base);
   GstVolume *self = GST_VOLUME (base);
   guint8 *data;
   gsize size;
@@ -850,10 +816,11 @@ volume_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
 
   mute_csource = gst_object_get_control_source (G_OBJECT (self), "mute");
   volume_csource = gst_object_get_control_source (G_OBJECT (self), "volume");
+
   if (mute_csource || (volume_csource && !self->current_mute)) {
-    gint rate = GST_AUDIO_FILTER_CAST (self)->format.rate;
-    gint width = GST_AUDIO_FILTER_CAST (self)->format.width / 8;
-    gint channels = GST_AUDIO_FILTER_CAST (self)->format.channels;
+    gint rate = GST_AUDIO_INFO_RATE (&filter->info);
+    gint width = GST_AUDIO_FORMAT_INFO_WIDTH (filter->info.finfo) / 8;
+    gint channels = GST_AUDIO_INFO_CHANNELS (&filter->info);
     guint nsamples = size / (width * channels);
     GstClockTime interval = gst_util_uint64_scale_int (1, GST_SECOND, rate);
     GstClockTime ts = GST_BUFFER_TIMESTAMP (outbuf);

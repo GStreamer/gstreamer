@@ -20,7 +20,7 @@
 #ifndef __GST_AUDIO_MULTICHANNEL_H__
 #define __GST_AUDIO_MULTICHANNEL_H__
 
-#include <gst/audio/audio.h>
+#include <gst/gst.h>
 #include <gst/audio/audio-enumtypes.h>
 
 G_BEGIN_DECLS

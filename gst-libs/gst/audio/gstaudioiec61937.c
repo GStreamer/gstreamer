@@ -114,9 +114,9 @@ gst_audio_iec61937_frame_size (const GstRingBufferSpec * spec)
 
       if (version == 1 && layer == 1)
         frames = 384;
-      else if (version == 2 && layer == 1 && spec->rate < 32000)
+      else if (version == 2 && layer == 1 && spec->info.rate < 32000)
         frames = 768;
-      else if (version == 2 && layer == 1 && spec->rate < 32000)
+      else if (version == 2 && layer == 1 && spec->info.rate < 32000)
         frames = 2304;
       else
         frames = 1152;
@@ -271,13 +271,13 @@ gst_audio_iec61937_payload (const guint8 * src, guint src_n, guint8 * dst,
       if (version == 1 && layer == 1)
         dst[five] = 0x04;
       else if ((version == 1 && (layer == 2 || layer == 3)) ||
-          (version == 2 && spec->rate >= 32000))
+          (version == 2 && spec->info.rate >= 32000))
         dst[five] = 0x05;
-      else if (version == 2 && layer == 1 && spec->rate < 32000)
+      else if (version == 2 && layer == 1 && spec->info.rate < 32000)
         dst[five] = 0x08;
-      else if (version == 2 && layer == 2 && spec->rate < 32000)
+      else if (version == 2 && layer == 2 && spec->info.rate < 32000)
         dst[five] = 0x09;
-      else if (version == 2 && layer == 3 && spec->rate < 32000)
+      else if (version == 2 && layer == 3 && spec->info.rate < 32000)
         dst[five] = 0x0A;
       else
         g_return_val_if_reached (FALSE);

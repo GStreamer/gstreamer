@@ -107,37 +107,11 @@ enum
 #endif
 
 static GstStaticPadTemplate alsasrc_src_factory =
-    GST_STATIC_PAD_TEMPLATE ("src",
+GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, "
-        "endianness = (int) { " ALSA_SRC_FACTORY_ENDIANNESS " }, "
-        "signed = (boolean) { TRUE, FALSE }, "
-        "width = (int) 32, "
-        "depth = (int) 32, "
-        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, MAX ]; "
-        "audio/x-raw-int, "
-        "endianness = (int) { " ALSA_SRC_FACTORY_ENDIANNESS " }, "
-        "signed = (boolean) { TRUE, FALSE }, "
-        "width = (int) 32, "
-        "depth = (int) 24, "
-        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, MAX ]; "
-        "audio/x-raw-int, "
-        "endianness = (int) { " ALSA_SRC_FACTORY_ENDIANNESS " }, "
-        "signed = (boolean) { TRUE, FALSE }, "
-        "width = (int) 24, "
-        "depth = (int) 24, "
-        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, MAX ]; "
-        "audio/x-raw-int, "
-        "endianness = (int) { " ALSA_SRC_FACTORY_ENDIANNESS " }, "
-        "signed = (boolean) { TRUE, FALSE }, "
-        "width = (int) 16, "
-        "depth = (int) 16, "
-        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, MAX ]; "
-        "audio/x-raw-int, "
-        "signed = (boolean) { TRUE, FALSE }, "
-        "width = (int) 8, "
-        "depth = (int) 8, "
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) " GST_AUDIO_FORMATS_ALL ", "
         "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, MAX ]")
     );
 
@@ -655,22 +629,96 @@ static gboolean
 alsasrc_parse_spec (GstAlsaSrc * alsa, GstRingBufferSpec * spec)
 {
   switch (spec->type) {
-    case GST_BUFTYPE_LINEAR:
-      alsa->format = snd_pcm_build_linear_format (spec->depth, spec->width,
-          spec->sign ? 0 : 1, spec->bigend ? 1 : 0);
-      break;
-    case GST_BUFTYPE_FLOAT:
-      switch (spec->format) {
-        case GST_FLOAT32_LE:
+    case GST_BUFTYPE_RAW:
+      switch (GST_AUDIO_INFO_FORMAT (&spec->info)) {
+        case GST_AUDIO_FORMAT_U8:
+          alsa->format = SND_PCM_FORMAT_U8;
+          break;
+        case GST_AUDIO_FORMAT_S8:
+          alsa->format = SND_PCM_FORMAT_S8;
+          break;
+        case GST_AUDIO_FORMAT_S16_LE:
+          alsa->format = SND_PCM_FORMAT_S16_LE;
+          break;
+        case GST_AUDIO_FORMAT_S16_BE:
+          alsa->format = SND_PCM_FORMAT_S16_BE;
+          break;
+        case GST_AUDIO_FORMAT_U16_LE:
+          alsa->format = SND_PCM_FORMAT_U16_LE;
+          break;
+        case GST_AUDIO_FORMAT_U16_BE:
+          alsa->format = SND_PCM_FORMAT_U16_BE;
+          break;
+        case GST_AUDIO_FORMAT_S24_LE:
+          alsa->format = SND_PCM_FORMAT_S24_LE;
+          break;
+        case GST_AUDIO_FORMAT_S24_BE:
+          alsa->format = SND_PCM_FORMAT_S24_BE;
+          break;
+        case GST_AUDIO_FORMAT_U24_LE:
+          alsa->format = SND_PCM_FORMAT_U24_LE;
+          break;
+        case GST_AUDIO_FORMAT_U24_BE:
+          alsa->format = SND_PCM_FORMAT_U24_BE;
+          break;
+        case GST_AUDIO_FORMAT_S32_LE:
+          alsa->format = SND_PCM_FORMAT_S32_LE;
+          break;
+        case GST_AUDIO_FORMAT_S32_BE:
+          alsa->format = SND_PCM_FORMAT_S32_BE;
+          break;
+        case GST_AUDIO_FORMAT_U32_LE:
+          alsa->format = SND_PCM_FORMAT_U32_LE;
+          break;
+        case GST_AUDIO_FORMAT_U32_BE:
+          alsa->format = SND_PCM_FORMAT_U32_BE;
+          break;
+        case GST_AUDIO_FORMAT_S24_3LE:
+          alsa->format = SND_PCM_FORMAT_S24_3LE;
+          break;
+        case GST_AUDIO_FORMAT_S24_3BE:
+          alsa->format = SND_PCM_FORMAT_S24_3BE;
+          break;
+        case GST_AUDIO_FORMAT_U24_3LE:
+          alsa->format = SND_PCM_FORMAT_U24_3LE;
+          break;
+        case GST_AUDIO_FORMAT_U24_3BE:
+          alsa->format = SND_PCM_FORMAT_U24_3BE;
+          break;
+        case GST_AUDIO_FORMAT_S20_3LE:
+          alsa->format = SND_PCM_FORMAT_S20_3LE;
+          break;
+        case GST_AUDIO_FORMAT_S20_3BE:
+          alsa->format = SND_PCM_FORMAT_S20_3BE;
+          break;
+        case GST_AUDIO_FORMAT_U20_3LE:
+          alsa->format = SND_PCM_FORMAT_U20_3LE;
+          break;
+        case GST_AUDIO_FORMAT_U20_3BE:
+          alsa->format = SND_PCM_FORMAT_U20_3BE;
+          break;
+        case GST_AUDIO_FORMAT_S18_3LE:
+          alsa->format = SND_PCM_FORMAT_S18_3LE;
+          break;
+        case GST_AUDIO_FORMAT_S18_3BE:
+          alsa->format = SND_PCM_FORMAT_S18_3BE;
+          break;
+        case GST_AUDIO_FORMAT_U18_3LE:
+          alsa->format = SND_PCM_FORMAT_U18_3LE;
+          break;
+        case GST_AUDIO_FORMAT_U18_3BE:
+          alsa->format = SND_PCM_FORMAT_U18_3BE;
+          break;
+        case GST_AUDIO_FORMAT_F32_LE:
           alsa->format = SND_PCM_FORMAT_FLOAT_LE;
           break;
-        case GST_FLOAT32_BE:
+        case GST_AUDIO_FORMAT_F32_BE:
           alsa->format = SND_PCM_FORMAT_FLOAT_BE;
           break;
-        case GST_FLOAT64_LE:
+        case GST_AUDIO_FORMAT_F64_LE:
           alsa->format = SND_PCM_FORMAT_FLOAT64_LE;
           break;
-        case GST_FLOAT64_BE:
+        case GST_AUDIO_FORMAT_F64_BE:
           alsa->format = SND_PCM_FORMAT_FLOAT64_BE;
           break;
         default:
@@ -687,8 +735,8 @@ alsasrc_parse_spec (GstAlsaSrc * alsa, GstRingBufferSpec * spec)
       goto error;
 
   }
-  alsa->rate = spec->rate;
-  alsa->channels = spec->channels;
+  alsa->rate = GST_AUDIO_INFO_RATE (&spec->info);
+  alsa->channels = GST_AUDIO_INFO_CHANNELS (&spec->info);
   alsa->buffer_time = spec->buffer_time;
   alsa->period_time = spec->latency_time;
   alsa->access = SND_PCM_ACCESS_RW_INTERLEAVED;
@@ -753,13 +801,9 @@ gst_alsasrc_prepare (GstAudioSrc * asrc, GstRingBufferSpec * spec)
   CHECK (set_swparams (alsa), sw_params_failed);
   CHECK (snd_pcm_prepare (alsa->handle), prepare_failed);
 
-  alsa->bytes_per_sample = spec->bytes_per_sample;
-  spec->segsize = alsa->period_size * spec->bytes_per_sample;
+  alsa->bpf = GST_AUDIO_INFO_BPF (&spec->info);
+  spec->segsize = alsa->period_size * alsa->bpf;
   spec->segtotal = alsa->buffer_size / alsa->period_size;
-  spec->silence_sample[0] = 0;
-  spec->silence_sample[1] = 0;
-  spec->silence_sample[2] = 0;
-  spec->silence_sample[3] = 0;
 
   return TRUE;
 
@@ -869,7 +913,7 @@ gst_alsasrc_read (GstAudioSrc * asrc, gpointer data, guint length)
 
   alsa = GST_ALSA_SRC (asrc);
 
-  cptr = length / alsa->bytes_per_sample;
+  cptr = length / alsa->bpf;
   ptr = data;
 
   GST_ALSA_SRC_LOCK (asrc);
@@ -889,7 +933,7 @@ gst_alsasrc_read (GstAudioSrc * asrc, gpointer data, guint length)
   }
   GST_ALSA_SRC_UNLOCK (asrc);
 
-  return length - (cptr * alsa->bytes_per_sample);
+  return length - (cptr * alsa->bpf);
 
 read_error:
   {
