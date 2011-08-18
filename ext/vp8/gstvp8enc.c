@@ -857,7 +857,6 @@ gst_vp8_enc_set_format (GstBaseVideoEncoder * base_video_encoder,
     GstStructure *s;
     GstBuffer *stream_hdr, *vorbiscomment;
     const GstTagList *iface_tags;
-    GstTagList *tags;
     GValue array = { 0, };
     GValue value = { 0, };
     s = gst_caps_get_structure (caps, 0);
@@ -892,8 +891,8 @@ gst_vp8_enc_set_format (GstBaseVideoEncoder * base_video_encoder,
         gst_tag_setter_get_tag_list (GST_TAG_SETTER (base_video_encoder));
     if (iface_tags) {
       vorbiscomment =
-          gst_tag_list_to_vorbiscomment_buffer ((iface_tags) ? iface_tags :
-          tags, (const guint8 *) "OVP80\2 ", 7,
+          gst_tag_list_to_vorbiscomment_buffer (iface_tags,
+          (const guint8 *) "OVP80\2 ", 7,
           "Encoded with GStreamer vp8enc " PACKAGE_VERSION);
 
       GST_BUFFER_FLAG_SET (vorbiscomment, GST_BUFFER_FLAG_IN_CAPS);
