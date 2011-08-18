@@ -834,7 +834,7 @@ gst_hls_demux_cache_fragments (GstHLSDemux * demux)
   /* If this playlist is a variant playlist, select the first one
    * and update it */
   if (gst_m3u8_client_has_variant_playlist (demux->client)) {
-    GstM3U8 *child = demux->client->main->lists->data;
+    GstM3U8 *child = demux->client->main->current_variant->data;
     gst_m3u8_client_set_current (demux->client, child);
     if (!gst_hls_demux_update_playlist (demux, FALSE)) {
       GST_ERROR_OBJECT (demux, "Could not fetch the child playlist %s",
@@ -972,17 +972,17 @@ gst_hls_demux_change_playlist (GstHLSDemux * demux, gboolean is_fast)
   GstStructure *s;
 
   if (is_fast)
-    list = g_list_next (demux->client->main->lists);
+    list = g_list_next (demux->client->main->current_variant);
   else
-    list = g_list_previous (demux->client->main->lists);
+    list = g_list_previous (demux->client->main->current_variant);
 
   /* Don't do anything else if the playlist is the same */
   if (!list || list->data == demux->client->current)
     return TRUE;
 
-  demux->client->main->lists = list;
+  demux->client->main->current_variant = list;
 
-  gst_m3u8_client_set_current (demux->client, demux->client->main->lists->data);
+  gst_m3u8_client_set_current (demux->client, list->data);
   gst_hls_demux_update_playlist (demux, TRUE);
   GST_INFO_OBJECT (demux, "Client is %s, switching to bitrate %d",
       is_fast ? "fast" : "slow", demux->client->current->bandwidth);
