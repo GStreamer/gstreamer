@@ -1560,7 +1560,7 @@ gst_base_parse_check_media (GstBaseParse * parse)
     parse->priv->is_video = FALSE;
   }
 
-  GST_DEBUG_OBJECT (parse, "media is video == %d", parse->priv->is_video);
+  GST_DEBUG_OBJECT (parse, "media is video: %d", parse->priv->is_video);
 }
 
 /* takes ownership of frame */
