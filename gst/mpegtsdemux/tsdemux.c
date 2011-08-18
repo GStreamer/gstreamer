@@ -1217,13 +1217,24 @@ gst_ts_demux_stream_added (MpegTSBase * base, MpegTSBaseStream * bstream,
 static void
 gst_ts_demux_stream_removed (MpegTSBase * base, MpegTSBaseStream * bstream)
 {
+  GstTSDemux *demux = GST_TS_DEMUX (base);
   TSDemuxStream *stream = (TSDemuxStream *) bstream;
 
   if (stream->pad) {
     if (gst_pad_is_active (stream->pad)) {
-      GST_DEBUG_OBJECT (stream->pad, "Flushing out pending data");
+      gboolean need_newsegment = demux->need_newsegment;
+
+      /* We must not send the newsegment when flushing the pending data
+         on the removed stream. We should only push it when the newly added
+         stream finishes parsing its PTS */
+      demux->need_newsegment = FALSE;
+
       /* Flush out all data */
+      GST_DEBUG_OBJECT (stream->pad, "Flushing out pending data");
       gst_ts_demux_push_pending_data ((GstTSDemux *) base, stream);
+
+      demux->need_newsegment = need_newsegment;
+
       GST_DEBUG_OBJECT (stream->pad, "Pushing out EOS");
       gst_pad_push_event (stream->pad, gst_event_new_eos ());
       GST_DEBUG_OBJECT (stream->pad, "Deactivating and removing pad");
