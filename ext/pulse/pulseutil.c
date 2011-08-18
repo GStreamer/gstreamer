@@ -80,37 +80,53 @@ gboolean
 gst_pulse_fill_sample_spec (GstRingBufferSpec * spec, pa_sample_spec * ss)
 {
 
-  if (spec->format == GST_MU_LAW && spec->width == 8)
+  if (spec->type == GST_BUFTYPE_RAW) {
+    switch (GST_AUDIO_INFO_FORMAT (&spec->info)) {
+      case GST_AUDIO_FORMAT_U8:
+        ss->format = PA_SAMPLE_U8;
+        break;
+      case GST_AUDIO_FORMAT_S16_LE:
+        ss->format = PA_SAMPLE_S16LE;
+        break;
+      case GST_AUDIO_FORMAT_S16_BE:
+        ss->format = PA_SAMPLE_S16BE;
+        break;
+      case GST_AUDIO_FORMAT_F32_LE:
+        ss->format = PA_SAMPLE_FLOAT32LE;
+        break;
+      case GST_AUDIO_FORMAT_F32_BE:
+        ss->format = PA_SAMPLE_FLOAT32BE;
+        break;
+      case GST_AUDIO_FORMAT_S32_LE:
+        ss->format = PA_SAMPLE_S32LE;
+        break;
+      case GST_AUDIO_FORMAT_S32_BE:
+        ss->format = PA_SAMPLE_S32BE;
+        break;
+      case GST_AUDIO_FORMAT_S24_3LE:
+        ss->format = PA_SAMPLE_S24LE;
+        break;
+      case GST_AUDIO_FORMAT_S24_3BE:
+        ss->format = PA_SAMPLE_S24BE;
+        break;
+      case GST_AUDIO_FORMAT_S24_LE:
+        ss->format = PA_SAMPLE_S24_32LE;
+        break;
+      case GST_AUDIO_FORMAT_S24_BE:
+        ss->format = PA_SAMPLE_S24_32BE;
+        break;
+      default:
+        return FALSE;
+    }
+  } else if (spec->type == GST_BUFTYPE_MU_LAW) {
     ss->format = PA_SAMPLE_ULAW;
-  else if (spec->format == GST_A_LAW && spec->width == 8)
+  } else if (spec->type == GST_BUFTYPE_A_LAW) {
     ss->format = PA_SAMPLE_ALAW;
-  else if (spec->format == GST_U8 && spec->width == 8)
-    ss->format = PA_SAMPLE_U8;
-  else if (spec->format == GST_S16_LE && spec->width == 16)
-    ss->format = PA_SAMPLE_S16LE;
-  else if (spec->format == GST_S16_BE && spec->width == 16)
-    ss->format = PA_SAMPLE_S16BE;
-  else if (spec->format == GST_FLOAT32_LE && spec->width == 32)
-    ss->format = PA_SAMPLE_FLOAT32LE;
-  else if (spec->format == GST_FLOAT32_BE && spec->width == 32)
-    ss->format = PA_SAMPLE_FLOAT32BE;
-  else if (spec->format == GST_S32_LE && spec->width == 32)
-    ss->format = PA_SAMPLE_S32LE;
-  else if (spec->format == GST_S32_BE && spec->width == 32)
-    ss->format = PA_SAMPLE_S32BE;
-  else if (spec->format == GST_S24_3LE && spec->width == 24)
-    ss->format = PA_SAMPLE_S24LE;
-  else if (spec->format == GST_S24_3BE && spec->width == 24)
-    ss->format = PA_SAMPLE_S24BE;
-  else if (spec->format == GST_S24_LE && spec->width == 32)
-    ss->format = PA_SAMPLE_S24_32LE;
-  else if (spec->format == GST_S24_BE && spec->width == 32)
-    ss->format = PA_SAMPLE_S24_32BE;
-  else
+  } else
     return FALSE;
 
-  ss->channels = spec->channels;
-  ss->rate = spec->rate;
+  ss->channels = GST_AUDIO_INFO_CHANNELS (&spec->info);
+  ss->rate = GST_AUDIO_INFO_RATE (&spec->info);
 
   if (!pa_sample_spec_valid (ss))
     return FALSE;
@@ -236,7 +252,7 @@ gst_pulse_gst_to_channel_map (pa_channel_map * map,
     return NULL;
   }
 
-  for (i = 0; i < spec->channels; i++) {
+  for (i = 0; i < spec->info.channels; i++) {
     if (pos[i] == GST_AUDIO_CHANNEL_POSITION_NONE) {
       /* no valid mappings for these channels */
       g_free (pos);
@@ -248,7 +264,7 @@ gst_pulse_gst_to_channel_map (pa_channel_map * map,
   }
 
   g_free (pos);
-  map->channels = spec->channels;
+  map->channels = spec->info.channels;
 
   if (!pa_channel_map_valid (map)) {
     return NULL;
@@ -264,12 +280,15 @@ gst_pulse_channel_map_to_gst (const pa_channel_map * map,
   int i;
   GstAudioChannelPosition *pos;
   gboolean invalid = FALSE;
+  gint channels;
 
-  g_return_val_if_fail (map->channels == spec->channels, NULL);
+  channels = GST_AUDIO_INFO_CHANNELS (&spec->info);
 
-  pos = g_new0 (GstAudioChannelPosition, spec->channels + 1);
+  g_return_val_if_fail (map->channels == channels, NULL);
 
-  for (i = 0; i < spec->channels; i++) {
+  pos = g_new0 (GstAudioChannelPosition, channels + 1);
+
+  for (i = 0; i < channels; i++) {
     if (map->map[i] == PA_CHANNEL_POSITION_INVALID) {
       invalid = TRUE;
       break;
@@ -281,11 +300,11 @@ gst_pulse_channel_map_to_gst (const pa_channel_map * map,
     }
   }
 
-  if (!invalid && !gst_audio_check_channel_positions (pos, spec->channels))
+  if (!invalid && !gst_audio_check_channel_positions (pos, channels))
     invalid = TRUE;
 
   if (invalid) {
-    for (i = 0; i < spec->channels; i++)
+    for (i = 0; i < channels; i++)
       pos[i] = GST_AUDIO_CHANNEL_POSITION_NONE;
   }
 

@@ -1274,16 +1274,16 @@ server_dead:
 G_STMT_START {                                  \
   guint8 *sb = s, *db = d;                      \
   while (s <= se && d < de) {                   \
-    memcpy (d, s, bps);                         \
-    s += bps;                                   \
+    memcpy (d, s, bpf);                         \
+    s += bpf;                                   \
     *accum += outr;                             \
     if ((*accum << 1) >= inr) {                 \
       *accum -= inr;                            \
-      d += bps;                                 \
+      d += bpf;                                 \
     }                                           \
   }                                             \
-  in_samples -= (s - sb)/bps;                   \
-  out_samples -= (d - db)/bps;                  \
+  in_samples -= (s - sb)/bpf;                   \
+  out_samples -= (d - db)/bpf;                  \
   GST_DEBUG ("fwd_up end %d/%d",*accum,*toprocess);     \
 } G_STMT_END
 
@@ -1292,16 +1292,16 @@ G_STMT_START {                                  \
 G_STMT_START {                                  \
   guint8 *sb = s, *db = d;                      \
   while (s <= se && d < de) {                   \
-    memcpy (d, s, bps);                         \
-    d += bps;                                   \
+    memcpy (d, s, bpf);                         \
+    d += bpf;                                   \
     *accum += inr;                              \
     if ((*accum << 1) >= outr) {                \
       *accum -= outr;                           \
-      s += bps;                                 \
+      s += bpf;                                 \
     }                                           \
   }                                             \
-  in_samples -= (s - sb)/bps;                   \
-  out_samples -= (d - db)/bps;                  \
+  in_samples -= (s - sb)/bpf;                   \
+  out_samples -= (d - db)/bpf;                  \
   GST_DEBUG ("fwd_down end %d/%d",*accum,*toprocess);   \
 } G_STMT_END
 
@@ -1309,16 +1309,16 @@ G_STMT_START {                                  \
 G_STMT_START {                                  \
   guint8 *sb = se, *db = d;                     \
   while (s <= se && d < de) {                   \
-    memcpy (d, se, bps);                        \
-    se -= bps;                                  \
+    memcpy (d, se, bpf);                        \
+    se -= bpf;                                  \
     *accum += outr;                             \
     while (d < de && (*accum << 1) >= inr) {    \
       *accum -= inr;                            \
-      d += bps;                                 \
+      d += bpf;                                 \
     }                                           \
   }                                             \
-  in_samples -= (sb - se)/bps;                  \
-  out_samples -= (d - db)/bps;                  \
+  in_samples -= (sb - se)/bpf;                  \
+  out_samples -= (d - db)/bpf;                  \
   GST_DEBUG ("rev_up end %d/%d",*accum,*toprocess);     \
 } G_STMT_END
 
@@ -1326,16 +1326,16 @@ G_STMT_START {                                  \
 G_STMT_START {                                  \
   guint8 *sb = se, *db = d;                     \
   while (s <= se && d < de) {                   \
-    memcpy (d, se, bps);                        \
-    d += bps;                                   \
+    memcpy (d, se, bpf);                        \
+    d += bpf;                                   \
     *accum += inr;                              \
     while (s <= se && (*accum << 1) >= outr) {  \
       *accum -= outr;                           \
-      se -= bps;                                \
+      se -= bpf;                                \
     }                                           \
   }                                             \
-  in_samples -= (sb - se)/bps;                  \
-  out_samples -= (d - db)/bps;                  \
+  in_samples -= (sb - se)/bpf;                  \
+  out_samples -= (d - db)/bpf;                  \
   GST_DEBUG ("rev_down end %d/%d",*accum,*toprocess);   \
 } G_STMT_END
 
@@ -1351,7 +1351,7 @@ gst_pulseringbuffer_commit (GstRingBuffer * buf, guint64 * sample,
   guint8 *data_end;
   gboolean reverse;
   gint *toprocess;
-  gint inr, outr, bps;
+  gint inr, outr, bpf;
   gint64 offset;
   guint bufsize;
 
@@ -1381,7 +1381,7 @@ gst_pulseringbuffer_commit (GstRingBuffer * buf, guint64 * sample,
   GST_DEBUG_OBJECT (psink, "entering commit");
   pbuf->in_commit = TRUE;
 
-  bps = buf->spec.bytes_per_sample;
+  bpf = GST_AUDIO_INFO_BPF (&buf->spec.info);
   bufsize = buf->spec.segsize * buf->spec.segtotal;
 
   /* our toy resampler for trick modes */
@@ -1400,7 +1400,7 @@ gst_pulseringbuffer_commit (GstRingBuffer * buf, guint64 * sample,
 
   /* data_end points to the last sample we have to write, not past it. This is
    * needed to properly handle reverse playback: it points to the last sample. */
-  data_end = data + (bps * inr);
+  data_end = data + (bpf * inr);
 
 #ifdef HAVE_PULSE_1_0
   if (g_atomic_int_get (&psink->format_lost)) {
@@ -1413,7 +1413,7 @@ gst_pulseringbuffer_commit (GstRingBuffer * buf, guint64 * sample,
     goto was_paused;
 
   /* offset is in bytes */
-  offset = *sample * bps;
+  offset = *sample * bpf;
 
   while (*toprocess > 0) {
     size_t avail;
@@ -1427,7 +1427,7 @@ gst_pulseringbuffer_commit (GstRingBuffer * buf, guint64 * sample,
       GST_LOG_OBJECT (psink, "discontinuity, offset is %" G_GINT64_FORMAT ", "
           "last offset was %" G_GINT64_FORMAT, offset, pbuf->m_lastoffset);
 
-    towrite = out_samples * bps;
+    towrite = out_samples * bpf;
 
     /* Only ever write segsize bytes at once. This will
      * also limit the PA shm buffer to segsize
@@ -1444,7 +1444,7 @@ gst_pulseringbuffer_commit (GstRingBuffer * buf, guint64 * sample,
 
         GST_LOG_OBJECT (psink,
             "flushing %u samples at offset %" G_GINT64_FORMAT,
-            (guint) pbuf->m_towrite / bps, pbuf->m_offset);
+            (guint) pbuf->m_towrite / bpf, pbuf->m_offset);
 
         if (pa_stream_write (pbuf->stream, (uint8_t *) pbuf->m_data,
                 pbuf->m_towrite, NULL, pbuf->m_offset, PA_SEEK_ABSOLUTE) < 0) {
@@ -1468,8 +1468,8 @@ gst_pulseringbuffer_commit (GstRingBuffer * buf, guint64 * sample,
         if (pbuf->m_writable == (size_t) - 1)
           goto writable_size_failed;
 
-        pbuf->m_writable /= bps;
-        pbuf->m_writable *= bps;        /* handle only complete samples */
+        pbuf->m_writable /= bpf;
+        pbuf->m_writable *= bpf;        /* handle only complete samples */
 
         if (pbuf->m_writable >= towrite)
           break;
@@ -1518,7 +1518,7 @@ gst_pulseringbuffer_commit (GstRingBuffer * buf, guint64 * sample,
 
     if (pbuf->m_writable < towrite)
       towrite = pbuf->m_writable;
-    avail = towrite / bps;
+    avail = towrite / bpf;
 
     GST_LOG_OBJECT (psink, "writing %u samples at offset %" G_GUINT64_FORMAT,
         (guint) avail, offset);
@@ -1569,14 +1569,14 @@ gst_pulseringbuffer_commit (GstRingBuffer * buf, guint64 * sample,
       pbuf->m_towrite += towrite;
       pbuf->m_writable -= towrite;
 
-      avail = towrite / bps;
+      avail = towrite / bpf;
     }
 
     /* flush the buffer if it's full */
     if ((pbuf->m_data != NULL) && (pbuf->m_towrite > 0)
         && (pbuf->m_writable == 0)) {
       GST_LOG_OBJECT (psink, "flushing %u samples at offset %" G_GINT64_FORMAT,
-          (guint) pbuf->m_towrite / bps, pbuf->m_offset);
+          (guint) pbuf->m_towrite / bpf, pbuf->m_offset);
 
       if (pa_stream_write (pbuf->stream, (uint8_t *) pbuf->m_data,
               pbuf->m_towrite, NULL, pbuf->m_offset, PA_SEEK_ABSOLUTE) < 0) {
@@ -1587,7 +1587,7 @@ gst_pulseringbuffer_commit (GstRingBuffer * buf, guint64 * sample,
     }
 
     *sample += avail;
-    offset += avail * bps;
+    offset += avail * bpf;
     pbuf->m_lastoffset = offset;
 
     /* check if we need to uncork after writing the samples */
@@ -1615,13 +1615,13 @@ gst_pulseringbuffer_commit (GstRingBuffer * buf, guint64 * sample,
 fake_done:
 #endif
   /* we consumed all samples here */
-  data = data_end + bps;
+  data = data_end + bpf;
 
   pbuf->in_commit = FALSE;
   pa_threaded_mainloop_unlock (mainloop);
 
 done:
-  result = inr - ((data_end - data) / bps);
+  result = inr - ((data_end - data) / bpf);
   GST_LOG_OBJECT (psink, "wrote %d samples", result);
 
   return result;
@@ -1686,12 +1686,12 @@ gst_pulsering_flush (GstPulseRingBuffer * pbuf)
   /* flush the buffer if possible */
   if (pbuf->stream && (pbuf->m_data != NULL) && (pbuf->m_towrite > 0)) {
 #ifndef GST_DISABLE_GST_DEBUG
-    gint bps;
+    gint bpf;
 
-    bps = (GST_RING_BUFFER_CAST (pbuf))->spec.bytes_per_sample;
+    bpf = (GST_RING_BUFFER_CAST (pbuf))->spec.info.bpf;
     GST_LOG_OBJECT (psink,
         "flushing %u samples at offset %" G_GINT64_FORMAT,
-        (guint) pbuf->m_towrite / bps, pbuf->m_offset);
+        (guint) pbuf->m_towrite / bpf, pbuf->m_offset);
 #endif
 
     if (pa_stream_write (pbuf->stream, (uint8_t *) pbuf->m_data,
@@ -1728,49 +1728,18 @@ static GstStateChangeReturn gst_pulsesink_change_state (GstElement * element,
     GstStateChange transition);
 
 #if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
-# define ENDIANNESS   "LITTLE_ENDIAN, BIG_ENDIAN"
+# define FORMATS   "{ S16_LE, S16_BE, F32_LE, F32_BE, S32_LE, S32_BE, " \
+                     "S24_3LE, S24_3BE, S24_LE, S24_BE, S8 }"
 #else
-# define ENDIANNESS   "BIG_ENDIAN, LITTLE_ENDIAN"
+# define FORMATS   "{ S16_BE, S16_LE, F32_BE, F32_LE, S32_BE, S32_LE, " \
+                     "S24_3BE, S24_3LE, S24_BE, S24_LE, S8 }"
 #endif
 
 static GstStaticPadTemplate pad_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, "
-        "endianness = (int) { " ENDIANNESS " }, "
-        "signed = (boolean) TRUE, "
-        "width = (int) 16, "
-        "depth = (int) 16, "
-        "rate = (int) [ 1, MAX ], "
-        "channels = (int) [ 1, 32 ];"
-        "audio/x-raw-float, "
-        "endianness = (int) { " ENDIANNESS " }, "
-        "width = (int) 32, "
-        "rate = (int) [ 1, MAX ], "
-        "channels = (int) [ 1, 32 ];"
-        "audio/x-raw-int, "
-        "endianness = (int) { " ENDIANNESS " }, "
-        "signed = (boolean) TRUE, "
-        "width = (int) 32, "
-        "depth = (int) 32, "
-        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 32 ];"
-        "audio/x-raw-int, "
-        "endianness = (int) { " ENDIANNESS " }, "
-        "signed = (boolean) TRUE, "
-        "width = (int) 24, "
-        "depth = (int) 24, "
-        "rate = (int) [ 1, MAX ], "
-        "channels = (int) [ 1, 32 ];"
-        "audio/x-raw-int, "
-        "endianness = (int) { " ENDIANNESS " }, "
-        "signed = (boolean) TRUE, "
-        "width = (int) 32, "
-        "depth = (int) 24, "
-        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 32 ];"
-        "audio/x-raw-int, "
-        "signed = (boolean) FALSE, "
-        "width = (int) 8, "
-        "depth = (int) 8, "
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) " FORMATS ", "
         "rate = (int) [ 1, MAX ], "
         "channels = (int) [ 1, 32 ];"
         "audio/x-alaw, "

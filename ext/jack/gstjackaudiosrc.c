@@ -215,7 +215,7 @@ jack_process_cb (jack_nframes_t nframes, void *arg)
   buf = GST_RING_BUFFER_CAST (arg);
   src = GST_JACK_AUDIO_SRC (GST_OBJECT_PARENT (buf));
 
-  channels = buf->spec.channels;
+  channels = GST_AUDIO_INFO_CHANNELS (&buf->spec.info);
 
   /* get input buffers */
   for (i = 0; i < channels; i++)
@@ -404,7 +404,7 @@ gst_jack_ring_buffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
   GstJackRingBuffer *abuf;
   const char **ports;
   gint sample_rate, buffer_size;
-  gint i, channels, res;
+  gint i, bpf, rate, channels, res;
   jack_client_t *client;
 
   src = GST_JACK_AUDIO_SRC (GST_OBJECT_PARENT (buf));
@@ -414,12 +414,15 @@ gst_jack_ring_buffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
 
   client = gst_jack_audio_client_get_client (src->client);
 
+  rate = GST_AUDIO_INFO_RATE (&spec->info);
+
   /* sample rate must be that of the server */
   sample_rate = jack_get_sample_rate (client);
-  if (sample_rate != spec->rate)
+  if (sample_rate != rate)
     goto wrong_samplerate;
 
-  channels = spec->channels;
+  bpf = GST_AUDIO_INFO_BPF (&spec->info);
+  channels = GST_AUDIO_INFO_CHANNELS (&spec->info);
 
   if (!gst_jack_audio_src_allocate_channels (src, channels))
     goto out_of_ports;
@@ -432,7 +435,7 @@ gst_jack_ring_buffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
    * for all channels  */
   spec->segsize = buffer_size * sizeof (gfloat) * channels;
   spec->latency_time = gst_util_uint64_scale (spec->segsize,
-      (GST_SECOND / GST_USECOND), spec->rate * spec->bytes_per_sample);
+      (GST_SECOND / GST_USECOND), rate * bpf);
   /* segtotal based on buffer-time latency */
   spec->segtotal = spec->buffer_time / spec->latency_time;
   if (spec->segtotal < 2) {
@@ -494,7 +497,7 @@ done:
 
   abuf->sample_rate = sample_rate;
   abuf->buffer_size = buffer_size;
-  abuf->channels = spec->channels;
+  abuf->channels = channels;
 
   return TRUE;
 
@@ -503,7 +506,7 @@ wrong_samplerate:
   {
     GST_ELEMENT_ERROR (src, RESOURCE, SETTINGS, (NULL),
         ("Wrong samplerate, server is running at %d and we received %d",
-            sample_rate, spec->rate));
+            sample_rate, rate));
     return FALSE;
   }
 out_of_ports:
@@ -668,9 +671,8 @@ enum
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-float, "
-        "endianness = (int) BYTE_ORDER, "
-        "width = (int) 32, "
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) " GST_JACK_FORMAT_STR ", "
         "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, MAX ]")
     );
 
@@ -858,9 +860,8 @@ gst_jack_audio_src_getcaps (GstBaseSrc * bsrc, GstCaps * filter)
   GST_DEBUG_OBJECT (src, "got %d-%d ports, samplerate: %d", min, max, rate);
 
   if (!src->caps) {
-    src->caps = gst_caps_new_simple ("audio/x-raw-float",
-        "endianness", G_TYPE_INT, G_BYTE_ORDER,
-        "width", G_TYPE_INT, 32,
+    src->caps = gst_caps_new_simple ("audio/x-raw",
+        "format", G_TYPE_STRING, GST_JACK_FORMAT_STR,
         "rate", G_TYPE_INT, rate,
         "channels", GST_TYPE_INT_RANGE, min, max, NULL);
   }

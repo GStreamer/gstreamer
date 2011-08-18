@@ -157,8 +157,7 @@ gst_auto_audio_src_reset (GstAutoAudioSrc * src)
   gst_object_unref (targetpad);
 }
 
-static GstStaticCaps raw_caps =
-    GST_STATIC_CAPS ("audio/x-raw-int; audio/x-raw-float");
+static GstStaticCaps raw_caps = GST_STATIC_CAPS ("audio/x-raw");
 
 static void
 gst_auto_audio_src_init (GstAutoAudioSrc * src)

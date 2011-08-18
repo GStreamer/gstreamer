@@ -99,37 +99,16 @@ static GstStateChangeReturn gst_pulsesrc_change_state (GstElement *
     element, GstStateChange transition);
 
 #if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
-# define ENDIANNESS   "LITTLE_ENDIAN, BIG_ENDIAN"
+# define FORMATS "{ S16_LE, S16_BE, F32_LE, F32_BE, S32_LE, S32_BE, U8 }"
 #else
-# define ENDIANNESS   "BIG_ENDIAN, LITTLE_ENDIAN"
+# define FORMATS "{ S16_BE, S16_LE, F32_BE, F32_LE, S32_BE, S32_LE, U8 }"
 #endif
 
 static GstStaticPadTemplate pad_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, "
-        "endianness = (int) { " ENDIANNESS " }, "
-        "signed = (boolean) TRUE, "
-        "width = (int) 16, "
-        "depth = (int) 16, "
-        "rate = (int) [ 1, MAX ], "
-        "channels = (int) [ 1, 32 ];"
-        "audio/x-raw-float, "
-        "endianness = (int) { " ENDIANNESS " }, "
-        "width = (int) 32, "
-        "rate = (int) [ 1, MAX ], "
-        "channels = (int) [ 1, 32 ];"
-        "audio/x-raw-int, "
-        "endianness = (int) { " ENDIANNESS " }, "
-        "signed = (boolean) TRUE, "
-        "width = (int) 32, "
-        "depth = (int) 32, "
-        "rate = (int) [ 1, MAX ], "
-        "channels = (int) [ 1, 32 ];"
-        "audio/x-raw-int, "
-        "signed = (boolean) FALSE, "
-        "width = (int) 8, "
-        "depth = (int) 8, "
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) " FORMATS ", "
         "rate = (int) [ 1, MAX ], "
         "channels = (int) [ 1, 32 ];"
         "audio/x-alaw, "
@@ -853,9 +832,9 @@ gst_pulsesrc_create_stream (GstPulseSrc * pulsesrc, GstCaps * caps)
   s = gst_caps_get_structure (caps, 0);
   if (!gst_structure_has_field (s, "channel-layout") ||
       !gst_pulse_gst_to_channel_map (&channel_map, &spec)) {
-    if (spec.channels == 1)
+    if (spec.info.channels == 1)
       pa_channel_map_init_mono (&channel_map);
-    else if (spec.channels == 2)
+    else if (spec.info.channels == 2)
       pa_channel_map_init_stereo (&channel_map);
     else
       need_channel_layout = TRUE;
