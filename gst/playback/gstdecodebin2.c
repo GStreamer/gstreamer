@@ -3078,7 +3078,7 @@ drain_and_switch_group (GstDecodeGroup * group, GstDecodePad * drainpad,
    * new information */
   for (tmp = group->children; tmp; tmp = tmp->next) {
     GstDecodeChain *chain = (GstDecodeChain *) tmp->data;
-    gboolean subdrained;
+    gboolean subdrained = FALSE;
 
     handled |=
         drain_and_switch_chains (chain, drainpad, last_group, &subdrained,
