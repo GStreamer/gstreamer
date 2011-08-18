@@ -1734,8 +1734,12 @@ gst_camera_bin_set_property (GObject * object, guint prop_id,
           "Setting audio capture caps to %" GST_PTR_FORMAT,
           gst_value_get_caps (value));
 
-      g_object_set (camera->audio_capsfilter, "caps",
-          gst_value_get_caps (value), NULL);
+      if (G_LIKELY (camera->audio_capsfilter)) {
+        g_object_set (camera->audio_capsfilter, "caps",
+            gst_value_get_caps (value), NULL);
+      } else {
+        GST_WARNING_OBJECT (camera, "Audio capsfilter missing");
+      }
     }
       break;
     case PROP_IMAGE_CAPTURE_CAPS:{
@@ -1750,9 +1754,14 @@ gst_camera_bin_set_property (GObject * object, guint prop_id,
           "Setting image capture caps to %" GST_PTR_FORMAT,
           gst_value_get_caps (value));
 
+      if (G_LIKELY (camera->imagebin_capsfilter)) {
+        g_object_set (camera->imagebin_capsfilter, "caps",
+            gst_value_get_caps (value), NULL);
+      } else {
+        GST_WARNING_OBJECT (camera, "Image capsfilter missing");
+      }
+
       /* set the capsfilter caps and notify the src to renegotiate */
-      g_object_set (camera->imagebin_capsfilter, "caps",
-          gst_value_get_caps (value), NULL);
       if (pad) {
         GST_DEBUG_OBJECT (camera, "Pushing renegotiate on %s",
             GST_PAD_NAME (pad));
@@ -1774,8 +1783,13 @@ gst_camera_bin_set_property (GObject * object, guint prop_id,
           gst_value_get_caps (value));
 
       /* set the capsfilter caps and notify the src to renegotiate */
-      g_object_set (camera->videobin_capsfilter, "caps",
-          gst_value_get_caps (value), NULL);
+      if (G_LIKELY (camera->videobin_capsfilter)) {
+        g_object_set (camera->videobin_capsfilter, "caps",
+            gst_value_get_caps (value), NULL);
+      } else {
+        GST_WARNING_OBJECT (camera, "Video capsfilter missing");
+      }
+
       if (pad) {
         GST_DEBUG_OBJECT (camera, "Pushing renegotiate on %s",
             GST_PAD_NAME (pad));
@@ -1797,8 +1811,13 @@ gst_camera_bin_set_property (GObject * object, guint prop_id,
           gst_value_get_caps (value));
 
       /* set the capsfilter caps and notify the src to renegotiate */
-      g_object_set (camera->viewfinderbin_capsfilter, "caps",
-          gst_value_get_caps (value), NULL);
+      if (G_LIKELY (camera->viewfinderbin_capsfilter)) {
+        g_object_set (camera->viewfinderbin_capsfilter, "caps",
+            gst_value_get_caps (value), NULL);
+      } else {
+        GST_WARNING_OBJECT (camera, "Viewfinder capsfilter missing");
+      }
+
       if (pad) {
         GST_DEBUG_OBJECT (camera, "Pushing renegotiate on %s",
             GST_PAD_NAME (pad));
@@ -1970,28 +1989,44 @@ gst_camera_bin_get_property (GObject * object, guint prop_id,
       break;
     case PROP_AUDIO_CAPTURE_CAPS:{
       GstCaps *caps = NULL;
-      g_object_get (camera->audio_capsfilter, "caps", &caps, NULL);
+      if (G_LIKELY (camera->audio_capsfilter)) {
+        g_object_get (camera->audio_capsfilter, "caps", &caps, NULL);
+      } else {
+        GST_WARNING ("Missing audio capsfilter");
+      }
       gst_value_set_caps (value, caps);
       gst_caps_unref (caps);
     }
       break;
     case PROP_IMAGE_CAPTURE_CAPS:{
       GstCaps *caps = NULL;
-      g_object_get (camera->imagebin_capsfilter, "caps", &caps, NULL);
+      if (G_LIKELY (camera->imagebin_capsfilter)) {
+        g_object_get (camera->imagebin_capsfilter, "caps", &caps, NULL);
+      } else {
+        GST_WARNING ("Missing imagebin capsfilter");
+      }
       gst_value_set_caps (value, caps);
       gst_caps_unref (caps);
     }
       break;
     case PROP_VIDEO_CAPTURE_CAPS:{
       GstCaps *caps = NULL;
-      g_object_get (camera->videobin_capsfilter, "caps", &caps, NULL);
+      if (G_LIKELY (camera->videobin_capsfilter)) {
+        g_object_get (camera->videobin_capsfilter, "caps", &caps, NULL);
+      } else {
+        GST_WARNING ("Missing imagebin capsfilter");
+      }
       gst_value_set_caps (value, caps);
       gst_caps_unref (caps);
     }
       break;
     case PROP_VIEWFINDER_CAPS:{
       GstCaps *caps = NULL;
-      g_object_get (camera->viewfinderbin_capsfilter, "caps", &caps, NULL);
+      if (G_LIKELY (camera->viewfinderbin_capsfilter)) {
+        g_object_get (camera->viewfinderbin_capsfilter, "caps", &caps, NULL);
+      } else {
+        GST_WARNING ("Missing imagebin capsfilter");
+      }
       gst_value_set_caps (value, caps);
       gst_caps_unref (caps);
     }
