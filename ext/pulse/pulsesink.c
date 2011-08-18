@@ -1430,9 +1430,7 @@ gst_pulseringbuffer_commit (GstRingBuffer * buf, guint64 * sample,
 
     towrite = out_samples * bps;
 
-    /* Only ever write segsize bytes at once. This will
-     * also limit the PA shm buffer to segsize
-     */
+    /* Wait for at least segsize bytes to become available */
     if (towrite > buf->spec.segsize)
       towrite = buf->spec.segsize;
 
@@ -1481,7 +1479,7 @@ gst_pulseringbuffer_commit (GstRingBuffer * buf, guint64 * sample,
             goto uncork_failed;
         }
 
-        /* we can't write a single byte, wait a bit */
+        /* we can't write segsize bytes, wait a bit */
         GST_LOG_OBJECT (psink, "waiting for free space");
         pa_threaded_mainloop_wait (mainloop);
 
@@ -1489,14 +1487,10 @@ gst_pulseringbuffer_commit (GstRingBuffer * buf, guint64 * sample,
           goto was_paused;
       }
 
-      /* make sure we only buffer up latency-time samples */
-      if (pbuf->m_writable > buf->spec.segsize) {
-        /* limit buffering to latency-time value */
-        pbuf->m_writable = buf->spec.segsize;
-
-        GST_LOG_OBJECT (psink, "Limiting buffering to %" G_GSIZE_FORMAT,
-            pbuf->m_writable);
-      }
+      /* Recalculate what we can write in the next chunk */
+      towrite = out_samples * bps;
+      if (pbuf->m_writable > towrite)
+          pbuf->m_writable = towrite;
 
       GST_LOG_OBJECT (psink, "requesting %" G_GSIZE_FORMAT " bytes of "
           "shared memory", pbuf->m_writable);
@@ -1510,14 +1504,9 @@ gst_pulseringbuffer_commit (GstRingBuffer * buf, guint64 * sample,
       GST_LOG_OBJECT (psink, "got %" G_GSIZE_FORMAT " bytes of shared memory",
           pbuf->m_writable);
 
-      /* Just to make sure that we didn't get more than requested */
-      if (pbuf->m_writable > buf->spec.segsize) {
-        /* limit buffering to latency-time value */
-        pbuf->m_writable = buf->spec.segsize;
-      }
     }
 
-    if (pbuf->m_writable < towrite)
+    if (towrite > pbuf->m_writable)
       towrite = pbuf->m_writable;
     avail = towrite / bps;
 
