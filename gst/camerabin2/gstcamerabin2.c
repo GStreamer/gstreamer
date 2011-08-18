@@ -1765,7 +1765,7 @@ gst_camera_bin_set_property (GObject * object, guint prop_id,
       if (pad) {
         GST_DEBUG_OBJECT (camera, "Pushing renegotiate on %s",
             GST_PAD_NAME (pad));
-        GST_PAD_EVENTFUNC (pad) (pad, gst_camera_bin_new_event_renegotiate ());
+        gst_pad_send_event (pad, gst_camera_bin_new_event_renegotiate ());
         gst_object_unref (pad);
       }
     }
@@ -1793,7 +1793,7 @@ gst_camera_bin_set_property (GObject * object, guint prop_id,
       if (pad) {
         GST_DEBUG_OBJECT (camera, "Pushing renegotiate on %s",
             GST_PAD_NAME (pad));
-        GST_PAD_EVENTFUNC (pad) (pad, gst_camera_bin_new_event_renegotiate ());
+        gst_pad_send_event (pad, gst_camera_bin_new_event_renegotiate ());
         gst_object_unref (pad);
       }
     }
@@ -1821,7 +1821,7 @@ gst_camera_bin_set_property (GObject * object, guint prop_id,
       if (pad) {
         GST_DEBUG_OBJECT (camera, "Pushing renegotiate on %s",
             GST_PAD_NAME (pad));
-        GST_PAD_EVENTFUNC (pad) (pad, gst_camera_bin_new_event_renegotiate ());
+        gst_pad_send_event (pad, gst_camera_bin_new_event_renegotiate ());
         gst_object_unref (pad);
       }
     }
