@@ -634,6 +634,22 @@ rtp_jitter_buffer_insert (RTPJitterBuffer * jbuf, GstBuffer * buf,
   }
 
   rtptime = gst_rtp_buffer_get_timestamp (buf);
+  /* rtp time jumps are checked for during skew calculation, but bypassed
+   * in other mode, so mind those here and reset jb if needed */
+  if (jbuf->mode != RTP_JITTER_BUFFER_MODE_SLAVE &&
+      jbuf->base_time != -1 && jbuf->last_rtptime != -1) {
+    GstClockTime ext_rtptime = jbuf->ext_rtptime;
+
+    ext_rtptime = gst_rtp_buffer_ext_timestamp (&ext_rtptime, rtptime);
+    if (ext_rtptime > jbuf->last_rtptime + 3 * clock_rate ||
+        ext_rtptime + 3 * clock_rate < jbuf->last_rtptime) {
+      /* reset even if we don't have valid incoming time;
+       * still better than producing possibly very bogus output timestamp */
+      GST_WARNING ("rtp delta too big, reset skew");
+      rtp_jitter_buffer_reset_skew (jbuf);
+    }
+  }
+
   switch (jbuf->mode) {
     case RTP_JITTER_BUFFER_MODE_NONE:
     case RTP_JITTER_BUFFER_MODE_BUFFER:
