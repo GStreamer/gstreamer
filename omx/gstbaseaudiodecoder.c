@@ -288,8 +288,6 @@ gst_base_audio_decoder_class_init (GstBaseAudioDecoderClass * klass)
   gobject_class = G_OBJECT_CLASS (klass);
   element_class = GST_ELEMENT_CLASS (klass);
 
-  parent_class = g_type_class_peek_parent (klass);
-
   g_type_class_add_private (klass, sizeof (GstBaseAudioDecoderPrivate));
 
   GST_DEBUG_CATEGORY_INIT (baseaudiodecoder_debug, "baseaudiodecoder", 0,
