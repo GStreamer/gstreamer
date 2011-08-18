@@ -1509,9 +1509,7 @@ gst_base_audio_decoder_do_seek (GstBaseAudioDecoder * dec, GstEvent * event)
     return FALSE;
   }
 
-  GST_BASE_AUDIO_DECODER_STREAM_LOCK (dec);
   memcpy (&seek_segment, &dec->segment, sizeof (seek_segment));
-  GST_BASE_AUDIO_DECODER_STREAM_UNLOCK (dec);
   gst_segment_set_seek (&seek_segment, rate, format, flags, start_type,
       start_time, end_type, end_time, NULL);
   start_time = seek_segment.last_stop;
