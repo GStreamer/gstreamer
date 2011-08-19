@@ -26,7 +26,7 @@
 #include "riff-ids.h"
 #include "riff-media.h"
 
-#include <gst/audio/multichannel.h>
+#include <gst/audio/audio.h>
 
 #include <string.h>
 #include <math.h>
@@ -1132,6 +1132,7 @@ gst_riff_create_audio_caps (guint16 codec_id,
         gint ba = strf->blockalign;
         gint ch = strf->channels;
         gint wd, ws;
+        GstAudioFormat format;
 
         /* If we have an empty blockalign, we take the width contained in 
          * strf->size */
@@ -1152,11 +1153,11 @@ gst_riff_create_audio_caps (guint16 codec_id,
         /* For reference, the actual depth is in strf->size */
         ws = wd;
 
-        caps = gst_caps_new_simple ("audio/x-raw-int",
-            "endianness", G_TYPE_INT, G_LITTLE_ENDIAN,
-            "channels", G_TYPE_INT, ch,
-            "width", G_TYPE_INT, wd,
-            "depth", G_TYPE_INT, ws, "signed", G_TYPE_BOOLEAN, wd != 8, NULL);
+        format = gst_audio_format_build_int (wd != 8, G_LITTLE_ENDIAN, wd, ws);
+
+        caps = gst_caps_new_simple ("audio/x-raw",
+            "format", G_TYPE_STRING, gst_audio_format_to_string (format),
+            "channels", G_TYPE_INT, ch, NULL);
 
         /* Add default channel layout. In theory this should be done
          * for 1 and 2 channels too but apparently breaks too many
@@ -1172,10 +1173,9 @@ gst_riff_create_audio_caps (guint16 codec_id,
         }
       } else {
         /* FIXME: this is pretty useless - we need fixed caps */
-        caps = gst_caps_from_string ("audio/x-raw-int, "
-            "endianness = (int) LITTLE_ENDIAN, "
-            "signed = (boolean) { true, false }, "
-            "width = (int) { 8, 16, 24, 32 }, " "depth = (int) [ 1, 32 ]");
+        caps = gst_caps_from_string ("audio/x-raw, "
+            "format = (string) { S8, U8, S16_LE, U16_LE, S24_LE, "
+            "U24_LE, S32_LE, U32_LE }");
       }
       if (codec_name && strf)
         *codec_name = g_strdup_printf ("Uncompressed %d-bit PCM audio",
@@ -1199,9 +1199,9 @@ gst_riff_create_audio_caps (guint16 codec_id,
         gint ch = strf->channels;
         gint wd = ba * 8 / ch;
 
-        caps = gst_caps_new_simple ("audio/x-raw-float",
-            "endianness", G_TYPE_INT, G_LITTLE_ENDIAN,
-            "channels", G_TYPE_INT, ch, "width", G_TYPE_INT, wd, NULL);
+        caps = gst_caps_new_simple ("audio/x-raw",
+            "format", G_TYPE_STRING, wd == 64 ? "F64_LE" : "F32_LE",
+            "channels", G_TYPE_INT, ch, NULL);
 
         /* Add default channel layout. In theory this should be done
          * for 1 and 2 channels too but apparently breaks too many
@@ -1217,8 +1217,8 @@ gst_riff_create_audio_caps (guint16 codec_id,
         }
       } else {
         /* FIXME: this is pretty useless - we need fixed caps */
-        caps = gst_caps_from_string ("audio/x-raw-float, "
-            "endianness = (int) LITTLE_ENDIAN, " "width = (int) { 32, 64 }");
+        caps = gst_caps_from_string ("audio/x-raw, "
+            "format = (string) { F32_LE, F64_LE }");
       }
       if (codec_name && strf)
         *codec_name = g_strdup_printf ("Uncompressed %d-bit IEEE float audio",
@@ -1503,6 +1503,7 @@ gst_riff_create_audio_caps (guint16 codec_id,
             gint ba = strf->blockalign;
             gint wd = ba * 8 / strf->channels;
             gint ws;
+            GstAudioFormat format;
 
             /* in riff, the depth is stored in the size field but it just
              * means that the _least_ significant bits are cleared. We can
@@ -1514,13 +1515,13 @@ gst_riff_create_audio_caps (guint16 codec_id,
              * if (valid_bits_per_sample != 0)
              *   ws = valid_bits_per_sample; */
 
-            caps = gst_caps_new_simple ("audio/x-raw-int",
-                "endianness", G_TYPE_INT, G_LITTLE_ENDIAN,
+            format =
+                gst_audio_format_build_int (wd != 8, G_LITTLE_ENDIAN, wd, ws);
+
+            caps = gst_caps_new_simple ("audio/x-raw",
+                "format", G_TYPE_STRING, gst_audio_format_to_string (format),
                 "channels", G_TYPE_INT, strf->channels,
-                "width", G_TYPE_INT, wd,
-                "depth", G_TYPE_INT, ws,
-                "rate", G_TYPE_INT, strf->rate,
-                "signed", G_TYPE_BOOLEAN, wd != 8, NULL);
+                "rate", G_TYPE_INT, strf->rate, NULL);
 
             /* If channel_mask == 0 and channels > 2 let's
              * assume default layout as some wav files don't have the
@@ -1549,10 +1550,10 @@ gst_riff_create_audio_caps (guint16 codec_id,
             gint ba = strf->blockalign;
             gint wd = ba * 8 / strf->channels;
 
-            caps = gst_caps_new_simple ("audio/x-raw-float",
-                "endianness", G_TYPE_INT, G_LITTLE_ENDIAN,
+            caps = gst_caps_new_simple ("audio/x-raw",
+                "format", G_TYPE_STRING, wd == 32 ? "F32_LE" : "F64_LE",
                 "channels", G_TYPE_INT, strf->channels,
-                "width", G_TYPE_INT, wd, "rate", G_TYPE_INT, strf->rate, NULL);
+                "rate", G_TYPE_INT, strf->rate, NULL);
 
             /* If channel_mask == 0 and channels > 2 let's
              * assume default layout as some wav files don't have the
