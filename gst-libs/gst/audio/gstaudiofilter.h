@@ -62,6 +62,14 @@ struct _GstAudioFilter {
   gpointer _gst_reserved[GST_PADDING];
 };
 
+#define GST_AUDIO_FILTER_INFO(filter)     (&GST_AUDIO_FILTER_CAST(filter)->info)
+
+#define GST_AUDIO_FILTER_FORMAT(filter)   (GST_AUDIO_INFO_FORMAT(GST_AUDIO_FILTER_INFO(filter)))
+#define GST_AUDIO_FILTER_RATE(filter)     (GST_AUDIO_INFO_RATE(GST_AUDIO_FILTER_INFO(filter)))
+#define GST_AUDIO_FILTER_CHANNELS(filter) (GST_AUDIO_INFO_CHANNELS(GST_AUDIO_FILTER_INFO(filter)))
+#define GST_AUDIO_FILTER_BPF(filter)      (GST_AUDIO_INFO_BPF(GST_AUDIO_FILTER_INFO(filter)))
+#define GST_AUDIO_FILTER_BPS(filter)      (GST_AUDIO_INFO_BPS(GST_AUDIO_FILTER_INFO(filter)))
+
 /**
  * GstAudioFilterClass:
  * @basetransformclass: parent class

@@ -273,6 +273,9 @@ struct _GstAudioInfo {
 
 #define GST_AUDIO_INFO_FORMAT(i)             (GST_AUDIO_FORMAT_INFO_FORMAT((i)->finfo))
 #define GST_AUDIO_INFO_NAME(i)               (GST_AUDIO_FORMAT_INFO_NAME((i)->finfo))
+#define GST_AUDIO_INFO_WIDTH(i)              (GST_AUDIO_FORMAT_INFO_WIDTH((i)->finfo))
+#define GST_AUDIO_INFO_DEPTH(i)              (GST_AUDIO_FORMAT_INFO_DEPTH((i)->finfo))
+#define GST_AUDIO_INFO_BPS(info)             (GST_AUDIO_INFO_DEPTH(info) >> 3)
 
 #define GST_AUDIO_INFO_FLAGS(info)           ((info)->flags)
 #define GST_AUDIO_INFO_IS_UNPOSITIONED(info) ((info)->flags & GST_AUDIO_FLAG_UNPOSITIONED)
@@ -292,6 +295,14 @@ GstCaps *    gst_audio_info_to_caps     (GstAudioInfo *info);
 
 #define GST_AUDIO_RATE_RANGE "(int) [ 1, max ]"
 #define GST_AUDIO_CHANNELS_RANGE "(int) [ 1, max ]"
+
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+# define GST_AUDIO_NE(s) G_STRINGIFY(s)"_LE"
+# define GST_AUDIO_OE(s) G_STRINGIFY(s)"_BE"
+#else
+# define GST_AUDIO_NE(s) G_STRINGIFY(s)"_BE"
+# define GST_AUDIO_OE(s) G_STRINGIFY(s)"_LE"
+#endif
 
 #define GST_AUDIO_FORMATS_ALL " { S8, U8, " \
     "S16_LE, S16_BE, U16_LE, U16_BE, " \
