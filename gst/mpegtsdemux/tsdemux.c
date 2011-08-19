@@ -1772,14 +1772,16 @@ beach:
       pcroffset->pcr = pcrs[nbpcr - 1];
       pcroffset->offset = pcroffs[nbpcr - 1];
     }
-    GST_DEBUG ("pcrdiff:%" GST_TIME_FORMAT " offsetdiff %" G_GUINT64_FORMAT,
-        GST_TIME_ARGS (PCRTIME_TO_GSTTIME (pcrs[nbpcr - 1] - pcrs[0])),
-        pcroffs[nbpcr - 1] - pcroffs[0]);
-    GST_DEBUG ("Estimated bitrate %" G_GUINT64_FORMAT,
-        gst_util_uint64_scale (GST_SECOND, pcroffs[nbpcr - 1] - pcroffs[0],
-            PCRTIME_TO_GSTTIME (pcrs[nbpcr - 1] - pcrs[0])));
-    GST_DEBUG ("Average PCR interval %" G_GUINT64_FORMAT,
-        (pcroffs[nbpcr - 1] - pcroffs[0]) / nbpcr);
+    if (nbpcr > 1) {
+      GST_DEBUG ("pcrdiff:%" GST_TIME_FORMAT " offsetdiff %" G_GUINT64_FORMAT,
+          GST_TIME_ARGS (PCRTIME_TO_GSTTIME (pcrs[nbpcr - 1] - pcrs[0])),
+          pcroffs[nbpcr - 1] - pcroffs[0]);
+      GST_DEBUG ("Estimated bitrate %" G_GUINT64_FORMAT,
+          gst_util_uint64_scale (GST_SECOND, pcroffs[nbpcr - 1] - pcroffs[0],
+              PCRTIME_TO_GSTTIME (pcrs[nbpcr - 1] - pcrs[0])));
+      GST_DEBUG ("Average PCR interval %" G_GUINT64_FORMAT,
+          (pcroffs[nbpcr - 1] - pcroffs[0]) / nbpcr);
+    }
   }
   /* Swallow any errors if it happened during the end scanning */
   if (!isinitial)
