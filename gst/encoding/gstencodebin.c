@@ -231,8 +231,7 @@ struct _StreamGroup
 
 #define DEFAULT_RAW_CAPS			\
   "video/x-raw; "				\
-  "audio/x-raw-int; "				\
-  "audio/x-raw-float; "				\
+  "audio/x-raw; "				\
   "text/plain; "				\
   "text/x-pango-markup; "			\
   "video/x-dvd-subpicture; "			\
@@ -482,8 +481,7 @@ gst_encode_bin_init (GstEncodeBin * encode_bin)
       GST_RANK_MARGINAL);
 
   encode_bin->raw_video_caps = gst_caps_from_string ("video/x-raw");
-  encode_bin->raw_audio_caps =
-      gst_caps_from_string ("audio/x-raw-int;audio/x-raw-float");
+  encode_bin->raw_audio_caps = gst_caps_from_string ("audio/x-raw");
   /* encode_bin->raw_text_caps = */
   /*     gst_caps_from_string ("text/plain;text/x-pango-markup"); */
 
@@ -1264,7 +1262,7 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
   /* FIXME : Once we have properties for specific converters, use those */
   if (GST_IS_ENCODING_VIDEO_PROFILE (sprof)) {
     const gboolean native_video =
-        !!(ebin->flags & GST_ENC_FLAG_NO_VIDEO_CONVERSION);
+        ! !(ebin->flags & GST_ENC_FLAG_NO_VIDEO_CONVERSION);
     GstElement *cspace = NULL, *scale, *vrate, *cspace2 = NULL;
 
     GST_LOG ("Adding conversion elements for video stream");

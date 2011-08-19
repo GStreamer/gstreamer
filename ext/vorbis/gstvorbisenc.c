@@ -63,10 +63,9 @@ static GstStaticPadTemplate vorbis_enc_sink_factory =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-float, "
-        "rate = (int) [ 1, 200000 ], "
-        "channels = (int) [ 1, 256 ], " "endianness = (int) BYTE_ORDER, "
-        "width = (int) 32")
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) " GST_AUDIO_NE (F32) ", "
+        "rate = (int) [ 1, 200000 ], " "channels = (int) [ 1, 256 ]")
     );
 
 static GstStaticPadTemplate vorbis_enc_src_factory =
@@ -223,17 +222,15 @@ gst_vorbis_enc_generate_sink_caps (void)
   GstCaps *caps = gst_caps_new_empty ();
   int i, c;
 
-  gst_caps_append_structure (caps, gst_structure_new ("audio/x-raw-float",
+  gst_caps_append_structure (caps, gst_structure_new ("audio/x-raw",
+          "format", G_TYPE_STRING, GST_AUDIO_NE (F32),
           "rate", GST_TYPE_INT_RANGE, 1, 200000,
-          "channels", G_TYPE_INT, 1,
-          "endianness", G_TYPE_INT, G_BYTE_ORDER, "width", G_TYPE_INT, 32,
-          NULL));
+          "channels", G_TYPE_INT, 1, NULL));
 
-  gst_caps_append_structure (caps, gst_structure_new ("audio/x-raw-float",
+  gst_caps_append_structure (caps, gst_structure_new ("audio/x-raw",
+          "format", G_TYPE_STRING, GST_AUDIO_NE (F32),
           "rate", GST_TYPE_INT_RANGE, 1, 200000,
-          "channels", G_TYPE_INT, 2,
-          "endianness", G_TYPE_INT, G_BYTE_ORDER, "width", G_TYPE_INT, 32,
-          NULL));
+          "channels", G_TYPE_INT, 2, NULL));
 
   for (i = 3; i <= 8; i++) {
     GValue chanpos = { 0 };
@@ -249,21 +246,19 @@ gst_vorbis_enc_generate_sink_caps (void)
     }
     g_value_unset (&pos);
 
-    structure = gst_structure_new ("audio/x-raw-float",
-        "rate", GST_TYPE_INT_RANGE, 1, 200000,
-        "channels", G_TYPE_INT, i,
-        "endianness", G_TYPE_INT, G_BYTE_ORDER, "width", G_TYPE_INT, 32, NULL);
+    structure = gst_structure_new ("audio/x-raw",
+        "format", G_TYPE_STRING, GST_AUDIO_NE (F32),
+        "rate", GST_TYPE_INT_RANGE, 1, 200000, "channels", G_TYPE_INT, i, NULL);
     gst_structure_set_value (structure, "channel-positions", &chanpos);
     g_value_unset (&chanpos);
 
     gst_caps_append_structure (caps, structure);
   }
 
-  gst_caps_append_structure (caps, gst_structure_new ("audio/x-raw-float",
+  gst_caps_append_structure (caps, gst_structure_new ("audio/x-raw",
+          "format", G_TYPE_STRING, GST_AUDIO_NE (F32),
           "rate", GST_TYPE_INT_RANGE, 1, 200000,
-          "channels", GST_TYPE_INT_RANGE, 9, 256,
-          "endianness", G_TYPE_INT, G_BYTE_ORDER, "width", G_TYPE_INT, 32,
-          NULL));
+          "channels", GST_TYPE_INT_RANGE, 9, 256, NULL));
 
   return caps;
 }

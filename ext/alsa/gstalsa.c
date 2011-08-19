@@ -17,7 +17,7 @@
 
 #include "gstalsa.h"
 
-#include <gst/audio/multichannel.h>
+#include <gst/audio/audio.h>
 
 static GstCaps *
 gst_alsa_detect_rates (GstObject * obj, snd_pcm_hw_params_t * hw_params,
@@ -117,18 +117,30 @@ gst_alsa_detect_formats (GstObject * obj, snd_pcm_hw_params_t * hw_params,
 
   for (i = 0; i < gst_caps_get_size (in_caps); ++i) {
     GstStructure *scopy;
+    const gchar *str;
+    GstAudioFormat format;
+    const GstAudioFormatInfo *finfo;
     gint w, width = 0, depth = 0;
 
     s = gst_caps_get_structure (in_caps, i);
-    if (!gst_structure_has_name (s, "audio/x-raw-int")) {
-      GST_WARNING_OBJECT (obj, "skipping non-int format");
+    if (!gst_structure_has_name (s, "audio/x-raw")) {
+      GST_WARNING_OBJECT (obj, "skipping non-raw format");
       continue;
     }
-    if (!gst_structure_get_int (s, "width", &width) ||
-        !gst_structure_get_int (s, "depth", &depth))
+
+    str = gst_structure_get_string (s, "format");
+    if (str == NULL)
       continue;
-    if (width == 0 || (width % 8) != 0)
-      continue;                 /* Only full byte widths are valid */
+
+    format = gst_audio_format_from_string (str);
+    if (format == GST_AUDIO_FORMAT_UNKNOWN)
+      continue;
+
+    finfo = gst_audio_format_get_info (format);
+
+    width = GST_AUDIO_FORMAT_INFO_WIDTH (finfo);
+    depth = GST_AUDIO_FORMAT_INFO_DEPTH (finfo);
+
     for (w = 0; w < G_N_ELEMENTS (pcmformats); w++)
       if (pcmformats[w].width == width && pcmformats[w].depth == depth)
         break;
@@ -137,22 +149,17 @@ gst_alsa_detect_formats (GstObject * obj, snd_pcm_hw_params_t * hw_params,
 
     if (snd_pcm_format_mask_test (mask, pcmformats[w].sformat) &&
         snd_pcm_format_mask_test (mask, pcmformats[w].uformat)) {
-      /* template contains { true, false } or just one, leave it as it is */
       scopy = gst_structure_copy (s);
     } else if (snd_pcm_format_mask_test (mask, pcmformats[w].sformat)) {
       scopy = gst_structure_copy (s);
-      gst_structure_set (scopy, "signed", G_TYPE_BOOLEAN, TRUE, NULL);
+      /* FIXME, remove unsigned version */
     } else if (snd_pcm_format_mask_test (mask, pcmformats[w].uformat)) {
       scopy = gst_structure_copy (s);
-      gst_structure_set (scopy, "signed", G_TYPE_BOOLEAN, FALSE, NULL);
+      /* FIXME, remove signed version */
     } else {
       scopy = NULL;
     }
     if (scopy) {
-      if (width > 8) {
-        /* TODO: proper endianness detection, for now it's CPU endianness only */
-        gst_structure_set (scopy, "endianness", G_TYPE_INT, G_BYTE_ORDER, NULL);
-      }
       gst_caps_append_structure (caps, scopy);
     }
   }

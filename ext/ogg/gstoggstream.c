@@ -1565,56 +1565,36 @@ setup_pcm_mapper (GstOggStream * pad, ogg_packet * packet)
 
   switch (format) {
     case OGGPCM_FMT_S8:
-      caps = gst_caps_new_simple ("audio/x-raw-int",
-          "depth", G_TYPE_INT, 8,
-          "width", G_TYPE_INT, 8, "signed", G_TYPE_BOOLEAN, TRUE, NULL);
+      caps = gst_caps_new_simple ("audio/x-raw",
+          "format", G_TYPE_STRING, "S8", NULL);
       break;
     case OGGPCM_FMT_U8:
-      caps = gst_caps_new_simple ("audio/x-raw-int",
-          "depth", G_TYPE_INT, 8,
-          "width", G_TYPE_INT, 8, "signed", G_TYPE_BOOLEAN, FALSE, NULL);
+      caps = gst_caps_new_simple ("audio/x-raw",
+          "format", G_TYPE_STRING, "U8", NULL);
       break;
     case OGGPCM_FMT_S16_LE:
-      caps = gst_caps_new_simple ("audio/x-raw-int",
-          "depth", G_TYPE_INT, 16,
-          "width", G_TYPE_INT, 16,
-          "endianness", G_TYPE_INT, G_LITTLE_ENDIAN,
-          "signed", G_TYPE_BOOLEAN, TRUE, NULL);
+      caps = gst_caps_new_simple ("audio/x-raw",
+          "format", G_TYPE_STRING, "S16_LE", NULL);
       break;
     case OGGPCM_FMT_S16_BE:
-      caps = gst_caps_new_simple ("audio/x-raw-int",
-          "depth", G_TYPE_INT, 16,
-          "width", G_TYPE_INT, 16,
-          "endianness", G_TYPE_INT, G_BIG_ENDIAN,
-          "signed", G_TYPE_BOOLEAN, TRUE, NULL);
+      caps = gst_caps_new_simple ("audio/x-raw",
+          "format", G_TYPE_STRING, "S16_BE", NULL);
       break;
     case OGGPCM_FMT_S24_LE:
-      caps = gst_caps_new_simple ("audio/x-raw-int",
-          "depth", G_TYPE_INT, 24,
-          "width", G_TYPE_INT, 24,
-          "endianness", G_TYPE_INT, G_LITTLE_ENDIAN,
-          "signed", G_TYPE_BOOLEAN, TRUE, NULL);
+      caps = gst_caps_new_simple ("audio/x-raw",
+          "format", G_TYPE_STRING, "S24_3LE", NULL);
       break;
     case OGGPCM_FMT_S24_BE:
-      caps = gst_caps_new_simple ("audio/x-raw-int",
-          "depth", G_TYPE_INT, 24,
-          "width", G_TYPE_INT, 24,
-          "endianness", G_TYPE_INT, G_BIG_ENDIAN,
-          "signed", G_TYPE_BOOLEAN, TRUE, NULL);
+      caps = gst_caps_new_simple ("audio/x-raw",
+          "format", G_TYPE_STRING, "S24_3BE", NULL);
       break;
     case OGGPCM_FMT_S32_LE:
-      caps = gst_caps_new_simple ("audio/x-raw-int",
-          "depth", G_TYPE_INT, 32,
-          "width", G_TYPE_INT, 32,
-          "endianness", G_TYPE_INT, G_LITTLE_ENDIAN,
-          "signed", G_TYPE_BOOLEAN, TRUE, NULL);
+      caps = gst_caps_new_simple ("audio/x-raw",
+          "format", G_TYPE_STRING, "S32_LE", NULL);
       break;
     case OGGPCM_FMT_S32_BE:
-      caps = gst_caps_new_simple ("audio/x-raw-int",
-          "depth", G_TYPE_INT, 32,
-          "width", G_TYPE_INT, 32,
-          "endianness", G_TYPE_INT, G_BIG_ENDIAN,
-          "signed", G_TYPE_BOOLEAN, TRUE, NULL);
+      caps = gst_caps_new_simple ("audio/x-raw",
+          "format", G_TYPE_STRING, "S32_BE", NULL);
       break;
     case OGGPCM_FMT_ULAW:
       caps = gst_caps_new_simple ("audio/x-mulaw", NULL);
@@ -1623,30 +1603,26 @@ setup_pcm_mapper (GstOggStream * pad, ogg_packet * packet)
       caps = gst_caps_new_simple ("audio/x-alaw", NULL);
       break;
     case OGGPCM_FMT_FLT32_LE:
-      caps = gst_caps_new_simple ("audio/x-raw-float",
-          "width", G_TYPE_INT, 32,
-          "endianness", G_TYPE_INT, G_LITTLE_ENDIAN, NULL);
+      caps = gst_caps_new_simple ("audio/x-raw",
+          "format", G_TYPE_STRING, "F32_LE", NULL);
       break;
     case OGGPCM_FMT_FLT32_BE:
-      caps = gst_caps_new_simple ("audio/x-raw-float",
-          "width", G_TYPE_INT, 32,
-          "endianness", G_TYPE_INT, G_BIG_ENDIAN, NULL);
+      caps = gst_caps_new_simple ("audio/x-raw",
+          "format", G_TYPE_STRING, "F32_BE", NULL);
       break;
     case OGGPCM_FMT_FLT64_LE:
-      caps = gst_caps_new_simple ("audio/x-raw-float",
-          "width", G_TYPE_INT, 64,
-          "endianness", G_TYPE_INT, G_LITTLE_ENDIAN, NULL);
+      caps = gst_caps_new_simple ("audio/x-raw",
+          "format", G_TYPE_STRING, "F64_LE", NULL);
       break;
     case OGGPCM_FMT_FLT64_BE:
-      caps = gst_caps_new_simple ("audio/x-raw-float",
-          "width", G_TYPE_INT, 64,
-          "endianness", G_TYPE_INT, G_BIG_ENDIAN, NULL);
+      caps = gst_caps_new_simple ("audio/x-raw",
+          "format", G_TYPE_STRING, "F64_BE", NULL);
       break;
     default:
       return FALSE;
   }
 
-  gst_caps_set_simple (caps, "audio/x-raw-int",
+  gst_caps_set_simple (caps,
       "rate", G_TYPE_INT, pad->granulerate_n,
       "channels", G_TYPE_INT, channels, NULL);
   pad->caps = caps;
@@ -1862,7 +1838,7 @@ const GstOggMap mappers[] = {
   },
   {
     "PCM     ", 8, 0,
-    "audio/x-raw-int",
+    "audio/x-raw",
     setup_pcm_mapper,
     NULL,
     NULL,

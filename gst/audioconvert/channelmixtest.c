@@ -41,12 +41,12 @@ main (gint argc, gchar ** argv)
   } tests[] = {
     /* stereo => mono */
     {
-      "audio/x-raw-int, channels=2", "audio/x-raw-int, channels=1", { {
+      "audio/x-raw, channels=2", "audio/x-raw, channels=1", { {
       0.5,}, {
     0.5,},}},
         /* mono => stereo */
     {
-      "audio/x-raw-int, channels=1", "audio/x-raw-int, channels=2", { {
+      "audio/x-raw, channels=1", "audio/x-raw, channels=2", { {
     1, 1,},}}
   };
 
