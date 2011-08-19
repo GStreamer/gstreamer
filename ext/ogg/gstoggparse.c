@@ -467,7 +467,7 @@ gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer)
         GstOggStream *stream = gst_ogg_parse_find_stream (ogg, serialno);
 
         if (stream != NULL) {
-          GST_LOG_OBJECT (ogg, "Incorrect stream; repeats serial number %u "
+          GST_LOG_OBJECT (ogg, "Incorrect stream; repeats serial number %08x "
               "at offset %" G_GINT64_FORMAT, serialno, ogg->offset);
         }
 
@@ -561,7 +561,7 @@ gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer)
               GstOggStream *stream = (GstOggStream *) l->data;
 
               if (g_list_length (stream->headers) == 0) {
-                GST_LOG_OBJECT (ogg, "No primary header found for stream %08lx",
+                GST_LOG_OBJECT (ogg, "No primary header found for stream %08x",
                     stream->serialno);
                 goto failure;
               }
