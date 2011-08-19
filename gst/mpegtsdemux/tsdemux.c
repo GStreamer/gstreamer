@@ -1590,6 +1590,7 @@ find_timestamps (MpegTSBase * base, guint64 initoff, guint64 * offset)
   gst_structure_free (base->pat);
   base->pat = NULL;
   mpegts_base_remove_program (base, demux->current_program_number);
+  demux->program = NULL;
 
   /* Find end position */
   if (G_UNLIKELY (!gst_pad_query_peer_duration (base->sinkpad, &format,
@@ -1648,6 +1649,7 @@ beach:
     base->pat = NULL;
   }
   mpegts_base_remove_program (base, demux->current_program_number);
+  demux->program = NULL;
 
   return ret;
 }
