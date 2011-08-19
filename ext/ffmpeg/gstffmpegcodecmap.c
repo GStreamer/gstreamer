@@ -34,6 +34,7 @@
 #include "gstffmpegcodecmap.h"
 
 #include <gst/video/video.h>
+#include <gst/audio/audio.h>
 #include <gst/pbutils/codec-utils.h>
 
 /*
@@ -434,7 +435,7 @@ gst_ff_aud_caps_new (AVCodecContext * context, enum CodecID codec_id,
        * Unfortunately no encoder uses this yet....
        */
     }
-
+#if 0
     /* regardless of encode/decode, open up channels if applicable */
     /* Until decoders/encoders expose the maximum number of channels
      * they support, we whitelist them here. */
@@ -453,6 +454,7 @@ gst_ff_aud_caps_new (AVCodecContext * context, enum CodecID codec_id,
       default:
         break;
     }
+#endif
 
     if (maxchannels == 1)
       caps = gst_caps_new_simple (mimetype,
@@ -1283,56 +1285,34 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
     case CODEC_ID_PCM_S8:
     case CODEC_ID_PCM_U8:
     {
-      gint width = 0, depth = 0, endianness = 0;
-      gboolean signedness = FALSE;      /* blabla */
+      GstAudioFormat format;
 
       switch (codec_id) {
         case CODEC_ID_PCM_S16LE:
-          width = 16;
-          depth = 16;
-          endianness = G_LITTLE_ENDIAN;
-          signedness = TRUE;
+          format = GST_AUDIO_FORMAT_S16_LE;
           break;
         case CODEC_ID_PCM_S16BE:
-          width = 16;
-          depth = 16;
-          endianness = G_BIG_ENDIAN;
-          signedness = TRUE;
+          format = GST_AUDIO_FORMAT_S16_BE;
           break;
         case CODEC_ID_PCM_U16LE:
-          width = 16;
-          depth = 16;
-          endianness = G_LITTLE_ENDIAN;
-          signedness = FALSE;
+          format = GST_AUDIO_FORMAT_U16_LE;
           break;
         case CODEC_ID_PCM_U16BE:
-          width = 16;
-          depth = 16;
-          endianness = G_BIG_ENDIAN;
-          signedness = FALSE;
+          format = GST_AUDIO_FORMAT_U16_BE;
           break;
         case CODEC_ID_PCM_S8:
-          width = 8;
-          depth = 8;
-          endianness = G_BYTE_ORDER;
-          signedness = TRUE;
+          format = GST_AUDIO_FORMAT_S8;
           break;
         case CODEC_ID_PCM_U8:
-          width = 8;
-          depth = 8;
-          endianness = G_BYTE_ORDER;
-          signedness = FALSE;
+          format = GST_AUDIO_FORMAT_U8;
           break;
         default:
           g_assert (0);         /* don't worry, we never get here */
           break;
       }
 
-      caps = gst_ff_aud_caps_new (context, codec_id, "audio/x-raw-int",
-          "width", G_TYPE_INT, width,
-          "depth", G_TYPE_INT, depth,
-          "endianness", G_TYPE_INT, endianness,
-          "signed", G_TYPE_BOOLEAN, signedness, NULL);
+      caps = gst_ff_aud_caps_new (context, codec_id, "audio/x-raw",
+          "format", G_TYPE_STRING, gst_audio_format_to_string (format), NULL);
     }
       break;
 
@@ -1799,50 +1779,30 @@ gst_ffmpeg_smpfmt_to_caps (enum SampleFormat sample_fmt,
     AVCodecContext * context, enum CodecID codec_id)
 {
   GstCaps *caps = NULL;
-
-  int bpp = 0;
-  gboolean integer = TRUE;
-  gboolean signedness = FALSE;
+  GstAudioFormat format;
 
   switch (sample_fmt) {
     case SAMPLE_FMT_S16:
-      signedness = TRUE;
-      bpp = 16;
+      format = GST_AUDIO_FORMAT_S16;
       break;
-
     case SAMPLE_FMT_S32:
-      signedness = TRUE;
-      bpp = 32;
+      format = GST_AUDIO_FORMAT_S32;
       break;
-
     case SAMPLE_FMT_FLT:
-      integer = FALSE;
-      bpp = 32;
+      format = GST_AUDIO_FORMAT_F32;
       break;
-
     case SAMPLE_FMT_DBL:
-      integer = FALSE;
-      bpp = 64;
+      format = GST_AUDIO_FORMAT_F64;
       break;
     default:
       /* .. */
+      format = GST_AUDIO_FORMAT_UNKNOWN;
       break;
   }
 
-  if (bpp) {
-    if (integer) {
-      caps = gst_ff_aud_caps_new (context, codec_id, "audio/x-raw-int",
-          "signed", G_TYPE_BOOLEAN, signedness,
-          "endianness", G_TYPE_INT, G_BYTE_ORDER,
-          "width", G_TYPE_INT, bpp, "depth", G_TYPE_INT, bpp, NULL);
-    } else {
-      caps = gst_ff_aud_caps_new (context, codec_id, "audio/x-raw-float",
-          "endianness", G_TYPE_INT, G_BYTE_ORDER,
-          "width", G_TYPE_INT, bpp, NULL);
-    }
-  }
-
-  if (caps != NULL) {
+  if (format != GST_AUDIO_FORMAT_UNKNOWN) {
+    caps = gst_ff_aud_caps_new (context, codec_id, "audio/x-raw",
+        "format", G_TYPE_STRING, gst_audio_format_to_string (format), NULL);
     GST_LOG ("caps for sample_fmt=%d: %" GST_PTR_FORMAT, sample_fmt, caps);
   } else {
     GST_LOG ("No caps found for sample_fmt=%d", sample_fmt);
@@ -1964,11 +1924,11 @@ gst_ffmpeg_caps_to_smpfmt (const GstCaps * caps,
     AVCodecContext * context, gboolean raw)
 {
   GstStructure *structure;
-  gint depth = 0, width = 0, endianness = 0;
-  gboolean signedness = FALSE;
-  const gchar *name;
+  const gchar *fmt;
+  GstAudioFormat format = GST_AUDIO_FORMAT_UNKNOWN;
 
   g_return_if_fail (gst_caps_get_size (caps) == 1);
+
   structure = gst_caps_get_structure (caps, 0);
 
   gst_structure_get_int (structure, "channels", &context->channels);
@@ -1979,35 +1939,29 @@ gst_ffmpeg_caps_to_smpfmt (const GstCaps * caps,
   if (!raw)
     return;
 
-  name = gst_structure_get_name (structure);
-
-  if (!strcmp (name, "audio/x-raw-float")) {
-    /* FLOAT */
-    if (gst_structure_get_int (structure, "width", &width) &&
-        gst_structure_get_int (structure, "endianness", &endianness)) {
-      if (endianness == G_BYTE_ORDER) {
-        if (width == 32)
-          context->sample_fmt = SAMPLE_FMT_FLT;
-        else if (width == 64)
-          context->sample_fmt = SAMPLE_FMT_DBL;
-      }
-    }
-  } else {
-    /* INT */
-    if (gst_structure_get_int (structure, "width", &width) &&
-        gst_structure_get_int (structure, "depth", &depth) &&
-        gst_structure_get_boolean (structure, "signed", &signedness) &&
-        gst_structure_get_int (structure, "endianness", &endianness)) {
-      if ((endianness == G_BYTE_ORDER) && (signedness == TRUE)) {
-        if ((width == 16) && (depth == 16))
-          context->sample_fmt = SAMPLE_FMT_S16;
-        else if ((width == 32) && (depth == 32))
-          context->sample_fmt = SAMPLE_FMT_S32;
-      }
+  if (gst_structure_has_name (structure, "audio/x-raw")) {
+    if ((fmt = gst_structure_get_string (structure, "format"))) {
+      format = gst_audio_format_from_string (fmt);
     }
   }
-}
 
+  switch (format) {
+    case GST_AUDIO_FORMAT_F32:
+      context->sample_fmt = SAMPLE_FMT_FLT;
+      break;
+    case GST_AUDIO_FORMAT_F64:
+      context->sample_fmt = SAMPLE_FMT_DBL;
+      break;
+    case GST_AUDIO_FORMAT_S32:
+      context->sample_fmt = SAMPLE_FMT_S32;
+      break;
+    case GST_AUDIO_FORMAT_S16:
+      context->sample_fmt = SAMPLE_FMT_S16;
+      break;
+    default:
+      break;
+  }
+}
 
 /* Convert a GstCaps (video/raw) to a FFMPEG PixFmt
  * and other video properties in a AVCodecContext.
@@ -2808,39 +2762,30 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
   if (!strcmp (mimetype, "video/x-raw")) {
     id = CODEC_ID_RAWVIDEO;
     video = TRUE;
-  } else if (!strcmp (mimetype, "audio/x-raw-int")) {
-    gint depth, width, endianness;
-    gboolean signedness;
+  } else if (!strcmp (mimetype, "audio/x-raw")) {
+    GstAudioInfo info;
 
-    if (gst_structure_get_int (structure, "endianness", &endianness) &&
-        gst_structure_get_boolean (structure, "signed", &signedness) &&
-        gst_structure_get_int (structure, "width", &width) &&
-        gst_structure_get_int (structure, "depth", &depth) && depth == width) {
-      switch (depth) {
-        case 8:
-          if (signedness) {
-            id = CODEC_ID_PCM_S8;
-          } else {
-            id = CODEC_ID_PCM_U8;
-          }
+    if (gst_audio_info_from_caps (&info, caps)) {
+      switch (GST_AUDIO_INFO_FORMAT (&info)) {
+        case GST_AUDIO_FORMAT_S8:
+          id = CODEC_ID_PCM_S8;
           break;
-        case 16:
-          switch (endianness) {
-            case G_BIG_ENDIAN:
-              if (signedness) {
-                id = CODEC_ID_PCM_S16BE;
-              } else {
-                id = CODEC_ID_PCM_U16BE;
-              }
-              break;
-            case G_LITTLE_ENDIAN:
-              if (signedness) {
-                id = CODEC_ID_PCM_S16LE;
-              } else {
-                id = CODEC_ID_PCM_U16LE;
-              }
-              break;
-          }
+        case GST_AUDIO_FORMAT_U8:
+          id = CODEC_ID_PCM_U8;
+          break;
+        case GST_AUDIO_FORMAT_S16_LE:
+          id = CODEC_ID_PCM_S16LE;
+          break;
+        case GST_AUDIO_FORMAT_S16_BE:
+          id = CODEC_ID_PCM_S16BE;
+          break;
+        case GST_AUDIO_FORMAT_U16_LE:
+          id = CODEC_ID_PCM_U16LE;
+          break;
+        case GST_AUDIO_FORMAT_U16_BE:
+          id = CODEC_ID_PCM_U16BE;
+          break;
+        default:
           break;
       }
       if (id != CODEC_ID_NONE)

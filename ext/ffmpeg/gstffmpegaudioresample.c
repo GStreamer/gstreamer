@@ -71,14 +71,18 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS
-    ("audio/x-raw-int, endianness = (int) BYTE_ORDER, signed = (boolean) true, width = (int) 16, depth = (int) 16, channels = (int) { 1 , 2 }, rate = (int) [1, MAX ]")
+    ("audio/x-raw,"
+        "format = (string) " GST_AUDIO_NE (S16) ","
+        "channels = (int) { 1 , 2 }, rate = (int) [1, MAX ]")
     );
 
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS
-    ("audio/x-raw-int, endianness = (int) BYTE_ORDER, signed = (boolean) true, width = (int) 16, depth = (int) 16, channels = (int) [ 1 , 6 ], rate = (int) [1, MAX ]")
+    ("audio/x-raw,"
+        "format = (string) " GST_AUDIO_NE (S16) ","
+        "channels = (int) { 1 , 2 }, rate = (int) [1, MAX ]")
     );
 
 GST_BOILERPLATE (GstFFMpegAudioResample, gst_ffmpegaudioresample,

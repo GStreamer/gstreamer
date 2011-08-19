@@ -265,8 +265,7 @@ gst_ffmpegmux_base_init (gpointer g_class)
     if (videosinkcaps)
       gst_caps_unref (videosinkcaps);
 
-    videosinkcaps =
-        gst_caps_from_string ("video/x-raw-rgb, bpp=(int)24, depth=(int)24");
+    videosinkcaps = gst_caps_from_string ("video/x-raw, format=(string)RGB");
   }
 
   /* pad templates */

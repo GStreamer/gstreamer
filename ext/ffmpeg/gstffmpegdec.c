@@ -1152,8 +1152,10 @@ gst_ffmpegdec_bufferpool (GstFFMpegDec * ffmpegdec, GstCaps * caps)
   /* and store */
   gst_buffer_pool_set_config (pool, config);
 
-  if (ffmpegdec->pool)
+  if (ffmpegdec->pool) {
+    gst_buffer_pool_set_active (ffmpegdec->pool, FALSE);
     gst_object_unref (ffmpegdec->pool);
+  }
   ffmpegdec->pool = pool;
 
   /* and activate */
