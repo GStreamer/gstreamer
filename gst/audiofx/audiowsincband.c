@@ -149,7 +149,7 @@ static void gst_audio_wsincband_get_property (GObject * object, guint prop_id,
 static void gst_audio_wsincband_finalize (GObject * object);
 
 static gboolean gst_audio_wsincband_setup (GstAudioFilter * base,
-    GstAudioInfo * info);
+    const GstAudioInfo * info);
 
 #define POW2(x)  (x)*(x)
 
@@ -371,7 +371,7 @@ gst_audio_wsincband_build_kernel (GstAudioWSincBand * self)
 
 /* get notified of caps and plug in the correct process function */
 static gboolean
-gst_audio_wsincband_setup (GstAudioFilter * base, GstAudioInfo * info)
+gst_audio_wsincband_setup (GstAudioFilter * base, const GstAudioInfo * info)
 {
   GstAudioWSincBand *self = GST_AUDIO_WSINC_BAND (base);
 

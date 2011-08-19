@@ -83,7 +83,7 @@ static void gst_audio_dynamic_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 static gboolean gst_audio_dynamic_setup (GstAudioFilter * filter,
-    GstAudioInfo * info);
+    const GstAudioInfo * info);
 static GstFlowReturn gst_audio_dynamic_transform_ip (GstBaseTransform * base,
     GstBuffer * buf);
 
@@ -323,7 +323,7 @@ gst_audio_dynamic_get_property (GObject * object, guint prop_id,
 /* GstAudioFilter vmethod implementations */
 
 static gboolean
-gst_audio_dynamic_setup (GstAudioFilter * base, GstAudioInfo * info)
+gst_audio_dynamic_setup (GstAudioFilter * base, const GstAudioInfo * info)
 {
   GstAudioDynamic *filter = GST_AUDIO_DYNAMIC (base);
   gboolean ret = TRUE;

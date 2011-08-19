@@ -148,7 +148,7 @@ static void gst_audio_wsinclimit_get_property (GObject * object, guint prop_id,
 static void gst_audio_wsinclimit_finalize (GObject * object);
 
 static gboolean gst_audio_wsinclimit_setup (GstAudioFilter * base,
-    GstAudioInfo * info);
+    const GstAudioInfo * info);
 
 
 #define POW2(x)  (x)*(x)
@@ -306,7 +306,7 @@ gst_audio_wsinclimit_build_kernel (GstAudioWSincLimit * self)
 
 /* get notified of caps and plug in the correct process function */
 static gboolean
-gst_audio_wsinclimit_setup (GstAudioFilter * base, GstAudioInfo * info)
+gst_audio_wsinclimit_setup (GstAudioFilter * base, const GstAudioInfo * info)
 {
   GstAudioWSincLimit *self = GST_AUDIO_WSINC_LIMIT (base);
 

@@ -152,7 +152,8 @@ static gboolean gst_spectrum_start (GstBaseTransform * trans);
 static gboolean gst_spectrum_stop (GstBaseTransform * trans);
 static GstFlowReturn gst_spectrum_transform_ip (GstBaseTransform * trans,
     GstBuffer * in);
-static gboolean gst_spectrum_setup (GstAudioFilter * base, GstAudioInfo * info);
+static gboolean gst_spectrum_setup (GstAudioFilter * base,
+    const GstAudioInfo * info);
 
 static void
 gst_spectrum_class_init (GstSpectrumClass * klass)
@@ -614,7 +615,7 @@ input_data_int16_max (const guint8 * _in, gfloat * out, guint len,
 }
 
 static gboolean
-gst_spectrum_setup (GstAudioFilter * base, GstAudioInfo * info)
+gst_spectrum_setup (GstAudioFilter * base, const GstAudioInfo * info)
 {
   GstSpectrum *spectrum = GST_SPECTRUM (base);
   gboolean multi_channel = spectrum->multi_channel;

@@ -42,6 +42,7 @@
 #include <gst/gst.h>
 #include "gstgoom.h"
 #include <gst/video/video.h>
+#include <gst/audio/audio.h>
 #include "goom.h"
 
 #if HAVE_ORC
@@ -82,11 +83,8 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",    /* the name of the pads */
     GST_PAD_SINK,               /* type of the pad */
     GST_PAD_ALWAYS,             /* ALWAYS/SOMETIMES */
-    GST_STATIC_CAPS ("audio/x-raw-int, "
-        "endianness = (int) BYTE_ORDER, "
-        "signed = (boolean) TRUE, "
-        "width = (int) 16, "
-        "depth = (int) 16, "
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) " GST_AUDIO_NE (S16) ", "
         "rate = (int) [ 8000, 96000 ], " "channels = (int) { 1, 2 }")
     );
 

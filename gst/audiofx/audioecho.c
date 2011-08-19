@@ -82,7 +82,7 @@ static void gst_audio_echo_get_property (GObject * object, guint prop_id,
 static void gst_audio_echo_finalize (GObject * object);
 
 static gboolean gst_audio_echo_setup (GstAudioFilter * self,
-    GstAudioInfo * info);
+    const GstAudioInfo * info);
 static gboolean gst_audio_echo_stop (GstBaseTransform * base);
 static GstFlowReturn gst_audio_echo_transform_ip (GstBaseTransform * base,
     GstBuffer * buf);
@@ -271,7 +271,7 @@ gst_audio_echo_get_property (GObject * object, guint prop_id,
 /* GstAudioFilter vmethod implementations */
 
 static gboolean
-gst_audio_echo_setup (GstAudioFilter * base, GstAudioInfo * info)
+gst_audio_echo_setup (GstAudioFilter * base, const GstAudioInfo * info)
 {
   GstAudioEcho *self = GST_AUDIO_ECHO (base);
   gboolean ret = TRUE;

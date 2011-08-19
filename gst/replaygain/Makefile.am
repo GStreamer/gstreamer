@@ -9,7 +9,7 @@ libgstreplaygain_la_SOURCES = \
 libgstreplaygain_la_CFLAGS  = \
 	$(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS)
 libgstreplaygain_la_LIBADD  = \
-	$(GST_PLUGINS_BASE_LIBS) -lgstpbutils-$(GST_MAJORMINOR) \
+	$(GST_PLUGINS_BASE_LIBS) -lgstpbutils-$(GST_MAJORMINOR) -lgstaudio-$(GST_MAJORMINOR)\
 	$(GST_BASE_LIBS) $(GST_LIBS) $(LIBM)
 libgstreplaygain_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstreplaygain_la_LIBTOOLFLAGS = --tag=disable-static

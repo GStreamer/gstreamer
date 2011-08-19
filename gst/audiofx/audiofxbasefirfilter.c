@@ -70,7 +70,7 @@ static gboolean gst_audio_fx_base_fir_filter_transform_size (GstBaseTransform *
     base, GstPadDirection direction, GstCaps * caps, gsize size,
     GstCaps * othercaps, gsize * othersize);
 static gboolean gst_audio_fx_base_fir_filter_setup (GstAudioFilter * base,
-    GstAudioInfo * info);
+    const GstAudioInfo * info);
 
 static gboolean gst_audio_fx_base_fir_filter_query (GstPad * pad,
     GstQuery * query);
@@ -743,7 +743,8 @@ gst_audio_fx_base_fir_filter_push_residue (GstAudioFXBaseFIRFilter * self)
 
 /* get notified of caps and plug in the correct process function */
 static gboolean
-gst_audio_fx_base_fir_filter_setup (GstAudioFilter * base, GstAudioInfo * info)
+gst_audio_fx_base_fir_filter_setup (GstAudioFilter * base,
+    const GstAudioInfo * info)
 {
   GstAudioFXBaseFIRFilter *self = GST_AUDIO_FX_BASE_FIR_FILTER (base);
 

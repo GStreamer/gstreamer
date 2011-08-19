@@ -43,7 +43,7 @@ static void gst_iir_equalizer_child_proxy_interface_init (gpointer g_iface,
 static void gst_iir_equalizer_finalize (GObject * object);
 
 static gboolean gst_iir_equalizer_setup (GstAudioFilter * filter,
-    GstAudioInfo * info);
+    const GstAudioInfo * info);
 static GstFlowReturn gst_iir_equalizer_transform_ip (GstBaseTransform * btrans,
     GstBuffer * buf);
 
@@ -848,7 +848,7 @@ gst_iir_equalizer_transform_ip (GstBaseTransform * btrans, GstBuffer * buf)
 }
 
 static gboolean
-gst_iir_equalizer_setup (GstAudioFilter * audio, GstAudioInfo * info)
+gst_iir_equalizer_setup (GstAudioFilter * audio, const GstAudioInfo * info)
 {
   GstIirEqualizer *equ = GST_IIR_EQUALIZER (audio);
 

@@ -107,7 +107,7 @@ static void gst_audio_cheb_band_get_property (GObject * object,
 static void gst_audio_cheb_band_finalize (GObject * object);
 
 static gboolean gst_audio_cheb_band_setup (GstAudioFilter * filter,
-    GstAudioInfo * info);
+    const GstAudioInfo * info);
 
 enum
 {
@@ -641,7 +641,7 @@ gst_audio_cheb_band_get_property (GObject * object, guint prop_id,
 /* GstAudioFilter vmethod implementations */
 
 static gboolean
-gst_audio_cheb_band_setup (GstAudioFilter * base, GstAudioInfo * info)
+gst_audio_cheb_band_setup (GstAudioFilter * base, const GstAudioInfo * info)
 {
   GstAudioChebBand *filter = GST_AUDIO_CHEB_BAND (base);
 

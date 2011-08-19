@@ -85,7 +85,7 @@ static void gst_audio_karaoke_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 static gboolean gst_audio_karaoke_setup (GstAudioFilter * filter,
-    GstAudioInfo * info);
+    const GstAudioInfo * info);
 static GstFlowReturn gst_audio_karaoke_transform_ip (GstBaseTransform * base,
     GstBuffer * buf);
 
@@ -239,7 +239,7 @@ gst_audio_karaoke_get_property (GObject * object, guint prop_id,
 /* GstAudioFilter vmethod implementations */
 
 static gboolean
-gst_audio_karaoke_setup (GstAudioFilter * base, GstAudioInfo * info)
+gst_audio_karaoke_setup (GstAudioFilter * base, const GstAudioInfo * info)
 {
   GstAudioKaraoke *filter = GST_AUDIO_KARAOKE (base);
   gboolean ret = TRUE;

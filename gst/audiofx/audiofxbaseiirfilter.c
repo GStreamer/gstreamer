@@ -46,7 +46,7 @@ G_DEFINE_TYPE (GstAudioFXBaseIIRFilter,
     gst_audio_fx_base_iir_filter, GST_TYPE_AUDIO_FILTER);
 
 static gboolean gst_audio_fx_base_iir_filter_setup (GstAudioFilter * filter,
-    GstAudioInfo * info);
+    const GstAudioInfo * info);
 static GstFlowReturn
 gst_audio_fx_base_iir_filter_transform_ip (GstBaseTransform * base,
     GstBuffer * buf);
@@ -236,7 +236,8 @@ gst_audio_fx_base_iir_filter_set_coefficients (GstAudioFXBaseIIRFilter * filter,
 /* GstAudioFilter vmethod implementations */
 
 static gboolean
-gst_audio_fx_base_iir_filter_setup (GstAudioFilter * base, GstAudioInfo * info)
+gst_audio_fx_base_iir_filter_setup (GstAudioFilter * base,
+    const GstAudioInfo * info)
 {
   GstAudioFXBaseIIRFilter *filter = GST_AUDIO_FX_BASE_IIR_FILTER (base);
   gboolean ret = TRUE;

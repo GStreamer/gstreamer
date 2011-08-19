@@ -102,7 +102,7 @@ static void gst_audio_cheb_limit_get_property (GObject * object,
 static void gst_audio_cheb_limit_finalize (GObject * object);
 
 static gboolean gst_audio_cheb_limit_setup (GstAudioFilter * filter,
-    GstAudioInfo * info);
+    const GstAudioInfo * info);
 
 enum
 {
@@ -550,7 +550,7 @@ gst_audio_cheb_limit_get_property (GObject * object, guint prop_id,
 /* GstAudioFilter vmethod implementations */
 
 static gboolean
-gst_audio_cheb_limit_setup (GstAudioFilter * base, GstAudioInfo * info)
+gst_audio_cheb_limit_setup (GstAudioFilter * base, const GstAudioInfo * info)
 {
   GstAudioChebLimit *filter = GST_AUDIO_CHEB_LIMIT (base);
 

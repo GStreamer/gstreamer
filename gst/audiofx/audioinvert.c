@@ -78,7 +78,7 @@ static void gst_audio_invert_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 static gboolean gst_audio_invert_setup (GstAudioFilter * filter,
-    GstAudioInfo * info);
+    const GstAudioInfo * info);
 static GstFlowReturn gst_audio_invert_transform_ip (GstBaseTransform * base,
     GstBuffer * buf);
 
@@ -172,7 +172,7 @@ gst_audio_invert_get_property (GObject * object, guint prop_id,
 /* GstAudioFilter vmethod implementations */
 
 static gboolean
-gst_audio_invert_setup (GstAudioFilter * base, GstAudioInfo * info)
+gst_audio_invert_setup (GstAudioFilter * base, const GstAudioInfo * info)
 {
   GstAudioInvert *filter = GST_AUDIO_INVERT (base);
   gboolean ret = TRUE;

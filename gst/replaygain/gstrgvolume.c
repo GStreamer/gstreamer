@@ -61,6 +61,7 @@
 
 #include <gst/gst.h>
 #include <gst/pbutils/pbutils.h>
+#include <gst/audio/audio.h>
 #include <math.h>
 
 #include "gstrgvolume.h"
@@ -96,29 +97,21 @@ enum
 
 /* Same template caps as GstVolume, for I don't like having just ANY caps. */
 
+#define FORMAT "{ "GST_AUDIO_NE(F32)","GST_AUDIO_NE(S16)" }"
+
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK, GST_PAD_ALWAYS, GST_STATIC_CAPS ("audio/x-raw-float, "
-        "rate = (int) [ 1, MAX ], "
-        "channels = (int) [ 1, MAX ], "
-        "endianness = (int) BYTE_ORDER, "
-        "width = (int) 32; "
-        "audio/x-raw-int, "
-        "channels = (int) [ 1, MAX ], "
-        "rate = (int) [ 1,  MAX ], "
-        "endianness = (int) BYTE_ORDER, "
-        "width = (int) 16, " "depth = (int) 16, " "signed = (bool) TRUE"));
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) " FORMAT ", "
+        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, MAX ]"));
 
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
-    GST_PAD_SRC, GST_PAD_ALWAYS, GST_STATIC_CAPS ("audio/x-raw-float, "
-        "rate = (int) [ 1, MAX ], "
-        "channels = (int) [ 1, MAX ], "
-        "endianness = (int) BYTE_ORDER, "
-        "width = (int) 32; "
-        "audio/x-raw-int, "
-        "channels = (int) [ 1, MAX ], "
-        "rate = (int) [ 1,  MAX ], "
-        "endianness = (int) BYTE_ORDER, "
-        "width = (int) 16, " "depth = (int) 16, " "signed = (bool) TRUE"));
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) " FORMAT ", "
+        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, MAX ]"));
 
 #define gst_rg_volume_parent_class parent_class
 G_DEFINE_TYPE (GstRgVolume, gst_rg_volume, GST_TYPE_BIN);
@@ -186,7 +179,7 @@ gst_rg_volume_class_init (GstRgVolumeClass * klass)
    * This element internally uses a volume element, which also supports
    * operating on integer audio formats.  These formats do not allow exceeding
    * digital full scale.  If extra headroom is used, make sure that the raw
-   * audio data format is floating point (audio/x-raw-float).  Otherwise,
+   * audio data format is floating point (F32).  Otherwise,
    * clipping distortion might be introduced as part of the volume adjustment
    * itself.
    */

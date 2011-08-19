@@ -79,6 +79,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstbasetransform.h>
+#include <gst/audio/audio.h>
 
 #include "gstrganalysis.h"
 #include "replaygain.h"
@@ -103,27 +104,20 @@ enum
  * audio.  The used implementation has filter coefficients for the
  * "usual" sample rates in the 8000 to 48000 Hz range. */
 #define REPLAY_GAIN_CAPS                                                \
+  "format = (string) { "GST_AUDIO_NE(F32)","GST_AUDIO_NE(S16)" }, "     \
   "channels = (int) { 1, 2 }, "                                         \
   "rate = (int) { 8000, 11025, 12000, 16000, 22050, 24000, 32000, "     \
   "44100, 48000 }"
 
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK, GST_PAD_ALWAYS, GST_STATIC_CAPS ("audio/x-raw-float, "
-        "width = (int) 32, " "endianness = (int) BYTE_ORDER, "
-        REPLAY_GAIN_CAPS "; "
-        "audio/x-raw-int, "
-        "width = (int) 16, " "depth = (int) [ 1, 16 ], "
-        "signed = (boolean) true, " "endianness = (int) BYTE_ORDER, "
-        REPLAY_GAIN_CAPS));
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (REPLAY_GAIN_CAPS));
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
-    GST_PAD_SRC, GST_PAD_ALWAYS, GST_STATIC_CAPS ("audio/x-raw-float, "
-        "width = (int) 32, " "endianness = (int) BYTE_ORDER, "
-        REPLAY_GAIN_CAPS "; "
-        "audio/x-raw-int, "
-        "width = (int) 16, " "depth = (int) [ 1, 16 ], "
-        "signed = (boolean) true, " "endianness = (int) BYTE_ORDER, "
-        REPLAY_GAIN_CAPS));
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (REPLAY_GAIN_CAPS));
 
 #define gst_rg_analysis_parent_class parent_class
 G_DEFINE_TYPE (GstRgAnalysis, gst_rg_analysis, GST_TYPE_BASE_TRANSFORM);
@@ -396,9 +390,8 @@ gst_rg_analysis_set_caps (GstBaseTransform * base, GstCaps * in_caps,
     GstCaps * out_caps)
 {
   GstRgAnalysis *filter = GST_RG_ANALYSIS (base);
-  GstStructure *structure;
-  const gchar *name;
-  gint n_channels, sample_rate, sample_bit_size, sample_size;
+  GstAudioInfo info;
+  gint rate, channels;
 
   g_return_val_if_fail (filter->ctx != NULL, FALSE);
 
@@ -406,58 +399,42 @@ gst_rg_analysis_set_caps (GstBaseTransform * base, GstCaps * in_caps,
       "set_caps in %" GST_PTR_FORMAT " out %" GST_PTR_FORMAT,
       in_caps, out_caps);
 
-  structure = gst_caps_get_structure (in_caps, 0);
-  name = gst_structure_get_name (structure);
-
-  if (!gst_structure_get_int (structure, "width", &sample_bit_size)
-      || !gst_structure_get_int (structure, "channels", &n_channels)
-      || !gst_structure_get_int (structure, "rate", &sample_rate))
+  if (!gst_audio_info_from_caps (&info, in_caps))
     goto invalid_format;
 
-  if (!rg_analysis_set_sample_rate (filter->ctx, sample_rate))
+  rate = GST_AUDIO_INFO_RATE (&info);
+
+  if (!rg_analysis_set_sample_rate (filter->ctx, rate))
     goto invalid_format;
 
-  if (sample_bit_size % 8 != 0)
+  channels = GST_AUDIO_INFO_CHANNELS (&info);
+
+  if (channels < 1 || channels > 2)
     goto invalid_format;
-  sample_size = sample_bit_size / 8;
 
-  if (g_str_equal (name, "audio/x-raw-float")) {
+  switch (GST_AUDIO_INFO_FORMAT (&info)) {
+    case GST_AUDIO_FORMAT_F32:
+      /* The depth is not variable for float formats of course.  It just
+       * makes the transform function nice and simple if the
+       * rg_analysis_analyze_* functions have a common signature. */
+      filter->depth = sizeof (gfloat) * 8;
 
-    if (sample_size != sizeof (gfloat))
+      if (channels == 1)
+        filter->analyze = rg_analysis_analyze_mono_float;
+      else
+        filter->analyze = rg_analysis_analyze_stereo_float;
+
+      break;
+    case GST_AUDIO_FORMAT_S16:
+      filter->depth = sizeof (gint16) * 8;
+
+      if (channels == 1)
+        filter->analyze = rg_analysis_analyze_mono_int16;
+      else
+        filter->analyze = rg_analysis_analyze_stereo_int16;
+      break;
+    default:
       goto invalid_format;
-
-    /* The depth is not variable for float formats of course.  It just
-     * makes the transform function nice and simple if the
-     * rg_analysis_analyze_* functions have a common signature. */
-    filter->depth = sizeof (gfloat) * 8;
-
-    if (n_channels == 1)
-      filter->analyze = rg_analysis_analyze_mono_float;
-    else if (n_channels == 2)
-      filter->analyze = rg_analysis_analyze_stereo_float;
-    else
-      goto invalid_format;
-
-  } else if (g_str_equal (name, "audio/x-raw-int")) {
-
-    if (sample_size != sizeof (gint16))
-      goto invalid_format;
-
-    if (!gst_structure_get_int (structure, "depth", &filter->depth))
-      goto invalid_format;
-    if (filter->depth < 1 || filter->depth > 16)
-      goto invalid_format;
-
-    if (n_channels == 1)
-      filter->analyze = rg_analysis_analyze_mono_int16;
-    else if (n_channels == 2)
-      filter->analyze = rg_analysis_analyze_stereo_int16;
-    else
-      goto invalid_format;
-
-  } else {
-
-    goto invalid_format;
   }
 
   return TRUE;

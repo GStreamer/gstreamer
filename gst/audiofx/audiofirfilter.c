@@ -86,7 +86,7 @@ static void gst_audio_fir_filter_get_property (GObject * object, guint prop_id,
 static void gst_audio_fir_filter_finalize (GObject * object);
 
 static gboolean gst_audio_fir_filter_setup (GstAudioFilter * base,
-    GstAudioInfo * info);
+    const GstAudioInfo * info);
 
 
 static void
@@ -183,7 +183,7 @@ gst_audio_fir_filter_init (GstAudioFIRFilter * self)
 
 /* get notified of caps and plug in the correct process function */
 static gboolean
-gst_audio_fir_filter_setup (GstAudioFilter * base, GstAudioInfo * info)
+gst_audio_fir_filter_setup (GstAudioFilter * base, const GstAudioInfo * info)
 {
   GstAudioFIRFilter *self = GST_AUDIO_FIR_FILTER (base);
   gint new_rate = GST_AUDIO_INFO_RATE (info);
