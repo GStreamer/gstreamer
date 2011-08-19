@@ -58,11 +58,8 @@ static GstStaticPadTemplate mad_src_template_factory =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, "
-        "endianness = (int) " G_STRINGIFY (G_BYTE_ORDER) ", "
-        "signed = (boolean) true, "
-        "width = (int) 32, "
-        "depth = (int) 32, "
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) " GST_AUDIO_NE (S32) ", "
         "rate = (int) { 8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000 }, "
         "channels = (int) [ 1, 2 ]")
     );
@@ -1252,11 +1249,8 @@ gst_mad_check_caps_reset (GstMad * mad)
 
     /* we set the caps even when the pad is not connected so they
      * can be gotten for streaminfo */
-    caps = gst_caps_new_simple ("audio/x-raw-int",
-        "endianness", G_TYPE_INT, G_BYTE_ORDER,
-        "signed", G_TYPE_BOOLEAN, TRUE,
-        "width", G_TYPE_INT, 32,
-        "depth", G_TYPE_INT, 32,
+    caps = gst_caps_new_simple ("audio/x-raw",
+        "format", G_TYPE_STRING, GST_AUDIO_NE (S32),
         "rate", G_TYPE_INT, rate, "channels", G_TYPE_INT, nchannels, NULL);
 
     gst_pad_set_caps (mad->srcpad, caps);

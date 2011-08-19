@@ -45,6 +45,7 @@
 #endif
 
 #include <string.h>
+#include <gst/audio/audio.h>
 #include "gstsiddec.h"
 
 #define DEFAULT_TUNE		0
@@ -76,14 +77,13 @@ static GstStaticPadTemplate sink_templ = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("audio/x-sid")
     );
 
+#define FORMATS "{ S8, U8, "GST_AUDIO_NE(S16)","GST_AUDIO_NE(U16)" }"
+
 static GstStaticPadTemplate src_templ = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, "
-        "endianness = (int) BYTE_ORDER, "
-        "signed = (boolean) { true, false }, "
-        "width = (int) { 8, 16 }, "
-        "depth = (int) { 8, 16 }, "
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) " FORMATS ", "
         "rate = (int) [ 8000, 48000 ], " "channels = (int) [ 1, 2 ]")
     );
 
@@ -279,12 +279,12 @@ static gboolean
 siddec_negotiate (GstSidDec * siddec)
 {
   GstCaps *allowed;
-  gboolean sign = TRUE;
-  gint width = 16, depth = 16;
   GstStructure *structure;
   int rate = 44100;
   int channels = 1;
   GstCaps *caps;
+  const gchar *str;
+  GstAudioFormat format;
 
   allowed = gst_pad_get_allowed_caps (siddec->srcpad);
   if (!allowed)
@@ -294,31 +294,39 @@ siddec_negotiate (GstSidDec * siddec)
 
   structure = gst_caps_get_structure (allowed, 0);
 
-  gst_structure_get_int (structure, "width", &width);
-  gst_structure_get_int (structure, "depth", &depth);
+  str = gst_structure_get_string (structure, "format");
+  if (str == NULL)
+    goto invalid_format;
 
-  if (width && depth && width != depth)
-    goto wrong_width;
-
-  width = width | depth;
-  if (width) {
-    siddec->config->bitsPerSample = width;
+  format = gst_audio_format_from_string (str);
+  switch (format) {
+    case GST_AUDIO_FORMAT_S8:
+      siddec->config->bitsPerSample = 8;
+      siddec->config->sampleFormat = SIDEMU_SIGNED_PCM;
+      break;
+    case GST_AUDIO_FORMAT_U8:
+      siddec->config->bitsPerSample = 8;
+      siddec->config->sampleFormat = SIDEMU_UNSIGNED_PCM;
+      break;
+    case GST_AUDIO_FORMAT_S16:
+      siddec->config->bitsPerSample = 16;
+      siddec->config->sampleFormat = SIDEMU_SIGNED_PCM;
+      break;
+    case GST_AUDIO_FORMAT_U16:
+      siddec->config->bitsPerSample = 16;
+      siddec->config->sampleFormat = SIDEMU_UNSIGNED_PCM;
+      break;
+    default:
+      goto invalid_format;
   }
 
-  gst_structure_get_boolean (structure, "signed", &sign);
   gst_structure_get_int (structure, "rate", &rate);
   siddec->config->frequency = rate;
   gst_structure_get_int (structure, "channels", &channels);
   siddec->config->channels = channels;
 
-  siddec->config->sampleFormat =
-      (sign ? SIDEMU_SIGNED_PCM : SIDEMU_UNSIGNED_PCM);
-
-  caps = gst_caps_new_simple ("audio/x-raw-int",
-      "endianness", G_TYPE_INT, G_BYTE_ORDER,
-      "signed", G_TYPE_BOOLEAN, sign,
-      "width", G_TYPE_INT, siddec->config->bitsPerSample,
-      "depth", G_TYPE_INT, siddec->config->bitsPerSample,
+  caps = gst_caps_new_simple ("audio/x-raw",
+      "format", G_TYPE_STRING, gst_audio_format_to_string (format),
       "rate", G_TYPE_INT, siddec->config->frequency,
       "channels", G_TYPE_INT, siddec->config->channels, NULL);
   gst_pad_set_caps (siddec->srcpad, caps);
@@ -334,10 +342,9 @@ nothing_allowed:
     GST_DEBUG_OBJECT (siddec, "could not get allowed caps");
     return FALSE;
   }
-wrong_width:
+invalid_format:
   {
-    GST_DEBUG_OBJECT (siddec, "width %d and depth %d are different",
-        width, depth);
+    GST_DEBUG_OBJECT (siddec, "invalid audio caps");
     return FALSE;
   }
 }
