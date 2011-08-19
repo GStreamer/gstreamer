@@ -44,7 +44,6 @@
 #include "config.h"
 #endif
 #include "gstadder.h"
-#include <gst/audio/audio.h>
 #include <string.h>             /* strcmp */
 #include "gstadderorc.h"
 
@@ -224,8 +223,7 @@ setcapsfunc (const GValue * item, IterData * data)
 static gboolean
 gst_adder_setcaps (GstAdder * adder, GstPad * pad, GstCaps * caps)
 {
-  GstStructure *structure;
-  const char *media_type;
+  GstAudioInfo info;
   GstIterator *it;
   GstIteratorResult ires;
   IterData idata;
@@ -256,79 +254,43 @@ gst_adder_setcaps (GstAdder * adder, GstPad * pad, GstCaps * caps)
     }
   }
 
-  /* parse caps now */
-  structure = gst_caps_get_structure (caps, 0);
-  media_type = gst_structure_get_name (structure);
-  if (strcmp (media_type, "audio/x-raw-int") == 0) {
-    adder->format = GST_ADDER_FORMAT_INT;
-    gst_structure_get_int (structure, "width", &adder->width);
-    gst_structure_get_int (structure, "depth", &adder->depth);
-    gst_structure_get_int (structure, "endianness", &adder->endianness);
-    gst_structure_get_boolean (structure, "signed", &adder->is_signed);
+  if (!gst_audio_info_from_caps (&info, caps))
+    goto invalid_format;
 
-    GST_INFO_OBJECT (pad, "parse_caps sets adder to format int, %d bit",
-        adder->width);
-
-    if (adder->endianness != G_BYTE_ORDER)
-      goto not_supported;
-
-    switch (adder->width) {
-      case 8:
-        adder->func = (adder->is_signed ?
-            (GstAdderFunction) add_int8 : (GstAdderFunction) add_uint8);
-        adder->sample_size = 1;
-        break;
-      case 16:
-        adder->func = (adder->is_signed ?
-            (GstAdderFunction) add_int16 : (GstAdderFunction) add_uint16);
-        adder->sample_size = 2;
-        break;
-      case 32:
-        adder->func = (adder->is_signed ?
-            (GstAdderFunction) add_int32 : (GstAdderFunction) add_uint32);
-        adder->sample_size = 4;
-        break;
-      default:
-        goto not_supported;
-    }
-  } else if (strcmp (media_type, "audio/x-raw-float") == 0) {
-    adder->format = GST_ADDER_FORMAT_FLOAT;
-    gst_structure_get_int (structure, "width", &adder->width);
-    gst_structure_get_int (structure, "endianness", &adder->endianness);
-
-    GST_INFO_OBJECT (pad, "parse_caps sets adder to format float, %d bit",
-        adder->width);
-
-    if (adder->endianness != G_BYTE_ORDER)
-      goto not_supported;
-
-    switch (adder->width) {
-      case 32:
-        adder->func = (GstAdderFunction) add_float32;
-        adder->sample_size = 4;
-        break;
-      case 64:
-        adder->func = (GstAdderFunction) add_float64;
-        adder->sample_size = 8;
-        break;
-      default:
-        goto not_supported;
-    }
-  } else {
-    goto not_supported;
+  switch (GST_AUDIO_INFO_FORMAT (&info)) {
+    case GST_AUDIO_FORMAT_S8:
+      adder->func = (GstAdderFunction) add_int8;
+      break;
+    case GST_AUDIO_FORMAT_U8:
+      adder->func = (GstAdderFunction) add_uint8;
+      break;
+    case GST_AUDIO_FORMAT_S16:
+      adder->func = (GstAdderFunction) add_int16;
+      break;
+    case GST_AUDIO_FORMAT_U16:
+      adder->func = (GstAdderFunction) add_uint16;
+      break;
+    case GST_AUDIO_FORMAT_S32:
+      adder->func = (GstAdderFunction) add_int32;
+      break;
+    case GST_AUDIO_FORMAT_U32:
+      adder->func = (GstAdderFunction) add_uint32;
+      break;
+    case GST_AUDIO_FORMAT_F32:
+      adder->func = (GstAdderFunction) add_float32;
+      break;
+    case GST_AUDIO_FORMAT_F64:
+      adder->func = (GstAdderFunction) add_float64;
+      break;
+    default:
+      goto invalid_format;
   }
-
-  gst_structure_get_int (structure, "channels", &adder->channels);
-  gst_structure_get_int (structure, "rate", &adder->rate);
-  /* precalc bps */
-  adder->bps = (adder->width / 8) * adder->channels;
-
   return TRUE;
 
   /* ERRORS */
-not_supported:
+invalid_format:
   {
-    GST_DEBUG_OBJECT (adder, "unsupported format set as caps");
+    GST_DEBUG_OBJECT (adder, "invalid format set as caps");
     return FALSE;
   }
 }
@@ -871,7 +833,7 @@ gst_adder_init (GstAdder * adder)
       GST_DEBUG_FUNCPTR (gst_adder_src_event));
   gst_element_add_pad (GST_ELEMENT (adder), adder->srcpad);
 
-  adder->format = GST_ADDER_FORMAT_UNSET;
+  gst_audio_info_init (&adder->info);
   adder->padcount = 0;
   adder->func = NULL;
 
@@ -1032,9 +994,12 @@ gst_adder_do_clip (GstCollectPads * pads, GstCollectData * data,
     GstBuffer * buffer, gpointer user_data)
 {
   GstAdder *adder = GST_ADDER (user_data);
+  gint rate, bpf;
 
-  buffer = gst_audio_buffer_clip (buffer, &data->segment, adder->rate,
-      adder->bps);
+  rate = GST_AUDIO_INFO_RATE (&adder->info);
+  bpf = GST_AUDIO_INFO_BPF (&adder->info);
+
+  buffer = gst_audio_buffer_clip (buffer, &data->segment, rate, bpf);
 
   return buffer;
 }
@@ -1066,6 +1031,7 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
   guint outsize;
   gint64 next_offset;
   gint64 next_timestamp;
+  gint rate, bps, bpf;
 
   adder = GST_ADDER (user_data);
 
@@ -1086,9 +1052,13 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
   if (outsize == 0)
     goto eos;
 
+  rate = GST_AUDIO_INFO_RATE (&adder->info);
+  bps = GST_AUDIO_INFO_BPS (&adder->info);
+  bpf = GST_AUDIO_INFO_BPF (&adder->info);
+
   GST_LOG_OBJECT (adder,
       "starting to cycle through channels, %d bytes available (bps = %d)",
-      outsize, adder->bps);
+      outsize, bpf);
 
   for (collected = pads->data; collected; collected = next) {
     GstCollectData *collect_data;
@@ -1148,8 +1118,7 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
             " from data %p", collect_data, insize, indata);
 
         /* further buffers, need to add them */
-        adder->func ((gpointer) outdata, (gpointer) indata,
-            insize / adder->sample_size);
+        adder->func ((gpointer) outdata, (gpointer) indata, insize / bps);
         gst_buffer_unmap (inbuf, indata, insize);
       } else {
         /* skip gap buffer */
@@ -1192,7 +1161,7 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
       adder->segment.position = adder->segment.stop;
     }
     adder->offset = gst_util_uint64_scale (adder->segment.position,
-        adder->rate, GST_SECOND);
+        rate, GST_SECOND);
     GST_INFO_OBJECT (adder, "seg_start %" G_GUINT64_FORMAT ", seg_end %"
         G_GUINT64_FORMAT, adder->segment.start, adder->segment.stop);
     GST_INFO_OBJECT (adder, "timestamp %" G_GINT64_FORMAT ",new offset %"
@@ -1226,11 +1195,11 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
   /* for the next timestamp, use the sample counter, which will
    * never accumulate rounding errors */
   if (adder->segment.rate > 0.0) {
-    next_offset = adder->offset + outsize / adder->bps;
+    next_offset = adder->offset + outsize / bpf;
   } else {
-    next_offset = adder->offset - outsize / adder->bps;
+    next_offset = adder->offset - outsize / bpf;
   }
-  next_timestamp = gst_util_uint64_scale (next_offset, GST_SECOND, adder->rate);
+  next_timestamp = gst_util_uint64_scale (next_offset, GST_SECOND, rate);
 
 
   /* set timestamps on the output buffer */

@@ -25,6 +25,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstcollectpads.h>
+#include <gst/audio/audio.h>
 
 G_BEGIN_DECLS
 
@@ -38,12 +39,6 @@ G_BEGIN_DECLS
 typedef struct _GstAdder             GstAdder;
 typedef struct _GstAdderClass        GstAdderClass;
 typedef struct _GstAdderInputChannel GstAdderInputChannel;
-
-typedef enum {
-  GST_ADDER_FORMAT_UNSET,
-  GST_ADDER_FORMAT_INT,
-  GST_ADDER_FORMAT_FLOAT
-} GstAdderFormat;
 
 typedef void (*GstAdderFunction) (gpointer out, gpointer in, guint size);
 
@@ -61,19 +56,7 @@ struct _GstAdder {
   gint            padcount;
 
   /* the next are valid for both int and float */
-  GstAdderFormat  format;
-  gint            rate;
-  gint            channels;
-  gint            width;
-  gint            endianness;
-  int             sample_size;
-
-  /* the next are valid only for format == GST_ADDER_FORMAT_INT */
-  gint            depth;
-  gboolean        is_signed;
-
-  /* number of bytes per sample, actually width/8 * channels */
-  gint            bps;
+  GstAudioInfo    info;
 
   /* function to add samples */
   GstAdderFunction func;
