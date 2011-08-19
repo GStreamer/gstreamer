@@ -103,7 +103,7 @@ enum
 /* The ReplayGain algorithm is intended for use with mono and stereo
  * audio.  The used implementation has filter coefficients for the
  * "usual" sample rates in the 8000 to 48000 Hz range. */
-#define REPLAY_GAIN_CAPS                                                \
+#define REPLAY_GAIN_CAPS "audio/x-raw," \
   "format = (string) { "GST_AUDIO_NE(F32)","GST_AUDIO_NE(S16)" }, "     \
   "channels = (int) { 1, 2 }, "                                         \
   "rate = (int) { 8000, 11025, 12000, 16000, 22050, 24000, 32000, "     \
