@@ -42,9 +42,6 @@ struct _GstAudioKaraoke
 {
   GstAudioFilter audiofilter;
 
-  gint channels;
-  gint rate;
-
   /* properties */
   gfloat level;
   gfloat mono_level;

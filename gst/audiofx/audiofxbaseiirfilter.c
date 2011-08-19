@@ -36,10 +36,9 @@
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
 #define ALLOWED_CAPS \
-    "audio/x-raw-float,"                                              \
-    " width = (int) { 32, 64 }, "                                     \
-    " endianness = (int) BYTE_ORDER,"                                 \
-    " rate = (int) [ 1, MAX ],"                                       \
+    "audio/x-raw,"                                                \
+    " format=(string){"GST_AUDIO_NE(F32)","GST_AUDIO_NE(F64)"},"  \
+    " rate = (int) [ 1, MAX ],"                                   \
     " channels = (int) [ 1, MAX ]"
 
 #define gst_audio_fx_base_iir_filter_parent_class parent_class
@@ -47,7 +46,7 @@ G_DEFINE_TYPE (GstAudioFXBaseIIRFilter,
     gst_audio_fx_base_iir_filter, GST_TYPE_AUDIO_FILTER);
 
 static gboolean gst_audio_fx_base_iir_filter_setup (GstAudioFilter * filter,
-    GstRingBufferSpec * format);
+    GstAudioInfo * info);
 static GstFlowReturn
 gst_audio_fx_base_iir_filter_transform_ip (GstBaseTransform * base,
     GstBuffer * buf);
@@ -237,48 +236,50 @@ gst_audio_fx_base_iir_filter_set_coefficients (GstAudioFXBaseIIRFilter * filter,
 /* GstAudioFilter vmethod implementations */
 
 static gboolean
-gst_audio_fx_base_iir_filter_setup (GstAudioFilter * base,
-    GstRingBufferSpec * format)
+gst_audio_fx_base_iir_filter_setup (GstAudioFilter * base, GstAudioInfo * info)
 {
   GstAudioFXBaseIIRFilter *filter = GST_AUDIO_FX_BASE_IIR_FILTER (base);
   gboolean ret = TRUE;
+  gint channels;
 
-  if (format->width == 32)
-    filter->process = (GstAudioFXBaseIIRFilterProcessFunc)
-        process_32;
-  else if (format->width == 64)
-    filter->process = (GstAudioFXBaseIIRFilterProcessFunc)
-        process_64;
-  else
-    ret = FALSE;
+  switch (GST_AUDIO_INFO_FORMAT (info)) {
+    case GST_AUDIO_FORMAT_F32:
+      filter->process = (GstAudioFXBaseIIRFilterProcessFunc)
+          process_32;
+      break;
+    case GST_AUDIO_FORMAT_F64:
+      filter->process = (GstAudioFXBaseIIRFilterProcessFunc)
+          process_64;
+      break;
+    default:
+      ret = FALSE;
+      break;
+  }
 
-  if (format->channels != filter->nchannels) {
+  channels = GST_AUDIO_INFO_CHANNELS (info);
+
+  if (channels != filter->nchannels) {
     guint i;
     GstAudioFXBaseIIRFilterChannelCtx *ctx;
 
     if (filter->channels) {
-
       for (i = 0; i < filter->nchannels; i++) {
         ctx = &filter->channels[i];
 
         g_free (ctx->x);
         g_free (ctx->y);
       }
-
       g_free (filter->channels);
-      filter->channels = NULL;
     }
 
-    filter->nchannels = format->channels;
-
-    filter->channels =
-        g_new0 (GstAudioFXBaseIIRFilterChannelCtx, filter->nchannels);
+    filter->channels = g_new0 (GstAudioFXBaseIIRFilterChannelCtx, channels);
     for (i = 0; i < filter->nchannels; i++) {
       ctx = &filter->channels[i];
 
       ctx->x = g_new0 (gdouble, filter->na);
       ctx->y = g_new0 (gdouble, filter->nb);
     }
+    filter->nchannels = channels;
   }
 
   return ret;
@@ -327,7 +328,7 @@ static void \
 process_##width (GstAudioFXBaseIIRFilter * filter, \
     g##ctype * data, guint num_samples) \
 { \
-  gint i, j, channels = GST_AUDIO_FILTER (filter)->format.channels; \
+  gint i, j, channels = filter->nchannels; \
   gdouble val; \
   \
   for (i = 0; i < num_samples / channels; i++) { \
@@ -370,7 +371,7 @@ gst_audio_fx_base_iir_filter_transform_ip (GstBaseTransform * base,
   g_return_val_if_fail (filter->a != NULL, GST_FLOW_ERROR);
 
   data = gst_buffer_map (buf, &size, NULL, GST_MAP_READWRITE);
-  num_samples = size / (GST_AUDIO_FILTER (filter)->format.width / 8);
+  num_samples = size / GST_AUDIO_FILTER_BPS (filter);
 
   filter->process (filter, data, num_samples);
 
@@ -384,7 +385,7 @@ static gboolean
 gst_audio_fx_base_iir_filter_stop (GstBaseTransform * base)
 {
   GstAudioFXBaseIIRFilter *filter = GST_AUDIO_FX_BASE_IIR_FILTER (base);
-  guint channels = GST_AUDIO_FILTER (filter)->format.channels;
+  guint channels = filter->nchannels;
   GstAudioFXBaseIIRFilterChannelCtx *ctx;
   guint i;
 
@@ -399,6 +400,7 @@ gst_audio_fx_base_iir_filter_stop (GstBaseTransform * base)
     g_free (filter->channels);
   }
   filter->channels = NULL;
+  filter->nchannels = 0;
 
   return TRUE;
 }

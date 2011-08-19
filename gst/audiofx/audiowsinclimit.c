@@ -148,7 +148,7 @@ static void gst_audio_wsinclimit_get_property (GObject * object, guint prop_id,
 static void gst_audio_wsinclimit_finalize (GObject * object);
 
 static gboolean gst_audio_wsinclimit_setup (GstAudioFilter * base,
-    GstRingBufferSpec * format);
+    GstAudioInfo * info);
 
 
 #define POW2(x)  (x)*(x)
@@ -221,22 +221,25 @@ gst_audio_wsinclimit_build_kernel (GstAudioWSincLimit * self)
   gint len = 0;
   gdouble w;
   gdouble *kernel = NULL;
+  gint rate, channels;
 
   len = self->kernel_length;
 
-  if (GST_AUDIO_FILTER (self)->format.rate == 0) {
+  rate = GST_AUDIO_FILTER_RATE (self);
+  channels = GST_AUDIO_FILTER_CHANNELS (self);
+
+  if (rate == 0) {
     GST_DEBUG ("rate not set yet");
     return;
   }
 
-  if (GST_AUDIO_FILTER (self)->format.channels == 0) {
+  if (channels == 0) {
     GST_DEBUG ("channels not set yet");
     return;
   }
 
   /* Clamp cutoff frequency between 0 and the nyquist frequency */
-  self->cutoff =
-      CLAMP (self->cutoff, 0.0, GST_AUDIO_FILTER (self)->format.rate / 2);
+  self->cutoff = CLAMP (self->cutoff, 0.0, rate / 2);
 
   GST_DEBUG ("gst_audio_wsinclimit_: initializing filter kernel of length %d "
       "with cutoff %.2lf Hz "
@@ -245,7 +248,7 @@ gst_audio_wsinclimit_build_kernel (GstAudioWSincLimit * self)
       (self->mode == MODE_LOW_PASS) ? "low-pass" : "high-pass");
 
   /* fill the kernel */
-  w = 2 * G_PI * (self->cutoff / GST_AUDIO_FILTER (self)->format.rate);
+  w = 2 * G_PI * (self->cutoff / rate);
 
   kernel = g_new (gdouble, len);
 
@@ -303,13 +306,13 @@ gst_audio_wsinclimit_build_kernel (GstAudioWSincLimit * self)
 
 /* get notified of caps and plug in the correct process function */
 static gboolean
-gst_audio_wsinclimit_setup (GstAudioFilter * base, GstRingBufferSpec * format)
+gst_audio_wsinclimit_setup (GstAudioFilter * base, GstAudioInfo * info)
 {
   GstAudioWSincLimit *self = GST_AUDIO_WSINC_LIMIT (base);
 
   gst_audio_wsinclimit_build_kernel (self);
 
-  return GST_AUDIO_FILTER_CLASS (parent_class)->setup (base, format);
+  return GST_AUDIO_FILTER_CLASS (parent_class)->setup (base, info);
 }
 
 static void

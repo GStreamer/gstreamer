@@ -82,7 +82,7 @@ static void gst_audio_iir_filter_get_property (GObject * object, guint prop_id,
 static void gst_audio_iir_filter_finalize (GObject * object);
 
 static gboolean gst_audio_iir_filter_setup (GstAudioFilter * base,
-    GstRingBufferSpec * format);
+    GstAudioInfo * info);
 
 static void
 gst_audio_iir_filter_class_init (GstAudioIIRFilterClass * klass)
@@ -200,17 +200,17 @@ gst_audio_iir_filter_init (GstAudioIIRFilter * self)
 
 /* get notified of caps and plug in the correct process function */
 static gboolean
-gst_audio_iir_filter_setup (GstAudioFilter * base, GstRingBufferSpec * format)
+gst_audio_iir_filter_setup (GstAudioFilter * base, GstAudioInfo * info)
 {
   GstAudioIIRFilter *self = GST_AUDIO_IIR_FILTER (base);
+  gint new_rate = GST_AUDIO_INFO_RATE (info);
 
-  if (self->rate != format->rate) {
+  if (GST_AUDIO_FILTER_RATE (self) != new_rate) {
     g_signal_emit (G_OBJECT (self),
-        gst_audio_iir_filter_signals[SIGNAL_RATE_CHANGED], 0, format->rate);
-    self->rate = format->rate;
+        gst_audio_iir_filter_signals[SIGNAL_RATE_CHANGED], 0, new_rate);
   }
 
-  return GST_AUDIO_FILTER_CLASS (parent_class)->setup (base, format);
+  return GST_AUDIO_FILTER_CLASS (parent_class)->setup (base, info);
 }
 
 static void

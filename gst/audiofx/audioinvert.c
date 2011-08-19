@@ -65,18 +65,10 @@ enum
 };
 
 #define ALLOWED_CAPS \
-    "audio/x-raw-int,"                                                \
-    " depth=(int)16,"                                                 \
-    " width=(int)16,"                                                 \
-    " endianness=(int)BYTE_ORDER,"                                    \
-    " signed=(bool)TRUE,"                                             \
-    " rate=(int)[1,MAX],"                                             \
-    " channels=(int)[1,MAX]; "                                        \
-    "audio/x-raw-float,"                                              \
-    " width=(int)32,"                                                 \
-    " endianness=(int)BYTE_ORDER,"                                    \
-    " rate=(int)[1,MAX],"                                             \
-    " channels=(int)[1,MAX]"
+    "audio/x-raw,"                                                     \
+    " format=(string) {"GST_AUDIO_NE(S16)","GST_AUDIO_NE(F32)"},"  \
+    " rate=(int)[1,MAX],"                                              \
+    " channels=(int)[1,MAX] "
 
 G_DEFINE_TYPE (GstAudioInvert, gst_audio_invert, GST_TYPE_AUDIO_FILTER);
 
@@ -86,7 +78,7 @@ static void gst_audio_invert_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 static gboolean gst_audio_invert_setup (GstAudioFilter * filter,
-    GstRingBufferSpec * format);
+    GstAudioInfo * info);
 static GstFlowReturn gst_audio_invert_transform_ip (GstBaseTransform * base,
     GstBuffer * buf);
 
@@ -180,20 +172,24 @@ gst_audio_invert_get_property (GObject * object, guint prop_id,
 /* GstAudioFilter vmethod implementations */
 
 static gboolean
-gst_audio_invert_setup (GstAudioFilter * base, GstRingBufferSpec * format)
+gst_audio_invert_setup (GstAudioFilter * base, GstAudioInfo * info)
 {
   GstAudioInvert *filter = GST_AUDIO_INVERT (base);
   gboolean ret = TRUE;
 
-  if (format->type == GST_BUFTYPE_FLOAT && format->width == 32)
-    filter->process = (GstAudioInvertProcessFunc)
-        gst_audio_invert_transform_float;
-  else if (format->type == GST_BUFTYPE_LINEAR && format->width == 16)
-    filter->process = (GstAudioInvertProcessFunc)
-        gst_audio_invert_transform_int;
-  else
-    ret = FALSE;
-
+  switch (GST_AUDIO_INFO_FORMAT (info)) {
+    case GST_AUDIO_FORMAT_S16:
+      filter->process = (GstAudioInvertProcessFunc)
+          gst_audio_invert_transform_int;
+      break;
+    case GST_AUDIO_FORMAT_F32:
+      filter->process = (GstAudioInvertProcessFunc)
+          gst_audio_invert_transform_float;
+      break;
+    default:
+      ret = FALSE;
+      break;
+  }
   return ret;
 }
 
@@ -250,7 +246,7 @@ gst_audio_invert_transform_ip (GstBaseTransform * base, GstBuffer * buf)
     return GST_FLOW_OK;
 
   data = gst_buffer_map (buf, &size, NULL, GST_MAP_READWRITE);
-  num_samples = size / (GST_AUDIO_FILTER (filter)->format.width / 8);
+  num_samples = size / GST_AUDIO_FILTER_BPS (filter);
 
   filter->process (filter, data, num_samples);
 

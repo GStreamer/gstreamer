@@ -149,8 +149,7 @@ static void gst_audio_wsincband_get_property (GObject * object, guint prop_id,
 static void gst_audio_wsincband_finalize (GObject * object);
 
 static gboolean gst_audio_wsincband_setup (GstAudioFilter * base,
-    GstRingBufferSpec * format);
-
+    GstAudioInfo * info);
 
 #define POW2(x)  (x)*(x)
 
@@ -228,26 +227,27 @@ gst_audio_wsincband_build_kernel (GstAudioWSincBand * self)
   gdouble *kernel_lp, *kernel_hp;
   gdouble w;
   gdouble *kernel;
+  gint rate, channels;
 
   len = self->kernel_length;
 
-  if (GST_AUDIO_FILTER (self)->format.rate == 0) {
+  rate = GST_AUDIO_FILTER_RATE (self);
+  channels = GST_AUDIO_FILTER_CHANNELS (self);
+
+  if (rate == 0) {
     GST_DEBUG ("rate not set yet");
     return;
   }
 
-  if (GST_AUDIO_FILTER (self)->format.channels == 0) {
+  if (channels == 0) {
     GST_DEBUG ("channels not set yet");
     return;
   }
 
   /* Clamp frequencies */
-  self->lower_frequency =
-      CLAMP (self->lower_frequency, 0.0,
-      GST_AUDIO_FILTER (self)->format.rate / 2);
-  self->upper_frequency =
-      CLAMP (self->upper_frequency, 0.0,
-      GST_AUDIO_FILTER (self)->format.rate / 2);
+  self->lower_frequency = CLAMP (self->lower_frequency, 0.0, rate / 2);
+  self->upper_frequency = CLAMP (self->upper_frequency, 0.0, rate / 2);
+
   if (self->lower_frequency > self->upper_frequency) {
     gint tmp = self->lower_frequency;
 
@@ -262,7 +262,7 @@ gst_audio_wsincband_build_kernel (GstAudioWSincBand * self)
       (self->mode == MODE_BAND_PASS) ? "band-pass" : "band-reject");
 
   /* fill the lp kernel */
-  w = 2 * G_PI * (self->lower_frequency / GST_AUDIO_FILTER (self)->format.rate);
+  w = 2 * G_PI * (self->lower_frequency / rate);
   kernel_lp = g_new (gdouble, len);
   for (i = 0; i < len; ++i) {
     if (i == (len - 1) / 2.0)
@@ -299,7 +299,7 @@ gst_audio_wsincband_build_kernel (GstAudioWSincBand * self)
     kernel_lp[i] /= sum;
 
   /* fill the hp kernel */
-  w = 2 * G_PI * (self->upper_frequency / GST_AUDIO_FILTER (self)->format.rate);
+  w = 2 * G_PI * (self->upper_frequency / rate);
   kernel_hp = g_new (gdouble, len);
   for (i = 0; i < len; ++i) {
     if (i == (len - 1) / 2.0)
@@ -371,13 +371,13 @@ gst_audio_wsincband_build_kernel (GstAudioWSincBand * self)
 
 /* get notified of caps and plug in the correct process function */
 static gboolean
-gst_audio_wsincband_setup (GstAudioFilter * base, GstRingBufferSpec * format)
+gst_audio_wsincband_setup (GstAudioFilter * base, GstAudioInfo * info)
 {
   GstAudioWSincBand *self = GST_AUDIO_WSINC_BAND (base);
 
   gst_audio_wsincband_build_kernel (self);
 
-  return GST_AUDIO_FILTER_CLASS (parent_class)->setup (base, format);
+  return GST_AUDIO_FILTER_CLASS (parent_class)->setup (base, info);
 }
 
 static void

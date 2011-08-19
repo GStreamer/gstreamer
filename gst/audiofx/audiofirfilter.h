@@ -56,7 +56,6 @@ struct _GstAudioFIRFilter {
 
   /* < private > */
   GMutex *lock;
-  gint rate;
 };
 
 struct _GstAudioFIRFilterClass {

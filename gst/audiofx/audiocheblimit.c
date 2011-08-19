@@ -102,7 +102,7 @@ static void gst_audio_cheb_limit_get_property (GObject * object,
 static void gst_audio_cheb_limit_finalize (GObject * object);
 
 static gboolean gst_audio_cheb_limit_setup (GstAudioFilter * filter,
-    GstRingBufferSpec * format);
+    GstAudioInfo * info);
 
 enum
 {
@@ -318,7 +318,7 @@ generate_biquad_coefficients (GstAudioChebLimit * filter,
   {
     gdouble k, d;
     gdouble omega =
-        2.0 * G_PI * (filter->cutoff / GST_AUDIO_FILTER (filter)->format.rate);
+        2.0 * G_PI * (filter->cutoff / GST_AUDIO_FILTER_RATE (filter));
 
     if (filter->mode == MODE_LOW_PASS)
       k = sin ((1.0 - omega) / 2.0) / sin ((1.0 + omega) / 2.0);
@@ -342,7 +342,7 @@ generate_biquad_coefficients (GstAudioChebLimit * filter,
 static void
 generate_coefficients (GstAudioChebLimit * filter)
 {
-  if (GST_AUDIO_FILTER (filter)->format.rate == 0) {
+  if (GST_AUDIO_FILTER_RATE (filter) == 0) {
     gdouble *a = g_new0 (gdouble, 1);
 
     a[0] = 1.0;
@@ -353,7 +353,7 @@ generate_coefficients (GstAudioChebLimit * filter)
     return;
   }
 
-  if (filter->cutoff >= GST_AUDIO_FILTER (filter)->format.rate / 2.0) {
+  if (filter->cutoff >= GST_AUDIO_FILTER_RATE (filter) / 2.0) {
     gdouble *a = g_new0 (gdouble, 1);
 
     a[0] = (filter->mode == MODE_LOW_PASS) ? 1.0 : 0.0;
@@ -450,8 +450,7 @@ generate_coefficients (GstAudioChebLimit * filter)
 #ifndef GST_DISABLE_GST_DEBUG
     {
       gdouble wc =
-          2.0 * G_PI * (filter->cutoff /
-          GST_AUDIO_FILTER (filter)->format.rate);
+          2.0 * G_PI * (filter->cutoff / GST_AUDIO_FILTER_RATE (filter));
       gdouble zr = cos (wc), zi = sin (wc);
 
       GST_LOG_OBJECT (filter, "%.2f dB gain @ %d Hz",
@@ -462,8 +461,7 @@ generate_coefficients (GstAudioChebLimit * filter)
 
     GST_LOG_OBJECT (filter, "%.2f dB gain @ %d Hz",
         20.0 * log10 (gst_audio_fx_base_iir_filter_calculate_gain (a, np + 1, b,
-                np + 1, -1.0, 0.0)),
-        GST_AUDIO_FILTER (filter)->format.rate / 2);
+                np + 1, -1.0, 0.0)), GST_AUDIO_FILTER_RATE (filter) / 2);
   }
 }
 
@@ -552,11 +550,11 @@ gst_audio_cheb_limit_get_property (GObject * object, guint prop_id,
 /* GstAudioFilter vmethod implementations */
 
 static gboolean
-gst_audio_cheb_limit_setup (GstAudioFilter * base, GstRingBufferSpec * format)
+gst_audio_cheb_limit_setup (GstAudioFilter * base, GstAudioInfo * info)
 {
   GstAudioChebLimit *filter = GST_AUDIO_CHEB_LIMIT (base);
 
   generate_coefficients (filter);
 
-  return GST_AUDIO_FILTER_CLASS (parent_class)->setup (base, format);
+  return GST_AUDIO_FILTER_CLASS (parent_class)->setup (base, info);
 }

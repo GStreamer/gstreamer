@@ -72,17 +72,9 @@ enum
 };
 
 #define ALLOWED_CAPS \
-    "audio/x-raw-int,"                                                \
-    " depth=(int)16,"                                                 \
-    " width=(int)16,"                                                 \
-    " endianness=(int)BYTE_ORDER,"                                    \
-    " signed=(bool)TRUE,"                                             \
-    " rate=(int)[1,MAX],"                                             \
-    " channels=(int)[1,MAX]; "                                        \
-    "audio/x-raw-float,"                                              \
-    " width=(int)32,"                                                 \
-    " endianness=(int)BYTE_ORDER,"                                    \
-    " rate=(int)[1,MAX],"                                             \
+    "audio/x-raw,"                                                \
+    " format=(string){"GST_AUDIO_NE(S16)","GST_AUDIO_NE(F32)"},"  \
+    " rate=(int)[1,MAX],"                                         \
     " channels=(int)[1,MAX]"
 
 G_DEFINE_TYPE (GstAudioKaraoke, gst_audio_karaoke, GST_TYPE_AUDIO_FILTER);
@@ -93,7 +85,7 @@ static void gst_audio_karaoke_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 static gboolean gst_audio_karaoke_setup (GstAudioFilter * filter,
-    GstRingBufferSpec * format);
+    GstAudioInfo * info);
 static GstFlowReturn gst_audio_karaoke_transform_ip (GstBaseTransform * base,
     GstBuffer * buf);
 
@@ -168,10 +160,12 @@ gst_audio_karaoke_init (GstAudioKaraoke * filter)
 }
 
 static void
-update_filter (GstAudioKaraoke * filter, gint rate)
+update_filter (GstAudioKaraoke * filter)
 {
   gfloat A, B, C;
+  gint rate;
 
+  rate = GST_AUDIO_FILTER_RATE (filter);
   if (rate == 0)
     return;
 
@@ -203,11 +197,11 @@ gst_audio_karaoke_set_property (GObject * object, guint prop_id,
       break;
     case PROP_FILTER_BAND:
       filter->filter_band = g_value_get_float (value);
-      update_filter (filter, filter->rate);
+      update_filter (filter);
       break;
     case PROP_FILTER_WIDTH:
       filter->filter_width = g_value_get_float (value);
-      update_filter (filter, filter->rate);
+      update_filter (filter);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -245,24 +239,25 @@ gst_audio_karaoke_get_property (GObject * object, guint prop_id,
 /* GstAudioFilter vmethod implementations */
 
 static gboolean
-gst_audio_karaoke_setup (GstAudioFilter * base, GstRingBufferSpec * format)
+gst_audio_karaoke_setup (GstAudioFilter * base, GstAudioInfo * info)
 {
   GstAudioKaraoke *filter = GST_AUDIO_KARAOKE (base);
   gboolean ret = TRUE;
 
-  filter->channels = format->channels;
-  filter->rate = format->rate;
-
-  if (format->type == GST_BUFTYPE_FLOAT && format->width == 32)
-    filter->process = (GstAudioKaraokeProcessFunc)
-        gst_audio_karaoke_transform_float;
-  else if (format->type == GST_BUFTYPE_LINEAR && format->width == 16)
-    filter->process = (GstAudioKaraokeProcessFunc)
-        gst_audio_karaoke_transform_int;
-  else
-    ret = FALSE;
-
-  update_filter (filter, format->rate);
+  switch (GST_AUDIO_INFO_FORMAT (info)) {
+    case GST_AUDIO_FORMAT_S16:
+      filter->process = (GstAudioKaraokeProcessFunc)
+          gst_audio_karaoke_transform_int;
+      break;
+    case GST_AUDIO_FORMAT_F32:
+      filter->process = (GstAudioKaraokeProcessFunc)
+          gst_audio_karaoke_transform_float;
+      break;
+    default:
+      ret = FALSE;
+      break;
+  }
+  update_filter (filter);
 
   return ret;
 }
@@ -276,7 +271,7 @@ gst_audio_karaoke_transform_int (GstAudioKaraoke * filter,
   gdouble y;
   gint level;
 
-  channels = filter->channels;
+  channels = GST_AUDIO_FILTER_CHANNELS (filter);
   level = filter->level * 256;
 
   for (i = 0; i < num_samples; i += channels) {
@@ -309,7 +304,7 @@ gst_audio_karaoke_transform_float (GstAudioKaraoke * filter,
   gdouble l, r, o;
   gdouble y;
 
-  channels = filter->channels;
+  channels = GST_AUDIO_FILTER_CHANNELS (filter);
 
   for (i = 0; i < num_samples; i += channels) {
     /* get left and right inputs */
@@ -353,7 +348,7 @@ gst_audio_karaoke_transform_ip (GstBaseTransform * base, GstBuffer * buf)
     return GST_FLOW_OK;
 
   data = gst_buffer_map (buf, &size, NULL, GST_MAP_READWRITE);
-  num_samples = size / (GST_AUDIO_FILTER (filter)->format.width / 8);
+  num_samples = size / GST_AUDIO_FILTER_BPS (filter);
 
   filter->process (filter, data, num_samples);
 

@@ -55,7 +55,6 @@ struct _GstAudioIIRFilter {
 
   /* < private > */
   GMutex *lock;
-  gint rate;
 };
 
 struct _GstAudioIIRFilterClass {

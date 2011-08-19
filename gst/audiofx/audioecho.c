@@ -67,10 +67,9 @@ enum
 };
 
 #define ALLOWED_CAPS \
-    "audio/x-raw-float,"                                              \
-    " width=(int) { 32, 64 }, "                                       \
-    " endianness=(int)BYTE_ORDER,"                                    \
-    " rate=(int)[1,MAX],"                                             \
+    "audio/x-raw,"                                                 \
+    " format=(string) {"GST_AUDIO_NE(F32)","GST_AUDIO_NE(F64)"}, " \
+    " rate=(int)[1,MAX],"                                          \
     " channels=(int)[1,MAX]"
 
 #define gst_audio_echo_parent_class parent_class
@@ -83,7 +82,7 @@ static void gst_audio_echo_get_property (GObject * object, guint prop_id,
 static void gst_audio_echo_finalize (GObject * object);
 
 static gboolean gst_audio_echo_setup (GstAudioFilter * self,
-    GstRingBufferSpec * format);
+    GstAudioInfo * info);
 static gboolean gst_audio_echo_stop (GstBaseTransform * base);
 static GstFlowReturn gst_audio_echo_transform_ip (GstBaseTransform * base,
     GstBuffer * buf);
@@ -272,19 +271,24 @@ gst_audio_echo_get_property (GObject * object, guint prop_id,
 /* GstAudioFilter vmethod implementations */
 
 static gboolean
-gst_audio_echo_setup (GstAudioFilter * base, GstRingBufferSpec * format)
+gst_audio_echo_setup (GstAudioFilter * base, GstAudioInfo * info)
 {
   GstAudioEcho *self = GST_AUDIO_ECHO (base);
   gboolean ret = TRUE;
 
-  if (format->type == GST_BUFTYPE_FLOAT && format->width == 32)
-    self->process = (GstAudioEchoProcessFunc)
-        gst_audio_echo_transform_float;
-  else if (format->type == GST_BUFTYPE_FLOAT && format->width == 64)
-    self->process = (GstAudioEchoProcessFunc)
-        gst_audio_echo_transform_double;
-  else
-    ret = FALSE;
+  switch (GST_AUDIO_INFO_FORMAT (info)) {
+    case GST_AUDIO_FORMAT_F32:
+      self->process = (GstAudioEchoProcessFunc)
+          gst_audio_echo_transform_float;
+      break;
+    case GST_AUDIO_FORMAT_F64:
+      self->process = (GstAudioEchoProcessFunc)
+          gst_audio_echo_transform_double;
+      break;
+    default:
+      ret = FALSE;
+      break;
+  }
 
   g_free (self->buffer);
   self->buffer = NULL;
@@ -315,8 +319,8 @@ gst_audio_echo_transform_##name (GstAudioEcho * self, \
     type * data, guint num_samples) \
 { \
   type *buffer = (type *) self->buffer; \
-  guint channels = GST_AUDIO_FILTER (self)->format.channels; \
-  guint rate = GST_AUDIO_FILTER (self)->format.rate; \
+  guint channels = GST_AUDIO_FILTER_CHANNELS (self); \
+  guint rate = GST_AUDIO_FILTER_RATE (self); \
   guint i, j; \
   guint echo_index = self->buffer_size_frames - self->delay_frames; \
   gdouble echo_off = ((((gdouble) self->delay) * rate) / GST_SECOND) - self->delay_frames; \
@@ -369,18 +373,17 @@ gst_audio_echo_transform_ip (GstBaseTransform * base, GstBuffer * buf)
     gst_object_sync_values (G_OBJECT (self), stream_time);
 
   if (self->buffer == NULL) {
-    guint width, rate, channels;
+    guint bpf, rate;
 
-    width = GST_AUDIO_FILTER (self)->format.width / 8;
-    rate = GST_AUDIO_FILTER (self)->format.rate;
-    channels = GST_AUDIO_FILTER (self)->format.channels;
+    bpf = GST_AUDIO_FILTER_BPS (self);
+    rate = GST_AUDIO_FILTER_RATE (self);
 
     self->delay_frames =
         MAX (gst_util_uint64_scale (self->delay, rate, GST_SECOND), 1);
     self->buffer_size_frames =
         MAX (gst_util_uint64_scale (self->max_delay, rate, GST_SECOND), 1);
 
-    self->buffer_size = self->buffer_size_frames * width * channels;
+    self->buffer_size = self->buffer_size_frames * bpf;
     self->buffer = g_try_malloc0 (self->buffer_size);
     self->buffer_pos = 0;
 
@@ -391,7 +394,7 @@ gst_audio_echo_transform_ip (GstBaseTransform * base, GstBuffer * buf)
   }
 
   data = gst_buffer_map (buf, &size, NULL, GST_MAP_READWRITE);
-  num_samples = size / (GST_AUDIO_FILTER (self)->format.width / 8);
+  num_samples = size / GST_AUDIO_FILTER_BPS (self);
 
   self->process (self, data, num_samples);
 

@@ -48,8 +48,7 @@ struct _GstAudioAmplify
   /* < private > */
   GstAudioAmplifyProcessFunc process;
   gint clipping_method;
-  gint format;
-  gint width;
+  GstAudioFormat format;
 };
 
 struct _GstAudioAmplifyClass

@@ -90,52 +90,29 @@ gst_audio_amplify_clipping_method_get_type (void)
       {METHOD_NOCLIP, "No clipping", "none"},
       {0, NULL, NULL}
     };
-
-    /* FIXME 0.11: rename to GstAudioAmplifyClippingMethod */
-    gtype = g_enum_register_static ("GstAudioPanoramaClippingMethod", values);
+    gtype = g_enum_register_static ("GstAudioAmplifyClippingMethod", values);
   }
   return gtype;
 }
 
 #define ALLOWED_CAPS                                                  \
-    "audio/x-raw-int,"                                                \
-    " depth=(int)8,"                                                  \
-    " width=(int)8,"                                                  \
-    " endianness=(int)BYTE_ORDER,"                                    \
-    " signed=(bool)TRUE,"                                             \
-    " rate=(int)[1,MAX],"                                             \
-    " channels=(int)[1,MAX]; "                                        \
-    "audio/x-raw-int,"                                                \
-    " depth=(int)16,"                                                 \
-    " width=(int)16,"                                                 \
-    " endianness=(int)BYTE_ORDER,"                                    \
-    " signed=(bool)TRUE,"                                             \
-    " rate=(int)[1,MAX],"                                             \
-    " channels=(int)[1,MAX]; "                                        \
-    "audio/x-raw-int,"                                                \
-    " depth=(int)32,"                                                 \
-    " width=(int)32,"                                                 \
-    " endianness=(int)BYTE_ORDER,"                                    \
-    " signed=(bool)TRUE,"                                             \
-    " rate=(int)[1,MAX],"                                             \
-    " channels=(int)[1,MAX]; "                                        \
-    "audio/x-raw-float,"                                              \
-    " width=(int){32,64},"                                            \
-    " endianness=(int)BYTE_ORDER,"                                    \
+    "audio/x-raw,"                                                    \
+    " format=(string) {S8,"GST_AUDIO_NE(S16)","GST_AUDIO_NE(S32)","   \
+                           GST_AUDIO_NE(F32)","GST_AUDIO_NE(F64)"},"  \
     " rate=(int)[1,MAX],"                                             \
     " channels=(int)[1,MAX]"
 
 G_DEFINE_TYPE (GstAudioAmplify, gst_audio_amplify, GST_TYPE_AUDIO_FILTER);
 
 static gboolean gst_audio_amplify_set_process_function (GstAudioAmplify *
-    filter, gint clipping, gint format, gint width);
+    filter, gint clipping, GstAudioFormat format);
 static void gst_audio_amplify_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_audio_amplify_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 static gboolean gst_audio_amplify_setup (GstAudioFilter * filter,
-    GstRingBufferSpec * format);
+    GstAudioInfo * info);
 static GstFlowReturn gst_audio_amplify_transform_ip (GstBaseTransform * base,
     GstBuffer * buf);
 
@@ -331,80 +308,76 @@ gst_audio_amplify_init (GstAudioAmplify * filter)
 {
   filter->amplification = 1.0;
   gst_audio_amplify_set_process_function (filter, METHOD_CLIP,
-      GST_BUFTYPE_LINEAR, 16);
+      GST_AUDIO_FORMAT_S16);
   gst_base_transform_set_in_place (GST_BASE_TRANSFORM (filter), TRUE);
   gst_base_transform_set_gap_aware (GST_BASE_TRANSFORM (filter), TRUE);
 }
 
 static GstAudioAmplifyProcessFunc
-gst_audio_amplify_process_function (gint clipping, gint format, gint width)
+gst_audio_amplify_process_function (gint clipping, GstAudioFormat format)
 {
   static const struct process
   {
-    gint format;
-    gint width;
+    GstAudioFormat format;
     gint clipping;
     GstAudioAmplifyProcessFunc func;
   } process[] = {
     {
-    GST_BUFTYPE_FLOAT, 32, METHOD_CLIP,
-          gst_audio_amplify_transform_gfloat_clip}, {
-    GST_BUFTYPE_FLOAT, 32, METHOD_WRAP_NEGATIVE,
+    GST_AUDIO_FORMAT_F32, METHOD_CLIP, gst_audio_amplify_transform_gfloat_clip}, {
+    GST_AUDIO_FORMAT_F32, METHOD_WRAP_NEGATIVE,
           gst_audio_amplify_transform_gfloat_wrap_negative}, {
-    GST_BUFTYPE_FLOAT, 32, METHOD_WRAP_POSITIVE,
+    GST_AUDIO_FORMAT_F32, METHOD_WRAP_POSITIVE,
           gst_audio_amplify_transform_gfloat_wrap_positive}, {
-    GST_BUFTYPE_FLOAT, 32, METHOD_NOCLIP,
+    GST_AUDIO_FORMAT_F32, METHOD_NOCLIP,
           gst_audio_amplify_transform_gfloat_noclip}, {
-    GST_BUFTYPE_FLOAT, 64, METHOD_CLIP,
+    GST_AUDIO_FORMAT_F64, METHOD_CLIP,
           gst_audio_amplify_transform_gdouble_clip}, {
-    GST_BUFTYPE_FLOAT, 64, METHOD_WRAP_NEGATIVE,
+    GST_AUDIO_FORMAT_F64, METHOD_WRAP_NEGATIVE,
           gst_audio_amplify_transform_gdouble_wrap_negative}, {
-    GST_BUFTYPE_FLOAT, 64, METHOD_WRAP_POSITIVE,
+    GST_AUDIO_FORMAT_F64, METHOD_WRAP_POSITIVE,
           gst_audio_amplify_transform_gdouble_wrap_positive}, {
-    GST_BUFTYPE_FLOAT, 64, METHOD_NOCLIP,
+    GST_AUDIO_FORMAT_F64, METHOD_NOCLIP,
           gst_audio_amplify_transform_gdouble_noclip}, {
-    GST_BUFTYPE_LINEAR, 8, METHOD_CLIP, gst_audio_amplify_transform_gint8_clip}, {
-    GST_BUFTYPE_LINEAR, 8, METHOD_WRAP_NEGATIVE,
+    GST_AUDIO_FORMAT_S8, METHOD_CLIP, gst_audio_amplify_transform_gint8_clip}, {
+    GST_AUDIO_FORMAT_S8, METHOD_WRAP_NEGATIVE,
           gst_audio_amplify_transform_gint8_wrap_negative}, {
-    GST_BUFTYPE_LINEAR, 8, METHOD_WRAP_POSITIVE,
+    GST_AUDIO_FORMAT_S8, METHOD_WRAP_POSITIVE,
           gst_audio_amplify_transform_gint8_wrap_positive}, {
-    GST_BUFTYPE_LINEAR, 8, METHOD_NOCLIP,
+    GST_AUDIO_FORMAT_S8, METHOD_NOCLIP,
           gst_audio_amplify_transform_gint8_noclip}, {
-    GST_BUFTYPE_LINEAR, 16, METHOD_CLIP,
-          gst_audio_amplify_transform_gint16_clip}, {
-    GST_BUFTYPE_LINEAR, 16, METHOD_WRAP_NEGATIVE,
+    GST_AUDIO_FORMAT_S16, METHOD_CLIP, gst_audio_amplify_transform_gint16_clip}, {
+    GST_AUDIO_FORMAT_S16, METHOD_WRAP_NEGATIVE,
           gst_audio_amplify_transform_gint16_wrap_negative}, {
-    GST_BUFTYPE_LINEAR, 16, METHOD_WRAP_POSITIVE,
+    GST_AUDIO_FORMAT_S16, METHOD_WRAP_POSITIVE,
           gst_audio_amplify_transform_gint16_wrap_positive}, {
-    GST_BUFTYPE_LINEAR, 16, METHOD_NOCLIP,
+    GST_AUDIO_FORMAT_S16, METHOD_NOCLIP,
           gst_audio_amplify_transform_gint16_noclip}, {
-    GST_BUFTYPE_LINEAR, 32, METHOD_CLIP,
-          gst_audio_amplify_transform_gint32_clip}, {
-    GST_BUFTYPE_LINEAR, 32, METHOD_WRAP_NEGATIVE,
+    GST_AUDIO_FORMAT_S32, METHOD_CLIP, gst_audio_amplify_transform_gint32_clip}, {
+    GST_AUDIO_FORMAT_S32, METHOD_WRAP_NEGATIVE,
           gst_audio_amplify_transform_gint32_wrap_negative}, {
-    GST_BUFTYPE_LINEAR, 32, METHOD_WRAP_POSITIVE,
+    GST_AUDIO_FORMAT_S32, METHOD_WRAP_POSITIVE,
           gst_audio_amplify_transform_gint32_wrap_positive}, {
-    GST_BUFTYPE_LINEAR, 32, METHOD_NOCLIP,
+    GST_AUDIO_FORMAT_S32, METHOD_NOCLIP,
           gst_audio_amplify_transform_gint32_noclip}, {
-    0, 0, 0, NULL}
+    0, 0, NULL}
   };
   const struct process *p;
 
   for (p = process; p->func; p++)
-    if (p->format == format && p->width == width && p->clipping == clipping)
+    if (p->format == format && p->clipping == clipping)
       return p->func;
   return NULL;
 }
 
 static gboolean
 gst_audio_amplify_set_process_function (GstAudioAmplify * filter, gint
-    clipping_method, gint format, gint width)
+    clipping_method, GstAudioFormat format)
 {
   GstAudioAmplifyProcessFunc process;
 
   /* set processing function */
 
-  process = gst_audio_amplify_process_function (clipping_method, format, width);
+  process = gst_audio_amplify_process_function (clipping_method, format);
   if (!process) {
     GST_DEBUG ("wrong format");
     return FALSE;
@@ -413,7 +386,6 @@ gst_audio_amplify_set_process_function (GstAudioAmplify * filter, gint
   filter->process = process;
   filter->clipping_method = clipping_method;
   filter->format = format;
-  filter->width = width;
 
   return TRUE;
 }
@@ -432,7 +404,7 @@ gst_audio_amplify_set_property (GObject * object, guint prop_id,
       break;
     case PROP_CLIPPING_METHOD:
       gst_audio_amplify_set_process_function (filter, g_value_get_enum (value),
-          filter->format, filter->width);
+          filter->format);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -461,12 +433,12 @@ gst_audio_amplify_get_property (GObject * object, guint prop_id,
 
 /* GstAudioFilter vmethod implementations */
 static gboolean
-gst_audio_amplify_setup (GstAudioFilter * base, GstRingBufferSpec * format)
+gst_audio_amplify_setup (GstAudioFilter * base, GstAudioInfo * info)
 {
   GstAudioAmplify *filter = GST_AUDIO_AMPLIFY (base);
 
   return gst_audio_amplify_set_process_function (filter,
-      filter->clipping_method, format->type, format->width);
+      filter->clipping_method, GST_AUDIO_INFO_FORMAT (info));
 }
 
 /* GstBaseTransform vmethod implementations */
@@ -494,7 +466,7 @@ gst_audio_amplify_transform_ip (GstBaseTransform * base, GstBuffer * buf)
     return GST_FLOW_OK;
 
   data = gst_buffer_map (buf, &size, NULL, GST_MAP_READWRITE);
-  num_samples = size / (GST_AUDIO_FILTER (filter)->format.width / 8);
+  num_samples = size / GST_AUDIO_FILTER_BPS (filter);
 
   filter->process (filter, data, num_samples);
 
