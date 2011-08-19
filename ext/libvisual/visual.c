@@ -63,9 +63,7 @@ struct _GstVisual
   VisActor *actor;
 
   /* audio/video state */
-  gint channels;
-  gint rate;                    /* Input samplerate */
-  gint bps;
+  GstAudioInfo info;
 
   /* framerate numerator & denominator */
   gint fps_n;
@@ -113,11 +111,9 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, "
-        "width = (int) 16, "
-        "depth = (int) 16, "
-        "endianness = (int) BYTE_ORDER, "
-        "signed = (boolean) TRUE, " "channels = (int) { 1, 2 }, "
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) " GST_AUDIO_NE (S16) ", "
+        "channels = (int) { 1, 2 }, "
 #if defined(VISUAL_API_VERSION) && VISUAL_API_VERSION >= 4000 && VISUAL_API_VERSION < 5000
         "rate = (int) { 8000, 11250, 22500, 32000, 44100, 48000, 96000 }"
 #else
@@ -333,7 +329,7 @@ gst_visual_src_setcaps (GstVisual * visual, GstCaps * caps)
 {
   gboolean res;
   GstStructure *structure;
-  gint depth, pitch;
+  gint depth, pitch, rate;
   const gchar *fmt;
 
   structure = gst_caps_get_structure (caps, 0);
@@ -364,10 +360,11 @@ gst_visual_src_setcaps (GstVisual * visual, GstCaps * caps)
   visual_video_set_pitch (visual->video, pitch);
   visual_actor_video_negotiate (visual->actor, 0, FALSE, FALSE);
 
+  rate = GST_AUDIO_INFO_RATE (&visual->info);
+
   /* precalc some values */
   visual->outsize = visual->video->height * pitch;
-  visual->spf =
-      gst_util_uint64_scale_int (visual->rate, visual->fps_d, visual->fps_n);
+  visual->spf = gst_util_uint64_scale_int (rate, visual->fps_d, visual->fps_n);
   visual->duration =
       gst_util_uint64_scale_int (GST_SECOND, visual->fps_d, visual->fps_n);
 
@@ -387,23 +384,34 @@ static gboolean
 gst_visual_sink_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstVisual *visual = GST_VISUAL (gst_pad_get_parent (pad));
-  GstStructure *structure;
+  GstAudioInfo info;
+  gint rate;
 
-  structure = gst_caps_get_structure (caps, 0);
+  if (!gst_audio_info_from_caps (&info, caps))
+    goto invalid_caps;
 
-  gst_structure_get_int (structure, "channels", &visual->channels);
-  gst_structure_get_int (structure, "rate", &visual->rate);
+  visual->info = info;
+
+  rate = GST_AUDIO_INFO_RATE (&info);
 
   /* this is how many samples we need to fill one frame at the requested
    * framerate. */
   if (visual->fps_n != 0) {
     visual->spf =
-        gst_util_uint64_scale_int (visual->rate, visual->fps_d, visual->fps_n);
+        gst_util_uint64_scale_int (rate, visual->fps_d, visual->fps_n);
   }
-  visual->bps = visual->channels * sizeof (gint16);
 
   gst_object_unref (visual);
+
   return TRUE;
+
+  /* ERRORS */
+invalid_caps:
+  {
+    GST_ERROR_OBJECT (visual, "invalid caps received");
+    gst_object_unref (visual);
+    return FALSE;
+  }
 }
 
 static gboolean
@@ -440,7 +448,6 @@ gst_vis_src_negotiate (GstVisual * visual)
    * already fixed. For video we always try to fixate to something like
    * 320x240x25 by convention. */
   structure = gst_caps_get_structure (target, 0);
-  gst_structure_fixate_field_nearest_int (structure, "width", DEFAULT_WIDTH);
   gst_structure_fixate_field_nearest_int (structure, "width", DEFAULT_WIDTH);
   gst_structure_fixate_field_nearest_int (structure, "height", DEFAULT_HEIGHT);
   gst_structure_fixate_field_nearest_fraction (structure, "framerate",
@@ -620,7 +627,8 @@ gst_visual_src_query (GstPad * pad, GstQuery * query)
         /* the max samples we must buffer buffer */
         max_samples = MAX (VISUAL_SAMPLES, visual->spf);
         our_latency =
-            gst_util_uint64_scale_int (max_samples, GST_SECOND, visual->rate);
+            gst_util_uint64_scale_int (max_samples, GST_SECOND,
+            GST_AUDIO_INFO_RATE (&visual->info));
 
         GST_DEBUG_OBJECT (visual, "Our latency: %" GST_TIME_FORMAT,
             GST_TIME_ARGS (our_latency));
@@ -676,6 +684,7 @@ gst_visual_chain (GstPad * pad, GstBuffer * buffer)
   GstVisual *visual = GST_VISUAL (gst_pad_get_parent (pad));
   GstFlowReturn ret = GST_FLOW_OK;
   guint avail;
+  gint bpf, rate, channels;
 
   GST_DEBUG_OBJECT (visual, "chain function called");
 
@@ -691,10 +700,13 @@ gst_visual_chain (GstPad * pad, GstBuffer * buffer)
     gst_adapter_clear (visual->adapter);
   }
 
+  rate = GST_AUDIO_INFO_RATE (&visual->info);
+  bpf = GST_AUDIO_INFO_BPF (&visual->info);
+  channels = GST_AUDIO_INFO_CHANNELS (&visual->info);
+
   GST_DEBUG_OBJECT (visual,
       "Input buffer has %d samples, time=%" G_GUINT64_FORMAT,
-      gst_buffer_get_size (buffer) / visual->bps,
-      GST_BUFFER_TIMESTAMP (buffer));
+      gst_buffer_get_size (buffer) / bpf, GST_BUFFER_TIMESTAMP (buffer));
 
   gst_adapter_push (visual->adapter, buffer);
 
@@ -711,19 +723,19 @@ gst_visual_chain (GstPad * pad, GstBuffer * buffer)
     GST_DEBUG_OBJECT (visual, "avail now %u", avail);
 
     /* we need at least VISUAL_SAMPLES samples */
-    if (avail < VISUAL_SAMPLES * visual->bps)
+    if (avail < VISUAL_SAMPLES * bpf)
       break;
 
     /* we need at least enough samples to make one frame */
-    if (avail < visual->spf * visual->bps)
+    if (avail < visual->spf * bpf)
       break;
 
     /* get timestamp of the current adapter byte */
     timestamp = gst_adapter_prev_timestamp (visual->adapter, &dist);
     if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
       /* convert bytes to time */
-      dist /= visual->bps;
-      timestamp += gst_util_uint64_scale_int (dist, GST_SECOND, visual->rate);
+      dist /= bpf;
+      timestamp += gst_util_uint64_scale_int (dist, GST_SECOND, rate);
     }
 
     if (timestamp != -1) {
@@ -751,18 +763,18 @@ gst_visual_chain (GstPad * pad, GstBuffer * buffer)
     /* Read VISUAL_SAMPLES samples per channel */
     data =
         (const guint16 *) gst_adapter_map (visual->adapter,
-        VISUAL_SAMPLES * visual->bps);
+        VISUAL_SAMPLES * bpf);
 
 #if defined(VISUAL_API_VERSION) && VISUAL_API_VERSION >= 4000 && VISUAL_API_VERSION < 5000
     {
       VisBuffer *lbuf, *rbuf;
       guint16 ldata[VISUAL_SAMPLES], rdata[VISUAL_SAMPLES];
-      VisAudioSampleRateType rate;
+      VisAudioSampleRateType vrate;
 
       lbuf = visual_buffer_new_with_buffer (ldata, sizeof (ldata), NULL);
       rbuf = visual_buffer_new_with_buffer (rdata, sizeof (rdata), NULL);
 
-      if (visual->channels == 2) {
+      if (channels == 2) {
         for (i = 0; i < VISUAL_SAMPLES; i++) {
           ldata[i] = *data++;
           rdata[i] = *data++;
@@ -774,32 +786,32 @@ gst_visual_chain (GstPad * pad, GstBuffer * buffer)
         }
       }
 
-      switch (visual->rate) {
+      switch (rate) {
         case 8000:
-          rate = VISUAL_AUDIO_SAMPLE_RATE_8000;
+          vrate = VISUAL_AUDIO_SAMPLE_RATE_8000;
           break;
         case 11250:
-          rate = VISUAL_AUDIO_SAMPLE_RATE_11250;
+          vrate = VISUAL_AUDIO_SAMPLE_RATE_11250;
           break;
         case 22500:
-          rate = VISUAL_AUDIO_SAMPLE_RATE_22500;
+          vrate = VISUAL_AUDIO_SAMPLE_RATE_22500;
           break;
         case 32000:
-          rate = VISUAL_AUDIO_SAMPLE_RATE_32000;
+          vrate = VISUAL_AUDIO_SAMPLE_RATE_32000;
           break;
         case 44100:
-          rate = VISUAL_AUDIO_SAMPLE_RATE_44100;
+          vrate = VISUAL_AUDIO_SAMPLE_RATE_44100;
           break;
         case 48000:
-          rate = VISUAL_AUDIO_SAMPLE_RATE_48000;
+          vrate = VISUAL_AUDIO_SAMPLE_RATE_48000;
           break;
         case 96000:
-          rate = VISUAL_AUDIO_SAMPLE_RATE_96000;
+          vrate = VISUAL_AUDIO_SAMPLE_RATE_96000;
           break;
         default:
           visual_object_unref (VISUAL_OBJECT (lbuf));
           visual_object_unref (VISUAL_OBJECT (rbuf));
-          GST_ERROR_OBJECT (visual, "unsupported rate %d", visual->rate);
+          GST_ERROR_OBJECT (visual, "unsupported rate %d", rate);
           ret = GST_FLOW_ERROR;
           goto beach;
           break;
@@ -807,10 +819,10 @@ gst_visual_chain (GstPad * pad, GstBuffer * buffer)
 
       visual_audio_samplepool_input_channel (visual->audio->samplepool,
           lbuf,
-          rate, VISUAL_AUDIO_SAMPLE_FORMAT_S16,
+          vrate, VISUAL_AUDIO_SAMPLE_FORMAT_S16,
           (char *) VISUAL_AUDIO_CHANNEL_LEFT);
       visual_audio_samplepool_input_channel (visual->audio->samplepool, rbuf,
-          rate, VISUAL_AUDIO_SAMPLE_FORMAT_S16,
+          vrate, VISUAL_AUDIO_SAMPLE_FORMAT_S16,
           (char *) VISUAL_AUDIO_CHANNEL_RIGHT);
 
       visual_object_unref (VISUAL_OBJECT (lbuf));
@@ -862,7 +874,7 @@ gst_visual_chain (GstPad * pad, GstBuffer * buffer)
         visual->spf);
 
     /* Flush out the number of samples per frame */
-    gst_adapter_flush (visual->adapter, visual->spf * visual->bps);
+    gst_adapter_flush (visual->adapter, visual->spf * bpf);
 
     /* quit the loop if something was wrong */
     if (ret != GST_FLOW_OK)
@@ -888,8 +900,8 @@ gst_visual_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
       visual->actor =
-          visual_actor_new (GST_VISUAL_GET_CLASS (visual)->plugin->
-          info->plugname);
+          visual_actor_new (GST_VISUAL_GET_CLASS (visual)->plugin->info->
+          plugname);
       visual->video = visual_video_new ();
       visual->audio = visual_audio_new ();
       /* can't have a play without actors */
