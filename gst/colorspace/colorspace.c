@@ -1540,6 +1540,28 @@ matrix_yuv_bt470_6_to_yuv_bt709 (ColorspaceConvert * convert)
 }
 
 static void
+matrix_yuv_jpeg_to_bt470_6 (ColorspaceConvert * convert)
+{
+  int i;
+  int y, u, v;
+  guint8 *tmpline = convert->tmpline;
+
+  for (i = 0; i < convert->width; i++) {
+    y = tmpline[i * 4 + 1];
+    u = tmpline[i * 4 + 2];
+    v = tmpline[i * 4 + 3];
+
+    y = (220 * y + 16 * 256 + 128) >> 8;
+    //u = (261 * u + 29 * v - 4367) >> 8;
+    //v = (19 * u + 262 * v - 3289) >> 8;
+
+    tmpline[i * 4 + 1] = CLAMP (y, 0, 255);
+    tmpline[i * 4 + 2] = CLAMP (u, 0, 255);
+    tmpline[i * 4 + 3] = CLAMP (v, 0, 255);
+  }
+}
+
+static void
 matrix_identity (ColorspaceConvert * convert)
 {
   /* do nothing */
@@ -1750,6 +1772,11 @@ colorspace_convert_lookup_getput (ColorspaceConvert * convert)
       && convert->to_spec == COLOR_SPEC_YUV_BT709) {
     convert->matrix = matrix_yuv_bt470_6_to_yuv_bt709;
     convert->matrix16 = matrix16_yuv_bt470_6_to_yuv_bt709;
+  } else if (convert->from_spec == COLOR_SPEC_YUV_JPEG
+      && convert->to_spec == COLOR_SPEC_YUV_BT470_6) {
+    convert->matrix = matrix_yuv_jpeg_to_bt470_6;
+    //convert->matrix16 = matrix16_yuv_jpeg_to_bt470_6;
+    convert->matrix16 = matrix16_identity;
   }
 }
 
