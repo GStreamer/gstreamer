@@ -569,7 +569,7 @@ _find_nearest_frame (GstOMXVideoEnc * self, GstOMXBuffer * buf)
   guint64 best_diff = G_MAXUINT64;
   BufferIdentification *best_id = NULL;
 
-  GST_OBJECT_LOCK (self);
+  GST_BASE_VIDEO_CODEC_STREAM_LOCK (self);
   for (l = GST_BASE_VIDEO_CODEC (self)->frames; l; l = l->next) {
     GstVideoFrame *tmp = l->data;
     BufferIdentification *id = tmp->coder_hook;
@@ -624,7 +624,7 @@ _find_nearest_frame (GstOMXVideoEnc * self, GstOMXBuffer * buf)
     }
   }
 
-  GST_OBJECT_UNLOCK (self);
+  GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (self);
 
   if (finish_frames) {
     g_warning ("Too old frames, bug in encoder -- please file a bug");
@@ -987,12 +987,12 @@ gst_omx_video_enc_reset (GstBaseVideoEncoder * encoder)
   /* FIXME: Workaround for 
    * https://bugzilla.gnome.org/show_bug.cgi?id=654529
    */
-  GST_OBJECT_LOCK (self);
+  GST_BASE_VIDEO_CODEC_STREAM_LOCK (self);
   g_list_foreach (GST_BASE_VIDEO_CODEC (self)->frames,
       (GFunc) gst_base_video_codec_free_frame, NULL);
   g_list_free (GST_BASE_VIDEO_CODEC (self)->frames);
   GST_BASE_VIDEO_CODEC (self)->frames = NULL;
-  GST_OBJECT_UNLOCK (self);
+  GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (self);
 
   if (self->started) {
     gst_omx_port_set_flushing (self->in_port, TRUE);
@@ -1153,7 +1153,12 @@ gst_omx_video_enc_handle_frame (GstBaseVideoEncoder * encoder,
     BufferIdentification *id;
     GstClockTime timestamp, duration;
 
+    /* Make sure to release the base class stream lock, otherwise
+     * _loop() can't call _finish_frame() and we might block forever
+     * because no input buffers are released */
+    GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (self);
     acq_ret = gst_omx_port_acquire_buffer (self->in_port, &buf);
+    GST_BASE_VIDEO_CODEC_STREAM_LOCK (self);
 
     if (acq_ret == GST_OMX_ACQUIRE_BUFFER_ERROR) {
       goto component_error;
