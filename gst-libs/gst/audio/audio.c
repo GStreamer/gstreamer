@@ -102,6 +102,48 @@ static GstAudioFormatInfo formats[] = {
 };
 
 /**
+ * gst_audio_format_build_int:
+ * @sign: signed or unsigned format
+ * @endianness: G_LITTLE_ENDIAN or G_BIG_ENDIAN
+ * @width: amount of bits used per sample
+ * @depth: amount of used bits in @width
+ *
+ * Construct a #GstAudioFormat with given parameters.
+ *
+ * Returns: a #GstAudioFormat or GST_AUDIO_FORMAT_UNKNOWN when no audio format
+ * exists with the given parameters.
+ */
+GstAudioFormat
+gst_audio_format_build_int (gboolean sign, gint endianness,
+    gint width, gint depth)
+{
+  gint i, e;
+
+  for (i = 0; i < G_N_ELEMENTS (formats); i++) {
+    GstAudioFormatInfo *finfo = &formats[i];
+
+    /* must be int */
+    if (!GST_AUDIO_FORMAT_INFO_IS_INT (finfo))
+      continue;
+    /* width and depth must match */
+    if (width != GST_AUDIO_FORMAT_INFO_WIDTH (finfo))
+      continue;
+    if (depth != GST_AUDIO_FORMAT_INFO_DEPTH (finfo))
+      continue;
+    /* if there is endianness, it must match */
+    e = GST_AUDIO_FORMAT_INFO_ENDIANNESS (finfo);
+    if (e && e != endianness)
+      continue;
+    /* check sign */
+    if (sign && !GST_AUDIO_FORMAT_INFO_IS_SIGNED (finfo))
+      continue;
+
+    return GST_AUDIO_FORMAT_INFO_FORMAT (finfo);
+  }
+  return GST_AUDIO_FORMAT_UNKNOWN;
+}
+
+/**
  * gst_audio_format_from_string:
  * @format: a format string
  *

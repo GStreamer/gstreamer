@@ -227,13 +227,17 @@ struct _GstAudioFormatInfo {
 #define GST_AUDIO_FORMAT_INFO_WIDTH(info)        ((info)->width)
 #define GST_AUDIO_FORMAT_INFO_DEPTH(info)        ((info)->depth)
 
-GstAudioFormat gst_audio_format_from_string          (const gchar *format) G_GNUC_CONST;
-const gchar *  gst_audio_format_to_string            (GstAudioFormat format) G_GNUC_CONST;
-const GstAudioFormatInfo *
-               gst_audio_format_get_info             (GstAudioFormat format) G_GNUC_CONST;
 
-void           gst_audio_format_fill_silence         (const GstAudioFormatInfo *info,
-                                                      gpointer dest, gsize length);
+GstAudioFormat gst_audio_format_build_int         (gboolean sign, gint endianness,
+                                                   gint width, gint depth) G_GNUC_CONST;
+
+GstAudioFormat gst_audio_format_from_string       (const gchar *format) G_GNUC_CONST;
+const gchar *  gst_audio_format_to_string         (GstAudioFormat format) G_GNUC_CONST;
+const GstAudioFormatInfo *
+               gst_audio_format_get_info          (GstAudioFormat format) G_GNUC_CONST;
+
+void           gst_audio_format_fill_silence      (const GstAudioFormatInfo *info,
+                                                   gpointer dest, gsize length);
 /**
  * GstAudioFlags:
  * @GST_AUDIO_FLAG_NONE: no valid flag
