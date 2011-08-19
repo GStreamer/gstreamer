@@ -130,7 +130,8 @@ static void volume_before_transform (GstBaseTransform * base,
 static GstFlowReturn volume_transform_ip (GstBaseTransform * base,
     GstBuffer * outbuf);
 static gboolean volume_stop (GstBaseTransform * base);
-static gboolean volume_setup (GstAudioFilter * filter, GstAudioInfo * info);
+static gboolean volume_setup (GstAudioFilter * filter,
+    const GstAudioInfo * info);
 
 static void volume_process_double (GstVolume * self, gpointer bytes,
     guint n_bytes);
@@ -721,7 +722,7 @@ volume_process_controlled_int8_clamp (GstVolume * self, gpointer bytes,
 
 /* get notified of caps and plug in the correct process function */
 static gboolean
-volume_setup (GstAudioFilter * filter, GstAudioInfo * info)
+volume_setup (GstAudioFilter * filter, const GstAudioInfo * info)
 {
   gboolean res;
   GstVolume *self = GST_VOLUME (filter);

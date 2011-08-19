@@ -78,7 +78,7 @@ struct _GstAudioFilterClass {
   GstBaseTransformClass basetransformclass;
 
   /* virtual function, called whenever the format changes */
-  gboolean  (*setup) (GstAudioFilter * filter, GstAudioInfo * info);
+  gboolean  (*setup) (GstAudioFilter * filter, const GstAudioInfo * info);
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
