@@ -37,11 +37,8 @@ static GstStaticPadTemplate gst_rtp_L16_depay_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, "
-        "endianness = (int) BIG_ENDIAN, "
-        "signed = (boolean) true, "
-        "width = (int) 16, "
-        "depth = (int) 16, "
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) S16_BE, "
         "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, MAX ]")
     );
 
@@ -177,11 +174,8 @@ gst_rtp_L16_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   rtpL16depay->rate = clock_rate;
   rtpL16depay->channels = channels;
 
-  srccaps = gst_caps_new_simple ("audio/x-raw-int",
-      "endianness", G_TYPE_INT, G_BIG_ENDIAN,
-      "signed", G_TYPE_BOOLEAN, TRUE,
-      "width", G_TYPE_INT, 16,
-      "depth", G_TYPE_INT, 16,
+  srccaps = gst_caps_new_simple ("audio/x-raw",
+      "format", G_TYPE_STRING, "S16_BE",
       "rate", G_TYPE_INT, clock_rate, "channels", G_TYPE_INT, channels, NULL);
 
   /* add channel positions */

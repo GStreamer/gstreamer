@@ -68,8 +68,8 @@ setup_jitterbuffer (gint num_buffers)
   GstBuffer *buffer;
   GstCaps *caps;
   /* a 20 sample audio block (2,5 ms) generated with
-   * gst-launch audiotestsrc wave=silence blocksize=40 num-buffers=3 ! 
-   *    "audio/x-raw-int,channels=1,rate=8000" ! mulawenc ! rtppcmupay !
+   * gst-launch audiotestsrc wave=silence blocksize=40 num-buffers=3 !
+   *    "audio/x-raw,channels=1,rate=8000" ! mulawenc ! rtppcmupay !
    *     fakesink dump=1
    */
   guint8 in[] = {               /* first 4 bytes are rtp-header, next 4 bytes are timestamp */

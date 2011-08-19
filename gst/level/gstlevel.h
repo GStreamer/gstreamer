@@ -26,7 +26,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstbasetransform.h>
-
+#include <gst/audio/audio.h>
 
 G_BEGIN_DECLS
 
@@ -59,9 +59,7 @@ struct _GstLevel {
   gboolean message;             /* whether or not to post messages */
   guint64 interval;             /* how many seconds between emits */
 
-  gint rate;                    /* caps variables */
-  gint width;
-  gint channels;
+  GstAudioInfo info;
 
   gdouble decay_peak_ttl;       /* time to live for peak in seconds */
   gdouble decay_peak_falloff;   /* falloff in dB/sec */
@@ -79,7 +77,7 @@ struct _GstLevel {
   gdouble *MS;                  /* normalized Mean Square of buffer */
   gdouble *RMS_dB;              /* RMS in dB to emit */
   GstClockTime *decay_peak_age; /* age of last peak */
-  
+
   void (*process)(gpointer, guint, guint, gdouble*, gdouble*);
 };
 

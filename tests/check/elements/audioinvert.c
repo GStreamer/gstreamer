@@ -37,31 +37,24 @@ GstPad *mysrcpad, *mysinkpad;
 
 
 #define INVERT_CAPS_STRING    \
-    "audio/x-raw-int, "                 \
+    "audio/x-raw, "                     \
+    "format = (string) "GST_AUDIO_NE(S16)", "   \
     "channels = (int) 1, "              \
-    "rate = (int) 44100, "              \
-    "endianness = (int) BYTE_ORDER, "   \
-    "width = (int) 16, "                \
-    "depth = (int) 16, "                \
-    "signed = (bool) TRUE"
+    "rate = (int) 44100"
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, "
-        "channels = (int) 1, "
-        "rate = (int) [ 1,  MAX ], "
-        "endianness = (int) BYTE_ORDER, "
-        "width = (int) 16, " "depth = (int) 16, " "signed = (bool) TRUE")
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) " GST_AUDIO_NE (S16) ", "
+        "channels = (int) 1, " "rate = (int) [ 1,  MAX ]")
     );
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, "
-        "channels = (int) 1, "
-        "rate = (int) [ 1,  MAX ], "
-        "endianness = (int) BYTE_ORDER, "
-        "width = (int) 16, " "depth = (int) 16, " "signed = (bool) TRUE")
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) " GST_AUDIO_NE (S16) ", "
+        "channels = (int) 1, " "rate = (int) [ 1,  MAX ]")
     );
 
 static GstElement *

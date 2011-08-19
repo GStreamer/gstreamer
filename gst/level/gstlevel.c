@@ -117,37 +117,23 @@ GST_DEBUG_CATEGORY_STATIC (level_debug);
 #define EPSILON 1e-35f
 
 static GstStaticPadTemplate sink_template_factory =
-    GST_STATIC_PAD_TEMPLATE ("sink",
+GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, "
-        "rate = (int) [ 1, MAX ], "
-        "channels = (int) [ 1, MAX ], "
-        "endianness = (int) BYTE_ORDER, "
-        "width = (int) { 8, 16, 32 }, "
-        "depth = (int) { 8, 16, 32 }, "
-        "signed = (boolean) true; "
-        "audio/x-raw-float, "
-        "rate = (int) [ 1, MAX ], "
-        "channels = (int) [ 1, MAX ], "
-        "endianness = (int) BYTE_ORDER, " "width = (int) {32, 64} ")
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) { S8, " GST_AUDIO_NE (S16) ", " GST_AUDIO_NE (S32)
+        GST_AUDIO_NE (F32) "," GST_AUDIO_NE (F64) " },"
+        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, MAX ]")
     );
 
 static GstStaticPadTemplate src_template_factory =
-    GST_STATIC_PAD_TEMPLATE ("src",
+GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, "
-        "rate = (int) [ 1, MAX ], "
-        "channels = (int) [ 1, MAX ], "
-        "endianness = (int) BYTE_ORDER, "
-        "width = (int) { 8, 16, 32 }, "
-        "depth = (int) { 8, 16, 32 }, "
-        "signed = (boolean) true; "
-        "audio/x-raw-float, "
-        "rate = (int) [ 1, MAX ], "
-        "channels = (int) [ 1, MAX ], "
-        "endianness = (int) BYTE_ORDER, " "width = (int) {32, 64} ")
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) { S8, " GST_AUDIO_NE (S16) ", " GST_AUDIO_NE (S32)
+        GST_AUDIO_NE (F32) "," GST_AUDIO_NE (F64) " },"
+        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, MAX ]")
     );
 
 enum
@@ -228,9 +214,7 @@ gst_level_init (GstLevel * filter)
   filter->CS = NULL;
   filter->peak = NULL;
 
-  filter->rate = 0;
-  filter->width = 0;
-  filter->channels = 0;
+  gst_audio_info_init (&filter->info);
 
   filter->interval = GST_SECOND / 10;
   filter->decay_peak_ttl = GST_SECOND / 10 * 3;
@@ -277,9 +261,10 @@ gst_level_set_property (GObject * object, guint prop_id,
       break;
     case PROP_SIGNAL_INTERVAL:
       filter->interval = g_value_get_uint64 (value);
-      if (filter->rate) {
+      if (GST_AUDIO_INFO_RATE (&filter->info)) {
         filter->interval_frames =
-            GST_CLOCK_TIME_TO_FRAMES (filter->interval, filter->rate);
+            GST_CLOCK_TIME_TO_FRAMES (filter->interval,
+            GST_AUDIO_INFO_RATE (&filter->info));
       }
       break;
     case PROP_PEAK_TTL:
@@ -410,57 +395,41 @@ gst_level_calculate_gdouble (gpointer data, guint num, guint channels,
 */
 
 
-static gint
-structure_get_int (GstStructure * structure, const gchar * field)
-{
-  gint ret;
-
-  if (!gst_structure_get_int (structure, field, &ret))
-    g_assert_not_reached ();
-
-  return ret;
-}
-
 static gboolean
 gst_level_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
 {
   GstLevel *filter = GST_LEVEL (trans);
-  const gchar *mimetype;
-  GstStructure *structure;
-  gint i;
+  GstAudioInfo info;
+  gint i, channels, rate;
 
-  structure = gst_caps_get_structure (in, 0);
-  filter->rate = structure_get_int (structure, "rate");
-  filter->width = structure_get_int (structure, "width");
-  filter->channels = structure_get_int (structure, "channels");
-  mimetype = gst_structure_get_name (structure);
+  if (!gst_audio_info_from_caps (&info, in))
+    return FALSE;
 
-  /* FIXME: set calculator func depending on caps */
-  filter->process = NULL;
-  if (strcmp (mimetype, "audio/x-raw-int") == 0) {
-    GST_DEBUG_OBJECT (filter, "use int: %u", filter->width);
-    switch (filter->width) {
-      case 8:
-        filter->process = gst_level_calculate_gint8;
-        break;
-      case 16:
-        filter->process = gst_level_calculate_gint16;
-        break;
-      case 32:
-        filter->process = gst_level_calculate_gint32;
-        break;
-    }
-  } else if (strcmp (mimetype, "audio/x-raw-float") == 0) {
-    GST_DEBUG_OBJECT (filter, "use float, %u", filter->width);
-    switch (filter->width) {
-      case 32:
-        filter->process = gst_level_calculate_gfloat;
-        break;
-      case 64:
-        filter->process = gst_level_calculate_gdouble;
-        break;
-    }
+  switch (GST_AUDIO_INFO_FORMAT (&info)) {
+    case GST_AUDIO_FORMAT_S8:
+      filter->process = gst_level_calculate_gint8;
+      break;
+    case GST_AUDIO_FORMAT_S16:
+      filter->process = gst_level_calculate_gint16;
+      break;
+    case GST_AUDIO_FORMAT_S32:
+      filter->process = gst_level_calculate_gint32;
+      break;
+    case GST_AUDIO_FORMAT_F32:
+      filter->process = gst_level_calculate_gfloat;
+      break;
+    case GST_AUDIO_FORMAT_F64:
+      filter->process = gst_level_calculate_gdouble;
+      break;
+    default:
+      filter->process = NULL;
+      break;
   }
+
+  filter->info = info;
+
+  channels = GST_AUDIO_INFO_CHANNELS (&info);
+  rate = GST_AUDIO_INFO_RATE (&info);
 
   /* allocate channel variable arrays */
   g_free (filter->CS);
@@ -469,22 +438,21 @@ gst_level_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
   g_free (filter->decay_peak);
   g_free (filter->decay_peak_base);
   g_free (filter->decay_peak_age);
-  filter->CS = g_new (gdouble, filter->channels);
-  filter->peak = g_new (gdouble, filter->channels);
-  filter->last_peak = g_new (gdouble, filter->channels);
-  filter->decay_peak = g_new (gdouble, filter->channels);
-  filter->decay_peak_base = g_new (gdouble, filter->channels);
+  filter->CS = g_new (gdouble, channels);
+  filter->peak = g_new (gdouble, channels);
+  filter->last_peak = g_new (gdouble, channels);
+  filter->decay_peak = g_new (gdouble, channels);
+  filter->decay_peak_base = g_new (gdouble, channels);
 
-  filter->decay_peak_age = g_new (GstClockTime, filter->channels);
+  filter->decay_peak_age = g_new (GstClockTime, channels);
 
-  for (i = 0; i < filter->channels; ++i) {
+  for (i = 0; i < channels; ++i) {
     filter->CS[i] = filter->peak[i] = filter->last_peak[i] =
         filter->decay_peak[i] = filter->decay_peak_base[i] = 0.0;
     filter->decay_peak_age[i] = G_GUINT64_CONSTANT (0);
   }
 
-  filter->interval_frames =
-      GST_CLOCK_TIME_TO_FRAMES (filter->interval, filter->rate);
+  filter->interval_frames = GST_CLOCK_TIME_TO_FRAMES (filter->interval, rate);
 
   return TRUE;
 }
@@ -572,35 +540,38 @@ gst_level_transform_ip (GstBaseTransform * trans, GstBuffer * in)
   guint num_int_samples = 0;    /* number of interleaved samples
                                  * ie. total count for all channels combined */
   GstClockTimeDiff falloff_time;
+  gint channels, rate, bps;
 
   filter = GST_LEVEL (trans);
 
+  channels = GST_AUDIO_INFO_CHANNELS (&filter->info);
+  bps = GST_AUDIO_INFO_BPS (&filter->info);
+  rate = GST_AUDIO_INFO_RATE (&filter->info);
+
   in_data = data = gst_buffer_map (in, &in_size, NULL, GST_MAP_READ);
-  num_int_samples = in_size / (filter->width / 8);
+  num_int_samples = in_size / bps;
 
   GST_LOG_OBJECT (filter, "analyzing %u sample frames at ts %" GST_TIME_FORMAT,
       num_int_samples, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (in)));
 
-  g_return_val_if_fail (num_int_samples % filter->channels == 0,
-      GST_FLOW_ERROR);
+  g_return_val_if_fail (num_int_samples % channels == 0, GST_FLOW_ERROR);
 
-  num_frames = num_int_samples / filter->channels;
+  num_frames = num_int_samples / channels;
 
-  for (i = 0; i < filter->channels; ++i) {
+  for (i = 0; i < channels; ++i) {
     if (!GST_BUFFER_FLAG_IS_SET (in, GST_BUFFER_FLAG_GAP)) {
-      filter->process (in_data, num_int_samples, filter->channels, &CS,
+      filter->process (in_data, num_int_samples, channels, &CS,
           &filter->peak[i]);
       GST_LOG_OBJECT (filter,
           "channel %d, cumulative sum %f, peak %f, over %d samples/%d channels",
-          i, CS, filter->peak[i], num_int_samples, filter->channels);
+          i, CS, filter->peak[i], num_int_samples, channels);
       filter->CS[i] += CS;
     } else {
       filter->peak[i] = 0.0;
     }
-    in_data += (filter->width / 8);
+    in_data += bps;
 
-    filter->decay_peak_age[i] +=
-        GST_FRAMES_TO_CLOCK_TIME (num_frames, filter->rate);
+    filter->decay_peak_age[i] += GST_FRAMES_TO_CLOCK_TIME (num_frames, rate);
     GST_LOG_OBJECT (filter, "filter peak info [%d]: decay peak %f, age %"
         GST_TIME_FORMAT, i,
         filter->decay_peak[i], GST_TIME_ARGS (filter->decay_peak_age[i]));
@@ -656,7 +627,7 @@ gst_level_transform_ip (GstBaseTransform * trans, GstBuffer * in)
     if (filter->message) {
       GstMessage *m;
       GstClockTime duration =
-          GST_FRAMES_TO_CLOCK_TIME (filter->num_frames, filter->rate);
+          GST_FRAMES_TO_CLOCK_TIME (filter->num_frames, rate);
 
       m = gst_level_message_new (filter, filter->message_ts, duration);
 
@@ -664,7 +635,7 @@ gst_level_transform_ip (GstBaseTransform * trans, GstBuffer * in)
           "message: ts %" GST_TIME_FORMAT ", num_frames %d",
           GST_TIME_ARGS (filter->message_ts), filter->num_frames);
 
-      for (i = 0; i < filter->channels; ++i) {
+      for (i = 0; i < channels; ++i) {
         gdouble RMS;
         gdouble RMSdB, lastdB, decaydB;
 

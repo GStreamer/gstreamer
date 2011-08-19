@@ -31,10 +31,10 @@ GST_DEBUG_CATEGORY_STATIC (rtpvrawdepay_debug);
 #define GST_CAT_DEFAULT (rtpvrawdepay_debug)
 
 static GstStaticPadTemplate gst_rtp_vraw_depay_src_template =
-    GST_STATIC_PAD_TEMPLATE ("src",
+GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw-rgb; video/x-raw-yuv")
+    GST_STATIC_CAPS ("video/x-raw")
     );
 
 static GstStaticPadTemplate gst_rtp_vraw_depay_sink_template =

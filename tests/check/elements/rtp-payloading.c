@@ -600,7 +600,7 @@ GST_START_TEST (rtp_L16)
 {
   rtp_pipeline_test (rtp_L16_frame_data, rtp_L16_frame_data_size,
       rtp_L16_frame_count,
-      "audio/x-raw-int,endianess=4321,signed=true,width=16,depth=16,rate=1,channels=1",
+      "audio/x-raw,format=S16_BE,rate=1,channels=1",
       "rtpL16pay", "rtpL16depay", 0, 0, FALSE);
 }
 

@@ -68,12 +68,9 @@ GST_DEBUG_CATEGORY_STATIC (cutter_debug);
 static GstStaticPadTemplate cutter_src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, "
-        "rate = (int) [ 1, MAX ], "
-        "channels = (int) [ 1, MAX ], "
-        "endianness = (int) BYTE_ORDER, "
-        "width = (int) { 8, 16 }, "
-        "depth = (int) { 8, 16 }, " "signed = (boolean) true")
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) { " GST_AUDIO_NE (S8) "," GST_AUDIO_NE (S16) " }, "
+        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, MAX ]")
     );
 
 static GstStaticPadTemplate cutter_sink_factory =
@@ -81,11 +78,8 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-int, "
-        "rate = (int) [ 1, MAX ], "
-        "channels = (int) [ 1, MAX ], "
-        "endianness = (int) BYTE_ORDER, "
-        "width = (int) { 8, 16 }, "
-        "depth = (int) { 8, 16 }, " "signed = (boolean) true")
+        "format = (string) { " GST_AUDIO_NE (S8) "," GST_AUDIO_NE (S16) " }, "
+        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, MAX ]")
     );
 
 enum
@@ -363,6 +357,7 @@ gst_cutter_get_caps (GstPad * pad, GstCutter * filter)
 {
   GstCaps *caps;
   GstStructure *structure;
+  const gchar *format;
 
   caps = gst_pad_get_current_caps (pad);
   if (!caps) {
@@ -370,8 +365,12 @@ gst_cutter_get_caps (GstPad * pad, GstCutter * filter)
     return FALSE;
   }
   structure = gst_caps_get_structure (caps, 0);
-  gst_structure_get_int (structure, "width", &filter->width);
-  filter->max_sample = 1 << (filter->width - 1);        /* signed */
+
+  format = gst_structure_get_string (structure, "format");
+  if (g_str_has_prefix (format, "S16"))
+    filter->width = 16;
+  else
+    filter->width = 8;
   filter->have_caps = TRUE;
 
   gst_caps_unref (caps);

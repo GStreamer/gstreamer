@@ -87,7 +87,7 @@ main (int argc, char *argv[])
 
   gst_init (&argc, &argv);
 
-  caps = gst_caps_from_string ("audio/x-raw-int,channels=2");
+  caps = gst_caps_from_string ("audio/x-raw,channels=2");
 
   pipeline = gst_pipeline_new (NULL);
   g_assert (pipeline);

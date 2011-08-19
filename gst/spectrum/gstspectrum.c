@@ -110,37 +110,17 @@ GST_DEBUG_CATEGORY_STATIC (gst_spectrum_debug);
 #define GST_CAT_DEFAULT gst_spectrum_debug
 
 /* elementfactory information */
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+# define FORMATS "{ S16_LE, S24_3LE, S32_LE, F32_LE, F64_LE }"
+#else
+# define FORMATS "{ S16_BE, S24_3BE, S32_BE, F32_BE, F64_BE }"
+#endif
 
 #define ALLOWED_CAPS \
-    "audio/x-raw-int, "                                               \
-    " width = (int) 16, "                                             \
-    " depth = (int) [ 1, 16 ], "                                      \
-    " signed = (boolean) true, "                                      \
-    " endianness = (int) BYTE_ORDER, "                                \
-    " rate = (int) [ 1, MAX ], "                                      \
-    " channels = (int) [ 1, MAX ]; "                                  \
-    "audio/x-raw-int, "                                               \
-    " width = (int) 24, "                                             \
-    " depth = (int) [ 1, 24 ], "                                      \
-    " signed = (boolean) true, "                                      \
-    " endianness = (int) BYTE_ORDER, "                                \
-    " rate = (int) [ 1, MAX ], "                                      \
-    " channels = (int) [ 1, MAX ]; "                                  \
-    "audio/x-raw-int, "                                               \
-    " width = (int) 32, "                                             \
-    " depth = (int) [ 1, 32 ], "                                      \
-    " signed = (boolean) true, "                                      \
-    " endianness = (int) BYTE_ORDER, "                                \
-    " rate = (int) [ 1, MAX ], "                                      \
-    " channels = (int) [ 1, MAX ]; "                                  \
-    "audio/x-raw-float, "                                             \
-    " width = (int) { 32, 64 }, "                                     \
-    " endianness = (int) BYTE_ORDER, "                                \
-    " rate = (int) [ 1, MAX ], "                                      \
-    " channels = (int) [ 1, MAX ]"
+  GST_AUDIO_CAPS_MAKE (FORMATS)
 
 /* Spectrum properties */
-#define DEFAULT_POST_MESSAGES			TRUE
+#define DEFAULT_POST_MESSAGES	        TRUE
 #define DEFAULT_MESSAGE_MAGNITUDE	TRUE
 #define DEFAULT_MESSAGE_PHASE		FALSE
 #define DEFAULT_INTERVAL		(GST_SECOND / 10)
@@ -172,8 +152,7 @@ static gboolean gst_spectrum_start (GstBaseTransform * trans);
 static gboolean gst_spectrum_stop (GstBaseTransform * trans);
 static GstFlowReturn gst_spectrum_transform_ip (GstBaseTransform * trans,
     GstBuffer * in);
-static gboolean gst_spectrum_setup (GstAudioFilter * base,
-    GstRingBufferSpec * format);
+static gboolean gst_spectrum_setup (GstAudioFilter * base, GstAudioInfo * info);
 
 static void
 gst_spectrum_class_init (GstSpectrumClass * klass)
@@ -287,7 +266,7 @@ gst_spectrum_alloc_channel_data (GstSpectrum * spectrum)
   g_assert (spectrum->channel_data == NULL);
 
   spectrum->num_channels = (spectrum->multi_channel) ?
-      GST_AUDIO_FILTER (spectrum)->format.channels : 1;
+      GST_AUDIO_FILTER_CHANNELS (spectrum) : 1;
 
   GST_DEBUG_OBJECT (spectrum, "allocating data for %d channels",
       spectrum->num_channels);
@@ -503,23 +482,6 @@ input_data_mixed_double (const guint8 * _in, gfloat * out, guint len,
 }
 
 static void
-input_data_mixed_int32 (const guint8 * _in, gfloat * out, guint len,
-    guint channels, gfloat max_value, guint op, guint nfft)
-{
-  guint i, j, ip = 0;
-  gint32 *in = (gint32 *) _in;
-  gfloat v;
-
-  for (j = 0; j < len; j++) {
-    v = in[ip++] * 2 + 1;
-    for (i = 1; i < channels; i++)
-      v += in[ip++] * 2 + 1;
-    out[op] = v / channels;
-    op = (op + 1) % nfft;
-  }
-}
-
-static void
 input_data_mixed_int32_max (const guint8 * _in, gfloat * out, guint len,
     guint channels, gfloat max_value, guint op, guint nfft)
 {
@@ -531,30 +493,6 @@ input_data_mixed_int32_max (const guint8 * _in, gfloat * out, guint len,
     v = in[ip++] / max_value;
     for (i = 1; i < channels; i++)
       v += in[ip++] / max_value;
-    out[op] = v / channels;
-    op = (op + 1) % nfft;
-  }
-}
-
-static void
-input_data_mixed_int24 (const guint8 * _in, gfloat * out, guint len,
-    guint channels, gfloat max_value, guint op, guint nfft)
-{
-  guint i, j;
-  gfloat v = 0.0;
-
-  for (j = 0; j < len; j++) {
-    for (i = 0; i < channels; i++) {
-#if G_BYTE_ORDER == G_BIG_ENDIAN
-      gint32 value = GST_READ_UINT24_BE (_in);
-#else
-      gint32 value = GST_READ_UINT24_LE (_in);
-#endif
-      if (value & 0x00800000)
-        value |= 0xff000000;
-      v += value * 2 + 1;
-      _in += 3;
-    }
     out[op] = v / channels;
     op = (op + 1) % nfft;
   }
@@ -579,23 +517,6 @@ input_data_mixed_int24_max (const guint8 * _in, gfloat * out, guint len,
       v += value / max_value;
       _in += 3;
     }
-    out[op] = v / channels;
-    op = (op + 1) % nfft;
-  }
-}
-
-static void
-input_data_mixed_int16 (const guint8 * _in, gfloat * out, guint len,
-    guint channels, gfloat max_value, guint op, guint nfft)
-{
-  guint i, j, ip = 0;
-  gint16 *in = (gint16 *) _in;
-  gfloat v;
-
-  for (j = 0; j < len; j++) {
-    v = in[ip++] * 2 + 1;
-    for (i = 1; i < channels; i++)
-      v += in[ip++] * 2 + 1;
     out[op] = v / channels;
     op = (op + 1) % nfft;
   }
@@ -647,19 +568,6 @@ input_data_double (const guint8 * _in, gfloat * out, guint len, guint channels,
 }
 
 static void
-input_data_int32 (const guint8 * _in, gfloat * out, guint len, guint channels,
-    gfloat max_value, guint op, guint nfft)
-{
-  guint j, ip;
-  gint32 *in = (gint32 *) _in;
-
-  for (j = 0, ip = 0; j < len; j++, ip += channels) {
-    out[op] = in[ip] * 2 + 1;
-    op = (op + 1) % nfft;
-  }
-}
-
-static void
 input_data_int32_max (const guint8 * _in, gfloat * out, guint len,
     guint channels, gfloat max_value, guint op, guint nfft)
 {
@@ -668,26 +576,6 @@ input_data_int32_max (const guint8 * _in, gfloat * out, guint len,
 
   for (j = 0, ip = 0; j < len; j++, ip += channels) {
     out[op] = in[ip] / max_value;
-    op = (op + 1) % nfft;
-  }
-}
-
-static void
-input_data_int24 (const guint8 * _in, gfloat * out, guint len, guint channels,
-    gfloat max_value, guint op, guint nfft)
-{
-  guint j;
-
-  for (j = 0; j < len; j++) {
-#if G_BYTE_ORDER == G_BIG_ENDIAN
-    gint32 v = GST_READ_UINT24_BE (_in);
-#else
-    gint32 v = GST_READ_UINT24_LE (_in);
-#endif
-    if (v & 0x00800000)
-      v |= 0xff000000;
-    _in += 3 * channels;
-    out[op] = v * 2 + 1;
     op = (op + 1) % nfft;
   }
 }
@@ -713,19 +601,6 @@ input_data_int24_max (const guint8 * _in, gfloat * out, guint len,
 }
 
 static void
-input_data_int16 (const guint8 * _in, gfloat * out, guint len, guint channels,
-    gfloat max_value, guint op, guint nfft)
-{
-  guint j, ip;
-  gint16 *in = (gint16 *) _in;
-
-  for (j = 0, ip = 0; j < len; j++, ip += channels) {
-    out[op] = in[ip] * 2 + 1;
-    op = (op + 1) % nfft;
-  }
-}
-
-static void
 input_data_int16_max (const guint8 * _in, gfloat * out, guint len,
     guint channels, gfloat max_value, guint op, guint nfft)
 {
@@ -739,54 +614,39 @@ input_data_int16_max (const guint8 * _in, gfloat * out, guint len,
 }
 
 static gboolean
-gst_spectrum_setup (GstAudioFilter * base, GstRingBufferSpec * format)
+gst_spectrum_setup (GstAudioFilter * base, GstAudioInfo * info)
 {
   GstSpectrum *spectrum = GST_SPECTRUM (base);
-  guint width = format->width / 8;
-  gboolean is_float = (format->type == GST_BUFTYPE_FLOAT);
-  /* max_value will be 0 when depth is 1,
-   * interpret -1 and 0 as -1 and +1 if that's the case. */
-  guint max_value = (1UL << (format->depth - 1)) - 1;
   gboolean multi_channel = spectrum->multi_channel;
   GstSpectrumInputData input_data = NULL;
 
-  if (is_float) {
-    if (width == 4) {
+  switch (GST_AUDIO_INFO_FORMAT (info)) {
+    case GST_AUDIO_FORMAT_S16:
+      input_data =
+          multi_channel ? input_data_int16_max : input_data_mixed_int16_max;
+      break;
+    case GST_AUDIO_FORMAT_S24_3:
+      input_data =
+          multi_channel ? input_data_int24_max : input_data_mixed_int24_max;
+      break;
+    case GST_AUDIO_FORMAT_S32:
+      input_data =
+          multi_channel ? input_data_int32_max : input_data_mixed_int32_max;
+      break;
+    case GST_AUDIO_FORMAT_F32:
       input_data = multi_channel ? input_data_float : input_data_mixed_float;
-    } else if (width == 8) {
+      break;
+    case GST_AUDIO_FORMAT_F64:
       input_data = multi_channel ? input_data_double : input_data_mixed_double;
-    } else {
+      break;
+    default:
       g_assert_not_reached ();
-    }
-  } else {
-    if (width == 4) {
-      if (max_value) {
-        input_data =
-            multi_channel ? input_data_int32_max : input_data_mixed_int32_max;
-      } else {
-        input_data = multi_channel ? input_data_int32 : input_data_mixed_int32;
-      }
-    } else if (width == 3) {
-      if (max_value) {
-        input_data =
-            multi_channel ? input_data_int24_max : input_data_mixed_int24_max;
-      } else {
-        input_data = multi_channel ? input_data_int24 : input_data_mixed_int24;
-      }
-    } else if (width == 2) {
-      if (max_value) {
-        input_data =
-            multi_channel ? input_data_int16_max : input_data_mixed_int16_max;
-      } else {
-        input_data = multi_channel ? input_data_int16 : input_data_mixed_int16;
-      }
-    } else {
-      g_assert_not_reached ();
-    }
+      break;
   }
-
   spectrum->input_data = input_data;
+
   gst_spectrum_reset_state (spectrum);
+
   return TRUE;
 }
 
@@ -878,7 +738,7 @@ gst_spectrum_message_new (GstSpectrum * spectrum, GstClockTime timestamp,
     }
   } else {
     guint c;
-    guint channels = GST_AUDIO_FILTER (spectrum)->format.channels;
+    guint channels = GST_AUDIO_FILTER_CHANNELS (spectrum);
 
     if (spectrum->message_magnitude) {
       mcv = gst_spectrum_message_add_container (s, GST_TYPE_ARRAY, "magnitude");
@@ -984,20 +844,19 @@ static GstFlowReturn
 gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
 {
   GstSpectrum *spectrum = GST_SPECTRUM (trans);
-  GstRingBufferSpec *format = &GST_AUDIO_FILTER (spectrum)->format;
-  guint rate = format->rate;
-  guint channels = format->channels;
+  guint rate = GST_AUDIO_FILTER_RATE (spectrum);
+  guint channels = GST_AUDIO_FILTER_CHANNELS (spectrum);
+  guint bps = GST_AUDIO_FILTER_BPS (spectrum);
+  guint bpf = GST_AUDIO_FILTER_BPF (spectrum);
   guint output_channels = spectrum->multi_channel ? channels : 1;
   guint c;
-  guint width = format->width / 8;
-  gfloat max_value = (1UL << (format->depth - 1)) - 1;
+  gfloat max_value = (1UL << ((bps << 3) - 1)) - 1;
   guint bands = spectrum->bands;
   guint nfft = 2 * bands - 2;
   guint input_pos;
   gfloat *input;
   const guint8 *data, *mdata;
   gsize size;
-  guint frame_size = width * channels;
   guint fft_todo, msg_todo, block_size;
   gboolean have_full_interval;
   GstSpectrumChannel *cd;
@@ -1047,16 +906,16 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
   input_pos = spectrum->input_pos;
   input_data = spectrum->input_data;
 
-  while (size >= frame_size) {
+  while (size >= bpf) {
     /* run input_data for a chunk of data */
     fft_todo = nfft - (spectrum->num_frames % nfft);
     msg_todo = spectrum->frames_todo - spectrum->num_frames;
     GST_LOG_OBJECT (spectrum,
         "message frames todo: %u, fft frames todo: %u, input frames %u",
-        msg_todo, fft_todo, (size / frame_size));
+        msg_todo, fft_todo, (size / bpf));
     block_size = msg_todo;
-    if (block_size > (size / frame_size))
-      block_size = (size / frame_size);
+    if (block_size > (size / bpf))
+      block_size = (size / bpf);
     if (block_size > fft_todo)
       block_size = fft_todo;
 
@@ -1064,11 +923,11 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
       cd = &spectrum->channel_data[c];
       input = cd->input;
       /* Move the current frames into our ringbuffers */
-      input_data (data + c * width, input, block_size, channels, max_value,
+      input_data (data + c * bps, input, block_size, channels, max_value,
           input_pos, nfft);
     }
-    data += block_size * frame_size;
-    size -= block_size * frame_size;
+    data += block_size * bpf;
+    size -= block_size * bpf;
     input_pos = (input_pos + block_size) % nfft;
     spectrum->num_frames += block_size;
 

@@ -43,6 +43,14 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("audio/x-au")
     );
 
+#define GST_AU_PARSE_RAW_PAD_TEMPLATE_CAPS \
+    "audio/x-raw, "                         \
+    "format= (string) { S8, S16_LE, S16_BE, S24_3LE, S24_3BE, "  \
+                       "S32_LE, S32_BE, F32_LE, F32_BE, "        \
+                       "F64_LE, F64_BE }, " \
+    "rate = (int) [ 8000, 192000 ], "       \
+    "channels = (int) [ 1, 2 ]"
+
 #define GST_AU_PARSE_ALAW_PAD_TEMPLATE_CAPS \
     "audio/x-alaw, "                        \
     "rate = (int) [ 8000, 192000 ], "       \
@@ -61,8 +69,7 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_AUDIO_INT_PAD_TEMPLATE_CAPS "; "
-        GST_AUDIO_FLOAT_PAD_TEMPLATE_CAPS ";"
+    GST_STATIC_CAPS (GST_AU_PARSE_RAW_PAD_TEMPLATE_CAPS "; "
         GST_AU_PARSE_ALAW_PAD_TEMPLATE_CAPS ";"
         GST_AU_PARSE_MULAW_PAD_TEMPLATE_CAPS ";"
         GST_AU_PARSE_ADPCM_PAD_TEMPLATE_CAPS));
@@ -180,7 +187,9 @@ gst_au_parse_parse_header (GstAuParse * auparse)
   guint32 size;
   guint8 *head;
   gchar layout[7] = { 0, };
-  gint law = 0, depth = 0, ieee = 0;
+  GstAudioFormat format = GST_AUDIO_FORMAT_UNKNOWN;
+  gint law = 0;
+  guint endianness;
 
   head = (guint8 *) gst_adapter_map (auparse->adapter, 24);
   g_assert (head != NULL);
@@ -190,14 +199,14 @@ gst_au_parse_parse_header (GstAuParse * auparse)
   switch (GST_READ_UINT32_BE (head)) {
       /* normal format is big endian (au is a Sparc format) */
     case 0x2e736e64:{          /* ".snd" */
-      auparse->endianness = G_BIG_ENDIAN;
+      endianness = G_BIG_ENDIAN;
       break;
     }
       /* and of course, someone had to invent a little endian
        * version.  Used by DEC systems. */
     case 0x646e732e:           /* dns.                          */
     case 0x0064732e:{          /* other source say it is "dns." */
-      auparse->endianness = G_LITTLE_ENDIAN;
+      endianness = G_LITTLE_ENDIAN;
       break;
     }
     default:{
@@ -237,33 +246,50 @@ gst_au_parse_parse_header (GstAuParse * auparse)
   switch (auparse->encoding) {
     case 1:                    /* 8-bit ISDN mu-law G.711 */
       law = 1;
-      depth = 8;
       break;
     case 27:                   /* 8-bit ISDN  A-law G.711 */
       law = 2;
-      depth = 8;
       break;
 
-    case 2:                    /*  8-bit linear PCM */
-      depth = 8;
+    case 2:                    /*  8-bit linear PCM, FIXME signed? */
+      format = GST_AUDIO_FORMAT_S8;
+      auparse->sample_size = auparse->channels;
       break;
     case 3:                    /* 16-bit linear PCM */
-      depth = 16;
+      if (endianness == G_LITTLE_ENDIAN)
+        format = GST_AUDIO_FORMAT_S16_LE;
+      else
+        format = GST_AUDIO_FORMAT_S16_BE;
+      auparse->sample_size = auparse->channels * 2;
       break;
     case 4:                    /* 24-bit linear PCM */
-      depth = 24;
+      if (endianness == G_LITTLE_ENDIAN)
+        format = GST_AUDIO_FORMAT_S24_3LE;
+      else
+        format = GST_AUDIO_FORMAT_S24_3BE;
+      auparse->sample_size = auparse->channels * 3;
       break;
     case 5:                    /* 32-bit linear PCM */
-      depth = 32;
+      if (endianness == G_LITTLE_ENDIAN)
+        format = GST_AUDIO_FORMAT_S32_LE;
+      else
+        format = GST_AUDIO_FORMAT_S32_BE;
+      auparse->sample_size = auparse->channels * 4;
       break;
 
     case 6:                    /* 32-bit IEEE floating point */
-      ieee = 1;
-      depth = 32;
+      if (endianness == G_LITTLE_ENDIAN)
+        format = GST_AUDIO_FORMAT_F32_LE;
+      else
+        format = GST_AUDIO_FORMAT_F32_BE;
+      auparse->sample_size = auparse->channels * 4;
       break;
     case 7:                    /* 64-bit IEEE floating point */
-      ieee = 1;
-      depth = 64;
+      if (endianness == G_LITTLE_ENDIAN)
+        format = GST_AUDIO_FORMAT_F64_LE;
+      else
+        format = GST_AUDIO_FORMAT_F64_BE;
+      auparse->sample_size = auparse->channels * 8;
       break;
 
     case 23:                   /* 4-bit CCITT G.721   ADPCM 32kbps -> modplug/libsndfile (compressed 8-bit mu-law) */
@@ -308,27 +334,17 @@ gst_au_parse_parse_header (GstAuParse * auparse)
         "rate", G_TYPE_INT, auparse->samplerate,
         "channels", G_TYPE_INT, auparse->channels, NULL);
     auparse->sample_size = auparse->channels;
-  } else if (ieee) {
-    tempcaps = gst_caps_new_simple ("audio/x-raw-float",
+  } else if (format != GST_AUDIO_FORMAT_UNKNOWN) {
+    tempcaps = gst_caps_new_simple ("audio/x-raw",
+        "format", G_TYPE_STRING, gst_audio_format_to_string (format),
         "rate", G_TYPE_INT, auparse->samplerate,
-        "channels", G_TYPE_INT, auparse->channels,
-        "endianness", G_TYPE_INT, auparse->endianness,
-        "width", G_TYPE_INT, depth, NULL);
-    auparse->sample_size = auparse->channels * depth / 8;
+        "channels", G_TYPE_INT, auparse->channels, NULL);
   } else if (layout[0]) {
     tempcaps = gst_caps_new_simple ("audio/x-adpcm",
         "layout", G_TYPE_STRING, layout, NULL);
     auparse->sample_size = 0;
-  } else {
-    tempcaps = gst_caps_new_simple ("audio/x-raw-int",
-        "rate", G_TYPE_INT, auparse->samplerate,
-        "channels", G_TYPE_INT, auparse->channels,
-        "endianness", G_TYPE_INT, auparse->endianness,
-        "depth", G_TYPE_INT, depth, "width", G_TYPE_INT, depth,
-        /* FIXME: signed TRUE even for 8-bit PCM? */
-        "signed", G_TYPE_BOOLEAN, TRUE, NULL);
-    auparse->sample_size = auparse->channels * depth / 8;
-  }
+  } else
+    goto unknown_format;
 
   GST_DEBUG_OBJECT (auparse, "sample_size=%d", auparse->sample_size);
 

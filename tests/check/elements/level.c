@@ -33,23 +33,16 @@ gboolean have_eos = FALSE;
 GstPad *mysrcpad, *mysinkpad;
 
 #define LEVEL_CAPS_TEMPLATE_STRING \
-  "audio/x-raw-int, " \
+  "audio/x-raw, " \
+    "format = (string) { S8, "GST_AUDIO_NE(S16)" }, " \
     "rate = (int) [ 1, MAX ], " \
-    "channels = (int) [ 1, 8 ], " \
-    "endianness = (int) BYTE_ORDER, " \
-    "width = (int) {8, 16}, " \
-    "depth = (int) {8, 16}, " \
-    "signed = (boolean) true"
+    "channels = (int) [ 1, 8 ]"
 
 #define LEVEL_CAPS_STRING \
-  "audio/x-raw-int, " \
+  "audio/x-raw, " \
+    "format = (string) "GST_AUDIO_NE(S16)", " \
     "rate = (int) 1000, " \
-    "channels = (int) 2, " \
-    "endianness = (int) BYTE_ORDER, " \
-    "width = (int) 16, " \
-    "depth = (int) 16, " \
-    "signed = (boolean) true"
-
+    "channels = (int) 2"
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,

@@ -169,53 +169,34 @@ static GstStructure *
 gst_oss_helper_get_format_structure (unsigned int format_bit)
 {
   GstStructure *structure;
-  int endianness;
-  gboolean sign;
-  int width;
+  const gchar *format;
 
   switch (format_bit) {
     case AFMT_U8:
-      endianness = 0;
-      sign = FALSE;
-      width = 8;
+      format = "U8";
       break;
     case AFMT_S16_LE:
-      endianness = G_LITTLE_ENDIAN;
-      sign = TRUE;
-      width = 16;
+      format = "S16_LE";
       break;
     case AFMT_S16_BE:
-      endianness = G_BIG_ENDIAN;
-      sign = TRUE;
-      width = 16;
+      format = "S16_BE";
       break;
     case AFMT_S8:
-      endianness = 0;
-      sign = TRUE;
-      width = 8;
+      format = "S8";
       break;
     case AFMT_U16_LE:
-      endianness = G_LITTLE_ENDIAN;
-      sign = FALSE;
-      width = 16;
+      format = "U16_LE";
       break;
     case AFMT_U16_BE:
-      endianness = G_BIG_ENDIAN;
-      sign = FALSE;
-      width = 16;
+      format = "U16_BE";
       break;
     default:
       g_assert_not_reached ();
       return NULL;
   }
 
-  structure = gst_structure_new ("audio/x-raw-int",
-      "width", G_TYPE_INT, width,
-      "depth", G_TYPE_INT, width, "signed", G_TYPE_BOOLEAN, sign, NULL);
-
-  if (endianness) {
-    gst_structure_set (structure, "endianness", G_TYPE_INT, endianness, NULL);
-  }
+  structure = gst_structure_new ("audio/x-raw",
+      "format", G_TYPE_STRING, format, NULL);
 
   return structure;
 }

@@ -52,14 +52,14 @@
 GST_DEBUG_CATEGORY_STATIC (speexenc_debug);
 #define GST_CAT_DEFAULT speexenc_debug
 
+#define FORMAT_STR GST_AUDIO_NE(S16)
+
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, "
-        "rate = (int) [ 6000, 48000 ], "
-        "channels = (int) [ 1, 2 ], "
-        "endianness = (int) BYTE_ORDER, "
-        "signed = (boolean) TRUE, " "width = (int) 16, " "depth = (int) 16")
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) " FORMAT_STR ", "
+        "rate = (int) [ 6000, 48000 ], " "channels = (int) [ 1, 2 ]")
     );
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",

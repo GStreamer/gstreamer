@@ -46,6 +46,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <gst/tag/tag.h>
+#include <gst/audio/audio.h>
 
 GST_DEBUG_CATEGORY_STATIC (speexdec_debug);
 #define GST_CAT_DEFAULT speexdec_debug
@@ -58,15 +59,15 @@ enum
   ARG_ENH
 };
 
+#define FORMAT_STR GST_AUDIO_NE(S16)
+
 static GstStaticPadTemplate speex_dec_src_factory =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, "
-        "rate = (int) [ 6000, 48000 ], "
-        "channels = (int) [ 1, 2 ], "
-        "endianness = (int) BYTE_ORDER, "
-        "signed = (boolean) true, " "width = (int) 16, " "depth = (int) 16")
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) " FORMAT_STR ", "
+        "rate = (int) [ 6000, 48000 ], " "channels = (int) [ 1, 2 ]")
     );
 
 static GstStaticPadTemplate speex_dec_sink_factory =
@@ -597,12 +598,10 @@ speex_dec_chain_parse_header (GstSpeexDec * dec, GstBuffer * buf)
   speex_bits_init (&dec->bits);
 
   /* set caps */
-  caps = gst_caps_new_simple ("audio/x-raw-int",
+  caps = gst_caps_new_simple ("audio/x-raw",
+      "format", G_TYPE_STRING, FORMAT_STR,
       "rate", G_TYPE_INT, dec->header->rate,
-      "channels", G_TYPE_INT, dec->header->nb_channels,
-      "signed", G_TYPE_BOOLEAN, TRUE,
-      "endianness", G_TYPE_INT, G_BYTE_ORDER,
-      "width", G_TYPE_INT, 16, "depth", G_TYPE_INT, 16, NULL);
+      "channels", G_TYPE_INT, dec->header->nb_channels, NULL);
 
   if (!gst_pad_set_caps (dec->srcpad, caps))
     goto nego_failed;

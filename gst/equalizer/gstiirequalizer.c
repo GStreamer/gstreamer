@@ -43,22 +43,15 @@ static void gst_iir_equalizer_child_proxy_interface_init (gpointer g_iface,
 static void gst_iir_equalizer_finalize (GObject * object);
 
 static gboolean gst_iir_equalizer_setup (GstAudioFilter * filter,
-    GstRingBufferSpec * fmt);
+    GstAudioInfo * info);
 static GstFlowReturn gst_iir_equalizer_transform_ip (GstBaseTransform * btrans,
     GstBuffer * buf);
 
 #define ALLOWED_CAPS \
-    "audio/x-raw-int,"                                                \
-    " depth=(int)16,"                                                 \
-    " width=(int)16,"                                                 \
-    " endianness=(int)BYTE_ORDER,"                                    \
-    " signed=(bool)TRUE,"                                             \
-    " rate=(int)[1000,MAX],"                                          \
-    " channels=(int)[1,MAX]; "                                        \
-    "audio/x-raw-float,"                                              \
-    " width=(int) { 32, 64 } ,"                                       \
-    " endianness=(int)BYTE_ORDER,"                                    \
-    " rate=(int)[1000,MAX],"                                          \
+    "audio/x-raw,"                                                \
+    " format=(string) {"GST_AUDIO_NE(S16)","GST_AUDIO_NE(F32)","  \
+                        GST_AUDIO_NE(F64)" }, "                   \
+    " rate=(int)[1000,MAX],"                                      \
     " channels=(int)[1,MAX]"
 
 #define gst_iir_equalizer_parent_class parent_class
@@ -465,15 +458,17 @@ calculate_bw (GstIirEqualizerBand * band, gint rate)
 static void
 setup_peak_filter (GstIirEqualizer * equ, GstIirEqualizerBand * band)
 {
-  g_return_if_fail (GST_AUDIO_FILTER (equ)->format.rate);
+  gint rate = GST_AUDIO_FILTER_RATE (equ);
+
+  g_return_if_fail (rate);
 
   {
     gdouble gain, omega, bw;
     gdouble alpha, alpha1, alpha2, b0;
 
     gain = arg_to_scale (band->gain);
-    omega = calculate_omega (band->freq, GST_AUDIO_FILTER (equ)->format.rate);
-    bw = calculate_bw (band, GST_AUDIO_FILTER (equ)->format.rate);
+    omega = calculate_omega (band->freq, rate);
+    bw = calculate_bw (band, rate);
     if (bw == 0.0)
       goto out;
 
@@ -501,7 +496,9 @@ setup_peak_filter (GstIirEqualizer * equ, GstIirEqualizerBand * band)
 static void
 setup_low_shelf_filter (GstIirEqualizer * equ, GstIirEqualizerBand * band)
 {
-  g_return_if_fail (GST_AUDIO_FILTER (equ)->format.rate);
+  gint rate = GST_AUDIO_FILTER_RATE (equ);
+
+  g_return_if_fail (rate);
 
   {
     gdouble gain, omega, bw;
@@ -509,8 +506,8 @@ setup_low_shelf_filter (GstIirEqualizer * equ, GstIirEqualizerBand * band)
     gdouble egp, egm;
 
     gain = arg_to_scale (band->gain);
-    omega = calculate_omega (band->freq, GST_AUDIO_FILTER (equ)->format.rate);
-    bw = calculate_bw (band, GST_AUDIO_FILTER (equ)->format.rate);
+    omega = calculate_omega (band->freq, rate);
+    bw = calculate_bw (band, rate);
     if (bw == 0.0)
       goto out;
 
@@ -539,7 +536,9 @@ setup_low_shelf_filter (GstIirEqualizer * equ, GstIirEqualizerBand * band)
 static void
 setup_high_shelf_filter (GstIirEqualizer * equ, GstIirEqualizerBand * band)
 {
-  g_return_if_fail (GST_AUDIO_FILTER (equ)->format.rate);
+  gint rate = GST_AUDIO_FILTER_RATE (equ);
+
+  g_return_if_fail (rate);
 
   {
     gdouble gain, omega, bw;
@@ -547,8 +546,8 @@ setup_high_shelf_filter (GstIirEqualizer * equ, GstIirEqualizerBand * band)
     gdouble egp, egm;
 
     gain = arg_to_scale (band->gain);
-    omega = calculate_omega (band->freq, GST_AUDIO_FILTER (equ)->format.rate);
-    bw = calculate_bw (band, GST_AUDIO_FILTER (equ)->format.rate);
+    omega = calculate_omega (band->freq, rate);
+    bw = calculate_bw (band, rate);
     if (bw == 0.0)
       goto out;
 
@@ -614,7 +613,7 @@ alloc_history (GstIirEqualizer * equ)
   /* free + alloc = no memcpy */
   g_free (equ->history);
   equ->history =
-      g_malloc0 (equ->history_size * GST_AUDIO_FILTER (equ)->format.channels *
+      g_malloc0 (equ->history_size * GST_AUDIO_FILTER_CHANNELS (equ) *
       equ->freq_band_count);
 }
 
@@ -819,8 +818,9 @@ gst_iir_equalizer_transform_ip (GstBaseTransform * btrans, GstBuffer * buf)
   GstClockTime timestamp;
   guint8 *data;
   gsize size;
+  gint channels = GST_AUDIO_FILTER_CHANNELS (filter);
 
-  if (G_UNLIKELY (filter->format.channels < 1 || equ->process == NULL))
+  if (G_UNLIKELY (channels < 1 || equ->process == NULL))
     return GST_FLOW_NOT_NEGOTIATED;
 
   BANDS_LOCK (equ);
@@ -841,41 +841,29 @@ gst_iir_equalizer_transform_ip (GstBaseTransform * btrans, GstBuffer * buf)
     gst_object_sync_values (G_OBJECT (equ), timestamp);
 
   data = gst_buffer_map (buf, &size, NULL, GST_MAP_WRITE);
-  equ->process (equ, data, size, filter->format.channels);
+  equ->process (equ, data, size, channels);
   gst_buffer_unmap (buf, data, size);
 
   return GST_FLOW_OK;
 }
 
 static gboolean
-gst_iir_equalizer_setup (GstAudioFilter * audio, GstRingBufferSpec * fmt)
+gst_iir_equalizer_setup (GstAudioFilter * audio, GstAudioInfo * info)
 {
   GstIirEqualizer *equ = GST_IIR_EQUALIZER (audio);
 
-  switch (fmt->type) {
-    case GST_BUFTYPE_LINEAR:
-      switch (fmt->width) {
-        case 16:
-          equ->history_size = history_size_gint16;
-          equ->process = gst_iir_equ_process_gint16;
-          break;
-        default:
-          return FALSE;
-      }
+  switch (GST_AUDIO_INFO_FORMAT (info)) {
+    case GST_AUDIO_FORMAT_S16:
+      equ->history_size = history_size_gint16;
+      equ->process = gst_iir_equ_process_gint16;
       break;
-    case GST_BUFTYPE_FLOAT:
-      switch (fmt->width) {
-        case 32:
-          equ->history_size = history_size_gfloat;
-          equ->process = gst_iir_equ_process_gfloat;
-          break;
-        case 64:
-          equ->history_size = history_size_gdouble;
-          equ->process = gst_iir_equ_process_gdouble;
-          break;
-        default:
-          return FALSE;
-      }
+    case GST_AUDIO_FORMAT_F32:
+      equ->history_size = history_size_gfloat;
+      equ->process = gst_iir_equ_process_gfloat;
+      break;
+    case GST_AUDIO_FORMAT_F64:
+      equ->history_size = history_size_gdouble;
+      equ->process = gst_iir_equ_process_gdouble;
       break;
     default:
       return FALSE;

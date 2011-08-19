@@ -95,7 +95,7 @@ main (int argc, char *argv[])
 
   gst_bin_add_many (GST_BIN (bin), src, audioconvert, spectrum, sink, NULL);
 
-  caps = gst_caps_new_simple ("audio/x-raw-int",
+  caps = gst_caps_new_simple ("audio/x-raw",
       "rate", G_TYPE_INT, AUDIOFREQ, NULL);
 
   if (!gst_element_link (src, audioconvert) ||
