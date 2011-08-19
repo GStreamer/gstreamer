@@ -1978,7 +1978,7 @@ main (int argc, char **argv)
   g_signal_connect (hscale, "format_value", G_CALLBACK (format_value),
       pipeline);
 
-  if (pipeline_type == 16) {
+  if (pipeline_type == 0) {
     /* the playbin2 panel controls for the video/audio/subtitle tracks */
     panel = gtk_hbox_new (FALSE, 0);
     video_combo = gtk_combo_box_text_new ();
