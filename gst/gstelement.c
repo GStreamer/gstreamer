@@ -1047,8 +1047,8 @@ _gst_element_request_pad (GstElement * element, GstPadTemplate * templ,
  * @element: a #GstElement to find a request pad of.
  * @name: the name of the request #GstPad to retrieve.
  *
- * Retrieves a pad from the element by name. This version only retrieves
- * request pads. The pad should be released with
+ * Retrieves a pad from the element by name (e.g. "src_%d"). This version only
+ * retrieves request pads. The pad should be released with
  * gst_element_release_request_pad().
  *
  * This method is slow and will be deprecated in the future. New code should
