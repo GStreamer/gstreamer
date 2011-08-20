@@ -231,8 +231,7 @@ gst_rtsp_transport_get_mime (GstRTSPTransMode trans, const gchar ** mime)
  * @manager: location to hold the result
  * @option: option index.
  *
- * Get the #GStreamer element that can handle the buffers transported over
- * @trans.
+ * Get the #GstElement that can handle the buffers transported over @trans.
  *
  * It is possible that there are several managers available, use @option to
  * selected one.

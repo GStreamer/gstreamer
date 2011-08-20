@@ -284,7 +284,7 @@ gst_rtp_buffer_calc_payload_len (guint packet_len, guint8 pad_len,
       - pad_len;
 }
 
-/**
+/*
  * validate_data:
  * @data: the data to validate
  * @len: the length of @data to validate
@@ -401,7 +401,7 @@ gst_rtp_buffer_validate_data (guint8 * data, guint len)
  * @buffer: the buffer to validate
  *
  * Check if the data pointed to by @buffer is a valid RTP packet using
- * validate_data().
+ * gst_rtp_buffer_validate_data().
  * Use this function to validate a packet before using the other functions in
  * this module.
  *
@@ -425,7 +425,7 @@ gst_rtp_buffer_validate (GstBuffer * buffer)
  * gst_rtp_buffer_list_validate:
  * @list: the buffer list to validate
  *
- * Check if all RTP packets in the @list are valid using validate_data().
+ * Check if all RTP packets in the @list are valid using gst_rtp_buffer_validate_data().
  * Use this function to validate an list before using the other functions in
  * this module.
  *

@@ -188,6 +188,7 @@
       <xi:include href="xml/gsttag.xml" />
       <xi:include href="xml/gsttagvorbis.xml" />
       <xi:include href="xml/gsttagid3.xml" />
+      <xi:include href="xml/gsttagexif.xml" />
       <xi:include href="xml/gsttagxmp.xml" />
       <xi:include href="xml/gsttagxmpwriter.xml" />
       <xi:include href="xml/gsttagdemux.xml" />

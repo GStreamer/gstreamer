@@ -486,7 +486,7 @@ gst_navigation_query_parse_angles (GstQuery * query, guint * cur_angle,
  * Check a bus message to see if it is a #GstNavigation event, and return
  * the #GstNavigationMessageType identifying the type of the message if so.
  *
- * Returns: The type of the #GstNavigationMessage, or
+ * Returns: The type of the #GstMessage, or
  * #GST_NAVIGATION_MESSAGE_INVALID if the message is not a #GstNavigation
  * notification.
  *

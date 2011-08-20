@@ -399,7 +399,7 @@ gst_x_overlay_set_window_handle (GstXOverlay * overlay, guintptr handle)
 /**
  * gst_x_overlay_got_xwindow_id:
  * @overlay: a #GstXOverlay which got a XWindow.
- * @xwindow_id: a #XID referencing the XWindow.
+ * @xwindow_id: a XID referencing the XWindow.
  *
  * This will post a "have-xwindow-id" element message on the bus.
  *
