@@ -22,14 +22,10 @@
  * @short_description: utility functions for Creative Commons licenses
  * @see_also: #GstTagList
  *
- * <refsect2>
- * <para>
  * Provides information about Creative Commons media licenses, which are
  * often expressed in media files as a license URI in tags. Also useful
  * for applications creating media files, in case the user wants to license
  * the content under a Creative Commons license.
- * </para>
- * </refsect2>
  */
 
 /* FIXME: add API to check obsolete-ness / replace-by */
