@@ -107,7 +107,7 @@ struct _GstVideoSink {
  * @parent_class: the parent class structure
  * @show_frame: render a video frame. Maps to #GstBaseSinkClass.render() and
  *     #GstBaseSinkClass.preroll() vfuncs. Rendering during preroll will be
- *     suppressed if the GstVideoSink::show-preroll-frame property is set to 
+ *     suppressed if the #GstVideoSink:show-preroll-frame property is set to 
  *     %FALSE. Since: 0.10.25
  *
  * The video sink class structure. Derived classes should override the
