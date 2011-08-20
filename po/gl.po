@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.31.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-04-16 15:41+0100\n"
+"POT-Creation-Date: 2011-08-20 12:18+0100\n"
 "PO-Revision-Date: 2011-01-09 21:20+0100\n"
 "Last-Translator: Fran Diéguez <frandieguez@ubuntu.com>\n"
 "Language-Team: Galician <proxecto@trasno.net>\n"
@@ -413,6 +413,12 @@ msgstr "ppi vertical da imaxe"
 
 msgid "Media (image/video) intended vertical pixel density in ppi"
 msgstr "Densidade vertical de píxeles, en ppi, do medio (imaxe ou vídeo)"
+
+msgid "ID3v2 frame"
+msgstr ""
+
+msgid "unparsed id3v2 tag frame"
+msgstr ""
 
 msgid "This CD has no audio tracks"
 msgstr "Este CD non contén pistas de son"
