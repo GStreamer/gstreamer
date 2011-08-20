@@ -1756,13 +1756,6 @@ GstTagEntryMatch
 </SECTION>
 
 <SECTION>
-<FILE>gsttaglicenses</FILE>
-<SUBSECTION Standard>
-gst_tag_license_flags_get_type
-</SECTION>
-
-
-<SECTION>
 <FILE>gsttagvorbis</FILE>
 <INCLUDE>gst/tag/tag.h</INCLUDE>
 <SUBSECTION>
