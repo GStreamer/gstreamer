@@ -601,8 +601,8 @@ gst_channel_mix_setup_matrix (AudioConvertCtx * this)
   gst_channel_mix_unset_matrix (this);
 
   /* temp storage */
-  if (GST_AUDIO_FORMAT_INFO_IS_INT (this->in.finfo) ||
-      GST_AUDIO_FORMAT_INFO_IS_INT (this->out.finfo)) {
+  if (GST_AUDIO_FORMAT_INFO_IS_INTEGER (this->in.finfo) ||
+      GST_AUDIO_FORMAT_INFO_IS_INTEGER (this->out.finfo)) {
     this->tmp = (gpointer) g_new (gint32, this->out.channels);
   } else {
     this->tmp = (gpointer) g_new (gdouble, this->out.channels);

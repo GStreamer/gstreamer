@@ -142,7 +142,7 @@ typedef struct _GstAudioInfo GstAudioInfo;
 
 /**
  * GstAudioFormatFlags:
- * @GST_AUDIO_FORMAT_FLAG_INT: int samples
+ * @GST_AUDIO_FORMAT_FLAG_INTEGER: integer samples
  * @GST_AUDIO_FORMAT_FLAG_FLOAT: float samples
  * @GST_AUDIO_FORMAT_FLAG_SIGNED: signed samples
  * @GST_AUDIO_FORMAT_FLAG_COMPLEX: complex layout
@@ -151,7 +151,7 @@ typedef struct _GstAudioInfo GstAudioInfo;
  */
 typedef enum
 {
-  GST_AUDIO_FORMAT_FLAG_INT      = (1 << 0),
+  GST_AUDIO_FORMAT_FLAG_INTEGER  = (1 << 0),
   GST_AUDIO_FORMAT_FLAG_FLOAT    = (1 << 1),
   GST_AUDIO_FORMAT_FLAG_SIGNED   = (1 << 2),
   GST_AUDIO_FORMAT_FLAG_COMPLEX  = (1 << 4)
@@ -217,7 +217,7 @@ struct _GstAudioFormatInfo {
 #define GST_AUDIO_FORMAT_INFO_NAME(info)         ((info)->name)
 #define GST_AUDIO_FORMAT_INFO_FLAGS(info)        ((info)->flags)
 
-#define GST_AUDIO_FORMAT_INFO_IS_INT(info)       ((info)->flags & GST_AUDIO_FORMAT_FLAG_INT)
+#define GST_AUDIO_FORMAT_INFO_IS_INTEGER(info)   ((info)->flags & GST_AUDIO_FORMAT_FLAG_INTEGER)
 #define GST_AUDIO_FORMAT_INFO_IS_FLOAT(info)     ((info)->flags & GST_AUDIO_FORMAT_FLAG_FLOAT)
 #define GST_AUDIO_FORMAT_INFO_IS_SIGNED(info)    ((info)->flags & GST_AUDIO_FORMAT_FLAG_SIGNED)
 
@@ -228,16 +228,17 @@ struct _GstAudioFormatInfo {
 #define GST_AUDIO_FORMAT_INFO_DEPTH(info)        ((info)->depth)
 
 
-GstAudioFormat gst_audio_format_build_int         (gboolean sign, gint endianness,
-                                                   gint width, gint depth) G_GNUC_CONST;
+GstAudioFormat gst_audio_format_build_integer    (gboolean sign, gint endianness,
+                                                  gint width, gint depth) G_GNUC_CONST;
 
-GstAudioFormat gst_audio_format_from_string       (const gchar *format) G_GNUC_CONST;
-const gchar *  gst_audio_format_to_string         (GstAudioFormat format) G_GNUC_CONST;
+GstAudioFormat gst_audio_format_from_string      (const gchar *format) G_GNUC_CONST;
+const gchar *  gst_audio_format_to_string        (GstAudioFormat format) G_GNUC_CONST;
+
 const GstAudioFormatInfo *
-               gst_audio_format_get_info          (GstAudioFormat format) G_GNUC_CONST;
+               gst_audio_format_get_info         (GstAudioFormat format) G_GNUC_CONST;
 
-void           gst_audio_format_fill_silence      (const GstAudioFormatInfo *info,
-                                                   gpointer dest, gsize length);
+void           gst_audio_format_fill_silence     (const GstAudioFormatInfo *info,
+                                                  gpointer dest, gsize length);
 /**
  * GstAudioFlags:
  * @GST_AUDIO_FLAG_NONE: no valid flag
@@ -375,18 +376,8 @@ GstCaps *    gst_audio_info_to_caps     (GstAudioInfo *info);
  * handling
  */
 
-/* get byte size of audio frame (based on caps of pad */
-int      gst_audio_frame_byte_size      (GstPad* pad);
-
-/* get length in frames of buffer */
-long     gst_audio_frame_length         (GstPad* pad, GstBuffer* buf);
-
-GstClockTime gst_audio_duration_from_pad_buffer (GstPad * pad, GstBuffer * buf);
-
-/* check if the buffer size is a whole multiple of the frame size */
-gboolean gst_audio_is_buffer_framed     (GstPad* pad, GstBuffer* buf);
-
-GstBuffer *gst_audio_buffer_clip (GstBuffer *buffer, GstSegment *segment, gint rate, gint frame_size);
+GstBuffer *    gst_audio_buffer_clip     (GstBuffer *buffer, GstSegment *segment,
+                                          gint rate, gint bpf);
 
 G_END_DECLS
 

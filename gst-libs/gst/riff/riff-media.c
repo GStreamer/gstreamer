@@ -1153,7 +1153,8 @@ gst_riff_create_audio_caps (guint16 codec_id,
         /* For reference, the actual depth is in strf->size */
         ws = wd;
 
-        format = gst_audio_format_build_int (wd != 8, G_LITTLE_ENDIAN, wd, ws);
+        format =
+            gst_audio_format_build_integer (wd != 8, G_LITTLE_ENDIAN, wd, ws);
 
         caps = gst_caps_new_simple ("audio/x-raw",
             "format", G_TYPE_STRING, gst_audio_format_to_string (format),
@@ -1516,7 +1517,8 @@ gst_riff_create_audio_caps (guint16 codec_id,
              *   ws = valid_bits_per_sample; */
 
             format =
-                gst_audio_format_build_int (wd != 8, G_LITTLE_ENDIAN, wd, ws);
+                gst_audio_format_build_integer (wd != 8, G_LITTLE_ENDIAN, wd,
+                ws);
 
             caps = gst_caps_new_simple ("audio/x-raw",
                 "format", G_TYPE_STRING, gst_audio_format_to_string (format),

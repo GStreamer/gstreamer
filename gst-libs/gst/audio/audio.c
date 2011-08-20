@@ -34,8 +34,8 @@
 
 #include <gst/gststructure.h>
 
-#define SINT (GST_AUDIO_FORMAT_FLAG_INT | GST_AUDIO_FORMAT_FLAG_SIGNED)
-#define UINT (GST_AUDIO_FORMAT_FLAG_INT)
+#define SINT (GST_AUDIO_FORMAT_FLAG_INTEGER | GST_AUDIO_FORMAT_FLAG_SIGNED)
+#define UINT (GST_AUDIO_FORMAT_FLAG_INTEGER)
 
 #define MAKE_FORMAT(str,flags,end,width,depth,silent) \
   { GST_AUDIO_FORMAT_ ##str, G_STRINGIFY(str), flags, end, width, depth, silent }
@@ -114,7 +114,7 @@ static GstAudioFormatInfo formats[] = {
  * exists with the given parameters.
  */
 GstAudioFormat
-gst_audio_format_build_int (gboolean sign, gint endianness,
+gst_audio_format_build_integer (gboolean sign, gint endianness,
     gint width, gint depth)
 {
   gint i, e;
@@ -123,7 +123,7 @@ gst_audio_format_build_int (gboolean sign, gint endianness,
     GstAudioFormatInfo *finfo = &formats[i];
 
     /* must be int */
-    if (!GST_AUDIO_FORMAT_INFO_IS_INT (finfo))
+    if (!GST_AUDIO_FORMAT_INFO_IS_INTEGER (finfo))
       continue;
     /* width and depth must match */
     if (width != GST_AUDIO_FORMAT_INFO_WIDTH (finfo))
@@ -196,7 +196,7 @@ gst_audio_format_get_info (GstAudioFormat format)
  * gst_audio_format_fill_silence:
  * @info: a #GstAudioFormatInfo
  * @dest: a destination to fill
- * @lenfth: the length to fill
+ * @length: the length to fill
  *
  * Fill @length bytes in @dest with silence samples for @info.
  */
@@ -363,7 +363,8 @@ no_channels:
  *
  * Convert the values of @info into a #GstCaps.
  *
- * Returns: a new #GstCaps containing the info of @info.
+ * Returns: (transfer full): the new #GstCaps containing the
+ *          info of @info.
  */
 GstCaps *
 gst_audio_info_to_caps (GstAudioInfo * info)
@@ -409,170 +410,31 @@ gst_audio_info_to_caps (GstAudioInfo * info)
   return caps;
 }
 
-
-/**
- * gst_audio_frame_byte_size:
- * @pad: the #GstPad to get the caps from
- *
- * Calculate byte size of an audio frame.
- *
- * Returns: the byte size, or 0 if there was an error
- */
-int
-gst_audio_frame_byte_size (GstPad * pad)
-{
-  /* FIXME: this should be moved closer to the gstreamer core
-   * and be implemented for every mime type IMO
-   */
-
-  int width = 0;
-  int channels = 0;
-  GstCaps *caps;
-  GstStructure *structure;
-
-  /* get caps of pad */
-  caps = gst_pad_get_current_caps (pad);
-
-  if (caps == NULL)
-    goto no_caps;
-
-  structure = gst_caps_get_structure (caps, 0);
-
-  gst_structure_get_int (structure, "width", &width);
-  gst_structure_get_int (structure, "channels", &channels);
-  gst_caps_unref (caps);
-
-  return (width / 8) * channels;
-
-  /* ERRORS */
-no_caps:
-  {
-    /* ERROR: could not get caps of pad */
-    g_warning ("gstaudio: could not get caps of pad %s:%s\n",
-        GST_DEBUG_PAD_NAME (pad));
-    return 0;
-  }
-}
-
-/**
- * gst_audio_frame_length:
- * @pad: the #GstPad to get the caps from
- * @buf: the #GstBuffer
- *
- * Calculate length of buffer in frames.
- *
- * Returns: 0 if there's an error, or the number of frames if everything's ok
- */
-long
-gst_audio_frame_length (GstPad * pad, GstBuffer * buf)
-{
-  /* FIXME: this should be moved closer to the gstreamer core
-   * and be implemented for every mime type IMO
-   */
-  int frame_byte_size = 0;
-
-  frame_byte_size = gst_audio_frame_byte_size (pad);
-  if (frame_byte_size == 0)
-    /* error */
-    return 0;
-  /* FIXME: this function assumes the buffer size to be a whole multiple
-   *        of the frame byte size
-   */
-  return gst_buffer_get_size (buf) / frame_byte_size;
-}
-
-/**
- * gst_audio_duration_from_pad_buffer:
- * @pad: the #GstPad to get the caps from
- * @buf: the #GstBuffer
- *
- * Calculate length in nanoseconds of audio buffer @buf based on capabilities of
- * @pad.
- *
- * Returns: the length.
- */
-GstClockTime
-gst_audio_duration_from_pad_buffer (GstPad * pad, GstBuffer * buf)
-{
-  long bytes = 0;
-  int width = 0;
-  int channels = 0;
-  int rate = 0;
-  GstCaps *caps;
-  GstStructure *structure;
-
-  g_assert (GST_IS_BUFFER (buf));
-
-  /* get caps of pad */
-  caps = gst_pad_get_current_caps (pad);
-  if (caps == NULL)
-    goto no_caps;
-
-  structure = gst_caps_get_structure (caps, 0);
-  bytes = gst_buffer_get_size (buf);
-  gst_structure_get_int (structure, "width", &width);
-  gst_structure_get_int (structure, "channels", &channels);
-  gst_structure_get_int (structure, "rate", &rate);
-  gst_caps_unref (caps);
-
-  g_assert (bytes != 0);
-  g_assert (width != 0);
-  g_assert (channels != 0);
-  g_assert (rate != 0);
-
-  return (bytes * 8 * GST_SECOND) / (rate * channels * width);
-
-  /* ERRORS */
-no_caps:
-  {
-    /* ERROR: could not get caps of pad */
-    g_warning ("gstaudio: could not get caps of pad %s:%s\n",
-        GST_DEBUG_PAD_NAME (pad));
-    return GST_CLOCK_TIME_NONE;
-  }
-}
-
-/**
- * gst_audio_is_buffer_framed:
- * @pad: the #GstPad to get the caps from
- * @buf: the #GstBuffer
- *
- * Check if the buffer size is a whole multiple of the frame size.
- *
- * Returns: %TRUE if buffer size is multiple.
- */
-gboolean
-gst_audio_is_buffer_framed (GstPad * pad, GstBuffer * buf)
-{
-  if (gst_buffer_get_size (buf) % gst_audio_frame_byte_size (pad) == 0)
-    return TRUE;
-  else
-    return FALSE;
-}
-
 /**
  * gst_audio_buffer_clip:
  * @buffer: The buffer to clip.
- * @segment: Segment in %GST_FORMAT_TIME or %GST_FORMAT_DEFAULT to which the buffer should be clipped.
+ * @segment: Segment in %GST_FORMAT_TIME or %GST_FORMAT_DEFAULT to which
+ *           the buffer should be clipped.
  * @rate: sample rate.
- * @frame_size: size of one audio frame in bytes.
+ * @bpf: size of one audio frame in bytes. This is the size of one sample
+ * * channels.
  *
  * Clip the the buffer to the given %GstSegment.
  *
- * After calling this function the caller does not own a reference to 
+ * After calling this function the caller does not own a reference to
  * @buffer anymore.
  *
  * Returns: %NULL if the buffer is completely outside the configured segment,
  * otherwise the clipped buffer is returned.
  *
  * If the buffer has no timestamp, it is assumed to be inside the segment and
- * is not clipped 
+ * is not clipped
  *
  * Since: 0.10.14
  */
 GstBuffer *
 gst_audio_buffer_clip (GstBuffer * buffer, GstSegment * segment, gint rate,
-    gint frame_size)
+    gint bpf)
 {
   GstBuffer *ret;
   GstClockTime timestamp = GST_CLOCK_TIME_NONE, duration = GST_CLOCK_TIME_NONE;
@@ -602,7 +464,7 @@ gst_audio_buffer_clip (GstBuffer * buffer, GstSegment * segment, gint rate,
     duration = GST_BUFFER_DURATION (buffer);
   } else {
     change_duration = FALSE;
-    duration = gst_util_uint64_scale (size / frame_size, GST_SECOND, rate);
+    duration = gst_util_uint64_scale (size / bpf, GST_SECOND, rate);
   }
 
   if (GST_BUFFER_OFFSET_IS_VALID (buffer)) {
@@ -616,7 +478,7 @@ gst_audio_buffer_clip (GstBuffer * buffer, GstSegment * segment, gint rate,
     offset_end = GST_BUFFER_OFFSET_END (buffer);
   } else {
     change_offset_end = FALSE;
-    offset_end = offset + size / frame_size;
+    offset_end = offset + size / bpf;
   }
 
   if (segment->format == GST_FORMAT_TIME) {
@@ -640,8 +502,8 @@ gst_audio_buffer_clip (GstBuffer * buffer, GstSegment * segment, gint rate,
         diff = gst_util_uint64_scale (diff, rate, GST_SECOND);
         if (change_offset)
           offset += diff;
-        trim += diff * frame_size;
-        size -= diff * frame_size;
+        trim += diff * bpf;
+        size -= diff * bpf;
       }
 
       diff = stop - cstop;
@@ -652,7 +514,7 @@ gst_audio_buffer_clip (GstBuffer * buffer, GstSegment * segment, gint rate,
         diff = gst_util_uint64_scale (diff, rate, GST_SECOND);
         if (change_offset_end)
           offset_end -= diff;
-        size -= diff * frame_size;
+        size -= diff * bpf;
       }
     } else {
       gst_buffer_unref (buffer);
@@ -679,8 +541,8 @@ gst_audio_buffer_clip (GstBuffer * buffer, GstSegment * segment, gint rate,
         if (change_duration)
           duration -= gst_util_uint64_scale (diff, GST_SECOND, rate);
 
-        trim += diff * frame_size;
-        size -= diff * frame_size;
+        trim += diff * bpf;
+        size -= diff * bpf;
       }
 
       diff = stop - cstop;
@@ -690,7 +552,7 @@ gst_audio_buffer_clip (GstBuffer * buffer, GstSegment * segment, gint rate,
         if (change_duration)
           duration -= gst_util_uint64_scale (diff, GST_SECOND, rate);
 
-        size -= diff * frame_size;
+        size -= diff * bpf;
       }
     } else {
       gst_buffer_unref (buffer);

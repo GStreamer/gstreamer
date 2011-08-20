@@ -557,8 +557,8 @@ static AudioConvertPack pack_funcs[] = {
 };
 
 #define DOUBLE_INTERMEDIATE_FORMAT(ctx)                   \
-    ((!GST_AUDIO_FORMAT_INFO_IS_INT (ctx->in.finfo) &&    \
-      !GST_AUDIO_FORMAT_INFO_IS_INT (ctx->out.finfo)) ||  \
+    ((!GST_AUDIO_FORMAT_INFO_IS_INTEGER (ctx->in.finfo) &&    \
+      !GST_AUDIO_FORMAT_INFO_IS_INTEGER (ctx->out.finfo)) ||  \
      (ctx->ns != NOISE_SHAPING_NONE))
 
 static gint
@@ -567,7 +567,7 @@ audio_convert_get_func_index (AudioConvertCtx * ctx,
 {
   gint index = 0;
 
-  if (GST_AUDIO_FORMAT_INFO_IS_INT (fmt)) {
+  if (GST_AUDIO_FORMAT_INFO_IS_INTEGER (fmt)) {
     index += (GST_AUDIO_FORMAT_INFO_WIDTH (fmt) / 8 - 1) * 4;
     index += GST_AUDIO_FORMAT_INFO_IS_LE (fmt) ? 0 : 2;
     index += GST_AUDIO_FORMAT_INFO_IS_SIGNED (fmt) ? 1 : 0;
@@ -621,7 +621,7 @@ audio_convert_prepare_context (AudioConvertCtx * ctx, GstAudioInfo * in,
    * as DA converters only can do a SNR up to 20 bits in reality.
    * Also don't dither or apply noise shaping if target depth is larger than
    * source depth. */
-  if (out_depth <= 20 && (!GST_AUDIO_FORMAT_INFO_IS_INT (in->finfo)
+  if (out_depth <= 20 && (!GST_AUDIO_FORMAT_INFO_IS_INTEGER (in->finfo)
           || in_depth >= out_depth)) {
     ctx->dither = dither;
     ctx->ns = ns;
@@ -665,9 +665,9 @@ audio_convert_prepare_context (AudioConvertCtx * ctx, GstAudioInfo * in,
       ctx->in_default, ctx->mix_passthrough, ctx->out_default);
 
   ctx->in_scale =
-      GST_AUDIO_FORMAT_INFO_IS_INT (in->finfo) ? (32 - in_depth) : 0;
+      GST_AUDIO_FORMAT_INFO_IS_INTEGER (in->finfo) ? (32 - in_depth) : 0;
   ctx->out_scale =
-      GST_AUDIO_FORMAT_INFO_IS_INT (out->finfo) ? (32 - out_depth) : 0;
+      GST_AUDIO_FORMAT_INFO_IS_INTEGER (out->finfo) ? (32 - out_depth) : 0;
 
   gst_audio_quantize_setup (ctx);
 
@@ -779,7 +779,7 @@ audio_convert_convert (AudioConvertCtx * ctx, gpointer src,
   }
 
   /* we only need to quantize if output format is int */
-  if (GST_AUDIO_FORMAT_INFO_IS_INT (ctx->out.finfo)) {
+  if (GST_AUDIO_FORMAT_INFO_IS_INTEGER (ctx->out.finfo)) {
     if (ctx->out_default)
       outbuf = dst;
     else
