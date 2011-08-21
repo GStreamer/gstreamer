@@ -333,6 +333,7 @@ setup_wrappercamerabinsrc_videotestsrc (void)
   GstElement *fakevideosink;
   GstElement *src;
   GstElement *testsrc;
+  GstElement *audiosrc;
 
   GST_INFO ("init");
 
@@ -345,16 +346,19 @@ setup_wrappercamerabinsrc_videotestsrc (void)
   fakevideosink = gst_element_factory_make ("fakesink", NULL);
   src = gst_element_factory_make ("wrappercamerabinsrc", NULL);
   testsrc = gst_element_factory_make ("videotestsrc", NULL);
+  audiosrc = gst_element_factory_make ("audiotestsrc", NULL);
 
   preview_caps = gst_caps_new_simple ("video/x-raw-rgb", "width", G_TYPE_INT,
       320, "height", G_TYPE_INT, 240, NULL);
 
   g_object_set (G_OBJECT (testsrc), "is-live", TRUE, "peer-alloc", FALSE, NULL);
+  g_object_set (G_OBJECT (audiosrc), "is-live", TRUE, NULL);
   g_object_set (G_OBJECT (src), "video-source", testsrc, NULL);
   g_object_set (G_OBJECT (camera), "camera-source", src, "preview-caps",
-      preview_caps, NULL);
+      preview_caps, "audio-source", audiosrc, NULL);
   gst_object_unref (src);
   gst_object_unref (testsrc);
+  gst_object_unref (audiosrc);
 
   vfbin = gst_bin_get_by_name (GST_BIN (camera), "vf-bin");
   g_object_set (G_OBJECT (vfbin), "video-sink", fakevideosink, NULL);
