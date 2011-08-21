@@ -380,6 +380,7 @@ gst_multi_file_sink_stop (GstBaseSink * sink)
       gst_buffer_unref (multifilesink->streamheaders[i]);
     }
     g_free (multifilesink->streamheaders);
+    multifilesink->streamheaders = NULL;
   }
 
   return TRUE;
