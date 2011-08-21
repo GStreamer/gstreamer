@@ -6,6 +6,7 @@
 
 #include "gstfragmented.h"
 #include "gsthlsdemux.h"
+#include "gsthlssink.h"
 
 GST_DEBUG_CATEGORY (fragmented_debug);
 
@@ -17,6 +18,10 @@ fragmented_init (GstPlugin * plugin)
   if (!gst_element_register (plugin, "hlsdemux", GST_RANK_PRIMARY,
           GST_TYPE_HLS_DEMUX) || FALSE)
     return FALSE;
+
+  if (!gst_hls_sink_plugin_init (plugin))
+    return FALSE;
+
   return TRUE;
 }
 

@@ -6,20 +6,24 @@ libgstfragmented_la_SOURCES =			\
 	gsthlsdemux.c				\
 	gstfragment.c				\
 	gsturidownloader.c			\
+	gstm3u8playlist.c			\
+	gsthlssink.c 				\
 	gstfragmentedplugin.c
 
-libgstfragmented_la_CFLAGS = $(GST_PLUGINS_BAD_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) $(SOUP_CFLAGS)
-libgstfragmented_la_LIBADD = $(GST_BASE_LIBS) $(GST_LIBS) $(SOUP_LIBS)
+libgstfragmented_la_CFLAGS = $(GST_PLUGINS_BAD_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) $(SOUP_CFLAGS) $(GIO_CFLAGS)
+libgstfragmented_la_LIBADD = $(GST_BASE_LIBS) $(GST_LIBS) $(SOUP_LIBS) $(GIO_LIBS) -lgstpbutils-$(GST_MAJORMINOR) -lgstvideo-$(GST_MAJORMINOR)
 libgstfragmented_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) -no-undefined
 libgstfragmented_la_LIBTOOLFLAGS = --tag=disable-static
 
 # headers we need but don't want installed
 noinst_HEADERS = 			\
-	gstfragmented.h		\
-	gstfragment.h				\
+	gstfragmented.h			\
+	gstfragment.h			\
 	gsthlsdemux.h			\
-	gsturidownloader.h			\
-	m3u8.h
+	gsturidownloader.h		\
+	m3u8.h 				\
+	gstm3u8playlist.h		\
+	gsthlssink.h
 
 Android.mk: Makefile.am $(BUILT_SOURCES)
 	androgenizer \
