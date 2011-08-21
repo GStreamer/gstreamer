@@ -1680,7 +1680,7 @@ cleanup:
 }
 
 static void
-gst_rtspsrc_flush (GstRTSPSrc * src, gboolean flush)
+gst_rtspsrc_flush (GstRTSPSrc * src, gboolean flush, gboolean playing)
 {
   GstEvent *event;
   gint cmd, i;
@@ -1696,9 +1696,12 @@ gst_rtspsrc_flush (GstRTSPSrc * src, gboolean flush)
     state = GST_STATE_PAUSED;
   } else {
     event = gst_event_new_flush_stop ();
-    GST_DEBUG_OBJECT (src, "stop flush");
+    GST_DEBUG_OBJECT (src, "stop flush; playing %d", playing);
     cmd = CMD_LOOP;
-    state = GST_STATE_PLAYING;
+    if (playing)
+      state = GST_STATE_PLAYING;
+    else
+      state = GST_STATE_PAUSED;
     clock = gst_element_get_clock (GST_ELEMENT_CAST (src));
     if (clock) {
       base_time = gst_clock_get_time (clock);
@@ -1847,7 +1850,7 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
    * blocking in preroll). */
   if (flush) {
     GST_DEBUG_OBJECT (src, "starting flush");
-    gst_rtspsrc_flush (src, TRUE);
+    gst_rtspsrc_flush (src, TRUE, FALSE);
   } else {
     if (src->task) {
       gst_task_pause (src->task);
@@ -1896,7 +1899,7 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
   if (flush) {
     /* if we started flush, we stop now */
     GST_DEBUG_OBJECT (src, "stopping flush");
-    gst_rtspsrc_flush (src, FALSE);
+    gst_rtspsrc_flush (src, FALSE, playing);
   } else if (src->running) {
     /* re-engage loop */
     gst_rtspsrc_loop_send_cmd (src, CMD_LOOP, FALSE);
