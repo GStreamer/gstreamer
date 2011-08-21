@@ -188,6 +188,7 @@ check_PROGRAMS = \
 	$(check_logoinsert) \
 	elements/h263parse \
 	elements/h264parse \
+	elements/mpegtsmux \
 	elements/mpegvideoparse \
 	elements/mpeg4videoparse \
 	elements/mxfdemux \
@@ -314,6 +315,10 @@ elements_rtpmux_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstrtp-0.10 $(GST_BASE_LIBS) 
 
 elements_assrender_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 elements_assrender_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstvideo-0.10 -lgstapp-0.10 $(GST_BASE_LIBS) $(LDADD)
+
+elements_mpegtsmux_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS)
+elements_mpegtsmux_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstvideo-0.10 $(GST_BASE_LIBS) $(LDADD)
+
 
 EXTRA_DIST = gst-plugins-bad.supp
 

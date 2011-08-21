@@ -128,6 +128,8 @@ struct MpegTsMux {
 
   GList *streamheader;
   gboolean streamheader_sent;
+  GstClockTime pending_key_unit_ts;
+  GstEvent *force_key_unit_event;
 };
 
 struct MpegTsMuxClass  {
@@ -157,7 +159,8 @@ struct MpegTsPadData {
   gboolean eos;
 
   gint prog_id; /* The program id to which it is attached to (not program pid) */ 
-  TsMuxProgram *prog; /* The program to which this stream belongs to */ 
+  TsMuxProgram *prog; /* The program to which this stream belongs to */
+  GstPadEventFunction eventfunc;
 };
 
 GType mpegtsmux_get_type (void);
