@@ -92,6 +92,8 @@ struct _GstCameraBin2
   gboolean video_profile_switch;
   gboolean image_profile_switch;
 
+  gboolean audio_drop_eos;
+
   /* properties */
   gint mode;
   gchar *location;

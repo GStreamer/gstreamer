@@ -439,6 +439,7 @@ gst_camera_bin_stop_capture (GstCameraBin2 * camerabin)
     g_signal_emit_by_name (camerabin->src, "stop-capture", NULL);
 
   if (camerabin->mode == MODE_VIDEO && camerabin->audio_src) {
+    camerabin->audio_drop_eos = FALSE;
     gst_element_send_event (camerabin->audio_src, gst_event_new_eos ());
   }
 }
@@ -1213,6 +1214,25 @@ gst_camera_bin_image_sink_event_probe (GstPad * pad, GstEvent * event,
   return TRUE;
 }
 
+static gboolean
+gst_camera_bin_audio_src_event_probe (GstPad * pad, GstEvent * event,
+    gpointer data)
+{
+  GstCameraBin2 *camera = data;
+  gboolean ret = TRUE;
+
+  if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
+    /* we only let an EOS pass when the user is stopping a capture */
+    if (camera->audio_drop_eos) {
+      ret = FALSE;
+    } else {
+      camera->audio_drop_eos = TRUE;
+    }
+  }
+
+  return ret;
+}
+
 /**
  * gst_camera_bin_create_elements:
  * @param camera: the #GstCameraBin2
@@ -1529,6 +1549,8 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
   }
 
   if (new_audio_src) {
+    GstPad *srcpad;
+
     if (g_object_class_find_property (G_OBJECT_GET_CLASS (camera->audio_src),
             "provide-clock")) {
       g_object_set (camera->audio_src, "provide-clock", FALSE, NULL);
@@ -1540,6 +1562,15 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
 
     gst_element_link_many (camera->audio_src, camera->audio_volume,
         camera->audio_capsfilter, NULL);
+
+    srcpad = gst_element_get_static_pad (camera->audio_src, "src");
+
+    /* drop EOS for audiosrc elements that push them on state_changes
+     * (basesrc does this) */
+    gst_pad_add_event_probe (srcpad,
+        (GCallback) gst_camera_bin_audio_src_event_probe, camera);
+
+    gst_object_unref (srcpad);
   }
   if (has_audio) {
     gst_camera_bin_check_and_replace_filter (camera, &camera->audio_filter,
@@ -1578,6 +1609,7 @@ gst_camera_bin_change_state (GstElement * element, GstStateChange trans)
   GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
   GstCameraBin2 *camera = GST_CAMERA_BIN2_CAST (element);
 
+
   switch (trans) {
     case GST_STATE_CHANGE_NULL_TO_READY:
       if (!gst_camera_bin_create_elements (camera)) {
@@ -1586,6 +1618,7 @@ gst_camera_bin_change_state (GstElement * element, GstStateChange trans)
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       GST_CAMERA_BIN2_RESET_PROCESSING_COUNTER (camera);
+      camera->audio_drop_eos = TRUE;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       if (GST_STATE (camera->videosink) >= GST_STATE_PAUSED)
