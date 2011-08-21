@@ -1263,9 +1263,9 @@ gen_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async)
   }
 
   /* find ts-offset element */
-  chain->ts_offset =
+  gst_object_replace ((GstObject **) & chain->ts_offset, (GstObject *)
       gst_play_sink_find_property_sinks (playsink, chain->sink, "ts-offset",
-      G_TYPE_INT64);
+          G_TYPE_INT64));
 
   /* create a bin to hold objects, as we create them we add them to this bin so
    * that when something goes wrong we only need to unref the bin */
@@ -1388,9 +1388,10 @@ setup_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async)
     return FALSE;
 
   /* find ts-offset element */
-  chain->ts_offset =
+
+  gst_object_replace ((GstObject **) & chain->ts_offset, (GstObject *)
       gst_play_sink_find_property_sinks (playsink, chain->sink, "ts-offset",
-      G_TYPE_INT64);
+          G_TYPE_INT64));
 
   /* if we can disable async behaviour of the sink, we can avoid adding a
    * queue for the audio chain. */
@@ -1705,9 +1706,9 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw)
   }
 
   /* find ts-offset element */
-  chain->ts_offset =
+  gst_object_replace ((GstObject **) & chain->ts_offset, (GstObject *)
       gst_play_sink_find_property_sinks (playsink, chain->sink, "ts-offset",
-      G_TYPE_INT64);
+          G_TYPE_INT64));
 
   /* check if the sink, or something within the sink, has the volume property.
    * If it does we don't need to add a volume element.  */
@@ -1888,9 +1889,9 @@ setup_audio_chain (GstPlaySink * playsink, gboolean raw)
     return FALSE;
 
   /* find ts-offset element */
-  chain->ts_offset =
+  gst_object_replace ((GstObject **) & chain->ts_offset, (GstObject *)
       gst_play_sink_find_property_sinks (playsink, chain->sink, "ts-offset",
-      G_TYPE_INT64);
+          G_TYPE_INT64));
 
   /* check if the sink, or something within the sink, has the volume property.
    * If it does we don't need to add a volume element.  */
@@ -2302,6 +2303,7 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
 
       add_chain (GST_PLAY_CHAIN (playsink->videochain), FALSE);
       activate_chain (GST_PLAY_CHAIN (playsink->videochain), FALSE);
+      g_object_unref (playsink->videochain->ts_offset);
       playsink->videochain->ts_offset = NULL;
     }
 
@@ -2355,6 +2357,7 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
         disconnect_chain (playsink->audiochain, playsink);
         playsink->audiochain->volume = NULL;
         playsink->audiochain->mute = NULL;
+        g_object_unref (playsink->audiochain->ts_offset);
         playsink->audiochain->ts_offset = NULL;
         free_chain ((GstPlayChain *) playsink->audiochain);
         playsink->audiochain = NULL;
@@ -2423,6 +2426,7 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
         disconnect_chain (playsink->audiochain, playsink);
         playsink->audiochain->volume = NULL;
         playsink->audiochain->mute = NULL;
+        g_object_unref (playsink->audiochain->ts_offset);
         playsink->audiochain->ts_offset = NULL;
       }
       add_chain (GST_PLAY_CHAIN (playsink->audiochain), FALSE);
@@ -3429,6 +3433,7 @@ gst_play_sink_change_state (GstElement * element, GstStateChange transition)
         disconnect_chain (playsink->audiochain, playsink);
         playsink->audiochain->volume = NULL;
         playsink->audiochain->mute = NULL;
+        g_object_unref (playsink->audiochain->ts_offset);
         playsink->audiochain->ts_offset = NULL;
       }
       ret = GST_STATE_CHANGE_SUCCESS;
