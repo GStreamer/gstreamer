@@ -220,7 +220,7 @@ void		gst_object_unref		(gpointer object);
 gpointer        gst_object_ref_sink		(gpointer object);
 
 /* replace object pointer */
-void            gst_object_replace		(GstObject **oldobj, GstObject *newobj);
+gboolean        gst_object_replace		(GstObject **oldobj, GstObject *newobj);
 
 /* printing out the 'path' of the object */
 gchar *		gst_object_get_path_string	(GstObject *object);

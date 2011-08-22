@@ -292,25 +292,20 @@ gst_object_ref_sink (gpointer object)
  *     replace
  * @newobj: (transfer none): a new #GstObject
  *
- * Unrefs the #GstObject pointed to by @oldobj, refs @newobj and
- * puts @newobj in *@oldobj. Be carefull when calling this
- * function, it does not take any locks. You might want to lock
- * the object owning @oldobj pointer before calling this
- * function.
+ * Atomically modifies a pointer to point to a new object.
+ * The reference count of @oldobj is decreased and the reference count of
+ * @newobj is increased.
  *
- * Make sure not to LOCK @oldobj because it might be unreffed
- * which could cause a deadlock when it is disposed.
+ * Either @newobj and the value pointed to by @oldobj may be NULL.
  *
- * Since 0.10.36, this function operates atomically.
+ * Returns: TRUE if @newobj was different from @oldobj
  */
-void
+gboolean
 gst_object_replace (GstObject ** oldobj, GstObject * newobj)
 {
   GstObject *oldptr;
 
-  g_return_if_fail (oldobj != NULL);
-  g_return_if_fail (*oldobj == NULL || GST_IS_OBJECT (*oldobj));
-  g_return_if_fail (newobj == NULL || GST_IS_OBJECT (newobj));
+  g_return_val_if_fail (oldobj != NULL, FALSE);
 
 #ifdef DEBUG_REFCOUNT
   GST_CAT_TRACE (GST_CAT_REFCOUNTING, "replace %p %s (%d) with %p %s (%d)",
@@ -320,14 +315,25 @@ gst_object_replace (GstObject ** oldobj, GstObject * newobj)
       newobj ? G_OBJECT (newobj)->ref_count : 0);
 #endif
 
+  oldptr = g_atomic_pointer_get ((gpointer *) oldobj);
+
+  if (G_UNLIKELY (oldptr == newobj))
+    return FALSE;
+
   if (newobj)
     g_object_ref (newobj);
-  do {
-    oldptr = *oldobj;
-  } while (!g_atomic_pointer_compare_and_exchange ((void *) oldobj,
-          oldptr, newobj));
+
+  while (G_UNLIKELY (!g_atomic_pointer_compare_and_exchange ((gpointer *)
+              oldobj, oldptr, newobj))) {
+    oldptr = g_atomic_pointer_get ((gpointer *) oldobj);
+    if (G_UNLIKELY (oldptr == newobj))
+      break;
+  }
+
   if (oldptr)
     g_object_unref (oldptr);
+
+  return oldptr != newobj;
 }
 
 /* dispose is called when the object has to release all links
