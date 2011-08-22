@@ -372,7 +372,7 @@ gst_hls_demux_src_event (GstPad * pad, GstEvent * event)
       g_cond_signal (demux->thread_cond);
 
       /* wait for streaming to finish */
-      GST_PAD_STREAM_LOCK (demux->srcpad);
+      g_static_rec_mutex_lock (&demux->task_lock);
 
       demux->need_cache = TRUE;
       while (!g_queue_is_empty (demux->queue)) {
@@ -391,7 +391,7 @@ gst_hls_demux_src_event (GstPad * pad, GstEvent * event)
       }
 
       gst_task_start (demux->task);
-      GST_PAD_STREAM_UNLOCK (demux->srcpad);
+      g_static_rec_mutex_unlock (&demux->task_lock);
 
       return TRUE;
     }
