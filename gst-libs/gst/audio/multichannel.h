@@ -17,11 +17,11 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_AUDIO_MULTICHANNEL_H__
-#define __GST_AUDIO_MULTICHANNEL_H__
-
 #include <gst/audio/audio.h>
 #include <gst/audio/audio-enumtypes.h>
+
+#ifndef __GST_AUDIO_MULTICHANNEL_H__
+#define __GST_AUDIO_MULTICHANNEL_H__
 
 G_BEGIN_DECLS
 
