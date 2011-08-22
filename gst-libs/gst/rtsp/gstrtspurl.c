@@ -385,10 +385,10 @@ unescape_path_component (gchar * comp)
  * Splits the path of @url on '/' boundaries, decoding the resulting components,
  *
  * The decoding performed by this routine is "URI decoding", as defined in RFC
- * 3986, commonly known as percent-decoding. For example, a string "foo%2fbar"
- * will decode to "foo/bar" -- the %2f being replaced by the corresponding byte
+ * 3986, commonly known as percent-decoding. For example, a string "foo\%2fbar"
+ * will decode to "foo/bar" -- the \%2f being replaced by the corresponding byte
  * with hex value 0x2f. Note that there is no guarantee that the resulting byte
- * sequence is valid in any given encoding. As a special case, %00 is not
+ * sequence is valid in any given encoding. As a special case, \%00 is not
  * unescaped to NUL, as that would prematurely terminate the string.
  *
  * Also note that since paths usually start with a slash, the first component

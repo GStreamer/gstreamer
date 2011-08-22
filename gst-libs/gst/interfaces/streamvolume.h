@@ -53,7 +53,7 @@ struct _GstStreamVolumeInterface {
  * @GST_STREAM_VOLUME_FORMAT_CUBIC: Cubic volume scale
  * @GST_STREAM_VOLUME_FORMAT_DB: Logarithmic volume scale (dB, amplitude not power)
  *
- * Different representations of a stream volume. gst_stream_volume_convert()
+ * Different representations of a stream volume. gst_stream_volume_convert_volume()
  * allows to convert between the different representations.
  *
  * Formulas to convert from a linear to a cubic or dB volume are

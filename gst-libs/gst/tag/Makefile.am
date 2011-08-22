@@ -19,7 +19,7 @@ libgsttag_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(
 
 # lang-tables.dat contains generated static data and is included by lang.c
 # licenses-tables.dat contains generated data and is included by licenses.c
-EXTRA_DIST = lang-tables.dat licenses-tables.dat
+EXTRA_DIST = lang-tables.dat licenses-tables.dat license-translations.dict
 
 noinst_HEADERS = gsttageditingprivate.h id3v2.h
 
@@ -102,7 +102,7 @@ update-licenses: mklicensestables
 # strings retranslated, but also we don't want to create 30 1kB .mo files,
 # so just do something for now, we can change it later if someone really cares.
 licensetransdir = $(pkgdatadir)
-licensetrans_DATA = $(builddir)/license-translations.dict
+licensetrans_DATA = $(srcdir)/license-translations.dict
 #endif
 
 Android.mk: Makefile.am

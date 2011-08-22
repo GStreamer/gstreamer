@@ -1204,7 +1204,7 @@ DEFINE_ARRAY_GETTER (media, medias, const GstSDPMedia);
  *
  * Adds @media to the array of medias in @msg. This function takes ownership of
  * the contents of @media so that @media will have to be reinitialized with
- * gst_media_init() before it can be used again.
+ * gst_sdp_media_init() before it can be used again.
  *
  * Returns: a #GstSDPResult.
  */

@@ -545,7 +545,7 @@ gst_mixer_option_changed (GstMixer * mixer,
  * options of a given options object has changed.
  *
  * The new options are not contained in the message on purpose. Applications
- * should call gst_mixer_option_get_values() on @opts to make @opts update
+ * should call gst_mixer_options_get_values() on @opts to make @opts update
  * its internal state and obtain the new list of values.
  *
  * This function only works for GstElements that are implementing the

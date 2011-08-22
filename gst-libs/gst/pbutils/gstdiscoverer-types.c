@@ -927,7 +927,7 @@ DISCOVERER_INFO_ACCESSOR_CODE (misc, const GstStructure *, NULL);
  * gst_discoverer_info_get_tags:
  * @info: a #GstDiscovererInfo
  *
- * Returns: (transfer none): all tags contained in the %URI. If you wish to use
+ * Returns: (transfer none): all tags contained in the URI. If you wish to use
  * the tags after the life-time of @info, you will need to copy them.
  *
  * Since: 0.10.31

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-08-02 21:32+0200\n"
+"POT-Creation-Date: 2011-08-20 12:18+0100\n"
 "PO-Revision-Date: 2011-04-26 15:56+0100\n"
 "Last-Translator: Klemen Košir <klemen.kosir@gmx.com>\n"
 "Language-Team: Slovenian <translation-team-sl@lists.sourceforge.net>\n"
@@ -351,6 +351,12 @@ msgstr "navpične slikovne točke slike (ppi)"
 
 msgid "Media (image/video) intended vertical pixel density in ppi"
 msgstr "Gostota navpičnih slikovnih točk (v ppi)"
+
+msgid "ID3v2 frame"
+msgstr ""
+
+msgid "unparsed id3v2 tag frame"
+msgstr ""
 
 msgid "This CD has no audio tracks"
 msgstr "Ta CD nima zvočnih sledi"

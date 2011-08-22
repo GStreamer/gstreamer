@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-08-02 21:32+0200\n"
+"POT-Creation-Date: 2011-08-22 12:54+0200\n"
 "PO-Revision-Date: 2011-06-04 21:11+0100\n"
 "Last-Translator: Kristjan SCHMIDT <kristjan.schmidt@googlemail.com>\n"
 "Language-Team: Esperanto <translation-team-eo@lists.sourceforge.net>\n"
@@ -347,6 +347,12 @@ msgstr ""
 msgid "Media (image/video) intended vertical pixel density in ppi"
 msgstr ""
 
+msgid "ID3v2 frame"
+msgstr ""
+
+msgid "unparsed id3v2 tag frame"
+msgstr ""
+
 msgid "This CD has no audio tracks"
 msgstr ""
 
@@ -380,9 +386,6 @@ msgstr "FFMpeg v1"
 msgid "Lossless MSZH"
 msgstr ""
 
-msgid "Uncompressed Gray Image"
-msgstr ""
-
 msgid "Run-length encoding"
 msgstr ""
 
@@ -395,59 +398,29 @@ msgstr ""
 msgid "Kate subtitle format"
 msgstr ""
 
-msgid "Uncompressed planar YUV 4:2:0"
+msgid "Uncompressed video"
 msgstr ""
 
-msgid "Uncompressed planar YVU 4:2:0"
-msgstr ""
-
-msgid "Uncompressed packed YUV 4:2:2"
-msgstr ""
-
-msgid "Uncompressed packed YUV 4:1:0"
-msgstr ""
-
-msgid "Uncompressed packed YVU 4:1:0"
-msgstr ""
-
-msgid "Uncompressed packed YUV 4:1:1"
-msgstr ""
-
-msgid "Uncompressed packed YUV 4:4:4"
-msgstr ""
-
-msgid "Uncompressed planar YUV 4:2:2"
-msgstr ""
-
-msgid "Uncompressed planar YUV 4:1:1"
-msgstr ""
-
-msgid "Uncompressed black and white Y-plane"
-msgstr ""
-
-msgid "Uncompressed YUV"
+msgid "Uncompressed gray"
 msgstr ""
 
 #, c-format
-msgid "Uncompressed palettized %d-bit %s"
+msgid "Uncompressed %s YUV %s"
+msgstr ""
+
+#, c-format
+msgid "Uncompressed %s%d-bit %s"
 msgstr ""
 
 #, c-format
 msgid "DivX MPEG-4 Version %d"
 msgstr "\"DivX MPEG-4\"-versio %d"
 
-#, c-format
-msgid "Raw %d-bit PCM audio"
-msgstr ""
-
-msgid "Raw PCM audio"
+msgid "Uncompressed audio"
 msgstr ""
 
 #, c-format
-msgid "Raw %d-bit floating-point audio"
-msgstr ""
-
-msgid "Raw floating-point audio"
+msgid "Raw %d-bit %s audio"
 msgstr ""
 
 msgid "Audio CD source"

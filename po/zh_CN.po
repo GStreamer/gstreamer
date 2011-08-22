@@ -6,595 +6,574 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.21.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-08-02 21:32+0200\n"
+"POT-Creation-Date: 2009-01-09 22:45+0000\n"
 "PO-Revision-Date: 2009-01-14 12:41+0800\n"
 "Last-Translator: Ji ZhengYu <zhengyuji@gmail.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
-"Language: zh_CN\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
+#: ext/alsa/gstalsamixertrack.c:144
 msgid "Master"
 msgstr "主音量"
 
+#: ext/alsa/gstalsamixertrack.c:145
 msgid "Bass"
 msgstr "低音(Bass)"
 
+#: ext/alsa/gstalsamixertrack.c:146
 msgid "Treble"
 msgstr "高音(Treble)"
 
+#: ext/alsa/gstalsamixertrack.c:147
 msgid "PCM"
 msgstr "波形"
 
+#: ext/alsa/gstalsamixertrack.c:148
 msgid "Synth"
 msgstr "合成器"
 
+#: ext/alsa/gstalsamixertrack.c:149
 msgid "Line-in"
 msgstr "线路输入"
 
+#: ext/alsa/gstalsamixertrack.c:150
 msgid "CD"
 msgstr "CD"
 
+#: ext/alsa/gstalsamixertrack.c:151
 msgid "Microphone"
 msgstr "话筒"
 
+#: ext/alsa/gstalsamixertrack.c:152
 msgid "PC Speaker"
 msgstr "PC 扬声器"
 
+#: ext/alsa/gstalsamixertrack.c:153
 msgid "Playback"
 msgstr "回放"
 
+#: ext/alsa/gstalsamixertrack.c:154 ext/alsa/gstalsamixertrack.c:220
+#: ext/alsa/gstalsamixertrack.c:223
 msgid "Capture"
 msgstr "录音"
 
+#: ext/alsa/gstalsasink.c:479
 msgid "Could not open device for playback in mono mode."
 msgstr "无法在单声道模式打开设备播放。"
 
+#: ext/alsa/gstalsasink.c:481
 msgid "Could not open device for playback in stereo mode."
 msgstr "无法在立体声模式打开设备播放。"
 
+#: ext/alsa/gstalsasink.c:485
 #, c-format
 msgid "Could not open device for playback in %d-channel mode."
 msgstr "无法在 %d 声道模式打开设备播放。"
 
-msgid ""
-"Could not open audio device for playback. Device is being used by another "
-"application."
+#: ext/alsa/gstalsasink.c:687
+msgid "Could not open audio device for playback. Device is being used by another application."
 msgstr "无法打开音频设备用于回放。目前有另一个程序正在使用该设备。"
 
+#: ext/alsa/gstalsasink.c:692
 msgid "Could not open audio device for playback."
 msgstr "无法打开音频设备播放。"
 
+#: ext/alsa/gstalsasrc.c:417
 msgid "Could not open device for recording in mono mode."
 msgstr "无法在单声道模式打开设备录音。"
 
+#: ext/alsa/gstalsasrc.c:419
 msgid "Could not open device for recording in stereo mode."
 msgstr "无法在立体声模式打开设备录音。"
 
+#: ext/alsa/gstalsasrc.c:423
 #, c-format
 msgid "Could not open device for recording in %d-channel mode"
 msgstr "无法在 %d 声道模式打开设备录音。"
 
-msgid ""
-"Could not open audio device for recording. Device is being used by another "
-"application."
+#: ext/alsa/gstalsasrc.c:628
+msgid "Could not open audio device for recording. Device is being used by another application."
 msgstr "无法打开音频设备用于录音。目前有另一个程序正在使用该设备。"
 
+#: ext/alsa/gstalsasrc.c:633
 msgid "Could not open audio device for recording."
 msgstr "无法打开音频设备录音。"
 
+#: ext/cdparanoia/gstcdparanoiasrc.c:257 ext/cdparanoia/gstcdparanoiasrc.c:263
 msgid "Could not open CD device for reading."
 msgstr "无法打开 CD 设备读取。"
 
+#: ext/cdparanoia/gstcdparanoiasrc.c:389
 msgid "Could not seek CD."
 msgstr "无法搜索 CD。"
 
+#: ext/cdparanoia/gstcdparanoiasrc.c:397
 msgid "Could not read CD."
 msgstr "无法读取 CD。"
 
+#: ext/gnomevfs/gstgnomevfssink.c:379
+#, c-format
+msgid "Could not open vfs file \"%s\" for writing: %s."
+msgstr "无法打开 vfs 文件“%s”写入：%s。"
+
+#: ext/gnomevfs/gstgnomevfssink.c:386
+msgid "No filename given"
+msgstr "没有给定文件名"
+
+#: ext/gnomevfs/gstgnomevfssink.c:412
+#, c-format
+msgid "Could not close vfs file \"%s\"."
+msgstr "无法关闭 vfs 文件“%s”。"
+
+#: ext/gnomevfs/gstgnomevfssink.c:570
+#, c-format
+msgid "Error while writing to file \"%s\"."
+msgstr "写入文件“%s”时出错。"
+
+#: ext/ogg/gstoggdemux.c:3150
 msgid "Internal data stream error."
 msgstr "内部数据流错误。"
 
+#: gst/playback/gstdecodebin.c:985 gst/playback/gstdecodebin2.c:1028
+#: gst/playback/gstplaybasebin.c:1536 gst/playback/gstplaybasebin.c:1672
 #, c-format
 msgid "A %s plugin is required to play this stream, but not installed."
 msgstr "播放此数据流需要 %s 插件，但它未安装。"
 
-#, fuzzy
-msgid "Could not determine type of stream"
-msgstr "无法创建“typefind”组件。"
-
+#: gst/playback/gstdecodebin.c:1799 gst/playback/gstdecodebin2.c:1424
 msgid "This appears to be a text file"
 msgstr "此文件是个文本文件"
 
+#: gst/playback/gstplaybasebin.c:1519
 #, c-format
-msgid "Missing element '%s' - check your GStreamer installation."
-msgstr "未找到组件‘%s’－请检查您的 GStreamer 安装情况。"
+msgid "Invalid subtitle URI \"%s\", subtitles disabled."
+msgstr "无效的字幕 URI “%s”，不使用字幕。"
 
-#, fuzzy, c-format
-msgid "Both autovideosink and %s elements are missing."
-msgstr "autovideosink 和 xvimagesink 组件都缺少。"
-
-#, fuzzy
-msgid "The autovideosink element is missing."
-msgstr "autovideosink 和 xvimagesink 组件都缺少。"
-
-#, c-format
-msgid "Configured videosink %s is not working."
-msgstr ""
-
-#, fuzzy, c-format
-msgid "Both autovideosink and %s elements are not working."
-msgstr "autovideosink 和 xvimagesink 组件都缺少。"
-
-#, fuzzy
-msgid "The autovideosink element is not working."
-msgstr "autovideosink 和 xvimagesink 组件都缺少。"
-
-msgid "Custom text sink element is not usable."
-msgstr ""
-
-msgid "No volume control found"
-msgstr "未找到音量控制"
-
-#, fuzzy, c-format
-msgid "Both autoaudiosink and %s elements are missing."
-msgstr "autovideosink 和 alsasink 组件都缺少。"
-
-#, fuzzy
-msgid "The autoaudiosink element is missing."
-msgstr "autovideosink 和 alsasink 组件都缺少。"
-
-#, c-format
-msgid "Configured audiosink %s is not working."
-msgstr ""
-
-#, fuzzy, c-format
-msgid "Both autoaudiosink and %s elements are not working."
-msgstr "autovideosink 和 alsasink 组件都缺少。"
-
-#, fuzzy
-msgid "The autoaudiosink element is not working."
-msgstr "autovideosink 和 alsasink 组件都缺少。"
-
-#, fuzzy
-msgid "Can't play a text file without video or visualizations."
-msgstr "无法播放不带视频的文本文件。"
-
-#, c-format
-msgid "No decoder available for type '%s'."
-msgstr "找不到‘%s’类型可用的解码器。"
-
+#: gst/playback/gstplaybasebin.c:1642 gst/playback/gsturidecodebin.c:812
 msgid "No URI specified to play from."
 msgstr "未指定要播放的 URI。"
 
+#: gst/playback/gstplaybasebin.c:1648 gst/playback/gsturidecodebin.c:818
 #, c-format
 msgid "Invalid URI \"%s\"."
 msgstr "无效的 URI“%s”。"
 
+#: gst/playback/gstplaybasebin.c:1654
+msgid "RTSP streams cannot be played yet."
+msgstr "RTSP 流尚不能播放。"
+
+#: gst/playback/gstplaybasebin.c:2006
+msgid "Could not create \"decodebin\" element."
+msgstr "无法创建“decodebin”组件。"
+
+#: gst/playback/gstplaybasebin.c:2224 gst/playback/gsturidecodebin.c:1406
+msgid "Source element is invalid."
+msgstr "无效的源组件。"
+
+#: gst/playback/gstplaybasebin.c:2301
+msgid "Only a subtitle stream was detected. Either you are loading a subtitle file or some other type of text file, or the media file was not recognized."
+msgstr "仅检测到字幕流。您可能装入的是字幕文件或者其它类型文本文件，又或者是媒体文件无法识别。"
+
+#: gst/playback/gstplaybasebin.c:2306
+msgid "You do not have a decoder installed to handle this file. You might need to install the necessary plugins."
+msgstr "您没有安装可处理此文件的解码器。您可能需要安装必要的插件。"
+
+#: gst/playback/gstplaybasebin.c:2310
+msgid "This is not a media file"
+msgstr "此文件不是媒体文件"
+
+#: gst/playback/gstplaybasebin.c:2315
+msgid "A subtitle stream was detected, but no video stream."
+msgstr "检测到了字幕流，但无视频流。"
+
+#: gst/playback/gstplaybin.c:882 gst/playback/gstplaysink.c:758
+msgid "Both autovideosink and xvimagesink elements are missing."
+msgstr "autovideosink 和 xvimagesink 组件都缺少。"
+
+#: gst/playback/gstplaybin.c:890 gst/playback/gstplaybin.c:900
+#: gst/playback/gstplaybin.c:1157 gst/playback/gstplaybin.c:1166
+#: gst/playback/gstplaybin.c:1175 gst/playback/gstplaybin.c:1306
+#: gst/playback/gstplaybin.c:1315 gst/playback/gstplaybin.c:1324
+#: gst/playback/gstplaysink.c:714 gst/playback/gstplaysink.c:729
+#: gst/playback/gstplaysink.c:845 gst/playback/gstplaysink.c:854
+#: gst/playback/gstplaysink.c:955 gst/playback/gstplaysink.c:973
+#: gst/playback/gstplaysink.c:992 gst/playback/gstplaysink.c:1139
+#: gst/playback/gstplaysink.c:1148 gst/playback/gstplaysink.c:1157
+#, c-format
+msgid "Missing element '%s' - check your GStreamer installation."
+msgstr "未找到组件‘%s’－请检查您的 GStreamer 安装情况。"
+
+#: gst/playback/gstplaybin.c:1150 gst/playback/gstplaysink.c:1045
+msgid "Both autoaudiosink and alsasink elements are missing."
+msgstr "autovideosink 和 alsasink 组件都缺少。"
+
+#: gst/playback/gstplaysink.c:1028
+msgid "No volume control found"
+msgstr "未找到音量控制"
+
+#: gst/playback/gstplaysink.c:1380
+msgid "Can't play a text file without video."
+msgstr "无法播放不带视频的文本文件。"
+
+#: gst/playback/gstqueue2.c:991
+msgid "No file name specified."
+msgstr "未给定文件名。"
+
+#: gst/playback/gstqueue2.c:997
+#, c-format
+msgid "Could not open file \"%s\" for reading."
+msgstr "无法打开文件“%s”读取。"
+
+#: gst/playback/gsturidecodebin.c:589
+#, c-format
+msgid "No decoder available for type '%s'."
+msgstr "找不到‘%s’类型可用的解码器。"
+
+#: gst/playback/gsturidecodebin.c:824
 msgid "This stream type cannot be played yet."
 msgstr "此类型的数据流尚不能播放。"
 
+#: gst/playback/gsturidecodebin.c:835
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "“%s”未实现 URI 处理器。"
 
-msgid "Source element is invalid."
-msgstr "无效的源组件。"
+#: gst/playback/gsturidecodebin.c:1126
+msgid "Could not create \"decodebin2\" element."
+msgstr "无法创建“decodebin”组件。"
 
+#: gst/playback/gsturidecodebin.c:1193
+msgid "Could not create \"queue2\" element."
+msgstr "无法创建“queue2”组件。"
+
+#: gst/playback/gsturidecodebin.c:1232
+msgid "Could not create \"typefind\" element."
+msgstr "无法创建“typefind”组件。"
+
+#: gst/tcp/gsttcp.c:503 gst/tcp/gsttcpclientsink.c:278
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "发送数据至“%s:%d”时出错。"
 
+#: gst/tcp/gsttcp.c:555
+#, fuzzy, c-format
+msgid "Error while sending gdp header data to \"%s:%d\"."
+msgstr "发送 gdp 头部数据至“%s:%d”时出错。"
+
+#: gst/tcp/gsttcp.c:564
+#, c-format
+msgid "Error while sending gdp payload data to \"%s:%d\"."
+msgstr "发送 gdp 负载数据至“%s:%d”时出错。"
+
+#: gst/tcp/gsttcpclientsink.c:390 gst/tcp/gsttcpclientsrc.c:373
 #, c-format
 msgid "Connection to %s:%d refused."
 msgstr "拒绝连接至 %s:%d。"
 
+#: gst-libs/gst/audio/gstbaseaudiosrc.c:804
 msgid "Can't record audio fast enough"
 msgstr "无法足够快的录音"
 
+#: gst-libs/gst/tag/gsttagdemux.c:1055
 msgid "Failed to read tag: not enough data"
 msgstr "无法读取标签: 数据不足"
 
+#: gst-libs/gst/tag/tags.c:59
 msgid "track ID"
 msgstr "音轨 ID"
 
+#: gst-libs/gst/tag/tags.c:59
 msgid "MusicBrainz track ID"
 msgstr "MusicBrainz 音轨 ID"
 
+#: gst-libs/gst/tag/tags.c:61
 msgid "artist ID"
 msgstr "艺人 ID"
 
+#: gst-libs/gst/tag/tags.c:61
 msgid "MusicBrainz artist ID"
 msgstr "MusicBrainz 艺人 ID"
 
+#: gst-libs/gst/tag/tags.c:63
 msgid "album ID"
 msgstr "专辑 ID"
 
+#: gst-libs/gst/tag/tags.c:63
 msgid "MusicBrainz album ID"
 msgstr "MusicBrainz 专辑 ID"
 
+#: gst-libs/gst/tag/tags.c:66
 msgid "album artist ID"
 msgstr "音轨艺人 ID"
 
+#: gst-libs/gst/tag/tags.c:66
 msgid "MusicBrainz album artist ID"
 msgstr "MusicBrainz 专辑艺人 ID"
 
+#: gst-libs/gst/tag/tags.c:68
 msgid "track TRM ID"
 msgstr "音轨 TRM ID"
 
+#: gst-libs/gst/tag/tags.c:68
 msgid "MusicBrainz TRM ID"
 msgstr "MusicBrainz TRM ID"
 
-msgid "capturing shutter speed"
-msgstr ""
-
-msgid "Shutter speed used when capturing an image, in seconds"
-msgstr ""
-
-msgid "capturing focal ratio"
-msgstr ""
-
-msgid "Focal ratio (f-number) used when capturing the image"
-msgstr ""
-
-msgid "capturing focal length"
-msgstr ""
-
-msgid "Focal length of the lens used capturing the image, in mm"
-msgstr ""
-
-msgid "capturing digital zoom ratio"
-msgstr ""
-
-msgid "Digital zoom ratio used when capturing an image"
-msgstr ""
-
-msgid "capturing iso speed"
-msgstr ""
-
-msgid "The ISO speed used when capturing an image"
-msgstr ""
-
-msgid "capturing exposure program"
-msgstr ""
-
-msgid "The exposure program used when capturing an image"
-msgstr ""
-
-msgid "capturing exposure mode"
-msgstr ""
-
-msgid "The exposure mode used when capturing an image"
-msgstr ""
-
-msgid "capturing exposure compensation"
-msgstr ""
-
-msgid "The exposure compensation used when capturing an image"
-msgstr ""
-
-msgid "capturing scene capture type"
-msgstr ""
-
-msgid "The scene capture mode used when capturing an image"
-msgstr ""
-
-msgid "capturing gain adjustment"
-msgstr ""
-
-msgid "The overall gain adjustment applied on an image"
-msgstr ""
-
-msgid "capturing white balance"
-msgstr ""
-
-msgid "The white balance mode set when capturing an image"
-msgstr ""
-
-msgid "capturing contrast"
-msgstr ""
-
-msgid "The direction of contrast processing applied when capturing an image"
-msgstr ""
-
-msgid "capturing saturation"
-msgstr ""
-
-msgid "The direction of saturation processing applied when capturing an image"
-msgstr ""
-
-msgid "capturing sharpness"
-msgstr ""
-
-msgid "The direction of sharpness processing applied when capturing an image"
-msgstr ""
-
-msgid "capturing flash fired"
-msgstr ""
-
-msgid "If the flash fired while capturing an image"
-msgstr ""
-
-msgid "capturing flash mode"
-msgstr ""
-
-msgid "The selected flash mode while capturing an image"
-msgstr ""
-
-msgid "capturing metering mode"
-msgstr ""
-
-msgid ""
-"The metering mode used while determining exposure for capturing an image"
-msgstr ""
-
-msgid "capturing source"
-msgstr ""
-
-msgid "The source or type of device used for the capture"
-msgstr ""
-
-msgid "image horizontal ppi"
-msgstr ""
-
-msgid "Media (image/video) intended horizontal pixel density in ppi"
-msgstr ""
-
-msgid "image vertical ppi"
-msgstr ""
-
-msgid "Media (image/video) intended vertical pixel density in ppi"
-msgstr ""
-
+#: gst-libs/gst/cdda/gstcddabasesrc.c:1397
+#: gst-libs/gst/cdda/gstcddabasesrc.c:1430
 msgid "This CD has no audio tracks"
 msgstr "此 CD 无音轨"
 
+#: gst-libs/gst/pbutils/descriptions.c:66
 msgid "ID3 tag"
 msgstr "ID3 标识"
 
+#: gst-libs/gst/pbutils/descriptions.c:67
 msgid "APE tag"
 msgstr "APE 标识"
 
+#: gst-libs/gst/pbutils/descriptions.c:68
 msgid "ICY internet radio"
 msgstr "ICY 网络电台"
 
+#: gst-libs/gst/pbutils/descriptions.c:91
 msgid "Apple Lossless Audio (ALAC)"
 msgstr "Apple 无损音频(ALAC)"
 
+#: gst-libs/gst/pbutils/descriptions.c:100
 msgid "Free Lossless Audio Codec (FLAC)"
 msgstr "自由无损音频编码(FLAC)"
 
+#: gst-libs/gst/pbutils/descriptions.c:125
+#: gst-libs/gst/pbutils/descriptions.c:126
 msgid "Lossless True Audio (TTA)"
 msgstr "无损高保真音频(TTA)"
 
+#: gst-libs/gst/pbutils/descriptions.c:134
 msgid "Windows Media Speech"
 msgstr "Windows Media 语音"
 
+#: gst-libs/gst/pbutils/descriptions.c:148
 msgid "CYUV Lossless"
 msgstr "CYUV 无损"
 
+#: gst-libs/gst/pbutils/descriptions.c:151
 msgid "FFMpeg v1"
 msgstr "FFMpeg v1"
 
+#: gst-libs/gst/pbutils/descriptions.c:163
 msgid "Lossless MSZH"
 msgstr "无损 MSZH"
 
+#: gst-libs/gst/pbutils/descriptions.c:169
 msgid "Uncompressed Gray Image"
 msgstr "未压缩的灰度图像"
 
+#: gst-libs/gst/pbutils/descriptions.c:174
 msgid "Run-length encoding"
 msgstr "Run-length 编码"
 
+#: gst-libs/gst/pbutils/descriptions.c:208
 msgid "Sami subtitle format"
 msgstr "Sami 字幕格式"
 
+#: gst-libs/gst/pbutils/descriptions.c:209
 msgid "TMPlayer subtitle format"
 msgstr "TMPlayer 字幕格式"
 
+#: gst-libs/gst/pbutils/descriptions.c:210
 msgid "Kate subtitle format"
 msgstr "Kate 字幕格式"
 
+#: gst-libs/gst/pbutils/descriptions.c:269
 msgid "Uncompressed planar YUV 4:2:0"
 msgstr "未压缩的 planar YUV 4:2:0"
 
+#: gst-libs/gst/pbutils/descriptions.c:272
 msgid "Uncompressed planar YVU 4:2:0"
 msgstr "未压缩的 planar YVU 4:2:0"
 
+#: gst-libs/gst/pbutils/descriptions.c:275
+#: gst-libs/gst/pbutils/descriptions.c:285
 msgid "Uncompressed packed YUV 4:2:2"
 msgstr "未压缩的 packed YUV 4:2:2"
 
+#: gst-libs/gst/pbutils/descriptions.c:278
 msgid "Uncompressed packed YUV 4:1:0"
 msgstr "未压缩的 packed YUV 4:1:0"
 
+#: gst-libs/gst/pbutils/descriptions.c:281
 msgid "Uncompressed packed YVU 4:1:0"
 msgstr "未压缩的 packed YVU 4:1:0"
 
+#: gst-libs/gst/pbutils/descriptions.c:288
 msgid "Uncompressed packed YUV 4:1:1"
 msgstr "未压缩的 packed YUV 4:1:1"
 
+#: gst-libs/gst/pbutils/descriptions.c:291
 msgid "Uncompressed packed YUV 4:4:4"
 msgstr "未压缩的 packed YUV 4:4:4"
 
+#: gst-libs/gst/pbutils/descriptions.c:294
 msgid "Uncompressed planar YUV 4:2:2"
 msgstr "未压缩的 planar YUV 4:2:2"
 
+#: gst-libs/gst/pbutils/descriptions.c:297
 msgid "Uncompressed planar YUV 4:1:1"
 msgstr "未压缩的 planar YUV 4:1:1"
 
+#: gst-libs/gst/pbutils/descriptions.c:300
 msgid "Uncompressed black and white Y-plane"
 msgstr "未压缩的黑白 Y-plane"
 
+#: gst-libs/gst/pbutils/descriptions.c:303
 msgid "Uncompressed YUV"
 msgstr "未压缩的 YUV"
 
+#: gst-libs/gst/pbutils/descriptions.c:314
 #, fuzzy, c-format
 msgid "Uncompressed palettized %d-bit %s"
 msgstr "未压缩的 palettized %d-位 %s"
 
+#: gst-libs/gst/pbutils/descriptions.c:366
 #, c-format
 msgid "DivX MPEG-4 Version %d"
 msgstr "DivX MPEG-4 版本 %d"
 
+#: gst-libs/gst/pbutils/descriptions.c:584
 #, c-format
 msgid "Raw %d-bit PCM audio"
 msgstr "原始 %d-位 PCM 音频"
 
+#: gst-libs/gst/pbutils/descriptions.c:586
 msgid "Raw PCM audio"
 msgstr "原始 PCM 音频"
 
+#: gst-libs/gst/pbutils/descriptions.c:592
 #, c-format
 msgid "Raw %d-bit floating-point audio"
 msgstr "原始 %d-位浮点音频"
 
+#: gst-libs/gst/pbutils/descriptions.c:594
 msgid "Raw floating-point audio"
 msgstr "原始浮点音频"
 
+#: gst-libs/gst/pbutils/descriptions.c:681
 msgid "Audio CD source"
 msgstr "音频 CD 源"
 
+#: gst-libs/gst/pbutils/descriptions.c:684
 msgid "DVD source"
 msgstr "DVD 源"
 
+#: gst-libs/gst/pbutils/descriptions.c:687
 msgid "Real Time Streaming Protocol (RTSP) source"
 msgstr "实时流协议(RTSP)源"
 
+#: gst-libs/gst/pbutils/descriptions.c:691
 msgid "Microsoft Media Server (MMS) protocol source"
 msgstr "Microsoft 媒体服务协议(MMS)源"
 
+#: gst-libs/gst/pbutils/descriptions.c:699
 #, c-format
 msgid "%s protocol source"
 msgstr "%s 协议源"
 
+#: gst-libs/gst/pbutils/descriptions.c:767
 #, fuzzy, c-format
 msgid "%s video RTP depayloader"
 msgstr "%s 视频 RTP 去负载器"
 
+#: gst-libs/gst/pbutils/descriptions.c:769
 #, fuzzy, c-format
 msgid "%s audio RTP depayloader"
 msgstr "%s 音频 RTP 去负载器"
 
+#: gst-libs/gst/pbutils/descriptions.c:771
 #, fuzzy, c-format
 msgid "%s RTP depayloader"
 msgstr "%s RTP 去负载器"
 
+#: gst-libs/gst/pbutils/descriptions.c:778
 #, c-format
 msgid "%s demuxer"
 msgstr "%s 多路分配器"
 
+#: gst-libs/gst/pbutils/descriptions.c:780
 #, c-format
 msgid "%s decoder"
 msgstr "%s 解码器"
 
+#: gst-libs/gst/pbutils/descriptions.c:815
 #, c-format
 msgid "%s video RTP payloader"
 msgstr "%s 视频 RTP 负载器"
 
+#: gst-libs/gst/pbutils/descriptions.c:817
 #, c-format
 msgid "%s audio RTP payloader"
 msgstr "%s 音频 RTP 负载器"
 
+#: gst-libs/gst/pbutils/descriptions.c:819
 #, c-format
 msgid "%s RTP payloader"
 msgstr "%s RTP 负载器"
 
+#: gst-libs/gst/pbutils/descriptions.c:826
 #, c-format
 msgid "%s muxer"
 msgstr "%s 混音器"
 
+#: gst-libs/gst/pbutils/descriptions.c:828
 #, c-format
 msgid "%s encoder"
 msgstr "%s 编码器"
 
+#: gst-libs/gst/pbutils/descriptions.c:859
 #, c-format
 msgid "GStreamer element %s"
 msgstr "GStreamer 组件 %s"
 
+#: gst-libs/gst/pbutils/missing-plugins.c:554
 msgid "Unknown source element"
 msgstr "未知源组件"
 
+#: gst-libs/gst/pbutils/missing-plugins.c:557
 msgid "Unknown sink element"
 msgstr "未知消音组件"
 
+#: gst-libs/gst/pbutils/missing-plugins.c:560
 msgid "Unknown element"
 msgstr "未知组件"
 
+#: gst-libs/gst/pbutils/missing-plugins.c:563
 msgid "Unknown decoder element"
 msgstr "未知的解码组件"
 
+#: gst-libs/gst/pbutils/missing-plugins.c:566
 msgid "Unknown encoder element"
 msgstr "未知的编码组件"
 
+#: gst-libs/gst/pbutils/missing-plugins.c:571
 msgid "Plugin or element of unknown type"
 msgstr "未知类型的插件或组件"
 
-#~ msgid "Could not open vfs file \"%s\" for writing: %s."
-#~ msgstr "无法打开 vfs 文件“%s”写入：%s。"
+#: sys/v4l/v4l_calls.c:159
+msgid "No device specified."
+msgstr "未指定设备。"
 
-#~ msgid "No filename given"
-#~ msgstr "没有给定文件名"
+#: sys/v4l/v4l_calls.c:168
+#, c-format
+msgid "Device \"%s\" does not exist."
+msgstr "设备“%s”不存在。"
 
-#~ msgid "Could not close vfs file \"%s\"."
-#~ msgstr "无法关闭 vfs 文件“%s”。"
+#: sys/v4l/v4l_calls.c:173
+#, c-format
+msgid "Device \"%s\" is already being used."
+msgstr "设备“%s”目前已被使用了。"
 
-#~ msgid "Error while writing to file \"%s\"."
-#~ msgstr "写入文件“%s”时出错。"
-
-#~ msgid "Invalid subtitle URI \"%s\", subtitles disabled."
-#~ msgstr "无效的字幕 URI “%s”，不使用字幕。"
-
-#~ msgid "RTSP streams cannot be played yet."
-#~ msgstr "RTSP 流尚不能播放。"
-
-#~ msgid "Could not create \"decodebin\" element."
-#~ msgstr "无法创建“decodebin”组件。"
-
-#~ msgid ""
-#~ "Only a subtitle stream was detected. Either you are loading a subtitle "
-#~ "file or some other type of text file, or the media file was not "
-#~ "recognized."
-#~ msgstr ""
-#~ "仅检测到字幕流。您可能装入的是字幕文件或者其它类型文本文件，又或者是媒体文"
-#~ "件无法识别。"
-
-#~ msgid ""
-#~ "You do not have a decoder installed to handle this file. You might need "
-#~ "to install the necessary plugins."
-#~ msgstr "您没有安装可处理此文件的解码器。您可能需要安装必要的插件。"
-
-#~ msgid "This is not a media file"
-#~ msgstr "此文件不是媒体文件"
-
-#~ msgid "A subtitle stream was detected, but no video stream."
-#~ msgstr "检测到了字幕流，但无视频流。"
-
-#~ msgid "No file name specified."
-#~ msgstr "未给定文件名。"
-
-#~ msgid "Could not open file \"%s\" for reading."
-#~ msgstr "无法打开文件“%s”读取。"
-
-#~ msgid "Could not create \"decodebin2\" element."
-#~ msgstr "无法创建“decodebin”组件。"
-
-#~ msgid "Could not create \"queue2\" element."
-#~ msgstr "无法创建“queue2”组件。"
-
-#, fuzzy
-#~ msgid "Error while sending gdp header data to \"%s:%d\"."
-#~ msgstr "发送 gdp 头部数据至“%s:%d”时出错。"
-
-#~ msgid "Error while sending gdp payload data to \"%s:%d\"."
-#~ msgstr "发送 gdp 负载数据至“%s:%d”时出错。"
-
-#~ msgid "No device specified."
-#~ msgstr "未指定设备。"
-
-#~ msgid "Device \"%s\" does not exist."
-#~ msgstr "设备“%s”不存在。"
-
-#~ msgid "Device \"%s\" is already being used."
-#~ msgstr "设备“%s”目前已被使用了。"
-
-#~ msgid "Could not open device \"%s\" for reading and writing."
-#~ msgstr "无法打开设备“%s”读取。"
+#: sys/v4l/v4l_calls.c:178
+#, c-format
+msgid "Could not open device \"%s\" for reading and writing."
+msgstr "无法打开设备“%s”读取。"

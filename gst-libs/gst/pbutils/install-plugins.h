@@ -58,7 +58,7 @@ G_BEGIN_DECLS
  *
  * Result codes returned by gst_install_plugins_async() and
  * gst_install_plugins_sync(), and also the result code passed to the
- * #GstInstallPluginsResultFunc specified with gst_install_plugin_async().
+ * #GstInstallPluginsResultFunc specified with gst_install_plugins_async().
  *
  * These codes indicate success or failure of starting an external installer
  * program and to what extent the requested plugins could be installed.

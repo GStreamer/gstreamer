@@ -23,7 +23,7 @@
  * SECTION:gstaudiofilter
  * @short_description: Base class for simple audio filters
  *
- * #GstAudioFilter is a #GstBaseTransform-derived base class for simple audio
+ * #GstAudioFilter is a #GstBaseTransform<!-- -->-derived base class for simple audio
  * filters, ie. those that output the same format that they get as input.
  *
  * #GstAudioFilter will parse the input format for you (with error checking)
