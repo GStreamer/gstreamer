@@ -978,7 +978,9 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
 
   if (flacdec->cur_granulepos != GST_BUFFER_OFFSET_NONE) {
     /* this should be fine since it should be one flac frame per ogg packet */
-    flacdec->segment.last_stop = flacdec->cur_granulepos - samples;
+    /* note the + 1, as the granpos is the presentation time of the last sample,
+       whereas the last stop represents the end time of that sample */
+    flacdec->segment.last_stop = flacdec->cur_granulepos - samples + 1;
     GST_LOG_OBJECT (flacdec, "granulepos = %" G_GINT64_FORMAT ", samples = %u",
         flacdec->cur_granulepos, samples);
   }
