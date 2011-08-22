@@ -208,7 +208,7 @@ gst_video_rate_class_init (GstVideoRateClass * klass)
    *
    * Only drop frames, no duplicates are produced.
    *
-   * Since: 0.10.34
+   * Since: 0.10.36
    */
   g_object_class_install_property (object_class, ARG_DROP_ONLY,
       g_param_spec_boolean ("drop-only", "Only Drop",
@@ -222,7 +222,7 @@ gst_video_rate_class_init (GstVideoRateClass * klass)
    * where the framerate is calculated using a moving average over the
    * configured.
    *
-   * Since: 0.10.34
+   * Since: 0.10.36
    */
   g_object_class_install_property (object_class, ARG_AVERAGE_PERIOD,
       g_param_spec_uint64 ("average-period", "Period over which to average",
