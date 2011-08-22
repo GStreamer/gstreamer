@@ -222,13 +222,13 @@ static gboolean test_mpeg_audio_parse_check_valid_frame (GstBaseParse * parse,
 static GstFlowReturn test_mpeg_audio_parse_parse_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame);
 
-GST_BOILERPLATE (TestMpegAudioParse, test_mpeg_audio_parse, GstBaseParse,
-    GST_TYPE_BASE_PARSE);
+G_DEFINE_TYPE (TestMpegAudioParse, test_mpeg_audio_parse, GST_TYPE_BASE_PARSE);
 
 static void
-test_mpeg_audio_parse_base_init (gpointer klass)
+test_mpeg_audio_parse_class_init (TestMpegAudioParseClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstBaseParseClass *parse_class = GST_BASE_PARSE_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
@@ -238,12 +238,6 @@ test_mpeg_audio_parse_base_init (gpointer klass)
   gst_element_class_set_details_simple (element_class, "MPEG1 Audio Parser",
       "Codec/Parser/Audio", "Pretends to parse mpeg1 audio stream",
       "Foo Bar <foo@bar.com>");
-}
-
-static void
-test_mpeg_audio_parse_class_init (TestMpegAudioParseClass * klass)
-{
-  GstBaseParseClass *parse_class = GST_BASE_PARSE_CLASS (klass);
 
   parse_class->start = test_mpeg_audio_parse_start;
   parse_class->stop = test_mpeg_audio_parse_stop;
@@ -254,8 +248,7 @@ test_mpeg_audio_parse_class_init (TestMpegAudioParseClass * klass)
 static gint num_parse_instances = 0;
 
 static void
-test_mpeg_audio_parse_init (TestMpegAudioParse * mp3parse,
-    TestMpegAudioParseClass * klass)
+test_mpeg_audio_parse_init (TestMpegAudioParse * mp3parse)
 {
   /* catch decodebin plugging parsers in a loop early */
   fail_unless (++num_parse_instances < 10);
@@ -278,7 +271,9 @@ static gboolean
 test_mpeg_audio_parse_check_valid_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame, guint * framesize, gint * skipsize)
 {
-  const guint8 *data = GST_BUFFER_DATA (frame->buffer);
+  guint8 data[2];
+
+  gst_buffer_extract (frame->buffer, 0, data, 2);
 
   if ((GST_READ_UINT16_BE (data) & 0xffe0) == 0xffe0) {
     /* this framesize is hard-coded for ../test.mp3 */
@@ -300,7 +295,6 @@ test_mpeg_audio_parse_parse_frame (GstBaseParse * parse,
     caps = gst_caps_new_simple ("audio/mpeg", "mpegversion", G_TYPE_INT, 1,
         "mpegaudioversion", G_TYPE_INT, 1, "layer", G_TYPE_INT, 3,
         "rate", G_TYPE_INT, 44100, "channels", G_TYPE_INT, 2, NULL);
-    gst_buffer_set_caps (frame->buffer, caps);
     gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (parse), caps);
     gst_caps_unref (caps);
   }

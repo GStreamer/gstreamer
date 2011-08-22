@@ -42,6 +42,9 @@
 
 #include "gst/gst-i18n-plugin.h"
 
+#include <gst/audio/audio.h>
+#include <gst/video/video.h>
+
 #include "pbutils.h"
 #include "pbutils-private.h"
 
@@ -184,7 +187,6 @@ static const FormatInfo formats[] = {
   {"video/x-nut", "NUT", FLAG_CONTAINER},
   {"video/x-nuv", "MythTV NuppelVideo (NUV)", FLAG_CONTAINER},
   {"video/x-qdrw", "Apple QuickDraw", 0},
-  {"video/x-raw-gray", N_("Uncompressed Gray Image"), 0},
   {"video/x-smc", "Apple SMC", 0},
   {"video/x-smoke", "Smoke", 0},
   {"video/x-tarkin", "Tarkin", 0},
@@ -251,8 +253,7 @@ static const FormatInfo formats[] = {
   {"audio/x-adpcm", NULL, 0},
   {"audio/x-mace", NULL, 0},
   {"audio/x-pn-realaudio", NULL, 0},
-  {"audio/x-raw-int", NULL, 0},
-  {"audio/x-raw-float", NULL, 0},
+  {"audio/x-raw", NULL, 0},
   {"audio/x-wma", NULL, 0},
   {"video/mpeg", NULL, FLAG_CONTAINER | FLAG_SYSTEMSTREAM},
   {"video/mpeg", NULL, 0},
@@ -274,14 +275,13 @@ static const FormatInfo formats[] = {
   {"audio/x-pn-multirate-realaudio-live", NULL, 0},
 #endif
   {"video/x-truemotion", NULL, 0},
-  {"video/x-raw-rgb", NULL, 0},
-  {"video/x-raw-yuv", NULL, 0},
+  {"video/x-raw", NULL, 0},
   {"video/x-svq", NULL, 0},
   {"video/x-wmv", NULL, 0},
   {"video/x-xan", NULL, 0}
 };
 
-/* returns static descriptions and dynamic ones (such as video/x-raw-yuv),
+/* returns static descriptions and dynamic ones (such as video/x-raw),
  * or NULL if caps aren't known at all */
 static gchar *
 format_info_get_desc (const FormatInfo * info, const GstCaps * caps)
@@ -295,63 +295,61 @@ format_info_get_desc (const FormatInfo * info, const GstCaps * caps)
 
   s = gst_caps_get_structure (caps, 0);
 
-  if (strcmp (info->type, "video/x-raw-yuv") == 0) {
-    const gchar *ret = NULL;
-    guint32 fourcc = 0;
+  if (strcmp (info->type, "video/x-raw") == 0) {
+    gchar *ret = NULL;
+    const gchar *str = 0;
+    GstVideoFormat format;
+    const GstVideoFormatInfo *finfo;
 
-    gst_structure_get_fourcc (s, "format", &fourcc);
-    switch (fourcc) {
-      case GST_MAKE_FOURCC ('I', '4', '2', '0'):
-        ret = _("Uncompressed planar YUV 4:2:0");
-        break;
-      case GST_MAKE_FOURCC ('Y', 'V', '1', '2'):
-        ret = _("Uncompressed planar YVU 4:2:0");
-        break;
-      case GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'):
-        ret = _("Uncompressed packed YUV 4:2:2");
-        break;
-      case GST_MAKE_FOURCC ('Y', 'U', 'V', '9'):
-        ret = _("Uncompressed packed YUV 4:1:0");
-        break;
-      case GST_MAKE_FOURCC ('Y', 'V', 'U', '9'):
-        ret = _("Uncompressed packed YVU 4:1:0");
-        break;
-      case GST_MAKE_FOURCC ('Y', 'V', 'Y', 'U'):
-      case GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y'):
-        ret = _("Uncompressed packed YUV 4:2:2");
-        break;
-      case GST_MAKE_FOURCC ('Y', '4', '1', 'P'):
-        ret = _("Uncompressed packed YUV 4:1:1");
-        break;
-      case GST_MAKE_FOURCC ('I', 'Y', 'U', '2'):
-        ret = _("Uncompressed packed YUV 4:4:4");
-        break;
-      case GST_MAKE_FOURCC ('Y', '4', '2', 'B'):
-        ret = _("Uncompressed planar YUV 4:2:2");
-        break;
-      case GST_MAKE_FOURCC ('Y', '4', '1', 'B'):
-        ret = _("Uncompressed planar YUV 4:1:1");
-        break;
-      case GST_MAKE_FOURCC ('Y', '8', '0', '0'):
-        ret = _("Uncompressed black and white Y-plane");
-        break;
-      default:
-        ret = _("Uncompressed YUV");
-        break;
-    }
-    return g_strdup (ret);
-  } else if (strcmp (info->type, "video/x-raw-rgb") == 0) {
-    const gchar *rgb_str;
-    gint depth = 0;
+    str = gst_structure_get_string (s, "format");
+    format = gst_video_format_from_string (str);
+    if (format == GST_VIDEO_FORMAT_UNKNOWN)
+      return g_strdup (_("Uncompressed video"));
 
-    gst_structure_get_int (s, "depth", &depth);
-    rgb_str = gst_structure_has_field (s, "alpha_mask") ? "RGBA" : "RGB";
-    if (gst_structure_has_field (s, "paletted_data")) {
-      return g_strdup_printf (_("Uncompressed palettized %d-bit %s"), depth,
-          rgb_str);
+    finfo = gst_video_format_get_info (format);
+
+    if (GST_VIDEO_FORMAT_INFO_IS_GRAY (finfo)) {
+      ret = g_strdup (_("Uncompressed gray"));
+    } else if (GST_VIDEO_FORMAT_INFO_IS_YUV (finfo)) {
+      const gchar *layout;
+      const gchar *subs;
+      gint w_sub, h_sub;
+
+      w_sub = GST_VIDEO_FORMAT_INFO_W_SUB (finfo, 1);
+      h_sub = GST_VIDEO_FORMAT_INFO_H_SUB (finfo, 1);
+
+      if (GST_VIDEO_FORMAT_INFO_N_PLANES (finfo) == 1) {
+        layout = "planar";
+      } else {
+        layout = "packed";
+      }
+
+      if (w_sub == 1 && h_sub == 1) {
+        subs = "4:4:4";
+      } else if (w_sub == 2 && h_sub == 1) {
+        subs = "4:2:2";
+      } else if (w_sub == 2 && h_sub == 2) {
+        subs = "4:2:0";
+      } else if (w_sub == 4 && h_sub == 1) {
+        subs = "4:1:1";
+      } else {
+        subs = "";
+      }
+      ret = g_strdup_printf (_("Uncompressed %s YUV %s"), layout, subs);
+    } else if (GST_VIDEO_FORMAT_INFO_IS_RGB (finfo)) {
+      gboolean alpha, palette;
+      gint bits;
+
+      alpha = GST_VIDEO_FORMAT_INFO_HAS_ALPHA (finfo);
+      palette = GST_VIDEO_FORMAT_INFO_HAS_PALETTE (finfo);
+      bits = GST_VIDEO_FORMAT_INFO_BITS (finfo);
+
+      ret = g_strdup_printf (_("Uncompressed %s%d-bit %s"),
+          palette ? "palettized " : "", bits, alpha ? "RGBA" : "RGB");
     } else {
-      return g_strdup_printf ("Uncompressed %d-bit %s", depth, rgb_str);
+      ret = g_strdup (_("Uncompressed video"));
     }
+    return ret;
   } else if (strcmp (info->type, "video/x-h263") == 0) {
     const gchar *variant, *ret;
 
@@ -610,26 +608,25 @@ format_info_get_desc (const FormatInfo * info, const GstCaps * caps)
       }
     }
     return g_strdup ("MPEG Video");
-  } else if (strcmp (info->type, "audio/x-raw-int") == 0) {
-    gint bitdepth = 0;
+  } else if (strcmp (info->type, "audio/x-raw") == 0) {
+    gint depth = 0;
+    gboolean is_float;
+    const gchar *str;
+    GstAudioFormat format;
+    const GstAudioFormatInfo *finfo;
 
-    /* 8-bit pcm might not have depth field (?) */
-    if (!gst_structure_get_int (s, "depth", &bitdepth))
-      gst_structure_get_int (s, "width", &bitdepth);
-    if (bitdepth != 0)
-      return g_strdup_printf (_("Raw %d-bit PCM audio"), bitdepth);
-    else
-      return g_strdup (_("Raw PCM audio"));
-  } else if (strcmp (info->type, "audio/x-raw-float") == 0) {
-    gint bitdepth = 0;
+    str = gst_structure_get_string (s, "format");
+    format = gst_audio_format_from_string (str);
+    if (format == GST_AUDIO_FORMAT_UNKNOWN)
+      return g_strdup (_("Uncompressed audio"));
 
-    gst_structure_get_int (s, "width", &bitdepth);
-    if (bitdepth != 0)
-      return g_strdup_printf (_("Raw %d-bit floating-point audio"), bitdepth);
-    else
-      return g_strdup (_("Raw floating-point audio"));
+    finfo = gst_audio_format_get_info (format);
+    depth = GST_AUDIO_FORMAT_INFO_DEPTH (finfo);
+    is_float = GST_AUDIO_FORMAT_INFO_IS_FLOAT (finfo);
+
+    return g_strdup_printf (_("Raw %d-bit %s audio"), depth,
+        is_float ? "floating-point" : "PCM");
   }
-
   return NULL;
 }
 

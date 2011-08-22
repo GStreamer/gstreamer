@@ -1415,12 +1415,14 @@ setup_ogmaudio_mapper (GstOggStream * pad, ogg_packet * packet)
 {
   guint8 *data = packet->packet;
   guint32 fourcc;
+  gchar *fstr;
 
   pad->granulerate_n = GST_READ_UINT64_LE (data + 25);
   pad->granulerate_d = 1;
 
   fourcc = GST_READ_UINT32_LE (data + 9);
-  GST_DEBUG ("fourcc: %" GST_FOURCC_FORMAT, GST_FOURCC_ARGS (fourcc));
+  fstr = g_strdup_printf ("%" GST_FOURCC_FORMAT, GST_FOURCC_ARGS (fourcc));
+  GST_DEBUG ("fourcc: %s", fstr);
 
   pad->caps = gst_riff_create_audio_caps (fourcc, NULL, NULL, NULL, NULL, NULL);
 
@@ -1433,9 +1435,10 @@ setup_ogmaudio_mapper (GstOggStream * pad, ogg_packet * packet)
         "rate", G_TYPE_INT, pad->granulerate_n, NULL);
   } else {
     pad->caps = gst_caps_new_simple ("audio/x-ogm-unknown",
-        "fourcc", GST_TYPE_FOURCC, fourcc,
+        "fourcc", G_TYPE_STRING, fstr,
         "rate", G_TYPE_INT, pad->granulerate_n, NULL);
   }
+  g_free (fstr);
 
   pad->n_header_packets = 1;
   pad->is_ogm = TRUE;
@@ -1450,6 +1453,7 @@ setup_ogmvideo_mapper (GstOggStream * pad, ogg_packet * packet)
   guint32 fourcc;
   int width, height;
   gint64 time_unit;
+  gchar *fstr;
 
   GST_DEBUG ("time unit %d", GST_READ_UINT32_LE (data + 16));
   GST_DEBUG ("samples per unit %d", GST_READ_UINT32_LE (data + 24));
@@ -1469,13 +1473,14 @@ setup_ogmvideo_mapper (GstOggStream * pad, ogg_packet * packet)
   fourcc = GST_READ_UINT32_LE (data + 9);
   width = GST_READ_UINT32_LE (data + 45);
   height = GST_READ_UINT32_LE (data + 49);
-  GST_DEBUG ("fourcc: %" GST_FOURCC_FORMAT, GST_FOURCC_ARGS (fourcc));
+  fstr = g_strdup_printf ("%" GST_FOURCC_FORMAT, GST_FOURCC_ARGS (fourcc));
+  GST_DEBUG ("fourcc: %s", fstr);
 
   pad->caps = gst_riff_create_video_caps (fourcc, NULL, NULL, NULL, NULL, NULL);
 
   if (pad->caps == NULL) {
     pad->caps = gst_caps_new_simple ("video/x-ogm-unknown",
-        "fourcc", GST_TYPE_FOURCC, fourcc,
+        "fourcc", G_TYPE_STRING, fstr,
         "framerate", GST_TYPE_FRACTION, pad->granulerate_n,
         pad->granulerate_d, NULL);
   } else {
@@ -1485,6 +1490,7 @@ setup_ogmvideo_mapper (GstOggStream * pad, ogg_packet * packet)
         "width", G_TYPE_INT, width, "height", G_TYPE_INT, height, NULL);
   }
   GST_DEBUG ("caps: %" GST_PTR_FORMAT, pad->caps);
+  g_free (fstr);
 
   pad->n_header_packets = 1;
   pad->frame_size = 1;

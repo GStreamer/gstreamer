@@ -68,21 +68,14 @@ gst_riff_create_video_caps (guint32 codec_fcc,
 
       if (strf) {
         if (bpp == 8) {
-          caps = gst_caps_new_simple ("video/x-raw-rgb",
-              "bpp", G_TYPE_INT, 8, "depth", G_TYPE_INT, 8,
-              "endianness", G_TYPE_INT, G_BYTE_ORDER, NULL);
+          caps = gst_caps_new_simple ("video/x-raw",
+              "format", G_TYPE_STRING, "RGB8_PALETTED", NULL);
         } else if (bpp == 24) {
-          caps = gst_caps_new_simple ("video/x-raw-rgb",
-              "bpp", G_TYPE_INT, 24, "depth", G_TYPE_INT, 24,
-              "endianness", G_TYPE_INT, G_BIG_ENDIAN,
-              "red_mask", G_TYPE_INT, 0xff, "green_mask", G_TYPE_INT, 0xff00,
-              "blue_mask", G_TYPE_INT, 0xff0000, NULL);
+          caps = gst_caps_new_simple ("video/x-raw",
+              "format", G_TYPE_STRING, "BGR", NULL);
         } else if (bpp == 32) {
-          caps = gst_caps_new_simple ("video/x-raw-rgb",
-              "bpp", G_TYPE_INT, 32, "depth", G_TYPE_INT, 24,
-              "endianness", G_TYPE_INT, G_BIG_ENDIAN,
-              "red_mask", G_TYPE_INT, 0xff00, "green_mask", G_TYPE_INT,
-              0xff0000, "blue_mask", G_TYPE_INT, 0xff000000, NULL);
+          caps = gst_caps_new_simple ("video/x-raw",
+              "format", G_TYPE_STRING, "BGRx", NULL);
         } else {
           GST_WARNING ("Unhandled DIB RGB depth: %d", bpp);
           return NULL;
@@ -90,8 +83,8 @@ gst_riff_create_video_caps (guint32 codec_fcc,
       } else {
         /* for template */
         caps =
-            gst_caps_from_string ("video/x-raw-rgb, bpp = (int) { 8, 24, 32 }, "
-            "depth = (int) { 8, 24}");
+            gst_caps_from_string ("video/x-raw, format = (string) "
+            "{ RGB8_PALETTED, BGR, BGRx }");
       }
 
       palette = strf_data;
@@ -105,40 +98,38 @@ gst_riff_create_video_caps (guint32 codec_fcc,
       break;
     }
     case GST_MAKE_FOURCC ('I', '4', '2', '0'):
-      caps = gst_caps_new_simple ("video/x-raw-yuv",
-          "format", GST_TYPE_FOURCC, codec_fcc, NULL);
+      caps = gst_caps_new_simple ("video/x-raw",
+          "format", G_TYPE_STRING, "I420", NULL);
       if (codec_name)
         *codec_name = g_strdup ("Uncompressed planar YUV 4:2:0");
       break;
 
     case GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'):
     case GST_MAKE_FOURCC ('Y', 'U', 'N', 'V'):
-      caps = gst_caps_new_simple ("video/x-raw-yuv",
-          "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'),
-          NULL);
+      caps = gst_caps_new_simple ("video/x-raw",
+          "format", G_TYPE_STRING, "YUY2", NULL);
       if (codec_name)
         *codec_name = g_strdup ("Uncompressed packed YUV 4:2:2");
       break;
 
     case GST_MAKE_FOURCC ('Y', 'V', 'U', '9'):
-      caps = gst_caps_new_simple ("video/x-raw-yuv",
-          "format", GST_TYPE_FOURCC, codec_fcc, NULL);
+      caps = gst_caps_new_simple ("video/x-raw",
+          "format", G_TYPE_STRING, "YVU9", NULL);
       if (codec_name)
         *codec_name = g_strdup ("Uncompressed packed YVU 4:1:0");
       break;
 
     case GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y'):
     case GST_MAKE_FOURCC ('2', 'v', 'u', 'y'):
-      caps = gst_caps_new_simple ("video/x-raw-yuv",
-          "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y'),
-          NULL);
+      caps = gst_caps_new_simple ("video/x-raw",
+          "format", G_TYPE_STRING, "UYVY", NULL);
       if (codec_name)
         *codec_name = g_strdup ("Uncompressed packed YUV 4:2:2");
       break;
 
     case GST_MAKE_FOURCC ('Y', 'V', '1', '2'):
-      caps = gst_caps_new_simple ("video/x-raw-yuv",
-          "format", GST_TYPE_FOURCC, codec_fcc, NULL);
+      caps = gst_caps_new_simple ("video/x-raw",
+          "format", G_TYPE_STRING, "YV12", NULL);
       if (codec_name)
         *codec_name = g_strdup ("Uncompressed packed YVU 4:2:2");
       break;
@@ -547,16 +538,14 @@ gst_riff_create_video_caps (guint32 codec_fcc,
 
     case GST_MAKE_FOURCC ('W', 'M', 'V', 'A'):
       caps = gst_caps_new_simple ("video/x-wmv",
-          "wmvversion", G_TYPE_INT, 3, "format", GST_TYPE_FOURCC,
-          codec_fcc, NULL);
+          "wmvversion", G_TYPE_INT, 3, "format", G_TYPE_STRING, "WMVA", NULL);
       if (codec_name)
         *codec_name = g_strdup ("Microsoft Windows Media Advanced Profile");
       break;
 
     case GST_MAKE_FOURCC ('W', 'V', 'C', '1'):
       caps = gst_caps_new_simple ("video/x-wmv",
-          "wmvversion", G_TYPE_INT, 3, "format", GST_TYPE_FOURCC,
-          codec_fcc, NULL);
+          "wmvversion", G_TYPE_INT, 3, "format", G_TYPE_STRING, "WVC1", NULL);
       if (codec_name)
         *codec_name = g_strdup ("Microsoft Windows Media VC-1");
       break;

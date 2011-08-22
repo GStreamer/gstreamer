@@ -131,10 +131,7 @@ check_PROGRAMS = \
 	libs/xmpwriter \
 	$(cxx_checks) \
 	$(check_orc) \
-	pipelines/simple-launch-lines \
-	pipelines/streamheader \
-	pipelines/basetime \
-	pipelines/capsfilter-renegotiation
+	pipelines/simple-launch-lines
 
 # TORTURE_TO_FIX = \
 #       elements/adder
@@ -146,6 +143,9 @@ VALGRIND_TO_FIX = \
 
 # FIXME 0.11: these tests don't even build at the moment
 ZERO_11_TO_PORT = \
+	pipelines/streamheader \
+	pipelines/basetime \
+	pipelines/capsfilter-renegotiation \
 	elements/appsink            \
 	elements/appsrc             \
 	elements/audiorate          \

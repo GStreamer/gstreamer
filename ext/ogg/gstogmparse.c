@@ -585,7 +585,7 @@ gst_ogm_parse_stream_header (GstOgmParse * ogm, const guint8 * data, guint size)
         GST_WARNING_OBJECT (ogm, "could not find video caps for fourcc %"
             GST_FOURCC_FORMAT, GST_FOURCC_ARGS (fourcc));
         caps = gst_caps_new_simple ("video/x-ogm-unknown", "fourcc",
-            GST_TYPE_FOURCC, fourcc, NULL);
+            G_TYPE_STRING, ogm->hdr.subtype, NULL);
         break;
       }
 
