@@ -454,9 +454,52 @@ static GstCaps *
 gst_d3dvideosink_get_caps (GstBaseSink * basesink)
 {
   GstD3DVideoSink *sink = GST_D3DVIDEOSINK (basesink);
+  GstCaps *caps = gst_caps_new_empty ();
+  const GstCaps *tempCaps =
+      gst_pad_get_pad_template_caps (GST_VIDEO_SINK_PAD (sink));
 
-  return
-      gst_caps_copy (gst_pad_get_pad_template_caps (GST_VIDEO_SINK_PAD (sink)));
+  /* restrict caps based on the hw capabilities */
+  if (shared.d3d) {
+    D3DDISPLAYMODE d3ddm;
+    if (FAILED (IDirect3D9_GetAdapterDisplayMode (shared.d3d,
+                D3DADAPTER_DEFAULT, &d3ddm))) {
+      GST_WARNING ("Unable to request adapter display mode");
+      gst_caps_unref (caps);
+      caps = gst_caps_copy (tempCaps);
+    } else {
+      gint i;
+      GstCaps *c = gst_caps_normalize (tempCaps);
+
+      for (i = 0; i < gst_caps_get_size (c); i++) {
+        D3DFORMAT d3dfourcc = 0;
+        GstStructure *stru = gst_caps_get_structure (c, i);
+        if (!gst_structure_has_name (stru, "video/x-raw-rgb")) {
+          gst_structure_get_fourcc (stru, "format", &d3dfourcc);
+          switch (d3dfourcc) {
+            case GST_MAKE_FOURCC ('Y', 'V', '1', '2'):
+            case GST_MAKE_FOURCC ('I', '4', '2', '0'):
+              d3dfourcc = (D3DFORMAT) MAKEFOURCC ('Y', 'V', '1', '2');
+              break;
+          }
+          if (d3dfourcc && SUCCEEDED (IDirect3D9_CheckDeviceFormat (shared.d3d,
+                      D3DADAPTER_DEFAULT,
+                      D3DDEVTYPE_HAL,
+                      d3ddm.Format, 0, D3DRTYPE_SURFACE, d3dfourcc))) {
+            /* hw supports this format */
+            gst_caps_append (caps, gst_caps_copy_nth (c, i));
+          }
+        } else {
+          /* rgb formats */
+          gst_caps_append (caps, gst_caps_copy_nth (c, i));
+        }
+      }
+      gst_caps_unref (c);
+    }
+  } else {
+    gst_caps_unref (caps);
+    caps = gst_caps_copy (tempCaps);
+  }
+  return caps;
 }
 
 static void
@@ -1057,8 +1100,8 @@ gst_d3dvideosink_set_window_handle (GstXOverlay * overlay, guintptr window_id)
 
     /* Save our window id */
     sink->window_handle = hWnd;
-	gst_d3dvideosink_set_window_for_renderer(sink);
-	
+    gst_d3dvideosink_set_window_for_renderer (sink);
+
     if (init_swap_chain)
       gst_d3dvideosink_initialize_swap_chain (sink);
   }
@@ -1067,8 +1110,8 @@ gst_d3dvideosink_set_window_handle (GstXOverlay * overlay, guintptr window_id)
   GST_DEBUG ("Direct3D window id successfully changed for sink %p to %p", sink,
       hWnd);
   GST_D3DVIDEOSINK_SWAP_CHAIN_UNLOCK (sink);
-  GST_D3DVIDEOSINK_SHARED_D3D_DEV_UNLOCK 
-  gst_d3dvideosink_update(sink);	 
+  GST_D3DVIDEOSINK_SHARED_D3D_DEV_UNLOCK
+      gst_d3dvideosink_update (GST_BASE_SINK_CAST (sink));
   return;
 /*error:*/
 /*  GST_DEBUG("Error attempting to change the window id for sink %d to %d", sink, hWnd); */
@@ -2166,7 +2209,8 @@ gst_d3dvideosink_initialize_swap_chain (GstD3DVideoSink * sink)
       goto error;
     }
 
-    GST_DEBUG ("Determined Direct3D format: %d", d3dfourcc);
+    GST_DEBUG ("Determined Direct3D format: %" GST_FOURCC_FORMAT,
+        GST_FOURCC_ARGS (d3dfourcc));
 
     //Stencil/depth buffers aren't created by default when using swap chains
     //if (SUCCEEDED(IDirect3D9_CheckDeviceFormat(shared.d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, d3dformat, D3DUSAGE_DEPTHSTENCIL, D3DRTYPE_SURFACE, D3DFMT_D32))) {
