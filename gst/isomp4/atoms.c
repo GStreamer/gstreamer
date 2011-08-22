@@ -4096,8 +4096,9 @@ build_jp2x_extension (const GstBuffer * prefix)
 }
 
 AtomInfo *
-build_jp2h_extension (AtomTRAK * trak, gint width, gint height, guint32 fourcc,
-    gint ncomp, const GValue * cmap_array, const GValue * cdef_array)
+build_jp2h_extension (AtomTRAK * trak, gint width, gint height,
+    const gchar * colorspace, gint ncomp, const GValue * cmap_array,
+    const GValue * cdef_array)
 {
   AtomData *atom_data;
   GstBuffer *buf;
@@ -4115,15 +4116,15 @@ build_jp2h_extension (AtomTRAK * trak, gint width, gint height, guint32 fourcc,
   g_return_val_if_fail (cdef_array == NULL ||
       GST_VALUE_HOLDS_ARRAY (cdef_array), NULL);
 
-  if (fourcc == GST_MAKE_FOURCC ('s', 'R', 'G', 'B')) {
+  if (g_str_equal (colorspace, "sRGB")) {
     cenum = 0x10;
     if (ncomp == 0)
       ncomp = 3;
-  } else if (fourcc == GST_MAKE_FOURCC ('G', 'R', 'A', 'Y')) {
+  } else if (g_str_equal (colorspace, "GRAY")) {
     cenum = 0x11;
     if (ncomp == 0)
       ncomp = 1;
-  } else if (fourcc == GST_MAKE_FOURCC ('s', 'Y', 'U', 'V')) {
+  } else if (g_str_equal (colorspace, "sYUV")) {
     cenum = 0x12;
     if (ncomp == 0)
       ncomp = 3;

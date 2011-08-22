@@ -197,8 +197,7 @@ gst_rtp_j2k_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
 
   outcaps =
       gst_caps_new_simple ("image/x-jpc", "framerate", GST_TYPE_FRACTION, 0, 1,
-      "fields", G_TYPE_INT, 1, "fourcc", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('s',
-          'Y', 'U', 'V'), NULL);
+      "fields", G_TYPE_INT, 1, "colorspace", G_TYPE_STRING, "sYUV", NULL);
   res = gst_pad_set_caps (depayload->srcpad, outcaps);
   gst_caps_unref (outcaps);
 

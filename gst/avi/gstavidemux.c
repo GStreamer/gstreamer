@@ -2168,7 +2168,7 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
           stream->strf.vids, stream->extradata, stream->initdata, &codec_name);
       if (!caps) {
         caps = gst_caps_new_simple ("video/x-avi-unknown", "fourcc",
-            GST_TYPE_FOURCC, fourcc, NULL);
+            G_TYPE_INT, fourcc, NULL);
       } else if (got_vprp && vprp) {
         guint32 aspect_n, aspect_d;
         gint n, d;
@@ -2212,7 +2212,7 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
           stream->strf.iavs, stream->extradata, stream->initdata, &codec_name);
       if (!caps) {
         caps = gst_caps_new_simple ("video/x-avi-unknown", "fourcc",
-            GST_TYPE_FOURCC, fourcc, NULL);
+            G_TYPE_INT, fourcc, NULL);
       }
       tag_name = GST_TAG_VIDEO_CODEC;
       avi->num_v_streams++;

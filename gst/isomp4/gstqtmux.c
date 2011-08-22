@@ -3120,7 +3120,7 @@ gst_qt_mux_video_sink_set_caps (GstPad * pad, GstCaps * caps)
     sync = FALSE;
   } else if (strcmp (mimetype, "image/x-j2c") == 0 ||
       strcmp (mimetype, "image/x-jpc") == 0) {
-    guint32 fourcc;
+    const gchar *colorspace;
     const GValue *cmap_array;
     const GValue *cdef_array;
     gint ncomp = 0;
@@ -3138,9 +3138,11 @@ gst_qt_mux_video_sink_set_caps (GstPad * pad, GstCaps * caps)
     ext_atom = NULL;
     entry.fourcc = FOURCC_mjp2;
     sync = FALSE;
-    if (gst_structure_get_fourcc (structure, "fourcc", &fourcc) &&
+
+    colorspace = gst_structure_get_string (structure, "colorspace");
+    if (colorspace &&
         (ext_atom =
-            build_jp2h_extension (qtpad->trak, width, height, fourcc, ncomp,
+            build_jp2h_extension (qtpad->trak, width, height, colorspace, ncomp,
                 cmap_array, cdef_array)) != NULL) {
       ext_atom_list = g_list_append (ext_atom_list, ext_atom);
 
@@ -3164,13 +3166,13 @@ gst_qt_mux_video_sink_set_caps (GstPad * pad, GstCaps * caps)
   } else if (strcmp (mimetype, "video/x-qt-part") == 0) {
     guint32 fourcc;
 
-    gst_structure_get_fourcc (structure, "format", &fourcc);
+    gst_structure_get_uint (structure, "format", &fourcc);
     entry.fourcc = fourcc;
     qtpad->have_dts = TRUE;
   } else if (strcmp (mimetype, "video/x-mp4-part") == 0) {
     guint32 fourcc;
 
-    gst_structure_get_fourcc (structure, "format", &fourcc);
+    gst_structure_get_uint (structure, "format", &fourcc);
     entry.fourcc = fourcc;
     qtpad->have_dts = TRUE;
   }

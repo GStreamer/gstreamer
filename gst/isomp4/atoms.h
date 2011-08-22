@@ -916,7 +916,7 @@ AtomInfo *   build_esds_extension        (AtomTRAK * trak, guint8 object_type,
 AtomInfo *   build_btrt_extension        (guint32 buffer_size_db, guint32 avg_bitrate,
                                           guint32 max_bitrate);
 AtomInfo *   build_jp2h_extension        (AtomTRAK * trak, gint width, gint height,
-                                          guint32 fourcc, gint ncomp,
+                                          const gchar *colorspace, gint ncomp,
                                           const GValue * cmap_array,
                                           const GValue * cdef_array);
 

@@ -51,6 +51,7 @@
 
 #include <glib/gprintf.h>
 #include <gst/tag/tag.h>
+#include <gst/audio/audio.h>
 
 #include "qtatomparser.h"
 #include "qtdemux_types.h"
@@ -5255,7 +5256,7 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
   /* sync sample atom */
   stream->stps_present = FALSE;
   if ((stream->stss_present =
-          !!qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stss,
+          ! !qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stss,
               &stream->stss) ? TRUE : FALSE) == TRUE) {
     /* copy atom data into a new buffer for later use */
     stream->stss.data = g_memdup (stream->stss.data, stream->stss.size);
@@ -5273,7 +5274,7 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
 
     /* partial sync sample atom */
     if ((stream->stps_present =
-            !!qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stps,
+            ! !qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stps,
                 &stream->stps) ? TRUE : FALSE) == TRUE) {
       /* copy atom data into a new buffer for later use */
       stream->stps.data = g_memdup (stream->stps.data, stream->stps.size);
@@ -5392,7 +5393,7 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
 
   /* composition time-to-sample */
   if ((stream->ctts_present =
-          !!qtdemux_tree_get_child_by_type_full (stbl, FOURCC_ctts,
+          ! !qtdemux_tree_get_child_by_type_full (stbl, FOURCC_ctts,
               &stream->ctts) ? TRUE : FALSE) == TRUE) {
     /* copy atom data into a new buffer for later use */
     stream->ctts.data = g_memdup (stream->ctts.data, stream->ctts.size);
@@ -6579,7 +6580,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
           /* see annex I of the jpeg2000 spec */
           GNode *jp2h, *ihdr, *colr, *mjp2, *field, *prefix, *cmap, *cdef;
           const guint8 *data;
-          guint32 fourcc = 0;
+          const gchar *colorspace;
           gint ncomp = 0;
           guint32 ncomp_map = 0;
           gint32 *comp_map = NULL;
@@ -6610,21 +6611,22 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
           if (QT_UINT8 ((guint8 *) colr->data + 8) == 1) {
             switch (QT_UINT32 ((guint8 *) colr->data + 11)) {
               case 16:
-                fourcc = GST_MAKE_FOURCC ('s', 'R', 'G', 'B');
+                colorspace = "sRGB";
                 break;
               case 17:
-                fourcc = GST_MAKE_FOURCC ('G', 'R', 'A', 'Y');
+                colorspace = "GRAY";
                 break;
               case 18:
-                fourcc = GST_MAKE_FOURCC ('s', 'Y', 'U', 'V');
+                colorspace = "sYUV";
                 break;
               default:
+                colorspace = NULL;
                 break;
             }
           }
-          if (!fourcc)
+          if (!colorspace)
             /* colr is required, and only values 16, 17, and 18 are specified,
-               so error if we have no fourcc */
+               so error if we have no colorspace */
             break;
 
           /* extract component mapping */
@@ -6691,7 +6693,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
           gst_caps_set_simple (stream->caps,
               "num-components", G_TYPE_INT, ncomp, NULL);
           gst_caps_set_simple (stream->caps,
-              "fourcc", GST_TYPE_FOURCC, fourcc, NULL);
+              "colorspace", G_TYPE_STRING, colorspace, NULL);
 
           if (comp_map) {
             GValue arr = { 0, };
@@ -7003,7 +7005,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
         }
         if (enda) {
           gst_caps_set_simple (stream->caps,
-              "endianness", G_TYPE_INT, G_LITTLE_ENDIAN, NULL);
+              "format", G_TYPE_STRING, "S24_3LE", NULL);
         }
         break;
       }
@@ -9085,43 +9087,20 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       _codec ("Raw RGB video");
       bps = QT_UINT16 (stsd_data + 98);
       /* set common stuff */
-      caps = gst_caps_new_simple ("video/x-raw-rgb",
-          "endianness", G_TYPE_INT, G_BYTE_ORDER, "depth", G_TYPE_INT, bps,
-          NULL);
+      caps = gst_caps_new_simple ("video/x-raw", NULL);
 
       switch (bps) {
         case 15:
-          gst_caps_set_simple (caps,
-              "bpp", G_TYPE_INT, 16,
-              "endianness", G_TYPE_INT, G_BIG_ENDIAN,
-              "red_mask", G_TYPE_INT, 0x7c00,
-              "green_mask", G_TYPE_INT, 0x03e0,
-              "blue_mask", G_TYPE_INT, 0x001f, NULL);
+          gst_caps_set_simple (caps, "format", G_TYPE_STRING, "RGB15", NULL);
           break;
         case 16:
-          gst_caps_set_simple (caps,
-              "bpp", G_TYPE_INT, 16,
-              "endianness", G_TYPE_INT, G_BIG_ENDIAN,
-              "red_mask", G_TYPE_INT, 0xf800,
-              "green_mask", G_TYPE_INT, 0x07e0,
-              "blue_mask", G_TYPE_INT, 0x001f, NULL);
+          gst_caps_set_simple (caps, "format", G_TYPE_STRING, "RGB16", NULL);
           break;
         case 24:
-          gst_caps_set_simple (caps,
-              "bpp", G_TYPE_INT, 24,
-              "endianness", G_TYPE_INT, G_BIG_ENDIAN,
-              "red_mask", G_TYPE_INT, 0xff0000,
-              "green_mask", G_TYPE_INT, 0x00ff00,
-              "blue_mask", G_TYPE_INT, 0x0000ff, NULL);
+          gst_caps_set_simple (caps, "format", G_TYPE_STRING, "RGB", NULL);
           break;
         case 32:
-          gst_caps_set_simple (caps,
-              "bpp", G_TYPE_INT, 32,
-              "endianness", G_TYPE_INT, G_BIG_ENDIAN,
-              "alpha_mask", G_TYPE_INT, 0xff000000,
-              "red_mask", G_TYPE_INT, 0x00ff0000,
-              "green_mask", G_TYPE_INT, 0x0000ff00,
-              "blue_mask", G_TYPE_INT, 0x000000ff, NULL);
+          gst_caps_set_simple (caps, "format", G_TYPE_STRING, "ARGB", NULL);
           break;
         default:
           /* unknown */
@@ -9131,39 +9110,30 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
     }
     case GST_MAKE_FOURCC ('y', 'v', '1', '2'):
       _codec ("Raw planar YUV 4:2:0");
-      caps = gst_caps_new_simple ("video/x-raw-yuv",
-          "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('I', '4', '2', '0'),
-          NULL);
+      caps = gst_caps_new_simple ("video/x-raw",
+          "format", G_TYPE_STRING, "I420", NULL);
       break;
     case GST_MAKE_FOURCC ('y', 'u', 'v', '2'):
     case GST_MAKE_FOURCC ('Y', 'u', 'v', '2'):
       _codec ("Raw packed YUV 4:2:2");
-      caps = gst_caps_new_simple ("video/x-raw-yuv",
-          "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'),
-          NULL);
+      caps = gst_caps_new_simple ("video/x-raw",
+          "format", G_TYPE_STRING, "YUY2", NULL);
       break;
     case GST_MAKE_FOURCC ('2', 'v', 'u', 'y'):
     case GST_MAKE_FOURCC ('2', 'V', 'u', 'y'):
       _codec ("Raw packed YUV 4:2:2");
-      caps = gst_caps_new_simple ("video/x-raw-yuv",
-          "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y'),
-          NULL);
+      caps = gst_caps_new_simple ("video/x-raw",
+          "format", G_TYPE_STRING, "UYVY", NULL);
       break;
     case GST_MAKE_FOURCC ('v', '2', '1', '0'):
       _codec ("Raw packed YUV 10-bit 4:2:2");
-      caps = gst_caps_new_simple ("video/x-raw-yuv",
-          "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('v', '2', '1', '0'),
-          NULL);
+      caps = gst_caps_new_simple ("video/x-raw",
+          "format", G_TYPE_STRING, "v210", NULL);
       break;
     case GST_MAKE_FOURCC ('r', '2', '1', '0'):
       _codec ("Raw packed RGB 10-bit 4:4:4");
-      caps = gst_caps_new_simple ("video/x-raw-rgb",
-          "endianness", G_TYPE_INT, G_BIG_ENDIAN, "depth", G_TYPE_INT, 30,
-          "bpp", G_TYPE_INT, 32,
-          "endianness", G_TYPE_INT, G_BIG_ENDIAN,
-          "red_mask", G_TYPE_INT, 0x3ff00000,
-          "green_mask", G_TYPE_INT, 0x000ffc00,
-          "blue_mask", G_TYPE_INT, 0x000003ff, NULL);
+      caps = gst_caps_new_simple ("video/x-raw",
+          "format", G_TYPE_STRING, "r210", NULL);
       break;
     case GST_MAKE_FOURCC ('m', 'p', 'e', 'g'):
     case GST_MAKE_FOURCC ('m', 'p', 'g', '1'):
@@ -9345,9 +9315,7 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
     case FOURCC_ovc1:
       _codec ("VC-1");
       caps = gst_caps_new_simple ("video/x-wmv",
-          "wmvversion", G_TYPE_INT, 3,
-          "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('W', 'V', 'C', '1'),
-          NULL);
+          "wmvversion", G_TYPE_INT, 3, "format", G_TYPE_STRING, "WVC1", NULL);
       break;
     case GST_MAKE_FOURCC ('k', 'p', 'c', 'd'):
     default:
@@ -9364,7 +9332,7 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
   /* enable clipping for raw video streams */
   s = gst_caps_get_structure (caps, 0);
   name = gst_structure_get_name (s);
-  if (g_str_has_prefix (name, "video/x-raw-")) {
+  if (g_str_has_prefix (name, "video/x-raw")) {
     stream->need_clip = TRUE;
   }
   return caps;
@@ -9385,8 +9353,8 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
     case GST_MAKE_FOURCC ('N', 'O', 'N', 'E'):
     case GST_MAKE_FOURCC ('r', 'a', 'w', ' '):
       _codec ("Raw 8-bit PCM audio");
-      caps = gst_caps_new_simple ("audio/x-raw-int", "width", G_TYPE_INT, 8,
-          "depth", G_TYPE_INT, 8, "signed", G_TYPE_BOOLEAN, FALSE, NULL);
+      caps = gst_caps_new_simple ("audio/x-raw",
+          "format", G_TYPE_STRING, "U8", NULL);
       break;
     case GST_MAKE_FOURCC ('t', 'w', 'o', 's'):
       endian = G_BIG_ENDIAN;
@@ -9395,45 +9363,43 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
     {
       gchar *str;
       gint depth;
+      GstAudioFormat format;
 
       if (!endian)
         endian = G_LITTLE_ENDIAN;
 
       depth = stream->bytes_per_packet * 8;
+      format = gst_audio_format_build_integer (TRUE, endian, depth, depth);
+
       str = g_strdup_printf ("Raw %d-bit PCM audio", depth);
       _codec (str);
       g_free (str);
-      caps = gst_caps_new_simple ("audio/x-raw-int",
-          "width", G_TYPE_INT, depth, "depth", G_TYPE_INT, depth,
-          "endianness", G_TYPE_INT, endian,
-          "signed", G_TYPE_BOOLEAN, TRUE, NULL);
+
+      caps = gst_caps_new_simple ("audio/x-raw",
+          "format", G_TYPE_STRING, gst_audio_format_to_string (format), NULL);
       break;
     }
     case GST_MAKE_FOURCC ('f', 'l', '6', '4'):
       _codec ("Raw 64-bit floating-point audio");
-      caps = gst_caps_new_simple ("audio/x-raw-float", "width", G_TYPE_INT, 64,
-          "endianness", G_TYPE_INT, G_BIG_ENDIAN, NULL);
+      caps = gst_caps_new_simple ("audio/x-raw",
+          "format", G_TYPE_STRING, "F64_BE", NULL);
       break;
     case GST_MAKE_FOURCC ('f', 'l', '3', '2'):
       _codec ("Raw 32-bit floating-point audio");
-      caps = gst_caps_new_simple ("audio/x-raw-float", "width", G_TYPE_INT, 32,
-          "endianness", G_TYPE_INT, G_BIG_ENDIAN, NULL);
+      caps = gst_caps_new_simple ("audio/x-raw",
+          "format", G_TYPE_STRING, "F32_BE", NULL);
       break;
     case FOURCC_in24:
       _codec ("Raw 24-bit PCM audio");
       /* we assume BIG ENDIAN, an enda box will tell us to change this to little
        * endian later */
-      caps = gst_caps_new_simple ("audio/x-raw-int", "width", G_TYPE_INT, 24,
-          "depth", G_TYPE_INT, 24,
-          "endianness", G_TYPE_INT, G_BIG_ENDIAN,
-          "signed", G_TYPE_BOOLEAN, TRUE, NULL);
+      caps = gst_caps_new_simple ("audio/x-raw",
+          "format", G_TYPE_STRING, "S24_3BE", NULL);
       break;
     case GST_MAKE_FOURCC ('i', 'n', '3', '2'):
       _codec ("Raw 32-bit PCM audio");
-      caps = gst_caps_new_simple ("audio/x-raw-int", "width", G_TYPE_INT, 32,
-          "depth", G_TYPE_INT, 32,
-          "endianness", G_TYPE_INT, G_BIG_ENDIAN,
-          "signed", G_TYPE_BOOLEAN, TRUE, NULL);
+      caps = gst_caps_new_simple ("audio/x-raw",
+          "format", G_TYPE_STRING, "S32_BE", NULL);
       break;
     case GST_MAKE_FOURCC ('u', 'l', 'a', 'w'):
       _codec ("Mu-law audio");
@@ -9570,7 +9536,7 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
   /* enable clipping for raw audio streams */
   s = gst_caps_get_structure (caps, 0);
   name = gst_structure_get_name (s);
-  if (g_str_has_prefix (name, "audio/x-raw-")) {
+  if (g_str_has_prefix (name, "audio/x-raw")) {
     stream->need_clip = TRUE;
   }
   return caps;
