@@ -1364,42 +1364,6 @@ gst_structure_get_uint (const GstStructure * structure,
 }
 
 /**
- * gst_structure_get_fourcc:
- * @structure: a #GstStructure
- * @fieldname: the name of a field
- * @value: (out): a pointer to a 32bit unsigned int to set
- *
- * Sets the Fourcc pointed to by @value corresponding to the value of the
- * given field.  Caller is responsible for making sure the field exists
- * and has the correct type.
- *
- * Returns: TRUE if the value could be set correctly. If there was no field
- * with @fieldname or the existing field did not contain a fourcc, this function
- * returns FALSE.
- */
-gboolean
-gst_structure_get_fourcc (const GstStructure * structure,
-    const gchar * fieldname, guint32 * value)
-{
-  GstStructureField *field;
-
-  g_return_val_if_fail (structure != NULL, FALSE);
-  g_return_val_if_fail (fieldname != NULL, FALSE);
-  g_return_val_if_fail (value != NULL, FALSE);
-
-  field = gst_structure_get_field (structure, fieldname);
-
-  if (field == NULL)
-    return FALSE;
-  if (!GST_VALUE_HOLDS_FOURCC (&field->value))
-    return FALSE;
-
-  *value = gst_value_get_fourcc (&field->value);
-
-  return TRUE;
-}
-
-/**
  * gst_structure_get_date:
  * @structure: a #GstStructure
  * @fieldname: the name of a field
@@ -1704,10 +1668,6 @@ gst_structure_get_abbrs (gint * n_abbrs)
       {"d", G_TYPE_DOUBLE}
       ,
       {"buffer", GST_TYPE_BUFFER}
-      ,
-      {"fourcc", GST_TYPE_FOURCC}
-      ,
-      {"4", GST_TYPE_FOURCC}
       ,
       {"fraction", GST_TYPE_FRACTION}
       ,

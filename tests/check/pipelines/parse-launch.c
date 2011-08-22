@@ -96,7 +96,7 @@ static const gchar *test_lines[] = {
   "filesrc location=http://domain.com/music.mp3 ! identity silent=true ! fakesink silent=true",
   "filesrc location=movie.avi ! tee name=demuxer ! ( queue ! identity silent=true ! fakesink silent=true ) ( demuxer. ! queue ! identity silent=true ! fakesink silent=true )",
   "fakesrc ! video/x-raw-yuv ! fakesink silent=true",
-  "fakesrc !   video/raw,  format=(fourcc)YUY2; video/raw, format=(fourcc)YV12 ! fakesink silent=true",
+  "fakesrc !   video/raw,  format=(string)YUY2; video/raw, format=(string)YV12 ! fakesink silent=true",
   "fakesrc ! audio/x-raw-int, width=[16,  32], depth={16, 24, 32}, signed=TRUE ! fakesink silent=true",
   "fakesrc ! identity silent=true ! identity silent=true ! identity silent=true ! fakesink silent=true",
   "fakesrc name=100 fakesink name=101 silent=true 100. ! 101.",

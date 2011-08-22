@@ -43,8 +43,8 @@
  *  <title>Creating caps</title>
  *  <programlisting>
  *  GstCaps *caps;
- *  caps = gst_caps_new_simple ("video/x-raw-yuv",
- *       "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('I', '4', '2', '0'),
+ *  caps = gst_caps_new_simple ("video/x-raw",
+ *       "format", G_TYPE_STRING, "I420"),
  *       "framerate", GST_TYPE_FRACTION, 25, 1,
  *       "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1,
  *       "width", G_TYPE_INT, 320,

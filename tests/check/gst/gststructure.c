@@ -284,26 +284,24 @@ GST_START_TEST (test_structure_new)
   gboolean bool;
   gint num, den;
   GstClockTime clocktime;
-  guint32 fourcc;
 
   s = gst_structure_new ("name",
       "key", G_TYPE_STRING, "value",
       "bool", G_TYPE_BOOLEAN, TRUE,
       "fraction", GST_TYPE_FRACTION, 1, 5,
-      "clocktime", GST_TYPE_CLOCK_TIME, GST_CLOCK_TIME_NONE,
-      "fourcc", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('f', 'o', 'u', 'r'), NULL);
+      "clocktime", GST_TYPE_CLOCK_TIME, GST_CLOCK_TIME_NONE, NULL);
 
   fail_unless (gst_structure_get_field_type (s, "unknown") == G_TYPE_INVALID);
   /* test setting a different name */
   gst_structure_set_name (s, "newname");
   fail_unless (strcmp (gst_structure_get_string (s, "key"), "value") == 0);
   fail_unless (gst_structure_has_field (s, "key"));
-  fail_unless_equals_int (gst_structure_n_fields (s), 5);
+  fail_unless_equals_int (gst_structure_n_fields (s), 4);
   /* test removing a field */
   gst_structure_remove_field (s, "key");
   fail_if (gst_structure_get_string (s, "key"));
   fail_if (gst_structure_has_field (s, "key"));
-  fail_unless_equals_int (gst_structure_n_fields (s), 4);
+  fail_unless_equals_int (gst_structure_n_fields (s), 3);
 
   fail_unless (gst_structure_get_boolean (s, "bool", &bool));
   fail_unless (bool);
@@ -314,8 +312,6 @@ GST_START_TEST (test_structure_new)
 
   fail_unless (gst_structure_get_clock_time (s, "clocktime", &clocktime));
   fail_unless_equals_uint64 (clocktime, GST_CLOCK_TIME_NONE);
-
-  fail_unless (gst_structure_get_fourcc (s, "fourcc", &fourcc));
 
   gst_structure_free (s);
 

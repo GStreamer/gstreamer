@@ -24,92 +24,6 @@
 #include <gst/check/gstcheck.h>
 
 
-GST_START_TEST (test_serialize_fourcc)
-{
-  int i;
-
-  guint32 fourccs[] = {
-    GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'),
-    GST_MAKE_FOURCC ('Y', '8', '0', '0'),
-    GST_MAKE_FOURCC ('Y', '8', ' ', ' '),
-    GST_MAKE_FOURCC ('Y', '1', '6', ' '),
-    GST_MAKE_FOURCC ('Y', 'U', 'Y', '_'),
-    GST_MAKE_FOURCC ('Y', 'U', 'Y', '#'),
-  };
-  gint fourccs_size = sizeof (fourccs) / sizeof (fourccs[0]);
-  const gchar *fourcc_strings[] = {
-    "YUY2",
-    "Y800",
-    "Y8  ",
-    "Y16 ",
-    "0x5f595559",               /* Ascii values of YUY_ */
-    "0x23595559",               /* Ascii values of YUY# */
-  };
-  gint fourcc_strings_size =
-      sizeof (fourcc_strings) / sizeof (fourcc_strings[0]);
-
-  fail_unless (fourccs_size == fourcc_strings_size);
-
-  for (i = 0; i < fourccs_size; ++i) {
-    gchar *str;
-    GValue value = { 0 };
-    g_value_init (&value, GST_TYPE_FOURCC);
-
-    gst_value_set_fourcc (&value, fourccs[i]);
-    str = gst_value_serialize (&value);
-
-    fail_unless (strcmp (str, fourcc_strings[i]) == 0);
-
-    g_free (str);
-  }
-}
-
-GST_END_TEST;
-
-GST_START_TEST (test_deserialize_fourcc)
-{
-  int i;
-
-  guint32 fourccs[] = {
-    GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'),
-    GST_MAKE_FOURCC ('Y', '8', '0', '0'),
-    GST_MAKE_FOURCC ('Y', '8', ' ', ' '),
-    GST_MAKE_FOURCC ('Y', '8', ' ', ' '),
-    GST_MAKE_FOURCC ('Y', '8', ' ', ' '),
-    GST_MAKE_FOURCC ('Y', '1', '6', ' '),
-    GST_MAKE_FOURCC ('Y', 'U', 'Y', '_'),
-    GST_MAKE_FOURCC ('Y', 'U', 'Y', '#'),
-  };
-  gint fourccs_size = sizeof (fourccs) / sizeof (fourccs[0]);
-  const gchar *fourcc_strings[] = {
-    "YUY2",
-    "Y800",
-    "Y8  ",
-    "Y8 ",
-    "Y8",
-    "Y16 ",
-    "0x5f595559",               /* Ascii values of YUY_ */
-    "0x23595559",               /* Ascii values of YUY# */
-  };
-  gint fourcc_strings_size =
-      sizeof (fourcc_strings) / sizeof (fourcc_strings[0]);
-
-  fail_unless (fourccs_size == fourcc_strings_size);
-
-  for (i = 0; i < fourccs_size; ++i) {
-    GValue value = { 0 };
-
-    g_value_init (&value, GST_TYPE_FOURCC);
-
-    fail_unless (gst_value_deserialize (&value, fourcc_strings[i]));
-    fail_unless_equals_int (gst_value_get_fourcc (&value), fourccs[i]);
-
-    g_value_unset (&value);
-  }
-}
-
-GST_END_TEST;
-
 GST_START_TEST (test_deserialize_buffer)
 {
   GValue value = { 0 };
@@ -683,15 +597,6 @@ GST_START_TEST (test_value_compare)
   g_value_unset (&value1);
   g_value_unset (&value2);
 
-  g_value_init (&value1, GST_TYPE_FOURCC);
-  gst_value_set_fourcc (&value1, GST_MAKE_FOURCC ('a', 'b', 'c', 'd'));
-  g_value_init (&value2, GST_TYPE_FOURCC);
-  gst_value_set_fourcc (&value2, GST_MAKE_FOURCC ('1', '2', '3', '4'));
-  fail_unless (gst_value_compare (&value1, &value2) == GST_VALUE_UNORDERED);
-  fail_unless (gst_value_compare (&value1, &value1) == GST_VALUE_EQUAL);
-  g_value_unset (&value1);
-  g_value_unset (&value2);
-
   /* comparing 2/3 with 3/4 */
   g_value_init (&value1, GST_TYPE_FRACTION);
   gst_value_set_fraction (&value1, 2, 3);
@@ -853,21 +758,20 @@ GST_START_TEST (test_value_intersect)
   g_value_unset (&src1);
   g_value_unset (&src2);
 
-  g_value_init (&src1, GST_TYPE_FOURCC);
-  gst_value_set_fourcc (&src1, GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'));
+  g_value_init (&src1, G_TYPE_STRING);
+  g_value_set_string (&src1, "YUY2");
   g_value_init (&src2, GST_TYPE_LIST);
-  g_value_init (&item, GST_TYPE_FOURCC);
-  gst_value_set_fourcc (&item, GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'));
+  g_value_init (&item, G_TYPE_STRING);
+  g_value_set_string (&item, "YUY2");
   gst_value_list_append_value (&src2, &item);
-  gst_value_set_fourcc (&item, GST_MAKE_FOURCC ('I', '4', '2', '0'));
+  g_value_set_string (&item, "I420");
   gst_value_list_append_value (&src2, &item);
-  gst_value_set_fourcc (&item, GST_MAKE_FOURCC ('A', 'B', 'C', 'D'));
+  g_value_set_string (&item, "ABCD");
   gst_value_list_append_value (&src2, &item);
 
   fail_unless (gst_value_intersect (&dest, &src1, &src2));
-  fail_unless (GST_VALUE_HOLDS_FOURCC (&dest));
-  fail_unless (gst_value_get_fourcc (&dest) ==
-      GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'));
+  fail_unless (G_VALUE_HOLDS_STRING (&dest));
+  fail_unless (g_str_equal (g_value_get_string (&dest), "YUY2"));
 
   g_value_unset (&src1);
   g_value_unset (&src2);
@@ -2603,8 +2507,6 @@ gst_value_suite (void)
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
-  tcase_add_test (tc_chain, test_serialize_fourcc);
-  tcase_add_test (tc_chain, test_deserialize_fourcc);
   tcase_add_test (tc_chain, test_deserialize_buffer);
   tcase_add_test (tc_chain, test_serialize_buffer);
   tcase_add_test (tc_chain, test_deserialize_gint);

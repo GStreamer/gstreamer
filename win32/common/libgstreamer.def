@@ -442,7 +442,6 @@ EXPORTS
 	gst_format_register
 	gst_format_to_quark
 	gst_formats_contains
-	gst_fourcc_get_type
 	gst_fraction_get_type
 	gst_fraction_range_get_type
 	gst_g_error_get_type
@@ -987,7 +986,6 @@ EXPORTS
 	gst_structure_get_double
 	gst_structure_get_enum
 	gst_structure_get_field_type
-	gst_structure_get_fourcc
 	gst_structure_get_fraction
 	gst_structure_get_int
 	gst_structure_get_name
@@ -1199,7 +1197,6 @@ EXPORTS
 	gst_value_get_date
 	gst_value_get_double_range_max
 	gst_value_get_double_range_min
-	gst_value_get_fourcc
 	gst_value_get_fraction_denominator
 	gst_value_get_fraction_numerator
 	gst_value_get_fraction_range_max
@@ -1227,7 +1224,6 @@ EXPORTS
 	gst_value_set_caps
 	gst_value_set_date
 	gst_value_set_double_range
-	gst_value_set_fourcc
 	gst_value_set_fraction
 	gst_value_set_fraction_range
 	gst_value_set_fraction_range_full

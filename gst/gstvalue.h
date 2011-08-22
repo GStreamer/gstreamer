@@ -86,14 +86,6 @@ G_BEGIN_DECLS
         ((gchar) (((fourcc)>>24)&0xff))
 
 /**
- * GST_VALUE_HOLDS_FOURCC:
- * @x: the #GValue to check
- *
- * Checks if the given #GValue contains a #GST_TYPE_FOURCC value.
- */
-#define GST_VALUE_HOLDS_FOURCC(x)       (G_VALUE_HOLDS((x), gst_fourcc_get_type ()))
-
-/**
  * GST_VALUE_HOLDS_INT_RANGE:
  * @x: the #GValue to check
  *
@@ -194,15 +186,6 @@ G_BEGIN_DECLS
  * Since: 0.10.31
  */
 #define GST_VALUE_HOLDS_DATE_TIME(x)    (G_VALUE_HOLDS((x), gst_date_time_get_type ()))
-
-/**
- * GST_TYPE_FOURCC:
- *
- * a #GValue type that represents 4 byte identifier (e.g. used for codecs)
- *
- * Returns: the #GType of GstFourcc
- */
-#define GST_TYPE_FOURCC                  gst_fourcc_get_type ()
 
 /**
  * GST_TYPE_INT_RANGE:
@@ -442,7 +425,6 @@ GType gst_int_range_get_type (void);
 GType gst_int64_range_get_type (void);
 GType gst_double_range_get_type (void);
 GType gst_fraction_range_get_type (void);
-GType gst_fourcc_get_type (void);
 GType gst_fraction_get_type (void);
 GType gst_value_list_get_type (void);
 GType gst_value_array_get_type (void);
@@ -481,11 +463,6 @@ void		gst_value_array_prepend_value	(GValue		*value,
 guint		gst_value_array_get_size	(const GValue	*value);
 const GValue *	gst_value_array_get_value	(const GValue	*value,
 						 guint		index);
-
-/* fourcc */
-void		gst_value_set_fourcc		(GValue		*value,
-						 guint32	fourcc);
-guint32		gst_value_get_fourcc		(const GValue   *value);
 
 /* int range */
 void		gst_value_set_int_range		(GValue		*value,

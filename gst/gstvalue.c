@@ -714,160 +714,6 @@ gst_value_deserialize_array (GValue * dest, const gchar * s)
   return FALSE;
 }
 
-/**********
- * fourcc *
- **********/
-
-static void
-gst_value_init_fourcc (GValue * value)
-{
-  value->data[0].v_int = 0;
-}
-
-static void
-gst_value_copy_fourcc (const GValue * src_value, GValue * dest_value)
-{
-  dest_value->data[0].v_int = src_value->data[0].v_int;
-}
-
-static gchar *
-gst_value_collect_fourcc (GValue * value, guint n_collect_values,
-    GTypeCValue * collect_values, guint collect_flags)
-{
-  value->data[0].v_int = collect_values[0].v_int;
-
-  return NULL;
-}
-
-static gchar *
-gst_value_lcopy_fourcc (const GValue * value, guint n_collect_values,
-    GTypeCValue * collect_values, guint collect_flags)
-{
-  guint32 *fourcc_p = collect_values[0].v_pointer;
-
-  if (!fourcc_p)
-    return g_strdup_printf ("value location for `%s' passed as NULL",
-        G_VALUE_TYPE_NAME (value));
-
-  *fourcc_p = value->data[0].v_int;
-
-  return NULL;
-}
-
-/**
- * gst_value_set_fourcc:
- * @value: a GValue initialized to #GST_TYPE_FOURCC
- * @fourcc: the #guint32 fourcc to set
- *
- * Sets @value to @fourcc.
- */
-void
-gst_value_set_fourcc (GValue * value, guint32 fourcc)
-{
-  g_return_if_fail (GST_VALUE_HOLDS_FOURCC (value));
-
-  value->data[0].v_int = fourcc;
-}
-
-/**
- * gst_value_get_fourcc:
- * @value: a GValue initialized to #GST_TYPE_FOURCC
- *
- * Gets the #guint32 fourcc contained in @value.
- *
- * Returns: the #guint32 fourcc contained in @value.
- */
-guint32
-gst_value_get_fourcc (const GValue * value)
-{
-  g_return_val_if_fail (GST_VALUE_HOLDS_FOURCC (value), 0);
-
-  return value->data[0].v_int;
-}
-
-static void
-gst_value_transform_fourcc_string (const GValue * src_value,
-    GValue * dest_value)
-{
-  guint32 fourcc = src_value->data[0].v_int;
-  gchar fourcc_char[4];
-
-  fourcc_char[0] = (fourcc >> 0) & 0xff;
-  fourcc_char[1] = (fourcc >> 8) & 0xff;
-  fourcc_char[2] = (fourcc >> 16) & 0xff;
-  fourcc_char[3] = (fourcc >> 24) & 0xff;
-
-  if ((g_ascii_isalnum (fourcc_char[0]) || fourcc_char[0] == ' ') &&
-      (g_ascii_isalnum (fourcc_char[1]) || fourcc_char[1] == ' ') &&
-      (g_ascii_isalnum (fourcc_char[2]) || fourcc_char[2] == ' ') &&
-      (g_ascii_isalnum (fourcc_char[3]) || fourcc_char[3] == ' ')) {
-    dest_value->data[0].v_pointer =
-        g_strdup_printf ("%" GST_FOURCC_FORMAT, GST_FOURCC_ARGS (fourcc));
-  } else {
-    dest_value->data[0].v_pointer = g_strdup_printf ("0x%08x", fourcc);
-  }
-}
-
-static gint
-gst_value_compare_fourcc (const GValue * value1, const GValue * value2)
-{
-  if (value2->data[0].v_int == value1->data[0].v_int)
-    return GST_VALUE_EQUAL;
-  return GST_VALUE_UNORDERED;
-}
-
-static gchar *
-gst_value_serialize_fourcc (const GValue * value)
-{
-  guint32 fourcc = value->data[0].v_int;
-  gchar fourcc_char[4];
-
-  fourcc_char[0] = (fourcc >> 0) & 0xff;
-  fourcc_char[1] = (fourcc >> 8) & 0xff;
-  fourcc_char[2] = (fourcc >> 16) & 0xff;
-  fourcc_char[3] = (fourcc >> 24) & 0xff;
-
-  if ((g_ascii_isalnum (fourcc_char[0]) || fourcc_char[0] == ' ') &&
-      (g_ascii_isalnum (fourcc_char[1]) || fourcc_char[1] == ' ') &&
-      (g_ascii_isalnum (fourcc_char[2]) || fourcc_char[2] == ' ') &&
-      (g_ascii_isalnum (fourcc_char[3]) || fourcc_char[3] == ' ')) {
-    return g_strdup_printf ("%" GST_FOURCC_FORMAT, GST_FOURCC_ARGS (fourcc));
-  } else {
-    return g_strdup_printf ("0x%08x", fourcc);
-  }
-}
-
-static gboolean
-gst_value_deserialize_fourcc (GValue * dest, const gchar * s)
-{
-  gboolean ret = FALSE;
-  guint32 fourcc = 0;
-  gchar *end;
-  gint l = strlen (s);
-
-  if (l == 4) {
-    fourcc = GST_MAKE_FOURCC (s[0], s[1], s[2], s[3]);
-    ret = TRUE;
-  } else if (l == 3) {
-    fourcc = GST_MAKE_FOURCC (s[0], s[1], s[2], ' ');
-    ret = TRUE;
-  } else if (l == 2) {
-    fourcc = GST_MAKE_FOURCC (s[0], s[1], ' ', ' ');
-    ret = TRUE;
-  } else if (l == 1) {
-    fourcc = GST_MAKE_FOURCC (s[0], ' ', ' ', ' ');
-    ret = TRUE;
-  } else if (g_ascii_isdigit (*s)) {
-    fourcc = strtoul (s, &end, 0);
-    if (*end == 0) {
-      ret = TRUE;
-    }
-  }
-  gst_value_set_fourcc (dest, fourcc);
-
-  return ret;
-}
-
 /*************
  * int range *
  *************/
@@ -4717,19 +4563,6 @@ GType gst_ ## type ## _get_type (void)                          \
   return gst_ ## type ## _type;                                 \
 }
 
-static const GTypeValueTable _gst_fourcc_value_table = {
-  gst_value_init_fourcc,
-  NULL,
-  gst_value_copy_fourcc,
-  NULL,
-  (char *) "i",
-  gst_value_collect_fourcc,
-  (char *) "p",
-  gst_value_lcopy_fourcc
-};
-
-FUNC_VALUE_GET_TYPE (fourcc, "GstFourcc");
-
 static const GTypeValueTable _gst_int_range_value_table = {
   gst_value_init_int_range,
   NULL,
@@ -4866,18 +4699,6 @@ _gst_value_initialize (void)
       sizeof (GstValueIntersectInfo));
   gst_value_subtract_funcs = g_array_new (FALSE, FALSE,
       sizeof (GstValueSubtractInfo));
-
-  {
-    static GstValueTable gst_value = {
-      0,
-      gst_value_compare_fourcc,
-      gst_value_serialize_fourcc,
-      gst_value_deserialize_fourcc,
-    };
-
-    gst_value.type = gst_fourcc_get_type ();
-    gst_value_register (&gst_value);
-  }
 
   {
     static GstValueTable gst_value = {
@@ -5050,8 +4871,6 @@ _gst_value_initialize (void)
 
   REGISTER_SERIALIZATION (G_TYPE_UCHAR, uchar);
 
-  g_value_register_transform_func (GST_TYPE_FOURCC, G_TYPE_STRING,
-      gst_value_transform_fourcc_string);
   g_value_register_transform_func (GST_TYPE_INT_RANGE, G_TYPE_STRING,
       gst_value_transform_int_range_string);
   g_value_register_transform_func (GST_TYPE_INT64_RANGE, G_TYPE_STRING,
