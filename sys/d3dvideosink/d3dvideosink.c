@@ -1587,6 +1587,65 @@ gst_d3dvideosink_stop (GstBaseSink * bsink)
   return TRUE;
 }
 
+static void
+gst_d3dvideosink_flush_gpu (GstD3DVideoSink * sink)
+{
+  LPDIRECT3DDEVICE9 d3ddev = NULL;
+  LPDIRECT3DQUERY9 pEventQuery = NULL;
+
+  if (D3D_OK == IDirect3DSwapChain9_GetDevice (sink->d3d_swap_chain, &d3ddev)) {
+    IDirect3DDevice9_CreateQuery (d3ddev, D3DQUERYTYPE_EVENT, &pEventQuery);
+    IDirect3DDevice9_Release (d3ddev);
+    if (pEventQuery) {
+      IDirect3DQuery9_Issue (pEventQuery, D3DISSUE_END);
+      /* Empty the command buffer and wait until the GPU is idle. */
+      while (S_FALSE == IDirect3DQuery9_GetData (pEventQuery, NULL, 0,
+              D3DGETDATA_FLUSH));
+      IDirect3DQuery9_Release (pEventQuery);
+    }
+  }
+}
+
+static void
+gst_d3dvideosink_wait_for_vsync (GstD3DVideoSink * sink)
+{
+  D3DPRESENT_PARAMETERS d3dpp;
+  ZeroMemory (&d3dpp, sizeof (d3dpp));
+
+  IDirect3DSwapChain9_GetPresentParameters (sink->d3d_swap_chain, &d3dpp);
+
+  if (d3dpp.PresentationInterval == D3DPRESENT_INTERVAL_IMMEDIATE) {
+    D3DRASTER_STATUS raster_stat;
+    D3DDISPLAYMODE d3ddm;
+    UINT lastScanline = 0;
+    UINT vblankStart = 0;
+    HANDLE thdl = GetCurrentThread ();
+    int prio = GetThreadPriority (thdl);
+    ZeroMemory (&d3ddm, sizeof (d3ddm));
+
+    GST_ERROR_OBJECT (sink, "USING ALT VSYNC");
+
+    IDirect3DSwapChain9_GetDisplayMode (sink->d3d_swap_chain, &d3ddm);
+    vblankStart = d3ddm.Height - 10;
+    SetThreadPriority (thdl, THREAD_PRIORITY_TIME_CRITICAL);
+    do {
+      if (FAILED (IDirect3DSwapChain9_GetRasterStatus (sink->d3d_swap_chain,
+                  &raster_stat)))
+        break;
+      if (!raster_stat.InVBlank) {
+        if (raster_stat.ScanLine < lastScanline) {
+          GST_INFO_OBJECT (sink, "missed last vsync curr : %d",
+              raster_stat.ScanLine);
+          break;
+        }
+        lastScanline = raster_stat.ScanLine;
+        SwitchToThread ();
+      }
+    } while (raster_stat.ScanLine < vblankStart);
+    SetThreadPriority (thdl, prio);
+  }
+}
+
 static GstFlowReturn
 gst_d3dvideosink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
 {
@@ -1763,10 +1822,12 @@ gst_d3dvideosink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
       gst_d3dvideosink_stretch (sink, backBuffer);
       IDirect3DDevice9_EndScene (shared.d3ddev);
     }
+    gst_d3dvideosink_flush_gpu (sink);
+    gst_d3dvideosink_wait_for_vsync (sink);
+    hr = IDirect3DSwapChain9_Present (sink->d3d_swap_chain, NULL, NULL, NULL,
+        NULL, 0);
     /* Swap back and front buffers on video card and present to the user */
-    if (FAILED (hr =
-            IDirect3DSwapChain9_Present (sink->d3d_swap_chain, NULL, NULL, NULL,
-                NULL, 0))) {
+    if (FAILED (hr)) {
       switch (hr) {
         case D3DERR_DEVICELOST:
         case D3DERR_DEVICENOTRESET:
@@ -2237,11 +2298,13 @@ gst_d3dvideosink_initialize_swap_chain (GstD3DVideoSink * sink)
 
     ZeroMemory (&d3dpp, sizeof (d3dpp));
     d3dpp.Windowed = TRUE;
+    d3dpp.Flags = D3DPRESENTFLAG_VIDEO;
     d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
     d3dpp.hDeviceWindow = sink->window_handle;
     d3dpp.BackBufferFormat = d3dformat;
     d3dpp.BackBufferWidth = width;
     d3dpp.BackBufferHeight = height;
+    d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_ONE;       /*D3DPRESENT_INTERVAL_IMMEDIATE; */
 
     if (FAILED (IDirect3DDevice9_CreateAdditionalSwapChain (shared.d3ddev,
                 &d3dpp, &d3dswapchain)))
