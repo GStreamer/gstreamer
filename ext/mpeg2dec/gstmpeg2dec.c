@@ -1150,7 +1150,7 @@ gst_mpeg2dec_chain (GstPad * pad, GstBuffer * buf)
               ("%d consecutive decoding errors", mpeg2dec->error_count),
               (NULL));
         }
-        goto exit;
+        continue;
       default:
         GST_ERROR_OBJECT (mpeg2dec, "Unknown libmpeg2 state %d, FIXME", state);
         goto exit;
