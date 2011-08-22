@@ -187,7 +187,7 @@ static void gst_d3dvideosink_log_warning (const gchar * file,
     const gchar * function, gint line, const gchar * format, va_list args);
 static void gst_d3dvideosink_log_error (const gchar * file,
     const gchar * function, gint line, const gchar * format, va_list args);
-
+static void gst_d3dvideosink_set_window_for_renderer (GstD3DVideoSink * sink);
 static DirectXInitParams directx_init_params = {
   gst_d3dvideosink_log_debug, gst_d3dvideosink_log_warning,
   gst_d3dvideosink_log_error
@@ -1057,7 +1057,8 @@ gst_d3dvideosink_set_window_handle (GstXOverlay * overlay, guintptr window_id)
 
     /* Save our window id */
     sink->window_handle = hWnd;
-
+	gst_d3dvideosink_set_window_for_renderer(sink);
+	
     if (init_swap_chain)
       gst_d3dvideosink_initialize_swap_chain (sink);
   }
@@ -1066,7 +1067,9 @@ gst_d3dvideosink_set_window_handle (GstXOverlay * overlay, guintptr window_id)
   GST_DEBUG ("Direct3D window id successfully changed for sink %p to %p", sink,
       hWnd);
   GST_D3DVIDEOSINK_SWAP_CHAIN_UNLOCK (sink);
-  GST_D3DVIDEOSINK_SHARED_D3D_DEV_UNLOCK return;
+  GST_D3DVIDEOSINK_SHARED_D3D_DEV_UNLOCK 
+  gst_d3dvideosink_update(sink);	 
+  return;
 /*error:*/
 /*  GST_DEBUG("Error attempting to change the window id for sink %d to %d", sink, hWnd); */
 /*  GST_D3DVIDEOSINK_SWAP_CHAIN_UNLOCK(sink);                                            */
