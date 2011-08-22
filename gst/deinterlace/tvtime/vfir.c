@@ -68,7 +68,11 @@ static inline void
 deinterlace_c (guint8 * dst, const guint8 * lum_m4, const guint8 * lum_m3,
     const guint8 * lum_m2, const guint8 * lum_m1, const guint8 * lum, gint size)
 {
-  deinterlace_line_vfir (dst, lum_m4, lum_m3, lum_m2, lum_m1, lum, size);
+  if (lum_m2 == NULL) {
+    deinterlace_line_linear (dst, lum_m1, lum_m3, size);
+  } else {
+    deinterlace_line_vfir (dst, lum_m4, lum_m3, lum_m2, lum_m1, lum, size);
+  }
 }
 
 static void
@@ -126,6 +130,8 @@ deinterlace_line_planar_v_c (GstDeinterlaceSimpleMethod * self, guint8 * dst,
 
   deinterlace_c (dst, lum_m4, lum_m3, lum_m2, lum_m1, lum, size);
 }
+
+#undef BUILD_X86_ASM
 
 #ifdef BUILD_X86_ASM
 #include "mmx.h"
@@ -251,7 +257,7 @@ gst_deinterlace_method_vfir_class_init (GstDeinterlaceMethodVFIRClass * klass)
   dim_class->fields_required = 2;
   dim_class->name = "Blur Vertical";
   dim_class->nick = "vfir";
-  dim_class->latency = 0;
+  dim_class->latency = 1;
 
 #ifdef BUILD_X86_ASM
   if (cpu_flags & ORC_TARGET_MMX_MMX) {

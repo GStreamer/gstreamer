@@ -72,54 +72,69 @@ static inline void
 deinterlace_greedy_interpolate_scanline_orc (GstDeinterlaceSimpleMethod * self,
     guint8 * out, const GstDeinterlaceScanlineData * scanlines)
 {
-  /* FIXME - is this safe or just a hack? */
   guint max_comb = GST_DEINTERLACE_METHOD_GREEDY_L (self)->max_comb;
 
-  deinterlace_line_greedy (out, scanlines->m3, scanlines->t2, scanlines->b2,
-      scanlines->m1, max_comb, self->parent.row_stride[0]);
+  if (scanlines->m1 == NULL || scanlines->mp == NULL) {
+    deinterlace_line_linear (out, scanlines->t0, scanlines->b0,
+        self->parent.row_stride[0]);
+  } else {
+    deinterlace_line_greedy (out, scanlines->m1, scanlines->t0, scanlines->b0,
+        scanlines->mp ? scanlines->mp : scanlines->m1,
+        max_comb, self->parent.row_stride[0]);
+  }
 }
 
 static inline void
 deinterlace_greedy_interpolate_scanline_orc_planar_u (GstDeinterlaceSimpleMethod
     * self, guint8 * out, const GstDeinterlaceScanlineData * scanlines)
 {
-  /* FIXME - is this safe or just a hack? */
   guint max_comb = GST_DEINTERLACE_METHOD_GREEDY_L (self)->max_comb;
 
-  deinterlace_line_greedy (out, scanlines->m3, scanlines->t2, scanlines->b2,
-      scanlines->m1, max_comb, self->parent.row_stride[1]);
+  if (scanlines->m1 == NULL || scanlines->mp == NULL) {
+    deinterlace_line_linear (out, scanlines->t0, scanlines->b0,
+        self->parent.row_stride[1]);
+  } else {
+    deinterlace_line_greedy (out, scanlines->m1, scanlines->t0, scanlines->b0,
+        scanlines->mp ? scanlines->mp : scanlines->m1,
+        max_comb, self->parent.row_stride[1]);
+  }
 }
 
 static inline void
 deinterlace_greedy_interpolate_scanline_orc_planar_v (GstDeinterlaceSimpleMethod
     * self, guint8 * out, const GstDeinterlaceScanlineData * scanlines)
 {
-  /* FIXME - is this safe or just a hack? */
   guint max_comb = GST_DEINTERLACE_METHOD_GREEDY_L (self)->max_comb;
 
-  deinterlace_line_greedy (out, scanlines->m3, scanlines->t2, scanlines->b2,
-      scanlines->m1, max_comb, self->parent.row_stride[2]);
+  if (scanlines->m1 == NULL || scanlines->mp == NULL) {
+    deinterlace_line_linear (out, scanlines->t0, scanlines->b0,
+        self->parent.row_stride[2]);
+  } else {
+    deinterlace_line_greedy (out, scanlines->m1, scanlines->t0, scanlines->b0,
+        scanlines->mp ? scanlines->mp : scanlines->m1,
+        max_comb, self->parent.row_stride[2]);
+  }
 }
 
 static void
 deinterlace_greedy_copy_scanline (GstDeinterlaceSimpleMethod * self,
     guint8 * out, const GstDeinterlaceScanlineData * scanlines)
 {
-  memcpy (out, scanlines->m2, self->parent.row_stride[0]);
+  memcpy (out, scanlines->m0, self->parent.row_stride[0]);
 }
 
 static void
 deinterlace_greedy_copy_scanline_planar_u (GstDeinterlaceSimpleMethod * self,
     guint8 * out, const GstDeinterlaceScanlineData * scanlines)
 {
-  memcpy (out, scanlines->m2, self->parent.row_stride[1]);
+  memcpy (out, scanlines->m0, self->parent.row_stride[1]);
 }
 
 static void
 deinterlace_greedy_copy_scanline_planar_v (GstDeinterlaceSimpleMethod * self,
     guint8 * out, const GstDeinterlaceScanlineData * scanlines)
 {
-  memcpy (out, scanlines->m2, self->parent.row_stride[2]);
+  memcpy (out, scanlines->m0, self->parent.row_stride[2]);
 }
 
 G_DEFINE_TYPE (GstDeinterlaceMethodGreedyL, gst_deinterlace_method_greedy_l,
@@ -179,7 +194,7 @@ gst_deinterlace_method_greedy_l_class_init (GstDeinterlaceMethodGreedyLClass *
           "Max Comb", 0, 255, 15, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
       );
 
-  dim_class->fields_required = 4;
+  dim_class->fields_required = 2;
   dim_class->name = "Motion Adaptive: Simple Detection";
   dim_class->nick = "greedyl";
   dim_class->latency = 1;

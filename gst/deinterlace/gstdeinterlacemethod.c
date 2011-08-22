@@ -206,10 +206,10 @@ gst_deinterlace_method_init (GstDeinterlaceMethod * self)
 void
 gst_deinterlace_method_deinterlace_frame (GstDeinterlaceMethod * self,
     const GstDeinterlaceField * history, guint history_count,
-    GstBuffer * outbuf)
+    GstBuffer * outbuf, int cur_field_idx)
 {
   g_assert (self->deinterlace_frame != NULL);
-  self->deinterlace_frame (self, history, history_count, outbuf);
+  self->deinterlace_frame (self, history, history_count, outbuf, cur_field_idx);
 }
 
 gint
@@ -318,14 +318,13 @@ gst_deinterlace_simple_method_copy_scanline_packed (GstDeinterlaceSimpleMethod *
 static void
 gst_deinterlace_simple_method_deinterlace_frame_packed (GstDeinterlaceMethod *
     method, const GstDeinterlaceField * history, guint history_count,
-    GstBuffer * outbuf)
+    GstBuffer * outbuf, gint cur_field_idx)
 {
   GstDeinterlaceSimpleMethod *self = GST_DEINTERLACE_SIMPLE_METHOD (method);
   GstDeinterlaceMethodClass *dm_class = GST_DEINTERLACE_METHOD_GET_CLASS (self);
   GstDeinterlaceScanlineData scanlines;
   guint8 *dest;
-  const guint8 *field0, *field1, *field2, *field3;
-  gint cur_field_idx = history_count - dm_class->fields_required;
+  const guint8 *field0, *field1, *field2, *fieldp;
   guint cur_field_flags = history[cur_field_idx].flags;
   gint i;
   gint frame_height = self->parent.frame_height;
@@ -334,27 +333,27 @@ gst_deinterlace_simple_method_deinterlace_frame_packed (GstDeinterlaceMethod *
   g_assert (self->interpolate_scanline_packed != NULL);
   g_assert (self->copy_scanline_packed != NULL);
 
+  if (cur_field_idx > 0) {
+    fieldp = GST_BUFFER_DATA (history[cur_field_idx - 1].buf);
+  } else {
+    fieldp = NULL;
+  }
+
   dest = GST_BUFFER_DATA (outbuf);
   field0 = GST_BUFFER_DATA (history[cur_field_idx].buf);
 
   g_assert (dm_class->fields_required <= 4);
 
-  if (dm_class->fields_required >= 2) {
+  if (cur_field_idx + 1 < history_count) {
     field1 = GST_BUFFER_DATA (history[cur_field_idx + 1].buf);
   } else {
     field1 = NULL;
   }
 
-  if (dm_class->fields_required >= 3) {
+  if (cur_field_idx + 2 < history_count) {
     field2 = GST_BUFFER_DATA (history[cur_field_idx + 2].buf);
   } else {
     field2 = NULL;
-  }
-
-  if (dm_class->fields_required >= 4) {
-    field3 = GST_BUFFER_DATA (history[cur_field_idx + 3].buf);
-  } else {
-    field3 = NULL;
   }
 
 #define CLAMP_LOW(i) (((i)<0) ? (i+2) : (i))
@@ -368,6 +367,9 @@ gst_deinterlace_simple_method_deinterlace_frame_packed (GstDeinterlaceMethod *
 
     if (!((i & 1) ^ scanlines.bottom_field)) {
       /* copying */
+      scanlines.tp = LINE2 (fieldp, i - 1);
+      scanlines.bp = LINE2 (fieldp, i + 1);
+
       scanlines.tt0 = LINE2 (field0, (i - 2 >= 0) ? i - 2 : i);
       scanlines.m0 = LINE2 (field0, i);
       scanlines.bb0 = LINE2 (field0, (i + 2 < frame_height ? i + 2 : i));
@@ -379,12 +381,13 @@ gst_deinterlace_simple_method_deinterlace_frame_packed (GstDeinterlaceMethod *
       scanlines.m2 = LINE2 (field2, i);
       scanlines.bb2 = LINE2 (field2, (i + 2 < frame_height ? i + 2 : i));
 
-      scanlines.t3 = LINE2 (field3, i - 1);
-      scanlines.b3 = LINE2 (field3, i + 1);
-
       self->copy_scanline_packed (self, LINE (dest, i), &scanlines);
     } else {
       /* interpolating */
+      scanlines.ttp = LINE2 (fieldp, (i - 2 >= 0) ? i - 2 : i);
+      scanlines.mp = LINE2 (fieldp, i);
+      scanlines.bbp = LINE2 (fieldp, (i + 2 < frame_height ? i + 2 : i));
+
       scanlines.t0 = LINE2 (field0, i - 1);
       scanlines.b0 = LINE2 (field0, i + 1);
 
@@ -394,10 +397,6 @@ gst_deinterlace_simple_method_deinterlace_frame_packed (GstDeinterlaceMethod *
 
       scanlines.t2 = LINE2 (field2, i - 1);
       scanlines.b2 = LINE2 (field2, i + 1);
-
-      scanlines.tt3 = LINE2 (field3, (i - 2 >= 0) ? i - 2 : i);
-      scanlines.m3 = LINE2 (field3, i);
-      scanlines.bb3 = LINE2 (field3, (i + 2 < frame_height ? i + 2 : i));
 
       self->interpolate_scanline_packed (self, LINE (dest, i), &scanlines);
     }
@@ -452,7 +451,7 @@ gst_deinterlace_simple_method_copy_scanline_planar_v (GstDeinterlaceSimpleMethod
 static void
     gst_deinterlace_simple_method_deinterlace_frame_planar_plane
     (GstDeinterlaceSimpleMethod * self, guint8 * dest, const guint8 * field0,
-    const guint8 * field1, const guint8 * field2, const guint8 * field3,
+    const guint8 * field1, const guint8 * field2, const guint8 * fieldp,
     guint cur_field_flags,
     gint plane, GstDeinterlaceSimpleMethodFunction copy_scanline,
     GstDeinterlaceSimpleMethodFunction interpolate_scanline)
@@ -471,6 +470,9 @@ static void
 
     if (!((i & 1) ^ scanlines.bottom_field)) {
       /* copying */
+      scanlines.tp = LINE2 (fieldp, i - 1);
+      scanlines.bp = LINE2 (fieldp, i + 1);
+
       scanlines.tt0 = LINE2 (field0, (i - 2 >= 0) ? i - 2 : i);
       scanlines.m0 = LINE2 (field0, i);
       scanlines.bb0 = LINE2 (field0, (i + 2 < frame_height ? i + 2 : i));
@@ -482,12 +484,13 @@ static void
       scanlines.m2 = LINE2 (field2, i);
       scanlines.bb2 = LINE2 (field2, (i + 2 < frame_height ? i + 2 : i));
 
-      scanlines.t3 = LINE2 (field3, i - 1);
-      scanlines.b3 = LINE2 (field3, i + 1);
-
       copy_scanline (self, LINE (dest, i), &scanlines);
     } else {
       /* interpolating */
+      scanlines.ttp = LINE2 (fieldp, (i - 2 >= 0) ? i - 2 : i);
+      scanlines.mp = LINE2 (fieldp, i);
+      scanlines.bbp = LINE2 (fieldp, (i + 2 < frame_height ? i + 2 : i));
+
       scanlines.t0 = LINE2 (field0, i - 1);
       scanlines.b0 = LINE2 (field0, i + 1);
 
@@ -498,10 +501,6 @@ static void
       scanlines.t2 = LINE2 (field2, i - 1);
       scanlines.b2 = LINE2 (field2, i + 1);
 
-      scanlines.tt3 = LINE2 (field3, (i - 2 >= 0) ? i - 2 : i);
-      scanlines.m3 = LINE2 (field3, i);
-      scanlines.bb3 = LINE2 (field3, (i + 2 < frame_height ? i + 2 : i));
-
       interpolate_scanline (self, LINE (dest, i), &scanlines);
     }
   }
@@ -510,13 +509,12 @@ static void
 static void
 gst_deinterlace_simple_method_deinterlace_frame_planar (GstDeinterlaceMethod *
     method, const GstDeinterlaceField * history, guint history_count,
-    GstBuffer * outbuf)
+    GstBuffer * outbuf, gint cur_field_idx)
 {
   GstDeinterlaceSimpleMethod *self = GST_DEINTERLACE_SIMPLE_METHOD (method);
   GstDeinterlaceMethodClass *dm_class = GST_DEINTERLACE_METHOD_GET_CLASS (self);
   guint8 *out;
-  const guint8 *field0, *field1, *field2, *field3;
-  gint cur_field_idx = history_count - dm_class->fields_required;
+  const guint8 *field0, *field1, *field2, *fieldp;
   guint cur_field_flags = history[cur_field_idx].flags;
   gint i, offset;
   GstDeinterlaceSimpleMethodFunction copy_scanline;
@@ -536,27 +534,27 @@ gst_deinterlace_simple_method_deinterlace_frame_planar (GstDeinterlaceMethod *
 
     out = GST_BUFFER_DATA (outbuf) + offset;
 
+    fieldp = NULL;
+    if (cur_field_idx > 0) {
+      fieldp = GST_BUFFER_DATA (history[cur_field_idx - 1].buf) + offset;
+    }
+
     field0 = GST_BUFFER_DATA (history[cur_field_idx].buf) + offset;
 
     g_assert (dm_class->fields_required <= 4);
 
     field1 = NULL;
-    if (dm_class->fields_required >= 2) {
+    if (cur_field_idx + 1 < history_count) {
       field1 = GST_BUFFER_DATA (history[cur_field_idx + 1].buf) + offset;
     }
 
     field2 = NULL;
-    if (dm_class->fields_required >= 3) {
+    if (cur_field_idx + 2 < history_count) {
       field2 = GST_BUFFER_DATA (history[cur_field_idx + 2].buf) + offset;
     }
 
-    field3 = NULL;
-    if (dm_class->fields_required >= 4) {
-      field3 = GST_BUFFER_DATA (history[cur_field_idx + 3].buf) + offset;
-    }
-
     gst_deinterlace_simple_method_deinterlace_frame_planar_plane (self, out,
-        field0, field1, field2, field3, cur_field_flags, i, copy_scanline,
+        field0, field1, field2, fieldp, cur_field_flags, i, copy_scanline,
         interpolate_scanline);
   }
 }
@@ -564,13 +562,12 @@ gst_deinterlace_simple_method_deinterlace_frame_planar (GstDeinterlaceMethod *
 static void
 gst_deinterlace_simple_method_deinterlace_frame_nv12 (GstDeinterlaceMethod *
     method, const GstDeinterlaceField * history, guint history_count,
-    GstBuffer * outbuf)
+    GstBuffer * outbuf, gint cur_field_idx)
 {
   GstDeinterlaceSimpleMethod *self = GST_DEINTERLACE_SIMPLE_METHOD (method);
   GstDeinterlaceMethodClass *dm_class = GST_DEINTERLACE_METHOD_GET_CLASS (self);
   guint8 *out;
-  const guint8 *field0, *field1, *field2, *field3;
-  gint cur_field_idx = history_count - dm_class->fields_required;
+  const guint8 *field0, *field1, *field2, *fieldp;
   guint cur_field_flags = history[cur_field_idx].flags;
   gint i, offset;
 
@@ -582,27 +579,27 @@ gst_deinterlace_simple_method_deinterlace_frame_nv12 (GstDeinterlaceMethod *
 
     out = GST_BUFFER_DATA (outbuf) + offset;
 
+    fieldp = NULL;
+    if (cur_field_idx > 0) {
+      fieldp = GST_BUFFER_DATA (history[cur_field_idx - 1].buf) + offset;
+    }
+
     field0 = GST_BUFFER_DATA (history[cur_field_idx].buf) + offset;
 
     g_assert (dm_class->fields_required <= 4);
 
     field1 = NULL;
-    if (dm_class->fields_required >= 2) {
+    if (cur_field_idx + 1 < history_count) {
       field1 = GST_BUFFER_DATA (history[cur_field_idx + 1].buf) + offset;
     }
 
     field2 = NULL;
-    if (dm_class->fields_required >= 3) {
+    if (cur_field_idx + 2 < history_count) {
       field2 = GST_BUFFER_DATA (history[cur_field_idx + 2].buf) + offset;
     }
 
-    field3 = NULL;
-    if (dm_class->fields_required >= 4) {
-      field3 = GST_BUFFER_DATA (history[cur_field_idx + 3].buf) + offset;
-    }
-
     gst_deinterlace_simple_method_deinterlace_frame_planar_plane (self, out,
-        field0, field1, field2, field3, cur_field_flags, i,
+        field0, field1, field2, fieldp, cur_field_flags, i,
         self->copy_scanline_packed, self->interpolate_scanline_packed);
   }
 }

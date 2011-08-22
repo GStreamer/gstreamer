@@ -48,28 +48,44 @@ static void
 deinterlace_scanline_weave_packed (GstDeinterlaceSimpleMethod * self,
     guint8 * out, const GstDeinterlaceScanlineData * scanlines)
 {
-  memcpy (out, scanlines->m1, self->parent.row_stride[0]);
+  if (scanlines->m1 == NULL) {
+    memcpy (out, scanlines->t0, self->parent.row_stride[0]);
+  } else {
+    memcpy (out, scanlines->m1, self->parent.row_stride[0]);
+  }
 }
 
 static void
 deinterlace_scanline_weave_planar_y (GstDeinterlaceSimpleMethod * self,
     guint8 * out, const GstDeinterlaceScanlineData * scanlines)
 {
-  memcpy (out, scanlines->m1, self->parent.row_stride[0]);
+  if (scanlines->m1 == NULL) {
+    memcpy (out, scanlines->t0, self->parent.row_stride[0]);
+  } else {
+    memcpy (out, scanlines->m1, self->parent.row_stride[0]);
+  }
 }
 
 static void
 deinterlace_scanline_weave_planar_u (GstDeinterlaceSimpleMethod * self,
     guint8 * out, const GstDeinterlaceScanlineData * scanlines)
 {
-  memcpy (out, scanlines->m1, self->parent.row_stride[1]);
+  if (scanlines->m1 == NULL) {
+    memcpy (out, scanlines->t0, self->parent.row_stride[1]);
+  } else {
+    memcpy (out, scanlines->m1, self->parent.row_stride[1]);
+  }
 }
 
 static void
 deinterlace_scanline_weave_planar_v (GstDeinterlaceSimpleMethod * self,
     guint8 * out, const GstDeinterlaceScanlineData * scanlines)
 {
-  memcpy (out, scanlines->m1, self->parent.row_stride[2]);
+  if (scanlines->m1 == NULL) {
+    memcpy (out, scanlines->t0, self->parent.row_stride[2]);
+  } else {
+    memcpy (out, scanlines->m1, self->parent.row_stride[2]);
+  }
 }
 
 static void
@@ -113,7 +129,7 @@ gst_deinterlace_method_weave_class_init (GstDeinterlaceMethodWeaveClass * klass)
   dim_class->fields_required = 2;
   dim_class->name = "Weave";
   dim_class->nick = "weave";
-  dim_class->latency = 0;
+  dim_class->latency = 1;
 
   dism_class->interpolate_scanline_ayuv = deinterlace_scanline_weave_packed;
   dism_class->interpolate_scanline_yuy2 = deinterlace_scanline_weave_packed;

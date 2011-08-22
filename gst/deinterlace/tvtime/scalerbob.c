@@ -77,10 +77,10 @@ gst_deinterlace_method_scaler_bob_class_init (GstDeinterlaceMethodScalerBobClass
   GstDeinterlaceSimpleMethodClass *dism_class =
       (GstDeinterlaceSimpleMethodClass *) klass;
 
-  dim_class->fields_required = 1;
+  dim_class->fields_required = 2;
   dim_class->name = "Double lines";
   dim_class->nick = "scalerbob";
-  dim_class->latency = 0;
+  dim_class->latency = 1;
 
   dism_class->interpolate_scanline_ayuv =
       deinterlace_scanline_scaler_bob_packed;

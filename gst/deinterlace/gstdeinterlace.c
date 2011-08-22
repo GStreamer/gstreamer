@@ -765,6 +765,7 @@ gst_deinterlace_reset_history (GstDeinterlace * self, gboolean drop_all)
   self->state_count = 0;
   self->pattern_lock = FALSE;
   self->pattern_refresh = TRUE;
+  self->cur_field_idx = -1;
 
   if (!self->still_frame_mode && self->last_buffer) {
     gst_buffer_unref (self->last_buffer);
@@ -1183,9 +1184,10 @@ gst_deinterlace_push_history (GstDeinterlace * self, GstBuffer * buffer)
   }
 
   self->history_count += fields_to_push;
+  self->cur_field_idx += fields_to_push;
 
-  GST_DEBUG_OBJECT (self, "Pushed buffer -- current history size %d",
-      self->history_count);
+  GST_DEBUG_OBJECT (self, "Pushed buffer -- current history size %d, index %d",
+      self->history_count, self->cur_field_idx);
 
   if (self->last_buffer)
     gst_buffer_unref (self->last_buffer);
@@ -1456,7 +1458,6 @@ gst_deinterlace_output_frame (GstDeinterlace * self, gboolean flushing)
   GstClockTime timestamp;
   GstFlowReturn ret;
   gint fields_required;
-  gint cur_field_idx;
   GstBuffer *buf, *outbuf;
   GstDeinterlaceField *field1, *field2;
   GstDeinterlaceInterlacingMethod interlacing_method;
@@ -1471,7 +1472,6 @@ gst_deinterlace_output_frame (GstDeinterlace * self, gboolean flushing)
 restart:
   ret = GST_FLOW_OK;
   fields_required = 0;
-  cur_field_idx = 0;
   hl_no_lock = FALSE;
   same_buffer = FALSE;
   flush_one = FALSE;
@@ -1530,6 +1530,7 @@ restart:
 
       if (flush_one && self->drop_orphans) {
         GST_DEBUG_OBJECT (self, "Dropping orphan first field");
+        self->cur_field_idx--;
         gst_buffer_unref (gst_deinterlace_pop_history (self));
         goto restart;
       }
@@ -1558,7 +1559,7 @@ restart:
     fields_required = 2;
     if (!flushing && self->history_count < fields_required) {
       GST_DEBUG_OBJECT (self, "Need more fields (have %d, need %d)",
-          self->history_count, fields_required);
+          self->history_count, self->cur_field_idx + fields_required);
       goto need_more;
     }
 
@@ -1573,9 +1574,11 @@ restart:
       GST_DEBUG_OBJECT (self,
           "Frame type: Telecine Progressive; pushing buffer as a frame");
       /* pop and push */
+      self->cur_field_idx--;
       field1_buf = gst_deinterlace_pop_history (self);
       /* field2 is the same buffer as field1, but we need to remove it from
        * the history anyway */
+      self->cur_field_idx--;
       gst_buffer_unref (gst_deinterlace_pop_history (self));
       /* set the caps from the src pad on the buffer as they should be correct */
       gst_buffer_set_caps (field1_buf, GST_PAD_CAPS (self->srcpad));
@@ -1617,9 +1620,9 @@ restart:
     }
 
     /* Not enough fields in the history */
-    if (self->history_count < fields_required) {
+    if (!flushing && self->history_count < fields_required) {
       GST_DEBUG_OBJECT (self, "Need more fields (have %d, need %d)",
-          self->history_count, fields_required);
+          self->history_count, self->cur_field_idx + fields_required);
       goto need_more;
     }
 
@@ -1633,9 +1636,9 @@ restart:
     fields_required = 2;
 
     /* Not enough fields in the history */
-    if (self->history_count < fields_required) {
+    if (!flushing && self->history_count < fields_required) {
       GST_DEBUG_OBJECT (self, "Need more fields (have %d, need %d)",
-          self->history_count, fields_required);
+          self->history_count, self->cur_field_idx + fields_required);
       goto need_more;
     }
 
@@ -1649,9 +1652,11 @@ restart:
     GST_DEBUG_OBJECT (self,
         "Frame type: Progressive; pushing buffer as a frame");
     /* pop and push */
+    self->cur_field_idx--;
     field1_buf = gst_deinterlace_pop_history (self);
     /* field2 is the same buffer as field1, but we need to remove it from the
      * history anyway */
+    self->cur_field_idx--;
     gst_buffer_unref (gst_deinterlace_pop_history (self));
     GST_DEBUG_OBJECT (self,
         "[OUT] ts %" GST_TIME_FORMAT ", dur %" GST_TIME_FORMAT ", end %"
@@ -1662,6 +1667,10 @@ restart:
     return gst_pad_push (self->srcpad, field1_buf);
   }
 
+  if (!flushing && self->cur_field_idx < 1) {
+    goto need_more;
+  }
+
   if (self->fields == GST_DEINTERLACE_ALL
       || interlacing_method == GST_DEINTERLACE_TELECINE)
     GST_DEBUG_OBJECT (self, "All fields");
@@ -1670,9 +1679,7 @@ restart:
   else if (self->fields == GST_DEINTERLACE_BF)
     GST_DEBUG_OBJECT (self, "Bottom fields");
 
-  cur_field_idx = self->history_count - fields_required;
-
-  if ((self->field_history[cur_field_idx].flags == PICTURE_INTERLACED_TOP
+  if ((self->field_history[self->cur_field_idx].flags == PICTURE_INTERLACED_TOP
           && (self->fields == GST_DEINTERLACE_TF
               || interlacing_method == GST_DEINTERLACE_TELECINE))
       || self->fields == GST_DEINTERLACE_ALL) {
@@ -1723,16 +1730,37 @@ restart:
 
     /* Check if we need to drop the frame because of QoS */
     if (!gst_deinterlace_do_qos (self, GST_BUFFER_TIMESTAMP (buf))) {
+      self->cur_field_idx--;
       gst_buffer_unref (gst_deinterlace_pop_history (self));
       gst_buffer_unref (outbuf);
       outbuf = NULL;
       ret = GST_FLOW_OK;
     } else {
+      if (self->cur_field_idx < 0 && flushing) {
+        if (self->history_count == 1) {
+          gst_buffer_unref (gst_deinterlace_pop_history (self));
+          goto need_more;
+        }
+        self->cur_field_idx++;
+      }
+      if (self->cur_field_idx < 0) {
+        goto need_more;
+      }
+      if (!flushing && self->cur_field_idx < 1) {
+        goto need_more;
+      }
+
       /* do magic calculus */
       gst_deinterlace_method_deinterlace_frame (self->method,
-          self->field_history, self->history_count, outbuf);
+          self->field_history, self->history_count, outbuf,
+          self->cur_field_idx);
 
-      gst_buffer_unref (gst_deinterlace_pop_history (self));
+      self->cur_field_idx--;
+      if (self->cur_field_idx + 1 +
+          gst_deinterlace_method_get_latency (self->method)
+          < self->history_count || flushing) {
+        gst_buffer_unref (gst_deinterlace_pop_history (self));
+      }
 
       if (gst_deinterlace_clip_buffer (self, outbuf)) {
         GST_DEBUG_OBJECT (self,
@@ -1755,6 +1783,7 @@ restart:
         /* pop off the second field */
         GST_DEBUG_OBJECT (self, "Removing unused field (count: %d)",
             self->history_count);
+        self->cur_field_idx--;
         gst_buffer_unref (gst_deinterlace_pop_history (self));
         interlacing_method = GST_DEINTERLACE_INTERLACED;
         return ret;
@@ -1767,10 +1796,11 @@ restart:
     }
   }
   /* no calculation done: remove excess field */
-  else if (self->field_history[cur_field_idx].flags ==
+  else if (self->field_history[self->cur_field_idx].flags ==
       PICTURE_INTERLACED_TOP && (self->fields == GST_DEINTERLACE_BF
           && interlacing_method != GST_DEINTERLACE_TELECINE)) {
     GST_DEBUG_OBJECT (self, "Removing unused top field");
+    self->cur_field_idx--;
     gst_buffer_unref (gst_deinterlace_pop_history (self));
 
     if (flush_one && !self->drop_orphans) {
@@ -1779,13 +1809,19 @@ restart:
     }
   }
 
-  cur_field_idx = self->history_count - fields_required;
   if (self->history_count < fields_required)
     return ret;
 
+  if (self->cur_field_idx < 0)
+    return ret;
+
+  if (!flushing && self->cur_field_idx < 1) {
+    return ret;
+  }
+
   /* deinterlace bottom_field */
-  if ((self->field_history[cur_field_idx].flags == PICTURE_INTERLACED_BOTTOM
-          && (self->fields == GST_DEINTERLACE_BF
+  if ((self->field_history[self->cur_field_idx].flags ==
+          PICTURE_INTERLACED_BOTTOM && (self->fields == GST_DEINTERLACE_BF
               || interlacing_method == GST_DEINTERLACE_TELECINE))
       || self->fields == GST_DEINTERLACE_ALL) {
     GST_DEBUG_OBJECT (self, "deinterlacing bottom field");
@@ -1834,6 +1870,7 @@ restart:
 
     /* Check if we need to drop the frame because of QoS */
     if (!gst_deinterlace_do_qos (self, GST_BUFFER_TIMESTAMP (buf))) {
+      self->cur_field_idx--;
       gst_buffer_unref (gst_deinterlace_pop_history (self));
       gst_buffer_unref (outbuf);
       outbuf = NULL;
@@ -1841,9 +1878,15 @@ restart:
     } else {
       /* do magic calculus */
       gst_deinterlace_method_deinterlace_frame (self->method,
-          self->field_history, self->history_count, outbuf);
+          self->field_history, self->history_count, outbuf,
+          self->cur_field_idx);
 
-      gst_buffer_unref (gst_deinterlace_pop_history (self));
+      self->cur_field_idx--;
+      if (self->cur_field_idx + 1 +
+          gst_deinterlace_method_get_latency (self->method)
+          < self->history_count) {
+        gst_buffer_unref (gst_deinterlace_pop_history (self));
+      }
 
       if (gst_deinterlace_clip_buffer (self, outbuf)) {
         GST_DEBUG_OBJECT (self,
@@ -1866,6 +1909,7 @@ restart:
         /* pop off the second field */
         GST_DEBUG_OBJECT (self, "Removing unused field (count: %d)",
             self->history_count);
+        self->cur_field_idx--;
         gst_buffer_unref (gst_deinterlace_pop_history (self));
         interlacing_method = GST_DEINTERLACE_INTERLACED;
         return ret;
@@ -1878,10 +1922,11 @@ restart:
     }
   }
   /* no calculation done: remove excess field */
-  else if (self->field_history[cur_field_idx].flags ==
+  else if (self->field_history[self->cur_field_idx].flags ==
       PICTURE_INTERLACED_BOTTOM && (self->fields == GST_DEINTERLACE_TF
           && interlacing_method != GST_DEINTERLACE_TELECINE)) {
     GST_DEBUG_OBJECT (self, "Removing unused bottom field");
+    self->cur_field_idx--;
     gst_buffer_unref (gst_deinterlace_pop_history (self));
 
     if (flush_one && !self->drop_orphans) {

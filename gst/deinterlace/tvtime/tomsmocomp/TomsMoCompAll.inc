@@ -61,7 +61,9 @@
 #define SEFUNC(x) Search_Effort_C_##x(src_pitch, dst_pitch, rowsize, pWeaveSrc, pWeaveSrcP, pWeaveDest, IsOdd, pCopySrc, pCopySrcP, FldHeight)
 #endif
 
-static void FUNCT_NAME(GstDeinterlaceMethod *d_method, const GstDeinterlaceField* history, guint history_count, GstBuffer *outbuf)
+static void FUNCT_NAME(GstDeinterlaceMethod *d_method,
+	const GstDeinterlaceField* history, guint history_count,
+	GstBuffer *outbuf, int cur_field_idx)
 {
   GstDeinterlaceMethodTomsMoComp *self = GST_DEINTERLACE_METHOD_TOMSMOCOMP (d_method);
   glong SearchEffort = self->search_effort;
@@ -77,6 +79,21 @@ static void FUNCT_NAME(GstDeinterlaceMethod *d_method, const GstDeinterlaceField
   gint dst_pitch;
   gint rowsize;
   gint FldHeight;
+
+  if (cur_field_idx + 2 > history_count || cur_field_idx < 1) {
+    GstDeinterlaceMethod *backup_method;
+    
+    backup_method = g_object_new (gst_deinterlace_method_linear_get_type(),
+        NULL);
+
+    gst_deinterlace_method_setup (backup_method, d_method->format,
+        d_method->frame_width, d_method->frame_height);
+    gst_deinterlace_method_deinterlace_frame (backup_method,
+        history, history_count, outbuf, cur_field_idx);
+
+    g_object_unref (backup_method);
+    return;
+  }
 
   /* double stride do address just every odd/even scanline */
   src_pitch = self->parent.row_stride[0]*2;
