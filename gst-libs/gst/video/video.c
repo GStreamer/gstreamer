@@ -572,6 +572,7 @@ gst_video_info_init (GstVideoInfo * info)
   g_return_if_fail (info != NULL);
 
   memset (info, 0, sizeof (GstVideoInfo));
+  info->views = 1;
   /* arrange for sensible defaults, e.g. if turned into caps */
   info->fps_n = 0;
   info->fps_d = 1;
@@ -622,7 +623,7 @@ gst_video_info_from_caps (GstVideoInfo * info, const GstCaps * caps)
   GstStructure *structure;
   const gchar *s;
   GstVideoFormat format;
-  gint width, height;
+  gint width, height, views;
   gint fps_n, fps_d;
   gboolean interlaced;
   gint par_n, par_d;
@@ -666,6 +667,11 @@ gst_video_info_from_caps (GstVideoInfo * info, const GstCaps * caps)
     info->flags |= GST_VIDEO_FLAG_INTERLACED;
   else
     info->flags &= ~GST_VIDEO_FLAG_INTERLACED;
+
+  if (gst_structure_get_int (structure, "views", &views))
+    info->views = views;
+  else
+    info->views = 1;
 
   s = gst_structure_get_string (structure, "color-matrix");
   if (s)
@@ -752,6 +758,8 @@ gst_video_info_to_caps (GstVideoInfo * info)
   if (info->chroma_site)
     gst_caps_set_simple (caps, "chroma-site", G_TYPE_STRING, info->chroma_site,
         NULL);
+  if (info->views > 1)
+    gst_caps_set_simple (caps, "views", G_TYPE_INT, info->views, NULL);
 
   return caps;
 }

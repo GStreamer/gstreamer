@@ -3,19 +3,23 @@ Media Types
 
  video/x-raw
 
-  width, G_TYPE_INT
+  width, G_TYPE_INT, mandatory
     The width of the image in pixels.
 
-  height, G_TYPE_INT
+  height, G_TYPE_INT, mandatory
     The height of the image in pixels
 
-  framerate, GST_TYPE_FRACTION
+  framerate, GST_TYPE_FRACTION, default 0/1
     The framerate of the video 0/1 for variable framerate
 
-  pixel-aspect-ratio, GST_TYPE_FRACTION
+  pixel-aspect-ratio, GST_TYPE_FRACTION, default 1/1
     The pixel aspect ration of the video
 
-  format, G_TYPE_STRING
+  views, G_TYPE_INT, default 1
+    The number of views for multiview video. Each buffer contains
+    multiple GstMetaVideo buffers that describe each view.
+
+  format, G_TYPE_STRING, mandatory
     The format of the video
 
   *  "I420" planar 4:2:0 YUV

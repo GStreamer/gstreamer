@@ -37,7 +37,11 @@ typedef struct _GstMetaVideoCrop GstMetaVideoCrop;
 /**
  * GstMetaVideo:
  * @meta: parent #GstMeta
+ * @buffer: the buffer this metadata belongs to
  * @flags: additional video flags
+ * @format: the video format
+ * @width: the video width
+ * @height: the video height
  * @n_planes: the number of planes in the image
  * @offset: array of offsets for the planes
  * @stride: array of strides for the planes

@@ -329,6 +329,7 @@ typedef enum {
  * @flags: additional video flags
  * @width: the width of the video
  * @height: the height of the video
+ * @views: the number of views for multiview video
  * @size: the default size of one frame
  * @color_matrix: the color matrix.  Possible values are
  *   "sdtv" for the standard definition color matrix (as specified in
@@ -360,6 +361,7 @@ struct _GstVideoInfo {
   gint                      width;
   gint                      height;
   gsize                     size;
+  gint                      views;
 
   const gchar              *color_matrix;
   const gchar              *chroma_site;
@@ -386,6 +388,7 @@ struct _GstVideoInfo {
 #define GST_VIDEO_INFO_WIDTH(i)          ((i)->width)
 #define GST_VIDEO_INFO_HEIGHT(i)         ((i)->height)
 #define GST_VIDEO_INFO_SIZE(i)           ((i)->size)
+#define GST_VIDEO_INFO_VIEWS(i)          ((i)->views)
 #define GST_VIDEO_INFO_PAR_N(i)          ((i)->par_n)
 #define GST_VIDEO_INFO_PAR_D(i)          ((i)->par_d)
 #define GST_VIDEO_INFO_FPS_N(i)          ((i)->fps_n)
