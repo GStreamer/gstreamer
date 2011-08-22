@@ -41,7 +41,10 @@
  * Core and plug-in writers can add and remove pads with gst_element_add_pad()
  * and gst_element_remove_pad().
  *
- * A pad of an element can be retrieved by name with gst_element_get_pad().
+ * An existing pad of an element can be retrieved by name with
+ * gst_element_get_static_pad(). A new dynamic pad can be created using
+ * gst_element_request_pad() with a #GstPadTemplate or 
+ * gst_element_get_request_pad() with the template name such as "src_%d".
  * An iterator of all pads can be retrieved with gst_element_iterate_pads().
  *
  * Elements can be linked through their pads.
@@ -1022,8 +1025,8 @@ _gst_element_request_pad (GstElement * element, GstPadTemplate * templ,
  * @element: a #GstElement to find a request pad of.
  * @name: the name of the request #GstPad to retrieve.
  *
- * Retrieves a pad from the element by name. This version only retrieves
- * request pads. The pad should be released with
+ * Retrieves a pad from the element by name (e.g. "src_%d"). This version only
+ * retrieves request pads. The pad should be released with
  * gst_element_release_request_pad().
  *
  * This method is slow and will be deprecated in the future. New code should
@@ -1129,6 +1132,8 @@ gst_element_get_request_pad (GstElement * element, const gchar * name)
  * request. Can be %NULL.
  *
  * Retrieves a request pad from the element according to the provided template.
+ * Pad templates can be looked up using
+ * gst_element_factory_get_static_pad_templates().
  *
  * If the @caps are specified and the element implements thew new
  * request_new_pad_full virtual method, the element will use them to select
@@ -1169,8 +1174,9 @@ gst_element_iterate_pad_list (GstElement * element, GList ** padlist)
  * gst_element_iterate_pads:
  * @element: a #GstElement to iterate pads of.
  *
- * Retrieves an iterattor of @element's pads. The iterator should
- * be freed after usage.
+ * Retrieves an iterator of @element's pads. The iterator should
+ * be freed after usage. Also more specialized iterators exists such as
+ * gst_element_iterate_src_pads() or gst_element_iterate_sink_pads().
  *
  * Returns: (transfer full): the #GstIterator of #GstPad. Unref each pad
  *     after use.

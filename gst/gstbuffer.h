@@ -381,7 +381,7 @@ typedef enum {
  * Combination of all possible fields that can be copied with
  * gst_buffer_copy_into().
  */
-#define GST_BUFFER_COPY_ALL  (GST_BUFFER_COPY_METADATA | GST_BUFFER_COPY_MEMORY)
+#define GST_BUFFER_COPY_ALL  ((GstBufferCopyFlags)(GST_BUFFER_COPY_METADATA | GST_BUFFER_COPY_MEMORY))
 
 /* copies memory or metadata into newly allocated buffer */
 void            gst_buffer_copy_into            (GstBuffer *dest, GstBuffer *src,

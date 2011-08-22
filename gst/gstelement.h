@@ -151,7 +151,7 @@ typedef enum {
  * Given a current state @cur and a target state @pending, calculate the next (intermediate)
  * #GstState.
  */
-#define GST_STATE_GET_NEXT(cur,pending)         ((cur) + __GST_SIGN ((gint)(pending) - (gint)(cur)))
+#define GST_STATE_GET_NEXT(cur,pending)         ((GstState)((cur) + __GST_SIGN ((gint)(pending) - (gint)(cur))))
 /**
  * GST_STATE_TRANSITION:
  * @cur: A current state

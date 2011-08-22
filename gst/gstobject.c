@@ -300,10 +300,14 @@ gst_object_ref_sink (gpointer object)
  *
  * Make sure not to LOCK @oldobj because it might be unreffed
  * which could cause a deadlock when it is disposed.
+ *
+ * Since 0.10.36, this function operates atomically.
  */
 void
 gst_object_replace (GstObject ** oldobj, GstObject * newobj)
 {
+  GstObject *oldptr;
+
   g_return_if_fail (oldobj != NULL);
   g_return_if_fail (*oldobj == NULL || GST_IS_OBJECT (*oldobj));
   g_return_if_fail (newobj == NULL || GST_IS_OBJECT (newobj));
@@ -316,14 +320,14 @@ gst_object_replace (GstObject ** oldobj, GstObject * newobj)
       newobj ? G_OBJECT (newobj)->ref_count : 0);
 #endif
 
-  if (G_LIKELY (*oldobj != newobj)) {
-    if (newobj)
-      gst_object_ref (newobj);
-    if (*oldobj)
-      gst_object_unref (*oldobj);
-
-    *oldobj = newobj;
-  }
+  if (newobj)
+    g_object_ref (newobj);
+  do {
+    oldptr = *oldobj;
+  } while (!g_atomic_pointer_compare_and_exchange ((void *) oldobj,
+          oldptr, newobj));
+  if (oldptr)
+    g_object_unref (oldptr);
 }
 
 /* dispose is called when the object has to release all links

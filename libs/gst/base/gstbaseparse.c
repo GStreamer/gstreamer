@@ -1586,7 +1586,7 @@ gst_base_parse_check_media (GstBaseParse * parse)
   if (caps)
     gst_caps_unref (caps);
 
-  GST_DEBUG_OBJECT (parse, "media is video == %d", parse->priv->is_video);
+  GST_DEBUG_OBJECT (parse, "media is video: %d", parse->priv->is_video);
 }
 
 /* takes ownership of frame */
@@ -1862,10 +1862,14 @@ gst_base_parse_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     parse->priv->close_segment = NULL;
   }
   if (G_UNLIKELY (parse->priv->pending_segment)) {
+    GstEvent *pending_segment;
+
+    pending_segment = parse->priv->pending_segment;
+    parse->priv->pending_segment = NULL;
+
     GST_DEBUG_OBJECT (parse, "%s push pending segment",
         parse->priv->pad_mode == GST_ACTIVATE_PULL ? "loop" : "chain");
-    gst_pad_push_event (parse->srcpad, parse->priv->pending_segment);
-    parse->priv->pending_segment = NULL;
+    gst_pad_push_event (parse->srcpad, pending_segment);
 
     /* have caps; check identity */
     gst_base_parse_check_media (parse);

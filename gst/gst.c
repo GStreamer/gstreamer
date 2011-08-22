@@ -217,7 +217,7 @@ parse_debug_category (gchar * str, const gchar ** category)
 }
 
 static gboolean
-parse_debug_level (gchar * str, gint * level)
+parse_debug_level (gchar * str, GstDebugLevel * level)
 {
   if (!str)
     return FALSE;
@@ -227,7 +227,7 @@ parse_debug_level (gchar * str, gint * level)
 
   if (str[0] != NUL && str[1] == NUL
       && str[0] >= '0' && str[0] < '0' + GST_LEVEL_COUNT) {
-    *level = str[0] - '0';
+    *level = (GstDebugLevel) (str[0] - '0');
     return TRUE;
   }
 
@@ -249,7 +249,7 @@ parse_debug_list (const gchar * list)
       gchar **values = g_strsplit (*walk, ":", 2);
 
       if (values[0] && values[1]) {
-        gint level;
+        GstDebugLevel level;
         const gchar *category;
 
         if (parse_debug_category (values[0], &category)
@@ -259,7 +259,7 @@ parse_debug_list (const gchar * list)
 
       g_strfreev (values);
     } else {
-      gint level;
+      GstDebugLevel level;
 
       if (parse_debug_level (*walk, &level))
         gst_debug_set_default_threshold (level);
@@ -909,9 +909,9 @@ parse_one_option (gint opt, const gchar * arg, GError ** err)
     }
 #ifndef GST_DISABLE_GST_DEBUG
     case ARG_DEBUG_LEVEL:{
-      gint tmp = 0;
+      GstDebugLevel tmp = GST_LEVEL_NONE;
 
-      tmp = strtol (arg, NULL, 0);
+      tmp = (GstDebugLevel) strtol (arg, NULL, 0);
       if (tmp >= 0 && tmp < GST_LEVEL_COUNT) {
         gst_debug_set_default_threshold (tmp);
       }
