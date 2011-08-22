@@ -331,6 +331,12 @@ gst_hls_demux_src_event (GstPad * pad, GstEvent * event)
       GstM3U8MediaFile *file;
 
       GST_INFO_OBJECT (demux, "Received GST_EVENT_SEEK");
+
+      if (gst_m3u8_client_is_live (demux->client)) {
+        GST_WARNING_OBJECT (demux, "Received seek event for live stream");
+        return FALSE;
+      }
+
       gst_event_parse_seek (event, &rate, &format, &flags, &start_type, &start,
           &stop_type, &stop);
 
