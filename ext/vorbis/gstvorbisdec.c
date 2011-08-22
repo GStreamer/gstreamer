@@ -81,7 +81,7 @@ static gboolean vorbis_dec_src_event (GstPad * pad, GstEvent * event);
 static gboolean vorbis_dec_src_query (GstPad * pad, GstQuery * query);
 static gboolean vorbis_dec_convert (GstPad * pad,
     GstFormat src_format, gint64 src_value,
-    GstFormat * dest_format, gint64 * dest_value);
+    GstFormat dest_format, gint64 * dest_value);
 
 static gboolean vorbis_dec_sink_query (GstPad * pad, GstQuery * query);
 
@@ -200,13 +200,12 @@ gst_vorbis_dec_reset (GstVorbisDec * dec)
 static gboolean
 vorbis_dec_convert (GstPad * pad,
     GstFormat src_format, gint64 src_value,
-    GstFormat * dest_format, gint64 * dest_value)
+    GstFormat dest_format, gint64 * dest_value)
 {
   gboolean res = TRUE;
   GstVorbisDec *dec;
-  guint64 scale = 1;
 
-  if (src_format == *dest_format) {
+  if (src_format == dest_format) {
     *dest_value = src_value;
     return TRUE;
   }
@@ -217,52 +216,12 @@ vorbis_dec_convert (GstPad * pad,
     goto no_header;
 
   if (dec->sinkpad == pad &&
-      (src_format == GST_FORMAT_BYTES || *dest_format == GST_FORMAT_BYTES))
+      (src_format == GST_FORMAT_BYTES || dest_format == GST_FORMAT_BYTES))
     goto no_format;
 
-  switch (src_format) {
-    case GST_FORMAT_TIME:
-      switch (*dest_format) {
-        case GST_FORMAT_BYTES:
-          scale = dec->info.bpf;
-        case GST_FORMAT_DEFAULT:
-          *dest_value =
-              scale * gst_util_uint64_scale_int (src_value, dec->vi.rate,
-              GST_SECOND);
-          break;
-        default:
-          res = FALSE;
-      }
-      break;
-    case GST_FORMAT_DEFAULT:
-      switch (*dest_format) {
-        case GST_FORMAT_BYTES:
-          *dest_value = src_value * dec->info.bpf;
-          break;
-        case GST_FORMAT_TIME:
-          *dest_value =
-              gst_util_uint64_scale_int (src_value, GST_SECOND, dec->vi.rate);
-          break;
-        default:
-          res = FALSE;
-      }
-      break;
-    case GST_FORMAT_BYTES:
-      switch (*dest_format) {
-        case GST_FORMAT_DEFAULT:
-          *dest_value = src_value / dec->info.bpf;
-          break;
-        case GST_FORMAT_TIME:
-          *dest_value = gst_util_uint64_scale_int (src_value, GST_SECOND,
-              dec->vi.rate * dec->info.bpf);
-          break;
-        default:
-          res = FALSE;
-      }
-      break;
-    default:
-      res = FALSE;
-  }
+  res = gst_audio_info_convert (&dec->info, src_format, src_value, dest_format,
+      dest_value);
+
 done:
   gst_object_unref (dec);
 
@@ -312,7 +271,7 @@ vorbis_dec_src_query (GstPad * pad, GstQuery * query)
 
       /* and convert to the final format */
       if (!(res =
-              vorbis_dec_convert (pad, GST_FORMAT_TIME, time, &format, &value)))
+              vorbis_dec_convert (pad, GST_FORMAT_TIME, time, format, &value)))
         goto error;
 
       gst_query_set_position (query, format, value);
@@ -338,7 +297,7 @@ vorbis_dec_src_query (GstPad * pad, GstQuery * query)
 
       gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
       if (!(res =
-              vorbis_dec_convert (pad, src_fmt, src_val, &dest_fmt, &dest_val)))
+              vorbis_dec_convert (pad, src_fmt, src_val, dest_fmt, &dest_val)))
         goto error;
       gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
       break;
@@ -376,7 +335,7 @@ vorbis_dec_sink_query (GstPad * pad, GstQuery * query)
 
       gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
       if (!(res =
-              vorbis_dec_convert (pad, src_fmt, src_val, &dest_fmt, &dest_val)))
+              vorbis_dec_convert (pad, src_fmt, src_val, dest_fmt, &dest_val)))
         goto error;
       gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
       break;
@@ -430,9 +389,9 @@ vorbis_dec_src_event (GstPad * pad, GstEvent * event)
 
       /* First bring the requested format to time */
       tformat = GST_FORMAT_TIME;
-      if (!(res = vorbis_dec_convert (pad, format, cur, &tformat, &tcur)))
+      if (!(res = vorbis_dec_convert (pad, format, cur, tformat, &tcur)))
         goto convert_error;
-      if (!(res = vorbis_dec_convert (pad, format, stop, &tformat, &tstop)))
+      if (!(res = vorbis_dec_convert (pad, format, stop, tformat, &tstop)))
         goto convert_error;
 
       /* then seek with time on the peer */

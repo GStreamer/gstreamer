@@ -316,38 +316,11 @@ gst_audio_test_src_query (GstBaseSrc * basesrc, GstQuery * query)
       gint rate;
 
       gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
-      if (src_fmt == dest_fmt) {
-        dest_val = src_val;
-        goto done;
-      }
 
-      rate = GST_AUDIO_INFO_RATE (&src->info);
+      if (!gst_audio_info_convert (&src->info, src_fmt, src_val, dest_fmt,
+              dest_val))
+        goto error;
 
-      switch (src_fmt) {
-        case GST_FORMAT_DEFAULT:
-          switch (dest_fmt) {
-            case GST_FORMAT_TIME:
-              /* samples to time */
-              dest_val = gst_util_uint64_scale_int (src_val, GST_SECOND, rate);
-              break;
-            default:
-              goto error;
-          }
-          break;
-        case GST_FORMAT_TIME:
-          switch (dest_fmt) {
-            case GST_FORMAT_DEFAULT:
-              /* time to samples */
-              dest_val = gst_util_uint64_scale_int (src_val, rate, GST_SECOND);
-              break;
-            default:
-              goto error;
-          }
-          break;
-        default:
-          goto error;
-      }
-    done:
       gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
       res = TRUE;
       break;
