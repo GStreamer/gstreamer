@@ -679,13 +679,18 @@ gst_ogg_demux_collect_start_time (GstOggDemux * ogg, GstOggChain * chain)
   for (i = 0; i < chain->streams->len; i++) {
     GstOggPad *pad = g_array_index (chain->streams, GstOggPad *, i);
 
-    if (pad->map.is_sparse)
+    if (pad->map.is_skeleton)
       continue;
 
     /*  can do this if the pad start time is not defined */
+    GST_DEBUG_OBJECT (ogg, "Pad %08x (%s) start time is %" GST_TIME_FORMAT,
+        pad->map.serialno, gst_ogg_stream_get_media_type (&pad->map),
+        GST_TIME_ARGS (pad->start_time));
     if (pad->start_time == GST_CLOCK_TIME_NONE) {
-      start_time = G_MAXUINT64;
-      break;
+      if (!pad->map.is_sparse) {
+        start_time = G_MAXUINT64;
+        break;
+      }
     } else {
       start_time = MIN (start_time, pad->start_time);
     }
