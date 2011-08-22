@@ -297,6 +297,11 @@ void         gst_audio_info_set_format  (GstAudioInfo *info, GstAudioFormat form
 gboolean     gst_audio_info_from_caps   (GstAudioInfo *info, const GstCaps *caps);
 GstCaps *    gst_audio_info_to_caps     (GstAudioInfo *info);
 
+gboolean     gst_audio_info_convert     (GstAudioInfo * info,
+                                         GstFormat src_fmt, gint64 src_val,
+                                         GstFormat dest_fmt, gint64 * dest_val);
+
+
 
 #define GST_AUDIO_RATE_RANGE "(int) [ 1, max ]"
 #define GST_AUDIO_CHANNELS_RANGE "(int) [ 1, max ]"

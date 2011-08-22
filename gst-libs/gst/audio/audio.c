@@ -411,6 +411,99 @@ gst_audio_info_to_caps (GstAudioInfo * info)
 }
 
 /**
+ * gst_audio_format_convert:
+ * @info: a #GstAudioInfo
+ * @src_format: #GstFormat of the @src_value
+ * @src_value: value to convert
+ * @dest_format: #GstFormat of the @dest_value
+ * @dest_value: pointer to destination value
+ *
+ * Converts among various #GstFormat types.  This function handles
+ * GST_FORMAT_BYTES, GST_FORMAT_TIME, and GST_FORMAT_DEFAULT.  For
+ * raw audio, GST_FORMAT_DEFAULT corresponds to audio frames.  This
+ * function can be used to handle pad queries of the type GST_QUERY_CONVERT.
+ *
+ * Returns: TRUE if the conversion was successful.
+ */
+gboolean
+gst_audio_info_convert (GstAudioInfo * info,
+    GstFormat src_fmt, gint64 src_val, GstFormat dest_fmt, gint64 * dest_val)
+{
+  gboolean res = TRUE;
+  gint bpf, rate;
+
+  GST_DEBUG ("converting value %" G_GINT64_FORMAT " from %s (%d) to %s (%d)",
+      src_val, gst_format_get_name (src_fmt), src_fmt,
+      gst_format_get_name (dest_fmt), dest_fmt);
+
+  if (src_fmt == dest_fmt || src_val == -1) {
+    *dest_val = src_val;
+    goto done;
+  }
+
+  /* get important info */
+  bpf = GST_AUDIO_INFO_BPF (info);
+  rate = GST_AUDIO_INFO_RATE (info);
+
+  if (bpf == 0 || rate == 0) {
+    GST_DEBUG ("no rate or bpf configured");
+    res = FALSE;
+    goto done;
+  }
+
+  switch (src_fmt) {
+    case GST_FORMAT_BYTES:
+      switch (dest_fmt) {
+        case GST_FORMAT_TIME:
+          *dest_val = GST_FRAMES_TO_CLOCK_TIME (src_val / bpf, rate);
+          break;
+        case GST_FORMAT_DEFAULT:
+          *dest_val = src_val / bpf;
+          break;
+        default:
+          res = FALSE;
+          break;
+      }
+      break;
+    case GST_FORMAT_DEFAULT:
+      switch (dest_fmt) {
+        case GST_FORMAT_TIME:
+          *dest_val = GST_FRAMES_TO_CLOCK_TIME (src_val, rate);
+          break;
+        case GST_FORMAT_BYTES:
+          *dest_val = src_val * bpf;
+          break;
+        default:
+          res = FALSE;
+          break;
+      }
+      break;
+    case GST_FORMAT_TIME:
+      switch (dest_fmt) {
+        case GST_FORMAT_DEFAULT:
+          *dest_val = GST_CLOCK_TIME_TO_FRAMES (src_val, rate);
+          break;
+        case GST_FORMAT_BYTES:
+          *dest_val = GST_CLOCK_TIME_TO_FRAMES (src_val, rate);
+          *dest_val *= bpf;
+          break;
+        default:
+          res = FALSE;
+          break;
+      }
+      break;
+    default:
+      res = FALSE;
+      break;
+  }
+done:
+  GST_DEBUG ("ret=%d result %" G_GINT64_FORMAT, res, *dest_val);
+
+  return res;
+}
+
+
+/**
  * gst_audio_buffer_clip:
  * @buffer: The buffer to clip.
  * @segment: Segment in %GST_FORMAT_TIME or %GST_FORMAT_DEFAULT to which

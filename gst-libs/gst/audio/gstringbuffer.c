@@ -316,78 +316,13 @@ gboolean
 gst_ring_buffer_convert (GstRingBuffer * buf,
     GstFormat src_fmt, gint64 src_val, GstFormat dest_fmt, gint64 * dest_val)
 {
-  gboolean res = TRUE;
-  gint bpf, rate;
+  gboolean res;
 
-  GST_DEBUG ("converting value %" G_GINT64_FORMAT " from %s (%d) to %s (%d)",
-      src_val, gst_format_get_name (src_fmt), src_fmt,
-      gst_format_get_name (dest_fmt), dest_fmt);
-
-  if (src_fmt == dest_fmt || src_val == -1) {
-    *dest_val = src_val;
-    goto done;
-  }
-
-  /* get important info */
   GST_OBJECT_LOCK (buf);
-  bpf = GST_AUDIO_INFO_BPF (&buf->spec.info);
-  rate = GST_AUDIO_INFO_RATE (&buf->spec.info);
+  res =
+      gst_audio_info_convert (&buf->spec.info, src_fmt, src_val, dest_fmt,
+      dest_val);
   GST_OBJECT_UNLOCK (buf);
-
-  if (bpf == 0 || rate == 0) {
-    GST_DEBUG ("no rate or bpf configured");
-    res = FALSE;
-    goto done;
-  }
-
-  switch (src_fmt) {
-    case GST_FORMAT_BYTES:
-      switch (dest_fmt) {
-        case GST_FORMAT_TIME:
-          *dest_val = gst_util_uint64_scale_int (src_val / bpf, GST_SECOND,
-              rate);
-          break;
-        case GST_FORMAT_DEFAULT:
-          *dest_val = src_val / bpf;
-          break;
-        default:
-          res = FALSE;
-          break;
-      }
-      break;
-    case GST_FORMAT_DEFAULT:
-      switch (dest_fmt) {
-        case GST_FORMAT_TIME:
-          *dest_val = gst_util_uint64_scale_int (src_val, GST_SECOND, rate);
-          break;
-        case GST_FORMAT_BYTES:
-          *dest_val = src_val * bpf;
-          break;
-        default:
-          res = FALSE;
-          break;
-      }
-      break;
-    case GST_FORMAT_TIME:
-      switch (dest_fmt) {
-        case GST_FORMAT_DEFAULT:
-          *dest_val = gst_util_uint64_scale_int (src_val, rate, GST_SECOND);
-          break;
-        case GST_FORMAT_BYTES:
-          *dest_val = gst_util_uint64_scale_int (src_val, rate, GST_SECOND);
-          *dest_val *= bpf;
-          break;
-        default:
-          res = FALSE;
-          break;
-      }
-      break;
-    default:
-      res = FALSE;
-      break;
-  }
-done:
-  GST_DEBUG ("ret=%d result %" G_GINT64_FORMAT, res, *dest_val);
 
   return res;
 }
