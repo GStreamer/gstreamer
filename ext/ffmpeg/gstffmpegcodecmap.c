@@ -816,37 +816,37 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
     case CODEC_ID_DVVIDEO:
     {
       if (encode && context) {
-        guint32 fourcc;
+        const gchar *format;
 
         switch (context->pix_fmt) {
           case PIX_FMT_YUYV422:
-            fourcc = GST_MAKE_FOURCC ('Y', 'U', 'Y', '2');
+            format = "YUY2";
             break;
           case PIX_FMT_YUV420P:
-            fourcc = GST_MAKE_FOURCC ('I', '4', '2', '0');
+            format = "I420";
             break;
           case PIX_FMT_YUVA420P:
-            fourcc = GST_MAKE_FOURCC ('A', '4', '2', '0');
+            format = "A420";
             break;
           case PIX_FMT_YUV411P:
-            fourcc = GST_MAKE_FOURCC ('Y', '4', '1', 'B');
+            format = "Y41B";
             break;
           case PIX_FMT_YUV422P:
-            fourcc = GST_MAKE_FOURCC ('Y', '4', '2', 'B');
+            format = "Y42B";
             break;
           case PIX_FMT_YUV410P:
-            fourcc = GST_MAKE_FOURCC ('Y', 'U', 'V', '9');
+            format = "YUV9";
             break;
           default:
             GST_WARNING
-                ("Couldnt' find fourcc for pixfmt %d, defaulting to I420",
+                ("Couldnt' find format for pixfmt %d, defaulting to I420",
                 context->pix_fmt);
-            fourcc = GST_MAKE_FOURCC ('I', '4', '2', '0');
+            format = "I420";
             break;
         }
         caps = gst_ff_vid_caps_new (context, codec_id, "video/x-dv",
             "systemstream", G_TYPE_BOOLEAN, FALSE,
-            "format", GST_TYPE_FOURCC, fourcc, NULL);
+            "format", G_TYPE_STRING, format, NULL);
       } else {
         caps = gst_ff_vid_caps_new (context, codec_id, "video/x-dv",
             "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
@@ -1099,8 +1099,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       break;
     case CODEC_ID_VC1:
       caps = gst_ff_vid_caps_new (context, codec_id, "video/x-wmv",
-          "wmvversion", G_TYPE_INT, 3, "format", GST_TYPE_FOURCC,
-          GST_MAKE_FOURCC ('W', 'V', 'C', '1'), NULL);
+          "wmvversion", G_TYPE_INT, 3, "format", G_TYPE_STRING, "WVC1", NULL);
       break;
     case CODEC_ID_QDM2:
       caps = gst_ff_aud_caps_new (context, codec_id, "audio/x-qdm2", NULL);
@@ -2375,33 +2374,25 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
 
     case CODEC_ID_DVVIDEO:
     {
-      guint32 fourcc;
+      const gchar *format;
 
-      if (gst_structure_get_fourcc (str, "format", &fourcc))
-        switch (fourcc) {
-          case GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'):
-            context->pix_fmt = PIX_FMT_YUYV422;
-            break;
-          case GST_MAKE_FOURCC ('I', '4', '2', '0'):
-            context->pix_fmt = PIX_FMT_YUV420P;
-            break;
-          case GST_MAKE_FOURCC ('A', '4', '2', '0'):
-            context->pix_fmt = PIX_FMT_YUVA420P;
-            break;
-          case GST_MAKE_FOURCC ('Y', '4', '1', 'B'):
-            context->pix_fmt = PIX_FMT_YUV411P;
-            break;
-          case GST_MAKE_FOURCC ('Y', '4', '2', 'B'):
-            context->pix_fmt = PIX_FMT_YUV422P;
-            break;
-          case GST_MAKE_FOURCC ('Y', 'U', 'V', '9'):
-            context->pix_fmt = PIX_FMT_YUV410P;
-            break;
-          default:
-            GST_WARNING ("couldn't convert fourcc %" GST_FOURCC_FORMAT
-                " to a pixel format", GST_FOURCC_ARGS (fourcc));
-            break;
-        }
+      format = gst_structure_get_string (str, "format");
+
+      if (g_str_equal (format, "YUY2"))
+        context->pix_fmt = PIX_FMT_YUYV422;
+      else if (g_str_equal (format, "I420"))
+        context->pix_fmt = PIX_FMT_YUV420P;
+      else if (g_str_equal (format, "A420"))
+        context->pix_fmt = PIX_FMT_YUVA420P;
+      else if (g_str_equal (format, "Y41B"))
+        context->pix_fmt = PIX_FMT_YUV411P;
+      else if (g_str_equal (format, "Y42B"))
+        context->pix_fmt = PIX_FMT_YUV422P;
+      else if (g_str_equal (format, "YUV9"))
+        context->pix_fmt = PIX_FMT_YUV410P;
+      else {
+        GST_WARNING ("couldn't convert format %s" " to a pixel format", format);
+      }
       break;
     }
     case CODEC_ID_H263P:
@@ -2862,19 +2853,17 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
           break;
         case 3:
         {
-          guint32 fourcc;
+          const gchar *format;
 
           /* WMV3 unless the fourcc exists and says otherwise */
           id = CODEC_ID_WMV3;
+          format = gst_structure_get_string (structure, "format");
 
-          if (gst_structure_get_fourcc (structure, "format", &fourcc)) {
-            if ((fourcc == GST_MAKE_FOURCC ('W', 'V', 'C', '1')) ||
-                (fourcc == GST_MAKE_FOURCC ('W', 'M', 'V', 'A'))) {
-              id = CODEC_ID_VC1;
-            }
+          if (g_str_equal (format, "WVC1") || g_str_equal (format, "WMVA")) {
+            id = CODEC_ID_VC1;
           }
-        }
           break;
+        }
       }
     }
     if (id != CODEC_ID_NONE)

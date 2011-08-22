@@ -478,84 +478,71 @@ gst_ffmpegscale_get_unit_size (GstBaseTransform * trans, GstCaps * caps,
 static enum PixelFormat
 gst_ffmpeg_caps_to_pixfmt (const GstCaps * caps)
 {
-  GstStructure *structure;
-  enum PixelFormat pix_fmt = PIX_FMT_NONE;
+  GstVideoInfo info;
+  enum PixelFormat pix_fmt;
 
   GST_DEBUG ("converting caps %" GST_PTR_FORMAT, caps);
-  g_return_val_if_fail (gst_caps_get_size (caps) == 1, PIX_FMT_NONE);
-  structure = gst_caps_get_structure (caps, 0);
 
-  if (strcmp (gst_structure_get_name (structure), "video/x-raw-yuv") == 0) {
-    guint32 fourcc;
+  if (gst_video_info_from_caps (&info, caps))
+    goto invalid_caps;
 
-    if (gst_structure_get_fourcc (structure, "format", &fourcc)) {
-      switch (fourcc) {
-        case GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'):
-          pix_fmt = PIX_FMT_YUYV422;
-          break;
-        case GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y'):
-          pix_fmt = PIX_FMT_UYVY422;
-          break;
-        case GST_MAKE_FOURCC ('I', '4', '2', '0'):
-          pix_fmt = PIX_FMT_YUV420P;
-          break;
-        case GST_MAKE_FOURCC ('Y', '4', '1', 'B'):
-          pix_fmt = PIX_FMT_YUV411P;
-          break;
-        case GST_MAKE_FOURCC ('Y', '4', '2', 'B'):
-          pix_fmt = PIX_FMT_YUV422P;
-          break;
-        case GST_MAKE_FOURCC ('Y', 'U', 'V', '9'):
-          pix_fmt = PIX_FMT_YUV410P;
-          break;
-      }
-    }
-  } else if (strcmp (gst_structure_get_name (structure),
-          "video/x-raw-rgb") == 0) {
-    gint bpp = 0, rmask = 0, endianness = 0;
-
-    if (gst_structure_get_int (structure, "bpp", &bpp) &&
-        gst_structure_get_int (structure, "endianness", &endianness) &&
-        endianness == G_BIG_ENDIAN) {
-      if (gst_structure_get_int (structure, "red_mask", &rmask)) {
-        switch (bpp) {
-          case 32:
-            if (rmask == 0x00ff0000)
-              pix_fmt = PIX_FMT_ARGB;
-            else if (rmask == 0xff000000)
-              pix_fmt = PIX_FMT_RGBA;
-            else if (rmask == 0xff00)
-              pix_fmt = PIX_FMT_BGRA;
-            else if (rmask == 0xff)
-              pix_fmt = PIX_FMT_ABGR;
-            break;
-          case 24:
-            if (rmask == 0x0000FF)
-              pix_fmt = PIX_FMT_BGR24;
-            else
-              pix_fmt = PIX_FMT_RGB24;
-            break;
-          case 16:
-            if (endianness == G_BYTE_ORDER)
-              pix_fmt = PIX_FMT_RGB565;
-            break;
-          case 15:
-            if (endianness == G_BYTE_ORDER)
-              pix_fmt = PIX_FMT_RGB555;
-            break;
-          default:
-            /* nothing */
-            break;
-        }
-      } else {
-        if (bpp == 8) {
-          pix_fmt = PIX_FMT_PAL8;
-        }
-      }
-    }
+  switch (GST_VIDEO_INFO_FORMAT (&info)) {
+    case GST_VIDEO_FORMAT_YUY2:
+      pix_fmt = PIX_FMT_YUYV422;
+      break;
+    case GST_VIDEO_FORMAT_UYVY:
+      pix_fmt = PIX_FMT_UYVY422;
+      break;
+    case GST_VIDEO_FORMAT_I420:
+      pix_fmt = PIX_FMT_YUV420P;
+      break;
+    case GST_VIDEO_FORMAT_Y41B:
+      pix_fmt = PIX_FMT_YUV411P;
+      break;
+    case GST_VIDEO_FORMAT_Y42B:
+      pix_fmt = PIX_FMT_YUV422P;
+      break;
+    case GST_VIDEO_FORMAT_YUV9:
+      pix_fmt = PIX_FMT_YUV410P;
+      break;
+    case GST_VIDEO_FORMAT_ARGB:
+      pix_fmt = PIX_FMT_ARGB;
+      break;
+    case GST_VIDEO_FORMAT_RGBA:
+      pix_fmt = PIX_FMT_RGBA;
+      break;
+    case GST_VIDEO_FORMAT_BGRA:
+      pix_fmt = PIX_FMT_BGRA;
+      break;
+    case GST_VIDEO_FORMAT_ABGR:
+      pix_fmt = PIX_FMT_ABGR;
+      break;
+    case GST_VIDEO_FORMAT_BGR:
+      pix_fmt = PIX_FMT_BGR24;
+      break;
+    case GST_VIDEO_FORMAT_RGB:
+      pix_fmt = PIX_FMT_RGB24;
+      break;
+    case GST_VIDEO_FORMAT_RGB16:
+      pix_fmt = PIX_FMT_RGB565;
+      break;
+    case GST_VIDEO_FORMAT_RGB15:
+      pix_fmt = PIX_FMT_RGB555;
+      break;
+    case GST_VIDEO_FORMAT_RGB8_PALETTED:
+      pix_fmt = PIX_FMT_PAL8;
+      break;
+    default:
+      pix_fmt = PIX_FMT_NONE;
+      break;
   }
-
   return pix_fmt;
+
+  /* ERROR */
+invalid_caps:
+  {
+    return PIX_FMT_NONE;
+  }
 }
 
 static gboolean
