@@ -2422,7 +2422,7 @@ gst_text_overlay_text_chain (GstPad * pad, GstBuffer * buffer)
       gst_segment_set_last_stop (&overlay->text_segment, GST_FORMAT_TIME,
           clip_start);
 
-    overlay->text_buffer = buffer;
+    overlay->text_buffer = gst_buffer_ref (buffer);
     /* That's a new text buffer we need to render */
     overlay->need_render = TRUE;
 
@@ -2434,6 +2434,7 @@ gst_text_overlay_text_chain (GstPad * pad, GstBuffer * buffer)
 
 beach:
 
+  gst_buffer_unref (buffer);
   return ret;
 }
 
