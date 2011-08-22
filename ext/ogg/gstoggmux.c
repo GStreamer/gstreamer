@@ -1075,12 +1075,8 @@ gst_ogg_mux_set_header_on_caps (GstCaps * caps, GList * buffers)
 }
 
 static void
-create_header_packet (ogg_packet * packet, GstBuffer * buf, GstOggPadData * pad)
+create_header_packet (ogg_packet * packet, GstOggPadData * pad)
 {
-  gsize size;
-
-  packet->packet = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
-  packet->bytes = size;
   packet->granulepos = 0;
   /* mark BOS and packet number */
   packet->b_o_s = (pad->packetno == 0);
@@ -1170,7 +1166,10 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
     }
 
     /* create a packet from the buffer */
-    create_header_packet (&packet, buf, pad);
+    packet.packet = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+    packet.bytes = size;
+
+    create_header_packet (&packet, pad);
 
     /* swap the packet in */
     ogg_stream_packetin (&pad->map.stream, &packet);
@@ -1228,7 +1227,10 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
       hwalk = hwalk->next;
 
       /* create a packet from the buffer */
-      create_header_packet (&packet, buf, pad);
+      packet.packet = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+      packet.bytes = size;
+
+      create_header_packet (&packet, pad);
 
       /* swap the packet in */
       ogg_stream_packetin (&pad->map.stream, &packet);
