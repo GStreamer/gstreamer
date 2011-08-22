@@ -1,11 +1,7 @@
 #ifndef __CAPTURE_H__
 #define __CAPTURE_H__
 
-#include "DeckLinkAPI.h"
-
-extern "C" {
-  IDeckLinkIterator* CreateDeckLinkIteratorInstance (void);
-};
+#include "gstdecklink.h"
 
 class DeckLinkCaptureDelegate : public IDeckLinkInputCallback
 {

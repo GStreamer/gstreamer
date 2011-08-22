@@ -22,7 +22,6 @@
 
 #include <gst/gst.h>
 #include "gstdecklink.h"
-#include "DeckLinkAPI.h"
 
 G_BEGIN_DECLS
 GST_DEBUG_CATEGORY_EXTERN (gst_decklink_src_debug_category);

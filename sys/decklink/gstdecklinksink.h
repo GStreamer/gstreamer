@@ -22,7 +22,6 @@
 
 #include <gst/gst.h>
 #include "gstdecklink.h"
-#include "DeckLinkAPI.h"
 
 G_BEGIN_DECLS
 

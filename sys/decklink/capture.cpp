@@ -33,7 +33,6 @@
 
 #include "gstdecklinksrc.h"
 
-#include "DeckLinkAPI.h"
 #include "capture.h"
 
 #define GST_CAT_DEFAULT gst_decklink_src_debug_category
@@ -99,7 +98,7 @@ HRESULT
       if (g_timecodeFormat != 0) {
         IDeckLinkTimecode *timecode;
         if (videoFrame->GetTimecode (g_timecodeFormat, &timecode) == S_OK) {
-          timecode->GetString ((COMSTR_T)&timecodeString);
+          timecode->GetString (&timecodeString);
           CONVERT_COM_STRING (timecodeString);
         }
       }

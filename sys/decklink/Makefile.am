@@ -17,13 +17,18 @@ libgstdecklink_la_SOURCES = \
 	gstdecklinksink.cpp \
 	gstdecklink.cpp \
 	capture.cpp \
-	DeckLinkAPIDispatch.cpp
+	linux/DeckLinkAPIDispatch.cpp
 
 noinst_HEADERS = \
 	gstdecklink.h \
 	gstdecklinksrc.h \
 	gstdecklinksink.h \
 	capture.h \
-	DeckLinkAPI.h \
-	LinuxCOM.h
+	linux/DeckLinkAPI.h \
+	linux/LinuxCOM.h
+
+EXTRA_DIST = \
+	win/DeckLinkAPI.h \
+	win/DeckLinkAPIDispatch.cpp \
+	win/DeckLinkAPI_i.c
 

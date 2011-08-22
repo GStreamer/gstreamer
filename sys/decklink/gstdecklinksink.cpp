@@ -40,9 +40,6 @@
 #include "gstdecklinksink.h"
 #include <string.h>
 
-extern "C" {
-  IDeckLinkIterator* CreateDeckLinkIteratorInstance (void);
-};
 
 GST_DEBUG_CATEGORY_STATIC (gst_decklink_sink_debug_category);
 #define GST_CAT_DEFAULT gst_decklink_sink_debug_category
@@ -1086,10 +1083,8 @@ HRESULT Output::ScheduledPlaybackHasStopped ()
 
 HRESULT Output::RenderAudioSamples (bool preroll)
 {
-  unsigned long
-      samplesWritten;
-  GstBuffer *
-      buffer;
+  uint32_t samplesWritten;
+  GstBuffer * buffer;
 
   // guint64 samplesToWrite;
 
@@ -1099,7 +1094,9 @@ HRESULT Output::RenderAudioSamples (bool preroll)
     // running = true;
   } else {
     g_mutex_lock (decklinksink->audio_mutex);
-    decklinksink->output->ScheduleAudioSamples (GST_BUFFER_DATA (decklinksink->audio_buffer), GST_BUFFER_SIZE (decklinksink->audio_buffer) / 4, // 2 bytes per sample, stereo
+    decklinksink->output->ScheduleAudioSamples (
+        GST_BUFFER_DATA (decklinksink->audio_buffer),
+        GST_BUFFER_SIZE (decklinksink->audio_buffer) / 4, // 2 bytes per sample, stereo
         0, 0, &samplesWritten);
 
     buffer =

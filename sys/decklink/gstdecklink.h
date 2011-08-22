@@ -21,9 +21,12 @@
 #define _GST_DECKLINK_H_
 
 #include <gst/gst.h>
-#include "DeckLinkAPI.h"
+#ifdef G_OS_UNIX
+#include "linux/DeckLinkAPI.h"
+#endif
 
-#ifdef _MSC_VER
+#ifdef G_OS_WIN32
+#include "win/DeckLinkAPI.h"
 
 #include <comutil.h>
 
