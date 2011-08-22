@@ -89,12 +89,11 @@ struct _IPCData
 GST_DEBUG_CATEGORY (d3dvideosink_debug);
 #define GST_CAT_DEFAULT d3dvideosink_debug
 
-/* TODO: Support RGB! */
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("{ YUY2, UYVY, YV12, I420 }"))
-    //";" GST_VIDEO_CAPS_RGBx)
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("{ YUY2, UYVY, YV12, I420, NV12 }")
+        ";" GST_VIDEO_CAPS_BGRx ";" GST_VIDEO_CAPS_BGRA)
     );
 
 static void gst_d3dvideosink_init_interfaces (GType type);
@@ -1678,6 +1677,30 @@ gst_d3dvideosink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
                 }
                 break;
               }
+              case GST_MAKE_FOURCC ('N', 'V', '1', '2'):
+              {
+                guint8 *dst = dest;
+                int component;
+                dststride = lr.Pitch;
+                for (component = 0; component < 2; component++) {
+                  const int compHeight =
+                      gst_video_format_get_component_height (sink->format,
+                      component, sink->height);
+                  guint8 *src =
+                      source +
+                      gst_video_format_get_component_offset (sink->format,
+                      component, sink->width, sink->height);
+                  srcstride =
+                      gst_video_format_get_row_stride (sink->format, component,
+                      sink->width);
+                  for (i = 0; i < compHeight; i++) {
+                    memcpy (dst + dststride * i, src + srcstride * i,
+                        srcstride);
+                  }
+                  dst += dststride * compHeight;
+                }
+                break;
+              }
               default:
                 g_assert_not_reached ();
             }
@@ -2123,6 +2146,10 @@ gst_d3dvideosink_initialize_swap_chain (GstD3DVideoSink * sink)
         case GST_MAKE_FOURCC ('I', '4', '2', '0'):
           d3dformat = D3DFMT_X8R8G8B8;
           d3dfourcc = (D3DFORMAT) MAKEFOURCC ('Y', 'V', '1', '2');
+          break;
+        case GST_MAKE_FOURCC ('N', 'V', '1', '2'):
+          d3dformat = D3DFMT_X8R8G8B8;
+          d3dfourcc = (D3DFORMAT) MAKEFOURCC ('N', 'V', '1', '2');
           break;
         default:
           g_assert_not_reached ();
