@@ -2830,7 +2830,7 @@ gst_ogg_demux_read_end_chain (GstOggDemux * ogg, GstOggChain * chain)
       for (i = 0; i < chain->streams->len; i++) {
         GstOggPad *pad = g_array_index (chain->streams, GstOggPad *, i);
 
-        if (pad->map.is_sparse)
+        if (pad->map.is_skeleton)
           continue;
 
         if (pad->map.serialno == ogg_page_serialno (&og)) {
