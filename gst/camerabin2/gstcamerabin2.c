@@ -23,7 +23,7 @@
  * elements, providing an API for controlling a digital camera.
  *
  * <note>
- * Note that camerabin2 is still UNSTABLE, EXPERIMENTAL and under
+ * Note that camerabin2 is still UNSTABLE and under
  * development.
  * </note>
  *

@@ -145,11 +145,6 @@ VALGRIND_TO_FIX = \
 VALGRIND_TESTS_DISABLE = \
 	$(VALGRIND_TO_FIX)
 
-if BUILD_EXPERIMENTAL
-EXPERIMENTAL_CHECKS=elements/camerabin2 \
-		elements/viewfinderbin
-endif
-
 # these tests don't even pass
 # neon: too flaky (almost always fails 'the first time')
 noinst_PROGRAMS = \
@@ -171,6 +166,7 @@ check_PROGRAMS = \
 	elements/asfmux \
 	elements/baseaudiovisualizer \
 	elements/camerabin \
+        elements/camerabin2 \
 	elements/dataurisrc \
 	elements/legacyresample \
         $(check_jifmux) \
@@ -189,6 +185,7 @@ check_PROGRAMS = \
 	elements/rtpmux \
 	$(check_schro) \
 	$(check_vp8) \
+        elements/viewfinderbin \
 	$(check_zbar) \
 	$(check_orc) \
 	$(EXPERIMENTAL_CHECKS)
