@@ -491,11 +491,8 @@ gst_alpha_color_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
       GST_VIDEO_INFO_HEIGHT (&in_info) != GST_VIDEO_INFO_HEIGHT (&out_info))
     goto invalid_caps;
 
-  in_sdtv =
-      in_info.color_matrix ? g_str_equal (in_info.color_matrix, "sdtv") : TRUE;
-  out_sdtv =
-      out_info.color_matrix ? g_str_equal (out_info.color_matrix,
-      "sdtv") : TRUE;
+  in_sdtv = in_info.colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_BT601;
+  out_sdtv = out_info.colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_BT601;
 
   switch (GST_VIDEO_INFO_FORMAT (&in_info)) {
     case GST_VIDEO_FORMAT_ARGB:

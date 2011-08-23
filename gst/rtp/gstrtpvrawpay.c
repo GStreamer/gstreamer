@@ -121,14 +121,17 @@ gst_rtp_vraw_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
 
   rtpvrawpay->vinfo = info;
 
-  colorimetrystr = "SMPTE240M";
-  if (info.color_matrix) {
-    if (g_str_equal (info.color_matrix, "sdtv")) {
-      /* BT.601 implies a bit more than just color-matrix */
-      colorimetrystr = "BT601-5";
-    } else if (g_str_equal (info.color_matrix, "hdtv")) {
-      colorimetrystr = "BT709-2";
-    }
+  if (gst_video_colorimetry_matches (&info.colorimetry,
+          GST_VIDEO_COLORIMETRY_BT601)) {
+    colorimetrystr = "BT601-5";
+  } else if (gst_video_colorimetry_matches (&info.colorimetry,
+          GST_VIDEO_COLORIMETRY_BT709)) {
+    colorimetrystr = "BT709-2";
+  } else if (gst_video_colorimetry_matches (&info.colorimetry,
+          GST_VIDEO_COLORIMETRY_SMPTE240M)) {
+    colorimetrystr = "SMPTE240M";
+  } else {
+    colorimetrystr = "SMPTE240M";
   }
 
   xinc = yinc = 1;
@@ -268,7 +271,7 @@ gst_rtp_vraw_pay_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buffer)
   width = GST_VIDEO_INFO_WIDTH (&rtpvrawpay->vinfo);
   height = GST_VIDEO_INFO_HEIGHT (&rtpvrawpay->vinfo);
 
-  interlaced = !!(rtpvrawpay->vinfo.flags & GST_VIDEO_FLAG_INTERLACED);
+  interlaced = ! !(rtpvrawpay->vinfo.flags & GST_VIDEO_FLAG_INTERLACED);
 
   /* start with line 0, offset 0 */
   for (field = 0; field < 1 + interlaced; field++) {

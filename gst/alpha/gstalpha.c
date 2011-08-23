@@ -377,7 +377,7 @@ gst_alpha_set_property (GObject * object, guint prop_id,
     case PROP_PREFER_PASSTHROUGH:{
       gboolean prefer_passthrough = g_value_get_boolean (value);
 
-      reconfigure = ((!!prefer_passthrough) != (!!alpha->prefer_passthrough))
+      reconfigure = ((! !prefer_passthrough) != (! !alpha->prefer_passthrough))
           && (alpha->method == ALPHA_METHOD_SET) && (alpha->alpha == 1.0);
       alpha->prefer_passthrough = prefer_passthrough;
       break;
@@ -532,11 +532,8 @@ gst_alpha_set_caps (GstBaseTransform * btrans,
 
   GST_ALPHA_LOCK (alpha);
 
-  alpha->in_sdtv =
-      in_info.color_matrix ? g_str_equal (in_info.color_matrix, "sdtv") : TRUE;
-  alpha->out_sdtv =
-      out_info.color_matrix ? g_str_equal (out_info.color_matrix,
-      "sdtv") : TRUE;
+  alpha->in_sdtv = in_info.colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_BT601;
+  alpha->out_sdtv = out_info.colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_BT601;
 
   passthrough = alpha->prefer_passthrough &&
       GST_VIDEO_INFO_FORMAT (&in_info) == GST_VIDEO_INFO_FORMAT (&out_info)
