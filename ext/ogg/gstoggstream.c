@@ -1094,7 +1094,7 @@ setup_fishead_mapper (GstOggStream * pad, ogg_packet * packet)
   pad->is_skeleton = TRUE;
   pad->is_sparse = TRUE;
 
-  pad->caps = gst_caps_new_simple ("none/none", NULL);
+  pad->caps = gst_caps_new_simple ("application/x-ogg-skeleton", NULL);
 
   return TRUE;
 }
