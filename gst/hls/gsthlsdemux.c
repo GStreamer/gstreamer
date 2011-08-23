@@ -958,7 +958,7 @@ gst_hls_demux_cache_fragments (GstHLSDemux * demux)
   }
 
   /* Cache the first fragments */
-  for (i = 0; i < demux->fragments_cache - 1; i++) {
+  for (i = 0; i < demux->fragments_cache; i++) {
     g_get_current_time (&demux->next_update);
     g_time_val_add (&demux->next_update,
         demux->client->current->targetduration * 1000000);
