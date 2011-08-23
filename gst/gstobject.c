@@ -446,8 +446,7 @@ gst_object_replace (GstObject ** oldobj, GstObject * newobj)
     g_object_ref (newobj);
   do {
     oldptr = *oldobj;
-  } while (!G_ATOMIC_POINTER_COMPARE_AND_EXCHANGE ((void *) oldobj,
-          oldptr, newobj));
+  } while (!G_ATOMIC_POINTER_COMPARE_AND_EXCHANGE (oldobj, oldptr, newobj));
   if (oldptr)
     g_object_unref (oldptr);
 }
