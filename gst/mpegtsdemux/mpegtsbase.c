@@ -1416,6 +1416,13 @@ mpegts_base_handle_seek_event (MpegTSBase * base, GstPad * pad,
   if (format != GST_FORMAT_TIME)
     return FALSE;
 
+  /* First try if upstream supports seeking in TIME format */
+  if (gst_pad_push_event (pad, gst_event_ref (event))) {
+    GST_DEBUG ("upstream handled SEEK event");
+    gst_event_unref (event);
+    return TRUE;
+  }
+
   GST_DEBUG ("seek event, rate: %f start: %" GST_TIME_FORMAT
       " stop: %" GST_TIME_FORMAT, rate, GST_TIME_ARGS (start),
       GST_TIME_ARGS (stop));
