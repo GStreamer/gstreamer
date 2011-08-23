@@ -2674,11 +2674,13 @@ gst_ogg_demux_read_chain (GstOggDemux * ogg, GstOggChain ** res_chain)
       break;
     }
     if (!ogg_page_bos (&og)) {
-      GST_WARNING_OBJECT (ogg, "page is not BOS page");
+      GST_INFO_OBJECT (ogg, "page is not BOS page, all streams identified");
       /* if we did not find a chain yet, assume this is a bogus stream and
        * ignore it */
-      if (!chain)
+      if (!chain) {
+        GST_WARNING_OBJECT (ogg, "No chain found, no Ogg data in stream ?");
         ret = GST_FLOW_UNEXPECTED;
+      }
       break;
     }
 
