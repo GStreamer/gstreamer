@@ -395,8 +395,9 @@ gst_ts_demux_srcpad_query (GstPad * pad, GstQuery * query)
       GST_DEBUG ("query duration");
       gst_query_parse_duration (query, &format, NULL);
       if (format == GST_FORMAT_TIME) {
-        gst_query_set_duration (query, GST_FORMAT_TIME,
-            demux->segment.duration);
+        if (!gst_pad_peer_query (pad, query))
+          gst_query_set_duration (query, GST_FORMAT_TIME,
+              demux->segment.duration);
       } else {
         GST_DEBUG_OBJECT (demux, "only query duration on TIME is supported");
         res = FALSE;
