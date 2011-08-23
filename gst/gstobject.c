@@ -84,6 +84,7 @@
  */
 
 #include "gst_private.h"
+#include "glib-compat-private.h"
 
 #include "gstobject.h"
 #include "gstmarshal.h"
@@ -445,7 +446,7 @@ gst_object_replace (GstObject ** oldobj, GstObject * newobj)
     g_object_ref (newobj);
   do {
     oldptr = *oldobj;
-  } while (!g_atomic_pointer_compare_and_exchange ((void *) oldobj,
+  } while (!G_ATOMIC_POINTER_COMPARE_AND_EXCHANGE ((void *) oldobj,
           oldptr, newobj));
   if (oldptr)
     g_object_unref (oldptr);
