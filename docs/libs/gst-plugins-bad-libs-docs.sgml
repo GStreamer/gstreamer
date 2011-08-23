@@ -30,6 +30,7 @@
       </para>
       <xi:include href="xml/gsth264parser.xml" />
       <xi:include href="xml/gstmpegvideoparser.xml" />
+      <xi:include href="xml/gstvc1parser.xml" />
     </chapter>
 
     <chapter id="video">

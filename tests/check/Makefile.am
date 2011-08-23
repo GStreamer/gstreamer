@@ -185,6 +185,7 @@ check_PROGRAMS = \
 	elements/rtpmux \
 	libs/mpegvideoparser \
 	libs/h264parser \
+	libs/vc1parser \
 	$(check_schro) \
 	$(check_vp8) \
         elements/viewfinderbin \
@@ -232,6 +233,16 @@ libs_h264parser_CFLAGS = \
 	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(AM_CFLAGS)
 
 libs_h264parser_LDADD = \
+	$(top_builddir)/gst-libs/gst/codecparsers/libgstcodecparsers-@GST_MAJORMINOR@.la \
+	$(GST_PLUGINS_BAD_LIBS) -lgstcodecparsers-@GST_MAJORMINOR@ \
+	$(GST_BASE_LIBS) $(GST_LIBS) $(LDADD)
+
+libs_vc1parser_CFLAGS = \
+	$(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
+	-DGST_USE_UNSTABLE_API \
+	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(AM_CFLAGS)
+
+libs_vc1parser_LDADD = \
 	$(top_builddir)/gst-libs/gst/codecparsers/libgstcodecparsers-@GST_MAJORMINOR@.la \
 	$(GST_PLUGINS_BAD_LIBS) -lgstcodecparsers-@GST_MAJORMINOR@ \
 	$(GST_BASE_LIBS) $(GST_LIBS) $(LDADD)
