@@ -882,9 +882,10 @@ gst_ts_demux_srcpad_event (GstPad * pad, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
       res = mpegts_base_handle_seek_event ((MpegTSBase *) demux, pad, event);
-      if (!res) {
+      if (res)
+        demux->need_newsegment = TRUE;
+      else
         GST_WARNING ("seeking failed");
-      }
       gst_event_unref (event);
       break;
     default:
