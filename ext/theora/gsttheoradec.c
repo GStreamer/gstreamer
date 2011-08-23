@@ -958,7 +958,7 @@ theora_handle_type_packet (GstTheoraDec * dec, ogg_packet * packet)
 
   /* these values are for all versions of the colorspace specified in the
    * theora info */
-  dec->vinfo.chroma_site = GST_VIDEO_CHROMA_JPEG;
+  dec->vinfo.chroma_site = GST_VIDEO_CHROMA_SITE_JPEG;
   dec->vinfo.colorimetry.range = GST_VIDEO_COLOR_RANGE_16_235;
   dec->vinfo.colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_BT601;
   dec->vinfo.colorimetry.transfer = GST_VIDEO_TRANSFER_BT709;

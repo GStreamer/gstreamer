@@ -608,43 +608,38 @@ gst_video_info_set_format (GstVideoInfo * info, GstVideoFormat format,
   fill_planes (info);
 }
 
+typedef struct
+{
+  const gchar *name;
+  GstVideoChromaSite site;
+} ChromaSiteInfo;
+
+static const ChromaSiteInfo chromasite[] = {
+  {"jpeg", GST_VIDEO_CHROMA_SITE_JPEG},
+  {"mpeg2", GST_VIDEO_CHROMA_SITE_MPEG2},
+  {"dv", GST_VIDEO_CHROMA_SITE_DV}
+};
+
 static GstVideoChromaSite
 gst_video_chroma_from_string (const gchar * s)
 {
-  GstVideoChromaSite res;
-
-  if (g_str_equal (s, "jpeg")) {
-    res = GST_VIDEO_CHROMA_JPEG;
-  } else if (g_str_equal (s, "mpeg2")) {
-    res = GST_VIDEO_CHROMA_MPEG2;
-  } else if (g_str_equal (s, "dv")) {
-    res = GST_VIDEO_CHROMA_DV;
-  } else {
-    res = GST_VIDEO_CHROMA_NONE;
+  gint i;
+  for (i = 0; i < G_N_ELEMENTS (chromasite); i++) {
+    if (g_str_equal (chromasite[i].name, s))
+      return chromasite[i].site;
   }
-  return res;
+  return GST_VIDEO_CHROMA_SITE_UNKNOWN;
 }
 
 static const gchar *
 gst_video_chroma_to_string (GstVideoChromaSite site)
 {
-  const gchar *res;
-
-  switch (site) {
-    case GST_VIDEO_CHROMA_JPEG:
-      res = "jpeg";
-      break;
-    case GST_VIDEO_CHROMA_MPEG2:
-      res = "mpeg2";
-      break;
-    case GST_VIDEO_CHROMA_DV:
-      res = "dv";
-      break;
-    default:
-      res = NULL;
-      break;
+  gint i;
+  for (i = 0; i < G_N_ELEMENTS (chromasite); i++) {
+    if (chromasite[i].site == site)
+      return chromasite[i].name;
   }
-  return res;
+  return NULL;
 }
 
 typedef struct
@@ -661,7 +656,6 @@ static const ColorimetryInfo colorimetry[] = {
   MAKE_COLORIMETRY (BT601, _16_235, BT601, BT709, BT470M),
   MAKE_COLORIMETRY (BT709, _16_235, BT709, BT709, BT709),
   MAKE_COLORIMETRY (SMPTE240M, _16_235, SMPTE240M, SMPTE240M, SMPTE240M),
-  {NULL,}
 };
 
 static const ColorimetryInfo *
@@ -669,7 +663,7 @@ gst_video_get_colorimetry (const gchar * s)
 {
   gint i;
 
-  for (i = 0; colorimetry[i].name; i++) {
+  for (i = 0; i < G_N_ELEMENTS (colorimetry); i++) {
     if (g_str_equal (colorimetry[i].name, s))
       return &colorimetry[i];
   }
@@ -715,7 +709,7 @@ gst_video_caps_set_colorimetry (GstCaps * caps, GstVideoColorimetry * cinfo)
 {
   gint i;
 
-  for (i = 0; colorimetry[i].name; i++) {
+  for (i = 0; i < G_N_ELEMENTS (colorimetry); i++) {
     if (IS_EQUAL (&colorimetry[i], cinfo)) {
       gst_caps_set_simple (caps, "colorimetry", G_TYPE_STRING,
           colorimetry[i].name, NULL);
@@ -887,7 +881,7 @@ gst_video_info_to_caps (GstVideoInfo * info)
   if (info->flags & GST_VIDEO_FLAG_INTERLACED)
     gst_caps_set_simple (caps, "interlaced", G_TYPE_BOOLEAN, TRUE, NULL);
 
-  if (info->chroma_site != GST_VIDEO_CHROMA_UNKNOWN)
+  if (info->chroma_site != GST_VIDEO_CHROMA_SITE_UNKNOWN)
     gst_caps_set_simple (caps, "chroma-site", G_TYPE_STRING,
         gst_video_chroma_to_string (info->chroma_site), NULL);
 

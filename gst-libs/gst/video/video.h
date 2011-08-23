@@ -325,29 +325,29 @@ typedef enum {
 
 /**
  * GstVideoChroma:
- * @GST_VIDEO_CHROMA_UNKNOWN: unknown cositing
- * @GST_VIDEO_CHROMA_NONE: no cositing
- * @GST_VIDEO_CHROMA_H_COSITED: chroma is horizontally cosited
- * @GST_VIDEO_CHROMA_V_COSITED: chroma is vertically cosited
- * @GST_VIDEO_CHROMA_ALT_LINE: choma samples are sited on alternate lines
- * @GST_VIDEO_CHROMA_COSITED: chroma samples cosited with luma samples
- * @GST_VIDEO_CHROMA_JPEG: jpeg style cositing, also for mpeg1 and mjpeg
- * @GST_VIDEO_CHROMA_MPEG2: mpeg2 style cositing
- * @GST_VIDEO_CHROMA_DV: DV style cositing
+ * @GST_VIDEO_CHROMA_SITE_UNKNOWN: unknown cositing
+ * @GST_VIDEO_CHROMA_SITE_NONE: no cositing
+ * @GST_VIDEO_CHROMA_SITE_H_COSITED: chroma is horizontally cosited
+ * @GST_VIDEO_CHROMA_SITE_V_COSITED: chroma is vertically cosited
+ * @GST_VIDEO_CHROMA_SITE_ALT_LINE: choma samples are sited on alternate lines
+ * @GST_VIDEO_CHROMA_SITE_COSITED: chroma samples cosited with luma samples
+ * @GST_VIDEO_CHROMA_SITE_JPEG: jpeg style cositing, also for mpeg1 and mjpeg
+ * @GST_VIDEO_CHROMA_SITE_MPEG2: mpeg2 style cositing
+ * @GST_VIDEO_CHROMA_SITE_DV: DV style cositing
  *
  * Various Chroma sitings.
  */
 typedef enum {
-  GST_VIDEO_CHROMA_UNKNOWN   =  0,
-  GST_VIDEO_CHROMA_NONE      = (1 << 0),
-  GST_VIDEO_CHROMA_H_COSITED = (1 << 1),
-  GST_VIDEO_CHROMA_V_COSITED = (1 << 2),
-  GST_VIDEO_CHROMA_ALT_LINE  = (1 << 3),
+  GST_VIDEO_CHROMA_SITE_UNKNOWN   =  0,
+  GST_VIDEO_CHROMA_SITE_NONE      = (1 << 0),
+  GST_VIDEO_CHROMA_SITE_H_COSITED = (1 << 1),
+  GST_VIDEO_CHROMA_SITE_V_COSITED = (1 << 2),
+  GST_VIDEO_CHROMA_SITE_ALT_LINE  = (1 << 3),
   /* some common chroma cositing */
-  GST_VIDEO_CHROMA_COSITED   = (GST_VIDEO_CHROMA_H_COSITED | GST_VIDEO_CHROMA_V_COSITED),
-  GST_VIDEO_CHROMA_JPEG      = (GST_VIDEO_CHROMA_NONE),
-  GST_VIDEO_CHROMA_MPEG2     = (GST_VIDEO_CHROMA_H_COSITED),
-  GST_VIDEO_CHROMA_DV        = (GST_VIDEO_CHROMA_COSITED | GST_VIDEO_CHROMA_ALT_LINE),
+  GST_VIDEO_CHROMA_SITE_COSITED   = (GST_VIDEO_CHROMA_SITE_H_COSITED | GST_VIDEO_CHROMA_SITE_V_COSITED),
+  GST_VIDEO_CHROMA_SITE_JPEG      = (GST_VIDEO_CHROMA_SITE_NONE),
+  GST_VIDEO_CHROMA_SITE_MPEG2     = (GST_VIDEO_CHROMA_SITE_H_COSITED),
+  GST_VIDEO_CHROMA_SITE_DV        = (GST_VIDEO_CHROMA_SITE_COSITED | GST_VIDEO_CHROMA_SITE_ALT_LINE),
 } GstVideoChromaSite;
 
 /**
