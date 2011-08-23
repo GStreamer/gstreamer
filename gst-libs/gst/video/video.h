@@ -472,10 +472,7 @@ gchar *      gst_video_colorimetry_to_string   (GstVideoColorimetry *cinfo);
  * @views: the number of views for multiview video
  * @size: the default size of one frame
  * @chroma_site: a #GstVideoChromaSite.
- * @color_range: the color range. This is the valid range for the samples.
- * @color_matrix: the color matrix. Used to transform to non-linear RGB (R'G'B')
- * @transfer_function: the transfer function. used to convert betwen R'G'B' and RGB
- * @color_primaries: color primaries. used to convert to CIE XYZ
+ * @colorimetry: the colorimetry info
  * @palette: a buffer with palette data
  * @par_n: the pixel-aspect-ratio numerator
  * @par_d: the pixel-aspect-ratio demnominator
