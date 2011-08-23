@@ -240,6 +240,7 @@ gst_hls_demux_init (GstHLSDemux * demux, GstHLSDemuxClass * klass)
   demux->fetcher_lock = g_mutex_new ();
   demux->queue = g_queue_new ();
   g_static_rec_mutex_init (&demux->task_lock);
+  /* FIXME: This really should be a pad task instead */
   demux->task = gst_task_create ((GstTaskFunction) gst_hls_demux_loop, demux);
   gst_task_set_lock (demux->task, &demux->task_lock);
 }
