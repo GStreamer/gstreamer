@@ -499,8 +499,13 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
   }
 
   /* get timing info for the packet */
-  duration = gst_ogg_stream_get_packet_duration (&pad->map, packet);
-  GST_DEBUG_OBJECT (ogg, "packet duration %" G_GUINT64_FORMAT, duration);
+  if (gst_ogg_stream_packet_is_header (&pad->map, packet)) {
+    duration = 0;
+    GST_DEBUG_OBJECT (ogg, "packet is header");
+  } else {
+    duration = gst_ogg_stream_get_packet_duration (&pad->map, packet);
+    GST_DEBUG_OBJECT (ogg, "packet duration %" G_GUINT64_FORMAT, duration);
+  }
 
   if (packet->b_o_s) {
     out_timestamp = GST_CLOCK_TIME_NONE;
