@@ -716,7 +716,7 @@ gst_hls_demux_loop (GstHLSDemux * demux)
     GST_DEBUG_OBJECT (demux, "Sending new-segment. Segment start:%"
         GST_TIME_FORMAT, GST_TIME_ARGS (demux->position));
     gst_pad_push_event (demux->srcpad,
-        gst_event_new_new_segment (0, 1.0, GST_FORMAT_TIME, demux->position,
+        gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME, demux->position,
             GST_CLOCK_TIME_NONE, demux->position));
     demux->need_segment = FALSE;
   }
