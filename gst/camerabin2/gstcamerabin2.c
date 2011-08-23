@@ -1276,14 +1276,6 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
         g_signal_connect (camera->video_encodebin, "element-added",
         (GCallback) encodebin_element_added, camera);
 
-    /* propagate the flags property by translating appropriate values
-     * to GstEncFlags values */
-    if (camera->flags & GST_CAM_FLAG_NO_AUDIO_CONVERSION)
-      encbin_flags |= (1 << 0);
-    if (camera->flags & GST_CAM_FLAG_NO_VIDEO_CONVERSION)
-      encbin_flags |= (1 << 1);
-    g_object_set (camera->video_encodebin, "flags", encbin_flags, NULL);
-
     camera->videosink =
         gst_element_factory_make ("filesink", "videobin-filesink");
     if (!camera->videosink) {
@@ -1418,6 +1410,14 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
     g_object_set (camera->videosink, "location", camera->location, NULL);
     g_object_set (camera->imagesink, "location", camera->location, NULL);
   }
+
+  /* propagate the flags property by translating appropriate values
+   * to GstEncFlags values */
+  if (camera->flags & GST_CAM_FLAG_NO_AUDIO_CONVERSION)
+    encbin_flags |= (1 << 0);
+  if (camera->flags & GST_CAM_FLAG_NO_VIDEO_CONVERSION)
+    encbin_flags |= (1 << 1);
+  g_object_set (camera->video_encodebin, "flags", encbin_flags, NULL);
 
   g_object_set (camera->viewfinderbin, "disable-converters",
       camera->flags & GST_CAM_FLAG_NO_VIEWFINDER_CONVERSION, NULL);
