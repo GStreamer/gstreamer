@@ -2656,7 +2656,7 @@ gst_ogg_demux_read_chain (GstOggDemux * ogg, GstOggChain ** res_chain)
   GstFlowReturn ret;
   GstOggChain *chain = NULL;
   gint64 offset = ogg->offset;
-  ogg_page op;
+  ogg_page og;
   gboolean done;
   gint i;
 
@@ -2668,12 +2668,12 @@ gst_ogg_demux_read_chain (GstOggDemux * ogg, GstOggChain ** res_chain)
     GstOggPad *pad;
     guint32 serial;
 
-    ret = gst_ogg_demux_get_next_page (ogg, &op, -1, NULL);
+    ret = gst_ogg_demux_get_next_page (ogg, &og, -1, NULL);
     if (ret != GST_FLOW_OK) {
       GST_WARNING_OBJECT (ogg, "problem reading BOS page: ret=%d", ret);
       break;
     }
-    if (!ogg_page_bos (&op)) {
+    if (!ogg_page_bos (&og)) {
       GST_WARNING_OBJECT (ogg, "page is not BOS page");
       /* if we did not find a chain yet, assume this is a bogus stream and
        * ignore it */
@@ -2687,7 +2687,7 @@ gst_ogg_demux_read_chain (GstOggDemux * ogg, GstOggChain ** res_chain)
       chain->offset = offset;
     }
 
-    serial = ogg_page_serialno (&op);
+    serial = ogg_page_serialno (&og);
     if (gst_ogg_chain_get_stream (chain, serial) != NULL) {
       GST_WARNING_OBJECT (ogg,
           "found serial %08x BOS page twice, ignoring", serial);
@@ -2695,7 +2695,7 @@ gst_ogg_demux_read_chain (GstOggDemux * ogg, GstOggChain ** res_chain)
     }
 
     pad = gst_ogg_chain_new_stream (chain, serial);
-    gst_ogg_pad_submit_page (pad, &op);
+    gst_ogg_pad_submit_page (pad, &og);
   }
 
   if (ret != GST_FLOW_OK || chain == NULL) {
@@ -2734,7 +2734,7 @@ gst_ogg_demux_read_chain (GstOggDemux * ogg, GstOggChain ** res_chain)
     gboolean known_serial = FALSE;
     GstFlowReturn ret;
 
-    serial = ogg_page_serialno (&op);
+    serial = ogg_page_serialno (&og);
     done = TRUE;
     for (i = 0; i < chain->streams->len; i++) {
       GstOggPad *pad = g_array_index (chain->streams, GstOggPad *, i);
@@ -2748,10 +2748,10 @@ gst_ogg_demux_read_chain (GstOggDemux * ogg, GstOggChain ** res_chain)
 
         /* submit the page now, this will fill in the start_time when the
          * internal decoder finds it */
-        gst_ogg_pad_submit_page (pad, &op);
+        gst_ogg_pad_submit_page (pad, &og);
 
         if (!pad->map.is_skeleton && pad->start_time == -1
-            && ogg_page_eos (&op)) {
+            && ogg_page_eos (&og)) {
           /* got EOS on a pad before we could find its start_time.
            * We have no chance of finding a start_time for every pad so
            * stop searching for the other start_time(s).
@@ -2777,7 +2777,7 @@ gst_ogg_demux_read_chain (GstOggDemux * ogg, GstOggChain ** res_chain)
     }
 
     if (!done) {
-      ret = gst_ogg_demux_get_next_page (ogg, &op, -1, NULL);
+      ret = gst_ogg_demux_get_next_page (ogg, &og, -1, NULL);
       if (ret != GST_FLOW_OK)
         break;
     }
