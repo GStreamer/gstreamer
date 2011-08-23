@@ -405,7 +405,7 @@ gst_hls_demux_src_query (GstPad * pad, GstQuery * query)
 
   switch (query->type) {
     case GST_QUERY_DURATION:{
-      GstClockTime duration;
+      GstClockTime duration = -1;
       GstFormat fmt;
 
       gst_query_parse_duration (query, &fmt, NULL);
@@ -416,6 +416,8 @@ gst_hls_demux_src_query (GstPad * pad, GstQuery * query)
           ret = TRUE;
         }
       }
+      GST_INFO_OBJECT (hlsdemux, "GST_QUERY_DURATION returns %s with duration %"
+          GST_TIME_FORMAT, ret ? "TRUE" : "FALSE", GST_TIME_ARGS (duration));
       break;
     }
     case GST_QUERY_URI:
