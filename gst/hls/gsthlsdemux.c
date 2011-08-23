@@ -430,18 +430,24 @@ gst_hls_demux_src_query (GstPad * pad, GstQuery * query)
       break;
     case GST_QUERY_SEEKING:{
       GstFormat fmt;
-      gint stop = -1;
+      gint64 stop = -1;
 
       gst_query_parse_seeking (query, &fmt, NULL, NULL, NULL);
+      GST_INFO_OBJECT (hlsdemux, "Received GST_QUERY_SEEKING with format %d",
+          fmt);
       if (fmt == GST_FORMAT_TIME) {
         GstClockTime duration;
 
         duration = gst_m3u8_client_get_duration (hlsdemux->client);
         if (GST_CLOCK_TIME_IS_VALID (duration) && duration > 0)
           stop = duration;
+
+        gst_query_set_seeking (query, fmt,
+            !gst_m3u8_client_is_live (hlsdemux->client), 0, stop);
+        ret = TRUE;
+        GST_INFO_OBJECT (hlsdemux, "GST_QUERY_SEEKING returning with stop : %"
+            GST_TIME_FORMAT, GST_TIME_ARGS (stop));
       }
-      gst_query_set_seeking (query, fmt, FALSE, 0, stop);
-      ret = TRUE;
       break;
     }
     default:
