@@ -387,15 +387,17 @@ gst_ts_demux_srcpad_query (GstPad * pad, GstQuery * query)
   gboolean res = TRUE;
   GstFormat format;
   GstTSDemux *demux;
+  MpegTSBase *base;
 
   demux = GST_TS_DEMUX (gst_pad_get_parent (pad));
+  base = GST_MPEGTS_BASE (demux);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_DURATION:
       GST_DEBUG ("query duration");
       gst_query_parse_duration (query, &format, NULL);
       if (format == GST_FORMAT_TIME) {
-        if (!gst_pad_peer_query (pad, query))
+        if (!gst_pad_peer_query (base->sinkpad, query))
           gst_query_set_duration (query, GST_FORMAT_TIME,
               demux->segment.duration);
       } else {
@@ -409,7 +411,7 @@ gst_ts_demux_srcpad_query (GstPad * pad, GstQuery * query)
       if (format == GST_FORMAT_TIME) {
         gboolean seekable = FALSE;
 
-        if (gst_pad_peer_query (pad, query))
+        if (gst_pad_peer_query (base->sinkpad, query))
           gst_query_parse_seeking (query, NULL, &seekable, NULL, NULL);
 
         /* If upstream is not seekable in TIME format we use
