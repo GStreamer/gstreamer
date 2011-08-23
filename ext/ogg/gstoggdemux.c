@@ -752,7 +752,7 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
     if (gst_ogg_map_parse_fisbone (&pad->map, packet->packet, packet->bytes,
             &serialno, &type)) {
 
-      GST_WARNING_OBJECT (pad->ogg,
+      GST_DEBUG_OBJECT (pad->ogg,
           "got skeleton packet for stream 0x%08x", serialno);
 
       skel_pad = gst_ogg_chain_get_stream (pad->chain, serialno);
