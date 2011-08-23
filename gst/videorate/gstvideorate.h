@@ -21,6 +21,7 @@
 #define __GST_VIDEO_RATE_H__
 
 #include <gst/gst.h>
+#include <gst/base/gstbasetransform.h>
 
 G_BEGIN_DECLS
 
@@ -45,9 +46,7 @@ typedef struct _GstVideoRateClass GstVideoRateClass;
  */
 struct _GstVideoRate
 {
-  GstElement element;
-
-  GstPad *sinkpad, *srcpad;
+  GstBaseTransform parent;
 
   /* video state */
   gint from_rate_numerator, from_rate_denominator;
@@ -81,7 +80,7 @@ struct _GstVideoRate
 
 struct _GstVideoRateClass
 {
-  GstElementClass parent_class;
+  GstBaseTransformClass parent_class;
 };
 
 GType gst_video_rate_get_type (void);
