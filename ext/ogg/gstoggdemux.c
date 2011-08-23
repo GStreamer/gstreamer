@@ -3688,7 +3688,8 @@ gst_ogg_print (GstOggDemux * ogg)
     for (j = 0; j < chain->streams->len; j++) {
       GstOggPad *stream = g_array_index (chain->streams, GstOggPad *, j);
 
-      GST_INFO_OBJECT (ogg, "  stream %08x:", stream->map.serialno);
+      GST_INFO_OBJECT (ogg, "  stream %08x: %s", stream->map.serialno,
+          gst_ogg_stream_get_media_type (&stream->map));
       GST_INFO_OBJECT (ogg, "   start time:       %" GST_TIME_FORMAT,
           GST_TIME_ARGS (stream->start_time));
     }
