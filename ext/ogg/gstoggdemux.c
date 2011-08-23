@@ -2670,7 +2670,11 @@ gst_ogg_demux_read_chain (GstOggDemux * ogg, GstOggChain ** res_chain)
 
     ret = gst_ogg_demux_get_next_page (ogg, &og, -1, NULL);
     if (ret != GST_FLOW_OK) {
-      GST_WARNING_OBJECT (ogg, "problem reading BOS page: ret=%d", ret);
+      if (ret == GST_FLOW_UNEXPECTED) {
+        GST_DEBUG_OBJECT (ogg, "Reached EOS, done reading end chain");
+      } else {
+        GST_WARNING_OBJECT (ogg, "problem reading BOS page: ret=%d", ret);
+      }
       break;
     }
     if (!ogg_page_bos (&og)) {
