@@ -43,14 +43,14 @@
 GST_DEBUG_CATEGORY_STATIC (gst_viewfinder_bin_debug);
 #define GST_CAT_DEFAULT gst_viewfinder_bin_debug
 
-/* prototypes */
-
-
 enum
 {
   PROP_0,
   PROP_VIDEO_SINK,
+  PROP_DISABLE_CONVERTERS
 };
+
+#define DEFAULT_DISABLE_CONVERTERS FALSE
 
 /* pad templates */
 
@@ -128,6 +128,12 @@ gst_viewfinder_bin_class_init (GstViewfinderBinClass * klass)
       g_param_spec_object ("video-sink", "Video Sink",
           "the video output element to use (NULL = default)",
           GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_klass, PROP_DISABLE_CONVERTERS,
+      g_param_spec_boolean ("disable-converters", "Disable conversion elements",
+          "If video converters should be disabled (must be set on NULL)",
+          DEFAULT_DISABLE_CONVERTERS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -140,6 +146,8 @@ gst_viewfinder_bin_init (GstViewfinderBin * viewfinderbin,
   gst_object_unref (templ);
   gst_element_add_pad (GST_ELEMENT_CAST (viewfinderbin),
       viewfinderbin->ghostpad);
+
+  viewfinderbin->disable_converters = DEFAULT_DISABLE_CONVERTERS;
 }
 
 static gboolean
@@ -147,42 +155,15 @@ gst_viewfinder_bin_create_elements (GstViewfinderBin * vfbin)
 {
   GstElement *csp = NULL;
   GstElement *videoscale = NULL;
-  GstPad *pad = NULL;
+  GstPad *firstpad = NULL;
   const gchar *missing_element_name;
+  gboolean newsink = FALSE;
+  gboolean updated_converters = FALSE;
 
   GST_DEBUG_OBJECT (vfbin, "Creating internal elements");
 
-  if (!vfbin->elements_created) {
-    /* create elements */
-    csp =
-        gst_camerabin_create_and_add_element (GST_BIN (vfbin),
-        "ffmpegcolorspace", "vfbin-csp");
-    if (!csp) {
-      missing_element_name = "ffmpegcolorspace";
-      goto missing_element;
-    }
-
-    videoscale =
-        gst_camerabin_create_and_add_element (GST_BIN (vfbin), "videoscale",
-        "vfbin-videoscale");
-    if (!videoscale) {
-      missing_element_name = "videoscale";
-      goto missing_element;
-    }
-
-    /* add ghostpad */
-    pad = gst_element_get_static_pad (csp, "sink");
-    if (!gst_ghost_pad_set_target (GST_GHOST_PAD (vfbin->ghostpad), pad))
-      goto error;
-    gst_object_unref (pad);
-    pad = NULL;
-
-    vfbin->elements_created = TRUE;
-    GST_DEBUG_OBJECT (vfbin, "Elements succesfully created and linked");
-  }
-
+  /* First check if we need to add/replace the internal sink */
   if (vfbin->video_sink) {
-    /* check if we need to replace the current one */
     if (vfbin->user_video_sink && vfbin->video_sink != vfbin->user_video_sink) {
       gst_bin_remove (GST_BIN_CAST (vfbin), vfbin->video_sink);
       gst_object_unref (vfbin->video_sink);
@@ -203,18 +184,86 @@ gst_viewfinder_bin_create_elements (GstViewfinderBin * vfbin)
     }
 
     gst_bin_add (GST_BIN_CAST (vfbin), gst_object_ref (vfbin->video_sink));
+    newsink = TRUE;
+  }
 
-    if (!videoscale)
+  /* check if we want add/remove the conversion elements */
+  if (vfbin->elements_created && vfbin->disable_converters) {
+    /* remove the elements, user doesn't want them */
+
+    gst_ghost_pad_set_target (GST_GHOST_PAD (vfbin->ghostpad), NULL);
+    csp = gst_bin_get_by_name (GST_BIN (vfbin), "vfbin-csp");
+    videoscale = gst_bin_get_by_name (GST_BIN (vfbin), "vfbin-videoscale");
+
+    gst_bin_remove (GST_BIN (vfbin), csp);
+    gst_bin_remove (GST_BIN (vfbin), videoscale);
+
+    gst_object_unref (csp);
+    gst_object_unref (videoscale);
+
+    updated_converters = TRUE;
+  } else if (!vfbin->elements_created && !vfbin->disable_converters) {
+    gst_ghost_pad_set_target (GST_GHOST_PAD (vfbin->ghostpad), NULL);
+
+    /* add the elements, user wants them */
+    csp =
+        gst_camerabin_create_and_add_element (GST_BIN (vfbin),
+        "ffmpegcolorspace", "vfbin-csp");
+    if (!csp) {
+      missing_element_name = "ffmpegcolorspace";
+      goto missing_element;
+    }
+
+    videoscale =
+        gst_camerabin_create_and_add_element (GST_BIN (vfbin), "videoscale",
+        "vfbin-videoscale");
+    if (!videoscale) {
+      missing_element_name = "videoscale";
+      goto missing_element;
+    }
+
+    vfbin->elements_created = TRUE;
+    GST_DEBUG_OBJECT (vfbin, "Elements succesfully created and linked");
+
+    updated_converters = TRUE;
+  }
+  /* otherwise, just leave it as is */
+
+  /* if sink was replaced -> link it to the internal converters */
+  if (newsink && !vfbin->disable_converters) {
+    gboolean unref = FALSE;
+    if (!videoscale) {
       videoscale = gst_bin_get_by_name (GST_BIN_CAST (vfbin),
-          "vfbin-videoscale");
+          "vfbin-videscale");
+      unref = TRUE;
+    }
 
     if (!gst_element_link_pads (videoscale, "src", vfbin->video_sink, "sink")) {
       GST_ELEMENT_ERROR (vfbin, CORE, NEGOTIATION, (NULL),
           ("linking videoscale and viewfindersink failed"));
     }
 
-    /* prevent it from being removed from the bin at this point */
+    if (unref)
+      gst_object_unref (videoscale);
     videoscale = NULL;
+  }
+
+  /* Check if we need a new ghostpad target */
+  if (updated_converters || (newsink && vfbin->disable_converters)) {
+    if (vfbin->disable_converters) {
+      firstpad = gst_element_get_static_pad (vfbin->video_sink, "sink");
+    } else {
+      /* csp should always exist at this point */
+      firstpad = gst_element_get_static_pad (csp, "sink");
+    }
+  }
+
+  /* need to change the ghostpad target if firstpad is set */
+  if (firstpad) {
+    if (!gst_ghost_pad_set_target (GST_GHOST_PAD (vfbin->ghostpad), firstpad))
+      goto error;
+    gst_object_unref (firstpad);
+    firstpad = NULL;
   }
 
   return TRUE;
@@ -230,8 +279,8 @@ missing_element:
 
 error:
   GST_WARNING_OBJECT (vfbin, "Creating internal elements failed");
-  if (pad)
-    gst_object_unref (pad);
+  if (firstpad)
+    gst_object_unref (firstpad);
   return FALSE;
 }
 
@@ -288,6 +337,9 @@ gst_viewfinder_bin_set_property (GObject * object, guint prop_id,
     case PROP_VIDEO_SINK:
       gst_viewfinder_bin_set_video_sink (vfbin, g_value_get_object (value));
       break;
+    case PROP_DISABLE_CONVERTERS:
+      vfbin->disable_converters = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -303,6 +355,9 @@ gst_viewfinder_bin_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_VIDEO_SINK:
       g_value_set_object (value, vfbin->video_sink);
+      break;
+    case PROP_DISABLE_CONVERTERS:
+      g_value_set_boolean (value, vfbin->disable_converters);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

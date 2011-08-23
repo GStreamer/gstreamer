@@ -43,6 +43,8 @@ struct _GstViewfinderBin
   GstElement *user_video_sink;
 
   gboolean elements_created;
+
+  gboolean disable_converters;
 };
 
 struct _GstViewfinderBinClass
