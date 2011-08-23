@@ -1693,6 +1693,7 @@ AG_GST_CHECK_FEATURE(VP8, [VP8 decoder], vp8, [
       AC_DEFINE(HAVE_VP8_ENCODER, 1, [Defined if the VP8 encoder is available])
       VPX_LIBS="-lvpx"
 
+      AC_MSG_CHECKING([for VP8E_SET_TUNING presence])
       AC_TRY_COMPILE([
 #include <vpx/vpx_encoder.h>
 #include <vpx/vp8cx.h>
@@ -1701,7 +1702,9 @@ int foo=VP8E_SET_TUNING;
 return 0;
       ], [
         AC_DEFINE(HAVE_VP8ENC_TUNING, 1, [Defined if the VP8 encoder has tuning API])
+	AC_MSG_RESULT(yes)
       ], [
+	AC_MSG_RESULT(no)
       ])
     ])
     AC_CHECK_LIB(vpx, vpx_codec_vp8_dx_algo, [
