@@ -36,7 +36,9 @@ typedef enum
   /* matches GstEncFlags GST_ENC_FLAG_NO_AUDIO_CONVERSION in encodebin */
   GST_CAM_FLAG_NO_AUDIO_CONVERSION = (1 << 0),
   /* matches GstEncFlags GST_ENC_FLAG_NO_VIDEO_CONVERSION in encodebin */
-  GST_CAM_FLAG_NO_VIDEO_CONVERSION = (1 << 1)
+  GST_CAM_FLAG_NO_VIDEO_CONVERSION = (1 << 1),
+  /* maps to 'disable-converters' property in viewfinderbin */
+  GST_CAM_FLAG_NO_VIEWFINDER_CONVERSION = (1 << 2)
 } GstCamFlags;
 
 

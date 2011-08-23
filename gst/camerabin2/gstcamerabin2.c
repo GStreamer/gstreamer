@@ -270,6 +270,9 @@ gst_cam_flags_get_type (void)
           "elements", "no-audio-conversion"},
     {C_FLAGS (GST_CAM_FLAG_NO_VIDEO_CONVERSION), "Do not use video conversion "
           "elements", "no-video-conversion"},
+    {C_FLAGS (GST_CAM_FLAG_NO_VIEWFINDER_CONVERSION),
+          "Do not use viewfinder conversion " "elements",
+        "no-viewfinder-conversion"},
     {0, NULL, NULL}
   };
   static volatile GType id = 0;
@@ -1415,6 +1418,9 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
     g_object_set (camera->videosink, "location", camera->location, NULL);
     g_object_set (camera->imagesink, "location", camera->location, NULL);
   }
+
+  g_object_set (camera->viewfinderbin, "disable-converters",
+      camera->flags & GST_CAM_FLAG_NO_VIEWFINDER_CONVERSION, NULL);
 
   if (camera->video_profile_switch) {
     GST_DEBUG_OBJECT (camera, "Switching encodebin's profile");
