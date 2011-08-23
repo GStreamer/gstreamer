@@ -959,6 +959,9 @@ gst_hls_demux_cache_fragments (GstHLSDemux * demux)
 
   /* Cache the first fragments */
   for (i = 0; i < demux->fragments_cache; i++) {
+    gst_element_post_message (GST_ELEMENT (demux),
+        gst_message_new_buffering (GST_OBJECT (demux),
+            100 * i / demux->fragments_cache));
     g_get_current_time (&demux->next_update);
     g_time_val_add (&demux->next_update,
         demux->client->current->targetduration * 1000000);
@@ -972,6 +975,8 @@ gst_hls_demux_cache_fragments (GstHLSDemux * demux)
       return FALSE;
     gst_hls_demux_switch_playlist (demux);
   }
+  gst_element_post_message (GST_ELEMENT (demux),
+      gst_message_new_buffering (GST_OBJECT (demux), 100));
 
   g_get_current_time (&demux->next_update);
 
