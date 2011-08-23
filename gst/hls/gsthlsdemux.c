@@ -302,7 +302,7 @@ gst_hls_demux_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       demux->cancelled = TRUE;
-      g_cond_signal (demux->fetcher_cond);
+      gst_hls_demux_stop (demux);
       break;
     default:
       break;
@@ -374,6 +374,7 @@ gst_hls_demux_src_event (GstPad * pad, GstEvent * event)
         gst_pad_push_event (demux->srcpad, gst_event_new_flush_start ());
       }
 
+      demux->cancelled = TRUE;
       gst_hls_demux_stop_fetcher (demux, TRUE);
       gst_task_pause (demux->task);
       g_cond_signal (demux->thread_cond);
@@ -397,6 +398,7 @@ gst_hls_demux_src_event (GstPad * pad, GstEvent * event)
         gst_pad_push_event (demux->srcpad, gst_event_new_flush_stop ());
       }
 
+      demux->cancelled = FALSE;
       gst_task_start (demux->task);
       g_static_rec_mutex_unlock (&demux->task_lock);
 
