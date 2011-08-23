@@ -340,8 +340,12 @@ gst_aac_parse_check_adts_frame (GstAacParse * aacparse,
   if ((data[0] == 0xff) && ((data[1] & 0xf6) == 0xf0)) {
     *framesize = gst_aac_parse_adts_get_frame_len (data);
 
-    /* In EOS mode this is enough. No need to examine the data further */
-    if (drain) {
+    /* In EOS mode this is enough. No need to examine the data further.
+       We also relax the check when we have sync, on the assumption that
+       if we're not looking at random data, we have a much higher chance
+       to get the correct sync, and this avoids losing two frames when
+       a single bit corruption happens. */
+    if (drain || !GST_BASE_PARSE_LOST_SYNC (aacparse)) {
       return TRUE;
     }
 
