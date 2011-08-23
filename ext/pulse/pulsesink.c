@@ -1490,7 +1490,7 @@ gst_pulseringbuffer_commit (GstRingBuffer * buf, guint64 * sample,
       /* Recalculate what we can write in the next chunk */
       towrite = out_samples * bps;
       if (pbuf->m_writable > towrite)
-          pbuf->m_writable = towrite;
+        pbuf->m_writable = towrite;
 
       GST_LOG_OBJECT (psink, "requesting %" G_GSIZE_FORMAT " bytes of "
           "shared memory", pbuf->m_writable);
