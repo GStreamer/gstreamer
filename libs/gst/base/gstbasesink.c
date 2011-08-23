@@ -3387,6 +3387,9 @@ gst_base_sink_flush_start (GstBaseSink * basesink, GstPad * pad)
   if (basesink->priv->async_enabled) {
     gst_element_lost_state (GST_ELEMENT_CAST (basesink));
   } else {
+    /* start time reset in above case as well;
+     * arranges for a.o. proper position reporting when flushing in PAUSED */
+    gst_element_set_start_time (GST_ELEMENT_CAST (basesink), 0);
     basesink->priv->have_latency = TRUE;
   }
   gst_base_sink_set_last_buffer (basesink, NULL);
