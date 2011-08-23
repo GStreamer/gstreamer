@@ -60,7 +60,6 @@ enum
   PROP_PATTERN,
   PROP_TIMESTAMP_OFFSET,
   PROP_IS_LIVE,
-  PROP_COLOR_SPEC,
   PROP_K0,
   PROP_KX,
   PROP_KY,
@@ -147,24 +146,6 @@ gst_video_test_src_pattern_get_type (void)
   return video_test_src_pattern_type;
 }
 
-#define GST_TYPE_VIDEO_TEST_SRC_COLOR_SPEC (gst_video_test_src_color_spec_get_type ())
-static GType
-gst_video_test_src_color_spec_get_type (void)
-{
-  static GType video_test_src_color_spec_type = 0;
-  static const GEnumValue color_spec_types[] = {
-    {GST_VIDEO_TEST_SRC_BT601, "ITU-R Rec. BT.601", "bt601"},
-    {GST_VIDEO_TEST_SRC_BT709, "ITU-R Rec. BT.709", "bt709"},
-    {0, NULL, NULL}
-  };
-
-  if (!video_test_src_color_spec_type) {
-    video_test_src_color_spec_type =
-        g_enum_register_static ("GstVideoTestSrcColorSpec", color_spec_types);
-  }
-  return video_test_src_color_spec_type;
-}
-
 static void
 gst_video_test_src_class_init (GstVideoTestSrcClass * klass)
 {
@@ -194,13 +175,6 @@ gst_video_test_src_class_init (GstVideoTestSrcClass * klass)
       g_param_spec_boolean ("is-live", "Is Live",
           "Whether to act as a live source", DEFAULT_IS_LIVE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_COLOR_SPEC,
-      g_param_spec_enum ("colorspec", "Color Specification",
-          "Generate video in the given color specification (Deprecated: "
-          "use a caps filter with video/x-raw-yuv,color-matrix=\"sdtv\" or "
-          "\"hdtv\" instead)",
-          GST_TYPE_VIDEO_TEST_SRC_COLOR_SPEC,
-          DEFAULT_COLOR_SPEC, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_K0,
       g_param_spec_int ("k0", "Zoneplate zero order phase",
           "Zoneplate zero order phase, for generating plain fields or phase offsets",
@@ -340,8 +314,8 @@ gst_video_test_src_src_fixate (GstBaseSrc * bsrc, GstCaps * caps)
   if (gst_structure_has_field (structure, "pixel-aspect-ratio"))
     gst_structure_fixate_field_nearest_fraction (structure,
         "pixel-aspect-ratio", 1, 1);
-  if (gst_structure_has_field (structure, "color-matrix"))
-    gst_structure_fixate_field_string (structure, "color-matrix", "sdtv");
+  if (gst_structure_has_field (structure, "colorimetry"))
+    gst_structure_fixate_field_string (structure, "colorimetry", "bt601");
   if (gst_structure_has_field (structure, "chroma-site"))
     gst_structure_fixate_field_string (structure, "chroma-site", "mpeg2");
 
@@ -444,8 +418,6 @@ gst_video_test_src_set_property (GObject * object, guint prop_id,
     case PROP_IS_LIVE:
       gst_base_src_set_live (GST_BASE_SRC (src), g_value_get_boolean (value));
       break;
-    case PROP_COLOR_SPEC:
-      break;
     case PROP_K0:
       src->k0 = g_value_get_int (value);
       break;
@@ -511,8 +483,6 @@ gst_video_test_src_get_property (GObject * object, guint prop_id,
     case PROP_IS_LIVE:
       g_value_set_boolean (value, gst_base_src_is_live (GST_BASE_SRC (src)));
       break;
-    case PROP_COLOR_SPEC:
-      break;
     case PROP_K0:
       g_value_set_int (value, src->k0);
       break;
@@ -564,23 +534,6 @@ gst_video_test_src_get_property (GObject * object, guint prop_id,
   }
 }
 
-static GstVideoTestSrcColorSpec
-to_color_spec (const gchar * csp)
-{
-  if (csp) {
-    if (strcmp (csp, "sdtv") == 0) {
-      return GST_VIDEO_TEST_SRC_BT601;
-    } else if (strcmp (csp, "hdtv") == 0) {
-      return GST_VIDEO_TEST_SRC_BT709;
-    } else {
-      GST_DEBUG ("unknown color-matrix");
-      return GST_VIDEO_TEST_SRC_UNKNOWN;
-    }
-  } else {
-    return GST_VIDEO_TEST_SRC_BT601;
-  }
-}
-
 /* threadsafe because this gets called as the plugin is loaded */
 static GstCaps *
 gst_video_test_src_getcaps (GstBaseSrc * bsrc, GstCaps * filter)
@@ -614,11 +567,12 @@ gst_video_test_src_getcaps (GstBaseSrc * bsrc, GstCaps * filter)
 static gboolean
 gst_video_test_src_parse_caps (const GstCaps * caps,
     gint * width, gint * height, gint * fps_n, gint * fps_d,
-    const gchar ** color_matrix)
+    GstVideoColorimetry * colorimetry)
 {
   const GstStructure *structure;
   GstPadLinkReturn ret;
   const GValue *framerate;
+  const gchar *csp;
 
   GST_DEBUG ("parsing caps");
 
@@ -634,7 +588,8 @@ gst_video_test_src_parse_caps (const GstCaps * caps,
   } else
     goto no_framerate;
 
-  *color_matrix = gst_structure_get_string (structure, "color-matrix");
+  if ((csp = gst_structure_get_string (structure, "colorimetry")))
+    gst_video_colorimetry_from_string (colorimetry, csp);
 
   return ret;
 
@@ -693,7 +648,7 @@ gst_video_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
 
   } else if (gst_structure_has_name (structure, "video/x-raw-bayer")) {
     if (!gst_video_test_src_parse_caps (caps, &info.width, &info.height,
-            &info.fps_n, &info.fps_d, &info.color_matrix))
+            &info.fps_n, &info.fps_d, &info.colorimetry))
       goto parse_failed;
 
     info.size =
@@ -704,7 +659,6 @@ gst_video_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
     goto unknown_format;
 
   /* looks ok here */
-  videotestsrc->color_spec = to_color_spec (info.color_matrix);
   videotestsrc->format = format;
   videotestsrc->info = info;
 

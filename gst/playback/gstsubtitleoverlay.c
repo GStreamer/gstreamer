@@ -868,7 +868,6 @@ _pad_blocked_cb (GstPad * pad, GstProbeType type, gpointer type_data,
       video_peer = gst_pad_get_peer (self->video_sinkpad);
       if (video_peer) {
         GstCaps *video_caps;
-        gint fps_n, fps_d;
 
         video_caps = gst_pad_get_current_caps (video_peer);
         if (!video_caps) {
@@ -879,12 +878,16 @@ _pad_blocked_cb (GstPad * pad, GstProbeType type, gpointer type_data,
           }
         }
 
-        if (video_caps
-            && gst_video_parse_caps_framerate (video_caps, &fps_n, &fps_d)) {
-          if (self->fps_n != fps_n || self->fps_d != fps_d) {
-            GST_DEBUG_OBJECT (self, "New video fps: %d/%d", fps_n, fps_d);
-            self->fps_n = fps_n;
-            self->fps_d = fps_d;
+        if (video_caps) {
+          GstVideoInfo info;
+
+          if (gst_video_info_from_caps (&info, video_caps)) {
+            if (self->fps_n != info.fps_n || self->fps_d != info.fps_d) {
+              GST_DEBUG_OBJECT (self, "New video fps: %d/%d", info.fps_n,
+                  info.fps_d);
+              self->fps_n = info.fps_n;
+              self->fps_d = info.fps_d;
+            }
           }
         }
 
@@ -1604,21 +1607,21 @@ gst_subtitle_overlay_video_sink_setcaps (GstSubtitleOverlay * self,
     GstCaps * caps)
 {
   gboolean ret = TRUE;
-  gint fps_n, fps_d;
+  GstVideoInfo info;
 
   GST_DEBUG_OBJECT (self, "Setting caps: %" GST_PTR_FORMAT, caps);
 
-  if (!gst_video_parse_caps_framerate (caps, &fps_n, &fps_d)) {
-    GST_ERROR_OBJECT (self, "Failed to parse framerate from caps");
+  if (!gst_video_info_from_caps (&info, caps)) {
+    GST_ERROR_OBJECT (self, "Failed to parse caps");
     ret = FALSE;
     goto out;
   }
 
   GST_SUBTITLE_OVERLAY_LOCK (self);
-  if (self->fps_n != fps_n || self->fps_d != fps_d) {
-    GST_DEBUG_OBJECT (self, "New video fps: %d/%d", fps_n, fps_d);
-    self->fps_n = fps_n;
-    self->fps_d = fps_d;
+  if (self->fps_n != info.fps_n || self->fps_d != info.fps_d) {
+    GST_DEBUG_OBJECT (self, "New video fps: %d/%d", info.fps_n, info.fps_d);
+    self->fps_n = info.fps_n;
+    self->fps_d = info.fps_d;
     gst_subtitle_overlay_set_fps (self);
   }
   GST_SUBTITLE_OVERLAY_UNLOCK (self);

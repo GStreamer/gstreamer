@@ -407,13 +407,13 @@ paint_get_structure (struct format_list_struct * format)
         g_value_init (&value_list, GST_TYPE_LIST);
 
         g_value_init (&value, G_TYPE_STRING);
-        g_value_set_static_string (&value, "sdtv");
+        g_value_set_static_string (&value, "bt601");
         gst_value_list_append_value (&value_list, &value);
 
-        g_value_set_static_string (&value, "hdtv");
+        g_value_set_static_string (&value, "bt709");
         gst_value_list_append_value (&value_list, &value);
 
-        gst_structure_set_value (structure, "color-matrix", &value_list);
+        gst_structure_set_value (structure, "colorimetry", &value_list);
         g_value_reset (&value_list);
 
         if (strcmp (format->format, "AYUV") &&
@@ -430,8 +430,8 @@ paint_get_structure (struct format_list_struct * format)
         }
         g_value_unset (&value_list);
       }
-    }
       break;
+    }
     case VTS_BAYER:
       structure = gst_structure_new ("video/x-raw-bayer",
           "format", G_TYPE_STRING, format->format, NULL);
@@ -508,7 +508,7 @@ videotestsrc_setup_paintinfo (GstVideoTestSrc * v, paintinfo * p, int w, int h)
 {
   int a, r, g, b;
 
-  if (v->color_spec == GST_VIDEO_TEST_SRC_BT601) {
+  if (v->info.colorimetry.matrix == GST_VIDEO_COLOR_MATRIX_BT601) {
     p->colors = vts_colors_bt601_ycbcr_100;
   } else {
     p->colors = vts_colors_bt709_ycbcr_100;
@@ -537,7 +537,7 @@ videotestsrc_setup_paintinfo (GstVideoTestSrc * v, paintinfo * p, int w, int h)
   p->foreground_color.R = r;
   p->foreground_color.G = g;
   p->foreground_color.B = b;
-  if (v->color_spec == GST_VIDEO_TEST_SRC_BT601) {
+  if (v->info.colorimetry.matrix == GST_VIDEO_COLOR_MATRIX_BT601) {
     p->foreground_color.Y = RGB_TO_Y_CCIR (r, g, b);
     p->foreground_color.U = RGB_TO_U_CCIR (r, g, b, 0);
     p->foreground_color.V = RGB_TO_V_CCIR (r, g, b, 0);
@@ -556,7 +556,7 @@ videotestsrc_setup_paintinfo (GstVideoTestSrc * v, paintinfo * p, int w, int h)
   p->background_color.R = r;
   p->background_color.G = g;
   p->background_color.B = b;
-  if (v->color_spec == GST_VIDEO_TEST_SRC_BT601) {
+  if (v->info.colorimetry.matrix == GST_VIDEO_COLOR_MATRIX_BT601) {
     p->background_color.Y = RGB_TO_Y_CCIR (r, g, b);
     p->background_color.U = RGB_TO_U_CCIR (r, g, b, 0);
     p->background_color.V = RGB_TO_V_CCIR (r, g, b, 0);
@@ -751,7 +751,7 @@ gst_video_test_src_smpte75 (GstVideoTestSrc * v, GstVideoFrame * frame)
   int w = frame->info.width, h = frame->info.height;
 
   videotestsrc_setup_paintinfo (v, p, w, h);
-  if (v->color_spec == GST_VIDEO_TEST_SRC_BT601) {
+  if (v->info.colorimetry.matrix == GST_VIDEO_COLOR_MATRIX_BT601) {
     p->colors = vts_colors_bt601_ycbcr_75;
   } else {
     p->colors = vts_colors_bt709_ycbcr_75;

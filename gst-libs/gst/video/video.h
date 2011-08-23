@@ -324,6 +324,146 @@ typedef enum {
 } GstVideoFlags;
 
 /**
+ * GstVideoChroma:
+ * @GST_VIDEO_CHROMA_UNKNOWN: unknown cositing
+ * @GST_VIDEO_CHROMA_NONE: no cositing
+ * @GST_VIDEO_CHROMA_H_COSITED: chroma is horizontally cosited
+ * @GST_VIDEO_CHROMA_V_COSITED: chroma is vertically cosited
+ * @GST_VIDEO_CHROMA_ALT_LINE: choma samples are sited on alternate lines
+ * @GST_VIDEO_CHROMA_COSITED: chroma samples cosited with luma samples
+ * @GST_VIDEO_CHROMA_JPEG: jpeg style cositing, also for mpeg1 and mjpeg
+ * @GST_VIDEO_CHROMA_MPEG2: mpeg2 style cositing
+ * @GST_VIDEO_CHROMA_DV: DV style cositing
+ *
+ * Various Chroma sitings.
+ */
+typedef enum {
+  GST_VIDEO_CHROMA_UNKNOWN   =  0,
+  GST_VIDEO_CHROMA_NONE      = (1 << 0),
+  GST_VIDEO_CHROMA_H_COSITED = (1 << 1),
+  GST_VIDEO_CHROMA_V_COSITED = (1 << 2),
+  GST_VIDEO_CHROMA_ALT_LINE  = (1 << 3),
+  /* some common chroma cositing */
+  GST_VIDEO_CHROMA_COSITED   = (GST_VIDEO_CHROMA_H_COSITED | GST_VIDEO_CHROMA_V_COSITED),
+  GST_VIDEO_CHROMA_JPEG      = (GST_VIDEO_CHROMA_NONE),
+  GST_VIDEO_CHROMA_MPEG2     = (GST_VIDEO_CHROMA_H_COSITED),
+  GST_VIDEO_CHROMA_DV        = (GST_VIDEO_CHROMA_COSITED | GST_VIDEO_CHROMA_ALT_LINE),
+} GstVideoChromaSite;
+
+/**
+ * GstVideoColorRange:
+ * @GST_VIDEO_COLOR_RANGE_UNKNOWN: unknown range
+ * @GST_VIDEO_COLOR_RANGE_0_255: [0..255] for 8 bit components
+ * @GST_VIDEO_COLOR_RANGE_16_235: [16..235] for 8 bit components. Chroma has
+ *                 [16..240] range.
+ *
+ * Possible color range values. These constants are defined for 8 bit color
+ * values and can be scaled for other bit depths.
+ */
+typedef enum {
+  GST_VIDEO_COLOR_RANGE_UNKNOWN = 0,
+  GST_VIDEO_COLOR_RANGE_0_255,
+  GST_VIDEO_COLOR_RANGE_16_235
+} GstVideoColorRange;
+
+/**
+ * GstVideoColorMatrix:
+ * @GST_VIDEO_COLOR_MATRIX_UNKNOWN: unknown matrix
+ * @GST_VIDEO_COLOR_MATRIX_RGB: identity matrix
+ * @GST_VIDEO_COLOR_MATRIX_BT709: ITU-R BT.709 transfer matrix
+ * @GST_VIDEO_COLOR_MATRIX_BT601: ITU-R BT.601 transfer matrix
+ * @GST_VIDEO_COLOR_MATRIX_SMPTE240M: SMPTE 240M transfer matrix
+ *
+ * The color matrix is used to convert between Y'PbPr and
+ * non-linear RGB (R'G'B')
+ */
+typedef enum {
+  GST_VIDEO_COLOR_MATRIX_UNKNOWN = 0,
+  GST_VIDEO_COLOR_MATRIX_RGB,
+  GST_VIDEO_COLOR_MATRIX_BT709,
+  GST_VIDEO_COLOR_MATRIX_BT601,
+  GST_VIDEO_COLOR_MATRIX_SMPTE240M
+} GstVideoColorMatrix;
+
+/**
+ * GstVideoTransferFunction:
+ * GST_VIDEO_TRANSFER_UNKNOWN: unknown transfer function
+ * GST_VIDEO_TRANSFER_GAMMA10: linear RGB, gamma 1.0 curve
+ * GST_VIDEO_TRANSFER_GAMMA18: Gamma 1.8 curve
+ * GST_VIDEO_TRANSFER_GAMMA20: Gamma 2.0 curve
+ * GST_VIDEO_TRANSFER_GAMMA22: Gamma 2.2 curve
+ * GST_VIDEO_TRANSFER_BT709: Gamma 2.2 curve with a linear segment in the lower
+ *                           range
+ * GST_VIDEO_TRANSFER_SMPTE240M: Gamma 2.2 curve with a linear segment in the
+ *                               lower range
+ * GST_VIDEO_TRANSFER_SRGB: Gamma 2.4 curve with a linear segment in the lower
+ *                          range
+ * GST_VIDEO_TRANSFER_GAMMA28: Gamma 2.8 curve
+ *
+ * The video transfer function defines the formula for converting between
+ * non-linear RGB (R'G'B') and linear RGB
+ */
+typedef enum {
+  GST_VIDEO_TRANSFER_UNKNOWN = 0,
+  GST_VIDEO_TRANSFER_GAMMA10,
+  GST_VIDEO_TRANSFER_GAMMA18,
+  GST_VIDEO_TRANSFER_GAMMA20,
+  GST_VIDEO_TRANSFER_GAMMA22,
+  GST_VIDEO_TRANSFER_BT709,
+  GST_VIDEO_TRANSFER_SMPTE240M,
+  GST_VIDEO_TRANSFER_SRGB,
+  GST_VIDEO_TRANSFER_GAMMA28
+} GstVideoTransferFunction;
+
+/**
+ * GstVideoColorPrimaries:
+ * @GST_VIDEO_COLOR_PRIMARIES_UNKNOWN: unknown color primaries
+ * @GST_VIDEO_COLOR_PRIMARIES_BT601:
+ * @GST_VIDEO_COLOR_PRIMARIES_BT470M:
+ * @GST_VIDEO_COLOR_PRIMARIES_BT470BG:
+ * @GST_VIDEO_COLOR_PRIMARIES_SMPTE170M:
+ * @GST_VIDEO_COLOR_PRIMARIES_SMPTE240M:
+ *
+ * The color primaries define the how to transform linear RGB values to and from
+ * the CIE XYZ colorspace.
+ */
+typedef enum {
+  GST_VIDEO_COLOR_PRIMARIES_UNKNOWN = 0,
+  GST_VIDEO_COLOR_PRIMARIES_BT709,
+  GST_VIDEO_COLOR_PRIMARIES_BT470M,
+  GST_VIDEO_COLOR_PRIMARIES_BT470BG,
+  GST_VIDEO_COLOR_PRIMARIES_SMPTE170M,
+  GST_VIDEO_COLOR_PRIMARIES_SMPTE240M
+} GstVideoColorPrimaries;
+
+/**
+ * GstVideoColorimetry:
+ * @range: the color range. This is the valid range for the samples.
+ *         It is used to convert the samples to Y'PbPr values.
+ * @matrix: the color matrix. Used to convert between Y'PbPr and
+ *          non-linear RGB (R'G'B')
+ * @transfer: the transfer function. used to convert between R'G'B' and RGB
+ * @primaries: color primaries. used to convert between R'G'B' and CIE XYZ
+ *
+ * Structure describing the color info.
+ */
+typedef struct {
+  GstVideoColorRange        range;
+  GstVideoColorMatrix       matrix;
+  GstVideoTransferFunction  transfer;
+  GstVideoColorPrimaries    primaries;
+} GstVideoColorimetry;
+
+/* predefined colorimetry */
+#define GST_VIDEO_COLORIMETRY_BT601       "bt601"
+#define GST_VIDEO_COLORIMETRY_BT709       "bt709"
+#define GST_VIDEO_COLORIMETRY_SMPTE240M   "smpte240m"
+
+gboolean     gst_video_colorimetry_matches     (GstVideoColorimetry *cinfo, const gchar *color);
+gboolean     gst_video_colorimetry_from_string (GstVideoColorimetry *cinfo, const gchar *color);
+gchar *      gst_video_colorimetry_to_string   (GstVideoColorimetry *cinfo);
+
+/**
  * GstVideoInfo:
  * @finfo: the format info of the video
  * @flags: additional video flags
@@ -331,15 +471,11 @@ typedef enum {
  * @height: the height of the video
  * @views: the number of views for multiview video
  * @size: the default size of one frame
- * @color_matrix: the color matrix.  Possible values are
- *   "sdtv" for the standard definition color matrix (as specified in
- *   Rec. ITU-R BT.470-6) or "hdtv" for the high definition color
- *   matrix (as specified in Rec. ITU-R BT.709)
- * @chroma_site: the chroma siting. Possible values are
- *   "mpeg2" for MPEG-2 style chroma siting (co-sited horizontally,
- *   halfway-sited vertically), "jpeg" for JPEG and Theora style
- *   chroma siting (halfway-sited both horizontally and vertically).
- *   Other chroma site values are possible, but uncommon.
+ * @chroma_site: a #GstVideoChromaSite.
+ * @color_range: the color range. This is the valid range for the samples.
+ * @color_matrix: the color matrix. Used to transform to non-linear RGB (R'G'B')
+ * @transfer_function: the transfer function. used to convert betwen R'G'B' and RGB
+ * @color_primaries: color primaries. used to convert to CIE XYZ
  * @palette: a buffer with palette data
  * @par_n: the pixel-aspect-ratio numerator
  * @par_d: the pixel-aspect-ratio demnominator
@@ -363,8 +499,9 @@ struct _GstVideoInfo {
   gsize                     size;
   gint                      views;
 
-  const gchar              *color_matrix;
-  const gchar              *chroma_site;
+  GstVideoChromaSite        chroma_site;
+  GstVideoColorimetry       colorimetry;
+
   GstBuffer                *palette;
 
   gint                      par_n;
@@ -429,6 +566,7 @@ gboolean     gst_video_info_convert     (GstVideoInfo *info,
  * @info: the #GstVideoInfo
  * @buffer: the mapped buffer
  * @meta: pointer to metadata if any
+ * @view_id: id of the view in multiview
  * @data: pointers to the plane data
  *
  * A video frame obtained from gst_video_frame_map()
@@ -438,6 +576,7 @@ struct _GstVideoFrame {
 
   GstBuffer *buffer;
   gpointer   meta;
+  gint       view_id;
 
   gpointer   data[GST_VIDEO_MAX_PLANES];
 };
@@ -545,7 +684,6 @@ gboolean       gst_video_calculate_display_ratio (guint * dar_n,
                                                   guint   display_par_n,
                                                   guint   display_par_d);
 
-gboolean       gst_video_parse_caps_framerate    (GstCaps * caps, int *fps_n, int *fps_d);
 GstBuffer *    gst_video_parse_caps_palette      (GstCaps * caps);
 
 /* video still frame event creation and parsing */

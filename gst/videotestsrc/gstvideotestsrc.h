@@ -106,19 +106,6 @@ typedef enum {
   GST_VIDEO_TEST_SRC_BAR
 } GstVideoTestSrcPattern;
 
-/**
- * GstVideoTestSrcColorSpec:
- * @GST_VIDEO_TEST_SRC_BT601: ITU-R Rec. BT.601/BT.470 (SD)
- * @GST_VIDEO_TEST_SRC_BT709: ITU-R Rec. BT.709 (HD)
- *
- * The color specification to use.
- */
-typedef enum {
-  GST_VIDEO_TEST_SRC_UNKNOWN,
-  GST_VIDEO_TEST_SRC_BT601,
-  GST_VIDEO_TEST_SRC_BT709
-} GstVideoTestSrcColorSpec;
-
 typedef struct _GstVideoTestSrc GstVideoTestSrc;
 typedef struct _GstVideoTestSrcClass GstVideoTestSrcClass;
 
@@ -134,9 +121,6 @@ struct _GstVideoTestSrc {
 
   /* type of output */
   GstVideoTestSrcPattern pattern_type;
-
-  /* Color spec of output */
-  GstVideoTestSrcColorSpec color_spec;
 
   /* video state */
   GstVideoInfo info;

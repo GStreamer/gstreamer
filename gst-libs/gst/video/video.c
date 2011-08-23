@@ -608,6 +608,145 @@ gst_video_info_set_format (GstVideoInfo * info, GstVideoFormat format,
   fill_planes (info);
 }
 
+static GstVideoChromaSite
+gst_video_chroma_from_string (const gchar * s)
+{
+  GstVideoChromaSite res;
+
+  if (g_str_equal (s, "jpeg")) {
+    res = GST_VIDEO_CHROMA_JPEG;
+  } else if (g_str_equal (s, "mpeg2")) {
+    res = GST_VIDEO_CHROMA_MPEG2;
+  } else if (g_str_equal (s, "dv")) {
+    res = GST_VIDEO_CHROMA_DV;
+  } else {
+    res = GST_VIDEO_CHROMA_NONE;
+  }
+  return res;
+}
+
+static const gchar *
+gst_video_chroma_to_string (GstVideoChromaSite site)
+{
+  const gchar *res;
+
+  switch (site) {
+    case GST_VIDEO_CHROMA_JPEG:
+      res = "jpeg";
+      break;
+    case GST_VIDEO_CHROMA_MPEG2:
+      res = "mpeg2";
+      break;
+    case GST_VIDEO_CHROMA_DV:
+      res = "dv";
+      break;
+    default:
+      res = NULL;
+      break;
+  }
+  return res;
+}
+
+typedef struct
+{
+  const gchar *name;
+  GstVideoColorimetry color;
+} ColorimetryInfo;
+
+#define MAKE_COLORIMETRY(n,r,m,t,p) { GST_VIDEO_COLORIMETRY_ ##n, \
+  { GST_VIDEO_COLOR_RANGE_ ##r, GST_VIDEO_COLOR_MATRIX_ ##m, \
+  GST_VIDEO_TRANSFER_ ##t, GST_VIDEO_COLOR_PRIMARIES_ ##p } }
+
+static const ColorimetryInfo colorimetry[] = {
+  MAKE_COLORIMETRY (BT601, 16 _235, BT601, BT709, BT470M),
+  MAKE_COLORIMETRY (BT709, 16 _235, BT709, BT709, BT709),
+  MAKE_COLORIMETRY (SMPTE240M, 16 _235, SMPTE240M, SMPTE240M, SMPTE240M),
+  {NULL,}
+};
+
+static const ColorimetryInfo *
+gst_video_get_colorimetry (const gchar * s)
+{
+  gint i;
+
+  for (i = 0; colorimetry[i].name; i++) {
+    if (g_str_equal (colorimetry[i].name, s))
+      return &colorimetry[i];
+  }
+  return NULL;
+}
+
+#define IS_EQUAL(ci,i) (((ci)->color.range == (i)->range) && \
+                        ((ci)->color.matrix == (i)->matrix) && \
+                        ((ci)->color.transfer == (i)->transfer) && \
+                        ((ci)->color.primaries == (i)->primaries))
+
+
+/**
+ * gst_video_colorimetry_from_string
+ * @cinfo: a #GstVideoColorimetry
+ * @color: a colorimetry string
+ *
+ * Parse the colorimetry string and update @cinfo with the parsed
+ * values.
+ *
+ * Returns: #TRUE if @color points to valid colorimetry info.
+ */
+gboolean
+gst_video_colorimetry_from_string (GstVideoColorimetry * cinfo,
+    const gchar * color)
+{
+  const ColorimetryInfo *ci;
+
+  if ((ci = gst_video_get_colorimetry (color))) {
+    *cinfo = ci->color;
+  } else {
+    /* FIXME, split and parse */
+    cinfo->range = GST_VIDEO_COLOR_RANGE_16_235;
+    cinfo->matrix = GST_VIDEO_COLOR_MATRIX_BT601;
+    cinfo->transfer = GST_VIDEO_TRANSFER_BT709;
+    cinfo->primaries = GST_VIDEO_COLOR_PRIMARIES_BT709;
+  }
+  return TRUE;
+}
+
+static void
+gst_video_caps_set_colorimetry (GstCaps * caps, GstVideoColorimetry * cinfo)
+{
+  gint i;
+
+  for (i = 0; colorimetry[i].name; i++) {
+    if (IS_EQUAL (&colorimetry[i], cinfo)) {
+      gst_caps_set_simple (caps, "colorimetry", G_TYPE_STRING,
+          colorimetry[i].name, NULL);
+      return;
+    }
+  }
+  /* FIXME, construct colorimetry */
+}
+
+/**
+ * gst_video_colorimetry_matches:
+ * @info: a #GstVideoInfo
+ * @color: a colorimetry string
+ *
+ * Check if the colorimetry information in @info matches that of the
+ * string @color.
+ *
+ * Returns: #TRUE if @color conveys the same colorimetry info as the color
+ * information in @info.
+ */
+gboolean
+gst_video_colorimetry_matches (GstVideoColorimetry * cinfo, const gchar * color)
+{
+  const ColorimetryInfo *ci;
+
+  if ((ci = gst_video_get_colorimetry (color)))
+    return IS_EQUAL (ci, cinfo);
+
+  return FALSE;
+}
+
 /**
  * gst_video_info_from_caps:
  * @info: a #GstVideoInfo
@@ -673,17 +812,11 @@ gst_video_info_from_caps (GstVideoInfo * info, const GstCaps * caps)
   else
     info->views = 1;
 
-  s = gst_structure_get_string (structure, "color-matrix");
-  if (s)
-    info->color_matrix = s;
-  else
-    info->color_matrix = "sdtv";
+  if ((s = gst_structure_get_string (structure, "chroma-site")))
+    info->chroma_site = gst_video_chroma_from_string (s);
 
-  s = gst_structure_get_string (structure, "chroma-site");
-  if (s)
-    info->chroma_site = s;
-  else
-    info->chroma_site = "mpeg2";
+  if ((s = gst_structure_get_string (structure, "colorimetry")))
+    gst_video_colorimetry_from_string (&info->colorimetry, s);
 
   if (gst_structure_get_fraction (structure, "pixel-aspect-ratio",
           &par_n, &par_d)) {
@@ -750,14 +883,16 @@ gst_video_info_to_caps (GstVideoInfo * info)
       "height", G_TYPE_INT, info->height,
       "framerate", GST_TYPE_FRACTION, info->fps_n, info->fps_d,
       "pixel-aspect-ratio", GST_TYPE_FRACTION, info->par_n, info->par_d, NULL);
+
   if (info->flags & GST_VIDEO_FLAG_INTERLACED)
     gst_caps_set_simple (caps, "interlaced", G_TYPE_BOOLEAN, TRUE, NULL);
-  if (info->color_matrix)
-    gst_caps_set_simple (caps, "color-matrix", G_TYPE_STRING,
-        info->color_matrix, NULL);
-  if (info->chroma_site)
-    gst_caps_set_simple (caps, "chroma-site", G_TYPE_STRING, info->chroma_site,
-        NULL);
+
+  if (info->chroma_site != GST_VIDEO_CHROMA_UNKNOWN)
+    gst_caps_set_simple (caps, "chroma-site", G_TYPE_STRING,
+        gst_video_chroma_to_string (info->chroma_site), NULL);
+
+  gst_video_caps_set_colorimetry (caps, &info->colorimetry);
+
   if (info->views > 1)
     gst_caps_set_simple (caps, "views", G_TYPE_INT, info->views, NULL);
 
@@ -1300,36 +1435,6 @@ gst_video_event_parse_still_frame (GstEvent * event, gboolean * in_still)
 }
 
 /**
- * gst_video_parse_caps_framerate:
- * @caps: pointer to a #GstCaps instance
- * @fps_n: pointer to integer to hold numerator of frame rate (output)
- * @fps_d: pointer to integer to hold denominator of frame rate (output)
- *
- * Extracts the frame rate from @caps and places the values in the locations
- * pointed to by @fps_n and @fps_d.  Returns TRUE if the values could be
- * parsed correctly, FALSE if not.
- *
- * This function can be used with #GstCaps that have any media type; it
- * is not limited to formats handled by #GstVideoFormat.
- *
- * Since: 0.10.16
- *
- * Returns: TRUE if @caps was parsed correctly.
- */
-gboolean
-gst_video_parse_caps_framerate (GstCaps * caps, int *fps_n, int *fps_d)
-{
-  GstStructure *structure;
-
-  if (!gst_caps_is_fixed (caps))
-    return FALSE;
-
-  structure = gst_caps_get_structure (caps, 0);
-
-  return gst_structure_get_fraction (structure, "framerate", fps_n, fps_d);
-}
-
-/**
  * gst_video_parse_caps_palette:
  * @caps: #GstCaps to parse
  *
@@ -1356,7 +1461,7 @@ gst_video_parse_caps_palette (GstCaps * caps)
   if (!p_v || !GST_VALUE_HOLDS_BUFFER (p_v))
     return NULL;
 
-  p = gst_buffer_ref (gst_value_get_buffer (p_v));
+  p = g_value_dup_boxed (p_v);
 
   return p;
 }

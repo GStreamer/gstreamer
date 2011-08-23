@@ -955,8 +955,24 @@ theora_handle_type_packet (GstTheoraDec * dec, ogg_packet * packet)
   dec->vinfo.fps_d = dec->info.fps_denominator;
   dec->vinfo.par_n = par_num;
   dec->vinfo.par_d = par_den;
-  dec->vinfo.chroma_site = "jpeg";
-  dec->vinfo.color_matrix = "sdtv";
+
+  /* these values are for all versions of the colorspace specified in the
+   * theora info */
+  dec->vinfo.chroma_site = GST_VIDEO_CHROMA_JPEG;
+  dec->vinfo.colorimetry.range = GST_VIDEO_COLOR_RANGE_16_235;
+  dec->vinfo.colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_BT601;
+  dec->vinfo.colorimetry.transfer = GST_VIDEO_TRANSFER_BT709;
+  switch (dec->info.colorspace) {
+    case TH_CS_ITU_REC_470M:
+      dec->vinfo.colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_BT470M;
+      break;
+    case TH_CS_ITU_REC_470BG:
+      dec->vinfo.colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_BT470BG;
+      break;
+    default:
+      dec->vinfo.colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_UNKNOWN;
+      break;
+  }
 
   caps = gst_video_info_to_caps (&dec->vinfo);
   gst_pad_set_caps (dec->srcpad, caps);

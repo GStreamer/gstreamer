@@ -123,7 +123,7 @@ gst_video_convert_caps_remove_format_info (GstCaps * caps)
 
     st = gst_structure_copy (st);
     gst_structure_remove_fields (st, "format", "palette_data",
-        "color-matrix", "chroma-site", NULL);
+        "colorimetry", "chroma-site", NULL);
 
     gst_caps_append_structure (res, st);
   }
@@ -203,7 +203,7 @@ gst_video_convert_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
   if (in_info.finfo->flags & GST_VIDEO_FORMAT_FLAG_RGB) {
     in_spec = COLOR_SPEC_RGB;
   } else if (in_info.finfo->flags & GST_VIDEO_FORMAT_FLAG_YUV) {
-    if (in_info.color_matrix && g_str_equal (in_info.color_matrix, "hdtv"))
+    if (in_info.colorimetry.matrix == GST_VIDEO_COLOR_MATRIX_BT709)
       in_spec = COLOR_SPEC_YUV_BT709;
     else
       in_spec = COLOR_SPEC_YUV_BT470_6;
@@ -218,7 +218,7 @@ gst_video_convert_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
   if (out_info.finfo->flags & GST_VIDEO_FORMAT_FLAG_RGB) {
     out_spec = COLOR_SPEC_RGB;
   } else if (out_info.finfo->flags & GST_VIDEO_FORMAT_FLAG_YUV) {
-    if (out_info.color_matrix && g_str_equal (out_info.color_matrix, "hdtv"))
+    if (out_info.colorimetry.matrix == GST_VIDEO_COLOR_MATRIX_BT709)
       out_spec = COLOR_SPEC_YUV_BT709;
     else
       out_spec = COLOR_SPEC_YUV_BT470_6;
