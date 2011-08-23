@@ -1111,12 +1111,15 @@ gst_ogg_map_parse_fisbone (GstOggStream * pad, const guint8 * data, guint size,
   GstOggSkeleton stype;
   guint serial_offset;
 
-  if (size < SKELETON_FISBONE_MIN_SIZE) {
+  if (size != 0 && size < SKELETON_FISBONE_MIN_SIZE) {
     GST_WARNING ("small fisbone packet of size %d, ignoring", size);
     return FALSE;
   }
 
-  if (memcmp (data, "fisbone\0", 8) == 0) {
+  if (size == 0) {
+    /* Skeleton EOS packet is zero bytes */
+    return FALSE;
+  } else if (memcmp (data, "fisbone\0", 8) == 0) {
     GST_INFO ("got fisbone packet");
     stype = GST_OGG_SKELETON_FISBONE;
     serial_offset = 12;
