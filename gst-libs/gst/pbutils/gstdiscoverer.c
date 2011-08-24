@@ -446,7 +446,7 @@ is_subtitle_caps (const GstCaps * caps)
     subs_caps = gst_caps_from_string ("text/plain; text/x-pango-markup; "
         "subpicture/x-pgs; subpicture/x-dvb; application/x-subtitle-unknown; "
         "application/x-ssa; application/x-ass; subtitle/x-kate; "
-        "video/x-dvd-subpicture; ");
+        "application/x-kate; video/x-dvd-subpicture; ");
   }
 
   return gst_caps_can_intersect (caps, subs_caps);
