@@ -40,7 +40,7 @@ static void
 track_object_removed_cb (GESTimelineObject * object,
     GESTrackObject * track_object);
 static void track_object_added_cb (GESTimelineObject * object,
-    GESTrackObject * track_object);
+    GESTrackObject * track_object, GHashTable * signal_table);
 static void track_object_changed_cb (GESTrackObject * track_object,
     GParamSpec * arg G_GNUC_UNUSED);
 static void calculate_transitions (GESTrackObject * track_object);
@@ -63,6 +63,9 @@ struct _GESTimelineLayerPrivate
                                  * containing timeline */
 
   gboolean auto_transition;
+
+
+  GHashTable *signal_table;
 };
 
 enum
@@ -210,6 +213,9 @@ ges_timeline_layer_init (GESTimelineLayer * self)
   self->priv->auto_transition = FALSE;
   self->min_gnl_priority = 0;
   self->max_gnl_priority = LAYER_HEIGHT;
+  self->priv->signal_table =
+      g_hash_table_new_full (g_direct_hash, g_direct_equal, g_object_unref,
+      g_free);
 }
 
 /**
@@ -312,7 +318,7 @@ ges_timeline_layer_add_object (GESTimelineLayer * layer,
   if (layer->priv->auto_transition) {
     if (GES_IS_TIMELINE_SOURCE (object)) {
       g_signal_connect (G_OBJECT (object), "track-object-added",
-          G_CALLBACK (track_object_added_cb), NULL);
+          G_CALLBACK (track_object_added_cb), layer->priv->signal_table);
       g_signal_connect (G_OBJECT (object), "track-object-removed",
           G_CALLBACK (track_object_removed_cb), NULL);
     }
@@ -361,15 +367,72 @@ track_object_duration_cb (GESTrackObject * track_object,
 }
 
 static void
-track_object_added_cb (GESTimelineObject * object,
-    GESTrackObject * track_object)
+track_object_deleted_cb (GESTrack * track, GESTrackObject * track_object)
 {
+  GList *track_objects, *tmp, *cur;
+  GESTimelineLayer *layer;
+
+  track_objects = ges_track_get_objects (track);
+  cur = g_list_find (track_objects, track_object);
+  for (tmp = cur->next; tmp; tmp = tmp->next) {
+    if (GES_IS_TRACK_SOURCE (tmp->data)) {
+      break;
+    }
+    if (GES_IS_TRACK_AUDIO_TRANSITION (tmp->data)
+        || GES_IS_TRACK_VIDEO_TRANSITION (tmp->data)) {
+      layer =
+          ges_timeline_object_get_layer (ges_track_object_get_timeline_object
+          (tmp->data));
+      if (ges_timeline_layer_get_auto_transition (layer)) {
+        ges_track_enable_update (track, FALSE);
+        ges_timeline_layer_remove_object (layer,
+            ges_track_object_get_timeline_object (tmp->data));
+        ges_track_enable_update (track, TRUE);
+      }
+      g_object_unref (layer);
+    }
+  }
+
+  for (tmp = cur->prev; tmp; tmp = tmp->prev) {
+    if (GES_IS_TRACK_SOURCE (tmp->data)) {
+      break;
+    }
+    if (GES_IS_TRACK_AUDIO_TRANSITION (tmp->data)
+        || GES_IS_TRACK_VIDEO_TRANSITION (tmp->data)) {
+      layer =
+          ges_timeline_object_get_layer (ges_track_object_get_timeline_object
+          (tmp->data));
+      if (ges_timeline_layer_get_auto_transition (layer)) {
+        ges_track_enable_update (track, FALSE);
+        ges_timeline_layer_remove_object (layer,
+            ges_track_object_get_timeline_object (tmp->data));
+        ges_track_enable_update (track, TRUE);
+      }
+      g_object_unref (layer);
+    }
+  }
+  g_object_unref (track_object);
+}
+
+static void
+track_object_added_cb (GESTimelineObject * object,
+    GESTrackObject * track_object, GHashTable * signal_table)
+{
+  GESTrack *track;
+  gint ptr;
+
   if (GES_IS_TRACK_SOURCE (track_object)) {
     g_signal_connect (G_OBJECT (track_object), "notify::start",
         G_CALLBACK (track_object_changed_cb), NULL);
     g_signal_connect (G_OBJECT (track_object), "notify::duration",
         G_CALLBACK (track_object_duration_cb), NULL);
     calculate_transitions (track_object);
+  }
+  track = ges_track_object_get_track (track_object);
+  if (!g_hash_table_lookup (signal_table, track)) {
+    ptr = g_signal_connect (track, "track-object-removed",
+        (GCallback) track_object_deleted_cb, NULL);
+    g_hash_table_insert (signal_table, track, &ptr);
   }
   return;
 }
@@ -378,6 +441,7 @@ static void
 track_object_removed_cb (GESTimelineObject * object,
     GESTrackObject * track_object)
 {
+  return;
   if (GES_IS_TRACK_SOURCE (track_object)) {
     g_signal_handlers_disconnect_by_func (track_object, track_object_changed_cb,
         object);
@@ -648,6 +712,41 @@ clean:
   g_object_unref (layer);
 }
 
+static void
+look_for_transition (GESTrackObject * track_object, GESTimelineLayer * layer)
+{
+  GESTrack *track;
+  GList *track_objects, *tmp, *cur;
+
+  track = ges_track_object_get_track (track_object);
+
+  track_objects = ges_track_get_objects (track);
+
+  cur = g_list_find (track_objects, track_object);
+
+  for (tmp = cur->next; tmp; tmp = tmp->next) {
+    if (GES_IS_TRACK_SOURCE (tmp->data)) {
+      break;
+    }
+    if (GES_IS_TRACK_AUDIO_TRANSITION (tmp->data)
+        || GES_IS_TRACK_VIDEO_TRANSITION (tmp->data)) {
+      ges_timeline_layer_remove_object (layer,
+          ges_track_object_get_timeline_object (tmp->data));
+    }
+  }
+
+  for (tmp = cur->prev; tmp; tmp = tmp->prev) {
+    if (GES_IS_TRACK_SOURCE (tmp->data)) {
+      break;
+    }
+    if (GES_IS_TRACK_AUDIO_TRANSITION (tmp->data)
+        || GES_IS_TRACK_VIDEO_TRANSITION (tmp->data)) {
+      ges_timeline_layer_remove_object (layer,
+          ges_track_object_get_timeline_object (tmp->data));
+    }
+  }
+  g_list_free_full (track_objects, g_object_unref);
+}
 
 /**
  * ges_timeline_layer_remove_object:
@@ -667,6 +766,7 @@ ges_timeline_layer_remove_object (GESTimelineLayer * layer,
     GESTimelineObject * object)
 {
   GESTimelineLayer *tl_obj_layer;
+  GList *trackobjects, *tmp;
 
   g_return_val_if_fail (GES_IS_TIMELINE_LAYER (layer), FALSE);
   g_return_val_if_fail (GES_IS_TIMELINE_OBJECT (object), FALSE);
@@ -681,6 +781,16 @@ ges_timeline_layer_remove_object (GESTimelineLayer * layer,
     return FALSE;
   }
   g_object_unref (tl_obj_layer);
+
+  if (layer->priv->auto_transition) {
+    trackobjects = ges_timeline_object_get_track_objects (object);
+
+    for (tmp = trackobjects; tmp; tmp = tmp->next) {
+      look_for_transition (tmp->data, layer);
+    }
+
+    g_list_free_full (trackobjects, g_object_unref);
+  }
 
   /* emit 'object-removed' */
   g_signal_emit (layer, ges_timeline_layer_signals[OBJECT_REMOVED], 0, object);
