@@ -1096,6 +1096,14 @@
   )
 )
 
+(define-method split
+  (of-object "GESTimelineObject")
+  (c-name "ges_timeline_object_split")
+  (return-type "GESTimelineObject*")
+  (parameters
+    '("gint64" "position")
+  )
+)
 
 
 

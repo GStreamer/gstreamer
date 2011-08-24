@@ -56,6 +56,10 @@ track_object_priority_changed_cb (GESTrackObject * child,
     GParamSpec * arg G_GNUC_UNUSED, GESTimelineObject * object);
 static void update_height (GESTimelineObject * object);
 
+void
+tck_object_added_cb (GESTimelineObject * object,
+    GESTrackObject * track_object, GList * track_objects);
+
 static gint sort_track_effects (gpointer a, gpointer b,
     GESTimelineObject * object);
 static void
@@ -1194,6 +1198,86 @@ ges_timeline_object_set_top_effect_priority (GESTimelineObject * object,
   return TRUE;
 }
 
+void
+tck_object_added_cb (GESTimelineObject * object,
+    GESTrackObject * track_object, GList * track_objects)
+{
+  gint64 duration, start, inpoint, position;
+  GList *tmp;
+  gboolean locked;
+
+  ges_track_object_set_locked (track_object, FALSE);
+  g_object_get (object, "start", &position, NULL);
+  for (tmp = track_objects; tmp; tmp = tmp->next) {
+    if (ges_track_object_get_track (track_object)->type ==
+        ges_track_object_get_track (tmp->data)->type) {
+      locked = ges_track_object_is_locked (tmp->data);
+      ges_track_object_set_locked (tmp->data, FALSE);
+      g_object_get (tmp->data, "duration", &duration, "start", &start,
+          "in-point", &inpoint, NULL);
+      g_object_set (tmp->data, "duration",
+          duration - (duration + start - position), NULL);
+      g_object_set (track_object, "start", position, "in-point",
+          duration - (duration + start - inpoint - position), "duration",
+          duration + start - position, NULL);
+      ges_track_object_set_locked (tmp->data, locked);
+      ges_track_object_set_locked (track_object, locked);
+    }
+  }
+}
+
+/**
+ * ges_timeline_object_split:
+ * @object: the #GESTimelineObject to split
+ * @position: The position at which to split the @object (in nanosecond)
+ *
+ * The function modifies @object, and creates another #GESTimelineObject so
+ * we have two clips at the end, splitted at the time specified by @position.
+ *
+ * Returns: (transfer full): The newly created #GESTimelineObject resulting from
+ * the splitting
+ *
+ * Since: 0.10.XX
+ */
+GESTimelineObject *
+ges_timeline_object_split (GESTimelineObject * object, gint64 position)
+{
+  GList *track_objects, *tmp;
+  GESTimelineLayer *layer;
+  GESTimelineObject *new_object;
+  gint64 duration, start, inpoint;
+
+  g_return_val_if_fail (GES_IS_TIMELINE_OBJECT (object), NULL);
+
+  g_object_get (object, "duration", &duration, "start", &start, "in-point",
+      &inpoint, NULL);
+
+  track_objects = ges_timeline_object_get_track_objects (object);
+  layer = ges_timeline_object_get_layer (object);
+
+  new_object = ges_timeline_object_copy (object, FALSE);
+
+  if (g_list_length (track_objects) == 2) {
+    g_object_set (new_object, "start", position, NULL);
+    g_signal_connect (G_OBJECT (new_object), "track-object-added",
+        G_CALLBACK (tck_object_added_cb), track_objects);
+  } else {
+    for (tmp = track_objects; tmp; tmp = tmp->next) {
+      g_object_set (tmp->data, "duration",
+          duration - (duration + start - position), NULL);
+      g_object_set (new_object, "start", position, "in-point",
+          duration - (duration + start - position), "duration",
+          (duration + start - position), NULL);
+      g_object_set (object, "duration",
+          duration - (duration + start - position), NULL);
+    }
+  }
+
+  ges_timeline_layer_add_object (layer, new_object);
+
+  return new_object;
+}
+
 /* TODO implement the deep parameter, and make it public */
 static GESTimelineObject *
 ges_timeline_object_copy (GESTimelineObject * object, gboolean * deep)
@@ -1222,6 +1306,19 @@ ges_timeline_object_copy (GESTimelineObject * object, gboolean * deep)
   }
 
   ret = g_object_newv (G_TYPE_FROM_INSTANCE (object), n_params, params);
+
+  if (GES_IS_TIMELINE_FILE_SOURCE (ret)) {
+    GList *tck_objects;
+    tck_objects = ges_timeline_object_get_track_objects (object);
+    if (g_list_length (tck_objects) == 1) {
+      GESTrackType type;
+      type = ges_track_object_get_track (tck_objects->data)->type;
+      ges_timeline_filesource_set_supported_formats (GES_TIMELINE_FILE_SOURCE
+          (ret), type);
+    }
+    g_list_free (tck_objects);
+  }
+
   g_free (specs);
   g_free (params);
 
