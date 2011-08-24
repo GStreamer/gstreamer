@@ -313,12 +313,11 @@ gst_audio_test_src_query (GstBaseSrc * basesrc, GstQuery * query)
     {
       GstFormat src_fmt, dest_fmt;
       gint64 src_val, dest_val;
-      gint rate;
 
       gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
 
       if (!gst_audio_info_convert (&src->info, src_fmt, src_val, dest_fmt,
-              dest_val))
+              &dest_val))
         goto error;
 
       gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
