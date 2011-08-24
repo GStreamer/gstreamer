@@ -83,13 +83,13 @@ distribute_running_time (GstElement * element, const GstSegment * segment)
   if (segment->accum) {
     event = gst_event_new_new_segment_full (FALSE, segment->rate,
         segment->applied_rate, segment->format, 0, segment->accum, 0);
-    gst_pad_push_event (pad, event);
+    gst_pad_send_event (pad, event);
   }
 
   event = gst_event_new_new_segment_full (FALSE, segment->rate,
       segment->applied_rate, segment->format,
       segment->start, segment->stop, segment->time);
-  gst_pad_push_event (pad, event);
+  gst_pad_send_event (pad, event);
 
   gst_object_unref (pad);
 }
