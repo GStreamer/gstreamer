@@ -242,14 +242,14 @@ void           gst_audio_format_fill_silence     (const GstAudioFormatInfo *info
 /**
  * GstAudioFlags:
  * @GST_AUDIO_FLAG_NONE: no valid flag
- * @GST_AUDIO_FLAG_UNPOSITIONED: unpositioned audio layout, position array
- *     contains the default layout.
+ * @GST_AUDIO_FLAG_DEFAULT_POSITIONS: position array
+ *     contains the default layout for the number of channels.
  *
  * Extra audio flags
  */
 typedef enum {
-  GST_AUDIO_FLAG_NONE         = 0,
-  GST_AUDIO_FLAG_UNPOSITIONED = (1 << 0)
+  GST_AUDIO_FLAG_NONE              = 0,
+  GST_AUDIO_FLAG_DEFAULT_POSITIONS = (1 << 0)
 } GstAudioFlags;
 
 /**
@@ -283,7 +283,7 @@ struct _GstAudioInfo {
 #define GST_AUDIO_INFO_BPS(info)             (GST_AUDIO_INFO_DEPTH(info) >> 3)
 
 #define GST_AUDIO_INFO_FLAGS(info)           ((info)->flags)
-#define GST_AUDIO_INFO_IS_UNPOSITIONED(info) ((info)->flags & GST_AUDIO_FLAG_UNPOSITIONED)
+#define GST_AUDIO_INFO_HAS_DEFAULT_POSITIONS(info) ((info)->flags & GST_AUDIO_FLAG_DEFAULT_POSITIONS)
 
 #define GST_AUDIO_INFO_RATE(info)            ((info)->rate)
 #define GST_AUDIO_INFO_CHANNELS(info)        ((info)->channels)

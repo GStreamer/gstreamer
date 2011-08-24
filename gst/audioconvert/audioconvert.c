@@ -608,9 +608,6 @@ audio_convert_prepare_context (AudioConvertCtx * ctx, GstAudioInfo * in,
   /* first clean the existing context */
   audio_convert_clean_context (ctx);
 
-  g_return_val_if_fail (GST_AUDIO_INFO_IS_UNPOSITIONED (in) ==
-      GST_AUDIO_INFO_IS_UNPOSITIONED (out), FALSE);
-
   ctx->in = *in;
   ctx->out = *out;
 

@@ -324,7 +324,8 @@ gst_audio_info_from_caps (GstAudioInfo * info, const GstCaps * caps)
       info->position[i] = g_value_get_enum (pos_val_entry);
     }
   } else {
-    info->flags |= GST_AUDIO_FLAG_UNPOSITIONED;
+    info->flags |= GST_AUDIO_FLAG_DEFAULT_POSITIONS;
+    /* FIXME, set default positions */
   }
 
   return TRUE;
