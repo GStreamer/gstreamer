@@ -671,6 +671,11 @@ gst_rtp_jitter_buffer_clear_pt_map (GstRtpJitterBuffer * jitterbuffer)
 
   JBUF_LOCK (priv);
   priv->clock_rate = -1;
+  /* do not clear current content, but refresh state for new arrival */
+  GST_DEBUG_OBJECT (jitterbuffer, "reset jitterbuffer");
+  rtp_jitter_buffer_reset_skew (priv->jbuf);
+  priv->last_popped_seqnum = -1;
+  priv->next_seqnum = -1;
   JBUF_UNLOCK (priv);
 }
 
