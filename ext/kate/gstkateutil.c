@@ -226,7 +226,7 @@ gst_kate_util_decoder_base_get_property (GstKateDecoderBase * decoder,
   return res;
 }
 
-static gboolean
+static inline gboolean
 gst_kate_util_is_utf8_string (const char *value, size_t len)
 {
   if (len == 0)
