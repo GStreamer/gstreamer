@@ -39,6 +39,9 @@ static GstDiscovererAudioInfo
 static GstDiscovererVideoInfo
     * gst_discoverer_video_info_copy_int (GstDiscovererVideoInfo * ptr);
 
+static GstDiscovererSubtitleInfo
+    * gst_discoverer_subtitle_info_copy_int (GstDiscovererSubtitleInfo * ptr);
+
 /* Per-stream information */
 
 G_DEFINE_TYPE (GstDiscovererStreamInfo, gst_discoverer_stream_info,
@@ -109,6 +112,11 @@ gst_discoverer_info_copy_int (GstDiscovererStreamInfo * info,
   } else if (ltyp == GST_TYPE_DISCOVERER_VIDEO_INFO) {
     ret = (GstDiscovererStreamInfo *)
         gst_discoverer_video_info_copy_int ((GstDiscovererVideoInfo *) info);
+
+  } else if (ltyp == GST_TYPE_DISCOVERER_SUBTITLE_INFO) {
+    ret = (GstDiscovererStreamInfo *)
+        gst_discoverer_subtitle_info_copy_int ((GstDiscovererSubtitleInfo *)
+        info);
 
   } else
     ret = gst_discoverer_stream_info_new ();
@@ -229,6 +237,48 @@ gst_discoverer_audio_info_copy_int (GstDiscovererAudioInfo * ptr)
   ret->depth = ptr->depth;
   ret->bitrate = ptr->bitrate;
   ret->max_bitrate = ptr->max_bitrate;
+
+  return ret;
+}
+
+/* Subtitle information */
+G_DEFINE_TYPE (GstDiscovererSubtitleInfo, gst_discoverer_subtitle_info,
+    GST_TYPE_DISCOVERER_STREAM_INFO);
+
+static void
+gst_discoverer_subtitle_info_init (GstDiscovererSubtitleInfo * info)
+{
+  info->language = NULL;
+}
+
+static void
+gst_discoverer_subtitle_info_finalize (GstDiscovererSubtitleInfo * info)
+{
+  g_free (info->language);
+}
+
+static void
+gst_discoverer_subtitle_info_class_init (GstMiniObjectClass * klass)
+{
+  klass->finalize =
+      (GstMiniObjectFinalizeFunction) gst_discoverer_subtitle_info_finalize;
+}
+
+static GstDiscovererSubtitleInfo *
+gst_discoverer_subtitle_info_new (void)
+{
+  return (GstDiscovererSubtitleInfo *)
+      gst_mini_object_new (GST_TYPE_DISCOVERER_SUBTITLE_INFO);
+}
+
+static GstDiscovererSubtitleInfo *
+gst_discoverer_subtitle_info_copy_int (GstDiscovererSubtitleInfo * ptr)
+{
+  GstDiscovererSubtitleInfo *ret;
+
+  ret = gst_discoverer_subtitle_info_new ();
+
+  ret->language = g_strdup (ptr->language);
 
   return ret;
 }
@@ -440,6 +490,25 @@ gst_discoverer_info_get_video_streams (GstDiscovererInfo * info)
 }
 
 /**
+ * gst_discoverer_info_get_subtitle_streams:
+ * @info: a #GstDiscovererInfo
+ *
+ * Finds all the #GstDiscovererSubtitleInfo contained in @info
+ *
+ * Returns: (transfer full) (element-type Gst.DiscovererStreamInfo): A #GList of
+ * matching #GstDiscovererStreamInfo. The caller should free it with
+ * gst_discoverer_stream_info_list_free().
+ *
+ * Since: 0.10.36
+ */
+GList *
+gst_discoverer_info_get_subtitle_streams (GstDiscovererInfo * info)
+{
+  return gst_discoverer_info_get_streams (info,
+      GST_TYPE_DISCOVERER_SUBTITLE_INFO);
+}
+
+/**
  * gst_discoverer_info_get_container_streams:
  * @info: a #GstDiscovererInfo
  *
@@ -481,6 +550,8 @@ gst_discoverer_stream_info_get_stream_type_nick (GstDiscovererStreamInfo * info)
     else
       return "video";
   }
+  if (GST_IS_DISCOVERER_SUBTITLE_INFO (info))
+    return "subtitles";
   return "unknown";
 }
 
@@ -817,6 +888,24 @@ gst_discoverer_video_info_is_image (const GstDiscovererVideoInfo * info)
 
   return info->is_image;
 }
+
+/* GstDiscovererSubtitleInfo */
+
+#define SUBTITLE_INFO_ACCESSOR_CODE(fieldname, type, failval)                     \
+  GENERIC_ACCESSOR_CODE(gst_discoverer_subtitle_info, GstDiscovererSubtitleInfo*, \
+			GST_TYPE_DISCOVERER_SUBTITLE_INFO,                        \
+			fieldname, type, failval)
+
+/**
+ * gst_discoverer_subtitle_info_get_language:
+ * @info: a #GstDiscovererSubtitleInfo
+ *
+ * Returns: the language of the stream, or NULL if unknown.
+ *
+ * Since: 0.10.36
+ */
+
+SUBTITLE_INFO_ACCESSOR_CODE (language, const gchar *, NULL);
 
 /* GstDiscovererInfo */
 

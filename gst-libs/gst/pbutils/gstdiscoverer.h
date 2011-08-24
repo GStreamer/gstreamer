@@ -141,6 +141,26 @@ guint           gst_discoverer_video_info_get_max_bitrate(const GstDiscovererVid
 gboolean        gst_discoverer_video_info_is_image(const GstDiscovererVideoInfo* info);
 
 /**
+ * GstDiscovererSubtitleInfo:
+ *
+ * #GstDiscovererStreamInfo specific to subtitle streams (this includes text and
+ * image based ones).
+ *
+ * Since: 0.10.36
+ */
+#define GST_TYPE_DISCOVERER_SUBTITLE_INFO \
+  (gst_discoverer_subtitle_info_get_type ())
+#define GST_DISCOVERER_SUBTITLE_INFO(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_DISCOVERER_SUBTITLE_INFO, GstDiscovererSubtitleInfo))
+#define GST_IS_DISCOVERER_SUBTITLE_INFO(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_DISCOVERER_SUBTITLE_INFO))
+typedef struct _GstDiscovererSubtitleInfo GstDiscovererSubtitleInfo;
+typedef GstMiniObjectClass GstDiscovererSubtitleInfoClass;
+GType gst_discoverer_subtitle_info_get_type (void);
+
+const gchar *   gst_discoverer_subtitle_info_get_language(const GstDiscovererSubtitleInfo* info);
+
+/**
  * GstDiscovererResult:
  * @GST_DISCOVERER_OK: The discovery was successful
  * @GST_DISCOVERER_URI_INVALID: the URI is invalid
@@ -199,6 +219,7 @@ GList *                   gst_discoverer_info_get_streams (GstDiscovererInfo *in
 							   GType streamtype);
 GList *                   gst_discoverer_info_get_audio_streams (GstDiscovererInfo *info);
 GList *                   gst_discoverer_info_get_video_streams (GstDiscovererInfo *info);
+GList *                   gst_discoverer_info_get_subtitle_streams (GstDiscovererInfo *info);
 GList *                   gst_discoverer_info_get_container_streams (GstDiscovererInfo *info);
 
 void                      gst_discoverer_stream_info_list_free (GList *infos);

@@ -64,6 +64,12 @@ struct _GstDiscovererVideoInfo {
   gboolean is_image;
 };
 
+struct _GstDiscovererSubtitleInfo {
+  GstDiscovererStreamInfo parent;
+
+  gchar *language;
+};
+
 struct _GstDiscovererInfo {
   GstMiniObject parent;
 
