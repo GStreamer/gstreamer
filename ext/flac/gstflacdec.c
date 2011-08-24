@@ -1676,7 +1676,7 @@ gst_flac_dec_convert_src (GstPad * pad, GstFormat src_format, gint64 src_value,
         case GST_FORMAT_BYTES:
           scale = bytes_per_sample;
         case GST_FORMAT_DEFAULT:
-          *dest_value = gst_util_uint64_scale_int (src_value,
+          *dest_value = gst_util_uint64_scale_int_round (src_value,
               scale * flacdec->sample_rate, GST_SECOND);
           break;
         default:
