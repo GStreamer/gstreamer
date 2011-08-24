@@ -667,6 +667,14 @@ collect_information (GstDiscoverer * dc, const GstStructure * st,
       gst_structure_free (tags_st);
     }
 
+    if (!info->language && ((GstDiscovererStreamInfo *) info)->tags) {
+      gchar *language;
+      if (gst_tag_list_get_string (((GstDiscovererStreamInfo *) info)->tags,
+              GST_TAG_LANGUAGE_CODE, &language)) {
+        info->language = language;
+      }
+    }
+
     return (GstDiscovererStreamInfo *) info;
 
   } else if (g_str_has_prefix (name, "video/") ||

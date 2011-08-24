@@ -110,6 +110,7 @@ guint gst_discoverer_audio_info_get_sample_rate(const GstDiscovererAudioInfo* in
 guint gst_discoverer_audio_info_get_depth(const GstDiscovererAudioInfo* info);
 guint gst_discoverer_audio_info_get_bitrate(const GstDiscovererAudioInfo* info);
 guint gst_discoverer_audio_info_get_max_bitrate(const GstDiscovererAudioInfo* info);
+const gchar * gst_discoverer_audio_info_get_language(const GstDiscovererAudioInfo* info);
 
 /**
  * GstDiscovererVideoInfo:

@@ -207,15 +207,22 @@ G_DEFINE_TYPE (GstDiscovererAudioInfo, gst_discoverer_audio_info,
     GST_TYPE_DISCOVERER_STREAM_INFO);
 
 static void
+gst_discoverer_audio_info_finalize (GstDiscovererAudioInfo * info)
+{
+  g_free (info->language);
+}
+
+static void
 gst_discoverer_audio_info_class_init (GstDiscovererAudioInfoClass * klass)
 {
-  /* Nothing to initialize */
+  klass->finalize =
+      (GstMiniObjectFinalizeFunction) gst_discoverer_audio_info_finalize;
 }
 
 static void
 gst_discoverer_audio_info_init (GstDiscovererAudioInfo * info)
 {
-  /* Nothing to initialize */
+  info->language = NULL;
 }
 
 static GstDiscovererAudioInfo *
@@ -237,6 +244,7 @@ gst_discoverer_audio_info_copy_int (GstDiscovererAudioInfo * ptr)
   ret->depth = ptr->depth;
   ret->bitrate = ptr->bitrate;
   ret->max_bitrate = ptr->max_bitrate;
+  ret->language = g_strdup (ptr->language);
 
   return ret;
 }
@@ -749,6 +757,17 @@ AUDIO_INFO_ACCESSOR_CODE (bitrate, guint, 0);
  */
 
 AUDIO_INFO_ACCESSOR_CODE (max_bitrate, guint, 0);
+
+/**
+ * gst_discoverer_audio_info_get_language:
+ * @info: a #GstDiscovererAudioInfo
+ *
+ * Returns: the language of the stream, or NULL if unknown.
+ *
+ * Since: 0.10.36
+ */
+
+AUDIO_INFO_ACCESSOR_CODE (language, const gchar *, NULL);
 
 /* GstDiscovererVideoInfo */
 

@@ -47,6 +47,7 @@ gst_stream_audio_information_to_string (GstDiscovererStreamInfo * info,
   GstDiscovererAudioInfo *audio_info;
   GString *s;
   gchar *tmp;
+  const gchar *ctmp;
   int len = 400;
   const GstTagList *tags;
   GstCaps *caps;
@@ -72,6 +73,8 @@ gst_stream_audio_information_to_string (GstDiscovererStreamInfo * info,
   }
 
   audio_info = (GstDiscovererAudioInfo *) info;
+  ctmp = gst_discoverer_audio_info_get_language (audio_info);
+  my_g_string_append_printf (s, "Language: %s\n", ctmp ? ctmp : "<unknown>");
   my_g_string_append_printf (s, "Channels: %u\n",
       gst_discoverer_audio_info_get_channels (audio_info));
   my_g_string_append_printf (s, "Sample rate: %u\n",
