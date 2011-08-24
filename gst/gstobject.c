@@ -84,6 +84,7 @@
  */
 
 #include "gst_private.h"
+#include "glib-compat-private.h"
 
 #include "gstobject.h"
 #include "gstmarshal.h"
