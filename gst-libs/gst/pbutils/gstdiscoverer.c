@@ -749,6 +749,14 @@ collect_information (GstDiscoverer * dc, const GstStructure * st,
 
     }
 
+    if (!info->language && ((GstDiscovererStreamInfo *) info)->tags) {
+      gchar *language;
+      if (gst_tag_list_get_string (((GstDiscovererStreamInfo *) info)->tags,
+              GST_TAG_LANGUAGE_CODE, &language)) {
+        info->language = language;
+      }
+    }
+
     return (GstDiscovererStreamInfo *) info;
 
   } else {
