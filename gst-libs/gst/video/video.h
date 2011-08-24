@@ -563,7 +563,8 @@ gboolean     gst_video_info_convert     (GstVideoInfo *info,
  * @info: the #GstVideoInfo
  * @buffer: the mapped buffer
  * @meta: pointer to metadata if any
- * @view_id: id of the view in multiview
+ * @id: id of the mapped frame. the id can for example be used to
+ *   indentify the frame in case of multiview video.
  * @data: pointers to the plane data
  *
  * A video frame obtained from gst_video_frame_map()
@@ -573,13 +574,15 @@ struct _GstVideoFrame {
 
   GstBuffer *buffer;
   gpointer   meta;
-  gint       view_id;
+  gint       id;
 
   gpointer   data[GST_VIDEO_MAX_PLANES];
 };
 
 gboolean    gst_video_frame_map           (GstVideoFrame *frame, GstVideoInfo *info,
                                            GstBuffer *buffer, GstMapFlags flags);
+gboolean    gst_video_frame_map_id        (GstVideoFrame *frame, GstVideoInfo *info,
+                                           GstBuffer *buffer, gint id, GstMapFlags flags);
 void        gst_video_frame_unmap         (GstVideoFrame *frame);
 
 gboolean    gst_video_frame_copy          (GstVideoFrame *dest, const GstVideoFrame *src);

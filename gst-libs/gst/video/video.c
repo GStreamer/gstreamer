@@ -894,12 +894,18 @@ gst_video_info_to_caps (GstVideoInfo * info)
 }
 
 /**
- * gst_video_frame_map:
+ * gst_video_frame_map_id:
  * @frame: pointer to #GstVideoFrame
  * @info: a #GstVideoInfo
  * @buffer: the buffer to map
+ * @id: the frame id to map
+ * @flags: #GstMapFlags
  *
- * Use @info and @buffer to fill in the values of @frame.
+ * Use @info and @buffer to fill in the values of @frame with the video frame
+ * information of frame @id.
+ *
+ * When @id is -1, the default frame is mapped. When @id != -1, this function
+ * will return %FALSE when there is no GstMetaVideo with that id.
  *
  * All video planes of @buffer will be mapped and the pointers will be set in
  * @frame->data.
@@ -907,8 +913,8 @@ gst_video_info_to_caps (GstVideoInfo * info)
  * Returns: %TRUE on success.
  */
 gboolean
-gst_video_frame_map (GstVideoFrame * frame, GstVideoInfo * info,
-    GstBuffer * buffer, GstMapFlags flags)
+gst_video_frame_map_id (GstVideoFrame * frame, GstVideoInfo * info,
+    GstBuffer * buffer, gint id, GstMapFlags flags)
 {
   GstMetaVideo *meta;
   guint8 *data;
@@ -919,8 +925,12 @@ gst_video_frame_map (GstVideoFrame * frame, GstVideoInfo * info,
   g_return_val_if_fail (info != NULL, FALSE);
   g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
 
+  if (id == -1)
+    meta = gst_buffer_get_meta_video (buffer);
+  else
+    meta = gst_buffer_get_meta_video_id (buffer, id);
+
   frame->buffer = buffer;
-  meta = gst_buffer_get_meta_video (buffer);
   frame->meta = meta;
 
   if (meta) {
@@ -928,14 +938,21 @@ gst_video_frame_map (GstVideoFrame * frame, GstVideoInfo * info,
     frame->info.finfo = &formats[meta->format].info;
     frame->info.width = meta->width;
     frame->info.height = meta->height;
+    frame->id = meta->id;
 
     for (i = 0; i < info->finfo->n_planes; i++) {
       frame->data[i] =
           gst_meta_video_map (meta, i, &frame->info.stride[i], flags);
     }
   } else {
+    /* no metadata, we really need to have the metadata when the id is
+     * specified. */
+    if (id != -1)
+      goto no_metadata;
+
     /* copy the info */
     frame->info = *info;
+    frame->id = id;
 
     data = gst_buffer_map (buffer, &size, NULL, flags);
 
@@ -951,6 +968,11 @@ gst_video_frame_map (GstVideoFrame * frame, GstVideoInfo * info,
   return TRUE;
 
   /* ERRORS */
+no_metadata:
+  {
+    GST_ERROR ("no GstMetaVideo for id", id);
+    return FALSE;
+  }
 invalid_size:
   {
     GST_ERROR ("invalid buffer size %" G_GSIZE_FORMAT " < %" G_GSIZE_FORMAT,
@@ -958,6 +980,27 @@ invalid_size:
     gst_buffer_unmap (buffer, data, size);
     return FALSE;
   }
+}
+
+/**
+ * gst_video_frame_map:
+ * @frame: pointer to #GstVideoFrame
+ * @info: a #GstVideoInfo
+ * @buffer: the buffer to map
+ * @flags: #GstMapFlags
+ *
+ * Use @info and @buffer to fill in the values of @frame.
+ *
+ * All video planes of @buffer will be mapped and the pointers will be set in
+ * @frame->data.
+ *
+ * Returns: %TRUE on success.
+ */
+gboolean
+gst_video_frame_map (GstVideoFrame * frame, GstVideoInfo * info,
+    GstBuffer * buffer, GstMapFlags flags)
+{
+  return gst_video_frame_map_id (frame, info, buffer, -1, flags);
 }
 
 /**

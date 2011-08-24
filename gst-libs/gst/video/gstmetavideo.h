@@ -40,6 +40,7 @@ typedef struct _GstMetaVideoCrop GstMetaVideoCrop;
  * @buffer: the buffer this metadata belongs to
  * @flags: additional video flags
  * @format: the video format
+ * @id: identifier of the frame
  * @width: the video width
  * @height: the video height
  * @n_planes: the number of planes in the image
@@ -57,6 +58,7 @@ struct _GstMetaVideo {
 
   GstVideoFlags      flags;
   GstVideoFormat     format;
+  gint               id;
   guint              width;
   guint              height;
 
@@ -72,6 +74,8 @@ struct _GstMetaVideo {
 const GstMetaInfo * gst_meta_video_get_info (void);
 
 #define gst_buffer_get_meta_video(b) ((GstMetaVideo*)gst_buffer_get_meta((b),GST_META_INFO_VIDEO))
+GstMetaVideo * gst_buffer_get_meta_video_id    (GstBuffer *buffer, gint id);
+
 GstMetaVideo * gst_buffer_add_meta_video       (GstBuffer *buffer, GstVideoFlags flags,
                                                 GstVideoFormat format, guint width, guint height);
 GstMetaVideo * gst_buffer_add_meta_video_full  (GstBuffer *buffer, GstVideoFlags flags,

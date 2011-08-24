@@ -36,6 +36,36 @@ gst_meta_video_get_info (void)
 }
 
 /**
+ * gst_buffer_get_meta_video_id:
+ * @buffer: a #GstBuffer
+ * @id: a metadata id
+ *
+ * Find the #GstMetaVideo on @buffer with the given @id.
+ *
+ * Buffers can contain multiple #GstMetaVideo metadata items when dealing with
+ * multiview buffers.
+ *
+ * Returns: the #GstMetaVideo with @id or %NULL when there is no such metadata
+ * on @buffer.
+ */
+GstMetaVideo *
+gst_buffer_get_meta_video_id (GstBuffer * buffer, gint id)
+{
+  gpointer state = NULL;
+  GstMeta *meta;
+  const GstMetaInfo *info = GST_META_INFO_VIDEO;
+
+  while ((meta = gst_buffer_iterate_meta (buffer, &state))) {
+    if (meta->info->api == info->api) {
+      GstMetaVideo *vmeta = (GstMetaVideo *) meta;
+      if (vmeta->id == id)
+        return vmeta;
+    }
+  }
+  return NULL;
+}
+
+/**
  * gst_buffer_add_meta_video:
  * @buffer: a #GstBuffer
  * @flags: #GstVideoFlags
@@ -95,6 +125,7 @@ gst_buffer_add_meta_video_full (GstBuffer * buffer, GstVideoFlags flags,
 
   meta->flags = flags;
   meta->format = format;
+  meta->id = 0;
   meta->width = width;
   meta->height = height;
   meta->buffer = buffer;
