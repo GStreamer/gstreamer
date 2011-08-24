@@ -2032,8 +2032,12 @@ gst_rtp_jitter_buffer_chain_rtcp (GstPad * pad, GstBuffer * buffer)
         diff = ext_rtptime - last_rtptime;
         /* if bigger than 1 second, we drop it */
         if (diff > clock_rate) {
-          GST_DEBUG_OBJECT (jitterbuffer, "dropping, too far ahead");
-          drop = TRUE;
+          GST_DEBUG_OBJECT (jitterbuffer, "too far ahead");
+          /* should drop this, but some RTSP servers end up with bogus
+           * way too ahead RTCP packet when repeated PAUSE/PLAY,
+           * so still trigger rptbin sync but invalidate RTCP data
+           * (sync might use other methods) */
+          ext_rtptime = -1;
         }
         GST_DEBUG_OBJECT (jitterbuffer, "ext last %" G_GUINT64_FORMAT ", diff %"
             G_GUINT64_FORMAT, last_rtptime, diff);

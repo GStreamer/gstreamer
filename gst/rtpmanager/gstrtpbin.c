@@ -1052,6 +1052,19 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream, guint8 len,
         stream->ssrc, client, client->cname);
   }
 
+  if (!GST_CLOCK_TIME_IS_VALID (last_extrtptime)) {
+    GST_DEBUG_OBJECT (bin, "invalidated sync data");
+    if (bin->rtcp_sync == GST_RTP_BIN_RTCP_SYNC_RTP) {
+      /* we don't need that data, so carry on,
+       * but make some values look saner */
+      last_extrtptime = base_rtptime;
+    } else {
+      /* nothing we can do with this data in this case */
+      GST_DEBUG_OBJECT (bin, "bailing out");
+      return;
+    }
+  }
+
   /* Take the extended rtptime we found in the SR packet and map it to the
    * local rtptime. The local rtp time is used to construct timestamps on the
    * buffers so we will calculate what running_time corresponds to the RTP
