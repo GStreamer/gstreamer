@@ -842,6 +842,9 @@ child_is_raw_stream (GstCaps * parent, GstCaps * child)
     return TRUE;
   }
 
+  if (is_subtitle_caps (parent))
+    return TRUE;
+
   return FALSE;
 }
 
