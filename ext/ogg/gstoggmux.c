@@ -1232,9 +1232,10 @@ gst_ogg_mux_add_fisbone_message_header_from_tags (GstOggMux * mux,
       g_string_append (s, ", ");
     gst_tag_list_get_string_index (tags, tag, n, &tmp);
     g_string_append (s, tmp);
+    g_free (tmp);
   }
   gst_ogg_mux_add_fisbone_message_header (mux, bw, header, s->str);
-  g_string_free (s, FALSE);
+  g_string_free (s, TRUE);
 }
 
 /* This is a basic placeholder to generate roles for the tracks.
