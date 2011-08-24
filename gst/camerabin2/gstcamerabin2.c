@@ -1377,11 +1377,14 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
         gst_object_ref (camera->imagesink),
         gst_object_ref (camera->viewfinderbin_queue), NULL);
 
-    /* Linking can be optimized TODO */
-    gst_element_link (camera->video_encodebin, camera->videosink);
-    gst_element_link (camera->image_encodebin, camera->imagesink);
-    gst_element_link_many (camera->viewfinderbin_queue,
-        camera->viewfinderbin_capsfilter, camera->viewfinderbin, NULL);
+    gst_element_link_pads_full (camera->video_encodebin, "src",
+        camera->videosink, "sink", GST_PAD_LINK_CHECK_NOTHING);
+    gst_element_link_pads_full (camera->image_encodebin, "src",
+        camera->imagesink, "sink", GST_PAD_LINK_CHECK_NOTHING);
+    gst_element_link_pads_full (camera->viewfinderbin_queue, "src",
+        camera->viewfinderbin_capsfilter, "sink", GST_PAD_LINK_CHECK_CAPS);
+    gst_element_link_pads_full (camera->viewfinderbin_capsfilter, "src",
+        camera->viewfinderbin, "sink", GST_PAD_LINK_CHECK_CAPS);
 
     {
       /* set an event probe to watch for custom location changes */
