@@ -177,7 +177,7 @@ typedef enum
  * Unpacks @width pixels from the given planes and strides containing data of
  * format @info. The pixels will be unpacked into @dest which each component
  * interleaved. @dest should at least be big enough to hold @width *
- * n_components * unpack_size bytes.
+ * n_components * size(unpack_format) bytes.
  */
 typedef void (*GstVideoFormatUnpack)         (GstVideoFormatInfo *info, gpointer dest,
                                               const gpointer data[GST_VIDEO_MAX_PLANES],
@@ -226,8 +226,7 @@ typedef void (*GstVideoFormatPack)           (GstVideoFormatInfo *info, const gp
  *     GST_VIDEO_SUB_SCALE to scale a width.
  * @h_sub: subsampling factor of the height for the component. Use
  *     GST_VIDEO_SUB_SCALE to scale a height.
- * @unpack_size: the size in bytes of each component item in the unpacked
- *     format.
+ * @unpack_format: the format of the unpacked pixels.
  * @unpack_func: an unpack function for this format
  * @pack_func: an pack function for this format
  *
@@ -248,7 +247,7 @@ struct _GstVideoFormatInfo {
   guint w_sub[GST_VIDEO_MAX_COMPONENTS];
   guint h_sub[GST_VIDEO_MAX_COMPONENTS];
 
-  guint unpack_size;
+  GstVideoFormat unpack_format;
   GstVideoFormatUnpack unpack_func;
   GstVideoFormatPack pack_func;
 };

@@ -167,7 +167,7 @@ typedef enum
  * Unpacks @length samples from the given data of format @info.
  * The samples will be unpacked into @dest which each channel
  * interleaved. @dest should at least be big enough to hold @length *
- * channels * unpack_size bytes.
+ * channels * size(unpack_format) bytes.
  */
 typedef void (*GstAudioFormatUnpack)         (GstAudioFormatInfo *info, gpointer dest,
                                               const gpointer data, gint length);
@@ -194,7 +194,7 @@ typedef void (*GstAudioFormatPack)           (GstAudioFormatInfo *info, const gp
  * @width: amount of bits used for one sample
  * @depth: amount of valid bits in @width
  * @silence: @width/8 bytes with 1 silent sample
- * @unpack_size: number of bytes for the unpack functions
+ * @unpack_format: the format of the unpacked samples
  * @unpack_func: function to unpack samples
  * @pack_func: function to pack samples
  *
@@ -208,7 +208,8 @@ struct _GstAudioFormatInfo {
   gint width;
   gint depth;
   guint8 silence[8];
-  guint unpack_size;
+
+  GstAudioFormat unpack_format;
   GstAudioFormatUnpack unpack_func;
   GstAudioFormatPack pack_func;
 };
