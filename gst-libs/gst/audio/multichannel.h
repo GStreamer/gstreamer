@@ -72,6 +72,14 @@ typedef enum {
   GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
   GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
 
+  GST_AUDIO_CHANNEL_POSITION_TOP_CENTER,
+  GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_LEFT,
+  GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_RIGHT,
+  GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_CENTER,
+  GST_AUDIO_CHANNEL_POSITION_TOP_REAR_LEFT,
+  GST_AUDIO_CHANNEL_POSITION_TOP_REAR_RIGHT,
+  GST_AUDIO_CHANNEL_POSITION_TOP_REAR_CENTER,
+
   /* for multi-channel input and output with more than 8 channels,
    * incompatible with all other positions, either all positions
    * are defined or all positions are undefined, but can't mix'n'match  */
