@@ -2167,7 +2167,7 @@ calculate_and_push_newsegment (GstTSDemux * demux, TSDemuxStream * stream)
       GST_TIME_FORMAT " time: %" GST_TIME_FORMAT, GST_TIME_ARGS (start),
       GST_TIME_ARGS (stop), GST_TIME_ARGS (position));
   newsegmentevent =
-      gst_event_new_new_segment (0, 1.0, GST_FORMAT_TIME, start, stop,
+      gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME, start, stop,
       position);
 
   push_event ((MpegTSBase *) demux, newsegmentevent);
