@@ -494,10 +494,11 @@ ges_track_remove_object (GESTrack * track, GESTrackObject * object)
   }
 
   ges_track_object_set_track (object, NULL);
-  priv->trackobjects = g_list_remove (priv->trackobjects, object);
 
   g_signal_emit (track, ges_track_signals[TRACK_OBJECT_REMOVED], 0,
       GES_TRACK_OBJECT (object));
+
+  priv->trackobjects = g_list_remove (priv->trackobjects, object);
 
   g_object_unref (object);
 
