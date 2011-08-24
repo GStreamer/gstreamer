@@ -1000,12 +1000,12 @@ gst_vorbis_enc_buffer_check_discontinuous (GstVorbisEnc * vorbisenc,
       vorbisenc->expected_ts != GST_CLOCK_TIME_NONE &&
       timestamp + duration != vorbisenc->expected_ts) {
     /* It turns out that a lot of elements don't generate perfect streams due
-     * to rounding errors. So, we permit small errors (< 1/2 a sample) without
+     * to rounding errors. So, we permit small errors (< 3 samples) without
      * causing a discont.
      */
-    int halfsample = GST_SECOND / vorbisenc->frequency / 2;
+    int threesample = GST_SECOND / vorbisenc->frequency * 3;
 
-    if ((GstClockTimeDiff) (timestamp - vorbisenc->expected_ts) > halfsample) {
+    if ((GstClockTimeDiff) (timestamp - vorbisenc->expected_ts) > threesample) {
       GST_DEBUG_OBJECT (vorbisenc, "Expected TS %" GST_TIME_FORMAT
           ", buffer TS %" GST_TIME_FORMAT,
           GST_TIME_ARGS (vorbisenc->expected_ts), GST_TIME_ARGS (timestamp));
@@ -1119,30 +1119,38 @@ gst_vorbis_enc_chain (GstPad * pad, GstBuffer * buffer)
 
   if (vorbisenc->expected_ts != GST_CLOCK_TIME_NONE &&
       timestamp < vorbisenc->expected_ts) {
+    int threesample = GST_SECOND / vorbisenc->frequency * 3;
     guint64 diff = vorbisenc->expected_ts - timestamp;
     guint64 diff_bytes;
     gsize size;
 
-    GST_WARNING_OBJECT (vorbisenc, "Buffer is older than previous "
-        "timestamp + duration (%" GST_TIME_FORMAT "< %" GST_TIME_FORMAT
-        "), cannot handle. Clipping buffer.",
-        GST_TIME_ARGS (timestamp), GST_TIME_ARGS (vorbisenc->expected_ts));
+    /* Don't freak out on tiny jitters; use the same < 3 sample
+       tolerance as in the discontinuous detection */
+    if ((GstClockTimeDiff) (vorbisenc->expected_ts - timestamp) > threesample) {
 
-    size = gst_buffer_get_size (buffer);
+      GST_WARNING_OBJECT (vorbisenc, "Buffer is older than previous "
+          "timestamp + duration (%" GST_TIME_FORMAT "< %" GST_TIME_FORMAT
+          "), cannot handle. Clipping buffer.",
+          GST_TIME_ARGS (timestamp), GST_TIME_ARGS (vorbisenc->expected_ts));
 
-    diff_bytes =
-        GST_CLOCK_TIME_TO_FRAMES (diff,
-        vorbisenc->frequency) * vorbisenc->channels * sizeof (gfloat);
-    if (diff_bytes >= size) {
-      gst_buffer_unref (buffer);
-      return GST_FLOW_OK;
+      size = gst_buffer_get_size (buffer);
+
+      diff_bytes =
+          GST_CLOCK_TIME_TO_FRAMES (diff,
+          vorbisenc->frequency) * vorbisenc->channels * sizeof (gfloat);
+      if (diff_bytes >= size) {
+        gst_buffer_unref (buffer);
+        return GST_FLOW_OK;
+      }
+      buffer = gst_buffer_make_writable (buffer);
+      gst_buffer_resize (buffer, diff_bytes, size - diff_bytes);
+
+      if (GST_BUFFER_DURATION_IS_VALID (buffer))
+        GST_BUFFER_DURATION (buffer) -= diff;
     }
-    buffer = gst_buffer_make_writable (buffer);
-    gst_buffer_resize (buffer, diff_bytes, size - diff_bytes);
 
+    /* adjust the input timestamp in either case */
     GST_BUFFER_TIMESTAMP (buffer) += diff;
-    if (GST_BUFFER_DURATION_IS_VALID (buffer))
-      GST_BUFFER_DURATION (buffer) -= diff;
   }
 
   if (gst_vorbis_enc_buffer_check_discontinuous (vorbisenc, timestamp,

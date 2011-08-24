@@ -139,7 +139,8 @@ gst_ogg_stream_granulepos_to_granule (GstOggStream * pad, gint64 granulepos)
   }
 
   if (mappers[pad->map].granulepos_to_granule_func == NULL) {
-    GST_WARNING ("Failed to convert granulepos to granule");
+    GST_WARNING ("Failed to convert %s granulepos to granule",
+        gst_ogg_stream_get_media_type (pad));
     return -1;
   }
 
@@ -168,7 +169,8 @@ gst_ogg_stream_granule_to_granulepos (GstOggStream * pad, gint64 granule,
   }
 
   if (mappers[pad->map].granule_to_granulepos_func == NULL) {
-    GST_WARNING ("Failed to convert granule to granulepos");
+    GST_WARNING ("Failed to convert %s granule to granulepos",
+        gst_ogg_stream_get_media_type (pad));
     return -1;
   }
 
@@ -184,7 +186,8 @@ gst_ogg_stream_granulepos_is_key_frame (GstOggStream * pad, gint64 granulepos)
   }
 
   if (mappers[pad->map].is_key_frame_func == NULL) {
-    GST_WARNING ("Failed to determine key frame");
+    GST_WARNING ("Failed to determine keyframeness for %s granulepos",
+        gst_ogg_stream_get_media_type (pad));
     return FALSE;
   }
 
@@ -195,7 +198,8 @@ gboolean
 gst_ogg_stream_packet_is_header (GstOggStream * pad, ogg_packet * packet)
 {
   if (mappers[pad->map].is_header_func == NULL) {
-    GST_WARNING ("Failed to determine header");
+    GST_WARNING ("Failed to determine headerness of %s packet",
+        gst_ogg_stream_get_media_type (pad));
     return FALSE;
   }
 
@@ -206,7 +210,8 @@ gint64
 gst_ogg_stream_get_packet_duration (GstOggStream * pad, ogg_packet * packet)
 {
   if (mappers[pad->map].packet_duration_func == NULL) {
-    GST_WARNING ("Failed to determine packet duration");
+    GST_WARNING ("Failed to determine %s packet duration",
+        gst_ogg_stream_get_media_type (pad));
     return -1;
   }
 
@@ -1087,7 +1092,7 @@ setup_fishead_mapper (GstOggStream * pad, ogg_packet * packet)
   pad->is_skeleton = TRUE;
   pad->is_sparse = TRUE;
 
-  pad->caps = gst_caps_new_simple ("none/none", NULL);
+  pad->caps = gst_caps_new_simple ("application/x-ogg-skeleton", NULL);
 
   return TRUE;
 }
@@ -1099,12 +1104,15 @@ gst_ogg_map_parse_fisbone (GstOggStream * pad, const guint8 * data, guint size,
   GstOggSkeleton stype;
   guint serial_offset;
 
-  if (size < SKELETON_FISBONE_MIN_SIZE) {
+  if (size != 0 && size < SKELETON_FISBONE_MIN_SIZE) {
     GST_WARNING ("small fisbone packet of size %d, ignoring", size);
     return FALSE;
   }
 
-  if (memcmp (data, "fisbone\0", 8) == 0) {
+  if (size == 0) {
+    /* Skeleton EOS packet is zero bytes */
+    return FALSE;
+  } else if (memcmp (data, "fisbone\0", 8) == 0) {
     GST_INFO ("got fisbone packet");
     stype = GST_OGG_SKELETON_FISBONE;
     serial_offset = 12;
