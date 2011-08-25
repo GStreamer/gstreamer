@@ -44,6 +44,7 @@ typedef void (* GstTypeFindFunction) (GstTypeFind *find, gpointer data);
 
 /**
  * GstTypeFindProbability:
+ * @GST_TYPE_FIND_NONE: type undetected
  * @GST_TYPE_FIND_MINIMUM: unlikely typefind
  * @GST_TYPE_FIND_POSSIBLE: possible type detected
  * @GST_TYPE_FIND_LIKELY: likely a type was detected
@@ -54,6 +55,7 @@ typedef void (* GstTypeFindFunction) (GstTypeFind *find, gpointer data);
  * in doing a reliable typefind.
  */
 typedef enum {
+  GST_TYPE_FIND_NONE = 0,
   GST_TYPE_FIND_MINIMUM = 1,
   GST_TYPE_FIND_POSSIBLE = 50,
   GST_TYPE_FIND_LIKELY = 80,
