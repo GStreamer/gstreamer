@@ -541,7 +541,7 @@ gst_type_find_element_handle_event (GstPad * pad, GstEvent * event)
     case MODE_TYPEFIND:
       switch (GST_EVENT_TYPE (event)) {
         case GST_EVENT_EOS:{
-          GstTypeFindProbability prob = 0;
+          GstTypeFindProbability prob = GST_TYPE_FIND_NONE;
           GstCaps *caps = NULL;
 
           GST_INFO_OBJECT (typefind, "Got EOS and no type found yet");
@@ -894,7 +894,7 @@ gst_type_find_element_activate_src_pull (GstPad * pad, gboolean active)
 static gboolean
 gst_type_find_element_activate (GstPad * pad)
 {
-  GstTypeFindProbability probability = 0;
+  GstTypeFindProbability probability = GST_TYPE_FIND_NONE;
   GstCaps *found_caps = NULL;
   GstTypeFindElement *typefind;
 
