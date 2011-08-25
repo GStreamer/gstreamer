@@ -7,6 +7,7 @@ EXPORTS
 	gst_color_balance_set_value
 	gst_color_balance_type_get_type
 	gst_color_balance_value_changed
+	gst_is_video_overlay_prepare_window_handle_message
 	gst_mixer_flags_get_type
 	gst_mixer_get_mixer_flags
 	gst_mixer_get_mixer_type
@@ -111,12 +112,10 @@ EXPORTS
 	gst_video_orientation_set_hflip
 	gst_video_orientation_set_vcenter
 	gst_video_orientation_set_vflip
-	gst_x_overlay_expose
-	gst_x_overlay_get_type
-	gst_x_overlay_got_window_handle
-	gst_x_overlay_got_xwindow_id
-	gst_x_overlay_handle_events
-	gst_x_overlay_prepare_xwindow_id
-	gst_x_overlay_set_render_rectangle
-	gst_x_overlay_set_window_handle
-	gst_x_overlay_set_xwindow_id
+	gst_video_overlay_expose
+	gst_video_overlay_get_type
+	gst_video_overlay_got_window_handle
+	gst_video_overlay_handle_events
+	gst_video_overlay_prepare_window_handle
+	gst_video_overlay_set_render_rectangle
+	gst_video_overlay_set_window_handle

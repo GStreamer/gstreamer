@@ -26,8 +26,8 @@ EXPORTS
 	gst_tag_list_add_id3_image
 	gst_tag_list_from_exif_buffer
 	gst_tag_list_from_exif_buffer_with_tiff_header
-	gst_tag_list_from_vorbiscomment
 	gst_tag_list_from_id3v2_tag
+	gst_tag_list_from_vorbiscomment
 	gst_tag_list_from_vorbiscomment_buffer
 	gst_tag_list_from_xmp_buffer
 	gst_tag_list_new_from_id3v1

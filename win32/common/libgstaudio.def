@@ -10,22 +10,27 @@ EXPORTS
 	gst_audio_clock_new_full
 	gst_audio_clock_reset
 	gst_audio_default_registry_mixer_filter
-	gst_audio_duration_from_pad_buffer
 	gst_audio_filter_class_add_pad_templates
 	gst_audio_filter_get_type
 	gst_audio_fixate_channel_positions
-	gst_audio_frame_byte_size
-	gst_audio_frame_length
+	gst_audio_format_build_integer
+	gst_audio_format_fill_silence
+	gst_audio_format_from_string
+	gst_audio_format_get_info
+	gst_audio_format_to_string
 	gst_audio_get_channel_positions
 	gst_audio_iec61937_frame_size
 	gst_audio_iec61937_payload
-	gst_audio_is_buffer_framed
+	gst_audio_info_convert
+	gst_audio_info_from_caps
+	gst_audio_info_init
+	gst_audio_info_set_format
+	gst_audio_info_to_caps
 	gst_audio_set_caps_channel_positions_list
 	gst_audio_set_channel_positions
 	gst_audio_set_structure_channel_positions_list
 	gst_audio_sink_get_type
 	gst_audio_src_get_type
-	gst_audio_structure_set_int
 	gst_base_audio_sink_create_ringbuffer
 	gst_base_audio_sink_get_drift_tolerance
 	gst_base_audio_sink_get_provide_clock
@@ -42,7 +47,6 @@ EXPORTS
 	gst_base_audio_src_set_provide_clock
 	gst_base_audio_src_set_slave_method
 	gst_base_audio_src_slave_method_get_type
-	gst_buffer_format_get_type
 	gst_buffer_format_type_get_type
 	gst_ring_buffer_acquire
 	gst_ring_buffer_activate

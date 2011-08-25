@@ -1,13 +1,21 @@
 EXPORTS
 	gst_buffer_add_meta_video
 	gst_buffer_add_meta_video_full
+	gst_buffer_get_meta_video_id
 	gst_buffer_pool_config_get_video_alignment
 	gst_buffer_pool_config_set_video_alignment
 	gst_meta_video_crop_get_info
 	gst_meta_video_get_info
 	gst_meta_video_map
 	gst_meta_video_unmap
+	gst_video_buffer_flags_get_type
 	gst_video_calculate_display_ratio
+	gst_video_chroma_site_get_type
+	gst_video_color_matrix_get_type
+	gst_video_color_primaries_get_type
+	gst_video_color_range_get_type
+	gst_video_colorimetry_from_string
+	gst_video_colorimetry_matches
 	gst_video_convert_frame
 	gst_video_convert_frame_async
 	gst_video_event_new_still_frame
@@ -24,13 +32,14 @@ EXPORTS
 	gst_video_format_to_string
 	gst_video_frame_copy
 	gst_video_frame_map
+	gst_video_frame_map_id
 	gst_video_frame_unmap
 	gst_video_info_convert
 	gst_video_info_from_caps
 	gst_video_info_init
 	gst_video_info_set_format
 	gst_video_info_to_caps
-	gst_video_parse_caps_framerate
 	gst_video_parse_caps_palette
 	gst_video_sink_center_rect
 	gst_video_sink_get_type
+	gst_video_transfer_function_get_type
