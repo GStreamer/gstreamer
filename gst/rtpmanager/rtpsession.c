@@ -2748,6 +2748,7 @@ session_cleanup (const gchar * key, RTPSource * source, ReportData * data)
   gboolean is_sender, is_active;
   RTPSession *sess = data->sess;
   GstClockTime interval;
+  GstClockTime btime;
 
   is_sender = RTP_SOURCE_IS_SENDER (source);
   is_active = RTP_SOURCE_IS_ACTIVE (source);
@@ -2766,11 +2767,13 @@ session_cleanup (const gchar * key, RTPSource * source, ReportData * data)
     }
     /* sources that were inactive for more than 5 times the deterministic reporting
      * interval get timed out. the min timeout is 5 seconds. */
-    if (data->current_time > source->last_activity) {
+    /* mind old time that might pre-date last time going to PLAYING */
+    btime = MAX (source->last_activity, sess->start_time);
+    if (data->current_time > btime) {
       interval = MAX (data->interval * 5, 5 * GST_SECOND);
-      if (data->current_time - source->last_activity > interval) {
+      if (data->current_time - btime > interval) {
         GST_DEBUG ("removing timeout source %08x, last %" GST_TIME_FORMAT,
-            source->ssrc, GST_TIME_ARGS (source->last_activity));
+            source->ssrc, GST_TIME_ARGS (btime));
         remove = TRUE;
       }
     }
@@ -2779,12 +2782,13 @@ session_cleanup (const gchar * key, RTPSource * source, ReportData * data)
   /* senders that did not send for a long time become a receiver, this also
    * holds for our own source. */
   if (is_sender) {
-    if (data->current_time > source->last_rtp_activity) {
+    /* mind old time that might pre-date last time going to PLAYING */
+    btime = MAX (source->last_rtp_activity, sess->start_time);
+    if (data->current_time > btime) {
       interval = MAX (data->interval * 2, 5 * GST_SECOND);
-      if (data->current_time - source->last_rtp_activity > interval) {
+      if (data->current_time - btime > interval) {
         GST_DEBUG ("sender source %08x timed out and became receiver, last %"
-            GST_TIME_FORMAT, source->ssrc,
-            GST_TIME_ARGS (source->last_rtp_activity));
+            GST_TIME_FORMAT, source->ssrc, GST_TIME_ARGS (btime));
         source->is_sender = FALSE;
         sess->stats.sender_sources--;
         sendertimeout = TRUE;

@@ -837,6 +837,10 @@ rtcp_thread (GstRtpSession * rtpsession)
 
   session = rtpsession->priv->session;
 
+  GST_DEBUG_OBJECT (rtpsession, "starting at %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (current_time));
+  session->start_time = current_time;
+
   while (!rtpsession->priv->stop_thread) {
     GstClockReturn res;
 
