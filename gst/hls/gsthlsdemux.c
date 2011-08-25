@@ -638,9 +638,10 @@ gst_hls_demux_stop_fetcher (GstHLSDemux * demux, gboolean cancelled)
   /* if we stopped it to cancell a download, free the cached buffer */
   if (cancelled && !gst_adapter_available (demux->download)) {
     gst_adapter_clear (demux->download);
-    /* signal the fetcher thread that the download has finished/cancelled */
-    g_cond_signal (demux->fetcher_cond);
   }
+  /* signal the fetcher thread that the download has finished/cancelled */
+  if (cancelled)
+    g_cond_broadcast (demux->fetcher_cond);
 }
 
 static void
