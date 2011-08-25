@@ -161,6 +161,9 @@ typedef struct _GstBufferPool GstBufferPool;
  * GstBufferFlags:
  * @GST_BUFFER_FLAG_LIVE:       the buffer is live data and should be discarded in
  *                              the PAUSED state.
+ * @GST_BUFFER_FLAG_CLIP:       the buffer contains data that should be dropped
+ *                              because it will be clipped against the segment
+ *                              boundaries.
  * @GST_BUFFER_FLAG_DISCONT:    the buffer marks a data discontinuity in the stream.
  *                              This typically occurs after a seek or a dropped buffer
  *                              from a live or network source.
@@ -186,14 +189,15 @@ typedef struct _GstBufferPool GstBufferPool;
  */
 typedef enum {
   GST_BUFFER_FLAG_LIVE       = (GST_MINI_OBJECT_FLAG_LAST << 0),
-  GST_BUFFER_FLAG_DISCONT    = (GST_MINI_OBJECT_FLAG_LAST << 1),
-  GST_BUFFER_FLAG_RESYNC     = (GST_MINI_OBJECT_FLAG_LAST << 2),
-  GST_BUFFER_FLAG_CORRUPTED  = (GST_MINI_OBJECT_FLAG_LAST << 3),
-  GST_BUFFER_FLAG_MARKER     = (GST_MINI_OBJECT_FLAG_LAST << 4),
-  GST_BUFFER_FLAG_HEADER     = (GST_MINI_OBJECT_FLAG_LAST << 5),
-  GST_BUFFER_FLAG_GAP        = (GST_MINI_OBJECT_FLAG_LAST << 6),
-  GST_BUFFER_FLAG_DELTA_UNIT = (GST_MINI_OBJECT_FLAG_LAST << 7),
-  GST_BUFFER_FLAG_IN_CAPS    = (GST_MINI_OBJECT_FLAG_LAST << 8),
+  GST_BUFFER_FLAG_CLIP       = (GST_MINI_OBJECT_FLAG_LAST << 1),
+  GST_BUFFER_FLAG_DISCONT    = (GST_MINI_OBJECT_FLAG_LAST << 2),
+  GST_BUFFER_FLAG_RESYNC     = (GST_MINI_OBJECT_FLAG_LAST << 3),
+  GST_BUFFER_FLAG_CORRUPTED  = (GST_MINI_OBJECT_FLAG_LAST << 4),
+  GST_BUFFER_FLAG_MARKER     = (GST_MINI_OBJECT_FLAG_LAST << 5),
+  GST_BUFFER_FLAG_HEADER     = (GST_MINI_OBJECT_FLAG_LAST << 6),
+  GST_BUFFER_FLAG_GAP        = (GST_MINI_OBJECT_FLAG_LAST << 7),
+  GST_BUFFER_FLAG_DELTA_UNIT = (GST_MINI_OBJECT_FLAG_LAST << 8),
+  GST_BUFFER_FLAG_IN_CAPS    = (GST_MINI_OBJECT_FLAG_LAST << 9),
 
   GST_BUFFER_FLAG_LAST       = (GST_MINI_OBJECT_FLAG_LAST << 16)
 } GstBufferFlags;
