@@ -304,7 +304,7 @@ typedef struct _GstVideoFrame GstVideoFrame;
  * GstVideoFlags:
  * @GST_META_VIDEO_FLAG_NONE: no flags
  * @GST_META_VIDEO_FLAG_INTERLACED:
- * @GST_META_VIDEO_FLAG_TTF:
+ * @GST_META_VIDEO_FLAG_TFF:
  * @GST_META_VIDEO_FLAG_RFF:
  * @GST_META_VIDEO_FLAG_ONEFIELD:
  * @GST_META_VIDEO_FLAG_TELECINE:
@@ -315,7 +315,7 @@ typedef struct _GstVideoFrame GstVideoFrame;
 typedef enum {
   GST_VIDEO_FLAG_NONE        = 0,
   GST_VIDEO_FLAG_INTERLACED  = (1 << 0),
-  GST_VIDEO_FLAG_TTF         = (1 << 1),
+  GST_VIDEO_FLAG_TFF         = (1 << 1),
   GST_VIDEO_FLAG_RFF         = (1 << 2),
   GST_VIDEO_FLAG_ONEFIELD    = (1 << 3),
   GST_VIDEO_FLAG_TELECINE    = (1 << 4),
