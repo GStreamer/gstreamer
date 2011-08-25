@@ -518,7 +518,7 @@ gst_registry_chunks_load_pad_template (GstElementFactory * factory, gchar ** in,
 
   template = g_slice_new (GstStaticPadTemplate);
   template->presence = pt->presence;
-  template->direction = pt->direction;
+  template->direction = (GstPadDirection) pt->direction;
   template->static_caps.caps.refcount = 0;
 
   /* unpack pad template strings */
@@ -758,7 +758,7 @@ gst_registry_chunks_load_plugin_dep (GstPlugin * plugin, gchar ** in,
   dep->env_hash = d->env_hash;
   dep->stat_hash = d->stat_hash;
 
-  dep->flags = d->flags;
+  dep->flags = (GstPluginDependencyFlags) d->flags;
 
   dep->names = gst_registry_chunks_load_plugin_dep_strv (in, end, d->n_names);
   dep->paths = gst_registry_chunks_load_plugin_dep_strv (in, end, d->n_paths);
