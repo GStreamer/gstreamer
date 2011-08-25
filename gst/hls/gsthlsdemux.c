@@ -379,7 +379,9 @@ gst_hls_demux_src_event (GstPad * pad, GstEvent * event)
       gst_hls_demux_stop_fetcher (demux, TRUE);
       g_mutex_unlock (demux->fetcher_lock);
       gst_task_pause (demux->task);
+      g_mutex_lock (demux->thread_lock);
       g_cond_signal (demux->thread_cond);
+      g_mutex_unlock (demux->thread_lock);
 
       /* wait for streaming to finish */
       g_static_rec_mutex_lock (&demux->task_lock);
@@ -649,7 +651,9 @@ gst_hls_demux_stop (GstHLSDemux * demux)
   g_mutex_unlock (demux->fetcher_lock);
   if (GST_TASK_STATE (demux->task) != GST_TASK_STOPPED)
     gst_task_stop (demux->task);
+  g_mutex_lock (demux->thread_lock);
   g_cond_signal (demux->thread_cond);
+  g_mutex_unlock (demux->thread_lock);
 }
 
 static void
