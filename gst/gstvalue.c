@@ -2388,7 +2388,7 @@ gst_value_serialize_enum (const GValue * value)
   if (G_UNLIKELY (en == NULL && G_VALUE_TYPE (value) == GST_TYPE_FORMAT)) {
     const GstFormatDefinition *format_def;
 
-    format_def = gst_format_get_details (g_value_get_enum (value));
+    format_def = gst_format_get_details ((GstFormat) g_value_get_enum (value));
     g_return_val_if_fail (format_def != NULL, NULL);
     return g_strdup (format_def->description);
   }
