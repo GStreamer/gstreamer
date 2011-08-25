@@ -431,10 +431,12 @@ gst_pad_template_set_property (GObject * object, guint prop_id,
       GST_PAD_TEMPLATE_NAME_TEMPLATE (object) = g_value_dup_string (value);
       break;
     case PROP_DIRECTION:
-      GST_PAD_TEMPLATE_DIRECTION (object) = g_value_get_enum (value);
+      GST_PAD_TEMPLATE_DIRECTION (object) =
+          (GstPadDirection) g_value_get_enum (value);
       break;
     case PROP_PRESENCE:
-      GST_PAD_TEMPLATE_PRESENCE (object) = g_value_get_enum (value);
+      GST_PAD_TEMPLATE_PRESENCE (object) =
+          (GstPadPresence) g_value_get_enum (value);
       break;
     case PROP_CAPS:
       /* allow caps == NULL for backwards compatibility (ie. g_object_new()
