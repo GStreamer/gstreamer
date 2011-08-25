@@ -242,7 +242,6 @@ elements_camerabin_LDADD = \
 
 elements_camerabin_SOURCES = elements/camerabin.c
 
-if BUILD_EXPERIMENTAL
 elements_camerabin2_CFLAGS = \
 	$(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(AM_CFLAGS) -DGST_USE_UNSTABLE_API
@@ -252,8 +251,6 @@ elements_camerabin2_LDADD = \
         -lgstpbutils-$(GST_MAJORMINOR) \
         $(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) $(GST_LIBS) $(LDADD)
 elements_camerabin2_SOURCES = elements/camerabin2.c
-
-endif
 
 elements_jifmux_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(EXIF_CFLAGS) $(AM_CFLAGS)
 elements_jifmux_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgsttag-$(GST_MAJORMINOR) $(GST_CHECK_LIBS) $(EXIF_LIBS) $(LDADD)
