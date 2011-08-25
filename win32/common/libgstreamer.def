@@ -100,7 +100,7 @@ EXPORTS
 	gst_buffer_copy_region
 	gst_buffer_extract
 	gst_buffer_fill
-	gst_buffer_flag_get_type
+	gst_buffer_flags_get_type
 	gst_buffer_get_meta
 	gst_buffer_get_sizes
 	gst_buffer_is_span_fast
