@@ -2703,7 +2703,7 @@ gst_element_class_install_std_props (GstElementClass * klass,
 
   while (name) {
     int arg_id = va_arg (args, int);
-    int flags = va_arg (args, int);
+    GParamFlags flags = (GParamFlags) va_arg (args, int);
 
     gst_element_populate_std_props ((GObjectClass *) klass, name, arg_id,
         flags);
@@ -3766,7 +3766,7 @@ gst_parse_bin_from_description (const gchar * bin_description,
     gboolean ghost_unlinked_pads, GError ** err)
 {
   return gst_parse_bin_from_description_full (bin_description,
-      ghost_unlinked_pads, NULL, 0, err);
+      ghost_unlinked_pads, NULL, GST_PARSE_FLAG_NONE, err);
 }
 
 /**
