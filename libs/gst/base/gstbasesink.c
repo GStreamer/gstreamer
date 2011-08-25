@@ -179,6 +179,9 @@ typedef struct
  */
 struct _GstBaseSinkPrivate
 {
+  GQueue *preroll_queue;
+  gint preroll_queued;
+
   gint qos_enabled;             /* ATOMIC */
   gboolean async_enabled;
   GstClockTimeDiff ts_offset;
@@ -427,14 +430,6 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
   gobject_class->set_property = gst_base_sink_set_property;
   gobject_class->get_property = gst_base_sink_get_property;
 
-  /* FIXME, this next value should be configured using an event from the
-   * upstream element, ie, the BUFFER_SIZE event. */
-  g_object_class_install_property (gobject_class, PROP_PREROLL_QUEUE_LEN,
-      g_param_spec_uint ("preroll-queue-len", "Preroll queue length",
-          "Number of buffers to queue during preroll", 0, G_MAXUINT,
-          DEFAULT_PREROLL_QUEUE_LEN,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
-
   g_object_class_install_property (gobject_class, PROP_SYNC,
       g_param_spec_boolean ("sync", "Sync", "Sync on the clock", DEFAULT_SYNC,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
@@ -657,7 +652,7 @@ gst_base_sink_init (GstBaseSink * basesink, gpointer g_class)
   basesink->pad_mode = GST_ACTIVATE_NONE;
   basesink->preroll_lock = g_mutex_new ();
   basesink->preroll_cond = g_cond_new ();
-  basesink->preroll_queue = g_queue_new ();
+  priv->preroll_queue = g_queue_new ();
   priv->have_latency = FALSE;
 
   basesink->can_activate_push = DEFAULT_CAN_ACTIVATE_PUSH;
@@ -686,7 +681,7 @@ gst_base_sink_finalize (GObject * object)
 
   g_mutex_free (basesink->preroll_lock);
   g_cond_free (basesink->preroll_cond);
-  g_queue_free (basesink->preroll_queue);
+  g_queue_free (basesink->priv->preroll_queue);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -1322,12 +1317,6 @@ gst_base_sink_set_property (GObject * object, guint prop_id,
   GstBaseSink *sink = GST_BASE_SINK (object);
 
   switch (prop_id) {
-    case PROP_PREROLL_QUEUE_LEN:
-      /* preroll lock necessary to serialize with finish_preroll */
-      GST_BASE_SINK_PREROLL_LOCK (sink);
-      g_atomic_int_set (&sink->preroll_queue_max_len, g_value_get_uint (value));
-      GST_BASE_SINK_PREROLL_UNLOCK (sink);
-      break;
     case PROP_SYNC:
       gst_base_sink_set_sync (sink, g_value_get_boolean (value));
       break;
@@ -1368,9 +1357,6 @@ gst_base_sink_get_property (GObject * object, guint prop_id, GValue * value,
   GstBaseSink *sink = GST_BASE_SINK (object);
 
   switch (prop_id) {
-    case PROP_PREROLL_QUEUE_LEN:
-      g_value_set_uint (value, g_atomic_int_get (&sink->preroll_queue_max_len));
-      break;
     case PROP_SYNC:
       g_value_set_boolean (value, gst_base_sink_get_sync (sink));
       break;
@@ -1427,7 +1413,7 @@ gst_base_sink_preroll_queue_flush (GstBaseSink * basesink, GstPad * pad)
   GstMiniObject *obj;
 
   GST_DEBUG_OBJECT (basesink, "flushing queue %p", basesink);
-  while ((obj = g_queue_pop_head (basesink->preroll_queue))) {
+  while ((obj = g_queue_pop_head (basesink->priv->preroll_queue))) {
     GST_DEBUG_OBJECT (basesink, "popped %p", obj);
     gst_mini_object_unref (obj);
   }
@@ -1437,9 +1423,7 @@ gst_base_sink_preroll_queue_flush (GstBaseSink * basesink, GstPad * pad)
   basesink->have_preroll = FALSE;
   basesink->priv->step_unlock = FALSE;
   basesink->eos_queued = FALSE;
-  basesink->preroll_queued = 0;
-  basesink->buffers_queued = 0;
-  basesink->events_queued = 0;
+  basesink->priv->preroll_queued = 0;
   /* can't report latency anymore until we preroll again */
   if (basesink->priv->async_enabled) {
     GST_OBJECT_LOCK (basesink);
@@ -3146,9 +3130,9 @@ gst_base_sink_queue_object_unlocked (GstBaseSink * basesink, GstPad * pad,
 
   if (G_UNLIKELY (basesink->need_preroll)) {
     if (G_LIKELY (prerollable))
-      basesink->preroll_queued++;
+      basesink->priv->preroll_queued++;
 
-    length = basesink->preroll_queued;
+    length = basesink->priv->preroll_queued;
 
     GST_DEBUG_OBJECT (basesink, "now %d prerolled items", length);
 
@@ -3163,13 +3147,13 @@ gst_base_sink_queue_object_unlocked (GstBaseSink * basesink, GstPad * pad,
     if (G_UNLIKELY (basesink->need_preroll)) {
       /* see if we can render now, if we can't add the object to the preroll
        * queue. */
-      if (G_UNLIKELY (length <= basesink->preroll_queue_max_len))
+      if (G_UNLIKELY (length <= 0))
         goto more_preroll;
     }
   }
   /* we can start rendering (or blocking) the queued object
    * if any. */
-  q = basesink->preroll_queue;
+  q = basesink->priv->preroll_queue;
   while (G_UNLIKELY (!g_queue_is_empty (q))) {
     GstMiniObject *o;
     guint8 ot;
@@ -3187,7 +3171,7 @@ gst_base_sink_queue_object_unlocked (GstBaseSink * basesink, GstPad * pad,
 
   /* now render the object */
   ret = gst_base_sink_render_object (basesink, pad, obj_type, obj);
-  basesink->preroll_queued = 0;
+  basesink->priv->preroll_queued = 0;
 
   return ret;
 
@@ -3202,9 +3186,8 @@ preroll_failed:
 more_preroll:
   {
     /* add object to the queue and return */
-    GST_DEBUG_OBJECT (basesink, "need more preroll data %d <= %d",
-        length, basesink->preroll_queue_max_len);
-    g_queue_push_tail (basesink->preroll_queue, obj);
+    GST_DEBUG_OBJECT (basesink, "need more preroll data");
+    g_queue_push_tail (basesink->priv->preroll_queue, obj);
     return GST_FLOW_OK;
   }
 dequeue_failed:

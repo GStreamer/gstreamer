@@ -60,8 +60,6 @@ GST_START_TEST (test_stress_preroll)
 
   g_return_if_fail (fakesrc && fakesink && pipeline);
 
-  g_object_set (G_OBJECT (fakesink), "preroll-queue-len", 4, NULL);
-
   gst_bin_add_many (GST_BIN (pipeline), fakesrc, fakesink, NULL);
   gst_element_link (fakesrc, fakesink);
 

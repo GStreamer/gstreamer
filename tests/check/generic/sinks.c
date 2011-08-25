@@ -903,10 +903,14 @@ GST_START_TEST (test_bin_live)
   gst_object_unref (pipeline);
 }
 
-GST_END_TEST static void
+GST_END_TEST static gpointer
 send_eos (GstPad * sinkpad)
 {
-  gst_pad_send_event (sinkpad, gst_event_new_eos ());
+  gboolean ret;
+
+  ret = gst_pad_send_event (sinkpad, gst_event_new_eos ());
+
+  return GINT_TO_POINTER (ret);
 }
 
 /* push a buffer with a very long duration in a fakesink, then push an EOS
@@ -977,6 +981,9 @@ GST_START_TEST (test_fake_eos)
   ret = gst_element_set_state (pipeline, GST_STATE_NULL);
   fail_unless (ret == GST_STATE_CHANGE_SUCCESS, "no SUCCESS state return");
 
+  /* we can join now */
+  g_thread_join (thread);
+
   gst_object_unref (pipeline);
 }
 
@@ -1043,7 +1050,6 @@ send_buffer (GstPad * sinkpad)
 GST_START_TEST (test_async_done)
 {
   GstElement *sink;
-  GstBuffer *buffer;
   GstEvent *event;
   GstStateChangeReturn ret;
   GstPad *sinkpad;
@@ -1056,7 +1062,6 @@ GST_START_TEST (test_async_done)
 
   sink = gst_element_factory_make ("fakesink", "sink");
   g_object_set (G_OBJECT (sink), "sync", TRUE, NULL);
-  g_object_set (G_OBJECT (sink), "preroll-queue-len", 2, NULL);
   g_object_set (G_OBJECT (sink), "signal-handoffs", TRUE, NULL);
 
   g_signal_connect (sink, "preroll-handoff", (GCallback) async_done_handoff,
@@ -1085,31 +1090,6 @@ GST_START_TEST (test_async_done)
   position = -1;
   qret = gst_element_query_position (sink, GST_FORMAT_TIME, &position);
   fail_unless (qret == TRUE, "position wrong");
-  fail_unless (position == 10 * GST_SECOND, "position is wrong");
-
-  /* Since we are paused and the preroll queue has a length of 2, this function
-   * will return immediatly, the preroll handoff will be called and the stream
-   * position should now be 10 seconds. */
-  GST_DEBUG ("pushing first buffer");
-  buffer = gst_buffer_new_and_alloc (10);
-  GST_BUFFER_TIMESTAMP (buffer) = 1 * GST_SECOND;
-  GST_BUFFER_DURATION (buffer) = 100 * GST_SECOND;
-  res = gst_pad_chain (sinkpad, buffer);
-  fail_unless (res == GST_FLOW_OK, "no OK flow return");
-
-  /* scond buffer, will not block either but position should still be 10
-   * seconds */
-  GST_DEBUG ("pushing second buffer");
-  buffer = gst_buffer_new_and_alloc (10);
-  GST_BUFFER_TIMESTAMP (buffer) = 100 * GST_SECOND;
-  GST_BUFFER_DURATION (buffer) = 100 * GST_SECOND;
-  res = gst_pad_chain (sinkpad, buffer);
-  fail_unless (res == GST_FLOW_OK, "no OK flow return");
-
-  /* check if position is still 10 seconds */
-  gst_element_query_position (sink, GST_FORMAT_TIME, &position);
-  GST_DEBUG ("first buffer position %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (position));
   fail_unless (position == 10 * GST_SECOND, "position is wrong");
 
   /* last buffer, blocks because preroll queue is filled. Start the push in a
@@ -1187,13 +1167,13 @@ GST_START_TEST (test_async_done_eos)
   GstPad *sinkpad;
   gboolean res;
   GstBus *bus;
-  gint64 position;
   gboolean qret;
   GstSegment segment;
+  gint64 position;
+  GThread *thread;
 
   sink = gst_element_factory_make ("fakesink", "sink");
   g_object_set (G_OBJECT (sink), "sync", TRUE, NULL);
-  g_object_set (G_OBJECT (sink), "preroll-queue-len", 1, NULL);
 
   sinkpad = gst_element_get_static_pad (sink, "sink");
 
@@ -1219,22 +1199,23 @@ GST_START_TEST (test_async_done_eos)
   fail_unless (qret == TRUE, "position wrong");
   fail_unless (position == 10 * GST_SECOND, "position is wrong");
 
-  /* Since we are paused and the preroll queue has a length of 1, this function
-   * will return immediatly. The EOS will complete the preroll and the  
-   * position should now be 10 seconds. */
   GST_DEBUG ("pushing EOS");
-  event = gst_event_new_eos ();
-  res = gst_pad_send_event (sinkpad, event);
-  fail_unless (res == TRUE, "no TRUE return");
+  GST_DEBUG ("starting thread");
+  thread = g_thread_create ((GThreadFunc) send_eos, sinkpad, TRUE, NULL);
+  fail_if (thread == NULL, "no thread");
+
+  /* wait for preroll */
+  gst_element_get_state (sink, NULL, NULL, -1);
 
   /* check if position is still 10 seconds */
   gst_element_query_position (sink, GST_FORMAT_TIME, &position);
   GST_DEBUG ("EOS position %" GST_TIME_FORMAT, GST_TIME_ARGS (position));
   fail_unless (position == 10 * GST_SECOND, "position is wrong");
 
-  gst_object_unref (sinkpad);
-
   gst_element_set_state (sink, GST_STATE_NULL);
+  g_thread_join (thread);
+
+  gst_object_unref (sinkpad);
   gst_object_unref (sink);
   gst_object_unref (bus);
 }
