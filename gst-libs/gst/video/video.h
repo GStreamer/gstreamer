@@ -634,44 +634,30 @@ gboolean    gst_video_frame_copy          (GstVideoFrame *dest, const GstVideoFr
 /* buffer flags */
 
 /**
- * GST_VIDEO_BUFFER_TFF:
+ * GstVideoBufferFlags:
+ * @GST_VIDEO_BUFFER_FLAG_TFF:         If the #GstBuffer is interlaced, then the first field
+ *                                     in the video frame is the top field.  If unset, the
+ *                                     bottom field is first.
+ * @GST_VIDEO_BUFFER_FLAG_RFF:         If the #GstBuffer is interlaced, then the first field
+ *                                     (as defined by the %GST_VIDEO_BUFFER_TFF flag setting)
+ *                                     is repeated.
+ * @GST_VIDEO_BUFFER_FLAG_ONEFIELD:    If the #GstBuffer is interlaced, then only the
+ *                                     first field (as defined by the %GST_VIDEO_BUFFER_TFF
+ *                                     flag setting) is to be displayed.
+ * @GST_VIDEO_BUFFER_FLAG_PROGRESSIVE: If the #GstBuffer is telecined, then the
+ *                                     buffer is progressive if the %GST_VIDEO_BUFFER_PROGRESSIVE
+ *                                     flag is set, else it is telecine mixed.
  *
- * If the #GstBuffer is interlaced, then the first field in the video frame is
- * the top field.  If unset, the bottom field is first.
- *
- * Since: 0.10.23
+ * Additional video buffer flags.
  */
-#define GST_VIDEO_BUFFER_TFF GST_BUFFER_FLAG_MEDIA1
+typedef enum {
+  GST_VIDEO_BUFFER_FLAG_TFF         = (GST_BUFFER_FLAG_LAST << 0),
+  GST_VIDEO_BUFFER_FLAG_RFF         = (GST_BUFFER_FLAG_LAST << 1),
+  GST_VIDEO_BUFFER_FLAG_ONEFIELD    = (GST_BUFFER_FLAG_LAST << 2),
+  GST_VIDEO_BUFFER_FLAG_PROGRESSIVE = (GST_BUFFER_FLAG_LAST << 3),
 
-/**
- * GST_VIDEO_BUFFER_RFF:
- *
- * If the #GstBuffer is interlaced, then the first field (as defined by the
- * %GST_VIDEO_BUFFER_TFF flag setting) is repeated.
- *
- * Since: 0.10.23
- */
-#define GST_VIDEO_BUFFER_RFF GST_BUFFER_FLAG_MEDIA2
-
-/**
- * GST_VIDEO_BUFFER_ONEFIELD:
- *
- * If the #GstBuffer is interlaced, then only the first field (as defined by the
- * %GST_VIDEO_BUFFER_TFF flag setting) is to be displayed.
- *
- * Since: 0.10.23
- */
-#define GST_VIDEO_BUFFER_ONEFIELD GST_BUFFER_FLAG_MEDIA3
-
-/**
- * GST_VIDEO_BUFFER_PROGRESSIVE:
- *
- * If the #GstBuffer is telecined, then the buffer is progressive if the
- * %GST_VIDEO_BUFFER_PROGRESSIVE flag is set, else it is telecine mixed.
- *
- * Since: 0.10.33
- */
-#define GST_VIDEO_BUFFER_PROGRESSIVE GST_BUFFER_FLAG_MEDIA4
+  GST_VIDEO_BUFFER_FLAG_LAST        = (GST_BUFFER_FLAG_LAST << 8)
+} GstVideoBufferFlags;
 
 /* some helper functions */
 gboolean       gst_video_calculate_display_ratio (guint * dar_n,
