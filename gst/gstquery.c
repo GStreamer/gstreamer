@@ -96,7 +96,7 @@ static GstQueryTypeDefinition standard_definitions[] = {
   {GST_QUERY_BUFFERING, "buffering", "Buffering status", 0},
   {GST_QUERY_CUSTOM, "custom", "Custom query", 0},
   {GST_QUERY_URI, "uri", "URI of the source or sink", 0},
-  {0, NULL, NULL, 0}
+  {GST_QUERY_NONE, NULL, NULL, 0}
 };
 
 void
@@ -233,15 +233,15 @@ gst_query_type_register (const gchar * nick, const gchar * description)
   GstQueryTypeDefinition *query;
   GstQueryType lookup;
 
-  g_return_val_if_fail (nick != NULL, 0);
-  g_return_val_if_fail (description != NULL, 0);
+  g_return_val_if_fail (nick != NULL, GST_QUERY_NONE);
+  g_return_val_if_fail (description != NULL, GST_QUERY_NONE);
 
   lookup = gst_query_type_get_by_nick (nick);
   if (lookup != GST_QUERY_NONE)
     return lookup;
 
   query = g_slice_new (GstQueryTypeDefinition);
-  query->value = _n_values;
+  query->value = (GstQueryType) _n_values;
   query->nick = g_strdup (nick);
   query->description = g_strdup (description);
   query->quark = g_quark_from_static_string (query->nick);
@@ -271,7 +271,7 @@ gst_query_type_get_by_nick (const gchar * nick)
 {
   GstQueryTypeDefinition *query;
 
-  g_return_val_if_fail (nick != NULL, 0);
+  g_return_val_if_fail (nick != NULL, GST_QUERY_NONE);
 
   g_static_mutex_lock (&mutex);
   query = g_hash_table_lookup (_nick_to_query, nick);
@@ -439,7 +439,8 @@ gst_query_parse_position (GstQuery * query, GstFormat * format, gint64 * cur)
 
   structure = query->structure;
   if (format)
-    *format = g_value_get_enum (gst_structure_id_get_value (structure,
+    *format =
+        (GstFormat) g_value_get_enum (gst_structure_id_get_value (structure,
             GST_QUARK (FORMAT)));
   if (cur)
     *cur = g_value_get_int64 (gst_structure_id_get_value (structure,
@@ -512,7 +513,8 @@ gst_query_parse_duration (GstQuery * query, GstFormat * format,
 
   structure = query->structure;
   if (format)
-    *format = g_value_get_enum (gst_structure_id_get_value (structure,
+    *format =
+        (GstFormat) g_value_get_enum (gst_structure_id_get_value (structure,
             GST_QUARK (FORMAT)));
   if (duration)
     *duration = g_value_get_int64 (gst_structure_id_get_value (structure,
@@ -683,13 +685,15 @@ gst_query_parse_convert (GstQuery * query, GstFormat * src_format,
 
   structure = query->structure;
   if (src_format)
-    *src_format = g_value_get_enum (gst_structure_id_get_value (structure,
+    *src_format =
+        (GstFormat) g_value_get_enum (gst_structure_id_get_value (structure,
             GST_QUARK (SRC_FORMAT)));
   if (src_value)
     *src_value = g_value_get_int64 (gst_structure_id_get_value (structure,
             GST_QUARK (SRC_VALUE)));
   if (dest_format)
-    *dest_format = g_value_get_enum (gst_structure_id_get_value (structure,
+    *dest_format =
+        (GstFormat) g_value_get_enum (gst_structure_id_get_value (structure,
             GST_QUARK (DEST_FORMAT)));
   if (dest_value)
     *dest_value = g_value_get_int64 (gst_structure_id_get_value (structure,
@@ -785,7 +789,8 @@ gst_query_parse_segment (GstQuery * query, gdouble * rate, GstFormat * format,
     *rate = g_value_get_double (gst_structure_id_get_value (structure,
             GST_QUARK (RATE)));
   if (format)
-    *format = g_value_get_enum (gst_structure_id_get_value (structure,
+    *format =
+        (GstFormat) g_value_get_enum (gst_structure_id_get_value (structure,
             GST_QUARK (FORMAT)));
   if (start_value)
     *start_value = g_value_get_int64 (gst_structure_id_get_value (structure,
@@ -908,7 +913,8 @@ gst_query_parse_seeking (GstQuery * query, GstFormat * format,
 
   structure = query->structure;
   if (format)
-    *format = g_value_get_enum (gst_structure_id_get_value (structure,
+    *format =
+        (GstFormat) g_value_get_enum (gst_structure_id_get_value (structure,
             GST_QUARK (FORMAT)));
   if (seekable)
     *seekable = g_value_get_boolean (gst_structure_id_get_value (structure,
@@ -1068,7 +1074,8 @@ gst_query_parse_formats_nth (GstQuery * query, guint nth, GstFormat * format)
       *format = GST_FORMAT_UNDEFINED;
     } else {
       if (nth < gst_value_list_get_size (list)) {
-        *format = g_value_get_enum (gst_value_list_get_value (list, nth));
+        *format =
+            (GstFormat) g_value_get_enum (gst_value_list_get_value (list, nth));
       } else
         *format = GST_FORMAT_UNDEFINED;
     }
@@ -1205,7 +1212,8 @@ gst_query_parse_buffering_stats (GstQuery * query,
   g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_BUFFERING);
 
   if (mode)
-    *mode = g_value_get_enum (gst_structure_id_get_value (query->structure,
+    *mode = (GstBufferingMode)
+        g_value_get_enum (gst_structure_id_get_value (query->structure,
             GST_QUARK (BUFFERING_MODE)));
   if (avg_in)
     *avg_in = g_value_get_int (gst_structure_id_get_value (query->structure,
@@ -1271,7 +1279,8 @@ gst_query_parse_buffering_range (GstQuery * query, GstFormat * format,
 
   structure = query->structure;
   if (format)
-    *format = g_value_get_enum (gst_structure_id_get_value (structure,
+    *format =
+        (GstFormat) g_value_get_enum (gst_structure_id_get_value (structure,
             GST_QUARK (FORMAT)));
   if (start)
     *start = g_value_get_int64 (gst_structure_id_get_value (structure,
