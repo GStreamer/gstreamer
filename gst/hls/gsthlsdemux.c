@@ -375,7 +375,9 @@ gst_hls_demux_src_event (GstPad * pad, GstEvent * event)
       }
 
       demux->cancelled = TRUE;
+      g_mutex_lock (demux->fetcher_lock);
       gst_hls_demux_stop_fetcher (demux, TRUE);
+      g_mutex_unlock (demux->fetcher_lock);
       gst_task_pause (demux->task);
       g_cond_signal (demux->thread_cond);
 
@@ -642,7 +644,9 @@ gst_hls_demux_stop_fetcher (GstHLSDemux * demux, gboolean cancelled)
 static void
 gst_hls_demux_stop (GstHLSDemux * demux)
 {
+  g_mutex_lock (demux->fetcher_lock);
   gst_hls_demux_stop_fetcher (demux, TRUE);
+  g_mutex_unlock (demux->fetcher_lock);
   if (GST_TASK_STATE (demux->task) != GST_TASK_STOPPED)
     gst_task_stop (demux->task);
   g_cond_signal (demux->thread_cond);
