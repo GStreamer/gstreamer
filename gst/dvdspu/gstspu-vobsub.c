@@ -187,10 +187,10 @@ gst_dvd_spu_exec_cmd_blk (GstDVDSpu * dvdspu, guint8 * data, guint8 * end)
         if (G_UNLIKELY (data + 7 >= end))
           return;               /* Invalid SET_DAREA cmd at the end of the blk */
 
-        r->top = ((data[4] & 0x3f) << 4) | ((data[5] & 0xe0) >> 4);
-        r->left = ((data[1] & 0x3f) << 4) | ((data[2] & 0xf0) >> 4);
-        r->right = ((data[2] & 0x03) << 8) | data[3];
-        r->bottom = ((data[5] & 0x03) << 8) | data[6];
+        r->top = ((data[4] & 0xff) << 4) | ((data[5] & 0xf0) >> 4);
+        r->left = ((data[1] & 0xff) << 4) | ((data[2] & 0xf0) >> 4);
+        r->right = ((data[2] & 0x0f) << 8) | data[3];
+        r->bottom = ((data[5] & 0x0f) << 8) | data[6];
 
         GST_DEBUG_OBJECT (dvdspu,
             " Set Display Area top %u left %u bottom %u right %u", r->top,

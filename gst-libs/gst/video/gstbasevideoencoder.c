@@ -169,13 +169,13 @@ gst_base_video_encoder_class_init (GstBaseVideoEncoderClass * klass)
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_base_video_encoder_change_state);
-
-  parent_class = g_type_class_peek_parent (klass);
 }
 
 static void
 gst_base_video_encoder_reset (GstBaseVideoEncoder * base_video_encoder)
 {
+  GST_BASE_VIDEO_CODEC_STREAM_LOCK (base_video_encoder);
+
   base_video_encoder->presentation_frame_number = 0;
   base_video_encoder->distance_from_sync = 0;
   base_video_encoder->force_keyframe = FALSE;
@@ -193,6 +193,8 @@ gst_base_video_encoder_reset (GstBaseVideoEncoder * base_video_encoder)
       (GFunc) gst_event_unref, NULL);
   g_list_free (base_video_encoder->current_frame_events);
   base_video_encoder->current_frame_events = NULL;
+
+  GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (base_video_encoder);
 }
 
 static void
@@ -285,6 +287,8 @@ gst_base_video_encoder_sink_setcaps (GstPad * pad, GstCaps * caps)
 
   GST_DEBUG_OBJECT (base_video_encoder, "setcaps %" GST_PTR_FORMAT, caps);
 
+  GST_BASE_VIDEO_CODEC_STREAM_LOCK (base_video_encoder);
+
   state = &GST_BASE_VIDEO_CODEC (base_video_encoder)->state;
   memset (&tmp_state, 0, sizeof (tmp_state));
 
@@ -351,12 +355,14 @@ gst_base_video_encoder_sink_setcaps (GstPad * pad, GstCaps * caps)
   }
 
 exit:
-  g_object_unref (base_video_encoder);
+  GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (base_video_encoder);
 
   if (!ret) {
     GST_WARNING_OBJECT (base_video_encoder, "rejected caps %" GST_PTR_FORMAT,
         caps);
   }
+
+  g_object_unref (base_video_encoder);
 
   return ret;
 }
@@ -452,6 +458,7 @@ gst_base_video_encoder_sink_eventfunc (GstBaseVideoEncoder * base_video_encoder,
     {
       GstFlowReturn flow_ret;
 
+      GST_BASE_VIDEO_CODEC_STREAM_LOCK (base_video_encoder);
       base_video_encoder->a.at_eos = TRUE;
 
       if (base_video_encoder_class->finish) {
@@ -461,6 +468,7 @@ gst_base_video_encoder_sink_eventfunc (GstBaseVideoEncoder * base_video_encoder,
       }
 
       ret = (flow_ret == GST_BASE_VIDEO_ENCODER_FLOW_DROPPED);
+      GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (base_video_encoder);
       break;
     }
     case GST_EVENT_NEWSEGMENT:
@@ -473,6 +481,7 @@ gst_base_video_encoder_sink_eventfunc (GstBaseVideoEncoder * base_video_encoder,
       gint64 stop;
       gint64 position;
 
+      GST_BASE_VIDEO_CODEC_STREAM_LOCK (base_video_encoder);
       gst_event_parse_new_segment_full (event, &update, &rate, &applied_rate,
           &format, &start, &stop, &position);
 
@@ -484,6 +493,7 @@ gst_base_video_encoder_sink_eventfunc (GstBaseVideoEncoder * base_video_encoder,
 
       if (format != GST_FORMAT_TIME) {
         GST_DEBUG_OBJECT (base_video_encoder, "received non TIME newsegment");
+        GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (base_video_encoder);
         break;
       }
 
@@ -492,6 +502,7 @@ gst_base_video_encoder_sink_eventfunc (GstBaseVideoEncoder * base_video_encoder,
       gst_segment_set_newsegment_full (&GST_BASE_VIDEO_CODEC
           (base_video_encoder)->segment, update, rate, applied_rate, format,
           start, stop, position);
+      GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (base_video_encoder);
       break;
     }
     case GST_EVENT_CUSTOM_DOWNSTREAM:
@@ -556,8 +567,10 @@ gst_base_video_encoder_sink_event (GstPad * pad, GstEvent * event)
         || GST_EVENT_TYPE (event) == GST_EVENT_FLUSH_STOP) {
       ret = gst_pad_push_event (enc->base_video_codec.srcpad, event);
     } else {
+      GST_BASE_VIDEO_CODEC_STREAM_LOCK (enc);
       enc->current_frame_events =
           g_list_prepend (enc->current_frame_events, event);
+      GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (enc);
     }
   }
 
@@ -699,8 +712,11 @@ gst_base_video_encoder_chain (GstPad * pad, GstBuffer * buf)
 
   g_return_val_if_fail (klass->handle_frame != NULL, GST_FLOW_ERROR);
 
+  GST_BASE_VIDEO_CODEC_STREAM_LOCK (base_video_encoder);
+
   if (!GST_PAD_CAPS (pad)) {
-    return GST_FLOW_NOT_NEGOTIATED;
+    ret = GST_FLOW_NOT_NEGOTIATED;
+    goto done;
   }
 
   GST_LOG_OBJECT (base_video_encoder,
@@ -710,7 +726,8 @@ gst_base_video_encoder_chain (GstPad * pad, GstBuffer * buf)
       GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
 
   if (base_video_encoder->a.at_eos) {
-    return GST_FLOW_UNEXPECTED;
+    ret = GST_FLOW_UNEXPECTED;
+    goto done;
   }
 
   if (base_video_encoder->sink_clipping) {
@@ -746,10 +763,8 @@ gst_base_video_encoder_chain (GstPad * pad, GstBuffer * buf)
   frame->force_keyframe = base_video_encoder->force_keyframe;
   base_video_encoder->force_keyframe = FALSE;
 
-  GST_OBJECT_LOCK (base_video_encoder);
   GST_BASE_VIDEO_CODEC (base_video_encoder)->frames =
       g_list_append (GST_BASE_VIDEO_CODEC (base_video_encoder)->frames, frame);
-  GST_OBJECT_UNLOCK (base_video_encoder);
 
   /* new data, more finish needed */
   base_video_encoder->drained = FALSE;
@@ -760,6 +775,8 @@ gst_base_video_encoder_chain (GstPad * pad, GstBuffer * buf)
   ret = klass->handle_frame (base_video_encoder, frame);
 
 done:
+  GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (base_video_encoder);
+
   g_object_unref (base_video_encoder);
 
   return ret;
@@ -830,6 +847,8 @@ gst_base_video_encoder_finish_frame (GstBaseVideoEncoder * base_video_encoder,
 
   GST_LOG_OBJECT (base_video_encoder,
       "finish frame fpn %d", frame->presentation_frame_number);
+
+  GST_BASE_VIDEO_CODEC_STREAM_LOCK (base_video_encoder);
 
   /* Push all pending events that arrived before this frame */
   for (l = base_video_encoder->base_video_codec.frames; l; l = l->next) {
@@ -945,12 +964,12 @@ gst_base_video_encoder_finish_frame (GstBaseVideoEncoder * base_video_encoder,
 
 done:
   /* handed out */
-  GST_OBJECT_LOCK (base_video_encoder);
   GST_BASE_VIDEO_CODEC (base_video_encoder)->frames =
       g_list_remove (GST_BASE_VIDEO_CODEC (base_video_encoder)->frames, frame);
-  GST_OBJECT_UNLOCK (base_video_encoder);
 
   gst_base_video_codec_free_frame (frame);
+
+  GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (base_video_encoder);
 
   return ret;
 }
@@ -1025,9 +1044,9 @@ gst_base_video_encoder_get_oldest_frame (GstBaseVideoEncoder *
 {
   GList *g;
 
-  GST_OBJECT_LOCK (base_video_encoder);
+  GST_BASE_VIDEO_CODEC_STREAM_LOCK (base_video_encoder);
   g = g_list_first (GST_BASE_VIDEO_CODEC (base_video_encoder)->frames);
-  GST_OBJECT_UNLOCK (base_video_encoder);
+  GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (base_video_encoder);
 
   if (g == NULL)
     return NULL;

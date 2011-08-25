@@ -226,6 +226,18 @@ gst_kate_util_decoder_base_get_property (GstKateDecoderBase * decoder,
   return res;
 }
 
+static inline gboolean
+gst_kate_util_is_utf8_string (const char *value, size_t len)
+{
+  if (len == 0)
+    return FALSE;
+  if (memchr (value, 0, len - 1))
+    return FALSE;
+  if (value[len - 1])
+    return FALSE;
+  return (kate_text_validate (kate_utf8, value, len) >= 0);
+}
+
 GstFlowReturn
 gst_kate_util_decoder_base_chain_kate_packet (GstKateDecoderBase * decoder,
     GstElement * element, GstPad * pad, GstBuffer * buf, GstPad * srcpad,
@@ -371,6 +383,40 @@ gst_kate_util_decoder_base_chain_kate_packet (GstKateDecoderBase * decoder,
         break;
     }
   }
+#if ((KATE_VERSION_MAJOR<<16)|(KATE_VERSION_MINOR<<8)|KATE_VERSION_PATCH) >= 0x000400
+  else if (*ev && (*ev)->meta) {
+    int count = kate_meta_query_count ((*ev)->meta);
+    if (count > 0) {
+      GstTagList *evtags = gst_tag_list_new ();
+      int idx;
+      GST_DEBUG_OBJECT (decoder, "Kate event has %d attached metadata", count);
+      for (idx = 0; idx < count; ++idx) {
+        const char *tag, *value;
+        size_t len;
+        if (kate_meta_query ((*ev)->meta, idx, &tag, &value, &len) < 0) {
+          GST_WARNING_OBJECT (decoder, "Failed to retrieve metadata %d", idx);
+        } else {
+          if (gst_kate_util_is_utf8_string (value, len)) {
+            gchar *compound = g_strdup_printf ("%s=%s", tag, value);
+            GST_DEBUG_OBJECT (decoder, "Metadata %d: %s=%s (%zu bytes)", idx,
+                tag, value, len);
+            gst_tag_list_add (evtags, GST_TAG_MERGE_APPEND,
+                GST_TAG_EXTENDED_COMMENT, compound, NULL);
+            g_free (compound);
+          } else {
+            GST_INFO_OBJECT (decoder,
+                "Metadata %d, (%s, %zu bytes) is binary, ignored", idx, tag,
+                len);
+          }
+        }
+      }
+      if (gst_tag_list_is_empty (evtags))
+        gst_tag_list_free (evtags);
+      else
+        gst_element_found_tags_for_pad (element, tagpad, evtags);
+    }
+  }
+#endif
 
   return rflow;
 }

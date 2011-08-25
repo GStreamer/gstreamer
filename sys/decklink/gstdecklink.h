@@ -21,8 +21,25 @@
 #define _GST_DECKLINK_H_
 
 #include <gst/gst.h>
-#include "DeckLinkAPI.h"
+#ifdef G_OS_UNIX
+#include "linux/DeckLinkAPI.h"
+#endif
 
+#ifdef G_OS_WIN32
+#include "win/DeckLinkAPI.h"
+
+#include <comutil.h>
+
+#define bool BOOL
+
+#define COMSTR_T BSTR*
+#define FREE_COM_STRING(s) delete[] s;
+#define CONVERT_COM_STRING(s) BSTR _s = (BSTR)s; s = _com_util::ConvertBSTRToString(_s); ::SysFreeString(_s);
+#else
+#define COMSTR_T char*
+#define FREE_COM_STRING(s) free ((void *) s)
+#define CONVERT_COM_STRING(s)
+#endif /* _MSC_VER */
 
 typedef enum {
   GST_DECKLINK_MODE_NTSC,

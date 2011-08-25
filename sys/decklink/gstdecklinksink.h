@@ -22,7 +22,6 @@
 
 #include <gst/gst.h>
 #include "gstdecklink.h"
-#include "DeckLinkAPI.h"
 
 G_BEGIN_DECLS
 
@@ -76,6 +75,14 @@ struct _GstDecklinkSink
   /* properties */
   GstDecklinkModeEnum mode;
 
+#ifdef _MSC_VER
+  gboolean comInitialized;
+  GMutex   *com_init_lock;
+  GMutex   *com_deinit_lock;
+  GCond    *com_initialized;
+  GCond    *com_uninitialize;
+  GCond    *com_uninitialized;
+#endif /* _MSC_VER */
 };
 
 struct _GstDecklinkSinkClass

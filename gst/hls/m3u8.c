@@ -206,6 +206,7 @@ gst_m3u8_update (GstM3U8 * self, gchar * data, gboolean * updated)
 
   if (!g_str_has_prefix (data, "#EXTM3U")) {
     GST_WARNING ("Data doesn't start with #EXTM3U");
+    *updated = FALSE;
     g_free (data);
     return FALSE;
   }
@@ -350,10 +351,21 @@ gst_m3u8_update (GstM3U8 * self, gchar * data, gboolean * updated)
   }
 
   /* redorder playlists by bitrate */
-  if (self->lists)
+  if (self->lists) {
+    gchar *top_variant_uri = NULL;
+
+    if (!self->current_variant)
+      top_variant_uri = GST_M3U8 (self->lists->data)->uri;
+    else
+      top_variant_uri = GST_M3U8 (self->current_variant->data)->uri;
+
     self->lists =
         g_list_sort (self->lists,
         (GCompareFunc) gst_m3u8_compare_playlist_by_bitrate);
+
+    self->current_variant = g_list_find_custom (self->lists, top_variant_uri,
+        (GCompareFunc) _m3u8_compare_uri);
+  }
 
   return TRUE;
 }
@@ -416,7 +428,7 @@ gst_m3u8_client_update (GstM3U8Client * self, gchar * data)
   /* select the first playlist, for now */
   if (!self->current) {
     if (self->main->lists) {
-      self->current = g_list_first (self->main->lists)->data;
+      self->current = self->main->current_variant->data;
     } else {
       self->current = self->main;
     }
@@ -442,9 +454,11 @@ _find_next (GstM3U8MediaFile * file, GstM3U8Client * client)
 
 gboolean
 gst_m3u8_client_get_next_fragment (GstM3U8Client * client,
-    gboolean * discontinuity, const gchar ** uri, GstClockTime * duration)
+    gboolean * discontinuity, const gchar ** uri, GstClockTime * duration,
+    GstClockTime * timestamp)
 {
   GList *l;
+  GList *walk;
   GstM3U8MediaFile *file;
 
   g_return_val_if_fail (client != NULL, FALSE);
@@ -464,6 +478,15 @@ gst_m3u8_client_get_next_fragment (GstM3U8Client * client,
 
   *uri = file->uri;
   *duration = file->duration * GST_SECOND;
+
+  *timestamp = 0;
+  for (walk = client->current->files; walk; walk = walk->next) {
+    if (walk == l)
+      break;
+    *timestamp += GST_M3U8_MEDIA_FILE (walk->data)->duration;
+  }
+  *timestamp *= GST_SECOND;
+
   return TRUE;
 }
 

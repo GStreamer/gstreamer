@@ -28,41 +28,37 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <pthread.h>
 #include <unistd.h>
 #include <fcntl.h>
 
 #include "gstdecklinksrc.h"
 
-#include "DeckLinkAPI.h"
 #include "capture.h"
 
-
-int videoOutputFile = -1;
-int audioOutputFile = -1;
+#define GST_CAT_DEFAULT gst_decklink_src_debug_category
 
 IDeckLink *deckLink;
 IDeckLinkInput *deckLinkInput;
 IDeckLinkDisplayModeIterator *displayModeIterator;
 
-static BMDTimecodeFormat g_timecodeFormat = 0;
+static BMDTimecodeFormat g_timecodeFormat = (BMDTimecodeFormat)0;
 
 DeckLinkCaptureDelegate::DeckLinkCaptureDelegate ():m_refCount (0)
 {
-  pthread_mutex_init (&m_mutex, NULL);
+  m_mutex = g_mutex_new();
 }
 
 DeckLinkCaptureDelegate::~DeckLinkCaptureDelegate ()
 {
-  pthread_mutex_destroy (&m_mutex);
+  g_mutex_free (m_mutex);
 }
 
 ULONG
 DeckLinkCaptureDelegate::AddRef (void)
 {
-  pthread_mutex_lock (&m_mutex);
+  g_mutex_lock (m_mutex);
   m_refCount++;
-  pthread_mutex_unlock (&m_mutex);
+  g_mutex_unlock (m_mutex);
 
   return (ULONG) m_refCount;
 }
@@ -70,9 +66,9 @@ DeckLinkCaptureDelegate::AddRef (void)
 ULONG
 DeckLinkCaptureDelegate::Release (void)
 {
-  pthread_mutex_lock (&m_mutex);
+  g_mutex_lock (m_mutex);
   m_refCount--;
-  pthread_mutex_unlock (&m_mutex);
+  g_mutex_unlock (m_mutex);
 
   if (m_refCount == 0) {
     delete this;
@@ -103,6 +99,7 @@ HRESULT
         IDeckLinkTimecode *timecode;
         if (videoFrame->GetTimecode (g_timecodeFormat, &timecode) == S_OK) {
           timecode->GetString (&timecodeString);
+          CONVERT_COM_STRING (timecodeString);
         }
       }
 
@@ -111,7 +108,7 @@ HRESULT
           "Valid Frame", videoFrame->GetRowBytes () * videoFrame->GetHeight ());
 
       if (timecodeString)
-        free ((void *) timecodeString);
+        FREE_COM_STRING (timecodeString);
 
       g_mutex_lock (decklinksrc->mutex);
       if (decklinksrc->video_frame != NULL) {
@@ -124,6 +121,10 @@ HRESULT
           decklinksrc->audio_frame = audioFrame;
         }
       }
+
+      /* increment regardless whether frame was dropped or not */
+      decklinksrc->frame_num++;
+
       g_cond_signal (decklinksrc->cond);
       g_mutex_unlock (decklinksrc->mutex);
     }

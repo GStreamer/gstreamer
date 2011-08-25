@@ -23,7 +23,7 @@
  * elements, providing an API for controlling a digital camera.
  *
  * <note>
- * Note that camerabin2 is still UNSTABLE, EXPERIMENTAL and under
+ * Note that camerabin2 is still UNSTABLE and under
  * development.
  * </note>
  *
@@ -270,6 +270,9 @@ gst_cam_flags_get_type (void)
           "elements", "no-audio-conversion"},
     {C_FLAGS (GST_CAM_FLAG_NO_VIDEO_CONVERSION), "Do not use video conversion "
           "elements", "no-video-conversion"},
+    {C_FLAGS (GST_CAM_FLAG_NO_VIEWFINDER_CONVERSION),
+          "Do not use viewfinder conversion " "elements",
+        "no-viewfinder-conversion"},
     {0, NULL, NULL}
   };
   static volatile GType id = 0;
@@ -439,6 +442,7 @@ gst_camera_bin_stop_capture (GstCameraBin2 * camerabin)
     g_signal_emit_by_name (camerabin->src, "stop-capture", NULL);
 
   if (camerabin->mode == MODE_VIDEO && camerabin->audio_src) {
+    camerabin->audio_drop_eos = FALSE;
     gst_element_send_event (camerabin->audio_src, gst_event_new_eos ());
   }
 }
@@ -1213,6 +1217,25 @@ gst_camera_bin_image_sink_event_probe (GstPad * pad, GstEvent * event,
   return TRUE;
 }
 
+static gboolean
+gst_camera_bin_audio_src_event_probe (GstPad * pad, GstEvent * event,
+    gpointer data)
+{
+  GstCameraBin2 *camera = data;
+  gboolean ret = TRUE;
+
+  if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
+    /* we only let an EOS pass when the user is stopping a capture */
+    if (camera->audio_drop_eos) {
+      ret = FALSE;
+    } else {
+      camera->audio_drop_eos = TRUE;
+    }
+  }
+
+  return ret;
+}
+
 /**
  * gst_camera_bin_create_elements:
  * @param camera: the #GstCameraBin2
@@ -1252,14 +1275,6 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
     camera->video_encodebin_signal_id =
         g_signal_connect (camera->video_encodebin, "element-added",
         (GCallback) encodebin_element_added, camera);
-
-    /* propagate the flags property by translating appropriate values
-     * to GstEncFlags values */
-    if (camera->flags & GST_CAM_FLAG_NO_AUDIO_CONVERSION)
-      encbin_flags |= (1 << 0);
-    if (camera->flags & GST_CAM_FLAG_NO_VIDEO_CONVERSION)
-      encbin_flags |= (1 << 1);
-    g_object_set (camera->video_encodebin, "flags", encbin_flags, NULL);
 
     camera->videosink =
         gst_element_factory_make ("filesink", "videobin-filesink");
@@ -1362,11 +1377,14 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
         gst_object_ref (camera->imagesink),
         gst_object_ref (camera->viewfinderbin_queue), NULL);
 
-    /* Linking can be optimized TODO */
-    gst_element_link (camera->video_encodebin, camera->videosink);
-    gst_element_link (camera->image_encodebin, camera->imagesink);
-    gst_element_link_many (camera->viewfinderbin_queue,
-        camera->viewfinderbin_capsfilter, camera->viewfinderbin, NULL);
+    gst_element_link_pads_full (camera->video_encodebin, "src",
+        camera->videosink, "sink", GST_PAD_LINK_CHECK_NOTHING);
+    gst_element_link_pads_full (camera->image_encodebin, "src",
+        camera->imagesink, "sink", GST_PAD_LINK_CHECK_NOTHING);
+    gst_element_link_pads_full (camera->viewfinderbin_queue, "src",
+        camera->viewfinderbin_capsfilter, "sink", GST_PAD_LINK_CHECK_CAPS);
+    gst_element_link_pads_full (camera->viewfinderbin_capsfilter, "src",
+        camera->viewfinderbin, "sink", GST_PAD_LINK_CHECK_CAPS);
 
     {
       /* set an event probe to watch for custom location changes */
@@ -1395,6 +1413,17 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
     g_object_set (camera->videosink, "location", camera->location, NULL);
     g_object_set (camera->imagesink, "location", camera->location, NULL);
   }
+
+  /* propagate the flags property by translating appropriate values
+   * to GstEncFlags values */
+  if (camera->flags & GST_CAM_FLAG_NO_AUDIO_CONVERSION)
+    encbin_flags |= (1 << 0);
+  if (camera->flags & GST_CAM_FLAG_NO_VIDEO_CONVERSION)
+    encbin_flags |= (1 << 1);
+  g_object_set (camera->video_encodebin, "flags", encbin_flags, NULL);
+
+  g_object_set (camera->viewfinderbin, "disable-converters",
+      camera->flags & GST_CAM_FLAG_NO_VIEWFINDER_CONVERSION, NULL);
 
   if (camera->video_profile_switch) {
     GST_DEBUG_OBJECT (camera, "Switching encodebin's profile");
@@ -1529,6 +1558,8 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
   }
 
   if (new_audio_src) {
+    GstPad *srcpad;
+
     if (g_object_class_find_property (G_OBJECT_GET_CLASS (camera->audio_src),
             "provide-clock")) {
       g_object_set (camera->audio_src, "provide-clock", FALSE, NULL);
@@ -1540,6 +1571,15 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
 
     gst_element_link_many (camera->audio_src, camera->audio_volume,
         camera->audio_capsfilter, NULL);
+
+    srcpad = gst_element_get_static_pad (camera->audio_src, "src");
+
+    /* drop EOS for audiosrc elements that push them on state_changes
+     * (basesrc does this) */
+    gst_pad_add_event_probe (srcpad,
+        (GCallback) gst_camera_bin_audio_src_event_probe, camera);
+
+    gst_object_unref (srcpad);
   }
   if (has_audio) {
     gst_camera_bin_check_and_replace_filter (camera, &camera->audio_filter,
@@ -1578,6 +1618,7 @@ gst_camera_bin_change_state (GstElement * element, GstStateChange trans)
   GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
   GstCameraBin2 *camera = GST_CAMERA_BIN2_CAST (element);
 
+
   switch (trans) {
     case GST_STATE_CHANGE_NULL_TO_READY:
       if (!gst_camera_bin_create_elements (camera)) {
@@ -1586,6 +1627,7 @@ gst_camera_bin_change_state (GstElement * element, GstStateChange trans)
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       GST_CAMERA_BIN2_RESET_PROCESSING_COUNTER (camera);
+      camera->audio_drop_eos = TRUE;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       if (GST_STATE (camera->videosink) >= GST_STATE_PAUSED)
@@ -1734,8 +1776,12 @@ gst_camera_bin_set_property (GObject * object, guint prop_id,
           "Setting audio capture caps to %" GST_PTR_FORMAT,
           gst_value_get_caps (value));
 
-      g_object_set (camera->audio_capsfilter, "caps",
-          gst_value_get_caps (value), NULL);
+      if (G_LIKELY (camera->audio_capsfilter)) {
+        g_object_set (camera->audio_capsfilter, "caps",
+            gst_value_get_caps (value), NULL);
+      } else {
+        GST_WARNING_OBJECT (camera, "Audio capsfilter missing");
+      }
     }
       break;
     case PROP_IMAGE_CAPTURE_CAPS:{
@@ -1750,13 +1796,18 @@ gst_camera_bin_set_property (GObject * object, guint prop_id,
           "Setting image capture caps to %" GST_PTR_FORMAT,
           gst_value_get_caps (value));
 
+      if (G_LIKELY (camera->imagebin_capsfilter)) {
+        g_object_set (camera->imagebin_capsfilter, "caps",
+            gst_value_get_caps (value), NULL);
+      } else {
+        GST_WARNING_OBJECT (camera, "Image capsfilter missing");
+      }
+
       /* set the capsfilter caps and notify the src to renegotiate */
-      g_object_set (camera->imagebin_capsfilter, "caps",
-          gst_value_get_caps (value), NULL);
       if (pad) {
         GST_DEBUG_OBJECT (camera, "Pushing renegotiate on %s",
             GST_PAD_NAME (pad));
-        GST_PAD_EVENTFUNC (pad) (pad, gst_camera_bin_new_event_renegotiate ());
+        gst_pad_send_event (pad, gst_camera_bin_new_event_renegotiate ());
         gst_object_unref (pad);
       }
     }
@@ -1774,12 +1825,17 @@ gst_camera_bin_set_property (GObject * object, guint prop_id,
           gst_value_get_caps (value));
 
       /* set the capsfilter caps and notify the src to renegotiate */
-      g_object_set (camera->videobin_capsfilter, "caps",
-          gst_value_get_caps (value), NULL);
+      if (G_LIKELY (camera->videobin_capsfilter)) {
+        g_object_set (camera->videobin_capsfilter, "caps",
+            gst_value_get_caps (value), NULL);
+      } else {
+        GST_WARNING_OBJECT (camera, "Video capsfilter missing");
+      }
+
       if (pad) {
         GST_DEBUG_OBJECT (camera, "Pushing renegotiate on %s",
             GST_PAD_NAME (pad));
-        GST_PAD_EVENTFUNC (pad) (pad, gst_camera_bin_new_event_renegotiate ());
+        gst_pad_send_event (pad, gst_camera_bin_new_event_renegotiate ());
         gst_object_unref (pad);
       }
     }
@@ -1797,12 +1853,17 @@ gst_camera_bin_set_property (GObject * object, guint prop_id,
           gst_value_get_caps (value));
 
       /* set the capsfilter caps and notify the src to renegotiate */
-      g_object_set (camera->viewfinderbin_capsfilter, "caps",
-          gst_value_get_caps (value), NULL);
+      if (G_LIKELY (camera->viewfinderbin_capsfilter)) {
+        g_object_set (camera->viewfinderbin_capsfilter, "caps",
+            gst_value_get_caps (value), NULL);
+      } else {
+        GST_WARNING_OBJECT (camera, "Viewfinder capsfilter missing");
+      }
+
       if (pad) {
         GST_DEBUG_OBJECT (camera, "Pushing renegotiate on %s",
             GST_PAD_NAME (pad));
-        GST_PAD_EVENTFUNC (pad) (pad, gst_camera_bin_new_event_renegotiate ());
+        gst_pad_send_event (pad, gst_camera_bin_new_event_renegotiate ());
         gst_object_unref (pad);
       }
     }
@@ -1970,28 +2031,44 @@ gst_camera_bin_get_property (GObject * object, guint prop_id,
       break;
     case PROP_AUDIO_CAPTURE_CAPS:{
       GstCaps *caps = NULL;
-      g_object_get (camera->audio_capsfilter, "caps", &caps, NULL);
+      if (G_LIKELY (camera->audio_capsfilter)) {
+        g_object_get (camera->audio_capsfilter, "caps", &caps, NULL);
+      } else {
+        GST_WARNING ("Missing audio capsfilter");
+      }
       gst_value_set_caps (value, caps);
       gst_caps_unref (caps);
     }
       break;
     case PROP_IMAGE_CAPTURE_CAPS:{
       GstCaps *caps = NULL;
-      g_object_get (camera->imagebin_capsfilter, "caps", &caps, NULL);
+      if (G_LIKELY (camera->imagebin_capsfilter)) {
+        g_object_get (camera->imagebin_capsfilter, "caps", &caps, NULL);
+      } else {
+        GST_WARNING ("Missing imagebin capsfilter");
+      }
       gst_value_set_caps (value, caps);
       gst_caps_unref (caps);
     }
       break;
     case PROP_VIDEO_CAPTURE_CAPS:{
       GstCaps *caps = NULL;
-      g_object_get (camera->videobin_capsfilter, "caps", &caps, NULL);
+      if (G_LIKELY (camera->videobin_capsfilter)) {
+        g_object_get (camera->videobin_capsfilter, "caps", &caps, NULL);
+      } else {
+        GST_WARNING ("Missing imagebin capsfilter");
+      }
       gst_value_set_caps (value, caps);
       gst_caps_unref (caps);
     }
       break;
     case PROP_VIEWFINDER_CAPS:{
       GstCaps *caps = NULL;
-      g_object_get (camera->viewfinderbin_capsfilter, "caps", &caps, NULL);
+      if (G_LIKELY (camera->viewfinderbin_capsfilter)) {
+        g_object_get (camera->viewfinderbin_capsfilter, "caps", &caps, NULL);
+      } else {
+        GST_WARNING ("Missing imagebin capsfilter");
+      }
       gst_value_set_caps (value, caps);
       gst_caps_unref (caps);
     }

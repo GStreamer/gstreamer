@@ -58,7 +58,7 @@ struct _GstRsvgDec
   GstTagList *pending_tags;
 
   gint fps_n, fps_d;
-  GstClockTime timestamp_offset;
+  GstClockTime first_timestamp;
   guint64 frame_count;
 
   GstSegment segment;

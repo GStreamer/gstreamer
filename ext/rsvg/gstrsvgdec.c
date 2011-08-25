@@ -141,7 +141,7 @@ gst_rsvg_dec_reset (GstRsvgDec * dec)
   dec->width = dec->height = 0;
   dec->fps_n = 0;
   dec->fps_d = 1;
-  dec->timestamp_offset = GST_CLOCK_TIME_NONE;
+  dec->first_timestamp = GST_CLOCK_TIME_NONE;
   dec->frame_count = 0;
 
   gst_segment_init (&dec->segment, GST_FORMAT_UNDEFINED);
@@ -341,11 +341,18 @@ gst_rsvg_dec_chain (GstPad * pad, GstBuffer * buffer)
   guint size;
   gboolean ret = GST_FLOW_OK;
 
-  if (rsvg->timestamp_offset == GST_CLOCK_TIME_NONE) {
+  /* first_timestamp is used slightly differently where a framerate
+     is given or not.
+     If there is a frame rate, it will be used as a base.
+     If there is not, it will be used to keep track of the timestamp
+     of the first buffer, to be used as the timestamp of the output
+     buffer. When a buffer is output, first timestamp will resync to
+     the next buffer's timestamp. */
+  if (rsvg->first_timestamp == GST_CLOCK_TIME_NONE) {
     if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer))
-      rsvg->timestamp_offset = GST_BUFFER_TIMESTAMP (buffer);
-    else
-      rsvg->timestamp_offset = 0;
+      rsvg->first_timestamp = GST_BUFFER_TIMESTAMP (buffer);
+    else if (rsvg->fps_n != 0)
+      rsvg->first_timestamp = 0;
   }
 
   gst_adapter_push (rsvg->adapter, buffer);
@@ -377,15 +384,33 @@ gst_rsvg_dec_chain (GstPad * pad, GstBuffer * buffer)
         break;
 
 
-      if (rsvg->fps_n != 0) {
+      if (rsvg->first_timestamp != GST_CLOCK_TIME_NONE) {
+        GST_BUFFER_TIMESTAMP (outbuf) = rsvg->first_timestamp;
+        GST_BUFFER_DURATION (outbuf) = GST_CLOCK_TIME_NONE;
+        if (GST_BUFFER_DURATION_IS_VALID (buffer)) {
+          GstClockTime end =
+              GST_BUFFER_TIMESTAMP_IS_VALID (buffer) ?
+              GST_BUFFER_TIMESTAMP (buffer) : rsvg->first_timestamp;
+          end += GST_BUFFER_DURATION (buffer);
+          GST_BUFFER_DURATION (outbuf) = end - GST_BUFFER_TIMESTAMP (outbuf);
+        }
+        if (rsvg->fps_n == 0) {
+          rsvg->first_timestamp = GST_CLOCK_TIME_NONE;
+        } else {
+          GST_BUFFER_DURATION (outbuf) =
+              gst_util_uint64_scale (rsvg->frame_count, rsvg->fps_d,
+              rsvg->fps_n * GST_SECOND);
+        }
+      } else if (rsvg->fps_n != 0) {
         GST_BUFFER_TIMESTAMP (outbuf) =
-            rsvg->timestamp_offset + gst_util_uint64_scale (rsvg->frame_count,
+            rsvg->first_timestamp + gst_util_uint64_scale (rsvg->frame_count,
             rsvg->fps_d, rsvg->fps_n * GST_SECOND);
         GST_BUFFER_DURATION (outbuf) =
             gst_util_uint64_scale (rsvg->frame_count, rsvg->fps_d,
             rsvg->fps_n * GST_SECOND);
       } else {
-        GST_BUFFER_TIMESTAMP (outbuf) = 0;
+        GST_BUFFER_TIMESTAMP (outbuf) = rsvg->first_timestamp;
+        GST_BUFFER_DURATION (outbuf) = GST_CLOCK_TIME_NONE;
       }
       rsvg->frame_count++;
 

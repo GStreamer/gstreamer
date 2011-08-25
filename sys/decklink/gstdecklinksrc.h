@@ -22,10 +22,9 @@
 
 #include <gst/gst.h>
 #include "gstdecklink.h"
-#include "DeckLinkAPI.h"
 
 G_BEGIN_DECLS
-
+GST_DEBUG_CATEGORY_EXTERN (gst_decklink_src_debug_category);
 #define GST_TYPE_DECKLINK_SRC   (gst_decklink_src_get_type())
 #define GST_DECKLINK_SRC(obj)   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_DECKLINK_SRC,GstDecklinkSrc))
 #define GST_DECKLINK_SRC_CLASS(klass)   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_DECKLINK_SRC,GstDecklinkSrcClass))
@@ -50,6 +49,7 @@ struct _GstDecklinkSrc
   GMutex *mutex;
   GCond *cond;
   int dropped_frames;
+  int dropped_frames_old;
   gboolean stop;
   IDeckLinkVideoInputFrame *video_frame;
   IDeckLinkAudioInputPacket * audio_frame;
@@ -60,7 +60,7 @@ struct _GstDecklinkSrc
   guint64 num_audio_samples;
 
   GstCaps *video_caps;
-  guint64 num_frames;
+  guint64 frame_num;
   int fps_n;
   int fps_d;
   int width;
@@ -73,6 +73,16 @@ struct _GstDecklinkSrc
   GstDecklinkModeEnum mode;
   GstDecklinkConnectionEnum connection;
   GstDecklinkAudioConnectionEnum audio_connection;
+  int subdevice;
+
+#ifdef _MSC_VER
+  gboolean comInitialized;
+  GMutex   *com_init_lock;
+  GMutex   *com_deinit_lock;
+  GCond    *com_initialized;
+  GCond    *com_uninitialize;
+  GCond    *com_uninitialized;
+#endif /* _MSC_VER */
 };
 
 struct _GstDecklinkSrcClass

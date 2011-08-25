@@ -62,10 +62,10 @@ gst_kate_spu_decode_alpha (GstKateEnc * ke, const guint8 * ptr)
 static void
 gst_kate_spu_decode_area (GstKateEnc * ke, const guint8 * ptr)
 {
-  ke->spu_left = ((((guint16) ptr[0]) & 0x3f) << 4) | (ptr[1] >> 4);
-  ke->spu_top = ((((guint16) ptr[3]) & 0x3f) << 4) | (ptr[4] >> 4);
-  ke->spu_right = ((((guint16) ptr[1]) & 0x03) << 8) | ptr[2];
-  ke->spu_bottom = ((((guint16) ptr[4]) & 0x03) << 8) | ptr[5];
+  ke->spu_left = ((((guint16) ptr[0]) & 0xff) << 4) | (ptr[1] >> 4);
+  ke->spu_top = ((((guint16) ptr[3]) & 0xff) << 4) | (ptr[4] >> 4);
+  ke->spu_right = ((((guint16) ptr[1]) & 0x0f) << 8) | ptr[2];
+  ke->spu_bottom = ((((guint16) ptr[4]) & 0x0f) << 8) | ptr[5];
   GST_DEBUG_OBJECT (ke, "SPU area %u %u -> %u %d", ke->spu_left, ke->spu_top,
       ke->spu_right, ke->spu_bottom);
 }
@@ -494,9 +494,14 @@ gst_kate_spu_decode_spu (GstKateEnc * ke, GstBuffer * buf, kate_region * kr,
   if (G_UNLIKELY (ke->spu_right - ke->spu_left < 0
           || ke->spu_bottom - ke->spu_top < 0 || ke->spu_pix_data[0] == 0
           || ke->spu_pix_data[1] == 0)) {
-    GST_ELEMENT_ERROR (ke, STREAM, ENCODE, (NULL),
-        ("SPU area is empty, nothing to encode"));
-    return GST_FLOW_ERROR;
+    GST_DEBUG_OBJECT (ke,
+        "left %d, right %d, top %d, bottom %d, pix data %d %d", ke->spu_left,
+        ke->spu_right, ke->spu_top, ke->spu_bottom, ke->spu_pix_data[0],
+        ke->spu_pix_data[1]);
+    GST_WARNING_OBJECT (ke, "SPU area is empty, nothing to encode");
+    kate_bitmap_init (kb);
+    kb->width = kb->height = 0;
+    return GST_FLOW_OK;
   }
 
   /* create the palette */

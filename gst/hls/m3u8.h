@@ -29,6 +29,7 @@ G_BEGIN_DECLS typedef struct _GstM3U8 GstM3U8;
 typedef struct _GstM3U8MediaFile GstM3U8MediaFile;
 typedef struct _GstM3U8Client GstM3U8Client;
 
+#define GST_M3U8(m) ((GstM3U8*)m)
 #define GST_M3U8_MEDIA_FILE(f) ((GstM3U8MediaFile*)f)
 
 struct _GstM3U8
@@ -50,6 +51,7 @@ struct _GstM3U8
   /*< private > */
   gchar *last_data;
   GList *lists;                 /* list of GstM3U8 from the main playlist */
+  GList *current_variant;       /* Current variant playlist used */
   GstM3U8 *parent;              /* main playlist (if any) */
   guint mediasequence;          /* EXT-X-MEDIA-SEQUENCE & increased with new media file */
 };
@@ -76,7 +78,8 @@ void gst_m3u8_client_free (GstM3U8Client * client);
 gboolean gst_m3u8_client_update (GstM3U8Client * client, gchar * data);
 void gst_m3u8_client_set_current (GstM3U8Client * client, GstM3U8 * m3u8);
 gboolean gst_m3u8_client_get_next_fragment (GstM3U8Client * client,
-    gboolean * discontinuity, const gchar ** uri, GstClockTime * duration);
+    gboolean * discontinuity, const gchar ** uri, GstClockTime * duration,
+    GstClockTime * timestamp);
 GstClockTime gst_m3u8_client_get_duration (GstM3U8Client * client);
 const gchar *gst_m3u8_client_get_uri(GstM3U8Client * client);
 gboolean gst_m3u8_client_has_variant_playlist(GstM3U8Client * client);

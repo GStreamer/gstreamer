@@ -362,6 +362,7 @@ AG_GST_CHECK_PLUGIN(pcapparse)
 AG_GST_CHECK_PLUGIN(pnm)
 AG_GST_CHECK_PLUGIN(rawparse)
 AG_GST_CHECK_PLUGIN(real)
+AG_GST_CHECK_PLUGIN(removesilence)
 AG_GST_CHECK_PLUGIN(rtpmux)
 AG_GST_CHECK_PLUGIN(rtpvp8)
 AG_GST_CHECK_PLUGIN(scaletempo)
@@ -387,11 +388,6 @@ dnl real plugin only works on i386 and x86_64 for the time being.
 if test "x$HAVE_CPU_I386" != "xyes" && test "x$HAVE_CPU_X86_64" != "xyes"; then
   AC_MSG_WARN([Not building real plugin, only works on 32bit and 64bit x86 platforms])
   AG_GST_DISABLE_PLUGIN(real)
-fi
-
-dnl disable experimental plug-ins
-if test "x$BUILD_EXPERIMENTAL" != "xyes"; then
-  AG_GST_DISABLE_PLUGIN(camerabin2)
 fi
 
 # This will always succeed because we depend on GLib >= 2.16
@@ -1708,6 +1704,20 @@ AG_GST_CHECK_FEATURE(VP8, [VP8 decoder], vp8, [
       HAVE_VP8=yes
       AC_DEFINE(HAVE_VP8_ENCODER, 1, [Defined if the VP8 encoder is available])
       VPX_LIBS="-lvpx"
+
+      AC_MSG_CHECKING([for VP8E_SET_TUNING presence])
+      AC_TRY_COMPILE([
+#include <vpx/vpx_encoder.h>
+#include <vpx/vp8cx.h>
+int foo=VP8E_SET_TUNING;
+      ], [
+return 0;
+      ], [
+        AC_DEFINE(HAVE_VP8ENC_TUNING, 1, [Defined if the VP8 encoder has tuning API])
+	AC_MSG_RESULT(yes)
+      ], [
+	AC_MSG_RESULT(no)
+      ])
     ])
     AC_CHECK_LIB(vpx, vpx_codec_vp8_dx_algo, [
       HAVE_VP8=yes
@@ -1929,6 +1939,7 @@ gst/pcapparse/Makefile
 gst/pnm/Makefile
 gst/rawparse/Makefile
 gst/real/Makefile
+gst/removesilence/Makefile
 gst/rtpmux/Makefile
 gst/rtpvp8/Makefile
 gst/scaletempo/Makefile

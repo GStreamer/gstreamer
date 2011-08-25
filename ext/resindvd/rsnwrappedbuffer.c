@@ -75,6 +75,7 @@ rsn_meta_wrapped_unwrap_and_unref (GstBuffer * wrap_buf, RsnMetaWrapped * meta)
   g_return_val_if_fail (meta->wrapped_buffer != NULL, NULL);
 
   buf = gst_buffer_ref (meta->wrapped_buffer);
+  buf = gst_buffer_make_metadata_writable (buf);
 
   /* Copy changed metadata back to the wrapped buffer from the wrapper,
    * except the the read-only flag and the caps. */

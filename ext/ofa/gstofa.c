@@ -115,9 +115,11 @@ static void
 create_fingerprint (GstOFA * ofa)
 {
   GstBuffer *buf;
-  gint rate = GST_AUDIO_FILTER (ofa)->format.rate;
-  gint channels = GST_AUDIO_FILTER (ofa)->format.channels;
-  gint endianness;
+  GstAudioFilter *ofa_filter = GST_AUDIO_FILTER (ofa);
+  gint rate = ofa_filter->format.rate;
+  gint channels = ofa_filter->format.channels;
+  gint endianness =
+      ofa_filter->format.bigend ? OFA_BIG_ENDIAN : OFA_LITTLE_ENDIAN;
   GstTagList *tags;
   guint available;
 
@@ -135,7 +137,8 @@ create_fingerprint (GstOFA * ofa)
     endianness = OFA_LITTLE_ENDIAN;
 
 
-  GST_DEBUG ("Generating fingerprint");
+  GST_DEBUG_OBJECT (ofa, "Generating fingerprint for %u samples",
+      available / 2);
 
   buf = gst_adapter_take_buffer (ofa->adapter, available);
 
@@ -143,16 +146,22 @@ create_fingerprint (GstOFA * ofa)
           endianness, GST_BUFFER_SIZE (buf) / 2, rate,
           (channels == 2) ? 1 : 0));
 
-  GST_DEBUG ("Generated fingerprint");
+  if (ofa->fingerprint) {
+    GST_INFO_OBJECT (ofa, "Generated fingerprint: %s", ofa->fingerprint);
+  } else {
+    GST_WARNING_OBJECT (ofa, "Failed to generate fingerprint");
+  }
 
   gst_buffer_unref (buf);
 
-  tags = gst_tag_list_new ();
-  gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE,
-      GST_TAG_OFA_FINGERPRINT, ofa->fingerprint, NULL);
-  gst_element_found_tags (GST_ELEMENT (ofa), tags);
+  if (ofa->fingerprint) {
+    tags = gst_tag_list_new ();
+    gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE,
+        GST_TAG_OFA_FINGERPRINT, ofa->fingerprint, NULL);
+    gst_element_found_tags (GST_ELEMENT (ofa), tags);
 
-  g_object_notify (G_OBJECT (ofa), "fingerprint");
+    g_object_notify (G_OBJECT (ofa), "fingerprint");
+  }
 
   ofa->record = FALSE;
 }
@@ -165,7 +174,8 @@ gst_ofa_event (GstBaseTransform * trans, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_STOP:
     case GST_EVENT_NEWSEGMENT:
-      GST_DEBUG ("Got %s event, clearing buffer", GST_EVENT_TYPE_NAME (event));
+      GST_DEBUG_OBJECT (ofa, "Got %s event, clearing buffer",
+          GST_EVENT_TYPE_NAME (event));
       gst_adapter_clear (ofa->adapter);
       ofa->record = TRUE;
       g_free (ofa->fingerprint);
@@ -175,7 +185,7 @@ gst_ofa_event (GstBaseTransform * trans, GstEvent * event)
       /* we got to the end of the stream but never generated a fingerprint
        * (probably under 135 seconds)
        */
-      if (!ofa->fingerprint)
+      if (!ofa->fingerprint && ofa->record)
         create_fingerprint (ofa);
       break;
     default:
@@ -200,10 +210,11 @@ static GstFlowReturn
 gst_ofa_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
 {
   GstOFA *ofa = GST_OFA (trans);
+  GstAudioFilter *ofa_filter = GST_AUDIO_FILTER (ofa);
   guint64 nframes;
   GstClockTime duration;
-  gint rate = GST_AUDIO_FILTER (ofa)->format.rate;
-  gint channels = GST_AUDIO_FILTER (ofa)->format.channels;
+  gint rate = ofa_filter->format.rate;
+  gint channels = ofa_filter->format.channels;
 
   g_return_val_if_fail (rate > 0 && channels > 0, GST_FLOW_NOT_NEGOTIATED);
 

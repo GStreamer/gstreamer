@@ -101,7 +101,13 @@ gst_vp8_enc_coder_hook_free (GstVP8EncCoderHook * hook)
 #define DEFAULT_LAG_IN_FRAMES 0
 #define DEFAULT_SHARPNESS 0
 #define DEFAULT_NOISE_SENSITIVITY 0
+#ifdef HAVE_VP8ENC_TUNING
 #define DEFAULT_TUNE VP8_TUNE_PSNR
+#else
+typedef enum
+{ VP8_TUNE_NONE } vp8e_tuning;
+#define DEFAULT_TUNE VP8_TUNE_NONE
+#endif
 #define DEFAULT_STATIC_THRESHOLD 0
 #define DEFAULT_DROP_FRAME 0
 #define DEFAULT_RESIZE_ALLOWED TRUE
@@ -186,8 +192,12 @@ static GType
 gst_vp8_enc_tune_get_type (void)
 {
   static const GEnumValue values[] = {
+#ifdef HAVE_VP8ENC_TUNING
     {VP8_TUNE_PSNR, "Tune for PSNR", "psnr"},
     {VP8_TUNE_SSIM, "Tune for SSIM", "ssim"},
+#else
+    {VP8_TUNE_NONE, "none", "none"},
+#endif
     {0, NULL, NULL}
   };
   static volatile GType id = 0;
@@ -542,7 +552,12 @@ gst_vp8_enc_set_property (GObject * object, guint prop_id,
       gst_vp8_enc->noise_sensitivity = g_value_get_int (value);
       break;
     case PROP_TUNE:
+#ifdef HAVE_VP8ENC_TUNING
       gst_vp8_enc->tuning = g_value_get_enum (value);
+#else
+      GST_WARNING_OBJECT (gst_vp8_enc,
+          "The tuning property is unsupported by this libvpx");
+#endif
       break;
     case PROP_STATIC_THRESHOLD:
       gst_vp8_enc->static_threshold = g_value_get_int (value);
@@ -626,7 +641,12 @@ gst_vp8_enc_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_int (value, gst_vp8_enc->noise_sensitivity);
       break;
     case PROP_TUNE:
+#ifdef HAVE_VP8ENC_TUNING
       g_value_set_enum (value, gst_vp8_enc->tuning);
+#else
+      GST_WARNING_OBJECT (gst_vp8_enc,
+          "The tuning property is unsupported by this libvpx");
+#endif
       break;
     case PROP_STATIC_THRESHOLD:
       g_value_set_int (value, gst_vp8_enc->static_threshold);
@@ -800,8 +820,10 @@ gst_vp8_enc_set_format (GstBaseVideoEncoder * base_video_encoder,
   status = vpx_codec_control (&encoder->encoder, VP8E_SET_ARNR_TYPE,
       encoder->arnr_type);
 #endif
+#ifdef HAVE_VP8ENC_TUNING
   status = vpx_codec_control (&encoder->encoder, VP8E_SET_TUNING,
       encoder->tuning);
+#endif
 
   status =
       vpx_codec_control (&encoder->encoder, VP8E_SET_ENABLEAUTOALTREF,
@@ -857,7 +879,6 @@ gst_vp8_enc_set_format (GstBaseVideoEncoder * base_video_encoder,
     GstStructure *s;
     GstBuffer *stream_hdr, *vorbiscomment;
     const GstTagList *iface_tags;
-    GstTagList *tags;
     GValue array = { 0, };
     GValue value = { 0, };
     s = gst_caps_get_structure (caps, 0);
@@ -892,8 +913,8 @@ gst_vp8_enc_set_format (GstBaseVideoEncoder * base_video_encoder,
         gst_tag_setter_get_tag_list (GST_TAG_SETTER (base_video_encoder));
     if (iface_tags) {
       vorbiscomment =
-          gst_tag_list_to_vorbiscomment_buffer ((iface_tags) ? iface_tags :
-          tags, (const guint8 *) "OVP80\2 ", 7,
+          gst_tag_list_to_vorbiscomment_buffer (iface_tags,
+          (const guint8 *) "OVP80\2 ", 7,
           "Encoded with GStreamer vp8enc " PACKAGE_VERSION);
 
       GST_BUFFER_FLAG_SET (vorbiscomment, GST_BUFFER_FLAG_IN_CAPS);

@@ -78,7 +78,9 @@ struct _GstVP8Enc
   unsigned int lag_in_frames;
   int sharpness;
   int noise_sensitivity;
+#ifdef HAVE_VP8ENC_TUNING
   vp8e_tuning tuning;
+#endif
   int static_threshold;
   gboolean drop_frame;
   gboolean resize_allowed;
