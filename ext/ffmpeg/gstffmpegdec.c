@@ -2032,7 +2032,7 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
     GST_BUFFER_FLAG_SET (*outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
 
   if (ffmpegdec->picture->top_field_first)
-    GST_BUFFER_FLAG_SET (*outbuf, GST_VIDEO_BUFFER_TFF);
+    GST_BUFFER_FLAG_SET (*outbuf, GST_VIDEO_BUFFER_FLAG_TFF);
 
 
 beach:
