@@ -3289,9 +3289,9 @@ gst_base_parse_find_frame (GstBaseParse * parse, gint64 * pos,
   GstBuffer *buf = NULL;
   GstBaseParseFrame frame;
 
-  g_return_val_if_fail (GST_FLOW_ERROR, pos != NULL);
-  g_return_val_if_fail (GST_FLOW_ERROR, time != NULL);
-  g_return_val_if_fail (GST_FLOW_ERROR, duration != NULL);
+  g_return_val_if_fail (pos != NULL, GST_FLOW_ERROR);
+  g_return_val_if_fail (time != NULL, GST_FLOW_ERROR);
+  g_return_val_if_fail (duration != NULL, GST_FLOW_ERROR);
 
   klass = GST_BASE_PARSE_GET_CLASS (parse);
 
