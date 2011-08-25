@@ -31,7 +31,7 @@
  *  0                   1                   2                   3
  *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
  * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
- * |C| CV  |D|X|Y|Z|                  MBZ                          |
+ * |C| CV  |D|0|0|0|                  MBZ                          |
  * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
  * |                          Frag_offset                          |
  * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -45,9 +45,6 @@
  *
  * CV: caps version, 0 = caps from SDP, 1 - 7 inlined caps
  * D: delta unit buffer
- * X: media 1 flag
- * Y: media 2 flag
- * Z: media 3 flag
  *
  *
  */
@@ -147,12 +144,6 @@ gst_rtp_gst_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   flags = 0;
   if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT))
     flags |= (1 << 3);
-  if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_MEDIA1))
-    flags |= (1 << 2);
-  if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_MEDIA2))
-    flags |= (1 << 1);
-  if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_MEDIA3))
-    flags |= (1 << 0);
 
   /*
    *  0                   1                   2                   3

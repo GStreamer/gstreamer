@@ -200,7 +200,7 @@ gst_rtp_gst_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
    *  0                   1                   2                   3
    *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
    * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-   * |C| CV  |D|X|Y|Z|                  MBZ                          |
+   * |C| CV  |D|0|0|0|                  MBZ                          |
    * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
    * |                          Frag_offset                          |
    * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -290,12 +290,6 @@ gst_rtp_gst_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     if (outbuf) {
       if (payload[0] & 0x8)
         GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
-      if (payload[0] & 0x4)
-        GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_MEDIA1);
-      if (payload[0] & 0x2)
-        GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_MEDIA2);
-      if (payload[0] & 0x1)
-        GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_MEDIA3);
     }
   }
   return outbuf;
