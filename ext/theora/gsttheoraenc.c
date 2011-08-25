@@ -627,7 +627,7 @@ theora_enc_sink_getcaps (GstPad * pad)
   peer = gst_pad_get_peer (encoder->srcpad);
   if (peer) {
     const GstCaps *templ_caps;
-    GstCaps *peer_caps;
+    GstCaps *peer_caps, *tmp_caps;
     GstStructure *s;
     guint i, n;
 
@@ -645,8 +645,9 @@ theora_enc_sink_getcaps (GstPad * pad)
 
     templ_caps = gst_pad_get_pad_template_caps (pad);
 
-    caps = gst_caps_intersect (peer_caps, templ_caps);
-    caps = gst_caps_intersect (caps, theora_enc_src_caps);
+    tmp_caps = gst_caps_intersect (peer_caps, templ_caps);
+    caps = gst_caps_intersect (tmp_caps, theora_enc_src_caps);
+    gst_caps_unref (tmp_caps);
     gst_caps_unref (peer_caps);
     gst_object_unref (peer);
     peer = NULL;
