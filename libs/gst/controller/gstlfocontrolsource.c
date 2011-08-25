@@ -969,7 +969,8 @@ gst_lfo_control_source_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_WAVEFORM:
       g_mutex_lock (self->lock);
-      gst_lfo_control_source_set_waveform (self, g_value_get_enum (value));
+      gst_lfo_control_source_set_waveform (self,
+          (GstLFOWaveform) g_value_get_enum (value));
       g_mutex_unlock (self->lock);
       break;
     case PROP_FREQUENCY:{
