@@ -96,7 +96,7 @@ gst_video_flags_get_type (void)
     static const GFlagsValue values[] = {
       {GST_VIDEO_FLAG_NONE, "GST_VIDEO_FLAG_NONE", "none"},
       {GST_VIDEO_FLAG_INTERLACED, "GST_VIDEO_FLAG_INTERLACED", "interlaced"},
-      {GST_VIDEO_FLAG_TTF, "GST_VIDEO_FLAG_TTF", "ttf"},
+      {GST_VIDEO_FLAG_TFF, "GST_VIDEO_FLAG_TFF", "tff"},
       {GST_VIDEO_FLAG_RFF, "GST_VIDEO_FLAG_RFF", "rff"},
       {GST_VIDEO_FLAG_ONEFIELD, "GST_VIDEO_FLAG_ONEFIELD", "onefield"},
       {GST_VIDEO_FLAG_TELECINE, "GST_VIDEO_FLAG_TELECINE", "telecine"},
@@ -104,6 +104,150 @@ gst_video_flags_get_type (void)
       {0, NULL, NULL}
     };
     GType g_define_type_id = g_flags_register_static ("GstVideoFlags", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+  }
+  return g_define_type_id__volatile;
+}
+
+GType
+gst_video_chroma_site_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
+    static const GFlagsValue values[] = {
+      {GST_VIDEO_CHROMA_SITE_UNKNOWN, "GST_VIDEO_CHROMA_SITE_UNKNOWN",
+          "unknown"},
+      {GST_VIDEO_CHROMA_SITE_NONE, "GST_VIDEO_CHROMA_SITE_NONE", "none"},
+      {GST_VIDEO_CHROMA_SITE_H_COSITED, "GST_VIDEO_CHROMA_SITE_H_COSITED",
+          "h-cosited"},
+      {GST_VIDEO_CHROMA_SITE_V_COSITED, "GST_VIDEO_CHROMA_SITE_V_COSITED",
+          "v-cosited"},
+      {GST_VIDEO_CHROMA_SITE_ALT_LINE, "GST_VIDEO_CHROMA_SITE_ALT_LINE",
+          "alt-line"},
+      {GST_VIDEO_CHROMA_SITE_COSITED, "GST_VIDEO_CHROMA_SITE_COSITED",
+          "cosited"},
+      {GST_VIDEO_CHROMA_SITE_JPEG, "GST_VIDEO_CHROMA_SITE_JPEG", "jpeg"},
+      {GST_VIDEO_CHROMA_SITE_MPEG2, "GST_VIDEO_CHROMA_SITE_MPEG2", "mpeg2"},
+      {GST_VIDEO_CHROMA_SITE_DV, "GST_VIDEO_CHROMA_SITE_DV", "dv"},
+      {0, NULL, NULL}
+    };
+    GType g_define_type_id =
+        g_flags_register_static ("GstVideoChromaSite", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+  }
+  return g_define_type_id__volatile;
+}
+
+GType
+gst_video_color_range_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
+    static const GEnumValue values[] = {
+      {GST_VIDEO_COLOR_RANGE_UNKNOWN, "GST_VIDEO_COLOR_RANGE_UNKNOWN",
+          "unknown"},
+      {GST_VIDEO_COLOR_RANGE_0_255, "GST_VIDEO_COLOR_RANGE_0_255", "0-255"},
+      {GST_VIDEO_COLOR_RANGE_16_235, "GST_VIDEO_COLOR_RANGE_16_235", "16-235"},
+      {0, NULL, NULL}
+    };
+    GType g_define_type_id =
+        g_enum_register_static ("GstVideoColorRange", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+  }
+  return g_define_type_id__volatile;
+}
+
+GType
+gst_video_color_matrix_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
+    static const GEnumValue values[] = {
+      {GST_VIDEO_COLOR_MATRIX_UNKNOWN, "GST_VIDEO_COLOR_MATRIX_UNKNOWN",
+          "unknown"},
+      {GST_VIDEO_COLOR_MATRIX_RGB, "GST_VIDEO_COLOR_MATRIX_RGB", "rgb"},
+      {GST_VIDEO_COLOR_MATRIX_BT709, "GST_VIDEO_COLOR_MATRIX_BT709", "bt709"},
+      {GST_VIDEO_COLOR_MATRIX_BT601, "GST_VIDEO_COLOR_MATRIX_BT601", "bt601"},
+      {GST_VIDEO_COLOR_MATRIX_SMPTE240M, "GST_VIDEO_COLOR_MATRIX_SMPTE240M",
+          "smpte240m"},
+      {0, NULL, NULL}
+    };
+    GType g_define_type_id =
+        g_enum_register_static ("GstVideoColorMatrix", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+  }
+  return g_define_type_id__volatile;
+}
+
+GType
+gst_video_transfer_function_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
+    static const GEnumValue values[] = {
+      {GST_VIDEO_TRANSFER_UNKNOWN, "GST_VIDEO_TRANSFER_UNKNOWN", "unknown"},
+      {GST_VIDEO_TRANSFER_GAMMA10, "GST_VIDEO_TRANSFER_GAMMA10", "gamma10"},
+      {GST_VIDEO_TRANSFER_GAMMA18, "GST_VIDEO_TRANSFER_GAMMA18", "gamma18"},
+      {GST_VIDEO_TRANSFER_GAMMA20, "GST_VIDEO_TRANSFER_GAMMA20", "gamma20"},
+      {GST_VIDEO_TRANSFER_GAMMA22, "GST_VIDEO_TRANSFER_GAMMA22", "gamma22"},
+      {GST_VIDEO_TRANSFER_BT709, "GST_VIDEO_TRANSFER_BT709", "bt709"},
+      {GST_VIDEO_TRANSFER_SMPTE240M, "GST_VIDEO_TRANSFER_SMPTE240M",
+          "smpte240m"},
+      {GST_VIDEO_TRANSFER_SRGB, "GST_VIDEO_TRANSFER_SRGB", "srgb"},
+      {GST_VIDEO_TRANSFER_GAMMA28, "GST_VIDEO_TRANSFER_GAMMA28", "gamma28"},
+      {0, NULL, NULL}
+    };
+    GType g_define_type_id =
+        g_enum_register_static ("GstVideoTransferFunction", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+  }
+  return g_define_type_id__volatile;
+}
+
+GType
+gst_video_color_primaries_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
+    static const GEnumValue values[] = {
+      {GST_VIDEO_COLOR_PRIMARIES_UNKNOWN, "GST_VIDEO_COLOR_PRIMARIES_UNKNOWN",
+          "unknown"},
+      {GST_VIDEO_COLOR_PRIMARIES_BT709, "GST_VIDEO_COLOR_PRIMARIES_BT709",
+          "bt709"},
+      {GST_VIDEO_COLOR_PRIMARIES_BT470M, "GST_VIDEO_COLOR_PRIMARIES_BT470M",
+          "bt470m"},
+      {GST_VIDEO_COLOR_PRIMARIES_BT470BG, "GST_VIDEO_COLOR_PRIMARIES_BT470BG",
+          "bt470bg"},
+      {GST_VIDEO_COLOR_PRIMARIES_SMPTE170M,
+          "GST_VIDEO_COLOR_PRIMARIES_SMPTE170M", "smpte170m"},
+      {GST_VIDEO_COLOR_PRIMARIES_SMPTE240M,
+          "GST_VIDEO_COLOR_PRIMARIES_SMPTE240M", "smpte240m"},
+      {0, NULL, NULL}
+    };
+    GType g_define_type_id =
+        g_enum_register_static ("GstVideoColorPrimaries", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+  }
+  return g_define_type_id__volatile;
+}
+
+GType
+gst_video_buffer_flags_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
+    static const GFlagsValue values[] = {
+      {GST_VIDEO_BUFFER_FLAG_TFF, "GST_VIDEO_BUFFER_FLAG_TFF", "tff"},
+      {GST_VIDEO_BUFFER_FLAG_RFF, "GST_VIDEO_BUFFER_FLAG_RFF", "rff"},
+      {GST_VIDEO_BUFFER_FLAG_ONEFIELD, "GST_VIDEO_BUFFER_FLAG_ONEFIELD",
+          "onefield"},
+      {GST_VIDEO_BUFFER_FLAG_PROGRESSIVE, "GST_VIDEO_BUFFER_FLAG_PROGRESSIVE",
+          "progressive"},
+      {GST_VIDEO_BUFFER_FLAG_LAST, "GST_VIDEO_BUFFER_FLAG_LAST", "last"},
+      {0, NULL, NULL}
+    };
+    GType g_define_type_id =
+        g_flags_register_static ("GstVideoBufferFlags", values);
     g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
   }
   return g_define_type_id__volatile;

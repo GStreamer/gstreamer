@@ -15,7 +15,7 @@
 #include "tunernorm.h"
 #include "tunerchannel.h"
 #include "videoorientation.h"
-#include "xoverlay.h"
+#include "videooverlay.h"
 
 /* enumerations from "colorbalance.h" */
 GType

@@ -81,7 +81,7 @@
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
 
 /* GStreamer package release date/time for plugins as YYYY-MM-DD */
-#define GST_PACKAGE_RELEASE_DATETIME "2011-08-03T09:53Z"
+#define GST_PACKAGE_RELEASE_DATETIME "2011-08-25T15:33Z"
 
 /* Define to enable ALSA (used by alsa). */
 #undef HAVE_ALSA
