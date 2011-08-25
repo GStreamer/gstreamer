@@ -375,13 +375,14 @@ gst_hls_demux_src_event (GstPad * pad, GstEvent * event)
       }
 
       demux->cancelled = TRUE;
+      gst_task_pause (demux->task);
       g_mutex_lock (demux->fetcher_lock);
       gst_hls_demux_stop_fetcher (demux, TRUE);
       g_mutex_unlock (demux->fetcher_lock);
-      gst_task_pause (demux->task);
       g_mutex_lock (demux->thread_lock);
       g_cond_signal (demux->thread_cond);
       g_mutex_unlock (demux->thread_lock);
+      gst_task_pause (demux->task);
 
       /* wait for streaming to finish */
       g_static_rec_mutex_lock (&demux->task_lock);
