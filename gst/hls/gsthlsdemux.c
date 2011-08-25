@@ -751,9 +751,11 @@ end_of_playlist:
 
 cache_error:
   {
-    GST_ELEMENT_ERROR (demux, RESOURCE, NOT_FOUND,
-        ("Could not cache the first fragments"), (NULL));
-    gst_hls_demux_stop (demux);
+    if (!demux->cancelled) {
+      GST_ELEMENT_ERROR (demux, RESOURCE, NOT_FOUND,
+          ("Could not cache the first fragments"), (NULL));
+      gst_hls_demux_stop (demux);
+    }
     return;
   }
 
