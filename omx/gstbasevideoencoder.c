@@ -432,6 +432,7 @@ done:
 
   GST_LOG_OBJECT (base_video_encoder, "Returning caps %" GST_PTR_FORMAT, fcaps);
 
+  g_object_unref (base_video_encoder);
   return fcaps;
 }
 
