@@ -158,7 +158,7 @@ typedef struct _GstBufferPool GstBufferPool;
 #define GST_BUFFER_IS_DISCONT(buffer)   (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT))
 
 /**
- * GstBufferFlag:
+ * GstBufferFlags:
  * @GST_BUFFER_FLAG_LIVE:    the buffer is live data and should be discarded in
  *                           the PAUSED state.
  * @GST_BUFFER_FLAG_DISCONT: the buffer marks a discontinuity in the stream.
@@ -189,7 +189,7 @@ typedef enum {
   GST_BUFFER_FLAG_MEDIA3     = (GST_MINI_OBJECT_FLAG_LAST << 7),
   GST_BUFFER_FLAG_MEDIA4     = (GST_MINI_OBJECT_FLAG_LAST << 8),
   GST_BUFFER_FLAG_LAST       = (GST_MINI_OBJECT_FLAG_LAST << 16)
-} GstBufferFlag;
+} GstBufferFlags;
 
 /**
  * GstBuffer:
