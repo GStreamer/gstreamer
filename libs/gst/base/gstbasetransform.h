@@ -190,6 +190,10 @@ struct _GstBaseTransform {
  *               Subclasses can override this method to check if @caps can be
  *               handled by the element. The default implementation might not be
  *               the most optimal way to check this in all cases.
+ * @query: Optional Since 0.10.36
+ *                Handle a requested query. Subclasses that implement this
+ *                should must chain up to the parent if they didn't handle the
+ *                query
  *
  * Subclasses can override any of the available virtual methods or not, as
  * needed. At minimum either @transform or @transform_ip need to be overridden.
@@ -243,9 +247,10 @@ struct _GstBaseTransformClass {
 
   gboolean      (*accept_caps)  (GstBaseTransform *trans, GstPadDirection direction,
                                          GstCaps *caps);
+  gboolean      (*query)  (GstBaseTransform *trans, GstPad *pad, GstQuery *query);
 
   /*< private >*/
-  gpointer       _gst_reserved[GST_PADDING_LARGE - 3];
+  gpointer       _gst_reserved[GST_PADDING_LARGE - 4];
 };
 
 GType           gst_base_transform_get_type         (void);

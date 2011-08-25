@@ -350,6 +350,8 @@ static gboolean gst_base_transform_setcaps (GstPad * pad, GstCaps * caps);
 static GstFlowReturn gst_base_transform_buffer_alloc (GstPad * pad,
     guint64 offset, guint size, GstCaps * caps, GstBuffer ** buf);
 static gboolean gst_base_transform_query (GstPad * pad, GstQuery * query);
+static gboolean gst_base_transform_default_query (GstBaseTransform * trans,
+    GstPad * pad, GstQuery * query);
 static const GstQueryType *gst_base_transform_query_type (GstPad * pad);
 
 /* static guint gst_base_transform_signals[LAST_SIGNAL] = { 0 }; */
@@ -397,6 +399,7 @@ gst_base_transform_class_init (GstBaseTransformClass * klass)
   klass->src_event = GST_DEBUG_FUNCPTR (gst_base_transform_src_eventfunc);
   klass->accept_caps =
       GST_DEBUG_FUNCPTR (gst_base_transform_acceptcaps_default);
+  klass->query = GST_DEBUG_FUNCPTR (gst_base_transform_default_query);
 }
 
 static void
@@ -1234,15 +1237,12 @@ failed_configure:
 }
 
 static gboolean
-gst_base_transform_query (GstPad * pad, GstQuery * query)
+gst_base_transform_default_query (GstBaseTransform * trans,
+    GstPad * pad, GstQuery * query)
 {
   gboolean ret = FALSE;
-  GstBaseTransform *trans;
   GstPad *otherpad;
 
-  trans = GST_BASE_TRANSFORM (gst_pad_get_parent (pad));
-  if (G_UNLIKELY (trans == NULL))
-    return FALSE;
   otherpad = (pad == trans->srcpad) ? trans->sinkpad : trans->srcpad;
 
   switch (GST_QUERY_TYPE (query)) {
@@ -1274,7 +1274,29 @@ gst_base_transform_query (GstPad * pad, GstQuery * query)
       break;
   }
 
+  return ret;
+}
+
+static gboolean
+gst_base_transform_query (GstPad * pad, GstQuery * query)
+{
+  GstBaseTransform *trans;
+  GstBaseTransformClass *bclass;
+  gboolean ret;
+
+  trans = GST_BASE_TRANSFORM (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (trans == NULL))
+    return FALSE;
+
+  bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
+
+  if (bclass->query)
+    ret = bclass->query (trans, pad, query);
+  else
+    ret = gst_pad_query_default (pad, query);
+
   gst_object_unref (trans);
+
   return ret;
 }
 
