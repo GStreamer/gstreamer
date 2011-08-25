@@ -645,10 +645,14 @@ gst_video_rate_query (GstBaseTransform * trans, GstPadDirection direction,
       GstClockTime min, max;
       gboolean live;
       guint64 latency;
+      guint64 avg_period;
       GstPad *peer;
 
-      if (videorate->average_period == 0
-          && (peer = gst_pad_get_peer (otherpad))) {
+      GST_OBJECT_LOCK (videorate);
+      avg_period = videorate->average_period_set;
+      GST_OBJECT_UNLOCK (videorate);
+
+      if (avg_period == 0 && (peer = gst_pad_get_peer (otherpad))) {
         if ((res = gst_pad_query (peer, query))) {
           gst_query_parse_latency (query, &live, &min, &max);
 
@@ -682,8 +686,10 @@ gst_video_rate_query (GstBaseTransform * trans, GstPadDirection direction,
           gst_query_set_latency (query, live, min, max);
         }
         gst_object_unref (peer);
+        break;
       }
-      break;
+      /* Simple fallthrough if we don't have a latency or not a peer that we
+       * can't ask about its latency yet.. */
     }
     default:
       res = parent_class->query (trans, direction, query);
@@ -783,17 +789,25 @@ gst_video_rate_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
 
   /* MT-safe switching between modes */
   if (G_UNLIKELY (avg_period != videorate->average_period)) {
+    gboolean switch_mode = (avg_period == 0 || videorate->average_period == 0);
     videorate->average_period = avg_period;
     videorate->last_ts = GST_CLOCK_TIME_NONE;
-    if (avg_period && !videorate->average) {
-      /* enabling average mode */
-      videorate->average = 0;
-    } else {
-      /* enable regular mode */
-      gst_video_rate_swap_prev (videorate, NULL, 0);
-      /* arrange for skip-to-first behaviour */
-      videorate->next_ts = GST_CLOCK_TIME_NONE;
-      skip = TRUE;
+
+    if (switch_mode) {
+      if (avg_period) {
+        /* enabling average mode */
+        videorate->average = 0;
+        /* make sure no cached buffers from regular mode are left */
+        gst_video_rate_swap_prev (videorate, NULL, 0);
+      } else {
+        /* enable regular mode */
+        videorate->next_ts = GST_CLOCK_TIME_NONE;
+        skip = TRUE;
+      }
+
+      /* max averaging mode has a no latency, normal mode does */
+      gst_element_post_message (GST_ELEMENT (videorate),
+          gst_message_new_latency (GST_OBJECT (videorate)));
     }
   }
 
@@ -980,7 +994,9 @@ gst_video_rate_set_property (GObject * object,
       videorate->drop_only = g_value_get_boolean (value);
       break;
     case ARG_AVERAGE_PERIOD:
+      GST_OBJECT_LOCK (videorate);
       videorate->average_period_set = g_value_get_uint64 (value);
+      GST_OBJECT_UNLOCK (videorate);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1022,7 +1038,9 @@ gst_video_rate_get_property (GObject * object,
       g_value_set_boolean (value, videorate->drop_only);
       break;
     case ARG_AVERAGE_PERIOD:
+      GST_OBJECT_LOCK (videorate);
       g_value_set_uint64 (value, videorate->average_period_set);
+      GST_OBJECT_UNLOCK (videorate);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
