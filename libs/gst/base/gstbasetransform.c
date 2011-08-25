@@ -1457,48 +1457,24 @@ static gboolean
 default_copy_metadata (GstBaseTransform * trans,
     GstBuffer * inbuf, GstBuffer * outbuf)
 {
-  GstBaseTransformPrivate *priv;
-  gboolean copymeta;
-  guint mask;
-
-  priv = trans->priv;
+  GstBaseTransformPrivate *priv = trans->priv;
 
   /* now copy the metadata */
-  mask = GST_BUFFER_FLAG_LIVE | GST_BUFFER_FLAG_IN_CAPS |
-      GST_BUFFER_FLAG_DELTA_UNIT | GST_BUFFER_FLAG_DISCONT |
-      GST_BUFFER_FLAG_GAP | GST_BUFFER_FLAG_MEDIA1 |
-      GST_BUFFER_FLAG_MEDIA2 | GST_BUFFER_FLAG_MEDIA3;
+  GST_DEBUG_OBJECT (trans, "copying metadata");
 
-  /* see if the flags and timestamps match */
-  copymeta =
-      (GST_MINI_OBJECT_FLAGS (outbuf) & mask) !=
-      (GST_MINI_OBJECT_FLAGS (inbuf) & mask);
-  copymeta |=
-      GST_BUFFER_TIMESTAMP (outbuf) != GST_BUFFER_TIMESTAMP (inbuf) ||
-      GST_BUFFER_DURATION (outbuf) != GST_BUFFER_DURATION (inbuf) ||
-      GST_BUFFER_OFFSET (outbuf) != GST_BUFFER_OFFSET (inbuf) ||
-      GST_BUFFER_OFFSET_END (outbuf) != GST_BUFFER_OFFSET_END (inbuf);
-  /* we need to modify the metadata when the element is not gap aware,
-   * passthrough is not used and the gap flag is set */
-  copymeta |= !priv->gap_aware && !trans->passthrough
-      && (GST_MINI_OBJECT_FLAGS (outbuf) & GST_BUFFER_FLAG_GAP);
+  /* this should not happen, buffers allocated from a pool or with
+   * new_allocate should always be writable. */
+  if (!gst_buffer_is_writable (outbuf))
+    goto not_writable;
 
-  if (copymeta) {
-    GST_DEBUG_OBJECT (trans, "copying metadata");
+  /* when we get here, the metadata should be writable */
+  gst_buffer_copy_into (outbuf, inbuf,
+      GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
 
-    /* this should not happen, buffers allocated from a pool or with
-     * new_allocate should always be writable. */
-    if (!gst_buffer_is_writable (outbuf))
-      goto not_writable;
+  /* clear the GAP flag when the subclass does not understand it */
+  if (!priv->gap_aware)
+    GST_BUFFER_FLAG_UNSET (outbuf, GST_BUFFER_FLAG_GAP);
 
-    /* when we get here, the metadata should be writable */
-    gst_buffer_copy_into (outbuf, inbuf,
-        GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
-
-    /* clear the GAP flag when the subclass does not understand it */
-    if (!priv->gap_aware)
-      GST_BUFFER_FLAG_UNSET (outbuf, GST_BUFFER_FLAG_GAP);
-  }
   return TRUE;
 
   /* ERRORS */

@@ -270,14 +270,8 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
       bufsize);
 
   if (flags & GST_BUFFER_COPY_FLAGS) {
-    guint mask;
-
-    /* copy relevant flags */
-    mask = GST_BUFFER_FLAG_LIVE | GST_BUFFER_FLAG_IN_CAPS |
-        GST_BUFFER_FLAG_DELTA_UNIT | GST_BUFFER_FLAG_DISCONT |
-        GST_BUFFER_FLAG_GAP | GST_BUFFER_FLAG_MEDIA1 |
-        GST_BUFFER_FLAG_MEDIA2 | GST_BUFFER_FLAG_MEDIA3;
-    GST_MINI_OBJECT_FLAGS (dest) |= GST_MINI_OBJECT_FLAGS (src) & mask;
+    /* copy flags */
+    GST_MINI_OBJECT_FLAGS (dest) = GST_MINI_OBJECT_FLAGS (src);
   }
 
   if (flags & GST_BUFFER_COPY_TIMESTAMPS) {
