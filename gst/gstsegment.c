@@ -173,7 +173,7 @@ gst_segment_init (GstSegment * segment, GstFormat format)
   segment->abs_rate = 1.0;
   segment->applied_rate = 1.0;
   segment->format = format;
-  segment->flags = 0;
+  segment->flags = GST_SEEK_FLAG_NONE;
   segment->start = 0;
   segment->stop = -1;
   segment->time = 0;
