@@ -31,8 +31,7 @@ caps_are_raw (const GstCaps * caps)
 
   for (i = 0; i < len; i++) {
     GstStructure *st = gst_caps_get_structure (caps, i);
-    if (gst_structure_has_name (st, "video/x-raw-yuv") ||
-        gst_structure_has_name (st, "video/x-raw-rgb"))
+    if (gst_structure_has_name (st, "video/x-raw"))
       return TRUE;
   }
 
