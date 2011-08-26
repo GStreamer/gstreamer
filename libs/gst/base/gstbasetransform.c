@@ -351,7 +351,7 @@ static GstFlowReturn gst_base_transform_buffer_alloc (GstPad * pad,
     guint64 offset, guint size, GstCaps * caps, GstBuffer ** buf);
 static gboolean gst_base_transform_query (GstPad * pad, GstQuery * query);
 static gboolean gst_base_transform_default_query (GstBaseTransform * trans,
-    GstPad * pad, GstQuery * query);
+    GstPadDirection direction, GstQuery * query);
 static const GstQueryType *gst_base_transform_query_type (GstPad * pad);
 
 /* static guint gst_base_transform_signals[LAST_SIGNAL] = { 0 }; */
@@ -1238,12 +1238,12 @@ failed_configure:
 
 static gboolean
 gst_base_transform_default_query (GstBaseTransform * trans,
-    GstPad * pad, GstQuery * query)
+    GstPadDirection direction, GstQuery * query)
 {
   gboolean ret = FALSE;
   GstPad *otherpad;
 
-  otherpad = (pad == trans->srcpad) ? trans->sinkpad : trans->srcpad;
+  otherpad = (direction == GST_PAD_SRC) ? trans->sinkpad : trans->srcpad;
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:{
@@ -1254,7 +1254,7 @@ gst_base_transform_default_query (GstBaseTransform * trans,
         gint64 pos;
         ret = TRUE;
 
-        if ((pad == trans->sinkpad)
+        if ((direction == GST_PAD_SINK)
             || (trans->priv->last_stop_out == GST_CLOCK_TIME_NONE)) {
           pos =
               gst_segment_to_stream_time (&trans->segment, GST_FORMAT_TIME,
@@ -1291,7 +1291,7 @@ gst_base_transform_query (GstPad * pad, GstQuery * query)
   bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
   if (bclass->query)
-    ret = bclass->query (trans, pad, query);
+    ret = bclass->query (trans, GST_PAD_DIRECTION (pad), query);
   else
     ret = gst_pad_query_default (pad, query);
 
