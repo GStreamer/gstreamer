@@ -1442,7 +1442,7 @@ mpegts_base_handle_seek_event (MpegTSBase * base, GstPad * pad,
 
   if (base->mode == BASE_MODE_PUSHING) {
     GST_ERROR ("seeking in push mode not supported");
-    goto done;
+    goto push_mode;
   }
 
   /* stop streaming, either by flushing or by pausing the task */
@@ -1493,7 +1493,7 @@ mpegts_base_handle_seek_event (MpegTSBase * base, GstPad * pad,
   //else
 done:
   gst_pad_start_task (base->sinkpad, (GstTaskFunction) mpegts_base_loop, base);
-
+push_mode:
   GST_PAD_STREAM_UNLOCK (base->sinkpad);
   return ret == GST_FLOW_OK;
 }
