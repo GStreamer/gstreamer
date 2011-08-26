@@ -49,7 +49,7 @@ static GstFormatDefinition standard_definitions[] = {
   {GST_FORMAT_TIME, "time", "Time", 0},
   {GST_FORMAT_BUFFERS, "buffers", "Buffers", 0},
   {GST_FORMAT_PERCENT, "percent", "Percent", 0},
-  {0, NULL, NULL, 0}
+  {GST_FORMAT_UNDEFINED, NULL, NULL, 0}
 };
 
 void
@@ -153,7 +153,7 @@ gst_format_register (const gchar * nick, const gchar * description)
 
   g_static_mutex_lock (&mutex);
   format = g_slice_new (GstFormatDefinition);
-  format->value = _n_values;
+  format->value = (GstFormat) _n_values;
   format->nick = g_strdup (nick);
   format->description = g_strdup (description);
   format->quark = g_quark_from_static_string (format->nick);

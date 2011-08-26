@@ -175,7 +175,7 @@ gst_segment_init (GstSegment * segment, GstFormat format)
 {
   g_return_if_fail (segment != NULL);
 
-  segment->flags = 0;
+  segment->flags = GST_SEEK_FLAG_NONE;
   segment->rate = 1.0;
   segment->applied_rate = 1.0;
   segment->format = format;

@@ -1479,7 +1479,7 @@ gst_debug_category_reset_threshold (GstDebugCategory * category)
 GstDebugLevel
 gst_debug_category_get_threshold (GstDebugCategory * category)
 {
-  return g_atomic_int_get (&category->threshold);
+  return (GstDebugLevel) g_atomic_int_get (&category->threshold);
 }
 
 /**

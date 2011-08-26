@@ -30,13 +30,15 @@ G_BEGIN_DECLS
 
 /**
  * GstAllocTraceFlags:
- * @GST_ALLOC_TRACE_LIVE: Trace number of non-freed memory
- * @GST_ALLOC_TRACE_MEM_LIVE: trace pointers of unfreed memory
+ * @GST_ALLOC_TRACE_NONE: No tracing specified or desired. Since 0.10.36.
+ * @GST_ALLOC_TRACE_LIVE: Trace number of non-freed memory.
+ * @GST_ALLOC_TRACE_MEM_LIVE: Trace pointers of unfreed memory.
  *
  * Flags indicating which tracing feature to enable.
  */
 typedef enum {
-  GST_ALLOC_TRACE_LIVE		= (1 << 0),
+  GST_ALLOC_TRACE_NONE      = 0,
+  GST_ALLOC_TRACE_LIVE      = (1 << 0),
   GST_ALLOC_TRACE_MEM_LIVE	= (1 << 1)
 } GstAllocTraceFlags;
 

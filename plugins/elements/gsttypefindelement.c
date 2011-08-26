@@ -884,7 +884,7 @@ gst_type_find_element_activate_src_pull (GstPad * pad, gboolean active)
 static gboolean
 gst_type_find_element_activate (GstPad * pad)
 {
-  GstTypeFindProbability probability = 0;
+  GstTypeFindProbability probability = GST_TYPE_FIND_NONE;
   GstCaps *found_caps = NULL;
   GstTypeFindElement *typefind;
   GstQuery *query;

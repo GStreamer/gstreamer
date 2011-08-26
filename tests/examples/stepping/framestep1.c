@@ -11,7 +11,7 @@ event_loop (GstElement * pipe)
   bus = gst_element_get_bus (GST_ELEMENT (pipe));
 
   while (running) {
-    message = gst_bus_timed_pop_filtered (bus, GST_MESSAGE_ANY, -1);
+    message = gst_bus_timed_pop_filtered (bus, -1, GST_MESSAGE_ANY);
 
     g_assert (message != NULL);
 

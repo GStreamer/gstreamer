@@ -2616,7 +2616,7 @@ gst_element_class_install_std_props (GstElementClass * klass,
 
   while (name) {
     int arg_id = va_arg (args, int);
-    int flags = va_arg (args, int);
+    GParamFlags flags = (GParamFlags) va_arg (args, int);
 
     gst_element_populate_std_props ((GObjectClass *) klass, name, arg_id,
         flags);

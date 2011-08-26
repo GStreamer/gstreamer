@@ -105,7 +105,7 @@ static GstQueryTypeDefinition standard_definitions[] = {
   {GST_QUERY_URI, "uri", "URI of the source or sink", 0},
   {GST_QUERY_ALLOCATION, "allocation", "Allocation properties", 0},
   {GST_QUERY_SCHEDULING, "scheduling", "Scheduling properties", 0},
-  {0, NULL, NULL, 0}
+  {GST_QUERY_NONE, NULL, NULL, 0}
 };
 
 void
@@ -211,7 +211,7 @@ gst_query_type_register (const gchar * nick, const gchar * description)
     return lookup;
 
   query = g_slice_new (GstQueryTypeDefinition);
-  query->value = _n_values;
+  query->value = (GstQueryType) _n_values;
   query->nick = g_strdup (nick);
   query->description = g_strdup (description);
   query->quark = g_quark_from_static_string (query->nick);
@@ -445,7 +445,8 @@ gst_query_parse_position (GstQuery * query, GstFormat * format, gint64 * cur)
 
   structure = GST_QUERY_STRUCTURE (query);
   if (format)
-    *format = g_value_get_enum (gst_structure_id_get_value (structure,
+    *format =
+        (GstFormat) g_value_get_enum (gst_structure_id_get_value (structure,
             GST_QUARK (FORMAT)));
   if (cur)
     *cur = g_value_get_int64 (gst_structure_id_get_value (structure,
@@ -522,7 +523,8 @@ gst_query_parse_duration (GstQuery * query, GstFormat * format,
 
   structure = GST_QUERY_STRUCTURE (query);
   if (format)
-    *format = g_value_get_enum (gst_structure_id_get_value (structure,
+    *format =
+        (GstFormat) g_value_get_enum (gst_structure_id_get_value (structure,
             GST_QUARK (FORMAT)));
   if (duration)
     *duration = g_value_get_int64 (gst_structure_id_get_value (structure,
@@ -699,13 +701,15 @@ gst_query_parse_convert (GstQuery * query, GstFormat * src_format,
 
   structure = GST_QUERY_STRUCTURE (query);
   if (src_format)
-    *src_format = g_value_get_enum (gst_structure_id_get_value (structure,
+    *src_format =
+        (GstFormat) g_value_get_enum (gst_structure_id_get_value (structure,
             GST_QUARK (SRC_FORMAT)));
   if (src_value)
     *src_value = g_value_get_int64 (gst_structure_id_get_value (structure,
             GST_QUARK (SRC_VALUE)));
   if (dest_format)
-    *dest_format = g_value_get_enum (gst_structure_id_get_value (structure,
+    *dest_format =
+        (GstFormat) g_value_get_enum (gst_structure_id_get_value (structure,
             GST_QUARK (DEST_FORMAT)));
   if (dest_value)
     *dest_value = g_value_get_int64 (gst_structure_id_get_value (structure,
@@ -804,7 +808,8 @@ gst_query_parse_segment (GstQuery * query, gdouble * rate, GstFormat * format,
     *rate = g_value_get_double (gst_structure_id_get_value (structure,
             GST_QUARK (RATE)));
   if (format)
-    *format = g_value_get_enum (gst_structure_id_get_value (structure,
+    *format =
+        (GstFormat) g_value_get_enum (gst_structure_id_get_value (structure,
             GST_QUARK (FORMAT)));
   if (start_value)
     *start_value = g_value_get_int64 (gst_structure_id_get_value (structure,
@@ -950,7 +955,8 @@ gst_query_parse_seeking (GstQuery * query, GstFormat * format,
 
   structure = GST_QUERY_STRUCTURE (query);
   if (format)
-    *format = g_value_get_enum (gst_structure_id_get_value (structure,
+    *format =
+        (GstFormat) g_value_get_enum (gst_structure_id_get_value (structure,
             GST_QUARK (FORMAT)));
   if (seekable)
     *seekable = g_value_get_boolean (gst_structure_id_get_value (structure,
@@ -1120,7 +1126,8 @@ gst_query_parse_nth_format (GstQuery * query, guint nth, GstFormat * format)
       *format = GST_FORMAT_UNDEFINED;
     } else {
       if (nth < gst_value_list_get_size (list)) {
-        *format = g_value_get_enum (gst_value_list_get_value (list, nth));
+        *format =
+            (GstFormat) g_value_get_enum (gst_value_list_get_value (list, nth));
       } else
         *format = GST_FORMAT_UNDEFINED;
     }
@@ -1271,7 +1278,8 @@ gst_query_parse_buffering_stats (GstQuery * query,
 
   structure = GST_QUERY_STRUCTURE (query);
   if (mode)
-    *mode = g_value_get_enum (gst_structure_id_get_value (structure,
+    *mode = (GstBufferingMode)
+        g_value_get_enum (gst_structure_id_get_value (structure,
             GST_QUARK (BUFFERING_MODE)));
   if (avg_in)
     *avg_in = g_value_get_int (gst_structure_id_get_value (structure,
@@ -1341,7 +1349,8 @@ gst_query_parse_buffering_range (GstQuery * query, GstFormat * format,
 
   structure = GST_QUERY_STRUCTURE (query);
   if (format)
-    *format = g_value_get_enum (gst_structure_id_get_value (structure,
+    *format =
+        (GstFormat) g_value_get_enum (gst_structure_id_get_value (structure,
             GST_QUARK (FORMAT)));
   if (start)
     *start = g_value_get_int64 (gst_structure_id_get_value (structure,

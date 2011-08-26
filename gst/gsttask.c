@@ -83,7 +83,7 @@ GST_DEBUG_CATEGORY_STATIC (task_debug);
 #define GST_CAT_DEFAULT (task_debug)
 
 #define SET_TASK_STATE(t,s) (g_atomic_int_set (&GST_TASK_STATE(t), (s)))
-#define GET_TASK_STATE(t)   (g_atomic_int_get (&GST_TASK_STATE(t)))
+#define GET_TASK_STATE(t)   ((GstTaskState) g_atomic_int_get (&GST_TASK_STATE(t)))
 
 #define GST_TASK_GET_PRIVATE(obj)  \
    (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_TASK, GstTaskPrivate))

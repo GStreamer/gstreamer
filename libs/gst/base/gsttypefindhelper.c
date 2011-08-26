@@ -51,7 +51,7 @@ typedef struct
   guint64 size;
   guint64 last_offset;
   GstTypeFindHelperGetRangeFunction func;
-  guint best_probability;
+  GstTypeFindProbability best_probability;
   GstCaps *caps;
   GstTypeFindFactory *factory;  /* for logging */
   GstObject *obj;               /* for logging */
@@ -196,7 +196,8 @@ error:
  * If given @probability is higher, replace previously store caps.
  */
 static void
-helper_find_suggest (gpointer data, guint probability, const GstCaps * caps)
+helper_find_suggest (gpointer data, GstTypeFindProbability probability,
+    const GstCaps * caps)
 {
   GstTypeFindHelper *helper = (GstTypeFindHelper *) data;
 
@@ -273,7 +274,7 @@ gst_type_find_helper_get_range_ext (GstObject * obj,
   helper.size = size;
   helper.last_offset = 0;
   helper.func = func;
-  helper.best_probability = 0;
+  helper.best_probability = GST_TYPE_FIND_NONE;
   helper.caps = NULL;
   helper.obj = obj;
 
@@ -418,7 +419,7 @@ typedef struct
 {
   const guint8 *data;           /* buffer data */
   gsize size;
-  guint best_probability;
+  GstTypeFindProbability best_probability;
   GstCaps *caps;
   GstTypeFindFactory *factory;  /* for logging */
   GstObject *obj;               /* for logging */
@@ -468,7 +469,8 @@ buf_helper_find_peek (gpointer data, gint64 off, guint size)
  * If given @probability is higher, replace previously store caps.
  */
 static void
-buf_helper_find_suggest (gpointer data, guint probability, const GstCaps * caps)
+buf_helper_find_suggest (gpointer data, GstTypeFindProbability probability,
+    const GstCaps * caps)
 {
   GstTypeFindBufHelper *helper = (GstTypeFindBufHelper *) data;
 
@@ -524,7 +526,7 @@ gst_type_find_helper_for_data (GstObject * obj, const guint8 * data, gsize size,
 
   helper.data = data;
   helper.size = size;
-  helper.best_probability = 0;
+  helper.best_probability = GST_TYPE_FIND_NONE;
   helper.caps = NULL;
   helper.obj = obj;
 

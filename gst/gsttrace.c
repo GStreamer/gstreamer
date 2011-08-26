@@ -262,7 +262,7 @@ _gst_trace_add_entry (GstTrace * trace, guint32 seq, guint32 data, gchar * msg)
 
 
 /* global flags */
-static GstAllocTraceFlags _gst_trace_flags = 0;
+static GstAllocTraceFlags _gst_trace_flags = GST_ALLOC_TRACE_NONE;
 
 /* list of registered tracers */
 static GList *_gst_alloc_tracers = NULL;

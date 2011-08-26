@@ -55,7 +55,7 @@
 #  define EWOULDBLOCK EAGAIN    /* This is just to placate gcc */
 #endif /* G_OS_WIN32 */
 
-#define GET_ENTRY_STATUS(e)          (g_atomic_int_get(&GST_CLOCK_ENTRY_STATUS(e)))
+#define GET_ENTRY_STATUS(e)          ((GstClockReturn) g_atomic_int_get(&GST_CLOCK_ENTRY_STATUS(e)))
 #define SET_ENTRY_STATUS(e,val)      (g_atomic_int_set(&GST_CLOCK_ENTRY_STATUS(e),(val)))
 #define CAS_ENTRY_STATUS(e,old,val)  (G_ATOMIC_INT_COMPARE_AND_EXCHANGE(\
                                        (&GST_CLOCK_ENTRY_STATUS(e)), (old), (val)))
@@ -237,7 +237,7 @@ gst_system_clock_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_CLOCK_TYPE:
-      sysclock->priv->clock_type = g_value_get_enum (value);
+      sysclock->priv->clock_type = (GstClockType) g_value_get_enum (value);
       GST_CAT_DEBUG (GST_CAT_CLOCK, "clock-type set to %d",
           sysclock->priv->clock_type);
       break;

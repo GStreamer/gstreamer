@@ -1307,9 +1307,8 @@ gst_base_transform_default_query (GstBaseTransform * trans,
     GstPadDirection direction, GstQuery * query)
 {
   gboolean ret = FALSE;
-  GstPad *pad, *otherpad;
+  GstPad *otherpad;
 
-  pad = (direction == GST_PAD_SRC) ? trans->srcpad : trans->sinkpad;
   otherpad = (direction == GST_PAD_SRC) ? trans->sinkpad : trans->srcpad;
 
   switch (GST_QUERY_TYPE (query)) {
@@ -1353,7 +1352,7 @@ gst_base_transform_default_query (GstBaseTransform * trans,
         gint64 pos;
         ret = TRUE;
 
-        if ((pad == trans->sinkpad)
+        if ((direction == GST_PAD_SINK)
             || (trans->priv->position_out == GST_CLOCK_TIME_NONE)) {
           pos =
               gst_segment_to_stream_time (&trans->segment, GST_FORMAT_TIME,

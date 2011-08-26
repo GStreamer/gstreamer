@@ -216,7 +216,7 @@ static const GstFormat fmtlist[] = {
   GST_FORMAT_DEFAULT,
   GST_FORMAT_BYTES,
   GST_FORMAT_TIME,
-  0
+  GST_FORMAT_UNDEFINED
 };
 
 #define GST_BASE_PARSE_GET_PRIVATE(obj)  \
@@ -3142,7 +3142,7 @@ gst_base_parse_get_querytypes (GstPad * pad)
     GST_QUERY_FORMATS,
     GST_QUERY_SEEKING,
     GST_QUERY_CONVERT,
-    0
+    GST_QUERY_NONE
   };
 
   return list;
@@ -3737,6 +3737,7 @@ gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
   } else {
     GstEvent *new_event;
     GstBaseParseSeek *seek;
+    GstSeekFlags flags = (flush ? GST_SEEK_FLAG_FLUSH : GST_SEEK_FLAG_NONE);
 
     /* The only thing we need to do in PUSH-mode is to send the
        seek event (in bytes) to upstream. Segment / flush handling happens
@@ -3744,7 +3745,7 @@ gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
     GST_DEBUG_OBJECT (parse, "seek in PUSH mode");
     if (seekstop >= 0 && seekstop <= seekpos)
       seekstop = seekpos;
-    new_event = gst_event_new_seek (rate, GST_FORMAT_BYTES, flush,
+    new_event = gst_event_new_seek (rate, GST_FORMAT_BYTES, flags,
         GST_SEEK_TYPE_SET, seekpos, stop_type, seekstop);
 
     /* store segment info so its precise details can be reconstructed when

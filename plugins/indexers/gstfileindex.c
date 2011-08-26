@@ -770,7 +770,7 @@ gst_file_index_add_association (GstIndex * index, GstIndexEntry * entry)
   }
 
   /* this is a hack, we should use a private structure instead */
-  sample.format = 0;
+  sample.format = GST_FORMAT_UNDEFINED;
   sample.value = GST_INDEX_ASSOC_VALUE (entry, 0);
 
   exact =
@@ -903,7 +903,7 @@ gst_file_index_get_assoc_entry (GstIndex * index,
   }
 
   /* this is a hack, we should use a private structure instead */
-  sample.format = formatx;
+  sample.format = (GstFormat) formatx;
   sample.value = value;
 
   exact = _fc_bsearch (id_index->array, ARRAY_ROW_SIZE (id_index),
@@ -953,7 +953,7 @@ gst_file_index_get_assoc_entry (GstIndex * index,
   {
     gint32 flags_be = ARRAY_ROW_FLAGS (row_data);
 
-    GST_INDEX_ASSOC_FLAGS (entry) = GINT32_FROM_BE (flags_be);
+    GST_INDEX_ASSOC_FLAGS (entry) = (GstAssocFlags) GINT32_FROM_BE (flags_be);
 
     for (xx = 0; xx < id_index->nformats; xx++) {
       gint64 val_be = ARRAY_ROW_VALUE (row_data, xx);
