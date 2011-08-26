@@ -930,7 +930,7 @@ gst_hls_demux_start_update (GstHLSDemux * demux)
 
   /* creates a new thread for the updates */
   demux->updates_thread = g_thread_create (
-      (GThreadFunc) gst_hls_demux_update_thread, demux, TRUE, &error);
+      (GThreadFunc) gst_hls_demux_update_thread, demux, FALSE, &error);
   return (error != NULL);
 }
 
