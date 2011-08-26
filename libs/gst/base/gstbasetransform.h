@@ -162,11 +162,13 @@ struct _GstBaseTransform {
  *                  query
  * @decide_allocation: Decide what parameters you want upstream elements to use
  *                     for the allocation of buffers. This function is only
- *                     called when not operating in passthrough mode.
+ *                     called when not operating in passthrough mode. The
+ *                     default implementation is NULL.
  * @setup_allocation: Setup the allocation parameters for allocating output
  *                    buffers. The passed in query contains the result of the
  *                    downstream allocation query. This function is only called
- *                    when not operating in passthrough mode.
+ *                    when not operating in passthrough mode. The default
+ *                    implementation is NULL.
  * @transform_size: Optional. Given the size of a buffer in the given direction
  *                  with the given caps, calculate the size in bytes of a buffer
  *                  on the other pad with the given other caps.
@@ -180,12 +182,6 @@ struct _GstBaseTransform {
  * @stop:           Optional.
  *                  Called when the element stops processing.
  *                  Allows closing external resources.
- * @transform:      Required if the element does not operate in-place.
- *                  Transforms one incoming buffer to one outgoing buffer.
- *                  The function is allowed to change size/timestamp/duration
- *                  of the outgoing buffer.
- * @transform_ip:   Required if the element operates in-place.
- *                  Transform the incoming buffer in-place.
  * @sink_event:     Optional.
  *                  Event handler on the sink pad. The default implementation
  *                  handles the event and forwards it downstream.
@@ -209,6 +205,12 @@ struct _GstBaseTransform {
  *                    This method is called right before the base class will
  *                    start processing. Dynamic properties or other delayed
  *                    configuration could be performed in this method.
+ * @transform:      Required if the element does not operate in-place.
+ *                  Transforms one incoming buffer to one outgoing buffer.
+ *                  The function is allowed to change size/timestamp/duration
+ *                  of the outgoing buffer.
+ * @transform_ip:   Required if the element operates in-place.
+ *                  Transform the incoming buffer in-place.
  *
  * Subclasses can override any of the available virtual methods or not, as
  * needed. At minimum either @transform or @transform_ip need to be overridden.

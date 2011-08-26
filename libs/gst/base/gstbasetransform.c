@@ -1324,12 +1324,23 @@ gst_base_transform_default_query (GstBaseTransform * trans,
       passthrough = trans->passthrough || trans->always_in_place;
       GST_BASE_TRANSFORM_UNLOCK (trans);
 
-      GST_DEBUG_OBJECT (trans, "passthrough %d", passthrough);
-
-      if (passthrough)
+      if (passthrough) {
+        GST_DEBUG_OBJECT (trans, "doing passthrough query");
         ret = gst_pad_peer_query (otherpad, query);
-      else
-        ret = FALSE;
+      } else {
+        GstBaseTransformClass *klass;
+
+        GST_DEBUG_OBJECT (trans, "deciding on allocation values");
+
+        klass = GST_BASE_TRANSFORM_GET_CLASS (trans);
+        /* pass the query to the decide_allocation vmethod if any */
+        if (G_LIKELY (klass->decide_allocation))
+          ret = klass->decide_allocation (trans, query);
+        else
+          ret = FALSE;
+      }
+      GST_DEBUG_OBJECT (trans, "ALLOCATION ret %d, %" GST_PTR_FORMAT, ret,
+          query);
       break;
     }
     case GST_QUERY_POSITION:
