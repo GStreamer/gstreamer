@@ -230,6 +230,8 @@ gst_m3u8_update (GstM3U8 * self, gchar * data, gboolean * updated)
       *end = '\0';
 
     if (data[0] != '#') {
+      gchar *r;
+
       if (duration < 0 && list == NULL) {
         GST_LOG ("%s: got line without EXTINF or EXTSTREAMINF, dropping", data);
         goto next_line;
@@ -250,8 +252,13 @@ gst_m3u8_update (GstM3U8 * self, gchar * data, gboolean * updated)
         *slash = '\0';
         data = g_strdup_printf ("%s/%s", self->uri, data);
         *slash = '/';
-      } else
+      } else {
         data = g_strdup (data);
+      }
+
+      r = g_utf8_strchr (data, -1, '\r');
+      if (r)
+        *r = '\0';
 
       if (list != NULL) {
         if (g_list_find_custom (self->lists, data,
