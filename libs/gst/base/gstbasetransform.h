@@ -160,6 +160,13 @@ struct _GstBaseTransform {
  *                  Handle a requested query. Subclasses that implement this
  *                  should must chain up to the parent if they didn't handle the
  *                  query
+ * @decide_allocation: Decide what parameters you want upstream elements to use
+ *                     for the allocation of buffers. This function is only
+ *                     called when not operating in passthrough mode.
+ * @setup_allocation: Setup the allocation parameters for allocating output
+ *                    buffers. The passed in query contains the result of the
+ *                    downstream allocation query. This function is only called
+ *                    when not operating in passthrough mode.
  * @transform_size: Optional. Given the size of a buffer in the given direction
  *                  with the given caps, calculate the size in bytes of a buffer
  *                  on the other pad with the given other caps.
@@ -225,9 +232,11 @@ struct _GstBaseTransformClass {
                                    GstCaps *caps);
   gboolean      (*set_caps)       (GstBaseTransform *trans, GstCaps *incaps,
                                    GstCaps *outcaps);
-  gboolean      (*query)          (GstBaseTransform *trans, GstPad *pad,
+  gboolean      (*query)          (GstBaseTransform *trans, GstPadDirection direction,
                                    GstQuery *query);
 
+  /* decide allocation query parameters for input buffers */
+  gboolean      (*decide_allocation) (GstBaseTransform *trans, GstQuery *query);
   /* setup allocation query for output buffers */
   gboolean      (*setup_allocation) (GstBaseTransform *trans, GstQuery *query);
 

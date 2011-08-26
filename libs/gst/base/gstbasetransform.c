@@ -325,7 +325,7 @@ static gboolean gst_base_transform_setcaps (GstBaseTransform * trans,
     GstPad * pad, GstCaps * caps);
 static gboolean gst_base_transform_query (GstPad * pad, GstQuery * query);
 static gboolean gst_base_transform_default_query (GstBaseTransform * trans,
-    GstPad * pad, GstQuery * query);
+    GstPadDirection direction, GstQuery * query);
 static const GstQueryType *gst_base_transform_query_type (GstPad * pad);
 
 static GstFlowReturn default_prepare_output_buffer (GstBaseTransform * trans,
@@ -1303,12 +1303,13 @@ failed_configure:
 
 static gboolean
 gst_base_transform_default_query (GstBaseTransform * trans,
-    GstPad * pad, GstQuery * query)
+    GstPadDirection direction, GstQuery * query)
 {
   gboolean ret = FALSE;
-  GstPad *otherpad;
+  GstPad *pad, *otherpad;
 
-  otherpad = (pad == trans->srcpad) ? trans->sinkpad : trans->srcpad;
+  pad = (direction == GST_PAD_SRC) ? trans->srcpad : trans->sinkpad;
+  otherpad = (direction == GST_PAD_SINK) ? trans->sinkpad : trans->srcpad;
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_ALLOCATION:
@@ -1316,7 +1317,7 @@ gst_base_transform_default_query (GstBaseTransform * trans,
       gboolean passthrough;
 
       /* can only be done on the sinkpad */
-      if (!GST_PAD_IS_SINK (pad))
+      if (direction != GST_PAD_SINK)
         goto done;
 
       GST_BASE_TRANSFORM_LOCK (trans);
@@ -1378,7 +1379,7 @@ gst_base_transform_query (GstPad * pad, GstQuery * query)
   bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
   if (bclass->query)
-    ret = bclass->query (trans, pad, query);
+    ret = bclass->query (trans, GST_PAD_DIRECTION (pad), query);
   else
     ret = gst_pad_query_default (pad, query);
 
