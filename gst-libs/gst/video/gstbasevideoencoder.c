@@ -1025,6 +1025,10 @@ gst_base_video_encoder_set_latency_fields (GstBaseVideoEncoder *
 {
   gint64 latency;
 
+  /* 0 numerator is used for "don't know" */
+  if (GST_BASE_VIDEO_CODEC (base_video_encoder)->state.fps_n == 0)
+    return;
+
   latency = gst_util_uint64_scale (n_fields,
       GST_BASE_VIDEO_CODEC (base_video_encoder)->state.fps_d * GST_SECOND,
       2 * GST_BASE_VIDEO_CODEC (base_video_encoder)->state.fps_n);
