@@ -787,9 +787,11 @@ gst_hls_demux_fetcher_bus_handler (GstBus * bus,
 
   if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ERROR) {
     demux->fetcher_error = TRUE;
-    g_mutex_lock (demux->fetcher_lock);
-    g_cond_broadcast (demux->fetcher_cond);
-    g_mutex_unlock (demux->fetcher_lock);
+    if (!demux->cancelled) {
+      g_mutex_lock (demux->fetcher_lock);
+      g_cond_broadcast (demux->fetcher_cond);
+      g_mutex_unlock (demux->fetcher_lock);
+    }
   }
 
   gst_message_unref (message);
