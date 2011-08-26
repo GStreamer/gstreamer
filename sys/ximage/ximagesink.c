@@ -1426,7 +1426,7 @@ gst_ximagesink_event (GstBaseSink * sink, GstEvent * event)
 }
 
 static gboolean
-gst_ximagesink_setup_allocation (GstBaseSink * bsink, GstQuery * query)
+gst_ximagesink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
 {
   GstXImageSink *ximagesink = GST_XIMAGESINK (bsink);
   GstBufferPool *pool;
@@ -1977,8 +1977,8 @@ gst_ximagesink_class_init (GstXImageSinkClass * klass)
   gstbasesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_ximagesink_getcaps);
   gstbasesink_class->set_caps = GST_DEBUG_FUNCPTR (gst_ximagesink_setcaps);
   gstbasesink_class->get_times = GST_DEBUG_FUNCPTR (gst_ximagesink_get_times);
-  gstbasesink_class->setup_allocation =
-      GST_DEBUG_FUNCPTR (gst_ximagesink_setup_allocation);
+  gstbasesink_class->propose_allocation =
+      GST_DEBUG_FUNCPTR (gst_ximagesink_propose_allocation);
   gstbasesink_class->event = GST_DEBUG_FUNCPTR (gst_ximagesink_event);
 
   videosink_class->show_frame = GST_DEBUG_FUNCPTR (gst_ximagesink_show_frame);

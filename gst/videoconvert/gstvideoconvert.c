@@ -161,7 +161,7 @@ gst_video_convert_transform_caps (GstBaseTransform * btrans,
 }
 
 static gboolean
-gst_video_convert_setup_allocation (GstBaseTransform * trans, GstQuery * query)
+gst_video_convert_decide_allocation (GstBaseTransform * trans, GstQuery * query)
 {
   GstBufferPool *pool = NULL;
   guint size, min, max, prefix, alignment;
@@ -370,8 +370,8 @@ gst_video_convert_class_init (GstVideoConvertClass * klass)
       GST_DEBUG_FUNCPTR (gst_video_convert_set_caps);
   gstbasetransform_class->get_unit_size =
       GST_DEBUG_FUNCPTR (gst_video_convert_get_unit_size);
-  gstbasetransform_class->setup_allocation =
-      GST_DEBUG_FUNCPTR (gst_video_convert_setup_allocation);
+  gstbasetransform_class->decide_allocation =
+      GST_DEBUG_FUNCPTR (gst_video_convert_decide_allocation);
   gstbasetransform_class->transform =
       GST_DEBUG_FUNCPTR (gst_video_convert_transform);
 

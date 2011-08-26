@@ -101,7 +101,7 @@ static gboolean gst_video_test_src_query (GstBaseSrc * bsrc, GstQuery * query);
 
 static void gst_video_test_src_get_times (GstBaseSrc * basesrc,
     GstBuffer * buffer, GstClockTime * start, GstClockTime * end);
-static gboolean gst_video_test_src_setup_allocation (GstBaseSrc * bsrc,
+static gboolean gst_video_test_src_decide_allocation (GstBaseSrc * bsrc,
     GstQuery * query);
 static GstFlowReturn gst_video_test_src_fill (GstPushSrc * psrc,
     GstBuffer * buffer);
@@ -281,7 +281,7 @@ gst_video_test_src_class_init (GstVideoTestSrcClass * klass)
   gstbasesrc_class->get_times = gst_video_test_src_get_times;
   gstbasesrc_class->start = gst_video_test_src_start;
   gstbasesrc_class->stop = gst_video_test_src_stop;
-  gstbasesrc_class->setup_allocation = gst_video_test_src_setup_allocation;
+  gstbasesrc_class->decide_allocation = gst_video_test_src_decide_allocation;
 
   gstpushsrc_class->fill = gst_video_test_src_fill;
 }
@@ -602,7 +602,7 @@ no_framerate:
 }
 
 static gboolean
-gst_video_test_src_setup_allocation (GstBaseSrc * bsrc, GstQuery * query)
+gst_video_test_src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
 {
   GstVideoTestSrc *videotestsrc;
   GstBufferPool *pool;

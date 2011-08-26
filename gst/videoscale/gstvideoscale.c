@@ -180,7 +180,7 @@ static gboolean gst_video_scale_set_caps (GstBaseTransform * trans,
     GstCaps * in, GstCaps * out);
 static gboolean gst_video_scale_get_unit_size (GstBaseTransform * trans,
     GstCaps * caps, gsize * size);
-static gboolean gst_video_scale_setup_allocation (GstBaseTransform * trans,
+static gboolean gst_video_scale_decide_allocation (GstBaseTransform * trans,
     GstQuery * query);
 static GstFlowReturn gst_video_scale_transform (GstBaseTransform * trans,
     GstBuffer * in, GstBuffer * out);
@@ -231,8 +231,8 @@ gst_video_scale_class_init (GstVideoScaleClass * klass)
   trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_video_scale_set_caps);
   trans_class->get_unit_size =
       GST_DEBUG_FUNCPTR (gst_video_scale_get_unit_size);
-  trans_class->setup_allocation =
-      GST_DEBUG_FUNCPTR (gst_video_scale_setup_allocation);
+  trans_class->decide_allocation =
+      GST_DEBUG_FUNCPTR (gst_video_scale_decide_allocation);
   trans_class->transform = GST_DEBUG_FUNCPTR (gst_video_scale_transform);
   trans_class->fixate_caps = GST_DEBUG_FUNCPTR (gst_video_scale_fixate_caps);
   trans_class->src_event = GST_DEBUG_FUNCPTR (gst_video_scale_src_event);
@@ -353,7 +353,7 @@ gst_video_scale_transform_caps (GstBaseTransform * trans,
 
 
 static gboolean
-gst_video_scale_setup_allocation (GstBaseTransform * trans, GstQuery * query)
+gst_video_scale_decide_allocation (GstBaseTransform * trans, GstQuery * query)
 {
   GstBufferPool *pool = NULL;
   guint size, min, max, prefix, alignment;
