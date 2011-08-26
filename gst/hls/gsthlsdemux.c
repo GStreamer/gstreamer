@@ -100,7 +100,7 @@ static gboolean gst_hls_demux_fetcher_sink_event (GstPad * pad,
     GstEvent * event);
 static void gst_hls_demux_loop (GstHLSDemux * demux);
 static void gst_hls_demux_stop (GstHLSDemux * demux);
-static void gst_hls_demux_stop_fetcher (GstHLSDemux * demux,
+static void gst_hls_demux_stop_fetcher_locked (GstHLSDemux * demux,
     gboolean cancelled);
 static gboolean gst_hls_demux_start_update (GstHLSDemux * demux);
 static gboolean gst_hls_demux_cache_fragments (GstHLSDemux * demux);
@@ -377,7 +377,7 @@ gst_hls_demux_src_event (GstPad * pad, GstEvent * event)
       demux->cancelled = TRUE;
       gst_task_pause (demux->task);
       g_mutex_lock (demux->fetcher_lock);
-      gst_hls_demux_stop_fetcher (demux, TRUE);
+      gst_hls_demux_stop_fetcher_locked (demux, TRUE);
       g_mutex_unlock (demux->fetcher_lock);
       g_mutex_lock (demux->thread_lock);
       g_cond_signal (demux->thread_cond);
@@ -614,7 +614,7 @@ done:
 }
 
 static void
-gst_hls_demux_stop_fetcher (GstHLSDemux * demux, gboolean cancelled)
+gst_hls_demux_stop_fetcher_locked (GstHLSDemux * demux, gboolean cancelled)
 {
   GstPad *pad;
 
@@ -652,7 +652,7 @@ static void
 gst_hls_demux_stop (GstHLSDemux * demux)
 {
   g_mutex_lock (demux->fetcher_lock);
-  gst_hls_demux_stop_fetcher (demux, TRUE);
+  gst_hls_demux_stop_fetcher_locked (demux, TRUE);
   g_mutex_unlock (demux->fetcher_lock);
   if (GST_TASK_STATE (demux->task) != GST_TASK_STOPPED)
     gst_task_stop (demux->task);
@@ -797,7 +797,7 @@ gst_hls_demux_fetcher_bus_handler (GstBus * bus,
 }
 
 static gboolean
-gst_hls_demux_make_fetcher (GstHLSDemux * demux, const gchar * uri)
+gst_hls_demux_make_fetcher_locked (GstHLSDemux * demux, const gchar * uri)
 {
   GstPad *pad;
 
@@ -1007,7 +1007,7 @@ gst_hls_demux_fetch_location (GstHLSDemux * demux, const gchar * uri)
   if (demux->cancelled)
     goto quit;
 
-  if (!gst_hls_demux_make_fetcher (demux, uri)) {
+  if (!gst_hls_demux_make_fetcher_locked (demux, uri)) {
     goto uri_error;
   }
 
@@ -1019,7 +1019,7 @@ gst_hls_demux_fetch_location (GstHLSDemux * demux, const gchar * uri)
   GST_DEBUG_OBJECT (demux, "Waiting to fetch the URI");
   g_cond_wait (demux->fetcher_cond, demux->fetcher_lock);
 
-  gst_hls_demux_stop_fetcher (demux, FALSE);
+  gst_hls_demux_stop_fetcher_locked (demux, FALSE);
 
   if (gst_adapter_available (demux->download)) {
     GST_INFO_OBJECT (demux, "URI fetched successfully");
