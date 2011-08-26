@@ -559,8 +559,11 @@ gst_hls_demux_fetcher_sink_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_EOS:{
       GST_DEBUG_OBJECT (demux, "Got EOS on the fetcher pad");
       /* signal we have fetched the URI */
-      if (!demux->cancelled)
+      if (!demux->cancelled) {
+        g_mutex_lock (demux->fetcher_lock);
         g_cond_broadcast (demux->fetcher_cond);
+        g_mutex_unlock (demux->fetcher_lock);
+      }
     }
     default:
       break;
@@ -784,7 +787,9 @@ gst_hls_demux_fetcher_bus_handler (GstBus * bus,
 
   if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ERROR) {
     demux->fetcher_error = TRUE;
+    g_mutex_lock (demux->fetcher_lock);
     g_cond_broadcast (demux->fetcher_cond);
+    g_mutex_unlock (demux->fetcher_lock);
   }
 
   gst_message_unref (message);
@@ -1041,9 +1046,9 @@ state_change_error:
 
 quit:
   {
-    g_mutex_unlock (demux->fetcher_lock);
     /* Unlock any other fetcher that might be waiting */
     g_cond_broadcast (demux->fetcher_cond);
+    g_mutex_unlock (demux->fetcher_lock);
     return bret;
   }
 }
