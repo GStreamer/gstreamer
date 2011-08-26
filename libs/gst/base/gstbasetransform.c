@@ -778,8 +778,8 @@ gst_base_transform_do_bufferpool (GstBaseTransform * trans, GstCaps * outcaps)
    *    will do that whenever some upstream does an allocation query.
    * 2) we need to do a transform, we need to get a bufferpool from downstream
    *    and configure it. When upstream does the ALLOCATION query, the
-   *    decide_allocation vmethod will be called and we will configure the
-   *    upstream allocator then.
+   *    propose_allocation vmethod will be called and we will configure the
+   *    upstream allocator with our porposed values then.
    */
 
   /* clear old pool */
@@ -811,9 +811,9 @@ gst_base_transform_do_bufferpool (GstBaseTransform * trans, GstCaps * outcaps)
 
   klass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
-  GST_DEBUG_OBJECT (trans, "calling setup_allocation");
-  if (G_LIKELY (klass->setup_allocation))
-    result = klass->setup_allocation (trans, query);
+  GST_DEBUG_OBJECT (trans, "calling decide_allocation");
+  if (G_LIKELY (klass->decide_allocation))
+    result = klass->decide_allocation (trans, query);
 
   /* we got configuration from our peer, parse them */
   gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
@@ -1331,12 +1331,12 @@ gst_base_transform_default_query (GstBaseTransform * trans,
       } else {
         GstBaseTransformClass *klass;
 
-        GST_DEBUG_OBJECT (trans, "deciding on allocation values");
+        GST_DEBUG_OBJECT (trans, "propose allocation values");
 
         klass = GST_BASE_TRANSFORM_GET_CLASS (trans);
-        /* pass the query to the decide_allocation vmethod if any */
-        if (G_LIKELY (klass->decide_allocation))
-          ret = klass->decide_allocation (trans, query);
+        /* pass the query to the propose_allocation vmethod if any */
+        if (G_LIKELY (klass->propose_allocation))
+          ret = klass->propose_allocation (trans, query);
         else
           ret = FALSE;
       }

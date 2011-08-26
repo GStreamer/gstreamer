@@ -2709,8 +2709,8 @@ gst_base_src_prepare_allocation (GstBaseSrc * basesrc, GstCaps * caps)
     GST_DEBUG_OBJECT (basesrc, "peer ALLOCATION query failed");
   }
 
-  if (G_LIKELY (bclass->setup_allocation))
-    result = bclass->setup_allocation (basesrc, query);
+  if (G_LIKELY (bclass->decide_allocation))
+    result = bclass->decide_allocation (basesrc, query);
 
   GST_DEBUG_OBJECT (basesrc, "ALLOCATION (%d) params: %" GST_PTR_FORMAT, result,
       query);

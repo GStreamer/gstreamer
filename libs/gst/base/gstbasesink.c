@@ -4860,8 +4860,8 @@ default_sink_query (GstBaseSink * basesink, GstQuery * query)
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_ALLOCATION:
     {
-      if (bclass->setup_allocation)
-        res = bclass->setup_allocation (basesink, query);
+      if (bclass->propose_allocation)
+        res = bclass->propose_allocation (basesink, query);
       else
         res = FALSE;
       break;

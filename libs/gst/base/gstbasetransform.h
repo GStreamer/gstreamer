@@ -235,10 +235,10 @@ struct _GstBaseTransformClass {
   gboolean      (*query)          (GstBaseTransform *trans, GstPadDirection direction,
                                    GstQuery *query);
 
-  /* decide allocation query parameters for input buffers */
+  /* propose allocation query parameters for input buffers */
+  gboolean      (*propose_allocation) (GstBaseTransform *trans, GstQuery *query);
+  /* decide allocation query for output buffers */
   gboolean      (*decide_allocation) (GstBaseTransform *trans, GstQuery *query);
-  /* setup allocation query for output buffers */
-  gboolean      (*setup_allocation) (GstBaseTransform *trans, GstQuery *query);
 
   /* transform size */
   gboolean      (*transform_size) (GstBaseTransform *trans,

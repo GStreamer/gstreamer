@@ -122,7 +122,7 @@ struct _GstBaseSink {
  *     mode. The default implementation starts a task on the sink pad.
  * @get_times: Called to get the start and end times for synchronising
  *     the passed buffer to the clock
- * @setup_allocation: configure the allocation query
+ * @propose_allocation: configure the allocation query
  * @start: Start processing. Ideal for opening resources in the subclass
  * @stop: Stop processing. Subclasses should use this to close resources.
  * @unlock: Unlock any pending access to the resource. Subclasses should
@@ -157,8 +157,8 @@ struct _GstBaseSinkClass {
   void          (*get_times)    (GstBaseSink *sink, GstBuffer *buffer,
                                  GstClockTime *start, GstClockTime *end);
 
-  /* setup allocation query */
-  gboolean      (*setup_allocation)   (GstBaseSink *sink, GstQuery *query);
+  /* propose allocation parameters for upstream */
+  gboolean      (*propose_allocation)   (GstBaseSink *sink, GstQuery *query);
 
   /* start and stop processing, ideal for opening/closing the resource */
   gboolean      (*start)        (GstBaseSink *sink);
