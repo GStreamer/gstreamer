@@ -200,9 +200,10 @@ gst_capsfilter_set_property (GObject * object, guint prop_id,
         gst_caps_unref (nego);
       } else {
         GST_DEBUG_OBJECT (capsfilter, "no negotiated caps");
-        /* no previous caps, the getcaps function will be used to find suitable
-         * caps */
-        suggest = NULL;
+        /* Suggest the new caps, we can't just rely on _get_caps as this may
+         * already be called at this point even though no buffer has been
+         * pushed yet */
+        suggest = gst_caps_copy (new_caps);
       }
 
       GST_DEBUG_OBJECT (capsfilter, "suggesting new caps %" GST_PTR_FORMAT,
