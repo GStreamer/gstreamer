@@ -231,6 +231,11 @@ gst_vaapisink_iface_init(GType type)
 static void
 gst_vaapisink_destroy(GstVaapiSink *sink)
 {
+    if (sink->texture) {
+        g_object_unref(sink->texture);
+        sink->texture = NULL;
+    }
+
     if (sink->display) {
         g_object_unref(sink->display);
         sink->display = NULL;
