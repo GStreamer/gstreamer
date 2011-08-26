@@ -720,7 +720,7 @@ slice_parse_ref_pic_list_reordering (GstH264SliceHdr * slice, NalReader * nr)
 {
   GST_DEBUG ("parsing \"Reference picture list reordering\"");
 
-  if (!(slice->type == GST_H264_I_SLICE) && !(slice->type == GST_H264_SI_SLICE)) {
+  if (!GST_H264_IS_I_SLICE (slice) && !GST_H264_IS_SI_SLICE (slice)) {
     guint8 ref_pic_list_reordering_flag_l0;
     guint32 reordering_of_pic_nums_idc;
 
@@ -741,7 +741,7 @@ slice_parse_ref_pic_list_reordering (GstH264SliceHdr * slice, NalReader * nr)
       } while (reordering_of_pic_nums_idc != 3);
   }
 
-  if (slice->type == GST_H264_B_SLICE) {
+  if (GST_H264_IS_B_SLICE (slice)) {
     guint8 ref_pic_list_reordering_flag_l1;
     guint32 reordering_of_pic_nums_idc;
 
