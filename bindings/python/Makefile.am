@@ -17,7 +17,7 @@ OVERRIDES = ges.override
 INCLUDES = -I$(top_srcdir) -I$(srcdir) $(PYTHON_INCLUDES)
 
 ges_la_CFLAGS = -I$(top_srcdir)\
-		$(PYGOBJECT_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) -Wno-write-strings
+		$(PYGST_CFLAGS) $(PYGOBJECT_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) -Wno-write-strings
 ges_la_LDFLAGS = -export-symbols-regex "^(initges|_PyGObject_API).*" \
 	-module -avoid-version $(GST_PLUGIN_LDFLAGS)
 ges_la_LIBADD = $(top_builddir)/ges/libges-@GST_MAJORMINOR@.la \
