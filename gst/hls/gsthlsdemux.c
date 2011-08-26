@@ -1021,7 +1021,7 @@ gst_hls_demux_fetch_location (GstHLSDemux * demux, const gchar * uri)
 
   gst_hls_demux_stop_fetcher_locked (demux, FALSE);
 
-  if (gst_adapter_available (demux->download)) {
+  if (!demux->fetcher_error && gst_adapter_available (demux->download)) {
     GST_INFO_OBJECT (demux, "URI fetched successfully");
     bret = TRUE;
   }
