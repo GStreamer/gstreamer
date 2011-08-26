@@ -939,17 +939,6 @@ gst_hls_demux_cache_fragments (GstHLSDemux * demux)
 {
   gint i;
 
-  /* Start parsing the main playlist */
-  gst_m3u8_client_set_current (demux->client, demux->client->main);
-
-  if (gst_m3u8_client_is_live (demux->client)) {
-    if (!gst_hls_demux_update_playlist (demux, FALSE)) {
-      GST_ERROR_OBJECT (demux, "Could not fetch the main playlist %s",
-          demux->client->main->uri);
-      return FALSE;
-    }
-  }
-
   /* If this playlist is a variant playlist, select the first one
    * and update it */
   if (gst_m3u8_client_has_variant_playlist (demux->client)) {
