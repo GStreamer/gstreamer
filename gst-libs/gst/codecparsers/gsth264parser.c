@@ -1124,8 +1124,8 @@ gst_h264_parser_identify_nalu (GstH264NalParser * nalparser,
 {
   gint off1, off2;
 
-  if (size - 4 <= offset) {
-    GST_DEBUG ("Can't parse,  buffer is to small size %u, offset %u", size,
+  if (size - offset < 4) {
+    GST_DEBUG ("Can't parse, buffer has too small size %u, offset %u", size,
         offset);
     return GST_H264_PARSER_ERROR;
   }
@@ -1152,6 +1152,13 @@ gst_h264_parser_identify_nalu (GstH264NalParser * nalparser,
   nalu->offset = offset + off1 + 3;
   nalu->data = (guint8 *) data;
   set_nalu_datas (nalu);
+
+  if (nalu->type == GST_H264_NAL_SEQ_END ||
+      nalu->type == GST_H264_NAL_STREAM_END) {
+    GST_DEBUG ("end-of-seq or end-of-stream nal found");
+    nalu->size = 0;
+    return GST_H264_PARSER_OK;
+  }
 
   off2 = scan_for_start_codes (data + nalu->offset, size - nalu->offset);
   if (off2 < 0) {
