@@ -74,14 +74,6 @@ typedef struct _GstURIHandlerInterface GstURIHandlerInterface;
  * @get_protocols: Method to return the list of protocols handled by the element.
  * @get_uri: Method to return the URI currently handled by the element.
  * @set_uri: Method to set a new URI.
- * @get_type_full: Variant of get_type which takes a GType argument. This is 
- *   for use by bindings that need to pass context when creating a URI Handler.
- *   If implemented, get_type will be used in preference to get_type_full.
- *   Since: 0.10.15.
- * @get_protocols_full: Variant of get_protocols which takes a GType argument.
- *   This is for use by bindings that need to pass context when creating a URI
- *   Handler. If implemented, get_protocols will be used in preference to
- *   get_protocols_full. Since: 0.10.15.
  *
  * Any #GstElement using this interface should implement these methods.
  */
