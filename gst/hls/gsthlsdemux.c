@@ -392,6 +392,8 @@ gst_hls_demux_src_event (GstPad * pad, GstEvent * event)
         GstBuffer *buf = g_queue_pop_head (demux->queue);
         gst_buffer_unref (buf);
       }
+      g_queue_clear (demux->queue);
+      gst_adapter_clear (demux->download);
 
       GST_DEBUG_OBJECT (demux, "seeking to sequence %d", current_sequence);
       demux->client->sequence = current_sequence;
