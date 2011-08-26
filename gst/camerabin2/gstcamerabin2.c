@@ -1368,7 +1368,8 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
     }
 
     g_object_set (camera->viewfinderbin_queue, "leaky", 2, "silent", TRUE,
-        NULL);
+        "max-size-time", (guint64) 0, "max-size-bytes", (guint) 0,
+        "max-size-buffers", (guint) 1, NULL);
 
     gst_bin_add_many (GST_BIN_CAST (camera),
         gst_object_ref (camera->video_encodebin),
