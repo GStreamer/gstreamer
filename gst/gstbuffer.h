@@ -159,48 +159,51 @@ typedef struct _GstBufferPool GstBufferPool;
 
 /**
  * GstBufferFlags:
- * @GST_BUFFER_FLAG_LIVE:       the buffer is live data and should be discarded in
- *                              the PAUSED state.
- * @GST_BUFFER_FLAG_DROP:       the buffer contains data that should be dropped
- *                              because it will be clipped against the segment
- *                              boundaries or because it does not contain data
- *                              that should be shown to the user.
- * @GST_BUFFER_FLAG_DISCONT:    the buffer marks a data discontinuity in the stream.
- *                              This typically occurs after a seek or a dropped buffer
- *                              from a live or network source.
- * @GST_BUFFER_FLAG_RESYNC:     the buffer timestamp might have a discontinuity
- *                              and this buffer is a good point to resynchronize.
- * @GST_BUFFER_FLAG_CORRUPTED:  the buffer data is corrupted.
- * @GST_BUFFER_FLAG_MARKER:     the buffer contains a media specific marker. for
- *                              video this is typically the end of a frame boundary, for audio
- *                              this is usually the end of a talkspurt.
- * @GST_BUFFER_FLAG_HEADER:     the buffer contains header information that is
- *                              needed to decode the following data
- * @GST_BUFFER_FLAG_GAP:        the buffer has been created to fill a gap in the
- *                              stream and contains media neutral data (elements can
- *                              switch to optimized code path that ignores the buffer
- *                              content).
- * @GST_BUFFER_FLAG_DELTA_UNIT: this unit cannot be decoded independently.
- * @GST_BUFFER_FLAG_IN_CAPS:    the buffer has been added as a field in a #GstCaps.
+ * @GST_BUFFER_FLAG_LIVE:        the buffer is live data and should be discarded in
+ *                               the PAUSED state.
+ * @GST_BUFFER_FLAG_DECODE_ONLY: the buffer contains data that should be dropped
+ *                               because it will be clipped against the segment
+ *                               boundaries or because it does not contain data
+ *                               that should be shown to the user.
+ * @GST_BUFFER_FLAG_DISCONT:     the buffer marks a data discontinuity in the stream.
+ *                               This typically occurs after a seek or a dropped buffer
+ *                               from a live or network source.
+ * @GST_BUFFER_FLAG_RESYNC:      the buffer timestamp might have a discontinuity
+ *                               and this buffer is a good point to resynchronize.
+ * @GST_BUFFER_FLAG_CORRUPTED:   the buffer data is corrupted.
+ * @GST_BUFFER_FLAG_MARKER:      the buffer contains a media specific marker. for
+ *                               video this is typically the end of a frame boundary, for audio
+ *                               this is usually the end of a talkspurt.
+ * @GST_BUFFER_FLAG_HEADER:      the buffer contains header information that is
+ *                               needed to decode the following data
+ * @GST_BUFFER_FLAG_GAP:         the buffer has been created to fill a gap in the
+ *                               stream and contains media neutral data (elements can
+ *                               switch to optimized code path that ignores the buffer
+ *                               content).
+ * @GST_BUFFER_FLAG_DROPPABLE:   the buffer can be dropped without breaking the
+ *                               stream, for example to reduce bandwidth.
+ * @GST_BUFFER_FLAG_DELTA_UNIT:  this unit cannot be decoded independently.
+ * @GST_BUFFER_FLAG_IN_CAPS:     the buffer has been added as a field in a #GstCaps.
  *
- * @GST_BUFFER_FLAG_LAST:       additional media specific flags can be added starting from
- *                              this flag.
+ * @GST_BUFFER_FLAG_LAST:        additional media specific flags can be added starting from
+ *                               this flag.
  *
  * A set of buffer flags used to describe properties of a #GstBuffer.
  */
 typedef enum {
-  GST_BUFFER_FLAG_LIVE       = (GST_MINI_OBJECT_FLAG_LAST << 0),
-  GST_BUFFER_FLAG_DROP       = (GST_MINI_OBJECT_FLAG_LAST << 1),
-  GST_BUFFER_FLAG_DISCONT    = (GST_MINI_OBJECT_FLAG_LAST << 2),
-  GST_BUFFER_FLAG_RESYNC     = (GST_MINI_OBJECT_FLAG_LAST << 3),
-  GST_BUFFER_FLAG_CORRUPTED  = (GST_MINI_OBJECT_FLAG_LAST << 4),
-  GST_BUFFER_FLAG_MARKER     = (GST_MINI_OBJECT_FLAG_LAST << 5),
-  GST_BUFFER_FLAG_HEADER     = (GST_MINI_OBJECT_FLAG_LAST << 6),
-  GST_BUFFER_FLAG_GAP        = (GST_MINI_OBJECT_FLAG_LAST << 7),
-  GST_BUFFER_FLAG_DELTA_UNIT = (GST_MINI_OBJECT_FLAG_LAST << 8),
-  GST_BUFFER_FLAG_IN_CAPS    = (GST_MINI_OBJECT_FLAG_LAST << 9),
+  GST_BUFFER_FLAG_LIVE        = (GST_MINI_OBJECT_FLAG_LAST << 0),
+  GST_BUFFER_FLAG_DECODE_ONLY = (GST_MINI_OBJECT_FLAG_LAST << 1),
+  GST_BUFFER_FLAG_DISCONT     = (GST_MINI_OBJECT_FLAG_LAST << 2),
+  GST_BUFFER_FLAG_RESYNC      = (GST_MINI_OBJECT_FLAG_LAST << 3),
+  GST_BUFFER_FLAG_CORRUPTED   = (GST_MINI_OBJECT_FLAG_LAST << 4),
+  GST_BUFFER_FLAG_MARKER      = (GST_MINI_OBJECT_FLAG_LAST << 5),
+  GST_BUFFER_FLAG_HEADER      = (GST_MINI_OBJECT_FLAG_LAST << 6),
+  GST_BUFFER_FLAG_GAP         = (GST_MINI_OBJECT_FLAG_LAST << 7),
+  GST_BUFFER_FLAG_DROPPABLE   = (GST_MINI_OBJECT_FLAG_LAST << 8),
+  GST_BUFFER_FLAG_DELTA_UNIT  = (GST_MINI_OBJECT_FLAG_LAST << 9),
+  GST_BUFFER_FLAG_IN_CAPS     = (GST_MINI_OBJECT_FLAG_LAST << 10),
 
-  GST_BUFFER_FLAG_LAST       = (GST_MINI_OBJECT_FLAG_LAST << 16)
+  GST_BUFFER_FLAG_LAST        = (GST_MINI_OBJECT_FLAG_LAST << 20)
 } GstBufferFlags;
 
 /**
