@@ -866,7 +866,7 @@ ges_timeline_object_set_priority_internal (GESTimelineObject * object,
 
     } else {
       /* ... or update the offset */
-      map->priority_offset = layer_min_gnl_prio + priority - tr->priority;
+      map->priority_offset = tr->priority - layer_min_gnl_prio + priority;
     }
   }
 
@@ -1464,7 +1464,7 @@ track_object_priority_changed_cb (GESTrackObject * child,
 
     /* Update the internal priority_offset */
     map->priority_offset =
-        (layer_min_gnl_prio + object->priority) - tck_priority;
+        tck_priority - (layer_min_gnl_prio + object->priority);
 
   } else if (tck_priority < layer_min_gnl_prio + object->priority) {
     /* Or update the parent priority, the object priority is always the
