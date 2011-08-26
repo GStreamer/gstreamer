@@ -1154,6 +1154,18 @@ gst_mpegts_base_handle_eos (MpegTSBase * base)
   return TRUE;
 }
 
+static inline void
+mpegts_base_flush (MpegTSBase * base)
+{
+  MpegTSBaseClass *klass = GST_MPEGTS_BASE_GET_CLASS (base);
+
+  /* Call implementation */
+  if (G_UNLIKELY (klass->flush == NULL))
+    GST_WARNING_OBJECT (base, "Class doesn't have a 'flush' implementation !");
+  else
+    klass->flush (base);
+}
+
 static gboolean
 mpegts_base_sink_event (GstPad * pad, GstEvent * event)
 {
@@ -1191,6 +1203,7 @@ mpegts_base_sink_event (GstPad * pad, GstEvent * event)
       break;
     case GST_EVENT_FLUSH_START:
       mpegts_packetizer_flush (base->packetizer);
+      mpegts_base_flush (base);
       res = GST_MPEGTS_BASE_GET_CLASS (base)->push_event (base, event);
       gst_event_unref (event);
       break;
