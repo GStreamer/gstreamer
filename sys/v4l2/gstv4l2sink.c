@@ -135,7 +135,7 @@ static GstStateChangeReturn gst_v4l2sink_change_state (GstElement * element,
     GstStateChange transition);
 
 /* GstBaseSink methods: */
-static gboolean gst_v4l2sink_setup_allocation (GstBaseSink * bsink,
+static gboolean gst_v4l2sink_propose_allocation (GstBaseSink * bsink,
     GstQuery * query);
 static GstCaps *gst_v4l2sink_get_caps (GstBaseSink * bsink, GstCaps * filter);
 static gboolean gst_v4l2sink_set_caps (GstBaseSink * bsink, GstCaps * caps);
@@ -211,8 +211,8 @@ gst_v4l2sink_class_init (GstV4l2SinkClass * klass)
 
   basesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_v4l2sink_get_caps);
   basesink_class->set_caps = GST_DEBUG_FUNCPTR (gst_v4l2sink_set_caps);
-  basesink_class->setup_allocation =
-      GST_DEBUG_FUNCPTR (gst_v4l2sink_setup_allocation);
+  basesink_class->propose_allocation =
+      GST_DEBUG_FUNCPTR (gst_v4l2sink_propose_allocation);
   basesink_class->render = GST_DEBUG_FUNCPTR (gst_v4l2sink_show_frame);
 
   klass->v4l2_class_devices = NULL;
@@ -620,7 +620,7 @@ invalid_format:
 }
 
 static gboolean
-gst_v4l2sink_setup_allocation (GstBaseSink * bsink, GstQuery * query)
+gst_v4l2sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
 {
   GstV4l2Sink *v4l2sink = GST_V4L2SINK (bsink);
   GstV4l2Object *obj = v4l2sink->v4l2object;

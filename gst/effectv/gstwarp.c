@@ -243,7 +243,7 @@ gst_warptv_start (GstBaseTransform * trans)
 }
 
 static gboolean
-gst_wraptv_setup_allocation (GstBaseTransform * trans, GstQuery * query)
+gst_wraptv_decide_allocation (GstBaseTransform * trans, GstQuery * query)
 {
   GstBufferPool *pool = NULL;
   guint size, min, max, prefix, alignment;
@@ -294,8 +294,8 @@ gst_warptv_class_init (GstWarpTVClass * klass)
 
   trans_class->start = GST_DEBUG_FUNCPTR (gst_warptv_start);
   trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_warptv_set_caps);
-  trans_class->setup_allocation =
-      GST_DEBUG_FUNCPTR (gst_wraptv_setup_allocation);
+  trans_class->decide_allocation =
+      GST_DEBUG_FUNCPTR (gst_wraptv_decide_allocation);
   trans_class->transform = GST_DEBUG_FUNCPTR (gst_warptv_transform);
 
   initSinTable ();
