@@ -246,6 +246,7 @@ struct _GstBaseTransformClass {
   void          (*before_transform)  (GstBaseTransform *trans, GstBuffer *buffer);
 
   gboolean      (*accept_caps)  (GstBaseTransform *trans, GstPadDirection direction,
+                                        GstCaps *caps);
   gboolean      (*query) (GstBaseTransform * trans, GstPadDirection direction,
       GstQuery * query);
 
