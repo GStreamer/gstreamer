@@ -13,6 +13,7 @@ EXPORTS
 	gst_discoverer_audio_info_get_bitrate
 	gst_discoverer_audio_info_get_channels
 	gst_discoverer_audio_info_get_depth
+	gst_discoverer_audio_info_get_language
 	gst_discoverer_audio_info_get_max_bitrate
 	gst_discoverer_audio_info_get_sample_rate
 	gst_discoverer_audio_info_get_type
@@ -31,6 +32,7 @@ EXPORTS
 	gst_discoverer_info_get_stream_info
 	gst_discoverer_info_get_stream_list
 	gst_discoverer_info_get_streams
+	gst_discoverer_info_get_subtitle_streams
 	gst_discoverer_info_get_tags
 	gst_discoverer_info_get_type
 	gst_discoverer_info_get_uri
@@ -47,6 +49,8 @@ EXPORTS
 	gst_discoverer_stream_info_get_tags
 	gst_discoverer_stream_info_get_type
 	gst_discoverer_stream_info_list_free
+	gst_discoverer_subtitle_info_get_language
+	gst_discoverer_subtitle_info_get_type
 	gst_discoverer_video_info_get_bitrate
 	gst_discoverer_video_info_get_depth
 	gst_discoverer_video_info_get_framerate_denom
