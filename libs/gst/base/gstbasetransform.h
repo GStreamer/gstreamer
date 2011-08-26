@@ -124,8 +124,6 @@ struct _GstBaseTransform {
   gsize		 cache_caps2_size;
   gboolean	 have_same_caps;
 
-  gboolean	 delay_configure;
-  gboolean	 pending_configure;
   gboolean	 negotiated;
 
   gboolean       have_segment;

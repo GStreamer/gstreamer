@@ -434,7 +434,6 @@ gst_base_transform_init (GstBaseTransform * trans,
   gst_element_add_pad (GST_ELEMENT (trans), trans->srcpad);
 
   trans->transform_lock = g_mutex_new ();
-  trans->pending_configure = FALSE;
   trans->priv->qos_enabled = DEFAULT_PROP_QOS;
   trans->cache_caps1 = NULL;
   trans->cache_caps2 = NULL;
@@ -778,7 +777,9 @@ gst_base_transform_do_bufferpool (GstBaseTransform * trans, GstCaps * outcaps)
    * 1) we negotiated passthrough, we can proxy the bufferpool directly and we
    *    will do that whenever some upstream does an allocation query.
    * 2) we need to do a transform, we need to get a bufferpool from downstream
-   *    and configure it.
+   *    and configure it. When upstream does the ALLOCATION query, the
+   *    decide_allocation vmethod will be called and we will configure the
+   *    upstream allocator then.
    */
 
   /* clear old pool */
@@ -1309,7 +1310,7 @@ gst_base_transform_default_query (GstBaseTransform * trans,
   GstPad *pad, *otherpad;
 
   pad = (direction == GST_PAD_SRC) ? trans->srcpad : trans->sinkpad;
-  otherpad = (direction == GST_PAD_SINK) ? trans->sinkpad : trans->srcpad;
+  otherpad = (direction == GST_PAD_SRC) ? trans->sinkpad : trans->srcpad;
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_ALLOCATION:
