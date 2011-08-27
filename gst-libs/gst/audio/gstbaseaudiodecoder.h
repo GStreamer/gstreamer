@@ -30,7 +30,7 @@
 #endif
 
 #include <gst/gst.h>
-#include <gst/audio/gstbaseaudioutils.h>
+#include <gst/audio/audio.h>
 #include <gst/base/gstadapter.h>
 
 G_BEGIN_DECLS
@@ -214,7 +214,7 @@ GstFlowReturn     gst_base_audio_decoder_finish_frame (GstBaseAudioDecoder * dec
                                                        GstBuffer * buf, gint frames);
 
 /* context parameters */
-GstAudioFormatInfo *gst_base_audio_decoder_get_info (GstBaseAudioDecoder * dec);
+GstAudioInfo    * gst_base_audio_decoder_get_audio_info (GstBaseAudioDecoder * dec);
 
 void              gst_base_audio_decoder_set_plc_aware (GstBaseAudioDecoder * dec,
                                                         gboolean plc);
