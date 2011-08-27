@@ -1416,7 +1416,7 @@ gst_directdraw_sink_setup_ddraw (GstDirectDrawSink * ddrawsink)
   return bRet;
 }
 
-static long FAR PASCAL
+static LRESULT FAR PASCAL
 WndProc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
   switch (message) {
@@ -2026,7 +2026,7 @@ surface_pitch_bad:
   GST_BUFFER_SIZE (surface) = size;
   surface->surface = NULL;
   GST_CAT_INFO_OBJECT (directdrawsink_debug, ddrawsink,
-      "allocating a system memory buffer of %d bytes", size);
+      "allocating a system memory buffer of %" G_GSIZE_FORMAT " bytes", size);
 
 #endif
 
