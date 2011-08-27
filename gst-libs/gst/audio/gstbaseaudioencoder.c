@@ -150,6 +150,7 @@
 #  include "config.h"
 #endif
 
+#define GST_USE_UNSTABLE_API
 #include "gstbaseaudioencoder.h"
 #include <gst/base/gstadapter.h>
 #include <gst/audio/audio.h>
@@ -771,7 +772,6 @@ gst_base_audio_encoder_set_base_gp (GstBaseAudioEncoder * enc)
 static GstFlowReturn
 gst_base_audio_encoder_chain (GstPad * pad, GstBuffer * buffer)
 {
-  GstBaseAudioEncoderClass *bclass;
   GstBaseAudioEncoder *enc;
   GstBaseAudioEncoderPrivate *priv;
   GstBaseAudioEncoderContext *ctx;
@@ -779,7 +779,6 @@ gst_base_audio_encoder_chain (GstPad * pad, GstBuffer * buffer)
   gboolean discont;
 
   enc = GST_BASE_AUDIO_ENCODER (GST_OBJECT_PARENT (pad));
-  bclass = GST_BASE_AUDIO_ENCODER_GET_CLASS (enc);
 
   priv = enc->priv;
   ctx = &enc->priv->ctx;
