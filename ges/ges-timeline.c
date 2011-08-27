@@ -504,12 +504,13 @@ discoverer_discovered_cb (GstDiscoverer * discoverer,
     /* FIXME : Handle errors in discovery */
     stream_list = gst_discoverer_info_get_stream_list (info);
 
+    tfs_supportedformats = ges_timeline_filesource_get_supported_formats (tfs);
+    if (tfs_supportedformats != GES_TRACK_TYPE_UNKNOWN)
+      goto check_image;
+
     /* Update timelinefilesource properties based on info */
     for (tmp = stream_list; tmp; tmp = tmp->next) {
       GstDiscovererStreamInfo *sinf = (GstDiscovererStreamInfo *) tmp->data;
-
-      tfs_supportedformats =
-          ges_timeline_filesource_get_supported_formats (tfs);
 
       if (GST_IS_DISCOVERER_AUDIO_INFO (sinf)) {
         tfs_supportedformats |= GES_TRACK_TYPE_AUDIO;
@@ -531,6 +532,8 @@ discoverer_discovered_cb (GstDiscoverer * discoverer,
 
     if (stream_list)
       gst_discoverer_stream_info_list_free (stream_list);
+
+  check_image:
 
     if (is_image) {
       /* don't set max-duration on still images */
