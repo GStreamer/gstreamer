@@ -44,7 +44,6 @@
 #include "config.h"
 #endif
 
-#include <gst/video/video.h>
 #include "pbutils.h"
 #include "pbutils-marshal.h"
 #include "pbutils-private.h"
@@ -615,7 +614,6 @@ collect_information (GstDiscoverer * dc, const GstStructure * st,
   const gchar *name;
   int tmp, tmp2;
   guint utmp;
-  gboolean btmp;
 
   if (!st || !gst_structure_id_has_field (st, _CAPS_QUARK)) {
     GST_WARNING ("Couldn't find caps !");
@@ -680,7 +678,6 @@ collect_information (GstDiscoverer * dc, const GstStructure * st,
   } else if (g_str_has_prefix (name, "video/") ||
       g_str_has_prefix (name, "image/")) {
     GstDiscovererVideoInfo *info;
-    GstVideoFormat format;
 
     if (parent)
       info = (GstDiscovererVideoInfo *) parent;
@@ -690,7 +687,8 @@ collect_information (GstDiscoverer * dc, const GstStructure * st,
       info->parent.caps = caps;
     }
 
-    if (gst_video_format_parse_caps (caps, &format, &tmp, &tmp2)) {
+    if (gst_structure_get_int (caps_st, "width", &tmp) &&
+        gst_structure_get_int (caps_st, "height", &tmp2)) {
       info->width = (guint) tmp;
       info->height = (guint) tmp2;
     }
@@ -698,18 +696,21 @@ collect_information (GstDiscoverer * dc, const GstStructure * st,
     if (gst_structure_get_int (caps_st, "depth", &tmp))
       info->depth = (guint) tmp;
 
-    if (gst_video_parse_caps_pixel_aspect_ratio (caps, &tmp, &tmp2)) {
+    if (gst_structure_get_fraction (caps_st, "pixel-aspect-ratio", &tmp, &tmp2)) {
       info->par_num = tmp;
       info->par_denom = tmp2;
+    } else {
+      info->par_num = 1;
+      info->par_denom = 1;
     }
 
-    if (gst_video_parse_caps_framerate (caps, &tmp, &tmp2)) {
+    if (gst_structure_get_fraction (caps_st, "framerate", &tmp, &tmp2)) {
       info->framerate_num = tmp;
       info->framerate_denom = tmp2;
     }
 
-    if (gst_video_format_parse_caps_interlaced (caps, &btmp))
-      info->interlaced = btmp;
+    if (!gst_structure_get_boolean (caps_st, "interlaced", &info->interlaced))
+      info->interlaced = FALSE;
 
     if (gst_structure_id_has_field (st, _TAGS_QUARK)) {
       gst_structure_id_get (st, _TAGS_QUARK,

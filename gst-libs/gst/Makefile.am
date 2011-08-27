@@ -29,10 +29,8 @@ riff: tag audio
 
 rtsp: sdp
 
-pbutils: video
-
 INDEPENDENT_SUBDIRS = \
-	interfaces tag fft floatcast netbuffer rtp sdp video app
+	interfaces tag fft floatcast netbuffer pbutils rtp sdp video app
 
 .PHONY: independent-subdirs $(INDEPENDENT_SUBDIRS)
 
