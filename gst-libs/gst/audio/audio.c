@@ -413,6 +413,31 @@ missing_field_width:
   }
 }
 
+/* FIXME: remove these if we don't actually go for deep alloc positions */
+void
+gst_audio_info_init (GstAudioInfo * info)
+{
+  memset (info, 0, sizeof (GstAudioInfo));
+}
+
+void
+gst_audio_info_clear (GstAudioInfo * info)
+{
+  memset (info, 0, sizeof (GstAudioInfo));
+}
+
+GstAudioInfo *
+gst_audio_info_copy (GstAudioInfo * info)
+{
+  return (GstAudioInfo *) g_slice_copy (sizeof (GstAudioInfo), info);
+}
+
+void
+gst_audio_info_free (GstAudioInfo * info)
+{
+  g_slice_free (GstAudioInfo, info);
+}
+
 static void
 gst_audio_info_set_format (GstAudioInfo * info, GstAudioFormat format,
     gint rate, gint channels)

@@ -261,17 +261,17 @@ struct _GstAudioInfo {
 #define GST_AUDIO_INFO_BPF(info)             ((info)->bpf)
 #define GST_AUDIO_INFO_POSITION(info,c)      ((info)->position[c])
 
-#if 0
-void         gst_audio_info_init        (GstAudioInfo *info);
-void         gst_audio_info_set_format  (GstAudioInfo *info, GstAudioFormat format,
-                                         gint rate, gint channels);
-#endif
-/* FIXME: need alloc/free for GstAudioInfo */
-gboolean     gst_audio_info_from_caps   (GstAudioInfo *info, const GstCaps *caps);
-GstCaps *    gst_audio_info_to_caps     (GstAudioInfo *info);
+void           gst_audio_info_init  (GstAudioInfo * info);
+void           gst_audio_info_clear (GstAudioInfo * info);
 
-gboolean     gst_audio_info_convert     (GstAudioInfo * info,
-                                         GstFormat src_fmt, gint64 src_val,
+GstAudioInfo * gst_audio_info_copy  (GstAudioInfo * info);
+void           gst_audio_info_free  (GstAudioInfo * info);
+
+gboolean       gst_audio_info_from_caps (GstAudioInfo * info, const GstCaps * caps);
+GstCaps *      gst_audio_info_to_caps   (GstAudioInfo * info);
+
+gboolean       gst_audio_info_convert   (GstAudioInfo * info,
+                                         GstFormat src_fmt,  gint64   src_val,
                                          GstFormat dest_fmt, gint64 * dest_val);
 
 /* For people that are looking at this source: the purpose of these defines is
