@@ -44,12 +44,16 @@ G_BEGIN_DECLS
  * GST_BASE_AUDIO_ENCODER_SINK_NAME:
  *
  * the name of the templates for the sink pad
+ *
+ * Since: 0.10.36
  */
 #define GST_BASE_AUDIO_ENCODER_SINK_NAME	"sink"
 /**
  * GST_BASE_AUDIO_ENCODER_SRC_NAME:
  *
  * the name of the templates for the source pad
+ *
+ * Since: 0.10.36
  */
 #define GST_BASE_AUDIO_ENCODER_SRC_NAME	        "src"
 
@@ -59,7 +63,7 @@ G_BEGIN_DECLS
  *
  * Gives the pointer to the source #GstPad object of the element.
  *
- * Since: 0.10.x
+ * Since: 0.10.36
  */
 #define GST_BASE_AUDIO_ENCODER_SRC_PAD(obj)	(GST_BASE_AUDIO_ENCODER_CAST (obj)->srcpad)
 
@@ -69,7 +73,7 @@ G_BEGIN_DECLS
  *
  * Gives the pointer to the sink #GstPad object of the element.
  *
- * Since: 0.10.x
+ * Since: 0.10.36
  */
 #define GST_BASE_AUDIO_ENCODER_SINK_PAD(obj)	(GST_BASE_AUDIO_ENCODER_CAST (obj)->sinkpad)
 
@@ -79,7 +83,7 @@ G_BEGIN_DECLS
  *
  * Gives the segment of the element.
  *
- * Since: 0.10.x
+ * Since: 0.10.36
  */
 #define GST_BASE_AUDIO_ENCODER_SEGMENT(obj)     (GST_BASE_AUDIO_ENCODER_CAST (obj)->segment)
 
@@ -94,6 +98,8 @@ typedef struct _GstBaseAudioEncoderPrivate GstBaseAudioEncoderPrivate;
  * @element: the parent element.
  *
  * The opaque #GstBaseAudioEncoder data structure.
+ *
+ * Since: 0.10.36
  */
 struct _GstBaseAudioEncoder {
   GstElement     element;
@@ -120,8 +126,7 @@ struct _GstBaseAudioEncoder {
  *                  Called when the element stops processing.
  *                  Allows closing external resources.
  * @set_format:     Notifies subclass of incoming data format.
- *                  GstBaseAudioEncoderContext fields have already been
- *                  set according to provided caps.
+ *                  GstAudioInfo contains the format according to provided caps.
  * @handle_frame:   Provides input samples (or NULL to clear any remaining data)
  *                  according to directions as provided by subclass in the
  *                  #GstBaseAudioEncoderContext.  Input data ref management
@@ -146,6 +151,8 @@ struct _GstBaseAudioEncoder {
  *
  * Subclasses can override any of the available virtual methods or not, as
  * needed. At minimum @set_format and @handle_frame needs to be overridden.
+ *
+ * Since: 0.10.36
  */
 struct _GstBaseAudioEncoderClass {
   GstElementClass parent_class;

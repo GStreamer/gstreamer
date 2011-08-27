@@ -52,12 +52,16 @@ G_BEGIN_DECLS
  * GST_BASE_AUDIO_DECODER_SINK_NAME:
  *
  * The name of the templates for the sink pad.
+ *
+ * Since: 0.10.36
  */
 #define GST_BASE_AUDIO_DECODER_SINK_NAME    "sink"
 /**
  * GST_BASE_AUDIO_DECODER_SRC_NAME:
  *
  * The name of the templates for the source pad.
+ *
+ * Since: 0.10.36
  */
 #define GST_BASE_AUDIO_DECODER_SRC_NAME     "src"
 
@@ -66,6 +70,8 @@ G_BEGIN_DECLS
  * @obj: base audio codec instance
  *
  * Gives the pointer to the source #GstPad object of the element.
+ *
+ * Since: 0.10.36
  */
 #define GST_BASE_AUDIO_DECODER_SRC_PAD(obj)         (((GstBaseAudioDecoder *) (obj))->srcpad)
 
@@ -74,6 +80,8 @@ G_BEGIN_DECLS
  * @obj: base audio codec instance
  *
  * Gives the pointer to the sink #GstPad object of the element.
+ *
+ * Since: 0.10.36
  */
 #define GST_BASE_AUDIO_DECODER_SINK_PAD(obj)        (((GstBaseAudioDecoder *) (obj))->sinkpad)
 
@@ -109,6 +117,8 @@ GstFlowReturn _gst_base_audio_decoder_error (GstBaseAudioDecoder *dec, gint weig
  * media processing.  Otherwise, it is considered a "glitch" and only a warning
  * is logged. In either case, @ret is set to the proper value to
  * return to upstream/caller (indicating either GST_FLOW_ERROR or GST_FLOW_OK).
+ *
+ * Since: 0.10.36
  */
 #define GST_BASE_AUDIO_DECODER_ERROR(el, w, domain, code, text, debug, ret) \
 G_STMT_START {                                                              \
@@ -124,6 +134,8 @@ G_STMT_START {                                                              \
  * GstBaseAudioDecoder:
  *
  * The opaque #GstBaseAudioDecoder data structure.
+ *
+ * Since: 0.10.36
  */
 struct _GstBaseAudioDecoder
 {
@@ -176,6 +188,8 @@ struct _GstBaseAudioDecoder
  * Subclasses can override any of the available virtual methods or not, as
  * needed. At minimum @handle_frame (and likely @set_format) needs to be
  * overridden.
+ *
+ * Since: 0.10.36
  */
 struct _GstBaseAudioDecoderClass
 {

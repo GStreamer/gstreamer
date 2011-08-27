@@ -23,6 +23,7 @@
  * SECTION:gstbaseaudioencoder
  * @short_description: Base class for audio encoders
  * @see_also: #GstBaseTransform
+ * @since: 0.10.36
  *
  * This base class is for audio encoders turning raw audio samples into
  * encoded audio data.
@@ -461,6 +462,8 @@ gst_base_audio_encoder_finalize (GObject * object)
  * and a discontinuity is marked (note that @buf == NULL => push == TRUE).
  *
  * Returns: a #GstFlowReturn that should be escalated to caller (of caller)
+ *
+ * Since: 0.10.36
  */
 GstFlowReturn
 gst_base_audio_encoder_finish_frame (GstBaseAudioEncoder * enc, GstBuffer * buf,
@@ -1047,6 +1050,8 @@ refuse_caps:
  * (e.g. muxers).
  *
  * Returns: a #GstCaps owned by caller
+ *
+ * Since: 0.10.36
  */
 GstCaps *
 gst_base_audio_encoder_proxy_getcaps (GstBaseAudioEncoder * enc, GstCaps * caps)
@@ -1287,6 +1292,8 @@ gst_base_audio_encoder_get_query_types (GstPad * pad)
  * @dest_format for encoded audio data.  Conversion is possible between
  * BYTE and TIME format by using estimated bitrate based on
  * @samples and @bytes (and @fmt).
+ *
+ * Since: 0.10.36
  */
 /* FIXME: make gst_base_audio_encoded_audio_convert() public? */
 static gboolean
@@ -1574,6 +1581,8 @@ gst_base_audio_encoder_sink_activate_push (GstPad * pad, gboolean active)
  * @enc: a #GstBaseAudioEncoder
  *
  * Returns: a #GstAudioInfo describing the input audio format
+ *
+ * Since: 0.10.36
  */
 GstAudioInfo *
 gst_base_audio_encoder_get_audio_info (GstBaseAudioEncoder * enc)
@@ -1590,6 +1599,8 @@ gst_base_audio_encoder_get_audio_info (GstBaseAudioEncoder * enc)
  *
  * Sets number of samples (per channel) subclass needs to be handed,
  * or will be handed all available if 0.
+ *
+ * Since: 0.10.36
  */
 void
 gst_base_audio_encoder_set_frame_samples (GstBaseAudioEncoder * enc, gint num)
@@ -1604,6 +1615,8 @@ gst_base_audio_encoder_set_frame_samples (GstBaseAudioEncoder * enc, gint num)
  * @enc: a #GstBaseAudioEncoder
  *
  * Returns: currently requested samples per frame
+ *
+ * Since: 0.10.36
  */
 gint
 gst_base_audio_encoder_get_frame_samples (GstBaseAudioEncoder * enc)
@@ -1619,6 +1632,8 @@ gst_base_audio_encoder_get_frame_samples (GstBaseAudioEncoder * enc)
  * @num: number of frames
  *
  * Sets max number of frames accepted at once (assumed minimally 1)
+ *
+ * Since: 0.10.36
  */
 void
 gst_base_audio_encoder_set_frame_max (GstBaseAudioEncoder * enc, gint num)
@@ -1633,6 +1648,8 @@ gst_base_audio_encoder_set_frame_max (GstBaseAudioEncoder * enc, gint num)
  * @enc: a #GstBaseAudioEncoder
  *
  * Returns: currently configured maximum handled frames
+ *
+ * Since: 0.10.36
  */
 gint
 gst_base_audio_encoder_get_frame_max (GstBaseAudioEncoder * enc)
@@ -1648,6 +1665,8 @@ gst_base_audio_encoder_get_frame_max (GstBaseAudioEncoder * enc)
  * @num: lookahead
  *
  * Sets encoder lookahead (in units of input rate samples)
+ *
+ * Since: 0.10.36
  */
 void
 gst_base_audio_encoder_set_lookahead (GstBaseAudioEncoder * enc, gint num)
@@ -1678,6 +1697,8 @@ gst_base_audio_encoder_get_lookahead (GstBaseAudioEncoder * enc)
  * @max: maximum latency
  *
  * Sets encoder latency.
+ *
+ * Since: 0.10.36
  */
 void
 gst_base_audio_encoder_set_latency (GstBaseAudioEncoder * enc,
@@ -1698,6 +1719,8 @@ gst_base_audio_encoder_set_latency (GstBaseAudioEncoder * enc,
  * @max: a pointer to storage to hold maximum latency
  *
  * Returns currently configured latency.
+ *
+ * Since: 0.10.36
  */
 void
 gst_base_audio_encoder_get_latency (GstBaseAudioEncoder * enc,
@@ -1722,6 +1745,7 @@ gst_base_audio_encoder_get_latency (GstBaseAudioEncoder * enc,
  *
  * MT safe.
  *
+ * Since: 0.10.36
  */
 void
 gst_base_audio_encoder_set_mark_granule (GstBaseAudioEncoder * enc,
@@ -1745,6 +1769,8 @@ gst_base_audio_encoder_set_mark_granule (GstBaseAudioEncoder * enc,
  * Returns: TRUE if granule marking is enabled.
  *
  * MT safe.
+ *
+ * Since: 0.10.36
  */
 gboolean
 gst_base_audio_encoder_get_mark_granule (GstBaseAudioEncoder * enc)
@@ -1769,6 +1795,7 @@ gst_base_audio_encoder_get_mark_granule (GstBaseAudioEncoder * enc)
  *
  * MT safe.
  *
+ * Since: 0.10.36
  */
 void
 gst_base_audio_encoder_set_perfect_timestamp (GstBaseAudioEncoder * enc,
@@ -1792,6 +1819,8 @@ gst_base_audio_encoder_set_perfect_timestamp (GstBaseAudioEncoder * enc,
  * Returns: TRUE if pefect timestamp setting enabled.
  *
  * MT safe.
+ *
+ * Since: 0.10.36
  */
 gboolean
 gst_base_audio_encoder_get_perfect_timestamp (GstBaseAudioEncoder * enc)
@@ -1816,6 +1845,7 @@ gst_base_audio_encoder_get_perfect_timestamp (GstBaseAudioEncoder * enc)
  *
  * MT safe.
  *
+ * Since: 0.10.36
  */
 void
 gst_base_audio_encoder_set_hard_resync (GstBaseAudioEncoder * enc,
@@ -1839,6 +1869,8 @@ gst_base_audio_encoder_set_hard_resync (GstBaseAudioEncoder * enc,
  * Returns: TRUE if hard resync is enabled.
  *
  * MT safe.
+ *
+ * Since: 0.10.36
  */
 gboolean
 gst_base_audio_encoder_get_hard_resync (GstBaseAudioEncoder * enc)
@@ -1863,6 +1895,7 @@ gst_base_audio_encoder_get_hard_resync (GstBaseAudioEncoder * enc)
  *
  * MT safe.
  *
+ * Since: 0.10.36
  */
 void
 gst_base_audio_encoder_set_tolerance (GstBaseAudioEncoder * enc,
@@ -1884,6 +1917,8 @@ gst_base_audio_encoder_set_tolerance (GstBaseAudioEncoder * enc,
  * Returns: encoder audio jitter tolerance threshold.
  *
  * MT safe.
+ *
+ * Since: 0.10.36
  */
 gint64
 gst_base_audio_encoder_get_tolerance (GstBaseAudioEncoder * enc)

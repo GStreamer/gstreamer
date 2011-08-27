@@ -25,6 +25,7 @@
  * SECTION:gstbaseaudiodecoder
  * @short_description: Base class for audio decoders
  * @see_also: #GstBaseTransform
+ * @since: 0.10.36
  *
  * This base class is for audio decoders turning encoded data into
  * raw audio samples.
@@ -1977,6 +1978,8 @@ _gst_base_audio_decoder_error (GstBaseAudioDecoder * dec, gint weight,
  * @dec: a #GstBaseAudioDecoder
  *
  * Returns: a #GstAudioInfo describing the input audio format
+ *
+ * Since: 0.10.36
  */
 GstAudioInfo *
 gst_base_audio_decoder_get_audio_info (GstBaseAudioDecoder * dec)
@@ -1992,6 +1995,8 @@ gst_base_audio_decoder_get_audio_info (GstBaseAudioDecoder * dec)
  * @plc: new plc state
  *
  * Indicates whether or not subclass handles packet loss concealment (plc).
+ *
+ * Since: 0.10.36
  */
 void
 gst_base_audio_decoder_set_plc_aware (GstBaseAudioDecoder * dec, gboolean plc)
@@ -2006,6 +2011,8 @@ gst_base_audio_decoder_set_plc_aware (GstBaseAudioDecoder * dec, gboolean plc)
  * @dec: a #GstBaseAudioDecoder
  *
  * Returns: currently configured plc handling
+ *
+ * Since: 0.10.36
  */
 gint
 gst_base_audio_decoder_get_plc_aware (GstBaseAudioDecoder * dec)
@@ -2021,6 +2028,8 @@ gst_base_audio_decoder_get_plc_aware (GstBaseAudioDecoder * dec)
  * @enabled: whether to enable byte to time conversion
  *
  * Allows baseclass to perform byte to time estimated conversion.
+ *
+ * Since: 0.10.36
  */
 void
 gst_base_audio_decoder_set_byte_time (GstBaseAudioDecoder * dec,
@@ -2036,6 +2045,8 @@ gst_base_audio_decoder_set_byte_time (GstBaseAudioDecoder * dec,
  * @dec: a #GstBaseAudioDecoder
  *
  * Returns: currently configured byte to time conversion setting
+ *
+ * Since: 0.10.36
  */
 gint
 gst_base_audio_decoder_get_byte_time (GstBaseAudioDecoder * dec)
@@ -2050,6 +2061,8 @@ gst_base_audio_decoder_get_byte_time (GstBaseAudioDecoder * dec)
  * @dec: a #GstBaseAudioDecoder
  *
  * Returns: currently configured decoder delay
+ *
+ * Since: 0.10.36
  */
 gint
 gst_base_audio_decoder_get_delay (GstBaseAudioDecoder * dec)
@@ -2066,6 +2079,8 @@ gst_base_audio_decoder_get_delay (GstBaseAudioDecoder * dec)
  *
  * Sets numbers of tolerated decoder errors, where a tolerated one is then only
  * warned about, but more than tolerated will lead to fatal error.
+ *
+ * Since: 0.10.36
  */
 void
 gst_base_audio_decoder_set_max_errors (GstBaseAudioDecoder * enc, gint num)
@@ -2080,6 +2095,8 @@ gst_base_audio_decoder_set_max_errors (GstBaseAudioDecoder * enc, gint num)
  * @dec: a #GstBaseAudioDecoder
  *
  * Returns: currently configured decoder tolerated error count.
+ *
+ * Since: 0.10.36
  */
 gint
 gst_base_audio_decoder_get_max_errors (GstBaseAudioDecoder * dec)
@@ -2096,6 +2113,8 @@ gst_base_audio_decoder_get_max_errors (GstBaseAudioDecoder * dec)
  * @max: maximum latency
  *
  * Sets decoder latency.
+ *
+ * Since: 0.10.36
  */
 void
 gst_base_audio_decoder_set_latency (GstBaseAudioDecoder * dec,
@@ -2116,6 +2135,8 @@ gst_base_audio_decoder_set_latency (GstBaseAudioDecoder * dec,
  * @max: a pointer to storage to hold maximum latency
  *
  * Returns currently configured latency.
+ *
+ * Since: 0.10.36
  */
 void
 gst_base_audio_decoder_get_latency (GstBaseAudioDecoder * dec,
@@ -2138,6 +2159,8 @@ gst_base_audio_decoder_get_latency (GstBaseAudioDecoder * dec,
  * @max: a pointer to storage to hold current eos state
  *
  * Return current parsing (sync and eos) state.
+ *
+ * Since: 0.10.36
  */
 void
 gst_base_audio_decoder_get_parse_state (GstBaseAudioDecoder * dec,
@@ -2161,6 +2184,7 @@ gst_base_audio_decoder_get_parse_state (GstBaseAudioDecoder * dec,
  *
  * MT safe.
  *
+ * Since: 0.10.36
  */
 void
 gst_base_audio_decoder_set_plc (GstBaseAudioDecoder * dec, gboolean enabled)
@@ -2183,6 +2207,8 @@ gst_base_audio_decoder_set_plc (GstBaseAudioDecoder * dec, gboolean enabled)
  * Returns: TRUE if packet loss concealment is enabled.
  *
  * MT safe.
+ *
+ * Since: 0.10.36
  */
 gboolean
 gst_base_audio_decoder_get_plc (GstBaseAudioDecoder * dec)
@@ -2207,6 +2233,7 @@ gst_base_audio_decoder_get_plc (GstBaseAudioDecoder * dec)
  *
  * MT safe.
  *
+ * Since: 0.10.36
  */
 void
 gst_base_audio_decoder_set_min_latency (GstBaseAudioDecoder * dec, gint64 num)
@@ -2227,6 +2254,8 @@ gst_base_audio_decoder_set_min_latency (GstBaseAudioDecoder * dec, gint64 num)
  * Returns: aggregation latency.
  *
  * MT safe.
+ *
+ * Since: 0.10.36
  */
 gint64
 gst_base_audio_decoder_get_min_latency (GstBaseAudioDecoder * dec)
@@ -2251,6 +2280,7 @@ gst_base_audio_decoder_get_min_latency (GstBaseAudioDecoder * dec)
  *
  * MT safe.
  *
+ * Since: 0.10.36
  */
 void
 gst_base_audio_decoder_set_tolerance (GstBaseAudioDecoder * dec,
@@ -2272,6 +2302,8 @@ gst_base_audio_decoder_set_tolerance (GstBaseAudioDecoder * dec,
  * Returns: decoder audio jitter tolerance threshold.
  *
  * MT safe.
+ *
+ * Since: 0.10.36
  */
 gint64
 gst_base_audio_decoder_get_tolerance (GstBaseAudioDecoder * dec)
