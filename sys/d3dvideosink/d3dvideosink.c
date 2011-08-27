@@ -495,6 +495,9 @@ gst_d3dvideosink_create_shared_hidden_window (GstD3DVideoSink * sink)
 
   CloseHandle (shared.hidden_window_created_signal);
 
+  if (!shared.d3ddev)
+     goto failed;
+
   GST_DEBUG ("Successfully created Direct3D hidden window, handle: %p",
       shared.hidden_window_handle);
 
@@ -1356,7 +1359,8 @@ gst_d3dvideosink_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
-      gst_d3dvideosink_initialize_direct3d (sink);
+      if (!gst_d3dvideosink_initialize_direct3d (sink))
+        return GST_STATE_CHANGE_FAILURE; 
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       break;
