@@ -28,7 +28,7 @@
 #endif
 
 #include <gst/gst.h>
-#include <gst/audio/gstbaseaudioutils.h>
+#include <gst/audio/audio.h>
 
 G_BEGIN_DECLS
 
@@ -158,7 +158,7 @@ struct _GstBaseAudioEncoderClass {
   gboolean      (*stop)               (GstBaseAudioEncoder *enc);
 
   gboolean      (*set_format)         (GstBaseAudioEncoder *enc,
-                                       GstAudioFormatInfo *info);
+                                       GstAudioInfo        *info);
 
   GstFlowReturn (*handle_frame)       (GstBaseAudioEncoder *enc,
                                        GstBuffer *buffer);
@@ -187,7 +187,7 @@ GstCaps *       gst_base_audio_encoder_proxy_getcaps (GstBaseAudioEncoder * enc,
 
 
 /* context parameters */
-GstAudioFormatInfo * gst_base_audio_encoder_get_info (GstBaseAudioEncoder * enc);
+GstAudioInfo  * gst_base_audio_encoder_get_audio_info (GstBaseAudioEncoder * enc);
 
 gint            gst_base_audio_encoder_get_frame_samples (GstBaseAudioEncoder * enc);
 void            gst_base_audio_encoder_set_frame_samples (GstBaseAudioEncoder * enc,

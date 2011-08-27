@@ -182,7 +182,7 @@ enum
 typedef struct _GstBaseAudioEncoderContext
 {
   /* input */
-  GstAudioFormatInfo info;
+  GstAudioInfo info;
 
   /* output */
   gint frame_samples;
@@ -410,7 +410,7 @@ gst_base_audio_encoder_reset (GstBaseAudioEncoder * enc, gboolean full)
     enc->priv->active = FALSE;
     enc->priv->samples_in = 0;
     enc->priv->bytes_out = 0;
-    gst_base_audio_format_info_clear (&enc->priv->ctx.info);
+    gst_audio_info_clear (&enc->priv->ctx.info);
     memset (&enc->priv->ctx, 0, sizeof (enc->priv->ctx));
   }
 
@@ -936,13 +936,31 @@ wrong_buffer:
 }
 
 static gboolean
+audio_info_is_equal (GstAudioInfo * from, GstAudioInfo * to)
+{
+  if (from == to)
+    return TRUE;
+  if (GST_AUDIO_INFO_FORMAT (from) != GST_AUDIO_INFO_FORMAT (to))
+    return FALSE;
+  if (GST_AUDIO_INFO_RATE (from) != GST_AUDIO_INFO_RATE (to))
+    return FALSE;
+  if (GST_AUDIO_INFO_CHANNELS (from) != GST_AUDIO_INFO_CHANNELS (to))
+    return FALSE;
+  if (GST_AUDIO_INFO_CHANNELS (from) > 64)
+    return TRUE;
+  return memcmp (from->position, to->position,
+      GST_AUDIO_INFO_CHANNELS (from) * sizeof (to->position[0]));
+}
+
+static gboolean
 gst_base_audio_encoder_sink_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstBaseAudioEncoder *enc;
   GstBaseAudioEncoderClass *klass;
   GstBaseAudioEncoderContext *ctx;
-  GstAudioFormatInfo *state, *ostate;
+  GstAudioInfo *state, *old_state;
   gboolean res = TRUE, changed = FALSE;
+  guint old_rate;
 
   enc = GST_BASE_AUDIO_ENCODER (GST_PAD_PARENT (pad));
   klass = GST_BASE_AUDIO_ENCODER_GET_CLASS (enc);
@@ -959,18 +977,19 @@ gst_base_audio_encoder_sink_setcaps (GstPad * pad, GstCaps * caps)
     goto refuse_caps;
 
   /* adjust ts tracking to new sample rate */
-  if (GST_CLOCK_TIME_IS_VALID (enc->priv->base_ts) && state->rate) {
+  old_rate = GST_AUDIO_INFO_RATE (state);
+  if (GST_CLOCK_TIME_IS_VALID (enc->priv->base_ts) && old_rate) {
     enc->priv->base_ts +=
-        GST_FRAMES_TO_CLOCK_TIME (enc->priv->samples, state->rate);
+        GST_FRAMES_TO_CLOCK_TIME (enc->priv->samples, old_rate);
     enc->priv->samples = 0;
   }
 
-  ostate = gst_base_audio_format_info_copy (state);
-  if (!gst_base_audio_parse_caps (caps, state))
+  old_state = gst_audio_info_copy (state);
+  if (!gst_audio_info_from_caps (state, caps))
     goto refuse_caps;
 
-  changed = gst_base_audio_compare_format_info (state, ostate);
-  gst_base_audio_format_info_free (ostate);
+  changed = audio_info_is_equal (state, old_state);
+  gst_audio_info_free (old_state);
 
   if (changed) {
     GstClockTime old_min_latency;
@@ -1225,8 +1244,8 @@ gst_base_audio_encoder_sink_query (GstPad * pad, GstQuery * query)
       gint64 src_val, dest_val;
 
       gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
-      if (!(res = gst_base_audio_raw_audio_convert (&enc->priv->ctx.info,
-                  src_fmt, src_val, &dest_fmt, &dest_val)))
+      if (!(res = gst_audio_info_convert (&enc->priv->ctx.info,
+                  src_fmt, src_val, dest_fmt, &dest_val)))
         goto error;
       gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
       break;
@@ -1253,6 +1272,77 @@ gst_base_audio_encoder_get_query_types (GstPad * pad)
   };
 
   return gst_base_audio_encoder_src_query_types;
+}
+
+/*
+ * gst_base_audio_encoded_audio_convert:
+ * @fmt: audio format of the encoded audio
+ * @bytes: number of encoded bytes
+ * @samples: number of encoded samples
+ * @src_format: source format
+ * @src_value: source value
+ * @dest_format: destination format
+ * @dest_value: destination format
+ *
+ * Helper function to convert @src_value in @src_format to @dest_value in
+ * @dest_format for encoded audio data.  Conversion is possible between
+ * BYTE and TIME format by using estimated bitrate based on
+ * @samples and @bytes (and @fmt).
+ */
+/* FIXME: make gst_base_audio_encoded_audio_convert() public? */
+static gboolean
+gst_base_audio_encoded_audio_convert (GstAudioInfo * fmt,
+    gint64 bytes, gint64 samples, GstFormat src_format,
+    gint64 src_value, GstFormat * dest_format, gint64 * dest_value)
+{
+  gboolean res = FALSE;
+
+  g_return_val_if_fail (dest_format != NULL, FALSE);
+  g_return_val_if_fail (dest_value != NULL, FALSE);
+
+  if (G_UNLIKELY (src_format == *dest_format || src_value == 0 ||
+          src_value == -1)) {
+    if (dest_value)
+      *dest_value = src_value;
+    return TRUE;
+  }
+
+  if (samples == 0 || bytes == 0 || fmt->rate == 0) {
+    GST_DEBUG ("not enough metadata yet to convert");
+    goto exit;
+  }
+
+  bytes *= fmt->rate;
+
+  switch (src_format) {
+    case GST_FORMAT_BYTES:
+      switch (*dest_format) {
+        case GST_FORMAT_TIME:
+          *dest_value = gst_util_uint64_scale (src_value,
+              GST_SECOND * samples, bytes);
+          res = TRUE;
+          break;
+        default:
+          res = FALSE;
+      }
+      break;
+    case GST_FORMAT_TIME:
+      switch (*dest_format) {
+        case GST_FORMAT_BYTES:
+          *dest_value = gst_util_uint64_scale (src_value, bytes,
+              samples * GST_SECOND);
+          res = TRUE;
+          break;
+        default:
+          res = FALSE;
+      }
+      break;
+    default:
+      res = FALSE;
+  }
+
+exit:
+  return res;
 }
 
 /* FIXME ? are any of these queries (other than latency) an encoder's business
@@ -1481,13 +1571,13 @@ gst_base_audio_encoder_sink_activate_push (GstPad * pad, gboolean active)
 }
 
 /**
- * gst_base_audio_encoder_get_info:
+ * gst_base_audio_encoder_get_audio_info:
  * @enc: a #GstBaseAudioEncoder
  *
- * Returns: a #AudioFormatInfo describing input audio format
+ * Returns: a #GstAudioInfo describing the input audio format
  */
-GstAudioFormatInfo *
-gst_base_audio_encoder_get_info (GstBaseAudioEncoder * enc)
+GstAudioInfo *
+gst_base_audio_encoder_get_audio_info (GstBaseAudioEncoder * enc)
 {
   g_return_val_if_fail (GST_IS_BASE_AUDIO_ENCODER (enc), NULL);
 
