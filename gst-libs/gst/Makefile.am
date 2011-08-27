@@ -5,23 +5,23 @@
 SUBDIRS = \
 	interfaces \
 	tag \
-	audio \
 	cdda \
 	fft \
 	floatcast \
 	netbuffer \
-	riff \
 	rtp \
 	sdp \
 	rtsp \
 	video \
 	pbutils \
+	audio \
+	riff \
 	app
 
 noinst_HEADERS = gettext.h gst-i18n-plugin.h
 
 # dependencies:
-audio: interfaces
+audio: interfaces pbutils
 
 cdda: tag
 
