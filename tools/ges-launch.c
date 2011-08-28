@@ -35,6 +35,8 @@ static guint repeat = 0;
 static GESTimelinePipeline *pipeline = NULL;
 static gboolean seenerrors = FALSE;
 
+void load_project (gchar * uri);
+
 static gchar *
 ensure_uri (gchar * location)
 {
@@ -396,6 +398,31 @@ print_pattern_list (void)
   print_enum (GES_VIDEO_TEST_PATTERN_TYPE);
 }
 
+void
+load_project (gchar * uri)
+{
+  GESFormatter *formatter;
+  GESTimeline *timeline;
+  GMainLoop *mainloop;
+  GESTimelinePipeline *pipeline;
+  GstBus *bus;
+
+  formatter = GES_FORMATTER (ges_pitivi_formatter_new ());
+  timeline = ges_timeline_new ();
+  pipeline = ges_timeline_pipeline_new ();
+  bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
+  mainloop = g_main_loop_new (NULL, FALSE);
+
+  ges_timeline_pipeline_add_timeline (pipeline, timeline);
+  ges_formatter_load_from_uri (formatter, timeline, uri);
+  ges_timeline_pipeline_set_mode (pipeline, TIMELINE_MODE_PREVIEW_VIDEO);
+
+  gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
+  gst_bus_add_signal_watch (bus);
+  g_signal_connect (bus, "message", G_CALLBACK (bus_message_cb), mainloop);
+  g_main_loop_run (mainloop);
+}
+
 int
 main (int argc, gchar ** argv)
 {
@@ -416,6 +443,7 @@ main (int argc, gchar ** argv)
   static gboolean verbose = FALSE;
   gchar *save_path = NULL;
   gchar *load_path = NULL;
+  gchar *project_path = NULL;
   GOptionEntry options[] = {
     {"thumbnail", 'm', 0.0, G_OPTION_ARG_DOUBLE, &thumbinterval,
         "Take thumbnails every n seconds (saved in current directory)", "N"},
@@ -451,6 +479,8 @@ main (int argc, gchar ** argv)
         "Output status information and property notifications", NULL},
     {"exclude", 'X', 0, G_OPTION_ARG_NONE, &exclude_args,
         "Do not output status information of TYPE", "TYPE1,TYPE2,..."},
+    {"load-xptv", 'y', 0, G_OPTION_ARG_STRING, &project_path,
+        "Load xptv project from file for previewing", "<path>"},
     {NULL}
   };
   GOptionContext *ctx;
@@ -502,6 +532,10 @@ main (int argc, gchar ** argv)
     exit (0);
   }
 
+  if (project_path) {
+    load_project (project_path);
+    exit (0);
+  }
   if (((!load_path && (argc < 4))) || (outputuri && (!render && !smartrender))) {
     g_printf ("%s", g_option_context_get_help (ctx, TRUE, NULL));
     g_option_context_free (ctx);
