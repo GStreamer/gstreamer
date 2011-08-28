@@ -100,6 +100,7 @@ enum
 {
   EFFECT_ADDED,
   EFFECT_REMOVED,
+  TRACK_OBJECT_ADDED,
   LAST_SIGNAL
 };
 
@@ -333,6 +334,20 @@ ges_timeline_object_class_init (GESTimelineObjectClass * klass)
       G_SIGNAL_RUN_FIRST, 0, NULL, NULL, ges_marshal_VOID__OBJECT,
       G_TYPE_NONE, 1, GES_TYPE_TRACK_EFFECT);
 
+  /**
+   * GESTimelineObject::track-object-added
+   * @object: the #GESTimelineObject
+   * @effect: the #GESTrackObject that was added.
+   *
+   * Will be emitted after a track object was added to the object.
+   *
+   * Since: 0.10.2
+   */
+  ges_timeline_object_signals[TRACK_OBJECT_ADDED] =
+      g_signal_new ("track-object-added", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_FIRST, 0, NULL, NULL, ges_marshal_VOID__OBJECT,
+      G_TYPE_NONE, 1, GES_TYPE_TRACK_OBJECT);
+
   klass->need_fill_track = TRUE;
 }
 
@@ -408,7 +423,6 @@ ges_timeline_object_create_track_objects (GESTimelineObject * object,
     GST_WARNING ("no GESTimelineObject::create_track_objects implentation");
     return FALSE;
   }
-
   return klass->create_track_objects (object, track);
 }
 
@@ -537,7 +551,10 @@ ges_timeline_object_add_track_object (GESTimelineObject * object, GESTrackObject
       + mapping->priority_offset);
 
   GST_DEBUG ("Returning trobj:%p", trobj);
-
+  if (!GES_IS_TRACK_PARSE_LAUNCH_EFFECT (trobj)) {
+    g_signal_emit (object, ges_timeline_object_signals[TRACK_OBJECT_ADDED], 0,
+        GES_TRACK_OBJECT (trobj));
+  }
   return TRUE;
 }
 
