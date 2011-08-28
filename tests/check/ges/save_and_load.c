@@ -20,6 +20,8 @@
 #include <ges/ges.h>
 #include <gst/check/gstcheck.h>
 #include <string.h>
+#include <unistd.h>
+#define GetCurrentDir getcwd
 
 #define KEY_FILE_START {\
   if (cmp) g_key_file_free (cmp);\
@@ -631,6 +633,53 @@ GST_START_TEST (test_keyfile_load)
 
 GST_END_TEST;
 
+GST_START_TEST (test_pitivi_file_load)
+{
+  GESFormatter *formatter;
+  GESTimeline *timeline, *expected;
+  GMainLoop *mainloop;
+  char cCurrentPath[FILENAME_MAX];
+  char *a;
+  gchar *uri, *save_uri;
+
+  /*create the expected timeline */
+  timeline = ges_timeline_new ();
+  mainloop = g_main_loop_new (NULL, FALSE);
+  expected = ges_timeline_new ();
+
+  /* create the timeline from formatter */
+  formatter = GES_FORMATTER (ges_pitivi_formatter_new ());
+  a = GetCurrentDir (cCurrentPath, sizeof (cCurrentPath));
+  uri = g_strconcat (a, "/test.xptv", NULL);
+  save_uri = g_strconcat (a, "/testsave.xptv", NULL);
+  if (g_file_test (uri, G_FILE_TEST_EXISTS) == FALSE) {
+    GST_ERROR ("Could not test GESPitiviFormatter as no project file found");
+    return;
+  }
+
+  ges_formatter_load_from_uri (formatter, timeline, uri);
+  g_timeout_add (1000, (GSourceFunc) g_main_loop_quit, mainloop);
+  g_main_loop_run (mainloop);
+  printf ("saloperie\n");
+  formatter = GES_FORMATTER (ges_pitivi_formatter_new ());
+  ges_formatter_save_to_uri (formatter, timeline, save_uri);
+  formatter = GES_FORMATTER (ges_pitivi_formatter_new ());
+  ges_formatter_load_from_uri (formatter, expected, uri);
+  g_timeout_add (1000, (GSourceFunc) g_main_loop_quit, mainloop);
+  g_main_loop_run (mainloop);
+
+  /* compare the two timelines and fail test if they are different */
+  TIMELINE_COMPARE (expected, timeline);
+  g_free (uri);
+  g_free (save_uri);
+  g_main_loop_unref (mainloop);
+  g_object_unref (formatter);
+  g_object_unref (timeline);
+  g_object_unref (expected);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_keyfile_identity)
 {
 
@@ -683,9 +732,11 @@ GST_START_TEST (test_keyfile_identity)
           "freq", (gdouble) 600,
           "volume", 1.0, "vpattern", GES_VIDEO_TEST_PATTERN_RED);
 
-    } LAYER_END;
+    }
+    LAYER_END;
 
-  } TIMELINE_END;
+  }
+  TIMELINE_END;
 
   serialized = ges_timeline_new ();
 
@@ -712,6 +763,7 @@ ges_suite (void)
   tcase_add_test (tc_chain, test_keyfile_save);
   tcase_add_test (tc_chain, test_keyfile_load);
   tcase_add_test (tc_chain, test_keyfile_identity);
+  tcase_add_test (tc_chain, test_pitivi_file_load);
 
   return s;
 }
