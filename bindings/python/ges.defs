@@ -14,6 +14,13 @@
   (gtype-id "GES_TYPE_KEYFILE_FORMATTER")
 )
 
+(define-object PitiviFormatter
+  (in-module "GES")
+  (parent "GESFormatter")
+  (c-name "GESPitiviFormatter")
+  (gtype-id "GES_TYPE_PITIVI_FORMATTER")
+)
+
 (define-object Timeline
   (in-module "GES")
   (parent "GstBin")
@@ -629,7 +636,18 @@
   )
 )
 
+;; From ges-pitivi-formatter.h
 
+(define-function pitivi_formatter_get_type
+  (c-name "ges_pitivi_formatter_get_type")
+  (return-type "GType")
+)
+
+(define-function pitivi_formatter_new
+  (c-name "ges_pitivi_formatter_new")
+  (is-constructor-of "GESPitiviFormatter")
+  (return-type "GESPitiviFormatter*")
+)
 
 ;; From ges-timeline-effect.h
 

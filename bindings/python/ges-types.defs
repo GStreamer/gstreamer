@@ -14,6 +14,13 @@
   (gtype-id "GES_TYPE_KEYFILE_FORMATTER")
 )
 
+(define-object PitiviFormatter
+  (in-module "GES")
+  (parent "GESFormatter")
+  (c-name "GESPitiviFormatter")
+  (gtype-id "GES_TYPE_PITIVI_FORMATTER")
+)
+
 (define-object Timeline
   (in-module "GES")
   (parent "GstBin")
