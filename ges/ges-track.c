@@ -32,6 +32,7 @@
 #include "ges-internal.h"
 #include "ges-track.h"
 #include "ges-track-object.h"
+#include "gesmarshal.h"
 
 G_DEFINE_TYPE (GESTrack, ges_track, GST_TYPE_BIN);
 
@@ -54,8 +55,12 @@ enum
   ARG_CAPS,
   ARG_TYPE,
   ARG_DURATION,
-  ARG_LAST
+  ARG_LAST,
+  TRACK_OBJECT_ADDED,
+  LAST_SIGNAL
 };
+
+static guint ges_track_signals[LAST_SIGNAL] = { 0 };
 
 static GParamSpec *properties[ARG_LAST];
 
@@ -191,6 +196,21 @@ ges_track_class_init (GESTrackClass * klass)
       G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY);
   g_object_class_install_property (object_class, ARG_TYPE,
       properties[ARG_TYPE]);
+
+  /**
+   * GESTrack::track-object-added
+   * @object: the #GESTrack
+   * @effect: the #GESTrackObject that was added.
+   *
+   * Will be emitted after a track object was added to the track.
+   *
+   * Since: 0.10.2
+   */
+  ges_track_signals[TRACK_OBJECT_ADDED] =
+      g_signal_new ("track-object-added", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_FIRST, 0, NULL, NULL, ges_marshal_VOID__OBJECT,
+      G_TYPE_NONE, 1, GES_TYPE_TRACK_OBJECT);
+
 }
 
 static void
@@ -365,6 +385,8 @@ ges_track_add_object (GESTrack * track, GESTrackObject * object)
   g_object_ref_sink (object);
 
   track->priv->trackobjects = g_list_append (track->priv->trackobjects, object);
+  g_signal_emit (track, ges_track_signals[TRACK_OBJECT_ADDED], 0,
+      GES_TRACK_OBJECT (object));
 
   return TRUE;
 }
