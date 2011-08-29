@@ -283,7 +283,7 @@ DllMain (HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 #endif
 
 /**
- * gst_init_get_option_group:
+ * gst_init_get_option_group: (skip)
  *
  * Returns a #GOptionGroup with GStreamer's argument specifications. The
  * group is set up to use standard GOption callbacks, so when using this
