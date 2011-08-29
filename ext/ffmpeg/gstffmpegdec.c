@@ -1809,6 +1809,28 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
     gst_ffmpegdec_negotiate (ffmpegdec, TRUE);
   }
 
+
+  /* Whether a frame is interlaced or not is unknown at the time of
+     buffer allocation, so caps on the buffer in opaque will have
+     the previous frame's interlaced flag set. So if interlacedness
+     has changed since allocation, we update the buffer (if any)
+     caps now with the correct interlaced flag. */
+  if (ffmpegdec->picture->opaque != NULL) {
+    GstBuffer *buffer = ffmpegdec->picture->opaque;
+    if (GST_BUFFER_CAPS (buffer) && GST_PAD_CAPS (ffmpegdec->srcpad)) {
+      GstStructure *s = gst_caps_get_structure (GST_BUFFER_CAPS (buffer), 0);
+      gboolean interlaced;
+      gboolean found = gst_structure_get_boolean (s, "interlaced", &interlaced);
+      if (!found || (!!interlaced != !!ffmpegdec->format.video.interlaced)) {
+        GST_DEBUG_OBJECT (ffmpegdec,
+            "Buffer interlacing does not match pad, updating");
+        buffer = gst_buffer_make_metadata_writable (buffer);
+        gst_buffer_set_caps (buffer, GST_PAD_CAPS (ffmpegdec->srcpad));
+        ffmpegdec->picture->opaque = buffer;
+      }
+    }
+  }
+
   /* check if we are dealing with a keyframe here, this will also check if we
    * are dealing with B frames. */
   iskeyframe = check_keyframe (ffmpegdec);
