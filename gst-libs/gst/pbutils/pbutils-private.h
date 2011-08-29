@@ -44,6 +44,8 @@ struct _GstDiscovererAudioInfo {
 
   guint bitrate;
   guint max_bitrate;
+
+  gchar *language;
 };
 
 struct _GstDiscovererVideoInfo {
@@ -62,6 +64,12 @@ struct _GstDiscovererVideoInfo {
   guint max_bitrate;
 
   gboolean is_image;
+};
+
+struct _GstDiscovererSubtitleInfo {
+  GstDiscovererStreamInfo parent;
+
+  gchar *language;
 };
 
 struct _GstDiscovererInfo {

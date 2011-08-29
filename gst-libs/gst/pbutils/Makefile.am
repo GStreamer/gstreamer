@@ -85,7 +85,6 @@ GstPbutils-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstpbutils-@GST_MAJ
 		-DGST_USE_UNSTABLE_API \
 		-I$(top_srcdir)/gst-libs \
 		-I$(top_builddir)/gst-libs \
-		--add-include-path=$(srcdir)/../video \
 		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-@GST_MAJORMINOR@` \
 		--library=libgstpbutils-@GST_MAJORMINOR@.la \
 		--library-path=`$(PKG_CONFIG) --variable=libdir gstreamer-@GST_MAJORMINOR@` \
@@ -93,7 +92,6 @@ GstPbutils-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstpbutils-@GST_MAJ
 		--include=Gst-@GST_MAJORMINOR@ \
 		--libtool="$(top_builddir)/libtool" \
 		--pkg gstreamer-@GST_MAJORMINOR@ \
-		--pkg gstreamer-video-@GST_MAJORMINOR@ \
 		--pkg-export gstreamer-pbutils-@GST_MAJORMINOR@ \
 		--add-init-section="gst_init(NULL,NULL);" \
 		--output $@ \
@@ -113,7 +111,6 @@ typelibs_DATA = $(BUILT_GIRSOURCES:.gir=.typelib)
 	$(AM_V_GEN)PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" \
 		$(INTROSPECTION_COMPILER) \
 		--includedir=$(srcdir) \
-		--includedir=$(srcdir)/../video \
 		--includedir=$(builddir) \
 		--includedir=`$(PKG_CONFIG) --variable=girdir gstreamer-@GST_MAJORMINOR@` \
 		$(INTROSPECTION_COMPILER_OPTS) $< -o $(@F)

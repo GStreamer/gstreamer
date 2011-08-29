@@ -313,6 +313,18 @@ gst_ogg_mux_sink_event (GstPad * pad, GstEvent * event)
       gst_segment_init (&ogg_pad->segment, GST_FORMAT_TIME);
       break;
     }
+    case GST_EVENT_TAG:{
+      GstTagList *tags;
+
+      gst_event_parse_tag (event, &tags);
+      tags = gst_tag_list_merge (ogg_pad->tags, tags, GST_TAG_MERGE_APPEND);
+      if (ogg_pad->tags)
+        gst_tag_list_free (ogg_pad->tags);
+      ogg_pad->tags = tags;
+
+      GST_DEBUG_OBJECT (ogg_mux, "Got tags %" GST_PTR_FORMAT, ogg_pad->tags);
+      break;
+    }
     default:
       break;
   }
@@ -1144,6 +1156,66 @@ gst_ogg_mux_byte_writer_put_string_utf8 (GstByteWriter * bw, const char *s)
 }
 
 static void
+gst_ogg_mux_add_fisbone_message_header (GstOggMux * mux, GstByteWriter * bw,
+    const char *tag, const char *value)
+{
+  /* It is valid to pass NULL as the value to omit the tag */
+  if (!value)
+    return;
+  GST_DEBUG_OBJECT (mux, "Adding fisbone message header %s: %s", tag, value);
+  gst_ogg_mux_byte_writer_put_string_utf8 (bw, tag);
+  gst_ogg_mux_byte_writer_put_string_utf8 (bw, ": ");
+  gst_ogg_mux_byte_writer_put_string_utf8 (bw, value);
+  gst_ogg_mux_byte_writer_put_string_utf8 (bw, "\r\n");
+}
+
+static void
+gst_ogg_mux_add_fisbone_message_header_from_tags (GstOggMux * mux,
+    GstByteWriter * bw, const char *header, const char *tag,
+    const GstTagList * tags)
+{
+  GString *s;
+  guint size = gst_tag_list_get_tag_size (tags, tag), n;
+  GST_DEBUG_OBJECT (mux, "Found %u tags for name %s", size, tag);
+  if (size == 0)
+    return;
+  s = g_string_new ("");
+  for (n = 0; n < size; ++n) {
+    gchar *tmp;
+    if (n)
+      g_string_append (s, ", ");
+    gst_tag_list_get_string_index (tags, tag, n, &tmp);
+    g_string_append (s, tmp);
+    g_free (tmp);
+  }
+  gst_ogg_mux_add_fisbone_message_header (mux, bw, header, s->str);
+  g_string_free (s, TRUE);
+}
+
+/* This is a basic placeholder to generate roles for the tracks.
+   For tracks with more than one video, both video tracks will get
+   tagged with a "video/main" role, but we have no way of knowing
+   which one is the main one, if any. We could just pick one. For
+   audio, it's more complicated as we don't know which is music,
+   which is dubbing, etc. For kate, we could take a pretty good
+   guess based on the category, as role essentially is category.
+   For now, leave this as is. */
+static const char *
+gst_ogg_mux_get_default_role (GstOggPadData * pad)
+{
+  const char *type = gst_ogg_stream_get_media_type (&pad->map);
+  if (type) {
+    if (!strncmp (type, "video/", strlen ("video/")))
+      return "video/main";
+    if (!strncmp (type, "audio/", strlen ("audio/")))
+      return "audio/main";
+    if (!strcmp (type + strlen (type) - strlen ("kate"), "kate"))
+      return "text/caption";
+  }
+  return NULL;
+}
+
+static void
 gst_ogg_mux_make_fisbone (GstOggMux * mux, ogg_stream_state * os,
     GstOggPadData * pad)
 {
@@ -1165,10 +1237,14 @@ gst_ogg_mux_make_fisbone (GstOggMux * mux, ogg_stream_state * os,
   gst_byte_writer_put_uint8 (&bw, pad->map.granuleshift);
   gst_byte_writer_fill (&bw, 0, 3);     /* padding */
   /* message header fields - MIME type for now */
-  gst_ogg_mux_byte_writer_put_string_utf8 (&bw, "Content-Type: ");
-  gst_ogg_mux_byte_writer_put_string_utf8 (&bw,
+  gst_ogg_mux_add_fisbone_message_header (mux, &bw, "Content-Type",
       gst_ogg_stream_get_media_type (&pad->map));
-  gst_ogg_mux_byte_writer_put_string_utf8 (&bw, "\r\n");
+  gst_ogg_mux_add_fisbone_message_header (mux, &bw, "Role",
+      gst_ogg_mux_get_default_role (pad));
+  gst_ogg_mux_add_fisbone_message_header_from_tags (mux, &bw, "Language",
+      GST_TAG_LANGUAGE_CODE, pad->tags);
+  gst_ogg_mux_add_fisbone_message_header_from_tags (mux, &bw, "Title",
+      GST_TAG_TITLE, pad->tags);
 
   gst_ogg_mux_submit_skeleton_header_packet (mux, os,
       gst_byte_writer_reset_and_get_buffer (&bw), 0, 0);
@@ -1918,6 +1994,11 @@ gst_ogg_mux_clear_collectpads (GstCollectPads * collect)
     if (oggpad->buffer) {
       gst_buffer_unref (oggpad->buffer);
       oggpad->buffer = NULL;
+    }
+
+    if (oggpad->tags) {
+      gst_tag_list_free (oggpad->tags);
+      oggpad->tags = NULL;
     }
 
     gst_segment_init (&oggpad->segment, GST_FORMAT_TIME);

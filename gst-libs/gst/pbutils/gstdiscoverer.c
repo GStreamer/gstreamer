@@ -44,7 +44,6 @@
 #include "config.h"
 #endif
 
-#include <gst/video/video.h>
 #include "pbutils.h"
 #include "pbutils-marshal.h"
 #include "pbutils-private.h"
@@ -438,6 +437,21 @@ _event_probe (GstPad * pad, GstProbeType type, GstEvent * event,
   return GST_PROBE_OK;
 }
 
+static gboolean
+is_subtitle_caps (const GstCaps * caps)
+{
+  static GstCaps *subs_caps = NULL;
+
+  if (!subs_caps) {
+    subs_caps = gst_caps_from_string ("text/plain; text/x-pango-markup; "
+        "subpicture/x-pgs; subpicture/x-dvb; application/x-subtitle-unknown; "
+        "application/x-ssa; application/x-ass; subtitle/x-kate; "
+        "application/x-kate; video/x-dvd-subpicture; ");
+  }
+
+  return gst_caps_can_intersect (caps, subs_caps);
+}
+
 static void
 uridecodebin_pad_added_cb (GstElement * uridecodebin, GstPad * pad,
     GstDiscoverer * dc)
@@ -445,14 +459,6 @@ uridecodebin_pad_added_cb (GstElement * uridecodebin, GstPad * pad,
   PrivateStream *ps;
   GstPad *sinkpad = NULL;
   GstCaps *caps;
-  static GstCaps *subs_caps = NULL;
-
-  if (!subs_caps) {
-    subs_caps = gst_caps_from_string ("text/plain; text/x-pango-markup; "
-        "subpicture/x-pgs; subpicture/x-dvb; application/x-subtitle-unknown; "
-        "application/x-ssa; application/x-ass; subtitle/x-kate; "
-        "video/x-dvd-subpicture; ");
-  }
 
   GST_DEBUG_OBJECT (dc, "pad %s:%s", GST_DEBUG_PAD_NAME (pad));
 
@@ -471,8 +477,8 @@ uridecodebin_pad_added_cb (GstElement * uridecodebin, GstPad * pad,
 
   caps = gst_pad_get_caps (pad, NULL);
 
-  if (gst_caps_can_intersect (caps, subs_caps)) {
-    /* Subtitle streams are sparse and don't provide any information - don't
+  if (is_subtitle_caps (caps)) {
+    /* Subtitle streams are sparse and may not provide any information - don't
      * wait for data to preroll */
     g_object_set (ps->sink, "async", FALSE, NULL);
   }
@@ -661,6 +667,14 @@ collect_information (GstDiscoverer * dc, const GstStructure * st,
       gst_structure_free (tags_st);
     }
 
+    if (!info->language && ((GstDiscovererStreamInfo *) info)->tags) {
+      gchar *language;
+      if (gst_tag_list_get_string (((GstDiscovererStreamInfo *) info)->tags,
+              GST_TAG_LANGUAGE_CODE, &language)) {
+        info->language = language;
+      }
+    }
+
     return (GstDiscovererStreamInfo *) info;
 
   } else if (g_str_has_prefix (name, "video/") ||
@@ -705,6 +719,44 @@ collect_information (GstDiscoverer * dc, const GstStructure * st,
       info->parent.tags = gst_tag_list_merge (info->parent.tags,
           (GstTagList *) tags_st, GST_TAG_MERGE_REPLACE);
       gst_structure_free (tags_st);
+    }
+
+    return (GstDiscovererStreamInfo *) info;
+
+  } else if (is_subtitle_caps (caps)) {
+    GstDiscovererSubtitleInfo *info;
+
+    if (parent)
+      info = (GstDiscovererSubtitleInfo *) parent;
+    else {
+      info = (GstDiscovererSubtitleInfo *)
+          gst_mini_object_new (GST_TYPE_DISCOVERER_SUBTITLE_INFO);
+      info->parent.caps = caps;
+    }
+
+    if (gst_structure_id_has_field (st, _TAGS_QUARK)) {
+      const gchar *language;
+
+      gst_structure_id_get (st, _TAGS_QUARK,
+          GST_TYPE_STRUCTURE, &tags_st, NULL);
+
+      language = gst_structure_get_string (caps_st, GST_TAG_LANGUAGE_CODE);
+      if (language)
+        info->language = g_strdup (language);
+
+      /* FIXME: Is it worth it to remove the tags we've parsed? */
+      info->parent.tags = gst_tag_list_merge (info->parent.tags,
+          (GstTagList *) tags_st, GST_TAG_MERGE_REPLACE);
+      gst_structure_free (tags_st);
+
+    }
+
+    if (!info->language && ((GstDiscovererStreamInfo *) info)->tags) {
+      gchar *language;
+      if (gst_tag_list_get_string (((GstDiscovererStreamInfo *) info)->tags,
+              GST_TAG_LANGUAGE_CODE, &language)) {
+        info->language = language;
+      }
     }
 
     return (GstDiscovererStreamInfo *) info;
@@ -791,6 +843,9 @@ child_is_raw_stream (GstCaps * parent, GstCaps * child)
     /* child is the "raw" sub-stream corresponding to parent */
     return TRUE;
   }
+
+  if (is_subtitle_caps (parent))
+    return TRUE;
 
   return FALSE;
 }
@@ -970,7 +1025,7 @@ discoverer_collect (GstDiscoverer * dc)
      * caps named image/<foo> (th exception being MJPEG video which is also
      * type image/jpeg), and should consist of precisely one stream (actually
      * initially there are 2, the image and raw stream, but we squash these
-     * while parsing the stream topology). At some ponit, if we find that these
+     * while parsing the stream topology). At some point, if we find that these
      * conditions are not sufficient, we can count the number of decoders and
      * parsers in the chain, and if there's more than one decoder, or any
      * parser at all, we should not mark this as an image.

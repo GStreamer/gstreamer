@@ -5,23 +5,23 @@
 SUBDIRS = \
 	interfaces \
 	tag \
-	audio \
 	cdda \
 	fft \
 	floatcast \
 	netbuffer \
-	riff \
 	rtp \
 	sdp \
 	rtsp \
 	video \
 	pbutils \
+	audio \
+	riff \
 	app
 
 noinst_HEADERS = gettext.h gst-i18n-plugin.h
 
 # dependencies:
-audio: interfaces
+audio: interfaces pbutils
 
 cdda: tag
 
@@ -29,10 +29,8 @@ riff: tag audio
 
 rtsp: sdp
 
-pbutils: video
-
 INDEPENDENT_SUBDIRS = \
-	interfaces tag fft floatcast netbuffer rtp sdp video app
+	interfaces tag fft floatcast netbuffer pbutils rtp sdp video app
 
 .PHONY: independent-subdirs $(INDEPENDENT_SUBDIRS)
 

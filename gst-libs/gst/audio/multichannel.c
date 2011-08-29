@@ -288,6 +288,32 @@ gst_audio_get_channel_positions (GstStructure * str)
   return pos;
 }
 
+void priv_gst_audio_info_fill_default_channel_positions (GstAudioInfo * info);
+
+void
+priv_gst_audio_info_fill_default_channel_positions (GstAudioInfo * info)
+{
+  guint channels, i;
+
+  g_assert (info != NULL);
+
+  channels = GST_AUDIO_INFO_CHANNELS (info);
+
+  g_assert (channels > 0);
+
+  if (channels <= NUM_DEF_CHANS) {
+    /* just return some default channel layout if we have one */
+    for (i = 0; i < channels; ++i)
+      info->position[i] = default_positions[channels - 1][i];
+  } else {
+    /* for many many channels, the positions are always NONE */
+    for (i = 0; i < G_N_ELEMENTS (info->position); i++)
+      info->position[i] = GST_AUDIO_CHANNEL_POSITION_NONE;
+  }
+
+  info->flags |= GST_AUDIO_FLAG_DEFAULT_POSITIONS;
+}
+
 /**
  * gst_audio_set_channel_positions:
  * @str: A #GstStructure to set channel positions on.

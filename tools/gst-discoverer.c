@@ -47,6 +47,7 @@ gst_stream_audio_information_to_string (GstDiscovererStreamInfo * info,
   GstDiscovererAudioInfo *audio_info;
   GString *s;
   gchar *tmp;
+  const gchar *ctmp;
   int len = 400;
   const GstTagList *tags;
   GstCaps *caps;
@@ -72,6 +73,8 @@ gst_stream_audio_information_to_string (GstDiscovererStreamInfo * info,
   }
 
   audio_info = (GstDiscovererAudioInfo *) info;
+  ctmp = gst_discoverer_audio_info_get_language (audio_info);
+  my_g_string_append_printf (s, "Language: %s\n", ctmp ? ctmp : "<unknown>");
   my_g_string_append_printf (s, "Channels: %u\n",
       gst_discoverer_audio_info_get_channels (audio_info));
   my_g_string_append_printf (s, "Sample rate: %u\n",
@@ -171,6 +174,57 @@ gst_stream_video_information_to_string (GstDiscovererStreamInfo * info,
   return g_string_free (s, FALSE);
 }
 
+static gchar *
+gst_stream_subtitle_information_to_string (GstDiscovererStreamInfo * info,
+    gint depth)
+{
+  GstDiscovererSubtitleInfo *subtitle_info;
+  GString *s;
+  gchar *tmp;
+  const gchar *ctmp;
+  int len = 400;
+  const GstTagList *tags;
+  GstCaps *caps;
+
+  g_return_val_if_fail (info != NULL, NULL);
+
+  s = g_string_sized_new (len);
+
+  my_g_string_append_printf (s, "Codec:\n");
+  caps = gst_discoverer_stream_info_get_caps (info);
+  tmp = gst_caps_to_string (caps);
+  gst_caps_unref (caps);
+  my_g_string_append_printf (s, "  %s\n", tmp);
+  g_free (tmp);
+
+  my_g_string_append_printf (s, "Additional info:\n");
+  if (gst_discoverer_stream_info_get_misc (info)) {
+    tmp = gst_structure_to_string (gst_discoverer_stream_info_get_misc (info));
+    my_g_string_append_printf (s, "  %s\n", tmp);
+    g_free (tmp);
+  } else {
+    my_g_string_append_printf (s, "  None\n");
+  }
+
+  subtitle_info = (GstDiscovererSubtitleInfo *) info;
+  ctmp = gst_discoverer_subtitle_info_get_language (subtitle_info);
+  my_g_string_append_printf (s, "Language: %s\n", ctmp ? ctmp : "<unknown>");
+
+  my_g_string_append_printf (s, "Tags:\n");
+  tags = gst_discoverer_stream_info_get_tags (info);
+  if (tags) {
+    tmp = gst_structure_to_string ((GstStructure *) tags);
+    my_g_string_append_printf (s, "  %s\n", tmp);
+    g_free (tmp);
+  } else {
+    my_g_string_append_printf (s, "  None\n");
+  }
+  if (verbose)
+    my_g_string_append_printf (s, "\n");
+
+  return g_string_free (s, FALSE);
+}
+
 static void
 print_stream_info (GstDiscovererStreamInfo * info, void *depth)
 {
@@ -203,6 +257,10 @@ print_stream_info (GstDiscovererStreamInfo * info, void *depth)
     else if (GST_IS_DISCOVERER_VIDEO_INFO (info))
       desc =
           gst_stream_video_information_to_string (info,
+          GPOINTER_TO_INT (depth) + 1);
+    else if (GST_IS_DISCOVERER_SUBTITLE_INFO (info))
+      desc =
+          gst_stream_subtitle_information_to_string (info,
           GPOINTER_TO_INT (depth) + 1);
     if (desc) {
       g_print ("%s", desc);
