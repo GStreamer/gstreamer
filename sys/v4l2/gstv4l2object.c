@@ -2291,37 +2291,38 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
         streamparm.parm.capture.timeperframe.denominator,
         streamparm.parm.capture.timeperframe.numerator);
 
-    /* Note: V4L2 provides the frame interval, we have the frame rate */
-    if (!fractions_are_equal (streamparm.parm.capture.timeperframe.numerator,
-            streamparm.parm.capture.timeperframe.denominator, fps_d, fps_n)) {
-      GST_LOG_OBJECT (v4l2object->element, "Setting framerate to %u/%u", fps_n,
-          fps_d);
-      /* We want to change the frame rate, so check whether we can. Some cheap USB
-       * cameras don't have the capability */
-      if ((streamparm.parm.capture.capability & V4L2_CAP_TIMEPERFRAME) == 0) {
-        GST_DEBUG_OBJECT (v4l2object->element,
-            "Not setting framerate (not supported)");
-        goto done;
-      }
-
-      /* Note: V4L2 wants the frame interval, we have the frame rate */
-      streamparm.parm.capture.timeperframe.numerator = fps_d;
-      streamparm.parm.capture.timeperframe.denominator = fps_n;
-
-      /* some cheap USB cam's won't accept any change */
-      if (v4l2_ioctl (fd, VIDIOC_S_PARM, &streamparm) < 0)
-        goto set_parm_failed;
-
-      /* get new values */
-      fps_d = streamparm.parm.capture.timeperframe.numerator;
-      fps_n = streamparm.parm.capture.timeperframe.denominator;
-
-      GST_INFO_OBJECT (v4l2object->element, "Set framerate to %u/%u", fps_n,
-          fps_d);
-
-      GST_VIDEO_INFO_FPS_N (&info) = fps_n;
-      GST_VIDEO_INFO_FPS_D (&info) = fps_d;
+    /* We used to skip frame rate setup if the camera was already setup
+     * with the requested frame rate. This breaks some cameras though,
+     * causing them to not output data (several models of Thinkpad cameras
+     * have this problem at least).
+     * So, don't skip. */
+    GST_LOG_OBJECT (v4l2object->element, "Setting framerate to %u/%u", fps_n,
+        fps_d);
+    /* We want to change the frame rate, so check whether we can. Some cheap USB
+     * cameras don't have the capability */
+    if ((streamparm.parm.capture.capability & V4L2_CAP_TIMEPERFRAME) == 0) {
+      GST_DEBUG_OBJECT (v4l2object->element,
+          "Not setting framerate (not supported)");
+      goto done;
     }
+
+    /* Note: V4L2 wants the frame interval, we have the frame rate */
+    streamparm.parm.capture.timeperframe.numerator = fps_d;
+    streamparm.parm.capture.timeperframe.denominator = fps_n;
+
+    /* some cheap USB cam's won't accept any change */
+    if (v4l2_ioctl (fd, VIDIOC_S_PARM, &streamparm) < 0)
+      goto set_parm_failed;
+
+    /* get new values */
+    fps_d = streamparm.parm.capture.timeperframe.numerator;
+    fps_n = streamparm.parm.capture.timeperframe.denominator;
+
+    GST_INFO_OBJECT (v4l2object->element, "Set framerate to %u/%u", fps_n,
+        fps_d);
+
+    GST_VIDEO_INFO_FPS_N (&info) = fps_n;
+    GST_VIDEO_INFO_FPS_D (&info) = fps_d;
   }
 
 done:
