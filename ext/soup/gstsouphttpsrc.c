@@ -734,6 +734,9 @@ gst_soup_http_src_got_headers_cb (SoupMessage * msg, GstSoupHTTPSrc * src)
   soup_message_headers_foreach (msg->response_headers,
       gst_soup_http_src_headers_foreach, src);
 
+  if (msg->status_code == 407 && src->proxy_id && src->proxy_pw)
+    return;
+
   if (src->automatic_redirect && SOUP_STATUS_IS_REDIRECTION (msg->status_code)) {
     GST_DEBUG_OBJECT (src, "%u redirect to \"%s\"", msg->status_code,
         soup_message_headers_get (msg->response_headers, "Location"));
