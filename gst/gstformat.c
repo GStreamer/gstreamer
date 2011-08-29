@@ -53,7 +53,7 @@ static GstFormatDefinition standard_definitions[] = {
 };
 
 void
-_gst_format_initialize (void)
+_priv_gst_format_initialize (void)
 {
   GstFormatDefinition *standards = standard_definitions;
 

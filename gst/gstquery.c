@@ -109,7 +109,7 @@ static GstQueryTypeDefinition standard_definitions[] = {
 };
 
 void
-_gst_query_initialize (void)
+_priv_gst_query_initialize (void)
 {
   GstQueryTypeDefinition *standards = standard_definitions;
 

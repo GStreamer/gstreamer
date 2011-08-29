@@ -4689,7 +4689,7 @@ gst_date_time_get_type (void)
 
 
 void
-_gst_value_initialize (void)
+_priv_gst_value_initialize (void)
 {
   gst_value_table = g_array_new (FALSE, FALSE, sizeof (GstValueTable));
   gst_value_hash = g_hash_table_new (NULL, NULL);

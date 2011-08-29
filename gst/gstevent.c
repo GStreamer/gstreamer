@@ -129,7 +129,7 @@ static GstEventQuarks event_quarks[] = {
 };
 
 void
-_gst_event_initialize (void)
+_priv_gst_event_initialize (void)
 {
   gint i;
 

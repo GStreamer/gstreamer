@@ -114,7 +114,7 @@ static gboolean gst_structure_parse_simple_string (gchar * s, gchar ** end);
 GType _gst_structure_type = 0;
 
 void
-_gst_structure_initialize (void)
+_priv_gst_structure_initialize (void)
 {
   _gst_structure_type = g_boxed_type_register_static ("GstStructure",
       (GBoxedCopyFunc) gst_structure_copy_conditional,

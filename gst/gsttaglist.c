@@ -89,7 +89,7 @@ gst_tag_list_get_type (void)
 }
 
 void
-_gst_tag_initialize (void)
+_priv_gst_tag_initialize (void)
 {
   __tag_mutex = g_mutex_new ();
   __tags = g_hash_table_new (g_direct_hash, g_direct_equal);

@@ -33,7 +33,6 @@ EXPORTS
 	__gst_debug_enabled DATA
 	__gst_debug_min DATA
 	_gst_alloc_trace_register
-	_gst_buffer_list_initialize
 	_gst_buffer_list_type DATA
 	_gst_buffer_type DATA
 	_gst_caps_type DATA
@@ -912,8 +911,6 @@ EXPORTS
 	gst_registry_add_feature
 	gst_registry_add_path
 	gst_registry_add_plugin
-	gst_registry_binary_read_cache
-	gst_registry_binary_write_cache
 	gst_registry_feature_filter
 	gst_registry_find_feature
 	gst_registry_find_plugin

@@ -1571,7 +1571,7 @@ scan_and_update_registry (GstRegistry * default_registry,
   }
 
   GST_INFO ("Registry cache changed. Writing new registry cache");
-  if (!gst_registry_binary_write_cache (default_registry, registry_file)) {
+  if (!priv_gst_registry_binary_write_cache (default_registry, registry_file)) {
     g_set_error (error, GST_CORE_ERROR, GST_CORE_ERROR_FAILED,
         _("Error writing registry cache to %s: %s"),
         registry_file, g_strerror (errno));
@@ -1600,7 +1600,7 @@ ensure_current_registry (GError ** error)
 
   if (!_gst_disable_registry_cache) {
     GST_INFO ("reading registry cache: %s", registry_file);
-    have_cache = gst_registry_binary_read_cache (default_registry,
+    have_cache = priv_gst_registry_binary_read_cache (default_registry,
         registry_file);
     /* Only ever read the registry cache once, then disable it for
      * subsequent updates during the program lifetime */

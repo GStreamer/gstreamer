@@ -298,7 +298,7 @@ gst_plugin_register_static_full (gint major_version, gint minor_version,
 }
 
 void
-_gst_plugin_initialize (void)
+_priv_gst_plugin_initialize (void)
 {
   const gchar *whitelist;
   guint i;

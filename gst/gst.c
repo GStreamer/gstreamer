@@ -666,10 +666,10 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
 
   _priv_gst_quarks_initialize ();
   _gst_memory_init ();
-  _gst_format_initialize ();
-  _gst_query_initialize ();
-  _gst_structure_initialize ();
-  _gst_caps_initialize ();
+  _priv_gst_format_initialize ();
+  _priv_gst_query_initialize ();
+  _priv_gst_structure_initialize ();
+  _priv_gst_caps_initialize ();
   _gst_meta_init ();
 
   g_type_class_ref (gst_object_get_type ());
@@ -759,16 +759,16 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
   g_type_class_ref (gst_probe_return_get_type ());
   g_type_class_ref (gst_segment_flags_get_type ());
 
-  _gst_event_initialize ();
-  _gst_buffer_initialize ();
-  _gst_message_initialize ();
-  _gst_buffer_list_initialize ();
-  _gst_value_initialize ();
+  _priv_gst_event_initialize ();
+  _priv_gst_buffer_initialize ();
+  _priv_gst_message_initialize ();
+  _priv_gst_buffer_list_initialize ();
+  _priv_gst_value_initialize ();
   g_type_class_ref (gst_param_spec_fraction_get_type ());
-  _gst_tag_initialize ();
+  _priv_gst_tag_initialize ();
   gst_parse_context_get_type ();
 
-  _gst_plugin_initialize ();
+  _priv_gst_plugin_initialize ();
 
   gst_g_error_get_type ();
 

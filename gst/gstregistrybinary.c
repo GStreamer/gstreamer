@@ -353,7 +353,8 @@ gst_registry_binary_initialize_magic (GstBinaryRegistryMagic * m)
  * Returns: %TRUE on success.
  */
 gboolean
-gst_registry_binary_write_cache (GstRegistry * registry, const char *location)
+priv_gst_registry_binary_write_cache (GstRegistry * registry,
+    const char *location)
 {
   GList *walk;
   GstBinaryRegistryMagic magic;
@@ -503,7 +504,8 @@ fail:
  * Returns: %TRUE on success.
  */
 gboolean
-gst_registry_binary_read_cache (GstRegistry * registry, const char *location)
+priv_gst_registry_binary_read_cache (GstRegistry * registry,
+    const char *location)
 {
   GMappedFile *mapped = NULL;
   gchar *contents = NULL;

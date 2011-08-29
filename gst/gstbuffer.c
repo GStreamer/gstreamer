@@ -224,7 +224,7 @@ _memory_add (GstBuffer * buffer, guint idx, GstMemory * mem)
 }
 
 void
-_gst_buffer_initialize (void)
+_priv_gst_buffer_initialize (void)
 {
   if (G_LIKELY (_gst_buffer_type == 0)) {
     _gst_buffer_type = gst_mini_object_register ("GstBuffer");

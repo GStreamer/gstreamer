@@ -110,7 +110,7 @@ static GstMessageQuarks message_quarks[] = {
 };
 
 void
-_gst_message_initialize (void)
+_priv_gst_message_initialize (void)
 {
   gint i;
 
