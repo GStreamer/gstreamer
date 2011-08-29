@@ -139,9 +139,9 @@ ges_timeline_pipeline_init (GESTimelinePipeline * self)
       "avoid-reencoding", TRUE, NULL);
 
   if (G_UNLIKELY (self->priv->playsink == NULL))
-    GST_ERROR_OBJECT (self, "Can't create playsink instance !");
+    goto no_playsink;
   if (G_UNLIKELY (self->priv->encodebin == NULL))
-    GST_ERROR_OBJECT (self, "Can't create encodebin instance !");
+    goto no_encodebin;
 
   /* HACK : Intercept events going through playsink */
   playsinkclass = GST_ELEMENT_GET_CLASS (self->priv->playsink);
@@ -149,6 +149,17 @@ ges_timeline_pipeline_init (GESTimelinePipeline * self)
   playsinkclass->send_event = play_sink_multiple_seeks_send_event;
 
   ges_timeline_pipeline_set_mode (self, DEFAULT_TIMELINE_MODE);
+
+no_playsink:
+  {
+    GST_ERROR_OBJECT (self, "Can't create playsink instance !");
+    return;
+  }
+no_encodebin:
+  {
+    GST_ERROR_OBJECT (self, "Can't create encodebin instance !");
+    return;
+  }
 }
 
 /**
@@ -300,7 +311,7 @@ get_output_chain_for_track (GESTimelinePipeline * self, GESTrack * track)
   return NULL;
 }
 
-/* Fetches a ocmpatible pad on the target element which isn't already
+/* Fetches a compatible pad on the target element which isn't already
  * linked */
 static GstPad *
 get_compatible_unlinked_pad (GstElement * element, GstPad * pad)
@@ -309,6 +320,9 @@ get_compatible_unlinked_pad (GstElement * element, GstPad * pad)
   GstIterator *pads;
   gboolean done = FALSE;
   GstCaps *srccaps;
+
+  if (G_UNLIKELY (pad == NULL))
+    goto no_pad;
 
   GST_DEBUG ("element : %s, pad %s:%s",
       GST_ELEMENT_NAME (element), GST_DEBUG_PAD_NAME (pad));
@@ -358,6 +372,12 @@ get_compatible_unlinked_pad (GstElement * element, GstPad * pad)
   gst_caps_unref (srccaps);
 
   return res;
+
+no_pad:
+  {
+    GST_ERROR ("No pad to check against");
+    return NULL;
+  }
 }
 
 static void
