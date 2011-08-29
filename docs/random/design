@@ -81,19 +81,27 @@ FUNDAMENTAL GOALS:
 
 
 * Effects support
+
   Status:
-    Implemented, requires API addition for all use-cases.
+    Partially Implemented, requires API addition for all use-cases.
 
   Problems:
-    We must be able to provide a list of effects available on the system at
-    runtime.
-    We must be able to configure effects through an API in GES
-    withtout having to access the GstElements properties directly.
-    We should also expose the GstElement-s contained in an effect so
-    it is possible for people to control their properties as they wish.
-    We must be able to implement and handle complexe effects directly in GES
-    We must be able to configure effects through time -> Keyframes without
-    duplicating code from GStreamer
+    In order for users to apply multimedia effects in their timelines,
+    we need an API to search, add and control those effects.
+
+  We must be able to provide a list of effects available on the system
+  at runtime.
+  We must be able to configure effects through an API in GES without
+  having to access the GstElements properties directly.
+
+  We should also expose the GstElements contained in an effect so it
+  is possible for people to control their properties as they wish.
+
+  We must be able to implement and handle complex effects directly in
+  GES.
+
+  We must be able to configure effects through time -> Keyframes
+  without duplicating code from GStreamer.
 
 * Source Material object
 
@@ -187,6 +195,17 @@ FUNDAMENTAL GOALS:
 
    Conforming the material here means bringing it to a common format.
 
+  All the information regarding the contents we are handling are
+  stored in the various GESMaterial. The target format is also known
+  throught the caps of the various GESTracks involved. Those two
+  information will allow us to make decisions on what course of action
+  to take.
+
+  By default content should be conformed to a good balance of speed
+  and avoid loss of information.
+    Ex: If mixing a 4:3 video and a 16:9 video with a target track
+        aspect ratio of 4:3, we will make the width of the two videos
+        be equal without distorting their respective aspect-ratios.
 
 * Media Asset Management integration
 
