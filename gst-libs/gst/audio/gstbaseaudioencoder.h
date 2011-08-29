@@ -178,7 +178,7 @@ struct _GstBaseAudioEncoderClass {
   gboolean      (*event)              (GstBaseAudioEncoder *enc,
                                        GstEvent *event);
 
-  GstCaps *     (*getcaps)            (GstBaseAudioEncoder *enc);
+  GstCaps *     (*getcaps)            (GstBaseAudioEncoder *enc, GstCaps * filter);
 
   /*< private >*/
   gpointer       _gst_reserved[GST_PADDING_LARGE];

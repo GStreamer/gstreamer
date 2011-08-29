@@ -224,6 +224,8 @@ struct _GstBaseAudioDecoderClass
   gpointer       _gst_reserved[GST_PADDING_LARGE];
 };
 
+gboolean          gst_base_audio_decoder_src_setcaps  (GstBaseAudioDecoder * dec,
+                                                       GstCaps * caps);
 GstFlowReturn     gst_base_audio_decoder_finish_frame (GstBaseAudioDecoder * dec,
                                                        GstBuffer * buf, gint frames);
 

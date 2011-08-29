@@ -72,28 +72,6 @@ post_missing_element_message (GstPlaySinkAudioConvert * self,
   gst_element_post_message (GST_ELEMENT_CAST (self), msg);
 }
 
-static void
-distribute_running_time (GstElement * element, const GstSegment * segment)
-{
-  GstEvent *event;
-  GstPad *pad;
-
-  pad = gst_element_get_static_pad (element, "sink");
-
-  if (segment->accum) {
-    event = gst_event_new_new_segment_full (FALSE, segment->rate,
-        segment->applied_rate, segment->format, 0, segment->accum, 0);
-    gst_pad_send_event (pad, event);
-  }
-
-  event = gst_event_new_new_segment_full (FALSE, segment->rate,
-      segment->applied_rate, segment->format,
-      segment->start, segment->stop, segment->time);
-  gst_pad_send_event (pad, event);
-
-  gst_object_unref (pad);
-}
-
 static GstProbeReturn
 pad_blocked_cb (GstPad * pad, GstProbeType type, gpointer type_data,
     gpointer user_data)
