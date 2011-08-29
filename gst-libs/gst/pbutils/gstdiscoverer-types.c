@@ -201,16 +201,19 @@ G_DEFINE_TYPE (GstDiscovererAudioInfo, gst_discoverer_audio_info,
     GST_TYPE_DISCOVERER_STREAM_INFO);
 
 static void
-gst_discoverer_audio_info_finalize (GstDiscovererAudioInfo * info)
+gst_discoverer_audio_info_finalize (GObject * object)
 {
+  GstDiscovererAudioInfo *info = (GstDiscovererAudioInfo *) object;
+
   g_free (info->language);
+
+  G_OBJECT_CLASS (gst_discoverer_audio_info_parent_class)->finalize (object);
 }
 
 static void
-gst_discoverer_audio_info_class_init (GstDiscovererAudioInfoClass * klass)
+gst_discoverer_audio_info_class_init (GObjectClass * klass)
 {
-  klass->finalize =
-      (GstMiniObjectFinalizeFunction) gst_discoverer_audio_info_finalize;
+  klass->finalize = gst_discoverer_audio_info_finalize;
 }
 
 static void
@@ -254,23 +257,26 @@ gst_discoverer_subtitle_info_init (GstDiscovererSubtitleInfo * info)
 }
 
 static void
-gst_discoverer_subtitle_info_finalize (GstDiscovererSubtitleInfo * info)
+gst_discoverer_subtitle_info_finalize (GObject * object)
 {
+  GstDiscovererSubtitleInfo *info = (GstDiscovererSubtitleInfo *) object;
+
   g_free (info->language);
+
+  G_OBJECT_CLASS (gst_discoverer_subtitle_info_parent_class)->finalize (object);
 }
 
 static void
-gst_discoverer_subtitle_info_class_init (GstMiniObjectClass * klass)
+gst_discoverer_subtitle_info_class_init (GObjectClass * klass)
 {
-  klass->finalize =
-      (GstMiniObjectFinalizeFunction) gst_discoverer_subtitle_info_finalize;
+  klass->finalize = gst_discoverer_subtitle_info_finalize;
 }
 
 static GstDiscovererSubtitleInfo *
 gst_discoverer_subtitle_info_new (void)
 {
   return (GstDiscovererSubtitleInfo *)
-      gst_mini_object_new (GST_TYPE_DISCOVERER_SUBTITLE_INFO);
+      g_object_new (GST_TYPE_DISCOVERER_SUBTITLE_INFO, NULL);
 }
 
 static GstDiscovererSubtitleInfo *

@@ -44,6 +44,8 @@
 #include "config.h"
 #endif
 
+#include <gst/video/video.h>
+
 #include "pbutils.h"
 #include "pbutils-marshal.h"
 #include "pbutils-private.h"
@@ -730,7 +732,7 @@ collect_information (GstDiscoverer * dc, const GstStructure * st,
       info = (GstDiscovererSubtitleInfo *) parent;
     else {
       info = (GstDiscovererSubtitleInfo *)
-          gst_mini_object_new (GST_TYPE_DISCOVERER_SUBTITLE_INFO);
+          g_object_new (GST_TYPE_DISCOVERER_SUBTITLE_INFO, NULL);
       info->parent.caps = caps;
     }
 

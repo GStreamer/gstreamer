@@ -156,7 +156,7 @@ gboolean        gst_discoverer_video_info_is_image(const GstDiscovererVideoInfo*
 #define GST_IS_DISCOVERER_SUBTITLE_INFO(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_DISCOVERER_SUBTITLE_INFO))
 typedef struct _GstDiscovererSubtitleInfo GstDiscovererSubtitleInfo;
-typedef GstMiniObjectClass GstDiscovererSubtitleInfoClass;
+typedef GObjectClass GstDiscovererSubtitleInfoClass;
 GType gst_discoverer_subtitle_info_get_type (void);
 
 const gchar *   gst_discoverer_subtitle_info_get_language(const GstDiscovererSubtitleInfo* info);
