@@ -3411,7 +3411,7 @@ gst_value_union (GValue * dest, const GValue * value1, const GValue * value2)
 }
 
 /**
- * gst_value_register_union_func:
+ * gst_value_register_union_func: (skip)
  * @type1: a type to union
  * @type2: another type to union
  * @func: a function that implements creating a union between the two types
@@ -3543,7 +3543,7 @@ gst_value_intersect (GValue * dest, const GValue * value1,
 }
 
 /**
- * gst_value_register_intersect_func:
+ * gst_value_register_intersect_func: (skip)
  * @type1: the first type to intersect
  * @type2: the second type to intersect
  * @func: the intersection function
@@ -3676,7 +3676,7 @@ gst_value_can_subtract (const GValue * minuend, const GValue * subtrahend)
 }
 
 /**
- * gst_value_register_subtract_func:
+ * gst_value_register_subtract_func: (skip)
  * @minuend_type: type of the minuend
  * @subtrahend_type: type of the subtrahend
  * @func: function to use
