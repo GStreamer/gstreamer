@@ -17,6 +17,23 @@ FUNDAMENTAL GOALS:
  ones.
 
 
+FEATURES
+
+Index of features:
+
+ * Project file load/save support (GESFormatter)
+ * Grouping/Linking of Multiple TrackObjects
+ * Selection support (Extension from Grouping/Linking)
+ * Effects support
+ * Source Material object
+ * Proxy support
+ * Editing modes (Ripple/Roll/Slip/Slide)
+ * Coherent handling of Content in different formats
+ * Media Asset Management integration
+ * Templates
+ * Plugin system
+
+
 * Project file load/save support (GESFormatter)
 
   Status:
@@ -102,6 +119,7 @@ FUNDAMENTAL GOALS:
 
   We must be able to configure effects through time -> Keyframes
   without duplicating code from GStreamer.
+
 
 * Source Material object
 
@@ -207,6 +225,9 @@ FUNDAMENTAL GOALS:
         aspect ratio of 4:3, we will make the width of the two videos
         be equal without distorting their respective aspect-ratios.
 
+  See also:
+   Video compositing and audio mixing
+
 * Media Asset Management integration
 
   (Track, Search, Browse, Push content) TBD
@@ -239,3 +260,99 @@ FUNDAMENTAL GOALS:
 
   Use a registry system similar to GStreamer.
 
+
+* Video compositing and audio mixing
+
+  Problems:
+   Editing requires not only a linear combination of cuts and
+   sequences, but also mixing various content/effect at the same
+   time.
+
+   Audio and Video compositing/mixing requires having a set of base
+   properties for all sources that indicate their positioning in the
+   final composition.
+
+   Audio properties
+    * Volume
+    * Panning (or more generally positioning for multi-channel).
+
+   Video properties
+    * Z-layer (implicit through priority property)
+    * X,Y position
+    * Vertical and Horizontal scaling
+    * Global Alpha (see note below about alpha).
+
+   A big problem with compositing/mixing is handling positioning that
+   could change due to different input/output format AND avoiding any
+   quality loss.
+
+   Example 1 (video position and scale/aspect-ratio changes):
+    A user puts a 32x24 logo video at position 10,10 on a 1280x720
+    video. Later on the user decides to render the timeline to a
+    different resolution (like 1920x1080) or aspect ratio (4:3 instead
+    of 16:9).
+    The overlayed logo should stay at the same relative position
+    regardless of the output format.
+
+   Example 2 (video scaling):
+    A user decides to overlay a video logo which is originally a
+    320x240 video by scaling it down to 32x24 on top of a 1280x720
+    video. Later on the user decides to render a 1920x1080 version of
+    the timeline.
+    The resulting rendered 1920x1080 video shall have the overlay
+    video located at the exact relative position and using a 64x48
+    downscale of the original overlay video (i.e. avoiding a
+    640x480=>32x24=>64x48 double-scaling).
+
+   Example 3 (audio volume):
+    A user adjusts the commentary audio track and the soundtrack audio
+    track based on the volume of the various videos playing. Later on
+    the user wants to adjust the overall audio volume in order for the
+    final output to conform to a target RMS/peak volume.
+    The resulting relative volumes of each track should be the same
+    WITHOUT any extra loss of audio quality (i.e. avoiding a
+    downscale/upscale lossy volume conversion cycle).
+
+   Example 4 (audio positioning):
+    A user adjusts the relative panning/positioning of the commentary,
+    soundtrack and sequence for a 5.1 mixing. Later on he decides to
+    make a 7.1 and a stereo rendering.
+    The resulting relative positioning should be kept as much as
+    possible (left/right downmix and re-positioning for extra 2
+    channels in the case of 7.1 upmixing) WITHOUT any extra loss in
+    quality.
+
+  Add a set of extensible properties to the base source classes
+  relative to compositing and mixing.
+
+  The properties values can be both set/stored as 'relative' values
+  and as 'absolute' values in order to handle any input/output formats
+  or setting.
+
+  Objects that are linked/grouped with others have their properties
+  move in sync with each other. (Ex: If an overlay logo is locked to a
+  video, it will scale/move/be-transparent in sync with the video on
+  which it is overlayed).
+
+  Objects that are not linked/grouped to other objects have their
+  properties move in sync with the target format. If the target format
+  changes, all object positioning will change relatively to that
+  format.
+
+  Add {audio|video}mixer elements in the Tracks where applicable, and
+  take into account input/output formats and relative values to apply
+  the most efficient processing.
+
+  See also:
+   Coherent handling of Content in different formats
+
+* Handling of alpha video (i.e. transparency)
+
+  Problem:
+   Some streams will contain partial transparency (overlay
+   logos/videos, bluescreen, ...).
+
+   Those streams need to be handle-able by the user just like
+   non-alpha videos.
+
+  
