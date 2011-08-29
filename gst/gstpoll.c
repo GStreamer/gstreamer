@@ -532,7 +532,7 @@ gst_poll_collect_winsock_events (GstPoll * set)
 #endif
 
 /**
- * gst_poll_new:
+ * gst_poll_new: (skip)
  * @controllable: whether it should be possible to control a wait.
  *
  * Create a new file descriptor set. If @controllable, it
@@ -606,7 +606,7 @@ no_socket_pair:
 }
 
 /**
- * gst_poll_new_timer:
+ * gst_poll_new_timer: (skip)
  *
  * Create a new poll object that can be used for scheduling cancellable
  * timeouts.
