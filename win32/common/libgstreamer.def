@@ -990,6 +990,7 @@ EXPORTS
 	gst_structure_get_name
 	gst_structure_get_name_id
 	gst_structure_get_string
+	gst_structure_get_type
 	gst_structure_get_uint
 	gst_structure_get_valist
 	gst_structure_get_value

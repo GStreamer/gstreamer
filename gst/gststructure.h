@@ -83,6 +83,8 @@ struct _GstStructure {
   GQuark name;
 };
 
+GType                   gst_structure_get_type             (void);
+
 GstStructure *          gst_structure_empty_new            (const gchar *            name);
 GstStructure *          gst_structure_id_empty_new         (GQuark                   quark);
 GstStructure *          gst_structure_new                  (const gchar *            name,

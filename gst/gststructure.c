@@ -113,12 +113,14 @@ static gboolean gst_structure_parse_simple_string (gchar * s, gchar ** end);
 
 GType _gst_structure_type = 0;
 
+
+G_DEFINE_BOXED_TYPE (GstStructure, gst_structure,
+    gst_structure_copy_conditional, gst_structure_free);
+
 void
 _priv_gst_structure_initialize (void)
 {
-  _gst_structure_type = g_boxed_type_register_static ("GstStructure",
-      (GBoxedCopyFunc) gst_structure_copy_conditional,
-      (GBoxedFreeFunc) gst_structure_free);
+  _gst_structure_type = gst_structure_get_type ();
 
   g_value_register_transform_func (_gst_structure_type, G_TYPE_STRING,
       gst_structure_transform_to_string);
