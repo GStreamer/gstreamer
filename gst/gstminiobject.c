@@ -48,24 +48,6 @@ static GstAllocTrace *_gst_mini_object_trace;
 /* Mutex used for weak referencing */
 G_LOCK_DEFINE_STATIC (weak_refs_mutex);
 
-/* boxed copy and free functions. Don't real copy or free but simply
- * change the refcount */
-static GstMiniObject *
-_gst_mini_object_boxed_copy (GstMiniObject * mini_object)
-{
-  if (mini_object)
-    return gst_mini_object_ref (mini_object);
-  else
-    return NULL;
-}
-
-static void
-_gst_mini_object_boxed_free (GstMiniObject * mini_object)
-{
-  if (mini_object)
-    gst_mini_object_unref (mini_object);
-}
-
 /**
  * gst_mini_object_register:
  * @name: name of the new boxed type
@@ -84,8 +66,8 @@ gst_mini_object_register (const gchar * name)
   g_return_val_if_fail (name != NULL, 0);
 
   type = g_boxed_type_register_static (name,
-      (GBoxedCopyFunc) _gst_mini_object_boxed_copy,
-      (GBoxedFreeFunc) _gst_mini_object_boxed_free);
+      (GBoxedCopyFunc) gst_mini_object_ref,
+      (GBoxedFreeFunc) gst_mini_object_unref);
 
   return type;
 }
