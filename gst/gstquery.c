@@ -108,7 +108,7 @@ static GstQueryTypeDefinition standard_definitions[] = {
   {GST_QUERY_NONE, NULL, NULL, 0}
 };
 
-GST_DEFINE_MINI_OBJECT (GstQuery, gst_query);
+GST_DEFINE_MINI_OBJECT_TYPE (GstQuery, gst_query);
 
 void
 _priv_gst_query_initialize (void)

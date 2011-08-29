@@ -223,7 +223,7 @@ _memory_add (GstBuffer * buffer, guint idx, GstMemory * mem)
   GST_BUFFER_MEM_LEN (buffer) = len + 1;
 }
 
-GST_DEFINE_MINI_OBJECT (GstBuffer, gst_buffer);
+GST_DEFINE_MINI_OBJECT_TYPE (GstBuffer, gst_buffer);
 
 void
 _priv_gst_buffer_initialize (void)

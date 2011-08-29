@@ -54,7 +54,7 @@ struct _GstBufferList
 
 GType _gst_buffer_list_type = 0;
 
-GST_DEFINE_MINI_OBJECT (GstBufferList, gst_buffer_list);
+GST_DEFINE_MINI_OBJECT_TYPE (GstBufferList, gst_buffer_list);
 
 void
 _priv_gst_buffer_list_initialize (void)

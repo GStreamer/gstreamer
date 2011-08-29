@@ -128,7 +128,7 @@ static GstEventQuarks event_quarks[] = {
   {0, NULL, 0}
 };
 
-GST_DEFINE_MINI_OBJECT (GstEvent, gst_event);
+GST_DEFINE_MINI_OBJECT_TYPE (GstEvent, gst_event);
 
 void
 _priv_gst_event_initialize (void)

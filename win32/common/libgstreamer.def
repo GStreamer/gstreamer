@@ -623,7 +623,6 @@ EXPORTS
 	gst_mini_object_is_writable
 	gst_mini_object_make_writable
 	gst_mini_object_ref
-	gst_mini_object_register
 	gst_mini_object_replace
 	gst_mini_object_steal
 	gst_mini_object_take

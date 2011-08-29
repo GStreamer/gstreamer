@@ -215,9 +215,9 @@ gboolean        gst_mini_object_replace         (GstMiniObject **olddata, GstMin
 gboolean        gst_mini_object_take            (GstMiniObject **olddata, GstMiniObject *newdata);
 GstMiniObject * gst_mini_object_steal           (GstMiniObject **olddata);
 
-#define GST_DEFINE_MINI_OBJECT(TypeName,type_name) \
-   G_DEFINE_BOXED_TYPE(TypeName,type_name,         \
-       (GBoxedCopyFunc) gst_mini_object_ref,       \
+#define GST_DEFINE_MINI_OBJECT_TYPE(TypeName,type_name) \
+   G_DEFINE_BOXED_TYPE(TypeName,type_name,              \
+       (GBoxedCopyFunc) gst_mini_object_ref,            \
        (GBoxedFreeFunc)gst_mini_object_unref)
 
 G_END_DECLS
