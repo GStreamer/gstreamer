@@ -240,6 +240,8 @@ struct _GstBuffer {
   guint64                offset_end;
 };
 
+GType       gst_buffer_get_type            (void);
+
 /* allocation */
 GstBuffer * gst_buffer_new                 (void);
 GstBuffer * gst_buffer_new_allocate        (const GstAllocator * allocator, gsize maxsize, gsize align);

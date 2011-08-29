@@ -412,6 +412,7 @@ gst_event_copy (const GstEvent * event)
   return GST_EVENT_CAST (gst_mini_object_copy (GST_MINI_OBJECT_CONST_CAST (event)));
 }
 
+GType           gst_event_get_type              (void);
 
 /* custom event */
 GstEvent*       gst_event_new_custom            (GstEventType type, GstStructure *structure);

@@ -100,6 +100,8 @@ void  _priv_gst_caps_initialize (void);
 void  _priv_gst_event_initialize (void);
 void  _priv_gst_format_initialize (void);
 void  _priv_gst_message_initialize (void);
+void  _priv_gst_memory_initialize (void);
+void  _priv_gst_meta_initialize (void);
 void  _priv_gst_plugin_initialize (void);
 void  _priv_gst_query_initialize (void);
 void  _priv_gst_tag_initialize (void);

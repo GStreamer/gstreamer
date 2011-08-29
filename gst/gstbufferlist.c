@@ -54,12 +54,12 @@ struct _GstBufferList
 
 GType _gst_buffer_list_type = 0;
 
+GST_DEFINE_MINI_OBJECT (GstBufferList, gst_buffer_list);
+
 void
 _priv_gst_buffer_list_initialize (void)
 {
-  if (G_LIKELY (_gst_buffer_list_type == 0)) {
-    _gst_buffer_list_type = gst_mini_object_register ("GstBufferList");
-  }
+  _gst_buffer_list_type = gst_buffer_list_get_type ();
 }
 
 static GstBufferList *

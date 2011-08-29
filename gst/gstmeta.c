@@ -36,7 +36,7 @@ static GHashTable *metainfo = NULL;
 static GStaticRWLock lock = G_STATIC_RW_LOCK_INIT;
 
 void
-_gst_meta_init (void)
+_priv_gst_meta_initialize (void)
 {
   metainfo = g_hash_table_new (g_str_hash, g_str_equal);
 }

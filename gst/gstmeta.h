@@ -107,8 +107,6 @@ struct _GstMetaInfo {
   GstMetaTransformFunction   transform_func;
 };
 
-void _gst_meta_init (void);
-
 const GstMetaInfo *  gst_meta_register        (const gchar *api, const gchar *impl,
                                                gsize size,
                                                GstMetaInitFunction        init_func,

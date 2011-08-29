@@ -128,12 +128,14 @@ static GstEventQuarks event_quarks[] = {
   {0, NULL, 0}
 };
 
+GST_DEFINE_MINI_OBJECT (GstEvent, gst_event);
+
 void
 _priv_gst_event_initialize (void)
 {
   gint i;
 
-  _gst_event_type = gst_mini_object_register ("GstEvent");
+  _gst_event_type = gst_event_get_type ();
 
   g_type_class_ref (gst_seek_flags_get_type ());
   g_type_class_ref (gst_seek_type_get_type ());

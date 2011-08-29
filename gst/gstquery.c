@@ -108,6 +108,8 @@ static GstQueryTypeDefinition standard_definitions[] = {
   {GST_QUERY_NONE, NULL, NULL, 0}
 };
 
+GST_DEFINE_MINI_OBJECT (GstQuery, gst_query);
+
 void
 _priv_gst_query_initialize (void)
 {
@@ -135,7 +137,7 @@ _priv_gst_query_initialize (void)
   }
   g_static_mutex_unlock (&mutex);
 
-  gst_query_get_type ();
+  _gst_query_type = gst_query_get_type ();
 }
 
 /**
@@ -175,16 +177,6 @@ gst_query_type_to_quark (GstQueryType query)
 
   return def->quark;
 }
-
-GType
-gst_query_get_type (void)
-{
-  if (G_UNLIKELY (_gst_query_type == 0)) {
-    _gst_query_type = gst_mini_object_register ("GstQuery");
-  }
-  return _gst_query_type;
-}
-
 
 /**
  * gst_query_type_register:

@@ -153,6 +153,8 @@ gst_buffer_list_copy (const GstBufferList * list)
  */
 #define gst_buffer_list_make_writable(list) GST_BUFFER_LIST_CAST (gst_mini_object_make_writable (GST_MINI_OBJECT_CAST (list)))
 
+GType                    gst_buffer_list_get_type              (void);
+
 /* allocation */
 GstBufferList *          gst_buffer_list_new                   (void);
 GstBufferList *          gst_buffer_list_sized_new             (guint size);

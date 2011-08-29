@@ -115,10 +115,12 @@ static gboolean gst_caps_from_string_inplace (GstCaps * caps,
 
 GType _gst_caps_type = 0;
 
+GST_DEFINE_MINI_OBJECT (GstCaps, gst_caps);
+
 void
 _priv_gst_caps_initialize (void)
 {
-  _gst_caps_type = gst_mini_object_register ("GstCaps");
+  _gst_caps_type = gst_caps_get_type ();
 
   g_value_register_transform_func (_gst_caps_type,
       G_TYPE_STRING, gst_caps_transform_to_string);

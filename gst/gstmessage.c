@@ -60,8 +60,6 @@
 #include "gstquark.h"
 
 
-static GType _gst_message_type = 0;
-
 typedef struct
 {
   GstMessage message;
@@ -109,6 +107,9 @@ static GstMessageQuarks message_quarks[] = {
   {0, NULL, 0}
 };
 
+static GType _gst_message_type = 0;
+GST_DEFINE_MINI_OBJECT (GstMessage, gst_message);
+
 void
 _priv_gst_message_initialize (void)
 {
@@ -125,6 +126,8 @@ _priv_gst_message_initialize (void)
     message_quarks[i].quark =
         g_quark_from_static_string (message_quarks[i].name);
   }
+
+  _gst_message_type = gst_message_get_type ();
 }
 
 /**
@@ -166,16 +169,6 @@ gst_message_type_to_quark (GstMessageType type)
   }
   return 0;
 }
-
-GType
-gst_message_get_type (void)
-{
-  if (G_UNLIKELY (_gst_message_type == 0)) {
-    _gst_message_type = gst_mini_object_register ("GstMessage");
-  }
-  return _gst_message_type;
-}
-
 
 static void
 _gst_message_free (GstMessage * message)

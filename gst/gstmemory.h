@@ -264,8 +264,6 @@ struct _GstMemoryInfo {
   gpointer user_data;
 };
 
-void _gst_memory_init (void);
-
 /* allocators */
 const GstAllocator *  gst_allocator_register    (const gchar *name, const GstMemoryInfo *info);
 const GstAllocator *  gst_allocator_find        (const gchar *name);

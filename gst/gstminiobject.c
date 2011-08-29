@@ -49,30 +49,6 @@ static GstAllocTrace *_gst_mini_object_trace;
 G_LOCK_DEFINE_STATIC (weak_refs_mutex);
 
 /**
- * gst_mini_object_register:
- * @name: name of the new boxed type
- *
- * This function creates a new G_TYPE_BOXED derived type id for a new boxed type
- * with name @name. The default miniobject refcounting copy and free function
- * are used for the boxed type.
- *
- * Returns: a new G_TYPE_BOXED derived type id for @name.
- */
-GType
-gst_mini_object_register (const gchar * name)
-{
-  GType type;
-
-  g_return_val_if_fail (name != NULL, 0);
-
-  type = g_boxed_type_register_static (name,
-      (GBoxedCopyFunc) gst_mini_object_ref,
-      (GBoxedFreeFunc) gst_mini_object_unref);
-
-  return type;
-}
-
-/**
  * gst_mini_object_init:
  * @mini_object: a #GstMiniObject 
  * @type: the #GType of the mini-object to create

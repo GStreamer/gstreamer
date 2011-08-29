@@ -308,7 +308,7 @@ static GStaticRWLock lock = G_STATIC_RW_LOCK_INIT;
 static GHashTable *allocators;
 
 void
-_gst_memory_init (void)
+_priv_gst_memory_initialize (void)
 {
   static const GstMemoryInfo _mem_info = {
     (GstMemoryAllocFunction) _default_mem_alloc,

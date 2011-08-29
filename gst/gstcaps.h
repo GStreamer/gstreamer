@@ -336,6 +336,8 @@ struct _GstStaticCaps {
   gpointer _gst_reserved[GST_PADDING];
 };
 
+GType             gst_caps_get_type                (void);
+
 GstCaps *         gst_caps_new_empty               (void);
 GstCaps *         gst_caps_new_any                 (void);
 GstCaps *         gst_caps_new_simple              (const char    *media_type,

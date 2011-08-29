@@ -102,11 +102,13 @@ EXPORTS
 	gst_buffer_flags_get_type
 	gst_buffer_get_meta
 	gst_buffer_get_sizes
+	gst_buffer_get_type
 	gst_buffer_is_span_fast
 	gst_buffer_iterate_meta
 	gst_buffer_join
 	gst_buffer_list_foreach
 	gst_buffer_list_get
+	gst_buffer_list_get_type
 	gst_buffer_list_insert
 	gst_buffer_list_len
 	gst_buffer_list_new
@@ -180,6 +182,7 @@ EXPORTS
 	gst_caps_from_string
 	gst_caps_get_size
 	gst_caps_get_structure
+	gst_caps_get_type
 	gst_caps_intersect
 	gst_caps_intersect_full
 	gst_caps_intersect_mode_get_type
@@ -395,6 +398,7 @@ EXPORTS
 	gst_event_copy_segment
 	gst_event_get_seqnum
 	gst_event_get_structure
+	gst_event_get_type
 	gst_event_has_name
 	gst_event_new_buffer_size
 	gst_event_new_caps

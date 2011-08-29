@@ -665,12 +665,12 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
   g_log_set_handler (g_log_domain_gstreamer, llf, debug_log_handler, NULL);
 
   _priv_gst_quarks_initialize ();
-  _gst_memory_init ();
+  _priv_gst_memory_initialize ();
   _priv_gst_format_initialize ();
   _priv_gst_query_initialize ();
   _priv_gst_structure_initialize ();
   _priv_gst_caps_initialize ();
-  _gst_meta_init ();
+  _priv_gst_meta_initialize ();
 
   g_type_class_ref (gst_object_get_type ());
   g_type_class_ref (gst_pad_get_type ());
