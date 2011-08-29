@@ -860,7 +860,7 @@ gst_bus_add_watch_full_unlocked (GstBus * bus, gint priority,
  * from @func.
  *
  * Returns: The event source id.
- *
+ * Rename to: gst_bus_add_watch
  * MT safe.
  */
 guint
@@ -879,7 +879,7 @@ gst_bus_add_watch_full (GstBus * bus, gint priority,
 }
 
 /**
- * gst_bus_add_watch:
+ * gst_bus_add_watch: (skip)
  * @bus: a #GstBus to create the watch for
  * @func: A function to call when a message is received.
  * @user_data: user data passed to @func.
