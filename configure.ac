@@ -317,7 +317,7 @@ GST_PLUGINS_NONPORTED=" deinterlace flx goom2k1 icydemux id3demux \
  videobox videocrop videomixer \
  annodex apetag cairo cairo_gobject dv1394 flac gdk_pixbuf libdv libpng \
  oss oss4 shout2 \
- soup taglib wavpack "
+ taglib wavpack "
 AC_SUBST(GST_PLUGINS_NONPORTED)
 
 dnl these are all the gst plug-ins, compilable without additional libs

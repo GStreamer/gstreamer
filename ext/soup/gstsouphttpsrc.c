@@ -170,46 +170,21 @@ static void gst_soup_http_src_authenticate_cb (SoupSession * session,
     SoupMessage * msg, SoupAuth * auth, gboolean retrying,
     GstSoupHTTPSrc * src);
 
-static void
-_do_init (GType type)
-{
-  static const GInterfaceInfo urihandler_info = {
-    gst_soup_http_src_uri_handler_init,
-    NULL,
-    NULL
-  };
-
-  g_type_add_interface_static (type, GST_TYPE_URI_HANDLER, &urihandler_info);
-
-  GST_DEBUG_CATEGORY_INIT (souphttpsrc_debug, "souphttpsrc", 0,
-      "SOUP HTTP src");
-}
-
-GST_BOILERPLATE_FULL (GstSoupHTTPSrc, gst_soup_http_src, GstPushSrc,
-    GST_TYPE_PUSH_SRC, _do_init);
-
-static void
-gst_soup_http_src_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&srctemplate));
-
-  gst_element_class_set_details_simple (element_class, "HTTP client source",
-      "Source/Network",
-      "Receive data as a client over the network via HTTP using SOUP",
-      "Wouter Cloetens <wouter@mind.be>");
-}
+#define gst_soup_http_src_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstSoupHTTPSrc, gst_soup_http_src, GST_TYPE_PUSH_SRC,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER,
+        gst_soup_http_src_uri_handler_init));
 
 static void
 gst_soup_http_src_class_init (GstSoupHTTPSrcClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
   GstBaseSrcClass *gstbasesrc_class;
   GstPushSrcClass *gstpushsrc_class;
 
   gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
   gstbasesrc_class = (GstBaseSrcClass *) klass;
   gstpushsrc_class = (GstPushSrcClass *) klass;
 
@@ -299,6 +274,14 @@ gst_soup_http_src_class_init (GstSoupHTTPSrcClass * klass)
           "Name of currently playing song", NULL,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&srctemplate));
+
+  gst_element_class_set_details_simple (gstelement_class, "HTTP client source",
+      "Source/Network",
+      "Receive data as a client over the network via HTTP using SOUP",
+      "Wouter Cloetens <wouter@mind.be>");
+
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_soup_http_src_start);
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_soup_http_src_stop);
   gstbasesrc_class->unlock = GST_DEBUG_FUNCPTR (gst_soup_http_src_unlock);
@@ -311,6 +294,9 @@ gst_soup_http_src_class_init (GstSoupHTTPSrcClass * klass)
   gstbasesrc_class->query = GST_DEBUG_FUNCPTR (gst_soup_http_src_query);
 
   gstpushsrc_class->create = GST_DEBUG_FUNCPTR (gst_soup_http_src_create);
+
+  GST_DEBUG_CATEGORY_INIT (souphttpsrc_debug, "souphttpsrc", 0,
+      "SOUP HTTP src");
 }
 
 static void
@@ -336,7 +322,7 @@ gst_soup_http_src_reset (GstSoupHTTPSrc * src)
 }
 
 static void
-gst_soup_http_src_init (GstSoupHTTPSrc * src, GstSoupHTTPSrcClass * g_class)
+gst_soup_http_src_init (GstSoupHTTPSrc * src)
 {
   const gchar *proxy;
 
@@ -757,8 +743,7 @@ gst_soup_http_src_got_headers_cb (SoupMessage * msg, GstSoupHTTPSrc * src)
       GST_DEBUG_OBJECT (src, "size = %" G_GUINT64_FORMAT, src->content_size);
 
       basesrc = GST_BASE_SRC_CAST (src);
-      gst_segment_set_duration (&basesrc->segment, GST_FORMAT_BYTES,
-          src->content_size);
+      basesrc->segment.duration = src->content_size;
       gst_element_post_message (GST_ELEMENT (src),
           gst_message_new_duration (GST_OBJECT (src), GST_FORMAT_BYTES,
               src->content_size));
@@ -944,10 +929,20 @@ gst_soup_http_src_finished_cb (SoupMessage * msg, GstSoupHTTPSrc * src)
  * refcount to 0, freeing it.
  */
 
-static void
-gst_soup_http_src_chunk_free (gpointer gstbuf)
+typedef struct
 {
-  gst_buffer_unref (GST_BUFFER_CAST (gstbuf));
+  GstBuffer *buffer;
+  gpointer data;
+} SoupGstChunk;
+
+static void
+gst_soup_http_src_chunk_free (gpointer user_data)
+{
+  SoupGstChunk *chunk = (SoupGstChunk *) user_data;
+
+  gst_buffer_unmap (chunk->buffer, chunk->data, -1);
+  gst_buffer_unref (chunk->buffer);
+  g_slice_free (SoupGstChunk, chunk);
 }
 
 static SoupBuffer *
@@ -960,6 +955,7 @@ gst_soup_http_src_chunk_allocator (SoupMessage * msg, gsize max_len,
   SoupBuffer *soupbuf;
   gsize length;
   GstFlowReturn rc;
+  SoupGstChunk *chunk;
 
   if (max_len)
     length = MIN (basesrc->blocksize, max_len);
@@ -968,11 +964,7 @@ gst_soup_http_src_chunk_allocator (SoupMessage * msg, gsize max_len,
   GST_DEBUG_OBJECT (src, "alloc %" G_GSIZE_FORMAT " bytes <= %" G_GSIZE_FORMAT,
       length, max_len);
 
-
-  rc = gst_pad_alloc_buffer (GST_BASE_SRC_PAD (basesrc),
-      GST_BUFFER_OFFSET_NONE, length,
-      src->src_caps ? src->src_caps :
-      GST_PAD_CAPS (GST_BASE_SRC_PAD (basesrc)), &gstbuf);
+  rc = GST_BASE_SRC_CLASS (parent_class)->alloc (basesrc, -1, length, &gstbuf);
   if (G_UNLIKELY (rc != GST_FLOW_OK)) {
     /* Failed to allocate buffer. Stall SoupSession and return error code
      * to create(). */
@@ -981,8 +973,12 @@ gst_soup_http_src_chunk_allocator (SoupMessage * msg, gsize max_len,
     return NULL;
   }
 
-  soupbuf = soup_buffer_new_with_owner (GST_BUFFER_DATA (gstbuf), length,
-      gstbuf, gst_soup_http_src_chunk_free);
+  chunk = g_slice_new0 (SoupGstChunk);
+  chunk->buffer = gstbuf;
+  chunk->data = gst_buffer_map (gstbuf, &length, NULL, GST_MAP_READWRITE);
+
+  soupbuf = soup_buffer_new_with_owner (chunk->data, length,
+      chunk, gst_soup_http_src_chunk_free);
 
   return soupbuf;
 }
@@ -1010,12 +1006,8 @@ gst_soup_http_src_got_chunk_cb (SoupMessage * msg, SoupBuffer * chunk,
   /* Extract the GstBuffer from the SoupBuffer and set its fields. */
   *src->outbuf = GST_BUFFER_CAST (soup_buffer_get_owner (chunk));
 
-  GST_BUFFER_SIZE (*src->outbuf) = chunk->length;
-  GST_BUFFER_OFFSET (*src->outbuf) = basesrc->segment.last_stop;
-
-  gst_buffer_set_caps (*src->outbuf,
-      (src->src_caps) ? src->src_caps :
-      GST_PAD_CAPS (GST_BASE_SRC_PAD (basesrc)));
+  gst_buffer_resize (*src->outbuf, 0, chunk->length);
+  GST_BUFFER_OFFSET (*src->outbuf) = basesrc->segment.position;
 
   gst_buffer_ref (*src->outbuf);
 
@@ -1446,13 +1438,13 @@ gst_soup_http_src_set_proxy (GstSoupHTTPSrc * src, const gchar * uri)
 }
 
 static guint
-gst_soup_http_src_uri_get_type (void)
+gst_soup_http_src_uri_get_type (GType type)
 {
   return GST_URI_SRC;
 }
 
 static gchar **
-gst_soup_http_src_uri_get_protocols (void)
+gst_soup_http_src_uri_get_protocols (GType type)
 {
   static const gchar *protocols[] = { "http", "https", NULL };
   return (gchar **) protocols;
