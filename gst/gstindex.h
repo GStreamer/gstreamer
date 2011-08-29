@@ -349,7 +349,7 @@ struct _GstIndexClass {
   GstObjectClass parent_class;
 
   /*< protected >*/
-  gboolean      (*get_writer_id)        (GstIndex *index, gint *writer_id, gchar *writer_string);
+  gboolean      (*get_writer_id)        (GstIndex *index, gint *id, gchar *writer);
 
   void          (*commit)               (GstIndex *index, gint id);
 
