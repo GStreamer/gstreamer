@@ -530,7 +530,7 @@ static const gchar *empty_option[] = { NULL };
  * @pool. An option would typically be enabled with
  * gst_buffer_pool_config_add_option().
  *
- * Returns: a NULL terminated array of strings.
+ * Returns: (array zero-terminated=1) (transfer none): a NULL terminated array of strings.
  */
 const gchar **
 gst_buffer_pool_get_options (GstBufferPool * pool)
