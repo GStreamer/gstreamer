@@ -1289,7 +1289,7 @@ gst_h264_parse_sps (GstH264NalUnit * nalu, GstH264SPS * sps,
   GstH264VUIParams *vui = NULL;
 
   GST_DEBUG ("parsing SPS");
-  nal_reader_init (&nr, nalu->data + nalu->offset + 1, nalu->size);
+  nal_reader_init (&nr, nalu->data + nalu->offset + 1, nalu->size - 1);
 
   /* set default values for fields that might not be present in the bitstream
      and have valid defaults */
@@ -1462,7 +1462,7 @@ gst_h264_parse_pps (GstH264NalParser * nalparser, GstH264NalUnit * nalu,
 
   GST_DEBUG ("parsing PPS");
 
-  nal_reader_init (&nr, nalu->data + nalu->offset + 1, nalu->size);
+  nal_reader_init (&nr, nalu->data + nalu->offset + 1, nalu->size - 1);
 
   READ_UE_ALLOWED (&nr, pps->id, 0, GST_H264_MAX_PPS_COUNT);
   READ_UE_ALLOWED (&nr, sps_id, 0, GST_H264_MAX_SPS_COUNT);
@@ -1627,7 +1627,7 @@ gst_h264_parser_parse_slice_hdr (GstH264NalParser * nalparser,
   }
 
 
-  nal_reader_init (&nr, nalu->data + nalu->offset + 1, nalu->size);
+  nal_reader_init (&nr, nalu->data + nalu->offset + 1, nalu->size - 1);
 
   READ_UE (&nr, slice->first_mb_in_slice);
   READ_UE (&nr, slice->type);
@@ -1799,7 +1799,7 @@ gst_h264_parser_parse_sei (GstH264NalParser * nalparser, GstH264NalUnit * nalu,
 
   GST_DEBUG ("parsing \"Sei message\"");
 
-  nal_reader_init (&nr, nalu->data + nalu->offset + 1, nalu->size);
+  nal_reader_init (&nr, nalu->data + nalu->offset + 1, nalu->size - 1);
 
   sei->payloadType = 0;
   do {
