@@ -29,7 +29,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v audiotestsrc ! goom ! ffmpegcolorspace ! xvimagesink
+ * gst-launch -v audiotestsrc ! goom ! videoconvert ! xvimagesink
  * ]|
  * </refsect2>
  */
