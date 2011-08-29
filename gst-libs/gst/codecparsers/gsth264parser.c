@@ -1558,13 +1558,10 @@ gst_h264_parse_pps (GstH264NalParser * nalparser, GstH264NalUnit * nalu,
     }
   }
 
-  /* FIXME For some reson second_chroma_qp_index_offset is not always present */
-  if (G_UNLIKELY (nr.byte * 8 + (8 - nr.bits_in_cache) > nr.size * 8))
-    READ_SE_ALLOWED (&nr, pps->second_chroma_qp_index_offset, -12, 12);
-
-  pps->valid = TRUE;
+  READ_SE_ALLOWED (&nr, pps->second_chroma_qp_index_offset, -12, 12);
 
 done:
+  pps->valid = TRUE;
   return GST_H264_PARSER_OK;
 
 error:
