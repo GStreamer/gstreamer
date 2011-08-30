@@ -2158,14 +2158,71 @@ rtp_session_process_app (RTPSession * sess, GstRTCPPacket * packet,
   GST_DEBUG ("received APP");
 }
 
+static gboolean
+rtp_session_request_local_key_unit (RTPSession * sess, RTPSource * src,
+    gboolean fir, GstClockTime current_time)
+{
+  guint32 round_trip = 0;
+
+  rtp_source_get_last_rb (src, NULL, NULL, NULL, NULL, NULL, NULL, &round_trip);
+
+  if (sess->last_keyframe_request != GST_CLOCK_TIME_NONE && round_trip) {
+    GstClockTime round_trip_in_ns = gst_util_uint64_scale (round_trip,
+        GST_SECOND, 65536);
+
+    if (sess->last_keyframe_request != GST_CLOCK_TIME_NONE &&
+        current_time - sess->last_keyframe_request < 2 * round_trip_in_ns) {
+      GST_DEBUG ("Ignoring %s request because one was send without one "
+          "RTT (%" GST_TIME_FORMAT " < %" GST_TIME_FORMAT ")",
+          fir ? "FIR" : "PLI",
+          GST_TIME_ARGS (current_time - sess->last_keyframe_request),
+          GST_TIME_ARGS (round_trip_in_ns));;
+      return FALSE;
+    }
+  }
+
+  sess->last_keyframe_request = current_time;
+
+  GST_LOG ("received %s request from %X %p(%p)", fir ? "FIR" : "PLI",
+      rtp_source_get_ssrc (src), sess->callbacks.process_rtp,
+      sess->callbacks.request_key_unit);
+
+  sess->callbacks.request_key_unit (sess, fir,
+      sess->request_key_unit_user_data);
+
+  return TRUE;
+}
+
 static void
 rtp_session_process_pli (RTPSession * sess, guint32 sender_ssrc,
     guint32 media_ssrc, GstClockTime current_time)
 {
   RTPSource *src;
-  guint32 round_trip = 0;
 
   if (!sess->callbacks.request_key_unit)
+    return;
+
+  src = g_hash_table_lookup (sess->ssrcs[sess->mask_idx],
+      GINT_TO_POINTER (sender_ssrc));
+  if (!src)
+    return;
+
+  rtp_session_request_local_key_unit (sess, src, FALSE, current_time);
+}
+
+static void
+rtp_session_process_fir (RTPSession * sess, guint32 sender_ssrc,
+    guint8 * fci_data, guint fci_length, GstClockTime current_time)
+{
+  RTPSource *src;
+  guint32 ssrc;
+  guint position = 0;
+  gboolean our_request = FALSE;
+
+  if (!sess->callbacks.request_key_unit)
+    return;
+
+  if (fci_length < 8)
     return;
 
   src = g_hash_table_lookup (sess->ssrcs[sess->mask_idx],
@@ -2174,29 +2231,20 @@ rtp_session_process_pli (RTPSession * sess, guint32 sender_ssrc,
   if (!src)
     return;
 
-  if (sess->last_keyframe_request != GST_CLOCK_TIME_NONE &&
-      rtp_source_get_last_rb (src, NULL, NULL, NULL, NULL, NULL, NULL,
-          &round_trip)) {
-    GstClockTime round_trip_in_ns = gst_util_uint64_scale (round_trip,
-        GST_SECOND, 65536);
+  for (position = 0; position < fci_length; position += 8) {
+    guint8 *data = fci_data + position;
 
-    if (sess->last_keyframe_request != GST_CLOCK_TIME_NONE &&
-        current_time - sess->last_keyframe_request < round_trip_in_ns) {
-      GST_DEBUG ("Ignoring PLI because one was send without one RTT (%"
-          GST_TIME_FORMAT " < %" GST_TIME_FORMAT ")",
-          GST_TIME_ARGS (current_time - sess->last_keyframe_request),
-          GST_TIME_ARGS (round_trip_in_ns));;
-      return;
+    ssrc = GST_READ_UINT32_BE (data);
+
+    if (ssrc == rtp_source_get_ssrc (sess->source)) {
+      our_request = TRUE;
+      break;
     }
   }
+  if (!our_request)
+    return;
 
-  sess->last_keyframe_request = current_time;
-
-  GST_LOG ("received PLI from %X %p(%p)", sender_ssrc,
-      sess->callbacks.process_rtp, sess->callbacks.request_key_unit);
-
-  sess->callbacks.request_key_unit (sess, FALSE,
-      sess->request_key_unit_user_data);
+  rtp_session_request_local_key_unit (sess, src, TRUE, current_time);
 }
 
 static void
@@ -2240,12 +2288,18 @@ rtp_session_process_feedback (RTPSession * sess, GstRTCPPacket * packet,
       rtp_source_retain_rtcp_packet (src, packet, arrival->running_time);
   }
 
-  if (rtp_source_get_ssrc (sess->source) == media_ssrc) {
+  if (rtp_source_get_ssrc (sess->source) == media_ssrc ||
+      /* PSFB FIR puts the media ssrc inside the FCI */
+      (type == GST_RTCP_TYPE_PSFB && fbtype == GST_RTCP_PSFB_TYPE_FIR)) {
     switch (type) {
       case GST_RTCP_TYPE_PSFB:
         switch (fbtype) {
           case GST_RTCP_PSFB_TYPE_PLI:
             rtp_session_process_pli (sess, sender_ssrc, media_ssrc,
+                current_time);
+            break;
+          case GST_RTCP_PSFB_TYPE_FIR:
+            rtp_session_process_fir (sess, sender_ssrc, fci_data, fci_length,
                 current_time);
             break;
           default:
