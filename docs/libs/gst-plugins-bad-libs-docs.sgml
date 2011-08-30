@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+<!ENTITY % version-entities SYSTEM "version.entities">
+%version-entities;
+]>
+<book id="index" xmlns:xi="http://www.w3.org/2003/XInclude">
+  <bookinfo>
+    <title>GStreamer Bad Plugins &GST_MAJORMINOR; Library Reference Manual</title>
+    <releaseinfo>
+      for GStreamer Bad Library &GST_MAJORMINOR; (&GST_VERSION;)
+      <ulink role="online-location" url="http://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-bad-libs/html/">http://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-bad-libs/html/</ulink>.
+    </releaseinfo>
+  </bookinfo>
+
+  <part id="gstreamer-plugins-bad">
+    <title>GStreamer Bad Plugins Libraries</title>
+    <para>
+      This manual describes the libraries provided by the GStreamer Bad Plugins
+      package.
+    </para>
+    <xi:include href="compiling.sgml" />
+  </part>
+
+  <part id="gstreamer-libs-hierarchy">
+    <title>Object Hierarchy</title>
+    <xi:include href="xml/tree_index.sgml" />
+  </part>
+
+  <index id="api-index-full">
+    <title>Index</title>
+    <xi:include href="xml/api-index-full.xml"><xi:fallback /></xi:include>
+  </index>
+  <index id="api-index-deprecated" role="deprecated">
+    <title>Index of deprecated API</title>
+    <xi:include href="xml/api-index-deprecated.xml"><xi:fallback /></xi:include>
+  </index>
+
+  <xi:include href="xml/annotation-glossary.xml"><xi:fallback /></xi:include>
+</book>
+

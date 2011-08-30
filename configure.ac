@@ -2041,6 +2041,7 @@ ext/zbar/Makefile
 po/Makefile.in
 docs/Makefile
 docs/plugins/Makefile
+docs/libs/Makefile
 docs/version.entities
 pkgconfig/Makefile
 pkgconfig/gstreamer-plugins-bad.pc
