@@ -150,6 +150,8 @@ ges_timeline_pipeline_init (GESTimelinePipeline * self)
 
   ges_timeline_pipeline_set_mode (self, DEFAULT_TIMELINE_MODE);
 
+  return;
+
 no_playsink:
   {
     GST_ERROR_OBJECT (self, "Can't create playsink instance !");
