@@ -194,8 +194,6 @@ gst_motion_cells_finalize (GObject * obj)
   GFREE (filter->basename_datafile);
   GFREE (filter->datafile_extension);
 
-  g_mutex_free (filter->propset_mutex);
-
   G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
 
@@ -326,7 +324,6 @@ gst_motion_cells_class_init (GstMotioncellsClass * klass)
 static void
 gst_motion_cells_init (GstMotioncells * filter, GstMotioncellsClass * gclass)
 {
-  filter->propset_mutex = g_mutex_new ();
   filter->sinkpad = gst_pad_new_from_static_template (&sink_factory, "sink");
   gst_pad_set_setcaps_function (filter->sinkpad,
       GST_DEBUG_FUNCPTR (gst_motion_cells_set_caps));
@@ -396,9 +393,7 @@ gst_motion_cells_init (GstMotioncells * filter, GstMotioncellsClass * gclass)
   filter->thickness = THICKNESS_DEF;
 
   filter->datafileidx = 0;
-  g_mutex_lock (filter->propset_mutex);
   filter->id = motion_cells_init ();
-  g_mutex_unlock (filter->propset_mutex);
 
 }
 
@@ -417,28 +412,19 @@ gst_motion_cells_set_property (GObject * object, guint prop_id,
   int tmpuy = -1;
   int tmplx = -1;
   int tmply = -1;
-  GstStateChangeReturn ret;
 
-  g_mutex_lock (filter->propset_mutex);
+  GST_OBJECT_LOCK (filter);
   switch (prop_id) {
     case PROP_GRID_X:
-      ret = gst_element_get_state (GST_ELEMENT (filter),
-          &filter->state, NULL, 250 * GST_NSECOND);
       filter->gridx = g_value_get_int (value);
-      if (filter->prevgridx != filter->gridx
-          && ret == GST_STATE_CHANGE_SUCCESS
-          && filter->state == GST_STATE_PLAYING) {
+      if (filter->prevgridx != filter->gridx && !filter->firstframe) {
         filter->changed_gridx = true;
       }
       filter->prevgridx = filter->gridx;
       break;
     case PROP_GRID_Y:
-      ret = gst_element_get_state (GST_ELEMENT (filter),
-          &filter->state, NULL, 250 * GST_NSECOND);
       filter->gridy = g_value_get_int (value);
-      if (filter->prevgridy != filter->gridy
-          && ret == GST_STATE_CHANGE_SUCCESS
-          && filter->state == GST_STATE_PLAYING) {
+      if (filter->prevgridy != filter->gridy && !filter->firstframe) {
         filter->changed_gridy = true;
       }
       filter->prevgridy = filter->gridy;
@@ -471,9 +457,7 @@ gst_motion_cells_set_property (GObject * object, guint prop_id,
       filter->calculate_motion = g_value_get_boolean (value);
       break;
     case PROP_DATE:
-      ret = gst_element_get_state (GST_ELEMENT (filter),
-          &filter->state, NULL, 250 * GST_NSECOND);
-      if (ret == GST_STATE_CHANGE_SUCCESS && filter->state == GST_STATE_PLAYING) {
+      if (!filter->firstframe) {
         filter->changed_startime = true;
       }
       filter->starttime = g_value_get_long (value);
@@ -627,7 +611,7 @@ gst_motion_cells_set_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-  g_mutex_unlock (filter->propset_mutex);
+  GST_OBJECT_UNLOCK (filter);
 }
 
 static void
@@ -638,6 +622,7 @@ gst_motion_cells_get_property (GObject * object, guint prop_id,
   GString *str;
   int i;
 
+  GST_OBJECT_LOCK (filter);
   switch (prop_id) {
     case PROP_GRID_X:
       g_value_set_int (value, filter->gridx);
@@ -749,6 +734,7 @@ gst_motion_cells_get_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+  GST_OBJECT_UNLOCK (filter);
 }
 
 static void
@@ -859,17 +845,17 @@ gst_motion_cells_set_caps (GstPad * pad, GstCaps * caps)
 static GstFlowReturn
 gst_motion_cells_chain (GstPad * pad, GstBuffer * buf)
 {
-
   GstMotioncells *filter;
-
   filter = gst_motion_cells (GST_OBJECT_PARENT (pad));
+  GST_OBJECT_LOCK (filter);
   if (filter->calculate_motion) {
     double sensitivity;
     int framerate, gridx, gridy, motionmaskcells_count, motionmaskcoord_count,
         motioncells_count, i;
     int thickness, success, motioncellsidxcnt, numberOfCells,
         motioncellsnumber, cellsOfInterestNumber;
-    int mincellsOfInterestNumber, motiondetect;
+    int mincellsOfInterestNumber, motiondetect, minimum_motion_frames,
+        postnomotion;
     char *datafile;
     bool display, changed_datafile, useAlpha;
     gint64 starttime;
@@ -877,14 +863,14 @@ gst_motion_cells_chain (GstPad * pad, GstBuffer * buf)
     motioncellidx *motionmaskcellsidx;
     cellscolor motioncellscolor;
     motioncellidx *motioncellsidx;
-    g_mutex_lock (filter->propset_mutex);
     buf = gst_buffer_make_writable (buf);
     filter->cvImage->imageData = (char *) GST_BUFFER_DATA (buf);
     if (filter->firstframe) {
       setPrevFrame (filter->cvImage, filter->id);
       filter->firstframe = FALSE;
     }
-
+    minimum_motion_frames = filter->minimum_motion_frames;
+    postnomotion = filter->postnomotion;
     sensitivity = filter->sensitivity;
     framerate = filter->framerate;
     gridx = filter->gridx;
@@ -961,6 +947,7 @@ gst_motion_cells_chain (GstPad * pad, GstBuffer * buf)
         motionmaskcoords, motionmaskcells_count, motionmaskcellsidx,
         motioncellscolor, motioncells_count, motioncellsidx, starttime,
         datafile, changed_datafile, thickness, filter->id);
+
     if ((success == 1) && (filter->sent_init_error_msg == false)) {
       char *initfailedreason;
       int initerrorcode;
@@ -994,7 +981,7 @@ gst_motion_cells_chain (GstPad * pad, GstBuffer * buf)
       GFREE (motionmaskcoords);
       GFREE (motionmaskcellsidx);
       GFREE (motioncellsidx);
-      g_mutex_unlock (filter->propset_mutex);
+      GST_OBJECT_UNLOCK (filter);
       return gst_pad_push (filter->srcpad, buf);
     }
     filter->changed_datafile = getChangedDataFile (filter->id);
@@ -1005,6 +992,7 @@ gst_motion_cells_chain (GstPad * pad, GstBuffer * buf)
         (filter->motioncells_count) : (numberOfCells);
     mincellsOfInterestNumber =
         floor ((double) cellsOfInterestNumber * filter->threshold);
+    GST_OBJECT_UNLOCK (filter);
     motiondetect = (motioncellsnumber >= mincellsOfInterestNumber) ? 1 : 0;
     if ((motioncellsidxcnt > 0) && (motiondetect == 1)) {
       char *detectedmotioncells;
@@ -1013,7 +1001,7 @@ gst_motion_cells_chain (GstPad * pad, GstBuffer * buf)
       if (detectedmotioncells) {
         filter->consecutive_motion++;
         if ((filter->previous_motion == false)
-            && (filter->consecutive_motion >= filter->minimum_motion_frames)) {
+            && (filter->consecutive_motion >= minimum_motion_frames)) {
           GstStructure *s;
           GstMessage *m;
           filter->previous_motion = true;
@@ -1059,7 +1047,7 @@ gst_motion_cells_chain (GstPad * pad, GstBuffer * buf)
         }
       }
     }
-    if (filter->postnomotion > 0) {
+    if (postnomotion > 0) {
       guint64 last_buf_timestamp = GST_BUFFER_TIMESTAMP (buf) / 1000000000l;
       if ((last_buf_timestamp -
               (filter->last_motion_timestamp / 1000000000l)) >=
@@ -1084,10 +1072,9 @@ gst_motion_cells_chain (GstPad * pad, GstBuffer * buf)
     GFREE (motionmaskcoords);
     GFREE (motionmaskcellsidx);
     GFREE (motioncellsidx);
-
-    g_mutex_unlock (filter->propset_mutex);
+  } else {
+    GST_OBJECT_UNLOCK (filter);
   }
-
   return gst_pad_push (filter->srcpad, buf);
 }
 
