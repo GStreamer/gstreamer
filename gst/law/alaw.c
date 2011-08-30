@@ -23,14 +23,18 @@
 #include "alaw-encode.h"
 #include "alaw-decode.h"
 
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+#define INT_FORMAT "S16_LE"
+#else
+#define INT_FORMAT "S16_BE"
+#endif
+
 GstStaticPadTemplate alaw_dec_src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, "
-        "rate = (int) [ 8000, 192000 ], "
-        "channels = (int) [ 1, 2 ], "
-        "endianness = (int) BYTE_ORDER, "
-        "width = (int) 16, " "depth = (int) 16, " "signed = (boolean) True")
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) " INT_FORMAT ", "
+        "rate = (int) [ 8000, 192000 ], " "channels = (int) [ 1, 2 ]")
     );
 
 GstStaticPadTemplate alaw_dec_sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -43,11 +47,9 @@ GstStaticPadTemplate alaw_dec_sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
 GstStaticPadTemplate alaw_enc_sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, "
-        "rate = (int) [ 8000, 192000 ], "
-        "channels = (int) [ 1, 2 ], "
-        "endianness = (int) BYTE_ORDER, "
-        "width = (int) 16, " "depth = (int) 16, " "signed = (boolean) True")
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) " INT_FORMAT ", "
+        "rate = (int) [ 8000, 192000 ], " "channels = (int) [ 1, 2 ]")
     );
 
 GstStaticPadTemplate alaw_enc_src_factory = GST_STATIC_PAD_TEMPLATE ("src",

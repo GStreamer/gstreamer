@@ -44,18 +44,16 @@ enum
   ARG_0
 };
 
-static void gst_mulawenc_class_init (GstMuLawEncClass * klass);
-static void gst_mulawenc_base_init (GstMuLawEncClass * klass);
-static void gst_mulawenc_init (GstMuLawEnc * mulawenc);
-
+static gboolean gst_mulawenc_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_mulawenc_chain (GstPad * pad, GstBuffer * buffer);
 
-static GstElementClass *parent_class = NULL;
+#define gst_mulawenc_parent_class parent_class
+G_DEFINE_TYPE (GstMuLawEnc, gst_mulawenc, GST_TYPE_ELEMENT);
 
 /*static guint gst_stereo_signals[LAST_SIGNAL] = { 0 }; */
 
 static GstCaps *
-mulawenc_getcaps (GstPad * pad)
+mulawenc_getcaps (GstPad * pad, GstCaps * filter)
 {
   GstMuLawEnc *mulawenc;
   GstPad *otherpad;
@@ -75,7 +73,7 @@ mulawenc_getcaps (GstPad * pad)
     otherpad = mulawenc->srcpad;
   }
   /* get caps from the peer, this can return NULL when there is no peer */
-  othercaps = gst_pad_peer_get_caps (otherpad);
+  othercaps = gst_pad_peer_get_caps (otherpad, filter);
 
   /* get the template caps to make sure we return something acceptable */
   templ = gst_pad_get_pad_template_caps (pad);
@@ -116,66 +114,31 @@ mulawenc_getcaps (GstPad * pad)
 }
 
 static gboolean
-mulawenc_setcaps (GstPad * pad, GstCaps * caps)
+mulawenc_setcaps (GstMuLawEnc * mulawenc, GstCaps * caps)
 {
-  GstMuLawEnc *mulawenc;
-  GstPad *otherpad;
   GstStructure *structure;
   GstCaps *base_caps;
-
-  mulawenc = GST_MULAWENC (gst_pad_get_parent (pad));
 
   structure = gst_caps_get_structure (caps, 0);
   gst_structure_get_int (structure, "channels", &mulawenc->channels);
   gst_structure_get_int (structure, "rate", &mulawenc->rate);
 
-  if (pad == mulawenc->sinkpad) {
-    otherpad = mulawenc->srcpad;
-  } else {
-    otherpad = mulawenc->sinkpad;
-  }
-  base_caps = gst_caps_copy (gst_pad_get_pad_template_caps (otherpad));
+  base_caps = gst_caps_copy (gst_pad_get_pad_template_caps (mulawenc->srcpad));
 
   structure = gst_caps_get_structure (base_caps, 0);
   gst_structure_set (structure, "rate", G_TYPE_INT, mulawenc->rate, NULL);
   gst_structure_set (structure, "channels", G_TYPE_INT, mulawenc->channels,
       NULL);
 
-  gst_pad_set_caps (otherpad, base_caps);
+  gst_pad_set_caps (mulawenc->srcpad, base_caps);
 
-  gst_object_unref (mulawenc);
   gst_caps_unref (base_caps);
 
   return TRUE;
 }
 
-GType
-gst_mulawenc_get_type (void)
-{
-  static GType mulawenc_type = 0;
-
-  if (!mulawenc_type) {
-    static const GTypeInfo mulawenc_info = {
-      sizeof (GstMuLawEncClass),
-      (GBaseInitFunc) gst_mulawenc_base_init,
-      NULL,
-      (GClassInitFunc) gst_mulawenc_class_init,
-      NULL,
-      NULL,
-      sizeof (GstMuLawEnc),
-      0,
-      (GInstanceInitFunc) gst_mulawenc_init,
-    };
-
-    mulawenc_type =
-        g_type_register_static (GST_TYPE_ELEMENT, "GstMuLawEnc", &mulawenc_info,
-        0);
-  }
-  return mulawenc_type;
-}
-
 static void
-gst_mulawenc_base_init (GstMuLawEncClass * klass)
+gst_mulawenc_class_init (GstMuLawEncClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
@@ -183,6 +146,7 @@ gst_mulawenc_base_init (GstMuLawEncClass * klass)
       gst_static_pad_template_get (&mulaw_enc_src_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&mulaw_enc_sink_factory));
+
   gst_element_class_set_details_simple (element_class, "Mu Law audio encoder",
       "Codec/Encoder/Audio",
       "Convert 16bit PCM to 8bit mu law",
@@ -190,24 +154,17 @@ gst_mulawenc_base_init (GstMuLawEncClass * klass)
 }
 
 static void
-gst_mulawenc_class_init (GstMuLawEncClass * klass)
-{
-  parent_class = g_type_class_peek_parent (klass);
-}
-
-static void
 gst_mulawenc_init (GstMuLawEnc * mulawenc)
 {
   mulawenc->sinkpad =
       gst_pad_new_from_static_template (&mulaw_enc_sink_factory, "sink");
-  gst_pad_set_setcaps_function (mulawenc->sinkpad, mulawenc_setcaps);
   gst_pad_set_getcaps_function (mulawenc->sinkpad, mulawenc_getcaps);
+  gst_pad_set_event_function (mulawenc->sinkpad, gst_mulawenc_event);
   gst_pad_set_chain_function (mulawenc->sinkpad, gst_mulawenc_chain);
   gst_element_add_pad (GST_ELEMENT (mulawenc), mulawenc->sinkpad);
 
   mulawenc->srcpad =
       gst_pad_new_from_static_template (&mulaw_enc_src_factory, "src");
-  gst_pad_set_setcaps_function (mulawenc->srcpad, mulawenc_setcaps);
   gst_pad_set_getcaps_function (mulawenc->srcpad, mulawenc_getcaps);
   gst_pad_use_fixed_caps (mulawenc->srcpad);
   gst_element_add_pad (GST_ELEMENT (mulawenc), mulawenc->srcpad);
@@ -217,12 +174,39 @@ gst_mulawenc_init (GstMuLawEnc * mulawenc)
   mulawenc->rate = 0;
 }
 
+static gboolean
+gst_mulawenc_event (GstPad * pad, GstEvent * event)
+{
+  GstMuLawEnc *mulawenc;
+  gboolean res;
+
+  mulawenc = GST_MULAWENC (GST_PAD_PARENT (pad));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+
+      gst_event_parse_caps (event, &caps);
+      mulawenc_setcaps (mulawenc, caps);
+      gst_event_unref (event);
+
+      res = TRUE;
+      break;
+    }
+    default:
+      res = gst_pad_event_default (pad, event);
+      break;
+  }
+  return res;
+}
+
 static GstFlowReturn
 gst_mulawenc_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstMuLawEnc *mulawenc;
   gint16 *linear_data;
-  guint linear_size;
+  gsize linear_size;
   guint8 *mulaw_data;
   guint mulaw_size;
   GstBuffer *outbuf;
@@ -234,32 +218,21 @@ gst_mulawenc_chain (GstPad * pad, GstBuffer * buffer)
   if (!mulawenc->rate || !mulawenc->channels)
     goto not_negotiated;
 
-  linear_data = (gint16 *) GST_BUFFER_DATA (buffer);
-  linear_size = GST_BUFFER_SIZE (buffer);
+  linear_data = gst_buffer_map (buffer, &linear_size, NULL, GST_MAP_READ);
 
   mulaw_size = linear_size / 2;
 
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
   duration = GST_BUFFER_DURATION (buffer);
 
-  ret = gst_pad_alloc_buffer_and_set_caps (mulawenc->srcpad,
-      GST_BUFFER_OFFSET_NONE, mulaw_size, GST_PAD_CAPS (mulawenc->srcpad),
-      &outbuf);
-  if (ret != GST_FLOW_OK)
-    goto alloc_failed;
+  outbuf = gst_buffer_new_allocate (NULL, mulaw_size, 0);
 
   if (duration == -1) {
     duration = gst_util_uint64_scale_int (mulaw_size,
         GST_SECOND, mulawenc->rate * mulawenc->channels);
   }
 
-  if (GST_BUFFER_SIZE (outbuf) < mulaw_size) {
-    /* pad-alloc can suggest a smaller size */
-    gst_buffer_unref (outbuf);
-    outbuf = gst_buffer_new_and_alloc (mulaw_size);
-  }
-
-  mulaw_data = (guint8 *) GST_BUFFER_DATA (outbuf);
+  mulaw_data = gst_buffer_map (outbuf, NULL, NULL, GST_MAP_WRITE);
 
   /* copy discont flag */
   if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT))
@@ -268,10 +241,10 @@ gst_mulawenc_chain (GstPad * pad, GstBuffer * buffer)
   GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
   GST_BUFFER_DURATION (outbuf) = duration;
 
-  gst_buffer_set_caps (outbuf, GST_PAD_CAPS (mulawenc->srcpad));
-
   mulaw_encode (linear_data, mulaw_data, mulaw_size);
 
+  gst_buffer_unmap (outbuf, mulaw_data, -1);
+  gst_buffer_unmap (buffer, linear_data, -1);
   gst_buffer_unref (buffer);
 
   ret = gst_pad_push (mulawenc->srcpad, outbuf);
@@ -285,12 +258,6 @@ not_negotiated:
   {
     GST_DEBUG_OBJECT (mulawenc, "no format negotiated");
     ret = GST_FLOW_NOT_NEGOTIATED;
-    gst_buffer_unref (buffer);
-    goto done;
-  }
-alloc_failed:
-  {
-    GST_DEBUG_OBJECT (mulawenc, "pad alloc failed");
     gst_buffer_unref (buffer);
     goto done;
   }
