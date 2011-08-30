@@ -1862,6 +1862,8 @@ gst_qtdemux_change_state (GstElement * element, GstStateChange transition)
       gst_segment_init (&qtdemux->segment, GST_FORMAT_TIME);
       qtdemux->requested_seek_time = GST_CLOCK_TIME_NONE;
       qtdemux->seek_offset = 0;
+      qtdemux->upstream_seekable = FALSE;
+      qtdemux->upstream_size = 0;
       break;
     }
     default:
@@ -3973,6 +3975,49 @@ qtdemux_seek_offset (GstQTDemux * demux, guint64 offset)
   return res;
 }
 
+/* check for seekable upstream, above and beyond a mere query */
+static void
+gst_qtdemux_check_seekability (GstQTDemux * demux)
+{
+  GstQuery *query;
+  gboolean seekable = FALSE;
+  gint64 start = -1, stop = -1;
+
+  if (demux->upstream_size)
+    return;
+
+  query = gst_query_new_seeking (GST_FORMAT_BYTES);
+  if (!gst_pad_peer_query (demux->sinkpad, query)) {
+    GST_DEBUG_OBJECT (demux, "seeking query failed");
+    goto done;
+  }
+
+  gst_query_parse_seeking (query, NULL, &seekable, &start, &stop);
+
+  /* try harder to query upstream size if we didn't get it the first time */
+  if (seekable && stop == -1) {
+    GstFormat fmt = GST_FORMAT_BYTES;
+
+    GST_DEBUG_OBJECT (demux, "doing duration query to fix up unset stop");
+    gst_pad_query_peer_duration (demux->sinkpad, &fmt, &stop);
+  }
+
+  /* if upstream doesn't know the size, it's likely that it's not seekable in
+   * practice even if it technically may be seekable */
+  if (seekable && (start != 0 || stop <= start)) {
+    GST_DEBUG_OBJECT (demux, "seekable but unknown start/stop -> disable");
+    seekable = FALSE;
+  }
+
+done:
+  gst_query_unref (query);
+
+  GST_DEBUG_OBJECT (demux, "seekable: %d (%" G_GUINT64_FORMAT " - %"
+      G_GUINT64_FORMAT ")", seekable, start, stop);
+  demux->upstream_seekable = seekable;
+  demux->upstream_size = seekable ? stop : -1;
+}
+
 /* FIXME, unverified after edit list updates */
 static GstFlowReturn
 gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
@@ -4003,6 +4048,8 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
         const guint8 *data;
         guint32 fourcc;
         guint64 size;
+
+        gst_qtdemux_check_seekability (demux);
 
         data = gst_adapter_peek (demux->adapter, demux->neededbytes);
 
@@ -4040,7 +4087,15 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
             target = old + size;
 
             /* try to jump over the atom with a seek */
-            res = qtdemux_seek_offset (demux, target);
+            /* only bother if it seems worth doing so,
+             * and avoids possible upstream/server problems */
+            if (demux->upstream_seekable &&
+                demux->upstream_size > 4 * (1 << 20)) {
+              res = qtdemux_seek_offset (demux, target);
+            } else {
+              GST_DEBUG_OBJECT (demux, "skipping seek");
+              res = FALSE;
+            }
 
             if (res) {
               GST_DEBUG_OBJECT (demux, "seek success");
@@ -4058,7 +4113,7 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
             } else {
               /* seek failed, need to buffer */
               demux->offset = old;
-              GST_DEBUG_OBJECT (demux, "seek failed");
+              GST_DEBUG_OBJECT (demux, "seek failed/skipped");
               /* there may be multiple mdat (or alike) buffers */
               /* sanity check */
               if (demux->mdatbuffer)

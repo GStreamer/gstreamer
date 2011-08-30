@@ -109,6 +109,9 @@ struct _GstQTDemux {
 
   gint64 requested_seek_time;
   guint64 seek_offset;
+
+  gboolean upstream_seekable;
+  gboolean upstream_size;
 };
 
 struct _GstQTDemuxClass {
