@@ -4153,6 +4153,7 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
            * put preceding buffered data ahead of current moov data.
            * This should also handle evil mdat, moov, mdat cases and alike */
           gst_adapter_clear (demux->adapter);
+          gst_adapter_push (demux->adapter, demux->mdatbuffer);
           demux->mdatbuffer = NULL;
           demux->offset = demux->mdatoffset;
           demux->neededbytes = next_entry_size (demux);
