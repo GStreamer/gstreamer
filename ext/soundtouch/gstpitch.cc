@@ -55,6 +55,7 @@ struct _GstPitchPrivate
 enum
 {
   ARG_0,
+  ARG_OUT_RATE,
   ARG_RATE,
   ARG_TEMPO,
   ARG_PITCH
@@ -147,6 +148,11 @@ gst_pitch_class_init (GstPitchClass * klass)
           "Audio stream rate", 0.1, 10.0, 1.0,
           (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS)));
 
+  g_object_class_install_property (gobject_class, ARG_OUT_RATE,
+      g_param_spec_float ("output-rate", "Output Rate",
+          "Output rate on downstream segment events", 0.1, 10.0, 1.0,
+          (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS)));
+
   g_type_class_add_private (gobject_class, sizeof (GstPitchPrivate));
 }
 
@@ -186,12 +192,14 @@ gst_pitch_init (GstPitch * pitch, GstPitchClass * pitch_class)
 
   pitch->tempo = 1.0;
   pitch->rate = 1.0;
+  pitch->out_seg_rate = 1.0;
+  pitch->seg_arate = 1.0;
   pitch->pitch = 1.0;
   pitch->next_buffer_time = 0;
   pitch->next_buffer_offset = 0;
 
   pitch->priv->st->setRate (pitch->rate);
-  pitch->priv->st->setTempo (pitch->tempo);
+  pitch->priv->st->setTempo (pitch->tempo * pitch->seg_arate);
   pitch->priv->st->setPitch (pitch->pitch);
 
   pitch->priv->stream_time_ratio = 1.0;
@@ -232,18 +240,22 @@ gst_pitch_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case ARG_TEMPO:
       pitch->tempo = g_value_get_float (value);
-      pitch->priv->stream_time_ratio = pitch->tempo * pitch->rate;
-      pitch->priv->st->setTempo (pitch->tempo);
+      pitch->priv->stream_time_ratio = pitch->tempo * pitch->rate * pitch->seg_arate;
+      pitch->priv->st->setTempo (pitch->tempo * pitch->seg_arate);
       GST_OBJECT_UNLOCK (pitch);
       gst_pitch_update_duration (pitch);
       break;
     case ARG_RATE:
       pitch->rate = g_value_get_float (value);
-      pitch->priv->stream_time_ratio = pitch->tempo * pitch->rate;
+      pitch->priv->stream_time_ratio = pitch->tempo * pitch->rate * pitch->seg_arate;
       pitch->priv->st->setRate (pitch->rate);
       GST_OBJECT_UNLOCK (pitch);
       gst_pitch_update_duration (pitch);
       break;
+    case ARG_OUT_RATE:
+      /* Has no effect until the next input segment */
+      pitch->out_seg_rate = g_value_get_float (value);
+      GST_OBJECT_UNLOCK (pitch);
     case ARG_PITCH:
       pitch->pitch = g_value_get_float (value);
       pitch->priv->st->setPitch (pitch->pitch);
@@ -269,6 +281,9 @@ gst_pitch_get_property (GObject * object, guint prop_id,
       break;
     case ARG_RATE:
       g_value_set_float (value, pitch->rate);
+      break;
+    case ARG_OUT_RATE:
+      g_value_set_float (value, pitch->out_seg_rate);
       break;
     case ARG_PITCH:
       g_value_set_float (value, pitch->pitch);
@@ -695,16 +710,17 @@ gst_pitch_process_segment (GstPitch * pitch, GstEvent ** event)
   gint64 start_value, stop_value, base;
   gint64 next_offset = 0, next_time = 0;
   gboolean update = FALSE;
-  gdouble rate;
+  gdouble rate, out_seg_rate, arate, our_arate;
   gfloat stream_time_ratio;
 
   g_return_val_if_fail (event, FALSE);
 
   GST_OBJECT_LOCK (pitch);
   stream_time_ratio = pitch->priv->stream_time_ratio;
+  out_seg_rate = pitch->out_seg_rate;
   GST_OBJECT_UNLOCK (pitch);
 
-  gst_event_parse_new_segment (*event, &update, &rate, &format, &start_value,
+  gst_event_parse_new_segment_full (*event, &update, &rate, &arate, &format, &start_value,
       &stop_value, &base);
 
   if (format != GST_FORMAT_TIME && format != GST_FORMAT_DEFAULT) {
@@ -713,20 +729,35 @@ gst_pitch_process_segment (GstPitch * pitch, GstEvent ** event)
         "open ended NEWSEGMENT in TIME format.");
     gst_event_unref (*event);
     *event =
-        gst_event_new_new_segment (update, rate, GST_FORMAT_TIME, 0, -1, 0);
+        gst_event_new_new_segment_full (update, rate, arate, GST_FORMAT_TIME, 0, -1, 0);
     start_value = 0;
     stop_value = -1;
     base = 0;
   }
 
+  /* Figure out how much of the incoming 'rate' we'll apply ourselves */
+  our_arate = rate / out_seg_rate;
+  /* update the output rate variables */
+  rate = out_seg_rate;
+  arate *= our_arate;
+
   GST_LOG_OBJECT (pitch->sinkpad,
       "segment %" G_GINT64_FORMAT " - %" G_GINT64_FORMAT " (%d)", start_value,
       stop_value, format);
+
+  stream_time_ratio = pitch->tempo * pitch->rate * pitch->seg_arate;
 
   if (stream_time_ratio == 0) {
     GST_LOG_OBJECT (pitch->sinkpad, "stream_time_ratio is zero");
     return FALSE;
   }
+
+  /* Update the playback rate */
+  GST_OBJECT_LOCK (pitch);
+  pitch->seg_arate = our_arate;
+  pitch->priv->stream_time_ratio = stream_time_ratio;
+  pitch->priv->st->setTempo (pitch->tempo * pitch->seg_arate);
+  GST_OBJECT_UNLOCK (pitch);
 
   start_value = (gint64) (start_value / stream_time_ratio);
   if (stop_value != -1)
@@ -752,8 +783,8 @@ gst_pitch_process_segment (GstPitch * pitch, GstEvent ** event)
   pitch->next_buffer_offset = next_offset;
 
   gst_event_unref (*event);
-  *event = gst_event_new_new_segment (update, rate, format, start_value,
-      stop_value, base);
+  *event = gst_event_new_new_segment_full (update, rate, arate, format,
+       start_value, stop_value, base);
 
   return TRUE;
 }
@@ -772,6 +803,8 @@ gst_pitch_sink_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_FLUSH_STOP:
       gst_pitch_flush_buffer (pitch, FALSE);
       pitch->priv->st->clear ();
+      pitch->next_buffer_offset = 0;
+      pitch->next_buffer_time = 0;
       pitch->min_latency = pitch->max_latency = 0;
       break;
     case GST_EVENT_EOS:
