@@ -567,6 +567,7 @@ rtp_session_init (RTPSession * sess)
       DEFAULT_RTCP_IMMEDIATE_FEEDBACK_THRESHOLD;
 
   sess->rtcp_pli_requests = g_array_new (FALSE, FALSE, sizeof (guint32));
+  sess->last_keyframe_request = GST_CLOCK_TIME_NONE;
 
   GST_DEBUG ("%p: session using SSRC: %08x", sess, sess->source->ssrc);
 }
