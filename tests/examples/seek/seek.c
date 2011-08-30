@@ -164,6 +164,16 @@ gst_element_factory_make_or_warn (const gchar * type, const gchar * name)
 {
   GstElement *element = gst_element_factory_make (type, name);
 
+#ifndef GST_DISABLE_PARSE
+  if (!element) {
+    /* Try parsing it as a pipeline description */
+    element = gst_parse_bin_from_description (type, TRUE, NULL);
+    if (element) {
+      gst_element_set_name (element, name);
+    }
+  }
+#endif
+
   if (!element) {
     g_warning ("Failed to create element %s of type %s", name, type);
   }
