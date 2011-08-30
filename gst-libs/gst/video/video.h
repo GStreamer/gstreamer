@@ -611,6 +611,14 @@ gboolean    gst_video_frame_copy          (GstVideoFrame *dest, const GstVideoFr
 #define GST_VIDEO_SIZE_RANGE "(int) [ 1, max ]"
 #define GST_VIDEO_FPS_RANGE "(fraction) [ 0, max ]"
 
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+# define GST_VIDEO_NE(s) G_STRINGIFY(s)"_LE"
+# define GST_VIDEO_OE(s) G_STRINGIFY(s)"_BE"
+#else
+# define GST_VIDEO_NE(s) G_STRINGIFY(s)"_BE"
+# define GST_VIDEO_OE(s) G_STRINGIFY(s)"_LE"
+#endif
+
 #define GST_VIDEO_FORMATS_ALL "{ I420, YV12, YUY2, UYVY, AYUV, RGBx, "  \
     "BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, "  \
     "YVYU, Y444, v210, v216, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, " \
