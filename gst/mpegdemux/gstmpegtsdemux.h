@@ -121,7 +121,8 @@ struct _GstMpegTSPAT  {
 typedef enum _MpegTsStreamFlags {
   MPEGTS_STREAM_FLAG_STREAM_TYPE_UNKNOWN = 0x01,
   MPEGTS_STREAM_FLAG_PMT_VALID = 0x02,
-  MPEGTS_STREAM_FLAG_IS_VIDEO  = 0x04
+  MPEGTS_STREAM_FLAG_IS_VIDEO  = 0x04,
+  MPEGTS_STREAM_FLAG_IS_AUDIO  = 0x08
 } MpegTsStreamFlags;
 
 /* Information associated to a single MPEG stream. */

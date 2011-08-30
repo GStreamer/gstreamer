@@ -88,6 +88,10 @@ enum
 /* latency in mseconds */
 #define TS_LATENCY 700
 
+/* threshold at which we deem PTS difference to be a discontinuity */
+#define DISCONT_THRESHOLD_AV (GST_SECOND * 2)   /* 2 seconds */
+#define DISCONT_THRESHOLD_OTHER (GST_SECOND * 60 * 10)  /* 10 minutes */
+
 enum
 {
   PROP_0,
@@ -534,6 +538,20 @@ gst_mpegts_stream_is_video (GstMpegTSStream * stream)
       return TRUE;
     case ST_VIDEO_DIRAC:
       return gst_mpegts_is_dirac_stream (stream);
+  }
+
+  return FALSE;
+}
+
+static FORCE_INLINE gboolean
+gst_mpegts_stream_is_audio (GstMpegTSStream * stream)
+{
+  switch (stream->stream_type) {
+    case ST_AUDIO_MPEG1:
+    case ST_AUDIO_MPEG2:
+    case ST_AUDIO_AAC_ADTS:
+    case ST_AUDIO_AAC_LOAS:
+      return TRUE;
   }
 
   return FALSE;
@@ -1040,16 +1058,21 @@ gst_mpegts_demux_data_cb (GstPESFilter * filter, gboolean first,
   demux = stream->demux;
   srcpad = stream->pad;
 
-  GST_DEBUG_OBJECT (demux, "got data on PID 0x%04x", stream->PID);
+  GST_DEBUG_OBJECT (demux, "got data on PID 0x%04x (flags %x)", stream->PID,
+      stream->flags);
 
   if (first && filter->pts != -1) {
+    gint64 discont_threshold =
+        ((stream->flags & (MPEGTS_STREAM_FLAG_IS_AUDIO |
+                MPEGTS_STREAM_FLAG_IS_VIDEO))) ? DISCONT_THRESHOLD_AV :
+        DISCONT_THRESHOLD_OTHER;
     pts = filter->pts;
     time = MPEGTIME_TO_GSTTIME (pts) + stream->base_time;
 
     if ((stream->last_time > 0 && stream->last_time < time &&
-            time - stream->last_time > GST_SECOND * 60 * 10)
+            time - stream->last_time > discont_threshold)
         || (stream->last_time > time
-            && stream->last_time - time > GST_SECOND * 60 * 10)) {
+            && stream->last_time - time > discont_threshold)) {
       /* check first to see if we're in middle of detecting a discont in PCR.
        * if we are we're not sure what timestamp the buffer should have, best
        * to drop. */
@@ -1065,8 +1088,7 @@ gst_mpegts_demux_data_cb (GstPESFilter * filter, gboolean first,
           stream->last_time - time > MPEGTIME_TO_GSTTIME (G_MAXUINT32)) {
         /* wrap around occurred */
         if (stream->base_time + MPEGTIME_TO_GSTTIME ((guint64) (1) << 33) +
-            MPEGTIME_TO_GSTTIME (pts) >
-            stream->last_time + GST_SECOND * 60 * 10) {
+            MPEGTIME_TO_GSTTIME (pts) > stream->last_time + discont_threshold) {
           GST_DEBUG_OBJECT (demux,
               "looks like we have a corrupt packet because its pts is a lot lower than"
               " the previous pts but not a wraparound");
@@ -1100,7 +1122,7 @@ gst_mpegts_demux_data_cb (GstPESFilter * filter, gboolean first,
           stream->base_time > 0) {
         /* had a previous wrap around */
         if (time - MPEGTIME_TO_GSTTIME ((guint64) (1) << 33) +
-            GST_SECOND * 60 * 10 < stream->last_time) {
+            discont_threshold < stream->last_time) {
           GST_DEBUG_OBJECT (demux,
               "looks like we have a corrupt packet because its pts is a lot higher than"
               " the previous pts but not because of a wraparound or pcr discont");
@@ -1202,7 +1224,8 @@ gst_mpegts_demux_data_cb (GstPESFilter * filter, gboolean first,
     gst_mpegts_demux_send_tags_for_stream (demux, stream);
   }
 
-  GST_DEBUG_OBJECT (srcpad, "pushing buffer");
+  GST_DEBUG_OBJECT (srcpad, "pushing buffer ts %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)));
   gst_buffer_set_caps (buffer, GST_PAD_CAPS (srcpad));
   if (stream->discont) {
     GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
@@ -1479,6 +1502,9 @@ gst_mpegts_stream_parse_pmt (GstMpegTSStream * stream,
         /* Recognise video streams based on stream_type */
         if (gst_mpegts_stream_is_video (ES_stream))
           ES_stream->flags |= MPEGTS_STREAM_FLAG_IS_VIDEO;
+        /* likewise for audio */
+        if (gst_mpegts_stream_is_audio (ES_stream))
+          ES_stream->flags |= MPEGTS_STREAM_FLAG_IS_AUDIO;
 
         /* set adaptor */
         GST_LOG ("Initializing PES filter for PID %u", ES_stream->PID);
