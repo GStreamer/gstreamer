@@ -1665,6 +1665,14 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw)
   } else {
     /* only try fallback if no specific sink was chosen */
     if (chain->sink == NULL) {
+      GST_DEBUG_OBJECT (playsink,
+          "trying pitch ! audioconvert ! autoaudiosink");
+      elem =
+          gst_parse_bin_from_description
+          ("pitch ! audioconvert ! autoaudiosink", TRUE, NULL);
+      chain->sink = try_element (playsink, elem, TRUE);
+    }
+    if (chain->sink == NULL) {
       GST_DEBUG_OBJECT (playsink, "trying autoaudiosink");
       elem = gst_element_factory_make ("autoaudiosink", "audiosink");
       chain->sink = try_element (playsink, elem, TRUE);
