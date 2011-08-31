@@ -102,6 +102,7 @@ static void gst_hls_demux_loop (GstHLSDemux * demux);
 static void gst_hls_demux_stop (GstHLSDemux * demux);
 static void gst_hls_demux_stop_fetcher_locked (GstHLSDemux * demux,
     gboolean cancelled);
+static void gst_hls_demux_stop_update (GstHLSDemux * demux);
 static gboolean gst_hls_demux_start_update (GstHLSDemux * demux);
 static gboolean gst_hls_demux_cache_fragments (GstHLSDemux * demux);
 static gboolean gst_hls_demux_schedule (GstHLSDemux * demux);
@@ -379,9 +380,7 @@ gst_hls_demux_src_event (GstPad * pad, GstEvent * event)
       g_mutex_lock (demux->fetcher_lock);
       gst_hls_demux_stop_fetcher_locked (demux, TRUE);
       g_mutex_unlock (demux->fetcher_lock);
-      g_mutex_lock (demux->thread_lock);
-      g_cond_signal (demux->thread_cond);
-      g_mutex_unlock (demux->thread_lock);
+      gst_hls_demux_stop_update (demux);
       gst_task_pause (demux->task);
 
       /* wait for streaming to finish */
@@ -658,9 +657,7 @@ gst_hls_demux_stop (GstHLSDemux * demux)
   g_mutex_unlock (demux->fetcher_lock);
   if (GST_TASK_STATE (demux->task) != GST_TASK_STOPPED)
     gst_task_stop (demux->task);
-  g_mutex_lock (demux->thread_lock);
-  g_cond_signal (demux->thread_cond);
-  g_mutex_unlock (demux->thread_lock);
+  gst_hls_demux_stop_update (demux);
 }
 
 static void
@@ -897,6 +894,7 @@ gst_hls_demux_update_thread (GstHLSDemux * demux)
    * switch to a different bitrate */
 
   g_mutex_lock (demux->thread_lock);
+  GST_DEBUG_OBJECT (demux, "Started updates thread");
   while (TRUE) {
     /* block until the next scheduled update or the signal to quit this thread */
     if (g_cond_timed_wait (demux->thread_cond, demux->thread_lock,
@@ -939,8 +937,24 @@ gst_hls_demux_update_thread (GstHLSDemux * demux)
 
 quit:
   {
+    GST_DEBUG_OBJECT (demux, "Stopped updates thread");
+    demux->updates_thread = NULL;
     g_mutex_unlock (demux->thread_lock);
     return TRUE;
+  }
+}
+
+
+static void
+gst_hls_demux_stop_update (GstHLSDemux * demux)
+{
+  GError *error;
+
+  GST_DEBUG_OBJECT (demux, "Stopping updates thread");
+  while (demux->updates_thread) {
+    g_mutex_lock (demux->thread_lock);
+    g_cond_signal (demux->thread_cond);
+    g_mutex_unlock (demux->thread_lock);
   }
 }
 
@@ -950,8 +964,13 @@ gst_hls_demux_start_update (GstHLSDemux * demux)
   GError *error;
 
   /* creates a new thread for the updates */
-  demux->updates_thread = g_thread_create (
-      (GThreadFunc) gst_hls_demux_update_thread, demux, FALSE, &error);
+  g_mutex_lock (demux->thread_lock);
+  if (demux->updates_thread == NULL) {
+    GST_DEBUG_OBJECT (demux, "Starting updates thread");
+    demux->updates_thread = g_thread_create (
+        (GThreadFunc) gst_hls_demux_update_thread, demux, FALSE, &error);
+  }
+  g_mutex_unlock (demux->thread_lock);
   return (error != NULL);
 }
 
