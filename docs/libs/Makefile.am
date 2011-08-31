@@ -66,7 +66,12 @@ CFILE_GLOB=$(DOC_SOURCE_DIR)/*/*.c
 # this is useful ;)
 
 SCANOBJ_DEPS = \
-	$(top_builddir)/gst-libs/gst/codecparsers/libgstcodecparsers-@GST_MAJORMINOR@.la
+	$(top_builddir)/gst-libs/gst/codecparsers/libgstcodecparsers-@GST_MAJORMINOR@.la \
+	$(top_builddir)/gst-libs/gst/basecamerabinsrc/libgstbasecamerabinsrc-@GST_MAJORMINOR@.la \
+	$(top_builddir)/gst-libs/gst/interfaces/libgstphotography-@GST_MAJORMINOR@.la \
+	$(top_builddir)/gst-libs/gst/signalprocessor/libgstsignalprocessor-@GST_MAJORMINOR@.la \
+	$(top_builddir)/gst-libs/gst/video/libgstbasevideo-@GST_MAJORMINOR@.la
+
 
 # Header files to ignore when scanning.
 IGNORE_HFILES =

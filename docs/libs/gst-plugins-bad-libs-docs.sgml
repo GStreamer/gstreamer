@@ -31,6 +31,14 @@
       <xi:include href="xml/gsth264parser.xml" />
       <xi:include href="xml/gstmpegvideoparser.xml" />
     </chapter>
+
+    <chapter id="video">
+      <title>Base video element classes</title>
+      <xi:include href="xml/gstbasevideocodec.xml" />
+      <xi:include href="xml/gstbasevideodecoder.xml" />
+      <xi:include href="xml/gstbasevideoencoder.xml" />
+      <xi:include href="xml/gstbasevideoutils.xml" />
+    </chapter>
   </part>
 
   <part id="gstreamer-libs-hierarchy">
