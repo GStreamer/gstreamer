@@ -1229,14 +1229,20 @@ gst_hls_demux_switch_playlist (GstHLSDemux * demux)
 
   /* if we are on time switch to a higher bitrate */
   if (diff > limit) {
-    gst_hls_demux_change_playlist (demux, TRUE);
+    while (diff > limit) {
+      gst_hls_demux_change_playlist (demux, TRUE);
+      diff -= limit;
+    }
+    demux->accumulated_delay = 0;
   } else if (diff < 0) {
     /* if the client is too slow wait until it has accumulated a certain delay to
      * switch to a lower bitrate */
     demux->accumulated_delay -= diff;
     if (demux->accumulated_delay >= limit) {
-      gst_hls_demux_change_playlist (demux, FALSE);
-    } else if (demux->accumulated_delay < 0) {
+      while (demux->accumulated_delay >= limit) {
+        gst_hls_demux_change_playlist (demux, FALSE);
+        demux->accumulated_delay -= limit;
+      }
       demux->accumulated_delay = 0;
     }
   }
