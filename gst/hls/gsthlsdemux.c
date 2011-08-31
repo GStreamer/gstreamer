@@ -980,6 +980,15 @@ gst_hls_demux_cache_fragments (GstHLSDemux * demux)
       demux->client->sequence -= demux->fragments_cache;
     else
       demux->client->sequence = 0;
+  } else {
+    GstClockTime duration = gst_m3u8_client_get_duration (demux->client);
+
+    GST_DEBUG_OBJECT (demux, "Sending duration message : %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (duration));
+    if (duration != GST_CLOCK_TIME_NONE)
+      gst_element_post_message (GST_ELEMENT (demux),
+          gst_message_new_duration (GST_OBJECT (demux),
+              GST_FORMAT_TIME, duration));
   }
 
   /* Cache the first fragments */
