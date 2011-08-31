@@ -1616,9 +1616,9 @@ setup_caps_delay:
     ppad->event_probe_id =
         gst_pad_add_event_probe (pad, (GCallback) pad_event_cb, ppad);
     chain->pending_pads = g_list_prepend (chain->pending_pads, ppad);
-    CHAIN_MUTEX_UNLOCK (chain);
     g_signal_connect (G_OBJECT (pad), "notify::caps",
         G_CALLBACK (caps_notify_cb), chain);
+    CHAIN_MUTEX_UNLOCK (chain);
     return;
   }
 }
