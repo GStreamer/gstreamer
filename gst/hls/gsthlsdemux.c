@@ -615,8 +615,6 @@ gst_hls_demux_fetcher_chain (GstPad * pad, GstBuffer * buf)
     goto done;
   }
 
-  GST_LOG_OBJECT (demux, "The uri fetcher received a new buffer of size %u",
-      GST_BUFFER_SIZE (buf));
   gst_adapter_push (demux->download, buf);
 
 done:
