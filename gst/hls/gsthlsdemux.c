@@ -294,6 +294,14 @@ gst_hls_demux_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:
       gst_hls_demux_reset (demux, FALSE);
       break;
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
+      /* Start the streaming loop in paused only if we already received
+         the main playlist. It might have been stopped if we were in PAUSED
+         state and we filled our queue with enough cached fragments
+       */
+      if (gst_m3u8_client_get_uri (demux->client)[0] != '\0')
+        gst_hls_demux_start_update (demux);
+      break;
     default:
       break;
   }
@@ -301,6 +309,9 @@ gst_hls_demux_change_state (GstElement * element, GstStateChange transition)
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+      gst_hls_demux_stop_update (demux);
+      break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       demux->cancelled = TRUE;
       gst_hls_demux_stop (demux);
@@ -716,8 +727,9 @@ gst_hls_demux_loop (GstHLSDemux * demux)
     if (!gst_hls_demux_cache_fragments (demux))
       goto cache_error;
 
-    /* we can start now the updates thread */
-    gst_hls_demux_start_update (demux);
+    /* we can start now the updates thread (only if on playing) */
+    if (GST_STATE (demux) == GST_STATE_PLAYING)
+      gst_hls_demux_start_update (demux);
     GST_INFO_OBJECT (demux, "First fragments cached successfully");
   }
 
@@ -725,7 +737,7 @@ gst_hls_demux_loop (GstHLSDemux * demux)
     if (demux->end_of_playlist)
       goto end_of_playlist;
 
-    goto empty_queue;
+    goto pause_task;
   }
 
   buf = g_queue_pop_head (demux->queue);
@@ -783,7 +795,7 @@ error:
     return;
   }
 
-empty_queue:
+pause_task:
   {
     gst_task_pause (demux->task);
     return;
@@ -925,14 +937,15 @@ gst_hls_demux_update_thread (GstHLSDemux * demux)
     }
 
     /* fetch the next fragment */
-    if (!gst_hls_demux_get_next_fragment (demux, TRUE)) {
-      if (!demux->end_of_playlist && !demux->cancelled)
-        GST_ERROR_OBJECT (demux, "Could not fetch the next fragment");
-      goto quit;
+    if (g_queue_is_empty (demux->queue)) {
+      if (!gst_hls_demux_get_next_fragment (demux, TRUE)) {
+        if (!demux->end_of_playlist && !demux->cancelled)
+          GST_ERROR_OBJECT (demux, "Could not fetch the next fragment");
+        goto quit;
+      }
+      /* try to switch to another bitrate if needed */
+      gst_hls_demux_switch_playlist (demux);
     }
-
-    /* try to switch to another bitrate if needed */
-    gst_hls_demux_switch_playlist (demux);
   }
 
 quit:
