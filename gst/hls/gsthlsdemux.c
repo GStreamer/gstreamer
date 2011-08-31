@@ -959,8 +959,6 @@ quit:
 static void
 gst_hls_demux_stop_update (GstHLSDemux * demux)
 {
-  GError *error;
-
   GST_DEBUG_OBJECT (demux, "Stopping updates thread");
   while (demux->updates_thread) {
     g_mutex_lock (demux->thread_lock);
