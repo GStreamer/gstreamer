@@ -454,6 +454,7 @@ mpegpsmux_collected (GstCollectPads * pads, MpegPsMux * mux)
 
   GstFlowReturn ret = GST_FLOW_OK;
   MpegPsPadData *best = NULL;
+  gboolean keyunit;
 
   GST_DEBUG_OBJECT (mux, "Pads collected");
 
@@ -496,9 +497,12 @@ mpegpsmux_collected (GstCollectPads * pads, MpegPsMux * mux)
           G_GINT64_FORMAT, GST_TIME_ARGS (best->cur_ts), pts);
     }
 
+    keyunit = !GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
+
     /* give the buffer to libpsmux for processing */
     psmux_stream_add_data (best->stream, GST_BUFFER_DATA (buf),
-        GST_BUFFER_SIZE (buf), buf, pts, -1);
+        GST_BUFFER_SIZE (buf), buf, pts, -1, keyunit);
+
     best->queued_buf = NULL;
 
     /* write the data from libpsmux to stream */
