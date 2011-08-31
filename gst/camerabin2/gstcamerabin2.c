@@ -1132,7 +1132,7 @@ gst_camera_bin_link_encodebin (GstCameraBin2 * camera, GstElement * encodebin,
     return GST_PAD_LINK_REFUSED;
   }
 
-  ret = gst_pad_link (srcpad, sinkpad);
+  ret = gst_pad_link_full (srcpad, sinkpad, GST_PAD_LINK_CHECK_CAPS);
   gst_object_unref (sinkpad);
   gst_object_unref (srcpad);
 
