@@ -1424,7 +1424,8 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
   g_object_set (camera->video_encodebin, "flags", encbin_flags, NULL);
 
   g_object_set (camera->viewfinderbin, "disable-converters",
-      camera->flags & GST_CAM_FLAG_NO_VIEWFINDER_CONVERSION, NULL);
+      camera->flags & GST_CAM_FLAG_NO_VIEWFINDER_CONVERSION ? TRUE : FALSE,
+      NULL);
 
   if (camera->video_profile_switch) {
     GST_DEBUG_OBJECT (camera, "Switching encodebin's profile");
