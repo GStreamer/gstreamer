@@ -664,8 +664,7 @@ gst_hls_demux_stop (GstHLSDemux * demux)
   g_mutex_lock (demux->fetcher_lock);
   gst_hls_demux_stop_fetcher_locked (demux, TRUE);
   g_mutex_unlock (demux->fetcher_lock);
-  if (GST_TASK_STATE (demux->task) != GST_TASK_STOPPED)
-    gst_task_stop (demux->task);
+  gst_task_join (demux->task);
   gst_hls_demux_stop_update (demux);
 }
 
