@@ -42,7 +42,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("application/x-rtp, "
         "media = (string) \"video\", "
         "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
-        "clock-rate = (int) 90000, " "encoding-name = (string) \"MP2T-ES\"")
+        "clock-rate = (int) 90000, " "encoding-name = (string) \"MP2T\"")
     );
 
 static gboolean gst_rtp_mp2t_pay_setcaps (GstBaseRTPPayload * payload,
@@ -108,7 +108,7 @@ gst_rtp_mp2t_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
 {
   gboolean res;
 
-  gst_basertppayload_set_options (payload, "video", TRUE, "MP2T-ES", 90000);
+  gst_basertppayload_set_options (payload, "video", TRUE, "MP2T", 90000);
   res = gst_basertppayload_set_outcaps (payload, NULL);
 
   return res;
