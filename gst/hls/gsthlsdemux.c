@@ -156,10 +156,7 @@ gst_hls_demux_dispose (GObject * obj)
   g_cond_free (demux->thread_cond);
   g_mutex_free (demux->thread_lock);
 
-  if (GST_TASK_STATE (demux->task) != GST_TASK_STOPPED) {
-    gst_task_stop (demux->task);
-    gst_task_join (demux->task);
-  }
+  gst_task_join (demux->task);
   gst_object_unref (demux->task);
   g_static_rec_mutex_free (&demux->task_lock);
 
