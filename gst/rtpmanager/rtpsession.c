@@ -2228,6 +2228,23 @@ rtp_session_process_fir (RTPSession * sess, guint32 sender_ssrc,
   src = g_hash_table_lookup (sess->ssrcs[sess->mask_idx],
       GINT_TO_POINTER (sender_ssrc));
 
+  /* Hack because Google fails to set the sender_ssrc correctly */
+  if (!src && sender_ssrc == 1) {
+    GHashTableIter iter;
+
+    if (sess->stats.sender_sources >
+        RTP_SOURCE_IS_SENDER (sess->source) ? 2 : 1)
+      return;
+
+    g_hash_table_iter_init (&iter, sess->ssrcs[sess->mask_idx]);
+
+    while (g_hash_table_iter_next (&iter, NULL, (gpointer *) & src)) {
+      if (src != sess->source && rtp_source_is_sender (src))
+        break;
+      src = NULL;
+    }
+  }
+
   if (!src)
     return;
 
