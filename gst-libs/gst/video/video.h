@@ -207,9 +207,10 @@ typedef void (*GstVideoFormatPack)           (GstVideoFormatInfo *info, const gp
  * @format: #GstVideoFormat
  * @name: string representation of the format
  * @flags: #GstVideoFormatFlags
- * @bits: The number of bits used to pack data items. This can be 8 when the
- *    pixels are stored in bytes. for values > 8 multiple bytes should be read
- *    according to the endianness flag before applying the shift and mask.
+ * @bits: The number of bits used to pack data items. This can be less than 8
+ *    when multiple pixels are stored in a byte. for values > 8 multiple bytes
+ *    should be read according to the endianness flag before applying the shift
+ *    and mask.
  * @n_components: the number of components in the video format.
  * @shift: the number of bits to shift away to get the component data
  * @depth: the depth in bits for each component
