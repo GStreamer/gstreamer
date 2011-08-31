@@ -1376,6 +1376,11 @@ theora_enc_encode_and_push (GstTheoraEnc * enc, ogg_packet op,
       goto multipass_read_failed;
     }
   }
+#ifdef TH_ENCCTL_SET_DUPLICATE_FLAG
+  if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_GAP)) {
+    th_encode_ctl (enc->encoder, TH_ENCCTL_SET_DUPLICATE_FLAG, NULL, 0);
+  }
+#endif
 
   res = th_encode_ycbcr_in (enc->encoder, ycbcr);
   /* none of the failure cases can happen here */
