@@ -162,6 +162,8 @@ struct _GstDeinterlace
   /* QoS stuff */
   gdouble proportion;
   GstClockTime earliest_time;
+  gint64 processed;
+  gint64 dropped;
 
   GstCaps *request_caps;
 

@@ -1223,6 +1223,8 @@ static void
 gst_deinterlace_reset_qos (GstDeinterlace * self)
 {
   gst_deinterlace_update_qos (self, 0.5, 0, GST_CLOCK_TIME_NONE);
+  self->processed = 0;
+  self->dropped = 0;
 }
 
 static void
@@ -1238,15 +1240,16 @@ gst_deinterlace_read_qos (GstDeinterlace * self, gdouble * proportion,
 /* Perform qos calculations before processing the next frame. Returns TRUE if
  * the frame should be processed, FALSE if the frame can be dropped entirely */
 static gboolean
-gst_deinterlace_do_qos (GstDeinterlace * self, GstClockTime timestamp)
+gst_deinterlace_do_qos (GstDeinterlace * self, const GstBuffer * buffer)
 {
   GstClockTime qostime, earliest_time;
+  GstClockTime timestamp = GST_BUFFER_TIMESTAMP (buffer);
   gdouble proportion;
 
   /* no timestamp, can't do QoS => process frame */
   if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (timestamp))) {
     GST_LOG_OBJECT (self, "invalid timestamp, can't do QoS, process frame");
-    return TRUE;
+    goto keep_frame;
   }
 
   /* get latest QoS observation values */
@@ -1255,7 +1258,7 @@ gst_deinterlace_do_qos (GstDeinterlace * self, GstClockTime timestamp)
   /* skip qos if we have no observation (yet) => process frame */
   if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (earliest_time))) {
     GST_LOG_OBJECT (self, "no observation yet, process frame");
-    return TRUE;
+    goto keep_frame;
   }
 
   /* qos is done on running time */
@@ -1267,11 +1270,27 @@ gst_deinterlace_do_qos (GstDeinterlace * self, GstClockTime timestamp)
       GST_TIME_FORMAT, GST_TIME_ARGS (qostime), GST_TIME_ARGS (earliest_time));
 
   if (qostime != GST_CLOCK_TIME_NONE && qostime <= earliest_time) {
+    GstClockTime stream_time, jitter;
+    GstMessage *qos_msg;
+
     GST_DEBUG_OBJECT (self, "we are late, drop frame");
+    self->dropped++;
+    stream_time =
+        gst_segment_to_stream_time (&self->segment, GST_FORMAT_TIME, timestamp);
+    jitter = GST_CLOCK_DIFF (qostime, earliest_time);
+    qos_msg =
+        gst_message_new_qos (GST_OBJECT (self), FALSE, qostime, stream_time,
+        timestamp, GST_BUFFER_DURATION (buffer));
+    gst_message_set_qos_values (qos_msg, jitter, proportion, 1000000);
+    gst_message_set_qos_stats (qos_msg, GST_FORMAT_BUFFERS,
+        self->processed, self->dropped);
+    gst_element_post_message (GST_ELEMENT (self), qos_msg);
     return FALSE;
   }
 
   GST_LOG_OBJECT (self, "process frame");
+keep_frame:
+  self->processed++;
   return TRUE;
 }
 
@@ -1729,7 +1748,7 @@ restart:
     }
 
     /* Check if we need to drop the frame because of QoS */
-    if (!gst_deinterlace_do_qos (self, GST_BUFFER_TIMESTAMP (buf))) {
+    if (!gst_deinterlace_do_qos (self, buf)) {
       self->cur_field_idx--;
       gst_buffer_unref (gst_deinterlace_pop_history (self));
       gst_buffer_unref (outbuf);
@@ -1869,7 +1888,7 @@ restart:
     }
 
     /* Check if we need to drop the frame because of QoS */
-    if (!gst_deinterlace_do_qos (self, GST_BUFFER_TIMESTAMP (buf))) {
+    if (!gst_deinterlace_do_qos (self, buf)) {
       self->cur_field_idx--;
       gst_buffer_unref (gst_deinterlace_pop_history (self));
       gst_buffer_unref (outbuf);
