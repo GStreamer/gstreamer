@@ -774,6 +774,178 @@ GST_START_TEST (test_selected_caps)
 
 GST_END_TEST;
 
+
+/* Caps negotiation tests */
+typedef struct
+{
+  const gchar *caps;
+  gboolean drop_only;
+  /* Result of the videomaxrate caps after transforming */
+  const gchar *expected_sink_caps;
+  const gchar *expected_src_caps;
+} TestInfo;
+
+static TestInfo caps_negotiation_tests[] = {
+  {
+        .caps = "video/x-raw-yuv",
+        .drop_only = FALSE,
+        .expected_sink_caps = "video/x-raw-yuv",
+      .expected_src_caps = "video/x-raw-yuv"},
+  {
+        .caps = "video/x-raw-yuv",
+        .drop_only = TRUE,
+        .expected_sink_caps = "video/x-raw-yuv",
+      .expected_src_caps = "video/x-raw-yuv"},
+  {
+        .caps = "video/x-raw-yuv, framerate=(fraction)[0/1, MAX]",
+        .drop_only = FALSE,
+        .expected_sink_caps = "video/x-raw-yuv, framerate=(fraction)[0/1, MAX]",
+      .expected_src_caps = "video/x-raw-yuv, framerate=(fraction)[0/1, MAX]"},
+  {
+        .caps = "video/x-raw-yuv, framerate=(fraction)[0/1, MAX]",
+        .drop_only = TRUE,
+        .expected_sink_caps = "video/x-raw-yuv, framerate=(fraction)[0/1, MAX]",
+      .expected_src_caps = "video/x-raw-yuv, framerate=(fraction)[0/1, MAX]"},
+  {
+        .caps = "video/x-raw-yuv, framerate=15/1",
+        .drop_only = FALSE,
+        .expected_sink_caps =
+        "video/x-raw-yuv, framerate=(fraction)15/1;"
+        "video/x-raw-yuv, framerate=(fraction)[0/1, MAX]",
+      .expected_src_caps =
+        "video/x-raw-yuv, framerate=(fraction)15/1;"
+        "video/x-raw-yuv, framerate=(fraction)[0/1, MAX]"},
+  {
+        .caps = "video/x-raw-yuv, framerate=15/1",
+        .drop_only = TRUE,
+        .expected_sink_caps =
+        "video/x-raw-yuv, framerate=(fraction)15/1;"
+        "video/x-raw-yuv, framerate=(fraction)[15/1, MAX];"
+        "video/x-raw-yuv, framerate=(fraction)0/1",
+      .expected_src_caps =
+        "video/x-raw-yuv, framerate=(fraction)15/1;"
+        "video/x-raw-yuv, framerate=(fraction)[0/1, 15/1]"},
+  {
+        .caps = "video/x-raw-yuv, framerate=[15/1, 30/1]",
+        .drop_only = FALSE,
+        .expected_sink_caps =
+        "video/x-raw-yuv, framerate=(fraction)[15/1, 30/1];"
+        "video/x-raw-yuv, framerate=(fraction)[0/1, MAX];",
+      .expected_src_caps =
+        "video/x-raw-yuv, framerate=(fraction)[15/1, 30/1];"
+        "video/x-raw-yuv, framerate=(fraction)[0/1, MAX];"},
+  {
+        .caps = "video/x-raw-yuv, framerate=[15/1, 30/1]",
+        .drop_only = TRUE,
+        .expected_sink_caps =
+        "video/x-raw-yuv, framerate=(fraction)[15/1, 30/1];"
+        "video/x-raw-yuv, framerate=(fraction)[15/1, MAX];"
+        "video/x-raw-yuv, framerate=(fraction)0/1",
+      .expected_src_caps =
+        "video/x-raw-yuv, framerate=(fraction)[15/1, 30/1];"
+        "video/x-raw-yuv, framerate=(fraction)[0/1, 30/1]"},
+  {
+        .caps = "video/x-raw-yuv, framerate={15/1, 30/1}",
+        .drop_only = FALSE,
+        .expected_sink_caps =
+        "video/x-raw-yuv, framerate=(fraction){15/1, 30/1};"
+        "video/x-raw-yuv, framerate=(fraction)[0/1, MAX];",
+      .expected_src_caps =
+        "video/x-raw-yuv, framerate=(fraction){15/1, 30/1};"
+        "video/x-raw-yuv, framerate=(fraction)[0/1, MAX]"},
+  {
+        .caps = "video/x-raw-yuv, framerate={15/1, 30/1}",
+        .drop_only = TRUE,
+        .expected_sink_caps =
+        "video/x-raw-yuv, framerate=(fraction){15/1, 30/1};"
+        "video/x-raw-yuv, framerate=(fraction)[15/1, MAX];"
+        "video/x-raw-yuv, framerate=(fraction)0/1",
+      .expected_src_caps =
+        "video/x-raw-yuv, framerate=(fraction){15/1, 30/1};"
+        "video/x-raw-yuv, framerate=(fraction)[0/1, 30/1];"},
+};
+
+static GstCaps *
+_getcaps_function (GstPad * pad)
+{
+  GstCaps *caps = g_object_get_data (G_OBJECT (pad), "caps");
+
+  fail_unless (caps != NULL);
+
+  return gst_caps_copy (caps);
+}
+
+static void
+check_caps_identical (GstCaps * a, GstCaps * b)
+{
+  int i;
+
+  if (gst_caps_get_size (a) != gst_caps_get_size (b))
+    goto fail;
+
+  for (i = 0; i < gst_caps_get_size (a); i++) {
+    GstStructure *sa, *sb;
+
+    sa = gst_caps_get_structure (a, i);
+    sb = gst_caps_get_structure (b, i);
+
+    if (!gst_structure_is_equal (sa, sb))
+      goto fail;
+  }
+
+  return;
+
+fail:
+  fail ("caps (%s) is not equal to caps (%s)",
+      gst_caps_to_string (a), gst_caps_to_string (b));
+}
+
+static void
+check_peer_caps (GstPad * pad, const char *expected)
+{
+  GstCaps *caps;
+  GstCaps *expected_caps;
+
+  caps = gst_pad_peer_get_caps (pad);
+  fail_unless (caps != NULL);
+
+  expected_caps = gst_caps_from_string (expected);
+  fail_unless (expected_caps != NULL);
+
+  check_caps_identical (caps, expected_caps);
+
+  gst_caps_unref (caps);
+  gst_caps_unref (expected_caps);
+}
+
+GST_START_TEST (test_caps_negotiation)
+{
+  GstElement *videorate;
+  GstCaps *caps;
+  TestInfo *test = &caps_negotiation_tests[__i__];
+
+  videorate = setup_videorate_full (&srctemplate, &sinktemplate);
+
+  caps = gst_caps_from_string (test->caps);
+  g_object_set_data_full (G_OBJECT (mysrcpad), "caps",
+      gst_caps_ref (caps), (GDestroyNotify) gst_caps_unref);
+  g_object_set_data_full (G_OBJECT (mysinkpad), "caps",
+      gst_caps_ref (caps), (GDestroyNotify) gst_caps_unref);
+  gst_caps_unref (caps);
+
+  g_object_set (videorate, "drop-only", test->drop_only, NULL);
+
+  gst_pad_set_getcaps_function (mysrcpad, _getcaps_function);
+  gst_pad_set_getcaps_function (mysinkpad, _getcaps_function);
+
+  check_peer_caps (mysrcpad, test->expected_sink_caps);
+  check_peer_caps (mysinkpad, test->expected_src_caps);
+
+  gst_object_unref (videorate);
+}
+
+GST_END_TEST;
+
 static Suite *
 videorate_suite (void)
 {
@@ -790,6 +962,8 @@ videorate_suite (void)
   tcase_add_test (tc_chain, test_non_ok_flow);
   tcase_add_test (tc_chain, test_upstream_caps_nego);
   tcase_add_test (tc_chain, test_selected_caps);
+  tcase_add_loop_test (tc_chain, test_caps_negotiation,
+      0, G_N_ELEMENTS (caps_negotiation_tests));
 
   return s;
 }
