@@ -148,6 +148,8 @@ gst_camerabin_create_preview_pipeline (GstElement * element,
     goto error;
   }
 
+  g_object_set (data->appsrc, "emit-signals", FALSE, NULL);
+
   gst_bin_add_many (GST_BIN (data->pipeline), data->appsrc, data->capsfilter,
       data->appsink, csp, csp2, vscale, NULL);
   if (filter)
