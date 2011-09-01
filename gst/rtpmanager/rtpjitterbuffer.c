@@ -635,8 +635,12 @@ rtp_jitter_buffer_insert (RTPJitterBuffer * jbuf, GstBuffer * buf,
 
   rtptime = gst_rtp_buffer_get_timestamp (buf);
   /* rtp time jumps are checked for during skew calculation, but bypassed
-   * in other mode, so mind those here and reset jb if needed */
-  if (jbuf->mode != RTP_JITTER_BUFFER_MODE_SLAVE &&
+   * in other mode, so mind those here and reset jb if needed.
+   * Only reset if valid input time, which is likely for UDP input
+   * where we expect this might happen due to async thread effects
+   * (in seek and state change cycles), but not so much for TCP input */
+  if (GST_CLOCK_TIME_IS_VALID (time) &&
+      jbuf->mode != RTP_JITTER_BUFFER_MODE_SLAVE &&
       jbuf->base_time != -1 && jbuf->last_rtptime != -1) {
     GstClockTime ext_rtptime = jbuf->ext_rtptime;
 
