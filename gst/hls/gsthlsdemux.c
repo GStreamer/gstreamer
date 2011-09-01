@@ -107,10 +107,8 @@ static gboolean gst_hls_demux_start_update (GstHLSDemux * demux);
 static gboolean gst_hls_demux_cache_fragments (GstHLSDemux * demux);
 static gboolean gst_hls_demux_schedule (GstHLSDemux * demux);
 static gboolean gst_hls_demux_switch_playlist (GstHLSDemux * demux);
-static gboolean gst_hls_demux_get_next_fragment (GstHLSDemux * demux,
-    gboolean retry);
-static gboolean gst_hls_demux_update_playlist (GstHLSDemux * demux,
-    gboolean retry);
+static gboolean gst_hls_demux_get_next_fragment (GstHLSDemux * demux);
+static gboolean gst_hls_demux_update_playlist (GstHLSDemux * demux);
 static void gst_hls_demux_reset (GstHLSDemux * demux, gboolean dispose);
 static gboolean gst_hls_demux_set_location (GstHLSDemux * demux,
     const gchar * uri);
@@ -910,7 +908,7 @@ gst_hls_demux_update_thread (GstHLSDemux * demux)
 
     /* update the playlist for live sources */
     if (gst_m3u8_client_is_live (demux->client)) {
-      if (!gst_hls_demux_update_playlist (demux, TRUE)) {
+      if (!gst_hls_demux_update_playlist (demux)) {
         GST_ERROR_OBJECT (demux, "Could not update the playlist");
         goto quit;
       }
@@ -932,7 +930,7 @@ gst_hls_demux_update_thread (GstHLSDemux * demux)
 
     /* fetch the next fragment */
     if (g_queue_is_empty (demux->queue)) {
-      if (!gst_hls_demux_get_next_fragment (demux, TRUE)) {
+      if (!gst_hls_demux_get_next_fragment (demux)) {
         if (!demux->end_of_playlist && !demux->cancelled)
           GST_ERROR_OBJECT (demux, "Could not fetch the next fragment");
         goto quit;
@@ -989,7 +987,7 @@ gst_hls_demux_cache_fragments (GstHLSDemux * demux)
   if (gst_m3u8_client_has_variant_playlist (demux->client)) {
     GstM3U8 *child = demux->client->main->current_variant->data;
     gst_m3u8_client_set_current (demux->client, child);
-    if (!gst_hls_demux_update_playlist (demux, FALSE)) {
+    if (!gst_hls_demux_update_playlist (demux)) {
       GST_ERROR_OBJECT (demux, "Could not fetch the child playlist %s",
           child->uri);
       return FALSE;
@@ -1023,7 +1021,7 @@ gst_hls_demux_cache_fragments (GstHLSDemux * demux)
     g_get_current_time (&demux->next_update);
     g_time_val_add (&demux->next_update,
         demux->client->current->targetduration * 1000000);
-    if (!gst_hls_demux_get_next_fragment (demux, FALSE)) {
+    if (!gst_hls_demux_get_next_fragment (demux)) {
       if (!demux->cancelled)
         GST_ERROR_OBJECT (demux, "Error caching the first fragments");
       return FALSE;
@@ -1117,7 +1115,7 @@ gst_hls_src_buf_to_utf8_playlist (gchar * data, guint size)
 }
 
 static gboolean
-gst_hls_demux_update_playlist (GstHLSDemux * demux, gboolean retry)
+gst_hls_demux_update_playlist (GstHLSDemux * demux)
 {
   const guint8 *data;
   gchar *playlist;
@@ -1158,7 +1156,7 @@ gst_hls_demux_change_playlist (GstHLSDemux * demux, gboolean is_fast)
   demux->client->main->current_variant = list;
 
   gst_m3u8_client_set_current (demux->client, list->data);
-  gst_hls_demux_update_playlist (demux, TRUE);
+  gst_hls_demux_update_playlist (demux);
   GST_INFO_OBJECT (demux, "Client is %s, switching to bitrate %d",
       is_fast ? "fast" : "slow", demux->client->current->bandwidth);
 
@@ -1244,7 +1242,7 @@ gst_hls_demux_switch_playlist (GstHLSDemux * demux)
 }
 
 static gboolean
-gst_hls_demux_get_next_fragment (GstHLSDemux * demux, gboolean retry)
+gst_hls_demux_get_next_fragment (GstHLSDemux * demux)
 {
   GstBuffer *buf;
   guint avail;
