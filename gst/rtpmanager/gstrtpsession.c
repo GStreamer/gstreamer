@@ -1389,7 +1389,6 @@ gst_rtp_session_request_remote_key_unit (GstRtpSession * rtpsession,
     guint32 ssrc, guint payload, gboolean all_headers)
 {
   GstCaps *caps;
-  gboolean requested = FALSE;
 
   caps = gst_rtp_session_get_caps_for_pt (rtpsession, payload);
 
@@ -1401,15 +1400,12 @@ gst_rtp_session_request_remote_key_unit (GstRtpSession * rtpsession,
 
     gst_caps_unref (caps);
 
-    if (pli) {
-      rtp_session_request_key_unit (rtpsession->priv->session, ssrc);
-      rtp_session_request_early_rtcp (rtpsession->priv->session,
-          gst_clock_get_time (rtpsession->priv->sysclock), 200 * GST_MSECOND);
-      requested = TRUE;
-    }
+    if (pli)
+      return rtp_session_request_key_unit (rtpsession->priv->session, ssrc,
+          gst_clock_get_time (rtpsession->priv->sysclock));
   }
 
-  return requested;
+  return FALSE;
 }
 
 static gboolean

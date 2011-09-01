@@ -172,6 +172,8 @@ struct _RTPSource {
   GList         *conflicting_addresses;
 
   GQueue        *retained_feedback;
+
+  gboolean     send_pli;
 };
 
 struct _RTPSourceClass {
