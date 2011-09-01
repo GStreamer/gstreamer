@@ -1246,9 +1246,9 @@ gst_sub_parse_data_format_autodetect_regex_once (GstSubParseRegex regtype)
       }
       break;
     case GST_SUB_PARSE_REGEX_SUBRIP:
-      result = (gpointer) g_regex_new ("^([ 0-9]){0,3}[0-9]\\s*(\x0d)?\x0a"
-          "[ 0-9][0-9]:[ 0-9][0-9]:[ 0-9][0-9][,.][ 0-9]{0,2}[0-9]"
-          " +--> +([ 0-9])?[0-9]:[ 0-9][0-9]:[ 0-9][0-9][,.][ 0-9]{0,2}[0-9]",
+      result = (gpointer) g_regex_new ("^ {0,3}[ 0-9]{1,4}\\s*(\x0d)?\x0a"
+          " ?[0-9]{1,2}: ?[0-9]{1,2}: ?[0-9]{1,2}[,.] {0,2}[0-9]{1,3}"
+          " +--> +[0-9]{1,2}: ?[0-9]{1,2}: ?[0-9]{1,2}[,.] {0,2}[0-9]{1,2}",
           G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, &gerr);
       if (result == NULL) {
         g_warning ("Compilation of subrip regex failed: %s", gerr->message);
