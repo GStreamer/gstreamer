@@ -2184,8 +2184,10 @@ rtp_session_request_local_key_unit (RTPSession * sess, RTPSource * src,
       rtp_source_get_ssrc (src), sess->callbacks.process_rtp,
       sess->callbacks.request_key_unit);
 
+  RTP_SESSION_UNLOCK (sess);
   sess->callbacks.request_key_unit (sess, fir,
       sess->request_key_unit_user_data);
+  RTP_SESSION_LOCK (sess);
 
   return TRUE;
 }
@@ -3301,7 +3303,8 @@ dont_send:
 }
 
 gboolean
-rtp_session_request_key_unit (RTPSession * sess, guint32 ssrc, GstClockTime now)
+rtp_session_request_key_unit (RTPSession * sess, guint32 ssrc, GstClockTime now,
+    gboolean fir, gint count)
 {
   RTPSource *src = g_hash_table_lookup (sess->ssrcs[sess->mask_idx],
       GUINT_TO_POINTER (ssrc));
@@ -3309,7 +3312,16 @@ rtp_session_request_key_unit (RTPSession * sess, guint32 ssrc, GstClockTime now)
   if (!src)
     return FALSE;
 
-  src->send_pli = TRUE;
+  if (fir) {
+    src->send_pli = FALSE;
+    src->send_fir = TRUE;
+
+    if (count == -1 || count != src->last_fir_count)
+      src->current_send_fir_seqnum++;
+    src->last_fir_count = count;
+  } else if (!src->send_fir) {
+    src->send_pli = TRUE;
+  }
 
   rtp_session_request_early_rtcp (sess, now, 200 * GST_MSECOND);
 
@@ -3338,23 +3350,64 @@ rtp_session_on_sending_rtcp (RTPSession * sess, GstBuffer * buffer,
   gboolean ret = FALSE;
   GHashTableIter iter;
   gpointer key, value;
+  gboolean started_fir = FALSE;
+  GstRTCPPacket fir_rtcppacket;
 
   RTP_SESSION_LOCK (sess);
 
   g_hash_table_iter_init (&iter, sess->ssrcs[sess->mask_idx]);
-
   while (g_hash_table_iter_next (&iter, &key, &value)) {
     guint media_ssrc = GPOINTER_TO_UINT (key);
     RTPSource *media_src = value;
-    GstRTCPPacket rtcppacket;
+    guint8 *fci_data;
+
+    if (media_src->send_fir) {
+      if (!started_fir) {
+        if (!gst_rtcp_buffer_add_packet (buffer, GST_RTCP_TYPE_PSFB,
+                &fir_rtcppacket))
+          break;
+        gst_rtcp_packet_fb_set_type (&fir_rtcppacket, GST_RTCP_PSFB_TYPE_FIR);
+        gst_rtcp_packet_fb_set_sender_ssrc (&fir_rtcppacket,
+            rtp_source_get_ssrc (sess->source));
+        gst_rtcp_packet_fb_set_media_ssrc (&fir_rtcppacket, 0);
+
+        if (!gst_rtcp_packet_fb_set_fci_length (&fir_rtcppacket, 2)) {
+          gst_rtcp_packet_remove (&fir_rtcppacket);
+          break;
+        }
+        ret = TRUE;
+        started_fir = TRUE;
+      } else {
+        if (!gst_rtcp_packet_fb_set_fci_length (&fir_rtcppacket,
+                !gst_rtcp_packet_fb_get_fci_length (&fir_rtcppacket) + 2))
+          break;
+      }
+
+      fci_data = gst_rtcp_packet_fb_get_fci (&fir_rtcppacket) -
+          ((gst_rtcp_packet_fb_get_fci_length (&fir_rtcppacket) - 2) * 4);
+
+      GST_WRITE_UINT32_BE (fci_data, media_ssrc);
+      fci_data += 4;
+      fci_data[0] = media_src->current_send_fir_seqnum;
+      fci_data[1] = fci_data[2] = fci_data[3] = 0;
+      media_src->send_fir = FALSE;
+    }
+  }
+
+  g_hash_table_iter_init (&iter, sess->ssrcs[sess->mask_idx]);
+  while (g_hash_table_iter_next (&iter, &key, &value)) {
+    guint media_ssrc = GPOINTER_TO_UINT (key);
+    RTPSource *media_src = value;
+    GstRTCPPacket pli_rtcppacket;
 
     if (media_src->send_pli && !rtp_source_has_retained (media_src,
             has_pli_compare_func, NULL)) {
-      if (gst_rtcp_buffer_add_packet (buffer, GST_RTCP_TYPE_PSFB, &rtcppacket)) {
-        gst_rtcp_packet_fb_set_type (&rtcppacket, GST_RTCP_PSFB_TYPE_PLI);
-        gst_rtcp_packet_fb_set_sender_ssrc (&rtcppacket,
+      if (gst_rtcp_buffer_add_packet (buffer, GST_RTCP_TYPE_PSFB,
+              &pli_rtcppacket)) {
+        gst_rtcp_packet_fb_set_type (&pli_rtcppacket, GST_RTCP_PSFB_TYPE_PLI);
+        gst_rtcp_packet_fb_set_sender_ssrc (&pli_rtcppacket,
             rtp_source_get_ssrc (sess->source));
-        gst_rtcp_packet_fb_set_media_ssrc (&rtcppacket, media_ssrc);
+        gst_rtcp_packet_fb_set_media_ssrc (&pli_rtcppacket, media_ssrc);
         ret = TRUE;
       } else {
         /* Break because the packet is full, will put next request in a
