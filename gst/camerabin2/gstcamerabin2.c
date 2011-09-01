@@ -273,6 +273,8 @@ gst_cam_flags_get_type (void)
     {C_FLAGS (GST_CAM_FLAG_NO_VIEWFINDER_CONVERSION),
           "Do not use viewfinder conversion " "elements",
         "no-viewfinder-conversion"},
+    {C_FLAGS (GST_CAM_FLAG_NO_IMAGE_CONVERSION), "Do not use image conversion "
+          "elements", "no-image-conversion"},
     {0, NULL, NULL}
   };
   static volatile GType id = 0;
@@ -1422,6 +1424,11 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
   if (camera->flags & GST_CAM_FLAG_NO_VIDEO_CONVERSION)
     encbin_flags |= (1 << 1);
   g_object_set (camera->video_encodebin, "flags", encbin_flags, NULL);
+
+  /* image encodebin has only video branch so disable its conversion elements
+   * appropriately */
+  if (camera->flags & GST_CAM_FLAG_NO_IMAGE_CONVERSION)
+    g_object_set (camera->image_encodebin, "flags", (1 << 1), NULL);
 
   g_object_set (camera->viewfinderbin, "disable-converters",
       camera->flags & GST_CAM_FLAG_NO_VIEWFINDER_CONVERSION ? TRUE : FALSE,
