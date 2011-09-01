@@ -909,8 +909,16 @@ gst_hls_demux_update_thread (GstHLSDemux * demux)
     /* update the playlist for live sources */
     if (gst_m3u8_client_is_live (demux->client)) {
       if (!gst_hls_demux_update_playlist (demux)) {
-        GST_ERROR_OBJECT (demux, "Could not update the playlist");
-        goto quit;
+        demux->client->update_failed_count++;
+        if (demux->client->update_failed_count < DEFAULT_FAILED_COUNT) {
+          GST_WARNING_OBJECT (demux, "Could not update the playlist");
+          gst_hls_demux_schedule (demux);
+          continue;
+        } else {
+          GST_ELEMENT_ERROR (demux, RESOURCE, NOT_FOUND,
+              ("Could not update the playlist"), (NULL));
+          goto quit;
+        }
       }
     }
 
@@ -931,10 +939,21 @@ gst_hls_demux_update_thread (GstHLSDemux * demux)
     /* fetch the next fragment */
     if (g_queue_is_empty (demux->queue)) {
       if (!gst_hls_demux_get_next_fragment (demux)) {
-        if (!demux->end_of_playlist && !demux->cancelled)
-          GST_ERROR_OBJECT (demux, "Could not fetch the next fragment");
-        goto quit;
+        if (!demux->end_of_playlist && !demux->cancelled) {
+          demux->client->update_failed_count++;
+          if (demux->client->update_failed_count < DEFAULT_FAILED_COUNT) {
+            GST_WARNING_OBJECT (demux, "Could not fetch the next fragment");
+            continue;
+          } else {
+            GST_ELEMENT_ERROR (demux, RESOURCE, NOT_FOUND,
+                ("Could not fetch the next fragment"), (NULL));
+            goto quit;
+          }
+        }
+      } else {
+        demux->client->update_failed_count = 0;
       }
+
       /* try to switch to another bitrate if needed */
       gst_hls_demux_switch_playlist (demux);
     }
