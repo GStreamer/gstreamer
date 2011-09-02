@@ -356,6 +356,7 @@ gst_hls_demux_src_event (GstPad * pad, GstEvent * event)
           " stop: %" GST_TIME_FORMAT, rate, GST_TIME_ARGS (start),
           GST_TIME_ARGS (stop));
 
+      GST_M3U8_CLIENT_LOCK (demux->client);
       file = GST_M3U8_MEDIA_FILE (demux->client->current->files->data);
       current_sequence = file->sequence;
       current_pos = 0;
@@ -371,6 +372,7 @@ gst_hls_demux_src_event (GstPad * pad, GstEvent * event)
         }
         current_pos += file->duration;
       }
+      GST_M3U8_CLIENT_UNLOCK (demux->client);
 
       if (walk == NULL) {
         GST_WARNING_OBJECT (demux, "Could not find seeked fragment");
@@ -401,10 +403,13 @@ gst_hls_demux_src_event (GstPad * pad, GstEvent * event)
       g_queue_clear (demux->queue);
       gst_adapter_clear (demux->download);
 
+      GST_M3U8_CLIENT_LOCK (demux->client);
       GST_DEBUG_OBJECT (demux, "seeking to sequence %d", current_sequence);
       demux->client->sequence = current_sequence;
       demux->position = start;
       demux->need_segment = TRUE;
+      GST_M3U8_CLIENT_UNLOCK (demux->client);
+
 
       if (flags & GST_SEEK_FLAG_FLUSH) {
         GST_DEBUG_OBJECT (demux, "sending flush stop");
@@ -522,7 +527,7 @@ gst_hls_demux_src_query (GstPad * pad, GstQuery * query)
       if (hlsdemux->client) {
         /* FIXME: Do we answer with the variant playlist, with the current
          * playlist or the the uri of the least downlowaded fragment? */
-        gst_query_set_uri (query, hlsdemux->client->current->uri);
+        gst_query_set_uri (query, gst_m3u8_client_get_uri (hlsdemux->client));
         ret = TRUE;
       }
       break;
@@ -1007,7 +1012,11 @@ gst_hls_demux_cache_fragments (GstHLSDemux * demux)
   /* If this playlist is a variant playlist, select the first one
    * and update it */
   if (gst_m3u8_client_has_variant_playlist (demux->client)) {
-    GstM3U8 *child = demux->client->main->current_variant->data;
+    GstM3U8 *child = NULL;
+
+    GST_M3U8_CLIENT_LOCK (demux->client);
+    child = demux->client->main->current_variant->data;
+    GST_M3U8_CLIENT_UNLOCK (demux->client);
     gst_m3u8_client_set_current (demux->client, child);
     if (!gst_hls_demux_update_playlist (demux)) {
       GST_ERROR_OBJECT (demux, "Could not fetch the child playlist %s",
@@ -1019,11 +1028,13 @@ gst_hls_demux_cache_fragments (GstHLSDemux * demux)
   /* If it's a live source, set the sequence number to the end of the list
    * and substract the 'fragmets_cache' to start from the last fragment*/
   if (gst_m3u8_client_is_live (demux->client)) {
+    GST_M3U8_CLIENT_LOCK (demux->client);
     demux->client->sequence += g_list_length (demux->client->current->files);
     if (demux->client->sequence >= demux->fragments_cache)
       demux->client->sequence -= demux->fragments_cache;
     else
       demux->client->sequence = 0;
+    GST_M3U8_CLIENT_UNLOCK (demux->client);
   } else {
     GstClockTime duration = gst_m3u8_client_get_duration (demux->client);
 
@@ -1042,7 +1053,8 @@ gst_hls_demux_cache_fragments (GstHLSDemux * demux)
             100 * i / demux->fragments_cache));
     g_get_current_time (&demux->next_update);
     g_time_val_add (&demux->next_update,
-        demux->client->current->targetduration * 1000000);
+        gst_m3u8_client_get_target_duration (demux->client)
+        / GST_SECOND * G_USEC_PER_SEC);
     if (!gst_hls_demux_get_next_fragment (demux)) {
       if (!demux->cancelled)
         GST_ERROR_OBJECT (demux, "Error caching the first fragments");
@@ -1142,10 +1154,10 @@ gst_hls_demux_update_playlist (GstHLSDemux * demux)
   const guint8 *data;
   gchar *playlist;
   guint avail;
+  const gchar *uri = gst_m3u8_client_get_current_uri (demux->client);
 
-  GST_INFO_OBJECT (demux, "Updating the playlist %s",
-      demux->client->current->uri);
-  if (!gst_hls_demux_fetch_location (demux, demux->client->current->uri))
+  GST_INFO_OBJECT (demux, "Updating the playlist %s", uri);
+  if (!gst_hls_demux_fetch_location (demux, uri))
     return FALSE;
 
   avail = gst_adapter_available (demux->download);
@@ -1165,26 +1177,36 @@ gst_hls_demux_change_playlist (GstHLSDemux * demux, gboolean is_fast)
 {
   GList *list;
   GstStructure *s;
+  gint new_bandwidth;
 
+  GST_M3U8_CLIENT_LOCK (demux->client);
   if (is_fast)
     list = g_list_next (demux->client->main->current_variant);
   else
     list = g_list_previous (demux->client->main->current_variant);
 
   /* Don't do anything else if the playlist is the same */
-  if (!list || list->data == demux->client->current)
+  if (!list || list->data == demux->client->current) {
+    GST_M3U8_CLIENT_UNLOCK (demux->client);
     return TRUE;
+  }
 
   demux->client->main->current_variant = list;
+  GST_M3U8_CLIENT_UNLOCK (demux->client);
 
   gst_m3u8_client_set_current (demux->client, list->data);
+
+  GST_M3U8_CLIENT_LOCK (demux->client);
+  new_bandwidth = demux->client->current->bandwidth;
+  GST_M3U8_CLIENT_UNLOCK (demux->client);
+
   gst_hls_demux_update_playlist (demux);
   GST_INFO_OBJECT (demux, "Client is %s, switching to bitrate %d",
-      is_fast ? "fast" : "slow", demux->client->current->bandwidth);
+      is_fast ? "fast" : "slow", new_bandwidth);
 
   s = gst_structure_new ("playlist",
-      "uri", G_TYPE_STRING, demux->client->current->uri,
-      "bitrate", G_TYPE_INT, demux->client->current->bandwidth, NULL);
+      "uri", G_TYPE_STRING, gst_m3u8_client_get_current_uri (demux->client),
+      "bitrate", G_TYPE_INT, new_bandwidth, NULL);
   gst_element_post_message (GST_ELEMENT_CAST (demux),
       gst_message_new_element (GST_OBJECT_CAST (demux), s));
 
@@ -1215,7 +1237,8 @@ gst_hls_demux_schedule (GstHLSDemux * demux)
   /* schedule the next update using the target duration field of the
    * playlist */
   g_time_val_add (&demux->next_update,
-      demux->client->current->targetduration * update_factor * 1000000);
+      gst_m3u8_client_get_target_duration (demux->client)
+      / GST_SECOND * G_USEC_PER_SEC * update_factor);
   GST_DEBUG_OBJECT (demux, "Next update scheduled at %s",
       g_time_val_to_iso8601 (&demux->next_update));
 
@@ -1229,14 +1252,18 @@ gst_hls_demux_switch_playlist (GstHLSDemux * demux)
   gint64 diff, limit;
 
   g_get_current_time (&now);
-  if (!demux->client->main->lists)
+  GST_M3U8_CLIENT_LOCK (demux->client);
+  if (!demux->client->main->lists) {
+    GST_M3U8_CLIENT_UNLOCK (demux->client);
     return TRUE;
+  }
+  GST_M3U8_CLIENT_UNLOCK (demux->client);
 
   /* compare the time when the fragment was downloaded with the time when it was
    * scheduled */
   diff = (GST_TIMEVAL_TO_TIME (demux->next_update) - GST_TIMEVAL_TO_TIME (now));
-  limit = demux->client->current->targetduration * GST_SECOND *
-      demux->bitrate_switch_tol;
+  limit = gst_m3u8_client_get_target_duration (demux->client)
+      * demux->bitrate_switch_tol;
 
   GST_DEBUG ("diff:%s%" GST_TIME_FORMAT ", limit:%" GST_TIME_FORMAT,
       diff < 0 ? "-" : " ", GST_TIME_ARGS (ABS (diff)), GST_TIME_ARGS (limit));
