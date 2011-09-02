@@ -389,6 +389,7 @@ gst_m3u8_client_new (const gchar * uri)
   client->current = NULL;
   client->sequence = -1;
   client->update_failed_count = 0;
+  client->lock = g_mutex_new ();
   gst_m3u8_set_uri (client->main, g_strdup (uri));
 
   return client;
@@ -400,6 +401,7 @@ gst_m3u8_client_free (GstM3U8Client * self)
   g_return_if_fail (self != NULL);
 
   gst_m3u8_free (self->main);
+  g_mutex_free (self->lock);
   g_free (self);
 }
 
@@ -408,10 +410,12 @@ gst_m3u8_client_set_current (GstM3U8Client * self, GstM3U8 * m3u8)
 {
   g_return_if_fail (self != NULL);
 
+  GST_M3U8_CLIENT_LOCK (self);
   if (m3u8 != self->current) {
     self->current = m3u8;
     self->update_failed_count = 0;
   }
+  GST_M3U8_CLIENT_UNLOCK (self);
 }
 
 gboolean
@@ -419,17 +423,19 @@ gst_m3u8_client_update (GstM3U8Client * self, gchar * data)
 {
   GstM3U8 *m3u8;
   gboolean updated = FALSE;
+  gboolean ret = FALSE;
 
   g_return_val_if_fail (self != NULL, FALSE);
 
+  GST_M3U8_CLIENT_LOCK (self);
   m3u8 = self->current ? self->current : self->main;
 
   if (!gst_m3u8_update (m3u8, data, &updated))
-    return FALSE;
+    goto out;
 
   if (!updated) {
     self->update_failed_count++;
-    return FALSE;
+    goto out;
   }
 
   /* select the first playlist, for now */
@@ -447,7 +453,10 @@ gst_m3u8_client_update (GstM3U8Client * self, gchar * data)
     GST_DEBUG ("Setting first sequence at %d", self->sequence);
   }
 
-  return TRUE;
+  ret = TRUE;
+out:
+  GST_M3U8_CLIENT_UNLOCK (self);
+  return ret;
 }
 
 static gboolean
@@ -472,11 +481,14 @@ gst_m3u8_client_get_next_fragment (GstM3U8Client * client,
   g_return_val_if_fail (client->current != NULL, FALSE);
   g_return_val_if_fail (discontinuity != NULL, FALSE);
 
+  GST_M3U8_CLIENT_LOCK (client);
   GST_DEBUG ("Looking for fragment %d", client->sequence);
   l = g_list_find_custom (client->current->files, client,
       (GCompareFunc) _find_next);
-  if (l == NULL)
+  if (l == NULL) {
+    GST_M3U8_CLIENT_UNLOCK (client);
     return FALSE;
+  }
 
   file = GST_M3U8_MEDIA_FILE (l->data);
 
@@ -494,6 +506,7 @@ gst_m3u8_client_get_next_fragment (GstM3U8Client * client,
   }
   *timestamp *= GST_SECOND;
 
+  GST_M3U8_CLIENT_UNLOCK (client);
   return TRUE;
 }
 
@@ -510,37 +523,56 @@ gst_m3u8_client_get_duration (GstM3U8Client * client)
 
   g_return_val_if_fail (client != NULL, GST_CLOCK_TIME_NONE);
 
+  GST_M3U8_CLIENT_LOCK (client);
   /* We can only get the duration for on-demand streams */
-  if (!client->current->endlist)
+  if (!client->current->endlist) {
+    GST_M3U8_CLIENT_UNLOCK (client);
     return GST_CLOCK_TIME_NONE;
+  }
 
   g_list_foreach (client->current->files, (GFunc) _sum_duration, &duration);
+  GST_M3U8_CLIENT_UNLOCK (client);
   return duration * GST_SECOND;
 }
 
 const gchar *
 gst_m3u8_client_get_uri (GstM3U8Client * client)
 {
+  const gchar *uri;
+
   g_return_val_if_fail (client != NULL, NULL);
 
-  return client->main->uri;
+  GST_M3U8_CLIENT_LOCK (client);
+  uri = client->main->uri;
+  GST_M3U8_CLIENT_UNLOCK (client);
+  return uri;
 }
 
 gboolean
 gst_m3u8_client_has_variant_playlist (GstM3U8Client * client)
 {
+  gboolean ret;
+
   g_return_val_if_fail (client != NULL, FALSE);
 
-  return client->main->lists != NULL;
+  GST_M3U8_CLIENT_LOCK (client);
+  ret = (client->main->lists != NULL);
+  GST_M3U8_CLIENT_UNLOCK (client);
+  return ret;
 }
 
 gboolean
 gst_m3u8_client_is_live (GstM3U8Client * client)
 {
+  gboolean ret;
+
   g_return_val_if_fail (client != NULL, FALSE);
 
+  GST_M3U8_CLIENT_LOCK (client);
   if (!client->current || client->current->endlist)
-    return FALSE;
-
-  return TRUE;
+    ret = FALSE;
+  else
+    ret = TRUE;
+  GST_M3U8_CLIENT_UNLOCK (client);
+  return ret;
 }

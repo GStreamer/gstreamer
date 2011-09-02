@@ -32,6 +32,9 @@ typedef struct _GstM3U8Client GstM3U8Client;
 #define GST_M3U8(m) ((GstM3U8*)m)
 #define GST_M3U8_MEDIA_FILE(f) ((GstM3U8MediaFile*)f)
 
+#define GST_M3U8_CLIENT_LOCK(c) g_mutex_lock (c->lock);
+#define GST_M3U8_CLIENT_UNLOCK(c) g_mutex_unlock (c->lock);
+
 struct _GstM3U8
 {
   gchar *uri;
@@ -70,6 +73,7 @@ struct _GstM3U8Client
   GstM3U8 *current;
   guint update_failed_count;
   gint sequence;                /* the next sequence for this client */
+  GMutex *lock;
 };
 
 
