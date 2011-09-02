@@ -613,6 +613,8 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
       default:
         GST_ERROR_OBJECT (self, "Unsupported color format: %d",
             port_def.format.video.eColorFormat);
+        if (buf)
+          gst_omx_port_release_buffer (self->out_port, buf);
         goto caps_failed;
         break;
     }
@@ -620,8 +622,8 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
     state->width = port_def.format.video.nFrameWidth;
     state->height = port_def.format.video.nFrameHeight;
 
-    /* FIXME XXX: Bellagio does not set this to something useful... */
-    /* gst_util_double_to_fraction (port_def.format.video.xFramerate / ((gdouble) 0xffff), &state->fps_n, &state->fps_d); */
+    /* Take framerate and pixel-aspect-ratio from sinkpad caps */
+
     if (!gst_base_video_decoder_set_src_caps (GST_BASE_VIDEO_DECODER (self))) {
       if (buf)
         gst_omx_port_release_buffer (self->out_port, buf);
@@ -708,12 +710,14 @@ component_error:
     gst_pad_pause_task (GST_BASE_VIDEO_CODEC_SRC_PAD (self));
     return;
   }
+
 flushing:
   {
     GST_DEBUG_OBJECT (self, "Flushing -- stopping task");
     gst_pad_pause_task (GST_BASE_VIDEO_CODEC_SRC_PAD (self));
     return;
   }
+
 flow_error:
   {
     if (flow_ret == GST_FLOW_UNEXPECTED) {
@@ -733,6 +737,7 @@ flow_error:
     }
     return;
   }
+
 reconfigure_error:
   {
     GST_ELEMENT_ERROR (self, LIBRARY, SETTINGS, (NULL),
@@ -742,6 +747,7 @@ reconfigure_error:
     gst_pad_pause_task (GST_BASE_VIDEO_CODEC_SRC_PAD (self));
     return;
   }
+
 invalid_buffer:
   {
     GST_ELEMENT_ERROR (self, LIBRARY, SETTINGS, (NULL),
@@ -751,6 +757,7 @@ invalid_buffer:
     gst_pad_pause_task (GST_BASE_VIDEO_CODEC_SRC_PAD (self));
     return;
   }
+
 caps_failed:
   {
     GST_ELEMENT_ERROR (self, LIBRARY, SETTINGS, (NULL), ("Failed to set caps"));
@@ -796,6 +803,124 @@ gst_omx_video_dec_stop (GstBaseVideoDecoder * decoder)
   gst_buffer_replace (&self->codec_data, NULL);
 
   return TRUE;
+}
+
+static gboolean
+gst_omx_video_dec_negotiate (GstOMXVideoDec * self)
+{
+  GstOMXPort *port = self->out_port;
+  GstVideoState *state = &GST_BASE_VIDEO_CODEC (self)->state;
+  OMX_VIDEO_PARAM_PORTFORMATTYPE param;
+  OMX_ERRORTYPE err;
+  GstCaps *comp_supported_caps;
+  const GstCaps *templ_caps;
+  GstCaps *peer_caps, *intersection;
+  GstVideoFormat format;
+  gint old_index;
+  GstStructure *s;
+  guint32 fourcc;
+
+  templ_caps =
+      gst_pad_get_pad_template_caps (GST_BASE_VIDEO_CODEC_SRC_PAD (self));
+  peer_caps = gst_pad_peer_get_caps (GST_BASE_VIDEO_CODEC_SRC_PAD (self));
+  if (peer_caps) {
+    intersection = gst_caps_intersect (templ_caps, peer_caps);
+    gst_caps_unref (peer_caps);
+  } else {
+    intersection = gst_caps_copy (templ_caps);
+  }
+
+  GST_OMX_INIT_STRUCT (&param);
+  param.nPortIndex = port->index;
+  param.nIndex = 0;
+  if (state->fps_n == 0)
+    param.xFramerate = 0;
+  else
+    param.xFramerate = (state->fps_n << 16) / (state->fps_d);
+
+  old_index = -1;
+  comp_supported_caps = gst_caps_new_empty ();
+  do {
+    err =
+        gst_omx_component_get_parameter (self->component,
+        OMX_IndexParamVideoPortFormat, &param);
+
+    /* FIXME: Workaround for Bellagio that simply always
+     * returns the same value regardless of nIndex and
+     * never returns OMX_ErrorNoMore
+     */
+    if (old_index == param.nIndex)
+      break;
+
+    if (err == OMX_ErrorNone) {
+      switch (param.eColorFormat) {
+        case OMX_COLOR_FormatYUV420Planar:
+          gst_caps_append_structure (comp_supported_caps,
+              gst_structure_new ("video/x-raw-yuv",
+                  "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('I', '4', '2',
+                      '0'), NULL));
+          break;
+        case OMX_COLOR_FormatYUV420SemiPlanar:
+          gst_caps_append_structure (comp_supported_caps,
+              gst_structure_new ("video/x-raw-yuv",
+                  "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('N', 'V', '1',
+                      '2'), NULL));
+          break;
+        default:
+          break;
+      }
+    }
+    old_index = param.nIndex++;
+  } while (err == OMX_ErrorNone);
+
+  if (!gst_caps_is_empty (comp_supported_caps)) {
+    GstCaps *tmp;
+
+    tmp = gst_caps_intersect (comp_supported_caps, intersection);
+    gst_caps_unref (intersection);
+    intersection = tmp;
+  }
+
+  if (gst_caps_is_empty (intersection)) {
+    GST_ERROR_OBJECT (self, "Empty caps");
+    return FALSE;
+  }
+
+  gst_caps_truncate (intersection);
+
+  s = gst_caps_get_structure (intersection, 0);
+  if (!gst_structure_get_fourcc (s, "format", &fourcc) ||
+      (format =
+          gst_video_format_from_fourcc (fourcc)) == GST_VIDEO_FORMAT_UNKNOWN) {
+    GST_ERROR_OBJECT (self, "Invalid caps: %" GST_PTR_FORMAT, intersection);
+    return FALSE;
+  }
+
+  switch (format) {
+    case GST_VIDEO_FORMAT_I420:
+      param.eColorFormat = OMX_COLOR_FormatYUV420Planar;
+      break;
+    case GST_VIDEO_FORMAT_NV12:
+      param.eColorFormat = OMX_COLOR_FormatYUV420SemiPlanar;
+      break;
+    default:
+      GST_ERROR_OBJECT (self, "Unknown color format: %u", format);
+      return FALSE;
+      break;
+  }
+
+  /* Reset framerate, we only care about the color format here */
+  param.xFramerate = 0;
+
+  err =
+      gst_omx_component_set_parameter (self->component,
+      OMX_IndexParamVideoPortFormat, &param);
+  if (err != OMX_ErrorNone) {
+    GST_ERROR_OBJECT (self, "Failed to set video port format: %s (0x%08x)",
+        gst_omx_error_to_string (err), err);
+  }
+
+  return (err == OMX_ErrorNone);
 }
 
 static gboolean
@@ -867,6 +992,9 @@ gst_omx_video_dec_set_format (GstBaseVideoDecoder * decoder,
   }
 
   gst_buffer_replace (&self->codec_data, state->codec_data);
+
+  if (!gst_omx_video_dec_negotiate (self))
+    return FALSE;
 
   if (needs_disable) {
     if (gst_omx_port_set_enabled (self->in_port, TRUE) != OMX_ErrorNone)
