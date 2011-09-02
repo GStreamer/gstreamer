@@ -73,7 +73,7 @@ gst_mpeg_video_parse_quant_matrix_extension
 </SECTION>
 
 <SECTION>
-<FILE>photography</FILE>
+<FILE>gstphotography</FILE>
 GST_PHOTOGRAPHY_AUTOFOCUS_DONE
 GST_PHOTOGRAPHY_SHAKE_RISK
 GST_PHOTOGRAPHY_PROP_WB_MODE

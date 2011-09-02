@@ -77,10 +77,10 @@ typedef enum {
 
 /**
  * GstMpegVideoLevel:
- * @GST_MPEG_VIDEO_LEVEL_LOW
- * @GST_MPEG_VIDEO_LEVEL_MAIN
- * @GST_MPEG_VIDEO_LEVEL_HIGH_1440
- * @GST_MPEG_VIDEO_LEVEL_HIGH
+ * @GST_MPEG_VIDEO_LEVEL_LOW: Level Low
+ * @GST_MPEG_VIDEO_LEVEL_MAIN: Level Main
+ * @GST_MPEG_VIDEO_LEVEL_HIGH_1440: Level High 1440
+ * @GST_MPEG_VIDEO_LEVEL_HIGH: Level High
  *
  * Indicates the level in use
  **/

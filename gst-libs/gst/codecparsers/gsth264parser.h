@@ -143,6 +143,12 @@ typedef enum
   GST_H264_SEI_PIC_STRUCT_FRAME_TRIPLING    = 8
 } GstH264SEIPicStructType;
 
+/**
+ * GstH264SliceType:
+ *
+ * Type of Picture slice
+ */
+
 typedef enum
 {
   GST_H264_P_SLICE    = 0,
@@ -624,9 +630,14 @@ struct _GstH264SEIMessage
   };
 };
 
-/* Opaque structure */
+/**
+ * GstH264NalParser:
+ *
+ * H264 NAL Parser (opaque structure).
+ */
 struct _GstH264NalParser
 {
+  /*< private >*/
   GstH264SPS sps[GST_H264_MAX_SPS_COUNT];
   GstH264PPS pps[GST_H264_MAX_PPS_COUNT];
   GstH264SPS *last_sps;
