@@ -543,6 +543,8 @@ rtp_session_init (RTPSession * sess)
   sess->source->internal = TRUE;
   sess->stats.active_sources++;
   INIT_AVG (sess->stats.avg_rtcp_packet_size, 100);
+  sess->source->stats.prev_rtcptime = 0;
+  sess->source->stats.last_rtcptime = 1;
 
   rtp_stats_set_min_interval (&sess->stats,
       (gdouble) DEFAULT_RTCP_MIN_INTERVAL / GST_SECOND);
@@ -2747,11 +2749,34 @@ session_cleanup (const gchar * key, RTPSource * source, ReportData * data)
   gboolean sendertimeout = FALSE;
   gboolean is_sender, is_active;
   RTPSession *sess = data->sess;
-  GstClockTime interval;
+  GstClockTime interval, binterval;
   GstClockTime btime;
 
   is_sender = RTP_SOURCE_IS_SENDER (source);
   is_active = RTP_SOURCE_IS_ACTIVE (source);
+
+  /* our own rtcp interval may have been forced low by secondary configuration,
+   * while sender side may still operate with higher interval,
+   * so do not just take our interval to decide on timing out sender,
+   * but take (if data->interval <= 5 * GST_SECOND):
+   *   interval = CLAMP (sender_interval, data->interval, 5 * GST_SECOND)
+   * where sender_interval is difference between last 2 received RTCP reports
+   */
+  if (data->interval >= 5 * GST_SECOND || (source == sess->source)) {
+    binterval = data->interval;
+  } else {
+    GST_LOG ("prev_rtcp %" GST_TIME_FORMAT ", last_rtcp %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (source->stats.prev_rtcptime),
+        GST_TIME_ARGS (source->stats.last_rtcptime));
+    /* if not received enough yet, fallback to larger default */
+    if (source->stats.last_rtcptime > source->stats.prev_rtcptime)
+      binterval = source->stats.last_rtcptime - source->stats.prev_rtcptime;
+    else
+      binterval = 5 * GST_SECOND;
+    binterval = CLAMP (binterval, data->interval, 5 * GST_SECOND);
+  }
+  GST_LOG ("timeout base interval %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (binterval));
 
   /* check for our own source, we don't want to delete our own source. */
   if (!(source == sess->source)) {
@@ -2770,7 +2795,7 @@ session_cleanup (const gchar * key, RTPSource * source, ReportData * data)
     /* mind old time that might pre-date last time going to PLAYING */
     btime = MAX (source->last_activity, sess->start_time);
     if (data->current_time > btime) {
-      interval = MAX (data->interval * 5, 5 * GST_SECOND);
+      interval = MAX (binterval * 5, 5 * GST_SECOND);
       if (data->current_time - btime > interval) {
         GST_DEBUG ("removing timeout source %08x, last %" GST_TIME_FORMAT,
             source->ssrc, GST_TIME_ARGS (btime));
@@ -2785,7 +2810,7 @@ session_cleanup (const gchar * key, RTPSource * source, ReportData * data)
     /* mind old time that might pre-date last time going to PLAYING */
     btime = MAX (source->last_rtp_activity, sess->start_time);
     if (data->current_time > btime) {
-      interval = MAX (data->interval * 2, 5 * GST_SECOND);
+      interval = MAX (binterval * 2, 5 * GST_SECOND);
       if (data->current_time - btime > interval) {
         GST_DEBUG ("sender source %08x timed out and became receiver, last %"
             GST_TIME_FORMAT, source->ssrc, GST_TIME_ARGS (btime));
