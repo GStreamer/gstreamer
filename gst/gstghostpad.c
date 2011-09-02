@@ -1019,25 +1019,11 @@ static void
 on_int_notify (GstPad * internal, GParamSpec * unused, GstGhostPad * pad)
 {
   GstCaps *caps;
-  gboolean changed;
 
   g_object_get (internal, "caps", &caps, NULL);
 
   GST_DEBUG_OBJECT (pad, "notified %p %" GST_PTR_FORMAT, caps, caps);
-
-  GST_OBJECT_LOCK (pad);
-  changed = (GST_PAD_CAPS (pad) != caps);
-  if (changed)
-    gst_caps_replace (&(GST_PAD_CAPS (pad)), caps);
-  GST_OBJECT_UNLOCK (pad);
-
-  if (changed) {
-#if GLIB_CHECK_VERSION(2,26,0)
-    g_object_notify_by_pspec ((GObject *) pad, pspec_caps);
-#else
-    g_object_notify ((GObject *) pad, "caps");
-#endif
-  }
+  gst_pad_set_caps (GST_PAD_CAST (pad), caps);
 
   if (caps)
     gst_caps_unref (caps);
@@ -1049,7 +1035,6 @@ on_src_target_notify (GstPad * target, GParamSpec * unused, gpointer user_data)
   GstProxyPad *proxypad;
   GstGhostPad *gpad;
   GstCaps *caps;
-  gboolean changed;
 
   g_object_get (target, "caps", &caps, NULL);
 
@@ -1075,22 +1060,7 @@ on_src_target_notify (GstPad * target, GParamSpec * unused, gpointer user_data)
   GST_PROXY_UNLOCK (proxypad);
   GST_OBJECT_UNLOCK (target);
 
-  GST_OBJECT_LOCK (gpad);
-
-  GST_DEBUG_OBJECT (gpad, "notified %p %" GST_PTR_FORMAT, caps, caps);
-
-  changed = (GST_PAD_CAPS (gpad) != caps);
-  if (changed)
-    gst_caps_replace (&(GST_PAD_CAPS (gpad)), caps);
-  GST_OBJECT_UNLOCK (gpad);
-
-  if (changed) {
-#if GLIB_CHECK_VERSION(2,26,0)
-    g_object_notify_by_pspec ((GObject *) gpad, pspec_caps);
-#else
-    g_object_notify ((GObject *) gpad, "caps");
-#endif
-  }
+  gst_pad_set_caps (GST_PAD_CAST (gpad), caps);
 
   g_object_unref (gpad);
 
