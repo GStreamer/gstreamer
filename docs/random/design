@@ -29,6 +29,9 @@ Index of features:
  * Proxy support
  * Editing modes (Ripple/Roll/Slip/Slide)
  * Coherent handling of Content in different formats
+ * Video compositing and audio mixing
+ * Handling of alpha video (i.e. transparency)
+ * Faster/Tigher interaction with GNonLin elements
  * Media Asset Management integration
  * Templates
  * Plugin system
@@ -63,6 +66,7 @@ Index of features:
   filling in the timeline to offer format-specific features.
 
 
+
 * Grouping/Linking of Multiple TrackObjects
 
   Status:
@@ -86,6 +90,7 @@ Index of features:
   synchronously with the TimelineObject.
 
 
+
 * Selection support (Extension from Grouping/Linking)
    
   Problems:
@@ -95,6 +100,7 @@ Index of features:
 
   This should be able to do by creating a non-visible (maybe not even
   inserted in the layer?) TimelineObject.
+
 
 
 * Effects support
@@ -121,6 +127,7 @@ Index of features:
   without duplicating code from GStreamer.
 
 
+
 * Source Material object
 
   Problems:
@@ -141,6 +148,7 @@ Index of features:
 
   A Material object can specify the TimelineSource class to use in a
   Layer.
+
 
 
 * Proxy support
@@ -171,6 +179,7 @@ Index of features:
   to original (in order to use the lower
   resolution/quality/... version for the editing phase and the
   original material for final rendering phase).
+
 
 
 * Editing modes (Ripple/Roll/Slip/Slide)
@@ -228,37 +237,6 @@ Index of features:
   See also:
    Video compositing and audio mixing
 
-* Media Asset Management integration
-
-  (Track, Search, Browse, Push content) TBD
-
-
-* Templates
-
-  Problem:
-   In order to create as quickly as possible professional-looking
-   timelines, we need to provide a way to create 'templates' which
-   users can select and have an automatic timeline 'look' used.
-
-   This will allow users to be able to quickly add their clips, set
-   titles and have a timeline with a professional look. This is
-   similar to the same feature that iMovie offers both on desktop and
-   iOS.
-
-
-* Plugin system
-
-  Problem:
-   All of GES classes are made in such a way that creating new
-   sources, effects, templates, formatters, etc... can be easily added
-   either to the GES codebase itself or to applications.
-
-   But in order to provide more features without depending on GES
-   releases, limit those features to a single application, and in
-   order to provide 'closed'/3rd party features, we need to implement
-   a plugin system so one can add new features.
-
-  Use a registry system similar to GStreamer.
 
 
 * Video compositing and audio mixing
@@ -274,7 +252,8 @@ Index of features:
 
    Audio properties
     * Volume
-    * Panning (or more generally positioning for multi-channel).
+    * Panning (or more generally positioning and up-/down-mixing for
+      multi-channel).
 
    Video properties
     * Z-layer (implicit through priority property)
@@ -346,6 +325,8 @@ Index of features:
   See also:
    Coherent handling of Content in different formats
 
+
+
 * Handling of alpha video (i.e. transparency)
 
   Problem:
@@ -355,7 +336,8 @@ Index of features:
    Those streams need to be handle-able by the user just like
    non-alpha videos.
 
-  
+
+
 * Faster/Tighter interaction with GNonLin elements
 
   Problems:
@@ -374,3 +356,39 @@ Index of features:
   and keep the same previous API for both for backward compatibility.
 
   Add additional APIs to GNonLin which GES can use.
+
+
+
+* Media Asset Management integration
+
+  (Track, Search, Browse, Push content) TBD
+
+
+
+* Templates
+
+  Problem:
+   In order to create as quickly as possible professional-looking
+   timelines, we need to provide a way to create 'templates' which
+   users can select and have an automatic timeline 'look' used.
+
+   This will allow users to be able to quickly add their clips, set
+   titles and have a timeline with a professional look. This is
+   similar to the same feature that iMovie offers both on desktop and
+   iOS.
+
+
+
+* Plugin system
+
+  Problem:
+   All of GES classes are made in such a way that creating new
+   sources, effects, templates, formatters, etc... can be easily added
+   either to the GES codebase itself or to applications.
+
+   But in order to provide more features without depending on GES
+   releases, limit those features to a single application, and in
+   order to provide 'closed'/3rd party features, we need to implement
+   a plugin system so one can add new features.
+
+  Use a registry system similar to GStreamer.
