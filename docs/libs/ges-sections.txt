@@ -327,7 +327,6 @@ ges_timeline_object_get_type
 <FILE>ges-timeline-pipeline</FILE>
 <TITLE>GESTimelinePipeline</TITLE>
 GESTimelinePipeline
-GESPipelineFlags
 ges_timeline_pipeline_new
 ges_timeline_pipeline_add_timeline
 ges_timeline_pipeline_set_mode
