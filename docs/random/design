@@ -356,3 +356,21 @@ Index of features:
    non-alpha videos.
 
   
+* Faster/Tighter interaction with GNonLin elements
+
+  Problems:
+   A lot of properties/concepts need to be duplicated at the GES level
+   since the only way to communicate with the GNonLin elements is
+   through publically available APIs (GObject and GStreamer APIs).
+
+   The GESTrackObject for example has to duplicate exactly the same
+   properties as GnlObject for no reason.
+
+   Other properties are also expensive to re-compute and also become
+   non-MT-safe (like computing the exact 'tree' of objects at a
+   certain position in a GnlComposition).
+
+  Merge the GES and GNonLin modules together into one single module,
+  and keep the same previous API for both for backward compatibility.
+
+  Add additional APIs to GNonLin which GES can use.
