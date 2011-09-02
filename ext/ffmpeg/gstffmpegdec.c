@@ -2935,7 +2935,12 @@ gst_ffmpegdec_register (GstPlugin * plugin)
         !strcmp (in_plugin->name, "mp1") ||
         !strcmp (in_plugin->name, "mp2") ||
         !strcmp (in_plugin->name, "libfaad") ||
-        !strcmp (in_plugin->name, "mpeg4aac")) {
+        !strcmp (in_plugin->name, "mpeg4aac") ||
+        !strcmp (in_plugin->name, "ass") ||
+        !strcmp (in_plugin->name, "srt") ||
+        !strcmp (in_plugin->name, "pgssub") ||
+        !strcmp (in_plugin->name, "dvdsub") ||
+        !strcmp (in_plugin->name, "dvbsub")) {
       GST_LOG ("Ignoring decoder %s", in_plugin->name);
       goto next;
     }
