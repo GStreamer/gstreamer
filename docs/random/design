@@ -243,9 +243,9 @@ Index of features:
 
   All the information regarding the contents we are handling are
   stored in the various GESMaterial. The target format is also known
-  throught the caps of the various GESTracks involved. Those two
-  information will allow us to make decisions on what course of action
-  to take.
+  through the caps of the various GESTracks involved. The Material and
+  track output caps will allow us to make decisions on what course of
+  action to take.
 
   By default content should be conformed to a good balance of speed
   and avoid loss of information.
