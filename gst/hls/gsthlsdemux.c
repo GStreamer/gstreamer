@@ -861,8 +861,10 @@ gst_hls_demux_reset (GstHLSDemux * demux, gboolean dispose)
 
   gst_adapter_clear (demux->download);
 
-  if (demux->client)
+  if (demux->client) {
     gst_m3u8_client_free (demux->client);
+    demux->client = NULL;
+  }
 
   if (!dispose) {
     demux->client = gst_m3u8_client_new ("");
