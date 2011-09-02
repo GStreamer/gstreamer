@@ -37,6 +37,7 @@ Index of features:
  * Plugin system
 
 
+
 * Project file load/save support (GESFormatter)
 
   Status:
@@ -136,6 +137,10 @@ Index of features:
    but could also contain extra information provided by 3rd party
    modules.
 
+   The information regarding the various streams (and obtained through
+   optionally running GstDiscoverer) is not stored and has to be
+   re-analyzed else where.
+
   Definition:
    Material: n, The substance or substances out of which a thing is or
    can be made.
@@ -145,6 +150,14 @@ Index of features:
 
   A Material object contains all the information which is independent
   of the usage of that material in a timeline.
+
+  A Material contains the list of 'streams' that can be provided with
+  as much information as possible (ex: contains audio and video
+  streams with full caps information, or better yet the output of
+  GstDiscoverer).
+
+  A Material contains the various Metadata (author, title, origin,
+  copyright ,....).
 
   A Material object can specify the TimelineSource class to use in a
   Layer.
@@ -180,9 +193,15 @@ Index of features:
   resolution/quality/... version for the editing phase and the
   original material for final rendering phase).
 
+  Requires:
+   GESMaterial
+
 
 
 * Editing modes (Ripple/Roll/Slip/Slide)
+
+  Status:
+   Not implemented.
 
   Problems:
    Most editing relies on heavy usage of 4 editing tools which editors
@@ -234,12 +253,20 @@ Index of features:
         aspect ratio of 4:3, we will make the width of the two videos
         be equal without distorting their respective aspect-ratios.
 
+  Requires:
+   GESMaterial
+
   See also:
    Video compositing and audio mixing
 
 
 
 * Video compositing and audio mixing
+
+  Status:
+   Not implemented. The bare minimum to implement are the static
+   absolute property handling. Relative/variable properties and group
+   handling can be done once we know how to handle object grouping.
 
   Problems:
    Editing requires not only a linear combination of cuts and
@@ -301,10 +328,29 @@ Index of features:
     channels in the case of 7.1 upmixing) WITHOUT any extra loss in
     quality.
 
-  Add a set of extensible properties to the base source classes
-  relative to compositing and mixing.
 
-  The properties values can be both set/stored as 'relative' values
+  Create a new 'CompositingProperties' object for audio and video
+  which is an extensible set of properties for media-specific
+  positioning. This contains the properties mentionned above.
+
+  Add the CompositingProperties object to the base GESTrackObject
+  which points to the audio or video CompositingProperties
+  object (depending on what format that object is handling).
+
+  Provide convenience functions to retrieve and set the audio or video
+  compositing properties of a GESTrackObject. Do the same for the
+  GESTimelineObject, which proxies it to the relevant GESTrackObject.
+
+  Create a new GESTrack{Audio|Video}Compositing GstElement which will
+  be put in each track as a priority 0 expandable GnlOperation.
+  That object will be able to figure out which
+  mixing/scaling/conversion elements to use at any given time by
+  inspecting:
+   * The various GESTrackObject Compositing Properties
+   * The various GESTrackObject GESMaterial stream properties
+   * The GESTrack target output GstCaps
+
+  The properties values could be both set/stored as 'relative' values
   and as 'absolute' values in order to handle any input/output formats
   or setting.
 
@@ -318,9 +364,8 @@ Index of features:
   changes, all object positioning will change relatively to that
   format.
 
-  Add {audio|video}mixer elements in the Tracks where applicable, and
-  take into account input/output formats and relative values to apply
-  the most efficient processing.
+  Requires:
+   GESMaterial
 
   See also:
    Coherent handling of Content in different formats
@@ -334,7 +379,8 @@ Index of features:
    logos/videos, bluescreen, ...).
 
    Those streams need to be handle-able by the user just like
-   non-alpha videos.
+   non-alpha videos without losing the transparency regions (i.e. it
+   should be properly blended with the underlying regions).
 
 
 
