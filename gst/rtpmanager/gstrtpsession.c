@@ -1400,6 +1400,12 @@ gst_rtp_session_request_remote_key_unit (GstRtpSession * rtpsession,
     pli = gst_structure_has_field (s, "rtcp-fb-nack-pli");
     fir = gst_structure_has_field (s, "rtcp-fb-ccm-fir") && all_headers;
 
+    /* Google Talk uses FIR for repair, so send it even if we just want a
+     * regular PLI */
+    if (!pli &&
+        gst_structure_has_field (s, "rtcp-fb-x-gstreamer-fir-as-repair"))
+      fir = TRUE;
+
     gst_caps_unref (caps);
 
     if (pli || fir)
