@@ -535,6 +535,19 @@ gst_m3u8_client_get_duration (GstM3U8Client * client)
   return duration * GST_SECOND;
 }
 
+GstClockTime
+gst_m3u8_client_get_target_duration (GstM3U8Client * client)
+{
+  GstClockTime duration = 0;
+
+  g_return_val_if_fail (client != NULL, GST_CLOCK_TIME_NONE);
+
+  GST_M3U8_CLIENT_LOCK (client);
+  duration = client->current->targetduration;
+  GST_M3U8_CLIENT_UNLOCK (client);
+  return duration * GST_SECOND;
+}
+
 const gchar *
 gst_m3u8_client_get_uri (GstM3U8Client * client)
 {
@@ -544,6 +557,19 @@ gst_m3u8_client_get_uri (GstM3U8Client * client)
 
   GST_M3U8_CLIENT_LOCK (client);
   uri = client->main->uri;
+  GST_M3U8_CLIENT_UNLOCK (client);
+  return uri;
+}
+
+const gchar *
+gst_m3u8_client_get_current_uri (GstM3U8Client * client)
+{
+  const gchar *uri;
+
+  g_return_val_if_fail (client != NULL, NULL);
+
+  GST_M3U8_CLIENT_LOCK (client);
+  uri = client->current->uri;
   GST_M3U8_CLIENT_UNLOCK (client);
   return uri;
 }

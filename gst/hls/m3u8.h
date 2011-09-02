@@ -85,7 +85,9 @@ gboolean gst_m3u8_client_get_next_fragment (GstM3U8Client * client,
     gboolean * discontinuity, const gchar ** uri, GstClockTime * duration,
     GstClockTime * timestamp);
 GstClockTime gst_m3u8_client_get_duration (GstM3U8Client * client);
+GstClockTime gst_m3u8_client_get_target_duration (GstM3U8Client * client);
 const gchar *gst_m3u8_client_get_uri(GstM3U8Client * client);
+const gchar *gst_m3u8_client_get_current_uri(GstM3U8Client * client);
 gboolean gst_m3u8_client_has_variant_playlist(GstM3U8Client * client);
 gboolean gst_m3u8_client_is_live(GstM3U8Client * client);
 
