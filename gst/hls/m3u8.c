@@ -225,7 +225,7 @@ gst_m3u8_update (GstM3U8 * self, gchar * data, gboolean * updated)
   title = NULL;
   data += 7;
   while (TRUE) {
-    end = g_utf8_strchr (data, -1, '\n');       /* FIXME: support \r\n */
+    end = g_utf8_strchr (data, -1, '\n');
     if (end)
       *end = '\0';
 
