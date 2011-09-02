@@ -286,7 +286,8 @@ gst_hls_demux_change_state (GstElement * element, GstStateChange transition)
   GstHLSDemux *demux = GST_HLS_DEMUX (element);
 
   switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_hls_demux_reset (demux, FALSE);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
