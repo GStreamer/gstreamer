@@ -1777,9 +1777,9 @@ gst_mpegts_demux_parse_adaptation_field (GstMpegTSStream * stream,
           stream->last_PCR,
           GST_TIME_ARGS (MPEGTIME_TO_GSTTIME (stream->last_PCR)));
       /* pcr has been converted into units of 90Khz ticks 
-       * so assume discont if last pcr was > 900000 (10 second) lower */
+       * so assume discont if last pcr was > 90000 (1 second) lower */
       if (stream->last_PCR != -1 &&
-          (pcr - stream->last_PCR > 900000 || pcr < stream->last_PCR)) {
+          (pcr - stream->last_PCR > 90000 || pcr < stream->last_PCR)) {
         GstClockTimeDiff base_time_difference;
 
         GST_DEBUG_OBJECT (demux,
