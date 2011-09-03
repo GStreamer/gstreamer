@@ -1310,8 +1310,15 @@ gst_hls_demux_get_next_fragment (GstHLSDemux * demux)
 
   GST_INFO_OBJECT (demux, "Fetching next fragment %s", next_fragment_uri);
 
-  if (!gst_hls_demux_fetch_location (demux, next_fragment_uri))
+  if (!gst_hls_demux_fetch_location (demux, next_fragment_uri)) {
+    /* FIXME: The gst_m3u8_get_next_fragment increments the sequence number
+       but another thread might call get_next_fragment and this decrement
+       will not redownload the failed fragment, but might duplicate the
+       download of a succeeded fragment
+     */
+    g_atomic_int_add (&demux->client->sequence, -1);
     return FALSE;
+  }
 
   avail = gst_adapter_available (demux->download);
   buf = gst_adapter_take_buffer (demux->download, avail);
