@@ -374,7 +374,10 @@ gst_udp_parse_uri (const gchar * uristr, GstUDPUri * uri)
   gchar *location, *location_end;
   gchar *colptr;
 
+  /* consider no protocol to be udp:// */
   protocol = gst_uri_get_protocol (uristr);
+  if (!protocol)
+    goto no_protocol;
   if (strcmp (protocol, "udp") != 0)
     goto wrong_protocol;
   g_free (protocol);
@@ -425,6 +428,11 @@ gst_udp_parse_uri (const gchar * uristr, GstUDPUri * uri)
   return 0;
 
   /* ERRORS */
+no_protocol:
+  {
+    GST_ERROR ("error parsing uri %s: no protocol", uristr);
+    return -1;
+  }
 wrong_protocol:
   {
     GST_ERROR ("error parsing uri %s: wrong protocol (%s != udp)", uristr,
