@@ -128,10 +128,9 @@ struct _GstAudioEncoder {
  * @set_format:     Notifies subclass of incoming data format.
  *                  GstAudioInfo contains the format according to provided caps.
  * @handle_frame:   Provides input samples (or NULL to clear any remaining data)
- *                  according to directions as provided by subclass in the
- *                  #GstAudioEncoderContext.  Input data ref management
- *                  is performed by base class, subclass should not care or
- *                  intervene.
+ *                  according to directions as configured by the subclass
+ *                  using the API.  Input data ref management is performed
+ *                  by base class, subclass should not care or intervene.
  * @flush:          Optional.
  *                  Instructs subclass to clear any codec caches and discard
  *                  any pending samples and not yet returned encoded data.

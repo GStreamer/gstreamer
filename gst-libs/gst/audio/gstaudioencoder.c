@@ -101,18 +101,18 @@
  *
  * In particular, base class will either favor tracking upstream timestamps
  * (at the possible expense of jitter) or aim to arrange for a perfect stream of
- * output timestamps, depending on #GstAudioEncoder:perfect-ts.
+ * output timestamps, depending on #GstAudioEncoder:perfect-timestamp.
  * However, in the latter case, the input may not be so perfect or ideal, which
  * is handled as follows.  An input timestamp is compared with the expected
  * timestamp as dictated by input sample stream and if the deviation is less
  * than #GstAudioEncoder:tolerance, the deviation is discarded.
  * Otherwise, it is considered a discontuinity and subsequent output timestamp
  * is resynced to the new position after performing configured discontinuity
- * processing.  In the non-perfect-ts case, an upstream variation exceeding
- * tolerance only leads to marking DISCONT on subsequent outgoing
+ * processing.  In the non-perfect-timestamp case, an upstream variation
+ * exceeding tolerance only leads to marking DISCONT on subsequent outgoing
  * (while timestamps are adjusted to upstream regardless of variation).
- * While DISCONT is also marked in the perfect-ts case, this one optionally
- * (see #GstAudioEncoder:hard-resync)
+ * While DISCONT is also marked in the perfect-timestamp case, this one
+ * optionally (see #GstAudioEncoder:hard-resync)
  * performs some additional steps, such as clipping of (early) input samples
  * or draining all currently remaining input data, depending on the direction
  * of the discontuinity.
@@ -325,7 +325,7 @@ gst_audio_encoder_class_init (GstAudioEncoderClass * klass)
           DEFAULT_PERFECT_TS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_GRANULE,
       g_param_spec_boolean ("mark-granule", "Granule Marking",
-          "Apply granule semantics to buffer metadata (implies perfect-ts)",
+          "Apply granule semantics to buffer metadata (implies perfect-timestamp)",
           DEFAULT_GRANULE, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_HARD_RESYNC,
       g_param_spec_boolean ("hard-resync", "Hard Resync",
@@ -1470,7 +1470,8 @@ gst_audio_encoder_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_PERFECT_TS:
       if (enc->priv->granule && !g_value_get_boolean (value))
-        GST_WARNING_OBJECT (enc, "perfect-ts can not be set FALSE");
+        GST_WARNING_OBJECT (enc, "perfect-timestamp can not be set FALSE "
+            "while granule handling is enabled");
       else
         enc->priv->perfect_ts = g_value_get_boolean (value);
       break;
@@ -1705,10 +1706,11 @@ gst_audio_encoder_set_latency (GstAudioEncoder * enc,
 /**
  * gst_audio_encoder_get_latency:
  * @enc: a #GstAudioEncoder
- * @min: a pointer to storage to hold minimum latency
- * @max: a pointer to storage to hold maximum latency
+ * @min: (out) (allow-none): a pointer to storage to hold minimum latency
+ * @max: (out) (allow-none): a pointer to storage to hold maximum latency
  *
- * Returns currently configured latency.
+ * Sets the variables pointed to by @min and @max to the currently configured
+ * latency.
  *
  * Since: 0.10.36
  */

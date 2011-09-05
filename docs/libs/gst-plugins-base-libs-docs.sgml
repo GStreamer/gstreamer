@@ -44,6 +44,8 @@
       </para>
       <xi:include href="xml/gstaudio.xml" />
       <xi:include href="xml/gstaudioclock.xml" />
+      <xi:include href="xml/gstaudiodecoder.xml" />
+      <xi:include href="xml/gstaudioencoder.xml" />
       <xi:include href="xml/gstaudiofilter.xml" />
       <xi:include href="xml/gstaudiomixerutils.xml" />
       <xi:include href="xml/gstaudiosink.xml" />

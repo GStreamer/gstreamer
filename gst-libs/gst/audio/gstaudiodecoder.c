@@ -2116,10 +2116,11 @@ gst_audio_decoder_set_latency (GstAudioDecoder * dec,
 /**
  * gst_audio_decoder_get_latency:
  * @dec: a #GstAudioDecoder
- * @min: a pointer to storage to hold minimum latency
- * @max: a pointer to storage to hold maximum latency
+ * @min: (out) (allow-none): a pointer to storage to hold minimum latency
+ * @max: (out) (allow-none): a pointer to storage to hold maximum latency
  *
- * Returns currently configured latency.
+ * Sets the variables pointed to by @min and @max to the currently configured
+ * latency.
  *
  * Since: 0.10.36
  */
