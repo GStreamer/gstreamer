@@ -474,6 +474,13 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
           0, G_MAXINT, DEFAULT_UDP_BUFFER_SIZE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstRTSPSrc::short-header:
+   *
+   * Only send the basic RTSP headers for broken encoders.
+   *
+   * Since: 0.10.31
+   */
   g_object_class_install_property (gobject_class, PROP_SHORT_HEADER,
       g_param_spec_boolean ("short-header", "Short Header",
           "Only send the basic RTSP headers for broken encoders",
