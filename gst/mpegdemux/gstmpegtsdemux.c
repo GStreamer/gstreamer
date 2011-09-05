@@ -336,6 +336,9 @@ gst_mpegts_demux_init (GstMpegTSDemux * demux)
   demux->pcr[1] = -1;
   demux->cache_duration = GST_CLOCK_TIME_NONE;
   demux->base_pts = GST_CLOCK_TIME_NONE;
+  demux->in_gap = GST_CLOCK_TIME_NONE;
+  demux->first_buf_ts = GST_CLOCK_TIME_NONE;
+  demux->last_buf_ts = GST_CLOCK_TIME_NONE;
 }
 
 static void
@@ -386,6 +389,10 @@ gst_mpegts_demux_reset (GstMpegTSDemux * demux)
     g_object_unref (demux->clock);
     demux->clock = NULL;
   }
+
+  demux->in_gap = GST_CLOCK_TIME_NONE;
+  demux->first_buf_ts = GST_CLOCK_TIME_NONE;
+  demux->last_buf_ts = GST_CLOCK_TIME_NONE;
 }
 
 #if 0
@@ -1166,10 +1173,35 @@ gst_mpegts_demux_data_cb (GstPESFilter * filter, gboolean first,
     pts = -1;
   }
 
+  if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (demux->in_gap))) {
+    if (GST_CLOCK_TIME_IS_VALID (demux->first_buf_ts)
+        && GST_CLOCK_TIME_IS_VALID (filter->pts)) {
+      int i;
+      GstClockTime pts = GST_CLOCK_TIME_NONE;
+      for (i = 0; i < MPEGTS_MAX_PID + 1; i++) {
+        GstMpegTSStream *stream = demux->streams[i];
+        if (stream && (pts == GST_CLOCK_TIME_NONE || stream->last_time < pts)) {
+          pts = stream->last_time;
+        }
+      }
+      if (pts == GST_CLOCK_TIME_NONE)
+        pts = 0;
+      demux->in_gap = demux->first_buf_ts - pts;
+      GST_INFO_OBJECT (demux, "Setting interpolation gap to %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (demux->in_gap));
+    } else {
+      demux->in_gap = 0;
+    }
+  }
+
+  if (GST_CLOCK_TIME_IS_VALID (time)) {
+    time += demux->in_gap;
+  }
+
   GST_DEBUG_OBJECT (demux, "setting PTS to (%" G_GUINT64_FORMAT ") time: %"
       GST_TIME_FORMAT " on buffer %p first buffer: %d base_time: %"
-      GST_TIME_FORMAT, pts, GST_TIME_ARGS (time), buffer, first,
-      GST_TIME_ARGS (stream->base_time));
+      GST_TIME_FORMAT, pts, GST_TIME_ARGS (time + demux->in_gap),
+      buffer, first, GST_TIME_ARGS (stream->base_time));
 
   GST_BUFFER_TIMESTAMP (buffer) = time;
 
@@ -2720,6 +2752,9 @@ gst_mpegts_demux_sink_event (GstPad * pad, GstEvent * event)
       gst_adapter_clear (demux->adapter);
       gst_mpegts_demux_flush (demux, TRUE);
       res = gst_mpegts_demux_send_event (demux, event);
+      demux->in_gap = GST_CLOCK_TIME_NONE;
+      demux->first_buf_ts = GST_CLOCK_TIME_NONE;
+      demux->last_buf_ts = GST_CLOCK_TIME_NONE;
       break;
     case GST_EVENT_EOS:
       gst_mpegts_demux_flush (demux, FALSE);
@@ -3060,7 +3095,35 @@ gst_mpegts_demux_chain (GstPad * pad, GstBuffer * buffer)
   gint i;
   guint sync_count;
 
+  if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer)) {
+    GstClockTime timestamp = GST_BUFFER_TIMESTAMP (buffer);
+    GST_DEBUG_OBJECT (demux, "Got chained buffer ts %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (timestamp));
+
+    /* if we did not get a buffer for a while, assume the source has dried up,
+       and flush any stale data */
+    if (GST_CLOCK_TIME_IS_VALID (demux->last_buf_ts)) {
+      GstClockTimeDiff dt = timestamp - demux->last_buf_ts;
+      if (dt < 0 || dt > GST_SECOND / 2) {
+        GST_INFO_OBJECT (demux,
+            "Input timestamp discontinuity (%" GST_TIME_FORMAT
+            "), flushing stale data", GST_TIME_ARGS (dt));
+        gst_mpegts_demux_flush (demux, FALSE);
+      }
+    }
+    demux->last_buf_ts = timestamp;
+
+    /* lock on the first valid buffer timestamp */
+    if (G_UNLIKELY (demux->first_buf_ts == GST_CLOCK_TIME_NONE)) {
+      demux->first_buf_ts = timestamp;
+      GST_DEBUG_OBJECT (demux, "First timestamp is %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (demux->first_buf_ts));
+    }
+  }
+
   if (GST_BUFFER_IS_DISCONT (buffer)) {
+    GST_DEBUG_OBJECT (demux,
+        "Input buffer has DISCONT flag set, flushing data");
     gst_mpegts_demux_flush (demux, FALSE);
   }
   /* first push the new buffer into the adapter */

@@ -224,6 +224,13 @@ struct _GstMpegTSDemux {
 
   /* Cached base_PCR in GStreamer time. */
   GstClockTime      base_pts;
+
+  /* base timings on first buffer timestamp */
+  GstClockTime      first_buf_ts;
+  GstClockTime      in_gap;
+
+  /* Detect when the source stops for a while, we will resync the interpolation gap */
+  GstClockTime      last_buf_ts;
 };
 
 struct _GstMpegTSDemuxClass {
