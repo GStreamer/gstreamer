@@ -5204,7 +5204,7 @@ qtdemux_add_fragmented_samples (GstQTDemux * qtdemux)
   guint64 length, offset;
   GstBuffer *buf = NULL;
   GstFlowReturn ret = GST_FLOW_OK;
-  GstFlowReturn res = TRUE;
+  GstFlowReturn res = GST_FLOW_OK;
 
   offset = qtdemux->moof_offset;
   GST_DEBUG_OBJECT (qtdemux, "next moof at offset %" G_GUINT64_FORMAT, offset);
