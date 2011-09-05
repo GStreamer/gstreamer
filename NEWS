@@ -5,6 +5,7 @@ Copyright (C) 2011 Intel Corporation
 Version 0.2.7 - DD.Jul.2011
 * Fix MPEG-2 TS decoding
 * Fix build with newer versions of FFmpeg
+* Fix vaapiconvert direct-rendering modes
 
 Version 0.2.6 - 14.Jun.2011
 * Fix licensing terms (LGPL v2.1)

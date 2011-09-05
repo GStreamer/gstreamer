@@ -77,6 +77,12 @@ GST_BOILERPLATE(
     GstBaseTransform,
     GST_TYPE_BASE_TRANSFORM);
 
+/*
+ * Direct rendering levels (direct-rendering)
+ * 0: upstream allocated YUV pixels
+ * 1: vaapiconvert allocated YUV pixels (mapped from VA image)
+ * 2: vaapiconvert allocated YUV pixels (mapped from VA surface)
+ */
 #define DIRECT_RENDERING_DEFAULT 2
 
 enum {
@@ -334,10 +340,11 @@ gst_vaapiconvert_transform(
 )
 {
     GstVaapiConvert * const convert = GST_VAAPICONVERT(trans);
-    GstVaapiVideoBuffer * const vbuffer = GST_VAAPI_VIDEO_BUFFER(outbuf);
+    GstVaapiVideoBuffer *vbuffer;
     GstVaapiSurface *surface;
     GstVaapiImage *image;
 
+    vbuffer = GST_VAAPI_VIDEO_BUFFER(outbuf);
     surface = gst_vaapi_video_buffer_get_surface(vbuffer);
     if (!surface)
         return GST_FLOW_UNEXPECTED;
@@ -347,12 +354,9 @@ gst_vaapiconvert_transform(
             GST_DEBUG("GstVaapiVideoBuffer was expected");
             return GST_FLOW_UNEXPECTED;
         }
-        if (inbuf != outbuf) {
-            GST_DEBUG("same GstVaapiVideoBuffer was expected on both pads");
-            return GST_FLOW_UNEXPECTED;
-        }
 
-        image = gst_vaapi_video_buffer_get_image(vbuffer);
+        vbuffer = GST_VAAPI_VIDEO_BUFFER(inbuf);
+        image   = gst_vaapi_video_buffer_get_image(vbuffer);
         if (!image)
             return GST_FLOW_UNEXPECTED;
         if (!gst_vaapi_image_unmap(image))
@@ -571,6 +575,8 @@ gst_vaapiconvert_buffer_alloc(
     GstVaapiConvert * const convert = GST_VAAPICONVERT(trans);
     GstBuffer *buffer = NULL;
     GstVaapiImage *image = NULL;
+    GstVaapiSurface *surface = NULL;
+    GstVaapiVideoBuffer *vbuffer;
 
     /* Check if we can use direct-rendering */
     if (!gst_vaapiconvert_negotiate_buffers(convert, caps, caps))
@@ -578,26 +584,32 @@ gst_vaapiconvert_buffer_alloc(
     if (!convert->direct_rendering)
         return GST_FLOW_OK;
 
-    buffer = gst_vaapi_video_buffer_new_from_pool(convert->surfaces);
-    if (!buffer)
-        goto error;
-
-    GstVaapiVideoBuffer * const vbuffer = GST_VAAPI_VIDEO_BUFFER(buffer);
-    GstVaapiSurface *surface;
     switch (convert->direct_rendering) {
     case 2:
+        buffer  = gst_vaapi_video_buffer_new_from_pool(convert->surfaces);
+        if (!buffer)
+            goto error;
+        vbuffer = GST_VAAPI_VIDEO_BUFFER(buffer);
+
         surface = gst_vaapi_video_buffer_get_surface(vbuffer);
         image   = gst_vaapi_surface_derive_image(surface);
         if (image) {
             gst_vaapi_video_buffer_set_image(vbuffer, image);
             break;
         }
+
         /* We can't use the derive-image optimization. Disable it. */
         convert->direct_rendering = 1;
+        gst_buffer_unref(buffer);
+        buffer = NULL;
+
     case 1:
-        if (!gst_vaapi_video_buffer_set_image_from_pool(vbuffer, convert->images))
+        buffer  = gst_vaapi_video_buffer_new_from_pool(convert->images);
+        if (!buffer)
             goto error;
-        image = gst_vaapi_video_buffer_get_image(vbuffer);
+        vbuffer = GST_VAAPI_VIDEO_BUFFER(buffer);
+
+        image   = gst_vaapi_video_buffer_get_image(vbuffer);
         break;
     }
     g_assert(image);
@@ -614,6 +626,7 @@ gst_vaapiconvert_buffer_alloc(
 
 error:
     /* We can't use the inout-buffers optimization. Disable it. */
+    GST_DEBUG("disable in/out buffer optimization");
     if (buffer)
         gst_buffer_unref(buffer);
     convert->direct_rendering = 0;
@@ -651,15 +664,21 @@ gst_vaapiconvert_prepare_output_buffer(
 )
 {
     GstVaapiConvert * const convert = GST_VAAPICONVERT(trans);
-    GstBuffer *buffer;
+    GstBuffer *buffer = NULL;
+    GstFlowReturn ret;
 
-    if (GST_VAAPI_IS_VIDEO_BUFFER(inbuf))
-        buffer = gst_buffer_ref(inbuf);
-    else {
-        if (convert->direct_rendering) {
-            GST_DEBUG("upstream element destroyed our inout buffer");
-            convert->direct_rendering = 0;
+    if (convert->direct_rendering == 2) {
+        if (GST_VAAPI_IS_VIDEO_BUFFER(inbuf)) {
+            buffer = gst_vaapi_video_buffer_new_from_buffer(inbuf);
+            GST_BUFFER_SIZE(buffer) = size;
         }
+        else {
+            GST_DEBUG("upstream element destroyed our in/out buffer");
+            convert->direct_rendering = 1;
+        }
+    }
+
+    if (!buffer) {
         buffer = gst_vaapi_video_buffer_new_from_pool(convert->surfaces);
         if (!buffer)
             return GST_FLOW_UNEXPECTED;
