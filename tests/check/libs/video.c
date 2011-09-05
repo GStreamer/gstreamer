@@ -627,6 +627,8 @@ GST_START_TEST (test_convert_frame)
   gint i;
   guint8 *data;
 
+  gst_debug_set_threshold_for_name ("default", GST_LEVEL_NONE);
+
   from_buffer = gst_buffer_new_and_alloc (640 * 480 * 4);
   data = GST_BUFFER_DATA (from_buffer);
 
@@ -695,6 +697,8 @@ GST_START_TEST (test_convert_frame_async)
   guint8 *data;
   GMainLoop *loop;
   ConvertFrameContext cf_data = { NULL, NULL, NULL };
+
+  gst_debug_set_threshold_for_name ("default", GST_LEVEL_NONE);
 
   from_buffer = gst_buffer_new_and_alloc (640 * 480 * 4);
   data = GST_BUFFER_DATA (from_buffer);

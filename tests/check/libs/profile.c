@@ -137,6 +137,8 @@ GST_START_TEST (test_target_naming)
 {
   GstEncodingTarget *target;
 
+  gst_debug_set_threshold_for_name ("default", GST_LEVEL_NONE);
+
   /* NULL values */
   ASSERT_CRITICAL (target = gst_encoding_target_new (NULL, NULL, NULL, NULL));
   fail_if (target != NULL);
@@ -397,6 +399,8 @@ GST_START_TEST (test_loading_profile)
   GstCaps *tmpcaps;
   GValue strvalue = { 0, };
   GValue miniobjectvalue = { 0, };
+
+  gst_debug_set_threshold_for_name ("default", GST_LEVEL_NONE);
 
   /* Test loading using short method and all arguments */
   target = gst_encoding_target_load ("myponytarget", "herding", NULL);

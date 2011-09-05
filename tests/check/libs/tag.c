@@ -765,6 +765,8 @@ GST_START_TEST (test_license_utils)
   gchar *path, *data = NULL;
   gsize data_len;
 
+  gst_debug_set_threshold_for_name ("tag-licenses", GST_LEVEL_NONE);
+
   /* test jurisdiction-specific license */
   fail_unless_equals_int (gst_tag_get_license_flags (SPECIFIC_L), 0x01010703);
   fail_unless_equals_string (gst_tag_get_license_nick (SPECIFIC_L),
