@@ -95,14 +95,16 @@ gst_v4l2src_iface_supported (GstImplementsInterface * iface, GType iface_type)
   GstV4l2Object *v4l2object = GST_V4L2SRC (iface)->v4l2object;
 
 #ifdef HAVE_XVIDEO
-  g_assert (iface_type == GST_TYPE_TUNER ||
-      iface_type == GST_TYPE_X_OVERLAY ||
-      iface_type == GST_TYPE_COLOR_BALANCE ||
-      iface_type == GST_TYPE_VIDEO_ORIENTATION);
+  if (!(iface_type == GST_TYPE_TUNER ||
+        iface_type == GST_TYPE_X_OVERLAY ||
+        iface_type == GST_TYPE_COLOR_BALANCE ||
+        iface_type == GST_TYPE_VIDEO_ORIENTATION))
+    return FALSE;
 #else
-  g_assert (iface_type == GST_TYPE_TUNER ||
-      iface_type == GST_TYPE_COLOR_BALANCE ||
-      iface_type == GST_TYPE_VIDEO_ORIENTATION);
+  if (!(iface_type == GST_TYPE_TUNER ||
+        iface_type == GST_TYPE_COLOR_BALANCE ||
+        iface_type == GST_TYPE_VIDEO_ORIENTATION))
+    return FALSE;
 #endif
 
   if (v4l2object->video_fd == -1)
