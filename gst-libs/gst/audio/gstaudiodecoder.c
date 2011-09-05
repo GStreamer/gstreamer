@@ -2068,11 +2068,11 @@ gst_audio_decoder_get_delay (GstAudioDecoder * dec)
  * Since: 0.10.36
  */
 void
-gst_audio_decoder_set_max_errors (GstAudioDecoder * enc, gint num)
+gst_audio_decoder_set_max_errors (GstAudioDecoder * dec, gint num)
 {
-  g_return_if_fail (GST_IS_AUDIO_DECODER (enc));
+  g_return_if_fail (GST_IS_AUDIO_DECODER (dec));
 
-  enc->priv->ctx.max_errors = num;
+  dec->priv->ctx.max_errors = num;
 }
 
 /**
@@ -2141,8 +2141,8 @@ gst_audio_decoder_get_latency (GstAudioDecoder * dec,
 /**
  * gst_audio_decoder_get_parse_state:
  * @dec: a #GstAudioDecoder
- * @min: a pointer to storage to hold current sync state
- * @max: a pointer to storage to hold current eos state
+ * @sync: a pointer to a variable to hold the current sync state
+ * @eos: a pointer to a variable to hold the current eos state
  *
  * Return current parsing (sync and eos) state.
  *
@@ -2233,7 +2233,7 @@ gst_audio_decoder_set_min_latency (GstAudioDecoder * dec, gint64 num)
 
 /**
  * gst_audio_decoder_get_min_latency:
- * @enc: a #GstAudioDecoder
+ * @dec: a #GstAudioDecoder
  *
  * Queries decoder's latency aggregation.
  *

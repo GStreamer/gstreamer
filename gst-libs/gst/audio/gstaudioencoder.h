@@ -95,7 +95,6 @@ typedef struct _GstAudioEncoderPrivate GstAudioEncoderPrivate;
 
 /**
  * GstAudioEncoder:
- * @element: the parent element.
  *
  * The opaque #GstAudioEncoder data structure.
  *

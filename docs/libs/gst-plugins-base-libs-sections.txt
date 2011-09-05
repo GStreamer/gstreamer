@@ -35,6 +35,7 @@ GST_IS_APP_BUFFER
 GST_IS_APP_BUFFER_CLASS
 GST_TYPE_APP_BUFFER
 GST_TYPE_APP_STREAM_TYPE
+gst_app_stream_type_get_type
 <SUBSECTION Private>
 GstAppSrc
 GstAppSrcPrivate
@@ -154,7 +155,7 @@ gst_audio_decoder_set_plc_aware
 gst_audio_decoder_set_tolerance
 <SUBSECTION Standard>
 GST_AUDIO_DECODER
-GST_IS_AUDI_DECODER
+GST_IS_AUDIO_DECODER
 GST_TYPE_AUDIO_DECODER
 gst_audio_decoder_get_type
 GST_AUDIO_DECODER_CLASS
@@ -545,6 +546,8 @@ KISS_FFT_F64_SIN
 <INCLUDE>gst/floatcast/floatcast.h</INCLUDE>
 gst_cast_double
 gst_cast_float
+<SUBSECTION Standard>
+inline
 </SECTION>
 
 
@@ -1916,7 +1919,7 @@ GST_IS_TAG_MUX_CLASS
 GST_TAG_MUX
 GST_TAG_MUX_CLASS
 GST_TYPE_TAG_MUX
-gst_tag_demux_get_type
+gst_tag_mux_get_type
 </SECTION>
 
 <SECTION>
@@ -1933,6 +1936,7 @@ gst_tag_get_language_code_iso_639_2T
 <SECTION>
 <FILE>gsttaglicenses</FILE>
 <INCLUDE>gst/tag/tag.h</INCLUDE>
+GstTagLicenseFlags
 gst_tag_get_license_flags
 gst_tag_get_license_nick
 gst_tag_get_license_title
@@ -2156,7 +2160,7 @@ GstEncodingTargetClass
 
 <SECTION>
 <FILE>gstvideo</FILE>
-<INCLUDE>gst/video/video.h</INCLUDE>
+<INCLUDE>gst/video.h</INCLUDE>
 GST_VIDEO_BLUE_MASK_15
 GST_VIDEO_BLUE_MASK_15_INT
 GST_VIDEO_BLUE_MASK_16
@@ -2222,6 +2226,7 @@ GST_VIDEO_SIZE_RANGE
 GST_VIDEO_BUFFER_TFF
 GST_VIDEO_BUFFER_RFF
 GST_VIDEO_BUFFER_ONEFIELD
+GST_VIDEO_BUFFER_PROGRESSIVE
 GstVideoFormat
 gst_video_calculate_display_ratio
 gst_video_frame_rate
@@ -2326,6 +2331,7 @@ GstDiscovererStreamInfo
 GstDiscovererContainerInfo
 GstDiscovererAudioInfo
 GstDiscovererVideoInfo
+GstDiscovererSubtitleInfo
 gst_discoverer_stream_info_get_caps
 gst_discoverer_stream_info_get_misc
 gst_discoverer_stream_info_get_next
@@ -2367,6 +2373,7 @@ GST_DISCOVERER_CONTAINER_INFO
 GST_DISCOVERER_INFO
 GST_DISCOVERER_STREAM_INFO
 GST_DISCOVERER_VIDEO_INFO
+GST_DISCOVERER_SUBTITLE_INFO
 GST_IS_DISCOVERER
 GST_IS_DISCOVERER_INFO
 GST_IS_DISCOVERER_AUDIO_INFO
@@ -2374,6 +2381,7 @@ GST_IS_DISCOVERER_CLASS
 GST_IS_DISCOVERER_CONTAINER_INFO
 GST_IS_DISCOVERER_STREAM_INFO
 GST_IS_DISCOVERER_VIDEO_INFO
+GST_IS_DISCOVERER_SUBTITLE_INFO
 GST_TYPE_DISCOVERER
 GST_TYPE_DISCOVERER_AUDIO_INFO
 GST_TYPE_DISCOVERER_CONTAINER_INFO
@@ -2381,12 +2389,14 @@ GST_TYPE_DISCOVERER_INFO
 GST_TYPE_DISCOVERER_RESULT
 GST_TYPE_DISCOVERER_STREAM_INFO
 GST_TYPE_DISCOVERER_VIDEO_INFO
+GST_TYPE_DISCOVERER_SUBTITLE_INFO
 GstDiscovererAudioInfoClass
 GstDiscovererClass
 GstDiscovererContainerInfoClass
 GstDiscovererPrivate
 GstDiscovererStreamInfoClass
 GstDiscovererVideoInfoClass
+GstDiscovererSubtitleInfoClass
 GstDiscovererInfoClass
 gst_discoverer_audio_info_get_type
 gst_discoverer_container_info_get_type

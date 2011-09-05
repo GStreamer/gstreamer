@@ -120,12 +120,12 @@ GstFlowReturn _gst_audio_decoder_error (GstAudioDecoder *dec, gint weight,
  *
  * Since: 0.10.36
  */
-#define GST_AUDIO_DECODER_ERROR(el, w, domain, code, text, debug, ret) \
+#define GST_AUDIO_DECODER_ERROR(el, weight, domain, code, text, debug, ret) \
 G_STMT_START {                                                              \
   gchar *__txt = _gst_element_error_printf text;                            \
   gchar *__dbg = _gst_element_error_printf debug;                           \
   GstAudioDecoder *dec = GST_AUDIO_DECODER (el);                   \
-  ret = _gst_audio_decoder_error (dec, w, GST_ ## domain ## _ERROR,    \
+  ret = _gst_audio_decoder_error (dec, weight, GST_ ## domain ## _ERROR,    \
       GST_ ## domain ## _ERROR_ ## code, __txt, __dbg, __FILE__,            \
       GST_FUNCTION, __LINE__);                                              \
 } G_STMT_END
@@ -244,7 +244,7 @@ gint              gst_audio_decoder_get_byte_time  (GstAudioDecoder * dec);
 
 gint              gst_audio_decoder_get_delay      (GstAudioDecoder * dec);
 
-void              gst_audio_decoder_set_max_errors (GstAudioDecoder * enc,
+void              gst_audio_decoder_set_max_errors (GstAudioDecoder * dec,
                                                    gint               num);
 
 gint              gst_audio_decoder_get_max_errors (GstAudioDecoder * dec);
