@@ -2920,6 +2920,34 @@ drained_cb (GstElement * decodebin, GstSourceGroup * group)
   setup_next_source (playbin, GST_STATE_PAUSED);
 }
 
+/* Like gst_element_factory_can_sink_any_caps() but doesn't
+ * allow ANY caps on the sinkpad template */
+static gboolean
+_factory_can_sink_caps (GstElementFactory * factory, GstCaps * caps)
+{
+  const GList *templs;
+
+  templs = gst_element_factory_get_static_pad_templates (factory);
+
+  while (templs) {
+    GstStaticPadTemplate *templ = (GstStaticPadTemplate *) templs->data;
+
+    if (templ->direction == GST_PAD_SINK) {
+      GstCaps *templcaps = gst_static_caps_get (&templ->static_caps);
+
+      if (!gst_caps_is_any (templcaps)
+          && gst_caps_can_intersect (templcaps, caps)) {
+        gst_caps_unref (templcaps);
+        return TRUE;
+      }
+      gst_caps_unref (templcaps);
+    }
+    templs = g_list_next (templs);
+  }
+
+  return FALSE;
+}
+
 /* Called when we must provide a list of factories to plug to @pad with @caps.
  * We first check if we have a sink that can handle the format and if we do, we
  * return NULL, to expose the pad. If we have no sink (or the sink does not
@@ -2948,11 +2976,51 @@ autoplug_factories_cb (GstElement * decodebin, GstPad * pad,
   GST_DEBUG_OBJECT (playbin, "found factories %p", mylist);
   GST_PLUGIN_FEATURE_LIST_DEBUG (mylist);
 
-  result = g_value_array_new (g_list_length (mylist));
+  /* 2 additional elements for the already set audio/video sinks */
+  result = g_value_array_new (g_list_length (mylist) + 2);
+
+  /* Check if we already have an audio/video sink and if this is the case
+   * put it as the first element of the array */
+  if (group->audio_sink) {
+    GstElementFactory *factory = gst_element_get_factory (group->audio_sink);
+
+    if (factory && _factory_can_sink_caps (factory, caps)) {
+      GValue val = { 0, };
+
+      g_value_init (&val, G_TYPE_OBJECT);
+      g_value_set_object (&val, factory);
+      result = g_value_array_append (result, &val);
+      g_value_unset (&val);
+    }
+  }
+
+  if (group->video_sink) {
+    GstElementFactory *factory = gst_element_get_factory (group->video_sink);
+
+    if (factory && _factory_can_sink_caps (factory, caps)) {
+      GValue val = { 0, };
+
+      g_value_init (&val, G_TYPE_OBJECT);
+      g_value_set_object (&val, factory);
+      result = g_value_array_append (result, &val);
+      g_value_unset (&val);
+    }
+  }
 
   for (tmp = mylist; tmp; tmp = tmp->next) {
     GstElementFactory *factory = GST_ELEMENT_FACTORY_CAST (tmp->data);
     GValue val = { 0, };
+
+    if (group->audio_sink && gst_element_factory_list_is_type (factory,
+            GST_ELEMENT_FACTORY_TYPE_SINK |
+            GST_ELEMENT_FACTORY_TYPE_MEDIA_AUDIO)) {
+      continue;
+    }
+    if (group->video_sink && gst_element_factory_list_is_type (factory,
+            GST_ELEMENT_FACTORY_TYPE_SINK | GST_ELEMENT_FACTORY_TYPE_MEDIA_VIDEO
+            | GST_ELEMENT_FACTORY_TYPE_MEDIA_IMAGE)) {
+      continue;
+    }
 
     g_value_init (&val, G_TYPE_OBJECT);
     g_value_set_object (&val, factory);
