@@ -1281,7 +1281,10 @@ gst_qtdemux_perform_seek (GstQTDemux * qtdemux, GstSegment * segment)
   GST_DEBUG_OBJECT (qtdemux, "seeking to %" GST_TIME_FORMAT,
       GST_TIME_ARGS (desired_offset));
 
-  if (segment->flags & GST_SEEK_FLAG_KEY_UNIT) {
+  /* may not have enough fragmented info to do this adjustment,
+   * and we can't scan (and probably should not) at this time with
+   * possibly flushing upstream */
+  if ((segment->flags & GST_SEEK_FLAG_KEY_UNIT) && !qtdemux->fragmented) {
     gint64 min_offset;
 
     gst_qtdemux_adjust_seek (qtdemux, desired_offset, &min_offset, NULL);
