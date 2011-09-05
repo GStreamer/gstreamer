@@ -192,10 +192,9 @@ struct _GstAudioFormatInfo {
 #define GST_AUDIO_FORMAT_INFO_NAME(info)         ((info)->name)
 #define GST_AUDIO_FORMAT_INFO_FLAGS(info)        ((info)->flags)
 
-// FIXME: fix IS macros (make boolean)
-#define GST_AUDIO_FORMAT_INFO_IS_INTEGER(info)   ((info)->flags & GST_AUDIO_FORMAT_FLAG_INTEGER)
-#define GST_AUDIO_FORMAT_INFO_IS_FLOAT(info)     ((info)->flags & GST_AUDIO_FORMAT_FLAG_FLOAT)
-#define GST_AUDIO_FORMAT_INFO_IS_SIGNED(info)    ((info)->flags & GST_AUDIO_FORMAT_FLAG_SIGNED)
+#define GST_AUDIO_FORMAT_INFO_IS_INTEGER(info)   !!((info)->flags & GST_AUDIO_FORMAT_FLAG_INTEGER)
+#define GST_AUDIO_FORMAT_INFO_IS_FLOAT(info)     !!((info)->flags & GST_AUDIO_FORMAT_FLAG_FLOAT)
+#define GST_AUDIO_FORMAT_INFO_IS_SIGNED(info)    !!((info)->flags & GST_AUDIO_FORMAT_FLAG_SIGNED)
 
 #define GST_AUDIO_FORMAT_INFO_ENDIANNESS(info)   ((info)->endianness)
 #define GST_AUDIO_FORMAT_INFO_IS_LE(info)        ((info)->endianness == G_LITTLE_ENDIAN)
