@@ -496,12 +496,14 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
 
       /* mark where config needs to go if interval expired */
       /* mind replacement buffer if applicable */
-      if (h264parse->format == GST_H264_PARSE_FORMAT_AVC)
-        h264parse->idr_pos = gst_adapter_available (h264parse->frame_out);
-      else
-        h264parse->idr_pos = nalu->offset - 4;
-      GST_DEBUG_OBJECT (h264parse, "marking IDR in frame at offset %d",
-          h264parse->idr_pos);
+      if (h264parse->idr_pos == -1) {
+        if (h264parse->format == GST_H264_PARSE_FORMAT_AVC)
+          h264parse->idr_pos = gst_adapter_available (h264parse->frame_out);
+        else
+          h264parse->idr_pos = nalu->offset - 4;
+        GST_DEBUG_OBJECT (h264parse, "marking IDR in frame at offset %d",
+            h264parse->idr_pos);
+      }
 
       GST_DEBUG ("first MB: %u, slice type: %u", slice.first_mb_in_slice,
           slice.type);
