@@ -435,6 +435,34 @@ typedef enum {
  */
 #define GST_VIDEO_BUFFER_PROGRESSIVE GST_BUFFER_FLAG_MEDIA4
 
+/**
+ * GstVideoQoSTrackerMethod:
+ * @GST_VIDEO_QOS_TRACKER_2DURATION: 
+ *
+ * Enum value describing the algorithm to use to determine when to drop a frame.
+ */
+typedef enum {
+  GST_VIDEO_QOS_TRACKER_DIFF,
+  GST_VIDEO_QOS_TRACKER_TWICE_DIFF,
+} GstVideoQoSTrackerMethod;
+
+typedef struct _GstVideoQoSTracker GstVideoQoSTracker;
+struct _GstVideoQoSTracker {
+  gdouble proportion;
+  GstClockTime timestamp;
+  GstClockTimeDiff diff;
+  GstClockTime earliest_time;
+  guint64 processed;
+  guint64 dropped;
+  GMutex *lock; /* protects the above */
+  GstElement *element;
+
+  /*< private >*/
+  union {
+    gpointer _gst_reserved[GST_PADDING];
+  } abidata;
+};
+
 /* functions */
 
 const GValue * gst_video_frame_rate (GstPad * pad);
@@ -568,6 +596,16 @@ GstBuffer *    gst_video_convert_frame       (GstBuffer     * buf,
                                               const GstCaps * to_caps,
                                               GstClockTime    timeout,
                                               GError       ** error);
+
+/* QoS */
+void           gst_video_qos_tracker_init            (GstVideoQoSTracker * qt, GstElement *element);
+void           gst_video_qos_tracker_reset           (GstVideoQoSTracker * qt);
+void           gst_video_qos_tracker_update          (GstVideoQoSTracker * qt, GstEvent* event,
+                                                         GstClockTime frame_duration,
+                                                         GstVideoQoSTrackerMethod method);
+gboolean       gst_video_qos_tracker_process_frame   (GstVideoQoSTracker * qt, const GstSegment *segment,
+                                                      GstClockTime timestamp, GstClockTime duration);
+void           gst_video_qos_tracker_clear           (GstVideoQoSTracker * qt);
 
 G_END_DECLS
 

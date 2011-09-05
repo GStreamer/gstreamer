@@ -2330,3 +2330,220 @@ gst_video_parse_caps_palette (GstCaps * caps)
 
   return p;
 }
+
+/**
+ * gst_video_qos_tracker_init:
+ * @qt: The #GstVideoQoSTracker to initialize
+ * @element: The element the tracker belongs to, which will be sending the QoS
+ * messages when appropriate.
+ *
+ * Initialize a #GstVideoQoSTracker. Call gst_video_qos_tracker_clear when done.
+ * Includes its own locking, so it's safe to call the gst_video_qos_tracker_ API
+ * from multiple threads (except _init and _clear, of course).
+ *
+ * The element is not referenced, so must have a lifetime that encompasses that
+ * of the GstVideoQoSTracker. This is implicit in the typical case where the
+ * GstVideoQoSTracker is a member of the owning element.
+ *
+ * Since: 0.10.36
+ */
+void
+gst_video_qos_tracker_init (GstVideoQoSTracker * qt, GstElement * element)
+{
+  qt->lock = g_mutex_new ();
+  qt->element = element;
+  gst_video_qos_tracker_reset (qt);
+}
+
+/**
+ * gst_video_qos_tracker_reset:
+ * @qt: The #GstVideoQoSTracker to reset
+ *
+ * Reset a #GstVideoQoSTracker.
+ * Use when restarting an element.
+ *
+ * Since: 0.10.36
+ */
+void
+gst_video_qos_tracker_reset (GstVideoQoSTracker * qt)
+{
+  g_return_if_fail (qt && qt->lock);
+  g_mutex_lock (qt->lock);
+  qt->proportion = 1.0;
+  qt->timestamp = GST_CLOCK_TIME_NONE;
+  qt->diff = 0;
+  qt->earliest_time = GST_CLOCK_TIME_NONE;
+  qt->processed = 0;
+  qt->dropped = 0;
+  g_mutex_unlock (qt->lock);
+}
+
+/**
+ * gst_video_qos_tracker_update:
+ * @qt: The #GstVideoQoSTracker to update
+ * @event: The event to update from, must a QOS event
+ * @frame_duration: the duration of a frame, if known,
+ * may be GST_CLOCK_TIME_NONE is unknown
+ * @method: the algorithm to use to determine the time at
+ * which to start accepting frames again when we're late
+ *
+ * Update a #GstVideoQoSTracker from an incoming QOS event.
+ * This allows the QoS tracker to know whether the sink is
+ * late or not.
+ * An element using a GstVideoQoSTracker should pass all
+ * QOS events to this function.
+ *
+ * Since: 0.10.36
+ */
+void
+gst_video_qos_tracker_update (GstVideoQoSTracker * qt, GstEvent * event,
+    GstClockTime frame_duration, GstVideoQoSTrackerMethod method)
+{
+  gdouble proportion;
+  GstClockTime timestamp;
+  GstClockTimeDiff diff;
+
+  g_return_if_fail (qt && qt->lock);
+  g_return_if_fail (event && GST_IS_EVENT (event));
+  g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_QOS);
+
+  gst_event_parse_qos (event, &proportion, &diff, &timestamp);
+
+  g_mutex_lock (qt->lock);
+
+  qt->proportion = proportion;
+  qt->diff = diff;
+
+  if (G_LIKELY (GST_CLOCK_TIME_IS_VALID (timestamp))) {
+    qt->timestamp = timestamp;
+    if (G_UNLIKELY (diff > 0)) {
+      switch (method) {
+        case GST_VIDEO_QOS_TRACKER_DIFF:
+          qt->earliest_time = qt->timestamp + diff;
+          break;
+        case GST_VIDEO_QOS_TRACKER_TWICE_DIFF:
+          qt->earliest_time = qt->timestamp + 2 * diff;
+          break;
+        default:
+          g_assert_not_reached ();
+          qt->earliest_time = qt->timestamp + diff;
+          break;
+      }
+      if (GST_CLOCK_TIME_IS_VALID (frame_duration)) {
+        qt->earliest_time += frame_duration;
+      }
+    } else {
+      qt->earliest_time = qt->timestamp + qt->diff;
+    }
+  } else {
+    qt->timestamp = GST_CLOCK_TIME_NONE;
+    qt->earliest_time = GST_CLOCK_TIME_NONE;
+  }
+
+  GST_DEBUG_OBJECT (qt->element,
+      "got QoS %" GST_TIME_FORMAT ", %" G_GINT64_FORMAT,
+      GST_TIME_ARGS (qt->timestamp), qt->diff);
+
+  g_mutex_unlock (qt->lock);
+}
+
+/**
+ * gst_video_qos_tracker_process_frame:
+ * @qt: The #GstVideoQoSTracker to use
+ * @segment: The segment to use to determine running times
+ * @timestamp: the timestamp of the buffer to consider.
+ * May be GST_CLOCK_TIME_NONE if unknown.
+ * @duration: the duration of the buffer to consider.
+ * May be GST_CLOCK_TIME_NONE if unknown.
+ *
+ * Decides if a frame should be dropped or not based on the known
+ * timings from previously received QOS events.
+ * Frames with unknown timestamps will never be dropped.
+ * If a frame is to be dropped, an appropriate QoS message will
+ * be sent on behalf of the owning element, and the element should
+ * not send that buffer downstream.
+ *
+ * Returns: %TRUE if the buffer should be dropped, %FALSE otherwise.
+ *
+ * Since: 0.10.36
+ */
+gboolean
+gst_video_qos_tracker_process_frame (GstVideoQoSTracker * qt,
+    const GstSegment * segment, GstClockTime timestamp, GstClockTime duration)
+{
+  GstClockTime running_time;
+  gboolean skip;
+  GstClockTime earliest_time;
+
+  g_return_val_if_fail (qt && qt->lock, FALSE);
+  g_return_val_if_fail (segment, FALSE);
+
+  if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (timestamp)))
+    return FALSE;
+
+  g_mutex_lock (qt->lock);
+
+  earliest_time = qt->earliest_time;
+
+  /* qos needs to be done on running time */
+  running_time =
+      gst_segment_to_running_time ((GstSegment *) segment, GST_FORMAT_TIME,
+      timestamp);
+  skip = GST_CLOCK_TIME_IS_VALID (earliest_time)
+      && running_time <= earliest_time;
+
+  if (skip) {
+    GstMessage *qos_msg;
+    guint64 stream_time;
+    gint64 jitter;
+    guint64 dropped, processed;
+    gdouble proportion;
+
+    qt->dropped++;
+
+    proportion = qt->proportion;
+    processed = qt->processed;
+    dropped = qt->dropped;
+
+    g_mutex_unlock (qt->lock);
+
+    GST_DEBUG_OBJECT (qt->element, "skipping decoding: qostime %"
+        GST_TIME_FORMAT " <= %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (running_time), GST_TIME_ARGS (earliest_time));
+
+    stream_time =
+        gst_segment_to_stream_time ((GstSegment *) segment, GST_FORMAT_TIME,
+        timestamp);
+    jitter = GST_CLOCK_DIFF (running_time, earliest_time);
+
+    qos_msg =
+        gst_message_new_qos (GST_OBJECT_CAST (qt->element), FALSE, running_time,
+        stream_time, timestamp, duration);
+    gst_message_set_qos_values (qos_msg, jitter, proportion, 1000000);
+    gst_message_set_qos_stats (qos_msg, GST_FORMAT_BUFFERS, processed, dropped);
+    gst_element_post_message (qt->element, qos_msg);
+  } else {
+    qt->processed++;
+    g_mutex_unlock (qt->lock);
+  }
+
+  return skip;
+}
+
+/**
+ * gst_video_qos_tracker_clear:
+ * @qt: The #GstVideoQoSTracker to clear
+ *
+ * Clears a previously initialized GstVideoQoSTracker.
+ * That GstVideoQoSTracker may be be used after this call, unless
+ * it is initialized again.
+ *
+ * Since: 0.10.36
+ */
+void
+gst_video_qos_tracker_clear (GstVideoQoSTracker * qt)
+{
+  g_return_if_fail (qt && qt->lock);
+  g_mutex_free (qt->lock);
+  qt->lock = NULL;
+}
