@@ -1477,7 +1477,7 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
 
     for (i = 0; i < factories->n_values && !dontuse; i++) {
       GstElementFactory *factory =
-          g_value_get_object (g_value_array_get_nth (factories, 0));
+          g_value_get_object (g_value_array_get_nth (factories, i));
       GstCaps *tcaps;
 
       /* We are only interested in skipping decoders */
