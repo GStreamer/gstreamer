@@ -346,7 +346,9 @@ gst_parser_test_drain_garbage (guint8 * data, guint size, guint8 * garbage,
 {
   GstParserTest ptest;
 
-  gst_parser_test_init (&ptest, data, size, 1);
+  /* provide enough initial frames since it may take some parsers some
+   * time to be convinced of proper sync */
+  gst_parser_test_init (&ptest, data, size, 10);
   ptest.series[1].data = garbage;
   ptest.series[1].size = gsize;
   ptest.series[1].num = 1;
