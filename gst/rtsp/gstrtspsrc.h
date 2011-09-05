@@ -214,6 +214,7 @@ struct _GstRTSPSrc {
   gint              buffer_mode;
   GstRTSPRange      client_port_range;
   gint              udp_buffer_size;
+  gboolean          short_header;
 
   /* state */
   GstRTSPState       state;
