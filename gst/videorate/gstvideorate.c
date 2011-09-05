@@ -994,9 +994,7 @@ gst_video_rate_set_property (GObject * object,
       videorate->drop_only = g_value_get_boolean (value);
       break;
     case ARG_AVERAGE_PERIOD:
-      GST_OBJECT_LOCK (videorate);
       videorate->average_period_set = g_value_get_uint64 (value);
-      GST_OBJECT_UNLOCK (videorate);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1038,9 +1036,7 @@ gst_video_rate_get_property (GObject * object,
       g_value_set_boolean (value, videorate->drop_only);
       break;
     case ARG_AVERAGE_PERIOD:
-      GST_OBJECT_LOCK (videorate);
       g_value_set_uint64 (value, videorate->average_period_set);
-      GST_OBJECT_UNLOCK (videorate);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
