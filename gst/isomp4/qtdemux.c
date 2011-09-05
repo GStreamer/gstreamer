@@ -2105,6 +2105,14 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
       stream->track_id, d_sample_duration, d_sample_size, d_sample_flags,
       *base_offset);
 
+  /* presence of stss or not can't really tell us much,
+   * and flags and so on tend to be marginally reliable in these files */
+  if (stream->subtype == FOURCC_soun) {
+    GST_DEBUG_OBJECT (qtdemux,
+        "sound track in fragmented file; marking all keyframes");
+    stream->all_keyframe = TRUE;
+  }
+
   if (!gst_byte_reader_skip (trun, 1) ||
       !gst_byte_reader_get_uint24_be (trun, &flags))
     goto fail;
