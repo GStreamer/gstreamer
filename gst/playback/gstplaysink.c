@@ -3444,9 +3444,16 @@ gst_play_sink_change_state (GstElement * element, GstStateChange transition)
         disconnect_chain (playsink->audiochain, playsink);
         playsink->audiochain->volume = NULL;
         playsink->audiochain->mute = NULL;
-        if (playsink->audiochain->ts_offset)
-          gst_object_unref (playsink->audiochain->ts_offset);
+      }
+
+      if (playsink->audiochain && playsink->audiochain->ts_offset) {
+        gst_object_unref (playsink->audiochain->ts_offset);
         playsink->audiochain->ts_offset = NULL;
+      }
+
+      if (playsink->videochain && playsink->videochain->ts_offset) {
+        gst_object_unref (playsink->videochain->ts_offset);
+        playsink->videochain->ts_offset = NULL;
       }
       ret = GST_STATE_CHANGE_SUCCESS;
       break;
