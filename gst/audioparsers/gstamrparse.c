@@ -307,11 +307,28 @@ gst_amr_parse_check_valid_frame (GstBaseParse * parse,
      *       to contain a valid header as well (and there is enough data to
      *       perform this check)
      */
-    if (fsize &&
-        (!GST_BASE_PARSE_LOST_SYNC (parse) || GST_BASE_PARSE_DRAINING (parse)
-            || (dsize > fsize && (data[fsize] & 0x83) == 0))) {
-      *framesize = fsize;
-      return TRUE;
+    if (fsize) {
+      gboolean found = FALSE;
+
+      /* in sync, no further check */
+      if (!GST_BASE_PARSE_LOST_SYNC (parse)) {
+        found = TRUE;
+      } else if (dsize > fsize) {
+        /* enough data, check for next sync */
+        if ((data[fsize] & 0x83) == 0)
+          found = TRUE;
+      } else if (GST_BASE_PARSE_DRAINING (parse)) {
+        /* not enough, but draining, so ok */
+        found = TRUE;
+      } else {
+        /* indicate we need not skip, but need more data */
+        *skipsize = 0;
+        *framesize = fsize + 1;
+      }
+      if (found) {
+        *framesize = fsize;
+        return TRUE;
+      }
     }
   }
 
