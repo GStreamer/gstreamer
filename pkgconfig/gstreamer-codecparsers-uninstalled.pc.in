@@ -1,0 +1,12 @@
+prefix=
+exec_prefix=
+libdir=${pcfiledir}/../gst-libs/gst/codecparsers
+includedir=${pcfiledir}/../gst-libs
+
+Name: GStreamer codec parsers, Uninstalled
+Description: Bitstream parsers for GStreamer elements, uninstalled
+Requires: gstreamer-@GST_MAJORMINOR@ gstreamer-base-@GST_MAJORMINOR@
+Version: @VERSION@
+Libs: -L${libdir} ${libdir}/libgstcodecparsers-@GST_MAJORMINOR@.la
+Cflags: -I${includedir}
+

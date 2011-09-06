@@ -273,7 +273,7 @@ gst_mms_prepare_seek_segment (GstBaseSrc * src, GstEvent * event,
 static gboolean
 gst_mms_do_seek (GstBaseSrc * src, GstSegment * segment)
 {
-  mms_off_t start;
+  gint64 start;
   GstMMS *mmssrc = GST_MMS (src);
 
   if (segment->format == GST_FORMAT_TIME) {

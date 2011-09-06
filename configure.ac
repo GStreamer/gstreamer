@@ -1963,6 +1963,7 @@ gst-libs/gst/Makefile
 gst-libs/gst/basecamerabinsrc/Makefile
 gst-libs/gst/interfaces/Makefile
 gst-libs/gst/signalprocessor/Makefile
+gst-libs/gst/codecparsers/Makefile
 gst-libs/gst/video/Makefile
 sys/Makefile
 sys/dshowdecwrapper/Makefile
@@ -2058,10 +2059,13 @@ ext/zbar/Makefile
 po/Makefile.in
 docs/Makefile
 docs/plugins/Makefile
+docs/libs/Makefile
 docs/version.entities
 pkgconfig/Makefile
 pkgconfig/gstreamer-plugins-bad.pc
 pkgconfig/gstreamer-plugins-bad-uninstalled.pc
+pkgconfig/gstreamer-codecparsers.pc
+pkgconfig/gstreamer-codecparsers-uninstalled.pc
 tools/Makefile
 m4/Makefile
 win32/common/config.h

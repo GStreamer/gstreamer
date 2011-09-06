@@ -188,6 +188,7 @@ static void gst_ts_demux_reset (MpegTSBase * base);
 static GstFlowReturn
 gst_ts_demux_push (MpegTSBase * base, MpegTSPacketizerPacket * packet,
     MpegTSPacketizerSection * section);
+static void gst_ts_demux_flush (MpegTSBase * base);
 static void
 gst_ts_demux_stream_added (MpegTSBase * base, MpegTSBaseStream * stream,
     MpegTSBaseProgram * program);
@@ -282,6 +283,7 @@ gst_ts_demux_class_init (GstTSDemuxClass * klass)
   ts_class->stream_removed = gst_ts_demux_stream_removed;
   ts_class->find_timestamps = GST_DEBUG_FUNCPTR (find_timestamps);
   ts_class->seek = GST_DEBUG_FUNCPTR (gst_ts_demux_do_seek);
+  ts_class->flush = GST_DEBUG_FUNCPTR (gst_ts_demux_flush);
 }
 
 static void
@@ -882,9 +884,7 @@ gst_ts_demux_srcpad_event (GstPad * pad, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
       res = mpegts_base_handle_seek_event ((MpegTSBase *) demux, pad, event);
-      if (res)
-        demux->need_newsegment = TRUE;
-      else
+      if (!res)
         GST_WARNING ("seeking failed");
       gst_event_unref (event);
       break;
@@ -2276,6 +2276,15 @@ gst_ts_demux_handle_packet (GstTSDemux * demux, TSDemuxStream * stream,
     gst_buffer_unref (packet->buffer);
 
   return res;
+}
+
+static void
+gst_ts_demux_flush (MpegTSBase * base)
+{
+  GstTSDemux *demux = GST_TS_DEMUX_CAST (base);
+
+  demux->need_newsegment = TRUE;
+  gst_ts_demux_flush_streams (demux);
 }
 
 static GstFlowReturn

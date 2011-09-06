@@ -32,6 +32,9 @@ typedef struct _GstM3U8Client GstM3U8Client;
 #define GST_M3U8(m) ((GstM3U8*)m)
 #define GST_M3U8_MEDIA_FILE(f) ((GstM3U8MediaFile*)f)
 
+#define GST_M3U8_CLIENT_LOCK(c) g_mutex_lock (c->lock);
+#define GST_M3U8_CLIENT_UNLOCK(c) g_mutex_unlock (c->lock);
+
 struct _GstM3U8
 {
   gchar *uri;
@@ -70,6 +73,7 @@ struct _GstM3U8Client
   GstM3U8 *current;
   guint update_failed_count;
   gint sequence;                /* the next sequence for this client */
+  GMutex *lock;
 };
 
 
@@ -81,7 +85,9 @@ gboolean gst_m3u8_client_get_next_fragment (GstM3U8Client * client,
     gboolean * discontinuity, const gchar ** uri, GstClockTime * duration,
     GstClockTime * timestamp);
 GstClockTime gst_m3u8_client_get_duration (GstM3U8Client * client);
+GstClockTime gst_m3u8_client_get_target_duration (GstM3U8Client * client);
 const gchar *gst_m3u8_client_get_uri(GstM3U8Client * client);
+const gchar *gst_m3u8_client_get_current_uri(GstM3U8Client * client);
 gboolean gst_m3u8_client_has_variant_playlist(GstM3U8Client * client);
 gboolean gst_m3u8_client_is_live(GstM3U8Client * client);
 

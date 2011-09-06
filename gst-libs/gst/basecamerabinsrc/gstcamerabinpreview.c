@@ -125,9 +125,9 @@ gst_camerabin_create_preview_pipeline (GstElement * element,
 {
   GstCameraBinPreviewPipelineData *data;
   GstElement *csp;
-  GstElement *csp2;
   GstElement *vscale;
   gboolean added = FALSE;
+  gboolean linkfail = FALSE;
   GstBus *bus;
   GstAppSinkCallbacks callbacks = { 0, };
 
@@ -138,29 +138,48 @@ gst_camerabin_create_preview_pipeline (GstElement * element,
   data->capsfilter = gst_element_factory_make ("capsfilter",
       "preview-capsfilter");
   data->appsink = gst_element_factory_make ("appsink", "preview-appsink");
-  csp = gst_element_factory_make ("ffmpegcolorspace", "preview-csp0");
-  csp2 = gst_element_factory_make ("ffmpegcolorspace", "preview-csp1");
+  csp = gst_element_factory_make ("ffmpegcolorspace", "preview-csp");
   vscale = gst_element_factory_make ("videoscale", "preview-vscale");
 
-  if (!data->appsrc || !data->capsfilter || !data->appsink || !csp ||
-      !csp2 || !vscale) {
+  if (!data->appsrc || !data->capsfilter || !data->appsink || !csp || !vscale) {
     goto error;
   }
 
+  g_object_set (data->appsrc, "emit-signals", FALSE, NULL);
+  g_object_set (data->appsink, "sync", FALSE, NULL);
+
   gst_bin_add_many (GST_BIN (data->pipeline), data->appsrc, data->capsfilter,
-      data->appsink, csp, csp2, vscale, NULL);
+      data->appsink, csp, vscale, NULL);
   if (filter)
     gst_bin_add (GST_BIN (data->pipeline), gst_object_ref (filter));
   added = TRUE;
 
   if (filter) {
-    if (!gst_element_link_many (data->appsrc, filter, csp, vscale, csp2,
-            data->capsfilter, data->appsink, NULL))
-      goto error;
+    linkfail |=
+        GST_PAD_LINK_FAILED (gst_element_link_pads_full (data->appsrc, "src",
+            filter, NULL, GST_PAD_LINK_CHECK_NOTHING));
+    linkfail |=
+        GST_PAD_LINK_FAILED (gst_element_link_pads_full (filter, NULL,
+            vscale, "sink", GST_PAD_LINK_CHECK_CAPS));
   } else {
-    if (!gst_element_link_many (data->appsrc, csp, vscale, csp2,
-            data->capsfilter, data->appsink, NULL))
-      goto error;
+    linkfail |=
+        GST_PAD_LINK_FAILED (gst_element_link_pads_full (data->appsrc, "src",
+            vscale, "sink", GST_PAD_LINK_CHECK_NOTHING));
+  }
+
+  linkfail |=
+      GST_PAD_LINK_FAILED (gst_element_link_pads_full (vscale, "src", csp,
+          "sink", GST_PAD_LINK_CHECK_NOTHING));
+  linkfail |=
+      GST_PAD_LINK_FAILED (gst_element_link_pads_full (csp, "src",
+          data->capsfilter, "sink", GST_PAD_LINK_CHECK_NOTHING));
+  linkfail |=
+      GST_PAD_LINK_FAILED (gst_element_link_pads_full (data->capsfilter, "src",
+          data->appsink, "sink", GST_PAD_LINK_CHECK_NOTHING));
+
+  if (linkfail) {
+    GST_WARNING ("Failed to link preview pipeline elements");
+    goto error;
   }
 
   callbacks.new_buffer = gst_camerabin_preview_pipeline_new_buffer;
@@ -188,8 +207,6 @@ error:
   if (!added) {
     if (csp)
       gst_object_unref (csp);
-    if (csp2)
-      gst_object_unref (csp2);
     if (vscale)
       gst_object_unref (vscale);
     if (data->appsrc)

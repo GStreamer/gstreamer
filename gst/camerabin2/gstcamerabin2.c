@@ -273,6 +273,8 @@ gst_cam_flags_get_type (void)
     {C_FLAGS (GST_CAM_FLAG_NO_VIEWFINDER_CONVERSION),
           "Do not use viewfinder conversion " "elements",
         "no-viewfinder-conversion"},
+    {C_FLAGS (GST_CAM_FLAG_NO_IMAGE_CONVERSION), "Do not use image conversion "
+          "elements", "no-image-conversion"},
     {0, NULL, NULL}
   };
   static volatile GType id = 0;
@@ -1132,7 +1134,7 @@ gst_camera_bin_link_encodebin (GstCameraBin2 * camera, GstElement * encodebin,
     return GST_PAD_LINK_REFUSED;
   }
 
-  ret = gst_pad_link (srcpad, sinkpad);
+  ret = gst_pad_link_full (srcpad, sinkpad, GST_PAD_LINK_CHECK_CAPS);
   gst_object_unref (sinkpad);
   gst_object_unref (srcpad);
 
@@ -1368,7 +1370,8 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
     }
 
     g_object_set (camera->viewfinderbin_queue, "leaky", 2, "silent", TRUE,
-        NULL);
+        "max-size-time", (guint64) 0, "max-size-bytes", (guint) 0,
+        "max-size-buffers", (guint) 1, NULL);
 
     gst_bin_add_many (GST_BIN_CAST (camera),
         gst_object_ref (camera->video_encodebin),
@@ -1422,8 +1425,14 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
     encbin_flags |= (1 << 1);
   g_object_set (camera->video_encodebin, "flags", encbin_flags, NULL);
 
+  /* image encodebin has only video branch so disable its conversion elements
+   * appropriately */
+  if (camera->flags & GST_CAM_FLAG_NO_IMAGE_CONVERSION)
+    g_object_set (camera->image_encodebin, "flags", (1 << 1), NULL);
+
   g_object_set (camera->viewfinderbin, "disable-converters",
-      camera->flags & GST_CAM_FLAG_NO_VIEWFINDER_CONVERSION, NULL);
+      camera->flags & GST_CAM_FLAG_NO_VIEWFINDER_CONVERSION ? TRUE : FALSE,
+      NULL);
 
   if (camera->video_profile_switch) {
     GST_DEBUG_OBJECT (camera, "Switching encodebin's profile");

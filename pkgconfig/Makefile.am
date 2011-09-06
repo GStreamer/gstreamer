@@ -1,9 +1,11 @@
 ### all of the standard pc files we need to generate
 pcverfiles =  \
-	gstreamer-plugins-bad-@GST_MAJORMINOR@.pc
+	gstreamer-plugins-bad-@GST_MAJORMINOR@.pc \
+	gstreamer-codecparsers-@GST_MAJORMINOR@.pc
 
 pcverfiles_uninstalled = \
-	gstreamer-plugins-bad-@GST_MAJORMINOR@-uninstalled.pc
+	gstreamer-plugins-bad-@GST_MAJORMINOR@-uninstalled.pc \
+	gstreamer-codecparsers-@GST_MAJORMINOR@-uninstalled.pc
 
 all-local: $(pcverfiles) $(pcverfiles_uninstalled)
 
@@ -22,7 +24,8 @@ pkgconfig_DATA = $(pcverfiles)
 
 CLEANFILES = $(pcverfiles) $(pcverfiles_uninstalled)
 pcinfiles = \
-           gstreamer-plugins-bad.pc.in gstreamer-plugins-bad-uninstalled.pc.in
+           gstreamer-plugins-bad.pc.in gstreamer-plugins-bad-uninstalled.pc.in \
+           gstreamer-codecparsers.pc.in gstreamer-codecparsers-uninstalled.pc.in
 
 DISTCLEANFILES = $(pcinfiles:.in=)
 EXTRA_DIST = $(pcinfiles)

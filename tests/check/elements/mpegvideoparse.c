@@ -183,8 +183,9 @@ mpeg_video_parse_check_caps (guint version, guint8 * seq, gint size)
   buf = gst_value_get_buffer (val);
   fail_unless (buf != NULL);
   /* codec-data = header - GOP */
-  fail_unless (GST_BUFFER_SIZE (buf) == size - 8);
-  fail_unless (memcmp (GST_BUFFER_DATA (buf), seq, GST_BUFFER_SIZE (buf)) == 0);
+  assert_equals_int (GST_BUFFER_SIZE (buf), size - 8);
+  fail_unless (memcmp (GST_BUFFER_DATA (buf), seq + 4,
+          GST_BUFFER_SIZE (buf)) == 0);
 
   gst_caps_unref (caps);
 }

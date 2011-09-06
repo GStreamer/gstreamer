@@ -563,7 +563,7 @@ gst_vp8_enc_set_property (GObject * object, guint prop_id,
       gst_vp8_enc->static_threshold = g_value_get_int (value);
       break;
     case PROP_DROP_FRAME:
-      gst_vp8_enc->drop_frame = g_value_get_boolean (value);
+      gst_vp8_enc->drop_frame = g_value_get_int (value);
       break;
     case PROP_RESIZE_ALLOWED:
       gst_vp8_enc->resize_allowed = g_value_get_boolean (value);
@@ -652,7 +652,7 @@ gst_vp8_enc_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_int (value, gst_vp8_enc->static_threshold);
       break;
     case PROP_DROP_FRAME:
-      g_value_set_boolean (value, gst_vp8_enc->drop_frame);
+      g_value_set_int (value, gst_vp8_enc->drop_frame);
       break;
     case PROP_RESIZE_ALLOWED:
       g_value_set_boolean (value, gst_vp8_enc->resize_allowed);

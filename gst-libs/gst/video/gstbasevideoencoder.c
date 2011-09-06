@@ -432,6 +432,7 @@ done:
 
   GST_LOG_OBJECT (base_video_encoder, "Returning caps %" GST_PTR_FORMAT, fcaps);
 
+  g_object_unref (base_video_encoder);
   return fcaps;
 }
 
@@ -1023,6 +1024,10 @@ gst_base_video_encoder_set_latency_fields (GstBaseVideoEncoder *
     base_video_encoder, int n_fields)
 {
   gint64 latency;
+
+  /* 0 numerator is used for "don't know" */
+  if (GST_BASE_VIDEO_CODEC (base_video_encoder)->state.fps_n == 0)
+    return;
 
   latency = gst_util_uint64_scale (n_fields,
       GST_BASE_VIDEO_CODEC (base_video_encoder)->state.fps_d * GST_SECOND,

@@ -1,0 +1,4 @@
+#include <gst/gst.h>
+
+#include <gst/codecparsers/gsth264parser.h>
+#include <gst/codecparsers/gstmpegvideoparser.h>

@@ -65,7 +65,7 @@
  * <row>
  * <entry>number</entry>
  * <entry>G_TYPE_INT</entry>
- * <entry>0-16</entry>
+ * <entry>0-15</entry>
  * <entry>The event number.</entry>
  * </row>
  * <row>
@@ -323,6 +323,7 @@ gst_dtmf_src_handle_dtmf_event (GstDTMFSrc * dtmfsrc,
   gint event_type;
   gboolean start;
   gint method;
+  GstClockTime last_stop;
 
   if (!gst_structure_get_int (event_structure, "type", &event_type) ||
       !gst_structure_get_boolean (event_structure, "start", &start) ||
@@ -334,6 +335,14 @@ gst_dtmf_src_handle_dtmf_event (GstDTMFSrc * dtmfsrc,
       goto failure;
     }
   }
+
+
+  GST_OBJECT_LOCK (dtmfsrc);
+  if (gst_structure_get_clock_time (event_structure, "last-stop", &last_stop))
+    dtmfsrc->last_stop = last_stop;
+  else
+    dtmfsrc->last_stop = GST_CLOCK_TIME_NONE;
+  GST_OBJECT_UNLOCK (dtmfsrc);
 
   if (start) {
     gint event_number;
@@ -447,19 +456,37 @@ gst_dtmf_src_get_property (GObject * object, guint prop_id, GValue * value,
 static void
 gst_dtmf_prepare_timestamps (GstDTMFSrc * dtmfsrc)
 {
-  GstClock *clock;
+  GstClockTime last_stop;
+  GstClockTime timestamp;
 
-  clock = gst_element_get_clock (GST_ELEMENT (dtmfsrc));
-  if (clock != NULL) {
-    dtmfsrc->timestamp = gst_clock_get_time (clock)
-        - gst_element_get_base_time (GST_ELEMENT (dtmfsrc));
-    gst_object_unref (clock);
+  GST_OBJECT_LOCK (dtmfsrc);
+  last_stop = dtmfsrc->last_stop;
+  GST_OBJECT_UNLOCK (dtmfsrc);
+
+  if (GST_CLOCK_TIME_IS_VALID (last_stop)) {
+    timestamp = last_stop;
   } else {
-    gchar *dtmf_name = gst_element_get_name (dtmfsrc);
-    GST_ERROR_OBJECT (dtmfsrc, "No clock set for element %s", dtmf_name);
-    dtmfsrc->timestamp = GST_CLOCK_TIME_NONE;
-    g_free (dtmf_name);
+    GstClock *clock;
+
+    /* If there is no valid start time, lets use now as the start time */
+
+    clock = gst_element_get_clock (GST_ELEMENT (dtmfsrc));
+    if (clock != NULL) {
+      timestamp = gst_clock_get_time (clock)
+          - gst_element_get_base_time (GST_ELEMENT (dtmfsrc));
+      gst_object_unref (clock);
+    } else {
+      gchar *dtmf_name = gst_element_get_name (dtmfsrc);
+      GST_ERROR_OBJECT (dtmfsrc, "No clock set for element %s", dtmf_name);
+      dtmfsrc->timestamp = GST_CLOCK_TIME_NONE;
+      g_free (dtmf_name);
+      return;
+    }
   }
+
+  /* Make sure the timestamp always goes forward */
+  if (timestamp > dtmfsrc->timestamp)
+    dtmfsrc->timestamp = timestamp;
 }
 
 static void
@@ -584,6 +611,12 @@ gst_dtmf_src_create_next_tone_packet (GstDTMFSrc * dtmfsrc,
   /* timestamp and duration of GstBuffer */
   GST_BUFFER_DURATION (buf) = dtmfsrc->interval * GST_MSECOND;
   GST_BUFFER_TIMESTAMP (buf) = dtmfsrc->timestamp;
+
+  GST_LOG_OBJECT (dtmfsrc, "Creating new buffer with event %u duration "
+      " gst: %" GST_TIME_FORMAT " at %" GST_TIME_FORMAT,
+      event->event_number, GST_TIME_ARGS (GST_BUFFER_DURATION (buf)),
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
+
   dtmfsrc->timestamp += GST_BUFFER_DURATION (buf);
 
   /* Set caps on the buffer before pushing it */
@@ -823,6 +856,7 @@ gst_dtmf_src_change_state (GstElement * element, GstStateChange transition)
         g_slice_free (GstDTMFSrcEvent, event);
         event = g_async_queue_try_pop (dtmfsrc->event_queue);
       }
+      dtmfsrc->timestamp = 0;
       no_preroll = TRUE;
       break;
     default:

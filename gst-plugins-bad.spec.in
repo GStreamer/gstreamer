@@ -204,6 +204,7 @@ make ERROR_CFLAGS='' ERROR_CXXFLAGS=''
 %{_libdir}/libgstbasevideo-%{majorminor}.so.*
 %{_libdir}/libgstphotography-%{majorminor}.so.*
 %{_libdir}/libgstsignalprocessor-%{majorminor}.so.*
+%{_libdir}/libgstcodecparsers-%{majorminor}.so.*
 # Plugins without external dependencies
 %{_libdir}/gstreamer-%{majorminor}/libgstadpcmdec.so
 %{_libdir}/gstreamer-%{majorminor}/libgstadpcmenc.so
@@ -329,8 +330,10 @@ make ERROR_CFLAGS='' ERROR_CXXFLAGS=''
 %{_libdir}/libgstbasevideo-%{majorminor}.so
 %{_libdir}/libgstphotography-%{majorminor}.so
 %{_libdir}/libgstsignalprocessor-%{majorminor}.so
+%{_libdir}/libgstcodecparsers-%{majorminor}.so
 %{_libdir}/libgstbasecamerabinsrc-%{majorminor}.so
 %{_includedir}/gstreamer-%{majorminor}/gst/interfaces/photography*
+%{_includedir}/gstreamer-%{majorminor}/gst/codecparsers
 %{_includedir}/gstreamer-%{majorminor}/gst/signalprocessor
 %{_includedir}/gstreamer-%{majorminor}/gst/video
 %{_includedir}/gstreamer-%{majorminor}/gst/basecamerabinsrc/gstbasecamerasrc.h

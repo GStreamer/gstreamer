@@ -3,11 +3,10 @@ exec_prefix=@exec_prefix@
 libdir=@libdir@
 includedir=@includedir@/gstreamer-@GST_MAJORMINOR@
 
-Name: GStreamer Bad Plugin libraries
-Description: Currently includes the photography interface library
+Name: GStreamer codec parsers
+Description: Bitstream parsers for GStreamer elements
 Requires: gstreamer-@GST_MAJORMINOR@ gstreamer-base-@GST_MAJORMINOR@
 Version: @VERSION@
-Libs: -L${libdir} -lgstphotography-@GST_MAJORMINOR@\
-    -L${libdir} -lgstcodecparsers-@GST_MAJORMINOR@\
+Libs: -L${libdir} -lgstcodecparsers-@GST_MAJORMINOR@
 Cflags: -I${includedir}
 

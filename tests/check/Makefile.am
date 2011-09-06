@@ -183,6 +183,8 @@ check_PROGRAMS = \
 	pipelines/colorspace \
 	$(check_mimic) \
 	elements/rtpmux \
+	libs/mpegvideoparser \
+	libs/h264parser \
 	$(check_schro) \
 	$(check_vp8) \
         elements/viewfinderbin \
@@ -214,6 +216,24 @@ elements_h263parse_LDADD = libparser.la $(LDADD)
 
 elements_h264parse_LDADD = libparser.la $(LDADD)
 
+libs_mpegvideoparser_CFLAGS = \
+	$(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
+	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(AM_CFLAGS)
+
+libs_mpegvideoparser_LDADD = \
+	$(top_builddir)/gst-libs/gst/codecparsers/libgstcodecparsers-@GST_MAJORMINOR@.la \
+	$(GST_PLUGINS_BAD_LIBS) -lgstcodecparsers-@GST_MAJORMINOR@ \
+	$(GST_BASE_LIBS) $(GST_LIBS) $(LDADD)
+
+libs_h264parser_CFLAGS = \
+	$(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
+	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(AM_CFLAGS)
+
+libs_h264parser_LDADD = \
+	$(top_builddir)/gst-libs/gst/codecparsers/libgstcodecparsers-@GST_MAJORMINOR@.la \
+	$(GST_PLUGINS_BAD_LIBS) -lgstcodecparsers-@GST_MAJORMINOR@ \
+	$(GST_BASE_LIBS) $(GST_LIBS) $(LDADD)
+
 elements_voaacenc_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(AM_CFLAGS)
@@ -242,7 +262,6 @@ elements_camerabin_LDADD = \
 
 elements_camerabin_SOURCES = elements/camerabin.c
 
-if BUILD_EXPERIMENTAL
 elements_camerabin2_CFLAGS = \
 	$(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(AM_CFLAGS) -DGST_USE_UNSTABLE_API
@@ -252,8 +271,6 @@ elements_camerabin2_LDADD = \
         -lgstpbutils-$(GST_MAJORMINOR) \
         $(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) $(GST_LIBS) $(LDADD)
 elements_camerabin2_SOURCES = elements/camerabin2.c
-
-endif
 
 elements_jifmux_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(EXIF_CFLAGS) $(AM_CFLAGS)
 elements_jifmux_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgsttag-$(GST_MAJORMINOR) $(GST_CHECK_LIBS) $(EXIF_LIBS) $(LDADD)

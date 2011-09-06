@@ -162,6 +162,9 @@ struct _MpegTSBaseClass {
   /* seek is called to wait for seeking */
   GstFlowReturn (*seek) (MpegTSBase * base, GstEvent * event, guint16 pid);
 
+  /* flush all streams */
+  void (*flush) (MpegTSBase * base);
+
   /* signals */
   void (*pat_info) (GstStructure *pat);
   void (*pmt_info) (GstStructure *pmt);
