@@ -911,6 +911,8 @@ data_probe_callback_marshal(GstPad *pad, GstMiniObject *obj, gpointer user_data)
     }
     
     pyg_gil_state_release(state);
+
+    return ret;
 }
 
 static PyObject *
