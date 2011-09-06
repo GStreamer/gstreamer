@@ -1802,7 +1802,7 @@ static gboolean
 gst_subtitle_overlay_subtitle_sink_acceptcaps (GstPad * pad, GstCaps * caps)
 {
   GstCaps *othercaps = gst_subtitle_overlay_subtitle_sink_getcaps (pad);
-  gboolean ret = gst_caps_can_intersect (caps, othercaps);
+  gboolean ret = gst_caps_is_subset (caps, othercaps);
 
   gst_caps_unref (othercaps);
 
