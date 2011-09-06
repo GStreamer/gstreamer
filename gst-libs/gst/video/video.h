@@ -206,6 +206,7 @@ typedef void (*GstVideoFormatPack)           (GstVideoFormatInfo *info, const gp
  * GstVideoFormatInfo:
  * @format: #GstVideoFormat
  * @name: string representation of the format
+ * @description: use readable description of the format
  * @flags: #GstVideoFormatFlags
  * @bits: The number of bits used to pack data items. This can be less than 8
  *    when multiple pixels are stored in a byte. for values > 8 multiple bytes
@@ -236,6 +237,7 @@ typedef void (*GstVideoFormatPack)           (GstVideoFormatInfo *info, const gp
 struct _GstVideoFormatInfo {
   GstVideoFormat format;
   const gchar *name;
+  const gchar *description;
   GstVideoFormatFlags flags;
   guint bits;
   guint n_components;

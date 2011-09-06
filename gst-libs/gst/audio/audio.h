@@ -189,6 +189,7 @@ typedef void (*GstAudioFormatPack)           (GstAudioFormatInfo *info, const gp
  * GstAudioFormatInfo:
  * @format: #GstAudioFormat
  * @name: string representation of the format
+ * @description: user readable description of the format
  * @flags: #GstAudioFormatFlags
  * @endianness: the endianness
  * @width: amount of bits used for one sample
@@ -203,6 +204,7 @@ typedef void (*GstAudioFormatPack)           (GstAudioFormatInfo *info, const gp
 struct _GstAudioFormatInfo {
   GstAudioFormat format;
   const gchar *name;
+  const gchar *description;
   GstAudioFormatFlags flags;
   gint endianness;
   gint width;
