@@ -3068,7 +3068,7 @@ autoplug_continue_cb (GstElement * element, GstPad * pad, GstCaps * caps,
     gst_object_unref (sinkpad);
   } else {
     GstCaps *subcaps = gst_subtitle_overlay_create_factory_caps ();
-    ret = !gst_caps_can_intersect (caps, subcaps);
+    ret = !gst_caps_is_subset (caps, subcaps);
     gst_caps_unref (subcaps);
   }
   /* If autoplugging can stop don't do additional checks */
