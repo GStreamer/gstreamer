@@ -1,6 +1,8 @@
 /* GStreamer
  * Copyright (C) <2006> Edward Hervey <edward@fluendo.com>
  * Copyright (C) <2009> Sebastian Dröge <sebastian.droege@collabora.co.uk>
+ * Copyright (C) <2011> Hewlett-Packard Development Company, L.P.
+ *   Author: Sebastian Dröge <sebastian.droege@collabora.co.uk>, Collabora Ltd.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -111,6 +113,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_decode_bin_debug);
 #define GST_CAT_DEFAULT gst_decode_bin_debug
 
 typedef struct _GstPendingPad GstPendingPad;
+typedef struct _GstDecodeElement GstDecodeElement;
 typedef struct _GstDecodeChain GstDecodeChain;
 typedef struct _GstDecodeGroup GstDecodeGroup;
 typedef struct _GstDecodePad GstDecodePad;
@@ -343,6 +346,12 @@ struct _GstPendingPad
   GstPad *pad;
   GstDecodeChain *chain;
   gulong event_probe_id;
+};
+
+struct _GstDecodeElement
+{
+  GstElement *element;
+  GstElement *capsfilter;       /* Optional capsfilter for Parser/Convert */
 };
 
 /* GstDecodeGroup
@@ -1328,11 +1337,15 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
   gboolean apcontinue = TRUE;
   GValueArray *factories = NULL, *result = NULL;
   GstDecodePad *dpad;
+  GstElementFactory *factory;
+  const gchar *classification;
+  gboolean is_parser_converter;
 
   GST_DEBUG_OBJECT (dbin, "Pad %s:%s caps:%" GST_PTR_FORMAT,
       GST_DEBUG_PAD_NAME (pad), caps);
 
-  if (chain->elements && src != chain->elements->data) {
+  if (chain->elements
+      && src != ((GstDecodeElement *) chain->elements->data)->element) {
     GST_ERROR_OBJECT (dbin, "New pad from not the last element in this chain");
     return;
   }
@@ -1379,12 +1392,20 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
   if ((!apcontinue) || are_final_caps (dbin, caps))
     goto expose_pad;
 
-  /* 1.b when the caps are not fixed yet, we can't be sure what element to
+  /* 1.b For Parser/Converter that can output different stream formats
+   * we insert a capsfilter with the sorted caps of all possible next
+   * elements and continue with the capsfilter srcpad */
+  factory = gst_element_get_factory (src);
+  classification = gst_element_factory_get_klass (factory);
+  is_parser_converter = (strstr (classification, "Parser")
+      && strstr (classification, "Converter"));
+
+  /* 1.c when the caps are not fixed yet, we can't be sure what element to
    * connect. We delay autoplugging until the caps are fixed */
-  if (!gst_caps_is_fixed (caps))
+  if (!is_parser_converter && !gst_caps_is_fixed (caps))
     goto non_fixed;
 
-  /* 1.c else get the factories and if there's no compatible factory goto
+  /* 1.d else get the factories and if there's no compatible factory goto
    * unknown_type */
   g_signal_emit (G_OBJECT (dbin),
       gst_decode_bin_signals[SIGNAL_AUTOPLUG_FACTORIES], 0, dpad, caps,
@@ -1401,6 +1422,7 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
 
       /* If the caps are raw, this just means we don't want to expose them */
       if (gst_caps_can_intersect (raw, caps)) {
+        g_value_array_free (factories);
         gst_caps_unref (raw);
         gst_object_unref (dpad);
         goto discarded_type;
@@ -1414,7 +1436,7 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
     goto unknown_type;
   }
 
-  /* 1.d sort some more. */
+  /* 1.e sort some more. */
   g_signal_emit (G_OBJECT (dbin),
       gst_decode_bin_signals[SIGNAL_AUTOPLUG_SORT], 0, dpad, caps, factories,
       &result);
@@ -1432,7 +1454,7 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
 
     GST_DEBUG ("Checking if we can abort early");
 
-    /* 1.e Do an early check to see if the candidates are potential decoders, but
+    /* 1.f Do an early check to see if the candidates are potential decoders, but
      * due to the fact that they decode to a mediatype that is not final we don't
      * need them */
 
@@ -1473,13 +1495,75 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
 
     if (dontuse) {
       gst_object_unref (dpad);
+      g_value_array_free (factories);
       goto discarded_type;
     }
   }
 
-  /* 1.f else continue autoplugging something from the list. */
+  /* 1.g now get the factory template caps and insert the capsfilter if this
+   * is a parser/converter
+   */
+  if (is_parser_converter) {
+    GstCaps *filter_caps;
+    gint i;
+    GstPad *p;
+    GstDecodeElement *delem;
+
+    g_assert (chain->elements != NULL);
+    delem = (GstDecodeElement *) chain->elements->data;
+
+    filter_caps = gst_caps_new_empty ();
+    for (i = 0; i < factories->n_values; i++) {
+      GstElementFactory *factory =
+          g_value_get_object (g_value_array_get_nth (factories, i));
+      GstCaps *tcaps;
+      const GList *tmps;
+
+      GST_DEBUG ("Trying factory %s",
+          gst_plugin_feature_get_name (GST_PLUGIN_FEATURE (factory)));
+
+      if (gst_element_get_factory (src) == factory) {
+        GST_DEBUG ("Skipping factory");
+        continue;
+      }
+
+      for (tmps = gst_element_factory_get_static_pad_templates (factory); tmps;
+          tmps = tmps->next) {
+        GstStaticPadTemplate *st = (GstStaticPadTemplate *) tmps->data;
+        if (st->direction != GST_PAD_SINK || st->presence != GST_PAD_ALWAYS)
+          continue;
+        tcaps = gst_static_pad_template_get_caps (st);
+        gst_caps_merge (filter_caps, gst_caps_copy (tcaps));
+        gst_caps_unref (tcaps);
+      }
+    }
+
+    /* Append the parser caps to prevent any not-negotiated errors */
+    gst_caps_merge (filter_caps, gst_caps_copy (caps));
+
+    delem->capsfilter = gst_element_factory_make ("capsfilter", NULL);
+    g_object_set (G_OBJECT (delem->capsfilter), "caps", filter_caps, NULL);
+    gst_caps_unref (filter_caps);
+    gst_element_set_state (delem->capsfilter, GST_STATE_PAUSED);
+    gst_bin_add (GST_BIN_CAST (dbin), gst_object_ref (delem->capsfilter));
+
+    gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (dpad), NULL);
+    p = gst_element_get_static_pad (delem->capsfilter, "sink");
+    gst_pad_link_full (pad, p, GST_PAD_LINK_CHECK_NOTHING);
+    gst_object_unref (p);
+    p = gst_element_get_static_pad (delem->capsfilter, "src");
+    gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (dpad), p);
+    pad = p;
+  }
+
+  /* 1.h else continue autoplugging something from the list. */
   GST_LOG_OBJECT (pad, "Let's continue discovery on this pad");
   connect_pad (dbin, src, dpad, pad, caps, factories, chain);
+
+  /* Need to unref the capsfilter srcpad here if
+   * we inserted a capsfilter */
+  if (is_parser_converter)
+    gst_object_unref (pad);
 
   gst_object_unref (dpad);
   g_value_array_free (factories);
@@ -1628,6 +1712,7 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
   while (factories->n_values > 0) {
     GstAutoplugSelectResult ret;
     GstElementFactory *factory;
+    GstDecodeElement *delem;
     GstElement *element;
     GstPad *sinkpad;
     gboolean subtitle;
@@ -1641,6 +1726,48 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
     factory = g_value_get_object (g_value_array_get_nth (factories, 0));
     /* Remove selected factory from the list. */
     g_value_array_remove (factories, 0);
+
+    /* Check if the caps are really supported by the factory. The
+     * factory list is non-empty-subset filtered while caps
+     * are only accepted by a pad if they are a subset of the
+     * pad caps.
+     *
+     * FIXME: Only do this for fixed caps here. Non-fixed caps
+     * can happen if a Parser/Converter was autoplugged before
+     * this. We then assume that it will be able to convert to
+     * everything that the decoder would want.
+     *
+     * A subset check will fail here because the parser caps
+     * will be generic and while the decoder will only
+     * support a subset of the parser caps.
+     */
+    if (gst_caps_is_fixed (caps)) {
+      const GList *templs;
+      gboolean skip = FALSE;
+
+      templs = gst_element_factory_get_static_pad_templates (factory);
+
+      while (templs) {
+        GstStaticPadTemplate *templ = (GstStaticPadTemplate *) templs->data;
+
+        if (templ->direction == GST_PAD_SINK) {
+          GstCaps *templcaps = gst_static_caps_get (&templ->static_caps);
+
+          if (!gst_caps_is_subset (caps, templcaps)) {
+            gst_caps_unref (templcaps);
+            skip = TRUE;
+            break;
+          }
+
+          gst_caps_unref (templcaps);
+        }
+        templs = g_list_next (templs);
+      }
+      if (skip) {
+        gst_object_unref (factory);
+        continue;
+      }
+    }
 
     /* If the factory is for a parser we first check if the factory
      * was already used for the current chain. If it was used already
@@ -1657,7 +1784,8 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
 
       CHAIN_MUTEX_LOCK (chain);
       for (l = chain->elements; l; l = l->next) {
-        GstElement *otherelement = GST_ELEMENT_CAST (l->data);
+        GstDecodeElement *delem = (GstDecodeElement *) l->data;
+        GstElement *otherelement = delem->element;
 
         if (gst_element_get_factory (otherelement) == factory) {
           skip = TRUE;
@@ -1749,8 +1877,10 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
     GST_LOG_OBJECT (dbin, "linked on pad %s:%s", GST_DEBUG_PAD_NAME (pad));
 
     CHAIN_MUTEX_LOCK (chain);
-    chain->elements =
-        g_list_prepend (chain->elements, gst_object_ref (element));
+    delem = g_slice_new (GstDecodeElement);
+    delem->element = gst_object_ref (element);
+    delem->capsfilter = NULL;
+    chain->elements = g_list_prepend (chain->elements, delem);
     chain->demuxer = is_demuxer_element (element);
     CHAIN_MUTEX_UNLOCK (chain);
 
@@ -1773,6 +1903,7 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
     /* Bring the element to the state of the parent */
     if ((gst_element_set_state (element,
                 GST_STATE_PAUSED)) == GST_STATE_CHANGE_FAILURE) {
+      GstDecodeElement *dtmp = NULL;
       GstElement *tmp = NULL;
 
       GST_WARNING_OBJECT (dbin, "Couldn't set %s to PAUSED",
@@ -1784,7 +1915,8 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
       do {
         GList *l;
 
-        tmp = chain->elements->data;
+        dtmp = chain->elements->data;
+        tmp = dtmp->element;
 
         /* Disconnect any signal handlers that might be connected
          * in connect_element() or analyze_pad() */
@@ -1813,10 +1945,18 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
           l = n;
         }
 
+        if (dtmp->capsfilter) {
+          gst_bin_remove (GST_BIN (dbin), dtmp->capsfilter);
+          gst_element_set_state (dtmp->capsfilter, GST_STATE_NULL);
+          gst_object_unref (dtmp->capsfilter);
+        }
+
         gst_bin_remove (GST_BIN (dbin), tmp);
         gst_element_set_state (tmp, GST_STATE_NULL);
 
         gst_object_unref (tmp);
+        g_slice_free (GstDecodeElement, dtmp);
+
         chain->elements = g_list_delete_link (chain->elements, chain->elements);
       } while (tmp != element);
       CHAIN_MUTEX_UNLOCK (chain);
@@ -2180,7 +2320,8 @@ no_more_pads_cb (GstElement * element, GstDecodeChain * chain)
   GST_LOG_OBJECT (element, "got no more pads");
 
   CHAIN_MUTEX_LOCK (chain);
-  if (!chain->elements || (GstElement *) chain->elements->data != element) {
+  if (!chain->elements
+      || ((GstDecodeElement *) chain->elements->data)->element != element) {
     GST_LOG_OBJECT (chain->dbin, "no-more-pads from old chain element '%s'",
         GST_OBJECT_NAME (element));
     CHAIN_MUTEX_UNLOCK (chain);
@@ -2425,11 +2566,21 @@ gst_decode_chain_free_internal (GstDecodeChain * chain, gboolean hide)
   chain->pending_pads = NULL;
 
   for (l = chain->elements; l; l = l->next) {
-    GstElement *element = GST_ELEMENT (l->data);
+    GstDecodeElement *delem = l->data;
+    GstElement *element = delem->element;
 
     g_signal_handlers_disconnect_by_func (element, pad_added_cb, chain);
     g_signal_handlers_disconnect_by_func (element, pad_removed_cb, chain);
     g_signal_handlers_disconnect_by_func (element, no_more_pads_cb, chain);
+
+    if (delem->capsfilter) {
+      if (GST_OBJECT_PARENT (delem->capsfilter) ==
+          GST_OBJECT_CAST (chain->dbin))
+        gst_bin_remove (GST_BIN_CAST (chain->dbin), delem->capsfilter);
+      if (!hide) {
+        gst_element_set_state (delem->capsfilter, GST_STATE_NULL);
+      }
+    }
 
     if (GST_OBJECT_PARENT (element) == GST_OBJECT_CAST (chain->dbin))
       gst_bin_remove (GST_BIN_CAST (chain->dbin), element);
@@ -2443,8 +2594,15 @@ gst_decode_chain_free_internal (GstDecodeChain * chain, gboolean hide)
     SUBTITLE_UNLOCK (chain->dbin);
 
     if (!hide) {
+      if (delem->capsfilter) {
+        gst_object_unref (delem->capsfilter);
+        delem->capsfilter = NULL;
+      }
+
       gst_object_unref (element);
       l->data = NULL;
+
+      g_slice_free (GstDecodeElement, delem);
     }
   }
   if (!hide) {
@@ -3179,7 +3337,16 @@ gst_decode_chain_get_topology (GstDecodeChain * chain)
   /* Get caps between all elements in this chain */
   l = (chain->elements && chain->elements->next) ? chain->elements : NULL;
   for (; l && l->next; l = l->next) {
-    GstCaps *caps = _gst_element_get_linked_caps (l->next->data, l->data);
+    GstDecodeElement *delem, *delem_next;
+    GstElement *elem, *elem_next;
+    GstCaps *caps;
+
+    delem = l->data;
+    elem = delem->element;
+    delem_next = l->next->data;
+    elem_next = delem_next->element;
+
+    caps = _gst_element_get_linked_caps (elem_next, elem);
 
     if (caps) {
       s = gst_structure_id_empty_new (topology_structure_name);
