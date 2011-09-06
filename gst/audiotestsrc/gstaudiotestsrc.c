@@ -77,11 +77,11 @@ enum
 };
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-#define FORMAT_STR "{ S16_LE, S32_LE, F32_LE, F64_LE }"
-#define DEFAULT_FORMAT_STR "S16_LE"
+#define FORMAT_STR "{ S16LE, S32LE, F32LE, F64LE }"
+#define DEFAULT_FORMAT_STR "S16LE"
 #else
-#define FORMAT_STR "{ S16_BE, S32_BE, F32_BE, F64_BE }"
-#define DEFAULT_FORMAT_STR "S16_BE"
+#define FORMAT_STR "{ S16BE, S32BE, F32BE, F64BE }"
+#define DEFAULT_FORMAT_STR "S16BE"
 #endif
 
 static GstStaticPadTemplate gst_audio_test_src_src_template =

@@ -73,8 +73,13 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
 /* elementfactory information */
 
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
 #define CAPS \
-  GST_AUDIO_CAPS_MAKE ("{ S32, U32, S16, U16, S8, U8, F32, F64 }")
+  GST_AUDIO_CAPS_MAKE ("{ S32LE, U32LE, S16LE, U16LE, S8, U8, F32LE, F64LE }")
+#else
+#define CAPS \
+  GST_AUDIO_CAPS_MAKE ("{ S32BE, U32BE, S16BE, U16BE, S8, U8, F32BE, F64BE }")
+#endif
 
 static GstStaticPadTemplate gst_adder_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",

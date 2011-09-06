@@ -106,10 +106,10 @@ enum
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
 #define ALLOWED_CAPS \
-    GST_AUDIO_CAPS_MAKE ("{ F32_LE, F64_LE, S8, S16_LE, S24_3LE, S32_LE }")
+    GST_AUDIO_CAPS_MAKE ("{ F32LE, F64LE, S8, S16LE, S24LE, S32LE }")
 #else
 #define ALLOWED_CAPS \
-    GST_AUDIO_CAPS_MAKE ("{ F32_BE, F64_BE, S8, S16_BE, S24_3BE, S32_BE }")
+    GST_AUDIO_CAPS_MAKE ("{ F32BE, F64BE, S8, S16BE, S24BE, S32BE }")
 #endif
 
 static void gst_volume_mixer_init (GstMixerClass * iface);
@@ -193,7 +193,7 @@ volume_choose_func (GstVolume * self)
       }
       self->process_controlled = volume_process_controlled_int32_clamp;
       break;
-    case GST_AUDIO_FORMAT_S24_3:
+    case GST_AUDIO_FORMAT_S24:
       /* only clamp if the gain is greater than 1.0 */
       if (self->current_vol_i24 > VOLUME_UNITY_INT24) {
         self->process = volume_process_int24_clamp;

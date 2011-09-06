@@ -368,59 +368,8 @@ static gboolean
 gst_audio_rate_convert (GstAudioRate * audiorate,
     GstFormat src_fmt, guint64 src_val, GstFormat dest_fmt, guint64 * dest_val)
 {
-  gint rate, bpf;
-
-  if (src_fmt == dest_fmt) {
-    *dest_val = src_val;
-    return TRUE;
-  }
-
-  rate = GST_AUDIO_INFO_RATE (&audiorate->info);
-  bpf = GST_AUDIO_INFO_BPF (&audiorate->info);
-
-  switch (src_fmt) {
-    case GST_FORMAT_DEFAULT:
-      switch (dest_fmt) {
-        case GST_FORMAT_BYTES:
-          *dest_val = src_val * bpf;
-          break;
-        case GST_FORMAT_TIME:
-          *dest_val = gst_util_uint64_scale_int (src_val, GST_SECOND, rate);
-          break;
-        default:
-          return FALSE;;
-      }
-      break;
-    case GST_FORMAT_BYTES:
-      switch (dest_fmt) {
-        case GST_FORMAT_DEFAULT:
-          *dest_val = src_val / bpf;
-          break;
-        case GST_FORMAT_TIME:
-          *dest_val = gst_util_uint64_scale_int (src_val, GST_SECOND,
-              rate * bpf);
-          break;
-        default:
-          return FALSE;;
-      }
-      break;
-    case GST_FORMAT_TIME:
-      switch (dest_fmt) {
-        case GST_FORMAT_BYTES:
-          *dest_val = gst_util_uint64_scale_int (src_val,
-              rate * bpf, GST_SECOND);
-          break;
-        case GST_FORMAT_DEFAULT:
-          *dest_val = gst_util_uint64_scale_int (src_val, rate, GST_SECOND);
-          break;
-        default:
-          return FALSE;
-      }
-      break;
-    default:
-      return FALSE;
-  }
-  return TRUE;
+  return gst_audio_info_convert (&audiorate->info, src_fmt, src_val, dest_fmt,
+      (gint64 *) dest_val);
 }
 
 

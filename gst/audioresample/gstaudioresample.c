@@ -67,10 +67,10 @@ enum
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
 #define SUPPORTED_CAPS \
-  GST_AUDIO_CAPS_MAKE ("{ F32_LE, F64_LE, S32_LE, S24_3LE, S16_LE, S8 }")
+  GST_AUDIO_CAPS_MAKE ("{ F32LE, F64LE, S32LE, S24LE, S16LE, S8 }")
 #else
 #define SUPPORTED_CAPS \
-  GST_AUDIO_CAPS_MAKE ("{ F32_BE, F64_BE, S32_BE, S24_3BE, S16_BE, S8 }")
+  GST_AUDIO_CAPS_MAKE ("{ F32BE, F64BE, S32BE, S24BE, S16BE, S8 }")
 #endif
 
 /* If TRUE integer arithmetic resampling is faster and will be used if appropiate */

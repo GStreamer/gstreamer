@@ -602,88 +602,88 @@ alsasink_parse_spec (GstAlsaSink * alsa, GstRingBufferSpec * spec)
         case GST_AUDIO_FORMAT_S8:
           alsa->format = SND_PCM_FORMAT_S8;
           break;
-        case GST_AUDIO_FORMAT_S16_LE:
+        case GST_AUDIO_FORMAT_S16LE:
           alsa->format = SND_PCM_FORMAT_S16_LE;
           break;
-        case GST_AUDIO_FORMAT_S16_BE:
+        case GST_AUDIO_FORMAT_S16BE:
           alsa->format = SND_PCM_FORMAT_S16_BE;
           break;
-        case GST_AUDIO_FORMAT_U16_LE:
+        case GST_AUDIO_FORMAT_U16LE:
           alsa->format = SND_PCM_FORMAT_U16_LE;
           break;
-        case GST_AUDIO_FORMAT_U16_BE:
+        case GST_AUDIO_FORMAT_U16BE:
           alsa->format = SND_PCM_FORMAT_U16_BE;
           break;
-        case GST_AUDIO_FORMAT_S24_LE:
+        case GST_AUDIO_FORMAT_S24_32LE:
           alsa->format = SND_PCM_FORMAT_S24_LE;
           break;
-        case GST_AUDIO_FORMAT_S24_BE:
+        case GST_AUDIO_FORMAT_S24_32BE:
           alsa->format = SND_PCM_FORMAT_S24_BE;
           break;
-        case GST_AUDIO_FORMAT_U24_LE:
+        case GST_AUDIO_FORMAT_U24_32LE:
           alsa->format = SND_PCM_FORMAT_U24_LE;
           break;
-        case GST_AUDIO_FORMAT_U24_BE:
+        case GST_AUDIO_FORMAT_U24_32BE:
           alsa->format = SND_PCM_FORMAT_U24_BE;
           break;
-        case GST_AUDIO_FORMAT_S32_LE:
+        case GST_AUDIO_FORMAT_S32LE:
           alsa->format = SND_PCM_FORMAT_S32_LE;
           break;
-        case GST_AUDIO_FORMAT_S32_BE:
+        case GST_AUDIO_FORMAT_S32BE:
           alsa->format = SND_PCM_FORMAT_S32_BE;
           break;
-        case GST_AUDIO_FORMAT_U32_LE:
+        case GST_AUDIO_FORMAT_U32LE:
           alsa->format = SND_PCM_FORMAT_U32_LE;
           break;
-        case GST_AUDIO_FORMAT_U32_BE:
+        case GST_AUDIO_FORMAT_U32BE:
           alsa->format = SND_PCM_FORMAT_U32_BE;
           break;
-        case GST_AUDIO_FORMAT_S24_3LE:
+        case GST_AUDIO_FORMAT_S24LE:
           alsa->format = SND_PCM_FORMAT_S24_3LE;
           break;
-        case GST_AUDIO_FORMAT_S24_3BE:
+        case GST_AUDIO_FORMAT_S24BE:
           alsa->format = SND_PCM_FORMAT_S24_3BE;
           break;
-        case GST_AUDIO_FORMAT_U24_3LE:
+        case GST_AUDIO_FORMAT_U24LE:
           alsa->format = SND_PCM_FORMAT_U24_3LE;
           break;
-        case GST_AUDIO_FORMAT_U24_3BE:
+        case GST_AUDIO_FORMAT_U24BE:
           alsa->format = SND_PCM_FORMAT_U24_3BE;
           break;
-        case GST_AUDIO_FORMAT_S20_3LE:
+        case GST_AUDIO_FORMAT_S20LE:
           alsa->format = SND_PCM_FORMAT_S20_3LE;
           break;
-        case GST_AUDIO_FORMAT_S20_3BE:
+        case GST_AUDIO_FORMAT_S20BE:
           alsa->format = SND_PCM_FORMAT_S20_3BE;
           break;
-        case GST_AUDIO_FORMAT_U20_3LE:
+        case GST_AUDIO_FORMAT_U20LE:
           alsa->format = SND_PCM_FORMAT_U20_3LE;
           break;
-        case GST_AUDIO_FORMAT_U20_3BE:
+        case GST_AUDIO_FORMAT_U20BE:
           alsa->format = SND_PCM_FORMAT_U20_3BE;
           break;
-        case GST_AUDIO_FORMAT_S18_3LE:
+        case GST_AUDIO_FORMAT_S18LE:
           alsa->format = SND_PCM_FORMAT_S18_3LE;
           break;
-        case GST_AUDIO_FORMAT_S18_3BE:
+        case GST_AUDIO_FORMAT_S18BE:
           alsa->format = SND_PCM_FORMAT_S18_3BE;
           break;
-        case GST_AUDIO_FORMAT_U18_3LE:
+        case GST_AUDIO_FORMAT_U18LE:
           alsa->format = SND_PCM_FORMAT_U18_3LE;
           break;
-        case GST_AUDIO_FORMAT_U18_3BE:
+        case GST_AUDIO_FORMAT_U18BE:
           alsa->format = SND_PCM_FORMAT_U18_3BE;
           break;
-        case GST_AUDIO_FORMAT_F32_LE:
+        case GST_AUDIO_FORMAT_F32LE:
           alsa->format = SND_PCM_FORMAT_FLOAT_LE;
           break;
-        case GST_AUDIO_FORMAT_F32_BE:
+        case GST_AUDIO_FORMAT_F32BE:
           alsa->format = SND_PCM_FORMAT_FLOAT_BE;
           break;
-        case GST_AUDIO_FORMAT_F64_LE:
+        case GST_AUDIO_FORMAT_F64LE:
           alsa->format = SND_PCM_FORMAT_FLOAT64_LE;
           break;
-        case GST_AUDIO_FORMAT_F64_BE:
+        case GST_AUDIO_FORMAT_F64BE:
           alsa->format = SND_PCM_FORMAT_FLOAT64_BE;
           break;
         default:

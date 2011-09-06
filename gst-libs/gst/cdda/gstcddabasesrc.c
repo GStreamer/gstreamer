@@ -88,6 +88,7 @@
 #include <string.h>
 #include <stdlib.h>             /* for strtol */
 
+#include <gst/audio/audio.h>
 #include "gstcddabasesrc.h"
 #include "gst/gst-i18n-plugin.h"
 
@@ -142,11 +143,8 @@ G_DEFINE_TYPE_WITH_CODE (GstCddaBaseSrc, gst_cdda_base_src, GST_TYPE_PUSH_SRC,
         gst_cdda_base_src_uri_handler_init));
 
 #define SRC_CAPS \
-  "audio/x-raw-int, "               \
-  "endianness = (int) BYTE_ORDER, " \
-  "signed = (boolean) true, "       \
-  "width = (int) 16, "              \
-  "depth = (int) 16, "              \
+  "audio/x-raw, "               \
+  "format = (string) " GST_AUDIO_NE(S16) ", " \
   "rate = (int) 44100, "            \
   "channels = (int) 2"              \
 

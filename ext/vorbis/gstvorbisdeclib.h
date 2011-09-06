@@ -38,12 +38,7 @@ typedef ogg_packet                     ogg_packet_wrapper;
 #define GST_VORBIS_DEC_DESCRIPTION "decode raw vorbis streams to float audio"
 
 #define GST_VORBIS_AUDIO_FORMAT     GST_AUDIO_FORMAT_F32
-
-#if G_BYTE_ORDER == G_BIG_ENDIAN
-#define GST_VORBIS_AUDIO_FORMAT_STR "F32_BE"
-#else
-#define GST_VORBIS_AUDIO_FORMAT_STR "F32_LE"
-#endif
+#define GST_VORBIS_AUDIO_FORMAT_STR GST_AUDIO_NE (F32)
 
 #define GST_VORBIS_DEC_SRC_CAPS       \
     GST_STATIC_CAPS ("audio/x-raw, "  \
@@ -110,12 +105,7 @@ struct _ogg_packet_wrapper {
 #define GST_VORBIS_DEC_DESCRIPTION "decode raw vorbis streams to integer audio"
 
 #define GST_VORBIS_AUDIO_FORMAT GST_AUDIO_FORMAT_S16
-
-#if G_BYTE_ORDER == G_BIG_ENDIAN
-#define GST_VORBIS_AUDIO_FORMAT_STR "S16_BE"
-#else
-#define GST_VORBIS_AUDIO_FORMAT_STR "S16_LE"
-#endif
+#define GST_VORBIS_AUDIO_FORMAT_STR GST_AUDIO_NE (S16)
 
 #define GST_VORBIS_DEC_SRC_CAPS        \
     GST_STATIC_CAPS ("audio/x-raw, "   \

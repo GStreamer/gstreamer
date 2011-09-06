@@ -1158,8 +1158,8 @@ gst_riff_create_audio_caps (guint16 codec_id,
       } else {
         /* FIXME: this is pretty useless - we need fixed caps */
         caps = gst_caps_from_string ("audio/x-raw, "
-            "format = (string) { S8, U8, S16_LE, U16_LE, S24_LE, "
-            "U24_LE, S32_LE, U32_LE }");
+            "format = (string) { S8, U8, S16LE, U16LE, S24LE, "
+            "U24LE, S32LE, U32LE }");
       }
       if (codec_name && strf)
         *codec_name = g_strdup_printf ("Uncompressed %d-bit PCM audio",
@@ -1184,7 +1184,7 @@ gst_riff_create_audio_caps (guint16 codec_id,
         gint wd = ba * 8 / ch;
 
         caps = gst_caps_new_simple ("audio/x-raw",
-            "format", G_TYPE_STRING, wd == 64 ? "F64_LE" : "F32_LE",
+            "format", G_TYPE_STRING, wd == 64 ? "F64LE" : "F32LE",
             "channels", G_TYPE_INT, ch, NULL);
 
         /* Add default channel layout. In theory this should be done
@@ -1202,7 +1202,7 @@ gst_riff_create_audio_caps (guint16 codec_id,
       } else {
         /* FIXME: this is pretty useless - we need fixed caps */
         caps = gst_caps_from_string ("audio/x-raw, "
-            "format = (string) { F32_LE, F64_LE }");
+            "format = (string) { F32LE, F64LE }");
       }
       if (codec_name && strf)
         *codec_name = g_strdup_printf ("Uncompressed %d-bit IEEE float audio",
@@ -1536,7 +1536,7 @@ gst_riff_create_audio_caps (guint16 codec_id,
             gint wd = ba * 8 / strf->channels;
 
             caps = gst_caps_new_simple ("audio/x-raw",
-                "format", G_TYPE_STRING, wd == 32 ? "F32_LE" : "F64_LE",
+                "format", G_TYPE_STRING, wd == 32 ? "F32LE" : "F64LE",
                 "channels", G_TYPE_INT, strf->channels,
                 "rate", G_TYPE_INT, strf->rate, NULL);
 
