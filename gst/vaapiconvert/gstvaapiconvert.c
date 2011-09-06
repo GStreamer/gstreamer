@@ -493,7 +493,8 @@ gst_vaapiconvert_ensure_surface_pool(GstVaapiConvert *convert, GstCaps *caps)
             image = gst_vaapi_surface_derive_image(surface);
             if (image) {
                 if (gst_vaapi_image_map(image)) {
-                    if (convert->direct_rendering_caps == 1)
+                    if (convert->direct_rendering_caps == 1 &&
+                        gst_vaapi_image_is_linear(image))
                         convert->direct_rendering_caps = 2;
                     gst_vaapi_image_unmap(image);
                 }
@@ -593,7 +594,7 @@ gst_vaapiconvert_buffer_alloc(
 
         surface = gst_vaapi_video_buffer_get_surface(vbuffer);
         image   = gst_vaapi_surface_derive_image(surface);
-        if (image) {
+        if (image && gst_vaapi_image_get_data_size(image) == size) {
             gst_vaapi_video_buffer_set_image(vbuffer, image);
             gst_object_unref(image); /* video buffer owns an extra reference */
             break;
