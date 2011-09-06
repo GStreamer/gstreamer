@@ -63,19 +63,6 @@ typedef struct _GstAacParseClass GstAacParseClass;
 
 /**
  * GstAacParse:
- * @element: the parent element.
- * @object_type: AAC object type of the stream.
- * @bitrate:  Current media bitrate.
- * @sample_rate: Current media samplerate.
- * @channels: Current media channel count.
- * @frames_per_sec: FPS value of the current stream.
- * @header_type: #GstAacHeaderType indicating the current stream type.
- * @framecount: The amount of frames that has been processed this far.
- * @bytecount: The amount of bytes that has been processed this far.
- * @sync: Tells whether the parser is in sync (a.k.a. not searching for header)
- * @eos: End-of-Stream indicator. Set when EOS event arrives.
- * @duration: Duration of the current stream.
- * @ts: Current stream timestamp.
  *
  * The opaque GstAacParse data structure.
  */
@@ -88,6 +75,7 @@ struct _GstAacParse {
   gint           sample_rate;
   gint           channels;
   gint           mpegversion;
+  gint           frame_samples;
 
   GstAacHeaderType header_type;
 };
