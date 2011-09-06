@@ -370,7 +370,7 @@ pygst_caps_sq_item(PyObject *self, Py_ssize_t i)
 				    
 	/* pyg_boxed_new handles NULL checking */
 	ret = pyg_boxed_new(GST_TYPE_STRUCTURE, 
-	                    gst_caps_get_structure(pyg_boxed_get(self, GstCaps), i), 
+	                    structure,
 			    FALSE, FALSE);
 	if (ret)
 	  pygst_caps_map_add (ret, self);
