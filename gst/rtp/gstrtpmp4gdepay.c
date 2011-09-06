@@ -611,6 +611,8 @@ gst_rtp_mp4g_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
               rtpmp4gdepay->next_AU_index = GST_BUFFER_OFFSET (outbuf);
               gst_rtp_mp4g_depay_flush_queue (rtpmp4gdepay);
             }
+            /* rebase next_AU_index to current rtp's first AU_index */
+            rtpmp4gdepay->next_AU_index = AU_index;
           }
           rtpmp4gdepay->prev_rtptime = rtptime;
           rtpmp4gdepay->prev_AU_num = num_AU_headers;
