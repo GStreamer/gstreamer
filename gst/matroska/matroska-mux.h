@@ -64,6 +64,7 @@ typedef struct
   guint64 duration;
   GstClockTime start_ts;
   GstClockTime end_ts;    /* last timestamp + (if available) duration */
+  guint64 default_duration_scaled;
 }
 GstMatroskaPad;
 
