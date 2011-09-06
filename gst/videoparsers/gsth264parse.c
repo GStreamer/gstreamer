@@ -102,7 +102,7 @@ gst_h264_parse_base_init (gpointer g_class)
       gst_static_pad_template_get (&sinktemplate));
 
   gst_element_class_set_details_simple (gstelement_class, "H.264 parser",
-      "Codec/Parser/Video",
+      "Codec/Parser/Converter/Video",
       "Parses H.264 streams",
       "Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>");
 
