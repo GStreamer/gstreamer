@@ -746,6 +746,9 @@ class AttachedWindow (object):
         handler = self.handle_log_view_notify_model
         self.notify_model_id = window.log_view.connect ("notify::model", handler)
 
+        self.idle_scroll_path = None
+        self.idle_scroll_id = None
+
     def detach (self, feature):
 
         self.window.log_view.disconnect (self.notify_model_id)
@@ -758,6 +761,11 @@ class AttachedWindow (object):
 
         self.timeline.destroy ()
         self.timeline = None
+
+        self.idle_scroll_path = None
+        if self.idle_scroll_id is not None:
+            gobject.source_remove (self.idle_scroll_id)
+            self.idle_scroll_id = None
 
     def handle_detach_log_file (self, log_file):
 
@@ -870,10 +878,25 @@ class AttachedWindow (object):
 
         count = sum (data[:pos + 1])
 
-        view = self.window.log_view
-        model = view.props.model
-        row = model[count]
         path = (count,)
+        self.idle_scroll_path = path
+
+        if self.idle_scroll_id is None:
+            self.idle_scroll_id = gobject.idle_add (self.idle_scroll)
+
+        return False
+
+    def idle_scroll (self):
+
+        self.idle_scroll_id = None
+
+        if self.idle_scroll_path is None:
+            return False
+
+        path = self.idle_scroll_path
+        self.idle_scroll_path = None
+
+        view = self.window.log_view
         view.scroll_to_cell (path, use_align = True, row_align = .5)
         sel = view.get_selection ()
         sel.select_path (path)
