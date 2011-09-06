@@ -118,6 +118,7 @@ struct _GstAudioEncoder {
 
 /**
  * GstAudioEncoderClass:
+ * @element_class:  The parent class structure
  * @start:          Optional.
  *                  Called when the element starts processing.
  *                  Allows opening external resources.
@@ -153,7 +154,7 @@ struct _GstAudioEncoder {
  * Since: 0.10.36
  */
 struct _GstAudioEncoderClass {
-  GstElementClass parent_class;
+  GstElementClass element_class;
 
   /*< public >*/
   /* virtual methods for subclasses */
