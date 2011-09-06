@@ -1288,16 +1288,16 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
 
       switch (codec_id) {
         case CODEC_ID_PCM_S16LE:
-          format = GST_AUDIO_FORMAT_S16_LE;
+          format = GST_AUDIO_FORMAT_S16LE;
           break;
         case CODEC_ID_PCM_S16BE:
-          format = GST_AUDIO_FORMAT_S16_BE;
+          format = GST_AUDIO_FORMAT_S16BE;
           break;
         case CODEC_ID_PCM_U16LE:
-          format = GST_AUDIO_FORMAT_U16_LE;
+          format = GST_AUDIO_FORMAT_U16LE;
           break;
         case CODEC_ID_PCM_U16BE:
-          format = GST_AUDIO_FORMAT_U16_BE;
+          format = GST_AUDIO_FORMAT_U16BE;
           break;
         case CODEC_ID_PCM_S8:
           format = GST_AUDIO_FORMAT_S8;
@@ -2764,16 +2764,16 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
         case GST_AUDIO_FORMAT_U8:
           id = CODEC_ID_PCM_U8;
           break;
-        case GST_AUDIO_FORMAT_S16_LE:
+        case GST_AUDIO_FORMAT_S16LE:
           id = CODEC_ID_PCM_S16LE;
           break;
-        case GST_AUDIO_FORMAT_S16_BE:
+        case GST_AUDIO_FORMAT_S16BE:
           id = CODEC_ID_PCM_S16BE;
           break;
-        case GST_AUDIO_FORMAT_U16_LE:
+        case GST_AUDIO_FORMAT_U16LE:
           id = CODEC_ID_PCM_U16LE;
           break;
-        case GST_AUDIO_FORMAT_U16_BE:
+        case GST_AUDIO_FORMAT_U16BE:
           id = CODEC_ID_PCM_U16BE;
           break;
         default:
