@@ -31,9 +31,9 @@
 #include "mulaw-conversion.h"
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-#define INT_FORMAT "S16_LE"
+#define INT_FORMAT "S16LE"
 #else
-#define INT_FORMAT "S16_BE"
+#define INT_FORMAT "S16BE"
 #endif
 
 extern GstStaticPadTemplate mulaw_dec_src_factory;

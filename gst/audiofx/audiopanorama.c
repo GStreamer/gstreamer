@@ -92,29 +92,17 @@ gst_audio_panorama_method_get_type (void)
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-float, "
-        "rate = (int) [ 1, MAX ], "
-        "channels = (int) [ 1, 2 ], "
-        "endianness = (int) BYTE_ORDER, " "width = (int) 32; "
-        "audio/x-raw-int, "
-        "rate = (int) [ 1, MAX ], "
-        "channels = (int) [ 1, 2 ], "
-        "endianness = (int) BYTE_ORDER, "
-        "width = (int) 16, " "depth = (int) 16, " "signed = (boolean) true")
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) { " GST_AUDIO_NE (S32) ", " GST_AUDIO_NE (S16) "}, "
+        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 2 ]")
     );
 
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-float, "
-        "rate = (int) [ 1, MAX ], "
-        "channels = (int) 2, "
-        "endianness = (int) BYTE_ORDER, " "width = (int) 32; "
-        "audio/x-raw-int, "
-        "rate = (int) [ 1, MAX ], "
-        "channels = (int) 2, "
-        "endianness = (int) BYTE_ORDER, "
-        "width = (int) 16, " "depth = (int) 16, " "signed = (boolean) true")
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) { " GST_AUDIO_NE (S32) ", " GST_AUDIO_NE (S16) "}, "
+        "rate = (int) [ 1, MAX ], " "channels = (int) 2")
     );
 
 G_DEFINE_TYPE (GstAudioPanorama, gst_audio_panorama, GST_TYPE_BASE_TRANSFORM);
@@ -237,27 +225,27 @@ gst_audio_panorama_init (GstAudioPanorama * filter)
 
   filter->panorama = 0;
   filter->method = METHOD_PSYCHOACOUSTIC;
-  filter->width = 0;
-  filter->channels = 0;
-  filter->format_float = FALSE;
+  gst_audio_info_init (&filter->info);
   filter->process = NULL;
 
   gst_base_transform_set_gap_aware (GST_BASE_TRANSFORM (filter), TRUE);
 }
 
 static gboolean
-gst_audio_panorama_set_process_function (GstAudioPanorama * filter)
+gst_audio_panorama_set_process_function (GstAudioPanorama * filter,
+    GstAudioInfo * info)
 {
   gint channel_index, format_index, method_index;
+  const GstAudioFormatInfo *finfo = info->finfo;
 
   /* set processing function */
-  channel_index = filter->channels - 1;
+  channel_index = GST_AUDIO_INFO_CHANNELS (info) - 1;
   if (channel_index > 1 || channel_index < 0) {
     filter->process = NULL;
     return FALSE;
   }
 
-  format_index = (filter->format_float) ? 1 : 0;
+  format_index = GST_AUDIO_FORMAT_INFO_IS_FLOAT (finfo) ? 1 : 0;
 
   method_index = filter->method;
   if (method_index >= NUM_METHODS || method_index < 0)
@@ -280,7 +268,7 @@ gst_audio_panorama_set_property (GObject * object, guint prop_id,
       break;
     case PROP_METHOD:
       filter->method = g_value_get_enum (value);
-      gst_audio_panorama_set_process_function (filter);
+      gst_audio_panorama_set_process_function (filter, &filter->info);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -356,44 +344,27 @@ gst_audio_panorama_set_caps (GstBaseTransform * base, GstCaps * incaps,
     GstCaps * outcaps)
 {
   GstAudioPanorama *filter = GST_AUDIO_PANORAMA (base);
-  const GstStructure *structure;
-  gboolean ret;
-  gint width;
-  const gchar *fmt;
+  GstAudioInfo info;
 
   /*GST_INFO ("incaps are %" GST_PTR_FORMAT, incaps); */
+  if (!gst_audio_info_from_caps (&info, incaps))
+    goto no_format;
 
-  structure = gst_caps_get_structure (incaps, 0);
-  ret = gst_structure_get_int (structure, "channels", &filter->channels);
-  if (!ret)
-    goto no_channels;
+  GST_DEBUG ("try to process %d input with %d channels",
+      GST_AUDIO_INFO_FORMAT (&info), GST_AUDIO_INFO_CHANNELS (&info));
 
-  ret = gst_structure_get_int (structure, "width", &width);
-  if (!ret)
-    goto no_width;
-  filter->width = width / 8;
+  if (!gst_audio_panorama_set_process_function (filter, &info))
+    goto no_format;
 
-  fmt = gst_structure_get_name (structure);
-  if (!strcmp (fmt, "audio/x-raw-int"))
-    filter->format_float = FALSE;
-  else
-    filter->format_float = TRUE;
+  filter->info = info;
 
-  GST_DEBUG ("try to process %s input with %d channels", fmt, filter->channels);
+  return TRUE;
 
-  ret = gst_audio_panorama_set_process_function (filter);
-
-  if (!ret)
-    GST_WARNING ("can't process input with %d channels", filter->channels);
-
-  return ret;
-
-no_channels:
-  GST_DEBUG ("no channels in caps");
-  return ret;
-no_width:
-  GST_DEBUG ("no width in caps");
-  return ret;
+no_format:
+  {
+    GST_DEBUG ("invalid caps");
+    return FALSE;
+  }
 }
 
 /* psychoacoustic processing functions */
@@ -672,7 +643,7 @@ gst_audio_panorama_transform (GstBaseTransform * base, GstBuffer * inbuf,
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_GAP);
     memset (outdata, 0, outsize);
   } else {
-    guint num_samples = outsize / (2 * filter->width);
+    guint num_samples = outsize / GST_AUDIO_INFO_BPF (&filter->info);
 
     filter->process (filter, indata, outdata, num_samples);
   }

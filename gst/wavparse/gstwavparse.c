@@ -1743,7 +1743,7 @@ gst_wavparse_add_src_pad (GstWavParse * wav, GstBuffer * buf)
 
   if (wav->caps) {
     s = gst_caps_get_structure (wav->caps, 0);
-    if (s && gst_structure_has_name (s, "audio/x-raw-int") && buf != NULL) {
+    if (s && gst_structure_has_name (s, "audio/x-raw") && buf != NULL) {
       GstTypeFindProbability prob;
       GstCaps *tf_caps;
 

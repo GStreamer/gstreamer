@@ -1717,11 +1717,11 @@ static GstStateChangeReturn gst_pulsesink_change_state (GstElement * element,
     GstStateChange transition);
 
 #if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
-# define FORMATS   "{ S16_LE, S16_BE, F32_LE, F32_BE, S32_LE, S32_BE, " \
-                     "S24_3LE, S24_3BE, S24_LE, S24_BE, S8 }"
+# define FORMATS   "{ S16LE, S16BE, F32LE, F32BE, S32LE, S32BE, " \
+                     "S24LE, S24BE, S24_32LE, S24_32BE, S8 }"
 #else
-# define FORMATS   "{ S16_BE, S16_LE, F32_BE, F32_LE, S32_BE, S32_LE, " \
-                     "S24_3BE, S24_3LE, S24_BE, S24_LE, S8 }"
+# define FORMATS   "{ S16BE, S16LE, F32BE, F32LE, S32BE, S32LE, " \
+                     "S24BE, S24LE, S24_32BE, S24_32LE, S8 }"
 #endif
 
 static GstStaticPadTemplate pad_template = GST_STATIC_PAD_TEMPLATE ("sink",

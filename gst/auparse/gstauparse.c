@@ -45,9 +45,9 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
 
 #define GST_AU_PARSE_RAW_PAD_TEMPLATE_CAPS \
     "audio/x-raw, "                         \
-    "format= (string) { S8, S16_LE, S16_BE, S24_3LE, S24_3BE, "  \
-                       "S32_LE, S32_BE, F32_LE, F32_BE, "        \
-                       "F64_LE, F64_BE }, " \
+    "format= (string) { S8, S16LE, S16BE, S24LE, S24BE, "  \
+                       "S32LE, S32BE, F32LE, F32BE, "        \
+                       "F64LE, F64BE }, " \
     "rate = (int) [ 8000, 192000 ], "       \
     "channels = (int) [ 1, 2 ]"
 
@@ -257,38 +257,38 @@ gst_au_parse_parse_header (GstAuParse * auparse)
       break;
     case 3:                    /* 16-bit linear PCM */
       if (endianness == G_LITTLE_ENDIAN)
-        format = GST_AUDIO_FORMAT_S16_LE;
+        format = GST_AUDIO_FORMAT_S16LE;
       else
-        format = GST_AUDIO_FORMAT_S16_BE;
+        format = GST_AUDIO_FORMAT_S16BE;
       auparse->sample_size = auparse->channels * 2;
       break;
     case 4:                    /* 24-bit linear PCM */
       if (endianness == G_LITTLE_ENDIAN)
-        format = GST_AUDIO_FORMAT_S24_3LE;
+        format = GST_AUDIO_FORMAT_S24LE;
       else
-        format = GST_AUDIO_FORMAT_S24_3BE;
+        format = GST_AUDIO_FORMAT_S24BE;
       auparse->sample_size = auparse->channels * 3;
       break;
     case 5:                    /* 32-bit linear PCM */
       if (endianness == G_LITTLE_ENDIAN)
-        format = GST_AUDIO_FORMAT_S32_LE;
+        format = GST_AUDIO_FORMAT_S32LE;
       else
-        format = GST_AUDIO_FORMAT_S32_BE;
+        format = GST_AUDIO_FORMAT_S32BE;
       auparse->sample_size = auparse->channels * 4;
       break;
 
     case 6:                    /* 32-bit IEEE floating point */
       if (endianness == G_LITTLE_ENDIAN)
-        format = GST_AUDIO_FORMAT_F32_LE;
+        format = GST_AUDIO_FORMAT_F32LE;
       else
-        format = GST_AUDIO_FORMAT_F32_BE;
+        format = GST_AUDIO_FORMAT_F32BE;
       auparse->sample_size = auparse->channels * 4;
       break;
     case 7:                    /* 64-bit IEEE floating point */
       if (endianness == G_LITTLE_ENDIAN)
-        format = GST_AUDIO_FORMAT_F64_LE;
+        format = GST_AUDIO_FORMAT_F64LE;
       else
-        format = GST_AUDIO_FORMAT_F64_BE;
+        format = GST_AUDIO_FORMAT_F64BE;
       auparse->sample_size = auparse->channels * 8;
       break;
 

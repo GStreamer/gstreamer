@@ -111,9 +111,9 @@ GST_DEBUG_CATEGORY_STATIC (gst_spectrum_debug);
 
 /* elementfactory information */
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-# define FORMATS "{ S16_LE, S24_3LE, S32_LE, F32_LE, F64_LE }"
+# define FORMATS "{ S16LE, S24LE, S32LE, F32LE, F64LE }"
 #else
-# define FORMATS "{ S16_BE, S24_3BE, S32_BE, F32_BE, F64_BE }"
+# define FORMATS "{ S16BE, S24BE, S32BE, F32BE, F64BE }"
 #endif
 
 #define ALLOWED_CAPS \
@@ -626,7 +626,7 @@ gst_spectrum_setup (GstAudioFilter * base, const GstAudioInfo * info)
       input_data =
           multi_channel ? input_data_int16_max : input_data_mixed_int16_max;
       break;
-    case GST_AUDIO_FORMAT_S24_3:
+    case GST_AUDIO_FORMAT_S24:
       input_data =
           multi_channel ? input_data_int24_max : input_data_mixed_int24_max;
       break;

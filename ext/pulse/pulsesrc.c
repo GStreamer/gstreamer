@@ -99,9 +99,9 @@ static GstStateChangeReturn gst_pulsesrc_change_state (GstElement *
     element, GstStateChange transition);
 
 #if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
-# define FORMATS "{ S16_LE, S16_BE, F32_LE, F32_BE, S32_LE, S32_BE, U8 }"
+# define FORMATS "{ S16LE, S16BE, F32LE, F32BE, S32LE, S32BE, U8 }"
 #else
-# define FORMATS "{ S16_BE, S16_LE, F32_BE, F32_LE, S32_BE, S32_LE, U8 }"
+# define FORMATS "{ S16BE, S16LE, F32BE, F32LE, S32BE, S32LE, U8 }"
 #endif
 
 static GstStaticPadTemplate pad_template = GST_STATIC_PAD_TEMPLATE ("src",
@@ -1084,7 +1084,7 @@ gst_pulsesrc_success_cb (pa_stream * s, int success, void *userdata)
 {
   GstPulseSrc *pulsesrc = GST_PULSESRC_CAST (userdata);
 
-  pulsesrc->operation_success = ! !success;
+  pulsesrc->operation_success = !!success;
   pa_threaded_mainloop_signal (pulsesrc->mainloop, 0);
 }
 

@@ -38,7 +38,7 @@
  * ! 'video/x-raw,format=(string)I420,width=320,height=240,framerate=(fraction)25/1' \
  * ! queue ! mux. \
  * audiotestsrc num-buffers=440 ! audioconvert \
- * ! 'audio/x-raw-int,rate=44100,channels=2' ! queue ! mux. \
+ * ! 'audio/x-raw,rate=44100,channels=2' ! queue ! mux. \
  * avimux name=mux ! filesink location=test.avi
  * ]| This will create an .AVI file containing an uncompressed video stream
  * with a test picture and an uncompressed audio stream containing a
@@ -47,7 +47,7 @@
  * gst-launch videotestsrc num-buffers=250 \
  * ! 'video/x-raw,format=(string)I420,width=320,height=240,framerate=(fraction)25/1' \
  * ! xvidenc ! queue ! mux. \
- * audiotestsrc num-buffers=440 ! audioconvert ! 'audio/x-raw-int,rate=44100,channels=2' \
+ * audiotestsrc num-buffers=440 ! audioconvert ! 'audio/x-raw,rate=44100,channels=2' \
  * ! lame ! queue ! mux. \
  * avimux name=mux ! filesink location=test.avi
  * ]| This will create an .AVI file containing the same test video and sound
@@ -66,6 +66,7 @@
 #include <string.h>
 
 #include <gst/video/video.h>
+#include <gst/audio/audio.h>
 #include <gst/base/gstbytewriter.h>
 
 #include "gstavimux.h"
@@ -160,11 +161,8 @@ static GstStaticPadTemplate audio_sink_factory =
     GST_STATIC_PAD_TEMPLATE ("audio_%d",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
-    GST_STATIC_CAPS ("audio/x-raw-int, "
-        "endianness = (int) LITTLE_ENDIAN, "
-        "signed = (boolean) { TRUE, FALSE }, "
-        "width = (int) { 8, 16 }, "
-        "depth = (int) { 8, 16 }, "
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) { U8, S16LE }, "
         "rate = (int) [ 1000, 96000 ], "
         "channels = (int) [ 1, 2 ]; "
         "audio/mpeg, "
@@ -758,36 +756,27 @@ gst_avi_mux_audsink_set_caps (GstPad * pad, GstCaps * vscaps)
     avimux->codec_data_size += gst_buffer_get_size (avipad->auds_codec_data);
   }
 
-  if (!strcmp (mimetype, "audio/x-raw-int")) {
-    gint width, depth;
-    gboolean signedness;
+  if (!strcmp (mimetype, "audio/x-raw")) {
+    const gchar *format;
+    GstAudioFormat fmt;
+
+    format = gst_structure_get_string (structure, "format");
+    fmt = gst_audio_format_from_string (format);
+
+    switch (fmt) {
+      case GST_AUDIO_FORMAT_U8:
+        avipad->auds.blockalign = 8;
+        avipad->auds.size = 8;
+        break;
+      case GST_AUDIO_FORMAT_S16:
+        avipad->auds.blockalign = 16;
+        avipad->auds.size = 16;
+        break;
+      default:
+        goto refuse_caps;
+    }
 
     avipad->auds.format = GST_RIFF_WAVE_FORMAT_PCM;
-
-    if (!gst_structure_get_int (structure, "width", &width) ||
-        !gst_structure_get_int (structure, "depth", &depth) ||
-        !gst_structure_get_boolean (structure, "signed", &signedness)) {
-      GST_DEBUG_OBJECT (avimux,
-          "broken caps, width/depth/signed field missing");
-      goto refuse_caps;
-    }
-
-    /* no clear place to put different values for these while keeping to spec */
-    if (width != depth) {
-      GST_DEBUG_OBJECT (avimux, "width must be same as depth!");
-      goto refuse_caps;
-    }
-
-    /* because that's the way the caps will be recreated from riff data */
-    if ((width == 8 && signedness) || (width == 16 && !signedness)) {
-      GST_DEBUG_OBJECT (avimux,
-          "8-bit PCM must be unsigned, 16-bit PCM signed");
-      goto refuse_caps;
-    }
-
-    avipad->auds.blockalign = width;
-    avipad->auds.size = (width == 8) ? 8 : depth;
-
     /* set some more info straight */
     avipad->auds.blockalign /= 8;
     avipad->auds.blockalign *= avipad->auds.channels;

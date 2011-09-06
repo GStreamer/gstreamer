@@ -23,9 +23,9 @@
 #include "mulaw-decode.h"
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-#define INT_FORMAT "S16_LE"
+#define INT_FORMAT "S16LE"
 #else
-#define INT_FORMAT "S16_BE"
+#define INT_FORMAT "S16BE"
 #endif
 
 GstStaticPadTemplate mulaw_dec_src_factory = GST_STATIC_PAD_TEMPLATE ("src",

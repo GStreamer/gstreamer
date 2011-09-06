@@ -98,34 +98,34 @@ gst_pulse_fill_sample_spec (GstRingBufferSpec * spec, pa_sample_spec * ss)
       case GST_AUDIO_FORMAT_U8:
         ss->format = PA_SAMPLE_U8;
         break;
-      case GST_AUDIO_FORMAT_S16_LE:
+      case GST_AUDIO_FORMAT_S16LE:
         ss->format = PA_SAMPLE_S16LE;
         break;
-      case GST_AUDIO_FORMAT_S16_BE:
+      case GST_AUDIO_FORMAT_S16BE:
         ss->format = PA_SAMPLE_S16BE;
         break;
-      case GST_AUDIO_FORMAT_F32_LE:
+      case GST_AUDIO_FORMAT_F32LE:
         ss->format = PA_SAMPLE_FLOAT32LE;
         break;
-      case GST_AUDIO_FORMAT_F32_BE:
+      case GST_AUDIO_FORMAT_F32BE:
         ss->format = PA_SAMPLE_FLOAT32BE;
         break;
-      case GST_AUDIO_FORMAT_S32_LE:
+      case GST_AUDIO_FORMAT_S32LE:
         ss->format = PA_SAMPLE_S32LE;
         break;
-      case GST_AUDIO_FORMAT_S32_BE:
+      case GST_AUDIO_FORMAT_S32BE:
         ss->format = PA_SAMPLE_S32BE;
         break;
-      case GST_AUDIO_FORMAT_S24_3LE:
+      case GST_AUDIO_FORMAT_S24LE:
         ss->format = PA_SAMPLE_S24LE;
         break;
-      case GST_AUDIO_FORMAT_S24_3BE:
+      case GST_AUDIO_FORMAT_S24BE:
         ss->format = PA_SAMPLE_S24BE;
         break;
-      case GST_AUDIO_FORMAT_S24_LE:
+      case GST_AUDIO_FORMAT_S24_32LE:
         ss->format = PA_SAMPLE_S24_32LE;
         break;
-      case GST_AUDIO_FORMAT_S24_BE:
+      case GST_AUDIO_FORMAT_S24_32BE:
         ss->format = PA_SAMPLE_S24_32BE;
         break;
       default:

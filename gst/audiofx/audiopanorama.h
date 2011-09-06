@@ -22,6 +22,7 @@
 #define __GST_AUDIO_PANORAMA_H__
 
 #include <gst/gst.h>
+#include <gst/audio/audio.h>
 #include <gst/base/gstbasetransform.h>
 
 G_BEGIN_DECLS
@@ -42,12 +43,11 @@ struct _GstAudioPanorama {
   GstBaseTransform element;
 
   gfloat panorama;
-  
+
   /* < private > */
   GstAudioPanoramaProcessFunc process;
-  gint channels;
-  gboolean format_float;
-  gint width;
+
+  GstAudioInfo info;
   gint method;
 };
 

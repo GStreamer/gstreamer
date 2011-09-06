@@ -50,9 +50,9 @@ typedef jack_default_audio_sample_t sample_t;
 #define GST_TYPE_JACK_CLIENT  (gst_jack_client_get_type ())
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-#define GST_JACK_FORMAT_STR "F32_LE"
+#define GST_JACK_FORMAT_STR "F32LE"
 #else
-#define GST_JACK_FORMAT_STR "F32_BE"
+#define GST_JACK_FORMAT_STR "F32BE"
 #endif
 
 GType gst_jack_client_get_type(void);
