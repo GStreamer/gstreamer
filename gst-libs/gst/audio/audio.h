@@ -214,19 +214,19 @@ struct _GstAudioFormatInfo {
   GstAudioFormatPack pack_func;
 };
 
-#define GST_AUDIO_FORMAT_INFO_FORMAT(info)       ((info)->format)
-#define GST_AUDIO_FORMAT_INFO_NAME(info)         ((info)->name)
-#define GST_AUDIO_FORMAT_INFO_FLAGS(info)        ((info)->flags)
+#define GST_AUDIO_FORMAT_INFO_FORMAT(info)           ((info)->format)
+#define GST_AUDIO_FORMAT_INFO_NAME(info)             ((info)->name)
+#define GST_AUDIO_FORMAT_INFO_FLAGS(info)            ((info)->flags)
 
-#define GST_AUDIO_FORMAT_INFO_IS_INTEGER(info)   !!((info)->flags & GST_AUDIO_FORMAT_FLAG_INTEGER)
-#define GST_AUDIO_FORMAT_INFO_IS_FLOAT(info)     !!((info)->flags & GST_AUDIO_FORMAT_FLAG_FLOAT)
-#define GST_AUDIO_FORMAT_INFO_IS_SIGNED(info)    !!((info)->flags & GST_AUDIO_FORMAT_FLAG_SIGNED)
+#define GST_AUDIO_FORMAT_INFO_IS_INTEGER(info)       !!((info)->flags & GST_AUDIO_FORMAT_FLAG_INTEGER)
+#define GST_AUDIO_FORMAT_INFO_IS_FLOAT(info)         !!((info)->flags & GST_AUDIO_FORMAT_FLAG_FLOAT)
+#define GST_AUDIO_FORMAT_INFO_IS_SIGNED(info)        !!((info)->flags & GST_AUDIO_FORMAT_FLAG_SIGNED)
 
-#define GST_AUDIO_FORMAT_INFO_ENDIANNESS(info)   ((info)->endianness)
-#define GST_AUDIO_FORMAT_INFO_IS_LE(info)        ((info)->endianness == G_LITTLE_ENDIAN)
-#define GST_AUDIO_FORMAT_INFO_IS_BE(info)        ((info)->endianness == G_BIG_ENDIAN)
-#define GST_AUDIO_FORMAT_INFO_WIDTH(info)        ((info)->width)
-#define GST_AUDIO_FORMAT_INFO_DEPTH(info)        ((info)->depth)
+#define GST_AUDIO_FORMAT_INFO_ENDIANNESS(info)       ((info)->endianness)
+#define GST_AUDIO_FORMAT_INFO_IS_LITTLE_ENDIAN(info) ((info)->endianness == G_LITTLE_ENDIAN)
+#define GST_AUDIO_FORMAT_INFO_IS_BIG_ENDIAN(info)    ((info)->endianness == G_BIG_ENDIAN)
+#define GST_AUDIO_FORMAT_INFO_WIDTH(info)            ((info)->width)
+#define GST_AUDIO_FORMAT_INFO_DEPTH(info)            ((info)->depth)
 
 
 GstAudioFormat gst_audio_format_build_integer    (gboolean sign, gint endianness,

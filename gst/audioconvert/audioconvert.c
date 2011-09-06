@@ -569,14 +569,14 @@ audio_convert_get_func_index (AudioConvertCtx * ctx,
 
   if (GST_AUDIO_FORMAT_INFO_IS_INTEGER (fmt)) {
     index += (GST_AUDIO_FORMAT_INFO_WIDTH (fmt) / 8 - 1) * 4;
-    index += GST_AUDIO_FORMAT_INFO_IS_LE (fmt) ? 0 : 2;
+    index += GST_AUDIO_FORMAT_INFO_IS_LITTLE_ENDIAN (fmt) ? 0 : 2;
     index += GST_AUDIO_FORMAT_INFO_IS_SIGNED (fmt) ? 1 : 0;
     index += (ctx->ns == NOISE_SHAPING_NONE) ? 0 : 24;
   } else {
     /* this is float/double */
     index = 16;
     index += (GST_AUDIO_FORMAT_INFO_WIDTH (fmt) == 32) ? 0 : 2;
-    index += GST_AUDIO_FORMAT_INFO_IS_LE (fmt) ? 0 : 1;
+    index += GST_AUDIO_FORMAT_INFO_IS_LITTLE_ENDIAN (fmt) ? 0 : 1;
     index += (DOUBLE_INTERMEDIATE_FORMAT (ctx)) ? 4 : 0;
   }
 
