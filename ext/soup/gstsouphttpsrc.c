@@ -1370,7 +1370,7 @@ gst_soup_http_src_do_seek (GstBaseSrc * bsrc, GstSegment * segment)
     return FALSE;
   }
 
-  if (segment->rate != 1.0 || segment->format != GST_FORMAT_BYTES) {
+  if (segment->rate < 0.0 || segment->format != GST_FORMAT_BYTES) {
     GST_WARNING_OBJECT (src, "Invalid seek segment");
     return FALSE;
   }

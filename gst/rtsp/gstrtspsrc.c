@@ -173,6 +173,7 @@ gst_rtsp_src_buffer_mode_get_type (void)
 #define DEFAULT_USER_PW          NULL
 #define DEFAULT_BUFFER_MODE      BUFFER_MODE_AUTO
 #define DEFAULT_PORT_RANGE       NULL
+#define DEFAULT_SHORT_HEADER     FALSE
 
 enum
 {
@@ -194,6 +195,7 @@ enum
   PROP_BUFFER_MODE,
   PROP_PORT_RANGE,
   PROP_UDP_BUFFER_SIZE,
+  PROP_SHORT_HEADER,
   PROP_LAST
 };
 
@@ -444,6 +446,18 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
           0, G_MAXINT, DEFAULT_UDP_BUFFER_SIZE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstRTSPSrc::short-header:
+   *
+   * Only send the basic RTSP headers for broken encoders.
+   *
+   * Since: 0.10.31
+   */
+  g_object_class_install_property (gobject_class, PROP_SHORT_HEADER,
+      g_param_spec_boolean ("short-header", "Short Header",
+          "Only send the basic RTSP headers for broken encoders",
+          DEFAULT_SHORT_HEADER, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gstelement_class->send_event = gst_rtspsrc_send_event;
   gstelement_class->change_state = gst_rtspsrc_change_state;
 
@@ -492,6 +506,7 @@ gst_rtspsrc_init (GstRTSPSrc * src)
   src->client_port_range.min = 0;
   src->client_port_range.max = 0;
   src->udp_buffer_size = DEFAULT_UDP_BUFFER_SIZE;
+  src->short_header = DEFAULT_SHORT_HEADER;
 
   /* get a list of all extensions */
   src->extensions = gst_rtsp_ext_list_get ();
@@ -685,6 +700,9 @@ gst_rtspsrc_set_property (GObject * object, guint prop_id, const GValue * value,
     case PROP_UDP_BUFFER_SIZE:
       rtspsrc->udp_buffer_size = g_value_get_int (value);
       break;
+    case PROP_SHORT_HEADER:
+      rtspsrc->short_header = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -776,6 +794,9 @@ gst_rtspsrc_get_property (GObject * object, guint prop_id, GValue * value,
     }
     case PROP_UDP_BUFFER_SIZE:
       g_value_set_int (value, rtspsrc->udp_buffer_size);
+      break;
+    case PROP_SHORT_HEADER:
+      g_value_set_boolean (value, rtspsrc->short_header);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -4399,7 +4420,8 @@ gst_rtspsrc_try_send (GstRTSPSrc * src, GstRTSPConnection * conn,
   gint try = 0;
 
 again:
-  gst_rtsp_ext_list_before_send (src->extensions, request);
+  if (!src->short_header)
+    gst_rtsp_ext_list_before_send (src->extensions, request);
 
   GST_DEBUG_OBJECT (src, "sending message");
 
