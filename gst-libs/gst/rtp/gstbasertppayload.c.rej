@@ -1,0 +1,16 @@
+*************** struct _GstBaseRTPPayloadPrivate
+*** 48,53 ****
+    guint16 next_seqnum;
+    gboolean perfect_rtptime;
+    gboolean timestamp_valid;
+  
+    gint64 prop_max_ptime;
+    gint64 caps_max_ptime;
+--- 48,54 ----
+    guint16 next_seqnum;
+    gboolean perfect_rtptime;
+    gboolean timestamp_valid;
++   gboolean notified_first_timestamp;
+  
+    gint64 prop_max_ptime;
+    gint64 caps_max_ptime;

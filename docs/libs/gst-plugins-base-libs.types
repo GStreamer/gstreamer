@@ -3,6 +3,10 @@
 
 #include <gst/audio/gstaudioclock.h>
 gst_audio_clock_get_type
+#include <gst/audio/gstaudiodecoder.h>
+gst_audio_decoder_get_type
+#include <gst/audio/gstaudioencoder.h>
+gst_audio_encoder_get_type
 #include <gst/audio/gstaudiofilter.h>
 gst_audio_filter_get_type
 #include <gst/audio/gstaudiosink.h>

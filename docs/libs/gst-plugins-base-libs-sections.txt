@@ -35,6 +35,7 @@ GST_IS_APP_BUFFER
 GST_IS_APP_BUFFER_CLASS
 GST_TYPE_APP_BUFFER
 GST_TYPE_APP_STREAM_TYPE
+gst_app_stream_type_get_type
 <SUBSECTION Private>
 GstAppSrc
 GstAppSrcPrivate
@@ -122,6 +123,86 @@ gst_audio_clock_get_type
 GST_AUDIO_CLOCK_CLASS
 GST_IS_AUDIO_CLOCK_CLASS
 GST_AUDIO_CLOCK_CAST
+</SECTION>
+
+<SECTION>
+<FILE>gstaudiodecoder</FILE>
+<INCLUDE>gst/audio/gstaudiodecoder.h</INCLUDE>
+GstAudioDecoder
+GstAudioDecoderClass
+GST_AUDIO_DECODER_ERROR
+GST_AUDIO_DECODER_SINK_NAME
+GST_AUDIO_DECODER_SINK_PAD
+GST_AUDIO_DECODER_SRC_NAME
+GST_AUDIO_DECODER_SRC_PAD
+gst_audio_decoder_finish_frame
+gst_audio_decoder_get_audio_info
+gst_audio_decoder_get_byte_time
+gst_audio_decoder_get_delay
+gst_audio_decoder_get_latency
+gst_audio_decoder_get_max_errors
+gst_audio_decoder_get_min_latency
+gst_audio_decoder_get_parse_state
+gst_audio_decoder_get_plc
+gst_audio_decoder_get_plc_aware
+gst_audio_decoder_get_tolerance
+gst_audio_decoder_set_byte_time
+gst_audio_decoder_set_latency
+gst_audio_decoder_set_max_errors
+gst_audio_decoder_set_min_latency
+gst_audio_decoder_set_plc
+gst_audio_decoder_set_plc_aware
+gst_audio_decoder_set_tolerance
+<SUBSECTION Standard>
+GST_AUDIO_DECODER
+GST_IS_AUDIO_DECODER
+GST_TYPE_AUDIO_DECODER
+gst_audio_decoder_get_type
+GST_AUDIO_DECODER_CLASS
+GST_IS_AUDIO_DECODER_CLASS
+GST_AUDIO_DECODER_GET_CLASS
+GstAudioDecoderPrivate
+</SECTION>
+
+<SECTION>
+<FILE>gstaudioencoder</FILE>
+<INCLUDE>gst/audio/gstaudioencoder.h</INCLUDE>
+GstAudioEncoder
+GstAudioEncoderClass
+GST_AUDIO_ENCODER_SEGMENT
+GST_AUDIO_ENCODER_SINK_NAME
+GST_AUDIO_ENCODER_SINK_PAD
+GST_AUDIO_ENCODER_SRC_NAME
+GST_AUDIO_ENCODER_SRC_PAD
+gst_audio_encoder_finish_frame
+gst_audio_encoder_get_audio_info
+gst_audio_encoder_get_frame_max
+gst_audio_encoder_get_frame_samples
+gst_audio_encoder_get_hard_resync
+gst_audio_encoder_get_latency
+gst_audio_encoder_get_lookahead
+gst_audio_encoder_get_mark_granule
+gst_audio_encoder_get_perfect_timestamp
+gst_audio_encoder_get_tolerance
+gst_audio_encoder_proxy_getcaps
+gst_audio_encoder_set_frame_max
+gst_audio_encoder_set_frame_samples
+gst_audio_encoder_set_hard_resync
+gst_audio_encoder_set_latency
+gst_audio_encoder_set_lookahead
+gst_audio_encoder_set_mark_granule
+gst_audio_encoder_set_perfect_timestamp
+gst_audio_encoder_set_tolerance
+<SUBSECTION Standard>
+GST_AUDIO_ENCODER
+GST_AUDIO_ENCODER_CAST
+GST_IS_AUDIO_ENCODER
+GST_TYPE_AUDIO_ENCODER
+gst_audio_encoder_get_type
+GST_AUDIO_ENCODER_CLASS
+GST_IS_AUDIO_ENCODER_CLASS
+GST_AUDIO_ENCODER_GET_CLASS
+GstAudioEncoderPrivate
 </SECTION>
 
 <SECTION>
@@ -465,6 +546,8 @@ KISS_FFT_F64_SIN
 <INCLUDE>gst/floatcast/floatcast.h</INCLUDE>
 gst_cast_double
 gst_cast_float
+<SUBSECTION Standard>
+inline
 </SECTION>
 
 
@@ -1832,7 +1915,7 @@ GST_IS_TAG_MUX_CLASS
 GST_TAG_MUX
 GST_TAG_MUX_CLASS
 GST_TYPE_TAG_MUX
-gst_tag_demux_get_type
+gst_tag_mux_get_type
 </SECTION>
 
 <SECTION>
@@ -1849,6 +1932,7 @@ gst_tag_get_language_code_iso_639_2T
 <SECTION>
 <FILE>gsttaglicenses</FILE>
 <INCLUDE>gst/tag/tag.h</INCLUDE>
+GstTagLicenseFlags
 gst_tag_get_license_flags
 gst_tag_get_license_nick
 gst_tag_get_license_title
@@ -2138,6 +2222,7 @@ GST_VIDEO_SIZE_RANGE
 GST_VIDEO_BUFFER_TFF
 GST_VIDEO_BUFFER_RFF
 GST_VIDEO_BUFFER_ONEFIELD
+GST_VIDEO_BUFFER_PROGRESSIVE
 GstVideoFormat
 gst_video_calculate_display_ratio
 gst_video_frame_rate
@@ -2242,6 +2327,7 @@ GstDiscovererStreamInfo
 GstDiscovererContainerInfo
 GstDiscovererAudioInfo
 GstDiscovererVideoInfo
+GstDiscovererSubtitleInfo
 gst_discoverer_stream_info_get_caps
 gst_discoverer_stream_info_get_misc
 gst_discoverer_stream_info_get_next
@@ -2283,6 +2369,7 @@ GST_DISCOVERER_CONTAINER_INFO
 GST_DISCOVERER_INFO
 GST_DISCOVERER_STREAM_INFO
 GST_DISCOVERER_VIDEO_INFO
+GST_DISCOVERER_SUBTITLE_INFO
 GST_IS_DISCOVERER
 GST_IS_DISCOVERER_INFO
 GST_IS_DISCOVERER_AUDIO_INFO
@@ -2290,6 +2377,7 @@ GST_IS_DISCOVERER_CLASS
 GST_IS_DISCOVERER_CONTAINER_INFO
 GST_IS_DISCOVERER_STREAM_INFO
 GST_IS_DISCOVERER_VIDEO_INFO
+GST_IS_DISCOVERER_SUBTITLE_INFO
 GST_TYPE_DISCOVERER
 GST_TYPE_DISCOVERER_AUDIO_INFO
 GST_TYPE_DISCOVERER_CONTAINER_INFO
@@ -2297,12 +2385,14 @@ GST_TYPE_DISCOVERER_INFO
 GST_TYPE_DISCOVERER_RESULT
 GST_TYPE_DISCOVERER_STREAM_INFO
 GST_TYPE_DISCOVERER_VIDEO_INFO
+GST_TYPE_DISCOVERER_SUBTITLE_INFO
 GstDiscovererAudioInfoClass
 GstDiscovererClass
 GstDiscovererContainerInfoClass
 GstDiscovererPrivate
 GstDiscovererStreamInfoClass
 GstDiscovererVideoInfoClass
+GstDiscovererSubtitleInfoClass
 GstDiscovererInfoClass
 gst_discoverer_audio_info_get_type
 gst_discoverer_container_info_get_type

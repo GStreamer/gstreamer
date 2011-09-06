@@ -8,6 +8,8 @@ built_headers = gstplay-marshal.h
 
 plugin_LTLIBRARIES = libgstplayback.la
 
+csp_cflags = -DCOLORSPACE=\"videoconvert\"
+
 libgstplayback_la_SOURCES = \
 	gstdecodebin2.c \
 	gsturidecodebin.c \
@@ -22,7 +24,7 @@ libgstplayback_la_SOURCES = \
 	gststreamsynchronizer.c
 
 nodist_libgstplayback_la_SOURCES = $(built_sources)
-libgstplayback_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
+libgstplayback_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) $(csp_cflags)
 libgstplayback_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstplayback_la_LIBADD = \
 	$(top_builddir)/gst-libs/gst/pbutils/libgstpbutils-@GST_MAJORMINOR@.la \
@@ -57,7 +59,7 @@ Android.mk: Makefile.am $(BUILT_SOURCES)
          -:REL_TOP $(top_srcdir) -:ABS_TOP $(abs_top_srcdir) \
 	 -:SOURCES $(libgstplayback_la_SOURCES) \
 	           $(nodist_libgstplayback_la_SOURCES) \
-	 -:CFLAGS $(DEFS) $(DEFAULT_INCLUDES) $(libgstplayback_la_CFLAGS) \
+	 -:CFLAGS $(DEFS) $(DEFAULT_INCLUDES) $(libgstplayback_la_CFLAGS) $(csp_cflags) \
 	 -:LDFLAGS $(libgstplayback_la_LDFLAGS) \
 	           $(libgstplayback_la_LIBADD) \
 	           -ldl \

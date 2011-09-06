@@ -1,0 +1,617 @@
+? foo
+Index: Makefile.am
+===================================================================
+RCS file: /cvs/gstreamer/gst-plugins-base/gst-libs/gst/cdda/Makefile.am,v
+retrieving revision 1.4
+diff -u -p -u -p -r1.4 Makefile.am
+--- Makefile.am	3 Apr 2008 06:39:27 -0000	1.4
++++ Makefile.am	21 Aug 2008 14:17:21 -0000
+@@ -1,9 +1,7 @@
+ lib_LTLIBRARIES = libgstcdda-@GST_MAJORMINOR@.la
+ 
+ libgstcdda_@GST_MAJORMINOR@_la_SOURCES = \
+-	gstcddabasesrc.c \
+-	sha1.c \
+-	sha1.h
++	gstcddabasesrc.c
+ 
+ libgstcdda_@GST_MAJORMINOR@includedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/cdda
+ libgstcdda_@GST_MAJORMINOR@include_HEADERS = \
+Index: gstcddabasesrc.c
+===================================================================
+RCS file: /cvs/gstreamer/gst-plugins-base/gst-libs/gst/cdda/gstcddabasesrc.c,v
+retrieving revision 1.19
+diff -u -p -u -p -r1.19 gstcddabasesrc.c
+--- gstcddabasesrc.c	28 May 2008 15:48:33 -0000	1.19
++++ gstcddabasesrc.c	21 Aug 2008 14:17:21 -0000
+@@ -1084,36 +1084,35 @@ cddb_sum (gint n)
+   return ret;
+ }
+ 
+-#include "sha1.h"
+-
+ static void
+ gst_cddabasesrc_calculate_musicbrainz_discid (GstCddaBaseSrc * src)
+ {
+   GString *s;
+-  SHA_INFO sha;
++  GChecksum *sha;
+   guchar digest[20];
+   gchar *ptr;
+   gchar tmp[9];
+   gulong i;
+   guint leadout_sector;
++  gsize digest_len;
+ 
+   s = g_string_new (NULL);
+ 
+   leadout_sector = src->tracks[src->num_tracks - 1].end + 1 + CD_MSF_OFFSET;
+ 
+   /* generate SHA digest */
+-  sha_init (&sha);
++  sha = g_checksum_new (G_CHECKSUM_SHA1);
+   g_snprintf (tmp, sizeof (tmp), "%02X", src->tracks[0].num);
+   g_string_append_printf (s, "%02X", src->tracks[0].num);
+-  sha_update (&sha, (SHA_BYTE *) tmp, 2);
++  g_checksum_update (sha, (guchar *) tmp, 2);
+ 
+   g_snprintf (tmp, sizeof (tmp), "%02X", src->tracks[src->num_tracks - 1].num);
+   g_string_append_printf (s, " %02X", src->tracks[src->num_tracks - 1].num);
+-  sha_update (&sha, (SHA_BYTE *) tmp, 2);
++  g_checksum_update (sha, (guchar *) tmp, 2);
+ 
+   g_snprintf (tmp, sizeof (tmp), "%08X", leadout_sector);
+   g_string_append_printf (s, " %08X", leadout_sector);
+-  sha_update (&sha, (SHA_BYTE *) tmp, 8);
++  g_checksum_update (sha, (guchar *) tmp, 8);
+ 
+   for (i = 0; i < 99; i++) {
+     if (i < src->num_tracks) {
+@@ -1121,15 +1120,17 @@ gst_cddabasesrc_calculate_musicbrainz_di
+ 
+       g_snprintf (tmp, sizeof (tmp), "%08X", frame_offset);
+       g_string_append_printf (s, " %08X", frame_offset);
+-      sha_update (&sha, (SHA_BYTE *) tmp, 8);
++      g_checksum_update (sha, (guchar *) tmp, 8);
+     } else {
+-      sha_update (&sha, (SHA_BYTE *) "00000000", 8);
++      g_checksum_update (sha, (guchar *) "00000000", 8);
+     }
+   }
+-  sha_final (digest, &sha);
++  digest_len = 20;
++  g_checksum_get_digest (sha, (guint8 *) &digest, &digest_len);
+ 
+   /* re-encode to base64 */
+-  ptr = g_base64_encode (digest, 20);
++  ptr = g_base64_encode (digest, digest_len);
++  g_checksum_free (sha);
+   i = strlen (ptr);
+ 
+   g_assert (i < sizeof (src->mb_discid) + 1);
+Index: sha1.c
+===================================================================
+RCS file: sha1.c
+diff -N sha1.c
+--- sha1.c	27 Feb 2008 10:42:08 -0000	1.2
++++ /dev/null	1 Jan 1970 00:00:00 -0000
+@@ -1,450 +0,0 @@
+-/* (PD) 2001 The Bitzi Corporation
+- * Please see file COPYING or http://bitzi.com/publicdomain 
+- * for more info.
+- *
+- * NIST Secure Hash Algorithm 
+- * heavily modified by Uwe Hollerbach <uh@alumni.caltech edu> 
+- * from Peter C. Gutmann's implementation as found in 
+- * Applied Cryptography by Bruce Schneier 
+- * Further modifications to include the "UNRAVEL" stuff, below 
+- *
+- * This code is in the public domain 
+- *
+- * $Id: sha1.c,v 1.2 2008-02-27 10:42:08 slomo Exp $
+- */
+-
+-#ifdef HAVE_CONFIG_H
+-#include "config.h"
+-#endif
+-#include <glib.h>
+-#define SHA_BYTE_ORDER G_BYTE_ORDER
+-
+-#include <string.h>
+-#include "sha1.h"
+-
+-/* UNRAVEL should be fastest & biggest */
+-/* UNROLL_LOOPS should be just as big, but slightly slower */
+-/* both undefined should be smallest and slowest */
+-
+-#define UNRAVEL
+-/* #define UNROLL_LOOPS */
+-
+-/* SHA f()-functions */
+-
+-#define f1(x,y,z)	((x & y) | (~x & z))
+-#define f2(x,y,z)	(x ^ y ^ z)
+-#define f3(x,y,z)	((x & y) | (x & z) | (y & z))
+-#define f4(x,y,z)	(x ^ y ^ z)
+-
+-/* SHA constants */
+-
+-#define CONST1		0x5a827999L
+-#define CONST2		0x6ed9eba1L
+-#define CONST3		0x8f1bbcdcL
+-#define CONST4		0xca62c1d6L
+-
+-/* truncate to 32 bits -- should be a null op on 32-bit machines */
+-
+-#define T32(x)	((x) & 0xffffffffL)
+-
+-/* 32-bit rotate */
+-
+-#define R32(x,n)	T32(((x << n) | (x >> (32 - n))))
+-
+-/* the generic case, for when the overall rotation is not unraveled */
+-
+-#define FG(n)	\
+-    T = T32(R32(A,5) + f##n(B,C,D) + E + *WP++ + CONST##n);	\
+-    E = D; D = C; C = R32(B,30); B = A; A = T
+-
+-/* specific cases, for when the overall rotation is unraveled */
+-
+-#define FA(n)	\
+-    T = T32(R32(A,5) + f##n(B,C,D) + E + *WP++ + CONST##n); B = R32(B,30)
+-
+-#define FB(n)	\
+-    E = T32(R32(T,5) + f##n(A,B,C) + D + *WP++ + CONST##n); A = R32(A,30)
+-
+-#define FC(n)	\
+-    D = T32(R32(E,5) + f##n(T,A,B) + C + *WP++ + CONST##n); T = R32(T,30)
+-
+-#define FD(n)	\
+-    C = T32(R32(D,5) + f##n(E,T,A) + B + *WP++ + CONST##n); E = R32(E,30)
+-
+-#define FE(n)	\
+-    B = T32(R32(C,5) + f##n(D,E,T) + A + *WP++ + CONST##n); D = R32(D,30)
+-
+-#define FT(n)	\
+-    A = T32(R32(B,5) + f##n(C,D,E) + T + *WP++ + CONST##n); C = R32(C,30)
+-
+-/* do SHA transformation */
+-
+-static void
+-sha_transform (SHA_INFO * sha_info)
+-{
+-  int i;
+-  SHA_BYTE *dp;
+-  SHA_LONG T, A, B, C, D, E, W[80], *WP;
+-
+-  dp = sha_info->data;
+-
+-/*
+-the following makes sure that at least one code block below is
+-traversed or an error is reported, without the necessity for nested
+-preprocessor if/else/endif blocks, which are a great pain in the
+-nether regions of the anatomy...
+-*/
+-#undef SWAP_DONE
+-
+-#if (SHA_BYTE_ORDER == 1234)
+-#define SWAP_DONE
+-  for (i = 0; i < 16; ++i) {
+-    memcpy (&T, dp, sizeof (SHA_LONG));
+-    dp += 4;
+-    W[i] = ((T << 24) & 0xff000000) | ((T << 8) & 0x00ff0000) |
+-        ((T >> 8) & 0x0000ff00) | ((T >> 24) & 0x000000ff);
+-  }
+-#endif /* SHA_BYTE_ORDER == 1234 */
+-
+-#if (SHA_BYTE_ORDER == 4321)
+-#define SWAP_DONE
+-  for (i = 0; i < 16; ++i) {
+-    memcpy (&T, dp, sizeof (SHA_LONG));
+-    dp += 4;
+-    W[i] = T32 (T);
+-  }
+-#endif /* SHA_BYTE_ORDER == 4321 */
+-
+-#if (SHA_BYTE_ORDER == 12345678)
+-#define SWAP_DONE
+-  for (i = 0; i < 16; i += 2) {
+-    memcpy (&T, dp, sizeof (SHA_LONG));
+-    dp += 8;
+-    W[i] = ((T << 24) & 0xff000000) | ((T << 8) & 0x00ff0000) |
+-        ((T >> 8) & 0x0000ff00) | ((T >> 24) & 0x000000ff);
+-    T >>= 32;
+-    W[i + 1] = ((T << 24) & 0xff000000) | ((T << 8) & 0x00ff0000) |
+-        ((T >> 8) & 0x0000ff00) | ((T >> 24) & 0x000000ff);
+-  }
+-#endif /* SHA_BYTE_ORDER == 12345678 */
+-
+-#if (SHA_BYTE_ORDER == 87654321)
+-#define SWAP_DONE
+-  for (i = 0; i < 16; i += 2) {
+-    memcpy (&T, dp, sizeof (SHA_LONG));
+-    dp += 8;
+-    W[i] = T32 (T >> 32);
+-    W[i + 1] = T32 (T);
+-  }
+-#endif /* SHA_BYTE_ORDER == 87654321 */
+-
+-#ifndef SWAP_DONE
+-#error Unknown byte order -- you need to add code here
+-#endif /* SWAP_DONE */
+-
+-  for (i = 16; i < 80; ++i) {
+-    W[i] = W[i - 3] ^ W[i - 8] ^ W[i - 14] ^ W[i - 16];
+-#if (SHA_VERSION == 1)
+-    W[i] = R32 (W[i], 1);
+-#endif /* SHA_VERSION */
+-  }
+-  A = sha_info->digest[0];
+-  B = sha_info->digest[1];
+-  C = sha_info->digest[2];
+-  D = sha_info->digest[3];
+-  E = sha_info->digest[4];
+-  WP = W;
+-#ifdef UNRAVEL
+-  FA (1);
+-  FB (1);
+-  FC (1);
+-  FD (1);
+-  FE (1);
+-  FT (1);
+-  FA (1);
+-  FB (1);
+-  FC (1);
+-  FD (1);
+-  FE (1);
+-  FT (1);
+-  FA (1);
+-  FB (1);
+-  FC (1);
+-  FD (1);
+-  FE (1);
+-  FT (1);
+-  FA (1);
+-  FB (1);
+-  FC (2);
+-  FD (2);
+-  FE (2);
+-  FT (2);
+-  FA (2);
+-  FB (2);
+-  FC (2);
+-  FD (2);
+-  FE (2);
+-  FT (2);
+-  FA (2);
+-  FB (2);
+-  FC (2);
+-  FD (2);
+-  FE (2);
+-  FT (2);
+-  FA (2);
+-  FB (2);
+-  FC (2);
+-  FD (2);
+-  FE (3);
+-  FT (3);
+-  FA (3);
+-  FB (3);
+-  FC (3);
+-  FD (3);
+-  FE (3);
+-  FT (3);
+-  FA (3);
+-  FB (3);
+-  FC (3);
+-  FD (3);
+-  FE (3);
+-  FT (3);
+-  FA (3);
+-  FB (3);
+-  FC (3);
+-  FD (3);
+-  FE (3);
+-  FT (3);
+-  FA (4);
+-  FB (4);
+-  FC (4);
+-  FD (4);
+-  FE (4);
+-  FT (4);
+-  FA (4);
+-  FB (4);
+-  FC (4);
+-  FD (4);
+-  FE (4);
+-  FT (4);
+-  FA (4);
+-  FB (4);
+-  FC (4);
+-  FD (4);
+-  FE (4);
+-  FT (4);
+-  FA (4);
+-  FB (4);
+-  sha_info->digest[0] = T32 (sha_info->digest[0] + E);
+-  sha_info->digest[1] = T32 (sha_info->digest[1] + T);
+-  sha_info->digest[2] = T32 (sha_info->digest[2] + A);
+-  sha_info->digest[3] = T32 (sha_info->digest[3] + B);
+-  sha_info->digest[4] = T32 (sha_info->digest[4] + C);
+-#else /* !UNRAVEL */
+-#ifdef UNROLL_LOOPS
+-  FG (1);
+-  FG (1);
+-  FG (1);
+-  FG (1);
+-  FG (1);
+-  FG (1);
+-  FG (1);
+-  FG (1);
+-  FG (1);
+-  FG (1);
+-  FG (1);
+-  FG (1);
+-  FG (1);
+-  FG (1);
+-  FG (1);
+-  FG (1);
+-  FG (1);
+-  FG (1);
+-  FG (1);
+-  FG (1);
+-  FG (2);
+-  FG (2);
+-  FG (2);
+-  FG (2);
+-  FG (2);
+-  FG (2);
+-  FG (2);
+-  FG (2);
+-  FG (2);
+-  FG (2);
+-  FG (2);
+-  FG (2);
+-  FG (2);
+-  FG (2);
+-  FG (2);
+-  FG (2);
+-  FG (2);
+-  FG (2);
+-  FG (2);
+-  FG (2);
+-  FG (3);
+-  FG (3);
+-  FG (3);
+-  FG (3);
+-  FG (3);
+-  FG (3);
+-  FG (3);
+-  FG (3);
+-  FG (3);
+-  FG (3);
+-  FG (3);
+-  FG (3);
+-  FG (3);
+-  FG (3);
+-  FG (3);
+-  FG (3);
+-  FG (3);
+-  FG (3);
+-  FG (3);
+-  FG (3);
+-  FG (4);
+-  FG (4);
+-  FG (4);
+-  FG (4);
+-  FG (4);
+-  FG (4);
+-  FG (4);
+-  FG (4);
+-  FG (4);
+-  FG (4);
+-  FG (4);
+-  FG (4);
+-  FG (4);
+-  FG (4);
+-  FG (4);
+-  FG (4);
+-  FG (4);
+-  FG (4);
+-  FG (4);
+-  FG (4);
+-#else /* !UNROLL_LOOPS */
+-  for (i = 0; i < 20; ++i) {
+-    FG (1);
+-  }
+-  for (i = 20; i < 40; ++i) {
+-    FG (2);
+-  }
+-  for (i = 40; i < 60; ++i) {
+-    FG (3);
+-  }
+-  for (i = 60; i < 80; ++i) {
+-    FG (4);
+-  }
+-#endif /* !UNROLL_LOOPS */
+-  sha_info->digest[0] = T32 (sha_info->digest[0] + A);
+-  sha_info->digest[1] = T32 (sha_info->digest[1] + B);
+-  sha_info->digest[2] = T32 (sha_info->digest[2] + C);
+-  sha_info->digest[3] = T32 (sha_info->digest[3] + D);
+-  sha_info->digest[4] = T32 (sha_info->digest[4] + E);
+-#endif /* !UNRAVEL */
+-}
+-
+-/* initialize the SHA digest */
+-
+-void
+-sha_init (SHA_INFO * sha_info)
+-{
+-  sha_info->digest[0] = 0x67452301L;
+-  sha_info->digest[1] = 0xefcdab89L;
+-  sha_info->digest[2] = 0x98badcfeL;
+-  sha_info->digest[3] = 0x10325476L;
+-  sha_info->digest[4] = 0xc3d2e1f0L;
+-  sha_info->count_lo = 0L;
+-  sha_info->count_hi = 0L;
+-  sha_info->local = 0;
+-}
+-
+-/* update the SHA digest */
+-
+-void
+-sha_update (SHA_INFO * sha_info, SHA_BYTE * buffer, int count)
+-{
+-  int i;
+-  SHA_LONG clo;
+-
+-  clo = T32 (sha_info->count_lo + ((SHA_LONG) count << 3));
+-  if (clo < sha_info->count_lo) {
+-    ++sha_info->count_hi;
+-  }
+-  sha_info->count_lo = clo;
+-  sha_info->count_hi += (SHA_LONG) count >> 29;
+-  if (sha_info->local) {
+-    i = SHA_BLOCKSIZE - sha_info->local;
+-    if (i > count) {
+-      i = count;
+-    }
+-    memcpy (((SHA_BYTE *) sha_info->data) + sha_info->local, buffer, i);
+-    count -= i;
+-    buffer += i;
+-    sha_info->local += i;
+-    if (sha_info->local == SHA_BLOCKSIZE) {
+-      sha_transform (sha_info);
+-    } else {
+-      return;
+-    }
+-  }
+-  while (count >= SHA_BLOCKSIZE) {
+-    memcpy (sha_info->data, buffer, SHA_BLOCKSIZE);
+-    buffer += SHA_BLOCKSIZE;
+-    count -= SHA_BLOCKSIZE;
+-    sha_transform (sha_info);
+-  }
+-  memcpy (sha_info->data, buffer, count);
+-  sha_info->local = count;
+-}
+-
+-/* finish computing the SHA digest */
+-
+-void
+-sha_final (unsigned char digest[20], SHA_INFO * sha_info)
+-{
+-  int count;
+-  SHA_LONG lo_bit_count, hi_bit_count;
+-
+-  lo_bit_count = sha_info->count_lo;
+-  hi_bit_count = sha_info->count_hi;
+-  count = (int) ((lo_bit_count >> 3) & 0x3f);
+-  ((SHA_BYTE *) sha_info->data)[count++] = 0x80;
+-  if (count > SHA_BLOCKSIZE - 8) {
+-    memset (((SHA_BYTE *) sha_info->data) + count, 0, SHA_BLOCKSIZE - count);
+-    sha_transform (sha_info);
+-    memset ((SHA_BYTE *) sha_info->data, 0, SHA_BLOCKSIZE - 8);
+-  } else {
+-    memset (((SHA_BYTE *) sha_info->data) + count, 0,
+-        SHA_BLOCKSIZE - 8 - count);
+-  }
+-  sha_info->data[56] = (unsigned char) ((hi_bit_count >> 24) & 0xff);
+-  sha_info->data[57] = (unsigned char) ((hi_bit_count >> 16) & 0xff);
+-  sha_info->data[58] = (unsigned char) ((hi_bit_count >> 8) & 0xff);
+-  sha_info->data[59] = (unsigned char) ((hi_bit_count >> 0) & 0xff);
+-  sha_info->data[60] = (unsigned char) ((lo_bit_count >> 24) & 0xff);
+-  sha_info->data[61] = (unsigned char) ((lo_bit_count >> 16) & 0xff);
+-  sha_info->data[62] = (unsigned char) ((lo_bit_count >> 8) & 0xff);
+-  sha_info->data[63] = (unsigned char) ((lo_bit_count >> 0) & 0xff);
+-  sha_transform (sha_info);
+-  digest[0] = (unsigned char) ((sha_info->digest[0] >> 24) & 0xff);
+-  digest[1] = (unsigned char) ((sha_info->digest[0] >> 16) & 0xff);
+-  digest[2] = (unsigned char) ((sha_info->digest[0] >> 8) & 0xff);
+-  digest[3] = (unsigned char) ((sha_info->digest[0]) & 0xff);
+-  digest[4] = (unsigned char) ((sha_info->digest[1] >> 24) & 0xff);
+-  digest[5] = (unsigned char) ((sha_info->digest[1] >> 16) & 0xff);
+-  digest[6] = (unsigned char) ((sha_info->digest[1] >> 8) & 0xff);
+-  digest[7] = (unsigned char) ((sha_info->digest[1]) & 0xff);
+-  digest[8] = (unsigned char) ((sha_info->digest[2] >> 24) & 0xff);
+-  digest[9] = (unsigned char) ((sha_info->digest[2] >> 16) & 0xff);
+-  digest[10] = (unsigned char) ((sha_info->digest[2] >> 8) & 0xff);
+-  digest[11] = (unsigned char) ((sha_info->digest[2]) & 0xff);
+-  digest[12] = (unsigned char) ((sha_info->digest[3] >> 24) & 0xff);
+-  digest[13] = (unsigned char) ((sha_info->digest[3] >> 16) & 0xff);
+-  digest[14] = (unsigned char) ((sha_info->digest[3] >> 8) & 0xff);
+-  digest[15] = (unsigned char) ((sha_info->digest[3]) & 0xff);
+-  digest[16] = (unsigned char) ((sha_info->digest[4] >> 24) & 0xff);
+-  digest[17] = (unsigned char) ((sha_info->digest[4] >> 16) & 0xff);
+-  digest[18] = (unsigned char) ((sha_info->digest[4] >> 8) & 0xff);
+-  digest[19] = (unsigned char) ((sha_info->digest[4]) & 0xff);
+-}
+Index: sha1.h
+===================================================================
+RCS file: sha1.h
+diff -N sha1.h
+--- sha1.h	13 Dec 2007 10:10:35 -0000	1.2
++++ /dev/null	1 Jan 1970 00:00:00 -0000
+@@ -1,62 +0,0 @@
+-/* NIST Secure Hash Algorithm */
+-/* heavily modified by Uwe Hollerbach <uh@alumni.caltech edu> */
+-/* from Peter C. Gutmann's implementation as found in */
+-/* Applied Cryptography by Bruce Schneier */
+-/* This code is in the public domain */
+-/* $Id: sha1.h,v 1.2 2007-12-13 10:10:35 tpm Exp $ */
+-
+-#ifndef __GST_CDDA_SHA_H__
+-#define __GST_CDDA_SHA_H__
+-
+-#include <stdlib.h>
+-#include <stdio.h>
+-
+-/* Useful defines & typedefs */
+-typedef unsigned char SHA_BYTE;	/* 8-bit quantity */
+-typedef unsigned long SHA_LONG;	/* 32-or-more-bit quantity */
+-
+-#define SHA_BLOCKSIZE		64
+-#define SHA_DIGESTSIZE		20
+-
+-typedef struct {
+-    SHA_LONG digest[5];		/* message digest */
+-    SHA_LONG count_lo, count_hi;	/* 64-bit bit count */
+-    SHA_BYTE data[SHA_BLOCKSIZE];	/* SHA data buffer */
+-    int local;			/* unprocessed amount in data */
+-} SHA_INFO;
+-
+-#define sha_init   __gst_cdda_sha_init
+-#define sha_update __gst_cdda_sha_update
+-#define sha_final  __gst_cdda_sha_final
+-
+-void sha_init(SHA_INFO *);
+-void sha_update(SHA_INFO *, SHA_BYTE *, int);
+-void sha_final(unsigned char [20], SHA_INFO *);
+-
+-#define SHA_VERSION 1
+-
+-#ifdef HAVE_CONFIG_H 
+-#include "config.h"
+-
+-
+-#ifdef WORDS_BIGENDIAN
+-#  if SIZEOF_LONG == 4
+-#    define SHA_BYTE_ORDER  4321
+-#  elif SIZEOF_LONG == 8
+-#    define SHA_BYTE_ORDER  87654321
+-#  endif
+-#else
+-#  if SIZEOF_LONG == 4
+-#    define SHA_BYTE_ORDER  1234
+-#  elif SIZEOF_LONG == 8
+-#    define SHA_BYTE_ORDER  12345678
+-#  endif
+-#endif
+-
+-#else
+-
+-#define SHA_BYTE_ORDER 1234
+-
+-#endif
+-
+-#endif /* __GST_CDDA_SHA_H__ */

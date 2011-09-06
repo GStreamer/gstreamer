@@ -28,6 +28,7 @@
 #ifndef __VS_IMAGE_H__
 #define __VS_IMAGE_H__
 
+#include <glib.h>
 #include <_stdint.h>
 
 typedef struct _VSImage VSImage;
@@ -48,6 +49,9 @@ void vs_image_scale_nearest_RGBA (const VSImage *dest, const VSImage *src,
     uint8_t *tmpbuf);
 void vs_image_scale_linear_RGBA (const VSImage *dest, const VSImage *src,
     uint8_t *tmpbuf);
+void vs_image_scale_lanczos_AYUV (const VSImage * dest, const VSImage * src,
+    uint8_t * tmpbuf, double sharpness, gboolean dither, int submethod,
+    double a, double sharpen);
 
 void vs_image_scale_nearest_RGB (const VSImage *dest, const VSImage *src,
     uint8_t *tmpbuf);
@@ -68,6 +72,9 @@ void vs_image_scale_nearest_Y (const VSImage *dest, const VSImage *src,
     uint8_t *tmpbuf);
 void vs_image_scale_linear_Y (const VSImage *dest, const VSImage *src,
     uint8_t *tmpbuf);
+void vs_image_scale_lanczos_Y (const VSImage *dest, const VSImage *src,
+    uint8_t *tmpbuf, double sharpness, gboolean dither, int submethod,
+    double a, double sharpen);
 
 void vs_image_scale_nearest_RGB565 (const VSImage *dest, const VSImage *src,
     uint8_t *tmpbuf);

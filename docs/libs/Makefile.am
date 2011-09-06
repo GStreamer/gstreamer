@@ -79,7 +79,13 @@ SCANOBJ_DEPS = \
 	$(top_builddir)/gst-libs/gst/pbutils/libgstpbutils-@GST_MAJORMINOR@.la
 
 # Header files to ignore when scanning.
-IGNORE_HFILES = pbutils-private.h
+IGNORE_HFILES = pbutils-private.h gsttageditingprivate.h id3v2.h \
+	kiss_fft_f32.h kiss_fft_f64.h kiss_fftr_f32.h kiss_fftr_f64.h \
+	kiss_fftr_s16.h kiss_fftr_s32.h kiss_fft_s16.h kiss_fft_s32.h \
+	_kiss_fft_guts_f32.h _kiss_fft_guts_f64.h _kiss_fft_guts_s16.h \
+	_kiss_fft_guts_s16.h _kiss_fft_guts_s32.h _kiss_fft_guts_s32.h \
+	interfaces-marshal.h pbutils-marshal.h
+
 
 # Images to copy into HTML directory.
 HTML_IMAGES =

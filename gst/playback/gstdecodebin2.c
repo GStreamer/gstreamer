@@ -1438,7 +1438,7 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
 
     for (i = 0; i < factories->n_values && !dontuse; i++) {
       GstElementFactory *factory =
-          g_value_get_object (g_value_array_get_nth (factories, 0));
+          g_value_get_object (g_value_array_get_nth (factories, i));
       GstCaps *tcaps;
 
       /* We are only interested in skipping decoders */
@@ -1577,9 +1577,9 @@ setup_caps_delay:
     ppad->event_probe_id =
         gst_pad_add_probe (pad, GST_PROBE_TYPE_EVENT, pad_event_cb, ppad, NULL);
     chain->pending_pads = g_list_prepend (chain->pending_pads, ppad);
-    CHAIN_MUTEX_UNLOCK (chain);
     g_signal_connect (G_OBJECT (pad), "notify::caps",
         G_CALLBACK (caps_notify_cb), chain);
+    CHAIN_MUTEX_UNLOCK (chain);
     return;
   }
 }

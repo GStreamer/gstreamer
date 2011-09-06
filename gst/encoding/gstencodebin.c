@@ -1262,7 +1262,7 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
   /* FIXME : Once we have properties for specific converters, use those */
   if (GST_IS_ENCODING_VIDEO_PROFILE (sprof)) {
     const gboolean native_video =
-        ! !(ebin->flags & GST_ENC_FLAG_NO_VIDEO_CONVERSION);
+        !!(ebin->flags & GST_ENC_FLAG_NO_VIDEO_CONVERSION);
     GstElement *cspace = NULL, *scale, *vrate, *cspace2 = NULL;
 
     GST_LOG ("Adding conversion elements for video stream");
@@ -1488,17 +1488,59 @@ cleanup:
 }
 
 static gboolean
-_factory_can_sink_caps (GstElementFactory * factory, const GstCaps * caps)
+_gst_caps_match_foreach (GQuark field_id, const GValue * value, gpointer data)
+{
+  GstStructure *structure = data;
+  const GValue *other_value = gst_structure_id_get_value (structure, field_id);
+
+  if (G_UNLIKELY (other_value == NULL))
+    return FALSE;
+  if (gst_value_compare (value, other_value) == GST_VALUE_EQUAL) {
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+/*
+ * checks that there is at least one structure on caps_a that has
+ * all its fields exactly the same as one structure on caps_b
+ */
+static gboolean
+_gst_caps_match (const GstCaps * caps_a, const GstCaps * caps_b)
+{
+  gint i, j;
+  gboolean res = FALSE;
+
+  for (i = 0; i < gst_caps_get_size (caps_a); i++) {
+    GstStructure *structure_a = gst_caps_get_structure (caps_a, i);
+    for (j = 0; j < gst_caps_get_size (caps_b); j++) {
+      GstStructure *structure_b = gst_caps_get_structure (caps_b, j);
+
+      res = gst_structure_foreach (structure_a, _gst_caps_match_foreach,
+          structure_b);
+      if (res)
+        goto end;
+    }
+  }
+end:
+  return res;
+}
+
+static gboolean
+_factory_can_handle_caps (GstElementFactory * factory, const GstCaps * caps,
+    GstPadDirection dir, gboolean exact)
 {
   GList *templates = factory->staticpadtemplates;
 
   while (templates) {
     GstStaticPadTemplate *template = (GstStaticPadTemplate *) templates->data;
 
-    if (template->direction == GST_PAD_SINK) {
+    if (template->direction == dir) {
       GstCaps *tmp = gst_static_caps_get (&template->static_caps);
 
-      if (gst_caps_can_intersect (tmp, caps)) {
+      if ((exact && _gst_caps_match (caps, tmp)) ||
+          (!exact && gst_caps_can_intersect (tmp, caps))) {
         gst_caps_unref (tmp);
         return TRUE;
       }
@@ -1549,6 +1591,31 @@ beach:
   return formatter;
 }
 
+static gint
+compare_elements (gconstpointer a, gconstpointer b, gpointer udata)
+{
+  GstCaps *caps = udata;
+  GstElementFactory *fac_a = (GstElementFactory *) a;
+  GstElementFactory *fac_b = (GstElementFactory *) b;
+
+  /* FIXME not quite sure this is the best algorithm to order the elements
+   * Some caps similarity comparison algorithm would fit better than going
+   * boolean (equals/not equals).
+   */
+  gboolean equals_a = _factory_can_handle_caps (fac_a, caps, GST_PAD_SRC, TRUE);
+  gboolean equals_b = _factory_can_handle_caps (fac_b, caps, GST_PAD_SRC, TRUE);
+
+  if (equals_a == equals_b) {
+    return gst_plugin_feature_get_rank ((GstPluginFeature *) fac_b) -
+        gst_plugin_feature_get_rank ((GstPluginFeature *) fac_a);
+  } else if (equals_a) {
+    return -1;
+  } else if (equals_b) {
+    return 1;
+  }
+  return 0;
+}
+
 static inline GstElement *
 _get_muxer (GstEncodeBin * ebin)
 {
@@ -1571,6 +1638,10 @@ _get_muxer (GstEncodeBin * ebin)
       gst_element_factory_list_filter (ebin->formatters, format, GST_PAD_SRC,
       TRUE);
 
+  muxers = g_list_sort_with_data (muxers, compare_elements, (gpointer) format);
+  formatters =
+      g_list_sort_with_data (formatters, compare_elements, (gpointer) format);
+
   muxers = g_list_concat (muxers, formatters);
 
   if (muxers == NULL)
@@ -1591,10 +1662,10 @@ _get_muxer (GstEncodeBin * ebin)
     for (tmp = profiles; tmp; tmp = tmp->next) {
       GstEncodingProfile *sprof = (GstEncodingProfile *) tmp->data;
 
-      if (!_factory_can_sink_caps (muxerfact,
-              gst_encoding_profile_get_format (sprof))) {
-        GST_DEBUG ("Skipping muxer because it can't sink caps %" GST_PTR_FORMAT,
-            gst_encoding_profile_get_format (sprof));
+      if (!_factory_can_handle_caps (muxerfact,
+              gst_encoding_profile_get_format (sprof), GST_PAD_SINK, FALSE)) {
+        GST_DEBUG ("Skipping muxer because it can't sink caps %"
+            GST_PTR_FORMAT, gst_encoding_profile_get_format (sprof));
         cansinkstreams = FALSE;
         break;
       }

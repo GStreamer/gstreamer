@@ -21,11 +21,11 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef _GST_BASE_AUDIO_DECODER_H_
-#define _GST_BASE_AUDIO_DECODER_H_
+#ifndef _GST_AUDIO_DECODER_H_
+#define _GST_AUDIO_DECODER_H_
 
 #ifndef GST_USE_UNSTABLE_API
-#warning "GstBaseAudioDecoder is unstable API and may change in future."
+#warning "GstAudioDecoder is unstable API and may change in future."
 #warning "You can define GST_USE_UNSTABLE_API to avoid this warning."
 #endif
 
@@ -35,70 +35,70 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_BASE_AUDIO_DECODER \
-  (gst_base_audio_decoder_get_type())
-#define GST_BASE_AUDIO_DECODER(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_BASE_AUDIO_DECODER,GstBaseAudioDecoder))
-#define GST_BASE_AUDIO_DECODER_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_BASE_AUDIO_DECODER,GstBaseAudioDecoderClass))
-#define GST_BASE_AUDIO_DECODER_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS((obj),GST_TYPE_BASE_AUDIO_DECODER,GstBaseAudioDecoderClass))
-#define GST_IS_BASE_AUDIO_DECODER(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_BASE_AUDIO_DECODER))
-#define GST_IS_BASE_AUDIO_DECODER_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_BASE_AUDIO_DECODER))
+#define GST_TYPE_AUDIO_DECODER \
+  (gst_audio_decoder_get_type())
+#define GST_AUDIO_DECODER(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AUDIO_DECODER,GstAudioDecoder))
+#define GST_AUDIO_DECODER_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_AUDIO_DECODER,GstAudioDecoderClass))
+#define GST_AUDIO_DECODER_GET_CLASS(obj) \
+  (G_TYPE_INSTANCE_GET_CLASS((obj),GST_TYPE_AUDIO_DECODER,GstAudioDecoderClass))
+#define GST_IS_AUDIO_DECODER(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AUDIO_DECODER))
+#define GST_IS_AUDIO_DECODER_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AUDIO_DECODER))
 
 /**
- * GST_BASE_AUDIO_DECODER_SINK_NAME:
+ * GST_AUDIO_DECODER_SINK_NAME:
  *
  * The name of the templates for the sink pad.
  *
  * Since: 0.10.36
  */
-#define GST_BASE_AUDIO_DECODER_SINK_NAME    "sink"
+#define GST_AUDIO_DECODER_SINK_NAME    "sink"
 /**
- * GST_BASE_AUDIO_DECODER_SRC_NAME:
+ * GST_AUDIO_DECODER_SRC_NAME:
  *
  * The name of the templates for the source pad.
  *
  * Since: 0.10.36
  */
-#define GST_BASE_AUDIO_DECODER_SRC_NAME     "src"
+#define GST_AUDIO_DECODER_SRC_NAME     "src"
 
 /**
- * GST_BASE_AUDIO_DECODER_SRC_PAD:
+ * GST_AUDIO_DECODER_SRC_PAD:
  * @obj: base audio codec instance
  *
  * Gives the pointer to the source #GstPad object of the element.
  *
  * Since: 0.10.36
  */
-#define GST_BASE_AUDIO_DECODER_SRC_PAD(obj)         (((GstBaseAudioDecoder *) (obj))->srcpad)
+#define GST_AUDIO_DECODER_SRC_PAD(obj)         (((GstAudioDecoder *) (obj))->srcpad)
 
 /**
- * GST_BASE_AUDIO_DECODER_SINK_PAD:
+ * GST_AUDIO_DECODER_SINK_PAD:
  * @obj: base audio codec instance
  *
  * Gives the pointer to the sink #GstPad object of the element.
  *
  * Since: 0.10.36
  */
-#define GST_BASE_AUDIO_DECODER_SINK_PAD(obj)        (((GstBaseAudioDecoder *) (obj))->sinkpad)
+#define GST_AUDIO_DECODER_SINK_PAD(obj)        (((GstAudioDecoder *) (obj))->sinkpad)
 
-typedef struct _GstBaseAudioDecoder GstBaseAudioDecoder;
-typedef struct _GstBaseAudioDecoderClass GstBaseAudioDecoderClass;
+typedef struct _GstAudioDecoder GstAudioDecoder;
+typedef struct _GstAudioDecoderClass GstAudioDecoderClass;
 
-typedef struct _GstBaseAudioDecoderPrivate GstBaseAudioDecoderPrivate;
+typedef struct _GstAudioDecoderPrivate GstAudioDecoderPrivate;
 
 /* do not use this one, use macro below */
-GstFlowReturn _gst_base_audio_decoder_error (GstBaseAudioDecoder *dec, gint weight,
-                                            GQuark domain, gint code,
-                                            gchar *txt, gchar *debug,
-                                            const gchar *file, const gchar *function,
-                                            gint line);
+GstFlowReturn _gst_audio_decoder_error (GstAudioDecoder *dec, gint weight,
+                                        GQuark domain, gint code,
+                                        gchar *txt, gchar *debug,
+                                        const gchar *file, const gchar *function,
+                                        gint line);
 
 /**
- * GST_BASE_AUDIO_DECODER_ERROR:
+ * GST_AUDIO_DECODER_ERROR:
  * @el:     the base audio decoder element that generates the error
  * @weight: element defined weight of the error, added to error count
  * @domain: like CORE, LIBRARY, RESOURCE or STREAM (see #gstreamer-GstGError)
@@ -120,24 +120,24 @@ GstFlowReturn _gst_base_audio_decoder_error (GstBaseAudioDecoder *dec, gint weig
  *
  * Since: 0.10.36
  */
-#define GST_BASE_AUDIO_DECODER_ERROR(el, w, domain, code, text, debug, ret) \
+#define GST_AUDIO_DECODER_ERROR(el, weight, domain, code, text, debug, ret) \
 G_STMT_START {                                                              \
   gchar *__txt = _gst_element_error_printf text;                            \
   gchar *__dbg = _gst_element_error_printf debug;                           \
-  GstBaseAudioDecoder *dec = GST_BASE_AUDIO_DECODER (el);                   \
-  ret = _gst_base_audio_decoder_error (dec, w, GST_ ## domain ## _ERROR,    \
+  GstAudioDecoder *dec = GST_AUDIO_DECODER (el);                   \
+  ret = _gst_audio_decoder_error (dec, weight, GST_ ## domain ## _ERROR,    \
       GST_ ## domain ## _ERROR_ ## code, __txt, __dbg, __FILE__,            \
       GST_FUNCTION, __LINE__);                                              \
 } G_STMT_END
 
 /**
- * GstBaseAudioDecoder:
+ * GstAudioDecoder:
  *
- * The opaque #GstBaseAudioDecoder data structure.
+ * The opaque #GstAudioDecoder data structure.
  *
  * Since: 0.10.36
  */
-struct _GstBaseAudioDecoder
+struct _GstAudioDecoder
 {
   GstElement element;
 
@@ -150,12 +150,13 @@ struct _GstBaseAudioDecoder
   GstSegment      segment;
 
   /*< private >*/
-  GstBaseAudioDecoderPrivate *priv;
+  GstAudioDecoderPrivate *priv;
   gpointer       _gst_reserved[GST_PADDING_LARGE];
 };
 
 /**
- * GstBaseAudioDecoderClass:
+ * GstAudioDecoderClass:
+ * @element_class:  The parent class structure
  * @start:          Optional.
  *                  Called when the element starts processing.
  *                  Allows opening external resources.
@@ -191,87 +192,93 @@ struct _GstBaseAudioDecoder
  *
  * Since: 0.10.36
  */
-struct _GstBaseAudioDecoderClass
+struct _GstAudioDecoderClass
 {
-  GstElementClass parent_class;
+  GstElementClass element_class;
 
   /*< public >*/
   /* virtual methods for subclasses */
 
-  gboolean      (*start)              (GstBaseAudioDecoder *dec);
+  gboolean      (*start)              (GstAudioDecoder *dec);
 
-  gboolean      (*stop)               (GstBaseAudioDecoder *dec);
+  gboolean      (*stop)               (GstAudioDecoder *dec);
 
-  gboolean      (*set_format)         (GstBaseAudioDecoder *dec,
+  gboolean      (*set_format)         (GstAudioDecoder *dec,
                                        GstCaps *caps);
 
-  GstFlowReturn (*parse)              (GstBaseAudioDecoder *dec,
+  GstFlowReturn (*parse)              (GstAudioDecoder *dec,
                                        GstAdapter *adapter,
                                        gint *offset, gint *length);
 
-  GstFlowReturn (*handle_frame)       (GstBaseAudioDecoder *dec,
+  GstFlowReturn (*handle_frame)       (GstAudioDecoder *dec,
                                        GstBuffer *buffer);
 
-  void          (*flush)              (GstBaseAudioDecoder *dec, gboolean hard);
+  void          (*flush)              (GstAudioDecoder *dec, gboolean hard);
 
-  GstFlowReturn (*pre_push)           (GstBaseAudioDecoder *dec,
+  GstFlowReturn (*pre_push)           (GstAudioDecoder *dec,
                                        GstBuffer **buffer);
 
-  gboolean      (*event)              (GstBaseAudioDecoder *dec,
+  gboolean      (*event)              (GstAudioDecoder *dec,
                                        GstEvent *event);
 
   /*< private >*/
   gpointer       _gst_reserved[GST_PADDING_LARGE];
 };
 
-gboolean          gst_base_audio_decoder_src_setcaps  (GstBaseAudioDecoder * dec,
-                                                       GstCaps * caps);
-GstFlowReturn     gst_base_audio_decoder_finish_frame (GstBaseAudioDecoder * dec,
-                                                       GstBuffer * buf, gint frames);
+GType             gst_audio_decoder_get_type (void);
+
+GstFlowReturn     gst_audio_decoder_finish_frame (GstAudioDecoder * dec,
+                                                  GstBuffer * buf, gint frames);
 
 /* context parameters */
-GstAudioInfo    * gst_base_audio_decoder_get_audio_info (GstBaseAudioDecoder * dec);
+GstAudioInfo    * gst_audio_decoder_get_audio_info (GstAudioDecoder * dec);
 
-void              gst_base_audio_decoder_set_plc_aware (GstBaseAudioDecoder * dec,
-                                                        gboolean plc);
-gint              gst_base_audio_decoder_get_plc_aware (GstBaseAudioDecoder * dec);
+void              gst_audio_decoder_set_plc_aware  (GstAudioDecoder * dec,
+                                                    gboolean          plc);
 
-void              gst_base_audio_decoder_set_byte_time (GstBaseAudioDecoder * dec,
-                                                        gboolean enabled);
-gint              gst_base_audio_decoder_get_byte_time (GstBaseAudioDecoder * dec);
+gint              gst_audio_decoder_get_plc_aware  (GstAudioDecoder * dec);
 
-gint              gst_base_audio_decoder_get_delay (GstBaseAudioDecoder * dec);
+void              gst_audio_decoder_set_byte_time  (GstAudioDecoder * dec,
+                                                    gboolean          enabled);
 
-void              gst_base_audio_decoder_set_max_errors (GstBaseAudioDecoder * enc,
-                                                         gint num);
-gint              gst_base_audio_decoder_get_max_errors (GstBaseAudioDecoder * dec);
+gint              gst_audio_decoder_get_byte_time  (GstAudioDecoder * dec);
 
-void              gst_base_audio_decoder_set_latency (GstBaseAudioDecoder * dec,
-                                                      GstClockTime min, GstClockTime max);
-void              gst_base_audio_decoder_get_latency (GstBaseAudioDecoder * dec,
-                                                      GstClockTime * min, GstClockTime * max);
+gint              gst_audio_decoder_get_delay      (GstAudioDecoder * dec);
 
-void              gst_base_audio_decoder_get_parse_state (GstBaseAudioDecoder * dec,
-                                                          gboolean * sync, gboolean * eos);
+void              gst_audio_decoder_set_max_errors (GstAudioDecoder * dec,
+                                                   gint               num);
+
+gint              gst_audio_decoder_get_max_errors (GstAudioDecoder * dec);
+
+void              gst_audio_decoder_set_latency (GstAudioDecoder * dec,
+                                                 GstClockTime      min,
+                                                 GstClockTime      max);
+
+void              gst_audio_decoder_get_latency (GstAudioDecoder * dec,
+                                                 GstClockTime    * min,
+                                                 GstClockTime    * max);
+
+void              gst_audio_decoder_get_parse_state (GstAudioDecoder * dec,
+                                                     gboolean        * sync,
+                                                     gboolean        * eos);
 
 
 /* object properties */
-void              gst_base_audio_decoder_set_plc (GstBaseAudioDecoder * dec,
-                                                  gboolean enabled);
-gboolean          gst_base_audio_decoder_get_plc (GstBaseAudioDecoder * dec);
+void              gst_audio_decoder_set_plc (GstAudioDecoder * dec,
+                                             gboolean          enabled);
 
-void              gst_base_audio_decoder_set_min_latency (GstBaseAudioDecoder * dec,
-                                                          gint64 num);
-gint64            gst_base_audio_decoder_get_min_latency (GstBaseAudioDecoder * dec);
+gboolean          gst_audio_decoder_get_plc (GstAudioDecoder * dec);
 
-void              gst_base_audio_decoder_set_tolerance (GstBaseAudioDecoder * dec,
-                                                        gint64 tolerance);
+void              gst_audio_decoder_set_min_latency (GstAudioDecoder * dec,
+                                                     gint64            num);
 
-gint64            gst_base_audio_decoder_get_tolerance (GstBaseAudioDecoder * dec);
+gint64            gst_audio_decoder_get_min_latency (GstAudioDecoder * dec);
 
-GType gst_base_audio_decoder_get_type (void);
+void              gst_audio_decoder_set_tolerance   (GstAudioDecoder * dec,
+                                                     gint64            tolerance);
+
+gint64            gst_audio_decoder_get_tolerance   (GstAudioDecoder * dec);
 
 G_END_DECLS
 
-#endif
-
+#endif /* _GST_AUDIO_DECODER_H_ */

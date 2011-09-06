@@ -1,0 +1,224 @@
+diff --git a/gst-libs/gst/rtp/gstrtcpbuffer.c b/gst-libs/gst/rtp/gstrtcpbuffer.c
+index ab77c8a..fb35a92 100644
+--- a/gst-libs/gst/rtp/gstrtcpbuffer.c
++++ b/gst-libs/gst/rtp/gstrtcpbuffer.c
+@@ -449,6 +449,11 @@ gst_rtcp_buffer_add_packet (GstBuffer * buffer, GstRTCPType type,
+     case GST_RTCP_TYPE_APP:
+       len = 12;
+       break;
++    case GST_RTCP_TYPE_RTPFB:
++      len = 12;
++      break;
++    case GST_RTCP_TYPE_PSFB:
++      len = 12;
+     default:
+       goto unknown_type;
+   }
+@@ -1637,6 +1642,147 @@ no_space:
+ }
+ 
+ /**
++ * gst_rtcp_packet_fb_get_sender_ssrc:
++ * @packet: a valid RTPFB or PSFB #GstRTCPPacket
++ *
++ * Get the sender SSRC field of the RTPFB or PSFB @packet.
++ *
++ * Returns: the sender SSRC.
++ */
++guint32
++gst_rtcp_packet_fb_get_sender_ssrc (GstRTCPPacket * packet)
++{
++  guint8 *data;
++  guint32 ssrc;
++
++  g_return_val_if_fail (packet != NULL, 0);
++  g_return_val_if_fail ((packet->type == GST_RTCP_TYPE_RTPFB ||
++      packet->type == GST_RTCP_TYPE_PSFB), 0);
++  g_return_val_if_fail (GST_IS_BUFFER (packet->buffer), 0);
++
++  data = GST_BUFFER_DATA (packet->buffer);
++
++  /* skip header */
++  data += packet->offset + 4;
++  ssrc = GST_READ_UINT32_BE (data);
++
++  return ssrc;
++}
++
++/**
++ * gst_rtcp_packet_fb_set_sender_ssrc:
++ * @packet: a valid RTPFB or PSFB #GstRTCPPacket
++ *
++ * Set the sender SSRC field of the RTPFB or PSFB @packet.
++ */
++void
++gst_rtcp_packet_fb_set_sender_ssrc (GstRTCPPacket *packet, guint32 ssrc)
++{
++  guint8 *data;
++
++  g_return_if_fail (packet != NULL);
++  g_return_if_fail (packet->type == GST_RTCP_TYPE_RTPFB ||
++      packet->type == GST_RTCP_TYPE_PSFB);
++  g_return_if_fail (GST_IS_BUFFER (packet->buffer));
++
++  data = GST_BUFFER_DATA (packet->buffer);
++
++  /* skip header */
++  data += packet->offset + 4;
++  GST_WRITE_UINT32_BE (data, ssrc);
++}
++
++/**
++ * gst_rtcp_packet_fb_get_media_ssrc:
++ * @packet: a valid RTPFB or PSFB #GstRTCPPacket
++ *
++ * Get the media SSRC field of the RTPFB or PSFB @packet.
++ *
++ * Returns: the media SSRC.
++ */
++guint32
++gst_rtcp_packet_fb_get_media_ssrc (GstRTCPPacket * packet)
++{
++  guint8 *data;
++  guint32 ssrc;
++
++  g_return_val_if_fail (packet != NULL, 0);
++  g_return_val_if_fail ((packet->type == GST_RTCP_TYPE_RTPFB ||
++      packet->type == GST_RTCP_TYPE_PSFB), 0);
++  g_return_val_if_fail (GST_IS_BUFFER (packet->buffer), 0);
++
++  data = GST_BUFFER_DATA (packet->buffer);
++
++  /* skip header and sender ssrc */
++  data += packet->offset + 8;
++  ssrc = GST_READ_UINT32_BE (data);
++
++  return ssrc;
++}
++
++/**
++ * gst_rtcp_packet_fb_set_media_ssrc:
++ * @packet: a valid RTPFB or PSFB #GstRTCPPacket
++ *
++ * Set the media SSRC field of the RTPFB or PSFB @packet.
++ */
++void
++gst_rtcp_packet_fb_set_media_ssrc (GstRTCPPacket *packet, guint32 ssrc)
++{
++  guint8 *data;
++
++  g_return_if_fail (packet != NULL);
++  g_return_if_fail (packet->type == GST_RTCP_TYPE_RTPFB ||
++      packet->type == GST_RTCP_TYPE_PSFB);
++  g_return_if_fail (GST_IS_BUFFER (packet->buffer));
++
++  data = GST_BUFFER_DATA (packet->buffer);
++
++  /* skip header and sender ssrc */
++  data += packet->offset + 8;
++  GST_WRITE_UINT32_BE (data, ssrc);
++}
++
++/**
++ * gst_rtcp_packet_psfb_get_type:
++ * @packet: a valid PSFB #GstRTCPPacket
++ *
++ * Get the feedback message type of the PSFB @packet.
++ *
++ * Returns: The feedback message type.
++ */
++GstRTCPPSFBType
++gst_rtcp_packet_psfb_get_type (GstRTCPPacket *packet)
++{
++  g_return_val_if_fail (packet != NULL, GST_RTCP_PSFB_TYPE_INVALID);
++  g_return_val_if_fail (packet->type == GST_RTCP_TYPE_PSFB,
++      GST_RTCP_PSFB_TYPE_INVALID);
++
++  return packet->count;
++}
++
++/**
++ * gst_rtcp_packet_psfb_set_type:
++ * @packet: a valid PSFB #GstRTCPPacket
++ * @type: the #GstRTCPPSFBType to set
++ *
++ * Set the feedback message type of the PSFB @packet.
++ */
++void
++gst_rtcp_packet_psfb_set_type (GstRTCPPacket *packet, GstRTCPPSFBType type)
++{
++  guint8 *data;
++
++  g_return_if_fail (packet != NULL);
++  g_return_if_fail (packet->type == GST_RTCP_TYPE_PSFB);
++  g_return_if_fail (GST_IS_BUFFER (packet->buffer));
++
++  data = GST_BUFFER_DATA (packet->buffer);
++
++  data[packet->offset] = (data[packet->offset] & 0xE0) | type;
++}
++
++/**
+  * gst_rtcp_ntp_to_unix:
+  * @ntptime: an NTP timestamp
+  *
+diff --git a/gst-libs/gst/rtp/gstrtcpbuffer.h b/gst-libs/gst/rtp/gstrtcpbuffer.h
+index 9c908a8..bb247c9 100644
+--- a/gst-libs/gst/rtp/gstrtcpbuffer.h
++++ b/gst-libs/gst/rtp/gstrtcpbuffer.h
+@@ -42,6 +42,8 @@ G_BEGIN_DECLS
+  * @GST_RTCP_TYPE_SDES: Source description
+  * @GST_RTCP_TYPE_BYE: Goodbye
+  * @GST_RTCP_TYPE_APP: Application defined
++ * @GST_RTCP_TYPE_RTPFB: Transport layer feedback
++ * @GST_RTCP_TYPE_PSFB: Payload-specific feedback
+  *
+  * Different RTCP packet types.
+  */
+@@ -52,9 +54,28 @@ typedef enum
+   GST_RTCP_TYPE_RR      = 201,
+   GST_RTCP_TYPE_SDES    = 202,
+   GST_RTCP_TYPE_BYE     = 203,
+-  GST_RTCP_TYPE_APP     = 204
++  GST_RTCP_TYPE_APP     = 204,
++  GST_RTCP_TYPE_RTPFB   = 205,
++  GST_RTCP_TYPE_PSFB    = 206
+ } GstRTCPType;
+ 
++/**
++ * GstRTCPPSFBType:
++ * @GST_RTCP_PSFB_TYPE_INVALID: Invalid type
++ * @GST_RTCP_PSFB_TYPE_PLI: Picture Loss Indication
++ * @GST_RTCP_PSFB_TYPE_SLI: Slice Loss Indication
++ * @GST_RTCP_PSFB_TYPE_RPSI: Reference Picture Selection Indication
++ * @GST_RTCP_PSFB_TYPE_AFB: Application layer Feedback
++ */
++typedef enum
++{
++  GST_RTCP_PSFB_TYPE_INVALID = 0,
++  GST_RTCP_PSFB_TYPE_PLI     = 1,
++  GST_RTCP_PSFB_TYPE_SLI     = 2,
++  GST_RTCP_PSFB_TYPE_RPSI    = 3,
++  GST_RTCP_PSFB_TYPE_AFB     = 15
++} GstRTCPPSFBType;
++
+ /** 
+  * GstRTCPSDESType:
+  * @GST_RTCP_SDES_INVALID: Invalid SDES entry
+@@ -232,6 +253,16 @@ guint8          gst_rtcp_packet_bye_get_reason_len    (GstRTCPPacket *packet);
+ gchar*          gst_rtcp_packet_bye_get_reason        (GstRTCPPacket *packet);
+ gboolean        gst_rtcp_packet_bye_set_reason        (GstRTCPPacket *packet, const gchar *reason);
+ 
++/* feedback packets */
++guint32         gst_rtcp_packet_fb_get_sender_ssrc    (GstRTCPPacket *packet);
++void            gst_rtcp_packet_fb_set_sender_ssrc    (GstRTCPPacket *packet, guint32 ssrc);
++guint32         gst_rtcp_packet_fb_get_media_ssrc     (GstRTCPPacket *packet);
++void            gst_rtcp_packet_fb_set_media_ssrc     (GstRTCPPacket *packet, guint32 ssrc);
++
++/* psfb packets */
++GstRTCPPSFBType gst_rtcp_packet_psfb_get_type         (GstRTCPPacket *packet);
++void            gst_rtcp_packet_psfb_set_type         (GstRTCPPacket *packet, GstRTCPPSFBType type);
++
+ /* helper functions */
+ guint64         gst_rtcp_ntp_to_unix                  (guint64 ntptime);
+ guint64         gst_rtcp_unix_to_ntp                  (guint64 unixtime);

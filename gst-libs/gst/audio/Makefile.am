@@ -16,14 +16,15 @@ lib_LTLIBRARIES = \
 
 CLEANFILES = $(BUILT_SOURCES)
 
+# FIXME 0.11: rename GstBaseAudioSink to GstAudioBaseSink or merge with GstAudioSink
 libgstaudio_@GST_MAJORMINOR@_la_SOURCES = \
 	audio.c \
 	gstringbuffer.c \
 	gstaudioclock.c \
 	mixerutils.c \
 	multichannel.c \
-	gstbaseaudiodecoder.c \
-	gstbaseaudioencoder.c \
+	gstaudiodecoder.c \
+	gstaudioencoder.c \
 	gstbaseaudiosink.c \
 	gstbaseaudiosrc.c \
 	gstaudiofilter.c \
@@ -38,8 +39,8 @@ libgstaudio_@GST_MAJORMINOR@include_HEADERS = \
 	gstringbuffer.h \
 	gstaudioclock.h \
 	gstaudiofilter.h \
-	gstbaseaudiodecoder.h \
-	gstbaseaudioencoder.h \
+	gstaudiodecoder.h \
+	gstaudioencoder.h \
 	gstbaseaudiosink.h \
 	gstbaseaudiosrc.h \
 	gstaudiosink.h \

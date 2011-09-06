@@ -1,0 +1,48 @@
+diff --git a/gst/videorate/gstvideorate.c b/gst/videorate/gstvideorate.c
+index 8d22186..7afcfdd 100644
+--- a/gst/videorate/gstvideorate.c
++++ b/gst/videorate/gstvideorate.c
+@@ -357,6 +357,7 @@ gst_video_rate_reset (GstVideoRate * videorate)
+   videorate->drop = 0;
+   videorate->dup = 0;
+   videorate->next_ts = GST_CLOCK_TIME_NONE;
++  videorate->discont = TRUE;
+   gst_video_rate_swap_prev (videorate, NULL, 0);
+ 
+   gst_segment_init (&videorate->segment, GST_FORMAT_TIME);
+@@ -409,6 +410,13 @@ gst_video_rate_flush_prev (GstVideoRate * videorate)
+   GST_BUFFER_OFFSET (outbuf) = videorate->out;
+   GST_BUFFER_OFFSET_END (outbuf) = videorate->out + 1;
+ 
++  if (videorate->discont) {
++    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
++    videorate->discont = FALSE;
++  }
++  else
++    GST_BUFFER_FLAG_UNSET (outbuf, GST_BUFFER_FLAG_DISCONT);
++
+   /* this is the timestamp we put on the buffer */
+   push_ts = videorate->next_ts;
+ 
+@@ -810,6 +818,9 @@ gst_video_rate_change_state (GstElement * element, GstStateChange transition)
+   videorate = GST_VIDEO_RATE (element);
+ 
+   switch (transition) {
++    case GST_STATE_CHANGE_READY_TO_PAUSED:
++      videorate->discont = TRUE;
++      break;
+     default:
+       break;
+   }
+diff --git a/gst/videorate/gstvideorate.h b/gst/videorate/gstvideorate.h
+index ea6063b..fe7feb6 100644
+--- a/gst/videorate/gstvideorate.h
++++ b/gst/videorate/gstvideorate.h
+@@ -56,6 +56,7 @@ struct _GstVideoRate
+   GstBuffer *prevbuf;
+   guint64 prev_ts;              /* Previous buffer timestamp */
+   guint64 segment_out;          /* in-segment counting */
++  gboolean discont;
+ 
+   /* segment handling */
+   GstSegment segment;

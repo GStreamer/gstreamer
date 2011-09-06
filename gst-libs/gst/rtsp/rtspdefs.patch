@@ -1,0 +1,73 @@
+commit bf5ef87699b8ef602548eec131312d7a733e278e
+Author: Josep Torra <n770galaxy@gmail.com>
+Date:   Tue Apr 14 18:03:09 2009 +0200
+
+    Added RTSP headers related to Windows Media extension.
+
+diff --git a/gst-libs/gst/rtsp/gstrtspdefs.c b/gst-libs/gst/rtsp/gstrtspdefs.c
+index 0ab2b95..8b086e5 100644
+--- a/gst-libs/gst/rtsp/gstrtspdefs.c
++++ b/gst-libs/gst/rtsp/gstrtspdefs.c
+@@ -164,6 +164,27 @@ static const gchar *rtsp_headers[] = {
+   "ETag",                       /* ETag */
+   "If-Match",                   /* If-Match */
+ 
++  /* WM extensions [MS-RTSP] */
++  "Accept-Charset",             /* Accept-Charset */
++  "Supported",                  /* Supported */
++  "Vary",                       /* Vary */
++  "X-Accelerate-Streaming",     /* X-Accelerate-Streaming */
++  "X-Accept-Authentication",    /* X-Accept-Authentication */
++  "X-Accept-Proxy-Authentication",      /* X-Accept-Proxy-Authentication */
++  "X-Broadcast-Id",             /* X-Broadcast-Id */
++  "X-Burst-Streaming",          /* X-Burst-Streaming */
++  "X-Notice",                   /* X-Notice */
++  "X-Player-Lag-Time",          /* X-Player-Lag-Time */
++  "X-Playlist",                 /* X-Playlist */
++  "X-Playlist-Change-Notice",   /* X-Playlist-Change-Notice */
++  "X-Playlist-Gen-Id",          /* X-Playlist-Gen-Id */
++  "X-Playlist-Seek-Id",         /* X-Playlist-Seek-Id */
++  "X-Proxy-Client-Agent",       /* X-Proxy-Client-Agent */
++  "X-Proxy-Client-Verb",        /* X-Proxy-Client-Verb */
++  "X-Receding-PlaylistChange",  /* X-Receding-PlaylistChange */
++  "X-RTP-Info",                 /* X-RTP-Info */
++  "X-StartupProfile",           /* X-StartupProfile */
++
+   NULL
+ };
+ 
+diff --git a/gst-libs/gst/rtsp/gstrtspdefs.h b/gst-libs/gst/rtsp/gstrtspdefs.h
+index dd4b531..ae3b105 100644
+--- a/gst-libs/gst/rtsp/gstrtspdefs.h
++++ b/gst-libs/gst/rtsp/gstrtspdefs.h
+@@ -287,7 +287,29 @@ typedef enum {
+ 
+   /* Since 0.10.23 */
+   GST_RTSP_HDR_ETAG,                /* ETag */
+-  GST_RTSP_HDR_IF_MATCH             /* If-Match */
++  GST_RTSP_HDR_IF_MATCH,            /* If-Match */
++
++  /* WM extensions [MS-RTSP] */
++  GST_RTSP_HDR_ACCEPT_CHARSET,      /* Accept-Charset */
++  GST_RTSP_HDR_SUPPORTED,           /* Supported */
++  GST_RTSP_HDR_VARY,                /* Vary */
++  GST_RTSP_HDR_X_ACCELERATE_STREAMING,    /* X-Accelerate-Streaming */
++  GST_RTSP_HDR_X_ACCEPT_AUTHENT,    /* X-Accept-Authentication */
++  GST_RTSP_HDR_X_ACCEPT_PROXY_AUTHENT,    /* X-Accept-Proxy-Authentication */
++  GST_RTSP_HDR_X_BROADCAST_ID,      /* X-Broadcast-Id */
++  GST_RTSP_HDR_X_BURST_STREAMING,   /* X-Burst-Streaming */
++  GST_RTSP_HDR_X_NOTICE,            /* X-Notice */
++  GST_RTSP_HDR_X_PLAYER_LAG_TIME,   /* X-Player-Lag-Time */
++  GST_RTSP_HDR_X_PLAYLIST,          /* X-Playlist */
++  GST_RTSP_HDR_X_PLAYLIST_CHANGE_NOTICE,  /* X-Playlist-Change-Notice */
++  GST_RTSP_HDR_X_PLAYLIST_GEN_ID,   /* X-Playlist-Gen-Id */
++  GST_RTSP_HDR_X_PLAYLIST_SEEK_ID,  /* X-Playlist-Seek-Id */
++  GST_RTSP_HDR_X_PROXY_CLIENT_AGENT,      /* X-Proxy-Client-Agent */
++  GST_RTSP_HDR_X_PROXY_CLIENT_VERB, /* X-Proxy-Client-Verb */
++  GST_RTSP_HDR_X_RECEDING_PLAYLISTCHANGE, /* X-Receding-PlaylistChange */
++  GST_RTSP_HDR_X_RTP_INFO,          /* X-RTP-Info */
++  GST_RTSP_HDR_X_STARTUPPROFILE     /* X-StartupProfile */
++
+ } GstRTSPHeaderField;
+ 
+ typedef enum {

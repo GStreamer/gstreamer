@@ -1132,13 +1132,13 @@ gen_video_deinterlace_chain (GstPlaySink * playsink)
   bin = GST_BIN_CAST (chain->chain.bin);
   gst_object_ref_sink (bin);
 
-  GST_DEBUG_OBJECT (playsink, "creating videoconvert");
-  chain->conv = gst_element_factory_make ("videoconvert", "vdconv");
+  GST_DEBUG_OBJECT (playsink, "creating " COLORSPACE);
+  chain->conv = gst_element_factory_make (COLORSPACE, "vdconv");
   if (chain->conv == NULL) {
-    post_missing_element_message (playsink, "videoconvert");
+    post_missing_element_message (playsink, COLORSPACE);
     GST_ELEMENT_WARNING (playsink, CORE, MISSING_PLUGIN,
         (_("Missing element '%s' - check your GStreamer installation."),
-            "videoconvert"), ("video rendering might fail"));
+            COLORSPACE), ("video rendering might fail"));
   } else {
     gst_bin_add (bin, chain->conv);
     head = chain->conv;
@@ -2304,8 +2304,9 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
 
       add_chain (GST_PLAY_CHAIN (playsink->videochain), FALSE);
       activate_chain (GST_PLAY_CHAIN (playsink->videochain), FALSE);
-      gst_object_replace ((GstObject **) & playsink->videochain->ts_offset,
-          NULL);
+      if (playsink->videochain->ts_offset)
+        gst_object_unref (playsink->videochain->ts_offset);
+      playsink->videochain->ts_offset = NULL;
     }
 
     if (playsink->videodeinterlacechain) {
@@ -2358,8 +2359,9 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
         disconnect_chain (playsink->audiochain, playsink);
         playsink->audiochain->volume = NULL;
         playsink->audiochain->mute = NULL;
-        gst_object_replace ((GstObject **) & playsink->audiochain->ts_offset,
-            NULL);
+        if (playsink->audiochain->ts_offset)
+          gst_object_unref (playsink->audiochain->ts_offset);
+        playsink->audiochain->ts_offset = NULL;
         free_chain ((GstPlayChain *) playsink->audiochain);
         playsink->audiochain = NULL;
         playsink->volume_changed = playsink->mute_changed = FALSE;
@@ -2429,8 +2431,9 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
         disconnect_chain (playsink->audiochain, playsink);
         playsink->audiochain->volume = NULL;
         playsink->audiochain->mute = NULL;
-        gst_object_replace ((GstObject **) & playsink->audiochain->ts_offset,
-            NULL);
+        if (playsink->audiochain->ts_offset)
+          gst_object_unref (playsink->audiochain->ts_offset);
+        playsink->audiochain->ts_offset = NULL;
       }
       add_chain (GST_PLAY_CHAIN (playsink->audiochain), FALSE);
       activate_chain (GST_PLAY_CHAIN (playsink->audiochain), FALSE);
@@ -3422,8 +3425,16 @@ gst_play_sink_change_state (GstElement * element, GstStateChange transition)
         disconnect_chain (playsink->audiochain, playsink);
         playsink->audiochain->volume = NULL;
         playsink->audiochain->mute = NULL;
-        gst_object_replace ((GstObject **) & playsink->audiochain->ts_offset,
-            NULL);
+      }
+
+      if (playsink->audiochain && playsink->audiochain->ts_offset) {
+        gst_object_unref (playsink->audiochain->ts_offset);
+        playsink->audiochain->ts_offset = NULL;
+      }
+
+      if (playsink->videochain && playsink->videochain->ts_offset) {
+        gst_object_unref (playsink->videochain->ts_offset);
+        playsink->videochain->ts_offset = NULL;
       }
       ret = GST_STATE_CHANGE_SUCCESS;
       break;
