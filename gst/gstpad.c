@@ -2554,7 +2554,7 @@ gst_pad_acceptcaps_default (GstPad * pad, GstCaps * caps)
 
   GST_DEBUG_OBJECT (pad, "allowed caps %" GST_PTR_FORMAT, allowed);
 
-  result = gst_caps_can_intersect (allowed, caps);
+  result = gst_caps_is_subset (caps, allowed);
 
   gst_caps_unref (allowed);
 
@@ -2760,7 +2760,7 @@ gst_pad_configure_sink (GstPad * pad, GstCaps * caps)
   gboolean res;
 
   /* See if pad accepts the caps */
-  if (!gst_caps_can_intersect (caps, gst_pad_get_pad_template_caps (pad)))
+  if (!gst_caps_is_subset (caps, gst_pad_get_pad_template_caps (pad)))
     goto not_accepted;
 
   /* set caps on pad if call succeeds */
