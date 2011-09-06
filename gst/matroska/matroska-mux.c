@@ -2204,6 +2204,10 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
       child = gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_TRACKENTRY);
       gst_matroska_mux_track_header (mux, collect_pad->track);
       gst_ebml_write_master_finish (ebml, child);
+      /* some remaing pad/track setup */
+      collect_pad->default_duration_scaled =
+          gst_util_uint64_scale (collect_pad->track->default_duration,
+          1, mux->time_scale);
     }
   }
   gst_ebml_write_master_finish (ebml, master);
@@ -2767,9 +2771,14 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad)
 
   /* Check if the duration differs from the default duration. */
   write_duration = FALSE;
-  block_duration = GST_BUFFER_DURATION (buf);
+  block_duration = 0;
   if (GST_BUFFER_DURATION_IS_VALID (buf)) {
-    if (block_duration != collect_pad->track->default_duration) {
+    block_duration = gst_util_uint64_scale (GST_BUFFER_DURATION (buf),
+        1, mux->time_scale);
+
+    /* small difference should be ok. */
+    if (block_duration > collect_pad->default_duration_scaled + 1 ||
+        block_duration < collect_pad->default_duration_scaled - 1) {
       write_duration = TRUE;
     }
   }
@@ -2810,10 +2819,8 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad)
     hdr =
         gst_matroska_mux_create_buffer_header (collect_pad->track,
         relative_timestamp, 0);
-    if (write_duration) {
-      gst_ebml_write_uint (ebml, GST_MATROSKA_ID_BLOCKDURATION,
-          gst_util_uint64_scale (block_duration, 1, mux->time_scale));
-    }
+    if (write_duration)
+      gst_ebml_write_uint (ebml, GST_MATROSKA_ID_BLOCKDURATION, block_duration);
     gst_ebml_write_buffer_header (ebml, GST_MATROSKA_ID_BLOCK,
         GST_BUFFER_SIZE (buf) + GST_BUFFER_SIZE (hdr));
     gst_ebml_write_buffer (ebml, hdr);
