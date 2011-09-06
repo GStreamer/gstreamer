@@ -1461,6 +1461,7 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
 
       /* If the caps are raw, this just means we don't want to expose them */
       if (gst_caps_can_intersect (raw, caps)) {
+        g_value_array_free (factories);
         gst_caps_unref (raw);
         gst_object_unref (dpad);
         goto discarded_type;
@@ -1533,6 +1534,7 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
 
     if (dontuse) {
       gst_object_unref (dpad);
+      g_value_array_free (factories);
       goto discarded_type;
     }
   }
