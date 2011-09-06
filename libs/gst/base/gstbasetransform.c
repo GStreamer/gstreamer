@@ -787,7 +787,7 @@ gst_base_transform_can_transform (GstBaseTransform * trans, GstPad * pad,
     goto no_transform;
 
   /* check if the out caps is a subset of the othercaps */
-  if (!gst_caps_can_intersect (out, othercaps))
+  if (!gst_caps_is_subset (out, othercaps))
     goto no_subset;
 
   if (othercaps)
@@ -889,7 +889,7 @@ gst_base_transform_find_transform (GstBaseTransform * trans, GstPad * pad,
 
     /* see if the target caps are a superset of the source caps, in this
      * case we can try to perform passthrough */
-    if (gst_caps_can_intersect (othercaps, caps)) {
+    if (gst_caps_is_subset (caps, othercaps)) {
       GST_DEBUG_OBJECT (trans, "try passthrough with %" GST_PTR_FORMAT, caps);
       if (otherpeer) {
         /* try passthrough. we know it's fixed, because caps is fixed */
@@ -1079,7 +1079,7 @@ gst_base_transform_acceptcaps_default (GstBaseTransform * trans,
     GST_DEBUG_OBJECT (trans, "allowed caps %" GST_PTR_FORMAT, allowed);
 
     /* intersect with the requested format */
-    ret = gst_caps_can_intersect (allowed, caps);
+    ret = gst_caps_is_subset (caps, allowed);
     gst_caps_unref (allowed);
 
     if (!ret)
