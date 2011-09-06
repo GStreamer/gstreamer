@@ -91,6 +91,9 @@ GstBuffer *
 gst_vaapi_video_buffer_new_from_pool(GstVaapiVideoPool *pool);
 
 GstBuffer *
+gst_vaapi_video_buffer_new_from_buffer(GstBuffer *buffer);
+
+GstBuffer *
 gst_vaapi_video_buffer_new_with_image(GstVaapiImage *image);
 
 GstBuffer *

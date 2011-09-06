@@ -47,6 +47,7 @@ struct _GstVaapiVideoBufferPrivate {
     GstVaapiVideoPool          *surface_pool;
     GstVaapiSurface            *surface;
     GstVaapiSurfaceProxy       *proxy;
+    GstBuffer                  *buffer;
 };
 
 static void
@@ -118,6 +119,11 @@ gst_vaapi_video_buffer_destroy_surface(GstVaapiVideoBuffer *buffer)
         g_object_unref(priv->surface_pool);
         priv->surface_pool = NULL;
     }
+
+    if (priv->buffer) {
+        gst_buffer_unref(priv->buffer);
+        priv->buffer = NULL;
+    }
 }
 
 static void
@@ -159,6 +165,7 @@ gst_vaapi_video_buffer_init(GstVaapiVideoBuffer *buffer)
     priv->surface_pool  = NULL;
     priv->surface       = NULL;
     priv->proxy         = NULL;
+    priv->buffer        = NULL;
 }
 
 /**
@@ -230,6 +237,42 @@ gst_vaapi_video_buffer_new_from_pool(GstVaapiVideoPool *pool)
 
     gst_mini_object_unref(GST_MINI_OBJECT(buffer));
     return NULL;
+}
+
+/**
+ * gst_vaapi_video_buffer_new_from_buffer:
+ * @buffer: a #GstBuffer
+ *
+ * Creates a #GstBuffer with video objects bound to @buffer video
+ * objects, if any.
+ *
+ * Return value: the newly allocated #GstBuffer, or %NULL on error
+ */
+GstBuffer *
+gst_vaapi_video_buffer_new_from_buffer(GstBuffer *buffer)
+{
+    GstVaapiVideoBuffer *inbuf, *outbuf;
+
+    if (!GST_VAAPI_IS_VIDEO_BUFFER(buffer)) {
+        if (!buffer->parent || !GST_VAAPI_IS_VIDEO_BUFFER(buffer->parent))
+            return NULL;
+        buffer = buffer->parent;
+    }
+    inbuf = GST_VAAPI_VIDEO_BUFFER(buffer);
+
+    outbuf = _gst_vaapi_video_buffer_new();
+    if (!outbuf)
+        return NULL;
+
+    if (inbuf->priv->image)
+        gst_vaapi_video_buffer_set_image(outbuf, inbuf->priv->image);
+    if (inbuf->priv->surface)
+        gst_vaapi_video_buffer_set_surface(outbuf, inbuf->priv->surface);
+    if (inbuf->priv->proxy)
+        gst_vaapi_video_buffer_set_surface_proxy(outbuf, inbuf->priv->proxy);
+
+    outbuf->priv->buffer = gst_buffer_ref(buffer);
+    return GST_BUFFER(outbuf);
 }
 
 /**
