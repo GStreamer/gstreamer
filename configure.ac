@@ -1718,6 +1718,17 @@ AG_GST_CHECK_FEATURE(RTMP, [rtmp library], rtmp, [
   AG_GST_PKG_CHECK_MODULES(RTMP, librtmp)
 ])
 
+dnl *** spandsp ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_SPANDSP, true)
+AG_GST_CHECK_FEATURE(SPANDSP, [Spandsp], spandsp, [
+  PKG_CHECK_MODULES(SPANDSP, spandsp >= 0.0.6, [
+    HAVE_SPANDSP="yes" ], [
+    HAVE_SPANDSP="no"
+  ])
+])
+AC_SUBST(SPANDSP_CFLAGS)
+AC_SUBST(SPANDSP_LIBS)
+
 dnl *** GSettings ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_GSETTINGS, true)
 AG_GST_CHECK_FEATURE(GSETTINGS, [GSettings plugin], gsettings, [
@@ -1780,6 +1791,7 @@ AM_CONDITIONAL(USE_WILDMIDI, false)
 AM_CONDITIONAL(USE_SDL, false)
 AM_CONDITIONAL(USE_SNDFILE, false)
 AM_CONDITIONAL(USE_SOUNDTOUCH, false)
+AM_CONDITIONAL(USE_SPANDSP, false)
 AM_CONDITIONAL(USE_SPC, false)
 AM_CONDITIONAL(USE_GME, false)
 AM_CONDITIONAL(USE_GSETTINGS, false)
@@ -2029,6 +2041,7 @@ ext/schroedinger/Makefile
 ext/sdl/Makefile
 ext/sndfile/Makefile
 ext/soundtouch/Makefile
+ext/spandsp/Makefile
 ext/teletextdec/Makefile
 ext/gme/Makefile
 ext/gsettings/Makefile
