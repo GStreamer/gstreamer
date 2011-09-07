@@ -78,8 +78,7 @@ GTKDOC_EXTRA_ENVIRONMENT= \
 
 # If you need to override some of the declarations, place them in this file
 # and uncomment this line.
-#DOC_OVERRIDES = $(DOC_MODULE)-overrides.txt
-DOC_OVERRIDES =
+DOC_OVERRIDES = $(DOC_MODULE)-overrides.txt
 
 include $(top_srcdir)/common/gtk-doc.mak
 
