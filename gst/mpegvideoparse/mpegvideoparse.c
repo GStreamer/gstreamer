@@ -1027,7 +1027,7 @@ plugin_init (GstPlugin * plugin)
       "MPEG Video Parser");
 
   return gst_element_register (plugin, "legacympegvideoparse",
-      GST_RANK_PRIMARY, GST_TYPE_MPEGVIDEOPARSE);
+      GST_RANK_NONE, GST_TYPE_MPEGVIDEOPARSE);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

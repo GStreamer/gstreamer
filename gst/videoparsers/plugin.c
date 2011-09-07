@@ -33,13 +33,13 @@ plugin_init (GstPlugin * plugin)
   gboolean ret;
 
   ret = gst_element_register (plugin, "h263parse",
-      GST_RANK_NONE, GST_TYPE_H263_PARSE);
+      GST_RANK_PRIMARY + 1, GST_TYPE_H263_PARSE);
   ret = gst_element_register (plugin, "h264parse",
       GST_RANK_PRIMARY + 1, GST_TYPE_H264_PARSE);
   ret = gst_element_register (plugin, "diracparse",
       GST_RANK_NONE, GST_TYPE_DIRAC_PARSE);
   ret = gst_element_register (plugin, "mpegvideoparse",
-      GST_RANK_NONE, GST_TYPE_MPEGVIDEO_PARSE);
+      GST_RANK_PRIMARY + 1, GST_TYPE_MPEGVIDEO_PARSE);
 
   return ret;
 }
