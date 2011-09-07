@@ -43,6 +43,7 @@ static GstPad *mysrcpad, *mysinkpad;
                         "rate = (int) 48000"
 #define VIDEO_CAPS_STRING "video/mpeg, " \
                            "mpegversion = (int) 4, " \
+                           "systemstream = (boolean) false, " \
                            "width = (int) 384, " \
                            "height = (int) 288, " \
                            "framerate = (fraction) 25/1"
