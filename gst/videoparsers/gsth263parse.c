@@ -39,7 +39,7 @@ static GstStaticPadTemplate srctemplate =
 GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-h263, variant = (string) itu, "
-        "parsed = (boolean) true")
+        "parsed = (boolean) true, framerate=(fraction)[0/1,MAX]")
     );
 
 static GstStaticPadTemplate sinktemplate =
