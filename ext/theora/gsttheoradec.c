@@ -231,14 +231,8 @@ gst_theora_dec_reset (GstTheoraDec * dec)
   dec->discont = TRUE;
   dec->frame_nr = -1;
   dec->seqnum = gst_util_seqnum_next ();
-  dec->dropped = 0;
-  dec->processed = 0;
+  gst_video_qos_tracker_reset (&dec->qt);
   gst_segment_init (&dec->segment, GST_FORMAT_TIME);
-
-  GST_OBJECT_LOCK (dec);
-  dec->proportion = 1.0;
-  dec->earliest_time = -1;
-  GST_OBJECT_UNLOCK (dec);
 
   g_list_foreach (dec->queued, (GFunc) gst_mini_object_unref, NULL);
   g_list_free (dec->queued);
@@ -576,23 +570,12 @@ theora_dec_src_event (GstPad * pad, GstEvent * event)
     }
     case GST_EVENT_QOS:
     {
-      gdouble proportion;
-      GstClockTimeDiff diff;
-      GstClockTime timestamp;
-
-      gst_event_parse_qos (event, &proportion, &diff, &timestamp);
-
       /* we cannot randomly skip frame decoding since we don't have
        * B frames. we can however use the timestamp and diff to not
        * push late frames. This would at least save us the time to
        * crop/memcpy the data. */
-      GST_OBJECT_LOCK (dec);
-      dec->proportion = proportion;
-      dec->earliest_time = timestamp + diff;
-      GST_OBJECT_UNLOCK (dec);
-
-      GST_DEBUG_OBJECT (dec, "got QoS %" GST_TIME_FORMAT ", %" G_GINT64_FORMAT,
-          GST_TIME_ARGS (timestamp), diff);
+      gst_video_qos_tracker_update (&dec->qt, event,
+          GST_CLOCK_TIME_NONE, GST_VIDEO_QOS_TRACKER_DIFF);
 
       res = gst_pad_push_event (dec->sinkpad, event);
       break;
@@ -1146,50 +1129,11 @@ theora_handle_data_packet (GstTheoraDec * dec, ogg_packet * packet,
   if (G_UNLIKELY (th_decode_packetin (dec->decoder, packet, &gp) < 0))
     goto decode_error;
 
-  if (outtime != -1) {
-    gboolean need_skip;
-    GstClockTime running_time;
-    GstClockTime earliest_time;
-    gdouble proportion;
-
-    /* qos needs to be done on running time */
-    running_time = gst_segment_to_running_time (&dec->segment, GST_FORMAT_TIME,
-        outtime);
-
-    GST_OBJECT_LOCK (dec);
-    proportion = dec->proportion;
-    earliest_time = dec->earliest_time;
-    /* check for QoS, don't perform the last steps of getting and
-     * pushing the buffers that are known to be late. */
-    need_skip = earliest_time != -1 && running_time <= earliest_time;
-    GST_OBJECT_UNLOCK (dec);
-
-    if (need_skip) {
-      GstMessage *qos_msg;
-      guint64 stream_time;
-      gint64 jitter;
-
-      GST_DEBUG_OBJECT (dec, "skipping decoding: qostime %"
-          GST_TIME_FORMAT " <= %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (running_time), GST_TIME_ARGS (earliest_time));
-
-      dec->dropped++;
-
-      stream_time =
-          gst_segment_to_stream_time (&dec->segment, GST_FORMAT_TIME, outtime);
-      jitter = GST_CLOCK_DIFF (running_time, earliest_time);
-
-      qos_msg =
-          gst_message_new_qos (GST_OBJECT_CAST (dec), FALSE, running_time,
-          stream_time, outtime, outdur);
-      gst_message_set_qos_values (qos_msg, jitter, proportion, 1000000);
-      gst_message_set_qos_stats (qos_msg, GST_FORMAT_BUFFERS,
-          dec->processed, dec->dropped);
-      gst_element_post_message (GST_ELEMENT_CAST (dec), qos_msg);
-
-      goto dropping_qos;
-    }
-  }
+  /* check for QoS, don't perform the last steps of getting and
+   * pushing the buffers that are known to be late. */
+  if (gst_video_qos_tracker_process_frame (&dec->qt, &dec->segment, outtime,
+          outdur))
+    goto dropping_qos;
 
   /* this does postprocessing and set up the decoded frame
    * pointers in our yuv variable */
@@ -1211,8 +1155,6 @@ theora_handle_data_packet (GstTheoraDec * dec, ogg_packet * packet,
 
   GST_BUFFER_TIMESTAMP (out) = outtime;
   GST_BUFFER_DURATION (out) = outdur;
-
-  dec->processed++;
 
   if (dec->segment.rate >= 0.0)
     result = theora_dec_push_forward (dec, out);
@@ -1506,6 +1448,7 @@ theora_dec_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
+      gst_video_qos_tracker_init (&dec->qt, element);
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       th_info_clear (&dec->info);
@@ -1536,6 +1479,7 @@ theora_dec_change_state (GstElement * element, GstStateChange transition)
       gst_theora_dec_reset (dec);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
+      gst_video_qos_tracker_clear (&dec->qt);
       break;
     default:
       break;
