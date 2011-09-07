@@ -7,7 +7,7 @@
       The controller subsystem offers a lightweight way to adjust gobject
       properties over stream-time. Normaly these properties are changed using
       <function>g_object_set()</function>. Timing those calls reliably so that
-      the changes affect certain stream times is close to imposible. The
+      the changes affect certain stream times is close to impossible. The
       controller takes time into account. It works by attaching control-sources
       to properties. Control-sources can provide new values for the properties
       for a given timestamp. At run-time the elements continously pull values
@@ -30,7 +30,7 @@
     </para>
     <para>
       The <filename>gstreamer-controller</filename> library needs to be initialized
-      when your application is run.  This can be done after the the GStreamer
+      when your application is run.  This can be done after the GStreamer
       library has been initialized.
     </para>
     <programlisting>

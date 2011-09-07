@@ -24,7 +24,7 @@
 /**
  * SECTION:gstimplementsinterface
  * @short_description: Core interface implemented by #GstElement instances that
- * allows runtime querying of interface availabillity
+ * allows runtime querying of interface availability
  * @see_also: #GstElement
  *
  * Provides interface functionality on per instance basis and not per class

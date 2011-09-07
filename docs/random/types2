@@ -97,7 +97,7 @@ the equivalence of both types, even it they have a different mime type.
 5. type hierarchy
 -----------------
 
-some plugins can ouput a specific subset of an allready existing type.
+some plugins can ouput a specific subset of an already existing type.
 
 example:
 

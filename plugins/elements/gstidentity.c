@@ -23,7 +23,7 @@
 /**
  * SECTION:element-identity
  *
- * Dummy element that passes incomming data through unmodified. It has some
+ * Dummy element that passes incoming data through unmodified. It has some
  * useful diagnostic functions, such as offset and timestamp checking.
  */
 

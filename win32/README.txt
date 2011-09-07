@@ -3,7 +3,7 @@ Building GStreamer on Windows
 
 Running GStreamer on Windows is currently experimental, but improving.
 
-Building on MingW/MSys
+Building on MinGW/MSys
 ----------------------
 Should work out of the box from the toplevel directory using the standard
 Unix build system provided.

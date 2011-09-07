@@ -1066,7 +1066,7 @@ gst_base_src_default_query (GstBaseSrc * src, GstQuery * query)
       GstClockTime min, max;
       gboolean live;
 
-      /* Subclasses should override and implement something usefull */
+      /* Subclasses should override and implement something useful */
       res = gst_base_src_query_latency (src, &live, &min, &max);
 
       GST_LOG_OBJECT (src, "report latency: live %d, min %" GST_TIME_FORMAT
@@ -1398,7 +1398,7 @@ gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
 
   /* If we configured the seeksegment above, don't overwrite it now. Otherwise
    * copy the current segment info into the temp segment that we can actually
-   * attempt the seek with. We only update the real segment if the seek suceeds. */
+   * attempt the seek with. We only update the real segment if the seek succeeds. */
   if (!seekseg_configured) {
     memcpy (&seeksegment, &src->segment, sizeof (GstSegment));
 
@@ -1587,7 +1587,7 @@ gst_base_src_send_event (GstElement * element, GstEvent * event)
        *    first and do EOS instead of entering it.
        *  - If we are in the _create function or we did not manage to set the
        *    flag fast enough and we are about to enter the _create function,
-       *    we unlock it so that we exit with WRONG_STATE immediatly. We then
+       *    we unlock it so that we exit with WRONG_STATE immediately. We then
        *    check the EOS flag and do the EOS logic.
        */
       g_atomic_int_set (&src->priv->pending_eos, TRUE);
@@ -3152,7 +3152,7 @@ gst_base_src_change_state (GstElement * element, GstStateChange transition)
        * already did this */
 
       /* FIXME, deprecate this behaviour, it is very dangerous.
-       * the prefered way of sending EOS downstream is by sending
+       * the preferred way of sending EOS downstream is by sending
        * the EOS event to the element */
       if (!basesrc->priv->last_sent_eos) {
         GST_DEBUG_OBJECT (basesrc, "Sending EOS event");

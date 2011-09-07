@@ -9,7 +9,7 @@ clock and typically happens in the sinks when they synchronize buffers
 against the clock.
 
 The measurements result in QOS events that aim to adjust the datarate
-in one or more upstream elements. Two types of adjustements can be
+in one or more upstream elements. Two types of adjustments can be
 made:
 
   - short time "emergency" corrections based on latest observation
@@ -350,7 +350,7 @@ in audio are more disturbing than dropping video frames. Also video requires in
 general more processing than audio.
 
 Normally there is a threshold for when buffers get dropped in a video sink. Frames
-that arrive 20 milliseconds late are still rendered as it is not noticable for
+that arrive 20 milliseconds late are still rendered as it is not noticeable for
 the human eye.
 
 A QoS message is posted whenever a (part of a) buffer is dropped.

@@ -25,7 +25,7 @@ the following things:
 Some transform elements can operate in different modes:
 
  - passthrough (no changes are done on the input buffers)
- - in-place (changes made directly to the incomming buffers without requiring a
+ - in-place (changes made directly to the incoming buffers without requiring a
    copy or new buffer allocation)
  - metadata changes only 
  
@@ -266,7 +266,7 @@ state. We can identify these steady states:
 	input buffer is transformed into the output buffer. The flow is exactly
 	the same as the case with the same-caps negotiation. (DCC)
  
-We can immeditatly observe that the copy transform states will need to
+We can immediately observe that the copy transform states will need to
 allocate a buffer from a downstream element using pad-alloc. When the transform
 element is receiving a non-writable buffer in the in-place state, it will also
 need to perform a pad-alloc. There is no reason why the passthrough state would
@@ -300,7 +300,7 @@ generated in the chain function is handled above in the copy-transform and the
 in-place transform when the input buffer is not writable or the input buffer
 size is smaller than the output size.
 
-We are left with the last case (proxy an incomming pad-alloc or not). We have 2
+We are left with the last case (proxy an incoming pad-alloc or not). We have 2
 possibilities here:
 
    - pad-alloc is called with the same caps as are currently being handled by
@@ -413,7 +413,7 @@ retrieve the size. There are two functions:
     
     Given a caps and a size on one pad, and a caps on the other pad, calculate
     the size of the other buffer. This function is able to perform all size
-    transforms and is the prefered method of transforming a size.
+    transforms and is the preferred method of transforming a size.
 
   - get_unit_size()
 

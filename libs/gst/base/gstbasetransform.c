@@ -1546,7 +1546,7 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
        * it needs to revisit the decision about whether to proxy or not: */
       gst_caps_replace (&priv->sink_alloc, NULL);
       /* if we got a buffer of the wrong size, discard it now and make sure we
-       * allocate a propertly sized buffer later. */
+       * allocate a properly sized buffer later. */
       if (newsize != expsize) {
         if (in_buf != *out_buf)
           gst_buffer_unref (*out_buf);

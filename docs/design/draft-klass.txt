@@ -39,7 +39,7 @@ for wild (application specific) customisation.
 
    Categories are base on _intended usage_ of the element. Some elements
    might have other side-effects (especially for filers/effects). The purpose
-   is to list enough keywords so that applications can do meaningfull filtering,
+   is to list enough keywords so that applications can do meaningful filtering,
    not to completely describe the functionality, that is expressed in caps etc..
 
    * Source        : produces data

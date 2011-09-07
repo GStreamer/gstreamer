@@ -419,7 +419,7 @@ gst_caps_ref (GstCaps * caps)
  * gst_caps_unref:
  * @caps: (transfer full): the #GstCaps to unref
  *
- * Unref a #GstCaps and and free all its structures and the
+ * Unref a #GstCaps and free all its structures and the
  * structures' values when the refcount reaches 0.
  */
 void
@@ -707,7 +707,7 @@ gst_caps_remove_structure (GstCaps * caps, guint idx)
 
 /**
  * gst_caps_merge_structure:
- * @caps: the #GstCaps that will the the new structure
+ * @caps: the #GstCaps that will the new structure
  * @structure: (transfer full): the #GstStructure to merge
  *
  * Appends @structure to @caps if its not already expressed by @caps.  The
@@ -1497,8 +1497,8 @@ gst_caps_structure_subtract (GSList ** into, const GstStructure * minuend,
 
 /**
  * gst_caps_subtract:
- * @minuend: #GstCaps to substract from
- * @subtrahend: #GstCaps to substract
+ * @minuend: #GstCaps to subtract from
+ * @subtrahend: #GstCaps to subtract
  *
  * Subtracts the @subtrahend from the @minuend.
  * <note>This function does not work reliably if optional properties for caps

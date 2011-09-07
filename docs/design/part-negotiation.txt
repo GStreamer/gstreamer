@@ -42,12 +42,12 @@ The basics of negotiation are as follows:
    The core will automatically call the set_caps function for this purpose
    when it is installed on the sink or source pad.
 
- - When requesting a buffer from a bufferpool, the prefered type should
+ - When requesting a buffer from a bufferpool, the preferred type should
    be passed to the buffer allocation function. After receiving a buffer
    from a bufferpool, the datatype should be checked again.
 
  - A bufferpool allocation function should try to allocate a buffer of the
-   prefered type. If there is a good reason to choose another type, the
+   preferred type. If there is a good reason to choose another type, the
    alloc function should see if that other type is accepted by the other
    element, then allocate a buffer of that type and attach the type to the
    buffer before returning it.

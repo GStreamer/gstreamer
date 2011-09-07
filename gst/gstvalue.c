@@ -2295,7 +2295,7 @@ gst_string_unwrap (const gchar * s)
 
         read += 3;
       } else {
-        /* if we run into a \0 here, we definately won't get a quote later */
+        /* if we run into a \0 here, we definitely won't get a quote later */
         if (*read == 0)
           goto beach;
 
@@ -3542,7 +3542,7 @@ gst_value_union (GValue * dest, const GValue * value1, const GValue * value2)
  * gst_value_register_union_func:
  * @type1: a type to union
  * @type2: another type to union
- * @func: a function that implments creating a union between the two types
+ * @func: a function that implements creating a union between the two types
  *
  * Registers a union function that can create a union between #GValue items
  * of the type @type1 and @type2.
@@ -4374,7 +4374,7 @@ gst_value_compare_fraction (const GValue * value1, const GValue * value2)
  * @value: a GValue initialized to GST_TYPE_DATE
  * @date: the date to set the value to
  *
- * Sets the contents of @value to coorespond to @date.  The actual
+ * Sets the contents of @value to correspond to @date.  The actual
  * #GDate structure is copied before it is used.
  */
 void

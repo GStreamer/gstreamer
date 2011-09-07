@@ -98,7 +98,7 @@ GST_START_TEST (test_can_sink_any_caps)
 
 GST_END_TEST;
 
-/* test if the factory is compabible with some caps */
+/* test if the factory is compatible with some caps */
 GST_START_TEST (test_can_sink_all_caps)
 {
   GstElementFactory *factory;

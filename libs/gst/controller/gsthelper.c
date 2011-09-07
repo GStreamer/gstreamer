@@ -25,7 +25,7 @@
  * @short_description: #GObject convenience methods for using dynamic properties
  * @see_also: #GstController
  *
- * These methods allow to use some #GstController functionallity directly from
+ * These methods allow to use some #GstController functionality directly from
  * the #GObject class.
  */
 

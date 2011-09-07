@@ -54,7 +54,7 @@ aligned video) and pixel-aspect-ratio (default value being 1/1). Adding p-a-r
 was in this case an example of 2bII, whereas stride is 2bI. The reason for
 this is simple: adding pixel-aspect-ratio to some element and not to others
 could lead to misunderstanding size. However, this is not a regression,
-because not adding it alltogether would lead to the same misunderstanding.
+because not adding it altogether would lead to the same misunderstanding.
 In both cases, the result would be wrongly sized video. Therefore, there
 is no regression and there is a bugfix, so this is fine. Obviously, the
 optional property is in this case very specifically a temporary solution.

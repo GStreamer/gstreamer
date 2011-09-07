@@ -328,7 +328,7 @@ gst_capsfilter_prepare_buf (GstBaseTransform * trans, GstBuffer * input,
 
   if (GST_BUFFER_CAPS (input) != NULL) {
     /* Output buffer already has caps */
-    GST_LOG_OBJECT (trans, "Input buffer already has caps (implicitely fixed)");
+    GST_LOG_OBJECT (trans, "Input buffer already has caps (implicitly fixed)");
     /* FIXME : Move this behaviour to basetransform. The given caps are the ones
      * of the source pad, therefore our outgoing buffers should always have
      * those caps. */

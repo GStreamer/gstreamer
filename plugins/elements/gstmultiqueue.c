@@ -1304,7 +1304,7 @@ gst_multi_queue_loop (GstPad * pad)
     if (sq->last_time == GST_CLOCK_TIME_NONE || sq->last_time < next_time)
       sq->last_time = next_time;
     if (mq->high_time == GST_CLOCK_TIME_NONE || mq->high_time <= next_time) {
-      /* Wake up all non-linked pads now that we advanceed the high time */
+      /* Wake up all non-linked pads now that we advanced the high time */
       mq->high_time = next_time;
       wake_up_next_non_linked (mq);
     }
@@ -1357,7 +1357,7 @@ out_flushing:
  * gst_multi_queue_chain:
  *
  * This is similar to GstQueue's chain function, except:
- * _ we don't have leak behavioures,
+ * _ we don't have leak behaviours,
  * _ we push with a unique id (curid)
  */
 static GstFlowReturn

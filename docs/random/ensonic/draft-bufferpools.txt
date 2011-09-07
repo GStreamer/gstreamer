@@ -39,7 +39,7 @@ What is needed
 
 Elements that sink raw data buffers of usualy constant size would like to 
 maintain a bufferpool. These could be sinks or encoders. We need mechanims to
-select and dynamicaly update:
+select and dynamically update:
 
   - the bufferpool owners in a pipeline
   - the bufferpool sizes

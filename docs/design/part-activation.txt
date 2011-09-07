@@ -63,7 +63,7 @@ fakesrc:src's activation function is then called.
 
 Note that it does not make sense to set an activation function on a
 source pad. The peer of a source pad is downstream, meaning it should
-have been activated first. If it was activated in PULL mode, the the
+have been activated first. If it was activated in PULL mode, the
 source pad should have already had activate_pull() called on it, and
 thus needs no further activation. Otherwise it should be in PUSH mode,
 which is the choice of the default activation function.

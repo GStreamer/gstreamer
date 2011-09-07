@@ -580,7 +580,7 @@ gst_tee_buffer_alloc (GstPad * pad, guint64 offset, guint size,
 
     GST_OBJECT_LOCK (tee);
   }
-  /* either we failed to alloc on the the previous pad or we did not have a
+  /* either we failed to alloc on the previous pad or we did not have a
    * previous pad. */
   if (res == GST_FLOW_NOT_LINKED) {
     /* find a new pad to alloc a buffer on */

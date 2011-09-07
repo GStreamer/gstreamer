@@ -406,7 +406,7 @@ are already active, so it ignores them.
 Similarly in (4), activating D will cause the activation of all of the
 rest of the pads, in this order: C d c b a B A. Then when the state
 change gets to the other elements they are already active, and in fact
-data flow is already occuring.
+data flow is already occurring.
 
 So, from these scenarios, we can distill how ghost pad activation
 functions should work:

@@ -103,7 +103,7 @@ GST_MESSAGE_ELEMENT:
 GST_MESSAGE_SEGMENT_START:
 
   An element started playback of a new segment. This message is not forwarded
-  the the application but is used internally to schedule SEGMENT_DONE messages.
+  the application but is used internally to schedule SEGMENT_DONE messages.
 
 GST_MESSAGE_SEGMENT_DONE:
 

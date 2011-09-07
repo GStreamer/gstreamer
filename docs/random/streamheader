@@ -2,7 +2,7 @@ A lot of data streams need a few initial buffers to make sense of the
 data stream.  With these initial buffers, it can pick up at any point in
 the rest of the data stream.
 
-Exampes:
+Examples:
 - Vorbis and Theora have three initial Ogg packets
 - MPEG4 has codec data
 - GDP protocol serializes the initial new_segment event and the initial caps

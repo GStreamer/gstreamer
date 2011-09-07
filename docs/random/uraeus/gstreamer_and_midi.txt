@@ -234,7 +234,7 @@ otherwise it can stay in individial projects.
 On using dparams for MIDI
 -------------------------
 
-You might might want to look into using dparams if:
+You might want to look into using dparams if:
 
 - you wanted your control parameters to change at a higher rate thanyour buffer
   rate (think zipper noise and sample-granularity-interpolation)

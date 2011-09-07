@@ -163,7 +163,7 @@ Issues
 
 When an EOS event has passed a pad and the pad is set to blocked, the block will
 never happen because no data is going to flow anymore. One possibility is to
-keep track of the pad's EOS state and make the block succeed immediatly. This is
+keep track of the pad's EOS state and make the block succeed immediately. This is
 not yet implemenented.
 
 When dynamically reconnecting pads, some events (like NEWSEGMENT, EOS,

@@ -3,7 +3,7 @@ Clocks
 
 The GstClock returns a monotonically increasing time with the method 
 _get_time(). Its accuracy and base time depends on the specific clock 
-implementation but time is always expessed in nanoseconds. Since the
+implementation but time is always expressed in nanoseconds. Since the
 baseline of the clock is undefined, the clock time returned is not
 meaningful in itself, what matters are the deltas between two clock
 times.

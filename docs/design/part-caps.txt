@@ -15,6 +15,6 @@ produce (see part-pads.txt and part-negotiation.txt).
 Caps are also attached to buffers to describe to content of the data
 pointed to be the buffer.
 
-Various methods exist to work with the media types such as substracting
+Various methods exist to work with the media types such as subtracting
 or intersecting.
 

@@ -163,7 +163,7 @@ GST_START_TEST (test_seeking)
           gst_event_new_new_segment (TRUE, 1.0, GST_FORMAT_BYTES, 8800, -1,
               0))) {
     GST_LOG ("seek ok");
-    /* make sure that that new position is reported immediately */
+    /* make sure that new position is reported immediately */
     CHECK_QUERY_POSITION (filesink, GST_FORMAT_BYTES, 8800);
     PUSH_BYTES (1);
     CHECK_QUERY_POSITION (filesink, GST_FORMAT_BYTES, 8801);

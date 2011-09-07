@@ -82,12 +82,12 @@ case 3)
   the eos handler returns false because both queues return false on the
   eos request. the parent removes fakesrc as an EOS provider.
 
-  queue1 and queue2 were responisble for the EOS delay and so they get
+  queue1 and queue2 were responsible for the EOS delay and so they get
   added to the bin as possible EOS providers.
 
   after the queues have sent out their last buffer, they calls eos on their
   src pads.
-  the parent allready has the two queues in the EOS provider list so they dont
+  the parent already has the two queues in the EOS provider list so they dont
   get added twice.
   the two queues perform gst_pad_eos () on their pads when the queue is empty,
   the parent removes the EOS providers from its list, when the list is empty,
@@ -122,12 +122,12 @@ case 4)
   the eos handler returns false because queue2 returns false on the
   eos request. the parent removes fakesrc as an EOS provider.
 
-  queue2 was responisble for the EOS delay and so it gets added to the bin 
+  queue2 was responsible for the EOS delay and so it gets added to the bin
   as a possible EOS provider.
 
   after the queue2 has sent its last buffer, it performs gst_pad_eos on its
   src pad.
-  the parent allready has the queue2 in the list of EOS providers so it does not
+  the parent already has the queue2 in the list of EOS providers so it does not
   get added twice.
   queue2 finally fires the EOS signal and the parent removes the EOS provider 
   from its list, when the list is empty, the parent fires EOS.

@@ -5,7 +5,7 @@ This draft document describes a possible design for arbitrary per-buffer
 metadata.
 
 The proposed changes in this document are not ABI/API compatible with the 0.10
-version of GStreamer and should thus only be considered for upcomming unstable
+version of GStreamer and should thus only be considered for upcoming unstable
 versions.
 
 Buffer metadata typically includes properties that give more information about

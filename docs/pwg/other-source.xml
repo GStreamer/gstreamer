@@ -58,7 +58,7 @@ gst_my_source_get (GstPad *pad)
       Those will continuously describe the current state of the stream.
       Query functions can be used to get stream properties such as current
       position and length. This can be used by fellow elements to convert
-      this same value into a different unit, or by appliations to provide
+      this same value into a different unit, or by applications to provide
       information about the length/position of the stream to the user.
       Conversion functions are used to convert such values from one unit
       to another. Lastly, events are mostly used to seek to positions

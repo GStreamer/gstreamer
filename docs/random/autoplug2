@@ -43,7 +43,7 @@ provided by various plugins.
 
 We will create a little pipeline to detect the media type by connecting
 a disksrc element to a typefind element. The typefind element will 
-repeadedly call all registered typefind functions with the buffer it 
+repeatedly call all registered typefind functions with the buffer it
 receives on its sink pad. when a typefind function returns a non NULL
 GstCaps*, that caps is set to the sink pad of the typefind element and
 a signal is emitted to notify the app.
@@ -195,7 +195,7 @@ for the second sink the following is needed:
 
 Note that for the audio connection the element list "mpeg1parse, mp3parse,
 mpg123" would also connect the srccaps to the audiosink caps. Since the
-"mpeg1parse, mad" list is shorter, it it always prefered by the autoplugger.
+"mpeg1parse, mad" list is shorter, it it always preferred by the autoplugger.
 
 We now have two lists of elementfactories.
 

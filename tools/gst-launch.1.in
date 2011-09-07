@@ -216,7 +216,7 @@ A pipeline can be controlled by signals. SIGUSR2 will stop the pipeline
 By default, the pipeline will start in the playing state.
 .br
 There are currently no signals defined to go into the ready or pause
-(GST_STATE_READY and GST_STATE_PAUSED) state explicitely.
+(GST_STATE_READY and GST_STATE_PAUSED) state explicitly.
 
 .SH "PIPELINE EXAMPLES"
 

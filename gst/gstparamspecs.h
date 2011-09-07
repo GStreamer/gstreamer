@@ -1,4 +1,4 @@
-/* GStreamer - GParamSpecs for for some of our types
+/* GStreamer - GParamSpecs for some of our types
  * Copyright (C) 2007 Tim-Philipp Müller  <tim centricular net>
  *
  * This library is free software; you can redistribute it and/or

@@ -40,7 +40,7 @@ A three step process:
   There is not much useful information we can give about how to resolve this 
   issue. It is possible to use the first N bytes of the data to determine the
   type (and needed plugin) on the server. We don't explore this option in this
-  document yet, but the proposal is flexible enough to accomodate this in the
+  document yet, but the proposal is flexible enough to accommodate this in the
   future should the need arise.
 
  - missing demuxer

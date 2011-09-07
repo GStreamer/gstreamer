@@ -193,7 +193,7 @@ of the pads negotiation functions returns the caps unmodified.
 
 The element can also return a NULL pointer if it has run out of
 options for the caps structure. When this happens, both pads are set
-the the NULL caps again and the pad connnection is broken.
+the NULL caps again and the pad connnection is broken.
 
 The negotiation process is stopped after a fixed number of tries,
 when the counter has reached some limit. This limit is typically

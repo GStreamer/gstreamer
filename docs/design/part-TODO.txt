@@ -27,7 +27,7 @@ API/ABI
 - Optimize negotiation. We currently do a get_caps() call when we link pads,
   which could potentially generate a huge list of caps and all their
   combinations, we need to avoid generating these huge lists by generating them
-  incrementaly when needed. We can do this with a gst_pad_iterate_caps() call.
+  incrementally when needed. We can do this with a gst_pad_iterate_caps() call.
   We also need to incrementally return intersections etc, for this.
 
 - Elements in a bin have no clue about the final state of the parent element

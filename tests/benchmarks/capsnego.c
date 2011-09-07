@@ -19,7 +19,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-/* this benchmark recursively builds a pipeline and meassures the time to go
+/* this benchmark recursively builds a pipeline and measures the time to go
  * from ready to paused.
  * The graph size and type can be controlled with a few commandline args:
  *  -d depth: is the depth of the tree
@@ -260,7 +260,7 @@ main (gint argc, gchar * argv[])
   g_print ("%" GST_TIME_FORMAT " built pipeline with %d elements\n",
       GST_TIME_ARGS (end - start), GST_BIN_NUMCHILDREN (bin));
 
-  /* meassure */
+  /* measure */
   g_print ("starting pipeline\n");
   gst_element_set_state (GST_ELEMENT (bin), GST_STATE_READY);
   GST_DEBUG_BIN_TO_DOT_FILE (bin, GST_DEBUG_GRAPH_SHOW_MEDIA_TYPE, "capsnego");

@@ -179,7 +179,7 @@ function returns a GstElementStateReturn.
 
    * If the element aborts the ASYNC state change due to an error within the 
      specified timeout, this function returns FAILURE with the state set to last
-     successfull state and pending set to the last attempt. The element should 
+     successful state and pending set to the last attempt. The element should
      also post an error message on the bus with more information about the problem.
 
 
@@ -201,7 +201,7 @@ error.
 If all the children return SUCCESS, the function returns SUCCESS as well. 
 
 If one of the children returns FAILURE, the function returns FAILURE as well. In
-this state it is possible that some elements successfuly changed state. The 
+this state it is possible that some elements successfully changed state. The
 application can check which elements have a changed state, which were in error
 and which were not affected by iterating the elements and calling _get_state()
 on the elements.

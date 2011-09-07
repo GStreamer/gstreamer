@@ -1232,7 +1232,7 @@ gst_poll_wait (GstPoll * set, GstClockTime timeout)
   if (G_UNLIKELY (old_waiting > 0 && !is_timer))
     goto already_waiting;
 
-  /* flushing, exit immediatly */
+  /* flushing, exit immediately */
   if (G_UNLIKELY (IS_FLUSHING (set)))
     goto flushing;
 

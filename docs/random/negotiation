@@ -155,7 +155,7 @@ Notes for converters:
      structure, perform whatever other setup is necessary for your
      element, and return GST_PAD_LINK_OK.
 
-   - Otherwise, you're not not using passthrough, and may need to
+   - Otherwise, you're not using passthrough, and may need to
      change the caps on the otherpad to match the given format.
 
    - If the otherpad is not negotiated (!gst_pad_is_negotiated()),

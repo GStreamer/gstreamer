@@ -930,7 +930,7 @@ GST_START_TEST (test_fake_eos)
   fail_unless (ret == GST_STATE_CHANGE_ASYNC, "no ASYNC state return");
 
   /* push buffer of 100 seconds, since it has a timestamp of 0, it should be
-   * rendered immediatly and the chain function should return immediatly */
+   * rendered immediately and the chain function should return immediately */
   buffer = gst_buffer_new_and_alloc (10);
   GST_BUFFER_TIMESTAMP (buffer) = 0;
   GST_BUFFER_DURATION (buffer) = 100 * GST_SECOND;
@@ -1085,7 +1085,7 @@ GST_START_TEST (test_async_done)
   fail_unless (position == 10 * GST_SECOND, "position is wrong");
 
   /* Since we are paused and the preroll queue has a length of 2, this function
-   * will return immediatly, the preroll handoff will be called and the stream
+   * will return immediately, the preroll handoff will be called and the stream
    * position should now be 10 seconds. */
   GST_DEBUG ("pushing first buffer");
   buffer = gst_buffer_new_and_alloc (10);
@@ -1223,7 +1223,7 @@ GST_START_TEST (test_async_done_eos)
   fail_unless (position == 10 * GST_SECOND, "position is wrong");
 
   /* Since we are paused and the preroll queue has a length of 1, this function
-   * will return immediatly. The EOS will complete the preroll and the  
+   * will return immediately. The EOS will complete the preroll and the
    * position should now be 10 seconds. */
   GST_DEBUG ("pushing EOS");
   event = gst_event_new_eos ();

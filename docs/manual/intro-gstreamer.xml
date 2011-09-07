@@ -23,7 +23,7 @@
     </para> 
 
     <para>
-      One of the the most obvious uses of &GStreamer; is using it to build
+      One of the most obvious uses of &GStreamer; is using it to build
       a media player. &GStreamer; already includes components for building a
       media player that can support a very wide variety of formats, including
       MP3, Ogg/Vorbis, MPEG-1/2, AVI, Quicktime, mod, and more. &GStreamer;,

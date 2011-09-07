@@ -113,7 +113,7 @@ The step event is created with the following fields in the structure:
      direction.
 
   "flush", G_TYPE_BOOLEAN
-     when flushing is TRUE, the step is performed immediatly: 
+     when flushing is TRUE, the step is performed immediately:
 
       - In the PAUSED state the pipeline loses the PAUSED state, the requested
         amount of data is skipped and the pipeline prerolls again when a
@@ -140,7 +140,7 @@ The step event is created with the following fields in the structure:
      Signal that this step operation is an intermediate step, part of a series
      of step operations. It is mostly interesting for stepping in the PAUSED state
      because the sink will only perform a preroll after a non-intermediate step
-     operation completes. Intermediate steps are usefull to flush out data from
+     operation completes. Intermediate steps are useful to flush out data from
      other sinks in order to not cause excessive queueing. In the PLAYING state
      the intermediate flag has no visual effect. In all states, the intermediate
      flag is passed to the corresponding GST_MESSAGE_STEP_DONE.

@@ -1764,7 +1764,7 @@ gst_plugin_ext_dep_equals (GstPluginDep * dep, const gchar ** env_vars,
 /**
  * gst_plugin_add_dependency:
  * @plugin: a #GstPlugin
- * @env_vars: NULL-terminated array of environent variables affecting the
+ * @env_vars: NULL-terminated array of environment variables affecting the
  *     feature set of the plugin (e.g. an environment variable containing
  *     paths where to look for additional modules/plugins of a library),
  *     or NULL. Environment variable names may be followed by a path component
@@ -1837,7 +1837,7 @@ gst_plugin_add_dependency (GstPlugin * plugin, const gchar ** env_vars,
 /**
  * gst_plugin_add_dependency_simple:
  * @plugin: the #GstPlugin
- * @env_vars: one or more environent variables (separated by ':', ';' or ','),
+ * @env_vars: one or more environment variables (separated by ':', ';' or ','),
  *      or NULL. Environment variable names may be followed by a path component
  *      which will be added to the content of the environment variable, e.g.
  *      "HOME/.mystuff/plugins:MYSTUFF_PLUGINS_PATH"

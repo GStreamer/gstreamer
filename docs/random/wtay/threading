@@ -323,7 +323,7 @@ Fixing Threading
      
      When performing a state change on an element that returns ASYNC on one of
      the state changes, ASYNC is returned and you can only proceed to the next
-     state change change when this ASYNC state change completed. Use the
+     state change when this ASYNC state change completed. Use the
      gst_element_get_state function to know when the state change completed.
      An example of this behaviour is setting a videosink to PLAYING, it will
      return ASYNC in the state change from READY->PAUSED. You can only set

@@ -140,7 +140,7 @@ PLATFORMS
 - MacOSX is reported to work; specific audio and video sinks have been written
 - Windows support is experimental but improving.  Output sinks have been
   written but are not yet included in the code. We support
-  - MSys/MingW builds
+  - MSys/MinGW builds
   - Microsoft Visual Studio 6 builds (see win32/README.txt)
 
 INSTALLING FROM PACKAGES

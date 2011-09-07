@@ -26,7 +26,7 @@ unless they're 1/2^n, and even then it's significantly heavier (you'd have
 to mask the top n bits of each color out).
 
 This SCREAMS for MMX, in case you haven't figured it out yet.
-Unfortunatley, MMX is only directly useful for the scalar matrix, unless
+Unfortunately, MMX is only directly useful for the scalar matrix, unless
 you do a trick where all the pixels in that fit in 64 bits (8 8bit, 4
 16bit, or 2 32bit) are always moved in a group.  This is very possible,
 and might be a significant perf increase by being able to use MMX all the

@@ -162,7 +162,7 @@ As with option2, a global plan will be built. At runtime the src pads
 will actually specify the capabilities they need for any element that
 wants to be connected to its source pads.
 
-In this case we specifiy the capabilities for all the sink pads of an
+In this case we specify the capabilities for all the sink pads of an
 element at create time. The capabilities of the src pads would only
 become available when data has been processed by the element.
 

@@ -505,7 +505,7 @@ GST_BOILERPLATE_FULL (type, type_as_function, parent_type,              \
 					  _GST_PUT (data, 0,  8,  0, num); \
 					} while (0)
 
-/* Float endianess conversion macros */
+/* Float endianness conversion macros */
 
 /* FIXME: Remove this once we depend on a GLib version with this */
 #ifndef GFLOAT_FROM_LE

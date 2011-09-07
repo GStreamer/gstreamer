@@ -2128,7 +2128,7 @@ gst_element_get_state_func (GstElement * element,
   if (ret == GST_STATE_CHANGE_FAILURE)
     goto done;
 
-  /* we got no_preroll, report immediatly */
+  /* we got no_preroll, report immediately */
   if (ret == GST_STATE_CHANGE_NO_PREROLL)
     goto done;
 

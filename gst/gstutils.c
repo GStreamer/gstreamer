@@ -485,7 +485,7 @@ _gst_util_uint64_scale (guint64 val, guint64 num, guint64 denom,
   if (G_UNLIKELY (num == denom))
     return val;
 
-  /* on 64bits we always use a full 128bits multipy/division */
+  /* on 64bits we always use a full 128bits multiply/division */
 #if !defined (__x86_64__) && !defined (HAVE_UINT128_T)
   /* denom is low --> try to use 96 bit muldiv */
   if (G_LIKELY (denom <= G_MAXUINT32)) {
@@ -829,7 +829,7 @@ gst_print_element_args (GString * buf, gint indent, GstElement * element)
  * @element: (transfer none): a #GstElement to create pads for
  *
  * Creates a pad for each pad template that is always available.
- * This function is only useful during object intialization of
+ * This function is only useful during object initialization of
  * subclasses of #GstElement.
  */
 void
@@ -2045,7 +2045,7 @@ gst_element_link_pads_filtered (GstElement * src, const gchar * srcpadname,
  * Links @src to @dest. The link must be from source to
  * destination; the other direction will not be tried. The function looks for
  * existing pads that aren't linked yet. It will request new pads if necessary.
- * Such pads need to be released manualy when unlinking.
+ * Such pads need to be released manually when unlinking.
  * If multiple links are possible, only one is established.
  *
  * Make sure you have added your elements to a bin or pipeline with
@@ -2166,7 +2166,7 @@ gst_element_unlink_pads (GstElement * src, const gchar * srcpadname,
     goto free_src;
   }
 
-  /* we're satisified they can be unlinked, let's do it */
+  /* we're satisfied they can be unlinked, let's do it */
   gst_pad_unlink (srcpad, destpad);
 
   if (destrequest)
@@ -2956,7 +2956,7 @@ setcaps_fold_func (GstPad * pad, GValue * ret, SetCapsFoldData * data)
  * same element as @pad.  If gst_pad_set_caps() fails on any pad,
  * the proxy setcaps fails. May be used only during negotiation.
  *
- * Returns: TRUE if sucessful
+ * Returns: TRUE if successful
  */
 gboolean
 gst_pad_proxy_setcaps (GstPad * pad, GstCaps * caps)
@@ -3854,7 +3854,7 @@ gst_parse_bin_from_description_full (const gchar * bin_description,
  * @base_init: Location of the base initialization function (optional).
  * @base_finalize: Location of the base finalization function (optional).
  * @class_init: Location of the class initialization function for class types
- *   Location of the default vtable inititalization function for interface
+ *   Location of the default vtable initialization function for interface
  *   types. (optional)
  * @class_finalize: Location of the class finalization function for class types.
  *   Location of the default vtable finalization function for interface types.
@@ -3918,7 +3918,7 @@ gst_type_register_static_full (GType parent_type,
 /**
  * gst_util_get_timestamp:
  *
- * Get a timestamp as GstClockTime to be used for interval meassurements.
+ * Get a timestamp as GstClockTime to be used for interval measurements.
  * The timestamp should not be interpreted in any other way.
  *
  * Returns: the timestamp

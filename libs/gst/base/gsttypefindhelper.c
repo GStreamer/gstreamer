@@ -150,7 +150,7 @@ helper_find_peek (gpointer data, gint64 offset, guint size)
   buf_size = GST_BUFFER_SIZE (buffer);
 
   if ((buf_offset != -1 && buf_offset != offset) || buf_size < size) {
-    GST_DEBUG ("droping short buffer: %" G_GUINT64_FORMAT "-%" G_GUINT64_FORMAT
+    GST_DEBUG ("dropping short buffer: %" G_GUINT64_FORMAT "-%" G_GUINT64_FORMAT
         " instead of %" G_GUINT64_FORMAT "-%" G_GUINT64_FORMAT,
         buf_offset, buf_offset + buf_size - 1, offset, offset + size - 1);
     gst_buffer_unref (buffer);
@@ -191,7 +191,7 @@ helper_find_suggest (gpointer data, GstTypeFindProbability probability,
   GstTypeFindHelper *helper = (GstTypeFindHelper *) data;
 
   GST_LOG_OBJECT (helper->obj,
-      "'%s' called called suggest (%u, %" GST_PTR_FORMAT ")",
+      "'%s' called suggest (%u, %" GST_PTR_FORMAT ")",
       GST_PLUGIN_FEATURE_NAME (helper->factory), probability, caps);
 
   if (probability > helper->best_probability) {
@@ -208,7 +208,7 @@ helper_find_get_length (gpointer data)
 {
   GstTypeFindHelper *helper = (GstTypeFindHelper *) data;
 
-  GST_LOG_OBJECT (helper->obj, "'%s' called called get_length, returning %"
+  GST_LOG_OBJECT (helper->obj, "'%s' called get_length, returning %"
       G_GUINT64_FORMAT, GST_PLUGIN_FEATURE_NAME (helper->factory),
       helper->size);
 
@@ -465,7 +465,7 @@ buf_helper_find_suggest (gpointer data, GstTypeFindProbability probability,
   GstTypeFindBufHelper *helper = (GstTypeFindBufHelper *) data;
 
   GST_LOG_OBJECT (helper->obj,
-      "'%s' called called suggest (%u, %" GST_PTR_FORMAT ")",
+      "'%s' called suggest (%u, %" GST_PTR_FORMAT ")",
       GST_PLUGIN_FEATURE_NAME (helper->factory), probability, caps);
 
   /* Note: not >= as we call typefinders in order of rank, highest first */

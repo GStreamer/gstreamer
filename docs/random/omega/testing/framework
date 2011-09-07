@@ -26,7 +26,7 @@ preconditions:
 	nothing
 action:
 	curparent = gst_element_get_parent(object);
-validaton:
+validation:
 	curparent == object->parent
 	curparent == parent
 cleanup:

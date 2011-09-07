@@ -1859,7 +1859,7 @@ clear_queue (GQueue * queue)
 }
 
 /* set all degrees to 0. Elements marked as a sink are
- * added to the queue immediatly. Since we only look at the SINK flag of the
+ * added to the queue immediately. Since we only look at the SINK flag of the
  * element, it is possible that we add non-sinks to the queue. These will be
  * removed from the queue again when we can prove that it provides data for some
  * other element. */
@@ -2481,7 +2481,7 @@ gst_bin_change_state_func (GstElement * element, GstStateChange transition)
       break;
   }
 
-  /* this flag is used to make the async state changes return immediatly. We
+  /* this flag is used to make the async state changes return immediately. We
    * don't want them to interfere with this state change */
   GST_OBJECT_LOCK (bin);
   bin->polling = TRUE;
@@ -2633,7 +2633,7 @@ done:
     /* nothing found, remove all old ASYNC_DONE messages. This can happen when
      * all the elements commited their state while we were doing the state
      * change. We will still return ASYNC for consistency but we commit the
-     * state already so that a _get_state() will return immediatly. */
+     * state already so that a _get_state() will return immediately. */
     bin_remove_messages (bin, NULL, GST_MESSAGE_ASYNC_DONE);
 
     GST_DEBUG_OBJECT (bin, "async elements commited");
@@ -2741,7 +2741,7 @@ gst_bin_continue_func (BinContinueData * data)
   GST_OBJECT_LOCK (bin);
 
   /* if a new state change happened after this thread was scheduled, we return
-   * immediatly. */
+   * immediately. */
   if (data->cookie != GST_ELEMENT_CAST (bin)->state_cookie)
     goto interrupted;
 

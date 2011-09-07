@@ -81,7 +81,7 @@ group.
 Metadata
 ~~~~~~~~
 
-Each of the buffers inside the bufferlist can have metadata assiociated with it.
+Each of the buffers inside the bufferlist can have metadata associated with it.
 
 The metadata of the bufferlist is always the metadata of the first buffer of the
 first group in the bufferlist. This means that:

@@ -53,7 +53,7 @@
       <function>gst_clock_get_time ()</function>. The clock-time does not
       need to start at 0. The pipeline, which contains the global clock that
       all elements in the pipeline will use, in addition has a <quote>base
-      time</quote>, which is the clock time at the the point where the
+      time</quote>, which is the clock time at the point where the
       pipeline went to the PLAYING state. Each element can subtract the
       <quote>base time</quote> from the clock-time to know the current
       running time.

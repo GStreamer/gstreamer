@@ -272,7 +272,7 @@
       <title>The Basic Types</title>
       <para>
         &GStreamer; already supports many basic media types. Following is a
-        table of a few of the the basic types used for buffers in
+        table of a few of the basic types used for buffers in
         &GStreamer;. The table contains the name ("mime type") and a
         description of the type, the properties associated with the type, and
         the meaning of each property. A full list of supported types is

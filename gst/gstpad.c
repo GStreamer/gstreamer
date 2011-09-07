@@ -2289,7 +2289,7 @@ done:
 }
 
 /* FIXME-0.11: what about making this the default and using
- * gst_caps_make_writable() explicitely where needed
+ * gst_caps_make_writable() explicitly where needed
  */
 /**
  * gst_pad_get_caps_reffed:
@@ -2348,7 +2348,7 @@ gst_pad_get_caps (GstPad * pad)
 }
 
 /* FIXME-0.11: what about making this the default and using
- * gst_caps_make_writable() explicitely where needed
+ * gst_caps_make_writable() explicitly where needed
  */
 /**
  * gst_pad_peer_get_caps_reffed:
@@ -3423,7 +3423,7 @@ gst_pad_get_internal_links_default (GstPad * pad)
 
     it = gst_pad_iterate_internal_links (pad);
     /* loop over the iterator and put all elements into a list, we also
-     * immediatly unref them, which is bad. */
+     * immediately unref them, which is bad. */
     do {
       ires = gst_iterator_foreach (it, (GFunc) add_unref_pad_to_list, &res);
       switch (ires) {
@@ -3616,7 +3616,7 @@ no_iter:
  * pads that are internally linked to @pad, only one will be sent an event.
  * Multi-sinkpad elements should implement custom event handlers.
  *
- * Returns: TRUE if the event was sent succesfully.
+ * Returns: TRUE if the event was sent successfully.
  */
 gboolean
 gst_pad_event_default (GstPad * pad, GstEvent * event)
@@ -3810,7 +3810,7 @@ no_peer:
  * @pad, only one will be sent the query.
  * Multi-sinkpad elements should implement custom query handlers.
  *
- * Returns: TRUE if the query was performed succesfully.
+ * Returns: TRUE if the query was performed successfully.
  */
 gboolean
 gst_pad_query_default (GstPad * pad, GstQuery * query)
@@ -4043,7 +4043,7 @@ handle_pad_block (GstPad * pad)
       pad->abidata.ABI.block_callback_called = TRUE;
       if (callback) {
         /* there is a callback installed, call it. We release the
-         * lock so that the callback can do something usefull with the
+         * lock so that the callback can do something useful with the
          * pad */
         user_data = pad->block_data;
         GST_OBJECT_UNLOCK (pad);
@@ -5015,7 +5015,7 @@ not_negotiated:
  *     returns #GST_FLOW_ERROR if %NULL.
  *
  * When @pad is flushing this function returns #GST_FLOW_WRONG_STATE
- * immediatly and @buffer is %NULL.
+ * immediately and @buffer is %NULL.
  *
  * Calls the getrange function of @pad, see #GstPadGetRangeFunction for a
  * description of a getrange function. If @pad has no getrange function
@@ -5376,7 +5376,7 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
           GST_EVENT_TYPE_NAME (event));
 
       /* make this a little faster, no point in grabbing the lock
-       * if the pad is allready flushing. */
+       * if the pad is already flushing. */
       if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
         goto flushing;
 
