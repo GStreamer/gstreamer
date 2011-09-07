@@ -310,6 +310,7 @@ gst_hls_demux_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       demux->cancelled = TRUE;
       gst_hls_demux_stop (demux);
+      gst_task_join (demux->task);
       gst_hls_demux_reset (demux, FALSE);
       break;
     default:
@@ -665,7 +666,7 @@ gst_hls_demux_stop (GstHLSDemux * demux)
   g_mutex_lock (demux->fetcher_lock);
   gst_hls_demux_stop_fetcher_locked (demux, TRUE);
   g_mutex_unlock (demux->fetcher_lock);
-  gst_task_join (demux->task);
+  gst_task_stop (demux->task);
   gst_hls_demux_stop_update (demux);
 }
 
