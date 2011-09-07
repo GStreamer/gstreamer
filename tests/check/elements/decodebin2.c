@@ -444,6 +444,14 @@ gst_fake_h264_parser_set_caps (GstBaseTransform * trans, GstCaps * incaps,
   return TRUE;
 }
 
+static GstFlowReturn
+gst_fake_h264_parser_prepare_output_buffer (GstBaseTransform * trans,
+    GstBuffer * inbuf, gint size, GstCaps * caps, GstBuffer ** outbuf)
+{
+  *outbuf = gst_buffer_ref (inbuf);
+  return GST_FLOW_OK;
+}
+
 static void
 gst_fake_h264_parser_class_init (GstFakeH264ParserClass * klass)
 {
@@ -453,6 +461,8 @@ gst_fake_h264_parser_class_init (GstFakeH264ParserClass * klass)
   basetrans_class->transform_caps = gst_fake_h264_parser_transform_caps;
   basetrans_class->get_unit_size = gst_fake_h264_parser_get_unit_size;
   basetrans_class->set_caps = gst_fake_h264_parser_set_caps;
+  basetrans_class->prepare_output_buffer =
+      gst_fake_h264_parser_prepare_output_buffer;
 }
 
 static void
@@ -537,6 +547,14 @@ gst_fake_h264_decoder_set_caps (GstBaseTransform * trans, GstCaps * incaps,
   return TRUE;
 }
 
+static GstFlowReturn
+gst_fake_h264_decoder_prepare_output_buffer (GstBaseTransform * trans,
+    GstBuffer * inbuf, gint size, GstCaps * caps, GstBuffer ** outbuf)
+{
+  *outbuf = gst_buffer_ref (inbuf);
+  return GST_FLOW_OK;
+}
+
 static void
 gst_fake_h264_decoder_class_init (GstFakeH264DecoderClass * klass)
 {
@@ -546,6 +564,8 @@ gst_fake_h264_decoder_class_init (GstFakeH264DecoderClass * klass)
   basetrans_class->transform_caps = gst_fake_h264_decoder_transform_caps;
   basetrans_class->get_unit_size = gst_fake_h264_decoder_get_unit_size;
   basetrans_class->set_caps = gst_fake_h264_decoder_set_caps;
+  basetrans_class->prepare_output_buffer =
+      gst_fake_h264_decoder_prepare_output_buffer;
 }
 
 static void
