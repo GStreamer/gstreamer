@@ -4105,6 +4105,8 @@ gst_rtspsrc_loop_send_cmd (GstRTSPSrc * src, gint cmd, gboolean flush)
   /* start new request */
   gst_rtspsrc_loop_start_cmd (src, cmd);
 
+  GST_DEBUG_OBJECT (src, "sending cmd %d", cmd);
+
   GST_OBJECT_LOCK (src);
   old = src->loop_cmd;
   if (old != CMD_WAIT) {
@@ -6454,10 +6456,6 @@ gst_rtspsrc_thread (GstRTSPSrc * src)
 
   switch (cmd) {
     case CMD_OPEN:
-      src->cur_protocols = src->protocols;
-      /* first attempt, don't ignore timeouts */
-      src->ignore_timeout = FALSE;
-      src->open_error = FALSE;
       ret = gst_rtspsrc_open (src, TRUE);
       break;
     case CMD_PLAY:
@@ -6577,6 +6575,11 @@ gst_rtspsrc_change_state (GstElement * element, GstStateChange transition)
         goto start_failed;
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      /* init some state */
+      rtspsrc->cur_protocols = rtspsrc->protocols;
+      /* first attempt, don't ignore timeouts */
+      rtspsrc->ignore_timeout = FALSE;
+      rtspsrc->open_error = FALSE;
       gst_rtspsrc_loop_send_cmd (rtspsrc, CMD_OPEN, FALSE);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
