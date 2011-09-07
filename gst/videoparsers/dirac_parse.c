@@ -165,7 +165,7 @@ dirac_sequence_header_parse (DiracSequenceHeader * header,
 
 /* standard stuff */
 
-static DiracSequenceHeader schro_video_formats[] = {
+static const DiracSequenceHeader schro_video_formats[] = {
   {0, 0, 0, 0,
         0,                      /* custom */
         640, 480, SCHRO_CHROMA_420,
@@ -323,7 +323,7 @@ struct _SchroFrameRate
   int denominator;
 };
 
-static SchroFrameRate schro_frame_rates[] = {
+static const SchroFrameRate schro_frame_rates[] = {
   {0, 0},
   {24000, 1001},
   {24, 1},
