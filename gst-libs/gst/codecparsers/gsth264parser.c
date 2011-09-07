@@ -1127,7 +1127,7 @@ gst_h264_nal_parser_new (void)
 {
   GstH264NalParser *nalparser;
 
-  nalparser = g_malloc0 (sizeof (GstH264NalParser));
+  nalparser = g_slice_new0 (GstH264NalParser);
   GST_DEBUG_CATEGORY_INIT (h264_parser_debug, "codecparsers_h264", 0,
       "h264 parser library");
 
