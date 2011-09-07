@@ -657,7 +657,8 @@ gst_base_transform_getcaps (GstPad * pad)
 {
   GstBaseTransform *trans;
   GstPad *otherpad;
-  GstCaps *peercaps, *caps;
+  const GstCaps *templ;
+  GstCaps *peercaps, *caps, *temp;
 
   trans = GST_BASE_TRANSFORM (gst_pad_get_parent (pad));
 
@@ -666,9 +667,6 @@ gst_base_transform_getcaps (GstPad * pad)
   /* we can do what the peer can */
   peercaps = gst_pad_peer_get_caps_reffed (otherpad);
   if (peercaps) {
-    GstCaps *temp;
-    const GstCaps *templ;
-
     GST_DEBUG_OBJECT (pad, "peer caps  %" GST_PTR_FORMAT, peercaps);
 
     /* filtered against our padtemplate on the other side */
@@ -676,24 +674,30 @@ gst_base_transform_getcaps (GstPad * pad)
     GST_DEBUG_OBJECT (pad, "our template  %" GST_PTR_FORMAT, templ);
     temp = gst_caps_intersect_full (peercaps, templ, GST_CAPS_INTERSECT_FIRST);
     GST_DEBUG_OBJECT (pad, "intersected %" GST_PTR_FORMAT, temp);
+  } else {
+    temp = gst_caps_copy (gst_pad_get_pad_template_caps (otherpad));
+    GST_DEBUG_OBJECT (pad, "no peer, using our template caps %" GST_PTR_FORMAT,
+        temp);
+  }
 
-    /* then see what we can transform this to */
-    caps = gst_base_transform_transform_caps (trans,
-        GST_PAD_DIRECTION (otherpad), temp);
-    GST_DEBUG_OBJECT (pad, "transformed  %" GST_PTR_FORMAT, caps);
-    gst_caps_unref (temp);
-    if (caps == NULL)
-      goto done;
+  /* then see what we can transform this to */
+  caps = gst_base_transform_transform_caps (trans,
+      GST_PAD_DIRECTION (otherpad), temp);
+  GST_DEBUG_OBJECT (pad, "transformed  %" GST_PTR_FORMAT, caps);
+  gst_caps_unref (temp);
+  if (caps == NULL)
+    goto done;
 
-    /* and filter against the template of this pad */
-    templ = gst_pad_get_pad_template_caps (pad);
-    GST_DEBUG_OBJECT (pad, "our template  %" GST_PTR_FORMAT, templ);
-    /* We keep the caps sorted like the returned caps */
-    temp = gst_caps_intersect_full (caps, templ, GST_CAPS_INTERSECT_FIRST);
-    GST_DEBUG_OBJECT (pad, "intersected %" GST_PTR_FORMAT, temp);
-    gst_caps_unref (caps);
-    caps = temp;
+  /* and filter against the template of this pad */
+  templ = gst_pad_get_pad_template_caps (pad);
+  GST_DEBUG_OBJECT (pad, "our template  %" GST_PTR_FORMAT, templ);
+  /* We keep the caps sorted like the returned caps */
+  temp = gst_caps_intersect_full (caps, templ, GST_CAPS_INTERSECT_FIRST);
+  GST_DEBUG_OBJECT (pad, "intersected %" GST_PTR_FORMAT, temp);
+  gst_caps_unref (caps);
+  caps = temp;
 
+  if (peercaps) {
     /* Now try if we can put the untransformed downstream caps first */
     temp = gst_caps_intersect_full (peercaps, caps, GST_CAPS_INTERSECT_FIRST);
     if (!gst_caps_is_empty (temp)) {
@@ -702,9 +706,6 @@ gst_base_transform_getcaps (GstPad * pad)
     } else {
       gst_caps_unref (temp);
     }
-  } else {
-    /* no peer or the peer can do anything, our padtemplate is enough then */
-    caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
   }
 
 done:
