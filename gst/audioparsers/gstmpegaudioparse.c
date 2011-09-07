@@ -76,14 +76,15 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("audio/mpeg, "
         "mpegversion = (int) 1, "
         "layer = (int) [ 1, 3 ], "
-        "rate = (int) [ 8000, 48000 ], channels = (int) [ 1, 2 ],"
-        "parsed=(boolean) true")
+        "mpegaudioversion = (int) [ 1, 3], "
+        "rate = (int) [ 8000, 48000 ], "
+        "channels = (int) [ 1, 2 ], " "parsed=(boolean) true")
     );
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/mpeg, mpegversion = (int) 1, parsed=(boolean)false")
+    GST_STATIC_CAPS ("audio/mpeg, mpegversion = (int) 1")
     );
 
 static void gst_mpeg_audio_parse_finalize (GObject * object);

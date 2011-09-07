@@ -144,16 +144,16 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-ac3, framed = (boolean) true, "
-        " channels = (int) [ 1, 6 ], rate = (int) [ 32000, 48000 ]; "
+        " channels = (int) [ 1, 6 ], rate = (int) [ 32000, 48000 ], "
+        " alignment = (string) { iec61937, frame}; "
         "audio/x-eac3, framed = (boolean) true, "
-        " channels = (int) [ 1, 6 ], rate = (int) [ 32000, 48000 ] "));
+        " channels = (int) [ 1, 6 ], rate = (int) [ 32000, 48000 ], "
+        " alignment = (string) { iec61937, frame}; "));
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-ac3, framed = (boolean) false; "
-        "audio/x-eac3, framed = (boolean) false; "
-        "audio/ac3, framed = (boolean) false "));
+    GST_STATIC_CAPS ("audio/x-ac3; " "audio/x-eac3; " "audio/ac3"));
 
 static void gst_ac3_parse_finalize (GObject * object);
 
