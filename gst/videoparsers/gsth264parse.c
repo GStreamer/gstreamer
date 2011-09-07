@@ -62,12 +62,14 @@ enum
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-h264, parsed = (boolean) false"));
+    GST_STATIC_CAPS ("video/x-h264"));
 
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-h264, parsed = (boolean) true"));
+    GST_STATIC_CAPS ("video/x-h264, parsed = (boolean) true, "
+        "stream-format=(string) { avc, byte-stream }, "
+        "alignment=(string) { au, nal }"));
 
 GST_BOILERPLATE (GstH264Parse, gst_h264_parse, GstBaseParse,
     GST_TYPE_BASE_PARSE);
