@@ -44,7 +44,7 @@
  * An existing pad of an element can be retrieved by name with
  * gst_element_get_static_pad(). A new dynamic pad can be created using
  * gst_element_request_pad() with a #GstPadTemplate or 
- * gst_element_get_request_pad() with the template name such as "src_%d".
+ * gst_element_get_request_pad() with the template name such as "src_\%d".
  * An iterator of all pads can be retrieved with gst_element_iterate_pads().
  *
  * Elements can be linked through their pads.
@@ -1050,7 +1050,7 @@ _gst_element_request_pad (GstElement * element, GstPadTemplate * templ,
  * @element: a #GstElement to find a request pad of.
  * @name: the name of the request #GstPad to retrieve.
  *
- * Retrieves a pad from the element by name (e.g. "src_%d"). This version only
+ * Retrieves a pad from the element by name (e.g. "src_\%d"). This version only
  * retrieves request pads. The pad should be released with
  * gst_element_release_request_pad().
  *
