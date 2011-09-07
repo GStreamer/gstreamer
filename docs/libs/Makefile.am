@@ -13,42 +13,16 @@ FORMATS=html
 html: html-build.stamp
 include $(top_srcdir)/common/upload-doc.mak
 
-# generated basefiles
-#basefiles = \
-#		$(DOC_MODULE).types \
-#		$(DOC_MODULE)-sections.txt \
-#		$(DOC_MODULE)-docs.sgml
-
-# ugly hack to make -unused.sgml work
-#unused-build.stamp:
-#	BUILDDIR=`pwd` && \
-#	cd $(srcdir)/tmpl && \
-#	ln -sf gstreamer-libs-unused.sgml \
-#		$$BUILDDIR/tmpl/gstreamer-libs-@GST_MAJORMINOR@-unused.sgml
-#	touch unused-build.stamp
-
-# these rules are added to create parallel docs using GST_MAJORMINOR
-#$(basefiles): gstreamer-libs-@GST_MAJORMINOR@%: gstreamer-libs%
-#	cp $< $@
-
-#CLEANFILES = $(basefiles)
-
 # The top-level SGML file. Change it if you want.
 DOC_MAIN_SGML_FILE=$(DOC_MODULE)-docs.sgml
 
-# The directory containing the source code. Relative to $(top_srcdir).
+# The directory containing the source code.
 # gtk-doc will search all .c & .h files beneath here for inline comments
 # documenting functions and macros.
 DOC_SOURCE_DIR=$(top_srcdir)/libs/gst
-DOC_BUILD_DIR=$(top_builddir)/libs/gst
 
 # Extra options to supply to gtkdoc-scan.
 SCAN_OPTIONS=--deprecated-guards="GST_DISABLE_DEPRECATED"
-
-# FIXME :
-# there's something wrong with gstreamer-sections.txt not being in the dist
-# maybe it doesn't resolve; we're adding it below for now
-#EXTRA_DIST = gstreamer.types.in gstreamer.hierarchy $(DOC_MODULE)-sections.txt gstreamer-sections.txt $(DOC_MAIN_SGML_FILE)
 
 # Extra options to supply to gtkdoc-mkdb.
 MKDB_OPTIONS=--sgml-mode --output-format=xml
@@ -59,14 +33,8 @@ FIXXREF_OPTIONS=--extra-dir=$(top_builddir)/docs/gst/html \
 	--extra-dir=$(datadir)/gtk-doc/html
 
 # Used for dependencies.
-HFILE_GLOB=$(DOC_SOURCE_DIR)/*/*.h
-CFILE_GLOB=$(DOC_SOURCE_DIR)/*/*.c
-
-# Dependencies for the intermediate scanobj tool
-SCANOBJ_DEPS = \
-	$(top_builddir)/libs/gst/controller/libgstcontroller-@GST_MAJORMINOR@.la \
-	$(top_builddir)/libs/gst/base/libgstbase-@GST_MAJORMINOR@.la \
-	$(top_builddir)/libs/gst/net/libgstnet-@GST_MAJORMINOR@.la
+HFILE_GLOB=$(top_srcdir)/libs/gst/*/*.h
+CFILE_GLOB=$(top_srcdir)/libs/gst/*/*.c
 
 # Extra options to pass to gtkdoc-scanobj or gtkdoc-scangobj.
 SCANOBJ_OPTIONS=--type-init-func="g_type_init();gst_init(&argc,&argv)"
@@ -91,7 +59,11 @@ extra_files =
 # CFLAGS and LDFLAGS for compiling scan program. Only needed if your app/lib
 # contains GtkObjects/GObjects and you want to document signals and properties.
 GTKDOC_CFLAGS = -I$(top_builddir) -I$(top_builddir)/libs $(GST_OBJ_CFLAGS)
-GTKDOC_LIBS = $(SCANOBJ_DEPS) $(GST_OBJ_LIBS)
+GTKDOC_LIBS = \
+	$(top_builddir)/libs/gst/controller/libgstcontroller-@GST_MAJORMINOR@.la \
+	$(top_builddir)/libs/gst/base/libgstbase-@GST_MAJORMINOR@.la \
+	$(top_builddir)/libs/gst/net/libgstnet-@GST_MAJORMINOR@.la \
+	$(GST_OBJ_LIBS)
 
 GTKDOC_CC=$(LIBTOOL) --tag=CC --mode=compile $(CC)
 GTKDOC_LD=$(LIBTOOL) --tag=CC --mode=link $(CC)
@@ -101,6 +73,7 @@ GTKDOC_EXTRA_ENVIRONMENT= \
 
 # If you need to override some of the declarations, place them in this file
 # and uncomment this line.
-DOC_OVERRIDES = $(DOC_MODULE)-overrides.txt
+#DOC_OVERRIDES = $(DOC_MODULE)-overrides.txt
+DOC_OVERRIDES =
 
 include $(top_srcdir)/common/gtk-doc.mak
