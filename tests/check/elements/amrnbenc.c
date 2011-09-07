@@ -23,7 +23,7 @@
 
 #include <gst/check/gstcheck.h>
 
-#define SRC_CAPS "audio/x-raw-int,width=16,depth=16,channels=1,rate=8000"
+#define SRC_CAPS "audio/x-raw-int,width=16,depth=16,channels=1,rate=8000,signed=true,endianness=BYTE_ORDER"
 #define SINK_CAPS "audio/AMR"
 
 GList *buffers;
