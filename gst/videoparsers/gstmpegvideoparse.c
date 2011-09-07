@@ -497,7 +497,8 @@ end:
     ret = FALSE;
   }
 
-  g_list_free_full (mpvparse->typeoffsize, (GDestroyNotify) g_free);
+  g_list_foreach (mpvparse->typeoffsize, (GFunc) g_free, NULL);
+  g_list_free (mpvparse->typeoffsize);
   mpvparse->typeoffsize = NULL;
 
   return ret;
