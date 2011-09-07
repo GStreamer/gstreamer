@@ -1378,13 +1378,14 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
   GstDecodePad *dpad;
   GstElementFactory *factory;
   const gchar *classification;
-  gboolean is_parser_converter;
+  gboolean is_parser_converter = FALSE;
 
   GST_DEBUG_OBJECT (dbin, "Pad %s:%s caps:%" GST_PTR_FORMAT,
       GST_DEBUG_PAD_NAME (pad), caps);
 
   if (chain->elements
-      && src != ((GstDecodeElement *) chain->elements->data)->element) {
+      && src != ((GstDecodeElement *) chain->elements->data)->element
+      && src != ((GstDecodeElement *) chain->elements->data)->capsfilter) {
     GST_ERROR_OBJECT (dbin, "New pad from not the last element in this chain");
     return;
   }
@@ -1595,6 +1596,11 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
     p = gst_element_get_static_pad (delem->capsfilter, "src");
     gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (dpad), p);
     pad = p;
+
+    if (!gst_caps_is_fixed (caps)) {
+      g_value_array_free (factories);
+      goto non_fixed;
+    }
   }
 
   /* 1.h else continue autoplugging something from the list. */
@@ -1705,6 +1711,12 @@ setup_caps_delay:
     g_signal_connect (G_OBJECT (pad), "notify::caps",
         G_CALLBACK (caps_notify_cb), chain);
     CHAIN_MUTEX_UNLOCK (chain);
+
+    /* If we're here because we have a Parser/Converter
+     * we have to unref the pad */
+    if (is_parser_converter)
+      gst_object_unref (pad);
+
     return;
   }
 }
