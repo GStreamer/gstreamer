@@ -409,7 +409,8 @@ GST_START_TEST (test_large_discont)
   audiorate = gst_check_setup_element ("audiorate");
   caps = gst_caps_new_simple ("audio/x-raw-float",
       "channels", G_TYPE_INT, 1,
-      "rate", G_TYPE_INT, 44100, "width", G_TYPE_INT, 32, NULL);
+      "rate", G_TYPE_INT, 44100, "width", G_TYPE_INT, 32,
+      "endianness", G_TYPE_INT, G_BYTE_ORDER, NULL);
 
   srcpad = gst_check_setup_src_pad (audiorate, &srctemplate, caps);
   sinkpad = gst_check_setup_sink_pad (audiorate, &sinktemplate, caps);
