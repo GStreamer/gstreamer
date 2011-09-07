@@ -1555,7 +1555,7 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
     for (i = 0; i < factories->n_values; i++) {
       GstElementFactory *factory =
           g_value_get_object (g_value_array_get_nth (factories, i));
-      GstCaps *tcaps;
+      GstCaps *tcaps, *intersection;
       const GList *tmps;
 
       GST_DEBUG ("Trying factory %s",
@@ -1572,7 +1572,9 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
         if (st->direction != GST_PAD_SINK || st->presence != GST_PAD_ALWAYS)
           continue;
         tcaps = gst_static_pad_template_get_caps (st);
-        gst_caps_merge (filter_caps, gst_caps_copy (tcaps));
+        intersection =
+            gst_caps_intersect_full (tcaps, caps, GST_CAPS_INTERSECT_FIRST);
+        gst_caps_merge (filter_caps, intersection);
         gst_caps_unref (tcaps);
       }
     }
