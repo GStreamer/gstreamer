@@ -2087,7 +2087,7 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
 
 again:
   last_buf = pad->last_buf;
-  if (G_UNLIKELY (qtmux->dts_method == DTS_METHOD_REORDER)) {
+  if (qtmux->dts_method == DTS_METHOD_REORDER) {
     buf = gst_qt_mux_get_asc_buffer_ts (qtmux, pad, buf);
     if (!buf && !last_buf) {
       GST_DEBUG_OBJECT (qtmux, "no reordered buffer");
