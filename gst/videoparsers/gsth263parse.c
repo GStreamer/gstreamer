@@ -45,8 +45,7 @@ GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC,
 static GstStaticPadTemplate sinktemplate =
 GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-h263, variant = (string) itu, "
-        "parsed = (boolean) false")
+    GST_STATIC_CAPS ("video/x-h263, variant = (string) itu")
     );
 
 GST_BOILERPLATE (GstH263Parse, gst_h263_parse, GstElement, GST_TYPE_BASE_PARSE);
