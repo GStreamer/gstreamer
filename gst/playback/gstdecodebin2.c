@@ -1802,10 +1802,8 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
         }
         templs = g_list_next (templs);
       }
-      if (skip) {
-        gst_object_unref (factory);
+      if (skip)
         continue;
-      }
     }
 
     /* If the factory is for a parser we first check if the factory
