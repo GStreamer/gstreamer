@@ -419,7 +419,7 @@ class ColumnManager (Common.GUI.Manager):
 
     def attach_sort (self):
 
-        sort_model = self.view.props.model
+        sort_model = self.view.get_model ()
 
         # Inform the sorted tree model of any custom sorting functions.
         for col_class in self.column_classes:
@@ -429,7 +429,7 @@ class ColumnManager (Common.GUI.Manager):
 
     def enable_sort (self):
 
-        sort_model = self.view.props.model
+        sort_model = self.view.get_model ()
 
         if sort_model:
             self.logger.debug ("activating sort")
@@ -442,7 +442,7 @@ class ColumnManager (Common.GUI.Manager):
 
         self.logger.debug ("deactivating sort")
 
-        sort_model = self.view.props.model
+        sort_model = self.view.get_model ()
 
         self.default_sort = tree_sortable_get_sort_column_id (sort_model)
 
@@ -599,7 +599,7 @@ class ViewColumnManager (ColumnManager):
     def _add_column (self, column):
 
         result = ColumnManager._add_column (self, column)
-        model = self.view.props.model
+        model = self.view.get_model ()
         self.size_column (column, self.view, model)
         return result
 
@@ -613,7 +613,7 @@ class ViewColumnManager (ColumnManager):
         if self.columns_sized:
             # Already sized.
             return
-        model = self.view.props.model
+        model = self.view.get_model ()
         if model is None:
             return
         self.logger.debug ("model changed, sizing columns")

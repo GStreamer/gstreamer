@@ -332,7 +332,7 @@ class FindBarFeature (FeatureBase):
                                      forward = True)
         # FIXME: Finish.
 
-        ## model = self.log_view.props.model
+        ## model = self.log_view.get_model ()
 
         ## start_path, end_path = self.log_view.get_visible_range ()
         ## start_index, end_index = start_path[0], end_path[0]
@@ -351,7 +351,7 @@ class FindBarFeature (FeatureBase):
 
     def update_search (self):
 
-        model = self.log_view.props.model
+        model = self.log_view.get_model ()
         search_text = self.bar.entry.props.text
         column = self.window.column_manager.find_item (name = "message")
         if search_text == "":
@@ -388,7 +388,7 @@ class FindBarFeature (FeatureBase):
 
     def start_search_operation (self, search_text = None, forward = True, start_position = None):
 
-        model = self.log_view.props.model
+        model = self.log_view.get_model ()
 
         if forward:
             self.search_state = "search-forward"

@@ -362,7 +362,7 @@ class VerticalTimelineWidget (gtk.DrawingArea):
         # view into account (which is 0 with the current UI layout).
 
         view = self.log_view
-        model = view.props.model
+        model = view.get_model ()
         visible_range = view.get_visible_range ()
         if visible_range is None:
             return
@@ -774,7 +774,7 @@ class AttachedWindow (object):
 
     def handle_log_view_notify_model (self, view, gparam):
 
-        model = view.props.model
+        model = view.get_model ()
 
         if model is None:
             self.timeline.clear ()
@@ -803,7 +803,7 @@ class AttachedWindow (object):
     def update_timeline_position (self):
 
         view = self.window.log_view
-        model = view.props.model
+        model = view.get_model ()
         visible_range = view.get_visible_range ()
         if visible_range is None:
             return

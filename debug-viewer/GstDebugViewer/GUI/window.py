@@ -70,7 +70,7 @@ class LineView (object):
 
     def clear (self):
 
-        model = self.line_view.props.model
+        model = self.line_view.get_model ()
 
         if len (model) == 0:
             return
@@ -82,13 +82,13 @@ class LineView (object):
 
     def handle_attach_log_file (self, window):
 
-        self.line_view.props.model = LineViewLogModel (window.log_model)
+        self.line_view.set_model (LineViewLogModel (window.log_model))
 
     def handle_line_view_row_activated (self, view, path, column):
 
         line_index = path[0]
-        line_model = view.props.model
-        log_model = self.log_view.props.model
+        line_model = view.get_model ()
+        log_model = self.log_view.get_model ()
         top_index = line_model.line_index_to_top (line_index)
         log_index = log_model.line_index_from_top (top_index)
         path = (log_index,)
@@ -98,11 +98,11 @@ class LineView (object):
 
     def handle_log_view_row_activated (self, view, path, column):
 
-        log_model = view.props.model
+        log_model = view.get_model ()
         line_index = path[0]
 
         top_line_index = log_model.line_index_to_top (line_index)
-        line_model = self.line_view.props.model
+        line_model = self.line_view.get_model ()
         if line_model is None:
             return
 
@@ -125,7 +125,7 @@ class LineView (object):
 
     def handle_log_view_selection_changed (self, selection):
 
-        line_model = self.line_view.props.model
+        line_model = self.line_view.get_model ()
         if line_model is None:
             return
 
@@ -345,7 +345,7 @@ class Window (object):
         model, tree_iter = selection.get_selected ()
         if tree_iter is None:
             raise ValueError ("no line selected")
-        model = self.log_view.props.model
+        model = self.log_view.get_model ()
         return model.get (tree_iter, *LogModelBase.column_ids)
 
     def close (self, *a, **kw):
@@ -361,7 +361,7 @@ class Window (object):
         self.default_index = None
         self.default_start_index = None
 
-        model = self.log_view.props.model
+        model = self.log_view.get_model ()
         if model is None:
             return
 
@@ -386,18 +386,18 @@ class Window (object):
     def update_model (self, model = None):
 
         if model is None:
-            model = self.log_view.props.model
+            model = self.log_view.get_model ()
 
-        previous_model = self.log_view.props.model
+        previous_model = self.log_view.get_model ()
 
         if previous_model == model:
             # Force update.
             self.log_view.set_model (None)
-        self.log_view.props.model = model
+        self.log_view.set_model (model)
 
     def pop_view_state (self, scroll_to_selection = False):
 
-        model = self.log_view.props.model
+        model = self.log_view.get_model ()
         if model is None:
             return
 
@@ -440,7 +440,7 @@ class Window (object):
     def update_view (self):
 
         view = self.log_view
-        model = view.props.model
+        model = view.get_model ()
 
         start_path, end_path = view.get_visible_range ()
         start_index, end_index = start_path[0], end_path[0]
@@ -459,7 +459,7 @@ class Window (object):
             last_selected = True
         else:
             first_selected = (line_index == 0)
-            last_selected = (line_index == len (self.log_view.props.model) - 1)
+            last_selected = (line_index == len (self.log_view.get_model ()) - 1)
 
         self.actions.hide_before_line.props.sensitive = not first_selected
         self.actions.hide_after_line.props.sensitive = not last_selected
@@ -518,7 +518,7 @@ class Window (object):
 
     def hide_range (self, after):
 
-        model = self.log_view.props.model
+        model = self.log_view.get_model ()
         try:
             filtered_line_index = self.get_active_line_index ()
         except ValueError:
@@ -614,7 +614,7 @@ class Window (object):
         self.progress_dialog = None
 
         self.log_filter.abort_process ()
-        self.log_view.props.model = self.log_filter
+        self.log_view.set_model (self.log_filter)
         self.pop_view_state ()
 
     def handle_log_filter_process_finished (self):
@@ -775,7 +775,8 @@ class Window (object):
         self.actions.show_hidden_lines.props.sensitive = False
 
         def idle_set ():
-            self.log_view.props.model = self.log_range
+            self.log_view.set_model (self.log_range)
+
             self.line_view.handle_attach_log_file (self)
             for feature in self.features:
                 feature.handle_attach_log_file (self, self.log_file)
