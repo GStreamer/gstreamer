@@ -13,33 +13,13 @@ FORMATS=html
 html: html-build.stamp
 include $(top_srcdir)/common/upload-doc.mak
 
-# generated basefiles
-#basefiles = \
-##		$(DOC_MODULE).types \
-#		$(DOC_MODULE)-sections.txt \
-#		$(DOC_MODULE)-docs.sgml
-
-# ugly hack to make -unused.sgml work
-#unused-build.stamp:
-#	BUILDDIR=`pwd` && \
-#	cd $(srcdir)/tmpl && \
-#	ln -sf gstreamer-libs-unused.sgml \
-#		$$BUILDDIR/tmpl/gstreamer-libs-@GST_MAJORMINOR@-unused.sgml
-#	touch unused-build.stamp
-
-# these rules are added to create parallel docs using GST_MAJORMINOR
-#$(basefiles): gstreamer-libs-@GST_MAJORMINOR@%: gstreamer-libs%
-#	cp $< $@
-
-#CLEANFILES = $(basefiles)
-
 # The top-level SGML file. Change it if you want.
 DOC_MAIN_SGML_FILE=$(DOC_MODULE)-docs.sgml
 
-# The directory containing the source code. Relative to $(top_srcdir).
+# The directory containing the source code.
 # gtk-doc will search all .c & .h files beneath here for inline comments
 # documenting functions and macros.
-DOC_SOURCE_DIR = $(top_srcdir)
+DOC_SOURCE_DIR = $(top_srcdir)/gst $(top_srcdir)/ext $(top_srcdir)/sys
 
 # Extra options to supply to gtkdoc-scan.
 SCAN_OPTIONS=
@@ -54,14 +34,8 @@ FIXXREF_OPTIONS=--extra-dir=$(top_builddir)/docs/libs/html \
 	--extra-dir=$(datadir)/gtk-doc/html
 
 # Used for dependencies.
-HFILE_GLOB=$(DOC_SOURCE_DIR)/*/*/*.h
-CFILE_GLOB=$(DOC_SOURCE_DIR)/*/*/*.c
-
-# this is a wingo addition
-# thomasvs: another nice wingo addition would be an explanation on why
-# this is useful ;)
-
-SCANOBJ_DEPS =
+HFILE_GLOB=$(top_srcdir)/gst/*/*.h $(top_srcdir)/ext/*/*.h $(top_srcdir)/sys/*/*.h
+CFILE_GLOB=$(top_srcdir)/gst/*/*.c $(top_srcdir)/ext/*/*.c $(top_srcdir)/sys/*/*.c
 
 # Header files to ignore when scanning.
 IGNORE_HFILES = avcodec.h gstffmpegcodecmap.h dsputil.h arch.h speex_resampler.h speex_resampler_wrapper.h fixed_arm4.h fixed_arm5e.h fixed_bfin.h fixed_debug.h fixed_generic.h resample_sse.h
@@ -139,14 +113,12 @@ extra_files =
 # CFLAGS and LDFLAGS for compiling scan program. Only needed if your app/lib
 # contains GtkObjects/GObjects and you want to document signals and properties.
 GTKDOC_CFLAGS = $(GST_BASE_CFLAGS) -I$(top_builddir) -I$(top_builddir)/gst-libs
-GTKDOC_LIBS = $(SCANOBJ_DEPS) $(GST_BASE_LIBS)
+GTKDOC_LIBS = $(GST_BASE_LIBS)
 
 GTKDOC_CC=$(LIBTOOL) --tag=CC --mode=compile $(CC)
 GTKDOC_LD=$(LIBTOOL) --tag=CC --mode=link $(CC)
 
 # If you need to override some of the declarations, place them in this file
-# and uncomment this line.
-#DOC_OVERRIDES = $(DOC_MODULE)-overrides.txt
-DOC_OVERRIDES =
+DOC_OVERRIDES = $(DOC_MODULE)-overrides.txt
 
 include $(top_srcdir)/common/gtk-doc-plugins.mak
