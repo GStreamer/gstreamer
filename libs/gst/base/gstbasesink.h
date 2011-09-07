@@ -133,6 +133,7 @@ struct _GstBaseSink {
  * @fixate: Only useful in pull mode, this vmethod will be called in response to
  *     gst_pad_fixate_caps() being called on the sink pad. Implement if you have
  *     ideas about what should be the default values for the caps you support.
+ * @query: perform a #GstQuery on the element. Since: 0.10.36
  *
  * Subclasses can override any of the available virtual methods or not, as
  * needed. At the minimum, the @render method should be overridden to
@@ -186,8 +187,11 @@ struct _GstBaseSinkClass {
   /* Render a BufferList */
   GstFlowReturn (*render_list)  (GstBaseSink *sink, GstBufferList *buffer_list);
 
+  /* notify subclass of query */
+  gboolean      (*query)        (GstBaseSink *sink, GstQuery *query);
+
   /*< private >*/
-  gpointer       _gst_reserved[GST_PADDING_LARGE-5];
+  gpointer       _gst_reserved[GST_PADDING_LARGE-6];
 };
 
 GType gst_base_sink_get_type(void);

@@ -168,7 +168,7 @@ static gboolean gst_file_sink_do_seek (GstFileSink * filesink,
 static gboolean gst_file_sink_get_current_offset (GstFileSink * filesink,
     guint64 * p_pos);
 
-static gboolean gst_file_sink_query (GstPad * pad, GstQuery * query);
+static gboolean gst_file_sink_query (GstBaseSink * bsink, GstQuery * query);
 
 static void gst_file_sink_uri_handler_init (gpointer g_iface,
     gpointer iface_data);
@@ -246,6 +246,7 @@ gst_file_sink_class_init (GstFileSinkClass * klass)
 
   gstbasesink_class->start = GST_DEBUG_FUNCPTR (gst_file_sink_start);
   gstbasesink_class->stop = GST_DEBUG_FUNCPTR (gst_file_sink_stop);
+  gstbasesink_class->query = GST_DEBUG_FUNCPTR (gst_file_sink_query);
   gstbasesink_class->render = GST_DEBUG_FUNCPTR (gst_file_sink_render);
   gstbasesink_class->event = GST_DEBUG_FUNCPTR (gst_file_sink_event);
 
@@ -258,12 +259,6 @@ gst_file_sink_class_init (GstFileSinkClass * klass)
 static void
 gst_file_sink_init (GstFileSink * filesink, GstFileSinkClass * g_class)
 {
-  GstPad *pad;
-
-  pad = GST_BASE_SINK_PAD (filesink);
-
-  gst_pad_set_query_function (pad, GST_DEBUG_FUNCPTR (gst_file_sink_query));
-
   filesink->filename = NULL;
   filesink->file = NULL;
   filesink->buffer_mode = DEFAULT_BUFFER_MODE;
@@ -466,36 +461,45 @@ close_failed:
 }
 
 static gboolean
-gst_file_sink_query (GstPad * pad, GstQuery * query)
+gst_file_sink_query (GstBaseSink * bsink, GstQuery * query)
 {
+  gboolean res;
   GstFileSink *self;
   GstFormat format;
 
-  self = GST_FILE_SINK (GST_PAD_PARENT (pad));
+  self = GST_FILE_SINK (bsink);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
       gst_query_parse_position (query, &format, NULL);
+
       switch (format) {
         case GST_FORMAT_DEFAULT:
         case GST_FORMAT_BYTES:
           gst_query_set_position (query, GST_FORMAT_BYTES, self->current_pos);
-          return TRUE;
+          res = TRUE;
+          break;
         default:
-          return FALSE;
+          res = FALSE;
+          break;
       }
+      break;
 
     case GST_QUERY_FORMATS:
       gst_query_set_formats (query, 2, GST_FORMAT_DEFAULT, GST_FORMAT_BYTES);
-      return TRUE;
+      res = TRUE;
+      break;
 
     case GST_QUERY_URI:
       gst_query_set_uri (query, self->uri);
-      return TRUE;
+      res = TRUE;
+      break;
 
     default:
-      return gst_pad_query_default (pad, query);
+      res = GST_BASE_SINK_CLASS (parent_class)->query (bsink, query);
+      break;
   }
+  return res;
 }
 
 #ifdef HAVE_FSEEKO
