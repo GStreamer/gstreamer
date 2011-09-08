@@ -266,7 +266,7 @@ Chained:
        -
 
 As usual, is likely to be an entry into a Bin.  The Bin iterate code must
-explicitely pull a buffer and pass it on to the peer. 
+explicitly pull a buffer and pass it on to the peer.
 
 Cothreaded: 
 

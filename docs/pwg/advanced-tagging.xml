@@ -81,7 +81,7 @@
       element, it might be a good idea to add it to <filename>gsttag.c</filename>
       instead. That's up to you to decide. If you want to do it in your own
       element, it's easiest to register the tag in one of your class init
-      functions, preferrably <function>_class_init ()</function>.
+      functions, preferably <function>_class_init ()</function>.
     </para>
     <programlisting>
 <![CDATA[

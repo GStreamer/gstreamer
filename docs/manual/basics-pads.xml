@@ -37,7 +37,7 @@
       request. The meaning of those three types is exactly as it says:
       always pads always exist, sometimes pad exist only in certain
       cases (and can disappear randomly), and on-request pads appear
-      only if explicitely requested by applications.
+      only if explicitly requested by applications.
     </para>
 
     <sect2 id="section-pads-dynamic">

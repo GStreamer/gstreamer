@@ -229,7 +229,7 @@ gst_child_proxy_lookup (GstObject * object, const gchar * name,
  * @value: (out caller-allocates): a #GValue that should take the result.
  *
  * Gets a single property using the GstChildProxy mechanism.
- * You are responsible for for freeing it by calling g_value_unset()
+ * You are responsible for freeing it by calling g_value_unset()
  */
 void
 gst_child_proxy_get_property (GstObject * object, const gchar * name,

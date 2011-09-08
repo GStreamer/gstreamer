@@ -3,7 +3,7 @@
   <para> 
     When writing a &GStreamer; application, you can simply include
     <filename>gst/gst.h</filename> to get access to the library
-    functions. Besides that, you will also need to intialize the
+    functions. Besides that, you will also need to initialize the
     &GStreamer; library.
   </para>
 

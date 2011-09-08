@@ -8,7 +8,7 @@ Pushing
 ~~~~~~~
 
 A pad can produce data and push it to the next pad. A pad that behaves this way
-exposes a loop function that will be called repeadedly until it returns false. 
+exposes a loop function that will be called repeatedly until it returns false.
 The loop function is allowed to block whenever it wants. When the pad is deactivated
 the loop function should unblock though.
 
@@ -24,7 +24,7 @@ Pulling
 
 Pads that operate in pulling mode can only pull data from a pad that exposes the
 pull_range function. In this case, the sink pad exposes a loop function that will be
-called repeadedly until the task is stopped.
+called repeatedly until the task is stopped.
 
 After pulling data from the peer pad, the loop function will typically call the
 push function to push the result to the peer sinkpad.

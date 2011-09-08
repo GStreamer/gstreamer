@@ -33,7 +33,7 @@ Details
 ------------------
 - read data from inspect/plugin-<pluginname>.xml
 - insert/overwrite "Short Description" and "Long Description" in tmpl/
-- the "Long Description" contains a <xi:inlcude> for xml/element-<name>-details.xml
+- the "Long Description" contains a <xi:include> for xml/element-<name>-details.xml
 
 3.) common/plugins.xsl
 ----------------------

@@ -17,33 +17,13 @@ include $(top_srcdir)/common/upload-doc.mak
 INSPECT_EXTRA_ENVIRONMENT= \
     GST_PLUGIN_SCANNER=$(top_builddir)/libs/gst/helpers/gst-plugin-scanner
 
-# generated basefiles
-#basefiles = \
-##		$(DOC_MODULE).types \
-#		$(DOC_MODULE)-sections.txt \
-#		$(DOC_MODULE)-docs.sgml
-
-# ugly hack to make -unused.sgml work
-#unused-build.stamp:
-#	BUILDDIR=`pwd` && \
-#	cd $(srcdir)/tmpl && \
-#	ln -sf gstreamer-libs-unused.sgml \
-#		$$BUILDDIR/tmpl/gstreamer-libs-@GST_MAJORMINOR@-unused.sgml
-#	touch unused-build.stamp
-
-# these rules are added to create parallel docs using GST_MAJORMINOR
-#$(basefiles): gstreamer-libs-@GST_MAJORMINOR@%: gstreamer-libs%
-#	cp $< $@
-
-#CLEANFILES = $(basefiles)
-
 # The top-level SGML file. Change it if you want.
 DOC_MAIN_SGML_FILE=$(DOC_MODULE)-docs.sgml
 
-# The directory containing the source code. Relative to $(top_srcdir).
+# The directory containing the source code.
 # gtk-doc will search all .c & .h files beneath here for inline comments
 # documenting functions and macros.
-DOC_SOURCE_DIR = $(top_srcdir)/plugins
+DOC_SOURCE_DIR = $(top_srcdir)/plugins/elements
 
 # Extra options to supply to gtkdoc-scan.
 SCAN_OPTIONS=
@@ -58,14 +38,8 @@ FIXXREF_OPTIONS=--extra-dir=$(top_builddir)/docs/gst/html \
 	--extra-dir=$(datadir)/gtk-doc/html
 
 # Used for dependencies.
-HFILE_GLOB=$(DOC_SOURCE_DIR)/*/*.h
-CFILE_GLOB=$(DOC_SOURCE_DIR)/*/*.c
-
-# this is a wingo addition
-# thomasvs: another nice wingo addition would be an explanation on why
-# this is useful ;)
-
-SCANOBJ_DEPS =
+HFILE_GLOB=$(top_srcdir)/plugins/elements/*.h
+CFILE_GLOB=$(top_srcdir)/plugins/elements/*.c
 
 # Header files to ignore when scanning.
 IGNORE_HFILES =
@@ -109,7 +83,7 @@ extra_files =
 # CFLAGS and LDFLAGS for compiling scan program. Only needed if your app/lib
 # contains GtkObjects/GObjects and you want to document signals and properties.
 GTKDOC_CFLAGS = $(GST_OBJ_CFLAGS) -I$(top_builddir) -I$(top_builddir)/libs
-GTKDOC_LIBS = $(SCANOBJ_DEPS) $(GST_OBJ_LIBS)
+GTKDOC_LIBS = $(GST_OBJ_LIBS)
 
 GTKDOC_CC=$(LIBTOOL) --tag=CC --mode=compile $(CC)
 GTKDOC_LD=$(LIBTOOL) --tag=CC --mode=link $(CC)

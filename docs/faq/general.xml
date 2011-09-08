@@ -80,7 +80,7 @@ application doesn't play back your files, you can help us solve that problem
 by <ulink url="http://bugzilla.gnome.org">filing an enhancement request
 bug</ulink> for that format. If you have it, please provide: 
 <itemizedlist>
-  <listitem><para>links to other players, preferrably Open Source and working 
+  <listitem><para>links to other players, preferably Open Source and working
   on Unix</para></listitem>
   <listitem><para>links to explanations of the format.</para></listitem>
   <listitem><para>ways to obtain mediafiles in that format to test.

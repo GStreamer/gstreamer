@@ -533,7 +533,7 @@ gst_proxy_pad_unlink_default (GstPad * pad)
 
   /* don't do anything if this unlink resulted from retargeting the pad
    * controlled by the ghostpad. We only want to invalidate the target pad when
-   * the element suddently unlinked with our internal pad. */
+   * the element suddenly unlinked with our internal pad. */
   if (GST_PROXY_PAD_RETARGET (pad))
     return;
 
@@ -693,7 +693,7 @@ gst_ghost_pad_internal_activate_pull_default (GstPad * pad, gboolean active)
   if (GST_PAD_DIRECTION (pad) == GST_PAD_SRC) {
     /* we are activated in pull mode by our peer element, which is a sinkpad
      * that wants to operate in pull mode. This activation has to propagate
-     * upstream throught the pipeline. We call the internal activation function,
+     * upstream through the pipeline. We call the internal activation function,
      * which will trigger gst_ghost_pad_activate_pull_default, which propagates even
      * further upstream */
     GST_LOG_OBJECT (pad, "pad is src, activate internal");

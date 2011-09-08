@@ -331,7 +331,7 @@ gst_plugin_feature_check_version (GstPluginFeature * feature,
         ret = FALSE;
       else if (micro > min_micro)
         ret = TRUE;
-      /* micro is 1 smaller but we have a nano version, this is the upcomming
+      /* micro is 1 smaller but we have a nano version, this is the upcoming
        * release of the requested version and we're ok then */
       else if (nscan == 4 && nano > 0 && (micro + 1 == min_micro))
         ret = TRUE;

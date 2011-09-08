@@ -95,7 +95,7 @@ capture pipelines.
   * the sink will receive the buffer with timestamp 0 at time >= D. At this
     point the buffer is too late already and might be dropped. This state of
     constantly dropping data will not change unless a constant latency
-    correction is added to the incomming buffer timestamps.
+    correction is added to the incoming buffer timestamps.
 
   The problem is due to the fact that the sink is set to (pending) PLAYING
   without being prerolled, which only happens in live pipelines. 

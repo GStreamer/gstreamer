@@ -525,7 +525,7 @@ main (int   argc,
           video sinks can already play the first frame (since this does
           not affect the clock yet). Autopluggers could use this same
           state transition to already plug together a pipeline. Most other
-          elements, such as codecs or filters, do not need to explicitely
+          elements, such as codecs or filters, do not need to explicitly
           do anything in this state, however.
         </para>
       </listitem>

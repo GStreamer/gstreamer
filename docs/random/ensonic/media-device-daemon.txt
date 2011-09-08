@@ -38,5 +38,5 @@ components
       channelstrip
   - state-control (play, pause/mute)
     - it would be useful if one app could pause/mute others
-    - think of a voip-client, if there is an incomming call, if pauses your
+    - think of a voip-client, if there is an incoming call, if pauses your
       media-player, or mutes the monitoring of your recording app

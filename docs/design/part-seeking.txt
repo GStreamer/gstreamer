@@ -178,12 +178,12 @@ Summary:
 
  - if the KEY_UNIT flag is *not* specified, the demuxer/parser should
    start pushing data from a key unit preceding the seek position
-   (or from the the seek position if that falls on a key unit), and
+   (or from the seek position if that falls on a key unit), and
    the start of the new segment should be the requested seek position.
 
  - if the KEY_UNIT flag is specified, the demuxer/parser should start
    pushing data from the key unit nearest the seek position (or from
-   the the seek position if that falls on a key unit), and
+   the seek position if that falls on a key unit), and
    the start of the new segment should be adjusted to the position of
    that key unit which was nearest the requested seek position (ie.
    the new segment start should be the position from which data is

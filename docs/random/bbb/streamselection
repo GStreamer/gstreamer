@@ -4,13 +4,13 @@ Stream selection
 1. Problem
 URIs (that being either a media stream or a media stream plus subtitle) can
 contain multiple streams of a type (audio, subtitle). A user has to be given
-the option of selecting one of those streams (or none alltogether).
+the option of selecting one of those streams (or none altogether).
 
 2. Implementation ideas
 Stream selection, in GStreamer, has to be integrated at the player plugging
 level, which is (in the case of Totem) playbin. Playbin offers a feature to
 'mute' a stream (which means that no processing is done on that stream
-alltogether, saving the decoding step). Currently, playbin will select the
+altogether, saving the decoding step). Currently, playbin will select the
 first occurrence of a stream type and mute all others. A queue is connected
 (for pre-roll) to the active stream. What is missing here is a way to change
 the active stream.
@@ -30,7 +30,7 @@ stream was linked. Alternatively, a switch-like element is used, which
 requires no replugging. Pad disabling/enabling is then enough. This also
 makes relinking less painful. The switch-like element needs to proxy the
 active pads' caps. However, since those caps are (in practice) always the
-same accross streams, caps setting will (inside the core) immediately
+same across streams, caps setting will (inside the core) immediately
 return success.
 The switch-like element simply works like this:
 =

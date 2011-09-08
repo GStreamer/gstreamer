@@ -2858,7 +2858,7 @@ wrong_type:
  * For refcounted (mini)objects you will acquire your own reference which
  * you must release with a suitable _unref() when no longer needed. For
  * strings and boxed types you will acquire a copy which you will need to
- * release with either g_free() or the suiteable function for the boxed type.
+ * release with either g_free() or the suitable function for the boxed type.
  *
  * Returns: FALSE if there was a problem reading any of the fields (e.g.
  *     because the field requested did not exist, or was of a type other
@@ -2903,7 +2903,7 @@ gst_structure_get (const GstStructure * structure, const char *first_fieldname,
  * For refcounted (mini)objects you will acquire your own reference which
  * you must release with a suitable _unref() when no longer needed. For
  * strings and boxed types you will acquire a copy which you will need to
- * release with either g_free() or the suiteable function for the boxed type.
+ * release with either g_free() or the suitable function for the boxed type.
  *
  * Returns: FALSE if there was a problem reading any of the fields (e.g.
  *     because the field requested did not exist, or was of a type other
@@ -3092,7 +3092,7 @@ gst_caps_structure_can_intersect_field (GQuark id, const GValue * val1,
  * @struct1: a #GstStructure
  * @struct2: a #GstStructure
  *
- * Tries interesecting @struct1 and @struct2 and reports whether the result
+ * Tries intersecting @struct1 and @struct2 and reports whether the result
  * would not be empty.
  *
  * Returns: %TRUE if intersection would not be empty

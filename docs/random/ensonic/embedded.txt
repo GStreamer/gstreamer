@@ -21,7 +21,7 @@ encapsulated in the indexer strategy.
 Autopluggers like playbin and decodebin use the element caps plus static ranks
 to create piplines.
 The rank of an elemnt right now refers to the quality/maturity of the element.
-Elements with higher rank should be functionaly more complete. If we have
+Elements with higher rank should be functionally more complete. If we have
 multiple elements that are feature complete there is a draw.
 
 There are more decission criteria thinkable:

@@ -156,3 +156,4 @@ as well, so that there is a generic method for both PAUSED and PLAYING.
 
 The same flow works as well for any chain of multiple elements and might 
 be implemented with a helper function in the future.
+

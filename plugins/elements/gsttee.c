@@ -488,6 +488,7 @@ gst_tee_sink_event (GstPad * pad, GstEvent * event)
       res = gst_pad_event_default (pad, event);
       break;
   }
+
   return res;
 }
 

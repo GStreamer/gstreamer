@@ -163,7 +163,7 @@ main (gint   argc,
         <para>
           Supports stream selection and disabling. If your media has
           multiple audio or subtitle tracks, you can dynamically choose
-          which one to play back, or decide to turn it off alltogther
+          which one to play back, or decide to turn it off altogether
           (which is especially useful to turn off subtitles). For each
           of those, use the <quote>current-text</quote> and other related
           properties.

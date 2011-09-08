@@ -45,7 +45,7 @@ Shared data structures and writability:
   _get_writable() function call. This function will check the refcount of the
   object and if the object is referenced by more than one instance, a copy is
   made of the object that is then by definition only referenced from the calling
-  thread. This new copy is then modifyable without being visible to other
+  thread. This new copy is then modifiable without being visible to other
   refcount holders.
 
   This technique is used for information objects that, once created, never

@@ -151,7 +151,7 @@ gst_my_sink_class_init (GstMySinkClass * klass)
         <listitem>
           <para>
             Features can be added to all audiosinks by making a change in the
-            base class, which makes maintainance easy.
+            base class, which makes maintenance easy.
           </para>
         </listitem>
         <listitem>
@@ -192,7 +192,7 @@ gst_my_sink_class_init (GstMySinkClass * klass)
           <para>
             By adding new features to <classname>GstVideoSink</classname>, it
             will be possible to add extensions to videosinks that affect all of
-            them, but only need to be coded once, which is a huge maintainance
+            them, but only need to be coded once, which is a huge maintenance
             benefit.
           </para>
         </listitem>

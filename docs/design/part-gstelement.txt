@@ -51,7 +51,7 @@ gst_element_add_pad(element,pads):
 	Fails if either the element or pad are either NULL or not what they
 	claim to be.  Should fail if the pad already has a parent. Should fail
 	if the pad is already owned by the element.  Should fail if there's
-	already a pad by that name in the the list of pads.
+	already a pad by that name in the list of pads.
 
 pad = gst_element_get_pad(element,"padname"):
 	Searches through the list of pads 

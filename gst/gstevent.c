@@ -50,7 +50,7 @@
  * Most of the event API is used inside plugins. Applications usually only 
  * construct and use seek events. 
  * To do that gst_event_new_seek() is used to create a seek event. It takes
- * the needed parameters to specity seeking time and mode.
+ * the needed parameters to specify seeking time and mode.
  * <example>
  * <title>performing a seek on a pipeline</title>
  *   <programlisting>
@@ -758,7 +758,7 @@ gst_event_parse_tag (GstEvent * event, GstTagList ** taglist)
  * Create a new buffersize event. The event is sent downstream and notifies
  * elements that they should provide a buffer of the specified dimensions.
  *
- * When the @async flag is set, a thread boundary is prefered.
+ * When the @async flag is set, a thread boundary is preferred.
  *
  * Returns: (transfer full): a new #GstEvent
  */

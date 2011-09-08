@@ -71,7 +71,7 @@ both entries is hard, because the idea at this point is that there's only a sing
 Does this mean that we should make mix a DECOUPLED element?  That would fix it to some extent, giving us three chains 
 in the above case.  Each eq chain would be driven by the eq element, pulling from the queue and pushing into the mixer.  
 The mixer -> queue chain is problematic, because there is no possibly entry.  The mixer side has no _get function 
-(since the push always happens upon the receipt of a buffer from the second sink pad), which means that that those two 
+(since the push always happens upon the receipt of a buffer from the second sink pad), which means that those two
 pads have no possible entrance.
 
 Cothreads make this case much easier, since the mix element would drive things, forcing the eq elements to pull and 

@@ -1038,7 +1038,7 @@ gst_queue2_have_data (GstQueue2 * queue, guint64 offset, guint length)
   } else {
     GST_INFO_OBJECT (queue, "not found in any range");
     /* we don't have the range, see how far away we are, FIXME, find a good
-     * threshold based on the incomming rate. */
+     * threshold based on the incoming rate. */
     if (!queue->is_eos && queue->current) {
       if (QUEUE_IS_USING_RING_BUFFER (queue)) {
         if (offset < queue->current->offset || offset >
@@ -1210,7 +1210,7 @@ gst_queue2_create_read (GstQueue2 * queue, guint64 offset, guint length,
     /* set range reading_pos to actual reading position for this read */
     queue->current->reading_pos = rpos;
 
-    /* congfigure how much and from where to read */
+    /* configure how much and from where to read */
     if (QUEUE_IS_USING_RING_BUFFER (queue)) {
       file_offset =
           (queue->current->rb_offset + (rpos -
@@ -2283,7 +2283,7 @@ out_flushing:
   }
 }
 
-/* called repeadedly with @pad as the source pad. This function should push out
+/* called repeatedly with @pad as the source pad. This function should push out
  * data to the peer element. */
 static void
 gst_queue2_loop (GstPad * pad)
@@ -2792,7 +2792,7 @@ gst_queue2_src_activate_pull (GstPad * pad, gboolean active)
         result = gst_queue2_open_temp_location_file (queue);
       } else if (!queue->ring_buffer) {
         queue->ring_buffer = g_malloc (queue->ring_buffer_max_size);
-        result = !!queue->ring_buffer;
+        result = ! !queue->ring_buffer;
       } else {
         result = TRUE;
       }

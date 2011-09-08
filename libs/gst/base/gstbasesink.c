@@ -692,7 +692,7 @@ gst_base_sink_finalize (GObject * object)
  * @sync: the new sync value.
  *
  * Configures @sink to synchronize on the clock or not. When
- * @sync is FALSE, incomming samples will be played as fast as
+ * @sync is FALSE, incoming samples will be played as fast as
  * possible. If @sync is TRUE, the timestamps of the incomming
  * buffers will be used to schedule the exact render time of its
  * contents.
@@ -829,8 +829,8 @@ gst_base_sink_is_qos_enabled (GstBaseSink * sink)
  * @enabled: the new async value.
  *
  * Configures @sink to perform all state changes asynchronusly. When async is
- * disabled, the sink will immediatly go to PAUSED instead of waiting for a
- * preroll buffer. This feature is usefull if the sink does not synchronize
+ * disabled, the sink will immediately go to PAUSED instead of waiting for a
+ * preroll buffer. This feature is useful if the sink does not synchronize
  * against the clock or when it is dealing with sparse streams.
  *
  * Since: 0.10.15
@@ -2310,10 +2310,10 @@ flushing:
  * if needed and then block if we still are not PLAYING.
  *
  * We start waiting on the clock in PLAYING. If we got interrupted, we
- * immediatly try to re-preroll.
+ * immediately try to re-preroll.
  *
  * Some objects do not need synchronisation (most events) and so this function
- * immediatly returns GST_FLOW_OK.
+ * immediately returns GST_FLOW_OK.
  *
  * for objects that arrive later than max-lateness to be synchronized to the
  * clock have the @late boolean set to TRUE.
@@ -2433,7 +2433,7 @@ again:
       GST_TIME_FORMAT ", adjusted %" GST_TIME_FORMAT,
       GST_TIME_ARGS (rstart), GST_TIME_ARGS (stime));
 
-  /* This function will return immediatly if start == -1, no clock
+  /* This function will return immediately if start == -1, no clock
    * or sync is disabled with GST_CLOCK_BADTIME. */
   status = gst_base_sink_wait_clock (basesink, stime, &jitter);
 
@@ -2840,7 +2840,7 @@ again:
   step_end = FALSE;
 
   /* synchronize this object, non syncable objects return OK
-   * immediatly. */
+   * immediately. */
   ret =
       gst_base_sink_do_sync (basesink, pad, sync_obj, &late, &step_end,
       obj_type);
@@ -3142,7 +3142,7 @@ gst_base_sink_queue_object_unlocked (GstBaseSink * basesink, GstPad * pad,
       if (G_UNLIKELY (ret != GST_FLOW_OK))
         goto preroll_failed;
     }
-    /* need to recheck if we need preroll, commmit state during preroll
+    /* need to recheck if we need preroll, commit state during preroll
      * could have made us not need more preroll. */
     if (G_UNLIKELY (basesink->need_preroll)) {
       /* see if we can render now, if we can't add the object to the preroll
@@ -3798,7 +3798,7 @@ gst_base_sink_perform_seek (GstBaseSink * sink, GstPad * pad, GstEvent * event)
 
   /* If we configured the seeksegment above, don't overwrite it now. Otherwise
    * copy the current segment info into the temp segment that we can actually
-   * attempt the seek with. We only update the real segment if the seek suceeds. */
+   * attempt the seek with. We only update the real segment if the seek succeeds. */
   if (!seekseg_configured) {
     memcpy (&seeksegment, &sink->segment, sizeof (GstSegment));
 
@@ -3854,7 +3854,7 @@ gst_base_sink_perform_seek (GstBaseSink * sink, GstPad * pad, GstEvent * event)
     res = FALSE;
   }
 
-  /* if successfull seek, we update our real segment and push
+  /* if successful seek, we update our real segment and push
    * out the new segment. */
   if (res) {
     gst_segment_copy_into (&seeksegment, &sink->segment);
@@ -4248,7 +4248,7 @@ gst_base_sink_negotiate_pull (GstBaseSink * basesink)
   GST_DEBUG_OBJECT (basesink, "allowed caps: %" GST_PTR_FORMAT, caps);
 
   caps = gst_caps_make_writable (caps);
-  /* get the first (prefered) format */
+  /* get the first (preferred) format */
   gst_caps_truncate (caps);
 
   GST_DEBUG_OBJECT (basesink, "have caps: %" GST_PTR_FORMAT, caps);
@@ -5064,7 +5064,7 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       GST_BASE_SINK_PREROLL_LOCK (basesink);
-      /* start by reseting our position state with the object lock so that the
+      /* start by resetting our position state with the object lock so that the
        * position query gets the right idea. We do this before we post the
        * messages so that the message handlers pick this up. */
       GST_OBJECT_LOCK (basesink);

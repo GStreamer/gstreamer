@@ -31,7 +31,7 @@
  *
  * Please note that these functions take several measures to create
  * somewhat dynamic pipelines. Due to that such pipelines are not always
- * reuseable (set the state to NULL and back to PLAYING).
+ * reusable (set the state to NULL and back to PLAYING).
  */
 
 #include "gst_private.h"

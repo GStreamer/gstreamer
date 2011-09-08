@@ -525,7 +525,7 @@ GST_START_TEST (send_custom_events)
       G_GINT64_FORMAT " us", timediff (&got_event_time, &sent_event_time));
 
   /* In-band downstream events are expected to take at least 1 second
-   * to traverse the the queue */
+   * to traverse the queue */
   test_event (pipeline, GST_EVENT_CUSTOM_DOWNSTREAM, srcpad, FALSE, srcpad);
   fail_unless (timediff (&got_event_time,
           &sent_event_time) >= G_USEC_PER_SEC / 2,

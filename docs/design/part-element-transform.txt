@@ -25,7 +25,7 @@ the following things:
 Some transform elements can operate in different modes:
 
  - passthrough (no changes are done on the input buffers)
- - in-place (changes made directly to the incomming buffers without requiring a
+ - in-place (changes made directly to the incoming buffers without requiring a
    copy or new buffer allocation)
  - metadata changes only 
  
@@ -253,7 +253,7 @@ state. We can identify these steady states:
 	input buffer is transformed into the output buffer. The flow is exactly
 	the same as the case with the same-caps negotiation. (DCC)
  
-We can immeditatly observe that the copy transform states will need to
+We can immediately observe that the copy transform states will need to
 allocate a new buffer from the bufferpool. When the transform element is
 receiving a non-writable buffer in the in-place state, it will also
 need to perform an allocation. There is no reason why the passthrough state would
@@ -295,7 +295,7 @@ retrieve the size. There are two functions:
     
     Given a caps and a size on one pad, and a caps on the other pad, calculate
     the size of the other buffer. This function is able to perform all size
-    transforms and is the prefered method of transforming a size.
+    transforms and is the preferred method of transforming a size.
 
   - get_unit_size()
 

@@ -209,7 +209,7 @@ for themselves - most of the time depending on caps on other pads in the
 element. The core then takes those, intersects them and if the intersection
 isn't empty fixates them. Fixation is a process that selects the best possible
 fixed caps from a caps. A fixed caps is a caps that describes only one format
-and cannot be reduced further. After both pads acdepted the fixed caps, its
+and cannot be reduced further. After both pads accepted the fixed caps, its
 format is then used to describe the contents of the buffers that are passed on
 this link. Caps can be serialized and deserialized to a string representation.
 [Add: a medium complex caps description (audioconvert?)]

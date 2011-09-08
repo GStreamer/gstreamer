@@ -445,7 +445,7 @@ typedef gboolean		(*GstPadAcceptCapsFunction)	(GstPad *pad, GstCaps *caps);
  * @pad: a #GstPad
  * @caps: the #GstCaps to fixate
  *
- * Given possibly unfixed caps @caps, let @pad use its default prefered
+ * Given possibly unfixed caps @caps, let @pad use its default preferred
  * format to make a fixed caps. @caps should be writable. By default this
  * function will pick the first value of any ranges or lists in the caps but
  * elements can override this function to perform other behaviour.

@@ -15,26 +15,6 @@ FORMATS=html
 html: html-build.stamp
 include $(top_srcdir)/common/upload-doc.mak
 
-# generated basefiles
-#basefiles = \
-#		gstreamer-@GST_MAJORMINOR@.types \
-#		gstreamer-@GST_MAJORMINOR@-sections.txt \
-#		gstreamer-@GST_MAJORMINOR@-docs.sgml
-
-# ugly hack to make -unused.sgml work
-#unused-build.stamp:
-#	BUILDDIR=`pwd` && \
-#	cd $(srcdir)/tmpl && \
-#	ln -sf gstreamer-unused.sgml \
-#		$$BUILDDIR/tmpl/gstreamer-@GST_MAJORMINOR@-unused.sgml
-#	touch unused-build.stamp
-
-# these rules are added to create parallel docs using GST_MAJORMINOR
-#$(basefiles): gstreamer-@GST_MAJORMINOR@%: gstreamer%
-#	cp $< $@
-
-#CLEANFILES += $(basefiles)
-
 # The top-level SGML file. Change it if you want.
 DOC_MAIN_SGML_FILE=$(DOC_MODULE)-docs.sgml
 
@@ -42,7 +22,6 @@ DOC_MAIN_SGML_FILE=$(DOC_MODULE)-docs.sgml
 # gtk-doc will search all .c & .h files beneath here for inline comments
 # documenting functions and macros.
 DOC_SOURCE_DIR = $(top_srcdir)/gst
-DOC_BUILD_DIR = $(top_builddir)/gst
 
 # Extra options to supply to gtkdoc-scan.
 SCAN_OPTIONS=--deprecated-guards="GST_DISABLE_DEPRECATED"
@@ -54,10 +33,8 @@ MKDB_OPTIONS=--sgml-mode --output-format=xml --ignore-files=parse
 FIXXREF_OPTIONS=--extra-dir=$(GLIB_PREFIX)/share/gtk-doc/html
 
 # Used for dependencies.
-HFILE_GLOB=$(DOC_SOURCE_DIR)/*.h
-CFILE_GLOB=$(DOC_SOURCE_DIR)/*.c
-
-SCANOBJ_DEPS = 
+HFILE_GLOB=$(top_srcdir)/gst/*.h
+CFILE_GLOB=$(top_srcdir)/gst/*.c
 
 # Header files to ignore when scanning. Use base file name, no paths
 IGNORE_HFILES= \
@@ -91,7 +68,7 @@ extra_files = gst-universe.dot
 # CFLAGS and LDFLAGS for compiling scan program. Only needed if your app/lib
 # contains GtkObjects/GObjects and you want to document signals and properties.
 GTKDOC_CFLAGS = $(GST_OBJ_CFLAGS)
-GTKDOC_LIBS = $(GST_OBJ_LIBS) $(SCANOBJ_DEPS)
+GTKDOC_LIBS = $(GST_OBJ_LIBS)
 
 GTKDOC_CC=$(LIBTOOL) --tag=CC --mode=compile $(CC)
 GTKDOC_LD=$(LIBTOOL) --tag=CC --mode=link $(CC)

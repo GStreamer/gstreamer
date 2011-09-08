@@ -2601,6 +2601,26 @@ gst_pad_accept_caps (GstPad * pad, GstCaps * caps)
   result = acceptfunc (pad, caps);
   GST_DEBUG_OBJECT (pad, "acceptfunc returned %d", result);
 
+#ifndef G_DISABLE_ASSERT
+  {
+    GstCaps *padcaps;
+
+    padcaps = gst_pad_get_caps_reffed (pad);
+    if (!gst_caps_is_subset (caps, padcaps)) {
+      gchar *padcaps_str, *caps_str;
+
+      padcaps_str = gst_caps_to_string (padcaps);
+      caps_str = gst_caps_to_string (caps);
+      g_warning ("pad %s:%s accepted caps %s although "
+          "they are not a subset of its caps %s",
+          GST_DEBUG_PAD_NAME (pad), caps_str, padcaps_str);
+      g_free (padcaps_str);
+      g_free (caps_str);
+    }
+    gst_caps_unref (padcaps);
+  }
+#endif
+
   return result;
 
 #if 0
@@ -2701,7 +2721,7 @@ do_event_function (GstPad * pad, GstEvent * event,
     GstPadEventFunction eventfunc, gboolean * caps_notify)
 {
   gboolean result = TRUE, call_event = TRUE;
-  GstCaps *caps, *templ, *old;
+  GstCaps *caps, *old, *templ;
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CAPS:
@@ -2721,7 +2741,6 @@ do_event_function (GstPad * pad, GstEvent * event,
       }
       if (call_event)
         *caps_notify = TRUE;
-
       gst_caps_unref (templ);
       break;
     }
@@ -3130,7 +3149,7 @@ event_forward_func (GstPad * pad, EventData * data)
  * The the event is sent to all pads internally linked to @pad. This function
  * takes ownership of @event.
  *
- * Returns: TRUE if the event was sent succesfully.
+ * Returns: TRUE if the event was sent successfully.
  */
 gboolean
 gst_pad_event_default (GstPad * pad, GstEvent * event)
@@ -3281,7 +3300,7 @@ no_peer:
  * @pad, only one will be sent the query.
  * Multi-sinkpad elements should implement custom query handlers.
  *
- * Returns: TRUE if the query was performed succesfully.
+ * Returns: TRUE if the query was performed successfully.
  */
 gboolean
 gst_pad_query_default (GstPad * pad, GstQuery * query)
@@ -3997,7 +4016,7 @@ get_range_failed:
  *     returns #GST_FLOW_ERROR if %NULL.
  *
  * When @pad is flushing this function returns #GST_FLOW_WRONG_STATE
- * immediatly and @buffer is %NULL.
+ * immediately and @buffer is %NULL.
  *
  * Calls the getrange function of @pad, see #GstPadGetRangeFunction for a
  * description of a getrange function. If @pad has no getrange function

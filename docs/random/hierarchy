@@ -12,7 +12,7 @@ better layout for it now. Some things to consider:
  - The plugins can be grouped together by the media type they
    operate on or by the way they work (decoder/encoder)
    
-In GStreamer all plugins are techically filters, the only way they
+In GStreamer all plugins are technically filters, the only way they
 can be considered sources or sinks (input/output) elements is
 by the absence of src/sink pads. At first sight the source/filter/
 sink distinction is quite useless because most of the plugins

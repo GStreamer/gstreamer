@@ -6,7 +6,7 @@ Implementation:
 
 Ideas and plans:
   - Deprecate control-rate property and add a control-period property
-    that does the same and is named appropiately. Damn confusing names.
+    that does the same and is named appropriately. Damn confusing names.
 
   - gst_object_suggest_next_sync() will not be used at all anymore.
     Note this in the docs and explain correct usage in elements.

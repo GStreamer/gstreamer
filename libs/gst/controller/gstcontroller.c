@@ -191,7 +191,7 @@ gst_controller_find_controlled_property (GstController * self,
  * @self: the controller object or %NULL if none yet exists
  * @object: object to bind the property
  * @name: name of projecty in @object
- * @ref_existing: pointer to flag that tracks if we need to ref an existng
+ * @ref_existing: pointer to flag that tracks if we need to ref an existing
  *   controller still
  *
  * Creates a new #GstControlledProperty if there is none for property @name yet.

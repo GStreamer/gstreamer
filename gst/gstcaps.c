@@ -592,7 +592,7 @@ gst_caps_remove_structure (GstCaps * caps, guint idx)
 
 /**
  * gst_caps_merge_structure:
- * @caps: the #GstCaps that will the the new structure
+ * @caps: the #GstCaps that will the new structure
  * @structure: (transfer full): the #GstStructure to merge
  *
  * Appends @structure to @caps if its not already expressed by @caps.  The
@@ -1376,8 +1376,8 @@ gst_caps_structure_subtract (GSList ** into, const GstStructure * minuend,
 
 /**
  * gst_caps_subtract:
- * @minuend: #GstCaps to substract from
- * @subtrahend: #GstCaps to substract
+ * @minuend: #GstCaps to subtract from
+ * @subtrahend: #GstCaps to subtract
  *
  * Subtracts the @subtrahend from the @minuend.
  * <note>This function does not work reliably if optional properties for caps

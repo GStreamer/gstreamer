@@ -162,11 +162,11 @@ Before sending buffers, an element must send a SEGMENT event. An element is
 free to refuse buffers if they were not preceeded by a SEGMENT event.
 
 Elements that sync to the clock should store the SEGMENT start and end values
-and substract the start value from the buffer timestamp before comparing
+and subtract the start value from the buffer timestamp before comparing
 it against the stream time (see part-clocks.txt).
 
 An element is allowed to send out buffers with the SEGMENT start time already
-substracted from the timestamp. If it does so, it needs to send a corrected
+subtracted from the timestamp. If it does so, it needs to send a corrected
 SEGMENT downstream, ie, one with start time 0.
 
 A SEGMENT event should be generated as soon as possible in the pipeline and

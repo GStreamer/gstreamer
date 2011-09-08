@@ -44,7 +44,7 @@ typedef struct _GstPluginFeatureClass GstPluginFeatureClass;
 /**
  * GstRank:
  * @GST_RANK_NONE: will be chosen last or not at all
- * @GST_RANK_MARGINAL: unlikly to be chosen
+ * @GST_RANK_MARGINAL: unlikely to be chosen
  * @GST_RANK_SECONDARY: likely to be chosen
  * @GST_RANK_PRIMARY: will be chosen first
  *

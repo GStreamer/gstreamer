@@ -79,7 +79,7 @@ typedef enum {
  * no EOS will be emmited by the element that performed the seek, but a
  * #GST_MESSAGE_SEGMENT_DONE message will be posted on the bus by the element.
  * When this message is posted, it is possible to send a new seek event to
- * continue playback. With this seek method it is possible to perform seemless
+ * continue playback. With this seek method it is possible to perform seamless
  * looping or simple linear editing.
  *
  * When doing fast forward (rate > 1.0) or fast reverse (rate < -1.0) trickmode

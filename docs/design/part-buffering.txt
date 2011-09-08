@@ -11,7 +11,7 @@ live sources.
 
 We want to be able to implement the following features:
 
- - buffering up to a specifc amount of data, in memory, before starting playback
+ - buffering up to a specific amount of data, in memory, before starting playback
    so that network fluctuations are minimized.
  - download of the network file to a local disk with fast seeking in the
    downloaded data. This is similar to the quicktime/youtube players.
@@ -79,7 +79,7 @@ Some use cases:
 
   The application can use the BUFFERING query to get the estimated download time
   and match this time to the current/remaining playback time to control when
-  playback should start to have a non-interupted playback experience.
+  playback should start to have a non-interrupted playback experience.
 
 
  * Timeshifting

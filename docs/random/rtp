@@ -5,7 +5,7 @@ A brief description of the RTP protocol.
 
 The RTP protocol uses two connections: one for passing data and another for control. The control connection is used for starting, finishing, and passing statistics of lost packets. On the data connection, packets are transmitted containing the media. These packets have a 7 bit field that says what codec is the data transmitted with. This codec is variable. However data cannot change from audio to video in packets of the same connection. All the packets belong to the same logical stream, that is, for instanace, to the same speech, or to the same song. Different codecs in the same stream is used, for instance, to insert comfort noise.
 
-Each codec is packeted in a specific way in RTP packets. This is necessary to minimize the damage produced by lost packets. Therefore, packets should be arranged so that each packet can be decoded independently. If a packet is lost, that shoudn't preclude the decoding of following packets.
+Each codec is packeted in a specific way in RTP packets. This is necessary to minimize the damage produced by lost packets. Therefore, packets should be arranged so that each packet can be decoded independently. If a packet is lost, that shouldn't preclude the decoding of following packets.
 
 
 Suggested implementation:
@@ -38,7 +38,7 @@ Ronald suggested to use inheritance. Thus the user should insert a codec specifi
 
 udpsrc ! rtp-mp3 ! mp3decode ! osssink
 
-Reuse of RTP logic would be achived through inhertiance. 
+Reuse of RTP logic would be achieved through inheritance.
 
 This looks more logical, because inheritance reflects the fact that rtp-mp3 "is an" specialization of rtp. However, there are several issues. As stated above, it is posible in RTP to switch the encoding of the media at any time. If this happens, some state must be kept, such as statistics of packets received and sent. 
 

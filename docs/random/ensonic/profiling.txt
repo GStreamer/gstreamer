@@ -89,7 +89,7 @@ $Id$
 
 = PerformanceMonitor =
 Write a ld-preload lib that can gather data from gstreamer and logs it to files.
-The idea is not avoid adding API for performance meassurement to gstreamer.
+The idea is not avoid adding API for performance measurement to gstreamer.
 
 == Services ==
 library provides some common services used by the sensor modules.
@@ -97,7 +97,7 @@ library provides some common services used by the sensor modules.
 * timestamps
 
 == Sensors ==
-Sensors do meassurements and deliver timestampe performance data.
+Sensors do measurements and deliver timestampe performance data.
 * bitrates and latency via gst_pad_push/pull per link
 * qos ratio via gst_event_new_qos(), gst_pad_send_event()
 * cpu/mem via get_rusage
@@ -125,7 +125,7 @@ timestamp [qos-ratio] [cpu-load={sum,17284,17285}]
 ** should we have the log config in the header or in some separate config?
    - if config, we just specify the config when capturing put that
      in the first log line
-   - otheriwse the analyzer ui has to parse it from the first line
+   - otherwise the analyzer ui has to parse it from the first line
 
 == Running ==
 LD_PRELOAD=libgstperfmon.so GST_PERFMON_DETAILS="qos-ratio,cpu-load=all" <application>

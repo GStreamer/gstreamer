@@ -65,7 +65,7 @@ We will have the following methods for (implicitly) loading plugins:
 
  gst_plugin_load (name)
 
-  The plugin will be located in the tree and if it allready loaded, the
+  The plugin will be located in the tree and if it already loaded, the
   function returns. If it is not loaded, the XML entry is removed and
   the plugin is loaded. The plugin_init is called so that the XML tree
   is reconstructed.
@@ -73,7 +73,7 @@ We will have the following methods for (implicitly) loading plugins:
  gst_elementfactory_create (factory, name);
 
   The plugin providing the element will be located, if the plugin is
-  allready loaded, an element with the given name is created.
+  already loaded, an element with the given name is created.
   if the plugin is not loaded, gst_plugin_load is called.
   the loaded factory is located again and the element is created.
 
