@@ -410,7 +410,8 @@ gst_hls_demux_src_event (GstPad * pad, GstEvent * event)
       GST_M3U8_CLIENT_LOCK (demux->client);
       GST_DEBUG_OBJECT (demux, "seeking to sequence %d", current_sequence);
       demux->client->sequence = current_sequence;
-      demux->position = start;
+      gst_m3u8_client_get_current_position (demux->client, &demux->position);
+      demux->position_shift = start - demux->position;
       demux->need_segment = TRUE;
       GST_M3U8_CLIENT_UNLOCK (demux->client);
 
@@ -751,13 +752,15 @@ gst_hls_demux_loop (GstHLSDemux * demux)
     demux->need_segment = TRUE;
   }
   if (demux->need_segment) {
+    GstClockTime start = demux->position + demux->position_shift;
     /* And send a newsegment */
-    GST_DEBUG_OBJECT (demux, "Sending new-segment. Segment start:%"
-        GST_TIME_FORMAT, GST_TIME_ARGS (demux->position));
+    GST_DEBUG_OBJECT (demux, "Sending new-segment. segment start:%"
+        GST_TIME_FORMAT, GST_TIME_ARGS (start));
     gst_pad_push_event (demux->srcpad,
-        gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME, demux->position,
-            GST_CLOCK_TIME_NONE, demux->position));
+        gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
+            start, GST_CLOCK_TIME_NONE, start));
     demux->need_segment = FALSE;
+    demux->position_shift = 0;
   }
 
   if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_DURATION (buf)))
@@ -886,6 +889,7 @@ gst_hls_demux_reset (GstHLSDemux * demux, gboolean dispose)
   g_queue_clear (demux->queue);
 
   demux->position = 0;
+  demux->position_shift = 0;
   demux->need_segment = TRUE;
 }
 
@@ -1037,6 +1041,7 @@ gst_hls_demux_cache_fragments (GstHLSDemux * demux)
       demux->client->sequence -= demux->fragments_cache;
     else
       demux->client->sequence = 0;
+    gst_m3u8_client_get_current_position (demux->client, &demux->position);
     GST_M3U8_CLIENT_UNLOCK (demux->client);
   } else {
     GstClockTime duration = gst_m3u8_client_get_duration (demux->client);
