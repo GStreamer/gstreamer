@@ -2781,7 +2781,7 @@ gst_pad_configure_sink (GstPad * pad, GstCaps * caps)
   gboolean res;
 
   /* See if pad accepts the caps */
-  if (!gst_caps_can_intersect (caps, gst_pad_get_pad_template_caps (pad)))
+  if (!gst_pad_accept_caps (pad, caps))
     goto not_accepted;
 
   /* set caps on pad if call succeeds */
