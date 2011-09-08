@@ -1339,13 +1339,14 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
   GstDecodePad *dpad;
   GstElementFactory *factory;
   const gchar *classification;
-  gboolean is_parser_converter;
+  gboolean is_parser_converter = FALSE;
 
   GST_DEBUG_OBJECT (dbin, "Pad %s:%s caps:%" GST_PTR_FORMAT,
       GST_DEBUG_PAD_NAME (pad), caps);
 
   if (chain->elements
-      && src != ((GstDecodeElement *) chain->elements->data)->element) {
+      && src != ((GstDecodeElement *) chain->elements->data)->element
+      && src != ((GstDecodeElement *) chain->elements->data)->capsfilter) {
     GST_ERROR_OBJECT (dbin, "New pad from not the last element in this chain");
     return;
   }
@@ -1516,7 +1517,7 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
     for (i = 0; i < factories->n_values; i++) {
       GstElementFactory *factory =
           g_value_get_object (g_value_array_get_nth (factories, i));
-      GstCaps *tcaps;
+      GstCaps *tcaps, *intersection;
       const GList *tmps;
 
       GST_DEBUG ("Trying factory %s",
@@ -1533,7 +1534,9 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
         if (st->direction != GST_PAD_SINK || st->presence != GST_PAD_ALWAYS)
           continue;
         tcaps = gst_static_pad_template_get_caps (st);
-        gst_caps_merge (filter_caps, gst_caps_copy (tcaps));
+        intersection =
+            gst_caps_intersect_full (tcaps, caps, GST_CAPS_INTERSECT_FIRST);
+        gst_caps_merge (filter_caps, intersection);
         gst_caps_unref (tcaps);
       }
     }
@@ -1554,6 +1557,11 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
     p = gst_element_get_static_pad (delem->capsfilter, "src");
     gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (dpad), p);
     pad = p;
+
+    if (!gst_caps_is_fixed (caps)) {
+      g_value_array_free (factories);
+      goto non_fixed;
+    }
   }
 
   /* 1.h else continue autoplugging something from the list. */
@@ -1664,6 +1672,12 @@ setup_caps_delay:
     g_signal_connect (G_OBJECT (pad), "notify::caps",
         G_CALLBACK (caps_notify_cb), chain);
     CHAIN_MUTEX_UNLOCK (chain);
+
+    /* If we're here because we have a Parser/Converter
+     * we have to unref the pad */
+    if (is_parser_converter)
+      gst_object_unref (pad);
+
     return;
   }
 }
@@ -1726,48 +1740,6 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
     factory = g_value_get_object (g_value_array_get_nth (factories, 0));
     /* Remove selected factory from the list. */
     g_value_array_remove (factories, 0);
-
-    /* Check if the caps are really supported by the factory. The
-     * factory list is non-empty-subset filtered while caps
-     * are only accepted by a pad if they are a subset of the
-     * pad caps.
-     *
-     * FIXME: Only do this for fixed caps here. Non-fixed caps
-     * can happen if a Parser/Converter was autoplugged before
-     * this. We then assume that it will be able to convert to
-     * everything that the decoder would want.
-     *
-     * A subset check will fail here because the parser caps
-     * will be generic and while the decoder will only
-     * support a subset of the parser caps.
-     */
-    if (gst_caps_is_fixed (caps)) {
-      const GList *templs;
-      gboolean skip = FALSE;
-
-      templs = gst_element_factory_get_static_pad_templates (factory);
-
-      while (templs) {
-        GstStaticPadTemplate *templ = (GstStaticPadTemplate *) templs->data;
-
-        if (templ->direction == GST_PAD_SINK) {
-          GstCaps *templcaps = gst_static_caps_get (&templ->static_caps);
-
-          if (!gst_caps_is_subset (caps, templcaps)) {
-            gst_caps_unref (templcaps);
-            skip = TRUE;
-            break;
-          }
-
-          gst_caps_unref (templcaps);
-        }
-        templs = g_list_next (templs);
-      }
-      if (skip) {
-        gst_object_unref (factory);
-        continue;
-      }
-    }
 
     /* If the factory is for a parser we first check if the factory
      * was already used for the current chain. If it was used already

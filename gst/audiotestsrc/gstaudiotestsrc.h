@@ -53,6 +53,8 @@ G_BEGIN_DECLS
  * @GST_AUDIO_TEST_SRC_WAVE_TICKS: periodic ticks
  * @GST_AUDIO_TEST_SRC_WAVE_GAUSSIAN_WHITE_NOISE: white (zero mean) Gaussian noise;  volume sets the standard deviation of the noise in units of the range of values of the sample type, e.g. volume=0.1 produces noise with a standard deviation of 0.1*32767=3277 with 16-bit integer samples, or 0.1*1.0=0.1 with floating-point samples.
  * @GST_AUDIO_TEST_SRC_WAVE_RED_NOISE: red (brownian) noise
+ * @GST_AUDIO_TEST_SRC_WAVE_BLUE_NOISE: spectraly inverted pink noise
+ * @GST_AUDIO_TEST_SRC_WAVE_VIOLET_NOISE: spectraly inverted red (brownian) noise
  *
  * Different types of supported sound waves.
  */

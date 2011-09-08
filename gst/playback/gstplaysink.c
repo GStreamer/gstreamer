@@ -2113,7 +2113,8 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
   GST_OBJECT_UNLOCK (playsink);
 
   /* figure out which components we need */
-  if (flags & GST_PLAY_FLAG_TEXT && playsink->text_pad) {
+  if (flags & GST_PLAY_FLAG_TEXT && playsink->video_pad_raw
+      && playsink->text_pad) {
     /* we have subtitles and we are requested to show it */
     need_text = TRUE;
   }
@@ -3027,14 +3028,14 @@ caps_notify_cb (GstPad * pad, GParamSpec * unused, GstPlaySink * playsink)
 
   if (pad == playsink->audio_pad) {
     raw = is_raw_pad (pad);
-    reconfigure = (!!playsink->audio_pad_raw != !!raw)
+    reconfigure = (! !playsink->audio_pad_raw != ! !raw)
         && playsink->audiochain;
     GST_DEBUG_OBJECT (pad,
         "Audio caps changed: raw %d reconfigure %d caps %" GST_PTR_FORMAT, raw,
         reconfigure, caps);
   } else if (pad == playsink->video_pad) {
     raw = is_raw_pad (pad);
-    reconfigure = (!!playsink->video_pad_raw != !!raw)
+    reconfigure = (! !playsink->video_pad_raw != ! !raw)
         && playsink->videochain;
     GST_DEBUG_OBJECT (pad,
         "Video caps changed: raw %d reconfigure %d caps %" GST_PTR_FORMAT, raw,

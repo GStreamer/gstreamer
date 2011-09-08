@@ -488,7 +488,13 @@ theora_enc_reset (GstTheoraEnc * enc)
 
   GST_OBJECT_LOCK (enc);
   enc->info.target_bitrate = enc->video_bitrate;
-  enc->info.quality = enc->video_quality;
+  if (enc->quality_changed) {
+    enc->info.quality = enc->video_quality;
+  } else {
+    if (enc->video_bitrate == 0) {
+      enc->info.quality = enc->video_quality;
+    }
+  }
   enc->bitrate_changed = FALSE;
   enc->quality_changed = FALSE;
   GST_OBJECT_UNLOCK (enc);

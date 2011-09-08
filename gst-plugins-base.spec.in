@@ -220,6 +220,9 @@ GStreamer Plugins Base library development and header files.
 %{_includedir}/gstreamer-%{majorminor}/gst/pbutils/gstpluginsbaseversion.h
 %{_includedir}/gstreamer-%{majorminor}/gst/tag/xmpwriter.h
 %{_includedir}/gstreamer-%{majorminor}/gst/audio/gstaudioiec61937.h
+%{_includedir}/gstreamer-%{majorminor}/gst/audio/gstaudiodecoder.h
+%{_includedir}/gstreamer-%{majorminor}/gst/audio/gstaudioencoder.h
+%{_includedir}/gstreamer-%{majorminor}/gst/tag/gsttagmux.h
 
 %{_libdir}/libgstfft-%{majorminor}.so
 %{_libdir}/libgstrtsp-%{majorminor}.so
@@ -280,6 +283,7 @@ GStreamer Plugins Base library development and header files.
 # gtk-doc documentation
 %doc %{_datadir}/gtk-doc/html/gst-plugins-base-libs-%{majorminor}
 %doc %{_datadir}/gtk-doc/html/gst-plugins-base-plugins-%{majorminor}
+%doc %{_datadir}/gst-plugins-base/license-translations.dict
 
 %changelog
 * Sun Aug 07 2011 Thomas Vander Stichele <thomas at apestaart dot org>
