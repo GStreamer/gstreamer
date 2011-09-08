@@ -463,6 +463,7 @@ gst_hls_demux_sink_event (GstPad * pad, GstEvent * event)
       playlist = gst_hls_src_buf_to_utf8_playlist ((gchar *)
           GST_BUFFER_DATA (demux->playlist), GST_BUFFER_SIZE (demux->playlist));
       gst_buffer_unref (demux->playlist);
+      demux->playlist = NULL;
       if (playlist == NULL) {
         GST_WARNING_OBJECT (demux, "Error validating first playlist.");
       } else if (!gst_m3u8_client_update (demux->client, playlist)) {
