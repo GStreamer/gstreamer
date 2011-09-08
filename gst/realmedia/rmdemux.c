@@ -707,6 +707,11 @@ gst_rmdemux_reset (GstRMDemux * rmdemux)
   rmdemux->n_audio_streams = 0;
   rmdemux->n_video_streams = 0;
 
+  if (rmdemux->pending_tags != NULL) {
+    gst_tag_list_free (rmdemux->pending_tags);
+    rmdemux->pending_tags = NULL;
+  }
+
   gst_adapter_clear (rmdemux->adapter);
   rmdemux->state = RMDEMUX_STATE_HEADER;
   rmdemux->have_pads = FALSE;
@@ -1861,9 +1866,11 @@ gst_rmdemux_parse_cont (GstRMDemux * rmdemux, const guint8 * data, int length)
   GstTagList *tags;
 
   tags = gst_rm_utils_read_tags (data, length, gst_rm_utils_read_string16);
-  if (tags) {
-    gst_element_found_tags (GST_ELEMENT (rmdemux), tags);
-  }
+
+  GST_LOG_OBJECT (rmdemux, "tags: %" GST_PTR_FORMAT, tags);
+
+  rmdemux->pending_tags =
+      gst_tag_list_merge (rmdemux->pending_tags, tags, GST_TAG_MERGE_APPEND);
 }
 
 static GstFlowReturn
@@ -2604,6 +2611,11 @@ gst_rmdemux_parse_packet (GstRMDemux * rmdemux, GstBuffer * in, guint16 version)
 
     gst_rmdemux_send_event (rmdemux, event);
     rmdemux->need_newsegment = FALSE;
+
+    if (rmdemux->pending_tags != NULL) {
+      gst_element_found_tags (GST_ELEMENT (rmdemux), rmdemux->pending_tags);
+      rmdemux->pending_tags = NULL;
+    }
   }
 
   if (stream->pending_tags != NULL) {
