@@ -279,13 +279,16 @@ gst_vaapi_image_set_property(
         break;
     }
     case PROP_FORMAT:
-        priv->format = g_value_get_uint(value);
+        if (priv->create_image)
+            priv->format = g_value_get_uint(value);
         break;
     case PROP_WIDTH:
-        priv->width = g_value_get_uint(value);
+        if (priv->create_image)
+            priv->width = g_value_get_uint(value);
         break;
     case PROP_HEIGHT:
-        priv->height = g_value_get_uint(value);
+        if (priv->create_image)
+            priv->height = g_value_get_uint(value);
         break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
