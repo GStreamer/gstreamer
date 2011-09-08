@@ -3364,7 +3364,7 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
         /* handle gaps, e.g. non-zero start-time, or an cue index entry
          * that landed us with timestamps not quite intended */
         GST_OBJECT_LOCK (demux);
-        if (GST_CLOCK_TIME_IS_VALID (demux->common.segment.last_stop) &&
+        if (GST_CLOCK_TIME_IS_VALID (demux->last_stop_end) &&
             demux->common.segment.rate > 0.0) {
           GstClockTimeDiff diff;
           GstEvent *event1, *event2;
@@ -3372,7 +3372,7 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
           /* only send newsegments with increasing start times,
            * otherwise if these go back and forth downstream (sinks) increase
            * accumulated time and running_time */
-          diff = GST_CLOCK_DIFF (demux->common.segment.last_stop, lace_time);
+          diff = GST_CLOCK_DIFF (demux->last_stop_end, lace_time);
           if (diff > 2 * GST_SECOND && lace_time > demux->common.segment.start
               && (!GST_CLOCK_TIME_IS_VALID (demux->common.segment.stop)
                   || lace_time < demux->common.segment.stop)) {
@@ -3386,11 +3386,9 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
              * accum time, hence running_time */
             /* close ahead of gap */
             event1 = gst_event_new_new_segment (TRUE,
-                demux->common.segment.rate,
-                demux->common.segment.format,
-                demux->common.segment.last_stop,
-                demux->common.segment.last_stop,
-                demux->common.segment.last_stop);
+                demux->common.segment.rate, demux->common.segment.format,
+                demux->last_stop_end, demux->last_stop_end,
+                demux->last_stop_end);
             /* skip gap */
             event2 = gst_event_new_new_segment (FALSE,
                 demux->common.segment.rate,
