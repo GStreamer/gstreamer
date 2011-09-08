@@ -2610,6 +2610,27 @@ gst_pad_accept_caps (GstPad * pad, GstCaps * caps)
     result = gst_pad_acceptcaps_default (pad, caps);
     GST_DEBUG_OBJECT (pad, "default acceptcaps returned %d", result);
   }
+
+#ifndef G_DISABLE_ASSERT
+  {
+    GstCaps *padcaps;
+
+    padcaps = gst_pad_get_caps_reffed (pad);
+    if (!gst_caps_is_subset (caps, padcaps)) {
+      gchar *padcaps_str, *caps_str;
+
+      padcaps_str = gst_caps_to_string (padcaps);
+      caps_str = gst_caps_to_string (caps);
+      g_warning ("pad %s:%s accepted caps %s although "
+          "they are not a subset of its caps %s",
+          GST_DEBUG_PAD_NAME (pad), caps_str, padcaps_str);
+      g_free (padcaps_str);
+      g_free (caps_str);
+    }
+    gst_caps_unref (padcaps);
+  }
+#endif
+
   return result;
 
 is_same_caps:
