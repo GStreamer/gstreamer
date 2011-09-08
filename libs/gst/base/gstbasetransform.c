@@ -919,7 +919,6 @@ gst_base_transform_find_transform (GstBaseTransform * trans, GstPad * pad,
   GstBaseTransformClass *klass;
   GstPad *otherpad, *otherpeer;
   GstCaps *othercaps;
-  gboolean peer_checked = FALSE;
   gboolean is_fixed;
 
   /* caps must be fixed here, this is a programming error if it's not */
@@ -1000,7 +999,6 @@ gst_base_transform_find_transform (GstBaseTransform * trans, GstPad * pad,
       gst_caps_unref (othercaps);
       othercaps = intersection;
       is_fixed = gst_caps_is_fixed (othercaps);
-      peer_checked = TRUE;
     } else {
       GST_DEBUG_OBJECT (trans, "no peer, doing passthrough");
       gst_caps_unref (othercaps);
@@ -1024,7 +1022,6 @@ gst_base_transform_find_transform (GstBaseTransform * trans, GstPad * pad,
     /* FIXME: when fixating using the vmethod, it might make sense to fixate
      * each of the caps; but Wim doesn't see a use case for that yet */
     gst_caps_truncate (othercaps);
-    peer_checked = FALSE;
 
     if (klass->fixate_caps) {
       GST_DEBUG_OBJECT (trans, "trying to fixate %" GST_PTR_FORMAT
@@ -1064,9 +1061,8 @@ gst_base_transform_find_transform (GstBaseTransform * trans, GstPad * pad,
   if (!is_fixed)
     goto could_not_fixate;
 
-  /* and peer should accept, don't check again if we already checked the
-   * othercaps against the peer. */
-  if (!peer_checked && otherpeer && !gst_pad_accept_caps (otherpeer, othercaps))
+  /* and peer should accept */
+  if (!gst_pad_accept_caps (otherpeer, othercaps))
     goto peer_no_accept;
 
   GST_DEBUG_OBJECT (trans, "Input caps were %" GST_PTR_FORMAT
@@ -1148,7 +1144,7 @@ gst_base_transform_acceptcaps_default (GstBaseTransform * trans,
     GST_DEBUG_OBJECT (trans, "allowed caps %" GST_PTR_FORMAT, allowed);
 
     /* intersect with the requested format */
-    ret = gst_caps_can_intersect (allowed, caps);
+    ret = gst_caps_is_subset (caps, allowed);
     gst_caps_unref (allowed);
 
     if (!ret)
