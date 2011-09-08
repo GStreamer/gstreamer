@@ -2542,7 +2542,7 @@ gst_pad_acceptcaps_default (GstPad * pad, GstCaps * caps)
 
   GST_DEBUG_OBJECT (pad, "allowed caps %" GST_PTR_FORMAT, allowed);
 
-  result = gst_caps_can_intersect (allowed, caps);
+  result = gst_caps_is_subset (caps, allowed);
 
   gst_caps_unref (allowed);
 
@@ -2600,26 +2600,6 @@ gst_pad_accept_caps (GstPad * pad, GstCaps * caps)
   /* we can call the function */
   result = acceptfunc (pad, caps);
   GST_DEBUG_OBJECT (pad, "acceptfunc returned %d", result);
-
-#ifndef G_DISABLE_ASSERT
-  {
-    GstCaps *padcaps;
-
-    padcaps = gst_pad_get_caps_reffed (pad);
-    if (!gst_caps_is_subset (caps, padcaps)) {
-      gchar *padcaps_str, *caps_str;
-
-      padcaps_str = gst_caps_to_string (padcaps);
-      caps_str = gst_caps_to_string (caps);
-      g_warning ("pad %s:%s accepted caps %s although "
-          "they are not a subset of its caps %s",
-          GST_DEBUG_PAD_NAME (pad), caps_str, padcaps_str);
-      g_free (padcaps_str);
-      g_free (caps_str);
-    }
-    gst_caps_unref (padcaps);
-  }
-#endif
 
   return result;
 
@@ -2731,7 +2711,7 @@ do_event_function (GstPad * pad, GstEvent * event,
 
       /* See if pad accepts the caps */
       templ = gst_pad_get_pad_template_caps (pad);
-      if (!gst_caps_can_intersect (caps, templ))
+      if (!gst_caps_is_subset (caps, templ))
         goto not_accepted;
 
       /* check if it changed */
