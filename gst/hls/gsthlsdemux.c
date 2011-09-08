@@ -574,9 +574,7 @@ gst_hls_demux_fetcher_sink_event (GstPad * pad, GstEvent * event)
       GST_DEBUG_OBJECT (demux, "Got EOS on the fetcher pad");
       /* signal we have fetched the URI */
       if (!demux->cancelled) {
-        g_mutex_lock (demux->fetcher_lock);
         g_cond_broadcast (demux->fetcher_cond);
-        g_mutex_unlock (demux->fetcher_lock);
       }
     }
     default:
