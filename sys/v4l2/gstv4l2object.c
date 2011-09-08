@@ -2175,11 +2175,20 @@ get_fmt_failed:
   }
 set_fmt_failed:
   {
-    GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, SETTINGS,
-        (_("Device '%s' cannot capture at %dx%d"),
-            v4l2object->videodev, width, height),
-        ("Call to S_FMT failed for %" GST_FOURCC_FORMAT " @ %dx%d: %s",
-            GST_FOURCC_ARGS (pixelformat), width, height, g_strerror (errno)));
+    if (errno == EBUSY) {
+      GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, BUSY,
+          (_("Device '%s' is busy"), v4l2object->videodev),
+          ("Call to S_FMT failed for %" GST_FOURCC_FORMAT " @ %dx%d: %s",
+              GST_FOURCC_ARGS (pixelformat), width, height,
+              g_strerror (errno)));
+    } else {
+      GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, SETTINGS,
+          (_("Device '%s' cannot capture at %dx%d"),
+              v4l2object->videodev, width, height),
+          ("Call to S_FMT failed for %" GST_FOURCC_FORMAT " @ %dx%d: %s",
+              GST_FOURCC_ARGS (pixelformat), width, height,
+              g_strerror (errno)));
+    }
     return FALSE;
   }
 invalid_dimensions:
