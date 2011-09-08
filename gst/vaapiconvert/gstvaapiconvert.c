@@ -288,9 +288,11 @@ gst_vaapiconvert_init(GstVaapiConvert *convert, GstVaapiConvertClass *klass)
 
     convert->display                    = NULL;
     convert->images                     = NULL;
+    convert->images_reset               = FALSE;
     convert->image_width                = 0;
     convert->image_height               = 0;
     convert->surfaces                   = NULL;
+    convert->surfaces_reset             = FALSE;
     convert->surface_width              = 0;
     convert->surface_height             = 0;
     convert->direct_rendering_caps      = 0;
@@ -449,8 +451,6 @@ static gboolean
 gst_vaapiconvert_ensure_image_pool(GstVaapiConvert *convert, GstCaps *caps)
 {
     GstStructure * const structure = gst_caps_get_structure(caps, 0);
-    GstVideoFormat vformat;
-    GstVaapiImage *image;
     gint width, height;
 
     gst_structure_get_int(structure, "width",  &width);
@@ -464,19 +464,7 @@ gst_vaapiconvert_ensure_image_pool(GstVaapiConvert *convert, GstCaps *caps)
         convert->images = gst_vaapi_image_pool_new(convert->display, caps);
         if (!convert->images)
             return FALSE;
-
-        /* Check if we can alias sink & output buffers (same data_size) */
-        if (gst_video_format_parse_caps(caps, &vformat, NULL, NULL)) {
-            image = gst_vaapi_video_pool_get_object(convert->images);
-            if (image) {
-                if (convert->direct_rendering_caps == 0 &&
-                    (gst_vaapi_image_is_linear(image) &&
-                     (gst_vaapi_image_get_data_size(image) ==
-                      gst_video_format_get_size(vformat, width, height))))
-                    convert->direct_rendering_caps = 1;
-                gst_vaapi_video_pool_put_object(convert->images, image);
-            }
-        }
+        convert->images_reset = TRUE;
     }
     return TRUE;
 }
@@ -500,24 +488,95 @@ gst_vaapiconvert_ensure_surface_pool(GstVaapiConvert *convert, GstCaps *caps)
         convert->surfaces = gst_vaapi_surface_pool_new(convert->display, caps);
         if (!convert->surfaces)
             return FALSE;
-
-        /* Check if we can access to the surface pixels directly */
-        surface = gst_vaapi_video_pool_get_object(convert->surfaces);
-        if (surface) {
-            image = gst_vaapi_surface_derive_image(surface);
-            if (image) {
-                if (gst_vaapi_image_map(image)) {
-                    if (convert->direct_rendering_caps == 1 &&
-                        gst_vaapi_image_is_linear(image))
-                        convert->direct_rendering_caps = 2;
-                    gst_vaapi_image_unmap(image);
-                }
-                g_object_unref(image);
-            }
-            gst_vaapi_video_pool_put_object(convert->surfaces, surface);
-        }
+        convert->surfaces_reset = TRUE;
     }
     return TRUE;
+}
+
+static GstVaapiImageFormat
+gst_video_format_to_vaapi_image_format(GstVideoFormat vformat)
+{
+    GstVaapiImageFormat vaformat;
+
+    switch (vformat) {
+    case GST_VIDEO_FORMAT_NV12: vaformat = GST_VAAPI_IMAGE_NV12; break;
+    case GST_VIDEO_FORMAT_YV12: vaformat = GST_VAAPI_IMAGE_YV12; break;
+    case GST_VIDEO_FORMAT_I420: vaformat = GST_VAAPI_IMAGE_I420; break;
+    case GST_VIDEO_FORMAT_AYUV: vaformat = GST_VAAPI_IMAGE_AYUV; break;
+    case GST_VIDEO_FORMAT_ARGB: vaformat = GST_VAAPI_IMAGE_ARGB; break;
+    case GST_VIDEO_FORMAT_RGBA: vaformat = GST_VAAPI_IMAGE_RGBA; break;
+    case GST_VIDEO_FORMAT_ABGR: vaformat = GST_VAAPI_IMAGE_ABGR; break;
+    case GST_VIDEO_FORMAT_BGRA: vaformat = GST_VAAPI_IMAGE_BGRA; break;
+    default:                    vaformat = (GstVaapiImageFormat)0; break;
+    }
+    return vaformat;
+}
+
+static void
+gst_vaapiconvert_ensure_direct_rendering_caps(
+    GstVaapiConvert *convert,
+    GstCaps         *caps
+)
+{
+    GstVaapiSurface *surface;
+    GstVaapiImage *image;
+    GstVaapiImageFormat vaformat;
+    GstVideoFormat vformat;
+    GstStructure *structure;
+    gint width, height;
+
+    if (!convert->images_reset && !convert->surfaces_reset)
+        return;
+
+    convert->images_reset          = FALSE;
+    convert->surfaces_reset        = FALSE;
+    convert->direct_rendering_caps = 0;
+
+    structure = gst_caps_get_structure(caps, 0);
+    if (!structure)
+        return;
+    gst_structure_get_int(structure, "width",  &width);
+    gst_structure_get_int(structure, "height", &height);
+
+    /* Translate from Gst video format to VA image format */
+    if (!gst_video_format_parse_caps(caps, &vformat, NULL, NULL))
+        return;
+    if (!gst_video_format_is_yuv(vformat))
+        return;
+    vaformat = gst_video_format_to_vaapi_image_format(vformat);
+    if (!vaformat)
+        return;
+
+    /* Check if we can alias sink & output buffers (same data_size) */
+    image = gst_vaapi_video_pool_get_object(convert->images);
+    if (image) {
+        if (convert->direct_rendering_caps == 0 &&
+            (gst_vaapi_image_get_format(image) == vaformat &&
+             gst_vaapi_image_is_linear(image) &&
+             (gst_vaapi_image_get_data_size(image) ==
+              gst_video_format_get_size(vformat, width, height))))
+            convert->direct_rendering_caps = 1;
+        gst_vaapi_video_pool_put_object(convert->images, image);
+    }
+
+    /* Check if we can access to the surface pixels directly */
+    surface = gst_vaapi_video_pool_get_object(convert->surfaces);
+    if (surface) {
+        image = gst_vaapi_surface_derive_image(surface);
+        if (image) {
+            if (gst_vaapi_image_map(image)) {
+                if (convert->direct_rendering_caps == 1 &&
+                    (gst_vaapi_image_get_format(image) == vaformat &&
+                     gst_vaapi_image_is_linear(image) &&
+                     (gst_vaapi_image_get_data_size(image) ==
+                      gst_video_format_get_size(vformat, width, height))))
+                    convert->direct_rendering_caps = 2;
+                gst_vaapi_image_unmap(image);
+            }
+            g_object_unref(image);
+        }
+        gst_vaapi_video_pool_put_object(convert->surfaces, surface);
+    }
 }
 
 static gboolean
@@ -535,6 +594,7 @@ gst_vaapiconvert_negotiate_buffers(
     if (!gst_vaapiconvert_ensure_surface_pool(convert, outcaps))
         return FALSE;
 
+    gst_vaapiconvert_ensure_direct_rendering_caps(convert, incaps);
     dr = MIN(convert->direct_rendering, convert->direct_rendering_caps);
     if (convert->direct_rendering != dr) {
         convert->direct_rendering = dr;

@@ -73,6 +73,8 @@ struct _GstVaapiConvert {
     guint               surface_height;
     guint               direct_rendering_caps;
     guint               direct_rendering;
+    unsigned int        images_reset    : 1;
+    unsigned int        surfaces_reset  : 1;
 };
 
 struct _GstVaapiConvertClass {
