@@ -2,6 +2,9 @@
  * mpegtsbase.h - GStreamer MPEG transport stream base class
  * Copyright (C) 2009 Edward Hervey <edward.hervey@collabora.co.uk>
  *               2007 Alessandro Decina
+ * Copyright (C) 2011, Hewlett-Packard Development Company, L.P.
+ *  Author: Youness Alaoui <youness.alaoui@collabora.co.uk>, Collabora Ltd.
+ *  Author: Sebastian Dröge <sebastian.droege@collabora.co.uk>, Collabora Ltd.
  *
  * Authors:
  *   Alessandro Decina <alessandro@nnva.org>

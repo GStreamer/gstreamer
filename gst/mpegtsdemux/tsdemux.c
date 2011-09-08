@@ -2,6 +2,10 @@
  * tsdemux.c
  * Copyright (C) 2009 Zaheer Abbas Merali
  *               2010 Edward Hervey
+ * Copyright (C) 2011, Hewlett-Packard Development Company, L.P.
+ *  Author: Youness Alaoui <youness.alaoui@collabora.co.uk>, Collabora Ltd.
+ *  Author: Sebastian Dröge <sebastian.droege@collabora.co.uk>, Collabora Ltd.
+ *  Author: Edward Hervey <bilboed@bilboed.com>, Collabora Ltd.
  *
  * Authors:
  *   Zaheer Abbas Merali <zaheerabbas at merali dot org>

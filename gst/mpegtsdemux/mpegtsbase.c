@@ -1,7 +1,11 @@
 /*
- * mpegtsbase.c - 
+ * mpegtsbase.c -
  * Copyright (C) 2007 Alessandro Decina
  *               2010 Edward Hervey
+ * Copyright (C) 2011, Hewlett-Packard Development Company, L.P.
+ *  Author: Youness Alaoui <youness.alaoui@collabora.co.uk>, Collabora Ltd.
+ *  Author: Sebastian Dröge <sebastian.droege@collabora.co.uk>, Collabora Ltd.
+ *  Author: Edward Hervey <bilboed@bilboed.com>, Collabora Ltd.
  *
  * Authors:
  *   Alessandro Decina <alessandro@nnva.org>
