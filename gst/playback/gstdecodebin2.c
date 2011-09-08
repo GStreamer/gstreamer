@@ -1780,46 +1780,6 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
     /* Remove selected factory from the list. */
     g_value_array_remove (factories, 0);
 
-    /* Check if the caps are really supported by the factory. The
-     * factory list is non-empty-subset filtered while caps
-     * are only accepted by a pad if they are a subset of the
-     * pad caps.
-     *
-     * FIXME: Only do this for fixed caps here. Non-fixed caps
-     * can happen if a Parser/Converter was autoplugged before
-     * this. We then assume that it will be able to convert to
-     * everything that the decoder would want.
-     *
-     * A subset check will fail here because the parser caps
-     * will be generic and while the decoder will only
-     * support a subset of the parser caps.
-     */
-    if (gst_caps_is_fixed (caps)) {
-      const GList *templs;
-      gboolean skip = FALSE;
-
-      templs = gst_element_factory_get_static_pad_templates (factory);
-
-      while (templs) {
-        GstStaticPadTemplate *templ = (GstStaticPadTemplate *) templs->data;
-
-        if (templ->direction == GST_PAD_SINK) {
-          GstCaps *templcaps = gst_static_caps_get (&templ->static_caps);
-
-          if (!gst_caps_is_subset (caps, templcaps)) {
-            gst_caps_unref (templcaps);
-            skip = TRUE;
-            break;
-          }
-
-          gst_caps_unref (templcaps);
-        }
-        templs = g_list_next (templs);
-      }
-      if (skip)
-        continue;
-    }
-
     /* If the factory is for a parser we first check if the factory
      * was already used for the current chain. If it was used already
      * we would otherwise create an infinite loop here because the
