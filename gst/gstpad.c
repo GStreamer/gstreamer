@@ -2612,7 +2612,7 @@ gst_pad_accept_caps (GstPad * pad, GstCaps * caps)
   }
 
 #ifndef G_DISABLE_ASSERT
-  {
+  if (result) {
     GstCaps *padcaps;
 
     padcaps = gst_pad_get_caps_reffed (pad);
