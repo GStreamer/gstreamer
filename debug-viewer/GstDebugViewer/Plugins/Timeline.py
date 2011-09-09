@@ -426,6 +426,7 @@ class TimelineWidget (gtk.DrawingArea):
 
         self.model = None
         self.__offscreen = None
+        self.__offscreen_size = (0, 0)
 
         self.__position_ts_range = None
 
@@ -446,7 +447,9 @@ class TimelineWidget (gtk.DrawingArea):
 
         x, y, w, h = self.get_allocation ()
         self.__offscreen = gtk.gdk.Pixmap (self.window, w, h, -1)
+        self.__offscreen_size = (w, h)
         if not self.__offscreen:
+            self.__offscreen_size = (0, 0)
             raise ValueError ("could not obtain pixmap")
 
     def __redraw (self):
@@ -455,7 +458,7 @@ class TimelineWidget (gtk.DrawingArea):
             return
 
         self.__ensure_offscreen ()
-        self.__draw (self.__offscreen)
+        self.__draw_offscreen ()
         self.__update_from_offscreen ()
 
     def __update_from_offscreen (self, rect = None):
@@ -465,6 +468,35 @@ class TimelineWidget (gtk.DrawingArea):
 
         if self.__offscreen is None:
             self.__redraw ()
+
+        x, y, w, h = self.get_allocation ()
+        off_w, off_h = self.__offscreen_size
+
+        # Fill the background (where the offscreen pixmap doesn't fit) with
+        # white. This happens after enlarging the window, until all sentinels
+        # have finished running.
+        draw_background = True
+        if off_w >= w and off_h >= h:
+            draw_background = False
+
+        if draw_background:
+            ctx = self.window.cairo_create ()
+
+            if rect:
+                ctx.rectangle (rect.x, rect.y,
+                               rect.x + rect.width,
+                               rect.y + rect.height)
+                ctx.clip ()
+
+            if off_w < w:
+                ctx.rectangle (off_w, 0, w, off_h)
+            if off_h < h:
+                ctx.new_path ()
+                ctx.rectangle (0, off_h, w, h)
+
+            ctx.set_line_width (0.)
+            ctx.set_source_rgb (1., 1., 1.)
+            ctx.fill ()
 
         gc = gtk.gdk.GC (self.window)
         if rect is None:
@@ -513,10 +545,12 @@ class TimelineWidget (gtk.DrawingArea):
         time_per_pixel = self.process.freq_sentinel.step
         return 32 # FIXME use self.freq_sentinel.step and len (self.process.freq_sentinel.data)
 
-    def __draw (self, drawable):
+    def __draw_offscreen (self):
+
+        drawable = self.__offscreen
+        w, h = self.__offscreen_size
 
         ctx = drawable.cairo_create ()
-        x, y, w, h = self.get_allocation ()
 
         # White background rectangle.
         ctx.set_line_width (0.)
