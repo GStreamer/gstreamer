@@ -239,8 +239,7 @@ gst_h264_parse_stop (GstBaseParse * parse)
   for (i = 0; i < GST_H264_MAX_PPS_COUNT; i++)
     gst_buffer_replace (&h264parse->pps_nals[i], NULL);
 
-  g_free (h264parse->nalparser);
-  h264parse->nalparser = NULL;
+  gst_h264_nal_parser_free (h264parse->nalparser);
 
   return TRUE;
 }
