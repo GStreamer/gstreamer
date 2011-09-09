@@ -1135,6 +1135,20 @@ gst_h264_nal_parser_new (void)
 }
 
 /**
+ * gst_h264_nal_parser_free:
+ * @nalparser the #GstH264NalParser to free
+ *
+ * Frees @nalparser and sets it to %NULL
+ */
+void
+gst_h264_nal_parser_free (GstH264NalParser * nalparser)
+{
+  g_slice_free (GstH264NalParser, nalparser);
+
+  nalparser = NULL;
+}
+
+/**
  * gst_h264_parser_identify_nalu:
  * @nalparser: a #GstH264NalParser
  * @data: The data to parse
