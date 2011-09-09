@@ -321,7 +321,9 @@ gst_ac3_parse_frame_header_ac3 (GstAc3Parse * ac3parse, GstBuffer * buf,
 
   /* spec not quite clear here: decoder should decode if less than 8,
    * but seemingly only defines 6 and 8 cases */
-  if (bsid > 8) {
+  /* Files with 9 and 10 happen, and seem to comply with the <= 8
+     format, so let them through. The spec says nothing about 9 and 10 */
+  if (bsid > 10) {
     GST_DEBUG_OBJECT (ac3parse, "unexpected bsid=%d", bsid);
     return FALSE;
   } else if (bsid != 8 && bsid != 6) {
