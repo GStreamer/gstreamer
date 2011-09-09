@@ -220,8 +220,8 @@ class Window (object):
         self.actions.reload_file.props.sensitive = False
 
         group = gtk.ActionGroup ("RowActions")
-        group.add_actions ([("hide-before-line", None, _("Hide lines before this one")),
-                            ("hide-after-line", None, _("Hide lines after this one")),
+        group.add_actions ([("hide-before-line", None, _("Hide lines before this point")),
+                            ("hide-after-line", None, _("Hide lines after this point")),
                             ("show-hidden-lines", None, _("Show hidden lines")),
                             ("edit-copy-line", gtk.STOCK_COPY, _("Copy line"), "<Ctrl>C"),
                             ("edit-copy-message", gtk.STOCK_COPY, _("Copy message"), ""),
