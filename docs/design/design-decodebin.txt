@@ -255,11 +255,11 @@ for baseline profile, and software fallback for main/high profile; or a DSP
 codec only supporting certain resolutions, with a software fallback for
 unusual resolutions). So if decodebin just plugged the most highest-ranking
 decoder, that decoder might not be be able to handle the actual stream later
-on, which would yield in an error (this is a data flow error then which would
+on, which would yield an error (this is a data flow error then which would
 be hard to intercept and avoid in decodebin). In other words, we can't solve
 this issue by plugging a decoder right away with the parser.
 
-So decodebin need to communicate to the parser the set of available decoder
+So decodebin needs to communicate to the parser the set of available decoder
 caps (which would contain the relevant capabilities/restrictions such as
 supported profiles, resolutions, etc.), after the usual "autoplug-*" signal
 filtering/sorting of course.
