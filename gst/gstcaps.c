@@ -175,7 +175,7 @@ gst_caps_new_empty (void)
    */
 
 #ifdef DEBUG_REFCOUNT
-  GST_CAT_LOG (GST_CAT_CAPS, "created caps %p", caps);
+  GST_CAT_TRACE (GST_CAT_CAPS, "created caps %p", caps);
 #endif
 
   return caps;
@@ -342,7 +342,7 @@ _gst_caps_free (GstCaps * caps)
 #endif
 
 #ifdef DEBUG_REFCOUNT
-  GST_CAT_LOG (GST_CAT_CAPS, "freeing caps %p", caps);
+  GST_CAT_TRACE (GST_CAT_CAPS, "freeing caps %p", caps);
 #endif
   g_slice_free (GstCaps, caps);
 }
@@ -485,7 +485,7 @@ gst_static_caps_get (GstStaticCaps * static_caps)
     if (G_UNLIKELY (string == NULL))
       goto no_string;
 
-    GST_CAT_LOG (GST_CAT_CAPS, "creating %p", static_caps);
+    GST_CAT_TRACE (GST_CAT_CAPS, "creating %p", static_caps);
 
     /* we construct the caps on the stack, then copy over the struct into our
      * real caps, refcount last. We do this because we must leave the refcount
@@ -510,7 +510,7 @@ gst_static_caps_get (GstStaticCaps * static_caps)
     /* and bump the refcount so other threads can now read */
     g_atomic_int_set (&caps->refcount, 1);
 
-    GST_CAT_LOG (GST_CAT_CAPS, "created %p", static_caps);
+    GST_CAT_TRACE (GST_CAT_CAPS, "created %p", static_caps);
   done:
     G_UNLOCK (static_caps_lock);
   }
