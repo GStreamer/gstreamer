@@ -534,14 +534,17 @@ gst_base_audio_src_fixate (GstBaseSrc * bsrc, GstCaps * caps)
   /* fields for all formats */
   gst_structure_fixate_field_nearest_int (s, "rate", 44100);
   gst_structure_fixate_field_nearest_int (s, "channels", 2);
-  gst_structure_fixate_field_nearest_int (s, "width", 16);
 
-  /* fields for int */
-  if (gst_structure_has_field (s, "depth")) {
-    gst_structure_get_int (s, "width", &width);
-    /* round width to nearest multiple of 8 for the depth */
-    depth = GST_ROUND_UP_8 (width);
-    gst_structure_fixate_field_nearest_int (s, "depth", depth);
+  /* fields for int and/or float, but maybe not others like alaw/mulaw */
+  if (gst_structure_has_field (s, "width")) {
+    gst_structure_fixate_field_nearest_int (s, "width", 16);
+
+    if (gst_structure_has_field (s, "depth")) {
+      gst_structure_get_int (s, "width", &width);
+      /* round width to nearest multiple of 8 for the depth */
+      depth = GST_ROUND_UP_8 (width);
+      gst_structure_fixate_field_nearest_int (s, "depth", depth);
+    }
   }
   if (gst_structure_has_field (s, "signed"))
     gst_structure_fixate_field_boolean (s, "signed", TRUE);
@@ -561,8 +564,7 @@ gst_base_audio_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
   spec->latency_time = src->latency_time;
 
   GST_OBJECT_LOCK (src);
-  if (!gst_ring_buffer_parse_caps (spec, caps))
-  {
+  if (!gst_ring_buffer_parse_caps (spec, caps)) {
     GST_OBJECT_UNLOCK (src);
     goto parse_error;
   }
