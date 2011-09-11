@@ -251,7 +251,7 @@ gst_pulsesrc_class_init (GstPulseSrcClass * klass)
 
   clientname = gst_pulse_client_name ();
   /**
-   * GstPulseSink:client
+   * GstPulseSrc:client
    *
    * The PulseAudio client name to use.
    *
