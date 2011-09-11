@@ -388,17 +388,17 @@ gst_theora_enc_class_init (GstTheoraEncClass * klass)
           THEORA_DEF_VP3_COMPATIBLE,
           (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_DROP_FRAMES,
-      g_param_spec_boolean ("drop-frames", "VP3 Compatible",
+      g_param_spec_boolean ("drop-frames", "Drop Frames",
           "Allow or disallow frame dropping",
           THEORA_DEF_DROP_FRAMES,
           (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_CAP_OVERFLOW,
-      g_param_spec_boolean ("cap-overflow", "VP3 Compatible",
+      g_param_spec_boolean ("cap-overflow", "Cap Overflow",
           "Enable capping of bit reservoir overflows",
           THEORA_DEF_CAP_OVERFLOW,
           (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_CAP_UNDERFLOW,
-      g_param_spec_boolean ("cap-underflow", "VP3 Compatible",
+      g_param_spec_boolean ("cap-underflow", "Cap Underflow",
           "Enable capping of bit reservoir underflows",
           THEORA_DEF_CAP_UNDERFLOW,
           (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
