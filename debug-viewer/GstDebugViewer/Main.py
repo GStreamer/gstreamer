@@ -27,7 +27,7 @@ Common = GstDebugViewer.Common
 
 GETTEXT_DOMAIN = "gst-debug-viewer"
 
-def main_version (options):
+def main_version ():
 
     from GstDebugViewer import version
 
