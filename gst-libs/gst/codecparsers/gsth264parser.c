@@ -1091,7 +1091,7 @@ gst_h264_parser_parse_pic_timing (GstH264NalParser * nalparser,
       guint i;
 
       READ_UINT8 (nr, tim->pic_struct, 4);
-      CHECK_ALLOWED (tim->pic_struct, 0, 8);
+      CHECK_ALLOWED ((gint8) tim->pic_struct, 0, 8);
 
       num_clock_num_ts = num_clock_ts_table[tim->pic_struct];
       for (i = 0; i < num_clock_num_ts; i++) {
@@ -1167,8 +1167,8 @@ gst_h264_parser_identify_nalu (GstH264NalParser * nalparser,
   gint off1, off2;
 
   if (size - offset < 4) {
-    GST_DEBUG ("Can't parse, buffer has too small size %u, offset %u", size,
-        offset);
+    GST_DEBUG ("Can't parse, buffer has too small size %" G_GSSIZE_FORMAT
+        ", offset %u", size, offset);
     return GST_H264_PARSER_ERROR;
   }
 
