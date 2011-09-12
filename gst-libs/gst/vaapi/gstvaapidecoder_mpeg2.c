@@ -85,6 +85,8 @@ struct _GstVaapiDecoderMpeg2Private {
     guint                       profile_changed         : 1;
     guint                       quant_matrix_changed    : 1;
     guint                       progressive_sequence    : 1;
+    guint                       closed_gop              : 1;
+    guint                       broken_link             : 1;
 };
 
 static void
@@ -304,7 +306,8 @@ decode_current_picture(GstVaapiDecoderMpeg2 *decoder)
         if (!gst_vaapi_decoder_decode_picture(base_decoder, picture))
             status = GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
         if (!GST_VAAPI_PICTURE_IS_REFERENCE(picture)) {
-            if (priv->prev_picture && priv->next_picture)
+            if ((priv->prev_picture && priv->next_picture) ||
+                (priv->closed_gop && priv->next_picture))
                 status = render_picture(decoder, picture);
             gst_vaapi_decoder_free_picture(base_decoder, picture);
         }
@@ -444,8 +447,12 @@ decode_gop(GstVaapiDecoderMpeg2 *decoder, guchar *buf, guint buf_size)
         return GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
     }
 
-    GST_DEBUG("GOP %02u:%02u:%02u:%02u",
-              gop.hour, gop.minute, gop.second, gop.frame);
+    priv->closed_gop  = gop.closed_gop;
+    priv->broken_link = gop.broken_link;
+
+    GST_DEBUG("GOP %02u:%02u:%02u:%02u (closed_gop %d, broken_link %d)",
+              gop.hour, gop.minute, gop.second, gop.frame,
+              priv->closed_gop, priv->broken_link);
 
     pts = GST_SECOND * (gop.hour * 3600 + gop.minute * 60 + gop.second);
     pts += gst_util_uint64_scale(gop.frame, GST_SECOND * priv->fps_d, priv->fps_n);
@@ -899,6 +906,8 @@ gst_vaapi_decoder_mpeg2_init(GstVaapiDecoderMpeg2 *decoder)
     priv->profile_changed       = FALSE;
     priv->quant_matrix_changed  = FALSE;
     priv->progressive_sequence  = FALSE;
+    priv->closed_gop            = FALSE;
+    priv->broken_link           = FALSE;
 }
 
 /**
