@@ -178,6 +178,42 @@ static const gchar *_sub_pad_names[] = { "subpicture", "subpicture_sink",
   "subtitle_sink", "subtitle"
 };
 
+static inline gboolean
+_is_raw_video (GstStructure * s)
+{
+  const gchar *name;
+
+  name = gst_structure_get_name (s);
+
+  if (g_str_has_prefix (name, "video/x-raw-"))
+    return TRUE;
+  return FALSE;
+}
+
+static gboolean
+_is_raw_video_pad (GstPad * pad)
+{
+  GstPad *peer = gst_pad_get_peer (pad);
+  GstCaps *caps;
+  gboolean raw = TRUE;
+
+  if (peer) {
+    caps = gst_pad_get_negotiated_caps (peer);
+    if (!caps) {
+      caps = gst_pad_get_caps_reffed (peer);
+    }
+    gst_object_unref (peer);
+  } else {
+    caps = gst_pad_get_caps_reffed (pad);
+  }
+
+  raw = _is_raw_video (gst_caps_get_structure (caps, 0));
+
+  gst_caps_unref (caps);
+
+  return raw;
+}
+
 static GstCaps *
 _get_sub_caps (GstElementFactory * factory)
 {
@@ -1067,6 +1103,7 @@ _pad_blocked_cb (GstPad * pad, gboolean blocked, gpointer user_data)
     } else {
       const gchar *name =
           gst_plugin_feature_get_name (GST_PLUGIN_FEATURE_CAST (factory));
+      gboolean is_raw_video = _is_raw_video_pad (self->video_sinkpad);
 
       if (strcmp (name, "textoverlay") == 0) {
         /* Set some textoverlay specific properties */
@@ -1086,66 +1123,123 @@ _pad_blocked_cb (GstPad * pad, gboolean blocked, gpointer user_data)
           g_object_set (self->renderer, "font-desc", self->font_desc, NULL);
       }
 
-      /* First link everything internally */
-      if (G_UNLIKELY (!_create_element (self, &self->post_colorspace,
-                  COLORSPACE, NULL, "post-colorspace", FALSE))) {
-        continue;
-      }
+      if (is_raw_video) {
+        /* First check that renderer also supports raw video */
+        sink = _get_video_pad (element);
+        if (G_UNLIKELY (!sink)) {
+          GST_WARNING_OBJECT (self, "Can't get video sink from renderer");
+          continue;
+        }
 
-      src = gst_element_get_static_pad (element, "src");
-      if (G_UNLIKELY (!src)) {
-        GST_WARNING_OBJECT (self, "Can't get src pad from renderer");
-        continue;
-      }
-
-      sink = gst_element_get_static_pad (self->post_colorspace, "sink");
-      if (G_UNLIKELY (!sink)) {
-        GST_WARNING_OBJECT (self, "Can't get sink pad from " COLORSPACE);
-        gst_object_unref (src);
-        continue;
-      }
-
-      if (G_UNLIKELY (gst_pad_link (src, sink) != GST_PAD_LINK_OK)) {
-        GST_WARNING_OBJECT (self, "Can't link renderer with " COLORSPACE);
-        gst_object_unref (src);
+        if (G_UNLIKELY (!_is_raw_video_pad (sink))) {
+          GST_DEBUG_OBJECT (self, "Renderer doesn't support raw video");
+          gst_object_unref (sink);
+          continue;
+        }
         gst_object_unref (sink);
-        continue;
-      }
-      gst_object_unref (src);
-      gst_object_unref (sink);
 
-      if (G_UNLIKELY (!_create_element (self, &self->pre_colorspace,
-                  COLORSPACE, NULL, "pre-colorspace", FALSE))) {
-        continue;
-      }
+        /* First link everything internally */
+        if (G_UNLIKELY (!_create_element (self, &self->post_colorspace,
+                    COLORSPACE, NULL, "post-colorspace", FALSE))) {
+          continue;
+        }
+        src = gst_element_get_static_pad (element, "src");
+        if (G_UNLIKELY (!src)) {
+          GST_WARNING_OBJECT (self, "Can't get src pad from renderer");
+          continue;
+        }
 
-      sink = _get_video_pad (element);
-      if (G_UNLIKELY (!sink)) {
-        GST_WARNING_OBJECT (self, "Can't get video sink from renderer");
-        continue;
-      }
+        sink = gst_element_get_static_pad (self->post_colorspace, "sink");
+        if (G_UNLIKELY (!sink)) {
+          GST_WARNING_OBJECT (self, "Can't get sink pad from " COLORSPACE);
+          gst_object_unref (src);
+          continue;
+        }
 
-      src = gst_element_get_static_pad (self->pre_colorspace, "src");
-      if (G_UNLIKELY (!src)) {
-        GST_WARNING_OBJECT (self, "Can't get srcpad from " COLORSPACE);
-        gst_object_unref (sink);
-        continue;
-      }
-
-      if (G_UNLIKELY (gst_pad_link (src, sink) != GST_PAD_LINK_OK)) {
-        GST_WARNING_OBJECT (self, "Can't link " COLORSPACE " to renderer");
+        if (G_UNLIKELY (gst_pad_link (src, sink) != GST_PAD_LINK_OK)) {
+          GST_WARNING_OBJECT (self, "Can't link renderer with " COLORSPACE);
+          gst_object_unref (src);
+          gst_object_unref (sink);
+          continue;
+        }
         gst_object_unref (src);
         gst_object_unref (sink);
-        continue;
-      }
-      gst_object_unref (src);
-      gst_object_unref (sink);
 
-      /* Set src ghostpad target */
-      src = gst_element_get_static_pad (self->post_colorspace, "src");
-      if (G_UNLIKELY (!src)) {
-        GST_WARNING_OBJECT (self, "Can't get src pad from " COLORSPACE);
-        continue;
+        if (G_UNLIKELY (!_create_element (self, &self->pre_colorspace,
+                    COLORSPACE, NULL, "pre-colorspace", FALSE))) {
+          continue;
+        }
+
+        sink = _get_video_pad (element);
+        if (G_UNLIKELY (!sink)) {
+          GST_WARNING_OBJECT (self, "Can't get video sink from renderer");
+          continue;
+        }
+
+        src = gst_element_get_static_pad (self->pre_colorspace, "src");
+        if (G_UNLIKELY (!src)) {
+          GST_WARNING_OBJECT (self, "Can't get srcpad from " COLORSPACE);
+          gst_object_unref (sink);
+          continue;
+        }
+
+        if (G_UNLIKELY (gst_pad_link (src, sink) != GST_PAD_LINK_OK)) {
+          GST_WARNING_OBJECT (self, "Can't link " COLORSPACE " to renderer");
+          gst_object_unref (src);
+          gst_object_unref (sink);
+          continue;
+        }
+        gst_object_unref (src);
+        gst_object_unref (sink);
+
+        /* Set src ghostpad target */
+        src = gst_element_get_static_pad (self->post_colorspace, "src");
+        if (G_UNLIKELY (!src)) {
+          GST_WARNING_OBJECT (self, "Can't get src pad from " COLORSPACE);
+          continue;
+        }
+      } else {                  /* No raw video pad */
+        GstCaps *allowed_caps, *video_caps = NULL;
+        GstPad *video_peer;
+        gboolean can_intersect = FALSE;
+
+        video_peer = gst_pad_get_peer (self->video_sinkpad);
+        if (video_peer) {
+          video_caps = gst_pad_get_negotiated_caps (video_peer);
+          if (!video_caps) {
+            video_caps = gst_pad_get_caps_reffed (video_peer);
+          }
+          gst_object_unref (video_peer);
+        }
+
+        sink = _get_video_pad (element);
+        if (G_UNLIKELY (!sink)) {
+          GST_WARNING_OBJECT (self, "Can't get video sink from renderer");
+          continue;
+        }
+        allowed_caps = gst_pad_get_caps_reffed (sink);
+        gst_object_unref (sink);
+
+        if (allowed_caps && video_caps)
+          can_intersect = gst_caps_can_intersect (allowed_caps, video_caps);
+
+        if (allowed_caps)
+          gst_caps_unref (allowed_caps);
+
+        if (video_caps)
+          gst_caps_unref (video_caps);
+
+        if (G_UNLIKELY (!can_intersect)) {
+          GST_WARNING_OBJECT (self, "Renderer with custom caps is not "
+              "compatible with video stream");
+          continue;
+        }
+
+        src = gst_element_get_static_pad (element, "src");
+        if (G_UNLIKELY (!src)) {
+          GST_WARNING_OBJECT (self, "Can't get src pad from renderer");
+          continue;
+        }
       }
 
       if (G_UNLIKELY (!gst_ghost_pad_set_target (GST_GHOST_PAD_CAST
@@ -1203,10 +1297,19 @@ _pad_blocked_cb (GstPad * pad, gboolean blocked, gpointer user_data)
       }
 
       /* Set the sink ghostpad targets */
-      sink = gst_element_get_static_pad (self->pre_colorspace, "sink");
-      if (G_UNLIKELY (!sink)) {
-        GST_WARNING_OBJECT (self, "Can't get sink pad from " COLORSPACE);
-        continue;
+      if (self->pre_colorspace) {
+        sink = gst_element_get_static_pad (self->pre_colorspace, "sink");
+        if (G_UNLIKELY (!sink)) {
+          GST_WARNING_OBJECT (self, "Can't get sink pad from " COLORSPACE);
+          continue;
+        }
+      } else {
+        sink = _get_video_pad (element);
+        if (G_UNLIKELY (!sink)) {
+          GST_WARNING_OBJECT (self, "Can't get sink pad from %" GST_PTR_FORMAT,
+              element);
+          continue;
+        }
       }
 
       if (G_UNLIKELY (!gst_ghost_pad_set_target (GST_GHOST_PAD_CAST
