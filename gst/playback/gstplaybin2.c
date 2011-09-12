@@ -1272,6 +1272,34 @@ gst_play_bin_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
+static gboolean
+gst_playbin_uri_is_valid (GstPlayBin * playbin, const gchar * uri)
+{
+  const gchar *c;
+
+  GST_LOG_OBJECT (playbin, "checking uri '%s'", uri);
+
+  /* this just checks the protocol */
+  if (!gst_uri_is_valid (uri))
+    return FALSE;
+
+  for (c = uri; *c != '\0'; ++c) {
+    if (*c >= 128 || !g_ascii_isprint (*c))
+      goto invalid;
+    if (*c == ' ')
+      goto invalid;
+  }
+
+  return TRUE;
+
+invalid:
+  {
+    GST_WARNING_OBJECT (playbin, "uri '%s' not valid, character #%u",
+        uri, (guint) ((guintptr) c - (guintptr) uri));
+    return FALSE;
+  }
+}
+
 static void
 gst_play_bin_set_uri (GstPlayBin * playbin, const gchar * uri)
 {
@@ -1280,6 +1308,17 @@ gst_play_bin_set_uri (GstPlayBin * playbin, const gchar * uri)
   if (uri == NULL) {
     g_warning ("cannot set NULL uri");
     return;
+  }
+
+  if (!gst_playbin_uri_is_valid (playbin, uri)) {
+    if (g_str_has_prefix (uri, "file:")) {
+      GST_ERROR_OBJECT (playbin, "malformed file URI '%s' - make sure to "
+          "escape spaces and non-ASCII characters properly and specify an "
+          "absolute path. Use gst_filename_to_uri() to convert filenames "
+          "to URIs", uri);
+    } else {
+      GST_ERROR_OBJECT (playbin, "malformed URI '%s'", uri);
+    }
   }
 
   GST_PLAY_BIN_LOCK (playbin);
