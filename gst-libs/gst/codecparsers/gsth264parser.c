@@ -1468,19 +1468,25 @@ gst_h264_parse_sps (GstH264NalUnit * nalu, GstH264SPS * sps,
   sps->width = width;
   sps->height = height;
 
-  /* derive framerate */
-  /* FIXME verify / also handle other cases */
-  GST_LOG ("Framerate: %u %u %u %u", parse_vui_params,
-      vui->fixed_frame_rate_flag, sps->frame_mbs_only_flag,
-      vui->pic_struct_present_flag);
+  if (vui) {
+    /* derive framerate */
+    /* FIXME verify / also handle other cases */
+    GST_LOG ("Framerate: %u %u %u %u", parse_vui_params,
+        vui->fixed_frame_rate_flag, sps->frame_mbs_only_flag,
+        vui->pic_struct_present_flag);
 
-  if (parse_vui_params && vui->fixed_frame_rate_flag &&
-      sps->frame_mbs_only_flag && !vui->pic_struct_present_flag) {
-    sps->fps_num = vui->time_scale;
-    sps->fps_den = vui->num_units_in_tick;
-    /* picture is a frame = 2 fields */
-    sps->fps_den *= 2;
-    GST_LOG ("framerate %d/%d", sps->fps_num, sps->fps_den);
+    if (parse_vui_params && vui->fixed_frame_rate_flag &&
+        sps->frame_mbs_only_flag && !vui->pic_struct_present_flag) {
+      sps->fps_num = vui->time_scale;
+      sps->fps_den = vui->num_units_in_tick;
+      /* picture is a frame = 2 fields */
+      sps->fps_den *= 2;
+      GST_LOG ("framerate %d/%d", sps->fps_num, sps->fps_den);
+    }
+  } else {
+    sps->fps_num = 0;
+    sps->fps_den = 1;
+    GST_LOG ("No VUI, unknown framerate");
   }
 
   sps->valid = TRUE;
