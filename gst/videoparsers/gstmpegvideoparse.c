@@ -236,13 +236,12 @@ gst_mpegv_parse_process_config (GstMpegvParse * mpvparse, GstBuffer * buf,
   if (!gst_mpeg_video_parse_sequence_header (&mpvparse->sequencehdr, data,
           GST_BUFFER_SIZE (buf) - mpvparse->seq_offset, 0)) {
     GST_DEBUG_OBJECT (mpvparse,
-        "failed to parse config data (size %" G_GSSIZE_FORMAT ") at offset %d",
+        "failed to parse config data (size %d) at offset %d",
         size, mpvparse->seq_offset);
     return FALSE;
   }
 
-  GST_LOG_OBJECT (mpvparse, "accepting parsed config size %" G_GSSIZE_FORMAT,
-      size);
+  GST_LOG_OBJECT (mpvparse, "accepting parsed config size %d", size);
 
   /* Set mpeg version, and parse sequence extension */
   if (mpvparse->mpeg_version <= 0) {
