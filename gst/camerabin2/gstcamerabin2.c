@@ -1152,6 +1152,17 @@ gst_camera_bin_src_notify_max_zoom_cb (GObject * self, GParamSpec * pspec,
   g_object_notify (G_OBJECT (camera), "max-zoom");
 }
 
+static void
+gst_camera_bin_src_notify_zoom_cb (GObject * self, GParamSpec * pspec,
+    gpointer user_data)
+{
+  GstCameraBin2 *camera = (GstCameraBin2 *) user_data;
+
+  g_object_get (self, "zoom", &camera->zoom, NULL);
+  GST_DEBUG_OBJECT (camera, "Zoom updated to %f", camera->zoom);
+  g_object_notify (G_OBJECT (camera), "zoom");
+}
+
 static gboolean
 gst_camera_bin_image_src_buffer_probe (GstPad * pad, GstBuffer * buf,
     gpointer data)
@@ -1495,6 +1506,8 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
           "preview-caps", camera->preview_caps, "preview-filter",
           camera->preview_filter, NULL);
     }
+    g_signal_connect (G_OBJECT (camera->src), "notify::zoom",
+        (GCallback) gst_camera_bin_src_notify_zoom_cb, camera);
     g_object_set (camera->src, "zoom", camera->zoom, NULL);
     g_signal_connect (G_OBJECT (camera->src), "notify::max-zoom",
         (GCallback) gst_camera_bin_src_notify_max_zoom_cb, camera);
