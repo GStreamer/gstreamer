@@ -745,7 +745,7 @@ gst_mpeg_video_parse_gop (GstMpegVideoGop * gop, guint8 * data,
 
   READ_UINT8 (&br, gop->closed_gop, 1);
 
-  READ_UINT8 (&br, gop->broken_gop, 1);
+  READ_UINT8 (&br, gop->broken_link, 1);
 
   return TRUE;
 

@@ -314,7 +314,7 @@ struct _GstMpegVideoPictureExt
  * @second: Second (0-59)
  * @frame: Frame (0-59)
  * @closed_gop: Closed Gop
- * @broken_gop: Broken Gop
+ * @broken_link: Broken link
  *
  * The Mpeg Video Group of Picture structure.
  */
@@ -325,7 +325,7 @@ struct _GstMpegVideoGop
   guint8 hour, minute, second, frame;
 
   guint8 closed_gop;
-  guint8 broken_gop;
+  guint8 broken_link;
 };
 
 /**
