@@ -50,6 +50,7 @@ static void
 mux_pcm_audio (guint num_buffers, guint repeat)
 {
   GstElement *src, *sink, *flvmux, *conv, *pipeline;
+  GstPad *sinkpad, *srcpad;
   gint counter;
 
   GST_LOG ("num_buffers = %u", num_buffers);
@@ -83,24 +84,23 @@ mux_pcm_audio (guint num_buffers, guint repeat)
   fail_unless (gst_element_link (src, conv));
   fail_unless (gst_element_link (flvmux, sink));
 
+  /* now link the elements */
+  sinkpad = gst_element_get_request_pad (flvmux, "audio");
+  fail_unless (sinkpad != NULL, "Could not get audio request pad");
+
+  srcpad = gst_element_get_static_pad (conv, "src");
+  fail_unless (srcpad != NULL, "Could not get audioconvert's source pad");
+
+  fail_unless_equals_int (gst_pad_link (srcpad, sinkpad), GST_PAD_LINK_OK);
+
+  gst_object_unref (srcpad);
+  gst_object_unref (sinkpad);
+
   do {
     GstStateChangeReturn state_ret;
     GstMessage *msg;
-    GstPad *sinkpad, *srcpad;
 
     GST_LOG ("repeat=%d", repeat);
-
-    /* now link the elements */
-    sinkpad = gst_element_get_request_pad (flvmux, "audio");
-    fail_unless (sinkpad != NULL, "Could not get audio request pad");
-
-    srcpad = gst_element_get_static_pad (conv, "src");
-    fail_unless (srcpad != NULL, "Could not get audioconvert's source pad");
-
-    fail_unless_equals_int (gst_pad_link (srcpad, sinkpad), GST_PAD_LINK_OK);
-
-    gst_object_unref (srcpad);
-    gst_object_unref (sinkpad);
 
     counter = 0;
 
