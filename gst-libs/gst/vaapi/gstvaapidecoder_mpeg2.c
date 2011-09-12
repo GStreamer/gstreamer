@@ -773,6 +773,11 @@ decode_chunks(GstVaapiDecoderMpeg2 *decoder, GstBuffer *buffer, GList *chunks)
                 );
                 break;
             }
+            else if (tos->type >= 0xb9 && tos->type <= 0xff) {
+                // Ignore system start codes (PES headers)
+                status = GST_VAAPI_DECODER_STATUS_SUCCESS;
+                break;
+            }
             GST_DEBUG("unsupported start code (0x%02x)", tos->type);
             status = GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
             break;
