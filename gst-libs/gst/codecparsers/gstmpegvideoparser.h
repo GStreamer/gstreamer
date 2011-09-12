@@ -112,6 +112,22 @@ typedef enum {
 } GstMpegVideoProfile;
 
 /**
+ * GstMpegVideoChromaFormat:
+ * @GST_MPEG_VIDEO_CHROMA_RES,
+ * @GST_MPEG_VIDEO_CHROMA_420,
+ * @GST_MPEG_VIDEO_CHROMA_422,
+ * @GST_MPEG_VIDEO_CHROMA_444,
+ *
+ * Indicates the chroma type
+ */
+typedef enum {
+  GST_MPEG_VIDEO_CHROMA_RES = 0x00,
+  GST_MPEG_VIDEO_CHROMA_420 = 0x01,
+  GST_MPEG_VIDEO_CHROMA_422 = 0x02,
+  GST_MPEG_VIDEO_CHROMA_444 = 0x03,
+} GstMpegVideoChromaFormat;
+
+/**
  * GstMpegVideoPictureType:
  * @GST_MPEG_VIDEO_PICTURE_TYPE_I: Type I
  * @GST_MPEG_VIDEO_PICTURE_TYPE_P: Type P
