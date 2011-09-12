@@ -114,6 +114,8 @@ static GstStateChangeReturn
 gst_flv_mux_change_state (GstElement * element, GstStateChange transition);
 
 static void gst_flv_mux_reset (GstElement * element);
+static void gst_flv_mux_reset_pad (GstFlvMux * mux, GstFlvPad * pad,
+    gboolean video);
 
 typedef struct
 {
@@ -218,10 +220,10 @@ gst_flv_mux_reset (GstElement * element)
   GstFlvMux *mux = GST_FLV_MUX (element);
   GSList *sl;
 
-  while ((sl = mux->collect->data) != NULL) {
+  for (sl = mux->collect->data; sl != NULL; sl = g_slist_next (sl)) {
     GstFlvPad *cpad = (GstFlvPad *) sl->data;
 
-    gst_element_release_request_pad (element, cpad->collect.pad);
+    gst_flv_mux_reset_pad (mux, cpad, cpad->video);
   }
 
   g_list_foreach (mux->index, (GFunc) gst_flv_mux_index_entry_free, NULL);
@@ -472,6 +474,26 @@ gst_flv_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
   return ret;
 }
 
+static void
+gst_flv_mux_reset_pad (GstFlvMux * mux, GstFlvPad * cpad, gboolean video)
+{
+  cpad->video = video;
+
+  if (cpad->audio_codec_data)
+    gst_buffer_unref (cpad->audio_codec_data);
+  cpad->audio_codec_data = NULL;
+  cpad->audio_codec = G_MAXUINT;
+  cpad->rate = G_MAXUINT;
+  cpad->width = G_MAXUINT;
+  cpad->channels = G_MAXUINT;
+
+  if (cpad->video_codec_data)
+    gst_buffer_unref (cpad->video_codec_data);
+  cpad->video_codec_data = NULL;
+  cpad->video_codec = G_MAXUINT;
+  cpad->last_timestamp = 0;
+}
+
 static GstPad *
 gst_flv_mux_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * pad_name)
@@ -516,18 +538,9 @@ gst_flv_mux_request_new_pad (GstElement * element,
   cpad = (GstFlvPad *)
       gst_collect_pads_add_pad (mux->collect, pad, sizeof (GstFlvPad));
 
-  cpad->video = video;
-
-  cpad->audio_codec = G_MAXUINT;
-  cpad->rate = G_MAXUINT;
-  cpad->width = G_MAXUINT;
-  cpad->channels = G_MAXUINT;
   cpad->audio_codec_data = NULL;
-
-  cpad->video_codec = G_MAXUINT;
   cpad->video_codec_data = NULL;
-
-  cpad->last_timestamp = 0;
+  gst_flv_mux_reset_pad (mux, cpad, video);
 
   /* FIXME: hacked way to override/extend the event function of
    * GstCollectPads; because it sets its own event function giving the
@@ -550,11 +563,7 @@ gst_flv_mux_release_pad (GstElement * element, GstPad * pad)
   GstFlvMux *mux = GST_FLV_MUX (GST_PAD_PARENT (pad));
   GstFlvPad *cpad = (GstFlvPad *) gst_pad_get_element_private (pad);
 
-  if (cpad && cpad->audio_codec_data)
-    gst_buffer_unref (cpad->audio_codec_data);
-  if (cpad && cpad->video_codec_data)
-    gst_buffer_unref (cpad->video_codec_data);
-
+  gst_flv_mux_reset_pad (mux, cpad, cpad->video);
   gst_collect_pads_remove_pad (mux->collect, pad);
   gst_element_remove_pad (element, pad);
 }
