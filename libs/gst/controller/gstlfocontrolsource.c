@@ -566,7 +566,7 @@ static GstWaveformImplementation *waveforms[] = {
   &waveform_triangle
 };
 
-static guint num_waveforms = G_N_ELEMENTS (waveforms);
+static const guint num_waveforms = G_N_ELEMENTS (waveforms);
 
 enum
 {
@@ -649,7 +649,7 @@ gst_lfo_control_source_set_waveform (GstLFOControlSource * self,
   GstControlSource *csource = GST_CONTROL_SOURCE (self);
   gboolean ret = TRUE;
 
-  if (waveform >= num_waveforms || waveform < 0) {
+  if (waveform >= num_waveforms || (int) waveform < 0) {
     GST_WARNING ("waveform %d invalid or not implemented yet", waveform);
     return FALSE;
   }
