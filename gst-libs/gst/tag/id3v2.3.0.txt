@@ -183,7 +183,7 @@ bits are ignored, so a 257 bytes long tag is represented as $00 00 02 01.
 The ID3v2 tag size is the size of the complete tag after unsychronisation,
 including padding, excluding the header but not excluding the extended header
 (total tag size - 10). Only 28 bits (representing up to 256MB) are used in the
-size description to avoid the introducuction of 'false syncsignals'.
+size description to avoid the introduction of 'false syncsignals'.
 An ID3v2 tag can be detected with the following pattern:
 
   $49 44 33 yy yy xx zz zz zz zz
@@ -1006,7 +1006,7 @@ Where time stamp format is:
   $01 Absolute time, 32 bit sized, using MPEG frames as unit
   $02 Absolute time, 32 bit sized, using milliseconds as unit
 
-Abolute time means that every stamp contains the time from the beginning of the
+Absolute time means that every stamp contains the time from the beginning of the
 file.
 Followed by a list of key events in the following format:
 
@@ -1111,7 +1111,7 @@ Where time stamp format is:
   $01 Absolute time, 32 bit sized, using MPEG frames as unit
   $02 Absolute time, 32 bit sized, using milliseconds as unit
 
-Abolute time means that every stamp contains the time from the beginning of the
+Absolute time means that every stamp contains the time from the beginning of the
 file.
 
 4.9. Unsychronised lyrics/text transcription
@@ -1167,7 +1167,7 @@ Time stamp format is:
   $01 Absolute time, 32 bit sized, using MPEG frames as unit
   $02 Absolute time, 32 bit sized, using milliseconds as unit
 
-Abolute time means that every stamp contains the time from the beginning of the
+Absolute time means that every stamp contains the time from the beginning of the
 file.
 The text that follows the frame header differs from that of the unsynchronised
 lyrics/text transcription in one major way. Each syllable (or whatever size of
@@ -1463,7 +1463,7 @@ frame in each tag.
 4.20. Audio encryption
 
 This frame indicates if the actual audio stream is encrypted, and by whom.
-Since standardisation of such encrypion scheme is beyond this document, all
+Since standardisation of such encryption scheme is beyond this document, all
 "AENC" frames begin with a terminated string with a URL containing an email
 address, or a link to a location where an email address can be found, that
 belongs to the organisation responsible for this specific encrypted audio file.

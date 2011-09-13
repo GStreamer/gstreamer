@@ -48,7 +48,7 @@ playbasebin:
   is particulary important for chained oggs. Initially, a new group is created in 
   the 'building' state. All new streams will be added to the building group until
   no-more-pads is signaled or one of the preroll queues overflows. When this happens,
-  the group is commited to a list of groups ready for playback. PlaybaseBin will then
+  the group is committed to a list of groups ready for playback. PlaybaseBin will then
   attach a padprobe to each stream to figure out when it finished. It will remove
   the current group and install the next playable group, then.
 
@@ -73,7 +73,7 @@ playbin:
    stream detected. implements seeking and querying on the configured sinks.
 
    It also waits for new notifications from playbasebin about any new groups that are
-   becomming active. It then disconnects the sinks and reconnects them to the new
+   becoming active. It then disconnects the sinks and reconnects them to the new
    pads in the group.
 
    TODO

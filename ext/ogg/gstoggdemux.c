@@ -572,7 +572,7 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
           pad->current_granule);
     } else if (ogg->segment.rate > 0.0 && pad->current_granule != -1) {
       pad->current_granule += duration;
-      GST_DEBUG_OBJECT (ogg, "interpollating granule %" G_GUINT64_FORMAT,
+      GST_DEBUG_OBJECT (ogg, "interpolating granule %" G_GUINT64_FORMAT,
           pad->current_granule);
     }
     if (ogg->segment.rate < 0.0 && packet->granulepos == -1) {

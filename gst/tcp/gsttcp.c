@@ -116,7 +116,7 @@ gst_tcp_socket_write (int socket, const void *buf, size_t count)
     bytes_written += wrote;
   }
 
-  GST_LOG ("wrote %" G_GSIZE_FORMAT " bytes succesfully", bytes_written);
+  GST_LOG ("wrote %" G_GSIZE_FORMAT " bytes successfully", bytes_written);
   return bytes_written;
 }
 

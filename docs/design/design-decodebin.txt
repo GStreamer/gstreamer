@@ -57,7 +57,7 @@ fine-tune the process.
 
     Get a list of elementfactories for @pad with @caps. This function is used to
     instruct decodebin2 of the elements it should try to autoplug. The default
-    behaviour when this function is not overridern is to get all elements that
+    behaviour when this function is not overriden is to get all elements that
     can handle @caps from the registry sorted by rank.
 
   - 'autoplug-select' :
@@ -142,7 +142,7 @@ Description:
 
   Multiple input-output data queue
   
-  The GstMultiQueue achieves the same functionnality as GstQueue, with a few
+  The GstMultiQueue achieves the same functionality as GstQueue, with a few
 differences:
 
   * Multiple streams handling.

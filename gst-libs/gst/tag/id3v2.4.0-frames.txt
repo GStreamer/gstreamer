@@ -255,7 +255,7 @@ Abstract
    one text information frame of its kind in an tag. All text
    information frames supports multiple strings, stored as a null
    separated list, where null is reperesented by the termination code
-   for the charater encoding. All text frame identifiers begin with "T".
+   for the character encoding. All text frame identifiers begin with "T".
    Only text frame identifiers begin with "T", with the exception of the
    "TXXX" frame. All the text information frames have the following
    format:

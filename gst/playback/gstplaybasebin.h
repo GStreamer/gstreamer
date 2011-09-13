@@ -108,7 +108,7 @@ struct _GstPlayBaseBin {
 struct _GstPlayBaseBinClass {
   GstPipelineClass parent_class;
 
-  /* virtual fuctions */
+  /* virtual functions */
   gboolean (*setup_output_pads) (GstPlayBaseBin *play_base_bin,
                                  GstPlayBaseGroup *group);
 

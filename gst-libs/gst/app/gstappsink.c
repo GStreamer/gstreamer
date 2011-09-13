@@ -274,9 +274,9 @@ gst_app_sink_class_init (GstAppSinkClass * klass)
 
   /**
    * GstAppSink::eos:
-   * @appsink: the appsink element that emited the signal
+   * @appsink: the appsink element that emitted the signal
    *
-   * Signal that the end-of-stream has been reached. This signal is emited from
+   * Signal that the end-of-stream has been reached. This signal is emitted from
    * the steaming thread.
    */
   gst_app_sink_signals[SIGNAL_EOS] =
@@ -285,18 +285,18 @@ gst_app_sink_class_init (GstAppSinkClass * klass)
       NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0, G_TYPE_NONE);
   /**
    * GstAppSink::new-preroll:
-   * @appsink: the appsink element that emited the signal
+   * @appsink: the appsink element that emitted the signal
    *
    * Signal that a new preroll buffer is available.
    *
-   * This signal is emited from the steaming thread and only when the
+   * This signal is emitted from the steaming thread and only when the
    * "emit-signals" property is %TRUE.
    *
    * The new preroll buffer can be retrieved with the "pull-preroll" action
    * signal or gst_app_sink_pull_preroll() either from this signal callback
    * or from any other thread.
    *
-   * Note that this signal is only emited when the "emit-signals" property is
+   * Note that this signal is only emitted when the "emit-signals" property is
    * set to %TRUE, which it is not by default for performance reasons.
    */
   gst_app_sink_signals[SIGNAL_NEW_PREROLL] =
@@ -305,18 +305,18 @@ gst_app_sink_class_init (GstAppSinkClass * klass)
       NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0, G_TYPE_NONE);
   /**
    * GstAppSink::new-buffer:
-   * @appsink: the appsink element that emited the signal
+   * @appsink: the appsink element that emitted the signal
    *
    * Signal that a new buffer is available.
    *
-   * This signal is emited from the steaming thread and only when the
+   * This signal is emitted from the steaming thread and only when the
    * "emit-signals" property is %TRUE.
    *
    * The new buffer can be retrieved with the "pull-buffer" action
    * signal or gst_app_sink_pull_buffer() either from this signal callback
    * or from any other thread.
    *
-   * Note that this signal is only emited when the "emit-signals" property is
+   * Note that this signal is only emitted when the "emit-signals" property is
    * set to %TRUE, which it is not by default for performance reasons.
    */
   gst_app_sink_signals[SIGNAL_NEW_BUFFER] =
@@ -325,18 +325,18 @@ gst_app_sink_class_init (GstAppSinkClass * klass)
       NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0, G_TYPE_NONE);
   /**
    * GstAppSink::new-buffer-list:
-   * @appsink: the appsink element that emited the signal
+   * @appsink: the appsink element that emitted the signal
    *
    * Signal that a new bufferlist is available.
    *
-   * This signal is emited from the steaming thread and only when the
+   * This signal is emitted from the steaming thread and only when the
    * "emit-signals" property is %TRUE.
    *
    * The new buffer can be retrieved with the "pull-buffer-list" action
    * signal or gst_app_sink_pull_buffer_list() either from this signal callback
    * or from any other thread.
    *
-   * Note that this signal is only emited when the "emit-signals" property is
+   * Note that this signal is only emitted when the "emit-signals" property is
    * set to %TRUE, which it is not by default for performance reasons.
    */
   gst_app_sink_signals[SIGNAL_NEW_BUFFER_LIST] =
@@ -1066,7 +1066,7 @@ gst_app_sink_set_emit_signals (GstAppSink * appsink, gboolean emit)
  *
  * Check if appsink will emit the "new-preroll" and "new-buffer" signals.
  *
- * Returns: %TRUE if @appsink is emiting the "new-preroll" and "new-buffer"
+ * Returns: %TRUE if @appsink is emitting the "new-preroll" and "new-buffer"
  * signals.
  *
  * Since: 0.10.22
@@ -1339,7 +1339,7 @@ gst_app_sink_pull_buffer_list (GstAppSink * appsink)
  * This is an alternative to using the signals, it has lower overhead and is thus
  * less expensive, but also less flexible.
  *
- * If callbacks are installed, no signals will be emited for performance
+ * If callbacks are installed, no signals will be emitted for performance
  * reasons.
  *
  * Since: 0.10.23

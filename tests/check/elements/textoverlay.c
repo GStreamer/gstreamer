@@ -354,7 +354,7 @@ GST_START_TEST (test_video_passthrough)
   /* pushing gives away one of the two references we have ... */
   fail_unless (gst_pad_push (myvideosrcpad, inbuffer) == GST_FLOW_OK);
 
-  /* should have been discareded as out-of-segment since it has no timestamp */
+  /* should have been discarded as out-of-segment since it has no timestamp */
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
   fail_unless_equals_int (g_list_length (buffers), 0);
 

@@ -895,7 +895,7 @@ gst_base_audio_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
         running_time_sample =
             gst_util_uint64_scale_int (running_time, spec->rate, GST_SECOND);
 
-        /* the segmentnr corrensponding to running_time, round down */
+        /* the segmentnr corresponding to running_time, round down */
         running_time_segment = running_time_sample / sps;
 
         /* the segment currently read from the ringbuffer */
@@ -921,7 +921,7 @@ gst_base_audio_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
          *
          * 1. We are more than the length of the ringbuffer behind.
          *    The length of the ringbuffer then gets to dictate
-         *    the threshold for what is concidered "too late"
+         *    the threshold for what is considered "too late"
          *
          * 2. If this is our first buffer.
          *    We know that we should catch up to running_time
@@ -1152,7 +1152,7 @@ gst_base_audio_src_change_state (GstElement * element,
   /* ERRORS */
 open_failed:
   {
-    /* subclass must post a meaningfull error message */
+    /* subclass must post a meaningful error message */
     GST_DEBUG_OBJECT (src, "open failed");
     return GST_STATE_CHANGE_FAILURE;
   }

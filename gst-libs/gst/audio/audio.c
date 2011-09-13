@@ -708,7 +708,7 @@ done:
  * @rate: sample rate.
  * @frame_size: size of one audio frame in bytes.
  *
- * Clip the the buffer to the given %GstSegment.
+ * Clip the buffer to the given %GstSegment.
  *
  * After calling this function the caller does not own a reference to 
  * @buffer anymore.

@@ -1,5 +1,5 @@
 /*
- * Templates for image convertion routines
+ * Templates for image conversion routines
  * Copyright (c) 2001, 2002, 2003 Fabrice Bellard.
  *
  * This library is free software; you can redistribute it and/or

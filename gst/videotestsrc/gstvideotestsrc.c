@@ -21,7 +21,7 @@
 /**
  * SECTION:element-videotestsrc
  *
- * The videotestsrc element is used to produce test video data in a wide variaty
+ * The videotestsrc element is used to produce test video data in a wide variety
  * of formats. The video test data produced can be controlled with the "pattern"
  * property.
  *

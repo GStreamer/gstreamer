@@ -151,7 +151,7 @@ gst_ff_aud_caps_new (AVCodecContext * context, const char *mimetype,
 }
 
 /* Convert a FFMPEG Pixel Format and optional AVCodecContext
- * to a GstCaps. If the context is ommitted, no fixed values
+ * to a GstCaps. If the context is omitted, no fixed values
  * for video/audio size will be included in the GstCaps
  *
  * See below for usefulness
@@ -453,7 +453,7 @@ gst_ffmpeg_pixfmt_to_caps (enum PixelFormat pix_fmt, AVCodecContext * context)
 }
 
 /* Convert a FFMPEG Sample Format and optional AVCodecContext
- * to a GstCaps. If the context is ommitted, no fixed values
+ * to a GstCaps. If the context is omitted, no fixed values
  * for video/audio size will be included in the GstCaps
  *
  * See below for usefulness
@@ -496,7 +496,7 @@ gst_ffmpeg_smpfmt_to_caps (enum SampleFormat sample_fmt,
 }
 
 /* Convert a FFMPEG codec Type and optional AVCodecContext
- * to a GstCaps. If the context is ommitted, no fixed values
+ * to a GstCaps. If the context is omitted, no fixed values
  * for video/audio size will be included in the GstCaps
  *
  * CodecType is primarily meant for uncompressed data GstCaps!
@@ -787,7 +787,7 @@ gst_ffmpeg_caps_to_pixfmt (const GstCaps * caps,
 }
 
 /* Convert a GstCaps and a FFMPEG codec Type to a
- * AVCodecContext. If the context is ommitted, no fixed values
+ * AVCodecContext. If the context is omitted, no fixed values
  * for video/audio size will be included in the context
  *
  * CodecType is primarily meant for uncompressed data GstCaps!

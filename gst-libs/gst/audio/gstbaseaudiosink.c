@@ -342,7 +342,7 @@ gst_base_audio_sink_init (GstBaseAudioSink * baseaudiosink,
   if (feature) {
     if (strcmp (gst_plugin_feature_get_name (feature), "pulsesink") == 0) {
       if (!gst_plugin_feature_check_version (feature, 0, 10, 17)) {
-        /* we're dealing with an old pulsesink, we need to disable time corection */
+        /* we're dealing with an old pulsesink, we need to disable time correction */
         GST_DEBUG ("disable time offset");
         baseaudiosink->priv->do_time_offset = FALSE;
       }
@@ -2119,7 +2119,7 @@ gst_base_audio_sink_async_play (GstBaseSink * basesink)
   sink->priv->sync_latency = TRUE;
   gst_ring_buffer_may_start (sink->ringbuffer, TRUE);
   if (basesink->pad_mode == GST_ACTIVATE_PULL) {
-    /* we always start the ringbuffer in pull mode immediatly */
+    /* we always start the ringbuffer in pull mode immediately */
     gst_ring_buffer_start (sink->ringbuffer);
   }
 
@@ -2173,7 +2173,7 @@ gst_base_audio_sink_change_state (GstElement * element,
       gst_ring_buffer_may_start (sink->ringbuffer, TRUE);
       if (GST_BASE_SINK_CAST (sink)->pad_mode == GST_ACTIVATE_PULL ||
           g_atomic_int_get (&sink->abidata.ABI.eos_rendering) || eos) {
-        /* we always start the ringbuffer in pull mode immediatly */
+        /* we always start the ringbuffer in pull mode immediately */
         /* sync rendering on eos needs running clock,
          * and others need running clock when finished rendering eos */
         gst_ring_buffer_start (sink->ringbuffer);
@@ -2241,7 +2241,7 @@ gst_base_audio_sink_change_state (GstElement * element,
   /* ERRORS */
 open_failed:
   {
-    /* subclass must post a meaningfull error message */
+    /* subclass must post a meaningful error message */
     GST_DEBUG_OBJECT (sink, "open failed");
     return GST_STATE_CHANGE_FAILURE;
   }

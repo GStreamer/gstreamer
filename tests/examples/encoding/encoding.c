@@ -501,7 +501,7 @@ main (int argc, char **argv)
       return 1;
     }
 
-    /* Trancode file */
+    /* Transcode file */
     transcode_file (inputuri, outputuri, prof);
 
     /* cleanup */

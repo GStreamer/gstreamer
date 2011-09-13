@@ -552,7 +552,7 @@ vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet,
   /* normal data packet */
   /* FIXME, we can skip decoding if the packet is outside of the
    * segment, this is however not very trivial as we need a previous
-   * packet to decode the current one so we must be carefull not to
+   * packet to decode the current one so we must be careful not to
    * throw away too much. For now we decode everything and clip right
    * before pushing data. */
 

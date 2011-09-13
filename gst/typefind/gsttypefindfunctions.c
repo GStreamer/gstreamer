@@ -1061,7 +1061,7 @@ mp3_type_frame_length_from_header (guint32 header, guint * put_layer,
   /* bitrate index */
   bitrate = header & 0xF;
   if (bitrate == 0 && possible_free_framelen == -1) {
-    GST_LOG ("Possibly a free format mp3 - signalling");
+    GST_LOG ("Possibly a free format mp3 - signaling");
     *may_be_free_format = TRUE;
   }
   if (bitrate == 15 || (bitrate == 0 && possible_free_framelen == -1))
@@ -1440,7 +1440,7 @@ ac3_type_find (GstTypeFind * tf, gpointer unused)
 {
   DataScanCtx c = { 0, NULL, 0 };
 
-  /* Search for an ac3 frame; not neccesarily right at the start, but give it
+  /* Search for an ac3 frame; not necessarily right at the start, but give it
    * a lower probability if not found right at the start. Check that the
    * frame is followed by a second frame at the expected offset.
    * We could also check the two ac3 CRCs, but we don't do that right now */
@@ -1607,7 +1607,7 @@ dts_type_find (GstTypeFind * tf, gpointer unused)
 {
   DataScanCtx c = { 0, NULL, 0 };
 
-  /* Search for an dts frame; not neccesarily right at the start, but give it
+  /* Search for an dts frame; not necessarily right at the start, but give it
    * a lower probability if not found right at the start. Check that the
    * frame is followed by a second frame at the expected offset. */
   while (c.offset <= DTS_MAX_FRAMESIZE) {
@@ -2412,7 +2412,7 @@ h264_video_type_find (GstTypeFind * tf, gpointer unused)
       nut = c.data[3] & 0x9f;   /* forbiden_zero_bit | nal_unit_type */
       ref = c.data[3] & 0x60;   /* nal_ref_idc */
 
-      /* if forbiden bit is different to 0 won't be h264 */
+      /* if forbidden bit is different to 0 won't be h264 */
       if (nut > 0x1f) {
         bad++;
         break;

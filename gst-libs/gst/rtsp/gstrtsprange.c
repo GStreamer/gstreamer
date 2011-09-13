@@ -263,7 +263,7 @@ gst_rtsp_range_to_string (const GstRTSPTimeRange * range)
  * gst_rtsp_range_free:
  * @range: a #GstRTSPTimeRange
  *
- * Free the memory alocated by @range.
+ * Free the memory allocated by @range.
  */
 void
 gst_rtsp_range_free (GstRTSPTimeRange * range)

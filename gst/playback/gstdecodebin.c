@@ -1441,7 +1441,7 @@ queue_underrun_cb (GstElement * queue, GstDecodeBin * decode_bin)
   /* FIXME: we don't really do anything here for now. Ideally we should
    * see if some of the queues are filled and increase their values
    * in that case.
-   * Note: be very carefull with thread safety here as this underrun
+   * Note: be very careful with thread safety here as this underrun
    * signal is done from the streaming thread of queue srcpad which
    * is different from the pad_added (where we add the queue to the
    * list) and the overrun signals that are signalled from the
@@ -1773,7 +1773,7 @@ close_link (GstElement * element, GstDecodeBin * decode_bin)
   }
 
   /* Check if this is an element with more than 1 pad. If this element
-   * has more than 1 pad, we need to be carefull not to signal the
+   * has more than 1 pad, we need to be careful not to signal the
    * no_more_pads signal after connecting the first pad. */
   more = g_list_length (to_connect) > 1;
 

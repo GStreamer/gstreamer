@@ -2009,7 +2009,7 @@ gst_audio_encoder_set_perfect_timestamp (GstAudioEncoder * enc,
  *
  * Queries encoder perfect timestamp behaviour.
  *
- * Returns: TRUE if pefect timestamp setting enabled.
+ * Returns: TRUE if perfect timestamp setting enabled.
  *
  * MT safe.
  *

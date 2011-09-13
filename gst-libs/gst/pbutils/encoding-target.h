@@ -36,7 +36,7 @@ G_BEGIN_DECLS
  * GST_ENCODING_CATEGORY_DEVICE:
  *
  * #GstEncodingTarget category for device-specific targets.
- * The name of the target will usually be the contructor and model of the device,
+ * The name of the target will usually be the constructor and model of the device,
  * and that target will contain #GstEncodingProfiles suitable for that device.
  */
 #define GST_ENCODING_CATEGORY_DEVICE		"device"

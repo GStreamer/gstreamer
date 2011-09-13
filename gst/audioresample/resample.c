@@ -461,7 +461,7 @@ resampler_basic_direct_single (SpeexResamplerState * st,
       sum += MULT16_16 (sinc[j], iptr[j]);
 
 /*    This code is slower on most DSPs which have only 2 accumulators.
-      Plus this this forces truncation to 32 bits and you lose the HW guard bits.
+      Plus this forces truncation to 32 bits and you lose the HW guard bits.
       I think we can trust the compiler and let it vectorize and/or unroll itself.
       spx_word32_t accum[4] = {0,0,0,0};
       for(j=0;j<N;j+=4) {

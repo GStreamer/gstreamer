@@ -287,7 +287,7 @@ struct _GstXvImageSink {
   /* stream metadata */
   gchar *media_title;
 
-  /* target video rectagle */
+  /* target video rectangle */
   GstVideoRectangle render_rect;
   gboolean have_render_rect;
 };

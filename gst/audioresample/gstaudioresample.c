@@ -103,7 +103,7 @@ GST_STATIC_CAPS ( \
       "signed = (boolean) true" \
 )
 
-/* If TRUE integer arithmetic resampling is faster and will be used if appropiate */
+/* If TRUE integer arithmetic resampling is faster and will be used if appropriate */
 #if defined AUDIORESAMPLE_FORMAT_INT
 static gboolean gst_audio_resample_use_int = TRUE;
 #elif defined AUDIORESAMPLE_FORMAT_FLOAT
@@ -187,7 +187,7 @@ gst_audio_resample_class_init (GstAudioResampleClass * klass)
    *
    * Length of the resample filter
    *
-   * Deprectated: Use #GstAudioResample:quality property instead
+   * Deprecated: Use #GstAudioResample:quality property instead
    */
   g_object_class_install_property (gobject_class, PROP_FILTER_LENGTH,
       g_param_spec_int ("filter-length", "Filter length",
@@ -1554,7 +1554,7 @@ _benchmark_integer_resampling (void)
   resample_int_resampler_destroy (stb);
 
   if (av > bv)
-    GST_INFO ("Using integer resampler if appropiate: %lf < %lf", bv, av);
+    GST_INFO ("Using integer resampler if appropriate: %lf < %lf", bv, av);
   else
     GST_INFO ("Using float resampler for everything: %lf <= %lf", av, bv);
 

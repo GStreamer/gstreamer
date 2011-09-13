@@ -7,7 +7,7 @@ Status:
   
 Purpose:
 
-  Provide an standarized generic way to introduce Video Acceleration APIs in
+  Provide an standardized generic way to introduce Video Acceleration APIs in
   already available elements instead of duplicating those into specialized ones.
   
   Provide a mechanism for a light GstBuffer subclassing in order to be able
@@ -26,7 +26,7 @@ Proposal:
 
    video/x-raw-va
    
-   Light subclassing embeding an structure in the data field of a standard
+   Light subclassing embedding an structure in the data field of a standard
    GstBuffer.
    
    struct {

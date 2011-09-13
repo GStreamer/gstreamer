@@ -152,7 +152,7 @@ static const FormatInfo formats[] = {
   {"video/sp5x", "Sunplus JPEG 5.x", 0},
   {"video/vivo", "Vivo", 0},
   {"video/x-3ivx", "3ivx", 0},
-  {"video/x-4xm", "4X Techologies Video", 0},
+  {"video/x-4xm", "4X Technologies Video", 0},
   {"video/x-apple-video", "Apple video", 0},
   {"video/x-aasc", "Autodesk Animator", 0},
   {"video/x-camtasia", "TechSmith Camtasia", 0},

@@ -288,7 +288,7 @@ gst_netaddress_get_address_bytes (const GstNetAddress * naddr,
  * Set just the address bytes stored in @naddr into @address.
  *
  * Note that @port must be expressed in network byte order, use g_htons() to
- * convert it to network byte order order. IP4 address bytes must also be
+ * convert it to network byte order. IP4 address bytes must also be
  * stored in network byte order.
  *
  * Returns: number of bytes actually copied

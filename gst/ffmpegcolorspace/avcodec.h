@@ -139,8 +139,8 @@ typedef struct AVCodecContext {
     /* video only */
     /**
      * frames per sec multiplied by frame_rate_base.
-     * for variable fps this is the precission, so if the timestamps 
-     * can be specified in msec precssion then this is 1000*frame_rate_base
+     * for variable fps this is the precision, so if the timestamps 
+     * can be specified in msec precision then this is 1000*frame_rate_base
      * - encoding: MUST be set by user
      * - decoding: set by lavc. 0 or the frame_rate if available
      */

@@ -31,7 +31,7 @@
  *
  * #GstFFTS32 provides a FFT implementation and related functions for
  * signed 32 bit integer samples. To use this call gst_fft_s32_new() for
- * allocating a #GstFFTS32 instance with the appropiate parameters and
+ * allocating a #GstFFTS32 instance with the appropriate parameters and
  * then call gst_fft_s32_fft() or gst_fft_s32_inverse_fft() to perform the
  * FFT or inverse FFT on a buffer of samples.
  *

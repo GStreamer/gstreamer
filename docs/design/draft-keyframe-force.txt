@@ -11,7 +11,7 @@ Consider the following use case:
   the existing file we are writing to and start writing to a new file.
 
   We want the new file to start with a keyframe so that one can start decoding
-  the file immediatly.
+  the file immediately.
 
 Components:
 

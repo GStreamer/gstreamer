@@ -86,7 +86,7 @@ given an input format, channel position manipulation, dithering and
 quantizing configuration, and output format, a Orc code generator
 would create an OrcProgram, add the appropriate instructions to do
 each step based on the configuration, and then compile the program.
-Sucessfully compiling the program would return a function pointer
+Successfully compiling the program would return a function pointer
 that can be called to perform the operation.
 
 This sort of advanced usage requires structural changes to current

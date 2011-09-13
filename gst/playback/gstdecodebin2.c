@@ -166,7 +166,7 @@ struct _GstDecodeBin
   gboolean have_type;           /* if we received the have_type signal */
   guint have_type_id;           /* signal id for have-type from typefind */
 
-  gboolean async_pending;       /* async-start has been emited */
+  gboolean async_pending;       /* async-start has been emitted */
 
   GMutex *dyn_lock;             /* lock protecting pad blocking */
   gboolean shutdown;            /* if we are shutting down */
@@ -688,7 +688,7 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
    * @pad: The #GstPad.
    * @caps: The #GstCaps found.
    *
-   * This function is emited when an array of possible factories for @caps on
+   * This function is emitted when an array of possible factories for @caps on
    * @pad is needed. Decodebin2 will by default return an array with all
    * compatible factories, sorted by rank.
    *
@@ -722,7 +722,7 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
    * @factories: A #GValueArray of possible #GstElementFactory to use.
    *
    * Once decodebin2 has found the possible #GstElementFactory objects to try
-   * for @caps on @pad, this signal is emited. The purpose of the signal is for
+   * for @caps on @pad, this signal is emitted. The purpose of the signal is for
    * the application to perform additional sorting or filtering on the element
    * factory array.
    *
@@ -755,7 +755,7 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
    *
    * This signal is emitted once decodebin2 has found all the possible
    * #GstElementFactory that can be used to handle the given @caps. For each of
-   * those factories, this signal is emited.
+   * those factories, this signal is emitted.
    *
    * The signal handler should return a #GST_TYPE_AUTOPLUG_SELECT_RESULT enum
    * value indicating what decodebin2 should do next.
@@ -856,7 +856,7 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
   /**
    * GstDecodebin2:max-size-bytes
    *
-   * Max amount amount of bytes in the queue (0=automatic).
+   * Max amount of bytes in the queue (0=automatic).
    *
    * Since: 0.10.26
    */
@@ -868,7 +868,7 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
   /**
    * GstDecodebin2:max-size-buffers
    *
-   * Max amount amount of buffers in the queue (0=automatic).
+   * Max amount of buffers in the queue (0=automatic).
    *
    * Since: 0.10.26
    */
@@ -880,7 +880,7 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
   /**
    * GstDecodebin2:max-size-time
    *
-   * Max amount amount of time in the queue (in ns, 0=automatic).
+   * Max amount of time in the queue (in ns, 0=automatic).
    *
    * Since: 0.10.26
    */
@@ -3637,7 +3637,7 @@ gst_decode_bin_expose (GstDecodeBin * dbin)
 
   /* 4. Signal no-more-pads. This allows the application to hook stuff to the
    * exposed pads */
-  GST_LOG_OBJECT (dbin, "signalling no-more-pads");
+  GST_LOG_OBJECT (dbin, "signaling no-more-pads");
   gst_element_no_more_pads (GST_ELEMENT (dbin));
 
   /* 5. Send a custom element message with the stream topology */

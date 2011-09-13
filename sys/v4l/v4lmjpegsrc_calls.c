@@ -167,7 +167,7 @@ gst_v4lmjpegsrc_set_capture (GstV4lMjpegSrc * v4lmjpegsrc,
   bparm.quality = quality;
   bparm.norm = norm;
   bparm.input = input;
-  bparm.APP_len = 0;            /* no JPEG markers - TODO: this is definately not right for decimation==1 */
+  bparm.APP_len = 0;            /* no JPEG markers - TODO: this is definitely not right for decimation==1 */
 
   mw = GST_V4LELEMENT (v4lmjpegsrc)->vcap.maxwidth;
   if (mw != 768 && mw != 640) {
@@ -235,7 +235,7 @@ gst_v4lmjpegsrc_set_capture_m (GstV4lMjpegSrc * v4lmjpegsrc,
   bparm.quality = quality;
   bparm.norm = norm;
   bparm.input = input;
-  bparm.APP_len = 0;            /* no JPEG markers - TODO: this is definately
+  bparm.APP_len = 0;            /* no JPEG markers - TODO: this is definitely
                                  * not right for decimation==1 */
 
   if (width <= 0) {

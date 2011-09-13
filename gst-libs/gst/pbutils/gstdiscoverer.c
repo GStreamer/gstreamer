@@ -1467,7 +1467,7 @@ gst_discoverer_stop (GstDiscoverer * discoverer)
  * A copy of @uri will be made internally, so the caller can safely g_free()
  * afterwards.
  *
- * Returns: %TRUE if the @uri was succesfully appended to the list of pending
+ * Returns: %TRUE if the @uri was successfully appended to the list of pending
  * uris, else %FALSE
  *
  * Since: 0.10.31

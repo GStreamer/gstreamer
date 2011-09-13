@@ -105,7 +105,7 @@ struct _GstURIDecodeBin
   guint src_nmp_sig_id;         /* no-more-pads signal id */
   gint pending;
 
-  gboolean async_pending;       /* async-start has been emited */
+  gboolean async_pending;       /* async-start has been emitted */
 
   gboolean expose_allstreams;   /* Whether to expose unknow type streams or not */
 
@@ -132,7 +132,7 @@ struct _GstURIDecodeBinClass
     GstAutoplugSelectResult (*autoplug_select) (GstElement * element,
       GstPad * pad, GstCaps * caps, GstElementFactory * factory);
 
-  /* emited when all data is decoded */
+  /* emitted when all data is decoded */
   void (*drained) (GstElement * element);
 };
 
@@ -513,7 +513,7 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
    * @pad: The #GstPad.
    * @caps: The #GstCaps found.
    *
-   * This function is emited when an array of possible factories for @caps on
+   * This function is emitted when an array of possible factories for @caps on
    * @pad is needed. Uridecodebin will by default return an array with all
    * compatible factories, sorted by rank.
    *
@@ -547,7 +547,7 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
    * @factories: A #GValueArray of possible #GstElementFactory to use.
    *
    * Once decodebin2 has found the possible #GstElementFactory objects to try
-   * for @caps on @pad, this signal is emited. The purpose of the signal is for
+   * for @caps on @pad, this signal is emitted. The purpose of the signal is for
    * the application to perform additional sorting or filtering on the element
    * factory array.
    *
@@ -582,7 +582,7 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
    *
    * This signal is emitted once uridecodebin has found all the possible
    * #GstElementFactory that can be used to handle the given @caps. For each of
-   * those factories, this signal is emited.
+   * those factories, this signal is emitted.
    *
    * The signal handler should return a #GST_TYPE_AUTOPLUG_SELECT_RESULT enum
    * value indicating what decodebin2 should do next.
@@ -1399,7 +1399,7 @@ analyse_source (GstURIDecodeBin * decoder, gboolean * is_raw,
         gst_iterator_resync (pads_iter);
         break;
       case GST_ITERATOR_OK:
-        /* we now officially have an ouput pad */
+        /* we now officially have an output pad */
         *have_out = TRUE;
 
         /* if FALSE, this pad has no caps and we continue with the next pad. */

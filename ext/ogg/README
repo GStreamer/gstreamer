@@ -99,7 +99,7 @@ with great efficiency.
 1) the streaming mode.
 
 In this mode, the ogg demuxer receives buffers in the _chain() function which
-are then simply submited to the ogg sync layer. Pages are then processed when
+are then simply submitted to the ogg sync layer. Pages are then processed when
 the sync layer detects them, pads are created for new chains and packets are
 sent to the peer elements of the pads.
 

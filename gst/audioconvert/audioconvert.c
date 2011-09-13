@@ -280,7 +280,7 @@ MAKE_UNPACK_FUNC_ORC_IF (s32_le_float, 4, 0, READ32_FROM_LE);
 MAKE_UNPACK_FUNC_ORC_IF (u32_be_float, 4, SIGNED, READ32_FROM_BE);
 MAKE_UNPACK_FUNC_ORC_IF (s32_be_float, 4, 0, READ32_FROM_BE);
 
-/* One of the double_hq_* functions generated above is ineffecient, but it's
+/* One of the double_hq_* functions generated above is inefficient, but it's
  * never used anyway.  The same is true for one of the s32_* functions. */
 
 /*** 
@@ -650,7 +650,7 @@ audio_convert_prepare_context (AudioConvertCtx * ctx, AudioConvertFmt * in,
   ctx->pack = pack_funcs[idx_out];
 
   /* if both formats are float/double or we use noise shaping use double as
-   * intermediate format and and switch mixing */
+   * intermediate format and switch mixing */
   if (!DOUBLE_INTERMEDIATE_FORMAT (ctx)) {
     GST_INFO ("use int mixing");
     ctx->channel_mix = (AudioConvertMix) gst_channel_mix_mix_int;

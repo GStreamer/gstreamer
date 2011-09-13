@@ -1804,7 +1804,7 @@ gst_ximagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
       " and offset %" G_GUINT64_FORMAT, size, caps, offset);
 
   /* assume we're going to alloc what was requested, keep track of
-   * wheter we need to unref or not. When we suggest a new format 
+   * whether we need to unref or not. When we suggest a new format 
    * upstream we will create a new caps that we need to unref. */
   alloc_caps = caps;
   alloc_unref = FALSE;

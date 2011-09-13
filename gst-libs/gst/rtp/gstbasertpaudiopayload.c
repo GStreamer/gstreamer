@@ -839,7 +839,7 @@ gst_base_rtp_audio_payload_handle_buffer (GstBaseRTPPayload *
         GstClockTime diff;
         guint64 bytes;
         /* we're only going to apply a positive gap, otherwise we let the marker
-         * bit do its thing. simply convert to bytes and add the the current
+         * bit do its thing. simply convert to bytes and add the current
          * offset */
         diff = timestamp - priv->last_timestamp;
         bytes = priv->time_to_bytes (payload, diff);

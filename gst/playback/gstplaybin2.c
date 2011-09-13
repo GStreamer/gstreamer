@@ -1128,7 +1128,7 @@ init_group (GstPlayBin * playbin, GstSourceGroup * group)
    * matches the media. */
   group->playbin = playbin;
   /* If you add any items to these lists, check that media_list[] is defined
-   * above to be large enough to hold MAX(items)+1, so as to accomodate a
+   * above to be large enough to hold MAX(items)+1, so as to accommodate a
    * NULL terminator (set when the memory is zeroed on allocation) */
   group->selector[PLAYBIN_STREAM_AUDIO].media_list[0] = "audio/";
   group->selector[PLAYBIN_STREAM_AUDIO].type = GST_PLAY_SINK_TYPE_AUDIO;
@@ -3114,7 +3114,7 @@ autoplug_factories_cb (GstElement * decodebin, GstPad * pad,
  * supported subtitles directly */
 
 /* FIXME 0.11: Remove the checks for ANY caps, a sink should specify
- * explicitely the caps it supports and if it claims to support ANY
+ * explicitly the caps it supports and if it claims to support ANY
  * caps it really should support everything */
 static gboolean
 autoplug_continue_cb (GstElement * element, GstPad * pad, GstCaps * caps,

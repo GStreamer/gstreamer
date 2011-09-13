@@ -48,7 +48,7 @@ struct mjpeg_params
 
    int  quality;                  /* Measure for quality of compressed images.
                                      Scales linearly with the size of the compressed images.
-                                     Must be beetween 0 and 100, 100 is a compression
+                                     Must be between 0 and 100, 100 is a compression
                                      ratio of 1:4 */
 
    int  odd_even;                 /* Which field should come first ???
@@ -64,7 +64,7 @@ struct mjpeg_params
 
    unsigned long jpeg_markers;    /* Which markers should go into the JPEG output.
                                      Unless you exactly know what you do, leave them untouched.
-                                     Inluding less markers will make the resulting code
+                                     Including less markers will make the resulting code
                                      smaller, but there will be fewer applications
                                      which can read it.
                                      The presence of the APP and COM marker is

@@ -705,7 +705,7 @@ queue_threshold_reached (GstElement * queue, GstPlayBaseBin * play_base_bin)
 /* this signal will be fired when one of the queues with raw
  * data is filled. This means that the group building stage is over
  * and playback of the new queued group should start. This is a rather unusual
- * situation because normally the group is commited when the "no_more_pads"
+ * situation because normally the group is committed when the "no_more_pads"
  * signal is fired.
  */
 static void
@@ -732,11 +732,11 @@ queue_out_of_data (GstElement * queue, GstPlayBaseBin * play_base_bin)
   GST_DEBUG_OBJECT (play_base_bin, "underrun signal received from queue %s",
       GST_ELEMENT_NAME (queue));
 
-  /* On underrun, we want to temoprarily pause playback, set a "min-size"
+  /* On underrun, we want to temporarily pause playback, set a "min-size"
    * threshold and wait for the running signal and then play again.
    *
    * This signal could never be called because the queue max-size limits are set
-   * too low. We take care of this possible deadlock in the the overrun signal
+   * too low. We take care of this possible deadlock in the overrun signal
    * handler. */
   g_signal_connect (G_OBJECT (queue), "pushing",
       G_CALLBACK (queue_threshold_reached), play_base_bin);
@@ -889,7 +889,7 @@ gen_preroll_element (GstPlayBaseBin * play_base_bin,
 
     gst_object_unref (sinkpad);
 
-    /* When we connect this queue, it will start running and immediatly
+    /* When we connect this queue, it will start running and immediately
      * fire an underrun. */
     g_signal_connect (G_OBJECT (preroll), "underrun",
         G_CALLBACK (queue_out_of_data), play_base_bin);
@@ -1894,7 +1894,7 @@ analyse_source (GstPlayBaseBin * play_base_bin, gboolean * is_raw,
         gst_iterator_resync (pads_iter);
         break;
       case GST_ITERATOR_OK:
-        /* we now officially have an ouput pad */
+        /* we now officially have an output pad */
         *have_out = TRUE;
 
         /* if FALSE, this pad has no caps and we continue with the next pad. */

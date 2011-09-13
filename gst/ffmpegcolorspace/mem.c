@@ -111,7 +111,7 @@ av_realloc (void *ptr, unsigned int size)
 #endif
 }
 
-/* NOTE: ptr = NULL is explicetly allowed */
+/* NOTE: ptr = NULL is explictly allowed */
 void
 av_free (void *ptr)
 {

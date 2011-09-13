@@ -534,7 +534,7 @@ GST_START_TEST (test_live_seeking)
 #if 1
     fail_unless (res == TRUE, NULL);
 #else
-    /* adder is picky, if a single seek fails it totaly fails */
+    /* adder is picky, if a single seek fails it totally fails */
     fail_unless (res == FALSE, NULL);
 #endif
 

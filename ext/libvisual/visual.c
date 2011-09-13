@@ -548,7 +548,7 @@ gst_visual_src_query (GstPad * pad, GstQuery * query)
             GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
             GST_TIME_ARGS (min_latency), GST_TIME_ARGS (max_latency));
 
-        /* the max samples we must buffer buffer */
+        /* the max samples we must buffer */
         max_samples = MAX (VISUAL_SAMPLES, visual->spf);
         our_latency =
             gst_util_uint64_scale_int (max_samples, GST_SECOND, visual->rate);

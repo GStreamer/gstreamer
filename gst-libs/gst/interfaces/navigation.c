@@ -53,7 +53,7 @@
  * mouse moving over a clickable region, or the set of available angles changing.
  * </para><para>
  * The GstNavigation message functions provide functions for creating and parsing
- * custom bus messages for signalling GstNavigation changes.
+ * custom bus messages for signaling GstNavigation changes.
  * </para>
  * </listitem>
  * </itemizedlist>
