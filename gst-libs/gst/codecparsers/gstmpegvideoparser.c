@@ -654,24 +654,26 @@ gst_mpeg_video_parse_picture_header (GstMpegVideoPictureHdr * hdr,
   size = size - offset;
 
   if (size < 4)
-    return FALSE;
+    goto failed;
 
   gst_bit_reader_init (&br, &data[offset], size);
 
   /* temperal sequence number */
   if (!gst_bit_reader_get_bits_uint16 (&br, &hdr->tsn, 10))
-    return FALSE;
+    goto failed;
+
 
   /* frame type */
   if (!gst_bit_reader_get_bits_uint8 (&br, (guint8 *) & hdr->pic_type, 3))
-    return FALSE;
+    goto failed;
+
 
   if (hdr->pic_type == 0 || hdr->pic_type > 4)
-    return FALSE;               /* Corrupted picture packet */
+    goto failed;                /* Corrupted picture packet */
 
   /* skype VBV delay */
   if (!gst_bit_reader_skip (&br, 8))
-    return FALSE;
+    goto failed;
 
   if (hdr->pic_type == GST_MPEG_VIDEO_PICTURE_TYPE_P
       || hdr->pic_type == GST_MPEG_VIDEO_PICTURE_TYPE_B) {
@@ -699,7 +701,7 @@ gst_mpeg_video_parse_picture_header (GstMpegVideoPictureHdr * hdr,
 
 failed:
   {
-    GST_WARNING ("Failed to parse sequence extension");
+    GST_WARNING ("Failed to parse picture header");
     return FALSE;
   }
 }
