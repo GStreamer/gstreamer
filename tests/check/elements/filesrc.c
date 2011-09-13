@@ -385,6 +385,34 @@ GST_START_TEST (test_uri_interface)
 GST_END_TEST;
 
 static void
+check_uri_for_uri (GstElement * e, const gchar * in_uri, const gchar * uri)
+{
+  GstQuery *query;
+  gchar *query_uri = NULL;
+
+  gst_uri_handler_set_uri (GST_URI_HANDLER (e), in_uri);
+
+  query = gst_query_new_uri ();
+  fail_unless (gst_element_query (e, query));
+  gst_query_parse_uri (query, &query_uri);
+  gst_query_unref (query);
+
+  if (uri != NULL) {
+    fail_unless_equals_string (query_uri, uri);
+  } else {
+    gchar *fn;
+
+    fail_unless (gst_uri_is_valid (query_uri));
+    fn = g_filename_from_uri (query_uri, NULL, NULL);
+    fail_unless (g_path_is_absolute (fn));
+    fail_unless (fn != NULL);
+    g_free (fn);
+  }
+
+  g_free (query_uri);
+}
+
+static void
 check_uri_for_location (GstElement * e, const gchar * location,
     const gchar * uri)
 {
@@ -440,6 +468,10 @@ GST_START_TEST (test_uri_query)
     /* make sure non-ASCII characters are escaped properly (U+00F6 here) */
     check_uri_for_location (src, "/i/./d\303\266/not/../exist",
         "file:///i/d%C3%B6/exist");
+    /* let's see what happens if we set a malformed URI with ISO-8859-1 chars,
+     * i.e. one that the input characters haven't been escaped properly. We
+     * should get back a properly escaped URI */
+    check_uri_for_uri (src, "file:///M\366t\366r", "file:///M%F6t%F6r");
   }
 #endif
 
