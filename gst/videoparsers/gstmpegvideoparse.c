@@ -493,9 +493,16 @@ end:
   } else if (GST_BASE_PARSE_DRAINING (parse)) {
     *framesize = GST_BUFFER_SIZE (buf);
     ret = TRUE;
+
   } else {
     /* resume scan where we left it */
-    mpvparse->last_sc = GST_BUFFER_SIZE (buf);
+    if (!mpvparse->last_sc)
+      *skipsize = mpvparse->last_sc = GST_BUFFER_SIZE (buf) - 3;
+    else if (mpvparse->typeoffsize)
+      mpvparse->last_sc = GST_BUFFER_SIZE (buf) - 3;
+    else
+      *skipsize = 0;
+
     /* request best next available */
     *framesize = G_MAXUINT;
     ret = FALSE;
