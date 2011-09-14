@@ -430,21 +430,24 @@ static void
 compare (GList * compared, GESTrackObject * track_object, gboolean ahead)
 {
   GList *tmp;
-  gint64 start, duration, compared_start, compared_duration, tr_start,
-      tr_duration;
+  gint64 start, duration, compared_start, compared_duration, end, compared_end,
+      tr_start, tr_duration;
   GESTimelineStandardTransition *tr = NULL;
   GESTrack *track;
   GESTimelineLayer *layer;
-  GESTimelineObject *object, *first_object, *second_object;
+  GESTimelineObject *object, *compared_object, *first_object, *second_object;
   gint priority;
 
   object = ges_track_object_get_timeline_object (track_object);
+  compared_object = ges_track_object_get_timeline_object (compared->data);
   layer = ges_timeline_object_get_layer (object);
 
   start = ges_track_object_get_start (track_object);
   duration = ges_track_object_get_duration (track_object);
   compared_start = ges_track_object_get_start (compared->data);
   compared_duration = ges_track_object_get_duration (compared->data);
+  end = start + duration;
+  compared_end = compared_start + compared_duration;
 
   if (ahead) {
     for (tmp = compared->next; tmp; tmp = tmp->next) {
@@ -459,19 +462,33 @@ compare (GList * compared, GESTrackObject * track_object, gboolean ahead)
         }
         }
     }
-    if (compared_start + compared_duration <= start) {
+
+    if (compared_end <= start) {
       if (tr) {
         ges_timeline_layer_remove_object (layer, GES_TIMELINE_OBJECT (tr));
+        g_object_get (compared_object, "priority", &priority, NULL);
+        g_object_set (object, "priority", priority, NULL);
       }
       goto clean;
-    } else if (start + duration < compared_start + compared_duration) {
+    } else if (start > compared_start && end < compared_end) {
       if (tr) {
         ges_timeline_layer_remove_object (layer, GES_TIMELINE_OBJECT (tr));
       }
-      ges_track_object_set_start (track_object, compared_start - 5);
-      compare (compared, track_object, FALSE);
+      if (start - compared_start < compared_end - end) {
+        ges_track_object_set_start (track_object, compared_end - duration + 1);
+        compare (compared, track_object, FALSE);
+      } else {
+        ges_track_object_set_start (track_object, compared_start - 1);
+        compare (compared, track_object, FALSE);
+      }
+      goto clean;
+    } else if (start <= compared_start) {
+      if (tr) {
+        ges_timeline_layer_remove_object (layer, GES_TIMELINE_OBJECT (tr));
+      }
       goto clean;
     }
+
   } else {
     for (tmp = compared->prev; tmp; tmp = tmp->prev) {
       if GES_IS_TRACK_TRANSITION
@@ -485,14 +502,28 @@ compare (GList * compared, GESTrackObject * track_object, gboolean ahead)
         }
         }
     }
+
     if (start + duration <= compared_start) {
+      if (tr) {
+        ges_timeline_layer_remove_object (layer, GES_TIMELINE_OBJECT (tr));
+        g_object_get (object, "priority", &priority, NULL);
+        g_object_set (compared_object, "priority", priority, NULL);
+      }
+      goto clean;
+    } else if (start > compared_start) {
       if (tr) {
         ges_timeline_layer_remove_object (layer, GES_TIMELINE_OBJECT (tr));
       }
       goto clean;
-    } else if (start + 10 >= compared_start) {
+    } else if (start < compared_start && end > compared_end) {
       if (tr) {
         ges_timeline_layer_remove_object (layer, GES_TIMELINE_OBJECT (tr));
+      }
+      if (compared_start - start < end - compared_end) {
+        ges_track_object_set_start (track_object, compared_end - duration - 1);
+        compare (compared, track_object, TRUE);
+      } else {
+        ges_track_object_set_start (track_object, compared_start + 1);
       }
       goto clean;
     }
