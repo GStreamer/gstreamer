@@ -166,9 +166,15 @@
 #include <gst/gst-i18n-plugin.h>
 #include <gst/pbutils/pbutils.h>
 
+#if GLIB_CHECK_VERSION(2,29,6)
+#define gst_camerabin2_atomic_int_add g_atomic_int_add
+#else
+#define gst_camerabin2_atomic_int_add g_atomic_int_exchange_and_add
+#endif
+
 #define GST_CAMERA_BIN2_PROCESSING_INC(c)                                \
 {                                                                       \
-  gint bef = g_atomic_int_exchange_and_add (&c->processing_counter, 1); \
+  gint bef = gst_camerabin2_atomic_int_add (&c->processing_counter, 1); \
   if (bef == 0)                                                         \
     g_object_notify (G_OBJECT (c), "idle");                             \
   GST_DEBUG_OBJECT ((c), "Processing counter incremented to: %d",       \
