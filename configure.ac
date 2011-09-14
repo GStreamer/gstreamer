@@ -333,9 +333,7 @@ pkgconfig/gstreamer-vaapi-glx.pc.in
     pkgconfig/gstreamer-vaapi-x11-$GST_MAJORMINOR.pc:\
 pkgconfig/gstreamer-vaapi-x11.pc.in
     gst/Makefile
-    gst/vaapiconvert/Makefile
-    gst/vaapidecode/Makefile
-    gst/vaapisink/Makefile
+    gst/vaapi/Makefile
     tests/Makefile
 ])
 

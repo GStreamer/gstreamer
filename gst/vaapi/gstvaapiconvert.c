@@ -240,6 +240,9 @@ gst_vaapiconvert_class_init(GstVaapiConvertClass *klass)
     GObjectClass * const object_class = G_OBJECT_CLASS(klass);
     GstBaseTransformClass * const trans_class = GST_BASE_TRANSFORM_CLASS(klass);
 
+    GST_DEBUG_CATEGORY_INIT(gst_debug_vaapiconvert,
+                            GST_PLUGIN_NAME, 0, GST_PLUGIN_DESC);
+
     object_class->finalize      = gst_vaapiconvert_finalize;
     object_class->set_property  = gst_vaapiconvert_set_property;
     object_class->get_property  = gst_vaapiconvert_get_property;
@@ -762,25 +765,3 @@ gst_vaapiconvert_prepare_output_buffer(
     *poutbuf = buffer;
     return GST_FLOW_OK;
 }
-
-static gboolean
-plugin_init(GstPlugin *plugin)
-{
-    GST_DEBUG_CATEGORY_INIT(gst_debug_vaapiconvert,
-                            GST_PLUGIN_NAME, 0, GST_PLUGIN_DESC);
-
-    return gst_element_register(plugin,
-                                GST_PLUGIN_NAME,
-                                GST_RANK_SECONDARY,
-                                GST_TYPE_VAAPICONVERT);
-}
-
-GST_PLUGIN_DEFINE(
-    GST_VERSION_MAJOR, GST_VERSION_MINOR,
-    GST_PLUGIN_NAME,
-    GST_PLUGIN_DESC,
-    plugin_init,
-    PACKAGE_VERSION,
-    "LGPL",
-    PACKAGE,
-    PACKAGE_BUGREPORT);

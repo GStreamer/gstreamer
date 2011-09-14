@@ -808,6 +808,9 @@ gst_vaapisink_class_init(GstVaapiSinkClass *klass)
     GObjectClass * const     object_class   = G_OBJECT_CLASS(klass);
     GstBaseSinkClass * const basesink_class = GST_BASE_SINK_CLASS(klass);
 
+    GST_DEBUG_CATEGORY_INIT(gst_debug_vaapisink,
+                            GST_PLUGIN_NAME, 0, GST_PLUGIN_DESC);
+
     object_class->finalize       = gst_vaapisink_finalize;
     object_class->set_property   = gst_vaapisink_set_property;
     object_class->get_property   = gst_vaapisink_get_property;
@@ -900,25 +903,3 @@ gst_vaapisink_get_display(GstVaapiSink *sink)
         return NULL;
     return sink->display;
 }
-
-static gboolean
-plugin_init(GstPlugin *plugin)
-{
-    GST_DEBUG_CATEGORY_INIT(gst_debug_vaapisink,
-                            GST_PLUGIN_NAME, 0, GST_PLUGIN_DESC);
-
-    return gst_element_register(plugin,
-                                GST_PLUGIN_NAME,
-                                GST_RANK_PRIMARY,
-                                GST_TYPE_VAAPISINK);
-}
-
-GST_PLUGIN_DEFINE(
-    GST_VERSION_MAJOR, GST_VERSION_MINOR,
-    GST_PLUGIN_NAME,
-    GST_PLUGIN_DESC,
-    plugin_init,
-    PACKAGE_VERSION,
-    "LGPL",
-    PACKAGE,
-    PACKAGE_BUGREPORT);

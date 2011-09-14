@@ -465,6 +465,9 @@ gst_vaapidecode_class_init(GstVaapiDecodeClass *klass)
     GObjectClass * const object_class = G_OBJECT_CLASS(klass);
     GstElementClass * const element_class = GST_ELEMENT_CLASS(klass);
 
+    GST_DEBUG_CATEGORY_INIT(gst_debug_vaapidecode,
+                            GST_PLUGIN_NAME, 0, GST_PLUGIN_DESC);
+
     object_class->finalize      = gst_vaapidecode_finalize;
     object_class->set_property  = gst_vaapidecode_set_property;
     object_class->get_property  = gst_vaapidecode_get_property;
@@ -655,25 +658,3 @@ gst_vaapidecode_init(GstVaapiDecode *decode, GstVaapiDecodeClass *klass)
     gst_pad_set_event_function(decode->srcpad, gst_vaapidecode_src_event);
     gst_element_add_pad(GST_ELEMENT(decode), decode->srcpad);
 }
-
-static gboolean
-plugin_init(GstPlugin *plugin)
-{
-    GST_DEBUG_CATEGORY_INIT(gst_debug_vaapidecode,
-                            GST_PLUGIN_NAME, 0, GST_PLUGIN_DESC);
-
-    return gst_element_register(plugin,
-                                GST_PLUGIN_NAME,
-                                GST_RANK_PRIMARY,
-                                GST_TYPE_VAAPIDECODE);
-}
-
-GST_PLUGIN_DEFINE(
-    GST_VERSION_MAJOR, GST_VERSION_MINOR,
-    GST_PLUGIN_NAME,
-    GST_PLUGIN_DESC,
-    plugin_init,
-    PACKAGE_VERSION,
-    "LGPL",
-    PACKAGE,
-    PACKAGE_BUGREPORT);
