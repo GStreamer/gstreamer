@@ -713,6 +713,10 @@ gst_omx_audio_enc_set_format (GstBaseAudioEncoder * encoder,
     if (gst_omx_component_set_state (self->component,
             OMX_StateExecuting) != OMX_ErrorNone)
       return FALSE;
+
+    if (gst_omx_component_get_state (self->component,
+            GST_CLOCK_TIME_NONE) != OMX_StateExecuting)
+      return FALSE;
   }
 
   /* Unset flushing to allow ports to accept data again */
@@ -730,8 +734,7 @@ gst_omx_audio_enc_set_format (GstBaseAudioEncoder * encoder,
   gst_pad_start_task (GST_BASE_AUDIO_ENCODER_SRC_PAD (self),
       (GstTaskFunction) gst_omx_audio_enc_loop, encoder);
 
-  return (gst_omx_component_get_state (self->component,
-          GST_CLOCK_TIME_NONE) == OMX_StateExecuting);
+  return TRUE;
 }
 
 static void

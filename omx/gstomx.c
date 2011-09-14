@@ -1175,9 +1175,6 @@ gst_omx_port_set_flushing (GstOMXPort * port, gboolean flush)
     if (port->port_def.eDir == OMX_DirOutput && port->buffers) {
       GstOMXBuffer *buf;
 
-      if (comp->hacks & GST_OMX_HACK_QCOM_7x30_FILL_THIS_BUFFER_RACE)
-        g_usleep (G_USEC_PER_SEC / 10);
-
       /* Enqueue all buffers for the component to fill */
       while ((buf = g_queue_pop_head (port->pending_buffers))) {
         g_assert (!buf->used);
@@ -1564,9 +1561,6 @@ gst_omx_port_set_enabled_unlocked (GstOMXPort * port, gboolean enabled)
     if (enabled && port->port_def.eDir == OMX_DirOutput) {
       GstOMXBuffer *buf;
 
-      if (comp->hacks & GST_OMX_HACK_QCOM_7x30_FILL_THIS_BUFFER_RACE)
-        g_usleep (G_USEC_PER_SEC / 10);
-
       /* Enqueue all buffers for the component to fill */
       while ((buf = g_queue_pop_head (port->pending_buffers))) {
         g_assert (!buf->used);
@@ -1894,8 +1888,6 @@ gst_omx_parse_hacks (gchar ** hacks)
       hacks_flags |= GST_OMX_HACK_VIDEO_FRAMERATE_INTEGER;
     else if (g_str_equal (*hacks, "syncframe-flag-not-used"))
       hacks_flags |= GST_OMX_HACK_SYNCFRAME_FLAG_NOT_USED;
-    else if (g_str_equal (*hacks, "qcom-7x30-fill-this-buffer-race"))
-      hacks_flags |= GST_OMX_HACK_QCOM_7x30_FILL_THIS_BUFFER_RACE;
     else
       GST_WARNING ("Unknown hack: %s", *hacks);
     hacks++;

@@ -1019,6 +1019,10 @@ gst_omx_video_dec_set_format (GstBaseVideoDecoder * decoder,
     if (gst_omx_component_set_state (self->component,
             OMX_StateExecuting) != OMX_ErrorNone)
       return FALSE;
+
+    if (gst_omx_component_get_state (self->component,
+            GST_CLOCK_TIME_NONE) != OMX_StateExecuting)
+      return FALSE;
   }
 
   /* Unset flushing to allow ports to accept data again */
@@ -1036,8 +1040,7 @@ gst_omx_video_dec_set_format (GstBaseVideoDecoder * decoder,
   gst_pad_start_task (GST_BASE_VIDEO_CODEC_SRC_PAD (self),
       (GstTaskFunction) gst_omx_video_dec_loop, decoder);
 
-  return (gst_omx_component_get_state (self->component,
-          GST_CLOCK_TIME_NONE) == OMX_StateExecuting);
+  return TRUE;
 }
 
 static gboolean
