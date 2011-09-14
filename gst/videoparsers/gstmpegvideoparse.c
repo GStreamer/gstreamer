@@ -71,6 +71,8 @@ static gboolean gst_mpegv_parse_check_valid_frame (GstBaseParse * parse,
 static GstFlowReturn gst_mpegv_parse_parse_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame);
 static gboolean gst_mpegv_parse_set_caps (GstBaseParse * parse, GstCaps * caps);
+static GstFlowReturn gst_mpegv_parse_pre_push_frame (GstBaseParse * parse,
+    GstBaseParseFrame * frame);
 
 static void gst_mpegv_parse_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -164,6 +166,8 @@ gst_mpegv_parse_class_init (GstMpegvParseClass * klass)
       GST_DEBUG_FUNCPTR (gst_mpegv_parse_check_valid_frame);
   parse_class->parse_frame = GST_DEBUG_FUNCPTR (gst_mpegv_parse_parse_frame);
   parse_class->set_sink_caps = GST_DEBUG_FUNCPTR (gst_mpegv_parse_set_caps);
+  parse_class->pre_push_frame =
+      GST_DEBUG_FUNCPTR (gst_mpegv_parse_pre_push_frame);
 }
 
 static void
@@ -187,6 +191,7 @@ gst_mpegv_parse_reset (GstMpegvParse * mpvparse)
   gst_mpegv_parse_reset_frame (mpvparse);
   mpvparse->profile = 0;
   mpvparse->update_caps = TRUE;
+  mpvparse->send_codec_tag = TRUE;
 
   gst_buffer_replace (&mpvparse->config, NULL);
   memset (&mpvparse->sequencehdr, 0, sizeof (mpvparse->sequencehdr));
@@ -651,6 +656,37 @@ gst_mpegv_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     return GST_BASE_PARSE_FLOW_DROPPED;
   } else
     return GST_FLOW_OK;
+}
+
+static GstFlowReturn
+gst_mpegv_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
+{
+  GstMpegvParse *mpvparse = GST_MPEGVIDEO_PARSE (parse);
+  GstTagList *taglist;
+
+  /* tag sending done late enough in hook to ensure pending events
+   * have already been sent */
+
+  if (G_UNLIKELY (mpvparse->send_codec_tag)) {
+    gchar *codec;
+
+    /* codec tag */
+    codec = g_strdup_printf ("MPEG %d Video", mpvparse->mpeg_version);
+    taglist = gst_tag_list_new ();
+    gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE,
+        GST_TAG_VIDEO_CODEC, codec, NULL);
+    g_free (codec);
+
+    gst_element_found_tags_for_pad (GST_ELEMENT (mpvparse),
+        GST_BASE_PARSE_SRC_PAD (mpvparse), taglist);
+
+    mpvparse->send_codec_tag = FALSE;
+  }
+
+  /* usual clipping applies */
+  frame->flags |= GST_BASE_PARSE_FRAME_FLAG_CLIP;
+
+  return GST_FLOW_OK;
 }
 
 static gboolean
