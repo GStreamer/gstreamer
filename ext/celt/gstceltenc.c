@@ -699,16 +699,18 @@ encoder_creation_failed:
 /* prepare a buffer for transmission */
 static GstBuffer *
 gst_celt_enc_buffer_from_data (GstCeltEnc * enc, guchar * data,
-    gint data_len, guint64 granulepos)
+    guint data_len, gint64 granulepos)
 {
   GstBuffer *outbuf;
 
-  outbuf = gst_buffer_new_and_alloc (data_len);
-  memcpy (GST_BUFFER_DATA (outbuf), data, data_len);
+  outbuf = gst_buffer_new ();
+  GST_BUFFER_DATA (outbuf) = data;
+  GST_BUFFER_MALLOCDATA (outbuf) = data;
+  GST_BUFFER_SIZE (outbuf) = data_len;
   GST_BUFFER_OFFSET (outbuf) = enc->bytes_out;
   GST_BUFFER_OFFSET_END (outbuf) = granulepos;
 
-  GST_LOG_OBJECT (enc, "encoded buffer of %d bytes", GST_BUFFER_SIZE (outbuf));
+  GST_LOG_OBJECT (enc, "encoded buffer of %u bytes", GST_BUFFER_SIZE (outbuf));
   return outbuf;
 }
 
@@ -907,11 +909,13 @@ gst_celt_enc_chain (GstPad * pad, GstBuffer * buf)
        constraints */
     GstBuffer *buf1, *buf2;
     GstCaps *caps;
-    guchar data[100];
+    /* libcelt has a bug which underestimates header size by 4... */
+    unsigned int header_size = enc->header.header_size + 4;
+    unsigned char *data = g_malloc (header_size);
 
     /* create header buffer */
-    celt_header_to_packet (&enc->header, data, 100);
-    buf1 = gst_celt_enc_buffer_from_data (enc, data, 100, 0);
+    celt_header_to_packet (&enc->header, data, header_size);
+    buf1 = gst_celt_enc_buffer_from_data (enc, data, header_size, 0);
 
     /* create comment buffer */
     buf2 = gst_celt_enc_create_metadata_buffer (enc);
