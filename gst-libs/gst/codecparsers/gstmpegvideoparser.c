@@ -520,7 +520,7 @@ gst_mpeg_video_parse_quant_matrix_extension (GstMpegVideoQuantMatrixExt * quant,
   }
 
   READ_UINT8 (&br, quant->load_chroma_intra_quantiser_matrix, 1);
-  if (quant->load_non_intra_quantiser_matrix) {
+  if (quant->load_chroma_intra_quantiser_matrix) {
     for (i = 0; i < 64; i++) {
       READ_UINT8 (&br, quant->chroma_intra_quantiser_matrix[mpeg_zigzag_8x8[i]],
           8);
