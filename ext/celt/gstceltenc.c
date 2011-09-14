@@ -914,7 +914,11 @@ gst_celt_enc_chain (GstPad * pad, GstBuffer * buf)
     unsigned char *data = g_malloc (header_size);
 
     /* create header buffer */
-    celt_header_to_packet (&enc->header, data, header_size);
+    int error = celt_header_to_packet (&enc->header, data, header_size);
+    if (error < 0) {
+      g_free (data);
+      goto no_header;
+    }
     buf1 = gst_celt_enc_buffer_from_data (enc, data, header_size, 0);
 
     /* create comment buffer */
@@ -1047,6 +1051,13 @@ not_setup:
     goto done;
   }
 
+no_header:
+  {
+    GST_ELEMENT_ERROR (enc, STREAM, ENCODE, (NULL),
+        ("Failed to encode header"));
+    ret = GST_FLOW_ERROR;
+    goto done;
+  }
 }
 
 

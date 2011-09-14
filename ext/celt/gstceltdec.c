@@ -560,8 +560,11 @@ celt_dec_chain_parse_header (GstCeltDec * dec, GstBuffer * buf)
   gint error = CELT_OK;
 
   /* get the header */
-  celt_header_from_packet ((const unsigned char *) GST_BUFFER_DATA (buf),
+  error =
+      celt_header_from_packet ((const unsigned char *) GST_BUFFER_DATA (buf),
       GST_BUFFER_SIZE (buf), &dec->header);
+  if (error < 0)
+    goto invalid_header;
 
   if (memcmp (dec->header.codec_id, "CELT    ", 8) != 0)
     goto invalid_header;
