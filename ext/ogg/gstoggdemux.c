@@ -3982,6 +3982,9 @@ gst_ogg_demux_send_event (GstOggDemux * ogg, GstEvent * event)
   GstOggChain *chain = ogg->current_chain;
   gboolean res = TRUE;
 
+  if (!chain)
+    chain = ogg->building_chain;
+
   if (chain) {
     gint i;
 
@@ -3992,6 +3995,8 @@ gst_ogg_demux_send_event (GstOggDemux * ogg, GstEvent * event)
       GST_DEBUG_OBJECT (pad, "Pushing event %" GST_PTR_FORMAT, event);
       res &= gst_pad_push_event (GST_PAD (pad), event);
     }
+  } else {
+    GST_WARNING_OBJECT (ogg, "No chain to forward event to");
   }
   gst_event_unref (event);
 
