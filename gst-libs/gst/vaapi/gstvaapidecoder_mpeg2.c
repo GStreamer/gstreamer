@@ -703,6 +703,7 @@ decode_chunks(GstVaapiDecoderMpeg2 *decoder, GstBuffer *buffer, GList *chunks)
     GstMpegVideoTypeOffsetSize *tos;
     GstVaapiDecoderStatus status;
     guchar * const buf = GST_BUFFER_DATA(buffer);
+    const guint buf_size = GST_BUFFER_SIZE(buffer);
     guchar *data;
     guint data_size, ofs, pos = 0;
     GList *l;
@@ -712,16 +713,8 @@ decode_chunks(GstVaapiDecoderMpeg2 *decoder, GstBuffer *buffer, GList *chunks)
         tos       = l->data;
         data      = buf + tos->offset;
         data_size = tos->size;
-        if (tos->size < 0) {
-            if (tos->offset < 4)
-                return GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
-            priv->sub_buffer = gst_buffer_create_sub(
-                buffer,
-                tos->offset - 4,
-                GST_BUFFER_SIZE(buffer) - (tos->offset - 4)
-            );
+        if (tos->size < 0)
             break;
-        }
 
         ofs = tos->offset - pos + tos->size;
         gst_vaapi_tsb_pop(priv->tsb, ofs);
@@ -785,6 +778,9 @@ decode_chunks(GstVaapiDecoderMpeg2 *decoder, GstBuffer *buffer, GList *chunks)
         if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
             break;
     }
+
+    if (status == GST_VAAPI_DECODER_STATUS_SUCCESS && pos < buf_size)
+        priv->sub_buffer = gst_buffer_create_sub(buffer, pos, buf_size - pos);
     return status;
 }
 
