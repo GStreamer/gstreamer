@@ -760,7 +760,11 @@ celt_dec_chain_parse_data (GstCeltDec * dec, GstBuffer * buf,
 #else
   error = celt_decode (dec->state, data, size, out_data);
 #endif
+#ifdef HAVE_CELT_0_11
+  if (error < 0) {
+#else
   if (error != CELT_OK) {
+#endif
     GST_WARNING_OBJECT (dec, "Decoding error: %d", error);
     return GST_FLOW_ERROR;
   }
