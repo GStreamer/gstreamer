@@ -56,7 +56,7 @@ static const GstElementDetails gst_vaapidecode_details =
     "height = (int) [ 1, MAX ]; "
 
 static const char gst_vaapidecode_sink_caps_str[] =
-    GST_CAPS_CODEC("video/mpeg, mpegversion=2")
+    GST_CAPS_CODEC("video/mpeg, mpegversion=2, systemstream=(boolean)false")
     GST_CAPS_CODEC("video/mpeg, mpegversion=4")
     GST_CAPS_CODEC("video/x-divx")
     GST_CAPS_CODEC("video/x-xvid")
