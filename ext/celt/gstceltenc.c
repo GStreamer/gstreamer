@@ -253,6 +253,9 @@ gst_celt_enc_sink_setcaps (GstPad * pad, GstCaps * caps)
     gst_caps_unref (otherpadcaps);
   }
 
+  if (enc->requested_frame_size > 0)
+    enc->frame_size = enc->requested_frame_size;
+
   GST_DEBUG_OBJECT (pad, "channels=%d rate=%d frame-size=%d",
       enc->channels, enc->rate, enc->frame_size);
 
@@ -573,6 +576,7 @@ gst_celt_enc_init (GstCeltEnc * enc, GstCeltEncClass * klass)
 
   enc->bitrate = DEFAULT_BITRATE;
   enc->frame_size = DEFAULT_FRAMESIZE;
+  enc->requested_frame_size = -1;
   enc->cbr = DEFAULT_CBR;
   enc->complexity = DEFAULT_COMPLEXITY;
   enc->max_bitrate = DEFAULT_MAX_BITRATE;
@@ -1090,7 +1094,8 @@ gst_celt_enc_set_property (GObject * object, guint prop_id,
       enc->bitrate = g_value_get_int (value);
       break;
     case PROP_FRAMESIZE:
-      enc->frame_size = g_value_get_int (value);
+      enc->requested_frame_size = g_value_get_int (value);
+      enc->frame_size = enc->requested_frame_size;
       break;
     case PROP_CBR:
       enc->cbr = g_value_get_boolean (value);
