@@ -94,8 +94,8 @@ gst_span_plc_class_init (GstSpanPlcClass * klass)
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_span_plc_change_state);
 
-  GST_DEBUG_CATEGORY_INIT (gst_span_plc_debug, "spandlc",
-      0, "spandlc's packet loss concealment");
+  GST_DEBUG_CATEGORY_INIT (gst_span_plc_debug, "spanplc",
+      0, "spanDSP's packet loss concealment");
 }
 
 static void
