@@ -485,7 +485,12 @@ gst_camera_bin_src_notify_readyforcapture (GObject * obj, GParamSpec * pspec,
       GST_DEBUG_OBJECT (camera, "Switching videobin location to %s", location);
       g_object_set (camera->videosink, "location", location, NULL);
       g_free (location);
-      gst_element_set_state (camera->videosink, GST_STATE_PLAYING);
+      if (gst_element_set_state (camera->videosink, GST_STATE_PLAYING) ==
+          GST_STATE_CHANGE_FAILURE) {
+        /* Resets the latest state change return, that would be a failure
+         * and could cause problems in a camerabin2 state change */
+        gst_element_set_state (camera->videosink, GST_STATE_NULL);
+      }
       gst_element_set_state (camera->video_encodebin, GST_STATE_PLAYING);
       gst_element_set_state (camera->videobin_capsfilter, GST_STATE_PLAYING);
     }
@@ -1219,7 +1224,12 @@ gst_camera_bin_image_sink_event_probe (GstPad * pad, GstEvent * event,
         GST_DEBUG_OBJECT (camerabin, "Setting filename to imagesink: %s",
             filename);
         g_object_set (camerabin->imagesink, "location", filename, NULL);
-        gst_element_set_state (camerabin->imagesink, GST_STATE_PLAYING);
+        if (gst_element_set_state (camerabin->imagesink, GST_STATE_PLAYING) ==
+            GST_STATE_CHANGE_FAILURE) {
+          /* Resets the latest state change return, that would be a failure
+           * and could cause problems in a camerabin2 state change */
+          gst_element_set_state (camerabin->imagesink, GST_STATE_NULL);
+        }
       }
     }
       break;
