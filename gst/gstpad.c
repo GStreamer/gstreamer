@@ -4258,8 +4258,10 @@ gst_pad_chain_data_unchecked (GstPad * pad, gboolean is_buffer, void *data,
       goto no_function;
 
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
-        "calling chainfunction &%s with buffer %p",
-        GST_DEBUG_FUNCPTR_NAME (chainfunc), data);
+        "calling chainfunction &%s with %s buffer %p, ts %" GST_TIME_FORMAT,
+        GST_DEBUG_FUNCPTR_NAME (chainfunc),
+        (caps) ? gst_structure_get_name (gst_caps_get_structure (caps, 0)) : "",
+        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (data)));
 
     if (cache) {
       cache->peer = gst_object_ref (pad);
@@ -5264,8 +5266,9 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
   if (peerpad == NULL)
     goto not_linked;
 
-  GST_LOG_OBJECT (pad, "sending event %s to peerpad %" GST_PTR_FORMAT,
-      GST_EVENT_TYPE_NAME (event), peerpad);
+  GST_LOG_OBJECT (pad,
+      "sending event %s (%" GST_PTR_FORMAT ") to peerpad %" GST_PTR_FORMAT,
+      GST_EVENT_TYPE_NAME (event), event, peerpad);
   gst_object_ref (peerpad);
   GST_OBJECT_UNLOCK (pad);
 
