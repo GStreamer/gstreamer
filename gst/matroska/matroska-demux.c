@@ -3395,7 +3395,7 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
            * otherwise if these go back and forth downstream (sinks) increase
            * accumulated time and running_time */
           diff = GST_CLOCK_DIFF (demux->last_stop_end, lace_time);
-          if (diff > demux->max_gap_time
+          if (diff > 0 && diff > demux->max_gap_time
               && lace_time > demux->common.segment.start
               && (!GST_CLOCK_TIME_IS_VALID (demux->common.segment.stop)
                   || lace_time < demux->common.segment.stop)) {
