@@ -2112,8 +2112,8 @@ gst_caps_transform_to_string (const GValue * src_value, GValue * dest_value)
   g_return_if_fail (G_VALUE_HOLDS (dest_value, G_TYPE_STRING)
       || G_VALUE_HOLDS (dest_value, G_TYPE_POINTER));
 
-  dest_value->data[0].v_pointer =
-      gst_caps_to_string (src_value->data[0].v_pointer);
+  g_value_take_string (dest_value,
+      gst_caps_to_string (gst_value_get_caps (src_value)));
 }
 
 static GstCaps *
