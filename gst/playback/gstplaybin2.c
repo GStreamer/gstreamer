@@ -3050,6 +3050,17 @@ autoplug_factories_cb (GstElement * decodebin, GstPad * pad,
     GstElementFactory *factory = GST_ELEMENT_FACTORY_CAST (tmp->data);
     GValue val = { 0, };
 
+    if (group->audio_sink && gst_element_factory_list_is_type (factory,
+            GST_ELEMENT_FACTORY_TYPE_SINK |
+            GST_ELEMENT_FACTORY_TYPE_MEDIA_AUDIO)) {
+      continue;
+    }
+    if (group->video_sink && gst_element_factory_list_is_type (factory,
+            GST_ELEMENT_FACTORY_TYPE_SINK | GST_ELEMENT_FACTORY_TYPE_MEDIA_VIDEO
+            | GST_ELEMENT_FACTORY_TYPE_MEDIA_IMAGE)) {
+      continue;
+    }
+
     g_value_init (&val, G_TYPE_OBJECT);
     g_value_set_object (&val, factory);
     g_value_array_append (result, &val);
@@ -3261,6 +3272,8 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
           "Existing sink '%s' does not accept caps: %" GST_PTR_FORMAT,
           GST_ELEMENT_NAME (sink), caps);
       gst_object_unref (sink);
+      GST_SOURCE_GROUP_UNLOCK (group);
+      return GST_AUTOPLUG_SELECT_SKIP;
     }
   }
   GST_DEBUG_OBJECT (playbin, "we have no pending sink, try to create one");
