@@ -1284,7 +1284,7 @@ gst_playbin_uri_is_valid (GstPlayBin * playbin, const gchar * uri)
     return FALSE;
 
   for (c = uri; *c != '\0'; ++c) {
-    if (*c >= 128 || !g_ascii_isprint (*c))
+    if (!g_ascii_isprint (*c))
       goto invalid;
     if (*c == ' ')
       goto invalid;
