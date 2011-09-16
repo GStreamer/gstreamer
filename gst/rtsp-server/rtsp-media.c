@@ -720,6 +720,11 @@ gst_rtsp_media_seek (GstRTSPMedia * media, GstRTSPTimeRange * range)
   g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
   g_return_val_if_fail (range != NULL, FALSE);
 
+  if (media->is_live) {
+    GST_INFO ("no seek in live media");
+    return TRUE;
+  }
+
   if (range->unit != GST_RTSP_RANGE_NPT)
     goto not_supported;
 
