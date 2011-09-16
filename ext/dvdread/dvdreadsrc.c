@@ -1545,25 +1545,27 @@ static gboolean
 gst_dvd_read_src_goto_sector (GstDvdReadSrc * src, int angle)
 {
   gint seek_to = src->cur_pack;
-  gint chapter, sectors, next, cur, i;
+  gint chapter, next, cur, i;
 
   /* retrieve position */
   src->cur_pack = 0;
+  GST_DEBUG_OBJECT (src, "Goto sector %d, angle %d, within %d chapters",
+      seek_to, angle, src->num_chapters);
+
   for (i = 0; i < src->num_chapters; i++) {
     gint c1, c2;
 
     cur_title_get_chapter_bounds (src, i, &c1, &c2);
+    GST_DEBUG_OBJECT (src, " Looking in chapter %d, bounds: %d %d", i, c1, c2);
 
     for (next = cur = c1; cur < c2;) {
-      if (next != cur) {
-        sectors =
-            src->cur_pgc->cell_playback[cur].last_sector -
-            src->cur_pgc->cell_playback[cur].first_sector;
-        if (src->cur_pack + sectors > seek_to) {
-          chapter = i;
-          goto done;
-        }
-        src->cur_pack += sectors;
+      gint first = src->cur_pgc->cell_playback[cur].first_sector;
+      gint last = src->cur_pgc->cell_playback[cur].last_sector;
+      GST_DEBUG_OBJECT (src, "Cell %d sector bounds: %d %d", cur, first, last);
+      if (seek_to >= first && seek_to <= last) {
+        GST_DEBUG_OBJECT (src, "Seek target found in chapter %d", i);
+        chapter = i;
+        goto done;
       }
       cur = next;
       if (src->cur_pgc->cell_playback[cur].block_type == BLOCK_TYPE_ANGLE_BLOCK)
