@@ -4261,7 +4261,7 @@ gst_pad_chain_data_unchecked (GstPad * pad, gboolean is_buffer, void *data,
         "calling chainfunction &%s with %s buffer %p, ts %" GST_TIME_FORMAT,
         GST_DEBUG_FUNCPTR_NAME (chainfunc),
         (caps) ? gst_structure_get_name (gst_caps_get_structure (caps, 0)) : "",
-        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (data)));
+        GST_BUFFER (data), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (data)));
 
     if (cache) {
       cache->peer = gst_object_ref (pad);
