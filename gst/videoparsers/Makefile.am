@@ -7,6 +7,7 @@ libgstvideoparsersbad_la_SOURCES = plugin.c \
 
 libgstvideoparsersbad_la_CFLAGS = \
 	$(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
+	-DGST_USE_UNSTABLE_API \
 	$(GST_BASE_CFLAGS) $(GST_CFLAGS)
 libgstvideoparsersbad_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) \
 	$(top_builddir)/gst-libs/gst/codecparsers/libgstcodecparsers-$(GST_MAJORMINOR).la \
