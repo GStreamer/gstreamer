@@ -1154,7 +1154,7 @@ gst_ogg_demux_estimate_bisection_target (GstOggDemux * ogg)
       GST_DEBUG_OBJECT (ogg,
           "Local bitrate on the %" GST_TIME_FORMAT " - %" GST_TIME_FORMAT
           " segment: %" G_GINT64_FORMAT, GST_TIME_ARGS (ogg->push_time0),
-          GST_TIME_ARGS (ogg->push_time1));
+          GST_TIME_ARGS (ogg->push_time1), segment_bitrate);
       best =
           ogg->push_offset0 +
           gst_util_uint64_scale (ogg->push_seek_time_target - ogg->push_time0,
