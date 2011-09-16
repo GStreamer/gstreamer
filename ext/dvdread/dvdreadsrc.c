@@ -1183,6 +1183,17 @@ gst_dvd_read_src_handle_seek_event (GstDvdReadSrc * src, GstEvent * event)
   return GST_BASE_SRC_CLASS (parent_class)->event (GST_BASE_SRC (src), event);
 }
 
+static void
+gst_dvd_read_src_get_sector_bounds (GstDvdReadSrc * src, gint * first,
+    gint * last)
+{
+  gint c1, c2, tmp;
+  cur_title_get_chapter_bounds (src, 0, &c1, &tmp);
+  cur_title_get_chapter_bounds (src, src->num_chapters - 1, &tmp, &c2);
+  *first = src->cur_pgc->cell_playback[c1].first_sector;
+  *last = src->cur_pgc->cell_playback[c2].last_sector;
+}
+
 static gboolean
 gst_dvd_read_src_do_seek (GstBaseSrc * basesrc, GstSegment * s)
 {
@@ -1200,9 +1211,17 @@ gst_dvd_read_src_do_seek (GstBaseSrc * basesrc, GstSegment * s)
     old = src->cur_pack;
 
     if (s->format == sector_format) {
+      gint first, last;
+      gst_dvd_read_src_get_sector_bounds (src, &first, &last);
+      GST_DEBUG_OBJECT (src, "Format is sector, seeking to %d", s->last_stop);
       src->cur_pack = s->last_stop;
+      if (src->cur_pack < first)
+        src->cur_pack = first;
+      if (src->cur_pack > last)
+        src->cur_pack = last;
     } else if (s->format == GST_FORMAT_TIME) {
       gint sector;
+      GST_DEBUG_OBJECT (src, "Format is time");
 
       sector = gst_dvd_read_src_get_sector_from_time (src, s->last_stop);
 
@@ -1215,12 +1234,16 @@ gst_dvd_read_src_do_seek (GstBaseSrc * basesrc, GstSegment * s)
       src->cur_pack = sector;
     } else {
       /* byte format */
+      gint first, last;
+      gst_dvd_read_src_get_sector_bounds (src, &first, &last);
+      GST_DEBUG_OBJECT (src, "Format is byte");
       src->cur_pack = s->last_stop / DVD_VIDEO_LB_LEN;
       if (((gint64) src->cur_pack * DVD_VIDEO_LB_LEN) != s->last_stop) {
         GST_LOG_OBJECT (src, "rounded down offset %" G_GINT64_FORMAT " => %"
             G_GINT64_FORMAT, s->last_stop,
             (gint64) src->cur_pack * DVD_VIDEO_LB_LEN);
       }
+      src->cur_pack += first;
     }
 
     if (!gst_dvd_read_src_goto_sector (src, src->angle)) {
