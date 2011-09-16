@@ -1639,14 +1639,12 @@ gst_matroska_read_common_peek_bytes (GstMatroskaReadCommon * common, guint64
   return GST_FLOW_OK;
 }
 
-static const guint8 *
-gst_matroska_read_common_peek_pull (GstMatroskaReadCommon * common, guint peek)
+static GstFlowReturn
+gst_matroska_read_common_peek_pull (GstMatroskaReadCommon * common, guint peek,
+    guint8 ** data)
 {
-  guint8 *data = NULL;
-
-  gst_matroska_read_common_peek_bytes (common, common->offset, peek, NULL,
-      &data);
-  return data;
+  return gst_matroska_read_common_peek_bytes (common, common->offset, peek,
+      NULL, data);
 }
 
 GstFlowReturn
