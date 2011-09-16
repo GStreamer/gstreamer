@@ -1738,15 +1738,25 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
     GstCollectData *cdata = (GstCollectData *) walk->data;
     GstQTPad *qtpad = (GstQTPad *) cdata;
 
-    /* send last buffer */
+    /* avoid add_buffer complaining if not negotiated
+     * in which case no buffers either, so skipping */
+    if (!qtpad->fourcc) {
+      GST_DEBUG_OBJECT (qtmux, "Pad %s has never had buffers",
+          GST_PAD_NAME (qtpad->collect.pad));
+      continue;
+    }
+
+    /* send last buffer; also flushes possibly queued buffers/ts */
     GST_DEBUG_OBJECT (qtmux, "Sending the last buffer for pad %s",
         GST_PAD_NAME (qtpad->collect.pad));
     ret = gst_qt_mux_add_buffer (qtmux, qtpad, NULL);
-    if (ret != GST_FLOW_OK)
+    if (ret != GST_FLOW_OK) {
       GST_WARNING_OBJECT (qtmux, "Failed to send last buffer for %s, "
           "flow return: %s", GST_PAD_NAME (qtpad->collect.pad),
           gst_flow_get_name (ret));
+    }
 
+    /* having flushed above, can check for buffers now */
     if (!GST_CLOCK_TIME_IS_VALID (qtpad->first_ts)) {
       GST_DEBUG_OBJECT (qtmux, "Pad %s has no buffers",
           GST_PAD_NAME (qtpad->collect.pad));
