@@ -682,23 +682,21 @@ gst_dvd_read_src_get_time_for_sector (GstDvdReadSrc * src, guint sector)
 static gint
 gst_dvd_read_src_get_sector_from_time (GstDvdReadSrc * src, GstClockTime ts)
 {
-  gint sector, i, j;
+  gint sector, j;
 
-  if (src->vts_tmapt == NULL || src->vts_tmapt->nr_of_tmaps == 0)
+  if (src->vts_tmapt == NULL || src->vts_tmapt->nr_of_tmaps < src->ttn)
     return -1;
 
   sector = 0;
-  for (i = 0; i < src->vts_tmapt->nr_of_tmaps; ++i) {
-    for (j = 0; j < src->vts_tmapt->tmap[i].nr_of_entries; ++j) {
-      GstClockTime entry_time;
+  for (j = 0; j < src->vts_tmapt->tmap[src->ttn - 1].nr_of_entries; ++j) {
+    GstClockTime entry_time;
 
-      entry_time = src->vts_tmapt->tmap[i].tmu * (j + 1) * GST_SECOND;
-      if (entry_time <= ts) {
-        sector = src->vts_tmapt->tmap[i].map_ent[j] & 0x7fffffff;
-      }
-      if (entry_time >= ts) {
-        return sector;
-      }
+    entry_time = src->vts_tmapt->tmap[src->ttn - 1].tmu * (j + 1) * GST_SECOND;
+    if (entry_time <= ts) {
+      sector = src->vts_tmapt->tmap[src->ttn - 1].map_ent[j] & 0x7fffffff;
+    }
+    if (entry_time >= ts) {
+      return sector;
     }
   }
 
