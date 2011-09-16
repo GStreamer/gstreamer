@@ -969,22 +969,24 @@ gst_hls_demux_update_playlist (GstHLSDemux * demux)
     GST_WARNING_OBJECT (demux, "Couldn't not validate playlist encoding");
     return FALSE;
   }
-  gst_m3u8_client_update (demux->client, playlist);
-  return TRUE;
+
+  return gst_m3u8_client_update (demux->client, playlist);
 }
 
 static gboolean
 gst_hls_demux_change_playlist (GstHLSDemux * demux, gboolean is_fast)
 {
   GList *list;
+  GList *previous_list;
   GstStructure *s;
   gint new_bandwidth;
 
   GST_M3U8_CLIENT_LOCK (demux->client);
+  previous_list = demux->client->main->current_variant;
   if (is_fast)
-    list = g_list_next (demux->client->main->current_variant);
+    list = g_list_next (previous_list);
   else
-    list = g_list_previous (demux->client->main->current_variant);
+    list = g_list_previous (previous_list);
 
   /* Don't do anything else if the playlist is the same */
   if (!list || list->data == demux->client->current) {
@@ -1001,15 +1003,23 @@ gst_hls_demux_change_playlist (GstHLSDemux * demux, gboolean is_fast)
   new_bandwidth = demux->client->current->bandwidth;
   GST_M3U8_CLIENT_UNLOCK (demux->client);
 
-  gst_hls_demux_update_playlist (demux);
   GST_INFO_OBJECT (demux, "Client is %s, switching to bitrate %d",
       is_fast ? "fast" : "slow", new_bandwidth);
 
-  s = gst_structure_new ("playlist",
-      "uri", G_TYPE_STRING, gst_m3u8_client_get_current_uri (demux->client),
-      "bitrate", G_TYPE_INT, new_bandwidth, NULL);
-  gst_element_post_message (GST_ELEMENT_CAST (demux),
-      gst_message_new_element (GST_OBJECT_CAST (demux), s));
+  if (gst_hls_demux_update_playlist (demux)) {
+    s = gst_structure_new ("playlist",
+        "uri", G_TYPE_STRING, gst_m3u8_client_get_current_uri (demux->client),
+        "bitrate", G_TYPE_INT, new_bandwidth, NULL);
+    gst_element_post_message (GST_ELEMENT_CAST (demux),
+        gst_message_new_element (GST_OBJECT_CAST (demux), s));
+  } else {
+    GST_INFO_OBJECT (demux, "Unable to update playlist. Switching back");
+    GST_M3U8_CLIENT_LOCK (demux->client);
+    demux->client->main->current_variant = previous_list;
+    GST_M3U8_CLIENT_UNLOCK (demux->client);
+    gst_m3u8_client_set_current (demux->client, previous_list->data);
+    return FALSE;
+  }
 
   /* Force typefinding since we might have changed media type */
   demux->do_typefind = TRUE;
@@ -1072,17 +1082,19 @@ gst_hls_demux_switch_playlist (GstHLSDemux * demux)
   /* if we are on time switch to a higher bitrate */
   if (diff > limit) {
     while (diff > limit) {
-      gst_hls_demux_change_playlist (demux, TRUE);
+      if (!gst_hls_demux_change_playlist (demux, TRUE))
+        break;
       diff -= limit;
     }
     demux->accumulated_delay = 0;
   } else if (diff < 0) {
-    /* if the client is too slow wait until it has accumulated a certain delay to
-     * switch to a lower bitrate */
+    /* if the client is too slow wait until it has accumulated a certain delay
+     * to switch to a lower bitrate */
     demux->accumulated_delay -= diff;
     if (demux->accumulated_delay >= limit) {
       while (demux->accumulated_delay >= limit) {
-        gst_hls_demux_change_playlist (demux, FALSE);
+        if (!gst_hls_demux_change_playlist (demux, FALSE))
+          break;
         demux->accumulated_delay -= limit;
       }
       demux->accumulated_delay = 0;
