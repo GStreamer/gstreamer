@@ -4702,8 +4702,10 @@ gst_pad_push (GstPad * pad, GstBuffer * buffer)
     goto invalid;
 
   GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
-      "calling chainfunction &%s with buffer %p",
-      GST_DEBUG_FUNCPTR_NAME (GST_PAD_CHAINFUNC (peer)), buffer);
+      "calling chainfunction &%s with %s buffer %p, ts %" GST_TIME_FORMAT,
+      GST_DEBUG_FUNCPTR_NAME (GST_PAD_CHAINFUNC (peer)),
+      (caps) ? gst_structure_get_name (gst_caps_get_structure (caps, 0)) : "",
+      GST_BUFFER (buffer), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)));
 
   ret = GST_PAD_CHAINFUNC (peer) (peer, buffer);
 
