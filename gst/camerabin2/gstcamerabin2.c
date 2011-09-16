@@ -927,6 +927,8 @@ gst_camera_bin_handle_message (GstBin * bin, GstMessage * message)
       if (gst_structure_has_name (structure, "GstMultiFileSink")) {
         GST_CAMERA_BIN2_PROCESSING_DEC (GST_CAMERA_BIN2_CAST (bin));
         filename = gst_structure_get_string (structure, "filename");
+        GST_DEBUG_OBJECT (bin, "Got file save message from multifilesink, "
+            "image %s has been saved", filename);
         if (filename) {
           gst_image_capture_bin_post_image_done (GST_CAMERA_BIN2_CAST (bin),
               filename);
@@ -941,6 +943,8 @@ gst_camera_bin_handle_message (GstBin * bin, GstMessage * message)
       gst_message_parse_warning (message, &err, &debug);
       if (err->domain == GST_RESOURCE_ERROR) {
         /* some capturing failed */
+        GST_WARNING_OBJECT (bin, "Capture failed, reason: %s - %s",
+            err->message, debug);
         GST_CAMERA_BIN2_PROCESSING_DEC (GST_CAMERA_BIN2_CAST (bin));
       }
     }
