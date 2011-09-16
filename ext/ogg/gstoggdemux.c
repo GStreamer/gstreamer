@@ -1924,12 +1924,13 @@ gst_ogg_demux_sink_event (GstPad * pad, GstEvent * event)
         gst_event_parse_new_segment_full (event, &update, &rate, &arate,
             &format, &start, &stop, &time);
         if (format == GST_FORMAT_BYTES) {
-          if (!ogg->pullmode) {
-            GST_PUSH_LOCK (ogg);
-            ogg->push_byte_offset = start;
-            ogg->push_last_seek_offset = start;
-            GST_PUSH_UNLOCK (ogg);
-          }
+          GST_PUSH_LOCK (ogg);
+          ogg->push_byte_offset = start;
+          ogg->push_last_seek_offset = start;
+          GST_PUSH_UNLOCK (ogg);
+        } else {
+          GST_WARNING_OBJECT (ogg, "unexpected segment format: %s",
+              gst_format_get_name (format));
         }
       }
       gst_event_unref (event);
