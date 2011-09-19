@@ -958,9 +958,9 @@ sub addPropElem
 {
 	my ($spec, $node, $is_child) = @_;
 	my ($name, $mode, $docs);
-	$spec =~ /g_param_spec_(\w+)\s*\((.*)\s*\)\s*\)/;
-	my $type = $1;
-	my @params = split(/,/, $2);
+	$spec =~ /(g|gst)_param_spec_(\w+)\s*\((.*)\s*\)\s*\)/;
+	my $type = $2;
+	my @params = split(/,/, $3);
 
 	$name = $params[0];
 	if ($defines{$name}) {
