@@ -876,7 +876,7 @@ _getcaps_function (GstPad * pad)
 }
 
 static void
-check_caps_identical (GstCaps * a, GstCaps * b)
+check_caps_identical (GstCaps * a, GstCaps * b, const char *name)
 {
   int i;
 
@@ -896,12 +896,12 @@ check_caps_identical (GstCaps * a, GstCaps * b)
   return;
 
 fail:
-  fail ("caps (%s) is not equal to caps (%s)",
-      gst_caps_to_string (a), gst_caps_to_string (b));
+  fail ("%s caps (%s) is not equal to caps (%s)",
+      name, gst_caps_to_string (a), gst_caps_to_string (b));
 }
 
 static void
-check_peer_caps (GstPad * pad, const char *expected)
+check_peer_caps (GstPad * pad, const char *expected, const char *name)
 {
   GstCaps *caps;
   GstCaps *expected_caps;
@@ -912,7 +912,7 @@ check_peer_caps (GstPad * pad, const char *expected)
   expected_caps = gst_caps_from_string (expected);
   fail_unless (expected_caps != NULL);
 
-  check_caps_identical (caps, expected_caps);
+  check_caps_identical (caps, expected_caps, name);
 
   gst_caps_unref (caps);
   gst_caps_unref (expected_caps);
@@ -938,8 +938,8 @@ GST_START_TEST (test_caps_negotiation)
   gst_pad_set_getcaps_function (mysrcpad, _getcaps_function);
   gst_pad_set_getcaps_function (mysinkpad, _getcaps_function);
 
-  check_peer_caps (mysrcpad, test->expected_sink_caps);
-  check_peer_caps (mysinkpad, test->expected_src_caps);
+  check_peer_caps (mysrcpad, test->expected_sink_caps, "sink");
+  check_peer_caps (mysinkpad, test->expected_src_caps, "src");
 
   gst_object_unref (videorate);
 }
