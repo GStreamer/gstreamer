@@ -766,6 +766,8 @@ gst_text_overlay_setcaps_txt (GstPad * pad, GstCaps * caps)
   GstStructure *structure;
 
   overlay = GST_TEXT_OVERLAY (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (!overlay))
+    return FALSE;
 
   structure = gst_caps_get_structure (caps, 0);
   overlay->have_pango_markup =
@@ -792,6 +794,8 @@ gst_text_overlay_setcaps (GstPad * pad, GstCaps * caps)
   g_return_val_if_fail (gst_caps_is_fixed (caps), FALSE);
 
   overlay = GST_TEXT_OVERLAY (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (!overlay))
+    return FALSE;
 
   overlay->width = 0;
   overlay->height = 0;
@@ -1037,6 +1041,8 @@ gst_text_overlay_src_query (GstPad * pad, GstQuery * query)
   GstTextOverlay *overlay = NULL;
 
   overlay = GST_TEXT_OVERLAY (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (!overlay))
+    return FALSE;
 
   ret = gst_pad_peer_query (overlay->video_sinkpad, query);
 
@@ -1052,6 +1058,10 @@ gst_text_overlay_src_event (GstPad * pad, GstEvent * event)
   GstTextOverlay *overlay = NULL;
 
   overlay = GST_TEXT_OVERLAY (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (!overlay)) {
+    gst_event_unref (event);
+    return FALSE;
+  }
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:{
@@ -1114,6 +1124,8 @@ gst_text_overlay_getcaps (GstPad * pad)
   GstCaps *caps;
 
   overlay = GST_TEXT_OVERLAY (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (!overlay))
+    return gst_caps_copy (gst_pad_get_pad_template_caps (pad));
 
   if (pad == overlay->srcpad)
     otherpad = overlay->video_sinkpad;
@@ -2125,6 +2137,8 @@ gst_text_overlay_text_pad_link (GstPad * pad, GstPad * peer)
   GstTextOverlay *overlay;
 
   overlay = GST_TEXT_OVERLAY (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (!overlay))
+    return GST_PAD_LINK_REFUSED;
 
   GST_DEBUG_OBJECT (overlay, "Text pad linked");
 
@@ -2157,6 +2171,10 @@ gst_text_overlay_text_event (GstPad * pad, GstEvent * event)
   GstTextOverlay *overlay = NULL;
 
   overlay = GST_TEXT_OVERLAY (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (!overlay)) {
+    gst_event_unref (event);
+    return FALSE;
+  }
 
   GST_LOG_OBJECT (pad, "received event %s", GST_EVENT_TYPE_NAME (event));
 
@@ -2242,6 +2260,10 @@ gst_text_overlay_video_event (GstPad * pad, GstEvent * event)
   GstTextOverlay *overlay = NULL;
 
   overlay = GST_TEXT_OVERLAY (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (!overlay)) {
+    gst_event_unref (event);
+    return FALSE;
+  }
 
   GST_DEBUG_OBJECT (pad, "received event %s", GST_EVENT_TYPE_NAME (event));
 
@@ -2313,6 +2335,9 @@ gst_text_overlay_video_bufferalloc (GstPad * pad, guint64 offset, guint size,
   GstTextOverlay *overlay = GST_TEXT_OVERLAY (gst_pad_get_parent (pad));
   GstFlowReturn ret = GST_FLOW_WRONG_STATE;
   GstPad *allocpad;
+
+  if (G_UNLIKELY (!overlay))
+    return GST_FLOW_WRONG_STATE;
 
   GST_OBJECT_LOCK (overlay);
   allocpad = overlay->srcpad ? gst_object_ref (overlay->srcpad) : NULL;
