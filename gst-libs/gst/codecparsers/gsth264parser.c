@@ -1136,7 +1136,7 @@ gst_h264_nal_parser_new (void)
 
 /**
  * gst_h264_nal_parser_free:
- * @nalparser the #GstH264NalParser to free
+ * @nalparser: the #GstH264NalParser to free
  *
  * Frees @nalparser and sets it to %NULL
  */
@@ -1270,7 +1270,7 @@ gst_h264_parser_identify_nalu_avc (GstH264NalParser * nalparser,
  * @nalparser: a #GstH264NalParser
  * @nalu: The #GstH264NalUnit to parse
  *
- * This function should be called in the case you don't need to
+ * This function should be called in the case one doesn't need to
  * parse a specific structure. It is necessary to do so to make
  * sure @nalparser is up to date.
  *
@@ -1296,8 +1296,8 @@ gst_h264_parser_parse_nal (GstH264NalParser * nalparser, GstH264NalUnit * nalu)
 /**
  * gst_h264_parser_parse_sps:
  * @nalparser: a #GstH264NalParser
- * @nalu: The #GST_H264_NAL_SPS #GstH264NalUnit you want to parse
- * @slice: The #GstH264SPS to fill.
+ * @nalu: The #GST_H264_NAL_SPS #GstH264NalUnit to parse
+ * @sps: The #GstH264SPS to fill.
  * @parse_vui_params: Whether to parse the vui_params or not
  *
  * Parses @data, and fills the @sps structure.
@@ -1324,7 +1324,7 @@ gst_h264_parser_parse_sps (GstH264NalParser * nalparser, GstH264NalUnit * nalu,
 
 /**
  * gst_h264_parse_sps:
- * @nalu: The #GST_H264_NAL_SPS #GstH264NalUnit you want to parse
+ * @nalu: The #GST_H264_NAL_SPS #GstH264NalUnit to parse
  * @sps: The #GstH264SPS to fill.
  * @parse_vui_params: Whether to parse the vui_params or not
  *
@@ -1502,7 +1502,7 @@ error:
 /**
  * gst_h264_parse_pps:
  * @nalparser: a #GstH264NalParser
- * @nalu: The #GST_H264_NAL_PPS #GstH264NalUnit you want to parse
+ * @nalu: The #GST_H264_NAL_PPS #GstH264NalUnit to parse
  * @pps: The #GstH264PPS to fill.
  *
  * Parses @data, and fills the @pps structure.
@@ -1631,7 +1631,7 @@ error:
 /**
  * gst_h264_parser_parse_pps:
  * @nalparser: a #GstH264NalParser
- * @nalu: The #GST_H264_NAL_PPS #GstH264NalUnit you want to parse
+ * @nalu: The #GST_H264_NAL_PPS #GstH264NalUnit to parse
  * @pps: The #GstH264PPS to fill.
  *
  * Parses @data, and fills the @pps structure.
@@ -1657,7 +1657,7 @@ gst_h264_parser_parse_pps (GstH264NalParser * nalparser,
 /**
  * gst_h264_parser_parse_slice_hdr:
  * @nalparser: a #GstH264NalParser
- * @nalu: The #GST_H264_NAL_SLICE #GstH264NalUnit you want to parse
+ * @nalu: The #GST_H264_NAL_SLICE #GstH264NalUnit to parse
  * @slice: The #GstH264SliceHdr to fill.
  * @parse_pred_weight_table: Whether to parse the pred_weight_table or not
  * @parse_dec_ref_pic_marking: Whether to parse the dec_ref_pic_marking or not
@@ -1834,7 +1834,7 @@ error:
 /**
  * gst_h264_parser_parse_sei:
  * @nalparser: a #GstH264NalParser
- * @nalu: The #GST_H264_NAL_SEI #GstH264NalUnit you want to parse
+ * @nalu: The #GST_H264_NAL_SEI #GstH264NalUnit to parse
  * @sei: The #GstH264SEIMessage to fill.
  *
  * Parses @data, and fills the @sei structures.

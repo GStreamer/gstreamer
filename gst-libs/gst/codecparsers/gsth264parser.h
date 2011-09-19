@@ -45,19 +45,19 @@ G_BEGIN_DECLS
 
 /**
  * GstH264NalUnitType:
- * @GST_H264_NAL_UNKNOWN: Unkonw nal type
+ * @GST_H264_NAL_UNKNOWN: Unknown nal type
  * @GST_H264_NAL_SLICE: Slice nal
  * @GST_H264_NAL_SLICE_DPA: DPA slice nal
  * @GST_H264_NAL_SLICE_DPB: DPB slice nal
  * @GST_H264_NAL_SLICE_DPC: DPC slice nal
  * @GST_H264_NAL_SLICE_IDR: DPR slice nal
- * @GST_H264_NAL_SEI: Supplemental enhancement information nal unit
- * @GST_H264_NAL_SPS: Sequence parameter set nal unit
- * @GST_H264_NAL_PPS: Picture parameter set nal unit
- * @GST_H264_NAL_AU_DELIMITER: Access unit delimiter nal unit
+ * @GST_H264_NAL_SEI: Supplemental enhancement information (SEI) nal unit
+ * @GST_H264_NAL_SPS: Sequence parameter set (SPS) nal unit
+ * @GST_H264_NAL_PPS: Picture parameter set (PPS) nal unit
+ * @GST_H264_NAL_AU_DELIMITER: Access unit (AU) delimiter nal unit
  * @GST_H264_NAL_SEQ_END: End of sequence nal unit
  * @GST_H264_NAL_STREAM_END: End of stream nal unit
- * @GST_H264_NAL_FILLER_DATA: Filler data na lunit
+ * @GST_H264_NAL_FILLER_DATA: Filler data nal lunit
  *
  * Indicates the type of H264 Nal Units
  */
@@ -81,13 +81,13 @@ typedef enum
 /**
  * GstH264ParserResult:
  * @GST_H264_PARSER_OK: The parsing succeded
- * @GST_H264_PARSER_BROKEN_DATA: The data we parsed where broken
- * @GST_H264_PARSER_BROKEN_LINK: The link to a needed struct for the parsing couldn't be found
+ * @GST_H264_PARSER_BROKEN_DATA: The data to parse is broken
+ * @GST_H264_PARSER_BROKEN_LINK: The link to structure needed for the parsing couldn't be found
  * @GST_H264_PARSER_ERROR: An error accured when parsing
  * @GST_H264_PARSER_NO_NAL: No nal found during the parsing
- * @GST_H264_PARSER_NO_NAL_END: Start of the nal found, not the end.
+ * @GST_H264_PARSER_NO_NAL_END: Start of the nal found, but not the end.
  *
- * Information about how the parsing of a H264 elements went.
+ * The result of parsing H264 data.
  */
 typedef enum
 {
@@ -101,11 +101,11 @@ typedef enum
 
 /**
  * GstH264SEIPayloadType:
- * @GST_H264_SEI_BUF_PERIOD: The Sei Message contains a buffering period message
- * @GST_H264_SEI_PIC_TIMING: The Sei Message contains a picture timing message
+ * @GST_H264_SEI_BUF_PERIOD: Buffering Period SEI Message
+ * @GST_H264_SEI_PIC_TIMING: Picture Timing SEI Message
  * ...
  *
- * The type of the SEI message information
+ * The type of SEI message.
  */
 typedef enum
 {
@@ -294,7 +294,7 @@ struct _GstH264HRDParams
  *  samples outside picture boundaries may be used in inter prediction
  * @max_bytes_per_pic_denom: indicates a number of bytes not exceeded by the sum of the sizes of
  *  the VCL NAL units associated with any coded picture in the coded video sequence.
- * @max_bits_per_mb_denom: indicates the maximum number of coded bits of macroblock_layer()
+ * @max_bits_per_mb_denom: indicates the maximum number of coded bits of macroblock_layer
  * @log2_max_mv_length_horizontal: indicate the maximum absolute value of a decoded horizontal
  * motion vector component
  * @log2_max_mv_length_vertical: indicate the maximum absolute value of a decoded vertical
@@ -363,7 +363,7 @@ struct _GstH264VUIParams
  * @id: The ID of the sequence parameter set
  * @profile_idc: indicate the profile to which the coded video sequence conforms
  *
- *
+ * H264 Sequence Parameter Set (SPS)
  */
 struct _GstH264SPS
 {
@@ -429,6 +429,11 @@ struct _GstH264SPS
   gboolean valid;
 };
 
+/**
+ * GstH264PPS:
+ *
+ * H264 Picture Parameter Set
+ */
 struct _GstH264PPS
 {
   gint id;
