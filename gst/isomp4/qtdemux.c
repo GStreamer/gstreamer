@@ -8361,6 +8361,42 @@ unknown_tag:
   }
 }
 
+static void
+qtdemux_tag_add_id32 (GstQTDemux * demux, const char *tag,
+    const char *tag_bis, GNode * node)
+{
+  guint8 *data;
+  GstBuffer *buf;
+  guint len;
+  GstTagList *taglist = NULL;
+
+  GST_LOG_OBJECT (demux, "parsing ID32");
+
+  data = node->data;
+  len = GST_READ_UINT32_BE (data);
+
+  /* need at least full box and language tag */
+  if (len < 12 + 2)
+    return;
+
+  buf = gst_buffer_new ();
+  GST_BUFFER_DATA (buf) = data + 14;
+  GST_BUFFER_SIZE (buf) = len - 14;
+
+  taglist = gst_tag_list_from_id3v2_tag (buf);
+  if (taglist) {
+    GST_LOG_OBJECT (demux, "parsing ok");
+    gst_tag_list_insert (demux->tag_list, taglist, GST_TAG_MERGE_KEEP);
+  } else {
+    GST_LOG_OBJECT (demux, "parsing failed");
+  }
+
+  if (taglist)
+    gst_tag_list_free (taglist);
+
+  gst_buffer_unref (buf);
+}
+
 typedef void (*GstQTDemuxAddTagFunc) (GstQTDemux * demux,
     const char *tag, const char *tag_bis, GNode * node);
 
@@ -8430,7 +8466,9 @@ static const struct
      * http://atomicparsley.sourceforge.net/mpeg-4files.html and
      * bug #614471
      */
-  FOURCC_____, "", NULL, qtdemux_tag_add_revdns}
+  FOURCC_____, "", NULL, qtdemux_tag_add_revdns}, {
+    /* see http://www.mp4ra.org/specs.html for ID32 in meta box */
+  FOURCC_ID32, "", NULL, qtdemux_tag_add_id32}
 };
 
 static void
@@ -8844,6 +8882,15 @@ qtdemux_parse_tree (GstQTDemux * qtdemux)
     qtdemux_parse_udta (qtdemux, udta);
   } else {
     GST_LOG_OBJECT (qtdemux, "No udta node found.");
+  }
+
+  /* maybe also some tags in meta box */
+  udta = qtdemux_tree_get_child_by_type (qtdemux->moov_node, FOURCC_meta);
+  if (udta) {
+    GST_DEBUG_OBJECT (qtdemux, "Parsing meta box for tags.");
+    qtdemux_parse_udta (qtdemux, udta);
+  } else {
+    GST_LOG_OBJECT (qtdemux, "No meta node found.");
   }
 
   qtdemux->tag_list = qtdemux_add_container_format (qtdemux, qtdemux->tag_list);
