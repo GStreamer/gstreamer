@@ -9,7 +9,7 @@
   <attr path="/api/namespace/.//field[translate(@array_len,' ','')='GST_PADDING-0']" name="array_len">4</attr>
   <attr path="/api/namespace/.//field[translate(@array_len,' ','')='GST_PADDING-1']" name="array_len">3</attr>
   <attr path="/api/namespace/.//field[translate(@array_len,' ','')='GST_PADDING-2']" name="array_len">2</attr>
-  <attr path="/api/namespace/.//field[translate(@array_len,' ','')='GST_PADDING-3']" name="array_len">3</attr>
+  <attr path="/api/namespace/.//field[translate(@array_len,' ','')='GST_PADDING-3']" name="array_len">1</attr>
   <attr path="/api/namespace/.//field[translate(@array_len,' ','')='GST_PADDING-4']" name="array_len">0</attr>
   <attr path="/api/namespace/.//field[translate(@array_len,' ','')='GST_PADDING/2']" name="array_len">2</attr>
   <attr path="/api/namespace/.//field[translate(@array_len,' ','')='GST_PADDING_LARGE']" name="array_len">20</attr>
