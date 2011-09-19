@@ -1753,8 +1753,7 @@ gst_subtitle_overlay_video_sink_setcaps (GstPad * pad, GstCaps * caps)
 
   GST_DEBUG_OBJECT (pad, "Setting caps: %" GST_PTR_FORMAT, caps);
 
-  target =
-      gst_ghost_pad_get_target (GST_GHOST_PAD_CAST (self->subtitle_sinkpad));
+  target = gst_ghost_pad_get_target (GST_GHOST_PAD_CAST (self->video_sinkpad));
 
   GST_SUBTITLE_OVERLAY_LOCK (self);
 
