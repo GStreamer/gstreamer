@@ -1747,18 +1747,36 @@ static gboolean
 gst_subtitle_overlay_video_sink_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstSubtitleOverlay *self = GST_SUBTITLE_OVERLAY (gst_pad_get_parent (pad));
+  GstPad *target;
   gboolean ret = TRUE;
   gint fps_n, fps_d;
 
   GST_DEBUG_OBJECT (pad, "Setting caps: %" GST_PTR_FORMAT, caps);
 
+  target =
+      gst_ghost_pad_get_target (GST_GHOST_PAD_CAST (self->subtitle_sinkpad));
+
+  GST_SUBTITLE_OVERLAY_LOCK (self);
+
+  if (!target || !gst_pad_accept_caps (target, caps)) {
+    GST_DEBUG_OBJECT (pad, "Target did not accept caps -- reconfiguring");
+
+    gst_pad_set_blocked_async_full (self->subtitle_block_pad, TRUE,
+        _pad_blocked_cb, gst_object_ref (self),
+        (GDestroyNotify) gst_object_unref);
+
+    gst_pad_set_blocked_async_full (self->video_block_pad, TRUE,
+        _pad_blocked_cb, gst_object_ref (self),
+        (GDestroyNotify) gst_object_unref);
+  }
+
   if (!gst_video_parse_caps_framerate (caps, &fps_n, &fps_d)) {
     GST_ERROR_OBJECT (pad, "Failed to parse framerate from caps");
     ret = FALSE;
+    GST_SUBTITLE_OVERLAY_UNLOCK (self);
     goto out;
   }
 
-  GST_SUBTITLE_OVERLAY_LOCK (self);
   if (self->fps_n != fps_n || self->fps_d != fps_d) {
     GST_DEBUG_OBJECT (self, "New video fps: %d/%d", fps_n, fps_d);
     self->fps_n = fps_n;
@@ -1770,6 +1788,8 @@ gst_subtitle_overlay_video_sink_setcaps (GstPad * pad, GstCaps * caps)
   ret = gst_ghost_pad_setcaps_default (pad, caps);
 
 out:
+  if (target)
+    gst_object_unref (target);
   gst_object_unref (self);
   return ret;
 }
