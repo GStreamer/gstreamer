@@ -1050,6 +1050,7 @@ gst_speex_enc_chain (GstPad * pad, GstBuffer * buf)
   /* Check if we have a continous stream, if not drop some samples or the buffer or
    * insert some silence samples */
   if (enc->next_ts != GST_CLOCK_TIME_NONE &&
+      GST_BUFFER_TIMESTAMP_IS_VALID (buf) &&
       GST_BUFFER_TIMESTAMP (buf) < enc->next_ts) {
     guint64 diff = enc->next_ts - GST_BUFFER_TIMESTAMP (buf);
     guint64 diff_bytes;
