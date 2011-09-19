@@ -324,7 +324,8 @@ gst_mpeg_video_parse (guint8 * data, gsize size, guint offset)
   gint off, rsize;
   GstByteReader br;
   GList *ret = NULL;
-  size = size - offset;
+
+  size -= offset;
 
   if (!initialized) {
     GST_DEBUG_CATEGORY_INIT (mpegvideo_parser_debug, "codecparsers_mpegvideo",
@@ -388,9 +389,11 @@ gst_mpeg_video_parse_sequence_header (GstMpegVideoSequenceHdr * seqhdr,
 {
   GstBitReader br;
 
-  size = size - offset;
+  g_return_val_if_fail (seqhdr != NULL, FALSE);
 
-  if (size - offset < 4)
+  size -= offset;
+
+  if (size < 4)
     return FALSE;
 
   gst_bit_reader_init (&br, &data[offset], size);
@@ -415,7 +418,9 @@ gst_mpeg_video_parse_sequence_extension (GstMpegVideoSequenceExt * seqext,
 {
   GstBitReader br;
 
-  size = size - offset;
+  g_return_val_if_fail (seqext != NULL, FALSE);
+
+  size -= offset;
 
   if (size < 6) {
     GST_DEBUG ("not enough bytes to parse the extension");
@@ -482,7 +487,9 @@ gst_mpeg_video_parse_quant_matrix_extension (GstMpegVideoQuantMatrixExt * quant,
   guint8 i;
   GstBitReader br;
 
-  size = size - offset;
+  g_return_val_if_fail (quant != NULL, FALSE);
+
+  size -= offset;
 
   if (size < 1) {
     GST_DEBUG ("not enough bytes to parse the extension");
@@ -553,7 +560,9 @@ gst_mpeg_video_parse_picture_extension (GstMpegVideoPictureExt * ext,
 {
   GstBitReader br;
 
-  size = size - offset;
+  g_return_val_if_fail (ext != NULL, FALSE);
+
+  size -= offset;
 
   if (size < 4)
     return FALSE;
@@ -724,7 +733,9 @@ gst_mpeg_video_parse_gop (GstMpegVideoGop * gop, guint8 * data,
 {
   GstBitReader br;
 
-  size = size - offset;
+  g_return_val_if_fail (gop != NULL, FALSE);
+
+  size -= offset;
 
   if (size < 4)
     return FALSE;
