@@ -2217,6 +2217,7 @@ gst_rtp_bin_handle_message (GstBin * bin, GstMessage * message)
             now = gst_clock_get_time (clock);
             base_time = gst_element_get_base_time (GST_ELEMENT_CAST (bin));
             running_time = now - base_time;
+            gst_object_unref (clock);
           }
           GST_DEBUG_OBJECT (bin,
               "running time now %" GST_TIME_FORMAT,
