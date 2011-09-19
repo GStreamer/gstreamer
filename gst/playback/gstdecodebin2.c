@@ -1379,6 +1379,7 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
   GstElementFactory *factory;
   const gchar *classification;
   gboolean is_parser_converter = FALSE;
+  gboolean res;
 
   GST_DEBUG_OBJECT (dbin, "Pad %s:%s caps:%" GST_PTR_FORMAT,
       GST_DEBUG_PAD_NAME (pad), caps);
@@ -1605,7 +1606,7 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
 
   /* 1.h else continue autoplugging something from the list. */
   GST_LOG_OBJECT (pad, "Let's continue discovery on this pad");
-  connect_pad (dbin, src, dpad, pad, caps, factories, chain);
+  res = connect_pad (dbin, src, dpad, pad, caps, factories, chain);
 
   /* Need to unref the capsfilter srcpad here if
    * we inserted a capsfilter */
@@ -1614,6 +1615,9 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
 
   gst_object_unref (dpad);
   g_value_array_free (factories);
+
+  if (!res)
+    goto unknown_type;
 
   return;
 
