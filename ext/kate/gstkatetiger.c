@@ -677,6 +677,7 @@ gst_kate_tiger_video_set_caps (GstPad * pad, GstCaps * caps)
   GstKateTiger *tiger = GST_KATE_TIGER (gst_pad_get_parent (pad));
   GstVideoFormat format;
   gint w, h;
+  gboolean ret;
 
   GST_KATE_TIGER_MUTEX_LOCK (tiger);
 
@@ -692,10 +693,10 @@ gst_kate_tiger_video_set_caps (GstPad * pad, GstCaps * caps)
 
   GST_KATE_TIGER_MUTEX_UNLOCK (tiger);
 
-  gst_pad_set_caps (tiger->srcpad, caps);
+  ret = gst_pad_set_caps (tiger->srcpad, caps);
 
   gst_object_unref (tiger);
-  return TRUE;
+  return ret;
 }
 
 static gdouble
