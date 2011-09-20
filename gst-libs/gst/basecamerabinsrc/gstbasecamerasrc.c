@@ -445,7 +445,11 @@ gst_base_camera_src_change_state (GstElement * element,
             gst_camerabin_create_preview_pipeline (GST_ELEMENT_CAST (self),
             self->preview_filter);
 
-      g_assert (self->preview_pipeline != NULL);
+      if (self->preview_pipeline == NULL) {
+        /* failed to create preview pipeline, fail state change */
+        return GST_STATE_CHANGE_FAILURE;
+      }
+
       self->preview_filter_changed = FALSE;
       if (self->preview_caps) {
         GST_DEBUG_OBJECT (self,

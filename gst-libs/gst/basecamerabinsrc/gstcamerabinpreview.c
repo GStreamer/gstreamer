@@ -231,6 +231,8 @@ void
 gst_camerabin_destroy_preview_pipeline (GstCameraBinPreviewPipelineData *
     preview)
 {
+  g_return_if_fail (preview != NULL);
+
   if (preview->processing_lock) {
     g_mutex_free (preview->processing_lock);
     preview->processing_lock = NULL;
