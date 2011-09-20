@@ -8,10 +8,10 @@ else
 endif
 
 libgstpcapparse_la_SOURCES = \
-	gstpcapparse.c
+	gstpcapparse.c gstirtspparse.c plugin.c
 
 noinst_HEADERS = \
-	gstpcapparse.h
+	gstpcapparse.h gstirtspparse.h
 
 libgstpcapparse_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS)
 libgstpcapparse_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS) $(WINSOCK2_LIBS)

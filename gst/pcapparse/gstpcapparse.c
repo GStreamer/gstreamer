@@ -607,17 +607,3 @@ gst_pcap_sink_event (GstPad * pad, GstEvent * event)
 
   return ret;
 }
-
-
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "pcapparse",
-      GST_RANK_NONE, GST_TYPE_PCAP_PARSE);
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "pcapparse",
-    "Element parsing raw pcap streams",
-    plugin_init, VERSION, "LGPL", "GStreamer", "http://gstreamer.net/")
