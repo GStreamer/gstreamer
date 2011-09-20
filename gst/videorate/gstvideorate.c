@@ -623,7 +623,6 @@ format_error:
   {
     GST_WARNING_OBJECT (videorate,
         "Got segment but doesn't have GST_FORMAT_TIME value");
-    gst_event_unref (event);
     return FALSE;
   }
 }
