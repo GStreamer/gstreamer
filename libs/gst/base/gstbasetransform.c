@@ -281,6 +281,7 @@ struct _GstBaseTransformPrivate
   guint64 dropped;
 
   GstClockTime last_stop_out;
+  GList *delayed_events;
 };
 
 static GstElementClass *parent_class = NULL;
@@ -357,12 +358,25 @@ static const GstQueryType *gst_base_transform_query_type (GstPad * pad);
 /* static guint gst_base_transform_signals[LAST_SIGNAL] = { 0 }; */
 
 static void
+gst_base_transform_drop_delayed_events (GstBaseTransform * trans)
+{
+  GST_OBJECT_LOCK (trans);
+  if (trans->priv->delayed_events) {
+    g_list_foreach (trans->priv->delayed_events, (GFunc) gst_event_unref, NULL);
+    g_list_free (trans->priv->delayed_events);
+    trans->priv->delayed_events = NULL;
+  }
+  GST_OBJECT_UNLOCK (trans);
+}
+
+static void
 gst_base_transform_finalize (GObject * object)
 {
   GstBaseTransform *trans;
 
   trans = GST_BASE_TRANSFORM (object);
 
+  gst_base_transform_drop_delayed_events (trans);
   gst_caps_replace (&trans->priv->sink_suggest, NULL);
   g_mutex_free (trans->transform_lock);
 
@@ -465,6 +479,7 @@ gst_base_transform_init (GstBaseTransform * trans,
   trans->cache_caps2 = NULL;
   trans->priv->pad_mode = GST_ACTIVATE_NONE;
   trans->priv->gap_aware = FALSE;
+  trans->priv->delayed_events = NULL;
 
   trans->passthrough = FALSE;
   if (bclass->transform == NULL) {
@@ -2036,6 +2051,28 @@ not_supported:
   }
 }
 
+static void
+gst_base_transform_send_delayed_events (GstBaseTransform * trans)
+{
+  GList *list, *tmp;
+
+  GST_OBJECT_LOCK (trans);
+  list = trans->priv->delayed_events;
+  trans->priv->delayed_events = NULL;
+  GST_OBJECT_UNLOCK (trans);
+  if (!list)
+    return;
+
+  for (tmp = list; tmp; tmp = tmp->next) {
+    GstEvent *ev = tmp->data;
+
+    GST_DEBUG_OBJECT (trans->srcpad, "Sending delayed event %s",
+        GST_EVENT_TYPE_NAME (ev));
+    gst_pad_push_event (trans->srcpad, ev);
+  }
+  g_list_free (list);
+}
+
 static gboolean
 gst_base_transform_sink_event (GstPad * pad, GstEvent * event)
 {
@@ -2056,9 +2093,31 @@ gst_base_transform_sink_event (GstPad * pad, GstEvent * event)
 
   /* FIXME, do this in the default event handler so the subclass can do
    * something different. */
-  if (forward)
-    ret = gst_pad_push_event (trans->srcpad, event);
-  else
+  if (forward) {
+    gboolean delay, caps_set = (GST_PAD_CAPS (trans->srcpad) != NULL);
+
+    /* src caps may not yet be set, so we delay any serialized events
+       that we receive before (in particular newsegment events), except
+       EOS and flush stops, since those'll obsolete previous events */
+    if (GST_EVENT_TYPE (event) == GST_EVENT_FLUSH_STOP) {
+      gst_base_transform_drop_delayed_events (trans);
+      delay = FALSE;
+    } else {
+      delay = GST_EVENT_IS_SERIALIZED (event) && !caps_set
+          && GST_EVENT_TYPE (event) != GST_EVENT_EOS;
+    }
+
+    if (delay) {
+      GST_OBJECT_LOCK (trans);
+      trans->priv->delayed_events =
+          g_list_append (trans->priv->delayed_events, event);
+      GST_OBJECT_UNLOCK (trans);
+    } else {
+      if (caps_set && GST_EVENT_IS_SERIALIZED (event))
+        gst_base_transform_send_delayed_events (trans);
+      ret = gst_pad_push_event (trans->srcpad, event);
+    }
+  } else
     gst_event_unref (event);
 
   gst_object_unref (trans);
@@ -2494,6 +2553,9 @@ gst_base_transform_chain (GstPad * pad, GstBuffer * buffer)
         trans->priv->discont = FALSE;
       }
       trans->priv->processed++;
+
+      gst_base_transform_send_delayed_events (trans);
+
       ret = gst_pad_push (trans->srcpad, outbuf);
     } else {
       gst_buffer_unref (outbuf);
@@ -2585,6 +2647,8 @@ gst_base_transform_activate (GstBaseTransform * trans, gboolean active)
      * and calling the ::stop vfunc */
     GST_PAD_STREAM_LOCK (trans->sinkpad);
     GST_PAD_STREAM_UNLOCK (trans->sinkpad);
+
+    gst_base_transform_drop_delayed_events (trans);
 
     trans->have_same_caps = FALSE;
     /* We can only reset the passthrough mode if the instance told us to 
