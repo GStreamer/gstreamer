@@ -1494,7 +1494,7 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
 
   /* At this point we have a potential decoder, but we might not need it
    * if it doesn't match the output caps  */
-  if (!dbin->expose_allstreams) {
+  if (!dbin->expose_allstreams && gst_caps_is_fixed (caps)) {
     guint i;
     const GList *tmps;
     gboolean dontuse = FALSE;
