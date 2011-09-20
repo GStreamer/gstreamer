@@ -56,6 +56,10 @@ struct _GstXImageSrc
   gchar *display_name;
   guint screen_num;
 
+  /* Window selection */
+  guint64 xid;
+  gchar *xname;
+
   /* Desired output framerate */
   gint fps_n;
   gint fps_d;
