@@ -29,8 +29,8 @@ EXPORTS
 	gst_audio_decoder_set_plc
 	gst_audio_decoder_set_plc_aware
 	gst_audio_decoder_set_tolerance
+	gst_audio_decoder_src_setcaps
 	gst_audio_default_registry_mixer_filter
-	gst_audio_duration_from_pad_buffer
 	gst_audio_encoder_finish_frame
 	gst_audio_encoder_get_audio_info
 	gst_audio_encoder_get_frame_max
@@ -72,7 +72,6 @@ EXPORTS
 	gst_audio_set_structure_channel_positions_list
 	gst_audio_sink_get_type
 	gst_audio_src_get_type
-	gst_audio_structure_set_int
 	gst_base_audio_sink_create_ringbuffer
 	gst_base_audio_sink_get_drift_tolerance
 	gst_base_audio_sink_get_provide_clock
