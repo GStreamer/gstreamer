@@ -1247,6 +1247,7 @@ gst_flups_demux_src_query (GstPad * pad, GstQuery * query)
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
     {
+      GstClockTime pos;
       GstFormat format;
 
       gst_query_parse_position (query, &format, NULL);
@@ -1257,10 +1258,9 @@ gst_flups_demux_src_query (GstPad * pad, GstQuery * query)
         goto not_supported;
       }
 
-      GST_LOG_OBJECT (demux, "Position at GStreamer Time:%" GST_TIME_FORMAT,
-          GST_TIME_ARGS (demux->src_segment.last_stop));
-
-      gst_query_set_position (query, format, demux->src_segment.last_stop);
+      pos = demux->src_segment.last_stop - demux->src_segment.start;
+      GST_LOG_OBJECT (demux, "Position %" GST_TIME_FORMAT, GST_TIME_ARGS (pos));
+      gst_query_set_position (query, format, pos);
       res = TRUE;
       break;
     }
