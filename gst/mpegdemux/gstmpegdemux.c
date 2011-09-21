@@ -1042,8 +1042,9 @@ gst_flups_demux_do_seek (GstFluPSDemux * demux, GstSegment * seeksegment)
   GST_INFO_OBJECT (demux, "sink segment configured %" GST_SEGMENT_FORMAT
       ", trying to go at SCR: %" G_GUINT64_FORMAT, &demux->sink_segment, scr);
 
-  offset = MIN (gst_util_uint64_scale (scr, scr_rate_n, scr_rate_d),
-      demux->sink_segment.stop);
+  offset =
+      MIN (gst_util_uint64_scale (scr - demux->first_scr, scr_rate_n,
+          scr_rate_d), demux->sink_segment.stop);
 
   found = gst_flups_demux_scan_forward_ts (demux, &offset, SCAN_SCR, &fscr);
   if (!found) {
