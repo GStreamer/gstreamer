@@ -119,10 +119,6 @@ enum
   ABR
 };
 
-static void gst_faac_base_init (GstFaacClass * klass);
-static void gst_faac_class_init (GstFaacClass * klass);
-static void gst_faac_init (GstFaac * faac);
-
 static void gst_faac_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
 static void gst_faac_get_property (GObject * object,
@@ -138,8 +134,6 @@ static gboolean gst_faac_set_format (GstAudioEncoder * enc,
 static GstFlowReturn gst_faac_handle_frame (GstAudioEncoder * enc,
     GstBuffer * in_buf);
 
-static GstElementClass *parent_class = NULL;
-
 GST_DEBUG_CATEGORY_STATIC (faac_debug);
 #define GST_CAT_DEFAULT faac_debug
 
@@ -150,33 +144,10 @@ GST_DEBUG_CATEGORY_STATIC (faac_debug);
 #define FAAC_DEFAULT_MIDSIDE      TRUE
 #define FAAC_DEFAULT_SHORTCTL     SHORTCTL_NORMAL
 
-GType
-gst_faac_get_type (void)
-{
-  static GType gst_faac_type = 0;
-
-  if (!gst_faac_type) {
-    static const GTypeInfo gst_faac_info = {
-      sizeof (GstFaacClass),
-      (GBaseInitFunc) gst_faac_base_init,
-      NULL,
-      (GClassInitFunc) gst_faac_class_init,
-      NULL,
-      NULL,
-      sizeof (GstFaac),
-      0,
-      (GInstanceInitFunc) gst_faac_init,
-    };
-
-    gst_faac_type = g_type_register_static (GST_TYPE_AUDIO_ENCODER,
-        "GstFaac", &gst_faac_info, 0);
-  }
-
-  return gst_faac_type;
-}
+GST_BOILERPLATE (GstFaac, gst_faac, GstAudioEncoder, GST_TYPE_AUDIO_ENCODER);
 
 static void
-gst_faac_base_init (GstFaacClass * klass)
+gst_faac_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
@@ -283,7 +254,7 @@ gst_faac_class_init (GstFaacClass * klass)
 }
 
 static void
-gst_faac_init (GstFaac * faac)
+gst_faac_init (GstFaac * faac, GstFaacClass * klass)
 {
 }
 
