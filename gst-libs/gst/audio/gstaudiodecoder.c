@@ -495,11 +495,13 @@ gst_audio_decoder_sink_setcaps (GstAudioDecoder * dec, GstCaps * caps)
 
   /* NOTE pbutils only needed here */
   /* TODO maybe (only) upstream demuxer/parser etc should handle this ? */
+#if 0
   if (dec->priv->taglist)
     gst_tag_list_free (dec->priv->taglist);
   dec->priv->taglist = gst_tag_list_new ();
   gst_pb_utils_add_codec_description_to_tag_list (dec->priv->taglist,
       GST_TAG_AUDIO_CODEC, caps);
+#endif
 
   if (klass->set_format)
     res = klass->set_format (dec, caps);
