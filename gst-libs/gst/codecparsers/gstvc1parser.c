@@ -33,6 +33,7 @@
 #endif
 
 #include "gstvc1parser.h"
+#include "parserutils.h"
 #include <gst/base/gstbytereader.h>
 #include <gst/base/gstbitreader.h>
 #include <string.h>
@@ -63,49 +64,6 @@ ensure_debug_category (void)
 #define ensure_debug_category() /* NOOP */
 
 #endif /* GST_DISABLE_GST_DEBUG */
-
-/* ------------------------------------------------------------------------- */
-
-#define GET_BITS(b, num, bits) G_STMT_START {        \
-  if (!gst_bit_reader_get_bits_uint32(b, bits, num)) \
-    goto failed;                                     \
-  GST_TRACE ("parsed %d bits: %d", num, *(bits));    \
-} G_STMT_END
-
-#define READ_UINT8(br, val, nbits) G_STMT_START {  \
-  if (!gst_bit_reader_get_bits_uint8 (br, &val, nbits)) { \
-    GST_WARNING ("failed to read uint8, nbits: %d", nbits); \
-    goto failed; \
-  } \
-} G_STMT_END
-
-#define READ_UINT16(br, val, nbits) G_STMT_START { \
-  if (!gst_bit_reader_get_bits_uint16 (br, &val, nbits)) { \
-    GST_WARNING ("failed to read uint16, nbits: %d", nbits); \
-    goto failed; \
-  } \
-} G_STMT_END
-
-#define READ_UINT32(br, val, nbits) G_STMT_START { \
-  if (!gst_bit_reader_get_bits_uint32 (br, &val, nbits)) { \
-    GST_WARNING ("failed to read uint32, nbits: %d", nbits); \
-    goto failed; \
-  } \
-} G_STMT_END
-
-#define SKIP(br, nbits) G_STMT_START {  \
-  if (!gst_bit_reader_skip (br, nbits)) { \
-    GST_WARNING ("Failed to skip nbits: %d", nbits); \
-    goto failed; \
-  } \
-} G_STMT_END
-
-typedef struct _VLCTable
-{
-  guint value;
-  guint cword;
-  guint cbits;
-} VLCTable;
 
 const guint8 vc1_pquant_table[3][32] = {
   {                             /* Implicit quantizer */
@@ -463,41 +421,6 @@ decode_refdist (GstBitReader * br, guint16 * value)
 failed:
   {
     GST_WARNING ("Could not decode end 0 returning");
-
-    return FALSE;
-  }
-}
-
-static gboolean
-decode_vlc (GstBitReader * br, guint * res, const VLCTable * table,
-    guint length)
-{
-  guint8 i;
-  guint cbits = 0;
-  guint32 value = 0;
-
-  for (i = 0; i < length; i++) {
-    if (cbits != table[i].cbits) {
-      cbits = table[i].cbits;
-      if (!gst_bit_reader_peek_bits_uint32 (br, &value, cbits)) {
-        goto failed;
-      }
-    }
-
-    if (value == table[i].cword) {
-      SKIP (br, cbits);
-      if (res)
-        *res = table[i].value;
-
-      return TRUE;
-    }
-  }
-
-  GST_DEBUG ("Did not find code");
-
-failed:
-  {
-    GST_WARNING ("Could not decode VLC returning");
 
     return FALSE;
   }
@@ -1807,7 +1730,7 @@ gst_vc1_parse_sequence_layer (const guint8 * data, gsize size,
   READ_UINT32 (&br, tmp, 32);
   if (tmp != 0x04)
     goto failed;
-  
+
   if (parse_sequence_header_struct_c (&br, &seqlayer->struct_c) ==
       GST_VC1_PARSER_ERROR)
     goto failed;

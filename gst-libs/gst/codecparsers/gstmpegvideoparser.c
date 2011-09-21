@@ -40,39 +40,13 @@
 #endif
 
 #include "gstmpegvideoparser.h"
+#include "parserutils.h"
 
 #include <string.h>
 #include <gst/base/gstbitreader.h>
 #include <gst/base/gstbytereader.h>
 
 #define MARKER_BIT 0x1
-
-#define GET_BITS(b, num, bits) G_STMT_START {        \
-  if (!gst_bit_reader_get_bits_uint32(b, bits, num)) \
-    goto failed;                                     \
-  GST_TRACE ("parsed %d bits: %d", num, *(bits));    \
-} G_STMT_END
-
-#define READ_UINT8(br, val, nbits) G_STMT_START {  \
-  if (!gst_bit_reader_get_bits_uint8 (br, &val, nbits)) { \
-    GST_WARNING ("failed to read uint8, nbits: %d", nbits); \
-    goto failed; \
-  } \
-} G_STMT_END
-
-#define READ_UINT16(br, val, nbits) G_STMT_START { \
-  if (!gst_bit_reader_get_bits_uint16 (br, &val, nbits)) { \
-    GST_WARNING ("failed to read uint16, nbits: %d", nbits); \
-    goto failed; \
-  } \
-} G_STMT_END
-
-#define READ_UINT32(br, val, nbits) G_STMT_START { \
-  if (!gst_bit_reader_get_bits_uint32 (br, &val, nbits)) { \
-    GST_WARNING ("failed to read uint32, nbits: %d", nbits); \
-    goto failed; \
-  } \
-} G_STMT_END
 
 /* default intra quant matrix, in zig-zag order */
 const guint8 default_intra_quantizer_matrix[64] = {
