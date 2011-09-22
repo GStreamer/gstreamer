@@ -1085,6 +1085,18 @@ gst_audio_encoder_proxy_getcaps (GstAudioEncoder * enc, GstCaps * caps)
         gst_structure_set_value (s, "rate", val);
       if ((val = gst_structure_get_value (allowed_s, "channels")))
         gst_structure_set_value (s, "channels", val);
+      /* following might also make sense for some encoded formats,
+       * e.g. wavpack */
+      if ((val = gst_structure_get_value (allowed_s, "width")))
+        gst_structure_set_value (s, "width", val);
+      if ((val = gst_structure_get_value (allowed_s, "depth")))
+        gst_structure_set_value (s, "depth", val);
+      if ((val = gst_structure_get_value (allowed_s, "endianness")))
+        gst_structure_set_value (s, "endianness", val);
+      if ((val = gst_structure_get_value (allowed_s, "signed")))
+        gst_structure_set_value (s, "signed", val);
+      if ((val = gst_structure_get_value (allowed_s, "channel-positions")))
+        gst_structure_set_value (s, "channel-positions", val);
 
       gst_caps_merge_structure (filter_caps, s);
     }
