@@ -933,6 +933,8 @@ audio_info_is_equal (GstAudioInfo * from, GstAudioInfo * to)
 {
   if (from == to)
     return TRUE;
+  if (from->finfo == NULL || to->finfo == NULL)
+    return FALSE;
   if (GST_AUDIO_INFO_FORMAT (from) != GST_AUDIO_INFO_FORMAT (to))
     return FALSE;
   if (GST_AUDIO_INFO_RATE (from) != GST_AUDIO_INFO_RATE (to))
