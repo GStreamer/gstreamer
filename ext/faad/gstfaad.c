@@ -140,9 +140,6 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS (STATIC_CAPS)
     );
 
-static void gst_faad_base_init (GstFaadClass * klass);
-static void gst_faad_class_init (GstFaadClass * klass);
-static void gst_faad_init (GstFaad * faad);
 static void gst_faad_reset (GstFaad * faad);
 
 static gboolean gst_faad_start (GstAudioDecoder * dec);
@@ -157,35 +154,10 @@ static void gst_faad_flush (GstAudioDecoder * dec, gboolean hard);
 static gboolean gst_faad_open_decoder (GstFaad * faad);
 static void gst_faad_close_decoder (GstFaad * faad);
 
-static GstElementClass *parent_class;   /* NULL */
-
-GType
-gst_faad_get_type (void)
-{
-  static GType gst_faad_type = 0;
-
-  if (!gst_faad_type) {
-    static const GTypeInfo gst_faad_info = {
-      sizeof (GstFaadClass),
-      (GBaseInitFunc) gst_faad_base_init,
-      NULL,
-      (GClassInitFunc) gst_faad_class_init,
-      NULL,
-      NULL,
-      sizeof (GstFaad),
-      0,
-      (GInstanceInitFunc) gst_faad_init,
-    };
-
-    gst_faad_type = g_type_register_static (GST_TYPE_AUDIO_DECODER,
-        "GstFaad", &gst_faad_info, 0);
-  }
-
-  return gst_faad_type;
-}
+GST_BOILERPLATE (GstFaad, gst_faad, GstAudioDecoder, GST_TYPE_AUDIO_DECODER);
 
 static void
-gst_faad_base_init (GstFaadClass * klass)
+gst_faad_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
@@ -218,7 +190,7 @@ gst_faad_class_init (GstFaadClass * klass)
 }
 
 static void
-gst_faad_init (GstFaad * faad)
+gst_faad_init (GstFaad * faad, GstFaadClass * klass)
 {
   gst_faad_reset (faad);
 }
