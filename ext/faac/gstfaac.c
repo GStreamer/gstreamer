@@ -415,6 +415,9 @@ gst_faac_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
   if (!(handle = faacEncOpen (samplerate, channels, &samples, &bytes)))
     goto setup_failed;
 
+  /* mind channel count */
+  samples /= channels;
+
   /* ok, record and set up */
   faac->format = fmt;
   faac->bps = bps;
