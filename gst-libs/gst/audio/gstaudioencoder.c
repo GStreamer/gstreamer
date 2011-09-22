@@ -983,7 +983,7 @@ gst_audio_encoder_sink_setcaps (GstPad * pad, GstCaps * caps)
   if (!gst_audio_info_from_caps (state, caps))
     goto refuse_caps;
 
-  changed = audio_info_is_equal (state, old_state);
+  changed = !audio_info_is_equal (state, old_state);
   gst_audio_info_free (old_state);
 
   if (changed) {
