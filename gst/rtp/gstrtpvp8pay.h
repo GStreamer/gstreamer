@@ -26,6 +26,13 @@
 
 G_BEGIN_DECLS typedef struct _GstRtpVP8Pay GstRtpVP8Pay;
 typedef struct _GstRtpVP8PayClass GstRtpVP8PayClass;
+typedef enum _PictureIDMode PictureIDMode;
+
+enum _PictureIDMode {
+  VP8_PAY_NO_PICTURE_ID,
+  VP8_PAY_PICTURE_ID_7BITS,
+  VP8_PAY_PICTURE_ID_15BITS,
+};
 
 struct _GstRtpVP8PayClass
 {
@@ -41,6 +48,8 @@ struct _GstRtpVP8Pay
    * folowed by max. 8 data partitions. last offset is the end of the buffer */
   guint partition_offset[10];
   guint partition_size[9];
+  PictureIDMode picture_id_mode;
+  guint16 picture_id;
 };
 
 GType gst_rtp_vp8_pay_get_type (void);
