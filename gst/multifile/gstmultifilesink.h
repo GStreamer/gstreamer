@@ -56,7 +56,8 @@ typedef enum {
   GST_MULTI_FILE_SINK_NEXT_BUFFER,
   GST_MULTI_FILE_SINK_NEXT_DISCONT,
   GST_MULTI_FILE_SINK_NEXT_KEY_FRAME,
-  GST_MULTI_FILE_SINK_NEXT_KEY_UNIT_EVENT
+  GST_MULTI_FILE_SINK_NEXT_KEY_UNIT_EVENT,
+  GST_MULTI_FILE_SINK_NEXT_MAX_SIZE
 } GstMultiFileSinkNext;
 
 struct _GstMultiFileSink
@@ -77,6 +78,8 @@ struct _GstMultiFileSink
   int n_streamheaders;
   GstBuffer **streamheaders;
   guint force_key_unit_count;
+
+  guint64 cur_file_size;
   guint64 max_file_size;
 };
 

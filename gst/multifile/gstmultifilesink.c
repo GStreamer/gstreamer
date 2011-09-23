@@ -176,6 +176,9 @@ gst_multi_file_sink_next_get_type (void)
           "(Useful for MPEG-TS segmenting)", "key-frame"},
     {GST_MULTI_FILE_SINK_NEXT_KEY_UNIT_EVENT,
         "New file after a force key unit event", "key-unit-event"},
+    {GST_MULTI_FILE_SINK_NEXT_MAX_SIZE, "New file when the configured maximum "
+          "file size would be exceeded with the next buffer or buffer list",
+        "max-size"},
     {0, NULL, NULL}
   };
 
@@ -573,6 +576,37 @@ gst_multi_file_sink_render (GstBaseSink * sink, GstBuffer * buffer)
         goto stdio_write_error;
 
       break;
+    case GST_MULTI_FILE_SINK_NEXT_MAX_SIZE:{
+      guint64 new_size;
+
+      new_size = multifilesink->cur_file_size + GST_BUFFER_SIZE (buffer);
+      if (new_size > multifilesink->max_file_size) {
+
+        GST_INFO_OBJECT (multifilesink, "current size: %" G_GUINT64_FORMAT
+            ", new_size: %" G_GUINT64_FORMAT ", max. size %" G_GUINT64_FORMAT,
+            multifilesink->cur_file_size, new_size,
+            multifilesink->max_file_size);
+
+        if (multifilesink->file != NULL)
+          gst_multi_file_sink_close_file (multifilesink, NULL);
+      }
+
+      if (multifilesink->file == NULL) {
+        if (!gst_multi_file_sink_open_next_file (multifilesink))
+          goto stdio_write_error;
+
+        /* FIXME: write stream headers if present */
+      }
+
+      ret = fwrite (GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer), 1,
+          multifilesink->file);
+
+      if (ret != 1)
+        goto stdio_write_error;
+
+      multifilesink->cur_file_size += GST_BUFFER_SIZE (buffer);
+      break;
+    }
     default:
       g_assert_not_reached ();
   }
@@ -744,6 +778,7 @@ gst_multi_file_sink_open_next_file (GstMultiFileSink * multifilesink)
   multifilesink->files = g_slist_append (multifilesink->files, filename);
   multifilesink->n_files += 1;
 
+  multifilesink->cur_file_size = 0;
   return TRUE;
 }
 
