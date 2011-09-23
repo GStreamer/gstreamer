@@ -305,10 +305,6 @@ enum
 #endif
 };
 
-static void gst_lame_base_init (gpointer g_class);
-static void gst_lame_class_init (GstLameClass * klass);
-static void gst_lame_init (GstLame * gst_lame);
-
 static gboolean gst_lame_start (GstAudioEncoder * enc);
 static gboolean gst_lame_stop (GstAudioEncoder * enc);
 static gboolean gst_lame_set_format (GstAudioEncoder * enc,
@@ -323,47 +319,18 @@ static void gst_lame_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static gboolean gst_lame_setup (GstLame * lame);
 
-static GstElementClass *parent_class = NULL;
-
-GType
-gst_lame_get_type (void)
+static void
+gst_lame_add_interfaces (GType lame_type)
 {
-  static GType gst_lame_type = 0;
+  static const GInterfaceInfo tag_setter_info = { NULL, NULL, NULL };
 
-  if (!gst_lame_type) {
-    static const GTypeInfo gst_lame_info = {
-      sizeof (GstLameClass),
-      gst_lame_base_init,
-      NULL,
-      (GClassInitFunc) gst_lame_class_init,
-      NULL,
-      NULL,
-      sizeof (GstLame),
-      0,
-      (GInstanceInitFunc) gst_lame_init,
-    };
-
-    /* FIXME: remove support for the GstTagSetter interface in 0.11 */
-    static const GInterfaceInfo tag_setter_info = {
-      NULL,
-      NULL,
-      NULL
-    };
-    static const GInterfaceInfo preset_info = {
-      NULL,
-      NULL,
-      NULL
-    };
-
-    gst_lame_type =
-        g_type_register_static (GST_TYPE_AUDIO_ENCODER, "GstLame",
-        &gst_lame_info, 0);
-    g_type_add_interface_static (gst_lame_type, GST_TYPE_TAG_SETTER,
-        &tag_setter_info);
-    g_type_add_interface_static (gst_lame_type, GST_TYPE_PRESET, &preset_info);
-  }
-  return gst_lame_type;
+  /* FIXME: remove support for the GstTagSetter interface in 0.11 */
+  g_type_add_interface_static (lame_type, GST_TYPE_TAG_SETTER,
+      &tag_setter_info);
 }
+
+GST_BOILERPLATE_FULL (GstLame, gst_lame, GstAudioEncoder,
+    GST_TYPE_AUDIO_ENCODER, gst_lame_add_interfaces);
 
 static void
 gst_lame_release_memory (GstLame * lame)
@@ -655,7 +622,7 @@ setup_failed:
 }
 
 static void
-gst_lame_init (GstLame * lame)
+gst_lame_init (GstLame * lame, GstLameClass * klass)
 {
   GST_DEBUG_OBJECT (lame, "starting initialization");
 
