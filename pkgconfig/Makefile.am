@@ -4,7 +4,6 @@ pcverfiles =  \
 	gstreamer-app-@GST_MAJORMINOR@.pc \
 	gstreamer-cdda-@GST_MAJORMINOR@.pc \
 	gstreamer-fft-@GST_MAJORMINOR@.pc \
-	gstreamer-floatcast-@GST_MAJORMINOR@.pc \
 	gstreamer-interfaces-@GST_MAJORMINOR@.pc \
 	gstreamer-netbuffer-@GST_MAJORMINOR@.pc \
 	gstreamer-pbutils-@GST_MAJORMINOR@.pc \
@@ -20,7 +19,6 @@ pcverfiles_uninstalled = \
 	gstreamer-app-@GST_MAJORMINOR@-uninstalled.pc \
 	gstreamer-cdda-@GST_MAJORMINOR@-uninstalled.pc \
 	gstreamer-fft-@GST_MAJORMINOR@-uninstalled.pc \
-	gstreamer-floatcast-@GST_MAJORMINOR@-uninstalled.pc \
 	gstreamer-interfaces-@GST_MAJORMINOR@-uninstalled.pc \
 	gstreamer-netbuffer-@GST_MAJORMINOR@-uninstalled.pc \
 	gstreamer-pbutils-@GST_MAJORMINOR@-uninstalled.pc \
@@ -53,7 +51,6 @@ pcinfiles = \
            gstreamer-app.pc.in gstreamer-app-uninstalled.pc.in \
            gstreamer-cdda.pc.in gstreamer-cdda-uninstalled.pc.in \
            gstreamer-fft.pc.in gstreamer-fft-uninstalled.pc.in \
-           gstreamer-floatcast.pc.in gstreamer-floatcast-uninstalled.pc.in \
            gstreamer-interfaces.pc.in gstreamer-interfaces-uninstalled.pc.in \
            gstreamer-netbuffer.pc.in gstreamer-netbuffer-uninstalled.pc.in \
            gstreamer-pbutils.pc.in gstreamer-pbutils-uninstalled.pc.in \

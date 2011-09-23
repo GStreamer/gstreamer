@@ -23,7 +23,6 @@
 
 #include <unistd.h>
 
-#include <gst/floatcast/floatcast.h>
 #include <gst/check/gstcheck.h>
 #include <gst/audio/multichannel.h>
 

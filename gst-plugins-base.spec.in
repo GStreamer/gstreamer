@@ -148,7 +148,6 @@ GStreamer Plugins Base library development and header files.
 %{_includedir}/gstreamer-%{majorminor}/gst/audio/audio.h
 %{_includedir}/gstreamer-%{majorminor}/gst/audio/gstaudiofilter.h
 %{_includedir}/gstreamer-%{majorminor}/gst/audio/multichannel.h
-%{_includedir}/gstreamer-%{majorminor}/gst/floatcast/floatcast.h
 %{_includedir}/gstreamer-%{majorminor}/gst/riff/riff-ids.h
 %{_includedir}/gstreamer-%{majorminor}/gst/riff/riff-media.h
 %{_includedir}/gstreamer-%{majorminor}/gst/riff/riff-read.h
@@ -243,7 +242,6 @@ GStreamer Plugins Base library development and header files.
 %{_libdir}/pkgconfig/gstreamer-audio-%{majorminor}.pc
 %{_libdir}/pkgconfig/gstreamer-cdda-%{majorminor}.pc
 %{_libdir}/pkgconfig/gstreamer-fft-%{majorminor}.pc
-%{_libdir}/pkgconfig/gstreamer-floatcast-%{majorminor}.pc
 %{_libdir}/pkgconfig/gstreamer-interfaces-%{majorminor}.pc
 %{_libdir}/pkgconfig/gstreamer-netbuffer-%{majorminor}.pc
 %{_libdir}/pkgconfig/gstreamer-pbutils-%{majorminor}.pc

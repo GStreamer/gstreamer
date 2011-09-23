@@ -86,16 +86,6 @@
       <xi:include href="xml/gstfftf64.xml" />
     </chapter>
 
-    <chapter id="gstreamer-floatcast">
-      <title>FloatCast Library</title>
-      <para>
-        This library should be linked to by getting cflags and libs from
-        <filename>gstreamer-plugins-base-&GST_MAJORMINOR;.pc</filename> and adding
-        <filename>-lgstfloatcase-&GST_MAJORMINOR;</filename> to the library flags.
-      </para>
-      <xi:include href="xml/gstfloatcast.xml" />
-    </chapter>
-
     <chapter id="gstreamer-interfaces">
       <title>Interfaces Library</title>
       <para>

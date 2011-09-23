@@ -48,8 +48,6 @@
 #include <gst/fft/gstffts16.h>
 #include <gst/fft/gstffts32.h>
 
-#include <gst/floatcast/floatcast.h>
-
 #include <gst/interfaces/colorbalancechannel.h>
 #include <gst/interfaces/colorbalance.h>
 #include <gst/interfaces/interfaces-enumtypes.h>

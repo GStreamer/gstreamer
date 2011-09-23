@@ -7,7 +7,6 @@ SUBDIRS = \
 	tag \
 	cdda \
 	fft \
-	floatcast \
 	netbuffer \
 	rtp \
 	sdp \
@@ -32,7 +31,7 @@ rtsp: sdp
 pbutils: video audio
 
 INDEPENDENT_SUBDIRS = \
-	interfaces tag audio fft floatcast netbuffer rtp sdp video app
+	interfaces tag audio fft netbuffer rtp sdp video app
 
 .PHONY: independent-subdirs $(INDEPENDENT_SUBDIRS)
 

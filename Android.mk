@@ -8,7 +8,6 @@ GST_PLUGINS_BASE_BUILT_SOURCES := 						\
 	pkgconfig/gstreamer-audio-0.10.pc			\
 	pkgconfig/gstreamer-cdda-0.10.pc			\
 	pkgconfig/gstreamer-fft-0.10.pc				\
-	pkgconfig/gstreamer-floatcast-0.10.pc			\
 	pkgconfig/gstreamer-interfaces-0.10.pc			\
 	pkgconfig/gstreamer-netbuffer-0.10.pc			\
 	pkgconfig/gstreamer-pbutils-0.10.pc			\
@@ -23,7 +22,6 @@ GST_PLUGINS_BASE_BUILT_SOURCES := 						\
 	pkgconfig/gstreamer-audio-0.10-uninstalled.pc		\
 	pkgconfig/gstreamer-cdda-0.10-uninstalled.pc		\
 	pkgconfig/gstreamer-fft-0.10-uninstalled.pc		\
-	pkgconfig/gstreamer-floatcast-0.10-uninstalled.pc	\
 	pkgconfig/gstreamer-interfaces-0.10-uninstalled.pc	\
 	pkgconfig/gstreamer-netbuffer-0.10-uninstalled.pc	\
 	pkgconfig/gstreamer-pbutils-0.10-uninstalled.pc		\

@@ -577,18 +577,6 @@ KISS_FFT_F64_MALLOC
 KISS_FFT_F64_SIN
 </SECTION>
 
-# floatcast
-
-<SECTION>
-<FILE>gstfloatcast</FILE>
-<INCLUDE>gst/floatcast/floatcast.h</INCLUDE>
-gst_cast_double
-gst_cast_float
-<SUBSECTION Standard>
-inline
-</SECTION>
-
-
 # interfaces
 
 <SECTION>

@@ -29,7 +29,6 @@
 #include "gstchannelmix.h"
 #include "gstaudioquantize.h"
 #include "audioconvert.h"
-#include "gst/floatcast/floatcast.h"
 #include "gstaudioconvertorc.h"
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN

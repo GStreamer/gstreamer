@@ -237,7 +237,7 @@ dnl check for fseeko()
 AC_FUNC_FSEEKO
 
 dnl Check for fast float to int casting as defined in C99
-dnl used in gst-libs/gst/floatcast/floatcast.h
+dnl used to be used in gst-libs/gst/floatcast/floatcast.h (FIXME: still needed?)
 save_libs=$LIBS
 LIBS="$LIBS $LIBM"
 AC_C99_FUNC_LRINT
@@ -901,7 +901,6 @@ gst-libs/gst/audio/Makefile
 gst-libs/gst/app/Makefile
 gst-libs/gst/cdda/Makefile
 gst-libs/gst/fft/Makefile
-gst-libs/gst/floatcast/Makefile
 gst-libs/gst/interfaces/Makefile
 gst-libs/gst/netbuffer/Makefile
 gst-libs/gst/riff/Makefile
@@ -922,8 +921,6 @@ pkgconfig/gstreamer-cdda.pc
 pkgconfig/gstreamer-cdda-uninstalled.pc
 pkgconfig/gstreamer-fft.pc
 pkgconfig/gstreamer-fft-uninstalled.pc
-pkgconfig/gstreamer-floatcast.pc
-pkgconfig/gstreamer-floatcast-uninstalled.pc
 pkgconfig/gstreamer-interfaces.pc
 pkgconfig/gstreamer-interfaces-uninstalled.pc
 pkgconfig/gstreamer-netbuffer.pc
