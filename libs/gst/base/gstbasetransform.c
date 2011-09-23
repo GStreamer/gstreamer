@@ -335,6 +335,7 @@ static gboolean default_copy_metadata (GstBaseTransform * trans,
 
 /* static guint gst_base_transform_signals[LAST_SIGNAL] = { 0 }; */
 
+
 static void
 gst_base_transform_finalize (GObject * object)
 {
@@ -2062,6 +2063,7 @@ gst_base_transform_chain (GstPad * pad, GstBuffer * buffer)
         trans->priv->discont = FALSE;
       }
       trans->priv->processed++;
+
       ret = gst_pad_push (trans->srcpad, outbuf);
     } else {
       gst_buffer_unref (outbuf);

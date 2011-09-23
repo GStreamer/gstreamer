@@ -208,7 +208,7 @@ gst_caps_new_empty (void)
   gst_caps_init (caps, sizeof (GstCaps));
 
 #ifdef DEBUG_REFCOUNT
-  GST_CAT_LOG (GST_CAT_CAPS, "created caps %p", caps);
+  GST_CAT_TRACE (GST_CAT_CAPS, "created caps %p", caps);
 #endif
 
   return caps;
@@ -362,7 +362,7 @@ gst_static_caps_get (GstStaticCaps * static_caps)
     if (G_UNLIKELY (string == NULL))
       goto no_string;
 
-    GST_CAT_LOG (GST_CAT_CAPS, "creating %p", static_caps);
+    GST_CAT_TRACE (GST_CAT_CAPS, "creating %p", static_caps);
 
     /* we construct the caps on the stack, then copy over the struct into our
      * real caps, refcount last. We do this because we must leave the refcount
@@ -379,7 +379,7 @@ gst_static_caps_get (GstStaticCaps * static_caps)
     GST_CAPS_FLAGS (caps) = GST_CAPS_FLAGS (&temp);
     caps->priv = GST_CAPS_ARRAY (&temp);
 
-    GST_CAT_LOG (GST_CAT_CAPS, "created %p", static_caps);
+    GST_CAT_TRACE (GST_CAT_CAPS, "created %p", static_caps);
   done:
     G_UNLOCK (static_caps_lock);
   }
@@ -1938,6 +1938,6 @@ gst_caps_transform_to_string (const GValue * src_value, GValue * dest_value)
   g_return_if_fail (G_VALUE_HOLDS (dest_value, G_TYPE_STRING)
       || G_VALUE_HOLDS (dest_value, G_TYPE_POINTER));
 
-  dest_value->data[0].v_pointer =
-      gst_caps_to_string (src_value->data[0].v_pointer);
+  g_value_take_string (dest_value,
+      gst_caps_to_string (gst_value_get_caps (src_value)));
 }

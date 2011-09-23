@@ -135,6 +135,7 @@ struct _GstBaseSink {
  *     correct moment if the #GstBaseSink has been set to sync to the clock.
  * @render_list: Same as @render but used whith buffer lists instead of
  *     buffers. Since: 0.10.24
+ * @query: perform a #GstQuery on the element. Since: 0.10.36
  *
  * Subclasses can override any of the available virtual methods or not, as
  * needed. At the minimum, the @render method should be overridden to
