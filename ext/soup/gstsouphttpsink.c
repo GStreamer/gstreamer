@@ -200,10 +200,6 @@ gst_soup_http_sink_init (GstSoupHttpSink * souphttpsink,
 {
   const char *proxy;
 
-  souphttpsink->sinkpad =
-      gst_pad_new_from_static_template (&gst_soup_http_sink_sink_template,
-      "sink");
-
   souphttpsink->mutex = g_mutex_new ();
   souphttpsink->cond = g_cond_new ();
 
