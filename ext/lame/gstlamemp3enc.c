@@ -176,10 +176,6 @@ enum
 #define DEFAULT_ENCODING_ENGINE_QUALITY LAMEMP3ENC_ENCODING_ENGINE_QUALITY_STANDARD
 #define DEFAULT_MONO FALSE
 
-static void gst_lamemp3enc_base_init (gpointer g_class);
-static void gst_lamemp3enc_class_init (GstLameMP3EncClass * klass);
-static void gst_lamemp3enc_init (GstLameMP3Enc * gst_lame);
-
 static gboolean gst_lamemp3enc_start (GstAudioEncoder * enc);
 static gboolean gst_lamemp3enc_stop (GstAudioEncoder * enc);
 static gboolean gst_lamemp3enc_set_format (GstAudioEncoder * enc,
@@ -194,32 +190,8 @@ static void gst_lamemp3enc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static gboolean gst_lamemp3enc_setup (GstLameMP3Enc * lame, GstTagList ** tags);
 
-static GstElementClass *parent_class = NULL;
-
-GType
-gst_lamemp3enc_get_type (void)
-{
-  static GType gst_lamemp3enc_type = 0;
-
-  if (!gst_lamemp3enc_type) {
-    static const GTypeInfo gst_lamemp3enc_info = {
-      sizeof (GstLameMP3EncClass),
-      gst_lamemp3enc_base_init,
-      NULL,
-      (GClassInitFunc) gst_lamemp3enc_class_init,
-      NULL,
-      NULL,
-      sizeof (GstLameMP3Enc),
-      0,
-      (GInstanceInitFunc) gst_lamemp3enc_init,
-    };
-
-    gst_lamemp3enc_type =
-        g_type_register_static (GST_TYPE_AUDIO_ENCODER, "GstLameMP3Enc",
-        &gst_lamemp3enc_info, 0);
-  }
-  return gst_lamemp3enc_type;
-}
+GST_BOILERPLATE (GstLameMP3Enc, gst_lamemp3enc, GstAudioEncoder,
+    GST_TYPE_AUDIO_ENCODER);
 
 static void
 gst_lamemp3enc_release_memory (GstLameMP3Enc * lame)
@@ -311,7 +283,7 @@ gst_lamemp3enc_class_init (GstLameMP3EncClass * klass)
 }
 
 static void
-gst_lamemp3enc_init (GstLameMP3Enc * lame)
+gst_lamemp3enc_init (GstLameMP3Enc * lame, GstLameMP3EncClass * klass)
 {
 }
 
