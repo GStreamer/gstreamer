@@ -1202,7 +1202,7 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
 
     /* Check if stream format is compatible */
     srcpad = gst_element_get_static_pad (sgroup->smartencoder, "src");
-    tmpcaps = gst_pad_get_caps (srcpad);
+    tmpcaps = gst_pad_get_caps_reffed (srcpad);
     if (!gst_caps_can_intersect (tmpcaps, format)) {
       GST_DEBUG ("We don't have a smart encoder for the stream format");
       gst_object_unref (sgroup->smartencoder);
