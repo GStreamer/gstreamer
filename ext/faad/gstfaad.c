@@ -650,7 +650,7 @@ gst_faad_parse (GstAudioDecoder * dec, GstAdapter * adapter,
   faad = GST_FAAD (dec);
 
   size = gst_adapter_available (adapter);
-  g_return_val_if_fail (size > 0, FALSE);
+  g_return_val_if_fail (size > 0, GST_FLOW_ERROR);
 
   gst_audio_decoder_get_parse_state (dec, &sync, &eos);
 
