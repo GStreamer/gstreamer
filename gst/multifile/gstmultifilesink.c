@@ -475,6 +475,34 @@ gst_multi_file_sink_post_message (GstMultiFileSink * multifilesink,
       offset, offset_end, running_time, stream_time, filename);
 }
 
+static gboolean
+gst_multi_file_sink_write_stream_headers (GstMultiFileSink * sink)
+{
+  int i;
+
+  if (sink->streamheaders == NULL)
+    return TRUE;
+
+  /* we want to write these at the beginning */
+  g_assert (sink->cur_file_size == 0);
+
+  for (i = 0; i < sink->n_streamheaders; i++) {
+    GstBuffer *hdr;
+    int ret;
+
+    hdr = sink->streamheaders[i];
+
+    ret = fwrite (GST_BUFFER_DATA (hdr), GST_BUFFER_SIZE (hdr), 1, sink->file);
+
+    if (ret != 1)
+      return FALSE;
+
+    sink->cur_file_size += GST_BUFFER_SIZE (hdr);
+  }
+
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_multi_file_sink_render (GstBaseSink * sink, GstBuffer * buffer)
 {
@@ -542,20 +570,10 @@ gst_multi_file_sink_render (GstBaseSink * sink, GstBuffer * buffer)
       }
 
       if (multifilesink->file == NULL) {
-        int i;
-
         if (!gst_multi_file_sink_open_next_file (multifilesink))
           goto stdio_write_error;
 
-        if (multifilesink->streamheaders) {
-          for (i = 0; i < multifilesink->n_streamheaders; i++) {
-            ret = fwrite (GST_BUFFER_DATA (multifilesink->streamheaders[i]),
-                GST_BUFFER_SIZE (multifilesink->streamheaders[i]), 1,
-                multifilesink->file);
-            if (ret != 1)
-              goto stdio_write_error;
-          }
-        }
+        gst_multi_file_sink_write_stream_headers (multifilesink);
       }
 
       ret = fwrite (GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer), 1,
@@ -595,7 +613,7 @@ gst_multi_file_sink_render (GstBaseSink * sink, GstBuffer * buffer)
         if (!gst_multi_file_sink_open_next_file (multifilesink))
           goto stdio_write_error;
 
-        /* FIXME: write stream headers if present */
+        gst_multi_file_sink_write_stream_headers (multifilesink);
       }
 
       ret = fwrite (GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer), 1,
