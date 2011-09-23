@@ -1129,10 +1129,14 @@ gst_omx_video_dec_handle_frame (GstBaseVideoDecoder * decoder,
 
     g_assert (acq_ret == GST_OMX_ACQUIRE_BUFFER_OK && buf != NULL);
 
+    if (buf->omx_buf->nAllocLen - buf->omx_buf->nOffset <= 0)
+      goto full_buffer;
+
     if (self->codec_data) {
       codec_data = self->codec_data;
 
-      if (buf->omx_buf->nAllocLen < GST_BUFFER_SIZE (codec_data)) {
+      if (buf->omx_buf->nAllocLen - buf->omx_buf->nOffset <
+          GST_BUFFER_SIZE (codec_data)) {
         gst_omx_port_release_buffer (self->in_port, buf);
         goto too_large_codec_data;
       }
@@ -1204,6 +1208,15 @@ gst_omx_video_dec_handle_frame (GstBaseVideoDecoder * decoder,
   }
 
   return GST_FLOW_OK;
+
+full_buffer:
+  {
+    GST_ELEMENT_ERROR (self, LIBRARY, FAILED, (NULL),
+        ("Got OpenMAX buffer with no free space (%p, %u/%u)", buf,
+            buf->omx_buf->nOffset, buf->omx_buf->nAllocLen));
+    gst_omx_port_release_buffer (self->in_port, buf);
+    return GST_FLOW_ERROR;
+  }
 
 too_large_codec_data:
   {
