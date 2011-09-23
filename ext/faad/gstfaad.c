@@ -556,7 +556,7 @@ gst_faad_sync (GstFaad * faad, const guint8 * data, guint size, gboolean next,
   guint n = 0;
   gint snc;
   gboolean ret = FALSE;
-  guint len;
+  guint len = 0;
 
   GST_LOG_OBJECT (faad, "Finding syncpoint");
 
@@ -611,11 +611,14 @@ gst_faad_sync (GstFaad * faad, const guint8 * data, guint size, gboolean next,
   }
 
 exit:
-  *off = n;
-  *length = len;
 
-  if (!ret)
+  *off = n;
+
+  if (ret) {
+    *length = len;
+  } else {
     GST_LOG_OBJECT (faad, "Found no syncpoint");
+  }
 
   return ret;
 }
