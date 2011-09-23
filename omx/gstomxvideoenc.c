@@ -1031,8 +1031,9 @@ gst_omx_video_enc_fill_buffer (GstOMXVideoEnc * self, GstBuffer * inbuf,
   }
 
   /* Same strides and everything */
-  if (GST_BUFFER_SIZE (inbuf) == outbuf->omx_buf->nAllocLen) {
-    outbuf->omx_buf->nFilledLen = outbuf->omx_buf->nAllocLen;
+  if (GST_BUFFER_SIZE (inbuf) ==
+      outbuf->omx_buf->nAllocLen - outbuf->omx_buf->nOffset) {
+    outbuf->omx_buf->nFilledLen = GST_BUFFER_SIZE (inbuf);
     memcpy (outbuf->omx_buf->pBuffer + outbuf->omx_buf->nOffset,
         GST_BUFFER_DATA (inbuf), outbuf->omx_buf->nFilledLen);
     ret = TRUE;
@@ -1078,6 +1079,19 @@ gst_omx_video_enc_fill_buffer (GstOMXVideoEnc * self, GstBuffer * inbuf,
             gst_video_format_get_component_height (state->format, i,
             state->height);
 
+        if (src + src_stride * height >
+            GST_BUFFER_DATA (inbuf) + GST_BUFFER_SIZE (inbuf)) {
+          GST_ERROR_OBJECT (self, "Invalid input buffer size");
+          ret = FALSE;
+          break;
+        }
+        if (dest + dest_stride * height >
+            outbuf->omx_buf->pBuffer + outbuf->omx_buf->nAllocLen) {
+          GST_ERROR_OBJECT (self, "Invalid output buffer size");
+          ret = FALSE;
+          break;
+        }
+
         for (j = 0; j < height; j++) {
           memcpy (dest, src, MIN (src_stride, dest_stride));
           outbuf->omx_buf->nFilledLen += dest_stride;
@@ -1120,6 +1134,20 @@ gst_omx_video_enc_fill_buffer (GstOMXVideoEnc * self, GstBuffer * inbuf,
         height =
             gst_video_format_get_component_height (state->format, i,
             state->height);
+
+        if (src + src_stride * height >
+            GST_BUFFER_DATA (inbuf) + GST_BUFFER_SIZE (inbuf)) {
+          GST_ERROR_OBJECT (self, "Invalid input buffer size");
+          ret = FALSE;
+          break;
+        }
+        if (dest + dest_stride * height >
+            outbuf->omx_buf->pBuffer + outbuf->omx_buf->nAllocLen) {
+          GST_ERROR_OBJECT (self, "Invalid output buffer size");
+          ret = FALSE;
+          break;
+        }
+
         for (j = 0; j < height; j++) {
           memcpy (dest, src, MIN (src_stride, dest_stride));
           outbuf->omx_buf->nFilledLen += dest_stride;
@@ -1179,6 +1207,9 @@ gst_omx_video_enc_handle_frame (GstBaseVideoEncoder * encoder,
 
     g_assert (acq_ret == GST_OMX_ACQUIRE_BUFFER_OK && buf != NULL);
 
+    if (buf->omx_buf->nAllocLen - buf->omx_buf->nOffset <= 0)
+      goto full_buffer;
+
     /* Now handle the frame */
     if (frame->force_keyframe) {
       OMX_ERRORTYPE err;
@@ -1227,6 +1258,15 @@ gst_omx_video_enc_handle_frame (GstBaseVideoEncoder * encoder,
   }
 
   return GST_FLOW_OK;
+
+full_buffer:
+  {
+    GST_ELEMENT_ERROR (self, LIBRARY, FAILED, (NULL),
+        ("Got OpenMAX buffer with no free space (%p, %u/%u)", buf,
+            buf->omx_buf->nOffset, buf->omx_buf->nAllocLen));
+    gst_omx_port_release_buffer (self->in_port, buf);
+    return GST_FLOW_ERROR;
+  }
 
 component_error:
   {
