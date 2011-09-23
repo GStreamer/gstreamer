@@ -445,7 +445,8 @@ GType   gst_tag_image_type_get_type (void);
 /**
  * GST_TAG_ID3V2_HEADER_SIZE:
  *
- * ID3V2 header size considered minimum input for some functions.
+ * ID3V2 header size considered minimum input for some functions such as
+ * gst_tag_list_from_id3v2_tag() and gst_tag_get_id3v2_tag_size() for example.
  *
  * Since: 0.10.36
  */

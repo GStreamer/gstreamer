@@ -258,7 +258,7 @@ struct _GstDiscoverer {
 struct _GstDiscovererClass {
   GObjectClass parentclass;
 
-  /*< signals >*/
+  /* signals */
   void        (*finished)        (GstDiscoverer *discoverer);
   void        (*starting)        (GstDiscoverer *discoverer);
   void        (*discovered)      (GstDiscoverer *discoverer,

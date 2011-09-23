@@ -999,6 +999,8 @@ gst_base_text_overlay_src_query (GstPad * pad, GstQuery * query)
   GstBaseTextOverlay *overlay = NULL;
 
   overlay = GST_BASE_TEXT_OVERLAY (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (!overlay))
+    return FALSE;
 
   ret = gst_pad_peer_query (overlay->video_sinkpad, query);
 
@@ -1014,6 +1016,10 @@ gst_base_text_overlay_src_event (GstPad * pad, GstEvent * event)
   GstBaseTextOverlay *overlay = NULL;
 
   overlay = GST_BASE_TEXT_OVERLAY (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (!overlay)) {
+    gst_event_unref (event);
+    return FALSE;
+  }
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:{
@@ -1076,6 +1082,8 @@ gst_base_text_overlay_getcaps (GstPad * pad, GstCaps * filter)
   GstCaps *caps;
 
   overlay = GST_BASE_TEXT_OVERLAY (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (!overlay))
+    return gst_caps_copy (gst_pad_get_pad_template_caps (pad));
 
   if (pad == overlay->srcpad)
     otherpad = overlay->video_sinkpad;
@@ -2102,6 +2110,8 @@ gst_base_text_overlay_text_pad_link (GstPad * pad, GstPad * peer)
   GstBaseTextOverlay *overlay;
 
   overlay = GST_BASE_TEXT_OVERLAY (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (!overlay))
+    return GST_PAD_LINK_REFUSED;
 
   GST_DEBUG_OBJECT (overlay, "Text pad linked");
 
@@ -2134,6 +2144,10 @@ gst_base_text_overlay_text_event (GstPad * pad, GstEvent * event)
   GstBaseTextOverlay *overlay = NULL;
 
   overlay = GST_BASE_TEXT_OVERLAY (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (!overlay)) {
+    gst_event_unref (event);
+    return FALSE;
+  }
 
   GST_LOG_OBJECT (pad, "received event %s", GST_EVENT_TYPE_NAME (event));
 
@@ -2224,6 +2238,10 @@ gst_base_text_overlay_video_event (GstPad * pad, GstEvent * event)
   GstBaseTextOverlay *overlay = NULL;
 
   overlay = GST_BASE_TEXT_OVERLAY (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (!overlay)) {
+    gst_event_unref (event);
+    return FALSE;
+  }
 
   GST_DEBUG_OBJECT (pad, "received event %s", GST_EVENT_TYPE_NAME (event));
 

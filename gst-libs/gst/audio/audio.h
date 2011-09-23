@@ -290,6 +290,14 @@ struct _GstAudioInfo {
 #define GST_AUDIO_INFO_DEPTH(i)              (GST_AUDIO_FORMAT_INFO_DEPTH((i)->finfo))
 #define GST_AUDIO_INFO_BPS(info)             (GST_AUDIO_INFO_DEPTH(info) >> 3)
 
+#define GST_AUDIO_INFO_IS_INTEGER(i)         (GST_AUDIO_FORMAT_INFO_IS_INTEGER((i)->finfo))
+#define GST_AUDIO_INFO_IS_FLOAT(i)           (GST_AUDIO_FORMAT_INFO_IS_FLOAT((i)->finfo))
+#define GST_AUDIO_INFO_IS_SIGNED(i)          (GST_AUDIO_FORMAT_INFO_IS_SIGNED((i)->finfo))
+
+#define GST_AUDIO_INFO_ENDIANNESS(i)         (GST_AUDIO_FORMAT_INFO_ENDIANNES((i)->finfo))
+#define GST_AUDIO_INFO_IS_LITTLE_ENDIAN(i)   (GST_AUDIO_FORMAT_INFO_IS_LITTLE_ENDIAN((i)->finfo))
+#define GST_AUDIO_INFO_IS_BIG_ENDIAN(i)      (GST_AUDIO_FORMAT_INFO_IS_BIG_ENDIAN((i)->finfo))
+
 #define GST_AUDIO_INFO_FLAGS(info)           ((info)->flags)
 #define GST_AUDIO_INFO_HAS_DEFAULT_POSITIONS(info) ((info)->flags & GST_AUDIO_FLAG_DEFAULT_POSITIONS)
 

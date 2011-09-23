@@ -27,7 +27,6 @@
 
 #include <gst/check/gstcheck.h>
 #include <gst/base/gstbaseparse.h>
-#include <gst/base/gstbasetransform.h>
 #include <unistd.h>
 
 static const gchar dummytext[] =
@@ -370,15 +369,15 @@ static GType gst_fake_h264_decoder_get_type (void);
 #undef parent_class
 #define parent_class fake_h264_parser_parent_class
 typedef struct _GstFakeH264Parser GstFakeH264Parser;
-typedef GstBaseTransformClass GstFakeH264ParserClass;
+typedef GstElementClass GstFakeH264ParserClass;
 
 struct _GstFakeH264Parser
 {
-  GstBaseTransform parent;
+  GstElement parent;
 };
 
-GST_BOILERPLATE (GstFakeH264Parser, gst_fake_h264_parser, GstBaseTransform,
-    GST_TYPE_BASE_TRANSFORM);
+GST_BOILERPLATE (GstFakeH264Parser, gst_fake_h264_parser, GstElement,
+    GST_TYPE_ELEMENT);
 
 static void
 gst_fake_h264_parser_base_init (gpointer klass)
@@ -400,89 +399,87 @@ gst_fake_h264_parser_base_init (gpointer klass)
       "FakeH264Parser", "Codec/Parser/Converter/Video", "yep", "me");
 }
 
-static GstFlowReturn
-gst_fake_h264_parser_transform (GstBaseTransform * trans, GstBuffer * inbuf,
-    GstBuffer * outbuf)
-{
-  return GST_FLOW_OK;
-}
-
-static GstCaps *
-gst_fake_h264_parser_transform_caps (GstBaseTransform * trans,
-    GstPadDirection direction, GstCaps * caps)
-{
-  if (direction == GST_PAD_SRC)
-    return gst_caps_from_string ("video/x-h264");
-  else
-    return gst_caps_from_string ("video/x-h264, "
-        "stream-format=(string) { avc, byte-stream }");
-}
-
-static gboolean
-gst_fake_h264_parser_get_unit_size (GstBaseTransform * trans, GstCaps * caps,
-    guint * size)
-{
-  *size = 1;
-  return TRUE;
-}
-
-static gboolean
-gst_fake_h264_parser_set_caps (GstBaseTransform * trans, GstCaps * incaps,
-    GstCaps * outcaps)
-{
-  GstStructure *s;
-  const gchar *stream_format;
-
-  s = gst_caps_get_structure (incaps, 0);
-  fail_unless (gst_structure_has_name (s, "video/x-h264"));
-
-  s = gst_caps_get_structure (outcaps, 0);
-  fail_unless (gst_structure_has_name (s, "video/x-h264"));
-  stream_format = gst_structure_get_string (s, "stream-format");
-  fail_unless_equals_string ("byte-stream", stream_format);
-
-  return TRUE;
-}
-
-static GstFlowReturn
-gst_fake_h264_parser_prepare_output_buffer (GstBaseTransform * trans,
-    GstBuffer * inbuf, gint size, GstCaps * caps, GstBuffer ** outbuf)
-{
-  *outbuf = gst_buffer_ref (inbuf);
-  return GST_FLOW_OK;
-}
-
 static void
 gst_fake_h264_parser_class_init (GstFakeH264ParserClass * klass)
 {
-  GstBaseTransformClass *basetrans_class = (GstBaseTransformClass *) klass;
+}
 
-  basetrans_class->transform = gst_fake_h264_parser_transform;
-  basetrans_class->transform_caps = gst_fake_h264_parser_transform_caps;
-  basetrans_class->get_unit_size = gst_fake_h264_parser_get_unit_size;
-  basetrans_class->set_caps = gst_fake_h264_parser_set_caps;
-  basetrans_class->prepare_output_buffer =
-      gst_fake_h264_parser_prepare_output_buffer;
+static gboolean
+gst_fake_h264_parser_sink_setcaps (GstPad * pad, GstCaps * caps)
+{
+  GstElement *self = GST_ELEMENT (gst_pad_get_parent (pad));
+  GstPad *otherpad = gst_element_get_static_pad (self, "src");
+  GstCaps *accepted_caps;
+  GstStructure *s;
+  const gchar *stream_format;
+
+  accepted_caps = gst_pad_get_allowed_caps (otherpad);
+  accepted_caps = gst_caps_make_writable (accepted_caps);
+  gst_caps_truncate (accepted_caps);
+
+  s = gst_caps_get_structure (accepted_caps, 0);
+  stream_format = gst_structure_get_string (s, "stream-format");
+  if (!stream_format)
+    gst_structure_set (s, "stream-format", G_TYPE_STRING, "avc", NULL);
+
+  gst_pad_set_caps (otherpad, accepted_caps);
+  gst_caps_unref (accepted_caps);
+
+  gst_object_unref (otherpad);
+  gst_object_unref (self);
+
+  return TRUE;
+}
+
+static GstFlowReturn
+gst_fake_h264_parser_sink_chain (GstPad * pad, GstBuffer * buf)
+{
+  GstElement *self = GST_ELEMENT (gst_pad_get_parent (pad));
+  GstPad *otherpad = gst_element_get_static_pad (self, "src");
+  GstFlowReturn ret = GST_FLOW_OK;
+
+  buf = gst_buffer_make_metadata_writable (buf);
+  gst_buffer_set_caps (buf, GST_PAD_CAPS (otherpad));
+
+  ret = gst_pad_push (otherpad, buf);
+
+  gst_object_unref (otherpad);
+  gst_object_unref (self);
+
+  return ret;
 }
 
 static void
 gst_fake_h264_parser_init (GstFakeH264Parser * self,
     GstFakeH264ParserClass * klass)
 {
+  GstPad *pad;
+
+  pad =
+      gst_pad_new_from_template (gst_element_class_get_pad_template
+      (GST_ELEMENT_GET_CLASS (self), "sink"), "sink");
+  gst_pad_set_setcaps_function (pad, gst_fake_h264_parser_sink_setcaps);
+  gst_pad_set_chain_function (pad, gst_fake_h264_parser_sink_chain);
+  gst_element_add_pad (GST_ELEMENT (self), pad);
+
+  pad =
+      gst_pad_new_from_template (gst_element_class_get_pad_template
+      (GST_ELEMENT_GET_CLASS (self), "src"), "src");
+  gst_element_add_pad (GST_ELEMENT (self), pad);
 }
 
 #undef parent_class
 #define parent_class fake_h264_decoder_parent_class
 typedef struct _GstFakeH264Decoder GstFakeH264Decoder;
-typedef GstBaseTransformClass GstFakeH264DecoderClass;
+typedef GstElementClass GstFakeH264DecoderClass;
 
 struct _GstFakeH264Decoder
 {
-  GstBaseTransform parent;
+  GstElement parent;
 };
 
-GST_BOILERPLATE (GstFakeH264Decoder, gst_fake_h264_decoder, GstBaseTransform,
-    GST_TYPE_BASE_TRANSFORM);
+GST_BOILERPLATE (GstFakeH264Decoder, gst_fake_h264_decoder, GstElement,
+    GST_TYPE_ELEMENT);
 
 static void
 gst_fake_h264_decoder_base_init (gpointer klass)
@@ -503,75 +500,62 @@ gst_fake_h264_decoder_base_init (gpointer klass)
       "FakeH264Decoder", "Codec/Decoder/Video", "yep", "me");
 }
 
-static GstFlowReturn
-gst_fake_h264_decoder_transform (GstBaseTransform * trans, GstBuffer * inbuf,
-    GstBuffer * outbuf)
-{
-  return GST_FLOW_OK;
-}
-
-static GstCaps *
-gst_fake_h264_decoder_transform_caps (GstBaseTransform * trans,
-    GstPadDirection direction, GstCaps * caps)
-{
-  if (direction == GST_PAD_SRC)
-    return gst_caps_from_string ("video/x-h264, "
-        "stream-format=(string) byte-stream");
-  else
-    return gst_caps_from_string ("video/x-raw-yuv");
-}
-
-static gboolean
-gst_fake_h264_decoder_get_unit_size (GstBaseTransform * trans, GstCaps * caps,
-    guint * size)
-{
-  *size = 1;
-  return TRUE;
-}
-
-static gboolean
-gst_fake_h264_decoder_set_caps (GstBaseTransform * trans, GstCaps * incaps,
-    GstCaps * outcaps)
-{
-  GstStructure *s;
-  const gchar *stream_format;
-
-  s = gst_caps_get_structure (incaps, 0);
-  fail_unless (gst_structure_has_name (s, "video/x-h264"));
-  stream_format = gst_structure_get_string (s, "stream-format");
-  fail_unless_equals_string ("byte-stream", stream_format);
-
-  s = gst_caps_get_structure (outcaps, 0);
-  fail_unless (gst_structure_has_name (s, "video/x-raw-yuv"));
-
-  return TRUE;
-}
-
-static GstFlowReturn
-gst_fake_h264_decoder_prepare_output_buffer (GstBaseTransform * trans,
-    GstBuffer * inbuf, gint size, GstCaps * caps, GstBuffer ** outbuf)
-{
-  *outbuf = gst_buffer_ref (inbuf);
-  return GST_FLOW_OK;
-}
-
 static void
 gst_fake_h264_decoder_class_init (GstFakeH264DecoderClass * klass)
 {
-  GstBaseTransformClass *basetrans_class = (GstBaseTransformClass *) klass;
+}
 
-  basetrans_class->transform = gst_fake_h264_decoder_transform;
-  basetrans_class->transform_caps = gst_fake_h264_decoder_transform_caps;
-  basetrans_class->get_unit_size = gst_fake_h264_decoder_get_unit_size;
-  basetrans_class->set_caps = gst_fake_h264_decoder_set_caps;
-  basetrans_class->prepare_output_buffer =
-      gst_fake_h264_decoder_prepare_output_buffer;
+static gboolean
+gst_fake_h264_decoder_sink_setcaps (GstPad * pad, GstCaps * caps)
+{
+  GstElement *self = GST_ELEMENT (gst_pad_get_parent (pad));
+  GstPad *otherpad = gst_element_get_static_pad (self, "src");
+
+  caps = gst_caps_new_simple ("video/x-raw-yuv", NULL);
+  gst_pad_set_caps (otherpad, caps);
+  gst_caps_unref (caps);
+
+  gst_object_unref (otherpad);
+  gst_object_unref (self);
+
+  return TRUE;
+}
+
+static GstFlowReturn
+gst_fake_h264_decoder_sink_chain (GstPad * pad, GstBuffer * buf)
+{
+  GstElement *self = GST_ELEMENT (gst_pad_get_parent (pad));
+  GstPad *otherpad = gst_element_get_static_pad (self, "src");
+  GstFlowReturn ret = GST_FLOW_OK;
+
+  buf = gst_buffer_make_metadata_writable (buf);
+  gst_buffer_set_caps (buf, GST_PAD_CAPS (otherpad));
+
+  ret = gst_pad_push (otherpad, buf);
+
+  gst_object_unref (otherpad);
+  gst_object_unref (self);
+
+  return ret;
 }
 
 static void
 gst_fake_h264_decoder_init (GstFakeH264Decoder * self,
     GstFakeH264DecoderClass * klass)
 {
+  GstPad *pad;
+
+  pad =
+      gst_pad_new_from_template (gst_element_class_get_pad_template
+      (GST_ELEMENT_GET_CLASS (self), "sink"), "sink");
+  gst_pad_set_setcaps_function (pad, gst_fake_h264_decoder_sink_setcaps);
+  gst_pad_set_chain_function (pad, gst_fake_h264_decoder_sink_chain);
+  gst_element_add_pad (GST_ELEMENT (self), pad);
+
+  pad =
+      gst_pad_new_from_template (gst_element_class_get_pad_template
+      (GST_ELEMENT_GET_CLASS (self), "src"), "src");
+  gst_element_add_pad (GST_ELEMENT (self), pad);
 }
 
 static void

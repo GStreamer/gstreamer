@@ -2113,8 +2113,7 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
   GST_OBJECT_UNLOCK (playsink);
 
   /* figure out which components we need */
-  if (flags & GST_PLAY_FLAG_TEXT && playsink->video_pad_raw
-      && playsink->text_pad) {
+  if (flags & GST_PLAY_FLAG_TEXT && playsink->text_pad) {
     /* we have subtitles and we are requested to show it */
     need_text = TRUE;
   }

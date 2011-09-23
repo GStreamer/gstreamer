@@ -113,6 +113,10 @@ struct _GstOggPad
   gboolean is_eos;
 
   gboolean added;
+
+  /* push mode seeking */
+  GstClockTime push_kf_time;
+  GstClockTime push_sync_time;
 };
 
 struct _GstOggPadClass
@@ -160,6 +164,29 @@ struct _GstOggDemux
   /* annodex stuff */
   gint64 basetime;
   gint64 prestime;
+
+  /* push mode seeking support */
+  GMutex *push_lock; /* we need the lock to protect the push mode variables */
+  gint64 push_byte_offset; /* where were are at in the stream, in bytes */
+  gint64 push_byte_length; /* length in bytes of the stream, -1 if unknown */
+  GstClockTime push_time_length; /* length in time of the stream */
+  GstClockTime push_start_time; /* start time of the stream */
+  GstClockTime push_time_offset; /* where were are at in the stream, in time */
+  enum { PUSH_PLAYING, PUSH_DURATION, PUSH_BISECT1, PUSH_LINEAR1, PUSH_BISECT2, PUSH_LINEAR2 } push_state;
+
+  GstClockTime push_seek_time_original_target;
+  GstClockTime push_seek_time_target;
+  gint64 push_last_seek_offset;
+  GstClockTime push_last_seek_time;
+  gint64 push_offset0, push_offset1; /* bisection search offset bounds */
+  GstClockTime push_time0, push_time1; /* bisection search time bounds */
+
+  double push_seek_rate;
+  GstSeekFlags push_seek_flags;
+  GstEvent *push_mode_seek_delayed_event;
+  gboolean push_disable_seeking;
+
+  gint push_bisection_steps[2];
 
   /* ogg stuff */
   ogg_sync_state sync;

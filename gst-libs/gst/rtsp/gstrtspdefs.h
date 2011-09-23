@@ -333,6 +333,9 @@ typedef enum {
   GST_RTSP_HDR_X_SERVER_IP_ADDRESS, /* X-Server-IP-Address */
   GST_RTSP_HDR_X_SESSIONCOOKIE,     /* X-Sessioncookie */
 
+  /* Since 0.10.36 */
+  GST_RTSP_HDR_RTCP_INTERVAL,       /* RTCP-Interval */
+
   GST_RTSP_HDR_LAST
 } GstRTSPHeaderField;
 

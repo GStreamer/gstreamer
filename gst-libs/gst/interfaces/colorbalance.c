@@ -127,7 +127,11 @@ gst_color_balance_class_init (GstColorBalanceClass * klass)
 const GList *
 gst_color_balance_list_channels (GstColorBalance * balance)
 {
-  GstColorBalanceClass *klass = GST_COLOR_BALANCE_GET_CLASS (balance);
+  GstColorBalanceClass *klass;
+
+  g_return_val_if_fail (GST_IS_COLOR_BALANCE (balance), NULL);
+
+  klass = GST_COLOR_BALANCE_GET_CLASS (balance);
 
   if (klass->list_channels) {
     return klass->list_channels (balance);
@@ -178,7 +182,11 @@ gint
 gst_color_balance_get_value (GstColorBalance * balance,
     GstColorBalanceChannel * channel)
 {
-  GstColorBalanceClass *klass = GST_COLOR_BALANCE_GET_CLASS (balance);
+  GstColorBalanceClass *klass;
+
+  g_return_val_if_fail (GST_IS_COLOR_BALANCE (balance), 0);
+
+  klass = GST_COLOR_BALANCE_GET_CLASS (balance);
 
   if (klass->get_value) {
     return klass->get_value (balance, channel);
@@ -200,7 +208,12 @@ gst_color_balance_get_value (GstColorBalance * balance,
 GstColorBalanceType
 gst_color_balance_get_balance_type (GstColorBalance * balance)
 {
-  GstColorBalanceClass *klass = GST_COLOR_BALANCE_GET_CLASS (balance);
+  GstColorBalanceClass *klass;
+
+  g_return_val_if_fail (GST_IS_COLOR_BALANCE (balance),
+      GST_COLOR_BALANCE_SOFTWARE);
+
+  klass = GST_COLOR_BALANCE_GET_CLASS (balance);
 
   return klass->balance_type;
 }
@@ -220,6 +233,9 @@ void
 gst_color_balance_value_changed (GstColorBalance * balance,
     GstColorBalanceChannel * channel, gint value)
 {
+
+  g_return_if_fail (GST_IS_COLOR_BALANCE (balance));
+
   g_signal_emit (G_OBJECT (balance),
       gst_color_balance_signals[VALUE_CHANGED], 0, channel, value);
 

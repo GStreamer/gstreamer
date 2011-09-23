@@ -255,40 +255,20 @@ for baseline profile, and software fallback for main/high profile; or a DSP
 codec only supporting certain resolutions, with a software fallback for
 unusual resolutions). So if decodebin just plugged the most highest-ranking
 decoder, that decoder might not be be able to handle the actual stream later
-on, which would yield in an error (this is a data flow error then which would
+on, which would yield an error (this is a data flow error then which would
 be hard to intercept and avoid in decodebin). In other words, we can't solve
 this issue by plugging a decoder right away with the parser.
 
-So decodebin need to communicate to the parser the set of available decoder
+So decodebin needs to communicate to the parser the set of available decoder
 caps (which would contain the relevant capabilities/restrictions such as
 supported profiles, resolutions, etc.), after the usual "autoplug-*" signal
 filtering/sorting of course.
 
-This could be done in multiple ways, e.g.
+This is done by plugging a capsfilter element right after the parser, and
+constructing set of filter caps from the list of available decoders (one
+appends at the end just the name(s) of the caps structures from the parser
+pad template caps to function as an 'ANY other' caps equivalent). This let
+the parser negotiate to a supported stream format in the same way as with
+the static pipeline mentioned above, but of course incur some overhead
+through the additional capsfilter element.
 
-  - plug a capsfilter element right after the parser, and construct
-    a set of filter caps from the list of available decoders (one
-    could append at the end just the name(s) of the caps structures
-    from the parser pad template caps to function as an 'ANY other'
-    caps equivalent). This would let the parser negotiate to a
-    supported stream format in the same way as with the static
-    pipeline mentioned above, but of course incur some overhead
-    through the additional capsfilter element.
-
-  - one could add a filter-caps equivalent property to the parsers
-    (and/or GstBaseParse class) (e.g. "prefered-caps" or so).
-
-  - one could add some kind of "fixate-caps" or "fixate-format"
-    signal to such parsers
-
-Alternatively, one could simply make all decoders incorporate parsers, so
-that always all formats are supported. This is problematic for other reasons
-though (e.g. we would not be able to detect the profile in all cases then
-before plugging a decoder, which would make it hard to just play the audio
-part of a stream and not the video if a suitable decoder was missing, for
-example).
-
-Additional considerations: the same problem exists with sinks that support
-non-raw formats. Consider, for example, an audio sink that accepts DTS audio,
-but only the 14-bit variant, not the 16-bit variant (or only native endiannes).
-Ideally dcaparse would convert into the required stream format here.

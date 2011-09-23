@@ -941,6 +941,8 @@ audio_info_is_equal (GstAudioInfo * from, GstAudioInfo * to)
 {
   if (from == to)
     return TRUE;
+  if (from->finfo == NULL || to->finfo == NULL)
+    return FALSE;
   if (GST_AUDIO_INFO_FORMAT (from) != GST_AUDIO_INFO_FORMAT (to))
     return FALSE;
   if (GST_AUDIO_INFO_RATE (from) != GST_AUDIO_INFO_RATE (to))
@@ -985,7 +987,7 @@ gst_audio_encoder_sink_setcaps (GstAudioEncoder * enc, GstCaps * caps)
   if (!gst_audio_info_from_caps (&state, caps))
     goto refuse_caps;
 
-  changed = audio_info_is_equal (&state, &ctx->info);
+  changed = !audio_info_is_equal (&state, &ctx->info);
 
   if (changed) {
     GstClockTime old_min_latency;
@@ -1086,6 +1088,18 @@ gst_audio_encoder_proxy_getcaps (GstAudioEncoder * enc, GstCaps * caps)
         gst_structure_set_value (s, "rate", val);
       if ((val = gst_structure_get_value (allowed_s, "channels")))
         gst_structure_set_value (s, "channels", val);
+      /* following might also make sense for some encoded formats,
+       * e.g. wavpack */
+      if ((val = gst_structure_get_value (allowed_s, "width")))
+        gst_structure_set_value (s, "width", val);
+      if ((val = gst_structure_get_value (allowed_s, "depth")))
+        gst_structure_set_value (s, "depth", val);
+      if ((val = gst_structure_get_value (allowed_s, "endianness")))
+        gst_structure_set_value (s, "endianness", val);
+      if ((val = gst_structure_get_value (allowed_s, "signed")))
+        gst_structure_set_value (s, "signed", val);
+      if ((val = gst_structure_get_value (allowed_s, "channel-positions")))
+        gst_structure_set_value (s, "channel-positions", val);
 
       gst_caps_merge_structure (filter_caps, s);
     }

@@ -54,7 +54,7 @@
  * </listitem>
  * As of configuration stage, and throughout processing, GstAudioDecoder
  * provides various (context) parameters, e.g. describing the format of
- * output audio data (valid when output caps have been caps) or current parsing state.
+ * output audio data (valid when output caps have been set) or current parsing state.
  * Conversely, subclass can and should configure context to inform
  * base class of its expectation w.r.t. buffer handling.
  * <listitem>

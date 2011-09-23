@@ -177,6 +177,9 @@ static struct rtsp_header rtsp_headers[] = {
   {"X-Server-IP-Address", FALSE},
   {"X-Sessioncookie", FALSE},
 
+  /* Since 0.10.36 */
+  {"RTCP-Interval", FALSE},
+
   {NULL, FALSE}
 };
 
