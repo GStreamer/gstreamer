@@ -595,7 +595,7 @@ gst_ac3_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
   }
 
   if (G_UNLIKELY (ac3parse->sample_rate != rate || ac3parse->channels != chans
-          || ac3parse->eac != ac3parse->eac)) {
+          || ac3parse->eac != eac)) {
     GstCaps *caps = gst_caps_new_simple (eac ? "audio/x-eac3" : "audio/x-ac3",
         "framed", G_TYPE_BOOLEAN, TRUE, "rate", G_TYPE_INT, rate,
         "channels", G_TYPE_INT, chans, NULL);
