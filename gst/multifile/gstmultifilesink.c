@@ -3,6 +3,7 @@
  *                    2000 Wim Taymans <wtay@chello.be>
  *                    2006 Wim Taymans <wim@fluendo.com>
  *                    2006 David A. Schleef <ds@schleef.org>
+ *                    2011 Collabora Ltd. <tim.muller@collabora.co.uk>
  *
  * gstmultifilesink.c:
  *
@@ -127,6 +128,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_multi_file_sink_debug);
 #define DEFAULT_POST_MESSAGES FALSE
 #define DEFAULT_NEXT_FILE GST_MULTI_FILE_SINK_NEXT_BUFFER
 #define DEFAULT_MAX_FILES 0
+#define DEFAULT_MAX_FILE_SIZE G_GUINT64_CONSTANT(2*1024*1024*1024)
 
 enum
 {
@@ -136,6 +138,7 @@ enum
   PROP_POST_MESSAGES,
   PROP_NEXT_FILE,
   PROP_MAX_FILES,
+  PROP_MAX_FILE_SIZE,
   PROP_LAST
 };
 
@@ -195,8 +198,7 @@ gst_multi_file_sink_base_init (gpointer g_class)
   GST_DEBUG_CATEGORY_INIT (gst_multi_file_sink_debug, "multifilesink", 0,
       "multifilesink element");
 
-  gst_element_class_add_static_pad_template (gstelement_class,
-      &sinktemplate);
+  gst_element_class_add_static_pad_template (gstelement_class, &sinktemplate);
   gst_element_class_set_details_simple (gstelement_class, "Multi-File Sink",
       "Sink/File",
       "Write buffers to a sequentially named set of files",
@@ -263,6 +265,19 @@ gst_multi_file_sink_class_init (GstMultiFileSinkClass * klass)
           0, G_MAXUINT, DEFAULT_MAX_FILES,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstMultiFileSink:max-file-size
+   *
+   * Maximum file size before starting a new file in max-size mode.
+   *
+   * Since: 0.10.31
+   */
+  g_object_class_install_property (gobject_class, PROP_MAX_FILE_SIZE,
+      g_param_spec_uint64 ("max-file-size", "Maximum File Size",
+          "Maximum file size before starting a new file in max-size mode",
+          0, G_MAXUINT64, DEFAULT_MAX_FILE_SIZE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gobject_class->finalize = gst_multi_file_sink_finalize;
 
   gstbasesink_class->get_times = NULL;
@@ -281,6 +296,7 @@ gst_multi_file_sink_init (GstMultiFileSink * multifilesink,
   multifilesink->index = DEFAULT_INDEX;
   multifilesink->post_messages = DEFAULT_POST_MESSAGES;
   multifilesink->max_files = DEFAULT_MAX_FILES;
+  multifilesink->max_file_size = DEFAULT_MAX_FILE_SIZE;
   multifilesink->files = NULL;
   multifilesink->n_files = 0;
 
@@ -335,6 +351,9 @@ gst_multi_file_sink_set_property (GObject * object, guint prop_id,
     case PROP_MAX_FILES:
       sink->max_files = g_value_get_uint (value);
       break;
+    case PROP_MAX_FILE_SIZE:
+      sink->max_file_size = g_value_get_uint64 (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -362,6 +381,9 @@ gst_multi_file_sink_get_property (GObject * object, guint prop_id,
       break;
     case PROP_MAX_FILES:
       g_value_set_uint (value, sink->max_files);
+      break;
+    case PROP_MAX_FILE_SIZE:
+      g_value_set_uint64 (value, sink->max_file_size);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

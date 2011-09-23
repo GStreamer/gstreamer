@@ -77,6 +77,7 @@ struct _GstMultiFileSink
   int n_streamheaders;
   GstBuffer **streamheaders;
   guint force_key_unit_count;
+  guint64 max_file_size;
 };
 
 struct _GstMultiFileSinkClass
