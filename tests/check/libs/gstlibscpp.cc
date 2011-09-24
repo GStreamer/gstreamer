@@ -30,6 +30,7 @@
 
 #include <gst/audio/audio-enumtypes.h>
 #include <gst/audio/audio.h>
+#include <gst/audio/gstaudiocdsrc.h>
 #include <gst/audio/gstaudioclock.h>
 #include <gst/audio/gstaudiofilter.h>
 #include <gst/audio/gstaudiosink.h>
@@ -39,8 +40,6 @@
 #include <gst/audio/gstringbuffer.h>
 #include <gst/audio/mixerutils.h>
 #include <gst/audio/multichannel.h>
-
-#include <gst/cdda/gstcddabasesrc.h>
 
 #include <gst/fft/gstfftf32.h>
 #include <gst/fft/gstfftf64.h>

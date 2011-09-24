@@ -114,7 +114,7 @@ check_PROGRAMS = \
 	gst/typefindfunctions \
 	libs/libsabi \
 	libs/audio \
-	libs/cddabasesrc \
+	libs/audiocdsrc \
 	libs/discoverer \
 	libs/fft \
 	libs/mixer \
@@ -196,7 +196,6 @@ libs_libsabi_CFLAGS = \
 libs_libsabi_LDADD = \
 	$(top_builddir)/gst-libs/gst/app/libgstapp-@GST_MAJORMINOR@.la \
 	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_MAJORMINOR@.la \
-	$(top_builddir)/gst-libs/gst/cdda/libgstcdda-@GST_MAJORMINOR@.la \
 	$(top_builddir)/gst-libs/gst/fft/libgstfft-@GST_MAJORMINOR@.la \
 	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_MAJORMINOR@.la \
 	$(top_builddir)/gst-libs/gst/pbutils/libgstpbutils-@GST_MAJORMINOR@.la \
@@ -218,13 +217,13 @@ libs_audio_LDADD = \
 	$(GST_BASE_LIBS) \
 	$(LDADD)
 
-libs_cddabasesrc_CFLAGS = \
+libs_audiocdsrc_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) \
 	$(AM_CFLAGS)
 
-libs_cddabasesrc_LDADD = \
-	$(top_builddir)/gst-libs/gst/cdda/libgstcdda-@GST_MAJORMINOR@.la \
+libs_audiocdsrc_LDADD = \
+	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_MAJORMINOR@.la \
 	$(top_builddir)/gst-libs/gst/tag/libgsttag-@GST_MAJORMINOR@.la \
 	$(GST_BASE_LIBS) \
 	$(LDADD)

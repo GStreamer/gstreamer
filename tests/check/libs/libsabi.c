@@ -26,13 +26,13 @@
 #include <gst/app/gstappsrc.h>
 #include <gst/app/gstappsink.h>
 #include <gst/audio/audio.h>
+#include <gst/audio/gstaudiocdsrc.h>
 #include <gst/audio/gstaudioclock.h>
 #include <gst/audio/gstaudiofilter.h>
 #include <gst/audio/gstaudiosrc.h>
 #include <gst/audio/gstaudiosink.h>
 #include <gst/audio/gstringbuffer.h>
 #include <gst/audio/multichannel.h>
-#include <gst/cdda/gstcddabasesrc.h>
 #include <gst/fft/gstfft.h>
 #include <gst/fft/gstffts16.h>
 #include <gst/fft/gstffts32.h>

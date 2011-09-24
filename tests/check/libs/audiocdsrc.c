@@ -1,6 +1,6 @@
 /* GStreamer
  *
- * unit test for cddabasesrc
+ * unit test for the audiocdsrc base class
  *
  * Copyright (C) <2005> Tim-Philipp Müller <tim centricular net>
  *
@@ -35,7 +35,7 @@
 #include <gst/check/gstcheck.h>
 #include <gst/check/gstbufferstraw.h>
 
-#include <gst/cdda/gstcddabasesrc.h>
+#include <gst/audio/gstaudiocdsrc.h>
 #include <string.h>
 
 #define CD_FRAMESIZE_RAW 2352
@@ -52,7 +52,7 @@ typedef struct _GstCdFooSrcClass GstCdFooSrcClass;
 
 
 /* Neue Heimat (CD 2) */
-static GstCddaBaseSrcTrack nh_cd2_tracks[] = {
+static GstAudioCdSrcTrack nh_cd2_tracks[] = {
   {TRUE, 1, 0, 20664, NULL,},
   {TRUE, 2, 20665, 52377, NULL,},
   {TRUE, 3, 52378, 84100, NULL,},
@@ -70,7 +70,7 @@ static GstCddaBaseSrcTrack nh_cd2_tracks[] = {
 };
 
 /* Offspring - Smash */
-static GstCddaBaseSrcTrack offspring_tracks[] = {
+static GstAudioCdSrcTrack offspring_tracks[] = {
   {TRUE, 1, 0, 1924, NULL,},
   {TRUE, 2, 1925, 12947, NULL,},
   {TRUE, 3, 12948, 29739, NULL,},
@@ -90,7 +90,7 @@ static GstCddaBaseSrcTrack offspring_tracks[] = {
 /* this matches the sample TOC from the DiscIDCalculation
  * page in the Musicbrainz wiki. It's a tricky one because
  * it's got a data track as well. */
-static GstCddaBaseSrcTrack mb_sample_tracks[] = {
+static GstAudioCdSrcTrack mb_sample_tracks[] = {
   {TRUE, 1, 0, 18640, NULL,},
   {TRUE, 2, 18641, 34666, NULL,},
   {TRUE, 3, 34667, 56349, NULL,},
@@ -110,7 +110,7 @@ static GstCddaBaseSrcTrack mb_sample_tracks[] = {
 
 /* Nicola Conte - Other Directions (also
  * tricky due to the extra data track) */
-static GstCddaBaseSrcTrack nconte_odir_tracks[] = {
+static GstAudioCdSrcTrack nconte_odir_tracks[] = {
   {TRUE, 1, 0, 17852, NULL,},
   {TRUE, 2, 17853, 39956, NULL,},
   {TRUE, 3, 39957, 68449, NULL,},
@@ -128,7 +128,7 @@ static GstCddaBaseSrcTrack nconte_odir_tracks[] = {
 };
 
 /* Pink Martini - Sympathique (11 track version) */
-static GstCddaBaseSrcTrack pm_symp_tracks[] = {
+static GstAudioCdSrcTrack pm_symp_tracks[] = {
   {TRUE, 1, 0, 21667, NULL,},
   {TRUE, 2, 21668, 49576, NULL,},
   {TRUE, 3, 49577, 62397, NULL,},
@@ -146,7 +146,7 @@ static GstCddaBaseSrcTrack pm_symp_tracks[] = {
 
 struct _test_disc
 {
-  GstCddaBaseSrcTrack *tracks;
+  GstAudioCdSrcTrack *tracks;
   guint num_tracks;
   guint32 cddb_discid;
   const gchar *musicbrainz_discid;
@@ -171,7 +171,7 @@ static struct _test_disc test_discs[NUM_TEST_DISCS] = {
 
 struct _GstCdFooSrc
 {
-  GstCddaBaseSrc cddabasesrc;
+  GstAudioCdSrc audiocdsrc;
 
   struct _test_disc *cur_test;
   guint cur_disc;
@@ -179,17 +179,15 @@ struct _GstCdFooSrc
 
 struct _GstCdFooSrcClass
 {
-  GstCddaBaseSrcClass parent_class;
+  GstAudioCdSrcClass parent_class;
 };
 
 GType gst_cd_foo_src_get_type (void);
-G_DEFINE_TYPE (GstCdFooSrc, gst_cd_foo_src, GST_TYPE_CDDA_BASE_SRC);
+G_DEFINE_TYPE (GstCdFooSrc, gst_cd_foo_src, GST_TYPE_AUDIO_CD_SRC);
 
-static GstBuffer *gst_cd_foo_src_read_sector (GstCddaBaseSrc * src,
-    gint sector);
-static gboolean gst_cd_foo_src_open (GstCddaBaseSrc * src,
-    const gchar * device);
-static void gst_cd_foo_src_close (GstCddaBaseSrc * src);
+static GstBuffer *gst_cd_foo_src_read_sector (GstAudioCdSrc * src, gint sector);
+static gboolean gst_cd_foo_src_open (GstAudioCdSrc * src, const gchar * device);
+static void gst_cd_foo_src_close (GstAudioCdSrc * src);
 
 static void
 gst_cd_foo_src_init (GstCdFooSrc * src)
@@ -200,26 +198,26 @@ gst_cd_foo_src_init (GstCdFooSrc * src)
 static void
 gst_cd_foo_src_class_init (GstCdFooSrcClass * klass)
 {
-  GstCddaBaseSrcClass *cddabasesrc_class = GST_CDDA_BASE_SRC_CLASS (klass);
+  GstAudioCdSrcClass *audiocdsrc_class = GST_AUDIO_CD_SRC_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_set_details_simple (element_class,
       "CD Audio (cdda) Source, FooBar", "Source/File",
       "Read audio from CD", "Foo Bar <foo@bar.com>");
 
-  cddabasesrc_class->open = gst_cd_foo_src_open;
-  cddabasesrc_class->close = gst_cd_foo_src_close;
-  cddabasesrc_class->read_sector = gst_cd_foo_src_read_sector;
+  audiocdsrc_class->open = gst_cd_foo_src_open;
+  audiocdsrc_class->close = gst_cd_foo_src_close;
+  audiocdsrc_class->read_sector = gst_cd_foo_src_read_sector;
 }
 
 static gboolean
-gst_cd_foo_src_open (GstCddaBaseSrc * cddabasesrc, const gchar * device)
+gst_cd_foo_src_open (GstAudioCdSrc * audiocdsrc, const gchar * device)
 {
-  GstCddaBaseSrcTrack *tracks;
+  GstAudioCdSrcTrack *tracks;
   GstCdFooSrc *src;
   gint i;
 
-  src = GST_CD_FOO_SRC (cddabasesrc);
+  src = GST_CD_FOO_SRC (audiocdsrc);
 
   /* if this fails, the test is wrong */
   g_assert (src->cur_disc < NUM_TEST_DISCS);
@@ -229,29 +227,29 @@ gst_cd_foo_src_open (GstCddaBaseSrc * cddabasesrc, const gchar * device)
   /* add tracks */
   tracks = src->cur_test->tracks;
   for (i = 0; i < src->cur_test->num_tracks; ++i) {
-    gst_cdda_base_src_add_track (GST_CDDA_BASE_SRC (src), &tracks[i]);
+    gst_audio_cd_src_add_track (GST_AUDIO_CD_SRC (src), &tracks[i]);
   }
 
   return TRUE;
 }
 
 static void
-gst_cd_foo_src_close (GstCddaBaseSrc * cddabasesrc)
+gst_cd_foo_src_close (GstAudioCdSrc * audiocdsrc)
 {
-  GstCdFooSrc *src = GST_CD_FOO_SRC (cddabasesrc);
+  GstCdFooSrc *src = GST_CD_FOO_SRC (audiocdsrc);
 
   if (src->cur_test->cddb_discid != 0) {
-    g_assert (cddabasesrc->discid == src->cur_test->cddb_discid);
+    g_assert (audiocdsrc->discid == src->cur_test->cddb_discid);
   }
 
   if (src->cur_test->musicbrainz_discid != NULL) {
-    g_assert (g_str_equal (cddabasesrc->mb_discid,
+    g_assert (g_str_equal (audiocdsrc->mb_discid,
             src->cur_test->musicbrainz_discid));
   }
 }
 
 static GstBuffer *
-gst_cd_foo_src_read_sector (GstCddaBaseSrc * cddabasesrc, gint sector)
+gst_cd_foo_src_read_sector (GstAudioCdSrc * audiocdsrc, gint sector)
 {
   GstBuffer *buf;
   guint8 *data;
@@ -495,9 +493,9 @@ GST_START_TEST (test_properties)
 GST_END_TEST;
 
 static Suite *
-cddabasesrc_suite (void)
+audiocdsrc_suite (void)
 {
-  Suite *s = suite_create ("cddabasesrc");
+  Suite *s = suite_create ("audiocdsrc");
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
@@ -509,4 +507,4 @@ cddabasesrc_suite (void)
   return s;
 }
 
-GST_CHECK_MAIN (cddabasesrc)
+GST_CHECK_MAIN (audiocdsrc)
