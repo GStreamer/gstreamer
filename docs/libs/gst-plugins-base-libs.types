@@ -1,6 +1,8 @@
 #include <gst/gst.h>
 
 
+#include <gst/audio/gstaudiocdsrc.h>
+gst_audio_cd_src_get_type
 #include <gst/audio/gstaudioclock.h>
 gst_audio_clock_get_type
 #include <gst/audio/gstaudiodecoder.h>
@@ -19,11 +21,6 @@ gst_audio_base_sink_get_type
 gst_audio_base_src_get_type
 #include <gst/audio/gstaudioringbuffer.h>
 gst_audio_ring_buffer_get_type
-
-
-#include <gst/cdda/gstcddabasesrc.h>
-gst_cdda_base_src_get_type
-
 
 #include <gst/interfaces/colorbalance.h>
 gst_color_balance_get_type

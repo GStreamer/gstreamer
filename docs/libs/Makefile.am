@@ -59,7 +59,6 @@ GTKDOC_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) -DGST_USE_UNSTABLE
 GTKDOC_LIBS = \
 	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_MAJORMINOR@.la \
 	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_MAJORMINOR@.la \
-	$(top_builddir)/gst-libs/gst/cdda/libgstcdda-@GST_MAJORMINOR@.la \
 	$(top_builddir)/gst-libs/gst/fft/libgstfft-@GST_MAJORMINOR@.la \
 	$(top_builddir)/gst-libs/gst/rtp/libgstrtp-@GST_MAJORMINOR@.la \
 	$(top_builddir)/gst-libs/gst/rtsp/libgstrtsp-@GST_MAJORMINOR@.la \

@@ -1,5 +1,4 @@
-/* GStreamer
- * Copyright (C) 1999 Erik Walthinsen <omega@cse.ogi.edu>
+/* GStreamer Audio CD Source Base Class
  * Copyright (C) 2005 Tim-Philipp Müller <tim centricular net>
  *
  * This library is free software; you can redistribute it and/or
@@ -36,17 +35,18 @@
  */
 
 /**
- * SECTION:gstcddabasesrc
- * @short_description: Base class for CD digital audio (CDDA) sources
+ * SECTION:gstaudiocdsrc
+ * @short_description: Base class for Audio CD sources
  *
  * <refsect2>
  * <para>
- * Provides a base class for CDDA sources, which handles things like seeking,
- * querying, discid calculation, tags, and buffer timestamping.
+ * Provides a base class for CD digital audio (CDDA) sources, which handles
+ * things like seeking, querying, discid calculation, tags, and buffer
+ * timestamping.
  * </para>
- * <title>Using GstCddaBaseSrc-based elements in applications</title>
+ * <title>Using GstAudioCdSrc-based elements in applications</title>
  * <para>
- * GstCddaBaseSrc registers two #GstFormat<!-- -->s of its own, namely
+ * GstAudioCdSrc registers two #GstFormat<!-- -->s of its own, namely
  * the "track" format and the "sector" format. Applications will usually
  * only find the "track" format interesting. You can retrieve that #GstFormat
  * for use in seek events or queries with gst_format_get_by_nick("track").
@@ -88,12 +88,13 @@
 #include <string.h>
 #include <stdlib.h>             /* for strtol */
 
+#include <gst/tag/tag.h>
 #include <gst/audio/audio.h>
-#include "gstcddabasesrc.h"
+#include "gstaudiocdsrc.h"
 #include "gst/gst-i18n-plugin.h"
 
-GST_DEBUG_CATEGORY_STATIC (gst_cdda_base_src_debug);
-#define GST_CAT_DEFAULT gst_cdda_base_src_debug
+GST_DEBUG_CATEGORY_STATIC (gst_audio_cd_src_debug);
+#define GST_CAT_DEFAULT gst_audio_cd_src_debug
 
 #define DEFAULT_DEVICE                       "/dev/cdrom"
 
@@ -115,31 +116,31 @@ enum
   ARG_TOC_BIAS
 };
 
-static void gst_cdda_base_src_uri_handler_init (gpointer g_iface,
+static void gst_audio_cd_src_uri_handler_init (gpointer g_iface,
     gpointer iface_data);
-static void gst_cdda_base_src_get_property (GObject * object, guint prop_id,
+static void gst_audio_cd_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-static void gst_cdda_base_src_set_property (GObject * object, guint prop_id,
+static void gst_audio_cd_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static void gst_cdda_base_src_finalize (GObject * obj);
-static gboolean gst_cdda_base_src_query (GstBaseSrc * src, GstQuery * query);
-static gboolean gst_cdda_base_src_handle_event (GstBaseSrc * basesrc,
+static void gst_audio_cd_src_finalize (GObject * obj);
+static gboolean gst_audio_cd_src_query (GstBaseSrc * src, GstQuery * query);
+static gboolean gst_audio_cd_src_handle_event (GstBaseSrc * basesrc,
     GstEvent * event);
-static gboolean gst_cdda_base_src_do_seek (GstBaseSrc * basesrc,
+static gboolean gst_audio_cd_src_do_seek (GstBaseSrc * basesrc,
     GstSegment * segment);
-static gboolean gst_cdda_base_src_start (GstBaseSrc * basesrc);
-static gboolean gst_cdda_base_src_stop (GstBaseSrc * basesrc);
-static GstFlowReturn gst_cdda_base_src_create (GstPushSrc * pushsrc,
+static gboolean gst_audio_cd_src_start (GstBaseSrc * basesrc);
+static gboolean gst_audio_cd_src_stop (GstBaseSrc * basesrc);
+static GstFlowReturn gst_audio_cd_src_create (GstPushSrc * pushsrc,
     GstBuffer ** buf);
-static gboolean gst_cdda_base_src_is_seekable (GstBaseSrc * basesrc);
-static void gst_cdda_base_src_update_duration (GstCddaBaseSrc * src);
-static void gst_cdda_base_src_set_index (GstElement * src, GstIndex * index);
-static GstIndex *gst_cdda_base_src_get_index (GstElement * src);
+static gboolean gst_audio_cd_src_is_seekable (GstBaseSrc * basesrc);
+static void gst_audio_cd_src_update_duration (GstAudioCdSrc * src);
+static void gst_audio_cd_src_set_index (GstElement * src, GstIndex * index);
+static GstIndex *gst_audio_cd_src_get_index (GstElement * src);
 
-#define gst_cdda_base_src_parent_class parent_class
-G_DEFINE_TYPE_WITH_CODE (GstCddaBaseSrc, gst_cdda_base_src, GST_TYPE_PUSH_SRC,
+#define gst_audio_cd_src_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstAudioCdSrc, gst_audio_cd_src, GST_TYPE_PUSH_SRC,
     G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER,
-        gst_cdda_base_src_uri_handler_init));
+        gst_audio_cd_src_uri_handler_init));
 
 #define SRC_CAPS \
   "audio/x-raw, "               \
@@ -147,7 +148,7 @@ G_DEFINE_TYPE_WITH_CODE (GstCddaBaseSrc, gst_cdda_base_src, GST_TYPE_PUSH_SRC,
   "rate = (int) 44100, "            \
   "channels = (int) 2"              \
 
-static GstStaticPadTemplate gst_cdda_base_src_src_template =
+static GstStaticPadTemplate gst_audio_cd_src_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -159,25 +160,25 @@ static GstFormat track_format;
 static GstFormat sector_format;
 
 GType
-gst_cdda_base_src_mode_get_type (void)
+gst_audio_cd_src_mode_get_type (void)
 {
   static GType mode_type;       /* 0 */
   static const GEnumValue modes[] = {
-    {GST_CDDA_BASE_SRC_MODE_NORMAL, "Stream consists of a single track",
+    {GST_AUDIO_CD_SRC_MODE_NORMAL, "Stream consists of a single track",
         "normal"},
-    {GST_CDDA_BASE_SRC_MODE_CONTINUOUS, "Stream consists of the whole disc",
+    {GST_AUDIO_CD_SRC_MODE_CONTINUOUS, "Stream consists of the whole disc",
         "continuous"},
     {0, NULL, NULL}
   };
 
   if (mode_type == 0)
-    mode_type = g_enum_register_static ("GstCddaBaseSrcMode", modes);
+    mode_type = g_enum_register_static ("GstAudioCdSrcMode", modes);
 
   return mode_type;
 }
 
 static void
-gst_cdda_base_src_class_init (GstCddaBaseSrcClass * klass)
+gst_audio_cd_src_class_init (GstAudioCdSrcClass * klass)
 {
   GstElementClass *element_class;
   GstPushSrcClass *pushsrc_class;
@@ -189,8 +190,8 @@ gst_cdda_base_src_class_init (GstCddaBaseSrcClass * klass)
   basesrc_class = (GstBaseSrcClass *) klass;
   pushsrc_class = (GstPushSrcClass *) klass;
 
-  GST_DEBUG_CATEGORY_INIT (gst_cdda_base_src_debug, "cddabasesrc", 0,
-      "CDDA Base Source");
+  GST_DEBUG_CATEGORY_INIT (gst_audio_cd_src_debug, "audiocdsrc", 0,
+      "Audio CD source base class");
 
   /* our very own formats */
   track_format = gst_format_register ("track", "CD track");
@@ -204,16 +205,16 @@ gst_cdda_base_src_class_init (GstCddaBaseSrcClass * klass)
   gst_tag_register (GST_TAG_CDDA_TRACK_TAGS, GST_TAG_FLAG_META, GST_TYPE_TAG_LIST, "track-tags", "CDDA taglist for one track", gst_tag_merge_use_first);        ///////////// FIXME: right function??? ///////
 #endif
 
-  gobject_class->set_property = gst_cdda_base_src_set_property;
-  gobject_class->get_property = gst_cdda_base_src_get_property;
-  gobject_class->finalize = gst_cdda_base_src_finalize;
+  gobject_class->set_property = gst_audio_cd_src_set_property;
+  gobject_class->get_property = gst_audio_cd_src_get_property;
+  gobject_class->finalize = gst_audio_cd_src_finalize;
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DEVICE,
       g_param_spec_string ("device", "Device", "CD device location",
           NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MODE,
-      g_param_spec_enum ("mode", "Mode", "Mode", GST_TYPE_CDDA_BASE_SRC_MODE,
-          GST_CDDA_BASE_SRC_MODE_NORMAL,
+      g_param_spec_enum ("mode", "Mode", "Mode", GST_TYPE_AUDIO_CD_SRC_MODE,
+          GST_AUDIO_CD_SRC_MODE_NORMAL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TRACK,
@@ -239,38 +240,37 @@ gst_cdda_base_src_class_init (GstCddaBaseSrcClass * klass)
 #endif
 
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_cdda_base_src_src_template));
+      gst_static_pad_template_get (&gst_audio_cd_src_src_template));
 
-  element_class->set_index = GST_DEBUG_FUNCPTR (gst_cdda_base_src_set_index);
-  element_class->get_index = GST_DEBUG_FUNCPTR (gst_cdda_base_src_get_index);
+  element_class->set_index = GST_DEBUG_FUNCPTR (gst_audio_cd_src_set_index);
+  element_class->get_index = GST_DEBUG_FUNCPTR (gst_audio_cd_src_get_index);
 
-  basesrc_class->start = GST_DEBUG_FUNCPTR (gst_cdda_base_src_start);
-  basesrc_class->stop = GST_DEBUG_FUNCPTR (gst_cdda_base_src_stop);
-  basesrc_class->query = GST_DEBUG_FUNCPTR (gst_cdda_base_src_query);
-  basesrc_class->event = GST_DEBUG_FUNCPTR (gst_cdda_base_src_handle_event);
-  basesrc_class->do_seek = GST_DEBUG_FUNCPTR (gst_cdda_base_src_do_seek);
-  basesrc_class->is_seekable =
-      GST_DEBUG_FUNCPTR (gst_cdda_base_src_is_seekable);
+  basesrc_class->start = GST_DEBUG_FUNCPTR (gst_audio_cd_src_start);
+  basesrc_class->stop = GST_DEBUG_FUNCPTR (gst_audio_cd_src_stop);
+  basesrc_class->query = GST_DEBUG_FUNCPTR (gst_audio_cd_src_query);
+  basesrc_class->event = GST_DEBUG_FUNCPTR (gst_audio_cd_src_handle_event);
+  basesrc_class->do_seek = GST_DEBUG_FUNCPTR (gst_audio_cd_src_do_seek);
+  basesrc_class->is_seekable = GST_DEBUG_FUNCPTR (gst_audio_cd_src_is_seekable);
 
-  pushsrc_class->create = GST_DEBUG_FUNCPTR (gst_cdda_base_src_create);
+  pushsrc_class->create = GST_DEBUG_FUNCPTR (gst_audio_cd_src_create);
 }
 
 static void
-gst_cdda_base_src_init (GstCddaBaseSrc * src)
+gst_audio_cd_src_init (GstAudioCdSrc * src)
 {
   /* we're not live and we operate in time */
   gst_base_src_set_format (GST_BASE_SRC (src), GST_FORMAT_TIME);
   gst_base_src_set_live (GST_BASE_SRC (src), FALSE);
 
   src->device = NULL;
-  src->mode = GST_CDDA_BASE_SRC_MODE_NORMAL;
+  src->mode = GST_AUDIO_CD_SRC_MODE_NORMAL;
   src->uri_track = -1;
 }
 
 static void
-gst_cdda_base_src_finalize (GObject * obj)
+gst_audio_cd_src_finalize (GObject * obj)
 {
-  GstCddaBaseSrc *cddasrc = GST_CDDA_BASE_SRC (obj);
+  GstAudioCdSrc *cddasrc = GST_AUDIO_CD_SRC (obj);
 
   g_free (cddasrc->uri);
   g_free (cddasrc->device);
@@ -282,7 +282,7 @@ gst_cdda_base_src_finalize (GObject * obj)
 }
 
 static void
-gst_cdda_base_src_set_device (GstCddaBaseSrc * src, const gchar * device)
+gst_audio_cd_src_set_device (GstAudioCdSrc * src, const gchar * device)
 {
   if (src->device)
     g_free (src->device);
@@ -314,10 +314,10 @@ gst_cdda_base_src_set_device (GstCddaBaseSrc * src, const gchar * device)
 }
 
 static void
-gst_cdda_base_src_set_property (GObject * object, guint prop_id,
+gst_audio_cd_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstCddaBaseSrc *src = GST_CDDA_BASE_SRC (object);
+  GstAudioCdSrc *src = GST_AUDIO_CD_SRC (object);
 
   GST_OBJECT_LOCK (src);
 
@@ -329,7 +329,7 @@ gst_cdda_base_src_set_property (GObject * object, guint prop_id,
     case ARG_DEVICE:{
       const gchar *dev = g_value_get_string (value);
 
-      gst_cdda_base_src_set_device (src, dev);
+      gst_audio_cd_src_set_device (src, dev);
       break;
     }
     case ARG_TRACK:{
@@ -363,11 +363,11 @@ gst_cdda_base_src_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_cdda_base_src_get_property (GObject * object, guint prop_id,
+gst_audio_cd_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstCddaBaseSrcClass *klass = GST_CDDA_BASE_SRC_GET_CLASS (object);
-  GstCddaBaseSrc *src = GST_CDDA_BASE_SRC (object);
+  GstAudioCdSrcClass *klass = GST_AUDIO_CD_SRC_GET_CLASS (object);
+  GstAudioCdSrc *src = GST_AUDIO_CD_SRC (object);
 
   GST_OBJECT_LOCK (src);
 
@@ -415,7 +415,7 @@ gst_cdda_base_src_get_property (GObject * object, guint prop_id,
 }
 
 static gint
-gst_cdda_base_src_get_track_from_sector (GstCddaBaseSrc * src, gint sector)
+gst_audio_cd_src_get_track_from_sector (GstAudioCdSrc * src, gint sector)
 {
   gint i;
 
@@ -427,7 +427,7 @@ gst_cdda_base_src_get_track_from_sector (GstCddaBaseSrc * src, gint sector)
 }
 
 static gboolean
-gst_cdda_base_src_convert (GstCddaBaseSrc * src, GstFormat src_format,
+gst_audio_cd_src_convert (GstAudioCdSrc * src, GstFormat src_format,
     gint64 src_val, GstFormat dest_format, gint64 * dest_val)
 {
   gboolean started;
@@ -489,7 +489,7 @@ gst_cdda_base_src_convert (GstCddaBaseSrc * src, GstFormat src_format,
           } else if (dest_format == track_format) {
             if (!started)
               goto not_started;
-            *dest_val = gst_cdda_base_src_get_track_from_sector (src, sector);
+            *dest_val = gst_audio_cd_src_get_track_from_sector (src, sector);
           } else {
             goto unknown_format;
           }
@@ -524,7 +524,7 @@ gst_cdda_base_src_convert (GstCddaBaseSrc * src, GstFormat src_format,
           } else if (dest_format == track_format) {
             if (!started)
               goto not_started;
-            *dest_val = gst_cdda_base_src_get_track_from_sector (src, sector);
+            *dest_val = gst_audio_cd_src_get_track_from_sector (src, sector);
           } else {
             goto unknown_format;
           }
@@ -566,9 +566,9 @@ not_started:
 }
 
 static gboolean
-gst_cdda_base_src_query (GstBaseSrc * basesrc, GstQuery * query)
+gst_audio_cd_src_query (GstBaseSrc * basesrc, GstQuery * query)
 {
-  GstCddaBaseSrc *src = GST_CDDA_BASE_SRC (basesrc);
+  GstAudioCdSrc *src = GST_AUDIO_CD_SRC (basesrc);
   gboolean started;
 
   started = GST_OBJECT_FLAG_IS_SET (basesrc, GST_BASE_SRC_STARTED);
@@ -598,7 +598,7 @@ gst_cdda_base_src_query (GstBaseSrc * basesrc, GstQuery * query)
       if (src->cur_track < 0 || src->cur_track >= src->num_tracks)
         return FALSE;
 
-      if (src->mode == GST_CDDA_BASE_SRC_MODE_NORMAL) {
+      if (src->mode == GST_AUDIO_CD_SRC_MODE_NORMAL) {
         sectors = src->tracks[src->cur_track].end -
             src->tracks[src->cur_track].start + 1;
       } else {
@@ -607,7 +607,7 @@ gst_cdda_base_src_query (GstBaseSrc * basesrc, GstQuery * query)
       }
 
       /* ... and convert into final format */
-      if (!gst_cdda_base_src_convert (src, sector_format, sectors,
+      if (!gst_audio_cd_src_convert (src, sector_format, sectors,
               dest_format, &dest_val)) {
         return FALSE;
       }
@@ -639,13 +639,13 @@ gst_cdda_base_src_query (GstBaseSrc * basesrc, GstQuery * query)
       if (src->cur_track < 0 || src->cur_track >= src->num_tracks)
         return FALSE;
 
-      if (src->mode == GST_CDDA_BASE_SRC_MODE_NORMAL) {
+      if (src->mode == GST_AUDIO_CD_SRC_MODE_NORMAL) {
         pos_sector = src->cur_sector - src->tracks[src->cur_track].start;
       } else {
         pos_sector = src->cur_sector - src->tracks[0].start;
       }
 
-      if (!gst_cdda_base_src_convert (src, sector_format, pos_sector,
+      if (!gst_audio_cd_src_convert (src, sector_format, pos_sector,
               dest_format, &dest_val)) {
         return FALSE;
       }
@@ -663,7 +663,7 @@ gst_cdda_base_src_query (GstBaseSrc * basesrc, GstQuery * query)
       gst_query_parse_convert (query, &src_format, &src_val, &dest_format,
           NULL);
 
-      if (!gst_cdda_base_src_convert (src, src_format, src_val, dest_format,
+      if (!gst_audio_cd_src_convert (src, src_format, src_val, dest_format,
               &dest_val)) {
         return FALSE;
       }
@@ -681,21 +681,21 @@ gst_cdda_base_src_query (GstBaseSrc * basesrc, GstQuery * query)
 }
 
 static gboolean
-gst_cdda_base_src_is_seekable (GstBaseSrc * basesrc)
+gst_audio_cd_src_is_seekable (GstBaseSrc * basesrc)
 {
   return TRUE;
 }
 
 static gboolean
-gst_cdda_base_src_do_seek (GstBaseSrc * basesrc, GstSegment * segment)
+gst_audio_cd_src_do_seek (GstBaseSrc * basesrc, GstSegment * segment)
 {
-  GstCddaBaseSrc *src = GST_CDDA_BASE_SRC (basesrc);
+  GstAudioCdSrc *src = GST_AUDIO_CD_SRC (basesrc);
   gint64 seek_sector;
 
   GST_DEBUG_OBJECT (src, "segment %" GST_TIME_FORMAT "-%" GST_TIME_FORMAT,
       GST_TIME_ARGS (segment->start), GST_TIME_ARGS (segment->stop));
 
-  if (!gst_cdda_base_src_convert (src, GST_FORMAT_TIME, segment->start,
+  if (!gst_audio_cd_src_convert (src, GST_FORMAT_TIME, segment->start,
           sector_format, &seek_sector)) {
     GST_WARNING_OBJECT (src, "conversion failed");
     return FALSE;
@@ -705,10 +705,10 @@ gst_cdda_base_src_do_seek (GstBaseSrc * basesrc, GstSegment * segment)
   g_assert (src->cur_track >= 0 && src->cur_track < src->num_tracks);
 
   switch (src->mode) {
-    case GST_CDDA_BASE_SRC_MODE_NORMAL:
+    case GST_AUDIO_CD_SRC_MODE_NORMAL:
       seek_sector += src->tracks[src->cur_track].start;
       break;
-    case GST_CDDA_BASE_SRC_MODE_CONTINUOUS:
+    case GST_AUDIO_CD_SRC_MODE_CONTINUOUS:
       seek_sector += src->tracks[0].start;
       break;
     default:
@@ -723,7 +723,7 @@ gst_cdda_base_src_do_seek (GstBaseSrc * basesrc, GstSegment * segment)
 }
 
 static gboolean
-gst_cdda_base_src_handle_track_seek (GstCddaBaseSrc * src, gdouble rate,
+gst_audio_cd_src_handle_track_seek (GstAudioCdSrc * src, gdouble rate,
     GstSeekFlags flags, GstSeekType start_type, gint64 start,
     GstSeekType stop_type, gint64 stop)
 {
@@ -734,7 +734,7 @@ gst_cdda_base_src_handle_track_seek (GstCddaBaseSrc * src, gdouble rate,
     gint64 start_time = -1;
     gint64 stop_time = -1;
 
-    if (src->mode != GST_CDDA_BASE_SRC_MODE_CONTINUOUS) {
+    if (src->mode != GST_AUDIO_CD_SRC_MODE_CONTINUOUS) {
       GST_DEBUG_OBJECT (src, "segment seek in track format is only "
           "supported in CONTINUOUS mode, not in mode %d", src->mode);
       return FALSE;
@@ -742,7 +742,7 @@ gst_cdda_base_src_handle_track_seek (GstCddaBaseSrc * src, gdouble rate,
 
     switch (start_type) {
       case GST_SEEK_TYPE_SET:
-        if (!gst_cdda_base_src_convert (src, track_format, start,
+        if (!gst_audio_cd_src_convert (src, track_format, start,
                 GST_FORMAT_TIME, &start_time)) {
           GST_DEBUG_OBJECT (src, "cannot convert track %d to time",
               (gint) start);
@@ -750,7 +750,7 @@ gst_cdda_base_src_handle_track_seek (GstCddaBaseSrc * src, gdouble rate,
         }
         break;
       case GST_SEEK_TYPE_END:
-        if (!gst_cdda_base_src_convert (src, track_format,
+        if (!gst_audio_cd_src_convert (src, track_format,
                 src->num_tracks - start - 1, GST_FORMAT_TIME, &start_time)) {
           GST_DEBUG_OBJECT (src, "cannot convert track %d to time",
               (gint) start);
@@ -767,7 +767,7 @@ gst_cdda_base_src_handle_track_seek (GstCddaBaseSrc * src, gdouble rate,
 
     switch (stop_type) {
       case GST_SEEK_TYPE_SET:
-        if (!gst_cdda_base_src_convert (src, track_format, stop,
+        if (!gst_audio_cd_src_convert (src, track_format, stop,
                 GST_FORMAT_TIME, &stop_time)) {
           GST_DEBUG_OBJECT (src, "cannot convert track %d to time",
               (gint) stop);
@@ -775,7 +775,7 @@ gst_cdda_base_src_handle_track_seek (GstCddaBaseSrc * src, gdouble rate,
         }
         break;
       case GST_SEEK_TYPE_END:
-        if (!gst_cdda_base_src_convert (src, track_format,
+        if (!gst_audio_cd_src_convert (src, track_format,
                 src->num_tracks - stop - 1, GST_FORMAT_TIME, &stop_time)) {
           GST_DEBUG_OBJECT (src, "cannot convert track %d to time",
               (gint) stop);
@@ -828,7 +828,7 @@ gst_cdda_base_src_handle_track_seek (GstCddaBaseSrc * src, gdouble rate,
     src->uri_track = -1;
     src->prev_track = -1;
 
-    gst_cdda_base_src_update_duration (src);
+    gst_audio_cd_src_update_duration (src);
   } else {
     GST_DEBUG_OBJECT (src, "is current track, just seeking back to start");
   }
@@ -842,9 +842,9 @@ gst_cdda_base_src_handle_track_seek (GstCddaBaseSrc * src, gdouble rate,
 }
 
 static gboolean
-gst_cdda_base_src_handle_event (GstBaseSrc * basesrc, GstEvent * event)
+gst_audio_cd_src_handle_event (GstBaseSrc * basesrc, GstEvent * event)
 {
-  GstCddaBaseSrc *src = GST_CDDA_BASE_SRC (basesrc);
+  GstAudioCdSrc *src = GST_AUDIO_CD_SRC (basesrc);
   gboolean ret = FALSE;
 
   GST_LOG_OBJECT (src, "handling %s event", GST_EVENT_TYPE_NAME (event));
@@ -871,7 +871,7 @@ gst_cdda_base_src_handle_event (GstBaseSrc * basesrc, GstEvent * event)
       }
 
       if (format == track_format) {
-        ret = gst_cdda_base_src_handle_track_seek (src, rate, flags,
+        ret = gst_audio_cd_src_handle_track_seek (src, rate, flags,
             start_type, start, stop_type, stop);
       } else {
         GST_LOG_OBJECT (src, "let base class handle seek in %s format",
@@ -892,13 +892,13 @@ gst_cdda_base_src_handle_event (GstBaseSrc * basesrc, GstEvent * event)
 }
 
 static GstURIType
-gst_cdda_base_src_uri_get_type (GType type)
+gst_audio_cd_src_uri_get_type (GType type)
 {
   return GST_URI_SRC;
 }
 
 static gchar **
-gst_cdda_base_src_uri_get_protocols (GType type)
+gst_audio_cd_src_uri_get_protocols (GType type)
 {
   static gchar *protocols[] = { (char *) "cdda", NULL };
 
@@ -906,9 +906,9 @@ gst_cdda_base_src_uri_get_protocols (GType type)
 }
 
 static const gchar *
-gst_cdda_base_src_uri_get_uri (GstURIHandler * handler)
+gst_audio_cd_src_uri_get_uri (GstURIHandler * handler)
 {
-  GstCddaBaseSrc *src = GST_CDDA_BASE_SRC (handler);
+  GstAudioCdSrc *src = GST_AUDIO_CD_SRC (handler);
 
   GST_OBJECT_LOCK (src);
 
@@ -933,9 +933,9 @@ gst_cdda_base_src_uri_get_uri (GstURIHandler * handler)
 /* We accept URIs of the format cdda://(device#track)|(track) */
 
 static gboolean
-gst_cdda_base_src_uri_set_uri (GstURIHandler * handler, const gchar * uri)
+gst_audio_cd_src_uri_set_uri (GstURIHandler * handler, const gchar * uri)
 {
-  GstCddaBaseSrc *src = GST_CDDA_BASE_SRC (handler);
+  GstAudioCdSrc *src = GST_AUDIO_CD_SRC (handler);
   gchar *protocol;
   const gchar *location;
   gchar *track_number;
@@ -961,7 +961,7 @@ gst_cdda_base_src_uri_set_uri (GstURIHandler * handler, const gchar * uri)
     track_number = nuri + (track_number - uri);
     *track_number = '\0';
     device = gst_uri_get_location (nuri);
-    gst_cdda_base_src_set_device (src, device);
+    gst_audio_cd_src_set_device (src, device);
     g_free (device);
     src->uri_track = strtol (track_number + 1, NULL, 10);
     g_free (nuri);
@@ -1003,20 +1003,20 @@ failed:
 }
 
 static void
-gst_cdda_base_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
+gst_audio_cd_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
 {
   GstURIHandlerInterface *iface = (GstURIHandlerInterface *) g_iface;
 
-  iface->get_type = gst_cdda_base_src_uri_get_type;
-  iface->get_uri = gst_cdda_base_src_uri_get_uri;
-  iface->set_uri = gst_cdda_base_src_uri_set_uri;
-  iface->get_protocols = gst_cdda_base_src_uri_get_protocols;
+  iface->get_type = gst_audio_cd_src_uri_get_type;
+  iface->get_uri = gst_audio_cd_src_uri_get_uri;
+  iface->set_uri = gst_audio_cd_src_uri_set_uri;
+  iface->get_protocols = gst_audio_cd_src_uri_get_protocols;
 }
 
 /**
- * gst_cdda_base_src_add_track:
- * @src: a #GstCddaBaseSrc
- * @track: address of #GstCddaBaseSrcTrack to add
+ * gst_audio_cd_src_add_track:
+ * @src: a #GstAudioCdSrc
+ * @track: address of #GstAudioCdSrcTrack to add
  * 
  * CDDA sources use this function from their start vfunc to announce the
  * available data and audio tracks to the base source class. The caller
@@ -1027,9 +1027,9 @@ gst_cdda_base_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
  */
 
 gboolean
-gst_cdda_base_src_add_track (GstCddaBaseSrc * src, GstCddaBaseSrcTrack * track)
+gst_audio_cd_src_add_track (GstAudioCdSrc * src, GstAudioCdSrcTrack * track)
 {
-  g_return_val_if_fail (GST_IS_CDDA_BASE_SRC (src), FALSE);
+  g_return_val_if_fail (GST_IS_AUDIO_CD_SRC (src), FALSE);
   g_return_val_if_fail (track != NULL, FALSE);
   g_return_val_if_fail (track->num > 0, FALSE);
 
@@ -1049,7 +1049,7 @@ gst_cdda_base_src_add_track (GstCddaBaseSrc * src, GstCddaBaseSrcTrack * track)
   GST_OBJECT_LOCK (src);
 
   ++src->num_tracks;
-  src->tracks = g_renew (GstCddaBaseSrcTrack, src->tracks, src->num_tracks);
+  src->tracks = g_renew (GstAudioCdSrcTrack, src->tracks, src->num_tracks);
   src->tracks[src->num_tracks - 1] = *track;
 
   GST_OBJECT_UNLOCK (src);
@@ -1058,7 +1058,7 @@ gst_cdda_base_src_add_track (GstCddaBaseSrc * src, GstCddaBaseSrcTrack * track)
 }
 
 static void
-gst_cdda_base_src_update_duration (GstCddaBaseSrc * src)
+gst_audio_cd_src_update_duration (GstAudioCdSrc * src)
 {
   GstBaseSrc *basesrc;
   gint64 dur;
@@ -1094,7 +1094,7 @@ cddb_sum (gint n)
 }
 
 static void
-gst_cddabasesrc_calculate_musicbrainz_discid (GstCddaBaseSrc * src)
+gst_audio_cd_src_calculate_musicbrainz_discid (GstAudioCdSrc * src)
 {
   GString *s;
   GChecksum *sha;
@@ -1190,7 +1190,7 @@ lba_to_msf (guint sector, guint * p_m, guint * p_s, guint * p_f, guint * p_secs)
 }
 
 static void
-gst_cdda_base_src_calculate_cddb_id (GstCddaBaseSrc * src)
+gst_audio_cd_src_calculate_cddb_id (GstAudioCdSrc * src)
 {
   GString *s;
   guint first_sector = 0, last_sector = 0;
@@ -1267,7 +1267,7 @@ gst_cdda_base_src_calculate_cddb_id (GstCddaBaseSrc * src)
 }
 
 static void
-gst_cdda_base_src_add_tags (GstCddaBaseSrc * src)
+gst_audio_cd_src_add_tags (GstAudioCdSrc * src)
 {
   gint i;
 
@@ -1280,7 +1280,7 @@ gst_cdda_base_src_add_tags (GstCddaBaseSrc * src)
       src->tracks[i].tags = gst_tag_list_new_empty ();
 
     num_sectors = src->tracks[i].end - src->tracks[i].start + 1;
-    gst_cdda_base_src_convert (src, sector_format, num_sectors,
+    gst_audio_cd_src_convert (src, sector_format, num_sectors,
         GST_FORMAT_TIME, &duration);
 
     gst_tag_list_add (src->tracks[i].tags,
@@ -1311,7 +1311,7 @@ gst_cdda_base_src_add_tags (GstCddaBaseSrc * src)
 }
 
 static void
-gst_cdda_base_src_add_index_associations (GstCddaBaseSrc * src)
+gst_audio_cd_src_add_index_associations (GstAudioCdSrc * src)
 {
   gint i;
 
@@ -1329,9 +1329,9 @@ gst_cdda_base_src_add_index_associations (GstCddaBaseSrc * src)
 }
 
 static void
-gst_cdda_base_src_set_index (GstElement * element, GstIndex * index)
+gst_audio_cd_src_set_index (GstElement * element, GstIndex * index)
 {
-  GstCddaBaseSrc *src = GST_CDDA_BASE_SRC (element);
+  GstAudioCdSrc *src = GST_AUDIO_CD_SRC (element);
   GstIndex *old;
 
   GST_OBJECT_LOCK (element);
@@ -1356,9 +1356,9 @@ gst_cdda_base_src_set_index (GstElement * element, GstIndex * index)
 
 
 static GstIndex *
-gst_cdda_base_src_get_index (GstElement * element)
+gst_audio_cd_src_get_index (GstElement * element)
 {
-  GstCddaBaseSrc *src = GST_CDDA_BASE_SRC (element);
+  GstAudioCdSrc *src = GST_AUDIO_CD_SRC (element);
   GstIndex *index;
 
   GST_OBJECT_LOCK (element);
@@ -1370,11 +1370,11 @@ gst_cdda_base_src_get_index (GstElement * element)
 }
 
 static gint
-gst_cdda_base_src_track_sort_func (gconstpointer a, gconstpointer b,
+gst_audio_cd_src_track_sort_func (gconstpointer a, gconstpointer b,
     gpointer foo)
 {
-  GstCddaBaseSrcTrack *track_a = ((GstCddaBaseSrcTrack *) a);
-  GstCddaBaseSrcTrack *track_b = ((GstCddaBaseSrcTrack *) b);
+  GstAudioCdSrcTrack *track_a = ((GstAudioCdSrcTrack *) a);
+  GstAudioCdSrcTrack *track_b = ((GstAudioCdSrcTrack *) b);
 
   /* sort data tracks to the end, and audio tracks by track number */
   if (track_a->is_audio == track_b->is_audio)
@@ -1388,10 +1388,10 @@ gst_cdda_base_src_track_sort_func (gconstpointer a, gconstpointer b,
 }
 
 static gboolean
-gst_cdda_base_src_start (GstBaseSrc * basesrc)
+gst_audio_cd_src_start (GstBaseSrc * basesrc)
 {
-  GstCddaBaseSrcClass *klass = GST_CDDA_BASE_SRC_GET_CLASS (basesrc);
-  GstCddaBaseSrc *src = GST_CDDA_BASE_SRC (basesrc);
+  GstAudioCdSrcClass *klass = GST_AUDIO_CD_SRC_GET_CLASS (basesrc);
+  GstAudioCdSrc *src = GST_AUDIO_CD_SRC (basesrc);
   gboolean ret;
   gchar *device = NULL;
 
@@ -1420,7 +1420,7 @@ gst_cdda_base_src_start (GstBaseSrc * basesrc)
   if (!ret) {
     GST_DEBUG_OBJECT (basesrc, "failed to open device");
     /* subclass (should have) posted an error message with the details */
-    gst_cdda_base_src_stop (basesrc);
+    gst_audio_cd_src_stop (basesrc);
     return FALSE;
   }
 
@@ -1428,13 +1428,13 @@ gst_cdda_base_src_start (GstBaseSrc * basesrc)
     GST_DEBUG_OBJECT (src, "no tracks");
     GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
         (_("This CD has no audio tracks")), (NULL));
-    gst_cdda_base_src_stop (basesrc);
+    gst_audio_cd_src_stop (basesrc);
     return FALSE;
   }
 
   /* need to calculate disc IDs before we ditch the data tracks */
-  gst_cdda_base_src_calculate_cddb_id (src);
-  gst_cddabasesrc_calculate_musicbrainz_discid (src);
+  gst_audio_cd_src_calculate_cddb_id (src);
+  gst_audio_cd_src_calculate_musicbrainz_discid (src);
 
 #if 0
   /* adjust sector offsets if necessary */
@@ -1452,7 +1452,7 @@ gst_cdda_base_src_start (GstBaseSrc * basesrc)
   src->num_all_tracks = src->num_tracks;
 
   g_qsort_with_data (src->tracks, src->num_tracks,
-      sizeof (GstCddaBaseSrcTrack), gst_cdda_base_src_track_sort_func, NULL);
+      sizeof (GstAudioCdSrcTrack), gst_audio_cd_src_track_sort_func, NULL);
 
   while (src->num_tracks > 0 && !src->tracks[src->num_tracks - 1].is_audio)
     --src->num_tracks;
@@ -1461,14 +1461,14 @@ gst_cdda_base_src_start (GstBaseSrc * basesrc)
     GST_DEBUG_OBJECT (src, "no audio tracks");
     GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
         (_("This CD has no audio tracks")), (NULL));
-    gst_cdda_base_src_stop (basesrc);
+    gst_audio_cd_src_stop (basesrc);
     return FALSE;
   }
 
-  gst_cdda_base_src_add_tags (src);
+  gst_audio_cd_src_add_tags (src);
 
   if (src->index && GST_INDEX_IS_WRITABLE (src->index))
-    gst_cdda_base_src_add_index_associations (src);
+    gst_audio_cd_src_add_index_associations (src);
 
   src->cur_track = 0;
   src->prev_track = -1;
@@ -1477,19 +1477,19 @@ gst_cdda_base_src_start (GstBaseSrc * basesrc)
     GST_LOG_OBJECT (src, "seek to track %d", src->uri_track);
     src->cur_track = src->uri_track - 1;
     src->uri_track = -1;
-    src->mode = GST_CDDA_BASE_SRC_MODE_NORMAL;
+    src->mode = GST_AUDIO_CD_SRC_MODE_NORMAL;
   }
 
   src->cur_sector = src->tracks[src->cur_track].start;
   GST_LOG_OBJECT (src, "starting at sector %d", src->cur_sector);
 
-  gst_cdda_base_src_update_duration (src);
+  gst_audio_cd_src_update_duration (src);
 
   return TRUE;
 }
 
 static void
-gst_cdda_base_src_clear_tracks (GstCddaBaseSrc * src)
+gst_audio_cd_src_clear_tracks (GstAudioCdSrc * src)
 {
   if (src->tracks != NULL) {
     gint i;
@@ -1507,16 +1507,16 @@ gst_cdda_base_src_clear_tracks (GstCddaBaseSrc * src)
 }
 
 static gboolean
-gst_cdda_base_src_stop (GstBaseSrc * basesrc)
+gst_audio_cd_src_stop (GstBaseSrc * basesrc)
 {
-  GstCddaBaseSrcClass *klass = GST_CDDA_BASE_SRC_GET_CLASS (basesrc);
-  GstCddaBaseSrc *src = GST_CDDA_BASE_SRC (basesrc);
+  GstAudioCdSrcClass *klass = GST_AUDIO_CD_SRC_GET_CLASS (basesrc);
+  GstAudioCdSrc *src = GST_AUDIO_CD_SRC (basesrc);
 
   g_assert (klass->close != NULL);
 
   klass->close (src);
 
-  gst_cdda_base_src_clear_tracks (src);
+  gst_audio_cd_src_clear_tracks (src);
 
   if (src->tags) {
     gst_tag_list_free (src->tags);
@@ -1531,10 +1531,10 @@ gst_cdda_base_src_stop (GstBaseSrc * basesrc)
 
 
 static GstFlowReturn
-gst_cdda_base_src_create (GstPushSrc * pushsrc, GstBuffer ** buffer)
+gst_audio_cd_src_create (GstPushSrc * pushsrc, GstBuffer ** buffer)
 {
-  GstCddaBaseSrcClass *klass = GST_CDDA_BASE_SRC_GET_CLASS (pushsrc);
-  GstCddaBaseSrc *src = GST_CDDA_BASE_SRC (pushsrc);
+  GstAudioCdSrcClass *klass = GST_AUDIO_CD_SRC_GET_CLASS (pushsrc);
+  GstAudioCdSrc *src = GST_AUDIO_CD_SRC (pushsrc);
   GstBuffer *buf;
   gboolean eos;
 
@@ -1545,12 +1545,12 @@ gst_cdda_base_src_create (GstPushSrc * pushsrc, GstBuffer ** buffer)
   g_assert (klass->read_sector != NULL);
 
   switch (src->mode) {
-    case GST_CDDA_BASE_SRC_MODE_NORMAL:
+    case GST_AUDIO_CD_SRC_MODE_NORMAL:
       eos = (src->cur_sector > src->tracks[src->cur_track].end);
       break;
-    case GST_CDDA_BASE_SRC_MODE_CONTINUOUS:
+    case GST_AUDIO_CD_SRC_MODE_CONTINUOUS:
       eos = (src->cur_sector > src->tracks[src->num_tracks - 1].end);
-      src->cur_track = gst_cdda_base_src_get_track_from_sector (src,
+      src->cur_track = gst_audio_cd_src_get_track_from_sector (src,
           src->cur_sector);
       break;
     default:
@@ -1574,7 +1574,7 @@ gst_cdda_base_src_create (GstPushSrc * pushsrc, GstBuffer ** buffer)
     gst_pad_push_event (GST_BASE_SRC_PAD (src), gst_event_new_tag (tags));
     src->prev_track = src->cur_track;
 
-    gst_cdda_base_src_update_duration (src);
+    gst_audio_cd_src_update_duration (src);
 
     g_object_notify (G_OBJECT (src), "track");
   }

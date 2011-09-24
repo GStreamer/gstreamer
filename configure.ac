@@ -904,7 +904,6 @@ gst-libs/Makefile
 gst-libs/gst/Makefile
 gst-libs/gst/audio/Makefile
 gst-libs/gst/app/Makefile
-gst-libs/gst/cdda/Makefile
 gst-libs/gst/fft/Makefile
 gst-libs/gst/interfaces/Makefile
 gst-libs/gst/riff/Makefile
@@ -921,8 +920,6 @@ pkgconfig/gstreamer-audio.pc
 pkgconfig/gstreamer-audio-uninstalled.pc
 pkgconfig/gstreamer-app.pc
 pkgconfig/gstreamer-app-uninstalled.pc
-pkgconfig/gstreamer-cdda.pc
-pkgconfig/gstreamer-cdda-uninstalled.pc
 pkgconfig/gstreamer-fft.pc
 pkgconfig/gstreamer-fft-uninstalled.pc
 pkgconfig/gstreamer-interfaces.pc

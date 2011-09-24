@@ -1,4 +1,0 @@
-EXPORTS
-	gst_cdda_base_src_add_track
-	gst_cdda_base_src_get_type
-	gst_cdda_base_src_mode_get_type

@@ -6,7 +6,6 @@ GST_PLUGINS_BASE_TOP := $(LOCAL_PATH)
 GST_PLUGINS_BASE_BUILT_SOURCES := 						\
 	pkgconfig/gstreamer-app-0.10.pc				\
 	pkgconfig/gstreamer-audio-0.10.pc			\
-	pkgconfig/gstreamer-cdda-0.10.pc			\
 	pkgconfig/gstreamer-fft-0.10.pc				\
 	pkgconfig/gstreamer-interfaces-0.10.pc			\
 	pkgconfig/gstreamer-pbutils-0.10.pc			\
@@ -19,7 +18,6 @@ GST_PLUGINS_BASE_BUILT_SOURCES := 						\
 	pkgconfig/gstreamer-video-0.10.pc			\
 	pkgconfig/gstreamer-app-0.10-uninstalled.pc		\
 	pkgconfig/gstreamer-audio-0.10-uninstalled.pc		\
-	pkgconfig/gstreamer-cdda-0.10-uninstalled.pc		\
 	pkgconfig/gstreamer-fft-0.10-uninstalled.pc		\
 	pkgconfig/gstreamer-interfaces-0.10-uninstalled.pc	\
 	pkgconfig/gstreamer-pbutils-0.10-uninstalled.pc		\

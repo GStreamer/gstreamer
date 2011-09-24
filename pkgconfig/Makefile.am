@@ -2,7 +2,6 @@
 pcverfiles =  \
 	gstreamer-audio-@GST_MAJORMINOR@.pc \
 	gstreamer-app-@GST_MAJORMINOR@.pc \
-	gstreamer-cdda-@GST_MAJORMINOR@.pc \
 	gstreamer-fft-@GST_MAJORMINOR@.pc \
 	gstreamer-interfaces-@GST_MAJORMINOR@.pc \
 	gstreamer-pbutils-@GST_MAJORMINOR@.pc \
@@ -16,7 +15,6 @@ pcverfiles =  \
 pcverfiles_uninstalled = \
 	gstreamer-audio-@GST_MAJORMINOR@-uninstalled.pc \
 	gstreamer-app-@GST_MAJORMINOR@-uninstalled.pc \
-	gstreamer-cdda-@GST_MAJORMINOR@-uninstalled.pc \
 	gstreamer-fft-@GST_MAJORMINOR@-uninstalled.pc \
 	gstreamer-interfaces-@GST_MAJORMINOR@-uninstalled.pc \
 	gstreamer-pbutils-@GST_MAJORMINOR@-uninstalled.pc \
@@ -47,7 +45,6 @@ CLEANFILES = $(pcverfiles) $(pcverfiles_uninstalled)
 pcinfiles = \
            gstreamer-audio.pc.in gstreamer-audio-uninstalled.pc.in \
            gstreamer-app.pc.in gstreamer-app-uninstalled.pc.in \
-           gstreamer-cdda.pc.in gstreamer-cdda-uninstalled.pc.in \
            gstreamer-fft.pc.in gstreamer-fft-uninstalled.pc.in \
            gstreamer-interfaces.pc.in gstreamer-interfaces-uninstalled.pc.in \
            gstreamer-pbutils.pc.in gstreamer-pbutils-uninstalled.pc.in \

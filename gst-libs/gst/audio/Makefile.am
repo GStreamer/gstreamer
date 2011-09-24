@@ -23,6 +23,7 @@ libgstaudio_@GST_MAJORMINOR@_la_SOURCES = \
 	gstaudioclock.c \
 	mixerutils.c \
 	multichannel.c \
+	gstaudiocdsrc.c \
 	gstaudiodecoder.c \
 	gstaudioencoder.c \
 	gstaudiobasesink.c \
@@ -39,6 +40,7 @@ libgstaudio_@GST_MAJORMINOR@include_HEADERS = \
 	gstaudioringbuffer.h \
 	gstaudioclock.h \
 	gstaudiofilter.h \
+	gstaudiocdsrc.h \
 	gstaudiodecoder.h \
 	gstaudioencoder.h \
 	gstaudiobasesink.h \
@@ -54,7 +56,8 @@ nodist_libgstaudio_@GST_MAJORMINOR@include_HEADERS = \
 
 libgstaudio_@GST_MAJORMINOR@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS)
 libgstaudio_@GST_MAJORMINOR@_la_LIBADD = $(GST_BASE_LIBS) $(GST_LIBS) \
-  $(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_MAJORMINOR@.la
+  $(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_MAJORMINOR@.la \
+  $(top_builddir)/gst-libs/gst/tag/libgsttag-@GST_MAJORMINOR@.la
 libgstaudio_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
 
 include $(top_srcdir)/common/gst-glib-gen.mak

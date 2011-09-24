@@ -150,6 +150,26 @@ GST_AUDIO_CLOCK_CAST
 </SECTION>
 
 <SECTION>
+<FILE>gstaudiocdsrc</FILE>
+<INCLUDE>gst/audio/gstaudiocdsrc.h</INCLUDE>
+GstAudioCdSrc
+GstAudioCdSrcClass
+GstAudioCdSrcTrack
+GstAudioCdSrcMode
+gst_audio_cd_src_add_track
+<SUBSECTION Standard>
+GST_TYPE_AUDIO_CD_SRC_MODE
+gst_audio_cd_src_mode_get_type
+GST_AUDIO_CD_SRC
+GST_AUDIO_CD_SRC_CLASS
+GST_AUDIO_CD_SRC_GET_CLASS
+GST_IS_AUDIO_CD_SRC
+GST_IS_AUDIO_CD_SRC_CLASS
+GST_TYPE_AUDIO_CD_SRC
+gst_audio_cd_src_get_type
+</SECTION>
+
+<SECTION>
 <FILE>gstaudiodecoder</FILE>
 <INCLUDE>gst/audio/gstaudiodecoder.h</INCLUDE>
 GstAudioDecoder
@@ -429,29 +449,6 @@ gst_audio_ring_buffer_debug_spec_caps
 <INCLUDE>gst/audio/gstaudioiec61937.h</INCLUDE>
 gst_audio_iec61937_frame_size
 gst_audio_iec61937_payload
-</SECTION>
-
-
-# cdda
-
-<SECTION>
-<FILE>gstcddabasesrc</FILE>
-<INCLUDE>gst/cdda/gstcddabasesrc.h</INCLUDE>
-GstCddaBaseSrc
-GstCddaBaseSrcClass
-GstCddaBaseSrcTrack
-GstCddaBaseSrcMode
-gst_cdda_base_src_add_track
-<SUBSECTION Standard>
-GST_TYPE_CDDA_BASE_SRC_MODE
-gst_cdda_base_src_mode_get_type
-GST_CDDA_BASE_SRC
-GST_CDDA_BASE_SRC_CLASS
-GST_CDDA_BASE_SRC_GET_CLASS
-GST_IS_CDDA_BASE_SRC
-GST_IS_CDDA_BASE_SRC_CLASS
-GST_TYPE_CDDA_BASE_SRC
-gst_cdda_base_src_get_type
 </SECTION>
 
 # fft
