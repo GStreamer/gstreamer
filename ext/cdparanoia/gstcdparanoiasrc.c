@@ -57,18 +57,18 @@ GST_DEBUG_CATEGORY_STATIC (gst_cd_paranoia_src_debug);
 #define GST_CAT_DEFAULT gst_cd_paranoia_src_debug
 
 #define gst_cd_paranoia_src_parent_class parent_class
-G_DEFINE_TYPE (GstCdParanoiaSrc, gst_cd_paranoia_src, GST_TYPE_CDDA_BASE_SRC);
+G_DEFINE_TYPE (GstCdParanoiaSrc, gst_cd_paranoia_src, GST_TYPE_AUDIO_CD_SRC);
 
 static void gst_cd_paranoia_src_finalize (GObject * obj);
 static void gst_cd_paranoia_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_cd_paranoia_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static GstBuffer *gst_cd_paranoia_src_read_sector (GstCddaBaseSrc * src,
+static GstBuffer *gst_cd_paranoia_src_read_sector (GstAudioCdSrc * src,
     gint sector);
-static gboolean gst_cd_paranoia_src_open (GstCddaBaseSrc * src,
+static gboolean gst_cd_paranoia_src_open (GstAudioCdSrc * src,
     const gchar * device);
-static void gst_cd_paranoia_src_close (GstCddaBaseSrc * src);
+static void gst_cd_paranoia_src_close (GstAudioCdSrc * src);
 
 /* We use these to serialize calls to paranoia_read() among several
  * cdparanoiasrc instances. We do this because it's the only reasonably
@@ -119,7 +119,7 @@ gst_cd_paranoia_src_init (GstCdParanoiaSrc * src)
 static void
 gst_cd_paranoia_src_class_init (GstCdParanoiaSrcClass * klass)
 {
-  GstCddaBaseSrcClass *cddabasesrc_class = GST_CDDA_BASE_SRC_CLASS (klass);
+  GstAudioCdSrcClass *audiocdsrc_class = GST_AUDIO_CD_SRC_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
@@ -132,9 +132,9 @@ gst_cd_paranoia_src_class_init (GstCdParanoiaSrcClass * klass)
       "Read audio from CD in paranoid mode",
       "Erik Walthinsen <omega@cse.ogi.edu>, Wim Taymans <wim@fluendo.com>");
 
-  cddabasesrc_class->open = gst_cd_paranoia_src_open;
-  cddabasesrc_class->close = gst_cd_paranoia_src_close;
-  cddabasesrc_class->read_sector = gst_cd_paranoia_src_read_sector;
+  audiocdsrc_class->open = gst_cd_paranoia_src_open;
+  audiocdsrc_class->close = gst_cd_paranoia_src_close;
+  audiocdsrc_class->read_sector = gst_cd_paranoia_src_read_sector;
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_GENERIC_DEVICE,
       g_param_spec_string ("generic-device", "Generic device",
@@ -197,9 +197,9 @@ gst_cd_paranoia_src_class_init (GstCdParanoiaSrcClass * klass)
 }
 
 static gboolean
-gst_cd_paranoia_src_open (GstCddaBaseSrc * cddabasesrc, const gchar * device)
+gst_cd_paranoia_src_open (GstAudioCdSrc * audiocdsrc, const gchar * device)
 {
-  GstCdParanoiaSrc *src = GST_CD_PARANOIA_SRC (cddabasesrc);
+  GstCdParanoiaSrc *src = GST_CD_PARANOIA_SRC (audiocdsrc);
   gint i, cache_size;
 
   GST_DEBUG_OBJECT (src, "trying to open device %s (generic-device=%s) ...",
@@ -232,7 +232,7 @@ gst_cd_paranoia_src_open (GstCddaBaseSrc * cddabasesrc, const gchar * device)
   }
 
   for (i = 1; i < src->d->tracks + 1; i++) {
-    GstCddaBaseSrcTrack track = { 0, };
+    GstAudioCdSrcTrack track = { 0, };
 
     track.num = i;
     track.is_audio = IS_AUDIO (src->d, i - 1);
@@ -240,7 +240,7 @@ gst_cd_paranoia_src_open (GstCddaBaseSrc * cddabasesrc, const gchar * device)
     track.end = cdda_track_lastsector (src->d, i);
     track.tags = NULL;
 
-    gst_cdda_base_src_add_track (GST_CDDA_BASE_SRC (src), &track);
+    gst_audio_cd_src_add_track (GST_AUDIO_CD_SRC (src), &track);
   }
 
   /* create the paranoia struct and set it up */
@@ -295,9 +295,9 @@ init_failed:
 }
 
 static void
-gst_cd_paranoia_src_close (GstCddaBaseSrc * cddabasesrc)
+gst_cd_paranoia_src_close (GstAudioCdSrc * audiocdsrc)
 {
-  GstCdParanoiaSrc *src = GST_CD_PARANOIA_SRC (cddabasesrc);
+  GstCdParanoiaSrc *src = GST_CD_PARANOIA_SRC (audiocdsrc);
 
   if (src->p) {
     paranoia_free (src->p);
@@ -345,9 +345,9 @@ gst_cd_paranoia_src_signal_is_being_watched (GstCdParanoiaSrc * src, gint sig)
 }
 
 static GstBuffer *
-gst_cd_paranoia_src_read_sector (GstCddaBaseSrc * cddabasesrc, gint sector)
+gst_cd_paranoia_src_read_sector (GstAudioCdSrc * audiocdsrc, gint sector)
 {
-  GstCdParanoiaSrc *src = GST_CD_PARANOIA_SRC (cddabasesrc);
+  GstCdParanoiaSrc *src = GST_CD_PARANOIA_SRC (audiocdsrc);
   GstBuffer *buf;
   gboolean do_serialize;
   gint16 *cdda_buf;
