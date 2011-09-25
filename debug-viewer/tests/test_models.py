@@ -29,7 +29,12 @@ sys.path.insert (0, os.path.join (sys.path[0], os.pardir))
 
 from unittest import TestCase, main as test_main
 
-from GstDebugViewer import Common, Data, GUI
+from GstDebugViewer import Common, Data
+from GstDebugViewer.GUI.filters import CategoryFilter, Filter
+from GstDebugViewer.GUI.models import (FilteredLogModel,
+                                       LogModelBase,
+                                       RangeFilteredLogModel,
+                                       SubRange,)
 
 class TestSubRange (TestCase):
 
@@ -37,39 +42,39 @@ class TestSubRange (TestCase):
 
         l = range (20)
 
-        sr = GUI.SubRange (l, 0, 20)
+        sr = SubRange (l, 0, 20)
         self.assertEquals (len (sr), 20)
 
-        sr = GUI.SubRange (l, 10, 20)
+        sr = SubRange (l, 10, 20)
         self.assertEquals (len (sr), 10)
 
-        sr = GUI.SubRange (l, 0, 10)
+        sr = SubRange (l, 0, 10)
         self.assertEquals (len (sr), 10)
 
-        sr = GUI.SubRange (l, 5, 15)
+        sr = SubRange (l, 5, 15)
         self.assertEquals (len (sr), 10)
 
     def test_iter (self):
 
         l = range (20)
 
-        sr = GUI.SubRange (l, 0, 20)
+        sr = SubRange (l, 0, 20)
         self.assertEquals (list (sr), l)
 
-        sr = GUI.SubRange (l, 10, 20)
+        sr = SubRange (l, 10, 20)
         self.assertEquals (list (sr), range (10, 20))
 
-        sr = GUI.SubRange (l, 0, 10)
+        sr = SubRange (l, 0, 10)
         self.assertEquals (list (sr), range (0, 10))
 
-        sr = GUI.SubRange (l, 5, 15)
+        sr = SubRange (l, 5, 15)
         self.assertEquals (list (sr), range (5, 15))
 
-class Model (GUI.LogModelBase):
+class Model (LogModelBase):
 
     def __init__ (self):
 
-        GUI.LogModelBase.__init__ (self)
+        LogModelBase.__init__ (self)
 
         for i in range (20):
             self.line_offsets.append (i * 100)
@@ -93,7 +98,7 @@ class Model (GUI.LogModelBase):
 
         return ""
 
-class IdentityFilter (GUI.Filter):
+class IdentityFilter (Filter):
 
     def __init__ (self):
 
@@ -101,7 +106,7 @@ class IdentityFilter (GUI.Filter):
             return True
         self.filter_func = filter_func
 
-class RandomFilter (GUI.Filter):
+class RandomFilter (Filter):
 
     def __init__ (self, seed):
 
@@ -117,10 +122,10 @@ class TestDynamicFilter (TestCase):
     def test_unset_filter_rerange (self):
 
         full_model = Model ()
-        ranged_model = GUI.RangeFilteredLogModel (full_model)
+        ranged_model = RangeFilteredLogModel (full_model)
         # FIXME: Call to .reset should not be needed.
         ranged_model.reset ()
-        filtered_model = GUI.FilteredLogModel (ranged_model)
+        filtered_model = FilteredLogModel (ranged_model)
         row_list = self.__row_list
 
         self.assertEquals (row_list (full_model), range (20))
@@ -149,10 +154,10 @@ class TestDynamicFilter (TestCase):
     def test_identity_filter_rerange (self):
 
         full_model = Model ()
-        ranged_model = GUI.RangeFilteredLogModel (full_model)
+        ranged_model = RangeFilteredLogModel (full_model)
         # FIXME: Call to .reset should not be needed.
         ranged_model.reset ()
-        filtered_model = GUI.FilteredLogModel (ranged_model)
+        filtered_model = FilteredLogModel (ranged_model)
         row_list = self.__row_list
 
         self.assertEquals (row_list (full_model), range (20))
@@ -183,14 +188,14 @@ class TestDynamicFilter (TestCase):
     def test_filtered_range_refilter_skip (self):
 
         full_model = Model ()
-        ranged_model = GUI.RangeFilteredLogModel (full_model)
+        ranged_model = RangeFilteredLogModel (full_model)
         # FIXME: Call to .reset should not be needed.
         ranged_model.reset ()
-        filtered_model = GUI.FilteredLogModel (ranged_model)
+        filtered_model = FilteredLogModel (ranged_model)
 
         row_list = self.__row_list
 
-        filtered_model.add_filter (GUI.CategoryFilter ("EVEN"),
+        filtered_model.add_filter (CategoryFilter ("EVEN"),
                                    Common.Data.DefaultDispatcher ())
         self.__dump_model (filtered_model, "filtered")
 
@@ -248,10 +253,10 @@ class TestDynamicFilter (TestCase):
     def test_filtered_range_refilter (self):
 
         full_model = Model ()
-        ranged_model = GUI.RangeFilteredLogModel (full_model)
+        ranged_model = RangeFilteredLogModel (full_model)
         # FIXME: Call to .reset should not be needed.
         ranged_model.reset ()
-        filtered_model = GUI.FilteredLogModel (ranged_model)
+        filtered_model = FilteredLogModel (ranged_model)
 
         row_list = self.__row_list
         rows = row_list (full_model)
@@ -329,7 +334,7 @@ class TestDynamicFilter (TestCase):
                             for i in range (11)],
                            range (5, 16))
 
-        filtered_model.add_filter (GUI.CategoryFilter ("EVEN"),
+        filtered_model.add_filter (CategoryFilter ("EVEN"),
                                    Common.Data.DefaultDispatcher ())
         rows_filtered = row_list (filtered_model)
         self.assertEquals (rows_filtered, range (5, 16, 2))
@@ -381,10 +386,10 @@ class TestDynamicFilter (TestCase):
     def test_random_filtered_range_refilter (self):
 
         full_model = Model ()
-        ranged_model = GUI.RangeFilteredLogModel (full_model)
+        ranged_model = RangeFilteredLogModel (full_model)
         # FIXME: Call to .reset should not be needed.
         ranged_model.reset ()
-        filtered_model = GUI.FilteredLogModel (ranged_model)
+        filtered_model = FilteredLogModel (ranged_model)
         row_list = self.__row_list
 
         self.assertEquals (row_list (full_model), range (20))
@@ -406,10 +411,10 @@ class TestDynamicFilter (TestCase):
         ranged_model.set_range (0, 20)
         self.assertEquals (row_list (ranged_model), range (0, 20))
 
-        ranged_model = GUI.RangeFilteredLogModel (full_model)
+        ranged_model = RangeFilteredLogModel (full_model)
         # FIXME: Call to .reset should not be needed.
         ranged_model.reset ()
-        filtered_model = GUI.FilteredLogModel (ranged_model)
+        filtered_model = FilteredLogModel (ranged_model)
         filtered_model.add_filter (RandomFilter (538295943),
                                    Common.Data.DefaultDispatcher ())
         self.__dump_model (filtered_model, "filtered model")
