@@ -1216,11 +1216,11 @@ gst_registry_scan_path_level (GstRegistryScanContext * context,
       } else {
         GST_INFO_OBJECT (context->registry, "cached info for %s is stale",
             filename);
-        GST_DEBUG_OBJECT (context->registry, "mtime %ld != %ld or size %"
-            G_GINT64_FORMAT " != %" G_GINT64_FORMAT " or external dependency "
-            "env_vars changed: %d or external dependencies changed: %d"
-            " or old path %s != new path %s",
-            plugin->file_mtime, file_status.st_mtime,
+        GST_DEBUG_OBJECT (context->registry, "mtime %" G_GINT64_FORMAT " != %"
+            G_GINT64_FORMAT " or size %" G_GINT64_FORMAT " != %"
+            G_GINT64_FORMAT " or external dependency env_vars changed: %d or"
+            " external dependencies changed: %d or old path %s != new path %s",
+            (gint64) plugin->file_mtime, (gint64) file_status.st_mtime,
             (gint64) plugin->file_size, (gint64) file_status.st_size,
             env_vars_changed, deps_changed, plugin->filename, filename);
         gst_registry_remove_plugin (context->registry, plugin);
