@@ -93,6 +93,10 @@ struct PsMux {
   guint8 audio_bound;
   guint8 video_bound;
   guint32 rate_bound;
+
+  /* stream headers */
+  GstBuffer *sys_header;
+  GstBuffer *psm;
 };
 
 /* create/free new muxer session */
@@ -108,6 +112,8 @@ PsMuxStream *	psmux_create_stream 		(PsMux *mux, PsMuxStreamType stream_type);
 /* writing stuff */
 gboolean 	psmux_write_stream_packet 	(PsMux *mux, PsMuxStream *stream); 
 gboolean	psmux_write_end_code		(PsMux *mux);
+
+GList *		psmux_get_stream_headers	(PsMux *mux);
 
 G_END_DECLS
 

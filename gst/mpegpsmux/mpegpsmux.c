@@ -709,6 +709,9 @@ new_packet_cb (guint8 * data, guint len, void *user_data)
 static gboolean
 mpegpsdemux_prepare_srcpad (MpegPsMux * mux)
 {
+  GValue val = { 0, };
+  GList *headers, *l;
+
   /* prepare the source pad for output */
 
   GstEvent *new_seg =
@@ -719,6 +722,21 @@ mpegpsdemux_prepare_srcpad (MpegPsMux * mux)
       NULL);
 
 /*      gst_static_pad_template_get_caps (&mpegpsmux_src_factory); */
+
+  headers = psmux_get_stream_headers (mux->psmux);
+  g_value_init (&val, GST_TYPE_ARRAY);
+  for (l = headers; l != NULL; l = l->next) {
+    GValue buf_val = { 0, };
+
+    g_value_init (&buf_val, GST_TYPE_BUFFER);
+    gst_value_take_buffer (&buf_val, GST_BUFFER (l->data));
+    l->data = NULL;
+    gst_value_array_append_value (&val, &buf_val);
+    g_value_unset (&buf_val);
+  }
+  gst_caps_set_value (caps, "streamheader", &val);
+  g_value_unset (&val);
+  g_list_free (headers);
 
   /* Set caps on src pad from our template and push new segment */
   gst_pad_set_caps (mux->srcpad, caps);
