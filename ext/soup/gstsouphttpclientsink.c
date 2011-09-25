@@ -17,16 +17,16 @@
  * Boston, MA 02110-1335, USA.
  */
 /**
- * SECTION:element-gstsouphttpsink
+ * SECTION:element-gstsouphttpclientsink
  *
- * The souphttpsink element sends pipeline data to an HTTP server
+ * The souphttpclientsink element sends pipeline data to an HTTP server
  * using HTTP PUT commands.
  *
  * <refsect2>
  * <title>Example launch line</title>
  * |[
  * gst-launch -v videotestsrc num-buffers=300 ! theoraenc ! oggmux !
- *   souphttpsink location=http://server/filename.ogv
+ *   souphttpclientsink location=http://server/filename.ogv
  * ]|
  * 
  * This example encodes 10 seconds of video and sends it to the HTTP
@@ -40,43 +40,44 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstbasesink.h>
-#include "gstsouphttpsink.h"
+#include "gstsouphttpclientsink.h"
 
-GST_DEBUG_CATEGORY_STATIC (gst_soup_http_sink_debug_category);
-#define GST_CAT_DEFAULT gst_soup_http_sink_debug_category
+GST_DEBUG_CATEGORY_STATIC (souphttpclientsink_dbg);
+#define GST_CAT_DEFAULT souphttpclientsink_dbg
 
 /* prototypes */
 
 
-static void gst_soup_http_sink_set_property (GObject * object,
+static void gst_soup_http_client_sink_set_property (GObject * object,
     guint property_id, const GValue * value, GParamSpec * pspec);
-static void gst_soup_http_sink_get_property (GObject * object,
+static void gst_soup_http_client_sink_get_property (GObject * object,
     guint property_id, GValue * value, GParamSpec * pspec);
-static void gst_soup_http_sink_dispose (GObject * object);
-static void gst_soup_http_sink_finalize (GObject * object);
+static void gst_soup_http_client_sink_dispose (GObject * object);
+static void gst_soup_http_client_sink_finalize (GObject * object);
 
-static gboolean gst_soup_http_sink_set_caps (GstBaseSink * sink,
+static gboolean gst_soup_http_client_sink_set_caps (GstBaseSink * sink,
     GstCaps * caps);
-static void gst_soup_http_sink_get_times (GstBaseSink * sink,
+static void gst_soup_http_client_sink_get_times (GstBaseSink * sink,
     GstBuffer * buffer, GstClockTime * start, GstClockTime * end);
-static gboolean gst_soup_http_sink_start (GstBaseSink * sink);
-static gboolean gst_soup_http_sink_stop (GstBaseSink * sink);
-static gboolean gst_soup_http_sink_unlock (GstBaseSink * sink);
-static gboolean gst_soup_http_sink_event (GstBaseSink * sink, GstEvent * event);
-static GstFlowReturn
-gst_soup_http_sink_preroll (GstBaseSink * sink, GstBuffer * buffer);
-static GstFlowReturn
-gst_soup_http_sink_render (GstBaseSink * sink, GstBuffer * buffer);
+static gboolean gst_soup_http_client_sink_start (GstBaseSink * sink);
+static gboolean gst_soup_http_client_sink_stop (GstBaseSink * sink);
+static gboolean gst_soup_http_client_sink_unlock (GstBaseSink * sink);
+static gboolean gst_soup_http_client_sink_event (GstBaseSink * sink,
+    GstEvent * event);
+static GstFlowReturn gst_soup_http_client_sink_preroll (GstBaseSink * sink,
+    GstBuffer * buffer);
+static GstFlowReturn gst_soup_http_client_sink_render (GstBaseSink * sink,
+    GstBuffer * buffer);
 
 static void free_buffer_list (GList * list);
-static void gst_soup_http_sink_reset (GstSoupHttpSink * souphttpsink);
+static void gst_soup_http_client_sink_reset (GstSoupHttpClientSink *
+    souphttpsink);
 static void authenticate (SoupSession * session, SoupMessage * msg,
     SoupAuth * auth, gboolean retrying, gpointer user_data);
-static void
-callback (SoupSession * session, SoupMessage * msg, gpointer user_data);
-static gboolean
-gst_soup_http_sink_set_proxy (GstSoupHttpSink * souphttpsink,
-    const gchar * uri);
+static void callback (SoupSession * session, SoupMessage * msg,
+    gpointer user_data);
+static gboolean gst_soup_http_client_sink_set_proxy (GstSoupHttpClientSink *
+    souphttpsink, const gchar * uri);
 
 enum
 {
@@ -93,11 +94,11 @@ enum
   PROP_SESSION
 };
 
-#define DEFAULT_USER_AGENT           "GStreamer souphttpsink "
+#define DEFAULT_USER_AGENT           "GStreamer souphttpclientsink "
 
 /* pad templates */
 
-static GstStaticPadTemplate gst_soup_http_sink_sink_template =
+static GstStaticPadTemplate gst_soup_http_client_sink_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -107,19 +108,19 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 /* class initialization */
 
 #define DEBUG_INIT(bla) \
-  GST_DEBUG_CATEGORY_INIT (gst_soup_http_sink_debug_category, "souphttpsink", 0, \
-      "debug category for souphttpsink element");
+  GST_DEBUG_CATEGORY_INIT (souphttpclientsink_dbg, "souphttpclientsink", 0, \
+      "souphttpclientsink element");
 
-GST_BOILERPLATE_FULL (GstSoupHttpSink, gst_soup_http_sink, GstBaseSink,
-    GST_TYPE_BASE_SINK, DEBUG_INIT);
+GST_BOILERPLATE_FULL (GstSoupHttpClientSink, gst_soup_http_client_sink,
+    GstBaseSink, GST_TYPE_BASE_SINK, DEBUG_INIT);
 
 static void
-gst_soup_http_sink_base_init (gpointer g_class)
+gst_soup_http_client_sink_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_soup_http_sink_sink_template));
+      gst_static_pad_template_get (&gst_soup_http_client_sink_sink_template));
 
   gst_element_class_set_details_simple (element_class, "HTTP client sink",
       "Generic", "Sends streams to HTTP server via PUT",
@@ -127,26 +128,30 @@ gst_soup_http_sink_base_init (gpointer g_class)
 }
 
 static void
-gst_soup_http_sink_class_init (GstSoupHttpSinkClass * klass)
+gst_soup_http_client_sink_class_init (GstSoupHttpClientSinkClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstBaseSinkClass *base_sink_class = GST_BASE_SINK_CLASS (klass);
 
-  gobject_class->set_property = gst_soup_http_sink_set_property;
-  gobject_class->get_property = gst_soup_http_sink_get_property;
-  gobject_class->dispose = gst_soup_http_sink_dispose;
-  gobject_class->finalize = gst_soup_http_sink_finalize;
-  base_sink_class->set_caps = GST_DEBUG_FUNCPTR (gst_soup_http_sink_set_caps);
+  gobject_class->set_property = gst_soup_http_client_sink_set_property;
+  gobject_class->get_property = gst_soup_http_client_sink_get_property;
+  gobject_class->dispose = gst_soup_http_client_sink_dispose;
+  gobject_class->finalize = gst_soup_http_client_sink_finalize;
+  base_sink_class->set_caps =
+      GST_DEBUG_FUNCPTR (gst_soup_http_client_sink_set_caps);
   if (0)
     base_sink_class->get_times =
-        GST_DEBUG_FUNCPTR (gst_soup_http_sink_get_times);
-  base_sink_class->start = GST_DEBUG_FUNCPTR (gst_soup_http_sink_start);
-  base_sink_class->stop = GST_DEBUG_FUNCPTR (gst_soup_http_sink_stop);
-  base_sink_class->unlock = GST_DEBUG_FUNCPTR (gst_soup_http_sink_unlock);
-  base_sink_class->event = GST_DEBUG_FUNCPTR (gst_soup_http_sink_event);
+        GST_DEBUG_FUNCPTR (gst_soup_http_client_sink_get_times);
+  base_sink_class->start = GST_DEBUG_FUNCPTR (gst_soup_http_client_sink_start);
+  base_sink_class->stop = GST_DEBUG_FUNCPTR (gst_soup_http_client_sink_stop);
+  base_sink_class->unlock =
+      GST_DEBUG_FUNCPTR (gst_soup_http_client_sink_unlock);
+  base_sink_class->event = GST_DEBUG_FUNCPTR (gst_soup_http_client_sink_event);
   if (0)
-    base_sink_class->preroll = GST_DEBUG_FUNCPTR (gst_soup_http_sink_preroll);
-  base_sink_class->render = GST_DEBUG_FUNCPTR (gst_soup_http_sink_render);
+    base_sink_class->preroll =
+        GST_DEBUG_FUNCPTR (gst_soup_http_client_sink_preroll);
+  base_sink_class->render =
+      GST_DEBUG_FUNCPTR (gst_soup_http_client_sink_render);
 
   g_object_class_install_property (gobject_class,
       PROP_LOCATION,
@@ -195,8 +200,8 @@ gst_soup_http_sink_class_init (GstSoupHttpSinkClass * klass)
 }
 
 static void
-gst_soup_http_sink_init (GstSoupHttpSink * souphttpsink,
-    GstSoupHttpSinkClass * souphttpsink_class)
+gst_soup_http_client_sink_init (GstSoupHttpClientSink * souphttpsink,
+    GstSoupHttpClientSinkClass * souphttpsink_class)
 {
   const char *proxy;
 
@@ -213,17 +218,17 @@ gst_soup_http_sink_init (GstSoupHttpSink * souphttpsink,
   souphttpsink->prop_session = NULL;
   souphttpsink->timeout = 1;
   proxy = g_getenv ("http_proxy");
-  if (proxy && !gst_soup_http_sink_set_proxy (souphttpsink, proxy)) {
+  if (proxy && !gst_soup_http_client_sink_set_proxy (souphttpsink, proxy)) {
     GST_WARNING_OBJECT (souphttpsink,
         "The proxy in the http_proxy env var (\"%s\") cannot be parsed.",
         proxy);
   }
 
-  gst_soup_http_sink_reset (souphttpsink);
+  gst_soup_http_client_sink_reset (souphttpsink);
 }
 
 static void
-gst_soup_http_sink_reset (GstSoupHttpSink * souphttpsink)
+gst_soup_http_client_sink_reset (GstSoupHttpClientSink * souphttpsink)
 {
   g_free (souphttpsink->reason_phrase);
   souphttpsink->reason_phrase = NULL;
@@ -233,7 +238,8 @@ gst_soup_http_sink_reset (GstSoupHttpSink * souphttpsink)
 }
 
 static gboolean
-gst_soup_http_sink_set_proxy (GstSoupHttpSink * souphttpsink, const gchar * uri)
+gst_soup_http_client_sink_set_proxy (GstSoupHttpClientSink * souphttpsink,
+    const gchar * uri)
 {
   if (souphttpsink->proxy) {
     soup_uri_free (souphttpsink->proxy);
@@ -252,10 +258,10 @@ gst_soup_http_sink_set_proxy (GstSoupHttpSink * souphttpsink, const gchar * uri)
 }
 
 void
-gst_soup_http_sink_set_property (GObject * object, guint property_id,
+gst_soup_http_client_sink_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstSoupHttpSink *souphttpsink = GST_SOUP_HTTP_SINK (object);
+  GstSoupHttpClientSink *souphttpsink = GST_SOUP_HTTP_CLIENT_SINK (object);
 
   g_mutex_lock (souphttpsink->mutex);
   switch (property_id) {
@@ -303,7 +309,7 @@ gst_soup_http_sink_set_property (GObject * object, guint property_id,
         GST_WARNING ("proxy property cannot be NULL");
         goto done;
       }
-      if (!gst_soup_http_sink_set_proxy (souphttpsink, proxy)) {
+      if (!gst_soup_http_client_sink_set_proxy (souphttpsink, proxy)) {
         GST_WARNING ("badly formatted proxy URI");
         goto done;
       }
@@ -322,10 +328,10 @@ done:
 }
 
 void
-gst_soup_http_sink_get_property (GObject * object, guint property_id,
+gst_soup_http_client_sink_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstSoupHttpSink *souphttpsink = GST_SOUP_HTTP_SINK (object);
+  GstSoupHttpClientSink *souphttpsink = GST_SOUP_HTTP_CLIENT_SINK (object);
 
   switch (property_id) {
     case PROP_SESSION:
@@ -372,9 +378,9 @@ gst_soup_http_sink_get_property (GObject * object, guint property_id,
 }
 
 void
-gst_soup_http_sink_dispose (GObject * object)
+gst_soup_http_client_sink_dispose (GObject * object)
 {
-  GstSoupHttpSink *souphttpsink = GST_SOUP_HTTP_SINK (object);
+  GstSoupHttpClientSink *souphttpsink = GST_SOUP_HTTP_CLIENT_SINK (object);
 
   /* clean up as possible.  may be called multiple times */
   if (souphttpsink->prop_session)
@@ -385,9 +391,9 @@ gst_soup_http_sink_dispose (GObject * object)
 }
 
 void
-gst_soup_http_sink_finalize (GObject * object)
+gst_soup_http_client_sink_finalize (GObject * object)
 {
-  GstSoupHttpSink *souphttpsink = GST_SOUP_HTTP_SINK (object);
+  GstSoupHttpClientSink *souphttpsink = GST_SOUP_HTTP_CLIENT_SINK (object);
 
   /* clean up object here */
 
@@ -409,9 +415,9 @@ gst_soup_http_sink_finalize (GObject * object)
 
 
 static gboolean
-gst_soup_http_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
+gst_soup_http_client_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
 {
-  GstSoupHttpSink *souphttpsink = GST_SOUP_HTTP_SINK (sink);
+  GstSoupHttpClientSink *souphttpsink = GST_SOUP_HTTP_CLIENT_SINK (sink);
   GstStructure *structure;
   const GValue *value_array;
   int i, n;
@@ -438,7 +444,7 @@ gst_soup_http_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
 }
 
 static void
-gst_soup_http_sink_get_times (GstBaseSink * sink, GstBuffer * buffer,
+gst_soup_http_client_sink_get_times (GstBaseSink * sink, GstBuffer * buffer,
     GstClockTime * start, GstClockTime * end)
 {
 
@@ -447,7 +453,7 @@ gst_soup_http_sink_get_times (GstBaseSink * sink, GstBuffer * buffer,
 static gpointer
 thread_func (gpointer ptr)
 {
-  GstSoupHttpSink *souphttpsink = GST_SOUP_HTTP_SINK (ptr);
+  GstSoupHttpClientSink *souphttpsink = GST_SOUP_HTTP_CLIENT_SINK (ptr);
 
   GST_DEBUG ("thread start");
 
@@ -460,9 +466,9 @@ thread_func (gpointer ptr)
 }
 
 static gboolean
-gst_soup_http_sink_start (GstBaseSink * sink)
+gst_soup_http_client_sink_start (GstBaseSink * sink)
 {
-  GstSoupHttpSink *souphttpsink = GST_SOUP_HTTP_SINK (sink);
+  GstSoupHttpClientSink *souphttpsink = GST_SOUP_HTTP_CLIENT_SINK (sink);
 
   if (souphttpsink->prop_session) {
     souphttpsink->session = souphttpsink->prop_session;
@@ -491,9 +497,9 @@ gst_soup_http_sink_start (GstBaseSink * sink)
 }
 
 static gboolean
-gst_soup_http_sink_stop (GstBaseSink * sink)
+gst_soup_http_client_sink_stop (GstBaseSink * sink)
 {
-  GstSoupHttpSink *souphttpsink = GST_SOUP_HTTP_SINK (sink);
+  GstSoupHttpClientSink *souphttpsink = GST_SOUP_HTTP_CLIENT_SINK (sink);
 
   GST_DEBUG ("stop");
 
@@ -513,13 +519,13 @@ gst_soup_http_sink_stop (GstBaseSink * sink)
     souphttpsink->context = NULL;
   }
 
-  gst_soup_http_sink_reset (souphttpsink);
+  gst_soup_http_client_sink_reset (souphttpsink);
 
   return TRUE;
 }
 
 static gboolean
-gst_soup_http_sink_unlock (GstBaseSink * sink)
+gst_soup_http_client_sink_unlock (GstBaseSink * sink)
 {
   GST_DEBUG ("unlock");
 
@@ -527,9 +533,9 @@ gst_soup_http_sink_unlock (GstBaseSink * sink)
 }
 
 static gboolean
-gst_soup_http_sink_event (GstBaseSink * sink, GstEvent * event)
+gst_soup_http_client_sink_event (GstBaseSink * sink, GstEvent * event)
 {
-  GstSoupHttpSink *souphttpsink = GST_SOUP_HTTP_SINK (sink);
+  GstSoupHttpClientSink *souphttpsink = GST_SOUP_HTTP_CLIENT_SINK (sink);
 
   GST_DEBUG_OBJECT (souphttpsink, "event");
 
@@ -548,7 +554,7 @@ gst_soup_http_sink_event (GstBaseSink * sink, GstEvent * event)
 }
 
 static GstFlowReturn
-gst_soup_http_sink_preroll (GstBaseSink * sink, GstBuffer * buffer)
+gst_soup_http_client_sink_preroll (GstBaseSink * sink, GstBuffer * buffer)
 {
   GST_DEBUG ("preroll");
 
@@ -567,7 +573,7 @@ free_buffer_list (GList * list)
 }
 
 static void
-send_message_locked (GstSoupHttpSink * souphttpsink)
+send_message_locked (GstSoupHttpClientSink * souphttpsink)
 {
   GList *g;
   guint64 n;
@@ -636,7 +642,7 @@ send_message_locked (GstSoupHttpSink * souphttpsink)
 }
 
 static gboolean
-send_message (GstSoupHttpSink * souphttpsink)
+send_message (GstSoupHttpClientSink * souphttpsink)
 {
   g_mutex_lock (souphttpsink->mutex);
   send_message_locked (souphttpsink);
@@ -648,7 +654,7 @@ send_message (GstSoupHttpSink * souphttpsink)
 static void
 callback (SoupSession * session, SoupMessage * msg, gpointer user_data)
 {
-  GstSoupHttpSink *souphttpsink = GST_SOUP_HTTP_SINK (user_data);
+  GstSoupHttpClientSink *souphttpsink = GST_SOUP_HTTP_CLIENT_SINK (user_data);
 
   GST_DEBUG_OBJECT (souphttpsink, "callback status=%d %s",
       msg->status_code, msg->reason_phrase);
@@ -672,9 +678,9 @@ callback (SoupSession * session, SoupMessage * msg, gpointer user_data)
 }
 
 static GstFlowReturn
-gst_soup_http_sink_render (GstBaseSink * sink, GstBuffer * buffer)
+gst_soup_http_client_sink_render (GstBaseSink * sink, GstBuffer * buffer)
 {
-  GstSoupHttpSink *souphttpsink = GST_SOUP_HTTP_SINK (sink);
+  GstSoupHttpClientSink *souphttpsink = GST_SOUP_HTTP_CLIENT_SINK (sink);
   GSource *source;
   gboolean wake;
 
@@ -710,7 +716,7 @@ static void
 authenticate (SoupSession * session, SoupMessage * msg,
     SoupAuth * auth, gboolean retrying, gpointer user_data)
 {
-  GstSoupHttpSink *souphttpsink = GST_SOUP_HTTP_SINK (user_data);
+  GstSoupHttpClientSink *souphttpsink = GST_SOUP_HTTP_CLIENT_SINK (user_data);
 
   if (!retrying) {
     if (souphttpsink->user_id && souphttpsink->user_pw) {

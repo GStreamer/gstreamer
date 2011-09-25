@@ -19,7 +19,7 @@
 #include <gst/gst-i18n-plugin.h>
 
 #include "gstsouphttpsrc.h"
-#include "gstsouphttpsink.h"
+#include "gstsouphttpclientsink.h"
 
 
 static gboolean
@@ -34,8 +34,8 @@ plugin_init (GstPlugin * plugin)
 
   gst_element_register (plugin, "souphttpsrc", GST_RANK_PRIMARY,
       GST_TYPE_SOUP_HTTP_SRC);
-  gst_element_register (plugin, "souphttpsink", GST_RANK_NONE,
-      GST_TYPE_SOUP_HTTP_SINK);
+  gst_element_register (plugin, "souphttpclientsink", GST_RANK_NONE,
+      GST_TYPE_SOUP_HTTP_CLIENT_SINK);
 
   return TRUE;
 }
