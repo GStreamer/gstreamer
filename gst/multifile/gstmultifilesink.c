@@ -152,6 +152,8 @@ static void gst_multi_file_sink_get_property (GObject * object, guint prop_id,
 static gboolean gst_multi_file_sink_stop (GstBaseSink * sink);
 static GstFlowReturn gst_multi_file_sink_render (GstBaseSink * sink,
     GstBuffer * buffer);
+static GstFlowReturn gst_multi_file_sink_render_list (GstBaseSink * sink,
+    GstBufferList * buffer_list);
 static gboolean gst_multi_file_sink_set_caps (GstBaseSink * sink,
     GstCaps * caps);
 static gboolean gst_multi_file_sink_open_next_file (GstMultiFileSink *
@@ -286,6 +288,8 @@ gst_multi_file_sink_class_init (GstMultiFileSinkClass * klass)
   gstbasesink_class->get_times = NULL;
   gstbasesink_class->stop = GST_DEBUG_FUNCPTR (gst_multi_file_sink_stop);
   gstbasesink_class->render = GST_DEBUG_FUNCPTR (gst_multi_file_sink_render);
+  gstbasesink_class->render_list =
+      GST_DEBUG_FUNCPTR (gst_multi_file_sink_render_list);
   gstbasesink_class->set_caps =
       GST_DEBUG_FUNCPTR (gst_multi_file_sink_set_caps);
   gstbasesink_class->event = GST_DEBUG_FUNCPTR (gst_multi_file_sink_event);
@@ -655,6 +659,59 @@ stdio_write_error:
   GST_ELEMENT_ERROR (multifilesink, RESOURCE, WRITE,
       ("Error while writing to file."), (NULL));
   return GST_FLOW_ERROR;
+}
+
+static GstBufferListItem
+buffer_list_calc_size (GstBuffer ** buf, guint group, guint idx, gpointer data)
+{
+  guint *p_size = data;
+  guint buf_size;
+
+  buf_size = GST_BUFFER_SIZE (*buf);
+  GST_TRACE ("buffer %u in group %u has size %u", idx, group, buf_size);
+  *p_size += buf_size;
+
+  return GST_BUFFER_LIST_CONTINUE;
+}
+
+static GstBufferListItem
+buffer_list_copy_data (GstBuffer ** buf, guint group, guint idx, gpointer data)
+{
+  GstBuffer *dest = data;
+
+  if (group == 0 && idx == 0)
+    gst_buffer_copy_metadata (dest, *buf, GST_BUFFER_COPY_ALL);
+
+  memcpy (GST_BUFFER_DATA (dest) + GST_BUFFER_SIZE (dest),
+      GST_BUFFER_DATA (*buf), GST_BUFFER_SIZE (*buf));
+  GST_BUFFER_SIZE (dest) += GST_BUFFER_SIZE (*buf);
+
+  return GST_BUFFER_LIST_CONTINUE;
+}
+
+/* Our assumption for now is that the buffers in a buffer list should always
+ * end up in the same file. If someone wants different behaviour, they'll just
+ * have to add a property for that. */
+static GstFlowReturn
+gst_multi_file_sink_render_list (GstBaseSink * sink, GstBufferList * list)
+{
+  GstBuffer *buf;
+  guint size;
+
+  gst_buffer_list_foreach (list, buffer_list_calc_size, &size);
+  GST_LOG_OBJECT (sink, "total size of buffer list %p: %u", list, size);
+
+  /* copy all buffers in the list into one single buffer, so we can use
+   * the normal render function (FIXME: optimise to avoid the memcpy) */
+  buf = gst_buffer_new_and_alloc (size);
+  GST_BUFFER_SIZE (buf) = 0;
+  gst_buffer_list_foreach (list, buffer_list_copy_data, buf);
+  g_assert (GST_BUFFER_SIZE (buf) == size);
+
+  gst_multi_file_sink_render (sink, buf);
+  gst_buffer_unref (buf);
+
+  return GST_FLOW_OK;
 }
 
 static gboolean
