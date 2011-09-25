@@ -4103,7 +4103,7 @@ degas_type_find (GstTypeFind * tf, gpointer private)
     if (resolution <= 2) {
       data = gst_type_find_peek (tf, len - 16, 8);
       if (G_UNLIKELY (data == NULL))
-	return;
+        return;
       for (n = 0; n < 4; n++) {
         if (GST_READ_UINT16_BE (data + n * 2) > 2)
           return;
@@ -4117,7 +4117,7 @@ degas_type_find (GstTypeFind * tf, gpointer private)
     if ((resolution & 0x8000) && (resolution & 0x7fff) <= 2) {
       data = gst_type_find_peek (tf, len - 16, 8);
       if (G_UNLIKELY (data == NULL))
-	return;
+        return;
       for (n = 0; n < 4; n++) {
         if (GST_READ_UINT16_BE (data + n * 2) > 2)
           return;
