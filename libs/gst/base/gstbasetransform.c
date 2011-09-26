@@ -2517,6 +2517,8 @@ gst_base_transform_chain (GstPad * pad, GstBuffer * buffer)
   if (klass->before_transform)
     klass->before_transform (trans, buffer);
 
+  gst_base_transform_send_delayed_events (trans);
+
   /* protect transform method and concurrent buffer alloc */
   GST_BASE_TRANSFORM_LOCK (trans);
   ret = gst_base_transform_handle_buffer (trans, buffer, &outbuf);
@@ -2553,8 +2555,6 @@ gst_base_transform_chain (GstPad * pad, GstBuffer * buffer)
         trans->priv->discont = FALSE;
       }
       trans->priv->processed++;
-
-      gst_base_transform_send_delayed_events (trans);
 
       ret = gst_pad_push (trans->srcpad, outbuf);
     } else {
