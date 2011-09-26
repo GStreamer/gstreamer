@@ -23,7 +23,7 @@
 #include <gst/gst.h>
 #include <gst/base/gstbaseparse.h>
 
-#include "mpeg4parse.h"
+#include <gst/codecparsers/gstmpeg4parser.h>
 
 G_BEGIN_DECLS
 
@@ -50,14 +50,14 @@ struct _GstMpeg4VParse {
   /* parse state */
   gint last_sc;
   gint vop_offset;
-  gint vos_offset;
-  gint vo_offset;
+  gboolean vo_found;
   gboolean intra_frame;
   gboolean update_caps;
 
   GstBuffer *config;
   guint8 profile;
-  MPEG4Params params;
+  GstMpeg4VideoObjectLayer vol;
+  gboolean vol_offset;
 
   /* properties */
   gboolean drop;

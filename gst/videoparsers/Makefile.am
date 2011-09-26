@@ -4,7 +4,7 @@ libgstvideoparsersbad_la_SOURCES = plugin.c \
 	h263parse.c gsth263parse.c \
 	gstdiracparse.c dirac_parse.c \
 	gsth264parse.c gstmpegvideoparse.c \
-	gstmpeg4videoparse.c mpeg4parse.c
+	gstmpeg4videoparse.c
 
 libgstvideoparsersbad_la_CFLAGS = \
 	$(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
@@ -19,7 +19,7 @@ libgstvideoparsersbad_la_LIBTOOLFLAGS = --tag=disable-static
 noinst_HEADERS = gsth263parse.h h263parse.h \
 	gstdiracparse.h dirac_parse.h \
 	gsth264parse.h gstmpegvideoparse.h \
-	gstmpeg4videoparse.h mpeg4parse.h
+	gstmpeg4videoparse.h
 
 Android.mk: Makefile.am $(BUILT_SOURCES)
 	androgenizer \
