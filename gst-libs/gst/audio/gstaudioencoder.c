@@ -155,6 +155,7 @@
 #include "gstaudioencoder.h"
 #include <gst/base/gstadapter.h>
 #include <gst/audio/audio.h>
+#include <gst/pbutils/descriptions.h>
 
 #include <stdlib.h>
 #include <string.h>
@@ -239,6 +240,9 @@ struct _GstAudioEncoderPrivate
   gboolean perfect_ts;
   gboolean hard_resync;
   gboolean granule;
+
+  /* pending tags */
+  GstTagList *tags;
 };
 
 
@@ -399,12 +403,18 @@ gst_audio_encoder_reset (GstAudioEncoder * enc, gboolean full)
 {
   GST_OBJECT_LOCK (enc);
 
+  GST_LOG_OBJECT (enc, "reset full %d", full);
+
   if (full) {
     enc->priv->active = FALSE;
     enc->priv->samples_in = 0;
     enc->priv->bytes_out = 0;
     gst_audio_info_clear (&enc->priv->ctx.info);
     memset (&enc->priv->ctx, 0, sizeof (enc->priv->ctx));
+
+    if (enc->priv->tags)
+      gst_tag_list_free (enc->priv->tags);
+    enc->priv->tags = NULL;
   }
 
   gst_segment_init (&enc->segment, GST_FORMAT_TIME);
@@ -474,6 +484,21 @@ gst_audio_encoder_finish_frame (GstAudioEncoder * enc, GstBuffer * buf,
   /* subclass should not hand us no data */
   g_return_val_if_fail (buf == NULL || GST_BUFFER_SIZE (buf) > 0,
       GST_FLOW_ERROR);
+
+  if (G_UNLIKELY (enc->priv->tags)) {
+    GstTagList *tags;
+
+    /* add codec info to pending tags */
+    tags = enc->priv->tags;
+    /* no more pending */
+    enc->priv->tags = NULL;
+    gst_pb_utils_add_codec_description_to_tag_list (tags, GST_TAG_CODEC,
+        GST_PAD_CAPS (enc->srcpad));
+    gst_pb_utils_add_codec_description_to_tag_list (tags, GST_TAG_AUDIO_CODEC,
+        GST_PAD_CAPS (enc->srcpad));
+    GST_DEBUG_OBJECT (enc, "sending tags %" GST_PTR_FORMAT, tags);
+    gst_element_found_tags_for_pad (GST_ELEMENT (enc), enc->srcpad, tags);
+  }
 
   GST_LOG_OBJECT (enc, "accepting %d bytes encoded data as %d samples",
       buf ? GST_BUFFER_SIZE (buf) : -1, samples);
@@ -1557,6 +1582,11 @@ gst_audio_encoder_activate (GstAudioEncoder * enc, gboolean active)
   GST_DEBUG_OBJECT (enc, "activate %d", active);
 
   if (active) {
+
+    if (enc->priv->tags)
+      gst_tag_list_free (enc->priv->tags);
+    enc->priv->tags = gst_tag_list_new ();
+
     if (!enc->priv->active && klass->start)
       result = klass->start (enc);
   } else {
