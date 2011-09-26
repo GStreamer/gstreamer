@@ -55,8 +55,10 @@
 
 #ifdef LIBA52_DOUBLE
 #define SAMPLE_WIDTH 64
+#define SAMPLE_FORMAT GST_AUDIO_NE(F64)
 #else
 #define SAMPLE_WIDTH 32
+#define SAMPLE_FORMAT GST_AUDIO_NE(F32)
 #endif
 
 GST_DEBUG_CATEGORY_STATIC (a52dec_debug);
@@ -80,17 +82,16 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-float, "
-        "endianness = (int) " G_STRINGIFY (G_BYTE_ORDER) ", "
-        "width = (int) " G_STRINGIFY (SAMPLE_WIDTH) ", "
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) " SAMPLE_FORMAT ", "
         "rate = (int) [ 4000, 96000 ], " "channels = (int) [ 1, 6 ]")
     );
 
-GST_BOILERPLATE (GstA52Dec, gst_a52dec, GstElement, GST_TYPE_ELEMENT);
+#define gst_a52dec_parent_class parent_class
+G_DEFINE_TYPE (GstA52Dec, gst_a52dec, GST_TYPE_ELEMENT);
 
 static GstFlowReturn gst_a52dec_chain (GstPad * pad, GstBuffer * buffer);
 static GstFlowReturn gst_a52dec_chain_raw (GstPad * pad, GstBuffer * buf);
-static gboolean gst_a52dec_sink_setcaps (GstPad * pad, GstCaps * caps);
 static gboolean gst_a52dec_sink_event (GstPad * pad, GstEvent * event);
 static GstStateChangeReturn gst_a52dec_change_state (GstElement * element,
     GstStateChange transition);
@@ -121,24 +122,6 @@ gst_a52dec_mode_get_type (void)
     a52dec_mode_type = g_enum_register_static ("GstA52DecMode", a52dec_modes);
   }
   return a52dec_mode_type;
-}
-
-static void
-gst_a52dec_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_factory));
-  gst_element_class_set_details_simple (element_class,
-      "ATSC A/52 audio decoder", "Codec/Decoder/Audio",
-      "Decodes ATSC A/52 encoded audio streams",
-      "David I. Lehn <dlehn@users.sourceforge.net>");
-
-  GST_DEBUG_CATEGORY_INIT (a52dec_debug, "a52dec", 0,
-      "AC3/A52 software decoder");
 }
 
 static void
@@ -188,6 +171,18 @@ gst_a52dec_class_init (GstA52DecClass * klass)
       g_param_spec_boolean ("lfe", "LFE", "LFE", TRUE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sink_factory));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&src_factory));
+  gst_element_class_set_details_simple (gstelement_class,
+      "ATSC A/52 audio decoder", "Codec/Decoder/Audio",
+      "Decodes ATSC A/52 encoded audio streams",
+      "David I. Lehn <dlehn@users.sourceforge.net>");
+
+  GST_DEBUG_CATEGORY_INIT (a52dec_debug, "a52dec", 0,
+      "AC3/A52 software decoder");
+
   /* If no CPU instruction based acceleration is available, end up using the
    * generic software djbfft based one when available in the used liba52 */
 #ifdef MM_ACCEL_DJBFFT
@@ -213,12 +208,10 @@ gst_a52dec_class_init (GstA52DecClass * klass)
 }
 
 static void
-gst_a52dec_init (GstA52Dec * a52dec, GstA52DecClass * g_class)
+gst_a52dec_init (GstA52Dec * a52dec)
 {
   /* create the sink and src pads */
   a52dec->sinkpad = gst_pad_new_from_static_template (&sink_factory, "sink");
-  gst_pad_set_setcaps_function (a52dec->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_a52dec_sink_setcaps));
   gst_pad_set_chain_function (a52dec->sinkpad,
       GST_DEBUG_FUNCPTR (gst_a52dec_chain));
   gst_pad_set_event_function (a52dec->sinkpad,
@@ -371,27 +364,22 @@ gst_a52dec_push (GstA52Dec * a52dec,
   GstBuffer *buf;
   int chans, n, c;
   GstFlowReturn result;
+  sample_t *data;
 
   flags &= (A52_CHANNEL_MASK | A52_LFE);
-  chans = gst_a52dec_channels (flags, NULL);
-  if (!chans) {
-    GST_ELEMENT_ERROR (GST_ELEMENT (a52dec), STREAM, DECODE, (NULL),
-        ("invalid channel flags: %d", flags));
-    return GST_FLOW_ERROR;
-  }
+  if (!(chans = gst_a52dec_channels (flags, NULL)))
+    goto no_channels;
 
-  result =
-      gst_pad_alloc_buffer_and_set_caps (srcpad, 0,
-      256 * chans * (SAMPLE_WIDTH / 8), GST_PAD_CAPS (srcpad), &buf);
-  if (result != GST_FLOW_OK)
-    return result;
+  buf = gst_buffer_new_allocate (NULL, 256 * chans * (SAMPLE_WIDTH / 8), 0);
 
+  data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
   for (n = 0; n < 256; n++) {
     for (c = 0; c < chans; c++) {
-      ((sample_t *) GST_BUFFER_DATA (buf))[n * chans + c] =
-          samples[c * 256 + n];
+      data[n * chans + c] = samples[c * 256 + n];
     }
   }
+  gst_buffer_unmap (buf, data, -1);
+
   GST_BUFFER_TIMESTAMP (buf) = timestamp;
   GST_BUFFER_DURATION (buf) = 256 * GST_SECOND / a52dec->sample_rate;
 
@@ -419,6 +407,14 @@ gst_a52dec_push (GstA52Dec * a52dec,
     }
   }
   return result;
+
+  /* ERRORS */
+no_channels:
+  {
+    GST_ELEMENT_ERROR (GST_ELEMENT (a52dec), STREAM, DECODE, (NULL),
+        ("invalid channel flags: %d", flags));
+    return GST_FLOW_ERROR;
+  }
 }
 
 static gboolean
@@ -435,9 +431,8 @@ gst_a52dec_reneg (GstA52Dec * a52dec, GstPad * pad)
   GST_INFO_OBJECT (a52dec, "reneg channels:%d rate:%d",
       channels, a52dec->sample_rate);
 
-  caps = gst_caps_new_simple ("audio/x-raw-float",
-      "endianness", G_TYPE_INT, G_BYTE_ORDER,
-      "width", G_TYPE_INT, SAMPLE_WIDTH,
+  caps = gst_caps_new_simple ("audio/x-raw",
+      "format", G_TYPE_STRING, SAMPLE_FORMAT,
       "channels", G_TYPE_INT, channels,
       "rate", G_TYPE_INT, a52dec->sample_rate, NULL);
   gst_audio_set_channel_positions (gst_caps_get_structure (caps, 0), pos);
@@ -455,6 +450,21 @@ done:
 }
 
 static gboolean
+gst_a52dec_sink_setcaps (GstA52Dec * a52dec, GstCaps * caps)
+{
+  GstStructure *structure;
+
+  structure = gst_caps_get_structure (caps, 0);
+
+  if (structure && gst_structure_has_name (structure, "audio/x-private1-ac3"))
+    a52dec->dvdmode = TRUE;
+  else
+    a52dec->dvdmode = FALSE;
+
+  return TRUE;
+}
+
+static gboolean
 gst_a52dec_sink_event (GstPad * pad, GstEvent * event)
 {
   GstA52Dec *a52dec = GST_A52DEC (gst_pad_get_parent (pad));
@@ -463,42 +473,43 @@ gst_a52dec_sink_event (GstPad * pad, GstEvent * event)
   GST_LOG ("Handling %s event", GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_NEWSEGMENT:
+    case GST_EVENT_CAPS:
     {
-      GstFormat fmt;
-      gboolean update;
-      gint64 start, end, pos;
-      gdouble rate, arate;
+      GstCaps *caps;
 
-      gst_event_parse_new_segment_full (event, &update, &rate, &arate, &fmt,
-          &start, &end, &pos);
+      gst_event_parse_caps (event, &caps);
+
+      ret = gst_a52dec_sink_setcaps (a52dec, caps);
+      gst_event_unref (event);
+      break;
+    }
+    case GST_EVENT_SEGMENT:
+    {
+      GstSegment seg;
+
+      gst_event_copy_segment (event, &seg);
 
       /* drain queued buffers before activating the segment so that we can clip
        * against the old segment first */
       gst_a52dec_drain (a52dec);
 
-      if (fmt != GST_FORMAT_TIME || !GST_CLOCK_TIME_IS_VALID (start)) {
+      if (seg.format != GST_FORMAT_TIME || !GST_CLOCK_TIME_IS_VALID (seg.start)) {
         GST_WARNING ("No time in newsegment event %p (format is %s)",
-            event, gst_format_get_name (fmt));
+            event, gst_format_get_name (seg.format));
         gst_event_unref (event);
         a52dec->sent_segment = FALSE;
         /* set some dummy values, FIXME: do proper conversion */
-        a52dec->time = start = pos = 0;
-        fmt = GST_FORMAT_TIME;
-        end = -1;
+        a52dec->time = seg.start = seg.position = 0;
+        seg.format = GST_FORMAT_TIME;
+        seg.stop = -1;
       } else {
-        a52dec->time = start;
+        a52dec->time = seg.start;
         a52dec->sent_segment = TRUE;
-        GST_DEBUG_OBJECT (a52dec,
-            "Pushing newseg rate %g, applied rate %g, format %d, start %"
-            G_GINT64_FORMAT ", stop %" G_GINT64_FORMAT ", pos %"
-            G_GINT64_FORMAT, rate, arate, fmt, start, end, pos);
+        GST_DEBUG_OBJECT (a52dec, "Pushing segment %" GST_SEGMENT_FORMAT, &seg);
 
         ret = gst_pad_push_event (a52dec->srcpad, event);
       }
-
-      gst_segment_set_newsegment (&a52dec->segment, update, rate, fmt, start,
-          end, pos);
+      a52dec->segment = seg;
       break;
     }
     case GST_EVENT_TAG:
@@ -664,24 +675,6 @@ gst_a52dec_handle_frame (GstA52Dec * a52dec, guint8 * data,
   return GST_FLOW_OK;
 }
 
-static gboolean
-gst_a52dec_sink_setcaps (GstPad * pad, GstCaps * caps)
-{
-  GstA52Dec *a52dec = GST_A52DEC (gst_pad_get_parent (pad));
-  GstStructure *structure;
-
-  structure = gst_caps_get_structure (caps, 0);
-
-  if (structure && gst_structure_has_name (structure, "audio/x-private1-ac3"))
-    a52dec->dvdmode = TRUE;
-  else
-    a52dec->dvdmode = FALSE;
-
-  gst_object_unref (a52dec);
-
-  return TRUE;
-}
-
 static GstFlowReturn
 gst_a52dec_chain (GstPad * pad, GstBuffer * buf)
 {
@@ -701,12 +694,13 @@ gst_a52dec_chain (GstPad * pad, GstBuffer * buf)
   }
 
   if (a52dec->dvdmode) {
-    gint size = GST_BUFFER_SIZE (buf);
-    guchar *data = GST_BUFFER_DATA (buf);
+    gsize size;
+    guint8 data[2];
     gint offset;
     gint len;
     GstBuffer *subbuf;
 
+    size = gst_buffer_extract (buf, 0, data, 2);
     if (size < 2)
       goto not_enough_data;
 
@@ -722,7 +716,7 @@ gst_a52dec_chain (GstPad * pad, GstBuffer * buf)
       if (len <= 0 || offset + len > size)
         goto bad_first_access_parameter;
 
-      subbuf = gst_buffer_create_sub (buf, offset, len);
+      subbuf = gst_buffer_copy_region (buf, GST_BUFFER_COPY_ALL, offset, len);
       GST_BUFFER_TIMESTAMP (subbuf) = GST_CLOCK_TIME_NONE;
       ret = gst_a52dec_chain_raw (pad, subbuf);
       if (ret != GST_FLOW_OK)
@@ -732,14 +726,16 @@ gst_a52dec_chain (GstPad * pad, GstBuffer * buf)
       len = size - offset;
 
       if (len > 0) {
-        subbuf = gst_buffer_create_sub (buf, offset, len);
+        subbuf = gst_buffer_copy_region (buf, GST_BUFFER_COPY_ALL, offset, len);
         GST_BUFFER_TIMESTAMP (subbuf) = GST_BUFFER_TIMESTAMP (buf);
 
         ret = gst_a52dec_chain_raw (pad, subbuf);
       }
     } else {
       /* first_access = 0 or 1, so if there's a timestamp it applies to the first byte */
-      subbuf = gst_buffer_create_sub (buf, offset, size - offset);
+      subbuf =
+          gst_buffer_copy_region (buf, GST_BUFFER_COPY_ALL, offset,
+          size - offset);
       GST_BUFFER_TIMESTAMP (subbuf) = GST_BUFFER_TIMESTAMP (buf);
       ret = gst_a52dec_chain_raw (pad, subbuf);
     }
@@ -773,8 +769,8 @@ static GstFlowReturn
 gst_a52dec_chain_raw (GstPad * pad, GstBuffer * buf)
 {
   GstA52Dec *a52dec;
-  guint8 *data;
-  guint size;
+  guint8 *bdata, *data;
+  gsize bsize, size;
   gint length = 0, flags, sample_rate, bit_rate;
   GstFlowReturn result = GST_FLOW_OK;
 
@@ -790,9 +786,7 @@ gst_a52dec_chain_raw (GstPad * pad, GstBuffer * buf)
      * new-segment event
      */
     gst_segment_init (&segment, GST_FORMAT_TIME);
-    gst_pad_push_event (a52dec->srcpad, gst_event_new_new_segment (FALSE,
-            segment.rate, segment.format, segment.start,
-            segment.duration, segment.start));
+    gst_pad_push_event (a52dec->srcpad, gst_event_new_segment (&segment));
     a52dec->sent_segment = TRUE;
   }
 
@@ -809,8 +803,10 @@ gst_a52dec_chain_raw (GstPad * pad, GstBuffer * buf)
     buf = gst_buffer_join (a52dec->cache, buf);
     a52dec->cache = NULL;
   }
-  data = GST_BUFFER_DATA (buf);
-  size = GST_BUFFER_SIZE (buf);
+  bdata = gst_buffer_map (buf, &bsize, NULL, GST_MAP_READ);
+
+  data = bdata;
+  size = bsize;
 
   /* find and read header */
   bit_rate = a52dec->bit_rate;
@@ -844,6 +840,7 @@ gst_a52dec_chain_raw (GstPad * pad, GstBuffer * buf)
       break;
     }
   }
+  gst_buffer_unmap (buf, bdata, bsize);
 
   /* keep cache */
   if (length == 0) {
@@ -851,8 +848,8 @@ gst_a52dec_chain_raw (GstPad * pad, GstBuffer * buf)
   }
 
   if (size > 0) {
-    a52dec->cache = gst_buffer_create_sub (buf,
-        GST_BUFFER_SIZE (buf) - size, size);
+    a52dec->cache =
+        gst_buffer_copy_region (buf, GST_BUFFER_COPY_ALL, bsize - size, size);
   }
 
   gst_buffer_unref (buf);
