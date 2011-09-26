@@ -337,7 +337,6 @@ AG_GST_CHECK_PLUGIN(mpegdemux)
 AG_GST_CHECK_PLUGIN(mpegtsdemux)
 AG_GST_CHECK_PLUGIN(mpegtsmux)
 AG_GST_CHECK_PLUGIN(mpegpsmux)
-AG_GST_CHECK_PLUGIN(mpeg4videoparse)
 AG_GST_CHECK_PLUGIN(mpegvideoparse)
 AG_GST_CHECK_PLUGIN(mve)
 AG_GST_CHECK_PLUGIN(mxf)
@@ -1948,7 +1947,6 @@ gst/mpegtsdemux/Makefile
 gst/mpegtsmux/Makefile
 gst/mpegtsmux/tsmux/Makefile
 gst/mpegpsmux/Makefile
-gst/mpeg4videoparse/Makefile
 gst/mpegvideoparse/Makefile
 gst/mve/Makefile
 gst/mxf/Makefile

@@ -28,7 +28,7 @@
 
 #include <string.h>
 #include <gst/base/gstbytereader.h>
-#include "mpeg4videoparse.h"
+#include "gstmpeg4videoparse.h"
 
 GST_DEBUG_CATEGORY (mpeg4v_parse_debug);
 #define GST_CAT_DEFAULT mpeg4v_parse_debug
@@ -92,13 +92,16 @@ gst_mpeg4vparse_base_init (gpointer klass)
       "MPEG 4 video elementary stream parser", "Codec/Parser/Video",
       "Parses MPEG-4 Part 2 elementary video streams",
       "Julien Moutte <julien@fluendo.com>");
+
+  GST_DEBUG_CATEGORY_INIT (mpeg4v_parse_debug, "mpeg4videoparse", 0,
+      "MPEG-4 video parser");
 }
 
 static void
 gst_mpeg4vparse_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstMpeg4VParse *parse = GST_MPEG4VIDEOPARSE (object);
+  GstMpeg4VParse *parse = GST_MPEG4VIDEO_PARSE (object);
 
   switch (property_id) {
     case PROP_DROP:
@@ -116,7 +119,7 @@ static void
 gst_mpeg4vparse_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstMpeg4VParse *parse = GST_MPEG4VIDEOPARSE (object);
+  GstMpeg4VParse *parse = GST_MPEG4VIDEO_PARSE (object);
 
   switch (property_id) {
     case PROP_DROP:
@@ -198,7 +201,7 @@ gst_mpeg4vparse_reset (GstMpeg4VParse * mp4vparse)
 static gboolean
 gst_mpeg4vparse_start (GstBaseParse * parse)
 {
-  GstMpeg4VParse *mp4vparse = GST_MPEG4VIDEOPARSE (parse);
+  GstMpeg4VParse *mp4vparse = GST_MPEG4VIDEO_PARSE (parse);
 
   GST_DEBUG_OBJECT (parse, "start");
 
@@ -212,7 +215,7 @@ gst_mpeg4vparse_start (GstBaseParse * parse)
 static gboolean
 gst_mpeg4vparse_stop (GstBaseParse * parse)
 {
-  GstMpeg4VParse *mp4vparse = GST_MPEG4VIDEOPARSE (parse);
+  GstMpeg4VParse *mp4vparse = GST_MPEG4VIDEO_PARSE (parse);
 
   GST_DEBUG_OBJECT (parse, "stop");
 
@@ -332,7 +335,7 @@ static gboolean
 gst_mpeg4vparse_check_valid_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame, guint * framesize, gint * skipsize)
 {
-  GstMpeg4VParse *mp4vparse = GST_MPEG4VIDEOPARSE (parse);
+  GstMpeg4VParse *mp4vparse = GST_MPEG4VIDEO_PARSE (parse);
   GstBuffer *buf = frame->buffer;
   GstByteReader reader = GST_BYTE_READER_INIT_FROM_BUFFER (buf);
   gint off = 0;
@@ -504,7 +507,7 @@ gst_mpeg4vparse_update_src_caps (GstMpeg4VParse * mp4vparse)
 static GstFlowReturn
 gst_mpeg4vparse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 {
-  GstMpeg4VParse *mp4vparse = GST_MPEG4VIDEOPARSE (parse);
+  GstMpeg4VParse *mp4vparse = GST_MPEG4VIDEO_PARSE (parse);
   GstBuffer *buffer = frame->buffer;
 
   gst_mpeg4vparse_update_src_caps (mp4vparse);
@@ -524,7 +527,7 @@ gst_mpeg4vparse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 static GstFlowReturn
 gst_mpeg4vparse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 {
-  GstMpeg4VParse *mp4vparse = GST_MPEG4VIDEOPARSE (parse);
+  GstMpeg4VParse *mp4vparse = GST_MPEG4VIDEO_PARSE (parse);
   GstBuffer *buffer = frame->buffer;
 
   /* periodic SPS/PPS sending */
@@ -583,7 +586,7 @@ gst_mpeg4vparse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 static gboolean
 gst_mpeg4vparse_set_caps (GstBaseParse * parse, GstCaps * caps)
 {
-  GstMpeg4VParse *mp4vparse = GST_MPEG4VIDEOPARSE (parse);
+  GstMpeg4VParse *mp4vparse = GST_MPEG4VIDEO_PARSE (parse);
   GstStructure *s;
   const GValue *value;
   GstBuffer *buf;
@@ -604,6 +607,7 @@ gst_mpeg4vparse_set_caps (GstBaseParse * parse, GstCaps * caps)
   /* let's not interfere and accept regardless of config parsing success */
   return TRUE;
 }
+
 
 static GstCaps *
 gst_mpeg4vparse_get_caps (GstBaseParse * parse)
@@ -637,22 +641,3 @@ gst_mpeg4vparse_get_caps (GstBaseParse * parse)
 
   return res;
 }
-
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (mpeg4v_parse_debug, "mpeg4videoparse", 0,
-      "MPEG-4 video parser");
-
-  if (!gst_element_register (plugin, "mpeg4videoparse", GST_RANK_PRIMARY + 1,
-          gst_mpeg4vparse_get_type ()))
-    return FALSE;
-
-  return TRUE;
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "mpeg4videoparse",
-    "MPEG-4 video parser",
-    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
