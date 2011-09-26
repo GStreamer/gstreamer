@@ -159,8 +159,10 @@ typedef enum
 
 /**
  * GstMiniObject:
+ * @type: the GType of the object
  * @refcount: atomic refcount
  * @flags: extra flags.
+ * @size: the size of the structure
  * @copy: a copy function
  * @dispose: a dispose function
  * @free: the free function

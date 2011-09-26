@@ -49,6 +49,7 @@ struct _GstMeta {
 /**
  * GstMetaInitFunction:
  * @meta: a #GstMeta
+ * @params: parameters passed to the init function
  * @buffer: a #GstBuffer
  *
  * Function called when @meta is initialized in @buffer.
@@ -123,6 +124,16 @@ typedef struct _GstMetaTiming GstMetaTiming;
 const GstMetaInfo *gst_meta_timing_get_info(void);
 #define GST_META_TIMING_INFO (gst_meta_timing_get_info())
 
+/**
+ * GstMetaTiming:
+ * @meta: parent metadata
+ * @dts: the decoding timestamp
+ * @pts: the presentation timestamp
+ * @duration: the duration
+ * @clock_rate: the clock rate of the dts, pts and duration values
+ *
+ * Extra timing metadata
+ */
 struct _GstMetaTiming {
   GstMeta        meta;        /* common meta header */
 

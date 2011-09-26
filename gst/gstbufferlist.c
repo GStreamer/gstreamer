@@ -28,7 +28,7 @@
  * Buffer lists are an object containing a list of buffers.
  *
  * Buffer lists are created with gst_buffer_list_new() and filled with data
- * using a gst_buffer_list_take().
+ * using a gst_buffer_list_insert().
  *
  */
 #include "gst_private.h"

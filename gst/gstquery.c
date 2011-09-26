@@ -1947,7 +1947,7 @@ gst_query_new_scheduling (void)
  * @random_access: if random access is possible
  * @sequential: if sequential access is recommended
  * @minsize: the suggested minimum size of pull requests
- * @maxsize the suggested maximum size of pull requests:
+ * @maxsize: the suggested maximum size of pull requests:
  * @align: the suggested alignment of pull requests
  *
  * Set the scheduling properties.
@@ -1979,7 +1979,7 @@ gst_query_set_scheduling (GstQuery * query, gboolean pull_mode,
  * @random_access: if random access is possible
  * @sequential: if sequential access is recommended
  * @minsize: the suggested minimum size of pull requests
- * @maxsize the suggested maximum size of pull requests:
+ * @maxsize: the suggested maximum size of pull requests:
  * @align: the suggested alignment of pull requests
  *
  * Set the scheduling properties.

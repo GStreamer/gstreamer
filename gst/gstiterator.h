@@ -188,6 +188,7 @@ typedef gboolean	  (*GstIteratorFoldFunction)    (const GValue * item, GValue * 
 
 /**
  * GstIterator:
+ * @copy: The function to copy the iterator
  * @next: The function to get the next item in the iterator
  * @item: The function to be called for each item retrieved
  * @resync: The function to call when a resync is needed.
@@ -198,6 +199,7 @@ typedef gboolean	  (*GstIteratorFoldFunction)    (const GValue * item, GValue * 
  * @cookie: The cookie; the value of the master_cookie when this iterator was
  *          created.
  * @master_cookie: A pointer to the master cookie.
+ * @size: the size of the iterator
  *
  * #GstIterator base structure. The values of this structure are 
  * protected for subclasses, use the methods to use the #GstIterator.

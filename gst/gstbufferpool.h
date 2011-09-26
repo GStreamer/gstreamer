@@ -57,6 +57,8 @@ typedef struct _GstBufferPoolClass GstBufferPoolClass;
  * @GST_BUFFER_POOL_FLAG_DONTWAIT: don't wait for buffer. This makes the
  * acquire_buffer method return GST_FLOW_UNEXPECTED.
  * @GST_BUFFER_POOL_FLAG_DISCONT: buffer is discont
+ * @GST_BUFFER_POOL_FLAG_LAST: last flag, subclasses can use private flags
+ *    starting from this value.
  *
  * Additional flags to control the allocation of a buffer
  */
@@ -169,6 +171,7 @@ struct _GstBufferPoolClass {
   void           (*release_buffer) (GstBufferPool *pool, GstBuffer *buffer);
   void           (*free_buffer)    (GstBufferPool *pool, GstBuffer *buffer);
 
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 

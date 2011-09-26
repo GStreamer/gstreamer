@@ -276,6 +276,7 @@ typedef enum {
  * @type: the #GstMessageType of the message
  * @timestamp: the timestamp of the message
  * @src: the src of the message
+ * @seqnum: the sequence number of the message
  *
  * A #GstMessage.
  */

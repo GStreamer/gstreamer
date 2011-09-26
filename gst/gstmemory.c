@@ -52,8 +52,7 @@
  * memory with an existing memory block at a custom offset and with a custom
  * size.
  *
- * Memory can be efficiently merged when gst_memory_is_span() returns TRUE and
- * with the function gst_memory_span().
+ * Memory can be efficiently merged when gst_memory_is_span() returns TRUE.
  *
  * Last reviewed on 2011-06-08 (0.11.0)
  */

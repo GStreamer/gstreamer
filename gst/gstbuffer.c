@@ -632,7 +632,7 @@ gst_buffer_n_memory (GstBuffer * buffer)
  * gst_buffer_take_memory:
  * @buffer: a #GstBuffer.
  * @idx: the index to add the memory at, or -1 to append it to the end
- * @mem: (transfer: full): a #GstMemory.
+ * @mem: (transfer full): a #GstMemory.
  *
  * Add the memory block @mem to @buffer at @idx. This function takes ownership
  * of @mem and thus doesn't increase its refcount.
@@ -673,10 +673,15 @@ _get_memory (GstBuffer * buffer, guint idx, gboolean write)
  * gst_buffer_peek_memory:
  * @buffer: a #GstBuffer.
  * @idx: an index
+ * @flags: #GstMapFlags
  *
- * Get the memory block in @buffer at @idx. This function does not return a
- * refcount to the memory block. The memory block stays valid for as long as the
- * caller has a valid reference to @buffer.
+ * Get the memory block in @buffer at @idx for memory access in @flags.
+ * This function does not return a refcount to the memory block. The memory
+ * block stays valid for as long as the caller has a valid reference to @buffer.
+ *
+ * @buffer should be writable when @flags contains #GST_MAP_WRITE. If the memory
+ * at @idx is not writable, a new writable copy will be installed in @buffer and
+ * returned.
  *
  * Returns: a #GstMemory at @idx.
  */

@@ -184,7 +184,6 @@ typedef struct _GstBufferPool GstBufferPool;
  *                               stream, for example to reduce bandwidth.
  * @GST_BUFFER_FLAG_DELTA_UNIT:  this unit cannot be decoded independently.
  * @GST_BUFFER_FLAG_IN_CAPS:     the buffer has been added as a field in a #GstCaps.
- *
  * @GST_BUFFER_FLAG_LAST:        additional media specific flags can be added starting from
  *                               this flag.
  *
@@ -244,7 +243,7 @@ GType       gst_buffer_get_type            (void);
 
 /* allocation */
 GstBuffer * gst_buffer_new                 (void);
-GstBuffer * gst_buffer_new_allocate        (const GstAllocator * allocator, gsize maxsize, gsize align);
+GstBuffer * gst_buffer_new_allocate        (const GstAllocator * allocator, gsize size, gsize align);
 GstBuffer * gst_buffer_new_wrapped_full    (gpointer data, GFreeFunc free_func, gsize offset, gsize size);
 GstBuffer * gst_buffer_new_wrapped         (gpointer data, gsize size);
 

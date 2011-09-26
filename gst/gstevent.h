@@ -82,8 +82,7 @@ typedef enum {
  *                 from the pipeline and unblock all streaming threads.
  * @GST_EVENT_FLUSH_STOP: Stop a flush operation. This event resets the
  *                 running-time of the pipeline.
- * @GST_EVENT_EOS: End-Of-Stream. No more data is to be expected to follow
- *                 without a SEGMENT event.
+ * @GST_EVENT_CAPS: #GstCaps event. Notify the pad of a new media type.
  * @GST_EVENT_SEGMENT: A new media segment follows in the dataflow. The
  *                 segment events contains information for clipping buffers and
  *                 converting buffer timestamps to running-time and
@@ -95,6 +94,8 @@ typedef enum {
  *                          send messages that should be emitted in sync with
  *                          rendering.
  *                          Since: 0.10.26
+ * @GST_EVENT_EOS: End-Of-Stream. No more data is to be expected to follow
+ *                 without a SEGMENT event.
  * @GST_EVENT_QOS: A quality message. Used to indicate to upstream elements
  *                 that the downstream elements should adjust their processing
  *                 rate.
@@ -340,6 +341,7 @@ typedef enum {
  * @mini_object: the parent structure
  * @type: the #GstEventType of the event
  * @timestamp: the timestamp of the event
+ * @seqnum: the sequence number of the event
  *
  * A #GstEvent.
  */

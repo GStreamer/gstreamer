@@ -315,6 +315,7 @@ gst_mini_object_steal (GstMiniObject ** olddata)
  * gst_mini_object_take:
  * @olddata: (inout) (transfer full): pointer to a pointer to a mini-object to
  *     be replaced
+ * @newdata: pointer to new mini-object
  *
  * Modifies a pointer to point to a new mini-object. The modification
  * is done atomically. This version is similar to gst_mini_object_replace()

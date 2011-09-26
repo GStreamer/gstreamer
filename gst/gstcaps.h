@@ -163,7 +163,7 @@ typedef struct _GstStaticCaps GstStaticCaps;
 /**
  * GST_CAPS_FLAG_IS_SET:
  * @caps: a #GstCaps.
- * @flag: the #GstCapsFlag to check.
+ * @flag: the #GstCapsFlags to check.
  *
  * Gives the status of a specific flag on a caps.
  */
@@ -171,7 +171,7 @@ typedef struct _GstStaticCaps GstStaticCaps;
 /**
  * GST_CAPS_FLAG_SET:
  * @caps: a #GstCaps.
- * @flag: the #GstCapsFlag to set.
+ * @flag: the #GstCapsFlags to set.
  *
  * Sets a caps flag on a caps.
  */
@@ -179,7 +179,7 @@ typedef struct _GstStaticCaps GstStaticCaps;
 /**
  * GST_CAPS_FLAG_UNSET:
  * @caps: a #GstCaps.
- * @flag: the #GstCapsFlag to clear.
+ * @flag: the #GstCapsFlags to clear.
  *
  * Clears a caps flag.
  */

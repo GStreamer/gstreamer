@@ -583,19 +583,22 @@ typedef enum {
  *                   the data used in streaming.
  * @task: task for this pad if the pad is actively driving dataflow.
  * @block_cond: conditional to signal pad block
+ * @probes: installed probes
  * @getcapsfunc: function to get caps of the pad
  * @acceptcapsfunc: function to check if pad can accept caps
  * @fixatecapsfunc: function to fixate caps
+ * @mode: current activation mode of the pad
  * @activatefunc: pad activation function
  * @activatepushfunc: function to activate/deactivate pad in push mode
  * @activatepullfunc: function to activate/deactivate pad in pull mode
+ * @peer: the pad this pad is linked to
  * @linkfunc: function called when pad is linked
  * @unlinkfunc: function called when pad is unlinked
- * @peer: the pad this pad is linked to
  * @chainfunc: function to chain buffer to pad
+ * @chainlistfunc: function to chain a list of buffers to pad
  * @getrangefunc: function to get a range of data from a pad
  * @eventfunc: function to send an event to a pad
- * @mode: current activation mode of the pad
+ * @offset: the pad offset
  * @querytypefunc: get list of supported queries
  * @queryfunc: perform a query on the pad
  * @iterintlinkfunc: get the internal links iterator of this pad
@@ -653,11 +656,11 @@ struct _GstPad {
   /* internal links */
   GstPadIterIntLinkFunction      iterintlinkfunc;
 
+  /*< private >*/
   /* counts number of probes attached. */
   gint				 num_probes;
   gint				 num_blocked;
 
-  /*< private >*/
   GstPadPrivate                 *priv;
 
   gpointer _gst_reserved[GST_PADDING];
