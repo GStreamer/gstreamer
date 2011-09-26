@@ -191,31 +191,22 @@ enum
   ARG_QUICK_MODE_COUNT
 };
 
+static gboolean gst_two_lame_start (GstAudioEncoder * enc);
+static gboolean gst_two_lame_stop (GstAudioEncoder * enc);
+static gboolean gst_two_lame_set_format (GstAudioEncoder * enc,
+    GstAudioInfo * info);
+static GstFlowReturn gst_two_lame_handle_frame (GstAudioEncoder * enc,
+    GstBuffer * in_buf);
+static void gst_two_lame_flush (GstAudioEncoder * enc);
+
 static void gst_two_lame_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_two_lame_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-static gboolean gst_two_lame_sink_event (GstPad * pad, GstEvent * event);
-static GstFlowReturn gst_two_lame_chain (GstPad * pad, GstBuffer * buf);
 static gboolean gst_two_lame_setup (GstTwoLame * twolame);
-static GstStateChangeReturn gst_two_lame_change_state (GstElement * element,
-    GstStateChange transition);
 
-static void
-_do_init (GType object_type)
-{
-  const GInterfaceInfo preset_interface_info = {
-    NULL,                       /* interface_init */
-    NULL,                       /* interface_finalize */
-    NULL                        /* interface_data */
-  };
-
-  g_type_add_interface_static (object_type, GST_TYPE_PRESET,
-      &preset_interface_info);
-}
-
-GST_BOILERPLATE_FULL (GstTwoLame, gst_two_lame, GstElement, GST_TYPE_ELEMENT,
-    _do_init);
+GST_BOILERPLATE (GstTwoLame, gst_two_lame, GstAudioEncoder,
+    GST_TYPE_AUDIO_ENCODER);
 
 static void
 gst_two_lame_release_memory (GstTwoLame * twolame)
@@ -253,16 +244,22 @@ static void
 gst_two_lame_class_init (GstTwoLameClass * klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
+  GstAudioEncoderClass *gstbase_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
+  gstbase_class = (GstAudioEncoderClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->set_property = gst_two_lame_set_property;
   gobject_class->get_property = gst_two_lame_get_property;
   gobject_class->finalize = gst_two_lame_finalize;
+
+  gstbase_class->start = GST_DEBUG_FUNCPTR (gst_two_lame_start);
+  gstbase_class->stop = GST_DEBUG_FUNCPTR (gst_two_lame_stop);
+  gstbase_class->set_format = GST_DEBUG_FUNCPTR (gst_two_lame_set_format);
+  gstbase_class->handle_frame = GST_DEBUG_FUNCPTR (gst_two_lame_handle_frame);
+  gstbase_class->flush = GST_DEBUG_FUNCPTR (gst_two_lame_flush);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MODE,
       g_param_spec_enum ("mode", "Mode", "Encoding mode",
@@ -349,39 +346,25 @@ gst_two_lame_class_init (GstTwoLameClass * klass)
           "Calculate Psymodel every n frames",
           0, G_MAXINT, gst_two_lame_default_settings.quick_mode_count,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-  gstelement_class->change_state =
-      GST_DEBUG_FUNCPTR (gst_two_lame_change_state);
 }
 
 static gboolean
-gst_two_lame_src_setcaps (GstPad * pad, GstCaps * caps)
-{
-  GST_DEBUG_OBJECT (pad, "caps: %" GST_PTR_FORMAT, caps);
-  return TRUE;
-}
-
-static gboolean
-gst_two_lame_sink_setcaps (GstPad * pad, GstCaps * caps)
+gst_two_lame_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
 {
   GstTwoLame *twolame;
   gint out_samplerate;
   gint version;
-  GstStructure *structure;
   GstCaps *othercaps;
 
-  twolame = GST_TWO_LAME (GST_PAD_PARENT (pad));
-  structure = gst_caps_get_structure (caps, 0);
+  twolame = GST_TWO_LAME (enc);
 
-  if (strcmp (gst_structure_get_name (structure), "audio/x-raw-int") == 0)
-    twolame->float_input = FALSE;
-  else
-    twolame->float_input = TRUE;
+  /* parameters already parsed for us */
+  twolame->samplerate = GST_AUDIO_INFO_RATE (info);
+  twolame->num_channels = GST_AUDIO_INFO_CHANNELS (info);
+  twolame->float_input = !GST_AUDIO_INFO_IS_INTEGER (info);
 
-  if (!gst_structure_get_int (structure, "rate", &twolame->samplerate))
-    goto no_rate;
-  if (!gst_structure_get_int (structure, "channels", &twolame->num_channels))
-    goto no_channels;
+  /* but we might be asked to reconfigure, so reset */
+  gst_two_lame_release_memory (twolame);
 
   GST_DEBUG_OBJECT (twolame, "setting up twolame");
   if (!gst_two_lame_setup (twolame))
@@ -413,21 +396,19 @@ gst_two_lame_sink_setcaps (GstPad * pad, GstCaps * caps)
       G_TYPE_INT, out_samplerate, NULL);
 
   /* and use these caps */
-  gst_pad_set_caps (twolame->srcpad, othercaps);
+  gst_pad_set_caps (GST_AUDIO_ENCODER_SRC_PAD (twolame), othercaps);
   gst_caps_unref (othercaps);
+
+  /* report needs to base class:
+   * hand one frame at a time, if we are pretty sure what a frame is */
+  if (out_samplerate == twolame->samplerate) {
+    gst_audio_encoder_set_frame_samples_min (enc, 1152);
+    gst_audio_encoder_set_frame_samples_max (enc, 1152);
+    gst_audio_encoder_set_frame_max (enc, 1);
+  }
 
   return TRUE;
 
-no_rate:
-  {
-    GST_ERROR_OBJECT (twolame, "input caps have no sample rate field");
-    return FALSE;
-  }
-no_channels:
-  {
-    GST_ERROR_OBJECT (twolame, "input caps have no channels field");
-    return FALSE;
-  }
 zero_output_rate:
   {
     GST_ELEMENT_ERROR (twolame, LIBRARY, SETTINGS, (NULL),
@@ -447,26 +428,6 @@ gst_two_lame_init (GstTwoLame * twolame, GstTwoLameClass * klass)
 {
   GST_DEBUG_OBJECT (twolame, "starting initialization");
 
-  twolame->sinkpad =
-      gst_pad_new_from_static_template (&gst_two_lame_sink_template, "sink");
-  gst_pad_set_event_function (twolame->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_two_lame_sink_event));
-  gst_pad_set_chain_function (twolame->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_two_lame_chain));
-  gst_pad_set_setcaps_function (twolame->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_two_lame_sink_setcaps));
-  gst_element_add_pad (GST_ELEMENT (twolame), twolame->sinkpad);
-
-  twolame->srcpad =
-      gst_pad_new_from_static_template (&gst_two_lame_src_template, "src");
-  gst_pad_set_setcaps_function (twolame->srcpad,
-      GST_DEBUG_FUNCPTR (gst_two_lame_src_setcaps));
-  gst_element_add_pad (GST_ELEMENT (twolame), twolame->srcpad);
-
-  twolame->samplerate = 44100;
-  twolame->num_channels = 2;
-  twolame->setup = FALSE;
-
   twolame->mode = gst_two_lame_default_settings.mode;
   twolame->psymodel = gst_two_lame_default_settings.psymodel;
   twolame->bitrate = gst_two_lame_default_settings.bitrate;
@@ -485,6 +446,26 @@ gst_two_lame_init (GstTwoLame * twolame, GstTwoLameClass * klass)
   twolame->quick_mode_count = gst_two_lame_default_settings.quick_mode_count;
 
   GST_DEBUG_OBJECT (twolame, "done initializing");
+}
+
+static gboolean
+gst_two_lame_start (GstAudioEncoder * enc)
+{
+  GstTwoLame *twolame = GST_TWO_LAME (enc);
+
+  GST_DEBUG_OBJECT (twolame, "start");
+  return TRUE;
+}
+
+static gboolean
+gst_two_lame_stop (GstAudioEncoder * enc)
+{
+  GstTwoLame *twolame = GST_TWO_LAME (enc);
+
+  GST_DEBUG_OBJECT (twolame, "stop");
+
+  gst_two_lame_release_memory (twolame);
+  return TRUE;
 }
 
 /* <php-emulation-mode>three underscores for ___rate is really really really
@@ -638,106 +619,54 @@ gst_two_lame_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
-static gboolean
-gst_two_lame_sink_event (GstPad * pad, GstEvent * event)
+static GstFlowReturn
+gst_two_lame_flush_full (GstTwoLame * lame, gboolean push)
 {
-  gboolean ret;
-  GstTwoLame *twolame;
+  GstBuffer *buf;
+  gint size;
+  GstFlowReturn result = GST_FLOW_OK;
 
-  twolame = GST_TWO_LAME (gst_pad_get_parent (pad));
+  if (!lame->glopts)
+    return GST_FLOW_OK;
 
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_EOS:{
-      GST_DEBUG_OBJECT (twolame, "handling EOS event");
+  buf = gst_buffer_new_and_alloc (16384);
+  size = twolame_encode_flush (lame->glopts, GST_BUFFER_DATA (buf), 16384);
 
-      if (twolame->glopts != NULL) {
-        GstBuffer *buf;
-        gint size;
-
-        buf = gst_buffer_new_and_alloc (16384);
-        size =
-            twolame_encode_flush (twolame->glopts, GST_BUFFER_DATA (buf),
-            16394);
-
-        if (size > 0 && twolame->last_flow == GST_FLOW_OK) {
-          gint64 duration;
-
-          duration = gst_util_uint64_scale (size, 8 * GST_SECOND,
-              1000 * twolame->bitrate);
-
-          if (twolame->last_ts == GST_CLOCK_TIME_NONE) {
-            twolame->last_ts = twolame->eos_ts;
-            twolame->last_duration = duration;
-          } else {
-            twolame->last_duration += duration;
-          }
-
-          GST_BUFFER_TIMESTAMP (buf) = twolame->last_ts;
-          GST_BUFFER_DURATION (buf) = twolame->last_duration;
-          twolame->last_ts = GST_CLOCK_TIME_NONE;
-          GST_BUFFER_SIZE (buf) = size;
-          GST_DEBUG_OBJECT (twolame, "pushing final packet of %u bytes", size);
-          gst_buffer_set_caps (buf, GST_PAD_CAPS (twolame->srcpad));
-          gst_pad_push (twolame->srcpad, buf);
-        } else {
-          GST_DEBUG_OBJECT (twolame, "no final packet (size=%d, last_flow=%s)",
-              size, gst_flow_get_name (twolame->last_flow));
-          gst_buffer_unref (buf);
-        }
-      }
-
-      ret = gst_pad_event_default (pad, event);
-      break;
-    }
-    case GST_EVENT_FLUSH_START:
-      GST_DEBUG_OBJECT (twolame, "handling FLUSH start event");
-      /* forward event */
-      ret = gst_pad_push_event (twolame->srcpad, event);
-      break;
-    case GST_EVENT_FLUSH_STOP:
-    {
-      guchar *mp3_data = NULL;
-      gint mp3_buffer_size;
-
-      GST_DEBUG_OBJECT (twolame, "handling FLUSH stop event");
-
-      /* clear buffers */
-      mp3_buffer_size = 16384;
-      mp3_data = g_malloc (mp3_buffer_size);
-      twolame_encode_flush (twolame->glopts, mp3_data, mp3_buffer_size);
-
-      ret = gst_pad_push_event (twolame->srcpad, event);
-
-      g_free (mp3_data);
-      break;
-    }
-    default:
-      ret = gst_pad_event_default (pad, event);
-      break;
+  if (size > 0 && push) {
+    GST_BUFFER_SIZE (buf) = size;
+    GST_DEBUG_OBJECT (lame, "pushing final packet of %u bytes", size);
+    result = gst_audio_encoder_finish_frame (GST_AUDIO_ENCODER (lame), buf, -1);
+  } else {
+    GST_DEBUG_OBJECT (lame, "no final packet (size=%d, push=%d)", size, push);
+    gst_buffer_unref (buf);
+    result = GST_FLOW_OK;
   }
-  gst_object_unref (twolame);
+  return result;
+}
 
-  return ret;
+static void
+gst_two_lame_flush (GstAudioEncoder * enc)
+{
+  gst_two_lame_flush_full (GST_TWO_LAME (enc), FALSE);
 }
 
 static GstFlowReturn
-gst_two_lame_chain (GstPad * pad, GstBuffer * buf)
+gst_two_lame_handle_frame (GstAudioEncoder * enc, GstBuffer * buf)
 {
   GstTwoLame *twolame;
   guchar *mp3_data;
   gint mp3_buffer_size, mp3_size;
-  gint64 duration;
+  GstBuffer *mp3_buf;
   GstFlowReturn result;
   gint num_samples;
   guint8 *data;
   guint size;
 
-  twolame = GST_TWO_LAME (GST_PAD_PARENT (pad));
+  twolame = GST_TWO_LAME (enc);
 
-  GST_LOG_OBJECT (twolame, "entered chain");
-
-  if (!twolame->setup)
-    goto not_setup;
+  /* squeeze remaining and push */
+  if (G_UNLIKELY (buf == NULL))
+    return gst_two_lame_flush_full (twolame, TRUE);
 
   data = GST_BUFFER_DATA (buf);
   size = GST_BUFFER_SIZE (buf);
@@ -749,7 +678,8 @@ gst_two_lame_chain (GstPad * pad, GstBuffer * buf)
 
   /* allocate space for output */
   mp3_buffer_size = 1.25 * num_samples + 16384;
-  mp3_data = g_malloc (mp3_buffer_size);
+  mp3_buf = gst_buffer_new_and_alloc (mp3_buffer_size);
+  mp3_data = GST_BUFFER_DATA (mp3_buf);
 
   if (twolame->num_channels == 1) {
     if (twolame->float_input)
@@ -774,73 +704,22 @@ gst_two_lame_chain (GstPad * pad, GstBuffer * buf)
   GST_LOG_OBJECT (twolame, "encoded %d bytes of audio to %d bytes of mp3",
       size, mp3_size);
 
-  if (twolame->float_input)
-    duration = gst_util_uint64_scale_int (size, GST_SECOND,
-        4 * twolame->samplerate * twolame->num_channels);
-  else
-    duration = gst_util_uint64_scale_int (size, GST_SECOND,
-        2 * twolame->samplerate * twolame->num_channels);
-
-  if (GST_BUFFER_DURATION (buf) != GST_CLOCK_TIME_NONE &&
-      GST_BUFFER_DURATION (buf) != duration) {
-    GST_DEBUG_OBJECT (twolame, "incoming buffer had incorrect duration %"
-        GST_TIME_FORMAT ", outgoing buffer will have correct duration %"
-        GST_TIME_FORMAT,
-        GST_TIME_ARGS (GST_BUFFER_DURATION (buf)), GST_TIME_ARGS (duration));
-  }
-
-  if (twolame->last_ts == GST_CLOCK_TIME_NONE) {
-    twolame->last_ts = GST_BUFFER_TIMESTAMP (buf);
-    twolame->last_offs = GST_BUFFER_OFFSET (buf);
-    twolame->last_duration = duration;
-  } else {
-    twolame->last_duration += duration;
-  }
-
-  gst_buffer_unref (buf);
-
   if (mp3_size < 0) {
-    g_warning ("error %d", mp3_size);
   }
 
   if (mp3_size > 0) {
-    GstBuffer *outbuf;
-
-    outbuf = gst_buffer_new ();
-    GST_BUFFER_DATA (outbuf) = mp3_data;
-    GST_BUFFER_MALLOCDATA (outbuf) = mp3_data;
-    GST_BUFFER_SIZE (outbuf) = mp3_size;
-    GST_BUFFER_TIMESTAMP (outbuf) = twolame->last_ts;
-    GST_BUFFER_OFFSET (outbuf) = twolame->last_offs;
-    GST_BUFFER_DURATION (outbuf) = twolame->last_duration;
-    gst_buffer_set_caps (outbuf, GST_PAD_CAPS (twolame->srcpad));
-
-    result = gst_pad_push (twolame->srcpad, outbuf);
-    twolame->last_flow = result;
-    if (result != GST_FLOW_OK) {
-      GST_DEBUG_OBJECT (twolame, "flow return: %s", gst_flow_get_name (result));
-    }
-
-    if (GST_CLOCK_TIME_IS_VALID (twolame->last_ts))
-      twolame->eos_ts = twolame->last_ts + twolame->last_duration;
-    else
-      twolame->eos_ts = GST_CLOCK_TIME_NONE;
-    twolame->last_ts = GST_CLOCK_TIME_NONE;
+    GST_BUFFER_SIZE (mp3_buf) = mp3_size;
+    result = gst_audio_encoder_finish_frame (enc, mp3_buf, -1);
   } else {
-    g_free (mp3_data);
+    if (mp3_size < 0) {
+      /* eat error ? */
+      g_warning ("error %d", mp3_size);
+    }
+    gst_buffer_unref (mp3_buf);
     result = GST_FLOW_OK;
   }
 
   return result;
-
-  /* ERRORS */
-not_setup:
-  {
-    gst_buffer_unref (buf);
-    GST_ELEMENT_ERROR (twolame, CORE, NEGOTIATION, (NULL),
-        ("encoder not initialized (input is not audio?)"));
-    return GST_FLOW_ERROR;
-  }
 }
 
 /* set up the encoder state */
@@ -877,7 +756,7 @@ gst_two_lame_setup (GstTwoLame * twolame)
   twolame_set_in_samplerate (twolame->glopts, twolame->samplerate);
 
   /* let twolame choose default samplerate unless outgoing sample rate is fixed */
-  allowed_caps = gst_pad_get_allowed_caps (twolame->srcpad);
+  allowed_caps = gst_pad_get_allowed_caps (GST_AUDIO_ENCODER_SRC_PAD (twolame));
 
   if (allowed_caps != NULL) {
     GstStructure *structure;
@@ -947,37 +826,6 @@ gst_two_lame_setup (GstTwoLame * twolame)
 
   return twolame->setup;
 #undef CHECK_ERROR
-}
-
-static GstStateChangeReturn
-gst_two_lame_change_state (GstElement * element, GstStateChange transition)
-{
-  GstTwoLame *twolame;
-  GstStateChangeReturn result;
-
-  twolame = GST_TWO_LAME (element);
-
-  switch (transition) {
-    case GST_STATE_CHANGE_READY_TO_PAUSED:
-      twolame->last_flow = GST_FLOW_OK;
-      twolame->last_ts = GST_CLOCK_TIME_NONE;
-      twolame->eos_ts = GST_CLOCK_TIME_NONE;
-      break;
-    default:
-      break;
-  }
-
-  result = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-
-  switch (transition) {
-    case GST_STATE_CHANGE_READY_TO_NULL:
-      gst_two_lame_release_memory (twolame);
-      break;
-    default:
-      break;
-  }
-
-  return result;
 }
 
 static gboolean

@@ -23,7 +23,6 @@ BuildRequires:  gcc-c++
 @USE_A52DEC_TRUE@BuildRequires:  a52dec-devel >= 0.7.3
 @USE_DVDREAD_TRUE@BuildRequires:  libdvdread-devel >= 0.9.0
 @USE_LAME_TRUE@BuildRequires:  lame-devel >= 3.89
-@USE_MAD_TRUE@BuildRequires:  libid3tag-devel >= 0.15.0
 @USE_MAD_TRUE@BuildRequires:  libmad-devel >= 0.15.0
 @USE_MPEG2DEC_TRUE@BuildRequires:  mpeg2dec-devel >= 0.4.0
 

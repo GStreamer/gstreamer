@@ -320,36 +320,14 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_MAD, true)
 AG_GST_CHECK_FEATURE(MAD, [mad mp3 decoder], mad, [
 
   dnl check with pkg-config first
-  AG_GST_PKG_CHECK_MODULES(ID3TAG, id3tag >= 0.15)
-  if test "x$HAVE_ID3TAG" = "xno"; then
-    dnl fall back to oldskool detection
-    AC_CHECK_HEADER(id3tag.h, [
-      save_LIBS=$LIBS
-      LIBS="-lz"
-      AC_CHECK_LIB(id3tag, id3_tag_options,
-        HAVE_ID3TAG="yes" ID3TAG_LIBS="-lid3tag -lz")
-      LIBS=$save_LIBS
-      AC_SUBST(ID3TAG_LIBS)
-    ])
-  fi
-
-  dnl check with pkg-config first
   AG_GST_PKG_CHECK_MODULES(MAD, mad >= 0.15)
-  MAD_LIBS="$MAD_LIBS $ID3TAG_LIBS"
+  MAD_LIBS="$MAD_LIBS"
   if test "x$HAVE_MAD" = "xno"; then
     dnl fall back to oldskool detection
     AC_CHECK_HEADER(mad.h, [
       AC_CHECK_LIB(mad, mad_decoder_finish,
-        HAVE_MAD="yes" MAD_LIBS="-lmad $ID3TAG_LIBS")
+        HAVE_MAD="yes" MAD_LIBS="-lmad")
     ])
-  fi
-
-  if test "x$HAVE_ID3TAG" = "xyes"; then
-    AC_DEFINE(HAVE_ID3TAG, 1, [defined if libid3tag is available])
-  else
-    AC_MSG_WARN([libid3tag not available, MAD MP3 decoder will be built without
-                 ID3 tag reading support (which is not a problem, since ID3
-                 tags are usually handled by id3demux)])
   fi
 ])
 AC_SUBST(MAD_LIBS)

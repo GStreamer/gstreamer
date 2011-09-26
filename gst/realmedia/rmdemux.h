@@ -123,6 +123,9 @@ struct _GstRMDemux {
   guint32 object_id;
   guint32 size;
   guint16 object_version;
+
+  /* container tags for all streams */
+  GstTagList *pending_tags;
 };
 
 struct _GstRMDemuxClass {

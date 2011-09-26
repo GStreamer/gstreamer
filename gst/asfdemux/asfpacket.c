@@ -381,7 +381,8 @@ gst_asf_demux_parse_payload (GstASFDemux * demux, AsfPacket * packet,
 
     GST_LOG_OBJECT (demux, "payload length: %u", payload_len);
 
-    if ((stream = gst_asf_demux_get_stream (demux, stream_num))) {
+    if ((stream = gst_asf_demux_get_stream (demux, stream_num))
+        && payload_len) {
       payload.buf = asf_packet_create_payload_buffer (packet, p_data, p_size,
           payload_len);
 
