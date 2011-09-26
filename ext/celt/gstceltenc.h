@@ -62,6 +62,7 @@ struct _GstCeltEnc {
 
   gint                  bitrate;
   gint                  frame_size;
+  gint                  requested_frame_size;
   gboolean              cbr;
   gint                  complexity;
   gint                  max_bitrate;

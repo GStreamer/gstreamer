@@ -146,7 +146,8 @@ gst_camerabin_create_preview_pipeline (GstElement * element,
   }
 
   g_object_set (data->appsrc, "emit-signals", FALSE, NULL);
-  g_object_set (data->appsink, "sync", FALSE, NULL);
+  g_object_set (data->appsink, "sync", FALSE, "enable-last-buffer",
+      FALSE, NULL);
 
   gst_bin_add_many (GST_BIN (data->pipeline), data->appsrc, data->capsfilter,
       data->appsink, csp, vscale, NULL);
@@ -230,6 +231,8 @@ void
 gst_camerabin_destroy_preview_pipeline (GstCameraBinPreviewPipelineData *
     preview)
 {
+  g_return_if_fail (preview != NULL);
+
   if (preview->processing_lock) {
     g_mutex_free (preview->processing_lock);
     preview->processing_lock = NULL;

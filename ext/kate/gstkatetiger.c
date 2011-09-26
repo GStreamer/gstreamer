@@ -677,6 +677,7 @@ gst_kate_tiger_video_set_caps (GstPad * pad, GstCaps * caps)
   GstKateTiger *tiger = GST_KATE_TIGER (gst_pad_get_parent (pad));
   GstVideoFormat format;
   gint w, h;
+  gboolean ret;
 
   GST_KATE_TIGER_MUTEX_LOCK (tiger);
 
@@ -692,10 +693,10 @@ gst_kate_tiger_video_set_caps (GstPad * pad, GstCaps * caps)
 
   GST_KATE_TIGER_MUTEX_UNLOCK (tiger);
 
-  gst_pad_set_caps (tiger->srcpad, caps);
+  ret = gst_pad_set_caps (tiger->srcpad, caps);
 
   gst_object_unref (tiger);
-  return TRUE;
+  return ret;
 }
 
 static gdouble
@@ -858,9 +859,13 @@ gst_kate_tiger_seek (GstKateTiger * tiger, GstPad * pad, GstEvent * event)
   gst_event_parse_seek (event, &rate, &format, &flags, &cur_type, &cur,
       &stop_type, &stop);
 
+  if (flags & GST_SEEK_FLAG_FLUSH)
+    gst_pad_push_event (tiger->srcpad, gst_event_new_flush_start ());
+
   GST_KATE_TIGER_MUTEX_LOCK (tiger);
   tiger->video_flushing = TRUE;
   gst_kate_util_decoder_base_set_flushing (&tiger->decoder, TRUE);
+  g_cond_broadcast (tiger->cond);
   GST_KATE_TIGER_MUTEX_UNLOCK (tiger);
 
   if (format == GST_FORMAT_TIME) {

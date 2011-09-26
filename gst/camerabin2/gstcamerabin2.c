@@ -166,9 +166,15 @@
 #include <gst/gst-i18n-plugin.h>
 #include <gst/pbutils/pbutils.h>
 
+#if GLIB_CHECK_VERSION(2,29,6)
+#define gst_camerabin2_atomic_int_add g_atomic_int_add
+#else
+#define gst_camerabin2_atomic_int_add g_atomic_int_exchange_and_add
+#endif
+
 #define GST_CAMERA_BIN2_PROCESSING_INC(c)                                \
 {                                                                       \
-  gint bef = g_atomic_int_exchange_and_add (&c->processing_counter, 1); \
+  gint bef = gst_camerabin2_atomic_int_add (&c->processing_counter, 1); \
   if (bef == 0)                                                         \
     g_object_notify (G_OBJECT (c), "idle");                             \
   GST_DEBUG_OBJECT ((c), "Processing counter incremented to: %d",       \
@@ -374,11 +380,6 @@ gst_camera_bin_start_capture (GstCameraBin2 * camerabin)
     if (camerabin->audio_src) {
       GstClock *clock = gst_pipeline_get_clock (GST_PIPELINE_CAST (camerabin));
 
-      /* FIXME We need to set audiosrc to null to make it resync the ringbuffer
-       * while bug https://bugzilla.gnome.org/show_bug.cgi?id=648359 isn't
-       * fixed */
-      gst_element_set_state (camerabin->audio_src, GST_STATE_NULL);
-
       /* need to reset eos status (pads could be flushing) */
       gst_element_set_state (camerabin->audio_capsfilter, GST_STATE_READY);
       gst_element_set_state (camerabin->audio_volume, GST_STATE_READY);
@@ -446,6 +447,14 @@ gst_camera_bin_stop_capture (GstCameraBin2 * camerabin)
   if (camerabin->mode == MODE_VIDEO && camerabin->audio_src) {
     camerabin->audio_drop_eos = FALSE;
     gst_element_send_event (camerabin->audio_src, gst_event_new_eos ());
+
+    /* FIXME We need to set audiosrc to null to make it resync the ringbuffer
+     * while bug https://bugzilla.gnome.org/show_bug.cgi?id=648359 isn't
+     * fixed.
+     *
+     * Also, we set to NULL here to stop capturing audio through to the next
+     * video mode start capture. */
+    gst_element_set_state (camerabin->audio_src, GST_STATE_NULL);
   }
 }
 
@@ -485,7 +494,12 @@ gst_camera_bin_src_notify_readyforcapture (GObject * obj, GParamSpec * pspec,
       GST_DEBUG_OBJECT (camera, "Switching videobin location to %s", location);
       g_object_set (camera->videosink, "location", location, NULL);
       g_free (location);
-      gst_element_set_state (camera->videosink, GST_STATE_PLAYING);
+      if (gst_element_set_state (camera->videosink, GST_STATE_PLAYING) ==
+          GST_STATE_CHANGE_FAILURE) {
+        /* Resets the latest state change return, that would be a failure
+         * and could cause problems in a camerabin2 state change */
+        gst_element_set_state (camera->videosink, GST_STATE_NULL);
+      }
       gst_element_set_state (camera->video_encodebin, GST_STATE_PLAYING);
       gst_element_set_state (camera->videobin_capsfilter, GST_STATE_PLAYING);
     }
@@ -916,6 +930,8 @@ gst_camera_bin_handle_message (GstBin * bin, GstMessage * message)
       if (gst_structure_has_name (structure, "GstMultiFileSink")) {
         GST_CAMERA_BIN2_PROCESSING_DEC (GST_CAMERA_BIN2_CAST (bin));
         filename = gst_structure_get_string (structure, "filename");
+        GST_DEBUG_OBJECT (bin, "Got file save message from multifilesink, "
+            "image %s has been saved", filename);
         if (filename) {
           gst_image_capture_bin_post_image_done (GST_CAMERA_BIN2_CAST (bin),
               filename);
@@ -930,6 +946,8 @@ gst_camera_bin_handle_message (GstBin * bin, GstMessage * message)
       gst_message_parse_warning (message, &err, &debug);
       if (err->domain == GST_RESOURCE_ERROR) {
         /* some capturing failed */
+        GST_WARNING_OBJECT (bin, "Capture failed, reason: %s - %s",
+            err->message, debug);
         GST_CAMERA_BIN2_PROCESSING_DEC (GST_CAMERA_BIN2_CAST (bin));
       }
     }
@@ -1152,6 +1170,17 @@ gst_camera_bin_src_notify_max_zoom_cb (GObject * self, GParamSpec * pspec,
   g_object_notify (G_OBJECT (camera), "max-zoom");
 }
 
+static void
+gst_camera_bin_src_notify_zoom_cb (GObject * self, GParamSpec * pspec,
+    gpointer user_data)
+{
+  GstCameraBin2 *camera = (GstCameraBin2 *) user_data;
+
+  g_object_get (self, "zoom", &camera->zoom, NULL);
+  GST_DEBUG_OBJECT (camera, "Zoom updated to %f", camera->zoom);
+  g_object_notify (G_OBJECT (camera), "zoom");
+}
+
 static gboolean
 gst_camera_bin_image_src_buffer_probe (GstPad * pad, GstBuffer * buf,
     gpointer data)
@@ -1208,7 +1237,12 @@ gst_camera_bin_image_sink_event_probe (GstPad * pad, GstEvent * event,
         GST_DEBUG_OBJECT (camerabin, "Setting filename to imagesink: %s",
             filename);
         g_object_set (camerabin->imagesink, "location", filename, NULL);
-        gst_element_set_state (camerabin->imagesink, GST_STATE_PLAYING);
+        if (gst_element_set_state (camerabin->imagesink, GST_STATE_PLAYING) ==
+            GST_STATE_CHANGE_FAILURE) {
+          /* Resets the latest state change return, that would be a failure
+           * and could cause problems in a camerabin2 state change */
+          gst_element_set_state (camerabin->imagesink, GST_STATE_NULL);
+        }
       }
     }
       break;
@@ -1495,6 +1529,8 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
           "preview-caps", camera->preview_caps, "preview-filter",
           camera->preview_filter, NULL);
     }
+    g_signal_connect (G_OBJECT (camera->src), "notify::zoom",
+        (GCallback) gst_camera_bin_src_notify_zoom_cb, camera);
     g_object_set (camera->src, "zoom", camera->zoom, NULL);
     g_signal_connect (G_OBJECT (camera->src), "notify::max-zoom",
         (GCallback) gst_camera_bin_src_notify_max_zoom_cb, camera);

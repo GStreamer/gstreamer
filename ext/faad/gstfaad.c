@@ -140,55 +140,24 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS (STATIC_CAPS)
     );
 
-static void gst_faad_base_init (GstFaadClass * klass);
-static void gst_faad_class_init (GstFaadClass * klass);
-static void gst_faad_init (GstFaad * faad);
 static void gst_faad_reset (GstFaad * faad);
-static void gst_faad_finalize (GObject * object);
 
-static void clear_queued (GstFaad * faad);
+static gboolean gst_faad_start (GstAudioDecoder * dec);
+static gboolean gst_faad_stop (GstAudioDecoder * dec);
+static gboolean gst_faad_set_format (GstAudioDecoder * dec, GstCaps * caps);
+static gboolean gst_faad_parse (GstAudioDecoder * dec, GstAdapter * adapter,
+    gint * offset, gint * length);
+static GstFlowReturn gst_faad_handle_frame (GstAudioDecoder * dec,
+    GstBuffer * buffer);
+static void gst_faad_flush (GstAudioDecoder * dec, gboolean hard);
 
-static gboolean gst_faad_setcaps (GstPad * pad, GstCaps * caps);
-static gboolean gst_faad_src_event (GstPad * pad, GstEvent * event);
-static gboolean gst_faad_sink_event (GstPad * pad, GstEvent * event);
-static gboolean gst_faad_src_query (GstPad * pad, GstQuery * query);
-static GstFlowReturn gst_faad_chain (GstPad * pad, GstBuffer * buffer);
-static GstStateChangeReturn gst_faad_change_state (GstElement * element,
-    GstStateChange transition);
-static gboolean gst_faad_src_convert (GstFaad * faad, GstFormat src_format,
-    gint64 src_val, GstFormat dest_format, gint64 * dest_val);
 static gboolean gst_faad_open_decoder (GstFaad * faad);
 static void gst_faad_close_decoder (GstFaad * faad);
 
-static GstElementClass *parent_class;   /* NULL */
-
-GType
-gst_faad_get_type (void)
-{
-  static GType gst_faad_type = 0;
-
-  if (!gst_faad_type) {
-    static const GTypeInfo gst_faad_info = {
-      sizeof (GstFaadClass),
-      (GBaseInitFunc) gst_faad_base_init,
-      NULL,
-      (GClassInitFunc) gst_faad_class_init,
-      NULL,
-      NULL,
-      sizeof (GstFaad),
-      0,
-      (GInstanceInitFunc) gst_faad_init,
-    };
-
-    gst_faad_type = g_type_register_static (GST_TYPE_ELEMENT,
-        "GstFaad", &gst_faad_info, 0);
-  }
-
-  return gst_faad_type;
-}
+GST_BOILERPLATE (GstFaad, gst_faad, GstAudioDecoder, GST_TYPE_AUDIO_DECODER);
 
 static void
-gst_faad_base_init (GstFaadClass * klass)
+gst_faad_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
@@ -208,47 +177,27 @@ gst_faad_base_init (GstFaadClass * klass)
 static void
 gst_faad_class_init (GstFaadClass * klass)
 {
-  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
-  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstAudioDecoderClass *base_class = GST_AUDIO_DECODER_CLASS (klass);
 
   parent_class = g_type_class_peek_parent (klass);
 
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_faad_finalize);
-
-  gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_faad_change_state);
+  base_class->start = GST_DEBUG_FUNCPTR (gst_faad_start);
+  base_class->stop = GST_DEBUG_FUNCPTR (gst_faad_stop);
+  base_class->set_format = GST_DEBUG_FUNCPTR (gst_faad_set_format);
+  base_class->parse = GST_DEBUG_FUNCPTR (gst_faad_parse);
+  base_class->handle_frame = GST_DEBUG_FUNCPTR (gst_faad_handle_frame);
+  base_class->flush = GST_DEBUG_FUNCPTR (gst_faad_flush);
 }
 
 static void
-gst_faad_init (GstFaad * faad)
+gst_faad_init (GstFaad * faad, GstFaadClass * klass)
 {
-  faad->sinkpad = gst_pad_new_from_static_template (&sink_template, "sink");
-  gst_element_add_pad (GST_ELEMENT (faad), faad->sinkpad);
-  gst_pad_set_event_function (faad->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_faad_sink_event));
-  gst_pad_set_setcaps_function (faad->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_faad_setcaps));
-  gst_pad_set_chain_function (faad->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_faad_chain));
-
-  faad->srcpad = gst_pad_new_from_static_template (&src_template, "src");
-  gst_pad_use_fixed_caps (faad->srcpad);
-  gst_pad_set_query_function (faad->srcpad,
-      GST_DEBUG_FUNCPTR (gst_faad_src_query));
-  gst_pad_set_event_function (faad->srcpad,
-      GST_DEBUG_FUNCPTR (gst_faad_src_event));
-  gst_element_add_pad (GST_ELEMENT (faad), faad->srcpad);
-
-  faad->adapter = gst_adapter_new ();
-
   gst_faad_reset (faad);
 }
 
 static void
 gst_faad_reset_stream_state (GstFaad * faad)
 {
-  faad->sync_flush = 0;
-  gst_adapter_clear (faad->adapter);
-  clear_queued (faad);
   if (faad->handle)
     faacDecPostSeekReset (faad->handle, 0);
 }
@@ -256,45 +205,43 @@ gst_faad_reset_stream_state (GstFaad * faad)
 static void
 gst_faad_reset (GstFaad * faad)
 {
-  gst_segment_init (&faad->segment, GST_FORMAT_TIME);
   faad->samplerate = -1;
   faad->channels = -1;
   faad->init = FALSE;
   faad->packetised = FALSE;
   g_free (faad->channel_positions);
   faad->channel_positions = NULL;
-  faad->next_ts = GST_CLOCK_TIME_NONE;
-  faad->prev_ts = 0;
-  faad->bytes_in = 0;
-  faad->sum_dur_out = 0;
-  faad->error_count = 0;
   faad->last_header = 0;
 
   gst_faad_reset_stream_state (faad);
 }
 
-
-static void
-gst_faad_finalize (GObject * object)
+static gboolean
+gst_faad_start (GstAudioDecoder * dec)
 {
-  GstFaad *faad = GST_FAAD (object);
+  GstFaad *faad = GST_FAAD (dec);
 
-  g_object_unref (faad->adapter);
+  GST_DEBUG_OBJECT (dec, "start");
+  gst_faad_reset (faad);
 
-  G_OBJECT_CLASS (parent_class)->finalize (object);
+  /* call upon legacy upstream byte support (e.g. seeking) */
+  gst_audio_decoder_set_byte_time (dec, TRUE);
+  /* never mind a few errors */
+  gst_audio_decoder_set_max_errors (dec, 10);
+
+  return TRUE;
 }
 
-static void
-gst_faad_send_tags (GstFaad * faad)
+static gboolean
+gst_faad_stop (GstAudioDecoder * dec)
 {
-  GstTagList *tags;
+  GstFaad *faad = GST_FAAD (dec);
 
-  tags = gst_tag_list_new ();
+  GST_DEBUG_OBJECT (dec, "stop");
+  gst_faad_reset (faad);
+  gst_faad_close_decoder (faad);
 
-  gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE,
-      GST_TAG_AUDIO_CODEC, "MPEG-4 AAC audio", NULL);
-
-  gst_element_found_tags (GST_ELEMENT (faad), tags);
+  return TRUE;
 }
 
 static gint
@@ -327,9 +274,9 @@ aac_rate_idx (gint rate)
 }
 
 static gboolean
-gst_faad_setcaps (GstPad * pad, GstCaps * caps)
+gst_faad_set_format (GstAudioDecoder * dec, GstCaps * caps)
 {
-  GstFaad *faad = GST_FAAD (gst_pad_get_parent (pad));
+  GstFaad *faad = GST_FAAD (dec);
   GstStructure *str = gst_caps_get_structure (caps, 0);
   GstBuffer *buf;
   const GValue *value;
@@ -352,8 +299,8 @@ gst_faad_setcaps (GstPad * pad, GstCaps * caps)
 
     /* We have codec data, means packetised stream */
     faad->packetised = TRUE;
-    buf = gst_value_get_buffer (value);
 
+    buf = gst_value_get_buffer (value);
     g_return_val_if_fail (buf != NULL, FALSE);
 
     cdata = GST_BUFFER_DATA (buf);
@@ -391,9 +338,6 @@ gst_faad_setcaps (GstPad * pad, GstCaps * caps)
     faad->channels = 0;
 
     faad->init = TRUE;
-    gst_faad_send_tags (faad);
-
-    gst_adapter_clear (faad->adapter);
   } else if ((value = gst_structure_get_value (str, "framed")) &&
       g_value_get_boolean (value) == TRUE) {
     faad->packetised = TRUE;
@@ -424,7 +368,6 @@ gst_faad_setcaps (GstPad * pad, GstCaps * caps)
     }
   }
 
-  gst_object_unref (faad);
   return TRUE;
 
   /* ERRORS */
@@ -535,349 +478,6 @@ gst_faad_chanpos_to_gst (GstFaad * faad, guchar * fpos, guint num,
   return pos;
 }
 
-static void
-clear_queued (GstFaad * faad)
-{
-  g_list_foreach (faad->queued, (GFunc) gst_mini_object_unref, NULL);
-  g_list_free (faad->queued);
-  faad->queued = NULL;
-  g_list_foreach (faad->gather, (GFunc) gst_mini_object_unref, NULL);
-  g_list_free (faad->gather);
-  faad->gather = NULL;
-  g_list_foreach (faad->decode, (GFunc) gst_mini_object_unref, NULL);
-  g_list_free (faad->decode);
-  faad->decode = NULL;
-}
-
-static GstFlowReturn
-flush_queued (GstFaad * faad)
-{
-  GstFlowReturn ret = GST_FLOW_OK;
-
-  while (faad->queued) {
-    GstBuffer *buf = GST_BUFFER_CAST (faad->queued->data);
-
-    GST_LOG_OBJECT (faad, "pushing buffer %p, timestamp %"
-        GST_TIME_FORMAT ", duration %" GST_TIME_FORMAT, buf,
-        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
-        GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
-
-    /* iterate ouput queue an push downstream */
-    ret = gst_pad_push (faad->srcpad, buf);
-
-    faad->queued = g_list_delete_link (faad->queued, faad->queued);
-  }
-  return ret;
-}
-
-static GstFlowReturn
-gst_faad_drain (GstFaad * faad)
-{
-  GstFlowReturn ret = GST_FLOW_OK;
-
-  GST_DEBUG_OBJECT (faad, "draining");
-
-  if (faad->segment.rate < 0.0) {
-    /* also decode tail = head of previous fragment to fill this one */
-    while (faad->decode) {
-      GstBuffer *buf = GST_BUFFER_CAST (faad->decode->data);
-
-      GST_DEBUG_OBJECT (faad, "processing delayed decode buffer");
-      gst_faad_chain (faad->sinkpad, buf);
-      faad->decode = g_list_delete_link (faad->decode, faad->decode);
-    }
-    /* if we have some queued frames for reverse playback, flush
-     * them now */
-    ret = flush_queued (faad);
-    /* move non-decoded leading buffers gathered in previous run
-     * to decode queue for this run */
-    faad->decode = g_list_reverse (faad->gather);
-    faad->gather = NULL;
-  } else {
-    /* squeeze any possible remaining frames that are pending sync */
-    gst_faad_chain (faad->sinkpad, NULL);
-  }
-  return ret;
-}
-
-static gboolean
-gst_faad_do_raw_seek (GstFaad * faad, GstEvent * event)
-{
-  GstSeekFlags flags;
-  GstSeekType start_type, end_type;
-  GstFormat format;
-  gdouble rate;
-  gint64 start, start_time;
-
-  gst_event_parse_seek (event, &rate, &format, &flags, &start_type,
-      &start_time, &end_type, NULL);
-
-  if (rate != 1.0 ||
-      format != GST_FORMAT_TIME ||
-      start_type != GST_SEEK_TYPE_SET || end_type != GST_SEEK_TYPE_NONE) {
-    return FALSE;
-  }
-
-  if (!gst_faad_src_convert (faad, GST_FORMAT_TIME, start_time,
-          GST_FORMAT_BYTES, &start)) {
-    return FALSE;
-  }
-
-  event = gst_event_new_seek (1.0, GST_FORMAT_BYTES, flags,
-      GST_SEEK_TYPE_SET, start, GST_SEEK_TYPE_NONE, -1);
-
-  GST_DEBUG_OBJECT (faad, "seeking to %" GST_TIME_FORMAT " at byte offset %"
-      G_GINT64_FORMAT, GST_TIME_ARGS (start_time), start);
-
-  return gst_pad_push_event (faad->sinkpad, event);
-}
-
-static gboolean
-gst_faad_src_event (GstPad * pad, GstEvent * event)
-{
-  GstFaad *faad;
-  gboolean res;
-
-  faad = GST_FAAD (gst_pad_get_parent (pad));
-
-  GST_LOG_OBJECT (faad, "Handling %s event", GST_EVENT_TYPE_NAME (event));
-
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_SEEK:{
-      /* try upstream first, there might be a demuxer */
-      gst_event_ref (event);
-      if (!(res = gst_pad_push_event (faad->sinkpad, event))) {
-        res = gst_faad_do_raw_seek (faad, event);
-      }
-      gst_event_unref (event);
-      break;
-    }
-    default:
-      res = gst_pad_push_event (faad->sinkpad, event);
-      break;
-  }
-
-  gst_object_unref (faad);
-  return res;
-}
-
-static gboolean
-gst_faad_sink_event (GstPad * pad, GstEvent * event)
-{
-  GstFaad *faad;
-  gboolean res = TRUE;
-
-  faad = GST_FAAD (gst_pad_get_parent (pad));
-
-  GST_LOG_OBJECT (faad, "Handling %s event", GST_EVENT_TYPE_NAME (event));
-
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_FLUSH_STOP:
-      gst_faad_reset_stream_state (faad);
-      res = gst_pad_push_event (faad->srcpad, event);
-      break;
-    case GST_EVENT_EOS:
-      gst_faad_drain (faad);
-      gst_faad_reset_stream_state (faad);
-      res = gst_pad_push_event (faad->srcpad, event);
-      break;
-    case GST_EVENT_NEWSEGMENT:
-    {
-      GstFormat fmt;
-      gboolean is_update;
-      gint64 start, end, base;
-      gdouble rate;
-
-      gst_event_parse_new_segment (event, &is_update, &rate, &fmt, &start,
-          &end, &base);
-
-      /* drain queued buffers before we activate the new segment */
-      gst_faad_drain (faad);
-
-      if (fmt == GST_FORMAT_TIME) {
-        GST_DEBUG_OBJECT (faad,
-            "Got NEWSEGMENT event in GST_FORMAT_TIME, passing on (%"
-            GST_TIME_FORMAT " - %" GST_TIME_FORMAT ")", GST_TIME_ARGS (start),
-            GST_TIME_ARGS (end));
-        gst_segment_set_newsegment (&faad->segment, is_update, rate, fmt, start,
-            end, base);
-      } else if (fmt == GST_FORMAT_BYTES) {
-        gint64 new_start = 0;
-        gint64 new_end = -1;
-
-        GST_DEBUG_OBJECT (faad, "Got NEWSEGMENT event in GST_FORMAT_BYTES (%"
-            G_GUINT64_FORMAT " - %" G_GUINT64_FORMAT ")", start, end);
-
-        if (gst_faad_src_convert (faad, GST_FORMAT_BYTES, start,
-                GST_FORMAT_TIME, &new_start)) {
-          if (end != -1) {
-            gst_faad_src_convert (faad, GST_FORMAT_BYTES, end,
-                GST_FORMAT_TIME, &new_end);
-          }
-        } else {
-          GST_DEBUG_OBJECT (faad,
-              "no average bitrate yet, sending newsegment with start at 0");
-        }
-        gst_event_unref (event);
-
-        event = gst_event_new_new_segment (is_update, rate,
-            GST_FORMAT_TIME, new_start, new_end, new_start);
-
-        gst_segment_set_newsegment (&faad->segment, is_update, rate,
-            GST_FORMAT_TIME, new_start, new_end, new_start);
-
-        GST_DEBUG_OBJECT (faad,
-            "Sending new NEWSEGMENT event, time %" GST_TIME_FORMAT
-            " - %" GST_TIME_FORMAT, GST_TIME_ARGS (new_start),
-            GST_TIME_ARGS (new_end));
-
-        faad->next_ts = GST_CLOCK_TIME_NONE;
-        faad->prev_ts = new_start;
-      }
-
-      res = gst_pad_push_event (faad->srcpad, event);
-      break;
-    }
-    default:
-      res = gst_pad_event_default (pad, event);
-      break;
-  }
-
-  gst_object_unref (faad);
-  return res;
-}
-
-static gboolean
-gst_faad_src_convert (GstFaad * faad, GstFormat src_format, gint64 src_val,
-    GstFormat dest_format, gint64 * dest_val)
-{
-  guint64 bytes_in, time_out, val;
-
-  if (src_format == dest_format) {
-    if (dest_val)
-      *dest_val = src_val;
-    return TRUE;
-  }
-
-  GST_OBJECT_LOCK (faad);
-  bytes_in = faad->bytes_in;
-  time_out = faad->sum_dur_out;
-  GST_OBJECT_UNLOCK (faad);
-
-  if (bytes_in == 0 || time_out == 0)
-    return FALSE;
-
-  /* convert based on the average bitrate so far */
-  if (src_format == GST_FORMAT_BYTES && dest_format == GST_FORMAT_TIME) {
-    val = gst_util_uint64_scale (src_val, time_out, bytes_in);
-  } else if (src_format == GST_FORMAT_TIME && dest_format == GST_FORMAT_BYTES) {
-    val = gst_util_uint64_scale (src_val, bytes_in, time_out);
-  } else {
-    return FALSE;
-  }
-
-  if (dest_val)
-    *dest_val = (gint64) val;
-
-  return TRUE;
-}
-
-static gboolean
-gst_faad_src_query (GstPad * pad, GstQuery * query)
-{
-  gboolean res = FALSE;
-  GstFaad *faad;
-  GstPad *peer = NULL;
-
-  faad = GST_FAAD (gst_pad_get_parent (pad));
-
-  GST_LOG_OBJECT (faad, "processing %s query", GST_QUERY_TYPE_NAME (query));
-
-  switch (GST_QUERY_TYPE (query)) {
-    case GST_QUERY_DURATION:{
-      GstFormat format;
-      gint64 len_bytes, duration;
-
-      /* try upstream first, in case there's a demuxer */
-      if ((res = gst_pad_query_default (pad, query)))
-        break;
-
-      gst_query_parse_duration (query, &format, NULL);
-      if (format != GST_FORMAT_TIME) {
-        GST_DEBUG_OBJECT (faad, "query failed: can't handle format %s",
-            gst_format_get_name (format));
-        break;
-      }
-
-      peer = gst_pad_get_peer (faad->sinkpad);
-      if (peer == NULL)
-        break;
-
-      format = GST_FORMAT_BYTES;
-      if (!gst_pad_query_duration (peer, &format, &len_bytes)) {
-        GST_DEBUG_OBJECT (faad, "query failed: failed to get upstream length");
-        break;
-      }
-
-      res = gst_faad_src_convert (faad, GST_FORMAT_BYTES, len_bytes,
-          GST_FORMAT_TIME, &duration);
-
-      if (res) {
-        gst_query_set_duration (query, GST_FORMAT_TIME, duration);
-
-        GST_LOG_OBJECT (faad, "duration estimate: %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (duration));
-      }
-      break;
-    }
-    case GST_QUERY_POSITION:{
-      GstFormat format;
-      gint64 pos_bytes, pos;
-
-      /* try upstream first, in case there's a demuxer */
-      if ((res = gst_pad_query_default (pad, query)))
-        break;
-
-      gst_query_parse_position (query, &format, NULL);
-      if (format != GST_FORMAT_TIME) {
-        GST_DEBUG_OBJECT (faad, "query failed: can't handle format %s",
-            gst_format_get_name (format));
-        break;
-      }
-
-      peer = gst_pad_get_peer (faad->sinkpad);
-      if (peer == NULL)
-        break;
-
-      format = GST_FORMAT_BYTES;
-      if (!gst_pad_query_position (peer, &format, &pos_bytes)) {
-        GST_OBJECT_LOCK (faad);
-        pos = faad->next_ts;
-        GST_OBJECT_UNLOCK (faad);
-        res = TRUE;
-      } else {
-        res = gst_faad_src_convert (faad, GST_FORMAT_BYTES, pos_bytes,
-            GST_FORMAT_TIME, &pos);
-      }
-
-      if (res) {
-        gst_query_set_position (query, GST_FORMAT_TIME, pos);
-      }
-      break;
-    }
-    default:
-      res = gst_pad_query_default (pad, query);
-      break;
-  }
-
-  if (peer)
-    gst_object_unref (peer);
-
-  gst_object_unref (faad);
-  return res;
-}
-
-
 static gboolean
 gst_faad_update_caps (GstFaad * faad, faacDecFrameInfo * info)
 {
@@ -935,7 +535,7 @@ gst_faad_update_caps (GstFaad * faad, faacDecFrameInfo * info)
 
   GST_DEBUG_OBJECT (faad, "New output caps: %" GST_PTR_FORMAT, caps);
 
-  ret = gst_pad_set_caps (faad->srcpad, caps);
+  ret = gst_pad_set_caps (GST_AUDIO_DECODER_SRC_PAD (faad), caps);
   gst_caps_unref (caps);
 
   return ret;
@@ -950,12 +550,13 @@ gst_faad_update_caps (GstFaad * faad, faacDecFrameInfo * info)
  * gst/typefind/) for ADTS because 12 bits isn't very reliable.
  */
 static gboolean
-gst_faad_sync (GstFaad * faad, guint8 * data, guint size, gboolean next,
-    guint * off)
+gst_faad_sync (GstFaad * faad, const guint8 * data, guint size, gboolean next,
+    gint * off, gint * length)
 {
   guint n = 0;
   gint snc;
   gboolean ret = FALSE;
+  guint len = 0;
 
   GST_LOG_OBJECT (faad, "Finding syncpoint");
 
@@ -968,8 +569,6 @@ gst_faad_sync (GstFaad * faad, guint8 * data, guint size, gboolean next,
     if ((snc & 0xfff6) == 0xfff0) {
       /* we have an ADTS syncpoint. Parse length and find
        * next syncpoint. */
-      guint len;
-
       GST_LOG_OBJECT (faad,
           "Found one ADTS syncpoint at offset 0x%x, tracing next...", n);
 
@@ -1012,10 +611,14 @@ gst_faad_sync (GstFaad * faad, guint8 * data, guint size, gboolean next,
   }
 
 exit:
+
   *off = n;
 
-  if (!ret)
+  if (ret) {
+    *length = len;
+  } else {
     GST_LOG_OBJECT (faad, "Found no syncpoint");
+  }
 
   return ret;
 }
@@ -1038,78 +641,52 @@ looks_like_valid_header (guint8 * input_data, guint input_size)
   return FALSE;
 }
 
-#define FAAD_MAX_ERROR  10
-#define FAAD_MAX_SYNC   10 * 8 * 1024
+static GstFlowReturn
+gst_faad_parse (GstAudioDecoder * dec, GstAdapter * adapter,
+    gint * offset, gint * length)
+{
+  GstFaad *faad;
+  const guint8 *data;
+  guint size;
+  gboolean sync, eos;
+
+  faad = GST_FAAD (dec);
+
+  size = gst_adapter_available (adapter);
+  g_return_val_if_fail (size > 0, GST_FLOW_ERROR);
+
+  gst_audio_decoder_get_parse_state (dec, &sync, &eos);
+
+  if (faad->packetised) {
+    *offset = 0;
+    *length = size;
+    return GST_FLOW_OK;
+  } else {
+    data = gst_adapter_peek (adapter, size);
+    return gst_faad_sync (faad, data, size, !eos, offset, length) ?
+        GST_FLOW_OK : GST_FLOW_UNEXPECTED;
+  }
+}
 
 static GstFlowReturn
-gst_faad_chain (GstPad * pad, GstBuffer * buffer)
+gst_faad_handle_frame (GstAudioDecoder * dec, GstBuffer * buffer)
 {
+  GstFaad *faad;
   GstFlowReturn ret = GST_FLOW_OK;
   guint input_size;
-  guint available;
   guchar *input_data;
-  GstFaad *faad;
   GstBuffer *outbuf;
   faacDecFrameInfo info;
   void *out;
-  gboolean run_loop = TRUE;
-  guint sync_off;
-  GstClockTime ts;
-  gboolean next;
 
-  faad = GST_FAAD (gst_pad_get_parent (pad));
+  faad = GST_FAAD (dec);
 
-  if (G_LIKELY (buffer)) {
-    GST_LOG_OBJECT (faad, "buffer of size %d with ts: %" GST_TIME_FORMAT
-        ", duration %" GST_TIME_FORMAT, GST_BUFFER_SIZE (buffer),
-        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
-        GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)));
+  /* no fancy draining */
+  if (G_UNLIKELY (!buffer))
+    return GST_FLOW_OK;
 
-    if (GST_BUFFER_IS_DISCONT (buffer)) {
-      gst_faad_drain (faad);
-      gst_faad_reset_stream_state (faad);
-      faad->discont = TRUE;
-    }
-
-    gst_adapter_push (faad->adapter, buffer);
-    buffer = NULL;
-    next = TRUE;
-  } else {
-    next = FALSE;
-  }
-
-  available = gst_adapter_available (faad->adapter);
-  input_size = available;
-  if (G_UNLIKELY (!available))
-    goto out;
-
-  ts = gst_adapter_prev_timestamp (faad->adapter, NULL);
-  if (GST_CLOCK_TIME_IS_VALID (ts) && (ts != faad->prev_ts)) {
-    faad->prev_ts = ts;
-  } else {
-    /* nothing new */
-    ts = GST_CLOCK_TIME_NONE;
-  }
-
-  if (!GST_CLOCK_TIME_IS_VALID (faad->next_ts))
-    faad->next_ts = faad->prev_ts;
-
-  input_data = (guchar *) gst_adapter_peek (faad->adapter, available);
-
-  if (!faad->packetised) {
-    if (!gst_faad_sync (faad, input_data, input_size, next, &sync_off)) {
-      faad->sync_flush += sync_off;
-      input_size -= sync_off;
-      if (faad->sync_flush > FAAD_MAX_SYNC)
-        goto parse_failed;
-      else
-        goto out;
-    } else {
-      faad->sync_flush = 0;
-      input_data += sync_off;
-      input_size -= sync_off;
-    }
-  }
+  input_data = GST_BUFFER_DATA (buffer);
+  input_size = GST_BUFFER_SIZE (buffer);
 
 init:
   /* init if not already done during capsnego */
@@ -1143,7 +720,6 @@ init:
     }
 
     faad->init = TRUE;
-    gst_faad_send_tags (faad);
 
     /* make sure we create new caps below */
     faad->samplerate = 0;
@@ -1151,18 +727,11 @@ init:
   }
 
   /* decode cycle */
-  info.bytesconsumed = input_size;
   info.error = 0;
 
-  while ((input_size > 0) && run_loop) {
+  do {
 
-    if (faad->packetised) {
-      /* Only one packet per buffer, no matter how much is really consumed */
-      run_loop = FALSE;
-    } else {
-      if (input_size < FAAD_MIN_STREAMSIZE || info.bytesconsumed <= 0) {
-        break;
-      }
+    if (!faad->packetised) {
       /* faad only really parses ADTS header at Init time, not when decoding,
        * so monitor for changes and kick faad when needed */
       if (GST_READ_UINT32_BE (input_data) >> 4 != faad->last_header >> 4) {
@@ -1178,32 +747,13 @@ init:
     out = faacDecDecode (faad->handle, &info, input_data, input_size);
 
     if (info.error > 0) {
-      /* mark discont for the next buffer */
-      faad->discont = TRUE;
-      /* flush a bit, arranges for resync next time */
-      input_size--;
-      faad->error_count++;
-      /* do not bail out at once, but know when to stop */
-      if (faad->error_count > FAAD_MAX_ERROR)
-        goto decode_failed;
-      else {
-        GST_WARNING_OBJECT (faad, "decoding error: %s",
-            faacDecGetErrorMessage (info.error));
-        goto out;
-      }
+      /* give up on frame and bail out */
+      gst_audio_decoder_finish_frame (dec, NULL, 1);
+      goto decode_failed;
     }
-
-    /* ok again */
-    faad->error_count = 0;
 
     GST_LOG_OBJECT (faad, "%d bytes consumed, %d samples decoded",
         (guint) info.bytesconsumed, (guint) info.samples);
-
-    if (info.bytesconsumed > input_size)
-      info.bytesconsumed = input_size;
-
-    input_size -= info.bytesconsumed;
-    input_data += info.bytesconsumed;
 
     if (out && info.samples > 0) {
       if (!gst_faad_update_caps (faad, &info))
@@ -1213,82 +763,21 @@ init:
       if (info.samples > G_MAXUINT / faad->bps)
         goto sample_overflow;
 
-      /* play decoded data */
-      if (info.samples > 0) {
-        guint bufsize = info.samples * faad->bps;
-        guint num_samples = info.samples / faad->channels;
+      /* note: info.samples is total samples, not per channel */
+      ret =
+          gst_pad_alloc_buffer_and_set_caps (GST_AUDIO_DECODER_SRC_PAD
+          (faad), 0, info.samples * faad->bps,
+          GST_PAD_CAPS (GST_AUDIO_DECODER_SRC_PAD (faad)), &outbuf);
+      if (ret != GST_FLOW_OK)
+        goto out;
 
-        /* note: info.samples is total samples, not per channel */
-        ret =
-            gst_pad_alloc_buffer_and_set_caps (faad->srcpad, 0, bufsize,
-            GST_PAD_CAPS (faad->srcpad), &outbuf);
-        if (ret != GST_FLOW_OK)
-          goto out;
+      memcpy (GST_BUFFER_DATA (outbuf), out, GST_BUFFER_SIZE (outbuf));
 
-        memcpy (GST_BUFFER_DATA (outbuf), out, GST_BUFFER_SIZE (outbuf));
-        GST_BUFFER_OFFSET (outbuf) =
-            GST_CLOCK_TIME_TO_FRAMES (faad->next_ts, faad->samplerate);
-        GST_BUFFER_TIMESTAMP (outbuf) = faad->next_ts;
-        GST_BUFFER_DURATION (outbuf) =
-            GST_FRAMES_TO_CLOCK_TIME (num_samples, faad->samplerate);
-
-        GST_OBJECT_LOCK (faad);
-        faad->next_ts += GST_BUFFER_DURATION (outbuf);
-        faad->sum_dur_out += GST_BUFFER_DURATION (outbuf);
-        faad->bytes_in += info.bytesconsumed;
-        GST_OBJECT_UNLOCK (faad);
-
-        if ((outbuf = gst_audio_buffer_clip (outbuf, &faad->segment,
-                    faad->samplerate, faad->bps * faad->channels))) {
-          GST_LOG_OBJECT (faad,
-              "pushing buffer, off=%" G_GUINT64_FORMAT ", ts=%" GST_TIME_FORMAT,
-              GST_BUFFER_OFFSET (outbuf),
-              GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)));
-
-          if (faad->discont) {
-            GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
-            faad->discont = FALSE;
-          }
-
-          if (faad->segment.rate > 0.0) {
-            ret = gst_pad_push (faad->srcpad, outbuf);
-          } else {
-            /* reverse playback, queue frame till later when we get a discont. */
-            GST_LOG_OBJECT (faad, "queued frame");
-            faad->queued = g_list_prepend (faad->queued, outbuf);
-            ret = GST_FLOW_OK;
-          }
-          if (ret != GST_FLOW_OK)
-            goto out;
-        }
-      }
-    } else {
-      if (faad->packetised && faad->segment.rate < 0.0) {
-        /* leading non-decoded frames used as tail
-         * for next preceding fragment */
-        outbuf = gst_adapter_take_buffer (faad->adapter, available);
-        available = 0;
-        outbuf = gst_buffer_make_metadata_writable (outbuf);
-        GST_BUFFER_FLAG_UNSET (outbuf, GST_BUFFER_FLAG_DISCONT);
-        faad->gather = g_list_prepend (faad->gather, outbuf);
-      }
+      ret = gst_audio_decoder_finish_frame (dec, outbuf, 1);
     }
-
-    /* adjust to incoming new timestamp, if any, after decoder delay */
-    if (GST_CLOCK_TIME_IS_VALID (ts)) {
-      faad->next_ts = ts;
-      ts = GST_CLOCK_TIME_NONE;
-    }
-  }
+  } while (FALSE);
 
 out:
-  /* in raw case: (pretend) all consumed */
-  if (faad->packetised)
-    input_size = 0;
-  gst_adapter_flush (faad->adapter, available - input_size);
-
-  gst_object_unref (faad);
-
   return ret;
 
 /* ERRORS */
@@ -1315,9 +804,8 @@ init2_failed:
   }
 decode_failed:
   {
-    GST_ELEMENT_ERROR (faad, STREAM, DECODE, (NULL),
-        ("decoding error: %s", faacDecGetErrorMessage (info.error)));
-    ret = GST_FLOW_ERROR;
+    GST_AUDIO_DECODER_ERROR (faad, 1, STREAM, DECODE, (NULL),
+        ("decoding error: %s", faacDecGetErrorMessage (info.error)), ret);
     goto out;
   }
 negotiation_failed:
@@ -1334,13 +822,12 @@ sample_overflow:
     ret = GST_FLOW_ERROR;
     goto out;
   }
-parse_failed:
-  {
-    GST_ELEMENT_ERROR (faad, STREAM, DECODE, (NULL),
-        ("failed to parse non-packetized stream"));
-    ret = GST_FLOW_ERROR;
-    goto out;
-  }
+}
+
+static void
+gst_faad_flush (GstAudioDecoder * dec, gboolean hard)
+{
+  gst_faad_reset_stream_state (GST_FAAD (dec));
 }
 
 static gboolean
@@ -1375,38 +862,6 @@ gst_faad_close_decoder (GstFaad * faad)
     faacDecClose (faad->handle);
     faad->handle = NULL;
   }
-}
-
-static GstStateChangeReturn
-gst_faad_change_state (GstElement * element, GstStateChange transition)
-{
-  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
-  GstFaad *faad = GST_FAAD (element);
-
-  switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
-      break;
-    case GST_STATE_CHANGE_READY_TO_PAUSED:
-      break;
-    default:
-      break;
-  }
-
-  if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-
-  switch (transition) {
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_faad_reset (faad);
-      gst_faad_close_decoder (faad);
-      break;
-    case GST_STATE_CHANGE_READY_TO_NULL:
-      break;
-    default:
-      break;
-  }
-
-  return ret;
 }
 
 static gboolean

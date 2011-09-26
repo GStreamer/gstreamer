@@ -25,6 +25,7 @@
 #include <gst/base/gstbitreader.h>
 #include <gst/rtp/gstrtppayloads.h>
 #include <gst/rtp/gstrtpbuffer.h>
+#include "dboolhuff.h"
 #include "gstrtpvp8pay.h"
 
 #define FI_FRAG_UNFRAGMENTED 0x0
@@ -130,6 +131,8 @@ gst_rtp_vp8_pay_parse_frame (GstRtpVP8Pay * self, GstBuffer * buffer)
   guint8 tmp8 = 0;
   guint8 *data;
   guint8 partitions;
+  guint offset;
+  BOOL_DECODER bc;
 
   reader = gst_bit_reader_new_from_buffer (buffer);
 
@@ -150,7 +153,8 @@ gst_rtp_vp8_pay_parse_frame (GstRtpVP8Pay * self, GstBuffer * buffer)
   header_size = data[2] << 11 | data[1] << 3 | (data[0] >> 5);
 
   /* Include the uncompressed data blob in the header */
-  header_size += keyframe ? 10 : 3;
+  offset = keyframe ? 10 : 3;
+  header_size += offset;
 
   if (!gst_bit_reader_skip (reader, 24))
     goto error;
@@ -166,108 +170,80 @@ gst_rtp_vp8_pay_parse_frame (GstRtpVP8Pay * self, GstBuffer * buffer)
     if (!gst_bit_reader_get_bits_uint8 (reader, &tmp8, 8) || tmp8 != 0x2a)
       goto error;
 
-    /* Skip horizontal size code (16 bits) vertical size code (16 bits),
-     * color space (1 bit) and clamping type (1 bit) */
-    if (!gst_bit_reader_skip (reader, 34))
+    /* Skip horizontal size code (16 bits) vertical size code (16 bits) */
+    if (!gst_bit_reader_skip (reader, 32))
       goto error;
   }
 
+  offset = keyframe ? 10 : 3;
+  vp8dx_start_decode (&bc, GST_BUFFER_DATA (buffer) + offset,
+      GST_BUFFER_SIZE (buffer) - offset);
+
+  if (keyframe) {
+    /* color space (1 bit) and clamping type (1 bit) */
+    vp8dx_decode_bool (&bc, 0x80);
+    vp8dx_decode_bool (&bc, 0x80);
+  }
+
   /* segmentation_enabled */
-  if (!gst_bit_reader_get_bits_uint8 (reader, &tmp8, 1))
-    goto error;
-
-  if (tmp8 != 0) {
-    gboolean update_mb_segmentation_map;
-    gboolean update_segment_feature_data;
-
-    if (!gst_bit_reader_get_bits_uint8 (reader, &tmp8, 2))
-      goto error;
-
-    update_mb_segmentation_map = (tmp8 & 0x2) != 0;
-    update_segment_feature_data = (tmp8 & 0x1) != 0;
+  if (vp8dx_decode_bool (&bc, 0x80)) {
+    guint8 update_mb_segmentation_map = vp8dx_decode_bool (&bc, 0x80);
+    guint8 update_segment_feature_data = vp8dx_decode_bool (&bc, 0x80);
 
     if (update_segment_feature_data) {
       /* skip segment feature mode */
-      if (!gst_bit_reader_skip (reader, 1))
-        goto error;
+      vp8dx_decode_bool (&bc, 0x80);
 
+      /* quantizer update */
       for (i = 0; i < 4; i++) {
-        /* quantizer update */
-        if (!gst_bit_reader_get_bits_uint8 (reader, &tmp8, 1))
-          goto error;
-
-        if (tmp8 != 0) {
-          /* skip quantizer value (7 bits) and sign (1 bit) */
-          if (!gst_bit_reader_skip (reader, 8))
-            goto error;
-        }
+        /* skip flagged quantizer value (7 bits) and sign (1 bit) */
+        if (vp8dx_decode_bool (&bc, 0x80))
+          vp8_decode_value (&bc, 8);
       }
 
+      /* loop filter update */
       for (i = 0; i < 4; i++) {
-        /* loop filter update */
-        if (!gst_bit_reader_get_bits_uint8 (reader, &tmp8, 1))
-          goto error;
-
-        if (tmp8 != 0) {
-          /* skip lf update value (6 bits) and sign (1 bit) */
-          if (!gst_bit_reader_skip (reader, 7))
-            goto error;
-        }
+        /* skip flagged lf update value (6 bits) and sign (1 bit) */
+        if (vp8dx_decode_bool (&bc, 0x80))
+          vp8_decode_value (&bc, 7);
       }
     }
 
     if (update_mb_segmentation_map) {
+      /* segment prob update */
       for (i = 0; i < 3; i++) {
-        /* segment prob update */
-        if (!gst_bit_reader_get_bits_uint8 (reader, &tmp8, 1))
-          goto error;
-
-        if (tmp8 != 0) {
-          /* skip segment prob */
-          if (!gst_bit_reader_skip (reader, 8))
-            goto error;
-        }
+        /* skip flagged segment prob */
+        if (vp8dx_decode_bool (&bc, 0x80))
+          vp8_decode_value (&bc, 8);
       }
     }
   }
 
   /* skip filter type (1 bit), loop filter level (6 bits) and
    * sharpness level (3 bits) */
-  if (!gst_bit_reader_skip (reader, 10))
-    goto error;
+  vp8_decode_value (&bc, 1);
+  vp8_decode_value (&bc, 6);
+  vp8_decode_value (&bc, 3);
 
   /* loop_filter_adj_enabled */
-  if (!gst_bit_reader_get_bits_uint8 (reader, &tmp8, 1))
-    goto error;
+  if (vp8dx_decode_bool (&bc, 0x80)) {
 
-  if (tmp8 != 0) {
-    /* loop filter adj enabled */
-
-    /* mode_ref_lf_delta_update */
-    if (!gst_bit_reader_get_bits_uint8 (reader, &tmp8, 1))
-      goto error;
-
-    if (tmp8 != 0) {
-      /* mode_ref_lf_data_update */
-      int i;
+    /* delta update */
+    if (vp8dx_decode_bool (&bc, 0x80)) {
 
       for (i = 0; i < 8; i++) {
         /* 8 updates, 1 bit indicate whether there is one and if follow by a
          * 7 bit update */
-        if (!gst_bit_reader_get_bits_uint8 (reader, &tmp8, 1))
-          goto error;
-
-        if (tmp8 != 0) {
-          /* skip delta magnitude (6 bits) and sign (1 bit) */
-          if (!gst_bit_reader_skip (reader, 7))
-            goto error;
-        }
+        if (vp8dx_decode_bool (&bc, 0x80))
+          vp8_decode_value (&bc, 7);
       }
     }
   }
 
-  if (!gst_bit_reader_get_bits_uint8 (reader, &tmp8, 2))
+  if (vp8dx_bool_error (&bc))
     goto error;
+
+  tmp8 = vp8_decode_value (&bc, 2);
 
   partitions = 1 << tmp8;
 

@@ -46,8 +46,7 @@ static GstStaticPadTemplate sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/mpeg, "
-        "mpegversion = (int) [1, 2], "
-        "parsed = (boolean) false, " "systemstream = (boolean) false")
+        "mpegversion = (int) [1, 2], " "systemstream = (boolean) false")
     );
 
 /* Properties */
@@ -72,6 +71,8 @@ static gboolean gst_mpegv_parse_check_valid_frame (GstBaseParse * parse,
 static GstFlowReturn gst_mpegv_parse_parse_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame);
 static gboolean gst_mpegv_parse_set_caps (GstBaseParse * parse, GstCaps * caps);
+static GstFlowReturn gst_mpegv_parse_pre_push_frame (GstBaseParse * parse,
+    GstBaseParseFrame * frame);
 
 static void gst_mpegv_parse_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -165,6 +166,8 @@ gst_mpegv_parse_class_init (GstMpegvParseClass * klass)
       GST_DEBUG_FUNCPTR (gst_mpegv_parse_check_valid_frame);
   parse_class->parse_frame = GST_DEBUG_FUNCPTR (gst_mpegv_parse_parse_frame);
   parse_class->set_sink_caps = GST_DEBUG_FUNCPTR (gst_mpegv_parse_set_caps);
+  parse_class->pre_push_frame =
+      GST_DEBUG_FUNCPTR (gst_mpegv_parse_pre_push_frame);
 }
 
 static void
@@ -188,6 +191,7 @@ gst_mpegv_parse_reset (GstMpegvParse * mpvparse)
   gst_mpegv_parse_reset_frame (mpvparse);
   mpvparse->profile = 0;
   mpvparse->update_caps = TRUE;
+  mpvparse->send_codec_tag = TRUE;
 
   gst_buffer_replace (&mpvparse->config, NULL);
   memset (&mpvparse->sequencehdr, 0, sizeof (mpvparse->sequencehdr));
@@ -237,13 +241,12 @@ gst_mpegv_parse_process_config (GstMpegvParse * mpvparse, GstBuffer * buf,
   if (!gst_mpeg_video_parse_sequence_header (&mpvparse->sequencehdr, data,
           GST_BUFFER_SIZE (buf) - mpvparse->seq_offset, 0)) {
     GST_DEBUG_OBJECT (mpvparse,
-        "failed to parse config data (size %" G_GSSIZE_FORMAT ") at offset %d",
+        "failed to parse config data (size %d) at offset %d",
         size, mpvparse->seq_offset);
     return FALSE;
   }
 
-  GST_LOG_OBJECT (mpvparse, "accepting parsed config size %" G_GSSIZE_FORMAT,
-      size);
+  GST_LOG_OBJECT (mpvparse, "accepting parsed config size %d", size);
 
   /* Set mpeg version, and parse sequence extension */
   if (mpvparse->mpeg_version <= 0) {
@@ -490,15 +493,23 @@ end:
   } else if (GST_BASE_PARSE_DRAINING (parse)) {
     *framesize = GST_BUFFER_SIZE (buf);
     ret = TRUE;
+
   } else {
     /* resume scan where we left it */
-    mpvparse->last_sc = GST_BUFFER_SIZE (buf);
+    if (!mpvparse->last_sc)
+      *skipsize = mpvparse->last_sc = GST_BUFFER_SIZE (buf) - 3;
+    else if (mpvparse->typeoffsize)
+      mpvparse->last_sc = GST_BUFFER_SIZE (buf) - 3;
+    else
+      *skipsize = 0;
+
     /* request best next available */
     *framesize = G_MAXUINT;
     ret = FALSE;
   }
 
-  g_list_free_full (mpvparse->typeoffsize, (GDestroyNotify) g_free);
+  g_list_foreach (mpvparse->typeoffsize, (GFunc) g_free, NULL);
+  g_list_free (mpvparse->typeoffsize);
   mpvparse->typeoffsize = NULL;
 
   return ret;
@@ -652,6 +663,37 @@ gst_mpegv_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     return GST_BASE_PARSE_FLOW_DROPPED;
   } else
     return GST_FLOW_OK;
+}
+
+static GstFlowReturn
+gst_mpegv_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
+{
+  GstMpegvParse *mpvparse = GST_MPEGVIDEO_PARSE (parse);
+  GstTagList *taglist;
+
+  /* tag sending done late enough in hook to ensure pending events
+   * have already been sent */
+
+  if (G_UNLIKELY (mpvparse->send_codec_tag)) {
+    gchar *codec;
+
+    /* codec tag */
+    codec = g_strdup_printf ("MPEG %d Video", mpvparse->mpeg_version);
+    taglist = gst_tag_list_new ();
+    gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE,
+        GST_TAG_VIDEO_CODEC, codec, NULL);
+    g_free (codec);
+
+    gst_element_found_tags_for_pad (GST_ELEMENT (mpvparse),
+        GST_BASE_PARSE_SRC_PAD (mpvparse), taglist);
+
+    mpvparse->send_codec_tag = FALSE;
+  }
+
+  /* usual clipping applies */
+  frame->flags |= GST_BASE_PARSE_FRAME_FLAG_CLIP;
+
+  return GST_FLOW_OK;
 }
 
 static gboolean

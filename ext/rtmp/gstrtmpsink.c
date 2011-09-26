@@ -164,20 +164,6 @@ gst_rtmp_sink_start (GstBaseSink * basesink)
   /* Mark this as an output connection */
   RTMP_EnableWrite (sink->rtmp);
 
-  /* open the connection */
-  if (!RTMP_IsConnected (sink->rtmp)) {
-    if (!RTMP_Connect (sink->rtmp, NULL) || !RTMP_ConnectStream (sink->rtmp, 0)) {
-      GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE, (NULL),
-          ("Could not connect to RTMP stream \"%s\" for writing", sink->uri));
-      RTMP_Free (sink->rtmp);
-      sink->rtmp = NULL;
-      g_free (sink->rtmp_uri);
-      sink->rtmp_uri = NULL;
-      return FALSE;
-    }
-    GST_DEBUG_OBJECT (sink, "Opened connection to %s", sink->rtmp_uri);
-  }
-
   sink->first = TRUE;
 
   return TRUE;
@@ -210,6 +196,21 @@ gst_rtmp_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   GstBuffer *reffed_buf = NULL;
 
   if (sink->first) {
+    /* open the connection */
+    if (!RTMP_IsConnected (sink->rtmp)) {
+      if (!RTMP_Connect (sink->rtmp, NULL)
+          || !RTMP_ConnectStream (sink->rtmp, 0)) {
+        GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE, (NULL),
+            ("Could not connect to RTMP stream \"%s\" for writing", sink->uri));
+        RTMP_Free (sink->rtmp);
+        sink->rtmp = NULL;
+        g_free (sink->rtmp_uri);
+        sink->rtmp_uri = NULL;
+        return GST_FLOW_ERROR;
+      }
+      GST_DEBUG_OBJECT (sink, "Opened connection to %s", sink->rtmp_uri);
+    }
+
     /* FIXME: Parse the first buffer and see if it contains a header plus a packet instead
      * of just assuming it's only the header */
     GST_LOG_OBJECT (sink, "Caching first buffer of size %d for concatenation",

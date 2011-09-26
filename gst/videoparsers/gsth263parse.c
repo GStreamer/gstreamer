@@ -39,14 +39,13 @@ static GstStaticPadTemplate srctemplate =
 GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-h263, variant = (string) itu, "
-        "parsed = (boolean) true")
+        "parsed = (boolean) true, framerate=(fraction)[0/1,MAX]")
     );
 
 static GstStaticPadTemplate sinktemplate =
 GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-h263, variant = (string) itu, "
-        "parsed = (boolean) false")
+    GST_STATIC_CAPS ("video/x-h263, variant = (string) itu")
     );
 
 GST_BOILERPLATE (GstH263Parse, gst_h263_parse, GstElement, GST_TYPE_BASE_PARSE);
@@ -102,7 +101,7 @@ gst_h263_parse_start (GstBaseParse * parse)
 {
   GstH263Parse *h263parse = GST_H263_PARSE (parse);
 
-  GST_DEBUG ("Start");
+  GST_DEBUG_OBJECT (h263parse, "start");
 
   h263parse->bitrate = 0;
   h263parse->profile = -1;
@@ -118,7 +117,7 @@ gst_h263_parse_start (GstBaseParse * parse)
 static gboolean
 gst_h263_parse_stop (GstBaseParse * parse)
 {
-  GST_DEBUG ("Stop");
+  GST_DEBUG_OBJECT (parse, "stop");
 
   return TRUE;
 }
@@ -139,7 +138,7 @@ gst_h263_parse_sink_event (GstBaseParse * parse, GstEvent * event)
       gst_event_parse_tag (event, &taglist);
 
       if (gst_tag_list_get_uint (taglist, GST_TAG_BITRATE, &h263parse->bitrate))
-        GST_DEBUG ("Got bitrate tag: %u", h263parse->bitrate);
+        GST_DEBUG_OBJECT (h263parse, "got bitrate tag: %u", h263parse->bitrate);
 
       break;
     }
@@ -201,7 +200,7 @@ gst_h263_parse_set_src_caps (GstH263Parse * h263parse,
   if (sink_caps && (st = gst_caps_get_structure (sink_caps, 0)) &&
       gst_structure_get_fraction (st, "framerate", &fr_num, &fr_denom)) {
     /* Got it in caps - nothing more to do */
-    GST_DEBUG ("Sink caps override framerate from headers");
+    GST_DEBUG_OBJECT (h263parse, "sink caps override framerate from headers");
   } else {
     /* Caps didn't have the framerate - get it from params */
     gst_h263_parse_get_framerate (params, &fr_num, &fr_denom);
@@ -308,7 +307,8 @@ gst_h263_parse_check_valid_frame (GstBaseParse * parse,
   /* XXX: After getting a keyframe, should we adjust min_frame_size to
    * something smaller so we don't end up collecting too many non-keyframes? */
 
-  GST_DEBUG ("Found a frame of size %d at pos %d", *framesize, *skipsize);
+  GST_DEBUG_OBJECT (h263parse, "found a frame of size %d at pos %d",
+      *framesize, *skipsize);
 
   return TRUE;
 

@@ -45,6 +45,40 @@ gst_h264_parse_pps
 </SECTION>
 
 <SECTION>
+<FILE>gstvc1parser</FILE>
+<TITLE>vc1parser</TITLE>
+<INCLUDE>gst/codecparsers/gstvc1parser.h</INCLUDE>
+MAX_HRD_NUM_LEAKY_BUCKETS
+GST_VC1_BFRACTION_BASIS
+GstVC1StartCode
+GstVC1Profile
+GstVC1ParseResult
+GstVC1PictureType
+GstVC1Level
+GstVC1QuantizerSpec
+GstVC1DQProfile
+GstVC1Condover
+GstVC1MvMode
+GstVC1SeqHdr
+GstVC1AdvancedSeqHdr
+GstVC1SimpleMainSeqHdr
+GstVC1HrdParam
+GstVC1EntryPointHdr
+GstVC1FrameHdr
+GstVC1PicAdvanced
+GstVC1PicSimpleMain
+GstVC1Picture
+GstVC1VopDquant
+GstVC1BDU
+gst_vc1_identify_next_bdu
+gst_vc1_parse_sequence_header
+gst_vc1_parse_entry_point_header
+gst_vc1_parse_frame_header
+<SUBSECTION Standard>
+<SUBSECTION Private>
+</SECTION>
+
+<SECTION>
 <FILE>gstmpegvideoparser</FILE>
 <TITLE>mpegvideoparser</TITLE>
 <INCLUDE>gst/codecparsers/gstmpegvideoparser.h</INCLUDE>

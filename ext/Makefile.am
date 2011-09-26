@@ -324,6 +324,12 @@ else
 SOUNDTOUCH_DIR=
 endif
 
+if USE_SPANDSP
+SPANDSP_DIR = spandsp
+else
+SPANDSP_DIR =
+endif
+
 if USE_SPC
 SPC_DIR=spc
 else
@@ -433,6 +439,7 @@ SUBDIRS=\
 	$(SMOOTHWAVE_DIR) \
 	$(SNDFILE_DIR) \
 	$(SOUNDTOUCH_DIR) \
+	$(SPANDSP_DIR) \
 	$(GME_DIR) \
 	$(SPC_DIR) \
 	$(SWFDEC_DIR) \
@@ -485,6 +492,7 @@ DIST_SUBDIRS = \
 	sdl \
 	sndfile \
 	soundtouch \
+	spandsp \
 	spc \
 	gme \
 	swfdec \

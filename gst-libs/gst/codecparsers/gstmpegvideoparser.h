@@ -26,6 +26,11 @@
 #ifndef __GST_MPEG_VIDEO_UTILS_H__
 #define __GST_MPEG_VIDEO_UTILS_H__
 
+#ifndef GST_USE_UNSTABLE_API
+#warning "The Mpeg video parsing library is unstable API and may change in future."
+#warning "You can define GST_USE_UNSTABLE_API to avoid this warning."
+#endif
+
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
@@ -57,32 +62,43 @@ typedef enum {
 } GstMpegVideoPacketTypeCode;
 
 /**
+ * GST_MPEG_VIDEO_PACKET_IS_SLICE:
+ * @typecode: The MPEG video packet type code
+ *
+ * Checks whether a packet type code is a slice.
+ *
+ * Returns: %TRUE if the packet type code corresponds to a slice,
+ * else %FALSE.
+ */
+#define GST_MPEG_VIDEO_PACKET_IS_SLICE(typecode) ((typecode) >= GST_MPEG_VIDEO_PACKET_SLICE_MIN && \
+						  (typecode) <= GST_MPEG_VIDEO_PACKET_SLICE_MAX)
+
+/**
  * GstMpegVideoPacketExtensionCode:
  * @GST_MPEG_VIDEO_PACKET_EXT_SEQUENCE: Sequence extension code
- * @GST_MPEG_VIDEO_PACKET_EXT_SEQUENCE_DISPLAY: Display extension code
- * @GST_MPEG_VIDEO_PACKET_EXT_QUANT_MATRIX: Quantizer extension code
- * @GST_MPEG_VIDEO_PACKET_EXT_GOP: Group Of Picture extension code
+ * @GST_MPEG_VIDEO_PACKET_EXT_SEQUENCE_DISPLAY: Sequence Display extension code
+ * @GST_MPEG_VIDEO_PACKET_EXT_QUANT_MATRIX: Quantization Matrix extension code
+ * @GST_MPEG_VIDEO_PACKET_EXT_PICTURE: Picture coding extension
  *
- * Indicates what type of packets are in this
- * block, some are mutually * exclusive though - ie, sequence packs are
- * accumulated separately. GOP & Picture may occur together or separately
+ * Indicates what type of packets are in this block, some are mutually
+ * exclusive though - ie, sequence packs are accumulated separately. GOP &
+ * Picture may occur together or separately.
  */
 typedef enum {
   GST_MPEG_VIDEO_PACKET_EXT_SEQUENCE         = 0x01,
   GST_MPEG_VIDEO_PACKET_EXT_SEQUENCE_DISPLAY = 0x02,
   GST_MPEG_VIDEO_PACKET_EXT_QUANT_MATRIX     = 0x03,
-  GST_MPEG_VIDEO_PACKET_EXT_GOP              = 0x04,
   GST_MPEG_VIDEO_PACKET_EXT_PICTURE          = 0x08
 } GstMpegVideoPacketExtensionCode;
 
 /**
  * GstMpegVideoLevel:
- * @GST_MPEG_VIDEO_LEVEL_LOW: Level Low
- * @GST_MPEG_VIDEO_LEVEL_MAIN: Level Main
- * @GST_MPEG_VIDEO_LEVEL_HIGH_1440: Level High 1440
- * @GST_MPEG_VIDEO_LEVEL_HIGH: Level High
+ * @GST_MPEG_VIDEO_LEVEL_LOW: Low level (LL)
+ * @GST_MPEG_VIDEO_LEVEL_MAIN: Main level (ML)
+ * @GST_MPEG_VIDEO_LEVEL_HIGH_1440: High 1440 level (H-14)
+ * @GST_MPEG_VIDEO_LEVEL_HIGH: High level (HL)
  *
- * Indicates the level in use
+ * Mpeg-2 Levels.
  **/
 typedef enum {
  GST_MPEG_VIDEO_LEVEL_HIGH      = 0x04,
@@ -93,14 +109,14 @@ typedef enum {
 
 /**
  * GstMpegVideoProfile:
- * @GST_MPEG_VIDEO_PROFILE_422,
- * @GST_MPEG_VIDEO_PROFILE_HIGH,
- * @GST_MPEG_VIDEO_PROFILE_SPATIALLY_SCALABLE,
- * @GST_MPEG_VIDEO_PROFILE_SNR_SCALABLE,
- * @GST_MPEG_VIDEO_PROFILE_MAIN,
- * @GST_MPEG_VIDEO_PROFILE_SIMPLE,
+ * @GST_MPEG_VIDEO_PROFILE_422: 4:2:2 profile (422)
+ * @GST_MPEG_VIDEO_PROFILE_HIGH: High profile (HP)
+ * @GST_MPEG_VIDEO_PROFILE_SPATIALLY_SCALABLE: Spatially Scalable profile (Spatial)
+ * @GST_MPEG_VIDEO_PROFILE_SNR_SCALABLE: SNR Scalable profile (SNR)
+ * @GST_MPEG_VIDEO_PROFILE_MAIN: Main profile (MP)
+ * @GST_MPEG_VIDEO_PROFILE_SIMPLE: Simple profile (SP)
  *
- * Indicates the profile type in use
+ * Mpeg-2 Profiles.
  **/
 typedef enum {
   GST_MPEG_VIDEO_PROFILE_422                 = 0x00,
@@ -112,13 +128,29 @@ typedef enum {
 } GstMpegVideoProfile;
 
 /**
- * GstMpegVideoPictureType:
- * @GST_MPEG_VIDEO_PICTURE_TYPE_I: Type I
- * @GST_MPEG_VIDEO_PICTURE_TYPE_P: Type P
- * @GST_MPEG_VIDEO_PICTURE_TYPE_B: Type B
- * @GST_MPEG_VIDEO_PICTURE_TYPE_D: Type D
+ * GstMpegVideoChromaFormat:
+ * @GST_MPEG_VIDEO_CHROMA_RES: Invalid (reserved for future use)
+ * @GST_MPEG_VIDEO_CHROMA_420: 4:2:0 subsampling
+ * @GST_MPEG_VIDEO_CHROMA_422: 4:2:2 subsampling
+ * @GST_MPEG_VIDEO_CHROMA_444: 4:4:4 (non-subsampled)
  *
- * Indicates the type of picture
+ * Chroma subsampling type.
+ */
+typedef enum {
+  GST_MPEG_VIDEO_CHROMA_RES = 0x00,
+  GST_MPEG_VIDEO_CHROMA_420 = 0x01,
+  GST_MPEG_VIDEO_CHROMA_422 = 0x02,
+  GST_MPEG_VIDEO_CHROMA_444 = 0x03,
+} GstMpegVideoChromaFormat;
+
+/**
+ * GstMpegVideoPictureType:
+ * @GST_MPEG_VIDEO_PICTURE_TYPE_I: Intra-coded (I) frame
+ * @GST_MPEG_VIDEO_PICTURE_TYPE_P: Predictive-codec (P) frame
+ * @GST_MPEG_VIDEO_PICTURE_TYPE_B: Bidirectionally predictive-coded (B) frame
+ * @GST_MPEG_VIDEO_PICTURE_TYPE_D: D frame
+ *
+ * Picture type.
  */
 typedef enum {
   GST_MPEG_VIDEO_PICTURE_TYPE_I = 0x01,
@@ -131,9 +163,9 @@ typedef enum {
  * GstMpegVideoPictureStructure:
  * @GST_MPEG_VIDEO_PICTURE_STRUCTURE_TOP_FIELD: Top field
  * @GST_MPEG_VIDEO_PICTURE_STRUCTURE_BOTTOM_FIELD: Bottom field
- * @GST_MPEG_VIDEO_PICTURE_STRUCTURE_FRAME: Frame
+ * @GST_MPEG_VIDEO_PICTURE_STRUCTURE_FRAME: Frame picture
  *
- * Indicates the structure of picture
+ * Picture structure type.
  */
 typedef enum {
     GST_MPEG_VIDEO_PICTURE_STRUCTURE_TOP_FIELD    = 0x01,
@@ -168,20 +200,20 @@ typedef struct _GstMpegVideoTypeOffsetSize  GstMpegVideoTypeOffsetSize;
 struct _GstMpegVideoSequenceHdr
 {
   guint16 width, height;
-  guint8 aspect_ratio_info;
-  guint8 frame_rate_code;
+  guint8  aspect_ratio_info;
+  guint8  frame_rate_code;
   guint32 bitrate_value;
   guint16 vbv_buffer_size_value;
 
-  guint8 constrained_parameters_flag;
+  guint8  constrained_parameters_flag;
 
-  guint8 intra_quantizer_matrix[64];
-  guint8 non_intra_quantizer_matrix[64];
+  guint8  intra_quantizer_matrix[64];
+  guint8  non_intra_quantizer_matrix[64];
 
   /* Calculated values */
-  guint par_w, par_h;
-  guint fps_n, fps_d;
-  guint bitrate;
+  guint   par_w, par_h;
+  guint   fps_n, fps_d;
+  guint   bitrate;
 };
 
 /**
@@ -194,7 +226,7 @@ struct _GstMpegVideoSequenceHdr
  * @vert_size_ext: Vertical size
  * @bitrate_ext: The bitrate
  * @vbv_buffer_size_extension: Vbv vuffer size
- * @low_delay: %TRUE if the sequence doesn't contain any B-pitcture, %FALSE
+ * @low_delay: %TRUE if the sequence doesn't contain any B-pictures, %FALSE
  * otherwize
  * @fps_n_ext: Framerate nominator code
  * @fps_d_ext: Framerate denominator code
@@ -222,14 +254,14 @@ struct _GstMpegVideoSequenceExt
 
 /**
  * GstMpegVideoQuantMatrixExt:
- * @load_intra_quantiser_matrix
- * @intra_quantiser_matrix
- * @load_non_intra_quantiser_matrix
+ * @load_intra_quantiser_matrix:
+ * @intra_quantiser_matrix:
+ * @load_non_intra_quantiser_matrix:
  * @non_intra_quantiser_matrix:
- * @load_chroma_intra_quantiser_matrix
- * @chroma_intra_quantiser_matrix
- * @load_chroma_non_intra_quantiser_matrix
- * @chroma_non_intra_quantiser_matrix
+ * @load_chroma_intra_quantiser_matrix:
+ * @chroma_intra_quantiser_matrix:
+ * @load_chroma_non_intra_quantiser_matrix:
+ * @chroma_non_intra_quantiser_matrix:
  *
  * The Quant Matrix Extension structure
  */
@@ -314,7 +346,7 @@ struct _GstMpegVideoPictureExt
  * @second: Second (0-59)
  * @frame: Frame (0-59)
  * @closed_gop: Closed Gop
- * @broken_gop: Broken Gop
+ * @broken_link: Broken link
  *
  * The Mpeg Video Group of Picture structure.
  */
@@ -325,7 +357,7 @@ struct _GstMpegVideoGop
   guint8 hour, minute, second, frame;
 
   guint8 closed_gop;
-  guint8 broken_gop;
+  guint8 broken_link;
 };
 
 /**
@@ -339,11 +371,11 @@ struct _GstMpegVideoGop
 struct _GstMpegVideoTypeOffsetSize
 {
   guint8 type;
-  guint offset;
-  gint size;
+  guint  offset;
+  gint   size;
 };
 
-GList * gst_mpeg_video_parse                          (guint8 * data, gsize size, guint offset);
+GList   *gst_mpeg_video_parse                         (guint8 * data, gsize size, guint offset);
 
 gboolean gst_mpeg_video_parse_sequence_header         (GstMpegVideoSequenceHdr * params,
                                                        guint8 * data, gsize size, guint offset);

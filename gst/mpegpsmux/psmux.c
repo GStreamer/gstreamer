@@ -348,7 +348,7 @@ psmux_write_system_header (PsMux * mux)
   bits_write (&bw, 24, PSMUX_START_CODE_PREFIX);
   bits_write (&bw, 8, PSMUX_SYSTEM_HEADER);
 
-  bits_write (&bw, 16, len);    /* header_length */
+  bits_write (&bw, 16, len - 6);        /* header_length (bytes after this field) */
   bits_write (&bw, 1, 1);       /* marker */
   bits_write (&bw, 22, mux->rate_bound);        /* rate_bound */
   bits_write (&bw, 1, 1);       /* marker */

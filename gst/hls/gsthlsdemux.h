@@ -89,6 +89,7 @@ struct _GstHLSDemux
 
   /* Position in the stream */
   GstClockTime position;
+  GstClockTime position_shift;
   gboolean need_segment;
 };
 

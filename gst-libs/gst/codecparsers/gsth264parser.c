@@ -32,25 +32,52 @@
  * @short_description: Convenience library for h264 video
  * bitstream parsing.
  *
- * It offers you basic parsing in AVC mode or not. Tp identify Nals in a bitstream and
- * parse its basic headers, you should call:
+ * It offers you bitstream parsing in AVC mode or not. To identify Nals in a bitstream and
+ * parse its headers, you should call:
  * <itemizedlist>
  *   <listitem>
- *      gst_h264_parser_identify_nalu to identify the following nalu in not AVC bitstreams
+ *      #gst_h264_parser_identify_nalu to identify the following nalu in not AVC bitstreams
  *   </listitem>
  *   <listitem>
- *      gst_h264_parser_identify_nalu_avc to identify the following nalu in AVC bitstreams
+ *      #gst_h264_parser_identify_nalu_avc to identify the nalu in AVC bitstreams
  *   </listitem>
  * </itemizedlist>
  *
  * Then, depending on the #GstH264NalUnitType of the newly parsed #GstH264NalUnit, you should
- * call the differents functions to parse the struct.
+ * call the differents functions to parse the structure:
+ * <itemizedlist>
+ *   <listitem>
+ *      From #GST_H264_NAL_SLICE to #GST_H264_NAL_SLICE_IDR: #gst_h264_parser_parse_slice_hdr
+ *   </listitem>
+ *   <listitem>
+ *      #GST_H264_NAL_SEI: #gst_h264_parser_parse_sei
+ *   </listitem>
+ *   <listitem>
+ *      #GST_H264_NAL_SPS: #gst_h264_parser_parse_sps
+ *   </listitem>
+ *   <listitem>
+ *      #GST_H264_NAL_PPS: #gst_h264_parser_parse_pps
+ *   </listitem>
+ *   <listitem>
+ *      Any other: #gst_h264_parser_parse_nal
+ *   </listitem>
+ * </itemizedlist>
  *
  * Note: You should always call gst_h264_parser_parse_nal if you don't actually need
- * #GstH264NalUnitType to be parsed for your personnal use. This, to guarantee that the
+ * #GstH264NalUnitType to be parsed for your personnal use, in order to guarantee that the
  * #GstH264NalParser is always up to date.
  *
- * For more details about the structures, look at the ISO specifications.
+ * For more details about the structures, look at the ITU-T H.264 and ISO/IEC 14496-10 – MPEG-4
+ * Part 10 specifications, you can download them from:
+ *
+ * <itemizedlist>
+ *   <listitem>
+ *     ITU-T H.264: http://www.itu.int/rec/T-REC-H.264
+ *   </listitem>
+ *   <listitem>
+ *     ISO/IEC 14496-10: http://www.iso.org/iso/iso_catalogue/catalogue_tc/catalogue_detail.htm?csnumber=56538
+ *   </listitem>
+ * </itemizedlist>
  */
 
 #ifdef HAVE_CONFIG_H
@@ -1064,7 +1091,7 @@ gst_h264_parser_parse_pic_timing (GstH264NalParser * nalparser,
       guint i;
 
       READ_UINT8 (nr, tim->pic_struct, 4);
-      CHECK_ALLOWED (tim->pic_struct, 0, 8);
+      CHECK_ALLOWED ((gint8) tim->pic_struct, 0, 8);
 
       num_clock_num_ts = num_clock_ts_table[tim->pic_struct];
       for (i = 0; i < num_clock_num_ts; i++) {
@@ -1090,7 +1117,8 @@ error:
 /**
  * gst_h264_nal_parser_new:
  *
- * Creates a nez #GstH264NalParser
+ * Creates a new #GstH264NalParser. It should be freed with
+ * gst_h264_nal_parser_free after use.
  *
  * Returns: a new #GstH264NalParser
  */
@@ -1099,7 +1127,7 @@ gst_h264_nal_parser_new (void)
 {
   GstH264NalParser *nalparser;
 
-  nalparser = g_malloc0 (sizeof (GstH264NalParser));
+  nalparser = g_slice_new0 (GstH264NalParser);
   GST_DEBUG_CATEGORY_INIT (h264_parser_debug, "codecparsers_h264", 0,
       "h264 parser library");
 
@@ -1107,14 +1135,28 @@ gst_h264_nal_parser_new (void)
 }
 
 /**
+ * gst_h264_nal_parser_free:
+ * @nalparser: the #GstH264NalParser to free
+ *
+ * Frees @nalparser and sets it to %NULL
+ */
+void
+gst_h264_nal_parser_free (GstH264NalParser * nalparser)
+{
+  g_slice_free (GstH264NalParser, nalparser);
+
+  nalparser = NULL;
+}
+
+/**
  * gst_h264_parser_identify_nalu:
  * @nalparser: a #GstH264NalParser
  * @data: The data to parse
- * @offset: the offset from which to parse  @data
+ * @offset: the offset from which to parse @data
  * @size: the size of @data
  * @nalu: The #GstH264NalUnit where to store parsed nal headers
  *
- * Parses the buffer and set @nalu from the next nalu data from @data
+ * Parses @data and fills @nalu from the next nalu data from @data
  *
  * Returns: a #GstH264ParserResult
  */
@@ -1125,8 +1167,8 @@ gst_h264_parser_identify_nalu (GstH264NalParser * nalparser,
   gint off1, off2;
 
   if (size - offset < 4) {
-    GST_DEBUG ("Can't parse, buffer has too small size %u, offset %u", size,
-        offset);
+    GST_DEBUG ("Can't parse, buffer has too small size %" G_GSSIZE_FORMAT
+        ", offset %u", size, offset);
     return GST_H264_PARSER_ERROR;
   }
 
@@ -1180,12 +1222,14 @@ gst_h264_parser_identify_nalu (GstH264NalParser * nalparser,
 
 /**
  * gst_h264_parser_identify_nalu_avc:
+ * @nalparser: a #GstH264NalParser
  * @data: The data to parse, must be the beging of the Nal unit
+ * @offset: the offset from which to parse @data
  * @size: the size of @data
  * @nal_length_size: the size in bytes of the AVC nal length prefix.
  * @nalu: The #GstH264NalUnit where to store parsed nal headers
  *
- * Parses the data and sets @nalu from @data.
+ * Parses @data and sets @nalu.
  *
  * Returns: a #GstH264ParserResult
  */
@@ -1221,6 +1265,17 @@ gst_h264_parser_identify_nalu_avc (GstH264NalParser * nalparser,
   return GST_H264_PARSER_OK;
 }
 
+/**
+ * gst_h264_parser_parse_nal:
+ * @nalparser: a #GstH264NalParser
+ * @nalu: The #GstH264NalUnit to parse
+ *
+ * This function should be called in the case one doesn't need to
+ * parse a specific structure. It is necessary to do so to make
+ * sure @nalparser is up to date.
+ *
+ * Returns: a #GstH264ParserResult
+ */
 GstH264ParserResult
 gst_h264_parser_parse_nal (GstH264NalParser * nalparser, GstH264NalUnit * nalu)
 {
@@ -1241,11 +1296,11 @@ gst_h264_parser_parse_nal (GstH264NalParser * nalparser, GstH264NalUnit * nalu)
 /**
  * gst_h264_parser_parse_sps:
  * @nalparser: a #GstH264NalParser
- * @nalu: The #GST_H264_NAL_SPS #GstH264NalUnit you want to parse
- * @slice: The #GstH264SPS to set.
+ * @nalu: The #GST_H264_NAL_SPS #GstH264NalUnit to parse
+ * @sps: The #GstH264SPS to fill.
  * @parse_vui_params: Whether to parse the vui_params or not
  *
- * Parses the @data, and sets the @sps.
+ * Parses @data, and fills the @sps structure.
  *
  * Returns: a #GstH264ParserResult
  */
@@ -1269,11 +1324,11 @@ gst_h264_parser_parse_sps (GstH264NalParser * nalparser, GstH264NalUnit * nalu,
 
 /**
  * gst_h264_parse_sps:
- * @nalu: The #GST_H264_NAL_SPS #GstH264NalUnit you want to parse
- * @slice: The #GstH264SPS to set.
+ * @nalu: The #GST_H264_NAL_SPS #GstH264NalUnit to parse
+ * @sps: The #GstH264SPS to fill.
  * @parse_vui_params: Whether to parse the vui_params or not
  *
- * Parses the @data, and sets the @sps.
+ * Parses @data, and fills the @sps structure.
  *
  * Returns: a #GstH264ParserResult
  */
@@ -1413,19 +1468,25 @@ gst_h264_parse_sps (GstH264NalUnit * nalu, GstH264SPS * sps,
   sps->width = width;
   sps->height = height;
 
-  /* derive framerate */
-  /* FIXME verify / also handle other cases */
-  GST_LOG ("Framerate: %u %u %u %u", parse_vui_params,
-      vui->fixed_frame_rate_flag, sps->frame_mbs_only_flag,
-      vui->pic_struct_present_flag);
+  if (vui) {
+    /* derive framerate */
+    /* FIXME verify / also handle other cases */
+    GST_LOG ("Framerate: %u %u %u %u", parse_vui_params,
+        vui->fixed_frame_rate_flag, sps->frame_mbs_only_flag,
+        vui->pic_struct_present_flag);
 
-  if (parse_vui_params && vui->fixed_frame_rate_flag &&
-      sps->frame_mbs_only_flag && !vui->pic_struct_present_flag) {
-    sps->fps_num = vui->time_scale;
-    sps->fps_den = vui->num_units_in_tick;
-    /* picture is a frame = 2 fields */
-    sps->fps_den *= 2;
-    GST_LOG ("framerate %d/%d", sps->fps_num, sps->fps_den);
+    if (parse_vui_params && vui->fixed_frame_rate_flag &&
+        sps->frame_mbs_only_flag && !vui->pic_struct_present_flag) {
+      sps->fps_num = vui->time_scale;
+      sps->fps_den = vui->num_units_in_tick;
+      /* picture is a frame = 2 fields */
+      sps->fps_den *= 2;
+      GST_LOG ("framerate %d/%d", sps->fps_num, sps->fps_den);
+    }
+  } else {
+    sps->fps_num = 0;
+    sps->fps_den = 1;
+    GST_LOG ("No VUI, unknown framerate");
   }
 
   sps->valid = TRUE;
@@ -1441,12 +1502,10 @@ error:
 /**
  * gst_h264_parse_pps:
  * @nalparser: a #GstH264NalParser
- * @data: the data to parse
- * @size: the size of @data
- * @nalu: The #GST_H264_NAL_PPS #GstH264NalUnit you want to parse
- * @slice: The #GstH264PPS to set.
+ * @nalu: The #GST_H264_NAL_PPS #GstH264NalUnit to parse
+ * @pps: The #GstH264PPS to fill.
  *
- * Parses the @data, and sets the @pps.
+ * Parses @data, and fills the @pps structure.
  *
  * Returns: a #GstH264ParserResult
  */
@@ -1572,12 +1631,10 @@ error:
 /**
  * gst_h264_parser_parse_pps:
  * @nalparser: a #GstH264NalParser
- * @data: the data to parse
- * @size: the size of @data
- * @nalu: The #GST_H264_NAL_PPS #GstH264NalUnit you want to parse
- * @slice: The #GstH264PPS to set.
+ * @nalu: The #GST_H264_NAL_PPS #GstH264NalUnit to parse
+ * @pps: The #GstH264PPS to fill.
  *
- * Parses the @data, and sets the @pps.
+ * Parses @data, and fills the @pps structure.
  *
  * Returns: a #GstH264ParserResult
  */
@@ -1599,12 +1656,13 @@ gst_h264_parser_parse_pps (GstH264NalParser * nalparser,
 
 /**
  * gst_h264_parser_parse_slice_hdr:
- * @nalu: The #GST_H264_NAL_SLICE #GstH264NalUnit you want to parse
- * @slice: The #GstH264SliceHdr to set.
+ * @nalparser: a #GstH264NalParser
+ * @nalu: The #GST_H264_NAL_SLICE #GstH264NalUnit to parse
+ * @slice: The #GstH264SliceHdr to fill.
  * @parse_pred_weight_table: Whether to parse the pred_weight_table or not
  * @parse_dec_ref_pic_marking: Whether to parse the dec_ref_pic_marking or not
  *
- * Parses the @data, and sets the @slice.
+ * Parses @data, and fills the @slice structure.
  *
  * Returns: a #GstH264ParserResult
  */
@@ -1776,10 +1834,10 @@ error:
 /**
  * gst_h264_parser_parse_sei:
  * @nalparser: a #GstH264NalParser
- * @nalu: The #GST_H264_NAL_SEI #GstH264NalUnit you want to parse
- * @slice: The #GstH264SEIMessage to set.
+ * @nalu: The #GST_H264_NAL_SEI #GstH264NalUnit to parse
+ * @sei: The #GstH264SEIMessage to fill.
  *
- * Parses the @data, and sets the @pps.
+ * Parses @data, and fills the @sei structures.
  *
  * Returns: a #GstH264ParserResult
  */

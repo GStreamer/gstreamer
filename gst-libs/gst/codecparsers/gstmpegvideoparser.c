@@ -309,12 +309,12 @@ scan_for_start_codes (const GstByteReader * reader, guint offset, guint size)
 
 /**
  * gst_mpeg_video_parse:
- * @data: The datas from which to parse
+ * @data: The data to parse
  * @size: The size of @data
- * @offset: The offset from which to start the parsing
+ * @offset: The offset from which to start parsing
  *
- * Parses @data, and detects the different packets types, offset,
- * and size, starting from @offset
+ * Parses the MPEG 1/2 video bitstream contained in @data , and returns the
+ * detect packets as a list of #GstMpegVideoTypeOffsetSize.
  *
  * Returns: a #GList of #GstMpegVideoTypeOffsetSize
  */
@@ -324,7 +324,8 @@ gst_mpeg_video_parse (guint8 * data, gsize size, guint offset)
   gint off, rsize;
   GstByteReader br;
   GList *ret = NULL;
-  size = size - offset;
+
+  size -= offset;
 
   if (!initialized) {
     GST_DEBUG_CATEGORY_INIT (mpegvideo_parser_debug, "codecparsers_mpegvideo",
@@ -373,12 +374,12 @@ gst_mpeg_video_parse (guint8 * data, gsize size, guint offset)
 
 /**
  * gst_mpeg_video_parse_sequence_header:
- * @seqhdr: The #GstMpegVideoSequenceHdr to set
- * @data: The datas from which to parse the seqhdr
+ * @seqhdr: (out): The #GstMpegVideoSequenceHdr structure to fill
+ * @data: The data from which to parse the sequence header
  * @size: The size of @data
  * @offset: The offset in byte from which to start parsing @data
  *
- * Sets the @seqhdr Mpeg Video Sequence Header structure members from @data
+ * Parses the @seqhdr Mpeg Video Sequence Header structure members from @data
  *
  * Returns: %TRUE if the seqhdr could be parsed correctly, %FALSE otherwize.
  */
@@ -388,9 +389,11 @@ gst_mpeg_video_parse_sequence_header (GstMpegVideoSequenceHdr * seqhdr,
 {
   GstBitReader br;
 
-  size = size - offset;
+  g_return_val_if_fail (seqhdr != NULL, FALSE);
 
-  if (size - offset < 4)
+  size -= offset;
+
+  if (size < 4)
     return FALSE;
 
   gst_bit_reader_init (&br, &data[offset], size);
@@ -400,12 +403,12 @@ gst_mpeg_video_parse_sequence_header (GstMpegVideoSequenceHdr * seqhdr,
 
 /**
  * gst_mpeg_video_parse_sequence_extension:
- * @seqhdr: The #GstMpegVideoSequenceExt to set
- * @data: The datas from which to parse the seqext
+ * @seqext: (out): The #GstMpegVideoSequenceExt structure to fill
+ * @data: The data from which to parse the sequence extension
  * @size: The size of @data
  * @offset: The offset in byte from which to start parsing @data
  *
- * Sets the @seqext Mpeg Video Sequence Extension structure members from @data
+ * Parses the @seqext Mpeg Video Sequence Extension structure members from @data
  *
  * Returns: %TRUE if the seqext could be parsed correctly, %FALSE otherwize.
  */
@@ -415,7 +418,9 @@ gst_mpeg_video_parse_sequence_extension (GstMpegVideoSequenceExt * seqext,
 {
   GstBitReader br;
 
-  size = size - offset;
+  g_return_val_if_fail (seqext != NULL, FALSE);
+
+  size -= offset;
 
   if (size < 6) {
     GST_DEBUG ("not enough bytes to parse the extension");
@@ -464,12 +469,12 @@ gst_mpeg_video_parse_sequence_extension (GstMpegVideoSequenceExt * seqext,
 
 /**
  * gst_mpeg_video_parse_quant_matrix_extension:
- * @ext: The #GstMpegVideoQuantMatrixExt to set
- * @data: The datas from which to parse @quant
+ * @quant: (out): The #GstMpegVideoQuantMatrixExt structure to fill
+ * @data: The data from which to parse the Quantization Matrix extension
  * @size: The size of @data
  * @offset: The offset in byte from which to start the parsing
  *
- * Sets the @quant Mpeg Video Quant Matrix Extension structure members from
+ * Parses the @quant Mpeg Video Quant Matrix Extension structure members from
  * @data
  *
  * Returns: %TRUE if the quant matrix extension could be parsed correctly,
@@ -482,7 +487,9 @@ gst_mpeg_video_parse_quant_matrix_extension (GstMpegVideoQuantMatrixExt * quant,
   guint8 i;
   GstBitReader br;
 
-  size = size - offset;
+  g_return_val_if_fail (quant != NULL, FALSE);
+
+  size -= offset;
 
   if (size < 1) {
     GST_DEBUG ("not enough bytes to parse the extension");
@@ -537,12 +544,12 @@ failed:
 
 /**
  * gst_mpeg_video_parse_picture_extension:
- * @ext: The #GstMpegVideoPictureExt to set
- * @data: The datas from which to parse the ext
+ * @ext: (out): The #GstMpegVideoPictureExt structure to fill
+ * @data: The data from which to parse the picture extension
  * @size: The size of @data
  * @offset: The offset in byte from which to start the parsing
  *
- * Sets the @ext Mpeg Video Picture Extension structure members from @data
+ * Parse the @ext Mpeg Video Picture Extension structure members from @data
  *
  * Returns: %TRUE if the picture extension could be parsed correctly,
  * %FALSE otherwize.
@@ -553,7 +560,9 @@ gst_mpeg_video_parse_picture_extension (GstMpegVideoPictureExt * ext,
 {
   GstBitReader br;
 
-  size = size - offset;
+  g_return_val_if_fail (ext != NULL, FALSE);
+
+  size -= offset;
 
   if (size < 4)
     return FALSE;
@@ -636,14 +645,15 @@ failed:
 
 /**
  * gst_mpeg_video_parse_picture_header:
- * @hdr: The #GstMpegVideoPictureHdr to set
- * @data: The datas from which to parse the hdr
+ * @hdr: (out): The #GstMpegVideoPictureHdr structure to fill
+ * @data: The data from which to parse the picture header
  * @size: The size of @data
  * @offset: The offset in byte from which to start the parsing
  *
- * Sets the @hdr Mpeg Video Picture Header structure members from @data
+ * Parsers the @hdr Mpeg Video Picture Header structure members from @data
  *
- * Returns: %TRUE if the picture sequence could be parsed correctly, %FALSE otherwize.
+ * Returns: %TRUE if the picture sequence could be parsed correctly, %FALSE
+ * otherwize.
  */
 gboolean
 gst_mpeg_video_parse_picture_header (GstMpegVideoPictureHdr * hdr,
@@ -654,24 +664,26 @@ gst_mpeg_video_parse_picture_header (GstMpegVideoPictureHdr * hdr,
   size = size - offset;
 
   if (size < 4)
-    return FALSE;
+    goto failed;
 
   gst_bit_reader_init (&br, &data[offset], size);
 
   /* temperal sequence number */
   if (!gst_bit_reader_get_bits_uint16 (&br, &hdr->tsn, 10))
-    return FALSE;
+    goto failed;
+
 
   /* frame type */
   if (!gst_bit_reader_get_bits_uint8 (&br, (guint8 *) & hdr->pic_type, 3))
-    return FALSE;
+    goto failed;
+
 
   if (hdr->pic_type == 0 || hdr->pic_type > 4)
-    return FALSE;               /* Corrupted picture packet */
+    goto failed;                /* Corrupted picture packet */
 
   /* skype VBV delay */
   if (!gst_bit_reader_skip (&br, 8))
-    return FALSE;
+    goto failed;
 
   if (hdr->pic_type == GST_MPEG_VIDEO_PICTURE_TYPE_P
       || hdr->pic_type == GST_MPEG_VIDEO_PICTURE_TYPE_B) {
@@ -699,20 +711,19 @@ gst_mpeg_video_parse_picture_header (GstMpegVideoPictureHdr * hdr,
 
 failed:
   {
-    GST_WARNING ("Failed to parse sequence extension");
+    GST_WARNING ("Failed to parse picture header");
     return FALSE;
   }
 }
 
 /**
  * gst_mpeg_video_parse_gop:
- * @gop: The #GstMpegVideoGop to set
- * @data: The datas from which to parse the gop
+ * @gop: (out): The #GstMpegVideoGop structure to fill
+ * @data: The data from which to parse the gop
  * @size: The size of @data
  * @offset: The offset in byte from which to start the parsing
  *
- *
- * Sets the @gop Mpeg Video Group of Picture structure members from @data
+ * Parses the @gop Mpeg Video Group of Picture structure members from @data
  *
  * Returns: %TRUE if the gop could be parsed correctly, %FALSE otherwize.
  */
@@ -722,7 +733,9 @@ gst_mpeg_video_parse_gop (GstMpegVideoGop * gop, guint8 * data,
 {
   GstBitReader br;
 
-  size = size - offset;
+  g_return_val_if_fail (gop != NULL, FALSE);
+
+  size -= offset;
 
   if (size < 4)
     return FALSE;
@@ -745,7 +758,7 @@ gst_mpeg_video_parse_gop (GstMpegVideoGop * gop, guint8 * data,
 
   READ_UINT8 (&br, gop->closed_gop, 1);
 
-  READ_UINT8 (&br, gop->broken_gop, 1);
+  READ_UINT8 (&br, gop->broken_link, 1);
 
   return TRUE;
 

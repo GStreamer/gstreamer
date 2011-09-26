@@ -145,7 +145,7 @@ GST_START_TEST (test_h264_parse_slice_dpa)
   assert_equals_int (res, GST_H264_PARSER_OK);
   assert_equals_int (nalu.type, GST_H264_NAL_SLICE_DPA);
 
-  g_free (parser);
+  gst_h264_nal_parser_free (parser);
 }
 
 GST_END_TEST;

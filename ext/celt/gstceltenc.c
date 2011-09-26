@@ -253,6 +253,9 @@ gst_celt_enc_sink_setcaps (GstPad * pad, GstCaps * caps)
     gst_caps_unref (otherpadcaps);
   }
 
+  if (enc->requested_frame_size > 0)
+    enc->frame_size = enc->requested_frame_size;
+
   GST_DEBUG_OBJECT (pad, "channels=%d rate=%d frame-size=%d",
       enc->channels, enc->rate, enc->frame_size);
 
@@ -573,6 +576,7 @@ gst_celt_enc_init (GstCeltEnc * enc, GstCeltEncClass * klass)
 
   enc->bitrate = DEFAULT_BITRATE;
   enc->frame_size = DEFAULT_FRAMESIZE;
+  enc->requested_frame_size = -1;
   enc->cbr = DEFAULT_CBR;
   enc->complexity = DEFAULT_COMPLEXITY;
   enc->max_bitrate = DEFAULT_MAX_BITRATE;
@@ -695,16 +699,18 @@ encoder_creation_failed:
 /* prepare a buffer for transmission */
 static GstBuffer *
 gst_celt_enc_buffer_from_data (GstCeltEnc * enc, guchar * data,
-    gint data_len, guint64 granulepos)
+    guint data_len, gint64 granulepos)
 {
   GstBuffer *outbuf;
 
-  outbuf = gst_buffer_new_and_alloc (data_len);
-  memcpy (GST_BUFFER_DATA (outbuf), data, data_len);
+  outbuf = gst_buffer_new ();
+  GST_BUFFER_DATA (outbuf) = data;
+  GST_BUFFER_MALLOCDATA (outbuf) = data;
+  GST_BUFFER_SIZE (outbuf) = data_len;
   GST_BUFFER_OFFSET (outbuf) = enc->bytes_out;
   GST_BUFFER_OFFSET_END (outbuf) = granulepos;
 
-  GST_LOG_OBJECT (enc, "encoded buffer of %d bytes", GST_BUFFER_SIZE (outbuf));
+  GST_LOG_OBJECT (enc, "encoded buffer of %u bytes", GST_BUFFER_SIZE (outbuf));
   return outbuf;
 }
 
@@ -903,11 +909,17 @@ gst_celt_enc_chain (GstPad * pad, GstBuffer * buf)
        constraints */
     GstBuffer *buf1, *buf2;
     GstCaps *caps;
-    guchar data[100];
+    /* libcelt has a bug which underestimates header size by 4... */
+    unsigned int header_size = enc->header.header_size + 4;
+    unsigned char *data = g_malloc (header_size);
 
     /* create header buffer */
-    celt_header_to_packet (&enc->header, data, 100);
-    buf1 = gst_celt_enc_buffer_from_data (enc, data, 100, 0);
+    int error = celt_header_to_packet (&enc->header, data, header_size);
+    if (error < 0) {
+      g_free (data);
+      goto no_header;
+    }
+    buf1 = gst_celt_enc_buffer_from_data (enc, data, header_size, 0);
 
     /* create comment buffer */
     buf2 = gst_celt_enc_create_metadata_buffer (enc);
@@ -966,6 +978,7 @@ gst_celt_enc_chain (GstPad * pad, GstBuffer * buf)
   /* Check if we have a continous stream, if not drop some samples or the buffer or
    * insert some silence samples */
   if (enc->next_ts != GST_CLOCK_TIME_NONE &&
+      GST_BUFFER_TIMESTAMP_IS_VALID (buf) &&
       GST_BUFFER_TIMESTAMP (buf) < enc->next_ts) {
     guint64 diff = enc->next_ts - GST_BUFFER_TIMESTAMP (buf);
     guint64 diff_bytes;
@@ -1038,6 +1051,13 @@ not_setup:
     goto done;
   }
 
+no_header:
+  {
+    GST_ELEMENT_ERROR (enc, STREAM, ENCODE, (NULL),
+        ("Failed to encode header"));
+    ret = GST_FLOW_ERROR;
+    goto done;
+  }
 }
 
 
@@ -1090,7 +1110,8 @@ gst_celt_enc_set_property (GObject * object, guint prop_id,
       enc->bitrate = g_value_get_int (value);
       break;
     case PROP_FRAMESIZE:
-      enc->frame_size = g_value_get_int (value);
+      enc->requested_frame_size = g_value_get_int (value);
+      enc->frame_size = enc->requested_frame_size;
       break;
     case PROP_CBR:
       enc->cbr = g_value_get_boolean (value);

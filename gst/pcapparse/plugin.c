@@ -1,6 +1,5 @@
-/* GStreamer video parsers
- * Copyright (C) 2011 Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
- * Copyright (C) 2009 Tim-Philipp Müller <tim centricular net>
+/*
+ * Copyright 2007 Ole André Vadla Ravnås <ole.andre.ravnas@tandberg.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -22,31 +21,24 @@
 #include "config.h"
 #endif
 
-#include "gsth263parse.h"
-#include "gsth264parse.h"
-#include "gstdiracparse.h"
-#include "gstmpegvideoparse.h"
+#include "gstpcapparse.h"
+#include "gstirtspparse.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
   gboolean ret;
 
-  ret = gst_element_register (plugin, "h263parse",
-      GST_RANK_PRIMARY + 1, GST_TYPE_H263_PARSE);
-  ret = gst_element_register (plugin, "h264parse",
-      GST_RANK_PRIMARY + 1, GST_TYPE_H264_PARSE);
-  ret = gst_element_register (plugin, "diracparse",
-      GST_RANK_NONE, GST_TYPE_DIRAC_PARSE);
-  ret = gst_element_register (plugin, "mpegvideoparse",
-      GST_RANK_PRIMARY + 1, GST_TYPE_MPEGVIDEO_PARSE);
+  ret = gst_element_register (plugin, "pcapparse",
+      GST_RANK_NONE, GST_TYPE_PCAP_PARSE);
+  ret &= gst_element_register (plugin, "irtspparse",
+      GST_RANK_NONE, GST_TYPE_IRTSP_PARSE);
 
   return ret;
 }
 
-
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    "videoparsersbad",
-    "videoparsers",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);
+    "pcapparse",
+    "Element parsing raw pcap streams",
+    plugin_init, VERSION, "LGPL", "GStreamer", "http://gstreamer.net/")

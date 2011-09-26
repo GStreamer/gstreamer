@@ -227,7 +227,6 @@ make ERROR_CFLAGS='' ERROR_CXXFLAGS=''
 %{_libdir}/gstreamer-%{majorminor}/libgsth264parse.so
 %{_libdir}/gstreamer-%{majorminor}/libgsthdvparse.so
 %{_libdir}/gstreamer-%{majorminor}/libgstid3tag.so
-%{_libdir}/gstreamer-%{majorminor}/libgstinvtelecine.so
 %{_libdir}/gstreamer-%{majorminor}/libgstivfparse.so
 %{_libdir}/gstreamer-%{majorminor}/libgstjpegformat.so
 %{_libdir}/gstreamer-%{majorminor}/libgstlegacyresample.so
@@ -274,9 +273,13 @@ make ERROR_CFLAGS='' ERROR_CXXFLAGS=''
 %{_libdir}/gstreamer-%{majorminor}/libgstvideofiltersbad.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvideoparsersbad.so
 %{_libdir}/gstreamer-%{majorminor}/libgsty4mdec.so
-%{_libdir}/gstreamer-%{majorminor}//libgstopenal.so
+%{_libdir}/gstreamer-%{majorminor}/libgstopenal.so
 %{_libdir}/libgstbasecamerabinsrc-%{majorminor}.so.0
 %{_libdir}/libgstbasecamerabinsrc-%{majorminor}.so.0.0.0
+%{_libdir}/gstreamer-%{majorminor}/libgstaudiovisualizers.so
+%{_libdir}/gstreamer-%{majorminor}/libgstfaceoverlay.so
+%{_libdir}/gstreamer-%{majorminor}/libgstinter.so
+%{_libdir}/gstreamer-%{majorminor}/libgstremovesilence.so
 
 # System (Linux) specific plugins
 %{_libdir}/gstreamer-%{majorminor}/libgstdvb.so
@@ -343,10 +346,12 @@ make ERROR_CFLAGS='' ERROR_CXXFLAGS=''
 
 # pkg-config files
 %{_libdir}/pkgconfig/gstreamer-plugins-bad-%{majorminor}.pc
+%{_libdir}/pkgconfig/gstreamer-codecparsers-0.10.pc
 
 %files devel-docs
 %defattr(-,root,root,-)
 %doc %{_datadir}/gtk-doc/html/gst-plugins-bad-plugins-%{majorminor}
+%doc %{_datadir}/gtk-doc/html/gst-plugins-bad-libs-%{majorminor}
 
 %changelog
 * Thu May 19 2011 Christian Schaller <christian.schaller@collabora.co.uk>

@@ -78,14 +78,19 @@ static GstStaticPadTemplate gst_dirac_parse_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-dirac, parsed=(boolean)FALSE")
+    GST_STATIC_CAPS ("video/x-dirac")
     );
 
 static GstStaticPadTemplate gst_dirac_parse_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-dirac, parsed=(boolean)TRUE")
+    GST_STATIC_CAPS ("video/x-dirac, parsed=(boolean)TRUE, "
+        "width=(int)[1,MAX], height=(int)[1,MAX], "
+        "framerate=(fraction)[0/1,MAX], "
+        "pixel-aspect-ratio=(fraction)[0/1,MAX], "
+        "interlaced=(boolean){TRUE,FALSE}, "
+        "profile=(int)[0,MAX], level=(int)[0,MAX]")
     );
 
 /* class initialization */
