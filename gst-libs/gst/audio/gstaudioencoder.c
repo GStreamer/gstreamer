@@ -1732,6 +1732,9 @@ gst_audio_encoder_get_audio_info (GstAudioEncoder * enc)
  * Sets number of samples (per channel) subclass needs to be handed,
  * at least or will be handed all available if 0.
  *
+ * If an exact number of samples is required, gst_audio_encoder_set_frame_samples_max()
+ * must be called with the same number.
+ *
  * Since: 0.10.36
  */
 void
@@ -1765,6 +1768,9 @@ gst_audio_encoder_get_frame_samples_min (GstAudioEncoder * enc)
  *
  * Sets number of samples (per channel) subclass needs to be handed,
  * at most or will be handed all available if 0.
+ *
+ * If an exact number of samples is required, gst_audio_encoder_set_frame_samples_min()
+ * must be called with the same number.
  *
  * Since: 0.10.36
  */
