@@ -203,9 +203,13 @@ GstCaps *       gst_audio_encoder_proxy_getcaps (GstAudioEncoder * enc,
 /* context parameters */
 GstAudioInfo  * gst_audio_encoder_get_audio_info (GstAudioEncoder * enc);
 
-gint            gst_audio_encoder_get_frame_samples (GstAudioEncoder * enc);
+gint            gst_audio_encoder_get_frame_samples_min (GstAudioEncoder * enc);
 
-void            gst_audio_encoder_set_frame_samples (GstAudioEncoder * enc, gint num);
+void            gst_audio_encoder_set_frame_samples_min (GstAudioEncoder * enc, gint num);
+
+gint            gst_audio_encoder_get_frame_samples_max (GstAudioEncoder * enc);
+
+void            gst_audio_encoder_set_frame_samples_max (GstAudioEncoder * enc, gint num);
 
 gint            gst_audio_encoder_get_frame_max (GstAudioEncoder * enc);
 

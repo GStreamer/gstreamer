@@ -188,7 +188,7 @@ typedef struct _GstAudioEncoderContext
   GstAudioInfo info;
 
   /* output */
-  gint frame_samples;
+  gint frame_samples_min, frame_samples_max;
   gint frame_max;
   gint lookahead;
   /* MT-protected (with LOCK) */
@@ -701,9 +701,11 @@ gst_audio_encoder_push_buffers (GstAudioEncoder * enc, gboolean force)
     g_assert (priv->offset <= av);
     av -= priv->offset;
 
-    need = ctx->frame_samples > 0 ? ctx->frame_samples * ctx->info.bpf : av;
-    GST_LOG_OBJECT (enc, "available: %d, needed: %d, force: %d",
-        av, need, force);
+    need =
+        ctx->frame_samples_min >
+        0 ? ctx->frame_samples_min * ctx->info.bpf : av;
+    GST_LOG_OBJECT (enc, "available: %d, needed: %d, force: %d", av, need,
+        force);
 
     if ((need > av) || !av) {
       if (G_UNLIKELY (force)) {
@@ -716,14 +718,19 @@ gst_audio_encoder_push_buffers (GstAudioEncoder * enc, gboolean force)
       priv->force = FALSE;
     }
 
-    /* if we have some extra metadata,
-     * provide for integer multiple of frames to allow for better granularity
-     * of processing */
-    if (ctx->frame_samples > 0 && need) {
-      if (ctx->frame_max > 1)
-        need = need * MIN ((av / need), ctx->frame_max);
-      else if (ctx->frame_max == 0)
-        need = need * (av / need);
+    if (ctx->frame_samples_max > 0)
+      need = MIN (av, ctx->frame_samples_max * ctx->info.bpf);
+
+    if (ctx->frame_samples_min == ctx->frame_samples_max) {
+      /* if we have some extra metadata,
+       * provide for integer multiple of frames to allow for better granularity
+       * of processing */
+      if (ctx->frame_samples_min > 0 && need) {
+        if (ctx->frame_max > 1)
+          need = need * MIN ((av / need), ctx->frame_max);
+        else if (ctx->frame_max == 0)
+          need = need * (av / need);
+      }
     }
 
     if (need) {
@@ -1034,7 +1041,8 @@ gst_audio_encoder_sink_setcaps (GstPad * pad, GstCaps * caps)
     gst_audio_encoder_drain (enc);
 
     /* context defaults */
-    enc->priv->ctx.frame_samples = 0;
+    enc->priv->ctx.frame_samples_min = 0;
+    enc->priv->ctx.frame_samples_max = 0;
     enc->priv->ctx.frame_max = 0;
     enc->priv->ctx.lookahead = 0;
 
@@ -1696,37 +1704,71 @@ gst_audio_encoder_get_audio_info (GstAudioEncoder * enc)
 }
 
 /**
- * gst_audio_encoder_set_frame_samples:
+ * gst_audio_encoder_set_frame_samples_min:
  * @enc: a #GstAudioEncoder
  * @num: number of samples per frame
  *
  * Sets number of samples (per channel) subclass needs to be handed,
- * or will be handed all available if 0.
+ * at least or will be handed all available if 0.
  *
  * Since: 0.10.36
  */
 void
-gst_audio_encoder_set_frame_samples (GstAudioEncoder * enc, gint num)
+gst_audio_encoder_set_frame_samples_min (GstAudioEncoder * enc, gint num)
 {
   g_return_if_fail (GST_IS_AUDIO_ENCODER (enc));
 
-  enc->priv->ctx.frame_samples = num;
+  enc->priv->ctx.frame_samples_min = num;
 }
 
 /**
- * gst_audio_encoder_get_frame_samples:
+ * gst_audio_encoder_get_frame_samples_min:
  * @enc: a #GstAudioEncoder
  *
- * Returns: currently requested samples per frame
+ * Returns: currently minimum requested samples per frame
  *
  * Since: 0.10.36
  */
 gint
-gst_audio_encoder_get_frame_samples (GstAudioEncoder * enc)
+gst_audio_encoder_get_frame_samples_min (GstAudioEncoder * enc)
 {
   g_return_val_if_fail (GST_IS_AUDIO_ENCODER (enc), 0);
 
-  return enc->priv->ctx.frame_samples;
+  return enc->priv->ctx.frame_samples_min;
+}
+
+/**
+ * gst_audio_encoder_set_frame_samples_max:
+ * @enc: a #GstAudioEncoder
+ * @num: number of samples per frame
+ *
+ * Sets number of samples (per channel) subclass needs to be handed,
+ * at most or will be handed all available if 0.
+ *
+ * Since: 0.10.36
+ */
+void
+gst_audio_encoder_set_frame_samples_max (GstAudioEncoder * enc, gint num)
+{
+  g_return_if_fail (GST_IS_AUDIO_ENCODER (enc));
+
+  enc->priv->ctx.frame_samples_max = num;
+}
+
+/**
+ * gst_audio_encoder_get_frame_samples_min:
+ * @enc: a #GstAudioEncoder
+ *
+ * Returns: currently maximum requested samples per frame
+ *
+ * Since: 0.10.36
+ */
+gint
+gst_audio_encoder_get_frame_samples_max (GstAudioEncoder * enc)
+{
+  g_return_val_if_fail (GST_IS_AUDIO_ENCODER (enc), 0);
+
+  return enc->priv->ctx.frame_samples_max;
 }
 
 /**
@@ -1734,7 +1776,8 @@ gst_audio_encoder_get_frame_samples (GstAudioEncoder * enc)
  * @enc: a #GstAudioEncoder
  * @num: number of frames
  *
- * Sets max number of frames accepted at once (assumed minimally 1)
+ * Sets max number of frames accepted at once (assumed minimally 1).
+ * Requires @frame_samples_min and @frame_samples_max to be the equal.
  *
  * Since: 0.10.36
  */
