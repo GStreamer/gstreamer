@@ -126,6 +126,8 @@ typedef enum {
  * @start: the start of the segment
  * @stop: the stop of the segment
  * @time: the stream time of the segment
+ * @position: the position in the segment
+ * @duration: the duration of the segment
  *
  * A helper structure that holds the configured region of
  * interest in a media file.
