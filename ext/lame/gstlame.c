@@ -368,11 +368,9 @@ static void
 gst_lame_class_init (GstLameClass * klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
   GstAudioEncoderClass *base_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
   base_class = (GstAudioEncoderClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);

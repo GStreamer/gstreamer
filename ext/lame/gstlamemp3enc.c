@@ -229,11 +229,9 @@ static void
 gst_lamemp3enc_class_init (GstLameMP3EncClass * klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
   GstAudioEncoderClass *base_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
   base_class = (GstAudioEncoderClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
