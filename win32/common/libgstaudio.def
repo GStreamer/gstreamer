@@ -34,7 +34,8 @@ EXPORTS
 	gst_audio_encoder_finish_frame
 	gst_audio_encoder_get_audio_info
 	gst_audio_encoder_get_frame_max
-	gst_audio_encoder_get_frame_samples
+	gst_audio_encoder_get_frame_samples_max
+	gst_audio_encoder_get_frame_samples_min
 	gst_audio_encoder_get_hard_resync
 	gst_audio_encoder_get_latency
 	gst_audio_encoder_get_lookahead
@@ -42,9 +43,11 @@ EXPORTS
 	gst_audio_encoder_get_perfect_timestamp
 	gst_audio_encoder_get_tolerance
 	gst_audio_encoder_get_type
+	gst_audio_encoder_merge_tags
 	gst_audio_encoder_proxy_getcaps
 	gst_audio_encoder_set_frame_max
-	gst_audio_encoder_set_frame_samples
+	gst_audio_encoder_set_frame_samples_max
+	gst_audio_encoder_set_frame_samples_min
 	gst_audio_encoder_set_hard_resync
 	gst_audio_encoder_set_latency
 	gst_audio_encoder_set_lookahead
