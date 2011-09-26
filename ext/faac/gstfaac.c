@@ -431,7 +431,7 @@ gst_faac_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
   result = gst_faac_configure_source_pad (faac);
 
   /* report needs to base class */
-  gst_audio_encoder_set_frame_samples (enc, samples);
+  gst_audio_encoder_set_frame_samples_min (enc, samples);
   gst_audio_encoder_set_frame_max (enc, 1);
 
 done:
