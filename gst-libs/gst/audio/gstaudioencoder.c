@@ -1982,3 +1982,40 @@ gst_audio_encoder_get_tolerance (GstAudioEncoder * enc)
 
   return result;
 }
+
+/**
+ * gst_audio_encoder_merge_tags:
+ * @enc: a #GstAudioEncoder
+ * @tags: a #GstTagList to merge
+ * @mode: the #GstTagMergeMode to use
+ *
+ * Adds tags to so-called pending tags, which will be processed
+ * before pushing out data downstream.
+ *
+ * Note that this is provided for convenience, and the subclass is
+ * not required to use this and can still do tag handling on its own,
+ * although it should be aware that baseclass already takes care
+ * of the usual CODEC/AUDIO_CODEC tags.
+ *
+ * MT safe.
+ *
+ * Since: 0.10.36
+ */
+void
+gst_audio_encoder_merge_tags (GstAudioEncoder * enc,
+    const GstTagList * tags, GstTagMergeMode mode)
+{
+  GstTagList *otags;
+
+  g_return_if_fail (GST_IS_AUDIO_ENCODER (enc));
+  g_return_if_fail (tags == NULL || GST_IS_TAG_LIST (tags));
+
+  GST_OBJECT_LOCK (enc);
+  if (tags)
+    GST_DEBUG_OBJECT (enc, "merging tags %" GST_PTR_FORMAT, tags);
+  otags = enc->priv->tags;
+  enc->priv->tags = gst_tag_list_merge (enc->priv->tags, tags, mode);
+  if (otags)
+    gst_tag_list_free (otags);
+  GST_OBJECT_UNLOCK (enc);
+}
