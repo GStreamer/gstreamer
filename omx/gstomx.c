@@ -332,6 +332,12 @@ EmptyBufferDone (OMX_HANDLETYPE hComponent, OMX_PTR pAppData,
   GST_DEBUG_OBJECT (comp->parent, "Port %u emptied buffer %p",
       port->index, buf);
   buf->used = FALSE;
+
+  if (comp->hacks & GST_OMX_HACK_NO_NOFFSET_RESET) {
+    g_assert (buf->omx_buf->nFilledLen == 0);
+    buf->omx_buf->nOffset = 0;
+  }
+
   g_queue_push_tail (port->pending_buffers, buf);
   g_cond_broadcast (port->port_cond);
   g_mutex_unlock (port->port_lock);
@@ -1888,6 +1894,8 @@ gst_omx_parse_hacks (gchar ** hacks)
       hacks_flags |= GST_OMX_HACK_VIDEO_FRAMERATE_INTEGER;
     else if (g_str_equal (*hacks, "syncframe-flag-not-used"))
       hacks_flags |= GST_OMX_HACK_SYNCFRAME_FLAG_NOT_USED;
+    else if (g_str_equal (*hacks, "no-noffset-reset"))
+      hacks_flags |= GST_OMX_HACK_NO_NOFFSET_RESET;
     else
       GST_WARNING ("Unknown hack: %s", *hacks);
     hacks++;

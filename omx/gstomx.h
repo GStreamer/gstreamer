@@ -55,6 +55,11 @@ G_BEGIN_DECLS
  * Happens with the Bellagio ffmpegdist video encoder.
  */
 #define GST_OMX_HACK_SYNCFRAME_FLAG_NOT_USED                          G_GUINT64_CONSTANT (0x0000000000000008)
+/* If the nOffset field of buffers is not reset in EmptyBufferDone.
+ * Happens with Qualcomm's OpenMAX implementation.
+ */
+#define GST_OMX_HACK_NO_NOFFSET_RESET                                 G_GUINT64_CONSTANT (0x0000000000000010)
+
 
 typedef struct _GstOMXCore GstOMXCore;
 typedef struct _GstOMXPort GstOMXPort;
