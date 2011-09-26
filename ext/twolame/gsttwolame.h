@@ -24,6 +24,7 @@
 
 
 #include <gst/gst.h>
+#include <gst/audio/gstaudioencoder.h>
 
 G_BEGIN_DECLS
 
@@ -49,10 +50,7 @@ typedef struct _GstTwoLameClass GstTwoLameClass;
  * Opaque data structure.
  */
 struct _GstTwoLame {
-  GstElement element;
-
-  /*< private >*/
-  GstPad *srcpad, *sinkpad;
+  GstAudioEncoder element;
 
   gint samplerate;
   gint num_channels;
@@ -75,17 +73,11 @@ struct _GstTwoLame {
   gboolean quick_mode;
   gint quick_mode_count;
 
-  /* track this so we don't send a last buffer in eos handler after error */
-  GstFlowReturn  last_flow;
-
   twolame_options *glopts;
-
-  /* time tracker */
-  guint64 last_ts, last_offs, last_duration, eos_ts;
 };
 
 struct _GstTwoLameClass {
-  GstElementClass parent_class;
+  GstAudioEncoderClass parent_class;
 };
 
 GType gst_two_lame_get_type(void);
