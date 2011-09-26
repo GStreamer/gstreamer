@@ -678,7 +678,7 @@ gst_lamemp3enc_setup (GstLameMP3Enc * lame, GstTagList ** tags)
       CHECK_ERROR (lame_set_VBR_mean_bitrate_kbps (lame->lgf, lame->bitrate));
     }
     gst_tag_list_add (*tags, GST_TAG_MERGE_REPLACE, GST_TAG_BITRATE,
-        lame->bitrate, NULL);
+        lame->bitrate * 1000, NULL);
   }
 
   if (lame->encoding_engine_quality == LAMEMP3ENC_ENCODING_ENGINE_QUALITY_FAST)
