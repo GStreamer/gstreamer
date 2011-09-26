@@ -402,7 +402,8 @@ gst_two_lame_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
   /* report needs to base class:
    * hand one frame at a time, if we are pretty sure what a frame is */
   if (out_samplerate == twolame->samplerate) {
-    gst_audio_encoder_set_frame_samples (enc, 1152);
+    gst_audio_encoder_set_frame_samples_min (enc, 1152);
+    gst_audio_encoder_set_frame_samples_max (enc, 1152);
     gst_audio_encoder_set_frame_max (enc, 1);
   }
 
