@@ -496,15 +496,21 @@ gst_audio_encoder_finish_frame (GstAudioEncoder * enc, GstBuffer * buf,
 
   if (G_UNLIKELY (enc->priv->tags)) {
     GstTagList *tags;
+#if 0
+    GstCaps *caps;
+#endif
 
     /* add codec info to pending tags */
     tags = enc->priv->tags;
     /* no more pending */
     enc->priv->tags = NULL;
-    gst_pb_utils_add_codec_description_to_tag_list (tags, GST_TAG_CODEC,
-        GST_PAD_CAPS (enc->srcpad));
+#if 0
+    caps = gst_pad_get_current_caps (enc->srcpad);
+    gst_pb_utils_add_codec_description_to_tag_list (tags, GST_TAG_CODEC, caps);
     gst_pb_utils_add_codec_description_to_tag_list (tags, GST_TAG_AUDIO_CODEC,
-        GST_PAD_CAPS (enc->srcpad));
+        caps);
+#endif
+
     GST_DEBUG_OBJECT (enc, "sending tags %" GST_PTR_FORMAT, tags);
     gst_element_found_tags_for_pad (GST_ELEMENT (enc), enc->srcpad, tags);
   }
