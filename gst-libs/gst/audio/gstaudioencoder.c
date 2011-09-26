@@ -247,6 +247,45 @@ struct _GstAudioEncoderPrivate
   GList *pending_events;
 };
 
+
+static GstElementClass *parent_class = NULL;
+
+static void gst_audio_encoder_class_init (GstAudioEncoderClass * klass);
+static void gst_audio_encoder_init (GstAudioEncoder * parse,
+    GstAudioEncoderClass * klass);
+
+GType
+gst_audio_encoder_get_type (void)
+{
+  static GType audio_encoder_type = 0;
+
+  if (!audio_encoder_type) {
+    static const GTypeInfo audio_encoder_info = {
+      sizeof (GstAudioEncoderClass),
+      (GBaseInitFunc) NULL,
+      (GBaseFinalizeFunc) NULL,
+      (GClassInitFunc) gst_audio_encoder_class_init,
+      NULL,
+      NULL,
+      sizeof (GstAudioEncoder),
+      0,
+      (GInstanceInitFunc) gst_audio_encoder_init,
+    };
+    const GInterfaceInfo preset_interface_info = {
+      NULL,                     /* interface_init */
+      NULL,                     /* interface_finalize */
+      NULL                      /* interface_data */
+    };
+
+    audio_encoder_type = g_type_register_static (GST_TYPE_ELEMENT,
+        "GstAudioEncoder", &audio_encoder_info, G_TYPE_FLAG_ABSTRACT);
+
+    g_type_add_interface_static (audio_encoder_type, GST_TYPE_PRESET,
+        &preset_interface_info);
+  }
+  return audio_encoder_type;
+}
+
 static void gst_audio_encoder_finalize (GObject * object);
 static void gst_audio_encoder_reset (GstAudioEncoder * enc, gboolean full);
 
@@ -266,20 +305,6 @@ static gboolean gst_audio_encoder_sink_query (GstPad * pad, GstQuery * query);
 static const GstQueryType *gst_audio_encoder_get_query_types (GstPad * pad);
 static GstCaps *gst_audio_encoder_sink_getcaps (GstPad * pad);
 
-static void
-do_init (GType gtype)
-{
-  const GInterfaceInfo preset_interface_info = {
-    NULL,                       /* interface_init */
-    NULL,                       /* interface_finalize */
-    NULL                        /* interface_data */
-  };
-
-  g_type_add_interface_static (gtype, GST_TYPE_PRESET, &preset_interface_info);
-}
-
-GST_BOILERPLATE_FULL (GstAudioEncoder, gst_audio_encoder, GstElement,
-    GST_TYPE_ELEMENT, do_init);
 
 static void
 gst_audio_encoder_class_init (GstAudioEncoderClass * klass)
@@ -287,6 +312,7 @@ gst_audio_encoder_class_init (GstAudioEncoderClass * klass)
   GObjectClass *gobject_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
+  parent_class = g_type_class_peek_parent (klass);
 
   GST_DEBUG_CATEGORY_INIT (gst_audio_encoder_debug, "audioencoder", 0,
       "audio encoder base class");
@@ -316,11 +342,6 @@ gst_audio_encoder_class_init (GstAudioEncoderClass * klass)
           "Consider discontinuity if timestamp jitter/imperfection exceeds tolerance (ns)",
           0, G_MAXINT64, DEFAULT_TOLERANCE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-}
-
-static void
-gst_audio_encoder_base_init (gpointer g_class)
-{
 }
 
 static void
