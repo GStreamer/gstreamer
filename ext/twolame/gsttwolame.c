@@ -401,8 +401,12 @@ gst_two_lame_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
   gst_pad_set_caps (GST_AUDIO_ENCODER_SRC_PAD (twolame), othercaps);
   gst_caps_unref (othercaps);
 
-  /* not much base class feedback:
-   * - we will handle buffers, just hand us all available */
+  /* report needs to base class:
+   * hand one frame at a time, if we are pretty sure what a frame is */
+  if (out_samplerate == twolame->samplerate) {
+    gst_audio_encoder_set_frame_samples (enc, 1152);
+    gst_audio_encoder_set_frame_max (enc, 1);
+  }
 
   return TRUE;
 
