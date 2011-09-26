@@ -1194,6 +1194,22 @@ gst_audio_encoder_sink_eventfunc (GstAudioEncoder * enc, GstEvent * event)
       gst_audio_encoder_drain (enc);
       break;
 
+    case GST_EVENT_TAG:
+    {
+      GstTagList *tags;
+
+      gst_event_parse_tag (event, &tags);
+      tags = gst_tag_list_copy (tags);
+      gst_event_unref (event);
+      gst_tag_list_remove_tag (tags, GST_TAG_CODEC);
+      gst_tag_list_remove_tag (tags, GST_TAG_AUDIO_CODEC);
+      event = gst_event_new_tag (tags);
+
+      gst_pad_push_event (enc->srcpad, event);
+      handled = TRUE;
+      break;
+    }
+
     default:
       break;
   }
