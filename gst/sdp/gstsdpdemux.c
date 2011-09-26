@@ -138,30 +138,8 @@ static GstFlowReturn gst_sdp_demux_sink_chain (GstPad * pad,
 
 /*static guint gst_sdp_demux_signals[LAST_SIGNAL] = { 0 }; */
 
-static void
-_do_init (GType sdp_demux_type)
-{
-  GST_DEBUG_CATEGORY_INIT (sdpdemux_debug, "sdpdemux", 0, "SDP demux");
-}
-
-GST_BOILERPLATE_FULL (GstSDPDemux, gst_sdp_demux, GstBin, GST_TYPE_BIN,
-    _do_init);
-
-static void
-gst_sdp_demux_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sinktemplate));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&rtptemplate));
-
-  gst_element_class_set_details_simple (element_class, "SDP session setup",
-      "Codec/Demuxer/Network/RTP",
-      "Receive data over the network via SDP",
-      "Wim Taymans <wim.taymans@gmail.com>");
-}
+#define gst_sdp_demux_parent_class parent_class
+G_DEFINE_TYPE (GstSDPDemux, gst_sdp_demux, GST_TYPE_BIN);
 
 static void
 gst_sdp_demux_class_init (GstSDPDemuxClass * klass)
@@ -202,13 +180,25 @@ gst_sdp_demux_class_init (GstSDPDemuxClass * klass)
           DEFAULT_REDIRECT,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sinktemplate));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&rtptemplate));
+
+  gst_element_class_set_details_simple (gstelement_class, "SDP session setup",
+      "Codec/Demuxer/Network/RTP",
+      "Receive data over the network via SDP",
+      "Wim Taymans <wim.taymans@gmail.com>");
+
   gstelement_class->change_state = gst_sdp_demux_change_state;
 
   gstbin_class->handle_message = gst_sdp_demux_handle_message;
+
+  GST_DEBUG_CATEGORY_INIT (sdpdemux_debug, "sdpdemux", 0, "SDP demux");
 }
 
 static void
-gst_sdp_demux_init (GstSDPDemux * demux, GstSDPDemuxClass * g_class)
+gst_sdp_demux_init (GstSDPDemux * demux)
 {
   demux->sinkpad = gst_pad_new_from_static_template (&sinktemplate, "sink");
   gst_pad_set_event_function (demux->sinkpad,
