@@ -368,6 +368,8 @@ gst_audio_encoder_init (GstAudioEncoder * enc, GstAudioEncoderClass * bclass)
 
   enc->priv->adapter = gst_adapter_new ();
 
+  g_static_rec_mutex_init (&enc->stream_lock);
+
   /* property default */
   enc->priv->granule = DEFAULT_GRANULE;
   enc->priv->perfect_ts = DEFAULT_PERFECT_TS;
@@ -382,7 +384,7 @@ gst_audio_encoder_init (GstAudioEncoder * enc, GstAudioEncoderClass * bclass)
 static void
 gst_audio_encoder_reset (GstAudioEncoder * enc, gboolean full)
 {
-  GST_OBJECT_LOCK (enc);
+  GST_AUDIO_ENCODER_STREAM_LOCK (enc);
 
   GST_LOG_OBJECT (enc, "reset full %d", full);
 
@@ -413,7 +415,7 @@ gst_audio_encoder_reset (GstAudioEncoder * enc, gboolean full)
   enc->priv->samples = 0;
   enc->priv->discont = FALSE;
 
-  GST_OBJECT_UNLOCK (enc);
+  GST_AUDIO_ENCODER_STREAM_UNLOCK (enc);
 }
 
 static void
@@ -422,6 +424,8 @@ gst_audio_encoder_finalize (GObject * object)
   GstAudioEncoder *enc = GST_AUDIO_ENCODER (object);
 
   g_object_unref (enc->priv->adapter);
+
+  g_static_rec_mutex_free (&enc->stream_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -470,6 +474,8 @@ gst_audio_encoder_finish_frame (GstAudioEncoder * enc, GstBuffer * buf,
   g_return_val_if_fail (buf == NULL || GST_BUFFER_SIZE (buf) > 0,
       GST_FLOW_ERROR);
 
+  GST_AUDIO_ENCODER_STREAM_LOCK (enc);
+
   if (G_UNLIKELY (enc->priv->tags)) {
     GstTagList *tags;
 
@@ -493,10 +499,9 @@ gst_audio_encoder_finish_frame (GstAudioEncoder * enc, GstBuffer * buf,
 
   if (priv->pending_events) {
     GList *pending_events, *l;
-    GST_OBJECT_LOCK (enc);
+
     pending_events = priv->pending_events;
     priv->pending_events = NULL;
-    GST_OBJECT_UNLOCK (enc);
 
     GST_DEBUG_OBJECT (enc, "Pushing pending events");
     for (l = priv->pending_events; l; l = l->next)
@@ -650,6 +655,8 @@ gst_audio_encoder_finish_frame (GstAudioEncoder * enc, GstBuffer * buf,
   }
 
 exit:
+  GST_AUDIO_ENCODER_STREAM_UNLOCK (enc);
+
   return ret;
 
   /* ERRORS */
@@ -660,7 +667,8 @@ overflow:
             samples, priv->offset / ctx->info.bpf), (NULL));
     if (buf)
       gst_buffer_unref (buf);
-    return GST_FLOW_ERROR;
+    ret = GST_FLOW_ERROR;
+    goto exit;
   }
 }
 
@@ -800,6 +808,8 @@ gst_audio_encoder_chain (GstPad * pad, GstBuffer * buffer)
   priv = enc->priv;
   ctx = &enc->priv->ctx;
 
+  GST_AUDIO_ENCODER_STREAM_LOCK (enc);
+
   /* should know what is coming by now */
   if (!ctx->info.bpf)
     goto not_negotiated;
@@ -931,6 +941,9 @@ gst_audio_encoder_chain (GstPad * pad, GstBuffer * buffer)
 
 done:
   GST_LOG_OBJECT (enc, "chain leaving");
+
+  GST_AUDIO_ENCODER_STREAM_UNLOCK (enc);
+
   return ret;
 
   /* ERRORS */
@@ -939,7 +952,8 @@ not_negotiated:
     GST_ELEMENT_ERROR (enc, CORE, NEGOTIATION, (NULL),
         ("encoder not initialized"));
     gst_buffer_unref (buffer);
-    return GST_FLOW_NOT_NEGOTIATED;
+    ret = GST_FLOW_NOT_NEGOTIATED;
+    goto done;
   }
 wrong_buffer:
   {
@@ -947,7 +961,8 @@ wrong_buffer:
         ("buffer size %d not a multiple of %d", GST_BUFFER_SIZE (buffer),
             ctx->info.bpf));
     gst_buffer_unref (buffer);
-    return GST_FLOW_ERROR;
+    ret = GST_FLOW_ERROR;
+    goto done;
   }
 }
 
@@ -988,6 +1003,8 @@ gst_audio_encoder_sink_setcaps (GstPad * pad, GstCaps * caps)
 
   ctx = &enc->priv->ctx;
   state = &ctx->info;
+
+  GST_AUDIO_ENCODER_STREAM_LOCK (enc);
 
   GST_DEBUG_OBJECT (enc, "caps: %" GST_PTR_FORMAT, caps);
 
@@ -1045,13 +1062,17 @@ gst_audio_encoder_sink_setcaps (GstPad * pad, GstCaps * caps)
     GST_DEBUG_OBJECT (enc, "new audio format identical to configured format");
   }
 
+exit:
+
+  GST_AUDIO_ENCODER_STREAM_UNLOCK (enc);
+
   return res;
 
   /* ERRORS */
 refuse_caps:
   {
     GST_WARNING_OBJECT (enc, "rejected caps %" GST_PTR_FORMAT, caps);
-    return res;
+    goto exit;
   }
 }
 
@@ -1191,6 +1212,7 @@ gst_audio_encoder_sink_eventfunc (GstAudioEncoder * enc, GstEvent * event)
         break;
       }
 
+      GST_AUDIO_ENCODER_STREAM_LOCK (enc);
       /* finish current segment */
       gst_audio_encoder_drain (enc);
       /* reset partially for new segment */
@@ -1198,6 +1220,7 @@ gst_audio_encoder_sink_eventfunc (GstAudioEncoder * enc, GstEvent * event)
       /* and follow along with segment */
       gst_segment_set_newsegment_full (&enc->segment, update, rate, arate,
           format, start, stop, time);
+      GST_AUDIO_ENCODER_STREAM_UNLOCK (enc);
       break;
     }
 
@@ -1205,6 +1228,7 @@ gst_audio_encoder_sink_eventfunc (GstAudioEncoder * enc, GstEvent * event)
       break;
 
     case GST_EVENT_FLUSH_STOP:
+      GST_AUDIO_ENCODER_STREAM_LOCK (enc);
       /* discard any pending stuff */
       /* TODO route through drain ?? */
       if (!enc->priv->drained && klass->flush)
@@ -1212,16 +1236,17 @@ gst_audio_encoder_sink_eventfunc (GstAudioEncoder * enc, GstEvent * event)
       /* and get (re)set for the sequel */
       gst_audio_encoder_reset (enc, FALSE);
 
-      GST_OBJECT_LOCK (enc);
       g_list_foreach (enc->priv->pending_events, (GFunc) gst_event_unref, NULL);
       g_list_free (enc->priv->pending_events);
       enc->priv->pending_events = NULL;
-      GST_OBJECT_UNLOCK (enc);
+      GST_AUDIO_ENCODER_STREAM_UNLOCK (enc);
 
       break;
 
     case GST_EVENT_EOS:
+      GST_AUDIO_ENCODER_STREAM_LOCK (enc);
       gst_audio_encoder_drain (enc);
+      GST_AUDIO_ENCODER_STREAM_UNLOCK (enc);
       break;
 
     case GST_EVENT_TAG:
@@ -1284,10 +1309,10 @@ gst_audio_encoder_sink_event (GstPad * pad, GstEvent * event)
         || GST_EVENT_TYPE (event) == GST_EVENT_FLUSH_STOP) {
       ret = gst_pad_event_default (pad, event);
     } else {
-      GST_OBJECT_LOCK (enc);
+      GST_AUDIO_ENCODER_STREAM_LOCK (enc);
       enc->priv->pending_events =
           g_list_append (enc->priv->pending_events, event);
-      GST_OBJECT_UNLOCK (enc);
+      GST_AUDIO_ENCODER_STREAM_UNLOCK (enc);
       ret = TRUE;
     }
   }
