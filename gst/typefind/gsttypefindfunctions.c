@@ -45,6 +45,10 @@
 GST_DEBUG_CATEGORY_STATIC (type_find_debug);
 #define GST_CAT_DEFAULT type_find_debug
 
+/* so our code stays ready for 0.11 */
+#define gst_type_find_peek(tf,off,len) \
+    ((const guint8 *)gst_type_find_peek((tf),(off),(len)))
+
 /* DataScanCtx: helper for typefind functions that scan through data
  * step-by-step, to avoid doing a peek at each and every offset */
 
