@@ -1245,7 +1245,12 @@ gst_mpegts_demux_data_cb (GstPESFilter * filter, gboolean first,
     /* activate and add */
     gst_pad_set_active (srcpad, TRUE);
     gst_element_add_pad (GST_ELEMENT_CAST (demux), srcpad);
-    demux->need_no_more_pads = TRUE;
+    demux->pending_pads--;
+    GST_DEBUG_OBJECT (demux,
+        "Adding pad due to received data, decreasing pending pads to %d",
+        demux->pending_pads);
+    if (demux->pending_pads == 0)
+      gst_element_no_more_pads (GST_ELEMENT (demux));
 
     stream->discont = TRUE;
 
@@ -1471,6 +1476,8 @@ gst_mpegts_stream_parse_pmt (GstMpegTSStream * stream,
     g_array_free (PMT->entries, TRUE);
   PMT->entries = g_array_new (FALSE, TRUE, sizeof (GstMpegTSPMTEntry));
 
+  GST_DEBUG_OBJECT (demux, "Resetting pending pads due to parsing the PMT");
+  demux->pending_pads = 0;
   while (entries > 0) {
     GstMpegTSPMTEntry entry;
     GstMpegTSStream *ES_stream;
@@ -1554,6 +1561,12 @@ gst_mpegts_stream_parse_pmt (GstMpegTSStream * stream,
             ES_stream->filter.gather_pes = TRUE;
           }
         }
+
+        ++demux->pending_pads;
+        GST_DEBUG_OBJECT (demux,
+            "Setting data callback, increasing pending pads to %d",
+            demux->pending_pads);
+
         gst_pes_filter_set_callbacks (&ES_stream->filter,
             (GstPESFilterData) gst_mpegts_demux_data_cb,
             (GstPESFilterResync) gst_mpegts_demux_resync_cb, ES_stream);
@@ -1584,6 +1597,11 @@ gst_mpegts_stream_parse_pmt (GstMpegTSStream * stream,
     if (demux->program_number == PMT->program_number)
       gst_mpegts_activate_pmt (demux, stream);
   }
+
+  GST_DEBUG_OBJECT (demux, "Done parsing PMT, pending pads now %d",
+      demux->pending_pads);
+  if (demux->pending_pads == 0)
+    gst_element_no_more_pads (GST_ELEMENT (demux));
 
   return TRUE;
 

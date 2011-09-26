@@ -231,6 +231,9 @@ struct _GstMpegTSDemux {
 
   /* Detect when the source stops for a while, we will resync the interpolation gap */
   GstClockTime      last_buf_ts;
+
+  /* Number of expected pads which have not been added yet */
+  gint              pending_pads;
 };
 
 struct _GstMpegTSDemuxClass {
