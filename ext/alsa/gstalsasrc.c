@@ -254,36 +254,62 @@ gst_alsasrc_get_timestamp (GstAlsaSrc * src)
   snd_htimestamp_t tstamp;
   GstClockTime timestamp;
   snd_pcm_uframes_t availmax;
+  gint64 offset;
 
   GST_DEBUG_OBJECT (src, "Getting alsa timestamp!");
 
   if (!src) {
     GST_ERROR_OBJECT (src, "No alsa handle created yet !");
-    return 0;
+    return GST_CLOCK_TIME_NONE;
   }
 
   if (snd_pcm_status_malloc (&status) != 0) {
     GST_ERROR_OBJECT (src, "snd_pcm_status_malloc failed");
+    return GST_CLOCK_TIME_NONE;
   }
 
   if (snd_pcm_status (src->handle, status) != 0) {
     GST_ERROR_OBJECT (src, "snd_pcm_status failed");
+    snd_pcm_status_free (status);
+    return GST_CLOCK_TIME_NONE;
   }
 
   /* get high resolution time stamp from driver */
   snd_pcm_status_get_htstamp (status, &tstamp);
   timestamp = GST_TIMESPEC_TO_TIME (tstamp);
+  GST_DEBUG_OBJECT (src, "Base ts: %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (timestamp));
+  if (timestamp == 0) {
+    /* This timestamp is supposed to represent the last sample, so 0 (which
+       can be returned on some ALSA setups (such as mine)) must mean that it
+       is invalid, unless there's just one sample, but we'll ignore that. */
+    GST_WARNING_OBJECT (src,
+        "No timestamp returned from snd_pcm_status_get_htstamp");
+    return GST_CLOCK_TIME_NONE;
+  }
 
   /* Max available frames sets the depth of the buffer */
   availmax = snd_pcm_status_get_avail_max (status);
 
   /* Compensate the fact that the timestamp references the last sample */
-  timestamp -= gst_util_uint64_scale_int (availmax * 2, GST_SECOND, src->rate);
+  offset = -gst_util_uint64_scale_int (availmax * 2, GST_SECOND, src->rate);
   /* Compensate for the delay until the package is available */
-  timestamp += gst_util_uint64_scale_int (snd_pcm_status_get_delay (status),
+  offset += gst_util_uint64_scale_int (snd_pcm_status_get_delay (status),
       GST_SECOND, src->rate);
 
   snd_pcm_status_free (status);
+
+  /* just in case, should not happen */
+  if (-offset > timestamp)
+    timestamp = 0;
+  else
+    timestamp -= offset;
+
+  /* Take first ts into account */
+  if (src->first_alsa_ts == GST_CLOCK_TIME_NONE) {
+    src->first_alsa_ts = timestamp;
+  }
+  timestamp -= src->first_alsa_ts;
 
   GST_DEBUG_OBJECT (src, "ALSA timestamp : %" GST_TIME_FORMAT,
       GST_TIME_ARGS (timestamp));
@@ -384,8 +410,10 @@ gst_alsasrc_create (GstBaseSrc * bsrc, guint64 offset, guint length,
   ret =
       GST_BASE_SRC_CLASS (parent_class)->create (bsrc, offset, length, outbuf);
   if (asrc->driver_timestamps == TRUE && *outbuf) {
-    GST_BUFFER_TIMESTAMP (*outbuf) =
-        gst_alsasrc_get_timestamp ((GstAlsaSrc *) bsrc);
+    GstClockTime ts = gst_alsasrc_get_timestamp (asrc);
+    if (GST_CLOCK_TIME_IS_VALID (ts)) {
+      GST_BUFFER_TIMESTAMP (*outbuf) = ts;
+    }
   }
 
   return ret;
@@ -399,6 +427,7 @@ gst_alsasrc_init (GstAlsaSrc * alsasrc, GstAlsaSrcClass * g_class)
   alsasrc->device = g_strdup (DEFAULT_PROP_DEVICE);
   alsasrc->cached_caps = NULL;
   alsasrc->driver_timestamps = FALSE;
+  alsasrc->first_alsa_ts = GST_CLOCK_TIME_NONE;
 
   alsasrc->alsa_lock = g_mutex_new ();
 }
@@ -943,6 +972,7 @@ gst_alsasrc_reset (GstAudioSrc * asrc)
   GST_DEBUG_OBJECT (alsa, "prepare");
   CHECK (snd_pcm_prepare (alsa->handle), prepare_error);
   GST_DEBUG_OBJECT (alsa, "reset done");
+  alsa->first_alsa_ts = GST_CLOCK_TIME_NONE;
   GST_ALSA_SRC_UNLOCK (asrc);
 
   return;
