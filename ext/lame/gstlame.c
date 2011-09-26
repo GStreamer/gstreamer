@@ -373,8 +373,6 @@ gst_lame_class_init (GstLameClass * klass)
   gobject_class = (GObjectClass *) klass;
   base_class = (GstAudioEncoderClass *) klass;
 
-  parent_class = g_type_class_peek_parent (klass);
-
   gobject_class->set_property = gst_lame_set_property;
   gobject_class->get_property = gst_lame_get_property;
   gobject_class->finalize = gst_lame_finalize;
