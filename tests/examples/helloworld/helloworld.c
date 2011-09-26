@@ -74,7 +74,7 @@ main (gint argc, gchar * argv[])
   /* cleanup */
   gst_element_set_state (playbin, GST_STATE_NULL);
   g_object_unref (playbin);
-  g_object_unref (loop);
+  g_main_loop_unref (loop);
 
   return 0;
 }

@@ -176,8 +176,8 @@ gst_structure_validate_name (const gchar * name)
   while (*s && (g_ascii_isalnum (*s) || strchr ("/-_.:+", *s) != NULL))
     s++;
   if (G_UNLIKELY (*s != '\0')) {
-    GST_WARNING ("Invalid character '%c' at offset %lu in structure name: %s",
-        *s, ((gulong) s - (gulong) name), name);
+    GST_WARNING ("Invalid character '%c' at offset %" G_GUINTPTR_FORMAT " in"
+        " structure name: %s", *s, ((guintptr) s - (guintptr) name), name);
     return FALSE;
   }
 
