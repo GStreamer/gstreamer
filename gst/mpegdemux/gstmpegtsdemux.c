@@ -1051,6 +1051,48 @@ done:
   return ret;
 }
 
+static void
+gst_mpegts_demux_sync_streams (GstMpegTSDemux * demux, GstClockTime time)
+{
+  gint i;
+
+  for (i = 0; i < MPEGTS_MAX_PID + 1; i++) {
+    GstMpegTSStream *stream = demux->streams[i];
+    if (!stream)
+      continue;
+
+    /* Theoretically, we should be doing this for all streams, but we're only
+     * doing it for non A/V streams, for which data might not be forthcoming. */
+    if (stream->flags & (MPEGTS_STREAM_FLAG_IS_AUDIO |
+            MPEGTS_STREAM_FLAG_IS_VIDEO))
+      continue;
+
+    /* at start, lock all streams onto the first timestamp */
+    if (G_UNLIKELY (stream->last_time == 0))
+      stream->last_time = time;
+
+    /* Does this stream lag? Random threshold of 2 seconds */
+    if (GST_CLOCK_DIFF (stream->last_time, time) > (2 * GST_SECOND)) {
+      /* If the pad was not added yet, do not wait any longer for
+         any pad that might be waiting for data */
+      if (!stream->pad && demux->pending_pads > 0) {
+        demux->pending_pads = 0;
+        gst_element_no_more_pads (GST_ELEMENT (demux));
+      }
+
+      if (stream->pad) {
+        GST_DEBUG_OBJECT (stream, "synchronizing stream with others by "
+            "advancing time from %" GST_TIME_FORMAT " to %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (stream->last_time), GST_TIME_ARGS (time));
+        stream->last_time = time;
+        /* advance stream time (FIXME: is this right, esp. time_pos?) */
+        gst_pad_push_event (stream->pad,
+            gst_event_new_new_segment (TRUE, 1.0,
+                GST_FORMAT_TIME, stream->last_time, -1, stream->last_time));
+      }
+    }
+  }
+}
 
 static GstFlowReturn
 gst_mpegts_demux_data_cb (GstPESFilter * filter, gboolean first,
@@ -1270,6 +1312,9 @@ gst_mpegts_demux_data_cb (GstPESFilter * filter, gboolean first,
   }
   ret = gst_pad_push (srcpad, buffer);
   ret = gst_mpegts_demux_combine_flows (demux, stream, ret);
+
+  if (GST_CLOCK_TIME_IS_VALID (time))
+    gst_mpegts_demux_sync_streams (demux, time);
 
   return ret;
 
