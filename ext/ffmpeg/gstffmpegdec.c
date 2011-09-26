@@ -852,6 +852,12 @@ gst_ffmpegdec_setcaps (GstPad * pad, GstCaps * caps)
     }
   }
 
+  /* for FLAC, don't parse if it's already parsed */
+  if (oclass->in_plugin->id == CODEC_ID_FLAC) {
+    if (gst_structure_has_field (structure, "streamheader"))
+      ffmpegdec->turnoff_parser = TRUE;
+  }
+
   /* workaround encoder bugs */
   ffmpegdec->context->workaround_bugs |= FF_BUG_AUTODETECT;
   ffmpegdec->context->error_recognition = 1;
