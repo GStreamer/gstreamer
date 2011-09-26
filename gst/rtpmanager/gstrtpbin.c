@@ -312,7 +312,7 @@ static void remove_recv_rtcp (GstRtpBin * rtpbin, GstRtpBinSession * session);
 static void remove_send_rtp (GstRtpBin * rtpbin, GstRtpBinSession * session);
 static void remove_rtcp (GstRtpBin * rtpbin, GstRtpBinSession * session);
 static void free_client (GstRtpBinClient * client, GstRtpBin * bin);
-static void free_stream (GstRtpBinStream * stream);
+static void free_stream (GstRtpBinStream * stream, GstRtpBin * bin);
 
 /* Manages the RTP stream for one SSRC.
  *
@@ -545,6 +545,11 @@ ssrc_demux_pad_removed (GstElement * element, guint ssrc, GstPad * pad,
     GstRtpBinSession * session)
 {
   GstRtpBinStream *stream = NULL;
+  GstRtpBin *rtpbin;
+
+  rtpbin = session->bin;
+
+  GST_RTP_BIN_LOCK (rtpbin);
 
   GST_RTP_SESSION_LOCK (session);
   if ((stream = find_stream_by_ssrc (session, ssrc)))
@@ -552,7 +557,9 @@ ssrc_demux_pad_removed (GstElement * element, guint ssrc, GstPad * pad,
   GST_RTP_SESSION_UNLOCK (session);
 
   if (stream)
-    free_stream (stream);
+    free_stream (stream, rtpbin);
+
+  GST_RTP_BIN_UNLOCK (rtpbin);
 }
 
 /* create a session with the given id.  Must be called with RTP_BIN_LOCK */
@@ -638,8 +645,6 @@ no_demux:
 static void
 free_session (GstRtpBinSession * sess, GstRtpBin * bin)
 {
-  GSList *client_walk;
-
   GST_DEBUG_OBJECT (bin, "freeing session %p", sess);
 
   gst_element_set_locked_state (sess->demux, TRUE);
@@ -656,40 +661,7 @@ free_session (GstRtpBinSession * sess, GstRtpBin * bin)
   gst_bin_remove (GST_BIN_CAST (bin), sess->session);
   gst_bin_remove (GST_BIN_CAST (bin), sess->demux);
 
-  /* remove any references in bin->clients to the streams in sess->streams */
-  client_walk = bin->clients;
-  while (client_walk) {
-    GSList *client_node = client_walk;
-    GstRtpBinClient *client = (GstRtpBinClient *) client_node->data;
-    GSList *stream_walk = client->streams;
-
-    while (stream_walk) {
-      GSList *stream_node = stream_walk;
-      GstRtpBinStream *stream = (GstRtpBinStream *) stream_node->data;
-      GSList *inner_walk;
-
-      stream_walk = g_slist_next (stream_walk);
-
-      for (inner_walk = sess->streams; inner_walk;
-          inner_walk = g_slist_next (inner_walk)) {
-        if ((GstRtpBinStream *) inner_walk->data == stream) {
-          client->streams = g_slist_delete_link (client->streams, stream_node);
-          --client->nstreams;
-          break;
-        }
-      }
-    }
-    client_walk = g_slist_next (client_walk);
-
-    g_assert ((client->streams && client->nstreams > 0) || (!client->streams
-            && client->streams == 0));
-    if (client->nstreams == 0) {
-      free_client (client, bin);
-      bin->clients = g_slist_delete_link (bin->clients, client_node);
-    }
-  }
-
-  g_slist_foreach (sess->streams, (GFunc) free_stream, NULL);
+  g_slist_foreach (sess->streams, (GFunc) free_stream, bin);
   g_slist_free (sess->streams);
 
   g_mutex_clear (&sess->lock);
@@ -1479,12 +1451,13 @@ no_demux:
   }
 }
 
+/* called with RTP_BIN_LOCK */
 static void
-free_stream (GstRtpBinStream * stream)
+free_stream (GstRtpBinStream * stream, GstRtpBin * bin)
 {
-  GstRtpBinSession *session;
+  GSList *clients, *next_client;
 
-  session = stream->session;
+  GST_DEBUG_OBJECT (bin, "freeing stream %p", stream);
 
   if (stream->demux) {
     g_signal_handler_disconnect (stream->demux, stream->demux_newpad_sig);
@@ -1508,10 +1481,33 @@ free_stream (GstRtpBinStream * stream)
   if (stream->demux)
     g_signal_handler_disconnect (stream->demux, stream->demux_padremoved_sig);
 
-  gst_bin_remove (GST_BIN_CAST (session->bin), stream->buffer);
+  gst_bin_remove (GST_BIN_CAST (bin), stream->buffer);
   if (stream->demux)
-    gst_bin_remove (GST_BIN_CAST (session->bin), stream->demux);
+    gst_bin_remove (GST_BIN_CAST (bin), stream->demux);
 
+  for (clients = bin->clients; clients; clients = next_client) {
+    GstRtpBinClient *client = (GstRtpBinClient *) clients->data;
+    GSList *streams, *next_stream;
+
+    next_client = g_slist_next (clients);
+
+    for (streams = client->streams; streams; streams = next_stream) {
+      GstRtpBinStream *ostream = (GstRtpBinStream *) streams->data;
+
+      next_stream = g_slist_next (streams);
+
+      if (ostream == stream) {
+        client->streams = g_slist_delete_link (client->streams, streams);
+        /* If this was the last stream belonging to this client,
+         * clean up the client. */
+        if (--client->nstreams == 0) {
+          bin->clients = g_slist_delete_link (bin->clients, clients);
+          free_client (client, bin);
+          break;
+        }
+      }
+    }
+  }
   g_free (stream);
 }
 
@@ -1920,10 +1916,6 @@ gst_rtp_bin_dispose (GObject * object)
   g_slist_foreach (rtpbin->sessions, (GFunc) free_session, rtpbin);
   g_slist_free (rtpbin->sessions);
   rtpbin->sessions = NULL;
-  GST_DEBUG_OBJECT (object, "freeing clients");
-  g_slist_foreach (rtpbin->clients, (GFunc) free_client, rtpbin);
-  g_slist_free (rtpbin->clients);
-  rtpbin->clients = NULL;
   GST_RTP_BIN_UNLOCK (rtpbin);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
