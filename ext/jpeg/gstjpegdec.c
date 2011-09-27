@@ -113,6 +113,7 @@ static void gst_jpeg_dec_get_property (GObject * object, guint prop_id,
 
 static GstFlowReturn gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buffer);
 static gboolean gst_jpeg_dec_setcaps (GstPad * pad, GstCaps * caps);
+static GstCaps *gst_jpeg_dec_getcaps (GstPad * pad);
 static gboolean gst_jpeg_dec_sink_event (GstPad * pad, GstEvent * event);
 static gboolean gst_jpeg_dec_src_event (GstPad * pad, GstEvent * event);
 static GstStateChangeReturn gst_jpeg_dec_change_state (GstElement * element,
@@ -406,6 +407,8 @@ gst_jpeg_dec_init (GstJpegDec * dec)
   gst_element_add_pad (GST_ELEMENT (dec), dec->sinkpad);
   gst_pad_set_setcaps_function (dec->sinkpad,
       GST_DEBUG_FUNCPTR (gst_jpeg_dec_setcaps));
+  gst_pad_set_getcaps_function (dec->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_jpeg_dec_getcaps));
   gst_pad_set_chain_function (dec->sinkpad,
       GST_DEBUG_FUNCPTR (gst_jpeg_dec_chain));
   gst_pad_set_event_function (dec->sinkpad,
@@ -768,6 +771,50 @@ gst_jpeg_dec_setcaps (GstPad * pad, GstCaps * caps)
 
   return TRUE;
 }
+
+static GstCaps *
+gst_jpeg_dec_getcaps (GstPad * pad)
+{
+  GstJpegDec *dec;
+  GstCaps *caps;
+  GstPad *peer;
+
+  dec = GST_JPEG_DEC (GST_OBJECT_PARENT (pad));
+
+  if (GST_PAD_CAPS (pad))
+    return gst_caps_ref (GST_PAD_CAPS (pad));
+
+  peer = gst_pad_get_peer (dec->srcpad);
+
+  if (peer) {
+    GstCaps *peer_caps;
+    const GstCaps *templ_caps;
+    GstStructure *s;
+    guint i, n;
+
+    peer_caps = gst_pad_get_caps (peer);
+
+    /* Translate peercaps to image/jpeg */
+    peer_caps = gst_caps_make_writable (peer_caps);
+    n = gst_caps_get_size (peer_caps);
+    for (i = 0; i < n; i++) {
+      s = gst_caps_get_structure (peer_caps, i);
+
+      gst_structure_set_name (s, "image/jpeg");
+    }
+
+    templ_caps = gst_pad_get_pad_template_caps (pad);
+    caps = gst_caps_intersect_full (peer_caps, templ_caps,
+        GST_CAPS_INTERSECT_FIRST);
+
+    gst_object_unref (peer);
+  } else {
+    caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+  }
+
+  return caps;
+}
+
 
 /* yuk */
 static void
