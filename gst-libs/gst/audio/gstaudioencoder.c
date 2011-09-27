@@ -457,20 +457,13 @@ gst_audio_encoder_finalize (GObject * object)
  * @buffer: encoded data
  * @samples: number of samples (per channel) represented by encoded data
  *
- * Collects encoded data and/or pushes encoded data downstream.
- * Source pad caps must be set when this is called.  Depending on the nature
- * of the (framing of) the format, subclass can decide whether to push
- * encoded data directly or to collect various "frames" in a single buffer.
- * Note that the latter behaviour is recommended whenever the format is allowed,
- * as it incurs no additional latency and avoids otherwise generating a
- * a multitude of (small) output buffers.  If not explicitly pushed,
- * any available encoded data is pushed at the end of each processing cycle,
- * i.e. which encodes as much data as available input data allows.
+ * Collects encoded data and pushes encoded data downstream.
+ * Source pad caps must be set when this is called.
  *
  * If @samples < 0, then best estimate is all samples provided to encoder
  * (subclass) so far.  @buf may be NULL, in which case next number of @samples
  * are considered discarded, e.g. as a result of discontinuous transmission,
- * and a discontinuity is marked (note that @buf == NULL => push == TRUE).
+ * and a discontinuity is marked.
  *
  * Returns: a #GstFlowReturn that should be escalated to caller (of caller)
  *
