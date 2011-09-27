@@ -135,13 +135,11 @@ gst_camerabin_create_preview_pipeline (GstElement * element,
 
   data->pipeline = gst_pipeline_new ("preview-pipeline");
   data->appsrc = gst_element_factory_make ("appsrc", "preview-appsrc");
-  data->capsfilter = gst_element_factory_make ("capsfilter",
-      "preview-capsfilter");
   data->appsink = gst_element_factory_make ("appsink", "preview-appsink");
   csp = gst_element_factory_make ("ffmpegcolorspace", "preview-csp");
   vscale = gst_element_factory_make ("videoscale", "preview-vscale");
 
-  if (!data->appsrc || !data->capsfilter || !data->appsink || !csp || !vscale) {
+  if (!data->appsrc || !data->appsink || !csp || !vscale) {
     goto error;
   }
 
@@ -149,7 +147,7 @@ gst_camerabin_create_preview_pipeline (GstElement * element,
   g_object_set (data->appsink, "sync", FALSE, "enable-last-buffer",
       FALSE, NULL);
 
-  gst_bin_add_many (GST_BIN (data->pipeline), data->appsrc, data->capsfilter,
+  gst_bin_add_many (GST_BIN (data->pipeline), data->appsrc,
       data->appsink, csp, vscale, NULL);
   if (filter)
     gst_bin_add (GST_BIN (data->pipeline), gst_object_ref (filter));
@@ -173,9 +171,6 @@ gst_camerabin_create_preview_pipeline (GstElement * element,
           "sink", GST_PAD_LINK_CHECK_NOTHING));
   linkfail |=
       GST_PAD_LINK_FAILED (gst_element_link_pads_full (csp, "src",
-          data->capsfilter, "sink", GST_PAD_LINK_CHECK_NOTHING));
-  linkfail |=
-      GST_PAD_LINK_FAILED (gst_element_link_pads_full (data->capsfilter, "src",
           data->appsink, "sink", GST_PAD_LINK_CHECK_NOTHING));
 
   if (linkfail) {
@@ -212,8 +207,6 @@ error:
       gst_object_unref (vscale);
     if (data->appsrc)
       gst_object_unref (data->appsrc);
-    if (data->capsfilter)
-      gst_object_unref (data->capsfilter);
     if (data->appsink)
       gst_object_unref (data->appsink);
   }
@@ -304,7 +297,7 @@ _gst_camerabin_preview_set_caps (GstCameraBinPreviewPipelineData * preview,
     pending = GST_STATE_VOID_PENDING;
   }
   gst_element_set_state (preview->pipeline, GST_STATE_NULL);
-  g_object_set (preview->capsfilter, "caps", caps, NULL);
+  g_object_set (preview->appsink, "caps", caps, NULL);
   if (pending != GST_STATE_VOID_PENDING)
     state = pending;
   gst_element_set_state (preview->pipeline, state);

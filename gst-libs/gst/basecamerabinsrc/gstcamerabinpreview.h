@@ -35,7 +35,6 @@ typedef struct
 
   GstElement *appsrc;
   GstElement *filter;
-  GstElement *capsfilter;
   GstElement *appsink;
 
   GstElement *element;
