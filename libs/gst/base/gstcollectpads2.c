@@ -1544,6 +1544,11 @@ gst_collect_pads2_default_collected (GstCollectPads2 * pads, gpointer user_data)
   buffer = gst_collect_pads2_pop (pads, best);
   ret = func (pads, best, buffer, buffer_user_data);
 
+  /* maybe non-waiting was forced to waiting above due to
+   * newsegment events coming too sparsely,
+   * so re-check to restore state to avoid hanging/waiting */
+  gst_collect_pads2_recalculate_full (pads);
+
 done:
   return ret;
 }
