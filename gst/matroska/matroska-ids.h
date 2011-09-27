@@ -537,6 +537,9 @@ struct _GstMatroskaTrackContext {
 
   /* Whether the stream is EOS */
   gboolean      eos;
+
+  /* any alignment we need our output buffers to have */
+  gint          alignment;
 };
 
 typedef struct _GstMatroskaTrackVideoContext {

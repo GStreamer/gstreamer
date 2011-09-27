@@ -413,6 +413,7 @@ gst_matroska_parse_add_stream (GstMatroskaParse * parse, GstEbmlRead * ebml)
       GST_MATROSKA_TRACK_LACING;
   context->last_flow = GST_FLOW_OK;
   context->to_offset = G_MAXINT64;
+  context->alignment = 1;
   parse->common.num_streams++;
   g_assert (parse->common.src->len == parse->common.num_streams);
 
