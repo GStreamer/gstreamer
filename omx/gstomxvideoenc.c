@@ -404,6 +404,10 @@ gst_omx_video_enc_close (GstOMXVideoEnc * self)
 
   state = gst_omx_component_get_state (self->component, 0);
   if (state > OMX_StateLoaded || state == OMX_StateInvalid) {
+    if (state > OMX_StateIdle) {
+      gst_omx_component_set_state (self->component, OMX_StateIdle);
+      gst_omx_component_get_state (self->component, 5 * GST_SECOND);
+    }
     gst_omx_component_set_state (self->component, OMX_StateLoaded);
     gst_omx_port_deallocate_buffers (self->in_port);
     gst_omx_port_deallocate_buffers (self->out_port);
