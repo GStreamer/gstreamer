@@ -95,23 +95,11 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("audio/mpeg, " "mpegversion = (int) { 2, 4 }")
     );
 
-#define STATIC_INT_CAPS(bpp) \
-  "audio/x-raw-int, " \
-    "endianness = (int) BYTE_ORDER, " \
-    "signed = (bool) TRUE, " \
-    "width = (int) " G_STRINGIFY (bpp) ", " \
-    "depth = (int) " G_STRINGIFY (bpp) ", " \
+#define STATIC_RAW_CAPS(format) \
+  "audio/x-raw, " \
+    "format = (string) "GST_AUDIO_NE(format)", " \
     "rate = (int) [ 8000, 96000 ], " \
     "channels = (int) [ 1, 8 ]"
-
-#if 0
-#define STATIC_FLOAT_CAPS(bpp) \
-  "audio/x-raw-float, " \
-    "endianness = (int) BYTE_ORDER, " \
-    "depth = (int) " G_STRINGIFY (bpp) ", " \
-    "rate = (int) [ 8000, 96000 ], " \
-    "channels = (int) [ 1, 8 ]"
-#endif
 
 /*
  * All except 16-bit integer are disabled until someone fixes FAAD.
@@ -122,16 +110,16 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
  */
 
 #define STATIC_CAPS \
-  STATIC_INT_CAPS (16)
+  STATIC_RAW_CAPS (S16)
 #if 0
 #define NOTUSED "; " \
-STATIC_INT_CAPS (24) \
+STATIC_RAW_CAPS (S24) \
     "; " \
-STATIC_INT_CAPS (32) \
+STATIC_RAW_CAPS (S32) \
     "; " \
-STATIC_FLOAT_CAPS (32) \
+STATIC_RAW_CAPS (F32) \
     "; " \
-STATIC_FLOAT_CAPS (64)
+STATIC_RAW_CAPS (F64)
 #endif
 
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
@@ -154,12 +142,14 @@ static void gst_faad_flush (GstAudioDecoder * dec, gboolean hard);
 static gboolean gst_faad_open_decoder (GstFaad * faad);
 static void gst_faad_close_decoder (GstFaad * faad);
 
-GST_BOILERPLATE (GstFaad, gst_faad, GstAudioDecoder, GST_TYPE_AUDIO_DECODER);
+#define gst_faad_parent_class parent_class
+G_DEFINE_TYPE (GstFaad, gst_faad, GST_TYPE_AUDIO_DECODER);
 
 static void
-gst_faad_base_init (gpointer klass)
+gst_faad_class_init (GstFaadClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstAudioDecoderClass *base_class = GST_AUDIO_DECODER_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template));
@@ -171,26 +161,18 @@ gst_faad_base_init (gpointer klass)
       "Free MPEG-2/4 AAC decoder",
       "Ronald Bultje <rbultje@ronald.bitfreak.net>");
 
-  GST_DEBUG_CATEGORY_INIT (faad_debug, "faad", 0, "AAC decoding");
-}
-
-static void
-gst_faad_class_init (GstFaadClass * klass)
-{
-  GstAudioDecoderClass *base_class = GST_AUDIO_DECODER_CLASS (klass);
-
-  parent_class = g_type_class_peek_parent (klass);
-
   base_class->start = GST_DEBUG_FUNCPTR (gst_faad_start);
   base_class->stop = GST_DEBUG_FUNCPTR (gst_faad_stop);
   base_class->set_format = GST_DEBUG_FUNCPTR (gst_faad_set_format);
   base_class->parse = GST_DEBUG_FUNCPTR (gst_faad_parse);
   base_class->handle_frame = GST_DEBUG_FUNCPTR (gst_faad_handle_frame);
   base_class->flush = GST_DEBUG_FUNCPTR (gst_faad_flush);
+
+  GST_DEBUG_CATEGORY_INIT (faad_debug, "faad", 0, "AAC decoding");
 }
 
 static void
-gst_faad_init (GstFaad * faad, GstFaadClass * klass)
+gst_faad_init (GstFaad * faad)
 {
   gst_faad_reset (faad);
 }
@@ -280,6 +262,8 @@ gst_faad_set_format (GstAudioDecoder * dec, GstCaps * caps)
   GstStructure *str = gst_caps_get_structure (caps, 0);
   GstBuffer *buf;
   const GValue *value;
+  guint8 *cdata;
+  gsize csize;
 
   /* clean up current decoder, rather than trying to reconfigure */
   gst_faad_close_decoder (faad);
@@ -294,8 +278,6 @@ gst_faad_set_format (GstAudioDecoder * dec, GstCaps * caps)
     guint32 samplerate;
 #endif
     guint8 channels;
-    guint8 *cdata;
-    guint csize;
 
     /* We have codec data, means packetised stream */
     faad->packetised = TRUE;
@@ -303,8 +285,7 @@ gst_faad_set_format (GstAudioDecoder * dec, GstCaps * caps)
     buf = gst_value_get_buffer (value);
     g_return_val_if_fail (buf != NULL, FALSE);
 
-    cdata = GST_BUFFER_DATA (buf);
-    csize = GST_BUFFER_SIZE (buf);
+    cdata = gst_buffer_map (buf, &csize, NULL, GST_MAP_READ);
 
     if (csize < 2)
       goto wrong_length;
@@ -375,18 +356,21 @@ wrong_length:
   {
     GST_DEBUG_OBJECT (faad, "codec_data less than 2 bytes long");
     gst_object_unref (faad);
+    gst_buffer_unmap (buf, cdata, csize);
     return FALSE;
   }
 open_failed:
   {
     GST_DEBUG_OBJECT (faad, "failed to create decoder");
     gst_object_unref (faad);
+    gst_buffer_unmap (buf, cdata, csize);
     return FALSE;
   }
 init_failed:
   {
     GST_DEBUG_OBJECT (faad, "faacDecInit2() failed");
     gst_object_unref (faad);
+    gst_buffer_unmap (buf, cdata, csize);
     return FALSE;
   }
 }
@@ -662,9 +646,13 @@ gst_faad_parse (GstAudioDecoder * dec, GstAdapter * adapter,
     *length = size;
     return GST_FLOW_OK;
   } else {
-    data = gst_adapter_peek (adapter, size);
-    return gst_faad_sync (faad, data, size, !eos, offset, length) ?
-        GST_FLOW_OK : GST_FLOW_UNEXPECTED;
+    gboolean ret;
+
+    data = gst_adapter_map (adapter, size);
+    ret = gst_faad_sync (faad, data, size, !eos, offset, length);
+    gst_adapter_unmap (adapter, 0);
+
+    return (ret ? GST_FLOW_OK : GST_FLOW_UNEXPECTED);
   }
 }
 
@@ -673,7 +661,7 @@ gst_faad_handle_frame (GstAudioDecoder * dec, GstBuffer * buffer)
 {
   GstFaad *faad;
   GstFlowReturn ret = GST_FLOW_OK;
-  guint input_size;
+  gsize input_size;
   guchar *input_data;
   GstBuffer *outbuf;
   faacDecFrameInfo info;
@@ -685,8 +673,7 @@ gst_faad_handle_frame (GstAudioDecoder * dec, GstBuffer * buffer)
   if (G_UNLIKELY (!buffer))
     return GST_FLOW_OK;
 
-  input_data = GST_BUFFER_DATA (buffer);
-  input_size = GST_BUFFER_SIZE (buffer);
+  input_data = gst_buffer_map (buffer, &input_size, NULL, GST_MAP_READ);
 
 init:
   /* init if not already done during capsnego */
@@ -764,20 +751,17 @@ init:
         goto sample_overflow;
 
       /* note: info.samples is total samples, not per channel */
-      ret =
-          gst_pad_alloc_buffer_and_set_caps (GST_AUDIO_DECODER_SRC_PAD
-          (faad), 0, info.samples * faad->bps,
-          GST_PAD_CAPS (GST_AUDIO_DECODER_SRC_PAD (faad)), &outbuf);
-      if (ret != GST_FLOW_OK)
-        goto out;
-
-      memcpy (GST_BUFFER_DATA (outbuf), out, GST_BUFFER_SIZE (outbuf));
+      /* FIXME, add bufferpool and allocator support to the base class */
+      outbuf = gst_buffer_new_allocate (NULL, info.samples * faad->bps, 0);
+      gst_buffer_fill (outbuf, 0, out, info.samples * faad->bps);
 
       ret = gst_audio_decoder_finish_frame (dec, outbuf, 1);
     }
   } while (FALSE);
 
 out:
+  gst_buffer_unmap (buffer, input_data, input_size);
+
   return ret;
 
 /* ERRORS */
