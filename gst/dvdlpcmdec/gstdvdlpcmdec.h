@@ -22,6 +22,7 @@
 #define __GST_DVDLPCMDEC_H__
 
 #include <gst/gst.h>
+#include <gst/audio/audio.h>
 
 G_BEGIN_DECLS
 
@@ -46,14 +47,12 @@ struct _GstDvdLpcmDec {
 
   guint32 header;
 
-  gint rate;
-  gint channels;
+  GstAudioInfo info;
   gint width;
-  gint out_width;
   gint dynamic_range;
   gint emphasis;
   gint mute;
-  
+
   GstClockTime timestamp;
   GstSegment   segment;
 };
