@@ -334,7 +334,9 @@ EmptyBufferDone (OMX_HANDLETYPE hComponent, OMX_PTR pAppData,
   buf->used = FALSE;
 
   if (comp->hacks & GST_OMX_HACK_NO_NOFFSET_RESET) {
-    g_assert (buf->omx_buf->nFilledLen == 0);
+    if (buf->omx_buf->nFilledLen != 0)
+      GST_WARNING_OBJECT (comp->parent,
+          "Not completely emptied buffer returned");
     buf->omx_buf->nOffset = 0;
   }
 
