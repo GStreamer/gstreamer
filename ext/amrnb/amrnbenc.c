@@ -92,31 +92,15 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
 GST_DEBUG_CATEGORY_STATIC (gst_amrnbenc_debug);
 #define GST_CAT_DEFAULT gst_amrnbenc_debug
 
-static void gst_amrnbenc_finalize (GObject * object);
+static gboolean gst_amrnbenc_start (GstAudioEncoder * enc);
+static gboolean gst_amrnbenc_stop (GstAudioEncoder * enc);
+static gboolean gst_amrnbenc_set_format (GstAudioEncoder * enc,
+    GstAudioInfo * info);
+static GstFlowReturn gst_amrnbenc_handle_frame (GstAudioEncoder * enc,
+    GstBuffer * in_buf);
 
-static GstFlowReturn gst_amrnbenc_chain (GstPad * pad, GstBuffer * buffer);
-static gboolean gst_amrnbenc_setcaps (GstPad * pad, GstCaps * caps);
-static GstStateChangeReturn gst_amrnbenc_state_change (GstElement * element,
-    GstStateChange transition);
-
-static void
-_do_init (GType object_type)
-{
-  const GInterfaceInfo preset_interface_info = {
-    NULL,                       /* interface init */
-    NULL,                       /* interface finalize */
-    NULL                        /* interface_data */
-  };
-
-  g_type_add_interface_static (object_type, GST_TYPE_PRESET,
-      &preset_interface_info);
-
-  GST_DEBUG_CATEGORY_INIT (gst_amrnbenc_debug, "amrnbenc", 0,
-      "AMR-NB audio encoder");
-}
-
-GST_BOILERPLATE_FULL (GstAmrnbEnc, gst_amrnbenc, GstElement, GST_TYPE_ELEMENT,
-    _do_init);
+GST_BOILERPLATE (GstAmrnbEnc, gst_amrnbenc, GstAudioEncoder,
+    GST_TYPE_AUDIO_ENCODER);
 
 static void
 gst_amrnbenc_set_property (GObject * object, guint prop_id,
@@ -172,11 +156,15 @@ static void
 gst_amrnbenc_class_init (GstAmrnbEncClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstAudioEncoderClass *base_class = GST_AUDIO_ENCODER_CLASS (klass);
 
   object_class->set_property = gst_amrnbenc_set_property;
   object_class->get_property = gst_amrnbenc_get_property;
-  object_class->finalize = gst_amrnbenc_finalize;
+
+  base_class->start = GST_DEBUG_FUNCPTR (gst_amrnbenc_start);
+  base_class->stop = GST_DEBUG_FUNCPTR (gst_amrnbenc_stop);
+  base_class->set_format = GST_DEBUG_FUNCPTR (gst_amrnbenc_set_format);
+  base_class->handle_frame = GST_DEBUG_FUNCPTR (gst_amrnbenc_handle_frame);
 
   g_object_class_install_property (object_class, PROP_BANDMODE,
       g_param_spec_enum ("band-mode", "Band Mode",
@@ -184,57 +172,53 @@ gst_amrnbenc_class_init (GstAmrnbEncClass * klass)
           BANDMODE_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
-  element_class->change_state = GST_DEBUG_FUNCPTR (gst_amrnbenc_state_change);
+  GST_DEBUG_CATEGORY_INIT (gst_amrnbenc_debug, "amrnbenc", 0,
+      "AMR-NB audio encoder");
 }
 
 static void
 gst_amrnbenc_init (GstAmrnbEnc * amrnbenc, GstAmrnbEncClass * klass)
 {
-  /* create the sink pad */
-  amrnbenc->sinkpad = gst_pad_new_from_static_template (&sink_template, "sink");
-  gst_pad_set_setcaps_function (amrnbenc->sinkpad, gst_amrnbenc_setcaps);
-  gst_pad_set_chain_function (amrnbenc->sinkpad, gst_amrnbenc_chain);
-  gst_element_add_pad (GST_ELEMENT (amrnbenc), amrnbenc->sinkpad);
-
-  /* create the src pad */
-  amrnbenc->srcpad = gst_pad_new_from_static_template (&src_template, "src");
-  gst_pad_use_fixed_caps (amrnbenc->srcpad);
-  gst_element_add_pad (GST_ELEMENT (amrnbenc), amrnbenc->srcpad);
-
-  amrnbenc->adapter = gst_adapter_new ();
-
-  /* init rest */
-  amrnbenc->handle = NULL;
-}
-
-static void
-gst_amrnbenc_finalize (GObject * object)
-{
-  GstAmrnbEnc *amrnbenc;
-
-  amrnbenc = GST_AMRNBENC (object);
-
-  g_object_unref (G_OBJECT (amrnbenc->adapter));
-  amrnbenc->adapter = NULL;
-
-  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static gboolean
-gst_amrnbenc_setcaps (GstPad * pad, GstCaps * caps)
+gst_amrnbenc_start (GstAudioEncoder * enc)
 {
-  GstStructure *structure;
+  GstAmrnbEnc *amrnbenc = GST_AMRNBENC (enc);
+
+  GST_DEBUG_OBJECT (amrnbenc, "start");
+
+  if (!(amrnbenc->handle = Encoder_Interface_init (0)))
+    return FALSE;
+
+  return TRUE;
+}
+
+static gboolean
+gst_amrnbenc_stop (GstAudioEncoder * enc)
+{
+  GstAmrnbEnc *amrnbenc = GST_AMRNBENC (enc);
+
+  GST_DEBUG_OBJECT (amrnbenc, "stop");
+
+  Encoder_Interface_exit (amrnbenc->handle);
+
+  return TRUE;
+}
+
+static gboolean
+gst_amrnbenc_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
+{
   GstAmrnbEnc *amrnbenc;
   GstCaps *copy;
 
-  amrnbenc = GST_AMRNBENC (GST_PAD_PARENT (pad));
+  amrnbenc = GST_AMRNBENC (enc);
 
-  structure = gst_caps_get_structure (caps, 0);
+  /* parameters already parsed for us */
+  amrnbenc->rate = GST_AUDIO_INFO_RATE (info);
+  amrnbenc->channels = GST_AUDIO_INFO_CHANNELS (info);
 
-  /* get channel count */
-  gst_structure_get_int (structure, "channels", &amrnbenc->channels);
-  gst_structure_get_int (structure, "rate", &amrnbenc->rate);
-
+  /* we do not really accept other input, but anyway ... */
   /* this is not wrong but will sound bad */
   if (amrnbenc->channels != 1) {
     g_warning ("amrnbdec is only optimized for mono channels");
@@ -248,124 +232,64 @@ gst_amrnbenc_setcaps (GstPad * pad, GstCaps * caps)
       "channels", G_TYPE_INT, amrnbenc->channels,
       "rate", G_TYPE_INT, amrnbenc->rate, NULL);
 
-  /* precalc duration as it's constant now */
-  amrnbenc->duration = gst_util_uint64_scale_int (160, GST_SECOND,
-      amrnbenc->rate * amrnbenc->channels);
-
-  gst_pad_set_caps (amrnbenc->srcpad, copy);
+  gst_pad_set_caps (GST_AUDIO_ENCODER_SRC_PAD (amrnbenc), copy);
   gst_caps_unref (copy);
+
+  /* report needs to base class: hand one frame at a time */
+  gst_audio_encoder_set_frame_samples_min (enc, 160);
+  gst_audio_encoder_set_frame_samples_max (enc, 160);
+  gst_audio_encoder_set_frame_max (enc, 1);
 
   return TRUE;
 }
 
 static GstFlowReturn
-gst_amrnbenc_chain (GstPad * pad, GstBuffer * buffer)
+gst_amrnbenc_handle_frame (GstAudioEncoder * enc, GstBuffer * buffer)
 {
   GstAmrnbEnc *amrnbenc;
   GstFlowReturn ret;
+  GstBuffer *out;
+  guint8 *data;
+  gint outsize;
 
-  amrnbenc = GST_AMRNBENC (GST_PAD_PARENT (pad));
+  amrnbenc = GST_AMRNBENC (enc);
 
   g_return_val_if_fail (amrnbenc->handle, GST_FLOW_WRONG_STATE);
 
-  if (amrnbenc->rate == 0 || amrnbenc->channels == 0)
-    goto not_negotiated;
-
-  /* discontinuity clears adapter, FIXME, maybe we can set some
-   * encoder flag to mask the discont. */
-  if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT)) {
-    gst_adapter_clear (amrnbenc->adapter);
-    amrnbenc->ts = 0;
-    amrnbenc->discont = TRUE;
+  /* we don't deal with squeezing remnants, so simply discard those */
+  if (G_UNLIKELY (buffer == NULL)) {
+    GST_DEBUG_OBJECT (amrnbenc, "no data");
+    return GST_FLOW_OK;
   }
 
-  /* take latest timestamp, FIXME timestamp is the one of the
-   * first buffer in the adapter. */
-  if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer))
-    amrnbenc->ts = GST_BUFFER_TIMESTAMP (buffer);
+  if (G_UNLIKELY (GST_BUFFER_SIZE (buffer) < 320)) {
+    GST_DEBUG_OBJECT (amrnbenc, "discarding trailing data %d",
+        buffer ? GST_BUFFER_SIZE (buffer) : 0);
+    return gst_audio_encoder_finish_frame (enc, NULL, -1);
+  }
 
-  ret = GST_FLOW_OK;
-  gst_adapter_push (amrnbenc->adapter, buffer);
+  /* get output, max size is 32 */
+  out = gst_buffer_new_and_alloc (32);
+  /* AMR encoder actually writes into the source data buffers it gets */
+  /* should be able to handle that with what we are given */
+  data = GST_BUFFER_DATA (buffer);
 
-  /* Collect samples until we have enough for an output frame */
-  while (gst_adapter_available (amrnbenc->adapter) >= 320) {
-    GstBuffer *out;
-    guint8 *data;
-    gint outsize;
+  /* encode */
+  outsize =
+      Encoder_Interface_Encode (amrnbenc->handle, amrnbenc->bandmode,
+      (short *) data, (guint8 *) GST_BUFFER_DATA (out), 0);
 
-    /* get output, max size is 32 */
-    out = gst_buffer_new_and_alloc (32);
-    GST_BUFFER_DURATION (out) = amrnbenc->duration;
-    GST_BUFFER_TIMESTAMP (out) = amrnbenc->ts;
-    if (amrnbenc->ts != -1) {
-      amrnbenc->ts += amrnbenc->duration;
-    }
-    if (amrnbenc->discont) {
-      GST_BUFFER_FLAG_SET (out, GST_BUFFER_FLAG_DISCONT);
-      amrnbenc->discont = FALSE;
-    }
+  GST_LOG_OBJECT (amrnbenc, "output data size %d", outsize);
 
-    gst_buffer_set_caps (out, GST_PAD_CAPS (amrnbenc->srcpad));
-
-    /* The AMR encoder actually writes into the source data buffers it gets */
-    data = gst_adapter_take (amrnbenc->adapter, 320);
-
-    /* encode */
-    outsize =
-        Encoder_Interface_Encode (amrnbenc->handle, amrnbenc->bandmode,
-        (short *) data, (guint8 *) GST_BUFFER_DATA (out), 0);
-
-    g_free (data);
-
+  if (outsize) {
     GST_BUFFER_SIZE (out) = outsize;
-
-    /* play */
-    if ((ret = gst_pad_push (amrnbenc->srcpad, out)) != GST_FLOW_OK)
-      break;
-  }
-  return ret;
-
-  /* ERRORS */
-not_negotiated:
-  {
-    GST_ELEMENT_ERROR (amrnbenc, STREAM, TYPE_NOT_FOUND,
-        (NULL), ("unknown type"));
-    return GST_FLOW_NOT_NEGOTIATED;
-  }
-}
-
-static GstStateChangeReturn
-gst_amrnbenc_state_change (GstElement * element, GstStateChange transition)
-{
-  GstAmrnbEnc *amrnbenc;
-  GstStateChangeReturn ret;
-
-  amrnbenc = GST_AMRNBENC (element);
-
-  switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
-      if (!(amrnbenc->handle = Encoder_Interface_init (0)))
-        return GST_STATE_CHANGE_FAILURE;
-      break;
-    case GST_STATE_CHANGE_READY_TO_PAUSED:
-      amrnbenc->rate = 0;
-      amrnbenc->channels = 0;
-      amrnbenc->ts = 0;
-      amrnbenc->discont = FALSE;
-      gst_adapter_clear (amrnbenc->adapter);
-      break;
-    default:
-      break;
+    ret = gst_audio_encoder_finish_frame (enc, out, 160);
+  } else {
+    /* should not happen (without dtx or so at least) */
+    GST_WARNING_OBJECT (amrnbenc, "no encoded data; discarding input");
+    gst_buffer_unref (out);
+    ret = gst_audio_encoder_finish_frame (enc, NULL, -1);
   }
 
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-
-  switch (transition) {
-    case GST_STATE_CHANGE_READY_TO_NULL:
-      Encoder_Interface_exit (amrnbenc->handle);
-      break;
-    default:
-      break;
-  }
   return ret;
 }
