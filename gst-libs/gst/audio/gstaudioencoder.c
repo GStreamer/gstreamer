@@ -1282,10 +1282,10 @@ gst_audio_encoder_sink_eventfunc (GstAudioEncoder * enc, GstEvent * event)
       gst_tag_list_remove_tag (tags, GST_TAG_AUDIO_CODEC);
       event = gst_event_new_tag (tags);
 
-      GST_OBJECT_LOCK (enc);
+      GST_AUDIO_ENCODER_STREAM_LOCK (enc);
       enc->priv->pending_events =
           g_list_append (enc->priv->pending_events, event);
-      GST_OBJECT_UNLOCK (enc);
+      GST_AUDIO_ENCODER_STREAM_UNLOCK (enc);
       handled = TRUE;
       break;
     }
