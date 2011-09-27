@@ -97,13 +97,7 @@ struct _GstX264Enc
   GString *option_string; /* used by set prop */
 
   /* input description */
-  GstVideoFormat format;
-  gint width, height;
-  gint fps_num, fps_den;
-  gint par_num, par_den;
-  /* cache some format properties */
-  gint stride[4], offset[4];
-  gint image_size;
+  GstVideoInfo info;
 
   /* for b-frame delay handling */
   GQueue *delay;
