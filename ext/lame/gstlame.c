@@ -66,7 +66,7 @@
  * gst-launch -v cdda://5 ! audioconvert ! lame bitrate=192 ! filesink location=track5.mp3
  * ]| Encode Audio CD track 5 to MP3
  * |[
- * gst-launch -v audiotestsrc num-buffers=10 ! audio/x-raw-int,rate=44100,channels=1 ! lame bitrate=48 mode=3 ! filesink location=test.mp3
+ * gst-launch -v audiotestsrc num-buffers=10 ! audio/x-raw,rate=44100,channels=1 ! lame bitrate=48 mode=3 ! filesink location=test.mp3
  * ]| Encode to a fixed sample rate
  * </refsect2>
  *
@@ -98,11 +98,8 @@ static GstStaticPadTemplate gst_lame_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, "
-        "endianness = (int) " G_STRINGIFY (G_BYTE_ORDER) ", "
-        "signed = (boolean) true, "
-        "width = (int) 16, "
-        "depth = (int) 16, "
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) " GST_AUDIO_NE (S16) ", "
         "rate = (int) { 8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000 }, "
         "channels = (int) [ 1, 2 ]")
     );
