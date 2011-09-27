@@ -1898,6 +1898,8 @@ gst_omx_parse_hacks (gchar ** hacks)
       hacks_flags |= GST_OMX_HACK_SYNCFRAME_FLAG_NOT_USED;
     else if (g_str_equal (*hacks, "no-noffset-reset"))
       hacks_flags |= GST_OMX_HACK_NO_NOFFSET_RESET;
+    else if (g_str_equal (*hacks, "no-component-reconfigure"))
+      hacks_flags |= GST_OMX_HACK_NO_COMPONENT_RECONFIGURE;
     else
       GST_WARNING ("Unknown hack: %s", *hacks);
     hacks++;

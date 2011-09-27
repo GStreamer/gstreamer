@@ -59,6 +59,10 @@ G_BEGIN_DECLS
  * Happens with Qualcomm's OpenMAX implementation.
  */
 #define GST_OMX_HACK_NO_NOFFSET_RESET                                 G_GUINT64_CONSTANT (0x0000000000000010)
+/* If the component needs to be re-created if the caps change.
+ * Happens with Qualcomm's OpenMAX implementation.
+ */
+#define GST_OMX_HACK_NO_COMPONENT_RECONFIGURE                         G_GUINT64_CONSTANT (0x0000000000000020)
 
 
 typedef struct _GstOMXCore GstOMXCore;

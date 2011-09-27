@@ -250,6 +250,8 @@ gst_omx_video_dec_open (GstOMXVideoDec * self)
 {
   GstOMXVideoDecClass *klass = GST_OMX_VIDEO_DEC_GET_CLASS (self);
 
+  GST_DEBUG_OBJECT (self, "Opening decoder");
+
   self->component =
       gst_omx_component_new (GST_OBJECT_CAST (self), klass->core_name,
       klass->component_name, klass->component_role, klass->hacks);
@@ -270,6 +272,8 @@ gst_omx_video_dec_open (GstOMXVideoDec * self)
   if (!self->in_port || !self->out_port)
     return FALSE;
 
+  GST_DEBUG_OBJECT (self, "Opened decoder");
+
   return TRUE;
 }
 
@@ -277,6 +281,8 @@ static gboolean
 gst_omx_video_dec_close (GstOMXVideoDec * self)
 {
   OMX_STATETYPE state;
+
+  GST_DEBUG_OBJECT (self, "Closing decoder");
 
   state = gst_omx_component_get_state (self->component, 0);
   if (state > OMX_StateLoaded || state == OMX_StateInvalid) {
@@ -292,6 +298,10 @@ gst_omx_video_dec_close (GstOMXVideoDec * self)
   if (self->component)
     gst_omx_component_free (self->component);
   self->component = NULL;
+
+  self->started = FALSE;
+
+  GST_DEBUG_OBJECT (self, "Closed decoder");
 
   return TRUE;
 }
@@ -790,6 +800,8 @@ gst_omx_video_dec_stop (GstBaseVideoDecoder * decoder)
 
   self = GST_OMX_VIDEO_DEC (decoder);
 
+  GST_DEBUG_OBJECT (self, "Stopping decoder");
+
   gst_pad_stop_task (GST_BASE_VIDEO_CODEC_SRC_PAD (decoder));
 
   if (gst_omx_component_get_state (self->component, 0) > OMX_StateIdle)
@@ -801,6 +813,8 @@ gst_omx_video_dec_stop (GstBaseVideoDecoder * decoder)
   gst_omx_component_get_state (self->component, 5 * GST_SECOND);
 
   gst_buffer_replace (&self->codec_data, NULL);
+
+  GST_DEBUG_OBJECT (self, "Stopped decoder");
 
   return TRUE;
 }
@@ -965,11 +979,32 @@ gst_omx_video_dec_set_format (GstBaseVideoDecoder * decoder,
         "Already running and caps did not change the format");
     return TRUE;
   }
+
   if (needs_disable && is_format_change) {
-    if (gst_omx_port_manual_reconfigure (self->in_port, TRUE) != OMX_ErrorNone)
-      return FALSE;
-    if (gst_omx_port_set_enabled (self->in_port, FALSE) != OMX_ErrorNone)
-      return FALSE;
+    if (klass->hacks & GST_OMX_HACK_NO_COMPONENT_RECONFIGURE) {
+      GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (self);
+      gst_omx_video_dec_stop (GST_BASE_VIDEO_DECODER (self));
+      gst_omx_video_dec_close (self);
+
+      /* FIXME: Workaround for 
+       * https://bugzilla.gnome.org/show_bug.cgi?id=654529
+       */
+      g_list_foreach (GST_BASE_VIDEO_CODEC (self)->frames,
+          (GFunc) gst_base_video_codec_free_frame, NULL);
+      g_list_free (GST_BASE_VIDEO_CODEC (self)->frames);
+      GST_BASE_VIDEO_CODEC (self)->frames = NULL;
+
+      GST_BASE_VIDEO_CODEC_STREAM_LOCK (self);
+      if (!gst_omx_video_dec_open (self))
+        return FALSE;
+      needs_disable = FALSE;
+    } else {
+      if (gst_omx_port_manual_reconfigure (self->in_port,
+              TRUE) != OMX_ErrorNone)
+        return FALSE;
+      if (gst_omx_port_set_enabled (self->in_port, FALSE) != OMX_ErrorNone)
+        return FALSE;
+    }
   }
 
   port_def.format.video.nFrameWidth = state->width;
@@ -1077,6 +1112,8 @@ gst_omx_video_dec_reset (GstBaseVideoDecoder * decoder)
   /* Start the srcpad loop again */
   gst_pad_start_task (GST_BASE_VIDEO_CODEC_SRC_PAD (self),
       (GstTaskFunction) gst_omx_video_dec_loop, decoder);
+
+  GST_DEBUG_OBJECT (self, "Reset decoder");
 
   return TRUE;
 }
