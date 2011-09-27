@@ -571,6 +571,7 @@ done:
 /**
  * gst_video_convert_frame_async:
  * @buf: a #GstBuffer
+ * @from_caps: the #GstCaps to convert from
  * @to_caps: the #GstCaps to convert to
  * @timeout: the maximum amount of time allowed for the processing.
  * @callback: %GstVideoConvertFrameCallback that will be called after conversion.

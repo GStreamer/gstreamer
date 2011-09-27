@@ -39,6 +39,13 @@ G_BEGIN_DECLS
  * @GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT_OF_CENTER: front right of center
  * @GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT: side left
  * @GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT: side right
+ * @GST_AUDIO_CHANNEL_POSITION_TOP_CENTER: top center
+ * @GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_LEFT: top front left
+ * @GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_RIGHT: top front right
+ * @GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_CENTER: top front center
+ * @GST_AUDIO_CHANNEL_POSITION_TOP_REAR_LEFT: top rear left
+ * @GST_AUDIO_CHANNEL_POSITION_TOP_REAR_RIGHT: top rear right
+ * @GST_AUDIO_CHANNEL_POSITION_TOP_REAR_CENTER: top rear center
  * @GST_AUDIO_CHANNEL_POSITION_NONE: used for position-less channels, e.g.
  *     from a sound card that records 1024 channels; mutually exclusive with
  *     any other channel position

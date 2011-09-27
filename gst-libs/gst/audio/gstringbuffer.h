@@ -119,19 +119,11 @@ typedef enum
  * GstRingBufferSpec:
  * @caps: The caps that generated the Spec.
  * @type: the sample type
- * @format: the sample format
- * @sign: the sample sign
- * @bigend: the endianness of the samples
- * @width: the width of the samples
- * @depth: th depth of the samples
- * @rate: the samplerate
- * @channels: the number of channels
+ * @info: the #GstAudioInfo
  * @latency_time: the latency in microseconds
  * @buffer_time: the total buffer size in microseconds
  * @segsize: the size of one segment in bytes
  * @segtotal: the total number of segments
- * @bytes_per_sample: number of bytes in one sample
- * @silence_sample: bytes representing one sample of silence
  * @seglatency: number of segments queued in the lower level device,
  *  defaults to segtotal
  *
@@ -178,7 +170,8 @@ struct _GstRingBufferSpec
  * @cond: used to signal start/stop/pause/resume actions
  * @open: boolean indicating that the ringbuffer is open
  * @acquired: boolean indicating that the ringbuffer is acquired
- * @data: data in the ringbuffer
+ * @memory: data in the ringbuffer
+ * @size: size of data in the ringbuffer
  * @spec: format and layout of the ringbuffer data
  * @segstate: status of each segment in the ringbuffer (unused)
  * @samples_per_seg: number of samples in one segment

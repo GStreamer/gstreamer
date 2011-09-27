@@ -268,7 +268,7 @@ typedef enum {
  * @channels: the number of channels
  * @bpf: the number of bytes for one frame, this is the size of one
  *         sample * @channels
- * @positions: the positions for each channel
+ * @position: the positions for each channel
  *
  * Information describing audio properties. This information can be filled
  * in from GstCaps with gst_audio_info_from_caps().

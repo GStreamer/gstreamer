@@ -306,12 +306,12 @@ typedef struct _GstVideoFrame GstVideoFrame;
 /**
  * GstVideoFlags:
  * @GST_META_VIDEO_FLAG_NONE: no flags
- * @GST_META_VIDEO_FLAG_INTERLACED:
- * @GST_META_VIDEO_FLAG_TFF:
- * @GST_META_VIDEO_FLAG_RFF:
- * @GST_META_VIDEO_FLAG_ONEFIELD:
- * @GST_META_VIDEO_FLAG_TELECINE:
- * @GST_META_VIDEO_FLAG_PROGRESSIVE:
+ * @GST_META_VIDEO_FLAG_INTERLACED: The video is interlaced
+ * @GST_META_VIDEO_FLAG_TFF: The video has the top field first
+ * @GST_META_VIDEO_FLAG_RFF: The video has the repeat flag
+ * @GST_META_VIDEO_FLAG_ONEFIELD: one field
+ * @GST_META_VIDEO_FLAG_TELECINE: telecine
+ * @GST_META_VIDEO_FLAG_PROGRESSIVE: video is progressive
  *
  * Extra video flags
  */
@@ -389,18 +389,18 @@ typedef enum {
 
 /**
  * GstVideoTransferFunction:
- * GST_VIDEO_TRANSFER_UNKNOWN: unknown transfer function
- * GST_VIDEO_TRANSFER_GAMMA10: linear RGB, gamma 1.0 curve
- * GST_VIDEO_TRANSFER_GAMMA18: Gamma 1.8 curve
- * GST_VIDEO_TRANSFER_GAMMA20: Gamma 2.0 curve
- * GST_VIDEO_TRANSFER_GAMMA22: Gamma 2.2 curve
- * GST_VIDEO_TRANSFER_BT709: Gamma 2.2 curve with a linear segment in the lower
+ * @GST_VIDEO_TRANSFER_UNKNOWN: unknown transfer function
+ * @GST_VIDEO_TRANSFER_GAMMA10: linear RGB, gamma 1.0 curve
+ * @GST_VIDEO_TRANSFER_GAMMA18: Gamma 1.8 curve
+ * @GST_VIDEO_TRANSFER_GAMMA20: Gamma 2.0 curve
+ * @GST_VIDEO_TRANSFER_GAMMA22: Gamma 2.2 curve
+ * @GST_VIDEO_TRANSFER_BT709: Gamma 2.2 curve with a linear segment in the lower
  *                           range
- * GST_VIDEO_TRANSFER_SMPTE240M: Gamma 2.2 curve with a linear segment in the
+ * @GST_VIDEO_TRANSFER_SMPTE240M: Gamma 2.2 curve with a linear segment in the
  *                               lower range
- * GST_VIDEO_TRANSFER_SRGB: Gamma 2.4 curve with a linear segment in the lower
+ * @GST_VIDEO_TRANSFER_SRGB: Gamma 2.4 curve with a linear segment in the lower
  *                          range
- * GST_VIDEO_TRANSFER_GAMMA28: Gamma 2.8 curve
+ * @GST_VIDEO_TRANSFER_GAMMA28: Gamma 2.8 curve
  *
  * The video transfer function defines the formula for converting between
  * non-linear RGB (R'G'B') and linear RGB
@@ -420,11 +420,11 @@ typedef enum {
 /**
  * GstVideoColorPrimaries:
  * @GST_VIDEO_COLOR_PRIMARIES_UNKNOWN: unknown color primaries
- * @GST_VIDEO_COLOR_PRIMARIES_BT601:
- * @GST_VIDEO_COLOR_PRIMARIES_BT470M:
- * @GST_VIDEO_COLOR_PRIMARIES_BT470BG:
- * @GST_VIDEO_COLOR_PRIMARIES_SMPTE170M:
- * @GST_VIDEO_COLOR_PRIMARIES_SMPTE240M:
+ * @GST_VIDEO_COLOR_PRIMARIES_BT709: BT709 primaries
+ * @GST_VIDEO_COLOR_PRIMARIES_BT470M: BT470M primaries
+ * @GST_VIDEO_COLOR_PRIMARIES_BT470BG: BT470BG primaries
+ * @GST_VIDEO_COLOR_PRIMARIES_SMPTE170M: SMPTE170M primaries
+ * @GST_VIDEO_COLOR_PRIMARIES_SMPTE240M: SMPTE240M primaries
  *
  * The color primaries define the how to transform linear RGB values to and from
  * the CIE XYZ colorspace.
