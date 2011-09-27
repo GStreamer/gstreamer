@@ -190,8 +190,8 @@ static void gst_lamemp3enc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static gboolean gst_lamemp3enc_setup (GstLameMP3Enc * lame, GstTagList ** tags);
 
-GST_BOILERPLATE (GstLameMP3Enc, gst_lamemp3enc, GstAudioEncoder,
-    GST_TYPE_AUDIO_ENCODER);
+#define gst_lamemp3enc_parent_class parent_class
+G_DEFINE_TYPE (GstLameMP3Enc, gst_lamemp3enc, GST_TYPE_AUDIO_ENCODER);
 
 static void
 gst_lamemp3enc_release_memory (GstLameMP3Enc * lame)
@@ -211,32 +211,29 @@ gst_lamemp3enc_finalize (GObject * obj)
 }
 
 static void
-gst_lamemp3enc_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_lamemp3enc_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_lamemp3enc_sink_template));
-  gst_element_class_set_details_simple (element_class, "L.A.M.E. mp3 encoder",
-      "Codec/Encoder/Audio",
-      "High-quality free MP3 encoder",
-      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
-}
-
-static void
 gst_lamemp3enc_class_init (GstLameMP3EncClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
   GstAudioEncoderClass *base_class;
 
   gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
   base_class = (GstAudioEncoderClass *) klass;
 
   gobject_class->set_property = gst_lamemp3enc_set_property;
   gobject_class->get_property = gst_lamemp3enc_get_property;
   gobject_class->finalize = gst_lamemp3enc_finalize;
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_lamemp3enc_src_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_lamemp3enc_sink_template));
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "L.A.M.E. mp3 encoder", "Codec/Encoder/Audio",
+      "High-quality free MP3 encoder",
+      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
 
   base_class->start = GST_DEBUG_FUNCPTR (gst_lamemp3enc_start);
   base_class->stop = GST_DEBUG_FUNCPTR (gst_lamemp3enc_stop);
@@ -279,7 +276,7 @@ gst_lamemp3enc_class_init (GstLameMP3EncClass * klass)
 }
 
 static void
-gst_lamemp3enc_init (GstLameMP3Enc * lame, GstLameMP3EncClass * klass)
+gst_lamemp3enc_init (GstLameMP3Enc * lame)
 {
 }
 
@@ -491,19 +488,25 @@ gst_lamemp3enc_flush_full (GstLameMP3Enc * lame, gboolean push)
 {
   GstBuffer *buf;
   gint size;
+  guint8 *data;
   GstFlowReturn result = GST_FLOW_OK;
 
   if (!lame->lgf)
     return GST_FLOW_OK;
 
   buf = gst_buffer_new_and_alloc (7200);
-  size = lame_encode_flush (lame->lgf, GST_BUFFER_DATA (buf), 7200);
+  data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
+  size = lame_encode_flush (lame->lgf, data, 7200);
 
-  if (size > 0 && push) {
-    GST_BUFFER_SIZE (buf) = size;
-    GST_DEBUG_OBJECT (lame, "pushing final packet of %u bytes", size);
-    result = gst_audio_encoder_finish_frame (GST_AUDIO_ENCODER (lame), buf, -1);
+  if (size > 0) {
+    gst_buffer_unmap (buf, data, size);
+    if (push) {
+      GST_DEBUG_OBJECT (lame, "pushing final packet of %u bytes", size);
+      result =
+          gst_audio_encoder_finish_frame (GST_AUDIO_ENCODER (lame), buf, -1);
+    }
   } else {
+    gst_buffer_unmap (buf, data, 0);
     GST_DEBUG_OBJECT (lame, "no final packet (size=%d, push=%d)", size, push);
     gst_buffer_unref (buf);
     result = GST_FLOW_OK;
@@ -527,7 +530,7 @@ gst_lamemp3enc_handle_frame (GstAudioEncoder * enc, GstBuffer * in_buf)
   GstFlowReturn result;
   gint num_samples;
   guint8 *data;
-  guint size;
+  gsize size;
 
   lame = GST_LAMEMP3ENC (enc);
 
@@ -535,15 +538,14 @@ gst_lamemp3enc_handle_frame (GstAudioEncoder * enc, GstBuffer * in_buf)
   if (G_UNLIKELY (in_buf == NULL))
     return gst_lamemp3enc_flush_full (lame, TRUE);
 
-  data = GST_BUFFER_DATA (in_buf);
-  size = GST_BUFFER_SIZE (in_buf);
+  data = gst_buffer_map (in_buf, &size, NULL, GST_MAP_READ);
 
   num_samples = size / 2;
 
   /* allocate space for output */
   mp3_buffer_size = 1.25 * num_samples + 7200;
-  mp3_buf = gst_buffer_new_and_alloc (mp3_buffer_size);
-  mp3_data = GST_BUFFER_DATA (mp3_buf);
+  mp3_buf = gst_buffer_new_allocate (NULL, mp3_buffer_size, 0);
+  mp3_data = gst_buffer_map (mp3_buf, NULL, NULL, GST_MAP_WRITE);
 
   /* lame seems to be too stupid to get mono interleaved going */
   if (lame->num_channels == 1) {
@@ -555,20 +557,22 @@ gst_lamemp3enc_handle_frame (GstAudioEncoder * enc, GstBuffer * in_buf)
         (short int *) data,
         num_samples / lame->num_channels, mp3_data, mp3_buffer_size);
   }
+  gst_buffer_unmap (in_buf, data, size);
 
   GST_LOG_OBJECT (lame, "encoded %d bytes of audio to %d bytes of mp3",
       size, mp3_size);
 
   if (G_LIKELY (mp3_size > 0)) {
-    GST_BUFFER_SIZE (mp3_buf) = mp3_size;
+    gst_buffer_unmap (mp3_buf, mp3_data, mp3_size);
     result = gst_audio_encoder_finish_frame (enc, mp3_buf, -1);
   } else {
+    gst_buffer_unmap (mp3_buf, mp3_data, 0);
     if (mp3_size < 0) {
       /* eat error ? */
       g_warning ("error %d", mp3_size);
     }
-    result = GST_FLOW_OK;
     gst_buffer_unref (mp3_buf);
+    result = GST_FLOW_OK;
   }
 
   return result;

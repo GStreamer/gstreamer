@@ -1,6 +1,6 @@
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
- * Copyright (C) <2004> Wim Taymans <wim@fluendo.com>
+ * Copyright (C) <2004> Wim Taymans <wim.taymans@gmail.com>
  * Copyright (C) <2005> Thomas Vander Stichele <thomas at apestaart dot org>
  *
  * This library is free software; you can redistribute it and/or
@@ -319,18 +319,8 @@ static void gst_lame_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static gboolean gst_lame_setup (GstLame * lame);
 
-static void
-gst_lame_add_interfaces (GType lame_type)
-{
-  static const GInterfaceInfo tag_setter_info = { NULL, NULL, NULL };
-
-  /* FIXME: remove support for the GstTagSetter interface in 0.11 */
-  g_type_add_interface_static (lame_type, GST_TYPE_TAG_SETTER,
-      &tag_setter_info);
-}
-
-GST_BOILERPLATE_FULL (GstLame, gst_lame, GstAudioEncoder,
-    GST_TYPE_AUDIO_ENCODER, gst_lame_add_interfaces);
+#define gst_lame_parent_class parent_class
+G_DEFINE_TYPE (GstLame, gst_lame, GST_TYPE_AUDIO_ENCODER);
 
 static void
 gst_lame_release_memory (GstLame * lame)
@@ -350,32 +340,30 @@ gst_lame_finalize (GObject * obj)
 }
 
 static void
-gst_lame_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_lame_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_lame_sink_template));
-  gst_element_class_set_details_simple (element_class, "L.A.M.E. mp3 encoder",
-      "Codec/Encoder/Audio",
-      "High-quality free MP3 encoder (deprecated)",
-      "Erik Walthinsen <omega@cse.ogi.edu>, " "Wim Taymans <wim@fluendo.com>");
-}
-
-static void
 gst_lame_class_init (GstLameClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
   GstAudioEncoderClass *base_class;
 
   gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
   base_class = (GstAudioEncoderClass *) klass;
 
   gobject_class->set_property = gst_lame_set_property;
   gobject_class->get_property = gst_lame_get_property;
   gobject_class->finalize = gst_lame_finalize;
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_lame_src_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_lame_sink_template));
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "L.A.M.E. mp3 encoder", "Codec/Encoder/Audio",
+      "High-quality free MP3 encoder (deprecated)",
+      "Erik Walthinsen <omega@cse.ogi.edu>, "
+      "Wim Taymans <wim.taymans@gmail.com>");
 
   base_class->start = GST_DEBUG_FUNCPTR (gst_lame_start);
   base_class->stop = GST_DEBUG_FUNCPTR (gst_lame_stop);
@@ -618,7 +606,7 @@ setup_failed:
 }
 
 static void
-gst_lame_init (GstLame * lame, GstLameClass * klass)
+gst_lame_init (GstLame * lame)
 {
   GST_DEBUG_OBJECT (lame, "starting initialization");
 
@@ -948,6 +936,7 @@ static GstFlowReturn
 gst_lame_flush_full (GstLame * lame, gboolean push)
 {
   GstBuffer *buf;
+  guint8 *data;
   gint size;
   GstFlowReturn result = GST_FLOW_OK;
 
@@ -955,10 +944,11 @@ gst_lame_flush_full (GstLame * lame, gboolean push)
     return GST_FLOW_OK;
 
   buf = gst_buffer_new_and_alloc (7200);
-  size = lame_encode_flush (lame->lgf, GST_BUFFER_DATA (buf), 7200);
+  data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
+  size = lame_encode_flush (lame->lgf, data, 7200);
+  gst_buffer_unmap (buf, data, size);
 
   if (size > 0 && push) {
-    GST_BUFFER_SIZE (buf) = size;
     GST_DEBUG_OBJECT (lame, "pushing final packet of %u bytes", size);
     result = gst_audio_encoder_finish_frame (GST_AUDIO_ENCODER (lame), buf, -1);
   } else {
@@ -985,7 +975,7 @@ gst_lame_handle_frame (GstAudioEncoder * enc, GstBuffer * buf)
   GstFlowReturn result;
   gint num_samples;
   guint8 *data;
-  guint size;
+  gsize size;
 
   lame = GST_LAME (enc);
 
@@ -993,15 +983,14 @@ gst_lame_handle_frame (GstAudioEncoder * enc, GstBuffer * buf)
   if (G_UNLIKELY (buf == NULL))
     return gst_lame_flush_full (lame, TRUE);
 
-  data = GST_BUFFER_DATA (buf);
-  size = GST_BUFFER_SIZE (buf);
+  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
 
   num_samples = size / 2;
 
   /* allocate space for output */
   mp3_buffer_size = 1.25 * num_samples + 7200;
-  mp3_buf = gst_buffer_new_and_alloc (mp3_buffer_size);
-  mp3_data = GST_BUFFER_DATA (mp3_buf);
+  mp3_buf = gst_buffer_new_allocate (NULL, mp3_buffer_size, 0);
+  mp3_data = gst_buffer_map (mp3_buf, NULL, NULL, GST_MAP_WRITE);
 
   /* lame seems to be too stupid to get mono interleaved going */
   if (lame->num_channels == 1) {
@@ -1013,18 +1002,16 @@ gst_lame_handle_frame (GstAudioEncoder * enc, GstBuffer * buf)
         (short int *) data,
         num_samples / lame->num_channels, mp3_data, mp3_buffer_size);
   }
+  gst_buffer_unmap (buf, data, size);
 
   GST_LOG_OBJECT (lame, "encoded %d bytes of audio to %d bytes of mp3",
       size, mp3_size);
 
-  if (mp3_size < 0) {
-    g_warning ("error %d", mp3_size);
-  }
-
   if (G_LIKELY (mp3_size > 0)) {
-    GST_BUFFER_SIZE (mp3_buf) = mp3_size;
+    gst_buffer_unmap (mp3_buf, mp3_data, mp3_size);
     result = gst_audio_encoder_finish_frame (enc, mp3_buf, -1);
   } else {
+    gst_buffer_unmap (mp3_buf, mp3_data, 0);
     if (mp3_size < 0) {
       /* eat error ? */
       g_warning ("error %d", mp3_size);
@@ -1032,7 +1019,6 @@ gst_lame_handle_frame (GstAudioEncoder * enc, GstBuffer * buf)
     result = GST_FLOW_OK;
     gst_buffer_unref (mp3_buf);
   }
-
   return result;
 }
 
