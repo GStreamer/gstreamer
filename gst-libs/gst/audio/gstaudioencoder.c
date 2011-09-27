@@ -494,7 +494,8 @@ gst_audio_encoder_finish_frame (GstAudioEncoder * enc, GstBuffer * buf,
       buf ? GST_BUFFER_SIZE (buf) : -1, samples);
 
   /* mark subclass still alive and providing */
-  priv->got_data = TRUE;
+  if (G_LIKELY (buf))
+    priv->got_data = TRUE;
 
   if (priv->pending_events) {
     GList *pending_events, *l;
