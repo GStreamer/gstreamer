@@ -547,7 +547,7 @@ gst_video_test_src_get_size (GstVideoTestSrc * v, int w, int h)
 
   fourcc->paint_setup (p, NULL);
 
-  return (unsigned long) p->endptr;
+  return (guintptr) p->endptr;
 }
 
 #define SCALEBITS 10
