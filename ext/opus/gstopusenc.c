@@ -879,29 +879,10 @@ gst_opus_enc_chain (GstPad * pad, GstBuffer * buf)
   if (!enc->setup)
     goto not_setup;
 
-#if 0
   if (!enc->header_sent) {
-    /* Opus streams begin with two headers; the initial header (with
-       most of the codec setup parameters) which is mandated by the Ogg
-       bitstream spec.  The second header holds any comment fields.
-       We merely need to make the headers, then pass them to libopus 
-       one at a time; libopus handles the additional Ogg bitstream 
-       constraints */
-    GstBuffer *buf1, *buf2;
     GstCaps *caps;
-    guchar data[100];
 
-    /* create header buffer */
-    opus_header_to_packet (&enc->header, data, 100);
-    buf1 = gst_opus_enc_buffer_from_data (enc, data, 100, 0);
-
-    /* create comment buffer */
-    buf2 = gst_opus_enc_create_metadata_buffer (enc);
-
-    /* mark and put on caps */
     caps = gst_pad_get_caps (enc->srcpad);
-    caps = gst_opus_enc_set_header_on_caps (caps, buf1, buf2);
-
     gst_caps_set_simple (caps,
         "rate", G_TYPE_INT, enc->sample_rate,
         "channels", G_TYPE_INT, enc->n_channels,
@@ -913,26 +894,8 @@ gst_opus_enc_chain (GstPad * pad, GstBuffer * buf)
         enc->sample_rate, enc->n_channels, enc->frame_size);
     gst_pad_set_caps (enc->srcpad, caps);
 
-    gst_buffer_set_caps (buf1, caps);
-    gst_buffer_set_caps (buf2, caps);
-    gst_caps_unref (caps);
-
-    /* push out buffers */
-    ret = gst_opus_enc_push_buffer (enc, buf1);
-
-    if (ret != GST_FLOW_OK) {
-      gst_buffer_unref (buf2);
-      goto done;
-    }
-
-    ret = gst_opus_enc_push_buffer (enc, buf2);
-
-    if (ret != GST_FLOW_OK)
-      goto done;
-
     enc->header_sent = TRUE;
   }
-#endif
 
   GST_DEBUG_OBJECT (enc, "received buffer of %u bytes", GST_BUFFER_SIZE (buf));
 
