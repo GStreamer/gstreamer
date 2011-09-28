@@ -65,10 +65,10 @@
 /* buffer alignment in bytes - 1
  * an alignment of 7 would be the same as malloc() guarantees
  */
-#ifdef HAVE_POSIX_MEMALIGN
 #if defined(MEMORY_ALIGNMENT_MALLOC)
 size_t gst_memory_alignment = 7;
 #elif defined(MEMORY_ALIGNMENT_PAGESIZE)
+/* we fill this in in the _init method */
 size_t gst_memory_alignment = 0;
 #elif defined(MEMORY_ALIGNMENT)
 size_t gst_memory_alignment = MEMORY_ALIGNMENT - 1;
@@ -76,7 +76,6 @@ size_t gst_memory_alignment = MEMORY_ALIGNMENT - 1;
 #error "No memory alignment configured"
 size_t gst_memory_alignment = 0;
 #endif
-#endif /* HAVE_POSIX_MEMALIGN */
 
 struct _GstAllocator
 {
@@ -329,6 +328,8 @@ _priv_gst_memory_initialize (void)
   gst_memory_alignment = getpagesize () - 1;
 #endif
 #endif
+
+  GST_DEBUG ("memory alignment: %" G_GSIZE_FORMAT, gst_memory_alignment);
 
   _default_mem_impl = gst_allocator_register (GST_ALLOCATOR_SYSMEM, &_mem_info);
 
