@@ -2612,7 +2612,7 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
           G_CALLBACK (notify_tags_cb), ntdata, (GClosureNotify) g_free,
           (GConnectFlags) 0);
       g_object_set_data (G_OBJECT (sinkpad), "playbin.notify_tags_handler",
-          (gpointer) notify_tags_handler);
+          (gpointer) (guintptr) notify_tags_handler);
 
       /* store the pad in the array */
       GST_DEBUG_OBJECT (playbin, "pad %p added to array", sinkpad);
@@ -2714,7 +2714,7 @@ pad_removed_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
     gulong notify_tags_handler;
 
     notify_tags_handler =
-        (gulong) g_object_get_data (G_OBJECT (peer),
+        (guintptr) g_object_get_data (G_OBJECT (peer),
         "playbin.notify_tags_handler");
     if (notify_tags_handler != 0)
       g_signal_handler_disconnect (G_OBJECT (peer), notify_tags_handler);

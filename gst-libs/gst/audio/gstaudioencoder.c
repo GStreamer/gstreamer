@@ -454,20 +454,13 @@ gst_audio_encoder_finalize (GObject * object)
  * @buffer: encoded data
  * @samples: number of samples (per channel) represented by encoded data
  *
- * Collects encoded data and/or pushes encoded data downstream.
- * Source pad caps must be set when this is called.  Depending on the nature
- * of the (framing of) the format, subclass can decide whether to push
- * encoded data directly or to collect various "frames" in a single buffer.
- * Note that the latter behaviour is recommended whenever the format is allowed,
- * as it incurs no additional latency and avoids otherwise generating a
- * a multitude of (small) output buffers.  If not explicitly pushed,
- * any available encoded data is pushed at the end of each processing cycle,
- * i.e. which encodes as much data as available input data allows.
+ * Collects encoded data and pushes encoded data downstream.
+ * Source pad caps must be set when this is called.
  *
  * If @samples < 0, then best estimate is all samples provided to encoder
  * (subclass) so far.  @buf may be NULL, in which case next number of @samples
  * are considered discarded, e.g. as a result of discontinuous transmission,
- * and a discontinuity is marked (note that @buf == NULL => push == TRUE).
+ * and a discontinuity is marked.
  *
  * Returns: a #GstFlowReturn that should be escalated to caller (of caller)
  *
@@ -494,6 +487,26 @@ gst_audio_encoder_finish_frame (GstAudioEncoder * enc, GstBuffer * buf,
 
   GST_AUDIO_ENCODER_STREAM_LOCK (enc);
 
+  GST_LOG_OBJECT (enc, "accepting %d bytes encoded data as %d samples",
+      buf ? gst_buffer_get_size (buf) : -1, samples);
+
+  /* mark subclass still alive and providing */
+  if (G_LIKELY (buf))
+    priv->got_data = TRUE;
+
+  if (priv->pending_events) {
+    GList *pending_events, *l;
+
+    pending_events = priv->pending_events;
+    priv->pending_events = NULL;
+
+    GST_DEBUG_OBJECT (enc, "Pushing pending events");
+    for (l = pending_events; l; l = l->next)
+      gst_pad_push_event (enc->srcpad, l->data);
+    g_list_free (pending_events);
+  }
+
+  /* send after pending events, which likely includes newsegment event */
   if (G_UNLIKELY (enc->priv->tags)) {
     GstTagList *tags;
 #if 0
@@ -510,27 +523,8 @@ gst_audio_encoder_finish_frame (GstAudioEncoder * enc, GstBuffer * buf,
     gst_pb_utils_add_codec_description_to_tag_list (tags, GST_TAG_AUDIO_CODEC,
         caps);
 #endif
-
     GST_DEBUG_OBJECT (enc, "sending tags %" GST_PTR_FORMAT, tags);
     gst_element_found_tags_for_pad (GST_ELEMENT (enc), enc->srcpad, tags);
-  }
-
-  GST_LOG_OBJECT (enc, "accepting %d bytes encoded data as %d samples",
-      buf ? gst_buffer_get_size (buf) : -1, samples);
-
-  /* mark subclass still alive and providing */
-  priv->got_data = TRUE;
-
-  if (priv->pending_events) {
-    GList *pending_events, *l;
-
-    pending_events = priv->pending_events;
-    priv->pending_events = NULL;
-
-    GST_DEBUG_OBJECT (enc, "Pushing pending events");
-    for (l = priv->pending_events; l; l = l->next)
-      gst_pad_push_event (enc->srcpad, l->data);
-    g_list_free (pending_events);
   }
 
   /* remove corresponding samples from input */
@@ -1287,10 +1281,10 @@ gst_audio_encoder_sink_eventfunc (GstAudioEncoder * enc, GstEvent * event)
       gst_tag_list_remove_tag (tags, GST_TAG_AUDIO_CODEC);
       event = gst_event_new_tag (tags);
 
-      GST_OBJECT_LOCK (enc);
+      GST_AUDIO_ENCODER_STREAM_LOCK (enc);
       enc->priv->pending_events =
           g_list_append (enc->priv->pending_events, event);
-      GST_OBJECT_UNLOCK (enc);
+      GST_AUDIO_ENCODER_STREAM_UNLOCK (enc);
       handled = TRUE;
       break;
     }
