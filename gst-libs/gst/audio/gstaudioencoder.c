@@ -1280,8 +1280,19 @@ gst_audio_encoder_sink_eventfunc (GstAudioEncoder * enc, GstEvent * event)
       gst_event_parse_tag (event, &tags);
       tags = gst_tag_list_copy (tags);
       gst_event_unref (event);
+
+      /* FIXME: make generic based on GST_TAG_FLAG_ENCODED */
       gst_tag_list_remove_tag (tags, GST_TAG_CODEC);
       gst_tag_list_remove_tag (tags, GST_TAG_AUDIO_CODEC);
+      gst_tag_list_remove_tag (tags, GST_TAG_VIDEO_CODEC);
+      gst_tag_list_remove_tag (tags, GST_TAG_SUBTITLE_CODEC);
+      gst_tag_list_remove_tag (tags, GST_TAG_CONTAINER_FORMAT);
+      gst_tag_list_remove_tag (tags, GST_TAG_BITRATE);
+      gst_tag_list_remove_tag (tags, GST_TAG_NOMINAL_BITRATE);
+      gst_tag_list_remove_tag (tags, GST_TAG_MAXIMUM_BITRATE);
+      gst_tag_list_remove_tag (tags, GST_TAG_MINIMUM_BITRATE);
+      gst_tag_list_remove_tag (tags, GST_TAG_ENCODER);
+      gst_tag_list_remove_tag (tags, GST_TAG_ENCODER_VERSION);
       event = gst_event_new_tag (tags);
 
       GST_AUDIO_ENCODER_STREAM_LOCK (enc);
