@@ -524,7 +524,6 @@ done:
 
   res = gst_pad_set_caps (dec->srcpad, caps);
 
-  gst_object_unref (dec);
   return res;
 
   /* ERRORS */
