@@ -63,7 +63,7 @@ gst_opus_enc_bandwidth_get_type (void)
     {OPUS_BANDWIDTH_WIDEBAND, "Wide band", "wideband"},
     {OPUS_BANDWIDTH_SUPERWIDEBAND, "Super wide band", "superwideband"},
     {OPUS_BANDWIDTH_FULLBAND, "Full band", "fullband"},
-    {OPUS_BANDWIDTH_AUTO, "Auto", "auto"},
+    {OPUS_AUTO, "Auto", "auto"},
     {0, NULL, NULL}
   };
   static volatile GType id = 0;
@@ -664,62 +664,24 @@ gst_opus_enc_create_metadata_buffer (GstOpusEnc * enc)
 static gboolean
 gst_opus_enc_setup (GstOpusEnc * enc)
 {
-  //gint error = OPUS_OK;
+  int error = OPUS_OK;
 
   enc->setup = FALSE;
 
-#if 0
-#ifdef HAVE_OPUS_0_7
-  enc->mode = opus_mode_create (enc->rate, enc->frame_size, &error);
-#else
-  enc->mode =
-      opus_mode_create (enc->rate, enc->n_channels, enc->frame_size, &error);
-#endif
-  if (!enc->mode)
-    goto mode_initialization_failed;
-
-#ifdef HAVE_OPUS_0_11
-  opus_header_init (&enc->header, enc->mode, enc->frame_size, enc->n_channels);
-#else
-#ifdef HAVE_OPUS_0_7
-  opus_header_init (&enc->header, enc->mode, enc->n_channels);
-#else
-  opus_header_init (&enc->header, enc->mode);
-#endif
-#endif
-  enc->header.nb_channels = enc->n_channels;
-
-#ifdef HAVE_OPUS_0_8
-  enc->frame_size = enc->header.frame_size;
-#else
-  opus_mode_info (enc->mode, OPUS_GET_FRAME_SIZE, &enc->frame_size);
-#endif
-#endif
-
-#if 0
-#ifdef HAVE_OPUS_0_11
-  enc->state = opus_encoder_create_custom (enc->mode, enc->n_channels, &error);
-#else
-#ifdef HAVE_OPUS_0_7
-  enc->state = opus_encoder_create (enc->mode, enc->n_channels, &error);
-#else
-  enc->state = opus_encoder_create (enc->mode);
-#endif
-#endif
-#endif
   enc->state = opus_encoder_create (enc->sample_rate, enc->n_channels,
-      enc->audio_or_voip ? OPUS_APPLICATION_AUDIO : OPUS_APPLICATION_VOIP);
-  if (!enc->state)
+      enc->audio_or_voip ? OPUS_APPLICATION_AUDIO : OPUS_APPLICATION_VOIP,
+      &error);
+  if (!enc->state || error != OPUS_OK)
     goto encoder_creation_failed;
 
   opus_encoder_ctl (enc->state, OPUS_SET_BITRATE (enc->bitrate), 0);
   opus_encoder_ctl (enc->state, OPUS_SET_BANDWIDTH (enc->bandwidth), 0);
-  opus_encoder_ctl (enc->state, OPUS_SET_VBR_FLAG (!enc->cbr), 0);
+  opus_encoder_ctl (enc->state, OPUS_SET_VBR (!enc->cbr), 0);
   opus_encoder_ctl (enc->state, OPUS_SET_VBR_CONSTRAINT (enc->constrained_vbr),
       0);
   opus_encoder_ctl (enc->state, OPUS_SET_COMPLEXITY (enc->complexity), 0);
-  opus_encoder_ctl (enc->state, OPUS_SET_INBAND_FEC_FLAG (enc->inband_fec), 0);
-  opus_encoder_ctl (enc->state, OPUS_SET_DTX_FLAG (enc->dtx), 0);
+  opus_encoder_ctl (enc->state, OPUS_SET_INBAND_FEC (enc->inband_fec), 0);
+  opus_encoder_ctl (enc->state, OPUS_SET_DTX (enc->dtx), 0);
   opus_encoder_ctl (enc->state,
       OPUS_SET_PACKET_LOSS_PERC (enc->packet_loss_percentage), 0);
 
