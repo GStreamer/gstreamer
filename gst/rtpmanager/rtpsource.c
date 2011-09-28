@@ -1368,6 +1368,9 @@ rtp_source_process_sr (RTPSource * src, GstClockTime time, guint64 ntptime,
 
   /* make current */
   src->stats.curr_sr = curridx;
+
+  src->stats.prev_rtcptime = src->stats.last_rtcptime;
+  src->stats.last_rtcptime = time;
 }
 
 /**

@@ -81,8 +81,11 @@ enum
 {
   ARG_0,
   ARG_METADATA,
-  ARG_STREAMINFO
+  ARG_STREAMINFO,
+  ARG_MAX_GAP_TIME
 };
+
+#define  DEFAULT_MAX_GAP_TIME      (2 * GST_SECOND)
 
 static GstStaticPadTemplate sink_templ = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -168,6 +171,12 @@ static void gst_matroska_demux_reset (GstElement * element);
 static gboolean perform_seek_to_offset (GstMatroskaDemux * demux,
     guint64 offset);
 
+/* gobject functions */
+static void gst_matroska_demux_set_property (GObject * object,
+    guint prop_id, const GValue * value, GParamSpec * pspec);
+static void gst_matroska_demux_get_property (GObject * object,
+    guint prop_id, GValue * value, GParamSpec * pspec);
+
 GType gst_matroska_demux_get_type (void);
 GST_BOILERPLATE (GstMatroskaDemux, gst_matroska_demux, GstElement,
     GST_TYPE_ELEMENT);
@@ -223,6 +232,15 @@ gst_matroska_demux_class_init (GstMatroskaDemuxClass * klass)
 
   gobject_class->finalize = gst_matroska_demux_finalize;
 
+  gobject_class->get_property = gst_matroska_demux_get_property;
+  gobject_class->set_property = gst_matroska_demux_set_property;
+
+  g_object_class_install_property (gobject_class, ARG_MAX_GAP_TIME,
+      g_param_spec_uint64 ("max-gap-time", "Maximum gap time",
+          "The demuxer sends out newsegment events for skipping "
+          "gaps longer than this (0 = disabled).", 0, G_MAXUINT64,
+          DEFAULT_MAX_GAP_TIME, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_matroska_demux_change_state);
   gstelement_class->send_event =
@@ -261,6 +279,9 @@ gst_matroska_demux_init (GstMatroskaDemux * demux,
   demux->common.global_tags = NULL;
 
   demux->common.adapter = gst_adapter_new ();
+
+  /* property defaults */
+  demux->max_gap_time = DEFAULT_MAX_GAP_TIME;
 
   /* finish off */
   gst_matroska_demux_reset (GST_ELEMENT (demux));
@@ -3364,7 +3385,8 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
         /* handle gaps, e.g. non-zero start-time, or an cue index entry
          * that landed us with timestamps not quite intended */
         GST_OBJECT_LOCK (demux);
-        if (GST_CLOCK_TIME_IS_VALID (demux->common.segment.last_stop) &&
+        if (demux->max_gap_time &&
+            GST_CLOCK_TIME_IS_VALID (demux->last_stop_end) &&
             demux->common.segment.rate > 0.0) {
           GstClockTimeDiff diff;
           GstEvent *event1, *event2;
@@ -3372,8 +3394,9 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
           /* only send newsegments with increasing start times,
            * otherwise if these go back and forth downstream (sinks) increase
            * accumulated time and running_time */
-          diff = GST_CLOCK_DIFF (demux->common.segment.last_stop, lace_time);
-          if (diff > 2 * GST_SECOND && lace_time > demux->common.segment.start
+          diff = GST_CLOCK_DIFF (demux->last_stop_end, lace_time);
+          if (diff > 0 && diff > demux->max_gap_time
+              && lace_time > demux->common.segment.start
               && (!GST_CLOCK_TIME_IS_VALID (demux->common.segment.stop)
                   || lace_time < demux->common.segment.stop)) {
             GST_DEBUG_OBJECT (demux,
@@ -3386,11 +3409,9 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
              * accum time, hence running_time */
             /* close ahead of gap */
             event1 = gst_event_new_new_segment (TRUE,
-                demux->common.segment.rate,
-                demux->common.segment.format,
-                demux->common.segment.last_stop,
-                demux->common.segment.last_stop,
-                demux->common.segment.last_stop);
+                demux->common.segment.rate, demux->common.segment.format,
+                demux->last_stop_end, demux->last_stop_end,
+                demux->last_stop_end);
             /* skip gap */
             event2 = gst_event_new_new_segment (FALSE,
                 demux->common.segment.rate,
@@ -5412,6 +5433,48 @@ gst_matroska_demux_change_state (GstElement * element,
   }
 
   return ret;
+}
+
+static void
+gst_matroska_demux_set_property (GObject * object,
+    guint prop_id, const GValue * value, GParamSpec * pspec)
+{
+  GstMatroskaDemux *demux;
+
+  g_return_if_fail (GST_IS_MATROSKA_DEMUX (object));
+  demux = GST_MATROSKA_DEMUX (object);
+
+  switch (prop_id) {
+    case ARG_MAX_GAP_TIME:
+      GST_OBJECT_LOCK (demux);
+      demux->max_gap_time = g_value_get_uint64 (value);
+      GST_OBJECT_UNLOCK (demux);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_matroska_demux_get_property (GObject * object,
+    guint prop_id, GValue * value, GParamSpec * pspec)
+{
+  GstMatroskaDemux *demux;
+
+  g_return_if_fail (GST_IS_MATROSKA_DEMUX (object));
+  demux = GST_MATROSKA_DEMUX (object);
+
+  switch (prop_id) {
+    case ARG_MAX_GAP_TIME:
+      GST_OBJECT_LOCK (demux);
+      g_value_set_uint64 (value, demux->max_gap_time);
+      GST_OBJECT_UNLOCK (demux);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
 }
 
 gboolean

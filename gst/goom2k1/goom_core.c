@@ -66,9 +66,8 @@ goom_set_resolution (GoomData * goomdata, guint32 resx, guint32 resy)
     goomdata->back = (guint32 *) malloc (buffsize * sizeof (guint32) + 128);
     goomdata->buffsize = buffsize;
 
-    goomdata->p1 =
-        (void *) (((unsigned long) goomdata->pixel + 0x7f) & (~0x7f));
-    goomdata->p2 = (void *) (((unsigned long) goomdata->back + 0x7f) & (~0x7f));
+    goomdata->p1 = (void *) (((guintptr) goomdata->pixel + 0x7f) & (~0x7f));
+    goomdata->p2 = (void *) (((guintptr) goomdata->back + 0x7f) & (~0x7f));
   }
 
   goomdata->resolx = resx;

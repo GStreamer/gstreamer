@@ -62,12 +62,13 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
         " channels = (int) [ 1, 8 ],"
         " rate = (int) [ 8000, 192000 ],"
         " depth = (int) { 14, 16 },"
-        " endianness = (int) { LITTLE_ENDIAN, BIG_ENDIAN }"));
+        " endianness = (int) { LITTLE_ENDIAN, BIG_ENDIAN }, "
+        " block-size = (int) [ 1, MAX], " " frame-size = (int) [ 1, MAX]"));
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-dts, framed = (boolean) false"));
+    GST_STATIC_CAPS ("audio/x-dts"));
 
 static void gst_dca_parse_finalize (GObject * object);
 

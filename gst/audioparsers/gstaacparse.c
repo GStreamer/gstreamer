@@ -57,8 +57,7 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/mpeg, "
-        "framed = (boolean) false, " "mpegversion = (int) { 2, 4 };"));
+    GST_STATIC_CAPS ("audio/mpeg, mpegversion = (int) { 2, 4 };"));
 
 GST_DEBUG_CATEGORY_STATIC (aacparse_debug);
 #define GST_CAT_DEFAULT aacparse_debug
@@ -252,10 +251,12 @@ gst_aac_parse_sink_setcaps (GstBaseParse * parse, GstCaps * caps)
       aacparse->channels = (data[1] & 0x78) >> 3;
       aacparse->header_type = DSPAAC_HEADER_NONE;
       aacparse->mpegversion = 4;
+      aacparse->frame_samples = (data[1] & 4) ? 960 : 1024;
       gst_buffer_unmap (buf, data, size);
 
-      GST_DEBUG ("codec_data: object_type=%d, sample_rate=%d, channels=%d",
-          aacparse->object_type, aacparse->sample_rate, aacparse->channels);
+      GST_DEBUG ("codec_data: object_type=%d, sample_rate=%d, channels=%d, "
+          "samples=%d", aacparse->object_type, aacparse->sample_rate,
+          aacparse->channels, aacparse->frame_samples);
 
       /* arrange for metadata and get out of the way */
       gst_aac_parse_set_src_caps (aacparse, caps);
@@ -451,7 +452,8 @@ gst_aac_parse_detect_stream (GstAacParse * aacparse,
     gst_aac_parse_parse_adts_header (aacparse, data, &rate, &channels,
         &aacparse->object_type, &aacparse->mpegversion);
 
-    gst_base_parse_set_frame_rate (GST_BASE_PARSE (aacparse), rate, 1024, 2, 2);
+    gst_base_parse_set_frame_rate (GST_BASE_PARSE (aacparse), rate,
+        aacparse->frame_samples, 2, 2);
 
     GST_DEBUG ("ADTS: samplerate %d, channels %d, objtype %d, version %d",
         rate, channels, aacparse->object_type, aacparse->mpegversion);
@@ -683,7 +685,7 @@ gst_aac_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     gst_caps_unref (sinkcaps);
 
     gst_base_parse_set_frame_rate (GST_BASE_PARSE (aacparse),
-        aacparse->sample_rate, 1024, 2, 2);
+        aacparse->sample_rate, aacparse->frame_samples, 2, 2);
   }
 
   return ret;
@@ -705,6 +707,7 @@ gst_aac_parse_start (GstBaseParse * parse)
 
   aacparse = GST_AAC_PARSE (parse);
   GST_DEBUG ("start");
+  aacparse->frame_samples = 1024;
   gst_base_parse_set_min_frame_size (GST_BASE_PARSE (aacparse), ADTS_MAX_SIZE);
   return TRUE;
 }

@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) 2011 FIXME <fixme@example.com>
+ * Copyright (C) 2011 David Schleef <ds@entropywave.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -17,28 +17,26 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef _GST_SOUP_HTTP_SINK_H_
-#define _GST_SOUP_HTTP_SINK_H_
+#ifndef _GST_SOUP_HTTP_CLIENT_SINK_H_
+#define _GST_SOUP_HTTP_CLIENT_SINK_H_
 
 #include <gst/base/gstbasesink.h>
 #include <libsoup/soup.h>
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_SOUP_HTTP_SINK   (gst_soup_http_sink_get_type())
-#define GST_SOUP_HTTP_SINK(obj)   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_SOUP_HTTP_SINK,GstSoupHttpSink))
-#define GST_SOUP_HTTP_SINK_CLASS(klass)   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_SOUP_HTTP_SINK,GstSoupHttpSinkClass))
-#define GST_IS_SOUP_HTTP_SINK(obj)   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SOUP_HTTP_SINK))
-#define GST_IS_SOUP_HTTP_SINK_CLASS(obj)   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SOUP_HTTP_SINK))
+#define GST_TYPE_SOUP_HTTP_CLIENT_SINK           (gst_soup_http_client_sink_get_type())
+#define GST_SOUP_HTTP_CLIENT_SINK(obj)           (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_SOUP_HTTP_CLIENT_SINK,GstSoupHttpClientSink))
+#define GST_SOUP_HTTP_CLIENT_SINK_CLASS(klass)   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_SOUP_HTTP_CLIENT_SINK,GstSoupHttpClientSinkClass))
+#define GST_IS_SOUP_HTTP_CLIENT_SINK(obj)        (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SOUP_HTTP_CLIENT_SINK))
+#define GST_IS_SOUP_HTTP_CLIENT_SINK_CLASS(obj)  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SOUP_HTTP_CLIENT_SINK))
 
-typedef struct _GstSoupHttpSink GstSoupHttpSink;
-typedef struct _GstSoupHttpSinkClass GstSoupHttpSinkClass;
+typedef struct _GstSoupHttpClientSink GstSoupHttpClientSink;
+typedef struct _GstSoupHttpClientSinkClass GstSoupHttpClientSinkClass;
 
-struct _GstSoupHttpSink
+struct _GstSoupHttpClientSink
 {
   GstBaseSink base_souphttpsink;
-
-  GstPad *sinkpad;
 
   GMutex *mutex;
   GCond *cond;
@@ -71,12 +69,12 @@ struct _GstSoupHttpSink
 
 };
 
-struct _GstSoupHttpSinkClass
+struct _GstSoupHttpClientSinkClass
 {
   GstBaseSinkClass base_souphttpsink_class;
 };
 
-GType gst_soup_http_sink_get_type (void);
+GType gst_soup_http_client_sink_get_type (void);
 
 G_END_DECLS
 

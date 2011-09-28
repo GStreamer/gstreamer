@@ -71,6 +71,8 @@ enum
   PROP_ENDX,
   PROP_ENDY,
   PROP_REMOTE,
+  PROP_XID,
+  PROP_XNAME,
 };
 
 #define gst_ximage_src_parent_class parent_class
@@ -105,6 +107,35 @@ gst_ximage_src_return_buf (GstXImageSrc * ximagesrc, GstBuffer * ximage)
   }
 }
 
+static Window
+gst_ximage_src_find_window (GstXImageSrc * src, Window root, const char *name)
+{
+  Window *children;
+  Window window = 0, root_return, parent_return;
+  unsigned int nchildren;
+  char *tmpname;
+  int n, status;
+
+  status = XFetchName (src->xcontext->disp, root, &tmpname);
+  if (status && !strcmp (name, tmpname))
+    return root;
+
+  status =
+      XQueryTree (src->xcontext->disp, root, &root_return, &parent_return,
+      &children, &nchildren);
+  if (!status || !children)
+    return (Window) 0;
+
+  for (n = 0; n < nchildren; ++n) {
+    window = gst_ximage_src_find_window (src, children[n], name);
+    if (window != 0)
+      break;
+  }
+
+  XFree (children);
+  return window;
+}
+
 static gboolean
 gst_ximage_src_open_display (GstXImageSrc * s, const gchar * name)
 {
@@ -125,8 +156,49 @@ gst_ximage_src_open_display (GstXImageSrc * s, const gchar * name)
   s->width = s->xcontext->width;
   s->height = s->xcontext->height;
 
-  /* Always capture root window, for now */
   s->xwindow = s->xcontext->root;
+  if (s->xid != 0 || s->xname) {
+    int status;
+    XWindowAttributes attrs;
+    Window window;
+
+    if (s->xid != 0) {
+      status = XGetWindowAttributes (s->xcontext->disp, s->xid, &attrs);
+      if (status) {
+        GST_DEBUG_OBJECT (s, "Found window XID %p", s->xid);
+        s->xwindow = s->xid;
+        goto window_found;
+      } else {
+        GST_WARNING_OBJECT (s, "Failed to get window %p attributes", s->xid);
+      }
+    }
+
+    if (s->xname) {
+      GST_DEBUG_OBJECT (s, "Looking for window %s", s->xname);
+      window = gst_ximage_src_find_window (s, s->xcontext->root, s->xname);
+      if (window != 0) {
+        GST_DEBUG_OBJECT (s, "Found window named %s as %p, ", s->xname, window);
+        status = XGetWindowAttributes (s->xcontext->disp, window, &attrs);
+        if (status) {
+          s->xwindow = window;
+          goto window_found;
+        } else {
+          GST_WARNING_OBJECT (s, "Failed to get window %p attributes", window);
+        }
+      }
+    }
+
+    GST_INFO_OBJECT (s, "Using root window");
+    goto use_root_window;
+
+  window_found:
+    g_assert (s->xwindow != 0);
+    s->width = attrs.width;
+    s->height = attrs.height;
+    GST_INFO_OBJECT (s, "Using default window %p, size of %dx%d", s->xwindow,
+        s->width, s->height);
+  }
+use_root_window:
 
 #ifdef HAVE_XFIXES
   /* check if xfixes supported */
@@ -603,7 +675,8 @@ gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
     } else
 #endif /* HAVE_XSHM */
     {
-      GST_DEBUG_OBJECT (ximagesrc, "Retrieving screen using XGetImage");
+      GST_DEBUG_OBJECT (ximagesrc,
+          "Retrieving screen using XGetImage, window %p", ximagesrc->xwindow);
       if (ximagesrc->remote) {
         XGetSubImage (ximagesrc->xcontext->disp, ximagesrc->xwindow,
             ximagesrc->startx, ximagesrc->starty, ximagesrc->width,
@@ -847,6 +920,21 @@ gst_ximage_src_set_property (GObject * object, guint prop_id,
     case PROP_REMOTE:
       src->remote = g_value_get_boolean (value);
       break;
+    case PROP_XID:
+      if (src->xcontext != NULL) {
+        g_warning ("ximagesrc window ID must be set before opening display");
+        break;
+      }
+      src->xid = g_value_get_uint64 (value);
+      break;
+    case PROP_XNAME:
+      if (src->xcontext != NULL) {
+        g_warning ("ximagesrc window name must be set before opening display");
+        break;
+      }
+      g_free (src->xname);
+      src->xname = g_strdup (g_value_get_string (value));
+      break;
     default:
       break;
   }
@@ -890,6 +978,12 @@ gst_ximage_src_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_REMOTE:
       g_value_set_boolean (value, src->remote);
       break;
+    case PROP_XID:
+      g_value_set_uint64 (value, src->xid);
+      break;
+    case PROP_XNAME:
+      g_value_set_string (value, src->xname);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -928,6 +1022,7 @@ gst_ximage_src_finalize (GObject * object)
   if (src->xcontext)
     ximageutil_xcontext_clear (src->xcontext);
 
+  g_free (src->xname);
   g_mutex_free (src->pool_lock);
   g_mutex_free (src->x_lock);
 
@@ -952,9 +1047,16 @@ gst_ximage_src_get_caps (GstBaseSrc * bs, GstCaps * filter)
             (s)->srcpad));
 
   xcontext = s->xcontext;
-
-  width = xcontext->width;
-  height = xcontext->height;
+  width = s->xcontext->width;
+  height = s->xcontext->height;
+  if (s->xwindow != 0) {
+    XWindowAttributes attrs;
+    int status = XGetWindowAttributes (s->xcontext->disp, s->xwindow, &attrs);
+    if (status) {
+      width = attrs.width;
+      height = attrs.height;
+    }
+  }
 
   /* property comments say 0 means right/bottom, means we can't capture
      the top left pixel alone */
@@ -1134,6 +1236,28 @@ gst_ximage_src_class_init (GstXImageSrcClass * klass)
   g_object_class_install_property (gc, PROP_REMOTE,
       g_param_spec_boolean ("remote", "Remote dispay",
           "Whether the display is remote", FALSE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstXImageSrc:xid
+   *
+   * The XID of the window to capture. 0 for the root window (default).
+   *
+   * Since: 0.10.31
+   **/
+  g_object_class_install_property (gc, PROP_XID,
+      g_param_spec_uint64 ("xid", "Window XID",
+          "Window XID to capture from", 0, G_MAXUINT64, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstXImageSrc:xname
+   *
+   * The name of the window to capture, if any.
+   *
+   * Since: 0.10.31
+   **/
+  g_object_class_install_property (gc, PROP_XNAME,
+      g_param_spec_string ("xname", "Window name",
+          "Window name to capture from", NULL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_details_simple (ec, "Ximage video source",

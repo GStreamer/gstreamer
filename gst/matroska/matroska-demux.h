@@ -91,6 +91,9 @@ typedef struct _GstMatroskaDemux {
   /* reverse playback */
   GArray                  *seek_index;
   gint                     seek_entry;
+
+  /* gap handling */
+  guint64                  max_gap_time;
 } GstMatroskaDemux;
 
 typedef struct _GstMatroskaDemuxClass {

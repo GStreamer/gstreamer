@@ -59,7 +59,7 @@ typedef struct _GstEbmlRead {
   GArray *readers;
 } GstEbmlRead;
 
-typedef const guint8 * (*GstPeekData) (gpointer * context, guint peek);
+typedef GstFlowReturn (*GstPeekData) (gpointer * context, guint peek, const guint8 ** data);
 
 /* returns UNEXPECTED if not enough data */
 GstFlowReturn gst_ebml_peek_id_length    (guint32 * _id, guint64 * _length,

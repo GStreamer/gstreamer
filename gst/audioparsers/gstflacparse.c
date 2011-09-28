@@ -181,7 +181,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-flac, framed = (boolean) false")
+    GST_STATIC_CAPS ("audio/x-flac")
     );
 
 static void gst_flac_parse_finalize (GObject * object);

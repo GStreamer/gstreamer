@@ -26,7 +26,7 @@
 #include <gst/tag/tag.h>
 
 #define SINK_CAPS "text/x-cmml"
-#define SRC_CAPS "text/x-cmml"
+#define SRC_CAPS "text/x-cmml,encoded=(boolean)FALSE"
 
 #define IDENT_HEADER \
   "CMML\x00\x00\x00\x00"\

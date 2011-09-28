@@ -60,6 +60,7 @@ gst_ebml_peek_id_length (guint32 * _id, guint64 * _length, guint * _needed,
   gint len_mask = 0x80, read = 1, n = 1, num_ffs = 0;
   guint64 total;
   guint8 b;
+  GstFlowReturn ret;
 
   g_return_val_if_fail (_id != NULL, GST_FLOW_ERROR);
   g_return_val_if_fail (_length != NULL, GST_FLOW_ERROR);
@@ -71,10 +72,9 @@ gst_ebml_peek_id_length (guint32 * _id, guint64 * _length, guint * _needed,
 
   /* read element id */
   needed = 2;
-  buf = peek (ctx, needed);
-  if (!buf)
-    goto not_enough_data;
-
+  ret = peek (ctx, needed, &buf);
+  if (ret != GST_FLOW_OK)
+    goto peek_error;
   b = GST_READ_UINT8 (buf);
   total = (guint64) b;
   while (read <= 4 && !(total & len_mask)) {
@@ -86,10 +86,9 @@ gst_ebml_peek_id_length (guint32 * _id, guint64 * _length, guint * _needed,
 
   /* need id and at least something for subsequent length */
   needed = read + 1;
-  buf = peek (ctx, needed);
-  if (!buf)
-    goto not_enough_data;
-
+  ret = peek (ctx, needed, &buf);
+  if (ret != GST_FLOW_OK)
+    goto peek_error;
   while (n < read) {
     b = GST_READ_UINT8 (buf + n);
     total = (total << 8) | b;
@@ -112,10 +111,9 @@ gst_ebml_peek_id_length (guint32 * _id, guint64 * _length, guint * _needed,
     num_ffs++;
 
   needed += read - 1;
-  buf = peek (ctx, needed);
-  if (!buf)
-    goto not_enough_data;
-
+  ret = peek (ctx, needed, &buf);
+  if (ret != GST_FLOW_OK)
+    goto peek_error;
   buf += (needed - read);
   n = 1;
   while (n < read) {
@@ -137,10 +135,11 @@ gst_ebml_peek_id_length (guint32 * _id, guint64 * _length, guint * _needed,
   return GST_FLOW_OK;
 
   /* ERRORS */
-not_enough_data:
+peek_error:
   {
+    GST_WARNING_OBJECT (el, "peek failed, ret = %d", ret);
     *_needed = needed;
-    return GST_FLOW_UNEXPECTED;
+    return ret;
   }
 invalid_id:
   {
@@ -190,15 +189,13 @@ gst_ebml_read_clear (GstEbmlRead * ebml)
   ebml->el = NULL;
 }
 
-static const guint8 *
-gst_ebml_read_peek (GstByteReader * br, guint peek)
+static GstFlowReturn
+gst_ebml_read_peek (GstByteReader * br, guint peek, const guint8 ** data)
 {
-  const guint8 *data = NULL;
-
-  if (G_LIKELY (gst_byte_reader_peek_data (br, peek, &data)))
-    return data;
+  if (G_LIKELY (gst_byte_reader_peek_data (br, peek, data)))
+    return GST_FLOW_OK;
   else
-    return NULL;
+    return GST_FLOW_UNEXPECTED;
 }
 
 static GstFlowReturn

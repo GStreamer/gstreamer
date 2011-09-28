@@ -420,6 +420,27 @@ gst_pulsering_context_subscribe_cb (pa_context * c,
     if (idx != pa_stream_get_index (pbuf->stream))
       continue;
 
+#ifdef HAVE_PULSE_1_0
+    if (psink->device && pa_format_info_is_pcm (pbuf->format) &&
+        !g_str_equal (psink->device,
+            pa_stream_get_device_name (pbuf->stream))) {
+      /* Underlying sink changed. And this is not a passthrough stream. Let's
+       * see if someone upstream wants to try to renegotiate. */
+      GstEvent *renego;
+
+      g_free (psink->device);
+      psink->device = g_strdup (pa_stream_get_device_name (pbuf->stream));
+
+      GST_INFO_OBJECT (psink, "emitting sink-changed");
+
+      renego = gst_event_new_custom (GST_EVENT_CUSTOM_UPSTREAM,
+          gst_structure_new ("pulse-sink-changed", NULL));
+
+      if (!gst_pad_push_event (GST_BASE_SINK (psink)->sinkpad, renego))
+        GST_DEBUG_OBJECT (psink, "Emitted sink-changed - nobody was listening");
+    }
+#endif
+
     /* Actually this event is also triggered when other properties of
      * the stream change that are unrelated to the volume. However it is
      * probably cheaper to signal the change here and check for the
@@ -1716,35 +1737,10 @@ static gboolean gst_pulsesink_event (GstBaseSink * sink, GstEvent * event);
 static GstStateChangeReturn gst_pulsesink_change_state (GstElement * element,
     GstStateChange transition);
 
-#if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
-# define FORMATS   "{ S16LE, S16BE, F32LE, F32BE, S32LE, S32BE, " \
-                     "S24LE, S24BE, S24_32LE, S24_32BE, S8 }"
-#else
-# define FORMATS   "{ S16BE, S16LE, F32BE, F32LE, S32BE, S32LE, " \
-                     "S24BE, S24LE, S24_32BE, S24_32LE, S8 }"
-#endif
-
 static GstStaticPadTemplate pad_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw, "
-        "format = (string) " FORMATS ", "
-        "rate = (int) [ 1, MAX ], "
-        "channels = (int) [ 1, 32 ];"
-        "audio/x-alaw, "
-        "rate = (int) [ 1, MAX], "
-        "channels = (int) [ 1, 32 ];"
-        "audio/x-mulaw, "
-        "rate = (int) [ 1, MAX], " "channels = (int) [ 1, 32 ];"
-#ifdef HAVE_PULSE_1_0
-        "audio/x-ac3, framed = (boolean) true;"
-        "audio/x-eac3, framed = (boolean) true; "
-        "audio/x-dts, framed = (boolean) true, "
-        "  block_size = (int) { 512, 1024, 2048 }; "
-        "audio/mpeg, mpegversion = (int)1, "
-        "  mpegaudioversion = (int) [ 1, 2 ], parsed = (boolean) true; "
-#endif
-    ));
+    GST_STATIC_CAPS (PULSE_SINK_TEMPLATE_CAPS));
 
 GST_IMPLEMENT_PULSEPROBE_METHODS (GstPulseSink, gst_pulsesink);
 
@@ -2002,6 +1998,8 @@ done:
 }
 
 #ifdef HAVE_PULSE_1_0
+/* NOTE: If you're making changes here, see if pulseaudiosink acceptcaps also
+ * needs to be changed accordingly. */
 static gboolean
 gst_pulsesink_pad_acceptcaps (GstPad * pad, GstCaps * caps)
 {

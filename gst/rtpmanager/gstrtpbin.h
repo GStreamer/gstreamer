@@ -50,6 +50,8 @@ struct _GstRtpBin {
   gboolean        do_lost;
   gboolean        ignore_pt;
   gboolean        ntp_sync;
+  gint            rtcp_sync;
+  guint           rtcp_sync_interval;
   RTPJitterBufferMode buffer_mode;
   gboolean        buffering;
   gboolean        use_pipeline_clock;

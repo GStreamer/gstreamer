@@ -144,16 +144,16 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-ac3, framed = (boolean) true, "
-        " channels = (int) [ 1, 6 ], rate = (int) [ 32000, 48000 ]; "
+        " channels = (int) [ 1, 6 ], rate = (int) [ 8000, 48000 ], "
+        " alignment = (string) { iec61937, frame}; "
         "audio/x-eac3, framed = (boolean) true, "
-        " channels = (int) [ 1, 6 ], rate = (int) [ 32000, 48000 ] "));
+        " channels = (int) [ 1, 6 ], rate = (int) [ 8000, 48000 ], "
+        " alignment = (string) { iec61937, frame}; "));
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-ac3, framed = (boolean) false; "
-        "audio/x-eac3, framed = (boolean) false; "
-        "audio/ac3, framed = (boolean) false "));
+    GST_STATIC_CAPS ("audio/x-ac3; " "audio/x-eac3; " "audio/ac3"));
 
 static void gst_ac3_parse_finalize (GObject * object);
 
@@ -187,7 +187,7 @@ gst_ac3_parse_class_init (GstAc3ParseClass * klass)
       gst_static_pad_template_get (&src_template));
 
   gst_element_class_set_details_simple (element_class,
-      "AC3 audio stream parser", "Codec/Parser/Audio",
+      "AC3 audio stream parser", "Codec/Parser/Converter/Audio",
       "AC3 parser", "Tim-Philipp Müller <tim centricular net>");
 
   parse_class->start = GST_DEBUG_FUNCPTR (gst_ac3_parse_start);
@@ -298,7 +298,7 @@ gst_ac3_parse_frame_header_ac3 (GstAc3Parse * ac3parse, GstBuffer * buf,
   GstBitReader bits;
   gpointer data;
   gsize size;
-  guint8 fscod, frmsizcod, bsid, acmod, lfe_on;
+  guint8 fscod, frmsizcod, bsid, acmod, lfe_on, rate_scale;
   gboolean ret = FALSE;
 
   GST_LOG_OBJECT (ac3parse, "parsing ac3");
@@ -338,10 +338,14 @@ gst_ac3_parse_frame_header_ac3 (GstAc3Parse * ac3parse, GstBuffer * buf,
 
   lfe_on = gst_bit_reader_get_bits_uint8_unchecked (&bits, 1);
 
+  /* 6/8->0, 9->1, 10->2,
+     see http://matroska.org/technical/specs/codecid/index.html */
+  rate_scale = (CLAMP (bsid, 8, 10) - 8);
+
   if (frame_size)
     *frame_size = frmsizcod_table[frmsizcod].frame_size[fscod] * 2;
   if (rate)
-    *rate = fscod_rates[fscod];
+    *rate = fscod_rates[fscod] >> rate_scale;
   if (chans)
     *chans = acmod_chans[acmod] + lfe_on;
   if (blks)
@@ -631,7 +635,7 @@ gst_ac3_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
   }
 
   if (G_UNLIKELY (ac3parse->sample_rate != rate || ac3parse->channels != chans
-          || ac3parse->eac != ac3parse->eac)) {
+          || ac3parse->eac != eac)) {
     GstCaps *caps = gst_caps_new_simple (eac ? "audio/x-eac3" : "audio/x-ac3",
         "framed", G_TYPE_BOOLEAN, TRUE, "rate", G_TYPE_INT, rate,
         "channels", G_TYPE_INT, chans, NULL);

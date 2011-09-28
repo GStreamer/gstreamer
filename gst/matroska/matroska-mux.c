@@ -391,6 +391,8 @@ gst_matroska_mux_finalize (GObject * object)
 {
   GstMatroskaMux *mux = GST_MATROSKA_MUX (object);
 
+  gst_event_replace (&mux->force_key_unit_event, NULL);
+
   gst_object_unref (mux->collect);
   gst_object_unref (mux->ebml_write);
   if (mux->writing_app)
@@ -662,6 +664,17 @@ gst_matroska_mux_handle_sink_event (GstPad * pad, GstEvent * event)
       gst_event_unref (event);
       event = NULL;
       break;
+    case GST_EVENT_CUSTOM_DOWNSTREAM:{
+      const GstStructure *structure;
+
+      structure = gst_event_get_structure (event);
+      if (gst_structure_has_name (structure, "GstForceKeyUnit")) {
+        gst_event_replace (&mux->force_key_unit_event, NULL);
+        mux->force_key_unit_event = event;
+        event = NULL;
+      }
+      break;
+    }
     default:
       break;
   }
@@ -2692,13 +2705,20 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad)
   }
 
   if (mux->cluster) {
-    /* start a new cluster at every keyframe or when we may be reaching the
-     * limit of the relative timestamp */
+    /* start a new cluster at every keyframe, at every GstForceKeyUnit event,
+     * or when we may be reaching the limit of the relative timestamp */
     if (mux->cluster_time +
         mux->max_cluster_duration < GST_BUFFER_TIMESTAMP (buf)
-        || is_video_keyframe) {
+        || is_video_keyframe || mux->force_key_unit_event) {
       if (!mux->streamable)
         gst_ebml_write_master_finish (ebml, mux->cluster);
+
+      /* Forward the GstForceKeyUnit event after finishing the cluster */
+      if (mux->force_key_unit_event) {
+        gst_pad_push_event (mux->srcpad, mux->force_key_unit_event);
+        mux->force_key_unit_event = NULL;
+      }
+
       mux->prev_cluster_size = ebml->pos - mux->cluster_pos;
       mux->cluster_pos = ebml->pos;
       gst_ebml_write_set_cache (ebml, 0x20);

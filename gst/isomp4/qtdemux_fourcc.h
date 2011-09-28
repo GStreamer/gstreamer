@@ -189,6 +189,9 @@ G_BEGIN_DECLS
 #define FOURCC_albm     GST_MAKE_FOURCC('a','l','b','m')
 #define FOURCC_yrrc     GST_MAKE_FOURCC('y','r','r','c')
 
+/* misc tag stuff */
+#define FOURCC_ID32     GST_MAKE_FOURCC('I', 'D','3','2')
+
 /* ISO Motion JPEG 2000 fourcc */
 #define FOURCC_mjp2     GST_MAKE_FOURCC('m','j','p','2')
 #define FOURCC_jp2h     GST_MAKE_FOURCC('j','p','2','h')
