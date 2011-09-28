@@ -38,8 +38,6 @@
  * </refsect2>
  */
 
-/* FIXME: remove all granulepos handling if there's any left */
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -708,13 +706,6 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
 
   GST_BUFFER_OFFSET (outbuf) = flacdec->segment.position;
 
-  if (flacdec->cur_granulepos != GST_BUFFER_OFFSET_NONE) {
-    /* this should be fine since it should be one flac frame per ogg packet */
-    flacdec->segment.position = flacdec->cur_granulepos - samples;
-    GST_LOG_OBJECT (flacdec, "granulepos = %" G_GINT64_FORMAT ", samples = %u",
-        flacdec->cur_granulepos, samples);
-  }
-
   GST_BUFFER_TIMESTAMP (outbuf) =
       gst_util_uint64_scale_int (flacdec->segment.position, GST_SECOND,
       frame->header.sample_rate);
@@ -948,6 +939,7 @@ gst_flac_dec_chain (GstPad * pad, GstBuffer * buf)
     FLAC__stream_decoder_flush (dec->decoder);
   }
 
+  /* FIXME: should always be framed */
   if (dec->framed) {
     gint64 unused;
     guint8 *data;
@@ -958,25 +950,17 @@ gst_flac_dec_chain (GstPad * pad, GstBuffer * buf)
     got_audio_frame = gst_flac_dec_scan_got_frame (dec, data, size, &unused);
     gst_buffer_unmap (buf, data, size);
 
-    /* oggdemux will set granulepos in OFFSET_END instead of timestamp */
     if (G_LIKELY (got_audio_frame)) {
-      /* old oggdemux for now */
-      if (!GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
-        dec->cur_granulepos = GST_BUFFER_OFFSET_END (buf);
-      } else {
-        GstFormat dformat = GST_FORMAT_DEFAULT;
-        gint64 position;
+      GstFormat dformat = GST_FORMAT_DEFAULT;   /* FIXME: remove var */
+      gint64 position;
 
-        /* upstream (e.g. demuxer) presents us time,
-         * convert to default samples */
-        gst_flac_dec_convert_src (dec->srcpad, GST_FORMAT_TIME,
-            GST_BUFFER_TIMESTAMP (buf), &dformat, &position);
-        dec->segment.position = position;
-        dec->cur_granulepos = GST_BUFFER_OFFSET_NONE;
-      }
+      /* upstream (e.g. demuxer) presents us time,
+       * convert to default samples */
+      gst_flac_dec_convert_src (dec->srcpad, GST_FORMAT_TIME,
+          GST_BUFFER_TIMESTAMP (buf), &dformat, &position);
+      dec->segment.position = position;
     }
   } else {
-    dec->cur_granulepos = GST_BUFFER_OFFSET_NONE;
     got_audio_frame = TRUE;
   }
 
