@@ -46,7 +46,6 @@ struct _GstFlacDec {
   FLAC__StreamDecoder         *decoder;
   GstAdapter                  *adapter;
   gboolean                     framed;
-  gboolean                     streaming;
 
   gboolean       got_headers; /* if we've parsed the headers (unframed push mode only) */
 
@@ -55,25 +54,9 @@ struct _GstFlacDec {
 
   gboolean       init;
 
-  guint64        offset;      /* current byte offset of input */
-
-  gboolean       seeking;     /* set to TRUE while seeking to make sure we
-                               * don't push any buffers in the write callback
-                               * until we are actually at the new position */
-
-  gboolean       eos;         /* set to TRUE if seeked after the end of file */
-
   GstSegment     segment;     /* the currently configured segment, in
                                * samples/audio frames (DEFAULT format) */
-  gboolean       running;
-  gboolean       discont;
-  GstBuffer     *pending;     /* pending buffer, produced in seek */
-  guint          pending_samples;
-  GstEvent      *close_segment;
-  GstEvent      *start_segment;
   GstTagList    *tags;
-
-  GstFlowReturn  pull_flow;   /* last flow from pull_range */ /* STREAM_LOCK */
 
   GstFlowReturn  last_flow;   /* the last flow return received from either
                                * gst_pad_push or gst_pad_buffer_alloc */
