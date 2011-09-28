@@ -282,10 +282,10 @@ gst_ring_buffer_parse_caps (GstRingBufferSpec * spec, GstCaps * caps)
    * not changed, we assume the same value as segtotal */
   spec->seglatency = -1;
 
+  spec->info = info;
+
   gst_ring_buffer_debug_spec_caps (spec);
   gst_ring_buffer_debug_spec_buff (spec);
-
-  spec->info = info;
 
   return TRUE;
 
