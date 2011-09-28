@@ -286,12 +286,13 @@ gst_opus_enc_sink_setcaps (GstPad * pad, GstCaps * caps)
       enc->frame_samples = enc->sample_rate / 50;
       break;
     case 40:
-      enc->frame_samples = enc->sample_rate / 20;
+      enc->frame_samples = enc->sample_rate / 25;
       break;
     case 60:
       enc->frame_samples = 3 * enc->sample_rate / 50;
       break;
     default:
+      GST_WARNING_OBJECT (enc, "Unsupported frame size: %d", enc->frame_size);
       return FALSE;
       break;
   }
