@@ -787,7 +787,7 @@ gst_base_src_new_seamless_segment (GstBaseSrc * src, gint64 start, gint64 stop,
 
 /**
  * gst_base_src_set_caps:
- * @bsrc: a #GstBaseSrc
+ * @src: a #GstBaseSrc
  * @caps: a #GstCaps
  *
  * Set new caps on the basesrc source pad.
@@ -795,17 +795,17 @@ gst_base_src_new_seamless_segment (GstBaseSrc * src, gint64 start, gint64 stop,
  * Returns: %TRUE if the caps could be set
  */
 gboolean
-gst_base_src_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
+gst_base_src_set_caps (GstBaseSrc * src, GstCaps * caps)
 {
   GstBaseSrcClass *bclass;
   gboolean res = TRUE;
 
-  bclass = GST_BASE_SRC_GET_CLASS (bsrc);
+  bclass = GST_BASE_SRC_GET_CLASS (src);
 
-  gst_pad_push_event (bsrc->srcpad, gst_event_new_caps (caps));
+  gst_pad_push_event (src->srcpad, gst_event_new_caps (caps));
 
   if (bclass->set_caps)
-    res = bclass->set_caps (bsrc, caps);
+    res = bclass->set_caps (src, caps);
 
   return res;
 }
