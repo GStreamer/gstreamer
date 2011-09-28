@@ -55,7 +55,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-int, "
-        "rate = (int) [ 32000, 64000 ], "
+        "rate = (int) { 8000, 12000, 16000, 24000, 48000 }, "
         "channels = (int) [ 1, 2 ], "
         "endianness = (int) BYTE_ORDER, "
         "signed = (boolean) true, " "width = (int) 16, " "depth = (int) 16")
