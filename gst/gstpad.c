@@ -2361,12 +2361,15 @@ gboolean
 gst_pad_has_current_caps (GstPad * pad)
 {
   gboolean result;
+  GstCaps *caps;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
 
   GST_OBJECT_LOCK (pad);
-  GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad, "check current pad caps");
-  result = (get_pad_caps (pad) != NULL);
+  caps = get_pad_caps (pad);
+  GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
+      "check current pad caps %" GST_PTR_FORMAT, caps);
+  result = (caps != NULL);
   GST_OBJECT_UNLOCK (pad);
 
   return result;
