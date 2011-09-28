@@ -193,6 +193,8 @@ opus_dec_sink_setcaps (GstPad * pad, GstCaps * caps)
   GstStructure *s;
   const GValue *streamheader;
 
+  GST_DEBUG_OBJECT (pad, "Setting sink caps to %" GST_PTR_FORMAT, caps);
+
   s = gst_caps_get_structure (caps, 0);
   if ((streamheader = gst_structure_get_value (s, "streamheader")) &&
       G_VALUE_HOLDS (streamheader, GST_TYPE_ARRAY) &&
@@ -236,6 +238,47 @@ opus_dec_sink_setcaps (GstPad * pad, GstCaps * caps)
       }
     }
   }
+
+  if (!gst_structure_get_int (s, "frame-size", &dec->frame_size)) {
+    GST_WARNING_OBJECT (dec, "Frame size not included in caps");
+  }
+  if (!gst_structure_get_int (s, "channels", &dec->n_channels)) {
+    GST_WARNING_OBJECT (dec, "Number of channels not included in caps");
+  }
+  if (!gst_structure_get_int (s, "rate", &dec->sample_rate)) {
+    GST_WARNING_OBJECT (dec, "Sample rate not included in caps");
+  }
+  switch (dec->frame_size) {
+    case 2:
+      dec->frame_samples = dec->sample_rate / 400;
+      break;
+    case 5:
+      dec->frame_samples = dec->sample_rate / 200;
+      break;
+    case 10:
+      dec->frame_samples = dec->sample_rate / 100;
+      break;
+    case 20:
+      dec->frame_samples = dec->sample_rate / 50;
+      break;
+    case 40:
+      dec->frame_samples = dec->sample_rate / 25;
+      break;
+    case 60:
+      dec->frame_samples = 3 * dec->sample_rate / 50;
+      break;
+    default:
+      GST_WARNING_OBJECT (dec, "Unsupported frame size: %d", dec->frame_size);
+      break;
+  }
+
+  dec->frame_duration = gst_util_uint64_scale_int (dec->frame_samples,
+      GST_SECOND, dec->sample_rate);
+
+  GST_INFO_OBJECT (dec,
+      "Got frame size %d, %d channels, %d Hz, giving %d samples per frame, frame duration %"
+      GST_TIME_FORMAT, dec->frame_size, dec->n_channels, dec->sample_rate,
+      dec->frame_samples, GST_TIME_ARGS (dec->frame_duration));
 
 done:
   gst_object_unref (dec);
@@ -788,6 +831,10 @@ opus_dec_chain (GstPad * pad, GstBuffer * buf)
   GstOpusDec *dec;
 
   dec = GST_OPUS_DEC (gst_pad_get_parent (pad));
+  GST_LOG_OBJECT (pad,
+      "Got buffer ts %" GST_TIME_FORMAT ", duration %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
+      GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
 
   if (GST_BUFFER_IS_DISCONT (buf)) {
     dec->discont = TRUE;
