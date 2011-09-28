@@ -210,9 +210,9 @@ dnl *** plug-ins to include ***
 
 dnl Non ported plugins (non-dependant, then dependant)
 dnl Make sure you have a space before and after all plugins
-GST_PLUGINS_NONPORTED=" dvdlpcmdec dvdsub iec958 synaesthesia xingmux \
+GST_PLUGINS_NONPORTED=" dvdsub iec958 synaesthesia xingmux \
  mpegstream realmedia \
- a52dec amrnb amrwb cdio dvdread lame mpeg2dec twolame x264 "
+ amrnb amrwb cdio dvdread mpeg2dec twolame "
 AC_SUBST(GST_PLUGINS_NONPORTED)
 
 dnl these are all the gst plug-ins, compilable without additional libs
