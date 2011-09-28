@@ -2742,6 +2742,56 @@ atom_moov_chunks_add_offset (AtomMOOV * moov, guint32 offset)
   }
 }
 
+void
+atom_trak_update_bitrates (AtomTRAK * trak, guint32 avg_bitrate,
+    guint32 max_bitrate)
+{
+  AtomESDS *esds = NULL;
+  AtomSTSD *stsd;
+  GList *iter;
+  GList *extensioniter = NULL;
+
+  g_return_if_fail (trak != NULL);
+
+  if (avg_bitrate == 0 && max_bitrate == 0)
+    return;
+
+  stsd = &trak->mdia.minf.stbl.stsd;
+  for (iter = stsd->entries; iter; iter = g_list_next (iter)) {
+    SampleTableEntry *entry = iter->data;
+
+    switch (entry->kind) {
+      case AUDIO:{
+        SampleTableEntryMP4A *audioentry = (SampleTableEntryMP4A *) entry;
+        extensioniter = audioentry->extension_atoms;
+        break;
+      }
+      case VIDEO:{
+        SampleTableEntryMP4V *videoentry = (SampleTableEntryMP4V *) entry;
+        extensioniter = videoentry->extension_atoms;
+        break;
+      }
+      default:
+        break;
+    }
+  }
+
+  for (; extensioniter; extensioniter = g_list_next (extensioniter)) {
+    AtomInfo *atominfo = extensioniter->data;
+    if (atominfo->atom->type == FOURCC_esds) {
+      esds = (AtomESDS *) atominfo->atom;
+      break;
+    }
+  }
+
+  if (esds) {
+    if (avg_bitrate && esds->es.dec_conf_desc.avg_bitrate == 0)
+      esds->es.dec_conf_desc.avg_bitrate = avg_bitrate;
+    if (max_bitrate && esds->es.dec_conf_desc.max_bitrate == 0)
+      esds->es.dec_conf_desc.max_bitrate = max_bitrate;
+  }
+}
+
 /*
  * Meta tags functions
  */
