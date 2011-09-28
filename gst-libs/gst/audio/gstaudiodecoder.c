@@ -760,7 +760,7 @@ gst_audio_decoder_finish_frame (GstAudioDecoder * dec, GstBuffer * buf,
     priv->pending_events = NULL;
 
     GST_DEBUG_OBJECT (dec, "Pushing pending events");
-    for (l = priv->pending_events; l; l = l->next)
+    for (l = pending_events; l; l = l->next)
       gst_pad_push_event (dec->srcpad, l->data);
     g_list_free (pending_events);
   }
