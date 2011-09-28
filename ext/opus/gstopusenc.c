@@ -842,6 +842,12 @@ gst_opus_enc_encode (GstOpusEnc * enc, gboolean flush)
       GST_ERROR_OBJECT (enc, "Encoding failed: %d", outsize);
       ret = GST_FLOW_ERROR;
       goto done;
+    } else if (outsize != bytes_per_packet) {
+      GST_WARNING_OBJECT (enc,
+          "Encoded size %d is different from %d bytes per packet", outsize,
+          bytes_per_packet);
+      ret = GST_FLOW_ERROR;
+      goto done;
     }
 
     GST_BUFFER_TIMESTAMP (outbuf) = enc->start_ts +
