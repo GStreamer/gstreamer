@@ -301,11 +301,11 @@ GST_PLUGINS_NONPORTED=" adpcmdec adpcmenc aiff asfmux \
  liveadder legacyresample librfb mpegdemux mpegtsdemux mpegtsmux \
  mpegpsmux mpeg4videoparse mpegvideoparse mve mxf nsf nuvdemux \
  patchdetect pcapparse pnm rawparse real rtpmux rtpvp8 scaletempo \
- sdi sdp segmentclip siren speed subenc stereo tta videofilters \
+ sdi segmentclip siren speed subenc stereo tta videofilters \
  videomaxrate videomeasure videoparsers videosignal vmnc y4m \
  decklink dvb fbdev linsys shm vcd \
  voaacenc assrender apexsink bz2 cog curl dc1394 dirac dts resindvd \
- faac faad gsettings jp2k ladspa libmms modplug mpeg2enc mimic \
+ faac gsettings jp2k ladspa libmms modplug mpeg2enc mimic \
  musepack musicbrainz neon rsvg schro sdl sndfile soundtouch \
  vp8 xvid "
 AC_SUBST(GST_PLUGINS_NONPORTED)
