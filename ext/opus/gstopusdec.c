@@ -566,7 +566,7 @@ static GstFlowReturn
 opus_dec_chain_parse_header (GstOpusDec * dec, GstBuffer * buf)
 {
   GstCaps *caps;
-  //gint error = OPUS_OK;
+  int err;
 
 #if 0
   dec->samples_per_frame = opus_packet_get_samples_per_frame (
@@ -578,41 +578,9 @@ opus_dec_chain_parse_header (GstOpusDec * dec, GstBuffer * buf)
     goto invalid_header;
 #endif
 
-#if 0
-#ifdef HAVE_OPUS_0_7
-  dec->mode =
-      opus_mode_create (dec->sample_rate, dec->header.frame_size, &error);
-#else
-  dec->mode =
-      opus_mode_create (dec->sample_rate, dec->header.nb_channels,
-      dec->header.frame_size, &error);
-#endif
-  if (!dec->mode)
-    goto mode_init_failed;
-
-  /* initialize the decoder */
-#ifdef HAVE_OPUS_0_11
-  dec->state =
-      opus_decoder_create_custom (dec->mode, dec->header.nb_channels, &error);
-#else
-#ifdef HAVE_OPUS_0_7
-  dec->state = opus_decoder_create (dec->mode, dec->header.nb_channels, &error);
-#else
-  dec->state = opus_decoder_create (dec->mode);
-#endif
-#endif
-#endif
-  dec->state = opus_decoder_create (dec->sample_rate, dec->n_channels);
-  if (!dec->state)
+  dec->state = opus_decoder_create (dec->sample_rate, dec->n_channels, &err);
+  if (!dec->state || err != OPUS_OK)
     goto init_failed;
-
-#if 0
-#ifdef HAVE_OPUS_0_8
-  dec->frame_size = dec->header.frame_size;
-#else
-  opus_mode_info (dec->mode, OPUS_GET_FRAME_SIZE, &dec->frame_size);
-#endif
-#endif
 
   dec->frame_duration = gst_util_uint64_scale_int (dec->frame_size,
       GST_SECOND, dec->sample_rate);
@@ -711,7 +679,7 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buf,
   guint8 *data;
   GstBuffer *outbuf;
   gint16 *out_data;
-  int n;
+  int n, err;
 
   if (timestamp != -1) {
     dec->segment.last_stop = timestamp;
@@ -721,7 +689,9 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buf,
   if (dec->state == NULL) {
     GstCaps *caps;
 
-    dec->state = opus_decoder_create (dec->sample_rate, dec->n_channels);
+    dec->state = opus_decoder_create (dec->sample_rate, dec->n_channels, &err);
+    if (!dec->state || err != OPUS_OK)
+      goto creation_failed;
 
     /* set caps */
     caps = gst_caps_new_simple ("audio/x-raw-int",
@@ -805,6 +775,10 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buf,
     GST_DEBUG_OBJECT (dec, "flow: %s", gst_flow_get_name (res));
 
   return res;
+
+creation_failed:
+  GST_ERROR_OBJECT (dec, "Failed to create Opus decoder: %d", err);
+  return GST_FLOW_ERROR;
 }
 
 static GstFlowReturn
