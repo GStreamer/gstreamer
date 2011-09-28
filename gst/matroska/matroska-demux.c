@@ -552,6 +552,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux, GstEbmlRead * ebml)
       GST_MATROSKA_TRACK_LACING;
   context->last_flow = GST_FLOW_OK;
   context->to_offset = G_MAXINT64;
+  context->alignment = 1;
   demux->common.num_streams++;
   g_assert (demux->common.src->len == demux->common.num_streams);
 
@@ -3507,6 +3508,24 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
         ret = stream->postprocess_frame (GST_ELEMENT (demux), stream, &sub);
       }
 
+      /* At this point, we have a sub-buffer pointing at data within a larger
+         buffer. This data might not be aligned with anything. If the data is
+         raw samples though, we want it aligned to the raw type (eg, 4 bytes
+         for 32 bit samples, etc), or bad things will happen downstream as
+         elements typically assume minimal alignment.
+         Therefore, create an aligned copy if necessary. */
+      g_assert (stream->alignment <= G_MEM_ALIGN);
+      if (((guintptr) GST_BUFFER_DATA (sub)) & (stream->alignment - 1)) {
+        GstBuffer *buffer = gst_buffer_new_and_alloc (GST_BUFFER_SIZE (sub));
+        memcpy (GST_BUFFER_DATA (buffer), GST_BUFFER_DATA (sub),
+            GST_BUFFER_SIZE (sub));
+        gst_buffer_copy_metadata (buffer, sub, GST_BUFFER_COPY_ALL);
+        GST_DEBUG_OBJECT (demux, "We want output aligned on %d, reallocated",
+            stream->alignment);
+        gst_buffer_unref (sub);
+        sub = buffer;
+      }
+
       ret = gst_pad_push (stream->pad, sub);
       if (demux->common.segment.rate < 0) {
         if (lace_time > demux->common.segment.stop
@@ -5090,12 +5109,14 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
 
     *codec_name = g_strdup_printf ("Raw %d-bit PCM audio",
         audiocontext->bitdepth);
+    context->alignment = audiocontext->bitdepth / 8;
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_PCM_FLOAT)) {
     caps = gst_caps_new_simple ("audio/x-raw-float",
         "endianness", G_TYPE_INT, G_LITTLE_ENDIAN,
         "width", G_TYPE_INT, audiocontext->bitdepth, NULL);
     *codec_name = g_strdup_printf ("Raw %d-bit floating-point audio",
         audiocontext->bitdepth);
+    context->alignment = audiocontext->bitdepth / 8;
   } else if (!strncmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_AC3,
           strlen (GST_MATROSKA_CODEC_ID_AUDIO_AC3))) {
     caps = gst_caps_new_simple ("audio/x-ac3",
