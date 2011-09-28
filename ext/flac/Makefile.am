@@ -1,7 +1,8 @@
 plugin_LTLIBRARIES = libgstflac.la
 
 libgstflac_la_SOURCES = gstflac.c gstflacdec.c gstflacenc.c gstflactag.c
-libgstflac_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) $(FLAC_CFLAGS)
+libgstflac_la_CFLAGS = -DGST_USE_UNSTABLE_API \
+	$(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) $(FLAC_CFLAGS)
 libgstflac_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) -lgsttag-$(GST_MAJORMINOR) \
 	-lgstaudio-$(GST_MAJORMINOR) \
