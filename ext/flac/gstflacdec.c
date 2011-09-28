@@ -150,15 +150,18 @@ static void gst_flac_dec_error_cb (const FLAC__StreamDecoder *
 #define gst_flac_dec_parent_class parent_class
 G_DEFINE_TYPE (GstFlacDec, gst_flac_dec, GST_TYPE_ELEMENT);
 
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+#define FORMATS "{ S8LE, S16LE, S32LE } "
+#else
+#define FORMATS "{ S8BE, S16BE, S32BE } "
+#endif
+
 /* FIXME 0.11: Use width=32 for all depths and let audioconvert
  * handle the conversions instead of doing it ourself.
  */
 #define GST_FLAC_DEC_SRC_CAPS                             \
-    "audio/x-raw-int, "                                   \
-    "endianness = (int) BYTE_ORDER, "                     \
-    "signed = (boolean) true, "                           \
-    "width = (int) { 8, 16, 32 }, "                       \
-    "depth = (int) [ 4, 32 ], "                           \
+    "audio/x-raw, "                                       \
+    "format = (string) " FORMATS ", "                     \
     "rate = (int) [ 1, 655350 ], "                        \
     "channels = (int) [ 1, 8 ]"
 
@@ -267,7 +270,7 @@ gst_flac_dec_reset_decoders (GstFlacDec * flacdec)
     flacdec->pending = NULL;
   }
 
-  flacdec->segment.last_stop = 0;
+  flacdec->segment.position = 0;
   flacdec->offset = 0;
   flacdec->init = TRUE;
 }
@@ -479,12 +482,12 @@ gst_flac_dec_scan_got_frame (GstFlacDec * flacdec, guint8 * data, guint size,
 static void
 gst_flac_dec_scan_for_last_block (GstFlacDec * flacdec, gint64 * samples)
 {
-  GstFormat format = GST_FORMAT_BYTES;
   gint64 file_size, offset;
 
   GST_INFO_OBJECT (flacdec, "total number of samples unknown, scanning file");
 
-  if (!gst_pad_query_peer_duration (flacdec->sinkpad, &format, &file_size)) {
+  if (!gst_pad_query_peer_duration (flacdec->sinkpad, GST_FORMAT_BYTES,
+          &file_size)) {
     GST_WARNING_OBJECT (flacdec, "failed to query upstream size!");
     return;
   }
@@ -612,22 +615,26 @@ gst_flac_dec_metadata_cb (const FLAC__StreamDecoder * decoder,
        * newsegment event in TIME format which we've passed on */
       if (samples > 0 && !flacdec->framed) {
         gint64 duration;
+        GstSegment seg;
 
-        gst_segment_set_duration (&flacdec->segment, GST_FORMAT_DEFAULT,
-            samples);
+        flacdec->segment.duration = samples;
 
         /* convert duration to time */
         duration = gst_util_uint64_scale_int (samples, GST_SECOND,
             flacdec->sample_rate);
 
+        gst_segment_init (&seg, GST_FORMAT_TIME);
+        seg.rate = flacdec->segment.rate;
+        seg.applied_rate = flacdec->segment.applied_rate;
+        seg.start = 0;
+        seg.stop = duration;
+        seg.time = 0;
+
         /* fixme, at this time we could seek to the queued seek event if we have
          * any */
         if (flacdec->start_segment)
           gst_event_unref (flacdec->start_segment);
-        flacdec->start_segment =
-            gst_event_new_new_segment_full (FALSE,
-            flacdec->segment.rate, flacdec->segment.applied_rate,
-            GST_FORMAT_TIME, 0, duration, 0);
+        flacdec->start_segment = gst_event_new_segment (&seg);
       }
       break;
     }
@@ -705,7 +712,6 @@ gst_flac_dec_length (const FLAC__StreamDecoder * decoder,
     FLAC__uint64 * length, void *client_data)
 {
   GstFlacDec *flacdec;
-  GstFormat fmt = GST_FORMAT_BYTES;
   gint64 len;
   GstPad *peer;
 
@@ -714,9 +720,9 @@ gst_flac_dec_length (const FLAC__StreamDecoder * decoder,
   if (!(peer = gst_pad_get_peer (flacdec->sinkpad)))
     return FLAC__STREAM_DECODER_LENGTH_STATUS_ERROR;
 
-  gst_pad_query_duration (peer, &fmt, &len);
+  gst_pad_query_duration (peer, GST_FORMAT_BYTES, &len);
   gst_object_unref (peer);
-  if (fmt != GST_FORMAT_BYTES || len == -1)
+  if (len == -1)
     return FLAC__STREAM_DECODER_LENGTH_STATUS_ERROR;
 
   *length = len;
@@ -731,7 +737,6 @@ static FLAC__bool
 gst_flac_dec_eof (const FLAC__StreamDecoder * decoder, void *client_data)
 {
   GstFlacDec *flacdec;
-  GstFormat fmt;
   GstPad *peer;
   gboolean ret = FALSE;
   gint64 len;
@@ -743,8 +748,7 @@ gst_flac_dec_eof (const FLAC__StreamDecoder * decoder, void *client_data)
     return TRUE;
   }
 
-  fmt = GST_FORMAT_BYTES;
-  if (gst_pad_query_duration (peer, &fmt, &len) && fmt == GST_FORMAT_BYTES &&
+  if (gst_pad_query_duration (peer, GST_FORMAT_BYTES, &len) &&
       len != -1 && flacdec->offset >= len) {
     GST_DEBUG_OBJECT (flacdec,
         "offset=%" G_GINT64_FORMAT ", len=%" G_GINT64_FORMAT
@@ -831,6 +835,7 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
   GstClockTime next;
   gpointer data;
   gsize size;
+  const gchar *format;
 
   GST_LOG_OBJECT (flacdec, "samples in frame header: %d", samples);
 
@@ -838,42 +843,45 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
    * of the segment */
   if (flacdec->segment.format == GST_FORMAT_DEFAULT &&
       flacdec->segment.stop != -1 &&
-      flacdec->segment.last_stop >= 0 &&
-      flacdec->segment.last_stop + samples > flacdec->segment.stop) {
-    samples = flacdec->segment.stop - flacdec->segment.last_stop;
+      flacdec->segment.position >= 0 &&
+      flacdec->segment.position + samples > flacdec->segment.stop) {
+    samples = flacdec->segment.stop - flacdec->segment.position;
     GST_DEBUG_OBJECT (flacdec,
         "clipping last buffer to %d samples because of segment", samples);
+  }
+
+  if (depth == 0) {
+    if (flacdec->depth < 4 || flacdec->depth > 32) {
+      GST_ERROR_OBJECT (flacdec, "unsupported depth %d from STREAMINFO",
+          flacdec->depth);
+      ret = GST_FLOW_ERROR;
+      goto done;
+    }
+
+    depth = flacdec->depth;
+    if (depth < 9)
+      depth = 8;
+    else if (depth < 17)
+      depth = 16;
+    else
+      depth = 32;
   }
 
   switch (depth) {
     case 8:
       width = 8;
+      format = GST_AUDIO_NE (S8);
       break;
     case 12:
     case 16:
       width = 16;
+      format = GST_AUDIO_NE (S16);
       break;
     case 20:
     case 24:
     case 32:
       width = 32;
-      break;
-    case 0:
-      if (flacdec->depth < 4 || flacdec->depth > 32) {
-        GST_ERROR_OBJECT (flacdec, "unsupported depth %d from STREAMINFO",
-            flacdec->depth);
-        ret = GST_FLOW_ERROR;
-        goto done;
-      }
-
-      depth = flacdec->depth;
-      if (depth < 9)
-        width = 8;
-      else if (depth < 17)
-        width = 16;
-      else
-        width = 32;
-
+      format = GST_AUDIO_NE (S32);
       break;
     default:
       GST_ERROR_OBJECT (flacdec, "unsupported depth %d", depth);
@@ -891,17 +899,14 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
     }
   }
 
-  if (!GST_PAD_CAPS (flacdec->srcpad)) {
+  if (!gst_pad_has_current_caps (flacdec->srcpad)) {
     GstCaps *caps;
 
     GST_DEBUG_OBJECT (flacdec, "Negotiating %d Hz @ %d channels",
         frame->header.sample_rate, channels);
 
-    caps = gst_caps_new_simple ("audio/x-raw-int",
-        "endianness", G_TYPE_INT, G_BYTE_ORDER,
-        "signed", G_TYPE_BOOLEAN, TRUE,
-        "width", G_TYPE_INT, width,
-        "depth", G_TYPE_INT, depth,
+    caps = gst_caps_new_simple ("audio/x-raw",
+        "format", G_TYPE_STRING, format,
         "rate", G_TYPE_INT, frame->header.sample_rate,
         "channels", G_TYPE_INT, channels, NULL);
 
@@ -944,54 +949,36 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
         GST_BUFFER_OFFSET (flacdec->pending),
         GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (flacdec->pending)),
         GST_TIME_ARGS (GST_BUFFER_DURATION (flacdec->pending)));
-    /* Pending buffer was always allocated from the seeking thread,
-     * which means it wasn't gst_buffer_alloc'd. Do so now to let
-     * downstream negotiation work on older basetransform */
-    ret = gst_pad_alloc_buffer_and_set_caps (flacdec->srcpad,
-        GST_BUFFER_OFFSET (flacdec->pending),
-        gst_buffer_get_size (flacdec->pending),
-        GST_BUFFER_CAPS (flacdec->pending), &outbuf);
-    if (ret == GST_FLOW_OK) {
-      gst_pad_push (flacdec->srcpad, flacdec->pending);
-      gst_buffer_unref (outbuf);
-    }
 
-    outbuf = flacdec->pending = NULL;
-    flacdec->segment.last_stop += flacdec->pending_samples;
+    gst_pad_push (flacdec->srcpad, flacdec->pending);
+    flacdec->pending = NULL;
+    flacdec->segment.position += flacdec->pending_samples;
     flacdec->pending_samples = 0;
   }
 
   if (flacdec->seeking) {
     GST_DEBUG_OBJECT (flacdec, "a pad_alloc would block here, do normal alloc");
     outbuf = gst_buffer_new_and_alloc (samples * channels * (width / 8));
-    gst_buffer_set_caps (outbuf, GST_PAD_CAPS (flacdec->srcpad));
-    GST_BUFFER_OFFSET (outbuf) = flacdec->segment.last_stop;
   } else {
     GST_LOG_OBJECT (flacdec, "alloc_buffer_and_set_caps");
-    ret = gst_pad_alloc_buffer_and_set_caps (flacdec->srcpad,
-        flacdec->segment.last_stop, samples * channels * (width / 8),
-        GST_PAD_CAPS (flacdec->srcpad), &outbuf);
-
-    if (ret != GST_FLOW_OK) {
-      GST_DEBUG_OBJECT (flacdec, "gst_pad_alloc_buffer() returned %s",
-          gst_flow_get_name (ret));
-      goto done;
-    }
+    outbuf =
+        gst_buffer_new_allocate (NULL, samples * channels * (width / 8), 0);
   }
+  GST_BUFFER_OFFSET (outbuf) = flacdec->segment.position;
 
   if (flacdec->cur_granulepos != GST_BUFFER_OFFSET_NONE) {
     /* this should be fine since it should be one flac frame per ogg packet */
-    flacdec->segment.last_stop = flacdec->cur_granulepos - samples;
+    flacdec->segment.position = flacdec->cur_granulepos - samples;
     GST_LOG_OBJECT (flacdec, "granulepos = %" G_GINT64_FORMAT ", samples = %u",
         flacdec->cur_granulepos, samples);
   }
 
   GST_BUFFER_TIMESTAMP (outbuf) =
-      gst_util_uint64_scale_int (flacdec->segment.last_stop, GST_SECOND,
+      gst_util_uint64_scale_int (flacdec->segment.position, GST_SECOND,
       frame->header.sample_rate);
 
   /* get next timestamp to calculate the duration */
-  next = gst_util_uint64_scale_int (flacdec->segment.last_stop + samples,
+  next = gst_util_uint64_scale_int (flacdec->segment.position + samples,
       GST_SECOND, frame->header.sample_rate);
 
   GST_BUFFER_DURATION (outbuf) = next - GST_BUFFER_TIMESTAMP (outbuf);
@@ -1041,7 +1028,7 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
     }
     ret = gst_pad_push (flacdec->srcpad, outbuf);
     GST_DEBUG_OBJECT (flacdec, "returned %s", gst_flow_get_name (ret));
-    flacdec->segment.last_stop += samples;
+    flacdec->segment.position += samples;
   } else {
     GST_DEBUG_OBJECT (flacdec,
         "not pushing %d samples at offset %" G_GINT64_FORMAT
@@ -1162,8 +1149,8 @@ analyze_state:
 
       /* check if we're at the end of a configured segment */
       if (flacdec->segment.stop != -1 &&
-          flacdec->segment.last_stop > 0 &&
-          flacdec->segment.last_stop >= flacdec->segment.stop) {
+          flacdec->segment.position > 0 &&
+          flacdec->segment.position >= flacdec->segment.stop) {
         GST_DEBUG_OBJECT (flacdec, "reached end of the configured segment");
 
         if ((flacdec->segment.flags & GST_SEEK_FLAG_SEGMENT) == 0) {
@@ -1186,7 +1173,7 @@ analyze_state:
         if (flacdec->segment.duration > 0) {
           flacdec->segment.stop = flacdec->segment.duration;
         } else {
-          flacdec->segment.stop = flacdec->segment.last_stop;
+          flacdec->segment.stop = flacdec->segment.position;
         }
         goto segment_done_and_pause;
       }
@@ -1264,6 +1251,10 @@ gst_flac_dec_sink_event (GstPad * pad, GstEvent * event)
   dec = GST_FLAC_DEC (gst_pad_get_parent (pad));
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+      res = TRUE;
+      gst_event_unref (event);
+      break;
     case GST_EVENT_FLUSH_STOP:{
       if (dec->init == FALSE) {
         FLAC__stream_decoder_flush (dec->decoder);
@@ -1272,16 +1263,13 @@ gst_flac_dec_sink_event (GstPad * pad, GstEvent * event)
       res = gst_pad_push_event (dec->srcpad, event);
       break;
     }
-    case GST_EVENT_NEWSEGMENT:{
-      GstFormat fmt;
-      gboolean update;
-      gdouble rate, applied_rate;
-      gint64 cur, stop, time;
+    case GST_EVENT_SEGMENT:{
+      GstSegment seg;
+      gint64 start, stop;
 
-      gst_event_parse_new_segment_full (event, &update, &rate, &applied_rate,
-          &fmt, &cur, &stop, &time);
+      gst_event_copy_segment (event, &seg);
 
-      if (fmt == GST_FORMAT_TIME) {
+      if (seg.format == GST_FORMAT_TIME) {
         GstFormat dformat = GST_FORMAT_DEFAULT;
 
         GST_DEBUG_OBJECT (dec, "newsegment event in TIME format => framed");
@@ -1289,28 +1277,33 @@ gst_flac_dec_sink_event (GstPad * pad, GstEvent * event)
         res = gst_pad_push_event (dec->srcpad, event);
 
         /* this won't work for the first newsegment event though ... */
-        if (gst_flac_dec_convert_src (dec->srcpad, GST_FORMAT_TIME, cur,
-                &dformat, &cur) && cur != -1 &&
-            gst_flac_dec_convert_src (dec->srcpad, GST_FORMAT_TIME, stop,
+        if (gst_flac_dec_convert_src (dec->srcpad, GST_FORMAT_TIME, seg.start,
+                &dformat, &start) && start != -1 &&
+            gst_flac_dec_convert_src (dec->srcpad, GST_FORMAT_TIME, seg.stop,
                 &dformat, &stop) && stop != -1) {
-          gst_segment_set_newsegment_full (&dec->segment, update, rate,
-              applied_rate, dformat, cur, stop, time);
+
+          seg.start = start;
+          seg.stop = stop;
+          dec->segment = seg;
+
           GST_DEBUG_OBJECT (dec, "segment %" GST_SEGMENT_FORMAT, &dec->segment);
         } else {
           GST_WARNING_OBJECT (dec, "couldn't convert time => samples");
         }
-      } else if (fmt == GST_FORMAT_BYTES || TRUE) {
+      } else if (seg.format == GST_FORMAT_BYTES || TRUE) {
+        GstSegment seg;
+
         GST_DEBUG_OBJECT (dec, "newsegment event in %s format => not framed",
-            gst_format_get_name (fmt));
+            gst_format_get_name (seg.format));
         dec->framed = FALSE;
 
         /* prepare generic newsegment event, for some reason our metadata
          * callback where we usually set this up is not being called in
          * push mode */
+        gst_segment_init (&seg, GST_FORMAT_TIME);
         if (dec->start_segment)
           gst_event_unref (dec->start_segment);
-        dec->start_segment = gst_event_new_new_segment (FALSE, 1.0,
-            GST_FORMAT_TIME, 0, -1, 0);
+        dec->start_segment = gst_event_new_segment (&seg);
 
         gst_event_unref (event);
         res = TRUE;
@@ -1437,11 +1430,13 @@ gst_flac_dec_chain (GstPad * pad, GstBuffer * buf)
         dec->cur_granulepos = GST_BUFFER_OFFSET_END (buf);
       } else {
         GstFormat dformat = GST_FORMAT_DEFAULT;
+        gint64 position;
 
         /* upstream (e.g. demuxer) presents us time,
          * convert to default samples */
         gst_flac_dec_convert_src (dec->srcpad, GST_FORMAT_TIME,
-            GST_BUFFER_TIMESTAMP (buf), &dformat, &dec->segment.last_stop);
+            GST_BUFFER_TIMESTAMP (buf), &dformat, &position);
+        dec->segment.position = position;
         dec->cur_granulepos = GST_BUFFER_OFFSET_NONE;
       }
     }
@@ -1726,14 +1721,14 @@ gst_flac_dec_src_query (GstPad * pad, GstQuery * query)
 
       if (fmt != GST_FORMAT_DEFAULT) {
         if (!gst_flac_dec_convert_src (flacdec->srcpad, GST_FORMAT_DEFAULT,
-                flacdec->segment.last_stop, &fmt, &pos)) {
+                flacdec->segment.position, &fmt, &pos)) {
           GST_DEBUG_OBJECT (flacdec, "failed to convert position into %s "
               "format", gst_format_get_name (fmt));
           res = FALSE;
           goto done;
         }
       } else {
-        pos = flacdec->segment.last_stop;
+        pos = flacdec->segment.position;
       }
 
       gst_query_set_position (query, fmt, pos);
@@ -1854,7 +1849,7 @@ gst_flac_dec_handle_seek_event (GstFlacDec * flacdec, GstEvent * event)
   gboolean only_update = FALSE;
   gboolean flush;
   gdouble rate;
-  gint64 start, last_stop;
+  gint64 start, position;
   gint64 stop;
 
   if (flacdec->streaming) {
@@ -1937,9 +1932,9 @@ gst_flac_dec_handle_seek_event (GstFlacDec * flacdec, GstEvent * event)
    * when the seek fails, we want to restore with what we were doing. */
   segment = flacdec->segment;
 
-  /* update the segment with the seek values, last_stop will contain the new
+  /* update the segment with the seek values, position will contain the new
    * position we should seek to */
-  gst_segment_set_seek (&flacdec->segment, rate, GST_FORMAT_DEFAULT,
+  gst_segment_do_seek (&flacdec->segment, rate, GST_FORMAT_DEFAULT,
       seek_flags, start_type, start, stop_type, stop, &only_update);
 
   GST_DEBUG_OBJECT (flacdec,
@@ -1952,14 +1947,14 @@ gst_flac_dec_handle_seek_event (GstFlacDec * flacdec, GstEvent * event)
           flacdec->sample_rate));
 
   GST_DEBUG_OBJECT (flacdec, "performing seek to sample %" G_GINT64_FORMAT,
-      flacdec->segment.last_stop);
+      flacdec->segment.position);
 
   /* flush sinkpad again because we need to pull and push buffers while doing
    * the seek */
   if (flush) {
     GST_DEBUG_OBJECT (flacdec, "flushing stop");
-    gst_pad_push_event (flacdec->sinkpad, gst_event_new_flush_stop ());
-    gst_pad_push_event (flacdec->srcpad, gst_event_new_flush_stop ());
+    gst_pad_push_event (flacdec->sinkpad, gst_event_new_flush_stop (TRUE));
+    gst_pad_push_event (flacdec->srcpad, gst_event_new_flush_stop (TRUE));
   }
 
   /* mark ourselves as seeking because the above lines will trigger some
@@ -1969,7 +1964,7 @@ gst_flac_dec_handle_seek_event (GstFlacDec * flacdec, GstEvent * event)
   if (!flacdec->eos) {
     GST_LOG_OBJECT (flacdec, "calling seek_absolute");
     seek_ok = FLAC__stream_decoder_seek_absolute (flacdec->decoder,
-        flacdec->segment.last_stop);
+        flacdec->segment.position);
     GST_LOG_OBJECT (flacdec, "done with seek_absolute, seek_ok=%d", seek_ok);
   } else {
     GST_LOG_OBJECT (flacdec, "not seeking, seeked after end of file");
@@ -1979,34 +1974,13 @@ gst_flac_dec_handle_seek_event (GstFlacDec * flacdec, GstEvent * event)
   flacdec->seeking = FALSE;
 
   GST_DEBUG_OBJECT (flacdec, "performed seek to sample %" G_GINT64_FORMAT,
-      flacdec->segment.last_stop);
+      flacdec->segment.position);
 
   if (!seek_ok) {
     GST_WARNING_OBJECT (flacdec, "seek failed");
     /* seek failed, restore the segment and start streaming again with
      * the previous segment values */
     flacdec->segment = segment;
-  } else if (!flush && flacdec->running) {
-    /* we are running the current segment and doing a non-flushing seek, 
-     * close the segment first based on the last_stop. */
-    GST_DEBUG_OBJECT (flacdec, "closing running segment %" G_GINT64_FORMAT
-        " to %" G_GINT64_FORMAT, segment.start, segment.last_stop);
-
-    /* convert the old segment values to time to close the old segment */
-    start = gst_util_uint64_scale_int (segment.start, GST_SECOND,
-        flacdec->sample_rate);
-    last_stop =
-        gst_util_uint64_scale_int (segment.last_stop, GST_SECOND,
-        flacdec->sample_rate);
-
-    /* queue the segment for sending in the stream thread, start and time are
-     * always the same. */
-    if (flacdec->close_segment)
-      gst_event_unref (flacdec->close_segment);
-    flacdec->close_segment =
-        gst_event_new_new_segment_full (TRUE,
-        segment.rate, segment.applied_rate, GST_FORMAT_TIME,
-        start, last_stop, start);
   }
 
   if (seek_ok) {
@@ -2018,7 +1992,7 @@ gst_flac_dec_handle_seek_event (GstFlacDec * flacdec, GstEvent * event)
    * new segment events. */
   start = gst_util_uint64_scale_int (flacdec->segment.start, GST_SECOND,
       flacdec->sample_rate);
-  last_stop = gst_util_uint64_scale_int (flacdec->segment.last_stop, GST_SECOND,
+  position = gst_util_uint64_scale_int (flacdec->segment.position, GST_SECOND,
       flacdec->sample_rate);
 
   /* for deriving a stop position for the playback segment from the seek
@@ -2032,27 +2006,33 @@ gst_flac_dec_handle_seek_event (GstFlacDec * flacdec, GstEvent * event)
 
   /* notify start of new segment when we were asked to do so. */
   if (flacdec->segment.flags & GST_SEEK_FLAG_SEGMENT) {
-    /* last_stop contains the position we start from */
+    /* position contains the position we start from */
     gst_element_post_message (GST_ELEMENT (flacdec),
         gst_message_new_segment_start (GST_OBJECT (flacdec),
-            GST_FORMAT_TIME, last_stop));
+            GST_FORMAT_TIME, position));
   }
 
   /* if the seek was ok or (when it failed) we are flushing, we need to send out
    * a new segment. If we did not flush and the seek failed, we simply do
    * nothing here and continue where we were. */
   if (seek_ok || flush) {
+    GstSegment seg;
+
     GST_DEBUG_OBJECT (flacdec, "Creating newsegment from %" GST_TIME_FORMAT
-        " to %" GST_TIME_FORMAT, GST_TIME_ARGS (last_stop),
+        " to %" GST_TIME_FORMAT, GST_TIME_ARGS (position),
         GST_TIME_ARGS (stop));
     /* now replace the old segment so that we send it in the stream thread the
      * next time it is scheduled. */
+    gst_segment_init (&seg, GST_FORMAT_TIME);
+    seg.rate = flacdec->segment.rate;
+    seg.applied_rate = flacdec->segment.applied_rate;
+    seg.start = position;
+    seg.stop = stop;
+    seg.time = position;
+
     if (flacdec->start_segment)
       gst_event_unref (flacdec->start_segment);
-    flacdec->start_segment =
-        gst_event_new_new_segment_full (FALSE,
-        flacdec->segment.rate, flacdec->segment.applied_rate, GST_FORMAT_TIME,
-        last_stop, stop, last_stop);
+    flacdec->start_segment = gst_event_new_segment (&seg);
   }
 
   /* we'll generate a discont on the next buffer */
@@ -2103,10 +2083,29 @@ gst_flac_dec_src_event (GstPad * pad, GstEvent * event)
 static gboolean
 gst_flac_dec_sink_activate (GstPad * sinkpad)
 {
-  if (gst_pad_check_pull_range (sinkpad))
-    return gst_pad_activate_pull (sinkpad, TRUE);
+  GstQuery *query;
+  gboolean pull_mode;
 
-  return gst_pad_activate_push (sinkpad, TRUE);
+  query = gst_query_new_scheduling ();
+
+  if (!gst_pad_peer_query (sinkpad, query)) {
+    gst_query_unref (query);
+    goto activate_push;
+  }
+
+  gst_query_parse_scheduling (query, &pull_mode, NULL, NULL, NULL, NULL, NULL);
+
+  if (!pull_mode)
+    goto activate_push;
+
+  GST_DEBUG_OBJECT (sinkpad, "activating pull");
+  return gst_pad_activate_pull (sinkpad, TRUE);
+
+activate_push:
+  {
+    GST_DEBUG_OBJECT (sinkpad, "activating push");
+    return gst_pad_activate_push (sinkpad, TRUE);
+  }
 }
 
 static gboolean

@@ -94,7 +94,7 @@ static GstFlowReturn gst_flac_tag_chain (GstPad * pad, GstBuffer * buffer);
 static GstStateChangeReturn gst_flac_tag_change_state (GstElement * element,
     GstStateChange transition);
 
-static gboolean gst_flac_tag_sink_setcaps (GstPad * pad, GstCaps * caps);
+static gboolean gst_flac_tag_sink_event (GstPad * pad, GstEvent * event);
 
 #define gst_flac_tag_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstFlacTag, gst_flac_tag, GST_TYPE_ELEMENT,
@@ -156,8 +156,8 @@ gst_flac_tag_init (GstFlacTag * tag)
       gst_pad_new_from_static_template (&flac_tag_sink_template, "sink");
   gst_pad_set_chain_function (tag->sinkpad,
       GST_DEBUG_FUNCPTR (gst_flac_tag_chain));
-  gst_pad_set_setcaps_function (tag->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_flac_tag_sink_setcaps));
+  gst_pad_set_event_function (tag->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_flac_tag_sink_event));
   gst_element_add_pad (GST_ELEMENT (tag), tag->sinkpad);
 
   tag->srcpad =
@@ -168,11 +168,20 @@ gst_flac_tag_init (GstFlacTag * tag)
 }
 
 static gboolean
-gst_flac_tag_sink_setcaps (GstPad * pad, GstCaps * caps)
+gst_flac_tag_sink_event (GstPad * pad, GstEvent * event)
 {
-  GstFlacTag *tag = GST_FLAC_TAG (GST_PAD_PARENT (pad));
+  gboolean ret;
+  GstFlacTag *tag;
 
-  return gst_pad_set_caps (tag->srcpad, caps);
+  tag = GST_FLAC_TAG (GST_PAD_PARENT (pad));
+
+  switch (GST_EVENT_TYPE (event)) {
+    default:
+      ret = gst_pad_event_default (pad, event);
+      break;
+  }
+
+  return ret;
 }
 
 #define FLAC_MAGIC "fLaC"
@@ -203,7 +212,6 @@ gst_flac_tag_chain (GstPad * pad, GstBuffer * buffer)
     if (gst_buffer_memcmp (id_buffer, 0, FLAC_MAGIC, FLAC_MAGIC_SIZE) == 0) {
 
       GST_DEBUG_OBJECT (tag, "pushing " FLAC_MAGIC " identifier buffer");
-      gst_buffer_set_caps (id_buffer, GST_PAD_CAPS (tag->srcpad));
       ret = gst_pad_push (tag->srcpad, id_buffer);
       if (ret != GST_FLOW_OK)
         goto cleanup;
@@ -282,7 +290,6 @@ gst_flac_tag_chain (GstPad * pad, GstBuffer * buffer)
 
     if (tag->state == GST_FLAC_TAG_STATE_WRITING_METADATA_BLOCK) {
       GST_DEBUG_OBJECT (tag, "pushing metadata block buffer");
-      gst_buffer_set_caps (metadata_buffer, GST_PAD_CAPS (tag->srcpad));
       ret = gst_pad_push (tag->srcpad, metadata_buffer);
       if (ret != GST_FLOW_OK)
         goto cleanup;
@@ -400,7 +407,6 @@ gst_flac_tag_chain (GstPad * pad, GstBuffer * buffer)
 
     GST_DEBUG_OBJECT (tag, "pushing %d byte vorbiscomment buffer", size);
 
-    gst_buffer_set_caps (buffer, GST_PAD_CAPS (tag->srcpad));
     ret = gst_pad_push (tag->srcpad, buffer);
     if (ret != GST_FLOW_OK) {
       goto cleanup;
@@ -416,7 +422,6 @@ gst_flac_tag_chain (GstPad * pad, GstBuffer * buffer)
     avail = gst_adapter_available (tag->adapter);
     if (avail > 0) {
       buffer = gst_adapter_take_buffer (tag->adapter, avail);
-      gst_buffer_set_caps (buffer, GST_PAD_CAPS (tag->srcpad));
       ret = gst_pad_push (tag->srcpad, buffer);
     }
   }
