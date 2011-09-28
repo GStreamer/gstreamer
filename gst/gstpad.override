@@ -899,6 +899,11 @@ data_probe_callback_marshal(GstPad *pad, GstMiniObject *obj, gpointer user_data)
         Py_DECREF (tmp);
     }
 
+    if (args == NULL) {
+        ret = NULL;
+        goto beach;
+    }
+
     pret = PyObject_CallObject(callback, args);
     Py_DECREF(args);
 
@@ -909,9 +914,9 @@ data_probe_callback_marshal(GstPad *pad, GstMiniObject *obj, gpointer user_data)
         ret = PyObject_IsTrue(pret)? TRUE : FALSE;
         Py_DECREF(pret);
     }
-    
-    pyg_gil_state_release(state);
 
+beach:
+    pyg_gil_state_release(state);
     return ret;
 }
 
@@ -1396,14 +1401,17 @@ pad_block_callback_marshal(GstPad *pad, gboolean blocked, gpointer user_data)
         Py_DECREF (tmp);
     }
 
+    if (args != NULL)
+        goto beach;
+
     ret = PyObject_CallObject(callback, args);
-    Py_DECREF(args);
 
     if (!ret)
         PyErr_Print();
     else
         Py_DECREF(ret);
-    
+
+beach:
     pyg_gil_state_release(state);
 }
 
