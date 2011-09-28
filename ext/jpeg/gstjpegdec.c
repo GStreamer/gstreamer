@@ -963,7 +963,7 @@ gst_jpeg_dec_decode_direct (GstJpegDec * dec, GstVideoFrame * frame)
   gint lines, v_samp[3];
   guchar *base[3], *last[3];
   gint stride[3];
-  guint width, height;
+  guint height;
 
   line[0] = y;
   line[1] = u;
@@ -976,7 +976,6 @@ gst_jpeg_dec_decode_direct (GstJpegDec * dec, GstVideoFrame * frame)
   if (G_UNLIKELY (v_samp[0] > 2 || v_samp[1] > 2 || v_samp[2] > 2))
     goto format_not_supported;
 
-  width = GST_VIDEO_FRAME_WIDTH (frame);
   height = GST_VIDEO_FRAME_HEIGHT (frame);
 
   for (i = 0; i < 3; i++) {

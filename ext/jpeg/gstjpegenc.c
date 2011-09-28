@@ -511,7 +511,7 @@ gst_jpegenc_chain (GstPad * pad, GstBuffer * buf)
 {
   GstFlowReturn ret;
   GstJpegEnc *jpegenc;
-  guint height, width;
+  guint height;
   guchar *base[3], *end[3];
   guint stride[3];
   gint i, j, k;
@@ -528,7 +528,6 @@ gst_jpegenc_chain (GstPad * pad, GstBuffer * buf)
     goto invalid_frame;
 
   height = GST_VIDEO_FRAME_HEIGHT (&frame);
-  width = GST_VIDEO_FRAME_WIDTH (&frame);
 
   GST_LOG_OBJECT (jpegenc, "got buffer of %lu bytes",
       gst_buffer_get_size (buf));

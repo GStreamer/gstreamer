@@ -171,9 +171,6 @@ static gboolean
 gst_flac_tag_sink_event (GstPad * pad, GstEvent * event)
 {
   gboolean ret;
-  GstFlacTag *tag;
-
-  tag = GST_FLAC_TAG (GST_PAD_PARENT (pad));
 
   switch (GST_EVENT_TYPE (event)) {
     default:
