@@ -785,7 +785,7 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buf,
 
   GST_LOG_OBJECT (dec, "decoding frame");
 
-  n = opus_decode (dec->state, data, size, out_data, dec->frame_samples, TRUE);
+  n = opus_decode (dec->state, data, size, out_data, dec->frame_samples, 0);
   if (n < 0) {
     GST_ELEMENT_ERROR (dec, STREAM, DECODE, ("Decoding error: %d", n), (NULL));
     return GST_FLOW_ERROR;
