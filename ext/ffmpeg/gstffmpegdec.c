@@ -137,6 +137,8 @@ struct _GstFFMpegDec
   /* QoS stuff *//* with LOCK */
   gdouble proportion;
   GstClockTime earliest_time;
+  gint64 processed;
+  gint64 dropped;
 
   /* clipping segment */
   GstSegment segment;
@@ -526,6 +528,8 @@ static void
 gst_ffmpegdec_reset_qos (GstFFMpegDec * ffmpegdec)
 {
   gst_ffmpegdec_update_qos (ffmpegdec, 0.5, GST_CLOCK_TIME_NONE);
+  ffmpegdec->processed = 0;
+  ffmpegdec->dropped = 0;
 }
 
 static void
@@ -808,6 +812,12 @@ gst_ffmpegdec_setcaps (GstFFMpegDec * ffmpegdec, GstCaps * caps)
     if (format == NULL || strcmp (format, "raw") == 0) {
       ffmpegdec->turnoff_parser = TRUE;
     }
+  }
+
+  /* for FLAC, don't parse if it's already parsed */
+  if (oclass->in_plugin->id == CODEC_ID_FLAC) {
+    if (gst_structure_has_field (structure, "streamheader"))
+      ffmpegdec->turnoff_parser = TRUE;
   }
 
   /* workaround encoder bugs */
@@ -1431,6 +1441,7 @@ gst_ffmpegdec_do_qos (GstFFMpegDec * ffmpegdec, GstClockTime timestamp,
   GstClockTimeDiff diff;
   gdouble proportion;
   GstClockTime qostime, earliest_time;
+  gboolean res = TRUE;
 
   *mode_switch = FALSE;
 
@@ -1481,11 +1492,13 @@ gst_ffmpegdec_do_qos (GstFFMpegDec * ffmpegdec, GstClockTime timestamp,
   }
 
 no_qos:
+  ffmpegdec->processed++;
   return TRUE;
 
 skipping:
   {
-    return FALSE;
+    res = FALSE;
+    goto drop_qos;
   }
 normal_mode:
   {
@@ -1494,6 +1507,7 @@ normal_mode:
       *mode_switch = TRUE;
       GST_DEBUG_OBJECT (ffmpegdec, "QOS: normal mode %g < 0.4", proportion);
     }
+    ffmpegdec->processed++;
     return TRUE;
   }
 skip_frame:
@@ -1504,7 +1518,27 @@ skip_frame:
       GST_DEBUG_OBJECT (ffmpegdec,
           "QOS: hurry up, diff %" G_GINT64_FORMAT " >= 0", diff);
     }
-    return TRUE;
+    goto drop_qos;
+  }
+drop_qos:
+  {
+    GstClockTime stream_time, jitter;
+    GstMessage *qos_msg;
+
+    ffmpegdec->dropped++;
+    stream_time =
+        gst_segment_to_stream_time (&ffmpegdec->segment, GST_FORMAT_TIME,
+        timestamp);
+    jitter = GST_CLOCK_DIFF (qostime, earliest_time);
+    qos_msg =
+        gst_message_new_qos (GST_OBJECT_CAST (ffmpegdec), FALSE, qostime,
+        stream_time, timestamp, GST_CLOCK_TIME_NONE);
+    gst_message_set_qos_values (qos_msg, jitter, proportion, 1000000);
+    gst_message_set_qos_stats (qos_msg, GST_FORMAT_BUFFERS,
+        ffmpegdec->processed, ffmpegdec->dropped);
+    gst_element_post_message (GST_ELEMENT_CAST (ffmpegdec), qos_msg);
+
+    return res;
   }
 }
 
@@ -3031,7 +3065,12 @@ gst_ffmpegdec_register (GstPlugin * plugin)
         !strcmp (in_plugin->name, "mp1") ||
         !strcmp (in_plugin->name, "mp2") ||
         !strcmp (in_plugin->name, "libfaad") ||
-        !strcmp (in_plugin->name, "mpeg4aac")) {
+        !strcmp (in_plugin->name, "mpeg4aac") ||
+        !strcmp (in_plugin->name, "ass") ||
+        !strcmp (in_plugin->name, "srt") ||
+        !strcmp (in_plugin->name, "pgssub") ||
+        !strcmp (in_plugin->name, "dvdsub") ||
+        !strcmp (in_plugin->name, "dvbsub")) {
       GST_LOG ("Ignoring decoder %s", in_plugin->name);
       goto next;
     }
