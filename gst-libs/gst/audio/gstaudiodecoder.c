@@ -287,9 +287,38 @@ static gboolean gst_audio_decoder_sink_query (GstPad * pad, GstQuery * query);
 static const GstQueryType *gst_audio_decoder_get_query_types (GstPad * pad);
 static void gst_audio_decoder_reset (GstAudioDecoder * dec, gboolean full);
 
+static GstElementClass *parent_class = NULL;
 
-#define gst_audio_decoder_parent_class parent_class
-G_DEFINE_TYPE (GstAudioDecoder, gst_audio_decoder, GST_TYPE_ELEMENT);
+static void gst_audio_decoder_class_init (GstAudioDecoderClass * klass);
+static void gst_audio_decoder_init (GstAudioDecoder * dec,
+    GstAudioDecoderClass * klass);
+
+GType
+gst_audio_decoder_get_type (void)
+{
+  static volatile gsize audio_decoder_type = 0;
+
+  if (g_once_init_enter (&audio_decoder_type)) {
+    GType _type;
+    static const GTypeInfo audio_decoder_info = {
+      sizeof (GstAudioDecoderClass),
+      NULL,
+      NULL,
+      (GClassInitFunc) gst_audio_decoder_class_init,
+      NULL,
+      NULL,
+      sizeof (GstAudioDecoder),
+      0,
+      (GInstanceInitFunc) gst_audio_decoder_init,
+    };
+
+    _type = g_type_register_static (GST_TYPE_ELEMENT,
+        "GstAudioDecoder", &audio_decoder_info, G_TYPE_FLAG_ABSTRACT);
+    g_once_init_leave (&audio_decoder_type, _type);
+  }
+  return audio_decoder_type;
+}
+
 
 static void
 gst_audio_decoder_class_init (GstAudioDecoderClass * klass)
@@ -333,9 +362,8 @@ gst_audio_decoder_class_init (GstAudioDecoderClass * klass)
 }
 
 static void
-gst_audio_decoder_init (GstAudioDecoder * dec)
+gst_audio_decoder_init (GstAudioDecoder * dec, GstAudioDecoderClass * klass)
 {
-  GstAudioDecoderClass *klass = GST_AUDIO_DECODER_GET_CLASS (dec);
   GstPadTemplate *pad_template;
 
   GST_DEBUG_OBJECT (dec, "gst_audio_decoder_init");
@@ -455,10 +483,18 @@ gst_audio_decoder_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
-/* automagically perform sanity checking of src caps;
- * also extracts output data format */
+/**
+ * gst_audio_decoder_set_outcaps:
+ * @dec: a #GstAudioDecoder
+ * @caps: #GstCaps
+ *
+ * Configure output @caps on the srcpad of @dec. Also perform
+ * sanity checking of @caps and extracts output data format
+ *
+ * Returns: %TRUE on success.
+ * */
 gboolean
-gst_audio_decoder_src_setcaps (GstAudioDecoder * dec, GstCaps * caps)
+gst_audio_decoder_set_outcaps (GstAudioDecoder * dec, GstCaps * caps)
 {
   gboolean res = TRUE;
   guint old_rate;
@@ -485,6 +521,8 @@ gst_audio_decoder_src_setcaps (GstAudioDecoder * dec, GstCaps * caps)
 
 done:
   GST_AUDIO_DECODER_STREAM_UNLOCK (dec);
+
+  res = gst_pad_set_caps (dec->srcpad, caps);
 
   gst_object_unref (dec);
   return res;
@@ -543,7 +581,7 @@ gst_audio_decoder_setup (GstAudioDecoder * dec)
   gst_query_unref (query);
 
   /* normalize to bool */
-  dec->priv->agg = ! !res;
+  dec->priv->agg = !!res;
 }
 
 /* mini aggregator combining output buffers into fewer larger ones,

@@ -234,6 +234,9 @@ struct _GstAudioDecoderClass
 
 GType             gst_audio_decoder_get_type (void);
 
+gboolean          gst_audio_decoder_set_outcaps  (GstAudioDecoder * dec,
+                                                  GstCaps * caps);
+
 GstFlowReturn     gst_audio_decoder_finish_frame (GstAudioDecoder * dec,
                                                   GstBuffer * buf, gint frames);
 
