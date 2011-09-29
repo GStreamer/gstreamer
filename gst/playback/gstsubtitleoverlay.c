@@ -1731,9 +1731,11 @@ gst_subtitle_overlay_video_sink_setcaps (GstSubtitleOverlay * self,
   }
   GST_SUBTITLE_OVERLAY_UNLOCK (self);
 
-out:
   if (target)
     gst_object_unref (target);
+
+out:
+
   return ret;
 }
 
