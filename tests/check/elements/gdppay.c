@@ -29,23 +29,19 @@
  * get_peer, and then remove references in every test function */
 static GstPad *mysrcpad, *myshsrcpad, *mysinkpad;
 
+#define FORMATS "{ S8, "GST_AUDIO_NE(S16)" }"
+
 #define AUDIO_CAPS_TEMPLATE_STRING \
-  "audio/x-raw-int, " \
+  "audio/x-raw, " \
+    "format = (string) "FORMATS", " \
     "rate = (int) [ 1, MAX ], " \
-    "channels = (int) [ 1, 8 ], " \
-    "endianness = (int) BYTE_ORDER, " \
-    "width = (int) {8, 16}, " \
-    "depth = (int) {8, 16}, " \
-    "signed = (boolean) true"
+    "channels = (int) [ 1, 8 ]"
 
 #define AUDIO_CAPS_STRING \
-  "audio/x-raw-int, " \
+  "audio/x-raw, " \
+    "format = (string) "GST_AUDIO_NE(S16)", " \
     "rate = (int) 1000, " \
-    "channels = (int) 2, " \
-    "endianness = (int) BYTE_ORDER, " \
-    "width = (int) 16, " \
-    "depth = (int) 16, " \
-    "signed = (boolean) true"
+    "channels = (int) 2"
 
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
