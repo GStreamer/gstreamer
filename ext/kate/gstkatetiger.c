@@ -725,6 +725,7 @@ gst_kate_tiger_video_chain (GstPad * pad, GstBuffer * buf)
   GstFlowReturn rflow = GST_FLOW_OK;
   unsigned char *ptr;
   int ret;
+  kate_float t;
 
   GST_KATE_TIGER_MUTEX_LOCK (tiger);
 
@@ -743,45 +744,58 @@ gst_kate_tiger_video_chain (GstPad * pad, GstBuffer * buf)
     g_cond_broadcast (tiger->cond);
   }
 
-  /* draw on it */
+  /* Update first with a dummy buffer pointer we cannot write to. If there is nothing
+     to draw, we will not have to make it writeable */
+  ptr = GST_BUFFER_DATA (buf);
+  ret =
+      tiger_renderer_set_buffer (tiger->tr, ptr, tiger->video_width,
+      tiger->video_height, tiger->video_width * 4, tiger->swap_rgb);
+  if (G_UNLIKELY (ret < 0)) {
+    GST_WARNING_OBJECT (tiger,
+        "Tiger renderer failed to set buffer to video frame: %d", ret);
+    goto pass;
+  }
+
+  /* update the renderer at the time of the video frame */
+  t = gst_kate_tiger_get_time (tiger);
+  GST_LOG_OBJECT (tiger, "Video segment calc: last stop %ld, time %.3f",
+      (long) tiger->video_segment.last_stop, t);
+  ret = tiger_renderer_update (tiger->tr, t, 1);
+  if (G_UNLIKELY (ret < 0)) {
+    GST_WARNING_OBJECT (tiger, "Tiger renderer failed to update: %d", ret);
+    goto pass;
+  }
+
+  /* if there nothing to draw, we can just push the video buffer as is */
+  if (ret > 0)
+    goto pass;
+
+  /* there is something to draw, so first make the buffer writable */
   buf = gst_buffer_make_writable (buf);
   if (G_UNLIKELY (!buf)) {
     GST_WARNING_OBJECT (tiger, "Failed to make video buffer writable");
-  } else {
-    ptr = GST_BUFFER_DATA (buf);
-    if (!ptr) {
-      GST_WARNING_OBJECT (tiger,
-          "Failed to get a pointer to video buffer data");
-    } else {
-      ret =
-          tiger_renderer_set_buffer (tiger->tr, ptr, tiger->video_width,
-          tiger->video_height, tiger->video_width * 4, tiger->swap_rgb);
-      if (G_UNLIKELY (ret < 0)) {
-        GST_WARNING_OBJECT (tiger,
-            "Tiger renderer failed to set buffer to video frame: %d", ret);
-      } else {
-        kate_float t = gst_kate_tiger_get_time (tiger);
-        GST_LOG_OBJECT (tiger, "Video segment calc: last stop %ld, time %.3f",
-            (long) tiger->video_segment.last_stop, t);
-
-        ret = tiger_renderer_update (tiger->tr, t, 1);
-        if (G_UNLIKELY (ret < 0)) {
-          GST_WARNING_OBJECT (tiger, "Tiger renderer failed to update: %d",
-              ret);
-        } else {
-          ret = tiger_renderer_render (tiger->tr);
-          if (G_UNLIKELY (ret < 0)) {
-            GST_WARNING_OBJECT (tiger,
-                "Tiger renderer failed to render to video frame: %d", ret);
-          } else {
-            GST_LOG_OBJECT (tiger,
-                "Tiger renderer rendered on video frame at %f", t);
-          }
-        }
-      }
-    }
+    goto pass;
   }
 
+  /* and setup that buffer before rendering */
+  ptr = GST_BUFFER_DATA (buf);
+  ret =
+      tiger_renderer_set_buffer (tiger->tr, ptr, tiger->video_width,
+      tiger->video_height, tiger->video_width * 4, tiger->swap_rgb);
+  if (G_UNLIKELY (ret < 0)) {
+    GST_WARNING_OBJECT (tiger,
+        "Tiger renderer failed to set buffer to video frame: %d", ret);
+    goto pass;
+  }
+  ret = tiger_renderer_render (tiger->tr);
+  if (G_UNLIKELY (ret < 0)) {
+    GST_WARNING_OBJECT (tiger,
+        "Tiger renderer failed to render to video frame: %d", ret);
+  } else {
+    GST_LOG_OBJECT (tiger, "Tiger renderer rendered on video frame at %f", t);
+  }
+
+pass:
   GST_KATE_TIGER_MUTEX_UNLOCK (tiger);
 
   rflow = gst_pad_push (tiger->srcpad, buf);
