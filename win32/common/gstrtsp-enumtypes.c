@@ -279,6 +279,8 @@ gst_rtsp_header_field_get_type (void)
           "x-server-ip-address"},
       {GST_RTSP_HDR_X_SESSIONCOOKIE, "GST_RTSP_HDR_X_SESSIONCOOKIE",
           "x-sessioncookie"},
+      {GST_RTSP_HDR_RTCP_INTERVAL, "GST_RTSP_HDR_RTCP_INTERVAL",
+          "rtcp-interval"},
       {GST_RTSP_HDR_LAST, "GST_RTSP_HDR_LAST", "last"},
       {0, NULL, NULL}
     };

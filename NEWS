@@ -1,9 +1,9 @@
-This is GStreamer Base Plug-ins 0.11.0, "Just like a pacifier"
+This is GStreamer Base Plug-ins 0.11.1, "A handful sometimes, A heartful always"
 
-New in 0.11.0:
+New in 0.11.1:
 
       * Ported to 0.11.0 core API changes
-      * Reworked video caps
-      * Improved video helper library
-      * Numerous cleanups and improvements
-
+      * Rename GstXOverlay -> GstVideoOverlay
+      * Reworked audio caps
+      * Support for multiple frames in buffers
+      * Add video colorimetry support

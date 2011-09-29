@@ -1,13 +1,14 @@
 
-Release notes for GStreamer Base Plug-ins 0.11.0 "Just like a pacifier"
+Release notes for GStreamer Base Plug-ins 0.11.1 "A handful sometimes, A heartful always"
         
 
 
 The GStreamer team is proud to announce a new release
-in the 0.11.x unstable series of the GStreamer Base Plug-ins.
+in the 0.11.x unstable series of the
+GStreamer Base Plug-ins.
 
 
-The 0.11.x series is an unstable series targeted at developers
+The 0.11.x series is an unstable series targeted at developers.
 It is not API or ABI compatible with the stable 0.10.x series.
 It is, however, parallel installable with the 0.10.x series.
 
@@ -31,8 +32,8 @@ This module contains elements for, among others:
   typefind functions
   audio processing: audioconvert, adder, audiorate, audioresample, volume
   visualisation: libvisual
-  video processing: ffmpegcolorspace
-  aggregate elements: uridecodebin, playbin2, decodebin2, decodebin, playbin, encodebin
+  video processing: videoconvert
+  aggregate elements: uridecodebin, playbin, decodebin, encodebin
   libraries: app, audio, cdda, fft, interfaces, netbuffer, pbutils, riff, rtp, rtsp, sdp, tag, video
 
 
@@ -55,8 +56,10 @@ contains a set of less supported plug-ins that haven't passed the
 Features of this release
     
       * Parallel installability with 0.10.x series
-      * Ported to the new 0.11 core API
-      * Improved video helper classes
+      * Rename GstXOverlay -> GstVideoOverlay
+      * Reworked audio caps
+      * Support for multiple frames in buffers
+      * Add video colorimetry support
 There were no bugs fixed in this release
     
 
@@ -87,16 +90,38 @@ Applications
   
 Contributors to this release
     
+      * Age Bosma
+      * Alessandro Decina
+      * Alex Lancaster
+      * Benjamin Otte
+      * Christian Fredrik Kalager Schaller
       * David Schleef
       * Edward Hervey
+      * Erich Schubert
+      * Iago Toral
       * Jan Schmidt
-      * Jonathan Matthew
-      * Luis de Bethencourt
+      * Jason Kivlighn
+      * Josep Torra
+      * LoneStar
       * Mark Nauwelaerts
-      * Philip Jägenstedt
-      * Piotr Fusik
+      * Monty Montgomery
+      * Nicolas Dufresne
+      * Olivier Crête
+      * Raimo Järvi
+      * René Stadler
       * Robert Swain
+      * Sebastian Dröge
+      * Sergey Scobich
+      * Sergey Scobich)
+      * Sjoerd Simons
+      * Stefan Kost
+      * Stefan Sauer
+      * Sébastien Moutte
       * Thiago Santos
+      * Thomas Vander Stichele
       * Tim-Philipp Müller
+      * Tommi Myöhänen
+      * Vincent Penquerc'h
       * Wim Taymans
+      * Youness Alaoui
  
