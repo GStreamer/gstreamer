@@ -33,7 +33,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-08-20 12:18+0100\n"
+"POT-Creation-Date: 2011-09-29 17:27+0200\n"
 "PO-Revision-Date: 2011-04-28 16:38+0100\n"
 "Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
@@ -427,9 +427,6 @@ msgstr "FFMpeg v1"
 msgid "Lossless MSZH"
 msgstr "Lossless MSZH"
 
-msgid "Uncompressed Gray Image"
-msgstr "Ukomprimeret gråtonebillede"
-
 msgid "Run-length encoding"
 msgstr "Kørsels-længde indkodning"
 
@@ -442,62 +439,35 @@ msgstr "TMPlayer undertekstformat"
 msgid "Kate subtitle format"
 msgstr "Undertekstformat Kate"
 
-msgid "Uncompressed planar YUV 4:2:0"
-msgstr "Ukomprimeret plan-YUV 4:2:0"
+#, fuzzy
+msgid "Uncompressed video"
+msgstr "Ukomprimeret YUV"
 
-msgid "Uncompressed planar YVU 4:2:0"
-msgstr "Ukomprimeret plan-YVU 4:2:0"
+#, fuzzy
+msgid "Uncompressed gray"
+msgstr "Ukomprimeret gråtonebillede"
 
-msgid "Uncompressed packed YUV 4:2:2"
-msgstr "Ukomprimeret pakket YUV 4:2:2"
-
-msgid "Uncompressed packed YUV 4:1:0"
-msgstr "Ukomprimeret pakket YUV 4:1:0"
-
-msgid "Uncompressed packed YVU 4:1:0"
-msgstr "Ukomprimeret pakket YVU 4:1:0"
-
-msgid "Uncompressed packed YUV 4:1:1"
-msgstr "Ukomprimeret pakket YUV 4:1:1"
-
-msgid "Uncompressed packed YUV 4:4:4"
-msgstr "Ukomprimeret pakket YUV 4:4:4"
-
-msgid "Uncompressed planar YUV 4:2:2"
-msgstr "Ukomprimeret plan-YUV 4:2:2"
-
-msgid "Uncompressed planar YUV 4:1:1"
-msgstr "Ukomprimeret plan-YUV 4:1:1"
-
-msgid "Uncompressed black and white Y-plane"
-msgstr "Ukomprimeret sort og hvid Y-plan"
-
-msgid "Uncompressed YUV"
+#, fuzzy, c-format
+msgid "Uncompressed %s YUV %s"
 msgstr "Ukomprimeret YUV"
 
 # Findes dette ord palettet på dansk ? evt. indekseret
 # Ukomprimeret palettet %d-bit %s
-#, c-format
-msgid "Uncompressed palettized %d-bit %s"
+#, fuzzy, c-format
+msgid "Uncompressed %s%d-bit %s"
 msgstr "Ukomprimeret indekseret %d-bit %s"
 
 #, c-format
 msgid "DivX MPEG-4 Version %d"
 msgstr "DivX MPEG-4 version %d"
 
-#, c-format
-msgid "Raw %d-bit PCM audio"
+#, fuzzy
+msgid "Uncompressed audio"
+msgstr "Ukomprimeret YUV"
+
+#, fuzzy, c-format
+msgid "Raw %d-bit %s audio"
 msgstr "Ufiltreret %d-bit PCM audio"
-
-msgid "Raw PCM audio"
-msgstr "Ufiltreret PCM audio"
-
-#, c-format
-msgid "Raw %d-bit floating-point audio"
-msgstr "Ufiltreret %d-bit flydende-komma audio"
-
-msgid "Raw floating-point audio"
-msgstr "Ufiltreret flydende-komma audio"
 
 msgid "Audio CD source"
 msgstr "Audio cd kilde"
@@ -577,6 +547,45 @@ msgstr "Ukendt indkodeelement"
 
 msgid "Plugin or element of unknown type"
 msgstr "Plugin eller element af ukendt type"
+
+#~ msgid "Uncompressed planar YUV 4:2:0"
+#~ msgstr "Ukomprimeret plan-YUV 4:2:0"
+
+#~ msgid "Uncompressed planar YVU 4:2:0"
+#~ msgstr "Ukomprimeret plan-YVU 4:2:0"
+
+#~ msgid "Uncompressed packed YUV 4:2:2"
+#~ msgstr "Ukomprimeret pakket YUV 4:2:2"
+
+#~ msgid "Uncompressed packed YUV 4:1:0"
+#~ msgstr "Ukomprimeret pakket YUV 4:1:0"
+
+#~ msgid "Uncompressed packed YVU 4:1:0"
+#~ msgstr "Ukomprimeret pakket YVU 4:1:0"
+
+#~ msgid "Uncompressed packed YUV 4:1:1"
+#~ msgstr "Ukomprimeret pakket YUV 4:1:1"
+
+#~ msgid "Uncompressed packed YUV 4:4:4"
+#~ msgstr "Ukomprimeret pakket YUV 4:4:4"
+
+#~ msgid "Uncompressed planar YUV 4:2:2"
+#~ msgstr "Ukomprimeret plan-YUV 4:2:2"
+
+#~ msgid "Uncompressed planar YUV 4:1:1"
+#~ msgstr "Ukomprimeret plan-YUV 4:1:1"
+
+#~ msgid "Uncompressed black and white Y-plane"
+#~ msgstr "Ukomprimeret sort og hvid Y-plan"
+
+#~ msgid "Raw PCM audio"
+#~ msgstr "Ufiltreret PCM audio"
+
+#~ msgid "Raw %d-bit floating-point audio"
+#~ msgstr "Ufiltreret %d-bit flydende-komma audio"
+
+#~ msgid "Raw floating-point audio"
+#~ msgstr "Ufiltreret flydende-komma audio"
 
 #~ msgid "Could not open vfs file \"%s\" for writing: %s."
 #~ msgstr "Kunne ikke åbne vfs-filen \"%s\" til skrivning: %s."

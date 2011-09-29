@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-08-20 12:18+0100\n"
+"POT-Creation-Date: 2011-09-29 17:27+0200\n"
 "PO-Revision-Date: 2010-11-08 15:34+0100\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
@@ -393,9 +393,6 @@ msgstr "FFMpeg v1"
 msgid "Lossless MSZH"
 msgstr "Bezstratové MSZH"
 
-msgid "Uncompressed Gray Image"
-msgstr "Nekomprimovaný šedotónový obrázok"
-
 msgid "Run-length encoding"
 msgstr "Kódovanie počas prehrávania"
 
@@ -408,60 +405,33 @@ msgstr "Titulkový formát TMPlayer"
 msgid "Kate subtitle format"
 msgstr "Formát titulkov Kate"
 
-msgid "Uncompressed planar YUV 4:2:0"
-msgstr "Nekomprimovaný planar YUV 4:2:0"
-
-msgid "Uncompressed planar YVU 4:2:0"
-msgstr "Nekomprimovaný planar YVU 4:2:0"
-
-msgid "Uncompressed packed YUV 4:2:2"
-msgstr "Nekomprimovaný pakovaný YUV 4:2:2"
-
-msgid "Uncompressed packed YUV 4:1:0"
-msgstr "Nekomprimovaný pakovaný YUV 4:1:0"
-
-msgid "Uncompressed packed YVU 4:1:0"
-msgstr "Nekomprimovaný pakovaný YVU 4:1:0"
-
-msgid "Uncompressed packed YUV 4:1:1"
-msgstr "Nekomprimovaný pakovaný YUV 4:1:1"
-
-msgid "Uncompressed packed YUV 4:4:4"
-msgstr "Nekomprimovaný pakovaný YUV 4:4:4"
-
-msgid "Uncompressed planar YUV 4:2:2"
-msgstr "Nekomprimovaný planar YUV 4:2:2"
-
-msgid "Uncompressed planar YUV 4:1:1"
-msgstr "Nekomprimovaný planar YUV 4:1:1"
-
-msgid "Uncompressed black and white Y-plane"
-msgstr "Nekomprimovaný čierno-biely Y-plane"
-
-msgid "Uncompressed YUV"
+#, fuzzy
+msgid "Uncompressed video"
 msgstr "Nekomprimovaný YUV"
 
-#, c-format
-msgid "Uncompressed palettized %d-bit %s"
+#, fuzzy
+msgid "Uncompressed gray"
+msgstr "Nekomprimovaný šedotónový obrázok"
+
+#, fuzzy, c-format
+msgid "Uncompressed %s YUV %s"
+msgstr "Nekomprimovaný YUV"
+
+#, fuzzy, c-format
+msgid "Uncompressed %s%d-bit %s"
 msgstr "Nekomprimovaný paletizovaný %d-bit %s"
 
 #, c-format
 msgid "DivX MPEG-4 Version %d"
 msgstr "DivX MPEG-4 Verzie %d"
 
-#, c-format
-msgid "Raw %d-bit PCM audio"
+#, fuzzy
+msgid "Uncompressed audio"
+msgstr "Nekomprimovaný YUV"
+
+#, fuzzy, c-format
+msgid "Raw %d-bit %s audio"
 msgstr "Surový %d-bit PCM zvuk"
-
-msgid "Raw PCM audio"
-msgstr "Surový PCM zvuk"
-
-#, c-format
-msgid "Raw %d-bit floating-point audio"
-msgstr "Surový %d-bit zvuk s pohyblivou desatinnou čiarkou"
-
-msgid "Raw floating-point audio"
-msgstr "Surový zvuk s pohyblivou desatinnou čiarkou"
 
 msgid "Audio CD source"
 msgstr "Zdroj zvukové CD"
@@ -540,6 +510,45 @@ msgstr "Neznámy prvok enkodéra"
 
 msgid "Plugin or element of unknown type"
 msgstr "Neznámy typ zásuvného modulu alebo prvku"
+
+#~ msgid "Uncompressed planar YUV 4:2:0"
+#~ msgstr "Nekomprimovaný planar YUV 4:2:0"
+
+#~ msgid "Uncompressed planar YVU 4:2:0"
+#~ msgstr "Nekomprimovaný planar YVU 4:2:0"
+
+#~ msgid "Uncompressed packed YUV 4:2:2"
+#~ msgstr "Nekomprimovaný pakovaný YUV 4:2:2"
+
+#~ msgid "Uncompressed packed YUV 4:1:0"
+#~ msgstr "Nekomprimovaný pakovaný YUV 4:1:0"
+
+#~ msgid "Uncompressed packed YVU 4:1:0"
+#~ msgstr "Nekomprimovaný pakovaný YVU 4:1:0"
+
+#~ msgid "Uncompressed packed YUV 4:1:1"
+#~ msgstr "Nekomprimovaný pakovaný YUV 4:1:1"
+
+#~ msgid "Uncompressed packed YUV 4:4:4"
+#~ msgstr "Nekomprimovaný pakovaný YUV 4:4:4"
+
+#~ msgid "Uncompressed planar YUV 4:2:2"
+#~ msgstr "Nekomprimovaný planar YUV 4:2:2"
+
+#~ msgid "Uncompressed planar YUV 4:1:1"
+#~ msgstr "Nekomprimovaný planar YUV 4:1:1"
+
+#~ msgid "Uncompressed black and white Y-plane"
+#~ msgstr "Nekomprimovaný čierno-biely Y-plane"
+
+#~ msgid "Raw PCM audio"
+#~ msgstr "Surový PCM zvuk"
+
+#~ msgid "Raw %d-bit floating-point audio"
+#~ msgstr "Surový %d-bit zvuk s pohyblivou desatinnou čiarkou"
+
+#~ msgid "Raw floating-point audio"
+#~ msgstr "Surový zvuk s pohyblivou desatinnou čiarkou"
 
 #~ msgid "Could not open vfs file \"%s\" for writing: %s."
 #~ msgstr "Nepodarilo sa otvoriť vfs súbor \"%s\" pre zápis: %s."

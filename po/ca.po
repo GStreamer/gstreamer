@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-08-20 12:18+0100\n"
+"POT-Creation-Date: 2011-09-29 17:27+0200\n"
 "PO-Revision-Date: 2010-11-04 23:13+0100\n"
 "Last-Translator: Jordi Mallach <jordi@sindominio.net>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -388,9 +388,6 @@ msgstr "FFMpeg v1"
 msgid "Lossless MSZH"
 msgstr "MSZH sense pèrdua"
 
-msgid "Uncompressed Gray Image"
-msgstr "Imatge en escala de grisos no comprimida"
-
 msgid "Run-length encoding"
 msgstr ""
 
@@ -403,60 +400,33 @@ msgstr "Format de subtítols TMPlayer"
 msgid "Kate subtitle format"
 msgstr "Format de subtítols Kate"
 
-msgid "Uncompressed planar YUV 4:2:0"
-msgstr ""
-
-msgid "Uncompressed planar YVU 4:2:0"
-msgstr ""
-
-msgid "Uncompressed packed YUV 4:2:2"
-msgstr ""
-
-msgid "Uncompressed packed YUV 4:1:0"
-msgstr ""
-
-msgid "Uncompressed packed YVU 4:1:0"
-msgstr ""
-
-msgid "Uncompressed packed YUV 4:1:1"
-msgstr ""
-
-msgid "Uncompressed packed YUV 4:4:4"
-msgstr ""
-
-msgid "Uncompressed planar YUV 4:2:2"
-msgstr ""
-
-msgid "Uncompressed planar YUV 4:1:1"
-msgstr ""
-
-msgid "Uncompressed black and white Y-plane"
-msgstr ""
-
-msgid "Uncompressed YUV"
+#, fuzzy
+msgid "Uncompressed video"
 msgstr "YUV sense comprimir"
 
-#, c-format
-msgid "Uncompressed palettized %d-bit %s"
-msgstr ""
+#, fuzzy
+msgid "Uncompressed gray"
+msgstr "Imatge en escala de grisos no comprimida"
+
+#, fuzzy, c-format
+msgid "Uncompressed %s YUV %s"
+msgstr "YUV sense comprimir"
+
+#, fuzzy, c-format
+msgid "Uncompressed %s%d-bit %s"
+msgstr "YUV sense comprimir"
 
 #, c-format
 msgid "DivX MPEG-4 Version %d"
 msgstr "DivX MPEG-4 versió %d"
 
-#, c-format
-msgid "Raw %d-bit PCM audio"
+#, fuzzy
+msgid "Uncompressed audio"
+msgstr "YUV sense comprimir"
+
+#, fuzzy, c-format
+msgid "Raw %d-bit %s audio"
 msgstr "Àudio en cru de %d-bit"
-
-msgid "Raw PCM audio"
-msgstr "Àudio PCM en cru"
-
-#, c-format
-msgid "Raw %d-bit floating-point audio"
-msgstr "Àudio en cru de %d-bit en coma flotant"
-
-msgid "Raw floating-point audio"
-msgstr "Àudio en cru en coma flotant"
 
 msgid "Audio CD source"
 msgstr "Font de CD d'àudio"
@@ -535,6 +505,15 @@ msgstr "L'element codificador és desconegut"
 
 msgid "Plugin or element of unknown type"
 msgstr "El connector o element és de tipus desconegut"
+
+#~ msgid "Raw PCM audio"
+#~ msgstr "Àudio PCM en cru"
+
+#~ msgid "Raw %d-bit floating-point audio"
+#~ msgstr "Àudio en cru de %d-bit en coma flotant"
+
+#~ msgid "Raw floating-point audio"
+#~ msgstr "Àudio en cru en coma flotant"
 
 #~ msgid "Could not open vfs file \"%s\" for writing: %s."
 #~ msgstr "No s'ha pogut obrir el fitxer vfs «%s» per a l'escriptura: %s."

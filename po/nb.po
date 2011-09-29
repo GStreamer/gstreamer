@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-08-20 12:18+0100\n"
+"POT-Creation-Date: 2011-09-29 17:27+0200\n"
 "PO-Revision-Date: 2010-10-24 21:44+0200\n"
 "Last-Translator: Kjartan Maraas <kmaraas@gnome.org>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
@@ -387,9 +387,6 @@ msgstr ""
 msgid "Lossless MSZH"
 msgstr ""
 
-msgid "Uncompressed Gray Image"
-msgstr ""
-
 msgid "Run-length encoding"
 msgstr ""
 
@@ -402,59 +399,29 @@ msgstr ""
 msgid "Kate subtitle format"
 msgstr ""
 
-msgid "Uncompressed planar YUV 4:2:0"
+msgid "Uncompressed video"
 msgstr ""
 
-msgid "Uncompressed planar YVU 4:2:0"
-msgstr ""
-
-msgid "Uncompressed packed YUV 4:2:2"
-msgstr ""
-
-msgid "Uncompressed packed YUV 4:1:0"
-msgstr ""
-
-msgid "Uncompressed packed YVU 4:1:0"
-msgstr ""
-
-msgid "Uncompressed packed YUV 4:1:1"
-msgstr ""
-
-msgid "Uncompressed packed YUV 4:4:4"
-msgstr ""
-
-msgid "Uncompressed planar YUV 4:2:2"
-msgstr ""
-
-msgid "Uncompressed planar YUV 4:1:1"
-msgstr ""
-
-msgid "Uncompressed black and white Y-plane"
-msgstr ""
-
-msgid "Uncompressed YUV"
+msgid "Uncompressed gray"
 msgstr ""
 
 #, c-format
-msgid "Uncompressed palettized %d-bit %s"
+msgid "Uncompressed %s YUV %s"
+msgstr ""
+
+#, c-format
+msgid "Uncompressed %s%d-bit %s"
 msgstr ""
 
 #, c-format
 msgid "DivX MPEG-4 Version %d"
 msgstr ""
 
-#, c-format
-msgid "Raw %d-bit PCM audio"
-msgstr ""
-
-msgid "Raw PCM audio"
+msgid "Uncompressed audio"
 msgstr ""
 
 #, c-format
-msgid "Raw %d-bit floating-point audio"
-msgstr ""
-
-msgid "Raw floating-point audio"
+msgid "Raw %d-bit %s audio"
 msgstr ""
 
 msgid "Audio CD source"

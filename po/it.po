@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-08-20 12:18+0100\n"
+"POT-Creation-Date: 2011-09-29 17:27+0200\n"
 "PO-Revision-Date: 2010-04-28 14:27+0200\n"
 "Last-Translator: Luca Ferretti <elle.uca@infinito.it>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
@@ -394,11 +394,6 @@ msgstr "FFMpeg v1"
 msgid "Lossless MSZH"
 msgstr "MSZH senza perdita"
 
-# non ho trovato info utili...
-# Copiato il messaggio originale solo per arrivare a 100 per cento
-msgid "Uncompressed Gray Image"
-msgstr "Uncompressed Gray Image"
-
 # cfr http://en.wikipedia.org/wiki/Run_length_encoding
 msgid "Run-length encoding"
 msgstr "RLE (Run-Length Encoding)"
@@ -413,51 +408,25 @@ msgstr "Sottotitoli formato TMPlayer"
 msgid "Kate subtitle format"
 msgstr "Sottotitoli formato Kate"
 
-# cfr http://en.wikipedia.org/wiki/YUV
-#     http://support.microsoft.com/kb/281188/it
-#     http://support.microsoft.com/kb/294880/it (traduz automatica) :-(
-#     http://www.benis.it/dvd/agg3.htm
-#
-# Dal secondo e terzo, evinco YUV compresso o planare sarebbero
-# buone abbreviazioni, ma tengo planare/packed + compresso/noncompresso
-msgid "Uncompressed planar YUV 4:2:0"
-msgstr "YUV 4:2:0 planare non compresso"
+#, fuzzy
+msgid "Uncompressed video"
+msgstr "YUV non compresso"
 
-msgid "Uncompressed planar YVU 4:2:0"
-msgstr "YVU 4:2:0 planare non compresso"
+# non ho trovato info utili...
+# Copiato il messaggio originale solo per arrivare a 100 per cento
+#, fuzzy
+msgid "Uncompressed gray"
+msgstr "Uncompressed Gray Image"
 
-msgid "Uncompressed packed YUV 4:2:2"
-msgstr "YUV 4:2:2 packed non compresso"
-
-msgid "Uncompressed packed YUV 4:1:0"
-msgstr "YUV 4:1:0 packed non compresso"
-
-msgid "Uncompressed packed YVU 4:1:0"
-msgstr "YVU 4:1:0 packed non compresso"
-
-msgid "Uncompressed packed YUV 4:1:1"
-msgstr "YUV 4:1:1 packed non compresso"
-
-msgid "Uncompressed packed YUV 4:4:4"
-msgstr "YUV 4:4:4 packed non compresso"
-
-msgid "Uncompressed planar YUV 4:2:2"
-msgstr "YUV 4:2:2 planare non compresso"
-
-msgid "Uncompressed planar YUV 4:1:1"
-msgstr "YUV 4:1:1 planare non compresso"
-
-msgid "Uncompressed black and white Y-plane"
-msgstr "Bianco e nero Y-plane non compresso"
-
-msgid "Uncompressed YUV"
+#, fuzzy, c-format
+msgid "Uncompressed %s YUV %s"
 msgstr "YUV non compresso"
 
 # %s è qualcosa come gli YUV dei precedenti
 #
 # Non so perché, ma senza X$ non lo dava buono....
-#, c-format
-msgid "Uncompressed palettized %d-bit %s"
+#, fuzzy, c-format
+msgid "Uncompressed %s%d-bit %s"
 msgstr "%2$s %1$d-bit con tavolozza non compresso"
 
 # o MPEG-4 DivX ?
@@ -465,20 +434,14 @@ msgstr "%2$s %1$d-bit con tavolozza non compresso"
 msgid "DivX MPEG-4 Version %d"
 msgstr "DivX MPEG-4 versione %d"
 
+#, fuzzy
+msgid "Uncompressed audio"
+msgstr "YUV non compresso"
+
 # o audio grezzo ?
-#, c-format
-msgid "Raw %d-bit PCM audio"
+#, fuzzy, c-format
+msgid "Raw %d-bit %s audio"
 msgstr "Audio raw PCM %d-bit"
-
-msgid "Raw PCM audio"
-msgstr "Audio raw PCM"
-
-#, c-format
-msgid "Raw %d-bit floating-point audio"
-msgstr "Audio raw floating-point %d-bit"
-
-msgid "Raw floating-point audio"
-msgstr "Audio raw floating-point"
 
 msgid "Audio CD source"
 msgstr "Sorgente CD audio"
@@ -557,6 +520,52 @@ msgstr "Elemento di codifica sconosciuto"
 
 msgid "Plugin or element of unknown type"
 msgstr "Plugin o elemento di tipo sconosciuto"
+
+# cfr http://en.wikipedia.org/wiki/YUV
+#     http://support.microsoft.com/kb/281188/it
+#     http://support.microsoft.com/kb/294880/it (traduz automatica) :-(
+#     http://www.benis.it/dvd/agg3.htm
+#
+# Dal secondo e terzo, evinco YUV compresso o planare sarebbero
+# buone abbreviazioni, ma tengo planare/packed + compresso/noncompresso
+#~ msgid "Uncompressed planar YUV 4:2:0"
+#~ msgstr "YUV 4:2:0 planare non compresso"
+
+#~ msgid "Uncompressed planar YVU 4:2:0"
+#~ msgstr "YVU 4:2:0 planare non compresso"
+
+#~ msgid "Uncompressed packed YUV 4:2:2"
+#~ msgstr "YUV 4:2:2 packed non compresso"
+
+#~ msgid "Uncompressed packed YUV 4:1:0"
+#~ msgstr "YUV 4:1:0 packed non compresso"
+
+#~ msgid "Uncompressed packed YVU 4:1:0"
+#~ msgstr "YVU 4:1:0 packed non compresso"
+
+#~ msgid "Uncompressed packed YUV 4:1:1"
+#~ msgstr "YUV 4:1:1 packed non compresso"
+
+#~ msgid "Uncompressed packed YUV 4:4:4"
+#~ msgstr "YUV 4:4:4 packed non compresso"
+
+#~ msgid "Uncompressed planar YUV 4:2:2"
+#~ msgstr "YUV 4:2:2 planare non compresso"
+
+#~ msgid "Uncompressed planar YUV 4:1:1"
+#~ msgstr "YUV 4:1:1 planare non compresso"
+
+#~ msgid "Uncompressed black and white Y-plane"
+#~ msgstr "Bianco e nero Y-plane non compresso"
+
+#~ msgid "Raw PCM audio"
+#~ msgstr "Audio raw PCM"
+
+#~ msgid "Raw %d-bit floating-point audio"
+#~ msgstr "Audio raw floating-point %d-bit"
+
+#~ msgid "Raw floating-point audio"
+#~ msgstr "Audio raw floating-point"
 
 #~ msgid "Could not open vfs file \"%s\" for writing: %s."
 #~ msgstr "Impossibile aprire il file vfs «%s» in scrittura: %s."

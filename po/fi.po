@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-08-20 12:18+0100\n"
+"POT-Creation-Date: 2011-09-29 17:27+0200\n"
 "PO-Revision-Date: 2010-12-31 23:21+0200\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
@@ -393,9 +393,6 @@ msgstr "FFMpeg v1"
 msgid "Lossless MSZH"
 msgstr "Häviötön MSZH"
 
-msgid "Uncompressed Gray Image"
-msgstr "Pakkaamaton harmaakuva"
-
 msgid "Run-length encoding"
 msgstr "RLE-koodaus"
 
@@ -408,60 +405,33 @@ msgstr "TMPlayer-tekstitysmuoto"
 msgid "Kate subtitle format"
 msgstr "Kate-tekstitysmuoto"
 
-msgid "Uncompressed planar YUV 4:2:0"
-msgstr "Pakkaamaton tasollinen YUV 4:2:0"
-
-msgid "Uncompressed planar YVU 4:2:0"
-msgstr "Pakkaamaton tasollinen YVU 4:2:0"
-
-msgid "Uncompressed packed YUV 4:2:2"
-msgstr "Pakkaamaton paketoitu YUV 4:2:0"
-
-msgid "Uncompressed packed YUV 4:1:0"
-msgstr "Pakkaamaton paketoitu YUV 4:1:0"
-
-msgid "Uncompressed packed YVU 4:1:0"
-msgstr "Pakkaamaton paketoitu YVU 4:1:0"
-
-msgid "Uncompressed packed YUV 4:1:1"
-msgstr "Pakkaamaton paketoitu YUV 4:1:1"
-
-msgid "Uncompressed packed YUV 4:4:4"
-msgstr "Pakkaamaton paketoitu YUV 4:4:4"
-
-msgid "Uncompressed planar YUV 4:2:2"
-msgstr "Pakkaamaton tasollinen YUV 4:2:2"
-
-msgid "Uncompressed planar YUV 4:1:1"
-msgstr "Pakkaamaton tasollinen YUV 4:1:1"
-
-msgid "Uncompressed black and white Y-plane"
-msgstr "Pakkaamaton mustavalkoinen Y-taso"
-
-msgid "Uncompressed YUV"
+#, fuzzy
+msgid "Uncompressed video"
 msgstr "Pakkaamaton YUV"
 
-#, c-format
-msgid "Uncompressed palettized %d-bit %s"
+#, fuzzy
+msgid "Uncompressed gray"
+msgstr "Pakkaamaton harmaakuva"
+
+#, fuzzy, c-format
+msgid "Uncompressed %s YUV %s"
+msgstr "Pakkaamaton YUV"
+
+#, fuzzy, c-format
+msgid "Uncompressed %s%d-bit %s"
 msgstr "Pakkaamaton paletillinen %d-bittinen %s"
 
 #, c-format
 msgid "DivX MPEG-4 Version %d"
 msgstr "DivX MPEG-4 versio %d"
 
-#, c-format
-msgid "Raw %d-bit PCM audio"
+#, fuzzy
+msgid "Uncompressed audio"
+msgstr "Pakkaamaton YUV"
+
+#, fuzzy, c-format
+msgid "Raw %d-bit %s audio"
 msgstr "Raaka %d-bittinen pcm-ääni"
-
-msgid "Raw PCM audio"
-msgstr "Raaka pcm-ääni"
-
-#, c-format
-msgid "Raw %d-bit floating-point audio"
-msgstr "Raaka %d-bittinen liukulukupohjainen ääni"
-
-msgid "Raw floating-point audio"
-msgstr "Raaka liukulukupohjainen ääni"
 
 msgid "Audio CD source"
 msgstr "Ääni-CD-lähde"
@@ -540,6 +510,45 @@ msgstr "Tuntematon kodekkielementti"
 
 msgid "Plugin or element of unknown type"
 msgstr "Liitännäisen tai elementin tyyppi on tuntematon"
+
+#~ msgid "Uncompressed planar YUV 4:2:0"
+#~ msgstr "Pakkaamaton tasollinen YUV 4:2:0"
+
+#~ msgid "Uncompressed planar YVU 4:2:0"
+#~ msgstr "Pakkaamaton tasollinen YVU 4:2:0"
+
+#~ msgid "Uncompressed packed YUV 4:2:2"
+#~ msgstr "Pakkaamaton paketoitu YUV 4:2:0"
+
+#~ msgid "Uncompressed packed YUV 4:1:0"
+#~ msgstr "Pakkaamaton paketoitu YUV 4:1:0"
+
+#~ msgid "Uncompressed packed YVU 4:1:0"
+#~ msgstr "Pakkaamaton paketoitu YVU 4:1:0"
+
+#~ msgid "Uncompressed packed YUV 4:1:1"
+#~ msgstr "Pakkaamaton paketoitu YUV 4:1:1"
+
+#~ msgid "Uncompressed packed YUV 4:4:4"
+#~ msgstr "Pakkaamaton paketoitu YUV 4:4:4"
+
+#~ msgid "Uncompressed planar YUV 4:2:2"
+#~ msgstr "Pakkaamaton tasollinen YUV 4:2:2"
+
+#~ msgid "Uncompressed planar YUV 4:1:1"
+#~ msgstr "Pakkaamaton tasollinen YUV 4:1:1"
+
+#~ msgid "Uncompressed black and white Y-plane"
+#~ msgstr "Pakkaamaton mustavalkoinen Y-taso"
+
+#~ msgid "Raw PCM audio"
+#~ msgstr "Raaka pcm-ääni"
+
+#~ msgid "Raw %d-bit floating-point audio"
+#~ msgstr "Raaka %d-bittinen liukulukupohjainen ääni"
+
+#~ msgid "Raw floating-point audio"
+#~ msgstr "Raaka liukulukupohjainen ääni"
 
 #~ msgid "Could not open vfs file \"%s\" for writing: %s."
 #~ msgstr "VFS-tiedostoa \"%s\" ei voi avata kirjoitettavaksi: %s."

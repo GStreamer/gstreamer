@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-08-20 12:18+0100\n"
+"POT-Creation-Date: 2011-09-29 17:27+0200\n"
 "PO-Revision-Date: 2010-11-02 15:40+0100\n"
 "Last-Translator: Jorge González González <aloriel@gmail.com>\n"
 "Language-Team: Spanish <es@li.org>\n"
@@ -392,9 +392,6 @@ msgstr "FFMpeg v1"
 msgid "Lossless MSZH"
 msgstr "MSZH sin pérdida"
 
-msgid "Uncompressed Gray Image"
-msgstr "Imagen en escala de grises sin comprimir"
-
 msgid "Run-length encoding"
 msgstr "Codificación del tamaño durante la ejecución"
 
@@ -407,60 +404,33 @@ msgstr "Formato de subtítulos TMPlayer"
 msgid "Kate subtitle format"
 msgstr "Formato de subtítulos kate"
 
-msgid "Uncompressed planar YUV 4:2:0"
-msgstr "YUV 4:2:0 plano sin comprimir"
-
-msgid "Uncompressed planar YVU 4:2:0"
-msgstr "YVU 4:2:0 plano sin comprimir"
-
-msgid "Uncompressed packed YUV 4:2:2"
-msgstr "YUV 4:2:2 empaquetado sin comprimir"
-
-msgid "Uncompressed packed YUV 4:1:0"
-msgstr "YUV 4:1:0 empaquetado sin comprimir"
-
-msgid "Uncompressed packed YVU 4:1:0"
-msgstr "YVU 4:1:0 empaquetado sin comprimir"
-
-msgid "Uncompressed packed YUV 4:1:1"
-msgstr "YUV 4:1:1 empaquetado sin comprimir"
-
-msgid "Uncompressed packed YUV 4:4:4"
-msgstr "YUV 4:4:4 empaquetado sin comprimir"
-
-msgid "Uncompressed planar YUV 4:2:2"
-msgstr "YUV 4:2:2 plano sin comprimir"
-
-msgid "Uncompressed planar YUV 4:1:1"
-msgstr "YUV 4:1:1 plano sin comprimir"
-
-msgid "Uncompressed black and white Y-plane"
-msgstr "Plano Y en blanco y negro sin comprimir"
-
-msgid "Uncompressed YUV"
+#, fuzzy
+msgid "Uncompressed video"
 msgstr "YUV sin comprimir"
 
-#, c-format
-msgid "Uncompressed palettized %d-bit %s"
+#, fuzzy
+msgid "Uncompressed gray"
+msgstr "Imagen en escala de grises sin comprimir"
+
+#, fuzzy, c-format
+msgid "Uncompressed %s YUV %s"
+msgstr "YUV sin comprimir"
+
+#, fuzzy, c-format
+msgid "Uncompressed %s%d-bit %s"
 msgstr "Paletizado sin comprimir de %d-bit %s"
 
 #, c-format
 msgid "DivX MPEG-4 Version %d"
 msgstr "DivX MPEG-4 versión %d"
 
-#, c-format
-msgid "Raw %d-bit PCM audio"
+#, fuzzy
+msgid "Uncompressed audio"
+msgstr "YUV sin comprimir"
+
+#, fuzzy, c-format
+msgid "Raw %d-bit %s audio"
 msgstr "Audio PCM sin comprimir de %d-bits"
-
-msgid "Raw PCM audio"
-msgstr "Audio PCM sin comprimir"
-
-#, c-format
-msgid "Raw %d-bit floating-point audio"
-msgstr "Audio sin comprimir de %d-bits en coma flotante"
-
-msgid "Raw floating-point audio"
-msgstr "Audio sin comprimir en coma flotante"
 
 msgid "Audio CD source"
 msgstr "Fuente: CD de audio"
@@ -539,6 +509,45 @@ msgstr "Elemento codificador desconocido"
 
 msgid "Plugin or element of unknown type"
 msgstr "Complemento o elemento de tipo desconocido"
+
+#~ msgid "Uncompressed planar YUV 4:2:0"
+#~ msgstr "YUV 4:2:0 plano sin comprimir"
+
+#~ msgid "Uncompressed planar YVU 4:2:0"
+#~ msgstr "YVU 4:2:0 plano sin comprimir"
+
+#~ msgid "Uncompressed packed YUV 4:2:2"
+#~ msgstr "YUV 4:2:2 empaquetado sin comprimir"
+
+#~ msgid "Uncompressed packed YUV 4:1:0"
+#~ msgstr "YUV 4:1:0 empaquetado sin comprimir"
+
+#~ msgid "Uncompressed packed YVU 4:1:0"
+#~ msgstr "YVU 4:1:0 empaquetado sin comprimir"
+
+#~ msgid "Uncompressed packed YUV 4:1:1"
+#~ msgstr "YUV 4:1:1 empaquetado sin comprimir"
+
+#~ msgid "Uncompressed packed YUV 4:4:4"
+#~ msgstr "YUV 4:4:4 empaquetado sin comprimir"
+
+#~ msgid "Uncompressed planar YUV 4:2:2"
+#~ msgstr "YUV 4:2:2 plano sin comprimir"
+
+#~ msgid "Uncompressed planar YUV 4:1:1"
+#~ msgstr "YUV 4:1:1 plano sin comprimir"
+
+#~ msgid "Uncompressed black and white Y-plane"
+#~ msgstr "Plano Y en blanco y negro sin comprimir"
+
+#~ msgid "Raw PCM audio"
+#~ msgstr "Audio PCM sin comprimir"
+
+#~ msgid "Raw %d-bit floating-point audio"
+#~ msgstr "Audio sin comprimir de %d-bits en coma flotante"
+
+#~ msgid "Raw floating-point audio"
+#~ msgstr "Audio sin comprimir en coma flotante"
 
 #~ msgid "Could not open vfs file \"%s\" for writing: %s."
 #~ msgstr "No se pudo abrir el archivo VFS «%s» para escribir: %s."

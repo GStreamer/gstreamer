@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-0.10.31.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-08-20 12:18+0100\n"
+"POT-Creation-Date: 2011-09-29 17:27+0200\n"
 "PO-Revision-Date: 2011-01-08 01:02-0300\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldp-br@bazar.conectiva.com.br>\n"
@@ -400,9 +400,6 @@ msgstr "FFMpeg v1"
 msgid "Lossless MSZH"
 msgstr "MSZH Sem Perdas"
 
-msgid "Uncompressed Gray Image"
-msgstr "Imagem Monocromática Sem Compressão"
-
 msgid "Run-length encoding"
 msgstr "Codificação Run-length"
 
@@ -415,60 +412,33 @@ msgstr "Formato de legendas TMPlayer"
 msgid "Kate subtitle format"
 msgstr "Formato de legendas Kate"
 
-msgid "Uncompressed planar YUV 4:2:0"
-msgstr "YUV 4:2:0 plano sem compressão"
-
-msgid "Uncompressed planar YVU 4:2:0"
-msgstr "YVU 4:2:0 plano sem compressão"
-
-msgid "Uncompressed packed YUV 4:2:2"
-msgstr "YUV 4:2:2 empacotado sem compressão"
-
-msgid "Uncompressed packed YUV 4:1:0"
-msgstr "YUV 4:1:0 empacotado sem compressão"
-
-msgid "Uncompressed packed YVU 4:1:0"
-msgstr "YVU 4:1:0 empacotado sem compressão"
-
-msgid "Uncompressed packed YUV 4:1:1"
-msgstr "YUV 4:1:1 empacotado sem compressão"
-
-msgid "Uncompressed packed YUV 4:4:4"
-msgstr "YUV 4:4:4 empacotado sem compressão"
-
-msgid "Uncompressed planar YUV 4:2:2"
-msgstr "YUV 4:2:2 plano sem compressão"
-
-msgid "Uncompressed planar YUV 4:1:1"
-msgstr "YUV 4:1:1 plano sem compressão"
-
-msgid "Uncompressed black and white Y-plane"
-msgstr "Plano Y em preto e branco sem compressão"
-
-msgid "Uncompressed YUV"
+#, fuzzy
+msgid "Uncompressed video"
 msgstr "YUV sem compressão"
 
-#, c-format
-msgid "Uncompressed palettized %d-bit %s"
+#, fuzzy
+msgid "Uncompressed gray"
+msgstr "Imagem Monocromática Sem Compressão"
+
+#, fuzzy, c-format
+msgid "Uncompressed %s YUV %s"
+msgstr "YUV sem compressão"
+
+#, fuzzy, c-format
+msgid "Uncompressed %s%d-bit %s"
 msgstr "%2$s de %1$d bits com paletas sem compressão"
 
 #, c-format
 msgid "DivX MPEG-4 Version %d"
 msgstr "DivX MPEG-4 Versão %d"
 
-#, c-format
-msgid "Raw %d-bit PCM audio"
+#, fuzzy
+msgid "Uncompressed audio"
+msgstr "YUV sem compressão"
+
+#, fuzzy, c-format
+msgid "Raw %d-bit %s audio"
 msgstr "Áudio PCM Raw de %d bits"
-
-msgid "Raw PCM audio"
-msgstr "Áudio PCM Raw"
-
-#, c-format
-msgid "Raw %d-bit floating-point audio"
-msgstr "Áudio Raw de ponto-flutuante de %d bits"
-
-msgid "Raw floating-point audio"
-msgstr "Áudio Raw de ponto-flutuante"
 
 msgid "Audio CD source"
 msgstr "Origem: CD de áudio"
@@ -547,6 +517,45 @@ msgstr "Elemento codificador desconhecido"
 
 msgid "Plugin or element of unknown type"
 msgstr "Elemento ou plug-in de tipo desconhecido"
+
+#~ msgid "Uncompressed planar YUV 4:2:0"
+#~ msgstr "YUV 4:2:0 plano sem compressão"
+
+#~ msgid "Uncompressed planar YVU 4:2:0"
+#~ msgstr "YVU 4:2:0 plano sem compressão"
+
+#~ msgid "Uncompressed packed YUV 4:2:2"
+#~ msgstr "YUV 4:2:2 empacotado sem compressão"
+
+#~ msgid "Uncompressed packed YUV 4:1:0"
+#~ msgstr "YUV 4:1:0 empacotado sem compressão"
+
+#~ msgid "Uncompressed packed YVU 4:1:0"
+#~ msgstr "YVU 4:1:0 empacotado sem compressão"
+
+#~ msgid "Uncompressed packed YUV 4:1:1"
+#~ msgstr "YUV 4:1:1 empacotado sem compressão"
+
+#~ msgid "Uncompressed packed YUV 4:4:4"
+#~ msgstr "YUV 4:4:4 empacotado sem compressão"
+
+#~ msgid "Uncompressed planar YUV 4:2:2"
+#~ msgstr "YUV 4:2:2 plano sem compressão"
+
+#~ msgid "Uncompressed planar YUV 4:1:1"
+#~ msgstr "YUV 4:1:1 plano sem compressão"
+
+#~ msgid "Uncompressed black and white Y-plane"
+#~ msgstr "Plano Y em preto e branco sem compressão"
+
+#~ msgid "Raw PCM audio"
+#~ msgstr "Áudio PCM Raw"
+
+#~ msgid "Raw %d-bit floating-point audio"
+#~ msgstr "Áudio Raw de ponto-flutuante de %d bits"
+
+#~ msgid "Raw floating-point audio"
+#~ msgstr "Áudio Raw de ponto-flutuante"
 
 #~ msgid "Could not open vfs file \"%s\" for writing: %s."
 #~ msgstr "Não foi possível abrir o arquivo VFS \"%s\" para escrita: %s."

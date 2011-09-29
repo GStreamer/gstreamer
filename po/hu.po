@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-08-20 12:18+0100\n"
+"POT-Creation-Date: 2011-09-29 17:27+0200\n"
 "PO-Revision-Date: 2010-11-03 02:48+0100\n"
 "Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -393,9 +393,6 @@ msgstr "FFMpeg v1"
 msgid "Lossless MSZH"
 msgstr "Veszteségmentes MSZH"
 
-msgid "Uncompressed Gray Image"
-msgstr "Tömörítetlen szürke kép"
-
 msgid "Run-length encoding"
 msgstr "Műsorhossz-kódolás"
 
@@ -408,60 +405,33 @@ msgstr "TMPlayer feliratformátum"
 msgid "Kate subtitle format"
 msgstr "Kate feliratformátum"
 
-msgid "Uncompressed planar YUV 4:2:0"
-msgstr "Tömörítetlen síkbeli YUV 4:2:0"
-
-msgid "Uncompressed planar YVU 4:2:0"
-msgstr "Tömörítetlen síkbeli YVU 4:2:0"
-
-msgid "Uncompressed packed YUV 4:2:2"
-msgstr "Tömörítetlen pakolt YUV 4:2:2"
-
-msgid "Uncompressed packed YUV 4:1:0"
-msgstr "Tömörítetlen pakolt YUV 4:1:0"
-
-msgid "Uncompressed packed YVU 4:1:0"
-msgstr "Tömörítetlen pakolt YVU 4:1:0"
-
-msgid "Uncompressed packed YUV 4:1:1"
-msgstr "Tömörítetlen pakolt YUV 4:1:1"
-
-msgid "Uncompressed packed YUV 4:4:4"
-msgstr "Tömörítetlen pakolt YUV 4:4:4"
-
-msgid "Uncompressed planar YUV 4:2:2"
-msgstr "Tömörítetlen síkbeli YUV 4:2:2"
-
-msgid "Uncompressed planar YUV 4:1:1"
-msgstr "Tömörítetlen síkbeli YUV 4:1:1"
-
-msgid "Uncompressed black and white Y-plane"
-msgstr "Tömörítetlen fekete-fehér Y-sík"
-
-msgid "Uncompressed YUV"
+#, fuzzy
+msgid "Uncompressed video"
 msgstr "Tömörítetlen YUV"
 
-#, c-format
-msgid "Uncompressed palettized %d-bit %s"
+#, fuzzy
+msgid "Uncompressed gray"
+msgstr "Tömörítetlen szürke kép"
+
+#, fuzzy, c-format
+msgid "Uncompressed %s YUV %s"
+msgstr "Tömörítetlen YUV"
+
+#, fuzzy, c-format
+msgid "Uncompressed %s%d-bit %s"
 msgstr "Tömörítetlen, palettás %d bites %s"
 
 #, c-format
 msgid "DivX MPEG-4 Version %d"
 msgstr "DivX MPEG-4 %d. verzió"
 
-#, c-format
-msgid "Raw %d-bit PCM audio"
+#, fuzzy
+msgid "Uncompressed audio"
+msgstr "Tömörítetlen YUV"
+
+#, fuzzy, c-format
+msgid "Raw %d-bit %s audio"
 msgstr "Nyers %d bites PCM hang"
-
-msgid "Raw PCM audio"
-msgstr "Nyers PCM hang"
-
-#, c-format
-msgid "Raw %d-bit floating-point audio"
-msgstr "Nyers %d bites lebegőpontos hang"
-
-msgid "Raw floating-point audio"
-msgstr "Nyers lebegőpontos hang"
 
 msgid "Audio CD source"
 msgstr "Hang CD forrás"
@@ -540,6 +510,45 @@ msgstr "Ismeretlen kódolóelem"
 
 msgid "Plugin or element of unknown type"
 msgstr "Ismeretlen típusú bővítmény vagy elem"
+
+#~ msgid "Uncompressed planar YUV 4:2:0"
+#~ msgstr "Tömörítetlen síkbeli YUV 4:2:0"
+
+#~ msgid "Uncompressed planar YVU 4:2:0"
+#~ msgstr "Tömörítetlen síkbeli YVU 4:2:0"
+
+#~ msgid "Uncompressed packed YUV 4:2:2"
+#~ msgstr "Tömörítetlen pakolt YUV 4:2:2"
+
+#~ msgid "Uncompressed packed YUV 4:1:0"
+#~ msgstr "Tömörítetlen pakolt YUV 4:1:0"
+
+#~ msgid "Uncompressed packed YVU 4:1:0"
+#~ msgstr "Tömörítetlen pakolt YVU 4:1:0"
+
+#~ msgid "Uncompressed packed YUV 4:1:1"
+#~ msgstr "Tömörítetlen pakolt YUV 4:1:1"
+
+#~ msgid "Uncompressed packed YUV 4:4:4"
+#~ msgstr "Tömörítetlen pakolt YUV 4:4:4"
+
+#~ msgid "Uncompressed planar YUV 4:2:2"
+#~ msgstr "Tömörítetlen síkbeli YUV 4:2:2"
+
+#~ msgid "Uncompressed planar YUV 4:1:1"
+#~ msgstr "Tömörítetlen síkbeli YUV 4:1:1"
+
+#~ msgid "Uncompressed black and white Y-plane"
+#~ msgstr "Tömörítetlen fekete-fehér Y-sík"
+
+#~ msgid "Raw PCM audio"
+#~ msgstr "Nyers PCM hang"
+
+#~ msgid "Raw %d-bit floating-point audio"
+#~ msgstr "Nyers %d bites lebegőpontos hang"
+
+#~ msgid "Raw floating-point audio"
+#~ msgstr "Nyers lebegőpontos hang"
 
 #~ msgid "Could not open vfs file \"%s\" for writing: %s."
 #~ msgstr "Nem lehet írásra megnyitni a(z) „%s” vfs-fájlt: %s."

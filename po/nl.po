@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-08-20 12:18+0100\n"
+"POT-Creation-Date: 2011-09-29 17:27+0200\n"
 "PO-Revision-Date: 2011-04-27 00:12+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -397,9 +397,6 @@ msgstr "FFMpeg v1"
 msgid "Lossless MSZH"
 msgstr "Lossless MSZH"
 
-msgid "Uncompressed Gray Image"
-msgstr "Niet-gecomprimeerde grijze afbeelding"
-
 msgid "Run-length encoding"
 msgstr "Run-length encoding (RLE)"
 
@@ -412,60 +409,33 @@ msgstr "TMPlayer ondertitelformaat"
 msgid "Kate subtitle format"
 msgstr "Kate ondertitelformaat"
 
-msgid "Uncompressed planar YUV 4:2:0"
-msgstr "Niet-gecomprimeerde planar YUV 4:2:0"
-
-msgid "Uncompressed planar YVU 4:2:0"
-msgstr "Niet-gecomprimeerde planar YVU 4:2:0"
-
-msgid "Uncompressed packed YUV 4:2:2"
-msgstr "Niet-gecomprimeerde packed YUV 4:2:2"
-
-msgid "Uncompressed packed YUV 4:1:0"
-msgstr "Niet-gecomprimeerde packed YUV 4:1:0"
-
-msgid "Uncompressed packed YVU 4:1:0"
-msgstr "Niet-gecomprimeerde packed YVU 4:1:0"
-
-msgid "Uncompressed packed YUV 4:1:1"
-msgstr "Niet-gecomprimeerde packed YUV 4:1:1"
-
-msgid "Uncompressed packed YUV 4:4:4"
-msgstr "Niet-gecomprimeerde packed YUV 4:4:4"
-
-msgid "Uncompressed planar YUV 4:2:2"
-msgstr "Niet-gecomprimeerde planar YUV 4:2:2"
-
-msgid "Uncompressed planar YUV 4:1:1"
-msgstr "Niet-gecomprimeerde planar YUV 4:1:1"
-
-msgid "Uncompressed black and white Y-plane"
-msgstr "Niet-gecomprimeerd zwartwit Y-vlak"
-
-msgid "Uncompressed YUV"
+#, fuzzy
+msgid "Uncompressed video"
 msgstr "Niet-gecomprimeerde YUV"
 
-#, c-format
-msgid "Uncompressed palettized %d-bit %s"
+#, fuzzy
+msgid "Uncompressed gray"
+msgstr "Niet-gecomprimeerde grijze afbeelding"
+
+#, fuzzy, c-format
+msgid "Uncompressed %s YUV %s"
+msgstr "Niet-gecomprimeerde YUV"
+
+#, fuzzy, c-format
+msgid "Uncompressed %s%d-bit %s"
 msgstr "Niet-gecomprimeerde, gepaletteerde %d-bits %s"
 
 #, c-format
 msgid "DivX MPEG-4 Version %d"
 msgstr "DivX MPEG-4 versie %d"
 
-#, c-format
-msgid "Raw %d-bit PCM audio"
+#, fuzzy
+msgid "Uncompressed audio"
+msgstr "Niet-gecomprimeerde YUV"
+
+#, fuzzy, c-format
+msgid "Raw %d-bit %s audio"
 msgstr "Raw %d-bits PCM-audio"
-
-msgid "Raw PCM audio"
-msgstr "Raw PCM-audio"
-
-#, c-format
-msgid "Raw %d-bit floating-point audio"
-msgstr "Raw %d-bits drijvendekomma-audio"
-
-msgid "Raw floating-point audio"
-msgstr "Raw drijvendekomma-audio"
 
 msgid "Audio CD source"
 msgstr "Audio-CD-bron"
@@ -544,6 +514,45 @@ msgstr "Onbekend encoder-element"
 
 msgid "Plugin or element of unknown type"
 msgstr "Plugin of element van onbekend type"
+
+#~ msgid "Uncompressed planar YUV 4:2:0"
+#~ msgstr "Niet-gecomprimeerde planar YUV 4:2:0"
+
+#~ msgid "Uncompressed planar YVU 4:2:0"
+#~ msgstr "Niet-gecomprimeerde planar YVU 4:2:0"
+
+#~ msgid "Uncompressed packed YUV 4:2:2"
+#~ msgstr "Niet-gecomprimeerde packed YUV 4:2:2"
+
+#~ msgid "Uncompressed packed YUV 4:1:0"
+#~ msgstr "Niet-gecomprimeerde packed YUV 4:1:0"
+
+#~ msgid "Uncompressed packed YVU 4:1:0"
+#~ msgstr "Niet-gecomprimeerde packed YVU 4:1:0"
+
+#~ msgid "Uncompressed packed YUV 4:1:1"
+#~ msgstr "Niet-gecomprimeerde packed YUV 4:1:1"
+
+#~ msgid "Uncompressed packed YUV 4:4:4"
+#~ msgstr "Niet-gecomprimeerde packed YUV 4:4:4"
+
+#~ msgid "Uncompressed planar YUV 4:2:2"
+#~ msgstr "Niet-gecomprimeerde planar YUV 4:2:2"
+
+#~ msgid "Uncompressed planar YUV 4:1:1"
+#~ msgstr "Niet-gecomprimeerde planar YUV 4:1:1"
+
+#~ msgid "Uncompressed black and white Y-plane"
+#~ msgstr "Niet-gecomprimeerd zwartwit Y-vlak"
+
+#~ msgid "Raw PCM audio"
+#~ msgstr "Raw PCM-audio"
+
+#~ msgid "Raw %d-bit floating-point audio"
+#~ msgstr "Raw %d-bits drijvendekomma-audio"
+
+#~ msgid "Raw floating-point audio"
+#~ msgstr "Raw drijvendekomma-audio"
 
 #~ msgid "Could not open vfs file \"%s\" for writing: %s."
 #~ msgstr "Kon het VFS-bestand \"%s\" niet openen om te schrijven: %s."

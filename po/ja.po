@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-08-20 12:18+0100\n"
+"POT-Creation-Date: 2011-09-29 17:27+0200\n"
 "PO-Revision-Date: 2010-10-25 10:27+0900\n"
 "Last-Translator: Makoto Kato <makoto.kt@gmail.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -392,9 +392,6 @@ msgstr "FFMpeg v1"
 msgid "Lossless MSZH"
 msgstr "ロスレス MSZH"
 
-msgid "Uncompressed Gray Image"
-msgstr "非圧縮グレーイメージ"
-
 msgid "Run-length encoding"
 msgstr "ランレングス符号化"
 
@@ -407,60 +404,33 @@ msgstr "TMPlayer 字幕形式"
 msgid "Kate subtitle format"
 msgstr "Kate 字幕形式"
 
-msgid "Uncompressed planar YUV 4:2:0"
-msgstr "非圧縮 planar YUV 4:2:0"
-
-msgid "Uncompressed planar YVU 4:2:0"
-msgstr "非圧縮 planar YVU 4:2:0"
-
-msgid "Uncompressed packed YUV 4:2:2"
-msgstr "非圧縮 packed YUV 4:2:2"
-
-msgid "Uncompressed packed YUV 4:1:0"
-msgstr "非圧縮 packed YUV 4:1:0"
-
-msgid "Uncompressed packed YVU 4:1:0"
-msgstr "非圧縮 packed YVU 4:1:0"
-
-msgid "Uncompressed packed YUV 4:1:1"
-msgstr "非圧縮 packed YUV 4:1:1"
-
-msgid "Uncompressed packed YUV 4:4:4"
-msgstr "非圧縮 packed YUV 4:4:4"
-
-msgid "Uncompressed planar YUV 4:2:2"
-msgstr "非圧縮 planar YUV 4:2:2"
-
-msgid "Uncompressed planar YUV 4:1:1"
-msgstr "非圧縮 planar YUV 4:1:1"
-
-msgid "Uncompressed black and white Y-plane"
-msgstr "非圧縮黒と白Y-plane"
-
-msgid "Uncompressed YUV"
+#, fuzzy
+msgid "Uncompressed video"
 msgstr "非圧縮 YUV"
 
-#, c-format
-msgid "Uncompressed palettized %d-bit %s"
+#, fuzzy
+msgid "Uncompressed gray"
+msgstr "非圧縮グレーイメージ"
+
+#, fuzzy, c-format
+msgid "Uncompressed %s YUV %s"
+msgstr "非圧縮 YUV"
+
+#, fuzzy, c-format
+msgid "Uncompressed %s%d-bit %s"
 msgstr "非圧縮 palettized %d ビット %s"
 
 #, c-format
 msgid "DivX MPEG-4 Version %d"
 msgstr "DivX MPEG-4 バージョン %d"
 
-#, c-format
-msgid "Raw %d-bit PCM audio"
+#, fuzzy
+msgid "Uncompressed audio"
+msgstr "非圧縮 YUV"
+
+#, fuzzy, c-format
+msgid "Raw %d-bit %s audio"
 msgstr "Raw %d ビット PCM オーディオ"
-
-msgid "Raw PCM audio"
-msgstr "Raw PCM オーディオ"
-
-#, c-format
-msgid "Raw %d-bit floating-point audio"
-msgstr "Raw %d ビット浮動小数点オーディオ"
-
-msgid "Raw floating-point audio"
-msgstr "Raw 浮動小数点オーディオ"
 
 msgid "Audio CD source"
 msgstr "オーディオ CD ソース"
@@ -539,6 +509,45 @@ msgstr "不明なエンコーダーエレメント"
 
 msgid "Plugin or element of unknown type"
 msgstr "不明な種類のプラグインまたはエレメント"
+
+#~ msgid "Uncompressed planar YUV 4:2:0"
+#~ msgstr "非圧縮 planar YUV 4:2:0"
+
+#~ msgid "Uncompressed planar YVU 4:2:0"
+#~ msgstr "非圧縮 planar YVU 4:2:0"
+
+#~ msgid "Uncompressed packed YUV 4:2:2"
+#~ msgstr "非圧縮 packed YUV 4:2:2"
+
+#~ msgid "Uncompressed packed YUV 4:1:0"
+#~ msgstr "非圧縮 packed YUV 4:1:0"
+
+#~ msgid "Uncompressed packed YVU 4:1:0"
+#~ msgstr "非圧縮 packed YVU 4:1:0"
+
+#~ msgid "Uncompressed packed YUV 4:1:1"
+#~ msgstr "非圧縮 packed YUV 4:1:1"
+
+#~ msgid "Uncompressed packed YUV 4:4:4"
+#~ msgstr "非圧縮 packed YUV 4:4:4"
+
+#~ msgid "Uncompressed planar YUV 4:2:2"
+#~ msgstr "非圧縮 planar YUV 4:2:2"
+
+#~ msgid "Uncompressed planar YUV 4:1:1"
+#~ msgstr "非圧縮 planar YUV 4:1:1"
+
+#~ msgid "Uncompressed black and white Y-plane"
+#~ msgstr "非圧縮黒と白Y-plane"
+
+#~ msgid "Raw PCM audio"
+#~ msgstr "Raw PCM オーディオ"
+
+#~ msgid "Raw %d-bit floating-point audio"
+#~ msgstr "Raw %d ビット浮動小数点オーディオ"
+
+#~ msgid "Raw floating-point audio"
+#~ msgstr "Raw 浮動小数点オーディオ"
 
 #~ msgid "Could not open vfs file \"%s\" for writing: %s."
 #~ msgstr "書き込み用に vfs ファイル \"%s\" を開くことができませんでした: %s"

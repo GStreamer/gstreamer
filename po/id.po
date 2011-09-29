@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-08-20 12:18+0100\n"
+"POT-Creation-Date: 2011-09-29 17:27+0200\n"
 "PO-Revision-Date: 2010-04-26 22:01+0700\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
@@ -384,9 +384,6 @@ msgstr "FFMpeg v1"
 msgid "Lossless MSZH"
 msgstr "Lossless MSZH"
 
-msgid "Uncompressed Gray Image"
-msgstr "Citra Abu-abu Tak Dikompres"
-
 msgid "Run-length encoding"
 msgstr "Penyandian sepanjang-jalan"
 
@@ -399,60 +396,33 @@ msgstr "Format subjudul TMPlayer"
 msgid "Kate subtitle format"
 msgstr "Format subjudul Kate"
 
-msgid "Uncompressed planar YUV 4:2:0"
-msgstr "YUV 4:2:0 planar tak dikompresi"
-
-msgid "Uncompressed planar YVU 4:2:0"
-msgstr "YVU 4:2:0 planar tak dikompresi"
-
-msgid "Uncompressed packed YUV 4:2:2"
-msgstr "YUV 4:2:2 terkemas tak dikompresi"
-
-msgid "Uncompressed packed YUV 4:1:0"
-msgstr "YUV 4:1:0 terkemas tak dikompresi"
-
-msgid "Uncompressed packed YVU 4:1:0"
-msgstr "YVU 4:1:0 terkemas tak dikompresi"
-
-msgid "Uncompressed packed YUV 4:1:1"
-msgstr "YUV 4:1:1 terkemas tak dikompresi"
-
-msgid "Uncompressed packed YUV 4:4:4"
-msgstr "YUV 4:4:4 terkemas tak dikompresi"
-
-msgid "Uncompressed planar YUV 4:2:2"
-msgstr "YUV 4:2:2 planar tak dikompresi"
-
-msgid "Uncompressed planar YUV 4:1:1"
-msgstr "YUV 4:1:1 planar tak dikompresi"
-
-msgid "Uncompressed black and white Y-plane"
-msgstr "Y-plane hitam dan putih tak dikompresi"
-
-msgid "Uncompressed YUV"
+#, fuzzy
+msgid "Uncompressed video"
 msgstr "YUV tak dikompresi"
 
-#, c-format
-msgid "Uncompressed palettized %d-bit %s"
+#, fuzzy
+msgid "Uncompressed gray"
+msgstr "Citra Abu-abu Tak Dikompres"
+
+#, fuzzy, c-format
+msgid "Uncompressed %s YUV %s"
+msgstr "YUV tak dikompresi"
+
+#, fuzzy, c-format
+msgid "Uncompressed %s%d-bit %s"
 msgstr "Terpalet dan tak dikompresi dari %d-bit %s"
 
 #, c-format
 msgid "DivX MPEG-4 Version %d"
 msgstr "DivX MPEG-4 Versi %d"
 
-#, c-format
-msgid "Raw %d-bit PCM audio"
+#, fuzzy
+msgid "Uncompressed audio"
+msgstr "YUV tak dikompresi"
+
+#, fuzzy, c-format
+msgid "Raw %d-bit %s audio"
 msgstr "Audio PCM %d-bita mentah"
-
-msgid "Raw PCM audio"
-msgstr "Audio PCM mentah"
-
-#, c-format
-msgid "Raw %d-bit floating-point audio"
-msgstr "Audio titik-apung %d-bita mentah"
-
-msgid "Raw floating-point audio"
-msgstr "Audio titik-apung mentah"
 
 msgid "Audio CD source"
 msgstr "Sumber CD audio"
@@ -585,6 +555,45 @@ msgstr "Plugin atau elemen dari tipe yang tak diketahui"
 
 #~ msgid "Error while sending gdp payload data to \"%s:%d\"."
 #~ msgstr "Galat ketika mengirim data pemuat gdp ke \"%s:%d\"."
+
+#~ msgid "Uncompressed planar YUV 4:2:0"
+#~ msgstr "YUV 4:2:0 planar tak dikompresi"
+
+#~ msgid "Uncompressed planar YVU 4:2:0"
+#~ msgstr "YVU 4:2:0 planar tak dikompresi"
+
+#~ msgid "Uncompressed packed YUV 4:2:2"
+#~ msgstr "YUV 4:2:2 terkemas tak dikompresi"
+
+#~ msgid "Uncompressed packed YUV 4:1:0"
+#~ msgstr "YUV 4:1:0 terkemas tak dikompresi"
+
+#~ msgid "Uncompressed packed YVU 4:1:0"
+#~ msgstr "YVU 4:1:0 terkemas tak dikompresi"
+
+#~ msgid "Uncompressed packed YUV 4:1:1"
+#~ msgstr "YUV 4:1:1 terkemas tak dikompresi"
+
+#~ msgid "Uncompressed packed YUV 4:4:4"
+#~ msgstr "YUV 4:4:4 terkemas tak dikompresi"
+
+#~ msgid "Uncompressed planar YUV 4:2:2"
+#~ msgstr "YUV 4:2:2 planar tak dikompresi"
+
+#~ msgid "Uncompressed planar YUV 4:1:1"
+#~ msgstr "YUV 4:1:1 planar tak dikompresi"
+
+#~ msgid "Uncompressed black and white Y-plane"
+#~ msgstr "Y-plane hitam dan putih tak dikompresi"
+
+#~ msgid "Raw PCM audio"
+#~ msgstr "Audio PCM mentah"
+
+#~ msgid "Raw %d-bit floating-point audio"
+#~ msgstr "Audio titik-apung %d-bita mentah"
+
+#~ msgid "Raw floating-point audio"
+#~ msgstr "Audio titik-apung mentah"
 
 #~ msgid "No device specified."
 #~ msgstr "Tak ada divais yang ditentukan."

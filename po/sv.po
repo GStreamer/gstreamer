@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-08-20 12:18+0100\n"
+"POT-Creation-Date: 2011-09-29 17:27+0200\n"
 "PO-Revision-Date: 2010-06-07 18:17+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -388,9 +388,6 @@ msgstr "FFMpeg v1"
 msgid "Lossless MSZH"
 msgstr "Förlustfri MSZH"
 
-msgid "Uncompressed Gray Image"
-msgstr "Okomprimerad gråskalebild"
-
 msgid "Run-length encoding"
 msgstr "Körlängdskodning"
 
@@ -403,60 +400,33 @@ msgstr "Undertextformatet TMPlayer"
 msgid "Kate subtitle format"
 msgstr "Undertextformatet Kate"
 
-msgid "Uncompressed planar YUV 4:2:0"
-msgstr "Okomprimerad plan YUV 4:2:0"
-
-msgid "Uncompressed planar YVU 4:2:0"
-msgstr "Okomprimerad plan YVU 4:2:0"
-
-msgid "Uncompressed packed YUV 4:2:2"
-msgstr "Okomprimerad paketerad YUV 4:2:2"
-
-msgid "Uncompressed packed YUV 4:1:0"
-msgstr "Okomprimerad paketerad YUV 4:1:0"
-
-msgid "Uncompressed packed YVU 4:1:0"
-msgstr "Okomprimerad paketerad YVU 4:1:0"
-
-msgid "Uncompressed packed YUV 4:1:1"
-msgstr "Okomprimerad paketerad YUV 4:1:1"
-
-msgid "Uncompressed packed YUV 4:4:4"
-msgstr "Okomprimerad paketerad YUV 4:4:4"
-
-msgid "Uncompressed planar YUV 4:2:2"
-msgstr "Okomprimerad plan YUV 4:2:2"
-
-msgid "Uncompressed planar YUV 4:1:1"
-msgstr "Okomprimerad plan YUV 4:1:1"
-
-msgid "Uncompressed black and white Y-plane"
-msgstr "Okomprimerad svartvitt y-plan"
-
-msgid "Uncompressed YUV"
+#, fuzzy
+msgid "Uncompressed video"
 msgstr "Okomprimerad YUV"
 
-#, c-format
-msgid "Uncompressed palettized %d-bit %s"
+#, fuzzy
+msgid "Uncompressed gray"
+msgstr "Okomprimerad gråskalebild"
+
+#, fuzzy, c-format
+msgid "Uncompressed %s YUV %s"
+msgstr "Okomprimerad YUV"
+
+#, fuzzy, c-format
+msgid "Uncompressed %s%d-bit %s"
 msgstr "Okomprimerad palettiserad %d-bitars %s"
 
 #, c-format
 msgid "DivX MPEG-4 Version %d"
 msgstr "DivX MPEG-4 version %d"
 
-#, c-format
-msgid "Raw %d-bit PCM audio"
+#, fuzzy
+msgid "Uncompressed audio"
+msgstr "Okomprimerad YUV"
+
+#, fuzzy, c-format
+msgid "Raw %d-bit %s audio"
 msgstr "Rått %d-bitars PCM-ljud"
-
-msgid "Raw PCM audio"
-msgstr "Rått PCM-ljud"
-
-#, c-format
-msgid "Raw %d-bit floating-point audio"
-msgstr "Rått %d-bitars flyttalsljud"
-
-msgid "Raw floating-point audio"
-msgstr "Rått flyttalsljud"
 
 msgid "Audio CD source"
 msgstr "Ljud-cd-källa"
@@ -535,6 +505,45 @@ msgstr "Okänt kodarelement"
 
 msgid "Plugin or element of unknown type"
 msgstr "Insticksmodul eller element av okänd typ"
+
+#~ msgid "Uncompressed planar YUV 4:2:0"
+#~ msgstr "Okomprimerad plan YUV 4:2:0"
+
+#~ msgid "Uncompressed planar YVU 4:2:0"
+#~ msgstr "Okomprimerad plan YVU 4:2:0"
+
+#~ msgid "Uncompressed packed YUV 4:2:2"
+#~ msgstr "Okomprimerad paketerad YUV 4:2:2"
+
+#~ msgid "Uncompressed packed YUV 4:1:0"
+#~ msgstr "Okomprimerad paketerad YUV 4:1:0"
+
+#~ msgid "Uncompressed packed YVU 4:1:0"
+#~ msgstr "Okomprimerad paketerad YVU 4:1:0"
+
+#~ msgid "Uncompressed packed YUV 4:1:1"
+#~ msgstr "Okomprimerad paketerad YUV 4:1:1"
+
+#~ msgid "Uncompressed packed YUV 4:4:4"
+#~ msgstr "Okomprimerad paketerad YUV 4:4:4"
+
+#~ msgid "Uncompressed planar YUV 4:2:2"
+#~ msgstr "Okomprimerad plan YUV 4:2:2"
+
+#~ msgid "Uncompressed planar YUV 4:1:1"
+#~ msgstr "Okomprimerad plan YUV 4:1:1"
+
+#~ msgid "Uncompressed black and white Y-plane"
+#~ msgstr "Okomprimerad svartvitt y-plan"
+
+#~ msgid "Raw PCM audio"
+#~ msgstr "Rått PCM-ljud"
+
+#~ msgid "Raw %d-bit floating-point audio"
+#~ msgstr "Rått %d-bitars flyttalsljud"
+
+#~ msgid "Raw floating-point audio"
+#~ msgstr "Rått flyttalsljud"
 
 #~ msgid "Could not open vfs file \"%s\" for writing: %s."
 #~ msgstr "Kunde inte öppna vfs-filen \"%s\" för skrivning: %s."

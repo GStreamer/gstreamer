@@ -3,12 +3,13 @@
 #
 # Arvis Lācis <arvis.lacis@inbox.lv>, 2009.
 # Rihards Priedītis <rprieditis@gmail.com>, 2010.
+# Rihards Priedītis <rprieditis@gmail.com>, 2011.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.29.2\n"
+"Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-08-20 12:18+0100\n"
-"PO-Revision-Date: 2010-07-07 10:52+0100\n"
+"POT-Creation-Date: 2011-09-29 17:27+0200\n"
+"PO-Revision-Date: 2011-09-02 12:02-0000\n"
 "Last-Translator: Rihards Priedītis <rprieditis@gmail.com>\n"
 "Language-Team: Latvian <translation-team-lv@lists.sourceforge.net>\n"
 "Language: lv\n"
@@ -232,125 +233,125 @@ msgid "MusicBrainz TRM ID"
 msgstr "MusicBrainz TRM ID"
 
 msgid "capturing shutter speed"
-msgstr ""
+msgstr "Tveršanā aizvara ātrums"
 
 msgid "Shutter speed used when capturing an image, in seconds"
-msgstr ""
+msgstr "Attēla tveršanā izmantotais aizvara ātrums sekundēs"
 
 msgid "capturing focal ratio"
-msgstr ""
+msgstr "tveršanā fokusa attiecība"
 
 msgid "Focal ratio (f-number) used when capturing the image"
-msgstr ""
+msgstr "Attēla tveršanā izmantotā fokusa attiecība (f-cipars)"
 
 msgid "capturing focal length"
-msgstr ""
+msgstr "tveršanā fokusa attālums"
 
 msgid "Focal length of the lens used capturing the image, in mm"
-msgstr ""
+msgstr "Attēla tveršanā izmantotā lēcas fokusa attālums milimetros"
 
 msgid "capturing digital zoom ratio"
-msgstr ""
+msgstr "tveršanā digitālais tālummaiņas attiecība"
 
 msgid "Digital zoom ratio used when capturing an image"
-msgstr ""
+msgstr "Attēla tveršanā izmantotais digitālās tālummaiņas attiecība"
 
 msgid "capturing iso speed"
-msgstr ""
+msgstr "tveršanā iso ātrums"
 
 msgid "The ISO speed used when capturing an image"
-msgstr ""
+msgstr "Attēla tveršanā izmantotais ISO ātrums"
 
 msgid "capturing exposure program"
-msgstr ""
+msgstr "tveršanā atseguma programma"
 
 msgid "The exposure program used when capturing an image"
-msgstr ""
+msgstr "Attēla tveršanā izmantotā atseguma programma"
 
 msgid "capturing exposure mode"
-msgstr ""
+msgstr "tveršanā atseguma režīms"
 
 msgid "The exposure mode used when capturing an image"
-msgstr ""
+msgstr "Attēla tveršanā izmantotais atseguma režīms"
 
 msgid "capturing exposure compensation"
-msgstr ""
+msgstr "tveršanā atseguma kompensācija"
 
 msgid "The exposure compensation used when capturing an image"
-msgstr ""
+msgstr "Attēla tveršanā izmantotais atseguma kompensācija"
 
 msgid "capturing scene capture type"
-msgstr ""
+msgstr "tveršanā ainas tveršanas tips"
 
 msgid "The scene capture mode used when capturing an image"
-msgstr ""
+msgstr "Attēla tveršanā izmantotas ainas tveršanas režīms"
 
 msgid "capturing gain adjustment"
-msgstr ""
+msgstr "tveršanā pieaguma korekcija"
 
 msgid "The overall gain adjustment applied on an image"
-msgstr ""
+msgstr "Attēla tveršanā izmantotais vispārējā pieauguma korekcija"
 
 msgid "capturing white balance"
-msgstr ""
+msgstr "tveršanas baltais balanss"
 
 msgid "The white balance mode set when capturing an image"
-msgstr ""
+msgstr "Lietotais baltais balanss virziens attēla tveršanā"
 
 msgid "capturing contrast"
-msgstr ""
+msgstr "tveršanā kontrasts"
 
 msgid "The direction of contrast processing applied when capturing an image"
-msgstr ""
+msgstr "Lietotais kontrasts virziens attēla tveršanā"
 
 msgid "capturing saturation"
-msgstr ""
+msgstr "tveršanā piesātinājums"
 
 msgid "The direction of saturation processing applied when capturing an image"
-msgstr ""
+msgstr "Lietotais piesātinājuma virziens attēla tveršanā"
 
 msgid "capturing sharpness"
-msgstr ""
+msgstr "tveršanā asumss"
 
 msgid "The direction of sharpness processing applied when capturing an image"
-msgstr ""
+msgstr "Lietotais asuma virziens attēla tveršanā"
 
 msgid "capturing flash fired"
-msgstr ""
+msgstr "tveršanā zibsnis palaists"
 
 msgid "If the flash fired while capturing an image"
-msgstr ""
+msgstr "Ja zibsnis palaists attēla tveršanā"
 
 msgid "capturing flash mode"
-msgstr ""
+msgstr "tveršanā zibšņa režīms"
 
 msgid "The selected flash mode while capturing an image"
-msgstr ""
+msgstr "Atlasītais zibšņa režīms priekš attēla tveršanas"
 
 msgid "capturing metering mode"
-msgstr ""
+msgstr "tveršanā mērīšanas režīms"
 
 msgid ""
 "The metering mode used while determining exposure for capturing an image"
-msgstr ""
+msgstr "Mērīšanas režīms, lai noteiktu atsegumu attēla tveršanai"
 
 msgid "capturing source"
-msgstr ""
+msgstr "tveršanā avots"
 
 msgid "The source or type of device used for the capture"
-msgstr ""
+msgstr "Tveršanas avots vai iekārtas tips"
 
 msgid "image horizontal ppi"
-msgstr ""
+msgstr "attēla horizontālais ppi"
 
 msgid "Media (image/video) intended horizontal pixel density in ppi"
-msgstr ""
+msgstr "Medija (attēls/video) domātā horizontālā pikseļu blīvums ppi"
 
 msgid "image vertical ppi"
-msgstr ""
+msgstr "attēla vertikālais ppi"
 
 msgid "Media (image/video) intended vertical pixel density in ppi"
-msgstr ""
+msgstr "Medija (attēls/video) domātā vertikālā pikseļu blīvums ppi"
 
 msgid "ID3v2 frame"
 msgstr ""
@@ -391,9 +392,6 @@ msgstr "FFMpeg v1"
 msgid "Lossless MSZH"
 msgstr "Bez zudumu MSZH"
 
-msgid "Uncompressed Gray Image"
-msgstr "Neatspiests Pelēks attēls"
-
 msgid "Run-length encoding"
 msgstr "Sērijas garuma kodēšana"
 
@@ -406,60 +404,33 @@ msgstr "TMPlayer subtitru formāts"
 msgid "Kate subtitle format"
 msgstr "Kate subtitru formāts"
 
-msgid "Uncompressed planar YUV 4:2:0"
-msgstr "Nesaspiesta plakne YUV 4:2:0"
-
-msgid "Uncompressed planar YVU 4:2:0"
-msgstr "Nesaspiesta plakne YVU 4:2:0"
-
-msgid "Uncompressed packed YUV 4:2:2"
-msgstr "Nesaspiests pakots YUV 4:2:2"
-
-msgid "Uncompressed packed YUV 4:1:0"
-msgstr "Nesaspiests pakots YUP 4:1:0"
-
-msgid "Uncompressed packed YVU 4:1:0"
-msgstr "Nesaspiests pakots YVU 4:1:0"
-
-msgid "Uncompressed packed YUV 4:1:1"
-msgstr "Nesaspiests pakots YUV 4:1:1"
-
-msgid "Uncompressed packed YUV 4:4:4"
-msgstr "Nesaspiests pakots YUV 4:4:4"
-
-msgid "Uncompressed planar YUV 4:2:2"
-msgstr "Nesaspiesta plakne YUV 4:2:2"
-
-msgid "Uncompressed planar YUV 4:1:1"
-msgstr "Nesaspiesta plakne YUV 4:1:1"
-
-msgid "Uncompressed black and white Y-plane"
-msgstr "Nesaspiests melnbaltais Y-plakne"
-
-msgid "Uncompressed YUV"
+#, fuzzy
+msgid "Uncompressed video"
 msgstr "Nesaspiests YUV"
 
-#, c-format
-msgid "Uncompressed palettized %d-bit %s"
+#, fuzzy
+msgid "Uncompressed gray"
+msgstr "Neatspiests Pelēks attēls"
+
+#, fuzzy, c-format
+msgid "Uncompressed %s YUV %s"
+msgstr "Nesaspiests YUV"
+
+#, fuzzy, c-format
+msgid "Uncompressed %s%d-bit %s"
 msgstr "Nesaspiests paletizēts %d-bitu %s"
 
 #, c-format
 msgid "DivX MPEG-4 Version %d"
 msgstr "DivX MPEG-4 versija %d"
 
-#, c-format
-msgid "Raw %d-bit PCM audio"
+#, fuzzy
+msgid "Uncompressed audio"
+msgstr "Nesaspiests YUV"
+
+#, fuzzy, c-format
+msgid "Raw %d-bit %s audio"
 msgstr "Jēls %d-bitu PCM audio"
-
-msgid "Raw PCM audio"
-msgstr "Jēls PCM audio"
-
-#, c-format
-msgid "Raw %d-bit floating-point audio"
-msgstr "Jēls %d-bitu plūstošā punkta audio"
-
-msgid "Raw floating-point audio"
-msgstr "Jēls plūstošā punkta audio"
 
 msgid "Audio CD source"
 msgstr "Audio CD avots"
@@ -587,6 +558,51 @@ msgstr "Nezināma veida spraudnis vai elements"
 #~ msgid "Both autoaudiosink and alsasink elements are missing."
 #~ msgstr "Trūkst gan autoaudiosink, gan alsasink elementi."
 
+#~ msgid "Error while sending gdp header data to \"%s:%d\"."
+#~ msgstr "Radās kļūda nosūtot gdb galvenas datus uz \"%s:%d\"."
+
+#~ msgid "Error while sending gdp payload data to \"%s:%d\"."
+#~ msgstr "Kļūda sūtot gdp iekrāvēja datus uz \"%s:%d\""
+
+#~ msgid "Uncompressed planar YUV 4:2:0"
+#~ msgstr "Nesaspiesta plakne YUV 4:2:0"
+
+#~ msgid "Uncompressed planar YVU 4:2:0"
+#~ msgstr "Nesaspiesta plakne YVU 4:2:0"
+
+#~ msgid "Uncompressed packed YUV 4:2:2"
+#~ msgstr "Nesaspiests pakots YUV 4:2:2"
+
+#~ msgid "Uncompressed packed YUV 4:1:0"
+#~ msgstr "Nesaspiests pakots YUP 4:1:0"
+
+#~ msgid "Uncompressed packed YVU 4:1:0"
+#~ msgstr "Nesaspiests pakots YVU 4:1:0"
+
+#~ msgid "Uncompressed packed YUV 4:1:1"
+#~ msgstr "Nesaspiests pakots YUV 4:1:1"
+
+#~ msgid "Uncompressed packed YUV 4:4:4"
+#~ msgstr "Nesaspiests pakots YUV 4:4:4"
+
+#~ msgid "Uncompressed planar YUV 4:2:2"
+#~ msgstr "Nesaspiesta plakne YUV 4:2:2"
+
+#~ msgid "Uncompressed planar YUV 4:1:1"
+#~ msgstr "Nesaspiesta plakne YUV 4:1:1"
+
+#~ msgid "Uncompressed black and white Y-plane"
+#~ msgstr "Nesaspiests melnbaltais Y-plakne"
+
+#~ msgid "Raw PCM audio"
+#~ msgstr "Jēls PCM audio"
+
+#~ msgid "Raw %d-bit floating-point audio"
+#~ msgstr "Jēls %d-bitu plūstošā punkta audio"
+
+#~ msgid "Raw floating-point audio"
+#~ msgstr "Jēls plūstošā punkta audio"
+
 #~ msgid "No device specified."
 #~ msgstr "Nav norādīta ierīce."
 
@@ -598,12 +614,6 @@ msgstr "Nezināma veida spraudnis vai elements"
 
 #~ msgid "Could not open device \"%s\" for reading and writing."
 #~ msgstr "Nevarēja atvērt ierīci \"%s\" lasīšanai vai rakstīšanai."
-
-#~ msgid "Error while sending gdp header data to \"%s:%d\"."
-#~ msgstr "Radās kļūda nosūtot gdb galvenas datus uz \"%s:%d\"."
-
-#~ msgid "Error while sending gdp payload data to \"%s:%d\"."
-#~ msgstr "Kļūda sūtot gdp iekrāvēja datus uz \"%s:%d\""
 
 #~ msgid "Could not create \"decodebin2\" element."
 #~ msgstr "Nav iespējams izveidot \"decodebin2\" elementu."

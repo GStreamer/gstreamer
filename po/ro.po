@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-08-20 12:18+0100\n"
+"POT-Creation-Date: 2011-09-29 17:27+0200\n"
 "PO-Revision-Date: 2010-08-16 01:21+0300\n"
 "Last-Translator: Lucian Adrian Grijincu <lucian.grijincu@gmail.com>\n"
 "Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
@@ -389,9 +389,6 @@ msgstr "FFMpeg v1"
 msgid "Lossless MSZH"
 msgstr "MSZH fără pierdere"
 
-msgid "Uncompressed Gray Image"
-msgstr "Imagine gri necomprimată"
-
 msgid "Run-length encoding"
 msgstr "Codarea run-length"
 
@@ -404,60 +401,33 @@ msgstr "Format subtitrare TMPlayer"
 msgid "Kate subtitle format"
 msgstr "Format subtitrare Kate"
 
-msgid "Uncompressed planar YUV 4:2:0"
-msgstr "Planar necomprimat YUV 4:2:0"
-
-msgid "Uncompressed planar YVU 4:2:0"
-msgstr "Planar necomprimat YVU 4:2:0"
-
-msgid "Uncompressed packed YUV 4:2:2"
-msgstr "Pachet necomprimat YUV 4:2:2"
-
-msgid "Uncompressed packed YUV 4:1:0"
-msgstr "Pachet necomprimat YUV 4:1:0"
-
-msgid "Uncompressed packed YVU 4:1:0"
-msgstr "Pachet necomprimat YVU 4:1:0"
-
-msgid "Uncompressed packed YUV 4:1:1"
-msgstr "Pachet necomprimat YUV 4:1:1"
-
-msgid "Uncompressed packed YUV 4:4:4"
-msgstr "Pachet necomprimat YUV 4:4:4"
-
-msgid "Uncompressed planar YUV 4:2:2"
-msgstr "Planar necomprimat YUV 4:2:2"
-
-msgid "Uncompressed planar YUV 4:1:1"
-msgstr "Planar necomprimat YUV 4:1:1"
-
-msgid "Uncompressed black and white Y-plane"
-msgstr "Plan-Y alb și negru necomprimat"
-
-msgid "Uncompressed YUV"
+#, fuzzy
+msgid "Uncompressed video"
 msgstr "YUV necomprimat"
 
-#, c-format
-msgid "Uncompressed palettized %d-bit %s"
+#, fuzzy
+msgid "Uncompressed gray"
+msgstr "Imagine gri necomprimată"
+
+#, fuzzy, c-format
+msgid "Uncompressed %s YUV %s"
+msgstr "YUV necomprimat"
+
+#, fuzzy, c-format
+msgid "Uncompressed %s%d-bit %s"
 msgstr "Paletizat la %d biți necomprimat %s"
 
 #, c-format
 msgid "DivX MPEG-4 Version %d"
 msgstr "DivX MPEG-4 versiunea %d"
 
-#, c-format
-msgid "Raw %d-bit PCM audio"
+#, fuzzy
+msgid "Uncompressed audio"
+msgstr "YUV necomprimat"
+
+#, fuzzy, c-format
+msgid "Raw %d-bit %s audio"
 msgstr "PCM audio brut %d biți"
-
-msgid "Raw PCM audio"
-msgstr "PCM audio brut"
-
-#, c-format
-msgid "Raw %d-bit floating-point audio"
-msgstr "Audio în virgulă mobilă brut la %d biți"
-
-msgid "Raw floating-point audio"
-msgstr "Audio în virgulă mobilă brut"
 
 msgid "Audio CD source"
 msgstr "Sursă CD audio"
@@ -536,6 +506,45 @@ msgstr "Element codor necunoscut"
 
 msgid "Plugin or element of unknown type"
 msgstr "Modul de extensie sau element de tip necunoscut"
+
+#~ msgid "Uncompressed planar YUV 4:2:0"
+#~ msgstr "Planar necomprimat YUV 4:2:0"
+
+#~ msgid "Uncompressed planar YVU 4:2:0"
+#~ msgstr "Planar necomprimat YVU 4:2:0"
+
+#~ msgid "Uncompressed packed YUV 4:2:2"
+#~ msgstr "Pachet necomprimat YUV 4:2:2"
+
+#~ msgid "Uncompressed packed YUV 4:1:0"
+#~ msgstr "Pachet necomprimat YUV 4:1:0"
+
+#~ msgid "Uncompressed packed YVU 4:1:0"
+#~ msgstr "Pachet necomprimat YVU 4:1:0"
+
+#~ msgid "Uncompressed packed YUV 4:1:1"
+#~ msgstr "Pachet necomprimat YUV 4:1:1"
+
+#~ msgid "Uncompressed packed YUV 4:4:4"
+#~ msgstr "Pachet necomprimat YUV 4:4:4"
+
+#~ msgid "Uncompressed planar YUV 4:2:2"
+#~ msgstr "Planar necomprimat YUV 4:2:2"
+
+#~ msgid "Uncompressed planar YUV 4:1:1"
+#~ msgstr "Planar necomprimat YUV 4:1:1"
+
+#~ msgid "Uncompressed black and white Y-plane"
+#~ msgstr "Plan-Y alb și negru necomprimat"
+
+#~ msgid "Raw PCM audio"
+#~ msgstr "PCM audio brut"
+
+#~ msgid "Raw %d-bit floating-point audio"
+#~ msgstr "Audio în virgulă mobilă brut la %d biți"
+
+#~ msgid "Raw floating-point audio"
+#~ msgstr "Audio în virgulă mobilă brut"
 
 #~ msgid "Could not open vfs file \"%s\" for writing: %s."
 #~ msgstr "Nu s-a putut deschide fișierul vsf „%s\" pentru scriere: %s."

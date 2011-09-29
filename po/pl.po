@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-08-20 12:18+0100\n"
+"POT-Creation-Date: 2011-09-29 17:27+0200\n"
 "PO-Revision-Date: 2011-04-26 18:01+0200\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
@@ -394,9 +394,6 @@ msgstr "FFMpeg v1"
 msgid "Lossless MSZH"
 msgstr "Lossless MSZH"
 
-msgid "Uncompressed Gray Image"
-msgstr "Nieskompresowany obraz w szarości"
-
 msgid "Run-length encoding"
 msgstr "Kodowanie RLE"
 
@@ -409,60 +406,33 @@ msgstr "Format podpisów TMPlayer"
 msgid "Kate subtitle format"
 msgstr "Format podpisów Kate"
 
-msgid "Uncompressed planar YUV 4:2:0"
-msgstr "Nieskompresowany planarny YUV 4:2:0"
-
-msgid "Uncompressed planar YVU 4:2:0"
-msgstr "Nieskompresowany planarny YUV 4:2:0"
-
-msgid "Uncompressed packed YUV 4:2:2"
-msgstr "Nieskompresowany spakowany YUV 4:2:2"
-
-msgid "Uncompressed packed YUV 4:1:0"
-msgstr "Nieskompresowany spakowany YUV 4:1:0"
-
-msgid "Uncompressed packed YVU 4:1:0"
-msgstr "Nieskompresowany spakowany YUV 4:1:0"
-
-msgid "Uncompressed packed YUV 4:1:1"
-msgstr "Nieskompresowany spakowany YUV 4:1:1"
-
-msgid "Uncompressed packed YUV 4:4:4"
-msgstr "Nieskompresowany spakowany YUV 4:4:4"
-
-msgid "Uncompressed planar YUV 4:2:2"
-msgstr "Nieskompresowany planarny YUV 4:2:2"
-
-msgid "Uncompressed planar YUV 4:1:1"
-msgstr "Nieskompresowany planarny YUV 4:1:1"
-
-msgid "Uncompressed black and white Y-plane"
-msgstr "Nieskompresowany czarno-biały plan Y"
-
-msgid "Uncompressed YUV"
+#, fuzzy
+msgid "Uncompressed video"
 msgstr "Nieskompresowany YUV"
 
-#, c-format
-msgid "Uncompressed palettized %d-bit %s"
+#, fuzzy
+msgid "Uncompressed gray"
+msgstr "Nieskompresowany obraz w szarości"
+
+#, fuzzy, c-format
+msgid "Uncompressed %s YUV %s"
+msgstr "Nieskompresowany YUV"
+
+#, fuzzy, c-format
+msgid "Uncompressed %s%d-bit %s"
 msgstr "Nieskompresowany %d-bitowy %s z paletą"
 
 #, c-format
 msgid "DivX MPEG-4 Version %d"
 msgstr "DivX MPEG-4 w wersji %d"
 
-#, c-format
-msgid "Raw %d-bit PCM audio"
+#, fuzzy
+msgid "Uncompressed audio"
+msgstr "Nieskompresowany YUV"
+
+#, fuzzy, c-format
+msgid "Raw %d-bit %s audio"
 msgstr "Surowe %d-bitowy dźwięk PCM"
-
-msgid "Raw PCM audio"
-msgstr "Surowy dźwięk PCM"
-
-#, c-format
-msgid "Raw %d-bit floating-point audio"
-msgstr "Surowy %d-bitowy dźwięk zmiennoprzecinkowy"
-
-msgid "Raw floating-point audio"
-msgstr "Surowy dźwięk zmiennoprzecinkowy"
 
 msgid "Audio CD source"
 msgstr "Źródło Audio CD"
@@ -541,6 +511,45 @@ msgstr "Nieznany element kodujący"
 
 msgid "Plugin or element of unknown type"
 msgstr "Wtyczka lub element nieznanego typu"
+
+#~ msgid "Uncompressed planar YUV 4:2:0"
+#~ msgstr "Nieskompresowany planarny YUV 4:2:0"
+
+#~ msgid "Uncompressed planar YVU 4:2:0"
+#~ msgstr "Nieskompresowany planarny YUV 4:2:0"
+
+#~ msgid "Uncompressed packed YUV 4:2:2"
+#~ msgstr "Nieskompresowany spakowany YUV 4:2:2"
+
+#~ msgid "Uncompressed packed YUV 4:1:0"
+#~ msgstr "Nieskompresowany spakowany YUV 4:1:0"
+
+#~ msgid "Uncompressed packed YVU 4:1:0"
+#~ msgstr "Nieskompresowany spakowany YUV 4:1:0"
+
+#~ msgid "Uncompressed packed YUV 4:1:1"
+#~ msgstr "Nieskompresowany spakowany YUV 4:1:1"
+
+#~ msgid "Uncompressed packed YUV 4:4:4"
+#~ msgstr "Nieskompresowany spakowany YUV 4:4:4"
+
+#~ msgid "Uncompressed planar YUV 4:2:2"
+#~ msgstr "Nieskompresowany planarny YUV 4:2:2"
+
+#~ msgid "Uncompressed planar YUV 4:1:1"
+#~ msgstr "Nieskompresowany planarny YUV 4:1:1"
+
+#~ msgid "Uncompressed black and white Y-plane"
+#~ msgstr "Nieskompresowany czarno-biały plan Y"
+
+#~ msgid "Raw PCM audio"
+#~ msgstr "Surowy dźwięk PCM"
+
+#~ msgid "Raw %d-bit floating-point audio"
+#~ msgstr "Surowy %d-bitowy dźwięk zmiennoprzecinkowy"
+
+#~ msgid "Raw floating-point audio"
+#~ msgstr "Surowy dźwięk zmiennoprzecinkowy"
 
 #~ msgid "Could not open vfs file \"%s\" for writing: %s."
 #~ msgstr "Nie udało się otworzyć pliku vfs \"%s\" do zapisu: %s."

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-08-20 12:18+0100\n"
+"POT-Creation-Date: 2011-09-29 17:27+0200\n"
 "PO-Revision-Date: 2011-04-26 15:56+0100\n"
 "Last-Translator: Klemen Košir <klemen.kosir@gmx.com>\n"
 "Language-Team: Slovenian <translation-team-sl@lists.sourceforge.net>\n"
@@ -391,9 +391,6 @@ msgstr "FFMpeg v1"
 msgid "Lossless MSZH"
 msgstr "Brezizgubni MSZH"
 
-msgid "Uncompressed Gray Image"
-msgstr "Nestisnjena sivinska slika"
-
 msgid "Run-length encoding"
 msgstr "Kodiranje trajanja izvajanja"
 
@@ -406,60 +403,33 @@ msgstr "Oblika podnapisov TMPlayer"
 msgid "Kate subtitle format"
 msgstr "Oblika podnapisov Kate"
 
-msgid "Uncompressed planar YUV 4:2:0"
-msgstr "Nestisnjen ploskovni YUV 4:2:0"
-
-msgid "Uncompressed planar YVU 4:2:0"
-msgstr "Nestisnjen ploskovni YVU 4:2:0"
-
-msgid "Uncompressed packed YUV 4:2:2"
-msgstr "Nestisnjen pakiran YUV 4:2:2"
-
-msgid "Uncompressed packed YUV 4:1:0"
-msgstr "Nestisnjen pakiran YUV 4:1:0"
-
-msgid "Uncompressed packed YVU 4:1:0"
-msgstr "Nestisnjen pakiran YVU 4:1:0"
-
-msgid "Uncompressed packed YUV 4:1:1"
-msgstr "Nestisnjen pakiran YUV 4:1:1"
-
-msgid "Uncompressed packed YUV 4:4:4"
-msgstr "Nestisnjen pakiran YUV 4:4:4"
-
-msgid "Uncompressed planar YUV 4:2:2"
-msgstr "Nestisnjen ploskovni YUV 4:2:2"
-
-msgid "Uncompressed planar YUV 4:1:1"
-msgstr "Nestisnjen ploskovni YUV 4:1:1"
-
-msgid "Uncompressed black and white Y-plane"
-msgstr "Nestisnjena črno-bela slika Y-ravnine"
-
-msgid "Uncompressed YUV"
+#, fuzzy
+msgid "Uncompressed video"
 msgstr "Nestisnjen YUV"
 
-#, c-format
-msgid "Uncompressed palettized %d-bit %s"
+#, fuzzy
+msgid "Uncompressed gray"
+msgstr "Nestisnjena sivinska slika"
+
+#, fuzzy, c-format
+msgid "Uncompressed %s YUV %s"
+msgstr "Nestisnjen YUV"
+
+#, fuzzy, c-format
+msgid "Uncompressed %s%d-bit %s"
 msgstr "Nestisnjen paletni %d-bitni %s"
 
 #, c-format
 msgid "DivX MPEG-4 Version %d"
 msgstr "DivX MPEG-4 različice %d"
 
-#, c-format
-msgid "Raw %d-bit PCM audio"
+#, fuzzy
+msgid "Uncompressed audio"
+msgstr "Nestisnjen YUV"
+
+#, fuzzy, c-format
+msgid "Raw %d-bit %s audio"
 msgstr "Surovi %d-bitni zvok PCM"
-
-msgid "Raw PCM audio"
-msgstr "Surovi zvok PCM"
-
-#, c-format
-msgid "Raw %d-bit floating-point audio"
-msgstr "Surovi %d-bitni zvok, določen s plavajočo vejico"
-
-msgid "Raw floating-point audio"
-msgstr "Surovi zvok, določen s plavajočo vejico"
 
 msgid "Audio CD source"
 msgstr "Vir zvočnega CD-ja"
@@ -538,6 +508,45 @@ msgstr "Neznan predmet kodirnika"
 
 msgid "Plugin or element of unknown type"
 msgstr "Vstavek ali predmet neznane vrste"
+
+#~ msgid "Uncompressed planar YUV 4:2:0"
+#~ msgstr "Nestisnjen ploskovni YUV 4:2:0"
+
+#~ msgid "Uncompressed planar YVU 4:2:0"
+#~ msgstr "Nestisnjen ploskovni YVU 4:2:0"
+
+#~ msgid "Uncompressed packed YUV 4:2:2"
+#~ msgstr "Nestisnjen pakiran YUV 4:2:2"
+
+#~ msgid "Uncompressed packed YUV 4:1:0"
+#~ msgstr "Nestisnjen pakiran YUV 4:1:0"
+
+#~ msgid "Uncompressed packed YVU 4:1:0"
+#~ msgstr "Nestisnjen pakiran YVU 4:1:0"
+
+#~ msgid "Uncompressed packed YUV 4:1:1"
+#~ msgstr "Nestisnjen pakiran YUV 4:1:1"
+
+#~ msgid "Uncompressed packed YUV 4:4:4"
+#~ msgstr "Nestisnjen pakiran YUV 4:4:4"
+
+#~ msgid "Uncompressed planar YUV 4:2:2"
+#~ msgstr "Nestisnjen ploskovni YUV 4:2:2"
+
+#~ msgid "Uncompressed planar YUV 4:1:1"
+#~ msgstr "Nestisnjen ploskovni YUV 4:1:1"
+
+#~ msgid "Uncompressed black and white Y-plane"
+#~ msgstr "Nestisnjena črno-bela slika Y-ravnine"
+
+#~ msgid "Raw PCM audio"
+#~ msgstr "Surovi zvok PCM"
+
+#~ msgid "Raw %d-bit floating-point audio"
+#~ msgstr "Surovi %d-bitni zvok, določen s plavajočo vejico"
+
+#~ msgid "Raw floating-point audio"
+#~ msgstr "Surovi zvok, določen s plavajočo vejico"
 
 #~ msgid "Could not open vfs file \"%s\" for writing: %s."
 #~ msgstr "VFS datoteke \"%s\" ni mogoče odpreti za pisanje: %s"

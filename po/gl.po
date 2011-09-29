@@ -2,14 +2,15 @@
 # Copyright (C) 2010 Fran Dieguez
 # This file is distributed under the same license as the gst-plugins-base package.
 # Fran Diéguez <frandieguez@ubuntu.com>, 2010, 2011.
+# Fran Dieguez <frandieguez@ubuntu.com>, 2011.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.31.2\n"
+"Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-08-20 12:18+0100\n"
-"PO-Revision-Date: 2011-01-09 21:20+0100\n"
-"Last-Translator: Fran Diéguez <frandieguez@ubuntu.com>\n"
+"POT-Creation-Date: 2011-09-29 17:27+0200\n"
+"PO-Revision-Date: 2011-09-05 12:48+0200\n"
+"Last-Translator: Fran Dieguez <frandieguez@ubuntu.com>\n"
 "Language-Team: Galician <proxecto@trasno.net>\n"
 "Language: gl\n"
 "MIME-Version: 1.0\n"
@@ -272,13 +273,11 @@ msgstr "modo de exposición da toma"
 msgid "The exposure mode used when capturing an image"
 msgstr "O modo de exposición usado ao tomar unha imaxe"
 
-#, fuzzy
 msgid "capturing exposure compensation"
-msgstr "modo de exposición da toma"
+msgstr "capturando a compensación de exposición"
 
-#, fuzzy
 msgid "The exposure compensation used when capturing an image"
-msgstr "O modo de exposición usado ao tomar unha imaxe"
+msgstr "A compensación de exposición usada ao capturar unha imaxe"
 
 msgid "capturing scene capture type"
 msgstr "tipo de escena usado na toma"
@@ -393,9 +392,6 @@ msgstr "FFMpeg v1"
 msgid "Lossless MSZH"
 msgstr "MSZH sen perda"
 
-msgid "Uncompressed Gray Image"
-msgstr "Imaxe en escala de grises sen comprimir"
-
 msgid "Run-length encoding"
 msgstr "Codificación do tamaño durante a execución"
 
@@ -408,60 +404,33 @@ msgstr "Formato de subtítulos TMPlayer"
 msgid "Kate subtitle format"
 msgstr "Formato de subtítulos Kate"
 
-msgid "Uncompressed planar YUV 4:2:0"
-msgstr "YUV 4:2:0 plano sen comprimir"
-
-msgid "Uncompressed planar YVU 4:2:0"
-msgstr "YUV 4:2:0 plano sen comprimir"
-
-msgid "Uncompressed packed YUV 4:2:2"
-msgstr "YUV 4:2:2 empaquetado sen comprimir"
-
-msgid "Uncompressed packed YUV 4:1:0"
-msgstr "YUV 4:1:0 empaquetado sen comprimir"
-
-msgid "Uncompressed packed YVU 4:1:0"
-msgstr "YUV 4:1:0 empaquetado sen comprimir"
-
-msgid "Uncompressed packed YUV 4:1:1"
-msgstr "YUV 4:1:1 empaquetado sen comprimir"
-
-msgid "Uncompressed packed YUV 4:4:4"
-msgstr "YUV 4:4:4 empaquetado sen comprimir"
-
-msgid "Uncompressed planar YUV 4:2:2"
-msgstr "YUV 4:2:2 plano sen comprimir"
-
-msgid "Uncompressed planar YUV 4:1:1"
-msgstr "YUV 4:1:1 plano sen comprimir"
-
-msgid "Uncompressed black and white Y-plane"
-msgstr "Plano Y en branco e negro sen comprimir"
-
-msgid "Uncompressed YUV"
+#, fuzzy
+msgid "Uncompressed video"
 msgstr "YUV sen comprimir"
 
-#, c-format
-msgid "Uncompressed palettized %d-bit %s"
+#, fuzzy
+msgid "Uncompressed gray"
+msgstr "Imaxe en escala de grises sen comprimir"
+
+#, fuzzy, c-format
+msgid "Uncompressed %s YUV %s"
+msgstr "YUV sen comprimir"
+
+#, fuzzy, c-format
+msgid "Uncompressed %s%d-bit %s"
 msgstr "Paletizado sen comprimir de %d-bit %s"
 
 #, c-format
 msgid "DivX MPEG-4 Version %d"
 msgstr "DivX MPEG-4 Versión %d"
 
-#, c-format
-msgid "Raw %d-bit PCM audio"
+#, fuzzy
+msgid "Uncompressed audio"
+msgstr "YUV sen comprimir"
+
+#, fuzzy, c-format
+msgid "Raw %d-bit %s audio"
 msgstr "Audio PCM sen comprimir de %d-bits"
-
-msgid "Raw PCM audio"
-msgstr "Audio PCM sen comprimir"
-
-#, c-format
-msgid "Raw %d-bit floating-point audio"
-msgstr "Audio sen comprimir de %d-bits en coma flotante"
-
-msgid "Raw floating-point audio"
-msgstr "Audio sen comprimir en coma flotante"
 
 msgid "Audio CD source"
 msgstr "Fonte: CD de son"
@@ -591,6 +560,52 @@ msgstr "Engadido ou elemento de tipo descoñecido"
 #~ msgid "Both autoaudiosink and alsasink elements are missing."
 #~ msgstr "Faltan os elementos autoaudiosink e alsasink."
 
+#~ msgid "Error while sending gdp header data to \"%s:%d\"."
+#~ msgstr ""
+#~ "Produciuse un erro ao enviar os datos da cabeceira gdp a  \"%s:%d\"."
+
+#~ msgid "Error while sending gdp payload data to \"%s:%d\"."
+#~ msgstr "Produciuse un erro ao enviar a carga de datos de gdp a «%s:%d»."
+
+#~ msgid "Uncompressed planar YUV 4:2:0"
+#~ msgstr "YUV 4:2:0 plano sen comprimir"
+
+#~ msgid "Uncompressed planar YVU 4:2:0"
+#~ msgstr "YUV 4:2:0 plano sen comprimir"
+
+#~ msgid "Uncompressed packed YUV 4:2:2"
+#~ msgstr "YUV 4:2:2 empaquetado sen comprimir"
+
+#~ msgid "Uncompressed packed YUV 4:1:0"
+#~ msgstr "YUV 4:1:0 empaquetado sen comprimir"
+
+#~ msgid "Uncompressed packed YVU 4:1:0"
+#~ msgstr "YUV 4:1:0 empaquetado sen comprimir"
+
+#~ msgid "Uncompressed packed YUV 4:1:1"
+#~ msgstr "YUV 4:1:1 empaquetado sen comprimir"
+
+#~ msgid "Uncompressed packed YUV 4:4:4"
+#~ msgstr "YUV 4:4:4 empaquetado sen comprimir"
+
+#~ msgid "Uncompressed planar YUV 4:2:2"
+#~ msgstr "YUV 4:2:2 plano sen comprimir"
+
+#~ msgid "Uncompressed planar YUV 4:1:1"
+#~ msgstr "YUV 4:1:1 plano sen comprimir"
+
+#~ msgid "Uncompressed black and white Y-plane"
+#~ msgstr "Plano Y en branco e negro sen comprimir"
+
+#~ msgid "Raw PCM audio"
+#~ msgstr "Audio PCM sen comprimir"
+
+#~ msgid "Raw %d-bit floating-point audio"
+#~ msgstr "Audio sen comprimir de %d-bits en coma flotante"
+
+#~ msgid "Raw floating-point audio"
+#~ msgstr "Audio sen comprimir en coma flotante"
+
 #~ msgid "No device specified."
 #~ msgstr "Non se especificou un dispositivo."
 
@@ -603,10 +618,3 @@ msgstr "Engadido ou elemento de tipo descoñecido"
 #~ msgid "Could not open device \"%s\" for reading and writing."
 #~ msgstr ""
 #~ "Non foi posíbel abrir o dispositivo «%s» para a súa lectura e escritura."
-
-#~ msgid "Error while sending gdp header data to \"%s:%d\"."
-#~ msgstr ""
-#~ "Produciuse un erro ao enviar os datos da cabeceira gdp a  \"%s:%d\"."
-
-#~ msgid "Error while sending gdp payload data to \"%s:%d\"."
-#~ msgstr "Produciuse un erro ao enviar a carga de datos de gdp a «%s:%d»."

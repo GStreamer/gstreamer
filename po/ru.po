@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-08-20 12:18+0100\n"
+"POT-Creation-Date: 2011-09-29 17:27+0200\n"
 "PO-Revision-Date: 2011-04-26 20:30+0400\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@mx.ru>\n"
@@ -394,9 +394,6 @@ msgstr "FFMpeg v1"
 msgid "Lossless MSZH"
 msgstr "Lossless MSZH"
 
-msgid "Uncompressed Gray Image"
-msgstr "Несжатое полутоновое изображение"
-
 msgid "Run-length encoding"
 msgstr "RLE-сжатие"
 
@@ -409,60 +406,33 @@ msgstr "Формат субтитров TMPlayer"
 msgid "Kate subtitle format"
 msgstr "Формат субтитров Kate"
 
-msgid "Uncompressed planar YUV 4:2:0"
-msgstr "Несжатый планарный YUV 4:2:0"
-
-msgid "Uncompressed planar YVU 4:2:0"
-msgstr "Несжатый планарный YVU 4:2:0"
-
-msgid "Uncompressed packed YUV 4:2:2"
-msgstr "Несжатый смешанный YUV 4:2:2"
-
-msgid "Uncompressed packed YUV 4:1:0"
-msgstr "Несжатый смешанный YUV 4:1:0"
-
-msgid "Uncompressed packed YVU 4:1:0"
-msgstr "Несжатый смешанный YVU 4:1:0"
-
-msgid "Uncompressed packed YUV 4:1:1"
-msgstr "Несжатый смешанный YUV 4:1:1"
-
-msgid "Uncompressed packed YUV 4:4:4"
-msgstr "Несжатый смешанный YUV 4:4:4"
-
-msgid "Uncompressed planar YUV 4:2:2"
-msgstr "Несжатый планарный YUV 4:2:2"
-
-msgid "Uncompressed planar YUV 4:1:1"
-msgstr "Несжатый планарный YUV 4:1:1"
-
-msgid "Uncompressed black and white Y-plane"
-msgstr "Несжатая чёрно-белая Y-плоскость"
-
-msgid "Uncompressed YUV"
+#, fuzzy
+msgid "Uncompressed video"
 msgstr "Несжатый YUV"
 
-#, c-format
-msgid "Uncompressed palettized %d-bit %s"
+#, fuzzy
+msgid "Uncompressed gray"
+msgstr "Несжатое полутоновое изображение"
+
+#, fuzzy, c-format
+msgid "Uncompressed %s YUV %s"
+msgstr "Несжатый YUV"
+
+#, fuzzy, c-format
+msgid "Uncompressed %s%d-bit %s"
 msgstr "Несжатое %d-битное %s-изображение с палитрой"
 
 #, c-format
 msgid "DivX MPEG-4 Version %d"
 msgstr "DivX MPEG-4 Версия %d"
 
-#, c-format
-msgid "Raw %d-bit PCM audio"
+#, fuzzy
+msgid "Uncompressed audio"
+msgstr "Несжатый YUV"
+
+#, fuzzy, c-format
+msgid "Raw %d-bit %s audio"
 msgstr "Несжатое %d-битное PCM-аудио"
-
-msgid "Raw PCM audio"
-msgstr "Несжатое PCM-аудио"
-
-#, c-format
-msgid "Raw %d-bit floating-point audio"
-msgstr "Несжатое %d-битное аудио с плавающей точкой"
-
-msgid "Raw floating-point audio"
-msgstr "Несжатое аудио с плавающей точкой"
 
 msgid "Audio CD source"
 msgstr "Источник аудио-CD"
@@ -541,6 +511,45 @@ msgstr "Неизвестный элемент-кодировщик"
 
 msgid "Plugin or element of unknown type"
 msgstr "Модуль или элемент неизвестного типа"
+
+#~ msgid "Uncompressed planar YUV 4:2:0"
+#~ msgstr "Несжатый планарный YUV 4:2:0"
+
+#~ msgid "Uncompressed planar YVU 4:2:0"
+#~ msgstr "Несжатый планарный YVU 4:2:0"
+
+#~ msgid "Uncompressed packed YUV 4:2:2"
+#~ msgstr "Несжатый смешанный YUV 4:2:2"
+
+#~ msgid "Uncompressed packed YUV 4:1:0"
+#~ msgstr "Несжатый смешанный YUV 4:1:0"
+
+#~ msgid "Uncompressed packed YVU 4:1:0"
+#~ msgstr "Несжатый смешанный YVU 4:1:0"
+
+#~ msgid "Uncompressed packed YUV 4:1:1"
+#~ msgstr "Несжатый смешанный YUV 4:1:1"
+
+#~ msgid "Uncompressed packed YUV 4:4:4"
+#~ msgstr "Несжатый смешанный YUV 4:4:4"
+
+#~ msgid "Uncompressed planar YUV 4:2:2"
+#~ msgstr "Несжатый планарный YUV 4:2:2"
+
+#~ msgid "Uncompressed planar YUV 4:1:1"
+#~ msgstr "Несжатый планарный YUV 4:1:1"
+
+#~ msgid "Uncompressed black and white Y-plane"
+#~ msgstr "Несжатая чёрно-белая Y-плоскость"
+
+#~ msgid "Raw PCM audio"
+#~ msgstr "Несжатое PCM-аудио"
+
+#~ msgid "Raw %d-bit floating-point audio"
+#~ msgstr "Несжатое %d-битное аудио с плавающей точкой"
+
+#~ msgid "Raw floating-point audio"
+#~ msgstr "Несжатое аудио с плавающей точкой"
 
 #~ msgid "Could not open vfs file \"%s\" for writing: %s."
 #~ msgstr "Не удалось открыть vfs-файл «%s» для записи: %s."

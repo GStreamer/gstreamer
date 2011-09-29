@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-08-20 12:18+0100\n"
+"POT-Creation-Date: 2011-09-29 17:27+0200\n"
 "PO-Revision-Date: 2010-03-25 12:32+0100\n"
 "Last-Translator: Mikel Olasagasti Uranga <hey_neken@mundurat.net>\n"
 "Language-Team: Basque <translation-team-eu@lists.sourceforge.net>\n"
@@ -391,9 +391,6 @@ msgstr "FFMpeg 1.b"
 msgid "Lossless MSZH"
 msgstr "Galerarik gabeko MSZH"
 
-msgid "Uncompressed Gray Image"
-msgstr "Konprimitu gabeko irudi grisa"
-
 msgid "Run-length encoding"
 msgstr "Run-length kodeketa"
 
@@ -406,60 +403,33 @@ msgstr "TMPlayer azpititulu-formatua"
 msgid "Kate subtitle format"
 msgstr "'Kate' azpititulu-formatua"
 
-msgid "Uncompressed planar YUV 4:2:0"
-msgstr "Konprimitu gabeko YUV 4:2:0 planarra"
-
-msgid "Uncompressed planar YVU 4:2:0"
-msgstr "Konprimitu gabeko YVU 4:2:0 planarra"
-
-msgid "Uncompressed packed YUV 4:2:2"
-msgstr "Konprimitu gabeko YUV 4:2:2 paketatua"
-
-msgid "Uncompressed packed YUV 4:1:0"
-msgstr "Konprimitu gabeko YUV 4:1:0 paketatua"
-
-msgid "Uncompressed packed YVU 4:1:0"
-msgstr "Konprimitu gabeko YVU 4:1:0 paketatua"
-
-msgid "Uncompressed packed YUV 4:1:1"
-msgstr "Konprimitu gabeko YUV 4:1:1 paketatua"
-
-msgid "Uncompressed packed YUV 4:4:4"
-msgstr "Konprimitu gabeko YUV 4:4:4 paketatua"
-
-msgid "Uncompressed planar YUV 4:2:2"
-msgstr "Konprimitu gabeko YUV 4:2:2 planarra"
-
-msgid "Uncompressed planar YUV 4:1:1"
-msgstr "Konprimitu gabeko YUV 4:1:1 planarra"
-
-msgid "Uncompressed black and white Y-plane"
-msgstr "Konprimitu gabeko zuri-beltzeko Y-planoa"
-
-msgid "Uncompressed YUV"
+#, fuzzy
+msgid "Uncompressed video"
 msgstr "Konprimitu gabeko YUV"
 
-#, c-format
-msgid "Uncompressed palettized %d-bit %s"
+#, fuzzy
+msgid "Uncompressed gray"
+msgstr "Konprimitu gabeko irudi grisa"
+
+#, fuzzy, c-format
+msgid "Uncompressed %s YUV %s"
+msgstr "Konprimitu gabeko YUV"
+
+#, fuzzy, c-format
+msgid "Uncompressed %s%d-bit %s"
 msgstr "Konprimitu gabeko paleta moduko %d biteko %s"
 
 #, c-format
 msgid "DivX MPEG-4 Version %d"
 msgstr "DivX MPEG-4 %d. bertsioa"
 
-#, c-format
-msgid "Raw %d-bit PCM audio"
+#, fuzzy
+msgid "Uncompressed audio"
+msgstr "Konprimitu gabeko YUV"
+
+#, fuzzy, c-format
+msgid "Raw %d-bit %s audio"
 msgstr "%d biteko prozesatu gabeko PCM audioa"
-
-msgid "Raw PCM audio"
-msgstr "Prozesatu gabeko PCM audioa"
-
-#, c-format
-msgid "Raw %d-bit floating-point audio"
-msgstr "Koma mugikorreko %d biteko prozesatu gabeko PCM audioa"
-
-msgid "Raw floating-point audio"
-msgstr "Koma mugikorreko prozesatu gabeko audioa"
 
 msgid "Audio CD source"
 msgstr "Audio CDaren iturburua"
@@ -538,6 +508,45 @@ msgstr "Kodetzailearen elementu ezezaguna"
 
 msgid "Plugin or element of unknown type"
 msgstr "Mota ezezaguneko plugina edo elementua"
+
+#~ msgid "Uncompressed planar YUV 4:2:0"
+#~ msgstr "Konprimitu gabeko YUV 4:2:0 planarra"
+
+#~ msgid "Uncompressed planar YVU 4:2:0"
+#~ msgstr "Konprimitu gabeko YVU 4:2:0 planarra"
+
+#~ msgid "Uncompressed packed YUV 4:2:2"
+#~ msgstr "Konprimitu gabeko YUV 4:2:2 paketatua"
+
+#~ msgid "Uncompressed packed YUV 4:1:0"
+#~ msgstr "Konprimitu gabeko YUV 4:1:0 paketatua"
+
+#~ msgid "Uncompressed packed YVU 4:1:0"
+#~ msgstr "Konprimitu gabeko YVU 4:1:0 paketatua"
+
+#~ msgid "Uncompressed packed YUV 4:1:1"
+#~ msgstr "Konprimitu gabeko YUV 4:1:1 paketatua"
+
+#~ msgid "Uncompressed packed YUV 4:4:4"
+#~ msgstr "Konprimitu gabeko YUV 4:4:4 paketatua"
+
+#~ msgid "Uncompressed planar YUV 4:2:2"
+#~ msgstr "Konprimitu gabeko YUV 4:2:2 planarra"
+
+#~ msgid "Uncompressed planar YUV 4:1:1"
+#~ msgstr "Konprimitu gabeko YUV 4:1:1 planarra"
+
+#~ msgid "Uncompressed black and white Y-plane"
+#~ msgstr "Konprimitu gabeko zuri-beltzeko Y-planoa"
+
+#~ msgid "Raw PCM audio"
+#~ msgstr "Prozesatu gabeko PCM audioa"
+
+#~ msgid "Raw %d-bit floating-point audio"
+#~ msgstr "Koma mugikorreko %d biteko prozesatu gabeko PCM audioa"
+
+#~ msgid "Raw floating-point audio"
+#~ msgstr "Koma mugikorreko prozesatu gabeko audioa"
 
 #~ msgid "Could not open vfs file \"%s\" for writing: %s."
 #~ msgstr "Ezin izan da \"%s\" vfs fitxategia ireki idazteko: %s."
