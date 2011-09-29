@@ -505,7 +505,6 @@ vorbis_handle_identification_packet (GstVorbisDec * vd)
 {
   GstCaps *caps;
   GstAudioInfo info;
-  const GstAudioChannelPosition *pos = NULL;
 
   gst_audio_info_set_format (&info, GST_VORBIS_AUDIO_FORMAT, vd->vi.rate,
       vd->vi.channels);
@@ -520,17 +519,23 @@ vorbis_handle_identification_packet (GstVorbisDec * vd)
     case 5:
     case 6:
     case 7:
-    case 8:
+    case 8:{
+      const GstAudioChannelPosition *pos;
+      gint i;
+
       pos = gst_vorbis_channel_positions[info.channels - 1];
+      for (i = 0; i < info.channels; i++)
+        info.position[i] = pos[i];
       break;
-    default:
-    {
+    }
+    default:{
       gint i, max_pos = MAX (info.channels, 64);
 
       GST_ELEMENT_WARNING (vd, STREAM, DECODE,
           (NULL), ("Using NONE channel layout for more than 8 channels"));
       for (i = 0; i < max_pos; i++)
         info.position[i] = GST_AUDIO_CHANNEL_POSITION_NONE;
+      break;
     }
   }
 
