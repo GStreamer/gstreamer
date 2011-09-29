@@ -363,7 +363,8 @@ static void
 gst_camera_bin_start_capture (GstCameraBin2 * camerabin)
 {
   const GstTagList *taglist;
-
+  gint capture_index = camerabin->capture_index;
+  gchar *location = NULL;
   GST_DEBUG_OBJECT (camerabin, "Received start-capture");
 
   /* check that we have a valid location */
@@ -375,6 +376,9 @@ gst_camera_bin_start_capture (GstCameraBin2 * camerabin)
   }
 
   GST_CAMERA_BIN2_PROCESSING_INC (camerabin);
+
+  if (camerabin->location)
+    location = g_strdup_printf (camerabin->location, capture_index);
 
   if (camerabin->mode == MODE_VIDEO) {
     if (camerabin->audio_src) {
@@ -396,15 +400,14 @@ gst_camera_bin_start_capture (GstCameraBin2 * camerabin)
       }
     }
   } else {
-    gchar *location = NULL;
-
     /* store the next capture buffer filename */
-    if (camerabin->location)
-      location =
-          g_strdup_printf (camerabin->location, camerabin->capture_index++);
     camerabin->image_location_list =
-        g_slist_append (camerabin->image_location_list, location);
+        g_slist_append (camerabin->image_location_list, g_strdup (location));
   }
+
+  /* store the next preview filename */
+  camerabin->preview_location_list =
+      g_slist_append (camerabin->preview_location_list, location);
 
   g_signal_emit_by_name (camerabin->src, "start-capture", NULL);
   if (camerabin->mode == MODE_VIDEO && camerabin->audio_src)
@@ -434,7 +437,6 @@ gst_camera_bin_start_capture (GstCameraBin2 * camerabin)
         gst_event_new_tag (gst_tag_list_copy (taglist)));
     gst_object_unref (active_pad);
   }
-
 }
 
 static void
@@ -482,7 +484,7 @@ gst_camera_bin_src_notify_readyforcapture (GObject * obj, GParamSpec * pspec,
       gst_element_set_state (camera->videosink, GST_STATE_NULL);
       gst_element_set_state (camera->video_encodebin, GST_STATE_NULL);
       gst_element_set_state (camera->videobin_capsfilter, GST_STATE_NULL);
-      location = g_strdup_printf (camera->location, camera->capture_index++);
+      location = g_strdup_printf (camera->location, camera->capture_index);
       GST_DEBUG_OBJECT (camera, "Switching videobin location to %s", location);
       g_object_set (camera->videosink, "location", location, NULL);
       g_free (location);
@@ -495,6 +497,8 @@ gst_camera_bin_src_notify_readyforcapture (GObject * obj, GParamSpec * pspec,
       gst_element_set_state (camera->video_encodebin, GST_STATE_PLAYING);
       gst_element_set_state (camera->videobin_capsfilter, GST_STATE_PLAYING);
     }
+
+    camera->capture_index++;
   } else {
     if (camera->mode == MODE_VIDEO && camera->audio_src) {
       /* FIXME We need to set audiosrc to null to make it resync the ringbuffer
@@ -923,6 +927,8 @@ gst_video_capture_bin_post_video_done (GstCameraBin2 * camera)
 static void
 gst_camera_bin_handle_message (GstBin * bin, GstMessage * message)
 {
+  GstCameraBin2 *camerabin = GST_CAMERA_BIN2_CAST (bin);
+
   switch (GST_MESSAGE_TYPE (message)) {
     case GST_MESSAGE_ELEMENT:{
       const GstStructure *structure = gst_message_get_structure (message);
@@ -937,6 +943,22 @@ gst_camera_bin_handle_message (GstBin * bin, GstMessage * message)
           gst_image_capture_bin_post_image_done (GST_CAMERA_BIN2_CAST (bin),
               filename);
         }
+      } else if (gst_structure_has_name (structure, "preview-image")) {
+        GValue *value;
+        gchar *location;
+
+        location = camerabin->preview_location_list->data;
+        camerabin->preview_location_list =
+            g_slist_delete_link (camerabin->preview_location_list,
+            camerabin->preview_location_list);
+        GST_DEBUG_OBJECT (camerabin, "Adding preview location to preview "
+            "message '%s'", location);
+
+        value = g_new0 (GValue, 1);
+        g_value_init (value, G_TYPE_STRING);
+        g_value_take_string (value, location);
+        gst_structure_take_value ((GstStructure *) structure, "location",
+            value);
       }
     }
       break;
@@ -1702,6 +1724,10 @@ gst_camera_bin_change_state (GstElement * element, GstStateChange trans)
       g_slist_foreach (camera->image_location_list, (GFunc) g_free, NULL);
       g_slist_free (camera->image_location_list);
       camera->image_location_list = NULL;
+
+      g_slist_foreach (camera->preview_location_list, (GFunc) g_free, NULL);
+      g_slist_free (camera->preview_location_list);
+      camera->preview_location_list = NULL;
 
       /* explicitly set to READY as they might be outside of the bin */
       gst_element_set_state (camera->audio_volume, GST_STATE_READY);
