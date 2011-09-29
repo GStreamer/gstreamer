@@ -538,7 +538,7 @@ gst_speex_enc_encode (GstSpeexEnc * enc, GstBuffer * buf)
 {
   gint frame_size = enc->frame_size;
   gint bytes = frame_size * 2 * enc->channels, samples, size;
-  gint outsize, written, dtx_ret;
+  gint outsize, written, dtx_ret = 0;
   guint8 *data;
   GstBuffer *outbuf;
   GstFlowReturn ret = GST_FLOW_OK;
