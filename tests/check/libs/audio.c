@@ -71,7 +71,7 @@ GST_START_TEST (test_multichannel_checks)
   };
   GstStructure *s;
 
-  s = gst_structure_new ("audio/x-raw-int", "channels", G_TYPE_INT, 2, NULL);
+  s = gst_structure_new ("audio/x-raw", "channels", G_TYPE_INT, 2, NULL);
 
   /* check if the audio channel position checks work */
   fail_if (gst_audio_check_channel_positions (pos_2_mixed, 2));

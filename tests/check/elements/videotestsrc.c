@@ -40,7 +40,7 @@ static GstPad *mysinkpad;
 
 
 #define CAPS_TEMPLATE_STRING            \
-    "video/x-raw-yuv, "                 \
+    "video/x-raw, "                 \
     "format = (string) UYVY, "          \
     "width = (int) [ 1,  MAX ], "       \
     "height = (int) [ 1,  MAX ], "      \

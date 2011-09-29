@@ -261,7 +261,7 @@ GST_START_TEST (test_encodebin_sink_pads_dynamic)
   sinkpad = NULL;
 
   /* Check again with the 'request-pad' signal */
-  sinkcaps = gst_caps_new_simple ("audio/x-raw-int", NULL);
+  sinkcaps = gst_caps_new_simple ("audio/x-raw", NULL);
   g_signal_emit_by_name (ebin, "request-pad", sinkcaps, &sinkpad);
   gst_caps_unref (sinkcaps);
   fail_unless (sinkpad != NULL);
@@ -506,7 +506,7 @@ GST_START_TEST (test_encodebin_render_audio_only_static)
   /* Requesting a new pad should fail */
   ASSERT_CRITICAL (gst_element_get_request_pad (ebin, "audio_0"));
 
-  sinkcaps = gst_caps_new_simple ("audio/x-raw-int", NULL);
+  sinkcaps = gst_caps_new_simple ("audio/x-raw", NULL);
   g_signal_emit_by_name (ebin, "request-pad", sinkcaps, &sinkpad);
   gst_caps_unref (sinkcaps);
   fail_if (sinkpad != NULL);

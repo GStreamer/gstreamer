@@ -33,19 +33,14 @@ typedef GstElementClass TestInjectorClass;
 GType test_injector_get_type (void);
 G_DEFINE_TYPE (TestInjector, test_injector, GST_TYPE_ELEMENT);
 
+#define FORMATS "{ "GST_AUDIO_NE(F32)", S8, S16LE, S16BE, " \
+                   "U16LE, U16NE, S32LE, S32BE, U32LE, U32BE }"
+
 #define INJECTOR_CAPS \
-  "audio/x-raw-float, "                                  \
+  "audio/x-raw, "                                        \
+    "format = (string) "FORMATS", "                      \
     "rate = (int) [ 1, MAX ], "                          \
-    "channels = (int) [ 1, 8 ], "                        \
-    "endianness = (int) BYTE_ORDER, "                    \
-    "width = (int) 32;"                                  \
-  "audio/x-raw-int, "                                    \
-    "rate = (int) [ 1, MAX ], "                          \
-    "channels = (int) [ 1, 8 ], "                        \
-    "endianness = (int) { LITTLE_ENDIAN, BIG_ENDIAN }, " \
-    "width = (int) { 8, 16, 32 }, "                      \
-    "depth = (int) [ 1, 32 ], "                          \
-    "signed = (boolean) { true, false }"
+    "channels = (int) [ 1, 8 ]"
 
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -178,8 +173,8 @@ got_buf (GstElement * fakesink, GstBuffer * buf, GstPad * pad, GList ** p_bufs)
 }
 
 static void
-do_perfect_stream_test (guint rate, guint width, gdouble drop_probability,
-    gdouble inject_probability)
+do_perfect_stream_test (guint rate, const gchar * format,
+    gdouble drop_probability, gdouble inject_probability)
 {
   GstElement *pipe, *src, *conv, *filter, *injector, *audiorate, *sink;
   GstMessage *msg;
@@ -189,8 +184,8 @@ do_perfect_stream_test (guint rate, guint width, gdouble drop_probability,
   GstClockTime next_time = GST_CLOCK_TIME_NONE;
   guint64 next_offset = GST_BUFFER_OFFSET_NONE;
 
-  caps = gst_caps_new_simple ("audio/x-raw-int", "rate", G_TYPE_INT,
-      rate, "width", G_TYPE_INT, width, NULL);
+  caps = gst_caps_new_simple ("audio/x-raw", "rate", G_TYPE_INT,
+      rate, "format", G_TYPE_STRING, format, NULL);
 
   GST_INFO ("-------- drop=%.0f%% caps = %" GST_PTR_FORMAT " ---------- ",
       drop_probability * 100.0, caps);
@@ -301,8 +296,8 @@ GST_START_TEST (test_perfect_stream_drop0)
   guint i;
 
   for (i = 0; i < G_N_ELEMENTS (rates); ++i) {
-    do_perfect_stream_test (rates[i], 8, 0.0, 0.0);
-    do_perfect_stream_test (rates[i], 16, 0.0, 0.0);
+    do_perfect_stream_test (rates[i], "S8", 0.0, 0.0);
+    do_perfect_stream_test (rates[i], GST_AUDIO_NE (S16), 0.0, 0.0);
   }
 }
 
@@ -313,8 +308,8 @@ GST_START_TEST (test_perfect_stream_drop10)
   guint i;
 
   for (i = 0; i < G_N_ELEMENTS (rates); ++i) {
-    do_perfect_stream_test (rates[i], 8, 0.10, 0.0);
-    do_perfect_stream_test (rates[i], 16, 0.10, 0.0);
+    do_perfect_stream_test (rates[i], "S8", 0.10, 0.0);
+    do_perfect_stream_test (rates[i], GST_AUDIO_NE (S16), 0.10, 0.0);
   }
 }
 
@@ -325,8 +320,8 @@ GST_START_TEST (test_perfect_stream_drop50)
   guint i;
 
   for (i = 0; i < G_N_ELEMENTS (rates); ++i) {
-    do_perfect_stream_test (rates[i], 8, 0.50, 0.0);
-    do_perfect_stream_test (rates[i], 16, 0.50, 0.0);
+    do_perfect_stream_test (rates[i], "S8", 0.50, 0.0);
+    do_perfect_stream_test (rates[i], GST_AUDIO_NE (S16), 0.50, 0.0);
   }
 }
 
@@ -337,8 +332,8 @@ GST_START_TEST (test_perfect_stream_drop90)
   guint i;
 
   for (i = 0; i < G_N_ELEMENTS (rates); ++i) {
-    do_perfect_stream_test (rates[i], 8, 0.90, 0.0);
-    do_perfect_stream_test (rates[i], 16, 0.90, 0.0);
+    do_perfect_stream_test (rates[i], "S8", 0.90, 0.0);
+    do_perfect_stream_test (rates[i], GST_AUDIO_NE (S16), 0.90, 0.0);
   }
 }
 
@@ -349,8 +344,8 @@ GST_START_TEST (test_perfect_stream_inject10)
   guint i;
 
   for (i = 0; i < G_N_ELEMENTS (rates); ++i) {
-    do_perfect_stream_test (rates[i], 8, 0.0, 0.10);
-    do_perfect_stream_test (rates[i], 16, 0.0, 0.10);
+    do_perfect_stream_test (rates[i], "S8", 0.0, 0.10);
+    do_perfect_stream_test (rates[i], GST_AUDIO_NE (S16), 0.0, 0.10);
   }
 }
 
@@ -361,8 +356,8 @@ GST_START_TEST (test_perfect_stream_inject90)
   guint i;
 
   for (i = 0; i < G_N_ELEMENTS (rates); ++i) {
-    do_perfect_stream_test (rates[i], 8, 0.0, 0.90);
-    do_perfect_stream_test (rates[i], 16, 0.0, 0.90);
+    do_perfect_stream_test (rates[i], "S8", 0.0, 0.90);
+    do_perfect_stream_test (rates[i], GST_AUDIO_NE (S16), 0.0, 0.90);
   }
 }
 
@@ -373,8 +368,8 @@ GST_START_TEST (test_perfect_stream_drop45_inject25)
   guint i;
 
   for (i = 0; i < G_N_ELEMENTS (rates); ++i) {
-    do_perfect_stream_test (rates[i], 8, 0.45, 0.25);
-    do_perfect_stream_test (rates[i], 16, 0.45, 0.25);
+    do_perfect_stream_test (rates[i], "S8", 0.45, 0.25);
+    do_perfect_stream_test (rates[i], GST_AUDIO_NE (S16), 0.45, 0.25);
   }
 }
 
@@ -385,13 +380,13 @@ GST_END_TEST;
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-float,channels=1,rate=44100,width=32")
+    GST_STATIC_CAPS ("audio/x-raw,format=F32LE,channels=1,rate=44100")
     );
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-float,channels=1,rate=44100,width=32")
+    GST_STATIC_CAPS ("audio/x-raw,format=F32LE,channels=1,rate=44100")
     );
 
 GST_START_TEST (test_large_discont)
@@ -402,10 +397,9 @@ GST_START_TEST (test_large_discont)
   GstBuffer *buf;
 
   audiorate = gst_check_setup_element ("audiorate");
-  caps = gst_caps_new_simple ("audio/x-raw-float",
-      "channels", G_TYPE_INT, 1,
-      "rate", G_TYPE_INT, 44100, "width", G_TYPE_INT, 32,
-      "endianness", G_TYPE_INT, G_BYTE_ORDER, NULL);
+  caps = gst_caps_new_simple ("audio/x-raw",
+      "format", G_TYPE_STRING, GST_AUDIO_NE (F32),
+      "channels", G_TYPE_INT, 1, "rate", G_TYPE_INT, 44100, NULL);
 
   srcpad = gst_check_setup_src_pad (audiorate, &srctemplate, caps);
   sinkpad = gst_check_setup_sink_pad (audiorate, &sinktemplate, caps);

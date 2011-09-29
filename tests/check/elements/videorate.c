@@ -808,177 +808,177 @@ typedef struct
 
 static TestInfo caps_negotiation_tests[] = {
   {
-        .caps = "video/x-raw-yuv",
+        .caps = "video/x-raw",
         .drop_only = FALSE,
-        .expected_sink_caps = "video/x-raw-yuv",
-      .expected_src_caps = "video/x-raw-yuv, framerate=(fraction)[0/1, MAX]"},
+        .expected_sink_caps = "video/x-raw",
+      .expected_src_caps = "video/x-raw, framerate=(fraction)[0/1, MAX]"},
   {
-        .caps = "video/x-raw-yuv",
+        .caps = "video/x-raw",
         .drop_only = FALSE,
         .max_rate = 15,
-        .expected_sink_caps = "video/x-raw-yuv",
-      .expected_src_caps = "video/x-raw-yuv, framerate=(fraction)[0/1, 15]"},
+        .expected_sink_caps = "video/x-raw",
+      .expected_src_caps = "video/x-raw, framerate=(fraction)[0/1, 15]"},
   {
-        .caps = "video/x-raw-yuv",
+        .caps = "video/x-raw",
         .drop_only = TRUE,
-        .expected_sink_caps = "video/x-raw-yuv, framerate=(fraction)[0/1, MAX]",
-      .expected_src_caps = "video/x-raw-yuv, framerate=(fraction)[0/1, MAX]"},
+        .expected_sink_caps = "video/x-raw, framerate=(fraction)[0/1, MAX]",
+      .expected_src_caps = "video/x-raw, framerate=(fraction)[0/1, MAX]"},
   {
-        .caps = "video/x-raw-yuv",
+        .caps = "video/x-raw",
         .drop_only = TRUE,
         .max_rate = 15,
         .expected_sink_caps =
-        "video/x-raw-yuv, framerate=(fraction)[0/1, 15];"
-        "video/x-raw-yuv, framerate=(fraction)[0/1, MAX]",
-      .expected_src_caps = "video/x-raw-yuv, framerate=(fraction)[0/1, 15]"},
+        "video/x-raw, framerate=(fraction)[0/1, 15];"
+        "video/x-raw, framerate=(fraction)[0/1, MAX]",
+      .expected_src_caps = "video/x-raw, framerate=(fraction)[0/1, 15]"},
 
 
   {
-        .caps = "video/x-raw-yuv, framerate=(fraction)[0/1, MAX]",
+        .caps = "video/x-raw, framerate=(fraction)[0/1, MAX]",
         .drop_only = FALSE,
-        .expected_sink_caps = "video/x-raw-yuv, framerate=(fraction)[0/1, MAX]",
-      .expected_src_caps = "video/x-raw-yuv, framerate=(fraction)[0/1, MAX]"},
+        .expected_sink_caps = "video/x-raw, framerate=(fraction)[0/1, MAX]",
+      .expected_src_caps = "video/x-raw, framerate=(fraction)[0/1, MAX]"},
   {
-        .caps = "video/x-raw-yuv, framerate=(fraction)[0/1, MAX]",
+        .caps = "video/x-raw, framerate=(fraction)[0/1, MAX]",
         .drop_only = FALSE,
         .max_rate = 15,
-        .expected_sink_caps = "video/x-raw-yuv, framerate=(fraction)[0/1, MAX]",
-      .expected_src_caps = "video/x-raw-yuv, framerate=(fraction)[0/1, 15]"},
+        .expected_sink_caps = "video/x-raw, framerate=(fraction)[0/1, MAX]",
+      .expected_src_caps = "video/x-raw, framerate=(fraction)[0/1, 15]"},
   {
-        .caps = "video/x-raw-yuv, framerate=(fraction)[0/1, MAX]",
+        .caps = "video/x-raw, framerate=(fraction)[0/1, MAX]",
         .drop_only = TRUE,
-        .expected_sink_caps = "video/x-raw-yuv, framerate=(fraction)[0/1, MAX]",
-      .expected_src_caps = "video/x-raw-yuv, framerate=(fraction)[0/1, MAX]"},
+        .expected_sink_caps = "video/x-raw, framerate=(fraction)[0/1, MAX]",
+      .expected_src_caps = "video/x-raw, framerate=(fraction)[0/1, MAX]"},
   {
-        .caps = "video/x-raw-yuv, framerate=(fraction)[0/1, MAX]",
+        .caps = "video/x-raw, framerate=(fraction)[0/1, MAX]",
         .drop_only = TRUE,
         .max_rate = 15,
         .expected_sink_caps =
-        "video/x-raw-yuv, framerate=(fraction)[0/1, 15];"
-        "video/x-raw-yuv, framerate=(fraction)[0/1, MAX]",
-      .expected_src_caps = "video/x-raw-yuv, framerate=(fraction)[0/1, 15]"},
+        "video/x-raw, framerate=(fraction)[0/1, 15];"
+        "video/x-raw, framerate=(fraction)[0/1, MAX]",
+      .expected_src_caps = "video/x-raw, framerate=(fraction)[0/1, 15]"},
   {
-        .caps = "video/x-raw-yuv, framerate=15/1",
+        .caps = "video/x-raw, framerate=15/1",
         .drop_only = FALSE,
         .expected_sink_caps =
-        "video/x-raw-yuv, framerate=(fraction)15/1;"
-        "video/x-raw-yuv, framerate=(fraction)[0/1, MAX]",
+        "video/x-raw, framerate=(fraction)15/1;"
+        "video/x-raw, framerate=(fraction)[0/1, MAX]",
       .expected_src_caps =
-        "video/x-raw-yuv, framerate=(fraction)15/1;"
-        "video/x-raw-yuv, framerate=(fraction)[0/1, MAX]"},
+        "video/x-raw, framerate=(fraction)15/1;"
+        "video/x-raw, framerate=(fraction)[0/1, MAX]"},
   {
-        .caps = "video/x-raw-yuv, framerate=15/1",
-        .drop_only = FALSE,
-        .max_rate = 20,
-        .expected_sink_caps =
-        "video/x-raw-yuv, framerate=(fraction)15/1;"
-        "video/x-raw-yuv, framerate=(fraction)[0/1, MAX]",
-      .expected_src_caps =
-        "video/x-raw-yuv, framerate=(fraction)15/1;"
-        "video/x-raw-yuv, framerate=(fraction)[0/1, 20/1]"},
-  {
-        .caps = "video/x-raw-yuv, framerate=15/1",
-        .drop_only = TRUE,
-        .expected_sink_caps =
-        "video/x-raw-yuv, framerate=(fraction)15/1;"
-        "video/x-raw-yuv, framerate=(fraction)[15/1, MAX];"
-        "video/x-raw-yuv, framerate=(fraction)0/1",
-      .expected_src_caps =
-        "video/x-raw-yuv, framerate=(fraction)15/1;"
-        "video/x-raw-yuv, framerate=(fraction)[0/1, 15/1]"},
-  {
-        .caps = "video/x-raw-yuv, framerate=15/1",
-        .drop_only = TRUE,
-        .max_rate = 20,
-        .expected_sink_caps =
-        "video/x-raw-yuv, framerate=(fraction)15/1;"
-        "video/x-raw-yuv, framerate=(fraction)[15/1, MAX];"
-        "video/x-raw-yuv, framerate=(fraction)0/1",
-      .expected_src_caps =
-        "video/x-raw-yuv, framerate=(fraction)15/1;"
-        "video/x-raw-yuv, framerate=(fraction)[0/1, 15/1];"},
-  {
-        .caps = "video/x-raw-yuv, framerate=[15/1, 30/1]",
-        .drop_only = FALSE,
-        .expected_sink_caps =
-        "video/x-raw-yuv, framerate=(fraction)[15/1, 30/1];"
-        "video/x-raw-yuv, framerate=(fraction)[0/1, MAX];",
-      .expected_src_caps =
-        "video/x-raw-yuv, framerate=(fraction)[15/1, 30/1];"
-        "video/x-raw-yuv, framerate=(fraction)[0/1, MAX];"},
-  {
-        .caps = "video/x-raw-yuv, framerate=[15/1, 30/1]",
+        .caps = "video/x-raw, framerate=15/1",
         .drop_only = FALSE,
         .max_rate = 20,
         .expected_sink_caps =
-        "video/x-raw-yuv, framerate=(fraction)[15/1, 30/1];"
-        "video/x-raw-yuv, framerate=(fraction)[0/1, MAX];",
+        "video/x-raw, framerate=(fraction)15/1;"
+        "video/x-raw, framerate=(fraction)[0/1, MAX]",
       .expected_src_caps =
-        "video/x-raw-yuv, framerate=(fraction)[15/1, 20/1];"
-        "video/x-raw-yuv, framerate=(fraction)[0/1, 20/1];"},
+        "video/x-raw, framerate=(fraction)15/1;"
+        "video/x-raw, framerate=(fraction)[0/1, 20/1]"},
   {
-        .caps = "video/x-raw-yuv, framerate=[15/1, 30/1]",
+        .caps = "video/x-raw, framerate=15/1",
         .drop_only = TRUE,
         .expected_sink_caps =
-        "video/x-raw-yuv, framerate=(fraction)[15/1, 30/1];"
-        "video/x-raw-yuv, framerate=(fraction)[15/1, MAX];"
-        "video/x-raw-yuv, framerate=(fraction)0/1",
+        "video/x-raw, framerate=(fraction)15/1;"
+        "video/x-raw, framerate=(fraction)[15/1, MAX];"
+        "video/x-raw, framerate=(fraction)0/1",
       .expected_src_caps =
-        "video/x-raw-yuv, framerate=(fraction)[15/1, 30/1];"
-        "video/x-raw-yuv, framerate=(fraction)[0/1, 30/1]"},
+        "video/x-raw, framerate=(fraction)15/1;"
+        "video/x-raw, framerate=(fraction)[0/1, 15/1]"},
   {
-        .caps = "video/x-raw-yuv, framerate=[15/1, 30/1]",
+        .caps = "video/x-raw, framerate=15/1",
         .drop_only = TRUE,
         .max_rate = 20,
         .expected_sink_caps =
-        "video/x-raw-yuv, framerate=(fraction)[15/1, 20/1];"
-        "video/x-raw-yuv, framerate=(fraction)[15/1, 30/1];"
-        "video/x-raw-yuv, framerate=(fraction)[15/1, MAX];"
-        "video/x-raw-yuv, framerate=(fraction)0/1",
+        "video/x-raw, framerate=(fraction)15/1;"
+        "video/x-raw, framerate=(fraction)[15/1, MAX];"
+        "video/x-raw, framerate=(fraction)0/1",
       .expected_src_caps =
-        "video/x-raw-yuv, framerate=(fraction)[15/1, 20/1];"
-        "video/x-raw-yuv, framerate=(fraction)[0/1, 20/1]"},
+        "video/x-raw, framerate=(fraction)15/1;"
+        "video/x-raw, framerate=(fraction)[0/1, 15/1];"},
   {
-        .caps = "video/x-raw-yuv, framerate={15/1, 30/1}",
+        .caps = "video/x-raw, framerate=[15/1, 30/1]",
         .drop_only = FALSE,
         .expected_sink_caps =
-        "video/x-raw-yuv, framerate=(fraction){15/1, 30/1};"
-        "video/x-raw-yuv, framerate=(fraction)[0/1, MAX];",
+        "video/x-raw, framerate=(fraction)[15/1, 30/1];"
+        "video/x-raw, framerate=(fraction)[0/1, MAX];",
       .expected_src_caps =
-        "video/x-raw-yuv, framerate=(fraction){15/1, 30/1};"
-        "video/x-raw-yuv, framerate=(fraction)[0/1, MAX]"},
+        "video/x-raw, framerate=(fraction)[15/1, 30/1];"
+        "video/x-raw, framerate=(fraction)[0/1, MAX];"},
   {
-        .caps = "video/x-raw-yuv, framerate={15/1, 30/1}",
+        .caps = "video/x-raw, framerate=[15/1, 30/1]",
         .drop_only = FALSE,
         .max_rate = 20,
         .expected_sink_caps =
-        "video/x-raw-yuv, framerate=(fraction){15/1, 30/1};"
-        "video/x-raw-yuv, framerate=(fraction)[0/1, MAX];",
+        "video/x-raw, framerate=(fraction)[15/1, 30/1];"
+        "video/x-raw, framerate=(fraction)[0/1, MAX];",
       .expected_src_caps =
-        "video/x-raw-yuv, framerate=(fraction)15/1;"
-        "video/x-raw-yuv, framerate=(fraction)[0/1, 20/1];"},
+        "video/x-raw, framerate=(fraction)[15/1, 20/1];"
+        "video/x-raw, framerate=(fraction)[0/1, 20/1];"},
   {
-        .caps = "video/x-raw-yuv, framerate={15/1, 30/1}",
+        .caps = "video/x-raw, framerate=[15/1, 30/1]",
         .drop_only = TRUE,
         .expected_sink_caps =
-        "video/x-raw-yuv, framerate=(fraction){15/1, 30/1};"
-        "video/x-raw-yuv, framerate=(fraction)[15/1, MAX];"
-        "video/x-raw-yuv, framerate=(fraction)0/1",
+        "video/x-raw, framerate=(fraction)[15/1, 30/1];"
+        "video/x-raw, framerate=(fraction)[15/1, MAX];"
+        "video/x-raw, framerate=(fraction)0/1",
       .expected_src_caps =
-        "video/x-raw-yuv, framerate=(fraction){15/1, 30/1};"
-        "video/x-raw-yuv, framerate=(fraction)[0/1, 30/1];"},
+        "video/x-raw, framerate=(fraction)[15/1, 30/1];"
+        "video/x-raw, framerate=(fraction)[0/1, 30/1]"},
   {
-        .caps = "video/x-raw-yuv, framerate={15/1, 30/1}",
+        .caps = "video/x-raw, framerate=[15/1, 30/1]",
         .drop_only = TRUE,
         .max_rate = 20,
         .expected_sink_caps =
-        "video/x-raw-yuv, framerate=(fraction)15/1;"
-        "video/x-raw-yuv, framerate=(fraction){15/1, 30/1};"
-        "video/x-raw-yuv, framerate=(fraction)[15/1, MAX];"
-        "video/x-raw-yuv, framerate=(fraction)0/1",
+        "video/x-raw, framerate=(fraction)[15/1, 20/1];"
+        "video/x-raw, framerate=(fraction)[15/1, 30/1];"
+        "video/x-raw, framerate=(fraction)[15/1, MAX];"
+        "video/x-raw, framerate=(fraction)0/1",
       .expected_src_caps =
-        "video/x-raw-yuv, framerate=(fraction)15/1;"
-        "video/x-raw-yuv, framerate=(fraction)[0/1, 20/1]"},
+        "video/x-raw, framerate=(fraction)[15/1, 20/1];"
+        "video/x-raw, framerate=(fraction)[0/1, 20/1]"},
+  {
+        .caps = "video/x-raw, framerate={15/1, 30/1}",
+        .drop_only = FALSE,
+        .expected_sink_caps =
+        "video/x-raw, framerate=(fraction){15/1, 30/1};"
+        "video/x-raw, framerate=(fraction)[0/1, MAX];",
+      .expected_src_caps =
+        "video/x-raw, framerate=(fraction){15/1, 30/1};"
+        "video/x-raw, framerate=(fraction)[0/1, MAX]"},
+  {
+        .caps = "video/x-raw, framerate={15/1, 30/1}",
+        .drop_only = FALSE,
+        .max_rate = 20,
+        .expected_sink_caps =
+        "video/x-raw, framerate=(fraction){15/1, 30/1};"
+        "video/x-raw, framerate=(fraction)[0/1, MAX];",
+      .expected_src_caps =
+        "video/x-raw, framerate=(fraction)15/1;"
+        "video/x-raw, framerate=(fraction)[0/1, 20/1];"},
+  {
+        .caps = "video/x-raw, framerate={15/1, 30/1}",
+        .drop_only = TRUE,
+        .expected_sink_caps =
+        "video/x-raw, framerate=(fraction){15/1, 30/1};"
+        "video/x-raw, framerate=(fraction)[15/1, MAX];"
+        "video/x-raw, framerate=(fraction)0/1",
+      .expected_src_caps =
+        "video/x-raw, framerate=(fraction){15/1, 30/1};"
+        "video/x-raw, framerate=(fraction)[0/1, 30/1];"},
+  {
+        .caps = "video/x-raw, framerate={15/1, 30/1}",
+        .drop_only = TRUE,
+        .max_rate = 20,
+        .expected_sink_caps =
+        "video/x-raw, framerate=(fraction)15/1;"
+        "video/x-raw, framerate=(fraction){15/1, 30/1};"
+        "video/x-raw, framerate=(fraction)[15/1, MAX];"
+        "video/x-raw, framerate=(fraction)0/1",
+      .expected_src_caps =
+        "video/x-raw, framerate=(fraction)15/1;"
+        "video/x-raw, framerate=(fraction)[0/1, 20/1]"},
 };
 
 static GstCaps *

@@ -110,7 +110,7 @@ GST_START_TEST (test_profile_input_caps)
   gst_encoding_profile_unref (sprof);
 
   /* One simple restriction */
-  restriction = gst_caps_from_string ("audio/x-raw-int,channels=2,rate=44100");
+  restriction = gst_caps_from_string ("audio/x-raw,channels=2,rate=44100");
   test1 = gst_caps_from_string ("audio/x-vorbis,channels=2,rate=44100");
   fail_if (restriction == NULL);
 
@@ -230,7 +230,7 @@ create_saveload_target (const gchar * targetname)
   gst_encoding_target_add_profile (target, profile);
 
   caps = gst_caps_from_string ("audio/x-pony-song,pretty=True");
-  caps2 = gst_caps_from_string ("audio/x-raw-int,channels=1,rate=44100");
+  caps2 = gst_caps_from_string ("audio/x-raw,channels=1,rate=44100");
   sprof =
       (GstEncodingProfile *) gst_encoding_audio_profile_new (caps, NULL, caps2,
       1);
@@ -364,7 +364,7 @@ test_individual_target (GstEncodingTarget * target)
 
   GST_DEBUG ("Checking the container profile has the audio/x-pony-song stream");
   tmpcaps = gst_caps_from_string ("audio/x-pony-song,pretty=True");
-  tmpcaps2 = gst_caps_from_string ("audio/x-raw-int,channels=1,rate=44100");
+  tmpcaps2 = gst_caps_from_string ("audio/x-raw,channels=1,rate=44100");
   sprof1 =
       (GstEncodingProfile *) gst_encoding_audio_profile_new (tmpcaps, NULL,
       tmpcaps2, 1);
@@ -530,7 +530,7 @@ format=animal/x-pony\n\
 parent=pony\n\
 type=audio\n\
 format=audio/x-pony-song,pretty=True\n\
-restriction=audio/x-raw-int,channels=1,rate=44100\n\
+restriction=audio/x-raw,channels=1,rate=44100\n\
 presence=1\n\
 \n\
 [streamprofile-pony12]\n\

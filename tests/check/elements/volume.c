@@ -32,79 +32,73 @@
  * get_peer, and then remove references in every test function */
 static GstPad *mysrcpad, *mysinkpad;
 
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+#define FORMATS1 "{ S8, S16LE, S24LE, S32LE, F32LE, F64LE }"
+#define FORMATS2 "S8"
+#define FORMATS3 "S16LE"
+#define FORMATS4 "S24LE"
+#define FORMATS5 "S32LE"
+#define FORMATS6 "F32LE"
+#define FORMATS7 "F64LE"
+#define FORMATS8 "U16LE"
+#else
+#define FORMATS1 "{ S8, S16BE, S24BE, S32BE, F32BE, F64BE }"
+#define FORMATS2 "S8"
+#define FORMATS3 "S16BE"
+#define FORMATS4 "S24BE"
+#define FORMATS5 "S32BE"
+#define FORMATS6 "F32BE"
+#define FORMATS7 "F64BE"
+#define FORMATS8 "U16BE"
+#endif
 
 #define VOLUME_CAPS_TEMPLATE_STRING     \
-    "audio/x-raw-int, "                 \
+    "audio/x-raw, "                     \
+    "format = (string) "FORMATS1", "    \
     "channels = (int) [ 1, MAX ], "     \
-    "rate = (int) [ 1,  MAX ], "        \
-    "endianness = (int) BYTE_ORDER, "   \
-    "width = (int) { 8, 16, 24, 32 }, " \
-    "depth = (int) { 8, 16, 24, 32 }, " \
-    "signed = (bool) TRUE; "            \
-    "audio/x-raw-float, "               \
-    "channels = (int) [ 1, MAX ], "     \
-    "rate = (int) [ 1,  MAX ], "        \
-    "endianness = (int) BYTE_ORDER, "   \
-    "width = (int) { 32, 64 }"          \
+    "rate = (int) [ 1,  MAX ]"
 
 #define VOLUME_CAPS_STRING_S8           \
-    "audio/x-raw-int, "                 \
+    "audio/x-raw, "                     \
+    "formats = (string) "FORMATS2", "   \
     "channels = (int) 1, "              \
-    "rate = (int) 44100, "              \
-    "endianness = (int) BYTE_ORDER, "   \
-    "width = (int) 8, "                 \
-    "depth = (int) 8, "                 \
-    "signed = (bool) TRUE"
+    "rate = (int) 44100"
 
 #define VOLUME_CAPS_STRING_S16          \
-    "audio/x-raw-int, "                 \
+    "audio/x-raw, "                     \
+    "formats = (string) "FORMATS3", "   \
     "channels = (int) 1, "              \
-    "rate = (int) 44100, "              \
-    "endianness = (int) BYTE_ORDER, "   \
-    "width = (int) 16, "                \
-    "depth = (int) 16, "                \
-    "signed = (bool) TRUE"
+    "rate = (int) 44100"
 
 #define VOLUME_CAPS_STRING_S24          \
-    "audio/x-raw-int, "                 \
+    "audio/x-raw, "                     \
+    "formats = (string) "FORMATS4", "   \
     "channels = (int) 1, "              \
-    "rate = (int) 44100, "              \
-    "endianness = (int) BYTE_ORDER, "   \
-    "width = (int) 24, "                \
-    "depth = (int) 24, "                \
-    "signed = (bool) TRUE"
+    "rate = (int) 44100"
 
 #define VOLUME_CAPS_STRING_S32          \
-    "audio/x-raw-int, "                 \
+    "audio/x-raw, "                     \
+    "formats = (string) "FORMATS5", "   \
     "channels = (int) 1, "              \
-    "rate = (int) 44100, "              \
-    "endianness = (int) BYTE_ORDER, "   \
-    "width = (int) 32, "                \
-    "depth = (int) 32, "                \
-    "signed = (bool) TRUE"
+    "rate = (int) 44100"
 
 #define VOLUME_CAPS_STRING_F32          \
-    "audio/x-raw-float, "               \
+    "audio/x-raw, "                     \
+    "formats = (string) "FORMATS6", "   \
     "channels = (int) 1, "              \
-    "rate = (int) 44100, "              \
-    "endianness = (int) BYTE_ORDER, "   \
-    "width = (int) 32"
+    "rate = (int) 44100"
 
 #define VOLUME_CAPS_STRING_F64          \
-    "audio/x-raw-float, "               \
+    "audio/x-raw, "                     \
+    "formats = (string) "FORMATS7", "   \
     "channels = (int) 1, "              \
-    "rate = (int) 44100, "              \
-    "endianness = (int) BYTE_ORDER, "   \
-    "width = (int) 64"
+    "rate = (int) 44100"
 
 #define VOLUME_WRONG_CAPS_STRING        \
-    "audio/x-raw-int, "                 \
+    "audio/x-raw, "                     \
+    "formats = (string) "FORMATS8", "   \
     "channels = (int) 1, "              \
-    "rate = (int) 44100, "              \
-    "endianness = (int) BYTE_ORDER, "   \
-    "width = (int) 16, "                \
-    "depth = (int) 16, "                \
-    "signed = (bool) FALSE"
+    "rate = (int) 44100"
 
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",

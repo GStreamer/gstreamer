@@ -23,6 +23,7 @@
 #include <unistd.h>
 
 #include <gst/check/gstcheck.h>
+#include <gst/audio/audio.h>
 
 /* For ease of programming we use globals to keep refs for our floating
  * src and sink pads we create; otherwise we always have to do get_pad,
@@ -31,13 +32,10 @@ static GstPad *mysinkpad;
 
 
 #define CAPS_TEMPLATE_STRING            \
-    "audio/x-raw-int, "                 \
+    "audio/x-raw, "                     \
+    "format = (string) "GST_AUDIO_NE(S16)", "   \
     "channels = (int) 1, "              \
-    "rate = (int) [ 1,  MAX ], "        \
-    "endianness = (int) BYTE_ORDER, "   \
-    "width = (int) 16, "                \
-    "depth = (int) 16, "                \
-    "signed = (bool) TRUE"
+    "rate = (int) [ 1,  MAX ]"
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,

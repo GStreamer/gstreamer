@@ -38,21 +38,25 @@
  * get_peer, and then remove references in every test function */
 static GstPad *mysrcpad, *mysinkpad;
 
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+#define FORMATS_F  "{ F32LE, F64LE }"
+#define FORMATS_I  "{ S16LE, S32LE }"
+#else
+#define FORMATS_F  "{ F32BE, F64BE }"
+#define FORMATS_I  "{ S16BE, S32BE }"
+#endif
+
 #define RESAMPLE_CAPS_FLOAT		\
-    "audio/x-raw-float, "               \
+    "audio/x-raw, "                     \
+    "formats = (string) "FORMATS_F", "  \
     "channels = (int) [ 1, MAX ], "     \
-    "rate = (int) [ 1,  MAX ], "        \
-    "endianness = (int) BYTE_ORDER, "   \
-    "width = (int) { 32, 64 }"
+    "rate = (int) [ 1,  MAX ]"
 
 #define RESAMPLE_CAPS_INT		\
-    "audio/x-raw-int, "                 \
+    "audio/x-raw, "                     \
+    "formats = (string) "FORMATS_I", "  \
     "channels = (int) [ 1, MAX ], "     \
-    "rate = (int) [ 1,  MAX ], "        \
-    "endianness = (int) BYTE_ORDER, "   \
-    "width = (int) { 16, 32 }, "        \
-    "depth = (int) { 16, 32 }, "        \
-    "signed = (bool) TRUE"
+    "rate = (int) [ 1,  MAX ]"
 
 #define RESAMPLE_CAPS_TEMPLATE_STRING   \
     RESAMPLE_CAPS_FLOAT " ; " \
@@ -435,13 +439,11 @@ GST_START_TEST (test_shutdown)
   g_object_set (cf2, "name", "capsfilter2", NULL);
   sink = gst_check_setup_element ("fakesink");
 
-  caps =
-      gst_caps_new_simple ("audio/x-raw-int", "rate", G_TYPE_INT, 11025, NULL);
+  caps = gst_caps_new_simple ("audio/x-raw", "rate", G_TYPE_INT, 11025, NULL);
   g_object_set (cf1, "caps", caps, NULL);
   gst_caps_unref (caps);
 
-  caps =
-      gst_caps_new_simple ("audio/x-raw-int", "rate", G_TYPE_INT, 48000, NULL);
+  caps = gst_caps_new_simple ("audio/x-raw", "rate", G_TYPE_INT, 48000, NULL);
   g_object_set (cf2, "caps", caps, NULL);
   gst_caps_unref (caps);
 
@@ -628,7 +630,7 @@ eos_message_cb (GstBus * bus, GstMessage * message, gpointer user_data)
 }
 
 static void
-test_pipeline (gint width, gboolean fp, gint inrate, gint outrate, gint quality)
+test_pipeline (const gchar * format, gint inrate, gint outrate, gint quality)
 {
   GstElement *pipeline;
   GstBus *bus;
@@ -637,9 +639,8 @@ test_pipeline (gint width, gboolean fp, gint inrate, gint outrate, gint quality)
 
   pipe_str =
       g_strdup_printf
-      ("audiotestsrc num-buffers=10 ! audioconvert ! audio/x-raw-%s,rate=%d,width=%d,channels=2 ! audioresample quality=%d ! audio/x-raw-%s,rate=%d,width=%d ! identity check-imperfect-timestamp=TRUE ! fakesink",
-      (fp) ? "float" : "int", inrate, width, quality, (fp) ? "float" : "int",
-      outrate, width);
+      ("audiotestsrc num-buffers=10 ! audioconvert ! audio/x-raw,format=%s,rate=%d,channels=2 ! audioresample quality=%d ! audio/x-raw,format=%s,rate=%d ! identity check-imperfect-timestamp=TRUE ! fakesink",
+      format, inrate, quality, format, outrate);
 
   pipeline = gst_parse_launch (pipe_str, &error);
   fail_unless (pipeline != NULL, "Error parsing pipeline: %s",
@@ -712,9 +713,8 @@ GST_START_TEST (test_preference_passthrough)
   gint rate = 0;
 
   pipeline = gst_parse_launch ("audiotestsrc num-buffers=1 name=src ! "
-      "audioresample ! audio/x-raw-int,channels=1,width=16,depth=16,"
-      "endianness=BYTE_ORDER,signed=true,rate=8000 ! "
-      "fakesink can-activate-pull=false", &error);
+      "audioresample ! audio/x-raw,format=" GST_AUDIO_NE (S16) ",channels=1,"
+      "rate=8000 ! fakesink can-activate-pull=false", &error);
   fail_unless (pipeline != NULL, "Error parsing pipeline: %s",
       error ? error->message : "(invalid error)");
 
@@ -872,7 +872,7 @@ GST_START_TEST (test_timestamp_drift)
   fail_unless (capsfilter1 != NULL);
   caps =
       gst_caps_from_string
-      ("audio/x-raw-float, channels=1, width=64, rate=16384");
+      ("audio/x-raw, format=F64LE, channels=1, rate=16384");
   g_object_set (G_OBJECT (capsfilter1), "caps", caps, NULL);
   gst_caps_unref (caps);
 
@@ -887,8 +887,7 @@ GST_START_TEST (test_timestamp_drift)
   capsfilter2 = gst_element_factory_make ("capsfilter", "capsfilter2");
   fail_unless (capsfilter2 != NULL);
   caps =
-      gst_caps_from_string
-      ("audio/x-raw-float, channels=1, width=64, rate=4096");
+      gst_caps_from_string ("audio/x-raw, format=F64LE, channels=1, rate=4096");
   g_object_set (G_OBJECT (capsfilter2), "caps", caps, NULL);
   gst_caps_unref (caps);
 

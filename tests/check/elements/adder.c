@@ -788,12 +788,10 @@ GST_START_TEST (test_clip)
   event = gst_event_new_segment (&segment);
   gst_pad_send_event (sinkpad, event);
 
-/*FIXME:  caps = gst_caps_new_simple ("audio/x-raw-int",
+/*FIXME:  caps = gst_caps_new_simple ("audio/x-raw",
+      "format", G_TYPE_STRING, GST_AUDIO_NE (S16),
       "rate", G_TYPE_INT, 44100,
-      "channels", G_TYPE_INT, 2,
-      "endianness", G_TYPE_INT, G_BYTE_ORDER,
-      "width", G_TYPE_INT, 16,
-      "depth", G_TYPE_INT, 16, "signed", G_TYPE_BOOLEAN, TRUE, NULL);
+      "channels", G_TYPE_INT, 2, NULL);
 */
 
   /* should be clipped and ok */

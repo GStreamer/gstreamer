@@ -95,7 +95,7 @@ GST_START_TEST (test_granulepos_offset)
   GError *error = NULL;
 
   pipe_str = g_strdup_printf ("audiotestsrc timestamp-offset=%" G_GUINT64_FORMAT
-      " ! audio/x-raw-int,rate=44100"
+      " ! audio/x-raw,rate=44100"
       " ! audioconvert ! vorbisenc ! fakesink", TIMESTAMP_OFFSET);
 
   bin = gst_parse_launch (pipe_str, &error);
@@ -187,7 +187,7 @@ GST_START_TEST (test_timestamps)
   GError *error = NULL;
 
   pipe_str = g_strdup_printf ("audiotestsrc"
-      " ! audio/x-raw-int,rate=44100 ! audioconvert ! vorbisenc ! fakesink");
+      " ! audio/x-raw,rate=44100 ! audioconvert ! vorbisenc ! fakesink");
 
   bin = gst_parse_launch (pipe_str, &error);
   fail_unless (bin != NULL, "Error parsing pipeline: %s",
@@ -285,7 +285,7 @@ GST_START_TEST (test_discontinuity)
   guint drop_id;
 
   pipe_str = g_strdup_printf ("audiotestsrc samplesperbuffer=1024"
-      " ! audio/x-raw-int,rate=44100" " ! audioconvert ! vorbisenc ! fakesink");
+      " ! audio/x-raw,rate=44100" " ! audioconvert ! vorbisenc ! fakesink");
 
   bin = gst_parse_launch (pipe_str, &error);
   fail_unless (bin != NULL, "Error parsing pipeline: %s",

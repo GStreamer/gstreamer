@@ -489,7 +489,7 @@ gst_fake_h264_decoder_base_init (gpointer klass)
       GST_STATIC_CAPS ("video/x-h264, " "stream-format=(string) byte-stream"));
   static GstStaticPadTemplate src_templ = GST_STATIC_PAD_TEMPLATE ("src",
       GST_PAD_SRC, GST_PAD_ALWAYS,
-      GST_STATIC_CAPS ("video/x-raw-yuv"));
+      GST_STATIC_CAPS ("video/x-raw"));
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
@@ -511,7 +511,7 @@ gst_fake_h264_decoder_sink_setcaps (GstPad * pad, GstCaps * caps)
   GstElement *self = GST_ELEMENT (gst_pad_get_parent (pad));
   GstPad *otherpad = gst_element_get_static_pad (self, "src");
 
-  caps = gst_caps_new_simple ("video/x-raw-yuv", NULL);
+  caps = gst_caps_new_simple ("video/x-raw", NULL);
   gst_pad_set_caps (otherpad, caps);
   gst_caps_unref (caps);
 

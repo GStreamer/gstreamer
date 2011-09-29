@@ -380,8 +380,8 @@ static const gchar *caps_strings[] = {
   "video/x-ati-vcr, vcrversion=(int)99",
   "video/x-ati-vcr",
   /* raw audio */
-  "audio/x-raw-int, endianness=(int)1234, signed=(boolean)true, width=(int)16, depth=(int)16, rate=(int)44100, channels=(int)2",
-  "audio/x-raw-float, rate=(int)22050, channels=(int)2, endianness=(int)1234, width=(int)32",
+  "audio/x-raw, format=(string)S16LE, rate=(int)44100, channels=(int)2",
+  "audio/x-raw, format=(string)F32,rate=(int)22050, channels=(int)2",
   /* raw video */
   "video/x-raw, format=(string)RGB16, width=(int)320, height=(int)240, framerate=(fraction)30/1, pixel-aspect-ratio=(fraction)1/1",
   "video/x-raw, format=(string)YUY2, width=(int)320, height=(int)240, framerate=(fraction)30/1",

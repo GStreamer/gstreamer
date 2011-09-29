@@ -55,7 +55,7 @@ GST_START_TEST (test_timestamps)
   GError *error = NULL;
 
   pipe_str = g_strdup_printf ("audiotestsrc num-buffers=100"
-      " ! audio/x-raw-int,rate=44100 ! audioconvert ! vorbisenc ! vorbisdec"
+      " ! audio/x-raw,rate=44100 ! audioconvert ! vorbisenc ! vorbisdec"
       " ! identity check-imperfect-timestamp=TRUE ! fakesink");
 
   pipeline = gst_parse_launch (pipe_str, &error);

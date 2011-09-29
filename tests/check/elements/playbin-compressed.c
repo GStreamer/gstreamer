@@ -274,7 +274,7 @@ gst_audio_codec_sink_base_init (gpointer klass)
 {
   static GstStaticPadTemplate sink_templ = GST_STATIC_PAD_TEMPLATE ("sink",
       GST_PAD_SINK, GST_PAD_ALWAYS,
-      GST_STATIC_CAPS ("audio/x-raw-int; audio/x-compressed")
+      GST_STATIC_CAPS ("audio/x-raw; audio/x-compressed")
       );
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
@@ -324,12 +324,12 @@ gst_audio_codec_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
 
   s = gst_caps_get_structure (caps, 0);
 
-  if (gst_structure_has_name (s, "audio/x-raw-int")) {
+  if (gst_structure_has_name (s, "audio/x-raw")) {
     sink->raw = TRUE;
   } else if (gst_structure_has_name (s, "audio/x-compressed")) {
     sink->raw = FALSE;
   } else {
-    fail_unless (gst_structure_has_name (s, "audio/x-raw-int")
+    fail_unless (gst_structure_has_name (s, "audio/x-raw")
         || gst_structure_has_name (s, "audio/x-compressed"));
     return FALSE;
   }
@@ -463,7 +463,7 @@ gst_codec_demuxer_base_init (gpointer klass)
       );
   static GstStaticPadTemplate src_templ = GST_STATIC_PAD_TEMPLATE ("src_%d",
       GST_PAD_SRC, GST_PAD_SOMETIMES,
-      GST_STATIC_CAPS ("audio/x-raw-int; audio/x-compressed; "
+      GST_STATIC_CAPS ("audio/x-raw; audio/x-compressed; "
           "video/x-raw; video/x-compressed")
       );
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
@@ -586,12 +586,9 @@ gst_codec_demuxer_setup_pad (GstCodecDemuxer * demux, GstPad ** pad,
     } else if (g_str_equal (streaminfo, "compressed-video")) {
       caps = gst_caps_new_simple ("video/x-compressed", NULL);
     } else if (g_str_equal (streaminfo, "raw-audio")) {
-      caps = gst_caps_new_simple ("audio/x-raw-int",
-          "rate", G_TYPE_INT, 48000,
-          "channels", G_TYPE_INT, 2,
-          "endianness", G_TYPE_INT, G_LITTLE_ENDIAN,
-          "width", G_TYPE_INT, 16,
-          "depth", G_TYPE_INT, 16, "signed", G_TYPE_BOOLEAN, TRUE, NULL);
+      caps = gst_caps_new_simple ("audio/x-raw",
+          "format", G_TYPE_STRING, "S16LE",
+          "rate", G_TYPE_INT, 48000, "channels", G_TYPE_INT, 2, NULL);
     } else {
       caps = gst_caps_new_simple ("audio/x-compressed", NULL);
     }
@@ -1024,11 +1021,8 @@ GST_START_TEST (test_raw_single_audio_stream_manual_sink)
 
   playbin =
       create_playbin
-      ("caps:audio/x-raw-int,"
-      " rate=(int)48000, "
-      " channels=(int)2, "
-      " endianness=(int)LITTLE_ENDIAN, "
-      " width=(int)16, " " depth=(int)16, " " signed=(bool)TRUE", TRUE);
+      ("caps:audio/x-raw,"
+      " format=(string)S16LE, " " rate=(int)48000, " " channels=(int)2", TRUE);
 
   fail_unless_equals_int (gst_element_set_state (playbin, GST_STATE_READY),
       GST_STATE_CHANGE_SUCCESS);
