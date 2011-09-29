@@ -165,11 +165,12 @@ gst_ximage_src_open_display (GstXImageSrc * s, const gchar * name)
     if (s->xid != 0) {
       status = XGetWindowAttributes (s->xcontext->disp, s->xid, &attrs);
       if (status) {
-        GST_DEBUG_OBJECT (s, "Found window XID %p", s->xid);
+        GST_DEBUG_OBJECT (s, "Found window XID %" G_GUINT64_FORMAT, s->xid);
         s->xwindow = s->xid;
         goto window_found;
       } else {
-        GST_WARNING_OBJECT (s, "Failed to get window %p attributes", s->xid);
+        GST_WARNING_OBJECT (s, "Failed to get window %" G_GUINT64_FORMAT
+            " attributes", s->xid);
       }
     }
 
@@ -177,13 +178,14 @@ gst_ximage_src_open_display (GstXImageSrc * s, const gchar * name)
       GST_DEBUG_OBJECT (s, "Looking for window %s", s->xname);
       window = gst_ximage_src_find_window (s, s->xcontext->root, s->xname);
       if (window != 0) {
-        GST_DEBUG_OBJECT (s, "Found window named %s as %p, ", s->xname, window);
+        GST_DEBUG_OBJECT (s, "Found window named %s, ", s->xname);
         status = XGetWindowAttributes (s->xcontext->disp, window, &attrs);
         if (status) {
           s->xwindow = window;
           goto window_found;
         } else {
-          GST_WARNING_OBJECT (s, "Failed to get window %p attributes", window);
+          GST_WARNING_OBJECT (s, "Failed to get window attributes for "
+              "window named %s", s->xname);
         }
       }
     }
@@ -195,7 +197,7 @@ gst_ximage_src_open_display (GstXImageSrc * s, const gchar * name)
     g_assert (s->xwindow != 0);
     s->width = attrs.width;
     s->height = attrs.height;
-    GST_INFO_OBJECT (s, "Using default window %p, size of %dx%d", s->xwindow,
+    GST_INFO_OBJECT (s, "Using default window size of %dx%d",
         s->width, s->height);
   }
 use_root_window:
@@ -664,8 +666,7 @@ gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
     } else
 #endif /* HAVE_XSHM */
     {
-      GST_DEBUG_OBJECT (ximagesrc,
-          "Retrieving screen using XGetImage, window %p", ximagesrc->xwindow);
+      GST_DEBUG_OBJECT (ximagesrc, "Retrieving screen using XGetImage");
       if (ximagesrc->remote) {
         XGetSubImage (ximagesrc->xcontext->disp, ximagesrc->xwindow,
             ximagesrc->startx, ximagesrc->starty, ximagesrc->width,
