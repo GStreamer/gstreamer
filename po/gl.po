@@ -4,11 +4,11 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.31.2\n"
+"Project-Id-Version: gstreamer 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-08-02 16:41+0200\n"
-"PO-Revision-Date: 2011-04-13 05:19+0000\n"
-"Last-Translator: Francisco Diéguez <frandieguez@ubuntu.com>\n"
+"POT-Creation-Date: 2011-09-29 14:55+0200\n"
+"PO-Revision-Date: 2011-09-05 12:49+0200\n"
+"Last-Translator: Fran Dieguez <frandieguez@ubuntu.com>\n"
 "Language-Team: Galician <proxecto@trasno.net>\n"
 "Language: gl_ES\n"
 "MIME-Version: 1.0\n"
@@ -404,12 +404,11 @@ msgstr "URI aos dereitos de autor"
 msgid "URI to the copyright notice of the data"
 msgstr "URI á nota de dereitos de autoría dos datos"
 
-#, fuzzy
 msgid "encoded by"
-msgstr "codificador"
+msgstr "codificado por"
 
 msgid "name of the encoding person or organization"
-msgstr ""
+msgstr "nome da persoa ou organización codificadora"
 
 msgid "contact"
 msgstr "contacto"
@@ -1029,7 +1028,7 @@ msgid "No such element or plugin '%s'\n"
 msgstr "Non existe o elemento ou engadido «%s»\n"
 
 msgid "Index statistics"
-msgstr ""
+msgstr "Estatísticas do índice"
 
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
@@ -1134,7 +1133,7 @@ msgid "Force EOS on sources before shutting the pipeline down"
 msgstr "Forzar EOS nas orixes antes de pechar a canalización"
 
 msgid "Gather and print index statistics"
-msgstr ""
+msgstr "Obter e imprimir as estatísticas do índice"
 
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"

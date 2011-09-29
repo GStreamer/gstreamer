@@ -1,14 +1,14 @@
 
-Release notes for GStreamer 0.11.0 "It's a boy"
+Release notes for GStreamer 0.11.1 "Sweet New Blossom"
         
 
 
-The GStreamer team is proud to announce the first release
+The GStreamer team is proud to announce a new release
 in the 0.11.x unstable series of the
 core of the GStreamer streaming media framework.
 
 
-The 0.11.x series is an unstable series targeted at developers.
+The 0.11.x series is an unstable series targeted at developers
 It is not API or ABI compatible with the stable 0.10.x series.
 It is, however, parallel installable with the 0.10.x series.
 
@@ -38,22 +38,11 @@ contains a set of less supported plug-ins that haven't passed the
 Features of this release
     
       * Parallel installability with 0.10.x series
-      * Reworked buffer memory management
-      * Arbitrary buffer metadata
-      * integrated bufferpool management
-      * Improved dynamic pipeline handling
-      * Reworked video caps system
-      * Reworked pad probes
-
-
-Bugs fixed in this release
-     
-      * 322851 : basesrc: add fill virtual method
-      * 491501 : Reduce usage of base_init in GstElement subclasses
-      * 518597 : [0.11] Get rid of .gstreamer-X.X folder and follow fd.o xdg base directory specifications
-      * 616237 : Stop allocating buffers for any caps
-      * 643244 : [0.11] gstpad: gst_pad_alloc_buffer(_and_set_caps) take size as gint instead of guint
-      * 648181 : [basetransform] Trigger upstream renegotiation if the sinkpad is (re-)linked
+      * Remove negotiation from state change in GstBaseSrc
+      * Removed our custom FOURCC type
+      * Updates to the base classes
+There were no bugs fixed in this release
+    
 
 Download
 
@@ -85,15 +74,25 @@ port plugins and applications.
 
   
 Contributors to this release
-
+    
       * David Schleef
       * Edward Hervey
-      * Johan Dahlin
-      * Koop Mast
+      * Fabrizio (Misto) Milo
+      * Guillaume Desmottes
+      * Josep Torra
       * Mark Nauwelaerts
+      * Nicolas Dufresne
+      * Peteris Krisjanis
+      * Piotr Fusik
+      * Raimo Järvi
       * Sebastian Dröge
+      * Shaun Hoopes
+      * Sjoerd Simons
+      * Stas Sergeev
       * Stefan Kost
-      * Thiago Santos
+      * Stefan Sauer
+      * Thomas Vander Stichele
       * Tim-Philipp Müller
+      * Vincent Penquerc'h
       * Wim Taymans
  

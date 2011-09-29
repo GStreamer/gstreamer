@@ -45,26 +45,31 @@ gst_bin_flags_get_type (void)
 
 /* enumerations from "gstbuffer.h" */
 GType
-gst_buffer_flag_get_type (void)
+gst_buffer_flags_get_type (void)
 {
   static gsize id = 0;
   static const GFlagsValue values[] = {
-    {C_FLAGS (GST_BUFFER_FLAG_PREROLL), "GST_BUFFER_FLAG_PREROLL", "preroll"},
+    {C_FLAGS (GST_BUFFER_FLAG_LIVE), "GST_BUFFER_FLAG_LIVE", "live"},
+    {C_FLAGS (GST_BUFFER_FLAG_DECODE_ONLY), "GST_BUFFER_FLAG_DECODE_ONLY",
+        "decode-only"},
     {C_FLAGS (GST_BUFFER_FLAG_DISCONT), "GST_BUFFER_FLAG_DISCONT", "discont"},
-    {C_FLAGS (GST_BUFFER_FLAG_IN_CAPS), "GST_BUFFER_FLAG_IN_CAPS", "in-caps"},
+    {C_FLAGS (GST_BUFFER_FLAG_RESYNC), "GST_BUFFER_FLAG_RESYNC", "resync"},
+    {C_FLAGS (GST_BUFFER_FLAG_CORRUPTED), "GST_BUFFER_FLAG_CORRUPTED",
+        "corrupted"},
+    {C_FLAGS (GST_BUFFER_FLAG_MARKER), "GST_BUFFER_FLAG_MARKER", "marker"},
+    {C_FLAGS (GST_BUFFER_FLAG_HEADER), "GST_BUFFER_FLAG_HEADER", "header"},
     {C_FLAGS (GST_BUFFER_FLAG_GAP), "GST_BUFFER_FLAG_GAP", "gap"},
+    {C_FLAGS (GST_BUFFER_FLAG_DROPPABLE), "GST_BUFFER_FLAG_DROPPABLE",
+        "droppable"},
     {C_FLAGS (GST_BUFFER_FLAG_DELTA_UNIT), "GST_BUFFER_FLAG_DELTA_UNIT",
         "delta-unit"},
-    {C_FLAGS (GST_BUFFER_FLAG_MEDIA1), "GST_BUFFER_FLAG_MEDIA1", "media1"},
-    {C_FLAGS (GST_BUFFER_FLAG_MEDIA2), "GST_BUFFER_FLAG_MEDIA2", "media2"},
-    {C_FLAGS (GST_BUFFER_FLAG_MEDIA3), "GST_BUFFER_FLAG_MEDIA3", "media3"},
-    {C_FLAGS (GST_BUFFER_FLAG_MEDIA4), "GST_BUFFER_FLAG_MEDIA4", "media4"},
+    {C_FLAGS (GST_BUFFER_FLAG_IN_CAPS), "GST_BUFFER_FLAG_IN_CAPS", "in-caps"},
     {C_FLAGS (GST_BUFFER_FLAG_LAST), "GST_BUFFER_FLAG_LAST", "last"},
     {0, NULL, NULL}
   };
 
   if (g_once_init_enter (&id)) {
-    GType tmp = g_flags_register_static ("GstBufferFlag", values);
+    GType tmp = g_flags_register_static ("GstBufferFlags", values);
     g_once_init_leave (&id, tmp);
   }
 
@@ -1585,6 +1590,7 @@ gst_alloc_trace_flags_get_type (void)
 {
   static gsize id = 0;
   static const GFlagsValue values[] = {
+    {C_FLAGS (GST_ALLOC_TRACE_NONE), "GST_ALLOC_TRACE_NONE", "none"},
     {C_FLAGS (GST_ALLOC_TRACE_LIVE), "GST_ALLOC_TRACE_LIVE", "live"},
     {C_FLAGS (GST_ALLOC_TRACE_MEM_LIVE), "GST_ALLOC_TRACE_MEM_LIVE",
         "mem-live"},
@@ -1605,6 +1611,7 @@ gst_type_find_probability_get_type (void)
 {
   static gsize id = 0;
   static const GEnumValue values[] = {
+    {C_ENUM (GST_TYPE_FIND_NONE), "GST_TYPE_FIND_NONE", "none"},
     {C_ENUM (GST_TYPE_FIND_MINIMUM), "GST_TYPE_FIND_MINIMUM", "minimum"},
     {C_ENUM (GST_TYPE_FIND_POSSIBLE), "GST_TYPE_FIND_POSSIBLE", "possible"},
     {C_ENUM (GST_TYPE_FIND_LIKELY), "GST_TYPE_FIND_LIKELY", "likely"},

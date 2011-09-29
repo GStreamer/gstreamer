@@ -40,6 +40,17 @@ hierarchy, and a set of media-agnostic core elements.
 
  <release>
   <Version>
+   <revision>0.11.1</revision>
+   <branch>0.11</branch>
+   <name>Sweet New Blossom</name>
+   <created>2011-09-29</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gstreamer/gstreamer-0.11.1.tar.bz2" />
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gstreamer/gstreamer-0.11.1.tar.gz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
    <revision>0.11.0</revision>
    <branch>0.11</branch>
    <name>It's a boy</name>

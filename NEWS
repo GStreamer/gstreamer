@@ -1,10 +1,8 @@
-This is GStreamer 0.11.0 "It's a boy"
+This is GStreamer 0.11.1 "Sweet New Blossom"
 
-New featues in 0.11.0:
+New featues in 0.11.1:
 
-      * Reworked buffer memory management
-      * Arbitrary buffer metadata
-      * Integrated bufferpool management
-      * Improved dynamic pipeline changes
-      * Reworked video caps system
-      * Reworked pad probes
+      * Parallel installability with 0.10.x series
+      * Remove negotiation from state change in GstBaseSrc
+      * Removed our custom FOURCC type
+      * Updates to the base classes

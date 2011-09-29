@@ -17,8 +17,8 @@ GType gst_bin_flags_get_type (void);
 #define GST_TYPE_BIN_FLAGS (gst_bin_flags_get_type())
 
 /* enumerations from "gstbuffer.h" */
-GType gst_buffer_flag_get_type (void);
-#define GST_TYPE_BUFFER_FLAG (gst_buffer_flag_get_type())
+GType gst_buffer_flags_get_type (void);
+#define GST_TYPE_BUFFER_FLAGS (gst_buffer_flags_get_type())
 GType gst_buffer_copy_flags_get_type (void);
 #define GST_TYPE_BUFFER_COPY_FLAGS (gst_buffer_copy_flags_get_type())
 

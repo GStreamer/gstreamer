@@ -1,9 +1,1296 @@
-=== release 0.11.0 ===
+=== release 0.11.1 ===
 
-2011-08-02  Wim Taymans <wim.taymans@collabora.co.uk>
+2011-09-29  Wim Taymans <wim.taymans@collabora.co.uk>
 
 	* configure.ac:
-	  releasing 0.11.0, "It's a boy"
+	  releasing 0.11.1, "Sweet New Blossom"
+
+2011-09-28 18:46:09 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gstmemory.c:
+	  memory: fix memory alignment
+	  Fix compilation when POSIX_MEMALIGN is not set.
+	  Debug the configured alignment.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=660300
+
+2011-09-28 18:44:12 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gstpad.c:
+	  pad: improve debug
+
+2011-09-28 11:28:25 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstbasetransform.c:
+	  transform: fix after merge
+
+2011-09-28 11:24:42 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
+
+2011-09-28 11:16:33 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/libs/gstreamer-libs-sections.txt:
+	* libs/gst/base/gstbasesrc.c:
+	* libs/gst/base/gstbasesrc.h:
+	* libs/gst/base/gstbasetransform.h:
+	  docs: fix some more docs
+
+2011-09-26 19:52:13 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* libs/gst/base/gstbasetransform.c:
+	  basetransform: send delayed events earlier
+	  Some elements (such as videorate) might push buffers early,
+	  for instance in in transform_ip. We want events (and in particular
+	  any NEWSEGMENT event) to be pushed before that.
+	  This fixes transmageddon wedging on converting a file starting
+	  with a non zero offset to Ogg.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=660165
+
+2011-09-26 20:47:35 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstbuffer.c:
+	* gst/gstbuffer.h:
+	* gst/gstbufferlist.c:
+	* gst/gstbufferpool.h:
+	* gst/gstcaps.h:
+	* gst/gstevent.h:
+	* gst/gstiterator.h:
+	* gst/gstmemory.c:
+	* gst/gstmessage.h:
+	* gst/gstmeta.h:
+	* gst/gstminiobject.c:
+	* gst/gstminiobject.h:
+	* gst/gstpad.h:
+	* gst/gstquery.c:
+	  docs: fix docs
+
+2011-09-26 19:25:22 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
+
+2011-09-26 19:24:19 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gstsegment.h:
+	  segment: improve API docs a little
+
+2011-09-26 00:30:47 +0300  Raimo Järvi <raimo.jarvi@gmail.com>
+
+	* gst/gstregistry.c:
+	* gst/gststructure.c:
+	  gst: Fix compiler warnings on 64 bit mingw-w64
+	  Fixes bug #660083.
+
+2011-09-25 16:10:53 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* tests/examples/helloworld/helloworld.c:
+	  examples: fix bogus g_object_unref in helloworld example
+	  GMainLoop is not a GObject.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=424143
+
+2011-09-23 13:09:25 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	  Merge branch 'master' into 0.11
+	  Conflicts:
+	  gst/gstcaps.c
+	  gst/gstpad.c
+	  libs/gst/base/gstbasesink.c
+	  libs/gst/base/gstbasesink.h
+	  libs/gst/base/gstbasetransform.c
+
+2011-09-21 13:43:48 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* common:
+	  Update common to 0.11 branch
+
+2011-09-20 13:04:06 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* libs/gst/base/gstbasetransform.c:
+	  basetransform: delay serialized events when src caps are not set yet
+	  https://bugzilla.gnome.org/show_bug.cgi?id=659571
+
+2011-09-13 17:04:31 +0400  Stas Sergeev <stsp@users.sourceforge.net>
+
+	* gst/gstpad.c:
+	  pad: Set caps on pad before checking if the pad is linked
+	  This allows the setcaps handler and notify::caps to link
+	  the pad downstream and doesn't require hacks to always
+	  provide a peer to the pad, like in decodebin2.
+
+2011-09-15 11:49:43 -0700  Fabrizio (Misto) Milo <mistobaan@gmail.com>
+
+	* gst/gstcaps.c:
+	  caps: use g_value_take_string() and gst_value_get_caps() instead of accessing internal fields
+
+2011-09-16 13:38:41 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/gstpad.c:
+	  pad: add more debug logging for other chain function code path as well
+
+2011-09-16 13:13:30 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/gstpad.c:
+	  pad: fix up printf format in debug message
+	  Which I messed up.
+
+2011-09-15 13:20:15 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* gst/gstpad.c:
+	  pad: make some debug traces more useful
+	  https://bugzilla.gnome.org/show_bug.cgi?id=659139
+
+2011-09-14 22:54:18 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* scripts/gstcvstest.sh:
+	  scripts: remove gstcvstest.sh
+
+2011-09-13 23:04:09 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* libs/gst/controller/gstlfocontrolsource.c:
+	  lfocontrolsource: fix clang compiler warning
+	  Cast enum to int before checking for negative values, which are
+	  impossible according to the enum list.
+	  gstlfocontrolsource.c:652:45: error: comparison of unsigned enum expression < 0
+	  is always false [-Werror,-Wtautological-compare]
+	  if (waveform >= num_waveforms || waveform < 0) {
+	  ~~~~~~~~ ^ ~
+	  https://bugzilla.gnome.org/show_bug.cgi?id=653137
+
+2011-09-13 21:58:21 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* tests/check/elements/filesrc.c:
+	  tests: make sure filesrc returns escaped URIs even if the input was unescaped
+	  https://bugzilla.gnome.org/show_bug.cgi?id=654673
+
+2011-09-10 18:15:49 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/gstcaps.c:
+	  caps: move log messages for caps creation/freeing into TRACE category
+	  Reduce SPAM for GST_CAPS:5.
+
+2011-09-09 12:56:20 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/gstpad.c:
+	  pad: Only do the subset check in gst_pad_accept_caps() if the pad claims to accept the caps
+
+2011-09-07 17:21:55 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* libs/gst/base/gstbasesink.c:
+	* libs/gst/base/gstbasesink.h:
+	* plugins/elements/gstfilesink.c:
+	  basesink: make it easy to override the pad query
+	  Add a vmethod to handle the pad query.
+	  Install a default handler for the pad query.
+	  Use the new query function in filesink
+
+2011-09-08 14:39:30 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* libs/gst/base/gstbasetransform.c:
+	  Revert "Revert "basetransform: Use check for subsets and not non-empty intersection to check if caps are compatible""
+	  This reverts commit 0bc6d49c950210bf422615fb8dc98c5adcd5e456.
+	  Conflicts:
+	  libs/gst/base/gstbasetransform.c
+
+2011-09-08 14:31:52 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/gstpad.c:
+	  Revert "Revert "pad: Check for subsets, not non-empty intersections to check if caps are compatible""
+	  This reverts commit 2bfada5581e35a2d37188f48a2c7442644f10bb3.
+	  Conflicts:
+	  gst/gstpad.c
+	  For 0.11 we want to enforce that only subsets of the pad
+	  caps are allowed. This breaks backward compatibility for
+	  some elements, which is why we only print a warning in
+	  0.10.
+
+2011-09-08 14:30:07 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
+	  Conflicts:
+	  gst/gstpad.c
+
+2011-09-08 14:29:00 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/gstpad.c:
+	  Revert "pad: Use gst_pad_accept_caps() instead of manually checking when configuring a sinkpad"
+	  This reverts commit d3cad28da936b037d877dc70c02286b81b680284.
+	  It causes performance problems because acceptcaps() propagates downstream.
+
+2011-09-08 14:23:50 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
+	  Conflicts:
+	  docs/design/draft-buffer2.txt
+	  docs/design/part-TODO.txt
+	  docs/design/part-block.txt
+	  docs/design/part-bufferlist.txt
+	  docs/design/part-caps.txt
+	  docs/design/part-element-transform.txt
+	  docs/design/part-events.txt
+	  docs/design/part-negotiation.txt
+	  gst/gstcaps.c
+	  gst/gstevent.h
+	  gst/gstghostpad.c
+	  gst/gstinterface.c
+	  gst/gstpad.c
+	  gst/gstpad.h
+	  gst/gstutils.c
+	  libs/gst/base/gstbasesink.c
+	  libs/gst/base/gstbasesrc.c
+	  libs/gst/base/gstbasetransform.c
+	  libs/gst/base/gsttypefindhelper.c
+	  plugins/elements/gstcapsfilter.c
+	  plugins/elements/gsttee.c
+	  tests/check/generic/sinks.c
+	  tools/gst-launch.1.in
+
+2011-09-08 13:41:19 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/gstpad.c:
+	  pad: Use gst_pad_accept_caps() instead of manually checking when configuring a sinkpad
+
+2011-09-08 13:40:06 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/gstpad.c:
+	  pad: Print a g_warning() if pad accept caps that are not a subset of its caps
+	  In 0.11 only subsets are supported again as documented instead of also
+	  allowing non-empty intersections.
+
+2011-09-08 13:26:24 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* libs/gst/base/gstbasetransform.c:
+	  Revert "basetransform: Use check for subsets and not non-empty intersection to check if caps are compatible"
+	  This reverts commit 5e5cc5e89e7e2858a6352fa4c81a374f6e5a6297.
+	  See bug #658541.
+
+2011-09-08 13:26:01 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/gstpad.c:
+	  Revert "pad: Check for subsets, not non-empty intersections to check if caps are compatible"
+	  This reverts commit 0c5d50207326d74a4805bcd898bfac887540f12b.
+	  See bug #658541.
+
+2011-09-07 13:14:38 +0200  Piotr Fusik <fox@scene.pl>
+
+	* README:
+	* docs/README:
+	* docs/design/draft-buffer2.txt:
+	* docs/design/draft-klass.txt:
+	* docs/design/part-MT-refcounting.txt:
+	* docs/design/part-TODO.txt:
+	* docs/design/part-activation.txt:
+	* docs/design/part-block.txt:
+	* docs/design/part-buffering.txt:
+	* docs/design/part-bufferlist.txt:
+	* docs/design/part-caps.txt:
+	* docs/design/part-clocks.txt:
+	* docs/design/part-element-sink.txt:
+	* docs/design/part-element-transform.txt:
+	* docs/design/part-events.txt:
+	* docs/design/part-framestep.txt:
+	* docs/design/part-gstelement.txt:
+	* docs/design/part-gstghostpad.txt:
+	* docs/design/part-latency.txt:
+	* docs/design/part-messages.txt:
+	* docs/design/part-missing-plugins.txt:
+	* docs/design/part-negotiation.txt:
+	* docs/design/part-qos.txt:
+	* docs/design/part-scheduling.txt:
+	* docs/design/part-seeking.txt:
+	* docs/design/part-states.txt:
+	* docs/design/part-stream-status.txt:
+	* docs/faq/Makefile.am:
+	* docs/faq/dependencies.xml:
+	* docs/faq/general.xml:
+	* docs/manual/Makefile.am:
+	* docs/manual/advanced-clocks.xml:
+	* docs/manual/advanced-dparams.xml:
+	* docs/manual/basics-elements.xml:
+	* docs/manual/basics-init.xml:
+	* docs/manual/basics-pads.xml:
+	* docs/manual/diagrams-general.svg:
+	* docs/manual/highlevel-components.xml:
+	* docs/manual/intro-gstreamer.xml:
+	* docs/pwg/Makefile.am:
+	* docs/pwg/advanced-tagging.xml:
+	* docs/pwg/intro-basics.xml:
+	* docs/pwg/intro-preface.xml:
+	* docs/pwg/other-base.xml:
+	* docs/pwg/other-source.xml:
+	* docs/random/autoplug2:
+	* docs/random/bbb/optional-properties:
+	* docs/random/bbb/streamselection:
+	* docs/random/caps:
+	* docs/random/company/gvadec.txt:
+	* docs/random/ensonic/draft-bufferpools.txt:
+	* docs/random/ensonic/embedded.txt:
+	* docs/random/ensonic/media-device-daemon.txt:
+	* docs/random/ensonic/plugindocs.txt:
+	* docs/random/ensonic/profiling.txt:
+	* docs/random/eos:
+	* docs/random/hierarchy:
+	* docs/random/i18n:
+	* docs/random/interfaces:
+	* docs/random/negotiation:
+	* docs/random/omega/sched/chains:
+	* docs/random/omega/testing/framework:
+	* docs/random/plugins:
+	* docs/random/rtp:
+	* docs/random/slomo/controller.txt:
+	* docs/random/sources:
+	* docs/random/streamheader:
+	* docs/random/testing/syntax:
+	* docs/random/types2:
+	* docs/random/uraeus/gstreamer_and_midi.txt:
+	* docs/random/vis-transform:
+	* docs/random/wtay/caps-negociation:
+	* docs/random/wtay/threading:
+	* docs/random/wtay/threads_hilevel:
+	* gst/gstbin.c:
+	* gst/gstcaps.c:
+	* gst/gstchildproxy.c:
+	* gst/gstelement.c:
+	* gst/gstevent.c:
+	* gst/gstevent.h:
+	* gst/gstghostpad.c:
+	* gst/gstinterface.c:
+	* gst/gstpad.c:
+	* gst/gstpad.h:
+	* gst/gstparamspecs.h:
+	* gst/gstparse.c:
+	* gst/gstpipeline.c:
+	* gst/gstplugin.c:
+	* gst/gstpluginfeature.c:
+	* gst/gstpluginfeature.h:
+	* gst/gstpoll.c:
+	* gst/gstregistry.c:
+	* gst/gststructure.c:
+	* gst/gstutils.c:
+	* gst/gstutils.h:
+	* gst/gstvalue.c:
+	* libs/gst/base/gstbasesink.c:
+	* libs/gst/base/gstbasesrc.c:
+	* libs/gst/base/gstbasetransform.c:
+	* libs/gst/base/gsttypefindhelper.c:
+	* libs/gst/controller/gstcontroller.c:
+	* libs/gst/controller/gsthelper.c:
+	* plugins/elements/gstcapsfilter.c:
+	* plugins/elements/gstidentity.c:
+	* plugins/elements/gstmultiqueue.c:
+	* plugins/elements/gstqueue2.c:
+	* plugins/elements/gsttee.c:
+	* tests/benchmarks/capsnego.c:
+	* tests/check/elements/filesink.c:
+	* tests/check/generic/sinks.c:
+	* tests/check/gst/gstelementfactory.c:
+	* tests/check/gst/gstevent.c:
+	* tools/gst-launch.1.in:
+	* win32/README.txt:
+	  docs, gst: typo fixes
+	  https://bugzilla.gnome.org/show_bug.cgi?id=658449
+
+2011-09-07 15:07:20 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* docs/gst/Makefile.am:
+	* docs/libs/Makefile.am:
+	  docs: fix make distcheck
+	  No point removin those empty override files from git, they'll
+	  just be re-created later, so let's tell gtk-doc about them, so
+	  it can clean them up properly.
+
+2011-09-07 16:02:31 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* libs/gst/base/gstbasetransform.c:
+	  basetransform: If there's no peer we still have to transform ANY caps in getcaps()
+	  Otherwise elements like capsfilter will return ANY caps if no
+	  peer is present instead of the filter caps. The transform_caps()
+	  vfunc could do transformations to the template caps that do not
+	  result in the unmodified template caps.
+
+2011-09-07 14:05:03 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* docs/gst/Makefile.am:
+	* docs/libs/Makefile.am:
+	* docs/plugins/Makefile.am:
+	  docs: cleanup makefiles
+	  Remove commented out parts that we don't need. Remove "the wingo addition" - no
+	  so useful after all. Narrow down file-globs for plugin docs.
+
+2011-09-07 13:50:08 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* gst/gstelement.c:
+	  docs: escape % in docblob
+
+2011-09-02 19:46:06 +0400  Stas Sergeev <stas@stas.(none)>
+
+	* gst/gstghostpad.c:
+	  ghostpad: Use gst_pad_set_caps() instead of manually changing caps
+	  gst_pad_set_caps() does essentially the same but additionally calls
+	  the pad's setcaps function.
+	  Fixes bug #658076.
+
+2011-09-06 21:24:10 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From a39eb83 to 11f0cd5
+
+2011-09-06 15:39:52 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 605cd9a to a39eb83
+
+2011-09-06 12:17:05 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* libs/gst/base/gstbasetransform.c:
+	  basetransform: Use check for subsets and not non-empty intersection to check if caps are compatible
+
+2011-09-06 12:19:58 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/gstpad.c:
+	  pad: Check for subsets, not non-empty intersections to check if caps are compatible
+	  Pads should only accept caps that are a subset of the pad caps, e.g.
+	  they should accept only caps that have a non-empty intersection and
+	  at least all fields of the pad caps.
+	  Without this a pad that wants for example
+	  "video/x-h264,stream-format=byte-stream"
+	  will be happy to accept
+	  "video/x-h264".
+
+2011-08-29 17:06:18 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gstbuffer.c:
+	* gst/gstbufferlist.c:
+	* gst/gstcaps.c:
+	* gst/gstevent.c:
+	* gst/gstmessage.c:
+	* gst/gstminiobject.h:
+	* gst/gstquery.c:
+	* win32/common/libgstreamer.def:
+	  miniobject: change to GST_DEFINE_MINI_OBJECT_TYPE
+	  Append _TYPE to the macro for consistency with other similar macros.
+
+2011-08-29 15:34:30 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gst.c:
+	* gst/gst_private.h:
+	* gst/gstbuffer.c:
+	* gst/gstbuffer.h:
+	* gst/gstbufferlist.c:
+	* gst/gstbufferlist.h:
+	* gst/gstcaps.c:
+	* gst/gstcaps.h:
+	* gst/gstevent.c:
+	* gst/gstevent.h:
+	* gst/gstmemory.c:
+	* gst/gstmemory.h:
+	* gst/gstmessage.c:
+	* gst/gstmeta.c:
+	* gst/gstmeta.h:
+	* gst/gstminiobject.c:
+	* gst/gstminiobject.h:
+	* gst/gstquery.c:
+	* win32/common/libgstreamer.def:
+	  init: add _get_type() functions
+	  Remove gst_mini_object_register() and add a GST_DEFINE_MINI_OBJECT macro to
+	  define a _get_type() function for the boxed miniobject.
+	  Remove a bunch of custom _get_type() functions and replace them with the
+	  miniobject macro.
+	  Rename some _init method to _priv_*_initialize() like the rest of them.
+	  Inspired by patch from Johan Dahlin and see bug #657603
+
+2011-08-29 13:27:26 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gst.c:
+	* gst/gst_private.h:
+	* gst/gstbuffer.c:
+	* gst/gstbufferlist.c:
+	* gst/gstcaps.c:
+	* gst/gstevent.c:
+	* gst/gstformat.c:
+	* gst/gstmessage.c:
+	* gst/gstplugin.c:
+	* gst/gstquery.c:
+	* gst/gstregistry.c:
+	* gst/gstregistrybinary.c:
+	* gst/gststructure.c:
+	* gst/gsttaglist.c:
+	* gst/gstvalue.c:
+	* win32/common/libgstreamer.def:
+	  gst: add some _priv prefixes to private methods
+
+2011-08-29 12:38:54 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gstminiobject.c:
+	  mini-object: use ref/unref directly in boxed copy/free
+	  GLib will not call our copy/free with a NULL object
+
+2011-08-26 14:37:54 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
+	  Conflicts:
+	  gst/gstmessage.c
+	  gst/gstquery.c
+	  gst/gstregistrychunks.c
+	  gst/gstsegment.c
+	  libs/gst/base/gstbasetransform.c
+	  libs/gst/base/gstbasetransform.h
+	  libs/gst/base/gsttypefindhelper.c
+	  plugins/elements/gsttypefindelement.c
+
+2011-08-26 14:18:33 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstbasesink.c:
+	* libs/gst/base/gstbasesink.h:
+	* libs/gst/base/gstbasesrc.c:
+	* libs/gst/base/gstbasesrc.h:
+	* libs/gst/base/gstbasetransform.c:
+	* libs/gst/base/gstbasetransform.h:
+	  base: rename allocation vmethods
+	  Name the allocation vmethod on srcpad decide_allocation because source pads will
+	  have to decide what allocation parameters will be used.
+	  Name the allocation vmethod on sinkpads propose_allocation because they will
+	  need to configure the allocation query with a proposed values for upstream.
+
+2011-08-26 14:17:23 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gstbuffer.h:
+	  buffer: improve flags
+	  Rename DROP to DECODE_ONLY.
+	  Add DROPPABLE flag to mark buffers that can be dropped to save bandwidth without
+	  destroying the stream.
+
+2011-08-26 14:09:47 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* gst/gsttrace.h:
+	* gst/gsttypefind.h:
+	  docs: add since 0.10.36 on the new _NONE enum values
+
+2011-08-26 00:13:16 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* tests/examples/stepping/framestep1.c:
+	  stepping: use the proper argument order
+	  Fixes warning #188: enumerated type mixed with another type reported by ICC.
+
+2011-08-26 00:06:12 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* plugins/indexers/gstfileindex.c:
+	  fileindex: explicitly cast to the enum types
+	  Fixes warning #188: enumerated type mixed with another type reported by ICC.
+
+2011-08-26 00:00:25 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* plugins/elements/gsttypefindelement.c:
+	  typefinder: use GST_TYPE_FIND_NONE instead of 0
+	  Fixes warning #188: enumerated type mixed with another type reported by ICC.
+
+2011-08-25 23:53:58 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* libs/gst/controller/gstlfocontrolsource.c:
+	  lfocontrolsource: explicitly cast to the enum type
+	  Fixes warning #188: enumerated type mixed with another type reported by ICC.
+
+2011-08-25 23:49:38 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* gst/gsttypefind.h:
+	* libs/gst/base/gsttypefindhelper.c:
+	  typefind: add GST_TYPE_FIND_NONE and use it
+	  Fixes warning #188: enumerated type mixed with another type reported by ICC.
+
+2011-08-25 23:26:08 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* libs/gst/base/gstbaseparse.c:
+	  baseparse: use the enum values for 0 and don't abuse on gboolean coincidence
+	  Fixes warning #188: enumerated type mixed with another type reported by ICC.
+
+2011-08-25 23:06:56 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* libs/gst/base/gstbaseparse.c:
+	  baseparse: put the arguments of g_return_val_if_fail in the proper order
+
+2011-08-25 22:48:54 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* gst/gstparse.c:
+	  parse: use GST_PARSE_FLAG_NONE instead of 0
+	  Fixes warning #188: enumerated type mixed with another type reported by ICC.
+
+2011-08-25 22:42:08 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* gst/gstvalue.c:
+	  value: explicitly cast to the enum type
+	  Fixes warning #188: enumerated type mixed with another type reported by ICC.
+
+2011-08-25 22:29:45 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* gst/gstutils.c:
+	  utils: minor changes related to enum types
+	  Fixes warning #188: enumerated type mixed with another type reported by ICC.
+
+2011-08-25 22:05:26 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* gst/gsttrace.c:
+	* gst/gsttrace.h:
+	  trace: add GST_ALLOC_TRACE_NONE for consistency and use it
+	  Fixes warning #188: enumerated type mixed with another type reported by ICC.
+
+2011-08-25 21:52:05 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* gst/gsttask.c:
+	  task: explicitly cast to the enum type
+	  Fixes warning #188: enumerated type mixed with another type reported by ICC.
+
+2011-08-25 21:49:29 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* gst/gstsystemclock.c:
+	* gst/gsttagsetter.c:
+	  tagsetter: use GST_TAG_MERGE_UNDEFINED instead of FALSE
+	  Fixes warning #188: enumerated type mixed with another type reported by ICC.
+
+2011-08-25 21:30:57 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* gst/gstsegment.c:
+	  segment: use GST_SEEK_FLAG_NONE instead of 0
+	  Fixes warning #188: enumerated type mixed with another type reported by ICC.
+
+2011-08-25 21:25:46 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* gst/gstregistrychunks.c:
+	  registrychunks: explicitly cast to the enum types
+	  Fixes warning #188: enumerated type mixed with another type reported by ICC.
+
+2011-08-25 21:18:15 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* gst/gstquery.c:
+	  query: minor changes related to enum types
+	  Fixes warning #188: enumerated type mixed with another type reported by ICC.
+
+2011-08-25 21:03:53 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* gst/gstpadtemplate.c:
+	  padtemplate: explicitly cast to the enum types
+	  Fixes warning #188: enumerated type mixed with another type reported by ICC.
+
+2011-08-16 23:00:47 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* gst/gstpad.c:
+	* gst/gstpad.h:
+	  pad: explicitly cast to the enum type
+	  Fixes warning #188: enumerated type mixed with another type reported by ICC.
+
+2011-08-16 22:51:29 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* gst/gstmessage.c:
+	  message: explicitly cast to the right enum types
+	  Fixes warning #188: enumerated type mixed with another type reported by ICC.
+
+2011-08-16 22:41:32 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* gst/gstinfo.c:
+	  info: explicitly cast to the enum type
+	  Fixes warning #188: enumerated type mixed with another type reported by ICC.
+
+2011-08-16 22:37:08 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* gst/gstindex.c:
+	  index: explicitly cast to the enum type
+	  Fixes warning #188: enumerated type mixed with another type reported by ICC.
+
+2011-08-16 22:29:59 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* gst/gstformat.c:
+	  format: use GST_FORMAT_UNDEFINED and few casts to GstFormat
+	  Fixes warning #188: enumerated type mixed with another type reported by ICC.
+
+2011-08-26 13:02:34 +0100  Sjoerd Simons <sjoerd.simons@collabora.co.uk>
+
+	* libs/gst/base/gstbasetransform.h:
+	  basetransform: Fix bodged previous commit
+
+2011-08-26 12:37:43 +0100  Sjoerd Simons <sjoerd.simons@collabora.co.uk>
+
+	* libs/gst/base/gstbasetransform.c:
+	* libs/gst/base/gstbasetransform.h:
+	  basetransform: Use GstPadDirection in the query vfunc
+	  Wim suggested that using GstPadDirection instead of a GstPad in the
+	  arguments to the new query vfunc would be more consistent with the other
+	  functions.
+
+2011-08-26 13:40:44 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gstbuffer.h:
+	  buffer: rename _CLIP to _DROP flag
+	  We can also use a flag to indicate that a frame should be decoded but not
+	  displayed regardless of the the segment boundaries so we use the more generic
+	  _DROP.
+
+2011-08-26 12:28:28 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstbasetransform.c:
+	* libs/gst/base/gstbasetransform.h:
+	  basetransform: remove some unused variables
+
+2011-08-26 11:44:12 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstbasetransform.c:
+	* libs/gst/base/gstbasetransform.h:
+	  basetransform: add vmethod to configure upstream bufferpool
+	  Add a vmethod that can be implemented to influence the bufferpool that upstream
+	  elements will use.
+
+2011-08-26 11:24:42 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstbasetransform.c:
+	* libs/gst/base/gstbasetransform.h:
+	  basetransform: use pad direction like other vmethods
+
+2011-08-26 11:09:07 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
+	  Conflicts:
+	  libs/gst/base/gstbasetransform.c
+	  libs/gst/base/gstbasetransform.h
+
+2011-08-26 10:57:37 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gsturi.h:
+	  uri: some doc fixes
+
+2011-08-25 11:02:16 +0100  Sjoerd Simons <sjoerd.simons@collabora.co.uk>
+
+	* libs/gst/base/gstbasetransform.c:
+	* libs/gst/base/gstbasetransform.h:
+	  BaseTransform: Add a query vfunc
+
+2011-07-20 14:05:27 +0200  Sjoerd Simons <sjoerd.simons@collabora.co.uk>
+
+	* plugins/elements/gstcapsfilter.c:
+	  capsfilter: don't assume _get_caps still has to be
+	  _set_caps only gets called when the buffer is actually pushed, so there
+	  is a reasonably big window between when the initial caps are retrieved
+	  and when the caps are set on our src pad. So we can't assume the not
+	  having negotiated caps on our src pad means _get_caps still has to be
+	  called.
+	  Instead simply always suggest the new caps on buffer_alloc.
+
+2011-08-25 18:04:28 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gstbuffer.h:
+	  buffer: add clip flag
+
+2011-08-25 16:21:18 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gstbuffer.h:
+	  buffer: rework flags a little
+	  Reorder buffer flags and add some new ones.
+	  Remove the media specific flags, we can now easily do this with the FLAG_LAST
+	  flag because we don't extend from GstBuffer anymore.
+
+2011-08-25 16:20:21 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gstbuffer.c:
+	* libs/gst/base/gstbasetransform.c:
+	  buffer: always copy all buffer flags when asked
+	  Don't try to be smart and copy only a subset of buffer flag
+
+2011-08-25 16:19:52 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* win32/common/libgstreamer.def:
+	  update defs
+
+2011-08-25 14:09:37 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gst.c:
+	* gst/gstbuffer.h:
+	  buffer: pluralize the buffer flags
+
+2011-08-25 12:38:58 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstbasesink.c:
+	* libs/gst/base/gstbasesink.h:
+	* tests/check/generic/sinks.c:
+	* tests/check/pipelines/stress.c:
+	  basesink: remove preroll-queue-len property
+	  Remove the preroll-queue-len property and move its variables to a private
+	  section so that we can remove them later.
+
+2011-08-24 10:43:09 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
+	  Conflicts:
+	  gst/gstobject.c
+
+2011-08-23 18:19:53 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* libs/gst/base/gstbasesink.c:
+	  basesink: ensure start_time reset upon flush
+
+2011-08-23 11:55:17 +0200  Stefan Kost <ensonic@users.sf.net>
+
+	* gst/gstobject.c:
+	  gstobject: also remove the cast as this is causing the trouble
+
+2011-08-23 11:41:02 +0200  Stefan Kost <ensonic@users.sf.net>
+
+	* gst/gstobject.c:
+	  gstobject: use the atomic macros to deal with the glib change in the impl.
+
+2011-08-22 12:49:04 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gstobject.c:
+	* gst/gstobject.h:
+	  object: make _replace like the miniobject version
+
+2011-08-22 12:33:35 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
+	  Conflicts:
+	  gst/gstbuffer.h
+	  gst/gstcaps.c
+	  gst/gstcaps.h
+	  gst/gstevent.c
+
+2011-08-22 12:19:19 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gstcaps.c:
+	* gst/gststructure.c:
+	* gst/gststructure.h:
+	* gst/gstvalue.c:
+	* gst/gstvalue.h:
+	* tests/check/gst/capslist.h:
+	* tests/check/gst/gstcaps.c:
+	* tests/check/gst/gststructure.c:
+	* tests/check/gst/gstvalue.c:
+	* tests/check/pipelines/parse-launch.c:
+	* win32/common/libgstreamer.def:
+	  value: remove our FOURCC GType
+	  Remove our custom fourcc GValue.
+
+2011-08-21 14:07:08 -0700  David Schleef <ds@schleef.org>
+
+	* gst/gstobject.c:
+	  object: make gst_object_replace() atomic
+
+2011-08-20 14:07:55 +0200  Stefan Kost <ensonic@users.sf.net>
+
+	* gst/gstelement.c:
+	  docs: more clarification for element docs
+	  Don't suggest deprecated method in the desction docs and try to be more helpful
+	  in other places by suggesting related functions.
+
+2011-08-20 09:56:01 +0200  Stefan Kost <ensonic@users.sf.net>
+
+	* gst/gstelement.c:
+	  docs: small clarification in the gst_element_get_request_pad docs
+	  Make it more obvious that one should pass the template name.
+
+2011-08-18 20:46:01 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* libs/gst/base/gstbaseparse.c:
+	  baseparse: don't use == in debug string
+	  It messes up GST_DEBUG=*:5 make foo/bar.valgrind, because
+	  our Makefile looks for '==' as marker of valgrind output.
+
+2011-08-18 20:44:01 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* libs/gst/base/gstbaseparse.c:
+	  baseparse: fix crash on seek from streaming thread on newsegment event
+	  Event if it's not allowed, we can easily prevent it, so let's do
+	  that.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=656771
+
+2011-08-17 17:56:40 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gststructure.c:
+	* gst/gststructure.h:
+	* win32/common/libgstreamer.def:
+	  structure: add method to fixate one field
+
+2011-08-17 17:16:21 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstbasesrc.c:
+	  basesrc: add default fixate function
+	  Add a default fixate function which does gst_caps_fixate() because
+	  gst_pad_fixate() does not do that anymore.
+
+2011-08-17 09:25:04 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gstpad.c:
+	* libs/gst/base/gstbasetransform.h:
+	  docs: improve some docs
+
+2011-08-16 18:29:29 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gstbuffer.c:
+	* gst/gstbuffer.h:
+	  buffer: return processed number of bytes
+	  Make _fill, _extract and _memset return the actual number of bytes that were
+	  handled in case the buffer size is less than the specified size.
+
+2011-08-16 17:19:29 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/gstelementfactory.c:
+	  docs: fix typo in element factory documentation
+
+2011-08-16 17:32:20 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gstbuffer.c:
+	* gst/gstbuffer.h:
+	* libs/gst/base/gstbasetransform.c:
+	* libs/gst/dataprotocol/dataprotocol.c:
+	  buffer: rename PREROLL -> LIVE flag
+	  Rename the GST_BUFFER_FLAG_PREROLL to GST_BUFFER_FLAG_LIVE and give the new flag
+	  a meaning. The old PREROLL flag never had a clear meaning.
+
+2011-08-15 21:05:34 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/gstcaps.c:
+	  caps: fix compiler warning reported by ICC
+	  The MAX macro expands to code that checks if an unsigned integer is < 0.
+	  Fixes warning #186: pointless comparison of unsigned integer reported by ICC.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=656265
+
+2011-08-10 11:39:23 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* gst/gstbuffer.h:
+	  buffer: explicitly cast to the enum type
+	  Fixes warning #188: enumerated type mixed with another type reported by ICC.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=656265
+
+2011-08-10 11:07:49 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* gst/gstelement.h:
+	  gststate: explicitly cast to the enum type
+	  Fixes warning #188: enumerated type mixed with another type reported by ICC.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=656265
+
+2011-08-09 23:42:26 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* gst/gstevent.c:
+	  event: explicitly cast to the right enum types
+	  Fixes warning #188: enumerated type mixed with another type reported by ICC.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=656265
+
+2011-08-09 23:33:43 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* gst/gsterror.c:
+	  gsterror: explicitly cast to the right GstGError code enum types
+	  Fixes warning #188: enumerated type mixed with another type reported by ICC.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=656265
+
+2011-08-09 23:26:13 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* gst/gstdebugutils.c:
+	  debugutils: use GST_STATE_VOID_PENDING for GstState instead of 0
+	  Fixes a warning reported by ICC.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=656265
+
+2011-08-09 22:48:53 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* gst/gstcaps.c:
+	* gst/gstcaps.h:
+	  caps: define GST_CAPS_FLAGS_NONE for consistency with other enumerations
+	  Use them to fix warnings when building with ICC.
+	  API: GST_CAPS_FLAGS_NONE
+	  https://bugzilla.gnome.org/show_bug.cgi?id=656265
+
+2011-08-09 22:29:44 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* gst/gst.c:
+	  gst: use GstDebugLevel enum type to fix a warning building with ICC
+	  https://bugzilla.gnome.org/show_bug.cgi?id=656265
+
+2011-08-15 16:45:33 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gstpad.c:
+	  pad: make fixate caps behave like other functions
+	  Install a default fixate caps function on pads like all the other pad functions.
+
+2011-08-15 16:45:05 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* win32/common/libgstreamer.def:
+	  defs: update for new symbols
+
+2011-08-15 14:43:14 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
+
+2011-08-15 14:40:38 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gstcaps.c:
+	* gst/gstcaps.h:
+	* gst/gstpad.c:
+	* gst/gststructure.c:
+	  caps: add fixate function
+	  Add a fixate function and use it in gstpad.c
+
+2011-08-15 14:32:17 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gstpad.c:
+	* gst/gststructure.c:
+	* gst/gststructure.h:
+	  structure: add function to fixate
+	  Add a function to fixate a structure and use it for the default fixate function
+	  in gstpad.c.
+
+2011-08-15 13:17:44 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* scripts/gst-uninstalled:
+	  gst-uninstalled: add Farsight and Nice support
+	  https://bugzilla.gnome.org/show_bug.cgi?id=656557
+
+2011-08-15 14:17:39 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gstpad.c:
+	  pad: fix default acceptcaps
+	  Make the acceptcaps function behave like all the other functions with a default
+	  implementation. Don't try to chain up to the default implementation when it was
+	  set to NULL explicitly but return FALSE instead.
+	  Fix some docs
+
+2011-08-15 13:24:11 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gstpad.c:
+	* gst/gstpad.h:
+	  pad: fix some macros
+	  Remove a rather usless macro to check if a pad mode is active and
+	  add GST_PAD_IS_ACTIVE().
+
+2011-08-15 12:18:59 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/random/porting-to-0.11.txt:
+	  docs: update porting doc
+
+2011-08-15 12:16:30 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gstdebugutils.c:
+	* gst/gstpad.c:
+	* gst/gstpad.h:
+	* win32/common/libgstreamer.def:
+	  pad: remove gst_pad_get_negotiated_caps()
+	  Remove gst_pad_get_negotiated_caps(), it does not realy do what it says,
+	  gst_pad_get_current_caps() returns the currently negotiated caps on the pad
+	  correctly.
+
+2011-08-12 19:27:21 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* plugins/elements/gstqueue2.c:
+	  queue2: fix deadlock in error path
+	  Don't lock the same lock twice. Spotted by Josep Torre Valles.
+
+2011-08-12 12:45:01 +0300  Peteris Krisjanis <pecisk@gmail.com>
+
+	* gst/gstiterator.c:
+	  iterator: Fix gst_iterator_next() element annotation
+
+2011-08-11 09:31:25 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* docs/pwg/advanced-types.xml:
+	  docs: fix typo in PWG
+	  RBG -> RGB. Spotted by Will Thompson.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=656326
+
+2011-08-11 10:09:41 +0200  Stefan Kost <ensonic@users.sf.net>
+
+	* gst/gstdebugutils.c:
+	  debugutils: removed non-sense comment
+
+2011-08-10 17:07:54 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	  Merge remote-tracking branch 'origin/master' into 0.11
+	  Conflicts:
+	  gst/gstdebugutils.c
+	  gst/gstelementdetails.h
+	  gst/gstregistrychunks.c
+	  tools/gst-run.c
+
+2011-08-08 19:36:04 +0200  Stefan Kost <ensonic@users.sf.net>
+
+	* gst/gstelementdetails.h:
+	* gst/gstregistrychunks.c:
+	  registry: move utf-8 validation to registry saving time
+	  Instead of checking for valid utf-8 element-details every time we create
+	  elements (from plugin-init or registry), do it before we save the registry.
+	  Fixes #656193.
+
+2011-08-10 11:01:58 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* gst/gstbuffer.c:
+	* gst/gstmemory.c:
+	* gst/gstmeta.c:
+	* gst/gstpad.c:
+	* libs/gst/base/gstadapter.c:
+	* libs/gst/base/gstbaseparse.c:
+	* libs/gst/base/gstbasesrc.c:
+	* libs/gst/base/gstbasetransform.c:
+	* libs/gst/check/gstcheck.c:
+	* plugins/elements/gstfdsink.c:
+	* plugins/elements/gstfilesink.c:
+	* plugins/elements/gstqueue.c:
+	* plugins/elements/gstqueue2.c:
+	* plugins/elements/gsttypefindelement.c:
+	  Fix and clarify debug statements
+	  Fixes build on MacOSX
+	  Signed-off-by: Edward Hervey <edward.hervey@collabora.co.uk>
+
+2011-08-05 10:59:42 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* gst/gstbuffer.c:
+	  gstbuffer: Clarify doc
+
+2011-08-07 09:14:50 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* docs/manual/basics-helloworld.xml:
+	  docs: fix helloworld compile command line for newer gcc
+	  https://bugzilla.gnome.org/show_bug.cgi?id=656092
+
+2011-08-06 18:20:51 +0200  Shaun Hoopes <hoopes01@student.uwa.edu.au>
+
+	* gst/gstdebugutils.c:
+	  debugutils: improve dot file flow layout
+	  Iterate source- and sink-pads separately to ensure that the graph reflects the
+	  upstream/downstream order. Fixes #643269
+
+2011-08-06 14:17:50 +0200  Thomas Vander Stichele <thomas (at) apestaart (dot) org>
+
+	* gstreamer.spec.in:
+	  gstreamer.spec: make buildable and parallel
+
+2011-08-05 12:12:33 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* tools/gst-run.c:
+	  tools: make unversioned wrapper look for -0.10 tools only
+	  Don't want (incompatible) 0.11 tools to be picked up by accident.
+
+2011-08-04 18:00:02 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstbasesrc.c:
+	* libs/gst/base/gstbasesrc.h:
+	  basesrc: add alloc vmethod
+	  Make an alloc vmethod so that subclasses can override or call the default
+	  implementation when they want.
+
+2011-08-04 17:26:34 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* win32/common/libgstbase.def:
+	* win32/common/libgstreamer.def:
+	  defs: update defs
+
+2011-08-04 17:12:47 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstbasesrc.c:
+	  basesrc: cleanups and mark reconfigure
+	  Don't abuse the result variable.
+	  Mark the srcpad with a reconfigure so that negotiation happens.
+
+2011-08-04 17:12:21 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gstpad.c:
+	* gst/gstpad.h:
+	  pad: add method to mark reconfigure
+
+2011-08-04 16:56:42 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstbasesrc.c:
+	  basesrc: remove negotiation from the state change
+	  Remove the negotiation from the state change function, it causes data transfer
+	  and bufferpool negotiation, which is not supposed to be done. Since we have the
+	  reconfigure state on the pad, the create function will do the negotiation as
+	  soon as it gets in the streaming thread.
+
+2011-08-04 16:34:49 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstbasesrc.c:
+	* libs/gst/base/gstbasesrc.h:
+	  basesrc: expose set_caps method
+	  Expose a previously static method so that custom negotiate implementation can
+	  call it and do the right thing.
+
+2011-08-04 13:48:11 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstbasesrc.c:
+	  basesrc: PAUSED<->PLAY doesn't change pool state
+	  Don't change the state of the bufferpool when going between PAUSED and PLAYING,
+	  it will dealloc and realloc all buffers, which is clearly too invasive. We will
+	  need to add some other way of unblocking the bufferpool.
+
+2011-08-04 11:00:57 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gstbufferpool.c:
+	* gst/gstmemory.c:
+	  fix default alignment
+	  A 0 alignment is the default.
+
+2011-08-04 10:54:29 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gstbufferpool.c:
+	* gst/gstbufferpool.h:
+	* win32/common/libgstreamer.def:
+	  bufferpool: add gst_buffer_pool_is_active()
+
+2011-08-03 11:57:50 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* configure.ac:
+	* win32/common/config.h:
+	* win32/common/gstversion.h:
+	  back to development
+
+=== release 0.11.0 ===
+
+2011-08-02 20:55:28 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gstreamer.doap:
+	* po/af.po:
+	* po/az.po:
+	* po/be.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/rw.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_TW.po:
+	* win32/common/config.h:
+	* win32/common/gstenumtypes.c:
+	* win32/common/gstenumtypes.h:
+	* win32/common/gstversion.h:
+	  RELEASE 0.11
+
+2011-08-03 11:04:12 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* docs/random/porting-to-0.11.txt:
+	  porting-to-0.11: Add section about GstIterator
 
 2011-08-01 18:12:12 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
 
