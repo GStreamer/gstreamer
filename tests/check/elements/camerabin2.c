@@ -166,8 +166,11 @@ static guint bus_source;
 static GMainLoop *main_loop;
 static gint capture_count = 0;
 guint32 test_id = 0;
+static const gchar *image_filename;
+static const gchar *video_filename;
 
 static GstBuffer *preview_buffer;
+static gchar *preview_filename;
 static GstCaps *preview_caps;
 static GstTagList *tags_found;
 
@@ -275,6 +278,8 @@ capture_bus_cb (GstBus * bus, GstMessage * message, gpointer data)
         if (preview_buffer)
           gst_buffer_unref (preview_buffer);
         preview_buffer = gst_buffer_ref (buf);
+        g_free (preview_filename);
+        preview_filename = g_strdup (gst_structure_get_string (st, "location"));
       }
       break;
   }
@@ -282,8 +287,10 @@ capture_bus_cb (GstBus * bus, GstMessage * message, gpointer data)
 }
 
 static void
-check_preview_image (GstElement * camera)
+check_preview_image (GstElement * camera, const gchar * filename, gint index)
 {
+  gchar *prev_filename = NULL;
+
   if (!preview_buffer && camera) {
     GstMessage *msg = wait_for_element_message (camera,
         GST_BASE_CAMERA_SRC_PREVIEW_MESSAGE_NAME, GST_CLOCK_TIME_NONE);
@@ -291,11 +298,21 @@ check_preview_image (GstElement * camera)
     gst_message_unref (msg);
   }
   fail_unless (preview_buffer != NULL);
+  if (filename) {
+    if (index >= 0) {
+      prev_filename = g_strdup_printf (filename, index);
+    } else {
+      prev_filename = g_strdup (filename);
+    }
+    fail_unless (preview_filename != NULL);
+    fail_unless (strcmp (preview_filename, prev_filename) == 0);
+  }
   if (preview_caps) {
     fail_unless (GST_BUFFER_CAPS (preview_buffer) != NULL);
     fail_unless (gst_caps_can_intersect (GST_BUFFER_CAPS (preview_buffer),
             preview_caps));
   }
+  g_free (prev_filename);
 }
 
 static void
@@ -371,6 +388,8 @@ setup_wrappercamerabinsrc_videotestsrc (void)
 
   tags_found = NULL;
   capture_count = 0;
+  image_filename = make_test_file_name (IMAGE_FILENAME, -1);
+  video_filename = make_test_file_name (VIDEO_FILENAME, -1);
 
   GST_INFO ("init finished");
 }
@@ -398,6 +417,9 @@ teardown (void)
   if (preview_buffer)
     gst_buffer_unref (preview_buffer);
   preview_buffer = NULL;
+
+  g_free (preview_filename);
+  preview_filename = NULL;
 
   if (tags_found)
     gst_tag_list_free (tags_found);
@@ -569,6 +591,9 @@ wait_for_element_message (GstElement * camera, const gchar * name,
           if (preview_buffer)
             gst_buffer_unref (preview_buffer);
           preview_buffer = gst_buffer_ref (buf);
+          g_free (preview_filename);
+          preview_filename =
+              g_strdup (gst_structure_get_string (st, "location"));
         }
 
         if (gst_structure_has_name (st, name))
@@ -593,8 +618,7 @@ GST_START_TEST (test_single_image_capture)
     return;
 
   /* set still image mode */
-  g_object_set (camera, "mode", 1,
-      "location", make_test_file_name (IMAGE_FILENAME, -1), NULL);
+  g_object_set (camera, "mode", 1, "location", image_filename, NULL);
 
   if (gst_element_set_state (GST_ELEMENT (camera), GST_STATE_PLAYING) ==
       GST_STATE_CHANGE_FAILURE) {
@@ -614,7 +638,7 @@ GST_START_TEST (test_single_image_capture)
   gst_message_unref (msg);
 
   /* check that we got a preview image */
-  check_preview_image (camera);
+  check_preview_image (camera, image_filename, 0);
 
   g_object_get (camera, "idle", &idle, NULL);
   fail_unless (idle);
@@ -636,8 +660,7 @@ GST_START_TEST (test_multiple_image_captures)
     return;
 
   /* set still image mode */
-  g_object_set (camera, "mode", 1,
-      "location", make_test_file_name (IMAGE_FILENAME, -1), NULL);
+  g_object_set (camera, "mode", 1, "location", image_filename, NULL);
 
   if (gst_element_set_state (GST_ELEMENT (camera), GST_STATE_PLAYING) ==
       GST_STATE_CHANGE_FAILURE) {
@@ -667,7 +690,7 @@ GST_START_TEST (test_multiple_image_captures)
     fail_unless (msg != NULL);
     gst_message_unref (msg);
 
-    check_preview_image (camera);
+    check_preview_image (camera, image_filename, i);
   }
 
   g_object_get (camera, "idle", &idle, NULL);
@@ -689,8 +712,7 @@ GST_START_TEST (test_single_video_recording)
     return;
 
   /* Set video recording mode */
-  g_object_set (camera, "mode", 2,
-      "location", make_test_file_name (VIDEO_FILENAME, -1), NULL);
+  g_object_set (camera, "mode", 2, "location", video_filename, NULL);
 
   if (gst_element_set_state (GST_ELEMENT (camera), GST_STATE_PLAYING) ==
       GST_STATE_CHANGE_FAILURE) {
@@ -716,7 +738,7 @@ GST_START_TEST (test_single_video_recording)
 
   g_signal_emit_by_name (camera, "stop-capture", NULL);
 
-  check_preview_image (camera);
+  check_preview_image (camera, video_filename, 0);
 
   msg = wait_for_element_message (camera, "video-done", GST_CLOCK_TIME_NONE);
   fail_unless (msg != NULL);
@@ -743,7 +765,7 @@ GST_START_TEST (test_multiple_video_recordings)
     return;
 
   /* Set video recording mode */
-  g_object_set (camera, "mode", 2, NULL);
+  g_object_set (camera, "mode", 2, "location", video_filename, NULL);
 
   if (gst_element_set_state (GST_ELEMENT (camera), GST_STATE_PLAYING) ==
       GST_STATE_CHANGE_FAILURE) {
@@ -765,8 +787,7 @@ GST_START_TEST (test_multiple_video_recordings)
         widths[i], "height", G_TYPE_INT, heights[i], "framerate",
         GST_TYPE_FRACTION, fr[i], 1, NULL);
 
-    g_object_set (camera, "video-capture-caps", caps,
-        "location", make_test_file_name (VIDEO_FILENAME, i), NULL);
+    g_object_set (camera, "video-capture-caps", caps, NULL);
 
     gst_caps_unref (caps);
 
@@ -784,7 +805,7 @@ GST_START_TEST (test_multiple_video_recordings)
     fail_unless (msg != NULL);
     gst_message_unref (msg);
 
-    check_preview_image (camera);
+    check_preview_image (camera, video_filename, i);
 
     g_object_get (camera, "idle", &idle, NULL);
     fail_unless (idle);
@@ -818,25 +839,30 @@ GST_START_TEST (test_image_video_cycle)
   GST_INFO ("starting capture");
   for (i = 0; i < 2; i++) {
     GstMessage *msg;
+    const gchar *img_filename;
+    const gchar *vid_filename;
+
     g_object_get (camera, "idle", &idle, NULL);
     fail_unless (idle);
 
+    img_filename = make_test_file_name (IMAGE_FILENAME, i);
+    vid_filename = make_test_file_name (VIDEO_FILENAME, i);
+
     /* take a picture */
     g_object_set (camera, "mode", 1, NULL);
-    g_object_set (camera, "location", make_test_file_name (IMAGE_FILENAME, i),
-        NULL);
+    g_object_set (camera, "location", img_filename, NULL);
     g_signal_emit_by_name (camera, "start-capture", NULL);
 
     msg = wait_for_element_message (camera, "image-done", GST_CLOCK_TIME_NONE);
     fail_unless (msg != NULL);
     gst_message_unref (msg);
 
-    check_preview_image (camera);
+    check_preview_image (camera, img_filename, i);
 
     /* now go to video */
     g_object_set (camera, "mode", 2, NULL);
-    g_object_set (camera, "location", make_test_file_name (VIDEO_FILENAME, i),
-        NULL);
+    g_object_set (camera, "location", vid_filename, NULL);
+
     g_signal_emit_by_name (camera, "start-capture", NULL);
     g_timeout_add_seconds (VIDEO_DURATION, (GSourceFunc) g_main_loop_quit,
         main_loop);
@@ -847,7 +873,7 @@ GST_START_TEST (test_image_video_cycle)
     fail_unless (msg != NULL);
     gst_message_unref (msg);
 
-    check_preview_image (camera);
+    check_preview_image (camera, vid_filename, i);
 
     /* wait for capture to finish */
     g_usleep (G_USEC_PER_SEC);
@@ -874,8 +900,7 @@ GST_START_TEST (test_image_capture_previews)
     return;
 
   /* set still image mode */
-  g_object_set (camera, "mode", 1,
-      "location", make_test_file_name (IMAGE_FILENAME, -1), NULL);
+  g_object_set (camera, "mode", 1, "location", image_filename, NULL);
 
   if (gst_element_set_state (GST_ELEMENT (camera), GST_STATE_PLAYING) ==
       GST_STATE_CHANGE_FAILURE) {
@@ -904,7 +929,7 @@ GST_START_TEST (test_image_capture_previews)
     fail_unless (msg != NULL);
     gst_message_unref (msg);
 
-    check_preview_image (camera);
+    check_preview_image (camera, image_filename, i);
 
     if (preview_buffer)
       gst_buffer_unref (preview_buffer);
@@ -1123,8 +1148,7 @@ GST_START_TEST (test_idle_property)
     return;
 
   /* Set video recording mode */
-  g_object_set (camera, "mode", 2,
-      "location", make_test_file_name (VIDEO_FILENAME, -1), NULL);
+  g_object_set (camera, "mode", 2, "location", video_filename, NULL);
 
   if (gst_element_set_state (GST_ELEMENT (camera), GST_STATE_PLAYING) ==
       GST_STATE_CHANGE_FAILURE) {
@@ -1158,7 +1182,7 @@ GST_START_TEST (test_idle_property)
   fail_unless (msg != NULL);
   gst_message_unref (msg);
 
-  check_preview_image (camera);
+  check_preview_image (camera, video_filename, 0);
 
   g_object_get (camera, "idle", &idle, NULL);
   fail_unless (idle);
@@ -1205,7 +1229,7 @@ GST_START_TEST (test_image_custom_filter)
 
   /* set still image mode and filters */
   g_object_set (camera, "mode", 1,
-      "location", make_test_file_name (IMAGE_FILENAME, -1),
+      "location", image_filename,
       "viewfinder-filter", vf_filter, "image-filter", image_filter,
       "preview-filter", preview_filter, NULL);
 
@@ -1228,7 +1252,7 @@ GST_START_TEST (test_image_custom_filter)
   g_main_loop_run (main_loop);
 
   /* check that we got a preview image */
-  check_preview_image (camera);
+  check_preview_image (camera, image_filename, 0);
 
   gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
   check_file_validity (IMAGE_FILENAME, 0, NULL, 0, 0, NO_AUDIO);
@@ -1283,7 +1307,7 @@ GST_START_TEST (test_video_custom_filter)
 
   /* set still image mode and filters */
   g_object_set (camera, "mode", 2,
-      "location", make_test_file_name (VIDEO_FILENAME, -1),
+      "location", video_filename,
       "viewfinder-filter", vf_filter, "video-filter", video_filter,
       "preview-filter", preview_filter, "audio-filter", audio_filter, NULL);
 
@@ -1309,7 +1333,7 @@ GST_START_TEST (test_video_custom_filter)
   g_signal_emit_by_name (camera, "stop-capture", NULL);
 
   /* check that we got a preview image */
-  check_preview_image (camera);
+  check_preview_image (camera, video_filename, 0);
 
   gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
   check_file_validity (VIDEO_FILENAME, 0, NULL, 0, 0, WITH_AUDIO);
