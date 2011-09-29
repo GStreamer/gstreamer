@@ -807,7 +807,7 @@ gst_opus_enc_encode (GstOpusEnc * enc, gboolean flush)
       (enc->bitrate * enc->frame_samples / enc->sample_rate + 4) / 8;
 
   if (flush && gst_adapter_available (enc->adapter) % bytes != 0) {
-    guint diff = gst_adapter_available (enc->adapter) % bytes;
+    guint diff = bytes - gst_adapter_available (enc->adapter) % bytes;
     GstBuffer *buf = gst_buffer_new_and_alloc (diff);
 
     memset (GST_BUFFER_DATA (buf), 0, diff);
