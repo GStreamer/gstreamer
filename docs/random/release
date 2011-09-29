@@ -132,7 +132,10 @@ RELEASE PROCEDURE:
        ftpadmin install gstreamer-0.10.42.tar.gz
 
   - Send release announcements to:
-    gstreamer-devel@lists.sourceforge.net gstreamer-announce@lists.sourceforge.net kde-multimedia@kde.org gnome-multimedia@gnome.org
+    gstreamer-devel@lists.freedesktop.org
+    gstreamer-announce@lists.freedesktop.org
+    kde-multimedia@kde.org
+    gnome-multimedia@gnome.org
   - Update freshmeat with new releases (get Uraeus to do it)
 
   - push release commit(s) to git repo
