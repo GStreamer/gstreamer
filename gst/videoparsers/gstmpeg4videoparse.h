@@ -55,9 +55,10 @@ struct _GstMpeg4VParse {
   gboolean update_caps;
 
   GstBuffer *config;
-  guint8 profile;
   GstMpeg4VideoObjectLayer vol;
   gboolean vol_offset;
+  const gchar *profile;
+  const gchar *level;
 
   /* properties */
   gboolean drop;

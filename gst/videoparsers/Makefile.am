@@ -12,7 +12,8 @@ libgstvideoparsersbad_la_CFLAGS = \
 	$(GST_BASE_CFLAGS) $(GST_CFLAGS)
 libgstvideoparsersbad_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) \
 	$(top_builddir)/gst-libs/gst/codecparsers/libgstcodecparsers-$(GST_MAJORMINOR).la \
-	$(GST_BASE_LIBS) $(GST_LIBS)
+	$(GST_BASE_LIBS) -lgstpbutils-$(GST_MAJORMINOR) \
+	$(GST_LIBS)
 libgstvideoparsersbad_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstvideoparsersbad_la_LIBTOOLFLAGS = --tag=disable-static
 

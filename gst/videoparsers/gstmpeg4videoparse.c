@@ -30,6 +30,8 @@
 
 #include <string.h>
 #include <gst/base/gstbytereader.h>
+#include <gst/pbutils/codec-utils.h>
+
 #include "gstmpeg4videoparse.h"
 
 GST_DEBUG_CATEGORY (mpeg4v_parse_debug);
@@ -193,8 +195,9 @@ static void
 gst_mpeg4vparse_reset (GstMpeg4VParse * mp4vparse)
 {
   gst_mpeg4vparse_reset_frame (mp4vparse);
-  mp4vparse->profile = 0;
   mp4vparse->update_caps = TRUE;
+  mp4vparse->profile = NULL;
+  mp4vparse->level = NULL;
 
   gst_buffer_replace (&mp4vparse->config, NULL);
   memset (&mp4vparse->vol, 0, sizeof (mp4vparse->vol));
@@ -325,6 +328,10 @@ gst_mpeg4vparse_process_sc (GstMpeg4VParse * mp4vparse, GstMpeg4Packet * packet,
     case GST_MPEG4_VISUAL_OBJ_SEQ_START:
       GST_LOG_OBJECT (mp4vparse, "Visual Sequence Start");
       mp4vparse->vo_found = TRUE;
+      mp4vparse->profile = gst_codec_utils_mpeg4video_get_profile (packet->data
+          + packet->offset + 1, packet->offset);
+      mp4vparse->level = gst_codec_utils_mpeg4video_get_level (packet->data
+          + packet->offset + 1, packet->offset);
       break;
     case GST_MPEG4_VISUAL_OBJ:
       GST_LOG_OBJECT (mp4vparse, "Visual Object");
@@ -489,14 +496,9 @@ gst_mpeg4vparse_update_src_caps (GstMpeg4VParse * mp4vparse)
   gst_caps_set_simple (caps, "systemstream", G_TYPE_BOOLEAN, FALSE,
       "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
 
-  if (mp4vparse->profile != 0) {
-    gchar *profile = NULL;
-
-    /* FIXME does it make sense to expose the profile in the caps ? */
-    profile = g_strdup_printf ("%d", mp4vparse->profile);
-    gst_caps_set_simple (caps, "profile-level-id",
-        G_TYPE_STRING, profile, NULL);
-    g_free (profile);
+  if (mp4vparse->profile && mp4vparse->level) {
+    gst_caps_set_simple (caps, "profile", G_TYPE_STRING, mp4vparse->profile,
+        "level", G_TYPE_STRING, mp4vparse->level, NULL);
   }
 
   if (mp4vparse->config != NULL) {
