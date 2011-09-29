@@ -1134,17 +1134,30 @@ gst_omx_video_dec_handle_frame (GstBaseVideoDecoder * decoder,
 {
   GstOMXAcquireBufferReturn acq_ret = GST_OMX_ACQUIRE_BUFFER_ERROR;
   GstOMXVideoDec *self;
+  GstOMXVideoDecClass *klass;
   GstOMXBuffer *buf;
   GstBuffer *codec_data = NULL;
   guint offset = 0;
   GstClockTime timestamp, duration, timestamp_offset = 0;
 
   self = GST_OMX_VIDEO_DEC (decoder);
+  klass = GST_OMX_VIDEO_DEC_GET_CLASS (self);
 
   GST_DEBUG_OBJECT (self, "Handling frame");
 
   timestamp = frame->presentation_timestamp;
   duration = frame->presentation_duration;
+
+  if (klass->prepare_frame) {
+    GstFlowReturn ret;
+
+    ret = klass->prepare_frame (self, frame);
+    if (ret != GST_FLOW_OK) {
+      GST_ERROR_OBJECT (self, "Preparing frame failed: %s",
+          gst_flow_get_name (ret));
+      return ret;
+    }
+  }
 
   while (offset < GST_BUFFER_SIZE (frame->sink_buffer)) {
     /* Make sure to release the base class stream lock, otherwise
