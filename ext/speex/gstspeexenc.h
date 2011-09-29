@@ -92,9 +92,6 @@ struct _GstSpeexEnc {
 
 struct _GstSpeexEncClass {
   GstAudioEncoderClass parent_class;
-
-  /* signals */
-  void (*frame_encoded) (GstElement *element);
 };
 
 GType gst_speex_enc_get_type (void);
