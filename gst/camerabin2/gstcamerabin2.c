@@ -447,14 +447,6 @@ gst_camera_bin_stop_capture (GstCameraBin2 * camerabin)
   if (camerabin->mode == MODE_VIDEO && camerabin->audio_src) {
     camerabin->audio_drop_eos = FALSE;
     gst_element_send_event (camerabin->audio_src, gst_event_new_eos ());
-
-    /* FIXME We need to set audiosrc to null to make it resync the ringbuffer
-     * while bug https://bugzilla.gnome.org/show_bug.cgi?id=648359 isn't
-     * fixed.
-     *
-     * Also, we set to NULL here to stop capturing audio through to the next
-     * video mode start capture. */
-    gst_element_set_state (camerabin->audio_src, GST_STATE_NULL);
   }
 }
 
@@ -503,7 +495,16 @@ gst_camera_bin_src_notify_readyforcapture (GObject * obj, GParamSpec * pspec,
       gst_element_set_state (camera->video_encodebin, GST_STATE_PLAYING);
       gst_element_set_state (camera->videobin_capsfilter, GST_STATE_PLAYING);
     }
-
+  } else {
+    if (camera->mode == MODE_VIDEO && camera->audio_src) {
+      /* FIXME We need to set audiosrc to null to make it resync the ringbuffer
+       * while bug https://bugzilla.gnome.org/show_bug.cgi?id=648359 isn't
+       * fixed.
+       *
+       * Also, we set to NULL here to stop capturing audio through to the next
+       * video mode start capture and to clear EOS. */
+      gst_element_set_state (camera->audio_src, GST_STATE_NULL);
+    }
   }
 }
 
