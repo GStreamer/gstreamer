@@ -26,10 +26,10 @@ EXPORTS
 	gst_audio_decoder_set_latency
 	gst_audio_decoder_set_max_errors
 	gst_audio_decoder_set_min_latency
+	gst_audio_decoder_set_outcaps
 	gst_audio_decoder_set_plc
 	gst_audio_decoder_set_plc_aware
 	gst_audio_decoder_set_tolerance
-	gst_audio_decoder_src_setcaps
 	gst_audio_default_registry_mixer_filter
 	gst_audio_encoder_finish_frame
 	gst_audio_encoder_get_audio_info
