@@ -1,6 +1,7 @@
 .dirstamp
 gst
 gstabi
+gstatomicqueue
 gstbin
 gstbuffer
 gstbufferlist

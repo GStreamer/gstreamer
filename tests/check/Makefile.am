@@ -95,6 +95,7 @@ endif
 
 check_PROGRAMS =				\
 	$(ABI_CHECKS)			     	\
+	gst/gstatomicqueue			\
 	gst/gstbuffer				\
 	gst/gstbufferlist			\
 	gst/gstbus				\
