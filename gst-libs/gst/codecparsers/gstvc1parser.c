@@ -1200,8 +1200,8 @@ gst_vc1_identify_next_bdu (const guint8 * data, gsize size, GstVC1BDU * bdu)
 
   ensure_debug_category ();
 
-  if (size <= 4) {
-    GST_DEBUG ("Can't parse, buffer is to small size %" G_GSSIZE_FORMAT, size);
+  if (size < 4) {
+    GST_DEBUG ("Can't parse, buffer has too small size %" G_GSSIZE_FORMAT, size);
     return GST_VC1_PARSER_ERROR;
   }
 
@@ -1217,6 +1217,12 @@ gst_vc1_identify_next_bdu (const guint8 * data, gsize size, GstVC1BDU * bdu)
   bdu->offset = off1 + 4;
   bdu->data = (guint8 *) data;
   bdu->type = (GstVC1StartCode) (data[bdu->offset - 1]);
+
+  if (bdu->type == GST_VC1_END_OF_SEQ) {
+    GST_DEBUG ("End-of-Sequence BDU found");
+    bdu->size = 0;
+    return GST_VC1_PARSER_OK;
+  }
 
   off2 = scan_for_start_codes (data + bdu->offset, size - bdu->offset);
   if (off2 < 0) {
