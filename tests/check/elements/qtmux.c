@@ -59,6 +59,19 @@ static GstPad *mysrcpad, *mysinkpad;
                            "height = (int) 288, " \
                            "framerate = (fraction) 25/1"
 
+#define VIDEO_CAPS_H264_STRING "video/x-h264, " \
+                               "width=(int)320, " \
+                               "height=(int)240, " \
+                               "framerate=(fraction)30/1, " \
+                               "pixel-aspect-ratio=(fraction)1/1, " \
+                               "codec_data=(buffer)01640014ffe1001867640014a" \
+                                   "cd94141fb0110000003001773594000f14299600" \
+                                   "1000568ebecb22c, " \
+                               "stream-format=(string)avc, " \
+                               "alignment=(string)au, " \
+                               "level=(string)2, " \
+                               "profile=(string)high"
+
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -67,6 +80,12 @@ static GstStaticPadTemplate srcvideotemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (VIDEO_CAPS_STRING));
+
+static GstStaticPadTemplate srcvideoh264template =
+GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (VIDEO_CAPS_H264_STRING));
 
 static GstStaticPadTemplate srcaudiotemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -748,7 +767,9 @@ extract_tags (const gchar * location, GstTagList ** taglist)
   return ret;
 }
 
-GST_START_TEST (test_average_bitrate)
+static void
+test_average_bitrate_custom (const gchar * elementname,
+    GstStaticPadTemplate * tmpl, const gchar * sinkpadname)
 {
   gchar *location;
   GstElement *qtmux;
@@ -764,11 +785,11 @@ GST_START_TEST (test_average_bitrate)
   location = g_strdup_printf ("%s/%s-%d", g_get_tmp_dir (), "qtmuxtest",
       g_random_int ());
   GST_INFO ("Using location %s for bitrate test", location);
-  qtmux = gst_check_setup_element ("mp4mux");
+  qtmux = gst_check_setup_element (elementname);
   filesink = gst_element_factory_make ("filesink", NULL);
   g_object_set (filesink, "location", location, NULL);
   gst_element_link (qtmux, filesink);
-  mysrcpad = setup_src_pad (qtmux, &srcaudioaactemplate, NULL, "audio_%d");
+  mysrcpad = setup_src_pad (qtmux, tmpl, NULL, sinkpadname);
   fail_unless (mysrcpad != NULL);
   gst_pad_set_active (mysrcpad, TRUE);
 
@@ -819,6 +840,15 @@ GST_START_TEST (test_average_bitrate)
         (guint64) 8 * GST_SECOND, (guint64) total_duration);
     fail_unless (bitrate == expected);
   }
+}
+
+GST_START_TEST (test_average_bitrate)
+{
+  test_average_bitrate_custom ("mp4mux", &srcaudioaactemplate, "audio_%d");
+  test_average_bitrate_custom ("mp4mux", &srcvideoh264template, "video_%d");
+
+  test_average_bitrate_custom ("qtmux", &srcaudioaactemplate, "audio_%d");
+  test_average_bitrate_custom ("qtmux", &srcvideoh264template, "video_%d");
 }
 
 GST_END_TEST;
