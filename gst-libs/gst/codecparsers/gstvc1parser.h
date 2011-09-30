@@ -66,7 +66,7 @@ typedef enum {
   GST_VC1_PARSER_NO_BDU,
   GST_VC1_PARSER_NO_BDU_END,
   GST_VC1_PARSER_ERROR,
-} GstVC1ParseResult;
+} GstVC1ParserResult;
 
 typedef enum
 {
@@ -445,21 +445,21 @@ struct _GstVC1BDU
   guint8 * data;
 };
 
-GstVC1ParseResult gst_vc1_identify_next_bdu            (const guint8 *data,
+GstVC1ParserResult gst_vc1_identify_next_bdu           (const guint8 *data,
                                                         gsize size,
                                                         GstVC1BDU *bdu);
 
 
-GstVC1ParseResult gst_vc1_parse_sequence_header        (const guint8 *data,
+GstVC1ParserResult gst_vc1_parse_sequence_header       (const guint8 *data,
                                                         gsize size,
                                                         GstVC1SeqHdr * seqhdr);
 
-GstVC1ParseResult gst_vc1_parse_entry_point_header     (const  guint8 *data,
+GstVC1ParserResult gst_vc1_parse_entry_point_header    (const  guint8 *data,
                                                         gsize size,
                                                         GstVC1EntryPointHdr * entrypoint,
                                                         GstVC1SeqHdr *seqhdr);
 
-GstVC1ParseResult gst_vc1_parse_frame_header           (const guint8 *data,
+GstVC1ParserResult gst_vc1_parse_frame_header          (const guint8 *data,
                                                         gsize size,
                                                         GstVC1FrameHdr * framehdr,
                                                         GstVC1SeqHdr *seqhdr);

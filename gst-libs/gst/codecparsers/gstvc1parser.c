@@ -563,7 +563,7 @@ get_unary (GstBitReader * br, gint stop, gint len)
   return i;
 }
 
-static GstVC1ParseResult
+static GstVC1ParserResult
 parse_hrd_param_flag (GstBitReader * br, GstVC1HrdParam * hrd_param)
 {
   guint i;
@@ -599,7 +599,7 @@ failed:
   return GST_VC1_PARSER_ERROR;
 }
 
-static GstVC1ParseResult
+static GstVC1ParserResult
 parse_sequence_header_advanced (GstVC1SeqHdr * seqhdr, GstBitReader * br)
 {
   GstVC1AdvancedSeqHdr *advanced = &seqhdr->profile.advanced;
@@ -715,7 +715,7 @@ failed:
   return GST_VC1_PARSER_ERROR;
 }
 
-static GstVC1ParseResult
+static GstVC1ParserResult
 parse_frame_header_advanced (GstBitReader * br, GstVC1FrameHdr * framehdr,
     GstVC1SeqHdr * seqhdr)
 {
@@ -972,7 +972,7 @@ failed:
   return GST_VC1_PARSER_ERROR;
 }
 
-static GstVC1ParseResult
+static GstVC1ParserResult
 parse_frame_header (GstBitReader * br, GstVC1FrameHdr * framehdr,
     GstVC1SeqHdr * seqhdr)
 {
@@ -1189,9 +1189,9 @@ failed:
  *
  * Parses @data and fills @bdu fields
  *
- * Returns: a #GstVC1ParseResult
+ * Returns: a #GstVC1ParserResult
  */
-GstVC1ParseResult
+GstVC1ParserResult
 gst_vc1_identify_next_bdu (const guint8 * data, gsize size, GstVC1BDU * bdu)
 {
   gint off1, off2;
@@ -1248,9 +1248,9 @@ gst_vc1_identify_next_bdu (const guint8 * data, gsize size, GstVC1BDU * bdu)
  *
  * Parses @data, and fills @seqhdr fields.
  *
- * Returns: a #GstVC1ParseResult
+ * Returns: a #GstVC1ParserResult
  */
-GstVC1ParseResult
+GstVC1ParserResult
 gst_vc1_parse_sequence_header (const guint8 * data, gsize size,
     GstVC1SeqHdr * seqhdr)
 {
@@ -1355,7 +1355,7 @@ failed:
  *
  * Returns: a #GstVC1EntryPointHdr
  */
-GstVC1ParseResult
+GstVC1ParserResult
 gst_vc1_parse_entry_point_header (const guint8 * data, gsize size,
     GstVC1EntryPointHdr * entrypoint, GstVC1SeqHdr * seqhdr)
 {
@@ -1430,7 +1430,7 @@ failed:
  *
  * Returns: a #GstVC1EntryPointHdr
  */
-GstVC1ParseResult
+GstVC1ParserResult
 gst_vc1_parse_frame_header (const guint8 * data, gsize size,
     GstVC1FrameHdr * framehdr, GstVC1SeqHdr * seqhdr)
 {
