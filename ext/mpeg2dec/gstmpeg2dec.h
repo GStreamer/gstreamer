@@ -24,6 +24,8 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
+#include <gst/video/gstvideopool.h>
+#include <gst/video/gstmetavideo.h>
 #include <mpeg2.h>
 
 G_BEGIN_DECLS
@@ -67,9 +69,9 @@ struct _GstMpeg2dec {
   gboolean       have_fbuf;
 
   /* buffer management */
-  guint          ip_bufpos;
-  GstBuffer     *ip_buffers[4];
-  GstBuffer     *b_buffer;
+  guint          ip_framepos;
+  GstVideoFrame  ip_frame[4];
+  GstVideoFrame  b_frame;
 
   DiscontState   discont_state;
 
@@ -77,28 +79,26 @@ struct _GstMpeg2dec {
   GstClockTime   next_time;
   GstSegment     segment;
 
+  /* whether we have a pixel aspect ratio from the sink caps */
+  gboolean       have_par;
+  gint           in_par_n;
+  gint           in_par_d;
+
   /* video state */
-  GstVideoFormat format;
-  gint           width;
-  gint           height;
+  GstVideoInfo   vinfo;
   gint           decoded_width;
   gint           decoded_height;
-  gint           pixel_width;
-  gint           pixel_height;
-  gint           frame_rate_code;
-  gint64         total_frames;
   gint64         frame_period;
   gboolean       interlaced;
+  GstBufferPool *pool;
+  gboolean       use_cropping;
 
   gint           size;
   gint           u_offs;
   gint           v_offs;
   guint8        *dummybuf[4];
 
-
   guint64        offset;
-  gint           fps_n;
-  gint           fps_d;
   gboolean       need_sequence;
 
   GstIndex      *index;
@@ -115,9 +115,6 @@ struct _GstMpeg2dec {
   GList *gather;
   GList *decode;
   GList *queued;
-
-  /* whether we have a pixel aspect ratio from the sink caps */
-  gboolean have_par;
 };
 
 struct _GstMpeg2decClass {
