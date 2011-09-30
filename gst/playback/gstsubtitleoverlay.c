@@ -1698,7 +1698,7 @@ static gboolean
 gst_subtitle_overlay_video_sink_setcaps (GstSubtitleOverlay * self,
     GstCaps * caps)
 {
-  GstPad *target;
+  GstPad *target = NULL;
   gboolean ret = TRUE;
   GstVideoInfo info;
 
