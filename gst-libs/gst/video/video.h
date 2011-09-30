@@ -372,9 +372,10 @@ typedef enum {
  * GstVideoColorMatrix:
  * @GST_VIDEO_COLOR_MATRIX_UNKNOWN: unknown matrix
  * @GST_VIDEO_COLOR_MATRIX_RGB: identity matrix
- * @GST_VIDEO_COLOR_MATRIX_BT709: ITU-R BT.709 transfer matrix
- * @GST_VIDEO_COLOR_MATRIX_BT601: ITU-R BT.601 transfer matrix
- * @GST_VIDEO_COLOR_MATRIX_SMPTE240M: SMPTE 240M transfer matrix
+ * @GST_VIDEO_COLOR_MATRIX_FCC: FCC color matrix
+ * @GST_VIDEO_COLOR_MATRIX_BT709: ITU-R BT.709 color matrix
+ * @GST_VIDEO_COLOR_MATRIX_BT601: ITU-R BT.601 color matrix
+ * @GST_VIDEO_COLOR_MATRIX_SMPTE240M: SMPTE 240M color matrix
  *
  * The color matrix is used to convert between Y'PbPr and
  * non-linear RGB (R'G'B')
@@ -382,6 +383,7 @@ typedef enum {
 typedef enum {
   GST_VIDEO_COLOR_MATRIX_UNKNOWN = 0,
   GST_VIDEO_COLOR_MATRIX_RGB,
+  GST_VIDEO_COLOR_MATRIX_FCC,
   GST_VIDEO_COLOR_MATRIX_BT709,
   GST_VIDEO_COLOR_MATRIX_BT601,
   GST_VIDEO_COLOR_MATRIX_SMPTE240M
