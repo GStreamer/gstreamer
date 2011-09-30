@@ -1068,7 +1068,7 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
    */
   if (!ebin->muxer
       || (!gst_element_implements_interface (ebin->muxer, GST_TYPE_TAG_SETTER)
-          || !_has_class (ebin->muxer, "Formatter"))) {
+          && !_has_class (ebin->muxer, "Formatter"))) {
     sgroup->formatter = _get_formatter (ebin, sprof);
     if (sgroup->formatter) {
       GST_DEBUG ("Adding formatter for %" GST_PTR_FORMAT, format);
