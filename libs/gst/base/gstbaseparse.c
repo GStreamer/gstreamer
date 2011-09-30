@@ -3163,14 +3163,14 @@ gst_base_parse_query (GstPad * pad, GstQuery * query)
           res = TRUE;
         }
         GST_OBJECT_UNLOCK (parse);
-        if (res)
-          gst_query_set_position (query, format, dest_value);
-        else {
+        if (!res) {
           /* no precise result, upstream no idea either, then best estimate */
           /* priv->offset is updated in both PUSH/PULL modes */
           res = gst_base_parse_convert (parse,
               GST_FORMAT_BYTES, parse->priv->offset, format, &dest_value);
         }
+        if (res)
+          gst_query_set_position (query, format, dest_value);
       }
       break;
     }
