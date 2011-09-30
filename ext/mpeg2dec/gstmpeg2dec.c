@@ -245,6 +245,8 @@ gst_mpeg2dec_qos_reset (GstMpeg2dec * mpeg2dec)
   GST_OBJECT_LOCK (mpeg2dec);
   mpeg2dec->proportion = 1.0;
   mpeg2dec->earliest_time = -1;
+  mpeg2dec->dropped = 0;
+  mpeg2dec->processed = 0;
   GST_OBJECT_UNLOCK (mpeg2dec);
 }
 
@@ -936,9 +938,32 @@ handle_slice (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
         && qostime <= mpeg2dec->earliest_time;
     GST_OBJECT_UNLOCK (mpeg2dec);
 
-    if (need_skip)
+    if (need_skip) {
+      GstMessage *qos_msg;
+      guint64 stream_time;
+      gint64 jitter;
+
+      mpeg2dec->dropped++;
+
+      stream_time =
+          gst_segment_to_stream_time (&mpeg2dec->segment, GST_FORMAT_TIME,
+          time);
+      jitter = GST_CLOCK_DIFF (qostime, mpeg2dec->earliest_time);
+
+      qos_msg =
+          gst_message_new_qos (GST_OBJECT_CAST (mpeg2dec), FALSE, qostime,
+          stream_time, time, GST_BUFFER_DURATION (outbuf));
+      gst_message_set_qos_values (qos_msg, jitter, mpeg2dec->proportion,
+          1000000);
+      gst_message_set_qos_stats (qos_msg, GST_FORMAT_BUFFERS,
+          mpeg2dec->processed, mpeg2dec->dropped);
+      gst_element_post_message (GST_ELEMENT_CAST (mpeg2dec), qos_msg);
+
       goto dropping_qos;
+    }
   }
+
+  mpeg2dec->processed++;
 
   /* ref before pushing it out, so we still have the ref in our
    * array of buffers */
