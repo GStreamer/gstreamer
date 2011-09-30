@@ -580,7 +580,7 @@ gst_audio_decoder_setup (GstAudioDecoder * dec)
   gst_query_unref (query);
 
   /* normalize to bool */
-  dec->priv->agg = !!res;
+  dec->priv->agg = ! !res;
 }
 
 /* mini aggregator combining output buffers into fewer larger ones,
@@ -1353,10 +1353,11 @@ gst_audio_decoder_sink_eventfunc (GstAudioDecoder * dec, GstEvent * event)
       gst_event_copy_segment (event, &seg);
 
       if (seg.format == GST_FORMAT_TIME) {
-        GST_DEBUG_OBJECT (dec, "received TIME SEGMENT %" GST_PTR_FORMAT, &seg);
+        GST_DEBUG_OBJECT (dec, "received TIME SEGMENT %" GST_SEGMENT_FORMAT,
+            &seg);
       } else {
         gint64 nstart;
-        GST_DEBUG_OBJECT (dec, "received SEGMENT %" GST_PTR_FORMAT, &seg);
+        GST_DEBUG_OBJECT (dec, "received SEGMENT %" GST_SEGMENT_FORMAT, &seg);
         /* handle newsegment resulting from legacy simple seeking */
         /* note that we need to convert this whether or not enough data
          * to handle initial newsegment */

@@ -1227,9 +1227,10 @@ gst_audio_encoder_sink_eventfunc (GstAudioEncoder * enc, GstEvent * event)
       gst_event_copy_segment (event, &seg);
 
       if (seg.format == GST_FORMAT_TIME) {
-        GST_DEBUG_OBJECT (enc, "received TIME SEGMENT %" GST_PTR_FORMAT, &seg);
+        GST_DEBUG_OBJECT (enc, "received TIME SEGMENT %" GST_SEGMENT_FORMAT,
+            &seg);
       } else {
-        GST_DEBUG_OBJECT (enc, "received SEGMENT %" GST_PTR_FORMAT, &seg);
+        GST_DEBUG_OBJECT (enc, "received SEGMENT %" GST_SEGMENT_FORMAT, &seg);
         GST_DEBUG_OBJECT (enc, "unsupported format; ignoring");
         break;
       }
