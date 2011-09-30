@@ -238,9 +238,11 @@ decode_sequence(GstVaapiDecoderVC1 *decoder, guchar *buf, guint buf_size)
     GstVaapiDecoder * const base_decoder = GST_VAAPI_DECODER(decoder);
     GstVaapiDecoderVC1Private * const priv = decoder->priv;
     GstVC1SeqHdr * const seq_hdr = &priv->seq_hdr;
+    GstVC1AdvancedSeqHdr * const adv_hdr = &seq_hdr->advanced;
+    GstVC1SeqStructC * const structc = &seq_hdr->struct_c;
     GstVC1ParserResult result;
     GstVaapiProfile profile;
-    guint width, height;
+    guint width, height, fps_n, fps_d;
 
     result = gst_vc1_parse_sequence_header(buf, buf_size, seq_hdr);
     if (result != GST_VC1_PARSER_OK) {
@@ -261,11 +263,64 @@ decode_sequence(GstVaapiDecoderVC1 *decoder, guchar *buf, guint buf_size)
         return GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_PROFILE;
     }
 
-#if 0
-    priv->fps_n = seq_hdr->fps_n;
-    priv->fps_d = seq_hdr->fps_d;
-    gst_vaapi_decoder_set_framerate(base_decoder, priv->fps_n, priv->fps_d);
-#endif
+    fps_n = 0;
+    fps_d = 0;
+    switch (seq_hdr->profile) {
+    case GST_VC1_PROFILE_SIMPLE:
+    case GST_VC1_PROFILE_MAIN:
+        if (structc->wmvp) {
+            fps_n = structc->framerate;
+            fps_d = 1;
+        }
+        break;
+    case GST_VC1_PROFILE_ADVANCED:
+        if (adv_hdr->display_ext && adv_hdr->framerate_flag) {
+            if (adv_hdr->framerateind) {
+                // 6.1.14.4.4 - Frame Rate Explicit
+                fps_n = adv_hdr->framerateexp + 1;
+                fps_d = 32;
+            }
+            else {
+                // 6.1.14.4.2 - Frame Rate Numerator
+                static const guint frameratenr_table[] = {
+                    [1] = 24000,
+                    [2] = 25000,
+                    [3] = 30000,
+                    [4] = 50000,
+                    [5] = 60000,
+                    [6] = 48000,
+                    [7] = 72000
+                };
+
+                // 6.1.14.4.3 - Frame Rate Denominator
+                static const guint frameratedr_table[] = {
+                    [1] = 1000,
+                    [2] = 1001
+                };
+
+                if (adv_hdr->frameratenr < 1 || adv_hdr->frameratenr > 7) {
+                    GST_DEBUG("unsupported FRAMERATENR value");
+                    return GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
+                }
+                fps_n = frameratenr_table[adv_hdr->frameratenr];
+
+                if (adv_hdr->frameratedr < 1 || adv_hdr->frameratedr > 2) {
+                    GST_DEBUG("unsupported FRAMERATEDR value");
+                    return GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
+                }
+                fps_d = frameratedr_table[adv_hdr->frameratedr];
+            }
+        }
+        break;
+    default:
+        g_assert(0 && "XXX: we already validated the profile above");
+        break;
+    }
+    if (fps_n && fps_d) {
+        priv->fps_n = fps_n;
+        priv->fps_d = fps_d;
+        gst_vaapi_decoder_set_framerate(base_decoder, priv->fps_n, priv->fps_d);
+    }
 
     switch (seq_hdr->profile) {
     case GST_VC1_PROFILE_SIMPLE:
