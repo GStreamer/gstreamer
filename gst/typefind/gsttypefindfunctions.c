@@ -41,6 +41,7 @@
 #include <ctype.h>
 
 #include <gst/pbutils/pbutils.h>
+#include <gst/base/gstbytereader.h>
 
 GST_DEBUG_CATEGORY_STATIC (type_find_debug);
 #define GST_CAT_DEFAULT type_find_debug
@@ -204,6 +205,157 @@ utf8_type_find (GstTypeFind * tf, gpointer unused)
 
   GST_LOG ("middle is plain text with probability of %u", mid_prob);
   gst_type_find_suggest (tf, (start_prob + mid_prob) / 2, UTF8_CAPS);
+}
+
+/*** text/utf-16 and text/utf-32} ***/
+/* While UTF-8 is unicode too, using text/plain for UTF-16 and UTF-32
+   is going to break stuff. */
+
+typedef struct
+{
+  size_t bomlen;
+  const char *const bom;
+  gboolean (*checker) (const guint8 *, gint, gint);
+  int boost;
+  int endianness;
+} GstUnicodeTester;
+
+static gboolean
+check_utf16 (const guint8 * data, gint len, gint endianness)
+{
+  GstByteReader br;
+  guint16 high, low;
+
+  if (len & 1)
+    return FALSE;
+
+  gst_byte_reader_init (&br, data, len);
+  while (len >= 2) {
+    /* test first for a single 16 bit value in the BMP */
+    if (endianness == G_BIG_ENDIAN)
+      gst_byte_reader_get_uint16_be (&br, &high);
+    else
+      gst_byte_reader_get_uint16_le (&br, &high);
+    if (high >= 0xD800 && high <= 0xDBFF) {
+      /* start of a surrogate pair */
+      if (len < 4)
+        return FALSE;
+      len -= 2;
+      if (endianness == G_BIG_ENDIAN)
+        gst_byte_reader_get_uint16_be (&br, &low);
+      else
+        gst_byte_reader_get_uint16_le (&br, &low);
+      if (low >= 0xDC00 && low <= 0xDFFF) {
+        /* second half of the surrogate pair */
+      } else
+        return FALSE;
+    } else {
+      if (high >= 0xDC00 && high <= 0xDFFF)
+        return FALSE;
+    }
+    len -= 2;
+  }
+  return TRUE;
+}
+
+static gboolean
+check_utf32 (const guint8 * data, gint len, gint endianness)
+{
+  if (len & 3)
+    return FALSE;
+  while (len > 3) {
+    guint32 v;
+    if (endianness == G_BIG_ENDIAN)
+      v = (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | data[3];
+    else
+      v = (data[3] << 24) | (data[2] << 16) | (data[1] << 8) | data[0];
+    if (v >= 0x10FFFF)
+      return FALSE;
+    data += 4;
+    len -= 4;
+  }
+  return TRUE;
+}
+
+static void
+unicode_type_find (GstTypeFind * tf, const GstUnicodeTester * tester,
+    guint n_tester, const char *media_type)
+{
+  size_t n;
+  gint len = 4;
+  const guint8 *data = gst_type_find_peek (tf, 0, len);
+  int prob = -1;
+  const gint max_scan_size = 256 * 1024;
+  int endianness;
+
+  if (!data) {
+    len = 2;
+    data = gst_type_find_peek (tf, 0, len);
+    if (!data)
+      return;
+  }
+
+  /* find a large enough size that works */
+  while (len < max_scan_size) {
+    size_t newlen = len << 1;
+    const guint8 *newdata = gst_type_find_peek (tf, 0, newlen);
+    if (!newdata)
+      break;
+    len = newlen;
+    data = newdata;
+  }
+
+  for (n = 0; n < n_tester; ++n) {
+    int bom_boost = 0, tmpprob;
+    if (len >= tester[n].bomlen) {
+      if (!memcmp (data, tester[n].bom, tester[n].bomlen))
+        bom_boost = tester[n].boost;
+    }
+    if (!(*tester[n].checker) (data, len, tester[n].endianness))
+      continue;
+    tmpprob = GST_TYPE_FIND_POSSIBLE - 20 + bom_boost;
+    if (tmpprob > prob) {
+      prob = tmpprob;
+      endianness = tester[n].endianness;
+    }
+  }
+
+  if (prob > 0) {
+    GST_DEBUG ("This is valid %s %s", media_type,
+        endianness == G_BIG_ENDIAN ? "be" : "le");
+    gst_type_find_suggest_simple (tf, prob, media_type,
+        "endianness", G_TYPE_INT, endianness, NULL);
+  }
+}
+
+static GstStaticCaps utf16_caps = GST_STATIC_CAPS ("text/utf-16");
+
+#define UTF16_CAPS gst_static_caps_get(&utf16_caps)
+
+static void
+utf16_type_find (GstTypeFind * tf, gpointer unused)
+{
+  static const GstUnicodeTester utf16tester[2] = {
+    {2, "\xff\xfe", check_utf16, 10, G_LITTLE_ENDIAN},
+    {2, "\xfe\xff", check_utf16, 20, G_BIG_ENDIAN},
+  };
+  unicode_type_find (tf, utf16tester, G_N_ELEMENTS (utf16tester),
+      "text/utf-16");
+}
+
+static GstStaticCaps utf32_caps = GST_STATIC_CAPS ("text/utf-32");
+
+#define UTF32_CAPS gst_static_caps_get(&utf32_caps)
+
+static void
+utf32_type_find (GstTypeFind * tf, gpointer unused)
+{
+  static const GstUnicodeTester utf32tester[2] = {
+    {4, "\xff\xfe\x00\x00", check_utf32, 10, G_LITTLE_ENDIAN},
+    {4, "\x00\x00\xfe\xff", check_utf32, 20, G_BIG_ENDIAN}
+  };
+  unicode_type_find (tf, utf32tester, G_N_ELEMENTS (utf32tester),
+      "text/utf-32");
 }
 
 /*** text/uri-list ***/
@@ -4262,6 +4414,7 @@ plugin_init (GstPlugin * plugin)
   static const gchar *rm_exts[] = { "ra", "ram", "rm", "rmvb", NULL };
   static const gchar *swf_exts[] = { "swf", "swfl", NULL };
   static const gchar *utf8_exts[] = { "txt", NULL };
+  static const gchar *unicode_exts[] = { "txt", NULL };
   static const gchar *wav_exts[] = { "wav", NULL };
   static const gchar *aiff_exts[] = { "aiff", "aif", "aifc", NULL };
   static const gchar *svx_exts[] = { "iff", "svx", NULL };
@@ -4436,6 +4589,10 @@ plugin_init (GstPlugin * plugin)
       flv_exts, "FLV", 3, GST_TYPE_FIND_MAXIMUM);
   TYPE_FIND_REGISTER (plugin, "text/plain", GST_RANK_MARGINAL, utf8_type_find,
       utf8_exts, UTF8_CAPS, NULL, NULL);
+  TYPE_FIND_REGISTER (plugin, "text/utf-16", GST_RANK_MARGINAL, utf16_type_find,
+      unicode_exts, UTF16_CAPS, NULL, NULL);
+  TYPE_FIND_REGISTER (plugin, "text/utf-32", GST_RANK_MARGINAL, utf32_type_find,
+      unicode_exts, UTF32_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "text/uri-list", GST_RANK_MARGINAL, uri_type_find,
       uri_exts, URI_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "application/x-hls", GST_RANK_MARGINAL,
