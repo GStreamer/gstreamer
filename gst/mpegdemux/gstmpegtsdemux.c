@@ -2987,10 +2987,10 @@ gst_mpegts_demux_sync_scan (GstMpegTSDemux * demux, const guint8 * in_data,
     guint size, guint * flush)
 {
   guint sync_count = 0;
-  const guint8 *end_scan = in_data + size - demux->packetsize;
   guint8 *ptr_data = (guint8 *) in_data;
   guint packetsize =
       (demux->packetsize ? demux->packetsize : MPEGTS_NORMAL_TS_PACKETSIZE);
+  const guint8 *end_scan = in_data + size - packetsize;
 
   /* Check if the LUT table is big enough */
   if (G_UNLIKELY (demux->sync_lut_len < (size / packetsize))) {
@@ -3007,18 +3007,14 @@ gst_mpegts_demux_sync_scan (GstMpegTSDemux * demux, const guint8 * in_data,
     guint chance = is_mpegts_sync (ptr_data, end_scan, packetsize);
     if (G_LIKELY (chance > 50)) {
       /* skip paketsize bytes and try find next */
-      guint8 *next_sync = ptr_data + packetsize;
-      if (next_sync < end_scan) {
-        demux->sync_lut[sync_count] = ptr_data;
-        sync_count++;
-        ptr_data += packetsize;
-      } else
-        goto done;
+      demux->sync_lut[sync_count] = ptr_data;
+      sync_count++;
+      ptr_data += packetsize;
     } else {
       ptr_data++;
     }
   }
-done:
+
   if (G_UNLIKELY (!demux->packetsize))
     gst_mpegts_demux_detect_packet_size (demux, sync_count);
 
