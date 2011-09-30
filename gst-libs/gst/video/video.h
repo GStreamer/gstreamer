@@ -305,13 +305,13 @@ typedef struct _GstVideoFrame GstVideoFrame;
 
 /**
  * GstVideoFlags:
- * @GST_META_VIDEO_FLAG_NONE: no flags
- * @GST_META_VIDEO_FLAG_INTERLACED: The video is interlaced
- * @GST_META_VIDEO_FLAG_TFF: The video has the top field first
- * @GST_META_VIDEO_FLAG_RFF: The video has the repeat flag
- * @GST_META_VIDEO_FLAG_ONEFIELD: one field
- * @GST_META_VIDEO_FLAG_TELECINE: telecine
- * @GST_META_VIDEO_FLAG_PROGRESSIVE: video is progressive
+ * @GST_VIDEO_FLAG_NONE: no flags
+ * @GST_VIDEO_FLAG_INTERLACED: The video is interlaced
+ * @GST_VIDEO_FLAG_TFF: The video has the top field first
+ * @GST_VIDEO_FLAG_RFF: The video has the repeat flag
+ * @GST_VIDEO_FLAG_ONEFIELD: one field
+ * @GST_VIDEO_FLAG_TELECINE: telecine
+ * @GST_VIDEO_FLAG_PROGRESSIVE: video is progressive
  *
  * Extra video flags
  */
