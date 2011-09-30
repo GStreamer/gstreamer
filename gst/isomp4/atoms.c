@@ -2748,6 +2748,7 @@ atom_trak_update_bitrates (AtomTRAK * trak, guint32 avg_bitrate,
 {
   AtomESDS *esds = NULL;
   AtomData *btrt = NULL;
+  AtomWAVE *wave = NULL;
   AtomSTSD *stsd;
   GList *iter;
   GList *extensioniter = NULL;
@@ -2783,6 +2784,20 @@ atom_trak_update_bitrates (AtomTRAK * trak, guint32 avg_bitrate,
       esds = (AtomESDS *) atominfo->atom;
     } else if (atominfo->atom->type == FOURCC_btrt) {
       btrt = (AtomData *) atominfo->atom;
+    } else if (atominfo->atom->type == FOURCC_wave) {
+      wave = (AtomWAVE *) atominfo->atom;
+    }
+  }
+
+  /* wave might have an esds internally */
+  if (wave) {
+    for (extensioniter = wave->extension_atoms; extensioniter;
+        extensioniter = g_list_next (extensioniter)) {
+      AtomInfo *atominfo = extensioniter->data;
+      if (atominfo->atom->type == FOURCC_esds) {
+        esds = (AtomESDS *) atominfo->atom;
+        break;
+      }
     }
   }
 
