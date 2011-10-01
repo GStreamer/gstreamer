@@ -571,6 +571,12 @@ gst_kate_tiger_kate_chain (GstPad * pad, GstBuffer * buf)
   GST_LOG_OBJECT (tiger, "Got kate buffer, caps %" GST_PTR_FORMAT,
       GST_BUFFER_CAPS (buf));
 
+  /* Now that we have the lock, check if we're flushing */
+  if (tiger->decoder.kate_flushing) {
+    GST_DEBUG_OBJECT (tiger, "Flushing, disregarding buffer");
+    goto done;
+  }
+
   /* Unfortunately, it can happen that the start of the stream is not sent,
      for instance if there's a stream selector upstream, which is switched
      from another Kate stream. If this happens, then we can fallback on the
@@ -663,6 +669,7 @@ gst_kate_tiger_kate_chain (GstPad * pad, GstBuffer * buf)
     }
   }
 
+done:
   GST_KATE_TIGER_MUTEX_UNLOCK (tiger);
 
   gst_object_unref (tiger);
