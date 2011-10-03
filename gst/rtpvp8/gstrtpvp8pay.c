@@ -410,10 +410,10 @@ gst_rtp_vp8_pay_handle_event (GstPad * pad, GstEvent * event)
   GstRtpVP8Pay *self = GST_RTP_VP8_PAY (gst_pad_get_parent (pad));
 
   if (GST_EVENT_TYPE (event) == GST_EVENT_FLUSH_START) {
-    if (obj->picture_id_mode == VP8_PAY_PICTURE_ID_7BITS)
-      obj->picture_id = g_random_int_range (0, G_MAXUINT8) & 0x7F;
-    else if (obj->picture_id_mode == VP8_PAY_PICTURE_ID_15BITS)
-      obj->picture_id = g_random_int_range (0, G_MAXUINT16) & 0x7FFF;
+    if (self->picture_id_mode == VP8_PAY_PICTURE_ID_7BITS)
+      self->picture_id = g_random_int_range (0, G_MAXUINT8) & 0x7F;
+    else if (self->picture_id_mode == VP8_PAY_PICTURE_ID_15BITS)
+      self->picture_id = g_random_int_range (0, G_MAXUINT16) & 0x7FFF;
   }
 
   gst_object_unref (self);
