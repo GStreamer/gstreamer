@@ -868,8 +868,10 @@ parse_frame_header_advanced (GstBitReader * br, GstVC1FrameHdr * framehdr,
       if (framehdr->dquant)
         parse_vopdquant (br, framehdr, framehdr->dquant);
 
-      GST_DEBUG ("acpred %u, condover %u transacfrm %u transacfrm2 %u,",
-          pic->acpred, pic->condover, framehdr->transacfrm, pic->transacfrm2);
+      GST_DEBUG
+          ("acpred %u, condover %u, transacfrm %u, transacfrm2 %u, transdctab %u",
+          pic->acpred, pic->condover, framehdr->transacfrm, pic->transacfrm2,
+          framehdr->transdctab);
       break;
 
     case GST_VC1_PICTURE_TYPE_B:
