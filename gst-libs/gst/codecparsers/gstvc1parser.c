@@ -493,11 +493,12 @@ parse_vopdquant (GstBitReader * br, GstVC1FrameHdr * framehdr, guint8 dquant)
 
     READ_UINT8 (br, vopdquant->pqdiff, 3);
 
-    if (vopdquant->pqdiff == 7)
+    if (vopdquant->pqdiff != 7)
+      vopdquant->altpquant = framehdr->pquant + vopdquant->pqdiff + 1;
+    else {
       READ_UINT8 (br, vopdquant->abspq, 5);
-    else
-      vopdquant->abspq = framehdr->pquant + vopdquant->pqdiff + 1;
-
+      vopdquant->altpquant = vopdquant->abspq;
+    }
   } else {
     READ_UINT8 (br, vopdquant->dquantfrm, 1);
     GST_DEBUG (" %u DquantFrm %u", gst_bit_reader_get_pos (br),

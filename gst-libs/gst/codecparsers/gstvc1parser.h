@@ -379,6 +379,8 @@ struct _GstVC1VopDquant
   guint8 pqdiff;
   guint8 abspq;
 
+  /* Computed */
+  guint8 altpquant;
 
   /*  if dqant != 2*/
   guint8 dquantfrm;
