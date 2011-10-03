@@ -94,6 +94,9 @@ struct _GstCameraBin2
    * each buffer capture */
   GSList *image_location_list;
 
+  /* similar to above, but used for giving names to previews */
+  GSList *preview_location_list;
+
   gboolean video_profile_switch;
   gboolean image_profile_switch;
 
