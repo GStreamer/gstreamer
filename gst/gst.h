@@ -36,6 +36,7 @@
 #include <gst/gstenumtypes.h>
 #include <gst/gstversion.h>
 
+#include <gst/gstatomicqueue.h>
 #include <gst/gstbin.h>
 #include <gst/gstbuffer.h>
 #include <gst/gstbufferlist.h>

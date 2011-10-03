@@ -3167,27 +3167,29 @@ gst_base_parse_query (GstPad * pad, GstQuery * query)
       GST_DEBUG_OBJECT (parse, "position query");
       gst_query_parse_position (query, &format, NULL);
 
-      GST_OBJECT_LOCK (parse);
-      if (format == GST_FORMAT_BYTES) {
-        dest_value = parse->priv->offset;
-        res = TRUE;
-      } else if (format == parse->segment.format &&
-          GST_CLOCK_TIME_IS_VALID (parse->segment.position)) {
-        dest_value = parse->segment.position;
-        res = TRUE;
-      }
-      GST_OBJECT_UNLOCK (parse);
-
-      if (res)
-        gst_query_set_position (query, format, dest_value);
-      else {
-        res = gst_pad_query_default (pad, query);
+      /* try upstream first */
+      res = gst_pad_query_default (pad, query);
+      if (!res) {
+        /* Fall back on interpreting segment */
+        GST_OBJECT_LOCK (parse);
+        if (format == GST_FORMAT_BYTES) {
+          dest_value = parse->priv->offset;
+          res = TRUE;
+        } else if (format == parse->segment.format &&
+            GST_CLOCK_TIME_IS_VALID (parse->segment.position)) {
+          dest_value = gst_segment_to_stream_time (&parse->segment,
+              parse->segment.format, parse->segment.position);
+          res = TRUE;
+        }
+        GST_OBJECT_UNLOCK (parse);
         if (!res) {
           /* no precise result, upstream no idea either, then best estimate */
           /* priv->offset is updated in both PUSH/PULL modes */
           res = gst_base_parse_convert (parse,
               GST_FORMAT_BYTES, parse->priv->offset, format, &dest_value);
         }
+        if (res)
+          gst_query_set_position (query, format, dest_value);
       }
       break;
     }
