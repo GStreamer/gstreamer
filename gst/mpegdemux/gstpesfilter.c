@@ -168,7 +168,7 @@ gst_pes_filter_parse (GstPESFilter * filter)
     avail = MIN (avail, filter->length + 6);
   }
 
-  if (avail < 7)
+  if (avail < 6)
     goto need_more_data;
 
   /* read more data, either the whole packet if there is a length
@@ -202,6 +202,8 @@ gst_pes_filter_parse (GstPESFilter * filter)
       break;
   }
 
+  if (datalen == 0)
+    goto need_more_data;
   filter->pts = filter->dts = -1;
 
   /* stuffing bits, first two bits are '10' for mpeg2 pes so this code is
