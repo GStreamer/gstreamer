@@ -3225,12 +3225,9 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
    * the fixed sink */
   if (!gst_element_factory_list_is_type (factory,
           GST_ELEMENT_FACTORY_TYPE_SINK)) {
-
     gboolean isvideodec = gst_element_factory_list_is_type (factory,
         GST_ELEMENT_FACTORY_TYPE_DECODER |
-        GST_ELEMENT_FACTORY_TYPE_MEDIA_VIDEO);
-    gboolean isimagedec = gst_element_factory_list_is_type (factory,
-        GST_ELEMENT_FACTORY_TYPE_DECODER |
+        GST_ELEMENT_FACTORY_TYPE_MEDIA_VIDEO |
         GST_ELEMENT_FACTORY_TYPE_MEDIA_IMAGE);
     gboolean isaudiodec = gst_element_factory_list_is_type (factory,
         GST_ELEMENT_FACTORY_TYPE_DECODER |
@@ -3238,9 +3235,7 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
 
     /* If it is a decoder and we have a fixed sink for the media
      * type it outputs, check that the decoder is compatible with this sink */
-    if (((isvideodec || isimagedec) && group->video_sink) ||
-        (isaudiodec && group->audio_sink)) {
-
+    if ((isvideodec && group->video_sink) || (isaudiodec && group->audio_sink)) {
       gboolean compatible = TRUE;
       GstPad *sinkpad;
       GstCaps *caps;
