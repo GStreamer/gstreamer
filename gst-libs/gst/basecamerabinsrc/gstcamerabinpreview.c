@@ -131,7 +131,7 @@ gst_camerabin_create_preview_pipeline (GstElement * element,
   GstBus *bus;
   GstAppSinkCallbacks callbacks = { 0, };
 
-  data = g_new (GstCameraBinPreviewPipelineData, 1);
+  data = g_new0 (GstCameraBinPreviewPipelineData, 1);
 
   data->pipeline = gst_pipeline_new ("preview-pipeline");
   data->appsrc = gst_element_factory_make ("appsrc", "preview-appsrc");
