@@ -1063,7 +1063,7 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
    * if the muxer isn't a formatter and doesn't implement the tagsetter interface
    */
   if (!ebin->muxer || (!GST_IS_TAG_SETTER (ebin->muxer)
-          || !_has_class (ebin->muxer, "Formatter"))) {
+          && !_has_class (ebin->muxer, "Formatter"))) {
     sgroup->formatter = _get_formatter (ebin, sprof);
     if (sgroup->formatter) {
       GST_DEBUG ("Adding formatter for %" GST_PTR_FORMAT, format);
@@ -1262,7 +1262,7 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
   /* FIXME : Once we have properties for specific converters, use those */
   if (GST_IS_ENCODING_VIDEO_PROFILE (sprof)) {
     const gboolean native_video =
-        !!(ebin->flags & GST_ENC_FLAG_NO_VIDEO_CONVERSION);
+        ! !(ebin->flags & GST_ENC_FLAG_NO_VIDEO_CONVERSION);
     GstElement *cspace = NULL, *scale, *vrate, *cspace2 = NULL;
 
     GST_LOG ("Adding conversion elements for video stream");
