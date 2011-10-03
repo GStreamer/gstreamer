@@ -403,6 +403,10 @@ typedef enum {
  * @GST_VIDEO_TRANSFER_SRGB: Gamma 2.4 curve with a linear segment in the lower
  *                          range
  * @GST_VIDEO_TRANSFER_GAMMA28: Gamma 2.8 curve
+ * @GST_VIDEO_TRANSFER_LOG100: Logarithmic transfer characteristic
+ *                             100:1 range
+ * @GST_VIDEO_TRANSFER_LOG316: Logarithmic transfer characteristic
+ *                             316.22777:1 range
  *
  * The video transfer function defines the formula for converting between
  * non-linear RGB (R'G'B') and linear RGB
@@ -416,7 +420,9 @@ typedef enum {
   GST_VIDEO_TRANSFER_BT709,
   GST_VIDEO_TRANSFER_SMPTE240M,
   GST_VIDEO_TRANSFER_SRGB,
-  GST_VIDEO_TRANSFER_GAMMA28
+  GST_VIDEO_TRANSFER_GAMMA28,
+  GST_VIDEO_TRANSFER_LOG100,
+  GST_VIDEO_TRANSFER_LOG316
 } GstVideoTransferFunction;
 
 /**
