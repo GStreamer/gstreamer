@@ -223,8 +223,8 @@ enum
  * and buffers in this case. */
 #define AUTO_PREROLL_SIZE_BYTES                  2 * 1024 * 1024
 #define AUTO_PREROLL_SIZE_BUFFERS                0
-#define AUTO_PREROLL_NOT_SEEKABLE_SIZE_TIME      0
-#define AUTO_PREROLL_SEEKABLE_SIZE_TIME          10 * GST_SECOND
+#define AUTO_PREROLL_NOT_SEEKABLE_SIZE_TIME      10 * GST_SECOND
+#define AUTO_PREROLL_SEEKABLE_SIZE_TIME          0
 
 /* whan playing, keep a max of 2MB of data but try to keep the number of buffers
  * as low as possible (try to aim for 5 buffers) */
