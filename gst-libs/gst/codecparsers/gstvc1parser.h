@@ -268,6 +268,8 @@ struct _GstVC1SeqHdr
   /*  calculated */
   guint framerate; /* Around in fps, 0 if unknown*/
   guint bitrate;   /* Around in kpbs, 0 if unknown*/
+  guint mb_height;
+  guint mb_width;
 
   union {
     GstVC1AdvancedSeqHdr   advanced;

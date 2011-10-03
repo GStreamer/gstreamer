@@ -649,6 +649,8 @@ parse_sequence_header_advanced (GstVC1SeqHdr * seqhdr, GstBitReader * br)
       gst_bit_reader_get_bits_uint16_unchecked (br, 12);
   advanced->max_coded_width = (advanced->max_coded_width + 1) << 1;
   advanced->max_coded_height = (advanced->max_coded_height + 1) << 1;
+  seqhdr->mb_height = (advanced->max_coded_height + 15) >> 4;
+  seqhdr->mb_width = (advanced->max_coded_width + 15) >> 4;
   advanced->pulldown = gst_bit_reader_get_bits_uint8_unchecked (br, 1);
   advanced->interlace = gst_bit_reader_get_bits_uint8_unchecked (br, 1);
   advanced->tfcntrflag = gst_bit_reader_get_bits_uint8_unchecked (br, 1);
@@ -724,8 +726,8 @@ parse_frame_header_advanced (GstBitReader * br, GstVC1FrameHdr * framehdr,
   GstVC1PicAdvanced *pic = &framehdr->pic.advanced;
   GstVC1EntryPointHdr *entrypthdr = &advhdr->entrypoint;
   guint8 mvmodeidx;
-  guint width = (entrypthdr->coded_width + 15) >> 4;
-  guint height = (entrypthdr->coded_height + 15) >> 4;
+  guint width = seqhdr->mb_width;
+  guint height = seqhdr->mb_height;
 
   GST_DEBUG ("Parsing Frame header advanced %u", advhdr->interlace);
 
@@ -982,8 +984,8 @@ parse_frame_header (GstBitReader * br, GstVC1FrameHdr * framehdr,
   guint8 mvmodeidx;
   GstVC1PicSimpleMain *pic = &framehdr->pic.simple;
   GstVC1SimpleMainSeqHdr *simplehdr = &seqhdr->profile.simplemain;
-  guint width = (simplehdr->coded_width + 15) >> 4;
-  guint height = (simplehdr->coded_height + 15) >> 4;
+  guint width = seqhdr->mb_width;
+  guint height = seqhdr->mb_height;
 
 
   GST_DEBUG ("Parsing frame header in simple or main mode");
@@ -1204,7 +1206,8 @@ gst_vc1_identify_next_bdu (const guint8 * data, gsize size, GstVC1BDU * bdu)
   ensure_debug_category ();
 
   if (size < 4) {
-    GST_DEBUG ("Can't parse, buffer has too small size %" G_GSSIZE_FORMAT, size);
+    GST_DEBUG ("Can't parse, buffer has too small size %" G_GSSIZE_FORMAT,
+        size);
     return GST_VC1_PARSER_ERROR;
   }
 
@@ -1339,6 +1342,10 @@ gst_vc1_parse_sequence_header (const guint8 * data, gsize size,
         simplehdr->slice_code);
   }
 
+  /* compute height and width */
+  seqhdr->mb_height = (simplehdr->coded_height + 15) >> 4;
+  seqhdr->mb_width = (simplehdr->coded_width + 15) >> 4;
+
   return GST_VC1_PARSER_OK;
 
 failed:
@@ -1399,6 +1406,8 @@ gst_vc1_parse_entry_point_header (const guint8 * data, gsize size,
     READ_UINT16 (&br, entrypoint->coded_height, 12);
     entrypoint->coded_height = (entrypoint->coded_height + 1) << 1;
     entrypoint->coded_width = (entrypoint->coded_width + 1) << 1;
+    seqhdr->mb_height = (entrypoint->coded_height + 15) >> 4;
+    seqhdr->mb_width = (entrypoint->coded_width + 15) >> 4;
   }
 
   if (entrypoint->extended_mv)

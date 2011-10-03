@@ -825,13 +825,13 @@ GST_START_TEST (test_vc1_parse_p_frame_header_main)
   GstVC1SimpleMainSeqHdr *simplehdr = &seqhdr.profile.simplemain;
   GstVC1PicSimpleMain *pic = &framehdr.pic.simple;
 
+  simplehdr->coded_height = 240;
+  simplehdr->coded_width = 320;
+
   assert_equals_int (gst_vc1_parse_sequence_header (pframe_header_main,
           sizeof (pframe_header_main), &seqhdr), GST_VC1_PARSER_OK);
 
   assert_equals_int (seqhdr.profiletype, GST_VC1_PROFILE_MAIN);
-
-  simplehdr->coded_height = 240;
-  simplehdr->coded_width = 320;
 
   assert_equals_int (seqhdr.frmrtq_postproc, 7);
   assert_equals_int (seqhdr.bitrtq_postproc, 2);
@@ -869,13 +869,15 @@ GST_START_TEST (test_vc1_parse_b_frame_header_main)
   GstVC1SimpleMainSeqHdr *simplehdr = &seqhdr.profile.simplemain;
   GstVC1PicSimpleMain *pic = &framehdr.pic.simple;
 
+  simplehdr->coded_height = 240;
+  simplehdr->coded_width = 320;
+
   assert_equals_int (gst_vc1_parse_sequence_header (bframe_header_main,
           sizeof (bframe_header_main), &seqhdr), GST_VC1_PARSER_OK);
 
   assert_equals_int (seqhdr.profiletype, GST_VC1_PROFILE_MAIN);
-
-  simplehdr->coded_height = 240;
-  simplehdr->coded_width = 320;
+  assert_equals_int (seqhdr.mb_height, 15);
+  assert_equals_int (seqhdr.mb_width, 20);
 
   assert_equals_int (seqhdr.frmrtq_postproc, 7);
   assert_equals_int (seqhdr.bitrtq_postproc, 3);
@@ -915,6 +917,7 @@ GST_START_TEST (test_vc1_parse_bi_frame_header_main)
 
   GstVC1SimpleMainSeqHdr *simplehdr = &seqhdr.profile.simplemain;
   GstVC1PicSimpleMain *pic = &framehdr.pic.simple;
+
   simplehdr->coded_height = 240;
   simplehdr->coded_width = 320;
 
