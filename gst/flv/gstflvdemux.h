@@ -95,6 +95,8 @@ struct _GstFlvDemux
   gboolean audio_linked;
   GstBuffer * audio_codec_data;
   GstClockTime audio_start;
+  guint32 last_audio_pts;
+  GstClockTime audio_time_offset;
 
   /* Video infos */
   guint32 w;
@@ -109,6 +111,8 @@ struct _GstFlvDemux
   gboolean got_par;
   GstBuffer * video_codec_data;
   GstClockTime video_start;
+  guint32 last_video_pts;
+  GstClockTime video_time_offset;
   gdouble framerate;
 
   gboolean random_access;
