@@ -431,6 +431,9 @@ struct _GstVC1FrameHdr
     GstVC1PicSimpleMain simple;
     GstVC1PicAdvanced advanced;
   } pic;
+
+  /* Size of the picture layer in bits */
+  guint header_size;
 };
 
 /**

@@ -1436,14 +1436,17 @@ gst_vc1_parse_frame_header (const guint8 * data, gsize size,
     GstVC1FrameHdr * framehdr, GstVC1SeqHdr * seqhdr)
 {
   GstBitReader br;
+  GstVC1ParserResult result;
 
   ensure_debug_category ();
 
   gst_bit_reader_init (&br, data, size);
 
   if (seqhdr->profiletype == GST_VC1_PROFILE_ADVANCED)
-    return parse_frame_header_advanced (&br, framehdr, seqhdr);
+    result = parse_frame_header_advanced (&br, framehdr, seqhdr);
   else
-    return parse_frame_header (&br, framehdr, seqhdr);
+    result = parse_frame_header (&br, framehdr, seqhdr);
 
+  framehdr->header_size = gst_bit_reader_get_pos (&br);
+  return result;
 }
