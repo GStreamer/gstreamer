@@ -52,7 +52,7 @@ MAX_HRD_NUM_LEAKY_BUCKETS
 GST_VC1_BFRACTION_BASIS
 GstVC1StartCode
 GstVC1Profile
-GstVC1ParseResult
+GstVC1ParserResult
 GstVC1PictureType
 GstVC1Level
 GstVC1QuantizerSpec

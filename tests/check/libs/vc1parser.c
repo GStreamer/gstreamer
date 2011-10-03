@@ -786,7 +786,7 @@ static guint8 pframe2_adv[] = {
 
 GST_START_TEST (test_vc1_identify_bdu)
 {
-  GstVC1ParseResult res;
+  GstVC1ParserResult res;
   GstVC1BDU bdu;
   GstVC1SeqHdr hdr;
   GstVC1EntryPointHdr entrypt;
