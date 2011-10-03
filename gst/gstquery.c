@@ -360,7 +360,7 @@ gst_query_new (GstQueryType type, GstStructure * structure)
 
   query = (GstQuery *) gst_mini_object_new (GST_TYPE_QUERY);
 
-  GST_DEBUG ("creating new query %p %d", query, type);
+  GST_DEBUG ("creating new query %p %s", query, gst_query_type_get_name (type));
 
   query->type = type;
 
