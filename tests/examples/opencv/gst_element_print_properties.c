@@ -403,8 +403,8 @@ gst_element_print_properties (GstElement * element)
               pfraction->def_num, pfraction->def_den);
         }
 
-        else if (GST_IS_PARAM_SPEC_MINI_OBJECT (param)) {
-          g_print ("%-*.*s | MiniObject of type \"%s\"",
+        else if (G_IS_PARAM_SPEC_BOXED (param)) {
+          g_print ("%-*.*s | Boxed of type \"%s\"",
               c3w, c3w,
               g_type_name (param->value_type), g_type_name (param->value_type));
         }
