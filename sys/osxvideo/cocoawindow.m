@@ -128,6 +128,7 @@
   }
 
   self = [super initWithFrame: frame pixelFormat:fmt];
+  [fmt release];
 
    actualContext = [self openGLContext];
    [actualContext makeCurrentContext];
