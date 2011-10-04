@@ -55,7 +55,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-int, "
-        "rate = (int) [ 32000, 64000 ], "
+        "rate = (int) { 8000, 12000, 16000, 24000, 48000 }, "
         "channels = (int) [ 1, 2 ], "
         "endianness = (int) BYTE_ORDER, "
         "signed = (boolean) true, " "width = (int) 16, " "depth = (int) 16")
@@ -193,6 +193,8 @@ opus_dec_sink_setcaps (GstPad * pad, GstCaps * caps)
   GstStructure *s;
   const GValue *streamheader;
 
+  GST_DEBUG_OBJECT (pad, "Setting sink caps to %" GST_PTR_FORMAT, caps);
+
   s = gst_caps_get_structure (caps, 0);
   if ((streamheader = gst_structure_get_value (s, "streamheader")) &&
       G_VALUE_HOLDS (streamheader, GST_TYPE_ARRAY) &&
@@ -236,6 +238,47 @@ opus_dec_sink_setcaps (GstPad * pad, GstCaps * caps)
       }
     }
   }
+
+  if (!gst_structure_get_int (s, "frame-size", &dec->frame_size)) {
+    GST_WARNING_OBJECT (dec, "Frame size not included in caps");
+  }
+  if (!gst_structure_get_int (s, "channels", &dec->n_channels)) {
+    GST_WARNING_OBJECT (dec, "Number of channels not included in caps");
+  }
+  if (!gst_structure_get_int (s, "rate", &dec->sample_rate)) {
+    GST_WARNING_OBJECT (dec, "Sample rate not included in caps");
+  }
+  switch (dec->frame_size) {
+    case 2:
+      dec->frame_samples = dec->sample_rate / 400;
+      break;
+    case 5:
+      dec->frame_samples = dec->sample_rate / 200;
+      break;
+    case 10:
+      dec->frame_samples = dec->sample_rate / 100;
+      break;
+    case 20:
+      dec->frame_samples = dec->sample_rate / 50;
+      break;
+    case 40:
+      dec->frame_samples = dec->sample_rate / 25;
+      break;
+    case 60:
+      dec->frame_samples = 3 * dec->sample_rate / 50;
+      break;
+    default:
+      GST_WARNING_OBJECT (dec, "Unsupported frame size: %d", dec->frame_size);
+      break;
+  }
+
+  dec->frame_duration = gst_util_uint64_scale_int (dec->frame_samples,
+      GST_SECOND, dec->sample_rate);
+
+  GST_INFO_OBJECT (dec,
+      "Got frame size %d, %d channels, %d Hz, giving %d samples per frame, frame duration %"
+      GST_TIME_FORMAT, dec->frame_size, dec->n_channels, dec->sample_rate,
+      dec->frame_samples, GST_TIME_ARGS (dec->frame_duration));
 
 done:
   gst_object_unref (dec);
@@ -566,7 +609,7 @@ static GstFlowReturn
 opus_dec_chain_parse_header (GstOpusDec * dec, GstBuffer * buf)
 {
   GstCaps *caps;
-  //gint error = OPUS_OK;
+  int err;
 
 #if 0
   dec->samples_per_frame = opus_packet_get_samples_per_frame (
@@ -578,41 +621,9 @@ opus_dec_chain_parse_header (GstOpusDec * dec, GstBuffer * buf)
     goto invalid_header;
 #endif
 
-#if 0
-#ifdef HAVE_OPUS_0_7
-  dec->mode =
-      opus_mode_create (dec->sample_rate, dec->header.frame_size, &error);
-#else
-  dec->mode =
-      opus_mode_create (dec->sample_rate, dec->header.nb_channels,
-      dec->header.frame_size, &error);
-#endif
-  if (!dec->mode)
-    goto mode_init_failed;
-
-  /* initialize the decoder */
-#ifdef HAVE_OPUS_0_11
-  dec->state =
-      opus_decoder_create_custom (dec->mode, dec->header.nb_channels, &error);
-#else
-#ifdef HAVE_OPUS_0_7
-  dec->state = opus_decoder_create (dec->mode, dec->header.nb_channels, &error);
-#else
-  dec->state = opus_decoder_create (dec->mode);
-#endif
-#endif
-#endif
-  dec->state = opus_decoder_create (dec->sample_rate, dec->n_channels);
-  if (!dec->state)
+  dec->state = opus_decoder_create (dec->sample_rate, dec->n_channels, &err);
+  if (!dec->state || err != OPUS_OK)
     goto init_failed;
-
-#if 0
-#ifdef HAVE_OPUS_0_8
-  dec->frame_size = dec->header.frame_size;
-#else
-  opus_mode_info (dec->mode, OPUS_GET_FRAME_SIZE, &dec->frame_size);
-#endif
-#endif
 
   dec->frame_duration = gst_util_uint64_scale_int (dec->frame_size,
       GST_SECOND, dec->sample_rate);
@@ -711,7 +722,7 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buf,
   guint8 *data;
   GstBuffer *outbuf;
   gint16 *out_data;
-  int n;
+  int n, err;
 
   if (timestamp != -1) {
     dec->segment.last_stop = timestamp;
@@ -721,7 +732,9 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buf,
   if (dec->state == NULL) {
     GstCaps *caps;
 
-    dec->state = opus_decoder_create (dec->sample_rate, dec->n_channels);
+    dec->state = opus_decoder_create (dec->sample_rate, dec->n_channels, &err);
+    if (!dec->state || err != OPUS_OK)
+      goto creation_failed;
 
     /* set caps */
     caps = gst_caps_new_simple ("audio/x-raw-int",
@@ -772,7 +785,7 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buf,
 
   GST_LOG_OBJECT (dec, "decoding frame");
 
-  n = opus_decode (dec->state, data, size, out_data, dec->frame_samples, TRUE);
+  n = opus_decode (dec->state, data, size, out_data, dec->frame_samples, 0);
   if (n < 0) {
     GST_ELEMENT_ERROR (dec, STREAM, DECODE, ("Decoding error: %d", n), (NULL));
     return GST_FLOW_ERROR;
@@ -805,6 +818,10 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buf,
     GST_DEBUG_OBJECT (dec, "flow: %s", gst_flow_get_name (res));
 
   return res;
+
+creation_failed:
+  GST_ERROR_OBJECT (dec, "Failed to create Opus decoder: %d", err);
+  return GST_FLOW_ERROR;
 }
 
 static GstFlowReturn
@@ -814,6 +831,10 @@ opus_dec_chain (GstPad * pad, GstBuffer * buf)
   GstOpusDec *dec;
 
   dec = GST_OPUS_DEC (gst_pad_get_parent (pad));
+  GST_LOG_OBJECT (pad,
+      "Got buffer ts %" GST_TIME_FORMAT ", duration %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
+      GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
 
   if (GST_BUFFER_IS_DISCONT (buf)) {
     dec->discont = TRUE;

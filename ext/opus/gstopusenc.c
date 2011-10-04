@@ -63,7 +63,7 @@ gst_opus_enc_bandwidth_get_type (void)
     {OPUS_BANDWIDTH_WIDEBAND, "Wide band", "wideband"},
     {OPUS_BANDWIDTH_SUPERWIDEBAND, "Super wide band", "superwideband"},
     {OPUS_BANDWIDTH_FULLBAND, "Full band", "fullband"},
-    {OPUS_BANDWIDTH_AUTO, "Auto", "auto"},
+    {OPUS_AUTO, "Auto", "auto"},
     {0, NULL, NULL}
   };
   static volatile GType id = 0;
@@ -286,12 +286,13 @@ gst_opus_enc_sink_setcaps (GstPad * pad, GstCaps * caps)
       enc->frame_samples = enc->sample_rate / 50;
       break;
     case 40:
-      enc->frame_samples = enc->sample_rate / 20;
+      enc->frame_samples = enc->sample_rate / 25;
       break;
     case 60:
       enc->frame_samples = 3 * enc->sample_rate / 50;
       break;
     default:
+      GST_WARNING_OBJECT (enc, "Unsupported frame size: %d", enc->frame_size);
       return FALSE;
       break;
   }
@@ -664,62 +665,24 @@ gst_opus_enc_create_metadata_buffer (GstOpusEnc * enc)
 static gboolean
 gst_opus_enc_setup (GstOpusEnc * enc)
 {
-  //gint error = OPUS_OK;
+  int error = OPUS_OK;
 
   enc->setup = FALSE;
 
-#if 0
-#ifdef HAVE_OPUS_0_7
-  enc->mode = opus_mode_create (enc->rate, enc->frame_size, &error);
-#else
-  enc->mode =
-      opus_mode_create (enc->rate, enc->n_channels, enc->frame_size, &error);
-#endif
-  if (!enc->mode)
-    goto mode_initialization_failed;
-
-#ifdef HAVE_OPUS_0_11
-  opus_header_init (&enc->header, enc->mode, enc->frame_size, enc->n_channels);
-#else
-#ifdef HAVE_OPUS_0_7
-  opus_header_init (&enc->header, enc->mode, enc->n_channels);
-#else
-  opus_header_init (&enc->header, enc->mode);
-#endif
-#endif
-  enc->header.nb_channels = enc->n_channels;
-
-#ifdef HAVE_OPUS_0_8
-  enc->frame_size = enc->header.frame_size;
-#else
-  opus_mode_info (enc->mode, OPUS_GET_FRAME_SIZE, &enc->frame_size);
-#endif
-#endif
-
-#if 0
-#ifdef HAVE_OPUS_0_11
-  enc->state = opus_encoder_create_custom (enc->mode, enc->n_channels, &error);
-#else
-#ifdef HAVE_OPUS_0_7
-  enc->state = opus_encoder_create (enc->mode, enc->n_channels, &error);
-#else
-  enc->state = opus_encoder_create (enc->mode);
-#endif
-#endif
-#endif
   enc->state = opus_encoder_create (enc->sample_rate, enc->n_channels,
-      enc->audio_or_voip ? OPUS_APPLICATION_AUDIO : OPUS_APPLICATION_VOIP);
-  if (!enc->state)
+      enc->audio_or_voip ? OPUS_APPLICATION_AUDIO : OPUS_APPLICATION_VOIP,
+      &error);
+  if (!enc->state || error != OPUS_OK)
     goto encoder_creation_failed;
 
   opus_encoder_ctl (enc->state, OPUS_SET_BITRATE (enc->bitrate), 0);
   opus_encoder_ctl (enc->state, OPUS_SET_BANDWIDTH (enc->bandwidth), 0);
-  opus_encoder_ctl (enc->state, OPUS_SET_VBR_FLAG (!enc->cbr), 0);
+  opus_encoder_ctl (enc->state, OPUS_SET_VBR (!enc->cbr), 0);
   opus_encoder_ctl (enc->state, OPUS_SET_VBR_CONSTRAINT (enc->constrained_vbr),
       0);
   opus_encoder_ctl (enc->state, OPUS_SET_COMPLEXITY (enc->complexity), 0);
-  opus_encoder_ctl (enc->state, OPUS_SET_INBAND_FEC_FLAG (enc->inband_fec), 0);
-  opus_encoder_ctl (enc->state, OPUS_SET_DTX_FLAG (enc->dtx), 0);
+  opus_encoder_ctl (enc->state, OPUS_SET_INBAND_FEC (enc->inband_fec), 0);
+  opus_encoder_ctl (enc->state, OPUS_SET_DTX (enc->dtx), 0);
   opus_encoder_ctl (enc->state,
       OPUS_SET_PACKET_LOSS_PERC (enc->packet_loss_percentage), 0);
 
@@ -879,6 +842,12 @@ gst_opus_enc_encode (GstOpusEnc * enc, gboolean flush)
       GST_ERROR_OBJECT (enc, "Encoding failed: %d", outsize);
       ret = GST_FLOW_ERROR;
       goto done;
+    } else if (outsize != bytes_per_packet) {
+      GST_WARNING_OBJECT (enc,
+          "Encoded size %d is different from %d bytes per packet", outsize,
+          bytes_per_packet);
+      ret = GST_FLOW_ERROR;
+      goto done;
     }
 
     GST_BUFFER_TIMESTAMP (outbuf) = enc->start_ts +
@@ -916,29 +885,10 @@ gst_opus_enc_chain (GstPad * pad, GstBuffer * buf)
   if (!enc->setup)
     goto not_setup;
 
-#if 0
   if (!enc->header_sent) {
-    /* Opus streams begin with two headers; the initial header (with
-       most of the codec setup parameters) which is mandated by the Ogg
-       bitstream spec.  The second header holds any comment fields.
-       We merely need to make the headers, then pass them to libopus 
-       one at a time; libopus handles the additional Ogg bitstream 
-       constraints */
-    GstBuffer *buf1, *buf2;
     GstCaps *caps;
-    guchar data[100];
 
-    /* create header buffer */
-    opus_header_to_packet (&enc->header, data, 100);
-    buf1 = gst_opus_enc_buffer_from_data (enc, data, 100, 0);
-
-    /* create comment buffer */
-    buf2 = gst_opus_enc_create_metadata_buffer (enc);
-
-    /* mark and put on caps */
     caps = gst_pad_get_caps (enc->srcpad);
-    caps = gst_opus_enc_set_header_on_caps (caps, buf1, buf2);
-
     gst_caps_set_simple (caps,
         "rate", G_TYPE_INT, enc->sample_rate,
         "channels", G_TYPE_INT, enc->n_channels,
@@ -950,26 +900,8 @@ gst_opus_enc_chain (GstPad * pad, GstBuffer * buf)
         enc->sample_rate, enc->n_channels, enc->frame_size);
     gst_pad_set_caps (enc->srcpad, caps);
 
-    gst_buffer_set_caps (buf1, caps);
-    gst_buffer_set_caps (buf2, caps);
-    gst_caps_unref (caps);
-
-    /* push out buffers */
-    ret = gst_opus_enc_push_buffer (enc, buf1);
-
-    if (ret != GST_FLOW_OK) {
-      gst_buffer_unref (buf2);
-      goto done;
-    }
-
-    ret = gst_opus_enc_push_buffer (enc, buf2);
-
-    if (ret != GST_FLOW_OK)
-      goto done;
-
     enc->header_sent = TRUE;
   }
-#endif
 
   GST_DEBUG_OBJECT (enc, "received buffer of %u bytes", GST_BUFFER_SIZE (buf));
 
