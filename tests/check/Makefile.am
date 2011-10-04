@@ -100,8 +100,6 @@ else
 cxx_checks =
 endif
 
-# FIXME 0.11: convert elements/ffmpegcolorspace to videoconvert or remove
-
 check_PROGRAMS = \
 	$(check_alsa) \
 	$(check_gio) \
