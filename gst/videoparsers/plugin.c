@@ -30,15 +30,15 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  gboolean ret;
+  gboolean ret = FALSE;
 
-  ret = gst_element_register (plugin, "h263parse",
+  ret |= gst_element_register (plugin, "h263parse",
       GST_RANK_PRIMARY + 1, GST_TYPE_H263_PARSE);
-  ret = gst_element_register (plugin, "h264parse",
+  ret |= gst_element_register (plugin, "h264parse",
       GST_RANK_PRIMARY + 1, GST_TYPE_H264_PARSE);
-  ret = gst_element_register (plugin, "diracparse",
+  ret |= gst_element_register (plugin, "diracparse",
       GST_RANK_NONE, GST_TYPE_DIRAC_PARSE);
-  ret = gst_element_register (plugin, "mpegvideoparse",
+  ret |= gst_element_register (plugin, "mpegvideoparse",
       GST_RANK_PRIMARY + 1, GST_TYPE_MPEGVIDEO_PARSE);
 
   return ret;

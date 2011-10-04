@@ -1,6 +1,8 @@
 /*
  * gst-rtp-vp8-depay.c - Source for GstRtpVP8Depay
  * Copyright (C) 2011 Sjoerd Simons <sjoerd@luon.net>
+ * Copyright (C) 2011 Collabora Ltd.
+ *   Contact: Youness Alaoui <youness.alaoui@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -44,7 +46,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
         "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ","
         "clock-rate = (int) 90000,"
         "media = (string) \"video\","
-        "encoding-name = (string) \"VP8-DRAFT-0-3-2\""));
+        "encoding-name = (string) \"VP8-DRAFT-IETF-01\""));
 
 static void
 gst_rtp_vp8_depay_init (GstRtpVP8Depay * self, GstRtpVP8DepayClass * klass)
@@ -129,22 +131,32 @@ gst_rtp_vp8_depay_process (GstBaseRTPDepayload * depay, GstBuffer * buf)
 
   if (G_UNLIKELY (!self->started)) {
     /* Check if this is the start of a VP8 frame, otherwise bail */
-    if ((data[0] & 0x1) == 0)
+    /* S=1 and PartID= 0 */
+    if ((data[0] & 0x1F) != 0x10)
       return NULL;
 
     self->started = TRUE;
   }
 
   offset = 1;
-  if ((data[0] & 0x10) != 0) {
-    /* Skip Picture identifier bytes */
-    for (; (data[offset] & 0x80) != 0; offset++) {
-      /* should be at least one more pictureID byte and at least one byte in
-       * the vp8 payload */
+  /* Check X optional header */
+  if ((data[0] & 0x80) != 0) {
+    offset++;
+    /* Check I optional header */
+    if ((data[1] & 0x80) != 0) {
+      offset++;
       if (G_UNLIKELY (offset + 2 >= size))
         goto too_small;
+      /* Check for 16 bits PictureID */
+      if ((data[2] & 0x80) != 0)
+        offset++;
     }
-    offset++;
+    /* Check L optional header */
+    if ((data[1] & 0x40) != 0)
+      offset++;
+    /* Check T optional header */
+    if ((data[1] & 0x20) != 0)
+      offset++;
   }
 
   if (G_UNLIKELY (offset >= size))
