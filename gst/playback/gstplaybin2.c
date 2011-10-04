@@ -3229,10 +3229,50 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
 
   GST_DEBUG_OBJECT (playbin, "checking factory %s", GST_OBJECT_NAME (factory));
 
-  /* if it's not a sink, we just make decodebin try it */
+  /* if it's not a sink, we make sure the element is compatible with
+   * the fixed sink */
   if (!gst_element_factory_list_is_type (factory,
-          GST_ELEMENT_FACTORY_TYPE_SINK))
-    return GST_AUTOPLUG_SELECT_TRY;
+          GST_ELEMENT_FACTORY_TYPE_SINK)) {
+    gboolean isvideodec = gst_element_factory_list_is_type (factory,
+        GST_ELEMENT_FACTORY_TYPE_DECODER |
+        GST_ELEMENT_FACTORY_TYPE_MEDIA_VIDEO |
+        GST_ELEMENT_FACTORY_TYPE_MEDIA_IMAGE);
+    gboolean isaudiodec = gst_element_factory_list_is_type (factory,
+        GST_ELEMENT_FACTORY_TYPE_DECODER |
+        GST_ELEMENT_FACTORY_TYPE_MEDIA_AUDIO);
+
+    /* If it is a decoder and we have a fixed sink for the media
+     * type it outputs, check that the decoder is compatible with this sink */
+    if ((isvideodec && group->video_sink) || (isaudiodec && group->audio_sink)) {
+      gboolean compatible = TRUE;
+      GstPad *sinkpad;
+      GstCaps *caps;
+      GstElement *sink;
+
+      if (isaudiodec)
+        sink = group->audio_sink;
+      else
+        sink = group->video_sink;
+
+      if ((sinkpad = gst_element_get_static_pad (sink, "sink"))) {
+        caps = gst_pad_get_caps_reffed (sinkpad);
+
+        compatible = gst_element_factory_can_src_any_caps (factory, caps);
+
+        gst_object_unref (sinkpad);
+        gst_caps_unref (caps);
+      }
+
+      if (compatible)
+        return GST_AUTOPLUG_SELECT_TRY;
+
+      GST_DEBUG_OBJECT (playbin, "%s not compatible with the fixed sink",
+          GST_PLUGIN_FEATURE_NAME (factory));
+
+      return GST_AUTOPLUG_SELECT_SKIP;
+    } else
+      return GST_AUTOPLUG_SELECT_TRY;
+  }
 
   /* it's a sink, see if an instance of it actually works */
   GST_DEBUG_OBJECT (playbin, "we found a sink");

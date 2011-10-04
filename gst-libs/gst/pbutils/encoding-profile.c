@@ -965,3 +965,73 @@ gst_encoding_profile_deserialize_valfunc (GValue * value, const gchar * s)
 
   return FALSE;
 }
+
+/**
+ * gst_encoding_profile_from_discoverer:
+ * @info: (transfer none): The #GstDiscovererInfo to read from
+ *
+ * Creates a #GstEncodingProfile matching the formats from the given
+ * #GstEncodingProfile. Streams other than audio or video (eg,
+ * subtitles), are currently ignored.
+ *
+ * Returns: (transfer full): The new #GstEncodingProfile or %NULL.
+ *
+ * Since: 0.10.36
+ */
+GstEncodingProfile *
+gst_encoding_profile_from_discoverer (GstDiscovererInfo * info)
+{
+  GstEncodingContainerProfile *profile;
+  GstDiscovererStreamInfo *sinfo;
+  GList *streams, *stream;
+  GstCaps *caps = NULL;
+
+  if (!info || gst_discoverer_info_get_result (info) != GST_DISCOVERER_OK)
+    return NULL;
+
+  sinfo = gst_discoverer_info_get_stream_info (info);
+  if (!sinfo)
+    return NULL;
+
+  caps = gst_discoverer_stream_info_get_caps (sinfo);
+  GST_LOG ("Container: %" GST_PTR_FORMAT "\n", caps);
+  profile =
+      gst_encoding_container_profile_new ("auto-generated",
+      "Automatically generated from GstDiscovererInfo", caps, NULL);
+  gst_caps_unref (caps);
+  if (!profile) {
+    GST_ERROR ("Failed to create container profile from caps %" GST_PTR_FORMAT,
+        caps);
+    return NULL;
+  }
+
+  streams =
+      gst_discoverer_container_info_get_streams (GST_DISCOVERER_CONTAINER_INFO
+      (sinfo));
+  for (stream = streams; stream; stream = stream->next) {
+    GstEncodingProfile *sprofile = NULL;
+    sinfo = (GstDiscovererStreamInfo *) stream->data;
+    caps = gst_discoverer_stream_info_get_caps (sinfo);
+    GST_LOG ("Stream: %" GST_PTR_FORMAT "\n", caps);
+    if (GST_IS_DISCOVERER_AUDIO_INFO (sinfo)) {
+      sprofile =
+          (GstEncodingProfile *) gst_encoding_audio_profile_new (caps, NULL,
+          NULL, 0);
+    } else if (GST_IS_DISCOVERER_VIDEO_INFO (sinfo)) {
+      sprofile =
+          (GstEncodingProfile *) gst_encoding_video_profile_new (caps, NULL,
+          NULL, 0);
+    } else {
+      /* subtitles or other ? ignore for now */
+    }
+    if (sprofile)
+      gst_encoding_container_profile_add_profile (profile, sprofile);
+    else
+      GST_ERROR ("Failed to create stream profile from caps %" GST_PTR_FORMAT,
+          caps);
+    gst_caps_unref (caps);
+  }
+  gst_discoverer_stream_info_list_free (streams);
+
+  return (GstEncodingProfile *) profile;
+}

@@ -26,6 +26,7 @@
 G_BEGIN_DECLS
 
 #include <gst/pbutils/pbutils-enumtypes.h>
+#include <gst/pbutils/gstdiscoverer.h>
 
 /**
  * GstEncodingProfile:
@@ -182,6 +183,9 @@ void     gst_encoding_video_profile_set_pass              (GstEncodingVideoProfi
 							   guint pass);
 void     gst_encoding_video_profile_set_variableframerate (GstEncodingVideoProfile *prof,
 							   gboolean variableframerate);
+
+GstEncodingProfile * gst_encoding_profile_from_discoverer (GstDiscovererInfo *info);
+
 G_END_DECLS
 
 #endif /* __GST_PROFILE_H__ */

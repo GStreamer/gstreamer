@@ -254,6 +254,7 @@ enum
   PROP_VIS_PLUGIN,
   PROP_FRAME,
   PROP_AV_OFFSET,
+  PROP_VIDEO_SINK,
   PROP_LAST
 };
 
@@ -408,6 +409,19 @@ gst_play_sink_class_init (GstPlaySinkClass * klass)
           "The synchronisation offset between audio and video in nanoseconds",
           G_MININT64, G_MAXINT64, 0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstPlaySink:video-sink:
+   *
+   * Set the used video sink element. NULL will use the default sink. playsink
+   * must be in %GST_STATE_NULL
+   *
+   * Since: 0.10.36
+   */
+  g_object_class_install_property (gobject_klass, PROP_VIDEO_SINK,
+      g_param_spec_object ("video-sink", "Video Sink",
+          "the video output element to use (NULL = default sink)",
+          GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_signal_new ("reconfigure", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstPlaySinkClass,
@@ -3610,6 +3624,10 @@ gst_play_sink_set_property (GObject * object, guint prop_id,
     case PROP_AV_OFFSET:
       gst_play_sink_set_av_offset (playsink, g_value_get_int64 (value));
       break;
+    case PROP_VIDEO_SINK:
+      gst_play_sink_set_sink (playsink, GST_PLAY_SINK_TYPE_VIDEO,
+          g_value_get_object (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, spec);
       break;
@@ -3647,6 +3665,10 @@ gst_play_sink_get_property (GObject * object, guint prop_id,
       break;
     case PROP_AV_OFFSET:
       g_value_set_int64 (value, gst_play_sink_get_av_offset (playsink));
+      break;
+    case PROP_VIDEO_SINK:
+      g_value_take_object (value, gst_play_sink_get_sink (playsink,
+              GST_PLAY_SINK_TYPE_VIDEO));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, spec);

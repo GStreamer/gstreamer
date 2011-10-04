@@ -73,6 +73,7 @@ EXPORTS
 	gst_encoding_list_all_targets
 	gst_encoding_list_available_categories
 	gst_encoding_profile_find
+	gst_encoding_profile_from_discoverer
 	gst_encoding_profile_get_description
 	gst_encoding_profile_get_format
 	gst_encoding_profile_get_input_caps
