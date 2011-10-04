@@ -83,7 +83,7 @@ G_BEGIN_DECLS
 #define GST_BASE_VIDEO_CODEC_STREAM_UNLOCK(codec) g_static_rec_mutex_unlock (&GST_BASE_VIDEO_CODEC (codec)->stream_lock)
 
 typedef struct _GstVideoState GstVideoState;
-typedef struct _GstVideoFrame GstVideoFrame;
+typedef struct _GstVideoFrameState GstVideoFrameState;
 typedef struct _GstBaseVideoCodec GstBaseVideoCodec;
 typedef struct _GstBaseVideoCodecClass GstBaseVideoCodecClass;
 
@@ -108,7 +108,7 @@ struct _GstVideoState
 
 };
 
-struct _GstVideoFrame
+struct _GstVideoFrameState
 {
   GstClockTime decode_timestamp;
   GstClockTime presentation_timestamp;
@@ -180,8 +180,8 @@ struct _GstBaseVideoCodecClass
 
 GType gst_base_video_codec_get_type (void);
 
-GstVideoFrame * gst_base_video_codec_new_frame (GstBaseVideoCodec *base_video_codec);
-void gst_base_video_codec_free_frame (GstVideoFrame *frame);
+GstVideoFrameState * gst_base_video_codec_new_frame (GstBaseVideoCodec *base_video_codec);
+void                 gst_base_video_codec_free_frame (GstVideoFrameState *frame);
 
 G_END_DECLS
 

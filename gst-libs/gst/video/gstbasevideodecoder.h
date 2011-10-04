@@ -142,7 +142,7 @@ struct _GstBaseVideoDecoder
   /* ... being tracked here;
    * only available during parsing */
   /* FIXME remove and add parameter to method */
-  GstVideoFrame    *current_frame;
+  GstVideoFrameState *current_frame;
   /* events that should apply to the current frame */
   GList            *current_frame_events;
   /* relative offset of input data */
@@ -233,7 +233,7 @@ struct _GstBaseVideoDecoderClass
 
   GstFlowReturn (*finish)         (GstBaseVideoDecoder *coder);
 
-  GstFlowReturn (*handle_frame)   (GstBaseVideoDecoder *coder, GstVideoFrame *frame);
+  GstFlowReturn (*handle_frame)   (GstBaseVideoDecoder *coder, GstVideoFrameState *frame);
 
 
   /*< private >*/
@@ -247,9 +247,9 @@ struct _GstBaseVideoDecoderClass
 void             gst_base_video_decoder_class_set_capture_pattern (GstBaseVideoDecoderClass *klass,
                                     guint32 mask, guint32 pattern);
 
-GstVideoFrame   *gst_base_video_decoder_get_frame (GstBaseVideoDecoder *coder,
+GstVideoFrameState   *gst_base_video_decoder_get_frame (GstBaseVideoDecoder *coder,
                                     int frame_number);
-GstVideoFrame   *gst_base_video_decoder_get_oldest_frame (GstBaseVideoDecoder *coder);
+GstVideoFrameState   *gst_base_video_decoder_get_oldest_frame (GstBaseVideoDecoder *coder);
 
 void             gst_base_video_decoder_add_to_frame (GstBaseVideoDecoder *base_video_decoder,
                                     int n_bytes);
@@ -260,13 +260,13 @@ void             gst_base_video_decoder_set_sync_point (GstBaseVideoDecoder *bas
 gboolean         gst_base_video_decoder_set_src_caps (GstBaseVideoDecoder *base_video_decoder);
 GstBuffer       *gst_base_video_decoder_alloc_src_buffer (GstBaseVideoDecoder * base_video_decoder);
 GstFlowReturn    gst_base_video_decoder_alloc_src_frame (GstBaseVideoDecoder *base_video_decoder,
-                                    GstVideoFrame *frame);
+                                    GstVideoFrameState *frame);
 GstVideoState   *gst_base_video_decoder_get_state (GstBaseVideoDecoder *base_video_decoder);
 GstClockTimeDiff gst_base_video_decoder_get_max_decode_time (
                                     GstBaseVideoDecoder *base_video_decoder,
-                                    GstVideoFrame *frame);
+                                    GstVideoFrameState *frame);
 GstFlowReturn    gst_base_video_decoder_finish_frame (GstBaseVideoDecoder *base_video_decoder,
-                                    GstVideoFrame *frame);
+                                    GstVideoFrameState *frame);
 
 GType            gst_base_video_decoder_get_type (void);
 

@@ -705,7 +705,7 @@ gst_base_video_encoder_chain (GstPad * pad, GstBuffer * buf)
 {
   GstBaseVideoEncoder *base_video_encoder;
   GstBaseVideoEncoderClass *klass;
-  GstVideoFrame *frame;
+  GstVideoFrameState *frame;
   GstFlowReturn ret = GST_FLOW_OK;
 
   base_video_encoder = GST_BASE_VIDEO_ENCODER (gst_pad_get_parent (pad));
@@ -825,7 +825,7 @@ gst_base_video_encoder_change_state (GstElement * element,
 /**
  * gst_base_video_encoder_finish_frame:
  * @base_video_encoder: a #GstBaseVideoEncoder
- * @frame: an encoded #GstVideoFrame 
+ * @frame: an encoded #GstVideoFrameState 
  *
  * @frame must have a valid encoded data buffer, whose metadata fields
  * are then appropriately set according to frame data or no buffer at
@@ -837,7 +837,7 @@ gst_base_video_encoder_change_state (GstElement * element,
  */
 GstFlowReturn
 gst_base_video_encoder_finish_frame (GstBaseVideoEncoder * base_video_encoder,
-    GstVideoFrame * frame)
+    GstVideoFrameState * frame)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   GstBaseVideoEncoderClass *base_video_encoder_class;
@@ -853,7 +853,7 @@ gst_base_video_encoder_finish_frame (GstBaseVideoEncoder * base_video_encoder,
 
   /* Push all pending events that arrived before this frame */
   for (l = base_video_encoder->base_video_codec.frames; l; l = l->next) {
-    GstVideoFrame *tmp = l->data;
+    GstVideoFrameState *tmp = l->data;
 
     if (tmp->events) {
       GList *k;
@@ -1041,9 +1041,9 @@ gst_base_video_encoder_set_latency_fields (GstBaseVideoEncoder *
  * gst_base_video_encoder_get_oldest_frame:
  * @base_video_encoder: a #GstBaseVideoEncoder
  *
- * Returns: oldest unfinished pending #GstVideoFrame
+ * Returns: oldest unfinished pending #GstVideoFrameState
  */
-GstVideoFrame *
+GstVideoFrameState *
 gst_base_video_encoder_get_oldest_frame (GstBaseVideoEncoder *
     base_video_encoder)
 {
@@ -1055,7 +1055,7 @@ gst_base_video_encoder_get_oldest_frame (GstBaseVideoEncoder *
 
   if (g == NULL)
     return NULL;
-  return (GstVideoFrame *) (g->data);
+  return (GstVideoFrameState *) (g->data);
 }
 
 /* FIXME there could probably be more of these;

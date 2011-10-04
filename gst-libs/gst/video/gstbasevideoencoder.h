@@ -150,13 +150,13 @@ struct _GstBaseVideoEncoderClass
                                        GstVideoState *state);
 
   GstFlowReturn (*handle_frame)       (GstBaseVideoEncoder *coder,
-                                       GstVideoFrame *frame);
+                                       GstVideoFrameState *frame);
 
   gboolean      (*reset)              (GstBaseVideoEncoder *coder);
   GstFlowReturn (*finish)             (GstBaseVideoEncoder *coder);
 
   GstFlowReturn (*shape_output)       (GstBaseVideoEncoder *coder,
-                                       GstVideoFrame *frame);
+                                       GstVideoFrameState *frame);
 
   gboolean      (*event)              (GstBaseVideoEncoder *coder,
                                        GstEvent *event);
@@ -170,9 +170,9 @@ GType                  gst_base_video_encoder_get_type (void);
 
 const GstVideoState*   gst_base_video_encoder_get_state (GstBaseVideoEncoder *coder);
 
-GstVideoFrame*         gst_base_video_encoder_get_oldest_frame (GstBaseVideoEncoder *coder);
+GstVideoFrameState*    gst_base_video_encoder_get_oldest_frame (GstBaseVideoEncoder *coder);
 GstFlowReturn          gst_base_video_encoder_finish_frame (GstBaseVideoEncoder *base_video_encoder,
-                                                            GstVideoFrame *frame);
+                                                            GstVideoFrameState *frame);
 
 void                   gst_base_video_encoder_set_latency (GstBaseVideoEncoder *base_video_encoder,
                                                            GstClockTime min_latency, GstClockTime max_latency);
