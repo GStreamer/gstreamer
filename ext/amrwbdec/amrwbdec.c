@@ -36,6 +36,8 @@
 #include "config.h"
 #endif
 
+#include <gst/audio/audio.h>
+
 #include "amrwbdec.h"
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -48,11 +50,8 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, "
-        "width = (int) 16, "
-        "depth = (int) 16, "
-        "signed = (boolean) TRUE, "
-        "endianness = (int) BYTE_ORDER, "
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) " GST_AUDIO_NE (S16) ", "
         "rate = (int) 16000, " "channels = (int) 1")
     );
 
@@ -74,27 +73,8 @@ static GstStateChangeReturn gst_amrwbdec_state_change (GstElement * element,
 
 static void gst_amrwbdec_finalize (GObject * object);
 
-#define _do_init(bla) \
-    GST_DEBUG_CATEGORY_INIT (gst_amrwbdec_debug, "amrwbdec", 0, "AMR-WB audio decoder");
-
-GST_BOILERPLATE_FULL (GstAmrwbDec, gst_amrwbdec, GstElement, GST_TYPE_ELEMENT,
-    _do_init);
-
-static void
-gst_amrwbdec_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_template));
-
-  gst_element_class_set_details_simple (element_class, "AMR-WB audio decoder",
-      "Codec/Decoder/Audio",
-      "Adaptive Multi-Rate Wideband audio decoder",
-      "Renato Araujo <renato.filho@indt.org.br>");
-}
+#define gst_amrwbdec_parent_class parent_class
+G_DEFINE_TYPE (GstAmrwbDec, gst_amrwbdec, GST_TYPE_ELEMENT);
 
 static void
 gst_amrwbdec_class_init (GstAmrwbDecClass * klass)
@@ -105,14 +85,26 @@ gst_amrwbdec_class_init (GstAmrwbDecClass * klass)
   object_class->finalize = gst_amrwbdec_finalize;
 
   element_class->change_state = GST_DEBUG_FUNCPTR (gst_amrwbdec_state_change);
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&sink_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&src_template));
+
+  gst_element_class_set_details_simple (element_class, "AMR-WB audio decoder",
+      "Codec/Decoder/Audio",
+      "Adaptive Multi-Rate Wideband audio decoder",
+      "Renato Araujo <renato.filho@indt.org.br>");
+
+  GST_DEBUG_CATEGORY_INIT (gst_amrwbdec_debug, "amrwbdec", 0,
+      "AMR-WB audio decoder");
 }
 
 static void
-gst_amrwbdec_init (GstAmrwbDec * amrwbdec, GstAmrwbDecClass * klass)
+gst_amrwbdec_init (GstAmrwbDec * amrwbdec)
 {
   /* create the sink pad */
   amrwbdec->sinkpad = gst_pad_new_from_static_template (&sink_template, "sink");
-  gst_pad_set_setcaps_function (amrwbdec->sinkpad, gst_amrwbdec_setcaps);
   gst_pad_set_event_function (amrwbdec->sinkpad, gst_amrwbdec_event);
   gst_pad_set_chain_function (amrwbdec->sinkpad, gst_amrwbdec_chain);
   gst_element_add_pad (GST_ELEMENT (amrwbdec), amrwbdec->sinkpad);
@@ -188,6 +180,15 @@ gst_amrwbdec_event (GstPad * pad, GstEvent * event)
   amrwbdec = GST_AMRWBDEC (gst_pad_get_parent (pad));
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+
+      gst_event_parse_caps (event, &caps);
+      ret = gst_amrwbdec_setcaps (pad, caps);
+      gst_event_unref (event);
+      break;
+    }
     case GST_EVENT_FLUSH_START:
       ret = gst_pad_push_event (amrwbdec->srcpad, event);
       break;
@@ -200,29 +201,20 @@ gst_amrwbdec_event (GstPad * pad, GstEvent * event)
       gst_adapter_clear (amrwbdec->adapter);
       ret = gst_pad_push_event (amrwbdec->srcpad, event);
       break;
-    case GST_EVENT_NEWSEGMENT:
+    case GST_EVENT_SEGMENT:
     {
-      GstFormat format;
-      gdouble rate, arate;
-      gint64 start, stop, time;
-      gboolean update;
+      GstSegment seg;
 
-      gst_event_parse_new_segment_full (event, &update, &rate, &arate, &format,
-          &start, &stop, &time);
-
+      gst_event_copy_segment (event, &seg);
       /* we need time for now */
-      if (format != GST_FORMAT_TIME)
+      if (seg.format != GST_FORMAT_TIME)
         goto newseg_wrong_format;
 
-      GST_DEBUG_OBJECT (amrwbdec,
-          "newsegment: update %d, rate %g, arate %g, start %" GST_TIME_FORMAT
-          ", stop %" GST_TIME_FORMAT ", time %" GST_TIME_FORMAT,
-          update, rate, arate, GST_TIME_ARGS (start), GST_TIME_ARGS (stop),
-          GST_TIME_ARGS (time));
+      GST_DEBUG_OBJECT (amrwbdec, "segment: %" GST_SEGMENT_FORMAT, &seg);
 
       /* now configure the values */
-      gst_segment_set_newsegment_full (&amrwbdec->segment, update,
-          rate, arate, format, start, stop, time);
+      amrwbdec->segment = seg;
+
       ret = gst_pad_push_event (amrwbdec->srcpad, event);
     }
       break;
@@ -271,16 +263,18 @@ gst_amrwbdec_chain (GstPad * pad, GstBuffer * buffer)
 
   while (TRUE) {
     GstBuffer *out;
+    guint8 head[1];
     const guint8 *data;
+    Word16 *out_data;
     gint block, mode;
 
     /* need to peek data to get the size */
     if (gst_adapter_available (amrwbdec->adapter) < 1)
       break;
-    data = gst_adapter_peek (amrwbdec->adapter, 1);
+    gst_adapter_copy (amrwbdec->adapter, head, 0, 1);
 
     /* get size */
-    mode = (data[0] >> 3) & 0x0F;
+    mode = (head[0] >> 3) & 0x0F;
     block = block_size[mode];
 
     GST_DEBUG_OBJECT (amrwbdec, "mode %d, block %d", mode, block);
@@ -310,11 +304,11 @@ gst_amrwbdec_chain (GstPad * pad, GstBuffer * buffer)
       amrwbdec->discont = FALSE;
     }
 
-    gst_buffer_set_caps (out, GST_PAD_CAPS (amrwbdec->srcpad));
-
     /* decode */
+    out_data = gst_buffer_map (out, NULL, NULL, GST_MAP_WRITE);
     D_IF_decode (amrwbdec->handle, (unsigned char *) data,
-        (Word16 *) GST_BUFFER_DATA (out), _good_frame);
+        out_data, _good_frame);
+    gst_buffer_unmap (out, out_data, -1);
 
     g_free ((gpointer) data);
 
