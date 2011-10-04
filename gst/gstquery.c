@@ -355,7 +355,7 @@ gst_query_new (GstQueryType type, GstStructure * structure)
   query->query.mini_object.copy = (GstMiniObjectCopyFunction) _gst_query_copy;
   query->query.mini_object.free = (GstMiniObjectFreeFunction) _gst_query_free;
 
-  GST_DEBUG ("creating new query %p %d", query, type);
+  GST_DEBUG ("creating new query %p %s", query, gst_query_type_get_name (type));
 
   GST_QUERY_TYPE (query) = type;
   query->structure = structure;

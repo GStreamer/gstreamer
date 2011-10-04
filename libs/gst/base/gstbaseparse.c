@@ -2798,7 +2798,7 @@ static gboolean
 gst_base_parse_activate (GstBaseParse * parse, gboolean active)
 {
   GstBaseParseClass *klass;
-  gboolean result = FALSE;
+  gboolean result = TRUE;
 
   GST_DEBUG_OBJECT (parse, "activate %d", active);
 
