@@ -208,7 +208,9 @@
  * -ugly siddec:        siddec: Sid decoder
  * -ugly x264:          x264enc: x264enc
 
+ * -bad  dataurisrc:    dataurisrc: data: URI source element
  * -bad  faad:          faad: AAC audio decoder
+ * -bad  mms:           mmssrc: MMS streaming source
  * -bad  sdp:           sdpdemux: SDP session setup
 
  * -ff   ffmpeg:
@@ -223,7 +225,6 @@
    -bad  assrender:     assrender: ASS/SSA Render
    -bad  celt:          celtdec: Celt audio decoder
    -bad  celt:          celtenc: Celt audio encoder
-   -bad  dataurisrc:    dataurisrc: data: URI source element
    -bad  dtsdec:        dtsdec: DTS audio decoder
    -bad  dvb:           dvbbasebin: DVB bin
    -bad  dvb:           dvbsrc: DVB Source
@@ -251,7 +252,6 @@
    -good matroska:      matroskamux: Matroska muxer
    -good matroska:      matroskaparse: Matroska parser
    -good matroska:      webmmux: WebM muxer
-   -bad  mms:           mmssrc: MMS streaming source
    -bad  mpeg4videoparse:  mpeg4videoparse: MPEG 4 video elementary stream parser
    -good mpegaudioparse:  mp3parse: MPEG1 Audio Parser
    -good mpegaudioparse:  xingmux: MP3 Xing muxer
