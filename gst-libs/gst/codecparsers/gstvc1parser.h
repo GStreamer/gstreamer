@@ -82,9 +82,9 @@ typedef enum
 
 typedef enum
 {
-    GST_VC1_LEVEL_LOW   = 0,    /* Simple/Main profile low level */
-    GST_VC1_LEVELMEDIUM = 1,    /* Simple/Main profile medium level */
-    GST_VC1_LEVELHIGH   = 2,    /* Main profile high level */
+    GST_VC1_LEVEL_LOW    = 0,    /* Simple/Main profile low level */
+    GST_VC1_LEVEL_MEDIUM = 1,    /* Simple/Main profile medium level */
+    GST_VC1_LEVEL_HIGH   = 2,   /* Main profile high level */
 
     GST_VC1_LEVEL_L0    = 0,    /* Advanced profile level 0 */
     GST_VC1_LEVEL_L1    = 1,    /* Advanced profile level 1 */

@@ -401,9 +401,11 @@ decode_vlc (GstBitReader * br, guint * res, const VLCTable * table,
     }
   }
 
+  GST_DEBUG ("Did not find code");
+
 failed:
   {
-    GST_DEBUG ("Could not decode VLC returning -1");
+    GST_WARNING ("Could not decode VLC returning");
 
     return FALSE;
   }
@@ -420,6 +422,8 @@ bitplane_decoding (GstBitReader * br, guint8 * data,
   guint imode, invert, invert_mask;
   guint x, y, v;
   guint8 *pdata = data;
+
+  *is_raw = FALSE;
 
   GET_BITS (br, 1, &invert);
   invert_mask = -invert;
@@ -438,7 +442,7 @@ bitplane_decoding (GstBitReader * br, guint8 * data,
 
     case IMODE_DIFF2:
       invert_mask = 0;
-      // fall-through
+      /* fall-through */
     case IMODE_NORM2:
 
       GST_DEBUG ("Parsing IMODE_DIFF2 or IMODE_NORM2 biplane");
@@ -476,7 +480,7 @@ bitplane_decoding (GstBitReader * br, guint8 * data,
 
     case IMODE_DIFF6:
       invert_mask = 0;
-      // fall-through
+      /* fall-through */
     case IMODE_NORM6:
 
       GST_DEBUG ("Parsing IMODE_DIFF6 or IMODE_NORM6 biplane");
@@ -1773,13 +1777,13 @@ gst_vc1_parse_frame_layer (const guint8 * data, gsize size,
  * gst_vc1_parse_frame_header:
  * @data: The data to parse
  * @size: the size of @data
- * @entrypoint: The #GstVC1EntryPointHdr to set.
+ * @framehdr: The #GstVC1FrameHdr to fill.
  * @seqhdr: The #GstVC1SeqHdr currently being parsed
  * @bitplanes: The #GstVC1BitPlanes to store bitplanes in or %NULL
  *
  * Parses @data, and fills @entrypoint fields.
  *
- * Returns: a #GstVC1EntryPointHdr
+ * Returns: a #GstVC1ParserResult
  */
 GstVC1ParserResult
 gst_vc1_parse_frame_header (const guint8 * data, gsize size,
@@ -1885,5 +1889,6 @@ gst_vc1_bitplanes_ensure_size (GstVC1BitPlanes * bitplanes,
     bitplanes->skipmb = g_malloc0 (bitplanes->size * sizeof (guint8));
     bitplanes->directmb = g_malloc0 (bitplanes->size * sizeof (guint8));
   }
+
   return TRUE;
 }
