@@ -54,6 +54,7 @@ struct _GstVaapiDecoderVC1Private {
     GstVC1SeqHdr                seq_hdr;
     GstVC1EntryPointHdr         entrypoint_hdr;
     GstVC1FrameHdr              frame_hdr;
+    GstVC1BitPlanes            *bitplanes;
     GstVaapiPicture            *current_picture;
     GstVaapiPicture            *next_picture;
     GstVaapiPicture            *prev_picture;
@@ -117,6 +118,11 @@ gst_vaapi_decoder_vc1_close(GstVaapiDecoderVC1 *decoder)
         priv->sub_buffer = NULL;
     }
 
+    if (priv->bitplanes) {
+        gst_vc1_bitplanes_free(priv->bitplanes);
+        priv->bitplanes = NULL;
+    }
+
     if (priv->tsb) {
         gst_vaapi_tsb_destroy(priv->tsb);
         priv->tsb = NULL;
@@ -132,6 +138,10 @@ gst_vaapi_decoder_vc1_open(GstVaapiDecoderVC1 *decoder, GstBuffer *buffer)
 
     priv->tsb = gst_vaapi_tsb_new();
     if (!priv->tsb)
+        return FALSE;
+
+    priv->bitplanes = gst_vc1_bitplanes_new();
+    if (!priv->bitplanes)
         return FALSE;
     return TRUE;
 }
@@ -584,6 +594,22 @@ has_OVERFLAGS_bitplane(GstVaapiDecoderVC1 *decoder)
             pic->condover == GST_VC1_CONDOVER_SELECT);
 }
 
+static inline void
+pack_bitplanes(GstVaapiBitPlane *bitplane, guint n, const guint8 *bitplanes[3], guint x, guint y, guint stride)
+{
+    const guint dst_index = n / 2;
+    const guint src_index = y * stride + x;
+    guint8 v = 0;
+
+    if (bitplanes[0])
+        v |= bitplanes[0][src_index];
+    if (bitplanes[1])
+        v |= bitplanes[1][src_index] << 1;
+    if (bitplanes[2])
+        v |= bitplanes[2][src_index] << 2;
+    bitplane->data[dst_index] = (bitplane->data[dst_index] << 4) | v;
+}
+
 static gboolean
 fill_picture_structc(GstVaapiDecoderVC1 *decoder, GstVaapiPicture *picture)
 {
@@ -701,6 +727,7 @@ fill_picture_advanced(GstVaapiDecoderVC1 *decoder, GstVaapiPicture *picture)
 static gboolean
 fill_picture(GstVaapiDecoderVC1 *decoder, GstVaapiPicture *picture)
 {
+    GstVaapiDecoder * const base_decoder = GST_VAAPI_DECODER(decoder);
     GstVaapiDecoderVC1Private * const priv = decoder->priv;
     VAPictureParameterBufferVC1 * const pic_param = picture->param;
     GstVC1SeqHdr * const seq_hdr = &priv->seq_hdr;
@@ -759,6 +786,49 @@ fill_picture(GstVaapiDecoderVC1 *decoder, GstVaapiPicture *picture)
     default:
         break;
     }
+
+    if (pic_param->bitplane_present.value) {
+        const guint8 *bitplanes[3];
+        guint x, y, n;
+
+        switch (picture->type) {
+        case GST_VAAPI_PICTURE_TYPE_P:
+            bitplanes[0] = pic_param->bitplane_present.flags.bp_direct_mb  ? priv->bitplanes->directmb  : NULL;
+            bitplanes[1] = pic_param->bitplane_present.flags.bp_skip_mb    ? priv->bitplanes->skipmb    : NULL;
+            bitplanes[2] = pic_param->bitplane_present.flags.bp_mv_type_mb ? priv->bitplanes->mvtypemb  : NULL;
+            break;
+        case GST_VAAPI_PICTURE_TYPE_B:
+            bitplanes[0] = pic_param->bitplane_present.flags.bp_direct_mb  ? priv->bitplanes->directmb  : NULL;
+            bitplanes[1] = pic_param->bitplane_present.flags.bp_skip_mb    ? priv->bitplanes->skipmb    : NULL;
+            bitplanes[2] = NULL; /* XXX: interlaced frame (FORWARD plane) */
+            break;
+        case GST_VAAPI_PICTURE_TYPE_BI:
+        case GST_VAAPI_PICTURE_TYPE_I:
+            bitplanes[0] = NULL; /* XXX: interlaced frame (FIELDTX plane) */
+            bitplanes[1] = pic_param->bitplane_present.flags.bp_ac_pred    ? priv->bitplanes->acpred    : NULL;
+            bitplanes[2] = pic_param->bitplane_present.flags.bp_overflags  ? priv->bitplanes->overflags : NULL;
+            break;
+        default:
+            bitplanes[0] = NULL;
+            bitplanes[1] = NULL;
+            bitplanes[2] = NULL;
+            break;
+        }
+
+        picture->bitplane = gst_vaapi_decoder_new_bitplane(
+            base_decoder,
+            (seq_hdr->mb_width * seq_hdr->mb_height + 1) / 2
+        );
+        if (!picture->bitplane)
+            return FALSE;
+
+        n = 0;
+        for (y = 0; y < seq_hdr->mb_height; y++)
+            for (x = 0; x < seq_hdr->mb_width; x++, n++)
+                pack_bitplanes(picture->bitplane, n, bitplanes, x, y, seq_hdr->mb_stride);
+        if (n & 1) /* move last nibble to the high order */
+            picture->bitplane->data[n/2] <<= 4;
+    }
     return TRUE;
 }
 
@@ -794,8 +864,18 @@ decode_frame(GstVaapiDecoderVC1 *decoder, guchar *buf, guint buf_size)
     }
     picture = priv->current_picture;
 
+    if (!gst_vc1_bitplanes_ensure_size(priv->bitplanes, seq_hdr)) {
+        GST_DEBUG("failed to allocate bitplanes");
+        return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
+    }
+
     memset(frame_hdr, 0, sizeof(*frame_hdr));
-    result = gst_vc1_parse_frame_header(buf, buf_size, frame_hdr, seq_hdr, NULL);
+    result = gst_vc1_parse_frame_header(
+        buf, buf_size,
+        frame_hdr,
+        seq_hdr,
+        priv->bitplanes
+    );
     if (result != GST_VC1_PARSER_OK) {
         GST_DEBUG("failed to parse frame layer");
         return get_status(result);

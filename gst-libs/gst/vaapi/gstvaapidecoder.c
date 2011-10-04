@@ -616,6 +616,9 @@ static void
 destroy_iq_matrix(GstVaapiDecoder *decoder, GstVaapiIqMatrix *iq_matrix);
 
 static void
+destroy_bitplane(GstVaapiDecoder *decoder, GstVaapiBitPlane *bitplane);
+
+static void
 destroy_slice(GstVaapiDecoder *decoder, GstVaapiSlice *slice);
 
 static void
@@ -641,6 +644,11 @@ destroy_picture(GstVaapiDecoder *decoder, GstVaapiPicture *picture)
     if (picture->iq_matrix) {
         destroy_iq_matrix(decoder, picture->iq_matrix);
         picture->iq_matrix = NULL;
+    }
+
+    if (picture->bitplane) {
+        destroy_bitplane(decoder, picture->bitplane);
+        picture->bitplane = NULL;
     }
 
     picture->surface = NULL;
@@ -669,6 +677,7 @@ create_picture(GstVaapiDecoder *decoder)
     picture->param      = NULL;
     picture->slices     = NULL;
     picture->iq_matrix  = NULL;
+    picture->bitplane   = NULL;
     picture->pts        = GST_CLOCK_TIME_NONE;
 
     picture->surface = gst_vaapi_context_get_surface(priv->context);
@@ -750,6 +759,50 @@ GstVaapiIqMatrix *
 gst_vaapi_decoder_new_iq_matrix(GstVaapiDecoder *decoder)
 {
     return create_iq_matrix(decoder);
+}
+
+static void
+destroy_bitplane(GstVaapiDecoder *decoder, GstVaapiBitPlane *bitplane)
+{
+    GstVaapiDecoderPrivate * const priv = decoder->priv;
+
+    vaapi_destroy_buffer(priv->va_display, &bitplane->data_id);
+    bitplane->data = NULL;
+    g_slice_free(GstVaapiBitPlane, bitplane);
+}
+
+static GstVaapiBitPlane *
+create_bitplane(GstVaapiDecoder *decoder, guint size)
+{
+    GstVaapiDecoderPrivate * const priv = decoder->priv;
+    GstVaapiBitPlane *bitplane;
+
+    bitplane = g_slice_new(GstVaapiBitPlane);
+    if (!bitplane)
+        return NULL;
+
+    bitplane->data_id = VA_INVALID_ID;
+
+    bitplane->data = vaapi_create_buffer(
+        priv->va_display,
+        priv->va_context,
+        VABitPlaneBufferType,
+        size,
+        &bitplane->data_id
+    );
+    if (!bitplane->data)
+        goto error;
+    return bitplane;
+
+error:
+    destroy_bitplane(decoder, bitplane);
+    return NULL;
+}
+
+GstVaapiBitPlane *
+gst_vaapi_decoder_new_bitplane(GstVaapiDecoder *decoder, guint size)
+{
+    return create_bitplane(decoder, size);
 }
 
 static void
@@ -836,6 +889,7 @@ gst_vaapi_decoder_decode_picture(
 {
     GstVaapiDecoderPrivate * const priv = decoder->priv;
     GstVaapiIqMatrix * const iq_matrix = picture->iq_matrix;
+    GstVaapiBitPlane * const bitplane = picture->bitplane;
     GstVaapiSlice *slice;
     VABufferID va_buffers[3];
     guint i, n_va_buffers = 0;
@@ -849,6 +903,11 @@ gst_vaapi_decoder_decode_picture(
     if (iq_matrix) {
         vaapi_unmap_buffer(priv->va_display, iq_matrix->param_id, &iq_matrix->param);
         va_buffers[n_va_buffers++] = iq_matrix->param_id;
+    }
+
+    if (bitplane) {
+        vaapi_unmap_buffer(priv->va_display, bitplane->data_id, (void **)&bitplane->data);
+        va_buffers[n_va_buffers++] = bitplane->data_id;
     }
 
     status = vaBeginPicture(

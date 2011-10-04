@@ -113,6 +113,7 @@ typedef struct _GstVaapiCodecInfo       GstVaapiCodecInfo;
 typedef struct _GstVaapiPicture         GstVaapiPicture;
 typedef struct _GstVaapiSlice           GstVaapiSlice;
 typedef struct _GstVaapiIqMatrix        GstVaapiIqMatrix;
+typedef struct _GstVaapiBitPlane        GstVaapiBitPlane;
 
 enum _GstVaapiPictureType {
     GST_VAAPI_PICTURE_TYPE_NONE = 0,        // Undefined
@@ -153,6 +154,7 @@ struct _GstVaapiPicture {
     void               *param;
     GPtrArray          *slices;
     GstVaapiIqMatrix   *iq_matrix;
+    GstVaapiBitPlane   *bitplane;
     GstClockTime        pts;
 };
 
@@ -165,6 +167,11 @@ struct _GstVaapiSlice {
 struct _GstVaapiIqMatrix {
     VABufferID          param_id;
     void               *param;
+};
+
+struct _GstVaapiBitPlane {
+    VABufferID          data_id;
+    guint8             *data;
 };
 
 struct _GstVaapiDecoderPrivate {
@@ -248,6 +255,10 @@ gst_vaapi_decoder_free_picture(GstVaapiDecoder *decoder, GstVaapiPicture *pictur
 
 GstVaapiIqMatrix *
 gst_vaapi_decoder_new_iq_matrix(GstVaapiDecoder *decoder)
+    attribute_hidden;
+
+GstVaapiBitPlane *
+gst_vaapi_decoder_new_bitplane(GstVaapiDecoder *decoder, guint size)
     attribute_hidden;
 
 GstVaapiSlice *
