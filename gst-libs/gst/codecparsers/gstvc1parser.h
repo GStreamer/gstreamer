@@ -37,7 +37,10 @@ G_BEGIN_DECLS
  * @GST_VC1_BFRACTION_BASIS: The @bfraction variable should be divided
  * by this constant to have the actual value.
  */
-#define GST_VC1_BFRACTION_BASIS 256
+#define GST_VC1_BFRACTION_BASIS 840
+
+#define GST_VC1_BFRACTION_RESERVED (GST_VC1_BFRACTION_BASIS + 1)
+#define GST_VC1_BFRACTION_PTYPE_BI (GST_VC1_BFRACTION_BASIS + 2)
 
 typedef enum {
   GST_VC1_END_OF_SEQ       = 0x0A,
@@ -350,7 +353,7 @@ struct _GstVC1PicSimpleMain
   /* B and BI picture only
    * Should be divided by #GST_VC1_BFRACTION_BASIS
    * to get the real value. */
-  guint8 bfraction;
+  guint16 bfraction;
 
   /* Biplane value, those fields only mention the fact
    * that the bitplane is in raw mode or not */
@@ -392,7 +395,7 @@ struct _GstVC1PicAdvanced
   /* B and BI picture only
    * Should be divided by #GST_VC1_BFRACTION_BASIS
    * to get the real value. */
-  guint8  bfraction;
+  guint16 bfraction;
 
   /* ppic */
   guint8  mvmode2;

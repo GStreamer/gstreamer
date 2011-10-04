@@ -147,9 +147,6 @@ const guint8 mvmode2_table[2][4] = {
       GST_VC1_MVMODE_1MV_HPEL_BILINEAR}
 };
 
-#define GST_VC1_BFRACTION_RESERVED (GST_VC1_BFRACTION_BASIS + 1)
-#define GST_VC1_BFRACTION_PTYPE_BI (GST_VC1_BFRACTION_BASIS + 2)
-
 /* Table 40: BFRACTION VLC Table */
 static const VLCTable vc1_bfraction_vlc_table[] = {
   {GST_VC1_BFRACTION_BASIS / 2, 0x00, 3},
@@ -815,10 +812,12 @@ parse_frame_header_advanced (GstBitReader * br, GstVC1FrameHdr * framehdr,
   }
 
   if (framehdr->ptype == GST_VC1_PICTURE_TYPE_B) {
-    if (!decode_vlc (br, (guint *) & pic->bfraction, vc1_bfraction_vlc_table,
+    guint bfraction;
+    if (!decode_vlc (br, &bfraction, vc1_bfraction_vlc_table,
             G_N_ELEMENTS (vc1_bfraction_vlc_table)))
       goto failed;
 
+    pic->bfraction = bfraction;
     GST_DEBUG ("bfraction %u", pic->bfraction);
 
     if (pic->bfraction == GST_VC1_BFRACTION_PTYPE_BI) {
@@ -1041,15 +1040,17 @@ parse_frame_header (GstBitReader * br, GstVC1FrameHdr * framehdr,
 
 
   if (framehdr->ptype == GST_VC1_PICTURE_TYPE_B) {
-
-    if (!decode_vlc (br, (guint *) & pic->bfraction, vc1_bfraction_vlc_table,
+    guint bfraction;
+    if (!decode_vlc (br, &bfraction, vc1_bfraction_vlc_table,
             G_N_ELEMENTS (vc1_bfraction_vlc_table)))
       goto failed;
+
+    pic->bfraction = bfraction;
+    GST_DEBUG ("bfraction %d", pic->bfraction);
 
     if (pic->bfraction == GST_VC1_BFRACTION_PTYPE_BI) {
       framehdr->ptype = GST_VC1_PICTURE_TYPE_BI;
     }
-    GST_DEBUG ("bfraction= %d", pic->bfraction);
   }
 
   if (framehdr->ptype == GST_VC1_PICTURE_TYPE_I ||
