@@ -421,16 +421,63 @@ decode_entry_point(GstVaapiDecoderVC1 *decoder, guchar *buf, guint buf_size)
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
+/* Reconstruct bitstream PTYPE (7.1.1.4, index into Table-35) */
 static guint
-get_PTYPE(GstVC1FrameHdr *frame_hdr)
+get_PTYPE(guint ptype)
 {
-    switch (frame_hdr->ptype) {
+    switch (ptype) {
     case GST_VC1_PICTURE_TYPE_I:  return 0;
     case GST_VC1_PICTURE_TYPE_P:  return 1;
     case GST_VC1_PICTURE_TYPE_B:  return 2;
     case GST_VC1_PICTURE_TYPE_BI: return 3;
     }
     return 4; /* skipped P-frame */
+}
+
+/* Reconstruct bitstream BFRACTION (7.1.1.14, index into Table-40) */
+static guint
+get_BFRACTION(guint bfraction)
+{
+    guint i;
+
+    static const struct {
+        guint16 index;
+        guint16 value;
+    }
+    bfraction_map[] = {
+        {  0,  GST_VC1_BFRACTION_BASIS      / 2 },
+        {  1,  GST_VC1_BFRACTION_BASIS      / 3 },
+        {  2, (GST_VC1_BFRACTION_BASIS * 2) / 3 },
+        {  3,  GST_VC1_BFRACTION_BASIS      / 4 },
+        {  4, (GST_VC1_BFRACTION_BASIS * 3) / 4 },
+        {  5,  GST_VC1_BFRACTION_BASIS      / 5 },
+        {  6, (GST_VC1_BFRACTION_BASIS * 2) / 5 },
+        {  7, (GST_VC1_BFRACTION_BASIS * 3) / 5 },
+        {  8, (GST_VC1_BFRACTION_BASIS * 4) / 5 },
+        {  9,  GST_VC1_BFRACTION_BASIS      / 6 },
+        { 10, (GST_VC1_BFRACTION_BASIS * 5) / 6 },
+        { 11,  GST_VC1_BFRACTION_BASIS      / 7 },
+        { 12, (GST_VC1_BFRACTION_BASIS * 2) / 7 },
+        { 13, (GST_VC1_BFRACTION_BASIS * 3) / 7 },
+        { 14, (GST_VC1_BFRACTION_BASIS * 4) / 7 },
+        { 15, (GST_VC1_BFRACTION_BASIS * 5) / 7 },
+        { 16, (GST_VC1_BFRACTION_BASIS * 6) / 7 },
+        { 17,  GST_VC1_BFRACTION_BASIS      / 8 },
+        { 18, (GST_VC1_BFRACTION_BASIS * 3) / 8 },
+        { 19, (GST_VC1_BFRACTION_BASIS * 5) / 8 },
+        { 20, (GST_VC1_BFRACTION_BASIS * 7) / 8 },
+        { 21,  GST_VC1_BFRACTION_RESERVED },
+        { 22,  GST_VC1_BFRACTION_PTYPE_BI }
+    };
+
+    if (!bfraction)
+        return 0;
+
+    for (i = 0; i < G_N_ELEMENTS(bfraction_map); i++) {
+        if (bfraction_map[i].value == bfraction)
+            return bfraction_map[i].index;
+    }
+    return 21; /* RESERVED */
 }
 
 static inline int
@@ -555,7 +602,7 @@ fill_picture_structc(GstVaapiDecoderVC1 *decoder, GstVaapiPicture *picture)
     pic_param->sequence_fields.bits.max_b_frames                    = structc->maxbframes;
     pic_param->conditional_overlap_flag                             = 0; /* advanced profile only */
     pic_param->fast_uvmc_flag                                       = structc->fastuvmc;
-    pic_param->b_picture_fraction                                   = pic->bfraction;
+    pic_param->b_picture_fraction                                   = get_BFRACTION(pic->bfraction);
     pic_param->cbp_table                                            = pic->cbptab;
     pic_param->mb_mode_table                                        = 0; /* XXX: interlaced frame */
     pic_param->range_reduction_frame                                = pic->rangeredfrm;
@@ -612,7 +659,7 @@ fill_picture_advanced(GstVaapiDecoderVC1 *decoder, GstVaapiPicture *picture)
     pic_param->range_mapping_fields.bits.luma                       = entrypoint_hdr->range_mapy;
     pic_param->range_mapping_fields.bits.chroma_flag                = entrypoint_hdr->range_mapuv_flag;
     pic_param->range_mapping_fields.bits.chroma                     = entrypoint_hdr->range_mapuv;
-    pic_param->b_picture_fraction                                   = pic->bfraction;
+    pic_param->b_picture_fraction                                   = get_BFRACTION(pic->bfraction);
     pic_param->cbp_table                                            = pic->cbptab;
     pic_param->mb_mode_table                                        = 0; /* XXX: interlaced frame */
     pic_param->range_reduction_frame                                = 0; /* simple/main profile only */
@@ -672,7 +719,7 @@ fill_picture(GstVaapiDecoderVC1 *decoder, GstVaapiPicture *picture)
     pic_param->entrypoint_fields.value                              = 0;
     pic_param->range_mapping_fields.value                           = 0;
     pic_param->picture_fields.value                                 = 0;
-    pic_param->picture_fields.bits.picture_type                     = get_PTYPE(frame_hdr);
+    pic_param->picture_fields.bits.picture_type                     = get_PTYPE(frame_hdr->ptype);
     pic_param->raw_coding.value                                     = 0;
     pic_param->bitplane_present.value                               = 0;
     pic_param->reference_fields.value                               = 0;
