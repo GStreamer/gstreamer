@@ -3255,7 +3255,7 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
         sink = group->video_sink;
 
       if ((sinkpad = gst_element_get_static_pad (sink, "sink"))) {
-        caps = gst_pad_get_caps_reffed (sinkpad);
+        caps = gst_pad_get_caps (sinkpad, NULL);
 
         compatible = gst_element_factory_can_src_any_caps (factory, caps);
 
@@ -3267,7 +3267,7 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
         return GST_AUTOPLUG_SELECT_TRY;
 
       GST_DEBUG_OBJECT (playbin, "%s not compatible with the fixed sink",
-          GST_PLUGIN_FEATURE_NAME (factory));
+          GST_OBJECT_NAME (factory));
 
       return GST_AUTOPLUG_SELECT_SKIP;
     } else
