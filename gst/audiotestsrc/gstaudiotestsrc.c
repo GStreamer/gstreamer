@@ -850,9 +850,9 @@ gst_audio_test_src_create_red_noise_##type (GstAudioTestSrc * src, g##type * sam
   for (i = 0; i < src->generate_samples_per_buffer * src->channels; ) { \
     for (c = 0; c < src->channels; ++c) { \
       while (TRUE) { \
-        gdouble  r = g_rand_double_range (src->gen, -1.0, 1.0); \
+        gdouble r = g_rand_double_range (src->gen, -1.0, 1.0); \
         state += r; \
-        if (state<-8.0f || state>8.0f) state -= r; \
+        if (state < -8.0f || state > 8.0f) state -= r; \
         else break; \
       } \
       samples[i++] = (g##type) (amp * state * 0.0625f); /* /16.0 */ \
