@@ -611,7 +611,7 @@ gst_event_parse_caps (GstEvent * event, GstCaps ** caps)
 
 /**
  * gst_event_new_segment:
- * @segment: a #GstSegment
+ * @segment: (transfer full): a #GstSegment
  *
  * Create a new SEGMENT event for @segment. The segment event can only travel
  * downstream synchronized with the buffer flow and contains timing information
