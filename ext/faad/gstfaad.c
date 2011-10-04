@@ -493,11 +493,8 @@ gst_faad_update_caps (GstFaad * faad, faacDecFrameInfo * info)
   g_free (faad->channel_positions);
   faad->channel_positions = g_memdup (info->channel_position, faad->channels);
 
-  caps = gst_caps_new_simple ("audio/x-raw-int",
-      "endianness", G_TYPE_INT, G_BYTE_ORDER,
-      "signed", G_TYPE_BOOLEAN, TRUE,
-      "width", G_TYPE_INT, 16,
-      "depth", G_TYPE_INT, 16,
+  caps = gst_caps_new_simple ("audio/x-raw",
+      "format", G_TYPE_STRING, GST_AUDIO_NE (S16),
       "rate", G_TYPE_INT, faad->samplerate,
       "channels", G_TYPE_INT, faad->channels, NULL);
 
@@ -519,7 +516,7 @@ gst_faad_update_caps (GstFaad * faad, faacDecFrameInfo * info)
 
   GST_DEBUG_OBJECT (faad, "New output caps: %" GST_PTR_FORMAT, caps);
 
-  ret = gst_pad_set_caps (GST_AUDIO_DECODER_SRC_PAD (faad), caps);
+  ret = gst_audio_decoder_set_outcaps (GST_AUDIO_DECODER (faad), caps);
   gst_caps_unref (caps);
 
   return ret;
