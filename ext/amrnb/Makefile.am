@@ -7,8 +7,9 @@ libgstamrnb_la_SOURCES = \
 
 libgstamrnb_la_CFLAGS = -DGST_USE_UNSTABLE_API $(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(AMRNB_CFLAGS)
-libgstamrnb_la_LIBADD = $(GST_BASE_LIBS) -lgstaudio-@GST_MAJORMINOR@  \
-	$(GST_LIBS) $(AMRNB_LIBS)
+libgstamrnb_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) \
+        -lgstaudio-@GST_MAJORMINOR@ \
+        $(GST_BASE_LIBS) $(GST_LIBS) $(AMRNB_LIBS)
 libgstamrnb_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstamrnb_la_LIBTOOLFLAGS = --tag=disable-static
 
