@@ -81,6 +81,10 @@ gst_vc1_parse_sequence_header_struct_b
 gst_vc1_parse_sequence_header_struct_c
 gst_vc1_parse_entry_point_header
 gst_vc1_parse_frame_header
+gst_vc1_bitplanes_new
+gst_vc1_bitplanes_free
+gst_vc1_bitplanes_free_1
+gst_vc1_bitplanes_ensure_size
 <SUBSECTION Standard>
 <SUBSECTION Private>
 </SECTION>

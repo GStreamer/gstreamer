@@ -150,6 +150,8 @@ typedef struct _GstVC1Picture           GstVC1Picture;
 
 typedef struct _GstVC1VopDquant         GstVC1VopDquant;
 
+typedef struct _GstVC1BitPlanes         GstVC1BitPlanes;
+
 typedef struct _GstVC1BDU               GstVC1BDU;
 
 struct _GstVC1HrdParam
@@ -314,6 +316,7 @@ struct _GstVC1SeqHdr
   /*  calculated */
   guint mb_height;
   guint mb_width;
+  guint mb_stride;
 
   GstVC1AdvancedSeqHdr   advanced;
 
@@ -416,6 +419,16 @@ struct _GstVC1PicAdvanced
   guint8  directmb;
 };
 
+struct _GstVC1BitPlanes
+{
+  guint8  *acpred;
+  guint8  *overflags;
+  guint8  *mvtypemb;
+  guint8  *skipmb;
+  guint8  *directmb;
+
+  guint size; /* Size of the arrays */
+};
 
 struct _GstVC1VopDquant
 {
@@ -544,6 +557,16 @@ GstVC1ParserResult gst_vc1_parse_frame_layer           (const guint8 *data,
 GstVC1ParserResult gst_vc1_parse_frame_header          (const guint8 *data,
                                                         gsize size,
                                                         GstVC1FrameHdr * framehdr,
+                                                        GstVC1SeqHdr *seqhdr,
+                                                        GstVC1BitPlanes *bitplanes);
+
+GstVC1BitPlanes *  gst_vc1_bitplanes_new               (void);
+
+void               gst_vc1_bitplanes_free              (GstVC1BitPlanes *bitplanes);
+
+void               gst_vc1_bitplanes_free_1            (GstVC1BitPlanes *bitplanes);
+
+gboolean           gst_vc1_bitplanes_ensure_size       (GstVC1BitPlanes *bitplanes,
                                                         GstVC1SeqHdr *seqhdr);
 
 G_END_DECLS
