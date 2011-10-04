@@ -297,17 +297,17 @@ GST_PLUGINS_NONPORTED=" adpcmdec adpcmenc aiff asfmux \
  audiovisualizers autoconvert bayer camerabin cdxaparse coloreffects \
  dataurisrc dccp debugutils dtmf dvbsuboverlay dvdspu faceoverlay festival \
  fieldanalysis freeze frei0r gaudieffects geometrictransform h264parse \
- hdvparse hls id3tag interlace ivfparse jpegformat jp2kdecimator \
+ hdvparse hls id3tag inter interlace ivfparse jpegformat jp2kdecimator \
  liveadder legacyresample librfb mpegdemux mpegtsdemux mpegtsmux \
  mpegpsmux mpeg4videoparse mpegvideoparse mve mxf nsf nuvdemux \
- patchdetect pcapparse pnm rawparse real rtpmux rtpvp8 scaletempo \
+ patchdetect pcapparse pnm rawparse real removesilence rtpmux rtpvp8 scaletempo \
  sdi segmentclip siren speed subenc stereo tta videofilters \
  videomaxrate videomeasure videoparsers videosignal vmnc y4m \
  decklink dvb fbdev linsys shm vcd \
- voaacenc assrender apexsink bz2 cog curl dc1394 dirac dts resindvd \
- faac gsettings jp2k ladspa libmms modplug mpeg2enc mimic \
- musepack musicbrainz neon rsvg schro sdl sndfile soundtouch \
- vp8 xvid "
+ voaacenc assrender apexsink bz2 cdaudio celt cog curl dc1394 dirac dts resindvd \
+ faac gsettings gsm jp2k ladspa libmms modplug mpeg2enc mplex mimic \
+ musepack musicbrainz nas neon ofa rsvg schro sdl sndfile soundtouch timidity \
+ vp8 wildmidi xvid "
 AC_SUBST(GST_PLUGINS_NONPORTED)
 
 dnl these are all the gst plug-ins, compilable without additional libs
