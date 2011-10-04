@@ -194,6 +194,9 @@
  * -good y4menc:        y4menc: YUV4MPEG video encoder
 
  * -ugly a52dec:        a52dec: ATSC A/52 audio decoder
+ * -ugly amrwbdec:      amrwbdec: AMR-WB audio decoder
+ * -ugly amrnb:         amrnbdec: AMR-NB audio decoder
+ * -ugly amrnb:         amrnbenc: AMR-NB audio encoder
  * -ugly asf:           asfdemux: ASF Demuxer
  * -ugly asf:           rtpasfdepay: RTP ASF packet depayloader
  * -ugly asf:           rtspwms: WMS RTSP Extension
@@ -214,9 +217,6 @@
 
  -- essential --
 
-   -ugly amrnb:         amrnbdec: AMR-NB audio decoder
-   -ugly amrnb:         amrnbenc: AMR-NB audio encoder
-   -ugly amrwbdec:      amrwbdec: AMR-WB audio decoder
    -good annodex:       cmmldec: CMML stream decoder
    -good annodex:       cmmlenc: CMML streams encoder
    -good apetag:        apedemux: APE tag demuxer
