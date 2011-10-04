@@ -70,42 +70,16 @@ static GstFlowReturn gst_mms_create (GstPushSrc * psrc, GstBuffer ** buf);
 static gboolean gst_mms_uri_set_uri (GstURIHandler * handler,
     const gchar * uri);
 
-static void
-gst_mms_urihandler_init (GType mms_type)
-{
-  static const GInterfaceInfo urihandler_info = {
-    gst_mms_uri_handler_init,
-    NULL,
-    NULL
-  };
-
-  g_type_add_interface_static (mms_type, GST_TYPE_URI_HANDLER,
-      &urihandler_info);
-}
-
-GST_BOILERPLATE_FULL (GstMMS, gst_mms, GstPushSrc, GST_TYPE_PUSH_SRC,
-    gst_mms_urihandler_init);
-
-static void
-gst_mms_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_factory));
-  gst_element_class_set_details_simple (element_class, "MMS streaming source",
-      "Source/Network",
-      "Receive data streamed via MSFT Multi Media Server protocol",
-      "Maciej Katafiasz <mathrick@users.sourceforge.net>");
-
-  GST_DEBUG_CATEGORY_INIT (mmssrc_debug, "mmssrc", 0, "MMS Source Element");
-}
+#define gst_mms_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstMMS, gst_mms, GST_TYPE_PUSH_SRC,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER, gst_mms_uri_handler_init));
 
 /* initialize the plugin's class */
 static void
 gst_mms_class_init (GstMMSClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstElementClass *gstelement_class = (GstElementClass *) klass;
   GstBaseSrcClass *gstbasesrc_class = (GstBaseSrcClass *) klass;
   GstPushSrcClass *gstpushsrc_class = (GstPushSrcClass *) klass;
 
@@ -124,6 +98,16 @@ gst_mms_class_init (GstMMSClass * klass)
           0, G_MAXINT / 1000, DEFAULT_CONNECTION_SPEED,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /* Note: connection-speed is intentionaly limited to G_MAXINT as libmms use int for it */
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&src_factory));
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "MMS streaming source", "Source/Network",
+      "Receive data streamed via MSFT Multi Media Server protocol",
+      "Maciej Katafiasz <mathrick@users.sourceforge.net>");
+
+  GST_DEBUG_CATEGORY_INIT (mmssrc_debug, "mmssrc", 0, "MMS Source Element");
 
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_mms_start);
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_mms_stop);
@@ -144,7 +128,7 @@ gst_mms_class_init (GstMMSClass * klass)
  * initialize structure
  */
 static void
-gst_mms_init (GstMMS * mmssrc, GstMMSClass * g_class)
+gst_mms_init (GstMMS * mmssrc)
 {
   mmssrc->uri_name = NULL;
   mmssrc->current_connection_uri_name = NULL;
@@ -264,7 +248,7 @@ gst_mms_prepare_seek_segment (GstBaseSrc * src, GstEvent * event,
      of the segment. */
 
   gst_segment_init (segment, seek_format);
-  gst_segment_set_seek (segment, rate, seek_format, flags, cur_type, cur,
+  gst_segment_do_seek (segment, rate, seek_format, flags, cur_type, cur,
       stop_type, stop, NULL);
 
   return TRUE;
@@ -301,7 +285,7 @@ gst_mms_do_seek (GstBaseSrc * src, GstSegment * segment)
     return FALSE;
   }
   gst_segment_init (segment, GST_FORMAT_BYTES);
-  gst_segment_set_seek (segment, segment->rate, GST_FORMAT_BYTES,
+  gst_segment_do_seek (segment, segment->rate, GST_FORMAT_BYTES,
       segment->flags, GST_SEEK_TYPE_SET, start, GST_SEEK_TYPE_NONE,
       segment->stop, NULL);
   return TRUE;
@@ -339,35 +323,30 @@ gst_mms_create (GstPushSrc * psrc, GstBuffer ** buf)
   else
     blocksize = mmsx_get_asf_packet_len (mmssrc->connection);
 
-  *buf = gst_buffer_try_new_and_alloc (blocksize);
-  if (!*buf) {
+  data = g_try_malloc (blocksize);
+  if (!data) {
     GST_ERROR_OBJECT (mmssrc, "Failed to allocate %u bytes", blocksize);
     return GST_FLOW_ERROR;
   }
 
-  data = GST_BUFFER_DATA (*buf);
-  GST_BUFFER_SIZE (*buf) = 0;
   GST_LOG_OBJECT (mmssrc, "reading %d bytes", blocksize);
   result = mmsx_read (NULL, mmssrc->connection, (char *) data, blocksize);
-
   /* EOS? */
   if (result == 0)
     goto eos;
 
+  *buf = gst_buffer_new_wrapped (data, result);
   GST_BUFFER_OFFSET (*buf) = offset;
-  GST_BUFFER_SIZE (*buf) = result;
 
   GST_LOG_OBJECT (mmssrc, "Returning buffer with offset %" G_GINT64_FORMAT
-      " and size %u", GST_BUFFER_OFFSET (*buf), GST_BUFFER_SIZE (*buf));
-
-  gst_buffer_set_caps (*buf, GST_PAD_CAPS (GST_BASE_SRC_PAD (mmssrc)));
+      " and size %u", offset, result);
 
   return GST_FLOW_OK;
 
 eos:
   {
     GST_DEBUG_OBJECT (mmssrc, "EOS");
-    gst_buffer_unref (*buf);
+    g_free (data);
     *buf = NULL;
     return GST_FLOW_UNEXPECTED;
   }
@@ -544,13 +523,13 @@ plugin_init (GstPlugin * plugin)
 }
 
 static GstURIType
-gst_mms_uri_get_type (void)
+gst_mms_uri_get_type (GType type)
 {
   return GST_URI_SRC;
 }
 
 static gchar **
-gst_mms_uri_get_protocols (void)
+gst_mms_uri_get_protocols (GType type)
 {
   static const gchar *protocols[] = { "mms", "mmsh", "mmst", "mmsu", NULL };
 
