@@ -485,7 +485,7 @@ bitplane_decoding (GstBitReader * br, guint8 * data,
 
       GST_DEBUG ("Parsing IMODE_DIFF6 or IMODE_NORM6 biplane");
 
-      if (!(height % 3) && (width % 3)) {   /* decode 2x3 "vertical" tiles */
+      if (!(height % 3) && (width % 3)) {       /* decode 2x3 "vertical" tiles */
         for (y = 0; y < height; y += 3) {
           for (x = width & 1; x < width; x += 2) {
             if (!decode_vlc (br, &v, vc1_norm6_vlc_table,
@@ -508,7 +508,7 @@ bitplane_decoding (GstBitReader * br, guint8 * data,
 
         x = width & 1;
         y = 0;
-      } else {                              /* decode 3x2 "horizontal" tiles */
+      } else {                  /* decode 3x2 "horizontal" tiles */
 
         if (pdata)
           pdata += (height & 1) * width;
@@ -562,6 +562,30 @@ bitplane_decoding (GstBitReader * br, guint8 * data,
       if (!decode_colskip (br, data, width, height, stride))
         goto failed;
       break;
+  }
+
+  if (!data)
+    return TRUE;
+
+  /* Applying diff operator */
+  if (imode == IMODE_DIFF2 || imode == IMODE_DIFF6) {
+    pdata = data;
+    pdata[0] ^= invert;
+
+    for (x = 1; x < width; x++)
+      pdata[x] ^= pdata[x - 1];
+
+    for (y = 1; y < height; y++) {
+      pdata[stride] ^= pdata[0];
+
+      for (x = 1; x < width; x++) {
+        if (pdata[stride + x - 1] != pdata[x])
+          pdata[stride + x] ^= invert;
+        else
+          pdata[stride + x] ^= pdata[stride + x - 1];
+      }
+      pdata += stride;
+    }
   }
 
   return TRUE;
