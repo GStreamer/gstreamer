@@ -100,6 +100,13 @@ ensure_debug_category (void)
   } \
 } G_STMT_END
 
+typedef struct _VLCTable
+{
+  guint value;
+  guint cword;
+  guint cbits;
+} VLCTable;
+
 const guint8 vc1_pquant_table[3][32] = {
   {                             /* Implicit quantizer */
         0, 1, 2, 3, 4, 5, 6, 7, 8, 6, 7, 8, 9, 10, 11, 12,
@@ -140,30 +147,34 @@ const guint8 mvmode2_table[2][4] = {
       GST_VC1_MVMODE_1MV_HPEL_BILINEAR}
 };
 
-static const guint bfraction_vlc_table[] = {
-  0x00, 3, 128,
-  0x01, 3, 85,
-  0x02, 3, 170,
-  0x03, 3, 64,
-  0x04, 3, 192,
-  0x05, 3, 51,
-  0x06, 3, 102,
-  0x70, 3, 153,
-  0x71, 7, 204,
-  0x72, 7, 43,
-  0x73, 7, 215,
-  0x74, 7, 37,
-  0x75, 7, 74,
-  0x76, 7, 111,
-  0x77, 7, 148,
-  0x78, 7, 185,
-  0x79, 7, 222,
-  0x7a, 7, 32,
-  0x7b, 7, 96,
-  0x7c, 7, 160,
-  0x7d, 7, 224,
-  0x7e, 7, 0,                   /* Indicate sthat it is smtpe reserved */
-  0x7f, 7, GST_VC1_PICTURE_TYPE_BI
+#define GST_VC1_BFRACTION_RESERVED (GST_VC1_BFRACTION_BASIS + 1)
+#define GST_VC1_BFRACTION_PTYPE_BI (GST_VC1_BFRACTION_BASIS + 2)
+
+/* Table 40: BFRACTION VLC Table */
+static const VLCTable vc1_bfraction_vlc_table[] = {
+  {GST_VC1_BFRACTION_BASIS / 2, 0x00, 3},
+  {GST_VC1_BFRACTION_BASIS / 3, 0x01, 3},
+  {(GST_VC1_BFRACTION_BASIS * 2) / 3, 0x02, 3},
+  {GST_VC1_BFRACTION_BASIS / 4, 0x02, 3},
+  {(GST_VC1_BFRACTION_BASIS * 3) / 4, 0x04, 3},
+  {GST_VC1_BFRACTION_BASIS / 5, 0x05, 3},
+  {(GST_VC1_BFRACTION_BASIS * 2) / 5, 0x06, 3},
+  {(GST_VC1_BFRACTION_BASIS * 3) / 5, 0x70, 7},
+  {(GST_VC1_BFRACTION_BASIS * 4) / 5, 0x71, 7},
+  {GST_VC1_BFRACTION_BASIS / 6, 0x72, 7},
+  {(GST_VC1_BFRACTION_BASIS * 5) / 6, 0x73, 7},
+  {GST_VC1_BFRACTION_BASIS / 7, 0x74, 7},
+  {(GST_VC1_BFRACTION_BASIS * 2) / 7, 0x75, 7},
+  {(GST_VC1_BFRACTION_BASIS * 3) / 7, 0x76, 7},
+  {(GST_VC1_BFRACTION_BASIS * 4) / 7, 0x77, 7},
+  {(GST_VC1_BFRACTION_BASIS * 5) / 7, 0x78, 7},
+  {(GST_VC1_BFRACTION_BASIS * 6) / 7, 0x79, 7},
+  {GST_VC1_BFRACTION_BASIS / 8, 0x7a, 7},
+  {(GST_VC1_BFRACTION_BASIS * 3) / 8, 0x7b, 7},
+  {(GST_VC1_BFRACTION_BASIS * 5) / 8, 0x7c, 7},
+  {(GST_VC1_BFRACTION_BASIS * 7) / 8, 0x7d, 7},
+  {GST_VC1_BFRACTION_RESERVED, 0x7e, 7},
+  {GST_VC1_BFRACTION_PTYPE_BI, 0x7f, 7}
 };
 
 /* Imode types */
@@ -178,88 +189,91 @@ enum
   IMODE_COLSKIP
 };
 
-static const guint imode_vlc_table[] = {
-  0x02, 2, IMODE_NORM2,         /* 10 */
-  0x03, 2, IMODE_NORM6,         /* 11 */
-  0x02, 3, IMODE_ROWSKIP,       /* 010 */
-  0x03, 3, IMODE_COLSKIP,       /* 011 */
-  0x01, 3, IMODE_DIFF2,         /* 001 */
-  0x01, 4, IMODE_DIFF6,         /* 0001 */
-  0x00, 4, IMODE_RAW            /* 0000 */
+/* Table 69: IMODE VLC Codetable */
+static const VLCTable vc1_imode_vlc_table[] = {
+  {IMODE_NORM2, 0x02, 2},
+  {IMODE_NORM6, 0x03, 2},
+  {IMODE_ROWSKIP, 0x02, 3},
+  {IMODE_COLSKIP, 0x03, 3},
+  {IMODE_DIFF2, 0x01, 3},
+  {IMODE_DIFF6, 0x01, 4},
+  {IMODE_RAW, 0x00, 4}
 };
 
-const guint vc1_norm2_codes_vlc_table[] = {
-  0x00, 1, 1,
-  0x03, 2, 3,
-  0x04, 3, 3,
-  0x05, 3, 2
+/* Table 80: Norm-2/Diff-2 Code Table */
+static const VLCTable vc1_norm2_vlc_table[4] = {
+  {0, 0, 1},
+  {2, 4, 3},
+  {1, 5, 3},
+  {3, 3, 2}
 };
 
-const guint norm6_vlc_table[256] = {
-  0x001, 1, 0,
-  0x002, 4, 0,
-  0x003, 4, 0,
-  0x004, 4, 0,
-  0x005, 4, 0,
-  0x006, 4, 0,
-  0x007, 4, 0,
-  0x007, 6, 0,
-  0x000, 8, 0,
-  0x001, 8, 0,
-  0x002, 8, 0,
-  0x003, 8, 0,
-  0x004, 8, 0,
-  0x005, 8, 0,
-  0x006, 8, 0,
-  0x007, 8, 0,
-  0x008, 8, 0,
-  0x009, 8, 0,
-  0x00A, 8, 0,
-  0x00B, 8, 0,
-  0x00C, 8, 0,
-  0x00D, 8, 0,
-  0x00E, 8, 0,
-  0x037, 9, 0,
-  0x036, 9, 0,
-  0x035, 9, 0,
-  0x034, 9, 0,
-  0x033, 9, 0,
-  0x032, 9, 0,
-  0x047, 10, 0,
-  0x04B, 10, 0,
-  0x04D, 10, 0,
-  0x04E, 10, 0,
-  0x30E, 13, 0,
-  0x053, 10, 0,
-  0x055, 10, 0,
-  0x056, 10, 0,
-  0x30D, 13, 0,
-  0x059, 10, 0,
-  0x05A, 10, 0,
-  0x30C, 13, 0,
-  0x05C, 10, 0,
-  0x30B, 13, 0,
-  0x30A, 13, 0,
-  0x043, 10, 0,
-  0x045, 10, 0,
-  0x046, 10, 0,
-  0x309, 13, 0,
-  0x049, 10, 0,
-  0x04A, 10, 0,
-  0x308, 13, 0,
-  0x04C, 10, 0,
-  0x307, 13, 0,
-  0x306, 13, 0,
-  0x051, 10, 0,
-  0x052, 10, 0,
-  0x305, 13, 0,
-  0x054, 10, 0,
-  0x304, 13, 0,
-  0x303, 13, 0,
-  0x058, 10, 0,
-  0x302, 13, 0,
-  0x301, 13, 0,
-  0x300, 13, 0
+/* Table 81: Code table for 3x2 and 2x3 tiles */
+static const VLCTable vc1_norm6_vlc_table[64] = {
+  {0, 1, 1},
+  {1, 2, 4},
+  {2, 3, 4},
+  {3, 0, 8},
+  {4, 4, 4},
+  {5, 1, 8},
+  {6, 2, 8},
+  {7, (2 << 5) | 7, 10},
+  {8, 5, 4},
+  {9, 3, 8},
+  {10, 4, 8},
+  {11, (2 << 5) | 11, 10},
+  {12, 5, 8},
+  {13, (2 << 5) | 13, 10},
+  {14, (2 << 5) | 14, 10},
+  {15, (3 << 8) | 14, 13},
+  {16, 6, 4},
+  {17, 6, 8},
+  {18, 7, 8},
+  {19, (2 << 5) | 19, 10},
+  {20, 8, 8},
+  {21, (2 << 5) | 21, 10},
+  {22, (2 << 5) | 22, 10},
+  {23, (3 << 8) | 13, 13},
+  {24, 9, 8},
+  {25, (2 << 5) | 25, 10},
+  {26, (2 << 5) | 26, 10},
+  {27, (3 << 8) | 12, 13},
+  {28, (2 << 5) | 28, 10},
+  {29, (3 << 8) | 11, 13},
+  {30, (3 << 8) | 10, 13},
+  {31, (3 << 4) | 7, 9},
+  {32, 7, 4},
+  {33, 10, 8},
+  {34, 11, 8},
+  {35, (2 << 5) | 3, 10},
+  {36, 12, 8},
+  {37, (2 << 5) | 5, 10},
+  {38, (2 << 5) | 6, 10},
+  {39, (3 << 8) | 9, 13},
+  {40, 13, 8},
+  {41, (2 << 5) | 9, 10},
+  {42, (2 << 5) | 10, 10},
+  {43, (3 << 8) | 8, 13},
+  {44, (2 << 5) | 12, 10},
+  {45, (3 << 8) | 7, 13},
+  {46, (3 << 8) | 6, 13},
+  {47, (3 << 4) | 6, 9},
+  {48, 14, 8},
+  {49, (2 << 5) | 17, 10},
+  {50, (2 << 5) | 18, 10},
+  {51, (3 << 8) | 5, 13},
+  {52, (2 << 5) | 20, 10},
+  {53, (3 << 8) | 4, 13},
+  {54, (3 << 8) | 3, 13},
+  {55, (3 << 4) | 5, 9},
+  {56, (2 << 5) | 24, 10},
+  {57, (3 << 8) | 2, 13},
+  {58, (3 << 8) | 1, 13},
+  {59, (3 << 4) | 4, 9},
+  {60, (3 << 8) | 0, 13},
+  {61, (3 << 4) | 3, 9},
+  {62, (3 << 4) | 2, 9},
+  {63, (3 << 1) | 1, 6}
 };
 
 static inline guint8
@@ -345,32 +359,26 @@ calculate_nb_pan_scan_win (GstVC1AdvancedSeqHdr * advseqhdr,
   }
 }
 
-
-/**
- * table should look like:
- *  {Value, nbBits, Meaning,
- *  ...
- *  } nbBits must be increasing
- */
 static gboolean
-decode_vlc (GstBitReader * br, guint * res, const guint * table, guint length)
+decode_vlc (GstBitReader * br, guint * res, const VLCTable * table,
+    guint length)
 {
   guint8 i;
   guint cbits = 0;
   guint32 value = 0;
 
-  for (i = 0; i < length; i += 3) {
-    if (cbits != table[i + 1]) {
-      cbits = table[i + 1];
+  for (i = 0; i < length; i++) {
+    if (cbits != table[i].cbits) {
+      cbits = table[i].cbits;
       if (!gst_bit_reader_peek_bits_uint32 (br, &value, cbits)) {
         goto failed;
       }
     }
 
-    if (value == table[i]) {
+    if (value == table[i].cword) {
       SKIP (br, cbits);
       if (res)
-        *res = table[i + 2];
+        *res = table[i].value;
 
       return TRUE;
     }
@@ -393,7 +401,8 @@ bitplane_decoding (GstBitReader * br, guint height,
   guint i, j, offset = 0;
 
   SKIP (br, 1);
-  if (!decode_vlc (br, &imode, imode_vlc_table, G_N_ELEMENTS (imode_vlc_table)))
+  if (!decode_vlc (br, &imode, vc1_imode_vlc_table,
+          G_N_ELEMENTS (vc1_imode_vlc_table)))
     goto failed;
 
   switch (imode) {
@@ -415,8 +424,8 @@ bitplane_decoding (GstBitReader * br, guint height,
 
       for (i = offset; i < height * width; i += 2) {
         /*guint x; */
-        if (!decode_vlc (br, NULL, vc1_norm2_codes_vlc_table,
-                G_N_ELEMENTS (vc1_norm2_codes_vlc_table))) {
+        if (!decode_vlc (br, NULL, vc1_norm2_vlc_table,
+                G_N_ELEMENTS (vc1_norm2_vlc_table))) {
           goto failed;
         }
       }
@@ -431,8 +440,8 @@ bitplane_decoding (GstBitReader * br, guint height,
 
         for (i = 0; i < height; i += 3) {
           for (j = width & 1; j < width; j += 2) {
-            if (!decode_vlc (br, NULL, norm6_vlc_table,
-                    G_N_ELEMENTS (norm6_vlc_table))) {
+            if (!decode_vlc (br, NULL, vc1_norm6_vlc_table,
+                    G_N_ELEMENTS (vc1_norm6_vlc_table))) {
               goto failed;
             }
           }
@@ -440,8 +449,8 @@ bitplane_decoding (GstBitReader * br, guint height,
       } else {
         for (i = height & 1; i < height; i += 2) {
           for (j = width % 3; j < width; j += 3) {
-            if (!decode_vlc (br, NULL, norm6_vlc_table,
-                    G_N_ELEMENTS (norm6_vlc_table))) {
+            if (!decode_vlc (br, NULL, vc1_norm6_vlc_table,
+                    G_N_ELEMENTS (vc1_norm6_vlc_table))) {
               goto failed;
             }
           }
@@ -806,13 +815,13 @@ parse_frame_header_advanced (GstBitReader * br, GstVC1FrameHdr * framehdr,
   }
 
   if (framehdr->ptype == GST_VC1_PICTURE_TYPE_B) {
-    if (!decode_vlc (br, (guint *) & pic->bfraction, bfraction_vlc_table,
-            G_N_ELEMENTS (bfraction_vlc_table)))
+    if (!decode_vlc (br, (guint *) & pic->bfraction, vc1_bfraction_vlc_table,
+            G_N_ELEMENTS (vc1_bfraction_vlc_table)))
       goto failed;
 
     GST_DEBUG ("bfraction %u", pic->bfraction);
 
-    if (pic->bfraction == GST_VC1_PICTURE_TYPE_BI) {
+    if (pic->bfraction == GST_VC1_BFRACTION_PTYPE_BI) {
       framehdr->ptype = GST_VC1_PICTURE_TYPE_BI;
     }
 
@@ -1033,11 +1042,11 @@ parse_frame_header (GstBitReader * br, GstVC1FrameHdr * framehdr,
 
   if (framehdr->ptype == GST_VC1_PICTURE_TYPE_B) {
 
-    if (!decode_vlc (br, (guint *) & pic->bfraction, bfraction_vlc_table,
-            G_N_ELEMENTS (bfraction_vlc_table)))
+    if (!decode_vlc (br, (guint *) & pic->bfraction, vc1_bfraction_vlc_table,
+            G_N_ELEMENTS (vc1_bfraction_vlc_table)))
       goto failed;
 
-    if (pic->bfraction == GST_VC1_PICTURE_TYPE_BI) {
+    if (pic->bfraction == GST_VC1_BFRACTION_PTYPE_BI) {
       framehdr->ptype = GST_VC1_PICTURE_TYPE_BI;
     }
     GST_DEBUG ("bfraction= %d", pic->bfraction);
