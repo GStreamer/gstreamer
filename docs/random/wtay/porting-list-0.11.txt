@@ -1,0 +1,588 @@
+ .Ported?
+ |  .Module
+ |  |    .Name
+ |  |    |               .Description
+ --------------------------------
+ * -core coreelements
+ * -core staticelements:  bin: Generic bin
+ * -core staticelements:  pipeline: Pipeline object
+
+ * -base adder:         adder: Adder
+ * -base alsa:          alsamixer: Alsa mixer
+ * -base alsa:          alsasink: Audio sink (ALSA)
+ * -base alsa:          alsasrc: Audio source (ALSA)
+ * -base app:           appsink: AppSink
+ * -base app:           appsrc: AppSrc
+ * -base audioconvert:  audioconvert: Audio converter
+ * -base audiorate:     audiorate: Audio rate adjuster
+ * -base audioresample: audioresample: Audio resampler
+ * -base audiotestsrc:  audiotestsrc: Audio test source
+ * -base cdparanoia:    cdparanoiasrc: CD Audio (cdda) Source, Paranoia IV
+ * -base encoding:      encodebin: Encoder Bin
+ * -base gdp:           gdpdepay: GDP Depayloader
+ * -base gdp:           gdppay: GDP Payloader
+ * -base gio:           giosink: GIO sink
+ * -base gio:           giosrc: GIO source
+ * -base gio:           giostreamsink: GIO stream sink
+ * -base gio:           giostreamsrc: GIO stream source
+ * -base libvisual:     libvisual_bumpscope: libvisual Bumpscope plugin plugin v.0.0.1
+ * -base libvisual:     libvisual_corona: libvisual libvisual corona plugin plugin v.0.1
+ * -base libvisual:     libvisual_infinite: libvisual infinite plugin plugin v.0.1
+ * -base libvisual:     libvisual_jakdaw: libvisual Jakdaw plugin plugin v.0.0.1
+ * -base libvisual:     libvisual_jess: libvisual jess plugin plugin v.0.1
+ * -base libvisual:     libvisual_lv_analyzer: libvisual libvisual analyzer plugin v.1.0
+ * -base libvisual:     libvisual_lv_scope: libvisual libvisual scope plugin v.0.1
+ * -base libvisual:     libvisual_oinksie: libvisual oinksie plugin plugin v.0.1
+ * -base ogg:           oggaviparse: Ogg AVI parser
+ * -base ogg:           oggdemux: Ogg demuxer
+ * -base ogg:           oggmux: Ogg muxer
+ * -base ogg:           oggparse: Ogg parser
+ * -base ogg:           ogmaudioparse: OGM audio stream parser
+ * -base ogg:           ogmtextparse: OGM text stream parser
+ * -base ogg:           ogmvideoparse: OGM video stream parser
+ * -base pango:         clockoverlay: Clock overlay
+ * -base pango:         textoverlay: Text overlay
+ * -base pango:         textrender: Text renderer
+ * -base pango:         timeoverlay: Time overlay
+ * -base playback:      playbin2: Player Bin 2
+ * -base playback:      playbin: Player Bin
+ * -base playback:      playsink: Player Sink
+ * -base playback:      subtitleoverlay: Subtitle Overlay
+ * -base subparse:      ssaparse: SSA Subtitle Parser
+ * -base subparse:      subparse: Subtitle parser
+ * -base subparse:      subparse_typefind: srt, sub, mpsub, mdvd, smi, txt, dks
+ * -base tcp:           multifdsink: Multi filedescriptor sink
+ * -base tcp:           tcpclientsink: TCP client sink
+ * -base tcp:           tcpclientsrc: TCP client source
+ * -base tcp:           tcpserversink: TCP server sink
+ * -base tcp:           tcpserversrc: TCP server source
+ * -base theora:        theoradec: Theora video decoder
+ * -base theora:        theoraenc: Theora video encoder
+ * -base theora:        theoraparse: Theora video parser
+ * -base typefindfunctions: application/msword: doc
+ * -base uridecodebin:  decodebin2: Decoder Bin
+ * -base uridecodebin:  uridecodebin: URI Decoder
+ * -base videorate:     videorate: Video rate adjuster
+ * -base videoscale:    videoscale: Video scaler
+ * -base videotestsrc:  videotestsrc: Video test source
+ * -base volume:        volume: Volume
+ * -base vorbis:        vorbisdec: Vorbis audio decoder
+ * -base vorbis:        vorbisenc: Vorbis audio encoder
+ * -base vorbis:        vorbisparse: VorbisParse
+ * -base vorbis:        vorbistag: VorbisTag
+ * -base ximagesink:    ximagesink: Video sink
+ * -base xvimagesink:   xvimagesink: Video sink
+
+ * -good aasink:        aasink: ASCII art video sink
+ * -good alaw:          alawdec: A Law audio decoder
+ * -good alaw:          alawenc: A Law audio encoder
+ * -good alpha:         alpha: Alpha filter
+ * -good alphacolor:    alphacolor: Alpha color filter
+ * -good audiofx:       audioamplify: Audio amplifier
+ * -good audiofx:       audiochebband: Band pass & band reject filter
+ * -good audiofx:       audiocheblimit: Low pass & high pass filter
+ * -good audiofx:       audiodynamic: Dynamic range controller
+ * -good audiofx:       audioecho: Audio echo
+ * -good audiofx:       audiofirfilter: Audio FIR filter
+ * -good audiofx:       audioiirfilter: Audio IIR filter
+ * -good audiofx:       audioinvert: Audio inversion
+ * -good audiofx:       audiokaraoke: AudioKaraoke
+ * -good audiofx:       audiopanorama: Stereo positioning
+ * -good audiofx:       audiowsincband: Band pass & band reject filter
+ * -good audiofx:       audiowsinclimit: Low pass & high pass filter
+ * -good audioparsers:  aacparse: AAC audio stream parser
+ * -good audioparsers:  ac3parse: AC3 audio stream parser
+ * -good audioparsers:  amrparse: AMR audio stream parser
+ * -good audioparsers:  dcaparse: DTS Coherent Acoustics audio stream parser
+ * -good audioparsers:  flacparse: FLAC audio parser
+ * -good audioparsers:  mpegaudioparse: MPEG1 Audio Parser
+ * -good auparse:       auparse: AU audio demuxer
+ * -good autodetect:    autoaudiosink: Auto audio sink
+ * -good autodetect:    autoaudiosrc: Auto audio source
+ * -good autodetect:    autovideosink: Auto video sink
+ * -good autodetect:    autovideosrc: Auto video source
+ * -good avi:           avidemux: Avi demuxer
+ * -good avi:           avimux: Avi muxer
+ * -good avi:           avisubtitle: Avi subtitle parser
+ * -good cacasink:      cacasink: A colored ASCII art video sink
+ * -good cutter:        cutter: Audio cutter
+ * -good debug:         breakmydata: Break my data
+ * -good debug:         capsdebug: Caps debug
+ * -good debug:         capssetter: CapsSetter
+ * -good debug:         cpureport: CPU report
+ * -good debug:         navseek: Seek based on left-right arrows
+ * -good debug:         progressreport: Progress report
+ * -good debug:         pushfilesrc: Push File Source
+ * -good debug:         rndbuffersize: Random buffer size
+ * -good debug:         taginject: TagInject
+ * -good debug:         testsink: Test plugin
+ * -good effectv:       dicetv: DiceTV effect
+ * -good effectv:       edgetv: EdgeTV effect
+ * -good effectv:       optv: OpTV effect
+ * -good effectv:       quarktv: QuarkTV effect
+ * -good effectv:       radioactv: RadioacTV effect
+ * -good effectv:       revtv: RevTV effect
+ * -good effectv:       rippletv: RippleTV effect
+ * -good effectv:       shagadelictv: ShagadelicTV
+ * -good effectv:       streaktv: StreakTV effect
+ * -good effectv:       vertigotv: VertigoTV effect
+ * -good effectv:       warptv: WarpTV effect
+ * -good equalizer:     equalizer-10bands: 10 Band Equalizer
+ * -good equalizer:     equalizer-3bands: 3 Band Equalizer
+ * -good equalizer:     equalizer-nbands: N Band Equalizer
+ * -good flac:          flacdec: FLAC audio decoder
+ * -good flac:          flacenc: FLAC audio encoder
+ * -good flac:          flactag: FLAC tagger
+ * -good flv:           flvdemux: FLV Demuxer
+ * -good flv:           flvmux: FLV muxer
+ * -good goom:          goom: GOOM: what a GOOM!
+ * -good gstrtpmanager: gstrtpbin: RTP Bin
+ * -good gstrtpmanager: gstrtpjitterbuffer: RTP packet jitter-buffer
+ * -good gstrtpmanager: gstrtpptdemux: RTP Demux
+ * -good gstrtpmanager: gstrtpsession: RTP Session
+ * -good gstrtpmanager: gstrtpssrcdemux: RTP SSRC Demux
+ * -good isomp4:        3gppmux: 3GPP Muxer
+ * -good isomp4:        gppmux: 3GPP Muxer
+ * -good isomp4:        ismlmux: ISML Muxer
+ * -good isomp4:        mj2mux: MJ2 Muxer
+ * -good isomp4:        mp4mux: MP4 Muxer
+ * -good isomp4:        qtdemux: QuickTime demuxer
+ * -good isomp4:        qtmoovrecover: QT Moov Recover
+ * -good isomp4:        qtmux: QuickTime Muxer
+ * -good isomp4:        rtpxqtdepay: RTP packet depayloader
+ * -good jack:          jackaudiosink: Audio Sink (Jack)
+ * -good jack:          jackaudiosrc: Audio Source (Jack)
+ * -good jpeg:          jpegdec: JPEG image decoder
+ * -good jpeg:          jpegenc: JPEG image encoder
+ * -good effectv:       agingtv: AgingTV effect
+ * -good level:         level: Level
+ * -good mulaw:         mulawdec: Mu Law audio decoder
+ * -good mulaw:         mulawenc: Mu Law audio encoder
+ * -good multifile:     multifilesink: Multi-File Sink
+ * -good multifile:     multifilesrc: Multi-File Source
+ * -good multipart:     multipartdemux: Multipart demuxer
+ * -good multipart:     multipartmux: Multipart muxer
+ * -good navigationtest:  navigationtest: Video navigation test
+ * -good pulseaudio:    pulsemixer: PulseAudio Mixer
+ * -good pulseaudio:    pulsesink: PulseAudio Audio Sink
+ * -good pulseaudio:    pulsesrc: PulseAudio Audio Source
+ * -good replaygain:    rganalysis: ReplayGain analysis
+ * -good replaygain:    rglimiter: ReplayGain limiter
+ * -good replaygain:    rgvolume: ReplayGain volume
+ * -good rtp
+ * -good rtsp:          rtpdec: RTP Decoder
+ * -good rtsp:          rtspsrc: RTSP packet receiver
+ * -good shapewipe:     shapewipe: Shape Wipe transition filter
+ * -good soup:          souphttpclientsink: HTTP client sink
+ * -good soup:          souphttpsrc: HTTP client source
+ * -good spectrum:      spectrum: Spectrum analyzer
+ * -good speex:         speexdec: Speex audio decoder
+ * -good speex:         speexenc: Speex audio encoder
+ * -good udp:           dynudpsink: UDP packet sender
+ * -good udp:           multiudpsink: UDP packet sender
+ * -good udp:           udpsink: UDP packet sender
+ * -good udp:           udpsrc: UDP packet receiver
+ * -good video4linux2:  v4l2radio: Radio (video4linux2) Tuner
+ * -good video4linux2:  v4l2sink: Video (video4linux2) Sink
+ * -good video4linux2:  v4l2src: Video (video4linux2) Source
+ * -good videofilter:   gamma: Video gamma correction
+ * -good videofilter:   videobalance: Video balance
+ * -good videofilter:   videoflip: Video flipper
+ * -good wavenc:        wavenc: WAV audio muxer
+ * -good wavparse:      wavparse: WAV audio demuxer
+ * -good ximagesrc:     ximagesrc: Ximage video source
+ * -good y4menc:        y4menc: YUV4MPEG video encoder
+
+ * -ugly a52dec:        a52dec: ATSC A/52 audio decoder
+ * -ugly asf:           asfdemux: ASF Demuxer
+ * -ugly asf:           rtpasfdepay: RTP ASF packet depayloader
+ * -ugly asf:           rtspwms: WMS RTSP Extension
+ * -ugly dvdlpcmdec:    dvdlpcmdec: DVD LPCM Audio decoder
+ * -ugly lame:          lame: L.A.M.E. mp3 encoder
+ * -ugly lame:          lamemp3enc: L.A.M.E. mp3 encoder
+ * -ugly mad:           mad: mad mp3 decoder
+ * -ugly mpeg2dec:      mpeg2dec: mpeg1 and mpeg2 video decoder
+ * -ugly siddec:        siddec: Sid decoder
+ * -ugly x264:          x264enc: x264enc
+
+ * -bad  faad:          faad: AAC audio decoder
+ * -bad  sdp:           sdpdemux: SDP session setup
+
+ * -ff   ffmpeg:
+ * -ff   ffvideoscale:  ffvideoscale: FFMPEG Scale element
+ * -ff   postproc:
+
+ -- essential --
+
+   -ugly amrnb:         amrnbdec: AMR-NB audio decoder
+   -ugly amrnb:         amrnbenc: AMR-NB audio encoder
+   -ugly amrwbdec:      amrwbdec: AMR-WB audio decoder
+   -good annodex:       cmmldec: CMML stream decoder
+   -good annodex:       cmmlenc: CMML streams encoder
+   -good apetag:        apedemux: APE tag demuxer
+   -bad  assrender:     assrender: ASS/SSA Render
+   -bad  celt:          celtdec: Celt audio decoder
+   -bad  celt:          celtenc: Celt audio encoder
+   -bad  dataurisrc:    dataurisrc: data: URI source element
+   -bad  dtsdec:        dtsdec: DTS audio decoder
+   -bad  dvb:           dvbbasebin: DVB bin
+   -bad  dvb:           dvbsrc: DVB Source
+   -bad  dvbsuboverlay: dvbsuboverlay: DVB Subtitles Overlay
+   -ugly dvdread:       dvdreadsrc: DVD Source
+   -bad  dvdspu:        dvdspu: Sub-picture Overlay
+   -ugly dvdsub:        dvdsubdec: DVD subtitle decoder
+   -ugly dvdsub:        dvdsubparse: DVD subtitle parser
+   -good dv:            dvdec: DV video decoder
+   -good dv:            dvdemux: DV system stream demuxer
+   -bad  gsm:           gsmdec: GSM audio decoder
+   -bad  gsm:           gsmenc: GSM audio encoder
+   -good icydemux:      icydemux: ICY tag demuxer
+   -good id3demux:      id3demux: ID3 tag demuxer
+   -bad  jp2kdecimator: jp2kdecimator: JPEG2000 decimator
+   -bad  jp2k:          jp2kdec: Jasper JPEG2000 image decoder
+   -bad  jp2k:          jp2kenc: Jasper JPEG2000 image encoder
+   -bad  jpegformat:    jifmux: JPEG stream muxer
+   -bad  jpegformat:    jpegparse: JPEG stream parser
+   -bad  kate:          katedec: Kate stream text decoder
+   -bad  kate:          kateenc: Kate stream encoder
+   -bad  kate:          kateparse: Kate stream parser
+   -bad  kate:          katetag: Kate stream tagger
+   -good matroska:      matroskademux: Matroska demuxer
+   -good matroska:      matroskamux: Matroska muxer
+   -good matroska:      matroskaparse: Matroska parser
+   -good matroska:      webmmux: WebM muxer
+   -bad  mms:           mmssrc: MMS streaming source
+   -bad  mpeg4videoparse:  mpeg4videoparse: MPEG 4 video elementary stream parser
+   -good mpegaudioparse:  mp3parse: MPEG1 Audio Parser
+   -good mpegaudioparse:  xingmux: MP3 Xing muxer
+   -bad  musepack:      musepackdec: Musepack decoder
+   -ugly realmedia:     pnmsrc: PNM packet receiver
+   -ugly realmedia:     rademux: RealAudio Demuxer
+   -ugly realmedia:     rdtdepay: RDT packet parser
+   -ugly realmedia:     rdtmanager: RTP Decoder
+   -ugly realmedia:     rmdemux: RealMedia Demuxer
+   -ugly realmedia:     rtspreal: RealMedia RTSP Extension
+   -bad  resindvd:      rsndvdbin: rsndvdbin
+   -bad  schro:         schrodec: Dirac Decoder
+   -bad  schro:         schroenc: Dirac Encoder
+   -bad  vp8:           vp8dec: On2 VP8 Decoder
+   -bad  vp8:           vp8enc: On2 VP8 Encoder
+   -good wavpack:       wavpackdec: Wavpack audio decoder
+   -good wavpack:       wavpackenc: Wavpack audio encoder
+   -good wavpack:       wavpackparse: Wavpack parser
+
+ -- non essential --
+
+   -good 1394:          dv1394src: Firewire (1394) DV video source
+   -good 1394:          hdv1394src: Firewire (1394) HDV video source
+
+   -bad  acmenc:        
+   -bad  acmmp3dec:     acmmp3dec      
+   -bad  adpcmdec:      adpcmdec: ADPCM decoder
+   -bad  adpcmenc:      adpcmenc: ADPCM encoder
+   -bad  aiff:          aiffmux: AIFF audio muxer
+   -bad  aiff:          aiffparse: AIFF audio demuxer
+   -bad  apexsink:      apexsink: Apple AirPort Express Audio Sink
+   -bad  applemedia:
+   -bad  asfmux:        asfmux: ASF muxer
+   -bad  asfmux:        asfparse: ASF parser
+   -bad  asfmux:        rtpasfpay: RTP ASF payloader
+   -bad  autoconvert:   autoconvert: Select convertor based on caps
+   -bad  autoconvert:   autovideoconvert: Select color space convertor based on caps
+   -bad  avcsrc:        avcsrc:
+
+   -bad  bayer:         bayer2rgb: Bayer to RGB decoder for cameras
+   -bad  bayer:         rgb2bayer: RGB to Bayer converter
+         bluetooth:     a2dpsink: Bluetooth A2DP sink
+         bluetooth:     avdtpsink: Bluetooth AVDTP sink
+         bluetooth:     rtpsbcpay: RTP packet payloader
+         bluetooth:     sbcdec: Bluetooth SBC decoder
+         bluetooth:     sbcenc: Bluetooth SBC encoder
+         bluetooth:     sbcparse: Bluetooth SBC parser
+         bluetooth:     sbc: sbc
+   -bad  bz2:           bz2dec: BZ2 decoder
+   -bad  bz2:           bz2enc: BZ2 encoder
+
+   -good cairo:         cairooverlay: Cairo overlay
+   -good cairo:         cairorender: Cairo encoder
+   -good cairo:         cairotextoverlay: Text overlay
+   -good cairo:         cairotimeoverlay: Time overlay
+   -bad  camerabin2:    camerabin2: CameraBin2
+   -bad  camerabin2:    imagecapturebin: Image Capture Bin
+   -bad  camerabin2:    viewfinderbin: Viewfinder Bin
+   -bad  camerabin2:    wrappercamerabinsrc: V4l2 camera src element for camerabin
+   -bad  camerabin:     camerabin: Camera Bin
+   -bad  cdaudio:       cdaudio: CD player
+   -ugly cdio:          cdiocddasrc: CD audio source (CDDA)
+   -bad  cdxaparse:     cdxaparse: (S)VCD parser
+   -bad  cdxaparse:     vcdparse: (S)VCD stream parser
+   -bad  cog:           cogcolorconvert: Convert colorspace
+   -bad  cog:           cogcolorspace: YCbCr/RGB format conversion
+   -bad  cog:           cogdownsample: Scale down video by factor of 2
+   -bad  cog:           coglogoinsert: Overlay image onto video
+   -bad  cog:           cogmse: Calculate MSE
+   -bad  cog:           cogscale: Video scaler
+   -bad  coloreffects:  chromahold: Chroma hold filter
+   -bad  coloreffects:  coloreffects: Color Look-up Table filter
+   -bad  colorspace:    colorspace:  Colorspace converter
+   -bad  curl:          curlsink: Curl sink
+         cutter-test:   cutter-console-output: Cutter console output
+         cutter-test:   cutter-server: Cutter test server
+         cutter-test:   cutter-test-runner: Cutter test runner
+
+   -bad  d3dsinkwrapper: d3dvideosink:
+   -bad  dc1394:        dc1394src: 1394 IIDC Video Source
+   -bad  dccp:          dccpclientsink: DCCP client sink
+   -bad  dccp:          dccpclientsrc: DCCP client source
+   -bad  dccp:          dccpserversink: DCCP server sink
+   -bad  dccp:          dccpserversrc: DCCP server source
+   -bad  debugutilsbad: checksumsink: Checksum sink
+   -bad  debugutilsbad: chopmydata: FIXME
+   -bad  debugutilsbad: fpsdisplaysink: Measure and show framerate on videosink
+   -bad  decklink:      decklinksink: Decklink Sink
+   -bad  decklink:      decklinksrc: Decklink source
+   -good deinterlace:   deinterlace: Deinterlacer
+   -bad  directdraw :   directdrawsink: 
+   -good directsound:   directsoundsink: Direct Sound Audio Sink
+   -bad  directsoundsrc: directsoundsrc: Direct Sound Audio Source
+   -bad  divxdec:       divxdec:
+   -bad  divxenc:       divxenc:
+   -bad  dfbvideosink:  dfbvideosink: DirectFB video sink
+   -bad  dirac:         diracenc: Dirac Encoder
+   -bad  dshowdecwrapper:
+   -bad  dshowsrcwrapper: dshowaudiosrc
+   -bad  dshowsrcwrapper: dshowvideosrc
+   -bad  dshowsinkwrapper: dshowvideosink
+   -bad  dtmf:          dtmfdetect: DTMF detector element
+   -bad  dtmf:          dtmfsrc: DTMF tone generator
+   -bad  dtmf:          rtpdtmfdepay: RTP DTMF packet depayloader
+   -bad  dtmf:          rtpdtmfsrc: RTP DTMF packet generator
+   -bad  dxr3:          dxr3videosink
+   -bad  dxr3:          dxr3audiosink
+   -bad  dxr3:          dxr3spusink
+
+   -good efence:        efence: Electric Fence
+   -good esdsink:       esdsink: Esound audio sink
+
+   -bad  faac:          faac: AAC audio encoder
+   -bad  fbdevsink:     fbdevsink: fbdev video sink
+   -bad  festival:      festival: Festival Text-to-Speech synthesizer
+   -bad  fieldanalysis: fieldanalysis: Video field analysis
+   -bad  flite:         flitetestsrc: Flite speech test source
+   -good flxdec:        flxdec: FLX video decoder
+   -bad  fragmented:    hlsdemux: HLS Demuxer
+   -bad  freeze:        freeze: Stream freezer
+   -bad  frei0r:
+         fsfunnel:        fsfunnel: Farsight Funnel pipe fitting
+         fsmsnconference: fsmsncamrecvconference: Farsight MSN Reception Conference
+         fsmsnconference: fsmsncamsendconference: Farsight MSN Sending Conference
+         fsrawconference: fsrawconference: Generic bin
+         fsrtcpfilter:    fsrtcpfilter: RTCP Filter element
+         fsrtpconference: fsrtpconference: Farsight RTP Conference
+         fsvideoanyrate:  fsvideoanyrate: Videoanyrate element
+
+   -bad  gaudieffects:  burn: Burn
+   -bad  gaudieffects:  chromium: Chromium
+   -bad  gaudieffects:  dilate: Dilate
+   -bad  gaudieffects:  dodge: Dodge
+   -bad  gaudieffects:  exclusion: Exclusion
+   -bad  gaudieffects:  gaussianblur: GaussBlur
+   -bad  gaudieffects:  solarize: Solarize
+   -good gconfelements: gconfaudiosink: GConf audio sink
+   -good gconfelements: gconfaudiosrc: GConf audio source
+   -good gconfelements: gconfvideosink: GConf video sink
+   -good gconfelements: gconfvideosrc: GConf video source
+   -good gdkpixbuf:     gdkpixbufdec: GdkPixbuf image decoder
+   -good gdkpixbuf:     gdkpixbufscale: GdkPixbuf image scaler
+   -good gdkpixbuf:     gdkpixbufsink: GdkPixbuf sink
+   -bad  geometrictransform:  bulge: bulge
+   -bad  geometrictransform:  circle: circle
+   -bad  geometrictransform:  diffuse: diffuse
+   -bad  geometrictransform:  fisheye: fisheye
+   -bad  geometrictransform:  kaleidoscope: kaleidoscope
+   -bad  geometrictransform:  marble: marble
+   -bad  geometrictransform:  mirror: mirror
+   -bad  geometrictransform:  pinch: pinch
+   -bad  geometrictransform:  rotate: rotate
+   -bad  geometrictransform:  sphere: sphere
+   -bad  geometrictransform:  square: square
+   -bad  geometrictransform:  stretch: stretch
+   -bad  geometrictransform:  tunnel: tunnel
+   -bad  geometrictransform:  twirl: twirl
+   -bad  geometrictransform:  waterripple: waterripple
+   -bad  gmedec:        gmedec: Gaming console music file decoder
+         gnonlin:       gnlcomposition: GNonLin Composition
+         gnonlin:       gnlfilesource: GNonLin File Source
+         gnonlin:       gnloperation: GNonLin Operation
+         gnonlin:       gnlsource: GNonLin Source
+         gnonlin:       gnlurisource: GNonLin URI Source
+   -good goom2k1:       goom2k1: GOOM: what a GOOM! 2k1 edition
+   -bad  gsettings:     gsettingsaudiosink: GSettings audio sink
+   -bad  gsettings:     gsettingsaudiosrc: GSettings audio src
+   -bad  gsettings:     gsettingsvideosink: GSettings video sink
+   -bad  gsettings:     gsettingsvideosrc: GSettings video src
+   -bad  gstsiren:      sirendec: Siren Decoder element
+   -bad  gstsiren:      sirenenc: Siren Encoder element
+
+   -bad  h264parse:     legacyh264parse: H264Parse
+   -bad  hdvparse:      hdvparse: HDVParser
+
+   -bad  id3tag:        id3mux: ID3 v1 and v2 Muxer
+   -ugly iec958:        ac3iec958: AC3 to IEC958 filter
+   -good imagefreeze:   imagefreeze: Still frame stream generator
+   -bad  interlace:     interlace: Interlace filter
+   -good interleave:    deinterleave: Audio deinterleaver
+   -good interleave:    interleave: Audio interleaver
+   -bad  invtelecine:   invtelecine: Inverse Telecine filter
+   -bad  ivfparse:      ivfparse: IVF parser
+
+   -good jpeg:          smokedec: Smoke video decoder
+   -good jpeg:          smokeenc: Smoke video encoder
+
+
+   -bad  ladspa:       
+   -bad  legacyresample: legacyresample: Audio scaler
+   -bad  linsys:        linsyssdisink: SDI video sink
+   -bad  linsys:        linsyssdisrc: SDI video source
+   -bad  liveadder:     liveadder: Live Adder element
+   -bad  lv2:
+
+   -bad  mimic:         mimdec: Mimic Decoder
+   -bad  mimic:         mimenc: Mimic Encoder
+   -bad  modplug:       modplug: ModPlug
+   -good monoscope:     monoscope: Monoscope
+   -bad  mpeg2enc:      mpeg2enc: mpeg2enc video encoder
+   -bad  mpegdemux2:    mpegpsdemux: The Fluendo MPEG Program Stream Demuxer
+   -bad  mpegdemux2:    mpegtsdemux: The Fluendo MPEG Transport stream demuxer
+   -bad  mpegdemux2:    mpegtsparse: MPEG transport stream parser
+   -bad  mpegpsmux:     mpegpsmux: MPEG Program Stream Muxer
+   -ugly mpegstream:    dvddemux: DVD Demuxer
+   -ugly mpegstream:    mpegdemux: MPEG Demuxer
+   -ugly mpegstream:    mpegparse: MPEG System Parser
+   -bad  mpegtsdemux:   tsdemux: MPEG transport stream demuxer
+   -bad  mpegtsdemux:   tsparse: MPEG transport stream parser
+   -bad  mpegtsmux:     mpegtsmux: MPEG Transport Stream Muxer
+   -bad  mpegvideoparse:  mpegvideoparse: MPEG video elementary stream parser
+   -bad  mplex:         mplex: mplex video multiplexer
+   -bad  musicbrainz:   trm: MusicBrainz TRM generator
+   -bad  mve:           mvedemux: MVE Demuxer
+   -bad  mve:           mvemux: MVE Multiplexer
+   -bad  mythtv:        mythtvsrc:
+   -bad  mxf:           mxfdemux: MXF Demuxer
+   -bad  mxf:           mxfmux: MXF muxer
+
+   -bad  nas:           nassink:
+         nice:          nicesink: ICE sink
+         nice:          nicesrc: ICE source
+   -bad  nsf:           nsfdec: Nsf decoder
+   -bad  nuvdemux:      nuvdemux: Nuv demuxer
+
+   -bad  ofa:           ofa: OFA
+   -bad  openal:        openalsink:
+   -bad  openal:        openalsrc:
+   -bad  opencv:
+   -bad  opus:          opusdec:
+   -bad  opus:          opusenc:
+   -good oss4:          oss4mixer: OSS v4 Audio Mixer
+   -good oss4:          oss4sink: OSS v4 Audio Sink
+   -good oss4:          oss4src: OSS v4 Audio Source
+   -good ossaudio:      ossmixer: OSS Mixer
+   -good ossaudio:      osssink: Audio Sink (OSS)
+   -good ossaudio:      osssrc: Audio Source (OSS)
+   -good osxaudio:      osxaudiosink: Audio Sink (OSX)
+   -good osxaudio:      osxaudiosrc: Audio Source (OSX)
+   -good osxvideo:      osxvideosink: Video Sink (OSX)
+   -bad  osxvideosrc:   osxvideosrc: Video Source (OSX)
+
+   -bad  patchdetect:   patchdetect: Color Patch Detector
+   -bad  pcapparse:     pcapparse: PCapParse
+   -good png:           pngdec: PNG image decoder
+   -good png:           pngenc: PNG image encoder
+   -bad  pnm:           pnmdec: PNM image decoder
+   -bad  pnm:           pnmenc: PNM image encoder
+
+   -bad  qtwrapper:
+
+   -bad  rawparse:      audioparse: Audio Parse
+   -bad  rawparse:      videoparse: Video Parse
+   -bad  rfbsrc:        rfbsrc: Rfb source
+   -bad  rsvg:          rsvgdec: SVG image decoder
+   -bad  rsvg:          rsvgoverlay: RSVG overlay
+   -bad  rtmpsrc:       rtmpsrc: RTMP Source
+   -bad  rtmpsink:      rtmpsink:
+   -bad  rtpmux:        rtpdtmfmux: RTP muxer
+   -bad  rtpmux:        rtpmux: RTP muxer
+   -bad  rtpvp8:        rtpvp8depay: RTP VP8 depayloader
+   -bad  rtpvp8:        rtpvp8pay: RTP VP8 payloader
+
+   -bad  scaletempo:    scaletempo: Scaletempo
+   -bad  sdi:           sdidemux: SDI Demuxer
+   -bad  sdi:           sdimux: SDI Muxer
+   -bad  sdl:           sdlaudiosink: SDL audio sink
+   -bad  sdl:           sdlvideosink: SDL video sink
+   -bad  segmentclip:   audiosegmentclip: Audio buffer segment clipper
+   -bad  segmentclip:   videosegmentclip: Video buffer segment clipper
+   -bad  shm:           shmsink: Shared Memory Sink
+   -bad  shm:           shmsrc: Shared Memory Source
+   -good shout2send:    shout2send: Icecast network sink
+   -good smpte:         smptealpha: SMPTE transitions
+   -good smpte:         smpte: SMPTE transitions
+   -bad  sndfile:       sfsink: Sndfile sink
+   -bad  sndfile:       sfsrc: Sndfile source
+   -bad  soundtouch:    bpmdetect: BPM Detector
+   -bad  soundtouch:    pitch: Pitch controller
+   -bad  spandsp:       spanplc:
+   -bad  spcdec:        spcdec:
+   -bad  speed:         speed: Speed
+   -bad  stereo:        stereo: Stereo effect
+   -bad  subenc:        srtenc: Srt encoder
+   -good sunaudio:      sunaudiomixer:
+   -good sunaudio:      sunaudiosink:
+   -good sunaudio:      sunaudiosrc:
+
+   -good taglib:        apev2mux: TagLib-based APEv2 Muxer
+   -good taglib:        id3v2mux: TagLib-based ID3v2 Muxer
+   -bad  teletext:      teletextdec:
+   -bad  timidity:      timidity:
+   -bad  tta:           ttadec: TTA audio decoder
+   -bad  tta:           ttaparse: TTA file parser
+   -ugly twolame:       twolame: TwoLAME mp2 encoder
+
+   -bad  vcdsrc:        vcdsrc: VCD Source
+   -bad  vdpau:
+   -good videobox:      videobox: Video box filter
+   -good videocrop:     aspectratiocrop: aspectratiocrop
+   -good videocrop:     videocrop: Crop
+   -bad  videofiltersbad: scenechange: Scene change detector
+   -bad  videofiltersbad: zebrastripe: Zebra stripe overlay
+   -bad  videomaxrate:  videomaxrate: Video maximum rate adjuster
+   -bad  videomeasure:  measurecollector: Video measure collector
+   -bad  videomeasure:  ssim: SSim
+   -good videomixer:    videomixer2: Video mixer 2
+   -good videomixer:    videomixer: Video mixer
+   -bad  videoparsersbad: diracparse: Dirac parser
+   -bad  videoparsersbad: h263parse: H.263 parser
+   -bad  videoparsersbad: h264parse: H.264 parser
+   -bad  videosignal:   videoanalyse: Video analyser
+   -bad  videosignal:   videodetect: Video detecter
+   -bad  videosignal:   videomark: Video marker
+
+   -bad  vmnc:          vmncdec: VMnc video decoder
+   -bad  voaacenc:      voaacenc:
+   -bad  voamrwbenc:    voamrwbenc:
+
+   -bad  wasapi:        wasapisrc
+   -bad  wasapi:        wasapisink
+   -good waveform:      waveformsink:
+   -bad  wildmidi:      wildmidi: WildMidi
+   -bad  wininet:       wininetsrc:
+   -bad  winks:         ksvideosrc:
+   -bad  winscreencap:  gdiscreencapsrc
+   -bad  winscreencap:  dx9screencapsrc
+
+   -bad  xvid:          xviddec: XviD video decoder
+   -bad  xvid:          xvidenc: XviD video encoder
+
+   -bad  y4mdec:        y4mdec: YUV4MPEG demuxer/decoder
+
+   -bad  zbar:          zbar: Barcode detector
