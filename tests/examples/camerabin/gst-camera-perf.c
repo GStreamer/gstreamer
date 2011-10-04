@@ -171,15 +171,16 @@ static const gchar *test_names[TEST_CASES] = {
 static void print_result (void);
 static gboolean run_test (gpointer user_data);
 static gboolean setup_add_pad_probe (GstElement * elem, const gchar * pad_name,
-    GCallback handler, gpointer data);
+    GstPadProbeCallback handler, gpointer data);
 
 
 /*
  * Callbacks
  */
 
-static gboolean
-pad_has_buffer (GstPad * pad, GstBuffer * buf, gpointer user_data)
+static GstProbeReturn
+pad_has_buffer (GstPad * pad, GstProbeType type, gpointer type_data,
+    gpointer user_data)
 {
   gboolean *signal_sink = (gboolean *) user_data;
   gboolean print_and_restart = FALSE;
@@ -209,7 +210,7 @@ pad_has_buffer (GstPad * pad, GstBuffer * buf, gpointer user_data)
     print_result ();
     g_idle_add ((GSourceFunc) run_test, NULL);
   }
-  return TRUE;
+  return GST_PROBE_OK;
 }
 
 static void
@@ -227,8 +228,7 @@ element_added (GstBin * bin, GstElement * element, gpointer user_data)
     if (elem) {
       need_vmux_pad_probe = FALSE;
       GST_INFO_OBJECT (elem, "got default video muxer");
-      if (setup_add_pad_probe (elem, "src", (GCallback) pad_has_buffer,
-              &signal_vid_sink)) {
+      if (setup_add_pad_probe (elem, "src", pad_has_buffer, &signal_vid_sink)) {
         /* enable test */
         target[8] = test_09_taget;
       }
@@ -239,8 +239,7 @@ element_added (GstBin * bin, GstElement * element, gpointer user_data)
     if (elem) {
       need_ienc_pad_probe = FALSE;
       GST_INFO_OBJECT (elem, "got default image encoder");
-      if (setup_add_pad_probe (elem, "src", (GCallback) pad_has_buffer,
-              &signal_img_enc)) {
+      if (setup_add_pad_probe (elem, "src", pad_has_buffer, &signal_img_enc)) {
         /* enable test */
         target[5] = test_06_taget;
       }
@@ -480,7 +479,7 @@ cleanup_pipeline (void)
 
 static gboolean
 setup_add_pad_probe (GstElement * elem, const gchar * pad_name,
-    GCallback handler, gpointer data)
+    GstPadProbeCallback handler, gpointer data)
 {
   GstPad *pad = NULL;
 
@@ -489,7 +488,8 @@ setup_add_pad_probe (GstElement * elem, const gchar * pad_name,
     return FALSE;
   }
 
-  gst_pad_add_buffer_probe (pad, (GCallback) handler, data);
+  gst_pad_add_probe (pad, GST_PROBE_TYPE_BLOCK | GST_PROBE_TYPE_BUFFER, handler,
+      data, NULL);
   gst_object_unref (pad);
 
   return TRUE;
@@ -567,13 +567,12 @@ setup_pipeline (void)
   /* set properties */
   g_object_set (camera_bin, "filename", filename->str, NULL);
 
-  if (src_csp && strlen (src_csp) == 4) {
+  if (src_csp) {
     GstCaps *filter_caps;
 
     /* FIXME: why do we need to set this? */
-    filter_caps = gst_caps_new_simple ("video/x-raw-yuv",
-        "format", GST_TYPE_FOURCC,
-        GST_MAKE_FOURCC (src_csp[0], src_csp[1], src_csp[2], src_csp[3]), NULL);
+    filter_caps = gst_caps_new_simple ("video/x-raw",
+        "format", G_TYPE_STRING, src_csp, NULL);
     if (filter_caps) {
       g_object_set (camera_bin, "filter-caps", filter_caps, NULL);
       gst_caps_unref (filter_caps);
@@ -589,8 +588,7 @@ setup_pipeline (void)
 
   /* connect signal handlers */
   g_assert (sink);
-  if (!setup_add_pad_probe (sink, "sink", (GCallback) pad_has_buffer,
-          &signal_vf_sink)) {
+  if (!setup_add_pad_probe (sink, "sink", pad_has_buffer, &signal_vf_sink)) {
     goto error;
   }
   if (!vmux) {
@@ -603,8 +601,7 @@ setup_pipeline (void)
     }
   }
   if (vmux) {
-    if (!setup_add_pad_probe (vmux, "src", (GCallback) pad_has_buffer,
-            &signal_vid_sink)) {
+    if (!setup_add_pad_probe (vmux, "src", pad_has_buffer, &signal_vid_sink)) {
       goto error;
     }
   }
@@ -618,8 +615,7 @@ setup_pipeline (void)
     }
   }
   if (ienc) {
-    if (!setup_add_pad_probe (ienc, "src", (GCallback) pad_has_buffer,
-            &signal_img_enc)) {
+    if (!setup_add_pad_probe (ienc, "src", pad_has_buffer, &signal_img_enc)) {
       goto error;
     }
   }

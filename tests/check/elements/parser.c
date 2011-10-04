@@ -55,16 +55,19 @@ buffer_new (const unsigned char *buffer_data, guint size)
 
   buffer = gst_buffer_new_and_alloc (size);
   if (buffer_data) {
-    memcpy (GST_BUFFER_DATA (buffer), buffer_data, size);
+    gst_buffer_fill (buffer, 0, buffer_data, size);
   } else {
     guint i;
+    guint8 *data;
+
     /* Create a recognizable pattern (loop 0x00 -> 0xff) in the data block */
+    data = gst_buffer_map (buffer, NULL, NULL, GST_MAP_WRITE);
     for (i = 0; i < size; i++) {
-      GST_BUFFER_DATA (buffer)[i] = i % 0x100;
+      data[i] = i % 0x100;
     }
+    gst_buffer_unmap (buffer, data, size);
   }
 
-  gst_buffer_set_caps (buffer, GST_PAD_CAPS (srcpad));
   GST_BUFFER_OFFSET (buffer) = dataoffset;
   dataoffset += size;
   return buffer;
@@ -77,7 +80,7 @@ static void
 buffer_count_size (void *buffer, void *user_data)
 {
   guint *sum = (guint *) user_data;
-  *sum += GST_BUFFER_SIZE (buffer);
+  *sum += gst_buffer_get_size (buffer);
 }
 
 /*
@@ -99,7 +102,7 @@ buffer_verify_data (void *buffer, void *user_data)
     if (ctx_verify_buffer)
       ctx_verify_buffer (vdata, buffer);
     vdata->buffer_counter++;
-    vdata->offset_counter += GST_BUFFER_SIZE (buffer);
+    vdata->offset_counter += gst_buffer_get_size (buffer);
     if (vdata->buffer_counter == vdata->discard) {
       vdata->buffer_counter = 0;
       vdata->discard = 0;
@@ -108,8 +111,8 @@ buffer_verify_data (void *buffer, void *user_data)
   }
 
   if (!ctx_verify_buffer || !ctx_verify_buffer (vdata, buffer)) {
-    fail_unless (GST_BUFFER_SIZE (buffer) == vdata->data_to_verify_size);
-    fail_unless (memcmp (GST_BUFFER_DATA (buffer), vdata->data_to_verify,
+    fail_unless (gst_buffer_get_size (buffer) == vdata->data_to_verify_size);
+    fail_unless (gst_buffer_memcmp (buffer, 0, vdata->data_to_verify,
             vdata->data_to_verify_size) == 0);
   }
 
@@ -125,14 +128,8 @@ buffer_verify_data (void *buffer, void *user_data)
     fail_unless (GST_BUFFER_OFFSET (buffer) == vdata->offset_counter);
   }
 
-  if (vdata->caps) {
-    GST_LOG ("%" GST_PTR_FORMAT " = %" GST_PTR_FORMAT " ?",
-        GST_BUFFER_CAPS (buffer), vdata->caps);
-    fail_unless (gst_caps_is_equal (GST_BUFFER_CAPS (buffer), vdata->caps));
-  }
-
   vdata->ts_counter += GST_BUFFER_DURATION (buffer);
-  vdata->offset_counter += GST_BUFFER_SIZE (buffer);
+  vdata->offset_counter += gst_buffer_get_size (buffer);
   vdata->buffer_counter++;
 }
 
@@ -246,14 +243,8 @@ gst_parser_test_run (GstParserTest * test, GstCaps ** out_caps)
         if (!k)
           buffer = buffer_new (test->series[j].data, test->series[j].size);
         else {
-          GstCaps *caps = gst_buffer_get_caps (buffer);
-
           buffer = gst_buffer_join (buffer,
               buffer_new (test->series[j].data, test->series[j].size));
-          if (caps) {
-            gst_buffer_set_caps (buffer, caps);
-            gst_caps_unref (caps);
-          }
         }
       }
       fail_unless_equals_int (gst_pad_push (srcpad, buffer), GST_FLOW_OK);
@@ -292,7 +283,7 @@ gst_parser_test_run (GstParserTest * test, GstCaps ** out_caps)
     fail_unless_equals_int (datasum, size);
   }
 
-  src_caps = gst_pad_get_negotiated_caps (sinkpad);
+  src_caps = gst_pad_get_current_caps (sinkpad);
   GST_LOG ("output caps: %" GST_PTR_FORMAT, src_caps);
 
   if (test->sink_caps) {

@@ -89,7 +89,7 @@
 #define GST_USE_UNSTABLE_API 1
 
 #include <gst/gst.h>
-#include <gst/interfaces/xoverlay.h>
+#include <gst/interfaces/videooverlay.h>
 #include <gst/interfaces/photography.h>
 #include <string.h>
 #include <sys/time.h>
@@ -240,8 +240,7 @@ sync_bus_callback (GstBus * bus, GstMessage * message, gpointer data)
   const GValue *image;
   GstBuffer *buf = NULL;
   guint8 *data_buf = NULL;
-  gchar *caps_string;
-  guint size = 0;
+  gsize size = 0;
   gchar *preview_filename = NULL;
   FILE *f = NULL;
   size_t written;
@@ -250,10 +249,10 @@ sync_bus_callback (GstBus * bus, GstMessage * message, gpointer data)
     case GST_MESSAGE_ELEMENT:{
       st = gst_message_get_structure (message);
       if (st) {
-        if (gst_structure_has_name (message->structure, "prepare-xwindow-id")) {
+        if (gst_structure_has_name (st, "prepare-xwindow-id")) {
           if (!no_xwindow && window) {
-            gst_x_overlay_set_window_handle (GST_X_OVERLAY (GST_MESSAGE_SRC
-                    (message)), window);
+            gst_video_overlay_set_window_handle (GST_VIDEO_OVERLAY
+                (GST_MESSAGE_SRC (message)), window);
             gst_message_unref (message);
             message = NULL;
             return GST_BUS_DROP;
@@ -266,13 +265,10 @@ sync_bus_callback (GstBus * bus, GstMessage * message, gpointer data)
           image = gst_structure_get_value (st, "buffer");
           if (image) {
             buf = gst_value_get_buffer (image);
-            data_buf = GST_BUFFER_DATA (buf);
-            size = GST_BUFFER_SIZE (buf);
+            data_buf = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
             preview_filename = g_strdup_printf ("test_vga.rgb");
-            caps_string = gst_caps_to_string (GST_BUFFER_CAPS (buf));
-            g_print ("writing buffer to %s, elapsed: %.2fs, buffer caps: %s\n",
-                preview_filename, g_timer_elapsed (timer, NULL), caps_string);
-            g_free (caps_string);
+            g_print ("writing buffer to %s, elapsed: %.2fs\n",
+                preview_filename, g_timer_elapsed (timer, NULL));
             f = g_fopen (preview_filename, "w");
             if (f) {
               written = fwrite (data_buf, size, 1, f);
@@ -284,6 +280,7 @@ sync_bus_callback (GstBus * bus, GstMessage * message, gpointer data)
               g_print ("error opening file for raw image writing\n");
             }
             g_free (preview_filename);
+            gst_buffer_unmap (buf, data_buf, size);
           }
         }
       }
@@ -526,12 +523,11 @@ setup_pipeline (void)
   /* set properties */
   if (src_format) {
     filter_caps = gst_caps_from_string (src_format);
-  } else if (src_csp && strlen (src_csp) == 4) {
+  } else if (src_csp) {
     /* Set requested colorspace format, this is needed if the default 
        colorspace negotiated for viewfinder doesn't match with e.g. encoders. */
-    filter_caps = gst_caps_new_simple ("video/x-raw-yuv",
-        "format", GST_TYPE_FOURCC,
-        GST_MAKE_FOURCC (src_csp[0], src_csp[1], src_csp[2], src_csp[3]), NULL);
+    filter_caps = gst_caps_new_simple ("video/x-raw",
+        "format", G_TYPE_STRING, src_csp, NULL);
   }
 
   if (filter_caps) {
@@ -646,8 +642,7 @@ run_pipeline (gpointer user_data)
 
   g_object_get (camera_bin, "video-source", &video_source, NULL);
   if (video_source) {
-    if (GST_IS_ELEMENT (video_source) &&
-        gst_element_implements_interface (video_source, GST_TYPE_PHOTOGRAPHY)) {
+    if (GST_IS_ELEMENT (video_source) && GST_IS_PHOTOGRAPHY (video_source)) {
       /* Set GstPhotography interface options. If option not given as
          command-line parameter use default of the source element. */
       if (scene_mode != SCENE_MODE_NONE)

@@ -197,7 +197,7 @@ noinst_HEADERS = elements/mxfdemux.h
 
 TESTS = $(check_PROGRAMS)
 
-AM_CFLAGS = $(GST_CHECK_CFLAGS) $(GST_OPTION_CFLAGS) \
+AM_CFLAGS = $(GST_CFLAGS) $(GST_CHECK_CFLAGS) $(GST_OPTION_CFLAGS) \
 		-DGST_TEST_FILES_PATH="\"$(TEST_FILES_DIRECTORY)\"" \
 		-UG_DISABLE_ASSERT -UG_DISABLE_CAST_CHECKS
 LDADD = $(GST_CHECK_LIBS)
@@ -207,7 +207,7 @@ noinst_LTLIBRARIES = libparser.la
 libparser_la_SOURCES = elements/parser.c elements/parser.h
 libparser_la_CFLAGS = \
 	-I$(top_srcdir)/tests/check \
-	$(GST_CHECK_CFLAGS) $(GST_OPTION_CFLAGS)
+	$(GST_CFLAGS) $(GST_CHECK_CFLAGS) $(GST_OPTION_CFLAGS)
 
 elements_mpegvideoparse_LDADD = libparser.la $(LDADD)
 

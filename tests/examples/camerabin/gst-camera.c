@@ -32,7 +32,7 @@
 #include "gst-camera.h"
 
 #include <gst/gst.h>
-#include <gst/interfaces/xoverlay.h>
+#include <gst/interfaces/videooverlay.h>
 #include <gst/interfaces/colorbalance.h>
 #include <gst/interfaces/photography.h>
 #include <gtk/gtk.h>
