@@ -99,8 +99,8 @@ static gboolean gst_amrnbenc_set_format (GstAudioEncoder * enc,
 static GstFlowReturn gst_amrnbenc_handle_frame (GstAudioEncoder * enc,
     GstBuffer * in_buf);
 
-GST_BOILERPLATE (GstAmrnbEnc, gst_amrnbenc, GstAudioEncoder,
-    GST_TYPE_AUDIO_ENCODER);
+#define gst_amrnbenc_parent_class parent_class
+G_DEFINE_TYPE (GstAmrnbEnc, gst_amrnbenc, GST_TYPE_AUDIO_ENCODER);
 
 static void
 gst_amrnbenc_set_property (GObject * object, guint prop_id,
@@ -137,25 +137,10 @@ gst_amrnbenc_get_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_amrnbenc_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_template));
-
-  gst_element_class_set_details_simple (element_class, "AMR-NB audio encoder",
-      "Codec/Encoder/Audio",
-      "Adaptive Multi-Rate Narrow-Band audio encoder",
-      "Wim Taymans <wim.taymans@gmail.com>");
-}
-
-static void
 gst_amrnbenc_class_init (GstAmrnbEncClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstAudioEncoderClass *base_class = GST_AUDIO_ENCODER_CLASS (klass);
 
   object_class->set_property = gst_amrnbenc_set_property;
@@ -172,12 +157,22 @@ gst_amrnbenc_class_init (GstAmrnbEncClass * klass)
           BANDMODE_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&sink_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&src_template));
+
+  gst_element_class_set_details_simple (element_class, "AMR-NB audio encoder",
+      "Codec/Encoder/Audio",
+      "Adaptive Multi-Rate Narrow-Band audio encoder",
+      "Wim Taymans <wim.taymans@gmail.com>");
+
   GST_DEBUG_CATEGORY_INIT (gst_amrnbenc_debug, "amrnbenc", 0,
       "AMR-NB audio encoder");
 }
 
 static void
-gst_amrnbenc_init (GstAmrnbEnc * amrnbenc, GstAmrnbEncClass * klass)
+gst_amrnbenc_init (GstAmrnbEnc * amrnbenc)
 {
 }
 
@@ -249,8 +244,9 @@ gst_amrnbenc_handle_frame (GstAudioEncoder * enc, GstBuffer * buffer)
   GstAmrnbEnc *amrnbenc;
   GstFlowReturn ret;
   GstBuffer *out;
-  guint8 *data;
-  gint outsize;
+  short *in_data;
+  guint8 *out_data;
+  gsize in_size, out_size;
 
   amrnbenc = GST_AMRNBENC (enc);
 
@@ -262,9 +258,11 @@ gst_amrnbenc_handle_frame (GstAudioEncoder * enc, GstBuffer * buffer)
     return GST_FLOW_OK;
   }
 
-  if (G_UNLIKELY (GST_BUFFER_SIZE (buffer) < 320)) {
-    GST_DEBUG_OBJECT (amrnbenc, "discarding trailing data %d",
-        buffer ? GST_BUFFER_SIZE (buffer) : 0);
+  in_data = gst_buffer_map (buffer, &in_size, NULL, GST_MAP_READ);
+
+  if (G_UNLIKELY (in_size < 320)) {
+    gst_buffer_unmap (buffer, in_data, in_size);
+    GST_DEBUG_OBJECT (amrnbenc, "discarding trailing data %d", in_size);
     return gst_audio_encoder_finish_frame (enc, NULL, -1);
   }
 
@@ -272,17 +270,17 @@ gst_amrnbenc_handle_frame (GstAudioEncoder * enc, GstBuffer * buffer)
   out = gst_buffer_new_and_alloc (32);
   /* AMR encoder actually writes into the source data buffers it gets */
   /* should be able to handle that with what we are given */
-  data = GST_BUFFER_DATA (buffer);
 
+  out_data = gst_buffer_map (buffer, NULL, NULL, GST_MAP_WRITE);
   /* encode */
-  outsize =
+  out_size =
       Encoder_Interface_Encode (amrnbenc->handle, amrnbenc->bandmode,
-      (short *) data, (guint8 *) GST_BUFFER_DATA (out), 0);
+      in_data, out_data, 0);
+  gst_buffer_unmap (out, out_data, out_size);
 
-  GST_LOG_OBJECT (amrnbenc, "output data size %d", outsize);
+  GST_LOG_OBJECT (amrnbenc, "output data size %d", out_size);
 
-  if (outsize) {
-    GST_BUFFER_SIZE (out) = outsize;
+  if (out_size) {
     ret = gst_audio_encoder_finish_frame (enc, out, 160);
   } else {
     /* should not happen (without dtx or so at least) */
