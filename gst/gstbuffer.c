@@ -600,7 +600,8 @@ gst_buffer_new_wrapped_full (gpointer data, GFreeFunc free_func, gsize offset,
  * @data: data to wrap
  * @size: allocated size of @data
  *
- * Creates a new buffer that wraps the given @data.
+ * Creates a new buffer that wraps the given @data. The memory will be freed
+ * with g_free and will be marked writable.
  *
  * MT safe.
  *
