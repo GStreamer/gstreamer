@@ -252,6 +252,8 @@ enum
   PROP_FRAME,
   PROP_AV_OFFSET,
   PROP_VIDEO_SINK,
+  PROP_AUDIO_SINK,
+  PROP_TEXT_SINK,
   PROP_LAST
 };
 
@@ -419,6 +421,31 @@ gst_play_sink_class_init (GstPlaySinkClass * klass)
       g_param_spec_object ("video-sink", "Video Sink",
           "the video output element to use (NULL = default sink)",
           GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstPlaySink:audio-sink:
+   *
+   * Set the used audio sink element. NULL will use the default sink. playsink
+   * must be in %GST_STATE_NULL
+   *
+   * Since: 0.10.36
+   */
+  g_object_class_install_property (gobject_klass, PROP_AUDIO_SINK,
+      g_param_spec_object ("audio-sink", "Audio Sink",
+          "the audio output element to use (NULL = default sink)",
+          GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstPlaySink:text-sink:
+   *
+   * Set the used text sink element. NULL will use the default sink. playsink
+   * must be in %GST_STATE_NULL
+   *
+   * Since: 0.10.36
+   */
+  g_object_class_install_property (gobject_klass, PROP_TEXT_SINK,
+      g_param_spec_object ("text-sink", "Text sink",
+          "the text output element to use (NULL = default textoverlay)",
+          GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
 
   g_signal_new ("reconfigure", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstPlaySinkClass,
@@ -3639,6 +3666,14 @@ gst_play_sink_set_property (GObject * object, guint prop_id,
       gst_play_sink_set_sink (playsink, GST_PLAY_SINK_TYPE_VIDEO,
           g_value_get_object (value));
       break;
+    case PROP_AUDIO_SINK:
+      gst_play_sink_set_sink (playsink, GST_PLAY_SINK_TYPE_AUDIO,
+          g_value_get_object (value));
+      break;
+    case PROP_TEXT_SINK:
+      gst_play_sink_set_sink (playsink, GST_PLAY_SINK_TYPE_TEXT,
+          g_value_get_object (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, spec);
       break;
@@ -3680,6 +3715,14 @@ gst_play_sink_get_property (GObject * object, guint prop_id,
     case PROP_VIDEO_SINK:
       g_value_take_object (value, gst_play_sink_get_sink (playsink,
               GST_PLAY_SINK_TYPE_VIDEO));
+      break;
+    case PROP_AUDIO_SINK:
+      g_value_take_object (value, gst_play_sink_get_sink (playsink,
+              GST_PLAY_SINK_TYPE_AUDIO));
+      break;
+    case PROP_TEXT_SINK:
+      g_value_take_object (value, gst_play_sink_get_sink (playsink,
+              GST_PLAY_SINK_TYPE_TEXT));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, spec);
