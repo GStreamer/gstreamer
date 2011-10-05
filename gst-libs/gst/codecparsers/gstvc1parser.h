@@ -129,9 +129,14 @@ typedef enum
 
 typedef struct _GstVC1SeqHdr            GstVC1SeqHdr;
 typedef struct _GstVC1AdvancedSeqHdr    GstVC1AdvancedSeqHdr;
-typedef struct _GstVC1SimpleMainSeqHdr  GstVC1SimpleMainSeqHdr;
 typedef struct _GstVC1HrdParam          GstVC1HrdParam;
 typedef struct _GstVC1EntryPointHdr     GstVC1EntryPointHdr;
+
+typedef struct _GstVC1SeqLayer     GstVC1SeqLayer;
+
+typedef struct _GstVC1SeqStructA   GstVC1SeqStructA;
+typedef struct _GstVC1SeqStructB   GstVC1SeqStructB;
+typedef struct _GstVC1SeqStructC   GstVC1SeqStructC;
 
 /* Pictures Structures */
 typedef struct _GstVC1FrameHdr          GstVC1FrameHdr;
@@ -150,37 +155,6 @@ struct _GstVC1HrdParam
   guint8 buffer_size_exponent;
   guint16 hrd_rate[MAX_HRD_NUM_LEAKY_BUCKETS];
   guint16 hrd_buffer[MAX_HRD_NUM_LEAKY_BUCKETS];
-};
-
-/**
- * GstVC1SimpleMainSeqHdr:
- *
- * Structure for simple and main profile sequence headers specific parameters.
- */
-struct _GstVC1SimpleMainSeqHdr
-{
-  guint8 res_sprite;
-  guint8 loop_filter;
-  guint8 multires;
-  guint8 fastuvmc;
-  guint8 extended_mv;
-  guint8 dquant;
-  guint8 vstransform;
-  guint8 overlap;
-  guint8 syncmarker;
-  guint8 rangered;
-  guint8 maxbframes;
-  guint8 quantizer;
-
-  /* This should be filled by user if previously known */
-  guint16 coded_width;
-  /* This should be filled by user if previously known */
-  guint16 coded_height;
-
-  /* Wmvp specific */
-  guint8 wmvp;          /* Specify if the stream is wmp or not */
-  guint8 framerate;
-  guint8 slice_code;
 };
 
 /**
@@ -221,12 +195,15 @@ struct _GstVC1EntryPointHdr
 struct _GstVC1AdvancedSeqHdr
 {
   guint8  level;
+  guint8 frmrtq_postproc;
+  guint8 bitrtq_postproc;
   guint8  postprocflag;
   guint16 max_coded_width;
   guint16 max_coded_height;
   guint8  pulldown;
   guint8  interlace;
   guint8  tfcntrflag;
+  guint8 finterpflag;
   guint8  psf;
   guint8  display_ext;
   guint16 disp_horiz_size;
@@ -245,11 +222,78 @@ struct _GstVC1AdvancedSeqHdr
   guint8  transfer_char;
   guint8  matrix_coef;
   guint8  hrd_param_flag;
+  guint8 colordiff_format;
 
   GstVC1HrdParam hrd_param;
 
+  /* computed */
+  guint framerate; /* Around in fps, 0 if unknown*/
+  guint bitrate;   /* Around in kpbs, 0 if unknown*/
+
   /* The last parsed entry point */
   GstVC1EntryPointHdr entrypoint;
+};
+
+struct _GstVC1SeqStructA
+{
+  guint32 vert_size;
+  guint32 horiz_size;
+};
+
+struct _GstVC1SeqStructB
+{
+  guint8 level;
+  guint8 cbr;
+  guint32 framerate;
+
+  /* In simple and main profiles only */
+  guint32 hrd_buffer;
+  guint32 hrd_rate;
+};
+
+struct _GstVC1SeqStructC
+{
+  GstVC1Profile profile;
+
+  /* Only in simple and main profiles */
+  guint8 frmrtq_postproc;
+  guint8 bitrtq_postproc;
+  guint8 res_sprite;
+  guint8 loop_filter;
+  guint8 multires;
+  guint8 fastuvmc;
+  guint8 extended_mv;
+  guint8 dquant;
+  guint8 vstransform;
+  guint8 overlap;
+  guint8 syncmarker;
+  guint8 rangered;
+  guint8 maxbframes;
+  guint8 quantizer;
+  guint8 finterpflag;
+
+  /* Computed */
+  guint framerate; /* Around in fps, 0 if unknown*/
+  guint bitrate;   /* Around in kpbs, 0 if unknown*/
+
+  /* This should be filled by user if previously known */
+  guint16 coded_width;
+  /* This should be filled by user if previously known */
+  guint16 coded_height;
+
+  /* Wmvp specific */
+  guint8 wmvp;          /* Specify if the stream is wmp or not */
+  /* In the wmvp case, the framerate is not computed but in the bistream */
+  guint8 slice_code;
+};
+
+struct _GstVC1SeqLayer
+{
+  guint32 numframes;
+
+  GstVC1SeqStructA struct_a;
+  GstVC1SeqStructB struct_b;
+  GstVC1SeqStructC struct_c;
 };
 
 /**
@@ -259,22 +303,15 @@ struct _GstVC1AdvancedSeqHdr
  */
 struct _GstVC1SeqHdr
 {
-  guint8 profiletype;
-  guint8 colordiff_format;
-  guint8 frmrtq_postproc;
-  guint8 bitrtq_postproc;
-  guint8 finterpflag;
+  GstVC1Profile profile;
+
+  GstVC1SeqStructC struct_c;
 
   /*  calculated */
-  guint framerate; /* Around in fps, 0 if unknown*/
-  guint bitrate;   /* Around in kpbs, 0 if unknown*/
   guint mb_height;
   guint mb_width;
 
-  union {
-    GstVC1AdvancedSeqHdr   advanced;
-    GstVC1SimpleMainSeqHdr simplemain;
-  } profile;
+  GstVC1AdvancedSeqHdr   advanced;
 
 };
 
@@ -465,6 +502,24 @@ GstVC1ParserResult gst_vc1_parse_entry_point_header    (const  guint8 *data,
                                                         gsize size,
                                                         GstVC1EntryPointHdr * entrypoint,
                                                         GstVC1SeqHdr *seqhdr);
+
+GstVC1ParserResult gst_vc1_parse_sequence_layer        (const guint8 *data,
+                                                        gsize size,
+                                                        GstVC1SeqLayer * seqlayer);
+
+GstVC1ParserResult
+gst_vc1_parse_sequence_header_struct_a                 (const guint8 *data,
+                                                        gsize size,
+                                                        GstVC1SeqStructA *structa);
+GstVC1ParserResult
+gst_vc1_parse_sequence_header_struct_b                 (const guint8 *data,
+                                                        gsize size,
+                                                        GstVC1SeqStructB *structb);
+
+GstVC1ParserResult
+gst_vc1_parse_sequence_header_struct_c                 (const guint8 *data,
+                                                        gsize size,
+                                                        GstVC1SeqStructC *structc);
 
 GstVC1ParserResult gst_vc1_parse_frame_header          (const guint8 *data,
                                                         gsize size,

@@ -61,7 +61,10 @@ GstVC1Condover
 GstVC1MvMode
 GstVC1SeqHdr
 GstVC1AdvancedSeqHdr
-GstVC1SimpleMainSeqHdr
+GstVC1SeqLayer
+GstVC1SeqStructA
+GstVC1SeqStructB
+GstVC1SeqStructC
 GstVC1HrdParam
 GstVC1EntryPointHdr
 GstVC1FrameHdr
@@ -72,6 +75,10 @@ GstVC1VopDquant
 GstVC1BDU
 gst_vc1_identify_next_bdu
 gst_vc1_parse_sequence_header
+gst_vc1_parse_sequence_layer
+gst_vc1_parse_sequence_header_struct_a
+gst_vc1_parse_sequence_header_struct_b
+gst_vc1_parse_sequence_header_struct_c
 gst_vc1_parse_entry_point_header
 gst_vc1_parse_frame_header
 <SUBSECTION Standard>

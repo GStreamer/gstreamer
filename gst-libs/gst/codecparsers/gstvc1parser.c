@@ -565,28 +565,28 @@ get_unary (GstBitReader * br, gint stop, gint len)
 }
 
 static inline void
-calculate_framerate_bitrate (GstVC1SeqHdr * seqhdr)
+calculate_framerate_bitrate (guint8 frmrtq_postproc, guint8 bitrtq_postproc,
+    guint * framerate, guint * bitrate)
 {
-  /* Calulate bitrate and framerate */
-  if (seqhdr->frmrtq_postproc == 0 && seqhdr->bitrtq_postproc == 30) {
-    seqhdr->framerate = 0;
-    seqhdr->bitrate = 0;
-  } else if (seqhdr->frmrtq_postproc == 0 && seqhdr->bitrtq_postproc == 30) {
-    seqhdr->framerate = 2;
-    seqhdr->bitrate = 1952;
-  } else if (seqhdr->frmrtq_postproc == 0 && seqhdr->bitrtq_postproc == 31) {
-    seqhdr->framerate = 6;
-    seqhdr->bitrate = 2016;
+  if (frmrtq_postproc == 0 && bitrtq_postproc == 30) {
+    *framerate = 0;
+    *bitrate = 0;
+  } else if (frmrtq_postproc == 0 && bitrtq_postproc == 30) {
+    *framerate = 2;
+    *bitrate = 1952;
+  } else if (frmrtq_postproc == 0 && bitrtq_postproc == 31) {
+    *framerate = 6;
+    *bitrate = 2016;
   } else {
-    if (seqhdr->frmrtq_postproc == 7) {
-      seqhdr->framerate = 30;
+    if (frmrtq_postproc == 7) {
+      *framerate = 30;
     } else {
-      seqhdr->framerate = 2 + (seqhdr->frmrtq_postproc * 4);
+      *framerate = 2 + (frmrtq_postproc * 4);
     }
-    if (seqhdr->bitrtq_postproc == 31) {
-      seqhdr->bitrate = 2016;
+    if (bitrtq_postproc == 31) {
+      *bitrate = 2016;
     } else {
-      seqhdr->bitrate = 32 + (seqhdr->bitrtq_postproc * 64);
+      *bitrate = 32 + (bitrtq_postproc * 64);
     }
   }
 }
@@ -630,20 +630,22 @@ failed:
 static GstVC1ParserResult
 parse_sequence_header_advanced (GstVC1SeqHdr * seqhdr, GstBitReader * br)
 {
-  GstVC1AdvancedSeqHdr *advanced = &seqhdr->profile.advanced;
+  GstVC1AdvancedSeqHdr *advanced = &seqhdr->advanced;
 
   GST_DEBUG ("Parsing sequence header in advanced mode");
 
   READ_UINT8 (br, advanced->level, 3);
 
-  READ_UINT8 (br, seqhdr->colordiff_format, 2);
-  READ_UINT8 (br, seqhdr->frmrtq_postproc, 3);
-  READ_UINT8 (br, seqhdr->bitrtq_postproc, 5);
-  calculate_framerate_bitrate (seqhdr);
+  READ_UINT8 (br, advanced->colordiff_format, 2);
+  READ_UINT8 (br, advanced->frmrtq_postproc, 3);
+  READ_UINT8 (br, advanced->bitrtq_postproc, 5);
+
+  calculate_framerate_bitrate (advanced->frmrtq_postproc,
+      advanced->bitrtq_postproc, &advanced->framerate, &advanced->bitrate);
 
   GST_DEBUG ("level %u, colordiff_format %u , frmrtq_postproc %u,"
-      " bitrtq_postproc %u", advanced->level, seqhdr->colordiff_format,
-      seqhdr->frmrtq_postproc, seqhdr->bitrtq_postproc);
+      " bitrtq_postproc %u", advanced->level, advanced->colordiff_format,
+      advanced->frmrtq_postproc, advanced->bitrtq_postproc);
 
   if (gst_bit_reader_get_remaining (br) < 32)
     goto failed;
@@ -659,13 +661,13 @@ parse_sequence_header_advanced (GstVC1SeqHdr * seqhdr, GstBitReader * br)
   advanced->pulldown = gst_bit_reader_get_bits_uint8_unchecked (br, 1);
   advanced->interlace = gst_bit_reader_get_bits_uint8_unchecked (br, 1);
   advanced->tfcntrflag = gst_bit_reader_get_bits_uint8_unchecked (br, 1);
-  seqhdr->finterpflag = gst_bit_reader_get_bits_uint8_unchecked (br, 1);
+  advanced->finterpflag = gst_bit_reader_get_bits_uint8_unchecked (br, 1);
 
   GST_DEBUG ("postprocflag %u, max_coded_width %u, max_coded_height %u,"
       "pulldown %u, interlace %u, tfcntrflag %u, finterpflag %u",
       advanced->postprocflag, advanced->max_coded_width,
       advanced->max_coded_height, advanced->pulldown,
-      advanced->interlace, advanced->tfcntrflag, seqhdr->finterpflag);
+      advanced->interlace, advanced->tfcntrflag, advanced->finterpflag);
 
   /* Skipping reserved bit */
   gst_bit_reader_skip_unchecked (br, 1);
@@ -727,7 +729,7 @@ static GstVC1ParserResult
 parse_frame_header_advanced (GstBitReader * br, GstVC1FrameHdr * framehdr,
     GstVC1SeqHdr * seqhdr)
 {
-  GstVC1AdvancedSeqHdr *advhdr = &seqhdr->profile.advanced;
+  GstVC1AdvancedSeqHdr *advhdr = &seqhdr->advanced;
   GstVC1PicAdvanced *pic = &framehdr->pic.advanced;
   GstVC1EntryPointHdr *entrypthdr = &advhdr->entrypoint;
   guint8 mvmodeidx;
@@ -737,7 +739,7 @@ parse_frame_header_advanced (GstBitReader * br, GstVC1FrameHdr * framehdr,
   GST_DEBUG ("Parsing Frame header advanced %u", advhdr->interlace);
 
   /* Set the conveninence fields */
-  framehdr->profile = seqhdr->profiletype;
+  framehdr->profile = seqhdr->profile;
   framehdr->dquant = entrypthdr->dquant;
 
   if (advhdr->interlace) {
@@ -798,7 +800,7 @@ parse_frame_header_advanced (GstBitReader * br, GstVC1FrameHdr * framehdr,
     GST_DEBUG ("uvsamp %u", pic->uvsamp);
   }
 
-  if (seqhdr->finterpflag) {
+  if (advhdr->finterpflag) {
     READ_UINT8 (br, framehdr->interpfrm, 1);
     GST_DEBUG ("interpfrm %u", framehdr->interpfrm);
   }
@@ -988,31 +990,28 @@ parse_frame_header (GstBitReader * br, GstVC1FrameHdr * framehdr,
 {
   guint8 mvmodeidx;
   GstVC1PicSimpleMain *pic = &framehdr->pic.simple;
-  GstVC1SimpleMainSeqHdr *simplehdr = &seqhdr->profile.simplemain;
-  guint width = seqhdr->mb_width;
-  guint height = seqhdr->mb_height;
-
+  GstVC1SeqStructC *structc = &seqhdr->struct_c;
 
   GST_DEBUG ("Parsing frame header in simple or main mode");
 
   /* Set the conveninence fields */
-  framehdr->profile = seqhdr->profiletype;
-  framehdr->dquant = simplehdr->dquant;
+  framehdr->profile = seqhdr->profile;
+  framehdr->dquant = structc->dquant;
 
   framehdr->interpfrm = 0;
-  if (seqhdr->finterpflag)
+  if (structc->finterpflag)
     READ_UINT8 (br, framehdr->interpfrm, 1);
 
   READ_UINT8 (br, pic->frmcnt, 2);
 
   pic->rangeredfrm = 0;
-  if (simplehdr->rangered) {
+  if (structc->rangered) {
     READ_UINT8 (br, pic->rangeredfrm, 2);
   }
 
   /*  Figuring out the picture type */
   READ_UINT8 (br, framehdr->ptype, 1);
-  if (simplehdr->maxbframes) {
+  if (structc->maxbframes) {
     if (!framehdr->ptype) {
       READ_UINT8 (br, framehdr->ptype, 1);
 
@@ -1055,7 +1054,7 @@ parse_frame_header (GstBitReader * br, GstVC1FrameHdr * framehdr,
   GST_DEBUG ("pqindex %u", framehdr->pqindex);
 
   /* compute pquant */
-  if (simplehdr->quantizer == GST_VC1_QUANTIZER_IMPLICITLY)
+  if (structc->quantizer == GST_VC1_QUANTIZER_IMPLICITLY)
     framehdr->pquant = vc1_pquant_table[0][framehdr->pqindex];
   else
     framehdr->pquant = vc1_pquant_table[1][framehdr->pqindex];
@@ -1069,20 +1068,20 @@ parse_frame_header (GstBitReader * br, GstVC1FrameHdr * framehdr,
 
   /* Set pquantizer */
   framehdr->pquantizer = 1;
-  if (simplehdr->quantizer == GST_VC1_QUANTIZER_IMPLICITLY)
+  if (structc->quantizer == GST_VC1_QUANTIZER_IMPLICITLY)
     framehdr->pquantizer = framehdr->pqindex < 9;
-  else if (simplehdr->quantizer == GST_VC1_QUANTIZER_NON_UNIFORM)
+  else if (structc->quantizer == GST_VC1_QUANTIZER_NON_UNIFORM)
     framehdr->pquantizer = 0;
 
-  if (simplehdr->quantizer == GST_VC1_QUANTIZER_EXPLICITLY)
+  if (structc->quantizer == GST_VC1_QUANTIZER_EXPLICITLY)
     READ_UINT8 (br, framehdr->pquantizer, 1);
 
-  if (simplehdr->extended_mv == 1) {
+  if (structc->extended_mv == 1) {
     pic->mvrange = get_unary (br, 0, 3);
     GST_DEBUG ("mvrange %u", pic->mvrange);
   }
 
-  if (simplehdr->multires && (framehdr->ptype == GST_VC1_PICTURE_TYPE_P ||
+  if (structc->multires && (framehdr->ptype == GST_VC1_PICTURE_TYPE_P ||
           framehdr->ptype == GST_VC1_PICTURE_TYPE_I)) {
     READ_UINT8 (br, pic->respic, 2);
     GST_DEBUG ("Respic %u", pic->respic);
@@ -1132,7 +1131,7 @@ parse_frame_header (GstBitReader * br, GstVC1FrameHdr * framehdr,
         parse_vopdquant (br, framehdr, framehdr->dquant);
       }
 
-      if (simplehdr->vstransform) {
+      if (structc->vstransform) {
         READ_UINT8 (br, pic->ttmbf, 1);
         GST_DEBUG ("ttmbf %u", pic->ttmbf);
 
@@ -1163,7 +1162,7 @@ parse_frame_header (GstBitReader * br, GstVC1FrameHdr * framehdr,
       if (framehdr->dquant)
         parse_vopdquant (br, framehdr, framehdr->dquant);
 
-      if (simplehdr->vstransform) {
+      if (structc->vstransform) {
         READ_UINT8 (br, pic->ttmbf, 1);
 
         if (pic->ttmbf) {
@@ -1186,6 +1185,130 @@ parse_frame_header (GstBitReader * br, GstVC1FrameHdr * framehdr,
 
 failed:
   GST_WARNING ("Failed to parse Simple picture header");
+
+  return GST_VC1_PARSER_ERROR;
+}
+
+static GstVC1ParserResult
+parse_sequence_header_struct_a (GstBitReader * br, GstVC1SeqStructA * structa)
+{
+  if (gst_bit_reader_get_remaining (br) < 64) {
+    GST_WARNING ("Failed to parse struct A");
+
+    return GST_VC1_PARSER_ERROR;
+  }
+
+  structa->vert_size = gst_bit_reader_get_bits_uint32_unchecked (br, 32);
+  structa->horiz_size = gst_bit_reader_get_bits_uint32_unchecked (br, 32);
+
+  return GST_VC1_PARSER_OK;
+}
+
+static GstVC1ParserResult
+parse_sequence_header_struct_b (GstBitReader * br, GstVC1SeqStructB * structb)
+{
+  if (gst_bit_reader_get_remaining (br) < 96) {
+    GST_WARNING ("Failed to parse sequence header");
+
+    return GST_VC1_PARSER_ERROR;
+  }
+
+  structb->level = gst_bit_reader_get_bits_uint8_unchecked (br, 3);
+  structb->cbr = gst_bit_reader_get_bits_uint8_unchecked (br, 1);
+
+  /* res4 */
+  gst_bit_reader_skip_unchecked (br, 4);
+
+  structb->hrd_buffer = gst_bit_reader_get_bits_uint32_unchecked (br, 24);
+  structb->hrd_rate = gst_bit_reader_get_bits_uint32_unchecked (br, 32);
+  structb->framerate = gst_bit_reader_get_bits_uint32_unchecked (br, 32);
+
+  return GST_VC1_PARSER_OK;
+}
+
+static GstVC1ParserResult
+parse_sequence_header_struct_c (GstBitReader * br, GstVC1SeqStructC * structc)
+{
+  guint8 old_interlaced_mode, tmp;
+
+  READ_UINT8 (br, tmp, 2);
+  structc->profile = tmp;
+
+  if (structc->profile == GST_VC1_PROFILE_ADVANCED)
+    return GST_VC1_PARSER_OK;
+
+  GST_DEBUG ("Parsing sequence header in simple or main mode");
+
+  if (gst_bit_reader_get_remaining (br) < 29)
+    goto failed;
+
+  /* Reserved bits */
+  old_interlaced_mode = gst_bit_reader_get_bits_uint8_unchecked (br, 1);
+  if (old_interlaced_mode)
+    GST_WARNING ("Old interlaced mode used");
+
+  structc->wmvp = gst_bit_reader_get_bits_uint8_unchecked (br, 1);
+  if (structc->wmvp)
+    GST_DEBUG ("WMVP mode");
+
+  structc->frmrtq_postproc = gst_bit_reader_get_bits_uint8_unchecked (br, 3);
+  structc->bitrtq_postproc = gst_bit_reader_get_bits_uint8_unchecked (br, 5);
+  structc->loop_filter = gst_bit_reader_get_bits_uint8_unchecked (br, 1);
+
+  calculate_framerate_bitrate (structc->frmrtq_postproc,
+      structc->bitrtq_postproc, &structc->framerate, &structc->bitrate);
+
+  /* Skipping reserved3 bit */
+  gst_bit_reader_skip_unchecked (br, 1);
+
+  structc->multires = gst_bit_reader_get_bits_uint8_unchecked (br, 1);
+
+  /* Skipping reserved4 bit */
+  gst_bit_reader_skip_unchecked (br, 1);
+
+  structc->fastuvmc = gst_bit_reader_get_bits_uint8_unchecked (br, 1);
+  structc->extended_mv = gst_bit_reader_get_bits_uint8_unchecked (br, 1);
+  structc->dquant = gst_bit_reader_get_bits_uint8_unchecked (br, 2);
+  structc->vstransform = gst_bit_reader_get_bits_uint8_unchecked (br, 1);
+
+  /* Skipping reserved5 bit */
+  gst_bit_reader_skip_unchecked (br, 1);
+
+  structc->overlap = gst_bit_reader_get_bits_uint8_unchecked (br, 1);
+  structc->syncmarker = gst_bit_reader_get_bits_uint8_unchecked (br, 1);
+  structc->rangered = gst_bit_reader_get_bits_uint8_unchecked (br, 1);
+  structc->maxbframes = gst_bit_reader_get_bits_uint8_unchecked (br, 3);
+  structc->quantizer = gst_bit_reader_get_bits_uint8_unchecked (br, 2);
+  structc->finterpflag = gst_bit_reader_get_bits_uint8_unchecked (br, 1);
+
+  GST_DEBUG ("frmrtq_postproc %u, bitrtq_postproc %u, loop_filter %u, "
+      "multires %u, fastuvmc %u, extended_mv %u, dquant %u, vstransform %u, "
+      "overlap %u, syncmarker %u, rangered %u, maxbframes %u, quantizer %u, "
+      "finterpflag %u", structc->frmrtq_postproc, structc->bitrtq_postproc,
+      structc->loop_filter, structc->multires, structc->fastuvmc,
+      structc->extended_mv, structc->dquant, structc->vstransform,
+      structc->overlap, structc->syncmarker, structc->rangered,
+      structc->maxbframes, structc->quantizer, structc->finterpflag);
+
+  if (structc->wmvp) {
+    if (gst_bit_reader_get_remaining (br) < 29)
+      goto failed;
+
+    structc->coded_width = gst_bit_reader_get_bits_uint16_unchecked (br, 11);
+    structc->coded_height = gst_bit_reader_get_bits_uint16_unchecked (br, 11);
+    structc->framerate = gst_bit_reader_get_bits_uint8_unchecked (br, 5);
+    gst_bit_reader_skip_unchecked (br, 1);
+    structc->slice_code = gst_bit_reader_get_bits_uint8_unchecked (br, 1);
+
+    GST_DEBUG ("coded_width %u, coded_height %u, framerate %u slice_code %u",
+        structc->coded_width, structc->coded_height, structc->framerate,
+        structc->slice_code);
+  }
+
+  return GST_VC1_PARSER_OK;
+
+failed:
+  GST_WARNING ("Failed to struct C");
 
   return GST_VC1_PARSER_ERROR;
 }
@@ -1230,7 +1353,7 @@ gst_vc1_identify_next_bdu (const guint8 * data, gsize size, GstVC1BDU * bdu)
   bdu->type = (GstVC1StartCode) (data[bdu->offset - 1]);
 
   if (bdu->type == GST_VC1_END_OF_SEQ) {
-    GST_DEBUG ("End-of-Sequence BDU found");
+    GST_DEBUG ("End-of-Seq BDU found");
     bdu->size = 0;
     return GST_VC1_PARSER_OK;
   }
@@ -1252,10 +1375,135 @@ gst_vc1_identify_next_bdu (const guint8 * data, gsize size, GstVC1BDU * bdu)
 }
 
 /**
- * gst_vc1_parse_sequence_header:
+ * gst_vc1_parse_sequence_layer:
  * @data: The data to parse
  * @size: the size of @data
- * @seqhdr: The #GstVC1SeqHdr to set.
+ * @structa: The #GstVC1SeqLayer to set.
+ *
+ * Parses @data, and fills @seqlayer fields.
+ *
+ * Returns: a #GstVC1ParserResult
+ */
+GstVC1ParserResult
+gst_vc1_parse_sequence_layer (const guint8 * data, gsize size,
+    GstVC1SeqLayer * seqlayer)
+{
+  guint32 tmp;
+  GstBitReader br = GST_BIT_READER_INIT (data, size);
+
+  g_return_val_if_fail (seqlayer != NULL, GST_VC1_PARSER_ERROR);
+
+  ensure_debug_category ();
+
+  READ_UINT32 (&br, tmp, 8);
+  if (tmp != 0xC5)
+    goto failed;
+
+  READ_UINT32 (&br, seqlayer->numframes, 24);
+
+  if (parse_sequence_header_struct_c (&br, &seqlayer->struct_c) ==
+      GST_VC1_PARSER_ERROR)
+    goto failed;
+
+  READ_UINT32 (&br, tmp, 32);
+  if (tmp != 0x04)
+    goto failed;
+
+  if (parse_sequence_header_struct_a (&br, &seqlayer->struct_a) ==
+      GST_VC1_PARSER_ERROR)
+    goto failed;
+
+  READ_UINT32 (&br, tmp, 32);
+  if (tmp != 0x0C)
+    goto failed;
+
+  if (parse_sequence_header_struct_b (&br, &seqlayer->struct_b) ==
+      GST_VC1_PARSER_ERROR)
+    goto failed;
+
+  return GST_VC1_PARSER_OK;
+
+failed:
+  GST_WARNING ("Failed to parse sequence layer");
+
+  return GST_VC1_PARSER_ERROR;
+}
+
+/**
+ * gst_vc1_parse_sequence_header_struct_a:
+ * @data: The data to parse
+ * @size: the size of @data
+ * @structa: The #GstVC1SeqStructA to set.
+ *
+ * Parses @data, and fills @structa fields.
+ *
+ * Returns: a #GstVC1ParserResult
+ */
+GstVC1ParserResult
+gst_vc1_parse_sequence_header_struct_a (const guint8 * data,
+    gsize size, GstVC1SeqStructA * structa)
+{
+  GstBitReader br = GST_BIT_READER_INIT (data, size);
+
+  g_return_val_if_fail (structa != NULL, GST_VC1_PARSER_ERROR);
+
+  ensure_debug_category ();
+
+
+  return parse_sequence_header_struct_a (&br, structa);
+}
+
+/**
+ * gst_vc1_parse_sequence_header_struct_b:
+ * @data: The data to parse
+ * @size: the size of @data
+ * @structa: The #GstVC1SeqStructB to set.
+ *
+ * Parses @data, and fills @structb fields.
+ *
+ * Returns: a #GstVC1ParserResult
+ */
+GstVC1ParserResult
+gst_vc1_parse_sequence_header_struct_b (const guint8 * data,
+    gsize size, GstVC1SeqStructB * structb)
+{
+  GstBitReader br = GST_BIT_READER_INIT (data, size);
+
+  g_return_val_if_fail (structb != NULL, GST_VC1_PARSER_ERROR);
+
+  ensure_debug_category ();
+
+  return parse_sequence_header_struct_b (&br, structb);
+}
+
+/**
+ * gst_vc1_parse_sequence_header_struct_c:
+ * @data: The data to parse
+ * @size: the size of @data
+ * @structc: The #GstVC1SeqStructC to set.
+ *
+ * Parses @data, and fills @structc fields.
+ *
+ * Returns: a #GstVC1ParserResult
+ */
+GstVC1ParserResult
+gst_vc1_parse_sequence_header_struct_c (const guint8 * data, gsize size,
+    GstVC1SeqStructC * structc)
+{
+  GstBitReader br = GST_BIT_READER_INIT (data, size);
+
+  g_return_val_if_fail (structc != NULL, GST_VC1_PARSER_ERROR);
+
+  ensure_debug_category ();
+
+  return parse_sequence_header_struct_c (&br, structc);
+}
+
+/**
+* gst_vc1_parse_sequence_header:
+* @data: The data to parse
+* @size: the size of @data
+* @seqhdr: The #GstVC1SeqHdr to set.
  *
  * Parses @data, and fills @seqhdr fields.
  *
@@ -1265,92 +1513,25 @@ GstVC1ParserResult
 gst_vc1_parse_sequence_header (const guint8 * data, gsize size,
     GstVC1SeqHdr * seqhdr)
 {
-  GstBitReader br;
-  guint8 old_interlaced_mode;
-  GstVC1SimpleMainSeqHdr *simplehdr = &seqhdr->profile.simplemain;
+  GstBitReader br = GST_BIT_READER_INIT (data, size);
 
   g_return_val_if_fail (seqhdr != NULL, GST_VC1_PARSER_ERROR);
 
   ensure_debug_category ();
 
-  gst_bit_reader_init (&br, data, size);
-
-  READ_UINT8 (&br, seqhdr->profiletype, 2);
-
-  if (seqhdr->profiletype == GST_VC1_PROFILE_ADVANCED) {
-    return parse_sequence_header_advanced (seqhdr, &br);
-  }
-
-  GST_DEBUG ("Parsing sequence header in simple or main mode");
-
-  if (gst_bit_reader_get_remaining (&br) < 29)
+  if (parse_sequence_header_struct_c (&br, &seqhdr->struct_c) ==
+      GST_VC1_PARSER_ERROR)
     goto failed;
 
-  /* Reserved bits */
-  old_interlaced_mode = gst_bit_reader_get_bits_uint8_unchecked (&br, 1);
-  if (old_interlaced_mode)
-    GST_WARNING ("Old interlaced mode used");
+  /*  Convenience field */
+  seqhdr->profile = seqhdr->struct_c.profile;
 
-  simplehdr->wmvp = gst_bit_reader_get_bits_uint8_unchecked (&br, 1);
-  if (simplehdr->wmvp)
-    GST_DEBUG ("WMVP mode");
-
-  seqhdr->frmrtq_postproc = gst_bit_reader_get_bits_uint8_unchecked (&br, 3);
-  seqhdr->bitrtq_postproc = gst_bit_reader_get_bits_uint8_unchecked (&br, 5);
-  simplehdr->loop_filter = gst_bit_reader_get_bits_uint8_unchecked (&br, 1);
-  calculate_framerate_bitrate (seqhdr);
-
-  /* Skipping reserved3 bit */
-  gst_bit_reader_skip_unchecked (&br, 1);
-
-  simplehdr->multires = gst_bit_reader_get_bits_uint8_unchecked (&br, 1);
-
-  /* Skipping reserved4 bit */
-  gst_bit_reader_skip_unchecked (&br, 1);
-
-  simplehdr->fastuvmc = gst_bit_reader_get_bits_uint8_unchecked (&br, 1);
-  simplehdr->extended_mv = gst_bit_reader_get_bits_uint8_unchecked (&br, 1);
-  simplehdr->dquant = gst_bit_reader_get_bits_uint8_unchecked (&br, 2);
-  simplehdr->vstransform = gst_bit_reader_get_bits_uint8_unchecked (&br, 1);
-
-  /* Skipping reserved5 bit */
-  gst_bit_reader_skip_unchecked (&br, 1);
-
-  simplehdr->overlap = gst_bit_reader_get_bits_uint8_unchecked (&br, 1);
-  simplehdr->syncmarker = gst_bit_reader_get_bits_uint8_unchecked (&br, 1);
-  simplehdr->rangered = gst_bit_reader_get_bits_uint8_unchecked (&br, 1);
-  simplehdr->maxbframes = gst_bit_reader_get_bits_uint8_unchecked (&br, 3);
-  simplehdr->quantizer = gst_bit_reader_get_bits_uint8_unchecked (&br, 2);
-  seqhdr->finterpflag = gst_bit_reader_get_bits_uint8_unchecked (&br, 1);
-
-  GST_DEBUG ("frmrtq_postproc %u, bitrtq_postproc %u, loop_filter %u, "
-      "multires %u, fastuvmc %u, extended_mv %u, dquant %u, vstransform %u, "
-      "overlap %u, syncmarker %u, rangered %u, maxbframes %u, quantizer %u, "
-      "finterpflag %u", seqhdr->frmrtq_postproc, seqhdr->bitrtq_postproc,
-      simplehdr->loop_filter, simplehdr->multires, simplehdr->fastuvmc,
-      simplehdr->extended_mv, simplehdr->dquant, simplehdr->vstransform,
-      simplehdr->overlap, simplehdr->syncmarker, simplehdr->rangered,
-      simplehdr->maxbframes, simplehdr->quantizer, seqhdr->finterpflag);
-
-  if (simplehdr->wmvp) {
-    if (gst_bit_reader_get_remaining (&br) < 29)
-      goto failed;
-
-    simplehdr->coded_width = gst_bit_reader_get_bits_uint16_unchecked (&br, 11);
-    simplehdr->coded_height =
-        gst_bit_reader_get_bits_uint16_unchecked (&br, 11);
-    simplehdr->framerate = gst_bit_reader_get_bits_uint8_unchecked (&br, 5);
-    gst_bit_reader_skip_unchecked (&br, 1);
-    simplehdr->slice_code = gst_bit_reader_get_bits_uint8_unchecked (&br, 1);
-
-    GST_DEBUG ("coded_width %u, coded_height %u, framerate %u slice_code %u",
-        simplehdr->coded_width, simplehdr->coded_height, simplehdr->framerate,
-        simplehdr->slice_code);
-  }
+  if (seqhdr->profile == GST_VC1_PROFILE_ADVANCED)
+    return parse_sequence_header_advanced (seqhdr, &br);
 
   /* compute height and width */
-  seqhdr->mb_height = (simplehdr->coded_height + 15) >> 4;
-  seqhdr->mb_width = (simplehdr->coded_width + 15) >> 4;
+  seqhdr->mb_height = (seqhdr->struct_c.coded_height + 15) >> 4;
+  seqhdr->mb_width = (seqhdr->struct_c.coded_width + 15) >> 4;
 
   return GST_VC1_PARSER_OK;
 
@@ -1377,7 +1558,7 @@ gst_vc1_parse_entry_point_header (const guint8 * data, gsize size,
 {
   GstBitReader br;
   guint8 i;
-  GstVC1AdvancedSeqHdr *advanced = &seqhdr->profile.advanced;
+  GstVC1AdvancedSeqHdr *advanced = &seqhdr->advanced;
 
   g_return_val_if_fail (entrypoint != NULL, GST_VC1_PARSER_ERROR);
 
@@ -1401,8 +1582,7 @@ gst_vc1_parse_entry_point_header (const guint8 * data, gsize size,
   entrypoint->quantizer = gst_bit_reader_get_bits_uint8_unchecked (&br, 2);
 
   if (advanced->hrd_param_flag) {
-    for (i = 0; i < seqhdr->profile.advanced.hrd_param.hrd_num_leaky_buckets;
-        i++)
+    for (i = 0; i < seqhdr->advanced.hrd_param.hrd_num_leaky_buckets; i++)
       READ_UINT8 (&br, entrypoint->hrd_full[MAX_HRD_NUM_LEAKY_BUCKETS], 8);
   }
 
@@ -1459,7 +1639,7 @@ gst_vc1_parse_frame_header (const guint8 * data, gsize size,
 
   gst_bit_reader_init (&br, data, size);
 
-  if (seqhdr->profiletype == GST_VC1_PROFILE_ADVANCED)
+  if (seqhdr->profile == GST_VC1_PROFILE_ADVANCED)
     result = parse_frame_header_advanced (&br, framehdr, seqhdr);
   else
     result = parse_frame_header (&br, framehdr, seqhdr);
