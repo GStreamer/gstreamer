@@ -582,10 +582,7 @@ rtsp_ext_real_parse_sdp (GstRTSPExtension * ext, GstSDPMessage * sdp,
   GST_WRITE_UINT32_BE (datap + 14, 0);  /* next data header */
   offset += size;
 
-  buf = gst_buffer_new ();
-  GST_BUFFER_DATA (buf) = data;
-  GST_BUFFER_MALLOCDATA (buf) = data;
-  GST_BUFFER_SIZE (buf) = offset;
+  buf = gst_buffer_new_wrapped (data, offset);
 
   /* Set on caps */
   GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_IN_CAPS);
@@ -666,46 +663,30 @@ static void gst_rtsp_real_extension_init (gpointer g_iface,
     gpointer iface_data);
 static void gst_rtsp_real_finalize (GObject * obj);
 
-static void
-_do_init (GType rtspreal_type)
-{
-  static const GInterfaceInfo rtspextension_info = {
-    gst_rtsp_real_extension_init,
-    NULL,
-    NULL
-  };
-
-  g_type_add_interface_static (rtspreal_type, GST_TYPE_RTSP_EXTENSION,
-      &rtspextension_info);
-}
-
-GST_BOILERPLATE_FULL (GstRTSPReal, gst_rtsp_real, GstElement, GST_TYPE_ELEMENT,
-    _do_init);
-
-static void
-gst_rtsp_real_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_set_details_simple (element_class,
-      "RealMedia RTSP Extension", "Network/Extension/Protocol",
-      "Extends RTSP so that it can handle RealMedia setup",
-      "Wim Taymans <wim.taymans@gmail.com>");
-}
+#define gst_rtsp_real_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstRTSPReal, gst_rtsp_real, GST_TYPE_ELEMENT,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_RTSP_EXTENSION,
+        gst_rtsp_real_extension_init));
 
 static void
 gst_rtsp_real_class_init (GstRTSPRealClass * g_class)
 {
   GObjectClass *gobject_class = (GObjectClass *) g_class;
+  GstElementClass *gstelement_class = (GstElementClass *) g_class;
 
   gobject_class->finalize = gst_rtsp_real_finalize;
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "RealMedia RTSP Extension", "Network/Extension/Protocol",
+      "Extends RTSP so that it can handle RealMedia setup",
+      "Wim Taymans <wim.taymans@gmail.com>");
 
   GST_DEBUG_CATEGORY_INIT (rtspreal_debug, "rtspreal", 0,
       "RealMedia RTSP extension");
 }
 
 static void
-gst_rtsp_real_init (GstRTSPReal * rtspreal, GstRTSPRealClass * klass)
+gst_rtsp_real_init (GstRTSPReal * rtspreal)
 {
   rtspreal->isreal = FALSE;
 }

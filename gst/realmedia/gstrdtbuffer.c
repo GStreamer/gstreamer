@@ -52,7 +52,7 @@ static gboolean
 read_packet_header (GstRDTPacket * packet)
 {
   guint8 *data;
-  guint size;
+  gsize size;
   guint offset;
   guint length;
   guint length_offset;
@@ -60,15 +60,14 @@ read_packet_header (GstRDTPacket * packet)
   g_return_val_if_fail (packet != NULL, FALSE);
   g_return_val_if_fail (GST_IS_BUFFER (packet->buffer), FALSE);
 
-  data = GST_BUFFER_DATA (packet->buffer);
-  size = GST_BUFFER_SIZE (packet->buffer);
+  data = gst_buffer_map (packet->buffer, &size, NULL, GST_MAP_READ);
 
   offset = packet->offset;
 
   /* check if we are at the end of the buffer, we add 3 because we also want to
    * ensure we can read the type, which is always at offset 1 and 2 bytes long. */
   if (offset + 3 > size)
-    return FALSE;
+    goto packet_end;
 
   /* read type */
   packet->type = GST_READ_UINT16_BE (&data[offset + 1]);
@@ -165,6 +164,7 @@ read_packet_header (GstRDTPacket * packet)
     /* length is remainder of packet */
     packet->length = size - offset;
   }
+  gst_buffer_unmap (packet->buffer, data, size);
 
   /* the length should be smaller than the remaining size */
   if (packet->length + offset > size)
@@ -173,9 +173,15 @@ read_packet_header (GstRDTPacket * packet)
   return TRUE;
 
   /* ERRORS */
+packet_end:
+  {
+    gst_buffer_unmap (packet->buffer, data, size);
+    return FALSE;
+  }
 unknown_packet:
   {
     packet->type = GST_RDT_TYPE_INVALID;
+    gst_buffer_unmap (packet->buffer, data, size);
     return FALSE;
   }
 invalid_length:
@@ -260,7 +266,8 @@ gst_rdt_packet_to_buffer (GstRDTPacket * packet)
   g_return_val_if_fail (packet->type != GST_RDT_TYPE_INVALID, NULL);
 
   result =
-      gst_buffer_create_sub (packet->buffer, packet->offset, packet->length);
+      gst_buffer_copy_region (packet->buffer, GST_BUFFER_COPY_ALL,
+      packet->offset, packet->length);
   /* timestamp applies to all packets in this buffer */
   GST_BUFFER_TIMESTAMP (result) = GST_BUFFER_TIMESTAMP (packet->buffer);
 
@@ -278,22 +285,26 @@ gst_rdt_packet_data_get_seq (GstRDTPacket * packet)
 {
   guint header;
   guint8 *bufdata;
+  guint16 result;
 
   g_return_val_if_fail (packet != NULL, FALSE);
   g_return_val_if_fail (GST_RDT_IS_DATA_TYPE (packet->type), FALSE);
 
-  bufdata = GST_BUFFER_DATA (packet->buffer);
+  bufdata = gst_buffer_map (packet->buffer, NULL, NULL, GST_MAP_READ);
 
   /* skip header bits */
   header = packet->offset + 1;
 
   /* read seq_no */
-  return GST_READ_UINT16_BE (&bufdata[header]);
+  result = GST_READ_UINT16_BE (&bufdata[header]);
+
+  gst_buffer_unmap (packet->buffer, bufdata, -1);
+
+  return result;
 }
 
-gboolean
-gst_rdt_packet_data_peek_data (GstRDTPacket * packet, guint8 ** data,
-    guint * size)
+guint8 *
+gst_rdt_packet_data_map (GstRDTPacket * packet, guint * size)
 {
   guint header;
   guint8 *bufdata;
@@ -302,10 +313,11 @@ gst_rdt_packet_data_peek_data (GstRDTPacket * packet, guint8 ** data,
   guint8 stream_id;
   guint8 asm_rule_number;
 
-  g_return_val_if_fail (packet != NULL, FALSE);
-  g_return_val_if_fail (GST_RDT_IS_DATA_TYPE (packet->type), FALSE);
+  g_return_val_if_fail (packet != NULL, NULL);
+  g_return_val_if_fail (packet->data == NULL, NULL);
+  g_return_val_if_fail (GST_RDT_IS_DATA_TYPE (packet->type), NULL);
 
-  bufdata = GST_BUFFER_DATA (packet->buffer);
+  bufdata = gst_buffer_map (packet->buffer, NULL, NULL, GST_MAP_READ);
 
   header = packet->offset;
 
@@ -338,10 +350,22 @@ gst_rdt_packet_data_peek_data (GstRDTPacket * packet, guint8 ** data,
     header += 2;
   }
 
-  if (data)
-    *data = &bufdata[header];
   if (size)
     *size = packet->length - (header - packet->offset);
+
+  packet->data = bufdata;
+
+  return &bufdata[header];
+}
+
+gboolean
+gst_rdt_packet_data_unmap (GstRDTPacket * packet)
+{
+  g_return_val_if_fail (packet != NULL, FALSE);
+  g_return_val_if_fail (packet->data != NULL, FALSE);
+
+  gst_buffer_unmap (packet->buffer, packet->data, -1);
+  packet->data = NULL;
 
   return TRUE;
 }
@@ -357,7 +381,7 @@ gst_rdt_packet_data_get_stream_id (GstRDTPacket * packet)
   g_return_val_if_fail (packet != NULL, 0);
   g_return_val_if_fail (GST_RDT_IS_DATA_TYPE (packet->type), 0);
 
-  bufdata = GST_BUFFER_DATA (packet->buffer);
+  bufdata = gst_buffer_map (packet->buffer, NULL, NULL, GST_MAP_READ);
 
   header = packet->offset;
 
@@ -377,6 +401,8 @@ gst_rdt_packet_data_get_stream_id (GstRDTPacket * packet)
     /* stream_id_expansion */
     result = GST_READ_UINT16_BE (&bufdata[header]);
   }
+  gst_buffer_unmap (packet->buffer, bufdata, -1);
+
   return result;
 }
 
@@ -386,11 +412,12 @@ gst_rdt_packet_data_get_timestamp (GstRDTPacket * packet)
   guint header;
   gboolean length_included_flag;
   guint8 *bufdata;
+  guint32 result;
 
   g_return_val_if_fail (packet != NULL, 0);
   g_return_val_if_fail (GST_RDT_IS_DATA_TYPE (packet->type), 0);
 
-  bufdata = GST_BUFFER_DATA (packet->buffer);
+  bufdata = gst_buffer_map (packet->buffer, NULL, NULL, GST_MAP_READ);
 
   header = packet->offset;
 
@@ -407,12 +434,16 @@ gst_rdt_packet_data_get_timestamp (GstRDTPacket * packet)
   header += 1;
 
   /* get timestamp */
-  return GST_READ_UINT32_BE (&bufdata[header]);
+  result = GST_READ_UINT32_BE (&bufdata[header]);
+  gst_buffer_unmap (packet->buffer, bufdata, -1);
+
+  return result;
 }
 
 guint8
 gst_rdt_packet_data_get_flags (GstRDTPacket * packet)
 {
+  guint8 result;
   guint header;
   gboolean length_included_flag;
   guint8 *bufdata;
@@ -420,7 +451,7 @@ gst_rdt_packet_data_get_flags (GstRDTPacket * packet)
   g_return_val_if_fail (packet != NULL, 0);
   g_return_val_if_fail (GST_RDT_IS_DATA_TYPE (packet->type), 0);
 
-  bufdata = GST_BUFFER_DATA (packet->buffer);
+  bufdata = gst_buffer_map (packet->buffer, NULL, NULL, GST_MAP_READ);
 
   header = packet->offset;
 
@@ -434,5 +465,8 @@ gst_rdt_packet_data_get_flags (GstRDTPacket * packet)
     header += 2;
   }
   /* get flags */
-  return bufdata[header];
+  result = bufdata[header];
+  gst_buffer_unmap (packet->buffer, bufdata, -1);
+
+  return result;
 }

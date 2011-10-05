@@ -125,13 +125,15 @@ gst_rm_utils_read_tags (const guint8 * data, guint datalen,
 GstBuffer *
 gst_rm_utils_descramble_dnet_buffer (GstBuffer * buf)
 {
-  guint8 *data, *end, tmp;
+  guint8 *base, *data, *end, tmp;
+  gsize size;
 
   buf = gst_buffer_make_writable (buf);
 
   /* dnet = byte-order swapped AC3 */
-  data = GST_BUFFER_DATA (buf);
-  end = GST_BUFFER_DATA (buf) + GST_BUFFER_SIZE (buf);
+  base = gst_buffer_map (buf, &size, NULL, GST_MAP_READWRITE);
+  data = base;
+  end = data + size;
   while ((data + 1) < end) {
     /* byte-swap */
     tmp = data[0];
@@ -139,6 +141,7 @@ gst_rm_utils_descramble_dnet_buffer (GstBuffer * buf)
     data[1] = tmp;
     data += sizeof (guint16);
   }
+  gst_buffer_unmap (buf, base, size);
   return buf;
 }
 
@@ -221,10 +224,10 @@ GstBuffer *
 gst_rm_utils_descramble_sipr_buffer (GstBuffer * buf)
 {
   guint8 *data;
-  guint size;
+  gsize size;
   gint n, bs;
 
-  size = GST_BUFFER_SIZE (buf);
+  size = gst_buffer_get_size (buf);
 
   /* split the packet in 96 blocks of nibbles */
   bs = size * 2 / 96;
@@ -233,7 +236,7 @@ gst_rm_utils_descramble_sipr_buffer (GstBuffer * buf)
 
   buf = gst_buffer_make_writable (buf);
 
-  data = GST_BUFFER_DATA (buf);
+  data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
 
   /* we need to perform 38 swaps on the blocks */
   for (n = 0; n < 38; n++) {
@@ -246,6 +249,8 @@ gst_rm_utils_descramble_sipr_buffer (GstBuffer * buf)
     /* swap the blocks */
     gst_rm_utils_swap_nibbles (data, idx1, idx2, bs);
   }
+  gst_buffer_unmap (buf, data, size);
+
   return buf;
 }
 

@@ -56,21 +56,9 @@ static GstFlowReturn gst_pnm_src_create (GstPushSrc * psrc, GstBuffer ** buf);
 static void gst_pnm_src_uri_handler_init (gpointer g_iface,
     gpointer iface_data);
 
-static void
-_do_init (GType pnmsrc_type)
-{
-  static const GInterfaceInfo urihandler_info = {
-    gst_pnm_src_uri_handler_init,
-    NULL,
-    NULL
-  };
-
-  g_type_add_interface_static (pnmsrc_type, GST_TYPE_URI_HANDLER,
-      &urihandler_info);
-}
-
-GST_BOILERPLATE_FULL (GstPNMSrc, gst_pnm_src, GstPushSrc, GST_TYPE_PUSH_SRC,
-    _do_init);
+#define gst_pnm_src_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstPNMSrc, gst_pnm_src, GST_TYPE_PUSH_SRC,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER, gst_pnm_src_uri_handler_init));
 
 static void gst_pnm_src_finalize (GObject * object);
 
@@ -79,31 +67,15 @@ static void gst_pnm_src_set_property (GObject * object, guint prop_id,
 static void gst_pnm_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-
-static void
-gst_pnm_src_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_pnm_src_template));
-
-  gst_element_class_set_details_simple (element_class, "PNM packet receiver",
-      "Source/Network",
-      "Receive data over the network via PNM",
-      "Wim Taymans <wim.taymans@gmail.com>");
-
-  GST_DEBUG_CATEGORY_INIT (pnmsrc_debug, "pnmsrc",
-      0, "Source for the pnm:// uri");
-}
-
 static void
 gst_pnm_src_class_init (GstPNMSrcClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
   GstPushSrcClass *gstpushsrc_class;
 
   gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
   gstpushsrc_class = (GstPushSrcClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
@@ -118,11 +90,23 @@ gst_pnm_src_class_init (GstPNMSrcClass * klass)
           "Location of the PNM url to read",
           DEFAULT_LOCATION, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_pnm_src_template));
+
+  gst_element_class_set_details_simple (gstelement_class, "PNM packet receiver",
+      "Source/Network",
+      "Receive data over the network via PNM",
+      "Wim Taymans <wim.taymans@gmail.com>");
+
   gstpushsrc_class->create = gst_pnm_src_create;
+
+  GST_DEBUG_CATEGORY_INIT (pnmsrc_debug, "pnmsrc",
+      0, "Source for the pnm:// uri");
 }
 
 static void
-gst_pnm_src_init (GstPNMSrc * pnmsrc, GstPNMSrcClass * klass)
+gst_pnm_src_init (GstPNMSrc * pnmsrc)
 {
   pnmsrc->location = g_strdup (DEFAULT_LOCATION);
 }
@@ -210,13 +194,13 @@ gst_pnm_src_create (GstPushSrc * psrc, GstBuffer ** buf)
 /*** GSTURIHANDLER INTERFACE *************************************************/
 
 static GstURIType
-gst_pnm_src_uri_get_type (void)
+gst_pnm_src_uri_get_type (GType type)
 {
   return GST_URI_SRC;
 }
 
 static gchar **
-gst_pnm_src_uri_get_protocols (void)
+gst_pnm_src_uri_get_protocols (GType type)
 {
   static gchar *protocols[] = { (gchar *) "pnm", NULL };
 

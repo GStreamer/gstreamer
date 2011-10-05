@@ -128,12 +128,12 @@ static GstClock *gst_rdt_manager_provide_clock (GstElement * element);
 static GstStateChangeReturn gst_rdt_manager_change_state (GstElement * element,
     GstStateChange transition);
 static GstPad *gst_rdt_manager_request_new_pad (GstElement * element,
-    GstPadTemplate * templ, const gchar * name);
+    GstPadTemplate * templ, const gchar * name, const GstCaps * caps);
 static void gst_rdt_manager_release_pad (GstElement * element, GstPad * pad);
 
 static gboolean gst_rdt_manager_parse_caps (GstRDTManager * rdtmanager,
     GstRDTManagerSession * session, GstCaps * caps);
-static gboolean gst_rdt_manager_setcaps (GstPad * pad, GstCaps * caps);
+static gboolean gst_rdt_manager_event_rdt (GstPad * pad, GstEvent * event);
 
 static GstFlowReturn gst_rdt_manager_chain_rdt (GstPad * pad,
     GstBuffer * buffer);
@@ -317,29 +317,8 @@ free_session (GstRDTManagerSession * session)
   g_free (session);
 }
 
-GST_BOILERPLATE (GstRDTManager, gst_rdt_manager, GstElement, GST_TYPE_ELEMENT);
-
-static void
-gst_rdt_manager_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  /* sink pads */
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rdt_manager_recv_rtp_sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rdt_manager_recv_rtcp_sink_template));
-  /* src pads */
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rdt_manager_recv_rtp_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rdt_manager_rtcp_src_template));
-
-  gst_element_class_set_details_simple (element_class, "RTP Decoder",
-      "Codec/Parser/Network",
-      "Accepts raw RTP and RTCP packets and sends them forward",
-      "Wim Taymans <wim@fluendo.com>");
-}
+#define gst_rdt_manager_parent_class parent_class
+G_DEFINE_TYPE (GstRDTManager, gst_rdt_manager, GST_TYPE_ELEMENT);
 
 /* BOXED:UINT,UINT */
 #define g_marshal_value_peek_uint(v)     g_value_get_uint (v)
@@ -505,11 +484,27 @@ gst_rdt_manager_class_init (GstRDTManagerClass * g_class)
   gstelement_class->release_pad =
       GST_DEBUG_FUNCPTR (gst_rdt_manager_release_pad);
 
+  /* sink pads */
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rdt_manager_recv_rtp_sink_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rdt_manager_recv_rtcp_sink_template));
+  /* src pads */
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rdt_manager_recv_rtp_src_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rdt_manager_rtcp_src_template));
+
+  gst_element_class_set_details_simple (gstelement_class, "RTP Decoder",
+      "Codec/Parser/Network",
+      "Accepts raw RTP and RTCP packets and sends them forward",
+      "Wim Taymans <wim@fluendo.com>");
+
   GST_DEBUG_CATEGORY_INIT (rdtmanager_debug, "rdtmanager", 0, "RTP decoder");
 }
 
 static void
-gst_rdt_manager_init (GstRDTManager * rdtmanager, GstRDTManagerClass * klass)
+gst_rdt_manager_init (GstRDTManager * rdtmanager)
 {
   rdtmanager->provided_clock = gst_system_clock_obtain ();
   rdtmanager->latency = DEFAULT_LATENCY_MS;
@@ -714,7 +709,7 @@ wrong_rate:
 }
 
 static gboolean
-gst_rdt_manager_setcaps (GstPad * pad, GstCaps * caps)
+gst_rdt_manager_event_rdt (GstPad * pad, GstEvent * event)
 {
   GstRDTManager *rdtmanager;
   GstRDTManagerSession *session;
@@ -724,8 +719,20 @@ gst_rdt_manager_setcaps (GstPad * pad, GstCaps * caps)
   /* find session */
   session = gst_pad_get_element_private (pad);
 
-  res = gst_rdt_manager_parse_caps (rdtmanager, session, caps);
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
 
+      gst_event_parse_caps (event, &caps);
+      res = gst_rdt_manager_parse_caps (rdtmanager, session, caps);
+      gst_event_unref (event);
+      break;
+    }
+    default:
+      res = gst_pad_event_default (pad, event);
+      break;
+  }
   return res;
 }
 
@@ -843,7 +850,6 @@ gst_rdt_manager_loop (GstPad * pad)
     session->discont = FALSE;
   }
 
-  gst_buffer_set_caps (buffer, GST_PAD_CAPS (session->recv_rtp_src));
   JBUF_UNLOCK (session);
 
   result = gst_pad_push (session->recv_rtp_src, buffer);
@@ -1146,8 +1152,8 @@ create_recv_rtp (GstRDTManager * rdtmanager, GstPadTemplate * templ,
 
   session->recv_rtp_sink = gst_pad_new_from_template (templ, name);
   gst_pad_set_element_private (session->recv_rtp_sink, session);
-  gst_pad_set_setcaps_function (session->recv_rtp_sink,
-      gst_rdt_manager_setcaps);
+  gst_pad_set_event_function (session->recv_rtp_sink,
+      gst_rdt_manager_event_rdt);
   gst_pad_set_chain_function (session->recv_rtp_sink,
       gst_rdt_manager_chain_rdt);
   gst_pad_set_active (session->recv_rtp_sink, TRUE);
@@ -1279,7 +1285,7 @@ existed:
  */
 static GstPad *
 gst_rdt_manager_request_new_pad (GstElement * element,
-    GstPadTemplate * templ, const gchar * name)
+    GstPadTemplate * templ, const gchar * name, const GstCaps * caps)
 {
   GstRDTManager *rdtmanager;
   GstElementClass *klass;
