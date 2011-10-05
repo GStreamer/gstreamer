@@ -21,7 +21,7 @@
 #define __GST_AMRWBDEC_H__
 
 #include <gst/gst.h>
-#include <gst/base/gstadapter.h>
+#include <gst/audio/gstaudiodecoder.h>
 #include <dec_if.h>
 #include <if_rom.h>
 
@@ -47,27 +47,17 @@ typedef struct _GstAmrwbDecClass GstAmrwbDecClass;
  * Opaque data structure.
  */
 struct _GstAmrwbDec {
-  GstElement element;
-
-  /* pads */
-  GstPad *sinkpad, *srcpad;
-  guint64 ts;
-
-  GstAdapter *adapter;
+  GstAudioDecoder element;
 
   /* library handle */
   void *handle;
 
   /* output settings */
   gint channels, rate;
-  gint duration;
-
-  GstSegment        segment;
-  gboolean          discont;
 };
 
 struct _GstAmrwbDecClass {
-  GstElementClass parent_class;
+  GstAudioDecoderClass parent_class;
 };
 
 GType gst_amrwbdec_get_type (void);
