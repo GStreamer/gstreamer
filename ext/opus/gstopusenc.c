@@ -270,7 +270,7 @@ gst_opus_enc_sink_setcaps (GstPad * pad, GstCaps * caps)
     gst_caps_unref (otherpadcaps);
   }
 
-  GST_ERROR_OBJECT (pad, "channels=%d rate=%d frame-size=%d",
+  GST_DEBUG_OBJECT (pad, "channels=%d rate=%d frame-size=%d",
       enc->n_channels, enc->sample_rate, enc->frame_size);
   switch (enc->frame_size) {
     case 2:
@@ -296,7 +296,7 @@ gst_opus_enc_sink_setcaps (GstPad * pad, GstCaps * caps)
       return FALSE;
       break;
   }
-  GST_ERROR ("frame_samples %d", enc->frame_samples);
+  GST_DEBUG_OBJECT (pad, "frame_samples %d", enc->frame_samples);
 
   gst_opus_enc_setup (enc);
 
