@@ -216,6 +216,8 @@
 
  * -bad  dataurisrc:    dataurisrc: data: URI source element
  * -bad  faad:          faad: AAC audio decoder
+ * -bad  jpegformat:    jifmux: JPEG stream muxer
+ * -bad  jpegformat:    jpegparse: JPEG stream parser
  * -bad  mms:           mmssrc: MMS streaming source
  * -bad  sdp:           sdpdemux: SDP session setup
 
@@ -247,8 +249,6 @@
    -good id3demux:      id3demux: ID3 tag demuxer
    -bad  jp2k:          jp2kdec: Jasper JPEG2000 image decoder
    -bad  jp2k:          jp2kenc: Jasper JPEG2000 image encoder
-   -bad  jpegformat:    jifmux: JPEG stream muxer
-   -bad  jpegformat:    jpegparse: JPEG stream parser
    -bad  kate:          katedec: Kate stream text decoder
    -bad  kate:          kateenc: Kate stream encoder
    -bad  kate:          kateparse: Kate stream parser
