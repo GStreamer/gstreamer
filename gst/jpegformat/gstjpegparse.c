@@ -59,7 +59,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("image/jpeg, "
-        "format = (fourcc) { I420, Y41B, UYVY, YV12 }, "
+        "format = (string) { I420, Y41B, UYVY, YV12 }, "
         "width = (int) [ 0, MAX ],"
         "height = (int) [ 0, MAX ], "
         "interlaced = (boolean) { true, false }, "
@@ -99,8 +99,8 @@ struct _GstJpegParsePrivate
   /* TRUE if the image is interlaced */
   gboolean interlaced;
 
-  /* fourcc color space */
-  guint32 fourcc;
+  /* format color space */
+  const gchar *format;
 
   /* TRUE if the src caps sets a specific framerate */
   gboolean has_fps;
@@ -124,31 +124,12 @@ static void gst_jpeg_parse_dispose (GObject * object);
 static GstFlowReturn gst_jpeg_parse_chain (GstPad * pad, GstBuffer * buffer);
 static gboolean gst_jpeg_parse_sink_setcaps (GstPad * pad, GstCaps * caps);
 static gboolean gst_jpeg_parse_sink_event (GstPad * pad, GstEvent * event);
-static GstCaps *gst_jpeg_parse_src_getcaps (GstPad * pad);
+static GstCaps *gst_jpeg_parse_src_getcaps (GstPad * pad, GstCaps * filter);
 static GstStateChangeReturn gst_jpeg_parse_change_state (GstElement * element,
     GstStateChange transition);
 
-#define _do_init(bla) \
-  GST_DEBUG_CATEGORY_INIT (jpeg_parse_debug, "jpegparse", 0, "JPEG parser");
-
-GST_BOILERPLATE_FULL (GstJpegParse, gst_jpeg_parse, GstElement,
-    GST_TYPE_ELEMENT, _do_init);
-
-static void
-gst_jpeg_parse_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_jpeg_parse_src_pad_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_jpeg_parse_sink_pad_template));
-  gst_element_class_set_details_simple (element_class,
-      "JPEG stream parser",
-      "Video/Parser",
-      "Parse JPEG images into single-frame buffers",
-      "Arnout Vandecappelle (Essensium/Mind) <arnout@mind.be>");
-}
+#define gst_jpeg_parse_parent_class parent_class
+G_DEFINE_TYPE (GstJpegParse, gst_jpeg_parse, GST_TYPE_ELEMENT);
 
 static void
 gst_jpeg_parse_class_init (GstJpegParseClass * klass)
@@ -164,10 +145,23 @@ gst_jpeg_parse_class_init (GstJpegParseClass * klass)
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_jpeg_parse_change_state);
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_jpeg_parse_src_pad_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_jpeg_parse_sink_pad_template));
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "JPEG stream parser",
+      "Video/Parser",
+      "Parse JPEG images into single-frame buffers",
+      "Arnout Vandecappelle (Essensium/Mind) <arnout@mind.be>");
+
+  GST_DEBUG_CATEGORY_INIT (jpeg_parse_debug, "jpegparse", 0, "JPEG parser");
 }
 
 static void
-gst_jpeg_parse_init (GstJpegParse * parse, GstJpegParseClass * g_class)
+gst_jpeg_parse_init (GstJpegParse * parse)
 {
   GstPad *sinkpad;
 
@@ -181,8 +175,6 @@ gst_jpeg_parse_init (GstJpegParse * parse, GstJpegParseClass * g_class)
       GST_DEBUG_FUNCPTR (gst_jpeg_parse_chain));
   gst_pad_set_event_function (sinkpad,
       GST_DEBUG_FUNCPTR (gst_jpeg_parse_sink_event));
-  gst_pad_set_setcaps_function (sinkpad,
-      GST_DEBUG_FUNCPTR (gst_jpeg_parse_sink_setcaps));
   gst_element_add_pad (GST_ELEMENT (parse), sinkpad);
 
   parse->priv->srcpad =
@@ -234,12 +226,11 @@ gst_jpeg_parse_sink_setcaps (GstPad * pad, GstCaps * caps)
 }
 
 static GstCaps *
-gst_jpeg_parse_src_getcaps (GstPad * pad)
+gst_jpeg_parse_src_getcaps (GstPad * pad, GstCaps * filter)
 {
   GstCaps *result;
 
-  if ((result = GST_PAD_CAPS (pad))) {
-    result = gst_caps_ref (result);
+  if ((result = gst_pad_get_current_caps (pad))) {
     GST_DEBUG_OBJECT (pad, "using pad caps %" GST_PTR_FORMAT, result);
   } else {
     result = gst_caps_ref (GST_PAD_TEMPLATE_CAPS (GST_PAD_PAD_TEMPLATE (pad)));
@@ -487,21 +478,21 @@ gst_jpeg_parse_sof (GstJpegParse * parse, GstByteReader * reader)
   }
 
   if (numcomps == 1) {
-    /* gray image - no fourcc */
-    parse->priv->fourcc = 0;
+    /* gray image - no format */
+    parse->priv->format = "";
   } else if (numcomps == 3) {
     temp = (blockWidth[0] * blockHeight[0]) / (blockWidth[1] * blockHeight[1]);
 
     if (temp == 4 && blockHeight[0] == 2)
-      parse->priv->fourcc = GST_MAKE_FOURCC ('I', '4', '2', '0');
+      parse->priv->format = "I420";
     else if (temp == 4 && blockHeight[0] == 4)
-      parse->priv->fourcc = GST_MAKE_FOURCC ('Y', '4', '1', 'B');
+      parse->priv->format = "Y41B";
     else if (temp == 2)
-      parse->priv->fourcc = GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y');
+      parse->priv->format = "UYVY";
     else if (temp == 1)
-      parse->priv->fourcc = GST_MAKE_FOURCC ('Y', 'V', '1', '2');
+      parse->priv->format = "YV12";
     else
-      parse->priv->fourcc = 0;
+      parse->priv->format = "";
   } else {
     return FALSE;
   }
@@ -517,7 +508,8 @@ gst_jpeg_parse_remove_marker (GstJpegParse * parse,
 {
   guint16 size = 0;
   guint pos = gst_byte_reader_get_pos (reader);
-  guint8 *data = GST_BUFFER_DATA (buffer);
+  guint8 *data;
+  gsize bsize;
 
   if (!gst_byte_reader_peek_uint16_be (reader, &size))
     return FALSE;
@@ -526,9 +518,9 @@ gst_jpeg_parse_remove_marker (GstJpegParse * parse,
 
   GST_LOG_OBJECT (parse, "unhandled marker %x removing %u bytes", marker, size);
 
-  memmove (&data[pos], &data[pos + size],
-      GST_BUFFER_SIZE (buffer) - (pos + size));
-  GST_BUFFER_SIZE (buffer) -= size;
+  data = gst_buffer_map (buffer, &bsize, NULL, GST_MAP_READWRITE);
+  memmove (&data[pos], &data[pos + size], bsize - (pos + size));
+  gst_buffer_unmap (buffer, data, bsize - size);
 
   if (!gst_byte_reader_set_pos (reader, pos - size))
     return FALSE;
@@ -579,14 +571,12 @@ get_tag_list (GstJpegParse * parse)
 
 static inline void
 extract_and_queue_tags (GstJpegParse * parse, guint size, guint8 * data,
-    GstTagList * (*tag_func) (const GstBuffer * buff))
+    GstTagList * (*tag_func) (GstBuffer * buff))
 {
   GstTagList *tags;
   GstBuffer *buf;
 
-  buf = gst_buffer_new ();
-  GST_BUFFER_DATA (buf) = data;
-  GST_BUFFER_SIZE (buf) = size;
+  buf = gst_buffer_new_wrapped_full (data, NULL, 0, size);
 
   tags = tag_func (buf);
   gst_buffer_unref (buf);
@@ -702,9 +692,14 @@ gst_jpeg_parse_com (GstJpegParse * parse, GstByteReader * reader)
 static gboolean
 gst_jpeg_parse_read_header (GstJpegParse * parse, GstBuffer * buffer)
 {
-  GstByteReader reader = GST_BYTE_READER_INIT_FROM_BUFFER (buffer);
+  GstByteReader reader;
   guint8 marker = 0;
   gboolean foundSOF = FALSE;
+  guint8 *data;
+  gsize size;
+
+  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+  gst_byte_reader_init (&reader, data, size);
 
   if (!gst_byte_reader_peek_uint8 (&reader, &marker))
     goto error;
@@ -720,7 +715,7 @@ gst_jpeg_parse_read_header (GstJpegParse * parse, GstBuffer * buffer)
 
     switch (marker) {
       case SOS:                /* start of scan (begins compressed data) */
-        return foundSOF;
+        goto done;
 
       case SOI:
         break;
@@ -751,12 +746,12 @@ gst_jpeg_parse_read_header (GstJpegParse * parse, GstBuffer * buffer)
         parse->priv->interlaced = TRUE;
         /* fall through */
       case SOF0:
-        foundSOF = TRUE;
         /* parse Start Of Frame */
         if (!gst_jpeg_parse_sof (parse, &reader))
           goto error;
 
-        return TRUE;
+        foundSOF = TRUE;
+        goto done;
 
       default:
         if (marker == JPG || (marker >= JPG0 && marker <= JPG13)) {
@@ -766,25 +761,35 @@ gst_jpeg_parse_read_header (GstJpegParse * parse, GstBuffer * buffer)
         } else if (marker >= APP0 && marker <= APP15) {
           if (!gst_jpeg_parse_skip_marker (parse, &reader, marker))
             goto error;
-        } else {
-          GST_WARNING_OBJECT (parse, "unhandled marker %x, leaving", marker);
-          /* Not SOF or SOI.  Must not be a JPEG file (or file pointer
-           * is placed wrong).  In either case, it's an error. */
-          return FALSE;
-        }
+        } else
+          goto unhandled;
     }
 
     if (!gst_byte_reader_peek_uint8 (&reader, &marker))
       goto error;
   }
+done:
+  gst_buffer_unmap (buffer, data, size);
 
   return foundSOF;
 
+  /* ERRORS */
 error:
-  GST_WARNING_OBJECT (parse,
-      "Error parsing image header (need more than %u bytes available)",
-      gst_byte_reader_get_remaining (&reader));
-  return FALSE;
+  {
+    GST_WARNING_OBJECT (parse,
+        "Error parsing image header (need more than %u bytes available)",
+        gst_byte_reader_get_remaining (&reader));
+    gst_buffer_unmap (buffer, data, size);
+    return FALSE;
+  }
+unhandled:
+  {
+    GST_WARNING_OBJECT (parse, "unhandled marker %x, leaving", marker);
+    /* Not SOF or SOI.  Must not be a JPEG file (or file pointer
+     * is placed wrong).  In either case, it's an error. */
+    gst_buffer_unmap (buffer, data, size);
+    return FALSE;
+  }
 }
 
 static gboolean
@@ -801,7 +806,7 @@ gst_jpeg_parse_set_new_caps (GstJpegParse * parse, gboolean header_ok)
 
   if (header_ok == TRUE) {
     gst_caps_set_simple (caps,
-        "format", GST_TYPE_FOURCC, parse->priv->fourcc,
+        "format", G_TYPE_STRING, parse->priv->format,
         "interlaced", G_TYPE_BOOLEAN, parse->priv->interlaced,
         "width", G_TYPE_INT, parse->priv->width,
         "height", G_TYPE_INT, parse->priv->height, NULL);
@@ -896,8 +901,6 @@ gst_jpeg_parse_push_buffer (GstJpegParse * parse, guint len)
 
   GST_BUFFER_DURATION (outbuf) = parse->priv->duration;
 
-  gst_buffer_set_caps (outbuf, GST_PAD_CAPS (parse->priv->srcpad));
-
   GST_LOG_OBJECT (parse, "pushing buffer (ts=%" GST_TIME_FORMAT ", len=%u)",
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)), len);
 
@@ -957,6 +960,15 @@ gst_jpeg_parse_sink_event (GstPad * pad, GstEvent * event)
   GST_DEBUG_OBJECT (parse, "event : %s", GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+
+      gst_event_parse_caps (event, &caps);
+      res = gst_jpeg_parse_sink_setcaps (pad, caps);
+      gst_event_unref (event);
+      break;
+    }
     case GST_EVENT_FLUSH_STOP:
       parse->priv->next_ts = GST_CLOCK_TIME_NONE;
       parse->priv->last_offset = 0;
@@ -972,7 +984,7 @@ gst_jpeg_parse_sink_event (GstPad * pad, GstEvent * event)
       res = gst_pad_push_event (parse->priv->srcpad, event);
       break;
     }
-    case GST_EVENT_NEWSEGMENT:
+    case GST_EVENT_SEGMENT:
       /* Discard any data in the adapter.  There should have been an EOS before
        * to flush it. */
       gst_adapter_clear (parse->priv->adapter);
