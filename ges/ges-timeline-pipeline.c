@@ -886,7 +886,10 @@ ges_timeline_pipeline_get_thumbnail_rgb24 (GESTimelinePipeline * self,
  * Obtains a pointer to playsink's video sink element that is used for
  * displaying video when the #GESTimelinePipeline is in %TIMELINE_MODE_PREVIEW
  *
- * Returns: a pointer to the playsink video sink #GstElement
+ * The caller is responsible for unreffing the returned element with
+ * #gst_object_unref.
+ *
+ * Returns: (transfer full): a pointer to the playsink video sink #GstElement
  */
 GstElement *
 ges_timeline_pipeline_preview_get_video_sink (GESTimelinePipeline * self)
@@ -901,7 +904,7 @@ ges_timeline_pipeline_preview_get_video_sink (GESTimelinePipeline * self)
 /**
  * ges_timeline_pipeline_preview_set_video_sink:
  * @self: a #GESTimelinePipeline in %GST_STATE_NULL
- * @sink: a video sink #GstElement
+ * @sink: (transfer none): a video sink #GstElement
  *
  * Sets playsink's video sink element that is used for displaying video when
  * the #GESTimelinePipeline is in %TIMELINE_MODE_PREVIEW
