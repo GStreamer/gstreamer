@@ -1047,6 +1047,7 @@ decode_buffer(GstVaapiDecoderVC1 *decoder, GstBuffer *buffer)
     GstVaapiDecoderStatus status;
     GstVC1ParserResult result;
     GstVC1BDU ebdu;
+    GstBuffer *codec_data;
     guchar *buf;
     guint buf_size, ofs;
 
@@ -1054,6 +1055,17 @@ decode_buffer(GstVaapiDecoderVC1 *decoder, GstBuffer *buffer)
     buf_size = GST_BUFFER_SIZE(buffer);
     if (!buf && buf_size == 0)
         return decode_sequence_end(decoder);
+
+    /* Assume demuxer sends out plain frames if codec-data */
+    codec_data = GST_VAAPI_DECODER_CODEC_DATA(decoder);
+    if (codec_data && codec_data != buffer) {
+        ebdu.type      = GST_VC1_FRAME;
+        ebdu.size      = buf_size;
+        ebdu.sc_offset = 0;
+        ebdu.offset    = 0;
+        ebdu.data      = buf;
+        return decode_ebdu(decoder, &ebdu);
+    }
 
     gst_vaapi_tsb_push(priv->tsb, buffer);
 
@@ -1089,11 +1101,52 @@ decode_buffer(GstVaapiDecoderVC1 *decoder, GstBuffer *buffer)
     return status;
 }
 
+static GstVaapiDecoderStatus
+decode_codec_data(GstVaapiDecoderVC1 *decoder, GstBuffer *buffer)
+{
+    GstVaapiDecoderStatus status;
+    GstVC1ParserResult result;
+    GstVC1BDU ebdu;
+    guchar *buf;
+    guint buf_size, ofs;
+
+    buf      = GST_BUFFER_DATA(buffer);
+    buf_size = GST_BUFFER_SIZE(buffer);
+    if (!buf || buf_size == 0)
+        return GST_VAAPI_DECODER_STATUS_SUCCESS;
+
+    ofs = 0;
+    do {
+        result = gst_vc1_identify_next_bdu(
+            buf + ofs,
+            buf_size - ofs,
+            &ebdu
+        );
+
+        switch (result) {
+        case GST_VC1_PARSER_NO_BDU_END:
+            /* Assume the EBDU is complete within codec-data bounds */
+            ebdu.size = buf_size - ofs - (ebdu.offset - ebdu.sc_offset);
+            // fall-through
+        case GST_VC1_PARSER_OK:
+            status = decode_ebdu(decoder, &ebdu);
+            ofs += ebdu.offset + ebdu.size;
+            break;
+        default:
+            status = get_status(result);
+            break;
+        }
+    } while (status == GST_VAAPI_DECODER_STATUS_SUCCESS && ofs < buf_size);
+    return status;
+}
+
 GstVaapiDecoderStatus
 gst_vaapi_decoder_vc1_decode(GstVaapiDecoder *base, GstBuffer *buffer)
 {
     GstVaapiDecoderVC1 * const decoder = GST_VAAPI_DECODER_VC1(base);
     GstVaapiDecoderVC1Private * const priv = decoder->priv;
+    GstVaapiDecoderStatus status;
+    GstBuffer *codec_data;
 
     g_return_val_if_fail(priv->is_constructed,
                          GST_VAAPI_DECODER_STATUS_ERROR_INIT_FAILED);
@@ -1102,6 +1155,13 @@ gst_vaapi_decoder_vc1_decode(GstVaapiDecoder *base, GstBuffer *buffer)
         priv->is_opened = gst_vaapi_decoder_vc1_open(decoder, buffer);
         if (!priv->is_opened)
             return GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_CODEC;
+
+        codec_data = GST_VAAPI_DECODER_CODEC_DATA(decoder);
+        if (codec_data) {
+            status = decode_codec_data(decoder, codec_data);
+            if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
+                return status;
+        }
     }
     return decode_buffer(decoder, buffer);
 }
