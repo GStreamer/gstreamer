@@ -27,6 +27,7 @@
  */
 
 #include "gst_private.h"
+#include "glib-compat-private.h"
 
 #include <errno.h>
 #ifdef HAVE_UNISTD_H
@@ -938,8 +939,7 @@ gst_buffer_pool_release_buffer (GstBufferPool * pool, GstBuffer * buffer)
 
   /* check that the buffer is ours, all buffers returned to the pool have the
    * pool member set to NULL and the pool refcount decreased */
-  if (!g_atomic_pointer_compare_and_exchange ((gpointer *) & buffer->pool,
-          pool, NULL))
+  if (!G_ATOMIC_POINTER_COMPARE_AND_EXCHANGE (&buffer->pool, pool, NULL))
     return;
 
   pclass = GST_BUFFER_POOL_GET_CLASS (pool);
