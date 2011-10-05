@@ -564,6 +564,33 @@ get_unary (GstBitReader * br, gint stop, gint len)
   return i;
 }
 
+static inline void
+calculate_framerate_bitrate (GstVC1SeqHdr * seqhdr)
+{
+  /* Calulate bitrate and framerate */
+  if (seqhdr->frmrtq_postproc == 0 && seqhdr->bitrtq_postproc == 30) {
+    seqhdr->framerate = 0;
+    seqhdr->bitrate = 0;
+  } else if (seqhdr->frmrtq_postproc == 0 && seqhdr->bitrtq_postproc == 30) {
+    seqhdr->framerate = 2;
+    seqhdr->bitrate = 1952;
+  } else if (seqhdr->frmrtq_postproc == 0 && seqhdr->bitrtq_postproc == 31) {
+    seqhdr->framerate = 6;
+    seqhdr->bitrate = 2016;
+  } else {
+    if (seqhdr->frmrtq_postproc == 7) {
+      seqhdr->framerate = 30;
+    } else {
+      seqhdr->framerate = 2 + (seqhdr->frmrtq_postproc * 4);
+    }
+    if (seqhdr->bitrtq_postproc == 31) {
+      seqhdr->bitrate = 2016;
+    } else {
+      seqhdr->bitrate = 32 + (seqhdr->bitrtq_postproc * 64);
+    }
+  }
+}
+
 static GstVC1ParserResult
 parse_hrd_param_flag (GstBitReader * br, GstVC1HrdParam * hrd_param)
 {
@@ -612,33 +639,11 @@ parse_sequence_header_advanced (GstVC1SeqHdr * seqhdr, GstBitReader * br)
   READ_UINT8 (br, seqhdr->colordiff_format, 2);
   READ_UINT8 (br, seqhdr->frmrtq_postproc, 3);
   READ_UINT8 (br, seqhdr->bitrtq_postproc, 5);
+  calculate_framerate_bitrate (seqhdr);
 
   GST_DEBUG ("level %u, colordiff_format %u , frmrtq_postproc %u,"
       " bitrtq_postproc %u", advanced->level, seqhdr->colordiff_format,
       seqhdr->frmrtq_postproc, seqhdr->bitrtq_postproc);
-
-  /* Calulate bitrate and framerate */
-  if (seqhdr->frmrtq_postproc == 0 && seqhdr->bitrtq_postproc == 30) {
-    seqhdr->framerate = 0;
-    seqhdr->bitrate = 0;
-  } else if (seqhdr->frmrtq_postproc == 0 && seqhdr->bitrtq_postproc == 30) {
-    seqhdr->framerate = 2;
-    seqhdr->bitrate = 1952;
-  } else if (seqhdr->frmrtq_postproc == 0 && seqhdr->bitrtq_postproc == 31) {
-    seqhdr->framerate = 6;
-    seqhdr->bitrate = 2016;
-  } else {
-    if (seqhdr->frmrtq_postproc == 7) {
-      seqhdr->framerate = 30;
-    } else {
-      seqhdr->framerate = 2 + (seqhdr->frmrtq_postproc * 4);
-    }
-    if (seqhdr->bitrtq_postproc == 31) {
-      seqhdr->bitrate = 2016;
-    } else {
-      seqhdr->bitrate = 32 + (seqhdr->bitrtq_postproc * 64);
-    }
-  }
 
   if (gst_bit_reader_get_remaining (br) < 32)
     goto failed;
@@ -1293,6 +1298,7 @@ gst_vc1_parse_sequence_header (const guint8 * data, gsize size,
   seqhdr->frmrtq_postproc = gst_bit_reader_get_bits_uint8_unchecked (&br, 3);
   seqhdr->bitrtq_postproc = gst_bit_reader_get_bits_uint8_unchecked (&br, 5);
   simplehdr->loop_filter = gst_bit_reader_get_bits_uint8_unchecked (&br, 1);
+  calculate_framerate_bitrate (seqhdr);
 
   /* Skipping reserved3 bit */
   gst_bit_reader_skip_unchecked (&br, 1);
