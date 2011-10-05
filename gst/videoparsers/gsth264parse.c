@@ -1248,7 +1248,7 @@ gst_h264_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
     off = 6;
     for (i = 0; i < num_sps; i++) {
       parseres = gst_h264_parser_identify_nalu_avc (h264parse->nalparser,
-          data, off, size - off, 2, &nalu);
+          data, off, size, 2, &nalu);
       if (parseres != GST_H264_PARSER_OK)
         goto avcc_too_small;
 
@@ -1261,7 +1261,7 @@ gst_h264_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
     size++;
     for (i = 0; i < num_pps; i++) {
       parseres = gst_h264_parser_identify_nalu_avc (h264parse->nalparser,
-          data, off, size - off, 2, &nalu);
+          data, off, size, 2, &nalu);
       if (parseres != GST_H264_PARSER_OK) {
         goto avcc_too_small;
       }
