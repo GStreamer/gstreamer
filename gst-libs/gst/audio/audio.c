@@ -346,7 +346,8 @@ gst_audio_info_from_caps (GstAudioInfo * info, const GstCaps * caps)
 
   pos_val_arr = gst_structure_get_value (str, "channel-positions");
   if (pos_val_arr) {
-    guint max_pos = MAX (channels, 64);
+    guint max_pos = MIN (channels, 64);
+
     for (i = 0; i < max_pos; i++) {
       pos_val_entry = gst_value_array_get_value (pos_val_arr, i);
       info->position[i] = g_value_get_enum (pos_val_entry);
