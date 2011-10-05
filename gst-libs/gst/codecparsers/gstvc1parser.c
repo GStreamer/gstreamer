@@ -876,9 +876,6 @@ parse_frame_header_advanced (GstBitReader * br, GstVC1FrameHdr * framehdr,
 
   framehdr->ptype = get_unary (br, 0, 4);
 
-  if (framehdr->ptype == GST_VC1_PICTURE_TYPE_SKIPPED)
-    goto failed;
-
   if (advhdr->tfcntrflag) {
     READ_UINT8 (br, pic->tfcntr, 8);
     GST_DEBUG ("tfcntr %u", pic->tfcntr);
@@ -915,6 +912,9 @@ parse_frame_header_advanced (GstBitReader * br, GstVC1FrameHdr * framehdr,
       }
     }
   }
+
+  if (framehdr->ptype == GST_VC1_PICTURE_TYPE_SKIPPED)
+    return GST_VC1_PARSER_OK;
 
   READ_UINT8 (br, pic->rndctrl, 1);
 
