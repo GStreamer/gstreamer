@@ -139,6 +139,7 @@ typedef struct _GstVC1SeqStructB   GstVC1SeqStructB;
 typedef struct _GstVC1SeqStructC   GstVC1SeqStructC;
 
 /* Pictures Structures */
+typedef struct _GstVC1FrameLayer        GstVC1FrameLayer;
 typedef struct _GstVC1FrameHdr          GstVC1FrameHdr;
 typedef struct _GstVC1PicAdvanced       GstVC1PicAdvanced;
 typedef struct _GstVC1PicSimpleMain     GstVC1PicSimpleMain;
@@ -438,6 +439,18 @@ struct _GstVC1VopDquant
 
 };
 
+struct _GstVC1FrameLayer
+{
+  guint8 key;
+  guint32 framesize;
+
+  guint32 timestamp;
+
+  /* calculated */
+  guint32 next_framelayer_offset;
+  guint8 skiped_p_frame;
+};
+
 /**
  * GstVC1FrameHdr:
  *
@@ -520,6 +533,10 @@ GstVC1ParserResult
 gst_vc1_parse_sequence_header_struct_c                 (const guint8 *data,
                                                         gsize size,
                                                         GstVC1SeqStructC *structc);
+
+GstVC1ParserResult gst_vc1_parse_frame_layer           (const guint8 *data,
+                                                        gsize size,
+                                                        GstVC1FrameLayer * framelayer);
 
 GstVC1ParserResult gst_vc1_parse_frame_header          (const guint8 *data,
                                                         gsize size,

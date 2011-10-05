@@ -1618,6 +1618,47 @@ failed:
 }
 
 /**
+ * gst_vc1_parse_frame_layer:
+ * @data: The data to parse
+ * @size: the size of @data
+ * @framelayer: The #GstVC1FrameLayer to fill.
+ *
+ * Parses @data, and fills @framelayer fields.
+ *
+ * Returns: a #GstVC1ParserResult
+ */
+GstVC1ParserResult
+gst_vc1_parse_frame_layer (const guint8 * data, gsize size,
+    GstVC1FrameLayer * framelayer)
+{
+  GstBitReader br = GST_BIT_READER_INIT (data, size);
+
+  if (gst_bit_reader_get_remaining (&br) < 64) {
+    GST_WARNING ("Could not parse frame layer");
+
+    return GST_VC1_PARSER_ERROR;
+  }
+
+  /* set default values */
+  framelayer->skiped_p_frame = 0;
+
+  framelayer->key = gst_bit_reader_get_bits_uint8_unchecked (&br, 1);
+  gst_bit_reader_skip_unchecked (&br, 7);
+
+  framelayer->framesize = gst_bit_reader_get_bits_uint32_unchecked (&br, 24);
+
+  if (framelayer->framesize == 0 || framelayer->framesize == 1)
+    framelayer->skiped_p_frame = 1;
+
+  /* compute  next_framelayer_offset */
+  framelayer->next_framelayer_offset = framelayer->framesize + 8;
+
+  framelayer->timestamp = gst_bit_reader_get_bits_uint32_unchecked (&br, 32);
+
+  return GST_VC1_PARSER_OK;
+}
+
+/**
  * gst_vc1_parse_frame_header:
  * @data: The data to parse
  * @size: the size of @data
