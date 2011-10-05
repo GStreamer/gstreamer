@@ -205,6 +205,12 @@
  * -ugly lame:          lamemp3enc: L.A.M.E. mp3 encoder
  * -ugly mad:           mad: mad mp3 decoder
  * -ugly mpeg2dec:      mpeg2dec: mpeg1 and mpeg2 video decoder
+ * -ugly realmedia:     pnmsrc: PNM packet receiver
+ * -ugly realmedia:     rademux: RealAudio Demuxer
+ * -ugly realmedia:     rdtdepay: RDT packet parser
+ * -ugly realmedia:     rdtmanager: RTP Decoder
+ * -ugly realmedia:     rmdemux: RealMedia Demuxer
+ * -ugly realmedia:     rtspreal: RealMedia RTSP Extension
  * -ugly siddec:        siddec: Sid decoder
  * -ugly x264:          x264enc: x264enc
 
@@ -239,7 +245,6 @@
    -bad  gsm:           gsmenc: GSM audio encoder
    -good icydemux:      icydemux: ICY tag demuxer
    -good id3demux:      id3demux: ID3 tag demuxer
-   -bad  jp2kdecimator: jp2kdecimator: JPEG2000 decimator
    -bad  jp2k:          jp2kdec: Jasper JPEG2000 image decoder
    -bad  jp2k:          jp2kenc: Jasper JPEG2000 image encoder
    -bad  jpegformat:    jifmux: JPEG stream muxer
@@ -256,12 +261,6 @@
    -good mpegaudioparse:  mp3parse: MPEG1 Audio Parser
    -good mpegaudioparse:  xingmux: MP3 Xing muxer
    -bad  musepack:      musepackdec: Musepack decoder
-   -ugly realmedia:     pnmsrc: PNM packet receiver
-   -ugly realmedia:     rademux: RealAudio Demuxer
-   -ugly realmedia:     rdtdepay: RDT packet parser
-   -ugly realmedia:     rdtmanager: RTP Decoder
-   -ugly realmedia:     rmdemux: RealMedia Demuxer
-   -ugly realmedia:     rtspreal: RealMedia RTSP Extension
    -bad  resindvd:      rsndvdbin: rsndvdbin
    -bad  schro:         schrodec: Dirac Decoder
    -bad  schro:         schroenc: Dirac Encoder
@@ -436,6 +435,7 @@
    -bad  invtelecine:   invtelecine: Inverse Telecine filter
    -bad  ivfparse:      ivfparse: IVF parser
 
+   -bad  jp2kdecimator: jp2kdecimator: JPEG2000 decimator
    -good jpeg:          smokedec: Smoke video decoder
    -good jpeg:          smokeenc: Smoke video encoder
 
