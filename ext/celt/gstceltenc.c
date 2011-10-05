@@ -494,7 +494,7 @@ gst_celt_enc_src_query (GstPad * pad, GstQuery * query)
       GstClockTime min_latency, max_latency;
       gint64 latency;
 
-      if ((res = gst_pad_peer_query (pad, query))) {
+      if ((res = gst_pad_peer_query (enc->sinkpad, query))) {
         gst_query_parse_latency (query, &live, &min_latency, &max_latency);
 
         latency = gst_celt_enc_get_latency (enc);
