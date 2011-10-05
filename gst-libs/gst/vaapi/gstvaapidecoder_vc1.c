@@ -60,6 +60,8 @@ struct _GstVaapiDecoderVC1Private {
     GstVaapiPicture            *prev_picture;
     GstVaapiTSB                *tsb;
     GstBuffer                  *sub_buffer;
+    guint8                     *rbdu_buffer;
+    guint                       rbdu_buffer_size;
     guint                       is_constructed          : 1;
     guint                       is_opened               : 1;
     guint                       is_first_field          : 1;
@@ -152,6 +154,12 @@ gst_vaapi_decoder_vc1_destroy(GstVaapiDecoderVC1 *decoder)
     GstVaapiDecoderVC1Private * const priv = decoder->priv;
 
     gst_vaapi_decoder_vc1_close(decoder);
+
+    if (priv->rbdu_buffer) {
+        g_free(priv->rbdu_buffer);
+        priv->rbdu_buffer = NULL;
+        priv->rbdu_buffer_size = 0;
+    }
 }
 
 static gboolean
@@ -243,7 +251,7 @@ decode_current_picture(GstVaapiDecoderVC1 *decoder)
 }
 
 static GstVaapiDecoderStatus
-decode_sequence(GstVaapiDecoderVC1 *decoder, guchar *buf, guint buf_size)
+decode_sequence(GstVaapiDecoderVC1 *decoder, GstVC1BDU *rbdu, GstVC1BDU *ebdu)
 {
     GstVaapiDecoder * const base_decoder = GST_VAAPI_DECODER(decoder);
     GstVaapiDecoderVC1Private * const priv = decoder->priv;
@@ -254,7 +262,11 @@ decode_sequence(GstVaapiDecoderVC1 *decoder, guchar *buf, guint buf_size)
     GstVaapiProfile profile;
     guint width, height, fps_n, fps_d;
 
-    result = gst_vc1_parse_sequence_header(buf, buf_size, seq_hdr);
+    result = gst_vc1_parse_sequence_header(
+        rbdu->data + rbdu->offset,
+        rbdu->size,
+        seq_hdr
+    );
     if (result != GST_VC1_PARSER_OK) {
         GST_DEBUG("failed to parse sequence layer");
         return get_status(result);
@@ -402,7 +414,7 @@ decode_sequence_end(GstVaapiDecoderVC1 *decoder)
 }
 
 static GstVaapiDecoderStatus
-decode_entry_point(GstVaapiDecoderVC1 *decoder, guchar *buf, guint buf_size)
+decode_entry_point(GstVaapiDecoderVC1 *decoder, GstVC1BDU *rbdu, GstVC1BDU *ebdu)
 {
     GstVaapiDecoderVC1Private * const priv = decoder->priv;
     GstVC1SeqHdr * const seq_hdr = &priv->seq_hdr;
@@ -410,7 +422,8 @@ decode_entry_point(GstVaapiDecoderVC1 *decoder, guchar *buf, guint buf_size)
     GstVC1ParserResult result;
 
     result = gst_vc1_parse_entry_point_header(
-        buf, buf_size,
+        rbdu->data + rbdu->offset,
+        rbdu->size,
         entrypoint_hdr,
         seq_hdr
     );
@@ -833,7 +846,7 @@ fill_picture(GstVaapiDecoderVC1 *decoder, GstVaapiPicture *picture)
 }
 
 static GstVaapiDecoderStatus
-decode_frame(GstVaapiDecoderVC1 *decoder, guchar *buf, guint buf_size)
+decode_frame(GstVaapiDecoderVC1 *decoder, GstVC1BDU *rbdu, GstVC1BDU *ebdu)
 {
     GstVaapiDecoder * const base_decoder = GST_VAAPI_DECODER(decoder);
     GstVaapiDecoderVC1Private * const priv = decoder->priv;
@@ -871,7 +884,8 @@ decode_frame(GstVaapiDecoderVC1 *decoder, guchar *buf, guint buf_size)
 
     memset(frame_hdr, 0, sizeof(*frame_hdr));
     result = gst_vc1_parse_frame_header(
-        buf, buf_size,
+        rbdu->data + rbdu->offset,
+        rbdu->size,
         frame_hdr,
         seq_hdr,
         priv->bitplanes
@@ -921,7 +935,12 @@ decode_frame(GstVaapiDecoderVC1 *decoder, guchar *buf, guint buf_size)
     if (!fill_picture(decoder, picture))
         return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
 
-    slice = gst_vaapi_decoder_new_slice(base_decoder, picture, buf, buf_size);
+    slice = gst_vaapi_decoder_new_slice(
+        base_decoder,
+        picture,
+        ebdu->data + ebdu->sc_offset,
+        ebdu->size + ebdu->offset - ebdu->sc_offset
+    );
     if (!slice) {
         GST_DEBUG("failed to allocate slice");
         return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
@@ -929,11 +948,96 @@ decode_frame(GstVaapiDecoderVC1 *decoder, guchar *buf, guint buf_size)
 
     /* Fill in VASliceParameterBufferVC1 */
     slice_param                            = slice->param;
-    slice_param->macroblock_offset         = frame_hdr->header_size;
+    slice_param->macroblock_offset         = 8 * (ebdu->offset - ebdu->sc_offset) + frame_hdr->header_size;
     slice_param->slice_vertical_position   = 0;
 
     /* Decode picture right away, we got the full frame */
     return decode_current_picture(decoder);
+}
+
+static gboolean
+decode_rbdu(GstVaapiDecoderVC1 *decoder, GstVC1BDU *rbdu, GstVC1BDU *ebdu)
+{
+    GstVaapiDecoderVC1Private * const priv = decoder->priv;
+    guint8 *rbdu_buffer;
+    guint i, j, rbdu_buffer_size;
+
+    /* BDU are encapsulated in advanced profile mode only */
+    if (priv->profile != GST_VAAPI_PROFILE_VC1_ADVANCED) {
+        memcpy(rbdu, ebdu, sizeof(*rbdu));
+        return TRUE;
+    }
+
+    /* Reallocate unescaped bitstream buffer */
+    rbdu_buffer = priv->rbdu_buffer;
+    if (!rbdu_buffer || ebdu->size > priv->rbdu_buffer_size) {
+        rbdu_buffer = g_realloc(priv->rbdu_buffer, ebdu->size);
+        if (!rbdu_buffer)
+            return FALSE;
+        priv->rbdu_buffer = rbdu_buffer;
+        priv->rbdu_buffer_size = ebdu->size;
+    }
+
+    /* Unescape bitstream buffer */
+    if (ebdu->size < 4) {
+        memcpy(rbdu_buffer, ebdu->data + ebdu->offset, ebdu->size);
+        rbdu_buffer_size = ebdu->size;
+    }
+    else {
+        guint8 * const bdu_buffer = ebdu->data + ebdu->offset;
+        for (i = 0, j = 0; i < ebdu->size; i++) {
+            if (i >= 2 && i < ebdu->size - 1 &&
+                bdu_buffer[i - 1] == 0x00   &&
+                bdu_buffer[i - 2] == 0x00   &&
+                bdu_buffer[i    ] == 0x03   &&
+                bdu_buffer[i + 1] <= 0x03)
+                i++;
+            rbdu_buffer[j++] = bdu_buffer[i];
+        }
+        rbdu_buffer_size = j;
+    }
+
+    /* Reconstruct RBDU */
+    rbdu->type      = ebdu->type;
+    rbdu->size      = rbdu_buffer_size;
+    rbdu->sc_offset = 0;
+    rbdu->offset    = 0;
+    rbdu->data      = rbdu_buffer;
+    return TRUE;
+}
+
+static GstVaapiDecoderStatus
+decode_ebdu(GstVaapiDecoderVC1 *decoder, GstVC1BDU *ebdu)
+{
+    GstVaapiDecoderStatus status;
+    GstVC1BDU rbdu;
+
+    if (!decode_rbdu(decoder, &rbdu, ebdu))
+        return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
+
+    switch (ebdu->type) {
+    case GST_VC1_SEQUENCE:
+        status = decode_sequence(decoder, &rbdu, ebdu);
+        break;
+    case GST_VC1_ENTRYPOINT:
+        status = decode_entry_point(decoder, &rbdu, ebdu);
+        break;
+    case GST_VC1_FRAME:
+        status = decode_frame(decoder, &rbdu, ebdu);
+        break;
+    case GST_VC1_SLICE:
+        GST_DEBUG("decode slice");
+        status = GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
+        break;
+    case GST_VC1_END_OF_SEQ:
+        status = decode_sequence_end(decoder);
+        break;
+    default:
+        GST_DEBUG("unsupported BDU type %d", ebdu->type);
+        status = GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
+        break;
+    }
+    return status;
 }
 
 static GstVaapiDecoderStatus
@@ -942,9 +1046,9 @@ decode_buffer(GstVaapiDecoderVC1 *decoder, GstBuffer *buffer)
     GstVaapiDecoderVC1Private * const priv = decoder->priv;
     GstVaapiDecoderStatus status;
     GstVC1ParserResult result;
-    GstVC1BDU bdu;
+    GstVC1BDU ebdu;
     guchar *buf;
-    guint buf_size, bdu_size, ofs;
+    guint buf_size, ofs;
 
     buf      = GST_BUFFER_DATA(buffer);
     buf_size = GST_BUFFER_SIZE(buffer);
@@ -968,7 +1072,7 @@ decode_buffer(GstVaapiDecoderVC1 *decoder, GstBuffer *buffer)
         result = gst_vc1_identify_next_bdu(
             buf + ofs,
             buf_size - ofs,
-            &bdu
+            &ebdu
         );
         status = get_status(result);
 
@@ -979,29 +1083,8 @@ decode_buffer(GstVaapiDecoderVC1 *decoder, GstBuffer *buffer)
         if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
             break;
 
-        ofs += bdu.offset;
-        switch (bdu.type) {
-        case GST_VC1_SEQUENCE:
-            status = decode_sequence(decoder, buf + ofs, bdu.size);
-            break;
-        case GST_VC1_ENTRYPOINT:
-            status = decode_entry_point(decoder, buf + ofs, bdu.size);
-            break;
-        case GST_VC1_FRAME:
-            status = decode_frame(decoder, buf + ofs, bdu.size);
-            break;
-        case GST_VC1_SLICE:
-            GST_DEBUG("decode slice");
-            break;
-        case GST_VC1_END_OF_SEQ:
-            status = decode_sequence_end(decoder);
-            break;
-        default:
-            GST_DEBUG("unsupported BDU type %d", bdu.type);
-            status = GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
-            break;
-        }
-        ofs += bdu.size;
+        ofs += ebdu.offset + ebdu.size;
+        status = decode_ebdu(decoder, &ebdu);
     } while (status == GST_VAAPI_DECODER_STATUS_SUCCESS);
     return status;
 }
@@ -1078,6 +1161,8 @@ gst_vaapi_decoder_vc1_init(GstVaapiDecoderVC1 *decoder)
     priv->prev_picture          = NULL;
     priv->tsb                   = NULL;
     priv->sub_buffer            = NULL;
+    priv->rbdu_buffer           = NULL;
+    priv->rbdu_buffer_size      = 0;
     priv->is_constructed        = FALSE;
     priv->is_opened             = FALSE;
     priv->is_first_field        = FALSE;
