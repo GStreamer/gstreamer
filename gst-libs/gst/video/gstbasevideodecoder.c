@@ -281,6 +281,7 @@ gst_base_video_decoder_sink_setcaps (GstPad * pad, GstCaps * caps)
   structure = gst_caps_get_structure (caps, 0);
 
   gst_video_format_parse_caps (caps, NULL, &state.width, &state.height);
+
   /* this one fails if no framerate in caps */
   if (!gst_video_parse_caps_framerate (caps, &state.fps_n, &state.fps_d)) {
     state.fps_n = 0;
@@ -988,7 +989,7 @@ gst_base_video_decoder_chain_forward (GstBaseVideoDecoder * base_video_decoder,
   if (GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
     gst_base_video_decoder_add_timestamp (base_video_decoder, buf);
   }
-  base_video_decoder->input_offset += GST_BUFFER_SIZE (buf);
+  base_video_decoder->input_offset += gst_buffer_get_size (buf);
 
   if (base_video_decoder->packetized) {
     base_video_decoder->current_frame->sink_buffer = buf;
@@ -1155,7 +1156,7 @@ gst_base_video_decoder_flush_parse (GstBaseVideoDecoder * dec)
     if (G_LIKELY (res == GST_FLOW_OK)) {
       GST_DEBUG_OBJECT (dec, "pushing buffer %p of size %u, "
           "time %" GST_TIME_FORMAT ", dur %" GST_TIME_FORMAT, buf,
-          GST_BUFFER_SIZE (buf), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
+          gst_buffer_get_size (buf), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
           GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
       /* should be already, but let's be sure */
       buf = gst_buffer_make_writable (buf);
@@ -1198,7 +1199,7 @@ gst_base_video_decoder_chain_reverse (GstBaseVideoDecoder * dec,
   if (G_LIKELY (buf)) {
     GST_DEBUG_OBJECT (dec, "gathering buffer %p of size %u, "
         "time %" GST_TIME_FORMAT ", dur %" GST_TIME_FORMAT, buf,
-        GST_BUFFER_SIZE (buf), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
+        gst_buffer_get_size (buf), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
         GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
 
     /* add buffer to gather queue */
@@ -1219,7 +1220,7 @@ gst_base_video_decoder_chain (GstPad * pad, GstBuffer * buf)
   GST_LOG_OBJECT (base_video_decoder,
       "chain %" GST_TIME_FORMAT " duration %" GST_TIME_FORMAT " size %d",
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
-      GST_TIME_ARGS (GST_BUFFER_DURATION (buf)), GST_BUFFER_SIZE (buf));
+      GST_TIME_ARGS (GST_BUFFER_DURATION (buf)), gst_buffer_get_size (buf));
 
   GST_BASE_VIDEO_CODEC_STREAM_LOCK (base_video_decoder);
 
@@ -1509,7 +1510,7 @@ gst_base_video_decoder_finish_frame (GstBaseVideoDecoder * base_video_decoder,
 
   /* update rate estimate */
   GST_BASE_VIDEO_CODEC (base_video_decoder)->bytes +=
-      GST_BUFFER_SIZE (src_buffer);
+      gst_buffer_get_size (src_buffer);
   if (GST_CLOCK_TIME_IS_VALID (frame->presentation_duration)) {
     GST_BASE_VIDEO_CODEC (base_video_decoder)->time +=
         frame->presentation_duration;
