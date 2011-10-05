@@ -314,7 +314,6 @@ not_negotiated:
   {
     GST_ELEMENT_ERROR (amrnbdec, STREAM, TYPE_NOT_FOUND, (NULL),
         ("Decoder is not initialized"));
-    gst_object_unref (amrnbdec);
     return GST_FLOW_NOT_NEGOTIATED;
   }
 }

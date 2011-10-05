@@ -65,26 +65,22 @@ static const unsigned char block_size[16] =
   6, 0, 0, 0, 0, 1, 1
 };
 
-static gboolean gst_amrwbdec_event (GstPad * pad, GstEvent * event);
-static GstFlowReturn gst_amrwbdec_chain (GstPad * pad, GstBuffer * buffer);
-static gboolean gst_amrwbdec_setcaps (GstPad * pad, GstCaps * caps);
-static GstStateChangeReturn gst_amrwbdec_state_change (GstElement * element,
-    GstStateChange transition);
-
-static void gst_amrwbdec_finalize (GObject * object);
+static gboolean gst_amrwbdec_start (GstAudioDecoder * dec);
+static gboolean gst_amrwbdec_stop (GstAudioDecoder * dec);
+static gboolean gst_amrwbdec_set_format (GstAudioDecoder * dec, GstCaps * caps);
+static gboolean gst_amrwbdec_parse (GstAudioDecoder * dec, GstAdapter * adapter,
+    gint * offset, gint * length);
+static GstFlowReturn gst_amrwbdec_handle_frame (GstAudioDecoder * dec,
+    GstBuffer * buffer);
 
 #define gst_amrwbdec_parent_class parent_class
-G_DEFINE_TYPE (GstAmrwbDec, gst_amrwbdec, GST_TYPE_ELEMENT);
+G_DEFINE_TYPE (GstAmrwbDec, gst_amrwbdec, GST_TYPE_AUDIO_DECODER);
 
 static void
 gst_amrwbdec_class_init (GstAmrwbDecClass * klass)
 {
-  GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  GstAudioDecoderClass *base_class = GST_AUDIO_DECODER_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  object_class->finalize = gst_amrwbdec_finalize;
-
-  element_class->change_state = GST_DEBUG_FUNCPTR (gst_amrwbdec_state_change);
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
@@ -96,6 +92,12 @@ gst_amrwbdec_class_init (GstAmrwbDecClass * klass)
       "Adaptive Multi-Rate Wideband audio decoder",
       "Renato Araujo <renato.filho@indt.org.br>");
 
+  base_class->start = GST_DEBUG_FUNCPTR (gst_amrwbdec_start);
+  base_class->stop = GST_DEBUG_FUNCPTR (gst_amrwbdec_stop);
+  base_class->set_format = GST_DEBUG_FUNCPTR (gst_amrwbdec_set_format);
+  base_class->parse = GST_DEBUG_FUNCPTR (gst_amrwbdec_parse);
+  base_class->handle_frame = GST_DEBUG_FUNCPTR (gst_amrwbdec_handle_frame);
+
   GST_DEBUG_CATEGORY_INIT (gst_amrwbdec_debug, "amrwbdec", 0,
       "AMR-WB audio decoder");
 }
@@ -103,48 +105,42 @@ gst_amrwbdec_class_init (GstAmrwbDecClass * klass)
 static void
 gst_amrwbdec_init (GstAmrwbDec * amrwbdec)
 {
-  /* create the sink pad */
-  amrwbdec->sinkpad = gst_pad_new_from_static_template (&sink_template, "sink");
-  gst_pad_set_event_function (amrwbdec->sinkpad, gst_amrwbdec_event);
-  gst_pad_set_chain_function (amrwbdec->sinkpad, gst_amrwbdec_chain);
-  gst_element_add_pad (GST_ELEMENT (amrwbdec), amrwbdec->sinkpad);
-
-  /* create the src pad */
-  amrwbdec->srcpad = gst_pad_new_from_static_template (&src_template, "src");
-  gst_pad_use_fixed_caps (amrwbdec->srcpad);
-  gst_element_add_pad (GST_ELEMENT (amrwbdec), amrwbdec->srcpad);
-
-  amrwbdec->adapter = gst_adapter_new ();
-
-  /* init rest */
-  amrwbdec->handle = NULL;
-  amrwbdec->channels = 0;
-  amrwbdec->rate = 0;
-  amrwbdec->duration = 0;
-  amrwbdec->ts = -1;
-}
-
-static void
-gst_amrwbdec_finalize (GObject * object)
-{
-  GstAmrwbDec *amrwbdec;
-
-  amrwbdec = GST_AMRWBDEC (object);
-
-  gst_adapter_clear (amrwbdec->adapter);
-  g_object_unref (amrwbdec->adapter);
-
-  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static gboolean
-gst_amrwbdec_setcaps (GstPad * pad, GstCaps * caps)
+gst_amrwbdec_start (GstAudioDecoder * dec)
+{
+  GstAmrwbDec *amrwbdec = GST_AMRWBDEC (dec);
+
+  GST_DEBUG_OBJECT (dec, "start");
+  if (!(amrwbdec->handle = D_IF_init ()))
+    return FALSE;
+
+  amrwbdec->rate = 0;
+  amrwbdec->channels = 0;
+
+  return TRUE;
+}
+
+static gboolean
+gst_amrwbdec_stop (GstAudioDecoder * dec)
+{
+  GstAmrwbDec *amrwbdec = GST_AMRWBDEC (dec);
+
+  GST_DEBUG_OBJECT (dec, "stop");
+  D_IF_exit (amrwbdec->handle);
+
+  return TRUE;
+}
+
+static gboolean
+gst_amrwbdec_set_format (GstAudioDecoder * dec, GstCaps * caps)
 {
   GstStructure *structure;
   GstAmrwbDec *amrwbdec;
   GstCaps *copy;
 
-  amrwbdec = GST_AMRWBDEC (gst_pad_get_parent (pad));
+  amrwbdec = GST_AMRWBDEC (dec);
 
   structure = gst_caps_get_structure (caps, 0);
 
@@ -153,224 +149,94 @@ gst_amrwbdec_setcaps (GstPad * pad, GstCaps * caps)
   gst_structure_get_int (structure, "rate", &amrwbdec->rate);
 
   /* create reverse caps */
-  copy = gst_caps_new_simple ("audio/x-raw-int",
+  copy = gst_caps_new_simple ("audio/x-raw",
+      "format", G_TYPE_STRING, GST_AUDIO_NE (S16),
       "channels", G_TYPE_INT, amrwbdec->channels,
-      "width", G_TYPE_INT, 16,
-      "depth", G_TYPE_INT, 16,
-      "endianness", G_TYPE_INT, G_BYTE_ORDER,
-      "rate", G_TYPE_INT, amrwbdec->rate, "signed", G_TYPE_BOOLEAN, TRUE, NULL);
+      "rate", G_TYPE_INT, amrwbdec->rate, NULL);
 
-  amrwbdec->duration = gst_util_uint64_scale_int (GST_SECOND, L_FRAME16k,
-      amrwbdec->rate * amrwbdec->channels);
-
-  gst_pad_set_caps (amrwbdec->srcpad, copy);
+  gst_audio_decoder_set_outcaps (dec, copy);
   gst_caps_unref (copy);
-
-  gst_object_unref (amrwbdec);
 
   return TRUE;
 }
 
-static gboolean
-gst_amrwbdec_event (GstPad * pad, GstEvent * event)
+static GstFlowReturn
+gst_amrwbdec_parse (GstAudioDecoder * dec, GstAdapter * adapter,
+    gint * offset, gint * length)
 {
-  GstAmrwbDec *amrwbdec;
-  gboolean ret = TRUE;
+  GstAmrwbDec *amrwbdec = GST_AMRWBDEC (dec);
+  guint8 header[1];
+  guint size;
+  gboolean sync, eos;
+  gint block, mode;
 
-  amrwbdec = GST_AMRWBDEC (gst_pad_get_parent (pad));
+  size = gst_adapter_available (adapter);
+  g_return_val_if_fail (size > 0, GST_FLOW_ERROR);
 
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_CAPS:
-    {
-      GstCaps *caps;
+  gst_audio_decoder_get_parse_state (dec, &sync, &eos);
 
-      gst_event_parse_caps (event, &caps);
-      ret = gst_amrwbdec_setcaps (pad, caps);
-      gst_event_unref (event);
-      break;
-    }
-    case GST_EVENT_FLUSH_START:
-      ret = gst_pad_push_event (amrwbdec->srcpad, event);
-      break;
-    case GST_EVENT_FLUSH_STOP:
-      ret = gst_pad_push_event (amrwbdec->srcpad, event);
-      gst_adapter_clear (amrwbdec->adapter);
-      amrwbdec->ts = -1;
-      break;
-    case GST_EVENT_EOS:
-      gst_adapter_clear (amrwbdec->adapter);
-      ret = gst_pad_push_event (amrwbdec->srcpad, event);
-      break;
-    case GST_EVENT_SEGMENT:
-    {
-      GstSegment seg;
+  /* need to peek data to get the size */
+  if (gst_adapter_available (adapter) < 1)
+    return GST_FLOW_ERROR;
 
-      gst_event_copy_segment (event, &seg);
-      /* we need time for now */
-      if (seg.format != GST_FORMAT_TIME)
-        goto newseg_wrong_format;
+  gst_adapter_copy (adapter, header, 0, 1);
+  mode = (header[0] >> 3) & 0x0F;
+  block = block_size[mode];
 
-      GST_DEBUG_OBJECT (amrwbdec, "segment: %" GST_SEGMENT_FORMAT, &seg);
+  GST_DEBUG_OBJECT (amrwbdec, "mode %d, block %d", mode, block);
 
-      /* now configure the values */
-      amrwbdec->segment = seg;
-
-      ret = gst_pad_push_event (amrwbdec->srcpad, event);
-    }
-      break;
-    default:
-      ret = gst_pad_push_event (amrwbdec->srcpad, event);
-      break;
+  if (block) {
+    *offset = 0;
+    *length = block;
+  } else {
+    /* no frame yet, skip one byte */
+    GST_LOG_OBJECT (amrwbdec, "skipping byte");
+    *offset = 1;
+    return GST_FLOW_UNEXPECTED;
   }
-done:
-  gst_object_unref (amrwbdec);
 
-  return ret;
-
-  /* ERRORS */
-newseg_wrong_format:
-  {
-    GST_DEBUG_OBJECT (amrwbdec, "received non TIME newsegment");
-    goto done;
-  }
+  return GST_FLOW_OK;
 }
 
 static GstFlowReturn
-gst_amrwbdec_chain (GstPad * pad, GstBuffer * buffer)
+gst_amrwbdec_handle_frame (GstAudioDecoder * dec, GstBuffer * buffer)
 {
   GstAmrwbDec *amrwbdec;
-  GstFlowReturn ret = GST_FLOW_OK;
+  GstBuffer *out;
+  guint8 *data;
+  Word16 *outdata;
 
-  amrwbdec = GST_AMRWBDEC (gst_pad_get_parent (pad));
+  amrwbdec = GST_AMRWBDEC (dec);
+
+  /* no fancy flushing */
+  if (!buffer || !gst_buffer_get_size (buffer))
+    return GST_FLOW_OK;
 
   if (amrwbdec->rate == 0 || amrwbdec->channels == 0)
     goto not_negotiated;
 
-  /* discontinuity, don't combine samples before and after the
-   * DISCONT */
-  if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT)) {
-    gst_adapter_clear (amrwbdec->adapter);
-    amrwbdec->ts = -1;
-    amrwbdec->discont = TRUE;
-  }
+  /* the library seems to write into the source data, hence the copy. */
+  /* should be no problem */
+  data = gst_buffer_map (buffer, NULL, NULL, GST_MAP_READ);
 
-  /* take latest timestamp, FIXME timestamp is the one of the
-   * first buffer in the adapter. */
-  if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer))
-    amrwbdec->ts = GST_BUFFER_TIMESTAMP (buffer);
+  /* get output */
+  out = gst_buffer_new_and_alloc (sizeof (gint16) * L_FRAME16k);
+  outdata = gst_buffer_map (out, NULL, NULL, GST_MAP_WRITE);
 
-  gst_adapter_push (amrwbdec->adapter, buffer);
+  /* decode */
+  D_IF_decode (amrwbdec->handle, (unsigned char *) data, outdata, _good_frame);
 
-  while (TRUE) {
-    GstBuffer *out;
-    guint8 head[1];
-    const guint8 *data;
-    Word16 *out_data;
-    gint block, mode;
+  gst_buffer_unmap (out, outdata, sizeof (gint16) * L_FRAME16k);
+  gst_buffer_unmap (buffer, data, -1);
 
-    /* need to peek data to get the size */
-    if (gst_adapter_available (amrwbdec->adapter) < 1)
-      break;
-    gst_adapter_copy (amrwbdec->adapter, head, 0, 1);
-
-    /* get size */
-    mode = (head[0] >> 3) & 0x0F;
-    block = block_size[mode];
-
-    GST_DEBUG_OBJECT (amrwbdec, "mode %d, block %d", mode, block);
-
-    if (!block) {
-      GST_LOG_OBJECT (amrwbdec, "skipping byte");
-      gst_adapter_flush (amrwbdec->adapter, 1);
-      continue;
-    }
-
-    if (gst_adapter_available (amrwbdec->adapter) < block)
-      break;
-
-    /* the library seems to write into the source data, hence the copy. */
-    data = gst_adapter_take (amrwbdec->adapter, block);
-
-    /* get output */
-    out = gst_buffer_new_and_alloc (sizeof (gint16) * L_FRAME16k);
-
-    GST_BUFFER_DURATION (out) = amrwbdec->duration;
-    GST_BUFFER_TIMESTAMP (out) = amrwbdec->ts;
-
-    if (amrwbdec->ts != -1)
-      amrwbdec->ts += amrwbdec->duration;
-    if (amrwbdec->discont) {
-      GST_BUFFER_FLAG_SET (out, GST_BUFFER_FLAG_DISCONT);
-      amrwbdec->discont = FALSE;
-    }
-
-    /* decode */
-    out_data = gst_buffer_map (out, NULL, NULL, GST_MAP_WRITE);
-    D_IF_decode (amrwbdec->handle, (unsigned char *) data,
-        out_data, _good_frame);
-    gst_buffer_unmap (out, out_data, -1);
-
-    g_free ((gpointer) data);
-
-    /* send out */
-    ret = gst_pad_push (amrwbdec->srcpad, out);
-  }
-
-  gst_object_unref (amrwbdec);
-  return ret;
+  /* send out */
+  return gst_audio_decoder_finish_frame (dec, out, 1);
 
   /* ERRORS */
 not_negotiated:
   {
     GST_ELEMENT_ERROR (amrwbdec, STREAM, TYPE_NOT_FOUND, (NULL),
         ("Decoder is not initialized"));
-    gst_object_unref (amrwbdec);
     return GST_FLOW_NOT_NEGOTIATED;
-  }
-}
-
-static GstStateChangeReturn
-gst_amrwbdec_state_change (GstElement * element, GstStateChange transition)
-{
-  GstAmrwbDec *amrwbdec;
-  GstStateChangeReturn ret;
-
-  amrwbdec = GST_AMRWBDEC (element);
-
-  switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
-      if (!(amrwbdec->handle = D_IF_init ()))
-        goto init_failed;
-      break;
-    case GST_STATE_CHANGE_READY_TO_PAUSED:
-      gst_adapter_clear (amrwbdec->adapter);
-      amrwbdec->rate = 0;
-      amrwbdec->channels = 0;
-      amrwbdec->ts = -1;
-      amrwbdec->discont = TRUE;
-      gst_segment_init (&amrwbdec->segment, GST_FORMAT_TIME);
-      break;
-    default:
-      break;
-  }
-
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-
-  switch (transition) {
-    case GST_STATE_CHANGE_READY_TO_NULL:
-      D_IF_exit (amrwbdec->handle);
-      break;
-    default:
-      break;
-  }
-
-  return ret;
-
-  /* ERRORS */
-init_failed:
-  {
-    GST_ELEMENT_ERROR (amrwbdec, LIBRARY, INIT, (NULL),
-        ("Failed to open AMR Decoder"));
-    return GST_STATE_CHANGE_FAILURE;
   }
 }
