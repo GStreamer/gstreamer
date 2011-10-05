@@ -345,8 +345,12 @@ gst_audio_info_from_caps (GstAudioInfo * info, const GstCaps * caps)
   gst_audio_info_set_format (info, format, rate, channels);
 
   pos_val_arr = gst_structure_get_value (str, "channel-positions");
+
   if (pos_val_arr) {
     guint max_pos = MIN (channels, 64);
+
+    if (channels != gst_value_array_get_size (pos_val_arr))
+      goto incoherent_channels;
 
     for (i = 0; i < max_pos; i++) {
       pos_val_entry = gst_value_array_get_value (pos_val_arr, i);
@@ -383,6 +387,13 @@ no_rate:
 no_channels:
   {
     GST_ERROR ("no channels property given");
+    return FALSE;
+  }
+
+incoherent_channels:
+  {
+    GST_ERROR ("There should be %d channels positions, but %d are present",
+        channels, gst_value_array_get_size (pos_val_arr));
     return FALSE;
   }
 }
