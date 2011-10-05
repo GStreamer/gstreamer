@@ -1226,7 +1226,7 @@ gst_h264_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
     size = GST_BUFFER_SIZE (codec_data);
 
     /* parse the avcC data */
-    if (size < 7)
+    if (size < 8)
       goto avcc_too_small;
     /* parse the version, this must be 1 */
     if (data[0] != 1)
