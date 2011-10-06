@@ -503,6 +503,58 @@ get_BFRACTION(guint bfraction)
     return 21; /* RESERVED */
 }
 
+/* Translate GStreamer MV modes to VA-API */
+static guint
+get_VAMvModeVC1(guint mvmode)
+{
+    switch (mvmode) {
+    case GST_VC1_MVMODE_1MV_HPEL_BILINEAR: return VAMvMode1MvHalfPelBilinear;
+    case GST_VC1_MVMODE_1MV:               return VAMvMode1Mv;
+    case GST_VC1_MVMODE_1MV_HPEL:          return VAMvMode1MvHalfPel;
+    case GST_VC1_MVMODE_MIXED_MV:          return VAMvModeMixedMv;
+    case GST_VC1_MVMODE_INTENSITY_COMP:    return VAMvModeIntensityCompensation;
+    }
+    return 0;
+}
+
+/* Reconstruct bitstream MVMODE (7.1.1.32) */
+static guint
+get_MVMODE(GstVC1FrameHdr *frame_hdr)
+{
+    guint mvmode;
+
+    if (frame_hdr->profile == GST_VC1_PROFILE_ADVANCED)
+        mvmode = frame_hdr->pic.advanced.mvmode;
+    else
+        mvmode = frame_hdr->pic.simple.mvmode;
+
+    if (frame_hdr->ptype == GST_VC1_PICTURE_TYPE_P ||
+        frame_hdr->ptype == GST_VC1_PICTURE_TYPE_B)
+        return get_VAMvModeVC1(mvmode);
+    return 0;
+}
+
+/* Reconstruct bitstream MVMODE2 (7.1.1.33) */
+static guint
+get_MVMODE2(GstVC1FrameHdr *frame_hdr)
+{
+    guint mvmode, mvmode2;
+
+    if (frame_hdr->profile == GST_VC1_PROFILE_ADVANCED) {
+        mvmode  = frame_hdr->pic.advanced.mvmode;
+        mvmode2 = frame_hdr->pic.advanced.mvmode2;
+    }
+    else {
+        mvmode  = frame_hdr->pic.simple.mvmode;
+        mvmode2 = frame_hdr->pic.simple.mvmode2;
+    }
+
+    if (frame_hdr->ptype == GST_VC1_PICTURE_TYPE_P &&
+        mvmode == GST_VC1_MVMODE_INTENSITY_COMP)
+        return get_VAMvModeVC1(mvmode2);
+    return 0;
+}
+
 static inline int
 has_MVTYPEMB_bitplane(GstVaapiDecoderVC1 *decoder)
 {
@@ -656,8 +708,6 @@ fill_picture_structc(GstVaapiDecoderVC1 *decoder, GstVaapiPicture *picture)
     pic_param->bitplane_present.flags.bp_mv_type_mb                 = has_MVTYPEMB_bitplane(decoder);
     pic_param->bitplane_present.flags.bp_direct_mb                  = has_DIRECTMB_bitplane(decoder);
     pic_param->bitplane_present.flags.bp_skip_mb                    = has_SKIPMB_bitplane(decoder);
-    pic_param->mv_fields.bits.mv_mode                               = pic->mvmode;
-    pic_param->mv_fields.bits.mv_mode2                              = pic->mvmode2;
     pic_param->mv_fields.bits.mv_table                              = pic->mvtab;
     pic_param->mv_fields.bits.extended_mv_flag                      = structc->extended_mv;
     pic_param->mv_fields.bits.extended_mv_range                     = pic->mvrange;
@@ -722,8 +772,6 @@ fill_picture_advanced(GstVaapiDecoderVC1 *decoder, GstVaapiPicture *picture)
     pic_param->bitplane_present.flags.bp_ac_pred                    = has_ACPRED_bitplane(decoder);
     pic_param->bitplane_present.flags.bp_overflags                  = has_OVERFLAGS_bitplane(decoder);
     pic_param->reference_fields.bits.reference_distance_flag        = entrypoint_hdr->refdist_flag;
-    pic_param->mv_fields.bits.mv_mode                               = pic->mvmode;
-    pic_param->mv_fields.bits.mv_mode2                              = pic->mvmode2;
     pic_param->mv_fields.bits.mv_table                              = pic->mvtab;
     pic_param->mv_fields.bits.extended_mv_flag                      = entrypoint_hdr->extended_mv;
     pic_param->mv_fields.bits.extended_mv_range                     = pic->mvrange;
@@ -764,6 +812,8 @@ fill_picture(GstVaapiDecoderVC1 *decoder, GstVaapiPicture *picture)
     pic_param->bitplane_present.value                               = 0;
     pic_param->reference_fields.value                               = 0;
     pic_param->mv_fields.value                                      = 0;
+    pic_param->mv_fields.bits.mv_mode                               = get_MVMODE(frame_hdr);
+    pic_param->mv_fields.bits.mv_mode2                              = get_MVMODE2(frame_hdr);
     pic_param->pic_quantizer_fields.value                           = 0;
     pic_param->pic_quantizer_fields.bits.half_qp                    = frame_hdr->halfqp;
     pic_param->pic_quantizer_fields.bits.pic_quantizer_scale        = frame_hdr->pquant;
