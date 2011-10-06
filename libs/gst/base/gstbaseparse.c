@@ -231,6 +231,7 @@ struct _GstBaseParsePrivate
   gint64 duration;
   GstFormat duration_fmt;
   gint64 estimated_duration;
+  gint64 estimated_drift;
 
   guint min_frame_size;
   gboolean passthrough;
@@ -685,6 +686,7 @@ gst_base_parse_reset (GstBaseParse * parse)
   parse->priv->first_frame_ts = GST_CLOCK_TIME_NONE;
   parse->priv->first_frame_offset = -1;
   parse->priv->estimated_duration = -1;
+  parse->priv->estimated_drift = 0;
   parse->priv->next_ts = 0;
   parse->priv->syncable = TRUE;
   parse->priv->passthrough = FALSE;
@@ -1266,6 +1268,17 @@ gst_base_parse_update_duration (GstBaseParse * baseparse)
     if (qres) {
       if (gst_base_parse_convert (parse, GST_FORMAT_BYTES, ptot,
               GST_FORMAT_TIME, &dest_value)) {
+
+        /* inform if duration changed, but try to avoid spamming */
+        parse->priv->estimated_drift +=
+            dest_value - parse->priv->estimated_duration;
+        if (parse->priv->estimated_drift > GST_SECOND ||
+            parse->priv->estimated_drift < -GST_SECOND) {
+          gst_element_post_message (GST_ELEMENT (parse),
+              gst_message_new_duration (GST_OBJECT (parse),
+                  GST_FORMAT_TIME, dest_value));
+          parse->priv->estimated_drift = 0;
+        }
         parse->priv->estimated_duration = dest_value;
         GST_LOG_OBJECT (parse,
             "updated estimated duration to %" GST_TIME_FORMAT,
