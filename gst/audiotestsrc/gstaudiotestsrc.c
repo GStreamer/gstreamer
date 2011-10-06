@@ -1004,6 +1004,7 @@ gst_audio_test_src_change_wave (GstAudioTestSrc * src)
         src->gen = g_rand_new ();
       src->red.state = 0.0;
       src->process = violet_noise_funcs[src->format];
+      break;
     default:
       GST_ERROR ("invalid wave-form");
       break;
