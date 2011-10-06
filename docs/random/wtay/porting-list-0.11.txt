@@ -220,6 +220,7 @@
  * -bad  jpegformat:    jifmux: JPEG stream muxer
  * -bad  jpegformat:    jpegparse: JPEG stream parser
  * -bad  mms:           mmssrc: MMS streaming source
+ * -bad  mpeg4videoparse:  mpeg4videoparse: MPEG 4 video elementary stream parser
  * -bad  sdp:           sdpdemux: SDP session setup
 
  * -ff   ffmpeg:
@@ -257,9 +258,6 @@
    -good matroska:      matroskamux: Matroska muxer
    -good matroska:      matroskaparse: Matroska parser
    -good matroska:      webmmux: WebM muxer
-   -bad  mpeg4videoparse:  mpeg4videoparse: MPEG 4 video elementary stream parser
-   -good mpegaudioparse:  mp3parse: MPEG1 Audio Parser
-   -good mpegaudioparse:  xingmux: MP3 Xing muxer
    -bad  musepack:      musepackdec: Musepack decoder
    -bad  resindvd:      rsndvdbin: rsndvdbin
    -bad  schro:         schrodec: Dirac Decoder
@@ -580,6 +578,7 @@
    -bad  winscreencap:  gdiscreencapsrc
    -bad  winscreencap:  dx9screencapsrc
 
+   -ugly xingmux:       xingmux: MP3 Xing muxer
    -bad  xvid:          xviddec: XviD video decoder
    -bad  xvid:          xvidenc: XviD video encoder
 
