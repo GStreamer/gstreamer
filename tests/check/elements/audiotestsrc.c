@@ -89,6 +89,7 @@ GST_START_TEST (test_all_waves)
 
   while (values[j].value_name) {
     GST_DEBUG_OBJECT (audiotestsrc, "testing wave %s", values[j].value_name);
+    g_object_set (audiotestsrc, "wave", values[j].value, NULL);
 
     fail_unless (gst_element_set_state (audiotestsrc,
             GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
