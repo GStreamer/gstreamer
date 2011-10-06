@@ -351,10 +351,7 @@ gst_play_sink_audio_convert_getcaps (GstPad * pad)
   GstPad *otherpad, *peer;
 
   GST_PLAY_SINK_AUDIO_CONVERT_LOCK (self);
-  if (pad == self->srcpad)
-    otherpad = gst_object_ref (self->sinkpad);
-  else
-    otherpad = gst_object_ref (self->srcpad);
+  otherpad = gst_ghost_pad_get_target (GST_GHOST_PAD_CAST (pad));
   GST_PLAY_SINK_AUDIO_CONVERT_UNLOCK (self);
 
   peer = gst_pad_get_peer (otherpad);
