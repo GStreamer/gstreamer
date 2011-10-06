@@ -137,6 +137,7 @@ libgstvaapi_@GST_MAJORMINOR@_la_CFLAGS =	\
 	-DGST_USE_UNSTABLE_API			\
 	-I$(top_srcdir)/gst-libs		\
 	$(GST_BASE_CFLAGS)			\
+	$(GST_BASEVIDEO_CFLAGS)			\
 	$(GST_CFLAGS)				\
 	$(LIBAVCODEC_CFLAGS)			\
 	$(LIBVA_CFLAGS)				\
@@ -144,6 +145,7 @@ libgstvaapi_@GST_MAJORMINOR@_la_CFLAGS =	\
 
 libgstvaapi_@GST_MAJORMINOR@_la_LIBADD =	\
 	$(GST_BASE_LIBS)			\
+	$(GST_BASEVIDEO_LIBS)			\
 	$(GST_LIBS)				\
 	$(LIBAVCODEC_LIBS)			\
 	$(LIBVA_LIBS)				\

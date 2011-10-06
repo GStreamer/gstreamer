@@ -22,7 +22,7 @@
 #ifndef GST_VAAPI_VIDEO_BUFFER_H
 #define GST_VAAPI_VIDEO_BUFFER_H
 
-#include <gst/gstbuffer.h>
+#include <gst/video/gstsurfacebuffer.h>
 #include <gst/vaapi/gstvaapidisplay.h>
 #include <gst/vaapi/gstvaapiimage.h>
 #include <gst/vaapi/gstvaapisurface.h>
@@ -66,7 +66,7 @@ typedef struct _GstVaapiVideoBufferClass        GstVaapiVideoBufferClass;
  */
 struct _GstVaapiVideoBuffer {
     /*< private >*/
-    GstBuffer parent_instance;
+    GstSurfaceBuffer parent_instance;
 
     GstVaapiVideoBufferPrivate *priv;
 };
@@ -78,7 +78,7 @@ struct _GstVaapiVideoBuffer {
  */
 struct _GstVaapiVideoBufferClass {
     /*< private >*/
-    GstBufferClass parent_class;
+    GstSurfaceBufferClass parent_class;
 };
 
 GType
