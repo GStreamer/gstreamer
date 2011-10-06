@@ -2442,12 +2442,14 @@ stream_changed_data_probe (GstPad * pad, GstMiniObject * object, gpointer data)
 
 /* helper function to lookup stuff in lists */
 static gboolean
-array_has_value (const gchar * values[], const gchar * value)
+array_has_value (const gchar * values[], const gchar * value, gboolean exact)
 {
   gint i;
 
   for (i = 0; values[i]; i++) {
-    if (values[i] && g_str_has_prefix (value, values[i]))
+    if (exact && !strcmp (value, values[i]))
+      return TRUE;
+    if (!exact && g_str_has_prefix (value, values[i]))
       return TRUE;
   }
   return FALSE;
@@ -2505,7 +2507,7 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
   GstPad *sinkpad;
   GstPadLinkReturn res;
   GstSourceSelect *select = NULL;
-  gint i;
+  gint i, pass;
   gboolean changed = FALSE;
 
   playbin = group->playbin;
@@ -2518,20 +2520,24 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
       "pad %s:%s with caps %" GST_PTR_FORMAT " added in group %p",
       GST_DEBUG_PAD_NAME (pad), caps, group);
 
-  /* major type of the pad, this determines the selector to use */
-  for (i = 0; i < PLAYBIN_STREAM_LAST; i++) {
-    if (array_has_value (group->selector[i].media_list, name)) {
-      select = &group->selector[i];
-      break;
-    } else if (group->selector[i].get_media_caps) {
-      GstCaps *media_caps = group->selector[i].get_media_caps ();
-
-      if (media_caps && gst_caps_can_intersect (media_caps, caps)) {
+  /* major type of the pad, this determines the selector to use,
+     try exact match first so we don't prematurely match video/
+     for video/x-dvd-subpicture */
+  for (pass = 0; !select && pass < 2; pass++) {
+    for (i = 0; i < PLAYBIN_STREAM_LAST; i++) {
+      if (array_has_value (group->selector[i].media_list, name, pass == 0)) {
         select = &group->selector[i];
-        gst_caps_unref (media_caps);
         break;
+      } else if (group->selector[i].get_media_caps) {
+        GstCaps *media_caps = group->selector[i].get_media_caps ();
+
+        if (media_caps && gst_caps_can_intersect (media_caps, caps)) {
+          select = &group->selector[i];
+          gst_caps_unref (media_caps);
+          break;
+        }
+        gst_caps_unref (media_caps);
       }
-      gst_caps_unref (media_caps);
     }
   }
   /* no selector found for the media type, don't bother linking it to a
