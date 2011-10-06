@@ -53,6 +53,10 @@
 
 #include <gst/gst.h>
 
+#ifdef G_OS_WIN32
+#include <winsock2.h>
+#endif
+
 GST_DEBUG_CATEGORY_STATIC (rtmpsrc_debug);
 #define GST_CAT_DEFAULT rtmpsrc_debug
 
@@ -153,6 +157,14 @@ gst_rtmp_src_class_init (GstRTMPSrcClass * klass)
 static void
 gst_rtmp_src_init (GstRTMPSrc * rtmpsrc, GstRTMPSrcClass * klass)
 {
+#ifdef G_OS_WIN32
+  WSADATA wsa_data;
+
+  if (WSAStartup (MAKEWORD (2, 2), &wsa_data) != 0) {
+    GST_ERROR_OBJECT (rtmpsrc, "WSAStartup failed: 0x%08x", WSAGetLastError ());
+  }
+#endif
+
   rtmpsrc->cur_offset = 0;
   rtmpsrc->last_timestamp = 0;
 
@@ -166,6 +178,10 @@ gst_rtmp_src_finalize (GObject * object)
 
   g_free (rtmpsrc->uri);
   rtmpsrc->uri = NULL;
+
+#ifdef G_OS_WIN32
+  WSACleanup ();
+#endif
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }

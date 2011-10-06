@@ -43,6 +43,10 @@
 
 #include "gstrtmpsink.h"
 
+#ifdef G_OS_WIN32
+#include <winsock2.h>
+#endif
+
 GST_DEBUG_CATEGORY_STATIC (gst_rtmp_sink_debug);
 #define GST_CAT_DEFAULT gst_rtmp_sink_debug
 
@@ -71,6 +75,7 @@ static void gst_rtmp_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_rtmp_sink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
+static void gst_rtmp_sink_finalize (GObject * object);
 static gboolean gst_rtmp_sink_stop (GstBaseSink * sink);
 static gboolean gst_rtmp_sink_start (GstBaseSink * sink);
 static GstFlowReturn gst_rtmp_sink_render (GstBaseSink * sink, GstBuffer * buf);
@@ -116,6 +121,7 @@ gst_rtmp_sink_class_init (GstRTMPSinkClass * klass)
   GstBaseSinkClass *gstbasesink_class = (GstBaseSinkClass *) klass;
 
   gobject_class = (GObjectClass *) klass;
+  gobject_class->finalize = gst_rtmp_sink_finalize;
   gobject_class->set_property = gst_rtmp_sink_set_property;
   gobject_class->get_property = gst_rtmp_sink_get_property;
 
@@ -133,7 +139,25 @@ gst_rtmp_sink_class_init (GstRTMPSinkClass * klass)
 static void
 gst_rtmp_sink_init (GstRTMPSink * sink, GstRTMPSinkClass * klass)
 {
+#ifdef G_OS_WIN32
+  WSADATA wsa_data;
+
+  if (WSAStartup (MAKEWORD (2, 2), &wsa_data) != 0) {
+    GST_ERROR_OBJECT (sink, "WSAStartup failed: 0x%08x", WSAGetLastError ());
+  }
+#endif
 }
+
+static void
+gst_rtmp_sink_finalize (GObject * object)
+{
+#ifdef G_OS_WIN32
+  WSACleanup ();
+#endif
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
 
 static gboolean
 gst_rtmp_sink_start (GstBaseSink * basesink)
