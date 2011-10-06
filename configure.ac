@@ -210,7 +210,7 @@ dnl *** plug-ins to include ***
 
 dnl Non ported plugins (non-dependant, then dependant)
 dnl Make sure you have a space before and after all plugins
-GST_PLUGINS_NONPORTED=" dvdsub iec958 synaesthesia xingmux \
+GST_PLUGINS_NONPORTED=" iec958 synaesthesia xingmux \
  mpegstream realmedia cdio dvdread twolame "
 AC_SUBST(GST_PLUGINS_NONPORTED)
 

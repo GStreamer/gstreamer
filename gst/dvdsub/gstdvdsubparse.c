@@ -49,23 +49,9 @@ static GstFlowReturn gst_dvd_sub_parse_chain (GstPad * pad, GstBuffer * buf);
 
 static GstStateChangeReturn gst_dvd_sub_parse_change_state (GstElement *
     element, GstStateChange transition);
-GST_BOILERPLATE (GstDvdSubParse, gst_dvd_sub_parse, GstElement,
-    GST_TYPE_ELEMENT);
 
-static void
-gst_dvd_sub_parse_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_template));
-
-  gst_element_class_set_details_simple (element_class, "DVD subtitle parser",
-      "Codec/Parser/Subtitle", "Parses and packetizes DVD subtitle streams",
-      "Mark Nauwelaerts <mnauw@users.sourceforge.net>");
-}
+#define gst_dvd_sub_parse_parent_class parent_class
+G_DEFINE_TYPE (GstDvdSubParse, gst_dvd_sub_parse, GST_TYPE_ELEMENT);
 
 static void
 gst_dvd_sub_parse_class_init (GstDvdSubParseClass * klass)
@@ -83,6 +69,15 @@ gst_dvd_sub_parse_class_init (GstDvdSubParseClass * klass)
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_dvd_sub_parse_change_state);
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&src_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sink_template));
+
+  gst_element_class_set_details_simple (gstelement_class, "DVD subtitle parser",
+      "Codec/Parser/Subtitle", "Parses and packetizes DVD subtitle streams",
+      "Mark Nauwelaerts <mnauw@users.sourceforge.net>");
 }
 
 static void
@@ -97,7 +92,7 @@ gst_dvd_sub_parse_finalize (GObject * object)
 }
 
 static void
-gst_dvd_sub_parse_init (GstDvdSubParse * parse, GstDvdSubParseClass * klass)
+gst_dvd_sub_parse_init (GstDvdSubParse * parse)
 {
   parse->sinkpad = gst_pad_new_from_static_template (&sink_template, "sink");
   gst_pad_set_chain_function (parse->sinkpad,
@@ -159,14 +154,14 @@ gst_dvd_sub_parse_chain (GstPad * pad, GstBuffer * buf)
   adapter = parse->adapter;
 
   GST_LOG_OBJECT (parse, "%4u bytes, ts: %" GST_TIME_FORMAT,
-      GST_BUFFER_SIZE (buf), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
+      gst_buffer_get_size (buf), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
 
   gst_adapter_push (adapter, buf);
 
   if (!parse->needed) {
-    const guint8 *data;
+    guint8 data[2];
 
-    data = gst_adapter_peek (adapter, 2);
+    gst_adapter_copy (adapter, data, 0, 2);
     parse->needed = GST_READ_UINT16_BE (data);
   }
 
@@ -190,7 +185,6 @@ gst_dvd_sub_parse_chain (GstPad * pad, GstBuffer * buf)
       }
       outbuf = gst_adapter_take_buffer (adapter, parse->needed);
       /* decorate buffer */
-      gst_buffer_set_caps (outbuf, GST_PAD_CAPS (parse->srcpad));
       GST_BUFFER_TIMESTAMP (outbuf) = parse->stamp;
       /* reset state */
       parse->stamp = GST_CLOCK_TIME_NONE;
