@@ -436,6 +436,7 @@ gst_matroska_demux_reset (GstElement * element)
   gst_segment_init (&demux->common.segment, GST_FORMAT_TIME);
   demux->last_stop_end = GST_CLOCK_TIME_NONE;
   demux->seek_block = 0;
+  demux->stream_start_time = GST_CLOCK_TIME_NONE;
 
   demux->common.offset = 0;
   demux->cluster_time = GST_CLOCK_TIME_NONE;
@@ -1370,10 +1371,11 @@ gst_matroska_demux_query (GstMatroskaDemux * demux, GstPad * pad,
       if (format == GST_FORMAT_TIME) {
         GST_OBJECT_LOCK (demux);
         if (context)
-          gst_query_set_position (query, GST_FORMAT_TIME, context->pos);
+          gst_query_set_position (query, GST_FORMAT_TIME,
+              context->pos - demux->stream_start_time);
         else
           gst_query_set_position (query, GST_FORMAT_TIME,
-              demux->common.segment.last_stop);
+              demux->common.segment.last_stop - demux->stream_start_time);
         GST_OBJECT_UNLOCK (demux);
       } else if (format == GST_FORMAT_DEFAULT && context
           && context->default_duration) {
@@ -1748,9 +1750,15 @@ gst_matroska_demux_search_pos (GstMatroskaDemux * demux, GstClockTime time)
 
 retry:
   GST_LOG_OBJECT (demux,
-      "opos: %" G_GUINT64_FORMAT ", otime: %" GST_TIME_FORMAT, opos,
-      GST_TIME_ARGS (otime));
-  newpos = gst_util_uint64_scale (opos, time, otime) - chunk;
+      "opos: %" G_GUINT64_FORMAT ", otime: %" GST_TIME_FORMAT ", %"
+      GST_TIME_FORMAT " in stream time (start %" GST_TIME_FORMAT "), time %"
+      GST_TIME_FORMAT, opos, GST_TIME_ARGS (otime),
+      GST_TIME_ARGS (otime - demux->stream_start_time),
+      GST_TIME_ARGS (demux->stream_start_time), GST_TIME_ARGS (time));
+  newpos =
+      gst_util_uint64_scale (opos - demux->common.ebml_segment_start,
+      time - demux->stream_start_time,
+      otime - demux->stream_start_time) - chunk;
   if (newpos < 0)
     newpos = 0;
   /* favour undershoot */
@@ -1918,6 +1926,14 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
     GST_DEBUG_OBJECT (demux, "configuring seek");
     gst_segment_set_seek (&seeksegment, rate, format, flags,
         cur_type, cur, stop_type, stop, &update);
+    /* compensate for clip start time */
+    if (GST_CLOCK_TIME_IS_VALID (demux->stream_start_time)) {
+      seeksegment.last_stop += demux->stream_start_time;
+      seeksegment.start += demux->stream_start_time;
+      if (GST_CLOCK_TIME_IS_VALID (seeksegment.stop))
+        seeksegment.stop += demux->stream_start_time;
+      /* note that time should stay at indicated position */
+    }
   }
 
   GST_DEBUG_OBJECT (demux, "New segment %" GST_SEGMENT_FORMAT, &seeksegment);
@@ -1988,7 +2004,7 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
         GST_TIME_FORMAT, GST_TIME_ARGS (entry->time));
     seeksegment.start = entry->time;
     seeksegment.last_stop = entry->time;
-    seeksegment.time = entry->time;
+    seeksegment.time = entry->time - demux->stream_start_time;
   }
 
   if (flush) {
@@ -3259,10 +3275,15 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
       GST_DEBUG_OBJECT (demux,
           "generating segment starting at %" GST_TIME_FORMAT,
           GST_TIME_ARGS (lace_time));
-      /* pretend we seeked here */
-      gst_segment_set_seek (&demux->common.segment, demux->common.segment.rate,
-          GST_FORMAT_TIME, 0, GST_SEEK_TYPE_SET, lace_time,
-          GST_SEEK_TYPE_SET, GST_CLOCK_TIME_NONE, NULL);
+      if (!GST_CLOCK_TIME_IS_VALID (demux->stream_start_time)) {
+        demux->stream_start_time = lace_time;
+        GST_DEBUG_OBJECT (demux,
+            "Setting stream start time to %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (lace_time));
+      }
+      gst_segment_set_newsegment (&demux->common.segment, FALSE,
+          demux->common.segment.rate, GST_FORMAT_TIME, lace_time,
+          GST_CLOCK_TIME_NONE, lace_time - demux->stream_start_time);
       /* now convey our segment notion downstream */
       gst_matroska_demux_send_event (demux, gst_event_new_new_segment (FALSE,
               demux->common.segment.rate, demux->common.segment.format,
@@ -3449,9 +3470,10 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
 
         GST_OBJECT_LOCK (demux);
         if (demux->common.segment.duration == -1 ||
-            demux->common.segment.duration < lace_time) {
+            demux->common.segment.duration <
+            lace_time - demux->stream_start_time) {
           gst_segment_set_duration (&demux->common.segment, GST_FORMAT_TIME,
-              last_stop_end);
+              last_stop_end - demux->stream_start_time);
           GST_OBJECT_UNLOCK (demux);
           gst_element_post_message (GST_ELEMENT_CAST (demux),
               gst_message_new_duration (GST_OBJECT_CAST (demux),
@@ -4106,12 +4128,10 @@ gst_matroska_demux_parse_id (GstMatroskaDemux * demux, guint32 id,
             demux->first_cluster_offset = demux->common.offset;
             GST_DEBUG_OBJECT (demux, "signaling no more pads");
             gst_element_no_more_pads (GST_ELEMENT (demux));
-            /* send initial newsegment */
-            gst_matroska_demux_send_event (demux,
-                gst_event_new_new_segment (FALSE, 1.0,
-                    GST_FORMAT_TIME, 0,
-                    (demux->common.segment.duration >
-                        0) ? demux->common.segment.duration : -1, 0));
+            /* send initial newsegment - we wait till we know the first
+               incoming timestamp, so we can properly set the start of
+               the segment. */
+            demux->need_newsegment = TRUE;
           }
           demux->cluster_time = GST_CLOCK_TIME_NONE;
           demux->cluster_offset = demux->common.offset;

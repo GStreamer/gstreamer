@@ -2743,6 +2743,81 @@ atom_moov_chunks_add_offset (AtomMOOV * moov, guint32 offset)
   }
 }
 
+void
+atom_trak_update_bitrates (AtomTRAK * trak, guint32 avg_bitrate,
+    guint32 max_bitrate)
+{
+  AtomESDS *esds = NULL;
+  AtomData *btrt = NULL;
+  AtomWAVE *wave = NULL;
+  AtomSTSD *stsd;
+  GList *iter;
+  GList *extensioniter = NULL;
+
+  g_return_if_fail (trak != NULL);
+
+  if (avg_bitrate == 0 && max_bitrate == 0)
+    return;
+
+  stsd = &trak->mdia.minf.stbl.stsd;
+  for (iter = stsd->entries; iter; iter = g_list_next (iter)) {
+    SampleTableEntry *entry = iter->data;
+
+    switch (entry->kind) {
+      case AUDIO:{
+        SampleTableEntryMP4A *audioentry = (SampleTableEntryMP4A *) entry;
+        extensioniter = audioentry->extension_atoms;
+        break;
+      }
+      case VIDEO:{
+        SampleTableEntryMP4V *videoentry = (SampleTableEntryMP4V *) entry;
+        extensioniter = videoentry->extension_atoms;
+        break;
+      }
+      default:
+        break;
+    }
+  }
+
+  for (; extensioniter; extensioniter = g_list_next (extensioniter)) {
+    AtomInfo *atominfo = extensioniter->data;
+    if (atominfo->atom->type == FOURCC_esds) {
+      esds = (AtomESDS *) atominfo->atom;
+    } else if (atominfo->atom->type == FOURCC_btrt) {
+      btrt = (AtomData *) atominfo->atom;
+    } else if (atominfo->atom->type == FOURCC_wave) {
+      wave = (AtomWAVE *) atominfo->atom;
+    }
+  }
+
+  /* wave might have an esds internally */
+  if (wave) {
+    for (extensioniter = wave->extension_atoms; extensioniter;
+        extensioniter = g_list_next (extensioniter)) {
+      AtomInfo *atominfo = extensioniter->data;
+      if (atominfo->atom->type == FOURCC_esds) {
+        esds = (AtomESDS *) atominfo->atom;
+        break;
+      }
+    }
+  }
+
+  if (esds) {
+    if (avg_bitrate && esds->es.dec_conf_desc.avg_bitrate == 0)
+      esds->es.dec_conf_desc.avg_bitrate = avg_bitrate;
+    if (max_bitrate && esds->es.dec_conf_desc.max_bitrate == 0)
+      esds->es.dec_conf_desc.max_bitrate = max_bitrate;
+  }
+  if (btrt) {
+    /* type(4bytes) + size(4bytes) + buffersize(4bytes) +
+     * maxbitrate(bytes) + avgbitrate(bytes) */
+    if (max_bitrate && GST_READ_UINT32_BE (btrt->data + 4) == 0)
+      GST_WRITE_UINT32_BE (btrt->data + 4, max_bitrate);
+    if (avg_bitrate && GST_READ_UINT32_BE (btrt->data + 8) == 0)
+      GST_WRITE_UINT32_BE (btrt->data + 8, avg_bitrate);
+  }
+}
+
 /*
  * Meta tags functions
  */
@@ -3973,17 +4048,13 @@ build_btrt_extension (guint32 buffer_size_db, guint32 avg_bitrate,
   GstBuffer *buf;
   guint8 *data;
 
-  if (buffer_size_db == 0 && avg_bitrate == 0 && max_bitrate == 0)
-    return 0;
-
   data = g_malloc (12);
   GST_WRITE_UINT32_BE (data, buffer_size_db);
   GST_WRITE_UINT32_BE (data + 4, max_bitrate);
   GST_WRITE_UINT32_BE (data + 8, avg_bitrate);
 
   buf = _gst_buffer_new_wrapped (data, 12, g_free);
-  atom_data =
-      atom_data_new_from_gst_buffer (GST_MAKE_FOURCC ('b', 't', 'r', 't'), buf);
+  atom_data = atom_data_new_from_gst_buffer (FOURCC_btrt, buf);
   gst_buffer_unref (buf);
 
   return build_atom_info_wrapper ((Atom *) atom_data, atom_data_copy_data,

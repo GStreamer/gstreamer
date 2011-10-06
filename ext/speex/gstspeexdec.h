@@ -22,6 +22,8 @@
 #define __GST_SPEEX_DEC_H__
 
 #include <gst/gst.h>
+#include <gst/audio/gstaudiodecoder.h>
+
 #include <speex/speex.h>
 #include <speex/speex_callbacks.h>
 #include <speex/speex_header.h>
@@ -44,11 +46,7 @@ typedef struct _GstSpeexDec GstSpeexDec;
 typedef struct _GstSpeexDecClass GstSpeexDecClass;
 
 struct _GstSpeexDec {
-  GstElement            element;
-
-  /* pads */
-  GstPad                *sinkpad;
-  GstPad                *srcpad;
+  GstAudioDecoder   element;
 
   void                  *state;
   SpeexStereoState      *stereo;
@@ -67,14 +65,12 @@ struct _GstSpeexDec {
   GstClockTime          frame_duration;
   guint64               packetno;
 
-  GstSegment            segment;    /* STREAM LOCK */
-
   GstBuffer             *streamheader;
   GstBuffer             *vorbiscomment;
 };
 
 struct _GstSpeexDecClass {
-  GstElementClass parent_class;
+  GstAudioDecoderClass parent_class;
 };
 
 GType gst_speex_dec_get_type (void);

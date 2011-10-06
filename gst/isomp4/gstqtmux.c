@@ -368,6 +368,8 @@ gst_qt_mux_pad_reset (GstQTPad * qtpad)
   qtpad->avg_bitrate = 0;
   qtpad->max_bitrate = 0;
   qtpad->ts_n_entries = 0;
+  qtpad->total_duration = 0;
+  qtpad->total_bytes = 0;
 
   qtpad->buf_head = 0;
   qtpad->buf_tail = 0;
@@ -1788,6 +1790,20 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
             qtpad->last_dts > first_ts)) {
       first_ts = qtpad->last_dts;
     }
+
+    /* update average bitrate of streams if needed */
+    {
+      guint32 avgbitrate = 0;
+      guint32 maxbitrate = qtpad->max_bitrate;
+
+      if (qtpad->avg_bitrate)
+        avgbitrate = qtpad->avg_bitrate;
+      else if (qtpad->total_duration > 0)
+        avgbitrate = (guint32) gst_util_uint64_scale_round (qtpad->total_bytes,
+            8 * GST_SECOND, qtpad->total_duration);
+
+      atom_trak_update_bitrates (qtpad->trak, avgbitrate, maxbitrate);
+    }
   }
 
   if (qtmux->fragment_sequence) {
@@ -2147,7 +2163,8 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
     buf = pad->prepare_buf_func (pad, buf, qtmux);
   }
 
-  if (G_LIKELY (buf != NULL && GST_CLOCK_TIME_IS_VALID (pad->first_ts))) {
+  if (G_LIKELY (buf != NULL && GST_CLOCK_TIME_IS_VALID (pad->first_ts) &&
+          pad->first_ts != 0)) {
     buf = gst_buffer_make_writable (buf);
     check_and_subtract_ts (qtmux, &GST_BUFFER_TIMESTAMP (buf), pad->first_ts);
   }
@@ -2307,6 +2324,12 @@ again:
     ts = gst_util_uint64_scale (10, GST_SECOND,
         atom_trak_get_timescale (pad->trak));
     duration = MAX (duration, ts);
+  }
+
+  /* for computing the avg bitrate */
+  if (G_LIKELY (last_buf)) {
+    pad->total_bytes += GST_BUFFER_SIZE (last_buf);
+    pad->total_duration += duration;
   }
 
   gst_buffer_replace (&pad->last_buf, buf);

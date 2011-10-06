@@ -744,8 +744,8 @@ gst_v4l2_set_defaults (GstV4l2Object * v4l2object)
 
   if (v4l2object->tv_norm)
     norm = gst_v4l2_tuner_get_norm_by_std_id (v4l2object, v4l2object->tv_norm);
-  GST_DEBUG_OBJECT (v4l2object->element, "tv_norm=%d, norm=%p",
-      v4l2object->tv_norm, norm);
+  GST_DEBUG_OBJECT (v4l2object->element, "tv_norm=0x%" G_GINT64_MODIFIER "x, "
+      "norm=%p", (guint64) v4l2object->tv_norm, norm);
   if (norm) {
     gst_tuner_set_norm (tuner, norm);
   } else {

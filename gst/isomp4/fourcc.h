@@ -208,6 +208,7 @@ G_BEGIN_DECLS
 #define FOURCC_mfhd     GST_MAKE_FOURCC('m','f','h','d')
 #define FOURCC_mvhd     GST_MAKE_FOURCC('m','v','h','d')
 #define FOURCC_traf     GST_MAKE_FOURCC('t','r','a','f')
+#define FOURCC_btrt     GST_MAKE_FOURCC('b','t','r','t')
 
 /* Xiph fourcc */
 #define FOURCC_XiTh     GST_MAKE_FOURCC('X','i','T','h')

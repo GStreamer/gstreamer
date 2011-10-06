@@ -97,6 +97,10 @@ struct _GstQTPad
   /* bitrates */
   guint32 avg_bitrate, max_bitrate;
 
+  /* for avg bitrate calculation */
+  guint64 total_bytes;
+  guint64 total_duration;
+
   GstBuffer *last_buf;
   /* dts of last_buf */
   GstClockTime last_dts;

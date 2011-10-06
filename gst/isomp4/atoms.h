@@ -906,6 +906,9 @@ void atom_trak_set_video_type (AtomTRAK * trak, AtomsContext * context,
                                VisualSampleEntry * entry, guint32 rate,
                                GList * ext_atoms_list);
 
+void atom_trak_update_bitrates (AtomTRAK * trak, guint32 avg_bitrate,
+                                guint32 max_bitrate);
+
 AtomInfo *   build_codec_data_extension  (guint32 fourcc, const GstBuffer * codec_data);
 AtomInfo *   build_mov_aac_extension     (AtomTRAK * trak, const GstBuffer * codec_data,
                                           guint32 avg_bitrate, guint32 max_bitrate);

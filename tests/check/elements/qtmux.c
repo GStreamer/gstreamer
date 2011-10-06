@@ -41,12 +41,36 @@ static GstPad *mysrcpad, *mysinkpad;
                         "layer = (int) 3, " \
                         "channels = (int) 2, " \
                         "rate = (int) 48000"
+
+#define AUDIO_AAC_CAPS_STRING "audio/mpeg, " \
+                            "mpegversion=(int)4, " \
+                            "channels=(int)1, " \
+                            "rate=(int)44100, " \
+                            "stream-format=(string)raw, " \
+                            "level=(string)2, " \
+                            "base-profile=(string)lc, " \
+                            "profile=(string)lc, " \
+                            "codec_data=(buffer)1208"
+
 #define VIDEO_CAPS_STRING "video/mpeg, " \
                            "mpegversion = (int) 4, " \
                            "systemstream = (boolean) false, " \
                            "width = (int) 384, " \
                            "height = (int) 288, " \
                            "framerate = (fraction) 25/1"
+
+#define VIDEO_CAPS_H264_STRING "video/x-h264, " \
+                               "width=(int)320, " \
+                               "height=(int)240, " \
+                               "framerate=(fraction)30/1, " \
+                               "pixel-aspect-ratio=(fraction)1/1, " \
+                               "codec_data=(buffer)01640014ffe1001867640014a" \
+                                   "cd94141fb0110000003001773594000f14299600" \
+                                   "1000568ebecb22c, " \
+                               "stream-format=(string)avc, " \
+                               "alignment=(string)au, " \
+                               "level=(string)2, " \
+                               "profile=(string)high"
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -57,11 +81,22 @@ static GstStaticPadTemplate srcvideotemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (VIDEO_CAPS_STRING));
 
+static GstStaticPadTemplate srcvideoh264template =
+GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (VIDEO_CAPS_H264_STRING));
+
 static GstStaticPadTemplate srcaudiotemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (AUDIO_CAPS_STRING));
 
+static GstStaticPadTemplate srcaudioaactemplate =
+GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (AUDIO_AAC_CAPS_STRING));
 
 /* setup and teardown needs some special handling for muxer */
 static GstPad *
@@ -684,6 +719,141 @@ GST_START_TEST (test_encodebin_mp4mux)
 
 GST_END_TEST;
 
+static gboolean
+extract_tags (const gchar * location, GstTagList ** taglist)
+{
+  gboolean ret = TRUE;
+  GstElement *src;
+  GstBus *bus;
+  GstElement *pipeline =
+      gst_parse_launch ("filesrc name=src ! qtdemux ! fakesink", NULL);
+
+  src = gst_bin_get_by_name (GST_BIN (pipeline), "src");
+  g_object_set (src, "location", location, NULL);
+
+  bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
+  fail_unless (gst_element_set_state (pipeline, GST_STATE_PLAYING)
+      != GST_STATE_CHANGE_FAILURE);
+
+  if (*taglist == NULL) {
+    *taglist = gst_tag_list_new ();
+  }
+
+  while (1) {
+    GstMessage *msg = gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE,
+        GST_MESSAGE_TAG | GST_MESSAGE_ERROR | GST_MESSAGE_EOS);
+
+    if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_EOS) {
+      gst_message_unref (msg);
+      break;
+    } else if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR) {
+      ret = FALSE;
+      gst_message_unref (msg);
+      break;
+    } else if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_TAG) {
+      GstTagList *tags;
+
+      gst_message_parse_tag (msg, &tags);
+      gst_tag_list_insert (*taglist, tags, GST_TAG_MERGE_REPLACE);
+      gst_tag_list_free (tags);
+    }
+    gst_message_unref (msg);
+  }
+
+  gst_object_unref (bus);
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_object_unref (src);
+  gst_object_unref (pipeline);
+  return ret;
+}
+
+static void
+test_average_bitrate_custom (const gchar * elementname,
+    GstStaticPadTemplate * tmpl, const gchar * sinkpadname)
+{
+  gchar *location;
+  GstElement *qtmux;
+  GstElement *filesink;
+  GstBuffer *inbuffer;
+  GstCaps *caps;
+  int i;
+  gint bytes[] = { 16, 22, 12 };
+  gint64 durations[] = { GST_SECOND * 3, GST_SECOND * 5, GST_SECOND * 2 };
+  gint64 total_bytes = 0;
+  GstClockTime total_duration = 0;
+
+  location = g_strdup_printf ("%s/%s-%d", g_get_tmp_dir (), "qtmuxtest",
+      g_random_int ());
+  GST_INFO ("Using location %s for bitrate test", location);
+  qtmux = gst_check_setup_element (elementname);
+  filesink = gst_element_factory_make ("filesink", NULL);
+  g_object_set (filesink, "location", location, NULL);
+  gst_element_link (qtmux, filesink);
+  mysrcpad = setup_src_pad (qtmux, tmpl, NULL, sinkpadname);
+  fail_unless (mysrcpad != NULL);
+  gst_pad_set_active (mysrcpad, TRUE);
+
+  fail_unless (gst_element_set_state (filesink,
+          GST_STATE_PLAYING) != GST_STATE_CHANGE_FAILURE,
+      "could not set filesink to playing");
+  fail_unless (gst_element_set_state (qtmux,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  for (i = 0; i < 3; i++) {
+    inbuffer = gst_buffer_new_and_alloc (bytes[i]);
+    caps = gst_caps_copy (gst_pad_get_pad_template_caps (mysrcpad));
+    gst_buffer_set_caps (inbuffer, caps);
+    gst_caps_unref (caps);
+    GST_BUFFER_TIMESTAMP (inbuffer) = total_duration;
+    GST_BUFFER_DURATION (inbuffer) = (GstClockTime) durations[i];
+    ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
+
+    total_bytes += GST_BUFFER_SIZE (inbuffer);
+    total_duration += GST_BUFFER_DURATION (inbuffer);
+    fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
+  }
+
+  /* send eos to have moov written */
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()) == TRUE);
+
+  gst_element_set_state (qtmux, GST_STATE_NULL);
+  gst_element_set_state (filesink, GST_STATE_NULL);
+
+  gst_pad_set_active (mysrcpad, FALSE);
+  teardown_src_pad (mysrcpad);
+  gst_object_unref (filesink);
+  gst_check_teardown_element (qtmux);
+
+  /* check the bitrate tag */
+  {
+    GstTagList *taglist = NULL;
+    guint bitrate = 0;
+    guint expected;
+
+    fail_unless (extract_tags (location, &taglist));
+
+    fail_unless (gst_tag_list_get_uint (taglist, GST_TAG_BITRATE, &bitrate));
+
+    expected =
+        (guint) gst_util_uint64_scale_round ((guint64) total_bytes,
+        (guint64) 8 * GST_SECOND, (guint64) total_duration);
+    fail_unless (bitrate == expected);
+  }
+}
+
+GST_START_TEST (test_average_bitrate)
+{
+  test_average_bitrate_custom ("mp4mux", &srcaudioaactemplate, "audio_%d");
+  test_average_bitrate_custom ("mp4mux", &srcvideoh264template, "video_%d");
+
+  test_average_bitrate_custom ("qtmux", &srcaudioaactemplate, "audio_%d");
+  test_average_bitrate_custom ("qtmux", &srcvideoh264template, "video_%d");
+}
+
+GST_END_TEST;
+
+
 static Suite *
 qtmux_suite (void)
 {
@@ -711,6 +881,8 @@ qtmux_suite (void)
   tcase_add_test (tc_chain, test_audio_pad_frag_asc);
   tcase_add_test (tc_chain, test_video_pad_frag_asc_streamable);
   tcase_add_test (tc_chain, test_audio_pad_frag_asc_streamable);
+
+  tcase_add_test (tc_chain, test_average_bitrate);
 
   tcase_add_test (tc_chain, test_reuse);
   tcase_add_test (tc_chain, test_encodebin_qtmux);
