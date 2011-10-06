@@ -62,6 +62,7 @@
  * -base typefindfunctions: application/msword: doc
  * -base uridecodebin:  decodebin2: Decoder Bin
  * -base uridecodebin:  uridecodebin: URI Decoder
+ * -base videoconvert:  videoconvert:  Colorspace converter
  * -base videorate:     videorate: Video rate adjuster
  * -base videoscale:    videoscale: Video scaler
  * -base videotestsrc:  videotestsrc: Video test source
@@ -201,6 +202,8 @@
  * -ugly asf:           rtpasfdepay: RTP ASF packet depayloader
  * -ugly asf:           rtspwms: WMS RTSP Extension
  * -ugly dvdlpcmdec:    dvdlpcmdec: DVD LPCM Audio decoder
+ * -ugly dvdsub:        dvdsubdec: DVD subtitle decoder
+ * -ugly dvdsub:        dvdsubparse: DVD subtitle parser
  * -ugly lame:          lame: L.A.M.E. mp3 encoder
  * -ugly lame:          lamemp3enc: L.A.M.E. mp3 encoder
  * -ugly mad:           mad: mad mp3 decoder
@@ -240,8 +243,6 @@
    -bad  dvbsuboverlay: dvbsuboverlay: DVB Subtitles Overlay
    -ugly dvdread:       dvdreadsrc: DVD Source
    -bad  dvdspu:        dvdspu: Sub-picture Overlay
-   -ugly dvdsub:        dvdsubdec: DVD subtitle decoder
-   -ugly dvdsub:        dvdsubparse: DVD subtitle parser
    -good dv:            dvdec: DV video decoder
    -good dv:            dvdemux: DV system stream demuxer
    -bad  gsm:           gsmdec: GSM audio decoder
@@ -259,6 +260,8 @@
    -good matroska:      matroskaparse: Matroska parser
    -good matroska:      webmmux: WebM muxer
    -bad  musepack:      musepackdec: Musepack decoder
+   -bad  opus:          opusdec:
+   -bad  opus:          opusenc:
    -bad  resindvd:      rsndvdbin: rsndvdbin
    -bad  schro:         schrodec: Dirac Decoder
    -bad  schro:         schroenc: Dirac Encoder
@@ -321,7 +324,6 @@
    -bad  cog:           cogscale: Video scaler
    -bad  coloreffects:  chromahold: Chroma hold filter
    -bad  coloreffects:  coloreffects: Color Look-up Table filter
-   -bad  colorspace:    colorspace:  Colorspace converter
    -bad  curl:          curlsink: Curl sink
          cutter-test:   cutter-console-output: Cutter console output
          cutter-test:   cutter-server: Cutter test server
@@ -479,8 +481,6 @@
    -bad  openal:        openalsink:
    -bad  openal:        openalsrc:
    -bad  opencv:
-   -bad  opus:          opusdec:
-   -bad  opus:          opusenc:
    -good oss4:          oss4mixer: OSS v4 Audio Mixer
    -good oss4:          oss4sink: OSS v4 Audio Sink
    -good oss4:          oss4src: OSS v4 Audio Source
