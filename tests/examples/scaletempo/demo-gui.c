@@ -1035,8 +1035,10 @@ demo_gui_show_func (DemoGui * gui)
   seek_range =
       gtk_hscale_new (GTK_ADJUSTMENT (gtk_adjustment_new (0.0, 0.0, 0.0, 5.0,
               30.0, 0.00)));
+#if !GTK_CHECK_VERSION (3, 0, 0)
   gtk_range_set_update_policy (GTK_RANGE (seek_range),
       GTK_UPDATE_DISCONTINUOUS);
+#endif
   seek_bar = gtk_hbox_new (FALSE, 0);
   gtk_box_pack_start (GTK_BOX (seek_bar), amount_played, FALSE, FALSE, 2);
   gtk_box_pack_start (GTK_BOX (seek_bar), seek_range, TRUE, TRUE, 2);

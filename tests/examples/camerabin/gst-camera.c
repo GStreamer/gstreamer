@@ -276,7 +276,7 @@ my_bus_sync_callback (GstBus * bus, GstMessage * message, gpointer data)
   /* FIXME: make sure to get XID in main thread */
   gst_x_overlay_set_window_handle (GST_X_OVERLAY (message->src),
 #if GTK_CHECK_VERSION (2, 91, 6)
-      GDK_WINDOW_XID (gtk_widget_get_window (ui_drawing));
+      GDK_WINDOW_XID (gtk_widget_get_window (ui_drawing)));
 #else
       GDK_WINDOW_XWINDOW (gtk_widget_get_window (ui_drawing)));
 #endif
