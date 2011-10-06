@@ -82,7 +82,8 @@ static const guint32 default_clut[16] = {
   0x808080, 0x808080, 0x808080, 0x808080
 };
 
-GST_BOILERPLATE (GstDVDSpu, gst_dvd_spu, GstElement, GST_TYPE_ELEMENT);
+#define gst_dvd_spu_parent_class parent_class
+G_DEFINE_TYPE (GstDVDSpu, gst_dvd_spu, GST_TYPE_ELEMENT);
 
 static void gst_dvd_spu_dispose (GObject * object);
 static void gst_dvd_spu_finalize (GObject * object);
@@ -91,12 +92,11 @@ static GstStateChangeReturn gst_dvd_spu_change_state (GstElement * element,
 
 static gboolean gst_dvd_spu_src_event (GstPad * pad, GstEvent * event);
 
-static GstCaps *gst_dvd_spu_video_proxy_getcaps (GstPad * pad);
+static GstCaps *gst_dvd_spu_video_proxy_getcaps (GstPad * pad,
+    GstCaps * filter);
 static gboolean gst_dvd_spu_video_set_caps (GstPad * pad, GstCaps * caps);
 static GstFlowReturn gst_dvd_spu_video_chain (GstPad * pad, GstBuffer * buf);
 static gboolean gst_dvd_spu_video_event (GstPad * pad, GstEvent * event);
-static GstFlowReturn gst_dvd_spu_buffer_alloc (GstPad * sinkpad, guint64 offset,
-    guint size, GstCaps * caps, GstBuffer ** buf);
 static void gst_dvd_spu_redraw_still (GstDVDSpu * dvdspu, gboolean force);
 
 static void gst_dvd_spu_check_still_updates (GstDVDSpu * dvdspu);
@@ -114,38 +114,35 @@ dvdspu_handle_vid_buffer (GstDVDSpu * dvdspu, GstBuffer * buf);
 static void gst_dvd_spu_handle_dvd_event (GstDVDSpu * dvdspu, GstEvent * event);
 
 static void
-gst_dvd_spu_base_init (gpointer gclass)
+gst_dvd_spu_class_init (GstDVDSpuClass * klass)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
+  GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
 
-  gst_element_class_add_pad_template (element_class,
+  gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
+
+  gobject_class->dispose = (GObjectFinalizeFunc) gst_dvd_spu_dispose;
+  gobject_class->finalize = (GObjectFinalizeFunc) gst_dvd_spu_finalize;
+
+  gstelement_class->change_state = gst_dvd_spu_change_state;
+
+  gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&src_factory));
-  gst_element_class_add_pad_template (element_class,
+  gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&video_sink_factory));
-  gst_element_class_add_pad_template (element_class,
+  gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&subpic_sink_factory));
-  gst_element_class_set_details_simple (element_class, "Sub-picture Overlay",
+
+  gst_element_class_set_details_simple (gstelement_class, "Sub-picture Overlay",
       "Mixer/Video/Overlay/SubPicture/DVD/Bluray",
       "Parses Sub-Picture command streams and renders the SPU overlay "
       "onto the video as it passes through",
       "Jan Schmidt <thaytan@noraisin.net>");
-
-  element_class->change_state = gst_dvd_spu_change_state;
 }
 
 static void
-gst_dvd_spu_class_init (GstDVDSpuClass * klass)
-{
-  GObjectClass *gobject_class;
-
-  gobject_class = (GObjectClass *) klass;
-
-  gobject_class->dispose = (GObjectFinalizeFunc) gst_dvd_spu_dispose;
-  gobject_class->finalize = (GObjectFinalizeFunc) gst_dvd_spu_finalize;
-}
-
-static void
-gst_dvd_spu_init (GstDVDSpu * dvdspu, GstDVDSpuClass * gclass)
+gst_dvd_spu_init (GstDVDSpu * dvdspu)
 {
   dvdspu->videosinkpad =
       gst_pad_new_from_static_template (&video_sink_factory, "video");
@@ -155,8 +152,6 @@ gst_dvd_spu_init (GstDVDSpu * dvdspu, GstDVDSpuClass * gclass)
       gst_dvd_spu_video_proxy_getcaps);
   gst_pad_set_chain_function (dvdspu->videosinkpad, gst_dvd_spu_video_chain);
   gst_pad_set_event_function (dvdspu->videosinkpad, gst_dvd_spu_video_event);
-  gst_pad_set_bufferalloc_function (dvdspu->videosinkpad,
-      gst_dvd_spu_buffer_alloc);
 
   dvdspu->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
   gst_pad_set_event_function (dvdspu->srcpad, gst_dvd_spu_src_event);
@@ -279,21 +274,6 @@ gst_dvd_spu_flush_spu_info (GstDVDSpu * dvdspu, gboolean keep_events)
   }
 }
 
-/* Proxy buffer allocations on the video sink pad downstream */
-static GstFlowReturn
-gst_dvd_spu_buffer_alloc (GstPad * sinkpad, guint64 offset, guint size,
-    GstCaps * caps, GstBuffer ** buf)
-{
-  GstDVDSpu *dvdspu = GST_DVD_SPU (gst_pad_get_parent (sinkpad));
-  GstFlowReturn ret = GST_FLOW_OK;
-
-  ret = gst_pad_alloc_buffer (dvdspu->srcpad, offset, size, caps, buf);
-
-  gst_object_unref (dvdspu);
-
-  return ret;
-}
-
 static gboolean
 gst_dvd_spu_src_event (GstPad * pad, GstEvent * event)
 {
@@ -359,7 +339,7 @@ done:
 }
 
 static GstCaps *
-gst_dvd_spu_video_proxy_getcaps (GstPad * pad)
+gst_dvd_spu_video_proxy_getcaps (GstPad * pad, GstCaps * filter)
 {
   GstDVDSpu *dvdspu = GST_DVD_SPU (gst_pad_get_parent (pad));
   GstCaps *caps;
@@ -369,7 +349,7 @@ gst_dvd_spu_video_proxy_getcaps (GstPad * pad)
    * subpicture sink pad */
   otherpad = (pad == dvdspu->srcpad) ? dvdspu->videosinkpad : dvdspu->srcpad;
 
-  caps = gst_pad_peer_get_caps (otherpad);
+  caps = gst_pad_peer_get_caps (otherpad, filter);
   if (caps) {
     GstCaps *temp;
     const GstCaps *templ;
@@ -435,36 +415,29 @@ gst_dvd_spu_video_event (GstPad * pad, GstEvent * event)
       }
       break;
     }
-    case GST_EVENT_NEWSEGMENT:
+    case GST_EVENT_SEGMENT:
     {
-      gboolean update;
-      gdouble rate, arate;
-      GstFormat format;
-      gint64 start, stop, time;
+      GstSegment seg;
 
-      gst_event_parse_new_segment_full (event, &update, &rate, &arate, &format,
-          &start, &stop, &time);
+      gst_event_copy_segment (event, &seg);
 
-      if (format != GST_FORMAT_TIME)
+      if (seg.format != GST_FORMAT_TIME)
         return FALSE;
 
       /* Only print updates if they have an end time (don't print start_time
        * updates */
-      GST_DEBUG_OBJECT (dvdspu, "video pad NewSegment:"
-          " Update %d, rate %g arate %g format %d start %" GST_TIME_FORMAT
-          " %" GST_TIME_FORMAT " position %" GST_TIME_FORMAT,
-          update, rate, arate, format, GST_TIME_ARGS (start),
-          GST_TIME_ARGS (stop), GST_TIME_ARGS (time));
+      GST_DEBUG_OBJECT (dvdspu, "video pad Segment: %" GST_SEGMENT_FORMAT,
+          &seg);
 
       DVD_SPU_LOCK (dvdspu);
 
-      if (update && start > dvdspu->video_seg.last_stop) {
+      if (seg.start > dvdspu->video_seg.position) {
 #if 0
         g_print ("Segment update for video. Advancing from %" GST_TIME_FORMAT
             " to %" GST_TIME_FORMAT "\n",
-            GST_TIME_ARGS (dvdspu->video_seg.last_stop), GST_TIME_ARGS (start));
+            GST_TIME_ARGS (dvdspu->video_seg.position), GST_TIME_ARGS (start));
 #endif
-        while (dvdspu->video_seg.last_stop < start &&
+        while (dvdspu->video_seg.position < seg.start &&
             !(state->flags & SPU_STATE_STILL_FRAME)) {
           DVD_SPU_UNLOCK (dvdspu);
           if (dvdspu_handle_vid_buffer (dvdspu, NULL) != GST_FLOW_OK) {
@@ -475,9 +448,7 @@ gst_dvd_spu_video_event (GstPad * pad, GstEvent * event)
         }
       }
 
-      gst_segment_set_newsegment_full (&dvdspu->video_seg, update, rate, arate,
-          format, start, stop, time);
-
+      dvdspu->video_seg = seg;
       DVD_SPU_UNLOCK (dvdspu);
 
       res = gst_pad_event_default (pad, event);
@@ -539,7 +510,7 @@ dvdspu_handle_vid_buffer (GstDVDSpu * dvdspu, GstBuffer * buf)
   DVD_SPU_LOCK (dvdspu);
 
   if (buf == NULL) {
-    GstClockTime next_ts = dvdspu->video_seg.last_stop;
+    GstClockTime next_ts = dvdspu->video_seg.position;
 
     next_ts += gst_util_uint64_scale_int (GST_SECOND,
         dvdspu->spu_state.fps_d, dvdspu->spu_state.fps_n);
@@ -547,7 +518,7 @@ dvdspu_handle_vid_buffer (GstDVDSpu * dvdspu, GstBuffer * buf)
     /* NULL buffer was passed - use the reference frame and update the timestamp,
      * or else there's nothing to draw, and just return GST_FLOW_OK */
     if (dvdspu->ref_frame == NULL) {
-      gst_segment_set_last_stop (&dvdspu->video_seg, GST_FORMAT_TIME, next_ts);
+      dvdspu->video_seg.position = next_ts;
       goto no_ref_frame;
     }
 
@@ -564,16 +535,15 @@ dvdspu_handle_vid_buffer (GstDVDSpu * dvdspu, GstBuffer * buf)
   }
 
   if (GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
-    gst_segment_set_last_stop (&dvdspu->video_seg, GST_FORMAT_TIME,
-        GST_BUFFER_TIMESTAMP (buf));
+    dvdspu->video_seg.position = GST_BUFFER_TIMESTAMP (buf);
   }
 
   new_ts = gst_segment_to_running_time (&dvdspu->video_seg, GST_FORMAT_TIME,
-      dvdspu->video_seg.last_stop);
+      dvdspu->video_seg.position);
 
 #if 0
   g_print ("TS %" GST_TIME_FORMAT " running: %" GST_TIME_FORMAT "\n",
-      GST_TIME_ARGS (dvdspu->video_seg.last_stop), GST_TIME_ARGS (new_ts));
+      GST_TIME_ARGS (dvdspu->video_seg.position), GST_TIME_ARGS (new_ts));
 #endif
 
   gst_dvd_spu_advance_spu (dvdspu, new_ts);
@@ -671,7 +641,7 @@ gst_dvd_spu_redraw_still (GstDVDSpu * dvdspu, gboolean force)
     } else if (force) {
       /* Simply output the reference frame */
       GstBuffer *buf = gst_buffer_ref (dvdspu->ref_frame);
-      buf = gst_buffer_make_metadata_writable (buf);
+      buf = gst_buffer_make_writable (buf);
       GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
       GST_BUFFER_TIMESTAMP (buf) = GST_CLOCK_TIME_NONE;
       GST_BUFFER_DURATION (buf) = GST_CLOCK_TIME_NONE;
@@ -694,7 +664,7 @@ gst_dvd_spu_handle_dvd_event (GstDVDSpu * dvdspu, GstEvent * event)
   gboolean hl_change = FALSE;
 
   GST_INFO_OBJECT (dvdspu, "DVD event of type %s on subp pad OOB=%d",
-      gst_structure_get_string (event->structure, "event"),
+      gst_structure_get_string (gst_event_get_structure (event), "event"),
       (GST_EVENT_TYPE (event) == GST_EVENT_CUSTOM_DOWNSTREAM_OOB));
 
   switch (dvdspu->spu_input_type) {
@@ -755,13 +725,13 @@ gst_dvd_spu_advance_spu (GstDVDSpu * dvdspu, GstClockTime new_ts)
 
       vid_run_ts =
           gst_segment_to_running_time (&dvdspu->video_seg, GST_FORMAT_TIME,
-          dvdspu->video_seg.last_stop);
+          dvdspu->video_seg.position);
       GST_LOG_OBJECT (dvdspu,
           "Popped new SPU packet with TS %" GST_TIME_FORMAT
-          ". Video last_stop=%" GST_TIME_FORMAT " (%" GST_TIME_FORMAT
+          ". Video position=%" GST_TIME_FORMAT " (%" GST_TIME_FORMAT
           ") type %s",
           GST_TIME_ARGS (packet->event_ts), GST_TIME_ARGS (vid_run_ts),
-          GST_TIME_ARGS (dvdspu->video_seg.last_stop),
+          GST_TIME_ARGS (dvdspu->video_seg.position),
           packet->buf ? "buffer" : "event");
 
       if (packet->buf) {
@@ -796,9 +766,9 @@ gst_dvd_spu_check_still_updates (GstDVDSpu * dvdspu)
   if (dvdspu->spu_state.flags & SPU_STATE_STILL_FRAME) {
 
     vid_ts = gst_segment_to_running_time (&dvdspu->video_seg,
-        GST_FORMAT_TIME, dvdspu->video_seg.last_stop);
+        GST_FORMAT_TIME, dvdspu->video_seg.position);
     sub_ts = gst_segment_to_running_time (&dvdspu->subp_seg,
-        GST_FORMAT_TIME, dvdspu->subp_seg.last_stop);
+        GST_FORMAT_TIME, dvdspu->subp_seg.position);
 
     vid_ts = MAX (vid_ts, sub_ts);
 
@@ -818,7 +788,7 @@ submit_new_spu_packet (GstDVDSpu * dvdspu, GstBuffer * buf)
 
   GST_DEBUG_OBJECT (dvdspu,
       "Complete subpicture buffer of %u bytes with TS %" GST_TIME_FORMAT,
-      GST_BUFFER_SIZE (buf), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
+      gst_buffer_get_size (buf), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
 
   /* Decide whether to pass this buffer through to the rendering code */
   ts = GST_BUFFER_TIMESTAMP (buf);
@@ -874,13 +844,12 @@ gst_dvd_spu_subpic_chain (GstPad * pad, GstBuffer * buf)
 
   GST_INFO_OBJECT (dvdspu, "Have subpicture buffer with timestamp %"
       GST_TIME_FORMAT " and size %u",
-      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)), GST_BUFFER_SIZE (buf));
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)), gst_buffer_get_size (buf));
 
   DVD_SPU_LOCK (dvdspu);
 
   if (GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
-    gst_segment_set_last_stop (&dvdspu->subp_seg, GST_FORMAT_TIME,
-        GST_BUFFER_TIMESTAMP (buf));
+    dvdspu->subp_seg.position = GST_BUFFER_TIMESTAMP (buf);
   }
 
   if (GST_BUFFER_IS_DISCONT (buf) && dvdspu->partial_spu) {
@@ -1053,29 +1022,20 @@ gst_dvd_spu_subpic_event (GstPad * pad, GstEvent * event)
 
       break;
     }
-    case GST_EVENT_NEWSEGMENT:
+    case GST_EVENT_SEGMENT:
     {
-      gboolean update;
-      gdouble rate;
-      GstFormat format;
-      gint64 start, stop, time;
-      gdouble arate;
+      GstSegment seg;
 
-      gst_event_parse_new_segment_full (event, &update, &rate, &arate, &format,
-          &start, &stop, &time);
+      gst_event_copy_segment (event, &seg);
 
       /* Only print updates if they have an end time (don't print start_time
        * updates */
-      GST_DEBUG_OBJECT (dvdspu, "subpic pad NewSegment:"
-          " Update %d, rate %g arate %g format %d start %" GST_TIME_FORMAT
-          " %" GST_TIME_FORMAT " position %" GST_TIME_FORMAT,
-          update, rate, arate, format, GST_TIME_ARGS (start),
-          GST_TIME_ARGS (stop), GST_TIME_ARGS (time));
+      GST_DEBUG_OBJECT (dvdspu, "subpic pad Segment: %" GST_SEGMENT_FORMAT,
+          &seg);
 
       DVD_SPU_LOCK (dvdspu);
 
-      gst_segment_set_newsegment_full (&dvdspu->subp_seg, update, rate, arate,
-          format, start, stop, time);
+      dvdspu->subp_seg = seg;
       GST_LOG_OBJECT (dvdspu, "Subpicture segment now: %" GST_SEGMENT_FORMAT,
           &dvdspu->subp_seg);
       DVD_SPU_UNLOCK (dvdspu);
@@ -1152,7 +1112,7 @@ gst_dvd_spu_change_state (GstElement * element, GstStateChange transition)
   GstDVDSpu *dvdspu = (GstDVDSpu *) element;
   GstStateChangeReturn ret;
 
-  ret = parent_class->change_state (element, transition);
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
