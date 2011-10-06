@@ -214,6 +214,7 @@
  * -ugly siddec:        siddec: Sid decoder
  * -ugly x264:          x264enc: x264enc
 
+ * -bad  assrender:     assrender: ASS/SSA Render
  * -bad  dataurisrc:    dataurisrc: data: URI source element
  * -bad  faad:          faad: AAC audio decoder
  * -bad  jpegformat:    jifmux: JPEG stream muxer
@@ -230,7 +231,6 @@
    -good annodex:       cmmldec: CMML stream decoder
    -good annodex:       cmmlenc: CMML streams encoder
    -good apetag:        apedemux: APE tag demuxer
-   -bad  assrender:     assrender: ASS/SSA Render
    -bad  celt:          celtdec: Celt audio decoder
    -bad  celt:          celtenc: Celt audio encoder
    -bad  dtsdec:        dtsdec: DTS audio decoder
