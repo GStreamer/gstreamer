@@ -482,52 +482,6 @@ gst_vaapisink_set_caps(GstBaseSink *base_sink, GstCaps *caps)
     return TRUE;
 }
 
-static GstFlowReturn
-gst_vaapisink_buffer_alloc(
-    GstBaseSink *base_sink,
-    guint64      offset,
-    guint        size,
-    GstCaps     *caps,
-    GstBuffer  **pout_buffer
-)
-{
-    GstVaapiSink * const sink = GST_VAAPISINK(base_sink);
-    GstStructure *structure;
-    GstBuffer *buffer;
-
-    if (!gst_vaapi_ensure_display(sink, &sink->display))
-        goto error_ensure_display;
-
-    structure = gst_caps_get_structure(caps, 0);
-    if (!gst_structure_has_name(structure, GST_VAAPI_SURFACE_CAPS_NAME))
-        goto error_invalid_caps;
-
-    buffer = gst_vaapi_video_buffer_new(sink->display);
-    if (!buffer)
-        goto error_create_buffer;
-
-    gst_buffer_set_caps(buffer, caps);
-    *pout_buffer = buffer;
-    return GST_FLOW_OK;
-
-    /* ERRORS */
-error_ensure_display:
-    {
-        GST_ERROR("failed to ensure display");
-        return GST_FLOW_UNEXPECTED;
-    }
-error_invalid_caps:
-    {
-        GST_ERROR("failed to validate input caps");
-        return GST_FLOW_UNEXPECTED;
-    }
-error_create_buffer:
-    {
-        GST_ERROR("failed to create video buffer");
-        return GST_FLOW_UNEXPECTED;
-    }
-}
-
 #if USE_VAAPISINK_GLX
 static void
 render_background(GstVaapiSink *sink)
@@ -837,7 +791,6 @@ gst_vaapisink_class_init(GstVaapiSinkClass *klass)
     basesink_class->start        = gst_vaapisink_start;
     basesink_class->stop         = gst_vaapisink_stop;
     basesink_class->set_caps     = gst_vaapisink_set_caps;
-    basesink_class->buffer_alloc = gst_vaapisink_buffer_alloc;
     basesink_class->preroll      = gst_vaapisink_show_frame;
     basesink_class->render       = gst_vaapisink_show_frame;
     basesink_class->query        = gst_vaapisink_query;

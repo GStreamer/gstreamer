@@ -209,17 +209,12 @@ gst_vaapidecode_step(GstVaapiDecode *decode)
             decode
         );
 
-        buffer = NULL;
-        ret = gst_pad_alloc_buffer(
-            decode->srcpad,
-            0, 0,
-            GST_PAD_CAPS(decode->srcpad),
-            &buffer
-        );
-        if (ret != GST_FLOW_OK || !buffer)
+        buffer = gst_vaapi_video_buffer_new(decode->display);
+        if (!buffer)
             goto error_create_buffer;
 
         GST_BUFFER_TIMESTAMP(buffer) = GST_VAAPI_SURFACE_PROXY_TIMESTAMP(proxy);
+        gst_buffer_set_caps(buffer, GST_PAD_CAPS(decode->srcpad));
         gst_vaapi_video_buffer_set_surface_proxy(
             GST_VAAPI_VIDEO_BUFFER(buffer),
             proxy
