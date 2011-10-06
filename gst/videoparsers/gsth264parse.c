@@ -613,7 +613,7 @@ gst_h264_parse_check_valid_frame (GstBaseParse * parse,
   data = GST_BUFFER_DATA (buffer);
   size = GST_BUFFER_SIZE (buffer);
 
-  drain = GST_BASE_PARSE_DRAINING (parse);
+  drain = FALSE;
   current_off = h264parse->current_off;
 
   GST_DEBUG_OBJECT (h264parse, "last parse position %u", current_off);
@@ -665,8 +665,9 @@ gst_h264_parse_check_valid_frame (GstBaseParse * parse,
         if (!h264parse->nalu.size && !h264parse->nalu.valid)
           h264parse->nalu = nalu;
 
-        if (drain) {
-          GST_DEBUG_OBJECT (h264parse, "drainning NAL %u %u %u", size,
+        if (GST_BASE_PARSE_DRAINING (parse)) {
+          drain = TRUE;
+          GST_DEBUG_OBJECT (h264parse, "draining NAL %u %u %u", size,
               h264parse->nalu.offset, h264parse->nalu.size);
           /*  Can't parse the nalu */
           if (size - h264parse->nalu.offset < 2) {
@@ -1226,7 +1227,7 @@ gst_h264_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
     size = GST_BUFFER_SIZE (codec_data);
 
     /* parse the avcC data */
-    if (size < 7)
+    if (size < 8)
       goto avcc_too_small;
     /* parse the version, this must be 1 */
     if (data[0] != 1)
@@ -1248,7 +1249,7 @@ gst_h264_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
     off = 6;
     for (i = 0; i < num_sps; i++) {
       parseres = gst_h264_parser_identify_nalu_avc (h264parse->nalparser,
-          data, off, size - off, 2, &nalu);
+          data, off, size, 2, &nalu);
       if (parseres != GST_H264_PARSER_OK)
         goto avcc_too_small;
 
@@ -1261,7 +1262,7 @@ gst_h264_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
     size++;
     for (i = 0; i < num_pps; i++) {
       parseres = gst_h264_parser_identify_nalu_avc (h264parse->nalparser,
-          data, off, size - off, 2, &nalu);
+          data, off, size, 2, &nalu);
       if (parseres != GST_H264_PARSER_OK) {
         goto avcc_too_small;
       }
