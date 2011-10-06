@@ -57,23 +57,19 @@ enum
   PROP_EMBEDDEDFONTS
 };
 
+#define FORMATS "{ RGB, BGR, xRGB, xBGR, RGBx, BGRx, I420 }"
+
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB ";" GST_VIDEO_CAPS_BGR ";"
-        GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_xBGR ";"
-        GST_VIDEO_CAPS_RGBx ";" GST_VIDEO_CAPS_BGRx ";"
-        GST_VIDEO_CAPS_YUV ("I420"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (FORMATS))
     );
 
 static GstStaticPadTemplate video_sink_factory =
-    GST_STATIC_PAD_TEMPLATE ("video_sink",
+GST_STATIC_PAD_TEMPLATE ("video_sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB ";" GST_VIDEO_CAPS_BGR ";"
-        GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_xBGR ";"
-        GST_VIDEO_CAPS_RGBx ";" GST_VIDEO_CAPS_BGRx ";"
-        GST_VIDEO_CAPS_YUV ("I420"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (FORMATS))
     );
 
 static GstStaticPadTemplate text_sink_factory =
@@ -93,9 +89,10 @@ static void gst_ass_render_finalize (GObject * object);
 static GstStateChangeReturn gst_ass_render_change_state (GstElement * element,
     GstStateChange transition);
 
-GST_BOILERPLATE (GstAssRender, gst_ass_render, GstElement, GST_TYPE_ELEMENT);
+#define gst_ass_render_parent_class parent_class
+G_DEFINE_TYPE (GstAssRender, gst_ass_render, GST_TYPE_ELEMENT);
 
-static GstCaps *gst_ass_render_getcaps (GstPad * pad);
+static GstCaps *gst_ass_render_getcaps (GstPad * pad, GstCaps * filter);
 
 static gboolean gst_ass_render_setcaps_video (GstPad * pad, GstCaps * caps);
 static gboolean gst_ass_render_setcaps_text (GstPad * pad, GstCaps * caps);
@@ -107,29 +104,7 @@ static gboolean gst_ass_render_event_video (GstPad * pad, GstEvent * event);
 static gboolean gst_ass_render_event_text (GstPad * pad, GstEvent * event);
 static gboolean gst_ass_render_event_src (GstPad * pad, GstEvent * event);
 
-static GstFlowReturn gst_ass_render_bufferalloc_video (GstPad * pad,
-    guint64 offset, guint size, GstCaps * caps, GstBuffer ** buffer);
-
 static gboolean gst_ass_render_query_src (GstPad * pad, GstQuery * query);
-
-static void
-gst_ass_render_base_init (gpointer gclass)
-{
-  GstElementClass *element_class = (GstElementClass *) gclass;
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&video_sink_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&text_sink_factory));
-
-  gst_element_class_set_details_simple (element_class, "ASS/SSA Render",
-      "Mixer/Video/Overlay/Subtitle",
-      "Renders ASS/SSA subtitles with libass",
-      "Benjamin Schmitz <vortex@wolpzone.de>, "
-      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
-}
 
 /* initialize the plugin's class */
 static void
@@ -153,6 +128,19 @@ gst_ass_render_class_init (GstAssRenderClass * klass)
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_ass_render_change_state);
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&src_factory));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&video_sink_factory));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&text_sink_factory));
+
+  gst_element_class_set_details_simple (gstelement_class, "ASS/SSA Render",
+      "Mixer/Video/Overlay/Subtitle",
+      "Renders ASS/SSA subtitles with libass",
+      "Benjamin Schmitz <vortex@wolpzone.de>, "
+      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
 }
 
 #if defined(LIBASS_VERSION) && LIBASS_VERSION >= 0x00907000
@@ -178,7 +166,7 @@ _libass_message_cb (gint level, const gchar * fmt, va_list args,
 #endif
 
 static void
-gst_ass_render_init (GstAssRender * render, GstAssRenderClass * gclass)
+gst_ass_render_init (GstAssRender * render)
 {
   GST_DEBUG_OBJECT (render, "init");
 
@@ -187,11 +175,6 @@ gst_ass_render_init (GstAssRender * render, GstAssRenderClass * gclass)
       gst_pad_new_from_static_template (&video_sink_factory, "video_sink");
   render->text_sinkpad =
       gst_pad_new_from_static_template (&text_sink_factory, "text_sink");
-
-  gst_pad_set_setcaps_function (render->video_sinkpad,
-      GST_DEBUG_FUNCPTR (gst_ass_render_setcaps_video));
-  gst_pad_set_setcaps_function (render->text_sinkpad,
-      GST_DEBUG_FUNCPTR (gst_ass_render_setcaps_text));
 
   gst_pad_set_getcaps_function (render->srcpad,
       GST_DEBUG_FUNCPTR (gst_ass_render_getcaps));
@@ -210,9 +193,6 @@ gst_ass_render_init (GstAssRender * render, GstAssRenderClass * gclass)
   gst_pad_set_event_function (render->srcpad,
       GST_DEBUG_FUNCPTR (gst_ass_render_event_src));
 
-  gst_pad_set_bufferalloc_function (render->video_sinkpad,
-      GST_DEBUG_FUNCPTR (gst_ass_render_bufferalloc_video));
-
   gst_pad_set_query_function (render->srcpad,
       GST_DEBUG_FUNCPTR (gst_ass_render_query_src));
 
@@ -220,8 +200,7 @@ gst_ass_render_init (GstAssRender * render, GstAssRenderClass * gclass)
   gst_element_add_pad (GST_ELEMENT (render), render->video_sinkpad);
   gst_element_add_pad (GST_ELEMENT (render), render->text_sinkpad);
 
-  render->width = 0;
-  render->height = 0;
+  gst_video_info_init (&render->info);
 
   render->subtitle_mutex = g_mutex_new ();
   render->subtitle_cond = g_cond_new ();
@@ -434,7 +413,7 @@ gst_ass_render_event_src (GstPad * pad, GstEvent * event)
 }
 
 static GstCaps *
-gst_ass_render_getcaps (GstPad * pad)
+gst_ass_render_getcaps (GstPad * pad, GstCaps * filter)
 {
   GstAssRender *render = GST_ASS_RENDER (gst_pad_get_parent (pad));
   GstPad *otherpad;
@@ -446,7 +425,7 @@ gst_ass_render_getcaps (GstPad * pad)
     otherpad = render->srcpad;
 
   /* we can do what the peer can */
-  caps = gst_pad_peer_get_caps (otherpad);
+  caps = gst_pad_peer_get_caps (otherpad, filter);
   if (caps) {
     GstCaps *temp;
     const GstCaps *templ;
@@ -469,18 +448,23 @@ gst_ass_render_getcaps (GstPad * pad)
 
 #define CREATE_RGB_BLIT_FUNCTION(name,bpp,R,G,B) \
 static void \
-blit_##name (GstAssRender * render, ASS_Image * ass_image, GstBuffer * buffer) \
+blit_##name (GstAssRender * render, ASS_Image * ass_image, GstVideoFrame * frame) \
 { \
   guint counter = 0; \
   gint alpha, r, g, b, k; \
   const guint8 *src; \
-  guint8 *dst; \
+  guint8 *dst, *data; \
   gint x, y, w, h; \
-  gint width = render->width; \
-  gint height = render->height; \
-  gint dst_stride = GST_ROUND_UP_4 (width * bpp); \
+  gint width; \
+  gint height; \
+  gint dst_stride; \
   gint dst_skip; \
   gint src_skip; \
+  \
+  width = GST_VIDEO_FRAME_WIDTH (frame); \
+  height = GST_VIDEO_FRAME_HEIGHT (frame); \
+  dst_stride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0); \
+  data = GST_VIDEO_FRAME_PLANE_DATA (frame, 0); \
   \
   while (ass_image) { \
     if (ass_image->dst_y > height || ass_image->dst_x > width) \
@@ -492,7 +476,7 @@ blit_##name (GstAssRender * render, ASS_Image * ass_image, GstBuffer * buffer) \
     g = ((ass_image->color) >> 16) & 0xff; \
     b = ((ass_image->color) >> 8) & 0xff; \
     src = ass_image->bitmap; \
-    dst = buffer->data + ass_image->dst_y * dst_stride + ass_image->dst_x * bpp; \
+    dst = data + ass_image->dst_y * dst_stride + ass_image->dst_x * bpp; \
     \
     w = MIN (ass_image->w, width - ass_image->dst_x); \
     h = MIN (ass_image->h, height - ass_image->dst_y); \
@@ -562,7 +546,7 @@ rgb_to_v (gint r, gint g, gint b)
 }
 
 static void
-blit_i420 (GstAssRender * render, ASS_Image * ass_image, GstBuffer * buffer)
+blit_i420 (GstAssRender * render, ASS_Image * ass_image, GstVideoFrame * frame)
 {
   guint counter = 0;
   gint alpha, r, g, b, k, k2;
@@ -575,25 +559,20 @@ blit_i420 (GstAssRender * render, ASS_Image * ass_image, GstBuffer * buffer)
   gint w2;
   gint src_stride;
 #endif
-  gint width = render->width;
-  gint height = render->height;
-  gint y_offset, y_stride;
-  gint u_offset, u_stride;
-  gint v_offset, v_stride;
+  gint width, height;
+  guint8 *y_data, *u_data, *v_data;
+  gint y_stride, u_stride, v_stride;
 
-  y_offset =
-      gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420, 0, width,
-      height);
-  u_offset =
-      gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420, 1, width,
-      height);
-  v_offset =
-      gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420, 2, width,
-      height);
+  width = GST_VIDEO_FRAME_WIDTH (frame);
+  height = GST_VIDEO_FRAME_HEIGHT (frame);
 
-  y_stride = gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, 0, width);
-  u_stride = gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, 1, width);
-  v_stride = gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, 2, width);
+  y_data = GST_VIDEO_FRAME_COMP_DATA (frame, 0);
+  u_data = GST_VIDEO_FRAME_COMP_DATA (frame, 1);
+  v_data = GST_VIDEO_FRAME_COMP_DATA (frame, 2);
+
+  y_stride = GST_VIDEO_FRAME_COMP_STRIDE (frame, 0);
+  u_stride = GST_VIDEO_FRAME_COMP_STRIDE (frame, 1);
+  v_stride = GST_VIDEO_FRAME_COMP_STRIDE (frame, 2);
 
   while (ass_image) {
     if (ass_image->dst_y > height || ass_image->dst_x > width)
@@ -619,19 +598,14 @@ blit_i420 (GstAssRender * render, ASS_Image * ass_image, GstBuffer * buffer)
 #endif
 
     src = ass_image->bitmap;
-    dst_y =
-        buffer->data + y_offset + ass_image->dst_y * y_stride +
-        ass_image->dst_x;
-    dst_u =
-        buffer->data + u_offset + (ass_image->dst_y / 2) * u_stride +
-        ass_image->dst_x / 2;
-    dst_v =
-        buffer->data + v_offset + (ass_image->dst_y / 2) * v_stride +
-        ass_image->dst_x / 2;
+#if 0
+    dst_y = y_data + ass_image->dst_y * y_stride + ass_image->dst_x;
+    dst_u = u_data + (ass_image->dst_y / 2) * u_stride + ass_image->dst_x / 2;
+    dst_v = v_data + (ass_image->dst_y / 2) * v_stride + ass_image->dst_x / 2;
+#endif
 
     for (y = 0; y < h; y++) {
-      dst_y = buffer->data + y_offset + (ass_image->dst_y + y) * y_stride +
-          ass_image->dst_x;
+      dst_y = y_data + (ass_image->dst_y + y) * y_stride + ass_image->dst_x;
       for (x = 0; x < w; x++) {
         k = src[y * ass_image->w + x] * alpha / 255;
         dst_y[x] = (k * Y + (255 - k) * dst_y[x]) / 255;
@@ -640,12 +614,8 @@ blit_i420 (GstAssRender * render, ASS_Image * ass_image, GstBuffer * buffer)
 
     y = 0;
     if (ass_image->dst_y & 1) {
-      dst_u =
-          buffer->data + u_offset + (ass_image->dst_y / 2) * u_stride +
-          ass_image->dst_x / 2;
-      dst_v =
-          buffer->data + v_offset + (ass_image->dst_y / 2) * v_stride +
-          ass_image->dst_x / 2;
+      dst_u = u_data + (ass_image->dst_y / 2) * u_stride + ass_image->dst_x / 2;
+      dst_v = v_data + (ass_image->dst_y / 2) * v_stride + ass_image->dst_x / 2;
       x = 0;
       if (ass_image->dst_x & 1) {
         k2 = src[y * ass_image->w + x] * alpha / 255;
@@ -674,11 +644,9 @@ blit_i420 (GstAssRender * render, ASS_Image * ass_image, GstBuffer * buffer)
     }
 
     for (; y < h - 1; y += 2) {
-      dst_u =
-          buffer->data + u_offset + ((ass_image->dst_y + y) / 2) * u_stride +
+      dst_u = u_data + ((ass_image->dst_y + y) / 2) * u_stride +
           ass_image->dst_x / 2;
-      dst_v =
-          buffer->data + v_offset + ((ass_image->dst_y + y) / 2) * v_stride +
+      dst_v = v_data + ((ass_image->dst_y + y) / 2) * v_stride +
           ass_image->dst_x / 2;
       x = 0;
       if (ass_image->dst_x & 1) {
@@ -712,12 +680,8 @@ blit_i420 (GstAssRender * render, ASS_Image * ass_image, GstBuffer * buffer)
     }
 
     if (y < h) {
-      dst_u =
-          buffer->data + u_offset + (ass_image->dst_y / 2) * u_stride +
-          ass_image->dst_x / 2;
-      dst_v =
-          buffer->data + v_offset + (ass_image->dst_y / 2) * v_stride +
-          ass_image->dst_x / 2;
+      dst_u = u_data + (ass_image->dst_y / 2) * u_stride + ass_image->dst_x / 2;
+      dst_v = v_data + (ass_image->dst_y / 2) * v_stride + ass_image->dst_x / 2;
       x = 0;
       if (ass_image->dst_x & 1) {
         k2 = src[y * ass_image->w + x] * alpha / 255;
@@ -762,25 +726,18 @@ gst_ass_render_setcaps_video (GstPad * pad, GstCaps * caps)
   gboolean ret = FALSE;
   gint par_n = 1, par_d = 1;
   gdouble dar;
+  GstVideoInfo info;
 
-  render->width = 0;
-  render->height = 0;
+  if (!gst_video_info_from_caps (&info, caps))
+    goto invalid_caps;
 
-  if (!gst_video_format_parse_caps (caps, &render->format, &render->width,
-          &render->height) ||
-      !gst_video_parse_caps_framerate (caps, &render->fps_n, &render->fps_d)) {
-    GST_ERROR_OBJECT (render, "Can't parse caps: %" GST_PTR_FORMAT, caps);
-    ret = FALSE;
-    goto out;
-  }
-
-  gst_video_parse_caps_pixel_aspect_ratio (caps, &par_n, &par_d);
+  render->info = info;
 
   ret = gst_pad_set_caps (render->srcpad, caps);
   if (!ret)
     goto out;
 
-  switch (render->format) {
+  switch (GST_VIDEO_INFO_FORMAT (&info)) {
     case GST_VIDEO_FORMAT_RGB:
       render->blit = blit_rgb;
       break;
@@ -808,15 +765,15 @@ gst_ass_render_setcaps_video (GstPad * pad, GstCaps * caps)
   }
 
   g_mutex_lock (render->ass_mutex);
-  ass_set_frame_size (render->ass_renderer, render->width, render->height);
+  ass_set_frame_size (render->ass_renderer, info.width, info.height);
 
-  dar = (((gdouble) par_n) * ((gdouble) render->width))
-      / (((gdouble) par_d) * ((gdouble) render->height));
+  dar = (((gdouble) par_n) * ((gdouble) info.width))
+      / (((gdouble) par_d) * ((gdouble) info.height));
 #if !defined(LIBASS_VERSION) || LIBASS_VERSION < 0x00907000
   ass_set_aspect_ratio (render->ass_renderer, dar);
 #else
   ass_set_aspect_ratio (render->ass_renderer,
-      dar, ((gdouble) render->width) / ((gdouble) render->height));
+      dar, ((gdouble) info.width) / ((gdouble) info.height));
 #endif
   ass_set_font_scale (render->ass_renderer, 1.0);
   ass_set_hinting (render->ass_renderer, ASS_HINTING_LIGHT);
@@ -840,6 +797,14 @@ out:
   gst_object_unref (render);
 
   return ret;
+
+  /* ERRORS */
+invalid_caps:
+  {
+    GST_ERROR_OBJECT (render, "Can't parse caps: %" GST_PTR_FORMAT, caps);
+    ret = FALSE;
+    goto out;
+  }
 }
 
 static gboolean
@@ -850,7 +815,7 @@ gst_ass_render_setcaps_text (GstPad * pad, GstCaps * caps)
   const GValue *value;
   GstBuffer *priv;
   gchar *codec_private;
-  guint codec_private_size;
+  gsize codec_private_size;
   gboolean ret = FALSE;
 
   structure = gst_caps_get_structure (caps, 0);
@@ -865,14 +830,16 @@ gst_ass_render_setcaps_text (GstPad * pad, GstCaps * caps)
     priv = gst_value_get_buffer (value);
     g_return_val_if_fail (priv != NULL, FALSE);
 
-    codec_private = (gchar *) GST_BUFFER_DATA (priv);
-    codec_private_size = GST_BUFFER_SIZE (priv);
+    codec_private =
+        gst_buffer_map (priv, &codec_private_size, NULL, GST_MAP_READ);
 
     if (!render->ass_track)
       render->ass_track = ass_new_track (render->ass_library);
 
     ass_process_codec_private (render->ass_track,
         codec_private, codec_private_size);
+
+    gst_buffer_unmap (priv, codec_private, codec_private_size);
 
     GST_DEBUG_OBJECT (render, "ass track created");
 
@@ -898,8 +865,8 @@ static void
 gst_ass_render_process_text (GstAssRender * render, GstBuffer * buffer,
     GstClockTime running_time, GstClockTime duration)
 {
-  gchar *data = (gchar *) GST_BUFFER_DATA (buffer);
-  guint size = GST_BUFFER_SIZE (buffer);
+  gchar *data;
+  gsize size;
   gdouble pts_start, pts_end;
 
   pts_start = running_time;
@@ -911,32 +878,15 @@ gst_ass_render_process_text (GstAssRender * render, GstBuffer * buffer,
       "Processing subtitles with running time %" GST_TIME_FORMAT
       " and duration %" GST_TIME_FORMAT, GST_TIME_ARGS (running_time),
       GST_TIME_ARGS (duration));
+
+  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+
   g_mutex_lock (render->ass_mutex);
   ass_process_chunk (render->ass_track, data, size, pts_start, pts_end);
   g_mutex_unlock (render->ass_mutex);
+
+  gst_buffer_unmap (buffer, data, size);
   gst_buffer_unref (buffer);
-}
-
-static GstFlowReturn
-gst_ass_render_bufferalloc_video (GstPad * pad, guint64 offset, guint size,
-    GstCaps * caps, GstBuffer ** buffer)
-{
-  GstAssRender *render = GST_ASS_RENDER (gst_pad_get_parent (pad));
-  GstFlowReturn ret = GST_FLOW_WRONG_STATE;
-  GstPad *allocpad;
-
-  GST_OBJECT_LOCK (render);
-  allocpad = render->srcpad ? gst_object_ref (render->srcpad) : NULL;
-  GST_OBJECT_UNLOCK (render);
-
-  if (allocpad) {
-    ret = gst_pad_alloc_buffer (allocpad, offset, size, caps, buffer);
-    gst_object_unref (allocpad);
-  }
-
-  gst_object_unref (render);
-
-  return ret;
 }
 
 static GstFlowReturn
@@ -945,7 +895,7 @@ gst_ass_render_chain_video (GstPad * pad, GstBuffer * buffer)
   GstAssRender *render = GST_ASS_RENDER (GST_PAD_PARENT (pad));
   GstFlowReturn ret = GST_FLOW_OK;
   gboolean in_seg = FALSE;
-  gint64 start, stop, clip_start = 0, clip_stop = 0;
+  guint64 start, stop, clip_start = 0, clip_stop = 0;
   ASS_Image *ass_image;
 
   if (!GST_BUFFER_TIMESTAMP_IS_VALID (buffer)) {
@@ -978,14 +928,13 @@ gst_ass_render_chain_video (GstPad * pad, GstBuffer * buffer)
   /* if the buffer is only partially in the segment, fix up stamps */
   if (clip_start != start || (stop != -1 && clip_stop != stop)) {
     GST_DEBUG_OBJECT (render, "clipping buffer timestamp/duration to segment");
-    buffer = gst_buffer_make_metadata_writable (buffer);
+    buffer = gst_buffer_make_writable (buffer);
     GST_BUFFER_TIMESTAMP (buffer) = clip_start;
     if (stop != -1)
       GST_BUFFER_DURATION (buffer) = clip_stop - clip_start;
   }
 
-  gst_segment_set_last_stop (&render->video_segment, GST_FORMAT_TIME,
-      clip_start);
+  render->video_segment.position = clip_start;
 
   g_mutex_lock (render->subtitle_mutex);
   if (render->subtitle_pending) {
@@ -1055,8 +1004,13 @@ gst_ass_render_chain_video (GstPad * pad, GstBuffer * buffer)
     g_mutex_unlock (render->ass_mutex);
 
     if (ass_image != NULL) {
+      GstVideoFrame frame;
+
       buffer = gst_buffer_make_writable (buffer);
-      render->blit (render, ass_image, buffer);
+
+      gst_video_frame_map (&frame, &render->info, buffer, GST_MAP_WRITE);
+      render->blit (render, ass_image, &frame);
+      gst_video_frame_unmap (&frame);
     } else {
       GST_LOG_OBJECT (render, "nothing to render right now");
     }
@@ -1084,7 +1038,7 @@ gst_ass_render_chain_text (GstPad * pad, GstBuffer * buffer)
   GstClockTime timestamp, duration;
   GstClockTime sub_running_time, vid_running_time;
   GstClockTime sub_running_time_end;
-  gint64 cstart, cstop;
+  guint64 cstart, cstop;
   gboolean in_seg;
 
   if (render->subtitle_flushing) {
@@ -1118,8 +1072,7 @@ gst_ass_render_chain_text (GstPad * pad, GstBuffer * buffer)
   GST_BUFFER_TIMESTAMP (buffer) = timestamp = cstart;
   GST_BUFFER_DURATION (buffer) = duration = cstop - cstart;
 
-  gst_segment_set_last_stop (&render->subtitle_segment, GST_FORMAT_TIME,
-      GST_BUFFER_TIMESTAMP (buffer));
+  render->subtitle_segment.position = GST_BUFFER_TIMESTAMP (buffer);
 
   sub_running_time =
       gst_segment_to_running_time (&render->subtitle_segment, GST_FORMAT_TIME,
@@ -1129,11 +1082,12 @@ gst_ass_render_chain_text (GstPad * pad, GstBuffer * buffer)
       timestamp + duration);
   vid_running_time =
       gst_segment_to_running_time (&render->video_segment, GST_FORMAT_TIME,
-      render->video_segment.last_stop);
+      render->video_segment.position);
 
-  if (render->fps_n && render->fps_d)
+  if (render->info.fps_n && render->info.fps_d)
     vid_running_time +=
-        gst_util_uint64_scale (GST_SECOND, render->fps_d, render->fps_n);
+        gst_util_uint64_scale (GST_SECOND, render->info.fps_d,
+        render->info.fps_n);
 
   if (sub_running_time > vid_running_time + GST_SECOND / 2) {
     g_assert (render->subtitle_pending == NULL);
@@ -1175,6 +1129,7 @@ gst_ass_render_chain_text (GstPad * pad, GstBuffer * buffer)
 static void
 gst_ass_render_handle_tags (GstAssRender * render, GstTagList * taglist)
 {
+#if 0
   static const gchar *mimetypes[] = {
     "application/x-font-ttf",
     "application/x-font-otf",
@@ -1184,8 +1139,8 @@ gst_ass_render_handle_tags (GstAssRender * render, GstTagList * taglist)
     ".otf",
     ".ttf"
   };
+#endif
   guint tag_size;
-  guint index;
 
   if (!taglist)
     return;
@@ -1194,17 +1149,21 @@ gst_ass_render_handle_tags (GstAssRender * render, GstTagList * taglist)
   if (tag_size > 0 && render->embeddedfonts) {
     const GValue *value;
     GstBuffer *buf;
+#if 0
     GstCaps *caps;
     GstStructure *structure;
     gboolean valid_mimetype, valid_extension;
     guint j;
     const gchar *filename;
+#endif
+    guint index;
 
     GST_DEBUG_OBJECT (render, "TAG event has attachments");
 
     for (index = 0; index < tag_size; index++) {
       value = gst_tag_list_get_value_index (taglist, GST_TAG_ATTACHMENT, index);
       buf = gst_value_get_buffer (value);
+#if 0
       if (!buf || !GST_BUFFER_CAPS (buf))
         continue;
 
@@ -1242,6 +1201,7 @@ gst_ass_render_handle_tags (GstAssRender * render, GstTagList * taglist)
         GST_DEBUG_OBJECT (render, "registered new font %s", filename);
         g_mutex_unlock (render->ass_mutex);
       }
+#endif
     }
   }
 }
@@ -1256,24 +1216,28 @@ gst_ass_render_event_video (GstPad * pad, GstEvent * event)
       GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_NEWSEGMENT:
+    case GST_EVENT_CAPS:
     {
-      GstFormat format;
-      gdouble rate;
-      gint64 start, stop, time;
-      gboolean update;
+      GstCaps *caps;
+
+      gst_event_parse_caps (event, &caps);
+      ret = gst_ass_render_setcaps_video (pad, caps);
+      gst_event_unref (event);
+      break;
+    }
+    case GST_EVENT_SEGMENT:
+    {
+      GstSegment segment;
 
       GST_DEBUG_OBJECT (render, "received new segment");
 
-      gst_event_parse_new_segment (event, &update, &rate, &format, &start,
-          &stop, &time);
+      gst_event_copy_segment (event, &segment);
 
-      if (format == GST_FORMAT_TIME) {
+      if (segment.format == GST_FORMAT_TIME) {
         GST_DEBUG_OBJECT (render, "VIDEO SEGMENT now: %" GST_SEGMENT_FORMAT,
             &render->video_segment);
 
-        gst_segment_set_newsegment (&render->video_segment, update, rate,
-            format, start, stop, time);
+        render->video_segment = segment;
 
         GST_DEBUG_OBJECT (render, "VIDEO SEGMENT after: %" GST_SEGMENT_FORMAT,
             &render->video_segment);
@@ -1320,24 +1284,28 @@ gst_ass_render_event_text (GstPad * pad, GstEvent * event)
   GST_DEBUG_OBJECT (pad, "received text event %s", GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_NEWSEGMENT:
+    case GST_EVENT_CAPS:
     {
-      GstFormat format;
-      gdouble rate;
-      gint64 start, stop, time;
-      gboolean update;
+      GstCaps *caps;
+
+      gst_event_parse_caps (event, &caps);
+      ret = gst_ass_render_setcaps_text (pad, caps);
+      gst_event_unref (event);
+      break;
+    }
+    case GST_EVENT_SEGMENT:
+    {
+      GstSegment segment;
 
       GST_DEBUG_OBJECT (render, "received new segment");
 
-      gst_event_parse_new_segment (event, &update, &rate, &format, &start,
-          &stop, &time);
+      gst_event_copy_segment (event, &segment);
 
-      if (format == GST_FORMAT_TIME) {
+      if (segment.format == GST_FORMAT_TIME) {
         GST_DEBUG_OBJECT (render, "SUBTITLE SEGMENT now: %" GST_SEGMENT_FORMAT,
             &render->subtitle_segment);
 
-        gst_segment_set_newsegment (&render->subtitle_segment, update, rate,
-            format, start, stop, time);
+        render->subtitle_segment = segment;
 
         GST_DEBUG_OBJECT (render,
             "SUBTITLE SEGMENT after: %" GST_SEGMENT_FORMAT,

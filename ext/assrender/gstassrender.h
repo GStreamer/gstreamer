@@ -43,7 +43,7 @@ G_BEGIN_DECLS
 
 typedef struct _GstAssRender GstAssRender;
 typedef struct _GstAssRenderClass GstAssRenderClass;
-typedef void (*GstAssRenderBlitFunction) (GstAssRender *render, ASS_Image *ass_image, GstBuffer *buffer);
+typedef void (*GstAssRenderBlitFunction) (GstAssRender *render, ASS_Image *ass_image, GstVideoFrame *frame);
 
 struct _GstAssRender
 {
@@ -57,9 +57,7 @@ struct _GstAssRender
   /* <private> */
   GstSegment video_segment;
 
-  GstVideoFormat format;
-  gint width, height;
-  gint fps_n, fps_d;
+  GstVideoInfo info;
   GstAssRenderBlitFunction blit;
 
   GMutex *subtitle_mutex;
