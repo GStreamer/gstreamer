@@ -1257,9 +1257,9 @@ gst_h264_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
       off = nalu.offset + nalu.size;
     }
 
-    num_pps = data[0];
-    data++;
-    size++;
+    num_pps = data[off];
+    off++;
+
     for (i = 0; i < num_pps; i++) {
       parseres = gst_h264_parser_identify_nalu_avc (h264parse->nalparser,
           data, off, size, 2, &nalu);
