@@ -2328,7 +2328,7 @@ again:
 
   /* for computing the avg bitrate */
   if (G_LIKELY (last_buf)) {
-    pad->total_bytes += GST_BUFFER_SIZE (last_buf);
+    pad->total_bytes += gst_buffer_get_size (last_buf);
     pad->total_duration += duration;
   }
 
