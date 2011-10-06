@@ -497,6 +497,10 @@ gst_split_file_src_create (GstBaseSrc * basesrc, guint64 offset, guint size,
       cur_part.stop, cur_part.path);
 
   buf = gst_buffer_new_and_alloc (size);
+
+  GST_BUFFER_OFFSET (buf) = offset;
+  GST_BUFFER_OFFSET_END (buf) = offset + size;
+
   data = GST_BUFFER_DATA (buf);
 
   cancel = src->cancellable;
