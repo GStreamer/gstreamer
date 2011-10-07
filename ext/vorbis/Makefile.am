@@ -28,7 +28,8 @@ plugin_LTLIBRARIES += libgstivorbisdec.la
 
 libgstivorbisdec_la_SOURCES = gstivorbisdec.c \
 	gstvorbisdec.c gstvorbisdeclib.c gstvorbiscommon.c
-libgstivorbisdec_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) \
+libgstivorbisdec_la_CFLAGS = -DGST_USE_UNSTABLE_API \
+	$(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) \
 	-DTREMOR $(IVORBIS_CFLAGS)
 libgstivorbisdec_la_LIBADD = \
 	$(top_builddir)/gst-libs/gst/tag/libgsttag-@GST_MAJORMINOR@.la \
