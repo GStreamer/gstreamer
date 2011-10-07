@@ -332,17 +332,28 @@ gst_play_sink_video_convert_getcaps (GstPad * pad)
 
   GST_PLAY_SINK_VIDEO_CONVERT_LOCK (self);
   otherpad = gst_ghost_pad_get_target (GST_GHOST_PAD_CAST (pad));
+  if (!otherpad) {
+    if (pad == self->srcpad) {
+      otherpad = self->sink_proxypad;
+    }
+    /* no equivalent for the sink pad */
+  }
   GST_PLAY_SINK_VIDEO_CONVERT_UNLOCK (self);
 
-  peer = gst_pad_get_peer (otherpad);
-  if (peer) {
-    ret = gst_pad_get_caps_reffed (peer);
-    gst_object_unref (peer);
+  if (otherpad) {
+    peer = gst_pad_get_peer (otherpad);
+    if (peer) {
+      ret = gst_pad_get_caps_reffed (peer);
+      gst_object_unref (peer);
+    } else {
+      ret = gst_caps_new_any ();
+    }
+    gst_object_unref (otherpad);
   } else {
+    GST_WARNING_OBJECT (self, "Could not traverse bin");
     ret = gst_caps_new_any ();
   }
 
-  gst_object_unref (otherpad);
   gst_object_unref (self);
 
   return ret;
