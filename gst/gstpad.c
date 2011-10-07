@@ -3377,17 +3377,21 @@ probe_hook_marshal (GHook * hook, ProbeMarshall * data)
   }
 }
 
-#define PROBE(pad,mask,data,label)                \
-  G_STMT_START {                                  \
-    if (G_UNLIKELY (pad->num_probes)) {           \
-      ret = do_probe_callbacks (pad, mask, data); \
-      if (G_UNLIKELY (ret != GST_FLOW_OK))        \
-        goto label;                               \
-    }                                             \
+#define PROBE_FULL(pad,mask,data,label,defaultval)		\
+  G_STMT_START {						\
+    if (G_UNLIKELY (pad->num_probes)) {				\
+      ret = do_probe_callbacks (pad, mask, data, defaultval);	\
+      if (G_UNLIKELY (ret != defaultval && ret != GST_FLOW_OK))	\
+        goto label;						\
+    }								\
   } G_STMT_END
 
+#define PROBE(pad,mask,data,label)		\
+  PROBE_FULL(pad, mask, data, label, GST_FLOW_OK);
+
 static GstFlowReturn
-do_probe_callbacks (GstPad * pad, GstProbeType mask, gpointer type_data)
+do_probe_callbacks (GstPad * pad, GstProbeType mask, gpointer type_data,
+    GstFlowReturn defaultval)
 {
   ProbeMarshall data;
   guint cookie;
@@ -3444,7 +3448,7 @@ again:
     }
   }
 
-  return GST_FLOW_OK;
+  return defaultval;
 
   /* ERRORS */
 flushing:
@@ -3459,6 +3463,7 @@ dropped:
   }
 passed:
   {
+    /* FIXME : Should we return FLOW_OK or the defaultval ?? */
     GST_DEBUG_OBJECT (pad, "data is passed");
     return GST_FLOW_OK;
   }
@@ -3805,7 +3810,8 @@ gst_pad_push_data (GstPad * pad, GstProbeType type, void *data)
   pad->priv->using--;
   if (pad->priv->using == 0) {
     /* pad is not active anymore, trigger idle callbacks */
-    PROBE (pad, GST_PROBE_TYPE_PUSH | GST_PROBE_TYPE_IDLE, NULL, probe_stopped);
+    PROBE_FULL (pad, GST_PROBE_TYPE_PUSH | GST_PROBE_TYPE_IDLE, NULL,
+        probe_stopped, ret);
   }
   GST_OBJECT_UNLOCK (pad);
 
