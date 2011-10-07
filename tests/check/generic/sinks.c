@@ -1053,7 +1053,7 @@ GST_START_TEST (test_async_done)
   GstEvent *event;
   GstStateChangeReturn ret;
   GstPad *sinkpad;
-  GstFlowReturn res;
+  gboolean res;
   GstBus *bus;
   GThread *thread;
   gint64 position;
@@ -1084,6 +1084,7 @@ GST_START_TEST (test_async_done)
 
   event = gst_event_new_segment (&segment);
   res = gst_pad_send_event (sinkpad, event);
+  fail_unless (res == TRUE);
 
   /* We have not yet received any buffers so we are still in the READY state,
    * the position is therefore still not queryable. */
@@ -1191,6 +1192,7 @@ GST_START_TEST (test_async_done_eos)
   segment.time = 10 * GST_SECOND;
   event = gst_event_new_segment (&segment);
   res = gst_pad_send_event (sinkpad, event);
+  fail_unless (res == TRUE);
 
   /* We have not yet received any buffers so we are still in the READY state,
    * the position is therefore still not queryable. */
