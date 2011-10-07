@@ -119,32 +119,36 @@ const guint8 vc1_pquant_table[3][32] = {
       14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 29, 31}
 };
 
-const guint8 mvmode_table[2][5] = {
-  {
-        GST_VC1_MVMODE_1MV_HPEL_BILINEAR,
-        GST_VC1_MVMODE_1MV,
-        GST_VC1_MVMODE_1MV_HPEL,
-        GST_VC1_MVMODE_MIXED_MV,
-      GST_VC1_MVMODE_INTENSITY_COMP},
+static const guint8 vc1_mvmode_table[2][5] = {
+  /* Table 47: P Picture High rate (PQUANT <= 12) MVMODE code table */
   {
         GST_VC1_MVMODE_1MV,
         GST_VC1_MVMODE_MIXED_MV,
         GST_VC1_MVMODE_1MV_HPEL,
         GST_VC1_MVMODE_INTENSITY_COMP,
-      GST_VC1_MVMODE_1MV_HPEL_BILINEAR}
-};
-
-const guint8 mvmode2_table[2][4] = {
+      GST_VC1_MVMODE_1MV_HPEL_BILINEAR},
+  /* Table 46: P Picture Low rate (PQUANT > 12) MVMODE code table */
   {
         GST_VC1_MVMODE_1MV_HPEL_BILINEAR,
         GST_VC1_MVMODE_1MV,
         GST_VC1_MVMODE_1MV_HPEL,
-      GST_VC1_MVMODE_MIXED_MV},
+        GST_VC1_MVMODE_INTENSITY_COMP,
+      GST_VC1_MVMODE_MIXED_MV}
+};
+
+static const guint8 vc1_mvmode2_table[2][4] = {
+  /* Table 50: P Picture High rate (PQUANT <= 12) MVMODE2 code table */
   {
         GST_VC1_MVMODE_1MV,
         GST_VC1_MVMODE_MIXED_MV,
         GST_VC1_MVMODE_1MV_HPEL,
-      GST_VC1_MVMODE_1MV_HPEL_BILINEAR}
+      GST_VC1_MVMODE_1MV_HPEL_BILINEAR},
+  /* Table 49: P Picture Low rate (PQUANT > 12) MVMODE2 code table */
+  {
+        GST_VC1_MVMODE_1MV_HPEL_BILINEAR,
+        GST_VC1_MVMODE_1MV,
+        GST_VC1_MVMODE_1MV_HPEL,
+      GST_VC1_MVMODE_MIXED_MV}
 };
 
 /* Table 40: BFRACTION VLC Table */
@@ -1056,15 +1060,13 @@ parse_frame_header_advanced (GstBitReader * br, GstVC1FrameHdr * framehdr,
       else
         pic->mvrange = 0;
 
-      mvmodeidx = framehdr->pquant > 12 ? 0 : 1;
-      pic->mvmode = mvmode_table[mvmodeidx][get_unary (br, 1, 4)];
+      mvmodeidx = framehdr->pquant > 12;
+      pic->mvmode = vc1_mvmode_table[mvmodeidx][get_unary (br, 1, 4)];
 
       if (pic->mvmode == GST_VC1_MVMODE_INTENSITY_COMP) {
-
-        pic->mvmode2 = mvmode2_table[mvmodeidx][get_unary (br, 1, 4)];
+        pic->mvmode2 = vc1_mvmode2_table[mvmodeidx][get_unary (br, 1, 3)];
         READ_UINT8 (br, pic->lumscale, 6);
         READ_UINT8 (br, pic->lumshift, 6);
-
         GST_DEBUG ("lumscale %u lumshift %u", pic->lumscale, pic->lumshift);
       }
 
@@ -1238,11 +1240,10 @@ parse_frame_header (GstBitReader * br, GstVC1FrameHdr * framehdr,
 
     case GST_VC1_PICTURE_TYPE_P:
       mvmodeidx = framehdr->pquant > 12;
-
-      pic->mvmode = mvmode_table[mvmodeidx][get_unary (br, 1, 4)];
+      pic->mvmode = vc1_mvmode_table[mvmodeidx][get_unary (br, 1, 4)];
 
       if (pic->mvmode == GST_VC1_MVMODE_INTENSITY_COMP) {
-        pic->mvmode2 = mvmode2_table[mvmodeidx][get_unary (br, 1, 4)];
+        pic->mvmode2 = vc1_mvmode2_table[mvmodeidx][get_unary (br, 1, 3)];
         READ_UINT8 (br, pic->lumscale, 6);
         READ_UINT8 (br, pic->lumshift, 6);
         GST_DEBUG ("lumscale %u lumshift %u", pic->lumscale, pic->lumshift);
