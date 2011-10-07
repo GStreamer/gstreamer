@@ -425,7 +425,7 @@ gst_pipeline_change_state (GstElement * element, GstStateChange transition)
         if (clock) {
           now = gst_clock_get_time (clock);
         } else {
-          GST_DEBUG ("no clock, using base time of NONE");
+          GST_DEBUG_OBJECT (pipeline, "no clock, using base time of NONE");
           now = GST_CLOCK_TIME_NONE;
         }
 
