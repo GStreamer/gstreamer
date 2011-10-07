@@ -3165,6 +3165,9 @@ beach:
   GST_DEBUG ("Chain %p (handled:%d, last_group:%d, drained:%d, switched:%d)",
       chain, handled, *last_group, *drained, *switched);
 
+  if (*drained)
+    g_signal_emit (dbin, gst_decode_bin_signals[SIGNAL_DRAINED], 0, NULL);
+
   return handled;
 }
 
