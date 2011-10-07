@@ -279,23 +279,26 @@ static const VLCTable vc1_norm6_vlc_table[64] = {
 
 static inline gboolean
 decode_colskip (GstBitReader * br, guint8 * data, guint width, guint height,
-    guint stride)
+    guint stride, guint invert)
 {
   guint x, y;
-  guint8 colskip;
+  guint8 colskip, v;
 
   GST_DEBUG ("Parsing colskip");
 
+  invert &= 1;
   for (x = 0; x < width; x++) {
     READ_UINT8 (br, colskip, 1);
 
     if (data) {
       if (colskip) {
-        for (y = 0; y < height; y++)
-          READ_UINT8 (br, data[y * stride], 1);
+        for (y = 0; y < height; y++) {
+          READ_UINT8 (br, v, 1);
+          data[y * stride] = v ^ invert;
+        }
       } else {
         for (y = 0; y < height; y++)
-          data[y * stride] = 0;
+          data[y * stride] = invert;
       }
       data++;
     } else if (colskip)
@@ -312,22 +315,25 @@ failed:
 
 static inline gboolean
 decode_rowskip (GstBitReader * br, guint8 * data, guint width, guint height,
-    guint stride)
+    guint stride, guint invert)
 {
   guint x, y;
-  guint8 rowskip;
+  guint8 rowskip, v;
 
   GST_DEBUG ("Parsing rowskip");
 
+  invert &= 1;
   for (y = 0; y < height; y++) {
     READ_UINT8 (br, rowskip, 1);
 
     if (data) {
       if (!rowskip)
-        memset (data, 0, width);
+        memset (data, invert, width);
       else {
-        for (x = 0; x < width; x++)
-          READ_UINT8 (br, data[x], 1);
+        for (x = 0; x < width; x++) {
+          READ_UINT8 (br, v, 1);
+          data[x] = v ^ invert;
+        }
       }
       data += stride;
     } else if (rowskip)
@@ -448,6 +454,7 @@ bitplane_decoding (GstBitReader * br, guint8 * data,
       invert_mask = 0;
       /* fall-through */
     case IMODE_NORM2:
+      invert_mask &= 3;
 
       GST_DEBUG ("Parsing IMODE_DIFF2 or IMODE_NORM2 biplane");
 
@@ -455,7 +462,7 @@ bitplane_decoding (GstBitReader * br, guint8 * data,
       if ((height * width) & 1) {
         GET_BITS (br, 1, &v);
         if (pdata) {
-          *pdata++ = v;
+          *pdata++ = (v ^ invert_mask) & 1;
           if (++x == width) {
             x = 0;
             pdata += stride - width;
@@ -468,6 +475,7 @@ bitplane_decoding (GstBitReader * br, guint8 * data,
                 G_N_ELEMENTS (vc1_norm2_vlc_table)))
           goto failed;
         if (pdata) {
+          v ^= invert_mask;
           *pdata++ = v >> 1;
           if (++x == width) {
             x = 0;
@@ -543,27 +551,27 @@ bitplane_decoding (GstBitReader * br, guint8 * data,
       if (x) {
         if (data)
           pdata = data + y * stride;
-        decode_colskip (br, pdata, x, height, stride);
+        decode_colskip (br, pdata, x, height, stride, invert_mask);
       }
 
       if (y) {
         if (data)
           pdata = data + x;
-        decode_rowskip (br, pdata, width, y, stride);
+        decode_rowskip (br, pdata, width, y, stride, invert_mask);
       }
       break;
     case IMODE_ROWSKIP:
 
       GST_DEBUG ("Parsing IMODE_ROWSKIP biplane");
 
-      if (!decode_rowskip (br, data, width, height, stride))
+      if (!decode_rowskip (br, data, width, height, stride, invert_mask))
         goto failed;
       break;
     case IMODE_COLSKIP:
 
       GST_DEBUG ("Parsing IMODE_COLSKIP biplane");
 
-      if (!decode_colskip (br, data, width, height, stride))
+      if (!decode_colskip (br, data, width, height, stride, invert_mask))
         goto failed;
       break;
   }
