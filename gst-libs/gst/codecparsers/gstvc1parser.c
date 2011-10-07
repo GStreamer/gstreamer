@@ -770,10 +770,12 @@ static GstVC1ParserResult
 parse_sequence_header_advanced (GstVC1SeqHdr * seqhdr, GstBitReader * br)
 {
   GstVC1AdvancedSeqHdr *advanced = &seqhdr->advanced;
+  guint8 tmp;
 
   GST_DEBUG ("Parsing sequence header in advanced mode");
 
-  READ_UINT8 (br, advanced->level, 3);
+  READ_UINT8 (br, tmp, 3);
+  advanced->level = tmp;
 
   READ_UINT8 (br, advanced->colordiff_format, 2);
   READ_UINT8 (br, advanced->frmrtq_postproc, 3);
@@ -888,7 +890,7 @@ parse_frame_header_advanced (GstBitReader * br, GstVC1FrameHdr * framehdr,
     pic->fcm = (guint8) fcm;
   }
 
-  framehdr->ptype = get_unary (br, 0, 4);
+  framehdr->ptype = (guint8) get_unary (br, 0, 4);
 
   if (advhdr->tfcntrflag) {
     READ_UINT8 (br, pic->tfcntr, 8);
@@ -1118,6 +1120,10 @@ parse_frame_header_advanced (GstBitReader * br, GstVC1FrameHdr * framehdr,
           pic->mvmode, pic->mvtab, pic->cbptab, pic->skipmb);
 
       break;
+
+    default:
+      goto failed;
+      break;
   }
 
   return GST_VC1_PARSER_OK;
@@ -1132,7 +1138,7 @@ static GstVC1ParserResult
 parse_frame_header (GstBitReader * br, GstVC1FrameHdr * framehdr,
     GstVC1SeqHdr * seqhdr, GstVC1BitPlanes * bitplanes)
 {
-  guint8 mvmodeidx;
+  guint8 mvmodeidx, tmp;
   GstVC1PicSimpleMain *pic = &framehdr->pic.simple;
   GstVC1SeqStructC *structc = &seqhdr->struct_c;
 
@@ -1154,12 +1160,14 @@ parse_frame_header (GstBitReader * br, GstVC1FrameHdr * framehdr,
   }
 
   /*  Figuring out the picture type */
-  READ_UINT8 (br, framehdr->ptype, 1);
+  READ_UINT8 (br, tmp, 1);
+  framehdr->ptype = tmp;
+
   if (structc->maxbframes) {
     if (!framehdr->ptype) {
-      READ_UINT8 (br, framehdr->ptype, 1);
+      READ_UINT8 (br, tmp, 1);
 
-      if (framehdr->ptype)
+      if (tmp)
         framehdr->ptype = GST_VC1_PICTURE_TYPE_I;
       else
         framehdr->ptype = GST_VC1_PICTURE_TYPE_B;
@@ -1328,6 +1336,10 @@ parse_frame_header (GstBitReader * br, GstVC1FrameHdr * framehdr,
           framehdr->transdctab, pic->mvmode, pic->mvtab, pic->cbptab,
           pic->directmb, pic->skipmb);
 
+      break;
+
+    default:
+      goto failed;
       break;
   }
 

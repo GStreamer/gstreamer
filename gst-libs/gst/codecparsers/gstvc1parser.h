@@ -130,6 +130,13 @@ typedef enum
   GST_VC1_MVMODE_INTENSITY_COMP
 } GstVC1MvMode;
 
+typedef enum
+{
+  GST_VC1_FRAME_PROGRESSIVE = 0x0,
+  GST_VC1_FRAME_INTERLACE   = 0x10,
+  GST_VC1_FIELD_INTERLACE   = 0x11
+} GstVC1FrameCodingMode;
+
 typedef struct _GstVC1SeqHdr            GstVC1SeqHdr;
 typedef struct _GstVC1AdvancedSeqHdr    GstVC1AdvancedSeqHdr;
 typedef struct _GstVC1HrdParam          GstVC1HrdParam;
@@ -200,7 +207,8 @@ struct _GstVC1EntryPointHdr
  */
 struct _GstVC1AdvancedSeqHdr
 {
-  guint8  level;
+  GstVC1Level  level;
+
   guint8 frmrtq_postproc;
   guint8 bitrtq_postproc;
   guint8  postprocflag;
@@ -248,7 +256,8 @@ struct _GstVC1SeqStructA
 
 struct _GstVC1SeqStructB
 {
-  guint8 level;
+  GstVC1Level  level;
+
   guint8 cbr;
   guint32 framerate;
 
@@ -372,7 +381,7 @@ struct _GstVC1PicSimpleMain
  */
 struct _GstVC1PicAdvanced
 {
-  guint8  fcm;
+  GstVC1FrameCodingMode fcm;
   guint8  tfcntr;
 
   guint8  rptfrm;
@@ -477,7 +486,7 @@ struct _GstVC1FrameLayer
 struct _GstVC1FrameHdr
 {
   /* common fields */
-  guint8 ptype;
+  GstVC1PictureType ptype;
   guint8 interpfrm;
   guint8 halfqp;
   guint8 transacfrm;
