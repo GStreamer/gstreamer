@@ -45,7 +45,6 @@
       <xi:include href="xml/gstbytewriter.xml" />
       <xi:include href="xml/gstcollectpads.xml" />
       <xi:include href="xml/gsttypefindhelper.xml" />
-      <xi:include href="xml/gstdataqueue.xml" />
     </chapter>
 
     <chapter id="gstreamer-control">

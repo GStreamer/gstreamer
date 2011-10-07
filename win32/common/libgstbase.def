@@ -222,18 +222,6 @@ EXPORTS
 	gst_collect_pads_start
 	gst_collect_pads_stop
 	gst_collect_pads_take_buffer
-	gst_data_queue_drop_head
-	gst_data_queue_flush
-	gst_data_queue_get_level
-	gst_data_queue_get_type
-	gst_data_queue_is_empty
-	gst_data_queue_is_full
-	gst_data_queue_limits_changed
-	gst_data_queue_new
-	gst_data_queue_new_full
-	gst_data_queue_pop
-	gst_data_queue_push
-	gst_data_queue_set_flushing
 	gst_push_src_get_type
 	gst_type_find_helper
 	gst_type_find_helper_for_buffer

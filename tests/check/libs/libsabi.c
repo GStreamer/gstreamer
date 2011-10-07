@@ -30,7 +30,6 @@
 #include <gst/base/gstbytereader.h>
 #include <gst/base/gstbytewriter.h>
 #include <gst/base/gstcollectpads.h>
-#include <gst/base/gstdataqueue.h>
 #include <gst/base/gstpushsrc.h>
 #include <gst/base/gsttypefindhelper.h>
 #include <gst/controller/gstcontroller.h>

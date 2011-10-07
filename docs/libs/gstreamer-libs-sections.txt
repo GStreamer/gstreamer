@@ -768,38 +768,6 @@ gst_type_find_helper_get_range_ext
 <SUBSECTION Private>
 </SECTION>
 
-<SECTION>
-<FILE>gstdataqueue</FILE>
-<TITLE>GstDataQueue</TITLE>
-<INCLUDE>gst/base/gstdataqueue.h</INCLUDE>
-GstDataQueue
-GstDataQueueSize
-GstDataQueueCheckFullFunction
-GstDataQueueItem
-GstDataQueueEmptyCallback
-GstDataQueueFullCallback
-gst_data_queue_new
-gst_data_queue_new_full
-gst_data_queue_push
-gst_data_queue_pop
-gst_data_queue_flush
-gst_data_queue_set_flushing
-gst_data_queue_drop_head
-gst_data_queue_is_full
-gst_data_queue_is_empty
-gst_data_queue_get_level
-gst_data_queue_limits_changed
-<SUBSECTION Standard>
-GstDataQueueClass
-GST_DATA_QUEUE
-GST_IS_DATA_QUEUE
-GST_TYPE_DATA_QUEUE
-GST_DATA_QUEUE_CLASS
-GST_IS_DATA_QUEUE_CLASS
-<SUBSECTION Private>
-gst_data_queue_get_type
-</SECTION>
-
 # net
 
 <SECTION>

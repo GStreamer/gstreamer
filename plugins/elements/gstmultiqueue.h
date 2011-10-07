@@ -24,7 +24,7 @@
 #define __GST_MULTI_QUEUE_H__
 
 #include <gst/gst.h>
-#include <gst/base/gstdataqueue.h>
+#include "gstdataqueue.h"
 
 G_BEGIN_DECLS
 
