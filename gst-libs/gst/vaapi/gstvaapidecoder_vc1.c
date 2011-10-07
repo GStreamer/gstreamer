@@ -907,6 +907,7 @@ decode_frame(GstVaapiDecoderVC1 *decoder, GstVC1BDU *rbdu, GstVC1BDU *ebdu)
     GstVaapiSlice *slice;
     GstVaapiDecoderStatus status;
     VASliceParameterBufferVC1 *slice_param;
+    GstClockTime pts;
 
     status = ensure_context(decoder);
     if (status != GST_VAAPI_DECODER_STATUS_SUCCESS) {
@@ -967,6 +968,10 @@ decode_frame(GstVaapiDecoderVC1 *decoder, GstVC1BDU *rbdu, GstVC1BDU *ebdu)
         GST_DEBUG("unsupported picture type %d", frame_hdr->ptype);
         return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
     }
+
+    /* Update presentation time */
+    pts = gst_vaapi_tsb_get_timestamp(priv->tsb);
+    picture->pts = pts;
 
     /* Update reference pictures */
     if (GST_VAAPI_PICTURE_IS_REFERENCE(picture)) {
@@ -1106,6 +1111,8 @@ decode_buffer(GstVaapiDecoderVC1 *decoder, GstBuffer *buffer)
     if (!buf && buf_size == 0)
         return decode_sequence_end(decoder);
 
+    gst_vaapi_tsb_push(priv->tsb, buffer);
+
     /* Assume demuxer sends out plain frames if codec-data */
     codec_data = GST_VAAPI_DECODER_CODEC_DATA(decoder);
     if (codec_data && codec_data != buffer) {
@@ -1114,10 +1121,10 @@ decode_buffer(GstVaapiDecoderVC1 *decoder, GstBuffer *buffer)
         ebdu.sc_offset = 0;
         ebdu.offset    = 0;
         ebdu.data      = buf;
-        return decode_ebdu(decoder, &ebdu);
+        status = decode_ebdu(decoder, &ebdu);
+        gst_vaapi_tsb_pop(priv->tsb, buf_size);
+        return status;
     }
-
-    gst_vaapi_tsb_push(priv->tsb, buffer);
 
     if (priv->sub_buffer) {
         buffer = gst_buffer_merge(priv->sub_buffer, buffer);
@@ -1146,7 +1153,9 @@ decode_buffer(GstVaapiDecoderVC1 *decoder, GstBuffer *buffer)
             break;
 
         ofs += ebdu.offset + ebdu.size;
+        gst_vaapi_tsb_pop(priv->tsb, ebdu.offset);
         status = decode_ebdu(decoder, &ebdu);
+        gst_vaapi_tsb_pop(priv->tsb, ebdu.size);
     } while (status == GST_VAAPI_DECODER_STATUS_SUCCESS);
     return status;
 }
