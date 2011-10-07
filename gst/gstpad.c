@@ -4258,10 +4258,8 @@ gst_pad_chain_data_unchecked (GstPad * pad, gboolean is_buffer, void *data,
       goto no_function;
 
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
-        "calling chainfunction &%s with %s buffer %p, ts %" GST_TIME_FORMAT,
-        GST_DEBUG_FUNCPTR_NAME (chainfunc),
-        (caps) ? gst_structure_get_name (gst_caps_get_structure (caps, 0)) : "",
-        GST_BUFFER (data), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (data)));
+        "calling chainfunction &%s with buffer %" GST_PTR_FORMAT,
+        GST_DEBUG_FUNCPTR_NAME (chainfunc), GST_BUFFER (data));
 
     if (cache) {
       cache->peer = gst_object_ref (pad);
@@ -4704,10 +4702,8 @@ gst_pad_push (GstPad * pad, GstBuffer * buffer)
     goto invalid;
 
   GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
-      "calling chainfunction &%s with %s buffer %p, ts %" GST_TIME_FORMAT,
-      GST_DEBUG_FUNCPTR_NAME (GST_PAD_CHAINFUNC (peer)),
-      (caps) ? gst_structure_get_name (gst_caps_get_structure (caps, 0)) : "",
-      GST_BUFFER (buffer), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)));
+      "calling chainfunction &%s with buffer %" GST_PTR_FORMAT,
+      GST_DEBUG_FUNCPTR_NAME (GST_PAD_CHAINFUNC (peer)), buffer);
 
   ret = GST_PAD_CHAINFUNC (peer) (peer, buffer);
 

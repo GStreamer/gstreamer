@@ -632,6 +632,23 @@ gst_debug_print_object (gpointer ptr)
   if (*(GType *) ptr == GST_TYPE_STRUCTURE) {
     return gst_info_structure_to_string ((GstStructure *) ptr);
   }
+  if (GST_IS_BUFFER (ptr)) {
+    GstBuffer *buf = (GstBuffer *) ptr;
+    gchar *caps, *ret;
+
+    caps = gst_caps_to_string (GST_BUFFER_CAPS (buf));
+    ret =
+        g_strdup_printf ("%p, data %p, malloc %p, ts %" GST_TIME_FORMAT
+        ", dur %" GST_TIME_FORMAT ", size %u, offset %" G_GUINT64_FORMAT
+        ", offset_end %" G_GUINT64_FORMAT ", caps: %s", buf,
+        GST_BUFFER_DATA (buf), GST_BUFFER_MALLOCDATA (buf),
+        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
+        GST_TIME_ARGS (GST_BUFFER_DURATION (buf)), GST_BUFFER_SIZE (buf),
+        GST_BUFFER_OFFSET (buf), GST_BUFFER_OFFSET_END (buf), caps);
+
+    g_free (caps);
+    return ret;
+  }
 #ifdef USE_POISONING
   if (*(guint32 *) ptr == 0xffffffff) {
     return g_strdup_printf ("<poisoned@%p>", ptr);
