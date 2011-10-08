@@ -787,9 +787,9 @@ gst_audio_test_src_create_red_noise_##type (GstAudioTestSrc * src, g##type * sam
   for (i = 0; i < src->generate_samples_per_buffer * channels; ) { \
     for (c = 0; c < channels; ++c) { \
       while (TRUE) { \
-        gdouble  r = g_rand_double_range (src->gen, -1.0, 1.0); \
+        gdouble r = g_rand_double_range (src->gen, -1.0, 1.0); \
         state += r; \
-        if (state<-8.0f || state>8.0f) state -= r; \
+        if (state < -8.0f || state > 8.0f) state -= r; \
         else break; \
       } \
       samples[i++] = (g##type) (amp * state * 0.0625f); /* /16.0 */ \
@@ -958,6 +958,7 @@ gst_audio_test_src_change_wave (GstAudioTestSrc * src)
         src->gen = g_rand_new ();
       src->red.state = 0.0;
       src->process = violet_noise_funcs[idx];
+      break;
     default:
       GST_ERROR ("invalid wave-form");
       break;

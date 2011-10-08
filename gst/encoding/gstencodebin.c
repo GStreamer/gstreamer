@@ -1090,45 +1090,6 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
   last = sgroup->outfilter;
 
 
-  /* FIXME :
-   *
-   *   The usage of parsers in encoding/muxing scenarios is
-   * just too undefined to just use as-is.
-   *
-   * Take the use-case where you want to re-mux a stream of type
-   * "my/media". You create a StreamEncodingProfile with that type
-   * as the target (as-is). And you use decodebin2/uridecodebin
-   * upstream.
-   *
-   * * demuxer exposes "my/media"
-   * * a parser is available for "my/media" which has a source pad
-   *   caps of "my/media,parsed=True"
-   * * decodebin2/uridecodebin exposes a new pad with the parsed caps
-   * * You request a new stream from encodebin, which will match the
-   *   streamprofile and creates a group (i.e. going through this method)
-   *   There is a matching parser (the same used in the decoder) whose
-   *   source pad caps intersects with the stream profile caps, you
-   *   therefore use it...
-   * * ... but that parser has a "my/media,parsed=False" sink pad caps
-   * * ... and you can't link your decodebin pad to encodebin.
-   *
-   * In the end, it comes down to parsers only taking into account the
-   * decoding use-cases.
-   *
-   * One way to solve that might be to :
-   * * Make parsers sink pad caps be "framed={False,True}" and the
-   *   source pad caps be "framed=True"
-   * * Modify decodebin2 accordingly to avoid looping and chaining
-   *   an infinite number of parsers
-   *
-   * Another way would be to have "well-known" caps properties to specify
-   * whether a stream has been parsed or not.
-   * * currently we fail. aacparse uses 'framed' and mp3parse uses 'parsed'
-   */
-  /* FIXME : Re-enable once parser situation is un-$#*@(%$#ed */
-#if 0
-  /* Parser.
-   * FIXME : identify smart parsers (used for re-encoding) */
   sgroup->parser = _get_parser (ebin, sprof);
 
   if (sgroup->parser != NULL) {
@@ -1139,7 +1100,6 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
       goto parser_link_failure;
     last = sgroup->parser;
   }
-#endif
 
   /* Stream combiner */
   sgroup->combiner = g_object_new (GST_TYPE_STREAM_COMBINER, NULL);
@@ -1467,11 +1427,9 @@ combiner_link_failure:
   GST_ERROR_OBJECT (ebin, "Failure linking to the combiner");
   goto cleanup;
 
-#if 0
 parser_link_failure:
   GST_ERROR_OBJECT (ebin, "Failure linking the parser");
   goto cleanup;
-#endif
 
 converter_link_failure:
   GST_ERROR_OBJECT (ebin, "Failure linking the video converters");

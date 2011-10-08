@@ -1504,6 +1504,9 @@ gst_audio_encoder_src_query (GstPad * pad, GstQuery * query)
   gboolean res = FALSE;
 
   enc = GST_AUDIO_ENCODER (GST_PAD_PARENT (pad));
+  if (G_UNLIKELY (enc == NULL))
+    return FALSE;
+
   peerpad = gst_pad_get_peer (GST_PAD (enc->sinkpad));
 
   GST_LOG_OBJECT (enc, "handling query: %" GST_PTR_FORMAT, query);

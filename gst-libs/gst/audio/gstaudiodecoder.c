@@ -1579,6 +1579,10 @@ gst_audio_decoder_src_event (GstPad * pad, GstEvent * event)
   gboolean res = FALSE;
 
   dec = GST_AUDIO_DECODER (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (dec == NULL)) {
+    gst_event_unref (event);
+    return FALSE;
+  }
 
   GST_DEBUG_OBJECT (dec, "received event %d, %s", GST_EVENT_TYPE (event),
       GST_EVENT_TYPE_NAME (event));
@@ -1779,6 +1783,9 @@ gst_audio_decoder_src_query (GstPad * pad, GstQuery * query)
   gboolean res = FALSE;
 
   dec = GST_AUDIO_DECODER (GST_PAD_PARENT (pad));
+  if (G_UNLIKELY (dec == NULL))
+    return FALSE;
+
   peerpad = gst_pad_get_peer (GST_PAD (dec->sinkpad));
 
   GST_LOG_OBJECT (dec, "handling query: %" GST_PTR_FORMAT, query);

@@ -11,7 +11,8 @@ libgstvorbis_la_SOURCES = gstvorbis.c \
 			  gstvorbistag.c \
 			  gstvorbiscommon.c
 
-libgstvorbis_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) $(VORBIS_CFLAGS)
+libgstvorbis_la_CFLAGS = -DGST_USE_UNSTABLE_API \
+	$(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) $(VORBIS_CFLAGS)
 ## AM_PATH_VORBIS also sets VORBISENC_LIBS
 libgstvorbis_la_LIBADD = \
 	$(top_builddir)/gst-libs/gst/tag/libgsttag-@GST_MAJORMINOR@.la \
@@ -27,7 +28,8 @@ plugin_LTLIBRARIES += libgstivorbisdec.la
 
 libgstivorbisdec_la_SOURCES = gstivorbisdec.c \
 	gstvorbisdec.c gstvorbisdeclib.c gstvorbiscommon.c
-libgstivorbisdec_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) \
+libgstivorbisdec_la_CFLAGS = -DGST_USE_UNSTABLE_API \
+	$(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) \
 	-DTREMOR $(IVORBIS_CFLAGS)
 libgstivorbisdec_la_LIBADD = \
 	$(top_builddir)/gst-libs/gst/tag/libgsttag-@GST_MAJORMINOR@.la \
