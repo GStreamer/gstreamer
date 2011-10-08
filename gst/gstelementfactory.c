@@ -77,7 +77,7 @@ static void gst_element_factory_cleanup (GstElementFactory * factory);
 /* static guint gst_element_factory_signals[LAST_SIGNAL] = { 0 }; */
 
 /* this is defined in gstelement.c */
-extern GQuark _gst_elementclass_factory;
+extern GQuark __gst_elementclass_factory;
 
 #define _do_init \
 { \
@@ -219,7 +219,7 @@ gst_element_register (GstPlugin * plugin, const gchar * name, guint rank,
     factory = GST_ELEMENT_FACTORY_CAST (existing_feature);
     factory->type = type;
     existing_feature->loaded = TRUE;
-    g_type_set_qdata (type, _gst_elementclass_factory, factory);
+    g_type_set_qdata (type, __gst_elementclass_factory, factory);
     gst_object_unref (existing_feature);
     return TRUE;
   }
@@ -232,7 +232,7 @@ gst_element_register (GstPlugin * plugin, const gchar * name, guint rank,
       g_type_name (type));
 
   /* provide info needed during class structure setup */
-  g_type_set_qdata (type, _gst_elementclass_factory, factory);
+  g_type_set_qdata (type, __gst_elementclass_factory, factory);
   klass = GST_ELEMENT_CLASS (g_type_class_ref (type));
 #if 0
   /* FIXME */
