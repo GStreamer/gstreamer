@@ -75,63 +75,50 @@ static gboolean gst_rtmp_sink_stop (GstBaseSink * sink);
 static gboolean gst_rtmp_sink_start (GstBaseSink * sink);
 static GstFlowReturn gst_rtmp_sink_render (GstBaseSink * sink, GstBuffer * buf);
 
-static void
-_do_init (GType gtype)
-{
-  static const GInterfaceInfo urihandler_info = {
-    gst_rtmp_sink_uri_handler_init,
-    NULL,
-    NULL
-  };
-
-  g_type_add_interface_static (gtype, GST_TYPE_URI_HANDLER, &urihandler_info);
-
-  GST_DEBUG_CATEGORY_INIT (gst_rtmp_sink_debug, "rtmpsink", 0,
-      "RTMP server element");
-}
-
-GST_BOILERPLATE_FULL (GstRTMPSink, gst_rtmp_sink, GstBaseSink,
-    GST_TYPE_BASE_SINK, _do_init);
-
-
-static void
-gst_rtmp_sink_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_set_details_simple (element_class,
-      "RTMP output sink",
-      "Sink/Network", "Sends FLV content to a server via RTMP",
-      "Jan Schmidt <thaytan@noraisin.net>");
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_template));
-}
+#define gst_rtmp_sink_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstRTMPSink, gst_rtmp_sink, GST_TYPE_BASE_SINK,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER,
+        gst_rtmp_sink_uri_handler_init));
 
 /* initialize the plugin's class */
 static void
 gst_rtmp_sink_class_init (GstRTMPSinkClass * klass)
 {
   GObjectClass *gobject_class;
-  GstBaseSinkClass *gstbasesink_class = (GstBaseSinkClass *) klass;
+  GstElementClass *gstelement_class;
+  GstBaseSinkClass *gstbasesink_class;
 
   gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
+  gstbasesink_class = (GstBaseSinkClass *) klass;
+
   gobject_class->set_property = gst_rtmp_sink_set_property;
   gobject_class->get_property = gst_rtmp_sink_get_property;
+
+  gst_element_class_install_std_props (gstelement_class,
+      "location", PROP_LOCATION, G_PARAM_READWRITE, NULL);
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "RTMP output sink",
+      "Sink/Network", "Sends FLV content to a server via RTMP",
+      "Jan Schmidt <thaytan@noraisin.net>");
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sink_template));
 
   gstbasesink_class->start = GST_DEBUG_FUNCPTR (gst_rtmp_sink_start);
   gstbasesink_class->stop = GST_DEBUG_FUNCPTR (gst_rtmp_sink_stop);
   gstbasesink_class->render = GST_DEBUG_FUNCPTR (gst_rtmp_sink_render);
 
-  gst_element_class_install_std_props (GST_ELEMENT_CLASS (klass),
-      "location", PROP_LOCATION, G_PARAM_READWRITE, NULL);
+  GST_DEBUG_CATEGORY_INIT (gst_rtmp_sink_debug, "rtmpsink", 0,
+      "RTMP server element");
 }
 
 /* initialize the new element
  * initialize instance structure
  */
 static void
-gst_rtmp_sink_init (GstRTMPSink * sink, GstRTMPSinkClass * klass)
+gst_rtmp_sink_init (GstRTMPSink * sink)
 {
 }
 
@@ -194,6 +181,8 @@ gst_rtmp_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 {
   GstRTMPSink *sink = GST_RTMP_SINK (bsink);
   GstBuffer *reffed_buf = NULL;
+  guint8 *data;
+  gsize size;
 
   if (sink->first) {
     /* open the connection */
@@ -214,7 +203,7 @@ gst_rtmp_sink_render (GstBaseSink * bsink, GstBuffer * buf)
     /* FIXME: Parse the first buffer and see if it contains a header plus a packet instead
      * of just assuming it's only the header */
     GST_LOG_OBJECT (sink, "Caching first buffer of size %d for concatenation",
-        GST_BUFFER_SIZE (buf));
+        gst_buffer_get_size (buf));
     gst_buffer_replace (&sink->cache, buf);
     sink->first = FALSE;
     return GST_FLOW_OK;
@@ -222,40 +211,48 @@ gst_rtmp_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 
   if (sink->cache) {
     GST_LOG_OBJECT (sink, "Joining 2nd buffer of size %d to cached buf",
-        GST_BUFFER_SIZE (buf));
+        gst_buffer_get_size (buf));
     gst_buffer_ref (buf);
     reffed_buf = buf = gst_buffer_join (sink->cache, buf);
     sink->cache = NULL;
   }
 
   GST_LOG_OBJECT (sink, "Sending %d bytes to RTMP server",
-      GST_BUFFER_SIZE (buf));
+      gst_buffer_get_size (buf));
 
-  if (!RTMP_Write (sink->rtmp,
-          (char *) GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf))) {
-    GST_ELEMENT_ERROR (sink, RESOURCE, WRITE, (NULL), ("Failed to write data"));
-    if (reffed_buf)
-      gst_buffer_unref (reffed_buf);
-    return GST_FLOW_ERROR;
-  }
+  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
 
+  if (!RTMP_Write (sink->rtmp, (char *) data, size))
+    goto write_failed;
+
+  gst_buffer_unmap (buf, data, size);
   if (reffed_buf)
     gst_buffer_unref (reffed_buf);
 
   return GST_FLOW_OK;
+
+  /* ERRORS */
+write_failed:
+  {
+    GST_ELEMENT_ERROR (sink, RESOURCE, WRITE, (NULL), ("Failed to write data"));
+    gst_buffer_unmap (buf, data, size);
+    if (reffed_buf)
+      gst_buffer_unref (reffed_buf);
+    return GST_FLOW_ERROR;
+  }
 }
 
 /*
  * URI interface support.
  */
 static GstURIType
-gst_rtmp_sink_uri_get_type (void)
+gst_rtmp_sink_uri_get_type (GType type)
 {
   return GST_URI_SINK;
 }
 
 static gchar **
-gst_rtmp_sink_uri_get_protocols (void)
+gst_rtmp_sink_uri_get_protocols (GType type)
 {
   static gchar *protocols[] =
       { (char *) "rtmp", (char *) "rtmpt", (char *) "rtmps", (char *) "rtmpe",

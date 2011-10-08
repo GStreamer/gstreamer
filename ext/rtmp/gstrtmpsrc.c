@@ -88,47 +88,21 @@ static GstFlowReturn gst_rtmp_src_create (GstPushSrc * pushsrc,
     GstBuffer ** buffer);
 static gboolean gst_rtmp_src_query (GstBaseSrc * src, GstQuery * query);
 
-static void
-_do_init (GType gtype)
-{
-  static const GInterfaceInfo urihandler_info = {
-    gst_rtmp_src_uri_handler_init,
-    NULL,
-    NULL
-  };
-
-  g_type_add_interface_static (gtype, GST_TYPE_URI_HANDLER, &urihandler_info);
-
-  GST_DEBUG_CATEGORY_INIT (rtmpsrc_debug, "rtmpsrc", 0, "RTMP Source");
-}
-
-GST_BOILERPLATE_FULL (GstRTMPSrc, gst_rtmp_src, GstPushSrc, GST_TYPE_PUSH_SRC,
-    _do_init);
-
-static void
-gst_rtmp_src_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&srctemplate));
-
-  gst_element_class_set_details_simple (element_class,
-      "RTMP Source",
-      "Source/File",
-      "Read RTMP streams",
-      "Bastien Nocera <hadess@hadess.net>, "
-      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
-}
+#define gst_rtmp_src_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstRTMPSrc, gst_rtmp_src, GST_TYPE_PUSH_SRC,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER,
+        gst_rtmp_src_uri_handler_init));
 
 static void
 gst_rtmp_src_class_init (GstRTMPSrcClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
   GstBaseSrcClass *gstbasesrc_class;
   GstPushSrcClass *gstpushsrc_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
+  gstelement_class = GST_ELEMENT_CLASS (klass);
   gstbasesrc_class = GST_BASE_SRC_CLASS (klass);
   gstpushsrc_class = GST_PUSH_SRC_CLASS (klass);
 
@@ -137,8 +111,18 @@ gst_rtmp_src_class_init (GstRTMPSrcClass * klass)
   gobject_class->get_property = gst_rtmp_src_get_property;
 
   /* properties */
-  gst_element_class_install_std_props (GST_ELEMENT_CLASS (klass),
+  gst_element_class_install_std_props (gstelement_class,
       "location", PROP_LOCATION, G_PARAM_READWRITE, NULL);
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&srctemplate));
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "RTMP Source",
+      "Source/File",
+      "Read RTMP streams",
+      "Bastien Nocera <hadess@hadess.net>, "
+      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
 
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_rtmp_src_start);
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_rtmp_src_stop);
@@ -148,10 +132,12 @@ gst_rtmp_src_class_init (GstRTMPSrcClass * klass)
   gstbasesrc_class->do_seek = GST_DEBUG_FUNCPTR (gst_rtmp_src_do_seek);
   gstpushsrc_class->create = GST_DEBUG_FUNCPTR (gst_rtmp_src_create);
   gstbasesrc_class->query = GST_DEBUG_FUNCPTR (gst_rtmp_src_query);
+
+  GST_DEBUG_CATEGORY_INIT (rtmpsrc_debug, "rtmpsrc", 0, "RTMP Source");
 }
 
 static void
-gst_rtmp_src_init (GstRTMPSrc * rtmpsrc, GstRTMPSrcClass * klass)
+gst_rtmp_src_init (GstRTMPSrc * rtmpsrc)
 {
   rtmpsrc->cur_offset = 0;
   rtmpsrc->last_timestamp = 0;
@@ -175,13 +161,13 @@ gst_rtmp_src_finalize (GObject * object)
  */
 
 static GstURIType
-gst_rtmp_src_uri_get_type (void)
+gst_rtmp_src_uri_get_type (GType type)
 {
   return GST_URI_SRC;
 }
 
 static gchar **
-gst_rtmp_src_uri_get_protocols (void)
+gst_rtmp_src_uri_get_protocols (GType type)
 {
   static gchar *protocols[] =
       { (char *) "rtmp", (char *) "rtmpt", (char *) "rtmps", (char *) "rtmpe",
@@ -286,8 +272,9 @@ gst_rtmp_src_create (GstPushSrc * pushsrc, GstBuffer ** buffer)
 {
   GstRTMPSrc *src;
   GstBuffer *buf;
-  guint8 *data;
+  guint8 *data, *bdata;
   guint todo;
+  gsize bsize;
   int read;
   int size;
 
@@ -300,15 +287,15 @@ gst_rtmp_src_create (GstPushSrc * pushsrc, GstBuffer ** buffer)
   GST_DEBUG ("reading from %" G_GUINT64_FORMAT
       ", size %u", src->cur_offset, size);
 
-  buf = gst_buffer_try_new_and_alloc (size);
+  buf = gst_buffer_new_allocate (NULL, size, 0);
   if (G_UNLIKELY (buf == NULL)) {
     GST_ERROR_OBJECT (src, "Failed to allocate %u bytes", size);
     return GST_FLOW_ERROR;
   }
 
-  todo = size;
-  data = GST_BUFFER_DATA (buf);
-  read = 0;
+  bsize = todo = size;
+  bdata = data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
+  read = bsize = 0;
 
   while (todo > 0) {
     read = RTMP_Read (src->rtmp, (char *) data, todo);
@@ -316,7 +303,6 @@ gst_rtmp_src_create (GstPushSrc * pushsrc, GstBuffer ** buffer)
     if (G_UNLIKELY (read == 0 && todo == size)) {
       goto eos;
     } else if (G_UNLIKELY (read == 0)) {
-      GST_BUFFER_SIZE (buf) -= todo;
       todo = 0;
       break;
     }
@@ -325,13 +311,16 @@ gst_rtmp_src_create (GstPushSrc * pushsrc, GstBuffer ** buffer)
       goto read_failed;
 
     if (read < todo) {
-      data = &data[read];
+      data += read;
       todo -= read;
+      bsize += read;
     } else {
       todo = 0;
+      bsize += todo;
     }
     GST_LOG ("  got size %d", read);
   }
+  gst_buffer_unmap (buf, bdata, bsize);
 
   if (src->discont) {
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
@@ -465,7 +454,7 @@ gst_rtmp_src_prepare_seek_segment (GstBaseSrc * basesrc, GstEvent * event,
   }
 
   gst_segment_init (segment, GST_FORMAT_TIME);
-  gst_segment_set_seek (segment, rate, format, flags, cur_type, cur, stop_type,
+  gst_segment_do_seek (segment, rate, format, flags, cur_type, cur, stop_type,
       stop, NULL);
 
   return TRUE;
