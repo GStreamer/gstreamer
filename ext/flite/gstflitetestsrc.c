@@ -86,16 +86,13 @@ static GstStaticPadTemplate gst_flite_test_src_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, "
-        "endianness = (int) BYTE_ORDER, "
-        "signed = (boolean) true, "
-        "width = (int) 16, "
-        "depth = (int) 16, " "rate = (int) 48000, " "channels = (int) [1,8]")
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) " GST_AUDIO_NE (s16) ", "
+        "rate = (int) 48000, " "channels = (int) [1,8]")
     );
 
-
-GST_BOILERPLATE (GstFliteTestSrc, gst_flite_test_src, GstBaseSrc,
-    GST_TYPE_BASE_SRC);
+#define gst_flite_test_src_parent_class parent_class
+G_DEFINE_TYPE (GstFliteTestSrc, gst_flite_test_src, GST_TYPE_BASE_SRC);
 
 static void gst_flite_test_src_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
@@ -109,39 +106,19 @@ static GstFlowReturn gst_flite_test_src_create (GstBaseSrc * basesrc,
 static gboolean
 gst_flite_test_src_set_caps (GstBaseSrc * basesrc, GstCaps * caps);
 
-
-static void
-gst_flite_test_src_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  GST_DEBUG_CATEGORY_INIT (flite_test_src_debug, "flitetestsrc", 0,
-      "Flite Audio Test Source");
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_flite_test_src_src_template));
-  gst_element_class_set_details_simple (element_class,
-      "Flite speech test source", "Source/Audio",
-      "Creates audio test signals identifying channels",
-      "David Schleef <ds@schleef.org>");
-}
-
 static void
 gst_flite_test_src_class_init (GstFliteTestSrcClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
   GstBaseSrcClass *gstbasesrc_class;
 
   gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
   gstbasesrc_class = (GstBaseSrcClass *) klass;
 
   gobject_class->set_property = gst_flite_test_src_set_property;
   gobject_class->get_property = gst_flite_test_src_get_property;
-
-  gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_flite_test_src_start);
-  gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_flite_test_src_stop);
-  gstbasesrc_class->create = GST_DEBUG_FUNCPTR (gst_flite_test_src_create);
-  gstbasesrc_class->set_caps = GST_DEBUG_FUNCPTR (gst_flite_test_src_set_caps);
 
   g_object_class_install_property (gobject_class, PROP_SAMPLES_PER_BUFFER,
       g_param_spec_int ("samplesperbuffer", "Samples per buffer",
@@ -149,15 +126,26 @@ gst_flite_test_src_class_init (GstFliteTestSrcClass * klass)
           1, G_MAXINT, DEFAULT_SAMPLES_PER_BUFFER,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_flite_test_src_src_template));
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "Flite speech test source", "Source/Audio",
+      "Creates audio test signals identifying channels",
+      "David Schleef <ds@schleef.org>");
+
+  gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_flite_test_src_start);
+  gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_flite_test_src_stop);
+  gstbasesrc_class->create = GST_DEBUG_FUNCPTR (gst_flite_test_src_create);
+  gstbasesrc_class->set_caps = GST_DEBUG_FUNCPTR (gst_flite_test_src_set_caps);
+
+  GST_DEBUG_CATEGORY_INIT (flite_test_src_debug, "flitetestsrc", 0,
+      "Flite Audio Test Source");
 }
 
 static void
-gst_flite_test_src_init (GstFliteTestSrc * src, GstFliteTestSrcClass * g_class)
+gst_flite_test_src_init (GstFliteTestSrc * src)
 {
-#if 0
-  GstPad *pad = GST_BASE_SRC_PAD (src);
-#endif
-
   src->samplerate = 48000;
   src->samples_per_buffer = DEFAULT_SAMPLES_PER_BUFFER;
 
@@ -367,6 +355,7 @@ gst_flite_test_src_create (GstBaseSrc * basesrc, guint64 offset,
     int i;
     gint16 *data;
     cst_wave *wave;
+    gsize size;
 
     text = get_channel_name (src, src->channel);
 
@@ -377,14 +366,15 @@ gst_flite_test_src_create (GstBaseSrc * basesrc, guint64 offset,
     GST_DEBUG ("type %s, sample_rate %d, num_samples %d, num_channels %d",
         wave->type, wave->sample_rate, wave->num_samples, wave->num_channels);
 
-    buf = gst_buffer_new_and_alloc (src->n_channels * sizeof (gint16) *
-        wave->num_samples);
+    size = src->n_channels * sizeof (gint16) * wave->num_samples;
+    buf = gst_buffer_new_and_alloc (size);
 
-    data = (void *) GST_BUFFER_DATA (buf);
-    memset (data, 0, src->n_channels * sizeof (gint16) * wave->num_samples);
+    data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
+    memset (data, 0, size);
     for (i = 0; i < wave->num_samples; i++) {
       data[i * src->n_channels + src->channel] = wave->samples[i];
     }
+    gst_buffer_unmap (buf, data, size);
 
     src->channel++;
     if (src->channel == src->n_channels) {
