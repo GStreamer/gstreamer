@@ -303,14 +303,9 @@ _priv_gst_in_valgrind (void)
   return (in_valgrind == GST_VG_INSIDE);
 }
 
-/**
- * _gst_debug_init:
- *
- * Initializes the debugging system.
- * Normally you don't want to call this, because gst_init() does it for you.
- */
+/* Initialize the debugging system */
 void
-_gst_debug_init (void)
+_priv_gst_debug_init (void)
 {
   const gchar *env;
 

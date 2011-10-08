@@ -577,7 +577,9 @@ init_pre (GOptionContext * context, GOptionGroup * group, gpointer data,
   /* we need threading to be enabled right here */
   g_assert (g_thread_get_initialized ());
 
-  _gst_debug_init ();
+#ifndef GST_DISABLE_GST_DEBUG
+  _priv_gst_debug_init ();
+#endif
 
 #ifdef ENABLE_NLS
   setlocale (LC_ALL, "");

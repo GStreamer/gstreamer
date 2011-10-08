@@ -256,11 +256,6 @@ typedef void (*GstLogFunction)  (GstDebugCategory * category,
                                  GstDebugMessage  * message,
                                  gpointer           data);
 
-
-/* FIXME 0.11: move this into private headers */
-void            _gst_debug_init (void);
-
-
 #ifdef GST_USING_PRINTF_EXTENSION
 
 /* not using G_GNUC_PRINTF, since gcc will choke on GST_PTR_FORMAT being %P */
@@ -1261,8 +1256,6 @@ GST_TRACE (const char *format, ...)
 #endif
 
 #define _gst_debug_min GST_LEVEL_NONE
-
-#define _gst_debug_init()				G_STMT_START{ }G_STMT_END
 
 #define gst_debug_set_default_threshold(level)		G_STMT_START{ }G_STMT_END
 #define gst_debug_get_default_threshold()		(GST_LEVEL_NONE)

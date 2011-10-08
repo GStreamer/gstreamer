@@ -79,6 +79,7 @@ struct _GstPluginPrivate {
   GstStructure *cache_data;
 };
 
+/* FIXME: could rename all priv_gst_* functions to __gst_* now */
 gboolean priv_gst_plugin_loading_have_whitelist (void);
 
 guint32  priv_gst_plugin_loading_get_whitelist_hash (void);
@@ -106,6 +107,7 @@ void  _priv_gst_plugin_initialize (void);
 void  _priv_gst_query_initialize (void);
 void  _priv_gst_tag_initialize (void);
 void  _priv_gst_value_initialize (void);
+void  _priv_gst_debug_init (void);
 
 /* Private registry functions */
 gboolean _priv_gst_registry_remove_cache_plugins (GstRegistry *registry);
