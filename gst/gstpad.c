@@ -3598,9 +3598,8 @@ gst_pad_chain_data_unchecked (GstPad * pad, GstProbeType type, void *data)
       goto no_function;
 
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
-        "calling chainfunction &%s with buffer %p, ts %" GST_TIME_FORMAT,
-        GST_DEBUG_FUNCPTR_NAME (chainfunc),
-        GST_BUFFER (data), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (data)));
+        "calling chainfunction &%s with buffer %" GST_PTR_FORMAT,
+        GST_DEBUG_FUNCPTR_NAME (chainfunc), GST_BUFFER (data));
 
     ret = chainfunc (pad, GST_BUFFER_CAST (data));
 
