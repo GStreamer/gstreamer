@@ -335,7 +335,7 @@ gst_parse_launch_full (const gchar * pipeline_description,
   GST_CAT_INFO (GST_CAT_PIPELINE, "parsing pipeline description '%s'",
       pipeline_description);
 
-  element = _gst_parse_launch (pipeline_description, error, context, flags);
+  element = priv_gst_parse_launch (pipeline_description, error, context, flags);
 
   /* don't return partially constructed pipeline if FATAL_ERRORS was given */
   if (G_UNLIKELY (error != NULL && *error != NULL && element != NULL)) {
