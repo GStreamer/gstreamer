@@ -117,7 +117,8 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("text/plain; text/x-pango-markup; " GST_KATE_SPU_MIME_TYPE)
     );
 
-GST_BOILERPLATE (GstKateDec, gst_kate_dec, GstElement, GST_TYPE_ELEMENT);
+#define gst_kate_dec_parent_class parent_class
+G_DEFINE_TYPE (GstKateDec, gst_kate_dec, GST_TYPE_ELEMENT);
 
 static void gst_kate_dec_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -130,23 +131,7 @@ static GstStateChangeReturn gst_kate_dec_change_state (GstElement * element,
 static gboolean gst_kate_dec_sink_query (GstPad * pad, GstQuery * query);
 static gboolean gst_kate_dec_sink_event (GstPad * pad, GstEvent * event);
 static gboolean gst_kate_dec_sink_handle_event (GstPad * pad, GstEvent * event);
-static GstCaps *gst_kate_dec_src_get_caps (GstPad * pad);
-
-static void
-gst_kate_dec_base_init (gpointer gclass)
-{
-
-  GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_factory));
-  gst_element_class_set_details_simple (element_class,
-      "Kate stream text decoder", "Codec/Decoder/Subtitle",
-      "Decodes Kate text streams",
-      "Vincent Penquerc'h <ogg.k.ogg.k@googlemail.com>");
-}
+static GstCaps *gst_kate_dec_src_get_caps (GstPad * pad, GstCaps * filter);
 
 /* initialize the plugin's class */
 static void
@@ -170,6 +155,16 @@ gst_kate_dec_class_init (GstKateDecClass * klass)
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_kate_dec_change_state);
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&src_factory));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sink_factory));
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "Kate stream text decoder", "Codec/Decoder/Subtitle",
+      "Decodes Kate text streams",
+      "Vincent Penquerc'h <ogg.k.ogg.k@googlemail.com>");
 }
 
 /* initialize the new element
@@ -178,7 +173,7 @@ gst_kate_dec_class_init (GstKateDecClass * klass)
  * initialize structure
  */
 static void
-gst_kate_dec_init (GstKateDec * dec, GstKateDecClass * gclass)
+gst_kate_dec_init (GstKateDec * dec)
 {
   GST_DEBUG_OBJECT (dec, "gst_kate_dec_init");
 
@@ -295,11 +290,10 @@ gst_kate_dec_chain (GstPad * pad, GstBuffer * buf)
         if (G_LIKELY (buffer)) {
           const char *mime = plain ? "text/plain" : "text/x-pango-markup";
           GstCaps *caps = gst_caps_new_simple (mime, NULL);
-          gst_buffer_set_caps (buffer, caps);
           gst_caps_unref (caps);
           /* allocate and copy the NULs, but don't include them in passed size */
-          memcpy (GST_BUFFER_DATA (buffer), escaped, len + 1);
-          GST_BUFFER_SIZE (buffer) = len;
+          gst_buffer_fill (buffer, 0, escaped, len + 1);
+          gst_buffer_resize (buffer, 0, len);
           GST_BUFFER_TIMESTAMP (buffer) = ev->start_time * GST_SECOND;
           GST_BUFFER_DURATION (buffer) =
               (ev->end_time - ev->start_time) * GST_SECOND;
@@ -330,9 +324,6 @@ gst_kate_dec_chain (GstPad * pad, GstBuffer * buf)
     if (ev->bitmap && ev->palette) {
       GstBuffer *buffer = gst_kate_spu_encode_spu (kd, ev);
       if (buffer) {
-        GstCaps *caps = gst_caps_new_simple (GST_KATE_SPU_MIME_TYPE, NULL);
-        gst_buffer_set_caps (buffer, caps);
-        gst_caps_unref (caps);
         GST_BUFFER_TIMESTAMP (buffer) = ev->start_time * GST_SECOND;
         GST_BUFFER_DURATION (buffer) =
             (ev->end_time - ev->start_time) * GST_SECOND;
@@ -416,8 +407,8 @@ gst_kate_dec_sink_handle_event (GstPad * pad, GstEvent * event)
       GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_NEWSEGMENT:
-      gst_kate_util_decoder_base_new_segment_event (&kd->decoder, event);
+    case GST_EVENT_SEGMENT:
+      gst_kate_util_decoder_base_segment_event (&kd->decoder, event);
       res = gst_pad_event_default (pad, event);
       break;
 
@@ -442,7 +433,7 @@ gst_kate_dec_sink_handle_event (GstPad * pad, GstEvent * event)
 }
 
 static GstCaps *
-gst_kate_dec_src_get_caps (GstPad * pad)
+gst_kate_dec_src_get_caps (GstPad * pad, GstCaps * filter)
 {
   GstKateDec *kd = (GstKateDec *) (gst_object_get_parent (GST_OBJECT (pad)));
   GstCaps *caps;

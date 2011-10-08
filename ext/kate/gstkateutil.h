@@ -82,7 +82,7 @@ extern void
 gst_kate_util_decoder_base_set_flushing (GstKateDecoderBase * decoder,
     gboolean flushing);
 extern void
-gst_kate_util_decoder_base_new_segment_event (GstKateDecoderBase * decoder,
+gst_kate_util_decoder_base_segment_event (GstKateDecoderBase * decoder,
     GstEvent * event);
 extern gboolean
 gst_kate_util_decoder_base_update_segment (GstKateDecoderBase * decoder,

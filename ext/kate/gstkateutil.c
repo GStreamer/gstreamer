@@ -247,12 +247,16 @@ gst_kate_util_decoder_base_chain_kate_packet (GstKateDecoderBase * decoder,
   int ret;
   GstFlowReturn rflow = GST_FLOW_OK;
   gboolean is_header;
+  guint8 *data;
+  gsize size;
+  guint8 header[1];
+
+  size = gst_buffer_extract (buf, 0, header, 1);
 
   GST_DEBUG_OBJECT (element, "got kate packet, %u bytes, type %02x",
-      GST_BUFFER_SIZE (buf),
-      GST_BUFFER_SIZE (buf) == 0 ? -1 : GST_BUFFER_DATA (buf)[0]);
+      gst_buffer_get_size (buf), size == 0 ? -1 : header[0]);
 
-  is_header = GST_BUFFER_SIZE (buf) > 0 && (GST_BUFFER_DATA (buf)[0] & 0x80);
+  is_header = size > 0 && (header[0] & 0x80);
 
   if (!is_header && decoder->tags) {
     /* after we've processed headers, send any tags before processing the data packet */
@@ -262,8 +266,11 @@ gst_kate_util_decoder_base_chain_kate_packet (GstKateDecoderBase * decoder,
     decoder->tags = NULL;
   }
 
-  kate_packet_wrap (&kp, GST_BUFFER_SIZE (buf), GST_BUFFER_DATA (buf));
+  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+  kate_packet_wrap (&kp, size, data);
   ret = kate_high_decode_packetin (&decoder->k, &kp, ev);
+  gst_buffer_unmap (buf, data, size);
+
   if (G_UNLIKELY (ret < 0)) {
     GST_ELEMENT_ERROR (element, STREAM, DECODE, (NULL),
         ("Failed to decode Kate packet: %d", ret));
@@ -277,7 +284,7 @@ gst_kate_util_decoder_base_chain_kate_packet (GstKateDecoderBase * decoder,
 
   /* headers may be interesting to retrieve information from */
   if (G_UNLIKELY (is_header)) {
-    switch (GST_BUFFER_DATA (buf)[0]) {
+    switch (header[0]) {
       case 0x80:               /* ID header */
         GST_INFO_OBJECT (element, "Parsed ID header: language %s, category %s",
             decoder->k.ki->language, decoder->k.ki->category);
@@ -484,37 +491,23 @@ gst_kate_util_decoder_base_set_flushing (GstKateDecoderBase * decoder,
 }
 
 void
-gst_kate_util_decoder_base_new_segment_event (GstKateDecoderBase * decoder,
+gst_kate_util_decoder_base_segment_event (GstKateDecoderBase * decoder,
     GstEvent * event)
 {
-  gboolean update;
-  gdouble rate;
-  GstFormat format;
-  gint64 start, stop, time;
-  gdouble arate;
+  GstSegment seg;
 
-  gst_event_parse_new_segment_full (event, &update, &rate, &arate, &format,
-      &start, &stop, &time);
-  GST_DEBUG_OBJECT (decoder, "kate pad segment:"
-      " Update %d, rate %g arate %g format %d start %" GST_TIME_FORMAT
-      " %" GST_TIME_FORMAT " position %" GST_TIME_FORMAT,
-      update, rate, arate, format, GST_TIME_ARGS (start),
-      GST_TIME_ARGS (stop), GST_TIME_ARGS (time));
-  if (!update) {
-    /* Tiger uses this segment is used to remap the video running time to the
-       Kate running time. The sending of segment updates to keep streams in sync
-       does kinda rain on our parade though, and since we don't need these,
-       we just ignore those here */
-    gst_segment_set_newsegment_full (&decoder->kate_segment, update, rate,
-        arate, format, start, stop, time);
-  }
+  gst_event_copy_segment (event, &seg);
+
+  GST_DEBUG_OBJECT (decoder, "kate pad segment: %" GST_SEGMENT_FORMAT, &seg);
+
+  decoder->kate_segment = seg;
 }
 
 gboolean
 gst_kate_util_decoder_base_update_segment (GstKateDecoderBase * decoder,
     GstElement * element, GstBuffer * buf)
 {
-  gint64 clip_start = 0, clip_stop = 0;
+  guint64 clip_start = 0, clip_stop = 0;
   gboolean in_seg;
 
   if (decoder->kate_flushing) {
@@ -538,8 +531,7 @@ gst_kate_util_decoder_base_update_segment (GstKateDecoderBase * decoder,
 
   if (in_seg) {
     if (GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
-      gst_segment_set_last_stop (&decoder->kate_segment, GST_FORMAT_TIME,
-          clip_start);
+      decoder->kate_segment.position = clip_start;
     }
   } else {
     GST_INFO_OBJECT (element, "Kate buffer not in segment, ignored");

@@ -97,38 +97,19 @@ static void gst_kate_tag_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_kate_tag_dispose (GObject * object);
 
-
-#define _do_init(type)                                                          \
-  G_STMT_START{                                                                 \
-    static const GInterfaceInfo tag_setter_info = {                             \
-      NULL,                                                                     \
-      NULL,                                                                     \
-      NULL                                                                      \
-    };                                                                          \
-    g_type_add_interface_static (type, GST_TYPE_TAG_SETTER,                     \
-                                 &tag_setter_info);                             \
-  }G_STMT_END
-
-GST_BOILERPLATE_FULL (GstKateTag, gst_kate_tag, GstKateParse,
-    GST_TYPE_KATE_PARSE, _do_init);
-
-static void
-gst_kate_tag_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (element_class, "Kate stream tagger",
-      "Formatter/Metadata",
-      "Retags kate streams", "Vincent Penquerc'h <ogg.k.ogg.k@googlemail.com>");
-}
+#define gst_kate_tag_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstKateTag, gst_kate_tag, GST_TYPE_KATE_PARSE,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_TAG_SETTER, NULL));
 
 static void
 gst_kate_tag_class_init (GstKateTagClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
   GstKateParseClass *gstkateparse_class;
 
   gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
   gstkateparse_class = GST_KATE_PARSE_CLASS (klass);
 
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_kate_tag_set_property);
@@ -155,12 +136,16 @@ gst_kate_tag_class_init (GstKateTagClass * klass)
           "Set the height of the canvas this stream was authored for (0 is unspecified)",
           0, G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_set_details_simple (gstelement_class, "Kate stream tagger",
+      "Formatter/Metadata",
+      "Retags kate streams", "Vincent Penquerc'h <ogg.k.ogg.k@googlemail.com>");
+
   gstkateparse_class->parse_packet =
       GST_DEBUG_FUNCPTR (gst_kate_tag_parse_packet);
 }
 
 static void
-gst_kate_tag_init (GstKateTag * kt, GstKateTagClass * g_class)
+gst_kate_tag_init (GstKateTag * kt)
 {
   kt->language = NULL;
   kt->category = NULL;
@@ -281,44 +266,52 @@ gst_kate_tag_parse_packet (GstKateParse * parse, GstBuffer * buffer)
   GstKateTag *kt;
   gchar *encoder = NULL;
   GstBuffer *new_buf;
+  guint8 *data;
+  gsize size;
 
   kt = GST_KATE_TAG (parse);
 
-  /* rewrite the language and category */
-  if (GST_BUFFER_SIZE (buffer) >= 64 && GST_BUFFER_DATA (buffer)[0] == 0x80) {
-    GstBuffer *new_buffer = gst_buffer_copy (buffer);
+  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
 
+  /* rewrite the language and category */
+  if (size >= 64 && data[0] == 0x80) {
+    GstBuffer *new_buffer;
+
+    gst_buffer_unmap (buffer, data, size);
+    new_buffer = gst_buffer_copy (buffer);
     gst_buffer_unref (buffer);
     buffer = new_buffer;
 
+    data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READWRITE);
     /* language is at offset 32, 16 bytes, zero terminated */
     if (kt->language) {
-      strncpy ((char *) GST_BUFFER_DATA (buffer) + 32, kt->language, 15);
-      GST_BUFFER_DATA (buffer)[47] = 0;
+      strncpy ((char *) data + 32, kt->language, 15);
+      data[47] = 0;
     }
     /* category is at offset 48, 16 bytes, zero terminated */
     if (kt->category) {
-      strncpy ((char *) GST_BUFFER_DATA (buffer) + 48, kt->category, 15);
-      GST_BUFFER_DATA (buffer)[63] = 0;
+      strncpy ((char *) data + 48, kt->category, 15);
+      data[63] = 0;
     }
     if (kt->original_canvas_width >= 0) {
       guint16 v = encode_canvas_size (kt->original_canvas_width);
-      GST_BUFFER_DATA (buffer)[16] = v & 0xff;
-      GST_BUFFER_DATA (buffer)[17] = (v >> 8) & 0xff;
+      data[16] = v & 0xff;
+      data[17] = (v >> 8) & 0xff;
     }
     if (kt->original_canvas_height >= 0) {
       guint16 v = encode_canvas_size (kt->original_canvas_height);
-      GST_BUFFER_DATA (buffer)[18] = v & 0xff;
-      GST_BUFFER_DATA (buffer)[19] = (v >> 8) & 0xff;
+      data[18] = v & 0xff;
+      data[19] = (v >> 8) & 0xff;
     }
   }
 
   /*  rewrite the comments packet */
-  if (GST_BUFFER_SIZE (buffer) >= 9 && GST_BUFFER_DATA (buffer)[0] == 0x81) {
+  if (size >= 9 && data[0] == 0x81) {
     old_tags =
-        gst_tag_list_from_vorbiscomment_buffer (buffer,
+        gst_tag_list_from_vorbiscomment (data, size,
         (const guint8 *) "\201kate\0\0\0\0", 9, &encoder);
     user_tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (kt));
+    gst_buffer_unmap (buffer, data, size);
 
     /* build new tag list */
     new_tags = gst_tag_list_merge (user_tags, old_tags,
@@ -328,16 +321,18 @@ gst_kate_tag_parse_packet (GstKateParse * parse, GstBuffer * buffer)
     new_buf =
         gst_tag_list_to_vorbiscomment_buffer (new_tags,
         (const guint8 *) "\201kate\0\0\0\0", 9, encoder);
-    gst_buffer_copy_metadata (new_buf, buffer, GST_BUFFER_COPY_TIMESTAMPS);
+    gst_buffer_copy_into (new_buf, buffer, GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
 
     gst_tag_list_free (new_tags);
     g_free (encoder);
     gst_buffer_unref (buffer);
 
     /* the buffer will have the framing bit used by Vorbis, but we don't use it */
-    --GST_BUFFER_SIZE (new_buf);
+    gst_buffer_resize (new_buf, 0, gst_buffer_get_size (new_buf) - 1);
 
     buffer = new_buf;
+  } else {
+    gst_buffer_unmap (buffer, data, size);
   }
 
   return GST_KATE_PARSE_CLASS (parent_class)->parse_packet (parse, buffer);
