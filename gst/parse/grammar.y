@@ -36,10 +36,10 @@
 
 typedef void* yyscan_t;
 
-int _gst_parse_yylex (void * yylval_param , yyscan_t yyscanner);
-int _gst_parse_yylex_init (yyscan_t scanner);
-int _gst_parse_yylex_destroy (yyscan_t scanner);
-struct yy_buffer_state * _gst_parse_yy_scan_string (char* , yyscan_t);
+int priv_gst_parse_yylex (void * yylval_param , yyscan_t yyscanner);
+int priv_gst_parse_yylex_init (yyscan_t scanner);
+int priv_gst_parse_yylex_destroy (yyscan_t scanner);
+struct yy_buffer_state * priv_gst_parse_yy_scan_string (char* , yyscan_t);
 void _gst_parse_yypush_buffer_state (void * new_buffer ,yyscan_t yyscanner );
 void _gst_parse_yypop_buffer_state (yyscan_t yyscanner );
 
@@ -892,7 +892,7 @@ yyerror (void *scanner, graph_t *graph, const char *s)
 
 
 GstElement *
-_gst_parse_launch (const gchar *str, GError **error, GstParseContext *ctx,
+priv_gst_parse_launch (const gchar *str, GError **error, GstParseContext *ctx,
     GstParseFlags flags)
 {
   graph_t g;
@@ -917,8 +917,8 @@ _gst_parse_launch (const gchar *str, GError **error, GstParseContext *ctx,
 #endif /* __GST_PARSE_TRACE */
 
   dstr = g_strdup (str);
-  _gst_parse_yylex_init (&scanner);
-  _gst_parse_yy_scan_string (dstr, scanner);
+  priv_gst_parse_yylex_init (&scanner);
+  priv_gst_parse_yy_scan_string (dstr, scanner);
 
 #ifndef YYDEBUG
   yydebug = 1;
@@ -928,12 +928,12 @@ _gst_parse_launch (const gchar *str, GError **error, GstParseContext *ctx,
     SET_ERROR (error, GST_PARSE_ERROR_SYNTAX,
         "Unrecoverable syntax error while parsing pipeline %s", str);
 
-    _gst_parse_yylex_destroy (scanner);
+    priv_gst_parse_yylex_destroy (scanner);
     g_free (dstr);
 
     goto error1;
   }
-  _gst_parse_yylex_destroy (scanner);
+  priv_gst_parse_yylex_destroy (scanner);
   g_free (dstr);
 
   GST_CAT_DEBUG (GST_CAT_PIPELINE, "got %u elements and %u links",
