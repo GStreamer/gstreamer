@@ -52,10 +52,7 @@ struct _GstZBar
   GstVideoFilter videofilter;
 
   /* format */
-  gint           width;
-  gint           height;
-
-  GstVideoFormat format;
+  GstVideoInfo   info;
 
   /* properties */
   gboolean message;

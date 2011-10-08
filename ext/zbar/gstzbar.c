@@ -109,14 +109,14 @@ static GstStaticPadTemplate gst_zbar_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV (ZBAR_YUV_CAPS))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (ZBAR_YUV_CAPS))
     );
 
 static GstStaticPadTemplate gst_zbar_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV (ZBAR_YUV_CAPS))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (ZBAR_YUV_CAPS))
     );
 
 static void gst_zbar_finalize (GObject * object);
@@ -132,32 +132,18 @@ static GstFlowReturn gst_zbar_transform_ip (GstBaseTransform * transform,
 static gboolean gst_zbar_start (GstBaseTransform * base);
 static gboolean gst_zbar_stop (GstBaseTransform * base);
 
-GST_BOILERPLATE (GstZBar, gst_zbar, GstVideoFilter, GST_TYPE_VIDEO_FILTER);
-
-
-static void
-gst_zbar_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (element_class, "Barcode detector",
-      "Filter/Analyzer/Video",
-      "Detect bar codes in the video streams",
-      "Stefan Kost <ensonic@users.sf.net>");
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_zbar_sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_zbar_src_template));
-}
+#define gst_zbar_parent_class parent_class
+G_DEFINE_TYPE (GstZBar, gst_zbar, GST_TYPE_VIDEO_FILTER);
 
 static void
 gst_zbar_class_init (GstZBarClass * g_class)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
   GstBaseTransformClass *trans_class;
 
   gobject_class = G_OBJECT_CLASS (g_class);
+  gstelement_class = GST_ELEMENT_CLASS (g_class);
   trans_class = GST_BASE_TRANSFORM_CLASS (g_class);
 
   gobject_class->set_property = gst_zbar_set_property;
@@ -176,6 +162,16 @@ gst_zbar_class_init (GstZBarClass * g_class)
           G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
           G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_set_details_simple (gstelement_class, "Barcode detector",
+      "Filter/Analyzer/Video",
+      "Detect bar codes in the video streams",
+      "Stefan Kost <ensonic@users.sf.net>");
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_zbar_sink_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_zbar_src_template));
+
   trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_zbar_set_caps);
   trans_class->transform_ip = GST_DEBUG_FUNCPTR (gst_zbar_transform_ip);
   trans_class->start = GST_DEBUG_FUNCPTR (gst_zbar_start);
@@ -183,7 +179,7 @@ gst_zbar_class_init (GstZBarClass * g_class)
 }
 
 static void
-gst_zbar_init (GstZBar * zbar, GstZBarClass * g_class)
+gst_zbar_init (GstZBar * zbar)
 {
   zbar->cache = DEFAULT_CACHE;
   zbar->message = DEFAULT_MESSAGE;
@@ -249,52 +245,53 @@ static gboolean
 gst_zbar_set_caps (GstBaseTransform * base, GstCaps * incaps, GstCaps * outcaps)
 {
   GstZBar *zbar = GST_ZBAR (base);
-  GstStructure *structure;
-  gboolean res;
-  guint32 fourcc;
-  gint width, height;
+  GstVideoInfo info;
 
   GST_DEBUG_OBJECT (zbar,
       "set_caps: in %" GST_PTR_FORMAT " out %" GST_PTR_FORMAT, incaps, outcaps);
 
-  structure = gst_caps_get_structure (incaps, 0);
+  if (!gst_video_info_from_caps (&info, incaps))
+    goto invalid_caps;
 
-  res = gst_structure_get_int (structure, "width", &width);
-  res &= gst_structure_get_int (structure, "height", &height);
-  res &= gst_structure_get_fourcc (structure, "format", &fourcc);
+  zbar->info = info;
 
-  if (res) {
-    zbar->width = width;
-    zbar->height = height;
-    zbar->format = gst_video_format_from_fourcc (fourcc);
+  return TRUE;
+
+  /* ERRORS */
+invalid_caps:
+  {
+    GST_ERROR_OBJECT (zbar, "invalid caps received");
+    return FALSE;
   }
-
-  return res;
 }
 
 static GstFlowReturn
 gst_zbar_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
 {
   GstZBar *zbar = GST_ZBAR (base);
-  guint8 *data;
-  guint rowstride;
+  gpointer data;
+  gint stride, height;
   zbar_image_t *image;
+  GstVideoFrame frame;
   const zbar_symbol_t *symbol;
   int n;
 
   if (base->passthrough)
     goto done;
 
-  data = GST_BUFFER_DATA (outbuf);
+  gst_video_frame_map (&frame, &zbar->info, outbuf, GST_MAP_READ);
 
   image = zbar_image_create ();
 
   /* all formats we support start with an 8-bit Y plane. zbar doesn't need
    * to know about the chroma plane(s) */
+  data = GST_VIDEO_FRAME_COMP_DATA (&frame, 0);
+  stride = GST_VIDEO_FRAME_COMP_STRIDE (&frame, 0);
+  height = GST_VIDEO_FRAME_HEIGHT (&frame);
+
   zbar_image_set_format (image, GST_MAKE_FOURCC ('Y', '8', '0', '0'));
-  rowstride = gst_video_format_get_row_stride (zbar->format, 0, zbar->width);
-  zbar_image_set_size (image, rowstride, zbar->height);
-  zbar_image_set_data (image, (gpointer) data, rowstride * zbar->height, NULL);
+  zbar_image_set_size (image, stride, height);
+  zbar_image_set_data (image, (gpointer) data, stride * height, NULL);
 
   /* scan the image for barcodes */
   n = zbar_scan_image (zbar->scanner, image);
@@ -330,6 +327,7 @@ gst_zbar_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
 
 out:
   /* clean up */
+  gst_video_frame_unmap (&frame);
   zbar_image_scanner_recycle_image (zbar->scanner, image);
   zbar_image_destroy (image);
 
@@ -344,9 +342,7 @@ gst_zbar_start (GstBaseTransform * base)
 {
   GstZBar *zbar = GST_ZBAR (base);
 
-  zbar->width = 0;
-  zbar->height = 0;
-  zbar->format = GST_VIDEO_FORMAT_UNKNOWN;
+  gst_video_info_init (&zbar->info);
 
   /* start the cache if enabled (e.g. for filtering dupes) */
   zbar_image_scanner_enable_cache (zbar->scanner, zbar->cache);
