@@ -416,7 +416,7 @@ gst_object_dispatch_properties_changed (GObject * object,
 
   gst_object = GST_OBJECT_CAST (object);
 #ifndef GST_DISABLE_GST_DEBUG
-  if (G_UNLIKELY (__gst_debug_min >= GST_LEVEL_LOG)) {
+  if (G_UNLIKELY (_gst_debug_min >= GST_LEVEL_LOG)) {
     name = gst_object_get_name (gst_object);
     debug_name = GST_STR_NULL (name);
   } else

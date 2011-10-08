@@ -30,8 +30,6 @@ EXPORTS
 	GST_CAT_SIGNAL DATA
 	GST_CAT_STATES DATA
 	GST_CAT_TYPES DATA
-	__gst_debug_enabled DATA
-	__gst_debug_min DATA
 	_gst_alloc_trace_register
 	_gst_buffer_list_type DATA
 	_gst_buffer_type DATA
@@ -40,7 +38,9 @@ EXPORTS
 	_gst_debug_bin_to_dot_file_with_ts
 	_gst_debug_category_new
 	_gst_debug_dump_mem
+	_gst_debug_enabled DATA
 	_gst_debug_get_category
+	_gst_debug_min DATA
 	_gst_debug_nameof_funcptr
 	_gst_debug_register_funcptr
 	_gst_disable_registry_cache DATA

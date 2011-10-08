@@ -133,8 +133,8 @@
 
 /* disabled by default, as soon as some threshold is set > NONE,
  * it becomes enabled. */
-gboolean __gst_debug_enabled = FALSE;
-GstDebugLevel __gst_debug_min = GST_LEVEL_NONE;
+gboolean _gst_debug_enabled = FALSE;
+GstDebugLevel _gst_debug_min = GST_LEVEL_NONE;
 
 GstDebugCategory *GST_CAT_DEFAULT = NULL;
 
@@ -1231,11 +1231,11 @@ gst_debug_is_colored (void)
 void
 gst_debug_set_active (gboolean active)
 {
-  __gst_debug_enabled = active;
+  _gst_debug_enabled = active;
   if (active)
-    __gst_debug_min = GST_LEVEL_COUNT;
+    _gst_debug_min = GST_LEVEL_COUNT;
   else
-    __gst_debug_min = GST_LEVEL_NONE;
+    _gst_debug_min = GST_LEVEL_NONE;
 }
 
 /**
@@ -1248,7 +1248,7 @@ gst_debug_set_active (gboolean active)
 gboolean
 gst_debug_is_active (void)
 {
-  return __gst_debug_enabled;
+  return _gst_debug_enabled;
 }
 
 /**
@@ -1457,9 +1457,9 @@ gst_debug_category_set_threshold (GstDebugCategory * category,
 {
   g_return_if_fail (category != NULL);
 
-  if (level > __gst_debug_min) {
-    __gst_debug_enabled = TRUE;
-    __gst_debug_min = level;
+  if (level > _gst_debug_min) {
+    _gst_debug_enabled = TRUE;
+    _gst_debug_min = level;
   }
 
   g_atomic_int_set (&category->threshold, level);
