@@ -65,8 +65,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     );
 
 #define gst_vorbis_dec_parent_class parent_class
-G_DEFINE_TYPE (GST_VORBIS_DEC_GLIB_TYPE_NAME, gst_vorbis_dec,
-    GST_TYPE_AUDIO_DECODER);
+G_DEFINE_TYPE (GstVorbisDec, gst_vorbis_dec, GST_TYPE_AUDIO_DECODER);
 
 static void vorbis_dec_finalize (GObject * object);
 
@@ -79,18 +78,20 @@ static void vorbis_dec_flush (GstAudioDecoder * dec, gboolean hard);
 static void
 gst_vorbis_dec_class_init (GstVorbisDecClass * klass)
 {
+  GstPadTemplate *src_template, *sink_template;
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
-  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstAudioDecoderClass *base_class = GST_AUDIO_DECODER_CLASS (klass);
 
   gobject_class->finalize = vorbis_dec_finalize;
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&vorbis_dec_src_factory));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&vorbis_dec_sink_factory));
+  src_template = gst_static_pad_template_get (&vorbis_dec_src_factory);
+  gst_element_class_add_pad_template (element_class, src_template);
 
-  gst_element_class_set_details_simple (gstelement_class,
+  sink_template = gst_static_pad_template_get (&vorbis_dec_sink_factory);
+  gst_element_class_add_pad_template (element_class, sink_template);
+
+  gst_element_class_set_details_simple (element_class,
       "Vorbis audio decoder", "Codec/Decoder/Audio",
       GST_VORBIS_DEC_DESCRIPTION,
       "Benjamin Otte <otte@gnome.org>, Chris Lord <chris@openedhand.com>");
@@ -192,9 +193,9 @@ vorbis_dec_src_event (GstPad * pad, GstEvent * event)
 
       /* First bring the requested format to time */
       tformat = GST_FORMAT_TIME;
-      if (!(res = vorbis_dec_convert (pad, format, cur, tformat, &tcur)))
+      if (!(res = vorbis_dec_convert (pad, format, cur, &tformat, &tcur)))
         goto convert_error;
-      if (!(res = vorbis_dec_convert (pad, format, stop, tformat, &tstop)))
+      if (!(res = vorbis_dec_convert (pad, format, stop, &tformat, &tstop)))
         goto convert_error;
 
       /* then seek with time on the peer */
@@ -242,7 +243,8 @@ vorbis_handle_identification_packet (GstVorbisDec * vd)
     case 5:
     case 6:
     case 7:
-    case 8:{
+    case 8:
+    {
       const GstAudioChannelPosition *pos;
       gint i;
 
@@ -263,7 +265,7 @@ vorbis_handle_identification_packet (GstVorbisDec * vd)
   }
 
   caps = gst_audio_info_to_caps (&info);
-  gst_pad_set_caps (GST_AUDIO_DECODER_SRC_PAD (vd), caps);
+  gst_audio_decoder_set_outcaps (GST_AUDIO_DECODER (vd), caps);
   gst_caps_unref (caps);
 
   vd->info = info;
@@ -561,17 +563,17 @@ vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet,
 #endif
 
   size = sample_count * vd->info.bpf;
-  GST_LOG_OBJECT (vd, "%d samples ready for reading, size %" G_GSIZE_FORMAT,
-      sample_count, size);
+  GST_LOG_OBJECT (vd, "%d samples ready for reading, size %d", sample_count,
+      size);
 
   /* alloc buffer for it */
-  out = gst_buffer_new_and_alloc (size);
+  out = gst_buffer_new_allocate (NULL, size, 0);
 
   data = gst_buffer_map (out, NULL, NULL, GST_MAP_WRITE);
   /* get samples ready for reading now, should be sample_count */
 #ifdef USE_TREMOLO
-  if (G_UNLIKELY ((vorbis_dsp_pcmout (&vd->vd, data,
-                  sample_count)) != sample_count))
+  if (G_UNLIKELY (vorbis_dsp_pcmout (&vd->vd, data, sample_count) !=
+          sample_count))
 #else
   if (G_UNLIKELY (vorbis_synthesis_pcmout (&vd->vd, &pcm) != sample_count))
 #endif
@@ -583,7 +585,7 @@ vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet,
       sample_count, vd->info.channels);
 #endif
 
-  GST_LOG_OBJECT (vd, "setting output size to %" G_GSIZE_FORMAT, size);
+  GST_LOG_OBJECT (vd, "setting output size to %d", size);
   gst_buffer_unmap (out, data, size);
 
 done:
@@ -638,6 +640,7 @@ vorbis_dec_handle_frame (GstAudioDecoder * dec, GstBuffer * buffer)
   if (G_UNLIKELY (!buffer))
     return GST_FLOW_OK;
 
+  GST_LOG_OBJECT (vd, "got buffer %p", buffer);
   /* make ogg_packet out of the buffer */
   gst_ogg_packet_wrapper_map (&packet_wrapper, buffer);
   packet = gst_ogg_packet_from_wrapper (&packet_wrapper);
@@ -675,6 +678,7 @@ vorbis_dec_handle_frame (GstAudioDecoder * dec, GstBuffer * buffer)
   }
 
 done:
+  GST_LOG_OBJECT (vd, "unmap buffer %p", buffer);
   gst_ogg_packet_wrapper_unmap (&packet_wrapper, buffer);
 
   return result;

@@ -67,6 +67,7 @@ gst_ogg_packet_wrapper_map (ogg_packet * packet, GstBuffer * buffer)
 {
   gsize size;
 
+  gst_buffer_ref (buffer);
   packet->packet = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
   packet->bytes = size;
 }
@@ -75,6 +76,7 @@ static inline void
 gst_ogg_packet_wrapper_unmap (ogg_packet * packet, GstBuffer * buffer)
 {
   gst_buffer_unmap (buffer, packet->packet, packet->bytes);
+  gst_buffer_unref (buffer);
 }
 
 static inline ogg_packet *
@@ -143,6 +145,7 @@ gst_ogg_packet_wrapper_map (ogg_packet_wrapper * packet,
   ogg_buffer *buf = &packet->buf;
   gsize size;
 
+  gst_buffer_ref (buffer);
   buf->data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
   buf->size = size;
   buf->refcount = 1;
@@ -166,6 +169,7 @@ gst_ogg_packet_wrapper_unmap (ogg_packet_wrapper * packet,
   ogg_buffer *buf = &packet->buf;
 
   gst_buffer_unmap (buffer, buf->data, buf->size);
+  gst_buffer_unref (buffer);
 }
 
 static inline ogg_packet *
