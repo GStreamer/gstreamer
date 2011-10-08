@@ -69,10 +69,7 @@ struct SpuState {
   GstClockTime next_ts; /* Next event TS in running time */
   SpuStateFlags flags;
 
-  gint fps_n, fps_d;
-  gint16 vid_width, vid_height;
-  gint16 Y_stride, UV_stride;
-  gint16 Y_height, UV_height;
+  GstVideoInfo info;
 
   guint32 *comp_bufs[3]; /* Compositing buffers for U+V & A */
   guint16 comp_left;

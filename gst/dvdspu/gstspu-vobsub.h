@@ -103,7 +103,7 @@ struct SpuVobsubState {
 
 void gstspu_vobsub_handle_new_buf (GstDVDSpu * dvdspu, GstClockTime event_ts, GstBuffer *buf);
 gboolean gstspu_vobsub_execute_event (GstDVDSpu *dvdspu);
-void gstspu_vobsub_render (GstDVDSpu *dvdspu, GstBuffer *buf);
+void gstspu_vobsub_render (GstDVDSpu *dvdspu, GstVideoFrame *frame);
 gboolean gstspu_vobsub_handle_dvd_event (GstDVDSpu *dvdspu, GstEvent *event);
 void gstspu_vobsub_flush (GstDVDSpu *dvdspu);
 

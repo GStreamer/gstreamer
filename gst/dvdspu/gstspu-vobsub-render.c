@@ -138,7 +138,7 @@ gstspu_vobsub_get_nibble (SpuState * state, guint16 * rle_offset)
   if (G_UNLIKELY (*rle_offset >= state->vobsub.max_offset))
     return 0;                   /* Overran the buffer */
 
-  ret = GST_BUFFER_DATA (state->vobsub.pix_buf)[(*rle_offset) / 2];
+  gst_buffer_extract (state->vobsub.pix_buf, (*rle_offset) / 2, &ret, 1);
 
   /* If the offset is even, we shift the answer down 4 bits, otherwise not */
   if (*rle_offset & 0x01)
@@ -384,24 +384,29 @@ gstspu_vobsub_clear_comp_buffers (SpuState * state)
 }
 
 void
-gstspu_vobsub_render (GstDVDSpu * dvdspu, GstBuffer * buf)
+gstspu_vobsub_render (GstDVDSpu * dvdspu, GstVideoFrame * frame)
 {
   SpuState *state = &dvdspu->spu_state;
   guint8 *planes[3];            /* YUV frame pointers */
   gint y, last_y;
+  gint width, height;
+  gint strides[3];
 
   /* Set up our initial state */
   if (G_UNLIKELY (state->vobsub.pix_buf == NULL))
     return;
 
   /* Store the start of each plane */
-  planes[0] = GST_BUFFER_DATA (buf);
-  planes[1] = planes[0] + (state->Y_height * state->Y_stride);
-  planes[2] = planes[1] + (state->UV_height * state->UV_stride);
+  planes[0] = GST_VIDEO_FRAME_COMP_DATA (frame, 0);
+  planes[1] = GST_VIDEO_FRAME_COMP_DATA (frame, 1);
+  planes[2] = GST_VIDEO_FRAME_COMP_DATA (frame, 2);
 
-  /* Sanity check */
-  g_return_if_fail (planes[2] + (state->UV_height * state->UV_stride) <=
-      GST_BUFFER_DATA (buf) + GST_BUFFER_SIZE (buf));
+  strides[0] = GST_VIDEO_FRAME_COMP_STRIDE (frame, 0);
+  strides[1] = GST_VIDEO_FRAME_COMP_STRIDE (frame, 1);
+  strides[2] = GST_VIDEO_FRAME_COMP_STRIDE (frame, 2);
+
+  width = GST_VIDEO_FRAME_WIDTH (frame);
+  height = GST_VIDEO_FRAME_HEIGHT (frame);
 
   GST_DEBUG_OBJECT (dvdspu,
       "Rendering SPU. disp_rect %d,%d to %d,%d. hl_rect %d,%d to %d,%d",
@@ -410,13 +415,12 @@ gstspu_vobsub_render (GstDVDSpu * dvdspu, GstBuffer * buf)
       state->vobsub.hl_rect.left, state->vobsub.hl_rect.top,
       state->vobsub.hl_rect.right, state->vobsub.hl_rect.bottom);
 
-  GST_DEBUG_OBJECT (dvdspu, "video size %d,%d", state->vid_width,
-      state->vid_height);
+  GST_DEBUG_OBJECT (dvdspu, "video size %d,%d", width, height);
 
   /* When reading RLE data, we track the offset in nibbles... */
   state->vobsub.cur_offsets[0] = state->vobsub.pix_data[0] * 2;
   state->vobsub.cur_offsets[1] = state->vobsub.pix_data[1] * 2;
-  state->vobsub.max_offset = GST_BUFFER_SIZE (state->vobsub.pix_buf) * 2;
+  state->vobsub.max_offset = gst_buffer_get_size (state->vobsub.pix_buf) * 2;
 
   /* Update all the palette caches */
   gstspu_vobsub_update_palettes (dvdspu, state);
@@ -436,18 +440,18 @@ gstspu_vobsub_render (GstDVDSpu * dvdspu, GstBuffer * buf)
   state->vobsub.clip_rect.right = state->vobsub.disp_rect.right;
 
   /* center the image when display rectangle exceeds the video width */
-  if (state->vid_width <= state->vobsub.disp_rect.right) {
+  if (width <= state->vobsub.disp_rect.right) {
     gint left, disp_width;
 
     disp_width = state->vobsub.disp_rect.right - state->vobsub.disp_rect.left
         + 1;
-    left = (state->vid_width - disp_width) / 2;
+    left = (width - disp_width) / 2;
     state->vobsub.disp_rect.left = left;
     state->vobsub.disp_rect.right = left + disp_width - 1;
 
     /* if it clips to the right, shift it left, but only till zero */
-    if (state->vobsub.disp_rect.right >= state->vid_width) {
-      gint shift = state->vobsub.disp_rect.right - state->vid_width - 1;
+    if (state->vobsub.disp_rect.right >= width) {
+      gint shift = state->vobsub.disp_rect.right - width - 1;
       if (shift > state->vobsub.disp_rect.left)
         shift = state->vobsub.disp_rect.left;
       state->vobsub.disp_rect.left -= shift;
@@ -459,8 +463,8 @@ gstspu_vobsub_render (GstDVDSpu * dvdspu, GstBuffer * buf)
     state->vobsub.clip_rect.right = state->vobsub.disp_rect.right;
 
     /* clip right after the shift */
-    if (state->vobsub.clip_rect.right >= state->vid_width)
-      state->vobsub.clip_rect.right = state->vid_width - 1;
+    if (state->vobsub.clip_rect.right >= width)
+      state->vobsub.clip_rect.right = width - 1;
 
     GST_DEBUG_OBJECT (dvdspu,
         "clipping width to %d,%d", state->vobsub.clip_rect.left,
@@ -472,10 +476,10 @@ gstspu_vobsub_render (GstDVDSpu * dvdspu, GstBuffer * buf)
    * is and do something more clever. */
   state->vobsub.clip_rect.top = state->vobsub.disp_rect.top;
   state->vobsub.clip_rect.bottom = state->vobsub.disp_rect.bottom;
-  if (state->vid_height <= state->vobsub.disp_rect.bottom) {
+  if (height <= state->vobsub.disp_rect.bottom) {
 
     /* shift it up, but only till zero */
-    gint shift = state->vobsub.disp_rect.bottom - state->vid_height - 1;
+    gint shift = state->vobsub.disp_rect.bottom - height - 1;
     if (shift > state->vobsub.disp_rect.top)
       shift = state->vobsub.disp_rect.top;
     state->vobsub.disp_rect.top -= shift;
@@ -492,8 +496,8 @@ gstspu_vobsub_render (GstDVDSpu * dvdspu, GstBuffer * buf)
     state->vobsub.clip_rect.bottom = state->vobsub.disp_rect.bottom;
 
     /* clip right after the shift */
-    if (state->vobsub.clip_rect.bottom >= state->vid_height)
-      state->vobsub.clip_rect.bottom = state->vid_height - 1;
+    if (state->vobsub.clip_rect.bottom >= height)
+      state->vobsub.clip_rect.bottom = height - 1;
 
     GST_DEBUG_OBJECT (dvdspu,
         "clipping height to %d,%d", state->vobsub.clip_rect.top,
@@ -508,9 +512,9 @@ gstspu_vobsub_render (GstDVDSpu * dvdspu, GstBuffer * buf)
   last_y = (state->vobsub.disp_rect.bottom - 1) & ~(0x01);
 
   /* Update our plane references to the first line of the disp_rect */
-  planes[0] += state->Y_stride * y;
-  planes[1] += state->UV_stride * (y / 2);
-  planes[2] += state->UV_stride * (y / 2);
+  planes[0] += strides[0] * y;
+  planes[1] += strides[1] * (y / 2);
+  planes[2] += strides[2] * (y / 2);
 
   for (state->vobsub.cur_Y = y; state->vobsub.cur_Y <= last_y;
       state->vobsub.cur_Y++) {
@@ -526,7 +530,7 @@ gstspu_vobsub_render (GstDVDSpu * dvdspu, GstBuffer * buf)
     gstspu_vobsub_render_line (state, planes, &state->vobsub.cur_offsets[0]);
     if (!clip) {
       /* Advance the luminance output pointer */
-      planes[0] += state->Y_stride;
+      planes[0] += strides[0];
     }
     state->vobsub.cur_Y++;
 
@@ -539,9 +543,9 @@ gstspu_vobsub_render (GstDVDSpu * dvdspu, GstBuffer * buf)
       gstspu_vobsub_blend_comp_buffers (state, planes);
 
       /* Update all the output pointers */
-      planes[0] += state->Y_stride;
-      planes[1] += state->UV_stride;
-      planes[2] += state->UV_stride;
+      planes[0] += strides[0];
+      planes[1] += strides[1];
+      planes[2] += strides[2];
     }
   }
   if (state->vobsub.cur_Y == state->vobsub.disp_rect.bottom) {
@@ -568,24 +572,22 @@ gstspu_vobsub_render (GstDVDSpu * dvdspu, GstBuffer * buf)
     guint8 *cur;
     gint16 pos;
 
-    cur = GST_BUFFER_DATA (buf) + state->Y_stride * state->vobsub.disp_rect.top;
+    cur = GST_BUFFER_DATA (buf) + strides[0] * state->vobsub.disp_rect.top;
     for (pos = state->vobsub.disp_rect.left + 1;
         pos < state->vobsub.disp_rect.right; pos++)
       cur[pos] = (cur[pos] / 2) + 0x8;
-    cur =
-        GST_BUFFER_DATA (buf) +
-        state->Y_stride * state->vobsub.disp_rect.bottom;
+    cur = GST_BUFFER_DATA (buf) + strides[0] * state->vobsub.disp_rect.bottom;
     for (pos = state->vobsub.disp_rect.left + 1;
         pos < state->vobsub.disp_rect.right; pos++)
       cur[pos] = (cur[pos] / 2) + 0x8;
-    cur = GST_BUFFER_DATA (buf) + state->Y_stride * state->vobsub.disp_rect.top;
+    cur = GST_BUFFER_DATA (buf) + strides[0] * state->vobsub.disp_rect.top;
     for (pos = state->vobsub.disp_rect.top;
         pos <= state->vobsub.disp_rect.bottom; pos++) {
       cur[state->vobsub.disp_rect.left] =
           (cur[state->vobsub.disp_rect.left] / 2) + 0x8;
       cur[state->vobsub.disp_rect.right] =
           (cur[state->vobsub.disp_rect.right] / 2) + 0x8;
-      cur += state->Y_stride;
+      cur += strides[0];
     }
   } while (0);
 #endif
@@ -595,17 +597,17 @@ gstspu_vobsub_render (GstDVDSpu * dvdspu, GstBuffer * buf)
     guint8 *cur;
     gint16 pos;
 
-    cur = GST_BUFFER_DATA (buf) + state->Y_stride * state->hl_rect.top;
+    cur = GST_BUFFER_DATA (buf) + strides[0] * state->hl_rect.top;
     for (pos = state->hl_rect.left + 1; pos < state->hl_rect.right; pos++)
       cur[pos] = (cur[pos] / 2) + 0x8;
-    cur = GST_BUFFER_DATA (buf) + state->Y_stride * state->hl_rect.bottom;
+    cur = GST_BUFFER_DATA (buf) + strides[0] * state->hl_rect.bottom;
     for (pos = state->hl_rect.left + 1; pos < state->hl_rect.right; pos++)
       cur[pos] = (cur[pos] / 2) + 0x8;
-    cur = GST_BUFFER_DATA (buf) + state->Y_stride * state->hl_rect.top;
+    cur = GST_BUFFER_DATA (buf) + strides[0] * state->hl_rect.top;
     for (pos = state->hl_rect.top; pos <= state->hl_rect.bottom; pos++) {
       cur[state->hl_rect.left] = (cur[state->hl_rect.left] / 2) + 0x8;
       cur[state->hl_rect.right] = (cur[state->hl_rect.right] / 2) + 0x8;
-      cur += state->Y_stride;
+      cur += strides[0];
     }
   }
 #endif

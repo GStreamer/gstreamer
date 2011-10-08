@@ -55,7 +55,7 @@ static GstStaticPadTemplate video_sink_factory =
 GST_STATIC_PAD_TEMPLATE ("video",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw-yuv, " "format = (fourcc) { I420 }, "
+    GST_STATIC_CAPS ("video/x-raw, " "format = (string) { I420 }, "
         "width = (int) [ 16, 4096 ], " "height = (int) [ 16, 4096 ]")
     /* FIXME: Can support YV12 one day too */
     );
@@ -63,7 +63,7 @@ GST_STATIC_PAD_TEMPLATE ("video",
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw-yuv, " "format = (fourcc) { I420 }, "
+    GST_STATIC_CAPS ("video/x-raw, " "format = (string) { I420 }, "
         "width = (int) [ 16, 4096 ], " "height = (int) [ 16, 4096 ]")
     /* FIXME: Can support YV12 one day too */
     );
@@ -146,8 +146,6 @@ gst_dvd_spu_init (GstDVDSpu * dvdspu)
 {
   dvdspu->videosinkpad =
       gst_pad_new_from_static_template (&video_sink_factory, "video");
-  gst_pad_set_setcaps_function (dvdspu->videosinkpad,
-      gst_dvd_spu_video_set_caps);
   gst_pad_set_getcaps_function (dvdspu->videosinkpad,
       gst_dvd_spu_video_proxy_getcaps);
   gst_pad_set_chain_function (dvdspu->videosinkpad, gst_dvd_spu_video_chain);
@@ -162,8 +160,6 @@ gst_dvd_spu_init (GstDVDSpu * dvdspu)
       gst_pad_new_from_static_template (&subpic_sink_factory, "subpicture");
   gst_pad_set_chain_function (dvdspu->subpic_sinkpad, gst_dvd_spu_subpic_chain);
   gst_pad_set_event_function (dvdspu->subpic_sinkpad, gst_dvd_spu_subpic_event);
-  gst_pad_set_setcaps_function (dvdspu->subpic_sinkpad,
-      gst_dvd_spu_subpic_set_caps);
 
   gst_element_add_pad (GST_ELEMENT (dvdspu), dvdspu->videosinkpad);
   gst_element_add_pad (GST_ELEMENT (dvdspu), dvdspu->subpic_sinkpad);
@@ -186,8 +182,8 @@ gst_dvd_spu_clear (GstDVDSpu * dvdspu)
   gst_buffer_replace (&dvdspu->ref_frame, NULL);
   gst_buffer_replace (&dvdspu->pending_frame, NULL);
 
-  dvdspu->spu_state.fps_n = 25;
-  dvdspu->spu_state.fps_d = 1;
+  dvdspu->spu_state.info.fps_n = 25;
+  dvdspu->spu_state.info.fps_d = 1;
 
   gst_segment_init (&dvdspu->video_seg, GST_FORMAT_UNDEFINED);
 }
@@ -296,39 +292,21 @@ gst_dvd_spu_video_set_caps (GstPad * pad, GstCaps * caps)
 {
   GstDVDSpu *dvdspu = GST_DVD_SPU (gst_pad_get_parent (pad));
   gboolean res = FALSE;
-  GstStructure *s;
-  gint w, h;
+  GstVideoInfo info;
   gint i;
-  gint fps_n, fps_d;
   SpuState *state;
 
-  s = gst_caps_get_structure (caps, 0);
-
-  if (!gst_structure_get_int (s, "width", &w) ||
-      !gst_structure_get_int (s, "height", &h) ||
-      !gst_structure_get_fraction (s, "framerate", &fps_n, &fps_d)) {
+  if (!gst_video_info_from_caps (&info, caps))
     goto done;
-  }
 
   DVD_SPU_LOCK (dvdspu);
 
   state = &dvdspu->spu_state;
 
-  state->fps_n = fps_n;
-  state->fps_d = fps_d;
-
-  state->vid_height = h;
-  state->Y_height = GST_ROUND_UP_2 (h);
-  state->UV_height = state->Y_height / 2;
-
-  if (state->vid_width != w) {
-    state->vid_width = w;
-    state->Y_stride = GST_ROUND_UP_4 (w);
-    state->UV_stride = GST_ROUND_UP_4 (state->Y_stride / 2);
-    for (i = 0; i < 3; i++) {
-      state->comp_bufs[i] = g_realloc (state->comp_bufs[i],
-          sizeof (guint32) * state->UV_stride);
-    }
+  state->info = info;
+  for (i = 0; i < 3; i++) {
+    state->comp_bufs[i] = g_realloc (state->comp_bufs[i],
+        sizeof (guint32) * info.width);
   }
   DVD_SPU_UNLOCK (dvdspu);
 
@@ -376,6 +354,15 @@ gst_dvd_spu_video_event (GstPad * pad, GstEvent * event)
   g_return_val_if_fail (dvdspu != NULL, FALSE);
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+
+      gst_event_parse_caps (event, &caps);
+      res = gst_dvd_spu_video_set_caps (pad, caps);
+      gst_event_unref (event);
+      break;
+    }
     case GST_EVENT_CUSTOM_DOWNSTREAM:
     case GST_EVENT_CUSTOM_DOWNSTREAM_OOB:
     {
@@ -513,7 +500,7 @@ dvdspu_handle_vid_buffer (GstDVDSpu * dvdspu, GstBuffer * buf)
     GstClockTime next_ts = dvdspu->video_seg.position;
 
     next_ts += gst_util_uint64_scale_int (GST_SECOND,
-        dvdspu->spu_state.fps_d, dvdspu->spu_state.fps_n);
+        dvdspu->spu_state.info.fps_d, dvdspu->spu_state.info.fps_n);
 
     /* NULL buffer was passed - use the reference frame and update the timestamp,
      * or else there's nothing to draw, and just return GST_FLOW_OK */
@@ -600,16 +587,21 @@ no_ref_frame:
 static void
 gstspu_render (GstDVDSpu * dvdspu, GstBuffer * buf)
 {
+  GstVideoFrame frame;
+
+  gst_video_frame_map (&frame, &dvdspu->spu_state.info, buf, GST_MAP_READWRITE);
+
   switch (dvdspu->spu_input_type) {
     case SPU_INPUT_TYPE_VOBSUB:
-      gstspu_vobsub_render (dvdspu, buf);
+      gstspu_vobsub_render (dvdspu, &frame);
       break;
     case SPU_INPUT_TYPE_PGS:
-      gstspu_pgs_render (dvdspu, buf);
+      gstspu_pgs_render (dvdspu, &frame);
       break;
     default:
       break;
   }
+  gst_video_frame_unmap (&frame);
 }
 
 /* With SPU LOCK */
@@ -839,6 +831,7 @@ gst_dvd_spu_subpic_chain (GstPad * pad, GstBuffer * buf)
 {
   GstDVDSpu *dvdspu = (GstDVDSpu *) (gst_object_get_parent (GST_OBJECT (pad)));
   GstFlowReturn ret = GST_FLOW_OK;
+  gsize size;
 
   g_return_val_if_fail (dvdspu != NULL, GST_FLOW_ERROR);
 
@@ -874,30 +867,31 @@ gst_dvd_spu_subpic_chain (GstPad * pad, GstBuffer * buf)
   if (dvdspu->partial_spu == NULL)
     goto done;
 
+  size = gst_buffer_get_size (dvdspu->partial_spu);
+
   switch (dvdspu->spu_input_type) {
     case SPU_INPUT_TYPE_VOBSUB:
-      if (GST_BUFFER_SIZE (dvdspu->partial_spu) > 4) {
+      if (size > 4) {
+        guint8 *header[2];
         guint16 packet_size;
-        guint8 *data;
 
-        data = GST_BUFFER_DATA (dvdspu->partial_spu);
-        packet_size = GST_READ_UINT16_BE (data);
-
-        if (packet_size == GST_BUFFER_SIZE (dvdspu->partial_spu)) {
+        gst_buffer_extract (dvdspu->partial_spu, 0, header, 2);
+        packet_size = GST_READ_UINT16_BE (header);
+        if (packet_size == size) {
           submit_new_spu_packet (dvdspu, dvdspu->partial_spu);
           dvdspu->partial_spu = NULL;
-        } else if (packet_size < GST_BUFFER_SIZE (dvdspu->partial_spu)) {
+        } else if (packet_size < size) {
           /* Somehow we collected too much - something is wrong. Drop the
            * packet entirely and wait for a new one */
           GST_DEBUG_OBJECT (dvdspu, "Discarding invalid SPU buffer of size %u",
-              GST_BUFFER_SIZE (dvdspu->partial_spu));
+              size);
 
           gst_buffer_unref (dvdspu->partial_spu);
           dvdspu->partial_spu = NULL;
         } else {
           GST_LOG_OBJECT (dvdspu,
               "SPU buffer claims to be of size %u. Collected %u so far.",
-              packet_size, GST_BUFFER_SIZE (dvdspu->partial_spu));
+              packet_size, size);
         }
       }
       break;
@@ -906,34 +900,42 @@ gst_dvd_spu_subpic_chain (GstPad * pad, GstBuffer * buf)
        * we've collected */
       guint8 packet_type;
       guint16 packet_size;
-      guint8 *data = GST_BUFFER_DATA (dvdspu->partial_spu);
-      guint8 *end = data + GST_BUFFER_SIZE (dvdspu->partial_spu);
+      guint8 *data, *ptr, *end;
+      gsize size;
+      gboolean invalid = FALSE;
+
+      data = gst_buffer_map (dvdspu->partial_spu, &size, NULL, GST_MAP_READ);
+
+      ptr = data;
+      end = ptr + size;
 
       /* FIXME: There's no need to walk the command set each time. We can set a
        * marker and resume where we left off next time */
       /* FIXME: Move the packet parsing and sanity checking into the format-specific modules */
-      while (data != end) {
-        if (data + 3 > end)
+      while (ptr != end) {
+        if (ptr + 3 > end)
           break;
-        packet_type = *data++;
-        packet_size = GST_READ_UINT16_BE (data);
-        data += 2;
-        if (data + packet_size > end)
+        packet_type = *ptr++;
+        packet_size = GST_READ_UINT16_BE (ptr);
+        ptr += 2;
+        if (ptr + packet_size > end)
           break;
-        data += packet_size;
+        ptr += packet_size;
         /* 0x80 is the END command for PGS packets */
-        if (packet_type == 0x80 && data != end) {
+        if (packet_type == 0x80 && ptr != end) {
           /* Extra cruft on the end of the packet -> assume invalid */
-          gst_buffer_unref (dvdspu->partial_spu);
-          dvdspu->partial_spu = NULL;
+          invalid = TRUE;
           break;
         }
       }
+      gst_buffer_unmap (dvdspu->partial_spu, data, size);
 
-      if (dvdspu->partial_spu && data == end) {
+      if (invalid) {
+        gst_buffer_unref (dvdspu->partial_spu);
+        dvdspu->partial_spu = NULL;
+      } else if (ptr == end) {
         GST_DEBUG_OBJECT (dvdspu,
-            "Have complete PGS packet of size %u. Enqueueing.",
-            GST_BUFFER_SIZE (dvdspu->partial_spu));
+            "Have complete PGS packet of size %u. Enqueueing.", size);
         submit_new_spu_packet (dvdspu, dvdspu->partial_spu);
         dvdspu->partial_spu = NULL;
       }
@@ -966,6 +968,15 @@ gst_dvd_spu_subpic_event (GstPad * pad, GstEvent * event)
   /* Some events on the subpicture sink pad just get ignored, like 
    * FLUSH_START */
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+
+      gst_event_parse_caps (event, &caps);
+      res = gst_dvd_spu_subpic_set_caps (pad, caps);
+      gst_event_unref (event);
+      break;
+    }
     case GST_EVENT_CUSTOM_DOWNSTREAM:
     case GST_EVENT_CUSTOM_DOWNSTREAM_OOB:
     {
