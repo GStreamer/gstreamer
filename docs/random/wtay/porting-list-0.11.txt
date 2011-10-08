@@ -220,11 +220,16 @@
  * -bad  assrender:     assrender: ASS/SSA Render
  * -bad  dataurisrc:    dataurisrc: data: URI source element
  * -bad  faad:          faad: AAC audio decoder
+ * -bad  flite:         flitetestsrc: Flite speech test source
+ * -bad  gmedec:        gmedec: Gaming console music file decoder
  * -bad  jpegformat:    jifmux: JPEG stream muxer
  * -bad  jpegformat:    jpegparse: JPEG stream parser
  * -bad  mms:           mmssrc: MMS streaming source
  * -bad  mpeg4videoparse:  mpeg4videoparse: MPEG 4 video elementary stream parser
+ * -bad  rtmpsrc:       rtmpsrc: RTMP Source
+ * -bad  rtmpsink:      rtmpsink:
  * -bad  sdp:           sdpdemux: SDP session setup
+ * -bad  zbar:          zbar: Barcode detector
 
  * -ff   ffmpeg:
  * -ff   ffvideoscale:  ffvideoscale: FFMPEG Scale element
@@ -367,7 +372,6 @@
    -bad  fbdevsink:     fbdevsink: fbdev video sink
    -bad  festival:      festival: Festival Text-to-Speech synthesizer
    -bad  fieldanalysis: fieldanalysis: Video field analysis
-   -bad  flite:         flitetestsrc: Flite speech test source
    -good flxdec:        flxdec: FLX video decoder
    -bad  fragmented:    hlsdemux: HLS Demuxer
    -bad  freeze:        freeze: Stream freezer
@@ -409,7 +413,6 @@
    -bad  geometrictransform:  tunnel: tunnel
    -bad  geometrictransform:  twirl: twirl
    -bad  geometrictransform:  waterripple: waterripple
-   -bad  gmedec:        gmedec: Gaming console music file decoder
          gnonlin:       gnlcomposition: GNonLin Composition
          gnonlin:       gnlfilesource: GNonLin File Source
          gnonlin:       gnloperation: GNonLin Operation
@@ -506,8 +509,6 @@
    -bad  rfbsrc:        rfbsrc: Rfb source
    -bad  rsvg:          rsvgdec: SVG image decoder
    -bad  rsvg:          rsvgoverlay: RSVG overlay
-   -bad  rtmpsrc:       rtmpsrc: RTMP Source
-   -bad  rtmpsink:      rtmpsink:
    -bad  rtpmux:        rtpdtmfmux: RTP muxer
    -bad  rtpmux:        rtpmux: RTP muxer
    -bad  rtpvp8:        rtpvp8depay: RTP VP8 depayloader
@@ -584,4 +585,3 @@
 
    -bad  y4mdec:        y4mdec: YUV4MPEG demuxer/decoder
 
-   -bad  zbar:          zbar: Barcode detector
