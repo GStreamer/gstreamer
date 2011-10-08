@@ -792,17 +792,17 @@ gst_audio_decoder_finish_frame (GstAudioDecoder * dec, GstBuffer * buf,
 
       g_assert (GST_CLOCK_TIME_IS_VALID (priv->base_ts));
       next_ts = priv->base_ts +
-          gst_util_uint64_scale (samples, GST_SECOND, ctx->info.rate);
+          gst_util_uint64_scale (priv->samples, GST_SECOND, ctx->info.rate);
       GST_LOG_OBJECT (dec, "buffer is %d samples past base_ts %" GST_TIME_FORMAT
-          ", expected ts %" GST_TIME_FORMAT, samples,
+          ", expected ts %" GST_TIME_FORMAT, priv->samples,
           GST_TIME_ARGS (priv->base_ts), GST_TIME_ARGS (next_ts));
       diff = GST_CLOCK_DIFF (next_ts, ts);
       GST_LOG_OBJECT (dec, "ts diff %d ms", (gint) (diff / GST_MSECOND));
       /* if within tolerance,
        * discard buffer ts and carry on producing perfect stream,
        * otherwise resync to ts */
-      if (G_UNLIKELY (diff < -dec->priv->tolerance ||
-              diff > dec->priv->tolerance)) {
+      if (G_UNLIKELY (diff < (gint64) - dec->priv->tolerance ||
+              diff > (gint64) dec->priv->tolerance)) {
         GST_DEBUG_OBJECT (dec, "base_ts resync");
         priv->base_ts = ts;
         priv->samples = 0;
