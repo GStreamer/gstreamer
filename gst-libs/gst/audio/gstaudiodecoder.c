@@ -1065,7 +1065,14 @@ gst_audio_decoder_flush (GstAudioDecoder * dec, gboolean hard)
 static GstFlowReturn
 gst_audio_decoder_chain_forward (GstAudioDecoder * dec, GstBuffer * buffer)
 {
-  GstFlowReturn ret;
+  GstFlowReturn ret = GST_FLOW_OK;
+
+  /* discard silly case, though maybe ts may be of value ?? */
+  if (G_UNLIKELY (GST_BUFFER_SIZE (buffer) == 0)) {
+    GST_DEBUG_OBJECT (dec, "discarding empty buffer");
+    gst_buffer_unref (buffer);
+    goto exit;
+  }
 
   /* grab buffer */
   gst_adapter_push (dec->priv->adapter, buffer);
@@ -1076,6 +1083,7 @@ gst_audio_decoder_chain_forward (GstAudioDecoder * dec, GstBuffer * buffer)
   /* hand to subclass */
   ret = gst_audio_decoder_push_buffers (dec, FALSE);
 
+exit:
   GST_LOG_OBJECT (dec, "chain-done");
   return ret;
 }
