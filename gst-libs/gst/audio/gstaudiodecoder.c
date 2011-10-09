@@ -555,7 +555,7 @@ gst_audio_decoder_setup (GstAudioDecoder * dec)
   gst_query_unref (query);
 
   /* normalize to bool */
-  dec->priv->agg = ! !res;
+  dec->priv->agg = !!res;
 }
 
 /* mini aggregator combining output buffers into fewer larger ones,
@@ -793,8 +793,9 @@ gst_audio_decoder_finish_frame (GstAudioDecoder * dec, GstBuffer * buf,
       g_assert (GST_CLOCK_TIME_IS_VALID (priv->base_ts));
       next_ts = priv->base_ts +
           gst_util_uint64_scale (priv->samples, GST_SECOND, ctx->info.rate);
-      GST_LOG_OBJECT (dec, "buffer is %d samples past base_ts %" GST_TIME_FORMAT
-          ", expected ts %" GST_TIME_FORMAT, priv->samples,
+      GST_LOG_OBJECT (dec,
+          "buffer is %" G_GUINT64_FORMAT " samples past base_ts %"
+          GST_TIME_FORMAT ", expected ts %" GST_TIME_FORMAT, priv->samples,
           GST_TIME_ARGS (priv->base_ts), GST_TIME_ARGS (next_ts));
       diff = GST_CLOCK_DIFF (next_ts, ts);
       GST_LOG_OBJECT (dec, "ts diff %d ms", (gint) (diff / GST_MSECOND));
