@@ -800,7 +800,7 @@ qtdemux_node_dump_foreach (GNode * node, gpointer qtdemux)
 gboolean
 qtdemux_node_dump (GstQTDemux * qtdemux, GNode * node)
 {
-  if (__gst_debug_min < GST_LEVEL_LOG)
+  if (_gst_debug_min < GST_LEVEL_LOG)
     return TRUE;
 
   g_node_traverse (node, G_PRE_ORDER, G_TRAVERSE_ALL, -1,
