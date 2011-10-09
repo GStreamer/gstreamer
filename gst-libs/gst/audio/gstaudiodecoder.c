@@ -580,7 +580,7 @@ gst_audio_decoder_setup (GstAudioDecoder * dec)
   gst_query_unref (query);
 
   /* normalize to bool */
-  dec->priv->agg = ! !res;
+  dec->priv->agg = !!res;
 }
 
 /* mini aggregator combining output buffers into fewer larger ones,
@@ -816,17 +816,18 @@ gst_audio_decoder_finish_frame (GstAudioDecoder * dec, GstBuffer * buf,
 
       g_assert (GST_CLOCK_TIME_IS_VALID (priv->base_ts));
       next_ts = priv->base_ts +
-          gst_util_uint64_scale (samples, GST_SECOND, ctx->info.rate);
-      GST_LOG_OBJECT (dec, "buffer is %d samples past base_ts %" GST_TIME_FORMAT
-          ", expected ts %" GST_TIME_FORMAT, samples,
+          gst_util_uint64_scale (priv->samples, GST_SECOND, ctx->info.rate);
+      GST_LOG_OBJECT (dec,
+          "buffer is %" G_GUINT64_FORMAT " samples past base_ts %"
+          GST_TIME_FORMAT ", expected ts %" GST_TIME_FORMAT, priv->samples,
           GST_TIME_ARGS (priv->base_ts), GST_TIME_ARGS (next_ts));
       diff = GST_CLOCK_DIFF (next_ts, ts);
       GST_LOG_OBJECT (dec, "ts diff %d ms", (gint) (diff / GST_MSECOND));
       /* if within tolerance,
        * discard buffer ts and carry on producing perfect stream,
        * otherwise resync to ts */
-      if (G_UNLIKELY (diff < -dec->priv->tolerance ||
-              diff > dec->priv->tolerance)) {
+      if (G_UNLIKELY (diff < (gint64) - dec->priv->tolerance ||
+              diff > (gint64) dec->priv->tolerance)) {
         GST_DEBUG_OBJECT (dec, "base_ts resync");
         priv->base_ts = ts;
         priv->samples = 0;
@@ -1088,7 +1089,14 @@ gst_audio_decoder_flush (GstAudioDecoder * dec, gboolean hard)
 static GstFlowReturn
 gst_audio_decoder_chain_forward (GstAudioDecoder * dec, GstBuffer * buffer)
 {
-  GstFlowReturn ret;
+  GstFlowReturn ret = GST_FLOW_OK;
+
+  /* discard silly case, though maybe ts may be of value ?? */
+  if (G_UNLIKELY (GST_BUFFER_SIZE (buffer) == 0)) {
+    GST_DEBUG_OBJECT (dec, "discarding empty buffer");
+    gst_buffer_unref (buffer);
+    goto exit;
+  }
 
   /* grab buffer */
   gst_adapter_push (dec->priv->adapter, buffer);
@@ -1099,6 +1107,7 @@ gst_audio_decoder_chain_forward (GstAudioDecoder * dec, GstBuffer * buffer)
   /* hand to subclass */
   ret = gst_audio_decoder_push_buffers (dec, FALSE);
 
+exit:
   GST_LOG_OBJECT (dec, "chain-done");
   return ret;
 }

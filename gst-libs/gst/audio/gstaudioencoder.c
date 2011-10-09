@@ -963,10 +963,12 @@ gst_audio_encoder_chain (GstPad * pad, GstBuffer * buffer)
         gst_audio_encoder_drain (enc);
       }
     }
-    /* now re-sync ts */
-    priv->base_ts += diff;
-    gst_audio_encoder_set_base_gp (enc);
-    priv->discont |= discont;
+    if (discont) {
+      /* now re-sync ts */
+      priv->base_ts += diff;
+      gst_audio_encoder_set_base_gp (enc);
+      priv->discont |= discont;
+    }
   }
 
   gst_adapter_push (enc->priv->adapter, buffer);
