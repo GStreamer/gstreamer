@@ -81,6 +81,7 @@ struct _GstVorbisEnc {
   gboolean         setup;
   gboolean         header_sent;
   gchar           *last_message;
+  GSList          *headers;
 };
 
 struct _GstVorbisEncClass {
