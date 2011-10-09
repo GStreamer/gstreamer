@@ -183,6 +183,8 @@ typedef struct
 static void
 buffer_alloc_harness_setup (BufferAllocHarness * h, gint countdown)
 {
+  h->app_thread = NULL;
+
   h->tee = gst_check_setup_element ("tee");
   fail_if (h->tee == NULL);
 
