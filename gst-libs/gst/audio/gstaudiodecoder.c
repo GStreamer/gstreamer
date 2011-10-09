@@ -1092,7 +1092,7 @@ gst_audio_decoder_chain_forward (GstAudioDecoder * dec, GstBuffer * buffer)
   GstFlowReturn ret = GST_FLOW_OK;
 
   /* discard silly case, though maybe ts may be of value ?? */
-  if (G_UNLIKELY (GST_BUFFER_SIZE (buffer) == 0)) {
+  if (G_UNLIKELY (gst_buffer_get_size (buffer) == 0)) {
     GST_DEBUG_OBJECT (dec, "discarding empty buffer");
     gst_buffer_unref (buffer);
     goto exit;
