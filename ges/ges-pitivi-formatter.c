@@ -92,21 +92,30 @@ ges_pitivi_formatter_finalize (GObject * object)
 {
   GESPitiviFormatter *self = GES_PITIVI_FORMATTER (object);
   GESPitiviFormatterPrivate *priv = GES_PITIVI_FORMATTER (self)->priv;
-  g_hash_table_foreach (priv->source_table, (GHFunc) ultimate_table_destroyer,
-      NULL);
-  g_hash_table_destroy (priv->source_table);
 
-  g_hash_table_foreach (priv->timeline_objects_table,
-      (GHFunc) list_table_destroyer, NULL);
-  g_hash_table_destroy (priv->timeline_objects_table);
+  if (priv->source_table != NULL) {
+    g_hash_table_foreach (priv->source_table,
+        (GHFunc) ultimate_table_destroyer, NULL);
+    g_hash_table_destroy (priv->source_table);
+  }
 
-  g_hash_table_foreach (priv->layers_table, (GHFunc) layers_table_destroyer,
-      NULL);
-  g_hash_table_destroy (priv->layers_table);
+  if (priv->timeline_objects_table != NULL) {
+    g_hash_table_foreach (priv->timeline_objects_table,
+        (GHFunc) list_table_destroyer, NULL);
+    g_hash_table_destroy (priv->timeline_objects_table);
+  }
 
-  g_hash_table_foreach (priv->track_objects_table,
-      (GHFunc) ultimate_table_destroyer, NULL);
-  g_hash_table_destroy (priv->track_objects_table);
+  if (priv->layers_table != NULL) {
+    g_hash_table_foreach (priv->layers_table,
+        (GHFunc) layers_table_destroyer, NULL);
+    g_hash_table_destroy (priv->layers_table);
+  }
+
+  if (priv->track_objects_table != NULL) {
+    g_hash_table_foreach (priv->track_objects_table,
+        (GHFunc) ultimate_table_destroyer, NULL);
+    g_hash_table_destroy (priv->track_objects_table);
+  }
 
   G_OBJECT_CLASS (ges_pitivi_formatter_parent_class)->finalize (object);
 }
