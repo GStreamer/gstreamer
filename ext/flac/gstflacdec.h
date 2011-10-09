@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+ * Copyright (C) <2011> Tim-Philipp Müller <tim centricular net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -21,9 +22,8 @@
 #ifndef __GST_FLAC_DEC_H__
 #define __GST_FLAC_DEC_H__
 
-
 #include <gst/gst.h>
-#include <gst/base/gstadapter.h>
+#include <gst/audio/gstaudiodecoder.h>
 
 #include <FLAC/all.h>
 
@@ -39,27 +39,19 @@ typedef struct _GstFlacDec GstFlacDec;
 typedef struct _GstFlacDecClass GstFlacDecClass;
 
 struct _GstFlacDec {
-  GstElement     element;
+  GstAudioDecoder  audiodecoder;
 
-  /* < private > */
-
+  /*< private >*/
   FLAC__StreamDecoder         *decoder;
   GstAdapter                  *adapter;
-  gboolean                     framed;
+  gboolean                     framed; // FIXME
 
-  gboolean       got_headers; /* if we've parsed the headers (unframed push mode only) */
+  gboolean       got_headers; /* if we've parsed the headers */
 
-  GstPad        *sinkpad;
-  GstPad        *srcpad;
-
-  gboolean       init;
-
-  GstSegment     segment;     /* the currently configured segment, in
-                               * samples/audio frames (DEFAULT format) */
   GstTagList    *tags;
 
-  GstFlowReturn  last_flow;   /* the last flow return received from either
-                               * gst_pad_push or gst_pad_buffer_alloc */
+  GstFlowReturn  last_flow;   /* to marshal flow return from finis_frame to
+                               * handle_frame via flac callbacks */
 
   gint           channels;
   gint           depth;
@@ -69,12 +61,10 @@ struct _GstFlacDec {
   /* from the stream info, needed for scanning */
   guint16        min_blocksize;
   guint16        max_blocksize;
-
-  gint64         cur_granulepos; /* only used in framed mode (flac-in-ogg) */
 };
 
 struct _GstFlacDecClass {
-  GstElementClass parent_class;
+  GstAudioDecoderClass  audiodecoder;
 };
 
 GType gst_flac_dec_get_type (void);
