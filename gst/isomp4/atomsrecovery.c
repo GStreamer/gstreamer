@@ -117,8 +117,10 @@ atoms_recov_write_ftyp_info (FILE * f, AtomFTYP * ftyp, GstBuffer * prefix)
     return FALSE;
   }
   if (fwrite (data, 1, offset, f) != offset) {
+    g_free (data);
     return FALSE;
   }
+  g_free (data);
   return TRUE;
 }
 
