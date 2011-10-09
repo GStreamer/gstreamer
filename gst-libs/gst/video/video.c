@@ -535,6 +535,8 @@ gst_video_format_from_string (const gchar * format)
 {
   guint i;
 
+  g_return_val_if_fail (format != NULL, GST_VIDEO_FORMAT_UNKNOWN);
+
   for (i = 0; i < G_N_ELEMENTS (formats); i++) {
     if (strcmp (GST_VIDEO_FORMAT_INFO_NAME (&formats[i].info), format) == 0)
       return GST_VIDEO_FORMAT_INFO_FORMAT (&formats[i].info);
