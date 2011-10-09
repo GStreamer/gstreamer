@@ -2018,11 +2018,9 @@ gst_pulsesink_pad_acceptcaps (GstPad * pad, GstCaps * caps)
   pa_format_info *format = NULL, *formats[1];
   guint channels;
 
-  pad_caps = gst_pad_get_caps_reffed (pad);
-  if (pad_caps) {
-    ret = gst_caps_can_intersect (pad_caps, caps);
-    gst_caps_unref (pad_caps);
-  }
+  pad_caps = gst_pad_get_caps (pad, caps);
+  ret = pad_caps != NULL;
+  gst_caps_unref (pad_caps);
 
   /* Either template caps didn't match, or we're still in NULL state */
   if (!ret || !pbuf->context)
