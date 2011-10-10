@@ -51,6 +51,7 @@ G_BEGIN_DECLS
 
 #define gst_buffer_new_and_alloc(s)            gst_buffer_new_allocate(NULL, s, 0)
 
+#define GST_FLOW_UNEXPECTED           GST_FLOW_EOS
 
 #ifndef GST_DISABLE_DEPRECATED
 
