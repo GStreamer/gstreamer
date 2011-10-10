@@ -209,15 +209,15 @@ struct _GstVC1AdvancedSeqHdr
 {
   GstVC1Level  level;
 
-  guint8 frmrtq_postproc;
-  guint8 bitrtq_postproc;
+  guint8  frmrtq_postproc;
+  guint8  bitrtq_postproc;
   guint8  postprocflag;
   guint16 max_coded_width;
   guint16 max_coded_height;
   guint8  pulldown;
   guint8  interlace;
   guint8  tfcntrflag;
-  guint8 finterpflag;
+  guint8  finterpflag;
   guint8  psf;
   guint8  display_ext;
   guint16 disp_horiz_size;
@@ -236,7 +236,7 @@ struct _GstVC1AdvancedSeqHdr
   guint8  transfer_char;
   guint8  matrix_coef;
   guint8  hrd_param_flag;
-  guint8 colordiff_format;
+  guint8  colordiff_format;
 
   GstVC1HrdParam hrd_param;
 
@@ -426,11 +426,27 @@ struct _GstVC1PicAdvanced
   guint8  mvtypemb;
   guint8  skipmb;
   guint8  directmb;
+
+  /* For interlaced pictures only */
+  guint8  fieldtx;
+
+  /* P and B pictures */
+  guint8  intcomp;
+  guint8  dmvrange;
+  guint8  mbmodetab;
+  guint8  imvtab;
+  guint8  icbptab;
+  guint8  mvbptab2;
+  guint8  mvbptab4; /* If 4mvswitch in ppic */
+
+  /*  P picture */
+  guint8  mvswitch4;
 };
 
 struct _GstVC1BitPlanes
 {
   guint8  *acpred;
+  guint8  *fieldtx;
   guint8  *overflags;
   guint8  *mvtypemb;
   guint8  *skipmb;

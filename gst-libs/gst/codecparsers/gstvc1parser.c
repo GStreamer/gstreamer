@@ -994,6 +994,12 @@ parse_frame_header_advanced (GstBitReader * br, GstVC1FrameHdr * framehdr,
   switch (framehdr->ptype) {
     case GST_VC1_PICTURE_TYPE_I:
     case GST_VC1_PICTURE_TYPE_BI:
+      if (pic->fcm == GST_VC1_FRAME_INTERLACE) {
+        if (!bitplane_decoding (br, bitplanes ? bitplanes->fieldtx : NULL,
+                seqhdr, &pic->fieldtx))
+          goto failed;
+      }
+
       if (!bitplane_decoding (br, bitplanes ? bitplanes->acpred : NULL,
               seqhdr, &pic->acpred))
         goto failed;
@@ -1032,7 +1038,14 @@ parse_frame_header_advanced (GstBitReader * br, GstVC1FrameHdr * framehdr,
       else
         pic->mvrange = 0;
 
-      READ_UINT8 (br, pic->mvmode, 1);
+      if (pic->fcm == GST_VC1_FRAME_INTERLACE) {
+        if (entrypthdr->extended_dmv)
+          pic->dmvrange = get_unary (br, 0, 3);
+        READ_UINT8 (br, pic->intcomp, 1);
+      } else {
+
+        READ_UINT8 (br, pic->mvmode, 1);
+      }
 
       if (!bitplane_decoding (br, bitplanes ? bitplanes->directmb : NULL,
               seqhdr, &pic->directmb))
@@ -1042,8 +1055,20 @@ parse_frame_header_advanced (GstBitReader * br, GstVC1FrameHdr * framehdr,
               seqhdr, &pic->skipmb))
         goto failed;
 
-      READ_UINT8 (br, pic->mvtab, 2);
-      READ_UINT8 (br, pic->cbptab, 2);
+      if (pic->fcm == GST_VC1_FRAME_INTERLACE) {
+        if (gst_bit_reader_get_remaining (br) < 11)
+          goto failed;
+
+        pic->mbmodetab = gst_bit_reader_get_bits_uint8_unchecked (br, 2);
+        pic->imvtab = gst_bit_reader_get_bits_uint8_unchecked (br, 2);
+        pic->icbptab = gst_bit_reader_get_bits_uint8_unchecked (br, 3);
+        pic->mvbptab2 = gst_bit_reader_get_bits_uint8_unchecked (br, 2);
+        pic->mvbptab4 = gst_bit_reader_get_bits_uint8_unchecked (br, 2);
+
+      } else {
+        READ_UINT8 (br, pic->mvtab, 2);
+        READ_UINT8 (br, pic->cbptab, 2);
+      }
 
       if (framehdr->dquant) {
         parse_vopdquant (br, framehdr, framehdr->dquant);
@@ -1072,33 +1097,61 @@ parse_frame_header_advanced (GstBitReader * br, GstVC1FrameHdr * framehdr,
       else
         pic->mvrange = 0;
 
-      mvmodeidx = framehdr->pquant > 12;
-      pic->mvmode = vc1_mvmode_table[mvmodeidx][get_unary (br, 1, 4)];
+      if (pic->fcm == GST_VC1_FRAME_INTERLACE) {
+        if (entrypthdr->extended_dmv)
+          pic->dmvrange = get_unary (br, 0, 3);
 
-      if (pic->mvmode == GST_VC1_MVMODE_INTENSITY_COMP) {
-        pic->mvmode2 = vc1_mvmode2_table[mvmodeidx][get_unary (br, 1, 3)];
-        READ_UINT8 (br, pic->lumscale, 6);
-        READ_UINT8 (br, pic->lumshift, 6);
-        GST_DEBUG ("lumscale %u lumshift %u", pic->lumscale, pic->lumshift);
-      }
+        READ_UINT8 (br, pic->mvswitch4, 1);
+        READ_UINT8 (br, pic->intcomp, 1);
 
-      if (pic->mvmode == GST_VC1_MVMODE_MIXED_MV ||
-          (pic->mvmode == GST_VC1_MVMODE_INTENSITY_COMP &&
-              pic->mvmode2 == GST_VC1_MVMODE_MIXED_MV)) {
-        if (!bitplane_decoding (br, bitplanes ? bitplanes->mvtypemb : NULL,
-                seqhdr, &pic->mvtypemb))
-          goto failed;
-        GST_DEBUG ("mvtypemb %u", pic->mvtypemb);
+        if (pic->intcomp) {
+          READ_UINT8 (br, pic->lumscale, 6);
+          READ_UINT8 (br, pic->lumshift, 6);
+        }
+      } else {
+
+        mvmodeidx = framehdr->pquant > 12;
+        pic->mvmode = vc1_mvmode_table[mvmodeidx][get_unary (br, 1, 4)];
+
+        if (pic->mvmode == GST_VC1_MVMODE_INTENSITY_COMP) {
+          pic->mvmode2 = vc1_mvmode2_table[mvmodeidx][get_unary (br, 1, 3)];
+          READ_UINT8 (br, pic->lumscale, 6);
+          READ_UINT8 (br, pic->lumshift, 6);
+          GST_DEBUG ("lumscale %u lumshift %u", pic->lumscale, pic->lumshift);
+        }
+
+        if (pic->mvmode == GST_VC1_MVMODE_MIXED_MV ||
+            (pic->mvmode == GST_VC1_MVMODE_INTENSITY_COMP &&
+                pic->mvmode2 == GST_VC1_MVMODE_MIXED_MV)) {
+          if (!bitplane_decoding (br, bitplanes ? bitplanes->mvtypemb : NULL,
+                  seqhdr, &pic->mvtypemb))
+            goto failed;
+          GST_DEBUG ("mvtypemb %u", pic->mvtypemb);
+        }
       }
 
       if (!bitplane_decoding (br, bitplanes ? bitplanes->skipmb : NULL,
               seqhdr, &pic->skipmb))
         goto failed;
 
-      if (gst_bit_reader_get_remaining (br) < 4)
-        goto failed;
-      pic->mvtab = gst_bit_reader_get_bits_uint8_unchecked (br, 2);
-      pic->cbptab = gst_bit_reader_get_bits_uint8_unchecked (br, 2);
+      if (pic->fcm == GST_VC1_FRAME_INTERLACE) {
+        if (gst_bit_reader_get_remaining (br) < 9)
+          goto failed;
+
+        pic->mbmodetab = gst_bit_reader_get_bits_uint8_unchecked (br, 2);
+        pic->imvtab = gst_bit_reader_get_bits_uint8_unchecked (br, 2);
+        pic->icbptab = gst_bit_reader_get_bits_uint8_unchecked (br, 3);
+        pic->mvbptab2 = gst_bit_reader_get_bits_uint8_unchecked (br, 2);
+
+        if (pic->mvswitch4)
+          READ_UINT8 (br, pic->mvbptab4, 2);
+
+      } else {
+        if (gst_bit_reader_get_remaining (br) < 4)
+          goto failed;
+        pic->mvtab = gst_bit_reader_get_bits_uint8_unchecked (br, 2);
+        pic->cbptab = gst_bit_reader_get_bits_uint8_unchecked (br, 2);
+      }
 
       if (framehdr->dquant) {
         parse_vopdquant (br, framehdr, framehdr->dquant);
@@ -1891,6 +1944,7 @@ void
 gst_vc1_bitplanes_free_1 (GstVC1BitPlanes * bitplanes)
 {
   g_free (bitplanes->acpred);
+  g_free (bitplanes->fieldtx);
   g_free (bitplanes->overflags);
   g_free (bitplanes->mvtypemb);
   g_free (bitplanes->skipmb);
@@ -1920,6 +1974,8 @@ gst_vc1_bitplanes_ensure_size (GstVC1BitPlanes * bitplanes,
     bitplanes->size = seqhdr->mb_height * seqhdr->mb_stride;
     bitplanes->acpred =
         g_realloc_n (bitplanes->acpred, bitplanes->size, sizeof (guint8));
+    bitplanes->fieldtx =
+        g_realloc_n (bitplanes->fieldtx, bitplanes->size, sizeof (guint8));
     bitplanes->overflags =
         g_realloc_n (bitplanes->overflags, bitplanes->size, sizeof (guint8));
     bitplanes->mvtypemb =
@@ -1931,6 +1987,7 @@ gst_vc1_bitplanes_ensure_size (GstVC1BitPlanes * bitplanes,
   } else {
     bitplanes->size = seqhdr->mb_height * seqhdr->mb_stride;
     bitplanes->acpred = g_malloc0 (bitplanes->size * sizeof (guint8));
+    bitplanes->fieldtx = g_malloc0 (bitplanes->size * sizeof (guint8));
     bitplanes->overflags = g_malloc0 (bitplanes->size * sizeof (guint8));
     bitplanes->mvtypemb = g_malloc0 (bitplanes->size * sizeof (guint8));
     bitplanes->skipmb = g_malloc0 (bitplanes->size * sizeof (guint8));
