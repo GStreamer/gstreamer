@@ -132,6 +132,8 @@ static GstFlowReturn gst_speex_enc_handle_frame (GstAudioEncoder * enc,
     GstBuffer * in_buf);
 static gboolean gst_speex_enc_sink_event (GstAudioEncoder * enc,
     GstEvent * event);
+static GstFlowReturn
+gst_speex_enc_pre_push (GstAudioEncoder * benc, GstBuffer ** buffer);
 
 #define gst_speex_enc_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstSpeexEnc, gst_speex_enc, GST_TYPE_AUDIO_ENCODER,
@@ -158,6 +160,7 @@ gst_speex_enc_class_init (GstSpeexEncClass * klass)
   base_class->set_format = GST_DEBUG_FUNCPTR (gst_speex_enc_set_format);
   base_class->handle_frame = GST_DEBUG_FUNCPTR (gst_speex_enc_handle_frame);
   base_class->event = GST_DEBUG_FUNCPTR (gst_speex_enc_sink_event);
+  base_class->pre_push = GST_DEBUG_FUNCPTR (gst_speex_enc_pre_push);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_QUALITY,
       g_param_spec_float ("quality", "Quality", "Encoding quality",
@@ -264,6 +267,8 @@ gst_speex_enc_stop (GstAudioEncoder * benc)
   speex_bits_destroy (&enc->bits);
   gst_tag_list_free (enc->tags);
   enc->tags = NULL;
+  g_slist_foreach (enc->headers, (GFunc) gst_buffer_unref, NULL);
+  enc->headers = NULL;
 
   return TRUE;
 }
@@ -698,18 +703,16 @@ gst_speex_enc_handle_frame (GstAudioEncoder * benc, GstBuffer * buf)
     /* negotiate with these caps */
     GST_DEBUG_OBJECT (enc, "here are the caps: %" GST_PTR_FORMAT, caps);
 
+    gst_pad_set_caps (GST_AUDIO_ENCODER_SRC_PAD (enc), caps);
+    gst_caps_unref (caps);
+
     /* push out buffers */
-    ret = gst_speex_enc_push_buffer (enc, buf1);
-
-    if (ret != GST_FLOW_OK) {
-      gst_buffer_unref (buf2);
-      goto done;
-    }
-
-    ret = gst_speex_enc_push_buffer (enc, buf2);
-
-    if (ret != GST_FLOW_OK)
-      goto done;
+    /* store buffers for later pre_push sending */
+    g_slist_foreach (enc->headers, (GFunc) gst_buffer_unref, NULL);
+    enc->headers = NULL;
+    GST_DEBUG_OBJECT (enc, "storing header buffers");
+    enc->headers = g_slist_prepend (enc->headers, buf2);
+    enc->headers = g_slist_prepend (enc->headers, buf1);
 
     enc->header_sent = TRUE;
   }
@@ -719,10 +722,38 @@ gst_speex_enc_handle_frame (GstAudioEncoder * benc, GstBuffer * buf)
 
   ret = gst_speex_enc_encode (enc, buf);
 
-done:
   return ret;
 }
 
+static GstFlowReturn
+gst_speex_enc_pre_push (GstAudioEncoder * benc, GstBuffer ** buffer)
+{
+  GstSpeexEnc *enc;
+  GstFlowReturn ret = GST_FLOW_OK;
+
+  enc = GST_SPEEX_ENC (benc);
+
+  /* FIXME 0.11 ? get rid of this special ogg stuff and have it
+   * put and use 'codec data' in caps like anything else,
+   * with all the usual out-of-band advantage etc */
+  if (G_UNLIKELY (enc->headers)) {
+    GSList *header = enc->headers;
+
+    /* try to push all of these, if we lose one, might as well lose all */
+    while (header) {
+      if (ret == GST_FLOW_OK)
+        ret = gst_speex_enc_push_buffer (enc, header->data);
+      else
+        gst_speex_enc_push_buffer (enc, header->data);
+      header = g_slist_next (header);
+    }
+
+    g_slist_free (enc->headers);
+    enc->headers = NULL;
+  }
+
+  return ret;
+}
 
 static void
 gst_speex_enc_get_property (GObject * object, guint prop_id, GValue * value,
