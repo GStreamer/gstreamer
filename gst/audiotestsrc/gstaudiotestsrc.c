@@ -290,6 +290,8 @@ gst_audio_test_src_setcaps (GstBaseSrc * basesrc, GstCaps * caps)
 
   src->info = info;
 
+  gst_base_src_set_blocksize (basesrc,
+      GST_AUDIO_INFO_BPF (&info) * src->samples_per_buffer);
   gst_audio_test_src_change_wave (src);
 
   return TRUE;
@@ -1211,6 +1213,8 @@ gst_audio_test_src_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_SAMPLES_PER_BUFFER:
       src->samples_per_buffer = g_value_get_int (value);
+      gst_base_src_set_blocksize (GST_BASE_SRC_CAST (src),
+          GST_AUDIO_INFO_BPF (&src->info) * src->samples_per_buffer);
       break;
     case PROP_WAVE:
       src->wave = g_value_get_enum (value);
