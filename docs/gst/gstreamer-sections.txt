@@ -2777,7 +2777,6 @@ gst_print_element_args
 gst_print_pad_caps
 gst_guint64_to_gdouble
 gst_gdouble_to_guint64
-gst_type_register_static_full
 gst_util_dump_mem
 gst_util_uint64_scale
 gst_util_uint64_scale_round

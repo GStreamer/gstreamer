@@ -78,20 +78,6 @@ void		gst_print_pad_caps		(GString *buf, gint indent, GstPad *pad);
 void		gst_print_element_args		(GString *buf, gint indent, GstElement *element);
 
 
-GType gst_type_register_static_full (GType parent_type,
-			                   const gchar       *type_name,
-                               guint              class_size,
-                               GBaseInitFunc      base_init,
-                               GBaseFinalizeFunc  base_finalize,
-                               GClassInitFunc     class_init,
-                               GClassFinalizeFunc class_finalize,
-                               gconstpointer      class_data,
-                               guint              instance_size,
-                               guint16            n_preallocs,
-                               GInstanceInitFunc  instance_init,
-                               const GTypeValueTable *value_table,
-                               GTypeFlags	 flags);
-
 /**
  * GST_CALL_PARENT:
  * @parent_class_cast: the name of the class cast macro for the parent type
