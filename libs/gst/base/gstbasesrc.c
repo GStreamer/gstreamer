@@ -1284,12 +1284,16 @@ gst_base_src_default_alloc (GstBaseSrc * src, guint64 offset,
 
   if (priv->pool) {
     ret = gst_buffer_pool_acquire_buffer (priv->pool, buffer, NULL);
-  } else {
+  } else if (size != -1) {
     *buffer = gst_buffer_new_allocate (priv->allocator, size, priv->alignment);
     if (G_UNLIKELY (*buffer == NULL))
       goto alloc_failed;
 
     ret = GST_FLOW_OK;
+  } else {
+    GST_WARNING_OBJECT (src, "Not trying to alloc %u bytes. Blocksize not set?",
+        size);
+    goto alloc_failed;
   }
   return ret;
 
