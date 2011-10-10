@@ -89,27 +89,15 @@ static void gst_id3demux_set_property (GObject * object, guint prop_id,
 static void gst_id3demux_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-GST_BOILERPLATE (GstID3Demux, gst_id3demux, GstTagDemux, GST_TYPE_TAG_DEMUX);
-
-static void
-gst_id3demux_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_factory));
-
-  gst_element_class_set_details_simple (element_class, "ID3 tag demuxer",
-      "Codec/Demuxer/Metadata",
-      "Read and output ID3v1 and ID3v2 tags while demuxing the contents",
-      "Jan Schmidt <thaytan@mad.scientist.com>");
-}
+#define gst_id3demux_parent_class parent_class
+G_DEFINE_TYPE (GstID3Demux, gst_id3demux, GST_TYPE_TAG_DEMUX);
 
 static void
 gst_id3demux_class_init (GstID3DemuxClass * klass)
 {
-  GstTagDemuxClass *tagdemux_class = (GstTagDemuxClass *) klass;
   GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstElementClass *gstelement_class = (GstElementClass *) klass;
+  GstTagDemuxClass *tagdemux_class = (GstTagDemuxClass *) klass;
 
   gobject_class->set_property = gst_id3demux_set_property;
   gobject_class->get_property = gst_id3demux_get_property;
@@ -120,6 +108,14 @@ gst_id3demux_class_init (GstID3DemuxClass * klass)
           "and ID3v2 tags are present", DEFAULT_PREFER_V1,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sink_factory));
+
+  gst_element_class_set_details_simple (gstelement_class, "ID3 tag demuxer",
+      "Codec/Demuxer/Metadata",
+      "Read and output ID3v1 and ID3v2 tags while demuxing the contents",
+      "Jan Schmidt <thaytan@mad.scientist.com>");
+
   tagdemux_class->identify_tag = GST_DEBUG_FUNCPTR (gst_id3demux_identify_tag);
   tagdemux_class->parse_tag = GST_DEBUG_FUNCPTR (gst_id3demux_parse_tag);
   tagdemux_class->merge_tags = GST_DEBUG_FUNCPTR (gst_id3demux_merge_tags);
@@ -129,7 +125,7 @@ gst_id3demux_class_init (GstID3DemuxClass * klass)
 }
 
 static void
-gst_id3demux_init (GstID3Demux * id3demux, GstID3DemuxClass * klass)
+gst_id3demux_init (GstID3Demux * id3demux)
 {
   id3demux->prefer_v1 = DEFAULT_PREFER_V1;
 }
@@ -138,7 +134,9 @@ static gboolean
 gst_id3demux_identify_tag (GstTagDemux * demux, GstBuffer * buf,
     gboolean start_tag, guint * tag_size)
 {
-  const guint8 *data = GST_BUFFER_DATA (buf);
+  guint8 data[3];
+
+  gst_buffer_extract (buf, 0, data, 3);
 
   if (start_tag) {
     if (data[0] != 'I' || data[1] != 'D' || data[2] != '3')
@@ -190,7 +188,11 @@ gst_id3demux_parse_tag (GstTagDemux * demux, GstBuffer * buffer,
       return GST_TAG_DEMUX_RESULT_BROKEN_TAG;
     }
   } else {
-    *tags = gst_tag_list_new_from_id3v1 (GST_BUFFER_DATA (buffer));
+    guint8 *data;
+
+    data = gst_buffer_map (buffer, NULL, NULL, GST_MAP_READ);
+    *tags = gst_tag_list_new_from_id3v1 (data);
+    gst_buffer_unmap (buffer, data, -1);
 
     if (G_UNLIKELY (*tags == NULL))
       return GST_TAG_DEMUX_RESULT_BROKEN_TAG;
