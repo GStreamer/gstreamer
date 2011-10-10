@@ -398,9 +398,21 @@ gst_ff_aud_caps_new (AVCodecContext * context, enum CodecID codec_id,
         break;
       }
       case CODEC_ID_ADPCM_G722:
-      case CODEC_ID_ADPCM_G726:
+      {
+        const static gint l_rates[] = { 16000 };
+        n_rates = G_N_ELEMENTS (l_rates);
+        rates = l_rates;
         maxchannels = 1;
         break;
+      }
+      case CODEC_ID_ADPCM_G726:
+      {
+        const static gint l_rates[] = { 8000 };
+        n_rates = G_N_ELEMENTS (l_rates);
+        rates = l_rates;
+        maxchannels = 1;
+        break;
+      }
       case CODEC_ID_ADPCM_SWF:
       {
         const static gint l_rates[] = { 11025, 22050, 44100 };
