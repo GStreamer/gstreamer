@@ -248,6 +248,11 @@
  * -ff   ffvideoscale:  ffvideoscale: FFMPEG Scale element
  * -ff   postproc:
 
+ * gnl   gnonlin:       gnlcomposition: GNonLin Composition
+ * gnl   gnonlin:       gnloperation: GNonLin Operation
+ * gnl   gnonlin:       gnlsource: GNonLin Source
+ * gnl   gnonlin:       gnlurisource: GNonLin URI Source
+
  -- essential --
 
    -good apetag:        apedemux: APE tag demuxer
@@ -413,11 +418,6 @@
    -bad  geometrictransform:  tunnel: tunnel
    -bad  geometrictransform:  twirl: twirl
    -bad  geometrictransform:  waterripple: waterripple
-         gnonlin:       gnlcomposition: GNonLin Composition
-         gnonlin:       gnlfilesource: GNonLin File Source
-         gnonlin:       gnloperation: GNonLin Operation
-         gnonlin:       gnlsource: GNonLin Source
-         gnonlin:       gnlurisource: GNonLin URI Source
    -good goom2k1:       goom2k1: GOOM: what a GOOM! 2k1 edition
    -bad  gsettings:     gsettingsaudiosink: GSettings audio sink
    -bad  gsettings:     gsettingsaudiosrc: GSettings audio src
