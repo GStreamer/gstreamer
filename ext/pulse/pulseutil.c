@@ -89,48 +89,57 @@ static const GstAudioChannelPosition
   [PA_CHANNEL_POSITION_INVALID + 1] = GST_AUDIO_CHANNEL_POSITION_NONE,
 };
 
+static gboolean
+gstaudioformat_to_pasampleformat (GstAudioFormat format,
+    pa_sample_format_t * sf)
+{
+  switch (format) {
+    case GST_AUDIO_FORMAT_U8:
+      *sf = PA_SAMPLE_U8;
+      break;
+    case GST_AUDIO_FORMAT_S16LE:
+      *sf = PA_SAMPLE_S16LE;
+      break;
+    case GST_AUDIO_FORMAT_S16BE:
+      *sf = PA_SAMPLE_S16BE;
+      break;
+    case GST_AUDIO_FORMAT_F32LE:
+      *sf = PA_SAMPLE_FLOAT32LE;
+      break;
+    case GST_AUDIO_FORMAT_F32BE:
+      *sf = PA_SAMPLE_FLOAT32BE;
+      break;
+    case GST_AUDIO_FORMAT_S32LE:
+      *sf = PA_SAMPLE_S32LE;
+      break;
+    case GST_AUDIO_FORMAT_S32BE:
+      *sf = PA_SAMPLE_S32BE;
+      break;
+    case GST_AUDIO_FORMAT_S24LE:
+      *sf = PA_SAMPLE_S24LE;
+      break;
+    case GST_AUDIO_FORMAT_S24BE:
+      *sf = PA_SAMPLE_S24BE;
+      break;
+    case GST_AUDIO_FORMAT_S24_32LE:
+      *sf = PA_SAMPLE_S24_32LE;
+      break;
+    case GST_AUDIO_FORMAT_S24_32BE:
+      *sf = PA_SAMPLE_S24_32BE;
+      break;
+    default:
+      return FALSE;
+  }
+  return TRUE;
+}
+
 gboolean
 gst_pulse_fill_sample_spec (GstRingBufferSpec * spec, pa_sample_spec * ss)
 {
-
   if (spec->type == GST_BUFTYPE_RAW) {
-    switch (GST_AUDIO_INFO_FORMAT (&spec->info)) {
-      case GST_AUDIO_FORMAT_U8:
-        ss->format = PA_SAMPLE_U8;
-        break;
-      case GST_AUDIO_FORMAT_S16LE:
-        ss->format = PA_SAMPLE_S16LE;
-        break;
-      case GST_AUDIO_FORMAT_S16BE:
-        ss->format = PA_SAMPLE_S16BE;
-        break;
-      case GST_AUDIO_FORMAT_F32LE:
-        ss->format = PA_SAMPLE_FLOAT32LE;
-        break;
-      case GST_AUDIO_FORMAT_F32BE:
-        ss->format = PA_SAMPLE_FLOAT32BE;
-        break;
-      case GST_AUDIO_FORMAT_S32LE:
-        ss->format = PA_SAMPLE_S32LE;
-        break;
-      case GST_AUDIO_FORMAT_S32BE:
-        ss->format = PA_SAMPLE_S32BE;
-        break;
-      case GST_AUDIO_FORMAT_S24LE:
-        ss->format = PA_SAMPLE_S24LE;
-        break;
-      case GST_AUDIO_FORMAT_S24BE:
-        ss->format = PA_SAMPLE_S24BE;
-        break;
-      case GST_AUDIO_FORMAT_S24_32LE:
-        ss->format = PA_SAMPLE_S24_32LE;
-        break;
-      case GST_AUDIO_FORMAT_S24_32BE:
-        ss->format = PA_SAMPLE_S24_32BE;
-        break;
-      default:
-        return FALSE;
-    }
+    if (!gstaudioformat_to_pasampleformat (GST_AUDIO_INFO_FORMAT (&spec->info),
+            &ss->format))
+      return FALSE;
   } else if (spec->type == GST_BUFTYPE_MU_LAW) {
     ss->format = PA_SAMPLE_ULAW;
   } else if (spec->type == GST_BUFTYPE_A_LAW) {
@@ -154,55 +163,28 @@ gst_pulse_fill_format_info (GstRingBufferSpec * spec, pa_format_info ** f,
 {
   pa_format_info *format;
   pa_sample_format_t sf = PA_SAMPLE_INVALID;
+  GstAudioInfo *ainfo = &spec->info;
 
   format = pa_format_info_new ();
 
-  if (spec->format == GST_MU_LAW && spec->width == 8) {
+  if (spec->type == GST_BUFTYPE_MU_LAW && GST_AUDIO_INFO_WIDTH (ainfo) == 8) {
     format->encoding = PA_ENCODING_PCM;
     sf = PA_SAMPLE_ULAW;
-  } else if (spec->format == GST_A_LAW && spec->width == 8) {
+  } else if (spec->type == GST_BUFTYPE_A_LAW
+      && GST_AUDIO_INFO_WIDTH (ainfo) == 8) {
     format->encoding = PA_ENCODING_PCM;
     sf = PA_SAMPLE_ALAW;
-  } else if (spec->format == GST_U8 && spec->width == 8) {
+  } else if (spec->type == GST_BUFTYPE_RAW) {
     format->encoding = PA_ENCODING_PCM;
-    sf = PA_SAMPLE_U8;
-  } else if (spec->format == GST_S16_LE && spec->width == 16) {
-    format->encoding = PA_ENCODING_PCM;
-    sf = PA_SAMPLE_S16LE;
-  } else if (spec->format == GST_S16_BE && spec->width == 16) {
-    format->encoding = PA_ENCODING_PCM;
-    sf = PA_SAMPLE_S16BE;
-  } else if (spec->format == GST_FLOAT32_LE && spec->width == 32) {
-    format->encoding = PA_ENCODING_PCM;
-    sf = PA_SAMPLE_FLOAT32LE;
-  } else if (spec->format == GST_FLOAT32_BE && spec->width == 32) {
-    format->encoding = PA_ENCODING_PCM;
-    sf = PA_SAMPLE_FLOAT32BE;
-  } else if (spec->format == GST_S32_LE && spec->width == 32) {
-    format->encoding = PA_ENCODING_PCM;
-    sf = PA_SAMPLE_S32LE;
-  } else if (spec->format == GST_S32_BE && spec->width == 32) {
-    format->encoding = PA_ENCODING_PCM;
-    sf = PA_SAMPLE_S32BE;
-  } else if (spec->format == GST_S24_3LE && spec->width == 24) {
-    format->encoding = PA_ENCODING_PCM;
-    sf = PA_SAMPLE_S24LE;
-  } else if (spec->format == GST_S24_3BE && spec->width == 24) {
-    format->encoding = PA_ENCODING_PCM;
-    sf = PA_SAMPLE_S24BE;
-  } else if (spec->format == GST_S24_LE && spec->width == 32) {
-    format->encoding = PA_ENCODING_PCM;
-    sf = PA_SAMPLE_S24_32LE;
-  } else if (spec->format == GST_S24_BE && spec->width == 32) {
-    format->encoding = PA_ENCODING_PCM;
-    sf = PA_SAMPLE_S24_32BE;
-  } else if (spec->format == GST_AC3) {
+    if (!gstaudioformat_to_pasampleformat (GST_AUDIO_INFO_FORMAT (ainfo), &sf))
+      goto fail;
+  } else if (spec->type == GST_BUFTYPE_AC3) {
     format->encoding = PA_ENCODING_AC3_IEC61937;
-  } else if (spec->format == GST_EAC3) {
+  } else if (spec->type == GST_BUFTYPE_EAC3) {
     format->encoding = PA_ENCODING_EAC3_IEC61937;
-  } else if (spec->format == GST_DTS) {
+  } else if (spec->type == GST_BUFTYPE_DTS) {
     format->encoding = PA_ENCODING_DTS_IEC61937;
-  } else if (spec->format == GST_MPEG) {
+  } else if (spec->type == GST_BUFTYPE_MPEG) {
     format->encoding = PA_ENCODING_MPEG_IEC61937;
   } else {
     goto fail;
@@ -210,16 +192,16 @@ gst_pulse_fill_format_info (GstRingBufferSpec * spec, pa_format_info ** f,
 
   if (format->encoding == PA_ENCODING_PCM) {
     pa_format_info_set_sample_format (format, sf);
-    pa_format_info_set_channels (format, spec->channels);
+    pa_format_info_set_channels (format, GST_AUDIO_INFO_CHANNELS (ainfo));
   }
 
-  pa_format_info_set_rate (format, spec->rate);
+  pa_format_info_set_rate (format, GST_AUDIO_INFO_RATE (ainfo));
 
   if (!pa_format_info_valid (format))
     goto fail;
 
   *f = format;
-  *channels = spec->channels;
+  *channels = GST_AUDIO_INFO_CHANNELS (ainfo);
 
   return TRUE;
 

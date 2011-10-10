@@ -28,6 +28,7 @@
 
 #include <gst/gst.h>
 #include <pulse/pulseaudio.h>
+#include <gst/audio/gstringbuffer.h>
 #include <gst/audio/gstaudiosink.h>
 
 gboolean gst_pulse_fill_sample_spec (GstRingBufferSpec * spec,
