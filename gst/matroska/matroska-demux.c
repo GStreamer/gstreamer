@@ -5266,6 +5266,7 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
           "framed", G_TYPE_BOOLEAN, TRUE, NULL);
       gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, priv, NULL);
       *codec_name = g_strdup_printf ("MPEG-%d AAC audio", mpegversion);
+      gst_buffer_unref (priv);
     }
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_TTA)) {
     caps = gst_caps_new_simple ("audio/x-tta",
