@@ -499,7 +499,6 @@ gst_split_file_src_create (GstBaseSrc * basesrc, guint64 offset, guint size,
   buf = gst_buffer_new_and_alloc (size);
 
   GST_BUFFER_OFFSET (buf) = offset;
-  GST_BUFFER_OFFSET_END (buf) = offset + size;
 
   data = GST_BUFFER_DATA (buf);
 
@@ -507,6 +506,7 @@ gst_split_file_src_create (GstBaseSrc * basesrc, guint64 offset, guint size,
 
   while (size > 0) {
     guint64 bytes_to_end_of_part;
+    gsize read = 0;
 
     /* we want the offset into the file part */
     read_offset = offset - cur_part.start;
@@ -530,14 +530,14 @@ gst_split_file_src_create (GstBaseSrc * basesrc, guint64 offset, guint size,
     stream = G_INPUT_STREAM (cur_part.stream);
 
     /* NB: we won't try to read beyond EOF */
-    if (!g_input_stream_read_all (stream, data, to_read, NULL, cancel, &err))
+    if (!g_input_stream_read_all (stream, data, to_read, &read, cancel, &err))
       goto read_failed;
 
-    GST_LOG_OBJECT (src, "read %u bytes", to_read);
+    GST_LOG_OBJECT (src, "read %u bytes", (guint) read);
 
-    data += to_read;
-    size -= to_read;
-    offset += to_read;
+    data += read;
+    size -= read;
+    offset += read;
 
     /* are we done? */
     if (size == 0)
@@ -545,14 +545,23 @@ gst_split_file_src_create (GstBaseSrc * basesrc, guint64 offset, guint size,
 
     GST_LOG_OBJECT (src, "%u bytes left to read for this chunk", size);
 
-    if (src->cur_part == src->num_parts - 1) {
-      /* FIXME: at end, need to truncate buffer */
-      break;
+    /* corner case, this should never really happen (assuming basesrc clips
+     * requests beyond the file size) */
+    if (read < to_read) {
+      if (src->cur_part == src->num_parts - 1) {
+        /* last file part, stop reading and truncate buffer */
+        GST_BUFFER_SIZE (buf) = offset - GST_BUFFER_OFFSET (buf);
+        break;
+      } else {
+        goto file_part_changed;
+      }
     }
 
     ++src->cur_part;
     cur_part = src->parts[src->cur_part];
   }
+
+  GST_BUFFER_OFFSET_END (buf) = offset;
 
   *buffer = buf;
   GST_LOG_OBJECT (src, "read %u bytes into buf %p", GST_BUFFER_SIZE (buf), buf);
@@ -580,6 +589,14 @@ read_failed:
         ("Read from %" G_GUINT64_FORMAT " in %s failed", read_offset,
             cur_part.path));
     g_error_free (err);
+    gst_buffer_unref (buf);
+    return GST_FLOW_ERROR;
+  }
+file_part_changed:
+  {
+    GST_ELEMENT_ERROR (src, RESOURCE, READ,
+        ("Read error while reading file part %s", cur_part.path),
+        ("Short read in file part, file may have been modified since start"));
     gst_buffer_unref (buf);
     return GST_FLOW_ERROR;
   }
