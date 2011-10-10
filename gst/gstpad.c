@@ -2425,7 +2425,7 @@ gst_pad_get_current_caps (GstPad * pad)
  * Note that this function does not return writable #GstCaps, use
  * gst_caps_make_writable() before modifying the caps.
  *
- * Returns: the caps of the pad with incremented ref-count.
+ * Returns: (transfer full): the caps of the pad with incremented ref-count.
  */
 GstCaps *
 gst_pad_get_caps (GstPad * pad, GstCaps * filter)
