@@ -79,6 +79,8 @@
  * -good alaw:          alawenc: A Law audio encoder
  * -good alpha:         alpha: Alpha filter
  * -good alphacolor:    alphacolor: Alpha color filter
+ * -good annodex:       cmmldec: CMML stream decoder
+ * -good annodex:       cmmlenc: CMML streams encoder
  * -good audiofx:       audioamplify: Audio amplifier
  * -good audiofx:       audiochebband: Band pass & band reject filter
  * -good audiofx:       audiocheblimit: Low pass & high pass filter
@@ -245,8 +247,6 @@
 
  -- essential --
 
-   -good annodex:       cmmldec: CMML stream decoder
-   -good annodex:       cmmlenc: CMML streams encoder
    -good apetag:        apedemux: APE tag demuxer
    -bad  celt:          celtdec: Celt audio decoder
    -bad  celt:          celtenc: Celt audio encoder
