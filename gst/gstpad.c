@@ -4215,6 +4215,14 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
       break;
     case GST_EVENT_FLUSH_STOP:
       GST_PAD_UNSET_FLUSHING (pad);
+
+      /* Remove sticky EOS events */
+      GST_LOG_OBJECT (pad, "Removing pending EOS events");
+      gst_event_replace (&pad->priv->
+          events[GST_EVENT_STICKY_IDX_TYPE (GST_EVENT_EOS)].pending, NULL);
+      gst_event_replace (&pad->priv->
+          events[GST_EVENT_STICKY_IDX_TYPE (GST_EVENT_EOS)].event, NULL);
+
       if (G_UNLIKELY (GST_PAD_IS_BLOCKED (pad))) {
         GST_LOG_OBJECT (pad, "Pad is blocked, not forwarding flush-stop");
         goto flushed;
@@ -4419,6 +4427,13 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
         GST_PAD_UNSET_FLUSHING (pad);
         GST_CAT_DEBUG_OBJECT (GST_CAT_EVENT, pad, "cleared flush flag");
       }
+      /* Remove pending EOS events */
+      GST_LOG_OBJECT (pad, "Removing pending EOS events");
+      gst_event_replace (&pad->priv->
+          events[GST_EVENT_STICKY_IDX_TYPE (GST_EVENT_EOS)].pending, NULL);
+      gst_event_replace (&pad->priv->
+          events[GST_EVENT_STICKY_IDX_TYPE (GST_EVENT_EOS)].event, NULL);
+
       GST_OBJECT_UNLOCK (pad);
       /* grab stream lock */
       GST_PAD_STREAM_LOCK (pad);
