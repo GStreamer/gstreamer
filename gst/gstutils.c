@@ -3900,6 +3900,9 @@ gst_type_register_static_full (GType parent_type,
 {
   GTypeInfo info;
 
+  g_return_val_if_fail (class_size <= G_MAXUINT16, G_TYPE_INVALID);
+  g_return_val_if_fail (instance_size <= G_MAXUINT16, G_TYPE_INVALID);
+
   info.class_size = class_size;
   info.base_init = base_init;
   info.base_finalize = base_finalize;
