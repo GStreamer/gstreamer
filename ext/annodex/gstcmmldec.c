@@ -83,7 +83,9 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     );
 
 /* GstCmmlDec */
-GST_BOILERPLATE (GstCmmlDec, gst_cmml_dec, GstElement, GST_TYPE_ELEMENT);
+#define gst_cmml_dec_parent_class parent_class
+G_DEFINE_TYPE (GstCmmlDec, gst_cmml_dec, GST_TYPE_ELEMENT);
+
 static void gst_cmml_dec_get_property (GObject * dec, guint property_id,
     GValue * value, GParamSpec * pspec);
 static void gst_cmml_dec_set_property (GObject * dec, guint property_id,
@@ -98,13 +100,15 @@ static GstStateChangeReturn gst_cmml_dec_change_state (GstElement * element,
 static GstFlowReturn gst_cmml_dec_chain (GstPad * pad, GstBuffer * buffer);
 
 static GstCmmlPacketType gst_cmml_dec_parse_packet_type (GstCmmlDec * dec,
-    GstBuffer * buffer);
-static void gst_cmml_dec_parse_ident_header (GstCmmlDec * dec, GstBuffer * buf);
-static void gst_cmml_dec_parse_first_header (GstCmmlDec * dec, GstBuffer * buf);
-static void gst_cmml_dec_parse_preamble (GstCmmlDec * dec,
-    guchar * preamble, guchar * cmml_root_element);
-static void gst_cmml_dec_parse_xml (GstCmmlDec * dec,
-    guchar * data, guint size);
+    gchar * data, gsize size);
+static void gst_cmml_dec_parse_ident_header (GstCmmlDec * dec, guint8 * data,
+    gsize size);
+static void gst_cmml_dec_parse_first_header (GstCmmlDec * dec, guint8 * data,
+    gsize size);
+static void gst_cmml_dec_parse_preamble (GstCmmlDec * dec, guchar * preamble,
+    guchar * cmml_root_element);
+static void gst_cmml_dec_parse_xml (GstCmmlDec * dec, guchar * data,
+    guint size);
 static void gst_cmml_dec_parse_head (GstCmmlDec * dec, GstCmmlTagHead * head);
 static void gst_cmml_dec_parse_clip (GstCmmlDec * dec, GstCmmlTagClip * clip);
 
@@ -117,9 +121,23 @@ static void gst_cmml_dec_send_clip_tag (GstCmmlDec * dec,
 static void gst_cmml_dec_finalize (GObject * object);
 
 static void
-gst_cmml_dec_base_init (gpointer g_class)
+gst_cmml_dec_class_init (GstCmmlDecClass * klass)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  object_class->set_property = gst_cmml_dec_set_property;
+  object_class->get_property = gst_cmml_dec_get_property;
+  object_class->finalize = gst_cmml_dec_finalize;
+
+  g_object_class_install_property (object_class, GST_CMML_DEC_WAIT_CLIP_END,
+      g_param_spec_boolean ("wait-clip-end-time",
+          "Wait clip end time",
+          "Send a tag for a clip when the clip ends, setting its end-time. "
+          "Use when you need to know both clip's start-time and end-time.",
+          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  element_class->change_state = gst_cmml_dec_change_state;
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_cmml_dec_sink_factory));
@@ -131,26 +149,7 @@ gst_cmml_dec_base_init (gpointer g_class)
 }
 
 static void
-gst_cmml_dec_class_init (GstCmmlDecClass * dec_class)
-{
-  GObjectClass *klass = G_OBJECT_CLASS (dec_class);
-
-  GST_ELEMENT_CLASS (klass)->change_state = gst_cmml_dec_change_state;
-
-  klass->set_property = gst_cmml_dec_set_property;
-  klass->get_property = gst_cmml_dec_get_property;
-  klass->finalize = gst_cmml_dec_finalize;
-
-  g_object_class_install_property (klass, GST_CMML_DEC_WAIT_CLIP_END,
-      g_param_spec_boolean ("wait-clip-end-time",
-          "Wait clip end time",
-          "Send a tag for a clip when the clip ends, setting its end-time. "
-          "Use when you need to know both clip's start-time and end-time.",
-          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-}
-
-static void
-gst_cmml_dec_init (GstCmmlDec * dec, GstCmmlDecClass * klass)
+gst_cmml_dec_init (GstCmmlDec * dec)
 {
   dec->sinkpad =
       gst_pad_new_from_static_template (&gst_cmml_dec_sink_factory, "sink");
@@ -240,7 +239,7 @@ gst_cmml_dec_change_state (GstElement * element, GstStateChange transition)
       break;
   }
 
-  res = parent_class->change_state (element, transition);
+  res = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
@@ -369,8 +368,12 @@ gst_cmml_dec_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstCmmlDec *dec = GST_CMML_DEC (GST_PAD_PARENT (pad));
   GstCmmlPacketType packet;
+  guint8 *data;
+  gsize size;
 
-  if (GST_BUFFER_SIZE (buffer) == 0) {
+  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+
+  if (size == 0) {
     /* the EOS page could be empty */
     dec->flow_return = GST_FLOW_OK;
     goto done;
@@ -381,25 +384,24 @@ gst_cmml_dec_chain (GstPad * pad, GstBuffer * buffer)
       dec->granulerate_n, dec->granulerate_d, dec->granuleshift);
 
   /* identify the packet type */
-  packet = gst_cmml_dec_parse_packet_type (dec, buffer);
+  packet = gst_cmml_dec_parse_packet_type (dec, (gchar *) data, size);
 
   /* handle the packet. the handler will set dec->flow_return */
   switch (packet) {
     case GST_CMML_PACKET_IDENT_HEADER:
       if (dec->sent_root == FALSE)
         /* don't parse the ident again in case of seeking to the beginning */
-        gst_cmml_dec_parse_ident_header (dec, buffer);
+        gst_cmml_dec_parse_ident_header (dec, data, size);
       break;
     case GST_CMML_PACKET_FIRST_HEADER:
       if (dec->sent_root == FALSE)
         /* don't parse the xml preamble if it has already been parsed because it
          * would error out, so seeking to the beginning would fail */
-        gst_cmml_dec_parse_first_header (dec, buffer);
+        gst_cmml_dec_parse_first_header (dec, data, size);
       break;
     case GST_CMML_PACKET_SECOND_HEADER:
     case GST_CMML_PACKET_CLIP:
-      gst_cmml_dec_parse_xml (dec,
-          GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer));
+      gst_cmml_dec_parse_xml (dec, data, size);
       break;
     case GST_CMML_PACKET_UNKNOWN:
     default:
@@ -408,18 +410,18 @@ gst_cmml_dec_chain (GstPad * pad, GstBuffer * buffer)
   }
 
 done:
+  gst_buffer_unmap (buffer, data, size);
   gst_buffer_unref (buffer);
+
   return dec->flow_return;
 }
 
 /* finds the packet type of the buffer
  */
 static GstCmmlPacketType
-gst_cmml_dec_parse_packet_type (GstCmmlDec * dec, GstBuffer * buffer)
+gst_cmml_dec_parse_packet_type (GstCmmlDec * dec, gchar * data, gsize size)
 {
   GstCmmlPacketType packet_type = GST_CMML_PACKET_UNKNOWN;
-  gchar *data = (gchar *) GST_BUFFER_DATA (buffer);
-  guint size = GST_BUFFER_SIZE (buffer);
 
   if (size >= 8 && !memcmp (data, "CMML\0\0\0\0", 8)) {
     packet_type = GST_CMML_PACKET_IDENT_HEADER;
@@ -443,19 +445,15 @@ gst_cmml_dec_new_buffer (GstCmmlDec * dec,
 {
   GstFlowReturn res;
 
-  res = gst_pad_alloc_buffer (dec->srcpad, GST_BUFFER_OFFSET_NONE,
-      size, gst_static_pad_template_get_caps (&gst_cmml_dec_src_factory),
-      buffer);
-
-  if (res == GST_FLOW_OK) {
+  *buffer = gst_buffer_new_allocate (NULL, size, 0);
+  if (*buffer != NULL) {
     if (data)
-      memcpy (GST_BUFFER_DATA (*buffer), data, size);
+      gst_buffer_fill (*buffer, 0, data, size);
     GST_BUFFER_TIMESTAMP (*buffer) = dec->timestamp;
-  } else if (res == GST_FLOW_NOT_LINKED) {
-    GST_DEBUG_OBJECT (dec, "alloc function return NOT-LINKED, ignoring");
+    res = GST_FLOW_OK;
   } else {
-    GST_WARNING_OBJECT (dec, "alloc function returned error %s",
-        gst_flow_get_name (res));
+    GST_WARNING_OBJECT (dec, "could not allocate buffer");
+    res = GST_FLOW_ERROR;
   }
 
   return res;
@@ -464,14 +462,12 @@ gst_cmml_dec_new_buffer (GstCmmlDec * dec,
 /* parses the first CMML packet (the ident header)
  */
 static void
-gst_cmml_dec_parse_ident_header (GstCmmlDec * dec, GstBuffer * buffer)
+gst_cmml_dec_parse_ident_header (GstCmmlDec * dec, guint8 * data, gsize size)
 {
-  guint8 *data = GST_BUFFER_DATA (buffer);
-
   /* the ident header has a fixed length */
-  if (GST_BUFFER_SIZE (buffer) != CMML_IDENT_HEADER_SIZE) {
+  if (size != CMML_IDENT_HEADER_SIZE) {
     GST_ELEMENT_ERROR (dec, STREAM, DECODE,
-        (NULL), ("wrong ident header size: %d", GST_BUFFER_SIZE (buffer)));
+        (NULL), ("wrong ident header size: %d", size));
     dec->flow_return = GST_FLOW_ERROR;
 
     return;
@@ -503,17 +499,15 @@ gst_cmml_dec_parse_ident_header (GstCmmlDec * dec, GstBuffer * buffer)
  * optional "cmml" processing instruction.
  */
 static void
-gst_cmml_dec_parse_first_header (GstCmmlDec * dec, GstBuffer * buffer)
+gst_cmml_dec_parse_first_header (GstCmmlDec * dec, guint8 * data, gsize size)
 {
-  gst_cmml_dec_parse_xml (dec,
-      GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer));
+  gst_cmml_dec_parse_xml (dec, data, size);
 
   /* if there is a processing instruction, gst_cmml_dec_parse_preamble
    * will be triggered. Otherwise we need to call it manually.
    */
   if (dec->flow_return == GST_FLOW_OK && !dec->sent_root) {
-    guchar *preamble = (guchar *) g_strndup ((gchar *) GST_BUFFER_DATA (buffer),
-        GST_BUFFER_SIZE (buffer));
+    guchar *preamble = (guchar *) g_strndup ((gchar *) data, size);
 
     gst_cmml_dec_parse_preamble (dec, preamble, (guchar *) "<cmml>");
     g_free (preamble);

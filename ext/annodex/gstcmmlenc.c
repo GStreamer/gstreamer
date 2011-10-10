@@ -79,7 +79,9 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("text/x-cmml, encoded = (boolean) false")
     );
 
-GST_BOILERPLATE (GstCmmlEnc, gst_cmml_enc, GstElement, GST_TYPE_ELEMENT);
+#define gst_cmml_enc_parent_class parent_class
+G_DEFINE_TYPE (GstCmmlEnc, gst_cmml_enc, GST_TYPE_ELEMENT);
+
 static void gst_cmml_enc_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec);
 static void gst_cmml_enc_set_property (GObject * object, guint property_id,
@@ -104,23 +106,10 @@ static GstFlowReturn gst_cmml_enc_push (GstCmmlEnc * enc, GstBuffer * buffer);
 static void gst_cmml_enc_finalize (GObject * object);
 
 static void
-gst_cmml_enc_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_cmml_enc_sink_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_cmml_enc_src_factory));
-  gst_element_class_set_details_simple (element_class, "CMML streams encoder",
-      "Codec/Encoder",
-      "Encodes CMML streams", "Alessandro Decina <alessandro@nnva.org>");
-}
-
-static void
 gst_cmml_enc_class_init (GstCmmlEncClass * enc_class)
 {
   GObjectClass *klass = G_OBJECT_CLASS (enc_class);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (enc_class);
 
   klass->get_property = gst_cmml_enc_get_property;
   klass->set_property = gst_cmml_enc_set_property;
@@ -147,11 +136,19 @@ gst_cmml_enc_class_init (GstCmmlEncClass * enc_class)
           0, 64, 32,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
-  GST_ELEMENT_CLASS (klass)->change_state = gst_cmml_enc_change_state;
+  element_class->change_state = gst_cmml_enc_change_state;
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_cmml_enc_sink_factory));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_cmml_enc_src_factory));
+  gst_element_class_set_details_simple (element_class, "CMML streams encoder",
+      "Codec/Encoder",
+      "Encodes CMML streams", "Alessandro Decina <alessandro@nnva.org>");
 }
 
 static void
-gst_cmml_enc_init (GstCmmlEnc * enc, GstCmmlEncClass * klass)
+gst_cmml_enc_init (GstCmmlEnc * enc)
 {
   enc->sinkpad =
       gst_pad_new_from_static_template (&gst_cmml_enc_sink_factory, "sink");
@@ -250,7 +247,7 @@ gst_cmml_enc_change_state (GstElement * element, GstStateChange transition)
       break;
   }
 
-  res = parent_class->change_state (element, transition);
+  res = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
@@ -295,14 +292,14 @@ gst_cmml_enc_new_buffer (GstCmmlEnc * enc,
 {
   GstFlowReturn res;
 
-  res = gst_pad_alloc_buffer (enc->srcpad, GST_BUFFER_OFFSET_NONE, size,
-      NULL, buffer);
-  if (res == GST_FLOW_OK) {
+  *buffer = gst_buffer_new_allocate (NULL, size, 0);
+  if (*buffer != NULL) {
     if (data)
-      memcpy (GST_BUFFER_DATA (*buffer), data, size);
+      gst_buffer_fill (*buffer, 0, data, size);
+    res = GST_FLOW_OK;
   } else {
-    GST_WARNING_OBJECT (enc, "alloc function returned error %s",
-        gst_flow_get_name (res));
+    GST_WARNING_OBJECT (enc, "could not allocate buffer");
+    res = GST_FLOW_ERROR;
   }
 
   return res;
@@ -443,7 +440,7 @@ gst_cmml_enc_parse_tag_head (GstCmmlEnc * enc, GstCmmlTagHead * head)
     goto alloc_error;
   headers = g_list_append (headers, head_buf);
 
-  caps = gst_pad_get_caps (enc->srcpad);
+  caps = gst_pad_get_current_caps (enc->srcpad);
   caps = gst_cmml_enc_set_header_on_caps (enc, caps,
       ident_buf, preamble_buf, head_buf);
 
@@ -451,7 +448,6 @@ gst_cmml_enc_parse_tag_head (GstCmmlEnc * enc, GstCmmlTagHead * head)
     buffer = GST_BUFFER (headers->data);
     /* set granulepos 0 on headers */
     GST_BUFFER_OFFSET_END (buffer) = 0;
-    gst_buffer_set_caps (buffer, caps);
 
     enc->flow_return = gst_cmml_enc_push (enc, buffer);
     headers = g_list_delete_link (headers, headers);
@@ -600,19 +596,23 @@ gst_cmml_enc_chain (GstPad * pad, GstBuffer * buffer)
 {
   GError *err = NULL;
   GstCmmlEnc *enc = GST_CMML_ENC (GST_PAD_PARENT (pad));
+  gchar *data;
+  gsize size;
 
   /* the CMML handlers registered with enc->parser will override this when
    * encoding/pushing the buffers downstream
    */
   enc->flow_return = GST_FLOW_OK;
 
-  if (!gst_cmml_parser_parse_chunk (enc->parser,
-          (gchar *) GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer), &err)) {
+  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+
+  if (!gst_cmml_parser_parse_chunk (enc->parser, data, size, &err)) {
     GST_ELEMENT_ERROR (enc, STREAM, ENCODE, (NULL), ("%s", err->message));
     g_error_free (err);
     enc->flow_return = GST_FLOW_ERROR;
   }
 
+  gst_buffer_unmap (buffer, data, size);
   gst_buffer_unref (buffer);
   return enc->flow_return;
 }
