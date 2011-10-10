@@ -50,10 +50,7 @@ struct _GstDVBSubOverlay
   GstSegment video_segment;
   GstSegment subtitle_segment;
 
-  GstVideoFormat format;
-  gint width, height;
-  gint fps_n, fps_d;
-  gint par_n, par_d;
+  GstVideoInfo info;
 
   DVBSubtitles *current_subtitle; /* The currently active set of subtitle regions, if any */
   GQueue *pending_subtitles; /* A queue of raw subtitle region sets with
