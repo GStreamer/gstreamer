@@ -626,7 +626,7 @@ gst_tag_demux_chain (GstPad * pad, GstBuffer * buf)
       typefind_buf = demux->priv->collect;
       gst_buffer_ref (typefind_buf);
       if (!gst_tag_demux_trim_buffer (demux, &typefind_buf, &typefind_size))
-        return GST_FLOW_UNEXPECTED;
+        return GST_FLOW_EOS;
 
       if (typefind_buf == NULL)
         break;                  /* Still need more data */
@@ -677,7 +677,7 @@ gst_tag_demux_chain (GstPad * pad, GstBuffer * buf)
         demux->priv->collect = NULL;
         demux->priv->collect_size = 0;
         if (!gst_tag_demux_trim_buffer (demux, &outbuf, &outbuf_size))
-          return GST_FLOW_UNEXPECTED;
+          return GST_FLOW_EOS;
       }
       if (outbuf) {
         if (G_UNLIKELY (demux->priv->srcpad == NULL)) {
@@ -1305,7 +1305,7 @@ gst_tag_demux_read_range (GstTagDemux * demux,
 
   if (in_offset + length >= demux->priv->upstream_size - demux->priv->strip_end) {
     if (in_offset + demux->priv->strip_end >= demux->priv->upstream_size)
-      return GST_FLOW_UNEXPECTED;
+      return GST_FLOW_EOS;
     in_length = demux->priv->upstream_size - demux->priv->strip_end - in_offset;
   } else {
     in_length = length;
@@ -1330,7 +1330,7 @@ read_beyond_end:
       gst_buffer_unref (*buffer);
       *buffer = NULL;
     }
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_EOS;
   }
 }
 

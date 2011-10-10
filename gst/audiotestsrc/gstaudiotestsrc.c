@@ -1119,7 +1119,7 @@ gst_audio_test_src_fill (GstBaseSrc * basesrc, guint64 offset,
 
   if (src->eos_reached) {
     GST_INFO_OBJECT (src, "eos");
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_EOS;
   }
 
   samplerate = GST_AUDIO_INFO_RATE (&src->info);

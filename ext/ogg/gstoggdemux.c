@@ -1073,7 +1073,7 @@ gst_ogg_pad_stream_out (GstOggPad * pad, gint npackets)
          * collecting headers and that we don't have exposed the pads yet */
         if (result == GST_FLOW_NOT_LINKED)
           break;
-        else if (result <= GST_FLOW_UNEXPECTED)
+        else if (result <= GST_FLOW_EOS)
           goto could_not_submit;
         break;
       default:
@@ -2077,7 +2077,7 @@ boundary_reached:
 eos:
   {
     GST_LOG_OBJECT (ogg, "reached EOS");
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_EOS;
   }
 error:
   {
@@ -2094,7 +2094,7 @@ error:
  * @offset will contain the offset the next page starts at when this function
  * returns GST_FLOW_OK.
  *
- * GST_FLOW_UNEXPECTED is returned on EOS.
+ * GST_FLOW_EOS is returned on EOS.
  *
  * GST_FLOW_LIMIT is returned when we did not find a page before the
  * boundary. If @boundary is -1, this is never returned.
@@ -2208,7 +2208,7 @@ gst_ogg_demux_get_prev_page (GstOggDemux * ogg, ogg_page * og, gint64 * offset)
         break;
       }
       /* something went wrong */
-      if (ret == GST_FLOW_UNEXPECTED) {
+      if (ret == GST_FLOW_EOS) {
         new_offset = 0;
         GST_LOG_OBJECT (ogg, "got unexpected");
       } else if (ret != GST_FLOW_OK) {
@@ -3336,7 +3336,7 @@ gst_ogg_demux_bisect_forward_serialno (GstOggDemux * ogg,
     gst_ogg_demux_seek (ogg, bisect);
     ret = gst_ogg_demux_get_next_page (ogg, &og, -1, &offset);
 
-    if (ret == GST_FLOW_UNEXPECTED) {
+    if (ret == GST_FLOW_EOS) {
       endsearched = bisect;
     } else if (ret == GST_FLOW_OK) {
       guint32 serial = ogg_page_serialno (&og);
@@ -3362,7 +3362,7 @@ gst_ogg_demux_bisect_forward_serialno (GstOggDemux * ogg,
 
   gst_ogg_demux_seek (ogg, next);
   ret = gst_ogg_demux_read_chain (ogg, &nextchain);
-  if (ret == GST_FLOW_UNEXPECTED) {
+  if (ret == GST_FLOW_EOS) {
     nextchain = NULL;
     ret = GST_FLOW_OK;
     GST_LOG_OBJECT (ogg, "no next chain");
@@ -3412,7 +3412,7 @@ gst_ogg_demux_read_chain (GstOggDemux * ogg, GstOggChain ** res_chain)
 
     ret = gst_ogg_demux_get_next_page (ogg, &og, -1, NULL);
     if (ret != GST_FLOW_OK) {
-      if (ret == GST_FLOW_UNEXPECTED) {
+      if (ret == GST_FLOW_EOS) {
         GST_DEBUG_OBJECT (ogg, "Reached EOS, done reading end chain");
       } else {
         GST_WARNING_OBJECT (ogg, "problem reading BOS page: ret=%d", ret);
@@ -3425,7 +3425,7 @@ gst_ogg_demux_read_chain (GstOggDemux * ogg, GstOggChain ** res_chain)
        * ignore it */
       if (!chain) {
         GST_WARNING_OBJECT (ogg, "No chain found, no Ogg data in stream ?");
-        ret = GST_FLOW_UNEXPECTED;
+        ret = GST_FLOW_EOS;
       }
       break;
     }
@@ -3450,7 +3450,7 @@ gst_ogg_demux_read_chain (GstOggDemux * ogg, GstOggChain ** res_chain)
     if (ret == GST_FLOW_OK) {
       GST_WARNING_OBJECT (ogg, "no chain was found");
       ret = GST_FLOW_ERROR;
-    } else if (ret != GST_FLOW_UNEXPECTED) {
+    } else if (ret != GST_FLOW_EOS) {
       GST_WARNING_OBJECT (ogg, "failed to read chain");
     } else {
       GST_DEBUG_OBJECT (ogg, "done reading chains");
@@ -4054,7 +4054,7 @@ gst_ogg_demux_loop_forward (GstOggDemux * ogg)
   if (ogg->offset == ogg->length) {
     GST_LOG_OBJECT (ogg, "no more data to pull %" G_GINT64_FORMAT
         " == %" G_GINT64_FORMAT, ogg->offset, ogg->length);
-    ret = GST_FLOW_UNEXPECTED;
+    ret = GST_FLOW_EOS;
     goto done;
   }
 
@@ -4081,7 +4081,7 @@ gst_ogg_demux_loop_forward (GstOggDemux * ogg)
   /* check for the end of the segment */
   if (gst_ogg_demux_check_eos (ogg)) {
     GST_LOG_OBJECT (ogg, "got EOS");
-    ret = GST_FLOW_UNEXPECTED;
+    ret = GST_FLOW_EOS;
     goto done;
   }
 done:
@@ -4106,7 +4106,7 @@ gst_ogg_demux_loop_reverse (GstOggDemux * ogg)
   if (ogg->offset == 0) {
     GST_LOG_OBJECT (ogg, "no more data to pull %" G_GINT64_FORMAT
         " == 0", ogg->offset);
-    ret = GST_FLOW_UNEXPECTED;
+    ret = GST_FLOW_EOS;
     goto done;
   }
 
@@ -4129,7 +4129,7 @@ gst_ogg_demux_loop_reverse (GstOggDemux * ogg)
   /* check for the end of the segment */
   if (gst_ogg_demux_check_eos (ogg)) {
     GST_LOG_OBJECT (ogg, "got EOS");
-    ret = GST_FLOW_UNEXPECTED;
+    ret = GST_FLOW_EOS;
     goto done;
   }
 done:
@@ -4251,7 +4251,7 @@ pause:
     GST_LOG_OBJECT (ogg, "pausing task, reason %s", reason);
     gst_pad_pause_task (ogg->sinkpad);
 
-    if (ret == GST_FLOW_UNEXPECTED) {
+    if (ret == GST_FLOW_EOS) {
       /* perform EOS logic */
       if (ogg->segment.flags & GST_SEEK_FLAG_SEGMENT) {
         gint64 stop;
@@ -4274,7 +4274,7 @@ pause:
         GST_LOG_OBJECT (ogg, "Sending EOS, at end of stream");
         event = gst_event_new_eos ();
       }
-    } else if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_UNEXPECTED) {
+    } else if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_EOS) {
       GST_ELEMENT_ERROR (ogg, STREAM, FAILED,
           (_("Internal data stream error.")),
           ("stream stopped, reason %s", reason));

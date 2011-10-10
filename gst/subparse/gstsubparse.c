@@ -1451,11 +1451,11 @@ handle_buffer (GstSubParse * self, GstBuffer * buf)
   /* make sure we know the format */
   if (G_UNLIKELY (self->parser_type == GST_SUB_PARSE_FORMAT_UNKNOWN)) {
     if (!(caps = gst_sub_parse_format_autodetect (self))) {
-      return GST_FLOW_UNEXPECTED;
+      return GST_FLOW_EOS;
     }
     if (!gst_pad_set_caps (self->srcpad, caps)) {
       gst_caps_unref (caps);
-      return GST_FLOW_UNEXPECTED;
+      return GST_FLOW_EOS;
     }
     gst_caps_unref (caps);
 

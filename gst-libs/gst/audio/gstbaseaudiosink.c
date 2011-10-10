@@ -1804,7 +1804,7 @@ gst_base_audio_sink_callback (GstRingBuffer * rbuf, guint8 * data, guint len,
       &buf);
 
   if (ret != GST_FLOW_OK) {
-    if (ret == GST_FLOW_UNEXPECTED)
+    if (ret == GST_FLOW_EOS)
       goto eos;
     else
       goto error;

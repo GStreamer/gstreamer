@@ -1020,7 +1020,7 @@ eos:
     g_mutex_unlock (priv->mutex);
     if (caps)
       gst_caps_unref (caps);
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_EOS;
   }
 seek_error:
   {
@@ -1474,7 +1474,7 @@ eos:
     if (steal_ref)
       gst_buffer_unref (buffer);
     g_mutex_unlock (priv->mutex);
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_EOS;
   }
 }
 
@@ -1491,7 +1491,7 @@ eos:
  *
  * Returns: #GST_FLOW_OK when the buffer was successfuly queued.
  * #GST_FLOW_WRONG_STATE when @appsrc is not PAUSED or PLAYING.
- * #GST_FLOW_UNEXPECTED when EOS occured.
+ * #GST_FLOW_EOS when EOS occured.
  *
  * Since: 0.10.22
  */

@@ -101,11 +101,11 @@ skip_junk:
   /* ERRORS */
 too_small:
   {
-    /* short read, we return UNEXPECTED to mark the EOS case */
+    /* short read, we return EOS to mark the EOS case */
     GST_DEBUG_OBJECT (element, "not enough data (available=%" G_GSIZE_FORMAT
         ", needed=%u)", gst_buffer_get_size (buf), size);
     gst_buffer_unref (buf);
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_EOS;
   }
 }
 

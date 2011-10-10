@@ -580,7 +580,7 @@ gst_audio_decoder_setup (GstAudioDecoder * dec)
   gst_query_unref (query);
 
   /* normalize to bool */
-  dec->priv->agg = !!res;
+  dec->priv->agg = ! !res;
 }
 
 /* mini aggregator combining output buffers into fewer larger ones,
@@ -971,7 +971,7 @@ gst_audio_decoder_push_buffers (GstAudioDecoder * dec, gboolean force)
             goto parse_failed;
         }
 
-        if (ret == GST_FLOW_UNEXPECTED) {
+        if (ret == GST_FLOW_EOS) {
           GST_LOG_OBJECT (dec, "no frame yet");
           ret = GST_FLOW_OK;
           break;

@@ -2351,7 +2351,7 @@ gst_base_text_overlay_text_chain (GstPad * pad, GstBuffer * buffer)
 
   if (overlay->text_eos) {
     GST_OBJECT_UNLOCK (overlay);
-    ret = GST_FLOW_UNEXPECTED;
+    ret = GST_FLOW_EOS;
     GST_LOG_OBJECT (overlay, "text EOS");
     goto beach;
   }
@@ -2718,7 +2718,7 @@ have_eos:
     GST_OBJECT_UNLOCK (overlay);
     GST_DEBUG_OBJECT (overlay, "eos, discarding buffer");
     gst_buffer_unref (buffer);
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_EOS;
   }
 out_of_segment:
   {

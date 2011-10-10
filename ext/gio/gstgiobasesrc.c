@@ -399,7 +399,7 @@ gst_gio_base_src_create (GstBaseSrc * base_src, guint64 offset, guint size,
     }
 
     if (eos)
-      ret = GST_FLOW_UNEXPECTED;
+      ret = GST_FLOW_EOS;
   }
 
   *buf_return = buf;

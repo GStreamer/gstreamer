@@ -1244,7 +1244,7 @@ eos:
   {
     GST_DEBUG_OBJECT (adder, "no data available, must be EOS");
     gst_pad_push_event (adder->srcpad, gst_event_new_eos ());
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_EOS;
   }
 }
 

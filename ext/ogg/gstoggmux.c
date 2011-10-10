@@ -1885,7 +1885,7 @@ gst_ogg_mux_collected (GstCollectPads * pads, GstOggMux * ogg_mux)
 
   if (best->eos && all_pads_eos (pads)) {
     gst_pad_push_event (ogg_mux->srcpad, gst_event_new_eos ());
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_EOS;
   }
 
   return ret;

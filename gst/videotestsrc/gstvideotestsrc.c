@@ -829,7 +829,7 @@ not_negotiated:
 eos:
   {
     GST_DEBUG_OBJECT (src, "eos: 0 framerate, frame %d", (gint) src->n_frames);
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_EOS;
   }
 invalid_frame:
   {
