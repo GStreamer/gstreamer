@@ -160,9 +160,11 @@ gst_rtp_g722_pay_setcaps (GstBaseRTPPayload * basepayload, GstCaps * caps)
   rtpg722pay->rate = rate;
   rtpg722pay->channels = channels;
 
-  /* octet-per-sample is 1 * channels for G722 */
+  /* bits-per-sample is 4 * channels for G722, but as the RTP clock runs at
+   * half speed (8 instead of 16 khz), pretend it's 8 bits per sample
+   * channels. */
   gst_base_rtp_audio_payload_set_samplebits_options (basertpaudiopayload,
-      4 * rtpg722pay->channels);
+      8 * rtpg722pay->channels);
 
   return res;
 
