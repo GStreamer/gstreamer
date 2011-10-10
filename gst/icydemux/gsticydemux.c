@@ -66,9 +66,6 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("ANY")
     );
 
-static void gst_icydemux_class_init (GstICYDemuxClass * klass);
-static void gst_icydemux_base_init (GstICYDemuxClass * klass);
-static void gst_icydemux_init (GstICYDemux * icydemux);
 static void gst_icydemux_dispose (GObject * object);
 
 static GstFlowReturn gst_icydemux_chain (GstPad * pad, GstBuffer * buf);
@@ -85,46 +82,9 @@ static gboolean gst_icydemux_sink_setcaps (GstPad * pad, GstCaps * caps);
 static gboolean gst_icydemux_send_tag_event (GstICYDemux * icydemux,
     GstTagList * taglist);
 
-static GstElementClass *parent_class = NULL;
 
-GType
-gst_icydemux_get_type (void)
-{
-  static GType plugin_type = 0;
-
-  if (!plugin_type) {
-    static const GTypeInfo plugin_info = {
-      sizeof (GstICYDemuxClass),
-      (GBaseInitFunc) gst_icydemux_base_init,
-      NULL,
-      (GClassInitFunc) gst_icydemux_class_init,
-      NULL,
-      NULL,
-      sizeof (GstICYDemux),
-      0,
-      (GInstanceInitFunc) gst_icydemux_init,
-    };
-    plugin_type = g_type_register_static (GST_TYPE_ELEMENT,
-        "GstICYDemux", &plugin_info, 0);
-  }
-  return plugin_type;
-}
-
-static void
-gst_icydemux_base_init (GstICYDemuxClass * klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_factory));
-  gst_element_class_set_details_simple (element_class, "ICY tag demuxer",
-      "Codec/Demuxer/Metadata",
-      "Read and output ICY tags while demuxing the contents",
-      "Jan Schmidt <thaytan@mad.scientist.com>, "
-      "Michael Smith <msmith@fluendo.com>");
-}
+#define gst_icydemux_parent_class parent_class
+G_DEFINE_TYPE (GstICYDemux, gst_icydemux, GST_TYPE_ELEMENT);
 
 static void
 gst_icydemux_class_init (GstICYDemuxClass * klass)
@@ -141,6 +101,16 @@ gst_icydemux_class_init (GstICYDemuxClass * klass)
 
   gstelement_class->change_state = gst_icydemux_change_state;
 
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&src_factory));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sink_factory));
+
+  gst_element_class_set_details_simple (gstelement_class, "ICY tag demuxer",
+      "Codec/Demuxer/Metadata",
+      "Read and output ICY tags while demuxing the contents",
+      "Jan Schmidt <thaytan@mad.scientist.com>, "
+      "Michael Smith <msmith@fluendo.com>");
 }
 
 static void
@@ -199,8 +169,6 @@ gst_icydemux_init (GstICYDemux * icydemux)
       GST_DEBUG_FUNCPTR (gst_icydemux_chain));
   gst_pad_set_event_function (icydemux->sinkpad,
       GST_DEBUG_FUNCPTR (gst_icydemux_handle_event));
-  gst_pad_set_setcaps_function (icydemux->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_icydemux_sink_setcaps));
   gst_element_add_pad (GST_ELEMENT (icydemux), icydemux->sinkpad);
 
   gst_icydemux_reset (icydemux);
@@ -332,7 +300,7 @@ gst_icydemux_parse_and_send_tags (GstICYDemux * icydemux)
 
   length = gst_adapter_available (icydemux->meta_adapter);
 
-  data = gst_adapter_peek (icydemux->meta_adapter, length);
+  data = gst_adapter_map (icydemux->meta_adapter, length);
 
   /* Now, copy this to a buffer where we can NULL-terminate it to make things
    * a bit easier, then do that parsing. */
@@ -363,7 +331,7 @@ gst_icydemux_parse_and_send_tags (GstICYDemux * icydemux)
 
   g_strfreev (strings);
   g_free (buffer);
-  gst_adapter_clear (icydemux->meta_adapter);
+  gst_adapter_unmap (icydemux->meta_adapter, length);
 
   if (!gst_tag_list_is_empty (tags))
     gst_icydemux_tag_found (icydemux, tags);
@@ -377,13 +345,27 @@ gst_icydemux_handle_event (GstPad * pad, GstEvent * event)
   GstICYDemux *icydemux = GST_ICYDEMUX (GST_PAD_PARENT (pad));
   gboolean result;
 
-  if (GST_EVENT_TYPE (event) == GST_EVENT_TAG) {
-    GstTagList *tags;
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_TAG:
+    {
+      GstTagList *tags;
 
-    gst_event_parse_tag (event, &tags);
-    result = gst_icydemux_tag_found (icydemux, gst_tag_list_copy (tags));
-    gst_event_unref (event);
-    return result;
+      gst_event_parse_tag (event, &tags);
+      result = gst_icydemux_tag_found (icydemux, gst_tag_list_copy (tags));
+      gst_event_unref (event);
+      return result;
+    }
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+
+      gst_event_parse_caps (event, &caps);
+      result = gst_icydemux_sink_setcaps (pad, caps);
+      gst_event_unref (event);
+      return result;
+    }
+    default:
+      break;
   }
 
   if (icydemux->typefinding) {
@@ -452,7 +434,8 @@ gst_icydemux_typefind_or_forward (GstICYDemux * icydemux, GstBuffer * buf)
           icydemux->typefind_buf, &prob);
 
       if (caps == NULL) {
-        if (GST_BUFFER_SIZE (icydemux->typefind_buf) < ICY_TYPE_FIND_MAX_SIZE) {
+        if (gst_buffer_get_size (icydemux->typefind_buf) <
+            ICY_TYPE_FIND_MAX_SIZE) {
           /* Just break for more data */
           return GST_FLOW_OK;
         }
@@ -497,8 +480,7 @@ gst_icydemux_typefind_or_forward (GstICYDemux * icydemux, GstBuffer * buf)
       return GST_FLOW_ERROR;
     }
 
-    buf = gst_buffer_make_metadata_writable (buf);
-    gst_buffer_set_caps (buf, icydemux->src_caps);
+    buf = gst_buffer_make_writable (buf);
 
     /* Most things don't care, and it's a pain to track (we should preserve a
      * 0 offset on the first buffer though if it's there, for id3demux etc.) */
@@ -540,12 +522,12 @@ gst_icydemux_chain (GstPad * pad, GstBuffer * buf)
   /* Go through the buffer, chopping it into appropriate chunks. Forward as
    * tags or buffers, as appropriate
    */
-  size = GST_BUFFER_SIZE (buf);
+  size = gst_buffer_get_size (buf);
   offset = 0;
   while (size) {
     if (icydemux->remaining) {
       chunk = (size <= icydemux->remaining) ? size : icydemux->remaining;
-      sub = gst_buffer_create_sub (buf, offset, chunk);
+      sub = gst_buffer_copy_region (buf, GST_BUFFER_COPY_ALL, offset, chunk);
       offset += chunk;
       icydemux->remaining -= chunk;
       size -= chunk;
@@ -557,7 +539,7 @@ gst_icydemux_chain (GstPad * pad, GstBuffer * buf)
     } else if (icydemux->meta_remaining) {
       chunk = (size <= icydemux->meta_remaining) ?
           size : icydemux->meta_remaining;
-      sub = gst_buffer_create_sub (buf, offset, chunk);
+      sub = gst_buffer_copy_region (buf, GST_BUFFER_COPY_ALL, offset, chunk);
       gst_icydemux_add_meta (icydemux, sub);
 
       offset += chunk;
@@ -572,12 +554,14 @@ gst_icydemux_chain (GstPad * pad, GstBuffer * buf)
         icydemux->remaining = icydemux->meta_interval;
       }
     } else {
+      guint8 byte;
       /* We need to read a single byte (always safe at this point in the loop)
        * to figure out how many bytes of metadata exist. 
        * The 'spec' tells us to read 16 * (byte_value) bytes of metadata after
        * this (zero is common, and means the metadata hasn't changed).
        */
-      icydemux->meta_remaining = 16 * GST_BUFFER_DATA (buf)[offset];
+      gst_buffer_extract (buf, offset, &byte, 1);
+      icydemux->meta_remaining = 16 * byte;
       if (icydemux->meta_remaining == 0)
         icydemux->remaining = icydemux->meta_interval;
 
