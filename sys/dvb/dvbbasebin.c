@@ -99,21 +99,21 @@ static void dvb_base_bin_get_property (GObject * object, guint prop_id,
 static void dvb_base_bin_dispose (GObject * object);
 static void dvb_base_bin_finalize (GObject * object);
 
-static gboolean dvb_base_bin_ts_pad_probe_cb (GstPad * pad,
-    GstBuffer * buf, gpointer user_data);
+static GstProbeReturn dvb_base_bin_ts_pad_probe_cb (GstPad * pad,
+    GstProbeType type, gpointer data, gpointer user_data);
 static GstStateChangeReturn dvb_base_bin_change_state (GstElement * element,
     GstStateChange transition);
 static void dvb_base_bin_handle_message (GstBin * bin, GstMessage * message);
 static void dvb_base_bin_pat_info_cb (DvbBaseBin * dvbbasebin,
-    GstStructure * pat);
+    const GstStructure * pat);
 static void dvb_base_bin_pmt_info_cb (DvbBaseBin * dvbbasebin,
-    GstStructure * pmt);
+    const GstStructure * pmt);
 static void dvb_base_bin_pad_added_cb (GstElement * mpegtsparse,
     GstPad * pad, DvbBaseBin * dvbbasebin);
 static void dvb_base_bin_pad_removed_cb (GstElement * mpegtsparse,
     GstPad * pad, DvbBaseBin * dvbbasebin);
 static GstPad *dvb_base_bin_request_new_pad (GstElement * element,
-    GstPadTemplate * templ, const gchar * name);
+    GstPadTemplate * templ, const gchar * name, const GstCaps * caps);
 static void dvb_base_bin_release_pad (GstElement * element, GstPad * pad);
 static void dvb_base_bin_rebuild_filter (DvbBaseBin * dvbbasebin);
 
@@ -121,18 +121,6 @@ static void dvb_base_bin_uri_handler_init (gpointer g_iface,
     gpointer iface_data);
 
 static void dvb_base_bin_program_destroy (gpointer data);
-
-static void
-dvb_base_bin_setup_interfaces (GType type)
-{
-  static const GInterfaceInfo urihandler_info = {
-    dvb_base_bin_uri_handler_init,
-    NULL,
-    NULL,
-  };
-
-  g_type_add_interface_static (type, GST_TYPE_URI_HANDLER, &urihandler_info);
-}
 
 static DvbBaseBinStream *
 dvb_base_bin_add_stream (DvbBaseBin * dvbbasebin, guint16 pid)
@@ -187,27 +175,10 @@ dvb_base_bin_get_program (DvbBaseBin * dvbbasebin, gint program_number)
 static guint signals [LAST_SIGNAL] = { 0 };
 */
 
-GST_BOILERPLATE_FULL (DvbBaseBin, dvb_base_bin, GstBin, GST_TYPE_BIN,
-    dvb_base_bin_setup_interfaces);
-
-static void
-dvb_base_bin_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  element_class->request_new_pad = dvb_base_bin_request_new_pad;
-  element_class->release_pad = dvb_base_bin_release_pad;
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&program_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_template));
-
-  gst_element_class_set_details_simple (element_class, "DVB bin",
-      "Source/Bin/Video",
-      "Access descramble and split DVB streams",
-      "Alessandro Decina <alessandro@nnva.org>");
-}
+#define dvb_base_bin_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (DvbBaseBin, dvb_base_bin, GST_TYPE_BIN,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER,
+        dvb_base_bin_uri_handler_init));
 
 static void
 dvb_base_bin_class_init (DvbBaseBinClass * klass)
@@ -247,6 +218,18 @@ dvb_base_bin_class_init (DvbBaseBinClass * klass)
 
   element_class = GST_ELEMENT_CLASS (klass);
   element_class->change_state = dvb_base_bin_change_state;
+  element_class->request_new_pad = dvb_base_bin_request_new_pad;
+  element_class->release_pad = dvb_base_bin_release_pad;
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&program_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&src_template));
+
+  gst_element_class_set_details_simple (element_class, "DVB bin",
+      "Source/Bin/Video",
+      "Access descramble and split DVB streams",
+      "Alessandro Decina <alessandro@nnva.org>");
 
   gobject_class = G_OBJECT_CLASS (klass);
   gobject_class->set_property = dvb_base_bin_set_property;
@@ -311,6 +294,7 @@ dvb_base_bin_class_init (DvbBaseBinClass * klass)
       g_param_spec_string ("program-numbers",
           "Program Numbers",
           "Colon separated list of programs", "", G_PARAM_READWRITE));
+
 }
 
 static void
@@ -332,7 +316,7 @@ dvb_base_bin_reset (DvbBaseBin * dvbbasebin)
 static gint16 initial_pids[] = { 0, 1, 0x10, 0x11, 0x12, 0x14, -1 };
 
 static void
-dvb_base_bin_init (DvbBaseBin * dvbbasebin, DvbBaseBinClass * klass)
+dvb_base_bin_init (DvbBaseBin * dvbbasebin)
 {
   DvbBaseBinStream *stream;
   int i;
@@ -473,7 +457,7 @@ dvb_base_bin_get_property (GObject * object, guint prop_id,
 
 static GstPad *
 dvb_base_bin_request_new_pad (GstElement * element,
-    GstPadTemplate * templ, const gchar * name)
+    GstPadTemplate * templ, const gchar * name, const GstCaps * caps)
 {
   GstPad *pad;
   GstPad *ghost;
@@ -543,8 +527,9 @@ dvb_base_bin_reset_pmtlist (DvbBaseBin * dvbbasebin)
   dvbbasebin->pmtlist_changed = FALSE;
 }
 
-static gboolean
-dvb_base_bin_ts_pad_probe_cb (GstPad * pad, GstBuffer * buf, gpointer user_data)
+static GstProbeReturn
+dvb_base_bin_ts_pad_probe_cb (GstPad * pad, GstProbeType type,
+    gpointer data, gpointer user_data)
 {
   DvbBaseBin *dvbbasebin = GST_DVB_BASE_BIN (user_data);
 
@@ -561,7 +546,7 @@ dvb_base_bin_ts_pad_probe_cb (GstPad * pad, GstBuffer * buf, gpointer user_data)
     }
   }
 
-  return TRUE;
+  return GST_PROBE_OK;
 }
 
 static void
@@ -579,8 +564,8 @@ dvb_base_bin_init_cam (DvbBaseBin * dvbbasebin)
       /* HACK: poll the cam in a buffer probe */
       dvbbasebin->ts_pad =
           gst_element_get_request_pad (dvbbasebin->mpegtsparse, "src%d");
-      gst_pad_add_buffer_probe (dvbbasebin->ts_pad,
-          G_CALLBACK (dvb_base_bin_ts_pad_probe_cb), dvbbasebin);
+      gst_pad_add_probe (dvbbasebin->ts_pad, GST_PROBE_TYPE_BLOCK,
+          dvb_base_bin_ts_pad_probe_cb, dvbbasebin, NULL);
     } else {
       GST_ERROR_OBJECT (dvbbasebin, "could not open %s", ca_file);
       cam_device_free (dvbbasebin->hwcam);
@@ -797,12 +782,13 @@ dvb_base_bin_handle_message (GstBin * bin, GstMessage * message)
 
   if (message->type == GST_MESSAGE_ELEMENT &&
       GST_ELEMENT (message->src) == GST_ELEMENT (dvbbasebin->mpegtsparse)) {
-    const gchar *structure_name = gst_structure_get_name (message->structure);
+    const GstStructure *s = gst_message_get_structure (message);
+    const gchar *structure_name = gst_structure_get_name (s);
 
     if (strcmp (structure_name, "pat") == 0)
-      dvb_base_bin_pat_info_cb (dvbbasebin, message->structure);
+      dvb_base_bin_pat_info_cb (dvbbasebin, s);
     else if (strcmp (structure_name, "pmt") == 0)
-      dvb_base_bin_pmt_info_cb (dvbbasebin, message->structure);
+      dvb_base_bin_pmt_info_cb (dvbbasebin, s);
 
     /*else if (strcmp (structure_name, "nit") == 0)
        dvb_base_bin_nit_info_cb (dvbbasebin, message->structure);
@@ -822,7 +808,8 @@ dvb_base_bin_handle_message (GstBin * bin, GstMessage * message)
 
 
 static void
-dvb_base_bin_pat_info_cb (DvbBaseBin * dvbbasebin, GstStructure * pat_info)
+dvb_base_bin_pat_info_cb (DvbBaseBin * dvbbasebin,
+    const GstStructure * pat_info)
 {
   DvbBaseBinProgram *program;
   DvbBaseBinStream *stream;
@@ -870,7 +857,7 @@ dvb_base_bin_pat_info_cb (DvbBaseBin * dvbbasebin, GstStructure * pat_info)
 }
 
 static void
-dvb_base_bin_pmt_info_cb (DvbBaseBin * dvbbasebin, GstStructure * pmt)
+dvb_base_bin_pmt_info_cb (DvbBaseBin * dvbbasebin, const GstStructure * pmt)
 {
   DvbBaseBinProgram *program;
   guint program_number;
@@ -965,13 +952,13 @@ dvb_base_bin_pad_removed_cb (GstElement * mpegtsparse,
 }
 
 static guint
-dvb_base_bin_uri_get_type (void)
+dvb_base_bin_uri_get_type (GType type)
 {
   return GST_URI_SRC;
 }
 
 static gchar **
-dvb_base_bin_uri_get_protocols (void)
+dvb_base_bin_uri_get_protocols (GType type)
 {
   static gchar *protocols[] = { (char *) "dvb", NULL };
 

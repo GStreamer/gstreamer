@@ -305,24 +305,8 @@ static GstStaticPadTemplate ts_src_factory = GST_STATIC_PAD_TEMPLATE ("src",
  ******************************
  */
 
-GST_BOILERPLATE (GstDvbSrc, gst_dvbsrc, GstPushSrc, GST_TYPE_PUSH_SRC);
-
-static void
-gst_dvbsrc_base_init (gpointer gclass)
-{
-  GstDvbSrcClass *klass = (GstDvbSrcClass *) gclass;
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&ts_src_factory));
-
-  gst_element_class_set_details_simple (element_class, "DVB Source",
-      "Source/Video",
-      "Digital Video Broadcast Source",
-      "P2P-VCR, C-Lab, University of Paderborn,"
-      "Zaheer Abbas Merali <zaheerabbas at merali dot org>");
-}
-
+#define gst_dvbsrc_parent_class parent_class
+G_DEFINE_TYPE (GstDvbSrc, gst_dvbsrc, GST_TYPE_PUSH_SRC);
 
 /* initialize the plugin's class */
 static void
@@ -343,6 +327,16 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
   gobject_class->finalize = gst_dvbsrc_finalize;
 
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_dvbsrc_change_state);
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&ts_src_factory));
+
+  gst_element_class_set_details_simple (gstelement_class, "DVB Source",
+      "Source/Video",
+      "Digital Video Broadcast Source",
+      "P2P-VCR, C-Lab, University of Paderborn,"
+      "Zaheer Abbas Merali <zaheerabbas at merali dot org>");
+
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_dvbsrc_start);
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_dvbsrc_stop);
   gstbasesrc_class->unlock = GST_DEBUG_FUNCPTR (gst_dvbsrc_unlock);
@@ -459,7 +453,7 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
  * initialize structure
  */
 static void
-gst_dvbsrc_init (GstDvbSrc * object, GstDvbSrcClass * klass)
+gst_dvbsrc_init (GstDvbSrc * object)
 {
   int i = 0;
 
@@ -907,12 +901,14 @@ gst_dvbsrc_read_device (GstDvbSrc * object, int size)
   gint ret_val = 0;
   GstBuffer *buf = gst_buffer_new_and_alloc (size);
   GstClockTime timeout = object->timeout * GST_USECOND;
+  guint8 *data;
 
   g_return_val_if_fail (GST_IS_BUFFER (buf), NULL);
 
   if (object->fd_dvr < 0)
     return NULL;
 
+  data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
   while (count < size) {
     ret_val = gst_poll_wait (object->poll, timeout);
     GST_LOG_OBJECT (object, "select returned %d", ret_val);
@@ -927,8 +923,7 @@ gst_dvbsrc_read_device (GstDvbSrc * object, int size)
           gst_message_new_element (GST_OBJECT (object),
               gst_structure_empty_new ("dvb-read-failure")));
     } else {
-      int nread =
-          read (object->fd_dvr, GST_BUFFER_DATA (buf) + count, size - count);
+      int nread = read (object->fd_dvr, data + count, size - count);
 
       if (G_UNLIKELY (nread < 0)) {
         GST_WARNING_OBJECT
@@ -942,19 +937,20 @@ gst_dvbsrc_read_device (GstDvbSrc * object, int size)
         count = count + nread;
     }
   }
-
-  GST_BUFFER_SIZE (buf) = count;
+  gst_buffer_unmap (buf, data, count);
   GST_BUFFER_TIMESTAMP (buf) = GST_CLOCK_TIME_NONE;
   return buf;
 
 stopped:
   GST_DEBUG_OBJECT (object, "stop called");
+  gst_buffer_unmap (buf, data, 0);
   gst_buffer_unref (buf);
   return NULL;
 
 select_error:
   GST_ELEMENT_ERROR (object, RESOURCE, READ, (NULL),
       ("select error %d: %s (%d)", ret_val, g_strerror (errno), errno));
+  gst_buffer_unmap (buf, data, 0);
   gst_buffer_unref (buf);
   return NULL;
 }
@@ -981,13 +977,7 @@ gst_dvbsrc_create (GstPushSrc * element, GstBuffer ** buf)
     GST_DEBUG_OBJECT (object, "Reading from DVR device");
     *buf = gst_dvbsrc_read_device (object, buffer_size);
     if (*buf != NULL) {
-      GstCaps *caps;
-
       retval = GST_FLOW_OK;
-
-      caps = gst_pad_get_caps (GST_BASE_SRC_PAD (object));
-      gst_buffer_set_caps (*buf, caps);
-      gst_caps_unref (caps);
     }
 
     if (object->stats_interval != 0 &&
