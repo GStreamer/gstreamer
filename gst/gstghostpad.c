@@ -352,6 +352,12 @@ gst_proxy_pad_getcaps_default (GstPad * pad, GstCaps * filter)
       goto done;
     }
 
+    /* If there's a filter, return that */
+    if (filter != NULL) {
+      res = gst_caps_ref (filter);
+      goto done;
+    }
+
     /* last resort, any caps */
     GST_DEBUG_OBJECT (pad, "pad has no template, returning ANY");
     res = gst_caps_new_any ();
