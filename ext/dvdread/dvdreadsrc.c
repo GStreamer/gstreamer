@@ -38,8 +38,6 @@
 GST_DEBUG_CATEGORY_STATIC (gstgst_dvd_read_src_debug);
 #define GST_CAT_DEFAULT (gstgst_dvd_read_src_debug)
 
-static void gst_dvd_read_src_do_init (GType dvdreadsrc_type);
-
 enum
 {
   ARG_0,
@@ -88,22 +86,13 @@ static GstClockTime gst_dvd_read_src_get_time_for_sector (GstDvdReadSrc * src,
 static gint gst_dvd_read_src_get_sector_from_time (GstDvdReadSrc * src,
     GstClockTime ts);
 
-GST_BOILERPLATE_FULL (GstDvdReadSrc, gst_dvd_read_src, GstPushSrc,
-    GST_TYPE_PUSH_SRC, gst_dvd_read_src_do_init);
+static void gst_dvd_read_src_uri_handler_init (gpointer g_iface,
+    gpointer iface_data);
 
-static void
-gst_dvd_read_src_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&srctemplate));
-
-  gst_element_class_set_details_simple (element_class, "DVD Source",
-      "Source/File/DVD",
-      "Access a DVD title/chapter/angle using libdvdread",
-      "Erik Walthinsen <omega@cse.ogi.edu>");
-}
+#define gst_dvd_read_src_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstDvdReadSrc, gst_dvd_read_src, GST_TYPE_PUSH_SRC,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER,
+        gst_dvd_read_src_uri_handler_init));
 
 static void
 gst_dvd_read_src_finalize (GObject * object)
@@ -117,7 +106,7 @@ gst_dvd_read_src_finalize (GObject * object)
 }
 
 static void
-gst_dvd_read_src_init (GstDvdReadSrc * src, GstDvdReadSrcClass * klass)
+gst_dvd_read_src_init (GstDvdReadSrc * src)
 {
   src->dvd = NULL;
   src->vts_file = NULL;
@@ -150,9 +139,10 @@ gst_dvd_read_src_is_seekable (GstBaseSrc * src)
 static void
 gst_dvd_read_src_class_init (GstDvdReadSrcClass * klass)
 {
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
   GstPushSrcClass *gstpushsrc_class = GST_PUSH_SRC_CLASS (klass);
   GstBaseSrcClass *gstbasesrc_class = GST_BASE_SRC_CLASS (klass);
-  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
   gobject_class->finalize = gst_dvd_read_src_finalize;
   gobject_class->set_property = gst_dvd_read_src_set_property;
@@ -172,6 +162,14 @@ gst_dvd_read_src_class_init (GstDvdReadSrcClass * klass)
       g_param_spec_int ("angle", "angle", "angle",
           1, 999, 1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&srctemplate));
+
+  gst_element_class_set_details_simple (gstelement_class, "DVD Source",
+      "Source/File/DVD",
+      "Access a DVD title/chapter/angle using libdvdread",
+      "Erik Walthinsen <omega@cse.ogi.edu>");
+
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_dvd_read_src_start);
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_dvd_read_src_stop);
   gstbasesrc_class->query = GST_DEBUG_FUNCPTR (gst_dvd_read_src_src_query);
@@ -181,6 +179,11 @@ gst_dvd_read_src_class_init (GstDvdReadSrcClass * klass)
       GST_DEBUG_FUNCPTR (gst_dvd_read_src_is_seekable);
 
   gstpushsrc_class->create = GST_DEBUG_FUNCPTR (gst_dvd_read_src_create);
+
+  title_format = gst_format_register ("title", "DVD title");
+  angle_format = gst_format_register ("angle", "DVD angle");
+  sector_format = gst_format_register ("sector", "DVD sector");
+  chapter_format = gst_format_register ("chapter", "DVD chapter");
 }
 
 static gboolean
@@ -726,6 +729,7 @@ gst_dvd_read_src_read (GstDvdReadSrc * src, gint angle, gint new_seek,
   gint len;
   gint retries;
   gint64 next_time;
+  guint8 *data;
 
   seg = &(GST_BASE_SRC (src)->segment);
 
@@ -828,24 +832,22 @@ nav_retry:
   g_assert (cur_output_size < 1024);
 
   /* create the buffer (TODO: use buffer pool?) */
-  buf = gst_buffer_new_and_alloc (cur_output_size * DVD_VIDEO_LB_LEN);
+  buf = gst_buffer_new_allocate (NULL, cur_output_size * DVD_VIDEO_LB_LEN, 0);
 
   GST_LOG_OBJECT (src, "Going to read %u sectors @ pack %d", cur_output_size,
       src->cur_pack);
 
+  data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
   /* read in and output cursize packs */
-  len = DVDReadBlocks (src->dvd_title, src->cur_pack, cur_output_size,
-      GST_BUFFER_DATA (buf));
+  len = DVDReadBlocks (src->dvd_title, src->cur_pack, cur_output_size, data);
 
   if (len != cur_output_size)
     goto block_read_error;
 
-  GST_BUFFER_SIZE (buf) = cur_output_size * DVD_VIDEO_LB_LEN;
+  gst_buffer_unmap (buf, data, cur_output_size * DVD_VIDEO_LB_LEN);
   /* GST_BUFFER_OFFSET (buf) = priv->cur_pack * DVD_VIDEO_LB_LEN; */
   GST_BUFFER_TIMESTAMP (buf) =
       gst_dvd_read_src_get_time_for_sector (src, src->cur_pack);
-
-  gst_buffer_set_caps (buf, GST_PAD_CAPS (GST_BASE_SRC_PAD (src)));
 
   *p_buf = buf;
 
@@ -878,6 +880,7 @@ block_read_error:
   {
     GST_ERROR_OBJECT (src, "Read failed for %d blocks at %d",
         cur_output_size, src->cur_pack);
+    gst_buffer_unmap (buf, data, 0);
     gst_buffer_unref (buf);
     return GST_DVD_READ_ERROR;
   }
@@ -914,9 +917,13 @@ gst_dvd_read_src_create (GstPushSrc * pushsrc, GstBuffer ** p_buf)
   srcpad = GST_BASE_SRC (src)->srcpad;
 
   if (src->need_newsegment) {
-    gst_pad_push_event (srcpad,
-        gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_BYTES,
-            (gint64) src->cur_pack * DVD_VIDEO_LB_LEN, -1, 0));
+    GstSegment seg;
+
+    gst_segment_init (&seg, GST_FORMAT_BYTES);
+    seg.start = src->cur_pack * DVD_VIDEO_LB_LEN;
+    seg.stop = -1;
+    seg.time = 0;
+    gst_pad_push_event (srcpad, gst_event_new_segment (&seg));
     src->need_newsegment = FALSE;
   }
 
@@ -1150,7 +1157,7 @@ gst_dvd_read_src_handle_seek_event (GstDvdReadSrc * src, GstEvent * event)
     query_ok = gst_dvd_read_src_get_size (src, &total);
     GST_OBJECT_UNLOCK (src);
   } else {
-    query_ok = gst_pad_query_duration (srcpad, &format, &total);
+    query_ok = gst_pad_query_duration (srcpad, format, &total);
   }
 
   if (!query_ok) {
@@ -1202,7 +1209,7 @@ gst_dvd_read_src_do_seek (GstBaseSrc * basesrc, GstSegment * s)
   src = GST_DVD_READ_SRC (basesrc);
 
   GST_DEBUG_OBJECT (src, "Seeking to %s: %12" G_GINT64_FORMAT,
-      gst_format_get_name (s->format), s->last_stop);
+      gst_format_get_name (s->format), s->position);
 
   if (s->format == sector_format || s->format == GST_FORMAT_BYTES
       || s->format == GST_FORMAT_TIME) {
@@ -1213,8 +1220,8 @@ gst_dvd_read_src_do_seek (GstBaseSrc * basesrc, GstSegment * s)
     if (s->format == sector_format) {
       gint first, last;
       gst_dvd_read_src_get_sector_bounds (src, &first, &last);
-      GST_DEBUG_OBJECT (src, "Format is sector, seeking to %d", s->last_stop);
-      src->cur_pack = s->last_stop;
+      GST_DEBUG_OBJECT (src, "Format is sector, seeking to %d", s->position);
+      src->cur_pack = s->position;
       if (src->cur_pack < first)
         src->cur_pack = first;
       if (src->cur_pack > last)
@@ -1223,10 +1230,10 @@ gst_dvd_read_src_do_seek (GstBaseSrc * basesrc, GstSegment * s)
       gint sector;
       GST_DEBUG_OBJECT (src, "Format is time");
 
-      sector = gst_dvd_read_src_get_sector_from_time (src, s->last_stop);
+      sector = gst_dvd_read_src_get_sector_from_time (src, s->position);
 
       GST_DEBUG_OBJECT (src, "Time %" GST_TIME_FORMAT " => sector %d",
-          GST_TIME_ARGS (s->last_stop), sector);
+          GST_TIME_ARGS (s->position), sector);
 
       /* really shouldn't happen, we've checked this earlier ... */
       g_return_val_if_fail (sector >= 0, FALSE);
@@ -1237,10 +1244,10 @@ gst_dvd_read_src_do_seek (GstBaseSrc * basesrc, GstSegment * s)
       gint first, last;
       gst_dvd_read_src_get_sector_bounds (src, &first, &last);
       GST_DEBUG_OBJECT (src, "Format is byte");
-      src->cur_pack = s->last_stop / DVD_VIDEO_LB_LEN;
-      if (((gint64) src->cur_pack * DVD_VIDEO_LB_LEN) != s->last_stop) {
+      src->cur_pack = s->position / DVD_VIDEO_LB_LEN;
+      if (((gint64) src->cur_pack * DVD_VIDEO_LB_LEN) != s->position) {
         GST_LOG_OBJECT (src, "rounded down offset %" G_GINT64_FORMAT " => %"
-            G_GINT64_FORMAT, s->last_stop,
+            G_GINT64_FORMAT, s->position,
             (gint64) src->cur_pack * DVD_VIDEO_LB_LEN);
       }
       src->cur_pack += first;
@@ -1254,20 +1261,20 @@ gst_dvd_read_src_do_seek (GstBaseSrc * basesrc, GstSegment * s)
 
     GST_LOG_OBJECT (src, "seek to sector 0x%08x ok", src->cur_pack);
   } else if (s->format == chapter_format) {
-    if (!gst_dvd_read_src_goto_chapter (src, (gint) s->last_stop)) {
+    if (!gst_dvd_read_src_goto_chapter (src, (gint) s->position)) {
       GST_DEBUG_OBJECT (src, "seek to chapter %d failed",
-          (gint) s->last_stop + 1);
+          (gint) s->position + 1);
       return FALSE;
     }
-    GST_INFO_OBJECT (src, "seek to chapter %d ok", (gint) s->last_stop + 1);
-    src->chapter = s->last_stop;
+    GST_INFO_OBJECT (src, "seek to chapter %d ok", (gint) s->position + 1);
+    src->chapter = s->position;
   } else if (s->format == title_format) {
-    if (!gst_dvd_read_src_goto_title (src, (gint) s->last_stop, src->angle) ||
+    if (!gst_dvd_read_src_goto_title (src, (gint) s->position, src->angle) ||
         !gst_dvd_read_src_goto_chapter (src, 0)) {
-      GST_DEBUG_OBJECT (src, "seek to title %d failed", (gint) s->last_stop);
+      GST_DEBUG_OBJECT (src, "seek to title %d failed", (gint) s->position);
       return FALSE;
     }
-    src->title = (gint) s->last_stop;
+    src->title = (gint) s->position;
     src->chapter = 0;
     GST_INFO_OBJECT (src, "seek to title %d ok", src->title + 1);
   } else {
@@ -1622,13 +1629,13 @@ done:
 /*** URI interface ***/
 
 static GstURIType
-gst_dvd_read_src_uri_get_type (void)
+gst_dvd_read_src_uri_get_type (GType type)
 {
   return GST_URI_SRC;
 }
 
 static gchar **
-gst_dvd_read_src_uri_get_protocols (void)
+gst_dvd_read_src_uri_get_protocols (GType type)
 {
   static gchar *protocols[] = { (gchar *) "dvd", NULL };
 
@@ -1738,24 +1745,6 @@ gst_dvd_read_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
   iface->get_protocols = gst_dvd_read_src_uri_get_protocols;
   iface->get_uri = gst_dvd_read_src_uri_get_uri;
   iface->set_uri = gst_dvd_read_src_uri_set_uri;
-}
-
-static void
-gst_dvd_read_src_do_init (GType dvdreadsrc_type)
-{
-  static const GInterfaceInfo urihandler_info = {
-    gst_dvd_read_src_uri_handler_init,
-    NULL,
-    NULL
-  };
-
-  g_type_add_interface_static (dvdreadsrc_type, GST_TYPE_URI_HANDLER,
-      &urihandler_info);
-
-  title_format = gst_format_register ("title", "DVD title");
-  angle_format = gst_format_register ("angle", "DVD angle");
-  sector_format = gst_format_register ("sector", "DVD sector");
-  chapter_format = gst_format_register ("chapter", "DVD chapter");
 }
 
 static gboolean
