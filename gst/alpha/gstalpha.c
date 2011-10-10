@@ -156,7 +156,6 @@ GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ AYUV, ARGB, BGRA, ABGR, RGBA }"));
   g_static_mutex_unlock (&alpha->lock); \
 } G_STMT_END
 
-static gboolean gst_alpha_start (GstBaseTransform * trans);
 static gboolean gst_alpha_get_unit_size (GstBaseTransform * btrans,
     GstCaps * caps, gsize * size);
 static GstCaps *gst_alpha_transform_caps (GstBaseTransform * btrans,
@@ -270,7 +269,6 @@ gst_alpha_class_init (GstAlphaClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_alpha_src_template));
 
-  btrans_class->start = GST_DEBUG_FUNCPTR (gst_alpha_start);
   btrans_class->transform = GST_DEBUG_FUNCPTR (gst_alpha_transform);
   btrans_class->before_transform =
       GST_DEBUG_FUNCPTR (gst_alpha_before_transform);
@@ -2560,18 +2558,6 @@ gst_alpha_set_process_function (GstAlpha * alpha)
       break;
   }
   return alpha->process != NULL;
-}
-
-static gboolean
-gst_alpha_start (GstBaseTransform * btrans)
-{
-  GstAlpha *alpha = GST_ALPHA (btrans);
-
-  GST_ALPHA_LOCK (alpha);
-  gst_alpha_init_params (alpha);
-  GST_ALPHA_UNLOCK (alpha);
-
-  return TRUE;
 }
 
 static void
