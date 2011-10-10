@@ -145,6 +145,7 @@
  * -good gstrtpmanager: gstrtpsession: RTP Session
  * -good gstrtpmanager: gstrtpssrcdemux: RTP SSRC Demux
  * -good icydemux:      icydemux: ICY tag demuxer
+ * -good id3demux:      id3demux: ID3 tag demuxer
  * -good isomp4:        3gppmux: 3GPP Muxer
  * -good isomp4:        gppmux: 3GPP Muxer
  * -good isomp4:        ismlmux: ISML Muxer
@@ -257,7 +258,6 @@
    -good dv:            dvdemux: DV system stream demuxer
    -bad  gsm:           gsmdec: GSM audio decoder
    -bad  gsm:           gsmenc: GSM audio encoder
-   -good id3demux:      id3demux: ID3 tag demuxer
    -bad  jp2k:          jp2kdec: Jasper JPEG2000 image decoder
    -bad  jp2k:          jp2kenc: Jasper JPEG2000 image encoder
    -good matroska:      matroskademux: Matroska demuxer
