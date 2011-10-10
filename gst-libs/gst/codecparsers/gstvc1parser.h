@@ -426,6 +426,7 @@ struct _GstVC1PicAdvanced
   guint8  mvtypemb;
   guint8  skipmb;
   guint8  directmb;
+  guint8  forwardmb; /* B pic interlace field only */
 
   /* For interlaced pictures only */
   guint8  fieldtx;
@@ -441,6 +442,18 @@ struct _GstVC1PicAdvanced
 
   /*  P picture */
   guint8  mvswitch4;
+
+  /* For interlaced fields only */
+  guint16 refdist;
+  guint8 fptype; /* Raw value */
+
+  /* P pic */
+  guint8  numref;
+  guint8  reffield;
+  guint8  lumscale2;
+  guint8  lumshift2;
+  guint8  intcompfield;
+
 };
 
 struct _GstVC1BitPlanes
@@ -451,6 +464,7 @@ struct _GstVC1BitPlanes
   guint8  *mvtypemb;
   guint8  *skipmb;
   guint8  *directmb;
+  guint8  *forwardmb;
 
   guint size; /* Size of the arrays */
 };
@@ -582,6 +596,12 @@ GstVC1ParserResult gst_vc1_parse_frame_layer           (const guint8 *data,
 GstVC1ParserResult gst_vc1_parse_frame_header          (const guint8 *data,
                                                         gsize size,
                                                         GstVC1FrameHdr * framehdr,
+                                                        GstVC1SeqHdr *seqhdr,
+                                                        GstVC1BitPlanes *bitplanes);
+
+GstVC1ParserResult gst_vc1_parse_field_header          (const guint8 *data,
+                                                        gsize size,
+                                                        GstVC1FrameHdr * fieldhdr,
                                                         GstVC1SeqHdr *seqhdr,
                                                         GstVC1BitPlanes *bitplanes);
 

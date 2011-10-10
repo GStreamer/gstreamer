@@ -387,6 +387,43 @@ calculate_nb_pan_scan_win (GstVC1AdvancedSeqHdr * advseqhdr,
 }
 
 static gboolean
+decode_refdist (GstBitReader * br, guint16 * value)
+{
+  guint16 tmp;
+  gint i = 2;
+
+  if (!gst_bit_reader_peek_bits_uint16 (br, &tmp, i))
+    goto failed;
+
+  if (tmp < 0x03) {
+    READ_UINT16 (br, *value, i);
+
+    return TRUE;
+  }
+
+  do {
+    i++;
+
+    if (!gst_bit_reader_peek_bits_uint16 (br, &tmp, i))
+      goto failed;
+
+    if (!(tmp >> i)) {
+      READ_UINT16 (br, *value, i);
+
+      return TRUE;
+    }
+  } while (i < 16);
+
+
+failed:
+  {
+    GST_WARNING ("Could not decode end 0 returning");
+
+    return FALSE;
+  }
+}
+
+static gboolean
 decode_vlc (GstBitReader * br, guint * res, const VLCTable * table,
     guint length)
 {
@@ -868,7 +905,7 @@ failed:
 
 static GstVC1ParserResult
 parse_frame_header_advanced (GstBitReader * br, GstVC1FrameHdr * framehdr,
-    GstVC1SeqHdr * seqhdr, GstVC1BitPlanes * bitplanes)
+    GstVC1SeqHdr * seqhdr, GstVC1BitPlanes * bitplanes, gboolean field2)
 {
   GstVC1AdvancedSeqHdr *advhdr = &seqhdr->advanced;
   GstVC1PicAdvanced *pic = &framehdr->pic.advanced;
@@ -888,9 +925,44 @@ parse_frame_header_advanced (GstBitReader * br, GstVC1FrameHdr * framehdr,
       goto failed;
 
     pic->fcm = (guint8) fcm;
-  }
+  } else
+    pic->fcm = GST_VC1_FRAME_PROGRESSIVE;
 
-  framehdr->ptype = (guint8) get_unary (br, 0, 4);
+  if (pic->fcm == GST_VC1_FIELD_INTERLACE) {
+    READ_UINT8 (br, pic->fptype, 3);
+    if (field2) {
+      switch (pic->fptype) {
+        case 0x00:
+        case 0x02:
+          framehdr->ptype = GST_VC1_PICTURE_TYPE_I;
+        case 0x01:
+        case 0x03:
+          framehdr->ptype = GST_VC1_PICTURE_TYPE_P;
+        case 0x04:
+        case 0x06:
+          framehdr->ptype = GST_VC1_PICTURE_TYPE_B;
+        case 0x05:
+        case 0x07:
+          framehdr->ptype = GST_VC1_PICTURE_TYPE_BI;
+      }
+    } else {
+      switch (pic->fptype) {
+        case 0x00:
+        case 0x01:
+          framehdr->ptype = GST_VC1_PICTURE_TYPE_I;
+        case 0x02:
+        case 0x03:
+          framehdr->ptype = GST_VC1_PICTURE_TYPE_P;
+        case 0x04:
+        case 0x05:
+          framehdr->ptype = GST_VC1_PICTURE_TYPE_B;
+        case 0x06:
+        case 0x07:
+          framehdr->ptype = GST_VC1_PICTURE_TYPE_BI;
+      }
+    }
+  } else
+    framehdr->ptype = (guint8) get_unary (br, 0, 4);
 
   if (advhdr->tfcntrflag) {
     READ_UINT8 (br, pic->tfcntr, 8);
@@ -937,6 +1009,11 @@ parse_frame_header_advanced (GstBitReader * br, GstVC1FrameHdr * framehdr,
   if (advhdr->interlace) {
     READ_UINT8 (br, pic->uvsamp, 1);
     GST_DEBUG ("uvsamp %u", pic->uvsamp);
+    if (pic->fcm == GST_VC1_FIELD_INTERLACE && entrypthdr->refdist_flag &&
+        pic->fptype < 4)
+      decode_refdist (br, &pic->refdist);
+    else
+      pic->refdist = 0;
   }
 
   if (advhdr->finterpflag) {
@@ -944,8 +1021,12 @@ parse_frame_header_advanced (GstBitReader * br, GstVC1FrameHdr * framehdr,
     GST_DEBUG ("interpfrm %u", framehdr->interpfrm);
   }
 
-  if (framehdr->ptype == GST_VC1_PICTURE_TYPE_B) {
+  if ((pic->fcm != GST_VC1_FIELD_INTERLACE &&
+          framehdr->ptype == GST_VC1_PICTURE_TYPE_B) ||
+      (pic->fcm == GST_VC1_FIELD_INTERLACE && (pic->fptype > 4))) {
+
     guint bfraction;
+
     if (!decode_vlc (br, &bfraction, vc1_bfraction_vlc_table,
             G_N_ELEMENTS (vc1_bfraction_vlc_table)))
       goto failed;
@@ -1038,32 +1119,47 @@ parse_frame_header_advanced (GstBitReader * br, GstVC1FrameHdr * framehdr,
       else
         pic->mvrange = 0;
 
-      if (pic->fcm == GST_VC1_FRAME_INTERLACE) {
+      if (pic->fcm != GST_VC1_FRAME_PROGRESSIVE) {
         if (entrypthdr->extended_dmv)
           pic->dmvrange = get_unary (br, 0, 3);
-        READ_UINT8 (br, pic->intcomp, 1);
-      } else {
-
-        READ_UINT8 (br, pic->mvmode, 1);
       }
 
-      if (!bitplane_decoding (br, bitplanes ? bitplanes->directmb : NULL,
-              seqhdr, &pic->directmb))
-        goto failed;
+      if (pic->fcm == GST_VC1_FRAME_INTERLACE)
+        READ_UINT8 (br, pic->intcomp, 1);
+      else
+        READ_UINT8 (br, pic->mvmode, 1);
 
-      if (!bitplane_decoding (br, bitplanes ? bitplanes->skipmb : NULL,
-              seqhdr, &pic->skipmb))
-        goto failed;
+      if (pic->fcm == GST_VC1_FIELD_INTERLACE) {
 
-      if (pic->fcm == GST_VC1_FRAME_INTERLACE) {
-        if (gst_bit_reader_get_remaining (br) < 11)
+        if (!bitplane_decoding (br, bitplanes ? bitplanes->forwardmb : NULL,
+                seqhdr, &pic->forwardmb))
+          goto failed;
+
+      } else {
+        if (!bitplane_decoding (br, bitplanes ? bitplanes->directmb : NULL,
+                seqhdr, &pic->directmb))
+          goto failed;
+
+        if (!bitplane_decoding (br, bitplanes ? bitplanes->skipmb : NULL,
+                seqhdr, &pic->skipmb))
+          goto failed;
+      }
+
+      if (pic->fcm != GST_VC1_FRAME_PROGRESSIVE) {
+        if (gst_bit_reader_get_remaining (br) < 7)
           goto failed;
 
         pic->mbmodetab = gst_bit_reader_get_bits_uint8_unchecked (br, 2);
         pic->imvtab = gst_bit_reader_get_bits_uint8_unchecked (br, 2);
         pic->icbptab = gst_bit_reader_get_bits_uint8_unchecked (br, 3);
-        pic->mvbptab2 = gst_bit_reader_get_bits_uint8_unchecked (br, 2);
-        pic->mvbptab4 = gst_bit_reader_get_bits_uint8_unchecked (br, 2);
+
+        if (pic->fcm == GST_VC1_FRAME_INTERLACE)
+          READ_UINT8 (br, pic->mvbptab2, 2);
+
+        if (pic->fcm == GST_VC1_FRAME_INTERLACE ||
+            (pic->fcm == GST_VC1_FIELD_INTERLACE
+                && pic->mvmode == GST_VC1_MVMODE_MIXED_MV))
+          READ_UINT8 (br, pic->mvbptab4, 2);
 
       } else {
         READ_UINT8 (br, pic->mvtab, 2);
@@ -1092,15 +1188,24 @@ parse_frame_header_advanced (GstBitReader * br, GstVC1FrameHdr * framehdr,
 
       break;
     case GST_VC1_PICTURE_TYPE_P:
+      if (pic->fcm == GST_VC1_FIELD_INTERLACE) {
+        READ_UINT8 (br, pic->numref, 1);
+
+        if (pic->numref)
+          READ_UINT8 (br, pic->reffield, 1);
+      }
+
       if (entrypthdr->extended_mv)
         pic->mvrange = get_unary (br, 0, 3);
       else
         pic->mvrange = 0;
 
-      if (pic->fcm == GST_VC1_FRAME_INTERLACE) {
+      if (pic->fcm != GST_VC1_FRAME_PROGRESSIVE) {
         if (entrypthdr->extended_dmv)
           pic->dmvrange = get_unary (br, 0, 3);
+      }
 
+      if (pic->fcm == GST_VC1_FRAME_INTERLACE) {
         READ_UINT8 (br, pic->mvswitch4, 1);
         READ_UINT8 (br, pic->intcomp, 1);
 
@@ -1115,35 +1220,55 @@ parse_frame_header_advanced (GstBitReader * br, GstVC1FrameHdr * framehdr,
 
         if (pic->mvmode == GST_VC1_MVMODE_INTENSITY_COMP) {
           pic->mvmode2 = vc1_mvmode2_table[mvmodeidx][get_unary (br, 1, 3)];
+
+          if (pic->fcm == GST_VC1_FIELD_INTERLACE)
+            pic->intcompfield = decode012 (br);
+
           READ_UINT8 (br, pic->lumscale, 6);
           READ_UINT8 (br, pic->lumshift, 6);
           GST_DEBUG ("lumscale %u lumshift %u", pic->lumscale, pic->lumshift);
+
+          if (pic->fcm == GST_VC1_FIELD_INTERLACE && pic->intcompfield) {
+            READ_UINT8 (br, pic->lumscale2, 6);
+            READ_UINT8 (br, pic->lumshift2, 6);
+          }
         }
 
-        if (pic->mvmode == GST_VC1_MVMODE_MIXED_MV ||
-            (pic->mvmode == GST_VC1_MVMODE_INTENSITY_COMP &&
-                pic->mvmode2 == GST_VC1_MVMODE_MIXED_MV)) {
-          if (!bitplane_decoding (br, bitplanes ? bitplanes->mvtypemb : NULL,
-                  seqhdr, &pic->mvtypemb))
-            goto failed;
-          GST_DEBUG ("mvtypemb %u", pic->mvtypemb);
+        if (pic->fcm == GST_VC1_FRAME_PROGRESSIVE) {
+          if (pic->mvmode == GST_VC1_MVMODE_MIXED_MV ||
+              (pic->mvmode == GST_VC1_MVMODE_INTENSITY_COMP &&
+                  pic->mvmode2 == GST_VC1_MVMODE_MIXED_MV)) {
+
+            if (!bitplane_decoding (br, bitplanes ? bitplanes->mvtypemb : NULL,
+                    seqhdr, &pic->mvtypemb))
+              goto failed;
+
+            GST_DEBUG ("mvtypemb %u", pic->mvtypemb);
+          }
         }
       }
 
-      if (!bitplane_decoding (br, bitplanes ? bitplanes->skipmb : NULL,
-              seqhdr, &pic->skipmb))
-        goto failed;
+      if (pic->fcm != GST_VC1_FIELD_INTERLACE) {
+        if (!bitplane_decoding (br, bitplanes ? bitplanes->skipmb : NULL,
+                seqhdr, &pic->skipmb))
+          goto failed;
+      }
 
-      if (pic->fcm == GST_VC1_FRAME_INTERLACE) {
-        if (gst_bit_reader_get_remaining (br) < 9)
+      if (pic->fcm != GST_VC1_FRAME_PROGRESSIVE) {
+        if (gst_bit_reader_get_remaining (br) < 7)
           goto failed;
 
         pic->mbmodetab = gst_bit_reader_get_bits_uint8_unchecked (br, 2);
         pic->imvtab = gst_bit_reader_get_bits_uint8_unchecked (br, 2);
         pic->icbptab = gst_bit_reader_get_bits_uint8_unchecked (br, 3);
-        pic->mvbptab2 = gst_bit_reader_get_bits_uint8_unchecked (br, 2);
 
-        if (pic->mvswitch4)
+        if (pic->fcm != GST_VC1_FIELD_INTERLACE) {
+          READ_UINT8 (br, pic->mvbptab2, 2);
+
+          if (pic->mvswitch4)
+            READ_UINT8 (br, pic->mvbptab4, 2);
+
+        } else if (pic->mvmode == GST_VC1_MVMODE_MIXED_MV)
           READ_UINT8 (br, pic->mvbptab4, 2);
 
       } else {
@@ -1898,11 +2023,41 @@ gst_vc1_parse_frame_header (const guint8 * data, gsize size,
   gst_bit_reader_init (&br, data, size);
 
   if (seqhdr->profile == GST_VC1_PROFILE_ADVANCED)
-    result = parse_frame_header_advanced (&br, framehdr, seqhdr, bitplanes);
+    result = parse_frame_header_advanced (&br, framehdr, seqhdr, bitplanes,
+        FALSE);
   else
     result = parse_frame_header (&br, framehdr, seqhdr, bitplanes);
 
   framehdr->header_size = gst_bit_reader_get_pos (&br);
+  return result;
+}
+
+/**
+ * gst_vc1_parse_field_header:
+ * @data: The data to parse
+ * @size: the size of @data
+ * @fieldhdr: The #GstVC1FrameHdr to fill.
+ * @seqhdr: The #GstVC1SeqHdr currently being parsed
+ * @bitplanes: The #GstVC1BitPlanes to store bitplanes in or %NULL
+ *
+ * Parses @data, and fills @fieldhdr fields.
+ *
+ * Returns: a #GstVC1ParserResult
+ */
+GstVC1ParserResult
+gst_vc1_parse_field_header (const guint8 * data, gsize size,
+    GstVC1FrameHdr * fieldhdr, GstVC1SeqHdr * seqhdr,
+    GstVC1BitPlanes * bitplanes)
+{
+  GstBitReader br;
+  GstVC1ParserResult result;
+
+  ensure_debug_category ();
+
+  gst_bit_reader_init (&br, data, size);
+
+  result = parse_frame_header_advanced (&br, fieldhdr, seqhdr, bitplanes, TRUE);
+
   return result;
 }
 
@@ -1949,6 +2104,7 @@ gst_vc1_bitplanes_free_1 (GstVC1BitPlanes * bitplanes)
   g_free (bitplanes->mvtypemb);
   g_free (bitplanes->skipmb);
   g_free (bitplanes->directmb);
+  g_free (bitplanes->forwardmb);
 }
 
 /**
@@ -1984,6 +2140,8 @@ gst_vc1_bitplanes_ensure_size (GstVC1BitPlanes * bitplanes,
         g_realloc_n (bitplanes->skipmb, bitplanes->size, sizeof (guint8));
     bitplanes->directmb =
         g_realloc_n (bitplanes->directmb, bitplanes->size, sizeof (guint8));
+    bitplanes->forwardmb =
+        g_realloc_n (bitplanes->forwardmb, bitplanes->size, sizeof (guint8));
   } else {
     bitplanes->size = seqhdr->mb_height * seqhdr->mb_stride;
     bitplanes->acpred = g_malloc0 (bitplanes->size * sizeof (guint8));
@@ -1992,6 +2150,7 @@ gst_vc1_bitplanes_ensure_size (GstVC1BitPlanes * bitplanes,
     bitplanes->mvtypemb = g_malloc0 (bitplanes->size * sizeof (guint8));
     bitplanes->skipmb = g_malloc0 (bitplanes->size * sizeof (guint8));
     bitplanes->directmb = g_malloc0 (bitplanes->size * sizeof (guint8));
+    bitplanes->forwardmb = g_malloc0 (bitplanes->size * sizeof (guint8));
   }
 
   return TRUE;
