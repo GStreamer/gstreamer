@@ -204,6 +204,7 @@
  * -ugly asf:           rtpasfdepay: RTP ASF packet depayloader
  * -ugly asf:           rtspwms: WMS RTSP Extension
  * -ugly dvdlpcmdec:    dvdlpcmdec: DVD LPCM Audio decoder
+ * -ugly dvdread:       dvdreadsrc: DVD Source
  * -ugly dvdsub:        dvdsubdec: DVD subtitle decoder
  * -ugly dvdsub:        dvdsubparse: DVD subtitle parser
  * -ugly lame:          lame: L.A.M.E. mp3 encoder
@@ -251,7 +252,6 @@
    -bad  celt:          celtdec: Celt audio decoder
    -bad  celt:          celtenc: Celt audio encoder
    -bad  dtsdec:        dtsdec: DTS audio decoder
-   -ugly dvdread:       dvdreadsrc: DVD Source
    -good dv:            dvdec: DV video decoder
    -good dv:            dvdemux: DV system stream demuxer
    -bad  gsm:           gsmdec: GSM audio decoder
