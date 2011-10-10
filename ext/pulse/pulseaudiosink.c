@@ -115,39 +115,18 @@ static gboolean gst_pulse_audio_sink_sink_event (GstPad * pad,
     GstEvent * event);
 static gboolean gst_pulse_audio_sink_sink_acceptcaps (GstPad * pad,
     GstCaps * caps);
-static gboolean gst_pulse_audio_sink_sink_setcaps (GstPad * pad,
-    GstCaps * caps);
 static GstStateChangeReturn
 gst_pulse_audio_sink_change_state (GstElement * element,
     GstStateChange transition);
+static gboolean gst_pulse_audio_sink_set_caps (GstPulseAudioSink * pbin,
+    GstCaps * caps);
 
-static void
-gst_pulse_audio_sink_do_init (GType type)
-{
-  GST_DEBUG_CATEGORY_INIT (pulseaudiosink_debug, "pulseaudiosink", 0,
-      "Bin that wraps pulsesink for handling compressed formats");
-}
-
-GST_BOILERPLATE_FULL (GstPulseAudioSink, gst_pulse_audio_sink, GstBin,
-    GST_TYPE_BIN, gst_pulse_audio_sink_do_init);
+#define gst_pulse_audio_sink_parent_class parent_class
+G_DEFINE_TYPE (GstPulseAudioSink, gst_pulse_audio_sink, GST_TYPE_BIN);
 
 static GstStaticPadTemplate sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
     GST_STATIC_CAPS (PULSE_SINK_TEMPLATE_CAPS));
-
-static void
-gst_pulse_audio_sink_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_template));
-
-  gst_element_class_set_details_simple (element_class,
-      "Bin wrapping pulsesink", "Sink/Audio/Bin",
-      "Correctly handles sink changes when streaming compressed formats to "
-      "pulsesink", "Arun Raghavan <arun.raghavan@collabora.co.uk>");
-}
 
 static GParamSpec *
 param_spec_copy (GParamSpec * spec)
@@ -272,11 +251,6 @@ param_spec_copy (GParamSpec * spec)
         vspec->default_value, flags);
   }
 
-  if (G_PARAM_SPEC_TYPE (spec) == GST_TYPE_PARAM_MINI_OBJECT) {
-    return gst_param_spec_mini_object (name, nick, blurb, spec->value_type,
-        flags);
-  }
-
   g_warning ("Unknown param type %ld for '%s'",
       (long) G_PARAM_SPEC_TYPE (spec), name);
   g_assert_not_reached ();
@@ -291,6 +265,17 @@ gst_pulse_audio_sink_class_init (GstPulseAudioSinkClass * klass)
       GST_PULSESINK_CLASS (g_type_class_ref (GST_TYPE_PULSESINK));
   GParamSpec **specs;
   guint n, i, j;
+
+  GST_DEBUG_CATEGORY_INIT (pulseaudiosink_debug, "pulseaudiosink", 0,
+      "Bin that wraps pulsesink for handling compressed formats");
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&sink_template));
+
+  gst_element_class_set_details_simple (element_class,
+      "Bin wrapping pulsesink", "Sink/Audio/Bin",
+      "Correctly handles sink changes when streaming compressed formats to "
+      "pulsesink", "Arun Raghavan <arun.raghavan@collabora.co.uk>");
 
   gobject_class->get_property = gst_pulse_audio_sink_get_property;
   gobject_class->set_property = gst_pulse_audio_sink_set_property;
@@ -353,9 +338,10 @@ notify_cb (GObject * selector, GParamSpec * pspec, GstPulseAudioSink * pbin)
 }
 
 static void
-gst_pulse_audio_sink_init (GstPulseAudioSink * pbin,
-    GstPulseAudioSinkClass * klass)
+gst_pulse_audio_sink_init (GstPulseAudioSink * pbin)
 {
+  GstPulseAudioSinkClass *klass =
+      GST_PULSE_AUDIO_SINK_CLASS (G_OBJECT_GET_CLASS (pbin));
   GstPad *pad = NULL;
   GParamSpec **specs;
   GString *prop;
@@ -381,8 +367,6 @@ gst_pulse_audio_sink_init (GstPulseAudioSink * pbin,
   pbin->sinkpad_old_eventfunc = GST_PAD_EVENTFUNC (pbin->sinkpad);
   gst_pad_set_event_function (pbin->sinkpad,
       GST_DEBUG_FUNCPTR (gst_pulse_audio_sink_sink_event));
-  gst_pad_set_setcaps_function (pbin->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_pulse_audio_sink_sink_setcaps));
   gst_pad_set_acceptcaps_function (pbin->sinkpad,
       GST_DEBUG_FUNCPTR (gst_pulse_audio_sink_sink_acceptcaps));
 
@@ -518,28 +502,27 @@ distribute_running_time (GstElement * element, const GstSegment * segment)
   }
 #endif
 
-  event = gst_event_new_new_segment_full (FALSE, segment->rate,
-      segment->applied_rate, segment->format,
-      segment->start, segment->stop, segment->time);
+  /* TODO review this copy, see if it can be avoided */
+  event = gst_event_new_segment (gst_segment_copy (segment));
   gst_pad_send_event (pad, event);
 
   gst_object_unref (pad);
 }
 
-static gboolean
-dbin2_event_probe (GstPad * pad, GstMiniObject * obj, gpointer data)
+static GstProbeReturn
+dbin2_event_probe (GstPad * pad, GstProbeType ptype, GstEvent * event,
+    gpointer data)
 {
   GstPulseAudioSink *pbin = GST_PULSE_AUDIO_SINK (data);
-  GstEvent *event = GST_EVENT (obj);
 
-  if (GST_EVENT_TYPE (event) == GST_EVENT_NEWSEGMENT) {
+  if (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT) {
     GST_DEBUG_OBJECT (pbin, "Got newsegment - dropping");
-    gst_pad_remove_event_probe (pad, pbin->event_probe_id);
+    gst_pad_remove_probe (pad, pbin->event_probe_id);
     gst_object_unref (pbin);
-    return FALSE;
+    return GST_PROBE_DROP;
   }
 
-  return TRUE;
+  return GST_PROBE_OK;
 }
 
 static void
@@ -594,8 +577,8 @@ gst_pulse_audio_sink_add_dbin2 (GstPulseAudioSink * pbin)
 
   /* Trap the newsegment events that we feed the decodebin and discard them */
   sinkpad = gst_element_get_static_pad (GST_ELEMENT (pbin->psink), "sink");
-  pbin->event_probe_id = gst_pad_add_event_probe (sinkpad,
-      G_CALLBACK (dbin2_event_probe), gst_object_ref (pbin));
+  pbin->event_probe_id = gst_pad_add_probe (sinkpad, GST_PROBE_TYPE_EVENT,
+      (GstPadProbeCallback) dbin2_event_probe, gst_object_ref (pbin), NULL);
   gst_object_unref (sinkpad);
   sinkpad = NULL;
 
@@ -614,7 +597,7 @@ out:
 static void
 update_eac3_alignment (GstPulseAudioSink * pbin)
 {
-  GstCaps *caps = gst_pad_peer_get_caps_reffed (pbin->sinkpad);
+  GstCaps *caps = gst_pad_peer_get_caps (pbin->sinkpad, NULL);
   GstStructure *st;
 
   if (!caps)
@@ -634,18 +617,21 @@ update_eac3_alignment (GstPulseAudioSink * pbin)
   gst_caps_unref (caps);
 }
 
-static void
-proxypad_blocked_cb (GstPad * pad, gboolean blocked, gpointer data)
+static GstProbeReturn
+proxypad_blocked_cb (GstPad * pad, GstProbeType ptype, gpointer type_data,
+    gpointer data)
 {
   GstPulseAudioSink *pbin = GST_PULSE_AUDIO_SINK (data);
   GstCaps *caps;
   GstPad *sinkpad = NULL;
 
+#if 0
   if (!blocked) {
     /* Unblocked, don't need to do anything */
     GST_DEBUG_OBJECT (pbin, "unblocked");
     return;
   }
+#endif
 
   GST_DEBUG_OBJECT (pbin, "blocked");
 
@@ -653,7 +639,7 @@ proxypad_blocked_cb (GstPad * pad, gboolean blocked, gpointer data)
 
   if (!pbin->format_lost) {
     sinkpad = gst_element_get_static_pad (GST_ELEMENT (pbin->psink), "sink");
-    caps = gst_pad_get_caps_reffed (pad);
+    caps = gst_pad_get_caps (pad, NULL);
 
     if (gst_pad_accept_caps (sinkpad, caps)) {
       if (pbin->dbin2) {
@@ -687,10 +673,8 @@ proxypad_blocked_cb (GstPad * pad, gboolean blocked, gpointer data)
 done:
   update_eac3_alignment (pbin);
 
-  gst_pad_set_blocked_async_full (pad, FALSE, proxypad_blocked_cb,
-      gst_object_ref (pbin), (GDestroyNotify) gst_object_unref);
-
   GST_PULSE_AUDIO_SINK_UNLOCK (pbin);
+  return GST_PROBE_PASS;
 }
 
 static gboolean
@@ -722,7 +706,7 @@ gst_pulse_audio_sink_src_event (GstPad * pad, GstEvent * event)
       pbin->format_lost = TRUE;
 
     if (!gst_pad_is_blocked (pad))
-      gst_pad_set_blocked_async_full (pad, TRUE, proxypad_blocked_cb,
+      gst_pad_add_probe (pad, GST_PROBE_TYPE_BLOCK, proxypad_blocked_cb,
           gst_object_ref (pbin), (GDestroyNotify) gst_object_unref);
     GST_PULSE_AUDIO_SINK_UNLOCK (pbin);
 
@@ -752,27 +736,27 @@ gst_pulse_audio_sink_sink_event (GstPad * pad, GstEvent * event)
   ret = pbin->sinkpad_old_eventfunc (pad, gst_event_ref (event));
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_NEWSEGMENT:
+    case GST_EVENT_CAPS:
     {
-      GstFormat format;
-      gdouble rate, arate;
-      gint64 start, stop, time;
-      gboolean update;
+      GstCaps *caps;
+
+      gst_event_parse_caps (event, &caps);
+      ret = gst_pulse_audio_sink_set_caps (pbin, caps);
+      gst_caps_unref (caps);
+      break;
+    }
+    case GST_EVENT_SEGMENT:
+    {
+      const GstSegment *segment = NULL;
 
       GST_PULSE_AUDIO_SINK_LOCK (pbin);
-      gst_event_parse_new_segment_full (event, &update, &rate, &arate, &format,
-          &start, &stop, &time);
+      gst_event_parse_segment (event, &segment);
 
-      GST_DEBUG_OBJECT (pbin,
-          "newsegment: update %d, rate %g, arate %g, start %" GST_TIME_FORMAT
-          ", stop %" GST_TIME_FORMAT ", time %" GST_TIME_FORMAT,
-          update, rate, arate, GST_TIME_ARGS (start), GST_TIME_ARGS (stop),
-          GST_TIME_ARGS (time));
+      GST_DEBUG_OBJECT (pbin, "newsegment: %" GST_SEGMENT_FORMAT, segment);
 
-      if (format == GST_FORMAT_TIME) {
+      if (segment->format == GST_FORMAT_TIME) {
         /* Store the values for feeding to sub-elements */
-        gst_segment_set_newsegment_full (&pbin->segment, update,
-            rate, arate, format, start, stop, time);
+        gst_segment_copy_into (segment, &pbin->segment);
       } else {
         GST_WARNING_OBJECT (pbin, "Got a non-TIME format segment");
         gst_segment_init (&pbin->segment, GST_FORMAT_TIME);
@@ -811,8 +795,8 @@ gst_pulse_audio_sink_sink_acceptcaps (GstPad * pad, GstCaps * caps)
   GstCaps *pad_caps = NULL;
   gboolean ret = FALSE;
 
-  pad_caps = gst_pad_get_caps_reffed (pad);
-  if (!pad_caps || !gst_caps_can_intersect (pad_caps, caps))
+  pad_caps = gst_pad_get_caps (pad, caps);
+  if (!pad_caps || !gst_caps_is_empty (pad_caps))
     goto out;
 
   /* If we've not got fixed caps, creating a stream might fail, so let's just
@@ -849,21 +833,18 @@ out:
 }
 
 static gboolean
-gst_pulse_audio_sink_sink_setcaps (GstPad * pad, GstCaps * caps)
+gst_pulse_audio_sink_set_caps (GstPulseAudioSink * pbin, GstCaps * caps)
 {
-  GstPulseAudioSink *pbin = GST_PULSE_AUDIO_SINK (gst_pad_get_parent (pad));
   gboolean ret = TRUE;
 
   GST_PULSE_AUDIO_SINK_LOCK (pbin);
 
   if (!gst_pad_is_blocked (pbin->sinkpad))
-    gst_pad_set_blocked_async_full (pbin->sink_proxypad, TRUE,
+    gst_pad_add_probe (pbin->sink_proxypad, GST_PROBE_TYPE_BLOCK,
         proxypad_blocked_cb, gst_object_ref (pbin),
         (GDestroyNotify) gst_object_unref);
 
   GST_PULSE_AUDIO_SINK_UNLOCK (pbin);
-
-  gst_object_unref (pbin);
 
   return ret;
 }
@@ -880,7 +861,7 @@ gst_pulse_audio_sink_change_state (GstElement * element,
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       GST_PULSE_AUDIO_SINK_LOCK (pbin);
       if (gst_pad_is_blocked (pbin->sinkpad)) {
-        gst_pad_set_blocked_async_full (pbin->sink_proxypad, FALSE,
+        gst_pad_add_probe (pbin->sink_proxypad, GST_PROBE_TYPE_BLOCK,
             proxypad_blocked_cb, gst_object_ref (pbin),
             (GDestroyNotify) gst_object_unref);
       }
