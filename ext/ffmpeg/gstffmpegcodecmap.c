@@ -373,79 +373,76 @@ gst_ff_aud_caps_new (AVCodecContext * context, enum CodecID codec_id,
     const gint *rates = NULL;
     gint n_rates = 0;
 
-    if (context) {
-      /* so we must be after restricted caps in this particular case */
-      switch (codec_id) {
-        case CODEC_ID_MP2:
-        {
-          const static gint l_rates[] =
-              { 48000, 44100, 32000, 24000, 22050, 16000 };
-          n_rates = G_N_ELEMENTS (l_rates);
-          rates = l_rates;
-          break;
-        }
-        case CODEC_ID_EAC3:
-        case CODEC_ID_AC3:
-        {
-          const static gint l_rates[] = { 48000, 44100, 32000 };
-          n_rates = G_N_ELEMENTS (l_rates);
-          rates = l_rates;
-          break;
-        }
-        case CODEC_ID_ADPCM_SWF:
-        {
-          const static gint l_rates[] = { 11025, 22050, 44100 };
-          n_rates = G_N_ELEMENTS (l_rates);
-          rates = l_rates;
-          break;
-        }
-        case CODEC_ID_ROQ_DPCM:
-        {
-          const static gint l_rates[] = { 22050 };
-          n_rates = G_N_ELEMENTS (l_rates);
-          rates = l_rates;
-          break;
-        }
-        case CODEC_ID_ADPCM_G726:
-          maxchannels = 1;
-          break;
-        case CODEC_ID_AMR_NB:
-        {
-          const static gint l_rates[] = { 8000 };
-          maxchannels = 1;
-          n_rates = G_N_ELEMENTS (l_rates);
-          rates = l_rates;
-          break;
-        }
-        case CODEC_ID_AMR_WB:
-        {
-          const static gint l_rates[] = { 16000 };
-          maxchannels = 1;
-          n_rates = G_N_ELEMENTS (l_rates);
-          rates = l_rates;
-          break;
-        }
-        default:
-          break;
-      }
-
-      /* TODO: handle context->channel_layouts here to set
-       * the list of channel layouts supported by the encoder.
-       * Unfortunately no encoder uses this yet....
-       */
-    }
-
-    /* regardless of encode/decode, open up channels if applicable */
-    /* Until decoders/encoders expose the maximum number of channels
-     * they support, we whitelist them here. */
+    /* so we must be after restricted caps in this case */
     switch (codec_id) {
-      case CODEC_ID_AC3:
-      case CODEC_ID_EAC3:
       case CODEC_ID_AAC:
       case CODEC_ID_AAC_LATM:
       case CODEC_ID_DTS:
         maxchannels = 6;
         break;
+      case CODEC_ID_MP2:
+      {
+        const static gint l_rates[] =
+            { 48000, 44100, 32000, 24000, 22050, 16000 };
+        n_rates = G_N_ELEMENTS (l_rates);
+        rates = l_rates;
+        break;
+      }
+      case CODEC_ID_EAC3:
+      case CODEC_ID_AC3:
+      {
+        const static gint l_rates[] = { 48000, 44100, 32000 };
+        maxchannels = 6;
+        n_rates = G_N_ELEMENTS (l_rates);
+        rates = l_rates;
+        break;
+      }
+      case CODEC_ID_ADPCM_G722:
+      case CODEC_ID_ADPCM_G726:
+        maxchannels = 1;
+        break;
+      case CODEC_ID_ADPCM_SWF:
+      {
+        const static gint l_rates[] = { 11025, 22050, 44100 };
+        n_rates = G_N_ELEMENTS (l_rates);
+        rates = l_rates;
+        break;
+      }
+      case CODEC_ID_ROQ_DPCM:
+      {
+        const static gint l_rates[] = { 22050 };
+        n_rates = G_N_ELEMENTS (l_rates);
+        rates = l_rates;
+        break;
+      }
+      case CODEC_ID_AMR_NB:
+      {
+        const static gint l_rates[] = { 8000 };
+        maxchannels = 1;
+        n_rates = G_N_ELEMENTS (l_rates);
+        rates = l_rates;
+        break;
+      }
+      case CODEC_ID_AMR_WB:
+      {
+        const static gint l_rates[] = { 16000 };
+        maxchannels = 1;
+        n_rates = G_N_ELEMENTS (l_rates);
+        rates = l_rates;
+        break;
+      }
+      default:
+        break;
+    }
+
+    /* TODO: handle context->channel_layouts here to set
+     * the list of channel layouts supported by the encoder.
+     * Unfortunately no encoder uses this yet....
+     */
+    /* regardless of encode/decode, open up channels if applicable */
+    /* Until decoders/encoders expose the maximum number of channels
+     * they support, we whitelist them here. */
+    switch (codec_id) {
       case CODEC_ID_WMAPRO:
       case CODEC_ID_TRUEHD:
         maxchannels = 8;
