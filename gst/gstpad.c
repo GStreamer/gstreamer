@@ -169,7 +169,7 @@ static GstFlowQuarks flow_quarks[] = {
   {GST_FLOW_OK, "ok", 0},
   {GST_FLOW_NOT_LINKED, "not-linked", 0},
   {GST_FLOW_WRONG_STATE, "wrong-state", 0},
-  {GST_FLOW_UNEXPECTED, "unexpected", 0},
+  {GST_FLOW_EOS, "eos", 0},
   {GST_FLOW_NOT_NEGOTIATED, "not-negotiated", 0},
   {GST_FLOW_ERROR, "error", 0},
   {GST_FLOW_NOT_SUPPORTED, "not-supported", 0},
@@ -3984,7 +3984,7 @@ get_range_failed:
     GST_PAD_STREAM_UNLOCK (pad);
     *buffer = NULL;
     GST_CAT_LEVEL_LOG (GST_CAT_SCHEDULING,
-        (ret >= GST_FLOW_UNEXPECTED) ? GST_LEVEL_INFO : GST_LEVEL_WARNING,
+        (ret >= GST_FLOW_EOS) ? GST_LEVEL_INFO : GST_LEVEL_WARNING,
         pad, "getrange failed, flow: %s", gst_flow_get_name (ret));
     return ret;
   }
@@ -4133,7 +4133,7 @@ pull_range_failed:
     *buffer = NULL;
     GST_OBJECT_UNLOCK (pad);
     GST_CAT_LEVEL_LOG (GST_CAT_SCHEDULING,
-        (ret >= GST_FLOW_UNEXPECTED) ? GST_LEVEL_INFO : GST_LEVEL_WARNING,
+        (ret >= GST_FLOW_EOS) ? GST_LEVEL_INFO : GST_LEVEL_WARNING,
         pad, "pullrange failed, flow: %s", gst_flow_get_name (ret));
     return ret;
   }

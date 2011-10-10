@@ -1395,7 +1395,7 @@ unexpected:
     /* we should not post an error for this, just inform upstream that
      * we don't expect anything anymore */
     GST_DEBUG ("pad %s:%s is eos", GST_DEBUG_PAD_NAME (pad));
-    ret = GST_FLOW_UNEXPECTED;
+    ret = GST_FLOW_EOS;
     goto unlock_done;
   }
 clipped:

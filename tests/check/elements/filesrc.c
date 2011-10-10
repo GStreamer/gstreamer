@@ -270,19 +270,19 @@ GST_START_TEST (test_pull)
 
   /* read 0 bytes at end should EOS */
   ret = gst_pad_get_range (pad, stop, 0, &buffer1);
-  fail_unless (ret == GST_FLOW_UNEXPECTED);
+  fail_unless (ret == GST_FLOW_EOS);
 
   /* read 10 bytes before end should EOS */
   ret = gst_pad_get_range (pad, stop, 10, &buffer1);
-  fail_unless (ret == GST_FLOW_UNEXPECTED);
+  fail_unless (ret == GST_FLOW_EOS);
 
   /* read 0 bytes after end should EOS */
   ret = gst_pad_get_range (pad, stop + 10, 0, &buffer1);
-  fail_unless (ret == GST_FLOW_UNEXPECTED);
+  fail_unless (ret == GST_FLOW_EOS);
 
   /* read 10 bytes after end should EOS too */
   ret = gst_pad_get_range (pad, stop + 10, 10, &buffer1);
-  fail_unless (ret == GST_FLOW_UNEXPECTED);
+  fail_unless (ret == GST_FLOW_EOS);
 
   fail_unless (gst_element_set_state (src,
           GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS, "could not set to null");

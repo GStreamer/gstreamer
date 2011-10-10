@@ -524,10 +524,10 @@ GST_START_TEST (test_flowreturn)
   GQuark quark;
 
   /* test some of the macros */
-  ret = GST_FLOW_UNEXPECTED;
-  fail_if (strcmp (gst_flow_get_name (ret), "unexpected"));
+  ret = GST_FLOW_EOS;
+  fail_if (strcmp (gst_flow_get_name (ret), "eos"));
   quark = gst_flow_to_quark (ret);
-  fail_if (strcmp (g_quark_to_string (quark), "unexpected"));
+  fail_if (strcmp (g_quark_to_string (quark), "eos"));
 
   ret = GST_FLOW_RESEND;
   fail_if (strcmp (gst_flow_get_name (ret), "resend"));

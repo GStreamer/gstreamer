@@ -1072,7 +1072,7 @@ gst_single_queue_push_one (GstMultiQueue * mq, GstSingleQueue * sq,
 
     switch (GST_EVENT_TYPE (event)) {
       case GST_EVENT_EOS:
-        result = GST_FLOW_UNEXPECTED;
+        result = GST_FLOW_EOS;
         break;
       case GST_EVENT_SEGMENT:
         apply_segment (mq, sq, event, &sq->src_segment);
@@ -1300,7 +1300,7 @@ gst_multi_queue_loop (GstPad * pad)
   object = NULL;
 
   if (result != GST_FLOW_OK && result != GST_FLOW_NOT_LINKED
-      && result != GST_FLOW_UNEXPECTED)
+      && result != GST_FLOW_EOS)
     goto out_flushing;
 
   GST_LOG_OBJECT (mq, "AFTER PUSHING sq->srcresult: %s",
@@ -1325,7 +1325,7 @@ out_flushing:
      * but might be stuck in one of our other full queues;
      * so empty this one and trigger dynamic queue growth. At
      * this point the srcresult is not OK, NOT_LINKED
-     * or UNEXPECTED, i.e. a real failure */
+     * or EOS, i.e. a real failure */
     gst_data_queue_flush (sq->queue);
     single_queue_underrun_cb (sq->queue, sq);
     gst_data_queue_set_flushing (sq->queue, TRUE);
@@ -1391,9 +1391,9 @@ flushing:
   }
 was_eos:
   {
-    GST_DEBUG_OBJECT (mq, "we are EOS, dropping buffer, return UNEXPECTED");
+    GST_DEBUG_OBJECT (mq, "we are EOS, dropping buffer, return EOS");
     gst_buffer_unref (buffer);
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_EOS;
   }
 }
 
@@ -1664,10 +1664,10 @@ compute_high_id (GstMultiQueue * mq)
 
       if (sq->nextid < lowest)
         lowest = sq->nextid;
-    } else if (sq->srcresult != GST_FLOW_UNEXPECTED) {
+    } else if (sq->srcresult != GST_FLOW_EOS) {
       /* If we don't have a global highid, or the global highid is lower than
        * this single queue's last outputted id, store the queue's one, 
-       * unless the singlequeue is at EOS (srcresult = UNEXPECTED) */
+       * unless the singlequeue is at EOS (srcresult = EOS) */
       if ((highid == G_MAXUINT32) || (sq->oldid > highid))
         highid = sq->oldid;
     }
@@ -1709,10 +1709,10 @@ compute_high_time (GstMultiQueue * mq)
 
       if (lowest == GST_CLOCK_TIME_NONE || sq->next_time < lowest)
         lowest = sq->next_time;
-    } else if (sq->srcresult != GST_FLOW_UNEXPECTED) {
+    } else if (sq->srcresult != GST_FLOW_EOS) {
       /* If we don't have a global highid, or the global highid is lower than
        * this single queue's last outputted id, store the queue's one, 
-       * unless the singlequeue is at EOS (srcresult = UNEXPECTED) */
+       * unless the singlequeue is at EOS (srcresult = EOS) */
       if (highest == GST_CLOCK_TIME_NONE || sq->last_time > highest)
         highest = sq->last_time;
     }

@@ -2057,8 +2057,8 @@ gst_base_sink_wait_clock (GstBaseSink * sink, GstClockTime time,
   /* FIXME: Casting to GstClockEntry only works because the types
    * are the same */
   if (G_LIKELY (sink->priv->cached_clock_id != NULL
-          && GST_CLOCK_ENTRY_CLOCK ((GstClockEntry *) sink->priv->
-              cached_clock_id) == clock)) {
+          && GST_CLOCK_ENTRY_CLOCK ((GstClockEntry *) sink->
+              priv->cached_clock_id) == clock)) {
     if (!gst_clock_single_shot_id_reinit (clock, sink->priv->cached_clock_id,
             time)) {
       gst_clock_id_unref (sink->priv->cached_clock_id);
@@ -3238,11 +3238,10 @@ flushing:
   }
 was_eos:
   {
-    GST_DEBUG_OBJECT (basesink,
-        "we are EOS, dropping object, return UNEXPECTED");
+    GST_DEBUG_OBJECT (basesink, "we are EOS, dropping object, return EOS");
     GST_BASE_SINK_PREROLL_UNLOCK (basesink);
     gst_mini_object_unref (obj);
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_EOS;
   }
 }
 
@@ -3587,10 +3586,9 @@ flushing:
   }
 was_eos:
   {
-    GST_DEBUG_OBJECT (basesink,
-        "we are EOS, dropping object, return UNEXPECTED");
+    GST_DEBUG_OBJECT (basesink, "we are EOS, dropping object, return EOS");
     gst_mini_object_unref (GST_MINI_OBJECT_CAST (obj));
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_EOS;
   }
 out_of_segment:
   {
@@ -3629,7 +3627,7 @@ wrong_mode:
     gst_mini_object_unref (GST_MINI_OBJECT_CAST (obj));
     /* we don't post an error message this will signal to the peer
      * pushing that EOS is reached. */
-    result = GST_FLOW_UNEXPECTED;
+    result = GST_FLOW_EOS;
     goto done;
   }
 }
@@ -4024,7 +4022,7 @@ paused:
     GST_LOG_OBJECT (basesink, "pausing task, reason %s",
         gst_flow_get_name (result));
     gst_pad_pause_task (pad);
-    if (result == GST_FLOW_UNEXPECTED) {
+    if (result == GST_FLOW_EOS) {
       /* perform EOS logic */
       if (basesink->segment.flags & GST_SEEK_FLAG_SEGMENT) {
         gst_element_post_message (GST_ELEMENT_CAST (basesink),
@@ -4033,7 +4031,7 @@ paused:
       } else {
         gst_base_sink_event (pad, gst_event_new_eos ());
       }
-    } else if (result == GST_FLOW_NOT_LINKED || result <= GST_FLOW_UNEXPECTED) {
+    } else if (result == GST_FLOW_NOT_LINKED || result <= GST_FLOW_EOS) {
       /* for fatal errors we post an error message, post the error
        * first so the app knows about the error first. 
        * wrong-state is not a fatal error because it happens due to

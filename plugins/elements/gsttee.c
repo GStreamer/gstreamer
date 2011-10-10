@@ -924,7 +924,7 @@ gst_tee_src_get_range (GstPad * pad, guint64 offset, guint length,
 
   if (ret == GST_FLOW_OK)
     ret = gst_tee_handle_data (tee, gst_buffer_ref (*buf), FALSE);
-  else if (ret == GST_FLOW_UNEXPECTED)
+  else if (ret == GST_FLOW_EOS)
     gst_tee_pull_eos (tee);
 
   gst_object_unref (tee);

@@ -1122,7 +1122,7 @@ could_not_read:
 eos:
   {
     GST_DEBUG ("non-regular file hits EOS");
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_EOS;
   }
 }
 
@@ -1265,7 +1265,7 @@ hit_eos:
   {
     GST_DEBUG_OBJECT (queue, "EOS hit and we don't have any requested data");
     gst_buffer_unref (buf);
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_EOS;
   }
 out_flushing:
   {
@@ -1306,7 +1306,7 @@ gst_queue2_read_item_from_file (GstQueue2 * queue)
       case GST_FLOW_OK:
         item = GST_MINI_OBJECT_CAST (buffer);
         break;
-      case GST_FLOW_UNEXPECTED:
+      case GST_FLOW_EOS:
         item = GST_MINI_OBJECT_CAST (gst_event_new_eos ());
         break;
       default:
@@ -1751,7 +1751,7 @@ out_flushing:
   {
     GST_DEBUG_OBJECT (queue, "we are flushing");
     gst_buffer_unmap (buffer, odata, osize);
-    /* FIXME - GST_FLOW_UNEXPECTED ? */
+    /* FIXME - GST_FLOW_EOS ? */
     return FALSE;
   }
 seek_failed:
@@ -1831,7 +1831,7 @@ gst_queue2_locked_enqueue (GstQueue2 * queue, gpointer item, gboolean isbuffer)
           queue->starting_segment = event;
           item = NULL;
         }
-        /* a new segment allows us to accept more buffers if we got UNEXPECTED
+        /* a new segment allows us to accept more buffers if we got EOS
          * from downstream */
         queue->unexpected = FALSE;
         break;
@@ -2165,16 +2165,15 @@ out_eos:
     GST_QUEUE2_MUTEX_UNLOCK (queue);
     gst_buffer_unref (buffer);
 
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_EOS;
   }
 out_unexpected:
   {
-    GST_CAT_LOG_OBJECT (queue_dataflow, queue,
-        "exit because we received UNEXPECTED");
+    GST_CAT_LOG_OBJECT (queue_dataflow, queue, "exit because we received EOS");
     GST_QUEUE2_MUTEX_UNLOCK (queue);
     gst_buffer_unref (buffer);
 
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_EOS;
   }
 }
 
@@ -2216,18 +2215,17 @@ next:
 
     /* need to check for srcresult here as well */
     GST_QUEUE2_MUTEX_LOCK_CHECK (queue, queue->srcresult, out_flushing);
-    if (result == GST_FLOW_UNEXPECTED) {
-      GST_CAT_LOG_OBJECT (queue_dataflow, queue,
-          "got UNEXPECTED from downstream");
+    if (result == GST_FLOW_EOS) {
+      GST_CAT_LOG_OBJECT (queue_dataflow, queue, "got EOS from downstream");
       /* stop pushing buffers, we dequeue all items until we see an item that we
        * can push again, which is EOS or SEGMENT. If there is nothing in the
        * queue we can push, we set a flag to make the sinkpad refuse more
-       * buffers with an UNEXPECTED return value until we receive something
+       * buffers with an EOS return value until we receive something
        * pushable again or we get flushed. */
       while ((data = gst_queue2_locked_dequeue (queue, &is_buffer))) {
         if (is_buffer) {
           GST_CAT_LOG_OBJECT (queue_dataflow, queue,
-              "dropping UNEXPECTED buffer %p", data);
+              "dropping EOS buffer %p", data);
           gst_buffer_unref (GST_BUFFER_CAST (data));
         } else if (GST_IS_EVENT (data)) {
           GstEvent *event = GST_EVENT_CAST (data);
@@ -2236,12 +2234,12 @@ next:
           if (type == GST_EVENT_EOS || type == GST_EVENT_SEGMENT) {
             /* we found a pushable item in the queue, push it out */
             GST_CAT_LOG_OBJECT (queue_dataflow, queue,
-                "pushing pushable event %s after UNEXPECTED",
+                "pushing pushable event %s after EOS",
                 GST_EVENT_TYPE_NAME (event));
             goto next;
           }
           GST_CAT_LOG_OBJECT (queue_dataflow, queue,
-              "dropping UNEXPECTED event %p", event);
+              "dropping EOS event %p", event);
           gst_event_unref (event);
         }
       }
@@ -2258,11 +2256,11 @@ next:
 
     gst_pad_push_event (queue->srcpad, event);
 
-    /* if we're EOS, return UNEXPECTED so that the task pauses. */
+    /* if we're EOS, return EOS so that the task pauses. */
     if (type == GST_EVENT_EOS) {
       GST_CAT_LOG_OBJECT (queue_dataflow, queue,
-          "pushed EOS event %p, return UNEXPECTED", event);
-      result = GST_FLOW_UNEXPECTED;
+          "pushed EOS event %p, return EOS", event);
+      result = GST_FLOW_EOS;
     }
 
     GST_QUEUE2_MUTEX_LOCK_CHECK (queue, queue->srcresult, out_flushing);
@@ -2337,8 +2335,8 @@ out_flushing:
     GST_CAT_LOG_OBJECT (queue_dataflow, queue,
         "pause task, reason:  %s", gst_flow_get_name (queue->srcresult));
     /* let app know about us giving up if upstream is not expected to do so */
-    /* UNEXPECTED is already taken care of elsewhere */
-    if (eos && (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_UNEXPECTED)) {
+    /* EOS is already taken care of elsewhere */
+    if (eos && (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_EOS)) {
       GST_ELEMENT_ERROR (queue, STREAM, FAILED,
           (_("Internal data flow error.")),
           ("streaming task paused, reason %s (%d)",
@@ -2700,7 +2698,7 @@ out_unexpected:
     GST_DEBUG_OBJECT (queue, "read beyond end of file");
     GST_QUEUE2_MUTEX_UNLOCK (queue);
     gst_object_unref (queue);
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_EOS;
   }
 }
 

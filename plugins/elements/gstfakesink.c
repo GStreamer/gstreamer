@@ -460,7 +460,7 @@ gst_fake_sink_preroll (GstBaseSink * bsink, GstBuffer * buffer)
 eos:
   {
     GST_DEBUG_OBJECT (sink, "we are EOS");
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_EOS;
   }
 }
 
@@ -548,7 +548,7 @@ gst_fake_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 eos:
   {
     GST_DEBUG_OBJECT (sink, "we are EOS");
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_EOS;
   }
 }
 

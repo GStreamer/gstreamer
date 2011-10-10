@@ -122,6 +122,8 @@ The 0.11 porting guide
 
     gst_pad_get_negotiated_caps() -> get_pad_get_current_caps()
 
+    GST_FLOW_UNEXPECTED -> GST_FLOW_EOS
+
 * GstPadTemplate
     gst_pad_template_get_caps() returns a new reference of the caps
     and the return value needs to be unreffed after usage.

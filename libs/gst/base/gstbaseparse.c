@@ -1924,7 +1924,7 @@ gst_base_parse_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
         GST_BUFFER_TIMESTAMP (buffer) >
         parse->segment.stop + parse->priv->lead_out_ts) {
       GST_LOG_OBJECT (parse, "Dropped frame, after segment");
-      ret = GST_FLOW_UNEXPECTED;
+      ret = GST_FLOW_EOS;
     } else if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer) &&
         GST_BUFFER_DURATION_IS_VALID (buffer) &&
         GST_CLOCK_TIME_IS_VALID (parse->segment.start) &&
@@ -1964,7 +1964,7 @@ gst_base_parse_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
         size, gst_flow_get_name (ret));
     gst_buffer_unref (buffer);
     /* if we are not sufficiently in control, let upstream decide on EOS */
-    if (ret == GST_FLOW_UNEXPECTED &&
+    if (ret == GST_FLOW_EOS &&
         (parse->priv->passthrough ||
             (parse->priv->pad_mode == GST_ACTIVATE_PUSH &&
                 !parse->priv->upstream_seekable)))
@@ -2492,7 +2492,7 @@ gst_base_parse_handle_previous_fragment (GstBaseParse * parse)
   if (!parse->priv->last_offset || parse->priv->last_ts <= parse->segment.start) {
     GST_DEBUG_OBJECT (parse, "past start of segment %" GST_TIME_FORMAT,
         GST_TIME_ARGS (parse->segment.start));
-    ret = GST_FLOW_UNEXPECTED;
+    ret = GST_FLOW_EOS;
     goto exit;
   }
 
@@ -2642,7 +2642,7 @@ gst_base_parse_scan_frame (GstBaseParse * parse, GstBaseParseClass * klass,
       goto done;
     if (gst_buffer_get_size (outbuf) < fsize) {
       gst_buffer_unref (outbuf);
-      ret = GST_FLOW_UNEXPECTED;
+      ret = GST_FLOW_EOS;
     }
   }
 
@@ -2696,7 +2696,7 @@ gst_base_parse_loop (GstPad * pad)
   ret = gst_base_parse_handle_and_push_frame (parse, klass, &frame);
 
   /* eat expected eos signalling past segment in reverse playback */
-  if (parse->segment.rate < 0.0 && ret == GST_FLOW_UNEXPECTED &&
+  if (parse->segment.rate < 0.0 && ret == GST_FLOW_EOS &&
       parse->segment.position >= parse->segment.stop) {
     GST_DEBUG_OBJECT (parse, "downstream has reached end of segment");
     /* push what was accumulated during loop run */
@@ -2707,7 +2707,7 @@ gst_base_parse_loop (GstPad * pad)
   }
 
 done:
-  if (ret == GST_FLOW_UNEXPECTED)
+  if (ret == GST_FLOW_EOS)
     goto eos;
   else if (ret != GST_FLOW_OK)
     goto pause;
@@ -2718,7 +2718,7 @@ done:
   /* ERRORS */
 eos:
   {
-    ret = GST_FLOW_UNEXPECTED;
+    ret = GST_FLOW_EOS;
     GST_DEBUG_OBJECT (parse, "eos");
     /* fall-through */
   }
@@ -2730,7 +2730,7 @@ pause:
         gst_flow_get_name (ret));
     gst_pad_pause_task (parse->sinkpad);
 
-    if (ret == GST_FLOW_UNEXPECTED) {
+    if (ret == GST_FLOW_EOS) {
       /* handle end-of-stream/segment */
       if (parse->segment.flags & GST_SEEK_FLAG_SEGMENT) {
         gint64 stop;
@@ -2752,7 +2752,7 @@ pause:
         }
         push_eos = TRUE;
       }
-    } else if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_UNEXPECTED) {
+    } else if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_EOS) {
       /* for fatal errors we post an error message, wrong-state is
        * not fatal because it happens due to flushes and only means
        * that we should stop now. */
@@ -3470,7 +3470,7 @@ gst_base_parse_locate_time (GstBaseParse * parse, GstClockTime * _time,
         GST_TIME_ARGS (time), newpos);
 
     ret = gst_base_parse_find_frame (parse, &newpos, &newtime, &dur);
-    if (ret == GST_FLOW_UNEXPECTED) {
+    if (ret == GST_FLOW_EOS) {
       /* heuristic HACK */
       hpos = MAX (lpos, hpos - chunk);
       continue;

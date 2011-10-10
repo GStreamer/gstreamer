@@ -395,7 +395,7 @@ eos:
   {
     GST_DEBUG ("non-regular file hits EOS");
     gst_buffer_unmap (buf, data, 0);
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_EOS;
   }
 }
 

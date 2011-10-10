@@ -114,7 +114,7 @@ typedef enum {
  * @GST_FLOW_OK:		 Data passing was ok.
  * @GST_FLOW_NOT_LINKED:	 Pad is not linked.
  * @GST_FLOW_WRONG_STATE:	 Pad is in wrong state.
- * @GST_FLOW_UNEXPECTED:	 Did not expect anything, like after EOS.
+ * @GST_FLOW_EOS:                Pad is EOS.
  * @GST_FLOW_NOT_NEGOTIATED:	 Pad is not negotiated.
  * @GST_FLOW_ERROR:		 Some (fatal) error occured. Element generating
  *                               this error should post an error message with more
@@ -154,7 +154,7 @@ typedef enum {
   GST_FLOW_NOT_LINKED     = -1,
   GST_FLOW_WRONG_STATE    = -2,
   /* error cases */
-  GST_FLOW_UNEXPECTED     = -3,
+  GST_FLOW_EOS            = -3,
   GST_FLOW_NOT_NEGOTIATED = -4,
   GST_FLOW_ERROR	  = -5,
   GST_FLOW_NOT_SUPPORTED  = -6,

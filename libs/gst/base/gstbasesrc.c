@@ -2327,12 +2327,12 @@ unexpected_length:
   {
     GST_DEBUG_OBJECT (src, "unexpected length %u (offset=%" G_GUINT64_FORMAT
         ", size=%" G_GINT64_FORMAT ")", length, offset, src->segment.duration);
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_EOS;
   }
 reached_num_buffers:
   {
     GST_DEBUG_OBJECT (src, "sent all buffers");
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_EOS;
   }
 flushing:
   {
@@ -2344,7 +2344,7 @@ flushing:
 eos:
   {
     GST_DEBUG_OBJECT (src, "we are EOS");
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_EOS;
   }
 }
 
@@ -2558,7 +2558,7 @@ gst_base_src_loop (GstPad * pad)
 
   if (G_UNLIKELY (eos)) {
     GST_INFO_OBJECT (src, "pausing after end of segment");
-    ret = GST_FLOW_UNEXPECTED;
+    ret = GST_FLOW_EOS;
     goto pause;
   }
 
@@ -2581,7 +2581,7 @@ pause:
     GST_DEBUG_OBJECT (src, "pausing task, reason %s", reason);
     src->running = FALSE;
     gst_pad_pause_task (pad);
-    if (ret == GST_FLOW_UNEXPECTED) {
+    if (ret == GST_FLOW_EOS) {
       gboolean flag_segment;
       GstFormat format;
       gint64 position;
@@ -2603,7 +2603,7 @@ pause:
         gst_event_set_seqnum (event, src->priv->seqnum);
         gst_pad_push_event (pad, event);
       }
-    } else if (ret == GST_FLOW_NOT_LINKED || ret <= GST_FLOW_UNEXPECTED) {
+    } else if (ret == GST_FLOW_NOT_LINKED || ret <= GST_FLOW_EOS) {
       event = gst_event_new_eos ();
       gst_event_set_seqnum (event, src->priv->seqnum);
       /* for fatal errors we post an error message, post the error

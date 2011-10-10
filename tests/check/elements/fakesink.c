@@ -453,9 +453,9 @@ GST_START_TEST (test_eos)
 
     GST_DEBUG ("sending buffer");
 
-    /* buffer after EOS is not UNEXPECTED */
+    /* buffer after EOS is not EOS */
     fret = gst_pad_chain (sinkpad, buffer);
-    fail_unless (fret == GST_FLOW_UNEXPECTED);
+    fail_unless (fret == GST_FLOW_EOS);
   }
 
   /* flush, EOS state is flushed again. */
@@ -556,7 +556,7 @@ GST_START_TEST (test_eos2)
     fail_if (eret == FALSE);
   }
 
-  /* send buffer that should return UNEXPECTED */
+  /* send buffer that should return EOS */
   {
     GstBuffer *buffer;
     GstFlowReturn fret;
@@ -567,12 +567,12 @@ GST_START_TEST (test_eos2)
 
     GST_DEBUG ("sending buffer");
 
-    /* this buffer will generate UNEXPECTED */
+    /* this buffer will generate EOS */
     fret = gst_pad_chain (sinkpad, buffer);
-    fail_unless (fret == GST_FLOW_UNEXPECTED);
+    fail_unless (fret == GST_FLOW_EOS);
   }
 
-  /* send buffer that should return UNEXPECTED */
+  /* send buffer that should return EOS */
   {
     GstBuffer *buffer;
     GstFlowReturn fret;
@@ -584,7 +584,7 @@ GST_START_TEST (test_eos2)
     GST_DEBUG ("sending buffer");
 
     fret = gst_pad_chain (sinkpad, buffer);
-    fail_unless (fret == GST_FLOW_UNEXPECTED);
+    fail_unless (fret == GST_FLOW_EOS);
   }
 
   gst_element_set_state (pipeline, GST_STATE_NULL);
@@ -815,7 +815,7 @@ GST_START_TEST (test_position)
     fail_if (eret == FALSE);
   }
 
-  /* send buffer that should return UNEXPECTED */
+  /* send buffer that should return EOS */
   buffer = gst_buffer_new ();
   GST_BUFFER_TIMESTAMP (buffer) = 3 * GST_SECOND;
   GST_BUFFER_DURATION (buffer) = 1 * GST_SECOND;
@@ -831,7 +831,7 @@ GST_START_TEST (test_position)
 
   /* preroll buffer is rendered, we expect no more buffer after this one */
   fret = chain_async_return (data);
-  fail_unless (fret == GST_FLOW_UNEXPECTED);
+  fail_unless (fret == GST_FLOW_EOS);
 
   /* do position query, this should succeed with the stream time of the buffer
    * against the clock. Since the buffer is synced against the clock, the time

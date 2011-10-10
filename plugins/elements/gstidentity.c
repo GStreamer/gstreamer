@@ -659,7 +659,7 @@ gst_identity_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
         identity->clock_id = NULL;
       }
       if (cret == GST_CLOCK_UNSCHEDULED)
-        ret = GST_FLOW_UNEXPECTED;
+        ret = GST_FLOW_EOS;
     }
     GST_OBJECT_UNLOCK (identity);
   }

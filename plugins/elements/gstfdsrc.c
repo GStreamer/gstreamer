@@ -496,7 +496,7 @@ eos:
   {
     GST_DEBUG_OBJECT (psrc, "Read 0 bytes. EOS.");
     gst_buffer_unref (buf);
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_EOS;
   }
 read_error:
   {
