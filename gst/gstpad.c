@@ -389,6 +389,9 @@ replace_event (GstPad * srcpad, GstPad * sinkpad, guint idx)
     }
     if (sinkev->event != event) {
       /* put in the pending entry when different */
+      GST_CAT_DEBUG_OBJECT (GST_CAT_SCHEDULING, srcpad,
+          "Putting event %p (%s) on pad %s:%s", event,
+          GST_EVENT_TYPE_NAME (event), GST_DEBUG_PAD_NAME (sinkpad));
       gst_event_replace (&sinkev->pending, event);
       pending = TRUE;
     }
