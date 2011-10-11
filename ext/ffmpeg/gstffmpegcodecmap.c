@@ -2377,23 +2377,26 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
     {
       const gchar *format;
 
-      format = gst_structure_get_string (str, "format");
+      if ((format = gst_structure_get_string (str, "format"))) {
 
-      if (g_str_equal (format, "YUY2"))
-        context->pix_fmt = PIX_FMT_YUYV422;
-      else if (g_str_equal (format, "I420"))
-        context->pix_fmt = PIX_FMT_YUV420P;
-      else if (g_str_equal (format, "A420"))
-        context->pix_fmt = PIX_FMT_YUVA420P;
-      else if (g_str_equal (format, "Y41B"))
-        context->pix_fmt = PIX_FMT_YUV411P;
-      else if (g_str_equal (format, "Y42B"))
-        context->pix_fmt = PIX_FMT_YUV422P;
-      else if (g_str_equal (format, "YUV9"))
-        context->pix_fmt = PIX_FMT_YUV410P;
-      else {
-        GST_WARNING ("couldn't convert format %s" " to a pixel format", format);
-      }
+        if (g_str_equal (format, "YUY2"))
+          context->pix_fmt = PIX_FMT_YUYV422;
+        else if (g_str_equal (format, "I420"))
+          context->pix_fmt = PIX_FMT_YUV420P;
+        else if (g_str_equal (format, "A420"))
+          context->pix_fmt = PIX_FMT_YUVA420P;
+        else if (g_str_equal (format, "Y41B"))
+          context->pix_fmt = PIX_FMT_YUV411P;
+        else if (g_str_equal (format, "Y42B"))
+          context->pix_fmt = PIX_FMT_YUV422P;
+        else if (g_str_equal (format, "YUV9"))
+          context->pix_fmt = PIX_FMT_YUV410P;
+        else {
+          GST_WARNING ("couldn't convert format %s" " to a pixel format",
+              format);
+        }
+      } else
+        GST_WARNING ("No specified format");
       break;
     }
     case CODEC_ID_H263P:
@@ -2858,11 +2861,11 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
 
           /* WMV3 unless the fourcc exists and says otherwise */
           id = CODEC_ID_WMV3;
-          format = gst_structure_get_string (structure, "format");
 
-          if (g_str_equal (format, "WVC1") || g_str_equal (format, "WMVA")) {
+          if ((format = gst_structure_get_string (structure, "format")) &&
+              (g_str_equal (format, "WVC1") || g_str_equal (format, "WMVA")))
             id = CODEC_ID_VC1;
-          }
+
           break;
         }
       }
