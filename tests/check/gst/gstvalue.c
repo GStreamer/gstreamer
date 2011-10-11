@@ -759,14 +759,14 @@ GST_START_TEST (test_value_intersect)
   g_value_unset (&src2);
 
   g_value_init (&src1, G_TYPE_STRING);
-  g_value_set_string (&src1, "YUY2");
+  g_value_set_static_string (&src1, "YUY2");
   g_value_init (&src2, GST_TYPE_LIST);
   g_value_init (&item, G_TYPE_STRING);
-  g_value_set_string (&item, "YUY2");
+  g_value_set_static_string (&item, "YUY2");
   gst_value_list_append_value (&src2, &item);
-  g_value_set_string (&item, "I420");
+  g_value_set_static_string (&item, "I420");
   gst_value_list_append_value (&src2, &item);
-  g_value_set_string (&item, "ABCD");
+  g_value_set_static_string (&item, "ABCD");
   gst_value_list_append_value (&src2, &item);
 
   fail_unless (gst_value_intersect (&dest, &src1, &src2));
@@ -775,6 +775,7 @@ GST_START_TEST (test_value_intersect)
 
   g_value_unset (&src1);
   g_value_unset (&src2);
+  g_value_unset (&dest);
 }
 
 GST_END_TEST;

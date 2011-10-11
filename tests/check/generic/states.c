@@ -59,11 +59,13 @@ setup (void)
 
     for (f = features; f; f = f->next) {
       GstPluginFeature *feature = f->data;
-      const gchar *name = gst_plugin_feature_get_name (feature);
+      gchar *name;
       gboolean ignore = FALSE;
 
       if (!GST_IS_ELEMENT_FACTORY (feature))
         continue;
+
+      name = gst_plugin_feature_get_name (feature);
 
       if (ignorelist) {
         gchar **s;
@@ -74,12 +76,14 @@ setup (void)
             ignore = TRUE;
           }
         }
-        if (ignore)
+        if (ignore) {
+          g_free (name);
           continue;
+        }
       }
 
       GST_DEBUG ("adding element %s", name);
-      elements = g_list_prepend (elements, (gpointer) g_strdup (name));
+      elements = g_list_prepend (elements, name);
     }
     gst_plugin_feature_list_free (features);
   }

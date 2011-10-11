@@ -542,6 +542,8 @@ GST_START_TEST (send_custom_events)
   gst_element_get_state (GST_ELEMENT (pipeline), NULL, NULL,
       GST_CLOCK_TIME_NONE);
 
+  gst_object_unref (sinkpad);
+  gst_object_unref (srcpad);
   gst_object_unref (pipeline);
 }
 

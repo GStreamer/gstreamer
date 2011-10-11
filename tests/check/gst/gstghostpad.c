@@ -241,6 +241,7 @@ GST_START_TEST (test_remove_target)
   fail_unless (target == NULL);
 
   gst_object_unref (b1);
+  gst_object_unref (ghost);
 }
 
 GST_END_TEST;
@@ -717,6 +718,7 @@ GST_START_TEST (test_ghost_pads_forward_setcaps)
 
   gst_object_unref (ghost);
   gst_caps_unref (caps1);
+  gst_caps_unref (caps2);
 
   /* source 2, setting the caps on the ghostpad does not influence the caps of
    * the target */
@@ -760,6 +762,7 @@ GST_START_TEST (test_ghost_pads_forward_setcaps)
 
   gst_object_unref (ghost);
   gst_caps_unref (caps1);
+  gst_caps_unref (caps2);
 
   /* clear caps on pads */
   gst_pad_set_active (src, FALSE);

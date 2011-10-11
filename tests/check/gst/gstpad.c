@@ -218,9 +218,10 @@ static gboolean
 name_is_valid (const gchar * name, GstPadPresence presence)
 {
   GstPadTemplate *new;
-  GstCaps *any = GST_CAPS_ANY;
+  GstCaps *any = gst_caps_new_any ();
 
   new = gst_pad_template_new (name, GST_PAD_SRC, presence, any);
+  gst_caps_unref (any);
   if (new) {
     gst_object_unref (GST_OBJECT (new));
     return TRUE;

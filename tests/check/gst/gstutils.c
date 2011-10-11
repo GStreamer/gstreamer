@@ -501,6 +501,7 @@ GST_START_TEST (test_element_found_tags)
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
   gst_element_found_tags (GST_ELEMENT (fakesrc), list);
+  gst_tag_list_free (list);
 
   bus = gst_element_get_bus (pipeline);
   message = gst_bus_poll (bus, GST_MESSAGE_EOS, -1);
