@@ -658,12 +658,18 @@ gst_matroska_mux_handle_sink_event (GstPad * pad, GstEvent * event)
       event = NULL;
       break;
     }
-    case GST_EVENT_NEWSEGMENT:
-      /* We don't support NEWSEGMENT events */
-      ret = FALSE;
-      gst_event_unref (event);
-      event = NULL;
+    case GST_EVENT_NEWSEGMENT:{
+      GstFormat format;
+
+      gst_event_parse_new_segment (event, NULL, NULL, &format, NULL, NULL,
+          NULL);
+      if (format != GST_FORMAT_TIME) {
+        ret = FALSE;
+        gst_event_unref (event);
+        event = NULL;
+      }
       break;
+    }
     case GST_EVENT_CUSTOM_DOWNSTREAM:{
       const GstStructure *structure;
 
@@ -2491,6 +2497,10 @@ gst_matroska_mux_best_pad (GstMatroskaMux * mux, gboolean * popped)
             collect_pad->buffer = NULL;
             return NULL;
           } else {
+            GST_LOG_OBJECT (mux, "buffer ts %" GST_TIME_FORMAT " -> %"
+                GST_TIME_FORMAT " running time",
+                GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (collect_pad->buffer)),
+                GST_TIME_ARGS (time));
             collect_pad->buffer =
                 gst_buffer_make_metadata_writable (collect_pad->buffer);
             GST_BUFFER_TIMESTAMP (collect_pad->buffer) = time;
