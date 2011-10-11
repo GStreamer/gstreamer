@@ -3488,7 +3488,7 @@ gst_value_can_intersect (const GValue * value1, const GValue * value2)
 
 /**
  * gst_value_intersect:
- * @dest: (out caller-allocates): a uninitialized #GValue that will hold the calculated
+ * @dest: (out caller-allocates) (transfer full): a uninitialized #GValue that will hold the calculated
  * intersection value
  * @value1: a value to intersect
  * @value2: another value to intersect

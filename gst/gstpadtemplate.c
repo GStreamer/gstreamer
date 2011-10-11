@@ -322,7 +322,7 @@ gst_static_pad_template_get (GstStaticPadTemplate * pad_template)
  * @name_template: the name template.
  * @direction: the #GstPadDirection of the template.
  * @presence: the #GstPadPresence of the pad.
- * @caps: a #GstCaps set for the template.
+ * @caps: (transfer none): a #GstCaps set for the template.
  *
  * Creates a new pad template with a name according to the given template
  * and with the given arguments.
