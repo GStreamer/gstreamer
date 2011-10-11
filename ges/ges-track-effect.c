@@ -90,7 +90,7 @@ pspec_hash (gconstpointer key_spec)
 static GHashTable *
 ges_track_effect_get_props_hashtable (GESTrackObject * self)
 {
-  gpointer data;
+  GValue item = { 0, };
   GstIterator *it;
   GParamSpec **parray;
   GObjectClass *class;
@@ -116,12 +116,12 @@ ges_track_effect_get_props_hashtable (GESTrackObject * self)
   it = gst_bin_iterate_recurse (GST_BIN (element));
 
   while (!done) {
-    switch (gst_iterator_next (it, &data)) {
+    switch (gst_iterator_next (it, &item)) {
       case GST_ITERATOR_OK:
       {
         gchar **categories;
         guint category;
-        GstElement *child = GST_ELEMENT_CAST (data);
+        GstElement *child = g_value_get_object (&item);
 
         factory = gst_element_get_factory (child);
         klass = gst_element_factory_get_klass (factory);
@@ -153,7 +153,7 @@ ges_track_effect_get_props_hashtable (GESTrackObject * self)
         }
 
         g_strfreev (categories);
-        gst_object_unref (child);
+        g_value_reset (&item);
         break;
       }
       case GST_ITERATOR_RESYNC:
@@ -171,6 +171,7 @@ ges_track_effect_get_props_hashtable (GESTrackObject * self)
         break;
     }
   }
+  g_value_unset (&item);
   gst_iterator_free (it);
 
   return ret;

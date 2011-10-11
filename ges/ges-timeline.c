@@ -398,7 +398,7 @@ do_async_start (GESTimeline * timeline)
     gst_element_set_locked_state ((GstElement *) tr_priv->track, TRUE);
   }
 
-  message = gst_message_new_async_start (GST_OBJECT_CAST (timeline), FALSE);
+  message = gst_message_new_async_start (GST_OBJECT_CAST (timeline));
   parent_class->handle_message (GST_BIN_CAST (timeline), message);
 }
 
@@ -417,7 +417,7 @@ do_async_done (GESTimeline * timeline)
     }
 
     GST_DEBUG_OBJECT (timeline, "Emitting async-done");
-    message = gst_message_new_async_done (GST_OBJECT_CAST (timeline));
+    message = gst_message_new_async_done (GST_OBJECT_CAST (timeline), FALSE);
     parent_class->handle_message (GST_BIN_CAST (timeline), message);
 
     timeline->priv->async_pending = FALSE;

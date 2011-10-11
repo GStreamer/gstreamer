@@ -309,6 +309,7 @@ get_compatible_unlinked_pad (GstElement * element, GstPad * pad)
   GstIterator *pads;
   gboolean done = FALSE;
   GstCaps *srccaps;
+  GValue paditem = { 0, };
 
   GST_DEBUG ("element : %s, pad %s:%s",
       GST_ELEMENT_NAME (element), GST_DEBUG_PAD_NAME (pad));
@@ -317,32 +318,28 @@ get_compatible_unlinked_pad (GstElement * element, GstPad * pad)
     pads = gst_element_iterate_sink_pads (element);
   else
     pads = gst_element_iterate_src_pads (element);
-  srccaps = gst_pad_get_caps_reffed (pad);
+  srccaps = gst_pad_get_caps (pad, NULL);
 
   GST_DEBUG ("srccaps %" GST_PTR_FORMAT, srccaps);
 
   while (!done) {
-    gpointer padptr;
-
-    switch (gst_iterator_next (pads, &padptr)) {
+    switch (gst_iterator_next (pads, &paditem)) {
       case GST_ITERATOR_OK:
       {
-        GstPad *testpad = (GstPad *) padptr;
+        GstPad *testpad = g_value_get_object (&paditem);
 
-        if (gst_pad_is_linked (testpad)) {
-          gst_object_unref (testpad);
-        } else {
-          GstCaps *sinkcaps = gst_pad_get_caps_reffed (testpad);
+        if (!gst_pad_is_linked (testpad)) {
+          GstCaps *sinkcaps = gst_pad_get_caps (testpad, NULL);
 
           GST_DEBUG ("sinkccaps %" GST_PTR_FORMAT, sinkcaps);
 
           if (gst_caps_can_intersect (srccaps, sinkcaps)) {
-            res = testpad;
+            res = gst_object_ref (testpad);
             done = TRUE;
-          } else
-            gst_object_unref (testpad);
+          }
           gst_caps_unref (sinkcaps);
         }
+        g_value_reset (&paditem);
       }
         break;
       case GST_ITERATOR_DONE:
@@ -354,6 +351,7 @@ get_compatible_unlinked_pad (GstElement * element, GstPad * pad)
         break;
     }
   }
+  g_value_reset (&paditem);
   gst_iterator_free (pads);
   gst_caps_unref (srccaps);
 
@@ -366,13 +364,19 @@ pad_added_cb (GstElement * timeline, GstPad * pad, GESTimelinePipeline * self)
   OutputChain *chain;
   GESTrack *track;
   GstPad *sinkpad;
+  GstCaps *caps;
   gboolean reconfigured = FALSE;
 
-  GST_DEBUG_OBJECT (self, "new pad %s:%s , caps:%" GST_PTR_FORMAT,
-      GST_DEBUG_PAD_NAME (pad), GST_PAD_CAPS (pad));
+  caps = gst_pad_get_caps (pad, NULL);
 
-  if (G_UNLIKELY (!(track =
-              ges_timeline_get_track_for_pad (self->priv->timeline, pad)))) {
+  GST_DEBUG_OBJECT (self, "new pad %s:%s , caps:%" GST_PTR_FORMAT,
+      GST_DEBUG_PAD_NAME (pad), caps);
+
+  gst_caps_unref (caps);
+
+  track = ges_timeline_get_track_for_pad (self->priv->timeline, pad);
+
+  if (G_UNLIKELY (!track)) {
     GST_WARNING_OBJECT (self, "Couldn't find coresponding track !");
     return;
   }
@@ -466,11 +470,13 @@ pad_added_cb (GstElement * timeline, GstPad * pad, GESTimelinePipeline * self)
       sinkpad = get_compatible_unlinked_pad (self->priv->encodebin, pad);
 
       if (sinkpad == NULL) {
-        GstCaps *caps = gst_pad_get_caps_reffed (pad);
+        GstCaps *caps = gst_pad_get_caps (pad, NULL);
+
         /* If no compatible static pad is available, request a pad */
         g_signal_emit_by_name (self->priv->encodebin, "request-pad", caps,
             &sinkpad);
         gst_caps_unref (caps);
+
         if (G_UNLIKELY (sinkpad == NULL)) {
           GST_ERROR_OBJECT (self, "Couldn't get a pad from encodebin !");
           goto error;
@@ -793,6 +799,8 @@ ges_timeline_pipeline_save_thumbnail (GESTimelinePipeline * self, int width, int
   FILE *fp;
   GstCaps *caps;
   gboolean res = TRUE;
+  gpointer data;
+  gsize size;
 
   caps = gst_caps_from_string (format);
 
@@ -807,15 +815,19 @@ ges_timeline_pipeline_save_thumbnail (GESTimelinePipeline * self, int width, int
     return res;
   }
 
+  data = gst_buffer_map (b, &size, NULL, GST_MAP_READ);
+
   /* FIXME : Use standard glib methods */
   fp = fopen (location, "w+");
-  if (!fwrite (GST_BUFFER_DATA (b), GST_BUFFER_SIZE (b), 1, fp) || ferror (fp)) {
+  if (!fwrite (data, size, 1, fp) || ferror (fp)) {
     res = FALSE;
   }
-
   fclose (fp);
+
   gst_caps_unref (caps);
+  gst_buffer_unmap (b, data, size);
   gst_buffer_unref (b);
+
   return res;
 }
 
