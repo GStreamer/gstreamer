@@ -199,9 +199,9 @@ ges_track_video_transition_create_element (GESTrackObject * object)
   GST_LOG ("creating a video bin");
 
   topbin = gst_bin_new ("transition-bin");
-  iconva = gst_element_factory_make ("ffmpegcolorspace", "tr-csp-a");
-  iconvb = gst_element_factory_make ("ffmpegcolorspace", "tr-csp-b");
-  oconv = gst_element_factory_make ("ffmpegcolorspace", "tr-csp-output");
+  iconva = gst_element_factory_make ("videoconvert", "tr-csp-a");
+  iconvb = gst_element_factory_make ("videoconvert", "tr-csp-b");
+  oconv = gst_element_factory_make ("videoconvert", "tr-csp-output");
 
   gst_bin_add_many (GST_BIN (topbin), iconva, iconvb, oconv, NULL);
   /* Prefer videomixer2 to videomixer */

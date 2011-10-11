@@ -146,8 +146,8 @@ ges_track_text_overlay_create_element (GESTrackObject * object)
   GESTrackTextOverlay *self = GES_TRACK_TEXT_OVERLAY (object);
 
   text = gst_element_factory_make ("textoverlay", NULL);
-  iconv = gst_element_factory_make ("ffmpegcolorspace", NULL);
-  oconv = gst_element_factory_make ("ffmpegcolorspace", NULL);
+  iconv = gst_element_factory_make ("videoconvert", NULL);
+  oconv = gst_element_factory_make ("videoconvert", NULL);
   self->priv->text_el = text;
   g_object_ref (text);
 

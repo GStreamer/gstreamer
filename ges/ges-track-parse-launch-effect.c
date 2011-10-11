@@ -158,8 +158,8 @@ ges_track_parse_launch_effect_create_element (GESTrackObject * object)
   }
 
   if (track->type == GES_TRACK_TYPE_VIDEO) {
-    bin_desc = g_strconcat ("ffmpegcolorspace name=beforecolorspace ! ",
-        self->priv->bin_description, " ! ffmpegcolorspace name=aftercolorspace",
+    bin_desc = g_strconcat ("videoconvert name=pre_video_convert ! ",
+        self->priv->bin_description, " ! videoconvert name=post_video_convert",
         NULL);
   } else if (track->type == GES_TRACK_TYPE_AUDIO) {
     bin_desc =

@@ -120,7 +120,7 @@ ges_track_image_source_create_element (GESTrackObject * object)
   source = gst_element_factory_make ("uridecodebin", NULL);
   scale = gst_element_factory_make ("videoscale", NULL);
   freeze = gst_element_factory_make ("imagefreeze", NULL);
-  iconv = gst_element_factory_make ("ffmpegcolorspace", NULL);
+  iconv = gst_element_factory_make ("videoconvert", NULL);
 
   g_object_set (scale, "add-borders", TRUE, NULL);
 
