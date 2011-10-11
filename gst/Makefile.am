@@ -24,7 +24,7 @@ defsdir = $(pkgdatadir)/$(GST_MAJORMINOR)/defs
 
 noinst_HEADERS = pygst-private.h
 
-pygst_installdir = $(includedir)/gstreamer-@GST_MAJORMINOR@/pygst/
+pygst_installdir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/
 pygst_install_HEADERS = pygst.h common.h pygstvalue.h pygstminiobject.h pygstexception.h
 
 versioned_overrides = \
