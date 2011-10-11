@@ -115,56 +115,7 @@ GOBJECT_INTROSPECTION_CHECK([0.9.6])
 dnl check for documentation tools
 AG_GST_DOCBOOK_CHECK
 GTK_DOC_CHECK([1.3])
-AS_PATH_PYTHON([2.1])
 AG_GST_PLUGIN_DOCS([1.3],[2.1])
-
-dnl check for python
-AM_PATH_PYTHON
-AC_MSG_CHECKING(for python >= 2.3)
-prog="
-import sys, string
-minver = (2,3,0,'final',0)
-if sys.version_info < minver:
-  sys.exit(1)
-sys.exit(0)"
-
-if $PYTHON -c "$prog" 1>&AC_FD_CC 2>&AC_FD_CC
-then
-  HAVE_PYTHON=yes
-  AC_MSG_RESULT(okay)
-else
-  HAVE_PYTHON=no
-  AC_MSG_RESULT(no python)
-fi
-
-AM_CHECK_PYTHON_HEADERS([HAVE_PYTHON_HEADERS=yes],[HAVE_PYTHON_HEADERS=no])
-
-dnl check for pygobject (optional, used in the bindings)
-PYGOBJECT_REQ=2.11.2
-PKG_CHECK_MODULES(PYGOBJECT, pygobject-2.0 >= $PYGOBJECT_REQ,
-  [HAVE_PYGOBJECT="yes"], [HAVE_PYGOBJECT="no"])
-AC_SUBST(PYGOBJECT_CFLAGS)
-
-dnl check for gst-python
-PKG_CHECK_MODULES(PYGST, gst-python-0.10,
-  [HAVE_PYGST="yes"], [HAVE_PYGST="no"])
-
-if test "x$HAVE_PYGST" = "xyes"; then
-  PYGST_DEFSDIR=`pkg-config gst-python-0.10 --variable=defsdir`
-fi
-AC_SUBST(PYGST_DEFSDIR, $PYGST_DEFSDIR)
-
-if test \
-    "x$HAVE_PYTHON" = "xyes" -a \
-    "x$HAVE_PYTHON_HEADERS" = "xyes" -a \
-    "x$HAVE_PYGOBJECT" = "xyes" -a \
-    "x$HAVE_PYGST" = "xyes"; then
-  HAVE_PYTHON_BINDINGS="yes"
-else
-  HAVE_PYTHON_BINDINGS="no"
-fi
-
-AM_CONDITIONAL(WITH_PYTHON, [test "x$HAVE_PYTHON_BINDINGS" = "xyes"])
 
 dnl *** checks for libraries ***
 
@@ -350,11 +301,6 @@ common/m4/Makefile
 gst-editing-services.spec
 m4/Makefile
 ges/Makefile
-bindings/Makefile
-bindings/python/Makefile
-bindings/python/codegen/Makefile
-bindings/python/examples/Makefile
-bindings/python/testsuite/Makefile
 tests/Makefile
 tests/check/Makefile
 tests/examples/Makefile
