@@ -19,7 +19,7 @@
  * Author: Andy Wingo <wingo@pobox.com>
  */
 
-#include "common.h"
+#include <Python.h>
 #include <gst/gst.h>
 
 

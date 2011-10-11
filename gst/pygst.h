@@ -27,8 +27,6 @@
 #include <glib-object.h>
 #include <gst/gst.h>
 
-#include "common.h"
-
 G_BEGIN_DECLS
 
 struct _PyGst_Functions {

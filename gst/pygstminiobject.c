@@ -22,6 +22,7 @@
 
 #define NO_IMPORT_PYGOBJECT
 #define _INSIDE_PYGST_
+#include "common.h"
 #include "pygstminiobject.h"
 #include "pygst.h"
 #include <gst/gst.h>

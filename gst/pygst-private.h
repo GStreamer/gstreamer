@@ -27,6 +27,7 @@
 
 #define _INSIDE_PYGST_
 #include "pygst.h"
+#include "common.h"
 
 extern PyTypeObject PyGstMiniObject_Type;
 

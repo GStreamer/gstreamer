@@ -8,8 +8,6 @@
 #include <glib.h>
 #include <glib-object.h>
 
-#include "common.h"
-
 G_BEGIN_DECLS
 
 /* Work around bugs in PyGILState api fixed in 2.4.0a4 */
