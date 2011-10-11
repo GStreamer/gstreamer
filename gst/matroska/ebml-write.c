@@ -25,7 +25,6 @@
 #endif
 
 #include <string.h>
-#include <gst/floatcast/floatcast.h>
 
 #include "ebml-write.h"
 #include "ebml-ids.h"
