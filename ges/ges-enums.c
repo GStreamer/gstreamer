@@ -46,6 +46,34 @@ ges_track_type_get_type (void)
   return id;
 }
 
+static void
+register_ges_pipeline_flags (GType * id)
+{
+  static const GFlagsValue values[] = {
+    {C_ENUM (TIMELINE_MODE_PREVIEW_AUDIO), "TIMELINE_MODE_PREVIEW_AUDIO",
+          "audio_preview"},
+    {C_ENUM (TIMELINE_MODE_PREVIEW_VIDEO), "TIMELINE_MODE_PREVIEW_VIDEO",
+          "video_preview"},
+    {C_ENUM (TIMELINE_MODE_PREVIEW), "TIMELINE_MODE_PREVIEW", "full_preview"},
+    {C_ENUM (TIMELINE_MODE_RENDER), "TIMELINE_MODE_RENDER", "render"},
+    {C_ENUM (TIMELINE_MODE_SMART_RENDER), "TIMELINE_MODE_SMART_RENDER",
+          "smart_render"},
+    {0, NULL, NULL}
+  };
+
+  *id = g_flags_register_static ("GESPipelineFlags", values);
+}
+
+GType
+ges_pipeline_flags_get_type (void)
+{
+  static GType id;
+  static GOnce once = G_ONCE_INIT;
+
+  g_once (&once, (GThreadFunc) register_ges_pipeline_flags, &id);
+  return id;
+}
+
 static GEnumValue transition_types[] = {
   {
         0,
@@ -436,6 +464,8 @@ ges_text_valign_get_type (void)
     {GES_TEXT_VALIGN_BASELINE, "baseline", "baseline"},
     {GES_TEXT_VALIGN_BOTTOM, "bottom", "bottom"},
     {GES_TEXT_VALIGN_TOP, "top", "top"},
+    {GES_TEXT_VALIGN_POSITION, "position", "position"},
+    {GES_TEXT_VALIGN_CENTER, "center", "center"},
     {0, NULL, NULL},
   };
 
@@ -456,6 +486,7 @@ ges_text_halign_get_type (void)
     {GES_TEXT_HALIGN_LEFT, "left", "left"},
     {GES_TEXT_HALIGN_CENTER, "center", "center"},
     {GES_TEXT_HALIGN_RIGHT, "right", "right"},
+    {GES_TEXT_HALIGN_POSITION, "position", "position"},
     {0, NULL, NULL},
   };
 

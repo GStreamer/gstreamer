@@ -47,24 +47,6 @@ G_BEGIN_DECLS
 typedef struct _GESTimelinePipelinePrivate GESTimelinePipelinePrivate;
 
 /**
- * GESPipelineFlags:
- * @TIMELINE_MODE_PREVIEW_AUDIO: output audio to the soundcard
- * @TIMELINE_MODE_PREVIEW_VIDEO: output video to the screen
- * @TIMELINE_MODE_PREVIEW: output audio/video to soundcard/screen (default)
- * @TIMELINE_MODE_RENDER: render timeline (forces decoding)
- * @TIMELINE_MODE_SMART_RENDER: render timeline (tries to avoid decoding/reencoding)
- *
- * The various modes the #GESTimelinePipeline can be configured to.
- */
-typedef enum {
-  TIMELINE_MODE_PREVIEW_AUDIO	= 1 << 0,
-  TIMELINE_MODE_PREVIEW_VIDEO	= 1 << 1,
-  TIMELINE_MODE_PREVIEW		= TIMELINE_MODE_PREVIEW_AUDIO | TIMELINE_MODE_PREVIEW_VIDEO,
-  TIMELINE_MODE_RENDER		= 1 << 2,
-  TIMELINE_MODE_SMART_RENDER	= 1 << 3
-} GESPipelineFlags;
-
-/**
  * GESTimelinePipeline:
  *
  */
@@ -116,6 +98,13 @@ ges_timeline_pipeline_get_thumbnail_rgb24(GESTimelinePipeline *self,
 gboolean
 ges_timeline_pipeline_save_thumbnail(GESTimelinePipeline *self,
     int width, int height, const gchar *format, const gchar *location);
+
+GstElement *
+ges_timeline_pipeline_preview_get_video_sink (GESTimelinePipeline * self);
+
+void
+ges_timeline_pipeline_preview_set_video_sink (GESTimelinePipeline * self,
+    GstElement * sink);
 
 G_END_DECLS
 

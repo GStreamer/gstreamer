@@ -3,6 +3,7 @@
 *.a
 *.la
 *.lo
+*.pyc
 *~
 
 Makefile
@@ -37,5 +38,7 @@ log
 /ges/gesmarshal.c
 
 /docs/version.entities
+
+/bindings/python/ges.c
 
 /m4

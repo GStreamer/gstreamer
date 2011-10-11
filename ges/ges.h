@@ -45,6 +45,7 @@
 #include <ges/ges-custom-timeline-source.h>
 #include <ges/ges-timeline-effect.h>
 #include <ges/ges-timeline-file-source.h>
+#include <ges/ges-screenshot.h>
 
 #include <ges/ges-track.h>
 #include <ges/ges-track-object.h>

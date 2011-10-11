@@ -30,10 +30,13 @@ GESTimelineObject *make_source (char *path, guint64 start, guint64 duration,
     gint priority);
 
 GESTimelineObject *make_overlay (char *text, guint64 start, guint64 duration,
-    gint priority, guint32 color);
+    gint priority, guint32 color, gdouble xpos, gdouble ypos);
 
 GESTimelinePipeline *make_timeline (char *path, float duration, char *text,
-    guint32 color);
+    guint32 color, gdouble xpos, gdouble ypos);
+
+#define DEFAULT_DURATION 5
+#define DEFAULT_POS 0.5
 
 GESTimelineObject *
 make_source (char *path, guint64 start, guint64 duration, gint priority)
@@ -55,7 +58,7 @@ make_source (char *path, guint64 start, guint64 duration, gint priority)
 
 GESTimelineObject *
 make_overlay (char *text, guint64 start, guint64 duration, gint priority,
-    guint32 color)
+    guint32 color, gdouble xpos, gdouble ypos)
 {
   GESTimelineObject *ret =
       GES_TIMELINE_OBJECT (ges_timeline_text_overlay_new ());
@@ -65,13 +68,18 @@ make_overlay (char *text, guint64 start, guint64 duration, gint priority,
       "start", (guint64) start,
       "duration", (guint64) duration,
       "priority", (guint32) priority,
-      "in-point", (guint64) 0, "color", (guint32) color, NULL);
+      "in-point", (guint64) 0,
+      "color", (guint32) color,
+      "valignment", (gint) GES_TEXT_VALIGN_POSITION,
+      "halignment", (gint) GES_TEXT_HALIGN_POSITION,
+      "xpos", (gdouble) xpos, "ypos", (gdouble) ypos, NULL);
 
   return ret;
 }
 
 GESTimelinePipeline *
-make_timeline (char *path, float duration, char *text, guint32 color)
+make_timeline (char *path, float duration, char *text, guint32 color,
+    gdouble xpos, gdouble ypos)
 {
   GESTimeline *timeline;
   GESTrack *trackv, *tracka;
@@ -102,7 +110,7 @@ make_timeline (char *path, float duration, char *text, guint32 color)
 
   aduration = (guint64) (duration * GST_SECOND);
   srca = make_source (path, 0, aduration, 1);
-  overlay = make_overlay (text, 0, aduration, 0, color);
+  overlay = make_overlay (text, 0, aduration, 0, color, xpos, ypos);
   ges_timeline_layer_add_object (layer1, srca);
   ges_timeline_layer_add_object (layer1, overlay);
 
@@ -116,26 +124,31 @@ main (int argc, char **argv)
   GOptionContext *ctx;
   GESTimelinePipeline *pipeline;
   GMainLoop *mainloop;
-  gdouble duration;
+  gdouble duration = DEFAULT_DURATION;
   char *path, *text;
   guint64 color;
+  gdouble xpos = DEFAULT_POS, ypos = DEFAULT_POS;
 
   GOptionEntry options[] = {
     {"duration", 'd', 0, G_OPTION_ARG_DOUBLE, &duration,
-        "duration of transition", "seconds"},
+        "duration of segment", "seconds"},
     {"path", 'p', 0, G_OPTION_ARG_STRING, &path,
         "path to file", "path"},
     {"text", 't', 0, G_OPTION_ARG_STRING, &text,
         "text to render", "text"},
     {"color", 'c', 0, G_OPTION_ARG_INT64, &color,
         "color of the text", "color"},
+    {"xpos", 'x', 0, G_OPTION_ARG_DOUBLE, &xpos,
+        "horizontal position of the text", "color"},
+    {"ypos", 'y', 0, G_OPTION_ARG_DOUBLE, &ypos,
+        "vertical position of the text", "color"},
     {NULL}
   };
 
   if (!g_thread_supported ())
     g_thread_init (NULL);
 
-  ctx = g_option_context_new ("- transition between two media files");
+  ctx = g_option_context_new ("- file segment playback with text overlay");
   g_option_context_add_main_entries (ctx, options, NULL);
   g_option_context_add_group (ctx, gst_init_get_option_group ());
 
@@ -153,7 +166,7 @@ main (int argc, char **argv)
 
   ges_init ();
 
-  pipeline = make_timeline (path, duration, text, color);
+  pipeline = make_timeline (path, duration, text, color, xpos, ypos);
 
   mainloop = g_main_loop_new (NULL, FALSE);
   g_timeout_add_seconds ((duration) + 1, (GSourceFunc) g_main_loop_quit,

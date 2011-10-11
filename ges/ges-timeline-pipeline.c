@@ -139,9 +139,9 @@ ges_timeline_pipeline_init (GESTimelinePipeline * self)
       "avoid-reencoding", TRUE, NULL);
 
   if (G_UNLIKELY (self->priv->playsink == NULL))
-    GST_ERROR_OBJECT (self, "Can't create playsink instance !");
+    goto no_playsink;
   if (G_UNLIKELY (self->priv->encodebin == NULL))
-    GST_ERROR_OBJECT (self, "Can't create encodebin instance !");
+    goto no_encodebin;
 
   /* HACK : Intercept events going through playsink */
   playsinkclass = GST_ELEMENT_GET_CLASS (self->priv->playsink);
@@ -149,6 +149,19 @@ ges_timeline_pipeline_init (GESTimelinePipeline * self)
   playsinkclass->send_event = play_sink_multiple_seeks_send_event;
 
   ges_timeline_pipeline_set_mode (self, DEFAULT_TIMELINE_MODE);
+
+  return;
+
+no_playsink:
+  {
+    GST_ERROR_OBJECT (self, "Can't create playsink instance !");
+    return;
+  }
+no_encodebin:
+  {
+    GST_ERROR_OBJECT (self, "Can't create encodebin instance !");
+    return;
+  }
 }
 
 /**
@@ -252,8 +265,8 @@ ges_timeline_pipeline_change_state (GstElement * element,
         ret = GST_STATE_CHANGE_FAILURE;
         goto done;
       }
-      if (self->
-          priv->mode & (TIMELINE_MODE_RENDER | TIMELINE_MODE_SMART_RENDER))
+      if (self->priv->
+          mode & (TIMELINE_MODE_RENDER | TIMELINE_MODE_SMART_RENDER))
         GST_DEBUG ("rendering => Updating pipeline caps");
       if (!ges_timeline_pipeline_update_caps (self)) {
         GST_ERROR_OBJECT (element, "Error setting the caps for rendering");
@@ -300,7 +313,7 @@ get_output_chain_for_track (GESTimelinePipeline * self, GESTrack * track)
   return NULL;
 }
 
-/* Fetches a ocmpatible pad on the target element which isn't already
+/* Fetches a compatible pad on the target element which isn't already
  * linked */
 static GstPad *
 get_compatible_unlinked_pad (GstElement * element, GstPad * pad)
@@ -310,6 +323,9 @@ get_compatible_unlinked_pad (GstElement * element, GstPad * pad)
   gboolean done = FALSE;
   GstCaps *srccaps;
   GValue paditem = { 0, };
+
+  if (G_UNLIKELY (pad == NULL))
+    goto no_pad;
 
   GST_DEBUG ("element : %s, pad %s:%s",
       GST_ELEMENT_NAME (element), GST_DEBUG_PAD_NAME (pad));
@@ -356,6 +372,12 @@ get_compatible_unlinked_pad (GstElement * element, GstPad * pad)
   gst_caps_unref (srccaps);
 
   return res;
+
+no_pad:
+  {
+    GST_ERROR ("No pad to check against");
+    return NULL;
+  }
 }
 
 static void
@@ -868,6 +890,43 @@ ges_timeline_pipeline_get_thumbnail_rgb24 (GESTimelinePipeline * self,
   gst_caps_unref (caps);
   return ret;
 }
+
+/**
+ * ges_timeline_pipeline_preview_get_video_sink:
+ * @self: a #GESTimelinePipeline
+ *
+ * Obtains a pointer to playsink's video sink element that is used for
+ * displaying video when the #GESTimelinePipeline is in %TIMELINE_MODE_PREVIEW
+ *
+ * The caller is responsible for unreffing the returned element with
+ * #gst_object_unref.
+ *
+ * Returns: (transfer full): a pointer to the playsink video sink #GstElement
+ */
+GstElement *
+ges_timeline_pipeline_preview_get_video_sink (GESTimelinePipeline * self)
+{
+  GstElement *sink;
+
+  g_object_get (self->priv->playsink, "video-sink", &sink, NULL);
+
+  return sink;
+};
+
+/**
+ * ges_timeline_pipeline_preview_set_video_sink:
+ * @self: a #GESTimelinePipeline in %GST_STATE_NULL
+ * @sink: (transfer none): a video sink #GstElement
+ *
+ * Sets playsink's video sink element that is used for displaying video when
+ * the #GESTimelinePipeline is in %TIMELINE_MODE_PREVIEW
+ */
+void
+ges_timeline_pipeline_preview_set_video_sink (GESTimelinePipeline * self,
+    GstElement * sink)
+{
+  g_object_set (self->priv->playsink, "video-sink", sink, NULL);
+};
 
 static gboolean
 play_sink_multiple_seeks_send_event (GstElement * element, GstEvent * event)
