@@ -1149,11 +1149,13 @@ wrong_type:
         ("This doesn't seem to be an ASF file"));
     return FALSE;
   }
+
 no_streams:
 read_failed:
 parse_failed:
   {
-    gst_buffer_unmap (buf, data, data_size);
+    if (buf)
+      gst_buffer_unmap (buf, data, data_size);
     gst_buffer_replace (&buf, NULL);
     GST_ELEMENT_ERROR (demux, STREAM, DEMUX, (NULL), (NULL));
     return FALSE;
