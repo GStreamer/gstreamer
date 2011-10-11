@@ -333,6 +333,103 @@ gst_matroska_mux_class_init (GstMatroskaMuxClass * klass)
       GST_DEBUG_FUNCPTR (gst_matroska_mux_release_pad);
 }
 
+/**
+ * Start of pad option handler code
+ */
+#define DEFAULT_PAD_FRAME_DURATION TRUE
+#define DEFAULT_PAD_FRAME_DURATION_VP8 FALSE
+
+enum
+{
+  PROP_PAD_0,
+  PROP_PAD_FRAME_DURATION
+};
+
+typedef struct
+{
+  GstPad parent;
+  gboolean frame_duration;
+  gboolean frame_duration_user;
+} GstMatroskamuxPad;
+
+static void gst_matroskamux_pad_class_init (GstPadClass * klass);
+
+static GType
+gst_matroskamux_pad_get_type (void)
+{
+  static GType type = 0;
+
+  if (G_UNLIKELY (type == 0)) {
+    type = g_type_register_static_simple (GST_TYPE_PAD,
+        g_intern_static_string ("GstMatroskamuxPad"), sizeof (GstPadClass),
+        (GClassInitFunc) gst_matroskamux_pad_class_init,
+        sizeof (GstMatroskamuxPad), NULL, 0);
+  }
+  return type;
+}
+
+#define GST_TYPE_MATROSKAMUX_PAD (gst_matroskamux_pad_get_type())
+#define GST_MATROSKAMUX_PAD(pad) (G_TYPE_CHECK_INSTANCE_CAST((pad),GST_TYPE_MATROSKAMUX_PAD,GstMatroskamuxPad))
+#define GST_MATROSKAMUX_PAD_CAST(pad) ((GstMatroskamuxPad *) pad)
+#define GST_IS_MATROSKAMUX_PAD(pad) (G_TYPE_CHECK_INSTANCE_TYPE((pad),GST_TYPE_MATROSKAMUX_PAD))
+
+static void
+gst_matroskamux_pad_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstMatroskamuxPad *pad = GST_MATROSKAMUX_PAD (object);
+
+  switch (prop_id) {
+    case PROP_PAD_FRAME_DURATION:
+      g_value_set_boolean (value, pad->frame_duration);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_matroskamux_pad_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstMatroskamuxPad *pad = GST_MATROSKAMUX_PAD (object);
+
+  switch (prop_id) {
+    case PROP_PAD_FRAME_DURATION:
+      pad->frame_duration = g_value_get_boolean (value);
+      pad->frame_duration_user = TRUE;
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_matroskamux_pad_class_init (GstPadClass * klass)
+{
+  GObjectClass *gobject_class = (GObjectClass *) klass;
+
+  gobject_class->set_property = gst_matroskamux_pad_set_property;
+  gobject_class->get_property = gst_matroskamux_pad_get_property;
+
+  g_object_class_install_property (gobject_class, PROP_PAD_FRAME_DURATION,
+      g_param_spec_boolean ("frame_duration", "Frame duration",
+          "Default frame duration", DEFAULT_PAD_FRAME_DURATION,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+}
+
+static void
+gst_matroskamux_pad_init (GstMatroskamuxPad * pad)
+{
+  pad->frame_duration = DEFAULT_PAD_FRAME_DURATION;
+  pad->frame_duration_user = FALSE;
+}
+
+/*
+ * End of pad option handler code
+ **/
 
 /**
  * gst_matroska_mux_init:
@@ -750,7 +847,15 @@ gst_matroska_mux_video_pad_setcaps (GstPad * pad, GstCaps * caps)
 
   videocontext->pixel_width = width;
   videocontext->pixel_height = height;
-  if (gst_structure_get_fraction (structure, "framerate", &fps_n, &fps_d)
+
+  /* set vp8 defaults or let user override it */
+  if (GST_MATROSKAMUX_PAD_CAST (pad)->frame_duration_user == FALSE
+      && (!strcmp (mimetype, "video/x-vp8")))
+    GST_MATROSKAMUX_PAD_CAST (pad)->frame_duration =
+        DEFAULT_PAD_FRAME_DURATION_VP8;
+
+  if (GST_MATROSKAMUX_PAD_CAST (pad)->frame_duration
+      && gst_structure_get_fraction (structure, "framerate", &fps_n, &fps_d)
       && fps_n > 0) {
     context->default_duration =
         gst_util_uint64_scale_int (GST_SECOND, fps_d, fps_n);
@@ -1843,7 +1948,7 @@ gst_matroska_mux_request_new_pad (GstElement * element,
   GstElementClass *klass = GST_ELEMENT_GET_CLASS (element);
   GstMatroskaMux *mux = GST_MATROSKA_MUX (element);
   GstMatroskaPad *collect_pad;
-  GstPad *newpad = NULL;
+  GstMatroskamuxPad *newpad;
   gchar *name = NULL;
   const gchar *pad_name = NULL;
   GstPadSetCapsFunction setcapsfunc = NULL;
@@ -1897,11 +2002,14 @@ gst_matroska_mux_request_new_pad (GstElement * element,
     return NULL;
   }
 
-  newpad = gst_pad_new_from_template (templ, pad_name);
+  newpad = g_object_new (GST_TYPE_MATROSKAMUX_PAD,
+      "name", pad_name, "direction", templ->direction, "template", templ, NULL);
   g_free (name);
+
+  gst_matroskamux_pad_init (newpad);
   collect_pad = (GstMatroskaPad *)
-      gst_collect_pads_add_pad_full (mux->collect, newpad,
-      sizeof (GstMatroskaPad),
+      gst_collect_pads_add_pad_full (mux->collect, GST_PAD (newpad),
+      sizeof (GstMatroskamuxPad),
       (GstCollectDataDestroyNotify) gst_matroska_pad_free);
 
   collect_pad->track = context;
@@ -1916,19 +2024,19 @@ gst_matroska_mux_request_new_pad (GstElement * element,
    * This would allow (clean) transcoding of info from demuxer/streams
    * to another muxer */
   mux->collect_event = (GstPadEventFunction) GST_PAD_EVENTFUNC (newpad);
-  gst_pad_set_event_function (newpad,
+  gst_pad_set_event_function (GST_PAD (newpad),
       GST_DEBUG_FUNCPTR (gst_matroska_mux_handle_sink_event));
 
-  gst_pad_set_setcaps_function (newpad, setcapsfunc);
-  gst_pad_set_active (newpad, TRUE);
-  if (!gst_element_add_pad (element, newpad))
+  gst_pad_set_setcaps_function (GST_PAD (newpad), setcapsfunc);
+  gst_pad_set_active (GST_PAD (newpad), TRUE);
+  if (!gst_element_add_pad (element, GST_PAD (newpad)))
     goto pad_add_failed;
 
   mux->num_streams++;
 
   GST_DEBUG_OBJECT (newpad, "Added new request pad");
 
-  return newpad;
+  return GST_PAD (newpad);
 
   /* ERROR cases */
 pad_add_failed:
@@ -2671,10 +2779,12 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad)
   gint64 relative_timestamp64;
   guint64 block_duration;
   gboolean is_video_keyframe = FALSE;
+  GstMatroskamuxPad *pad;
 
   /* write data */
   buf = collect_pad->buffer;
   collect_pad->buffer = NULL;
+  pad = GST_MATROSKAMUX_PAD_CAST (collect_pad->collect.pad);
 
   /* vorbis/theora headers are retrieved from caps and put in CodecPrivate */
   if (collect_pad->track->xiph_headers_to_skip > 0) {
@@ -2802,7 +2912,7 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad)
   /* Check if the duration differs from the default duration. */
   write_duration = FALSE;
   block_duration = 0;
-  if (GST_BUFFER_DURATION_IS_VALID (buf)) {
+  if (pad->frame_duration && GST_BUFFER_DURATION_IS_VALID (buf)) {
     block_duration = gst_util_uint64_scale (GST_BUFFER_DURATION (buf),
         1, mux->time_scale);
 
