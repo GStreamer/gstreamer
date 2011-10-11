@@ -1195,7 +1195,9 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
 
     GST_LOG_OBJECT (demux, "got cts %d", cts);
 
-    pts = pts + cts;
+    /* avoid negative overflow */
+    if (cts >= 0 || pts >= -cts)
+      pts += cts;
   }
 
   GST_LOG_OBJECT (demux, "video tag with codec tag %u, keyframe (%d) "
