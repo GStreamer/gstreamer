@@ -183,13 +183,17 @@ ges_track_video_transition_set_property (GObject * object,
 static void
 on_caps_set (GstPad * srca_pad, GParamSpec * pspec, GstElement * capsfilt)
 {
-  gint width, height;
-  const GstStructure *str;
-  GstCaps *size_caps = NULL;
+  GstCaps *orig_caps;
 
-  if (GST_PAD_CAPS (srca_pad)) {
+  orig_caps = gst_pad_get_caps (srca_pad, NULL);
+
+  if (orig_caps) {
+    gint width, height;
+    const GstStructure *str;
+    GstCaps *size_caps;
+
     /* Get width and height of first video */
-    str = gst_caps_get_structure (GST_PAD_CAPS (srca_pad), 0);
+    str = gst_caps_get_structure (orig_caps, 0);
     gst_structure_get_int (str, "width", &width);
     gst_structure_get_int (str, "height", &height);
 
