@@ -36,7 +36,8 @@ ges_play_sink_convert_frame (GstElement * playsink, GstCaps * caps)
     GstBuffer *temp;
     GError *err = NULL;
 
-    temp = gst_video_convert_frame (result, caps, 25 * GST_SECOND, &err);
+    /* FIXME : Need to get the input buffer caps */
+    temp = gst_video_convert_frame (result, NULL, caps, 25 * GST_SECOND, &err);
     gst_buffer_unref (result);
     if (temp == NULL && err) {
       /* I'm really uncertain whether we should make playsink post an error
