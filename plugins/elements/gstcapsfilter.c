@@ -355,8 +355,7 @@ gst_capsfilter_prepare_buf (GstBaseTransform * trans, GstBuffer * input,
 
       if (!gst_pad_has_current_caps (trans->srcpad))
         gst_pad_push_event (trans->srcpad, gst_event_new_caps (out_caps));
-      else
-        gst_caps_unref (out_caps);
+      gst_caps_unref (out_caps);
     } else {
       gchar *caps_str = gst_caps_to_string (out_caps);
 
