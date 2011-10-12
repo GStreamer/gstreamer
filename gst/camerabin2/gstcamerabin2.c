@@ -949,22 +949,31 @@ gst_camera_bin_handle_message (GstBin * bin, GstMessage * message)
         }
       } else if (gst_structure_has_name (structure, "preview-image")) {
         GValue *value;
-        gchar *location;
+        gchar *location = NULL;
 
         g_mutex_lock (camerabin->preview_list_mutex);
-        location = camerabin->preview_location_list->data;
-        camerabin->preview_location_list =
-            g_slist_delete_link (camerabin->preview_location_list,
-            camerabin->preview_location_list);
-        GST_DEBUG_OBJECT (camerabin, "Adding preview location to preview "
-            "message '%s'", location);
+        if (camerabin->preview_location_list) {
+          location = camerabin->preview_location_list->data;
+          camerabin->preview_location_list =
+              g_slist_delete_link (camerabin->preview_location_list,
+              camerabin->preview_location_list);
+          GST_DEBUG_OBJECT (camerabin, "Adding preview location to preview "
+              "message '%s'", location);
+        } else {
+          GST_WARNING_OBJECT (camerabin, "Unexpected preview message received, "
+              "won't be able to put location field into the message. This can "
+              "happen if the source is posting previews while camerabin2 is "
+              "shutting down");
+        }
         g_mutex_unlock (camerabin->preview_list_mutex);
 
-        value = g_new0 (GValue, 1);
-        g_value_init (value, G_TYPE_STRING);
-        g_value_take_string (value, location);
-        gst_structure_take_value ((GstStructure *) structure, "location",
-            value);
+        if (location) {
+          value = g_new0 (GValue, 1);
+          g_value_init (value, G_TYPE_STRING);
+          g_value_take_string (value, location);
+          gst_structure_take_value ((GstStructure *) structure, "location",
+              value);
+        }
       }
     }
       break;
