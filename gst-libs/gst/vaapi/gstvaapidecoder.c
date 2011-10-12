@@ -117,12 +117,9 @@ decode_step(GstVaapiDecoder *decoder)
 
         status = GST_VAAPI_DECODER_GET_CLASS(decoder)->decode(decoder, buffer);
         GST_DEBUG("decode frame (status = %d)", status);
+        if (status != GST_VAAPI_DECODER_STATUS_SUCCESS && GST_BUFFER_IS_EOS(buffer))
+            status = GST_VAAPI_DECODER_STATUS_END_OF_STREAM;
         gst_buffer_unref(buffer);
-        if (status == GST_VAAPI_DECODER_STATUS_SUCCESS)
-            return status;
-
-        if (GST_BUFFER_IS_EOS(buffer))
-            return GST_VAAPI_DECODER_STATUS_END_OF_STREAM;
     } while (status == GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA);
     return status;
 }
