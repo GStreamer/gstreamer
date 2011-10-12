@@ -1453,6 +1453,7 @@ gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
         gst_event_new_new_segment_full (TRUE,
         src->segment.rate, src->segment.applied_rate, src->segment.format,
         src->segment.start, src->segment.last_stop, src->segment.time);
+    seeksegment.start = src->segment.last_stop;
     gst_event_set_seqnum (src->priv->close_segment, seqnum);
   }
 
