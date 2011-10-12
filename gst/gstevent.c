@@ -561,7 +561,7 @@ gst_event_new_eos (void)
 
 /**
  * gst_event_new_caps:
- * @caps: a #GstCaps
+ * @caps: (transfer none): a #GstCaps
  *
  * Create a new CAPS event for @caps. The caps event can only travel downstream
  * synchronized with the buffer flow and contains the format of the buffers
