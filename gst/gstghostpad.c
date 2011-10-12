@@ -199,7 +199,6 @@ gst_proxy_pad_iterate_internal_links_default (GstPad * pad)
   g_value_set_object (&v, internal);
   res = gst_iterator_new_single (GST_TYPE_PAD, &v);
   g_value_unset (&v);
-  gst_object_unref (internal);
 
   return res;
 }
