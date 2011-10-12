@@ -310,12 +310,15 @@ static GstPad *
 get_proxypad (GstPad * sinkpad)
 {
   GstIterator *iter = NULL;
+  GValue res = { 0 };
   GstPad *proxypad = NULL;
 
   iter = gst_pad_iterate_internal_links (sinkpad);
   if (iter) {
-    if (gst_iterator_next (iter, (gpointer) & proxypad) != GST_ITERATOR_OK)
-      proxypad = NULL;
+    if (gst_iterator_next (iter, &res) == GST_ITERATOR_OK) {
+      proxypad = g_value_dup_object (&res);
+      g_value_reset (&res);
+    }
     gst_iterator_free (iter);
   }
 
