@@ -133,13 +133,12 @@ static GstBuffer *
 buffer_new (const gchar * buffer_data, guint size)
 {
   GstBuffer *buffer;
-  GstCaps *caps;
+  guint8 *data;
 
-  buffer = gst_buffer_new_and_alloc (size);
-  memcpy (GST_BUFFER_DATA (buffer), buffer_data, size);
-  caps = gst_caps_from_string (SRC_CAPS);
-  gst_buffer_set_caps (buffer, caps);
-  gst_caps_unref (caps);
+  data = g_malloc (size);
+  memcpy (data, buffer_data, size);
+
+  buffer = gst_buffer_new_wrapped (data, size);
 
   return buffer;
 }
@@ -202,6 +201,8 @@ check_output_buffer_is_equal (const gchar * name,
     const gchar * data, gint refcount)
 {
   GstBuffer *buffer;
+  gpointer buf_data;
+  gsize size;
 
   if (current_buf == NULL)
     current_buf = buffers;
@@ -210,11 +211,13 @@ check_output_buffer_is_equal (const gchar * name,
 
   fail_unless (current_buf != NULL);
   buffer = GST_BUFFER (current_buf->data);
+  buf_data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
 
   ASSERT_OBJECT_REFCOUNT (buffer, name, refcount);
-  fail_unless (memcmp (GST_BUFFER_DATA (buffer), data,
-          GST_BUFFER_SIZE (buffer)) == 0,
-      "'%s' (%s) is not equal to (%s)", name, GST_BUFFER_DATA (buffer), data);
+  fail_unless (memcmp (buf_data, data, size) == 0,
+      "'%s' (%s) is not equal to (%s)", name, buf_data, data);
+
+  gst_buffer_unmap (buffer, buf_data, size);
 }
 
 static GstFlowReturn
@@ -230,8 +233,20 @@ push_data (const gchar * name, const gchar * data, gint size)
 }
 
 static void
+push_caps (void)
+{
+  GstCaps *caps;
+
+  caps = gst_caps_from_string (SRC_CAPS);
+  fail_unless (gst_pad_set_caps (srcpad, caps));
+  gst_caps_unref (caps);
+}
+
+static void
 check_headers (void)
 {
+  push_caps ();
+
   /* push the cmml start tag */
   flow = push_data ("preamble", PREAMBLE, strlen (PREAMBLE));
   fail_unless_equals_flow_return (flow, GST_FLOW_OK);
