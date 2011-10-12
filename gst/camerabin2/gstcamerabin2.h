@@ -94,8 +94,22 @@ struct _GstCameraBin2
    * each buffer capture */
   GSList *image_location_list;
 
-  /* similar to above, but used for giving names to previews */
+  /*
+   * Similar to above, but used for giving names to previews
+   *
+   * Need to protect with a mutex as this list is used when the
+   * camera-source posts a preview image. As we have no control
+   * on how the camera-source will behave (we can only tell how
+   * it should), the preview location list might be used in an
+   * inconsistent way.
+   * One example is the camera-source posting a preview image after
+   * camerabin2 was put to ready, when this preview list will be
+   * freed and set to NULL. Concurrent access might lead to crashes in
+   * this situation. (Concurrency from the state-change freeing the
+   * list and the message handling function looking at preview names)
+   */
   GSList *preview_location_list;
+  GMutex *preview_list_mutex;
 
   gboolean video_profile_switch;
   gboolean image_profile_switch;
