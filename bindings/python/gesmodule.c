@@ -5,7 +5,7 @@
 #include <Python.h>
 #include <pygobject.h>
 #include <pyglib.h>
-#include <pygst/pygst.h>
+#include <gst/pygst.h>
 
 /* include any extra headers needed here */
 
