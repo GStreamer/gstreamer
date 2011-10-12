@@ -111,7 +111,7 @@ gboolean
 gst_rtcp_buffer_validate_data (guint8 * data, guint len)
 {
   guint16 header_mask;
-  guint16 header_len;
+  guint header_len;
   guint8 version;
   guint data_len;
   gboolean padding;
