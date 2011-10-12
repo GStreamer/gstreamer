@@ -113,29 +113,13 @@ static void mpegts_parse_reset_selected_programs (MpegTSParse2 * parse,
 
 static void mpegts_parse_pad_removed (GstElement * element, GstPad * pad);
 static GstPad *mpegts_parse_request_new_pad (GstElement * element,
-    GstPadTemplate * templ, const gchar * name);
+    GstPadTemplate * templ, const gchar * name, const GstCaps * caps);
 static void mpegts_parse_release_pad (GstElement * element, GstPad * pad);
 static gboolean mpegts_parse_src_pad_query (GstPad * pad, GstQuery * query);
 static gboolean push_event (MpegTSBase * base, GstEvent * event);
 
-GST_BOILERPLATE (MpegTSParse2, mpegts_parse, MpegTSBase, GST_TYPE_MPEGTS_BASE);
-
-static void
-mpegts_parse_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&program_template));
-
-  gst_element_class_set_details_simple (element_class,
-      "MPEG transport stream parser", "Codec/Parser",
-      "Parses MPEG2 transport streams",
-      "Alessandro Decina <alessandro@nnva.org>, "
-      "Zaheer Abbas Merali <zaheerabbas at merali dot org>");
-}
+#define mpegts_parse_parent_class parent_class
+G_DEFINE_TYPE (MpegTSParse2, mpegts_parse, GST_TYPE_MPEGTS_BASE);
 
 static void
 mpegts_parse_class_init (MpegTSParse2Class * klass)
@@ -148,6 +132,17 @@ mpegts_parse_class_init (MpegTSParse2Class * klass)
   element_class->pad_removed = mpegts_parse_pad_removed;
   element_class->request_new_pad = mpegts_parse_request_new_pad;
   element_class->release_pad = mpegts_parse_release_pad;
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&src_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&program_template));
+
+  gst_element_class_set_details_simple (element_class,
+      "MPEG transport stream parser", "Codec/Parser",
+      "Parses MPEG2 transport streams",
+      "Alessandro Decina <alessandro@nnva.org>, "
+      "Zaheer Abbas Merali <zaheerabbas at merali dot org>");
 
   gobject_class = G_OBJECT_CLASS (klass);
   gobject_class->set_property = mpegts_parse_set_property;
@@ -168,7 +163,7 @@ mpegts_parse_class_init (MpegTSParse2Class * klass)
 }
 
 static void
-mpegts_parse_init (MpegTSParse2 * parse, MpegTSParse2Class * klass)
+mpegts_parse_init (MpegTSParse2 * parse)
 {
   parse->need_sync_program_pads = FALSE;
   parse->program_numbers = g_strdup ("");
@@ -429,7 +424,7 @@ mpegts_parse_pad_removed (GstElement * element, GstPad * pad)
 
 static GstPad *
 mpegts_parse_request_new_pad (GstElement * element, GstPadTemplate * template,
-    const gchar * unused)
+    const gchar * unused, const GstCaps * caps)
 {
   MpegTSParse2 *parse;
   gchar *name;
@@ -564,9 +559,15 @@ mpegts_parse_push (MpegTSBase * base, MpegTSPacketizerPacket * packet,
     mpegts_parse_sync_program_pads (parse);
 
   pid = packet->pid;
+
+#if 0
   buffer = gst_buffer_make_metadata_writable (packet->buffer);
+
   /* we have the same caps on all the src pads */
   gst_buffer_set_caps (buffer, base->packetizer->caps);
+#else
+  buffer = packet->buffer;
+#endif
 
   GST_OBJECT_LOCK (parse);
   /* clear tspad->pushed on pads */
