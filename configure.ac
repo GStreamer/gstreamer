@@ -146,7 +146,8 @@ PKG_CHECK_MODULES(PYGOBJECT, pygobject-2.0 >= $PYGOBJECT_REQ,
 AC_SUBST(PYGOBJECT_CFLAGS)
 
 dnl check for gst-python
-PKG_CHECK_MODULES(PYGST, gst-python-0.10,
+PYGST_REQ=0.10.21.1
+PKG_CHECK_MODULES(PYGST, gst-python-0.10 >= $PYGST_REQ,
   [HAVE_PYGST="yes"], [HAVE_PYGST="no"])
 
 if test "x$HAVE_PYGST" = "xyes"; then
