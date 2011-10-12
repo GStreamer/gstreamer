@@ -38,18 +38,18 @@ static GstStaticPadTemplate gst_rtp_vraw_pay_sink_template =
         "bpp = (int) 24, "
         "depth = (int) 24, "
         "endianness = (int) BIG_ENDIAN, "
-        "red_mask = (int) 0xFF000000, "
-        "green_mask = (int) 0x00FF0000, "
-        "blue_mask = (int) 0x0000FF00, "
+        "red_mask =   (int) 0x00FF0000, "
+        "green_mask = (int) 0x0000FF00, "
+        "blue_mask =  (int) 0x000000FF, "
         "width = (int) [ 1, 32767 ], "
         "height = (int) [ 1, 32767 ]; "
         "video/x-raw-rgb, "
         "bpp = (int) 32, "
         "depth = (int) 32, "
         "endianness = (int) BIG_ENDIAN, "
-        "red_mask = (int) 0xFF000000, "
+        "red_mask =   (int) 0xFF000000, "
         "green_mask = (int) 0x00FF0000, "
-        "blue_mask = (int) 0x0000FF00, "
+        "blue_mask =  (int) 0x0000FF00, "
         "alpha_mask = (int) 0x000000FF, "
         "width = (int) [ 1, 32767 ], "
         "height = (int) [ 1, 32767 ]; "
@@ -57,18 +57,18 @@ static GstStaticPadTemplate gst_rtp_vraw_pay_sink_template =
         "bpp = (int) 24, "
         "depth = (int) 24, "
         "endianness = (int) BIG_ENDIAN, "
-        "red_mask = (int) 0x0000FF00, "
-        "green_mask = (int) 0x00FF0000, "
-        "blue_mask = (int) 0xFF000000, "
+        "red_mask =   (int) 0x000000FF, "
+        "green_mask = (int) 0x0000FF00, "
+        "blue_mask =  (int) 0x00FF0000, "
         "width = (int) [ 1, 32767 ], "
         "height = (int) [ 1, 32767 ]; "
         "video/x-raw-rgb, "
         "bpp = (int) 32, "
         "depth = (int) 32, "
         "endianness = (int) BIG_ENDIAN, "
-        "red_mask = (int) 0x0000FF00, "
+        "red_mask =   (int) 0x0000FF00, "
         "green_mask = (int) 0x00FF0000, "
-        "blue_mask = (int) 0xFF000000, "
+        "blue_mask =  (int) 0xFF000000, "
         "alpha_mask = (int) 0x000000FF, "
         "width = (int) [ 1, 32767 ], "
         "height = (int) [ 1, 32767 ]; "
@@ -219,7 +219,7 @@ gst_rtp_vraw_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
     } else {
       pgroup = 3;
       ystride = GST_ROUND_UP_4 (width * 3);
-      if (rmask == 0xFF000000) {
+      if (rmask == 0x00FF0000) {
         sampling = GST_VIDEO_FORMAT_RGB;
         samplingstr = "RGB";
       } else {
