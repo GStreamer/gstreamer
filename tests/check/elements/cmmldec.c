@@ -116,14 +116,12 @@ static GstBuffer *
 buffer_new (const gchar * buffer_data, guint size)
 {
   GstBuffer *buffer;
+  guint8 *data;
 
-  GstCaps *caps;
+  data = g_malloc (size);
+  memcpy (data, buffer_data, size);
 
-  buffer = gst_buffer_new_and_alloc (size);
-  memcpy (GST_BUFFER_DATA (buffer), buffer_data, size);
-  caps = gst_caps_from_string (SRC_CAPS);
-  gst_buffer_set_caps (buffer, caps);
-  gst_caps_unref (caps);
+  buffer = gst_buffer_new_wrapped (data, size);
 
   return buffer;
 }
@@ -181,6 +179,8 @@ check_output_buffer_is_equal (const gchar * name,
     const gchar * data, gint refcount)
 {
   GstBuffer *buffer;
+  gpointer buf_data;
+  gsize size;
 
   if (current_buf == NULL)
     current_buf = buffers;
@@ -190,11 +190,13 @@ check_output_buffer_is_equal (const gchar * name,
   fail_unless (current_buf != NULL);
 
   buffer = GST_BUFFER (current_buf->data);
+  buf_data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
 
   ASSERT_OBJECT_REFCOUNT (buffer, name, refcount);
-  fail_unless (memcmp (GST_BUFFER_DATA (buffer), data,
-          GST_BUFFER_SIZE (buffer)) == 0,
-      "'%s' (%s) is not equal to (%s)", name, GST_BUFFER_DATA (buffer), data);
+  fail_unless (memcmp (buf_data, data, size) == 0,
+      "'%s' (%s) is not equal to (%s)", name, buf_data, data);
+
+  gst_buffer_unmap (buffer, buf_data, size);
 }
 
 static GstFlowReturn
@@ -205,6 +207,16 @@ push_data (const gchar * name, const gchar * data, gint size, gint64 granulepos)
   buffer = buffer_new (data, size);
   GST_BUFFER_OFFSET_END (buffer) = granulepos;
   return gst_pad_push (srcpad, buffer);
+}
+
+static void
+push_caps (void)
+{
+  GstCaps *caps;
+
+  caps = gst_caps_from_string (SRC_CAPS);
+  fail_unless (gst_pad_set_caps (srcpad, caps));
+  gst_caps_unref (caps);
 }
 
 static GObject *
@@ -245,6 +257,8 @@ check_headers (void)
   gchar *title, *base;
 
   GValueArray *meta;
+
+  push_caps ();
 
   /* push the ident header */
   flow = push_data ("ident-header", IDENT_HEADER, IDENT_HEADER_SIZE, 0);
@@ -371,6 +385,8 @@ GST_END_TEST;
 
 GST_START_TEST (test_preamble_no_pi)
 {
+  push_caps ();
+
   flow = push_data ("ident-header", IDENT_HEADER, IDENT_HEADER_SIZE, 0);
   fail_unless_equals_flow_return (flow, GST_FLOW_OK);
   fail_unless_equals_int (g_list_length (buffers), 0);
@@ -531,6 +547,8 @@ GST_START_TEST (test_weird_input)
 {
   const gchar *bad_xml = "<?xml version=\"1.0\"?><a><b></a>";
 
+  push_caps ();
+
   /* malformed ident header */
   flow = push_data ("bad-ident-header", "CMML\0\0\0\0garbage", 15, 0);
   fail_unless_equals_flow_return (flow, GST_FLOW_ERROR);
@@ -569,7 +587,7 @@ GST_START_TEST (test_sink_query_convert)
   granulepos = keyindex + keyoffset;
 
   fail_unless (gst_pad_query_convert (GST_PAD_PEER (srcpad),
-          GST_FORMAT_DEFAULT, granulepos, &dstfmt, &dstval));
+          GST_FORMAT_DEFAULT, granulepos, dstfmt, &dstval));
 
   fail_unless (dstfmt == GST_FORMAT_TIME);
   /* fail unless dstval == index + offset */
