@@ -1262,11 +1262,16 @@ mpegts_base_chain (GstPad * pad, GstBuffer * buf)
   }
 
   mpegts_packetizer_push (base->packetizer, buf);
-  while (((pret =
-              mpegts_packetizer_next_packet (base->packetizer,
-                  &packet)) != PACKET_NEED_MORE) && res == GST_FLOW_OK) {
+
+  while (res == GST_FLOW_OK) {
+    pret = mpegts_packetizer_next_packet (base->packetizer, &packet);
+
+    /* If we don't have enough data, return */
+    if (G_UNLIKELY (pret == PACKET_NEED_MORE))
+      break;
+
+    /* bad header, skip the packet */
     if (G_UNLIKELY (pret == PACKET_BAD))
-      /* bad header, skip the packet */
       goto next;
 
     GST_DEBUG ("Got packet (buffer:%p)", packet.buffer);
@@ -1292,13 +1297,15 @@ mpegts_base_chain (GstPad * pad, GstBuffer * buf)
           /* bad PSI table */
           goto next;
       }
+
       /* we need to push section packet downstream */
       res = mpegts_base_push (base, &packet, &section);
     } else if (MPEGTS_BIT_IS_SET (base->is_pes, packet.pid)) {
       /* push the packet downstream */
       res = mpegts_base_push (base, &packet, NULL);
-    } else
+    } else {
       gst_buffer_unref (packet.buffer);
+    }
 
   next:
     mpegts_packetizer_clear_packet (base->packetizer, &packet);
