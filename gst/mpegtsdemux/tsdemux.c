@@ -909,6 +909,8 @@ push_event (MpegTSBase * base, GstEvent * event)
     }
   }
 
+  gst_event_unref (event);
+
   return TRUE;
 }
 
@@ -1198,10 +1200,14 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
     gst_pad_set_query_type_function (pad, gst_ts_demux_srcpad_query_types);
     gst_pad_set_query_function (pad, gst_ts_demux_srcpad_query);
     gst_pad_set_event_function (pad, gst_ts_demux_srcpad_event);
-    gst_caps_unref (caps);
   }
 
-  g_free (name);
+  if (name)
+    g_free (name);
+  if (template)
+    gst_object_unref (template);
+  if (caps)
+    gst_caps_unref (caps);
 
   return pad;
 }
