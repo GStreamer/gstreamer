@@ -1217,8 +1217,8 @@ gst_bus_disable_sync_message_emission (GstBus * bus)
  * responsible for calling gst_bus_remove_signal_watch() as many times as this
  * function is called.
  *
- * There can only be a single bus watch per bus, you most remove all signal watch
- * before you can set another type of watch.
+ * There can only be a single bus watch per bus, you must remove any signal
+ * watch before you can set another type of watch.
  *
  * MT safe.
  */
