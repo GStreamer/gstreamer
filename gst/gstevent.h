@@ -239,8 +239,15 @@ typedef struct _GstEventClass GstEventClass;
  *
  * Since: 0.10.3
  */
-#define         gst_event_replace(old_event,new_event) \
-    gst_mini_object_replace ((GstMiniObject **)(old_event), GST_MINI_OBJECT_CAST (new_event))
+#ifdef _FOOL_GTK_DOC_
+G_INLINE_FUNC void gst_event_replace (GstEvent **old_event, GstEvent *new_event);
+#endif
+
+static inline void
+gst_event_replace (GstEvent **old_event, GstEvent *new_event)
+{
+  gst_mini_object_replace ((GstMiniObject **) old_event, (GstMiniObject *) new_event);
+}
 
 /**
  * GstSeekType:
