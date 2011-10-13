@@ -503,7 +503,8 @@ gst_vaapi_display_constructed(GObject *object)
     GObjectClass *parent_class;
 
     display->priv->create_display = display->priv->display == NULL;
-    gst_vaapi_display_create(display);
+    if (!gst_vaapi_display_create(display))
+        gst_vaapi_display_destroy(display);
 
     parent_class = G_OBJECT_CLASS(gst_vaapi_display_parent_class);
     if (parent_class->constructed)
