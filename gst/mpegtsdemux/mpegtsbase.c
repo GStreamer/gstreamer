@@ -477,21 +477,30 @@ mpegts_base_free_program (MpegTSBaseProgram * program)
 
 /* FIXME : This is being called by tsdemux::find_timestamps()
  * We need to avoid re-entrant code like that */
+static gboolean
+mpegts_base_stop_program (MpegTSBase * base, MpegTSBaseProgram * program)
+{
+  MpegTSBaseClass *klass = GST_MPEGTS_BASE_GET_CLASS (base);
+
+  GST_DEBUG_OBJECT (base, "program_number : %d", program->program_number);
+
+  if (klass->program_stopped)
+    klass->program_stopped (base, program);
+
+  return TRUE;
+}
+
 void
 mpegts_base_remove_program (MpegTSBase * base, gint program_number)
 {
   MpegTSBaseProgram *program;
-  MpegTSBaseClass *klass = GST_MPEGTS_BASE_GET_CLASS (base);
 
-  GST_DEBUG_OBJECT (base, "program_number : %d", program_number);
+  program =
+      (MpegTSBaseProgram *) g_hash_table_lookup (base->programs,
+      GINT_TO_POINTER (program_number));
+  if (program)
+    mpegts_base_stop_program (base, program);
 
-  if (klass->program_stopped) {
-    program =
-        (MpegTSBaseProgram *) g_hash_table_lookup (base->programs,
-        GINT_TO_POINTER (program_number));
-    if (program)
-      klass->program_stopped (base, program);
-  }
   g_hash_table_remove (base->programs, GINT_TO_POINTER (program_number));
 }
 
@@ -1137,20 +1146,26 @@ mpegts_base_get_tags_from_eit (MpegTSBase * base, GstStructure * eit_info)
   }
 }
 
-static void
+static gboolean
 remove_each_program (gpointer key, MpegTSBaseProgram * program,
     MpegTSBase * base)
 {
   /* First deactivate it */
   mpegts_base_deactivate_program (base, program);
-  /* Then remove it */
-  mpegts_base_remove_program (base, program->program_number);
+
+  /* Then stop it */
+  mpegts_base_stop_program (base, program);
+
+  /* And tell _foreach_remove() to remove it */
+  return TRUE;
 }
 
 static gboolean
 gst_mpegts_base_handle_eos (MpegTSBase * base)
 {
-  g_hash_table_foreach (base->programs, (GHFunc) remove_each_program, base);
+  g_hash_table_foreach_remove (base->programs, (GHRFunc) remove_each_program,
+      base);
+
   /* finally remove  */
   return TRUE;
 }
