@@ -142,6 +142,9 @@ find_config(
     GstVaapiConfig *config;
     guint i;
 
+    if (!configs)
+        return FALSE;
+
     for (i = 0; i < configs->len; i++) {
         config = &g_array_index(configs, GstVaapiConfig, i);
         if (config->profile == profile && config->entrypoint == entrypoint)
@@ -157,6 +160,9 @@ get_profile_caps(GArray *configs)
     GstVaapiConfig *config;
     GstCaps *out_caps, *caps;
     guint i;
+
+    if (!configs)
+        return NULL;
 
     out_caps = gst_caps_new_empty();
     if (!out_caps)
