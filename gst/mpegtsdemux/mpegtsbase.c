@@ -1204,6 +1204,7 @@ mpegts_base_sink_event (GstPad * pad, GstEvent * event)
       break;
     case GST_EVENT_EOS:
       res = gst_mpegts_base_handle_eos (base);
+      gst_event_unref (event);
       break;
     case GST_EVENT_FLUSH_START:
       mpegts_packetizer_flush (base->packetizer);
