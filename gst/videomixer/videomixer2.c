@@ -760,7 +760,7 @@ gst_videomixer2_fill_queues (GstVideoMixer2 * mix,
 
         if (buf == mixcol->queued) {
           gst_buffer_unref (buf);
-          gst_buffer_replace (mixcol->queued, NULL);
+          gst_buffer_replace (&mixcol->queued, NULL);
         } else {
           gst_buffer_unref (buf);
           buf = gst_collect_pads2_pop (mix->collect, &mixcol->collect);
