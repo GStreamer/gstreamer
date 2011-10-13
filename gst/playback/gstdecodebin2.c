@@ -175,6 +175,8 @@ struct _GstDecodeBin
   gboolean expose_allstreams;   /* Whether to expose unknow type streams or not */
 
   gboolean upstream_seekable;   /* if upstream is seekable */
+
+  GList *filtered;              /* elements for which error messages are filtered */
 };
 
 struct _GstDecodeBinClass
@@ -296,6 +298,7 @@ static void caps_notify_cb (GstPad * pad, GParamSpec * unused,
 static GstPad *find_sink_pad (GstElement * element);
 static GstStateChangeReturn gst_decode_bin_change_state (GstElement * element,
     GstStateChange transition);
+static void gst_decode_bin_handle_message (GstBin * bin, GstMessage * message);
 
 #define EXPOSE_LOCK(dbin) G_STMT_START {				\
     GST_LOG_OBJECT (dbin,						\
@@ -588,9 +591,11 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
 {
   GObjectClass *gobject_klass;
   GstElementClass *gstelement_klass;
+  GstBinClass *gstbin_klass;
 
   gobject_klass = (GObjectClass *) klass;
   gstelement_klass = (GstElementClass *) klass;
+  gstbin_klass = (GstBinClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
 
@@ -937,6 +942,9 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
 
   gstelement_klass->change_state =
       GST_DEBUG_FUNCPTR (gst_decode_bin_change_state);
+
+  gstbin_klass->handle_message =
+      GST_DEBUG_FUNCPTR (gst_decode_bin_handle_message);
 }
 
 /* Must be called with factories lock! */
@@ -1731,6 +1739,21 @@ setup_caps_delay:
   }
 }
 
+static void
+add_error_filter (GstDecodeBin * dbin, GstElement * element)
+{
+  GST_OBJECT_LOCK (dbin);
+  dbin->filtered = g_list_prepend (dbin->filtered, element);
+  GST_OBJECT_UNLOCK (dbin);
+}
+
+static void
+remove_error_filter (GstDecodeBin * dbin, GstElement * element)
+{
+  GST_OBJECT_LOCK (dbin);
+  dbin->filtered = g_list_remove (dbin->filtered, element);
+  GST_OBJECT_UNLOCK (dbin);
+}
 
 /* connect_pad:
  *
@@ -1855,45 +1878,52 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
       continue;
     }
 
-    /* ... activate it ... We do this before adding it to the bin so that we
-     * don't accidentally make it post error messages that will stop
-     * everything. */
-    if ((gst_element_set_state (element,
-                GST_STATE_READY)) == GST_STATE_CHANGE_FAILURE) {
-      GST_WARNING_OBJECT (dbin, "Couldn't set %s to READY",
-          GST_ELEMENT_NAME (element));
-      gst_object_unref (element);
-      continue;
-    }
+    /* Filter errors, this will prevent the element from causing the pipeline
+     * to error while we test it using READY state. */
+    add_error_filter (dbin, element);
 
-    /* 2.3. Find its sink pad, this should work after activating it. */
-    if (!(sinkpad = find_sink_pad (element))) {
-      GST_WARNING_OBJECT (dbin, "Element %s doesn't have a sink pad",
-          GST_ELEMENT_NAME (element));
-      gst_element_set_state (element, GST_STATE_NULL);
-      gst_object_unref (element);
-      continue;
-    }
-
-    /* 2.4 add it ... */
+    /* ... add it ... */
     if (!(gst_bin_add (GST_BIN_CAST (dbin), element))) {
       GST_WARNING_OBJECT (dbin, "Couldn't add %s to the bin",
           GST_ELEMENT_NAME (element));
-      gst_object_unref (sinkpad);
-      gst_element_set_state (element, GST_STATE_NULL);
+      remove_error_filter (dbin, element);
       gst_object_unref (element);
       continue;
     }
 
-    /* 2.5 ...and try to link */
+    /* Find its sink pad. */
+    if (!(sinkpad = find_sink_pad (element))) {
+      GST_WARNING_OBJECT (dbin, "Element %s doesn't have a sink pad",
+          GST_ELEMENT_NAME (element));
+      remove_error_filter (dbin, element);
+      gst_bin_remove (GST_BIN (dbin), element);
+      continue;
+    }
+
+    /* ... and try to link */
     if ((gst_pad_link (pad, sinkpad)) != GST_PAD_LINK_OK) {
       GST_WARNING_OBJECT (dbin, "Link failed on pad %s:%s",
           GST_DEBUG_PAD_NAME (sinkpad));
-      gst_element_set_state (element, GST_STATE_NULL);
+      remove_error_filter (dbin, element);
       gst_object_unref (sinkpad);
       gst_bin_remove (GST_BIN (dbin), element);
       continue;
     }
+
+    /* ... activate it ... */
+    if ((gst_element_set_state (element,
+                GST_STATE_READY)) == GST_STATE_CHANGE_FAILURE) {
+      GST_WARNING_OBJECT (dbin, "Couldn't set %s to READY",
+          GST_ELEMENT_NAME (element));
+      remove_error_filter (dbin, element);
+      gst_object_unref (sinkpad);
+      gst_bin_remove (GST_BIN (dbin), element);
+      continue;
+    }
+
+    /* Stop filtering errors. */
+    remove_error_filter (dbin, element);
+
     gst_object_unref (sinkpad);
     GST_LOG_OBJECT (dbin, "linked on pad %s:%s", GST_DEBUG_PAD_NAME (pad));
 
@@ -3991,6 +4021,24 @@ activate_failed:
         "element failed to change states -- activation problem?");
     return GST_STATE_CHANGE_FAILURE;
   }
+}
+
+static void
+gst_decode_bin_handle_message (GstBin * bin, GstMessage * msg)
+{
+  GstDecodeBin *dbin = GST_DECODE_BIN (bin);
+  gboolean drop = FALSE;
+
+  if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR) {
+    GST_OBJECT_LOCK (dbin);
+    drop = (g_list_find (dbin->filtered, GST_MESSAGE_SRC (msg)) != NULL);
+    GST_OBJECT_UNLOCK (dbin);
+  }
+
+  if (drop)
+    gst_message_unref (msg);
+  else
+    GST_BIN_CLASS (parent_class)->handle_message (bin, msg);
 }
 
 gboolean
