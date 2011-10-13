@@ -734,23 +734,28 @@ gst_rtp_ssrc_demux_iterate_internal_links_sink (GstPad * pad)
 {
   GstRtpSsrcDemux *demux;
   GstIterator *it = NULL;
-  const gchar *prefix = NULL;
+  GValue gval = { 0, };
 
   demux = GST_RTP_SSRC_DEMUX (gst_pad_get_parent (pad));
 
   if (!demux)
     return NULL;
 
+  g_value_init (&gval, G_TYPE_STRING);
   if (pad == demux->rtp_sink)
-    prefix = "src_";
+    g_value_set_static_string (&gval, "src_");
   else if (pad == demux->rtcp_sink)
-    prefix = "rtcp_src_";
+    g_value_set_static_string (&gval, "rtcp_src_");
   else
     g_assert_not_reached ();
 
   it = gst_element_iterate_src_pads (GST_ELEMENT (demux));
 
-  return gst_iterator_filter (it, src_pad_compare_func, (gpointer) prefix);
+  it = gst_iterator_filter (it, src_pad_compare_func, &gval);
+
+  gst_object_unref (demux);
+
+  return it;
 }
 
 
