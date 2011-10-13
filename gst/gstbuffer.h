@@ -460,12 +460,15 @@ GstBuffer*      gst_buffer_make_metadata_writable (GstBuffer *buf);
  *
  * Either @nbuf or the #GstBuffer pointed to by @obuf may be NULL.
  */
-#define         gst_buffer_replace(obuf,nbuf) \
-G_STMT_START {                                                                \
-  GstBuffer **___obufaddr = (GstBuffer **)(obuf);         \
-  gst_mini_object_replace ((GstMiniObject **)___obufaddr, \
-      GST_MINI_OBJECT_CAST (nbuf));                       \
-} G_STMT_END
+#ifdef _FOOL_GTK_DOC_
+G_INLINE_FUNC void gst_buffer_replace (GstBuffer **obuf, GstBuffer *nbuf);
+#endif
+
+static inline void
+gst_buffer_replace (GstBuffer **obuf, GstBuffer *nbuf)
+{
+  gst_mini_object_replace ((GstMiniObject **) obuf, (GstMiniObject *) nbuf);
+}
 
 GstCaps*        gst_buffer_get_caps             (GstBuffer *buffer);
 void            gst_buffer_set_caps             (GstBuffer *buffer, GstCaps *caps);
