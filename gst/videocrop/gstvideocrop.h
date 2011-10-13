@@ -47,19 +47,10 @@ struct _GstVideoCropImageDetails
   /*< private >*/
   VideoCropPixelFormat  packing;
 
-  guint width;
-  guint height;
-  guint size;
+  GstVideoInfo info;
 
   /* for packed RGB and YUV */
-  guint   stride;
-  guint   bytes_per_pixel;
   guint8  macro_y_off;            /* for YUY2, YVYU, UYVY, Y offset within macropixel in bytes */
-
-  /* for planar YUV */
-  guint y_stride, y_off;
-  guint u_stride, u_off;
-  guint v_stride, v_off;
 };
 
 typedef struct _GstVideoCrop GstVideoCrop;
