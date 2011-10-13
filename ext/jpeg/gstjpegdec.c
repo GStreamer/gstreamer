@@ -92,7 +92,7 @@ static void gst_jpeg_dec_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 static GstFlowReturn gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buffer);
-static GstCaps *gst_jpeg_dec_getcaps (GstPad * pad);
+static GstCaps *gst_jpeg_dec_getcaps (GstPad * pad, GstCaps * filter);
 static gboolean gst_jpeg_dec_sink_event (GstPad * pad, GstEvent * event);
 static gboolean gst_jpeg_dec_src_event (GstPad * pad, GstEvent * event);
 static GstStateChangeReturn gst_jpeg_dec_change_state (GstElement * element,
@@ -729,8 +729,8 @@ gst_jpeg_dec_getcaps (GstPad * pad, GstCaps * filter)
 
   dec = GST_JPEG_DEC (GST_OBJECT_PARENT (pad));
 
-  if (GST_PAD_CAPS (pad))
-    return gst_caps_ref (GST_PAD_CAPS (pad));
+  if (gst_pad_has_current_caps (pad))
+    return gst_pad_get_current_caps (pad);
 
   peer = gst_pad_get_peer (dec->srcpad);
 
