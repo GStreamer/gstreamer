@@ -314,7 +314,7 @@ dnl Non ported plugins (non-dependant, then dependant)
 dnl Make sure you have a space before and after all plugins
 GST_PLUGINS_NONPORTED="deinterlace flx goom2k1 \
  imagefreeze interleave matroska monoscope smpte \
- videobox videocrop videomixer \
+ videobox videomixer \
  apetag cairo cairo_gobject dv1394 gdk_pixbuf libdv libpng \
  oss oss4 shout2 \
  taglib wavpack "
