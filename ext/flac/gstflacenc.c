@@ -150,7 +150,7 @@ GST_DEBUG_CATEGORY_STATIC (flacenc_debug);
 #define GST_CAT_DEFAULT flacenc_debug
 
 #define gst_flac_enc_parent_class parent_class
-G_DEFINE_TYPE_WITH_CODE (GstFlacEnc, gst_flac_enc, GST_TYPE_ELEMENT,
+G_DEFINE_TYPE_WITH_CODE (GstFlacEnc, gst_flac_enc, GST_TYPE_AUDIO_ENCODER,
     G_IMPLEMENT_INTERFACE (GST_TYPE_TAG_SETTER, NULL));
 
 static gboolean gst_flac_enc_start (GstAudioEncoder * enc);
