@@ -108,7 +108,6 @@ struct _TSDemuxStream
   guint8 nbpending;
 
   /* Current data to be pushed out */
-  GstBufferList *current;
   GList *currentlist;
 
   /* Current PTS for this stream */
@@ -1191,6 +1190,7 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
           bstream->stream_type);
       break;
   }
+
   if (template && name && caps) {
     GST_LOG ("stream:%p creating pad with name %s and caps %s", stream, name,
         gst_caps_to_string (caps));
@@ -1286,8 +1286,6 @@ gst_ts_demux_stream_flush (TSDemuxStream * stream)
     gst_buffer_unref (stream->pendingbuffers[i]);
   memset (stream->pendingbuffers, 0, TS_MAX_PENDING_BUFFERS);
   stream->nbpending = 0;
-
-  stream->current = NULL;
 }
 
 static void
@@ -2028,12 +2026,8 @@ gst_ts_demux_parse_pes_header (GstTSDemux * demux, TSDemuxStream * stream)
    * creating the bufferlist */
   if (1) {
     /* Append to the buffer list */
-    if (G_UNLIKELY (stream->current == NULL)) {
+    if (G_UNLIKELY (stream->currentlist == NULL)) {
       guint8 i;
-
-      /* Create a new bufferlist */
-      stream->current = gst_buffer_list_new ();
-      stream->currentlist = NULL;
 
       /* Push pending buffers into the list */
       for (i = stream->nbpending; i; i--)
@@ -2175,6 +2169,7 @@ calculate_and_push_newsegment (GstTSDemux * demux, TSDemuxStream * stream)
   GST_DEBUG ("new segment:   start: %" GST_TIME_FORMAT " stop: %"
       GST_TIME_FORMAT " time: %" GST_TIME_FORMAT, GST_TIME_ARGS (start),
       GST_TIME_ARGS (stop), GST_TIME_ARGS (position));
+
   newsegmentevent = gst_event_new_segment (&demux->segment);
 
   push_event ((MpegTSBase *) demux, newsegmentevent);
@@ -2194,7 +2189,7 @@ gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream)
       stream, bs->pid, bs->stream_type, stream->state,
       GST_DEBUG_PAD_NAME (stream->pad));
 
-  if (G_UNLIKELY (stream->current == NULL)) {
+  if (G_UNLIKELY (stream->currentlist == NULL)) {
     GST_LOG ("stream->current == NULL");
     goto beach;
   }
@@ -2210,7 +2205,7 @@ gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream)
   if (G_UNLIKELY (stream->pad == NULL)) {
     g_list_foreach (stream->currentlist, (GFunc) gst_buffer_unref, NULL);
     g_list_free (stream->currentlist);
-    gst_buffer_list_unref (stream->current);
+    stream->currentlist = NULL;
     goto beach;
   }
 
@@ -2224,7 +2219,7 @@ gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream)
   buf = (GstBuffer *) stream->currentlist->data;
 
   for (tmp = stream->currentlist->next; tmp; tmp = tmp->next) {
-    buf = gst_buffer_merge (buf, (GstBuffer *) tmp->data);
+    buf = gst_buffer_join (buf, (GstBuffer *) tmp->data);
   }
 
   GST_DEBUG_OBJECT (stream->pad,
@@ -2242,7 +2237,9 @@ beach:
   stream->state = PENDING_PACKET_EMPTY;
   memset (stream->pendingbuffers, 0, TS_MAX_PENDING_BUFFERS);
   stream->nbpending = 0;
-  stream->current = NULL;
+  if (stream->currentlist)
+    g_list_free (stream->currentlist);
+  stream->currentlist = NULL;
 
   return res;
 }
