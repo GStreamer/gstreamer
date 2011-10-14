@@ -243,6 +243,10 @@ struct _GstVC1AdvancedSeqHdr
   /* computed */
   guint framerate; /* Around in fps, 0 if unknown*/
   guint bitrate;   /* Around in kpbs, 0 if unknown*/
+  guint par_n;
+  guint par_d;
+  guint fps_n;
+  guint fps_d;
 
   /* The last parsed entry point */
   GstVC1EntryPointHdr entrypoint;

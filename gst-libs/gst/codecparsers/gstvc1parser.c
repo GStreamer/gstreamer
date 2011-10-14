@@ -277,6 +277,51 @@ static const VLCTable vc1_norm6_vlc_table[64] = {
   {63, (3 << 1) | 1, 6}
 };
 
+/* SMPTE 421M Table 7 */
+typedef struct
+{
+  gint par_n, par_d;
+} PAR;
+
+static PAR aspect_ratios[] = {
+  {0, 0},
+  {1, 1},
+  {12, 11},
+  {10, 11},
+  {16, 11},
+  {40, 33},
+  {24, 11},
+  {20, 11},
+  {32, 11},
+  {80, 33},
+  {18, 11},
+  {15, 11},
+  {64, 33},
+  {160, 99},
+  {0, 0},
+  {0, 0}
+};
+
+/* SMPTE 421M Table 8 */
+static const guint framerates_n[] = {
+  0,
+  24 * 1000,
+  25 * 1000,
+  30 * 1000,
+  50 * 1000,
+  60 * 1000,
+  48 * 1000,
+  72 * 1000
+};
+
+/* SMPTE 421M Table 9 */
+static const guint framerates_d[] = {
+  0,
+  1000,
+  1001
+};
+
+
 static inline gboolean
 decode_colskip (GstBitReader * br, guint8 * data, guint width, guint height,
     guint stride, guint invert)
@@ -813,6 +858,10 @@ parse_sequence_header_advanced (GstVC1SeqHdr * seqhdr, GstBitReader * br)
 
   READ_UINT8 (br, tmp, 3);
   advanced->level = tmp;
+  advanced->par_n = 0;
+  advanced->par_d = 0;
+  advanced->fps_n = 0;
+  advanced->fps_d = 0;
 
   READ_UINT8 (br, advanced->colordiff_format, 2);
   READ_UINT8 (br, advanced->frmrtq_postproc, 3);
@@ -867,6 +916,11 @@ parse_sequence_header_advanced (GstVC1SeqHdr * seqhdr, GstBitReader * br)
       if (advanced->aspect_ratio == 15) {
         READ_UINT8 (br, advanced->aspect_horiz_size, 8);
         READ_UINT8 (br, advanced->aspect_vert_size, 8);
+        advanced->par_n = advanced->aspect_horiz_size;
+        advanced->par_d = advanced->aspect_vert_size;
+      } else {
+        advanced->par_n = aspect_ratios[advanced->aspect_ratio].par_n;
+        advanced->par_d = aspect_ratios[advanced->aspect_ratio].par_d;
       }
     }
     READ_UINT8 (br, advanced->framerate_flag, 1);
@@ -878,6 +932,15 @@ parse_sequence_header_advanced (GstVC1SeqHdr * seqhdr, GstBitReader * br)
         READ_UINT8 (br, advanced->frameratedr, 4);
       } else {
         READ_UINT16 (br, advanced->framerateexp, 16);
+      }
+      if (advanced->frameratenr > 0 &&
+          advanced->frameratenr < 8 &&
+          advanced->frameratedr > 0 && advanced->frameratedr < 3) {
+        advanced->fps_n = framerates_n[advanced->frameratenr];
+        advanced->fps_d = framerates_d[advanced->frameratedr];
+      } else {
+        advanced->fps_n = advanced->framerateexp + 1;
+        advanced->fps_d = 32;
       }
     }
     READ_UINT8 (br, advanced->color_format_flag, 1);
