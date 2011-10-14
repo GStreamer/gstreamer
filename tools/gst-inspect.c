@@ -1236,14 +1236,14 @@ print_plugin_info (GstPlugin * plugin)
 static void
 print_plugin_features (GstPlugin * plugin)
 {
-  GList *features;
+  GList *features, *origlist;
   gint num_features = 0;
   gint num_elements = 0;
   gint num_typefinders = 0;
   gint num_indexes = 0;
   gint num_other = 0;
 
-  features =
+  origlist = features =
       gst_registry_get_feature_list_by_plugin (gst_registry_get_default (),
       plugin->desc.name);
 
@@ -1292,6 +1292,9 @@ print_plugin_features (GstPlugin * plugin)
     num_features++;
     features = g_list_next (features);
   }
+
+  gst_plugin_feature_list_free (origlist);
+
   n_print ("\n");
   n_print ("  %d features:\n", num_features);
   if (num_elements > 0)
