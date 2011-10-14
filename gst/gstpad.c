@@ -146,7 +146,6 @@ static void gst_pad_fixate_caps_default (GstPad * pad, GstCaps * caps);
 static GstFlowReturn gst_pad_chain_list_default (GstPad * pad,
     GstBufferList * list);
 
-static GstObjectClass *parent_class = NULL;
 static guint gst_pad_signals[LAST_SIGNAL] = { 0 };
 
 static GParamSpec *pspec_caps = NULL;
@@ -237,6 +236,7 @@ gst_flow_to_quark (GstFlowReturn ret)
       GST_DEBUG_BOLD | GST_DEBUG_FG_GREEN, "dataflow inside pads"); \
 }
 
+#define gst_pad_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstPad, gst_pad, GST_TYPE_OBJECT, _do_init);
 
 static void
@@ -249,8 +249,6 @@ gst_pad_class_init (GstPadClass * klass)
   gstobject_class = GST_OBJECT_CLASS (klass);
 
   g_type_class_add_private (klass, sizeof (GstPadPrivate));
-
-  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->dispose = gst_pad_dispose;
   gobject_class->finalize = gst_pad_finalize;
