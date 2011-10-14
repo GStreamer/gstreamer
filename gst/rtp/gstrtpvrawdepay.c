@@ -125,6 +125,7 @@ gst_rtp_vraw_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   GstCaps *srccaps;
   guint32 fourcc = 0;
   gboolean res;
+  gint rmask = 0, gmask = 0, bmask = 0, amask = 0, bpp = 0, depth = 0;
 
   rtpvrawdepay = GST_RTP_VRAW_DEPAY (depayload);
 
@@ -159,24 +160,46 @@ gst_rtp_vraw_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
     ystride = GST_ROUND_UP_4 (width * 3);
     outsize = ystride * height;
     type = "video/x-raw-rgb";
+    rmask = 0x00ff0000;
+    gmask = 0x0000ff00;
+    bmask = 0x000000ff;
+    depth = 24;
+    bpp = 24;
   } else if (!strcmp (str, "RGBA")) {
     format = GST_VIDEO_FORMAT_RGBA;
     pgroup = 4;
     ystride = width * 4;
     outsize = ystride * height;
     type = "video/x-raw-rgb";
+    rmask = 0xff000000;
+    gmask = 0x00ff0000;
+    bmask = 0x0000ff00;
+    amask = 0x000000ff;
+    depth = 32;
+    bpp = 32;
   } else if (!strcmp (str, "BGR")) {
     format = GST_VIDEO_FORMAT_BGR;
     pgroup = 3;
     ystride = GST_ROUND_UP_4 (width * 3);
     outsize = ystride * height;
     type = "video/x-raw-rgb";
+    rmask = 0x000000ff;
+    gmask = 0x0000ff00;
+    bmask = 0x00ff0000;
+    depth = 24;
+    bpp = 24;
   } else if (!strcmp (str, "BGRA")) {
     format = GST_VIDEO_FORMAT_BGRA;
     pgroup = 4;
     ystride = width * 4;
     outsize = ystride * height;
     type = "video/x-raw-rgb";
+    rmask = 0x0000ff00;
+    gmask = 0x00ff0000;
+    bmask = 0xff000000;
+    amask = 0x000000ff;
+    depth = 32;
+    bpp = 32;
   } else if (!strcmp (str, "YCbCr-4:4:4")) {
     format = GST_VIDEO_FORMAT_AYUV;
     pgroup = 3;
@@ -235,6 +258,19 @@ gst_rtp_vraw_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
       "height", G_TYPE_INT, height,
       "format", GST_TYPE_FOURCC, fourcc,
       "framerate", GST_TYPE_FRACTION, 0, 1, NULL);
+
+  if (!strcmp (type, "video/x-raw-rgb")) {
+    gst_caps_set_simple (srccaps,
+        "endianness", G_TYPE_INT, BIG_ENDIAN,
+        "red_mask", G_TYPE_INT, rmask,
+        "green_mask", G_TYPE_INT, gmask,
+        "blue_mask", G_TYPE_INT, bmask,
+        "bpp", G_TYPE_INT, bpp, "depth", G_TYPE_INT, depth, NULL);
+
+    if (amask > 0) {
+      gst_caps_set_simple (srccaps, "alpha_mask", G_TYPE_INT, amask, NULL);
+    }
+  }
 
   res = gst_pad_set_caps (GST_BASE_RTP_DEPAYLOAD_SRCPAD (depayload), srccaps);
   gst_caps_unref (srccaps);
