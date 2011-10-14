@@ -1901,8 +1901,6 @@ gst_omx_parse_hacks (gchar ** hacks)
       hacks_flags |= GST_OMX_HACK_VIDEO_FRAMERATE_INTEGER;
     else if (g_str_equal (*hacks, "syncframe-flag-not-used"))
       hacks_flags |= GST_OMX_HACK_SYNCFRAME_FLAG_NOT_USED;
-    else if (g_str_equal (*hacks, "no-noffset-reset"))
-      hacks_flags |= GST_OMX_HACK_NO_NOFFSET_RESET;
     else if (g_str_equal (*hacks, "no-component-reconfigure"))
       hacks_flags |= GST_OMX_HACK_NO_COMPONENT_RECONFIGURE;
     else
