@@ -2746,8 +2746,8 @@ gst_buffer_merge (GstBuffer * buf1, GstBuffer * buf2)
 
 /**
  * gst_buffer_join:
- * @buf1: the first source #GstBuffer.
- * @buf2: the second source #GstBuffer.
+ * @buf1: (transfer full): the first source #GstBuffer.
+ * @buf2: (transfer full): the second source #GstBuffer.
  *
  * Create a new buffer that is the concatenation of the two source
  * buffers, and unrefs the original source buffers.
