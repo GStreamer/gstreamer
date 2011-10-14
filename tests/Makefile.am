@@ -3,6 +3,7 @@ noinst_PROGRAMS = 	\
 	test-display	\
 	test-surfaces	\
 	test-windows	\
+	test-subpicture	\
 	$(NULL)
 
 if USE_GLX
@@ -54,6 +55,10 @@ test_display_LDADD	= $(TEST_LIBS) $(TEST_MIX_LIBS)
 test_surfaces_SOURCES	= test-surfaces.c
 test_surfaces_CFLAGS	= $(TEST_CFLAGS) $(TEST_X11_CFLAGS)
 test_surfaces_LDADD	= $(TEST_LIBS) $(TEST_X11_LIBS)
+
+test_subpicture_SOURCES = test-subpicture.c test-h264.c test-subpicture-data.c
+test_subpicture_CFLAGS  = $(TEST_CFLAGS) $(TEST_X11_CFLAGS)
+test_subpicture_LDADD   = $(TEST_LIBS) $(TEST_X11_LIBS)
 
 test_windows_SOURCES	= test-windows.c image.c
 test_windows_CFLAGS	= $(TEST_CFLAGS) $(TEST_X11_CFLAGS)
