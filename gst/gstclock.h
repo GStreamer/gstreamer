@@ -81,28 +81,41 @@ typedef gpointer GstClockID;
  */
 #define GST_CLOCK_TIME_IS_VALID(time)	(((GstClockTime)(time)) != GST_CLOCK_TIME_NONE)
 
+/* FIXME: still need to explicitly force types on the defines below */
 /**
  * GST_SECOND:
  *
  * Constant that defines one GStreamer second.
+ * 
+ * Value: 1000000000
+ *
  */
 #define GST_SECOND  (G_USEC_PER_SEC * G_GINT64_CONSTANT (1000))
 /**
  * GST_MSECOND:
  *
  * Constant that defines one GStreamer millisecond.
+ * 
+ * Value: 1000000
+ * 
  */
 #define GST_MSECOND (GST_SECOND / G_GINT64_CONSTANT (1000))
 /**
  * GST_USECOND:
  *
  * Constant that defines one GStreamer microsecond.
+ * 
+ * Value: 1000
+ * 
  */
 #define GST_USECOND (GST_SECOND / G_GINT64_CONSTANT (1000000))
 /**
  * GST_NSECOND:
  *
  * Constant that defines one GStreamer nanosecond
+ * 
+ * Value: 1
+ * 
  */
 #define GST_NSECOND (GST_SECOND / G_GINT64_CONSTANT (1000000000))
 
