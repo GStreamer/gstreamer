@@ -82,17 +82,25 @@ static GstStaticPadTemplate gst_y4m_dec_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("{I420,Y42B,Y444}"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{I420,Y42B,Y444}"))
     );
 
 /* class initialization */
-
-GST_BOILERPLATE (GstY4mDec, gst_y4m_dec, GstElement, GST_TYPE_ELEMENT);
+#define gst_y4m_dec_parent_class parent_class
+G_DEFINE_TYPE (GstY4mDec, gst_y4m_dec, GST_TYPE_ELEMENT);
 
 static void
-gst_y4m_dec_base_init (gpointer g_class)
+gst_y4m_dec_class_init (GstY4mDecClass * klass)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  gobject_class->set_property = gst_y4m_dec_set_property;
+  gobject_class->get_property = gst_y4m_dec_get_property;
+  gobject_class->dispose = gst_y4m_dec_dispose;
+  gobject_class->finalize = gst_y4m_dec_finalize;
+
+  element_class->change_state = GST_DEBUG_FUNCPTR (gst_y4m_dec_change_state);
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_y4m_dec_src_template));
@@ -105,21 +113,7 @@ gst_y4m_dec_base_init (gpointer g_class)
 }
 
 static void
-gst_y4m_dec_class_init (GstY4mDecClass * klass)
-{
-  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gobject_class->set_property = gst_y4m_dec_set_property;
-  gobject_class->get_property = gst_y4m_dec_get_property;
-  gobject_class->dispose = gst_y4m_dec_dispose;
-  gobject_class->finalize = gst_y4m_dec_finalize;
-  element_class->change_state = GST_DEBUG_FUNCPTR (gst_y4m_dec_change_state);
-
-}
-
-static void
-gst_y4m_dec_init (GstY4mDec * y4mdec, GstY4mDecClass * y4mdec_class)
+gst_y4m_dec_init (GstY4mDec * y4mdec)
 {
   y4mdec->adapter = gst_adapter_new ();
 
@@ -232,15 +226,15 @@ gst_y4m_dec_change_state (GstElement * element, GstStateChange transition)
 static GstClockTime
 gst_y4m_dec_frames_to_timestamp (GstY4mDec * y4mdec, int frame_index)
 {
-  return gst_util_uint64_scale (frame_index, GST_SECOND * y4mdec->fps_d,
-      y4mdec->fps_n);
+  return gst_util_uint64_scale (frame_index, GST_SECOND * y4mdec->info.fps_d,
+      y4mdec->info.fps_n);
 }
 
 static int
 gst_y4m_dec_timestamp_to_frames (GstY4mDec * y4mdec, GstClockTime timestamp)
 {
-  return gst_util_uint64_scale (timestamp, y4mdec->fps_n,
-      GST_SECOND * y4mdec->fps_d);
+  return gst_util_uint64_scale (timestamp, y4mdec->info.fps_n,
+      GST_SECOND * y4mdec->info.fps_d);
 }
 
 static int
@@ -248,13 +242,13 @@ gst_y4m_dec_bytes_to_frames (GstY4mDec * y4mdec, gint64 bytes)
 {
   if (bytes < y4mdec->header_size)
     return 0;
-  return (bytes - y4mdec->header_size) / (y4mdec->frame_size + 6);
+  return (bytes - y4mdec->header_size) / (y4mdec->info.size + 6);
 }
 
 static gint64
 gst_y4m_dec_frames_to_bytes (GstY4mDec * y4mdec, int frame_index)
 {
-  return y4mdec->header_size + (y4mdec->frame_size + 6) * frame_index;
+  return y4mdec->header_size + (y4mdec->info.size + 6) * frame_index;
 }
 
 static GstClockTime
@@ -269,8 +263,12 @@ static gboolean
 gst_y4m_dec_parse_header (GstY4mDec * y4mdec, char *header)
 {
   char *end;
-  int format = 420;
+  int iformat = 420;
   int interlaced_char = 0;
+  gint fps_n = 0, fps_d = 0;
+  gint par_n = 0, par_d = 0;
+  gint width = 0, height = 0;
+  GstVideoFormat format;
 
   if (memcmp (header, "YUV4MPEG2 ", 10) != 0) {
     return FALSE;
@@ -285,21 +283,21 @@ gst_y4m_dec_parse_header (GstY4mDec * y4mdec, char *header)
         break;
       case 'C':
         header++;
-        format = strtoul (header, &end, 10);
+        iformat = strtoul (header, &end, 10);
         if (end == header)
           goto error;
         header = end;
         break;
       case 'W':
         header++;
-        y4mdec->width = strtoul (header, &end, 10);
+        width = strtoul (header, &end, 10);
         if (end == header)
           goto error;
         header = end;
         break;
       case 'H':
         header++;
-        y4mdec->height = strtoul (header, &end, 10);
+        height = strtoul (header, &end, 10);
         if (end == header)
           goto error;
         header = end;
@@ -315,7 +313,7 @@ gst_y4m_dec_parse_header (GstY4mDec * y4mdec, char *header)
         break;
       case 'F':
         header++;
-        y4mdec->fps_n = strtoul (header, &end, 10);
+        fps_n = strtoul (header, &end, 10);
         if (end == header)
           goto error;
         header = end;
@@ -324,14 +322,14 @@ gst_y4m_dec_parse_header (GstY4mDec * y4mdec, char *header)
           return FALSE;
         }
         header++;
-        y4mdec->fps_d = strtoul (header, &end, 10);
+        fps_d = strtoul (header, &end, 10);
         if (end == header)
           goto error;
         header = end;
         break;
       case 'A':
         header++;
-        y4mdec->par_n = strtoul (header, &end, 10);
+        par_n = strtoul (header, &end, 10);
         if (end == header)
           goto error;
         header = end;
@@ -340,7 +338,7 @@ gst_y4m_dec_parse_header (GstY4mDec * y4mdec, char *header)
           return FALSE;
         }
         header++;
-        y4mdec->par_d = strtoul (header, &end, 10);
+        par_d = strtoul (header, &end, 10);
         if (end == header)
           goto error;
         header = end;
@@ -354,41 +352,39 @@ gst_y4m_dec_parse_header (GstY4mDec * y4mdec, char *header)
     }
   }
 
-  switch (format) {
+  switch (iformat) {
     case 420:
-      y4mdec->format = GST_VIDEO_FORMAT_I420;
+      format = GST_VIDEO_FORMAT_I420;
       break;
     case 422:
-      y4mdec->format = GST_VIDEO_FORMAT_Y42B;
+      format = GST_VIDEO_FORMAT_Y42B;
       break;
     case 444:
-      y4mdec->format = GST_VIDEO_FORMAT_Y444;
+      format = GST_VIDEO_FORMAT_Y444;
       break;
     default:
-      GST_WARNING_OBJECT (y4mdec, "unknown y4m format %d", format);
+      GST_WARNING_OBJECT (y4mdec, "unknown y4m format %d", iformat);
       return FALSE;
   }
 
-  if (y4mdec->width <= 0 || y4mdec->width > MAX_SIZE ||
-      y4mdec->height <= 0 || y4mdec->height > MAX_SIZE) {
-    GST_WARNING_OBJECT (y4mdec, "Dimensions %dx%d out of range",
-        y4mdec->width, y4mdec->height);
+  if (width <= 0 || width > MAX_SIZE || height <= 0 || height > MAX_SIZE) {
+    GST_WARNING_OBJECT (y4mdec, "Dimensions %dx%d out of range", width, height);
     return FALSE;
   }
 
-  y4mdec->frame_size = gst_video_format_get_size (y4mdec->format,
-      y4mdec->width, y4mdec->height);
+  gst_video_info_set_format (&y4mdec->info, format, width, height);
 
   switch (interlaced_char) {
     case 0:
     case '?':
     case 'p':
-      y4mdec->interlaced = FALSE;
+      y4mdec->info.flags &= ~GST_VIDEO_FLAG_INTERLACED;
       break;
     case 't':
     case 'b':
-      y4mdec->interlaced = TRUE;
-      y4mdec->tff = (interlaced_char == 't');
+      y4mdec->info.flags |= GST_VIDEO_FLAG_INTERLACED;
+      if (interlaced_char == 't')
+        y4mdec->info.flags |= GST_VIDEO_FLAG_TFF;
       break;
     default:
       GST_WARNING_OBJECT (y4mdec, "Unknown interlaced char '%c'",
@@ -397,14 +393,19 @@ gst_y4m_dec_parse_header (GstY4mDec * y4mdec, char *header)
       break;
   }
 
-  if (y4mdec->fps_n == 0)
-    y4mdec->fps_n = 1;
-  if (y4mdec->fps_d == 0)
-    y4mdec->fps_d = 1;
-  if (y4mdec->par_n == 0)
-    y4mdec->par_n = 1;
-  if (y4mdec->par_d == 0)
-    y4mdec->par_d = 1;
+  if (fps_n == 0)
+    fps_n = 1;
+  if (fps_d == 0)
+    fps_d = 1;
+  if (par_n == 0)
+    par_n = 1;
+  if (par_d == 0)
+    par_d = 1;
+
+  y4mdec->info.fps_n = fps_n;
+  y4mdec->info.fps_d = fps_d;
+  y4mdec->info.par_n = par_n;
+  y4mdec->info.par_d = par_d;
 
   return TRUE;
 error:
@@ -460,10 +461,7 @@ gst_y4m_dec_chain (GstPad * pad, GstBuffer * buffer)
     y4mdec->header_size = strlen (header) + 1;
     gst_adapter_flush (y4mdec->adapter, y4mdec->header_size);
 
-    caps = gst_video_format_new_caps_interlaced (y4mdec->format,
-        y4mdec->width, y4mdec->height,
-        y4mdec->fps_n, y4mdec->fps_d,
-        y4mdec->par_n, y4mdec->par_d, y4mdec->interlaced);
+    caps = gst_video_info_to_caps (&y4mdec->info);
     ret = gst_pad_set_caps (y4mdec->srcpad, caps);
     gst_caps_unref (caps);
     if (!ret) {
@@ -477,21 +475,25 @@ gst_y4m_dec_chain (GstPad * pad, GstBuffer * buffer)
   if (y4mdec->have_new_segment) {
     GstEvent *event;
     GstClockTime start = gst_y4m_dec_bytes_to_timestamp (y4mdec,
-        y4mdec->segment_start);
+        y4mdec->segment.start);
     GstClockTime stop = gst_y4m_dec_bytes_to_timestamp (y4mdec,
-        y4mdec->segment_stop);
-    GstClockTime position = gst_y4m_dec_bytes_to_timestamp (y4mdec,
-        y4mdec->segment_position);
+        y4mdec->segment.stop);
+    GstClockTime time = gst_y4m_dec_bytes_to_timestamp (y4mdec,
+        y4mdec->segment.time);
+    GstSegment seg;
 
-    event = gst_event_new_new_segment (FALSE, 1.0,
-        GST_FORMAT_TIME, start, stop, position);
+    gst_segment_init (&seg, GST_FORMAT_TIME);
+    seg.start = start;
+    seg.stop = stop;
+    seg.time = time;
+    event = gst_event_new_segment (&seg);
 
     gst_pad_push_event (y4mdec->srcpad, event);
     //gst_event_unref (event);
 
     y4mdec->have_new_segment = FALSE;
     y4mdec->frame_index = gst_y4m_dec_bytes_to_frames (y4mdec,
-        y4mdec->segment_position);
+        y4mdec->segment.time);
     GST_DEBUG ("new frame_index %d", y4mdec->frame_index);
 
   }
@@ -515,25 +517,24 @@ gst_y4m_dec_chain (GstPad * pad, GstBuffer * buffer)
     }
 
     len = strlen (header);
-    if (n_avail < y4mdec->frame_size + len + 1) {
+    if (n_avail < y4mdec->info.size + len + 1) {
       /* not enough data */
       GST_DEBUG ("not enough data for frame %d < %d",
-          n_avail, y4mdec->frame_size + len + 1);
+          n_avail, y4mdec->info.size + len + 1);
       break;
     }
 
     gst_adapter_flush (y4mdec->adapter, len + 1);
 
-    buffer = gst_adapter_take_buffer (y4mdec->adapter, y4mdec->frame_size);
+    buffer = gst_adapter_take_buffer (y4mdec->adapter, y4mdec->info.size);
 
-    GST_BUFFER_CAPS (buffer) = gst_caps_ref (GST_PAD_CAPS (y4mdec->srcpad));
     GST_BUFFER_TIMESTAMP (buffer) =
         gst_y4m_dec_frames_to_timestamp (y4mdec, y4mdec->frame_index);
     GST_BUFFER_DURATION (buffer) =
         gst_y4m_dec_frames_to_timestamp (y4mdec, y4mdec->frame_index + 1) -
         GST_BUFFER_TIMESTAMP (buffer);
-    if (y4mdec->interlaced && y4mdec->tff) {
-      GST_BUFFER_FLAG_SET (buffer, GST_VIDEO_BUFFER_TFF);
+    if (y4mdec->info.flags & GST_VIDEO_FLAG_TFF) {
+      GST_BUFFER_FLAG_SET (buffer, GST_VIDEO_BUFFER_FLAG_TFF);
     }
 
     y4mdec->frame_index++;
@@ -565,28 +566,16 @@ gst_y4m_dec_sink_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_FLUSH_STOP:
       res = gst_pad_push_event (y4mdec->srcpad, event);
       break;
-    case GST_EVENT_NEWSEGMENT:
+    case GST_EVENT_SEGMENT:
     {
-      gboolean update;
-      gdouble rate;
-      gdouble applied_rate;
-      GstFormat format;
-      gint64 start;
-      gint64 stop;
-      gint64 position;
+      GstSegment seg;
 
-      gst_event_parse_new_segment_full (event, &update, &rate,
-          &applied_rate, &format, &start, &stop, &position);
+      gst_event_copy_segment (event, &seg);
 
-      GST_DEBUG ("new_segment: update: %d rate: %g applied_rate: %g "
-          "format: %d start: %" G_GUINT64_FORMAT " stop: %" G_GUINT64_FORMAT
-          " position %" G_GUINT64_FORMAT,
-          update, rate, applied_rate, format, start, stop, position);
+      GST_DEBUG ("segment: %" GST_SEGMENT_FORMAT, &seg);
 
-      if (format == GST_FORMAT_BYTES) {
-        y4mdec->segment_start = start;
-        y4mdec->segment_stop = stop;
-        y4mdec->segment_position = position;
+      if (seg.format == GST_FORMAT_BYTES) {
+        y4mdec->segment = seg;
         y4mdec->have_new_segment = TRUE;
       }
 

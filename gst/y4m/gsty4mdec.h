@@ -48,20 +48,9 @@ struct _GstY4mDec
   int header_size;
 
   gboolean have_new_segment;
-  gint64 segment_start;
-  gint64 segment_stop;
-  gint64 segment_position;
+  GstSegment segment;
 
-  int width;
-  int height;
-  GstVideoFormat format;
-  gboolean interlaced;
-  gboolean tff;
-  int fps_n;
-  int fps_d;
-  int par_n;
-  int par_d;
-  int frame_size;
+  GstVideoInfo info;
 };
 
 struct _GstY4mDecClass
