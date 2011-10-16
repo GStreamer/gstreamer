@@ -30,31 +30,24 @@
 #define GST_CAT_DEFAULT gst_rgb2bayer_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
-static void gst_rgb2bayer_dispose (GObject * object);
 static void gst_rgb2bayer_finalize (GObject * object);
 
 static GstCaps *gst_rgb2bayer_transform_caps (GstBaseTransform * trans,
-    GstPadDirection direction, GstCaps * caps);
+    GstPadDirection direction, GstCaps * caps, GstCaps * filter);
 static gboolean
 gst_rgb2bayer_get_unit_size (GstBaseTransform * trans, GstCaps * caps,
-    guint * size);
+    gsize * size);
 static gboolean
 gst_rgb2bayer_set_caps (GstBaseTransform * trans, GstCaps * incaps,
     GstCaps * outcaps);
-static gboolean gst_rgb2bayer_start (GstBaseTransform * trans);
-static gboolean gst_rgb2bayer_stop (GstBaseTransform * trans);
-static gboolean gst_rgb2bayer_event (GstBaseTransform * trans,
-    GstEvent * event);
 static GstFlowReturn gst_rgb2bayer_transform (GstBaseTransform * trans,
     GstBuffer * inbuf, GstBuffer * outbuf);
-static gboolean gst_rgb2bayer_src_event (GstBaseTransform * trans,
-    GstEvent * event);
 
 static GstStaticPadTemplate gst_rgb2bayer_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_ARGB)
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("ARGB"))
     );
 
 #if 0
@@ -81,16 +74,18 @@ GST_STATIC_PAD_TEMPLATE ("src",
 
 /* class initialization */
 
-#define DEBUG_INIT(bla) \
-    GST_DEBUG_CATEGORY_INIT (gst_rgb2bayer_debug, "rgb2bayer", 0, "rgb2bayer element");
-
-GST_BOILERPLATE_FULL (GstRGB2Bayer, gst_rgb2bayer, GstBaseTransform,
-    GST_TYPE_BASE_TRANSFORM, DEBUG_INIT);
+#define gst_rgb2bayer_parent_class parent_class
+G_DEFINE_TYPE (GstRGB2Bayer, gst_rgb2bayer, GST_TYPE_BASE_TRANSFORM);
 
 static void
-gst_rgb2bayer_base_init (gpointer g_class)
+gst_rgb2bayer_class_init (GstRGB2BayerClass * klass)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstBaseTransformClass *base_transform_class =
+      GST_BASE_TRANSFORM_CLASS (klass);
+
+  gobject_class->finalize = gst_rgb2bayer_finalize;
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_rgb2bayer_src_template));
@@ -100,43 +95,24 @@ gst_rgb2bayer_base_init (gpointer g_class)
   gst_element_class_set_details_simple (element_class,
       "RGB to Bayer converter",
       "Filter/Converter/Video",
-      "Converts video/x-raw-rgb to video/x-raw-bayer",
+      "Converts video/x-raw to video/x-raw-bayer",
       "David Schleef <ds@entropywave.com>");
-}
 
-static void
-gst_rgb2bayer_class_init (GstRGB2BayerClass * klass)
-{
-  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
-  GstBaseTransformClass *base_transform_class =
-      GST_BASE_TRANSFORM_CLASS (klass);
-
-  gobject_class->dispose = gst_rgb2bayer_dispose;
-  gobject_class->finalize = gst_rgb2bayer_finalize;
   base_transform_class->transform_caps =
       GST_DEBUG_FUNCPTR (gst_rgb2bayer_transform_caps);
   base_transform_class->get_unit_size =
       GST_DEBUG_FUNCPTR (gst_rgb2bayer_get_unit_size);
   base_transform_class->set_caps = GST_DEBUG_FUNCPTR (gst_rgb2bayer_set_caps);
-  base_transform_class->start = GST_DEBUG_FUNCPTR (gst_rgb2bayer_start);
-  base_transform_class->stop = GST_DEBUG_FUNCPTR (gst_rgb2bayer_stop);
-  base_transform_class->event = GST_DEBUG_FUNCPTR (gst_rgb2bayer_event);
   base_transform_class->transform = GST_DEBUG_FUNCPTR (gst_rgb2bayer_transform);
-  base_transform_class->src_event = GST_DEBUG_FUNCPTR (gst_rgb2bayer_src_event);
 
+  GST_DEBUG_CATEGORY_INIT (gst_rgb2bayer_debug, "rgb2bayer", 0,
+      "rgb2bayer element");
 }
 
 static void
-gst_rgb2bayer_init (GstRGB2Bayer * rgb2bayer,
-    GstRGB2BayerClass * rgb2bayer_class)
+gst_rgb2bayer_init (GstRGB2Bayer * rgb2bayer)
 {
 
-}
-
-void
-gst_rgb2bayer_dispose (GObject * object)
-{
-  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 void
@@ -148,7 +124,7 @@ gst_rgb2bayer_finalize (GObject * object)
 
 static GstCaps *
 gst_rgb2bayer_transform_caps (GstBaseTransform * trans,
-    GstPadDirection direction, GstCaps * caps)
+    GstPadDirection direction, GstCaps * caps, GstCaps * filter)
 {
   GstStructure *structure;
   GstStructure *new_structure;
@@ -160,7 +136,7 @@ gst_rgb2bayer_transform_caps (GstBaseTransform * trans,
   structure = gst_caps_get_structure (caps, 0);
 
   if (direction == GST_PAD_SRC) {
-    newcaps = gst_caps_new_simple ("video/x-raw-rgb", NULL);
+    newcaps = gst_caps_new_simple ("video/x-raw", NULL);
   } else {
     newcaps = gst_caps_new_simple ("video/x-raw-bayer", NULL);
   }
@@ -183,12 +159,11 @@ gst_rgb2bayer_transform_caps (GstBaseTransform * trans,
 
 static gboolean
 gst_rgb2bayer_get_unit_size (GstBaseTransform * trans, GstCaps * caps,
-    guint * size)
+    gsize * size)
 {
   GstStructure *structure;
   int width;
   int height;
-  int pixsize;
   const char *name;
 
   structure = gst_caps_get_structure (caps, 0);
@@ -196,16 +171,14 @@ gst_rgb2bayer_get_unit_size (GstBaseTransform * trans, GstCaps * caps,
   if (gst_structure_get_int (structure, "width", &width) &&
       gst_structure_get_int (structure, "height", &height)) {
     name = gst_structure_get_name (structure);
-    /* Our name must be either video/x-raw-bayer video/x-raw-rgb */
+    /* Our name must be either video/x-raw-bayer video/x-raw */
     if (g_str_equal (name, "video/x-raw-bayer")) {
       *size = width * height;
       return TRUE;
     } else {
       /* For output, calculate according to format */
-      if (gst_structure_get_int (structure, "bpp", &pixsize)) {
-        *size = width * height * (pixsize / 8);
-        return TRUE;
-      }
+      *size = width * height * 4;
+      return TRUE;
     }
 
   }
@@ -220,9 +193,15 @@ gst_rgb2bayer_set_caps (GstBaseTransform * trans, GstCaps * incaps,
   GstRGB2Bayer *rgb2bayer = GST_RGB_2_BAYER (trans);
   GstStructure *structure;
   const char *format;
+  GstVideoInfo info;
 
   GST_DEBUG ("in caps %" GST_PTR_FORMAT " out caps %" GST_PTR_FORMAT, incaps,
       outcaps);
+
+  if (!gst_video_info_from_caps (&info, incaps))
+    return FALSE;
+
+  rgb2bayer->info = info;
 
   structure = gst_caps_get_structure (outcaps, 0);
 
@@ -245,27 +224,6 @@ gst_rgb2bayer_set_caps (GstBaseTransform * trans, GstCaps * incaps,
   return TRUE;
 }
 
-static gboolean
-gst_rgb2bayer_start (GstBaseTransform * trans)
-{
-
-  return TRUE;
-}
-
-static gboolean
-gst_rgb2bayer_stop (GstBaseTransform * trans)
-{
-
-  return TRUE;
-}
-
-static gboolean
-gst_rgb2bayer_event (GstBaseTransform * trans, GstEvent * event)
-{
-
-  return TRUE;
-}
-
 static GstFlowReturn
 gst_rgb2bayer_transform (GstBaseTransform * trans, GstBuffer * inbuf,
     GstBuffer * outbuf)
@@ -276,9 +234,12 @@ gst_rgb2bayer_transform (GstBaseTransform * trans, GstBuffer * inbuf,
   int i, j;
   int height = rgb2bayer->height;
   int width = rgb2bayer->width;
+  GstVideoFrame frame;
 
-  dest = GST_BUFFER_DATA (outbuf);
-  src = GST_BUFFER_DATA (inbuf);
+  gst_video_frame_map (&frame, &rgb2bayer->info, inbuf, GST_MAP_READ);
+
+  dest = gst_buffer_map (outbuf, NULL, NULL, GST_MAP_READ);
+  src = GST_VIDEO_FRAME_PLANE_DATA (&frame, 0);
 
   for (j = 0; j < height; j++) {
     guint8 *dest_line = dest + width * j;
@@ -295,13 +256,8 @@ gst_rgb2bayer_transform (GstBaseTransform * trans, GstBuffer * inbuf,
       }
     }
   }
+  gst_buffer_unmap (outbuf, dest, -1);
+  gst_video_frame_unmap (&frame);
 
   return GST_FLOW_OK;
-}
-
-static gboolean
-gst_rgb2bayer_src_event (GstBaseTransform * trans, GstEvent * event)
-{
-
-  return TRUE;
 }

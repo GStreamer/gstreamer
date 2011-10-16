@@ -111,10 +111,9 @@ struct _GstBayer2RGB
   GstBaseTransform basetransform;
 
   /* < private > */
+  GstVideoInfo info;
   int width;
   int height;
-  int stride;
-  int pixsize;                  /* bytes per pixel */
   int r_off;                    /* offset for red */
   int g_off;                    /* offset for green */
   int b_off;                    /* offset for blue */
@@ -127,14 +126,7 @@ struct _GstBayer2RGBClass
 };
 
 #define	SRC_CAPS                                 \
-  GST_VIDEO_CAPS_RGBx ";"                        \
-  GST_VIDEO_CAPS_xRGB ";"                        \
-  GST_VIDEO_CAPS_BGRx ";"                        \
-  GST_VIDEO_CAPS_xBGR ";"                        \
-  GST_VIDEO_CAPS_RGBA ";"                        \
-  GST_VIDEO_CAPS_ARGB ";"                        \
-  GST_VIDEO_CAPS_BGRA ";"                        \
-  GST_VIDEO_CAPS_ABGR
+  GST_VIDEO_CAPS_MAKE ("RGBx, xRGB, BGRx, xBGR, RGBA, ARGB, BGRA, ABGR")
 
 #define SINK_CAPS "video/x-raw-bayer,format=(string){bggr,grbg,gbrg,rggb}," \
   "width=(int)[1,MAX],height=(int)[1,MAX],framerate=(fraction)[0/1,MAX]"
@@ -144,12 +136,10 @@ enum
   PROP_0
 };
 
-#define DEBUG_INIT(bla) \
-  GST_DEBUG_CATEGORY_INIT (gst_bayer2rgb_debug, "bayer2rgb", 0, "bayer2rgb element");
-
 GType gst_bayer2rgb_get_type (void);
-GST_BOILERPLATE_FULL (GstBayer2RGB, gst_bayer2rgb, GstBaseTransform,
-    GST_TYPE_BASE_TRANSFORM, DEBUG_INIT);
+
+#define gst_bayer2rgb_parent_class parent_class
+G_DEFINE_TYPE (GstBayer2RGB, gst_bayer2rgb, GST_TYPE_BASE_TRANSFORM);
 
 static void gst_bayer2rgb_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -162,37 +152,34 @@ static GstFlowReturn gst_bayer2rgb_transform (GstBaseTransform * base,
     GstBuffer * inbuf, GstBuffer * outbuf);
 static void gst_bayer2rgb_reset (GstBayer2RGB * filter);
 static GstCaps *gst_bayer2rgb_transform_caps (GstBaseTransform * base,
-    GstPadDirection direction, GstCaps * caps);
+    GstPadDirection direction, GstCaps * caps, GstCaps * filter);
 static gboolean gst_bayer2rgb_get_unit_size (GstBaseTransform * base,
-    GstCaps * caps, guint * size);
+    GstCaps * caps, gsize * size);
 
-
-static void
-gst_bayer2rgb_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_set_details_simple (element_class,
-      "Bayer to RGB decoder for cameras", "Filter/Converter/Video",
-      "Converts video/x-raw-bayer to video/x-raw-rgb",
-      "William Brack <wbrack@mmm.com.hk>");
-
-  gst_element_class_add_pad_template (element_class,
-      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-          gst_caps_from_string (SRC_CAPS)));
-  gst_element_class_add_pad_template (element_class,
-      gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-          gst_caps_from_string (SINK_CAPS)));
-}
 
 static void
 gst_bayer2rgb_class_init (GstBayer2RGBClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
 
   gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
+
   gobject_class->set_property = gst_bayer2rgb_set_property;
   gobject_class->get_property = gst_bayer2rgb_get_property;
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "Bayer to RGB decoder for cameras", "Filter/Converter/Video",
+      "Converts video/x-raw-bayer to video/x-raw",
+      "William Brack <wbrack@mmm.com.hk>");
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
+          gst_caps_from_string (SRC_CAPS)));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
+          gst_caps_from_string (SINK_CAPS)));
 
   GST_BASE_TRANSFORM_CLASS (klass)->transform_caps =
       GST_DEBUG_FUNCPTR (gst_bayer2rgb_transform_caps);
@@ -202,10 +189,13 @@ gst_bayer2rgb_class_init (GstBayer2RGBClass * klass)
       GST_DEBUG_FUNCPTR (gst_bayer2rgb_set_caps);
   GST_BASE_TRANSFORM_CLASS (klass)->transform =
       GST_DEBUG_FUNCPTR (gst_bayer2rgb_transform);
+
+  GST_DEBUG_CATEGORY_INIT (gst_bayer2rgb_debug, "bayer2rgb", 0,
+      "bayer2rgb element");
 }
 
 static void
-gst_bayer2rgb_init (GstBayer2RGB * filter, GstBayer2RGBClass * klass)
+gst_bayer2rgb_init (GstBayer2RGB * filter)
 {
   gst_bayer2rgb_reset (filter);
   gst_base_transform_set_in_place (GST_BASE_TRANSFORM (filter), TRUE);
@@ -236,35 +226,14 @@ gst_bayer2rgb_get_property (GObject * object, guint prop_id,
   }
 }
 
-/* Routine to convert colormask value into relative byte offset */
-static int
-get_pix_offset (int mask, int bpp)
-{
-  int bpp32 = (bpp / 8) - 3;
-
-  switch (mask) {
-    case 255:
-      return 2 + bpp32;
-    case 65280:
-      return 1 + bpp32;
-    case 16711680:
-      return 0 + bpp32;
-    case -16777216:
-      return 0;
-    default:
-      GST_ERROR ("Invalid color mask 0x%08x", mask);
-      return -1;
-  }
-}
-
 static gboolean
 gst_bayer2rgb_set_caps (GstBaseTransform * base, GstCaps * incaps,
     GstCaps * outcaps)
 {
   GstBayer2RGB *bayer2rgb = GST_BAYER2RGB (base);
   GstStructure *structure;
-  int val, bpp;
   const char *format;
+  GstVideoInfo info;
 
   GST_DEBUG ("in caps %" GST_PTR_FORMAT " out caps %" GST_PTR_FORMAT, incaps,
       outcaps);
@@ -273,7 +242,6 @@ gst_bayer2rgb_set_caps (GstBaseTransform * base, GstCaps * incaps,
 
   gst_structure_get_int (structure, "width", &bayer2rgb->width);
   gst_structure_get_int (structure, "height", &bayer2rgb->height);
-  bayer2rgb->stride = GST_ROUND_UP_4 (bayer2rgb->width);
 
   format = gst_structure_get_string (structure, "format");
   if (g_str_equal (format, "bggr")) {
@@ -289,15 +257,12 @@ gst_bayer2rgb_set_caps (GstBaseTransform * base, GstCaps * incaps,
   }
 
   /* To cater for different RGB formats, we need to set params for later */
-  structure = gst_caps_get_structure (outcaps, 0);
-  gst_structure_get_int (structure, "bpp", &bpp);
-  bayer2rgb->pixsize = bpp / 8;
-  gst_structure_get_int (structure, "red_mask", &val);
-  bayer2rgb->r_off = get_pix_offset (val, bpp);
-  gst_structure_get_int (structure, "green_mask", &val);
-  bayer2rgb->g_off = get_pix_offset (val, bpp);
-  gst_structure_get_int (structure, "blue_mask", &val);
-  bayer2rgb->b_off = get_pix_offset (val, bpp);
+  gst_video_info_from_caps (&info, outcaps);
+  bayer2rgb->r_off = GST_VIDEO_INFO_COMP_OFFSET (&info, 0);
+  bayer2rgb->g_off = GST_VIDEO_INFO_COMP_OFFSET (&info, 1);
+  bayer2rgb->b_off = GST_VIDEO_INFO_COMP_OFFSET (&info, 2);
+
+  bayer2rgb->info = info;
 
   return TRUE;
 }
@@ -307,16 +272,15 @@ gst_bayer2rgb_reset (GstBayer2RGB * filter)
 {
   filter->width = 0;
   filter->height = 0;
-  filter->stride = 0;
-  filter->pixsize = 0;
   filter->r_off = 0;
   filter->g_off = 0;
   filter->b_off = 0;
+  gst_video_info_init (&filter->info);
 }
 
 static GstCaps *
 gst_bayer2rgb_transform_caps (GstBaseTransform * base,
-    GstPadDirection direction, GstCaps * caps)
+    GstPadDirection direction, GstCaps * caps, GstCaps * filter)
 {
   GstStructure *structure;
   GstCaps *newcaps;
@@ -330,7 +294,7 @@ gst_bayer2rgb_transform_caps (GstBaseTransform * base,
     newcaps = gst_caps_from_string ("video/x-raw-bayer,"
         "format=(string){bggr,grbg,gbrg,rggb}");
   } else {
-    newcaps = gst_caps_new_simple ("video/x-raw-rgb", NULL);
+    newcaps = gst_caps_new_simple ("video/x-raw", NULL);
   }
   newstruct = gst_caps_get_structure (newcaps, 0);
 
@@ -348,12 +312,11 @@ gst_bayer2rgb_transform_caps (GstBaseTransform * base,
 
 static gboolean
 gst_bayer2rgb_get_unit_size (GstBaseTransform * base, GstCaps * caps,
-    guint * size)
+    gsize * size)
 {
   GstStructure *structure;
   int width;
   int height;
-  int pixsize;
   const char *name;
 
   structure = gst_caps_get_structure (caps, 0);
@@ -362,15 +325,13 @@ gst_bayer2rgb_get_unit_size (GstBaseTransform * base, GstCaps * caps,
       gst_structure_get_int (structure, "height", &height)) {
     name = gst_structure_get_name (structure);
     /* Our name must be either video/x-raw-bayer video/x-raw-rgb */
-    if (strcmp (name, "video/x-raw-rgb")) {
+    if (strcmp (name, "video/x-raw")) {
       *size = GST_ROUND_UP_4 (width) * height;
       return TRUE;
     } else {
-      /* For output, calculate according to format */
-      if (gst_structure_get_int (structure, "bpp", &pixsize)) {
-        *size = width * height * (pixsize / 8);
-        return TRUE;
-      }
+      /* For output, calculate according to format (always 32 bits) */
+      *size = width * height * 4;
+      return TRUE;
     }
 
   }
@@ -487,20 +448,17 @@ gst_bayer2rgb_transform (GstBaseTransform * base, GstBuffer * inbuf,
 {
   GstBayer2RGB *filter = GST_BAYER2RGB (base);
   uint8_t *input, *output;
-
-  /*
-   * We need to lock our filter params to prevent changing
-   * caps in the middle of a transformation (nice way to get
-   * segfaults)
-   */
-  GST_OBJECT_LOCK (filter);
+  GstVideoFrame frame;
 
   GST_DEBUG ("transforming buffer");
-  input = (uint8_t *) GST_BUFFER_DATA (inbuf);
-  output = (uint8_t *) GST_BUFFER_DATA (outbuf);
+  input = gst_buffer_map (inbuf, NULL, NULL, GST_MAP_READ);
+  gst_video_frame_map (&frame, &filter->info, inbuf, GST_MAP_WRITE);
+
+  output = GST_VIDEO_FRAME_PLANE_DATA (&frame, 0);
   gst_bayer2rgb_process (filter, output, filter->width * 4,
       input, filter->width);
+  gst_video_frame_unmap (&frame);
+  gst_buffer_unmap (inbuf, input, -1);
 
-  GST_OBJECT_UNLOCK (filter);
   return GST_FLOW_OK;
 }

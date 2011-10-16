@@ -22,6 +22,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstbasetransform.h>
+#include <gst/video/video.h>
 
 G_BEGIN_DECLS
 
@@ -45,6 +46,7 @@ struct _GstRGB2Bayer
 {
   GstBaseTransform base_rgb2bayer;
 
+  GstVideoInfo info;
   int width, height;
   int format;
 };
