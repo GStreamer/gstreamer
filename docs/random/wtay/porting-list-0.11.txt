@@ -190,6 +190,8 @@
  * -good video4linux2:  v4l2radio: Radio (video4linux2) Tuner
  * -good video4linux2:  v4l2sink: Video (video4linux2) Sink
  * -good video4linux2:  v4l2src: Video (video4linux2) Source
+ * -good videocrop:     aspectratiocrop: aspectratiocrop
+ * -good videocrop:     videocrop: Crop
  * -good videofilter:   gamma: Video gamma correction
  * -good videofilter:   videobalance: Video balance
  * -good videofilter:   videoflip: Video flipper
@@ -242,6 +244,8 @@
  * -bad  kate:          katetag: Kate stream tagger
  * -bad  mms:           mmssrc: MMS streaming source
  * -bad  mpeg4videoparse:  mpeg4videoparse: MPEG 4 video elementary stream parser
+ * -bad  mpegtsdemux:   tsdemux: MPEG transport stream demuxer
+ * -bad  mpegtsdemux:   tsparse: MPEG transport stream parser
  * -bad  rtmpsrc:       rtmpsrc: RTMP Source
  * -bad  rtmpsink:      rtmpsink:
  * -bad  sdp:           sdpdemux: SDP session setup
@@ -462,8 +466,6 @@
    -ugly mpegstream:    dvddemux: DVD Demuxer
    -ugly mpegstream:    mpegdemux: MPEG Demuxer
    -ugly mpegstream:    mpegparse: MPEG System Parser
-   -bad  mpegtsdemux:   tsdemux: MPEG transport stream demuxer
-   -bad  mpegtsdemux:   tsparse: MPEG transport stream parser
    -bad  mpegtsmux:     mpegtsmux: MPEG Transport Stream Muxer
    -bad  mpegvideoparse:  mpegvideoparse: MPEG video elementary stream parser
    -bad  mplex:         mplex: mplex video multiplexer
@@ -550,8 +552,6 @@
    -bad  vcdsrc:        vcdsrc: VCD Source
    -bad  vdpau:
    -good videobox:      videobox: Video box filter
-   -good videocrop:     aspectratiocrop: aspectratiocrop
-   -good videocrop:     videocrop: Crop
    -bad  videofiltersbad: scenechange: Scene change detector
    -bad  videofiltersbad: zebrastripe: Zebra stripe overlay
    -bad  videomaxrate:  videomaxrate: Video maximum rate adjuster
