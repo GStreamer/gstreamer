@@ -146,35 +146,60 @@ static gboolean
 gst_pngenc_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstPngEnc *pngenc;
-  const GValue *fps;
-  GstStructure *structure;
+  GstVideoFormat format;
+  int fps_n, fps_d;
   GstCaps *pcaps;
-  gboolean ret = TRUE;
+  gboolean ret;
 
   pngenc = GST_PNGENC (gst_pad_get_parent (pad));
 
-  structure = gst_caps_get_structure (caps, 0);
-  gst_structure_get_int (structure, "width", &pngenc->width);
-  gst_structure_get_int (structure, "height", &pngenc->height);
-  fps = gst_structure_get_value (structure, "framerate");
-  gst_structure_get_int (structure, "bpp", &pngenc->bpp);
+  ret = gst_video_format_parse_caps (caps, &format,
+      &pngenc->width, &pngenc->height);
+  if (G_LIKELY (ret))
+    ret = gst_video_parse_caps_framerate (caps, &fps_n, &fps_d);
 
-  if (pngenc->bpp == 32)
-    pngenc->stride = pngenc->width * 4;
-  else if (pngenc->bpp == 8)
-    pngenc->stride = GST_ROUND_UP_4 (pngenc->width);
-  else
-    pngenc->stride = GST_ROUND_UP_4 (pngenc->width * 3);
+  if (G_UNLIKELY (!ret))
+    goto done;
+
+  switch (format) {
+    case GST_VIDEO_FORMAT_RGBA:
+      pngenc->png_color_type = PNG_COLOR_TYPE_RGBA;
+      break;
+    case GST_VIDEO_FORMAT_RGB:
+      pngenc->png_color_type = PNG_COLOR_TYPE_RGB;
+      break;
+    case GST_VIDEO_FORMAT_GRAY8:
+      pngenc->png_color_type = PNG_COLOR_TYPE_GRAY;
+      break;
+    default:
+      ret = FALSE;
+      goto done;
+  }
+
+  if (G_UNLIKELY (pngenc->width < 16 || pngenc->width > 4096 ||
+          pngenc->height < 16 || pngenc->height > 4096)) {
+    ret = FALSE;
+    goto done;
+  }
+
+  pngenc->stride = gst_video_format_get_row_stride (format, 0, pngenc->width);
 
   pcaps = gst_caps_new_simple ("image/png",
       "width", G_TYPE_INT, pngenc->width,
-      "height", G_TYPE_INT, pngenc->height, NULL);
-  structure = gst_caps_get_structure (pcaps, 0);
-  gst_structure_set_value (structure, "framerate", fps);
+      "height", G_TYPE_INT, pngenc->height,
+      "framerate", GST_TYPE_FRACTION, fps_n, fps_d, NULL);
 
   ret = gst_pad_set_caps (pngenc->srcpad, pcaps);
 
   gst_caps_unref (pcaps);
+
+  /* Fall-through. */
+done:
+  if (G_UNLIKELY (!ret)) {
+    pngenc->width = 0;
+    pngenc->height = 0;
+  }
+
   gst_object_unref (pngenc);
 
   return ret;
@@ -238,7 +263,6 @@ gst_pngenc_chain (GstPad * pad, GstBuffer * buf)
 {
   GstPngEnc *pngenc;
   gint row_index;
-  gint color_type;
   png_byte *row_pointers[MAX_HEIGHT];
   GstFlowReturn ret = GST_FLOW_OK;
   GstBuffer *encoded_buf = NULL;
@@ -282,19 +306,12 @@ gst_pngenc_chain (GstPad * pad, GstBuffer * buf)
       PNG_FILTER_NONE | PNG_FILTER_VALUE_NONE);
   png_set_compression_level (pngenc->png_struct_ptr, pngenc->compression_level);
 
-  if (pngenc->bpp == 32)
-    color_type = PNG_COLOR_TYPE_RGBA;
-  else if (pngenc->bpp == 8)
-    color_type = PNG_COLOR_TYPE_GRAY;
-  else
-    color_type = PNG_COLOR_TYPE_RGB;
-
   png_set_IHDR (pngenc->png_struct_ptr,
       pngenc->png_info_ptr,
       pngenc->width,
       pngenc->height,
       8,
-      color_type,
+      pngenc->png_color_type,
       PNG_INTERLACE_NONE,
       PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
 

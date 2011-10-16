@@ -49,9 +49,9 @@ struct _GstPngEnc
   png_structp png_struct_ptr;
   png_infop png_info_ptr;
 
+  gint png_color_type;
   gint width;
   gint height;
-  gint bpp;
   gint stride;
   guint compression_level;
 
