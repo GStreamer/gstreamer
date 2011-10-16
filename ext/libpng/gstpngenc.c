@@ -57,8 +57,8 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("image/png, "
-        "width = (int) [ 16, 4096 ], "
-        "height = (int) [ 16, 4096 ], " "framerate = " GST_VIDEO_FPS_RANGE)
+        "width = (int) [ 16, 1000000 ], "
+        "height = (int) [ 16, 1000000 ], " "framerate = " GST_VIDEO_FPS_RANGE)
     );
 
 static GstStaticPadTemplate pngenc_sink_template =
@@ -174,8 +174,8 @@ gst_pngenc_setcaps (GstPad * pad, GstCaps * caps)
       goto done;
   }
 
-  if (G_UNLIKELY (pngenc->width < 16 || pngenc->width > 4096 ||
-          pngenc->height < 16 || pngenc->height > 4096)) {
+  if (G_UNLIKELY (pngenc->width < 16 || pngenc->width > 1000000 ||
+          pngenc->height < 16 || pngenc->height > 1000000)) {
     ret = FALSE;
     goto done;
   }
@@ -329,7 +329,7 @@ gst_pngenc_chain (GstPad * pad, GstBuffer * buf)
   png_set_write_fn (pngenc->png_struct_ptr, pngenc,
       (png_rw_ptr) user_write_data, user_flush_data);
 
-  row_pointers = g_newa (png_byte *, pngenc->height);
+  row_pointers = g_new (png_byte *, pngenc->height);
 
   for (row_index = 0; row_index < pngenc->height; row_index++) {
     row_pointers[row_index] = GST_BUFFER_DATA (buf) +
@@ -344,6 +344,8 @@ gst_pngenc_chain (GstPad * pad, GstBuffer * buf)
   png_write_info (pngenc->png_struct_ptr, pngenc->png_info_ptr);
   png_write_image (pngenc->png_struct_ptr, row_pointers);
   png_write_end (pngenc->png_struct_ptr, NULL);
+
+  g_free (row_pointers);
 
   encoded_buf = gst_buffer_create_sub (pngenc->buffer_out, 0, pngenc->written);
 
