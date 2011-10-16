@@ -474,6 +474,9 @@ gst_base_camera_src_change_state (GstElement * element,
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      gst_element_set_state (self->preview_pipeline->pipeline, GST_STATE_READY);
+      break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       gst_element_set_state (self->preview_pipeline->pipeline, GST_STATE_NULL);
       break;

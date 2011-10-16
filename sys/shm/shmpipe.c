@@ -78,7 +78,6 @@ enum
 };
 
 typedef struct _ShmArea ShmArea;
-typedef struct _ShmBuffer ShmBuffer;
 
 struct _ShmArea
 {
@@ -112,6 +111,8 @@ struct _ShmBuffer
 
   int num_clients;
   int clients[0];
+
+  uint64_t tag;
 };
 
 
@@ -542,7 +543,7 @@ sp_writer_free_block (ShmBlock * block)
 /* Returns the number of client this has successfully been sent to */
 
 int
-sp_writer_send_buf (ShmPipe * self, char *buf, size_t size)
+sp_writer_send_buf (ShmPipe * self, char *buf, size_t size, uint64_t tag)
 {
   ShmArea *area = NULL;
   unsigned long offset = 0;
@@ -577,6 +578,7 @@ sp_writer_send_buf (ShmPipe * self, char *buf, size_t size)
   sb->size = size;
   sb->num_clients = self->num_clients;
   sb->ablock = ablock;
+  sb->tag = tag;
 
   for (client = self->clients; client; client = client->next) {
     struct CommandBuffer cb = { 0 };
@@ -891,4 +893,22 @@ const char *
 sp_writer_get_path (ShmPipe * pipe)
 {
   return pipe->socket_path;
+}
+
+ShmBuffer *
+sp_writer_get_pending_buffers (ShmPipe * self)
+{
+  return self->buffers;
+}
+
+ShmBuffer *
+sp_writer_get_next_buffer (ShmBuffer * buffer)
+{
+  return buffer->next;
+}
+
+uint64_t
+sp_writer_buf_get_tag (ShmBuffer * buffer)
+{
+  return buffer->tag;
 }

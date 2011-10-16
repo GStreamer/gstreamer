@@ -1641,6 +1641,7 @@ static void
 gst_camerabin_start_video_recording (GstCameraBin * camera)
 {
   GstStateChangeReturn state_ret;
+  GstCameraBinVideo *vidbin = (GstCameraBinVideo *) camera->vidbin;
   /* FIXME: how to ensure resolution and fps is supported by CPU?
    * use a queue overrun signal?
    */
@@ -1654,9 +1655,14 @@ gst_camerabin_start_video_recording (GstCameraBin * camera)
   gst_camerabin_rewrite_tags (camera);
 
   /* Pause the pipeline in order to distribute new clock in paused_to_playing */
+  /* Audio source needs to go to null to reset the ringbuffer */
+  if (vidbin->aud_src)
+    gst_element_set_state (vidbin->aud_src, GST_STATE_NULL);
   state_ret = gst_element_set_state (GST_ELEMENT (camera), GST_STATE_PAUSED);
 
   if (state_ret != GST_STATE_CHANGE_FAILURE) {
+    GstClock *clock = gst_element_get_clock (GST_ELEMENT (camera));
+
     g_mutex_lock (camera->capture_mutex);
     camera->capturing = TRUE;
     g_mutex_unlock (camera->capture_mutex);
@@ -1671,6 +1677,11 @@ gst_camerabin_start_video_recording (GstCameraBin * camera)
             "capture-mode")) {
       g_object_set (G_OBJECT (camera->src_vid_src), "capture-mode", 2, NULL);
     }
+
+    /* Clock might be distributed as NULL to audiosrc, messing timestamping */
+    if (vidbin->aud_src)
+      gst_element_set_clock (vidbin->aud_src, clock);
+    gst_object_unref (clock);
 
     /* videobin will not go to playing if file is not writable */
     if (gst_element_set_state (GST_ELEMENT (camera), GST_STATE_PLAYING) ==

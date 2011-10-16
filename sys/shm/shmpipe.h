@@ -63,6 +63,7 @@
 #define __SHMPIPE_H__
 
 #include <stdlib.h>
+#include <stdint.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -75,6 +76,7 @@ extern "C" {
 typedef struct _ShmClient ShmClient;
 typedef struct _ShmPipe ShmPipe;
 typedef struct _ShmBlock ShmBlock;
+typedef struct _ShmBuffer ShmBuffer;
 
 ShmPipe *sp_writer_create (const char *path, size_t size, mode_t perms);
 const char *sp_writer_get_path (ShmPipe *pipe);
@@ -90,7 +92,7 @@ int sp_writer_get_client_fd (ShmClient * client);
 
 ShmBlock *sp_writer_alloc_block (ShmPipe * self, size_t size);
 void sp_writer_free_block (ShmBlock *block);
-int sp_writer_send_buf (ShmPipe * self, char *buf, size_t size);
+int sp_writer_send_buf (ShmPipe * self, char *buf, size_t size, uint64_t tag);
 char *sp_writer_block_get_buf (ShmBlock *block);
 ShmPipe *sp_writer_block_get_pipe (ShmBlock *block);
 
@@ -103,6 +105,10 @@ int sp_writer_pending_writes (ShmPipe * self);
 ShmPipe *sp_client_open (const char *path);
 long int sp_client_recv (ShmPipe * self, char **buf);
 int sp_client_recv_finish (ShmPipe * self, char *buf);
+
+ShmBuffer *sp_writer_get_pending_buffers (ShmPipe * self);
+ShmBuffer *sp_writer_get_next_buffer (ShmBuffer * buffer);
+uint64_t sp_writer_buf_get_tag (ShmBuffer * buffer);
 
 #ifdef __cplusplus
 }

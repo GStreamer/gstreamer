@@ -638,6 +638,13 @@ gst_camerabin_video_create_elements (GstCameraBinVideo * vid)
       G_CALLBACK (gst_camerabin_drop_eos_probe), vid);
   gst_object_unref (vid_srcpad);
 
+  /* audio source is not always present and might be set to NULL during operation */
+  if (vid->aud_src
+      && g_object_class_find_property (G_OBJECT_GET_CLASS (vid->aud_src),
+          "provide-clock")) {
+    g_object_set (vid->aud_src, "provide-clock", FALSE, NULL);
+  }
+
   GST_DEBUG ("created video elements");
 
   return TRUE;

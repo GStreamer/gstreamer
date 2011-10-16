@@ -406,8 +406,10 @@ gst_camera_bin_start_capture (GstCameraBin2 * camerabin)
   }
 
   /* store the next preview filename */
+  g_mutex_lock (camerabin->preview_list_mutex);
   camerabin->preview_location_list =
       g_slist_append (camerabin->preview_location_list, location);
+  g_mutex_unlock (camerabin->preview_list_mutex);
 
   g_signal_emit_by_name (camerabin->src, "start-capture", NULL);
   if (camerabin->mode == MODE_VIDEO && camerabin->audio_src)
@@ -518,6 +520,7 @@ gst_camera_bin_dispose (GObject * object)
   GstCameraBin2 *camerabin = GST_CAMERA_BIN2_CAST (object);
 
   g_free (camerabin->location);
+  g_mutex_free (camerabin->preview_list_mutex);
 
   if (camerabin->src_capture_notify_id)
     g_signal_handler_disconnect (camerabin->src,
@@ -873,6 +876,7 @@ gst_camera_bin_init (GstCameraBin2 * camera)
   camera->zoom = DEFAULT_ZOOM;
   camera->max_zoom = MAX_ZOOM;
   camera->flags = DEFAULT_FLAGS;
+  camera->preview_list_mutex = g_mutex_new ();
 
   /* capsfilters are created here as we proxy their caps properties and
    * this way we avoid having to store the caps while on NULL state to 
@@ -945,20 +949,31 @@ gst_camera_bin_handle_message (GstBin * bin, GstMessage * message)
         }
       } else if (gst_structure_has_name (structure, "preview-image")) {
         GValue *value;
-        gchar *location;
+        gchar *location = NULL;
 
-        location = camerabin->preview_location_list->data;
-        camerabin->preview_location_list =
-            g_slist_delete_link (camerabin->preview_location_list,
-            camerabin->preview_location_list);
-        GST_DEBUG_OBJECT (camerabin, "Adding preview location to preview "
-            "message '%s'", location);
+        g_mutex_lock (camerabin->preview_list_mutex);
+        if (camerabin->preview_location_list) {
+          location = camerabin->preview_location_list->data;
+          camerabin->preview_location_list =
+              g_slist_delete_link (camerabin->preview_location_list,
+              camerabin->preview_location_list);
+          GST_DEBUG_OBJECT (camerabin, "Adding preview location to preview "
+              "message '%s'", location);
+        } else {
+          GST_WARNING_OBJECT (camerabin, "Unexpected preview message received, "
+              "won't be able to put location field into the message. This can "
+              "happen if the source is posting previews while camerabin2 is "
+              "shutting down");
+        }
+        g_mutex_unlock (camerabin->preview_list_mutex);
 
-        value = g_new0 (GValue, 1);
-        g_value_init (value, G_TYPE_STRING);
-        g_value_take_string (value, location);
-        gst_structure_take_value ((GstStructure *) structure, "location",
-            value);
+        if (location) {
+          value = g_new0 (GValue, 1);
+          g_value_init (value, G_TYPE_STRING);
+          g_value_take_string (value, location);
+          gst_structure_take_value ((GstStructure *) structure, "location",
+              value);
+        }
       }
     }
       break;
@@ -1725,9 +1740,11 @@ gst_camera_bin_change_state (GstElement * element, GstStateChange trans)
       g_slist_free (camera->image_location_list);
       camera->image_location_list = NULL;
 
+      g_mutex_lock (camera->preview_list_mutex);
       g_slist_foreach (camera->preview_location_list, (GFunc) g_free, NULL);
       g_slist_free (camera->preview_location_list);
       camera->preview_location_list = NULL;
+      g_mutex_unlock (camera->preview_list_mutex);
 
       /* explicitly set to READY as they might be outside of the bin */
       gst_element_set_state (camera->audio_volume, GST_STATE_READY);
