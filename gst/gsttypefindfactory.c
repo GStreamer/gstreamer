@@ -91,14 +91,13 @@ GST_DEBUG_CATEGORY (type_find_debug);
 
 static void gst_type_find_factory_dispose (GObject * object);
 
-static GstPluginFeatureClass *parent_class = NULL;
-
 #define _do_init \
 { \
   GST_DEBUG_CATEGORY_INIT (type_find_debug, "GST_TYPEFIND", \
       GST_DEBUG_FG_GREEN, "typefinding subsystem"); \
 }
 
+#define gst_type_find_factory_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstTypeFindFactory, gst_type_find_factory,
     GST_TYPE_PLUGIN_FEATURE, _do_init);
 
@@ -106,8 +105,6 @@ static void
 gst_type_find_factory_class_init (GstTypeFindFactoryClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-
-  parent_class = g_type_class_peek_parent (klass);
 
   object_class->dispose = gst_type_find_factory_dispose;
 }

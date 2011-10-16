@@ -99,7 +99,6 @@ enum
 
 static void gst_bus_dispose (GObject * object);
 
-static GstObjectClass *parent_class = NULL;
 static guint gst_bus_signals[LAST_SIGNAL] = { 0 };
 
 struct _GstBusPrivate
@@ -112,6 +111,7 @@ struct _GstBusPrivate
   GPollFD pollfd;
 };
 
+#define gst_bus_parent_class parent_class
 G_DEFINE_TYPE (GstBus, gst_bus, GST_TYPE_OBJECT);
 
 static void
@@ -145,8 +145,6 @@ static void
 gst_bus_class_init (GstBusClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
-
-  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->dispose = gst_bus_dispose;
   gobject_class->set_property = gst_bus_set_property;

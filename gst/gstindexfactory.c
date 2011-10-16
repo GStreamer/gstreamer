@@ -39,17 +39,15 @@
 
 static void gst_index_factory_finalize (GObject * object);
 
-static GstPluginFeatureClass *factory_parent_class = NULL;
 
 /* static guint gst_index_factory_signals[LAST_SIGNAL] = { 0 }; */
+#define gst_index_factory_parent_class parent_class
 G_DEFINE_TYPE (GstIndexFactory, gst_index_factory, GST_TYPE_PLUGIN_FEATURE);
 
 static void
 gst_index_factory_class_init (GstIndexFactoryClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
-
-  factory_parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->finalize = gst_index_factory_finalize;
 }
@@ -66,7 +64,7 @@ gst_index_factory_finalize (GObject * object)
 
   g_free (factory->longdesc);
 
-  G_OBJECT_CLASS (factory_parent_class)->finalize (object);
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 
 }
 

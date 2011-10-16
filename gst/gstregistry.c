@@ -194,8 +194,8 @@ static GstPluginFeature *gst_registry_lookup_feature_locked (GstRegistry *
 static GstPlugin *gst_registry_lookup_bn_locked (GstRegistry * registry,
     const char *basename);
 
+#define gst_registry_parent_class parent_class
 G_DEFINE_TYPE (GstRegistry, gst_registry, GST_TYPE_OBJECT);
-static GstObjectClass *parent_class = NULL;
 
 static void
 gst_registry_class_init (GstRegistryClass * klass)
@@ -204,7 +204,6 @@ gst_registry_class_init (GstRegistryClass * klass)
 
   gobject_class = (GObjectClass *) klass;
 
-  parent_class = g_type_class_peek_parent (klass);
   g_type_class_add_private (klass, sizeof (GstRegistryPrivate));
 
   /**

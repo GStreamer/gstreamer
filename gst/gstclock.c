@@ -177,8 +177,6 @@ static void gst_clock_get_property (GObject * object, guint prop_id,
 static void gst_clock_update_stats (GstClock * clock);
 
 
-static GstObjectClass *parent_class = NULL;
-
 /* static guint gst_clock_signals[LAST_SIGNAL] = { 0 }; */
 
 static GstClockID
@@ -649,14 +647,13 @@ gst_clock_id_unschedule (GstClockID id)
 /*
  * GstClock abstract base class implementation
  */
+#define gst_clock_parent_class parent_class
 G_DEFINE_TYPE (GstClock, gst_clock, GST_TYPE_OBJECT);
 
 static void
 gst_clock_class_init (GstClockClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
-
-  parent_class = g_type_class_peek_parent (klass);
 
 #ifndef GST_DISABLE_TRACE
   _gst_clock_entry_trace =

@@ -123,10 +123,9 @@ static void gst_system_clock_add_wakeup (GstSystemClock * sysclock);
 
 static GStaticMutex _gst_sysclock_mutex = G_STATIC_MUTEX_INIT;
 
-static GstClockClass *parent_class = NULL;
-
 /* static guint gst_system_clock_signals[LAST_SIGNAL] = { 0 }; */
 
+#define gst_system_clock_parent_class parent_class
 G_DEFINE_TYPE (GstSystemClock, gst_system_clock, GST_TYPE_CLOCK);
 
 static void
@@ -137,8 +136,6 @@ gst_system_clock_class_init (GstSystemClockClass * klass)
 
   gobject_class = (GObjectClass *) klass;
   gstclock_class = (GstClockClass *) klass;
-
-  parent_class = g_type_class_peek_parent (klass);
 
   g_type_class_add_private (klass, sizeof (GstSystemClockPrivate));
 

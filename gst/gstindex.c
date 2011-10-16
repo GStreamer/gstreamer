@@ -100,7 +100,6 @@ static gboolean gst_index_gtype_resolver (GstIndex * index, GstObject * writer,
     gchar ** writer_string, gpointer data);
 static void gst_index_add_entry (GstIndex * index, GstIndexEntry * entry);
 
-static GstObject *parent_class = NULL;
 static guint gst_index_signals[LAST_SIGNAL] = { 0 };
 
 typedef struct
@@ -155,14 +154,13 @@ gst_index_entry_get_type (void)
       "Generic indexing support"); \
 }
 
+#define gst_index_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstIndex, gst_index, GST_TYPE_OBJECT, _do_init);
 
 static void
 gst_index_class_init (GstIndexClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
-
-  parent_class = g_type_class_peek_parent (klass);
 
   /**
    * GstIndex::entry-added
