@@ -3098,6 +3098,7 @@ gst_ogg_demux_get_duration_push (GstOggDemux * ogg, int flags)
   } else {
     GST_INFO_OBJECT (ogg, "Seek failed, duration will stay unknown");
     ogg->push_state = PUSH_PLAYING;
+    ogg->push_disable_seeking = TRUE;
     return FALSE;
   }
 }
