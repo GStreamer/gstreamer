@@ -271,6 +271,11 @@ gst_pngenc_chain (GstPad * pad, GstBuffer * buf)
 
   GST_DEBUG_OBJECT (pngenc, "BEGINNING");
 
+  if (G_UNLIKELY (pngenc->width <= 0 || pngenc->height <= 0)) {
+    ret = GST_FLOW_NOT_NEGOTIATED;
+    goto done;
+  }
+
   if (G_UNLIKELY (GST_BUFFER_SIZE (buf) < pngenc->height * pngenc->stride)) {
     gst_buffer_unref (buf);
     GST_ELEMENT_ERROR (pngenc, STREAM, FORMAT, (NULL),
