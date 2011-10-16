@@ -271,6 +271,14 @@ gst_pngenc_chain (GstPad * pad, GstBuffer * buf)
 
   GST_DEBUG_OBJECT (pngenc, "BEGINNING");
 
+  if (G_UNLIKELY (GST_BUFFER_SIZE (buf) < pngenc->height * pngenc->stride)) {
+    gst_buffer_unref (buf);
+    GST_ELEMENT_ERROR (pngenc, STREAM, FORMAT, (NULL),
+        ("Provided input buffer is too small, caps problem?"));
+    ret = GST_FLOW_ERROR;
+    goto done;
+  }
+
   /* initialize png struct stuff */
   pngenc->png_struct_ptr = png_create_write_struct (PNG_LIBPNG_VER_STRING,
       (png_voidp) NULL, user_error_fn, user_warning_fn);
