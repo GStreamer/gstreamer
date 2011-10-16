@@ -223,11 +223,14 @@
  * -ugly x264:          x264enc: x264enc
 
  * -bad  assrender:     assrender: ASS/SSA Render
+ * -bad  bayer:         bayer2rgb: Bayer to RGB decoder for cameras
+ * -bad  bayer:         rgb2bayer: RGB to Bayer converter
  * -bad  dataurisrc:    dataurisrc: data: URI source element
  * -bad  dvb:           dvbbasebin: DVB bin
  * -bad  dvb:           dvbsrc: DVB Source
  * -bad  dvbsuboverlay: dvbsuboverlay: DVB Subtitles Overlay
  * -bad  dvdspu:        dvdspu: Sub-picture Overlay
+ * -bad  faac:          faac: AAC audio encoder
  * -bad  faad:          faad: AAC audio decoder
  * -bad  flite:         flitetestsrc: Flite speech test source
  * -bad  gmedec:        gmedec: Gaming console music file decoder
@@ -301,8 +304,6 @@
    -bad  autoconvert:   autovideoconvert: Select color space convertor based on caps
    -bad  avcsrc:        avcsrc:
 
-   -bad  bayer:         bayer2rgb: Bayer to RGB decoder for cameras
-   -bad  bayer:         rgb2bayer: RGB to Bayer converter
          bluetooth:     a2dpsink: Bluetooth A2DP sink
          bluetooth:     avdtpsink: Bluetooth AVDTP sink
          bluetooth:     rtpsbcpay: RTP packet payloader
@@ -373,7 +374,6 @@
    -good efence:        efence: Electric Fence
    -good esdsink:       esdsink: Esound audio sink
 
-   -bad  faac:          faac: AAC audio encoder
    -bad  fbdevsink:     fbdevsink: fbdev video sink
    -bad  festival:      festival: Festival Text-to-Speech synthesizer
    -bad  fieldanalysis: fieldanalysis: Video field analysis
