@@ -30,8 +30,6 @@
 #include <gst/video/video.h>
 #include <zlib.h>
 
-#define MAX_HEIGHT              4096
-
 GST_DEBUG_CATEGORY_STATIC (pngenc_debug);
 #define GST_CAT_DEFAULT pngenc_debug
 
@@ -263,7 +261,7 @@ gst_pngenc_chain (GstPad * pad, GstBuffer * buf)
 {
   GstPngEnc *pngenc;
   gint row_index;
-  png_byte *row_pointers[MAX_HEIGHT];
+  png_byte **row_pointers;
   GstFlowReturn ret = GST_FLOW_OK;
   GstBuffer *encoded_buf = NULL;
 
@@ -330,6 +328,8 @@ gst_pngenc_chain (GstPad * pad, GstBuffer * buf)
 
   png_set_write_fn (pngenc->png_struct_ptr, pngenc,
       (png_rw_ptr) user_write_data, user_flush_data);
+
+  row_pointers = g_newa (png_byte *, pngenc->height);
 
   for (row_index = 0; row_index < pngenc->height; row_index++) {
     row_pointers[row_index] = GST_BUFFER_DATA (buf) +
