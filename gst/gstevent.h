@@ -281,8 +281,16 @@ extern GType _gst_event_type;
  *
  * Returns: TRUE if @new_event was different from @old_event
  */
-#define         gst_event_replace(old_event,new_event) \
-    gst_mini_object_replace ((GstMiniObject **)(old_event), GST_MINI_OBJECT_CAST (new_event))
+#ifdef _FOOL_GTK_DOC_
+G_INLINE_FUNC void gst_event_replace (GstEvent **old_event, GstEvent *new_event);
+#endif
+
+static inline void
+gst_event_replace (GstEvent **old_event, GstEvent *new_event)
+{
+  gst_mini_object_replace ((GstMiniObject **) old_event, (GstMiniObject *) new_event);
+}
+
 /**
  * gst_event_steal:
  * @old_event: (inout) (transfer full): pointer to a pointer to a #GstEvent

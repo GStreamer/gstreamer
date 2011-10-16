@@ -2567,12 +2567,12 @@ restart:
         break;
       }
       case GST_ITERATOR_RESYNC:
-        GST_CAT_DEBUG (GST_CAT_STATES, "iterator doing resync");
+        GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element, "iterator doing resync");
         gst_iterator_resync (it);
         goto restart;
       default:
       case GST_ITERATOR_DONE:
-        GST_CAT_DEBUG (GST_CAT_STATES, "iterator done");
+        GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element, "iterator done");
         done = TRUE;
         break;
     }
@@ -2583,12 +2583,13 @@ restart:
     goto done;
 
   if (have_no_preroll) {
-    GST_CAT_DEBUG (GST_CAT_STATES,
+    GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, bin,
         "we have NO_PREROLL elements %s -> NO_PREROLL",
         gst_element_state_change_return_get_name (ret));
     ret = GST_STATE_CHANGE_NO_PREROLL;
   } else if (have_async) {
-    GST_CAT_DEBUG (GST_CAT_STATES, "we have ASYNC elements %s -> ASYNC",
+    GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, bin,
+        "we have ASYNC elements %s -> ASYNC",
         gst_element_state_change_return_get_name (ret));
     ret = GST_STATE_CHANGE_ASYNC;
   }

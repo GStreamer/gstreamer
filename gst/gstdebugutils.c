@@ -81,7 +81,9 @@ debug_dump_get_element_state (GstElement * element)
 
   gst_element_get_state (element, &state, &pending, 0);
   if (pending == GST_STATE_VOID_PENDING) {
-    state_name = g_strdup_printf ("\\n[%c]", state_icons[state]);
+    gboolean is_locked = gst_element_is_locked_state (element);
+    state_name = g_strdup_printf ("\\n[%c]%s", state_icons[state],
+        (is_locked ? "(locked)" : ""));
   } else {
     state_name = g_strdup_printf ("\\n[%c] -> [%c]", state_icons[state],
         state_icons[pending]);
