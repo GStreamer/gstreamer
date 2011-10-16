@@ -249,6 +249,7 @@
  * -bad  rtmpsrc:       rtmpsrc: RTMP Source
  * -bad  rtmpsink:      rtmpsink:
  * -bad  sdp:           sdpdemux: SDP session setup
+ * -bad  y4mdec:        y4mdec: YUV4MPEG demuxer/decoder
  * -bad  zbar:          zbar: Barcode detector
 
  * -ff   ffmpeg:
@@ -582,6 +583,4 @@
    -ugly xingmux:       xingmux: MP3 Xing muxer
    -bad  xvid:          xviddec: XviD video decoder
    -bad  xvid:          xvidenc: XviD video encoder
-
-   -bad  y4mdec:        y4mdec: YUV4MPEG demuxer/decoder
 
