@@ -123,7 +123,6 @@ enum
   LAST_SIGNAL
 };
 
-static GstObject *parent_class = NULL;
 static guint gst_pad_template_signals[LAST_SIGNAL] = { 0 };
 
 static void gst_pad_template_dispose (GObject * object);
@@ -132,6 +131,7 @@ static void gst_pad_template_set_property (GObject * object, guint prop_id,
 static void gst_pad_template_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
+#define gst_pad_template_parent_class parent_class
 G_DEFINE_TYPE (GstPadTemplate, gst_pad_template, GST_TYPE_OBJECT);
 
 static void
@@ -142,8 +142,6 @@ gst_pad_template_class_init (GstPadTemplateClass * klass)
 
   gobject_class = (GObjectClass *) klass;
   gstobject_class = (GstObjectClass *) klass;
-
-  parent_class = g_type_class_peek_parent (klass);
 
   /**
    * GstPadTemplate::pad-created:
