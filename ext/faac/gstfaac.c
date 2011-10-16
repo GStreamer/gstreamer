@@ -56,11 +56,8 @@
                     "88200, " \
                     "96000"
 #define SINK_CAPS \
-    "audio/x-raw-int, "                \
-    "endianness = (int) BYTE_ORDER, "  \
-    "signed = (boolean) true, "        \
-    "width = (int) 16, "               \
-    "depth = (int) 16, "               \
+    "audio/x-raw, "                \
+    "format = (string) "GST_AUDIO_NE (S16) ", "  \
     "rate = (int) {" SAMPLE_RATES "}, "   \
     "channels = (int) [ 1, 6 ] "
 
@@ -125,7 +122,7 @@ static void gst_faac_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
 static gboolean gst_faac_configure_source_pad (GstFaac * faac);
-static GstCaps *gst_faac_getcaps (GstAudioEncoder * enc);
+static GstCaps *gst_faac_getcaps (GstAudioEncoder * enc, GstCaps * filter);
 
 static gboolean gst_faac_start (GstAudioEncoder * enc);
 static gboolean gst_faac_stop (GstAudioEncoder * enc);
@@ -144,25 +141,8 @@ GST_DEBUG_CATEGORY_STATIC (faac_debug);
 #define FAAC_DEFAULT_MIDSIDE      TRUE
 #define FAAC_DEFAULT_SHORTCTL     SHORTCTL_NORMAL
 
-GST_BOILERPLATE (GstFaac, gst_faac, GstAudioEncoder, GST_TYPE_AUDIO_ENCODER);
-
-static void
-gst_faac_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_template));
-
-  gst_element_class_set_details_simple (element_class, "AAC audio encoder",
-      "Codec/Encoder/Audio",
-      "Free MPEG-2/4 AAC encoder",
-      "Ronald Bultje <rbultje@ronald.bitfreak.net>");
-
-  GST_DEBUG_CATEGORY_INIT (faac_debug, "faac", 0, "AAC encoding");
-}
+#define gst_faac_parent_class parent_class
+G_DEFINE_TYPE (GstFaac, gst_faac, GST_TYPE_AUDIO_ENCODER);
 
 #define GST_TYPE_FAAC_RATE_CONTROL (gst_faac_brtype_get_type ())
 static GType
@@ -209,12 +189,21 @@ static void
 gst_faac_class_init (GstFaacClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
   GstAudioEncoderClass *base_class = GST_AUDIO_ENCODER_CLASS (klass);
-
-  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->set_property = gst_faac_set_property;
   gobject_class->get_property = gst_faac_get_property;
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&src_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sink_template));
+
+  gst_element_class_set_details_simple (gstelement_class, "AAC audio encoder",
+      "Codec/Encoder/Audio",
+      "Free MPEG-2/4 AAC encoder",
+      "Ronald Bultje <rbultje@ronald.bitfreak.net>");
 
   base_class->start = GST_DEBUG_FUNCPTR (gst_faac_start);
   base_class->stop = GST_DEBUG_FUNCPTR (gst_faac_stop);
@@ -251,10 +240,12 @@ gst_faac_class_init (GstFaacClass * klass)
           "Block type encorcing",
           GST_TYPE_FAAC_SHORTCTL, FAAC_DEFAULT_SHORTCTL,
           G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  GST_DEBUG_CATEGORY_INIT (faac_debug, "faac", 0, "AAC encoding");
 }
 
 static void
-gst_faac_init (GstFaac * faac, GstFaacClass * klass)
+gst_faac_init (GstFaac * faac)
 {
 }
 
@@ -315,7 +306,7 @@ static const GstAudioChannelPosition aac_channel_positions[][8] = {
 };
 
 static GstCaps *
-gst_faac_getcaps (GstAudioEncoder * enc)
+gst_faac_getcaps (GstAudioEncoder * enc, GstCaps * filter)
 {
   static volatile gsize sinkcaps = 0;
 
@@ -338,10 +329,8 @@ gst_faac_getcaps (GstAudioEncoder * enc)
     }
     g_value_unset (&tmp_v);
 
-    s = gst_structure_new ("audio/x-raw-int",
-        "endianness", G_TYPE_INT, G_BYTE_ORDER,
-        "signed", G_TYPE_BOOLEAN, TRUE,
-        "width", G_TYPE_INT, 16, "depth", G_TYPE_INT, 16, NULL);
+    s = gst_structure_new ("audio/x-raw",
+        "format", G_TYPE_STRING, GST_AUDIO_NE (S16), NULL);
     gst_structure_set_value (s, "rate", &rates_arr);
 
     for (i = 1; i <= 6; i++) {
@@ -588,7 +577,7 @@ gst_faac_configure_source_pad (GstFaac * faac)
 
       /* copy it into a buffer */
       codec_data = gst_buffer_new_and_alloc (config_len);
-      memcpy (GST_BUFFER_DATA (codec_data), config, config_len);
+      gst_buffer_fill (codec_data, 0, config, config_len);
 
       /* add to caps */
       gst_caps_set_simple (srccaps,
@@ -647,28 +636,35 @@ gst_faac_handle_frame (GstAudioEncoder * enc, GstBuffer * in_buf)
   GstFaac *faac = GST_FAAC (enc);
   GstFlowReturn ret = GST_FLOW_OK;
   GstBuffer *out_buf;
-  gint size, ret_size;
-  const guint8 *data;
+  gsize size, ret_size;
+  guint8 *data;
+  guint8 *out_data;
+  gsize out_size;
 
   out_buf = gst_buffer_new_and_alloc (faac->bytes);
+  out_data = gst_buffer_map (out_buf, &out_size, NULL, GST_MAP_WRITE);
 
   if (G_LIKELY (in_buf)) {
-    data = GST_BUFFER_DATA (in_buf);
-    size = GST_BUFFER_SIZE (in_buf);
+    data = gst_buffer_map (in_buf, &size, NULL, GST_MAP_READ);
   } else {
     data = NULL;
     size = 0;
   }
 
   if (G_UNLIKELY ((ret_size = faacEncEncode (faac->handle, (gint32 *) data,
-                  size / faac->bps, GST_BUFFER_DATA (out_buf),
-                  GST_BUFFER_SIZE (out_buf))) < 0))
+                  size / faac->bps, out_data, out_size)) < 0))
     goto encode_failed;
 
+  gst_buffer_unmap (in_buf, data, size);
+
   GST_LOG_OBJECT (faac, "encoder return: %d", ret_size);
+
   if (ret_size > 0) {
-    GST_BUFFER_SIZE (out_buf) = ret_size;
+    gst_buffer_unmap (out_buf, out_data, ret_size);
     ret = gst_audio_encoder_finish_frame (enc, out_buf, faac->samples);
+  } else {
+    gst_buffer_unmap (out_buf, out_data, 0);
+    gst_buffer_unref (out_buf);
   }
 
   return ret;
@@ -677,6 +673,9 @@ gst_faac_handle_frame (GstAudioEncoder * enc, GstBuffer * in_buf)
 encode_failed:
   {
     GST_ELEMENT_ERROR (faac, LIBRARY, ENCODE, (NULL), (NULL));
+    gst_buffer_unmap (in_buf, data, size);
+    gst_buffer_unmap (out_buf, out_data, 0);
+    gst_buffer_unref (out_buf);
     return GST_FLOW_ERROR;
   }
 }
