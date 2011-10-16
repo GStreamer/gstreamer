@@ -107,7 +107,7 @@ static GstCaps *gst_video_crop_transform_caps (GstBaseTransform * trans,
 static GstFlowReturn gst_video_crop_transform (GstBaseTransform * trans,
     GstBuffer * inbuf, GstBuffer * outbuf);
 static gboolean gst_video_crop_get_unit_size (GstBaseTransform * trans,
-    GstCaps * caps, guint * size);
+    GstCaps * caps, gsize * size);
 static gboolean gst_video_crop_set_caps (GstBaseTransform * trans,
     GstCaps * in_caps, GstCaps * outcaps);
 static gboolean gst_video_crop_src_event (GstBaseTransform * trans,
@@ -290,7 +290,7 @@ incomplete_format:
 
 static gboolean
 gst_video_crop_get_unit_size (GstBaseTransform * trans, GstCaps * caps,
-    guint * size)
+    gsize * size)
 {
   GstVideoCropImageDetails img_details = { 0, };
   GstVideoCrop *vcrop = GST_VIDEO_CROP (trans);
