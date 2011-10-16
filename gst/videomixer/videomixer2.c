@@ -760,7 +760,7 @@ gst_videomixer2_fill_queues (GstVideoMixer2 * mix,
 
         if (buf == mixcol->queued) {
           gst_buffer_unref (buf);
-          gst_buffer_replace (mixcol->queued, NULL);
+          gst_buffer_replace (&mixcol->queued, NULL);
         } else {
           gst_buffer_unref (buf);
           buf = gst_collect_pads2_pop (mix->collect, &mixcol->collect);
@@ -770,6 +770,7 @@ gst_videomixer2_fill_queues (GstVideoMixer2 * mix,
       } else if (start_time >= output_end_time) {
         GST_DEBUG_OBJECT (pad, "Keeping buffer until %" GST_TIME_FORMAT,
             GST_TIME_ARGS (start_time));
+        gst_buffer_unref (buf);
         eos = FALSE;
       } else {
         GST_DEBUG_OBJECT (pad, "Too old buffer -- dropping");
