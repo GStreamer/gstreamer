@@ -357,11 +357,17 @@ gst_play_sink_convert_bin_getcaps (GstPad * pad)
     if (peer) {
       GstCaps *peer_caps = gst_pad_get_caps_reffed (peer);
       gst_object_unref (peer);
-      ret = gst_caps_union (peer_caps, self->converter_caps);
-      gst_caps_unref (peer_caps);
+      if (self->converter_caps) {
+        ret = gst_caps_union (peer_caps, self->converter_caps);
+        gst_caps_unref (peer_caps);
+      } else {
+        ret = peer_caps;
+      }
     } else {
       ret = gst_caps_ref (self->converter_caps);
     }
+  } else {
+    ret = gst_caps_new_any ();
   }
   GST_PLAY_SINK_CONVERT_BIN_UNLOCK (self);
 
@@ -389,13 +395,17 @@ gst_play_sink_convert_bin_cache_converter_caps (GstPlaySinkConvertBin * self)
 
   self->converter_caps = NULL;
 
-  if (!self->conversion_elements)
+  if (!self->conversion_elements) {
+    GST_WARNING_OBJECT (self, "No conversion elements");
     return;
+  }
 
   head = GST_ELEMENT (g_list_first (self->conversion_elements)->data);
   pad = gst_element_get_static_pad (head, "sink");
-  if (!pad)
+  if (!pad) {
+    GST_WARNING_OBJECT (self, "No sink pad found");
     return;
+  }
 
   self->converter_caps = gst_pad_get_caps_reffed (pad);
   GST_INFO_OBJECT (self, "Converter caps: %" GST_PTR_FORMAT,
