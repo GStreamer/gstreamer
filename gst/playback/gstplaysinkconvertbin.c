@@ -150,6 +150,8 @@ gst_play_sink_convert_bin_set_targets (GstPlaySinkConvertBin * self,
   GST_DEBUG_OBJECT (self, "Setting pad targets with passthrough %d",
       passthrough);
   if (self->conversion_elements == NULL || passthrough) {
+    GST_DEBUG_OBJECT (self, "no conversion elements, using identity (%p) as "
+        "head/tail", self->identity);
     if (!passthrough) {
       GST_WARNING_OBJECT (self,
           "Doing passthrough as no converter elements were added");
@@ -158,7 +160,12 @@ gst_play_sink_convert_bin_set_targets (GstPlaySinkConvertBin * self,
   } else {
     head = GST_ELEMENT (g_list_first (self->conversion_elements)->data);
     tail = GST_ELEMENT (g_list_last (self->conversion_elements)->data);
+    GST_DEBUG_OBJECT (self, "conversion elements in use, picking "
+        "head:%s and tail:%s", GST_OBJECT_NAME (head), GST_OBJECT_NAME (tail));
   }
+
+  g_return_if_fail (head != NULL);
+  g_return_if_fail (tail != NULL);
 
   pad = gst_element_get_static_pad (head, "sink");
   GST_DEBUG_OBJECT (self, "Ghosting bin sink pad to %" GST_PTR_FORMAT, pad);
