@@ -288,7 +288,8 @@ gst_audio_convert_caps_remove_format_info (GstCaps * caps)
       continue;
 
     st = gst_structure_copy (st);
-    gst_structure_remove_fields (st, "format", "channel-positions", NULL);
+    gst_structure_remove_fields (st, "format", "channel-positions", "channels",
+        NULL);
 
     gst_caps_append_structure (res, st);
   }
