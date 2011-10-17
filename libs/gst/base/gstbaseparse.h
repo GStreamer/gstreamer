@@ -191,6 +191,7 @@ struct _GstBaseParse {
  *                  Called when the element stops processing.
  *                  Allows closing external resources.
  * @set_sink_caps:  allows the subclass to be notified of the actual caps set.
+ * @get_sink_caps:  allows the subclass to do its own sink get caps if needed.
  * @check_valid_frame:  Check if the given piece of data contains a valid
  *                      frame.
  * @parse_frame:    Parse the already checked frame. Subclass need to
@@ -252,8 +253,10 @@ struct _GstBaseParseClass {
   gboolean      (*src_event)          (GstBaseParse * parse,
                                        GstEvent     * event);
 
+  GstCaps *     (*get_sink_caps)      (GstBaseParse * parse);
+
   /*< private >*/
-  gpointer       _gst_reserved[GST_PADDING_LARGE];
+  gpointer       _gst_reserved[GST_PADDING_LARGE - 1];
 };
 
 GType           gst_base_parse_get_type (void);

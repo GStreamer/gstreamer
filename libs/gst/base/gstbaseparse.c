@@ -379,6 +379,7 @@ static gboolean gst_base_parse_src_event (GstPad * pad, GstEvent * event);
 static gboolean gst_base_parse_sink_event (GstPad * pad, GstEvent * event);
 static gboolean gst_base_parse_query (GstPad * pad, GstQuery * query);
 static gboolean gst_base_parse_sink_setcaps (GstPad * pad, GstCaps * caps);
+static GstCaps *gst_base_parse_sink_getcaps (GstPad * pad);
 static const GstQueryType *gst_base_parse_get_querytypes (GstPad * pad);
 
 static GstFlowReturn gst_base_parse_chain (GstPad * pad, GstBuffer * buffer);
@@ -512,6 +513,8 @@ gst_base_parse_init (GstBaseParse * parse, GstBaseParseClass * bclass)
       GST_DEBUG_FUNCPTR (gst_base_parse_sink_event));
   gst_pad_set_setcaps_function (parse->sinkpad,
       GST_DEBUG_FUNCPTR (gst_base_parse_sink_setcaps));
+  gst_pad_set_getcaps_function (parse->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_base_parse_sink_getcaps));
   gst_pad_set_chain_function (parse->sinkpad,
       GST_DEBUG_FUNCPTR (gst_base_parse_chain));
   gst_pad_set_activate_function (parse->sinkpad,
@@ -3854,6 +3857,29 @@ gst_base_parse_sink_setcaps (GstPad * pad, GstCaps * caps)
     res = klass->set_sink_caps (parse, caps);
 
   return res;
+}
+
+static GstCaps *
+gst_base_parse_sink_getcaps (GstPad * pad)
+{
+  GstBaseParse *parse;
+  GstBaseParseClass *klass;
+  GstCaps *caps;
+
+  parse = GST_BASE_PARSE (gst_pad_get_parent (pad));
+  klass = GST_BASE_PARSE_GET_CLASS (parse);
+  g_assert (pad == GST_BASE_PARSE_SINK_PAD (parse));
+
+  if (klass->get_sink_caps)
+    caps = klass->get_sink_caps (parse);
+  else
+    caps = gst_pad_proxy_getcaps (pad);
+  gst_object_unref (parse);
+
+  GST_LOG_OBJECT (parse, "sink getcaps returning caps %" GST_PTR_FORMAT, caps);
+
+  return caps;
+
 }
 
 static void
