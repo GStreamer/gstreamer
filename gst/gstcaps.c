@@ -374,10 +374,9 @@ gst_static_caps_get (GstStaticCaps * static_caps)
     if (G_UNLIKELY (!gst_caps_from_string_inplace (&temp, string)))
       g_critical ("Could not convert static caps \"%s\"", string);
 
-    gst_caps_init (caps, sizeof (GstCaps));
-    /* now copy stuff over to the real caps. */
-    GST_CAPS_FLAGS (caps) = GST_CAPS_FLAGS (&temp);
-    caps->priv = GST_CAPS_ARRAY (&temp);
+    GST_MINI_OBJECT_REFCOUNT (&temp) = 0;
+    memcpy (caps, &temp, sizeof (GstCaps));
+    gst_caps_ref (caps);
 
     GST_CAT_TRACE (GST_CAT_CAPS, "created %p", static_caps);
   done:
