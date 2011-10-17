@@ -1799,9 +1799,15 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw)
 
   if (!(playsink->flags & GST_PLAY_FLAG_NATIVE_AUDIO) || (!have_volume
           && playsink->flags & GST_PLAY_FLAG_SOFT_VOLUME)) {
-    GST_DEBUG_OBJECT (playsink, "creating audioconvert");
+    gboolean use_converters = !(playsink->flags & GST_PLAY_FLAG_NATIVE_AUDIO);
+    gboolean use_volume =
+        !have_volume && playsink->flags & GST_PLAY_FLAG_SOFT_VOLUME;
+    GST_DEBUG_OBJECT (playsink,
+        "creating audioconvert with use-converters %d, use-volume %d",
+        use_converters, use_volume);
     chain->conv =
-        g_object_new (GST_TYPE_PLAY_SINK_AUDIO_CONVERT, "name", "aconv", NULL);
+        g_object_new (GST_TYPE_PLAY_SINK_AUDIO_CONVERT, "name", "aconv",
+        "use-converters", use_converters, "use-volume", use_volume, NULL);
     gst_bin_add (bin, chain->conv);
     if (prev) {
       if (!gst_element_link_pads_full (prev, "src", chain->conv, "sink",
@@ -1811,11 +1817,6 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw)
       head = chain->conv;
     }
     prev = chain->conv;
-
-    GST_PLAY_SINK_AUDIO_CONVERT_CAST (chain->conv)->use_converters =
-        !(playsink->flags & GST_PLAY_FLAG_NATIVE_AUDIO);
-    GST_PLAY_SINK_AUDIO_CONVERT_CAST (chain->conv)->use_volume = (!have_volume
-        && playsink->flags & GST_PLAY_FLAG_SOFT_VOLUME);
 
     if (!have_volume && playsink->flags & GST_PLAY_FLAG_SOFT_VOLUME) {
       GstPlaySinkAudioConvert *conv =
@@ -1964,13 +1965,13 @@ setup_audio_chain (GstPlaySink * playsink, gboolean raw)
           G_CALLBACK (notify_mute_cb), playsink);
     }
 
-    GST_PLAY_SINK_AUDIO_CONVERT_CAST (chain->conv)->use_volume = FALSE;
+    g_object_set (chain->conv, "use-volume", FALSE, NULL);
   } else {
     GstPlaySinkAudioConvert *conv =
         GST_PLAY_SINK_AUDIO_CONVERT_CAST (chain->conv);
 
     /* no volume, we need to add a volume element when we can */
-    conv->use_volume = TRUE;
+    g_object_set (chain->conv, "use-volume", TRUE, NULL);
     GST_DEBUG_OBJECT (playsink, "the sink has no volume property");
 
     /* Disconnect signals */
@@ -3028,14 +3029,14 @@ caps_notify_cb (GstPad * pad, GParamSpec * unused, GstPlaySink * playsink)
 
   if (pad == playsink->audio_pad) {
     raw = is_raw_pad (pad);
-    reconfigure = (! !playsink->audio_pad_raw != ! !raw)
+    reconfigure = (!!playsink->audio_pad_raw != !!raw)
         && playsink->audiochain;
     GST_DEBUG_OBJECT (pad,
         "Audio caps changed: raw %d reconfigure %d caps %" GST_PTR_FORMAT, raw,
         reconfigure, caps);
   } else if (pad == playsink->video_pad) {
     raw = is_raw_pad (pad);
-    reconfigure = (! !playsink->video_pad_raw != ! !raw)
+    reconfigure = (!!playsink->video_pad_raw != !!raw)
         && playsink->videochain;
     GST_DEBUG_OBJECT (pad,
         "Video caps changed: raw %d reconfigure %d caps %" GST_PTR_FORMAT, raw,

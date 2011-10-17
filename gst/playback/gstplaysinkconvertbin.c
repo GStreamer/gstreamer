@@ -147,6 +147,8 @@ gst_play_sink_convert_bin_set_targets (GstPlaySinkConvertBin * self,
   GstPad *pad;
   GstElement *head, *tail;
 
+  GST_DEBUG_OBJECT (self, "Setting pad targets with passthrough %d",
+      passthrough);
   if (self->conversion_elements == NULL || passthrough) {
     if (!passthrough) {
       GST_WARNING_OBJECT (self,
@@ -159,10 +161,12 @@ gst_play_sink_convert_bin_set_targets (GstPlaySinkConvertBin * self,
   }
 
   pad = gst_element_get_static_pad (head, "sink");
+  GST_DEBUG_OBJECT (self, "Ghosting bin sink pad to %" GST_PTR_FORMAT, pad);
   gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (self->sinkpad), pad);
   gst_object_unref (pad);
 
   pad = gst_element_get_static_pad (tail, "src");
+  GST_DEBUG_OBJECT (self, "Ghosting bin src pad to %" GST_PTR_FORMAT, pad);
   gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (self->srcpad), pad);
   gst_object_unref (pad);
 }
@@ -289,6 +293,7 @@ gst_play_sink_convert_bin_sink_setcaps (GstPad * pad, GstCaps * caps)
   gboolean reconfigure = FALSE;
   gboolean raw;
 
+  GST_DEBUG_OBJECT (pad, "setcaps: %" GST_PTR_FORMAT, caps);
   GST_PLAY_SINK_CONVERT_BIN_LOCK (self);
   s = gst_caps_get_structure (caps, 0);
   name = gst_structure_get_name (s);
@@ -299,6 +304,8 @@ gst_play_sink_convert_bin_sink_setcaps (GstPad * pad, GstCaps * caps)
     raw = g_str_has_prefix (name, "video/x-raw-");
   }
 
+  GST_DEBUG_OBJECT (self, "raw %d, self->raw %d, blocked %d",
+      raw, self->raw, gst_pad_is_blocked (self->sink_proxypad));
   if (raw) {
     if (!self->raw && !gst_pad_is_blocked (self->sink_proxypad)) {
       GST_DEBUG_OBJECT (self, "Changing caps from non-raw to raw");
@@ -376,10 +383,32 @@ gst_play_sink_convert_bin_getcaps (GstPad * pad)
   return ret;
 }
 
+void
+gst_play_sink_convert_bin_remove_elements (GstPlaySinkConvertBin * self)
+{
+  if (self->conversion_elements) {
+    g_list_foreach (self->conversion_elements,
+        (GFunc) gst_play_sink_convert_bin_remove_element, self);
+    g_list_free (self->conversion_elements);
+    self->conversion_elements = NULL;
+  }
+  if (self->identity) {
+    gst_element_set_state (self->identity, GST_STATE_NULL);
+    gst_bin_remove (GST_BIN_CAST (self), self->identity);
+    self->identity = NULL;
+  }
+  if (self->converter_caps) {
+    gst_caps_unref (self->converter_caps);
+    self->converter_caps = NULL;
+  }
+}
+
 static void
 gst_play_sink_convert_bin_finalize (GObject * object)
 {
   GstPlaySinkConvertBin *self = GST_PLAY_SINK_CONVERT_BIN_CAST (object);
+
+  gst_play_sink_convert_bin_remove_elements (self);
 
   gst_object_unref (self->sink_proxypad);
   g_mutex_free (self->lock);
@@ -387,13 +416,16 @@ gst_play_sink_convert_bin_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
-static void
+void
 gst_play_sink_convert_bin_cache_converter_caps (GstPlaySinkConvertBin * self)
 {
   GstElement *head;
   GstPad *pad;
 
-  self->converter_caps = NULL;
+  if (self->converter_caps) {
+    gst_caps_unref (self->converter_caps);
+    self->converter_caps = NULL;
+  }
 
   if (!self->conversion_elements) {
     GST_WARNING_OBJECT (self, "No conversion elements");
@@ -422,17 +454,6 @@ gst_play_sink_convert_bin_change_state (GstElement * element,
   GstPlaySinkConvertBin *self = GST_PLAY_SINK_CONVERT_BIN_CAST (element);
 
   switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
-      GST_PLAY_SINK_CONVERT_BIN_LOCK (self);
-      g_assert (self->add_conversion_elements);
-      if (!(*self->add_conversion_elements) (self)) {
-        GST_ELEMENT_ERROR (self, CORE, PAD,
-            (NULL), ("Failed to configure the converter bin."));
-      }
-      gst_play_sink_convert_bin_cache_converter_caps (self);
-      gst_play_sink_convert_bin_add_identity (self);
-      GST_PLAY_SINK_CONVERT_BIN_UNLOCK (self);
-      break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       GST_PLAY_SINK_CONVERT_BIN_LOCK (self);
       if (gst_pad_is_blocked (self->sink_proxypad))
@@ -463,25 +484,6 @@ gst_play_sink_convert_bin_change_state (GstElement * element,
         gst_pad_set_blocked_async_full (self->sink_proxypad, TRUE,
             (GstPadBlockCallback) pad_blocked_cb, gst_object_ref (self),
             (GDestroyNotify) gst_object_unref);
-      GST_PLAY_SINK_CONVERT_BIN_UNLOCK (self);
-      break;
-    case GST_STATE_CHANGE_READY_TO_NULL:
-      GST_PLAY_SINK_CONVERT_BIN_LOCK (self);
-      if (self->conversion_elements) {
-        g_list_foreach (self->conversion_elements,
-            (GFunc) gst_play_sink_convert_bin_remove_element, self);
-        g_list_free (self->conversion_elements);
-        self->conversion_elements = NULL;
-      }
-      if (self->identity) {
-        gst_element_set_state (self->identity, GST_STATE_NULL);
-        gst_bin_remove (GST_BIN_CAST (self), self->identity);
-        self->identity = NULL;
-      }
-      if (self->converter_caps) {
-        gst_caps_unref (self->converter_caps);
-        self->converter_caps = NULL;
-      }
       GST_PLAY_SINK_CONVERT_BIN_UNLOCK (self);
       break;
     default:
@@ -547,4 +549,6 @@ gst_play_sink_convert_bin_init (GstPlaySinkConvertBin * self)
       GST_DEBUG_FUNCPTR (gst_play_sink_convert_bin_getcaps));
   gst_element_add_pad (GST_ELEMENT_CAST (self), self->srcpad);
   gst_object_unref (templ);
+
+  gst_play_sink_convert_bin_add_identity (self);
 }

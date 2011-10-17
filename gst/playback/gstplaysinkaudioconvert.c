@@ -34,14 +34,25 @@ GST_DEBUG_CATEGORY_STATIC (gst_play_sink_audio_convert_debug);
 G_DEFINE_TYPE (GstPlaySinkAudioConvert, gst_play_sink_audio_convert,
     GST_TYPE_PLAY_SINK_CONVERT_BIN);
 
-static gboolean
-gst_play_sink_audio_convert_add_conversion_elements (GstPlaySinkConvertBin *
-    cbin)
+enum
 {
-  GstPlaySinkAudioConvert *self = GST_PLAY_SINK_AUDIO_CONVERT (cbin);
+  PROP_0,
+  PROP_USE_CONVERTERS,
+  PROP_USE_VOLUME,
+};
+
+static gboolean
+gst_play_sink_audio_convert_add_conversion_elements (GstPlaySinkAudioConvert *
+    self)
+{
+  GstPlaySinkConvertBin *cbin = GST_PLAY_SINK_CONVERT_BIN (self);
   GstElement *el, *prev = NULL;
 
   g_assert (cbin->conversion_elements == NULL);
+
+  GST_DEBUG_OBJECT (self,
+      "Building audio conversion with use-converters %d, use-volume %d",
+      self->use_converters, self->use_volume);
 
   if (self->use_converters) {
     el = gst_play_sink_convert_bin_add_conversion_element_factory (cbin,
@@ -73,6 +84,7 @@ gst_play_sink_audio_convert_add_conversion_elements (GstPlaySinkConvertBin *
     }
     prev = el;
   }
+
   return TRUE;
 
 link_failed:
@@ -91,6 +103,59 @@ gst_play_sink_audio_convert_finalize (GObject * object)
 }
 
 static void
+gst_play_sink_audio_convert_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstPlaySinkAudioConvert *self = GST_PLAY_SINK_AUDIO_CONVERT_CAST (object);
+  gboolean v, changed = FALSE;
+
+  switch (prop_id) {
+    case PROP_USE_CONVERTERS:
+      v = g_value_get_boolean (value);
+      if (v != self->use_converters) {
+        self->use_converters = v;
+        changed = TRUE;
+      }
+      break;
+    case PROP_USE_VOLUME:
+      v = g_value_get_boolean (value);
+      if (v != self->use_volume) {
+        self->use_volume = v;
+        changed = TRUE;
+      }
+      break;
+    default:
+      break;
+  }
+
+  if (changed) {
+    GstPlaySinkConvertBin *cbin = GST_PLAY_SINK_CONVERT_BIN (self);
+    GST_DEBUG_OBJECT (self, "Rebuilding converter bin");
+    gst_play_sink_convert_bin_remove_elements (cbin);
+    gst_play_sink_audio_convert_add_conversion_elements (self);
+    gst_play_sink_convert_bin_cache_converter_caps (cbin);
+  }
+}
+
+static void
+gst_play_sink_audio_convert_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstPlaySinkAudioConvert *self = GST_PLAY_SINK_AUDIO_CONVERT_CAST (object);
+
+  switch (prop_id) {
+    case PROP_USE_CONVERTERS:
+      g_value_set_boolean (value, self->use_converters);
+      break;
+    case PROP_USE_VOLUME:
+      g_value_set_boolean (value, self->use_volume);
+      break;
+    default:
+      break;
+  }
+}
+
+static void
 gst_play_sink_audio_convert_class_init (GstPlaySinkAudioConvertClass * klass)
 {
   GObjectClass *gobject_class;
@@ -103,6 +168,18 @@ gst_play_sink_audio_convert_class_init (GstPlaySinkAudioConvertClass * klass)
   gstelement_class = (GstElementClass *) klass;
 
   gobject_class->finalize = gst_play_sink_audio_convert_finalize;
+  gobject_class->set_property = gst_play_sink_audio_convert_set_property;
+  gobject_class->get_property = gst_play_sink_audio_convert_get_property;
+
+  g_object_class_install_property (gobject_class, PROP_USE_CONVERTERS,
+      g_param_spec_boolean ("use-converters", "Use converters",
+          "Whether to use conversion elements", FALSE,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_USE_VOLUME,
+      g_param_spec_boolean ("use-volume", "Use volume",
+          "Whether to use a volume element", FALSE,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_details_simple (gstelement_class,
       "Player Sink Audio Converter", "Audio/Bin/Converter",
@@ -116,8 +193,6 @@ gst_play_sink_audio_convert_init (GstPlaySinkAudioConvert * self)
   GstPlaySinkConvertBin *cbin = GST_PLAY_SINK_CONVERT_BIN (self);
 
   cbin->audio = TRUE;
-  cbin->add_conversion_elements =
-      gst_play_sink_audio_convert_add_conversion_elements;
 
   /* FIXME: Only create this on demand but for now we need
    * it to always exist because of playsink's volume proxying
@@ -126,4 +201,7 @@ gst_play_sink_audio_convert_init (GstPlaySinkAudioConvert * self)
   self->volume = gst_element_factory_make ("volume", "volume");
   if (self->volume)
     gst_object_ref_sink (self->volume);
+
+  gst_play_sink_audio_convert_add_conversion_elements (self);
+  gst_play_sink_convert_bin_cache_converter_caps (cbin);
 }

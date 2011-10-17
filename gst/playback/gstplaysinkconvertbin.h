@@ -78,7 +78,6 @@ struct _GstPlaySinkConvertBin
 
   /* configuration for derived classes */
   gboolean audio;
-  gboolean (*add_conversion_elements)(GstPlaySinkConvertBin *);
 };
 
 struct _GstPlaySinkConvertBinClass
@@ -93,6 +92,10 @@ gst_play_sink_convert_bin_add_conversion_element_factory (GstPlaySinkConvertBin 
 void
 gst_play_sink_convert_bin_add_conversion_element (GstPlaySinkConvertBin *self,
     GstElement *el);
+void
+gst_play_sink_convert_bin_cache_converter_caps (GstPlaySinkConvertBin * self);
+void
+gst_play_sink_convert_bin_remove_elements (GstPlaySinkConvertBin * self);
 
 G_END_DECLS
 #endif /* __GST_PLAY_SINK_CONVERT_BIN_H__ */

@@ -35,9 +35,10 @@ G_DEFINE_TYPE (GstPlaySinkVideoConvert, gst_play_sink_video_convert,
     GST_TYPE_PLAY_SINK_CONVERT_BIN);
 
 static gboolean
-gst_play_sink_video_convert_add_conversion_elements (GstPlaySinkConvertBin *
-    cbin)
+gst_play_sink_video_convert_add_conversion_elements (GstPlaySinkVideoConvert *
+    self)
 {
+  GstPlaySinkConvertBin *cbin = GST_PLAY_SINK_CONVERT_BIN (self);
   GstElement *el, *prev = NULL;
 
   el = gst_play_sink_convert_bin_add_conversion_element_factory (cbin,
@@ -87,6 +88,7 @@ gst_play_sink_video_convert_init (GstPlaySinkVideoConvert * self)
 {
   GstPlaySinkConvertBin *cbin = GST_PLAY_SINK_CONVERT_BIN (self);
   cbin->audio = FALSE;
-  cbin->add_conversion_elements =
-      gst_play_sink_video_convert_add_conversion_elements;
+
+  gst_play_sink_video_convert_add_conversion_elements (self);
+  gst_play_sink_convert_bin_cache_converter_caps (cbin);
 }
