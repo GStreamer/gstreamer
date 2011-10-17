@@ -137,18 +137,21 @@ gst_play_sink_convert_bin_add_identity (GstPlaySinkConvertBin * self)
         );
   } else {
     gst_bin_add (GST_BIN_CAST (self), self->identity);
-    gst_element_sync_state_with_parent (self->identity);
-    distribute_running_time (self->identity, &self->segment);
   }
 }
 
 static void
-gst_play_sink_convert_bin_set_targets (GstPlaySinkConvertBin * self)
+gst_play_sink_convert_bin_set_targets (GstPlaySinkConvertBin * self,
+    gboolean passthrough)
 {
   GstPad *pad;
   GstElement *head, *tail;
 
-  if (self->conversion_elements == NULL) {
+  if (self->conversion_elements == NULL || passthrough) {
+    if (!passthrough) {
+      GST_WARNING_OBJECT (self,
+          "Doing passthrough as no converter elements were added");
+    }
     head = tail = self->identity;
   } else {
     head = GST_ELEMENT (g_list_first (self->conversion_elements)->data);
@@ -208,45 +211,23 @@ pad_blocked_cb (GstPad * pad, gboolean blocked, GstPlaySinkConvertBin * self)
     goto unblock;
   self->raw = raw;
 
+  gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (self->sinkpad), NULL);
+  gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (self->srcpad), NULL);
+
   if (raw) {
-    GST_DEBUG_OBJECT (self, "Creating raw conversion pipeline");
+    GST_DEBUG_OBJECT (self, "Switching to raw conversion pipeline");
 
-    gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (self->sinkpad), NULL);
-    gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (self->srcpad), NULL);
-
-    g_assert (self->add_conversion_elements);
-    if (!(*self->add_conversion_elements) (self)) {
-      goto link_failed;
-    }
     if (self->conversion_elements)
       g_list_foreach (self->conversion_elements,
           (GFunc) gst_play_sink_convert_bin_on_element_added, self);
-
-    GST_DEBUG_OBJECT (self, "Raw conversion pipeline created");
   } else {
 
-    GST_DEBUG_OBJECT (self, "Removing raw conversion pipeline");
+    GST_DEBUG_OBJECT (self, "Switch to passthrough pipeline");
 
-    gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (self->sinkpad), NULL);
-    gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (self->srcpad), NULL);
-
-    if (self->conversion_elements) {
-      g_list_foreach (self->conversion_elements,
-          (GFunc) gst_play_sink_convert_bin_remove_element, self);
-      g_list_free (self->conversion_elements);
-      self->conversion_elements = NULL;
-    }
-
-    GST_DEBUG_OBJECT (self, "Raw conversion pipeline removed");
+    gst_play_sink_convert_bin_on_element_added (self->identity, self);
   }
 
-  /* to make things simple and avoid counterintuitive pad juggling,
-     ensure there is at least one element in the list */
-  if (!self->conversion_elements) {
-    gst_play_sink_convert_bin_add_identity (self);
-  }
-
-  gst_play_sink_convert_bin_set_targets (self);
+  gst_play_sink_convert_bin_set_targets (self, !raw);
 
 unblock:
   gst_pad_set_blocked_async_full (self->sink_proxypad, FALSE,
@@ -256,23 +237,6 @@ unblock:
 done:
   GST_PLAY_SINK_CONVERT_BIN_UNLOCK (self);
   return;
-
-link_failed:
-  {
-    GST_ELEMENT_ERROR (self, CORE, PAD,
-        (NULL), ("Failed to configure the converter bin."));
-
-    /* use a simple identity, better than nothing */
-    gst_play_sink_convert_bin_add_identity (self);
-    gst_play_sink_convert_bin_set_targets (self);
-
-    gst_pad_set_blocked_async_full (self->sink_proxypad, FALSE,
-        (GstPadBlockCallback) pad_blocked_cb, gst_object_ref (self),
-        (GDestroyNotify) gst_object_unref);
-
-    GST_PLAY_SINK_CONVERT_BIN_UNLOCK (self);
-    return;
-  }
 }
 
 static gboolean
@@ -430,6 +394,16 @@ gst_play_sink_convert_bin_change_state (GstElement * element,
   GstPlaySinkConvertBin *self = GST_PLAY_SINK_CONVERT_BIN_CAST (element);
 
   switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
+      GST_PLAY_SINK_CONVERT_BIN_LOCK (self);
+      g_assert (self->add_conversion_elements);
+      if (!(*self->add_conversion_elements) (self)) {
+        GST_ELEMENT_ERROR (self, CORE, PAD,
+            (NULL), ("Failed to configure the converter bin."));
+      }
+      gst_play_sink_convert_bin_add_identity (self);
+      GST_PLAY_SINK_CONVERT_BIN_UNLOCK (self);
+      break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       GST_PLAY_SINK_CONVERT_BIN_LOCK (self);
       if (gst_pad_is_blocked (self->sink_proxypad))
@@ -450,16 +424,7 @@ gst_play_sink_convert_bin_change_state (GstElement * element,
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       GST_PLAY_SINK_CONVERT_BIN_LOCK (self);
       gst_segment_init (&self->segment, GST_FORMAT_UNDEFINED);
-      if (self->conversion_elements) {
-        g_list_foreach (self->conversion_elements,
-            (GFunc) gst_play_sink_convert_bin_remove_element, self);
-        g_list_free (self->conversion_elements);
-        self->conversion_elements = NULL;
-      }
-      if (!self->identity) {
-        gst_play_sink_convert_bin_add_identity (self);
-      }
-      gst_play_sink_convert_bin_set_targets (self);
+      gst_play_sink_convert_bin_set_targets (self, TRUE);
       self->raw = FALSE;
       GST_PLAY_SINK_CONVERT_BIN_UNLOCK (self);
       break;
@@ -472,11 +437,19 @@ gst_play_sink_convert_bin_change_state (GstElement * element,
       GST_PLAY_SINK_CONVERT_BIN_UNLOCK (self);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
+      GST_PLAY_SINK_CONVERT_BIN_LOCK (self);
+      if (self->conversion_elements) {
+        g_list_foreach (self->conversion_elements,
+            (GFunc) gst_play_sink_convert_bin_remove_element, self);
+        g_list_free (self->conversion_elements);
+        self->conversion_elements = NULL;
+      }
       if (self->identity) {
         gst_element_set_state (self->identity, GST_STATE_NULL);
         gst_bin_remove (GST_BIN_CAST (self), self->identity);
         self->identity = NULL;
       }
+      GST_PLAY_SINK_CONVERT_BIN_UNLOCK (self);
       break;
     default:
       break;
