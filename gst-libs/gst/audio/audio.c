@@ -153,17 +153,21 @@ gst_audio_format_build_integer (gboolean sign, gint endianness,
     /* must be int */
     if (!GST_AUDIO_FORMAT_INFO_IS_INTEGER (finfo))
       continue;
+
     /* width and depth must match */
     if (width != GST_AUDIO_FORMAT_INFO_WIDTH (finfo))
       continue;
     if (depth != GST_AUDIO_FORMAT_INFO_DEPTH (finfo))
       continue;
+
     /* if there is endianness, it must match */
     e = GST_AUDIO_FORMAT_INFO_ENDIANNESS (finfo);
     if (e && e != endianness)
       continue;
+
     /* check sign */
-    if (sign && !GST_AUDIO_FORMAT_INFO_IS_SIGNED (finfo))
+    if ((sign && !GST_AUDIO_FORMAT_INFO_IS_SIGNED (finfo)) ||
+        (!sign && GST_AUDIO_FORMAT_INFO_IS_SIGNED (finfo)))
       continue;
 
     return GST_AUDIO_FORMAT_INFO_FORMAT (finfo);

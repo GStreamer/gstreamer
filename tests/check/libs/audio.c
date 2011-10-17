@@ -551,6 +551,19 @@ GST_START_TEST (test_channel_layout_value_intersect)
 
 GST_END_TEST;
 
+GST_START_TEST (test_audio_info)
+{
+  GstAudioFormat fmt;
+
+  fmt = gst_audio_format_build_integer (TRUE, G_BYTE_ORDER, 8, 8);
+  fail_unless (fmt == GST_AUDIO_FORMAT_S8);
+
+  fmt = gst_audio_format_build_integer (FALSE, G_BYTE_ORDER, 8, 8);
+  fail_unless (fmt == GST_AUDIO_FORMAT_U8);
+}
+
+GST_END_TEST;
+
 static Suite *
 audio_suite (void)
 {
@@ -559,6 +572,7 @@ audio_suite (void)
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
+  tcase_add_test (tc_chain, test_audio_info);
   tcase_add_test (tc_chain, test_multichannel_checks);
   tcase_add_test (tc_chain, test_buffer_clipping_time);
   tcase_add_test (tc_chain, test_buffer_clipping_samples);
