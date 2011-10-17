@@ -343,33 +343,28 @@ gst_play_sink_convert_bin_getcaps (GstPad * pad)
   GstPad *otherpad, *peer;
 
   GST_PLAY_SINK_CONVERT_BIN_LOCK (self);
-  otherpad = gst_ghost_pad_get_target (GST_GHOST_PAD_CAST (pad));
-  if (!otherpad) {
-    if (pad == self->srcpad) {
-      otherpad = self->sink_proxypad;
-    } else if (pad == self->sinkpad) {
-      otherpad =
-          GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD
-              (self->sinkpad)));
-    } else {
-      GST_ERROR_OBJECT (pad, "Not one of our pads");
-    }
+  if (pad == self->srcpad) {
+    otherpad = self->sinkpad;
+  } else if (pad == self->sinkpad) {
+    otherpad = self->srcpad;
+  } else {
+    GST_ERROR_OBJECT (pad, "Not one of our pads");
+    otherpad = NULL;
   }
-  GST_PLAY_SINK_CONVERT_BIN_UNLOCK (self);
 
   if (otherpad) {
     peer = gst_pad_get_peer (otherpad);
     if (peer) {
-      ret = gst_pad_get_caps_reffed (peer);
+      GstCaps *peer_caps = gst_pad_get_caps_reffed (peer);
       gst_object_unref (peer);
+      ret = gst_caps_union (peer_caps, self->converter_caps);
+      gst_caps_unref (peer_caps);
     } else {
-      ret = gst_caps_new_any ();
+      ret = gst_caps_ref (self->converter_caps);
     }
-    gst_object_unref (otherpad);
-  } else {
-    GST_WARNING_OBJECT (self, "Could not traverse bin");
-    ret = gst_caps_new_any ();
   }
+  GST_PLAY_SINK_CONVERT_BIN_UNLOCK (self);
+
   gst_object_unref (self);
 
   return ret;
