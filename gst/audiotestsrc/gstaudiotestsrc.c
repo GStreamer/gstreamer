@@ -878,12 +878,18 @@ static const ProcessFunc violet_noise_funcs[] = {
 
 /*
  * gst_audio_test_src_change_wave:
- * Assign function pointer of wave genrator.
+ * Assign function pointer of wave generator.
  */
 static void
 gst_audio_test_src_change_wave (GstAudioTestSrc * src)
 {
   gint idx;
+
+  /* not negotiated yet? */
+  if (src->info.finfo == NULL) {
+    src->process = NULL;
+    return;
+  }
 
   switch (GST_AUDIO_FORMAT_INFO_FORMAT (src->info.finfo)) {
     case GST_AUDIO_FORMAT_S16:
