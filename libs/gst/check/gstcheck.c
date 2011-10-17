@@ -381,6 +381,14 @@ gst_check_buffer_data (GstBuffer * buffer, gconstpointer data, gsize size)
   gsize bsize;
 
   bdata = gst_buffer_map (buffer, &bsize, NULL, GST_MAP_READ);
+  GST_MEMDUMP ("Converted data", bdata, bsize);
+  GST_MEMDUMP ("Expected data", data, size);
+  if (memcmp (bdata, data, size) != 0) {
+    g_print ("\nConverted data:\n");
+    gst_util_dump_mem (bdata, bsize);
+    g_print ("\nExpected data:\n");
+    gst_util_dump_mem (data, size);
+  }
   fail_unless (memcmp (bdata, data, size) == 0, "buffer contents not equal");
   gst_buffer_unmap (buffer, bdata, bsize);
 }
