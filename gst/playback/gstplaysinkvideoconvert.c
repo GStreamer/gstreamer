@@ -68,13 +68,11 @@ link_failed:
 static void
 gst_play_sink_video_convert_class_init (GstPlaySinkVideoConvertClass * klass)
 {
-  GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
 
   GST_DEBUG_CATEGORY_INIT (gst_play_sink_video_convert_debug,
       "playsinkvideoconvert", 0, "play bin");
 
-  gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
   gst_element_class_set_details_simple (gstelement_class,
