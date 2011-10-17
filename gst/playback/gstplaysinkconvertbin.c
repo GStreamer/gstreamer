@@ -45,18 +45,18 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS_ANY);
 
 static gboolean
-is_raw_caps (GstCaps * caps)
+is_raw_caps (GstCaps * caps, gboolean audio)
 {
   gint i, n;
   GstStructure *s;
   const gchar *name;
+  const gchar *prefix = audio ? "audio/x-raw-" : "video/x-raw-";
 
   n = gst_caps_get_size (caps);
   for (i = 0; i < n; i++) {
     s = gst_caps_get_structure (caps, i);
     name = gst_structure_get_name (s);
-    if (!g_str_has_prefix (name, "audio/x-raw")
-        && !g_str_has_prefix (name, "video/x-raw"))
+    if (!g_str_has_prefix (name, prefix))
       return FALSE;
   }
 
@@ -200,7 +200,7 @@ pad_blocked_cb (GstPad * pad, gboolean blocked, GstPlaySinkConvertBin * self)
     caps = gst_pad_get_caps_reffed (peer);
   gst_object_unref (peer);
 
-  raw = is_raw_caps (caps);
+  raw = is_raw_caps (caps, self->audio);
   GST_DEBUG_OBJECT (self, "Caps %" GST_PTR_FORMAT " are raw: %d", caps, raw);
   gst_caps_unref (caps);
 
