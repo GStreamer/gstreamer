@@ -386,6 +386,29 @@ gst_play_sink_convert_bin_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
+static void
+gst_play_sink_convert_bin_cache_converter_caps (GstPlaySinkConvertBin * self)
+{
+  GstElement *head;
+  GstPad *pad;
+
+  self->converter_caps = NULL;
+
+  if (!self->conversion_elements)
+    return;
+
+  head = GST_ELEMENT (g_list_first (self->conversion_elements)->data);
+  pad = gst_element_get_static_pad (head, "sink");
+  if (!pad)
+    return;
+
+  self->converter_caps = gst_pad_get_caps_reffed (pad);
+  GST_INFO_OBJECT (self, "Converter caps: %" GST_PTR_FORMAT,
+      self->converter_caps);
+
+  gst_object_unref (pad);
+}
+
 static GstStateChangeReturn
 gst_play_sink_convert_bin_change_state (GstElement * element,
     GstStateChange transition)
@@ -401,6 +424,7 @@ gst_play_sink_convert_bin_change_state (GstElement * element,
         GST_ELEMENT_ERROR (self, CORE, PAD,
             (NULL), ("Failed to configure the converter bin."));
       }
+      gst_play_sink_convert_bin_cache_converter_caps (self);
       gst_play_sink_convert_bin_add_identity (self);
       GST_PLAY_SINK_CONVERT_BIN_UNLOCK (self);
       break;
@@ -448,6 +472,10 @@ gst_play_sink_convert_bin_change_state (GstElement * element,
         gst_element_set_state (self->identity, GST_STATE_NULL);
         gst_bin_remove (GST_BIN_CAST (self), self->identity);
         self->identity = NULL;
+      }
+      if (self->converter_caps) {
+        gst_caps_unref (self->converter_caps);
+        self->converter_caps = NULL;
       }
       GST_PLAY_SINK_CONVERT_BIN_UNLOCK (self);
       break;

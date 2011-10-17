@@ -74,6 +74,8 @@ struct _GstPlaySinkConvertBin
   GList *conversion_elements;
   GstElement *identity;
 
+  GstCaps *converter_caps;
+
   /* configuration for derived classes */
   gboolean audio;
   gboolean (*add_conversion_elements)(GstPlaySinkConvertBin *);
