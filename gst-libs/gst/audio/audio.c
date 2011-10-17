@@ -356,13 +356,25 @@ gst_audio_info_from_caps (GstAudioInfo * info, const GstCaps * caps)
     if (channels != gst_value_array_get_size (pos_val_arr))
       goto incoherent_channels;
 
+    /* FIXME : Detect if it's the default channel position */
     for (i = 0; i < max_pos; i++) {
       pos_val_entry = gst_value_array_get_value (pos_val_arr, i);
       info->position[i] = g_value_get_enum (pos_val_entry);
     }
   } else {
     info->flags |= GST_AUDIO_FLAG_DEFAULT_POSITIONS;
-    /* FIXME, set default positions */
+    /* FIXME, set more default positions */
+    switch (channels) {
+      case 1:
+        info->position[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_MONO;
+        break;
+      case 2:
+        info->position[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
+        info->position[1] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
+        break;
+      default:
+        break;
+    }
   }
 
   return TRUE;
