@@ -277,8 +277,11 @@ gst_registry_finalize (GObject * object)
     GstPluginFeature *feature = f->data;
 
     if (feature) {
-      GST_LOG_OBJECT (registry, "removing feature %p (%s)",
-          feature, gst_plugin_feature_get_name (feature));
+#ifndef GST_DISABLE_GST_DEBUG
+      gchar *name = gst_plugin_feature_get_name (feature);
+      GST_LOG_OBJECT (registry, "removing feature %p (%s)", feature, name);
+      g_free (name);
+#endif
       gst_object_unparent (GST_OBJECT_CAST (feature));
     }
     f = g_list_next (f);
