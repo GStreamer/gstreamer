@@ -464,6 +464,13 @@ gst_play_sink_convert_bin_change_state (GstElement * element,
             (GDestroyNotify) gst_object_unref);
       GST_PLAY_SINK_CONVERT_BIN_UNLOCK (self);
       break;
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      GST_PLAY_SINK_CONVERT_BIN_LOCK (self);
+      gst_segment_init (&self->segment, GST_FORMAT_UNDEFINED);
+      gst_play_sink_convert_bin_set_targets (self, TRUE);
+      self->raw = FALSE;
+      GST_PLAY_SINK_CONVERT_BIN_UNLOCK (self);
+      break;
     default:
       break;
   }
