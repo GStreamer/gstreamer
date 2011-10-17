@@ -70,6 +70,19 @@ static GOptionEntry g_options[] = {
     { NULL, }
 };
 
+static void
+upload_image (guint8 *dst, const guint32 *src, guint size)
+{
+    guint i;
+
+    for (i = 0; i < size; i += 4) {
+        dst[i    ] = *src >> 24;
+        dst[i + 1] = *src >> 16;
+        dst[i + 2] = *src >> 8;
+        dst[i + 3] = *src++;
+    }
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -83,12 +96,14 @@ main(int argc, char *argv[])
     const CodecDefs      *codec;
     GstBuffer            *buffer;
     GstVaapiSurfaceProxy *proxy;
+    GstVaapiSurface      *surface;
     VideoDecodeInfo       info;
     VideoSubpictureInfo   subinfo;
     GstVaapiImage        *subtitle_image;
     GstVaapiSubpicture   *subpicture;
-    GstCaps *argbcaps;
-    GstVaapiRectangle sub_rect;
+    GstCaps              *argbcaps;
+    GstVaapiRectangle     sub_rect;
+    guint                 surf_width, surf_height;
 
     static const guint win_width  = 640;
     static const guint win_height = 480;
@@ -151,35 +166,47 @@ main(int argc, char *argv[])
     if (!proxy)
         g_error("could not get decoded surface (decoder status %d)", status);
 
+    surface = gst_vaapi_surface_proxy_get_surface(proxy);
+    if (!surface)
+        g_error("could not get underlying surface");
+
+    gst_vaapi_surface_get_size(surface, &surf_width, &surf_height);
+    printf("surface size %dx%d\n", surf_width, surf_height);
+
     subpicture_get_info (&subinfo);
 
     /* Adding subpicture */
     argbcaps = gst_caps_new_simple ("video/x-raw-rgb",
-              "endianness", G_TYPE_INT, 1,
+              "endianness", G_TYPE_INT, G_BIG_ENDIAN,
               "bpp", G_TYPE_INT, 32,
+              "red_mask", G_TYPE_INT, 0xff000000,
+              "green_mask", G_TYPE_INT, 0x00ff0000,
+              "blue_mask", G_TYPE_INT, 0x0000ff00,
+              "alpha_mask", G_TYPE_INT, 0x000000ff,
               "width", G_TYPE_INT,  subinfo.width,
               "height", G_TYPE_INT, subinfo.height,
                NULL);
 
-    buffer = gst_buffer_new ();
-    gst_buffer_set_data(buffer, (guchar *)subinfo.data, subinfo.data_size);
+    buffer = gst_buffer_new_and_alloc (subinfo.data_size);
+    upload_image (GST_BUFFER_DATA (buffer), subinfo.data, subinfo.data_size);
     gst_buffer_set_caps (buffer, argbcaps);
 
     subtitle_image = gst_vaapi_image_new (display,
       GST_VAAPI_IMAGE_RGBA, subinfo.width, subinfo.height);
 
-    gst_vaapi_image_update_from_buffer (subtitle_image, buffer);
+    if (!gst_vaapi_image_update_from_buffer (subtitle_image, buffer))
+        g_error ("could not update VA image with subtitle data");
 
     subpicture = gst_vaapi_subpicture_new (subtitle_image);
 
     /* We position it as a subtitle, centered at the bottom. */
-    sub_rect.x = (win_width - subinfo.width) / 2;
-    sub_rect.y = win_height - subinfo.height - 10;
+    sub_rect.x = (surf_width - subinfo.width) / 2;
+    sub_rect.y = surf_height - subinfo.height - 10;
     sub_rect.height = subinfo.height;
-    sub_rect.width = subinfo.height;
+    sub_rect.width = subinfo.width;
 
     if (!gst_vaapi_surface_associate_subpicture (
-         GST_VAAPI_SURFACE_PROXY_SURFACE(proxy),
+         surface,
          subpicture,
          NULL,
          &sub_rect))
