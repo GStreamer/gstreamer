@@ -71,6 +71,7 @@ struct _GstPlaySinkAudioConvert
 
   gboolean raw;
   GstElement *conv, *resample;
+  GstElement *identity;
 
   /* < pseudo public > */
   GstElement *volume;

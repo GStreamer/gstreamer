@@ -71,6 +71,7 @@ struct _GstPlaySinkVideoConvert
 
   gboolean raw;
   GstElement *conv, *scale;
+  GstElement *identity;
 };
 
 struct _GstPlaySinkVideoConvertClass

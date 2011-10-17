@@ -95,11 +95,44 @@ distribute_running_time (GstElement * element, const GstSegment * segment)
 }
 
 static void
+gst_play_sink_video_convert_add_identity (GstPlaySinkVideoConvert * self)
+{
+  self->identity = gst_element_factory_make ("identity", "identity");
+  if (self->identity == NULL) {
+    post_missing_element_message (self, "identity");
+    GST_ELEMENT_WARNING (self, CORE, MISSING_PLUGIN,
+        (_("Missing element '%s' - check your GStreamer installation."),
+            "identity"), ("video rendering might fail"));
+  } else {
+    gst_bin_add (GST_BIN_CAST (self), self->identity);
+    gst_element_sync_state_with_parent (self->identity);
+    distribute_running_time (self->identity, &self->segment);
+  }
+}
+
+static void
+gst_play_sink_video_convert_set_targets (GstPlaySinkVideoConvert * self,
+    GstElement * head, GstElement * tail)
+{
+  GstPad *pad;
+
+  pad = gst_element_get_static_pad (head, "sink");
+  gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (self->sinkpad), pad);
+  gst_object_unref (pad);
+
+  pad = gst_element_get_static_pad (tail, "src");
+  gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (self->srcpad), pad);
+  gst_object_unref (pad);
+}
+
+static void
 pad_blocked_cb (GstPad * pad, gboolean blocked, GstPlaySinkVideoConvert * self)
 {
   GstPad *peer;
   GstCaps *caps;
   gboolean raw;
+  GstBin *bin = GST_BIN_CAST (self);
+  GstElement *head = NULL, *prev = NULL;
 
   GST_PLAY_SINK_VIDEO_CONVERT_LOCK (self);
   self->sink_proxypad_blocked = blocked;
@@ -123,9 +156,6 @@ pad_blocked_cb (GstPad * pad, gboolean blocked, GstPlaySinkVideoConvert * self)
   self->raw = raw;
 
   if (raw) {
-    GstBin *bin = GST_BIN_CAST (self);
-    GstElement *head = NULL, *prev = NULL;
-    GstPad *pad;
 
     GST_DEBUG_OBJECT (self, "Creating raw conversion pipeline");
 
@@ -167,26 +197,8 @@ pad_blocked_cb (GstPad * pad, gboolean blocked, GstPlaySinkVideoConvert * self)
       prev = self->scale;
     }
 
-    if (head) {
-      pad = gst_element_get_static_pad (head, "sink");
-      gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (self->sinkpad), pad);
-      gst_object_unref (pad);
-    }
-
-    if (prev) {
-      pad = gst_element_get_static_pad (prev, "src");
-      gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (self->srcpad), pad);
-      gst_object_unref (pad);
-    }
-
-    if (!head && !prev) {
-      gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (self->srcpad),
-          self->sink_proxypad);
-    }
-
     GST_DEBUG_OBJECT (self, "Raw conversion pipeline created");
   } else {
-    GstBin *bin = GST_BIN_CAST (self);
 
     GST_DEBUG_OBJECT (self, "Removing raw conversion pipeline");
 
@@ -204,11 +216,19 @@ pad_blocked_cb (GstPad * pad, gboolean blocked, GstPlaySinkVideoConvert * self)
       self->scale = NULL;
     }
 
-    gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (self->srcpad),
-        self->sink_proxypad);
-
     GST_DEBUG_OBJECT (self, "Raw conversion pipeline removed");
   }
+
+  g_assert ((head != NULL) == (prev != NULL));
+
+  /* to make things simple and avoid counterintuitive pad juggling,
+     ensure there is at least one element in the list */
+  if (!head) {
+    gst_play_sink_video_convert_add_identity (self);
+    prev = head = self->identity;
+  }
+
+  gst_play_sink_video_convert_set_targets (self, head, prev);
 
 unblock:
   gst_pad_set_blocked_async_full (self->sink_proxypad, FALSE,
@@ -223,8 +243,12 @@ link_failed:
   {
     GST_ELEMENT_ERROR (self, CORE, PAD,
         (NULL), ("Failed to configure the video converter."));
-    gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (self->srcpad),
-        self->sink_proxypad);
+
+    /* use a simple identity, better than nothing */
+    gst_play_sink_video_convert_add_identity (self);
+    gst_play_sink_video_convert_set_targets (self, self->identity,
+        self->identity);
+
     gst_pad_set_blocked_async_full (self->sink_proxypad, FALSE,
         (GstPadBlockCallback) pad_blocked_cb, gst_object_ref (self),
         (GDestroyNotify) gst_object_unref);
@@ -335,8 +359,13 @@ gst_play_sink_video_convert_getcaps (GstPad * pad)
   if (!otherpad) {
     if (pad == self->srcpad) {
       otherpad = self->sink_proxypad;
+    } else if (pad == self->sinkpad) {
+      otherpad =
+          GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD
+              (self->sinkpad)));
+    } else {
+      GST_ERROR_OBJECT (pad, "Not one of our pads");
     }
-    /* no equivalent for the sink pad */
   }
   GST_PLAY_SINK_VIDEO_CONVERT_UNLOCK (self);
 
@@ -408,8 +437,11 @@ gst_play_sink_video_convert_change_state (GstElement * element,
         gst_bin_remove (GST_BIN_CAST (self), self->scale);
         self->scale = NULL;
       }
-      gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (self->srcpad),
-          self->sink_proxypad);
+      if (!self->identity) {
+        gst_play_sink_video_convert_add_identity (self);
+      }
+      gst_play_sink_video_convert_set_targets (self, self->identity,
+          self->identity);
       self->raw = FALSE;
       GST_PLAY_SINK_VIDEO_CONVERT_UNLOCK (self);
       break;
@@ -420,6 +452,14 @@ gst_play_sink_video_convert_change_state (GstElement * element,
             (GstPadBlockCallback) pad_blocked_cb, gst_object_ref (self),
             (GDestroyNotify) gst_object_unref);
       GST_PLAY_SINK_VIDEO_CONVERT_UNLOCK (self);
+      break;
+    case GST_STATE_CHANGE_READY_TO_NULL:
+      if (self->identity) {
+        gst_element_set_state (self->identity, GST_STATE_NULL);
+        gst_bin_remove (GST_BIN_CAST (self), self->identity);
+        self->identity = NULL;
+      }
+      break;
     default:
       break;
   }
