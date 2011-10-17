@@ -126,7 +126,7 @@ struct _GstBayer2RGBClass
 };
 
 #define	SRC_CAPS                                 \
-  GST_VIDEO_CAPS_MAKE ("RGBx, xRGB, BGRx, xBGR, RGBA, ARGB, BGRA, ABGR")
+  GST_VIDEO_CAPS_MAKE ("{ RGBx, xRGB, BGRx, xBGR, RGBA, ARGB, BGRA, ABGR }")
 
 #define SINK_CAPS "video/x-raw-bayer,format=(string){bggr,grbg,gbrg,rggb}," \
   "width=(int)[1,MAX],height=(int)[1,MAX],framerate=(fraction)[0/1,MAX]"
