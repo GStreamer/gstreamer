@@ -413,12 +413,12 @@ G_STMT_START {								\
 #define ASSERT_BUFFER_REFCOUNT(buffer, name, value)		\
 	ASSERT_MINI_OBJECT_REFCOUNT(buffer, name, value)
 
-#define ASSERT_MINI_OBJECT_REFCOUNT(caps, name, value)		\
+#define ASSERT_MINI_OBJECT_REFCOUNT(miniobj, name, value)	\
 G_STMT_START {							\
   int rc;							\
-  rc = GST_MINI_OBJECT_REFCOUNT_VALUE (caps);			\
+  rc = GST_MINI_OBJECT_REFCOUNT_VALUE (miniobj);		\
   fail_unless (rc == value,					\
-               name " refcount is %d instead of %d", rc, value);\
+               name " (%p) refcount is %d instead of %d", miniobj, rc, value); \
 } G_STMT_END
 
 #define ASSERT_SET_STATE(element, state, ret)			\
