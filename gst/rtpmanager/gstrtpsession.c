@@ -2212,10 +2212,18 @@ gst_rtp_session_request_key_unit (RTPSession * sess,
   GstRtpSession *rtpsession = GST_RTP_SESSION (user_data);
   GstEvent *event;
 
-  event = gst_event_new_custom (GST_EVENT_CUSTOM_UPSTREAM,
-      gst_structure_new ("GstForceKeyUnit",
-          "all-headers", G_TYPE_BOOLEAN, all_headers, NULL));
-  gst_pad_push_event (rtpsession->send_rtp_sink, event);
+  GST_RTP_SESSION_LOCK (rtpsession);
+  if (rtpsession->send_rtp_sink)
+    send_rtp_sink = gst_object_ref (rtpsession->send_rtp_sink);
+  GST_RTP_SESSION_UNLOCK (rtpsession);
+
+  if (send_rtp_sink) {
+    GstEvent *event = gst_event_new_custom (GST_EVENT_CUSTOM_UPSTREAM,
+        gst_structure_new ("GstForceKeyUnit",
+            "all-headers", G_TYPE_BOOLEAN, all_headers, NULL));
+    gst_pad_push_event (send_rtp_sink, event);
+    gst_object_unref (send_rtp_sink);
+  }
 }
 
 static GstClockTime
