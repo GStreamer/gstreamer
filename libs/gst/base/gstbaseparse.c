@@ -2293,6 +2293,7 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
       res = bclass->check_valid_frame (parse, frame, &fsize, &skip);
       gst_adapter_unmap (parse->priv->adapter, 0);
       gst_buffer_replace (&frame->buffer, NULL);
+      gst_buffer_remove_memory_range (tmpbuf, 0, -1);
       if (res) {
         if (gst_adapter_available (parse->priv->adapter) < fsize) {
           GST_DEBUG_OBJECT (parse, "found valid frame but not enough data"
