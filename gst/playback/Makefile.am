@@ -22,6 +22,7 @@ libgstplaybin_la_SOURCES = \
 	gstsubtitleoverlay.c \
 	gstplaysinkvideoconvert.c \
 	gstplaysinkaudioconvert.c \
+	gstplaysinkconvertbin.c \
 	gststreamsynchronizer.c
 
 nodist_libgstplaybin_la_SOURCES = $(built_sources)
@@ -63,6 +64,7 @@ noinst_HEADERS = \
 	gstsubtitleoverlay.h \
 	gstplaysinkvideoconvert.h \
 	gstplaysinkaudioconvert.h \
+	gstplaysinkconvertbin.h \
 	gststreamsynchronizer.h
 
 BUILT_SOURCES = $(built_headers) $(built_sources)

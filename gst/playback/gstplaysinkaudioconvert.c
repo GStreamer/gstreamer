@@ -32,378 +32,51 @@ GST_DEBUG_CATEGORY_STATIC (gst_play_sink_audio_convert_debug);
 #define parent_class gst_play_sink_audio_convert_parent_class
 
 G_DEFINE_TYPE (GstPlaySinkAudioConvert, gst_play_sink_audio_convert,
-    GST_TYPE_BIN);
-
-static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
-    GST_PAD_SRC,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS_ANY);
-
-static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS_ANY);
+    GST_TYPE_PLAY_SINK_CONVERT_BIN);
 
 static gboolean
-is_raw_caps (GstCaps * caps)
+gst_play_sink_audio_convert_add_conversion_elements (GstPlaySinkConvertBin *
+    cbin)
 {
-  gint i, n;
-  GstStructure *s;
-  const gchar *name;
+  GstPlaySinkAudioConvert *self = GST_PLAY_SINK_AUDIO_CONVERT (cbin);
+  GstElement *el, *prev = NULL;
 
-  n = gst_caps_get_size (caps);
-  for (i = 0; i < n; i++) {
-    s = gst_caps_get_structure (caps, i);
-    name = gst_structure_get_name (s);
-    if (!g_str_has_prefix (name, "audio/x-raw"))
-      return FALSE;
-  }
+  g_assert (cbin->conversion_elements == NULL);
 
-  return TRUE;
-}
-
-static void
-post_missing_element_message (GstPlaySinkAudioConvert * self,
-    const gchar * name)
-{
-  GstMessage *msg;
-
-  msg = gst_missing_element_message_new (GST_ELEMENT_CAST (self), name);
-  gst_element_post_message (GST_ELEMENT_CAST (self), msg);
-}
-
-static void
-distribute_running_time (GstElement * element, const GstSegment * segment)
-{
-  GstEvent *event;
-  GstPad *pad;
-
-  pad = gst_element_get_static_pad (element, "sink");
-
-  if (segment->accum) {
-    event = gst_event_new_new_segment_full (FALSE, segment->rate,
-        segment->applied_rate, segment->format, 0, segment->accum, 0);
-    gst_pad_send_event (pad, event);
-  }
-
-  event = gst_event_new_new_segment_full (FALSE, segment->rate,
-      segment->applied_rate, segment->format,
-      segment->start, segment->stop, segment->time);
-  gst_pad_send_event (pad, event);
-
-  gst_object_unref (pad);
-}
-
-static void
-gst_play_sink_audio_convert_add_identity (GstPlaySinkAudioConvert * self)
-{
-  self->identity = gst_element_factory_make ("identity", "identity");
-  if (self->identity == NULL) {
-    post_missing_element_message (self, "identity");
-    GST_ELEMENT_WARNING (self, CORE, MISSING_PLUGIN,
-        (_("Missing element '%s' - check your GStreamer installation."),
-            "identity"), ("audio rendering might fail"));
-  } else {
-    gst_bin_add (GST_BIN_CAST (self), self->identity);
-    gst_element_sync_state_with_parent (self->identity);
-    distribute_running_time (self->identity, &self->segment);
-  }
-}
-
-static void
-gst_play_sink_audio_convert_set_targets (GstPlaySinkAudioConvert * self,
-    GstElement * head, GstElement * tail)
-{
-  GstPad *pad;
-
-  pad = gst_element_get_static_pad (head, "sink");
-  gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (self->sinkpad), pad);
-  gst_object_unref (pad);
-
-  pad = gst_element_get_static_pad (tail, "src");
-  gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (self->srcpad), pad);
-  gst_object_unref (pad);
-}
-
-static void
-pad_blocked_cb (GstPad * pad, gboolean blocked, GstPlaySinkAudioConvert * self)
-{
-  GstPad *peer;
-  GstCaps *caps;
-  gboolean raw;
-  GstElement *head = NULL, *prev = NULL;
-  GstBin *bin = GST_BIN_CAST (self);
-
-  GST_PLAY_SINK_AUDIO_CONVERT_LOCK (self);
-  self->sink_proxypad_blocked = blocked;
-  GST_DEBUG_OBJECT (self, "Pad blocked: %d", blocked);
-  if (!blocked)
-    goto done;
-
-  /* There must be a peer at this point */
-  peer = gst_pad_get_peer (self->sinkpad);
-  caps = gst_pad_get_negotiated_caps (peer);
-  if (!caps)
-    caps = gst_pad_get_caps_reffed (peer);
-  gst_object_unref (peer);
-
-  raw = is_raw_caps (caps);
-  GST_DEBUG_OBJECT (self, "Caps %" GST_PTR_FORMAT " are raw: %d", caps, raw);
-  gst_caps_unref (caps);
-
-  if (raw == self->raw)
-    goto unblock;
-  self->raw = raw;
-
-  if (raw) {
-    GST_DEBUG_OBJECT (self, "Creating raw conversion pipeline");
-
-    gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (self->sinkpad), NULL);
-    gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (self->srcpad), NULL);
-
-    if (self->use_converters) {
-      self->conv = gst_element_factory_make ("audioconvert", "conv");
-      if (self->conv == NULL) {
-        post_missing_element_message (self, "audioconvert");
-        GST_ELEMENT_WARNING (self, CORE, MISSING_PLUGIN,
-            (_("Missing element '%s' - check your GStreamer installation."),
-                "audioconvert"), ("audio rendering might fail"));
-      } else {
-        gst_bin_add (bin, self->conv);
-        gst_element_sync_state_with_parent (self->conv);
-        distribute_running_time (self->conv, &self->segment);
-        prev = head = self->conv;
-      }
-
-      self->resample = gst_element_factory_make ("audioresample", "resample");
-      if (self->resample == NULL) {
-        post_missing_element_message (self, "audioresample");
-        GST_ELEMENT_WARNING (self, CORE, MISSING_PLUGIN,
-            (_("Missing element '%s' - check your GStreamer installation."),
-                "audioresample"), ("possibly a liboil version mismatch?"));
-      } else {
-        gst_bin_add (bin, self->resample);
-        gst_element_sync_state_with_parent (self->resample);
-        distribute_running_time (self->resample, &self->segment);
-        if (prev) {
-          if (!gst_element_link_pads_full (prev, "src", self->resample, "sink",
-                  GST_PAD_LINK_CHECK_TEMPLATE_CAPS))
-            goto link_failed;
-        } else {
-          head = self->resample;
-        }
-        prev = self->resample;
-      }
+  if (self->use_converters) {
+    el = gst_play_sink_convert_bin_add_conversion_element_factory (cbin,
+        "audioconvert", "conv");
+    if (el) {
+      prev = el;
     }
 
-    if (self->use_volume && self->volume) {
-      gst_bin_add (bin, gst_object_ref (self->volume));
-      gst_element_sync_state_with_parent (self->volume);
-      distribute_running_time (self->volume, &self->segment);
+    el = gst_play_sink_convert_bin_add_conversion_element_factory (cbin,
+        "audioresample", "resample");
+    if (el) {
+
       if (prev) {
-        if (!gst_element_link_pads_full (prev, "src", self->volume, "sink",
+        if (!gst_element_link_pads_full (prev, "src", el, "sink",
                 GST_PAD_LINK_CHECK_TEMPLATE_CAPS))
           goto link_failed;
-      } else {
-        head = self->volume;
       }
-      prev = self->volume;
+      prev = el;
     }
-
-    GST_DEBUG_OBJECT (self, "Raw conversion pipeline created");
-  } else {
-
-    GST_DEBUG_OBJECT (self, "Removing raw conversion pipeline");
-
-    gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (self->sinkpad), NULL);
-    gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (self->srcpad), NULL);
-
-    if (self->conv) {
-      gst_element_set_state (self->conv, GST_STATE_NULL);
-      gst_bin_remove (bin, self->conv);
-      self->conv = NULL;
-    }
-    if (self->resample) {
-      gst_element_set_state (self->resample, GST_STATE_NULL);
-      gst_bin_remove (bin, self->resample);
-      self->resample = NULL;
-    }
-    if (self->volume) {
-      gst_element_set_state (self->volume, GST_STATE_NULL);
-      if (GST_OBJECT_PARENT (self->volume) == GST_OBJECT_CAST (self)) {
-        gst_bin_remove (GST_BIN_CAST (self), self->volume);
-      }
-    }
-
-    GST_DEBUG_OBJECT (self, "Raw conversion pipeline removed");
   }
 
-  g_assert ((head != NULL) == (prev != NULL));
-
-  /* to make things simple and avoid counterintuitive pad juggling,
-     ensure there is at least one element in the list */
-  if (!head) {
-    gst_play_sink_audio_convert_add_identity (self);
-    prev = head = self->identity;
+  if (self->use_volume && self->volume) {
+    el = self->volume;
+    gst_play_sink_convert_bin_add_conversion_element (cbin, el);
+    if (prev) {
+      if (!gst_element_link_pads_full (prev, "src", el, "sink",
+              GST_PAD_LINK_CHECK_TEMPLATE_CAPS))
+        goto link_failed;
+    }
+    prev = el;
   }
-
-  gst_play_sink_audio_convert_set_targets (self, head, prev);
-
-unblock:
-  gst_pad_set_blocked_async_full (self->sink_proxypad, FALSE,
-      (GstPadBlockCallback) pad_blocked_cb, gst_object_ref (self),
-      (GDestroyNotify) gst_object_unref);
-
-done:
-  GST_PLAY_SINK_AUDIO_CONVERT_UNLOCK (self);
-  return;
+  return TRUE;
 
 link_failed:
-  {
-    GST_ELEMENT_ERROR (self, CORE, PAD,
-        (NULL), ("Failed to configure the audio converter."));
-
-    /* use a simple identity, better than nothing */
-    gst_play_sink_audio_convert_add_identity (self);
-    gst_play_sink_audio_convert_set_targets (self, self->identity,
-        self->identity);
-
-    gst_pad_set_blocked_async_full (self->sink_proxypad, FALSE,
-        (GstPadBlockCallback) pad_blocked_cb, gst_object_ref (self),
-        (GDestroyNotify) gst_object_unref);
-
-    GST_PLAY_SINK_AUDIO_CONVERT_UNLOCK (self);
-    return;
-  }
-}
-
-static gboolean
-gst_play_sink_audio_convert_sink_event (GstPad * pad, GstEvent * event)
-{
-  GstPlaySinkAudioConvert *self =
-      GST_PLAY_SINK_AUDIO_CONVERT (gst_pad_get_parent (pad));
-  gboolean ret;
-
-  ret = gst_proxy_pad_event_default (pad, gst_event_ref (event));
-
-  if (GST_EVENT_TYPE (event) == GST_EVENT_NEWSEGMENT) {
-    gboolean update;
-    gdouble rate, applied_rate;
-    GstFormat format;
-    gint64 start, stop, position;
-
-    GST_PLAY_SINK_AUDIO_CONVERT_LOCK (self);
-    gst_event_parse_new_segment_full (event, &update, &rate, &applied_rate,
-        &format, &start, &stop, &position);
-
-    GST_DEBUG_OBJECT (self, "Segment before %" GST_SEGMENT_FORMAT,
-        &self->segment);
-    gst_segment_set_newsegment_full (&self->segment, update, rate, applied_rate,
-        format, start, stop, position);
-    GST_DEBUG_OBJECT (self, "Segment after %" GST_SEGMENT_FORMAT,
-        &self->segment);
-    GST_PLAY_SINK_AUDIO_CONVERT_UNLOCK (self);
-  } else if (GST_EVENT_TYPE (event) == GST_EVENT_FLUSH_STOP) {
-    GST_PLAY_SINK_AUDIO_CONVERT_LOCK (self);
-    GST_DEBUG_OBJECT (self, "Resetting segment");
-    gst_segment_init (&self->segment, GST_FORMAT_UNDEFINED);
-    GST_PLAY_SINK_AUDIO_CONVERT_UNLOCK (self);
-  }
-
-  gst_event_unref (event);
-  gst_object_unref (self);
-
-  return ret;
-}
-
-static gboolean
-gst_play_sink_audio_convert_sink_setcaps (GstPad * pad, GstCaps * caps)
-{
-  GstPlaySinkAudioConvert *self =
-      GST_PLAY_SINK_AUDIO_CONVERT (gst_pad_get_parent (pad));
-  gboolean ret;
-  GstStructure *s;
-  const gchar *name;
-  gboolean reconfigure = FALSE;
-
-  GST_PLAY_SINK_AUDIO_CONVERT_LOCK (self);
-  s = gst_caps_get_structure (caps, 0);
-  name = gst_structure_get_name (s);
-
-  if (g_str_has_prefix (name, "audio/x-raw-")) {
-    if (!self->raw && !gst_pad_is_blocked (self->sink_proxypad)) {
-      GST_DEBUG_OBJECT (self, "Changing caps from non-raw to raw");
-      reconfigure = TRUE;
-      gst_pad_set_blocked_async_full (self->sink_proxypad, TRUE,
-          (GstPadBlockCallback) pad_blocked_cb, gst_object_ref (self),
-          (GDestroyNotify) gst_object_unref);
-    }
-  } else {
-    if (self->raw && !gst_pad_is_blocked (self->sink_proxypad)) {
-      GST_DEBUG_OBJECT (self, "Changing caps from raw to non-raw");
-      reconfigure = TRUE;
-      gst_pad_set_blocked_async_full (self->sink_proxypad, TRUE,
-          (GstPadBlockCallback) pad_blocked_cb, gst_object_ref (self),
-          (GDestroyNotify) gst_object_unref);
-    }
-  }
-
-  /* Otherwise the setcaps below fails */
-  if (reconfigure) {
-    gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (self->sinkpad), NULL);
-    gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (self->srcpad), NULL);
-  }
-
-  GST_PLAY_SINK_AUDIO_CONVERT_UNLOCK (self);
-  ret = gst_ghost_pad_setcaps_default (pad, caps);
-
-  GST_DEBUG_OBJECT (self, "Setting sink caps %" GST_PTR_FORMAT ": %d", caps,
-      ret);
-
-  gst_object_unref (self);
-
-  return ret;
-}
-
-static GstCaps *
-gst_play_sink_audio_convert_getcaps (GstPad * pad)
-{
-  GstPlaySinkAudioConvert *self =
-      GST_PLAY_SINK_AUDIO_CONVERT (gst_pad_get_parent (pad));
-  GstCaps *ret;
-  GstPad *otherpad, *peer;
-
-  GST_PLAY_SINK_AUDIO_CONVERT_LOCK (self);
-  otherpad = gst_ghost_pad_get_target (GST_GHOST_PAD_CAST (pad));
-  if (!otherpad) {
-    if (pad == self->srcpad) {
-      otherpad = self->sink_proxypad;
-    } else if (pad == self->sinkpad) {
-      otherpad =
-          GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD
-              (self->sinkpad)));
-    } else {
-      GST_ERROR_OBJECT (pad, "Not one of our pads");
-    }
-  }
-  GST_PLAY_SINK_AUDIO_CONVERT_UNLOCK (self);
-
-  if (otherpad) {
-    peer = gst_pad_get_peer (otherpad);
-    if (peer) {
-      ret = gst_pad_get_caps_reffed (peer);
-      gst_object_unref (peer);
-    } else {
-      ret = gst_caps_new_any ();
-    }
-    gst_object_unref (otherpad);
-  } else {
-    GST_WARNING_OBJECT (self, "Could not traverse bin");
-    ret = gst_caps_new_any ();
-  }
-  gst_object_unref (self);
-
-  return ret;
+  return FALSE;
 }
 
 static void
@@ -414,84 +87,7 @@ gst_play_sink_audio_convert_finalize (GObject * object)
   if (self->volume)
     gst_object_unref (self->volume);
 
-  gst_object_unref (self->sink_proxypad);
-  g_mutex_free (self->lock);
-
   G_OBJECT_CLASS (parent_class)->finalize (object);
-}
-
-static GstStateChangeReturn
-gst_play_sink_audio_convert_change_state (GstElement * element,
-    GstStateChange transition)
-{
-  GstStateChangeReturn ret;
-  GstPlaySinkAudioConvert *self = GST_PLAY_SINK_AUDIO_CONVERT_CAST (element);
-
-  switch (transition) {
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-      GST_PLAY_SINK_AUDIO_CONVERT_LOCK (self);
-      if (gst_pad_is_blocked (self->sink_proxypad))
-        gst_pad_set_blocked_async_full (self->sink_proxypad, FALSE,
-            (GstPadBlockCallback) pad_blocked_cb, gst_object_ref (self),
-            (GDestroyNotify) gst_object_unref);
-      GST_PLAY_SINK_AUDIO_CONVERT_UNLOCK (self);
-      break;
-    default:
-      break;
-  }
-
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-  if (ret == GST_STATE_CHANGE_FAILURE)
-    return ret;
-
-  switch (transition) {
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-      GST_PLAY_SINK_AUDIO_CONVERT_LOCK (self);
-      gst_segment_init (&self->segment, GST_FORMAT_UNDEFINED);
-      if (self->conv) {
-        gst_element_set_state (self->conv, GST_STATE_NULL);
-        gst_bin_remove (GST_BIN_CAST (self), self->conv);
-        self->conv = NULL;
-      }
-      if (self->resample) {
-        gst_element_set_state (self->resample, GST_STATE_NULL);
-        gst_bin_remove (GST_BIN_CAST (self), self->resample);
-        self->resample = NULL;
-      }
-      if (self->volume) {
-        gst_element_set_state (self->volume, GST_STATE_NULL);
-        if (GST_OBJECT_PARENT (self->volume) == GST_OBJECT_CAST (self)) {
-          gst_bin_remove (GST_BIN_CAST (self), self->volume);
-        }
-      }
-      if (!self->identity) {
-        gst_play_sink_audio_convert_add_identity (self);
-      }
-      gst_play_sink_audio_convert_set_targets (self, self->identity,
-          self->identity);
-      self->raw = FALSE;
-      GST_PLAY_SINK_AUDIO_CONVERT_UNLOCK (self);
-      break;
-    case GST_STATE_CHANGE_READY_TO_PAUSED:
-      GST_PLAY_SINK_AUDIO_CONVERT_LOCK (self);
-      if (!gst_pad_is_blocked (self->sink_proxypad))
-        gst_pad_set_blocked_async_full (self->sink_proxypad, TRUE,
-            (GstPadBlockCallback) pad_blocked_cb, gst_object_ref (self),
-            (GDestroyNotify) gst_object_unref);
-      GST_PLAY_SINK_AUDIO_CONVERT_UNLOCK (self);
-      break;
-    case GST_STATE_CHANGE_READY_TO_NULL:
-      if (self->identity) {
-        gst_element_set_state (self->identity, GST_STATE_NULL);
-        gst_bin_remove (GST_BIN_CAST (self), self->identity);
-        self->identity = NULL;
-      }
-      break;
-    default:
-      break;
-  }
-
-  return ret;
 }
 
 static void
@@ -508,48 +104,20 @@ gst_play_sink_audio_convert_class_init (GstPlaySinkAudioConvertClass * klass)
 
   gobject_class->finalize = gst_play_sink_audio_convert_finalize;
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&srctemplate));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sinktemplate));
   gst_element_class_set_details_simple (gstelement_class,
       "Player Sink Audio Converter", "Audio/Bin/Converter",
       "Convenience bin for audio conversion",
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
-
-  gstelement_class->change_state =
-      GST_DEBUG_FUNCPTR (gst_play_sink_audio_convert_change_state);
 }
 
 static void
 gst_play_sink_audio_convert_init (GstPlaySinkAudioConvert * self)
 {
-  GstPadTemplate *templ;
+  GstPlaySinkConvertBin *cbin = GST_PLAY_SINK_CONVERT_BIN (self);
 
-  self->lock = g_mutex_new ();
-  gst_segment_init (&self->segment, GST_FORMAT_UNDEFINED);
-
-  templ = gst_static_pad_template_get (&sinktemplate);
-  self->sinkpad = gst_ghost_pad_new_no_target_from_template ("sink", templ);
-  gst_pad_set_event_function (self->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_play_sink_audio_convert_sink_event));
-  gst_pad_set_setcaps_function (self->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_play_sink_audio_convert_sink_setcaps));
-  gst_pad_set_getcaps_function (self->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_play_sink_audio_convert_getcaps));
-
-  self->sink_proxypad =
-      GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD (self->sinkpad)));
-
-  gst_element_add_pad (GST_ELEMENT_CAST (self), self->sinkpad);
-  gst_object_unref (templ);
-
-  templ = gst_static_pad_template_get (&srctemplate);
-  self->srcpad = gst_ghost_pad_new_no_target_from_template ("src", templ);
-  gst_pad_set_getcaps_function (self->srcpad,
-      GST_DEBUG_FUNCPTR (gst_play_sink_audio_convert_getcaps));
-  gst_element_add_pad (GST_ELEMENT_CAST (self), self->srcpad);
-  gst_object_unref (templ);
+  cbin->audio = TRUE;
+  cbin->add_conversion_elements =
+      gst_play_sink_audio_convert_add_conversion_elements;
 
   /* FIXME: Only create this on demand but for now we need
    * it to always exist because of playsink's volume proxying
