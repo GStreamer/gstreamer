@@ -20,11 +20,17 @@
 #ifndef __GST_FFMPEG_UTILS_H__
 #define __GST_FFMPEG_UTILS_H__
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #ifdef HAVE_FFMPEG_UNINSTALLED
+#include <mathematics.h>
 #include <avcodec.h>
 #else
 #include <libavcodec/avcodec.h>
 #endif
+
 #include <gst/gst.h>
 
 /*
