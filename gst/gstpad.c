@@ -3640,6 +3640,7 @@ flushing:
         "chaining, but pad was flushing");
     GST_OBJECT_UNLOCK (pad);
     GST_PAD_STREAM_UNLOCK (pad);
+    gst_mini_object_unref (GST_MINI_OBJECT_CAST (data));
     return GST_FLOW_WRONG_STATE;
   }
 events_error:
@@ -3647,6 +3648,7 @@ events_error:
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "events were not accepted");
     GST_OBJECT_UNLOCK (pad);
     GST_PAD_STREAM_UNLOCK (pad);
+    gst_mini_object_unref (GST_MINI_OBJECT_CAST (data));
     return ret;
   }
 probe_stopped:
