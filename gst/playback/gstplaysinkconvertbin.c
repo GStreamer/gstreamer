@@ -399,11 +399,6 @@ gst_play_sink_convert_bin_remove_elements (GstPlaySinkConvertBin * self)
     g_list_free (self->conversion_elements);
     self->conversion_elements = NULL;
   }
-  if (self->identity) {
-    gst_element_set_state (self->identity, GST_STATE_NULL);
-    gst_bin_remove (GST_BIN_CAST (self), self->identity);
-    self->identity = NULL;
-  }
   if (self->converter_caps) {
     gst_caps_unref (self->converter_caps);
     self->converter_caps = NULL;
