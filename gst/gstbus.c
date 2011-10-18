@@ -494,8 +494,9 @@ gst_bus_timed_pop_filtered (GstBus * bus, GstClockTime timeout,
     GST_LOG_OBJECT (bus, "have %d messages", g_queue_get_length (bus->queue));
 
     while ((message = g_queue_pop_head (bus->queue))) {
-      GST_DEBUG_OBJECT (bus, "got message %p, %s, type mask is %u",
-          message, GST_MESSAGE_TYPE_NAME (message), (guint) types);
+      GST_DEBUG_OBJECT (bus, "got message %p, %s from %s, type mask is %u",
+          message, GST_MESSAGE_TYPE_NAME (message),
+          GST_OBJECT_NAME (GST_MESSAGE_SRC (message)), (guint) types);
       if ((GST_MESSAGE_TYPE (message) & types) != 0) {
         /* exit the loop, we have a message */
         goto beach;
@@ -756,7 +757,8 @@ gst_bus_source_dispatch (GSource * source, GSourceFunc callback,
   if (!handler)
     goto no_handler;
 
-  GST_DEBUG_OBJECT (bus, "source %p calling dispatch with %p", source, message);
+  GST_DEBUG_OBJECT (bus, "source %p calling dispatch with %" GST_PTR_FORMAT,
+      source, message);
 
   keep = handler (bus, message, user_data);
   gst_message_unref (message);

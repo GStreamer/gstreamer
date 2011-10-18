@@ -191,7 +191,9 @@ gst_message_finalize (GstMessage * message)
 {
   g_return_if_fail (message != NULL);
 
-  GST_CAT_LOG (GST_CAT_MESSAGE, "finalize message %p", message);
+  GST_CAT_LOG (GST_CAT_MESSAGE, "finalize message %p, %s from %s", message,
+      GST_MESSAGE_TYPE_NAME (message),
+      GST_OBJECT_NAME (GST_MESSAGE_SRC (message)));
 
   if (GST_MESSAGE_SRC (message)) {
     gst_object_unref (GST_MESSAGE_SRC (message));
@@ -217,7 +219,9 @@ _gst_message_copy (GstMessage * message)
 {
   GstMessage *copy;
 
-  GST_CAT_LOG (GST_CAT_MESSAGE, "copy message %p", message);
+  GST_CAT_LOG (GST_CAT_MESSAGE, "copy message %p, %s from %s", message,
+      GST_MESSAGE_TYPE_NAME (message),
+      GST_OBJECT_NAME (GST_MESSAGE_SRC (message)));
 
   copy = (GstMessage *) gst_mini_object_new (GST_TYPE_MESSAGE);
 
