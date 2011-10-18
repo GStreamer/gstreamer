@@ -44,6 +44,7 @@
 #include "gstceltdec.h"
 #include <string.h>
 #include <gst/tag/tag.h>
+#include <gst/audio/audio.h>
 
 GST_DEBUG_CATEGORY_STATIC (celtdec_debug);
 #define GST_CAT_DEFAULT celtdec_debug
@@ -54,11 +55,9 @@ static GstStaticPadTemplate celt_dec_src_factory =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, "
-        "rate = (int) [ 32000, 64000 ], "
-        "channels = (int) [ 1, 2 ], "
-        "endianness = (int) BYTE_ORDER, "
-        "signed = (boolean) true, " "width = (int) 16, " "depth = (int) 16")
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) " GST_AUDIO_NE (S16) ", "
+        "rate = (int) [ 32000, 64000 ], " "channels = (int) [ 1, 2 ]")
     );
 
 static GstStaticPadTemplate celt_dec_sink_factory =
@@ -68,7 +67,8 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("audio/x-celt")
     );
 
-GST_BOILERPLATE (GstCeltDec, gst_celt_dec, GstElement, GST_TYPE_ELEMENT);
+#define gst_celt_dec_parent_class parent_class
+G_DEFINE_TYPE (GstCeltDec, gst_celt_dec, GST_TYPE_ELEMENT);
 
 static gboolean celt_dec_sink_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn celt_dec_chain (GstPad * pad, GstBuffer * buf);
@@ -93,21 +93,6 @@ static GstFlowReturn celt_dec_chain_parse_comments (GstCeltDec * dec,
     GstBuffer * buf);
 
 static void
-gst_celt_dec_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&celt_dec_src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&celt_dec_sink_factory));
-  gst_element_class_set_details_simple (element_class, "Celt audio decoder",
-      "Codec/Decoder/Audio",
-      "decode celt streams to audio",
-      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
-}
-
-static void
 gst_celt_dec_class_init (GstCeltDecClass * klass)
 {
   GstElementClass *gstelement_class;
@@ -115,6 +100,16 @@ gst_celt_dec_class_init (GstCeltDecClass * klass)
   gstelement_class = (GstElementClass *) klass;
 
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (celt_dec_change_state);
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&celt_dec_src_factory));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&celt_dec_sink_factory));
+
+  gst_element_class_set_details_simple (gstelement_class, "Celt audio decoder",
+      "Codec/Decoder/Audio",
+      "decode celt streams to audio",
+      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
 
   GST_DEBUG_CATEGORY_INIT (celtdec_debug, "celtdec", 0,
       "celt decoding element");
@@ -148,7 +143,7 @@ gst_celt_dec_reset (GstCeltDec * dec)
 }
 
 static void
-gst_celt_dec_init (GstCeltDec * dec, GstCeltDecClass * g_class)
+gst_celt_dec_init (GstCeltDec * dec)
 {
   dec->sinkpad =
       gst_pad_new_from_static_template (&celt_dec_sink_factory, "sink");
