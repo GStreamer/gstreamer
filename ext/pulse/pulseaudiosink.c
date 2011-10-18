@@ -653,7 +653,14 @@ proxypad_blocked_cb (GstPad * pad, gboolean blocked, gpointer data)
 
   if (!pbin->format_lost) {
     sinkpad = gst_element_get_static_pad (GST_ELEMENT (pbin->psink), "sink");
-    caps = gst_pad_get_caps_reffed (pad);
+
+    if (GST_PAD_CAPS (pbin->sinkpad)) {
+      /* See if we already got caps on our sinkpad */
+      caps = gst_caps_ref (GST_PAD_CAPS (pbin->sinkpad));
+    } else {
+      /* We haven't, so get caps from upstream */
+      caps = gst_pad_get_caps_reffed (pad);
+    }
 
     if (gst_pad_accept_caps (sinkpad, caps)) {
       if (pbin->dbin2) {
