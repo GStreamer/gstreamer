@@ -1822,7 +1822,7 @@ gst_subtitle_overlay_video_sink_event (GstPad * pad, GstEvent * event)
     if (format != GST_FORMAT_TIME) {
       GST_ERROR_OBJECT (pad, "Newsegment event in non-time format: %s",
           gst_format_get_name (format));
-      gst_object_unref (event);
+      gst_event_unref (event);
       gst_object_unref (self);
       return FALSE;
     }
