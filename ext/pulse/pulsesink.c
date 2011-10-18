@@ -142,10 +142,10 @@ struct _GstPulseRingBuffer
 #ifdef HAVE_PULSE_1_0
   pa_format_info *format;
   guint channels;
+  gboolean is_pcm;
 #else
   pa_sample_spec sample_spec;
 #endif
-  gboolean is_pcm;
 
   void *m_data;
   size_t m_towrite;
@@ -232,10 +232,10 @@ gst_pulseringbuffer_init (GstPulseRingBuffer * pbuf)
 #ifdef HAVE_PULSE_1_0
   pbuf->format = NULL;
   pbuf->channels = 0;
+  pbuf->is_pcm = FALSE;
 #else
   pa_sample_spec_init (&pbuf->sample_spec);
 #endif
-  pbuf->is_pcm = FALSE;
 
   pbuf->m_data = NULL;
   pbuf->m_towrite = 0;
@@ -828,7 +828,6 @@ gst_pulseringbuffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
 #else
   if (!gst_pulse_fill_sample_spec (spec, &pbuf->sample_spec))
     goto invalid_spec;
-  pbuf->is_pcm = TRUE;
 #endif
 
   pa_threaded_mainloop_lock (mainloop);
