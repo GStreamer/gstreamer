@@ -4,18 +4,15 @@ Gwenole Beauchesne <gbeauchesne@splitted-desktop.com>
 Copyright:
 
     gstreamer-vaapi helper libraries
-    gst-libs/gst/vaapi/*.[ch]: LGPL (v2.1 or later)
-
-    gstreamer-vaapi plugin elements
-    gst/vaapi{convert,decode,sink}: GPL (v2 or later)
+    and plugins elements: LGPL (v2.1 or later)
 
 License:
 
     Copyright (C) 2010-2011, Splitted-Desktop Systems.
     Copyright (C) 2011, Intel Corporation.
 
-    gstreamer-vaapi helper libraries are available under the terms of
-    the GNU Lesser General Public License v2.1+.
+    gstreamer-vaapi helper libraries and plugins elements are available under
+    the terms of the GNU Lesser General Public License v2.1+.
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public License
@@ -35,22 +32,3 @@ License:
 On Debian GNU/Linux systems, the complete text of the GNU Lesser General
 Public License can be found in `/usr/share/common-licenses/LGPL-2.1'.
 
-    gstreamer-vaapi plugin elements are available under the terms of
-    the GNU General Public License v2+.
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
-
-On Debian GNU/Linux systems, the complete text of the GNU General Public
-License can be found in `/usr/share/common-licenses/GPL-2'.
