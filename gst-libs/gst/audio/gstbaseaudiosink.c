@@ -1367,9 +1367,11 @@ gst_base_audio_sink_get_alignment (GstBaseAudioSink * sink,
         "align with prev sample, ABS (%" G_GINT64_FORMAT ") < %"
         G_GINT64_FORMAT, align, maxdrift);
   } else {
+    gint64 diff_s G_GNUC_UNUSED;
+
     /* calculate sample diff in seconds for error message */
-    gint64 diff_s = gst_util_uint64_scale_int (diff, GST_SECOND,
-        ringbuf->spec.rate);
+    diff_s = gst_util_uint64_scale_int (diff, GST_SECOND, ringbuf->spec.rate);
+
     /* timestamps drifted apart from previous samples too much, we need to
      * resync. We log this as an element warning. */
     GST_WARNING_OBJECT (sink,
