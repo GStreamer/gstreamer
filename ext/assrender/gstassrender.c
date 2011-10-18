@@ -1140,7 +1140,7 @@ gst_ass_render_chain_text (GstPad * pad, GstBuffer * buffer)
     g_mutex_lock (render->subtitle_mutex);
     if (G_UNLIKELY (render->subtitle_flushing)) {
       GST_DEBUG_OBJECT (render, "Text pad flushing");
-      gst_object_unref (buffer);
+      gst_buffer_unref (buffer);
       g_mutex_unlock (render->subtitle_mutex);
       return GST_FLOW_WRONG_STATE;
     }
