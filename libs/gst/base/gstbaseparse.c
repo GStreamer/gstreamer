@@ -1717,7 +1717,6 @@ gst_base_parse_handle_and_push_frame (GstBaseParse * parse,
       gst_buffer_set_caps (queued_frame->buffer,
           GST_PAD_CAPS (GST_BASE_PARSE_SRC_PAD (parse)));
       gst_base_parse_push_frame (parse, queued_frame);
-      gst_base_parse_frame_free (queued_frame);
     }
   }
 
