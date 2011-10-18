@@ -858,7 +858,7 @@ gst_wavpack_enc_sink_event (GstPad * pad, GstEvent * event)
       /* Drop all remaining data, this is no complete block otherwise
        * it would've been pushed already */
       if (enc->pending_buffer) {
-        gst_object_unref (enc->pending_buffer);
+        gst_buffer_unref (enc->pending_buffer);
         enc->pending_buffer = NULL;
         enc->pending_offset = 0;
       }
