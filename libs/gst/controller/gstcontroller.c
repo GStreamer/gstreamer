@@ -275,9 +275,12 @@ gst_controller_new_valist (GObject * object, va_list var_args)
 /**
  * gst_controller_new_list:
  * @object: the object of which some properties should be controlled
- * @list: list of property names that should be controlled
+ * @list: (transfer none) (element-type utf8): list of property names
+ *   that should be controlled
  *
  * Creates a new GstController for the given object's properties
+ *
+ * Rename to: gst_controller_new
  *
  * Returns: the new controller.
  */
@@ -366,9 +369,12 @@ gst_controller_remove_properties_valist (GstController * self, va_list var_args)
 /**
  * gst_controller_remove_properties_list:
  * @self: the controller object from which some properties should be removed
- * @list: #GList of property names that should be removed
+ * @list: (transfer none) (element-type utf8): #GList of property names that
+ *   should be removed
  *
  * Removes the given object properties from the controller
+ *
+ * Rename to: gst_controller_remove_properties
  *
  * Returns: %FALSE if one of the given property isn't handled by the controller, %TRUE otherwise
  */
@@ -434,8 +440,6 @@ gst_controller_remove_properties (GstController * self, ...)
  * This function is used to disable the #GstController on a property for
  * some time, i.e. gst_controller_sync_values() will do nothing for the
  * property.
- *
- * Since: 0.10.14
  */
 
 void
@@ -463,8 +467,6 @@ gst_controller_set_property_disabled (GstController * self,
  *
  * This function is used to disable all properties of the #GstController
  * for some time, i.e. gst_controller_sync_values() will do nothing.
- *
- * Since: 0.10.14
  */
 
 void
@@ -494,8 +496,6 @@ gst_controller_set_disabled (GstController * self, gboolean disabled)
  *
  * Returns: %FALSE if the given property isn't handled by the controller or the new #GstControlSource
  * couldn't be bound to the property, %TRUE if everything worked as expected.
- *
- * Since: 0.10.14
  */
 gboolean
 gst_controller_set_control_source (GstController * self,
@@ -532,10 +532,9 @@ gst_controller_set_control_source (GstController * self,
  * Gets the corresponding #GstControlSource for the property. This should be unreferenced
  * again after use.
  *
- * Returns: the #GstControlSource for @property_name or NULL if the property is not
- * controlled by this controller or no #GstControlSource was assigned yet.
- *
- * Since: 0.10.14
+ * Returns: (transfer full): the #GstControlSource for @property_name or NULL if
+ * the property is not controlled by this controller or no #GstControlSource was
+ * assigned yet.
  */
 GstControlSource *
 gst_controller_get_control_source (GstController * self,
@@ -613,8 +612,6 @@ gst_controller_get (GstController * self, const gchar * property_name,
  *
  * Returns: Returns the suggested timestamp or %GST_CLOCK_TIME_NONE
  * if no control-rate was set.
- *
- * Since: 0.10.13
  */
 GstClockTime
 gst_controller_suggest_next_sync (GstController * self)

@@ -52,9 +52,8 @@ GST_DEBUG_CATEGORY_EXTERN (GST_CAT_DEFAULT);
  * If the given GObject already has a GstController, it adds the given properties to the existing
  * controller and returns that controller.
  *
- * Returns: The GstController with which the user can control the given properties dynamically or NULL if
+ * Returns: (transfer full): The GstController with which the user can control the given properties dynamically or NULL if
  * one or more of the given properties aren't available, or cannot be controlled, for the given element.
- * Since: 0.9
  */
 GstController *
 gst_object_control_properties (GObject * object, ...)
@@ -81,7 +80,6 @@ gst_object_control_properties (GObject * object, ...)
  *
  * Returns: %FALSE if one of the given property names isn't handled by the
  * controller, %TRUE otherwise
- * Since: 0.9
  */
 gboolean
 gst_object_uncontrol_properties (GObject * object, ...)
@@ -107,8 +105,8 @@ gst_object_uncontrol_properties (GObject * object, ...)
  *
  * Gets the controller for the given GObject
  * 
- * Returns: the controller handling some of the given element's properties, %NULL if no controller
- * Since: 0.9
+ * Returns: (transfer full): the controller handling some of the given element's
+ * properties, %NULL if no controller
  */
 /* FIXME 0.11: This should return a new reference */
 GstController *
@@ -122,12 +120,11 @@ gst_object_get_controller (GObject * object)
 /**
  * gst_object_set_controller:
  * @object: the object that should get the controller
- * @controller: the controller object to plug in
+ * @controller: (transfer none): the controller object to plug in
  *
  * Sets the controller on the given GObject
  *
  * Returns: %FALSE if the GObject already has an controller, %TRUE otherwise
- * Since: 0.9
  */
 /* FIXME 0.11: This should increase the refcount before storing */
 gboolean
@@ -150,7 +147,6 @@ gst_object_set_controller (GObject * object, GstController * controller)
  * Convenience function for GObject
  *
  * Returns: same thing as gst_controller_suggest_next_sync()
- * Since: 0.10.13
  */
 GstClockTime
 gst_object_suggest_next_sync (GObject * object)
@@ -173,7 +169,6 @@ gst_object_suggest_next_sync (GObject * object)
  * Convenience function for GObject
  *
  * Returns: same thing as gst_controller_sync_values()
- * Since: 0.9
  */
 gboolean
 gst_object_sync_values (GObject * object, GstClockTime timestamp)
@@ -202,8 +197,6 @@ gst_object_sync_values (GObject * object, GstClockTime timestamp)
  *
  * Returns: %FALSE if the given property isn't handled by the controller or the new #GstControlSource
  * couldn't be bound to the property, %TRUE if everything worked as expected.
- *
- * Since: 0.10.14
  */
 gboolean
 gst_object_set_control_source (GObject * object, const gchar * property_name,
@@ -228,10 +221,9 @@ gst_object_set_control_source (GObject * object, const gchar * property_name,
  * Gets the corresponding #GstControlSource for the property. This should be unreferenced
  * again after use.
  *
- * Returns: the #GstControlSource for @property_name or NULL if the property is not
- * controlled by this controller or no #GstControlSource was assigned yet.
- *
- * Since: 0.10.14
+ * Returns: (transfer full): the #GstControlSource for @property_name or NULL if
+ * the property is not controlled by this controller or no #GstControlSource was
+ * assigned yet.
  */
 GstControlSource *
 gst_object_get_control_source (GObject * object, const gchar * property_name)
@@ -262,7 +254,6 @@ gst_object_get_control_source (GObject * object, const gchar * property_name)
  * The g_object_* functions are just convenience functions for GObject
  *
  * Returns: %TRUE if the given array(s) could be filled, %FALSE otherwise
- * Since: 0.9
  */
 gboolean
 gst_object_get_value_arrays (GObject * object, GstClockTime timestamp,
@@ -293,7 +284,6 @@ gst_object_get_value_arrays (GObject * object, GstClockTime timestamp,
  * The g_object_* functions are just convenience functions for GObject
  *
  * Returns: %TRUE if the given array(s) could be filled, %FALSE otherwise
- * Since: 0.9
  */
 gboolean
 gst_object_get_value_array (GObject * object, GstClockTime timestamp,
@@ -326,7 +316,6 @@ gst_object_get_value_array (GObject * object, GstClockTime timestamp,
  * %GST_STATE_PAUSED or %GST_STATE_PLAYING.
  *
  * Returns: the control rate in nanoseconds
- * Since: 0.10.10
  */
 GstClockTime
 gst_object_get_control_rate (GObject * object)
@@ -354,8 +343,6 @@ gst_object_get_control_rate (GObject * object)
  *
  * The control-rate should not change if the element is in %GST_STATE_PAUSED or
  * %GST_STATE_PLAYING.
- *
- * Since: 0.10.10
  */
 void
 gst_object_set_control_rate (GObject * object, GstClockTime control_rate)

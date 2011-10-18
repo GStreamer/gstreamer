@@ -497,7 +497,8 @@ gst_interpolation_control_source_set (GstInterpolationControlSource * self,
 /**
  * gst_interpolation_control_source_set_from_list:
  * @self: the #GstInterpolationControlSource object
- * @timedvalues: a list with #GstTimedValue items
+ * @timedvalues: (transfer none) (element-type GstController.TimedValue): a list
+ * with #GstTimedValue items
  *
  * Sets multiple timed values at once.
  *
@@ -616,7 +617,8 @@ _append_control_point (GstControlPoint * cp, GList ** l)
  * Returns a read-only copy of the list of #GstTimedValue for the given property.
  * Free the list after done with it.
  *
- * Returns: a copy of the list, or %NULL if the property isn't handled by the controller
+ * Returns: (transfer container) (element-type GstController.TimedValue): a copy
+ * of the list, or %NULL if the property isn't handled by the controller
  */
 GList *
 gst_interpolation_control_source_get_all (GstInterpolationControlSource * self)
