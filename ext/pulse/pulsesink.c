@@ -145,6 +145,7 @@ struct _GstPulseRingBuffer
 #else
   pa_sample_spec sample_spec;
 #endif
+  gboolean is_pcm;
 
   void *m_data;
   size_t m_towrite;
@@ -234,6 +235,7 @@ gst_pulseringbuffer_init (GstPulseRingBuffer * pbuf)
 #else
   pa_sample_spec_init (&pbuf->sample_spec);
 #endif
+  pbuf->is_pcm = FALSE;
 
   pbuf->m_data = NULL;
   pbuf->m_towrite = 0;
@@ -267,6 +269,7 @@ gst_pulsering_destroy_stream (GstPulseRingBuffer * pbuf)
       pa_format_info_free (pbuf->format);
       pbuf->format = NULL;
       pbuf->channels = 0;
+      pbuf->is_pcm = FALSE;
     }
 #endif
 
@@ -421,7 +424,7 @@ gst_pulsering_context_subscribe_cb (pa_context * c,
       continue;
 
 #ifdef HAVE_PULSE_1_0
-    if (psink->device && pa_format_info_is_pcm (pbuf->format) &&
+    if (psink->device && pbuf->is_pcm &&
         !g_str_equal (psink->device,
             pa_stream_get_device_name (pbuf->stream))) {
       /* Underlying sink changed. And this is not a passthrough stream. Let's
@@ -821,9 +824,11 @@ gst_pulseringbuffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
 #ifdef HAVE_PULSE_1_0
   if (!gst_pulse_fill_format_info (spec, &pbuf->format, &pbuf->channels))
     goto invalid_spec;
+  pbuf->is_pcm = pa_format_info_is_pcm (pbuf->format);
 #else
   if (!gst_pulse_fill_sample_spec (spec, &pbuf->sample_spec))
     goto invalid_spec;
+  pbuf->is_pcm = TRUE;
 #endif
 
   pa_threaded_mainloop_lock (mainloop);
@@ -842,8 +847,7 @@ gst_pulseringbuffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
 
   /* initialize the channel map */
 #ifdef HAVE_PULSE_1_0
-  if (pa_format_info_is_pcm (pbuf->format) &&
-      gst_pulse_gst_to_channel_map (&channel_map, spec))
+  if (pbuf->is_pcm && gst_pulse_gst_to_channel_map (&channel_map, spec))
     pa_format_info_set_channel_map (pbuf->format, &channel_map);
 #else
   gst_pulse_gst_to_channel_map (&channel_map, spec);
@@ -905,7 +909,7 @@ gst_pulseringbuffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
     GST_LOG_OBJECT (psink, "have volume of %f", psink->volume);
     pv = &v;
 #ifdef HAVE_PULSE_1_0
-    if (pa_format_info_is_pcm (pbuf->format))
+    if (pbuf->is_pcm)
       gst_pulse_cvolume_from_linear (pv, pbuf->channels, psink->volume);
     else {
       GST_DEBUG_OBJECT (psink, "passthrough stream, not setting volume");
@@ -1168,8 +1172,8 @@ gst_pulseringbuffer_start (GstRingBuffer * buf)
 
   /* EOS needs running clock */
   if (GST_BASE_SINK_CAST (psink)->eos ||
-      g_atomic_int_get (&GST_BASE_AUDIO_SINK (psink)->abidata.ABI.
-          eos_rendering))
+      g_atomic_int_get (&GST_BASE_AUDIO_SINK (psink)->abidata.
+          ABI.eos_rendering))
     gst_pulsering_set_corked (pbuf, FALSE, FALSE);
 
   pa_threaded_mainloop_unlock (mainloop);
@@ -1536,7 +1540,7 @@ gst_pulseringbuffer_commit (GstRingBuffer * buf, guint64 * sample,
 
 #ifdef HAVE_PULSE_1_0
     /* No trick modes for passthrough streams */
-    if (G_UNLIKELY (inr != outr || reverse)) {
+    if (G_UNLIKELY (!pbuf->is_pcm && (inr != outr || reverse))) {
       GST_WARNING_OBJECT (psink, "Passthrough stream can't run in trick mode");
       goto unlock_and_fail;
     }
@@ -2281,7 +2285,7 @@ gst_pulsesink_set_volume (GstPulseSink * psink, gdouble volume)
     goto no_index;
 
 #ifdef HAVE_PULSE_1_0
-  if (pa_format_info_is_pcm (pbuf->format))
+  if (pbuf->is_pcm)
     gst_pulse_cvolume_from_linear (&v, pbuf->channels, volume);
   else
     /* FIXME: this will eventually be superceded by checks to see if the volume
