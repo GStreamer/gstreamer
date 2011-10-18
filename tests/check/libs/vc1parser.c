@@ -786,7 +786,7 @@ static guint8 pframe2_adv[] = {
 
 GST_START_TEST (test_vc1_identify_bdu)
 {
-  GstVC1ParseResult res;
+  GstVC1ParserResult res;
   GstVC1BDU bdu;
   GstVC1SeqHdr hdr;
   GstVC1EntryPointHdr entrypt;
@@ -799,10 +799,10 @@ GST_START_TEST (test_vc1_identify_bdu)
 
   res = gst_vc1_parse_sequence_header (bdu.data + bdu.offset, bdu.size, &hdr);
   assert_equals_int (res, GST_VC1_PARSER_OK);
-  assert_equals_int (hdr.profiletype, GST_VC1_PROFILE_ADVANCED);
+  assert_equals_int (hdr.profile, GST_VC1_PROFILE_ADVANCED);
 
-  assert_equals_int (hdr.profile.advanced.level, GST_VC1_LEVEL_L1);
-  assert_equals_int (hdr.colordiff_format, 1);
+  assert_equals_int (hdr.advanced.level, GST_VC1_LEVEL_L1);
+  assert_equals_int (hdr.advanced.colordiff_format, 1);
 
   res = gst_vc1_identify_next_bdu (sequence_fullframe + bdu.sc_offset +
       bdu.size, sizeof (sequence_fullframe) - bdu.sc_offset - bdu.size, &bdu);
@@ -822,32 +822,32 @@ GST_START_TEST (test_vc1_parse_p_frame_header_main)
   GstVC1FrameHdr framehdr;
   GstVC1SeqHdr seqhdr;
 
-  GstVC1SimpleMainSeqHdr *simplehdr = &seqhdr.profile.simplemain;
+  GstVC1SeqStructC *structc = &seqhdr.struct_c;
   GstVC1PicSimpleMain *pic = &framehdr.pic.simple;
+
+  structc->coded_height = 240;
+  structc->coded_width = 320;
 
   assert_equals_int (gst_vc1_parse_sequence_header (pframe_header_main,
           sizeof (pframe_header_main), &seqhdr), GST_VC1_PARSER_OK);
 
-  assert_equals_int (seqhdr.profiletype, GST_VC1_PROFILE_MAIN);
+  assert_equals_int (seqhdr.profile, GST_VC1_PROFILE_MAIN);
 
-  simplehdr->coded_height = 240;
-  simplehdr->coded_width = 320;
-
-  assert_equals_int (seqhdr.frmrtq_postproc, 7);
-  assert_equals_int (seqhdr.bitrtq_postproc, 2);
-  assert_equals_int (simplehdr->loop_filter, 1);
-  assert_equals_int (simplehdr->multires, 0);
-  assert_equals_int (simplehdr->extended_mv, 0);
-  assert_equals_int (simplehdr->rangered, 0);
-  assert_equals_int (simplehdr->vstransform, 1);
-  assert_equals_int (simplehdr->overlap, 1);
-  assert_equals_int (simplehdr->syncmarker, 0);
-  assert_equals_int (simplehdr->dquant, 1);
-  assert_equals_int (simplehdr->quantizer, 0);
-  assert_equals_int (simplehdr->maxbframes, 1);
+  assert_equals_int (structc->frmrtq_postproc, 7);
+  assert_equals_int (structc->bitrtq_postproc, 2);
+  assert_equals_int (structc->loop_filter, 1);
+  assert_equals_int (structc->multires, 0);
+  assert_equals_int (structc->extended_mv, 0);
+  assert_equals_int (structc->rangered, 0);
+  assert_equals_int (structc->vstransform, 1);
+  assert_equals_int (structc->overlap, 1);
+  assert_equals_int (structc->syncmarker, 0);
+  assert_equals_int (structc->dquant, 1);
+  assert_equals_int (structc->quantizer, 0);
+  assert_equals_int (structc->maxbframes, 1);
 
   assert_equals_int (gst_vc1_parse_frame_header (pframe_main,
-          sizeof (pframe_main), &framehdr, &seqhdr), GST_VC1_PARSER_OK);
+          sizeof (pframe_main), &framehdr, &seqhdr, NULL), GST_VC1_PARSER_OK);
   assert_equals_int (framehdr.ptype, GST_VC1_PICTURE_TYPE_P);
   assert_equals_int (framehdr.interpfrm, 0);
   assert_equals_int (pic->frmcnt, 1);
@@ -865,33 +865,40 @@ GST_START_TEST (test_vc1_parse_b_frame_header_main)
 {
   GstVC1FrameHdr framehdr;
   GstVC1SeqHdr seqhdr;
+  GstVC1BitPlanes b = { 0, };
 
-  GstVC1SimpleMainSeqHdr *simplehdr = &seqhdr.profile.simplemain;
+  GstVC1SeqStructC *structc = &seqhdr.struct_c;
   GstVC1PicSimpleMain *pic = &framehdr.pic.simple;
+
+  structc->coded_height = 240;
+  structc->coded_width = 320;
 
   assert_equals_int (gst_vc1_parse_sequence_header (bframe_header_main,
           sizeof (bframe_header_main), &seqhdr), GST_VC1_PARSER_OK);
 
-  assert_equals_int (seqhdr.profiletype, GST_VC1_PROFILE_MAIN);
+  assert_equals_int (seqhdr.profile, GST_VC1_PROFILE_MAIN);
+  assert_equals_int (seqhdr.mb_height, 15);
+  assert_equals_int (seqhdr.mb_width, 20);
 
-  simplehdr->coded_height = 240;
-  simplehdr->coded_width = 320;
+  gst_vc1_bitplanes_ensure_size (&b, &seqhdr);
 
-  assert_equals_int (seqhdr.frmrtq_postproc, 7);
-  assert_equals_int (seqhdr.bitrtq_postproc, 3);
-  assert_equals_int (simplehdr->loop_filter, 1);
-  assert_equals_int (simplehdr->multires, 0);
-  assert_equals_int (simplehdr->extended_mv, 0);
-  assert_equals_int (simplehdr->rangered, 0);
-  assert_equals_int (simplehdr->vstransform, 1);
-  assert_equals_int (simplehdr->overlap, 1);
-  assert_equals_int (simplehdr->syncmarker, 0);
-  assert_equals_int (simplehdr->dquant, 1);
-  assert_equals_int (simplehdr->quantizer, 0);
-  assert_equals_int (simplehdr->maxbframes, 1);
+  assert_equals_int (b.size, 315);
+
+  assert_equals_int (structc->frmrtq_postproc, 7);
+  assert_equals_int (structc->bitrtq_postproc, 3);
+  assert_equals_int (structc->loop_filter, 1);
+  assert_equals_int (structc->multires, 0);
+  assert_equals_int (structc->extended_mv, 0);
+  assert_equals_int (structc->rangered, 0);
+  assert_equals_int (structc->vstransform, 1);
+  assert_equals_int (structc->overlap, 1);
+  assert_equals_int (structc->syncmarker, 0);
+  assert_equals_int (structc->dquant, 1);
+  assert_equals_int (structc->quantizer, 0);
+  assert_equals_int (structc->maxbframes, 1);
 
   assert_equals_int (gst_vc1_parse_frame_header (bframe_main,
-          sizeof (bframe_main), &framehdr, &seqhdr), GST_VC1_PARSER_OK);
+          sizeof (bframe_main), &framehdr, &seqhdr, &b), GST_VC1_PARSER_OK);
 
   assert_equals_int (framehdr.ptype, GST_VC1_PICTURE_TYPE_B);
   assert_equals_int (framehdr.interpfrm, 0);
@@ -904,6 +911,8 @@ GST_START_TEST (test_vc1_parse_b_frame_header_main)
   assert_equals_int (framehdr.pquant, 7);
   assert_equals_int (framehdr.halfqp, 0);
   assert_equals_int (framehdr.pquantizer, 0);
+
+  gst_vc1_bitplanes_free_1 (&b);
 }
 
 GST_END_TEST;
@@ -913,30 +922,31 @@ GST_START_TEST (test_vc1_parse_bi_frame_header_main)
   GstVC1FrameHdr framehdr;
   GstVC1SeqHdr seqhdr;
 
-  GstVC1SimpleMainSeqHdr *simplehdr = &seqhdr.profile.simplemain;
+  GstVC1SeqStructC *structc = &seqhdr.struct_c;
   GstVC1PicSimpleMain *pic = &framehdr.pic.simple;
-  simplehdr->coded_height = 240;
-  simplehdr->coded_width = 320;
+
+  structc->coded_height = 240;
+  structc->coded_width = 320;
 
   assert_equals_int (gst_vc1_parse_sequence_header (i_bi_frame_header,
           sizeof (i_bi_frame_header), &seqhdr), GST_VC1_PARSER_OK);
 
-  assert_equals_int (seqhdr.profiletype, GST_VC1_PROFILE_MAIN);
-  assert_equals_int (seqhdr.frmrtq_postproc, 7);
-  assert_equals_int (seqhdr.bitrtq_postproc, 7);
-  assert_equals_int (simplehdr->loop_filter, 1);
-  assert_equals_int (simplehdr->multires, 0);
-  assert_equals_int (simplehdr->extended_mv, 0);
-  assert_equals_int (simplehdr->rangered, 0);
-  assert_equals_int (simplehdr->vstransform, 1);
-  assert_equals_int (simplehdr->overlap, 1);
-  assert_equals_int (simplehdr->syncmarker, 0);
-  assert_equals_int (simplehdr->dquant, 1);
-  assert_equals_int (simplehdr->quantizer, 0);
-  assert_equals_int (simplehdr->maxbframes, 1);
+  assert_equals_int (seqhdr.profile, GST_VC1_PROFILE_MAIN);
+  assert_equals_int (structc->frmrtq_postproc, 7);
+  assert_equals_int (structc->bitrtq_postproc, 7);
+  assert_equals_int (structc->loop_filter, 1);
+  assert_equals_int (structc->multires, 0);
+  assert_equals_int (structc->extended_mv, 0);
+  assert_equals_int (structc->rangered, 0);
+  assert_equals_int (structc->vstransform, 1);
+  assert_equals_int (structc->overlap, 1);
+  assert_equals_int (structc->syncmarker, 0);
+  assert_equals_int (structc->dquant, 1);
+  assert_equals_int (structc->quantizer, 0);
+  assert_equals_int (structc->maxbframes, 1);
 
   assert_equals_int (gst_vc1_parse_frame_header (biframe_main,
-          sizeof (biframe_main), &framehdr, &seqhdr), GST_VC1_PARSER_OK);
+          sizeof (biframe_main), &framehdr, &seqhdr, NULL), GST_VC1_PARSER_OK);
   assert_equals_int (framehdr.ptype, GST_VC1_PICTURE_TYPE_BI);
   assert_equals_int (framehdr.interpfrm, 0);
 
@@ -955,31 +965,31 @@ GST_START_TEST (test_vc1_parse_i_frame_header_main)
   GstVC1FrameHdr framehdr;
   GstVC1SeqHdr seqhdr;
 
-  GstVC1SimpleMainSeqHdr *simplehdr = &seqhdr.profile.simplemain;
+  GstVC1SeqStructC *structc = &seqhdr.struct_c;
   GstVC1PicSimpleMain *pic = &framehdr.pic.simple;
 
-  simplehdr->coded_height = 240;
-  simplehdr->coded_width = 320;
+  structc->coded_height = 240;
+  structc->coded_width = 320;
 
   assert_equals_int (gst_vc1_parse_sequence_header (i_bi_frame_header,
           sizeof (i_bi_frame_header), &seqhdr), GST_VC1_PARSER_OK);
 
-  assert_equals_int (seqhdr.profiletype, GST_VC1_PROFILE_MAIN);
-  assert_equals_int (seqhdr.frmrtq_postproc, 7);
-  assert_equals_int (seqhdr.bitrtq_postproc, 7);
-  assert_equals_int (simplehdr->loop_filter, 1);
-  assert_equals_int (simplehdr->multires, 0);
-  assert_equals_int (simplehdr->extended_mv, 0);
-  assert_equals_int (simplehdr->rangered, 0);
-  assert_equals_int (simplehdr->vstransform, 1);
-  assert_equals_int (simplehdr->overlap, 1);
-  assert_equals_int (simplehdr->syncmarker, 0);
-  assert_equals_int (simplehdr->dquant, 1);
-  assert_equals_int (simplehdr->quantizer, 0);
-  assert_equals_int (simplehdr->maxbframes, 1);
+  assert_equals_int (seqhdr.profile, GST_VC1_PROFILE_MAIN);
+  assert_equals_int (structc->frmrtq_postproc, 7);
+  assert_equals_int (structc->bitrtq_postproc, 7);
+  assert_equals_int (structc->loop_filter, 1);
+  assert_equals_int (structc->multires, 0);
+  assert_equals_int (structc->extended_mv, 0);
+  assert_equals_int (structc->rangered, 0);
+  assert_equals_int (structc->vstransform, 1);
+  assert_equals_int (structc->overlap, 1);
+  assert_equals_int (structc->syncmarker, 0);
+  assert_equals_int (structc->dquant, 1);
+  assert_equals_int (structc->quantizer, 0);
+  assert_equals_int (structc->maxbframes, 1);
 
   assert_equals_int (gst_vc1_parse_frame_header (iframe_main,
-          sizeof (iframe_main), &framehdr, &seqhdr), GST_VC1_PARSER_OK);
+          sizeof (iframe_main), &framehdr, &seqhdr, NULL), GST_VC1_PARSER_OK);
   assert_equals_int (framehdr.ptype, GST_VC1_PICTURE_TYPE_I);
   assert_equals_int (framehdr.interpfrm, 0);
 
@@ -998,23 +1008,23 @@ GST_START_TEST (test_vc1_parse_i_frame_header_adv)
   GstVC1FrameHdr framehdr;
   GstVC1SeqHdr seqhdr;
 
-  GstVC1AdvancedSeqHdr *advhdr = &seqhdr.profile.advanced;
+  GstVC1AdvancedSeqHdr *advhdr = &seqhdr.advanced;
   GstVC1EntryPointHdr *entrypt = &advhdr->entrypoint;
   GstVC1PicAdvanced *pic = &framehdr.pic.advanced;
 
   assert_equals_int (gst_vc1_parse_sequence_header (iframe_adv_hdr,
           sizeof (iframe_adv_hdr), &seqhdr), GST_VC1_PARSER_OK);
 
-  assert_equals_int (seqhdr.profiletype, GST_VC1_PROFILE_ADVANCED);
+  assert_equals_int (seqhdr.profile, GST_VC1_PROFILE_ADVANCED);
   assert_equals_int (advhdr->level, GST_VC1_LEVEL_L3);
-  assert_equals_int (seqhdr.frmrtq_postproc, 7);
-  assert_equals_int (seqhdr.bitrtq_postproc, 31);
+  assert_equals_int (advhdr->frmrtq_postproc, 7);
+  assert_equals_int (advhdr->bitrtq_postproc, 31);
   assert_equals_int (advhdr->postprocflag, 0);
   assert_equals_int (advhdr->max_coded_width, 1920);
   assert_equals_int (advhdr->max_coded_height, 1080);
   assert_equals_int (advhdr->interlace, 1);
   assert_equals_int (advhdr->tfcntrflag, 0);
-  assert_equals_int (seqhdr.finterpflag, 0);
+  assert_equals_int (advhdr->finterpflag, 0);
 
   assert_equals_int (advhdr->display_ext, 1);
   assert_equals_int (advhdr->disp_horiz_size, 1920);
@@ -1038,7 +1048,7 @@ GST_START_TEST (test_vc1_parse_i_frame_header_adv)
   assert_equals_int (entrypt->coded_width, 1920);
 
   assert_equals_int (gst_vc1_parse_frame_header (iframe_adv,
-          sizeof (iframe_adv), &framehdr, &seqhdr), GST_VC1_PARSER_OK);
+          sizeof (iframe_adv), &framehdr, &seqhdr, NULL), GST_VC1_PARSER_OK);
 
   assert_equals_int (framehdr.ptype, GST_VC1_PICTURE_TYPE_I);
   assert_equals_int (framehdr.pqindex, 3);
@@ -1059,23 +1069,23 @@ GST_START_TEST (test_vc1_parse_b_frame_header_adv)
   GstVC1FrameHdr framehdr;
   GstVC1SeqHdr seqhdr;
 
-  GstVC1AdvancedSeqHdr *advhdr = &seqhdr.profile.advanced;
+  GstVC1AdvancedSeqHdr *advhdr = &seqhdr.advanced;
   GstVC1EntryPointHdr *entrypt = &advhdr->entrypoint;
   GstVC1PicAdvanced *pic = &framehdr.pic.advanced;
 
   assert_equals_int (gst_vc1_parse_sequence_header (iframe_adv_hdr,
           sizeof (iframe_adv_hdr), &seqhdr), GST_VC1_PARSER_OK);
 
-  assert_equals_int (seqhdr.profiletype, GST_VC1_PROFILE_ADVANCED);
+  assert_equals_int (seqhdr.profile, GST_VC1_PROFILE_ADVANCED);
   assert_equals_int (advhdr->level, GST_VC1_LEVEL_L3);
-  assert_equals_int (seqhdr.frmrtq_postproc, 7);
-  assert_equals_int (seqhdr.bitrtq_postproc, 31);
+  assert_equals_int (advhdr->frmrtq_postproc, 7);
+  assert_equals_int (advhdr->bitrtq_postproc, 31);
   assert_equals_int (advhdr->postprocflag, 0);
   assert_equals_int (advhdr->max_coded_width, 1920);
   assert_equals_int (advhdr->max_coded_height, 1080);
   assert_equals_int (advhdr->interlace, 1);
   assert_equals_int (advhdr->tfcntrflag, 0);
-  assert_equals_int (seqhdr.finterpflag, 0);
+  assert_equals_int (advhdr->finterpflag, 0);
 
   assert_equals_int (advhdr->display_ext, 1);
   assert_equals_int (advhdr->disp_horiz_size, 1920);
@@ -1097,7 +1107,7 @@ GST_START_TEST (test_vc1_parse_b_frame_header_adv)
   assert_equals_int (entrypt->quantizer, 0);
 
   assert_equals_int (gst_vc1_parse_frame_header (bframe_adv,
-          sizeof (bframe_adv), &framehdr, &seqhdr), GST_VC1_PARSER_OK);
+          sizeof (bframe_adv), &framehdr, &seqhdr, NULL), GST_VC1_PARSER_OK);
 
   assert_equals_int (framehdr.ptype, GST_VC1_PICTURE_TYPE_B);
   assert_equals_int (framehdr.pqindex, 1);
@@ -1109,7 +1119,7 @@ GST_START_TEST (test_vc1_parse_b_frame_header_adv)
   assert_equals_int (framehdr.transacfrm, 1);
 
   assert_equals_int (gst_vc1_parse_frame_header (bframe2_adv,
-          sizeof (bframe2_adv), &framehdr, &seqhdr), GST_VC1_PARSER_OK);
+          sizeof (bframe2_adv), &framehdr, &seqhdr, NULL), GST_VC1_PARSER_OK);
   assert_equals_int (framehdr.ptype, GST_VC1_PICTURE_TYPE_B);
   assert_equals_int (framehdr.pqindex, 4);
   assert_equals_int (framehdr.pquant, 4);
@@ -1129,23 +1139,23 @@ GST_START_TEST (test_vc1_parse_p_frame_header_adv)
   GstVC1FrameHdr framehdr;
   GstVC1SeqHdr seqhdr;
 
-  GstVC1AdvancedSeqHdr *advhdr = &seqhdr.profile.advanced;
+  GstVC1AdvancedSeqHdr *advhdr = &seqhdr.advanced;
   GstVC1EntryPointHdr *entrypt = &advhdr->entrypoint;
   GstVC1PicAdvanced *pic = &framehdr.pic.advanced;
 
   assert_equals_int (gst_vc1_parse_sequence_header (iframe_adv_hdr,
           sizeof (iframe_adv_hdr), &seqhdr), GST_VC1_PARSER_OK);
 
-  assert_equals_int (seqhdr.profiletype, GST_VC1_PROFILE_ADVANCED);
+  assert_equals_int (seqhdr.profile, GST_VC1_PROFILE_ADVANCED);
   assert_equals_int (advhdr->level, GST_VC1_LEVEL_L3);
-  assert_equals_int (seqhdr.frmrtq_postproc, 7);
-  assert_equals_int (seqhdr.bitrtq_postproc, 31);
+  assert_equals_int (advhdr->frmrtq_postproc, 7);
+  assert_equals_int (advhdr->bitrtq_postproc, 31);
   assert_equals_int (advhdr->postprocflag, 0);
   assert_equals_int (advhdr->max_coded_width, 1920);
   assert_equals_int (advhdr->max_coded_height, 1080);
   assert_equals_int (advhdr->interlace, 1);
   assert_equals_int (advhdr->tfcntrflag, 0);
-  assert_equals_int (seqhdr.finterpflag, 0);
+  assert_equals_int (advhdr->finterpflag, 0);
 
   assert_equals_int (advhdr->display_ext, 1);
   assert_equals_int (advhdr->disp_horiz_size, 1920);
@@ -1169,7 +1179,7 @@ GST_START_TEST (test_vc1_parse_p_frame_header_adv)
 
 
   assert_equals_int (gst_vc1_parse_frame_header (pframe_adv,
-          sizeof (pframe_adv), &framehdr, &seqhdr), GST_VC1_PARSER_OK);
+          sizeof (pframe_adv), &framehdr, &seqhdr, NULL), GST_VC1_PARSER_OK);
   assert_equals_int (framehdr.ptype, GST_VC1_PICTURE_TYPE_P);
   assert_equals_int (framehdr.pqindex, 1);
   assert_equals_int (framehdr.pquant, 1);
@@ -1180,7 +1190,7 @@ GST_START_TEST (test_vc1_parse_p_frame_header_adv)
   assert_equals_int (pic->mvrange, 0);
 
   assert_equals_int (gst_vc1_parse_frame_header (pframe2_adv,
-          sizeof (pframe2_adv), &framehdr, &seqhdr), GST_VC1_PARSER_OK);
+          sizeof (pframe2_adv), &framehdr, &seqhdr, NULL), GST_VC1_PARSER_OK);
   assert_equals_int (framehdr.ptype, GST_VC1_PICTURE_TYPE_P);
   assert_equals_int (framehdr.pqindex, 1);
   assert_equals_int (framehdr.pquant, 1);
