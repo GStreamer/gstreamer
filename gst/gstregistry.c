@@ -175,6 +175,8 @@ extern GList *_priv_gst_plugin_paths;
 
 /* Set to TRUE when the registry cache should be disabled */
 gboolean _gst_disable_registry_cache = FALSE;
+
+static gboolean __registry_reuse_plugin_scanner = TRUE;
 #endif
 
 /* Element signals and args */
@@ -1084,6 +1086,11 @@ gst_registry_scan_plugin_file (GstRegistryScanContext * context,
     changed = TRUE;
   }
 
+  if (!__registry_reuse_plugin_scanner) {
+    clear_scan_context (context);
+    context->helper_state = REGISTRY_SCAN_HELPER_NOT_STARTED;
+  }
+
   return changed;
 }
 
@@ -1616,6 +1623,12 @@ ensure_current_registry (GError ** error)
   }
 
   if (do_update) {
+    const gchar *reuse_env;
+
+    if ((reuse_env = g_getenv ("GST_REGISTRY_REUSE_PLUGIN_SCANNER"))) {
+      /* do reuse for any value different from "no" */
+      __registry_reuse_plugin_scanner = (strcmp (reuse_env, "no") != 0);
+    }
     /* now check registry */
     GST_DEBUG ("Updating registry cache");
     scan_and_update_registry (default_registry, registry_file, TRUE, error);
