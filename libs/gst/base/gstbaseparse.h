@@ -192,6 +192,7 @@ struct _GstBaseParse {
  *                  Allows closing external resources.
  * @set_sink_caps:  allows the subclass to be notified of the actual caps set.
  * @get_sink_caps:  allows the subclass to do its own sink get caps if needed.
+ *                  Since: 0.10.36
  * @check_valid_frame:  Check if the given piece of data contains a valid
  *                      frame.
  * @parse_frame:    Parse the already checked frame. Subclass need to
