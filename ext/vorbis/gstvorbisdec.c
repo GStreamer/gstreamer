@@ -501,7 +501,7 @@ vorbis_dec_handle_header_caps (GstVorbisDec * vd)
     GstBuffer *buf = NULL;
     gint i = 0;
 
-    while (result == GST_FLOW_OK) {
+    while (result == GST_FLOW_OK && i < gst_value_array_get_size (array)) {
       value = gst_value_array_get_value (array, i);
       buf = gst_value_get_buffer (value);
       if (!buf)
