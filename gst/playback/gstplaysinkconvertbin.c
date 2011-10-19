@@ -81,6 +81,9 @@ distribute_running_time (GstElement * element, const GstSegment * segment)
 
   pad = gst_element_get_static_pad (element, "sink");
 
+  gst_pad_send_event (pad, gst_event_new_flush_start ());
+  gst_pad_send_event (pad, gst_event_new_flush_stop ());
+
   if (segment->accum) {
     event = gst_event_new_new_segment_full (FALSE, segment->rate,
         segment->applied_rate, segment->format, 0, segment->accum, 0);
