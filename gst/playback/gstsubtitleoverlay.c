@@ -2133,6 +2133,7 @@ gst_subtitle_overlay_init (GstSubtitleOverlay * self,
 
   templ = gst_static_pad_template_get (&srctemplate);
   self->srcpad = gst_ghost_pad_new_no_target_from_template ("src", templ);
+  gst_object_unref (templ);
 
   proxypad =
       GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD (self->srcpad)));
@@ -2147,6 +2148,7 @@ gst_subtitle_overlay_init (GstSubtitleOverlay * self,
   templ = gst_static_pad_template_get (&video_sinktemplate);
   self->video_sinkpad =
       gst_ghost_pad_new_no_target_from_template ("video_sink", templ);
+  gst_object_unref (templ);
   gst_pad_set_event_function (self->video_sinkpad,
       GST_DEBUG_FUNCPTR (gst_subtitle_overlay_video_sink_event));
   gst_pad_set_setcaps_function (self->video_sinkpad,
@@ -2158,11 +2160,13 @@ gst_subtitle_overlay_init (GstSubtitleOverlay * self,
       GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD
           (self->video_sinkpad)));
   self->video_block_pad = proxypad;
+  gst_object_unref (proxypad);
   gst_element_add_pad (GST_ELEMENT_CAST (self), self->video_sinkpad);
 
   templ = gst_static_pad_template_get (&subtitle_sinktemplate);
   self->subtitle_sinkpad =
       gst_ghost_pad_new_no_target_from_template ("subtitle_sink", templ);
+  gst_object_unref (templ);
   gst_pad_set_link_function (self->subtitle_sinkpad,
       GST_DEBUG_FUNCPTR (gst_subtitle_overlay_subtitle_sink_link));
   gst_pad_set_unlink_function (self->subtitle_sinkpad,
@@ -2183,6 +2187,7 @@ gst_subtitle_overlay_init (GstSubtitleOverlay * self,
       GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD
           (self->subtitle_sinkpad)));
   self->subtitle_block_pad = proxypad;
+  gst_object_unref (proxypad);
 
   gst_element_add_pad (GST_ELEMENT_CAST (self), self->subtitle_sinkpad);
 
