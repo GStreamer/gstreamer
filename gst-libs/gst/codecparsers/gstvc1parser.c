@@ -781,13 +781,13 @@ static inline void
 calculate_framerate_bitrate (guint8 frmrtq_postproc, guint8 bitrtq_postproc,
     guint * framerate, guint * bitrate)
 {
-  if (frmrtq_postproc == 0 && bitrtq_postproc == 30) {
+  if (frmrtq_postproc == 0 && bitrtq_postproc == 31) {
     *framerate = 0;
     *bitrate = 0;
   } else if (frmrtq_postproc == 0 && bitrtq_postproc == 30) {
     *framerate = 2;
     *bitrate = 1952;
-  } else if (frmrtq_postproc == 0 && bitrtq_postproc == 31) {
+  } else if (frmrtq_postproc == 1 && bitrtq_postproc == 31) {
     *framerate = 6;
     *bitrate = 2016;
   } else {
