@@ -41,7 +41,7 @@ m4_define([gtkdoc_version], [gtkdoc_major_version.gtkdoc_minor_version])
 
 AC_PREREQ([2.57])
 AC_INIT([gst_vaapi], [gst_vaapi_version],
-    [gbeauchesne@splitted-desktop.com],
+    [gwenole.beauchesne@intel.com],
     [gstreamer-vaapi])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CANONICAL_TARGET

@@ -1,7 +1,7 @@
 Source: gstreamer@GST_MAJORMINOR@-vaapi
 Section: libs
 Priority: optional
-Maintainer: Gwenole Beauchesne <gbeauchesne@splitted-desktop.com>
+Maintainer: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
 Build-Depends: debhelper (>= 5),
 	       cdbs,
 	       libglib2.0-dev,

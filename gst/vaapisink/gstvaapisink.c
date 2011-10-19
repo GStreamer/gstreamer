@@ -56,7 +56,7 @@ static const GstElementDetails gst_vaapisink_details =
         "VA-API sink",
         "Sink/Video",
         GST_PLUGIN_DESC,
-        "Gwenole Beauchesne <gbeauchesne@splitted-desktop.com>");
+        "Gwenole Beauchesne <gwenole.beauchesne@intel.com>");
 
 /* Default template */
 static GstStaticPadTemplate gst_vaapisink_sink_factory =

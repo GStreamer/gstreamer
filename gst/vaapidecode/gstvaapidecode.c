@@ -48,7 +48,7 @@ static const GstElementDetails gst_vaapidecode_details =
         "VA-API decoder",
         "Codec/Decoder/Video",
         GST_PLUGIN_DESC,
-        "Gwenole Beauchesne <gbeauchesne@splitted-desktop.com>");
+        "Gwenole Beauchesne <gwenole.beauchesne@intel.com>");
 
 /* Default templates */
 #define GST_CAPS_CODEC(CODEC) CODEC "; "
