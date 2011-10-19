@@ -558,6 +558,78 @@ gst_audio_decoder_setup (GstAudioDecoder * dec)
   dec->priv->agg = !!res;
 }
 
+static GstFlowReturn
+gst_audio_decoder_push_forward (GstAudioDecoder * dec, GstBuffer * buf)
+{
+  GstAudioDecoderClass *klass;
+  GstAudioDecoderPrivate *priv;
+  GstAudioDecoderContext *ctx;
+  GstFlowReturn ret = GST_FLOW_OK;
+
+  klass = GST_AUDIO_DECODER_GET_CLASS (dec);
+  priv = dec->priv;
+  ctx = &dec->priv->ctx;
+
+  g_return_val_if_fail (ctx->info.bpf != 0, GST_FLOW_ERROR);
+
+  if (G_UNLIKELY (!buf)) {
+    g_assert_not_reached ();
+    return GST_FLOW_OK;
+  }
+
+  GST_LOG_OBJECT (dec, "clipping buffer of size %d with ts %" GST_TIME_FORMAT
+      ", duration %" GST_TIME_FORMAT, GST_BUFFER_SIZE (buf),
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
+      GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
+
+  /* clip buffer */
+  buf = gst_audio_buffer_clip (buf, &dec->segment, ctx->info.rate,
+      ctx->info.bpf);
+  if (G_UNLIKELY (!buf)) {
+    GST_DEBUG_OBJECT (dec, "no data after clipping to segment");
+    goto exit;
+  }
+
+  /* decorate */
+  gst_buffer_set_caps (buf, GST_PAD_CAPS (dec->srcpad));
+
+  if (G_UNLIKELY (priv->discont)) {
+    GST_LOG_OBJECT (dec, "marking discont");
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
+    priv->discont = FALSE;
+  }
+
+  /* track where we are */
+  if (G_LIKELY (GST_BUFFER_TIMESTAMP_IS_VALID (buf))) {
+    /* duration should always be valid for raw audio */
+    g_assert (GST_BUFFER_DURATION_IS_VALID (buf));
+    dec->segment.last_stop =
+        GST_BUFFER_TIMESTAMP (buf) + GST_BUFFER_DURATION (buf);
+  }
+
+  if (klass->pre_push) {
+    /* last chance for subclass to do some dirty stuff */
+    ret = klass->pre_push (dec, &buf);
+    if (ret != GST_FLOW_OK || !buf) {
+      GST_DEBUG_OBJECT (dec, "subclass returned %s, buf %p",
+          gst_flow_get_name (ret), buf);
+      if (buf)
+        gst_buffer_unref (buf);
+      goto exit;
+    }
+  }
+
+  GST_LOG_OBJECT (dec, "pushing buffer of size %d with ts %" GST_TIME_FORMAT
+      ", duration %" GST_TIME_FORMAT, GST_BUFFER_SIZE (buf),
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
+      GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
+
+  ret = gst_pad_push (dec->srcpad, buf);
+
+exit:
+  return ret;
+}
+
 /* mini aggregator combining output buffers into fewer larger ones,
  * if so allowed/configured */
 static GstFlowReturn
@@ -577,27 +649,10 @@ gst_audio_decoder_output (GstAudioDecoder * dec, GstBuffer * buf)
     gst_audio_decoder_setup (dec);
 
   if (G_LIKELY (buf)) {
-    g_return_val_if_fail (ctx->info.bpf != 0, GST_FLOW_ERROR);
-
     GST_LOG_OBJECT (dec, "output buffer of size %d with ts %" GST_TIME_FORMAT
         ", duration %" GST_TIME_FORMAT, GST_BUFFER_SIZE (buf),
         GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
         GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
-
-    /* clip buffer */
-    buf = gst_audio_buffer_clip (buf, &dec->segment, ctx->info.rate,
-        ctx->info.bpf);
-    if (G_UNLIKELY (!buf)) {
-      GST_DEBUG_OBJECT (dec, "no data after clipping to segment");
-    } else {
-      GST_LOG_OBJECT (dec,
-          "buffer after segment clipping has size %d with ts %" GST_TIME_FORMAT
-          ", duration %" GST_TIME_FORMAT, GST_BUFFER_SIZE (buf),
-          GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
-          GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
-    }
-  } else {
-    GST_DEBUG_OBJECT (dec, "no output buffer");
   }
 
 again:
@@ -647,42 +702,8 @@ again:
   }
 
   if (G_LIKELY (buf)) {
-
-    /* decorate */
-    gst_buffer_set_caps (buf, GST_PAD_CAPS (dec->srcpad));
-
-    if (G_UNLIKELY (priv->discont)) {
-      GST_LOG_OBJECT (dec, "marking discont");
-      GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
-      priv->discont = FALSE;
-    }
-
-    if (G_LIKELY (GST_BUFFER_TIMESTAMP_IS_VALID (buf))) {
-      /* duration should always be valid for raw audio */
-      g_assert (GST_BUFFER_DURATION_IS_VALID (buf));
-      dec->segment.last_stop =
-          GST_BUFFER_TIMESTAMP (buf) + GST_BUFFER_DURATION (buf);
-    }
-
-    if (klass->pre_push) {
-      /* last chance for subclass to do some dirty stuff */
-      ret = klass->pre_push (dec, &buf);
-      if (ret != GST_FLOW_OK || !buf) {
-        GST_DEBUG_OBJECT (dec, "subclass returned %s, buf %p",
-            gst_flow_get_name (ret), buf);
-        if (buf)
-          gst_buffer_unref (buf);
-        goto exit;
-      }
-    }
-
-    GST_LOG_OBJECT (dec, "pushing buffer of size %d with ts %" GST_TIME_FORMAT
-        ", duration %" GST_TIME_FORMAT, GST_BUFFER_SIZE (buf),
-        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
-        GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
-
     if (dec->segment.rate > 0.0) {
-      ret = gst_pad_push (dec->srcpad, buf);
+      ret = gst_audio_decoder_push_forward (dec, buf);
       GST_LOG_OBJECT (dec, "buffer pushed: %s", gst_flow_get_name (ret));
     } else {
       ret = GST_FLOW_OK;
@@ -690,7 +711,6 @@ again:
       GST_LOG_OBJECT (dec, "buffer queued");
     }
 
-  exit:
     if (inbuf) {
       buf = inbuf;
       goto again;
@@ -1176,6 +1196,7 @@ gst_audio_decoder_flush_decode (GstAudioDecoder * dec)
 {
   GstAudioDecoderPrivate *priv = dec->priv;
   GstFlowReturn res = GST_FLOW_OK;
+  GstClockTime timestamp;
   GList *walk;
 
   walk = priv->decode;
@@ -1213,8 +1234,27 @@ gst_audio_decoder_flush_decode (GstAudioDecoder * dec)
   gst_audio_decoder_drain (dec);
 
   /* now send queued data downstream */
+  timestamp = GST_CLOCK_TIME_NONE;
   while (priv->queued) {
     GstBuffer *buf = GST_BUFFER_CAST (priv->queued->data);
+
+    /* duration should always be valid for raw audio */
+    g_assert (GST_BUFFER_DURATION_IS_VALID (buf));
+
+    /* interpolate (backward) if needed */
+    if (G_LIKELY (timestamp != -1))
+      timestamp -= GST_BUFFER_DURATION (buf);
+
+    if (!GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
+      GST_LOG_OBJECT (dec, "applying reverse interpolated ts %"
+          GST_TIME_FORMAT, GST_TIME_ARGS (timestamp));
+      GST_BUFFER_TIMESTAMP (buf) = timestamp;
+    } else {
+      /* track otherwise */
+      timestamp = GST_BUFFER_TIMESTAMP (buf);
+      GST_LOG_OBJECT (dec, "tracking ts %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (timestamp));
+    }
 
     if (G_LIKELY (res == GST_FLOW_OK)) {
       GST_DEBUG_OBJECT (dec, "pushing buffer %p of size %u, "
@@ -1226,7 +1266,7 @@ gst_audio_decoder_flush_decode (GstAudioDecoder * dec)
       /* avoid stray DISCONT from forward processing,
        * which have no meaning in reverse pushing */
       GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_DISCONT);
-      res = gst_pad_push (dec->srcpad, buf);
+      res = gst_audio_decoder_push_forward (dec, buf);
     } else {
       gst_buffer_unref (buf);
     }
