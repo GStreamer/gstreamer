@@ -262,7 +262,7 @@ gst_object_unref (gpointer object)
 }
 
 /**
- * gst_object_ref_sink:
+ * gst_object_ref_sink: (skip)
  * @object: a #GstObject to sink
  *
  * Increase the reference count of @object, and possibly remove the floating
