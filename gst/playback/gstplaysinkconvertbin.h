@@ -96,6 +96,8 @@ void
 gst_play_sink_convert_bin_cache_converter_caps (GstPlaySinkConvertBin * self);
 void
 gst_play_sink_convert_bin_remove_elements (GstPlaySinkConvertBin * self);
+void
+gst_play_sink_convert_bin_add_identity (GstPlaySinkConvertBin * self);
 
 G_END_DECLS
 #endif /* __GST_PLAY_SINK_CONVERT_BIN_H__ */

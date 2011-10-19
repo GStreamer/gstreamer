@@ -134,6 +134,7 @@ gst_play_sink_audio_convert_set_property (GObject * object, guint prop_id,
     GST_DEBUG_OBJECT (self, "Rebuilding converter bin");
     gst_play_sink_convert_bin_remove_elements (cbin);
     gst_play_sink_audio_convert_add_conversion_elements (self);
+    gst_play_sink_convert_bin_add_identity (cbin);
     gst_play_sink_convert_bin_cache_converter_caps (cbin);
   }
   GST_PLAY_SINK_CONVERT_BIN_UNLOCK (self);

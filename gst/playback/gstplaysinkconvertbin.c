@@ -123,7 +123,7 @@ gst_play_sink_convert_bin_add_conversion_element_factory (GstPlaySinkConvertBin
   return el;
 }
 
-static void
+void
 gst_play_sink_convert_bin_add_identity (GstPlaySinkConvertBin * self)
 {
   self->identity = gst_element_factory_make ("identity", "identity");
