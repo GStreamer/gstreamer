@@ -474,8 +474,6 @@ static gboolean
 gst_vaapiconvert_ensure_surface_pool(GstVaapiConvert *convert, GstCaps *caps)
 {
     GstStructure * const structure = gst_caps_get_structure(caps, 0);
-    GstVaapiSurface *surface;
-    GstVaapiImage *image;
     gint width, height;
 
     gst_structure_get_int(structure, "width",  &width);
@@ -742,7 +740,6 @@ gst_vaapiconvert_prepare_output_buffer(
 {
     GstVaapiConvert * const convert = GST_VAAPICONVERT(trans);
     GstBuffer *buffer = NULL;
-    GstFlowReturn ret;
 
     if (convert->direct_rendering == 2) {
         if (GST_VAAPI_IS_VIDEO_BUFFER(inbuf)) {
