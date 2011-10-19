@@ -109,6 +109,7 @@ gst_play_sink_audio_convert_set_property (GObject * object, guint prop_id,
   GstPlaySinkAudioConvert *self = GST_PLAY_SINK_AUDIO_CONVERT_CAST (object);
   gboolean v, changed = FALSE;
 
+  GST_PLAY_SINK_CONVERT_BIN_LOCK (self);
   switch (prop_id) {
     case PROP_USE_CONVERTERS:
       v = g_value_get_boolean (value);
@@ -135,6 +136,7 @@ gst_play_sink_audio_convert_set_property (GObject * object, guint prop_id,
     gst_play_sink_audio_convert_add_conversion_elements (self);
     gst_play_sink_convert_bin_cache_converter_caps (cbin);
   }
+  GST_PLAY_SINK_CONVERT_BIN_UNLOCK (self);
 }
 
 static void
@@ -143,6 +145,7 @@ gst_play_sink_audio_convert_get_property (GObject * object, guint prop_id,
 {
   GstPlaySinkAudioConvert *self = GST_PLAY_SINK_AUDIO_CONVERT_CAST (object);
 
+  GST_PLAY_SINK_CONVERT_BIN_LOCK (self);
   switch (prop_id) {
     case PROP_USE_CONVERTERS:
       g_value_set_boolean (value, self->use_converters);
@@ -153,6 +156,7 @@ gst_play_sink_audio_convert_get_property (GObject * object, guint prop_id,
     default:
       break;
   }
+  GST_PLAY_SINK_CONVERT_BIN_UNLOCK (self);
 }
 
 static void
