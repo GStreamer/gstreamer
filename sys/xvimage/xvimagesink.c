@@ -3575,8 +3575,8 @@ gst_xvimagesink_class_init (GstXvImageSinkClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_SYNCHRONOUS,
       g_param_spec_boolean ("synchronous", "Synchronous",
-          "When enabled, runs "
-          "the X display in synchronous mode. (used only for debugging)", FALSE,
+          "When enabled, runs the X display in synchronous mode. "
+          "(unrelated to A/V sync, used only for debugging)", FALSE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_PIXEL_ASPECT_RATIO,
       g_param_spec_string ("pixel-aspect-ratio", "Pixel Aspect Ratio",
