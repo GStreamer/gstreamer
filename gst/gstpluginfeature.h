@@ -67,15 +67,13 @@ typedef enum {
  * gst_plugin_feature_get_name:
  * @feature: a #GstPluginFeature to get the name of @feature.
  *
- * Returns a copy of the name of @feature.
- * Caller should g_free() the return value after usage.
- * For a nameless plugin feature, this returns NULL, which you can safely g_free()
- * as well.
+ * Returns the name of @feature.
+ * For a nameless plugin feature, this returns NULL.
  *
- * Returns: (transfer full): the name of @feature. g_free() after usage. MT safe.
+ * Returns: (transfer none): the name of @feature. MT safe.
  *
  */
-#define                 gst_plugin_feature_get_name(feature)      gst_object_get_name(GST_OBJECT_CAST(feature))
+#define                 gst_plugin_feature_get_name(feature)      GST_OBJECT_NAME(feature)
 
 /**
  * gst_plugin_feature_set_name:

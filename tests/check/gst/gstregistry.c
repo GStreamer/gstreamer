@@ -55,13 +55,11 @@ print_plugin (const gchar * marker, GstRegistry * registry, GstPlugin * plugin)
   features = gst_registry_get_feature_list_by_plugin (registry, name);
   for (f = features; f != NULL; f = f->next) {
     GstPluginFeature *feature;
-    gchar *featurename;
 
     feature = GST_PLUGIN_FEATURE (f->data);
 
-    featurename = gst_plugin_feature_get_name (feature);
-    GST_LOG ("%s:    feature: %p %s", marker, feature, featurename);
-    g_free (featurename);
+    GST_LOG ("%s:    feature: %p %s", marker, feature,
+        GST_OBJECT_NAME (feature));
   }
   gst_plugin_feature_list_free (features);
 }
