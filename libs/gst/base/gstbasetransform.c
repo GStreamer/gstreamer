@@ -282,6 +282,9 @@ struct _GstBaseTransformPrivate
 
   GstClockTime last_stop_out;
   GList *delayed_events;
+
+  GstCaps *cached_peer_caps[2];
+  GstCaps *cached_transformed_caps[2];
 };
 
 static GstElementClass *parent_class = NULL;
@@ -370,6 +373,24 @@ gst_base_transform_drop_delayed_events (GstBaseTransform * trans)
 }
 
 static void
+gst_base_transform_clear_transformed_caps_cache (GstBaseTransform * trans)
+{
+  struct _GstBaseTransformPrivate *priv = trans->priv;
+  int n;
+
+  for (n = 0; n < 2; ++n) {
+    if (priv->cached_peer_caps[n]) {
+      gst_caps_unref (priv->cached_peer_caps[n]);
+      priv->cached_peer_caps[n] = NULL;
+    }
+    if (priv->cached_transformed_caps[n]) {
+      gst_caps_unref (priv->cached_transformed_caps[n]);
+      priv->cached_transformed_caps[n] = NULL;
+    }
+  }
+}
+
+static void
 gst_base_transform_finalize (GObject * object)
 {
   GstBaseTransform *trans;
@@ -379,6 +400,8 @@ gst_base_transform_finalize (GObject * object)
   gst_base_transform_drop_delayed_events (trans);
   gst_caps_replace (&trans->priv->sink_suggest, NULL);
   g_mutex_free (trans->transform_lock);
+
+  gst_base_transform_clear_transformed_caps_cache (trans);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -674,13 +697,36 @@ gst_base_transform_getcaps (GstPad * pad)
   GstPad *otherpad;
   const GstCaps *templ;
   GstCaps *peercaps, *caps, *temp;
+  gboolean samecaps;
+  int cache_index;
 
   trans = GST_BASE_TRANSFORM (gst_pad_get_parent (pad));
 
   otherpad = (pad == trans->srcpad) ? trans->sinkpad : trans->srcpad;
+  cache_index = (pad == trans->srcpad) ? 0 : 1;
 
   /* we can do what the peer can */
   peercaps = gst_pad_peer_get_caps_reffed (otherpad);
+  GST_OBJECT_LOCK (trans);
+  samecaps = (peercaps && trans->priv->cached_peer_caps[cache_index]
+      && gst_caps_is_equal (peercaps,
+          trans->priv->cached_peer_caps[cache_index]));
+  if (!samecaps) {
+    if (trans->priv->cached_peer_caps[cache_index]) {
+      gst_caps_unref (trans->priv->cached_peer_caps[cache_index]);
+      trans->priv->cached_peer_caps[cache_index] = NULL;
+    }
+    if (trans->priv->cached_transformed_caps[cache_index]) {
+      gst_caps_unref (trans->priv->cached_transformed_caps[cache_index]);
+      trans->priv->cached_transformed_caps[cache_index] = NULL;
+    }
+  } else {
+    caps = gst_caps_ref (trans->priv->cached_transformed_caps[cache_index]);
+    GST_OBJECT_UNLOCK (trans);
+    return caps;
+  }
+  GST_OBJECT_UNLOCK (trans);
+
   if (peercaps) {
     GST_DEBUG_OBJECT (pad, "peer caps  %" GST_PTR_FORMAT, peercaps);
 
@@ -725,6 +771,15 @@ gst_base_transform_getcaps (GstPad * pad)
 
 done:
   GST_DEBUG_OBJECT (trans, "returning  %" GST_PTR_FORMAT, caps);
+
+  GST_OBJECT_LOCK (trans);
+  if (peercaps) {
+    trans->priv->cached_peer_caps[cache_index] = gst_caps_ref (peercaps);
+  }
+  if (caps) {
+    trans->priv->cached_transformed_caps[cache_index] = gst_caps_ref (caps);
+  }
+  GST_OBJECT_UNLOCK (trans);
 
   if (peercaps)
     gst_caps_unref (peercaps);
@@ -2616,6 +2671,10 @@ gst_base_transform_activate (GstBaseTransform * trans, gboolean active)
 
   bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
+  GST_OBJECT_LOCK (trans);
+  gst_base_transform_clear_transformed_caps_cache (trans);
+  GST_OBJECT_UNLOCK (trans);
+
   if (active) {
     if (trans->priv->pad_mode == GST_ACTIVATE_NONE && bclass->start)
       result &= bclass->start (trans);
@@ -2987,6 +3046,7 @@ gst_base_transform_reconfigure (GstBaseTransform * trans)
   GST_OBJECT_LOCK (trans);
   GST_DEBUG_OBJECT (trans, "marking reconfigure");
   trans->priv->reconfigure = TRUE;
+  gst_base_transform_clear_transformed_caps_cache (trans);
   gst_caps_replace (&trans->priv->sink_alloc, NULL);
   GST_OBJECT_UNLOCK (trans);
 }
