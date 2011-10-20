@@ -46,6 +46,7 @@ struct _GESTrackPrivate
   GstCaps *caps;
 
   GstElement *composition;      /* The composition associated with this track */
+  GstElement *background;       /* The backgrond, handle the gaps in the track */
   GstPad *srcpad;               /* The source GhostPad */
 };
 
@@ -140,6 +141,49 @@ ges_track_dispose (GObject * object)
 }
 
 static void
+ges_track_constructed (GObject * object)
+{
+  GObjectClass *parent_class;
+  GstElement *background = NULL;
+  GESTrack *self = GES_TRACK (object);
+  GESTrackPrivate *priv = self->priv;
+
+  if ((priv->background = gst_element_factory_make ("gnlsource", "background"))) {
+    g_object_set (G_OBJECT (self->priv->background), "expandable", TRUE,
+        "priority", G_MAXINT, NULL);
+
+    switch (self->type) {
+      case GES_TRACK_TYPE_VIDEO:
+        background = gst_element_factory_make ("videotestsrc", "background");
+        g_object_set (background, "pattern", 2, NULL);
+        break;
+      case GES_TRACK_TYPE_AUDIO:
+        background = gst_element_factory_make ("audiotestsrc", "background");
+        g_object_set (background, "wave", 4, NULL);
+        break;
+      default:
+        break;
+    }
+
+    if (background) {
+      if (!gst_bin_add (GST_BIN (priv->background), background))
+        GST_ERROR ("Couldn't add background");
+      else {
+        if (!gst_bin_add (GST_BIN (priv->composition), priv->background))
+          GST_ERROR ("Couldn't add background");
+      }
+
+    }
+  }
+
+  parent_class = ges_track_parent_class;
+  if (parent_class->constructed)
+    parent_class->constructed (object);
+
+  G_OBJECT_CLASS (parent_class)->constructed (object);
+}
+
+static void
 ges_track_finalize (GObject * object)
 {
   G_OBJECT_CLASS (ges_track_parent_class)->finalize (object);
@@ -156,6 +200,7 @@ ges_track_class_init (GESTrackClass * klass)
   object_class->set_property = ges_track_set_property;
   object_class->dispose = ges_track_dispose;
   object_class->finalize = ges_track_finalize;
+  object_class->constructed = ges_track_constructed;
 
   /**
    * GESTrack:caps
