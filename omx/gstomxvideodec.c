@@ -390,6 +390,15 @@ _find_nearest_frame (GstOMXVideoDec * self, GstOMXBuffer * buf)
   guint64 best_diff = G_MAXUINT64;
   BufferIdentification *best_id = NULL;
 
+  /* This prevents a deadlock between the srcpad stream
+   * lock and the videocodec stream lock, if ::reset()
+   * is called at the wrong time
+   */
+  if (gst_omx_port_is_flushing (self->out_port)) {
+    GST_DEBUG_OBJECT (self, "Flushing -- returning NULL");
+    return NULL;
+  }
+
   GST_BASE_VIDEO_CODEC_STREAM_LOCK (self);
   for (l = GST_BASE_VIDEO_CODEC (self)->frames; l; l = l->next) {
     GstVideoFrame *tmp = l->data;
