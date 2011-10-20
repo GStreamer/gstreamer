@@ -990,21 +990,25 @@ gst_omx_video_enc_reset (GstBaseVideoEncoder * encoder)
 
   /* FIXME: Workaround for 
    * https://bugzilla.gnome.org/show_bug.cgi?id=654529
+   *
+   * This is always called with GST_BASE_VIDEO_CODEC_STREAM_LOCK
    */
-  GST_BASE_VIDEO_CODEC_STREAM_LOCK (self);
   g_list_foreach (GST_BASE_VIDEO_CODEC (self)->frames,
       (GFunc) gst_base_video_codec_free_frame, NULL);
   g_list_free (GST_BASE_VIDEO_CODEC (self)->frames);
   GST_BASE_VIDEO_CODEC (self)->frames = NULL;
-  GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (self);
 
   if (self->started) {
     gst_omx_port_set_flushing (self->in_port, TRUE);
     gst_omx_port_set_flushing (self->out_port, TRUE);
 
-    /* Wait until the srcpad loop is finished */
+    /* Wait until the srcpad loop is finished,
+     * unlock GST_BASE_VIDEO_CODEC_STREAM_LOCK to prevent deadlocks
+     * caused by using this lock from inside the loop function */
+    GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (self);
     GST_PAD_STREAM_LOCK (GST_BASE_VIDEO_CODEC_SRC_PAD (self));
     GST_PAD_STREAM_UNLOCK (GST_BASE_VIDEO_CODEC_SRC_PAD (self));
+    GST_BASE_VIDEO_CODEC_STREAM_LOCK (self);
 
     gst_omx_port_set_flushing (self->in_port, FALSE);
     gst_omx_port_set_flushing (self->out_port, FALSE);
