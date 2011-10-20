@@ -63,8 +63,11 @@ GST_PLUGINS_BASE_BUILT_SOURCES := 						\
 	gst/audiorate/Android.mk					\
 	gst/volume/Android.mk					\
 	tools/Android.mk					\
-	ext/vorbis/Android.mk				\
 	ext/ogg/Android.mk
+
+ifneq ($(NDK_BUILD), true)
+GST_PLUGINS_BASE_BUILT_SOURCES += ext/vorbis/Android.mk
+endif
 
 GST_PLUGINS_BASE_BUILT_SOURCES := $(patsubst %, $(abspath $(GST_PLUGINS_BASE_TOP))/%, $(GST_PLUGINS_BASE_BUILT_SOURCES))
 
@@ -121,5 +124,7 @@ CONFIGURE_TARGETS += gst-plugins-base-configure
 -include $(GST_PLUGINS_BASE_TOP)/gst/audiorate/Android.mk
 -include $(GST_PLUGINS_BASE_TOP)/gst/volume/Android.mk
 -include $(GST_PLUGINS_BASE_TOP)/ext/ogg/Android.mk
+ifneq ($(NDK_BUILD), true)
 -include $(GST_PLUGINS_BASE_TOP)/ext/vorbis/Android.mk
+endif
 -include $(GST_PLUGINS_BASE_TOP)/tools/Android.mk
