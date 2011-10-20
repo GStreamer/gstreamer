@@ -70,8 +70,11 @@ GST_PLUGINS_BAD_BUILT_SOURCES := \
 	gst/stereo/Android.mk \
 	gst/rtpvp8/Android.mk \
 	gst/mpegdemux/Android.mk \
-	gst/ivfparse/Android.mk \
-	ext/faad/Android.mk
+	gst/ivfparse/Android.mk
+
+ifneq ($(NDK_BUILD), true)
+GST_PLUGINS_BAD_BUILT_SOURCES += ext/faad/Android.mk
+endif
 
 GST_PLUGINS_BAD_BUILT_SOURCES := $(patsubst %, $(abspath $(GST_PLUGINS_BAD_TOP))/%, $(GST_PLUGINS_BAD_BUILT_SOURCES))
 
@@ -110,7 +113,9 @@ CONFIGURE_TARGETS += gst-plugins-bad-configure
 -include $(GST_PLUGINS_BAD_TOP)/gst/aiff/Android.mk
 -include $(GST_PLUGINS_BAD_TOP)/gst/asfmux/Android.mk
 -include $(GST_PLUGINS_BAD_TOP)/gst/videoparsers/Android.mk
+ifneq ($(NDK_BUILD), true)
 -include $(GST_PLUGINS_BAD_TOP)/ext/faad/Android.mk
+endif
 -include $(GST_PLUGINS_BAD_TOP)/gst/sdp/Android.mk
 -include $(GST_PLUGINS_BAD_TOP)/gst/hls/Android.mk
 -include $(GST_PLUGINS_BAD_TOP)/gst/jp2kdecimator/Android.mk
