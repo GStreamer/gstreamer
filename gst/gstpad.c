@@ -1038,7 +1038,7 @@ gst_pad_is_active (GstPad * pad)
  *  and sink pads in pull mode.
  * </note>
  *
- * Returns: TRUE if the pad could be blocked. This function can fail if the
+ * Returns: %TRUE if the pad could be blocked. This function can fail if the
  * wrong parameters were passed or the pad was already in the requested state.
  *
  * MT safe.
@@ -1060,6 +1060,15 @@ gst_pad_set_blocked_async_full (GstPad * pad, gboolean blocked,
 
   if (G_UNLIKELY (was_blocked == blocked))
     goto had_right_state;
+
+  if (G_UNLIKELY (
+          (GST_PAD_ACTIVATE_MODE (pad) == GST_ACTIVATE_PUSH) &&
+          (GST_PAD_DIRECTION (pad) != GST_PAD_SRC)))
+    goto wrong_direction;
+  if (G_UNLIKELY (
+          (GST_PAD_ACTIVATE_MODE (pad) == GST_ACTIVATE_PULL) &&
+          (GST_PAD_DIRECTION (pad) != GST_PAD_SINK)))
+    goto wrong_direction;
 
   if (blocked) {
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "blocking pad");
@@ -1104,10 +1113,20 @@ gst_pad_set_blocked_async_full (GstPad * pad, gboolean blocked,
 
   return TRUE;
 
+/* Errors */
+
 had_right_state:
   {
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
         "pad was in right state (%d)", was_blocked);
+    GST_OBJECT_UNLOCK (pad);
+
+    return FALSE;
+  }
+wrong_direction:
+  {
+    GST_CAT_INFO_OBJECT (GST_CAT_SCHEDULING, pad, "pad block on the wrong pad, "
+        "block src pads in push mode and sink pads in pull mode.");
     GST_OBJECT_UNLOCK (pad);
 
     return FALSE;
