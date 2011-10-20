@@ -2759,7 +2759,12 @@ rsn_dvdsrc_do_seek (GstBaseSrc * bsrc, GstSegment * segment)
         if (dvdnav_current_title_info (src->dvdnav, &title, &x) ==
             DVDNAV_STATUS_OK) {
           if (segment->start + 1 == x) {
-            dvdnav_prev_pg_search (src->dvdnav);
+            /* if already on the first part, don't try to get before it */
+            if (segment->start == 0) {
+              dvdnav_part_play (src->dvdnav, title, 1);
+            } else {
+              dvdnav_prev_pg_search (src->dvdnav);
+            }
             ret = TRUE;
             src->discont = TRUE;
           } else if (segment->start == x + 1) {
