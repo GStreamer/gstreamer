@@ -990,6 +990,7 @@ gst_omx_video_dec_set_format (GstBaseVideoDecoder * decoder,
       gst_omx_video_dec_stop (GST_BASE_VIDEO_DECODER (self));
       gst_omx_video_dec_close (self);
 
+      GST_BASE_VIDEO_CODEC_STREAM_LOCK (self);
       /* FIXME: Workaround for 
        * https://bugzilla.gnome.org/show_bug.cgi?id=654529
        */
@@ -998,7 +999,6 @@ gst_omx_video_dec_set_format (GstBaseVideoDecoder * decoder,
       g_list_free (GST_BASE_VIDEO_CODEC (self)->frames);
       GST_BASE_VIDEO_CODEC (self)->frames = NULL;
 
-      GST_BASE_VIDEO_CODEC_STREAM_LOCK (self);
       if (!gst_omx_video_dec_open (self))
         return FALSE;
       needs_disable = FALSE;
