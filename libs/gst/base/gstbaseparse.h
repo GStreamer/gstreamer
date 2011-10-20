@@ -58,7 +58,7 @@ G_BEGIN_DECLS
  * GST_BASE_PARSE_FLOW_DROPPED:
  *
  * A #GstFlowReturn that can be returned from parse_frame to
- * indicate that no output buffer was generated, or from pre_push_buffer to
+ * indicate that no output buffer was generated, or from pre_push_frame to
  * to forego pushing buffer.
  *
  * Since: 0.10.33
@@ -107,7 +107,7 @@ G_BEGIN_DECLS
  *   counted as frame, e.g. if this frame is dependent on a previous one.
  *   As it is not counted as a frame, bitrate increases but frame to time
  *   conversions are maintained.
- * @GST_BASE_PARSE_FRAME_FLAG_CLIP: @pre_push_buffer can set this to indicate
+ * @GST_BASE_PARSE_FRAME_FLAG_CLIP: @pre_push_frame can set this to indicate
  *    that regular segment clipping can still be performed (as opposed to
  *    any custom one having been done).
  *
