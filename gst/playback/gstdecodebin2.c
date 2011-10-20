@@ -3483,7 +3483,7 @@ gst_decode_chain_get_topology (GstDecodeChain * chain)
       caps = NULL;
     }
   }
-  gst_structure_set (u, "caps", GST_TYPE_CAPS, caps, NULL);
+  gst_structure_id_set (u, topology_caps, GST_TYPE_CAPS, caps, NULL);
   gst_caps_unref (caps);
 
   return u;
