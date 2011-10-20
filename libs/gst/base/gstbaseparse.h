@@ -213,6 +213,10 @@ struct _GstBaseParse {
  *                   additional actions at this time (e.g. tag sending) or to
  *                   decide whether this buffer should be dropped or not
  *                   (e.g. custom segment clipping).
+ * @detect:         Optional.
+ *                   Called until it doesn't return GST_FLOW_OK anymore for
+ *                   the first buffers. Can be used by the subclass to detect
+ *                   the stream format. Since: 0.10.36
  *
  * Subclasses can override any of the available virtual methods or not, as
  * needed. At minimum @check_valid_frame and @parse_frame needs to be
@@ -256,8 +260,11 @@ struct _GstBaseParseClass {
 
   GstCaps *     (*get_sink_caps)      (GstBaseParse * parse);
 
+  GstFlowReturn (*detect)             (GstBaseParse * parse,
+                                       GstBuffer    * buffer);
+
   /*< private >*/
-  gpointer       _gst_reserved[GST_PADDING_LARGE - 1];
+  gpointer       _gst_reserved[GST_PADDING_LARGE - 2];
 };
 
 GType           gst_base_parse_get_type (void);

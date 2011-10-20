@@ -2,6 +2,8 @@
  * Copyright (C) 2008 Nokia Corporation. All rights reserved.
  *   Contact: Stefan Kost <stefan.kost@nokia.com>
  * Copyright (C) 2008 Sebastian Dröge <sebastian.droege@collabora.co.uk>.
+ * Copyright (C) 2011, Hewlett-Packard Development Company, L.P.
+ *   Author: Sebastian Dröge <sebastian.droege@collabora.co.uk>, Collabora Ltd.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -315,6 +317,12 @@ struct _GstBaseParsePrivate
 
   /* push mode helper frame */
   GstBaseParseFrame frame;
+
+  /* TRUE if we're still detecting the format, i.e.
+   * if ::detect() is still called for future buffers */
+  gboolean detecting;
+  GList *detect_buffers;
+  guint detect_buffers_size;
 };
 
 typedef struct _GstBaseParseSeek
@@ -424,6 +432,11 @@ gst_base_parse_clear_queues (GstBaseParse * parse)
   g_slist_foreach (parse->priv->buffers_send, (GFunc) gst_buffer_unref, NULL);
   g_slist_free (parse->priv->buffers_send);
   parse->priv->buffers_send = NULL;
+
+  g_list_foreach (parse->priv->detect_buffers, (GFunc) gst_buffer_unref, NULL);
+  g_list_free (parse->priv->detect_buffers);
+  parse->priv->detect_buffers = NULL;
+  parse->priv->detect_buffers_size = 0;
 }
 
 static void
@@ -741,6 +754,11 @@ gst_base_parse_reset (GstBaseParse * parse)
   parse->priv->frame._private_flags |=
       GST_BASE_PARSE_FRAME_PRIVATE_FLAG_NOALLOC;
   gst_base_parse_frame_free (&parse->priv->frame);
+
+  g_list_foreach (parse->priv->detect_buffers, (GFunc) gst_buffer_unref, NULL);
+  g_list_free (parse->priv->detect_buffers);
+  parse->priv->detect_buffers = NULL;
+  parse->priv->detect_buffers_size = 0;
   GST_OBJECT_UNLOCK (parse);
 }
 
@@ -2200,6 +2218,81 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
 
   parse = GST_BASE_PARSE (GST_OBJECT_PARENT (pad));
   bclass = GST_BASE_PARSE_GET_CLASS (parse);
+
+  if (parse->priv->detecting) {
+    GstBuffer *detect_buf;
+
+    if (parse->priv->detect_buffers_size == 0) {
+      detect_buf = gst_buffer_ref (buffer);
+    } else {
+      GList *l;
+      guint offset = 0;
+
+      detect_buf =
+          gst_buffer_new_and_alloc (parse->priv->detect_buffers_size +
+          (buffer ? GST_BUFFER_SIZE (buffer) : 0));
+      for (l = parse->priv->detect_buffers; l; l = l->next) {
+        memcpy (GST_BUFFER_DATA (detect_buf) + offset,
+            GST_BUFFER_DATA (l->data), GST_BUFFER_SIZE (l->data));
+        offset += GST_BUFFER_SIZE (l->data);
+      }
+      if (buffer)
+        memcpy (GST_BUFFER_DATA (detect_buf) + offset, GST_BUFFER_DATA (buffer),
+            GST_BUFFER_SIZE (buffer));
+    }
+
+    ret = bclass->detect (parse, detect_buf);
+    gst_buffer_unref (detect_buf);
+
+    if (ret == GST_FLOW_OK) {
+      GList *l;
+
+      /* Detected something */
+      parse->priv->detecting = FALSE;
+
+      for (l = parse->priv->detect_buffers; l; l = l->next) {
+        if (ret == GST_FLOW_OK && !parse->priv->flushing)
+          ret =
+              gst_base_parse_chain (GST_BASE_PARSE_SINK_PAD (parse),
+              GST_BUFFER_CAST (l->data));
+        else
+          gst_buffer_unref (GST_BUFFER_CAST (l->data));
+      }
+      g_list_free (parse->priv->detect_buffers);
+      parse->priv->detect_buffers = NULL;
+      parse->priv->detect_buffers_size = 0;
+
+      if (ret != GST_FLOW_OK) {
+        return ret;
+      }
+
+      /* Handle the current buffer */
+    } else if (ret == GST_FLOW_NOT_NEGOTIATED) {
+      /* Still detecting, append buffer or error out if draining */
+
+      if (parse->priv->drain) {
+        GST_DEBUG_OBJECT (parse, "Draining but did not detect format yet");
+        return GST_FLOW_ERROR;
+      } else if (parse->priv->flushing) {
+        g_list_foreach (parse->priv->detect_buffers, (GFunc) gst_buffer_unref,
+            NULL);
+        g_list_free (parse->priv->detect_buffers);
+        parse->priv->detect_buffers = NULL;
+        parse->priv->detect_buffers_size = 0;
+      } else {
+        parse->priv->detect_buffers =
+            g_list_append (parse->priv->detect_buffers, buffer);
+        parse->priv->detect_buffers_size += GST_BUFFER_SIZE (buffer);
+        return GST_FLOW_OK;
+      }
+    } else {
+      /* Something went wrong, subclass responsible for error reporting */
+      return ret;
+    }
+
+    /* And now handle the current buffer if detection worked */
+  }
+
   frame = &parse->priv->frame;
 
   if (G_LIKELY (buffer)) {
@@ -2576,6 +2669,30 @@ gst_base_parse_scan_frame (GstBaseParse * parse, GstBaseParseClass * klass,
     if (GST_BUFFER_SIZE (buffer) < min_size)
       parse->priv->drain = TRUE;
 
+    if (parse->priv->detecting) {
+      ret = klass->detect (parse, buffer);
+      if (ret == GST_FLOW_NOT_NEGOTIATED) {
+        /* If draining we error out, otherwise request a buffer
+         * with 64kb more */
+        if (parse->priv->drain) {
+          gst_buffer_unref (buffer);
+          GST_ERROR_OBJECT (parse, "Failed to detect format but draining");
+          return GST_FLOW_ERROR;
+        } else {
+          fsize += 64 * 1024;
+          gst_buffer_unref (buffer);
+          continue;
+        }
+      } else if (ret != GST_FLOW_OK) {
+        gst_buffer_unref (buffer);
+        GST_ERROR_OBJECT (parse, "detect() returned %s",
+            gst_flow_get_name (ret));
+        return ret;
+      }
+
+      /* Else handle this buffer normally */
+    }
+
     skip = -1;
     gst_base_parse_frame_update (parse, frame, buffer);
     res = klass->check_valid_frame (parse, frame, &fsize, &skip);
@@ -2801,6 +2918,10 @@ gst_base_parse_activate (GstBaseParse * parse, gboolean active)
   if (active) {
     if (parse->priv->pad_mode == GST_ACTIVATE_NONE && klass->start)
       result = klass->start (parse);
+
+    /* If the subclass implements ::detect we want to
+     * call it for the first buffers now */
+    parse->priv->detecting = (klass->detect != NULL);
   } else {
     /* We must make sure streaming has finished before resetting things
      * and calling the ::stop vfunc */
