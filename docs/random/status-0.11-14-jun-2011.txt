@@ -96,7 +96,7 @@ GstCaps optimizations
 
 It doesn't look like we'll be able to implement GstCaps iterators to 0.11 so
 Sebastian was looking for other ways to improve caps performance. One of the
-lowhanging fruits was to pass the complete GstCaps structure to the
+low hanging fruits was to pass the complete GstCaps structure to the
 GstBaseTransform transform_caps method. This allows for better and smarter
 implementations of the function at the cost of marginally more complex code.
 

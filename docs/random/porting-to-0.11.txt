@@ -258,7 +258,7 @@ The 0.11 porting guide
     gst_query_parse_formats_length() -> gst_query_parse_n_formats()
     gst_query_parse_formats_nth() -> gst_query_parse_nth_format()
 
-    Some query utility functionsno longer use an inout parameter for the
+    Some query utility functions no longer use an inout parameter for the
     destination/query format:
 
       - gst_pad_query_position()
@@ -313,7 +313,7 @@ The 0.11 porting guide
     gst_adapter_peek() is removed, use gst_adapter_map() and gst_adapter_unmap()
     to get access to raw data from the adapter.
 
-    Arguments renamed from guint to gsize.
+    Arguments changed from guint to gsize.
 
 * GstBitReader, GstByteReader, GstByteWriter
     gst_*_reader_new_from_buffer(), gst_*_reader_init_from_buffer() removed, get
@@ -352,3 +352,4 @@ The 0.11 porting guide
     uses a GValue based API now that is similar to the 0.10 API but
     allows bindings to properly use GstIterator and prevents complex
     return value ownership issues.
+
