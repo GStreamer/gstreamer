@@ -583,7 +583,8 @@ gst_caps_append (GstCaps * caps1, GstCaps * caps2)
   g_return_if_fail (GST_IS_CAPS (caps1));
   g_return_if_fail (GST_IS_CAPS (caps2));
   g_return_if_fail (IS_WRITABLE (caps1));
-  g_return_if_fail (IS_WRITABLE (caps2));
+
+  caps2 = gst_caps_make_writable (caps2);
 
 #ifdef USE_POISONING
   CAPS_POISON (caps2);
@@ -625,7 +626,8 @@ gst_caps_merge (GstCaps * caps1, GstCaps * caps2)
   g_return_if_fail (GST_IS_CAPS (caps1));
   g_return_if_fail (GST_IS_CAPS (caps2));
   g_return_if_fail (IS_WRITABLE (caps1));
-  g_return_if_fail (IS_WRITABLE (caps2));
+
+  caps2 = gst_caps_make_writable (caps2);
 
 #ifdef USE_POISONING
   CAPS_POISON (caps2);
