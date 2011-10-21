@@ -1804,12 +1804,12 @@ gst_vc1_parse_sequence_layer (const guint8 * data, gsize size,
 
   READ_UINT32 (&br, seqlayer->numframes, 24);
 
-  if (parse_sequence_header_struct_c (&br, &seqlayer->struct_c) ==
-      GST_VC1_PARSER_ERROR)
-    goto failed;
-
   READ_UINT32 (&br, tmp, 32);
   if (tmp != 0x04)
+    goto failed;
+  
+  if (parse_sequence_header_struct_c (&br, &seqlayer->struct_c) ==
+      GST_VC1_PARSER_ERROR)
     goto failed;
 
   if (parse_sequence_header_struct_a (&br, &seqlayer->struct_a) ==
