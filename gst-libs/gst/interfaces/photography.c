@@ -110,7 +110,7 @@ gst_photography_set_ ## function_name (GstPhotography * photo, param_type param)
 { \
   GstPhotographyInterface *iface; \
   g_return_val_if_fail (photo != NULL, FALSE); \
-  iface = GST_PHOTOGRAPHY_GET_IFACE (photo); \
+  iface = GST_PHOTOGRAPHY_GET_INTERFACE (photo); \
   if (iface->set_ ## function_name) { \
     return iface->set_ ## function_name (photo, param); \
   } \
@@ -121,7 +121,7 @@ gst_photography_get_ ## function_name (GstPhotography * photo, param_type * para
 { \
   GstPhotographyInterface *iface; \
   g_return_val_if_fail (photo != NULL, FALSE); \
-  iface = GST_PHOTOGRAPHY_GET_IFACE (photo); \
+  iface = GST_PHOTOGRAPHY_GET_INTERFACE (photo); \
   if (iface->get_ ## function_name) { \
     return iface->get_ ## function_name (photo, param); \
   } \
@@ -389,7 +389,7 @@ gst_photography_get_capabilities (GstPhotography * photo)
   GstPhotographyInterface *iface;
   g_return_val_if_fail (photo != NULL, GST_PHOTOGRAPHY_CAPS_NONE);
 
-  iface = GST_PHOTOGRAPHY_GET_IFACE (photo);
+  iface = GST_PHOTOGRAPHY_GET_INTERFACE (photo);
   if (iface->get_capabilities) {
     return iface->get_capabilities (photo);
   } else {
@@ -418,7 +418,7 @@ gst_photography_prepare_for_capture (GstPhotography * photo,
 
   g_return_val_if_fail (photo != NULL, FALSE);
 
-  iface = GST_PHOTOGRAPHY_GET_IFACE (photo);
+  iface = GST_PHOTOGRAPHY_GET_INTERFACE (photo);
   if (iface->prepare_for_capture) {
     ret = iface->prepare_for_capture (photo, func, capture_caps, user_data);
   }
@@ -440,7 +440,7 @@ gst_photography_set_autofocus (GstPhotography * photo, gboolean on)
   GstPhotographyInterface *iface;
   g_return_if_fail (photo != NULL);
 
-  iface = GST_PHOTOGRAPHY_GET_IFACE (photo);
+  iface = GST_PHOTOGRAPHY_GET_INTERFACE (photo);
   if (iface->set_autofocus) {
     iface->set_autofocus (photo, on);
   }
@@ -463,7 +463,7 @@ gst_photography_set_config (GstPhotography * photo, GstPhotoSettings * config)
 
   g_return_val_if_fail (photo != NULL, FALSE);
 
-  iface = GST_PHOTOGRAPHY_GET_IFACE (photo);
+  iface = GST_PHOTOGRAPHY_GET_INTERFACE (photo);
   if (iface->set_config) {
     ret = iface->set_config (photo, config);
   }
@@ -488,7 +488,7 @@ gst_photography_get_config (GstPhotography * photo, GstPhotoSettings * config)
 
   g_return_val_if_fail (photo != NULL, FALSE);
 
-  iface = GST_PHOTOGRAPHY_GET_IFACE (photo);
+  iface = GST_PHOTOGRAPHY_GET_INTERFACE (photo);
   if (iface->get_config) {
     ret = iface->get_config (photo, config);
   }

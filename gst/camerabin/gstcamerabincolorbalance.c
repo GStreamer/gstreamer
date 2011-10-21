@@ -71,7 +71,7 @@ gst_camerabin_color_balance_get_value (GstColorBalance * cb,
  */
 
 void
-gst_camerabin_color_balance_init (GstColorBalanceClass * iface)
+gst_camerabin_color_balance_init (GstColorBalanceInterface * iface)
 {
   /* FIXME: to get the same type as v4l2src */
   GST_COLOR_BALANCE_TYPE (iface) = GST_COLOR_BALANCE_HARDWARE;

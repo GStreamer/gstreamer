@@ -2091,7 +2091,7 @@ gst_dfbvideosink_colorbalance_get_value (GstColorBalance * balance,
 }
 
 static void
-gst_dfbvideosink_colorbalance_init (GstColorBalanceClass * iface)
+gst_dfbvideosink_colorbalance_init (GstColorBalanceInterface * iface)
 {
   GST_COLOR_BALANCE_TYPE (iface) = GST_COLOR_BALANCE_HARDWARE;
   iface->list_channels = gst_dfbvideosink_colorbalance_list_channels;

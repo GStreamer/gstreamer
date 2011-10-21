@@ -172,7 +172,7 @@ static GstStateChangeReturn gst_apexsink_change_state (GstElement * element,
 static void gst_apexsink_interfaces_init (GType type);
 static void gst_apexsink_implements_interface_init (GstImplementsInterfaceClass
     * iface);
-static void gst_apexsink_mixer_interface_init (GstMixerClass * iface);
+static void gst_apexsink_mixer_interface_init (GstMixerInterface * iface);
 
 static gboolean gst_apexsink_interface_supported (GstImplementsInterface *
     iface, GType iface_type);
@@ -208,7 +208,7 @@ gst_apexsink_implements_interface_init (GstImplementsInterfaceClass * iface)
 }
 
 static void
-gst_apexsink_mixer_interface_init (GstMixerClass * iface)
+gst_apexsink_mixer_interface_init (GstMixerInterface * iface)
 {
   GST_MIXER_TYPE (iface) = GST_MIXER_SOFTWARE;
 

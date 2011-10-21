@@ -23,6 +23,6 @@
 
 #include <gst/interfaces/colorbalance.h>
 
-extern void gst_camerabin_color_balance_init (GstColorBalanceClass * iface);
+extern void gst_camerabin_color_balance_init (GstColorBalanceInterface * iface);
 
 #endif /* #ifndef __GST_CAMERA_COLOR_BALANCE_H__ */
