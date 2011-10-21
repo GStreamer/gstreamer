@@ -191,6 +191,7 @@ struct _GstBaseParse {
  *                  Called when the element stops processing.
  *                  Allows closing external resources.
  * @set_sink_caps:  allows the subclass to be notified of the actual caps set.
+ * @get_sink_caps:  allows the subclass to do its own sink get caps if needed.
  * @check_valid_frame:  Check if the given piece of data contains a valid
  *                      frame.
  * @parse_frame:    Parse the already checked frame. Subclass need to
@@ -211,6 +212,10 @@ struct _GstBaseParse {
  *                   additional actions at this time (e.g. tag sending) or to
  *                   decide whether this buffer should be dropped or not
  *                   (e.g. custom segment clipping).
+ * @detect:         Optional.
+ *                   Called until it doesn't return GST_FLOW_OK anymore for
+ *                   the first buffers. Can be used by the subclass to detect
+ *                   the stream format. Since: 0.10.36
  *
  * Subclasses can override any of the available virtual methods or not, as
  * needed. At minimum @check_valid_frame and @parse_frame needs to be
@@ -252,8 +257,14 @@ struct _GstBaseParseClass {
   gboolean      (*src_event)          (GstBaseParse * parse,
                                        GstEvent     * event);
 
+  GstCaps *     (*get_sink_caps)      (GstBaseParse * parse,
+				       GstCaps      * filter);
+
+  GstFlowReturn (*detect)             (GstBaseParse * parse,
+                                       GstBuffer    * buffer);
+
   /*< private >*/
-  gpointer       _gst_reserved[GST_PADDING_LARGE];
+  gpointer       _gst_reserved[GST_PADDING_LARGE - 2];
 };
 
 GType           gst_base_parse_get_type (void);

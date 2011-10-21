@@ -177,7 +177,8 @@ _gst_message_free (GstMessage * message)
 
   g_return_if_fail (message != NULL);
 
-  GST_CAT_LOG (GST_CAT_MESSAGE, "finalize message %p", message);
+  GST_CAT_LOG (GST_CAT_MESSAGE, "finalize message %p, %s from %s", message,
+      GST_MESSAGE_TYPE_NAME (message), GST_MESSAGE_SRC_NAME (message));
 
   if (GST_MESSAGE_SRC (message)) {
     gst_object_unref (GST_MESSAGE_SRC (message));
@@ -205,7 +206,9 @@ _gst_message_copy (GstMessage * message)
   GstMessageImpl *copy;
   GstStructure *structure;
 
-  GST_CAT_LOG (GST_CAT_MESSAGE, "copy message %p", message);
+  GST_CAT_LOG (GST_CAT_MESSAGE, "copy message %p, %s from %s", message,
+      GST_MESSAGE_TYPE_NAME (message),
+      GST_OBJECT_NAME (GST_MESSAGE_SRC (message)));
 
   copy = g_slice_new0 (GstMessageImpl);
 

@@ -1065,6 +1065,19 @@ gst_pad_add_probe (GstPad * pad, GstProbeType mask,
   g_return_val_if_fail (mask != 0, 0);
 
   GST_OBJECT_LOCK (pad);
+
+  /* FIXME : I'm not checking for != GST_ACTIVATE_correct_direction
+   * because the pad might not be activated yet.
+   * This means that _add_probe() might return a valid probeid ...
+   * which will potentially never be called if the pad
+   * is activated in the wrong direction */
+  if (G_UNLIKELY ((mask & GST_PROBE_TYPE_PUSH) &&
+          (GST_PAD_ACTIVATE_MODE (pad) == GST_ACTIVATE_PULL)))
+    goto wrong_direction;
+  if (G_UNLIKELY ((mask & GST_PROBE_TYPE_PULL) &&
+          (GST_PAD_ACTIVATE_MODE (pad) == GST_ACTIVATE_PUSH)))
+    goto wrong_direction;
+
   /* make a new probe */
   hook = g_hook_alloc (&pad->probes);
 
@@ -1127,6 +1140,15 @@ gst_pad_add_probe (GstPad * pad, GstProbeType mask,
     GST_OBJECT_UNLOCK (pad);
   }
   return res;
+
+wrong_direction:
+  {
+    GST_CAT_INFO_OBJECT (GST_CAT_SCHEDULING, pad, "pad block on the wrong pad, "
+        "block src pads in push mode and sink pads in pull mode.");
+    GST_OBJECT_UNLOCK (pad);
+
+    return 0;
+  }
 }
 
 static void
@@ -4221,10 +4243,11 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
 
       /* Remove sticky EOS events */
       GST_LOG_OBJECT (pad, "Removing pending EOS events");
-      gst_event_replace (&pad->priv->
-          events[GST_EVENT_STICKY_IDX_TYPE (GST_EVENT_EOS)].pending, NULL);
-      gst_event_replace (&pad->priv->
-          events[GST_EVENT_STICKY_IDX_TYPE (GST_EVENT_EOS)].event, NULL);
+      gst_event_replace (&pad->
+          priv->events[GST_EVENT_STICKY_IDX_TYPE (GST_EVENT_EOS)].pending,
+          NULL);
+      gst_event_replace (&pad->
+          priv->events[GST_EVENT_STICKY_IDX_TYPE (GST_EVENT_EOS)].event, NULL);
 
       if (G_UNLIKELY (GST_PAD_IS_BLOCKED (pad))) {
         GST_LOG_OBJECT (pad, "Pad is blocked, not forwarding flush-stop");
@@ -4432,10 +4455,11 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
       }
       /* Remove pending EOS events */
       GST_LOG_OBJECT (pad, "Removing pending EOS events");
-      gst_event_replace (&pad->priv->
-          events[GST_EVENT_STICKY_IDX_TYPE (GST_EVENT_EOS)].pending, NULL);
-      gst_event_replace (&pad->priv->
-          events[GST_EVENT_STICKY_IDX_TYPE (GST_EVENT_EOS)].event, NULL);
+      gst_event_replace (&pad->
+          priv->events[GST_EVENT_STICKY_IDX_TYPE (GST_EVENT_EOS)].pending,
+          NULL);
+      gst_event_replace (&pad->
+          priv->events[GST_EVENT_STICKY_IDX_TYPE (GST_EVENT_EOS)].event, NULL);
 
       GST_OBJECT_UNLOCK (pad);
       /* grab stream lock */

@@ -13,7 +13,7 @@ GST_BUILT_SOURCES := 		\
 	gst/parse/grammar.tab.h	\
 	gst/parse/grammar.tab.c	\
 	gst/parse/grammar.output	\
-	gst/parse/lex._gst_parse_yy.c \
+	gst/parse/lex.priv_gst_parse_yy.c \
 	pkgconfig/gstreamer-0.10.pc       \
 	pkgconfig/gstreamer-base-0.10.pc      \
 	pkgconfig/gstreamer-controller-0.10.pc    \
