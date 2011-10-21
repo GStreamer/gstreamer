@@ -1553,7 +1553,7 @@ gst_matroska_read_common_peek_adapter (GstMatroskaReadCommon * common, guint
 {
   *data = gst_adapter_peek (common->adapter, peek);
   if (*data == NULL)
-    return GST_FLOW_ERROR;
+    return GST_FLOW_UNEXPECTED;
 
   return GST_FLOW_OK;
 }
