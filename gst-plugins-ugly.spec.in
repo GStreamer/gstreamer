@@ -1,7 +1,7 @@
 %define majorminor  @GST_MAJORMINOR@
-%define gstreamer   gstreamer
+%define gstreamer   gstreamer011
 
-%define gst_minver  0.10.0
+%define gst_minver  0.11.0
 
 Name: 		%{gstreamer}-plugins-ugly
 Version: 	@VERSION@
@@ -94,10 +94,10 @@ rm -rf $RPM_BUILD_ROOT
 %doc AUTHORS COPYING README REQUIREMENTS gst-plugins-ugly.doap
 %{_libdir}/gstreamer-%{majorminor}/libgstasf.so
 %{_libdir}/gstreamer-%{majorminor}/libgstdvdlpcmdec.so
-%{_libdir}/gstreamer-%{majorminor}/libgstiec958.so
-%{_libdir}/gstreamer-%{majorminor}/libgstxingmux.so
-%{_libdir}/gstreamer-%{majorminor}/libgstmpegstream.so
-%{_libdir}/gstreamer-%{majorminor}/libgstrmdemux.so
+# %{_libdir}/gstreamer-%{majorminor}/libgstiec958.so
+# %{_libdir}/gstreamer-%{majorminor}/libgstxingmux.so
+# %{_libdir}/gstreamer-%{majorminor}/libgstmpegstream.so
+# %{_libdir}/gstreamer-%{majorminor}/libgstrmdemux.so
 %{_libdir}/gstreamer-%{majorminor}/libgstdvdsub.so
 
 # plugins with dependencies
