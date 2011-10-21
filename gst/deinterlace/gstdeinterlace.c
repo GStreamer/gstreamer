@@ -392,10 +392,9 @@ gst_deinterlace_set_method (GstDeinterlace * self, GstDeinterlaceMethods method)
     g_assert (method_type != G_TYPE_INVALID);
   }
 
-  self->method = g_object_new (method_type, NULL);
+  self->method = g_object_new (method_type, "name", "method", NULL);
   self->method_id = method;
 
-  gst_object_set_name (GST_OBJECT (self->method), "method");
   gst_object_set_parent (GST_OBJECT (self->method), GST_OBJECT (self));
   gst_child_proxy_child_added (GST_OBJECT (self), GST_OBJECT (self->method));
 
