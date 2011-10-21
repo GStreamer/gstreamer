@@ -797,10 +797,9 @@ gen_preroll_element (GstPlayBaseBin * play_base_bin,
     g_return_if_reached ();
 
   /* create stream selector */
-  selector = g_object_new (GST_TYPE_STREAM_SELECTOR, NULL);
   padname = gst_pad_get_name (pad);
   name = g_strdup_printf ("selector_%s_%s", prename, padname);
-  gst_object_set_name (GST_OBJECT_CAST (selector), name);
+  selector = g_object_new (GST_TYPE_STREAM_SELECTOR, "name", name, NULL);
   g_free (name);
 
   /* create preroll queue */
