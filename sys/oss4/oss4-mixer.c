@@ -1800,18 +1800,18 @@ gst_oss4_mixer_get_mixer_flags (GstMixer * mixer)
 }
 
 static void
-gst_oss4_mixer_interface_init (GstMixerClass * klass)
+gst_oss4_mixer_interface_init (GstMixerInterface * iface)
 {
-  GST_MIXER_TYPE (klass) = GST_MIXER_HARDWARE;
+  GST_MIXER_TYPE (iface) = GST_MIXER_HARDWARE;
 
-  klass->list_tracks = gst_oss4_mixer_list_tracks;
-  klass->set_volume = gst_oss4_mixer_set_volume;
-  klass->get_volume = gst_oss4_mixer_get_volume;
-  klass->set_mute = gst_oss4_mixer_set_mute;
-  klass->set_record = gst_oss4_mixer_set_record;
-  klass->set_option = gst_oss4_mixer_set_option;
-  klass->get_option = gst_oss4_mixer_get_option;
-  klass->get_mixer_flags = gst_oss4_mixer_get_mixer_flags;
+  iface->list_tracks = gst_oss4_mixer_list_tracks;
+  iface->set_volume = gst_oss4_mixer_set_volume;
+  iface->get_volume = gst_oss4_mixer_get_volume;
+  iface->set_mute = gst_oss4_mixer_set_mute;
+  iface->set_record = gst_oss4_mixer_set_record;
+  iface->set_option = gst_oss4_mixer_set_option;
+  iface->get_option = gst_oss4_mixer_get_option;
+  iface->get_mixer_flags = gst_oss4_mixer_get_mixer_flags;
 }
 
 /* Implement the horror that is GstImplementsInterface */

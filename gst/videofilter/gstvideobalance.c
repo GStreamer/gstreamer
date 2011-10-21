@@ -90,7 +90,8 @@ GST_STATIC_PAD_TEMPLATE ("sink",
             "I420, YV12, IYUV, Y41B }"))
     );
 
-static void gst_video_balance_colorbalance_init (GstColorBalanceClass * iface);
+static void gst_video_balance_colorbalance_init (GstColorBalanceInterface *
+    iface);
 
 static void gst_video_balance_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -660,7 +661,7 @@ gst_video_balance_colorbalance_get_value (GstColorBalance * balance,
 }
 
 static void
-gst_video_balance_colorbalance_init (GstColorBalanceClass * iface)
+gst_video_balance_colorbalance_init (GstColorBalanceInterface * iface)
 {
   GST_COLOR_BALANCE_TYPE (iface) = GST_COLOR_BALANCE_SOFTWARE;
   iface->list_channels = gst_video_balance_colorbalance_list_channels;

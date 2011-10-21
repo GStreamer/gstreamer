@@ -152,16 +152,16 @@ interface_as_function ## _set_mute (GstMixer * mixer, GstMixerTrack * track,    
 }                                                                               \
                                                                                 \
 static void                                                                     \
-interface_as_function ## _interface_init (GstMixerClass * klass)                \
+interface_as_function ## _interface_init (GstMixerInterface * iface)                \
 {                                                                               \
-  GST_MIXER_TYPE (klass) = GST_MIXER_HARDWARE;                                  \
+  GST_MIXER_TYPE (iface) = GST_MIXER_HARDWARE;                                  \
                                                                                 \
   /* set up the interface hooks */                                              \
-  klass->list_tracks = interface_as_function ## _list_tracks;                   \
-  klass->set_volume = interface_as_function ## _set_volume;                     \
-  klass->get_volume = interface_as_function ## _get_volume;                     \
-  klass->set_mute = interface_as_function ## _set_mute;                         \
-  klass->set_record = interface_as_function ## _set_record;                     \
+  iface->list_tracks = interface_as_function ## _list_tracks;                   \
+  iface->set_volume = interface_as_function ## _set_volume;                     \
+  iface->get_volume = interface_as_function ## _get_volume;                     \
+  iface->set_mute = interface_as_function ## _set_mute;                         \
+  iface->set_record = interface_as_function ## _set_record;                     \
 }
 
 

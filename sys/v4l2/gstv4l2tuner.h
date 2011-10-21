@@ -179,20 +179,20 @@ interface_as_function ## _tuner_signal_strength (GstTuner * mixer,              
 }                                                                                     \
                                                                                       \
 static void                                                                           \
-interface_as_function ## _tuner_interface_init (GstTunerClass * klass)                \
+interface_as_function ## _tuner_interface_init (GstTunerInterface * iface)                \
 {                                                                                     \
   /* default virtual functions */                                                     \
-  klass->list_channels = interface_as_function ## _tuner_list_channels;               \
-  klass->set_channel = interface_as_function ## _tuner_set_channel;                   \
-  klass->get_channel = interface_as_function ## _tuner_get_channel;                   \
+  iface->list_channels = interface_as_function ## _tuner_list_channels;               \
+  iface->set_channel = interface_as_function ## _tuner_set_channel;                   \
+  iface->get_channel = interface_as_function ## _tuner_get_channel;                   \
                                                                                       \
-  klass->list_norms = interface_as_function ## _tuner_list_norms;                     \
-  klass->set_norm = interface_as_function ## _tuner_set_norm_and_notify;              \
-  klass->get_norm = interface_as_function ## _tuner_get_norm;                         \
+  iface->list_norms = interface_as_function ## _tuner_list_norms;                     \
+  iface->set_norm = interface_as_function ## _tuner_set_norm_and_notify;              \
+  iface->get_norm = interface_as_function ## _tuner_get_norm;                         \
                                                                                       \
-  klass->set_frequency = interface_as_function ## _tuner_set_frequency_and_notify;    \
-  klass->get_frequency = interface_as_function ## _tuner_get_frequency;               \
-  klass->signal_strength = interface_as_function ## _tuner_signal_strength;           \
+  iface->set_frequency = interface_as_function ## _tuner_set_frequency_and_notify;    \
+  iface->get_frequency = interface_as_function ## _tuner_get_frequency;               \
+  iface->signal_strength = interface_as_function ## _tuner_signal_strength;           \
 }                                                                                     \
 
 #endif /* __GST_V4L2_TUNER_H__ */

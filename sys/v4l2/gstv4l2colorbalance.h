@@ -91,14 +91,14 @@ interface_as_function ## _color_balance_get_value (GstColorBalance * balance,   
 }                                                                                     \
                                                                                       \
 static void                                                                           \
-interface_as_function ## _color_balance_interface_init (GstColorBalanceClass * klass) \
+interface_as_function ## _color_balance_interface_init (GstColorBalanceInterface * iface) \
 {                                                                                     \
-  GST_COLOR_BALANCE_TYPE (klass) = GST_COLOR_BALANCE_HARDWARE;                        \
+  GST_COLOR_BALANCE_TYPE (iface) = GST_COLOR_BALANCE_HARDWARE;                        \
                                                                                       \
   /* default virtual functions */                                                     \
-  klass->list_channels = interface_as_function ## _color_balance_list_channels;       \
-  klass->set_value = interface_as_function ## _color_balance_set_value;               \
-  klass->get_value = interface_as_function ## _color_balance_get_value;               \
+  iface->list_channels = interface_as_function ## _color_balance_list_channels;       \
+  iface->set_value = interface_as_function ## _color_balance_set_value;               \
+  iface->get_value = interface_as_function ## _color_balance_get_value;               \
 }                                                                                     \
 
 #endif /* __GST_V4L2_COLOR_BALANCE_H__ */

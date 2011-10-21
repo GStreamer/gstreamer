@@ -169,19 +169,19 @@ interface_as_function ## _get_mixer_flags (GstMixer * mixer)                    
 }                                                                               \
 										\
 static void                                                                     \
-interface_as_function ## _interface_init (GstMixerClass * klass)                \
+interface_as_function ## _interface_init (GstMixerInterface * iface)                \
 {                                                                               \
-  GST_MIXER_TYPE (klass) = GST_MIXER_HARDWARE;                                  \
+  GST_MIXER_TYPE (iface) = GST_MIXER_HARDWARE;                                  \
                                                                                 \
   /* set up the interface hooks */                                              \
-  klass->list_tracks = interface_as_function ## _list_tracks;                   \
-  klass->set_volume  = interface_as_function ## _set_volume;                    \
-  klass->get_volume  = interface_as_function ## _get_volume;                    \
-  klass->set_mute    = interface_as_function ## _set_mute;                      \
-  klass->set_record  = interface_as_function ## _set_record;                    \
-  klass->get_option  = interface_as_function ## _get_option;			\
-  klass->set_option  = interface_as_function ## _set_option;			\
-  klass->get_mixer_flags   = interface_as_function ## _get_mixer_flags;		\
+  iface->list_tracks = interface_as_function ## _list_tracks;                   \
+  iface->set_volume  = interface_as_function ## _set_volume;                    \
+  iface->get_volume  = interface_as_function ## _get_volume;                    \
+  iface->set_mute    = interface_as_function ## _set_mute;                      \
+  iface->set_record  = interface_as_function ## _set_record;                    \
+  iface->get_option  = interface_as_function ## _get_option;			\
+  iface->set_option  = interface_as_function ## _set_option;			\
+  iface->get_mixer_flags   = interface_as_function ## _get_mixer_flags;		\
 }
 
 G_END_DECLS

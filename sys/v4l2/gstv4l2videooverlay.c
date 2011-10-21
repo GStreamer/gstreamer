@@ -51,7 +51,7 @@ GST_DEBUG_CATEGORY_STATIC (v4l2xv_debug);
 #define GST_CAT_DEFAULT v4l2xv_debug
 
 void
-gst_v4l2_video_overlay_interface_init (GstVideoOverlayIface * klass)
+gst_v4l2_video_overlay_interface_init (GstVideoOverlayInterface * iface)
 {
   GST_DEBUG_CATEGORY_INIT (v4l2xv_debug, "v4l2xv", 0,
       "V4L2 GstVideoOverlay interface debugging");

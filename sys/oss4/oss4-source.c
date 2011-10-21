@@ -935,15 +935,15 @@ gst_oss4_source_mixer_set_mute (GstMixer * mixer, GstMixerTrack * track,
 }
 
 static void
-gst_oss4_source_mixer_interface_init (GstMixerClass * klass)
+gst_oss4_source_mixer_interface_init (GstMixerInterface * iface)
 {
-  GST_MIXER_TYPE (klass) = GST_MIXER_HARDWARE;
+  GST_MIXER_TYPE (iface) = GST_MIXER_HARDWARE;
 
-  klass->list_tracks = gst_oss4_source_mixer_list_tracks;
-  klass->set_volume = gst_oss4_source_mixer_set_volume;
-  klass->get_volume = gst_oss4_source_mixer_get_volume;
-  klass->set_mute = gst_oss4_source_mixer_set_mute;
-  klass->set_record = gst_oss4_source_mixer_set_record;
+  iface->list_tracks = gst_oss4_source_mixer_list_tracks;
+  iface->set_volume = gst_oss4_source_mixer_set_volume;
+  iface->get_volume = gst_oss4_source_mixer_get_volume;
+  iface->set_mute = gst_oss4_source_mixer_set_mute;
+  iface->set_record = gst_oss4_source_mixer_set_record;
 }
 
 /* Implement the horror that is GstImplementsInterface */

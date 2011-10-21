@@ -258,7 +258,7 @@ static void gst_v4l2radio_uri_handler_init (gpointer g_iface,
     gpointer iface_data);
 
 static void
-gst_v4l2radio_tuner_interface_reinit (GstTunerClass * iface)
+gst_v4l2radio_tuner_interface_reinit (GstTunerInterface * iface)
 {
   gst_v4l2radio_tuner_interface_init (iface);
 }

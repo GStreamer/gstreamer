@@ -92,7 +92,8 @@ static void gst_directsound_sink_interfaces_init (GType type);
 static void
 gst_directsound_sink_implements_interface_init (GstImplementsInterfaceClass *
     iface);
-static void gst_directsound_sink_mixer_interface_init (GstMixerClass * iface);
+static void gst_directsound_sink_mixer_interface_init (GstMixerInterface *
+    iface);
 
 static GstStaticPadTemplate directsoundsink_sink_factory =
     GST_STATIC_PAD_TEMPLATE ("sink",
@@ -223,7 +224,7 @@ gst_directsound_sink_mixer_get_volume (GstMixer * mixer,
 }
 
 static void
-gst_directsound_sink_mixer_interface_init (GstMixerClass * iface)
+gst_directsound_sink_mixer_interface_init (GstMixerInterface * iface)
 {
   /* the mixer interface requires a definition of the mixer type:
    * hardware or software? */

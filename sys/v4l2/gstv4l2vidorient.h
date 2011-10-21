@@ -30,7 +30,7 @@
 
 G_BEGIN_DECLS
 
-void     gst_v4l2_video_orientation_interface_init (GstVideoOrientationInterface * klass);
+void     gst_v4l2_video_orientation_interface_init (GstVideoOrientationInterface * iface);
 
 gboolean gst_v4l2_video_orientation_get_hflip 	(GstV4l2Object *v4l2object, gboolean *flip);
 gboolean gst_v4l2_video_orientation_get_vflip 	(GstV4l2Object *v4l2object, gboolean *flip);
@@ -101,17 +101,17 @@ gboolean gst_v4l2_video_orientation_set_vcenter (GstV4l2Object *v4l2object, gint
   }                                                                                               \
                                                                                                   \
   static void                                                                                     \
-  interface_as_function ## _video_orientation_interface_init (GstVideoOrientationInterface * klass)          \
+  interface_as_function ## _video_orientation_interface_init (GstVideoOrientationInterface * iface)          \
   {                                                                                               \
     /* default virtual functions */                                                               \
-    klass->get_hflip   = interface_as_function ## _video_orientation_get_hflip;                   \
-    klass->get_vflip   = interface_as_function ## _video_orientation_get_vflip;                   \
-    klass->get_hcenter = interface_as_function ## _video_orientation_get_hcenter;                 \
-    klass->get_vcenter = interface_as_function ## _video_orientation_get_vcenter;                 \
-    klass->set_hflip   = interface_as_function ## _video_orientation_set_hflip;                   \
-    klass->set_vflip   = interface_as_function ## _video_orientation_set_vflip;                   \
-    klass->set_hcenter = interface_as_function ## _video_orientation_set_hcenter;                 \
-    klass->set_vcenter = interface_as_function ## _video_orientation_set_vcenter;                 \
+    iface->get_hflip   = interface_as_function ## _video_orientation_get_hflip;                   \
+    iface->get_vflip   = interface_as_function ## _video_orientation_get_vflip;                   \
+    iface->get_hcenter = interface_as_function ## _video_orientation_get_hcenter;                 \
+    iface->get_vcenter = interface_as_function ## _video_orientation_get_vcenter;                 \
+    iface->set_hflip   = interface_as_function ## _video_orientation_set_hflip;                   \
+    iface->set_vflip   = interface_as_function ## _video_orientation_set_vflip;                   \
+    iface->set_hcenter = interface_as_function ## _video_orientation_set_hcenter;                 \
+    iface->set_vcenter = interface_as_function ## _video_orientation_set_vcenter;                 \
   }
 
 #endif /* __GST_V4L2_VIDORIENT_H__ */

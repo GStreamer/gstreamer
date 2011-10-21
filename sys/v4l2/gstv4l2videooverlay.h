@@ -39,7 +39,7 @@ void gst_v4l2_video_overlay_stop  (GstV4l2Object  *v4l2object);
 gboolean gst_v4l2_video_overlay_get_render_rect (GstV4l2Object *v4l2object,
     GstVideoRectangle *rect);
 
-void gst_v4l2_video_overlay_interface_init (GstVideoOverlayIface * iface);
+void gst_v4l2_video_overlay_interface_init (GstVideoOverlayInterface * iface);
 void gst_v4l2_video_overlay_set_window_handle (GstV4l2Object * v4l2object,
     guintptr id);
 void gst_v4l2_video_overlay_prepare_window_handle (GstV4l2Object * v4l2object,
@@ -57,7 +57,7 @@ interface_as_function ## _video_overlay_set_window_handle (GstVideoOverlay * ove
 }                                                                             \
                                                                               \
 static void                                                                   \
-interface_as_function ## _video_overlay_interface_init (GstVideoOverlayIface * iface)  \
+interface_as_function ## _video_overlay_interface_init (GstVideoOverlayInterface * iface)  \
 {                                                                             \
   /* default virtual functions */                                             \
   iface->set_window_handle = interface_as_function ## _video_overlay_set_window_handle;  \
