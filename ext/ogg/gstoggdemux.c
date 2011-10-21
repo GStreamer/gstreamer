@@ -1440,6 +1440,19 @@ gst_ogg_pad_handle_push_mode_state (GstOggPad * pad, ogg_page * page)
           }
           GST_INFO_OBJECT (ogg, "Bisection needed %d + %d steps",
               ogg->push_bisection_steps[0], ogg->push_bisection_steps[1]);
+          ogg->stats_bisection_steps[0] += ogg->push_bisection_steps[0];
+          ogg->stats_bisection_steps[1] += ogg->push_bisection_steps[1];
+          if (ogg->stats_bisection_max_steps[0] < ogg->push_bisection_steps[0])
+            ogg->stats_bisection_max_steps[0] = ogg->push_bisection_steps[0];
+          if (ogg->stats_bisection_max_steps[1] < ogg->push_bisection_steps[1])
+            ogg->stats_bisection_max_steps[1] = ogg->push_bisection_steps[1];
+          ogg->stats_nbisections++;
+          GST_INFO_OBJECT (ogg,
+              "So far, %.2f + %.2f bisections needed per seek (max %d + %d)",
+              ogg->stats_bisection_steps[0] / (float) ogg->stats_nbisections,
+              ogg->stats_bisection_steps[1] / (float) ogg->stats_nbisections,
+              ogg->stats_bisection_max_steps[0],
+              ogg->stats_bisection_max_steps[1]);
         }
       }
     } else if (ogg->push_state == PUSH_LINEAR1) {
@@ -1852,6 +1865,12 @@ gst_ogg_demux_init (GstOggDemux * ogg, GstOggDemuxClass * g_class)
   ogg->chain_lock = g_mutex_new ();
   ogg->push_lock = g_mutex_new ();
   ogg->chains = g_array_new (FALSE, TRUE, sizeof (GstOggChain *));
+
+  ogg->stats_nbisections = 0;
+  ogg->stats_bisection_steps[0] = 0;
+  ogg->stats_bisection_steps[1] = 0;
+  ogg->stats_bisection_max_steps[0] = 0;
+  ogg->stats_bisection_max_steps[1] = 0;
 
   ogg->newsegment = NULL;
 }

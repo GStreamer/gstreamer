@@ -188,6 +188,9 @@ struct _GstOggDemux
   gboolean push_disable_seeking;
 
   gint push_bisection_steps[2];
+  gint stats_bisection_steps[2];
+  gint stats_bisection_max_steps[2];
+  gint stats_nbisections;
 
   /* ogg stuff */
   ogg_sync_state sync;
