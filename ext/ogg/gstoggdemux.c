@@ -1692,7 +1692,9 @@ gst_ogg_chain_new_stream (GstOggChain * chain, guint32 serialno)
   GST_DEBUG_OBJECT (chain->ogg,
       "creating new stream %08x in chain %p", serialno, chain);
 
-  ret = g_object_new (GST_TYPE_OGG_PAD, NULL);
+  name = g_strdup_printf ("serial_%08x", serialno);
+  ret = g_object_new (GST_TYPE_OGG_PAD, "name", name, NULL);
+  g_free (name);
   /* we own this one */
   gst_object_ref (ret);
   gst_object_sink (ret);
@@ -1706,10 +1708,6 @@ gst_ogg_chain_new_stream (GstOggChain * chain, guint32 serialno)
   ret->map.serialno = serialno;
   if (ogg_stream_init (&ret->map.stream, serialno) != 0)
     goto init_failed;
-
-  name = g_strdup_printf ("serial_%08x", serialno);
-  gst_object_set_name (GST_OBJECT (ret), name);
-  g_free (name);
 
   /* FIXME: either do something with it or remove it */
   list = gst_tag_list_new ();
