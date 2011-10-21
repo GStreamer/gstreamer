@@ -29,7 +29,7 @@ G_BEGIN_DECLS
 #define GST_TYPE_TAG_SETTER		(gst_tag_setter_get_type ())
 #define GST_TAG_SETTER(obj)		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_TAG_SETTER, GstTagSetter))
 #define GST_IS_TAG_SETTER(obj)		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_TAG_SETTER))
-#define GST_TAG_SETTER_GET_IFACE(obj)	(G_TYPE_INSTANCE_GET_INTERFACE ((obj), GST_TYPE_TAG_SETTER, GstTagSetterIFace))
+#define GST_TAG_SETTER_GET_INTERFACE(obj)	(G_TYPE_INSTANCE_GET_INTERFACE ((obj), GST_TYPE_TAG_SETTER, GstTagSetterInterface))
 
 /**
  * GstTagSetter:
@@ -37,17 +37,17 @@ G_BEGIN_DECLS
  * Opaque #GstTagSetter data structure.
  */
 typedef struct _GstTagSetter			GstTagSetter; /* Dummy typedef */
-typedef struct _GstTagSetterIFace		GstTagSetterIFace;
+typedef struct _GstTagSetterInterface		GstTagSetterInterface;
 
 /**
- * GstTagSetterIFace:
+ * GstTagSetterInterface:
  * @g_iface: parent interface type.
  *
- * #GstTagSetterIFace interface.
+ * #GstTagSetterInterface interface.
  */
 /* use an empty interface here to allow detection of elements using user-set
    tags */
-struct _GstTagSetterIFace
+struct _GstTagSetterInterface
 {
   GTypeInterface g_iface;
 

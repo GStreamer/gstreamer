@@ -94,7 +94,7 @@ gst_tag_setter_get_type (void)
   if (g_once_init_enter (&tag_setter_type)) {
     GType _type;
     static const GTypeInfo tag_setter_info = {
-      sizeof (GstTagSetterIFace),       /* class_size */
+      sizeof (GstTagSetterInterface),   /* class_size */
       NULL,                     /* base_init */
       NULL,                     /* base_finalize */
       NULL,

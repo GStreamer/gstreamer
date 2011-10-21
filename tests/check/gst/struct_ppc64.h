@@ -54,7 +54,7 @@ static GstCheckABIStruct list[] = {
   {"GstStructure", sizeof (GstStructure), 40} ,
   {"GstSystemClock", sizeof (GstSystemClock), 288} ,
   {"GstSystemClockClass", sizeof (GstSystemClockClass), 352} ,
-  {"GstTagSetterIFace", sizeof (GstTagSetterIFace), 16} ,
+  {"GstTagSetterInterface", sizeof (GstTagSetterInterface), 16} ,
   {"GstTask", sizeof (GstTask), 160} ,
   {"GstTaskClass", sizeof (GstTaskClass), 280} ,
   {"GstTrace", sizeof (GstTrace), 32} ,
