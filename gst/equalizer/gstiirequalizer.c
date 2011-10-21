@@ -658,10 +658,10 @@ gst_iir_equalizer_compute_frequencies (GstIirEqualizer * equ, guint new_count)
     /* add new bands */
     equ->bands = g_realloc (equ->bands, sizeof (GstObject *) * new_count);
     for (i = old_count; i < new_count; i++) {
-      equ->bands[i] = g_object_new (GST_TYPE_IIR_EQUALIZER_BAND, NULL);
       /* otherwise they get names like 'iirequalizerband5' */
       sprintf (name, "band%u", i);
-      gst_object_set_name (GST_OBJECT (equ->bands[i]), name);
+      equ->bands[i] = g_object_new (GST_TYPE_IIR_EQUALIZER_BAND,
+          "name", name, NULL);
       GST_DEBUG ("adding band[%d]=%p", i, equ->bands[i]);
 
       gst_object_set_parent (GST_OBJECT (equ->bands[i]), GST_OBJECT (equ));
